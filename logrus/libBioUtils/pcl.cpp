@@ -1,0 +1,308 @@
+#include "stdafx.h"
+#include "pcl.h"
+#include "meta.h"
+
+namespace libBioUtils {
+
+const char	CPCLImpl::c_szEWEIGHT[]	= "EWEIGHT";
+const char	CPCLImpl::c_szGENE[]	= "GENE";
+const char	CPCLImpl::c_szGID[]		= "GID";
+
+size_t CPCL::GetSkip( ) {
+
+	return c_iSkip; }
+
+CPCLImpl::~CPCLImpl( ) {
+
+	Reset( ); }
+
+void CPCLImpl::Reset( ) {
+
+	m_Data.Reset( );
+	m_vecstrGenes.clear( );
+	m_vecstrExperiments.clear( );
+	m_vecstrFeatures.clear( );
+	m_vecvecstrFeatures.clear( );
+	m_setiGenes.clear( ); }
+
+void CPCL::Open( const CPCL& PCL ) {
+	size_t					i, j;
+	TSetI::const_iterator	iterGene;
+
+	Reset( );
+	m_Data.Initialize( PCL.m_Data.GetRows( ), PCL.m_Data.GetColumns( ) );
+	for( i = 0; i < m_Data.GetRows( ); ++i )
+		for( j = 0; j < m_Data.GetColumns( ); ++j )
+			m_Data.Set( i, j, PCL.m_Data.Get( i, j ) );
+
+	for( iterGene = PCL.m_setiGenes.begin( ); iterGene != PCL.m_setiGenes.end( );
+		++iterGene )
+		m_setiGenes.insert( *iterGene );
+	m_vecstrExperiments.resize( PCL.m_vecstrExperiments.size( ) );
+	copy( PCL.m_vecstrExperiments.begin( ), PCL.m_vecstrExperiments.end( ),
+		m_vecstrExperiments.begin( ) );
+	m_vecstrFeatures.resize( PCL.m_vecstrFeatures.size( ) );
+	copy( PCL.m_vecstrFeatures.begin( ), PCL.m_vecstrFeatures.end( ),
+		m_vecstrFeatures.begin( ) );
+	m_vecstrGenes.resize( PCL.m_vecstrGenes.size( ) );
+	copy( PCL.m_vecstrGenes.begin( ), PCL.m_vecstrGenes.end( ), m_vecstrGenes.begin( ) );
+	m_vecvecstrFeatures.resize( PCL.m_vecvecstrFeatures.size( ) );
+	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i ) {
+		m_vecvecstrFeatures[ i ].resize( PCL.m_vecvecstrFeatures[ i ].size( ) );
+		copy( PCL.m_vecvecstrFeatures[ i ].begin( ), PCL.m_vecvecstrFeatures[ i ].end( ),
+			m_vecvecstrFeatures[ i ].begin( ) ); } }
+
+bool CPCL::Open( istream& istmInput, size_t iFeatures ) {
+	vector<float>	vecdData;
+	size_t			i, j, k;
+
+	if( !OpenExperiments( istmInput, iFeatures ) )
+		return false;
+	m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
+	while( OpenGene( istmInput, vecdData ) );
+
+	m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
+	for( k = i = 0; i < m_Data.GetRows( ); ++i )
+		for( j = 0; j < m_Data.GetColumns( ); ++j )
+			m_Data.Set( i, j, vecdData[ k++ ] );
+
+	return true; }
+
+bool CPCLImpl::OpenExperiments( istream& istmInput, size_t iFeatures ) {
+	string	strToken;
+	size_t	iToken;
+
+	Reset( );
+	for( iToken = 0; !IsNewline( istmInput.peek( ) ); ++iToken ) {
+		strToken = OpenToken( istmInput );
+		if( !strToken.length( ) )
+			return false;
+		if( iToken <= iFeatures )
+			m_vecstrFeatures.push_back( strToken );
+		else
+			m_vecstrExperiments.push_back( strToken ); }
+	istmInput.ignore( );
+
+	return true; }
+
+bool CPCLImpl::OpenGene( istream& istmInput, vector<float>& vecdData ) {
+	string	strToken;
+	size_t	iToken, iData;
+
+	for( iData = iToken = 0; !IsNewline( istmInput.peek( ) ); ++iToken ) {
+		strToken = OpenToken( istmInput );
+		if( !strToken.length( ) && ( istmInput.peek( ) == EOF ) )
+			return false;
+		if( strToken == "EWEIGHT" ) {
+			iData = -1;
+			while( !IsNewline( istmInput.peek( ) ) )
+				OpenToken( istmInput );
+			break; }
+		if( !iToken )
+			m_vecstrGenes.push_back( strToken );
+		else if( iToken < m_vecstrFeatures.size( ) )
+			m_vecvecstrFeatures[ iToken - 1 ].push_back( strToken );
+		else {
+			iData++;
+			if( !strToken.length( ) )
+				vecdData.push_back( CMeta::GetNaN( ) );
+			else
+				vecdData.push_back( (float)atof( strToken.c_str( ) ) ); } }
+	istmInput.ignore( );
+
+	while( iData++ < m_vecstrExperiments.size( ) )
+		vecdData.push_back( CMeta::GetNaN( ) );
+
+	return true; }
+
+void CPCL::SaveHeader( ostream& ostm, bool fCluster ) const {
+	size_t	i;
+
+	if( fCluster )
+		ostm << c_szGID << '\t';
+	ostm << m_vecstrFeatures[ 0 ];
+	for( i = 1; i < m_vecstrFeatures.size( ); ++i )
+		ostm << '\t' << m_vecstrFeatures[ i ];
+	for( i = 0; i < m_vecstrExperiments.size( ); ++i )
+		ostm << '\t' << m_vecstrExperiments[ i ];
+	ostm << endl;
+
+	ostm << c_szEWEIGHT;
+	for( i = fCluster ? 0 : 1; i < m_vecstrFeatures.size( ); ++i )
+		ostm << '\t';
+	for( i = 0; i < m_vecstrExperiments.size( ); ++i )
+		ostm << '\t' << 1;
+	ostm << endl; }
+
+void CPCL::SaveGene( ostream& ostm, size_t iGene, size_t iOrig ) const {
+	size_t	i;
+	float	d;
+
+	if( iOrig != -1 )
+		ostm << c_szGENE << iOrig << '\t';
+	ostm << m_vecstrGenes[ iGene ];
+	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i )
+		ostm << '\t' << m_vecvecstrFeatures[ i ][ iGene ];
+	for( i = 0; i < m_vecstrExperiments.size( ); ++i ) {
+		ostm << '\t';
+		if( !CMeta::IsNaN( d = Get( iGene, i ) ) )
+			ostm << Get( iGene, i ); }
+	ostm << endl; }
+
+void CPCL::Save( ostream& ostmOutput, const vector<size_t>* pveciGenes ) const {
+	size_t	i;
+
+	SaveHeader( ostmOutput, !!pveciGenes );
+
+	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
+		if( m_setiGenes.find( i ) != m_setiGenes.end( ) )
+			continue;
+		SaveGene( ostmOutput, i, pveciGenes ? (*pveciGenes)[ i ] : -1 ); } }
+
+float CPCL::Get( size_t iGene, size_t iExp ) const {
+
+	return m_Data.Get( iGene, iExp ); }
+
+const float* CPCL::Get( size_t iGene ) const {
+
+	return m_Data.Get( iGene ); }
+
+const CDataMatrix& CPCL::Get( ) const {
+
+	return m_Data; }
+
+size_t CPCL::GetGenes( ) const {
+
+	return m_vecstrGenes.size( ); }
+
+const vector<string>& CPCL::GetGeneNames( ) const {
+
+	return m_vecstrGenes; }
+
+size_t CPCL::GetExperiments( ) const {
+
+	return m_vecstrExperiments.size( ); }
+
+string CPCL::GetFeature( size_t iGene, const char* szFeature ) const {
+	size_t	 i;
+
+	for( i = 0; i < m_vecstrFeatures.size( ); ++i )
+		if( m_vecstrFeatures[ i ] == szFeature )
+			return GetFeature( iGene, i );
+
+	return ""; }
+
+const string& CPCL::GetFeature( size_t iGene, size_t iFeature ) const {
+
+	return m_vecvecstrFeatures[ iFeature ][ iGene ]; }
+
+const string& CPCL::GetGene( size_t iGene ) const {
+
+	return m_vecstrGenes[ iGene ]; }
+
+const string& CPCL::GetExperiment( size_t iExp ) const {
+
+	return m_vecstrExperiments[ iExp ]; }
+
+void CPCL::MaskGene( size_t iGene ) {
+
+//	m_setiGenes.push_back( iGene ); }
+	m_setiGenes.insert( iGene ); }
+
+void CPCL::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrExperiments ) {
+	size_t	i, j;
+
+	Reset( );
+	m_vecstrFeatures.resize( 3 );
+	m_vecstrFeatures[ 0 ] = "GID";
+	m_vecstrFeatures[ 1 ] = "NAME";
+	m_vecstrFeatures[ 2 ] = "GWEIGHT";
+	m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
+	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i )
+		m_vecvecstrFeatures[ i ].resize( vecstrGenes.size( ) );
+	for( i = 0; i < vecstrGenes.size( ); ++i ) {
+		m_vecvecstrFeatures[ 0 ][ i ] = vecstrGenes[ i ];
+		m_vecvecstrFeatures[ 1 ][ i ] = "1"; }
+
+	m_vecstrGenes.resize( vecstrGenes.size( ) );
+	for( i = 0; i < m_vecstrGenes.size( ); ++i )
+		m_vecstrGenes[ i ] = vecstrGenes[ i ];
+	m_vecstrExperiments.resize( vecstrExperiments.size( ) );
+	for( i = 0; i < m_vecstrExperiments.size( ); ++i )
+		m_vecstrExperiments[ i ] = vecstrExperiments[ i ];
+
+	m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
+	for( i = 0; i < m_Data.GetRows( ); ++i )
+		for( j = 0; j < m_Data.GetColumns( ); ++j )
+			m_Data.Set( i, j, CMeta::GetNaN( ) ); }
+
+void CPCL::Open( const vector<size_t>& veciGenes, const vector<string>& vecstrGenes,
+	const vector<string>& vecstrExperiments ) {
+	size_t	i, j;
+	char	ac[ 16 ];
+
+	Reset( );
+	m_vecstrFeatures.resize( 4 );
+	m_vecstrFeatures[ 0 ] = "GID";
+	m_vecstrFeatures[ 1 ] = "YORF";
+	m_vecstrFeatures[ 2 ] = "NAME";
+	m_vecstrFeatures[ 3 ] = "GWEIGHT";
+	m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
+	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i )
+		m_vecvecstrFeatures[ i ].resize( veciGenes.size( ) );
+	for( i = 0; i < veciGenes.size( ); ++i ) {
+		m_vecvecstrFeatures[ 0 ][ i ] = m_vecvecstrFeatures[ 1 ][ i ] =
+			vecstrGenes[ veciGenes[ i ] ];
+		m_vecvecstrFeatures[ 2 ][ i ] = "1"; }
+
+	m_vecstrGenes.resize( vecstrGenes.size( ) );
+	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
+		m_vecstrGenes[ i ] = "GENE";
+		sprintf( ac, "%d", veciGenes[ i ] );
+		m_vecstrGenes[ i ] += ac; }
+	m_vecstrExperiments.resize( vecstrExperiments.size( ) );
+	for( i = 0; i < m_vecstrExperiments.size( ); ++i )
+		m_vecstrExperiments[ i ] = vecstrExperiments[ i ];
+
+	m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
+	for( i = 0; i < m_Data.GetRows( ); ++i )
+		for( j = 0; j < m_Data.GetColumns( ); ++j )
+			m_Data.Set( i, j, CMeta::GetNaN( ) ); }
+
+void CPCL::Set( size_t iX, size_t iY, float dValue ) {
+
+	m_Data.Set( iX, iY, dValue ); }
+
+size_t CPCL::GetGene( const string& strGene ) const {
+	size_t	i;
+
+	for( i = 0; i < m_vecstrGenes.size( ); ++i )
+		if( m_vecstrGenes[ i ] == strGene )
+			return i;
+
+	return -1; }
+
+void CPCL::SortGenes( const vector<size_t>& veciOrder ) {
+	size_t	i;
+
+	CMeta::Permute( m_Data.Get( ), m_Data.GetRows( ), veciOrder );
+	CMeta::Permute( m_vecstrGenes, veciOrder );
+	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i )
+		CMeta::Permute( m_vecvecstrFeatures[ i ], veciOrder ); }
+
+void CPCL::RankTransform( ) {
+	size_t	i, j, k;
+	size_t*	aiRanks;
+
+	aiRanks = new size_t[ m_Data.GetColumns( ) ];
+	for( i = 0; i < m_Data.GetRows( ); ++i ) {
+		memset( aiRanks, 0, m_Data.GetColumns( ) * sizeof(*aiRanks) );
+		for( j = 0; j < m_Data.GetColumns( ); ++j )
+			for( k = 0; k < m_Data.GetColumns( ); ++k )
+				if( ( j != k ) && ( m_Data.Get( i, k ) < m_Data.Get( i, j ) ) )
+					aiRanks[ j ]++;
+		for( j = 0; j < m_Data.GetColumns( ); ++j )
+			m_Data.Set( i, j, (float)aiRanks[ j ] ); }
+	delete[] aiRanks; }
+
+}

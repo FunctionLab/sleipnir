@@ -1,0 +1,17 @@
+package	"OntoShell"
+version	"1.0"
+purpose	"Ontology exploration utility"
+
+section "Optional"
+option	"kegg"		k	"KEGG ontology"	string	typestr="filename"
+option	"go_onto"	o	"GO ontology"	string	typestr="filename"
+option	"go_anno"	g	"GO annotations"	string	typestr="filename"
+option	"mips_onto"	m	"MIPS ontology"	string	typestr="filename"
+option	"mips_anno"	a	"MIPS annotations"	string	typestr="filename"
+option	"mipsp_onto"	M	"MIPS phenotypes ontology"	string	typestr="filename"
+option	"mipsp_anno"	A	"MIPS phenotypes annotations"	string	typestr="filename"
+option	"features"	f	"SGD gene features"	string	typestr="filename"
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"zeroes"	z	"Tab-complete zero entries"	flag	off
+option	"exec"		x	"Command to execute"	string
+option	"config"	c	"Command line config file"	string	typestr="filename"	default="OntoShell.ini"

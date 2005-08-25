@@ -1,0 +1,9 @@
+package	"Normalizer"
+version	"1.0"
+purpose	"Data file normalizer."
+
+option	"input"		i	"Input/output dat file"	string	typestr="filename"	yes
+section "Optional"
+option	"output"	o	"Output dat file"	string	typestr="filename"
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"flip"		f	"Flip high/low scores"	flag	off

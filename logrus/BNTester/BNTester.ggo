@@ -1,0 +1,13 @@
+package	"BNTester"
+version	"1.0"
+purpose	"Bayes net evaluation"
+
+option	"input"		i	"Input dsl file"	string	typestr="filename"	yes
+option	"datadir"	d	"Data directory"	string	typestr="directory"	yes
+section "Optional"
+option	"output"	o	"Output dab file"	string	typestr="filename"
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"pnl"		p	"Use PNL library"	flag	off
+option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
+option	"zero"		z	"Zero missing values"	flag	off
+option	"group"		u	"Group identical inputs"	flag	on
