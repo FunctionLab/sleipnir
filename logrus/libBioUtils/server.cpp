@@ -15,7 +15,8 @@ bool CServer::Initialize( const char* szConfig, IServerClient* pClient ) {
 #endif // WIN32
 
 	m_pClient = pClient;
-	m_Config.Open( szConfig );
+	if( !m_Config.Open( szConfig ) )
+		return false;
 	
 	Var = m_Config.Get( c_szPort );
 	if( Var.m_eType != SVariant::eInt )
@@ -44,6 +45,11 @@ bool CServer::Start( ) {
 	sockaddr_in	Addr;
 	char		cOn;
 
+#ifdef WIN32
+	WSADATA		sWSA;
+	WSAStartup( MAKEWORD(2, 0), &sWSA );
+#endif // WIN32
+
 	m_fStop = false;
 	m_iSocket = socket( PF_INET, SOCK_STREAM, 0 );
 	cOn = true;
@@ -57,7 +63,14 @@ bool CServer::Start( ) {
 		listen( m_iSocket, INT_MAX ) ) {
 		g_CatBioUtils.error( "CServer::Start( ) bind failed: %s", strerror( errno ) );
 		return false; }
+
 	g_CatBioUtils.notice( "CServer::Start( ) bound to port %d", m_iPort );
+	Listen( );
+	g_CatBioUtils.info( "CServer::Start( ) preparing to shutdown..." );
+
+#ifdef WIN32
+	WSACleanup( );
+#endif // WIN32
 
 	return true; }
 
@@ -65,7 +78,7 @@ void CServer::Listen( ) {
 	SOCKET			iClient;
 	socklen_t		iSize;
 	IServerClient*	pClient;
-	CThread			ThreadClient;
+	pthread_t		thrdClient;
 	sockaddr_in		Addr;
 #ifndef WIN32
 	itimerval		Time;
@@ -94,9 +107,8 @@ void CServer::Listen( ) {
 		g_CatBioUtils.info( "CServer::Listen( ) client 0x%08x connected from %d.%d.%d.%d",
 			pClient, ( iSize >> 24 ) & 0xFF, ( iSize >> 16 ) & 0xFF, ( iSize >> 8 ) & 0xFF,
 			iSize & 0xFF );
-		ThreadClient.Run( pClient->GetStartRoutine( ), pClient ); }
-
-	g_CatBioUtils.info( "CServer::Listen( ) preparing to shutdown..." ); }
+		pthread_create( &thrdClient, NULL, pClient->GetStartRoutine( ), pClient );
+		pthread_detach( thrdClient ); } }
 
 void CServer::Stop( ) {
 

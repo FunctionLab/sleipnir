@@ -14,7 +14,7 @@ int main( int iArgs, char** aszArgs ) {
 	ofstream				ofsm;
 	IBayesNet*				pNet;
 	CGenome					Genome;
-	CGenes					Genes( Genome );
+	CGenes					GenesIn( Genome ), GenesEx( Genome );
 	size_t					i;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -28,16 +28,26 @@ int main( int iArgs, char** aszArgs ) {
 	if( !BNSmile.Open( sArgs.input_arg ) ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
+	if( sArgs.randomize_flag )
+		BNSmile.Randomize( );
 
 	if( !Answers.Open( sArgs.answers_arg, BNSmile.IsContinuous( ) ) ) {
 		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
 		return 1; }
 	if( sArgs.genes_arg ) {
 		ifsm.open( sArgs.genes_arg );
-		if( !Genes.Open( ifsm ) ) {
+		if( !GenesIn.Open( ifsm ) ) {
 			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
 			return 1; }
-		Answers.FilterGenes( Genes );
+		Answers.FilterGenes( GenesIn, CDat::EFilterInclude );
+		ifsm.close( ); }
+	if( sArgs.genex_arg ) {
+		ifsm.clear( );
+		ifsm.open( sArgs.genex_arg );
+		if( !GenesEx.Open( ifsm ) ) {
+			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
+			return 1; }
+		Answers.FilterGenes( GenesEx, CDat::EFilterExclude );
 		ifsm.close( ); }
 	if( !Data.Open( Answers, sArgs.datadir_arg, &BNSmile ) ) {
 		cerr << "Couldn't open: " << sArgs.datadir_arg << endl;

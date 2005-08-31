@@ -478,7 +478,7 @@ float CDataSubset::GetContinuous( size_t iX, size_t iY, size_t iNode ) const {
 	size_t	iMap;
 
 	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
-		return -1;
+		return CMeta::GetNaN( );
 
 	return m_Examples.Get( iX - m_iOffset, iY ).GetContinuous( iMap ); }
 

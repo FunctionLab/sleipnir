@@ -2,7 +2,6 @@
 #define SERVERI_H
 
 #include "propertyfile.h"
-#include "thread.h"
 
 namespace libBioUtils {
 
@@ -11,7 +10,7 @@ class IServerClient;
 
 class CServerImpl {
 protected:
-	typedef std::map<IServerClient*, CThread>	TMapThreads;
+	typedef std::map<IServerClient*, pthread_t>	TMapThreads;
 	typedef std::vector<IServerClient*>			TVecClients;
 
 	static const char*	c_szPort;

@@ -417,6 +417,28 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 
 	return true; }
 
+void CBayesNetSmile::Randomize( ) {
+	int				i;
+	DSL_Dmatrix*	pMat;
+
+	if( !m_fSmileNet )
+		return;
+
+	for( i = m_SmileNet.GetFirstNode( ); i != DSL_OUT_OF_RANGE;
+		i = m_SmileNet.GetNextNode( i ) ) {
+		pMat = m_SmileNet.GetNode( i )->Definition( )->GetMatrix( );
+
+		{
+			DSL_sysCoordinates	Coords( *pMat );
+
+			Coords.GoFirst( );
+			do
+				Coords.CheckedValue( ) = (float)rand( ) / RAND_MAX;
+			while( Coords.Next( ) != DSL_OUT_OF_RANGE );
+		}
+
+		pMat->Normalize( ); } }
+
 const char	CBayesNetPNLImpl::c_szBN[]	= "bn";
 
 CBayesNetPNL::CBayesNetPNL( bool fGroup ) : CBayesNetPNLImpl(fGroup) { }
@@ -633,6 +655,8 @@ bool CBayesNetPNLImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 
 	delete pInferrer;
 	return true; }
+
+void CBayesNetPNL::Randomize( ) { }
 
 }
 

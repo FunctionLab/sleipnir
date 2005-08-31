@@ -11,9 +11,12 @@ class CDat;
 class CDataPair;
 class CGenes;
 class CPCLSet;
+class IDataset;
 
 class CSVMImpl {
 protected:
+	static const size_t	c_iWords	= 512;
+
 	struct SLearn : LEARN_PARM {
 		SLearn( );
 	};
@@ -22,19 +25,37 @@ protected:
 		SKernel( );
 	};
 
-	static DOC* CreateDoc( const CPCLSet&, size_t, size_t, size_t );
-	static size_t GetWords( const CPCLSet& );
+	struct SData {
+		enum {
+			EPCLs,
+			EData,
+			EFile
+		}	m_eType;
+		union {
+			const CPCLSet*	m_pPCLs;
+			const IDataset*	m_pData;
+			const char*		m_szFile;
+		}	m_uData;
+		const CDataPair*	m_pAnswers;
+	};
+
+	static SWORD	s_asWords[ c_iWords ];
 
 	CSVMImpl( );
 	~CSVMImpl( );
 
 	void Reset( bool, bool, bool );
-	bool Initialize( const CPCLSet&, const CDataPair& );
-	bool Evaluate( const CPCLSet&, const CGenes*, CDat& ) const;
+	bool Initialize( const SData& );
+	bool Evaluate( const SData&, const CGenes*, CDat& ) const;
+	bool EvaluateFile( const char*, CDat& ) const;
+	bool Learn( const SData& );
+	size_t GetWords( const SData& ) const;
+	DOC* CreateDoc( const SData&, size_t, size_t, size_t ) const;
 
 	MODEL*	m_pModel;
 	DOC**	m_apDocs;
 	size_t	m_iDocs;
+	size_t	m_iWords;
 	double*	m_adLabels;
 	double*	m_adAlphas;
 	size_t	m_iAlphas;

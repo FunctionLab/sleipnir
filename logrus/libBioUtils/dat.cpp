@@ -32,8 +32,8 @@ void CDatImpl::ResizeNaN( TAF& vecf, size_t iLast ) {
 		vecf[ i ] = CMeta::GetNaN( ); }
 
 string CDatImpl::DabGene( istream& istm ) {
-	char			szBuffer[ c_iBufferSize ];
-	unsigned int	i;
+	char	szBuffer[ c_iBufferSize ];
+	size_t	i;
 
 	i = 0;
 	do
@@ -160,8 +160,8 @@ bool CDatImpl::OpenText( istream& istm ) {
 	return true; }
 
 bool CDatImpl::OpenBinary( istream& istm ) {
-	unsigned int	i, j;
-	float			dScore;
+	size_t	i, j;
+	float	dScore;
 
 	if( !OpenGenes( istm, true ) )
 		return false;
@@ -178,9 +178,9 @@ bool CDat::OpenGenes( istream& istm, bool fBinary ) {
 	return CDatImpl::OpenGenes( istm, fBinary ); }
 
 bool CDatImpl::OpenGenes( istream& istm, bool fBinary ) {
-	unsigned int	iCount, i;
-	string			strToken, strCache;
-	float			d;
+	size_t	iCount, i;
+	string	strToken, strCache;
+	float	d;
 
 	Reset( );
 	if( fBinary ) {
@@ -214,8 +214,8 @@ void CDat::Save( ostream& ostm, bool fBinary ) const {
 	fBinary ? SaveBinary( ostm ) : SaveText( ostm ); }
 
 void CDatImpl::SaveText( ostream& ostm ) const {
-	unsigned int	i, j;
-	float			d;
+	size_t	i, j;
+	float	d;
 
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )
 		for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j )

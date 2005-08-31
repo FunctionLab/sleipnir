@@ -19,6 +19,7 @@ public:
 	virtual bool Evaluate( const IDataset*, CDat&, bool = false ) const = 0;
 	virtual std::vector<std::string> GetNodes( ) const = 0;
 	virtual bool IsContinuous( ) const = 0;
+	virtual void Randomize( ) = 0;
 };
 
 class CBayesNetSmile : CBayesNetSmileImpl, public IBayesNet {
@@ -32,6 +33,7 @@ public:
 	bool Evaluate( const IDataset*, CDat&, bool = false ) const;
 	std::vector<std::string> GetNodes( ) const;
 	bool IsContinuous( ) const;
+	void Randomize( );
 
 	bool Convert( CBayesNetPNL& ) const;
 };
@@ -47,6 +49,7 @@ public:
 	bool Evaluate( const IDataset*, CDat&, bool = false ) const;
 	std::vector<std::string> GetNodes( ) const;
 	bool IsContinuous( ) const;
+	void Randomize( );
 
 	bool Convert( CBayesNetSmile& ) const;
 };

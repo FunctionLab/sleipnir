@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 #include "parser.h"
+#include "serveronto.h"
 
 static const char	c_szCat[]		= "cat";
 static const char	c_szFind[]		= "find";
@@ -105,7 +106,21 @@ cout << Genome.GetGene( *iterGene ).GetName( ) << endl;
 return 0;
 */
 
-	if( sArgs.exec_arg )
+	if( sArgs.server_arg ) {
+		XMLPlatformUtils::Initialize( );
+		XPathEvaluator::initialize( );
+		{
+			CServer				Server;
+			CServerClientOnto	ServerClientOnto;
+
+			Server.Initialize( sArgs.server_arg, &ServerClientOnto );
+			pthread_win32_process_attach_np( );
+			Server.Start( );
+			pthread_win32_process_detach_np( );
+		}
+		XPathEvaluator::terminate( );
+		XMLPlatformUtils::Terminate( ); }
+	else if( sArgs.exec_arg )
 		Parser.ProcessLine( sArgs.exec_arg );
 	else {
 //		rl_completion_entry_function = CompletionCommands;

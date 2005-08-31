@@ -5,8 +5,8 @@ namespace libBioUtils {
 
 vector<double>	CMathImpl::s_vecdLogFact;
 
-unsigned int CMath::GCD( unsigned int iA, unsigned int iB ) {
-	unsigned int	i;
+size_t CMath::GCD( size_t iA, size_t iB ) {
+	size_t	i;
 
 	while( iB ) {
 		i = iA;

@@ -15,3 +15,5 @@ option	"cache"		e	"SVM cache size"	int	default="40"
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
 option	"kernel"	k	"SVM kernel function"	values="linear","poly","rbf"	default="linear"
+option	"pcl"		p	"PCL input mode"	flag	on
+option	"binary"	b	"Input binary training file"	string	typestr="filename"

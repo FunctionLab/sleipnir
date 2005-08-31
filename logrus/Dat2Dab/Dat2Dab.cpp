@@ -34,7 +34,7 @@ int main( int iArgs, char** aszArgs ) {
 	else if( !strcmp( sArgs.border_arg, "negate" ) )
 		eFilt = CDat::EFilterNegate;
 	else
-		eFilt = CDat::EFilterNone;
+		eFilt = CDat::EFilterInclude;
 	iRet = Dat2Dab( szFile, fCreate, !!sArgs.flip_flag, eFilt, Genes );
 
 	CMeta::Shutdown( );
