@@ -1,15 +1,15 @@
 #include "stdafx.h"
 #include "cmdline.h"
-#include "parser.h"
-#include "serveronto.h"
+#include "parserconsole.h"
+#include "parserxml.h"
 
 static const char	c_szCat[]		= "cat";
 static const char	c_szFind[]		= "find";
 static const char	c_szPrompt[]	= "> ";
 
-static const CParser*	g_pParser;
-static bool				g_fGenes;
-static bool				g_fZeroes;
+static const CParserConsole*	g_pParser;
+static bool						g_fGenes;
+static bool						g_fZeroes;
 
 bool ProcessLine( const char* );
 char** CompletionAll( const char*, int, int );
@@ -30,7 +30,7 @@ int main( int iArgs, char** aszArgs ) {
 	char*					szLine;
 	const IOntology*		apOntologies[]
 		= { &KEGG, &GOBP, &GOMF, &GOCC, &MIPS, &MIPSPhen, NULL };
-	CParser					Parser( apOntologies, Genome );
+	CParserConsole			Parser( apOntologies, Genome );
 
 	g_pParser = &Parser;
 	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) || ( sArgs.config_arg &&
@@ -110,13 +110,17 @@ return 0;
 		XMLPlatformUtils::Initialize( );
 		XPathEvaluator::initialize( );
 		{
-			CServer				Server;
-			CServerClientOnto	ServerClientOnto;
+			CServer		Server;
+			CParserXml	ParserXml( apOntologies, Genome );
 
-			Server.Initialize( sArgs.server_arg, &ServerClientOnto );
+			Server.Initialize( sArgs.server_arg, &ParserXml );
+#ifdef WIN32
 			pthread_win32_process_attach_np( );
+#endif // WIN32
 			Server.Start( );
+#ifdef WIN32
 			pthread_win32_process_detach_np( );
+#endif // WIN32
 		}
 		XPathEvaluator::terminate( );
 		XMLPlatformUtils::Terminate( ); }
@@ -196,7 +200,8 @@ char* CompletionMembers( const char* szText, int iState ) {
 
 	return NULL; }
 
-size_t CompletionGetParents( const CParser::SLocation& sLoc, vector<string>& vecstrParents ) {
+size_t CompletionGetParents( const CParser::SLocation& sLoc,
+	vector<string>& vecstrParents ) {
 	const IOntology*	pOnto;
 	size_t				i, iSize;
 

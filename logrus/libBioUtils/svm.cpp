@@ -502,6 +502,18 @@ void CSVM::SetCache( size_t iCache ) {
 
 	m_sLearn.kernel_cache_size = iCache; }
 
+void CSVM::SetTradeoff( float dTradeoff ) {
+
+	m_sLearn.svm_c = dTradeoff; }
+
+void CSVM::SetGamma( float dGamma ) {
+
+	m_sKernel.rbf_gamma = dGamma; }
+
+void CSVM::SetDegree( size_t iDegree ) {
+
+	m_sKernel.poly_degree = iDegree; }
+
 void CSVM::SetKernel( EKernel eKernel ) {
 
 	m_sKernel.kernel_type = eKernel; }

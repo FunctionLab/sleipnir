@@ -26,6 +26,9 @@ public:
 	bool Evaluate( const IDataset*, const CGenes&, CDat& ) const;
 	void SetIterations( size_t );
 	void SetCache( size_t );
+	void SetTradeoff( float );
+	void SetGamma( float );
+	void SetDegree( size_t );
 	void SetKernel( EKernel );
 };
 

@@ -7,7 +7,7 @@ namespace libBioUtils {
 
 class CMath : CMathImpl {
 public:
-	static unsigned int GCD( unsigned int, unsigned int );
+	static size_t GCD( size_t, size_t );
 	static double Min( double, double );
 	static size_t Round( double );
 	static double LogFact( size_t );
