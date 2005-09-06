@@ -17,3 +17,6 @@ option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
 option	"kernel"	k	"SVM kernel function"	values="linear","poly","rbf"	default="linear"
 option	"pcl"		p	"PCL input mode"	flag	on
 option	"binary"	b	"Input binary training file"	string	typestr="filename"
+option	"tradeoff"	c	"Classification tradeoff"	float
+option	"gamma"		M	"RBF gamma"	float	default="1"
+option	"degree"	d	"Polynomial degree"	int	default="3"

@@ -66,6 +66,10 @@ int main( int iArgs, char** aszArgs ) {
 
 	SVM.SetCache( sArgs.cache_arg );
 	SVM.SetIterations( sArgs.iterations_arg );
+	SVM.SetGamma( sArgs.gamma_arg );
+	SVM.SetDegree( sArgs.degree_arg );
+	if( sArgs.tradeoff_given )
+		SVM.SetTradeoff( sArgs.tradeoff_arg );
 	if( sArgs.binary_arg && !sArgs.output_arg ) {
 		SVM.Learn( sArgs.binary_arg );
 		if( sArgs.model_arg )

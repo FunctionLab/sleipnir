@@ -158,9 +158,9 @@ bool OpenDats( const CDataPair& Answers, const vector<string>& vecstrDATs, ostre
 		for( j = 0; j < Pairs.GetSize( ); ++j )
 			for( k = ( j + 1 ); k < Pairs.GetSize( ); ++k )
 				if( Pairs.Get( j, k ) ) {
-					if( ( veciGenes[ j ] == -1 ) || ( veciGenes[ k ] == -1 ) ||
-						CMeta::IsNaN( d = Dat.Get( veciGenes[ j ], veciGenes[ k ] ) ) )
-						d = 0;
+					d = ( ( veciGenes[ j ] == -1 ) || ( veciGenes[ k ] == -1 ) ||
+						CMeta::IsNaN( d = Dat.Get( veciGenes[ j ], veciGenes[ k ] ) ) ) ?
+						0 : ( 2 * d ) - 1;
 					ostm.write( (char*)&d, sizeof(d) );
 					ostm.seekp( (ostream::off_type)( ( 3 * sizeof(size_t) ) +
 						( vecstrDATs.size( ) * sizeof(float) ) ), ios_base::cur ); } }

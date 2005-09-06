@@ -305,25 +305,18 @@ bool CParserConsole::ParseCd( const vector<string>& vecstrLine ) {
 
 	return true; }
 
-struct SSortFind {
-	bool operator()( const TPrID& prOne, const TPrID& prTwo ) {
-
-		return ( prOne.second < prTwo.second ); }
-};
-
 bool CParserConsole::ParseFind( const vector<string>& vecstrLine ) {
-	ifstream				ifsm;
 	CGenes					Genes( (CGenome&)m_Genome );
+	ifstream				ifsm;
 	size_t					i, j, k, l, iWidth;
-	vector<TPrID>			vecprCur, vecprTerms;
+	vector<TPrID>			vecprTerms;
 	vector<size_t>			veciOnto;
-	SSortFind				sSort;
 	string					strFile, strP;
 	SArgs					sArgs;
 	const IOntology*		pOnto;
 	vector<const CGene*>	vecpGenes;
 	vector<string>			vecstrGenes;
-	double					dP	= 0.05;
+	float					dP	= 0.05f;
 
 	if( vecstrLine.size( ) < 2 )
 		return false;
@@ -340,17 +333,10 @@ bool CParserConsole::ParseFind( const vector<string>& vecstrLine ) {
 		return false; }
 	ifsm.close( );
 	if( strP.length( ) )
-		dP = atof( strP.c_str( ) );
+		dP = (float)atof( strP.c_str( ) );
 
-	veciOnto.resize( m_vecpOntologies.size( ) );
-	for( i = 0; i < m_vecpOntologies.size( ); ++i ) {
-		vecprCur.clear( );
-		m_vecpOntologies[ i ]->TermFinder( Genes, vecprCur, sArgs.m_fBonferroni,
-			sArgs.m_fSibs, sArgs.m_fBackground );
-		sort( vecprCur.begin( ), vecprCur.end( ), sSort );
-		for( j = 0; ( j < vecprCur.size( ) ) && ( vecprCur[ j ].second <= dP ); ++j )
-			vecprTerms.push_back( vecprCur[ j ] );
-		veciOnto[ i ] = vecprTerms.size( ); }
+	CParser::TermFinder( Genes, dP, sArgs.m_fBonferroni, sArgs.m_fSibs, sArgs.m_fBackground,
+		veciOnto, vecprTerms );
 
 	for( i = j = 0; i < m_vecpOntologies.size( ); ++i ) {
 		pOnto = m_vecpOntologies[ i ];
