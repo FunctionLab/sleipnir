@@ -1,0 +1,14 @@
+package	"DChecker"
+version	"1.0"
+purpose	"Correlation to answer file checker"
+
+option	"input"		i	"Correlation file"	string	typestr="filename"	yes
+option	"answers"	w	"Answer file"	string	typestr="filename"	yes
+section "Optional"
+option	"invert"	t	"Invert correlations to distances"	flag	off
+option	"min"		m	"Minimum correlation to process"	float	default="0"
+option	"max"		M	"Maximum correlation to process"	float	default="1"
+option	"delta"		e	"Size of correlation bins"	double	default="0.01"
+option	"directory"	d	"Output directory"	string	typestr="directory"	default="."
+option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
+option	"verbosity"	v	"Message verbosity"	int	default="5"

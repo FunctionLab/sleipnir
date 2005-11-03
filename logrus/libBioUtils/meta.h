@@ -16,6 +16,7 @@ public:
 	static float GetNaN( );
 	static bool IsNaN( float );
 	static std::string Filename( const std::string&, char = '_' );
+	static std::string Basename( const char* );
 	static void Tokenize( const char*, std::vector<std::string>&, const char* = "\t",
 		bool = false );
 

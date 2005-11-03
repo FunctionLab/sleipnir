@@ -80,6 +80,15 @@ bool CDat::Set( size_t iX, size_t iY, float dValue ) {
 
 	return CDatImpl::Set( iX, iY, dValue ); }
 
+void CDatImpl::SlimCache( const CSlim& Slim, vector<vector<size_t> >& vecveciGenes ) const {
+	size_t	iS, iG;
+
+	vecveciGenes.resize( Slim.GetSlims( ) );
+	for( iS = 0; iS < vecveciGenes.size( ); ++iS ) {
+		vecveciGenes[ iS ].resize( Slim.GetGenes( iS ) );
+		for( iG = 0; iG < vecveciGenes[ iS ].size( ); ++iG )
+			vecveciGenes[ iS ][ iG ] =  GetGene( Slim.GetGene( iS, iG ).GetName( ) ); } }
+
 bool CDat::Open( const CSlim& Slim ) {
 	vector<string>			vecstrGenes;
 	size_t					iS1, iS2, iG1, iG2, iGene1, iGene2;
@@ -90,12 +99,7 @@ bool CDat::Open( const CSlim& Slim ) {
 	if( !Open( vecstrGenes ) )
 		return false;
 
-	vecveciGenes.resize( Slim.GetSlims( ) );
-	for( iS1 = 0; iS1 < vecveciGenes.size( ); ++iS1 ) {
-		vecveciGenes[ iS1 ].resize( Slim.GetGenes( iS1 ) );
-		for( iG1 = 0; iG1 < vecveciGenes[ iS1 ].size( ); ++iG1 )
-			vecveciGenes[ iS1 ][ iG1 ] =  GetGene( Slim.GetGene( iS1, iG1 ).GetName( ) ); }
-
+	SlimCache( Slim, vecveciGenes );
 	for( iS1 = 0; iS1 < Slim.GetSlims( ); ++iS1 ) {
 		g_CatBioUtils.info( "CDat::Open( ) processing slim: %s",
 			Slim.GetSlim( iS1 ).c_str( ) );
@@ -105,6 +109,47 @@ bool CDat::Open( const CSlim& Slim ) {
 				Set( iGene1, vecveciGenes[ iS1 ][ iG2 ], 1 );
 			for( iS2 = ( iS1 + 1 ); iS2 < Slim.GetSlims( ); ++iS2 )
 				for( iG2 = 0; iG2 < Slim.GetGenes( iS2 ); ++iG2 ) {
+					iGene2 = vecveciGenes[ iS2 ][ iG2 ];
+					if( CMeta::IsNaN( Get( iGene1, iGene2 ) ) )
+						Set( iGene1, iGene2, 0 ); } } }
+
+	return true; }
+
+bool CDat::Open( const CSlim& SlimPos, const CSlim& SlimNeg ) {
+	set<string>				setstrGenes;
+	vector<string>			vecstrGenes;
+	size_t					iS1, iS2, iG1, iG2, iGene1, iGene2;
+	vector<vector<size_t> >	vecveciGenes;
+
+	Reset( );
+	SlimPos.GetGeneNames( vecstrGenes );
+	setstrGenes.insert( vecstrGenes.begin( ), vecstrGenes.end( ) );
+	vecstrGenes.clear( );
+	SlimNeg.GetGeneNames( vecstrGenes );
+	setstrGenes.insert( vecstrGenes.begin( ), vecstrGenes.end( ) );
+	vecstrGenes.clear( );
+	vecstrGenes.resize( setstrGenes.size( ) );
+	copy( setstrGenes.begin( ), setstrGenes.end( ), vecstrGenes.begin( ) );
+	if( !Open( vecstrGenes ) )
+		return false;
+
+	SlimCache( SlimPos, vecveciGenes );
+	for( iS1 = 0; iS1 < SlimPos.GetSlims( ); ++iS1 ) {
+		g_CatBioUtils.info( "CDat::Open( ) processing slim: %s",
+			SlimPos.GetSlim( iS1 ).c_str( ) );
+		for( iG1 = 0; iG1 < SlimPos.GetGenes( iS1 ); ++iG1 ) {
+			iGene1 = vecveciGenes[ iS1 ][ iG1 ];
+			for( iG2 = ( iG1 + 1 ); iG2 < SlimPos.GetGenes( iS1 ); ++iG2 )
+				Set( iGene1, vecveciGenes[ iS1 ][ iG2 ], 1 ); } }
+	vecveciGenes.clear( );
+	SlimCache( SlimNeg, vecveciGenes );
+	for( iS1 = 0; iS1 < SlimNeg.GetSlims( ); ++iS1 ) {
+		g_CatBioUtils.info( "CDat::Open( ) processing slim: %s",
+			SlimNeg.GetSlim( iS1 ).c_str( ) );
+		for( iG1 = 0; iG1 < SlimNeg.GetGenes( iS1 ); ++iG1 ) {
+			iGene1 = vecveciGenes[ iS1 ][ iG1 ];
+			for( iS2 = ( iS1 + 1 ); iS2 < SlimNeg.GetSlims( ); ++iS2 )
+				for( iG2 = 0; iG2 < SlimNeg.GetGenes( iS2 ); ++iG2 ) {
 					iGene2 = vecveciGenes[ iS2 ][ iG2 ];
 					if( CMeta::IsNaN( Get( iGene1, iGene2 ) ) )
 						Set( iGene1, iGene2, 0 ); } } }
@@ -271,6 +316,10 @@ bool CDat::Open( const vector<string>& vecstrGenes, const CDistanceMatrix& Dist 
 	return true; }
 
 size_t CDat::GetGene( const string& strGene ) const {
+
+	return CDatImpl::GetGene( strGene ); }
+
+size_t CDatImpl::GetGene( const string& strGene ) const {
 	size_t	i;
 
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )

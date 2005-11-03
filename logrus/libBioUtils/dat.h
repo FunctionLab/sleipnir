@@ -10,7 +10,6 @@
 namespace libBioUtils {
 
 class CGenes;
-class CSlim;
 
 class CDat : protected CDatImpl {
 public:
@@ -31,6 +30,7 @@ public:
 	bool Open( const char* );
 	bool Open( std::istream&, bool );
 	bool Open( const CSlim& );
+	bool Open( const CSlim&, const CSlim& );
 	bool Open( const std::vector<std::string>& );
 	bool Open( const std::vector<std::string>&, const CDistanceMatrix& );
 	bool OpenGenes( std::istream&, bool );

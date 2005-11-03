@@ -184,6 +184,8 @@ bool CSlim::Open( istream& istm, const IOntology* pOnto ) {
 	set<const CGene*>					setiGenes;
 	set<const CGene*>::const_iterator	iterGene;
 
+	g_CatBioUtils.info( "CSlim::Open( %s )", pOnto->GetID( ).c_str( ) );
+
 	Reset( pOnto );
 	while( istm.peek( ) != EOF ) {
 		i = m_vecveciTerms.size( );
@@ -199,8 +201,10 @@ bool CSlim::Open( istream& istm, const IOntology* pOnto ) {
 				if( m_vecstrSlims.size( ) <= i )
 					m_vecstrSlims.push_back( str );
 				else {
-					if( ( j = m_pOntology->GetNode( str ) ) == -1 )
-						return false;
+					if( ( j = m_pOntology->GetNode( str ) ) == -1 ) {
+						g_CatBioUtils.error( "CSlim::Open( %s ) unknown node: %s",
+							pOnto->GetID( ).c_str( ), str.c_str( ) );
+						return false; }
 					m_vecveciTerms[ i ].push_back( j ); } }
 		} }
 

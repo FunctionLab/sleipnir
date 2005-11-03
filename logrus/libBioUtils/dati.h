@@ -8,6 +8,8 @@
 
 namespace libBioUtils {
 
+class CSlim;
+
 class CDatImpl : protected CFile {
 protected:
 	typedef std::map<std::string,size_t>	TMapStrI;
@@ -33,6 +35,8 @@ protected:
 	void SaveBinary( std::ostream& ) const;
 	float Get( size_t, size_t ) const;
 	bool Set( size_t, size_t, float );
+	size_t GetGene( const std::string& ) const;
+	void SlimCache( const CSlim&, std::vector<std::vector<size_t> >& ) const;
 
 	CDistanceMatrix	m_Data;
 	TVecStr			m_vecstrGenes;

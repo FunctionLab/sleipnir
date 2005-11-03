@@ -68,4 +68,16 @@ void CMeta::Tokenize( const char* szString, vector<string>& vecstrTokens,
 			pc++;
 		vecstrTokens.push_back( strCur ); } }
 
+string CMeta::Basename( const char* szPath ) {
+	const char*	pchOne;
+	const char*	pchTwo;
+
+	if( pchOne = strrchr( szPath, '\\' ) )
+		pchOne++;
+	if( pchTwo = strrchr( szPath, '/' ) )
+		pchTwo++;
+
+	return ( pchOne ? ( pchTwo ? max( pchOne, pchTwo ) : pchOne ) :
+		( pchTwo ? pchTwo : szPath ) ); }
+
 }

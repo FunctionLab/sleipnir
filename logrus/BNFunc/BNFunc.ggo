@@ -5,6 +5,7 @@ purpose	"Functional Bayes net preparation"
 option	"input"		i	"Ontology slim file"	string	typestr="filename"	yes
 option	"output"	o	"Answer file"	string	typestr="filename"	yes
 section "Optional"
+option	"negatives"	I	"Negative slim file"	string	typestr="filename"
 option	"directory"	d	"Output directory"	string	typestr="directory"	default="."
 option	"kegg"		k	"KEGG ontology"	string	typestr="filename"
 option	"go_onto"	y	"GO ontology"	string	typestr="filename"

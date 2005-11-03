@@ -14,7 +14,7 @@ int main( int iArgs, char** aszArgs ) {
 	COntologyMIPS						MIPS;
 	const IOntology*					pOnto;
 	CDat								Dat;
-	CSlim								Slim;
+	CSlim								Slim, SlimNeg;
 	ofstream							ofsm;
 	size_t								i, j;
 	set<const CGene*>					setpGenes;
@@ -71,10 +71,20 @@ int main( int iArgs, char** aszArgs ) {
 
 	ifsmOnto.clear( );
 	ifsmOnto.open( sArgs.input_arg );
-	if( !( Slim.Open( ifsmOnto, pOnto ) && Dat.Open( Slim ) ) ) {
+	if( !Slim.Open( ifsmOnto, pOnto ) ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
 	ifsmOnto.close( );
+	if( sArgs.negatives_arg ) {
+		ifsmOnto.clear( );
+		ifsmOnto.open( sArgs.negatives_arg );
+		if( !( SlimNeg.Open( ifsmOnto, pOnto ) && Dat.Open( Slim, SlimNeg ) ) ) {
+			cerr << "Couldn't open: " << sArgs.negatives_arg << endl;
+			return 1; }
+		ifsmOnto.close( ); }
+	else if( !Dat.Open( Slim ) ) {
+		cerr << "Couldn't open: " << sArgs.input_arg << endl;
+		return 1; }
 
 	ofsm.open( sArgs.output_arg, ios_base::binary );
 	Dat.Save( ofsm, true );

@@ -410,14 +410,14 @@ void CParserConsole::PrintLocations( const vector<SLocation>& vecVisited,
 
 		if( pOnto = sLoc.m_pOnto ) {
 			if( sLoc.m_iNode == -1 ) {
+				PrintOntology( pOnto, '-' );
 				if( sArgs.m_fSibs ) {
-					PrintOntology( pOnto, '-' );
 					for( j = 0; j < pOnto->GetNodes( ); ++j )
 						if( !pOnto->GetParents( j ) )
 							PrintLink( pOnto, j, 'C', sArgs ); } }
 			else {
+				PrintLink( pOnto, sLoc.m_iNode, '-', sArgs );
 				if( sArgs.m_fSibs ) {
-					PrintLink( pOnto, sLoc.m_iNode, '-', sArgs );
 					for( j = 0; j < pOnto->GetParents( sLoc.m_iNode ); ++j )
 						PrintLink( pOnto, pOnto->GetParent( sLoc.m_iNode, j ), 'P', sArgs );
 					for( j = 0; j < pOnto->GetChildren( sLoc.m_iNode ); ++j )
@@ -429,10 +429,11 @@ void CParserConsole::PrintLocations( const vector<SLocation>& vecVisited,
 						vecpGenes.push_back( &pOnto->GetGene( sLoc.m_iNode, j ) );
 					if( sArgs.m_fSibs )
 						PrintGenes( vecpGenes ); } } }
-		else if( sArgs.m_fSibs ) {
+		else {
 			PrintOntology( NULL, '-' );
-			for( j = 0; j < m_vecpOntologies.size( ); ++j )
-				PrintOntology( m_vecpOntologies[ j ], 'O' ); } }
+			if( sArgs.m_fSibs )
+				for( j = 0; j < m_vecpOntologies.size( ); ++j )
+					PrintOntology( m_vecpOntologies[ j ], 'O' ); } }
 
 	if( sArgs.m_fGenes && !sArgs.m_fSibs )
 		PrintGenes( vecpGenes ); }
