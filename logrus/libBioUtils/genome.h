@@ -48,11 +48,29 @@ public:
 	bool Open( istream& );
 	bool Open( const std::vector<std::string>& );
 	void Filter( const CGenes& );
-	size_t GetGenes( ) const;
-	const CGene& GetGene( size_t ) const;
-	const CGenome& GetGenome( ) const;
 	size_t CountAnnotations( const IOntology*, size_t, bool = true ) const;
-	bool IsGene( const std::string& ) const;
+
+	size_t GetGenes( ) const {
+
+		return m_vecpGenes.size( ); }
+
+	bool IsGene( const string& strGene ) const {
+
+		return ( m_mapGenes.find( strGene ) != m_mapGenes.end( ) ); }
+
+	const CGenome& GetGenome( ) const {
+
+		return m_Genome; }
+
+	const CGene& GetGene( size_t iGene ) const {
+
+		return *m_vecpGenes[ iGene ]; }
+
+	size_t GetGene( const string& strGene ) const {
+		TMapStrI::const_iterator	iterGene;
+
+		return ( ( ( iterGene = m_mapGenes.find( strGene ) ) == m_mapGenes.end( ) ) ? -1 :
+			iterGene->second ); }
 };
 
 }

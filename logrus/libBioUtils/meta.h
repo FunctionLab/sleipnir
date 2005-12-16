@@ -1,6 +1,8 @@
 #ifndef META_H
 #define META_H
 
+#include <float.h>
+
 #include <vector>
 
 #include "metai.h"
@@ -14,11 +16,15 @@ public:
 	static void Startup( int, size_t = 0 );
 	static void Shutdown( );
 	static float GetNaN( );
-	static bool IsNaN( float );
 	static std::string Filename( const std::string&, char = '_' );
 	static std::string Basename( const char* );
 	static void Tokenize( const char*, std::vector<std::string>&, const char* = "\t",
 		bool = false );
+
+	static bool IsNaN( float d ) {
+
+//		return !!_isnan( d ); }
+		return !_finite( d ); }
 
 	template <class tType>
 	static void Permute( std::vector<tType>& vecItems,

@@ -280,24 +280,18 @@ bool CGenes::Open( istream& istm ) {
 	static const size_t	c_iBuffer	= 1024;
 	char	szBuf[ c_iBuffer ];
 
+	m_mapGenes.clear( );
 	m_vecpGenes.clear( );
 	while( istm.peek( ) != EOF ) {
 		istm.getline( szBuf, c_iBuffer - 1 );
-		m_vecpGenes.push_back( &m_Genome.AddGene( szBuf ) ); }
+		{
+			CGene*	pGene	= &m_Genome.AddGene( szBuf );
+
+			m_mapGenes[ pGene->GetName( ) ] = m_vecpGenes.size( );
+			m_vecpGenes.push_back( pGene );
+		} }
 
 	return true; }
-
-size_t CGenes::GetGenes( ) const {
-
-	return m_vecpGenes.size( ); }
-
-const CGene& CGenes::GetGene( size_t iGene ) const {
-
-	return *m_vecpGenes[ iGene ]; }
-
-const CGenome& CGenes::GetGenome( ) const {
-
-	return m_Genome; }
 
 size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKids ) const {
 	size_t	i, iRet;
@@ -311,9 +305,11 @@ size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKid
 bool CGenes::Open( const vector<string>& vecstrGenes ) {
 	size_t	i;
 
+	m_mapGenes.clear( );
 	m_vecpGenes.resize( vecstrGenes.size( ) );
-	for( i = 0; i < m_vecpGenes.size( ); ++i )
-		m_vecpGenes[ i ] = &m_Genome.AddGene( vecstrGenes[ i ] );
+	for( i = 0; i < m_vecpGenes.size( ); ++i ) {
+		m_mapGenes[ vecstrGenes[ i ] ] = i;
+		m_vecpGenes[ i ] = &m_Genome.AddGene( vecstrGenes[ i ] ); }
 
 	return true; }
 
@@ -324,21 +320,10 @@ void CGenes::Filter( const CGenes& Genes ) {
 	for( i = 0; i < Genes.GetGenes( ); ++i )
 		for( j = 0; j < iSize; ++j )
 			if( m_vecpGenes[ j ] == &Genes.GetGene( i ) ) {
+				m_mapGenes.erase( m_vecpGenes[ j ]->GetName( ) );
 				m_vecpGenes[ j ] = m_vecpGenes[ m_vecpGenes.size( ) - 1 ];
 				iSize--;
 				break; }
 	m_vecpGenes.resize( iSize ); }
-
-bool CGenes::IsGene( const string& strGene ) const {
-	size_t	i, iGene;
-
-	if( ( iGene = m_Genome.GetGene( strGene ) ) == -1 )
-		return false;
-
-	for( i = 0; i < m_vecpGenes.size( ); ++i )
-		if( m_vecpGenes[ i ] == &m_Genome.GetGene( iGene ) )
-			return true;
-
-	return false; }
 
 }

@@ -75,6 +75,15 @@ public:
 
 		return ( fBinary ? SaveBinary( ostm ) : SaveText( ostm ) ); }
 
+	void Clear( ) {
+		size_t	i;
+
+		if( !m_aaData )
+			return;
+
+		for( i = 0; i < m_iR; ++i )
+			memset( m_aaData[ i ], 0, sizeof(*m_aaData[ i ]) * m_iC ); }
+
 protected:
 	static const size_t	c_iBuffer	= 1024;
 

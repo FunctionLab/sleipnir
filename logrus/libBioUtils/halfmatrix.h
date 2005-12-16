@@ -35,6 +35,10 @@ public:
 		HalfIndex( iX, iY );
 		m_aaData[ iX ][ iY ] = Value; }
 
+	void Set( size_t iX, const tType* adValues ) {
+
+		memcpy( m_aaData[ iX ], adValues, sizeof(*m_aaData[ iX ]) * ( m_iSize - iX - 1 ) ); }
+
 	void Initialize( size_t iSize, const CHalfMatrix& Mat ) {
 
 		Initialize( iSize, Mat.m_aaData ); }

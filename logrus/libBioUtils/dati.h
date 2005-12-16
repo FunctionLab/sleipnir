@@ -5,6 +5,7 @@
 
 #include "halfmatrix.h"
 #include "file.h"
+#include "meta.h"
 
 namespace libBioUtils {
 
@@ -33,10 +34,25 @@ protected:
 	bool OpenBinary( std::istream& );
 	void SaveText( std::ostream& ) const;
 	void SaveBinary( std::ostream& ) const;
-	float Get( size_t, size_t ) const;
-	bool Set( size_t, size_t, float );
 	size_t GetGene( const std::string& ) const;
 	void SlimCache( const CSlim&, std::vector<std::vector<size_t> >& ) const;
+
+	float Get( size_t iX, size_t iY ) const {
+
+		return ( ( iX == iY ) ? CMeta::GetNaN( ) : m_Data.Get( iX, iY ) ); }
+
+	bool Set( size_t iX, size_t iY, float dValue ) {
+
+		if( iX == iY )
+			return false;
+
+		m_Data.Set( iX, iY, dValue );
+		return true; }
+
+	bool Set( size_t iX, const float* adValues ) {
+
+		m_Data.Set( iX, adValues );
+		return true; }
 
 	CDistanceMatrix	m_Data;
 	TVecStr			m_vecstrGenes;

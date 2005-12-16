@@ -30,10 +30,6 @@ float CMeta::GetNaN( ) {
 
 	return c_dNaN; }
 
-bool CMeta::IsNaN( float d ) {
-
-	return !_finite( d ); }
-
 string CMeta::Filename( const string& str, char cRepl ) {
 	size_t	i;
 	string	strRet;

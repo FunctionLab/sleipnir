@@ -418,26 +418,33 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 	return true; }
 
 void CBayesNetSmile::Randomize( ) {
-	int				i;
-	DSL_Dmatrix*	pMat;
+	int	i;
 
 	if( !m_fSmileNet )
 		return;
 
 	for( i = m_SmileNet.GetFirstNode( ); i != DSL_OUT_OF_RANGE;
-		i = m_SmileNet.GetNextNode( i ) ) {
-		pMat = m_SmileNet.GetNode( i )->Definition( )->GetMatrix( );
+		i = m_SmileNet.GetNextNode( i ) )
+		Randomize( i ); }
 
-		{
-			DSL_sysCoordinates	Coords( *pMat );
+void CBayesNetSmile::Randomize( size_t iNode ) {
+	DSL_Dmatrix*	pMat;
 
-			Coords.GoFirst( );
-			do
-				Coords.CheckedValue( ) = (float)rand( ) / RAND_MAX;
-			while( Coords.Next( ) != DSL_OUT_OF_RANGE );
-		}
+	if( !m_fSmileNet )
+		return;
 
-		pMat->Normalize( ); } }
+	pMat = m_SmileNet.GetNode( (int)iNode )->Definition( )->GetMatrix( );
+
+	{
+		DSL_sysCoordinates	Coords( *pMat );
+
+		Coords.GoFirst( );
+		do
+			Coords.CheckedValue( ) = (float)rand( ) / RAND_MAX;
+		while( Coords.Next( ) != DSL_OUT_OF_RANGE );
+	}
+
+	pMat->Normalize( ); }
 
 void CBayesNetSmile::Reverse( size_t iNode ) {
 	int				iCoords;
@@ -685,6 +692,8 @@ bool CBayesNetPNLImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 	return true; }
 
 void CBayesNetPNL::Randomize( ) { }
+
+void CBayesNetPNL::Randomize( size_t ) { }
 
 void CBayesNetPNL::Reverse( size_t ) { }
 

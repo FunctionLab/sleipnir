@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "dat.h"
-#include "meta.h"
 #include "annotation.h"
 #include "genome.h"
 
@@ -52,33 +51,6 @@ void CDatImpl::Reset( ) {
 
 	m_Data.Reset( );
 	m_vecstrGenes.clear( ); }
-
-const CDistanceMatrix& CDat::Get( ) const {
-
-	return m_Data; }
-
-float CDatImpl::Get( size_t iX, size_t iY ) const {
-
-	if( iX == iY )
-		return CMeta::GetNaN( );
-
-	return m_Data.Get( iX, iY ); }
-
-float CDat::Get( size_t iX, size_t iY ) const {
-
-	return CDatImpl::Get( iX, iY ); }
-
-bool CDatImpl::Set( size_t iX, size_t iY, float dValue ) {
-
-	if( iX == iY )
-		return false;
-
-	m_Data.Set( iX, iY, dValue );
-	return true; }
-
-bool CDat::Set( size_t iX, size_t iY, float dValue ) {
-
-	return CDatImpl::Set( iX, iY, dValue ); }
 
 void CDatImpl::SlimCache( const CSlim& Slim, vector<vector<size_t> >& vecveciGenes ) const {
 	size_t	iS, iG;
@@ -205,16 +177,17 @@ bool CDatImpl::OpenText( istream& istm ) {
 	return true; }
 
 bool CDatImpl::OpenBinary( istream& istm ) {
-	size_t	i, j;
-	float	dScore;
+	size_t	i;
+	float*	adScores;
 
 	if( !OpenGenes( istm, true ) )
 		return false;
 	m_Data.Initialize( m_vecstrGenes.size( ) );
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
-		for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j ) {
-			istm.read( (char*)&dScore, sizeof(dScore) );
-			Set( i, j, dScore ); }
+	adScores = new float[ m_vecstrGenes.size( ) - 1 ];
+	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
+		istm.read( (char*)adScores, sizeof(*adScores) * ( m_vecstrGenes.size( ) - i - 1 ) );
+		Set( i, adScores ); }
+	delete[] adScores;
 
 	return true; }
 
@@ -284,10 +257,6 @@ void CDatImpl::SaveBinary( ostream& ostm ) const {
 			dScore = Get( i, j );
 			ostm.write( (char*)&dScore, sizeof(dScore) ); } }
 
-size_t CDat::GetGenes( ) const {
-
-	return m_vecstrGenes.size( ); }
-
 bool CDat::Open( const vector<string>& vecstrGenes ) {
 	size_t	i, j;
 
@@ -327,14 +296,6 @@ size_t CDatImpl::GetGene( const string& strGene ) const {
 			return i;
 
 	return -1; }
-
-string CDat::GetGene( size_t iGene ) const {
-
-	return m_vecstrGenes[ iGene ]; }
-
-const CDistanceMatrix& CDat::GetData( ) const {
-
-	return m_Data; }
 
 bool CDat::Open( const char* szFile ) {
 	ifstream	ifsm;

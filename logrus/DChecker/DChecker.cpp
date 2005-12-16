@@ -17,8 +17,8 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info		sArgs;
 	size_t					i, j, iOne, iTwo, iGenes;
 	vector<size_t>			veciGenes, veciRec;
-	vector<vector<bool> >	vecvecfGenes;
-	vector<vector<size_t> >	vecveciResults;
+	CFullMatrix<bool>		MatGenes;
+	CFullMatrix<size_t>		MatResults;
 	ETFPN					eTFPN;
 	int						k, iMax;
 	float					dAnswer, dValue;
@@ -51,22 +51,16 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
 
-	vecveciResults.resize( (size_t)( ( sArgs.max_arg - sArgs.min_arg ) / sArgs.delta_arg ) );
 	veciGenes.resize( DatAnswers.GetGenes( ) );
-	vecvecfGenes.resize( veciGenes.size( ) );
-	for( i = 0; i < DatAnswers.GetGenes( ); ++i ) {
+	MatResults.Initialize( (size_t)( ( sArgs.max_arg - sArgs.min_arg ) / sArgs.delta_arg ),
+		4 );
+	MatGenes.Initialize( veciGenes.size( ), MatResults.GetRows( ) );
+	for( i = 0; i < DatAnswers.GetGenes( ); ++i )
 		veciGenes[ i ] = DatData.GetGene( DatAnswers.GetGene( i ) );
-		vecvecfGenes[ i ].resize( vecveciResults.size( ) ); }
-	for( i = 0; i < vecveciResults.size( ); ++i )
-		vecveciResults[ i ].resize( 4 );
 
 	for( iGenes = 0; !sArgs.inputs_num || ( iGenes < sArgs.inputs_num ); ++iGenes ) {
-		for( i = 0; i < vecveciResults.size( ); ++i )
-			for( j = 0; j < vecveciResults[ i ].size( ); ++j )
-				vecveciResults[ i ][ j ] = 0;
-		for( i = 0; i < vecvecfGenes.size( ); ++i )
-			for( j = 0; j < vecvecfGenes[ i ].size( ); ++j )
-				vecvecfGenes[ i ][ j ] = false;
+		MatResults.Clear( );
+		MatGenes.Clear( );
 
 		if( sArgs.inputs_num ) {
 			ifsm.clear( );
@@ -85,8 +79,8 @@ int main( int iArgs, char** aszArgs ) {
 				continue;
 			for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
 				if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-					CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) ||
-					CMeta::IsNaN( dValue = DatData.Get( iOne, iTwo ) ) )
+					CMeta::IsNaN( dValue = DatData.Get( iOne, iTwo ) ) ||
+					CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) )
 					continue;
 				if( GenesIn.GetGenes( ) &&
 					( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
@@ -98,21 +92,22 @@ int main( int iArgs, char** aszArgs ) {
 //'\t' << dAnswer << endl;
 
 				iMax = (int)( ( dValue - sArgs.min_arg ) / sArgs.delta_arg );
-				if( iMax > (int)vecveciResults.size( ) )
-					iMax = (int)vecveciResults.size( );
+				if( iMax > (int)MatResults.GetRows( ) )
+					iMax = (int)MatResults.GetRows( );
 				eTFPN = (ETFPN)!dAnswer;
 				for( k = 0; k < iMax; ++k ) {
-					vecveciResults[ k ][ eTFPN ]++;
-					vecvecfGenes[ i ][ k ] = vecvecfGenes[ j ][ k ] = true; }
+					MatResults.Get( k, eTFPN )++;
+					MatGenes.Set( i, k, true );
+					MatGenes.Set( j, k, true ); }
 				eTFPN = (ETFPN)( 2 + !eTFPN );
-				for( ; k < (int)vecveciResults.size( ); ++k )
-					vecveciResults[ k ][ eTFPN ]++; } }
+				for( ; k < (int)MatResults.GetRows( ); ++k )
+					MatResults.Get( k, eTFPN )++; } }
 
-		veciRec.resize( vecveciResults.size( ) );
+		veciRec.resize( MatResults.GetRows( ) );
 		for( i = 0; i < veciRec.size( ); ++i ) {
 			veciRec[ i ] = 0;
-			for( j = 0; j < vecvecfGenes.size( ); ++j )
-				if( vecvecfGenes[ j ][ i ] )
+			for( j = 0; j < MatGenes.GetRows( ); ++j )
+				if( MatGenes.Get( j, i ) )
 					veciRec[ i ]++; }
 
 		if( sArgs.inputs_num ) {
@@ -123,11 +118,11 @@ int main( int iArgs, char** aszArgs ) {
 			postm = &cout;
 
 		*postm << "Cut\tGenes\tTP\tFP\tTN\tFN" << endl;
-		for( i = 0; i < vecveciResults.size( ); ++i ) {
+		for( i = 0; i < MatResults.GetRows( ); ++i ) {
 			*postm << ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) << '\t' <<
 				(unsigned int)veciRec[ i ];
-			for( j = 0; j < vecveciResults[ i ].size( ); ++j )
-				*postm << '\t' << (unsigned int)vecveciResults[ i ][ j ];
+			for( j = 0; j < MatResults.GetColumns( ); ++j )
+				*postm << '\t' << (unsigned int)MatResults.Get( i, j );
 			*postm << endl; }
 
 		if( sArgs.inputs_num )

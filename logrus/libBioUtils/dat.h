@@ -21,12 +21,7 @@ public:
 	};
 
 	const std::vector<std::string>& GetGeneNames( ) const;
-	size_t GetGenes( ) const;
 	size_t GetGene( const std::string& ) const;
-	std::string GetGene( size_t ) const;
-	float Get( size_t, size_t ) const;
-	const CDistanceMatrix& Get( ) const;
-	bool Set( size_t, size_t, float );
 	bool Open( const char* );
 	bool Open( std::istream&, bool );
 	bool Open( const CSlim& );
@@ -35,9 +30,32 @@ public:
 	bool Open( const std::vector<std::string>&, const CDistanceMatrix& );
 	bool OpenGenes( std::istream&, bool );
 	void Save( std::ostream&, bool ) const;
-	const CDistanceMatrix& GetData( ) const;
 	void Normalize( );
 	void FilterGenes( const CGenes&, EFilter );
+
+	float Get( size_t iX, size_t iY ) const {
+
+		return CDatImpl::Get( iX, iY ); }
+
+	size_t GetGenes( ) const {
+
+		return m_vecstrGenes.size( ); }
+
+	const CDistanceMatrix& Get( ) const {
+
+		return m_Data; }
+
+	bool Set( size_t iX, size_t iY, float dValue ) {
+
+		return CDatImpl::Set( iX, iY, dValue ); }
+
+	string GetGene( size_t iGene ) const {
+
+		return m_vecstrGenes[ iGene ]; }
+
+	const CDistanceMatrix& GetData( ) const {
+
+		return m_Data; }
 };
 
 }

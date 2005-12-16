@@ -93,7 +93,7 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 	for( i = 0; i < Dat.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 			for( k = 0; k < Dataset.GetExperiments( ); ++k )
-				if( Dataset.GetDiscrete( i, j, k ) ) {
+				if( Dataset.GetDiscrete( i, j, k ) != -1 ) {
 					Dat.Set( i, j, 1 );
 					break; }
 

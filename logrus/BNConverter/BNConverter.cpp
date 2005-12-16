@@ -75,7 +75,8 @@ int main( int iArgs, char** aszArgs ) {
 			pNet->Learn( pData, sArgs.iterations_arg, !!sArgs.zero_flag ); }
 
 	if( sArgs.murder_given ) {
-		pNet->Reverse( sArgs.murder_arg );
+		pNet->Randomize( sArgs.murder_arg );
+//		pNet->Reverse( sArgs.murder_arg );
 		pNet->Save( sArgs.output_arg ); }
 
 	if( sArgs.eval_train_arg && ( sArgs.test_arg < 1 ) ) {

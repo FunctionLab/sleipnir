@@ -45,10 +45,13 @@ protected:
 
 class CGenesImpl {
 protected:
+	typedef std::map<std::string,size_t>	TMapStrI;
+
 	CGenesImpl( CGenome& );
 
 	CGenome&			m_Genome;
 	std::vector<CGene*>	m_vecpGenes;
+	TMapStrI			m_mapGenes;
 };
 
 }

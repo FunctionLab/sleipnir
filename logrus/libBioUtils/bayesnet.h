@@ -20,6 +20,7 @@ public:
 	virtual std::vector<std::string> GetNodes( ) const = 0;
 	virtual bool IsContinuous( ) const = 0;
 	virtual void Randomize( ) = 0;
+	virtual void Randomize( size_t ) = 0;
 	virtual void Reverse( size_t ) = 0;
 };
 
@@ -35,6 +36,7 @@ public:
 	std::vector<std::string> GetNodes( ) const;
 	bool IsContinuous( ) const;
 	void Randomize( );
+	void Randomize( size_t );
 	void Reverse( size_t );
 
 	bool Convert( CBayesNetPNL& ) const;
@@ -52,6 +54,7 @@ public:
 	std::vector<std::string> GetNodes( ) const;
 	bool IsContinuous( ) const;
 	void Randomize( );
+	void Randomize( size_t );
 	void Reverse( size_t );
 
 	bool Convert( CBayesNetSmile& ) const;
