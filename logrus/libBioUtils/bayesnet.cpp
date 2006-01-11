@@ -66,7 +66,7 @@ bool CBayesNetSmileImpl::LearnGrouped( const IDataset* pData, size_t iIterations
 
 	for( i = 0; i < pData->GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
-			if( !pData->IsExample( i, j ) )
+			if( !pData->IsExample( i, j ) || ( pData->GetDiscrete( i, j, 0 ) == -1 ) )
 				continue;
 			strCur = EncodeDatum( pData, i, j );
 			if( ( iterDatum = mapData.find( strCur ) ) == mapData.end( ) )
@@ -135,7 +135,7 @@ bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIteratio
 				g_CatBioUtils.notice( "CBayesNetSmile::Learn( %d, %d ) iteration %d, gene %d/%d",
 					iIterations, fZero, iIter, i, pData->GetGenes( ) );
 			for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
-				if( !pData->IsExample( i, j ) )
+				if( !pData->IsExample( i, j ) || ( pData->GetDiscrete( i, j, 0 ) == -1 ) )
 					continue;
 
 				m_SmileNet.ClearAllEvidence( );
@@ -378,7 +378,6 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 				continue;
 			if( m_fGroup ) {
 				strCur = EncodeDatum( pData, i, j );
-//cerr << (int)i << '\t' << (int)j << '\t' << strCur << endl;
 				if( ( iterDatum = mapData.find( strCur ) ) != mapData.end( ) ) {
 					if( pDatOut )
 						pDatOut->Set( i, j, iterDatum->second );

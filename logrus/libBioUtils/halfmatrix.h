@@ -25,6 +25,10 @@ public:
 		m_iSize = 0;
 		m_aaData = NULL; }
 
+	const tType* Get( size_t iX ) const {
+
+		return m_aaData[ iX ]; }
+
 	tType& Get( size_t iX, size_t iY ) const {
 
 		HalfIndex( iX, iY );

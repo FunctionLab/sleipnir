@@ -39,7 +39,7 @@ public:
 
 	size_t GetGenes( ) const {
 
-		return m_vecstrGenes.size( ); }
+		return CDatImpl::GetGenes( ); }
 
 	const CDistanceMatrix& Get( ) const {
 

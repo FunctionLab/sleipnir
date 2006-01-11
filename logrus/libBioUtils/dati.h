@@ -54,6 +54,10 @@ protected:
 		m_Data.Set( iX, adValues );
 		return true; }
 
+	size_t GetGenes( ) const {
+
+		return m_vecstrGenes.size( ); }
+
 	CDistanceMatrix	m_Data;
 	TVecStr			m_vecstrGenes;
 };

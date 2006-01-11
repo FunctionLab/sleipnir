@@ -182,10 +182,10 @@ bool CDatImpl::OpenBinary( istream& istm ) {
 
 	if( !OpenGenes( istm, true ) )
 		return false;
-	m_Data.Initialize( m_vecstrGenes.size( ) );
-	adScores = new float[ m_vecstrGenes.size( ) - 1 ];
-	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
-		istm.read( (char*)adScores, sizeof(*adScores) * ( m_vecstrGenes.size( ) - i - 1 ) );
+	m_Data.Initialize( GetGenes( ) );
+	adScores = new float[ GetGenes( ) - 1 ];
+	for( i = 0; ( i + 1 ) < GetGenes( ); ++i ) {
+		istm.read( (char*)adScores, sizeof(*adScores) * ( GetGenes( ) - i - 1 ) );
 		Set( i, adScores ); }
 	delete[] adScores;
 
@@ -241,8 +241,8 @@ void CDatImpl::SaveText( ostream& ostm ) const {
 				ostm << m_vecstrGenes[ i ] << '\t' << m_vecstrGenes[ j ] << '\t' << d << endl; }
 
 void CDatImpl::SaveBinary( ostream& ostm ) const {
-	size_t	i, j;
-	float	dScore;
+	size_t			i, j;
+	const float*	pd;
 
 	i = m_vecstrGenes.size( );
 	ostm.write( (char*)&i, sizeof(i) );
@@ -252,10 +252,9 @@ void CDatImpl::SaveBinary( ostream& ostm ) const {
 			ostm.put( m_vecstrGenes[ i ][ j ] ); }
 		ostm.put( 0 );
 		ostm.put( 0 ); }
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
-		for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j ) {
-			dScore = Get( i, j );
-			ostm.write( (char*)&dScore, sizeof(dScore) ); } }
+	for( i = 0; ( i + 1 ) < GetGenes( ); ++i ) {
+		pd = m_Data.Get( i );
+		ostm.write( (const char*)pd, sizeof(*pd) * ( GetGenes( ) - i - 1 ) ); } }
 
 bool CDat::Open( const vector<string>& vecstrGenes ) {
 	size_t	i, j;

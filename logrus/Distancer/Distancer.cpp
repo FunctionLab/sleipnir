@@ -62,6 +62,26 @@ int main( int iArgs, char** aszArgs ) {
 			Dist.Set( i, j, (float)pMeasure->Measure( PCL.Get( i ), PCL.GetExperiments( ),
 				PCL.Get( j ), PCL.GetExperiments( ) ) ); }
 
+/*
+	if( sArgs.zscore_flag ) {
+		size_t	iN;
+		float	d, dAve, dDev;
+
+		dAve = dDev = 0;
+		for( iN = i = 0; i < Dist.GetSize( ); ++i )
+			for( j = ( i + 1 ); j < Dist.GetSize( ); ++j )
+				if( !CMeta::IsNaN( d = Dist.Get( i, j ) ) ) {
+					iN++;
+					dAve += d;
+					dDev += d * d; }
+		dAve /= iN;
+		dDev = sqrt( ( dDev / iN ) - ( dAve * dAve ) );
+		for( i = 0; i < Dist.GetSize( ); ++i )
+			for( j = ( i + 1 ); j < Dist.GetSize( ); ++j )
+				if( !CMeta::IsNaN( d = Dist.Get( i, j ) ) )
+					Dist.Set( i, j, ( d - dAve ) / dDev ); }
+*/
+
 	Dat.Open( PCL.GetGeneNames( ), Dist );
 	if( sArgs.normalize_flag )
 		Dat.Normalize( );

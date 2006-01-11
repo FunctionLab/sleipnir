@@ -71,6 +71,56 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 	return 0; }
 
 int MainDATs( const gengetopt_args_info& sArgs ) {
+	CDataSubset		Dataset;
+	CDat			Dat;
+	size_t			i, j, k, iSubset, iSubsets;
+	float			d, dMax;
+	vector<string>	vecstrFiles;
+	ofstream		ofsm;
+
+	if( !sArgs.inputs_num )
+		return 1;
+
+	vecstrFiles.resize( sArgs.inputs_num );
+	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
+	if( !Dataset.Initialize( vecstrFiles, sArgs.subset_arg ) ) {
+		cerr << "Couldn't open: " << vecstrFiles[ 0 ];
+		for( i = 1; i < vecstrFiles.size( ); ++i )
+			cerr << ", " << vecstrFiles[ i ];
+		cerr << endl;
+		return 1; }
+
+	Dat.Open( Dataset.GetGeneNames( ) );
+	iSubsets = ( Dataset.GetGenes( ) / sArgs.subset_arg ) + ( ( Dataset.GetGenes( ) %
+		sArgs.subset_arg ) ? 1 : 0 );
+	for( iSubset = 0; iSubset < iSubsets; ++iSubset ) {
+		cerr << "Opening subset " << (unsigned int)iSubset << "/" <<
+			(unsigned int)iSubsets << endl;
+		if( !Dataset.Open( iSubset * sArgs.subset_arg ) ) {
+			cerr << "Couldn't open subset " << (unsigned int)iSubset << endl;
+			return 1; }
+		for( i = 0; i < Dat.GetGenes( ); ++i ) {
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+				if( !Dataset.IsExample( i, j ) )
+					continue;
+				dMax = CMeta::GetNaN( );
+				for( k = 0; k < Dataset.GetExperiments( ); ++k )
+					if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) &&
+						( CMeta::IsNaN( dMax ) || ( d > dMax ) ) )
+						dMax = d;
+				Dat.Set( i, j, dMax ); } } }
+
+	if( sArgs.output_arg ) {
+		ofsm.open( sArgs.output_arg, ios_base::binary );
+		Dat.Save( ofsm, true );
+		ofsm.close( ); }
+	else {
+		Dat.Save( cout, false );
+		cout.flush( ); }
+
+	return 0; }
+
+int MainDATs2( const gengetopt_args_info& sArgs ) {
 	CDatasetCompact	Dataset;
 	CDat			Dat;
 	size_t			i, j, k;
