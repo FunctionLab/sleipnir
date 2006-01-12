@@ -2,10 +2,15 @@
 #define META_H
 
 #include <float.h>
+#include <math.h>
 
 #include <vector>
 
 #include "metai.h"
+
+#ifndef WIN32
+#define _finite	isfinite
+#endif // WIN32
 
 namespace libBioUtils {
 

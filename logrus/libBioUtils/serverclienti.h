@@ -1,6 +1,8 @@
 #ifndef SERVERCLIENTI_H
 #define SERVERCLIENTI_H
 
+#include "xml.h"
+
 #include <xercesc/dom/DOMBuilder.hpp>
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/util/XMLChar.hpp>
