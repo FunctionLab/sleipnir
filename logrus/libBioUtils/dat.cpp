@@ -2,6 +2,7 @@
 #include "dat.h"
 #include "annotation.h"
 #include "genome.h"
+#include "pstdint.h"
 
 namespace libBioUtils {
 
@@ -196,9 +197,10 @@ bool CDat::OpenGenes( istream& istm, bool fBinary ) {
 	return CDatImpl::OpenGenes( istm, fBinary ); }
 
 bool CDatImpl::OpenGenes( istream& istm, bool fBinary ) {
-	size_t	iCount, i;
-	string	strToken, strCache;
-	float	d;
+	size_t		i;
+	uint32_t	iCount;
+	string		strToken, strCache;
+	float		d;
 
 	Reset( );
 	if( fBinary ) {
@@ -242,10 +244,11 @@ void CDatImpl::SaveText( ostream& ostm ) const {
 
 void CDatImpl::SaveBinary( ostream& ostm ) const {
 	size_t			i, j;
+	uint32_t		iSize;
 	const float*	pd;
 
-	i = m_vecstrGenes.size( );
-	ostm.write( (char*)&i, sizeof(i) );
+	iSize = m_vecstrGenes.size( );
+	ostm.write( (char*)&iSize, sizeof(iSize) );
 	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
 		for( j = 0; j < m_vecstrGenes[ i ].length( ); ++j ) {
 			ostm.put( 0 );

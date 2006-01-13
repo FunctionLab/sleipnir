@@ -5,57 +5,58 @@
 
 namespace libBioUtils {
 
-size_t CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
-	float dDiameter, size_t iSize, bool fAutoc, vector<size_t>& veciClusters ) {
+uint16_t CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
+	float dDiameter, size_t iSize, bool fAutoc, vector<uint16_t>& vecsClusters ) {
 	CDistanceMatrix	Dist;
 
 	InitializeDistances( Data, pMeasure, fAutoc, Dist );
-	return QualityThresholdAll( Data, 2 * dDiameter, iSize, Dist, veciClusters ); }
+	return QualityThresholdAll( Data, 2 * dDiameter, iSize, Dist, vecsClusters ); }
 
-size_t CClustQTCImpl::QualityThresholdAll( const CDataMatrix& Data, float dDiameter,
-	size_t iSize, const CDistanceMatrix& Dist, vector<size_t>& veciClusters ) {
-	size_t			i, iCluster, iAssigned;
-	vector<size_t>	veciCur;
-	vector<bool>	vecfAssigned;
+uint16_t CClustQTCImpl::QualityThresholdAll( const CDataMatrix& Data, float dDiameter,
+	size_t iSize, const CDistanceMatrix& Dist, vector<uint16_t>& vecsClusters ) {
+	size_t				i, iAssigned;
+	uint16_t			sCluster;
+	vector<uint16_t>	vecsCur;
+	vector<bool>		vecfAssigned;
 
 	vecfAssigned.resize( Data.GetRows( ) );
 	for( i = 0; i < vecfAssigned.size( ); ++i )
 		vecfAssigned[ i ] = false;
 
-	veciClusters.resize( Data.GetRows( ) );
-	for( iAssigned = iCluster = 0; ; ++iCluster ) {
+	vecsClusters.resize( Data.GetRows( ) );
+	for( iAssigned = sCluster = 0; ; ++sCluster ) {
 		g_CatBioUtils.notice( "CClustQTCImpl::QualityThresholdAll( ) cluster %d, assigned %d/%d genes",
-			iCluster + 1, iAssigned, Data.GetRows( ) );
-		QualityThresholdLargest( Data, dDiameter, Dist, vecfAssigned, veciCur );
-		for( i = 0; i < veciCur.size( ); ++i )
-			veciClusters[ veciCur[ i ] ] = iCluster;
+			sCluster + 1, iAssigned, Data.GetRows( ) );
+		QualityThresholdLargest( Data, dDiameter, Dist, vecfAssigned, vecsCur );
+		for( i = 0; i < vecsCur.size( ); ++i )
+			vecsClusters[ vecsCur[ i ] ] = sCluster;
 
-		if( veciCur.size( ) < iSize ) {
+		if( vecsCur.size( ) < iSize ) {
 			for( i = 0; i < vecfAssigned.size( ); ++i )
 				if( !vecfAssigned[ i ] )
-					veciClusters[ i ] = iCluster;
+					vecsClusters[ i ] = sCluster;
 			break; }
 
-		iAssigned += veciCur.size( );
-		for( i = 0; i < veciCur.size( ); ++i )
-			vecfAssigned[ veciCur[ i ] ] = true;
+		iAssigned += vecsCur.size( );
+		for( i = 0; i < vecsCur.size( ); ++i )
+			vecfAssigned[ vecsCur[ i ] ] = true;
 
 		for( i = 0; i < vecfAssigned.size( ); ++i )
 			if( vecfAssigned[ i ] )
 				break;
 		if( i >= vecfAssigned.size( ) ) {
-			iCluster++;
+			sCluster++;
 			break; } }
 
-	return ( iCluster + 1 ); }
+	return ( sCluster + 1 ); }
 
 void CClustQTCImpl::QualityThresholdLargest( const CDataMatrix& Data, float dDiameter,
 	const CDistanceMatrix& Dist, const vector<bool>& vecfAssigned,
-	vector<size_t>& veciCluster ) {
-	vector<bool>	vecfClone;
-	size_t			i, iGene;
-	vector<size_t>	veciCur;
-	vector<float>	vecdDiameter;
+	vector<uint16_t>& veciCluster ) {
+	vector<bool>		vecfClone;
+	size_t				i, iGene;
+	vector<uint16_t>	vecsCur;
+	vector<float>		vecdDiameter;
 
 	veciCluster.clear( );
 	vecfClone.resize( vecfAssigned.size( ) );
@@ -67,17 +68,16 @@ void CClustQTCImpl::QualityThresholdLargest( const CDataMatrix& Data, float dDia
 		vecfClone[ iGene ] = true;
 
 		QualityThresholdGene( iGene, Data, dDiameter, Dist, vecfClone, vecdDiameter,
-			veciCur );
+			vecsCur );
 
-		if( veciCur.size( ) > veciCluster.size( ) ) {
-			veciCluster.resize( veciCur.size( ) );
+		if( vecsCur.size( ) > veciCluster.size( ) ) {
+			veciCluster.resize( vecsCur.size( ) );
 			for( i = 0; i < veciCluster.size( ); ++i )
-				veciCluster[ i ] = veciCur[ i ]; } } }
+				veciCluster[ i ] = vecsCur[ i ]; } } }
 
 void CClustQTCImpl::QualityThresholdGene( size_t iGene, const CDataMatrix& Data,
 	float dDiameter, const CDistanceMatrix& Dist, vector<bool>& vecfAssigned,
-	vector<float>& vecdDiameter,
-	vector<size_t>& veciCluster ) {
+	vector<float>& vecdDiameter, vector<uint16_t>& veciCluster ) {
 	size_t	iAdded, iLocal, iBest;
 	float	dBest;
 

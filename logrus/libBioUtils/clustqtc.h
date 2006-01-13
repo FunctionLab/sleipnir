@@ -7,8 +7,8 @@ namespace libBioUtils {
 
 class CClustQTC : CClustQTCImpl {
 public:
-	static size_t Cluster( const CDataMatrix&, const IMeasure*, float, size_t, bool,
-		std::vector<size_t>& );
+	static uint16_t Cluster( const CDataMatrix&, const IMeasure*, float, size_t, bool,
+		std::vector<uint16_t>& );
 };
 
 }

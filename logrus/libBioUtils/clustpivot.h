@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "halfmatrix.h"
+#include "pstdint.h"
 
 namespace libBioUtils {
 
@@ -11,7 +12,7 @@ class CDat;
 
 class CClustPivot {
 public:
-	static size_t Cluster( const CDistanceMatrix&, float, std::vector<size_t>& );
+	static uint16_t Cluster( const CDistanceMatrix&, float, std::vector<uint16_t>& );
 };
 
 }

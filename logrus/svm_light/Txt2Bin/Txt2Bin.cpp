@@ -76,7 +76,7 @@ int main( int iArgs, char** aszArgs ) {
 
 bool OpenDats( const CDataPair& Answers, const vector<string>& vecstrDATs, ostream& ostm,
 	const CGenes& GenesIn, const CGenes& GenesEx ) {
-	size_t			i, j, k, iPairs;
+	uint32_t		i, j, k, iPairs;
 	CBinaryMatrix	Pairs;
 	vector<size_t>	veciGenes;
 	float			d;
@@ -124,8 +124,8 @@ bool OpenDats( const CDataPair& Answers, const vector<string>& vecstrDATs, ostre
 						Pairs.Set( i, j, false ); } }
 
 	cerr << "OpenDats( ) storing answers" << endl;
-	k = 2 * sizeof(size_t);
-	ostm.seekp( 2 * sizeof(size_t), ios_base::beg );
+	k = 2 * sizeof(iPairs);
+	ostm.seekp( k, ios_base::beg );
 	for( iPairs = i = 0; i < Pairs.GetSize( ); ++i )
 		for( j = ( i + 1 ); j < Pairs.GetSize( ); ++j )
 			if( CMeta::IsNaN( d = Answers.Get( i, j ) ) )
@@ -141,7 +141,7 @@ bool OpenDats( const CDataPair& Answers, const vector<string>& vecstrDATs, ostre
 				iPairs++; }
 
 	ostm.seekp( 0, ios_base::beg );
-	i = vecstrDATs.size( );
+	i = (uint32_t)vecstrDATs.size( );
 	ostm.write( (char*)&i, sizeof(i) );
 	ostm.write( (char*)&iPairs, sizeof(iPairs) );
 	for( i = 0; i < vecstrDATs.size( ); ++i ) {
@@ -153,7 +153,7 @@ bool OpenDats( const CDataPair& Answers, const vector<string>& vecstrDATs, ostre
 		cerr << "OpenDats( ) storing " << vecstrDATs[ i ] << endl;
 		for( j = 0; j < veciGenes.size( ); ++j )
 			veciGenes[ j ] = Dat.GetGene( Answers.GetGene( j ) );
-		ostm.seekp( sizeof(float) + ( 2 * sizeof(size_t) ) + ( i * sizeof(float) ),
+		ostm.seekp( sizeof(float) + ( 2 * sizeof(iPairs) ) + ( i * sizeof(float) ),
 			ios_base::beg );
 		for( j = 0; j < Pairs.GetSize( ); ++j )
 			for( k = ( j + 1 ); k < Pairs.GetSize( ); ++k )
@@ -162,10 +162,10 @@ bool OpenDats( const CDataPair& Answers, const vector<string>& vecstrDATs, ostre
 						CMeta::IsNaN( d = Dat.Get( veciGenes[ j ], veciGenes[ k ] ) ) ) ?
 						0 : ( 2 * d ) - 1;
 					ostm.write( (char*)&d, sizeof(d) );
-					ostm.seekp( (ostream::off_type)( ( 3 * sizeof(size_t) ) +
+					ostm.seekp( (ostream::off_type)( ( 3 * sizeof(iPairs) ) +
 						( vecstrDATs.size( ) * sizeof(float) ) ), ios_base::cur ); } }
 	ostm.seekp( 0, ios_base::end );
-	i = Answers.GetGenes( );
+	i = (uint32_t)Answers.GetGenes( );
 	ostm.write( (char*)&i, sizeof(i) );
 	for( j = i = 0; i < Answers.GetGenes( ); ++i ) {
 		const string&	strGene	= Answers.GetGene( i );
@@ -183,7 +183,7 @@ bool OpenBin( istream& istm, ostream& ostm ) {
 	static const size_t	c_iSize	= 512;
 	char			sz[ c_iSize ];
 	char*			pc;
-	size_t			i, j, k, iWords, iDocs, iGenes;
+	uint32_t		i, j, k, iWords, iDocs, iGenes;
 	float*			ad;
 	vector<string>	vecstrGenes;
 
@@ -220,88 +220,3 @@ bool OpenBin( istream& istm, ostream& ostm ) {
 		cout << endl; }
 
 	return true; }
-
-//	return ( iWords ? Txt2Bin( szFile, iWords, cin ) : Bin2Txt( szFile ) ); }
-
-int Txt2Bin( const char* szOutput, unsigned int iWords, istream& istm ) {
-	char			szToken[ c_iLineLength ];
-	ofstream		ofsmOutput;
-	float			d;
-	char*			pc;
-	float*			adWords;
-	string			strComment;
-	size_t			i, iDocs;
-
-	adWords = new float[ iWords ];
-	ofsmOutput.open( szOutput, ios_base::out | ios_base::binary );
-	iDocs = 0;
-	ofsmOutput.write( (char*)&iWords, sizeof(iWords) );
-	ofsmOutput.write( (char*)&iDocs, sizeof(iDocs) );
-	istm >> szToken;
-	while( istm.peek( ) != EOF ) {
-		if( !szToken[ 0 ] )
-			break;
-		iDocs++;
-		d = (float)atof( szToken );
-		ofsmOutput.write( (char*)&d, sizeof(d) );
-		strComment = "";
-		memset( adWords, 0, sizeof(*adWords) * iWords );
-		for( istm >> szToken; szToken[ 0 ]; istm >> szToken ) {
-			if( szToken[ 0 ] == '#' ) {
-				strComment = szToken + 1;
-				istm.getline( szToken, c_iLineLength - 1 );
-				strComment += szToken;
-				continue; }
-			if( !( pc = strchr( szToken, ':' ) ) )
-				break;
-			*pc = 0;
-			adWords[ atoi( szToken ) - 1 ] = (float)atof( pc + 1 ); }
-		ofsmOutput.write( (char*)adWords, sizeof(*adWords) * iWords );
-		i = strComment.length( );
-		ofsmOutput.write( (char*)&i, sizeof(i) );
-		ofsmOutput.write( strComment.c_str( ), (streamsize)strComment.length( ) ); }
-		
-	delete[] adWords;
-
-	ofsmOutput.seekp( sizeof(iWords) );
-	ofsmOutput.write( (char*)&iDocs, sizeof(iDocs) );
-	ofsmOutput.close( );
-
-	return 0; }
-
-int Bin2Txt( const char* szInput ) {
-	char			szComment[ c_iLineLength ];
-	ifstream		ifsmInput;
-	unsigned int	iDoc, iWord, iWords, iDocs, i;
-	float			d;
-	float*			adWords;
-
-	ifsmInput.open( szInput, ios_base::binary );
-	ifsmInput.read( (char*)&iWords, sizeof(iWords) );
-	ifsmInput.read( (char*)&iDocs, sizeof(iDocs) );
-	adWords = new float[ iWords ];
-	for( iDoc = 0; iDoc < iDocs; ++iDoc ) {
-		ifsmInput.read( (char*)&d, sizeof(d) );
-		if( d == 1 )
-			cout << "+1";
-		else if( d == -1 )
-			cout << "-1";
-		else
-			cout << d;
-
-		ifsmInput.read( (char*)adWords, sizeof(*adWords) * iWords );
-		for( iWord = 0; iWord < iWords; ++iWord )
-			if( adWords[ iWord ] )
-				cout << '\t' << ( iWord + 1 ) << ':' << adWords[ iWord ];
-
-		ifsmInput.read( (char*)&i, sizeof(i) );
-		if( i ) {
-			ifsmInput.read( szComment, i );
-			szComment[ i ] = 0;
-			cout << "\t#" << szComment; }
-
-		cout << endl; }
-	delete[] adWords;
-	cout.flush( );
-
-	return 0; }

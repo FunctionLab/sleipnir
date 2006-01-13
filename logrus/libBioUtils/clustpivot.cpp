@@ -4,13 +4,14 @@
 
 namespace libBioUtils {
 
-size_t CClustPivot::Cluster( const CDistanceMatrix& Dist, float dCutoff,
-	vector<size_t>& veciClusters ) {
-	size_t			i, j, iRand, iTmp, iRet, iPivot;
+uint16_t CClustPivot::Cluster( const CDistanceMatrix& Dist, float dCutoff,
+	vector<uint16_t>& vecsClusters ) {
+	size_t			i, j, iRand, iTmp, iPivot;
+	uint16_t		sRet;
 	vector<size_t>	veciPerm;
 	float			d;
 
-	if( veciClusters.size( ) != Dist.GetSize( ) )
+	if( vecsClusters.size( ) != Dist.GetSize( ) )
 		return -1;
 
 	veciPerm.resize( Dist.GetSize( ) );
@@ -24,24 +25,24 @@ size_t CClustPivot::Cluster( const CDistanceMatrix& Dist, float dCutoff,
 		veciPerm[ i + iRand ] = iTmp; }
 
 	// reset the cluster data
-	for( i = 0; i < veciClusters.size( ); ++i )
-		veciClusters[ i ] = -1;
+	for( i = 0; i < vecsClusters.size( ); ++i )
+		vecsClusters[ i ] = -1;
 
-	for( iRet = i = 0; i < Dist.GetSize( ); ++i ) {
+	for( sRet = i = 0; i < Dist.GetSize( ); ++i ) {
 		iPivot = veciPerm[ i ];
 		// If gene was already clustered (or excluded), continue
-		if( veciClusters[ iPivot ] != -1 )
+		if( vecsClusters[ iPivot ] != -1 )
 			continue;
 
-		veciClusters[ iPivot ] = iRet++;
+		vecsClusters[ iPivot ] = sRet++;
 		for( j = 0; j < Dist.GetSize( ); ++j ) {
 			// check if already clustered (or thrown away)
-			if( veciClusters[ j ] != -1 )
+			if( vecsClusters[ j ] != -1 )
 				continue;
 
 		if( !CMeta::IsNaN( d = Dist.Get( iPivot, j ) ) && ( d > dCutoff ) )
-			veciClusters[ j ] = veciClusters[ iPivot ]; } }
+			vecsClusters[ j ] = vecsClusters[ iPivot ]; } }
 
-	return iRet; }
+	return sRet; }
 
 }

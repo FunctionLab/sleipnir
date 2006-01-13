@@ -3,6 +3,8 @@
 
 #include <sstream>
 
+#include "pstdint.h"
+
 namespace libBioUtils {
 
 template<class tType>
@@ -88,11 +90,14 @@ protected:
 	static const size_t	c_iBuffer	= 1024;
 
 	bool OpenBinary( std::istream& istm ) {
-		size_t	i, j;
+		size_t		i, j;
+		uint32_t	iSize;
 
 		Reset( );
-		istm.read( (char*)&m_iR, sizeof(m_iR) );
-		istm.read( (char*)&m_iC, sizeof(m_iC) );
+		istm.read( (char*)&iSize, sizeof(iSize) );
+		m_iR = iSize;
+		istm.read( (char*)&iSize, sizeof(iSize) );
+		m_iC = iSize;
 		m_fMemory = true;
 		m_aaData = new tType*[ m_iR ];
 		for( i = 0; i < m_iR; ++i ) {
@@ -140,10 +145,13 @@ protected:
 		return true; }
 
 	bool SaveBinary( std::ostream& ostm ) const {
-		size_t	i, j;
+		size_t		i, j;
+		uint32_t	iSize;
 
-		ostm.write( (const char*)&m_iR, sizeof(m_iR) );
-		ostm.write( (const char*)&m_iC, sizeof(m_iC) );
+		iSize = (uint32_t)m_iR;
+		ostm.write( (const char*)&iSize, sizeof(iSize) );
+		iSize = (uint32_t)m_iC;
+		ostm.write( (const char*)&iSize, sizeof(iSize) );
 		for( i = 0; i < m_iR; ++i )
 			for( j = 0; j < m_iC; ++j )
 				ostm.write( (const char*)&m_aaData[ i ][ j ], sizeof(m_aaData[ i ][ j ]) );

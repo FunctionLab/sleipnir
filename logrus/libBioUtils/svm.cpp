@@ -377,7 +377,7 @@ bool CSVMImpl::EvaluateFile( const char* szFile, CDat& DatOut ) const {
 	char*			pc;
 	ifstream		ifsm;
 	vector<string>	vecstrGenes;
-	size_t			i, j, k, iDocs, iWords, iGenes;
+	uint32_t		i, j, k, iDocs, iWords, iGenes;
 	float*			ad;
 	DOC*			pDoc;
 
@@ -387,7 +387,7 @@ bool CSVMImpl::EvaluateFile( const char* szFile, CDat& DatOut ) const {
 	ifsm.read( (char*)&iWords, sizeof(iWords) );
 	ifsm.read( (char*)&iDocs, sizeof(iDocs) );
 	ifsm.seekg( iDocs * ( ( ( iWords + 1 ) * sizeof(float) ) +
-		( 3 * sizeof(size_t) ) ), ios_base::cur );
+		( 3 * sizeof(iDocs) ) ), ios_base::cur );
 	ifsm.read( (char*)&iGenes, sizeof(iGenes) );
 	vecstrGenes.resize( iGenes );
 	for( i = 0; i < iGenes; ++i ) {
@@ -404,7 +404,7 @@ bool CSVMImpl::EvaluateFile( const char* szFile, CDat& DatOut ) const {
 	asWords[ i ].wnum = 0;
 
 	ad = new float[ iWords + 1 ];
-	ifsm.seekg( 2 * sizeof(size_t), ios_base::beg );
+	ifsm.seekg( 2 * sizeof(iDocs), ios_base::beg );
 	for( i = 0; i < iDocs; ++i ) {
 		if( !( i % 1000 ) )
 			g_CatBioUtils.notice( "CSVMImpl::EvaluateFile( %s ) pair %d/%d", szFile, i,
