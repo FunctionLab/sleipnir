@@ -330,6 +330,15 @@ void CDat::Normalize( ) {
 			for( j = ( i + 1 ); j < GetGenes( ); ++j )
 				Set( i, j, ( Get( i, j ) - dMin ) / dMax ); }
 
+void CDat::Invert( ) {
+	size_t	i, j;
+	float	d;
+
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) )
+				Set( i, j, 1 - d ); }
+
 void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt ) {
 	size_t			i, j;
 	vector<bool>	vecfGenes;

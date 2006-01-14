@@ -6,6 +6,8 @@
 #pragma warning (default: 4244 4267)
 #include <smile.h>
 
+#include "dataset.h"
+
 namespace libBioUtils {
 
 class CBayesNetPNL;
@@ -14,8 +16,8 @@ class CBayesNetImpl {
 protected:
 	CBayesNetImpl( bool );
 
-	static string EncodeDatum( const IDataset*, size_t, size_t );
-	static void DecodeDatum( const string&, std::vector<size_t>& );
+	static std::string EncodeDatum( const IDataset*, size_t, size_t );
+	static void DecodeDatum( const std::string&, std::vector<size_t>& );
 
 	bool	m_fGroup;
 };

@@ -191,7 +191,7 @@ bool OpenBin( istream& istm, ostream& ostm ) {
 	istm.read( (char*)&iDocs, sizeof(iDocs) );
 
 	istm.seekg( (istream::off_type)( iDocs * ( ( ( iWords + 1 ) * sizeof(float) ) +
-		( 3 * sizeof(size_t) ) ) ), ios_base::cur );
+		( 3 * sizeof(iWords) ) ) ), ios_base::cur );
 	istm.read( (char*)&iGenes, sizeof(iGenes) );
 	vecstrGenes.resize( iGenes );
 	for( i = 0; i < vecstrGenes.size( ); ++i ) {
@@ -200,7 +200,7 @@ bool OpenBin( istream& istm, ostream& ostm ) {
 			if( !*pc )
 				break; }
 		vecstrGenes[ i ] = sz; }
-	istm.seekg( 2 * sizeof(size_t), ios_base::beg );
+	istm.seekg( 2 * sizeof(iWords), ios_base::beg );
 
 	ad = new float[ iWords + 1 ];
 	for( i = 0; i < iDocs; ++i ) {
@@ -209,7 +209,7 @@ bool OpenBin( istream& istm, ostream& ostm ) {
 		for( j = 1; j <= iWords; ++j )
 			cout << '\t' << (unsigned int)j << ':' << ad[ j ];
 		istm.read( (char*)&j, sizeof(j) );
-		if( j == ( 2 * sizeof(size_t) ) ) {
+		if( j == ( 2 * sizeof(iWords) ) ) {
 			istm.read( (char*)&j, sizeof(j) );
 			istm.read( (char*)&k, sizeof(k) );
 			cout << " # " << vecstrGenes[ j ] << '\t' << vecstrGenes[ k ]; }

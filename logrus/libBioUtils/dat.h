@@ -31,6 +31,7 @@ public:
 	bool OpenGenes( std::istream&, bool );
 	void Save( std::ostream&, bool ) const;
 	void Normalize( );
+	void Invert( );
 	void FilterGenes( const CGenes&, EFilter );
 
 	float Get( size_t iX, size_t iY ) const {
@@ -49,7 +50,7 @@ public:
 
 		return CDatImpl::Set( iX, iY, dValue ); }
 
-	string GetGene( size_t iGene ) const {
+	std::string GetGene( size_t iGene ) const {
 
 		return m_vecstrGenes[ iGene ]; }
 

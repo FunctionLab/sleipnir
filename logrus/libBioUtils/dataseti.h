@@ -20,7 +20,7 @@ protected:
 
 	size_t OpenMax( const char*, const std::vector<std::string>&, bool,
 		std::vector<std::string>&, std::set<std::string>* = NULL );
-	bool OpenGenes( istream&, bool, std::set<std::string>& ) const;
+	bool OpenGenes( std::istream&, bool, std::set<std::string>& ) const;
 	bool OpenGenes( const std::vector<std::string>& );
 
 	bool IsHidden( size_t ) const;

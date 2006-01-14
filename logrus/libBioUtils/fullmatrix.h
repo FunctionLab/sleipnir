@@ -168,7 +168,7 @@ protected:
 			ostm << m_aaData[ i ][ 0 ];
 			for( j = 1; j < m_iC; ++j )
 				ostm << '\t' << m_aaData[ i ][ j ];
-			ostm << endl; }
+			ostm << std::endl; }
 
 		return true; }
 
