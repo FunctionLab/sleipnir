@@ -17,9 +17,9 @@ protected:
 	static const char*	c_szTimeout;
 	static CServer*		s_pServer;
 
-#ifndef WIN32
+#ifndef _MSC_VER
 	static void Alarm( int );
-#endif // WIN32
+#endif // _MSC_VER
 
 	CPropertyFile	m_Config;
 	int				m_iPort;

@@ -8,9 +8,9 @@
 
 #include "metai.h"
 
-#ifndef WIN32
+#ifndef _MSC_VER
 #define _finite	isfinite
-#endif // WIN32
+#endif // _MSC_VER
 
 namespace libBioUtils {
 
@@ -28,7 +28,6 @@ public:
 
 	static bool IsNaN( float d ) {
 
-//		return !!_isnan( d ); }
 		return !_finite( d ); }
 
 	template <class tType>

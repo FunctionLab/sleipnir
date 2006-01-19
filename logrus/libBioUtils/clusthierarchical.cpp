@@ -76,7 +76,7 @@ string CHierarchyImpl::GetSave( ) const {
 	char	achBuf[ 16 ];
 
 	strRet = IsGene( ) ? "GENE" : "NODE";
-	sprintf( achBuf, "%d", m_iID );
+	sprintf_s( achBuf, "%d", m_iID );
 	strRet += achBuf;
 
 	return strRet; }

@@ -10,9 +10,9 @@ CServer*	CServerImpl::s_pServer		= NULL;
 
 bool CServer::Initialize( const char* szConfig, IServerClient* pClient ) {
 	SVariant			Var;
-#ifndef WIN32
+#ifndef _MSC_VER
 	struct sigaction	Sigact;
-#endif // WIN32
+#endif // _MSC_VER
 
 	m_pClient = pClient;
 	if( !m_Config.Open( szConfig ) )
@@ -28,27 +28,27 @@ bool CServer::Initialize( const char* szConfig, IServerClient* pClient ) {
 		return false;
 	m_iTimeout = Var.m_i;
 
-#ifndef WIN32
+#ifndef _MSC_VER
 	Sigact.sa_handler = Alarm;
 	memset( &Sigact.sa_mask, 0, sizeof(Sigact.sa_mask) );
 	Sigact.sa_flags = 0;
 	sigaction( SIGALRM, &Sigact, NULL );
-#endif // WIN32
+#endif // _MSC_VER
 
 	return true; }
 
-#ifndef WIN32
+#ifndef _MSC_VER
 void CServerImpl::Alarm( int iSig ) { }
-#endif // WIN32
+#endif // _MSC_VER
 
 bool CServer::Start( ) {
 	sockaddr_in	Addr;
 	char		cOn;
 
-#ifdef WIN32
+#ifdef _MSC_VER
 	WSADATA		sWSA;
 	WSAStartup( MAKEWORD(2, 0), &sWSA );
-#endif // WIN32
+#endif // _MSC_VER
 
 	m_fStop = false;
 	m_iSocket = socket( PF_INET, SOCK_STREAM, 0 );
@@ -61,16 +61,25 @@ bool CServer::Start( ) {
 	s_pServer = this;
 	if( bind( m_iSocket, (const sockaddr*)&Addr, sizeof(Addr) ) ||
 		listen( m_iSocket, INT_MAX ) ) {
+#ifdef _MSC_VER
+		{
+			char	acError[ 1024 ];
+
+			strerror_s( acError, ARRAYSIZE(acError) - 1, errno );
+			g_CatBioUtils.error( "CServer::Start( ) bind failed: %s", acError );
+		}
+#else // _MSC_VER
 		g_CatBioUtils.error( "CServer::Start( ) bind failed: %s", strerror( errno ) );
+#endif // _MSC_VER
 		return false; }
 
 	g_CatBioUtils.notice( "CServer::Start( ) bound to port %d", m_iPort );
 	Listen( );
 	g_CatBioUtils.info( "CServer::Start( ) preparing to shutdown..." );
 
-#ifdef WIN32
+#ifdef _MSC_VER
 	WSACleanup( );
-#endif // WIN32
+#endif // _MSC_VER
 
 	return true; }
 
@@ -80,23 +89,23 @@ void CServer::Listen( ) {
 	IServerClient*	pClient;
 	pthread_t		thrdClient;
 	sockaddr_in		Addr;
-#ifndef WIN32
+#ifndef _MSC_VER
 	itimerval		Time;
 
 	memset( &Time, 0, sizeof(Time) );
-#endif // WIN32
+#endif // _MSC_VER
 	while( !m_fStop ) {
-#ifndef WIN32
+#ifndef _MSC_VER
 		Time.it_value.tv_usec = 1000 * m_iTimeout;
 		setitimer( ITIMER_REAL, &Time, NULL );
 		Time.it_value.tv_usec = 0;
-#endif // WIN32
+#endif // _MSC_VER
 		iSize = sizeof(Addr);
 		if( ( iClient = accept( m_iSocket, (sockaddr*)&Addr, &iSize ) ) == -1 )
 			continue;
-#ifndef WIN32
+#ifndef _MSC_VER
 		setitimer( ITIMER_REAL, &Time, NULL );
-#endif // WIN32
+#endif // _MSC_VER
 
 		pClient = m_pClient->NewInstance( );
 		pClient->SetParent( this );

@@ -1,3 +1,4 @@
+<<<<<<< .mine
 #include "stdafx.h"
 #include "cmdline.h"
 
@@ -77,7 +78,6 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.murder_given ) {
 		pNet->Randomize( sArgs.murder_arg );
-//		pNet->Reverse( sArgs.murder_arg );
 		pNet->Save( sArgs.output_arg ); }
 
 	if( sArgs.eval_train_arg && ( sArgs.test_arg < 1 ) ) {

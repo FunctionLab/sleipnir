@@ -164,7 +164,7 @@ char* CompletionCommands( const char* szText, int iState ) {
 		if( !( szCur = CParser::GetCommand( iTry++ ) ) )
 			break;
 		if( !strncmp( szCur, szText, iLen ) )
-			return strdup( szCur ); }
+			return _strdup( szCur ); }
 
 	return NULL; }
 
@@ -196,7 +196,7 @@ char* CompletionMembers( const char* szText, int iState ) {
 	while( iTry < vecstrTries.size( ) )
 		if( !strncmp( szReal, vecstrTries[ iTry++ ].c_str( ), iLen ) ) {
 			rl_completion_append_character = ( iTry <= iLinks ) ? '/' : ' ';
-			return strdup( ( strBase + vecstrTries[ iTry - 1 ] ).c_str( ) ); }
+			return _strdup( ( strBase + vecstrTries[ iTry - 1 ] ).c_str( ) ); }
 
 	return NULL; }
 

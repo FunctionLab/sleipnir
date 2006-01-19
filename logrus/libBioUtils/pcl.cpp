@@ -258,7 +258,7 @@ void CPCL::Open( const vector<size_t>& veciGenes, const vector<string>& vecstrGe
 	m_vecstrGenes.resize( vecstrGenes.size( ) );
 	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
 		m_vecstrGenes[ i ] = "GENE";
-		sprintf( ac, "%d", veciGenes[ i ] );
+		sprintf_s( ac, "%d", veciGenes[ i ] );
 		m_vecstrGenes[ i ] += ac; }
 	m_vecstrExperiments.resize( vecstrExperiments.size( ) );
 	for( i = 0; i < m_vecstrExperiments.size( ); ++i )

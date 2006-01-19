@@ -11,11 +11,11 @@ void CMeta::Startup( int iVerbosity, size_t iRand ) {
 	OstreamAppender*	pAppOstm	= new OstreamAppender( "cerr", &cerr );
 
 	srand( ( iRand == -1 ) ?
-#ifdef WIN32
+#ifdef _MSC_VER
 		GetTickCount( )
 #else
 		time( NULL )
-#endif // WIN32
+#endif // _MSC_VER
 		: iRand );
 	pAppOstm->setLayout( new BasicLayout( ) );
 	CatBioUtils.setAdditivity( false );

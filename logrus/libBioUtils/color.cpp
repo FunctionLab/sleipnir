@@ -73,7 +73,7 @@ CColor& CColor::operator=( const CColor& Color ) {
 string CColor::ToRGB( ) const {
 	char	ac[ 7 ];
 
-	sprintf( ac, "%02x%02x%02x", m_acRGB[ 0 ], m_acRGB[ 1 ], m_acRGB[ 2 ] );
+	sprintf_s( ac, "%02x%02x%02x", m_acRGB[ 0 ], m_acRGB[ 1 ], m_acRGB[ 2 ] );
 
 	return ac; }
 

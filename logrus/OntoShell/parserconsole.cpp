@@ -122,11 +122,11 @@ void CParserConsole::PrintAnnotation( const IOntology* pOnto, size_t iNode,
 	PrintSpaces( c_iWidthID - strID.size( ) );
 	if( dP >= 0 ) {
 		iWidth -= c_iWidthGenes;
-		sprintf( szBuf, "%g", dP );
+		sprintf_s( szBuf, "%g", dP );
 		cout << szBuf;
 		PrintSpaces( c_iWidthP - strlen( szBuf ) ); }
 	if( pGenes ) {
-		sprintf( szBuf, "%-4d %-4d %-4d %-4d ", pGenes->CountAnnotations( pOnto, iNode,
+		sprintf_s( szBuf, "%-4d %-4d %-4d %-4d ", pGenes->CountAnnotations( pOnto, iNode,
 			sArgs.m_fSibs ), pGenes->GetGenes( ), pOnto->GetGenes( iNode, sArgs.m_fSibs ),
 			sArgs.m_fBackground ? pGenes->GetGenome( ).GetGenes( ) :
 			pGenes->GetGenome( ).CountGenes( pOnto ) );

@@ -24,8 +24,8 @@ SWORD	CSVMImpl::s_asWords[ CSVMImpl::c_iWords ];
 
 CSVMImpl::SLearn::SLearn( ) {
 
-	strcpy( predfile, "" );
-	strcpy( alphafile, "" );
+	predfile[ 0 ] = 0;
+	alphafile[ 0 ] = 0;
 	biased_hyperplane = 1;
 	sharedslack = 0;
 	remove_inconsistent = 0;
@@ -50,12 +50,12 @@ CSVMImpl::SLearn::SLearn( ) {
 
 CSVMImpl::SKernel::SKernel( ) {
 
-  kernel_type = 0;
-  poly_degree = 3;
-  rbf_gamma = 1;
-  coef_lin = 1;
-  coef_const = 1;
-  strcpy( custom, "" ); }
+	kernel_type = 0;
+	poly_degree = 3;
+	rbf_gamma = 1;
+	coef_lin = 1;
+	coef_const = 1;
+	custom[ 0 ] = 0; }
 
 CSVMImpl::CSVMImpl( ) : m_apDocs(NULL), m_iDocs(0), m_adAlphas(NULL), m_iAlphas(0),
 	m_pModel(NULL), m_adLabels(NULL) {
@@ -451,7 +451,7 @@ bool CSVM::Open( istream& istm ) {
 	istm.getline( szBuf, c_iBuf - 1 );
 	CMeta::Tokenize( szBuf, vecstrLine, "#", true );
 	if( vecstrLine.size( ) > 1 )
-		strcpy( m_pModel->kernel_parm.custom, vecstrLine[ 0 ].c_str( ) );
+		strcpy_s( m_pModel->kernel_parm.custom, 49, vecstrLine[ 0 ].c_str( ) );
 	istm >> m_pModel->totwords;
 	istm.getline( szBuf, c_iBuf - 1 );
 	istm >> m_pModel->totdoc;
