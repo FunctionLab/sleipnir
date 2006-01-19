@@ -83,13 +83,12 @@ int main( int iArgs, char** aszArgs ) {
 					CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) )
 					continue;
 				if( GenesIn.GetGenes( ) &&
-					( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
-					( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+					!( vecfGenes[ i ] || vecfGenes[ j ] ) )
+//					( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
+//					( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
 					continue;
 				if( sArgs.invert_flag )
 					dValue = 1 - dValue;
-//cout << DatAnswers.GetGene( i ) << '\t' << DatAnswers.GetGene( j ) << '\t' << dValue <<
-//'\t' << dAnswer << endl;
 
 				iMax = (int)( ( dValue - sArgs.min_arg ) / sArgs.delta_arg );
 				if( iMax > (int)MatResults.GetRows( ) )

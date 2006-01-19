@@ -125,8 +125,6 @@ size_t CDataImpl::GetGene( const string& strGene ) const {
 
 	return -1; }
 
-#ifdef BAYESIAN_NETWORKS
-
 bool CDataset::Open( const char* szAnswers, const char* szDataDir,
 	const IBayesNet* pBayesNet ) {
 	CDataPair	Answers;
@@ -157,8 +155,6 @@ bool CDataset::Open( const CDataPair& Answers, const char* szDataDir,
 
 	TrimExamples( );
 	return true; }
-
-#endif // BAYESIAN_NETWORKS
 
 bool CDatasetImpl::Open( const CDataPair& Datum, size_t iExp, size_t iMax ) {
 	vector<size_t>	veciGenes;
@@ -384,8 +380,6 @@ size_t CDataMask::GetGene( const string& strGene ) const {
 
 	return m_pDataset->GetGene( strGene ); }
 
-#ifdef BAYESIAN_NETWORKS
-
 bool CDataSubset::Initialize( const char* szDataDir, const IBayesNet* pBayesNet,
 	size_t iSize ) {
 	size_t	i;
@@ -406,8 +400,6 @@ bool CDataSubset::Initialize( const char* szDataDir, const IBayesNet* pBayesNet,
 	m_Examples.Initialize( m_iSize, m_vecstrGenes.size( ) );
 
 	return true; }
-
-#endif // BAYESIAN_NETWORKS
 
 bool CDataSubset::Initialize( const vector<string>& vecstrData, size_t iSize ) {
 	size_t	i;

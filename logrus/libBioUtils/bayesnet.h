@@ -1,8 +1,6 @@
 #ifndef BAYESNET_H
 #define BAYESNET_H
 
-#ifdef BAYESIAN_NETWORKS
-
 #include "bayesneti.h"
 
 namespace libBioUtils {
@@ -61,7 +59,5 @@ public:
 };
 
 }
-
-#endif // BAYESIAN_NETWORKS
 
 #endif // BAYESNET_H

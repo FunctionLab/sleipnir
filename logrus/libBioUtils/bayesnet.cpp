@@ -1,7 +1,4 @@
 #include "stdafx.h"
-
-#ifdef BAYESIAN_NETWORKS
-
 #include "bayesnet.h"
 #include "dat.h"
 #include "dataset.h"
@@ -697,5 +694,3 @@ void CBayesNetPNL::Randomize( size_t ) { }
 void CBayesNetPNL::Reverse( size_t ) { }
 
 }
-
-#endif // BAYESIAN_NETWORKS

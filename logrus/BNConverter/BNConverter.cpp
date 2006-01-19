@@ -21,6 +21,7 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
+	EnableXdslFormat( );
 
 	CBayesNetSmile	BNSmile( !!sArgs.group_flag );
 	CBayesNetPNL	BNPNL( !!sArgs.group_flag );
