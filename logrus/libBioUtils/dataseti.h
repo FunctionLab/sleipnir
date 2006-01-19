@@ -10,6 +10,7 @@
 namespace libBioUtils {
 
 class CDataPair;
+class IBayesNet;
 class IDataset;
 
 class CDataImpl {
@@ -66,6 +67,7 @@ protected:
 	~CDatasetCompactImpl( );
 
 	bool Open( const CDataPair&, CCompactMatrix& ) const;
+	bool Open( const char*, const IBayesNet*, const CGenes* = NULL, const CGenes* = NULL );
 
 	size_t				m_iSize;
 	size_t				m_iData;

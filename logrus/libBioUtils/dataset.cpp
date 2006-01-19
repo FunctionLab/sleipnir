@@ -592,8 +592,17 @@ bool CDatasetCompactImpl::Open( const CDataPair& Datum, CCompactMatrix& Target )
 
 	return true; }
 
+bool CDatasetCompact::Open( const char* szDataDir, const IBayesNet* pBayesNet ) {
+
+	return CDatasetCompactImpl::Open( szDataDir, pBayesNet ); }
+
 bool CDatasetCompact::Open( const char* szDataDir, const IBayesNet* pBayesNet,
-	const CGenes* pGenes ) {
+	const CGenes& GenesIn, const CGenes& GenesEx ) {
+
+	return CDatasetCompactImpl::Open( szDataDir, pBayesNet, &GenesIn, &GenesEx ); }
+
+bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNet,
+	const CGenes* pGenesIn, const CGenes* pGenesEx ) {
 	size_t						i, j, k;
 	vector<string>				vecstrData;
 	set<string>					setstrGenes;
@@ -604,9 +613,9 @@ bool CDatasetCompact::Open( const char* szDataDir, const IBayesNet* pBayesNet,
 		return false;
 
 	m_iData = OpenMax( szDataDir, pBayesNet->GetNodes( ), false, vecstrData, &setstrGenes );
-	if( pGenes )
-		for( i = 0; i < pGenes->GetGenes( ); ++i )
-			setstrGenes.insert( pGenes->GetGene( i ).GetName( ) );
+	if( pGenesIn )
+		for( i = 0; i < pGenesIn->GetGenes( ); ++i )
+			setstrGenes.insert( pGenesIn->GetGene( i ).GetName( ) );
 	m_vecstrGenes.resize( setstrGenes.size( ) );
 	for( i = 0,iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( );
 		++iterGenes )
@@ -623,16 +632,25 @@ bool CDatasetCompact::Open( const char* szDataDir, const IBayesNet* pBayesNet,
 			CDatasetCompactImpl::Open( Datum, m_aData[ i ] ) ) )
 			return false; }
 
-	if( pGenes ) {
+	if( pGenesIn ) {
 		vecfGenes.resize( GetGenes( ) );
 		for( i = 0; i < vecfGenes.size( ); ++i )
-			vecfGenes[ i ] = pGenes->IsGene( GetGene( i ) );
+			vecfGenes[ i ] = pGenesIn->IsGene( GetGene( i ) );
 		for( i = 0; i < GetGenes( ); ++i )
 			if( !vecfGenes[ i ] )
 				for( j = ( i + 1 ); j < GetGenes( ); ++j )
 					if( !vecfGenes[ j ] )
 						for( k = 0; k < m_iData; ++k )
 							m_aData[ k ].Set( i, j, 0 ); }
+	if( pGenesEx ) {
+		vecfGenes.resize( GetGenes( ) );
+		for( i = 0; i < vecfGenes.size( ); ++i )
+			vecfGenes[ i ] = pGenesEx->IsGene( GetGene( i ) );
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+				if( vecfGenes[ i ] || vecfGenes[ j ] )
+					for( k = 0; k < m_iData; ++k )
+						m_aData[ k ].Set( i, j, 0 ); }
 
 	return true; }
 

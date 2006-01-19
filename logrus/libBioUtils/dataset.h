@@ -42,7 +42,8 @@ public:
 class CDatasetCompact : CDatasetCompactImpl, public IDataset {
 public:
 	bool Open( const CDataPair&, const char*, const IBayesNet* );
-	bool Open( const char*, const IBayesNet*, const CGenes* = NULL );
+	bool Open( const char*, const IBayesNet* );
+	bool Open( const char*, const IBayesNet*, const CGenes&, const CGenes& );
 	bool Open( const std::vector<std::string>& );
 
 	bool IsHidden( size_t ) const;

@@ -17,8 +17,8 @@ int main( int iArgs, char** aszArgs ) {
 	CSlim								Slim, SlimNeg;
 	ofstream							ofsm;
 	size_t								i, j;
-	set<const CGene*>					setpGenes;
-	set<const CGene*>::const_iterator	iterGene;
+	map<const CGene*,bool>				mapGenes;
+	map<const CGene*,bool>::iterator	iterGene;
 
 	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) || ( sArgs.config_arg &&
 		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) ) {
@@ -90,21 +90,28 @@ int main( int iArgs, char** aszArgs ) {
 	Dat.Save( ofsm, true );
 	ofsm.close( );
 
+	if( sArgs.test_arg ) {
+		for( i = 0; i < Slim.GetSlims( ); ++i )
+			for( j = 0; j < Slim.GetGenes( i ); ++j )
+				mapGenes[ &Slim.GetGene( i, j ) ] = false;
+		for( i = 0; i < Slim.GetSlims( ); ++i )
+			mapGenes[ &Slim.GetGene( i, rand( ) % Slim.GetGenes( i ) ) ] = true;
+		for( iterGene = mapGenes.begin( ); iterGene != mapGenes.end( ); ++iterGene )
+			if( ( (float)rand( ) / RAND_MAX ) < sArgs.test_arg )
+				iterGene->second = true; }
+
 	if( sArgs.directory_arg )
 		for( i = 0; i < Slim.GetSlims( ); ++i ) {
 			ofsm.clear( );
 			ofsm.open( ( (string)sArgs.directory_arg + '\\' +
 				CMeta::Filename( Slim.GetSlim( i ) ) ).c_str( ) );
 			for( j = 0; j < Slim.GetGenes( i ); ++j )
-				if( ( (float)rand( ) / RAND_MAX ) < sArgs.test_arg )
-					setpGenes.insert( &Slim.GetGene( i, j ) );
-				else
-					ofsm << Slim.GetGene( i, j ).GetName( ) << endl;
+				ofsm << Slim.GetGene( i, j ).GetName( ) << endl;
 			ofsm.close( ); }
-	if( sArgs.test_arg ) {
-		for( iterGene = setpGenes.begin( ); iterGene != setpGenes.end( ); ++iterGene )
-			cout << (*iterGene)->GetName( ) << endl;
-		cout.flush( ); }
+	if( sArgs.test_arg )
+		for( iterGene = mapGenes.begin( ); iterGene != mapGenes.end( ); ++iterGene )
+			if( iterGene->second )
+				cout << iterGene->first->GetName( ) << endl;
 
 	CMeta::Shutdown( );
 	return 0; }

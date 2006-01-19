@@ -6,7 +6,7 @@ int main( int iArgs, char** aszArgs ) {
 	CDatasetCompact			Data;
 	CDat					Dat;
 	CGenome					Genome;
-	CGenes					Genes( Genome );
+	CGenes					GenesIn( Genome ), GenesEx( Genome );
 	ifstream				ifsm;
 	ofstream				ofsm;
 	vector<vector<float> >	vecvecdResults;
@@ -27,11 +27,18 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	if( sArgs.genes_arg ) {
 		ifsm.open( sArgs.genes_arg );
-		if( !Genes.Open( ifsm ) ) {
+		if( !GenesIn.Open( ifsm ) ) {
 			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
 			return 1; }
 		ifsm.close( ); }
-	if( !Data.Open( sArgs.datadir_arg, &BNSmile, sArgs.genes_arg ? &Genes : NULL ) ) {
+	if( sArgs.genex_arg ) {
+		ifsm.clear( );
+		ifsm.open( sArgs.genex_arg );
+		if( !GenesEx.Open( ifsm ) ) {
+			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
+			return 1; }
+		ifsm.close( ); }
+	if( !Data.Open( sArgs.datadir_arg, &BNSmile, GenesIn, GenesEx ) ) {
 		cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
 		return 1; }
 
