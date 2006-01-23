@@ -160,7 +160,51 @@ bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIteratio
 
 	return true; }
 
+bool CBayesNetSmileImpl::IsNaive( ) const {
+	size_t	i;
+
+//	if( !m_fSmileNet )
+		return false;
+
+	for( i = 1; i < m_SmileNet.GetNumberOfNodes( ); ++i ) {
+		const DSL_intArray&	veciParents	= m_SmileNet.GetNode( (int)i )->Parents( );
+
+		if( ( veciParents.NumItems( ) > 1 ) || ( veciParents[ 0 ] != 0 ) )
+			return false; }
+
+	return true; }
+
+bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData ) {
+	return false; }
+/*
+	DSL_dataset		SmileData;
+	size_t			i, j, k, iCur;
+	vector<int>*	aveciData;
+	DSL_naiveBayes	SmileNaive;
+	bool			fRet;
+
+	if( !pData )
+		return false;
+
+	aveciData = new vector<int>[ pData->GetExperiments( ) - 1 ];
+	for( i = 0; i < pData->GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
+			if( pData->IsExample( i, j ) )
+				for( k = 1; k < pData->GetExperiments( ); ++k )
+					aveciData[ k - 1 ].push_back( ( ( iCur = pData->GetDiscrete( i, j, k ) ) == -1 ) ?
+						0 : (int)iCur );
+	for( i = 1; i < pData->GetExperiments( ); ++i )
+		SmileData.AddIntVar( m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), &aveciData[ i - 1 ] );
+
+	fRet = ( SmileNaive.Learn( SmileData, m_SmileNet ) == DSL_OKAY );
+	delete[] aveciData;
+	return fRet; }
+*/
+
 bool CBayesNetSmile::Learn( const IDataset* pData, size_t iIterations, bool fZero ) {
+
+	if( IsNaive( ) )
+		return LearnNaive( pData );
 
 	return ( m_fGroup ? LearnGrouped( pData, iIterations, fZero ) :
 		LearnUngrouped( pData, iIterations, fZero ) ); }

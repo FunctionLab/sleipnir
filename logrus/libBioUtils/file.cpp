@@ -19,4 +19,16 @@ string CFile::OpenToken( istream& istmInput ) {
 
 	return strRet; }
 
+string CFile::OpenToken( const char* szInput, const char** pcEnd ) {
+	string	strRet;
+	char	c;
+
+	while( isspace( c = *(szInput++) ) && ( c != '\t' ) && c );
+	for( ; c && ( c != -1 ) && ( c != '\t' ) && !IsNewline( c ); c = *(szInput++) )
+		strRet += c;
+	if( pcEnd )
+		*pcEnd = szInput - ( IsNewline( c ) ? 1 : 0 );
+
+	return strRet; }
+
 }

@@ -35,8 +35,10 @@ protected:
 	void LearnExpected( DSL_node*, DSL_Dmatrix*, size_t = 1 );
 	bool Evaluate( const IDataset*, CDat*, vector<vector<float> >*, bool ) const;
 	bool IsContinuous( ) const;
+	bool IsNaive( ) const;
 	bool LearnGrouped( const IDataset*, size_t, bool );
 	bool LearnUngrouped( const IDataset*, size_t, bool );
+	bool LearnNaive( const IDataset* );
 
 	bool		m_fSmileNet;
 	DSL_network	m_SmileNet;
