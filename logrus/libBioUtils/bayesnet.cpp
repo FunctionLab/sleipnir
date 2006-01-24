@@ -279,7 +279,8 @@ bool CBayesNetSmileImpl::ConvertGraph( CBayesNetPNL& BNPNL ) const {
 		else
 			iSize = pNode->Definition( )->GetNumberOfOutcomes( );
 		if( ( iterNodeTypes = mapNodeTypes.find( iSize ) ) == mapNodeTypes.end( ) ) {
-			mapNodeTypes[ iSize ] = (int)mapNodeTypes.size( );
+			j = mapNodeTypes.size( );
+			mapNodeTypes[ iSize ] = (int)j;
 			iterNodeTypes = mapNodeTypes.find( iSize ); }
 		aiNodeAssociation[ i ] = iterNodeTypes->second; }
 	aNodeTypes = new CNodeType[ mapNodeTypes.size( ) ];
