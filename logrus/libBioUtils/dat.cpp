@@ -155,7 +155,7 @@ bool CDatImpl::OpenText( istream& istm ) {
 
 			strToken = OpenToken( pc, &pc );
 			iTwo = MapGene( mapGenes, m_vecstrGenes, strToken );
-			if( !( dScore = (float)atof( OpenToken( pc ).c_str( ) ) ) && errno ) {
+			if( !( dScore = (float)atof( OpenToken( pc ).c_str( ) ) ) && errno && ( errno != ENOENT ) ) {
 				Reset( );
 				return false; }
 

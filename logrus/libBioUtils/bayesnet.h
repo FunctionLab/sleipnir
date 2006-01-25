@@ -11,7 +11,7 @@ class IBayesNet {
 public:
 	virtual bool Open( const char* ) = 0;
 	virtual bool Save( const char* ) const = 0;
-	virtual bool Learn( const IDataset*, size_t, bool = false ) = 0;
+	virtual bool Learn( const IDataset*, size_t, bool = false, bool = false ) = 0;
 	virtual bool Evaluate( const IDataset*, std::vector<std::vector<float> >&,
 		bool = false ) const = 0;
 	virtual bool Evaluate( const IDataset*, CDat&, bool = false ) const = 0;
@@ -28,7 +28,7 @@ public:
 
 	bool Open( const char* );
 	bool Save( const char* ) const;
-	bool Learn( const IDataset*, size_t, bool = false );
+	bool Learn( const IDataset*, size_t, bool = false, bool = false );
 	bool Evaluate( const IDataset*, std::vector<std::vector<float> >&, bool = false ) const;
 	bool Evaluate( const IDataset*, CDat&, bool = false ) const;
 	std::vector<std::string> GetNodes( ) const;
@@ -46,7 +46,7 @@ public:
 
 	bool Open( const char* );
 	bool Save( const char* ) const;
-	bool Learn( const IDataset*, size_t, bool = false );
+	bool Learn( const IDataset*, size_t, bool = false, bool = false );
 	bool Evaluate( const IDataset*, std::vector<std::vector<float> >&, bool = false ) const;
 	bool Evaluate( const IDataset*, CDat&, bool = false ) const;
 	std::vector<std::string> GetNodes( ) const;

@@ -21,9 +21,9 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
-#ifndef _DEBUG
+#if defined(_MSC_VER) && !defined(_DEBUG)
 	EnableXdslFormat( );
-#endif // _DEBUG
+#endif // defined(_MSC_VER) && !defined(_DEBUG)
 
 	CBayesNetSmile	BNSmile( !!sArgs.group_flag );
 	CBayesNetPNL	BNPNL( !!sArgs.group_flag );
@@ -70,12 +70,12 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.test_arg < 1 ) {
 		if( sArgs.checkpoint_flag )
 			for( i = 0; i < sArgs.iterations_arg; ++i ) {
-				pNet->Learn( pData, 1, !!sArgs.zero_flag );
+				pNet->Learn( pData, 1, !!sArgs.zero_flag, !!sArgs.elr_flag );
 				cerr << "Iteration " << (unsigned int)i << '/' << sArgs.iterations_arg <<
 					" complete" << endl;
 				pNet->Save( sArgs.output_arg ); }
 		else
-			pNet->Learn( pData, sArgs.iterations_arg, !!sArgs.zero_flag ); }
+			pNet->Learn( pData, sArgs.iterations_arg, !!sArgs.zero_flag, !!sArgs.elr_flag ); }
 
 	if( sArgs.murder_given ) {
 		pNet->Randomize( sArgs.murder_arg );

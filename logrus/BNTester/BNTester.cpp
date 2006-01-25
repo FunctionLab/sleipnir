@@ -18,7 +18,9 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
+#if defined(_MSC_VER) && !defined(_DEBUG)
 	EnableXdslFormat( );
+#endif // defined(_MSC_VER) && !defined(_DEBUG)
 
 	CBayesNetSmile	BNSmile( !!sArgs.group_flag );
 	CBayesNetPNL	BNPNL( !!sArgs.group_flag );
