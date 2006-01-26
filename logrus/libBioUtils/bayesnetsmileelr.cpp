@@ -39,6 +39,8 @@ bool CBayesNetSmileImpl::LearnELR( const IDataset* pData, size_t iIterations, bo
 	dDotNew = ELRDot( vecvecfGradient, vecvecfPrev );
 
 	for( i = 0; i < iIterations; ++i ) {
+		g_CatBioUtils.notice( "CBayesNetSmile::LearnELR( %d, %d ) iteration %d/%d",
+			iIterations, fZero, i, iIterations );
 		if( !dDotNew )
 			continue;
 		ELRNormalizeDirection( vecvecfDirection );
@@ -50,13 +52,14 @@ bool CBayesNetSmileImpl::LearnELR( const IDataset* pData, size_t iIterations, bo
 		dDotOld = dDotNew;
 		dDotON = ELRDot( vecvecfGradient, vecvecfPrev );
 		copy( vecvecfGradient.begin( ), vecvecfGradient.end( ), vecvecfPrev.begin( ) );
+		dDotNew = ELRDot( vecvecfGradient, vecvecfPrev );
 		dB = ( dDotNew - dDotON ) / dDotOld;
 		if( !( ( i + 1 ) % iParameters ) || ( dB <= 0 ) )
 			copy( vecvecfGradient.begin( ), vecvecfGradient.end( ), vecvecfDirection.begin( ) );
 		else
 			ELRComputeDirection( dB, vecvecfGradient, vecvecfDirection ); }
 
-	return false; }
+	return true; }
 
 size_t CBayesNetSmileImpl::ELRCountParameters( ) const {
 	size_t	i, iRet;
@@ -68,32 +71,32 @@ size_t CBayesNetSmileImpl::ELRCountParameters( ) const {
 
 void CBayesNetSmileImpl::ELRCopyParameters( TVecVecF& vecvecfBeta ) {
 	static const float	c_dMinimum	= log( FLT_MIN );
-	size_t			i, j, k, iIndex, iSets, iDomains;
-	float			dSum, dCur, dMax;
-	DSL_node*		pNode;
-	DSL_Dmatrix*	pValues;
+	size_t				i, j, k, iIndex, iDomains;
+	float				dSum, dCur, dMax;
+	DSL_nodeDefinition*	pDef;
+	DSL_Dmatrix*		pDefs;
 
 	for( i = 0; i < vecvecfBeta.size( ); ++i ) {
-		pNode = m_SmileNet.GetNode( (int)i );
-		pValues = pNode->Value( )->GetMatrix( );
-		iDomains = pNode->Definition( )->GetNumberOfOutcomes( );
-		iSets = vecvecfBeta[ i ].size( ) / iDomains;
-		for( j = 0; j < iSets; ++j ) {
+		pDef = m_SmileNet.GetNode( (int)i )->Definition( );
+		pDefs = pDef->GetMatrix( );
+		iDomains = pDef->GetNumberOfOutcomes( );
+		for( j = 0; j < vecvecfBeta[ i ].size( ); j += iDomains ) {
 			dSum = 0;
 			dMax = vecvecfBeta[ i ][ j ];
-			for( k = 1; k < iDomains; ++k ) {
-				if( ( dCur = vecvecfBeta[ i ][ j + ( k * iSets ) ] ) > dMax )
-					dMax = dCur; }
+			for( k = 1; k < iDomains; ++k )
+				if( ( dCur = vecvecfBeta[ i ][ j + k ] ) > dMax )
+					dMax = dCur;
 			for( k = 0; k < iDomains; ++k ) {
-				iIndex = j + ( k * iSets );
+				iIndex = j + k;
 				if( ( vecvecfBeta[ i ][ iIndex ] -= dMax ) < c_dMinimum )
 					vecvecfBeta[ i ][ iIndex ] = c_dMinimum;
 				dSum += exp( vecvecfBeta[ i ][ iIndex ] ); }
 			if( dSum )
 				for( k = 0; k < iDomains; ++k ) {
-					iIndex = j + ( k * iSets );
-					(*pValues)[ (int)iIndex ] = exp( vecvecfBeta[ i ][ iIndex ] ) / dSum; } } } }
+					iIndex = j + k;
+					(*pDefs)[ (int)iIndex ] = exp( vecvecfBeta[ i ][ iIndex ] ) / dSum; } } } }
 
+// EXPENSIVE
 void CBayesNetSmileImpl::ELRComputeGradient( const IDataset* pData, bool fZero, TVecVecF& vecvecfGradient ) {
 	size_t	i, j, iVal;
 
@@ -169,27 +172,23 @@ float CBayesNetSmileImpl::ELRDot( const TVecVecF& vecvecfOne, const TVecVecF& ve
 	return dRet; }
 
 void CBayesNetSmileImpl::ELRNormalizeDirection( TVecVecF& vecvecfDirection ) const {
-	size_t			i, j, k, iSets, iDomains;
-	float			d, dSum;
-	DSL_node*		pNode;
-	DSL_Dmatrix*	pValues;
-	DSL_Dmatrix*	pDefs;
+	size_t	i, j;
+	float	d, dSum;
+	int		k, iDomains;
 
 	for( i = 0; i < vecvecfDirection.size( ); ++i ) {
-		pNode = m_SmileNet.GetNode( (int)i );
-		pValues = pNode->Value( )->GetMatrix( );
-		pDefs = pNode->Definition( )->GetMatrix( );
-		iDomains = pNode->Definition( )->GetNumberOfOutcomes( );
-		iSets = vecvecfDirection[ i ].size( ) / iDomains;
-		for( j = 0; j < iSets; ++j ) {
+		iDomains = m_SmileNet.GetNode( (int)i )->Definition( )->GetNumberOfOutcomes( );
+		for( j = 0; j < vecvecfDirection[ i ].size( ); j += iDomains ) {
 			dSum = 0;
 			for( k = 0; k < iDomains; ++k ) {
-				d = vecvecfDirection[ i ][ j + ( k * iSets ) ];
+				d = vecvecfDirection[ i ][ j + k ];
 				dSum += d * d; }
+
 			if( dSum = sqrt( dSum ) )
 				for( k = 0; k < iDomains; ++k )
-					vecvecfDirection[ i ][ j + ( k * iSets ) ] /= dSum; } } }
+					vecvecfDirection[ i ][ j + k ] /= dSum; } } }
 
+// EXPENSIVE
 float CBayesNetSmileImpl::ELRLineSearch( const IDataset* pData, const TVecVecF& vecvecfDirection,
 	const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, float& dAX, float& dBX, bool fZero ) {
 	float	dFA, dFB, dFC, dCX;
@@ -211,8 +210,9 @@ float CBayesNetSmileImpl::ELREvalFunction( const IDataset* pData, float dX, cons
 float CBayesNetSmileImpl::ELRAvoidZero( float d ) {
 	static const float	c_dTiny	= 1e-10f;
 
-	if( ( d >= 0 ) && ( d < c_dTiny ) )
-		return c_dTiny;
+	if( d >= 0 ) {
+		if( d < c_dTiny )
+			return c_dTiny; }
 	else if( d > -c_dTiny )
 		return -c_dTiny;
 
@@ -473,7 +473,7 @@ float CBayesNetSmileImpl::ELRConditionalLikelihood( const IDataset* pData, bool 
 			iCount++;
 			m_SmileNet.UpdateBeliefs( );
 			pMatrix = m_SmileNet.GetNode( 0 )->Value( )->GetMatrix( );
-			dRet += (float)log( (*pMatrix)[ pMatrix->GetSize( ) - 1 ] ); }
+			dRet += (float)log( (*pMatrix)[ (int)pData->GetDiscrete( i, j, 0 ) ] ); }
 
 	return ( dRet / iCount ); }
 
