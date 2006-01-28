@@ -7,6 +7,7 @@
 #include <smile.h>
 
 #include "dataset.h"
+#include "trie.h"
 
 namespace libBioUtils {
 
@@ -14,10 +15,19 @@ class CBayesNetPNL;
 
 class CBayesNetImpl {
 protected:
+	static const char	c_cMissing	= '_';
+	static const char	c_cBase		= 'A';
+
+	typedef std::map<std::string, size_t>	TMapData;
+	typedef CTrie<size_t>					TTrieData;
+
 	CBayesNetImpl( bool );
 
+	static void EncodeData( const IDataset*, TTrieData& );
+	static void EncodeData( const IDataset*, TMapData& );
 	static std::string EncodeDatum( const IDataset*, size_t, size_t );
 	static void DecodeDatum( const std::string&, std::vector<size_t>& );
+	static bool IsAnswer( const std::string& );
 
 	bool	m_fGroup;
 };
@@ -42,21 +52,24 @@ protected:
 	bool IsContinuous( ) const;
 	bool IsNaive( ) const;
 	bool FillCPTs( const IDataset*, size_t, size_t, bool, bool );
+	bool FillCPTs( const IDataset*, const std::string&, bool, bool );
 	bool LearnGrouped( const IDataset*, size_t, bool );
 	bool LearnUngrouped( const IDataset*, size_t, bool );
 	bool LearnNaive( const IDataset* );
 	bool LearnELR( const IDataset*, size_t, bool );
 	size_t ELRCountParameters( ) const;
 	void ELRCopyParameters( TVecVecF& );
-	void ELRComputeGradient( const IDataset*, bool, TVecVecF& );
+	void ELRComputeGradient( const IDataset*, const TMapData&, bool, TVecVecF& );
 	void ELRUpdateGradient( float, TVecVecF& );
 	void ELRNormalizeDirection( TVecVecF& ) const;
-	float ELRLineSearch( const IDataset*, const TVecVecF&, const TVecVecF&, TVecVecF&, float&, float&, bool );
-	float ELREvalFunction( const IDataset*, float, const TVecVecF&, const TVecVecF&, TVecVecF&, bool );
-	void ELRBracket( const IDataset*, const TVecVecF&, const TVecVecF&, TVecVecF&, float&, float&, float&, float&,
+	float ELRLineSearch( const IDataset*, const TMapData&, const TVecVecF&, const TVecVecF&, TVecVecF&,
 		float&, float&, bool );
-	float ELRConditionalLikelihood( const IDataset*, bool );
-	float ELRBrent( const IDataset*, const TVecVecF&, const TVecVecF&, TVecVecF&,
+	float ELREvalFunction( const IDataset*, const TMapData&, float, const TVecVecF&, const TVecVecF&,
+		TVecVecF&, bool );
+	void ELRBracket( const IDataset*, const TMapData&, const TVecVecF&, const TVecVecF&, TVecVecF&,
+		float&, float&, float&, float&, float&, float&, bool );
+	float ELRConditionalLikelihood( const IDataset*, const TMapData&, bool );
+	float ELRBrent( const IDataset*, const TMapData&, const TVecVecF&, const TVecVecF&, TVecVecF&,
 		float&, float&, float, float, float, float, bool );
 
 	bool		m_fSmileNet;

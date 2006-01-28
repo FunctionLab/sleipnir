@@ -10,10 +10,12 @@ bool CBayesNetSmileImpl::LearnELR( const IDataset* pData, size_t iIterations, bo
 	DSL_Dmatrix*	pMatrix;
 	DSL_intArray	veciCoords;
 	float			dAX, dBX, dDotNew, dDotOld, dDotON, dB;
+	TMapData		mapData;
 
 	if( !m_fSmileNet )
 		return false;
 
+	EncodeData( pData, mapData );
 	iParameters = ELRCountParameters( );
 	vecvecfBeta.resize( m_SmileNet.GetNumberOfNodes( ) );
 	vecvecfGradient.resize( m_SmileNet.GetNumberOfNodes( ) );
@@ -33,7 +35,7 @@ bool CBayesNetSmileImpl::LearnELR( const IDataset* pData, size_t iIterations, bo
 	dBX = 0.1f;
 
 	copy( vecvecfBeta.begin( ), vecvecfBeta.end( ), vecvecfOriginal.begin( ) );
-	ELRComputeGradient( pData, fZero, vecvecfGradient );
+	ELRComputeGradient( pData, mapData, fZero, vecvecfGradient );
 	copy( vecvecfGradient.begin( ), vecvecfGradient.end( ), vecvecfPrev.begin( ) );
 	copy( vecvecfGradient.begin( ), vecvecfGradient.end( ), vecvecfDirection.begin( ) );
 	dDotNew = ELRDot( vecvecfGradient, vecvecfPrev );
@@ -44,10 +46,10 @@ bool CBayesNetSmileImpl::LearnELR( const IDataset* pData, size_t iIterations, bo
 		if( !dDotNew )
 			continue;
 		ELRNormalizeDirection( vecvecfDirection );
-		ELRLineSearch( pData, vecvecfDirection, vecvecfOriginal, vecvecfBeta, dAX, dBX, fZero );
+		ELRLineSearch( pData, mapData, vecvecfDirection, vecvecfOriginal, vecvecfBeta, dAX, dBX, fZero );
 		copy( vecvecfBeta.begin( ), vecvecfBeta.end( ), vecvecfOriginal.begin( ) );
 		ELRCopyParameters( vecvecfBeta );
-		ELRComputeGradient( pData, fZero, vecvecfGradient );
+		ELRComputeGradient( pData, mapData, fZero, vecvecfGradient );
 
 		dDotOld = dDotNew;
 		dDotON = ELRDot( vecvecfGradient, vecvecfPrev );
@@ -65,7 +67,7 @@ size_t CBayesNetSmileImpl::ELRCountParameters( ) const {
 	size_t	i, iRet;
 
 	for( iRet = i = 0; i < m_SmileNet.GetNumberOfNodes( ); ++i )
-		iRet += m_SmileNet.GetNode( (int)i )->Definition( )->GetNumberOfOutcomes( );
+		iRet += m_SmileNet.GetNode( (int)i )->Definition( )->GetSize( );
 
 	return iRet; }
 
@@ -97,20 +99,20 @@ void CBayesNetSmileImpl::ELRCopyParameters( TVecVecF& vecvecfBeta ) {
 					(*pDefs)[ (int)iIndex ] = exp( vecvecfBeta[ i ][ iIndex ] ) / dSum; } } } }
 
 // EXPENSIVE
-void CBayesNetSmileImpl::ELRComputeGradient( const IDataset* pData, bool fZero, TVecVecF& vecvecfGradient ) {
-	size_t	i, j, iVal;
+void CBayesNetSmileImpl::ELRComputeGradient( const IDataset* pData, const TMapData& mapData, bool fZero,
+	TVecVecF& vecvecfGradient ) {
+	size_t						i, j;
+	TMapData::const_iterator	iterData;
 
 	for( i = 0; i < vecvecfGradient.size( ); ++i )
 		for( j = 0; j < vecvecfGradient[ i ].size( ); ++j )
 			vecvecfGradient[ i ][ j ] = 0;
 
-	for( i = 0; i < pData->GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
-			if( ( ( iVal = pData->GetDiscrete( i, j, 0 ) ) == -1 ) || !FillCPTs( pData, i, j, fZero, false ) )
-				continue;
-			ELRUpdateGradient( -1, vecvecfGradient );
-			m_SmileNet.GetNode( 0 )->Value( )->SetEvidence( (int)iVal );
-			ELRUpdateGradient( 1, vecvecfGradient ); } }
+	for( iterData = mapData.begin( ); iterData != mapData.end( ); ++iterData )
+		if( IsAnswer( iterData->first ) && FillCPTs( pData, iterData->first, fZero, false ) ) {
+			ELRUpdateGradient( -(float)iterData->second, vecvecfGradient );
+			m_SmileNet.GetNode( 0 )->Value( )->SetEvidence( iterData->first[ 0 ] - c_cBase );
+			ELRUpdateGradient( (float)iterData->second, vecvecfGradient ); } }
 
 void CBayesNetSmileImpl::ELRUpdateGradient( float dRate, TVecVecF& vecvecfGradient ) {
 	size_t				i, j;
@@ -189,15 +191,18 @@ void CBayesNetSmileImpl::ELRNormalizeDirection( TVecVecF& vecvecfDirection ) con
 					vecvecfDirection[ i ][ j + k ] /= dSum; } } }
 
 // EXPENSIVE
-float CBayesNetSmileImpl::ELRLineSearch( const IDataset* pData, const TVecVecF& vecvecfDirection,
-	const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, float& dAX, float& dBX, bool fZero ) {
+float CBayesNetSmileImpl::ELRLineSearch( const IDataset* pData, const TMapData& mapData,
+	const TVecVecF& vecvecfDirection, const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta,
+	float& dAX, float& dBX, bool fZero ) {
 	float	dFA, dFB, dFC, dCX;
 
-	ELRBracket( pData, vecvecfDirection, vecvecfOriginal, vecvecfBeta, dAX, dBX, dCX, dFA, dFB, dFC, fZero );
-	return ELRBrent( pData, vecvecfDirection, vecvecfOriginal, vecvecfBeta, dAX, dBX, dCX, dFA, dFB, dFC, fZero ); }
+	ELRBracket( pData, mapData, vecvecfDirection, vecvecfOriginal, vecvecfBeta,
+		dAX, dBX, dCX, dFA, dFB, dFC, fZero );
+	return ELRBrent( pData, mapData, vecvecfDirection, vecvecfOriginal, vecvecfBeta,
+		dAX, dBX, dCX, dFA, dFB, dFC, fZero ); }
 
-float CBayesNetSmileImpl::ELREvalFunction( const IDataset* pData, float dX, const TVecVecF& vecvecfDirection,
-	const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, bool fZero  ) {
+float CBayesNetSmileImpl::ELREvalFunction( const IDataset* pData, const TMapData& mapData, float dX,
+	const TVecVecF& vecvecfDirection, const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, bool fZero  ) {
 	size_t	i, j;
 
 	for( i = 0; i < vecvecfBeta.size( ); ++i )
@@ -205,7 +210,7 @@ float CBayesNetSmileImpl::ELREvalFunction( const IDataset* pData, float dX, cons
 			vecvecfBeta[ i ][ j ] = ( dX * vecvecfDirection[ i ][ j ] ) + vecvecfOriginal[ i ][ j ];
 	ELRCopyParameters( vecvecfBeta );
 
-	return -ELRConditionalLikelihood( pData, fZero ); }
+	return -ELRConditionalLikelihood( pData, mapData, fZero ); }
 
 float CBayesNetSmileImpl::ELRAvoidZero( float d ) {
 	static const float	c_dTiny	= 1e-10f;
@@ -218,8 +223,9 @@ float CBayesNetSmileImpl::ELRAvoidZero( float d ) {
 
 	return d; }
 
-void CBayesNetSmileImpl::ELRBracket( const IDataset* pData, const TVecVecF& vecvecfDirection,
-	const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, float& dAX, float& dBX, float& dCX, float& dFA,
+void CBayesNetSmileImpl::ELRBracket( const IDataset* pData, const TMapData& mapData,
+	const TVecVecF& vecvecfDirection, const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, float& dAX,
+	float& dBX, float& dCX, float& dFA,
 	float& dFB, float& dFC, bool fZero ) {
 	static const float	c_dGolden		= 1.618034f;
 	static const float	c_dLimit		= 100;
@@ -227,14 +233,14 @@ void CBayesNetSmileImpl::ELRBracket( const IDataset* pData, const TVecVecF& vecv
 	size_t	i;
 	float	dR, dQ, dU, dFU, dULim;
 
-	dFA = ELREvalFunction( pData, dAX, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
-	dFB = ELREvalFunction( pData, dBX, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
+	dFA = ELREvalFunction( pData, mapData, dAX, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
+	dFB = ELREvalFunction( pData, mapData, dBX, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
 	if( dFB > dFA ) {
 		swap( dAX, dBX );
 		swap( dFA, dFB ); }
 
 	dCX = dBX + ( c_dGolden * ( dBX - dAX ) );
-	dFC = ELREvalFunction( pData, dCX, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
+	dFC = ELREvalFunction( pData, mapData, dCX, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
 	for( i = 0; ( i < c_iIterations ) && ( dFB > dFC ); ++i ) {
 		/* finding the minimum point dU of the extrapolated parabola*/
 		dR = ( dBX - dAX ) * ( dFB - dFC );
@@ -244,7 +250,7 @@ void CBayesNetSmileImpl::ELRBracket( const IDataset* pData, const TVecVecF& vecv
 
 		/* bx>u and u>cx, or u is between b and c */
 		if( ( ( dBX - dU ) * ( dU - dCX ) ) > 0 ) {
-			dFU = ELREvalFunction( pData, dU, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
+			dFU = ELREvalFunction( pData, mapData, dU, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
 
 			/* the minimum is between b and c, because c is lower than b,
 			 * otherwise we can not be in the loop. So u is lower than both b
@@ -265,10 +271,10 @@ void CBayesNetSmileImpl::ELRBracket( const IDataset* pData, const TVecVecF& vecv
 			 * u will be copied to c. */
 
 			dU = dCX + ( c_dGolden * ( dCX - dBX ) );
-			dFU = ELREvalFunction( pData, dU, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero ); }
+			dFU = ELREvalFunction( pData, mapData, dU, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero ); }
 		/* u is between c and the far limit */
 		else if( ( ( dCX - dU ) * ( dU - dULim ) ) > 0 ) {
-			dFU = ELREvalFunction( pData, dU, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
+			dFU = ELREvalFunction( pData, mapData, dU, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
 			/* if u is still lower than c, extend the points beyond u and shift the values */
 			if( dFU < dFC ) {
 				dBX = dCX;
@@ -276,13 +282,15 @@ void CBayesNetSmileImpl::ELRBracket( const IDataset* pData, const TVecVecF& vecv
 				dU = dCX + ( c_dGolden * ( dCX - dBX ) );
 				dFB = dFC;
 				dFC = dFU;
-				dFU = ELREvalFunction( pData, dU, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero ); } }
+				dFU = ELREvalFunction( pData, mapData, dU, vecvecfDirection, vecvecfOriginal, vecvecfBeta,
+					fZero ); } }
 		/* u is beyond the far limit. ulim is between u and c. c and ulim defines the direction. */
 		else if( ( ( dU - dULim ) * ( dULim - dCX ) ) > 0 )
-			dFU = ELREvalFunction( pData, dU = dULim, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
+			dFU = ELREvalFunction( pData, mapData, dU = dULim, vecvecfDirection, vecvecfOriginal, vecvecfBeta,
+				fZero );
 		/* other cases... what could be left? */
 		else
-			dFU = ELREvalFunction( pData, dU = dCX + ( c_dGolden * ( dCX - dBX ) ), vecvecfDirection,
+			dFU = ELREvalFunction( pData, mapData, dU = dCX + ( c_dGolden * ( dCX - dBX ) ), vecvecfDirection,
 				vecvecfOriginal, vecvecfBeta, fZero );
 
 		/*eliminate oldest point and repeat the process*/
@@ -293,8 +301,9 @@ void CBayesNetSmileImpl::ELRBracket( const IDataset* pData, const TVecVecF& vecv
 		dFB = dFC;
 		dFC = dFU; } }
 
-float CBayesNetSmileImpl::ELRBrent( const IDataset* pData, const TVecVecF& vecvecfDirection,
-	const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, float& dAX, float& dBX, float dCX, float dFA,
+float CBayesNetSmileImpl::ELRBrent( const IDataset* pData, const TMapData& mapData,
+	const TVecVecF& vecvecfDirection, const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, float& dAX,
+	float& dBX, float dCX, float dFA,
 	float dFB, float dFC, bool fZero ) {
 	static const size_t	c_iIterations	= 100;
 	static const float	c_dZEPS			= 1e-8f;
@@ -332,7 +341,7 @@ float CBayesNetSmileImpl::ELRBrent( const IDataset* pData, const TVecVecF& vecve
 	for( iter = 0; iter < c_iIterations; ++iter ) {
 		xm = 0.5f * ( a + b );
 		/* error tolerance:2*tol*x.  note that tol, tol1, tol2 are all positive*/
-		tol2 = 2 * ( tol1 = ( ( c_dTolerance * abs( x ) ) + c_dZEPS ) );
+		tol2 = 2 * ( tol1 = ( ( c_dTolerance * fabs( x ) ) + c_dZEPS ) );
 		/* the sum of x - xm and 0.5*(b-a) smaller than tolerance*/
 		if( ( fw - fx ) <= ( c_dTolerance * fx ) ) {
 			dAX = a;
@@ -344,7 +353,7 @@ float CBayesNetSmileImpl::ELRBrent( const IDataset* pData, const TVecVecF& vecve
 		 * step was too small , made  no progress.
 		 * I'm not sure when could this happen... if progress is too small,
 		 * it should be done.... unless it's the first time */
-		if( abs( e ) > tol1 ) {
+		if( fabs( e ) > tol1 ) {
 			/* fit a parabola*/
 			r = ( x - w ) * ( fx - fv );
 			q = ( x - v ) * ( fx - fw );
@@ -378,7 +387,7 @@ float CBayesNetSmileImpl::ELRBrent( const IDataset* pData, const TVecVecF& vecve
 			 * the 2nd part test the new minimum of the parabola x+p/q (which
 			 * is the old x-p/q) is outside of (a,b)
 			 * e is set to be the larger of the 2 segments */
-			if( ( abs( p ) >= abs( 0.5 * q * etemp ) ) ||
+			if( ( fabs( p ) >= fabs( 0.5 * q * etemp ) ) ||
 				( ( p <= ( q * ( a - x ) ) ) || ( p >= ( q * ( b - x ) ) ) ) )
 				d = c_dIGolden * ( e = ( x >= xm ? ( a - x ) : ( b - x ) ) );
 			/* parabola is good. update the minimum u */
@@ -404,14 +413,14 @@ float CBayesNetSmileImpl::ELRBrent( const IDataset* pData, const TVecVecF& vecve
 		/* update the new minimum
 		 * if d<tolerance, step by tolerance, because otherwise it would give
 		 * the "same" result and make no progress */
-		if( abs( d ) >=tol1 )
+		if( fabs( d ) >=tol1 )
 			u = x + d;
 		else {
 			if( d > 0 )
 				u = x + tol1;
 			else
 				u = x - tol1; }
-		fu = ELREvalFunction( pData, u, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
+		fu = ELREvalFunction( pData, mapData, u, vecvecfDirection, vecvecfOriginal, vecvecfBeta, fZero );
 
 		/* u is the lowest point of the function,
 		 * lower than the previous lowest point x.
@@ -460,20 +469,20 @@ float CBayesNetSmileImpl::ELRBrent( const IDataset* pData, const TVecVecF& vecve
 	dBX = b;
 	return fx; }
 
-float CBayesNetSmileImpl::ELRConditionalLikelihood( const IDataset* pData, bool fZero ) {
-	size_t			i, j, iCount;
-	float			dRet;
-	DSL_Dmatrix*	pMatrix;
+float CBayesNetSmileImpl::ELRConditionalLikelihood( const IDataset* pData, const TMapData& mapData, bool fZero ) {
+	size_t						iCount;
+	float						dRet;
+	DSL_Dmatrix*				pMatrix;
+	TMapData::const_iterator	iterData;
 
+	iCount = 0;
 	dRet = 0;
-	for( iCount = i = 0; i < pData->GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
-			if( ( pData->GetDiscrete( i, j, 0 ) == -1 ) || !FillCPTs( pData, i, j, fZero, false ) )
-				continue;
-			iCount++;
+	for( iterData = mapData.begin( ); iterData != mapData.end( ); ++iterData )
+		if( IsAnswer( iterData->first ) && FillCPTs( pData, iterData->first, fZero, false ) ) {
+			iCount += iterData->second;
 			m_SmileNet.UpdateBeliefs( );
 			pMatrix = m_SmileNet.GetNode( 0 )->Value( )->GetMatrix( );
-			dRet += (float)log( (*pMatrix)[ (int)pData->GetDiscrete( i, j, 0 ) ] ); }
+			dRet += (float)( iterData->second * log( (*pMatrix)[ iterData->first[ 0 ] - c_cBase ] ) ); }
 
 	return ( dRet / iCount ); }
 

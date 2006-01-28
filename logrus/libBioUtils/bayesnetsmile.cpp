@@ -34,26 +34,15 @@ bool CBayesNetSmile::Save( const char* szDSL ) const {
 
 bool CBayesNetSmileImpl::LearnGrouped( const IDataset* pData, size_t iIterations,
 	bool fZero ) {
-	size_t							i, j, iVal, iIter, iDatum;
-	string							strCur;
-	map<string,size_t>				mapData;
-	map<string,size_t>::iterator	iterDatum;
-	DSL_Dmatrix*					pMat;
-	vector<DSL_Dmatrix*>			vecpExpected;
-	DSL_intArray					veciCoords;
-	vector<size_t>					veciDatum;
+	size_t					i, j, iIter, iDatum;
+	string					strCur;
+	TMapData				mapData;
+	TMapData::iterator		iterDatum;
+	DSL_Dmatrix*			pMat;
+	vector<DSL_Dmatrix*>	vecpExpected;
+	DSL_intArray			veciCoords;
 
-	for( i = 0; i < pData->GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
-			if( !pData->IsExample( i, j ) || ( pData->GetDiscrete( i, j, 0 ) == -1 ) )
-				continue;
-			strCur = EncodeDatum( pData, i, j );
-			if( ( iterDatum = mapData.find( strCur ) ) == mapData.end( ) )
-				mapData[ strCur ] = 1;
-			else
-				iterDatum->second++; }
-
-	veciDatum.resize( m_SmileNet.GetNumberOfNodes( ) );
+	EncodeData( pData, mapData );
 	vecpExpected.resize( m_SmileNet.GetNumberOfNodes( ) );
 	for( i = 0; i < vecpExpected.size( ); ++i )
 		vecpExpected[ i ] = new DSL_Dmatrix( *m_SmileNet.GetNode( (int)i )->Definition(
@@ -65,17 +54,7 @@ bool CBayesNetSmileImpl::LearnGrouped( const IDataset* pData, size_t iIterations
 			if( !( iDatum++ % 50 ) )
 				g_CatBioUtils.notice( "CBayesNetSmile::Learn( %d, %d ) iteration %d, datum %d/%d",
 					iIterations, fZero, iIter, ( iDatum - 1 ), mapData.size( ) );
-			DecodeDatum( iterDatum->first, veciDatum );
-			m_SmileNet.ClearAllEvidence( );
-			for( i = 0; i < m_SmileNet.GetNumberOfNodes( ); ++i ) {
-				if( pData->IsHidden( i ) )
-					continue;
-				if( ( iVal = veciDatum[ i ] ) == -1 ) {
-					if( fZero )
-						iVal = 0;
-					else
-						continue; }
-				m_SmileNet.GetNode( (int)i )->Value( )->SetEvidence( (int)iVal ); }
+			FillCPTs( pData, iterDatum->first, fZero, false );
 			m_SmileNet.UpdateBeliefs( );
 
 			for( i = 0; i < m_SmileNet.GetNumberOfNodes( ); ++i )
@@ -107,6 +86,26 @@ bool CBayesNetSmileImpl::FillCPTs( const IDataset* pData, size_t iOne, size_t iT
 				iVal = 0;
 			else
 				continue; }
+		m_SmileNet.GetNode( (int)i )->Value( )->SetEvidence( (int)iVal ); }
+
+	return true; }
+
+bool CBayesNetSmileImpl::FillCPTs( const IDataset* pData, const string& strDatum, bool fZero, bool fLearn ) {
+	size_t	i, iVal;
+
+	if( fLearn && !IsAnswer( strDatum ) )
+		return false;
+
+	m_SmileNet.ClearAllEvidence( );
+	for( i = fLearn ? 0 : 1; i < m_SmileNet.GetNumberOfNodes( ); ++i ) {
+		if( pData->IsHidden( i ) )
+			continue;
+		if( strDatum[ i ] == c_cMissing ) {
+			if( !fZero )
+				continue;
+			iVal = 0; }
+		else
+			iVal = strDatum[ i ] - c_cBase;
 		m_SmileNet.GetNode( (int)i )->Value( )->SetEvidence( (int)iVal ); }
 
 	return true; }
