@@ -30,10 +30,12 @@ protected:
 	const std::vector<std::string>& GetGeneNames( ) const;
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
+	size_t GetBins( size_t ) const;
 
 	bool						m_fContinuous;
 	std::vector<size_t>			m_veciMapping;
 	std::vector<std::string>	m_vecstrGenes;
+	std::vector<size_t>			m_veciQuants;
 };
 
 class CDatasetImpl : protected CDataImpl {
@@ -66,13 +68,12 @@ protected:
 	CDatasetCompactImpl( );
 	~CDatasetCompactImpl( );
 
-	bool Open( const CDataPair&, CCompactMatrix& ) const;
+	bool Open( const CDataPair&, size_t );
 	bool Open( const char*, const IBayesNet*, const CGenes* = NULL, const CGenes* = NULL );
 
-	size_t				m_iSize;
-	size_t				m_iData;
-	std::vector<size_t>	m_veciQuants;
-	CCompactMatrix*		m_aData;
+	size_t			m_iSize;
+	size_t			m_iData;
+	CCompactMatrix*	m_aData;
 };
 
 }

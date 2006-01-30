@@ -17,8 +17,29 @@ public:
 	CTrie( const std::vector<unsigned char>& vecbSizes, const tType& Undef ) : CTrieImpl( Undef ) {
 
 		m_vecbSizes.resize( vecbSizes.size( ) );
-		std::copy( vecbSizes.begin( ), vecbSizes.end( ), m_vecbSizes.begin( ) );
-		m_aabData = NULL; }
+		std::copy( vecbSizes.begin( ), vecbSizes.end( ), m_vecbSizes.begin( ) ); }
+
+	CTrie( const IDataset* pData, const tType& Undef, bool fAnswers = true ) : CTrieImpl( Undef ) {
+		size_t					i, j, k, iExp;
+		vector<unsigned char>	vecbDatum;
+
+		for( i = j = 0; i < pData->GetExperiments( ); ++i )
+			if( !pData->IsHidden( i ) )
+				j++;
+		m_vecbSizes.resize( j );
+		for( i = j = 0; i < pData->GetExperiments( ); ++i )
+			if( !pData->IsHidden( i ) )
+				m_vecbSizes[ j++ ] = (unsigned char)pData->GetBins( i ) + 1;
+
+		vecbDatum.resize( GetSize( ) );
+		for( i = 0; i < pData->GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
+				if( !pData->IsExample( i, j ) || ( fAnswers && ( pData->GetDiscrete( i, j, 0 ) == -1 ) ) )
+					continue;
+				for( iExp = k = 0; k < pData->GetExperiments( ); ++k )
+					if( !pData->IsHidden( k ) )
+						vecbDatum[ iExp++ ] = (unsigned char)( pData->GetDiscrete( i, j, k ) + 1 );
+				Set( vecbDatum )++; } }
 
 	~CTrie( ) {
 
@@ -70,7 +91,7 @@ public:
 
 	bool IsDone( ) const {
 
-		return !m_vecpaaPosition[ m_vecpaaPosition.size( ) - 1 ]; }
+		return ( m_vecpaaPosition.empty( ) || !m_vecpaaPosition[ m_vecpaaPosition.size( ) - 1 ] ); }
 
 	const std::vector<unsigned char>& GetPosition( ) const {
 

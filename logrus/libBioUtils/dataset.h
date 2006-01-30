@@ -18,6 +18,7 @@ public:
 	virtual const std::vector<std::string>& GetGeneNames( ) const = 0;
 	virtual size_t GetExperiments( ) const = 0;
 	virtual size_t GetGene( const std::string& ) const = 0;
+	virtual size_t GetBins( size_t ) const = 0;
 };
 
 class CDataset : CDatasetImpl, public IDataset {
@@ -37,6 +38,7 @@ public:
 	const std::vector<std::string>& GetGeneNames( ) const;
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
+	size_t GetBins( size_t ) const;
 };
 
 class CDatasetCompact : CDatasetCompactImpl, public IDataset {
@@ -55,6 +57,7 @@ public:
 	const std::vector<std::string>& GetGeneNames( ) const;
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
+	size_t GetBins( size_t ) const;
 };
 
 class CDataMask : CDataMaskImpl, public IDataset {
@@ -72,6 +75,7 @@ public:
 	const std::vector<std::string>& GetGeneNames( ) const;
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
+	size_t GetBins( size_t ) const;
 };
 
 class CDataSubset : CDataSubsetImpl, public IDataset {
@@ -89,6 +93,7 @@ public:
 	const std::vector<std::string>& GetGeneNames( ) const;
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
+	size_t GetBins( size_t ) const;
 };
 
 }

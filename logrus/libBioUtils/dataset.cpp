@@ -74,6 +74,7 @@ bool CDataImpl::OpenGenes( const vector<string>& vecstrData ) {
 	set<string>::const_iterator	iterGenes;
 
 	m_veciMapping.resize( vecstrData.size( ) );
+	m_veciQuants.resize( vecstrData.size( ) );
 	for( i = 0; i < vecstrData.size( ); ++i ) {
 		m_veciMapping[ i ] = i;
 		ifsm.clear( );
@@ -125,6 +126,10 @@ size_t CDataImpl::GetGene( const string& strGene ) const {
 
 	return -1; }
 
+size_t CDataImpl::GetBins( size_t iExp ) const {
+
+	return m_veciQuants[ iExp ]; }
+
 bool CDataset::Open( const char* szAnswers, const char* szDataDir,
 	const IBayesNet* pBayesNet ) {
 	CDataPair	Answers;
@@ -139,6 +144,7 @@ bool CDataset::Open( const CDataPair& Answers, const char* szDataDir,
 
 	m_fContinuous = pBayesNet->IsContinuous( );
 	m_iMax = 1 + OpenMax( szDataDir, pBayesNet->GetNodes( ), true, vecstrData );
+	m_veciQuants.resize( m_iMax );
 	m_vecstrGenes.resize( Answers.GetGenes( ) );
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )
 		m_vecstrGenes[ i ] = Answers.GetGene( i );
@@ -161,6 +167,7 @@ bool CDatasetImpl::Open( const CDataPair& Datum, size_t iExp, size_t iMax ) {
 	size_t			i, j, iOne, iTwo;
 	float			d;
 
+	m_veciQuants[ iExp ] = Datum.IsContinuous( ) ? -1 : Datum.GetValues( );
 	veciGenes.resize( m_vecstrGenes.size( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
 		veciGenes[ i ] = Datum.GetGene( m_vecstrGenes[ i ] );
@@ -179,6 +186,7 @@ bool CDataset::Open( const char* szAnswers, const vector<string>& vecstrData ) {
 	size_t	i;
 
 	m_iMax = 1 + vecstrData.size( );
+	m_veciQuants.resize( m_iMax );
 	{
 		CDataPair	Answers;
 
@@ -276,33 +284,9 @@ size_t CDataset::GetGene( const string& strGene ) const {
 
 	return CDataImpl::GetGene( strGene ); }
 
-/*
-bool CDataset::Open( const char* szDataDir, const IBayesNet* pBayesNet ) {
-	size_t			i, iMax;
-	string			strFile;
-	vector<string>	vecstrData;
+size_t CDataset::GetBins( size_t iExp ) const {
 
-	{
-		set<string>					setstrGenes;
-		set<string>::const_iterator	iterGenes;
-
-		iMax = OpenMax( szDataDir, pBayesNet->GetNodes( ), false, vecstrData, &setstrGenes );
-		m_vecstrGenes.resize( setstrGenes.size( ) );
-		i = 0;
-		for( iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( ); ++iterGenes )
-			m_vecstrGenes[ i++ ] = *iterGenes;
-	}
-	m_Examples.Initialize( m_vecstrGenes.size( ) );
-
-	for( i = 0; i < vecstrData.size( ); ++i ) {
-		CDataPair	Datum;
-
-		if( !( Datum.Open( vecstrData[ i ].c_str( ), pBayesNet->IsContinuous( ) ) &&
-			CDatasetImpl::Open( Datum, i, iMax ) ) )
-			return false; }
-
-	return true; }
-*/
+	return CDataImpl::GetBins( iExp ); }
 
 void CDataMask::AttachRandom( const IDataset* pDataset, float dFrac ) {
 	size_t	i, j;
@@ -380,6 +364,10 @@ size_t CDataMask::GetGene( const string& strGene ) const {
 
 	return m_pDataset->GetGene( strGene ); }
 
+size_t CDataMask::GetBins( size_t iExp ) const {
+
+	return m_pDataset->GetBins( iExp ); }
+
 bool CDataSubset::Initialize( const char* szDataDir, const IBayesNet* pBayesNet,
 	size_t iSize ) {
 	size_t	i;
@@ -406,6 +394,7 @@ bool CDataSubset::Initialize( const vector<string>& vecstrData, size_t iSize ) {
 
 	m_iSize = iSize;
 	m_vecstrData.resize( vecstrData.size( ) );
+	m_veciQuants.resize( vecstrData.size( ) );
 	for( i = 0; i < vecstrData.size( ); ++i )
 		m_vecstrData[ i ] = vecstrData[ i ];
 	m_fContinuous = true;
@@ -440,6 +429,7 @@ bool CDataSubsetImpl::Open( const CDataPair& Datum, size_t iExp ) {
 	size_t			i, j, iOne, iTwo;
 	float			d;
 
+	m_veciQuants[ iExp ] = Datum.IsContinuous( ) ? -1 : Datum.GetValues( );
 	veciGenes.resize( m_vecstrGenes.size( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
 		veciGenes[ i ] = Datum.GetGene( m_vecstrGenes[ i ] );
@@ -501,6 +491,10 @@ size_t CDataSubset::GetGene( const string& strGene ) const {
 
 	return CDataImpl::GetGene( strGene ); }
 
+size_t CDataSubset::GetBins( size_t iExp ) const {
+
+	return CDataImpl::GetBins( iExp ); }
+
 CDatasetCompactImpl::CDatasetCompactImpl( ) : m_iSize(0), m_iData(0), m_aData(NULL) {
 
 	m_fContinuous = false; }
@@ -523,7 +517,7 @@ bool CDatasetCompact::Open( const vector<string>& vecstrData ) {
 		CDataPair	Datum;
 
 		if( !( Datum.Open( vecstrData[ i ].c_str( ), false ) &&
-			CDatasetCompactImpl::Open( Datum, m_aData[ i ] ) ) )
+			CDatasetCompactImpl::Open( Datum, i ) ) )
 			return false; }
 
 	return true; }
@@ -537,6 +531,7 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 		return false;
 
 	m_iData = 1 + OpenMax( szDataDir, pBayesNet->GetNodes( ), true, vecstrData );
+	m_veciQuants.resize( m_iData );
 	if( m_aData )
 		delete[] m_aData;
 	m_aData = new CCompactMatrix[ m_iData ];
@@ -545,13 +540,13 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )
 		m_vecstrGenes[ i ] = Answers.GetGene( i );
 
-	if( !CDatasetCompactImpl::Open( Answers, m_aData[ 0 ] ) )
+	if( !CDatasetCompactImpl::Open( Answers, 0 ) )
 		return false;
 	for( i = 0; i < vecstrData.size( ); ++i ) {
 		CDataPair	Datum;
 
 		if( !( Datum.Open( vecstrData[ i ].c_str( ), false ) &&
-			CDatasetCompactImpl::Open( Datum, m_aData[ i + 1 ] ) ) )
+			CDatasetCompactImpl::Open( Datum, i + 1 ) ) )
 			return false; }
 
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )
@@ -564,11 +559,13 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 
 	return true; }
 
-bool CDatasetCompactImpl::Open( const CDataPair& Datum, CCompactMatrix& Target ) const {
+bool CDatasetCompactImpl::Open( const CDataPair& Datum, size_t iExp ) {
 	vector<size_t>	veciGenes;
 	size_t			i, j, iOne, iTwo;
 	float			d;
+	CCompactMatrix&	Target	= m_aData[ iExp ];
 
+	m_veciQuants[ iExp ] = Datum.IsContinuous( ) ? -1 : Datum.GetValues( );
 	Target.Initialize( m_vecstrGenes.size( ), (unsigned char)( Datum.GetValues( ) + 1 ),
 		true );
 	veciGenes.resize( m_vecstrGenes.size( ) );
@@ -605,6 +602,7 @@ bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNe
 		return false;
 
 	m_iData = OpenMax( szDataDir, pBayesNet->GetNodes( ), false, vecstrData, &setstrGenes );
+	m_veciQuants.resize( m_iData );
 	if( pGenesIn )
 		for( i = 0; i < pGenesIn->GetGenes( ); ++i )
 			setstrGenes.insert( pGenesIn->GetGene( i ).GetName( ) );
@@ -621,7 +619,7 @@ bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNe
 		CDataPair	Datum;
 
 		if( !( Datum.Open( vecstrData[ i ].c_str( ), false ) &&
-			CDatasetCompactImpl::Open( Datum, m_aData[ i ] ) ) )
+			CDatasetCompactImpl::Open( Datum, i ) ) )
 			return false; }
 
 	if( pGenesIn ) {
@@ -690,5 +688,9 @@ size_t CDatasetCompact::GetExperiments( ) const {
 size_t CDatasetCompact::GetGene( const string& strGene ) const {
 
 	return CDataImpl::GetGene( strGene ); }
+
+size_t CDatasetCompact::GetBins( size_t iExp ) const {
+
+	return CDataImpl::GetBins( iExp ); }
 
 }

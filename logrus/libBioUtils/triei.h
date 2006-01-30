@@ -12,7 +12,7 @@ template<class tType>
 class CTrieImpl {
 	friend class CTrieIteratorImpl<tType>;
 protected:
-	CTrieImpl( const tType& Undef ) : m_Undef(Undef) { }
+	CTrieImpl( const tType& Undef ) : m_Undef(Undef), m_aabData(NULL) { }
 
 	void Delete( unsigned char** aabData, size_t iDepth = 0 ) const {
 		unsigned char	i;

@@ -4,25 +4,6 @@
 
 namespace libBioUtils {
 
-void CBayesNetImpl::EncodeData( const IDataset* pData, TTrieData& TrieData ) {
-	size_t					i, j, k, iExp;
-	string					strCur;
-	vector<unsigned char>	vecbDatum;
-
-	for( iExp = i = 0; i < pData->GetExperiments( ); ++i )
-		if( !pData->IsHidden( i ) )
-			iExp++;
-	vecbDatum.resize( iExp );
-
-	for( i = 0; i < pData->GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
-			if( !pData->IsExample( i, j ) || ( pData->GetDiscrete( i, j, 0 ) == -1 ) )
-				continue;
-			for( iExp = k = 0; k < pData->GetExperiments( ); ++k )
-				if( !pData->IsHidden( k ) )
-					vecbDatum[ iExp++ ] = (unsigned char)pData->GetDiscrete( i, j, k );
-			TrieData.Set( vecbDatum )++; } }
-
 void CBayesNetImpl::EncodeData( const IDataset* pData, TMapData& mapData ) {
 	size_t				i, j;
 	string				strCur;

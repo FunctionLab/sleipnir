@@ -10,6 +10,7 @@ bool CBayesNetSmileImpl::LearnELR( const IDataset* pData, size_t iIterations, bo
 	DSL_Dmatrix*	pMatrix;
 	DSL_intArray	veciCoords;
 	float			dAX, dBX, dDotNew, dDotOld, dDotON, dB;
+//	TTrieData		TrieData( pData, 0 );
 	TMapData		mapData;
 
 	if( !m_fSmileNet )
@@ -101,18 +102,24 @@ void CBayesNetSmileImpl::ELRCopyParameters( TVecVecF& vecvecfBeta ) {
 // EXPENSIVE
 void CBayesNetSmileImpl::ELRComputeGradient( const IDataset* pData, const TMapData& mapData, bool fZero,
 	TVecVecF& vecvecfGradient ) {
-	size_t						i, j;
-	TMapData::const_iterator	iterData;
+	size_t	i, j;
 
 	for( i = 0; i < vecvecfGradient.size( ); ++i )
 		for( j = 0; j < vecvecfGradient[ i ].size( ); ++j )
 			vecvecfGradient[ i ][ j ] = 0;
 
-	for( iterData = mapData.begin( ); iterData != mapData.end( ); ++iterData )
+	for( TMapData::const_iterator iterData = mapData.begin( ); iterData != mapData.end( ); ++iterData )
 		if( IsAnswer( iterData->first ) && FillCPTs( pData, iterData->first, fZero, false ) ) {
 			ELRUpdateGradient( -(float)iterData->second, vecvecfGradient );
 			m_SmileNet.GetNode( 0 )->Value( )->SetEvidence( iterData->first[ 0 ] - c_cBase );
 			ELRUpdateGradient( (float)iterData->second, vecvecfGradient ); } }
+/*
+	for( TTrieData::iterator IterData( TrieData ); !IterData.IsDone( ); IterData.Next( ) )
+		if( IterData.GetPosition( )[ 0 ] && FillCPTs( pData, IterData.GetPosition( ), fZero, false ) ) {
+			ELRUpdateGradient( -(float)IterData.Get( ), vecvecfGradient );
+			m_SmileNet.GetNode( 0 )->Value( )->SetEvidence( IterData.GetPosition( )[ 0 ] - 1 );
+			ELRUpdateGradient( (float)IterData.Get( ), vecvecfGradient ); } }
+*/
 
 void CBayesNetSmileImpl::ELRUpdateGradient( float dRate, TVecVecF& vecvecfGradient ) {
 	size_t				i, j;
@@ -470,19 +477,26 @@ float CBayesNetSmileImpl::ELRBrent( const IDataset* pData, const TMapData& mapDa
 	return fx; }
 
 float CBayesNetSmileImpl::ELRConditionalLikelihood( const IDataset* pData, const TMapData& mapData, bool fZero ) {
-	size_t						iCount;
-	float						dRet;
-	DSL_Dmatrix*				pMatrix;
-	TMapData::const_iterator	iterData;
+	size_t			iCount;
+	float			dRet;
+	DSL_Dmatrix*	pMatrix;
 
 	iCount = 0;
 	dRet = 0;
-	for( iterData = mapData.begin( ); iterData != mapData.end( ); ++iterData )
+	for( TMapData::const_iterator iterData = mapData.begin( ); iterData != mapData.end( ); ++iterData )
 		if( IsAnswer( iterData->first ) && FillCPTs( pData, iterData->first, fZero, false ) ) {
 			iCount += iterData->second;
 			m_SmileNet.UpdateBeliefs( );
 			pMatrix = m_SmileNet.GetNode( 0 )->Value( )->GetMatrix( );
 			dRet += (float)( iterData->second * log( (*pMatrix)[ iterData->first[ 0 ] - c_cBase ] ) ); }
+/*
+	for( TTrieData::iterator IterData( TrieData ); !IterData.IsDone( ); IterData.Next( ) )
+		if( IterData.GetPosition( )[ 0 ] && FillCPTs( pData, IterData.GetPosition( ), fZero, false ) ) {
+			iCount += IterData.Get( );
+			m_SmileNet.UpdateBeliefs( );
+			pMatrix = m_SmileNet.GetNode( 0 )->Value( )->GetMatrix( );
+			dRet += (float)( IterData.Get( ) * log( (*pMatrix)[ IterData.GetPosition( )[ 0 ] - 1 ] ) ); }
+*/
 
 	return ( dRet / iCount ); }
 

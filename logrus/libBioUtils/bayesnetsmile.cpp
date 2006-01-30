@@ -52,9 +52,9 @@ bool CBayesNetSmileImpl::LearnGrouped( const IDataset* pData, size_t iIterations
 			vecpExpected[ i ]->FillWith( 0 );
 		for( iterDatum = mapData.begin( ); iterDatum != mapData.end( ); ++iterDatum ) {
 			if( !( iDatum++ % 50 ) )
-				g_CatBioUtils.notice( "CBayesNetSmile::Learn( %d, %d ) iteration %d, datum %d/%d",
+				g_CatBioUtils.notice( "CBayesNetSmile::LearnGrouped( %d, %d ) iteration %d, datum %d/%d",
 					iIterations, fZero, iIter, ( iDatum - 1 ), mapData.size( ) );
-			FillCPTs( pData, iterDatum->first, fZero, false );
+			FillCPTs( pData, iterDatum->first, fZero, true );
 			m_SmileNet.UpdateBeliefs( );
 
 			for( i = 0; i < m_SmileNet.GetNumberOfNodes( ); ++i )
@@ -110,6 +110,27 @@ bool CBayesNetSmileImpl::FillCPTs( const IDataset* pData, const string& strDatum
 
 	return true; }
 
+bool CBayesNetSmileImpl::FillCPTs( const IDataset* pData, const vector<unsigned char>& vecbDatum, bool fZero,
+	bool fLearn ) {
+	size_t	i, iVal;
+
+	if( fLearn && !vecbDatum[ 0 ] )
+		return false;
+
+	m_SmileNet.ClearAllEvidence( );
+	for( i = fLearn ? 0 : 1; i < m_SmileNet.GetNumberOfNodes( ); ++i ) {
+		if( pData->IsHidden( i ) )
+			continue;
+		if( !vecbDatum[ i ] ) {
+			if( !fZero )
+				continue;
+			iVal = 0; }
+		else
+			iVal = vecbDatum[ i ] - 1;
+		m_SmileNet.GetNode( (int)i )->Value( )->SetEvidence( (int)iVal ); }
+
+	return true; }
+
 bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIterations,
 	bool fZero ) {
 	size_t					iIter, i, j, k;
@@ -129,7 +150,7 @@ bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIteratio
 			vecpExpected[ i ]->FillWith( 0 );
 		for( i = 0; i < pData->GetGenes( ); ++i ) {
 			if( !( i % 50 ) )
-				g_CatBioUtils.notice( "CBayesNetSmile::Learn( %d, %d ) iteration %d, gene %d/%d",
+				g_CatBioUtils.notice( "CBayesNetSmile::LearnUngrouped( %d, %d ) iteration %d, gene %d/%d",
 					iIterations, fZero, iIter, i, pData->GetGenes( ) );
 			for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
 				if( !FillCPTs( pData, i, j, fZero, true ) )
@@ -137,13 +158,13 @@ bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIteratio
 				m_SmileNet.UpdateBeliefs( );
 
 				for( k = 0; k < m_SmileNet.GetNumberOfNodes( ); ++k )
-					LearnExpected( m_SmileNet.GetNode( (int)k ), vecpExpected[ k ] ); }
+					LearnExpected( m_SmileNet.GetNode( (int)k ), vecpExpected[ k ] ); } }
 		for( i = 0; i < m_SmileNet.GetNumberOfNodes( ); ++i ) {
 			pMat = m_SmileNet.GetNode( (int)i )->Definition( )->GetMatrix( );
 			for( pMat->IndexToCoordinates( (int)( j = 0 ), veciCoords );
 				j != DSL_OUT_OF_RANGE; j = pMat->NextCoordinates( veciCoords ) )
 				pMat->Subscript( veciCoords ) = vecpExpected[ i ]->Subscript( veciCoords );
-			pMat->Normalize( ); } } }
+			pMat->Normalize( ); } }
 	for( i = 0; i < vecpExpected.size( ); ++i )
 		delete vecpExpected[ i ];
 
