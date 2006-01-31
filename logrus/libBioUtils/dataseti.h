@@ -70,6 +70,9 @@ protected:
 
 	bool Open( const CDataPair&, size_t );
 	bool Open( const char*, const IBayesNet*, const CGenes* = NULL, const CGenes* = NULL );
+	void FilterGenes( const CGenes&, CDat::EFilter );
+	void Remove( size_t, size_t );
+	size_t GetDiscrete( size_t, size_t, size_t ) const;
 
 	size_t			m_iSize;
 	size_t			m_iData;

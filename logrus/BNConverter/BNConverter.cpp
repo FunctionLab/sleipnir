@@ -1,21 +1,18 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-void evaluate( const IDataset*, const IBayesNet*, bool, ostream& );
-void debug_dataset( const IDataset* );
+static void Evaluate( const IDataset*, const IBayesNet*, bool, ostream& );
+static void DebugDataset( const IDataset* );
 
 int main( int iArgs, char** aszArgs ) {
-	CDatasetCompact			Data;
-	CDataPair				Answers;
-	CDataMask				Train, Test;
-	IDataset*				pData;
-	gengetopt_args_info		sArgs;
-	ifstream				ifsm;
-	ofstream				ofsm;
-	IBayesNet*				pNet;
-	CGenome					Genome;
-	CGenes					GenesIn( Genome ), GenesEx( Genome );
-	size_t					i;
+	CDatasetCompact		Data;
+	CDataPair			Answers;
+	CDataMask			Train, Test;
+	IDataset*			pData;
+	gengetopt_args_info	sArgs;
+	ofstream			ofsm;
+	IBayesNet*			pNet;
+	size_t				i, j;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -37,24 +34,23 @@ int main( int iArgs, char** aszArgs ) {
 	if( !Answers.Open( sArgs.answers_arg, BNSmile.IsContinuous( ) ) ) {
 		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
 		return 1; }
-	if( sArgs.genes_arg ) {
-		ifsm.open( sArgs.genes_arg );
-		if( !GenesIn.Open( ifsm ) ) {
-			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
-			return 1; }
-		Answers.FilterGenes( GenesIn, CDat::EFilterInclude );
-		ifsm.close( ); }
-	if( sArgs.genex_arg ) {
-		ifsm.clear( );
-		ifsm.open( sArgs.genex_arg );
-		if( !GenesEx.Open( ifsm ) ) {
-			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
-			return 1; }
-		Answers.FilterGenes( GenesEx, CDat::EFilterExclude );
-		ifsm.close( ); }
+	if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
+		cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+		return 1; }
+	if( sArgs.genet_arg && !Answers.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) ) {
+		cerr << "Couldn't open: " << sArgs.genet_arg << endl;
+		return 1; }
+	if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
+		cerr << "Couldn't open: " << sArgs.genex_arg << endl;
+		return 1; }
 	if( !Data.Open( Answers, sArgs.datadir_arg, &BNSmile ) ) {
 		cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
 		return 1; }
+
+	for( i = 0; i < Data.GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < Data.GetGenes( ); ++j )
+			if( Data.IsExample( i, j ) && ( Data.GetDiscrete( i, j, 0 ) == -1 ) )
+				Data.Remove( i, j );
 
 	pData = &Data;
 	if( sArgs.test_arg ) {
@@ -77,26 +73,24 @@ int main( int iArgs, char** aszArgs ) {
 		else
 			pNet->Learn( pData, sArgs.iterations_arg, !!sArgs.zero_flag, !!sArgs.elr_flag ); }
 
-	if( sArgs.murder_given ) {
+	if( sArgs.murder_given )
 		pNet->Randomize( sArgs.murder_arg );
-		pNet->Save( sArgs.output_arg ); }
+	pNet->Save( sArgs.output_arg );
 
 	if( sArgs.eval_train_arg && ( sArgs.test_arg < 1 ) ) {
 		ofsm.open( sArgs.eval_train_arg, ios_base::binary );
-		evaluate( pData, pNet, !!sArgs.zero_flag, ofsm );
+		Evaluate( pData, pNet, !!sArgs.zero_flag, ofsm );
 		ofsm.close( ); }
 	if( sArgs.eval_test_arg && sArgs.test_arg ) {
 		ofsm.clear( );
 		ofsm.open( sArgs.eval_test_arg, ios_base::binary );
-		evaluate( &Test, pNet, !!sArgs.zero_flag, ofsm );
+		Evaluate( &Test, pNet, !!sArgs.zero_flag, ofsm );
 		ofsm.close( ); }
-	if( !sArgs.checkpoint_flag )
-		pNet->Save( sArgs.output_arg );
 
 	CMeta::Shutdown( );
 	return 0; }
 
-void evaluate( const IDataset* pData, const IBayesNet* pNet, bool fZero, ostream& ostm ) {
+static void Evaluate( const IDataset* pData, const IBayesNet* pNet, bool fZero, ostream& ostm ) {
 	size_t	i, j;
 	float	d;
 	CDat	Dat;
@@ -110,7 +104,7 @@ void evaluate( const IDataset* pData, const IBayesNet* pNet, bool fZero, ostream
 					Dat.Set( i, j, 1 - d );
 	Dat.Save( ostm, true ); }
 
-void debug_dataset( const IDataset* pData ) {
+static void DebugDataset( const IDataset* pData ) {
 	size_t	i, j;
 
 	for( i = 0; i < pData->GetGenes( ); ++i ) {

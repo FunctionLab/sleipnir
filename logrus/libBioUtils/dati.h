@@ -36,6 +36,8 @@ protected:
 	void SaveBinary( std::ostream& ) const;
 	size_t GetGene( const std::string& ) const;
 	void SlimCache( const CSlim&, std::vector<std::vector<size_t> >& ) const;
+	void NormalizeMinmax( );
+	void NormalizeStdev( );
 
 	float Get( size_t iX, size_t iY ) const {
 

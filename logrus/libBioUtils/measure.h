@@ -14,6 +14,7 @@ public:
 	};
 
 	virtual const char* GetName( ) const = 0;
+	virtual bool IsRank( ) const = 0;
 	virtual double Measure( const float*, size_t, const float*, size_t, EMap = EMapCenter,
 		const float* = NULL, const float* = NULL ) const = 0;
 };
@@ -23,6 +24,7 @@ public:
 	CMeasureSigmoid( const IMeasure*, float dDiv = 1 );
 
 	const char* GetName( ) const;
+	bool IsRank( ) const;
 	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
 		const float* ) const;
 };
@@ -32,6 +34,7 @@ public:
 	CMeasureNegate( const IMeasure* );
 
 	const char* GetName( ) const;
+	bool IsRank( ) const;
 	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
 		const float* ) const;
 };
@@ -41,6 +44,7 @@ public:
 	CMeasureAutocorrelate( const IMeasure* );
 
 	const char* GetName( ) const;
+	bool IsRank( ) const;
 	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
 		const float* ) const;
 };
@@ -48,13 +52,18 @@ public:
 class CMeasureEuclidean : public IMeasure {
 public:
 	const char* GetName( ) const;
+	bool IsRank( ) const;
 	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
 		const float* ) const;
 };
 
 class CMeasurePearson : public IMeasure {
 public:
+	static double Pearson( const float*, size_t, const float*, size_t, EMap, const float*,
+		const float* );
+
 	const char* GetName( ) const;
+	bool IsRank( ) const;
 	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
 		const float* ) const;
 };
@@ -62,6 +71,7 @@ public:
 class CMeasureKolmogorovSmirnov : public IMeasure {
 public:
 	const char* GetName( ) const;
+	bool IsRank( ) const;
 	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
 		const float* ) const;
 };
@@ -69,6 +79,7 @@ public:
 class CMeasureKendallsTau : CMeasureKendallsTauImpl, public IMeasure {
 public:
 	const char* GetName( ) const;
+	bool IsRank( ) const;
 	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
 		const float* ) const;
 };
@@ -78,6 +89,15 @@ public:
 	CMeasureSpearman( bool = false );
 
 	const char* GetName( ) const;
+	bool IsRank( ) const;
+	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
+		const float* ) const;
+};
+
+class CMeasurePearNorm : public IMeasure {
+public:
+	const char* GetName( ) const;
+	bool IsRank( ) const;
 	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
 		const float* ) const;
 };

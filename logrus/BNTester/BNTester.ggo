@@ -10,5 +10,6 @@ option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"pnl"		p	"Use PNL library"	flag	off
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
+option	"genee"		e	"Gene overlap file"	string	typestr="filename"
 option	"zero"		z	"Zero missing values"	flag	off
 option	"group"		u	"Group identical inputs"	flag	on

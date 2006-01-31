@@ -288,6 +288,10 @@ size_t CDataset::GetBins( size_t iExp ) const {
 
 	return CDataImpl::GetBins( iExp ); }
 
+void CDataset::Remove( size_t iX, size_t iY ) {
+
+	m_Examples.Get( iX, iY ).Reset( ); }
+
 void CDataMask::AttachRandom( const IDataset* pDataset, float dFrac ) {
 	size_t	i, j;
 
@@ -367,6 +371,10 @@ size_t CDataMask::GetGene( const string& strGene ) const {
 size_t CDataMask::GetBins( size_t iExp ) const {
 
 	return m_pDataset->GetBins( iExp ); }
+
+void CDataMask::Remove( size_t iX, size_t iY ) {
+
+	m_Mask.Set( iX, iY, false ); }
 
 bool CDataSubset::Initialize( const char* szDataDir, const IBayesNet* pBayesNet,
 	size_t iSize ) {
@@ -495,6 +503,10 @@ size_t CDataSubset::GetBins( size_t iExp ) const {
 
 	return CDataImpl::GetBins( iExp ); }
 
+void CDataSubset::Remove( size_t iX, size_t iY ) {
+
+	m_Examples.Get( iX - m_iOffset, iY ).Reset( ); }
+
 CDatasetCompactImpl::CDatasetCompactImpl( ) : m_iSize(0), m_iData(0), m_aData(NULL) {
 
 	m_fContinuous = false; }
@@ -592,11 +604,10 @@ bool CDatasetCompact::Open( const char* szDataDir, const IBayesNet* pBayesNet,
 
 bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNet,
 	const CGenes* pGenesIn, const CGenes* pGenesEx ) {
-	size_t						i, j, k;
+	size_t						i;
 	vector<string>				vecstrData;
 	set<string>					setstrGenes;
 	set<string>::const_iterator	iterGenes;
-	vector<bool>				vecfGenes;
 
 	if( pBayesNet->IsContinuous( ) )
 		return false;
@@ -606,6 +617,9 @@ bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNe
 	if( pGenesIn )
 		for( i = 0; i < pGenesIn->GetGenes( ); ++i )
 			setstrGenes.insert( pGenesIn->GetGene( i ).GetName( ) );
+	if( pGenesEx )
+		for( i = 0; i < pGenesEx->GetGenes( ); ++i )
+			setstrGenes.erase( pGenesEx->GetGene( i ).GetName( ) );
 	m_vecstrGenes.resize( setstrGenes.size( ) );
 	for( i = 0,iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( );
 		++iterGenes )
@@ -622,33 +636,57 @@ bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNe
 			CDatasetCompactImpl::Open( Datum, i ) ) )
 			return false; }
 
-	if( pGenesIn ) {
-		vecfGenes.resize( GetGenes( ) );
-		for( i = 0; i < vecfGenes.size( ); ++i )
-			vecfGenes[ i ] = pGenesIn->IsGene( GetGene( i ) );
-		for( i = 0; i < GetGenes( ); ++i )
-			if( !vecfGenes[ i ] )
-				for( j = ( i + 1 ); j < GetGenes( ); ++j )
-					if( !vecfGenes[ j ] )
-						for( k = 0; k < m_iData; ++k )
-							m_aData[ k ].Set( i, j, 0 ); }
-	if( pGenesEx ) {
-		vecfGenes.resize( GetGenes( ) );
-		for( i = 0; i < vecfGenes.size( ); ++i )
-			vecfGenes[ i ] = pGenesEx->IsGene( GetGene( i ) );
-		for( i = 0; i < GetGenes( ); ++i )
-			for( j = ( i + 1 ); j < GetGenes( ); ++j )
-				if( vecfGenes[ i ] || vecfGenes[ j ] )
-					for( k = 0; k < m_iData; ++k )
-						m_aData[ k ].Set( i, j, 0 ); }
+	if( pGenesIn )
+		FilterGenes( *pGenesIn, CDat::EFilterInclude );
+	if( pGenesEx )
+		FilterGenes( *pGenesEx, CDat::EFilterExclude );
 
 	return true; }
+
+void CDatasetCompact::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
+
+	CDatasetCompactImpl::FilterGenes( Genes, eFilt ); }
+
+void CDatasetCompactImpl::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
+	vector<bool>	vecfGenes;
+	size_t			i, j;
+
+	if( !Genes.GetGenes( ) )
+		return;
+
+	vecfGenes.resize( GetGenes( ) );
+	for( i = 0; i < vecfGenes.size( ); ++i )
+		vecfGenes[ i ] = Genes.IsGene( GetGene( i ) );
+
+	for( i = 0; i < vecfGenes.size( ); ++i ) {
+		if( vecfGenes[ i ] ) {
+			if( eFilt == CDat::EFilterInclude )
+				continue;
+			if( eFilt == CDat::EFilterExclude ) {
+				for( j = ( i + 1 ); j < GetGenes( ); ++j )
+					Remove( i, j );
+				continue; } }
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			switch( eFilt ) {
+				case CDat::EFilterInclude:
+					if( !vecfGenes[ j ] )
+						Remove( i, j );
+					break;
+
+				case CDat::EFilterExclude:
+					if( vecfGenes[ j ] )
+						Remove( i, j );
+					break; } } }
 
 bool CDatasetCompact::IsHidden( size_t iNode ) const {
 
 	return CDataImpl::IsHidden( iNode ); }
 
 size_t CDatasetCompact::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
+
+	return CDatasetCompactImpl::GetDiscrete( iX, iY, iNode ); }
+
+size_t CDatasetCompactImpl::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
 	size_t	iMap;
 
 	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
@@ -692,5 +730,15 @@ size_t CDatasetCompact::GetGene( const string& strGene ) const {
 size_t CDatasetCompact::GetBins( size_t iExp ) const {
 
 	return CDataImpl::GetBins( iExp ); }
+
+void CDatasetCompact::Remove( size_t iX, size_t iY ) {
+
+	CDatasetCompactImpl::Remove( iX, iY ); }
+
+void CDatasetCompactImpl::Remove( size_t iX, size_t iY ) {
+	size_t	i;
+
+	for( i = 0; i < m_iData; ++i )
+		m_aData[ i ].Set( iX, iY, 0 ); }
 
 }

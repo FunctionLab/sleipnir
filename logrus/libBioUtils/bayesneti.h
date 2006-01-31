@@ -55,7 +55,7 @@ protected:
 	bool FillCPTs( const IDataset*, const std::vector<unsigned char>&, bool, bool );
 	bool LearnGrouped( const IDataset*, size_t, bool );
 	bool LearnUngrouped( const IDataset*, size_t, bool );
-	bool LearnNaive( const IDataset* );
+	bool LearnNaive( const IDataset*, bool );
 	bool LearnELR( const IDataset*, size_t, bool );
 	size_t ELRCountParameters( ) const;
 	void ELRCopyParameters( TVecVecF& );

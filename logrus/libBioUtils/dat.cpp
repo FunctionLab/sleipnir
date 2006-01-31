@@ -320,7 +320,32 @@ const vector<string>& CDat::GetGeneNames( ) const {
 
 	return m_vecstrGenes; }
 
-void CDat::Normalize( ) {
+void CDat::Normalize( bool fCap ) {
+
+	if( fCap )
+		NormalizeMinmax( );
+	else
+		NormalizeStdev( ); }
+
+void CDatImpl::NormalizeStdev( ) {
+	float	d, dAve, dDev;
+	size_t	i, j, iN;
+
+	dAve = dDev = 0;
+	for( iN = i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+				iN++;
+				dAve += d;
+				dDev += d * d; }
+	dAve /= iN;
+	dDev = sqrt( ( dDev / iN ) - ( dAve * dAve ) );
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) )
+				Set( i, j, ( d - dAve ) / dDev ); }
+
+void CDatImpl::NormalizeMinmax( ) {
 	float	d, dMin, dMax;
 	size_t	i, j;
 
@@ -346,13 +371,26 @@ void CDat::Invert( ) {
 			if( !CMeta::IsNaN( d = Get( i, j ) ) )
 				Set( i, j, 1 - d ); }
 
+bool CDat::FilterGenes( const char* szGenes, EFilter eFilt ) {
+	CGenome		Genome;
+	CGenes		Genes( Genome );
+	ifstream	ifsm;
+
+	if( !szGenes )
+		return false;
+
+	ifsm.open( szGenes );
+	if( !Genes.Open( ifsm ) )
+		return false;
+	FilterGenes( Genes, eFilt );
+	ifsm.close( );
+	return true; }
+
 void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt ) {
 	size_t			i, j;
 	vector<bool>	vecfGenes;
 
 	vecfGenes.resize( GetGenes( ) );
-	for( i = 0; i < vecfGenes.size( ); ++i )
-		vecfGenes[ i ] = false;
 	for( i = 0; i < Genes.GetGenes( ); ++i )
 		if( ( j = GetGene( Genes.GetGene( i ).GetName( ) ) ) != -1 )
 			vecfGenes[ j ] = true;
@@ -366,18 +404,21 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt ) {
 					Set( i, j, CMeta::GetNaN( ) );
 				continue; } }
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( eFilt == EFilterExclude ) {
-				if( vecfGenes[ j ] )
-					Set( i, j, CMeta::GetNaN( ) ); }
-			else if( eFilt != EFilterInclude ) {
-				if( !( vecfGenes[ i ] && vecfGenes[ j ] ) ) {
-					if( !( vecfGenes[ i ] || vecfGenes[ j ] ) )
+			switch( eFilt ) {
+				case EFilterInclude:
+					if( !vecfGenes[ j ] )
 						Set( i, j, CMeta::GetNaN( ) );
-					else if( eFilt == EFilterDiscard )
-						Set( i, j, Get( i, j ) ? CMeta::GetNaN( ) : 0 );
-					else
-						Set( i, j, 0 ); } }
-			else if( !vecfGenes[ j ] )
-				Set( i, j, CMeta::GetNaN( ) ); } }
+					break;
+
+				case EFilterTerm:
+					if( !( vecfGenes[ i ] && vecfGenes[ j ] ) &&
+						( !( vecfGenes[ i ] || vecfGenes[ j ] ) || Get( i, j ) ) )
+							Set( i, j, CMeta::GetNaN( ) );
+					break;
+
+				case EFilterExclude:
+					if( vecfGenes[ j ] )
+						Set( i, j, CMeta::GetNaN( ) );
+					break; } } }
 
 }

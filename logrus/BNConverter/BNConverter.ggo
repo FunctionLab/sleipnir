@@ -13,9 +13,10 @@ option	"test"		t	"Test fraction"	double	default="0.333333333"
 option	"iterations"	s	"EM iterations"	int	default="20"
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
-option	"pnl"		p	"Use PNL library"	flag	on
+option	"genet"		c	"Term inclusion file"	string	typestr="filename"
+option	"pnl"		p	"Use PNL library"	flag	off
 option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"checkpoint"	k	"Checkpoint xml file after each iteration"	flag	on
+option	"checkpoint"	k	"Checkpoint xml file after each iteration"	flag	off
 option	"eval_train"	E	"Training evaluation results"	string	typestr="filename"
 option	"eval_test"	e	"Test evaluation results"	string	typestr="filename"
 option	"zero"		z	"Zero missing values"	flag	off

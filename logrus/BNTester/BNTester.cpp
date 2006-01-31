@@ -1,18 +1,22 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+static int Genes( const char*, CGenes& );
+
 int main( int iArgs, char** aszArgs ) {
 	IBayesNet*				pBN;
 	CDatasetCompact			Data;
 	CDat					Dat;
 	CGenome					Genome;
-	CGenes					GenesIn( Genome ), GenesEx( Genome );
+	CGenes					GenesIn( Genome ), GenesEx( Genome ), GenesOv( Genome );
 	ifstream				ifsm;
 	ofstream				ofsm;
 	vector<vector<float> >	vecvecdResults;
 	float					d;
 	size_t					i, j, k;
 	gengetopt_args_info		sArgs;
+	int						iRet;
+	vector<bool>			vecfGenes;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -28,22 +32,14 @@ int main( int iArgs, char** aszArgs ) {
 	if( !BNSmile.Open( sArgs.input_arg ) ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
-	if( sArgs.genes_arg ) {
-		ifsm.open( sArgs.genes_arg );
-		if( !GenesIn.Open( ifsm ) ) {
-			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
-			return 1; }
-		ifsm.close( ); }
-	if( sArgs.genex_arg ) {
-		ifsm.clear( );
-		ifsm.open( sArgs.genex_arg );
-		if( !GenesEx.Open( ifsm ) ) {
-			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
-			return 1; }
-		ifsm.close( ); }
+	if( ( iRet = Genes( sArgs.genes_arg, GenesIn ) ) ||
+		( iRet = Genes( sArgs.genee_arg, GenesOv ) ) ||
+		( iRet = Genes( sArgs.genex_arg, GenesEx ) ) )
+		return iRet;
 	if( !Data.Open( sArgs.datadir_arg, &BNSmile, GenesIn, GenesEx ) ) {
 		cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
 		return 1; }
+	Data.FilterGenes( GenesOv, CDat::EFilterInclude );
 
 	if( sArgs.output_arg )
 		Dat.Open( Data.GetGeneNames( ) );
@@ -82,4 +78,17 @@ int main( int iArgs, char** aszArgs ) {
 		cout.flush( ); }
 
 	CMeta::Shutdown( );
+	return 0; }
+
+static int Genes( const char* szGenes, CGenes& Genes ) {
+	ifstream	ifsm;
+
+	if( !szGenes )
+		return 0;
+
+	ifsm.open( szGenes );
+	if( !Genes.Open( ifsm ) ) {
+		cerr << "Couldn't open: " << szGenes << endl;
+		return 1; }
+	ifsm.close( );
 	return 0; }

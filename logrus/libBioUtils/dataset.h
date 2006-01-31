@@ -19,6 +19,7 @@ public:
 	virtual size_t GetExperiments( ) const = 0;
 	virtual size_t GetGene( const std::string& ) const = 0;
 	virtual size_t GetBins( size_t ) const = 0;
+	virtual void Remove( size_t, size_t ) = 0;
 };
 
 class CDataset : CDatasetImpl, public IDataset {
@@ -39,6 +40,7 @@ public:
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
 	size_t GetBins( size_t ) const;
+	void Remove( size_t, size_t );
 };
 
 class CDatasetCompact : CDatasetCompactImpl, public IDataset {
@@ -47,6 +49,7 @@ public:
 	bool Open( const char*, const IBayesNet* );
 	bool Open( const char*, const IBayesNet*, const CGenes&, const CGenes& );
 	bool Open( const std::vector<std::string>& );
+	void FilterGenes( const CGenes&, CDat::EFilter );
 
 	bool IsHidden( size_t ) const;
 	size_t GetDiscrete( size_t, size_t, size_t ) const;
@@ -58,6 +61,7 @@ public:
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
 	size_t GetBins( size_t ) const;
+	void Remove( size_t, size_t );
 };
 
 class CDataMask : CDataMaskImpl, public IDataset {
@@ -76,6 +80,7 @@ public:
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
 	size_t GetBins( size_t ) const;
+	void Remove( size_t, size_t );
 };
 
 class CDataSubset : CDataSubsetImpl, public IDataset {
@@ -94,6 +99,7 @@ public:
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
 	size_t GetBins( size_t ) const;
+	void Remove( size_t, size_t );
 };
 
 }

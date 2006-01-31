@@ -4,7 +4,7 @@
 
 namespace libBioUtils {
 
-double CountWeights( const float* adWX, size_t iN ) {
+static double CountWeights( const float* adWX, size_t iN ) {
 	size_t	i;
 	double	dRet;
 
@@ -17,7 +17,7 @@ double CountWeights( const float* adWX, size_t iN ) {
 
 	return dRet; }
 
-float GetWeight( const float* adW, size_t iW ) {
+static float GetWeight( const float* adW, size_t iW ) {
 
 	return ( adW ? adW[ iW ] : 1 ); }
 
@@ -26,6 +26,10 @@ CMeasureImpl::CMeasureImpl( const IMeasure* pMeasure ) : m_pMeasure(pMeasure) { 
 const char* CMeasureKolmogorovSmirnov::GetName( ) const {
 
 	return "kolm-smir"; }
+
+bool CMeasureKolmogorovSmirnov::IsRank( ) const {
+
+	return false; }
 
 double CMeasureKolmogorovSmirnov::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
@@ -74,6 +78,10 @@ const char* CMeasureEuclidean::GetName( ) const {
 
 	return "euclidean"; }
 
+bool CMeasureEuclidean::IsRank( ) const {
+
+	return false; }
+
 double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 	size_t	i;
@@ -93,8 +101,17 @@ const char* CMeasurePearson::GetName( ) const {
 
 	return "pearson"; }
 
+bool CMeasurePearson::IsRank( ) const {
+
+	return false; }
+
 double CMeasurePearson::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+
+	return CMeasurePearson::Pearson( adX, iM, adY, iN, eMap, adWX, adWY ); }
+
+double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) {
 	double	dMX, dMY, dRet, dDX, dDY, dX, dY;
 	size_t	i;
 
@@ -137,6 +154,10 @@ double CMeasurePearson::Measure( const float* adX, size_t iM, const float* adY,
 const char* CMeasureKendallsTau::GetName( ) const {
 
 	return "kendalls"; }
+
+bool CMeasureKendallsTau::IsRank( ) const {
+
+	return true; }
 
 double CMeasureKendallsTau::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
@@ -313,6 +334,10 @@ const char* CMeasureNegate::GetName( ) const {
 
 	return m_pMeasure->GetName( ); }
 
+bool CMeasureNegate::IsRank( ) const {
+
+	return m_pMeasure->IsRank( ); }
+
 double CMeasureNegate::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 
@@ -328,6 +353,10 @@ const char* CMeasureSigmoid::GetName( ) const {
 
 	return m_pMeasure->GetName( ); }
 
+bool CMeasureSigmoid::IsRank( ) const {
+
+	return m_pMeasure->IsRank( ); }
+
 double CMeasureSigmoid::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 	double	dRet;
@@ -341,6 +370,10 @@ CMeasureAutocorrelate::CMeasureAutocorrelate( const IMeasure* pMeasure ) :
 const char* CMeasureAutocorrelate::GetName( ) const {
 
 	return m_pMeasure->GetName( ); }
+
+bool CMeasureAutocorrelate::IsRank( ) const {
+
+	return m_pMeasure->IsRank( ); }
 
 double CMeasureAutocorrelate::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
@@ -375,6 +408,10 @@ CMeasureSpearmanImpl::CMeasureSpearmanImpl( bool fTransformed ) :
 const char* CMeasureSpearman::GetName( ) const {
 
 	return "spearman"; }
+
+bool CMeasureSpearman::IsRank( ) const {
+
+	return true; }
 
 double CMeasureSpearman::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
@@ -433,5 +470,19 @@ double CMeasureSpearman::Measure( const float* adX, size_t iM, const float* adY,
 
 	return dRet; }
 
+const char* CMeasurePearNorm::GetName( ) const {
+
+	return "pearnorm"; }
+
+bool CMeasurePearNorm::IsRank( ) const {
+
+	return false; }
+
+double CMeasurePearNorm::Measure( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	double	dP;
+
+	dP = CMeasurePearson::Pearson( adX, iM, adY, iN, eMap, adWX, adWY );
+	return ( ( log( 1 + dP ) - log( 1 - dP ) ) / 2 ); }
 
 }

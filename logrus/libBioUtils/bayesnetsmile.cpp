@@ -173,7 +173,7 @@ bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIteratio
 bool CBayesNetSmileImpl::IsNaive( ) const {
 	size_t	i;
 
-//	if( !m_fSmileNet )
+	if( !m_fSmileNet )
 		return false;
 
 	for( i = 1; i < m_SmileNet.GetNumberOfNodes( ); ++i ) {
@@ -186,10 +186,10 @@ bool CBayesNetSmileImpl::IsNaive( ) const {
 
 bool CBayesNetSmile::Learn( const IDataset* pData, size_t iIterations, bool fZero, bool fELR ) {
 
-	if( IsNaive( ) )
-		return LearnNaive( pData );
 	if( fELR )
 		return LearnELR( pData, iIterations, fZero );
+	if( IsNaive( ) )
+		return LearnNaive( pData, fZero );
 
 	return ( m_fGroup ? LearnGrouped( pData, iIterations, fZero ) :
 		LearnUngrouped( pData, iIterations, fZero ) ); }
@@ -394,7 +394,6 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 	if( !m_fSmileNet || IsContinuous( ) )
 		return false;
 
-	((CBayesNetSmileImpl*)this)->m_SmileNet.SetDefaultBNAlgorithm( DSL_ALG_BN_LAURITZEN );
 	m_SmileNet.GetAllNodes( IntArrayNodes );
 	for( i = 0; i < pData->GetGenes( ); ++i ) {
 		if( !( i % 250 ) )
@@ -489,8 +488,46 @@ void CBayesNetSmile::Reverse( size_t iNode ) {
 		while( Coords.Next( ) != DSL_OUT_OF_RANGE );
 	} }
 
-bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData ) {
+bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
+	vector<vector<size_t> >	vecveciCounts;
+	size_t					i, j, k, iAnswer, iAnswers, iVal;
+	DSL_nodeDefinition*		pDef;
+	DSL_Dmatrix*			pMat;
+	DSL_intArray			veciCoords;
 
-	return false; }
+	vecveciCounts.resize( m_SmileNet.GetNumberOfNodes( ) );
+	iAnswers = m_SmileNet.GetNode( 0 )->Definition( )->GetNumberOfOutcomes( );
+	vecveciCounts[ 0 ].resize( iAnswers );
+	for( i = 1; i < vecveciCounts.size( ); ++i )
+		vecveciCounts[ i ].resize( iAnswers *
+			m_SmileNet.GetNode( (int)i )->Definition( )->GetNumberOfOutcomes( ) );
+	for( i = 0; i < pData->GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
+			if( pData->IsExample( i, j ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
+				vecveciCounts[ 0 ][ iAnswer ]++;
+				for( k = 1; k < pData->GetExperiments( ); ++k ) {
+					if( ( iVal = pData->GetDiscrete( i, j, k ) ) == -1 ) {
+						if( fZero )
+							iVal = 0;
+						else
+							continue; }
+					vecveciCounts[ k ][ ( iVal * iAnswers ) + iAnswer ]++; } }
+
+	pMat = m_SmileNet.GetNode( 0 )->Definition( )->GetMatrix( );
+	for( i = 0; i < iAnswers; ++i )
+		(*pMat)[ (int)i ] = vecveciCounts[ 0 ][ (int)i ] + 1;
+	pMat->Normalize( );
+	for( i = 1; i < vecveciCounts.size( ); ++i ) {
+		pDef = m_SmileNet.GetNode( (int)i )->Definition( );
+		pMat = pDef->GetMatrix( );
+		pMat->IndexToCoordinates( 0, veciCoords );
+		for( j = 0; j < iAnswers; ++j ) {
+			veciCoords[ 0 ] = (int)j;
+			for( k = 0; k < pDef->GetNumberOfOutcomes( ); ++k ) {
+				veciCoords[ 1 ] = (int)k;
+				(*pMat)[ veciCoords ] = vecveciCounts[ i ][ ( k * iAnswers ) + j ] + 1; } }
+		pMat->Normalize( ); }
+
+	return true; }
 
 }

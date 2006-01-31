@@ -17,8 +17,9 @@ int main( int iArgs, char** aszArgs ) {
 	CMeasureKolmogorovSmirnov	KolmSmir;
 	CMeasureSpearman			Spearman( true );
 	CMeasureNegate				EuclideanNeg( &Euclidean );
+	CMeasurePearNorm			PearNorm;
 	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanNeg, &KendallsTau,
-		&KolmSmir, &Spearman, NULL };
+		&KolmSmir, &Spearman, &PearNorm, NULL };
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -51,7 +52,7 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open PCL" << endl;
 		return 1; }
 
-	if( ( pMeasure == &Spearman ) || ( pMeasure == &KendallsTau ) )
+	if( pMeasure->IsRank( ) )
 		PCL.RankTransform( );
 	Dist.Initialize( PCL.GetGenes( ) );
 	for( i = 0; i < PCL.GetGenes( ); ++i ) {
@@ -62,29 +63,9 @@ int main( int iArgs, char** aszArgs ) {
 			Dist.Set( i, j, (float)pMeasure->Measure( PCL.Get( i ), PCL.GetExperiments( ),
 				PCL.Get( j ), PCL.GetExperiments( ) ) ); }
 
-/*
-	if( sArgs.zscore_flag ) {
-		size_t	iN;
-		float	d, dAve, dDev;
-
-		dAve = dDev = 0;
-		for( iN = i = 0; i < Dist.GetSize( ); ++i )
-			for( j = ( i + 1 ); j < Dist.GetSize( ); ++j )
-				if( !CMeta::IsNaN( d = Dist.Get( i, j ) ) ) {
-					iN++;
-					dAve += d;
-					dDev += d * d; }
-		dAve /= iN;
-		dDev = sqrt( ( dDev / iN ) - ( dAve * dAve ) );
-		for( i = 0; i < Dist.GetSize( ); ++i )
-			for( j = ( i + 1 ); j < Dist.GetSize( ); ++j )
-				if( !CMeta::IsNaN( d = Dist.Get( i, j ) ) )
-					Dist.Set( i, j, ( d - dAve ) / dDev ); }
-*/
-
 	Dat.Open( PCL.GetGeneNames( ), Dist );
-	if( sArgs.normalize_flag )
-		Dat.Normalize( );
+	if( sArgs.normalize_flag || sArgs.zscore_flag )
+		Dat.Normalize( !!sArgs.normalize_flag );
 	ofsm.open( sArgs.output_arg, ios_base::binary );
 	Dat.Save( ofsm, true );
 	ofsm.close( );

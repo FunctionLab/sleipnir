@@ -15,9 +15,8 @@ class CDat : protected CDatImpl {
 public:
 	enum EFilter {
 		EFilterInclude	= 0,
-		EFilterDiscard	= EFilterInclude + 1,
-		EFilterNegate	= EFilterDiscard + 1,
-		EFilterExclude	= EFilterNegate + 1
+		EFilterTerm		= EFilterInclude + 1,
+		EFilterExclude	= EFilterTerm + 1
 	};
 
 	const std::vector<std::string>& GetGeneNames( ) const;
@@ -30,8 +29,9 @@ public:
 	bool Open( const std::vector<std::string>&, const CDistanceMatrix& );
 	bool OpenGenes( std::istream&, bool );
 	void Save( std::ostream&, bool ) const;
-	void Normalize( );
+	void Normalize( bool = true );
 	void Invert( );
+	bool FilterGenes( const char*, EFilter );
 	void FilterGenes( const CGenes&, EFilter );
 
 	float Get( size_t iX, size_t iY ) const {
