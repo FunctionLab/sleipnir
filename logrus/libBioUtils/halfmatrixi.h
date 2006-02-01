@@ -1,6 +1,8 @@
 #ifndef HALFMATRIXI_H
 #define HALFMATRIXI_H
 
+#include "pstdint.h"
+
 namespace libBioUtils {
 
 class CHalfMatrixBase {
@@ -26,8 +28,10 @@ protected:
 	~CCompactMatrixImpl( );
 
 	size_t* GetWord( size_t, size_t, unsigned char& ) const;
+	size_t CountWords( ) const;
 
-	size_t			m_iSize;
+	bool			m_fMemory;
+	uint32_t		m_iSize;
 	unsigned char	m_cBits;
 	size_t*			m_aiData;
 };

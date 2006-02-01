@@ -13,7 +13,7 @@ public:
 	bool Open( const CSlim& );
 	size_t Quantify( float ) const;
 	bool IsContinuous( ) const;
-	size_t GetValues( ) const;
+	unsigned char GetValues( ) const;
 };
 
 }

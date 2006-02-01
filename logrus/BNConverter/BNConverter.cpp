@@ -6,13 +6,14 @@ static void DebugDataset( const IDataset* );
 
 int main( int iArgs, char** aszArgs ) {
 	CDatasetCompact		Data;
+	CDatasetCompactMap	DataMap;
 	CDataPair			Answers;
 	CDataMask			Train, Test;
 	IDataset*			pData;
 	gengetopt_args_info	sArgs;
 	ofstream			ofsm;
 	IBayesNet*			pNet;
-	size_t				i, j;
+	size_t				i;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -31,28 +32,41 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.randomize_flag )
 		BNSmile.Randomize( );
 
-	if( !Answers.Open( sArgs.answers_arg, BNSmile.IsContinuous( ) ) ) {
-		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
-		return 1; }
-	if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
-		cerr << "Couldn't open: " << sArgs.genes_arg << endl;
-		return 1; }
-	if( sArgs.genet_arg && !Answers.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) ) {
-		cerr << "Couldn't open: " << sArgs.genet_arg << endl;
-		return 1; }
-	if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
-		cerr << "Couldn't open: " << sArgs.genex_arg << endl;
-		return 1; }
-	if( !Data.Open( Answers, sArgs.datadir_arg, &BNSmile ) ) {
-		cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
-		return 1; }
+	if( sArgs.dataset_arg ) {
+		if( !DataMap.Open( sArgs.dataset_arg ) ) {
+			cerr << "Couldn't open: " << sArgs.dataset_arg << endl;
+			return 1; }
 
-	for( i = 0; i < Data.GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < Data.GetGenes( ); ++j )
-			if( Data.IsExample( i, j ) && ( Data.GetDiscrete( i, j, 0 ) == -1 ) )
-				Data.Remove( i, j );
+		if( sArgs.genes_arg && !DataMap.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
+			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+			return 1; }
+		if( sArgs.genet_arg && !DataMap.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) ) {
+			cerr << "Couldn't open: " << sArgs.genet_arg << endl;
+			return 1; }
+		if( sArgs.genex_arg && !DataMap.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
+			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
+			return 1; }
+		DataMap.FilterAnswers( );
+		pData = &DataMap; }
+	else {
+		if( !Answers.Open( sArgs.answers_arg, BNSmile.IsContinuous( ) ) ) {
+			cerr << "Couldn't open: " << sArgs.answers_arg << endl;
+			return 1; }
+		if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
+			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+			return 1; }
+		if( sArgs.genet_arg && !Answers.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) ) {
+			cerr << "Couldn't open: " << sArgs.genet_arg << endl;
+			return 1; }
+		if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
+			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
+			return 1; }
+		if( !Data.Open( Answers, sArgs.datadir_arg, &BNSmile ) ) {
+			cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
+			return 1; }
+		Data.FilterAnswers( );
+		pData = &Data; }
 
-	pData = &Data;
 	if( sArgs.test_arg ) {
 		Train.AttachRandom( pData, (float)( 1 - sArgs.test_arg ) );
 		Test.AttachComplement( Train );

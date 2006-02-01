@@ -8,5 +8,4 @@ groupoption	"output"	o	"Output dab file"	string	typestr="filename"	group="input-
 section "Optional"
 option	"flip"		f	"Calculate one minus dat values"	flag	off
 option	"genes"		g	"Process only genes from the given subset"	string	typestr="filename"
-option	"border"	b	"Treat functional border pairs specially"	values="none","discard","negate"	default="none"
 option	"verbosity"	v	"Message verbosity"	int	default="5"

@@ -1,10 +1,11 @@
 #include "stdafx.h"
 
-int MainDATs( const gengetopt_args_info& );
-int MainPCLs( const gengetopt_args_info& );
+static int MainDABs( const gengetopt_args_info& );
+static int MainDATs( const gengetopt_args_info& );
+static int MainPCLs( const gengetopt_args_info& );
 
-static const TPFnCombiner	c_apfnCombiners[]	= { MainPCLs, MainDATs, NULL };
-static const char*			c_aszCombiners[]	= { "pcl", "dat", NULL };
+static const TPFnCombiner	c_apfnCombiners[]	= { MainPCLs, MainDATs, MainDABs, NULL };
+static const char*			c_aszCombiners[]	= { "pcl", "dat", "dab", NULL };
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -24,7 +25,7 @@ int main( int iArgs, char** aszArgs ) {
 	CMeta::Shutdown( );
 	return iRet; }
 
-int MainPCLs( const gengetopt_args_info& sArgs ) {
+static int MainPCLs( const gengetopt_args_info& sArgs ) {
 	CPCL						PCL, PCLNew;
 	size_t						i, j, iArg, iExp, iGene;
 	vector<string>				vecstrGenes, vecstrExps;
@@ -70,7 +71,7 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 
 	return 0; }
 
-int MainDATs( const gengetopt_args_info& sArgs ) {
+static int MainDATs2( const gengetopt_args_info& sArgs ) {
 	CDataSubset		Dataset;
 	CDat			Dat;
 	size_t			i, j, k, iSubset, iSubsets;
@@ -120,7 +121,7 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 
 	return 0; }
 
-int MainDATs2( const gengetopt_args_info& sArgs ) {
+int MainDATs( const gengetopt_args_info& sArgs ) {
 	CDatasetCompact	Dataset;
 	CDat			Dat;
 	size_t			i, j, k;
@@ -153,6 +154,34 @@ int MainDATs2( const gengetopt_args_info& sArgs ) {
 		ofsm.close( ); }
 	else {
 		Dat.Save( cout, false );
+		cout.flush( ); }
+
+	return 0; }
+
+static int MainDABs( const gengetopt_args_info& sArgs ) {
+	CDatasetCompact	Dataset;
+	size_t			i;
+	vector<string>	vecstrFiles;
+	ofstream		ofsm;
+
+	if( !sArgs.inputs_num )
+		return 1;
+
+	vecstrFiles.resize( sArgs.inputs_num );
+	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
+	if( !Dataset.Open( vecstrFiles ) ) {
+		cerr << "Couldn't open: " << vecstrFiles[ 0 ];
+		for( i = 1; i < vecstrFiles.size( ); ++i )
+			cerr << ", " << vecstrFiles[ i ];
+		cerr << endl;
+		return 1; }
+
+	if( sArgs.output_arg ) {
+		ofsm.open( sArgs.output_arg );
+		Dataset.Save( ofsm, true );
+		ofsm.close( ); }
+	else {
+		Dataset.Save( cout, false );
 		cout.flush( ); }
 
 	return 0; }

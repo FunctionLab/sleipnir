@@ -43,25 +43,50 @@ public:
 	void Remove( size_t, size_t );
 };
 
-class CDatasetCompact : CDatasetCompactImpl, public IDataset {
+class CDatasetCompact : protected CDatasetCompactImpl, public IDataset {
 public:
 	bool Open( const CDataPair&, const char*, const IBayesNet* );
 	bool Open( const char*, const IBayesNet* );
 	bool Open( const char*, const IBayesNet*, const CGenes&, const CGenes& );
 	bool Open( const std::vector<std::string>& );
+	bool Open( std::istream& );
+	void Save( std::ostream&, bool ) const;
 	void FilterGenes( const CGenes&, CDat::EFilter );
+	bool FilterGenes( const char*, CDat::EFilter );
+	void FilterAnswers( );
 
 	bool IsHidden( size_t ) const;
 	size_t GetDiscrete( size_t, size_t, size_t ) const;
 	float GetContinuous( size_t, size_t, size_t ) const;
 	const std::string& GetGene( size_t ) const;
 	size_t GetGenes( ) const;
-	bool IsExample( size_t, size_t ) const;
+	virtual bool IsExample( size_t, size_t ) const;
 	const std::vector<std::string>& GetGeneNames( ) const;
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
 	size_t GetBins( size_t ) const;
+	virtual void Remove( size_t, size_t );
+};
+
+class CDatasetCompactMap : public CDatasetCompact {
+public:
+	CDatasetCompactMap( );
+	~CDatasetCompactMap( );
+
+	bool Open( const char* );
+
+	bool IsExample( size_t, size_t ) const;
 	void Remove( size_t, size_t );
+
+private:
+	static const char	c_szMap[];
+
+	CBinaryMatrix			m_Mask;
+	const unsigned char*	m_pbData;
+	size_t					m_iData;
+#ifdef _MSC_VER
+	HANDLE					m_hndlMap;
+#endif // _MSC_VER
 };
 
 class CDataMask : CDataMaskImpl, public IDataset {

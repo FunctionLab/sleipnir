@@ -210,9 +210,11 @@ bool CDatImpl::OpenGenes( istream& istm, bool fBinary ) {
 	Reset( );
 	if( fBinary ) {
 		istm.read( (char*)&iCount, sizeof(iCount) );
-		m_vecstrGenes.reserve( iCount );
+		if( iCount > c_iGeneLimit )
+			return false;
+		m_vecstrGenes.resize( iCount );
 		for( i = 0; i < iCount; ++i )
-			m_vecstrGenes.push_back( DabGene( istm ) ); }
+			m_vecstrGenes[ i ] = DabGene( istm ); }
 	else {
 		set<string>					setstrGenes;
 		set<string>::const_iterator	iterGenes;

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-int Dat2Dab( const char*, bool, bool, CDat::EFilter, const CGenes& );
+int Dat2Dab( const char*, bool, bool, const CGenes& );
 int DabShuffle( const char*, bool );
 int DabFinder( const char*, bool );
 void DatFlip( CDat& );
@@ -14,7 +14,6 @@ int main( int iArgs, char** aszArgs ) {
 	CGenome				Genome;
 	CGenes				Genes( Genome );
 	ifstream			ifsm;
-	CDat::EFilter		eFilt;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -29,19 +28,12 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open: " << sArgs.genes_arg << endl;
 			return 1; }
 		ifsm.close( ); }
-	if( !strcmp( sArgs.border_arg, "discard" ) )
-		eFilt = CDat::EFilterDiscard;
-	else if( !strcmp( sArgs.border_arg, "negate" ) )
-		eFilt = CDat::EFilterNegate;
-	else
-		eFilt = CDat::EFilterInclude;
-	iRet = Dat2Dab( szFile, fCreate, !!sArgs.flip_flag, eFilt, Genes );
+	iRet = Dat2Dab( szFile, fCreate, !!sArgs.flip_flag, Genes );
 
 	CMeta::Shutdown( );
 	return iRet; }
 
-int Dat2Dab( const char* szFile, bool fCreate, bool fFlip, CDat::EFilter eFilt,
-	const CGenes& Genes ) {
+int Dat2Dab( const char* szFile, bool fCreate, bool fFlip, const CGenes& Genes ) {
 	CDat		Dat;
 	ifstream	ifsm;
 	ofstream	ofsm;
@@ -51,7 +43,7 @@ int Dat2Dab( const char* szFile, bool fCreate, bool fFlip, CDat::EFilter eFilt,
 		if( fFlip )
 			DatFlip( Dat );
 		if( Genes.GetGenes( ) )
-			Dat.FilterGenes( Genes, eFilt );
+			Dat.FilterGenes( Genes, CDat::EFilterInclude );
 		ofsm.open( szFile, ios_base::binary );
 		Dat.Save( ofsm, true );
 		ofsm.close( ); }
@@ -61,7 +53,7 @@ int Dat2Dab( const char* szFile, bool fCreate, bool fFlip, CDat::EFilter eFilt,
 		if( fFlip )
 			DatFlip( Dat );
 		if( Genes.GetGenes( ) )
-			Dat.FilterGenes( Genes, eFilt );
+			Dat.FilterGenes( Genes, CDat::EFilterInclude );
 		ifsm.close( );
 		Dat.Save( cout, false );
 		cout.flush( ); }

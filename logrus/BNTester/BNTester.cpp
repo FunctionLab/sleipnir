@@ -6,6 +6,8 @@ static int Genes( const char*, CGenes& );
 int main( int iArgs, char** aszArgs ) {
 	IBayesNet*				pBN;
 	CDatasetCompact			Data;
+	CDatasetCompactMap		DataMap;
+	CDatasetCompact*		pData;
 	CDat					Dat;
 	CGenome					Genome;
 	CGenes					GenesIn( Genome ), GenesEx( Genome ), GenesOv( Genome );
@@ -36,13 +38,27 @@ int main( int iArgs, char** aszArgs ) {
 		( iRet = Genes( sArgs.genee_arg, GenesOv ) ) ||
 		( iRet = Genes( sArgs.genex_arg, GenesEx ) ) )
 		return iRet;
-	if( !Data.Open( sArgs.datadir_arg, &BNSmile, GenesIn, GenesEx ) ) {
-		cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
-		return 1; }
-	Data.FilterGenes( GenesOv, CDat::EFilterInclude );
+	if( sArgs.dataset_arg ) {
+		if( !DataMap.Open( sArgs.dataset_arg ) ) {
+			cerr << "Couldn't open: " << sArgs.dataset_arg << endl;
+			return 1; }
+		if( sArgs.genes_arg && !DataMap.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
+			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+			return 1; }
+		if( sArgs.genex_arg && !DataMap.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
+			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
+			return 1; }
+		DataMap.FilterAnswers( );
+		pData = &DataMap; }
+	else {
+		if( !Data.Open( sArgs.datadir_arg, &BNSmile, GenesIn, GenesEx ) ) {
+			cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
+			return 1; }
+		pData = &Data; }
+	pData->FilterGenes( GenesOv, CDat::EFilterInclude );
 
 	if( sArgs.output_arg )
-		Dat.Open( Data.GetGeneNames( ) );
+		Dat.Open( pData->GetGeneNames( ) );
 	vecvecdResults.clear( );
 	cerr << "Evaluating..." << endl;
 	if( sArgs.pnl_flag ) {
@@ -51,9 +67,9 @@ int main( int iArgs, char** aszArgs ) {
 	else
 		pBN = &BNSmile;
 	if( sArgs.output_arg )
-		pBN->Evaluate( &Data, Dat, !!sArgs.zero_flag );
+		pBN->Evaluate( pData, Dat, !!sArgs.zero_flag );
 	else
-		pBN->Evaluate( &Data, vecvecdResults, !!sArgs.zero_flag );
+		pBN->Evaluate( pData, vecvecdResults, !!sArgs.zero_flag );
 
 	if( sArgs.output_arg ) {
 		cerr << "Saving..." << endl;
@@ -66,14 +82,14 @@ int main( int iArgs, char** aszArgs ) {
 		ofsm.close( ); }
 	else {
 		cerr << "Storing..." << endl;
-		for( k = i = 0; i < Data.GetGenes( ); ++i )
-			for( j = ( i + 1 ); j < Data.GetGenes( ); ++j ) {
-				if( !Data.IsExample( i, j ) )
+		for( k = i = 0; i < pData->GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
+				if( !pData->IsExample( i, j ) )
 					continue;
 				d = vecvecdResults[ k++ ][ 0 ];
 				if( !pBN->IsContinuous( ) )
 					d = 1 - d;
-				cout << Data.GetGene( i ) << '\t' << Data.GetGene( j ) << '\t' << d <<
+				cout << pData->GetGene( i ) << '\t' << pData->GetGene( j ) << '\t' << d <<
 					endl; }
 		cout.flush( ); }
 

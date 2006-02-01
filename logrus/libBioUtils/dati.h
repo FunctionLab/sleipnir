@@ -18,6 +18,7 @@ protected:
 	typedef std::vector<float>				TAF;
 	typedef std::vector<TAF>				TAAF;
 
+	static const size_t	c_iGeneLimit	= 100000;
 	static const float	c_dNaN;
 	static const char	c_szBin[];
 

@@ -70,13 +70,26 @@ typedef CHalfMatrix<float>	CDistanceMatrix;
 
 class CBinaryMatrix : public CHalfMatrix<unsigned char> {
 public:
-	bool Get( size_t, size_t ) const;
-	void Set( size_t, size_t, bool );
+	bool Get( size_t iX, size_t iY ) const {
+
+		HalfIndex( iX, iY );
+		return ( ( m_aaData[ iX ][ iY / 8 ] >> ( iY % 8 ) ) & 1 ); }
+
+	void Set( size_t iX, size_t iY, bool fValue ) {
+		unsigned char	c;
+
+		HalfIndex( iX, iY );
+		c = 1 << (unsigned char)( iY % 8 );
+		m_aaData[ iX ][ iY / 8 ] = ( m_aaData[ iX ][ iY / 8 ] & ~c ) | ( fValue ? c : 0 ); }
+
 	void Initialize( size_t, unsigned char** = NULL );
 };
 
 class CCompactMatrix : CCompactMatrixImpl {
 public:
+	bool Open( std::istream& );
+	const unsigned char* Open( const unsigned char* );
+	void Save( std::ostream& ) const;
 	unsigned char Get( size_t, size_t ) const;
 	void Set( size_t, size_t, unsigned char );
 	void Initialize( size_t, unsigned char, bool = false );

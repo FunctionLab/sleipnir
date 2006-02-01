@@ -58,7 +58,7 @@ size_t CDataPair::Quantify( float dValue ) const {
 		if( dValue <= m_vecdQuant[ i ] )
 			break;
 
-	return i; }
+	return min( i, m_vecdQuant.size( ) - 1 ); }
 
 bool CDataPair::IsContinuous( ) const {
 
@@ -69,7 +69,7 @@ void CDataPairImpl::Reset( bool fContinuous ) {
 	m_vecdQuant.clear( );
 	m_fContinuous = fContinuous; }
 
-size_t CDataPair::GetValues( ) const {
+unsigned char CDataPair::GetValues( ) const {
 
 	return m_vecdQuant.size( ); }
 

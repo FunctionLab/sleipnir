@@ -2,8 +2,10 @@ package	"BNTester"
 version	"1.0"
 purpose	"Bayes net evaluation"
 
+defgroup "data" yes
+groupoption	"datadir"	d	"Data directory"	string	typestr="directory"	group="data"
+groupoption	"dataset"	D	"Dataset dad file"	string	typestr="filename"	group="data"
 option	"input"		i	"Input dsl file"	string	typestr="filename"	yes
-option	"datadir"	d	"Data directory"	string	typestr="directory"	yes
 section "Optional"
 option	"output"	o	"Output dab file"	string	typestr="filename"
 option	"verbosity"	v	"Message verbosity"	int	default="5"

@@ -3,6 +3,10 @@
 
 #include <set>
 
+#ifdef _MSC_VER
+#include <windows.h>
+#endif // _MSC_VER
+
 #include "examplei.h"
 #include "fullmatrix.h"
 #include "halfmatrix.h"
@@ -30,12 +34,15 @@ protected:
 	const std::vector<std::string>& GetGeneNames( ) const;
 	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
-	size_t GetBins( size_t ) const;
+	unsigned char GetBins( size_t ) const;
+	bool OpenBinary( std::istream& );
+	const unsigned char* OpenBinary( const unsigned char* );
+	void SaveBinary( std::ostream& ) const;
 
 	bool						m_fContinuous;
 	std::vector<size_t>			m_veciMapping;
 	std::vector<std::string>	m_vecstrGenes;
-	std::vector<size_t>			m_veciQuants;
+	std::vector<unsigned char>	m_veccQuants;
 };
 
 class CDatasetImpl : protected CDataImpl {
@@ -70,12 +77,15 @@ protected:
 
 	bool Open( const CDataPair&, size_t );
 	bool Open( const char*, const IBayesNet*, const CGenes* = NULL, const CGenes* = NULL );
+	bool Open( const unsigned char* );
 	void FilterGenes( const CGenes&, CDat::EFilter );
-	void Remove( size_t, size_t );
+	virtual void Remove( size_t, size_t );
 	size_t GetDiscrete( size_t, size_t, size_t ) const;
+	void SaveText( std::ostream& ) const;
+	void SaveBinary( std::ostream& ) const;
+	virtual bool IsExample( size_t, size_t ) const;
 
-	size_t			m_iSize;
-	size_t			m_iData;
+	uint32_t		m_iData;
 	CCompactMatrix*	m_aData;
 };
 
