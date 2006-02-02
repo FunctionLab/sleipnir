@@ -53,7 +53,7 @@ public:
 		Reset( );
 		m_iSize = iSize;
 		if( m_fMemory = !( m_aaData = aaData ) ) {
-			m_aaData = new tType*[ m_iSize - 1 ];
+			m_aaData = iSize ? new tType*[ m_iSize - 1 ] : NULL;
 			for( i = 0; ( i + 1 ) < m_iSize; ++i )
 				m_aaData[ i ] = new tType[ m_iSize - i - 1 ]; } }
 

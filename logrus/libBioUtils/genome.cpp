@@ -280,6 +280,9 @@ bool CGenes::Open( istream& istm ) {
 	static const size_t	c_iBuffer	= 1024;
 	char	szBuf[ c_iBuffer ];
 
+	if( istm.rdstate( ) != ios_base::goodbit )
+		return false;
+
 	m_mapGenes.clear( );
 	m_vecpGenes.clear( );
 	while( istm.peek( ) != EOF ) {

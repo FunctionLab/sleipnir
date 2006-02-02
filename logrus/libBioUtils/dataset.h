@@ -20,6 +20,7 @@ public:
 	virtual size_t GetGene( const std::string& ) const = 0;
 	virtual size_t GetBins( size_t ) const = 0;
 	virtual void Remove( size_t, size_t ) = 0;
+	virtual void FilterGenes( const CGenes&, CDat::EFilter ) = 0;
 };
 
 class CDataset : CDatasetImpl, public IDataset {
@@ -41,6 +42,7 @@ public:
 	size_t GetGene( const std::string& ) const;
 	size_t GetBins( size_t ) const;
 	void Remove( size_t, size_t );
+	void FilterGenes( const CGenes&, CDat::EFilter );
 };
 
 class CDatasetCompact : protected CDatasetCompactImpl, public IDataset {
@@ -51,7 +53,6 @@ public:
 	bool Open( const std::vector<std::string>& );
 	bool Open( std::istream& );
 	void Save( std::ostream&, bool ) const;
-	void FilterGenes( const CGenes&, CDat::EFilter );
 	bool FilterGenes( const char*, CDat::EFilter );
 	void FilterAnswers( );
 
@@ -66,6 +67,7 @@ public:
 	size_t GetGene( const std::string& ) const;
 	size_t GetBins( size_t ) const;
 	virtual void Remove( size_t, size_t );
+	void FilterGenes( const CGenes&, CDat::EFilter );
 };
 
 class CDatasetCompactMap : public CDatasetCompact {
@@ -91,9 +93,9 @@ private:
 
 class CDataMask : CDataMaskImpl, public IDataset {
 public:
+	void Attach( const IDataset* );
 	void AttachRandom( const IDataset*, float );
 	void AttachComplement( const CDataMask& );
-	void AttachGenes( const IDataset*, std::istream& );
 
 	bool IsHidden( size_t ) const;
 	size_t GetDiscrete( size_t, size_t, size_t ) const;
@@ -106,6 +108,7 @@ public:
 	size_t GetGene( const std::string& ) const;
 	size_t GetBins( size_t ) const;
 	void Remove( size_t, size_t );
+	void FilterGenes( const CGenes&, CDat::EFilter );
 };
 
 class CDataSubset : CDataSubsetImpl, public IDataset {
@@ -125,6 +128,7 @@ public:
 	size_t GetGene( const std::string& ) const;
 	size_t GetBins( size_t ) const;
 	void Remove( size_t, size_t );
+	void FilterGenes( const CGenes&, CDat::EFilter );
 };
 
 }

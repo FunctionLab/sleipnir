@@ -18,10 +18,13 @@ class IBayesNet;
 class IDataset;
 
 class CDataImpl {
+	friend class CDataMask;
 protected:
 	static const char	c_cSeparator	= '/';
 	static const char	c_szDat[];
 	static const char	c_szDab[];
+
+	static void FilterGenes( IDataset*, const CGenes&, CDat::EFilter );
 
 	size_t OpenMax( const char*, const std::vector<std::string>&, bool,
 		std::vector<std::string>&, std::set<std::string>* = NULL );
@@ -78,7 +81,6 @@ protected:
 	bool Open( const CDataPair&, size_t );
 	bool Open( const char*, const IBayesNet*, const CGenes* = NULL, const CGenes* = NULL );
 	bool Open( const unsigned char* );
-	void FilterGenes( const CGenes&, CDat::EFilter );
 	virtual void Remove( size_t, size_t );
 	size_t GetDiscrete( size_t, size_t, size_t ) const;
 	void SaveText( std::ostream& ) const;

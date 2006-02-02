@@ -272,9 +272,9 @@ bool CDat::Open( const vector<string>& vecstrGenes ) {
 	size_t	i, j;
 
 	Reset( );
-	m_vecstrGenes.reserve( vecstrGenes.size( ) );
+	m_vecstrGenes.resize( vecstrGenes.size( ) );
 	for( i = 0; i < vecstrGenes.size( ); ++i )
-		m_vecstrGenes.push_back( vecstrGenes[ i ] );
+		m_vecstrGenes[ i ] = vecstrGenes[ i ];
 
 	m_Data.Initialize( m_vecstrGenes.size( ) );
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )

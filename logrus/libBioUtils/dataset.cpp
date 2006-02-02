@@ -11,6 +11,43 @@ namespace libBioUtils {
 const char	CDataImpl::c_szDat[]	= ".dat";
 const char	CDataImpl::c_szDab[]	= ".dab";
 
+void CDataImpl::FilterGenes( IDataset* pData, const CGenes& Genes, CDat::EFilter eFilt ) {
+	vector<bool>	vecfGenes;
+	size_t			i, j;
+
+	if( !Genes.GetGenes( ) )
+		return;
+
+	vecfGenes.resize( pData->GetGenes( ) );
+	for( i = 0; i < vecfGenes.size( ); ++i )
+		vecfGenes[ i ] = Genes.IsGene( pData->GetGene( i ) );
+
+	for( i = 0; i < vecfGenes.size( ); ++i ) {
+		if( vecfGenes[ i ] ) {
+			if( eFilt == CDat::EFilterInclude )
+				continue;
+			if( eFilt == CDat::EFilterExclude ) {
+				for( j = ( i + 1 ); j < vecfGenes.size( ); ++j )
+					pData->Remove( i, j );
+				continue; } }
+		for( j = ( i + 1 ); j < vecfGenes.size( ); ++j )
+			switch( eFilt ) {
+				case CDat::EFilterInclude:
+					if( !vecfGenes[ j ] )
+						pData->Remove( i, j );
+					break;
+
+				case CDat::EFilterTerm:
+					if( !( vecfGenes[ i ] && vecfGenes[ j ] ) &&
+						( !( vecfGenes[ i ] || vecfGenes[ j ] ) || pData->GetDiscrete( i, j, 0 ) ) )
+							pData->Remove( i, j );
+					break;
+
+				case CDat::EFilterExclude:
+					if( vecfGenes[ j ] )
+						pData->Remove( i, j );
+					break; } } }
+
 size_t CDataImpl::OpenMax( const char* szDataDir, const vector<string>& vecstrNodes,
 	bool fAnswers, vector<string>& vecstrData, set<string>* psetstrGenes ) {
 	size_t		i, iLength, iMap, iRet;
@@ -381,45 +418,34 @@ void CDataset::Remove( size_t iX, size_t iY ) {
 
 	m_Examples.Get( iX, iY ).Reset( ); }
 
+void CDataset::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
+
+	CDataImpl::FilterGenes( this, Genes, eFilt ); }
+
 void CDataMask::AttachRandom( const IDataset* pDataset, float dFrac ) {
 	size_t	i, j;
 
-	m_pDataset = pDataset;
-	m_Mask.Initialize( m_pDataset->GetGenes( ) );
+	Attach( pDataset );
 	for( i = 0; i < m_Mask.GetSize( ); ++i )
 		for( j = ( i + 1 ); j < m_Mask.GetSize( ); ++j )
-			m_Mask.Set( i, j, ( m_pDataset->IsExample( i, j ) &&
-				( ( (float)rand( ) / RAND_MAX ) < dFrac ) ) ); }
+			m_Mask.Set( i, j, ( m_Mask.Get( i, j ) && ( ( (float)rand( ) / RAND_MAX ) < dFrac ) ) ); }
 
 void CDataMask::AttachComplement( const CDataMask& Data ) {
 	size_t	i, j;
 
-	m_pDataset = Data.m_pDataset;
-	m_Mask.Initialize( m_pDataset->GetGenes( ) );
+	Attach( Data.m_pDataset );
 	for( i = 0; i < m_Mask.GetSize( ); ++i )
 		for( j = ( i + 1 ); j < m_Mask.GetSize( ); ++j )
-			m_Mask.Set( i, j, ( m_pDataset->IsExample( i, j ) &&
-				!Data.m_Mask.Get( i, j ) ) ); }
+			m_Mask.Set( i, j, ( m_Mask.Get( i, j ) && !Data.m_Mask.Get( i, j ) ) ); }
 
-void CDataMask::AttachGenes( const IDataset* pDataset, istream& istm ) {
-	static const size_t	c_iBuffer	= 1024;
-	char		szBuf[ c_iBuffer ];
-	set<size_t>	setiGenes;
-	size_t		i, j;
-	bool		fOne;
+void CDataMask::Attach( const IDataset* pDataset ) {
+	size_t	i, j;
 
 	m_pDataset = pDataset;
 	m_Mask.Initialize( m_pDataset->GetGenes( ) );
-	while( istm.peek( ) != EOF ) {
-		istm.getline( szBuf, c_iBuffer - 1 );
-		if( ( i = GetGene( szBuf ) ) != -1 )
-			setiGenes.insert( i ); }
-
-	for( i = 0; i < m_Mask.GetSize( ); ++i ) {
-		fOne = ( setiGenes.find( i ) != setiGenes.end( ) );
+	for( i = 0; i < m_Mask.GetSize( ); ++i )
 		for( j = ( i + 1 ); j < m_Mask.GetSize( ); ++j )
-			m_Mask.Set( i, j, ( m_pDataset->IsExample( i, j ) && ( fOne ||
-				( setiGenes.find( j ) != setiGenes.end( ) ) ) ) ); } }
+			m_Mask.Set( i, j, m_pDataset->IsExample( i, j ) ); }
 
 size_t CDataMask::GetGenes( ) const {
 
@@ -464,6 +490,10 @@ size_t CDataMask::GetBins( size_t iExp ) const {
 void CDataMask::Remove( size_t iX, size_t iY ) {
 
 	m_Mask.Set( iX, iY, false ); }
+
+void CDataMask::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
+
+	CDataImpl::FilterGenes( this, Genes, eFilt ); }
 
 bool CDataSubset::Initialize( const char* szDataDir, const IBayesNet* pBayesNet,
 	size_t iSize ) {
@@ -596,6 +626,10 @@ void CDataSubset::Remove( size_t iX, size_t iY ) {
 
 	m_Examples.Get( iX - m_iOffset, iY ).Reset( ); }
 
+void CDataSubset::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
+
+	CDataImpl::FilterGenes( this, Genes, eFilt ); }
+
 CDatasetCompactImpl::CDatasetCompactImpl( ) : m_iData(0), m_aData(NULL) {
 
 	m_fContinuous = false; }
@@ -689,7 +723,12 @@ bool CDatasetCompact::Open( const char* szDataDir, const IBayesNet* pBayesNet ) 
 bool CDatasetCompact::Open( const char* szDataDir, const IBayesNet* pBayesNet,
 	const CGenes& GenesIn, const CGenes& GenesEx ) {
 
-	return CDatasetCompactImpl::Open( szDataDir, pBayesNet, &GenesIn, &GenesEx ); }
+	if( !CDatasetCompactImpl::Open( szDataDir, pBayesNet, &GenesIn, &GenesEx ) )
+		return false;
+	CDataImpl::FilterGenes( this, GenesIn, CDat::EFilterInclude );
+	CDataImpl::FilterGenes( this, GenesEx, CDat::EFilterExclude );
+
+	return true; }
 
 bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNet,
 	const CGenes* pGenesIn, const CGenes* pGenesEx ) {
@@ -725,11 +764,6 @@ bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNe
 			CDatasetCompactImpl::Open( Datum, i ) ) )
 			return false; }
 
-	if( pGenesIn )
-		FilterGenes( *pGenesIn, CDat::EFilterInclude );
-	if( pGenesEx )
-		FilterGenes( *pGenesEx, CDat::EFilterExclude );
-
 	return true; }
 
 bool CDatasetCompact::FilterGenes( const char* szGenes, CDat::EFilter eFilt ) {
@@ -747,44 +781,7 @@ bool CDatasetCompact::FilterGenes( const char* szGenes, CDat::EFilter eFilt ) {
 
 void CDatasetCompact::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
 
-	CDatasetCompactImpl::FilterGenes( Genes, eFilt ); }
-
-void CDatasetCompactImpl::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
-	vector<bool>	vecfGenes;
-	size_t			i, j;
-
-	if( !Genes.GetGenes( ) )
-		return;
-
-	vecfGenes.resize( GetGenes( ) );
-	for( i = 0; i < vecfGenes.size( ); ++i )
-		vecfGenes[ i ] = Genes.IsGene( GetGene( i ) );
-
-	for( i = 0; i < vecfGenes.size( ); ++i ) {
-		if( vecfGenes[ i ] ) {
-			if( eFilt == CDat::EFilterInclude )
-				continue;
-			if( eFilt == CDat::EFilterExclude ) {
-				for( j = ( i + 1 ); j < GetGenes( ); ++j )
-					Remove( i, j );
-				continue; } }
-		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			switch( eFilt ) {
-				case CDat::EFilterInclude:
-					if( !vecfGenes[ j ] )
-						Remove( i, j );
-					break;
-
-				case CDat::EFilterTerm:
-					if( !( vecfGenes[ i ] && vecfGenes[ j ] ) &&
-						( !( vecfGenes[ i ] || vecfGenes[ j ] ) || GetDiscrete( i, j, 0 ) ) )
-							Remove( i, j );
-					break;
-
-				case CDat::EFilterExclude:
-					if( vecfGenes[ j ] )
-						Remove( i, j );
-					break; } } }
+	CDataImpl::FilterGenes( this, Genes, eFilt ); }
 
 void CDatasetCompact::FilterAnswers( ) {
 	size_t	i, j;
