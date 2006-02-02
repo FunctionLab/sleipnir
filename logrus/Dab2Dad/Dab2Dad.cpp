@@ -18,6 +18,8 @@ int main( int iArgs, char** aszArgs ) {
 			return 1; }
 #ifdef _MSC_VER
 		Sleep( INFINITE );
+#else // _MSC_VER
+		sleep( -1 );
 #endif // _MSC_VER
 	}
 	else if( sArgs.input_arg ) {

@@ -1,8 +1,6 @@
 #ifndef TRIE_H
 #define TRIE_H
 
-#include <vector>
-
 #include "triei.h"
 
 namespace libBioUtils {
@@ -14,12 +12,12 @@ class CTrie : public CTrieImpl<tType> {
 public:
 	typedef CTrieIterator<tType>	iterator;
 
-	CTrie( const std::vector<unsigned char>& vecbSizes, const tType& Undef ) : CTrieImpl( Undef ) {
+	CTrie( const std::vector<unsigned char>& vecbSizes, const tType& Undef ) : CTrieImpl<tType>( Undef ) {
 
 		m_vecbSizes.resize( vecbSizes.size( ) );
 		std::copy( vecbSizes.begin( ), vecbSizes.end( ), m_vecbSizes.begin( ) ); }
 
-	CTrie( const IDataset* pData, const tType& Undef, bool fAnswers = true ) : CTrieImpl( Undef ) {
+	CTrie( const IDataset* pData, const tType& Undef, bool fAnswers = true ) : CTrieImpl<tType>( Undef ) {
 		size_t					i, j, k, iExp;
 		vector<unsigned char>	vecbDatum;
 

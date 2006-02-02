@@ -78,14 +78,14 @@ public:
 	bool IsExample( size_t, size_t ) const;
 	void Remove( size_t, size_t );
 
+	unsigned char*	m_pbData;
 private:
 	static const char	c_szMap[];
 
-	CBinaryMatrix			m_Mask;
-	const unsigned char*	m_pbData;
-	size_t					m_iData;
+	CBinaryMatrix	m_Mask;
+	size_t			m_iData;
 #ifdef _MSC_VER
-	HANDLE					m_hndlMap;
+	HANDLE			m_hndlMap;
 #endif // _MSC_VER
 };
 

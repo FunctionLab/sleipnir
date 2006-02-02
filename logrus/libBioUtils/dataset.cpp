@@ -973,7 +973,11 @@ bool CDatasetCompactMap::Open( const char* szFile ) {
 	if( !( iFile = open( szFile, O_RDONLY ) ) )
 		return false;
 	fstat( iFile, &sStat );
-	if( !( m_pbData = mmap( NULL, m_iData = sStat.st_size, PROT_READ, MAP_SHARED | MAP_LOCKED, iFile, 0 ) ) ) {
+	m_iData = sStat.st_size;
+
+	if( ( m_pbData = (unsigned char*)mmap( NULL, m_iData, PROT_READ, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
+		g_CatBioUtils.error( "CDatasetCompactMap::Open( %s ) %s", szFile, strerror( errno ) );
+		m_pbData = NULL;
 		close( iFile );
 		return false; }
 	close( iFile );

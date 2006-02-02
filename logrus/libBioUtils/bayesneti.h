@@ -7,7 +7,7 @@
 #include <smile.h>
 
 #include "dataset.h"
-#include "trie.h"
+//#include "trie.h"
 
 namespace libBioUtils {
 
@@ -20,7 +20,7 @@ protected:
 
 	typedef std::vector<std::vector<float> >	TVecVecF;
 	typedef std::map<std::string, size_t>		TMapData;
-	typedef CTrie<size_t>						TTrieData;
+//	typedef CTrie<size_t>						TTrieData;
 
 	CBayesNetImpl( bool );
 
