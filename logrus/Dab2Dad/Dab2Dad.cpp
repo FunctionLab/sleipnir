@@ -9,6 +9,9 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
+#if !( defined(_MSC_VER) && defined(_DEBUG) )
+    EnableXdslFormat( );
+#endif // !( defined(_MSC_VER) && defined(_DEBUG) )
 
 	if( sArgs.load_arg ) {
 		CDatasetCompactMap	DataMap;
@@ -24,9 +27,13 @@ int main( int iArgs, char** aszArgs ) {
 		return 0; }
 
 	if( sArgs.input_arg ) {
-		if( !Data.Open( ifstream( sArgs.input_arg, ios_base::binary ) ) ) {
+		ifstream	ifsm;
+
+		ifsm.open( sArgs.input_arg, ios_base::binary );
+		if( !Data.Open( ifsm ) ) {
 			cerr << "Couldn't open: " << sArgs.input_arg << endl;
-			return 1; } }
+			return 1; }
+		ifsm.close( ); }
 	else if( sArgs.network_arg ) {
 		CDataPair		Answers;
 		CBayesNetSmile	BNSmile;
@@ -52,8 +59,12 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open inputs" << endl;
 			return 1; } }
 
-	if( sArgs.output_arg )
-		Data.Save( ofstream( sArgs.output_arg, ios_base::binary ), true );
+	if( sArgs.output_arg ) {
+		ofstream	ofsm;
+
+		ofsm.open( sArgs.output_arg, ios_base::binary );
+		Data.Save( ofsm, true );
+		ofsm.close( ); }
 	else
 		Data.Save( cout, false );
 
