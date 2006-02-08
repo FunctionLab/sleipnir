@@ -59,6 +59,29 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open inputs" << endl;
 			return 1; } }
 
+	if( sArgs.mask_arg ) {
+		CDat		Mask;
+		vector<int>	veciGenes;
+		size_t		i, j;
+		int			iOne, iTwo;
+		float		d;
+
+		if( !Mask.Open( sArgs.mask_arg ) ) {
+			cerr << "Couldn't open: " << sArgs.mask_arg << endl;
+			return 1; }
+		veciGenes.resize( Data.GetGenes( ) );
+		for( i = 0; i < Data.GetGenes( ); ++i )
+			veciGenes[ i ] = (int)Mask.GetGene( Data.GetGene( i ) );
+		for( i = 0; i < Data.GetGenes( ); ++i ) {
+			if( ( iOne = veciGenes[ i ] ) == -1 ) {
+				for( j = ( i + 1 ); j < Data.GetGenes( ); ++j )
+					Data.Remove( i, j );
+				continue; }
+			for( j = ( i + 1 ); j < Data.GetGenes( ); ++j )
+				if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+					CMeta::IsNaN( d = Mask.Get( iOne, iTwo ) ) || !d )
+					Data.Remove( i, j ); } }
+
 	if( sArgs.output_arg ) {
 		ofstream	ofsm;
 

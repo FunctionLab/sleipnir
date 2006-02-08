@@ -279,14 +279,18 @@ void CDatasetCompactImpl::SaveBinary( ostream& ostm ) const {
 		m_aData[ i ].Save( ostm ); }
 
 void CDatasetCompactImpl::SaveText( ostream& ostm ) const {
-	size_t	i, j, k;
+	size_t	i, j, k, iVal;
 
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( IsExample( i, j ) ) {
 				ostm << GetGene( i ) << '\t' << GetGene( j );
-				for( k = 0; k < GetExperiments( ); ++k )
-					ostm << '\t' << GetDiscrete( i, j, k );
+				for( k = 0; k < GetExperiments( ); ++k ) {
+					ostm << '\t';
+					if( ( iVal = GetDiscrete( i, j, k ) ) == -1 )
+						ostm << "-1";
+					else
+						ostm << iVal; }
 				ostm << endl; } }
 
 const char	CDatasetCompactMap::c_szMap[]	= "CompactDataSetMap";
