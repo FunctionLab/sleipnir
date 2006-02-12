@@ -1,7 +1,13 @@
 #ifndef STATISTICS_H
 #define STATISTICS_H
 
+#include <algorithm>
+
 #include "statisticsi.h"
+
+#include "dat.h"
+#include "halfmatrix.h"
+#include "meta.h"
 
 namespace libBioUtils {
 
@@ -48,6 +54,67 @@ public:
 	static double LjungBox( const float*, size_t );
 	static double PValueLognormal( double, double, double );
 	static double TTest( double, double, size_t, double, double, size_t );
+
+private:
+	template<class tType>
+	struct SCompareRank {
+		const std::vector<tType>&	m_vecData;
+
+		SCompareRank( const std::vector<tType>& vecData ) : m_vecData(vecData) { }
+
+		bool operator()( size_t iOne, size_t iTwo ) const {
+
+			return ( m_vecData[ iOne ] < m_vecData[ iTwo ] ); }
+	};
+
+public:
+	static double WilcoxonRankSum( const CDat& Data, const CDat& Answers ) {
+		size_t				i, j, k, iOne, iTwo, iSum, iPos, iNeg;
+		float				d;
+		std::vector<size_t>	veciGenes, veciRanks;
+		std::vector<float>	vecdValues;
+
+		veciGenes.resize( Answers.GetGenes( ) );
+		for( i = 0; i < veciGenes.size( ); ++i )
+			veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
+
+		for( i = 0; i < Answers.GetGenes( ); ++i ) {
+			if( ( iOne = veciGenes[ i ] ) == -1 )
+				continue;
+			for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j )
+				if( !( ( ( iTwo = veciGenes[ j ] ) == -1 ) || CMeta::IsNaN( Answers.Get( i, j ) ||
+					CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ) ) )
+					vecdValues.push_back( d ); }
+
+		{
+			std::vector<size_t>	veciIndices;
+
+			veciIndices.resize( vecdValues.size( ) );
+			for( i = 0; i < vecdValues.size( ); ++i )
+				veciIndices[ i ] = i;
+			std::sort( veciIndices.begin( ), veciIndices.end( ), SCompareRank<float>( vecdValues ) );
+			veciRanks.resize( veciIndices.size( ) );
+			for( i = 0; i < veciRanks.size( ); ++i )
+				veciRanks[ veciIndices[ i ] ] = i;
+		}
+
+		for( iPos = iNeg = iSum = i = k = 0; i < Answers.GetGenes( ); ++i ) {
+			if( ( iOne = veciGenes[ i ] ) == -1 )
+				continue;
+			for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+				if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+					CMeta::IsNaN( Data.Get( iOne, iTwo ) ) ||
+					CMeta::IsNaN( d = Answers.Get( i, j ) ) )
+					continue;
+				if( d ) {
+					iPos++;
+					iSum += veciRanks[ k ]; }
+				else
+					iNeg++;
+				k++; } }
+		iSum -= ( iPos * ( iPos - 1 ) ) / 2;
+
+		return ( (double)iSum / ( iPos * iNeg ) ); }
 
 	// Probability distributions
 	static double BinomialCDF( size_t, size_t, double );

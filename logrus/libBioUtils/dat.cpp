@@ -330,13 +330,13 @@ void CDat::Normalize( bool fCap ) {
 		NormalizeStdev( ); }
 
 void CDatImpl::NormalizeStdev( ) {
-	float	d, dAve, dDev;
+	double	d, dAve, dDev;
 	size_t	i, j, iN;
 
 	dAve = dDev = 0;
 	for( iN = i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+			if( !CMeta::IsNaN( (float)( d = Get( i, j ) ) ) ) {
 				iN++;
 				dAve += d;
 				dDev += d * d; }
@@ -344,8 +344,8 @@ void CDatImpl::NormalizeStdev( ) {
 	dDev = sqrt( ( dDev / iN ) - ( dAve * dAve ) );
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( d = Get( i, j ) ) )
-				Set( i, j, ( d - dAve ) / dDev ); }
+			if( !CMeta::IsNaN( (float)( d = Get( i, j ) ) ) )
+				Set( i, j, (float)( ( d - dAve ) / dDev ) ); }
 
 void CDatImpl::NormalizeMinmax( ) {
 	float	d, dMin, dMax;

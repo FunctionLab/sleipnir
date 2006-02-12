@@ -44,7 +44,7 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 
 	veciGenes.resize( Answers.GetGenes( ) );
-	MatResults.Initialize( (size_t)( ( sArgs.max_arg - sArgs.min_arg ) / sArgs.delta_arg ),
+	MatResults.Initialize( (size_t)( ( sArgs.max_arg - sArgs.min_arg ) / sArgs.delta_arg ) + 1,
 		4 );
 	MatGenes.Initialize( veciGenes.size( ), MatResults.GetRows( ) );
 	for( i = 0; i < Answers.GetGenes( ); ++i )
@@ -84,7 +84,7 @@ int main( int iArgs, char** aszArgs ) {
 				if( sArgs.invert_flag )
 					dValue = 1 - dValue;
 
-				iMax = (int)( ( dValue - sArgs.min_arg ) / sArgs.delta_arg );
+				iMax = (int)ceil( ( dValue - sArgs.min_arg ) / sArgs.delta_arg );
 				if( iMax > (int)MatResults.GetRows( ) )
 					iMax = (int)MatResults.GetRows( );
 				eTFPN = (ETFPN)!dAnswer;
@@ -117,6 +117,7 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = 0; j < MatResults.GetColumns( ); ++j )
 				*postm << '\t' << (unsigned int)MatResults.Get( i, j );
 			*postm << endl; }
+		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers ) << endl;
 
 		if( sArgs.inputs_num )
 			ofsm.close( );

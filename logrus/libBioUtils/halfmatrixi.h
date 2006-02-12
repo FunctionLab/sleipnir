@@ -19,6 +19,18 @@ protected:
 		else
 			iY -= iX + 1; }
 
+	void UnHalfIndex( size_t iIndex, size_t& iX, size_t& iY ) const {
+		size_t	i, iRow;
+
+		iRow = m_iSize - 1;
+		for( i = 0; ( i + 1 ) < m_iSize; ++i,--iRow ) {
+			if( iIndex < iRow )
+				break;
+			iIndex -= iRow; }
+
+		iX = i;
+		iY = iIndex; }
+
 	size_t	m_iSize;
 };
 

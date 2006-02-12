@@ -34,6 +34,12 @@ public:
 		HalfIndex( iX, iY );
 		return m_aaData[ iX ][ iY ]; }
 
+	tType& GetAbs( size_t iIndex ) const {
+		size_t	iX, iY;
+
+		UnHalfIndex( iIndex, iX, iY );
+		return m_aaData[ iX ][ iY ]; }
+
 	void Set( size_t iX, size_t iY, const tType& Value ) {
 
 		HalfIndex( iX, iY );
@@ -42,6 +48,12 @@ public:
 	void Set( size_t iX, const tType* adValues ) {
 
 		memcpy( m_aaData[ iX ], adValues, sizeof(*m_aaData[ iX ]) * ( m_iSize - iX - 1 ) ); }
+
+	void SetAbs( size_t iIndex, const tType& Value ) {
+		size_t	iX, iY;
+
+		UnHalfIndex( iIndex, iX, iY );
+		m_aaData[ iX ][ iY ] = Value; }
 
 	void Initialize( size_t iSize, const CHalfMatrix& Mat ) {
 
