@@ -71,10 +71,10 @@ static int MainPCLs( const gengetopt_args_info& sArgs ) {
 
 	return 0; }
 
-static int MainDATs2( const gengetopt_args_info& sArgs ) {
+static int MainDATs( const gengetopt_args_info& sArgs ) {
 	CDataSubset		Dataset;
 	CDat			Dat;
-	size_t			i, j, k, iSubset, iSubsets;
+	size_t			i, j, k, iSubset, iSubsets, iN;
 	float			d, dMax;
 	vector<string>	vecstrFiles;
 	ofstream		ofsm;
@@ -105,10 +105,16 @@ static int MainDATs2( const gengetopt_args_info& sArgs ) {
 				if( !Dataset.IsExample( i, j ) )
 					continue;
 				dMax = CMeta::GetNaN( );
-				for( k = 0; k < Dataset.GetExperiments( ); ++k )
+				for( iN = k = 0; k < Dataset.GetExperiments( ); ++k )
+					if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) ) {
+						dMax += d;
+						iN++; }
+				dMax /= iN;
+/* Max
 					if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) &&
 						( CMeta::IsNaN( dMax ) || ( d > dMax ) ) )
 						dMax = d;
+//*/
 				Dat.Set( i, j, dMax ); } } }
 
 	if( sArgs.output_arg ) {
@@ -121,7 +127,7 @@ static int MainDATs2( const gengetopt_args_info& sArgs ) {
 
 	return 0; }
 
-int MainDATs( const gengetopt_args_info& sArgs ) {
+int MainDATs2( const gengetopt_args_info& sArgs ) {
 	CDatasetCompact	Dataset;
 	CDat			Dat;
 	size_t			i, j, k;

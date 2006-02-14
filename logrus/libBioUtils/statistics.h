@@ -82,8 +82,8 @@ public:
 			if( ( iOne = veciGenes[ i ] ) == -1 )
 				continue;
 			for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j )
-				if( !( ( ( iTwo = veciGenes[ j ] ) == -1 ) || CMeta::IsNaN( Answers.Get( i, j ) ||
-					CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ) ) )
+				if( !( ( ( iTwo = veciGenes[ j ] ) == -1 ) || CMeta::IsNaN( Answers.Get( i, j ) ) ||
+					CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ) )
 					vecdValues.push_back( d ); }
 
 		{

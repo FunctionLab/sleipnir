@@ -9,6 +9,11 @@ int main( int iArgs, char** aszArgs ) {
 	ofstream					ofsm;
 	ifstream					ifsm;
 	vector<string>				vecstrGenes;
+	CGenome						Genome;
+	CGenes						GenesIn( Genome );
+	vector<bool>				vecfIn;
+	bool						fOne;
+	float						d;
 	gengetopt_args_info			sArgs;
 	IMeasure*					pMeasure;
 	CMeasurePearson				Pearson;
@@ -24,7 +29,6 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-
 	CMeta::Startup( sArgs.verbosity_arg );
 
 	pMeasure = NULL;
@@ -52,6 +56,14 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open PCL" << endl;
 		return 1; }
 
+	if( sArgs.genes_arg ) {
+		if( !GenesIn.Open( ifstream( sArgs.genes_arg ) ) ) {
+			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+			return 1; }
+		vecfIn.resize( PCL.GetGenes( ) );
+		for( i = 0; i < vecfIn.size( ); ++i )
+			vecfIn[ i ] = GenesIn.IsGene( PCL.GetGene( i ) ); }
+
 	if( pMeasure->IsRank( ) )
 		PCL.RankTransform( );
 	Dist.Initialize( PCL.GetGenes( ) );
@@ -59,9 +71,12 @@ int main( int iArgs, char** aszArgs ) {
 		if( !( i % 100 ) )
 			cerr << "Processing gene " << (unsigned int)i << '/' <<
 				(unsigned int)PCL.GetGenes( ) << endl;
-		for( j = ( i + 1 ); j < PCL.GetGenes( ); ++j )
-			Dist.Set( i, j, (float)pMeasure->Measure( PCL.Get( i ), PCL.GetExperiments( ),
-				PCL.Get( j ), PCL.GetExperiments( ) ) ); }
+		fOne = !vecfIn.size( ) || vecfIn[ i ];
+		for( j = ( i + 1 ); j < PCL.GetGenes( ); ++j ) {
+			d = ( fOne || vecfIn[ j ] ) ?
+				(float)pMeasure->Measure( PCL.Get( i ), PCL.GetExperiments( ),
+				PCL.Get( j ), PCL.GetExperiments( ) ) : CMeta::GetNaN( );
+			Dist.Set( i, j, d ); } }
 
 	Dat.Open( PCL.GetGeneNames( ), Dist );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
