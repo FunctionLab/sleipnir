@@ -329,4 +329,14 @@ void CGenes::Filter( const CGenes& Genes ) {
 				break; }
 	m_vecpGenes.resize( iSize ); }
 
+vector<string> CGenes::GetGeneNames( ) const {
+	vector<string>	vecstrRet;
+	size_t			i;
+
+	vecstrRet.resize( m_vecpGenes.size( ) );
+	for( i = 0; i < vecstrRet.size( ); ++i )
+		vecstrRet[ i ] = m_vecpGenes[ i ]->GetName( );
+
+	return vecstrRet; }
+
 }

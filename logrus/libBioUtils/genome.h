@@ -49,6 +49,7 @@ public:
 	bool Open( const std::vector<std::string>& );
 	void Filter( const CGenes& );
 	size_t CountAnnotations( const IOntology*, size_t, bool = true ) const;
+	std::vector<std::string> GetGeneNames( ) const;
 
 	size_t GetGenes( ) const {
 

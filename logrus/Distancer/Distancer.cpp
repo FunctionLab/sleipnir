@@ -5,15 +5,14 @@ int main( int iArgs, char** aszArgs ) {
 	CPCL						PCL;
 	CDat						Dat;
 	CDistanceMatrix				Dist;
-	size_t						i, j;
+	size_t						i, j, iOne, iTwo;
 	ofstream					ofsm;
 	ifstream					ifsm;
 	vector<string>				vecstrGenes;
 	CGenome						Genome;
 	CGenes						GenesIn( Genome );
-	vector<bool>				vecfIn;
-	bool						fOne;
-	float						d;
+	vector<size_t>				veciGenes;
+	const float*				adOne;
 	gengetopt_args_info			sArgs;
 	IMeasure*					pMeasure;
 	CMeasurePearson				Pearson;
@@ -57,28 +56,37 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 
 	if( sArgs.genes_arg ) {
-		if( !GenesIn.Open( ifstream( sArgs.genes_arg ) ) ) {
+		ifsm.clear( );
+		ifsm.open( sArgs.genes_arg );
+		if( !GenesIn.Open( ifsm ) ) {
 			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
 			return 1; }
-		vecfIn.resize( PCL.GetGenes( ) );
-		for( i = 0; i < vecfIn.size( ); ++i )
-			vecfIn[ i ] = GenesIn.IsGene( PCL.GetGene( i ) ); }
+		ifsm.close( ); }
+	else
+		GenesIn.Open( PCL.GetGeneNames( ) );
+	veciGenes.resize( GenesIn.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = PCL.GetGene( GenesIn.GetGene( i ).GetName( ) );
 
 	if( pMeasure->IsRank( ) )
 		PCL.RankTransform( );
-	Dist.Initialize( PCL.GetGenes( ) );
-	for( i = 0; i < PCL.GetGenes( ); ++i ) {
+	Dist.Initialize( GenesIn.GetGenes( ) );
+	for( i = 0; i < Dist.GetSize( ); ++i )
+		for( j = ( i + 1 ); j < Dist.GetSize( ); ++j )
+			Dist.Set( i, j, CMeta::GetNaN( ) );
+	for( i = 0; i < GenesIn.GetGenes( ); ++i ) {
 		if( !( i % 100 ) )
 			cerr << "Processing gene " << (unsigned int)i << '/' <<
-				(unsigned int)PCL.GetGenes( ) << endl;
-		fOne = !vecfIn.size( ) || vecfIn[ i ];
-		for( j = ( i + 1 ); j < PCL.GetGenes( ); ++j ) {
-			d = ( fOne || vecfIn[ j ] ) ?
-				(float)pMeasure->Measure( PCL.Get( i ), PCL.GetExperiments( ),
-				PCL.Get( j ), PCL.GetExperiments( ) ) : CMeta::GetNaN( );
-			Dist.Set( i, j, d ); } }
+				(unsigned int)GenesIn.GetGenes( ) << endl;
+		if( ( iOne = veciGenes[ i ] ) == -1 )
+			continue;
+		adOne = PCL.Get( iOne );
+		for( j = ( i + 1 ); j < GenesIn.GetGenes( ); ++j )
+			if( ( iTwo = veciGenes[ j ] ) != -1 )
+				Dist.Set( i, j, (float)pMeasure->Measure(
+					adOne, PCL.GetExperiments( ), PCL.Get( iTwo ), PCL.GetExperiments( ) ) ); }
 
-	Dat.Open( PCL.GetGeneNames( ), Dist );
+	Dat.Open( GenesIn.GetGeneNames( ), Dist );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
 		Dat.Normalize( !!sArgs.normalize_flag );
 	ofsm.open( sArgs.output_arg, ios_base::binary );
