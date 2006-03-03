@@ -168,7 +168,6 @@ bool CDatImpl::OpenText( istream& istm ) {
 				g_CatBioUtils.error( "CDatImpl::OpenText( ) duplicate genes %s, %s (%g:%g)",
 					strCache.c_str( ), strToken.c_str( ), vecvecfScores[ iOne ][ iTwo ],
 					dScore );
-//dScore = CMeta::GetNaN( ); }
 				Reset( );
 				return false; }
 			vecvecfScores[ iOne ][ iTwo ] = vecvecfScores[ iTwo ][ iOne ] = dScore; } }

@@ -117,7 +117,7 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = 0; j < MatResults.GetColumns( ); ++j )
 				*postm << '\t' << (unsigned int)MatResults.Get( i, j );
 			*postm << endl; }
-		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers ) << endl;
+		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes ) << endl;
 
 		if( sArgs.inputs_num )
 			ofsm.close( );
