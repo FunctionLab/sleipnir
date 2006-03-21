@@ -12,7 +12,7 @@ bool CDataPair::Open( const CSlim& Slim ) {
 	return CDat::Open( Slim ); }
 
 bool CDataPair::Open( const char* szDatafile, bool fContinuous ) {
-	static const size_t	c_iBuf	= 1024;
+	static const size_t	c_iBuf	= 8192;
 	char			szBuf[ c_iBuf ];
 	ifstream		ifsmData, ifsmQuant;
 	string			strToken;

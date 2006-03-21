@@ -72,9 +72,9 @@ static int MainPCLs( const gengetopt_args_info& sArgs ) {
 	return 0; }
 
 static int MainDATs( const gengetopt_args_info& sArgs ) {
-	CDataSubset		Dataset;
+	CDataset		Dataset;
 	CDat			Dat;
-	size_t			i, j, k, iSubset, iSubsets, iN;
+	size_t			i, j, k, iN;
 	float			d, dMax;
 	vector<string>	vecstrFiles;
 	ofstream		ofsm;
@@ -84,7 +84,7 @@ static int MainDATs( const gengetopt_args_info& sArgs ) {
 
 	vecstrFiles.resize( sArgs.inputs_num );
 	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
-	if( !Dataset.Initialize( vecstrFiles, sArgs.subset_arg ) ) {
+	if( !Dataset.Open( vecstrFiles ) ) {
 		cerr << "Couldn't open: " << vecstrFiles[ 0 ];
 		for( i = 1; i < vecstrFiles.size( ); ++i )
 			cerr << ", " << vecstrFiles[ i ];
@@ -92,30 +92,22 @@ static int MainDATs( const gengetopt_args_info& sArgs ) {
 		return 1; }
 
 	Dat.Open( Dataset.GetGeneNames( ) );
-	iSubsets = ( Dataset.GetGenes( ) / sArgs.subset_arg ) + ( ( Dataset.GetGenes( ) %
-		sArgs.subset_arg ) ? 1 : 0 );
-	for( iSubset = 0; iSubset < iSubsets; ++iSubset ) {
-		cerr << "Opening subset " << (unsigned int)iSubset << "/" <<
-			(unsigned int)iSubsets << endl;
-		if( !Dataset.Open( iSubset * sArgs.subset_arg ) ) {
-			cerr << "Couldn't open subset " << (unsigned int)iSubset << endl;
-			return 1; }
-		for( i = 0; i < Dat.GetGenes( ); ++i ) {
-			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
-				if( !Dataset.IsExample( i, j ) )
-					continue;
-				dMax = CMeta::GetNaN( );
-				for( iN = k = 0; k < Dataset.GetExperiments( ); ++k )
-					if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) ) {
-						dMax += d;
-						iN++; }
-				dMax /= iN;
+	for( i = 0; i < Dat.GetGenes( ); ++i ) {
+		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+			if( !Dataset.IsExample( i, j ) )
+				continue;
+			dMax = CMeta::GetNaN( );
+			for( iN = k = 0; k < Dataset.GetExperiments( ); ++k )
+				if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) ) {
+					dMax = ( CMeta::IsNaN( dMax ) ? 0 : dMax ) + d;
+					iN++; }
+			dMax /= iN;
 /* Max
-					if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) &&
-						( CMeta::IsNaN( dMax ) || ( d > dMax ) ) )
-						dMax = d;
+				if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) &&
+					( CMeta::IsNaN( dMax ) || ( d > dMax ) ) )
+					dMax = d;
 //*/
-				Dat.Set( i, j, dMax ); } } }
+			Dat.Set( i, j, dMax ); } }
 
 	if( sArgs.output_arg ) {
 		ofsm.open( sArgs.output_arg, ios_base::binary );

@@ -172,8 +172,9 @@ const unsigned char* CDataImpl::OpenBinary( const unsigned char* pbData ) {
 	pbData += sizeof(iVal);
 	m_veciMapping.resize( iVal );
 	for( i = 0; i < m_veciMapping.size( ); ++i ) {
-		m_veciMapping[ i ] = *(uint32_t*)pbData;
-		pbData += sizeof(uint32_t); }
+		iVal = *(uint32_t*)pbData;
+		m_veciMapping[ i ] = ( iVal == -1 ) ? (size_t)-1 : iVal;
+		pbData += sizeof(iVal); }
 
 	iVal = *(uint32_t*)pbData;
 	pbData += 2 * sizeof(iVal);
@@ -202,7 +203,7 @@ bool CDataImpl::OpenBinary( istream& istm ) {
 	m_veciMapping.resize( iVal );
 	for( i = 0; i < m_veciMapping.size( ); ++i ) {
 		istm.read( (char*)&iVal, sizeof(iVal) );
-		m_veciMapping[ i ] = iVal; }
+		m_veciMapping[ i ] = ( iVal == -1 ) ? (size_t)-1 : iVal; }
 
 	istm.read( (char*)&iVal, sizeof(iVal) );
 	m_vecstrGenes.resize( iVal );
@@ -235,7 +236,8 @@ void CDataImpl::SaveBinary( ostream& ostm ) const {
 	iVal = (uint32_t)m_veciMapping.size( );
 	ostm.write( (char*)&iVal, sizeof(iVal) );
 	for( i = 0; i < m_veciMapping.size( ); ++i ) {
-		iVal = (uint32_t)m_veciMapping[ i ];
+		iVal = ( m_veciMapping[ i ] == -1 ) ? -1 :
+			(uint32_t)m_veciMapping[ i ];
 		ostm.write( (char*)&iVal, sizeof(iVal) ); }
 
 	iVal = (uint32_t)m_vecstrGenes.size( );

@@ -104,7 +104,7 @@ int main( int iArgs, char** aszArgs ) {
 					veciRec[ i ]++; }
 
 		if( sArgs.inputs_num ) {
-			ofsm.open( ( (string)sArgs.directory_arg + '\\' +
+			ofsm.open( ( (string)sArgs.directory_arg + '/' +
 				CMeta::Basename( sArgs.inputs[ iGenes ] ) + ".bins" ).c_str( ) );
 			postm = &ofsm; }
 		else
@@ -117,7 +117,7 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = 0; j < MatResults.GetColumns( ); ++j )
 				*postm << '\t' << (unsigned int)MatResults.Get( i, j );
 			*postm << endl; }
-		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes ) << endl;
+		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, sArgs.invert_flag ) << endl;
 
 		if( sArgs.inputs_num )
 			ofsm.close( );
