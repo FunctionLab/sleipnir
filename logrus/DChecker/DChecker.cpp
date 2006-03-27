@@ -19,6 +19,7 @@ int main( int iArgs, char** aszArgs ) {
 	int					k, iMax;
 	float				dAnswer, dValue;
 	vector<bool>		vecfGenes;
+	CBinaryMatrix		MatPairs;
 	ofstream			ofsm;
 	ostream*			postm;
 
@@ -50,6 +51,26 @@ int main( int iArgs, char** aszArgs ) {
 	for( i = 0; i < Answers.GetGenes( ); ++i )
 		veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
 
+	if( sArgs.inputs_num ) {
+		MatPairs.Initialize( Answers.GetGenes( ) );
+		for( i = 0; i < MatPairs.GetSize( ); ++i )
+			for( j = ( i + 1 ); j < MatPairs.GetSize( ); ++j )
+				MatPairs.Set( i, j, true );
+		for( i = 0; i < sArgs.inputs_num; ++i ) {
+			ifstream	ifsm( sArgs.inputs[ i ] );
+			CGenome		Genome;
+			CGenes		Genes( Genome );
+			size_t		iGene;
+
+			if( !Genes.Open( ifsm ) ) {
+				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+				return 1; }
+			for( j = 0; j < Genes.GetGenes( ); ++j ) {
+				if( ( iGene = Answers.GetGene( Genes.GetGene( j ).GetName( ) ) ) == -1 )
+					continue;
+				for( k = 0; k < MatPairs.GetSize( ); ++k )
+					MatPairs.Set( k, iGene, false ); } } }
+
 	for( iGenes = 0; !sArgs.inputs_num || ( iGenes < sArgs.inputs_num ); ++iGenes ) {
 		MatResults.Clear( );
 		MatGenes.Clear( );
@@ -77,7 +98,7 @@ int main( int iArgs, char** aszArgs ) {
 					CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
 					CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
 					continue;
-				if( !vecfGenes.empty( ) &&
+				if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
 					( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
 					( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
 					continue;
@@ -117,7 +138,7 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = 0; j < MatResults.GetColumns( ); ++j )
 				*postm << '\t' << (unsigned int)MatResults.Get( i, j );
 			*postm << endl; }
-		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, sArgs.invert_flag ) << endl;
+		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, MatPairs, sArgs.invert_flag ) << endl;
 
 		if( sArgs.inputs_num )
 			ofsm.close( );

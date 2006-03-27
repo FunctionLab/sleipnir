@@ -84,12 +84,16 @@ class CBinaryMatrix : public CHalfMatrix<unsigned char> {
 public:
 	bool Get( size_t iX, size_t iY ) const {
 
+		if( iX == iY )
+			return false;
 		HalfIndex( iX, iY );
 		return ( ( m_aaData[ iX ][ iY / 8 ] >> ( iY % 8 ) ) & 1 ); }
 
 	void Set( size_t iX, size_t iY, bool fValue ) {
 		unsigned char	c;
 
+		if( iX == iY )
+			return;
 		HalfIndex( iX, iY );
 		c = 1 << (unsigned char)( iY % 8 );
 		m_aaData[ iX ][ iY / 8 ] = ( m_aaData[ iX ][ iY / 8 ] & ~c ) | ( fValue ? c : 0 ); }

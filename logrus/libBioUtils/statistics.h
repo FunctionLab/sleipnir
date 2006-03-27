@@ -68,7 +68,7 @@ private:
 	};
 
 public:
-	static double WilcoxonRankSum( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes, bool fInvert = false ) {
+	static double WilcoxonRankSum( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes, const CBinaryMatrix& MatPairs, bool fInvert = false ) {
 		size_t				i, j, k, iOne, iTwo, iSum, iPos, iNeg;
 		float				d, dAnswer;
 		std::vector<size_t>	veciGenes, veciRanks;
@@ -83,7 +83,7 @@ public:
 				continue;
 			for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j )
 				if( !( ( ( iTwo = veciGenes[ j ] ) == -1 ) || CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-					( !vecfGenes.empty( ) && ( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
+					( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) && ( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
 					( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) ) ||
 					CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ) ) {
 					if( fInvert )
@@ -109,7 +109,7 @@ public:
 				if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
 					CMeta::IsNaN( Data.Get( iOne, iTwo ) ) ||
 					CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-					( !vecfGenes.empty( ) &&
+					( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
 					( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
 					( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) ) )
 					continue;
