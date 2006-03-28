@@ -370,6 +370,10 @@ vector<string> CBayesNetSmile::GetNodes( ) const {
 
 	return vecRet; }
 
+unsigned char CBayesNetSmile::GetValues( size_t iNode ) const {
+
+	return m_SmileNet.GetNode( (int)iNode )->Definition( )->GetNumberOfOutcomes( ); }
+
 bool CBayesNetSmile::IsContinuous( ) const {
 
 	return CBayesNetSmileImpl::IsContinuous( ); }
@@ -434,6 +438,25 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 				} }
 			if( pDatOut )
 				pDatOut->Set( i, j, (float)(*pValue->GetMatrix( ))[ 0 ] ); } }
+
+	return true; }
+
+bool CBayesNetSmile::Evaluate( const vector<unsigned char>& vecbDatum, vector<float>& vecdOut, bool fZero ) const {
+	vector<bool>	vecfHidden;
+	DSL_nodeValue*	pValue;
+	size_t			i;
+
+	if( !m_fSmileNet || IsContinuous( ) )
+		return false;
+
+	vecfHidden.resize( vecbDatum.size( ) );
+	for( i = 0; i < vecfHidden.size( ); ++i )
+		vecfHidden[ i ] = false;
+	((CBayesNetSmile*)this)->FillCPTs( vecfHidden, vecbDatum, fZero, false );
+	((CBayesNetSmile*)this)->m_SmileNet.UpdateBeliefs( );
+	pValue = m_SmileNet.GetNode( 0 )->Value( );
+	for( i = 0; ( i + 1 ) < pValue->GetSize( ); ++i )
+		vecdOut.push_back( (float)(*pValue->GetMatrix( ))[ (int)i ] );
 
 	return true; }
 

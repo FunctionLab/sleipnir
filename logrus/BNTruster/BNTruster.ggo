@@ -1,0 +1,6 @@
+package	"BNTruster"
+version	"1.0"
+purpose	"Bayes net data set trust evaluation"
+
+section "Optional"
+option	"verbosity"	v	"Message verbosity"	int	default="5"

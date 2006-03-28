@@ -1,0 +1,8 @@
+package	"DSLConverter"
+version	"1.0"
+purpose	"Interconverts DSL/XDSL files"
+
+option	"input"		i	"Input (X)DSL file"	string	typestr="filename"	yes
+option	"output"	o	"Output (X)DSL file"	string	typestr="filename"	yes
+section "Optional"
+option	"verbosity"	v	"Message verbosity"	int	default="5"

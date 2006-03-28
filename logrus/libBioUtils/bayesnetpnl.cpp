@@ -196,4 +196,12 @@ void CBayesNetPNL::Randomize( size_t ) { }
 
 void CBayesNetPNL::Reverse( size_t ) { }
 
+bool CBayesNetPNL::Evaluate( const vector<unsigned char>&, vector<float>&, bool ) const {
+
+	return false; }
+
+unsigned char CBayesNetPNL::GetValues( size_t ) const {
+
+	return 0; }
+
 }
