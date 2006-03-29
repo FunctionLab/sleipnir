@@ -129,6 +129,38 @@ bool CDat::Open( const CSlim& SlimPos, const CSlim& SlimNeg ) {
 
 	return true; }
 
+bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& vecpNegatives,
+	const CGenome& Genome ) {
+	size_t	i, j;
+	float	d;
+
+	Reset( );
+	Open( Genome.GetGeneNames( ) );
+	for( i = 0; i < vecpPositives.size( ); ++i )
+		OpenHelper( vecpPositives[ i ], 1 );
+	for( i = 0; i < vecpNegatives.size( ); ++i )
+		OpenHelper( vecpNegatives[ i ], 0 );
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( CMeta::IsNaN( d = Get( i, j ) ) )
+				Set( i, j, 0 );
+			else if( !d )
+				Set( i, j, CMeta::GetNaN( ) );
+
+	return true; }
+
+void CDatImpl::OpenHelper( const CGenes* pGenes, float dValue ) {
+	vector<size_t>	veciGenes;
+	size_t			i, j, iOne;
+
+	veciGenes.resize( pGenes->GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = GetGene( pGenes->GetGene( i ).GetName( ) );
+	for( i = 0; i < veciGenes.size( ); ++i ) {
+		iOne = veciGenes[ i ];
+		for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
+			Set( iOne, veciGenes[ j ],dValue ); } }
+
 bool CDat::Open( istream& istm, bool fBinary ) {
 
 	return ( fBinary ? OpenBinary( istm ) : OpenText( istm ) ); }

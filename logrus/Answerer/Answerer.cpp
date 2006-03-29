@@ -1,0 +1,77 @@
+#include "stdafx.h"
+#include "cmdline.h"
+
+int read_genes( const char*, CGenome&, vector<CGenes*>& );
+
+int main( int iArgs, char** aszArgs ) {
+	gengetopt_args_info	sArgs;
+	CGenome				Genome;
+	CDat				Dat;
+	vector<CGenes*>		vecpPositives, vecpNegatives;
+	size_t				i;
+	int					iRet;
+
+	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
+		cmdline_parser_print_help( );
+		return 1; }
+	CMeta::Startup( sArgs.verbosity_arg );
+
+	if( sArgs.genome_arg ) {
+		ifstream	ifsm;
+
+		ifsm.open( sArgs.genome_arg );
+		if( !Genome.Open( ifsm ) ) {
+			cerr << "Couldn't open: " << sArgs.genome_arg << endl;
+			return 1; } }
+	if( ( iRet = read_genes( sArgs.positives_arg, Genome, vecpPositives ) ) ||
+		( iRet = read_genes( sArgs.negatives_arg, Genome, vecpNegatives ) ) )
+		return iRet;
+
+	Dat.Open( vecpPositives, vecpNegatives, Genome );
+	if( sArgs.output_arg ) {
+		ofstream	ofsm;
+
+		ofsm.open( sArgs.output_arg );
+		Dat.Save( ofsm, true ); }
+	else
+		Dat.Save( cout, false );
+
+	for( i = 0; i < vecpPositives.size( ); ++i )
+		delete vecpPositives[ i ];
+	for( i = 0; i < vecpNegatives.size( ); ++i )
+		delete vecpNegatives[ i ];
+	CMeta::Shutdown( );
+	return 0; }
+
+int read_genes( const char* szDir, CGenome& Genome, vector<CGenes*>& vecpGenes ) {
+	CGenes*		pGenes;
+	string		strDir, strFile;
+
+	strDir = szDir;
+#ifdef _MSC_VER
+	bool			fOK;
+	HANDLE			hFind;
+	WIN32_FIND_DATA	sFind;
+	for( fOK = ( hFind = FindFirstFile( ( strDir + "\\*" ).c_str( ), &sFind ) ) !=
+		INVALID_HANDLE_VALUE; fOK; fOK = !!FindNextFile( hFind, &sFind ) ) {
+		if( sFind.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+			continue;
+		strFile = sFind.cFileName;
+#else // _MSC_VER
+	DIR*			pDir;
+	struct dirent*	pFind;
+	pDir = opendir( szDir );
+	while( pFind = readdir( pDir ) ) {
+		strFile = pFind->d_name;
+#endif // _MSC_VER
+		ifstream	ifsm;
+
+		strFile = strDir + '/' + strFile;
+		ifsm.open( strFile.c_str( ) );
+		pGenes = new CGenes( Genome );
+		if( !pGenes->Open( ifsm ) ) {
+			cerr << "Couldn't open: " << strFile << endl;
+			return 1; }
+		vecpGenes.push_back( pGenes ); }
+
+	return 0; }

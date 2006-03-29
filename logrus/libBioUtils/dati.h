@@ -9,6 +9,7 @@
 
 namespace libBioUtils {
 
+class CGenes;
 class CSlim;
 
 class CDatImpl : protected CFile {
@@ -24,6 +25,7 @@ protected:
 
 	static size_t MapGene( TMapStrI&, TVecStr&, const std::string& );
 	bool OpenGenes( std::istream&, bool );
+	void OpenHelper( const CGenes*, float );
 	static void ResizeNaN( TAF&, size_t );
 	static std::string DabGene( std::istream& );
 

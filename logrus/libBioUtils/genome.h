@@ -37,6 +37,7 @@ public:
 	CGene& GetGene( size_t ) const;
 	size_t GetGene( const std::string& ) const;
 	size_t GetGenes( ) const;
+	std::vector<std::string> GetGeneNames( ) const;
 	size_t CountGenes( const IOntology* ) const;
 	bool AddSynonym( CGene&, const std::string& );
 };

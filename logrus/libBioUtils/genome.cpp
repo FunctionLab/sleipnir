@@ -253,6 +253,16 @@ size_t CGenome::GetGenes( ) const {
 
 	return m_vecpGenes.size( ); }
 
+vector<string> CGenome::GetGeneNames( ) const {
+	vector<string>	vecstrRet;
+	size_t			i;
+
+	vecstrRet.resize( m_vecpGenes.size( ) );
+	for( i = 0; i < vecstrRet.size( ); ++i )
+		vecstrRet[ i ] = m_vecpGenes[ i ]->GetName( );
+
+	return vecstrRet; }
+
 size_t CGenome::CountGenes( const IOntology* pOnto ) const {
 	size_t	i, j, iRet;
 

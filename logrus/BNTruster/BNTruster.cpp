@@ -19,11 +19,17 @@ int main( int iArgs, char** aszArgs ) {
 		CBayesNetSmile	BNSmile;
 		size_t			iNode;
 		unsigned char	bValue;
+		float			dPrior;
 
 		if( !BNSmile.Open( sArgs.inputs[ iDSL ] ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ iDSL ] << endl;
 			return 1; }
 		vecbDatum.resize( BNSmile.GetNodes( ).size( ) );
+		for( i = 0; i < vecbDatum.size( ); ++i )
+			vecbDatum[ i ] = 0;
+
+		BNSmile.Evaluate( vecbDatum, vecdOut, false );
+		dPrior = vecdOut[ vecdOut.size( ) - 1 ];
 
 		if( !iDSL ) {
 			for( iNode = 1; iNode < BNSmile.GetNodes( ).size( ); ++iNode )
@@ -34,8 +40,7 @@ int main( int iArgs, char** aszArgs ) {
 		for( iNode = 1; iNode < BNSmile.GetNodes( ).size( ); ++iNode ) {
 			float	d;
 
-			for( i = 0; i < vecbDatum.size( ); ++i )
-				vecbDatum[ i ] = 0;
+			vecbDatum[ iNode - 1 ] = 0;
 			vecdOut.clear( );
 			for( bValue = 0; bValue < BNSmile.GetValues( iNode ); ++bValue ) {
 				vecbDatum[ iNode ] = bValue + 1;
@@ -43,7 +48,7 @@ int main( int iArgs, char** aszArgs ) {
 
 			d = 0;
 			for( i = 0; i < vecdOut.size( ); ++i )
-				d += fabs( 0.5f - vecdOut[ i ] );
+				d += fabs( dPrior - vecdOut[ i ] );
 			cout << '\t' << ( d / BNSmile.GetValues( iNode ) ); }
 		cout << endl; }
 
