@@ -56,17 +56,20 @@ int read_genes( const char* szDir, CGenome& Genome, vector<CGenes*>& vecpGenes )
 		INVALID_HANDLE_VALUE; fOK; fOK = !!FindNextFile( hFind, &sFind ) ) {
 		if( sFind.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
 			continue;
-		strFile = sFind.cFileName;
+		strFile = strDir + '/' + sFind.cFileName;
 #else // _MSC_VER
 	DIR*			pDir;
 	struct dirent*	pFind;
+	struct stat		sStat;
 	pDir = opendir( szDir );
 	while( pFind = readdir( pDir ) ) {
-		strFile = pFind->d_name;
+		strFile = strDir + '/' + pFind->d_name;
+		stat( strFile.c_str( ), &sStat );
+		if( S_ISDIR( sStat.st_mode ) )
+			continue;
 #endif // _MSC_VER
 		ifstream	ifsm;
 
-		strFile = strDir + '/' + strFile;
 		ifsm.open( strFile.c_str( ) );
 		pGenes = new CGenes( Genome );
 		if( !pGenes->Open( ifsm ) ) {

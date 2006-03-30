@@ -6,6 +6,6 @@ option	"positives"	p	"Directory containing related gene lists"	string	typestr="d
 option	"negatives"	n	"Directory containing minimally related gene lists"	string	typestr="directory"	yes
 section "Optional"
 option	"genome"	g	"List of all genes to be considered"	string	typestr="filename"
-option	"test"		t	"Number of genes to randomly select for testing"	int	default="0"
+option	"test"		t	"Fraction of genes to randomly select for testing"	double	default="0"
 option	"output"	o	"Output dab file"	string	typestr="filename"
 option	"verbosity"	v	"Message verbosity"	int	default="5"

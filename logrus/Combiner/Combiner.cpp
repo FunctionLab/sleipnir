@@ -98,11 +98,13 @@ static int MainDATs( const gengetopt_args_info& sArgs ) {
 				continue;
 			dMax = CMeta::GetNaN( );
 			for( iN = k = 0; k < Dataset.GetExperiments( ); ++k )
+/* Average
 				if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) ) {
 					dMax = ( CMeta::IsNaN( dMax ) ? 0 : dMax ) + d;
 					iN++; }
 			dMax /= iN;
-/* Max
+//*/
+//* Max
 				if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) &&
 					( CMeta::IsNaN( dMax ) || ( d > dMax ) ) )
 					dMax = d;

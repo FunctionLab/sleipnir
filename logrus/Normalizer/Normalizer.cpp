@@ -17,7 +17,7 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open input: " << sArgs.input_arg << endl;
 		return 1; }
 
-	Dat.Normalize( );
+	Dat.Normalize( !sArgs.zscore_flag );
 	if( sArgs.flip_flag )
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )

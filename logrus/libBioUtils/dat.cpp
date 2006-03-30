@@ -151,15 +151,17 @@ bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& ve
 
 void CDatImpl::OpenHelper( const CGenes* pGenes, float dValue ) {
 	vector<size_t>	veciGenes;
-	size_t			i, j, iOne;
+	size_t			i, j, iOne, iTwo;
 
 	veciGenes.resize( pGenes->GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
 		veciGenes[ i ] = GetGene( pGenes->GetGene( i ).GetName( ) );
 	for( i = 0; i < veciGenes.size( ); ++i ) {
 		iOne = veciGenes[ i ];
-		for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
-			Set( iOne, veciGenes[ j ],dValue ); } }
+		for( j = ( i + 1 ); j < veciGenes.size( ); ++j ) {
+			iTwo = veciGenes[ j ];
+			if( CMeta::IsNaN( Get( iOne, iTwo ) ) )
+				Set( iOne, iTwo, dValue ); } } }
 
 bool CDat::Open( istream& istm, bool fBinary ) {
 

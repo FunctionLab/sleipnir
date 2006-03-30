@@ -7,3 +7,4 @@ section "Optional"
 option	"output"	o	"Output dat file"	string	typestr="filename"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"flip"		f	"Flip high/low scores"	flag	off
+option	"zscore"	z	"Normalize values as z-scores"	flag	on
