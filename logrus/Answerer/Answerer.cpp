@@ -14,7 +14,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta::Startup( sArgs.verbosity_arg );
+	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
 
 	if( sArgs.genome_arg ) {
 		ifstream	ifsm;
@@ -28,6 +28,18 @@ int main( int iArgs, char** aszArgs ) {
 		return iRet;
 
 	Dat.Open( vecpPositives, vecpNegatives, Genome );
+	if( sArgs.test_arg ) {
+		set<string>					setstrGenes;
+		set<string>::const_iterator	iterGenes;
+		ostream&					ostm	= sArgs.output_arg ? cout : cerr;
+
+		for( i = 0; i < vecpPositives.size( ); ++i )
+			setstrGenes.insert( vecpPositives[ i ]->GetGene( rand( ) % vecpPositives[ i ]->GetGenes( ) ).GetName( ) );
+		while( setstrGenes.size( ) < ( sArgs.test_arg * Dat.GetGenes( ) ) )
+			setstrGenes.insert( Dat.GetGene( rand( ) % Dat.GetGenes( ) ) );
+		for( iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( ); ++iterGenes )
+			ostm << *iterGenes << endl; }
+
 	if( sArgs.output_arg ) {
 		ofstream	ofsm;
 
