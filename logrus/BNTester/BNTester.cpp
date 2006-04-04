@@ -7,7 +7,8 @@ int main( int iArgs, char** aszArgs ) {
 	IBayesNet*				pBN;
 	CDatasetCompact			Data;
 	CDatasetCompactMap		DataMap;
-	CDatasetCompact*		pData;
+	CDataset				DataFull;
+	IDataset*				pData;
 	CDat					Dat;
 	CGenome					Genome;
 	CGenes					GenesIn( Genome ), GenesEx( Genome ), GenesOv( Genome );
@@ -30,15 +31,35 @@ int main( int iArgs, char** aszArgs ) {
 
 	CBayesNetSmile	BNSmile( !!sArgs.group_flag );
 	CBayesNetPNL	BNPNL( !!sArgs.group_flag );
+	CBayesNetFN		BNFN;
 
-	if( !BNSmile.Open( sArgs.input_arg ) ) {
-		cerr << "Couldn't open: " << sArgs.input_arg << endl;
-		return 1; }
+	if( sArgs.function_flag ) {
+		if( !BNFN.Open( sArgs.input_arg ) ) {
+			cerr << "Couldn't open: " << sArgs.input_arg << endl;
+			return 1; }
+		pBN = &BNFN; }
+	else {
+		if( !BNSmile.Open( sArgs.input_arg ) ) {
+			cerr << "Couldn't open: " << sArgs.input_arg << endl;
+			return 1; }
+		if( sArgs.pnl_flag ) {
+			BNSmile.Convert( BNPNL );
+			pBN = &BNPNL; }
+		else
+			pBN = &BNSmile; }
+
 	if( ( iRet = Genes( sArgs.genes_arg, GenesIn ) ) ||
 		( iRet = Genes( sArgs.genee_arg, GenesOv ) ) ||
 		( iRet = Genes( sArgs.genex_arg, GenesEx ) ) )
 		return iRet;
-	if( sArgs.dataset_arg ) {
+	if( pBN->IsContinuous( ) ) {
+		if( !DataFull.Open( sArgs.datadir_arg, pBN ) ) {
+			cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
+			return 1; }
+		DataFull.FilterGenes( GenesIn, CDat::EFilterInclude );
+		DataFull.FilterGenes( GenesEx, CDat::EFilterExclude );
+		pData = &DataFull; }
+	else if( sArgs.dataset_arg ) {
 		if( !DataMap.Open( sArgs.dataset_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.dataset_arg << endl;
 			return 1; }
@@ -51,7 +72,7 @@ int main( int iArgs, char** aszArgs ) {
 		DataMap.FilterAnswers( );
 		pData = &DataMap; }
 	else {
-		if( !Data.Open( sArgs.datadir_arg, &BNSmile, GenesIn, GenesEx ) ) {
+		if( !Data.Open( sArgs.datadir_arg, pBN, GenesIn, GenesEx ) ) {
 			cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
 			return 1; }
 		pData = &Data; }
@@ -61,11 +82,6 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.Open( pData->GetGeneNames( ) );
 	vecvecdResults.clear( );
 	cerr << "Evaluating..." << endl;
-	if( sArgs.pnl_flag ) {
-		BNSmile.Convert( BNPNL );
-		pBN = &BNPNL; }
-	else
-		pBN = &BNSmile;
 	if( sArgs.output_arg )
 		pBN->Evaluate( pData, Dat, !!sArgs.zero_flag );
 	else

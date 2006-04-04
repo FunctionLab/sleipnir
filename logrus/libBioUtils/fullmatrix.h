@@ -34,17 +34,17 @@ public:
 
 		return m_aaData; }
 
-	const tType* Get( size_t iX ) const {
+	const tType* Get( size_t iY ) const {
 
-		return m_aaData[ iX ]; }
+		return m_aaData[ iY ]; }
 
-	tType& Get( size_t iX, size_t iY ) const {
+	tType& Get( size_t iY, size_t iX ) const {
 
-		return m_aaData[ iX ][ iY ]; }
+		return m_aaData[ iY ][ iX ]; }
 
-	void Set( size_t iX, size_t iY, const tType& Value ) {
+	void Set( size_t iY, size_t iX, const tType& Value ) {
 
-		m_aaData[ iX ][ iY ] = Value; }
+		m_aaData[ iY ][ iX ] = Value; }
 
 	void Initialize( size_t iR, size_t iC, const CFullMatrix& Mat ) {
 
@@ -87,7 +87,7 @@ public:
 			memset( m_aaData[ i ], 0, sizeof(*m_aaData[ i ]) * m_iC ); }
 
 protected:
-	static const size_t	c_iBuffer	= 1024;
+	static const size_t	c_iBuffer	= 8192;
 
 	bool OpenBinary( std::istream& istm ) {
 		size_t		i, j;

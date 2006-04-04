@@ -16,6 +16,23 @@ bool CBayesNetSmileImpl::IsGaussian( const DSL_network& BayesNet ) {
 
 	return !!atoi( ((DSL_network&)BayesNet).UserProperties( ).GetPropertyValue( i ) ); }
 
+bool CBayesNetSmileImpl::IsNaive( const DSL_network& BayesNet ) {
+	size_t	i;
+
+	{
+		const DSL_intArray&	veciParents	= ((DSL_network&)BayesNet).GetNode( (int)0 )->Parents( );
+
+		if( veciParents.NumItems( ) != 0 )
+			return false;
+	}
+	for( i = 1; i < BayesNet.GetNumberOfNodes( ); ++i ) {
+		const DSL_intArray&	veciParents	= ((DSL_network&)BayesNet).GetNode( (int)i )->Parents( );
+
+		if( ( veciParents.NumItems( ) > 1 ) || ( veciParents[ 0 ] != 0 ) )
+			return false; }
+
+	return true; }
+
 CBayesNetSmileImpl::CBayesNetSmileImpl( bool fGroup ) : CBayesNetImpl(fGroup),
 	m_fSmileNet(false) { }
 
@@ -176,18 +193,8 @@ bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIteratio
 	return true; }
 
 bool CBayesNetSmileImpl::IsNaive( ) const {
-	size_t	i;
 
-	if( !m_fSmileNet )
-		return false;
-
-	for( i = 1; i < m_SmileNet.GetNumberOfNodes( ); ++i ) {
-		const DSL_intArray&	veciParents	= m_SmileNet.GetNode( (int)i )->Parents( );
-
-		if( ( veciParents.NumItems( ) > 1 ) || ( veciParents[ 0 ] != 0 ) )
-			return false; }
-
-	return true; }
+	return ( m_fSmileNet ? CBayesNetSmileImpl::IsNaive( m_SmileNet ) : false ); }
 
 bool CBayesNetSmile::Learn( const IDataset* pData, size_t iIterations, bool fZero, bool fELR ) {
 
@@ -373,6 +380,10 @@ vector<string> CBayesNetSmile::GetNodes( ) const {
 unsigned char CBayesNetSmile::GetValues( size_t iNode ) const {
 
 	return m_SmileNet.GetNode( (int)iNode )->Definition( )->GetNumberOfOutcomes( ); }
+
+bool CBayesNetSmile::IsContinuous( size_t ) const {
+
+	return IsContinuous( ); }
 
 bool CBayesNetSmile::IsContinuous( ) const {
 

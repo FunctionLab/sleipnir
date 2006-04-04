@@ -25,11 +25,11 @@ public:
 
 class CDataset : CDatasetImpl, public IDataset {
 public:
+	bool Open( const char*, const IBayesNet* );
 	bool Open( const char*, const char*, const IBayesNet* );
 	bool Open( const CDataPair&, const char*, const IBayesNet* );
 	bool Open( const char*, const std::vector<std::string>& );
 	bool Open( const std::vector<std::string>& );
-//	bool Open( const char*, const IBayesNet* );
 
 	bool IsHidden( size_t ) const;
 	size_t GetDiscrete( size_t, size_t, size_t ) const;

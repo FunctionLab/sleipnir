@@ -76,7 +76,7 @@ public:
 
 		veciGenes.resize( Answers.GetGenes( ) );
 		for( i = 0; i < veciGenes.size( ); ++i )
-			veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
+			veciGenes[ i ] = (unsigned int)Data.GetGene( Answers.GetGene( i ) );
 
 		for( i = 0; i < Answers.GetGenes( ); ++i ) {
 			if( ( iOne = veciGenes[ i ] ) == -1 )
@@ -95,11 +95,11 @@ public:
 
 			veciIndices.resize( vecdValues.size( ) );
 			for( i = 0; i < vecdValues.size( ); ++i )
-				veciIndices[ i ] = i;
+				veciIndices[ i ] = (unsigned int)i;
 			std::sort( veciIndices.begin( ), veciIndices.end( ), SCompareRank<float>( vecdValues ) );
 			veciRanks.resize( veciIndices.size( ) );
 			for( i = 0; i < veciRanks.size( ); ++i )
-				veciRanks[ veciIndices[ i ] ] = i;
+				veciRanks[ veciIndices[ i ] ] = (unsigned int)i;
 		}
 
 		for( iPos = iNeg = iSum = i = k = 0; i < Answers.GetGenes( ); ++i ) {
@@ -134,6 +134,13 @@ public:
 	static double SampleGammaStandard( double );
 	static double SampleNormalStandard( );
 	static double SampleExponentialStandard( );
+
+	static double NormalPDF( double dX, double dMu, double dSigma ) {
+		static const double	c_dS2P	= sqrt( 2 * 3.1415926535898 );
+		double	d;
+
+		d = dX - dMu;
+		return ( exp( -( d * d ) / ( 2 * dSigma * dSigma ) ) / ( dSigma * c_dS2P ) ); }
 };
 
 }

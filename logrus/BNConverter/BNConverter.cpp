@@ -7,6 +7,7 @@ static void DebugDataset( const IDataset* );
 int main( int iArgs, char** aszArgs ) {
 	CDatasetCompact		Data;
 	CDatasetCompactMap	DataMap;
+	CDataset			DataFull;
 	CDataPair			Answers;
 	CDataMask			Train, Test;
 	IDataset*			pData;
@@ -25,12 +26,24 @@ int main( int iArgs, char** aszArgs ) {
 
 	CBayesNetSmile	BNSmile( !!sArgs.group_flag );
 	CBayesNetPNL	BNPNL( !!sArgs.group_flag );
+	CBayesNetFN		BNFN;
 
-	if( !BNSmile.Open( sArgs.input_arg ) ) {
-		cerr << "Couldn't open: " << sArgs.input_arg << endl;
-		return 1; }
+	if( sArgs.function_flag ) {
+		if( !BNFN.Open( sArgs.input_arg ) ) {
+			cerr << "Couldn't open: " << sArgs.input_arg << endl;
+			return 1; }
+		pNet = &BNFN; }
+	else {
+		if( !BNSmile.Open( sArgs.input_arg ) ) {
+			cerr << "Couldn't open: " << sArgs.input_arg << endl;
+			return 1; }
+		if( sArgs.pnl_flag ) {
+			BNSmile.Convert( BNPNL );
+			pNet = &BNPNL; }
+		else
+			pNet = &BNSmile; }
 	if( sArgs.randomize_flag )
-		BNSmile.Randomize( );
+		pNet->Randomize( );
 
 	if( sArgs.dataset_arg ) {
 		if( !DataMap.Open( sArgs.dataset_arg ) ) {
@@ -49,7 +62,7 @@ int main( int iArgs, char** aszArgs ) {
 		DataMap.FilterAnswers( );
 		pData = &DataMap; }
 	else {
-		if( !Answers.Open( sArgs.answers_arg, BNSmile.IsContinuous( ) ) ) {
+		if( !Answers.Open( sArgs.answers_arg, pNet->IsContinuous( 0 ) ) ) {
 			cerr << "Couldn't open: " << sArgs.answers_arg << endl;
 			return 1; }
 		if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
@@ -61,22 +74,23 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
 			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 			return 1; }
-		if( !Data.Open( Answers, sArgs.datadir_arg, &BNSmile ) ) {
-			cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
-			return 1; }
-		Data.FilterAnswers( );
-		pData = &Data; }
+
+		if( pNet->IsContinuous( ) ) {
+			if( !DataFull.Open( Answers, sArgs.datadir_arg, pNet ) ) {
+				cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
+				return 1; }
+			pData = &DataFull; }
+		else {
+			if( !Data.Open( Answers, sArgs.datadir_arg, pNet ) ) {
+				cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
+				return 1; }
+			Data.FilterAnswers( );
+			pData = &Data; } }
 
 	if( sArgs.test_arg ) {
 		Train.AttachRandom( pData, (float)( 1 - sArgs.test_arg ) );
 		Test.AttachComplement( Train );
 		pData = &Train; }
-
-	if( sArgs.pnl_flag ) {
-		BNSmile.Convert( BNPNL );
-		pNet = &BNPNL; }
-	else
-		pNet = &BNSmile;
 	if( sArgs.test_arg < 1 ) {
 		if( sArgs.checkpoint_flag )
 			for( i = 0; i < sArgs.iterations_arg; ++i ) {

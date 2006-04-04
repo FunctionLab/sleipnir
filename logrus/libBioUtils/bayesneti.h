@@ -34,9 +34,12 @@ protected:
 
 class CBayesNetSmileImpl : protected CBayesNetImpl {
 protected:
+	friend class CBayesNetFN;
+
 	static const char	c_szGaussian[];
 
 	static bool IsGaussian( const DSL_network& );
+	static bool IsNaive( const DSL_network& );
 	static float ELRDot( const TVecVecF&, const TVecVecF& );
 	static float ELRAvoidZero( float );
 	static void ELRComputeDirection( float, const TVecVecF&, TVecVecF& );
@@ -91,5 +94,7 @@ protected:
 };
 
 }
+
+#include "bayesnetfni.h"
 
 #endif // BAYESNETI_H

@@ -264,24 +264,41 @@ bool CDataset::Open( const char* szAnswers, const char* szDataDir,
 
 bool CDataset::Open( const CDataPair& Answers, const char* szDataDir,
 	const IBayesNet* pBayesNet ) {
-	size_t			i;
-	vector<string>	vecstrData;
+
+	return CDatasetImpl::Open( &Answers, szDataDir, pBayesNet ); }
+
+bool CDataset::Open( const char* szDataDir, const IBayesNet* pBayesNet ) {
+
+	return CDatasetImpl::Open( NULL, szDataDir, pBayesNet ); }
+
+bool CDatasetImpl::Open( const CDataPair* pAnswers, const char* szDataDir,
+	const IBayesNet* pBayesNet ) {
+	size_t						i;
+	vector<string>				vecstrData;
+	set<string>					setstrGenes;
+	set<string>::const_iterator	iterGene;
 
 	m_fContinuous = pBayesNet->IsContinuous( );
-	m_iMax = 1 + OpenMax( szDataDir, pBayesNet->GetNodes( ), true, vecstrData );
+	m_iMax = ( pAnswers ? 1 : 0 ) + OpenMax( szDataDir, pBayesNet->GetNodes( ), !!pAnswers, vecstrData,
+		&setstrGenes );
 	m_veccQuants.resize( m_iMax );
-	m_vecstrGenes.resize( Answers.GetGenes( ) );
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
-		m_vecstrGenes[ i ] = Answers.GetGene( i );
+	if( pAnswers ) {
+		m_vecstrGenes.resize( pAnswers->GetGenes( ) );
+		for( i = 0; i < m_vecstrGenes.size( ); ++i )
+			m_vecstrGenes[ i ] = pAnswers->GetGene( i ); }
+	else {
+		m_vecstrGenes.resize( setstrGenes.size( ) );
+		for( i = 0,iterGene = setstrGenes.begin( ); iterGene != setstrGenes.end( ); ++i,++iterGene )
+			m_vecstrGenes[ i ] = *iterGene; }
 	m_Examples.Initialize( m_vecstrGenes.size( ) );
-	if( !CDatasetImpl::Open( Answers, 0, m_iMax ) )
+	if( pAnswers && !CDatasetImpl::Open( *pAnswers, 0, m_iMax ) )
 		return false;
 
 	for( i = 0; i < vecstrData.size( ); ++i ) {
 		CDataPair	Datum;
 
-		if( !( Datum.Open( vecstrData[ i ].c_str( ), m_fContinuous ) &&
-			CDatasetImpl::Open( Datum, i + 1, 0 ) ) )
+		if( !( Datum.Open( vecstrData[ i ].c_str( ), pBayesNet->IsContinuous( i + 1 ) ) &&
+			CDatasetImpl::Open( Datum, i + ( pAnswers ? 1 : 0 ), pAnswers ? 0 : m_iMax ) ) )
 			return false; }
 
 	TrimExamples( );
@@ -362,7 +379,7 @@ void CDatasetImpl::TrimExamples( ) {
 		for( j = ( i + 1 ); j < m_Examples.GetSize( ); ++j ) {
 			CExampleImpl&	Example	= m_Examples.Get( i, j );
 
-			if( !Example.IsEvidence( m_fContinuous, m_iMax ) )
+			if( !Example.IsEvidence( m_iMax ) )
 				Example.Reset( ); } }
 
 bool CDataset::IsHidden( size_t iNode ) const {
@@ -383,7 +400,11 @@ size_t CDataset::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
 	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
 		return -1;
 
-	return m_Examples.Get( iX, iY ).GetDiscrete( iMap ); }
+	{
+		const CExampleImpl&	Example	= m_Examples.Get( iX, iY );
+
+		return ( CMeta::IsNaN( Example.GetContinuous( iMap ) ) ? -1 : Example.GetDiscrete( iMap ) );
+	} }
 
 const string& CDataset::GetGene( size_t iGene ) const {
 

@@ -51,6 +51,7 @@ protected:
 class CDatasetImpl : protected CDataImpl {
 protected:
 	bool Open( const CDataPair&, size_t, size_t );
+	bool Open( const CDataPair*, const char*, const IBayesNet* );
 	void TrimExamples( );
 
 	size_t						m_iMax;

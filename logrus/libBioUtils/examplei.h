@@ -14,11 +14,20 @@ public:
 
 	void Set( size_t, float, const CDataPair&, size_t );
 	bool Equals( const CExampleImpl&, size_t ) const;
-	size_t GetDiscrete( size_t ) const;
-	float GetContinuous( size_t ) const;
 	void Reset( );
-	bool IsEvidence( bool, size_t ) const;
-	bool IsSet( ) const;
+	bool IsEvidence( size_t ) const;
+
+	size_t GetDiscrete( size_t iDatum ) const {
+
+		return m_auData[ iDatum ].m_i; }
+
+	float GetContinuous( size_t iDatum ) const {
+
+		return m_auData[ iDatum ].m_d; }
+
+	bool IsSet( ) const {
+
+		return !!m_auData; }
 
 protected:
 	union UDatum {

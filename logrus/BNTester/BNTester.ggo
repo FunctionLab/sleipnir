@@ -9,6 +9,7 @@ option	"input"		i	"Input dsl file"	string	typestr="filename"	yes
 section "Optional"
 option	"output"	o	"Output dab file"	string	typestr="filename"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"function"	f	"Use function-fitting networks"	flag	off
 option	"pnl"		p	"Use PNL library"	flag	off
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"genex"		G	"Gene exclusion file"	string	typestr="filename"

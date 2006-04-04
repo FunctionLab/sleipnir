@@ -51,6 +51,10 @@ vector<string> CBayesNetPNL::GetNodes( ) const {
 
 	return vecstrRet; }
 
+bool CBayesNetPNL::IsContinuous( size_t ) const {
+
+	return IsContinuous( ); }
+
 bool CBayesNetPNL::IsContinuous( ) const {
 
 	return CBayesNetPNLImpl::IsContinuous( ); }
