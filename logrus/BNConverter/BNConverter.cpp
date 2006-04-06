@@ -95,8 +95,7 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.checkpoint_flag )
 			for( i = 0; i < sArgs.iterations_arg; ++i ) {
 				pNet->Learn( pData, 1, !!sArgs.zero_flag, !!sArgs.elr_flag );
-				cerr << "Iteration " << (unsigned int)i << '/' << sArgs.iterations_arg <<
-					" complete" << endl;
+				cerr << "Iteration " << i << '/' << sArgs.iterations_arg << " complete" << endl;
 				pNet->Save( sArgs.output_arg ); }
 		else
 			pNet->Learn( pData, sArgs.iterations_arg, !!sArgs.zero_flag, !!sArgs.elr_flag ); }

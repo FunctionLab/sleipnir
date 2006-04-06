@@ -133,10 +133,9 @@ int main( int iArgs, char** aszArgs ) {
 
 		*postm << "Cut\tGenes\tTP\tFP\tTN\tFN" << endl;
 		for( i = 0; i < MatResults.GetRows( ); ++i ) {
-			*postm << ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) << '\t' <<
-				(unsigned int)veciRec[ i ];
+			*postm << ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) << '\t' << veciRec[ i ];
 			for( j = 0; j < MatResults.GetColumns( ); ++j )
-				*postm << '\t' << (unsigned int)MatResults.Get( i, j );
+				*postm << '\t' << MatResults.Get( i, j );
 			*postm << endl; }
 		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, MatPairs,
 			!!sArgs.invert_flag ) << endl;

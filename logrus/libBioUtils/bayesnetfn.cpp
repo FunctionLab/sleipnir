@@ -123,7 +123,9 @@ bool CBayesNetFNNodeDiscrete::Learn( const IDataset* pData, size_t iNode, bool f
 	veciSums.resize( m_Params.GetRows( ) );
 	MatCounts.Initialize( m_Params.GetRows( ), m_Params.GetColumns( ) );
 	for( i = 0; i < MatCounts.GetRows( ); ++i ) {
-		veciSums[ i ] = (unsigned int)MatCounts.GetColumns( );
+#pragma warning( disable : 4267 )
+		veciSums[ i ] = MatCounts.GetColumns( );
+#pragma warning( default : 4267 )
 		for( j = 0; j < MatCounts.GetColumns( ); ++j )
 			MatCounts.Set( i, j, 1 ); }
 	for( i = 0; i < pData->GetGenes( ); ++i )

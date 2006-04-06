@@ -77,31 +77,39 @@ public:
 
 		veciGenes.resize( Answers.GetGenes( ) );
 		for( i = 0; i < veciGenes.size( ); ++i )
-			veciGenes[ i ] = (unsigned int)Data.GetGene( Answers.GetGene( i ) );
+#pragma warning( disable : 4267 )
+			veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
+#pragma warning( default : 4267 )
 
 		for( i = 0; i < Answers.GetGenes( ); ++i ) {
 			if( ( iOne = veciGenes[ i ] ) == -1 )
 				continue;
-			for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j )
-				if( !( ( ( iTwo = veciGenes[ j ] ) == -1 ) || CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-					( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
+			for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+				if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+					CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ||
+					CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
+					continue;
+				if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
 					( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
-					( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) ) ||
-					CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ) ) {
-					if( fInvert )
-						d = 1 - d;
-					vecdValues.push_back( d ); } }
-
+					( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+					continue;
+				if( fInvert )
+					d = 1 - d;
+				vecdValues.push_back( d ); } }
 		{
 			std::vector<size_t>	veciIndices;
 
 			veciIndices.resize( vecdValues.size( ) );
 			for( i = 0; i < vecdValues.size( ); ++i )
-				veciIndices[ i ] = (unsigned int)i;
+#pragma warning( disable : 4267 )
+				veciIndices[ i ] = i;
+#pragma warning( default : 4267 )
 			std::sort( veciIndices.begin( ), veciIndices.end( ), SCompareRank<float>( vecdValues ) );
 			veciRanks.resize( veciIndices.size( ) );
 			for( i = 0; i < veciRanks.size( ); ++i )
-				veciRanks[ veciIndices[ i ] ] = (unsigned int)i;
+#pragma warning( disable : 4267 )
+				veciRanks[ veciIndices[ i ] ] = i;
+#pragma warning( default : 4267 )
 		}
 
 		for( iPos = iNeg = iSum = i = k = 0; i < Answers.GetGenes( ); ++i ) {

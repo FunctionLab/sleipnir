@@ -76,8 +76,7 @@ int main( int iArgs, char** aszArgs ) {
 			Dist.Set( i, j, CMeta::GetNaN( ) );
 	for( i = 0; i < GenesIn.GetGenes( ); ++i ) {
 		if( !( i % 100 ) )
-			cerr << "Processing gene " << (unsigned int)i << '/' <<
-				(unsigned int)GenesIn.GetGenes( ) << endl;
+			cerr << "Processing gene " << i << '/' << GenesIn.GetGenes( ) << endl;
 		if( ( iOne = veciGenes[ i ] ) == -1 )
 			continue;
 		adOne = PCL.Get( iOne );

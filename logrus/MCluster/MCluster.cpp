@@ -66,10 +66,8 @@ int main( int iArgs, char** aszArgs ) {
 
 			if( ( Weights.GetExperiments( ) != PCL.GetExperiments( ) ) ||
 				( Weights.GetGenes( ) != PCL.GetGenes( ) ) ) {
-				cerr << "Illegal data sizes: " << (unsigned int)PCL.GetExperiments( ) <<
-					'x' << (unsigned int)PCL.GetGenes( ) << ", " <<
-					(unsigned int)Weights.GetExperiments( ) << 'x' <<
-					(unsigned int)Weights.GetGenes( ) << endl;
+				cerr << "Illegal data sizes: " << PCL.GetExperiments( ) << 'x' << PCL.GetGenes( ) << ", " <<
+					Weights.GetExperiments( ) << 'x' << Weights.GetGenes( ) << endl;
 				return 1; } }
 
 		{
