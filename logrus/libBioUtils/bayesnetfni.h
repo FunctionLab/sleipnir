@@ -100,10 +100,8 @@ class CBayesNetFNNodeExponential : protected CBayesNetFNNode {
 protected:
 	friend class CBayesNetFNNode;
 
-	static const size_t	c_iMin		= 0;
-	static const size_t	c_iMax		= 1;
-	static const size_t	c_iAlpha	= 2;
-	static const size_t	c_iBeta		= 3;
+	static const size_t	c_iMin	= 0;
+	static const size_t	c_iBeta	= 1;
 
 	void Randomize( );
 	bool Learn( const IDataset*, size_t, bool );

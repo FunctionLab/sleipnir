@@ -12,6 +12,7 @@ CBayesNetFNNode* CBayesNetFNNode::Open( DSL_node* pNode ) {
 		new CBayesNetFNNodeDiscrete( ),
 		new CBayesNetFNNodeGaussian( ),
 		new CBayesNetFNNodeBeta( ),
+		new CBayesNetFNNodeExponential( ),
 		NULL };
 	CBayesNetFNNode*	pRet;
 	int					i, j, iDim;
@@ -279,6 +280,57 @@ bool CBayesNetFNNodeBeta::Evaluate( float dValue, vector<float>& vecdOut ) const
 			d = m_Params.Get( i, c_iMax );
 		dSum += ( vecdOut[ i ] = (float)CStatistics::BetaPDF( d, m_Params.Get( i, c_iMin ),
 			m_Params.Get( i, c_iMax ), m_Params.Get( i, c_iAlpha ), m_Params.Get( i, c_iBeta ) ) ); }
+	for( i = 0; i < vecdOut.size( ); ++i )
+		vecdOut[ i ] /= dSum;
+
+	return true; }
+
+void CBayesNetFNNodeExponential::Randomize( ) {
+	size_t	i;
+
+	for( i = 0; i < m_Params.GetRows( ); ++i ) {
+		m_Params.Set( i, c_iMin, (float)( rand( ) - ( RAND_MAX / 2 ) ) );
+		m_Params.Set( i, c_iBeta, (float)rand( ) / RAND_MAX ); } }
+
+bool CBayesNetFNNodeExponential::Learn( const IDataset* pData, size_t iNode, bool fZero ) {
+	float			dVal;
+	size_t			i, j, iAnswer;
+	vector<size_t>	veciCounts;
+
+	for( i = 0; i < m_Params.GetRows( ); ++i ) {
+		m_Params.Set( i, c_iMin, FLT_MAX );
+		m_Params.Set( i, c_iBeta, 0 ); }
+	veciCounts.resize( m_Params.GetRows( ) );
+	for( i = 0; i < pData->GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
+			if( pData->IsExample( i, j ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
+				if( CMeta::IsNaN( dVal = pData->GetContinuous( i, j, iNode ) ) ) {
+					if( !fZero )
+						continue;
+					dVal = 0; }
+				if( iAnswer >= m_Params.GetRows( ) )
+					return false;
+				veciCounts[ iAnswer ]++;
+				m_Params.Get( iAnswer, c_iBeta ) += dVal;
+				if( dVal < m_Params.Get( i, c_iMin ) )
+					m_Params.Set( i, c_iMin, dVal ); }
+	for( i = 0; i < m_Params.GetRows( ); ++i ) {
+		if( !veciCounts[ i ] )
+			veciCounts[ i ] = 1;
+		m_Params.Set( i, c_iBeta, ( m_Params.Get( i, c_iBeta ) / veciCounts[ i ] ) - m_Params.Get( i, c_iMin ) ); }
+
+	return true; }
+
+bool CBayesNetFNNodeExponential::Evaluate( float dValue, vector<float>& vecdOut ) const {
+	float	d, dSum;
+	size_t	i;
+
+	vecdOut.resize( m_Params.GetRows( ) );
+	dSum = 0;
+	for( i = 0; i < vecdOut.size( ); ++i ) {
+		d = ( dValue < m_Params.Get( i, c_iMin ) ) ? c_iMin : dValue;
+		dSum += ( vecdOut[ i ] = exp( ( m_Params.Get( i, c_iMin ) - d ) / m_Params.Get( i, c_iBeta ) ) /
+			m_Params.Get( i, c_iBeta ) ); }
 	for( i = 0; i < vecdOut.size( ); ++i )
 		vecdOut[ i ] /= dSum;
 
