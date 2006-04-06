@@ -68,7 +68,8 @@ private:
 	};
 
 public:
-	static double WilcoxonRankSum( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes, const CBinaryMatrix& MatPairs, bool fInvert = false ) {
+	static double WilcoxonRankSum( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes,
+		const CBinaryMatrix& MatPairs, bool fInvert = false ) {
 		size_t				i, j, k, iOne, iTwo, iSum, iPos, iNeg;
 		float				d, dAnswer;
 		std::vector<size_t>	veciGenes, veciRanks;
@@ -83,7 +84,8 @@ public:
 				continue;
 			for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j )
 				if( !( ( ( iTwo = veciGenes[ j ] ) == -1 ) || CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-					( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) && ( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
+					( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
+					( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
 					( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) ) ||
 					CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ) ) {
 					if( fInvert )
@@ -132,8 +134,19 @@ public:
 	static double SampleChi2( size_t );
 	static double SampleGamma( double, double );
 	static double SampleGammaStandard( double );
+	static double SampleGammaLogStandard( double );
 	static double SampleNormalStandard( );
 	static double SampleExponentialStandard( );
+
+	static double BetaPDF( double dX, double dMin, double dMax, double dAlpha, double dBeta ) {
+		double	dFunc, dLocation, dScale;
+
+		dLocation = dMin;
+		dScale = dMax - dMin;
+		dX = ( dX - dLocation ) / dScale;
+		dFunc = exp( SampleGammaLogStandard( dAlpha ) + SampleGammaLogStandard( dBeta ) -
+			SampleGammaLogStandard( dAlpha + dBeta ) );
+		return ( pow( dX, dAlpha - 1 ) * pow( 1 - dX, dBeta - 1 ) / dFunc / dScale ); }
 
 	static double NormalPDF( double dX, double dMu, double dSigma ) {
 		static const double	c_dS2P	= sqrt( 2 * 3.1415926535898 );

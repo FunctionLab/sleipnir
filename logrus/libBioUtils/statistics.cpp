@@ -363,6 +363,21 @@ double CStatistics::SampleChi2( size_t iDF ) {
 
 	return ( 2 * SampleGamma( 1, iDF / 2 ) ); }
 
+double CStatistics::SampleGammaLogStandard( double dXX ) {
+	static const double	c_adCof[]	= { 76.18009172947146, -86.50532032941677, 24.01409824083091,
+		-1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5 };
+	double	dX, dY, dTmp, dSer;
+	size_t	j;
+
+	dX = dY = dXX;
+	dTmp = dX + 5.5;
+	dTmp -= ( dX + 0.5 ) * log( dTmp );
+	dSer = 1.000000000190015;
+	for( j = 0; j <= 5; ++j )
+		dSer += c_adCof[ j ] / ++dY;
+
+	return ( -dTmp + log( 2.5066282746310005 * dSer / dX ) ); }
+
 double CStatistics::SampleGamma( double dLocation, double dShape ) {
 
 	return ( SampleGammaStandard( dShape ) / dLocation ); }

@@ -255,11 +255,28 @@ void CDataImpl::SaveBinary( ostream& ostm ) const {
 	ostm.write( ac, iVal );
 	delete[] ac; }
 
+CDatasetImpl::CDatasetImpl( ) : m_apData(NULL) { }
+
+CDatasetImpl::~CDatasetImpl( ) {
+
+	Reset( ); }
+
+void CDatasetImpl::Reset( ) {
+	size_t	i;
+
+	if( m_apData ) {
+		for( i = 0; i < m_veccQuants.size( ); ++i )
+			if( m_veccQuants[ i ] == (unsigned char)-1 )
+				delete (CDistanceMatrix*)m_apData[ i ];
+			else
+				delete (CCompactMatrix*)m_apData[ i ];
+		delete[] m_apData; } }
+
 bool CDataset::Open( const char* szAnswers, const char* szDataDir,
 	const IBayesNet* pBayesNet ) {
 	CDataPair	Answers;
 
-	return ( Answers.Open( szAnswers, pBayesNet->IsContinuous( ) ) &&
+	return ( Answers.Open( szAnswers, pBayesNet->IsContinuous( 0 ) ) &&
 		Open( Answers, szDataDir, pBayesNet ) ); }
 
 bool CDataset::Open( const CDataPair& Answers, const char* szDataDir,
@@ -278,10 +295,10 @@ bool CDatasetImpl::Open( const CDataPair* pAnswers, const char* szDataDir,
 	set<string>					setstrGenes;
 	set<string>::const_iterator	iterGene;
 
+	Reset( );
 	m_fContinuous = pBayesNet->IsContinuous( );
-	m_iMax = ( pAnswers ? 1 : 0 ) + OpenMax( szDataDir, pBayesNet->GetNodes( ), !!pAnswers, vecstrData,
-		&setstrGenes );
-	m_veccQuants.resize( m_iMax );
+	m_veccQuants.resize( ( pAnswers ? 1 : 0 ) + OpenMax( szDataDir, pBayesNet->GetNodes( ), !!pAnswers,
+		vecstrData, &setstrGenes ) );
 	if( pAnswers ) {
 		m_vecstrGenes.resize( pAnswers->GetGenes( ) );
 		for( i = 0; i < m_vecstrGenes.size( ); ++i )
@@ -290,21 +307,20 @@ bool CDatasetImpl::Open( const CDataPair* pAnswers, const char* szDataDir,
 		m_vecstrGenes.resize( setstrGenes.size( ) );
 		for( i = 0,iterGene = setstrGenes.begin( ); iterGene != setstrGenes.end( ); ++i,++iterGene )
 			m_vecstrGenes[ i ] = *iterGene; }
-	m_Examples.Initialize( m_vecstrGenes.size( ) );
-	if( pAnswers && !CDatasetImpl::Open( *pAnswers, 0, m_iMax ) )
+	m_apData = new void*[ m_veccQuants.size( ) ];
+	if( pAnswers && !CDatasetImpl::Open( *pAnswers, 0 ) )
 		return false;
 
 	for( i = 0; i < vecstrData.size( ); ++i ) {
 		CDataPair	Datum;
 
 		if( !( Datum.Open( vecstrData[ i ].c_str( ), pBayesNet->IsContinuous( i + 1 ) ) &&
-			CDatasetImpl::Open( Datum, i + ( pAnswers ? 1 : 0 ), pAnswers ? 0 : m_iMax ) ) )
+			CDatasetImpl::Open( Datum, i + ( pAnswers ? 1 : 0 ) ) ) )
 			return false; }
 
-	TrimExamples( );
 	return true; }
 
-bool CDatasetImpl::Open( const CDataPair& Datum, size_t iExp, size_t iMax ) {
+bool CDatasetImpl::Open( const CDataPair& Datum, size_t iExp ) {
 	vector<size_t>	veciGenes;
 	size_t			i, j, iOne, iTwo;
 	float			d;
@@ -314,21 +330,42 @@ bool CDatasetImpl::Open( const CDataPair& Datum, size_t iExp, size_t iMax ) {
 	for( i = 0; i < veciGenes.size( ); ++i )
 		veciGenes[ i ] = Datum.GetGene( m_vecstrGenes[ i ] );
 
-	for( i = 0; i < veciGenes.size( ); ++i ) {
-		if( ( iOne = veciGenes[ i ] ) == -1 )
-			continue;
-		for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
-			if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
-				!CMeta::IsNaN( d = Datum.Get( iOne, iTwo ) ) )
-				m_Examples.Get( i, j ).Set( iExp, d, Datum, iMax ); }
+	if( Datum.IsContinuous( ) ) {
+		CDistanceMatrix*	pDatum;
+
+		pDatum = new CDistanceMatrix( );
+		pDatum->Initialize( m_vecstrGenes.size( ) );
+		for( i = 0; i < pDatum->GetSize( ); ++i )
+			for( j = ( i + 1 ); j < pDatum->GetSize( ); ++j )
+				pDatum->Set( i, j, CMeta::GetNaN( ) );
+		for( i = 0; i < veciGenes.size( ); ++i ) {
+			if( ( iOne = veciGenes[ i ] ) == -1 )
+				continue;
+			for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
+				if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
+					!CMeta::IsNaN( d = Datum.Get( iOne, iTwo ) ) )
+					pDatum->Set( i, j, d ); }
+		m_apData[ iExp ] = pDatum; }
+	else {
+		CCompactMatrix*	pDatum;
+
+		pDatum = new CCompactMatrix( );
+		pDatum->Initialize( m_vecstrGenes.size( ), m_veccQuants[ iExp ] + 1, true );
+		for( i = 0; i < veciGenes.size( ); ++i )
+			if( ( iOne = veciGenes[ i ] ) != -1 )
+				for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
+					if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
+						!CMeta::IsNaN( d = Datum.Get( iOne, iTwo ) ) )
+						pDatum->Set( i, j, (unsigned char)( Datum.Quantify( d ) + 1 ) );
+		m_apData[ iExp ] = pDatum; }
 
 	return true; }
 
 bool CDataset::Open( const char* szAnswers, const vector<string>& vecstrData ) {
 	size_t	i;
 
-	m_iMax = 1 + vecstrData.size( );
-	m_veccQuants.resize( m_iMax );
+	Reset( );
+	m_veccQuants.resize( 1 + vecstrData.size( ) );
 	{
 		CDataPair	Answers;
 
@@ -338,22 +375,21 @@ bool CDataset::Open( const char* szAnswers, const vector<string>& vecstrData ) {
 		m_vecstrGenes.resize( Answers.GetGenes( ) );
 		for( i = 0; i < m_vecstrGenes.size( ); ++i )
 			m_vecstrGenes[ i ] = Answers.GetGene( i );
-		m_Examples.Initialize( m_vecstrGenes.size( ) );
-		if( !CDatasetImpl::Open( Answers, 0, m_iMax ) )
+		m_apData = new void*[ m_veccQuants.size( ) ];
+		if( !CDatasetImpl::Open( Answers, 0 ) )
 			return false;
 	}
 
-	m_veciMapping.resize( m_iMax );
+	m_veciMapping.resize( m_veccQuants.size( ) );
 	m_veciMapping[ 0 ] = 0;
 	for( i = 1; i <= vecstrData.size( ); ++i ) {
 		CDataPair	Datum;
 
 		if( !Datum.Open( vecstrData[ i - 1 ].c_str( ), true ) ||
-			!CDatasetImpl::Open( Datum, i, 0 ) )
+			!CDatasetImpl::Open( Datum, i ) )
 			return false;
 		m_veciMapping[ i ] = i; }
 
-	TrimExamples( );
 	return true; }
 
 bool CDataset::Open( const vector<string>& vecstrData ) {
@@ -361,26 +397,17 @@ bool CDataset::Open( const vector<string>& vecstrData ) {
 
 	if( !OpenGenes( vecstrData ) )
 		return false;
-	m_Examples.Initialize( m_vecstrGenes.size( ) );
+	Reset( );
+	m_apData = new void*[ m_veccQuants.size( ) ];
 
 	for( i = 0; i < vecstrData.size( ); ++i ) {
 		CDataPair	Datum;
 
 		if( !( Datum.Open( vecstrData[ i ].c_str( ), true ) &&
-			CDatasetImpl::Open( Datum, i, vecstrData.size( ) ) ) )
+			CDatasetImpl::Open( Datum, i ) ) )
 			return false; }
 
 	return true; }
-
-void CDatasetImpl::TrimExamples( ) {
-	size_t	i, j;
-
-	for( i = 0; i < m_Examples.GetSize( ); ++i )
-		for( j = ( i + 1 ); j < m_Examples.GetSize( ); ++j ) {
-			CExampleImpl&	Example	= m_Examples.Get( i, j );
-
-			if( !Example.IsEvidence( m_iMax ) )
-				Example.Reset( ); } }
 
 bool CDataset::IsHidden( size_t iNode ) const {
 
@@ -392,7 +419,9 @@ float CDataset::GetContinuous( size_t iX, size_t iY, size_t iNode ) const {
 	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
 		return CMeta::GetNaN( );
 
-	return m_Examples.Get( iX, iY ).GetContinuous( iMap ); }
+	return ( ( m_veccQuants[ iMap ] == (unsigned char)-1 ) ?
+		((CDistanceMatrix*)m_apData[ iMap ])->Get( iX, iY ) :
+		((CCompactMatrix*)m_apData[ iMap ])->Get( iX, iY ) ); }
 
 size_t CDataset::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
 	size_t	iMap;
@@ -400,11 +429,8 @@ size_t CDataset::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
 	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
 		return -1;
 
-	{
-		const CExampleImpl&	Example	= m_Examples.Get( iX, iY );
-
-		return ( CMeta::IsNaN( Example.GetContinuous( iMap ) ) ? -1 : Example.GetDiscrete( iMap ) );
-	} }
+	return ( ( m_veccQuants[ iMap ] == (unsigned char)-1 ) ? -1 :
+		( ((CCompactMatrix*)m_apData[ iMap ])->Get( iX, iY ) - 1 ) ); }
 
 const string& CDataset::GetGene( size_t iGene ) const {
 
@@ -415,8 +441,16 @@ size_t CDataset::GetGenes( ) const {
 	return CDataImpl::GetGenes( ); }
 
 bool CDataset::IsExample( size_t iX, size_t iY ) const {
+	size_t	i;
 
-	return m_Examples.Get( iX, iY ).IsSet( ); }
+	for( i = 0; i < m_veccQuants.size( ); ++i )
+		if( m_veccQuants[ i ] == (unsigned char)-1 ) {
+			if( !CMeta::IsNaN( ((CDistanceMatrix*)m_apData[ i ])->Get( iX, iY ) ) )
+				return true; }
+		else if( ((CCompactMatrix*)m_apData[ i ])->Get( iX, iY ) )
+			return true;
+
+	return false; }
 
 const vector<string>& CDataset::GetGeneNames( ) const {
 
@@ -435,8 +469,13 @@ size_t CDataset::GetBins( size_t iExp ) const {
 	return CDataImpl::GetBins( iExp ); }
 
 void CDataset::Remove( size_t iX, size_t iY ) {
+	size_t	i;
 
-	m_Examples.Get( iX, iY ).Reset( ); }
+	for( i = 0; i < m_veccQuants.size( ); ++i )
+		if( m_veccQuants[ i ] == (unsigned char)-1 )
+			((CDistanceMatrix*)m_apData[ i ])->Set( iX, iY, CMeta::GetNaN( ) );
+		else
+			((CCompactMatrix*)m_apData[ i ])->Set( iX, iY, 0 ); }
 
 void CDataset::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
 

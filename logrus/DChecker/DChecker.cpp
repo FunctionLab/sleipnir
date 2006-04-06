@@ -68,7 +68,7 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = 0; j < Genes.GetGenes( ); ++j ) {
 				if( ( iGene = Answers.GetGene( Genes.GetGene( j ).GetName( ) ) ) == -1 )
 					continue;
-				for( k = 0; k < MatPairs.GetSize( ); ++k )
+				for( k = 0; k < (int)MatPairs.GetSize( ); ++k )
 					MatPairs.Set( k, iGene, false ); } } }
 
 	for( iGenes = 0; !sArgs.inputs_num || ( iGenes < sArgs.inputs_num ); ++iGenes ) {
@@ -138,7 +138,8 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = 0; j < MatResults.GetColumns( ); ++j )
 				*postm << '\t' << (unsigned int)MatResults.Get( i, j );
 			*postm << endl; }
-		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, MatPairs, sArgs.invert_flag ) << endl;
+		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, MatPairs,
+			!!sArgs.invert_flag ) << endl;
 
 		if( sArgs.inputs_num )
 			ofsm.close( );

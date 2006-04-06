@@ -50,12 +50,14 @@ protected:
 
 class CDatasetImpl : protected CDataImpl {
 protected:
-	bool Open( const CDataPair&, size_t, size_t );
-	bool Open( const CDataPair*, const char*, const IBayesNet* );
-	void TrimExamples( );
+	CDatasetImpl( );
+	~CDatasetImpl( );
 
-	size_t						m_iMax;
-	CHalfMatrix<CExampleImpl>	m_Examples;
+	void Reset( );
+	bool Open( const CDataPair&, size_t );
+	bool Open( const CDataPair*, const char*, const IBayesNet* );
+
+	void**	m_apData;
 };
 
 class CDataMaskImpl {
