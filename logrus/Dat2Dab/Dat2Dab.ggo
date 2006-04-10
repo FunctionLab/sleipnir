@@ -7,5 +7,6 @@ groupoption	"input"		i	"Input dab file"	string	typestr="filename"	group="input-o
 groupoption	"output"	o	"Output dab file"	string	typestr="filename"	group="input-output"
 section "Optional"
 option	"flip"		f	"Calculate one minus dat values"	flag	off
+option	"normalize"	n	"Normalize to the range [0,1]"	flag	off
 option	"genes"		g	"Process only genes from the given subset"	string	typestr="filename"
 option	"verbosity"	v	"Message verbosity"	int	default="5"

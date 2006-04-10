@@ -566,13 +566,13 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 			for( k = 0; k < pDef->GetNumberOfOutcomes( ); ++k ) {
 				veciCoords[ 1 ] = (int)k;
 				if( !( iCount = vecveciCounts[ i ][ ( k * iAnswers ) + j ] ) ) {
-/*
+//* Indicates that unseen examples provide no information
 					for( size_t m = 0; m < iAnswers; ++m )
 						if( m != j )
 							iCount += vecveciCounts[ i ][ ( k * iAnswers ) + m ];
 					iCount /= iAnswers - 1; }
 				if( !iCount ) {
-*/
+//*/
 					iCount = 1; }
 				(*pMat)[ veciCoords ] = iCount; } }
 		pMat->Normalize( ); }

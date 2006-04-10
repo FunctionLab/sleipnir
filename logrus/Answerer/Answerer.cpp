@@ -33,8 +33,11 @@ int main( int iArgs, char** aszArgs ) {
 		set<string>::const_iterator	iterGenes;
 		ostream&					ostm	= sArgs.output_arg ? cout : cerr;
 
-		for( i = 0; i < vecpPositives.size( ); ++i )
-			setstrGenes.insert( vecpPositives[ i ]->GetGene( rand( ) % vecpPositives[ i ]->GetGenes( ) ).GetName( ) );
+		for( i = 0; i < vecpPositives.size( ); ++i ) {
+			size_t	iGenes;
+
+			if( iGenes = vecpPositives[ i ]->GetGenes( ) )
+				setstrGenes.insert( vecpPositives[ i ]->GetGene( rand( ) % iGenes ).GetName( ) ); }
 		while( setstrGenes.size( ) < ( sArgs.test_arg * Dat.GetGenes( ) ) )
 			setstrGenes.insert( Dat.GetGene( rand( ) % Dat.GetGenes( ) ) );
 		for( iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( ); ++iterGenes )

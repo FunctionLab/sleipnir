@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-int Dat2Dab( const char*, bool, bool, const CGenes& );
+int Dat2Dab( const char*, bool, bool, bool, const CGenes& );
 int DabShuffle( const char*, bool );
 int DabFinder( const char*, bool );
 void DatFlip( CDat& );
@@ -28,18 +28,20 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open: " << sArgs.genes_arg << endl;
 			return 1; }
 		ifsm.close( ); }
-	iRet = Dat2Dab( szFile, fCreate, !!sArgs.flip_flag, Genes );
+	iRet = Dat2Dab( szFile, fCreate, !!sArgs.flip_flag, !!sArgs.normalize_flag, Genes );
 
 	CMeta::Shutdown( );
 	return iRet; }
 
-int Dat2Dab( const char* szFile, bool fCreate, bool fFlip, const CGenes& Genes ) {
+int Dat2Dab( const char* szFile, bool fCreate, bool fFlip, bool fNormalize, const CGenes& Genes ) {
 	CDat		Dat;
 	ifstream	ifsm;
 	ofstream	ofsm;
 
 	if( fCreate ) {
 		Dat.Open( cin, false );
+		if( fNormalize )
+			Dat.Normalize( );
 		if( fFlip )
 			DatFlip( Dat );
 		if( Genes.GetGenes( ) )
@@ -50,6 +52,8 @@ int Dat2Dab( const char* szFile, bool fCreate, bool fFlip, const CGenes& Genes )
 	else {
 		ifsm.open( szFile, ios_base::binary );
 		Dat.Open( ifsm, true );
+		if( fNormalize )
+			Dat.Normalize( );
 		if( fFlip )
 			DatFlip( Dat );
 		if( Genes.GetGenes( ) )

@@ -312,8 +312,8 @@ bool CBayesNetFNNodeExponential::Learn( const IDataset* pData, size_t iNode, boo
 					return false;
 				veciCounts[ iAnswer ]++;
 				m_Params.Get( iAnswer, c_iBeta ) += dVal;
-				if( dVal < m_Params.Get( i, c_iMin ) )
-					m_Params.Set( i, c_iMin, dVal ); }
+				if( dVal < m_Params.Get( iAnswer, c_iMin ) )
+					m_Params.Set( iAnswer, c_iMin, dVal ); }
 	for( i = 0; i < m_Params.GetRows( ); ++i ) {
 		if( !veciCounts[ i ] )
 			veciCounts[ i ] = 1;
