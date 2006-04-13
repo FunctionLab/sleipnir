@@ -7,6 +7,9 @@ namespace libBioUtils {
 const char	CPCLImpl::c_szEWEIGHT[]	= "EWEIGHT";
 const char	CPCLImpl::c_szGENE[]	= "GENE";
 const char	CPCLImpl::c_szGID[]		= "GID";
+const char	CPCLImpl::c_szGWEIGHT[]	= "GWEIGHT";
+const char	CPCLImpl::c_szNAME[]	= "NAME";
+const char	CPCLImpl::c_szOne[]		= "1";
 
 size_t CPCL::GetSkip( ) {
 
@@ -304,5 +307,29 @@ void CPCL::RankTransform( ) {
 		for( j = 0; j < m_Data.GetColumns( ); ++j )
 			m_Data.Set( i, j, (float)aiRanks[ j ] ); }
 	delete[] aiRanks; }
+
+bool CPCL::AddGenes( const vector<string>& vecstrGenes ) {
+	size_t	i, j, iStart;
+
+	iStart = m_Data.GetRows( );
+	if( !m_Data.AddRows( vecstrGenes.size( ) ) )
+		return false;
+	for( i = iStart; i < m_Data.GetRows( ); ++i )
+		for( j = 0; j < m_Data.GetColumns( ); ++j )
+			m_Data.Set( i, j, CMeta::GetNaN( ) );
+
+	m_vecstrGenes.resize( m_vecstrGenes.size( ) + vecstrGenes.size( ) );
+	for( i = 0; i < vecstrGenes.size( ); ++i )
+		m_vecstrGenes[ iStart + i ] = vecstrGenes[ i ];
+	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i ) {
+		m_vecvecstrFeatures[ i ].resize( m_vecvecstrFeatures[ i ].size( ) + vecstrGenes.size( ) );
+		if( m_vecstrFeatures[ i ] == c_szNAME )
+			for( j = 0; j < vecstrGenes.size( ); ++j )
+				m_vecvecstrFeatures[ i ][ iStart + j ] = vecstrGenes[ j ];
+		else if( m_vecstrFeatures[ i ] == c_szGWEIGHT )
+			for( j = 0; j < vecstrGenes.size( ); ++j )
+				m_vecvecstrFeatures[ i ][ iStart + j ] = c_szOne; }
+
+	return true; }
 
 }

@@ -44,6 +44,7 @@ public:
 	void Reverse( size_t );
 
 	bool Convert( CBayesNetPNL& ) const;
+	void SetDefault( const CBayesNetSmile& );
 };
 
 class CBayesNetPNL : public CBayesNetPNLImpl, public IBayesNet {

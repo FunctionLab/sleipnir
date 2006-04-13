@@ -86,6 +86,23 @@ public:
 		for( i = 0; i < m_iR; ++i )
 			memset( m_aaData[ i ], 0, sizeof(*m_aaData[ i ]) * m_iC ); }
 
+	bool AddRows( size_t iR ) {
+		tType**	m_aaNew;
+		size_t	i;
+
+		if( !m_fMemory )
+			return false;
+
+		m_aaNew = new tType*[ m_iR + iR ];
+		memcpy( m_aaNew, m_aaData, m_iR * sizeof(*m_aaData) );
+		delete[] m_aaData;
+		m_aaData = m_aaNew;
+		for( i = 0; i < iR; ++i )
+			m_aaNew[ m_iR + i ] = new tType[ m_iC ];
+		m_iR += iR;
+
+		return true; }
+
 protected:
 	static const size_t	c_iBuffer	= 8192;
 

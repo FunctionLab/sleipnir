@@ -11,7 +11,7 @@ int main( int iArgs, char** aszArgs ) {
 	ifstream					ifsm;
 	vector<size_t>				veciGenes, veciPCL;
 	vector<float>				vecdPCL;
-	vector<string>				vecstrGenes;
+	vector<string>				vecstrGenes, vecstrMissing;
 	gengetopt_args_info			sArgs;
 	IMeasure*					pMeasure;
 	CMeasurePearson				Pearson;
@@ -31,6 +31,8 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg ) {
 		if( Dat.Open( sArgs.input_arg ) ) {
 			cerr << "Opened dat: " << sArgs.input_arg << endl;
+//ifstream asdf( "../Magic/Data/official/Microarray/data_03_impute/01_Gasch_2000.txt" );
+//if( !PCL.Open( asdf, sArgs.skip_arg ) ) {
 			if( !PCL.Open( cin, sArgs.skip_arg ) ) {
 				cerr << "Could not open PCL" << endl;
 				return 1; } }
@@ -88,10 +90,15 @@ int main( int iArgs, char** aszArgs ) {
 						sArgs.weights_arg ? Weights.Get( j ) : NULL ) );
 		} }
 
-	for( i = 0; i < Dat.GetGenes( ); ++i )
+	for( i = 0; i < Dat.GetGenes( ); ++i ) {
+		if( PCL.GetGene( Dat.GetGene( i ) ) == -1 )
+			vecstrMissing.push_back( Dat.GetGene( i ) );
 		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 			if( CMeta::IsNaN( Dat.Get( i, j ) ) )
-				Dat.Set( i, j, 0 );
+				Dat.Set( i, j, 0 ); }
+	if( !vecstrMissing.empty( ) && !PCL.AddGenes( vecstrMissing ) ) {
+		cerr << "Couldn't reconcile data" << endl;
+		return 1; }
 	if( sArgs.normalize_flag )
 		Dat.Normalize( );
 	pHier = CClustHierarchical::Cluster( Dat.Get( ) );

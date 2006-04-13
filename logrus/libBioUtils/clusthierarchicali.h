@@ -28,25 +28,10 @@ protected:
 
 class CClustHierarchicalImpl {
 protected:
-	struct SHierarchy {
-		CHierarchy*	m_pHier;
-		bool		m_fUsed;
-	};
 
-	typedef std::vector<std::vector<float> >	TVecVecD;
-	typedef std::pair<CHierarchy*,CHierarchy*>	TPrHier;
-
-	static void FindHighestSimilarity( const CDistanceMatrix&, const vector<SHierarchy>&,
-		const vector<SHierarchy>&, const TVecVecD&, const CDistanceMatrix&, size_t, float&,
-		CHierarchy*&, CHierarchy*& );
-	static void RefreshDistances( const CDistanceMatrix&, const vector<SHierarchy>&,
-		const vector<SHierarchy>&, TVecVecD&, CDistanceMatrix&, size_t );
-	static float CalculateDistance( const CHierarchy&, const CHierarchy&, const CDistanceMatrix&,
-		const TVecVecD&, const CDistanceMatrix& );
-	static void CalculateDistance( const CHierarchy&, const CHierarchy&, const CDistanceMatrix&,
-		const TVecVecD&, const CDistanceMatrix&, size_t&, float& );
-	static void CleanDistance( const CHierarchy&, vector<SHierarchy>&, vector<SHierarchy>&,
-		TVecVecD& );
+	static void AssertParentage( std::vector<size_t>&, std::vector<size_t>&, std::vector<size_t>&, size_t, size_t );
+	static CHierarchy* ConstructHierarchy( const std::vector<size_t>&, const std::vector<size_t>&,
+		const std::vector<float>&, size_t );
 };
 
 }

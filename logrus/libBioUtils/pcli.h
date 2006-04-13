@@ -15,6 +15,9 @@ protected:
 	static const char	c_szEWEIGHT[];
 	static const char	c_szGENE[];
 	static const char	c_szGID[];
+	static const char	c_szGWEIGHT[];
+	static const char	c_szNAME[];
+	static const char	c_szOne[];
 
 	typedef std::vector<std::string>	TVecStr;
 	typedef std::set<size_t>			TSetI;

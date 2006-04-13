@@ -4,6 +4,8 @@
 
 namespace libBioUtils {
 
+// CBayesNetFNNode //////////////////////////////////////////////////////////
+
 const char	CBayesNetFNNode::c_szType[]	= "type";
 
 CBayesNetFNNode* CBayesNetFNNode::Open( DSL_node* pNode ) {
@@ -13,6 +15,7 @@ CBayesNetFNNode* CBayesNetFNNode::Open( DSL_node* pNode ) {
 		new CBayesNetFNNodeGaussian( ),
 		new CBayesNetFNNodeBeta( ),
 		new CBayesNetFNNodeExponential( ),
+		new CBayesNetFNNodeMOG( ),
 		NULL };
 	CBayesNetFNNode*	pRet;
 	int					i, j, iDim;
@@ -105,6 +108,8 @@ bool CBayesNetFNNode::Learn( const vector<size_t>& veciCounts ) {
 
 	return true; }
 
+// CBayesNetFNNodeDiscrete //////////////////////////////////////////////////
+
 void CBayesNetFNNodeDiscrete::Randomize( ) {
 	size_t		iCol, iRow, iSum;
 	vector<int>	veciRow;
@@ -164,6 +169,8 @@ bool CBayesNetFNNodeDiscrete::Evaluate( float dValue, vector<float>& vecdOut ) c
 
 	return true; }
 
+// CBayesNetFNNodeGaussian //////////////////////////////////////////////////
+
 void CBayesNetFNNodeGaussian::Randomize( ) {
 	size_t	i;
 
@@ -216,6 +223,8 @@ bool CBayesNetFNNodeGaussian::Evaluate( float dValue, vector<float>& vecdOut ) c
 		vecdOut[ i ] /= dSum;
 
 	return true; }
+
+// CBayesNetFNNodeBeta //////////////////////////////////////////////////////
 
 void CBayesNetFNNodeBeta::Randomize( ) {
 	size_t	i;
@@ -285,6 +294,8 @@ bool CBayesNetFNNodeBeta::Evaluate( float dValue, vector<float>& vecdOut ) const
 
 	return true; }
 
+// CBayesNetFNNodeExponential ///////////////////////////////////////////////
+
 void CBayesNetFNNodeExponential::Randomize( ) {
 	size_t	i;
 
@@ -335,6 +346,71 @@ bool CBayesNetFNNodeExponential::Evaluate( float dValue, vector<float>& vecdOut 
 		vecdOut[ i ] /= dSum;
 
 	return true; }
+
+// CBayesNetFNNodeMOG ///////////////////////////////////////////////////////
+
+void CBayesNetFNNodeMOG::Randomize( ) {
+	size_t	i, j;
+
+	for( i = 0; i < m_Params.GetRows( ); ++i )
+		for( j = 0; j < m_Params.GetColumns( ); j += 2 ) {
+			m_Params.Set( i, j + c_iMu, (float)( rand( ) - ( RAND_MAX / 2 ) ) );
+			m_Params.Set( i, j + c_iSigma, (float)rand( ) / RAND_MAX ); } }
+
+bool CBayesNetFNNodeMOG::Learn( const IDataset* pData, size_t iNode, bool fZero ) {
+
+	return false; }
+/*
+	float			d, dVal;
+	size_t			i, j, iAnswer;
+	vector<size_t>	veciCounts;
+
+	for( i = 0; i < m_Params.GetRows( ); ++i )
+		for( j = 0; j < m_Params.GetColumns( ); ++j )
+			m_Params.Set( i, j, 0 );
+	veciCounts.resize( m_Params.GetRows( ) );
+	for( i = 0; i < pData->GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
+			if( pData->IsExample( i, j ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
+				if( CMeta::IsNaN( dVal = pData->GetContinuous( i, j, iNode ) ) ) {
+					if( !fZero )
+						continue;
+					dVal = 0; }
+				if( iAnswer >= m_Params.GetRows( ) )
+					return false;
+				veciCounts[ iAnswer ]++;
+				m_Params.Get( iAnswer, c_iMu ) += dVal;
+				m_Params.Get( iAnswer, c_iSigma ) += dVal * dVal; }
+	for( i = 0; i < m_Params.GetRows( ); ++i ) {
+		if( !veciCounts[ i ] )
+			veciCounts[ i ] = 1;
+		d = ( m_Params.Get( i, c_iMu ) /= veciCounts[ i ] );
+		d *= d;
+		dVal = m_Params.Get( i, c_iSigma );
+		dVal = ( dVal == d ) ? 1 : sqrt( ( dVal / ( veciCounts[ i ] - 1 ) ) - d );
+		m_Params.Set( i, c_iSigma, dVal ); }
+
+	return true; }
+*/
+
+bool CBayesNetFNNodeMOG::Evaluate( float dValue, vector<float>& vecdOut ) const {
+	float	dCur, dSum;
+	size_t	i, j;
+
+	vecdOut.resize( m_Params.GetRows( ) );
+	dSum = 0;
+	for( i = 0; i < vecdOut.size( ); ++i ) {
+		dCur = 0;
+		for( j = 0; j < m_Params.GetColumns( ); j += 2 )
+			dCur += (float)CStatistics::NormalPDF( dValue, m_Params.Get( i, j + c_iMu ),
+				m_Params.Get( i, j + c_iSigma ) );
+		dSum += ( vecdOut[ i ] = dCur ); }
+	for( i = 0; i < vecdOut.size( ); ++i )
+		vecdOut[ i ] /= dSum;
+
+	return true; }
+
+// CBayesNetFN //////////////////////////////////////////////////////////////
 
 CBayesNetFNImpl::CBayesNetFNImpl( ) : CBayesNetImpl( true ), m_iNodes(0), m_apNodes(NULL), m_fSmileNet(false) { }
 

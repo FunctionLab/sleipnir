@@ -116,6 +116,26 @@ protected:
 		return "exponential"; }
 };
 
+class CBayesNetFNNodeMOG : protected CBayesNetFNNode {
+protected:
+	friend class CBayesNetFNNode;
+
+	static const size_t	c_iMu		= 0;
+	static const size_t	c_iSigma	= 1;
+
+	void Randomize( );
+	bool Learn( const IDataset*, size_t, bool );
+	bool Evaluate( float, std::vector<float>& ) const;
+
+	CBayesNetFNNode* New( DSL_node* pNode ) const {
+
+		return new CBayesNetFNNodeMOG( ); }
+
+	const char* GetType( ) const {
+
+		return "mog"; }
+};
+
 class CBayesNetFNImpl : protected CBayesNetImpl {
 protected:
 	CBayesNetFNImpl( );

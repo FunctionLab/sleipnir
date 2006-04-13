@@ -170,41 +170,43 @@ bool CDat::Open( istream& istm, bool fBinary ) {
 bool CDatImpl::OpenText( istream& istm ) {
 	char		acBuf[ c_iBufferSize ];
 	const char*	pc;
-	string		strToken, strCache;
+	char*		pcTail;
+	string		strToken, strCache, strValue;
 	TMapStrI	mapGenes;
-	size_t		iOne, iTwo, i, iToken;
+	size_t		iOne, iTwo, i;
 	float		dScore;
 	TAAF		vecvecfScores;
 
 	Reset( );
 	while( istm.peek( ) != EOF ) {
 		istm.getline( acBuf, ARRAYSIZE(acBuf) - 1 );
-		for( iToken = 0; iToken < 3; ++iToken ) {
-			strToken = OpenToken( acBuf, &pc );
-			if( !strToken.length( ) )
-				break;
-			if( strToken != strCache ) {
-				strCache = strToken;
-				iOne = MapGene( mapGenes, m_vecstrGenes, strToken ); }
+		strToken = OpenToken( acBuf, &pc );
+		if( !strToken.length( ) )
+			break;
+		if( strToken != strCache ) {
+			strCache = strToken;
+			iOne = MapGene( mapGenes, m_vecstrGenes, strToken ); }
 
-			strToken = OpenToken( pc, &pc );
-			iTwo = MapGene( mapGenes, m_vecstrGenes, strToken );
-			if( !( dScore = (float)atof( OpenToken( pc ).c_str( ) ) ) && errno && ( errno != ENOENT ) ) {
-				Reset( );
-				return false; }
+		strToken = OpenToken( pc, &pc );
+		iTwo = MapGene( mapGenes, m_vecstrGenes, strToken );
+		strValue = OpenToken( pc );
+		if( !( dScore = (float)strtod( strValue.c_str( ), &pcTail ) ) &&
+			( pcTail != ( strValue.c_str( ) + strValue.length( ) ) ) ) {
+			Reset( );
+			return false; }
 
-			i = ( ( iOne > iTwo ) ? iOne : iTwo );
-			if( vecvecfScores.size( ) <= i )
-				vecvecfScores.resize( i + 1 );
-			ResizeNaN( vecvecfScores[ iOne ], i );
-			ResizeNaN( vecvecfScores[ iTwo ], i );
-			if( !CMeta::IsNaN( vecvecfScores[ iOne ][ iTwo ] ) && ( vecvecfScores[ iOne ][ iTwo ] != dScore ) ) {
-				g_CatBioUtils.error( "CDatImpl::OpenText( ) duplicate genes %s, %s (%g:%g)",
-					strCache.c_str( ), strToken.c_str( ), vecvecfScores[ iOne ][ iTwo ],
-					dScore );
-				Reset( );
-				return false; }
-			vecvecfScores[ iOne ][ iTwo ] = vecvecfScores[ iTwo ][ iOne ] = dScore; } }
+		i = ( ( iOne > iTwo ) ? iOne : iTwo );
+		if( vecvecfScores.size( ) <= i )
+			vecvecfScores.resize( i + 1 );
+		ResizeNaN( vecvecfScores[ iOne ], i );
+		ResizeNaN( vecvecfScores[ iTwo ], i );
+		if( !CMeta::IsNaN( vecvecfScores[ iOne ][ iTwo ] ) && ( vecvecfScores[ iOne ][ iTwo ] != dScore ) ) {
+			g_CatBioUtils.error( "CDatImpl::OpenText( ) duplicate genes %s, %s (%g:%g)",
+				strCache.c_str( ), strToken.c_str( ), vecvecfScores[ iOne ][ iTwo ],
+				dScore );
+			Reset( );
+			return false; }
+		vecvecfScores[ iOne ][ iTwo ] = vecvecfScores[ iTwo ][ iOne ] = dScore; }
 
 	m_Data.Initialize( m_vecstrGenes.size( ) );
 	for( iOne = 0; iOne < m_vecstrGenes.size( ); ++iOne )

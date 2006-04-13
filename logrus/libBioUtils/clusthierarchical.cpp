@@ -5,21 +5,16 @@
 
 namespace libBioUtils {
 
-CHierarchy::CHierarchy( size_t iID ) {
-
-	m_iID = iID;
-	m_dScore = 0;
-	m_iWeight = 1;
-	m_pLeft = m_pRight = NULL; }
-
 CHierarchy::CHierarchy( size_t iID, float dScore, const CHierarchy* pLeft,
 	const CHierarchy* pRight ) {
+
+	assert( ( pLeft && pRight ) || !( pLeft || pRight ) );
 
 	m_iID = iID;
 	m_dScore = dScore;
 	m_pLeft = pLeft;
 	m_pRight = pRight;
-	m_iWeight = m_pLeft->GetWeight( ) + m_pRight->GetWeight( ); }
+	m_iWeight = ( m_pLeft && m_pRight ) ? ( m_pLeft->m_iWeight + m_pRight->m_iWeight ) : 1; }
 
 CHierarchyImpl::~CHierarchyImpl( ) {
 
@@ -31,6 +26,10 @@ CHierarchyImpl::~CHierarchyImpl( ) {
 void CHierarchy::Destroy( ) {
 
 	delete this; }
+
+float CHierarchy::GetSimilarity( ) const {
+
+	return m_dScore; }
 
 bool CHierarchy::IsGene( ) const {
 
@@ -47,10 +46,6 @@ size_t CHierarchy::GetID( ) const {
 const CHierarchy& CHierarchy::Get( bool fRight ) const {
 
 	return *( fRight ? m_pRight : m_pLeft ); }
-
-size_t CHierarchy::GetWeight( ) const {
-
-	return m_iWeight; }
 
 void CHierarchy::Save( ostream& ostm, size_t iGenes ) const {
 	size_t	i;
@@ -98,8 +93,8 @@ float CHierarchy::SortChildren( const vector<float>& vecdPCL ) {
 
 	dLeft = ((CHierarchy*)m_pLeft)->SortChildren( vecdPCL );
 	dRight = ((CHierarchy*)m_pRight)->SortChildren( vecdPCL );
-	dRet = ( ( dLeft * m_pLeft->GetWeight( ) ) + ( dRight * m_pRight->GetWeight( ) ) ) /
-		( m_pRight->GetWeight( ) + m_pLeft->GetWeight( ) );
+	dRet = ( ( dLeft * m_pLeft->m_iWeight ) + ( dRight * m_pRight->m_iWeight ) ) /
+		( m_pRight->m_iWeight + m_pLeft->m_iWeight );
 	if( dLeft < dRight ) {
 		pTemp = m_pLeft;
 		m_pLeft = m_pRight;
@@ -107,167 +102,104 @@ float CHierarchy::SortChildren( const vector<float>& vecdPCL ) {
 
 	return dRet; }
 
+// Implementation courtesy of TIGR MeV
+
 CHierarchy* CClustHierarchical::Cluster( const CDistanceMatrix& Dist ) {
-	size_t				i, iNodes;
-	vector<SHierarchy>	vecsGenes, vecsNodes;
-	TPrHier				prHier;
-	TVecVecD			vecvecdDist;
-	CDistanceMatrix		DistNodes;
-	CHierarchy*			pHier;
-	CHierarchy*			pRight;
-	float				dScore;
+	CDistanceMatrix	Sim;
+	size_t			i, j, k, m, iP, iAssigned, iParentless;
+	float			d, dTotal, dMin;
+	vector<float>	vecdHeight, vecdMax;
+	vector<size_t>	veciChild1, veciChild2, veciChildren, veciMax, veciOwner;
 
-	iNodes = 0;
-	DistNodes.Initialize( Dist.GetSize( ) );
-	vecvecdDist.resize( Dist.GetSize( ) );
-	vecsGenes.resize( Dist.GetSize( ) );
-	vecsNodes.resize( Dist.GetSize( ) );
-	vecvecdDist.resize( Dist.GetSize( ) );
-	for( i = 0; i < Dist.GetSize( ); ++i ) {
-		vecsGenes[ i ].m_fUsed = vecsNodes[ i ].m_fUsed = false;
-		vecsNodes[ i ].m_pHier = NULL;
-		vecsGenes[ i ].m_pHier = new CHierarchy( i ); }
+	Sim.Initialize( Dist.GetSize( ) );
+	for( i = 0; i < Sim.GetSize( ); ++i )
+		Sim.Set( i, Dist.Get( i ) );
+	iAssigned = iParentless = Sim.GetSize( );
+	dTotal = FLT_MAX;
 
-	for( i = 1; i < Dist.GetSize( ); ++i ) {
-		g_CatBioUtils.notice( "CClustHierarchical::Cluster( ) processing node %d/%d", i,
-			Dist.GetSize( ) );
-		FindHighestSimilarity( Dist, vecsGenes, vecsNodes, vecvecdDist, DistNodes, iNodes,
-			dScore, pHier, pRight );
-		vecsNodes[ iNodes++ ].m_pHier = pHier = new CHierarchy( iNodes, dScore, pHier, pRight );
-		CleanDistance( pHier->Get( false ), vecsGenes, vecsNodes, vecvecdDist );
-		CleanDistance( pHier->Get( true ), vecsGenes, vecsNodes, vecvecdDist );
-		RefreshDistances( Dist, vecsGenes, vecsNodes, vecvecdDist, DistNodes, iNodes - 1 ); }
+	vecdHeight.resize( Sim.GetSize( ) );
+	veciChild1.resize( Sim.GetSize( ) );
+	veciChild2.resize( Sim.GetSize( ) );
+	veciChildren.resize( Sim.GetSize( ) * 2 );
+	for( i = 0; i < veciChild1.size( ); ++i ) {
+		veciChild1[ i ] = veciChild2[ i ] = -1;
+		veciChildren[ i ] = 1; }
 
-	return pHier; }
+	dMin = FLT_MAX;
+	vecdMax.resize( Sim.GetSize( ) );
+	veciMax.resize( Sim.GetSize( ) );
+	for( i = 0; ( i + 1 ) < Sim.GetSize( ); ++i ) {
+		vecdMax[ i ] = -FLT_MAX;
+		for( j = ( i + 1 ); j < Sim.GetSize( ); ++j ) {
+			if( ( d = Sim.Get( i, j ) ) > vecdMax[ i ] ) {
+				vecdMax[ i ] = d;
+				veciMax[ i ] = j; }
+			if( d < dMin )
+				dMin = d; } }
 
-void CClustHierarchicalImpl::FindHighestSimilarity( const CDistanceMatrix& Dist,
-	const vector<SHierarchy>& vecsGenes, const vector<SHierarchy>& vecsNodes,
-	const TVecVecD& vecvecdDist, const CDistanceMatrix& DistNodes, size_t iNodes,
-	float& dMax, CHierarchy*& pLeft, CHierarchy*& pRight ) {
-	size_t	i, j;
+	veciOwner.resize( Sim.GetSize( ) );
+	for( i = 0; i < veciOwner.size( ); ++i )
+		veciOwner[ i ] = i;
+	while( iParentless > 1 ) {
+		float	dHeight;
+		size_t	iOne, iTwo;
 
-	dMax = -1;
-	for( i = 0; i < Dist.GetSize( ); ++i ) {
-		if( vecsGenes[ i ].m_fUsed )
-			continue;
-		for( j = ( i + 1 ); j < Dist.GetSize( ); ++j )
-			if( !vecsGenes[ j ].m_fUsed && ( Dist.Get( i, j ) > dMax ) ) {
-				dMax = Dist.Get( i, j );
-				pLeft = vecsGenes[ i ].m_pHier;
-				pRight = vecsGenes[ j ].m_pHier; } }
+		if( !( iParentless % 500 ) )
+			g_CatBioUtils.notice( "CClustHierarchical::Cluster( ) %d/%d nodes remaining", iParentless,
+				Dist.GetSize( ) );
+		dHeight = -FLT_MAX;
+		for( i = 0; i < Sim.GetSize( ); ++i )
+			if( ( veciOwner[ i ] != -1 ) && ( vecdMax[ i ] > dHeight ) ) {
+				dHeight = vecdMax[ i ];
+				j = i;
+				iOne = veciMax[ i ]; }
+		i = iOne;
 
-	for( i = 0; i < iNodes; ++i ) {
-		if( vecsNodes[ i ].m_fUsed )
-			continue;
-		for( j = 0; j < vecvecdDist[ i ].size( ); ++j )
-			if( !vecsGenes[ j ].m_fUsed && ( vecvecdDist[ i ][ j ] > dMax ) ) {
-				dMax = vecvecdDist[ i ][ j ];
-				pLeft = vecsNodes[ i ].m_pHier;
-				pRight = vecsGenes[ j ].m_pHier; }
-		for( j = ( i + 1 ); j < iNodes; ++j )
-			if( !vecsNodes[ j ].m_fUsed && ( DistNodes.Get( i, j ) > dMax ) ) {
-				dMax = DistNodes.Get( i, j );
-				pLeft = vecsNodes[ i ].m_pHier;
-				pRight = vecsNodes[ j ].m_pHier; } }
+		if( ( vecdHeight[ ( k = iAssigned++ ) - Sim.GetSize( ) ] = dHeight ) < dTotal )
+			dTotal = dHeight;
+		AssertParentage( veciChildren, veciChild1, veciChild2, veciOwner[ i ], k );
+		AssertParentage( veciChildren, veciChild1, veciChild2, veciOwner[ j ], k );
+		iParentless--;
 
-	if( dMax >= 0 )
-		return;
+		iOne = veciChildren[ veciOwner[ i ] ];
+		iTwo = veciChildren[ veciOwner[ j ] ];
+		veciOwner[ i ] = k;
+		veciOwner[ j ] = -1;
+		for( iP = 0; iP < Sim.GetSize( ); ++iP )
+			if( ( iP != i ) && ( veciOwner[ iP ] != -1 ) )
+				Sim.Set( i, iP, ( ( Sim.Get( i, iP ) * iOne ) + ( Sim.Get( j, iP ) * iTwo ) ) /
+					( iOne + iTwo ) );
 
-	dMax = 0;
-	for( i = 0; i < Dist.GetSize( ); ++i ) {
-		if( vecsGenes[ i ].m_fUsed )
-			continue;
-		for( j = ( i + 1 ); j < Dist.GetSize( ); ++j )
-			if( !vecsGenes[ j ].m_fUsed ) {
-				pLeft = vecsGenes[ i ].m_pHier;
-				pRight = vecsGenes[ j ].m_pHier;
-				return; } }
-	for( i = 0; i < iNodes; ++i ) {
-		if( vecsNodes[ i ].m_fUsed )
-			continue;
-		for( j = 0; j < vecvecdDist[ i ].size( ); ++j )
-			if( !vecsGenes[ j ].m_fUsed ) {
-				pLeft = vecsNodes[ i ].m_pHier;
-				pRight = vecsGenes[ j ].m_pHier;
-				return; }
-		for( j = ( i + 1 ); j < iNodes; ++j )
-			if( !vecsNodes[ j ].m_fUsed ) {
-				pLeft = vecsNodes[ i ].m_pHier;
-				pRight = vecsNodes[ j ].m_pHier;
-				return; } }
+		veciMax[ i ] = i;
+		for( iP = 0; iP < Sim.GetSize( ); ++iP )
+			if( ( veciOwner[ iP ] != -1 ) && ( ( veciMax[ iP ] == i ) || ( veciMax[ iP ] == j ) ) ) {
+				if( ( vecdMax[ iP ] == dMin ) && ( iP != i ) ) {
+					veciMax[ iP ] = i;
+					continue; }
+				vecdMax[ iP ] = -FLT_MAX;
+				for( m = ( iP + 1 ); m < Sim.GetSize( ); ++m )
+					if( ( veciOwner[ m ] != -1 ) && ( ( d = Sim.Get( iP, m ) ) > vecdMax[ iP ] ) ) {
+						vecdMax[ iP ] = d;
+						veciMax[ iP ] = m; } } }
 
-	g_CatBioUtils.error( "CClustHierarchicalImpl::FindHighestSimilarity( ) found no unused nodes!" ); }
+	return ConstructHierarchy( veciChild1, veciChild2, vecdHeight, ( 2 * Sim.GetSize( ) ) - 2 ); }
 
-void CClustHierarchicalImpl::CleanDistance( const CHierarchy& Hier,
-	vector<SHierarchy>& vecsGenes, vector<SHierarchy>& vecsNodes, TVecVecD& vecvecdDist ) {
+void CClustHierarchicalImpl::AssertParentage( vector<size_t>& veciChildren, vector<size_t>& veciChild1,
+	vector<size_t>& veciChild2, size_t iChild, size_t iParent ) {
 
-	if( Hier.IsGene( ) ) {
-		vecsGenes[ Hier.GetID( ) ].m_fUsed = true;
-		return; }
+	veciChildren[ iParent ] += veciChildren[ iChild ];
+	iParent -= veciChild1.size( );
+	veciChild2[ iParent ] = veciChild1[ iParent ];
+	veciChild1[ iParent ] = iChild; }
 
-	vecsNodes[ Hier.GetID( ) ].m_fUsed = true;
-	if( !Hier.Get( false ).IsGene( ) )
-		vecvecdDist[ Hier.Get( false ).GetID( ) ].clear( );
-	if( !Hier.Get( true ).IsGene( ) )
-		vecvecdDist[ Hier.Get( true ).GetID( ) ].clear( ); }
+CHierarchy* CClustHierarchicalImpl::ConstructHierarchy( const vector<size_t>& veciChild1,
+	const vector<size_t>& veciChild2, const vector<float>& vecdHeight, size_t iID ) {
+	bool	fNode;
 
-void CClustHierarchicalImpl::RefreshDistances( const CDistanceMatrix& Dist,
-	const vector<SHierarchy>& vecsGenes, const vector<SHierarchy>& vecsNodes,
-	TVecVecD& vecvecdDist, CDistanceMatrix& DistNodes, size_t iNode ) {
-	size_t				i;
-	vector<float>&		vecdDist	= vecvecdDist[ iNode ];
-	const CHierarchy&	Hier		= *vecsNodes[ iNode ].m_pHier;
-
-	vecdDist.resize( Dist.GetSize( ) );
-	for( i = 0; i < vecdDist.size( ); ++i )
-		if( !vecsGenes[ i ].m_fUsed )
-			vecdDist[ i ] = CalculateDistance( Hier, *vecsGenes[ i ].m_pHier, Dist, vecvecdDist,
-				DistNodes );
-	for( i = 0; i < iNode; ++i )
-		if( !vecsNodes[ i ].m_fUsed )
-			DistNodes.Set( i, iNode, CalculateDistance( Hier, *vecsNodes[ i ].m_pHier, Dist,
-				vecvecdDist, DistNodes ) ); }
-
-float CClustHierarchicalImpl::CalculateDistance( const CHierarchy& HierNew,
-	const CHierarchy& HierOld, const CDistanceMatrix& Dist, const TVecVecD& vecvecdDist,
-	const CDistanceMatrix& DistNodes ) {
-	size_t	iLeftWeight, iRightWeight;
-	float	dLeftDist, dRightDist;
-
-	if( HierNew.IsGene( ) ) {
-		if( HierOld.IsGene( ) ) {
-			iLeftWeight = 1;
-			dLeftDist = Dist.Get( HierNew.GetID( ), HierOld.GetID( ) );
-			iRightWeight = 0; }
-		else {
-			CalculateDistance( HierOld.Get( false ), HierNew, Dist, vecvecdDist, DistNodes,
-				iLeftWeight, dLeftDist );
-			CalculateDistance( HierOld.Get( true ), HierNew, Dist, vecvecdDist, DistNodes,
-				iRightWeight, dRightDist ); } }
-	else {
-		CalculateDistance( HierNew.Get( false ), HierOld, Dist, vecvecdDist, DistNodes,
-			iLeftWeight, dLeftDist );
-		CalculateDistance( HierNew.Get( true ), HierOld, Dist, vecvecdDist, DistNodes,
-			iRightWeight, dRightDist ); }
-
-	return ( ( ( iLeftWeight * dLeftDist ) + ( iRightWeight * dRightDist ) ) /
-		( iLeftWeight + iRightWeight ) ); }
-
-void CClustHierarchicalImpl::CalculateDistance( const CHierarchy& HierOne,
-	const CHierarchy& HierTwo, const CDistanceMatrix& Dist, const TVecVecD& vecvecdDist,
-	const CDistanceMatrix& DistNodes, size_t& iWeight, float& dDist ) {
-
-	if( HierOne.IsGene( ) ) {
-		iWeight = 1;
-		if( HierTwo.IsGene( ) )
-			dDist = Dist.Get( HierOne.GetID( ), HierTwo.GetID( ) );
-		else
-			dDist = vecvecdDist[ HierTwo.GetID( ) ][ HierOne.GetID( ) ]; }
-	else {
-		iWeight = HierOne.GetWeight( );
-		if( HierTwo.IsGene( ) )
-			dDist = vecvecdDist[ HierOne.GetID( ) ][ HierTwo.GetID( ) ];
-		else
-			dDist = DistNodes.Get( HierOne.GetID( ), HierTwo.GetID( ) ); } }
+	if( fNode = ( iID >= veciChild1.size( ) ) )
+		iID -= veciChild1.size( );
+	return new CHierarchy( iID, vecdHeight[ iID ],
+			fNode ? ConstructHierarchy( veciChild1, veciChild2, vecdHeight, veciChild1[ iID ] ) : NULL,
+			fNode ? ConstructHierarchy( veciChild1, veciChild2, vecdHeight, veciChild2[ iID ] ) : NULL ); }
 
 }

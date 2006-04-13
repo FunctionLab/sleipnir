@@ -35,6 +35,7 @@ public:
 	void Set( size_t, size_t, float );
 	void SortGenes( const std::vector<size_t>& );
 	void RankTransform( );
+	bool AddGenes( const std::vector<std::string>& );
 };
 
 }

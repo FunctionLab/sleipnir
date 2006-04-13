@@ -24,7 +24,7 @@ int main( int iArgs, char** aszArgs ) {
 	EnableXdslFormat( );
 #endif // !( defined(_MSC_VER) && defined(_DEBUG) )
 
-	CBayesNetSmile	BNSmile( !!sArgs.group_flag );
+	CBayesNetSmile	BNSmile( !!sArgs.group_flag ), BNDefault( !!sArgs.group_flag );
 	CBayesNetPNL	BNPNL( !!sArgs.group_flag );
 	CBayesNetFN		BNFN;
 
@@ -37,6 +37,11 @@ int main( int iArgs, char** aszArgs ) {
 		if( !BNSmile.Open( sArgs.input_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.input_arg << endl;
 			return 1; }
+		if( sArgs.default_arg ) {
+			if( !BNDefault.Open( sArgs.default_arg ) ) {
+				cerr << "Couldn't open: " << sArgs.default_arg << endl;
+				return 1; }
+			BNSmile.SetDefault( BNDefault ); }
 		if( sArgs.pnl_flag ) {
 			BNSmile.Convert( BNPNL );
 			pNet = &BNPNL; }

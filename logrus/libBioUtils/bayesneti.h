@@ -12,6 +12,7 @@
 namespace libBioUtils {
 
 class CBayesNetPNL;
+class CBayesNetSmile;
 
 class CBayesNetImpl {
 protected:
@@ -36,6 +37,7 @@ class CBayesNetSmileImpl : protected CBayesNetImpl {
 protected:
 	friend class CBayesNetFN;
 
+	static const size_t	c_iMinimum	= 10;
 	static const char	c_szGaussian[];
 
 	static bool IsGaussian( const DSL_network& );
@@ -74,8 +76,9 @@ protected:
 	float ELRBrent( const std::vector<bool>&, const TMapData&, const TVecVecF&, const TVecVecF&, TVecVecF&,
 		float&, float&, float, float, float, float, bool );
 
-	bool		m_fSmileNet;
-	DSL_network	m_SmileNet;
+	bool					m_fSmileNet;
+	DSL_network				m_SmileNet;
+	const CBayesNetSmile*	m_pDefaults;
 };
 
 class CBayesNetPNLImpl : protected CBayesNetImpl {
