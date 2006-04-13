@@ -33,22 +33,28 @@ bool CDatasetCompact::Open( const vector<string>& vecstrData ) {
 	return true; }
 
 bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
-	const IBayesNet* pBayesNet ) {
+	const IBayesNet* pBayesNet, bool fEverything ) {
 	size_t			i, j, k;
 	vector<string>	vecstrData;
+	set<string>		setstrGenes;
 
 	if( pBayesNet->IsContinuous( ) )
 		return false;
 
-	m_iData = 1 + (uint32_t)OpenMax( szDataDir, pBayesNet->GetNodes( ), true, vecstrData );
+	m_iData = 1 + (uint32_t)OpenMax( szDataDir, pBayesNet->GetNodes( ), !fEverything, vecstrData, fEverything ?
+		&setstrGenes : NULL );
 	m_veccQuants.resize( m_iData );
 	if( m_aData )
 		delete[] m_aData;
 	m_aData = new CCompactMatrix[ m_iData ];
 
-	m_vecstrGenes.resize( Answers.GetGenes( ) );
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
-		m_vecstrGenes[ i ] = Answers.GetGene( i );
+	if( fEverything ) {
+		m_vecstrGenes.resize( setstrGenes.size( ) );
+		copy( setstrGenes.begin( ), setstrGenes.end( ), m_vecstrGenes.begin( ) ); }
+	else {
+		m_vecstrGenes.resize( Answers.GetGenes( ) );
+		for( i = 0; i < m_vecstrGenes.size( ); ++i )
+			m_vecstrGenes[ i ] = Answers.GetGene( i ); }
 
 	if( !CDatasetCompactImpl::Open( Answers, 0 ) )
 		return false;

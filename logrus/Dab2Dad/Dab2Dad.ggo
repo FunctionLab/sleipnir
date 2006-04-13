@@ -12,3 +12,4 @@ option	"answers"		w	"Answer dab file"	string	typestr="filename"
 option	"directory"		d	"Directory with dab files"	string	typestr="directory"	default="."
 option	"mask"			m	"Mask dab file"	string	typestr="filename"
 option	"verbosity"		v	"Message verbosity"	int	default="5"
+option	"everything"	e	"Include pairs without answers"	flag	off

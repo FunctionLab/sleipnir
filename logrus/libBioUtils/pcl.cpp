@@ -323,10 +323,10 @@ bool CPCL::AddGenes( const vector<string>& vecstrGenes ) {
 		m_vecstrGenes[ iStart + i ] = vecstrGenes[ i ];
 	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i ) {
 		m_vecvecstrFeatures[ i ].resize( m_vecvecstrFeatures[ i ].size( ) + vecstrGenes.size( ) );
-		if( m_vecstrFeatures[ i ] == c_szNAME )
+		if( m_vecstrFeatures[ i + 1 ] == c_szNAME )
 			for( j = 0; j < vecstrGenes.size( ); ++j )
 				m_vecvecstrFeatures[ i ][ iStart + j ] = vecstrGenes[ j ];
-		else if( m_vecstrFeatures[ i ] == c_szGWEIGHT )
+		else if( m_vecstrFeatures[ i + 1 ] == c_szGWEIGHT )
 			for( j = 0; j < vecstrGenes.size( ); ++j )
 				m_vecvecstrFeatures[ i ][ iStart + j ] = c_szOne; }
 

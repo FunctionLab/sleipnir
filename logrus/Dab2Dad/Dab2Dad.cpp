@@ -47,7 +47,7 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Answers.Open( sArgs.answers_arg, false ) ) {
 			cerr << "Couldn't open: " << sArgs.answers_arg << endl;
 			return 1; }
-		if( !Data.Open( Answers, sArgs.directory_arg, &BNSmile ) ) {
+		if( !Data.Open( Answers, sArgs.directory_arg, &BNSmile, !!sArgs.everything_flag ) ) {
 			cerr << "Couldn't open: " << sArgs.directory_arg << endl;
 			return 1; } }
 	else {
