@@ -4,7 +4,6 @@
 namespace libBioUtils {
 
 const char	CMeta::c_szWS[]		= " \t\r\n";
-const float	CMetaImpl::c_dNaN	= (float)HUGE_VAL;
 
 void CMeta::Startup( int iVerbosity, size_t iRand ) {
 	Category&			CatBioUtils	= Category::getInstance( c_szBioUtils );
@@ -25,10 +24,6 @@ void CMeta::Startup( int iVerbosity, size_t iRand ) {
 void CMeta::Shutdown( ) {
 
 	Category::shutdown( ); }
-
-float CMeta::GetNaN( ) {
-
-	return c_dNaN; }
 
 string CMeta::Filename( const string& str, char cRepl ) {
 	size_t	i;

@@ -5,7 +5,7 @@ namespace libBioUtils {
 
 class CFileImpl {
 protected:
-	static const size_t c_iBufferSize	= 1024;
+	static const size_t c_iBufferSize	= 131072;
 
 	static bool IsNewline( char );
 };

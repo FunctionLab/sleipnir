@@ -29,6 +29,7 @@ protected:
 class CClustHierarchicalImpl {
 protected:
 
+	static CHierarchy* Cluster( const CDistanceMatrix&, const std::vector<bool>* = NULL );
 	static void AssertParentage( std::vector<size_t>&, std::vector<size_t>&, std::vector<size_t>&, size_t, size_t );
 	static CHierarchy* ConstructHierarchy( const std::vector<size_t>&, const std::vector<size_t>&,
 		const std::vector<float>&, size_t );

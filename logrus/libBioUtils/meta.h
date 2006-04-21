@@ -20,7 +20,6 @@ public:
 
 	static void Startup( int, size_t = 0 );
 	static void Shutdown( );
-	static float GetNaN( );
 	static std::string Filename( const std::string&, char = '_' );
 	static std::string Basename( const char* );
 	static void Tokenize( const char*, std::vector<std::string>&, const char* = "\t",
@@ -29,6 +28,10 @@ public:
 	static bool IsNaN( float d ) {
 
 		return !_finite( d ); }
+
+	static float GetNaN( ) {
+
+		return (float)HUGE_VAL; }
 
 	template <class tType>
 	static void Permute( std::vector<tType>& vecItems,

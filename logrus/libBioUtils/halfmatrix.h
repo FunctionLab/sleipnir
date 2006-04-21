@@ -30,6 +30,10 @@ public:
 		return m_aaData[ iX ]; }
 
 	tType& Get( size_t iX, size_t iY ) const {
+		static tType	c_Zero	= 0;
+
+		if( iX == iY )
+			return c_Zero;
 
 		HalfIndex( iX, iY );
 		return m_aaData[ iX ][ iY ]; }
@@ -41,6 +45,9 @@ public:
 		return m_aaData[ iX ][ iY ]; }
 
 	void Set( size_t iX, size_t iY, const tType& Value ) {
+
+		if( iX == iY )
+			return;
 
 		HalfIndex( iX, iY );
 		m_aaData[ iX ][ iY ] = Value; }

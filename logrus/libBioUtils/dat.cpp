@@ -459,4 +459,82 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt ) {
 						Set( i, j, CMeta::GetNaN( ) );
 					break; } } }
 
+void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool fMinimal ) const {
+	size_t			i, j;
+	float			d;
+	bool			fAll;
+	vector<string>	vecstrNames;
+	vector<bool>	vecfGenes;
+
+	fAll = CMeta::IsNaN( dCutoff );
+	ostm << "graph G {" << endl;
+	ostm << "	pack = \"true\";" << endl;
+	ostm << "	overlap = \"orthoyx\";" << endl;
+	ostm << "	splines = \"true\";" << endl;
+
+	if( !( fMinimal || fAll ) ) {
+		vecfGenes.resize( GetGenes( ) );
+		for( i = 0; i < vecfGenes.size( ); ++i )
+			for( j = ( i + 1 ); j < vecfGenes.size( ); ++j )
+				if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
+					vecfGenes[ i ] = vecfGenes[ j ] = true; }
+
+	vecstrNames.resize( GetGenes( ) );
+	for( i = 0; i < vecstrNames.size( ); ++i ) {
+		vecstrNames[ i ] = CMeta::Filename( GetGene( i ) );
+		if( pGenome && ( ( j = pGenome->GetGene( GetGene( i ) ) ) != -1 ) ) {
+			const CGene&	Gene	= pGenome->GetGene( j );
+
+			if( Gene.GetSynonyms( ) ) {
+				if( fMinimal ) {
+					vecstrNames[ i ] += '_';
+					vecstrNames[ i ] += Gene.GetSynonym( 0 ); }
+				else if( fAll || vecfGenes[ i ] )
+					ostm << vecstrNames[ i ] << " [label=\"" << Gene.GetSynonym( 0 ) << "\"];" << endl; } } }
+
+	ostm << endl;
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
+				ostm << vecstrNames[ i ] << " -- " << vecstrNames[ j ] << ';' << endl;
+
+	ostm << "}" << endl; }
+
+void CDat::SaveGDF( ostream& ostm, float dCutoff ) const {
+	size_t			i, j;
+	float			d;
+	bool			fAll;
+	vector<string>	vecstrNames;
+
+	fAll = CMeta::IsNaN( dCutoff );
+	ostm << "nodedef> name" << endl;
+
+	vecstrNames.resize( GetGenes( ) );
+	for( i = 0; i < vecstrNames.size( ); ++i )
+		vecstrNames[ i ] = CMeta::Filename( GetGene( i ) );
+	for( i = 0; i < GetGenes( ); ++i )
+		ostm << vecstrNames[ i ] << endl;
+
+	ostm << endl << "edgedef> node1,node2,weight" << endl;
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
+				ostm << vecstrNames[ i ] << "," << vecstrNames[ j ] << "," << ( 10 * Get( i, j ) ) << endl; }
+
+void CDat::SaveNET( ostream& ostm, float dCutoff ) const {
+	size_t	i, j;
+	float	d;
+	bool	fAll;
+
+	fAll = CMeta::IsNaN( dCutoff );
+	ostm << "*Vertices " << GetGenes( ) << endl;
+	for( i = 0; i < GetGenes( ); ++i )
+		ostm << ( i + 1 ) << " \"" << GetGene( i ) << '"' << endl;
+
+	ostm << "*Edges" << endl;
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
+				ostm << ( i + 1 ) << ' ' << ( j + 1 ) << ' ' << d << endl; }
+
 }

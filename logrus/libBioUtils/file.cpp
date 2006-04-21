@@ -27,7 +27,7 @@ string CFile::OpenToken( const char* szInput, const char** pcEnd ) {
 	for( ; c && ( c != -1 ) && ( c != '\t' ) && !IsNewline( c ); c = *(szInput++) )
 		strRet += c;
 	if( pcEnd )
-		*pcEnd = szInput - ( IsNewline( c ) ? 1 : 0 );
+		*pcEnd = szInput - ( ( !c || IsNewline( c ) ) ? 1 : 0 );
 
 	return strRet; }
 

@@ -25,6 +25,7 @@ public:
 class CClustHierarchical : CClustHierarchicalImpl {
 public:
 	static CHierarchy* Cluster( const CDistanceMatrix& );
+	static CHierarchy* Cluster( const CDistanceMatrix&, const std::vector<bool>& );
 };
 
 }

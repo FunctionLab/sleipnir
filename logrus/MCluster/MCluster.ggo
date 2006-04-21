@@ -9,4 +9,5 @@ option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
 option	"input"		i	"Input PCL/dat file"	string	typestr="filename"
 option	"weights"	w	"Input weights file"	string	typestr="filename"
 option	"normalize"	n	"Normalize distances before clustering"	flag	on
+option	"epsilon"	e	"Remove genes with no correlations above epsilon"	double
 option	"verbosity"	v	"Message verbosity"	int	default="5"

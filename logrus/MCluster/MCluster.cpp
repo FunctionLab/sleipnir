@@ -6,12 +6,13 @@ int main( int iArgs, char** aszArgs ) {
 	CPCL						PCL, Weights;
 	const CPCL*					pPCL;
 	CDat						Dat;
-	size_t						i, j, iGene;
+	size_t						i, j, k, iGene, iGenes;
 	ofstream					ofsm;
 	ifstream					ifsm;
-	vector<size_t>				veciGenes, veciPCL;
+	vector<size_t>				veciGenes, veciPCL, veciEpsilon;
 	vector<float>				vecdPCL;
 	vector<string>				vecstrGenes, vecstrMissing;
+	vector<bool>				vecfGenes;
 	gengetopt_args_info			sArgs;
 	IMeasure*					pMeasure;
 	CMeasurePearson				Pearson;
@@ -31,7 +32,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg ) {
 		if( Dat.Open( sArgs.input_arg ) ) {
 			cerr << "Opened dat: " << sArgs.input_arg << endl;
-//ifstream asdf( "../Magic/Data/official/Microarray/data_03_impute/01_Gasch_2000.txt" );
+//ifstream asdf( "Data/test.pcl" );
 //if( !PCL.Open( asdf, sArgs.skip_arg ) ) {
 			if( !PCL.Open( cin, sArgs.skip_arg ) ) {
 				cerr << "Could not open PCL" << endl;
@@ -101,31 +102,56 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	if( sArgs.normalize_flag )
 		Dat.Normalize( );
-	pHier = CClustHierarchical::Cluster( Dat.Get( ) );
 
-	vecdPCL.resize( Dat.GetGenes( ) );
-	for( i = 0; i < vecdPCL.size( ); ++i ) {
+	if( sArgs.epsilon_given ) {
+		vecfGenes.resize( Dat.GetGenes( ) );
+		for( i = 0; i < vecfGenes.size( ); ++i )
+			for( j = ( i + 1 ); j < vecfGenes.size( ); ++j )
+				if( Dat.Get( i, j ) > sArgs.epsilon_arg )
+					vecfGenes[ i ] = vecfGenes[ j ] = true;
+		for( iGenes = i = 0; i < vecfGenes.size( ); ++i )
+			if( vecfGenes[ i ] )
+				iGenes++;
+		veciEpsilon.resize( iGenes );
+		for( j = i = 0; i < vecfGenes.size( ); ++i )
+			if( vecfGenes[ i ] )
+				veciEpsilon[ j++ ] = i; }
+	else
+		iGenes = Dat.GetGenes( );
+
+	pHier = sArgs.epsilon_given ? CClustHierarchical::Cluster( Dat.Get( ), vecfGenes ) :
+		CClustHierarchical::Cluster( Dat.Get( ) );
+
+	vecdPCL.resize( iGenes );
+	for( k = i = 0; i < Dat.GetGenes( ); ++i ) {
+		if( sArgs.epsilon_given && !vecfGenes[ i ] )
+			continue;
 		if( ( iGene = PCL.GetGene( Dat.GetGene( i ) ) ) == -1 ) {
-			vecdPCL[ i ] = CMeta::GetNaN( );
+			vecdPCL[ k++ ] = CMeta::GetNaN( );
 			continue; }
-		vecdPCL[ i ] = 0;
+		vecdPCL[ k ] = 0;
 		for( j = 0; j < PCL.GetExperiments( ); ++j )
-			vecdPCL[ i ] += PCL.Get( iGene, j );
-		vecdPCL[ i ] /= PCL.GetExperiments( ); }
+			vecdPCL[ k ] += PCL.Get( iGene, j );
+		vecdPCL[ k++ ] /= PCL.GetExperiments( ); }
 	pHier->SortChildren( vecdPCL );
 
 	pHier->GetGenes( veciGenes );
 	veciPCL.resize( PCL.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
-		veciPCL[ i ] = PCL.GetGene( Dat.GetGene( veciGenes[ i ] ) );
+		veciPCL[ i ] = PCL.GetGene( Dat.GetGene(
+			sArgs.epsilon_given ? veciEpsilon[ veciGenes[ i ] ] : veciGenes[ i ] ) );
 	for( j = 0; j < PCL.GetGenes( ); ++j )
-		if( Dat.GetGene( PCL.GetGene( j ) ) == -1 )
+		if( ( ( k = Dat.GetGene( PCL.GetGene( j ) ) ) == -1 ) ||
+			( sArgs.epsilon_given && !vecfGenes[ k ] ) )
 			veciPCL[ i++ ] = j;
 	PCL.SortGenes( veciPCL );
 	for( i = 0; i < veciGenes.size( ); ++i )
 		veciPCL[ i ] = veciGenes[ i ];
 	for( ; i < veciPCL.size( ); ++i )
 		veciPCL[ i ] = i;
+	if( sArgs.epsilon_given )
+		for( i = iGenes; i < PCL.GetGenes( ); ++i )
+			PCL.MaskGene( i );
 
 	ofsm.open( sArgs.output_arg );
 	pHier->Save( ofsm, Dat.GetGenes( ) );

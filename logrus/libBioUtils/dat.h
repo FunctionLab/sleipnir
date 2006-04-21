@@ -31,6 +31,9 @@ public:
 	bool Open( const std::vector<CGenes*>&, const std::vector<CGenes*>&, const CGenome& );
 	bool OpenGenes( std::istream&, bool );
 	void Save( std::ostream&, bool ) const;
+	void SaveDOT( std::ostream&, float = HUGE_VAL, const CGenome* = NULL, bool = false ) const;
+	void SaveGDF( std::ostream&, float = HUGE_VAL ) const;
+	void SaveNET( std::ostream&, float = HUGE_VAL ) const;
 	void Normalize( bool = true );
 	void Invert( );
 	bool FilterGenes( const char*, EFilter );

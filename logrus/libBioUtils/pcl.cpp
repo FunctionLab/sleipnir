@@ -72,35 +72,33 @@ bool CPCL::Open( istream& istmInput, size_t iFeatures ) {
 	return true; }
 
 bool CPCLImpl::OpenExperiments( istream& istmInput, size_t iFeatures ) {
-	string	strToken;
-	size_t	iToken;
+	char		acLine[ c_iBufferSize ];
+	const char*	pc;
+	string		strToken;
+	size_t		iToken;
 
 	Reset( );
-	for( iToken = 0; !IsNewline( istmInput.peek( ) ); ++iToken ) {
-		strToken = OpenToken( istmInput );
-		if( !strToken.length( ) )
-			return false;
+	istmInput.getline( acLine, c_iBufferSize - 1 );
+	acLine[ c_iBufferSize - 1 ] = 0;
+	for( iToken = 0,pc = acLine; ( strToken = OpenToken( pc, &pc ) ).length( ) || *pc; ++iToken )
 		if( iToken <= iFeatures )
 			m_vecstrFeatures.push_back( strToken );
 		else
-			m_vecstrExperiments.push_back( strToken ); }
-	istmInput.ignore( );
+			m_vecstrExperiments.push_back( strToken );
 
-	return true; }
+	return !!iToken; }
 
 bool CPCLImpl::OpenGene( istream& istmInput, vector<float>& vecdData ) {
-	string	strToken;
-	size_t	iToken, iData;
+	char		acLine[ c_iBufferSize ];
+	const char*	pc;
+	string		strToken;
+	size_t		iToken, iData;
 
-	for( iData = iToken = 0; !IsNewline( istmInput.peek( ) ); ++iToken ) {
-		strToken = OpenToken( istmInput );
-		if( !strToken.length( ) && ( istmInput.peek( ) == EOF ) )
-			return false;
-		if( strToken == "EWEIGHT" ) {
-			iData = -1;
-			while( !IsNewline( istmInput.peek( ) ) )
-				OpenToken( istmInput );
-			break; }
+	istmInput.getline( acLine, c_iBufferSize - 1 );
+	acLine[ c_iBufferSize - 1 ] = 0;
+	for( iData = iToken = 0,pc = acLine; ( strToken = OpenToken( pc, &pc ) ).length( ) || *pc; ++iToken ) {
+		if( strToken == "EWEIGHT" )
+			return true;
 		if( !iToken )
 			m_vecstrGenes.push_back( strToken );
 		else if( iToken < m_vecstrFeatures.size( ) )
@@ -111,12 +109,11 @@ bool CPCLImpl::OpenGene( istream& istmInput, vector<float>& vecdData ) {
 				vecdData.push_back( CMeta::GetNaN( ) );
 			else
 				vecdData.push_back( (float)atof( strToken.c_str( ) ) ); } }
-	istmInput.ignore( );
 
 	while( iData++ < m_vecstrExperiments.size( ) )
 		vecdData.push_back( CMeta::GetNaN( ) );
 
-	return true; }
+	return !!iToken; }
 
 void CPCL::SaveHeader( ostream& ostm, bool fCluster ) const {
 	size_t	i;

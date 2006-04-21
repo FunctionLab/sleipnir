@@ -102,18 +102,38 @@ float CHierarchy::SortChildren( const vector<float>& vecdPCL ) {
 
 	return dRet; }
 
-// Implementation courtesy of TIGR MeV
+CHierarchy* CClustHierarchical::Cluster( const CDistanceMatrix& Dist, const vector<bool>& vecfGenes ) {
+
+	return CClustHierarchicalImpl::Cluster( Dist, &vecfGenes ); }
 
 CHierarchy* CClustHierarchical::Cluster( const CDistanceMatrix& Dist ) {
+
+	return CClustHierarchicalImpl::Cluster( Dist ); }
+
+// Implementation courtesy of TIGR MeV
+
+CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const vector<bool>* pvecfGenes ) {
 	CDistanceMatrix	Sim;
-	size_t			i, j, k, m, iP, iAssigned, iParentless;
+	size_t			i, j, k, m, iP, iAssigned, iParentless, iOne, iTwo;
 	float			d, dTotal, dMin;
 	vector<float>	vecdHeight, vecdMax;
 	vector<size_t>	veciChild1, veciChild2, veciChildren, veciMax, veciOwner;
 
-	Sim.Initialize( Dist.GetSize( ) );
-	for( i = 0; i < Sim.GetSize( ); ++i )
-		Sim.Set( i, Dist.Get( i ) );
+	if( pvecfGenes ) {
+		for( i = j = 0; i < pvecfGenes->size( ); ++i )
+			if( (*pvecfGenes)[ i ] )
+				j++;
+		Sim.Initialize( j );
+		for( iOne = i = 0; i < Dist.GetSize( ); ++i )
+			if( (*pvecfGenes)[ i ] ) {
+				for( iTwo = 0,j = 0; j < Dist.GetSize( ); ++j )
+					if( (*pvecfGenes)[ j ] )
+						Sim.Set( iOne, iTwo++, Dist.Get( i, j ) );
+				iOne++; } }
+	else {
+		Sim.Initialize( Dist.GetSize( ) );
+		for( i = 0; i < Sim.GetSize( ); ++i )
+			Sim.Set( i, Dist.Get( i ) ); }
 	iAssigned = iParentless = Sim.GetSize( );
 	dTotal = FLT_MAX;
 
@@ -146,7 +166,7 @@ CHierarchy* CClustHierarchical::Cluster( const CDistanceMatrix& Dist ) {
 
 		if( !( iParentless % 500 ) )
 			g_CatBioUtils.notice( "CClustHierarchical::Cluster( ) %d/%d nodes remaining", iParentless,
-				Dist.GetSize( ) );
+				Sim.GetSize( ) );
 		dHeight = -FLT_MAX;
 		for( i = 0; i < Sim.GetSize( ); ++i )
 			if( ( veciOwner[ i ] != -1 ) && ( vecdMax[ i ] > dHeight ) ) {

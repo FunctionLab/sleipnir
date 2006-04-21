@@ -5,7 +5,6 @@ namespace libBioUtils {
 
 class CMetaImpl {
 protected:
-	static const float	c_dNaN;
 };
 
 }
