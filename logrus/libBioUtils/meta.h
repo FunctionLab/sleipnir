@@ -25,6 +25,11 @@ public:
 	static void Tokenize( const char*, std::vector<std::string>&, const char* = "\t",
 		bool = false );
 
+	template<class tType>
+	static bool IsNaN( tType ) {
+
+		return false; }
+
 	static bool IsNaN( float d ) {
 
 		return !_finite( d ); }

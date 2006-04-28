@@ -4,16 +4,20 @@
 
 namespace libBioUtils {
 
-static double CountWeights( const float* adWX, size_t iN ) {
+static double CountWeights( const float* adX, const float* adWX, size_t iN ) {
 	size_t	i;
 	double	dRet;
 
-	if( !adWX )
-		return iN;
+	if( !adWX ) {
+		for( dRet = i = 0; i < iN; ++i )
+			if( !CMeta::IsNaN( adX[ i ] ) )
+				dRet++;
+		return dRet; }
 
 	dRet = 0;
 	for( i = 0; i < iN; ++i )
-		dRet += adWX[ i ];
+		if( !CMeta::IsNaN( adX[ i ] ) )
+			dRet += adWX[ i ];
 
 	return dRet; }
 
@@ -120,13 +124,17 @@ double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY,
 
 	dMX = dMY = 0;
 	for( i = 0; i < iN; ++i ) {
+		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
+			continue;
 		dMX += adX[ i ] * GetWeight( adWX, i );
 		dMY += adY[ i ] * GetWeight( adWY, i ); }
-	dMX /= CountWeights( adWX, iM );
-	dMY /= CountWeights( adWY, iN );
+	dMX /= CountWeights( adX, adWX, iM );
+	dMY /= CountWeights( adY, adWY, iN );
 
 	dRet = dDX = dDY = 0;
 	for( i = 0; i < iN; ++i ) {
+		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
+			continue;
 		dX = adX[ i ] - dMX;
 		dY = adY[ i ] - dMY;
 		dRet += dX * dY * GetWeight( adWX, i ) * GetWeight( adWY, i );

@@ -2,9 +2,11 @@ package	"Normalizer"
 version	"1.0"
 purpose	"Data file normalizer."
 
-option	"input"		i	"Input/output dat file"	string	typestr="filename"	yes
 section "Optional"
-option	"output"	o	"Output dat file"	string	typestr="filename"
+option	"input"		i	"Input/output dat/pcl file"	string	typestr="filename"
+option	"type"		t	"Data file type"	values="pcl","dat"	default="dat"
+option	"output"	o	"Output dab file"	string	typestr="filename"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"flip"		f	"Flip high/low scores"	flag	off
 option	"zscore"	z	"Normalize values as z-scores"	flag	on
+option	"skip"		s	"Columns to skip in input PCL"	int	default="2"

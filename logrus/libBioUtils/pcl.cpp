@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "pcl.h"
 #include "meta.h"
+#include "statistics.h"
 
 namespace libBioUtils {
 
@@ -159,56 +160,6 @@ void CPCL::Save( ostream& ostmOutput, const vector<size_t>* pveciGenes ) const {
 			continue;
 		SaveGene( ostmOutput, i, pveciGenes ? (*pveciGenes)[ i ] : -1 ); } }
 
-float CPCL::Get( size_t iGene, size_t iExp ) const {
-
-	return m_Data.Get( iGene, iExp ); }
-
-const float* CPCL::Get( size_t iGene ) const {
-
-	return m_Data.Get( iGene ); }
-
-const CDataMatrix& CPCL::Get( ) const {
-
-	return m_Data; }
-
-size_t CPCL::GetGenes( ) const {
-
-	return m_vecstrGenes.size( ); }
-
-const vector<string>& CPCL::GetGeneNames( ) const {
-
-	return m_vecstrGenes; }
-
-size_t CPCL::GetExperiments( ) const {
-
-	return m_vecstrExperiments.size( ); }
-
-string CPCL::GetFeature( size_t iGene, const char* szFeature ) const {
-	size_t	 i;
-
-	for( i = 0; i < m_vecstrFeatures.size( ); ++i )
-		if( m_vecstrFeatures[ i ] == szFeature )
-			return GetFeature( iGene, i );
-
-	return ""; }
-
-const string& CPCL::GetFeature( size_t iGene, size_t iFeature ) const {
-
-	return m_vecvecstrFeatures[ iFeature ][ iGene ]; }
-
-const string& CPCL::GetGene( size_t iGene ) const {
-
-	return m_vecstrGenes[ iGene ]; }
-
-const string& CPCL::GetExperiment( size_t iExp ) const {
-
-	return m_vecstrExperiments[ iExp ]; }
-
-void CPCL::MaskGene( size_t iGene ) {
-
-//	m_setiGenes.push_back( iGene ); }
-	m_setiGenes.insert( iGene ); }
-
 void CPCL::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrExperiments ) {
 	size_t	i, j;
 
@@ -269,19 +220,6 @@ void CPCL::Open( const vector<size_t>& veciGenes, const vector<string>& vecstrGe
 		for( j = 0; j < m_Data.GetColumns( ); ++j )
 			m_Data.Set( i, j, CMeta::GetNaN( ) ); }
 
-void CPCL::Set( size_t iX, size_t iY, float dValue ) {
-
-	m_Data.Set( iX, iY, dValue ); }
-
-size_t CPCL::GetGene( const string& strGene ) const {
-	size_t	i;
-
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
-		if( m_vecstrGenes[ i ] == strGene )
-			return i;
-
-	return -1; }
-
 void CPCL::SortGenes( const vector<size_t>& veciOrder ) {
 	size_t	i;
 
@@ -328,5 +266,15 @@ bool CPCL::AddGenes( const vector<string>& vecstrGenes ) {
 				m_vecvecstrFeatures[ i ][ iStart + j ] = c_szOne; }
 
 	return true; }
+
+void CPCL::Normalize( ) {
+	size_t	i, j;
+	double	dAve, dStd;
+
+	for( i = 0; i < GetGenes( ); ++i ) {
+		dAve = CStatistics::Average( Get( i ), Get( i ) + GetExperiments( ) );
+		dStd = sqrt( CStatistics::Variance( Get( i ), Get( i ) + GetExperiments( ), dAve ) );
+		for( j = 0; j < GetExperiments( ); ++j )
+			Set( i, j, (float)( ( Get( i, j ) - dAve ) / dStd ) ); } }
 
 }

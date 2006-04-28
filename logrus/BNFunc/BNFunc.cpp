@@ -16,7 +16,7 @@ int main( int iArgs, char** aszArgs ) {
 	CDat								Dat;
 	CSlim								Slim, SlimNeg;
 	ofstream							ofsm;
-	size_t								i, j;
+	size_t								i, j, k;
 	map<const CGene*,bool>				mapGenes;
 	map<const CGene*,bool>::iterator	iterGene;
 
@@ -75,6 +75,34 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
 	ifsmOnto.close( );
+
+	if( sArgs.sql_arg ) {
+		ofsm.open( ( (string)sArgs.sql_arg + "/functions.txt" ).c_str( ) );
+		for( i = 0; i < Slim.GetSlims( ); ++i )
+			ofsm << ( i + 1 ) << '\t' << Slim.GetSlim( i ) << endl;
+		ofsm.close( );
+
+		ofsm.open( ( (string)sArgs.sql_arg + "/genes.txt" ).c_str( ) );
+		for( i = 0; i < Genome.GetGenes( ); ++i )
+			ofsm << ( i + 1 ) << '\t' << Genome.GetGene( i ).GetName( ) << endl;
+		ofsm.close( );
+
+		ofsm.open( ( (string)sArgs.sql_arg + "/gene_names.txt" ).c_str( ) );
+		for( k = i = 0; i < Genome.GetGenes( ); ++i ) {
+			const CGene&	Gene	= Genome.GetGene( i );
+
+			for( j = 0; j < Gene.GetSynonyms( ); ++j )
+				ofsm << ( k++ + 1 ) << '\t' << ( i + 1 ) << '\t' << Gene.GetSynonym( j ) << endl; }
+		ofsm.close( );
+
+		ofsm.open( ( (string)sArgs.sql_arg + "/functions_genes.txt" ).c_str( ) );
+		for( i = 0; i < Slim.GetSlims( ); ++i )
+			for( j = 0; j < Slim.GetGenes( i ); ++j )
+				ofsm << ( i + 1 ) << '\t' << ( Genome.GetGene( Slim.GetGene( i, j ).GetName( ) ) + 1 ) << endl;
+		ofsm.close( );
+
+		return 0; }
+
 	if( sArgs.negatives_arg ) {
 		ifsmOnto.clear( );
 		ifsmOnto.open( sArgs.negatives_arg );

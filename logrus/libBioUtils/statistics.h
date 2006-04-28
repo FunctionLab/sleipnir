@@ -19,19 +19,23 @@ public:
 	static double Recall( size_t, size_t, size_t, size_t );
 
 	template<class tType>
-	static double Variance( const std::vector<tType>& vecValues, double dMean ) {
-		size_t	i;
+	static double Variance( tType Begin, tType End, double dMean ) {
+		tType	Cur;
+		size_t	iN;
 		double	d, dRet;
 
-		if( vecValues.size( ) < 2 )
-			return 0;
+		for( dRet = iN = 0,Cur = Begin; Cur != End; ++Cur )
+			if( !CMeta::IsNaN( *Cur ) ) {
+				iN++;
+				d = *Cur - dMean;
+				dRet += d * d; }
 
-		dRet = 0;
-		for( i = 0; i < vecValues.size( ); ++i ) {
-			d = vecValues[ i ] - dMean;
-			dRet += d * d; }
+		return ( ( iN < 2 ) ? 0 : ( dRet / ( iN - 1 ) ) ); }
 
-		return ( dRet / ( i - 1 ) ); }
+	template<class tType>
+	static double Variance( const std::vector<tType>& vecValues, double dMean ) {
+
+		return Variance( vecValues.begin( ), vecValues.end( ), dMean ); }
 
 	template<class tType>
 	static double Variance( const std::vector<tType>& vecValues ) {
@@ -40,14 +44,21 @@ public:
 
 	template<class tType>
 	static double Average( const std::vector<tType>& vecValues ) {
-		size_t	i;
+
+		return Average( vecValues.begin( ), vecValues.end( ) ); }
+
+	template<class tType>
+	static double Average( tType Begin, tType End ) {
+		tType	Cur;
 		double	dRet;
+		size_t	iN;
 
-		dRet = 0;
-		for( i = 0; i < vecValues.size( ); ++i )
-			dRet += vecValues[ i ];
+		for( dRet = iN = 0,Cur = Begin; Cur != End; ++Cur )
+			if( !CMeta::IsNaN( *Cur ) ) {
+				iN++;
+				dRet += *Cur; }
 
-		return ( dRet / i ); }
+		return ( dRet / iN ); }
 
 	// P-value tests
 	static double LjungBox( const float*, size_t, size_t );
