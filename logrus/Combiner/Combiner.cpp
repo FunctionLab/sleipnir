@@ -44,17 +44,16 @@ static int MainPCLs( const gengetopt_args_info& sArgs ) {
 			setstrGenes.insert( PCL.GetGene( i ) );
 		ifsm.close( ); }
 	vecstrGenes.resize( setstrGenes.size( ) );
-	i = 0;
-	for( iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( ); ++iterGenes )
-		vecstrGenes[ i++ ] = *iterGenes;
+	copy( setstrGenes.begin( ), setstrGenes.end( ), vecstrGenes.begin( ) );
 
 	PCLNew.Open( vecstrGenes, vecstrExps );
 	iExp = 0;
 	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
+		cerr << "Processing " << sArgs.inputs[ iArg ] << "..." << endl;
 		ifsm.clear( );
 		ifsm.open( sArgs.inputs[ iArg ] );
 		PCL.Open( ifsm, 2 );
-		for( i = 0; i < PCL.GetGenes( ); ++i )
+		for( i = 0; i < PCLNew.GetGenes( ); ++i )
 			if( ( iGene = PCL.GetGene( vecstrGenes[ i ] ) ) != -1 )
 				for( j = 0; j < PCL.GetExperiments( ); ++j )
 					PCLNew.Set( i, iExp + j, PCL.Get( iGene, j ) );

@@ -16,3 +16,4 @@ option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
 option	"genee"		e	"Gene overlap file"	string	typestr="filename"
 option	"zero"		z	"Zero missing values"	flag	off
 option	"group"		u	"Group identical inputs"	flag	on
+option	"everything"	y	"Evaluate pairs without an answer"	flag	off

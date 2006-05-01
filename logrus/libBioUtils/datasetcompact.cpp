@@ -41,7 +41,7 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 	if( pBayesNet->IsContinuous( ) )
 		return false;
 
-	m_iData = 1 + (uint32_t)OpenMax( szDataDir, pBayesNet->GetNodes( ), !fEverything, vecstrData, fEverything ?
+	m_iData = 1 + (uint32_t)OpenMax( szDataDir, pBayesNet->GetNodes( ), true, vecstrData, fEverything ?
 		&setstrGenes : NULL );
 	m_veccQuants.resize( m_iData );
 	if( m_aData )

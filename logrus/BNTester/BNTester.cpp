@@ -69,7 +69,8 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.genex_arg && !DataMap.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
 			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 			return 1; }
-		DataMap.FilterAnswers( );
+		if( !sArgs.everything_flag )
+			DataMap.FilterAnswers( );
 		pData = &DataMap; }
 	else {
 		if( !Data.Open( sArgs.datadir_arg, pBN, GenesIn, GenesEx ) ) {
