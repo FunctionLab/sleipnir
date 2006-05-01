@@ -45,6 +45,7 @@ protected:
 	static float ELRDot( const TVecVecF&, const TVecVecF& );
 	static float ELRAvoidZero( float );
 	static void ELRComputeDirection( float, const TVecVecF&, TVecVecF& );
+	static bool GetCPT( DSL_node*, CDataMatrix& );
 
 	CBayesNetSmileImpl( bool );
 

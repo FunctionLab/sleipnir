@@ -638,4 +638,8 @@ void CBayesNetFN::Reverse( size_t iNode ) {
 
 	m_apNodes[ iNode ]->Reverse( ); }
 
+bool CBayesNetFN::GetCPT( size_t iNode, CDataMatrix& MatCPT ) const {
+
+	return CBayesNetSmileImpl::GetCPT( m_SmileNet.GetNode( (int)iNode ), MatCPT ); }
+
 }

@@ -8,6 +8,28 @@ namespace libBioUtils {
 
 const char	CBayesNetSmileImpl::c_szGaussian[]	= "gaussian";
 
+bool CBayesNetSmileImpl::GetCPT( DSL_node* pNode, CDataMatrix& MatCPT ) {
+	DSL_Dmatrix*	pMat;
+	DSL_intArray	veciCoord;
+
+	pMat = pNode->Definition( )->GetMatrix( );
+	const DSL_intArray&	veciDims	= pMat->GetDimensions( );
+
+	if( veciDims.GetSize( ) > 2 )
+		return false;
+	pMat->IndexToCoordinates( 0, veciCoord );
+	if( veciDims.GetSize( ) == 1 ) {
+		MatCPT.Initialize( veciDims[ 0 ], 1 );
+		for( veciCoord[ 0 ] = 0; veciCoord[ 0 ] < veciDims[ 0 ]; ++veciCoord[ 0 ] )
+			MatCPT.Set( veciCoord[ 0 ], 0, (float)(*pMat)[ veciCoord ] );
+		return true; }
+
+	MatCPT.Initialize( veciDims[ 1 ], veciDims[ 0 ] );
+	for( veciCoord[ 0 ] = 0; veciCoord[ 0 ] < veciDims[ 0 ]; ++veciCoord[ 0 ] )
+		for( veciCoord[ 1 ] = 0; veciCoord[ 1 ] < veciDims[ 1 ]; ++veciCoord[ 1 ] )
+			MatCPT.Set( veciCoord[ 1 ], veciCoord[ 0 ], (float)(*pMat)[ veciCoord ] );
+	return true; }
+
 bool CBayesNetSmileImpl::IsGaussian( const DSL_network& BayesNet ) {
 	int	i;
 
@@ -589,5 +611,9 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 void CBayesNetSmile::SetDefault( const CBayesNetSmile& Defaults ) {
 
 	m_pDefaults = &Defaults; }
+
+bool CBayesNetSmile::GetCPT( size_t iNode, CDataMatrix& MatCPT ) const {
+
+	return CBayesNetSmileImpl::GetCPT( m_SmileNet.GetNode( (int)iNode ), MatCPT ); }
 
 }

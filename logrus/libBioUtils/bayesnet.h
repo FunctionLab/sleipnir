@@ -23,6 +23,7 @@ public:
 	virtual void Randomize( ) = 0;
 	virtual void Randomize( size_t ) = 0;
 	virtual void Reverse( size_t ) = 0;
+	virtual bool GetCPT( size_t, CDataMatrix& ) const = 0;
 };
 
 class CBayesNetSmile : public CBayesNetSmileImpl, public IBayesNet {
@@ -42,6 +43,7 @@ public:
 	void Randomize( );
 	void Randomize( size_t );
 	void Reverse( size_t );
+	bool GetCPT( size_t, CDataMatrix& ) const;
 
 	bool Convert( CBayesNetPNL& ) const;
 	void SetDefault( const CBayesNetSmile& );
@@ -64,6 +66,7 @@ public:
 	void Randomize( );
 	void Randomize( size_t );
 	void Reverse( size_t );
+	bool GetCPT( size_t, CDataMatrix& ) const;
 
 	bool Convert( CBayesNetSmile& ) const;
 };
@@ -83,6 +86,7 @@ public:
 	void Randomize( );
 	void Randomize( size_t );
 	void Reverse( size_t );
+	bool GetCPT( size_t, CDataMatrix& ) const;
 };
 
 }

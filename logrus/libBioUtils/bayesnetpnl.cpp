@@ -208,4 +208,8 @@ unsigned char CBayesNetPNL::GetValues( size_t ) const {
 
 	return 0; }
 
+bool CBayesNetPNL::GetCPT( size_t, CDataMatrix& ) const {
+
+	return false; }
+
 }
