@@ -6,6 +6,8 @@ static int MainPCLs( const gengetopt_args_info& );
 
 static const TPFnCombiner	c_apfnCombiners[]	= { MainPCLs, MainDATs, MainDABs, NULL };
 static const char*			c_aszCombiners[]	= { "pcl", "dat", "dab", NULL };
+static const char			c_szMean[]			= "mean";
+static const char			c_szMax[]			= "max";
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -72,8 +74,10 @@ static int MainPCLs( const gengetopt_args_info& sArgs ) {
 
 static int MainDATs( const gengetopt_args_info& sArgs ) {
 	CDataset		Dataset;
+	CDataSubset		DataSubset;
+	IDataset*		pData;
 	CDat			Dat;
-	size_t			i, j, k, iN;
+	size_t			i, j, k, iN, iSubset, iSubsets;
 	float			d, dMax;
 	vector<string>	vecstrFiles;
 	ofstream		ofsm;
@@ -83,32 +87,43 @@ static int MainDATs( const gengetopt_args_info& sArgs ) {
 
 	vecstrFiles.resize( sArgs.inputs_num );
 	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
-	if( !Dataset.Open( vecstrFiles ) ) {
-		cerr << "Couldn't open: " << vecstrFiles[ 0 ];
-		for( i = 1; i < vecstrFiles.size( ); ++i )
-			cerr << ", " << vecstrFiles[ i ];
-		cerr << endl;
-		return 1; }
+	if( sArgs.subset_arg ) {
+		DataSubset.Initialize( vecstrFiles, sArgs.subset_arg );
+		iSubsets = ( DataSubset.GetGenes( ) / sArgs.subset_arg ) +
+			( ( DataSubset.GetGenes( ) % sArgs.subset_arg ) ? 1 : 0 );
+		pData = &DataSubset; }
+	else {
+		if( !Dataset.Open( vecstrFiles ) ) {
+			cerr << "Couldn't open: " << vecstrFiles[ 0 ];
+			for( i = 1; i < vecstrFiles.size( ); ++i )
+				cerr << ", " << vecstrFiles[ i ];
+			cerr << endl;
+			return 1; }
+		iSubsets = 1;
+		pData = &Dataset; }
 
-	Dat.Open( Dataset.GetGeneNames( ) );
-	for( i = 0; i < Dat.GetGenes( ); ++i ) {
-		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
-			if( !Dataset.IsExample( i, j ) )
-				continue;
-			dMax = CMeta::GetNaN( );
-			for( iN = k = 0; k < Dataset.GetExperiments( ); ++k )
-/* Average
-				if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) ) {
-					dMax = ( CMeta::IsNaN( dMax ) ? 0 : dMax ) + d;
-					iN++; }
-			dMax /= iN;
-//*/
-//* Max
-				if( !CMeta::IsNaN( d = Dataset.GetContinuous( i, j, k ) ) &&
-					( CMeta::IsNaN( dMax ) || ( d > dMax ) ) )
-					dMax = d;
-//*/
-			Dat.Set( i, j, dMax ); } }
+	Dat.Open( pData->GetGeneNames( ) );
+	for( iSubset = 0; iSubset < iSubsets; ++iSubset ) {
+		if( sArgs.subset_arg ) {
+			cerr << "Processing subset " << iSubset << '/' << iSubsets << endl;
+			DataSubset.Open( iSubset * sArgs.subset_arg ); }
+		for( i = 0; i < Dat.GetGenes( ); ++i ) {
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+				if( !pData->IsExample( i, j ) )
+					continue;
+				dMax = CMeta::GetNaN( );
+				if( !strcmp( c_szMean, sArgs.method_arg ) ) {
+					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
+						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) ) {
+							dMax = ( CMeta::IsNaN( dMax ) ? 0 : dMax ) + d;
+							iN++; }
+					dMax /= iN; }
+				else if( !strcmp( c_szMax, sArgs.method_arg ) ) {
+					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
+						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) &&
+							( CMeta::IsNaN( dMax ) || ( d > dMax ) ) )
+							dMax = d; }
+				Dat.Set( i, j, dMax ); } } }
 
 	if( sArgs.output_arg ) {
 		ofsm.open( sArgs.output_arg, ios_base::binary );
