@@ -7,6 +7,8 @@ static int MainPCLs( const gengetopt_args_info& );
 static const TPFnCombiner	c_apfnCombiners[]	= { MainPCLs, MainDATs, MainDABs, NULL };
 static const char*			c_aszCombiners[]	= { "pcl", "dat", "dab", NULL };
 static const char			c_szMean[]			= "mean";
+static const char			c_szGMean[]			= "gmean";
+static const char			c_szHMean[]			= "hmean";
 static const char			c_szMax[]			= "max";
 
 int main( int iArgs, char** aszArgs ) {
@@ -118,6 +120,18 @@ static int MainDATs( const gengetopt_args_info& sArgs ) {
 							dMax = ( CMeta::IsNaN( dMax ) ? 0 : dMax ) + d;
 							iN++; }
 					dMax /= iN; }
+				else if( !strcmp( c_szGMean, sArgs.method_arg ) ) {
+					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
+						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) ) {
+							dMax = ( CMeta::IsNaN( dMax ) ? 1 : dMax ) * d;
+							iN++; }
+					dMax = pow( dMax, 1.0 / iN ); }
+				else if( !strcmp( c_szHMean, sArgs.method_arg ) ) {
+					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
+						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) ) {
+							dMax = ( CMeta::IsNaN( dMax ) ? 0 : dMax ) + ( 1 / d );
+							iN++; }
+					dMax = iN / dMax; }
 				else if( !strcmp( c_szMax, sArgs.method_arg ) ) {
 					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
 						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) &&

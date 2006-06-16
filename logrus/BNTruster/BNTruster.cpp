@@ -96,7 +96,7 @@ int MainSums( const gengetopt_args_info& sArgs ) {
 			dSum = 0;
 			BNSmile.GetCPT( iNode, MatCPT );
 			for( bValue = 0; bValue < MatCPT.GetRows( ); ++bValue )
-				dSum += abs( MatCPT.Get( bValue, 0 ) - MatCPT.Get( bValue, 1 ) );
+				dSum += fabs( MatCPT.Get( bValue, 0 ) - MatCPT.Get( bValue, 1 ) );
 			cout << '\t' << dSum; }
 		cout << endl; }
 
