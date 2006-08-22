@@ -20,6 +20,10 @@ CPCLImpl::~CPCLImpl( ) {
 
 	Reset( ); }
 
+void CPCL::Reset( ) {
+
+	CPCLImpl::Reset( ); }
+
 void CPCLImpl::Reset( ) {
 
 	m_Data.Reset( );
@@ -55,6 +59,10 @@ void CPCL::Open( const CPCL& PCL ) {
 		m_vecvecstrFeatures[ i ].resize( PCL.m_vecvecstrFeatures[ i ].size( ) );
 		copy( PCL.m_vecvecstrFeatures[ i ].begin( ), PCL.m_vecvecstrFeatures[ i ].end( ),
 			m_vecvecstrFeatures[ i ].begin( ) ); } }
+
+bool CPCL::Open( istream& istmInput ) {
+
+	return Open( istmInput, GetSkip( ) ); }
 
 bool CPCL::Open( istream& istmInput, size_t iFeatures ) {
 	vector<float>	vecdData;

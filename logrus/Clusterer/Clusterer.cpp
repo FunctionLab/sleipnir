@@ -1,35 +1,55 @@
 #include "stdafx.h"
+#include "cmdline.h"
 
 int main( int iArgs, char** aszArgs ) {
-	CPCL				PCL;
-	CDat				Dat;
-	vector<uint16_t>	vecsClusters;
-	uint16_t			sClusters;
-	size_t				i, j, iSize;
-	double				dDiameter;
-	vector<string>		vecstrGenes;
-	ofstream			ofsm;
-	const char*			szOutput;
-	bool				fAutoc;
-	CMeasureKendallsTau	KendallsTau;
+	size_t						i, j;
+	ofstream					ofsm;
+	CDat						Dat;
+	vector<uint16_t>			vecsClusters;
+	const CPCL*					pPCL;
+	uint16_t					sClusters;
+	CPCL						PCL, Ranks;
+	gengetopt_args_info			sArgs;
+	IMeasure*					pMeasure;
+	CMeasurePearson				Pearson;
+	CMeasureEuclidean			Euclidean;
+	CMeasureKendallsTau			KendallsTau;
+	CMeasureKolmogorovSmirnov	KolmSmir;
+	CMeasureSpearman			Spearman;
+	CMeasureNegate				EuclideanNeg( &Euclidean );
+	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanNeg, &KendallsTau,
+		&KolmSmir, &Spearman, NULL };
 
-	if( iArgs < 4 ) {
-		cerr << "Usage: " << aszArgs[ 0 ] << " <diameter> <size> <output.dab> [autocorrelate]" <<
-			endl;
+	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
+		cmdline_parser_print_help( );
 		return 1; }
-	dDiameter = atof( aszArgs[ 1 ] );
-	iSize = atoi( aszArgs[ 2 ] );
-	szOutput = aszArgs[ 3 ];
-	fAutoc = ( iArgs > 4 ) ? !!atoi( aszArgs[ 4 ] ) : false;
+	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
 
-	PCL.Open( cin, 0 );
-	sClusters = CClustQTC::Cluster( PCL.Get( ), &KendallsTau, (float)dDiameter, iSize,
-		fAutoc, vecsClusters );
+	pMeasure = NULL;
+	for( i = 0; apMeasures[ i ]; ++i )
+		if( !strcmp( apMeasures[ i ]->GetName( ), sArgs.distance_arg ) ) {
+			if( ( pMeasure = apMeasures[ i ] ) == &EuclideanNeg )
+				sArgs.normalize_flag = true;
+			break; }
+	if( !pMeasure ) {
+		cmdline_parser_print_help( );
+		return 1; }
 
-	vecstrGenes.reserve( PCL.GetGenes( ) );
-	for( i = 0; i < PCL.GetGenes( ); ++i )
-		vecstrGenes.push_back( PCL.GetGene( i ) );
-	Dat.Open( vecstrGenes );
+	if( !PCL.Open( cin, sArgs.skip_arg ) ) {
+		cerr << "Could not open PCL" << endl;
+		return 1; }
+
+	if( pMeasure->IsRank( ) ) {
+		Ranks.Open( PCL );
+		Ranks.RankTransform( );
+		pPCL = &Ranks; }
+	else
+		pPCL = &PCL;
+
+	sClusters = CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diameter_arg, sArgs.size_arg,
+		!!sArgs.autocorrelate_flag, vecsClusters );
+
+	Dat.Open( pPCL->GetGeneNames( ) );
 	for( i = 0; i < vecsClusters.size( ); ++i ) {
 		if( ( vecsClusters[ i ] + 1 ) == sClusters )
 			continue;
@@ -37,7 +57,7 @@ int main( int iArgs, char** aszArgs ) {
 			if( ( vecsClusters[ j ] + 1 ) == sClusters )
 				continue;
 			Dat.Set( i, j, ( vecsClusters[ i ] == vecsClusters[ j ] ) ? 1.0f : 0.0f ); } }
-	ofsm.open( szOutput, ios_base::binary );
+	ofsm.open( sArgs.output_arg, ios_base::binary );
 	Dat.Save( ofsm, true );
 	ofsm.close( );
 

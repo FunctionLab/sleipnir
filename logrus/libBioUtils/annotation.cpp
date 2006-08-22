@@ -248,30 +248,36 @@ const string& CSlim::GetSlim( size_t iSlim ) const {
 
 	return m_vecstrSlims[ iSlim ]; }
 
-void COntologyImpl::TermFinder( const CGenes& Genes, vector<TPrID>& vecprTerms, bool fBon,
-	bool fKids, bool fBack ) const {
-	size_t			i, iMult;
+void COntologyImpl::TermFinder( const CGenes& Genes, vector<STermFound>& vecsTerms, bool fBon,
+	bool fKids, bool fBack, const CGenes* pBkg ) const {
+	size_t			i, j, iMult, iBkg, iGenes;
 	double			d;
 	vector<size_t>	veciAnno;
 
+	iBkg = pBkg ? pBkg->GetGenes( ) :
+		( fBack ? Genes.GetGenome( ).GetGenes( ) : Genes.GetGenome( ).CountGenes( m_pOntology ) );
 	veciAnno.resize( m_iNodes );
 	for( iMult = i = 0; i < veciAnno.size( ); ++i )
-		if( veciAnno[ i ] = Genes.CountAnnotations( m_pOntology, i, fKids ) )
+		if( veciAnno[ i ] = Genes.CountAnnotations( m_pOntology, i, fKids, pBkg ) )
 			iMult++;
 	for( i = 0; i < m_iNodes; ++i ) {
 		if( !veciAnno[ i ] )
 			continue;
+		if( pBkg ) {
+			for( iGenes = j = 0; j < pBkg->GetGenes( ); ++j )
+				if( IsAnnotated( i, pBkg->GetGene( j ), fKids ) )
+					iGenes++; }
+		else
+			iGenes = GetGenes( i, fKids );
 		d = CStatistics::HypergeometricCDF( veciAnno[ i ], Genes.GetGenes( ),
-			GetGenes( i, fKids ), fBack ? Genes.GetGenome( ).GetGenes( ) :
-			Genes.GetGenome( ).CountGenes( m_pOntology ) );
+			iGenes, iBkg );
 /*
-if( m_aNodes[ i ].m_strID == "GO:0050875" )
-cerr << veciAnno[ i ] << ", " << Genes.GetGenes( ) << ", " << GetGenes( i, true ) << ", " <<
-iGenes << ", " << d << ", " << iMult << endl;
-*/
+//if( m_aNodes[ i ].m_strID == "GO:0050875" )
+cerr << veciAnno[ i ] << ", " << Genes.GetGenes( ) << ", " << iGenes << ", " << iBkg << ", " << d << ", " << iMult << endl;
+//*/
 		if( fBon ) {
 			if( ( d *= iMult ) > 1 )
 				d = 1; }
-		vecprTerms.push_back( TPrID( i, d ) ); } }
+		vecsTerms.push_back( STermFound( i, d, veciAnno[ i ], Genes.GetGenes( ), iGenes, iBkg ) ); } }
 
 }

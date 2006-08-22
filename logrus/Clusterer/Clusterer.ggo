@@ -1,0 +1,14 @@
+package	"Clusterer"
+version	"1.0"
+purpose	"QTC and other hard clustering methods"
+
+option	"output"	o	"Output DAB file"	string	typestr="filename"	yes
+section "Optional"
+option	"distance"	d	"Distance measure"	values="pearson","euclidean","kendalls","kolm-smir","spearman"	default="pearson"
+option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
+option	"diameter"	m	"Maximum cluster diameter"	double	default="0.5"
+option	"size"		z	"Minimum cluster size"	int	default="10"
+option	"autocorrelate"	a	"Autocorrelate similarity measures"	flag	off
+option	"normalize"	n	"Normalize distances before clustering"	flag	on
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"random"	r	"Seed random generator"	int	default="0"

@@ -23,12 +23,13 @@ protected:
 	static const char	c_cSeparator	= '/';
 	static const char	c_szDat[];
 	static const char	c_szDab[];
+	static const char	c_szPcl[];
 
 	static void FilterGenes( IDataset*, const CGenes&, CDat::EFilter );
 
 	size_t OpenMax( const char*, const std::vector<std::string>&, bool,
 		std::vector<std::string>&, std::set<std::string>* = NULL );
-	bool OpenGenes( std::istream&, bool, std::set<std::string>& ) const;
+	bool OpenGenes( std::istream&, bool, bool, std::set<std::string>& ) const;
 	bool OpenGenes( const std::vector<std::string>& );
 
 	bool IsHidden( size_t ) const;

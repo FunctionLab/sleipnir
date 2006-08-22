@@ -54,7 +54,7 @@ protected:
 	static void PrintNumber( size_t, size_t );
 	static void PrintSpaces( size_t );
 	static void PrintAnnotation( const IOntology*, size_t, const SArgs&,
-		const CGenes* = NULL, double = -1 );
+		const STermFound* = NULL );
 	static void PrintGloss( string, size_t, bool );
 	static void PrintGene( const CGene&, const SArgs& );
 	static void PrintGenes( const vector<const CGene*>&, size_t = 0 );

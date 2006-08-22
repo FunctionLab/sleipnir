@@ -7,6 +7,7 @@ namespace libBioUtils {
 
 const char	CDataImpl::c_szDat[]	= ".dat";
 const char	CDataImpl::c_szDab[]	= ".dab";
+const char	CDataImpl::c_szPcl[]	= ".pcl";
 
 void CDataImpl::FilterGenes( IDataset* pData, const CGenes& Genes, CDat::EFilter eFilt ) {
 	vector<bool>	vecfGenes;
@@ -50,6 +51,7 @@ size_t CDataImpl::OpenMax( const char* szDataDir, const vector<string>& vecstrNo
 	size_t		i, iLength, iMap, iRet;
 	string		strFile;
 	ifstream	ifsm;
+	CPCL		PCL;
 
 	strFile = szDataDir;
 	strFile += c_cSeparator;
@@ -71,7 +73,7 @@ size_t CDataImpl::OpenMax( const char* szDataDir, const vector<string>& vecstrNo
 			m_veciMapping[ i ] = iMap++;
 			vecstrData.push_back( strFile );
 			if( psetstrGenes )
-				OpenGenes( ifsm, true, *psetstrGenes ); }
+				OpenGenes( ifsm, true, false, *psetstrGenes ); }
 		else {
 			strFile.resize( strFile.length( ) - strlen( c_szDab ) );
 			strFile += c_szDat;
@@ -82,20 +84,31 @@ size_t CDataImpl::OpenMax( const char* szDataDir, const vector<string>& vecstrNo
 				m_veciMapping[ i ] = iMap++;
 				vecstrData.push_back( strFile );
 				if( psetstrGenes )
-					OpenGenes( ifsm, false, *psetstrGenes ); }
+					OpenGenes( ifsm, false, false, *psetstrGenes ); }
 			else {
-				g_CatBioUtils.info( "CDataImpl::OpenMax( %s ) assuming %s is hidden",
-					szDataDir, vecstrNodes[ i ].c_str( ) );
-				continue; } }
+				strFile.resize( strFile.length( ) - strlen( c_szDat ) );
+				strFile += c_szPcl;
+				ifsm.clear( );
+				ifsm.open( strFile.c_str( ) );
+				if( ifsm.is_open( ) ) {
+					iRet++;
+					m_veciMapping[ i ] = iMap++;
+					vecstrData.push_back( strFile );
+					if( psetstrGenes )
+						OpenGenes( ifsm, false, true, *psetstrGenes ); }
+				else {
+					g_CatBioUtils.info( "CDataImpl::OpenMax( %s ) assuming %s is hidden",
+						szDataDir, vecstrNodes[ i ].c_str( ) );
+					continue; } } }
 		ifsm.close( ); }
 
 	return iRet; }
 
-bool CDataImpl::OpenGenes( istream& istm, bool fBinary, set<string>& setstrGenes ) const {
+bool CDataImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL, set<string>& setstrGenes ) const {
 	CDat	Dat;
 	size_t	i;
 
-	if( !Dat.OpenGenes( istm, fBinary ) )
+	if( !Dat.OpenGenes( istm, fBinary, fPCL ) )
 		return false;
 	for( i = 0; i < Dat.GetGenes( ); ++i )
 		setstrGenes.insert( Dat.GetGene( i ) );
@@ -113,12 +126,16 @@ bool CDataImpl::OpenGenes( const vector<string>& vecstrData ) {
 		m_veciMapping[ i ] = i;
 		ifsm.clear( );
 		ifsm.open( vecstrData[ i ].c_str( ), ios_base::binary );
-		if( !( ifsm.is_open( ) && OpenGenes( ifsm, true, setstrGenes ) ) ) {
+		if( !( ifsm.is_open( ) && OpenGenes( ifsm, true, false, setstrGenes ) ) ) {
 			ifsm.close( );
 			ifsm.clear( );
 			ifsm.open( vecstrData[ i ].c_str( ) );
-			if( !( ifsm.is_open( ) && OpenGenes( ifsm, false, setstrGenes ) ) )
-				return false; }
+			if( !( ifsm.is_open( ) && OpenGenes( ifsm, false, false, setstrGenes ) ) ) {
+				ifsm.close( );
+				ifsm.clear( );
+				ifsm.open( vecstrData[ i ].c_str( ) );
+				if( !( ifsm.is_open( ) && OpenGenes( ifsm, false, true, setstrGenes ) ) )
+					return false; } }
 		ifsm.close( ); }
 
 	m_vecstrGenes.resize( setstrGenes.size( ) );

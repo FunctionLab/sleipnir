@@ -72,6 +72,14 @@ protected:
 		size_t = 0 );
 };
 
+class CMeasurePearNormImpl {
+protected:
+	CMeasurePearNormImpl( double, double );
+
+	double	m_dAverage;
+	double	m_dStdDev;
+};
+
 }
 
 #endif // MEASUREI_H

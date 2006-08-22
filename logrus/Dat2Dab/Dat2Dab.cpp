@@ -1,15 +1,13 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-int Dat2Dab( const char*, bool, bool, bool, const CGenes& );
+int Dat2Dab( const CGenes&, const gengetopt_args_info& );
 int DabShuffle( const char*, bool );
 int DabFinder( const char*, bool );
 void DatFlip( CDat& );
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
-	const char*			szFile;
-	bool				fCreate;
 	int					iRet;
 	CGenome				Genome;
 	CGenes				Genes( Genome );
@@ -20,41 +18,52 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
 
-	fCreate = !!sArgs.output_arg;
-	szFile = fCreate ? sArgs.output_arg : sArgs.input_arg;
 	if( sArgs.genes_arg ) {
 		ifsm.open( sArgs.genes_arg );
 		if( !Genes.Open( ifsm ) ) {
 			cerr << "Could not open: " << sArgs.genes_arg << endl;
 			return 1; }
 		ifsm.close( ); }
-	iRet = Dat2Dab( szFile, fCreate, !!sArgs.flip_flag, !!sArgs.normalize_flag, Genes );
+	iRet = Dat2Dab( Genes, sArgs );
 
 	CMeta::Shutdown( );
 	return iRet; }
 
-int Dat2Dab( const char* szFile, bool fCreate, bool fFlip, bool fNormalize, const CGenes& Genes ) {
+int Dat2Dab( const CGenes& Genes, const gengetopt_args_info& sArgs ) {
 	CDat		Dat;
 	ifstream	ifsm;
 	ofstream	ofsm;
+	CPCL		PCL;
 
-	if( fCreate ) {
+	if( sArgs.pcl_arg ) {
+		ifsm.open( sArgs.pcl_arg );
+		if( !PCL.Open( ifsm, sArgs.skip_arg ) ) {
+			cerr << "Couldn't open: " << sArgs.pcl_arg << endl;
+			return 1; }
+		ifsm.close( );
+		{
+			CMeasurePearNorm	PearNorm;
+			CDatPCL				DatPCL( PCL, &PearNorm );
+
+			DatPCL.Save( cout, false );
+		} }
+	else if( !!sArgs.output_arg ) {
 		Dat.Open( cin, false );
-		if( fNormalize )
+		if( sArgs.normalize_flag )
 			Dat.Normalize( );
-		if( fFlip )
+		if( sArgs.flip_flag )
 			DatFlip( Dat );
 		if( Genes.GetGenes( ) )
 			Dat.FilterGenes( Genes, CDat::EFilterInclude );
-		ofsm.open( szFile, ios_base::binary );
+		ofsm.open( sArgs.output_arg, ios_base::binary );
 		Dat.Save( ofsm, true );
 		ofsm.close( ); }
 	else {
-		ifsm.open( szFile, ios_base::binary );
+		ifsm.open( sArgs.input_arg, ios_base::binary );
 		Dat.Open( ifsm, true );
-		if( fNormalize )
+		if( sArgs.normalize_flag )
 			Dat.Normalize( );
-		if( fFlip )
+		if( sArgs.flip_flag )
 			DatFlip( Dat );
 		if( Genes.GetGenes( ) )
 			Dat.FilterGenes( Genes, CDat::EFilterInclude );

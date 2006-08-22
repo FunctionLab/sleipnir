@@ -49,7 +49,7 @@ public:
 	bool Open( istream& );
 	bool Open( const std::vector<std::string>& );
 	void Filter( const CGenes& );
-	size_t CountAnnotations( const IOntology*, size_t, bool = true ) const;
+	size_t CountAnnotations( const IOntology*, size_t, bool = true, const CGenes* = NULL ) const;
 	std::vector<std::string> GetGeneNames( ) const;
 
 	size_t GetGenes( ) const {

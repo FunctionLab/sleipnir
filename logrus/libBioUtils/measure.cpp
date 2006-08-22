@@ -478,6 +478,12 @@ double CMeasureSpearman::Measure( const float* adX, size_t iM, const float* adY,
 
 	return dRet; }
 
+CMeasurePearNorm::CMeasurePearNorm( ) : CMeasurePearNormImpl( HUGE_VAL, HUGE_VAL ) { }
+
+CMeasurePearNorm::CMeasurePearNorm( double dAve, double dStd ) : CMeasurePearNormImpl( dAve, dStd ) { }
+
+CMeasurePearNormImpl::CMeasurePearNormImpl( double dAve, double dStd ) : m_dAverage(dAve), m_dStdDev(dStd) { }
+
 const char* CMeasurePearNorm::GetName( ) const {
 
 	return "pearnorm"; }
@@ -491,6 +497,9 @@ double CMeasurePearNorm::Measure( const float* adX, size_t iM, const float* adY,
 	double	dP;
 
 	dP = CMeasurePearson::Pearson( adX, iM, adY, iN, eMap, adWX, adWY );
-	return ( ( log( 1 + dP ) - log( 1 - dP ) ) / 2 ); }
+	dP = ( log( 1 + dP ) - log( 1 - dP ) ) / 2;
+	if( m_dAverage != HUGE_VAL )
+		dP = ( dP - m_dAverage ) / m_dStdDev;
+	return dP; }
 
 }

@@ -15,11 +15,11 @@ const char					CParserConsole::c_szZeroes[]			= "-a";
 const char					CParserConsole::c_szRecursive[]			= "-r";
 const char					CParserConsole::c_szStar[]				= "*";
 const char					CParserConsole::c_szHelpHelp[]			= "Commands:\n"
-	"cat <gene>+          Displays information on individual genes.\n"
-	"cd [path]            Display or change current term.\n"
-	"find <filename> [p]  Runs term finder on the given gene list.\n"
-	"help [command]       Provides help on command syntax.\n"
-	"ls [path]            List parents, children, and annotations.";
+	"cat <gene>+                Displays information on individual genes.\n"
+	"cd [path]                  Display or change current term.\n"
+	"find <filename> [p] [bkg]  Runs term finder on the given gene list.\n"
+	"help [command]             Provides help on command syntax.\n"
+	"ls [path]                  List parents, children, and annotations.";
 const CParserConsole::TPFnParser	CParserConsole::c_apfnParsers[]	=
 	{ &CParserConsole::ParseCat, &CParserConsole::ParseCd, &CParserConsole::ParseFind,
 	&CParserConsole::ParseHelp, &CParserConsole::ParseLs, NULL };
@@ -37,11 +37,12 @@ const char*					CParserConsole::c_aszHelps[]			= {
 	"characters to indicate the current term or its parent.  In nodes with\n"
 	"multiple parents, the parent ID must be specified explicitly.  / serves as\n"
 	"the path separator and root marker.",
-	"find <filename> [p=0.05] [-l] [-b]\n\n"
+	"find <filename> [p=0.05] [bkg] [-l] [-b] [-g] [-a] [-s] [-k]\n\n"
 	"Performs a hypergeometric test over each ontology using the given gene list.\n"
 	"Only terms with probability less than p are displayed, with a default p-value\n"
 	"of 0.05.  The total number of possible genes is assumed to be the entire\n"
-	"genome.  The optional flags are:\n"
+	"genome.  If given, the second file is used as a background distribution.  The\n"
+	"other optional flags are:\n"
 	"-l  Long listings; deactivates term gloss abbreviation.\n"
 	"-b  Bonferroni correction; deactivates Bonferroni correction.\n"
 	"-g  Genes; display genes associated with each ontology term.\n"
@@ -49,7 +50,7 @@ const char*					CParserConsole::c_aszHelps[]			= {
 	"-s  Siblings; deactivates child annotations during analysis.\n"
 	"-k  Background; uses whole genome background in place of ontology background.",
 	CParserConsole::c_szHelpHelp,
-	"ls [-l] [-a] [-g] [-s] [path]\n\n"
+	"ls [-l] [-a] [-g] [-s] [-r] [path]\n\n"
 	"With no arguments, the ls command displays the parents, children, and gene\n"
 	"annotations of the current term.  Given a path, it displays the same\n"
 	"information for that target instead.  The four optional flags are:\n"
@@ -112,7 +113,7 @@ void CParserConsole::PrintSpaces( size_t iSpaces ) {
 		cout << ' '; }
 
 void CParserConsole::PrintAnnotation( const IOntology* pOnto, size_t iNode,
-	const SArgs& sArgs, const CGenes* pGenes, double dP ) {
+	const SArgs& sArgs, const STermFound* psFound ) {
 	char	szBuf[ 128 ];
 	string	strID;
 	size_t	iWidth;
@@ -120,16 +121,13 @@ void CParserConsole::PrintAnnotation( const IOntology* pOnto, size_t iNode,
 	iWidth = c_iWidthGloss + c_iWidthGenes;
 	cout << ( strID = pOnto->GetID( iNode ) );
 	PrintSpaces( c_iWidthID - strID.size( ) );
-	if( dP >= 0 ) {
+	if( psFound ) {
 		iWidth -= c_iWidthGenes;
-		sprintf_s( szBuf, "%g", dP );
+		sprintf_s( szBuf, "%g", psFound->m_dP );
 		cout << szBuf;
-		PrintSpaces( c_iWidthP - strlen( szBuf ) ); }
-	if( pGenes ) {
-		sprintf_s( szBuf, "%-4d %-4d %-4d %-4d ", pGenes->CountAnnotations( pOnto, iNode,
-			sArgs.m_fSibs ), pGenes->GetGenes( ), pOnto->GetGenes( iNode, sArgs.m_fSibs ),
-			sArgs.m_fBackground ? pGenes->GetGenome( ).GetGenes( ) :
-			pGenes->GetGenome( ).CountGenes( pOnto ) );
+		PrintSpaces( c_iWidthP - strlen( szBuf ) );
+		sprintf_s( szBuf, "%-4d %-4d %-4d %-4d ", psFound->m_iHitsTerm, psFound->m_iSizeTerm,
+			psFound->m_iHitsTotal, psFound->m_iSizeTotal );
 		iWidth -= strlen( szBuf );
 		cout << szBuf; }
 	PrintGloss( pOnto->GetGloss( iNode ), iWidth, sArgs.m_fLong );
@@ -306,12 +304,12 @@ bool CParserConsole::ParseCd( const vector<string>& vecstrLine ) {
 	return true; }
 
 bool CParserConsole::ParseFind( const vector<string>& vecstrLine ) {
-	CGenes					Genes( (CGenome&)m_Genome );
+	CGenes					Genes( (CGenome&)m_Genome ), GenesBkg( (CGenome&)m_Genome );
 	ifstream				ifsm;
 	size_t					i, j, k, l, iWidth;
-	vector<TPrID>			vecprTerms;
+	vector<STermFound>		vecsTerms;
 	vector<size_t>			veciOnto;
-	string					strFile, strP;
+	string					strFile, strP, strBkg;
 	SArgs					sArgs;
 	const IOntology*		pOnto;
 	vector<const CGene*>	vecpGenes;
@@ -326,7 +324,9 @@ bool CParserConsole::ParseFind( const vector<string>& vecstrLine ) {
 		if( !strFile.length( ) )
 			strFile = vecstrLine[ i ];
 		else if( !strP.length( ) )
-			strP = vecstrLine[ i ]; }
+			strP = vecstrLine[ i ];
+		else if( !strBkg.length( ) )
+			strBkg = vecstrLine[ i ]; }
 	ifsm.open( strFile.c_str( ) );
 	if( !( ifsm.is_open( ) && Genes.Open( ifsm ) ) ) {
 		cout << "find, can't open file: " << strFile << endl;
@@ -334,9 +334,16 @@ bool CParserConsole::ParseFind( const vector<string>& vecstrLine ) {
 	ifsm.close( );
 	if( strP.length( ) )
 		dP = (float)atof( strP.c_str( ) );
+	if( strBkg.length( ) ) {
+		ifsm.clear( );
+		ifsm.open( strBkg.c_str( ) );
+		if( !( ifsm.is_open( ) && GenesBkg.Open( ifsm ) ) ) {
+			cout << "find, can't open background: " << strBkg << endl;
+			return false; }
+		ifsm.close( ); }
 
-	CParser::TermFinder( Genes, dP, sArgs.m_fBonferroni, sArgs.m_fSibs, sArgs.m_fBackground,
-		veciOnto, vecprTerms );
+	CParser::TermFinder( Genes, dP, GenesBkg, sArgs.m_fBonferroni, sArgs.m_fSibs, sArgs.m_fBackground,
+		veciOnto, vecsTerms );
 
 	for( i = j = 0; i < m_vecpOntologies.size( ); ++i ) {
 		pOnto = m_vecpOntologies[ i ];
@@ -349,18 +356,17 @@ bool CParserConsole::ParseFind( const vector<string>& vecstrLine ) {
 			vecpGenes.clear( );
 			for( ; j < veciOnto[ i ]; ++j )
 				for( k = 0; k < Genes.GetGenes( ); ++k )
-					if( pOnto->IsAnnotated( vecprTerms[ j ].first, Genes.GetGene( k ) ) )
+					if( pOnto->IsAnnotated( vecsTerms[ j ].m_iID, Genes.GetGene( k ) ) )
 						vecpGenes.push_back( &Genes.GetGene( k ) );
 			vecstrGenes.clear( );
 			iWidth = FormatGenes( vecpGenes, vecstrGenes ); }
 
 		for( j = l; j < veciOnto[ i ]; ++j ) {
-			PrintAnnotation( pOnto, vecprTerms[ j ].first, sArgs, sArgs.m_fZeroes ?
-				&Genes : NULL, vecprTerms[ j ].second );
+			PrintAnnotation( pOnto, vecsTerms[ j ].m_iID, sArgs, &vecsTerms[ j ] );
 			if( !sArgs.m_fGenes ) {
 				vecpGenes.clear( );
 				for( k = 0; k < Genes.GetGenes( ); ++k )
-					if( pOnto->IsAnnotated( vecprTerms[ j ].first, Genes.GetGene( k ),
+					if( pOnto->IsAnnotated( vecsTerms[ j ].m_iID, Genes.GetGene( k ),
 						sArgs.m_fSibs ) )
 						vecpGenes.push_back( &Genes.GetGene( k ) );
 				PrintGenes( vecpGenes, iWidth ); } } }

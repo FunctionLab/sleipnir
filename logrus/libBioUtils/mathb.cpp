@@ -34,8 +34,7 @@ double CMath::LogFact( size_t iN ) {
 		for( i = 2; i < s_vecdLogFact.size( ); ++i )
 			s_vecdLogFact[ i ] = s_vecdLogFact[ i - 1 ] + log( (double)i ); }
 
-	return ( ( iN > c_iFactCutoff ) ? LogFactStirling( iN ) : s_vecdLogFact[ iN ] ); }
-//	return ( ( iN > c_iFactCutoff ) ? LogFactStirling( iN ) : LogFactRec( iN ) ); }
+	return ( ( iN >= c_iFactCutoff ) ? LogFactStirling( iN ) : s_vecdLogFact[ iN ] ); }
 
 double CMathImpl::LogFactStirling( size_t iN ) {
 

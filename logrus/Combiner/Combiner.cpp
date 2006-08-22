@@ -125,7 +125,7 @@ static int MainDATs( const gengetopt_args_info& sArgs ) {
 						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) ) {
 							dMax = ( CMeta::IsNaN( dMax ) ? 1 : dMax ) * d;
 							iN++; }
-					dMax = pow( dMax, 1.0 / iN ); }
+					dMax = pow( dMax, 1.0f / iN ); }
 				else if( !strcmp( c_szHMean, sArgs.method_arg ) ) {
 					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
 						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) ) {

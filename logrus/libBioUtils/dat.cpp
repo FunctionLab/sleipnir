@@ -7,6 +7,7 @@
 namespace libBioUtils {
 
 const char	CDatImpl::c_szBin[]	= "dab";
+const char	CDatImpl::c_szPcl[]	= "pcl";
 
 size_t CDatImpl::MapGene( TMapStrI& mapGenes, TVecStr& vecGenes, const string& strToken ) {
 	TMapStrI::iterator	iterGenes;
@@ -42,8 +43,6 @@ string CDatImpl::DabGene( istream& istm ) {
 
 	return szBuffer; }
 
-CDatImpl::CDatImpl( ) { }
-
 CDatImpl::~CDatImpl( ) {
 
 	Reset( ); }
@@ -51,7 +50,9 @@ CDatImpl::~CDatImpl( ) {
 void CDatImpl::Reset( ) {
 
 	m_Data.Reset( );
-	m_vecstrGenes.clear( ); }
+	m_vecstrGenes.clear( );
+	m_PCL.Reset( );
+	m_pMeasure = NULL; }
 
 void CDatImpl::SlimCache( const CSlim& Slim, vector<vector<size_t> >& vecveciGenes ) const {
 	size_t	iS, iG;
@@ -163,9 +164,34 @@ void CDatImpl::OpenHelper( const CGenes* pGenes, float dValue ) {
 			if( CMeta::IsNaN( Get( iOne, iTwo ) ) )
 				Set( iOne, iTwo, dValue ); } } }
 
-bool CDat::Open( istream& istm, bool fBinary ) {
+bool CDat::Open( istream& istm, bool fBinary, bool fPCL ) {
 
-	return ( fBinary ? OpenBinary( istm ) : OpenText( istm ) ); }
+	return ( fPCL ? OpenPCL( istm ) : ( fBinary ? OpenBinary( istm ) : OpenText( istm ) ) ); }
+
+bool CDatImpl::OpenPCL( istream& istm ) {
+	size_t	i, iOne, iTwo;
+	float	d, dAve, dStd;
+
+	Reset( );
+	if( !m_PCL.Open( istm ) )
+		return false;
+
+// BUGBUG: This is not cool
+	dAve = dStd = 0;
+	m_pMeasure = new CMeasurePearNorm( );
+	for( i = 0; i < 1000; ++i ) {
+		iOne = rand( ) % GetGenes( );
+		if( ( iTwo = rand( ) % GetGenes( ) ) == iOne ) {
+			i--;
+			continue; }
+		dAve += ( d = Get( iOne, iTwo ) );
+		dStd += d * d; }
+	dAve /= i;
+	dStd = sqrt( ( dStd / i ) - ( dAve * dAve ) );
+	delete m_pMeasure;
+	m_pMeasure = new CMeasurePearNorm( dAve, dStd );
+
+	return true; }
 
 bool CDatImpl::OpenText( istream& istm ) {
 	char		acBuf[ c_iBufferSize ];
@@ -188,8 +214,12 @@ bool CDatImpl::OpenText( istream& istm ) {
 			iOne = MapGene( mapGenes, m_vecstrGenes, strToken ); }
 
 		strToken = OpenToken( pc, &pc );
+		if( !strToken.length( ) )
+			return false;
 		iTwo = MapGene( mapGenes, m_vecstrGenes, strToken );
 		strValue = OpenToken( pc );
+		if( !strValue.length( ) )
+			return false;
 		if( !( dScore = (float)strtod( strValue.c_str( ), &pcTail ) ) &&
 			( pcTail != ( strValue.c_str( ) + strValue.length( ) ) ) ) {
 			Reset( );
@@ -208,9 +238,9 @@ bool CDatImpl::OpenText( istream& istm ) {
 			return false; }
 		vecvecfScores[ iOne ][ iTwo ] = vecvecfScores[ iTwo ][ iOne ] = dScore; }
 
-	m_Data.Initialize( m_vecstrGenes.size( ) );
-	for( iOne = 0; iOne < m_vecstrGenes.size( ); ++iOne )
-		for( iTwo = ( iOne + 1 ); iTwo < m_vecstrGenes.size( ); ++iTwo )
+	m_Data.Initialize( GetGenes( ) );
+	for( iOne = 0; iOne < GetGenes( ); ++iOne )
+		for( iTwo = ( iOne + 1 ); iTwo < GetGenes( ); ++iTwo )
 			Set( iOne, iTwo, ( ( iTwo < vecvecfScores[ iOne ].size( ) ) ?
 				vecvecfScores[ iOne ][ iTwo ] : CMeta::GetNaN( ) ) );
 
@@ -220,7 +250,7 @@ bool CDatImpl::OpenBinary( istream& istm ) {
 	size_t	i;
 	float*	adScores;
 
-	if( !OpenGenes( istm, true ) )
+	if( !OpenGenes( istm, true, false ) )
 		return false;
 	m_Data.Initialize( GetGenes( ) );
 	adScores = new float[ GetGenes( ) - 1 ];
@@ -231,11 +261,11 @@ bool CDatImpl::OpenBinary( istream& istm ) {
 
 	return true; }
 
-bool CDat::OpenGenes( istream& istm, bool fBinary ) {
+bool CDat::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
 
-	return CDatImpl::OpenGenes( istm, fBinary ); }
+	return CDatImpl::OpenGenes( istm, fBinary, fPCL ); }
 
-bool CDatImpl::OpenGenes( istream& istm, bool fBinary ) {
+bool CDatImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
 	size_t		i, iToken;
 	uint32_t	iCount;
 	string		strToken, strCache;
@@ -244,6 +274,11 @@ bool CDatImpl::OpenGenes( istream& istm, bool fBinary ) {
 	const char*	pc;
 
 	Reset( );
+	if( fPCL ) {
+		if( m_PCL.Open( istm ) ) {
+			m_pMeasure = (IMeasure*)1;
+			return true; }
+		return false; }
 	if( fBinary ) {
 		istm.read( (char*)&iCount, sizeof(iCount) );
 		if( iCount > c_iGeneLimit )
@@ -267,7 +302,9 @@ bool CDatImpl::OpenGenes( istream& istm, bool fBinary ) {
 
 				strToken = OpenToken( pc, &pc );
 				setstrGenes.insert( strToken );
-				d = (float)atof( OpenToken( pc ).c_str( ) ); } }
+				d = (float)strtod( ( strToken = OpenToken( pc ) ).c_str( ), (char**)&pc );
+				if( !d && ( ( pc - strToken.c_str( ) ) != strToken.length( ) ) )
+					return false; } }
 		m_vecstrGenes.reserve( setstrGenes.size( ) );
 		for( iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( ); ++iterGenes )
 			m_vecstrGenes.push_back( *iterGenes ); }
@@ -282,27 +319,36 @@ void CDatImpl::SaveText( ostream& ostm ) const {
 	size_t	i, j;
 	float	d;
 
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
-		for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j )
-			if( ( d = Get( i, j ) ) != CMeta::GetNaN( ) )
-				ostm << m_vecstrGenes[ i ] << '\t' << m_vecstrGenes[ j ] << '\t' << d << endl; }
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) )
+				ostm << GetGene( i ) << '\t' << GetGene( j ) << '\t' << d << endl; }
 
 void CDatImpl::SaveBinary( ostream& ostm ) const {
 	size_t			i, j;
 	uint32_t		iSize;
 	const float*	pd;
+	string			strGene;
+	float			d;
 
-	iSize = m_vecstrGenes.size( );
+	iSize = GetGenes( );
 	ostm.write( (char*)&iSize, sizeof(iSize) );
-	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
-		for( j = 0; j < m_vecstrGenes[ i ].length( ); ++j ) {
+	for( i = 0; i < iSize; ++i ) {
+		strGene = GetGene( i );
+		for( j = 0; j < strGene.length( ); ++j ) {
 			ostm.put( 0 );
-			ostm.put( m_vecstrGenes[ i ][ j ] ); }
+			ostm.put( strGene[ j ] ); }
 		ostm.put( 0 );
 		ostm.put( 0 ); }
-	for( i = 0; ( i + 1 ) < GetGenes( ); ++i ) {
-		pd = m_Data.Get( i );
-		ostm.write( (const char*)pd, sizeof(*pd) * ( GetGenes( ) - i - 1 ) ); } }
+	if( m_pMeasure ) {
+		for( i = 0; i < iSize; ++i )
+			for( j = ( i + 1 ); j < iSize; ++j ) {
+				d = Get( i, j );
+				ostm.write( (char*)&d, sizeof(d) ); } }
+	else
+		for( i = 0; ( i + 1 ) < iSize; ++i ) {
+			pd = m_Data.Get( i );
+			ostm.write( (char*)pd, sizeof(*pd) * ( iSize - i - 1 ) ); } }
 
 bool CDat::Open( const vector<string>& vecstrGenes ) {
 	size_t	i, j;
@@ -338,7 +384,10 @@ size_t CDat::GetGene( const string& strGene ) const {
 size_t CDatImpl::GetGene( const string& strGene ) const {
 	size_t	i;
 
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
+	if( m_pMeasure )
+		return m_PCL.GetGene( strGene );
+
+	for( i = 0; i < GetGenes( ); ++i )
 		if( m_vecstrGenes[ i ] == strGene )
 			return i;
 
@@ -346,17 +395,14 @@ size_t CDatImpl::GetGene( const string& strGene ) const {
 
 bool CDat::Open( const char* szFile ) {
 	ifstream	ifsm;
-	bool		fBinary;
+	bool		fBinary, fPCL;
 
 	fBinary = !strcmp( szFile + strlen( szFile ) - strlen( c_szBin ), c_szBin );
+	fPCL = !strcmp( szFile + strlen( szFile ) - strlen( c_szBin ), c_szPcl );
 	ifsm.open( szFile, ( fBinary ? ios_base::binary : ios_base::in ) );
 	if( !ifsm.is_open( ) )
 		return false;
-	return Open( ifsm, fBinary ); }
-
-const vector<string>& CDat::GetGeneNames( ) const {
-
-	return m_vecstrGenes; }
+	return Open( ifsm, fBinary, fPCL ); }
 
 void CDat::Normalize( bool fCap ) {
 

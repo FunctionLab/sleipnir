@@ -5,7 +5,9 @@
 
 #include "halfmatrix.h"
 #include "file.h"
+#include "measure.h"
 #include "meta.h"
+#include "pcl.h"
 
 namespace libBioUtils {
 
@@ -22,29 +24,33 @@ protected:
 	static const size_t	c_iGeneLimit	= 100000;
 	static const float	c_dNaN;
 	static const char	c_szBin[];
+	static const char	c_szPcl[];
 
 	static size_t MapGene( TMapStrI&, TVecStr&, const std::string& );
-	bool OpenGenes( std::istream&, bool );
-	void OpenHelper( const CGenes*, float );
 	static void ResizeNaN( TAF&, size_t );
 	static std::string DabGene( std::istream& );
 
-	CDatImpl( );
+	CDatImpl( ) : m_pMeasure(NULL) { }
 	~CDatImpl( );
 
 	void Reset( );
+	bool OpenPCL( std::istream& );
 	bool OpenText( std::istream& );
 	bool OpenBinary( std::istream& );
+	bool OpenGenes( std::istream&, bool, bool );
 	void SaveText( std::ostream& ) const;
 	void SaveBinary( std::ostream& ) const;
 	size_t GetGene( const std::string& ) const;
 	void SlimCache( const CSlim&, std::vector<std::vector<size_t> >& ) const;
 	void NormalizeMinmax( );
 	void NormalizeStdev( );
+	void OpenHelper( const CGenes*, float );
 
 	float Get( size_t iX, size_t iY ) const {
 
-		return ( ( iX == iY ) ? CMeta::GetNaN( ) : m_Data.Get( iX, iY ) ); }
+		return ( m_pMeasure ? (float)m_pMeasure->Measure( m_PCL.Get( iX ), m_PCL.GetExperiments( ), m_PCL.Get( iY ),
+			m_PCL.GetExperiments( ) ) :
+			( ( iX == iY ) ? CMeta::GetNaN( ) : m_Data.Get( iX, iY ) ) ); }
 
 	bool Set( size_t iX, size_t iY, float dValue ) {
 
@@ -61,10 +67,16 @@ protected:
 
 	size_t GetGenes( ) const {
 
-		return m_vecstrGenes.size( ); }
+		return ( m_pMeasure ? m_PCL.GetGenes( ) : m_vecstrGenes.size( ) ); }
+
+	std::string GetGene( size_t iGene ) const {
+
+		return ( m_pMeasure ? m_PCL.GetGene( iGene ) : m_vecstrGenes[ iGene ] ); }
 
 	CDistanceMatrix	m_Data;
 	TVecStr			m_vecstrGenes;
+	CPCL			m_PCL;
+	const IMeasure*	m_pMeasure;
 };
 
 }

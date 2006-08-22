@@ -76,7 +76,7 @@ int main( int iArgs, char** aszArgs ) {
 		{
 			CPCL	Ranks;
 
-			if( ( pMeasure == &Spearman ) || ( pMeasure == &KendallsTau ) ) {
+			if( pMeasure->IsRank( ) ) {
 				Ranks.Open( PCL );
 				Ranks.RankTransform( );
 				pPCL = &Ranks; }

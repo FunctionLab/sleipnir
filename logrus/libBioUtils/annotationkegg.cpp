@@ -265,9 +265,9 @@ void COntologyKEGG::GetGeneNames( vector<string>& vecstrGenes ) const {
 
 	return COntologyImpl::GetGeneNames( vecstrGenes ); }
 
-void COntologyKEGG::TermFinder( const CGenes& Genes, vector<TPrID>& vecprTerms,
-	bool fBon, bool fKids, bool fBack ) const {
+void COntologyKEGG::TermFinder( const CGenes& Genes, vector<STermFound>& vecsTerms,
+	bool fBon, bool fKids, bool fBack, const CGenes* pBkg ) const {
 
-	return COntologyImpl::TermFinder( Genes, vecprTerms, fBon, fKids, fBack ); }
+	return COntologyImpl::TermFinder( Genes, vecsTerms, fBon, fKids, fBack, pBkg ); }
 
 }

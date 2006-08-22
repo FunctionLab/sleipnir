@@ -24,9 +24,9 @@ protected:
 
 	~CPCLImpl( );
 
-	void Reset( );
 	bool OpenExperiments( std::istream&, size_t );
 	bool OpenGene( std::istream&, std::vector<float>& );
+	void Reset( );
 
 	CDataMatrix				m_Data;
 	TVecStr					m_vecstrGenes;

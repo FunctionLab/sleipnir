@@ -94,8 +94,11 @@ public:
 		const float* ) const;
 };
 
-class CMeasurePearNorm : public IMeasure {
+class CMeasurePearNorm : CMeasurePearNormImpl, public IMeasure {
 public:
+	CMeasurePearNorm( );
+	CMeasurePearNorm( double, double );
+
 	const char* GetName( ) const;
 	bool IsRank( ) const;
 	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,

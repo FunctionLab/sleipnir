@@ -5,7 +5,18 @@
 
 namespace libBioUtils {
 
-typedef std::pair<size_t,double>	TPrID;
+struct STermFound {
+	size_t	m_iID;
+	double	m_dP;
+	size_t	m_iHitsTerm;
+	size_t	m_iSizeTerm;
+	size_t	m_iHitsTotal;
+	size_t	m_iSizeTotal;
+
+	STermFound( size_t iID, double dP, size_t iHitsTerm, size_t iSizeTerm, size_t iHitsTotal, size_t iSizeTotal ) :
+		m_iID(iID), m_dP(dP), m_iHitsTerm(iHitsTerm), m_iSizeTerm(iSizeTerm), m_iHitsTotal(iHitsTotal),
+		m_iSizeTotal(iSizeTotal) { }
+};
 
 }
 
@@ -28,8 +39,8 @@ public:
 	virtual bool IsAnnotated( size_t, const CGene&, bool = true ) const = 0;
 	virtual size_t GetNode( const std::string& ) const = 0;
 	virtual void GetGeneNames( std::vector<std::string>& ) const = 0;
-	virtual void TermFinder( const CGenes&, std::vector<TPrID>&, bool = true,
-		bool = true, bool = false ) const = 0;
+	virtual void TermFinder( const CGenes&, std::vector<STermFound>&, bool = true,
+		bool = true, bool = false, const CGenes* = NULL ) const = 0;
 };
 
 class COntologyKEGG : COntologyKEGGImpl, public IOntology {
@@ -50,7 +61,7 @@ public:
 	bool IsAnnotated( size_t, const CGene&, bool ) const;
 	size_t GetNode( const std::string& ) const;
 	void GetGeneNames( std::vector<std::string>& ) const;
-	void TermFinder( const CGenes&, std::vector<TPrID>&, bool, bool, bool ) const;
+	void TermFinder( const CGenes&, std::vector<STermFound>&, bool, bool, bool, const CGenes* ) const;
 };
 
 class COntologyGO : COntologyGOImpl, public IOntology {
@@ -80,7 +91,7 @@ public:
 	bool IsAnnotated( size_t, const CGene&, bool ) const;
 	size_t GetNode( const std::string& ) const;
 	void GetGeneNames( std::vector<std::string>& ) const;
-	void TermFinder( const CGenes&, std::vector<TPrID>&, bool, bool, bool ) const;
+	void TermFinder( const CGenes&, std::vector<STermFound>&, bool, bool, bool, const CGenes* ) const;
 };
 
 class COntologyMIPS : protected COntologyMIPSImpl, public IOntology {
@@ -101,7 +112,7 @@ public:
 	bool IsAnnotated( size_t, const CGene&, bool ) const;
 	size_t GetNode( const std::string& ) const;
 	void GetGeneNames( std::vector<std::string>& ) const;
-	void TermFinder( const CGenes&, std::vector<TPrID>&, bool, bool, bool ) const;
+	void TermFinder( const CGenes&, std::vector<STermFound>&, bool, bool, bool, const CGenes* ) const;
 };
 
 class COntologyMIPSPhenotypes : public COntologyMIPS {

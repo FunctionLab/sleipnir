@@ -306,11 +306,12 @@ bool CGenes::Open( istream& istm ) {
 
 	return true; }
 
-size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKids ) const {
+size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKids, const CGenes* pBkg ) const {
 	size_t	i, iRet;
 
 	for( iRet = i = 0; i < m_vecpGenes.size( ); ++i )
-		if( pOnto->IsAnnotated( iNode, *m_vecpGenes[ i ], fKids ) )
+		if( ( !pBkg || pBkg->IsGene( m_vecpGenes[ i ]->GetName( ) ) ) &&
+			pOnto->IsAnnotated( iNode, *m_vecpGenes[ i ], fKids ) )
 			iRet++;
 
 	return iRet; }

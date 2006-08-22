@@ -71,7 +71,7 @@ protected:
 	void Reset( );
 	void CollectGenes( size_t ) const;
 	void CollectGenes( size_t, TSetPGenes& );
-	void TermFinder( const CGenes&, std::vector<TPrID>&, bool, bool, bool ) const;
+	void TermFinder( const CGenes&, std::vector<STermFound>&, bool, bool, bool, const CGenes* ) const;
 
 	const IOntology*	m_pOntology;
 	std::string			m_strID;

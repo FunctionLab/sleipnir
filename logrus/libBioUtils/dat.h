@@ -20,16 +20,15 @@ public:
 		EFilterExclude	= EFilterTerm + 1
 	};
 
-	const std::vector<std::string>& GetGeneNames( ) const;
 	size_t GetGene( const std::string& ) const;
 	bool Open( const char* );
-	bool Open( std::istream&, bool );
+	bool Open( std::istream&, bool, bool = false );
 	bool Open( const CSlim& );
 	bool Open( const CSlim&, const CSlim& );
 	bool Open( const std::vector<std::string>& );
 	bool Open( const std::vector<std::string>&, const CDistanceMatrix& );
 	bool Open( const std::vector<CGenes*>&, const std::vector<CGenes*>&, const CGenome& );
-	bool OpenGenes( std::istream&, bool );
+	bool OpenGenes( std::istream&, bool, bool = false );
 	void Save( std::ostream&, bool ) const;
 	void SaveDOT( std::ostream&, float = HUGE_VAL, const CGenome* = NULL, bool = false ) const;
 	void SaveGDF( std::ostream&, float = HUGE_VAL ) const;
@@ -57,11 +56,15 @@ public:
 
 	std::string GetGene( size_t iGene ) const {
 
-		return m_vecstrGenes[ iGene ]; }
+		return CDatImpl::GetGene( iGene ); }
 
 	const CDistanceMatrix& GetData( ) const {
 
 		return m_Data; }
+
+	const std::vector<std::string>& GetGeneNames( ) const {
+
+		return ( m_pMeasure ? m_PCL.GetGeneNames( ) : m_vecstrGenes ); }
 };
 
 }

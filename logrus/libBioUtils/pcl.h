@@ -13,6 +13,7 @@ public:
 	static size_t GetSkip( );
 
 	void Open( const CPCL& );
+	bool Open( std::istream& );
 	bool Open( std::istream&, size_t );
 	void Open( const std::vector<size_t>&, const std::vector<string>&,
 		const std::vector<string>& );
@@ -24,6 +25,7 @@ public:
 	void RankTransform( );
 	bool AddGenes( const std::vector<std::string>& );
 	void Normalize( );
+	void Reset( );
 
 	float Get( size_t iGene, size_t iExp ) const {
 

@@ -186,10 +186,10 @@ void COntologyMIPS::GetGeneNames( vector<string>& vecstrGenes ) const {
 
 	return COntologyImpl::GetGeneNames( vecstrGenes ); }
 
-void COntologyMIPS::TermFinder( const CGenes& Genes, vector<TPrID>& vecprTerms,
-	bool fBon, bool fKids, bool fBack ) const {
+void COntologyMIPS::TermFinder( const CGenes& Genes, vector<STermFound>& vecsTerms,
+	bool fBon, bool fKids, bool fBack, const CGenes* pBkg ) const {
 
-	return COntologyImpl::TermFinder( Genes, vecprTerms, fBon, fKids, fBack ); }
+	return COntologyImpl::TermFinder( Genes, vecsTerms, fBon, fKids, fBack, pBkg ); }
 
 const char	COntologyMIPSPhenotypes::c_szMIPSPhen[]	= "MIPSP";
 
