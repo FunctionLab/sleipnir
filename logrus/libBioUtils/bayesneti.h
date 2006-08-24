@@ -13,6 +13,7 @@ namespace libBioUtils {
 
 class CBayesNetPNL;
 class CBayesNetSmile;
+class CPCLPair;
 
 class CBayesNetImpl {
 protected:
@@ -27,6 +28,7 @@ protected:
 
 	static void EncodeData( const IDataset*, TMapData& );
 	static std::string EncodeDatum( const IDataset*, size_t, size_t );
+	static std::string EncodeDatum( const CPCLPair&, size_t, const std::vector<size_t>& );
 	static void DecodeDatum( const std::string&, std::vector<size_t>& );
 	static bool IsAnswer( const std::string& );
 
@@ -56,7 +58,7 @@ protected:
 	bool IsContinuous( ) const;
 	bool IsNaive( ) const;
 	bool FillCPTs( const IDataset*, size_t, size_t, bool, bool );
-	bool FillCPTs( const std::vector<bool>&, const std::string&, bool, bool );
+	bool FillCPTs( const std::vector<bool>&, const std::string&, bool, bool, bool = false );
 	bool FillCPTs( const std::vector<bool>&, const std::vector<unsigned char>&, bool, bool );
 	bool LearnGrouped( const IDataset*, size_t, bool );
 	bool LearnUngrouped( const IDataset*, size_t, bool );

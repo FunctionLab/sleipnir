@@ -71,4 +71,19 @@ string CMeta::Basename( const char* szPath ) {
 	return ( pchOne ? ( pchTwo ? max( pchOne, pchTwo ) : pchOne ) :
 		( pchTwo ? pchTwo : szPath ) ); }
 
+string CMeta::Trim( const char* szIn ) {
+	size_t	iBeg, iEnd, iLen;
+
+	if( !szIn || !( iLen = strlen( szIn ) ) )
+		return "";
+
+	for( iBeg = 0; szIn[ iBeg ]; ++iBeg )
+		if( !isspace( szIn[ iBeg ] ) )
+			break;
+	for( iEnd = 0; szIn[ iLen - iEnd - 1 ]; ++iEnd )
+		if( !isspace( szIn[ iLen - iEnd - 1 ] ) )
+			break;
+
+	return string( szIn + iBeg, iLen - iBeg - iEnd ); }
+
 }

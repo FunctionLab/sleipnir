@@ -24,6 +24,7 @@ public:
 	static std::string Basename( const char* );
 	static void Tokenize( const char*, std::vector<std::string>&, const char* = "\t",
 		bool = false );
+	static std::string Trim( const char* );
 
 	template<class tType>
 	static bool IsNaN( tType ) {

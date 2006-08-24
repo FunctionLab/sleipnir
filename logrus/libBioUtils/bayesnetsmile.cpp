@@ -134,14 +134,14 @@ bool CBayesNetSmileImpl::FillCPTs( const IDataset* pData, size_t iOne, size_t iT
 	return true; }
 
 bool CBayesNetSmileImpl::FillCPTs( const vector<bool>& vecfHidden, const string& strDatum, bool fZero,
-	bool fLearn ) {
+	bool fLearn, bool fAll ) {
 	size_t	i, iVal;
 
-	if( fLearn && !IsAnswer( strDatum ) )
+	if( !fAll && fLearn && !IsAnswer( strDatum ) )
 		return false;
 
 	m_SmileNet.ClearAllEvidence( );
-	for( i = fLearn ? 0 : 1; i < m_SmileNet.GetNumberOfNodes( ); ++i ) {
+	for( i = ( fAll || fLearn ) ? 0 : 1; i < m_SmileNet.GetNumberOfNodes( ); ++i ) {
 		if( vecfHidden[ i ] )
 			continue;
 		if( strDatum[ i ] == c_cMissing ) {
@@ -616,4 +616,54 @@ bool CBayesNetSmile::GetCPT( size_t iNode, CDataMatrix& MatCPT ) const {
 
 	return CBayesNetSmileImpl::GetCPT( m_SmileNet.GetNode( (int)iNode ), MatCPT ); }
 
+bool CBayesNetSmile::Evaluate( const CPCLPair& PCLIn, CPCL& PCLOut, bool fZero ) const {
+	size_t									i, j, k, iExp;
+	string									strCur;
+	map<string, vector<float> >				mapData;
+	map<string, vector<float> >::iterator	iterDatum;
+	vector<size_t>							veciMap;
+	vector<bool>							vecfHidden;
+
+	if( !m_fSmileNet || IsContinuous( ) )
+		return false;
+
+	veciMap.resize( m_SmileNet.GetNumberOfNodes( ) );
+	vecfHidden.resize( veciMap.size( ) );
+	for( i = 0; i < veciMap.size( ); ++i ) {
+		veciMap[ i ] = -1;
+		vecfHidden[ i ] = true;
+		for( j = 0; j < PCLIn.GetExperiments( ); ++j )
+			if( PCLIn.GetExperiment( j ) == m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ) ) {
+				vecfHidden[ i ] = false;
+				veciMap[ i ] = (unsigned int)j;
+				break; } }
+	for( i = 0; i < PCLOut.GetGenes( ); ++i ) {
+		if( !( i % 1 ) )
+			g_CatBioUtils.notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
+				PCLOut.GetGenes( ) );
+		strCur = EncodeDatum( PCLIn, PCLIn.GetGene( PCLOut.GetGene( i ) ), veciMap );
+		if( m_fGroup && ( ( iterDatum = mapData.find( strCur ) ) != mapData.end( ) ) ) {
+			for( j = 0; j < iterDatum->second.size( ); ++j )
+				PCLOut.Set( i, j, iterDatum->second[ j ] );
+			continue; }
+
+		((CBayesNetSmile*)this)->FillCPTs( vecfHidden, strCur, fZero, false, true );
+		((CBayesNetSmile*)this)->m_SmileNet.UpdateBeliefs( );
+		for( iExp = j = 0; j < veciMap.size( ); ++j ) {
+			DSL_Dmatrix*	pMatrix;
+
+			if( veciMap[ j ] != -1 )
+				continue;
+			pMatrix = m_SmileNet.GetNode( (int)j )->Value( )->GetMatrix( );
+			for( k = 0; k < GetValues( j ); ++k )
+				PCLOut.Set( i, iExp++, (float)(*pMatrix)[ (int)k ] ); }
+		if( m_fGroup ) {
+			vector<float>	vecfCur;
+
+			vecfCur.resize( PCLOut.GetExperiments( ) );
+			for( j = 0; j < vecfCur.size( ); ++j )
+				vecfCur[ j ] = PCLOut.Get( i, j );
+			mapData[ strCur ] = vecfCur; } }
+
+	return true; }
 }

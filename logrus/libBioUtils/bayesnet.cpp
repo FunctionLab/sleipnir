@@ -29,6 +29,16 @@ string CBayesNetImpl::EncodeDatum( const IDataset* pData, size_t iOne, size_t iT
 
 	return strRet; }
 
+string CBayesNetImpl::EncodeDatum( const CPCLPair& PCL, size_t iGene, const vector<size_t>& veciMap ) {
+	string	strRet;
+	size_t	i, iCur;
+
+	for( i = 0; i < veciMap.size( ); ++i )
+		strRet += ( ( veciMap[ i ] == -1 ) || ( ( iCur = PCL.Quantify( PCL.Get( iGene, veciMap[ i ] ),
+			veciMap[ i ] ) ) == -1 ) ) ? c_cMissing : (char)( c_cBase + ( iCur & 0xFF ) );
+
+	return strRet; }
+
 void CBayesNetImpl::DecodeDatum( const string& strDatum, vector<size_t>& veciDatum ) {
 	size_t	i;
 

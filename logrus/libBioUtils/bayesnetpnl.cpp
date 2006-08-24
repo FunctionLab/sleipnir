@@ -212,4 +212,8 @@ bool CBayesNetPNL::GetCPT( size_t, CDataMatrix& ) const {
 
 	return false; }
 
+bool CBayesNetPNL::Evaluate( const CPCLPair&, CPCL&, bool ) const {
+
+	return false; }
+
 }

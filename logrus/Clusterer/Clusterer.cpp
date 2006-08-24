@@ -61,4 +61,5 @@ int main( int iArgs, char** aszArgs ) {
 	Dat.Save( ofsm, true );
 	ofsm.close( );
 
+	CMeta::Shutdown( );
 	return 0; }

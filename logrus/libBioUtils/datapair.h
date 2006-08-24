@@ -16,6 +16,12 @@ public:
 	unsigned char GetValues( ) const;
 };
 
+class CPCLPair : public CPCLPairImpl {
+public:
+	bool Open( const char*, size_t );
+	size_t Quantify( float, size_t ) const;
+};
+
 }
 
 #endif // DATAPAIR_H

@@ -16,6 +16,7 @@ public:
 		bool = false ) const = 0;
 	virtual bool Evaluate( const IDataset*, CDat&, bool = false ) const = 0;
 	virtual bool Evaluate( const std::vector<unsigned char>&, std::vector<float>&, bool = false ) const = 0;
+	virtual bool Evaluate( const CPCLPair&, CPCL&, bool = false ) const = 0;
 	virtual std::vector<std::string> GetNodes( ) const = 0;
 	virtual unsigned char GetValues( size_t ) const = 0;
 	virtual bool IsContinuous( ) const = 0;
@@ -36,6 +37,7 @@ public:
 	bool Evaluate( const IDataset*, std::vector<std::vector<float> >&, bool = false ) const;
 	bool Evaluate( const IDataset*, CDat&, bool = false ) const;
 	bool Evaluate( const std::vector<unsigned char>&, std::vector<float>&, bool = false ) const;
+	bool Evaluate( const CPCLPair&, CPCL&, bool = false ) const;
 	std::vector<std::string> GetNodes( ) const;
 	unsigned char GetValues( size_t ) const;
 	bool IsContinuous( ) const;
@@ -59,6 +61,7 @@ public:
 	bool Evaluate( const IDataset*, std::vector<std::vector<float> >&, bool = false ) const;
 	bool Evaluate( const IDataset*, CDat&, bool = false ) const;
 	bool Evaluate( const std::vector<unsigned char>&, std::vector<float>&, bool = false ) const;
+	bool Evaluate( const CPCLPair&, CPCL&, bool = false ) const;
 	std::vector<std::string> GetNodes( ) const;
 	unsigned char GetValues( size_t ) const;
 	bool IsContinuous( ) const;
@@ -79,6 +82,7 @@ public:
 	bool Evaluate( const IDataset*, std::vector<std::vector<float> >&, bool = false ) const;
 	bool Evaluate( const IDataset*, CDat&, bool = false ) const;
 	bool Evaluate( const std::vector<unsigned char>&, std::vector<float>&, bool = false ) const;
+	bool Evaluate( const CPCLPair&, CPCL&, bool = false ) const;
 	std::vector<std::string> GetNodes( ) const;
 	unsigned char GetValues( size_t ) const;
 	bool IsContinuous( ) const;

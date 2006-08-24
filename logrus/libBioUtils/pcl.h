@@ -65,7 +65,6 @@ public:
 
 	void MaskGene( size_t iGene ) {
 
-	//	m_setiGenes.push_back( iGene ); }
 		m_setiGenes.insert( iGene ); }
 
 	void Set( size_t iX, size_t iY, float dValue ) {
