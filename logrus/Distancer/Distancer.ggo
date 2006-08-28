@@ -12,4 +12,5 @@ option	"normalize"	n	"Normalize distances"	flag	off
 option	"autocorrelate"	a	"Autocorrelate distances"	flag	off
 option	"zscore"	z	"Convert correlations to z-scores"	flag	on
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
+option	"cutoff"	e	"Remove scores below cutoff"	double
 option	"verbosity"	v	"Message verbosity"	int	default="5"

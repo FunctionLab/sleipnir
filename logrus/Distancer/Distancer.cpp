@@ -6,6 +6,7 @@ int main( int iArgs, char** aszArgs ) {
 	CDat						Dat;
 	CDistanceMatrix				Dist;
 	size_t						i, j, iOne, iTwo;
+	float						d;
 	ofstream					ofsm;
 	ifstream					ifsm;
 	vector<string>				vecstrGenes;
@@ -88,6 +89,11 @@ int main( int iArgs, char** aszArgs ) {
 	Dat.Open( GenesIn.GetGeneNames( ), Dist );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
 		Dat.Normalize( !!sArgs.normalize_flag );
+	if( sArgs.cutoff_given )
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) && ( d < sArgs.cutoff_arg ) )
+					Dat.Set( i, j, CMeta::GetNaN( ) );
 	ofsm.open( sArgs.output_arg, ios_base::binary );
 	Dat.Save( ofsm, true );
 	ofsm.close( );
