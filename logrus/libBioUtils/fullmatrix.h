@@ -2,6 +2,7 @@
 #define FULLMATRIX_H
 
 #include <sstream>
+#include <vector>
 
 #include "pstdint.h"
 
