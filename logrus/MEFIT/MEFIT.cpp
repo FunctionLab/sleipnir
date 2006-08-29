@@ -175,7 +175,7 @@ int read_genes( const char* szPositives, const char* szNegatives, CGenome& Genom
 	DIR*			pDir;
 	struct dirent*	pFind;
 	struct stat		sStat;
-	pDir = opendir( szDir );
+	pDir = opendir( strDir.c_str( ) );
 	while( pFind = readdir( pDir ) ) {
 		strFile = strDir + '/' + ( strBase = pFind->d_name );
 		stat( strFile.c_str( ), &sStat );

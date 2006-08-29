@@ -38,10 +38,10 @@ CBayesNetFNNode* CBayesNetFNNode::Open( DSL_node* pNode ) {
 		iDim = ( veciDims.GetSize( ) > 1 ) ? 1 : 0;
 		pRet->m_strName = pNode->Info( ).Header( ).GetId( );
 		pRet->m_Params.Initialize( iDim ? veciDims[ 0 ] : 1, veciDims[ iDim ] );
-		for( i = 0; i < pRet->m_Params.GetRows( ); ++i ) {
+		for( i = 0; (size_t)i < pRet->m_Params.GetRows( ); ++i ) {
 			if( iDim )
 				veciDims[ 0 ] = i;
-			for( j = 0; j < pRet->m_Params.GetColumns( ); ++j ) {
+			for( j = 0; (size_t)j < pRet->m_Params.GetColumns( ); ++j ) {
 				veciDims[ iDim ] = j;
 				pRet->m_Params.Set( i, j, (float)(*pMatrix)[ veciDims ] ); } } }
 

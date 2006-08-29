@@ -69,10 +69,11 @@ bool CBayesNetSmileImpl::LearnELR( const IDataset* pData, size_t iIterations, bo
 	return true; }
 
 size_t CBayesNetSmileImpl::ELRCountParameters( ) const {
-	size_t	i, iRet;
+	int		i;
+	size_t	iRet;
 
 	for( iRet = i = 0; i < m_SmileNet.GetNumberOfNodes( ); ++i )
-		iRet += m_SmileNet.GetNode( (int)i )->Definition( )->GetSize( );
+		iRet += m_SmileNet.GetNode( i )->Definition( )->GetSize( );
 
 	return iRet; }
 

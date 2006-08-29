@@ -1,4 +1,7 @@
 #include "stdafx.h"
+#pragma warning (disable: 4244 4267)
+#include <pnl_dll.hpp>
+#pragma warning (default: 4244 4267)
 #include "bayesnet.h"
 #include "dat.h"
 #include "dataset.h"

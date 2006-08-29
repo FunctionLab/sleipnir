@@ -1,14 +1,17 @@
 #ifndef BAYESNETI_H
 #define BAYESNETI_H
 
-#pragma warning (disable: 4244 4267)
-#include <pnl_dll.hpp>
-#pragma warning (default: 4244 4267)
 #include <smile.h>
 #include <syscoord.h>
 
 #include "dataset.h"
 //#include "trie.h"
+
+namespace pnl {
+
+class CBNet;
+
+}
 
 namespace libBioUtils {
 
