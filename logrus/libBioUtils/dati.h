@@ -35,7 +35,7 @@ protected:
 
 	void Reset( );
 	bool OpenPCL( std::istream& );
-	bool OpenText( std::istream& );
+	bool OpenText( std::istream&, float dDefault );
 	bool OpenBinary( std::istream& );
 	bool OpenGenes( std::istream&, bool, bool );
 	void SaveText( std::ostream& ) const;

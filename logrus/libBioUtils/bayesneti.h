@@ -5,6 +5,7 @@
 #include <pnl_dll.hpp>
 #pragma warning (default: 4244 4267)
 #include <smile.h>
+#include <syscoord.h>
 
 #include "dataset.h"
 //#include "trie.h"
@@ -19,6 +20,7 @@ class CBayesNetImpl {
 protected:
 	static const char	c_cMissing	= '_';
 	static const char	c_cBase		= 'A';
+	static const char	c_szFR[];
 
 	typedef std::vector<std::vector<float> >	TVecVecF;
 	typedef std::map<std::string, size_t>		TMapData;

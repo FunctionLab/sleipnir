@@ -22,6 +22,7 @@ public:
 	static void Shutdown( );
 	static std::string Filename( const std::string&, char = '_' );
 	static std::string Basename( const char* );
+	static std::string Deextension( const std::string& );
 	static void Tokenize( const char*, std::vector<std::string>&, const char* = "\t",
 		bool = false );
 	static std::string Trim( const char* );

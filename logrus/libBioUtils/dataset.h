@@ -52,6 +52,8 @@ public:
 	bool Open( const char*, const IBayesNet*, const CGenes&, const CGenes& );
 	bool Open( const std::vector<std::string>& );
 	bool Open( std::istream& );
+	bool Open( const CGenes&, const CGenes&, const CDataPair&, const std::vector<std::string>&, size_t,
+		const IMeasure*, const std::vector<float>&, const IBayesNet* );
 	void Save( std::ostream&, bool ) const;
 	bool FilterGenes( const char*, CDat::EFilter );
 	void FilterAnswers( );

@@ -5,6 +5,7 @@ namespace libBioUtils {
 
 class CMetaImpl {
 protected:
+	static const char	c_cPeriod	= '.';
 };
 
 }

@@ -86,4 +86,10 @@ string CMeta::Trim( const char* szIn ) {
 
 	return string( szIn + iBeg, iLen - iBeg - iEnd ); }
 
+string CMeta::Deextension( const string& strName ) {
+	size_t	i;
+
+	return ( ( ( i = strName.rfind( c_cPeriod ) ) == string::npos ) ? strName :
+		strName.substr( 0, i ) ); }
+
 }

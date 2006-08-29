@@ -130,6 +130,26 @@ bool CDat::Open( const CSlim& SlimPos, const CSlim& SlimNeg ) {
 
 	return true; }
 
+bool CDat::Open( const vector<CGenes*>& vecpPositives, const CDat& DatNegatives,
+	const CGenome& Genome ) {
+	size_t			i, j, iOne, iTwo;
+	vector<size_t>	veciGenes;
+
+	Reset( );
+	Open( Genome.GetGeneNames( ) );
+	for( i = 0; i < vecpPositives.size( ); ++i )
+		OpenHelper( vecpPositives[ i ], 1 );
+	veciGenes.resize( DatNegatives.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = GetGene( DatNegatives.GetGene( i ) );
+	for( i = 0; i < DatNegatives.GetGenes( ); ++i ) {
+		iOne = veciGenes[ i ];
+		for( j = ( i + 1 ); j < DatNegatives.GetGenes( ); ++j )
+			if( CMeta::IsNaN( Get( iOne, iTwo = veciGenes[ j ] ) ) )
+				Set( iOne, iTwo, DatNegatives.Get( i, j ) ); }
+
+	return true; }
+
 bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& vecpNegatives,
 	const CGenome& Genome ) {
 	size_t	i, j;
@@ -164,9 +184,9 @@ void CDatImpl::OpenHelper( const CGenes* pGenes, float dValue ) {
 			if( CMeta::IsNaN( Get( iOne, iTwo ) ) )
 				Set( iOne, iTwo, dValue ); } } }
 
-bool CDat::Open( istream& istm, bool fBinary, bool fPCL ) {
+bool CDat::Open( istream& istm, bool fBinary, bool fPCL, float dDefault ) {
 
-	return ( fPCL ? OpenPCL( istm ) : ( fBinary ? OpenBinary( istm ) : OpenText( istm ) ) ); }
+	return ( fPCL ? OpenPCL( istm ) : ( fBinary ? OpenBinary( istm ) : OpenText( istm, dDefault ) ) ); }
 
 bool CDatImpl::OpenPCL( istream& istm ) {
 	size_t	i, iOne, iTwo;
@@ -193,7 +213,7 @@ bool CDatImpl::OpenPCL( istream& istm ) {
 
 	return true; }
 
-bool CDatImpl::OpenText( istream& istm ) {
+bool CDatImpl::OpenText( istream& istm, float dDefault ) {
 	char		acBuf[ c_iBufferSize ];
 	const char*	pc;
 	char*		pcTail;
@@ -214,13 +234,16 @@ bool CDatImpl::OpenText( istream& istm ) {
 			iOne = MapGene( mapGenes, m_vecstrGenes, strToken ); }
 
 		strToken = OpenToken( pc, &pc );
-		if( !strToken.length( ) )
-			return false;
+		if( !strToken.length( ) ) {
+			Reset( );
+			return false; }
 		iTwo = MapGene( mapGenes, m_vecstrGenes, strToken );
 		strValue = OpenToken( pc );
-		if( !strValue.length( ) )
-			return false;
-		if( !( dScore = (float)strtod( strValue.c_str( ), &pcTail ) ) &&
+		if( !strValue.length( ) ) {
+			if( CMeta::IsNaN( dScore = dDefault ) ) {
+				Reset( );
+				return false; } }
+		else if( !( dScore = (float)strtod( strValue.c_str( ), &pcTail ) ) &&
 			( pcTail != ( strValue.c_str( ) + strValue.length( ) ) ) ) {
 			Reset( );
 			return false; }
@@ -467,7 +490,6 @@ bool CDat::FilterGenes( const char* szGenes, EFilter eFilt ) {
 	if( !Genes.Open( ifsm ) )
 		return false;
 	FilterGenes( Genes, eFilt );
-	ifsm.close( );
 	return true; }
 
 void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt ) {

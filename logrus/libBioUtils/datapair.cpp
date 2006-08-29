@@ -87,6 +87,18 @@ unsigned char CDataPair::GetValues( ) const {
 
 	return m_vecdQuant.size( ); }
 
+void CDataPair::SetQuants( const float* adQuants, size_t iQuants ) {
+
+	Reset( false );
+	m_vecdQuant.resize( iQuants );
+	copy( adQuants, adQuants + iQuants, m_vecdQuant.begin( ) ); }
+
+void CDataPair::SetQuants( const vector<float>& vecdQuant ) {
+
+	Reset( false );
+	m_vecdQuant.resize( vecdQuant.size( ) );
+	copy( vecdQuant.begin( ), vecdQuant.end( ), m_vecdQuant.begin( ) ); }
+
 bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 	static const size_t	c_iBuf	= 8192;
 	char		szBuf[ c_iBuf ];
@@ -109,7 +121,6 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 		ifsm.getline( szBuf, c_iBuf - 1 );
 		if( !CPairImpl::Open( szBuf, m_vecvecdQuants[ i ] ) )
 			return false; }
-	ifsm.close( );
 
 	return true; }
 

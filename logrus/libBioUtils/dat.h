@@ -22,12 +22,13 @@ public:
 
 	size_t GetGene( const std::string& ) const;
 	bool Open( const char* );
-	bool Open( std::istream&, bool, bool = false );
+	bool Open( std::istream&, bool, bool = false, float = HUGE_VAL );
 	bool Open( const CSlim& );
 	bool Open( const CSlim&, const CSlim& );
 	bool Open( const std::vector<std::string>& );
 	bool Open( const std::vector<std::string>&, const CDistanceMatrix& );
 	bool Open( const std::vector<CGenes*>&, const std::vector<CGenes*>&, const CGenome& );
+	bool Open( const std::vector<CGenes*>&, const CDat&, const CGenome& );
 	bool OpenGenes( std::istream&, bool, bool = false );
 	void Save( std::ostream&, bool ) const;
 	void SaveDOT( std::ostream&, float = HUGE_VAL, const CGenome* = NULL, bool = false ) const;

@@ -4,6 +4,10 @@
 #include "dataset.h"
 #include "meta.h"
 
+#if ( defined(_MSC_VER) && defined(_DEBUG) )
+extern "C" void __cdecl _invalid_parameter_noinfo( ) { }
+#endif // ( defined(_MSC_VER) && defined(_DEBUG) )
+
 namespace libBioUtils {
 
 const char	CBayesNetSmileImpl::c_szGaussian[]	= "gaussian";
@@ -666,4 +670,19 @@ bool CBayesNetSmile::Evaluate( const CPCLPair& PCLIn, CPCL& PCLOut, bool fZero )
 			mapData[ strCur ] = vecfCur; } }
 
 	return true; }
+
+bool CBayesNetSmile::Open( const vector<string>& vecstrPCLs, size_t iBins ) {
+	size_t	i;
+
+	m_fSmileNet = true;
+	m_SmileNet.DeleteAllNodes( );
+	m_SmileNet.AddNode( DSL_CPT, (char*)c_szFR );
+	m_SmileNet.GetNode( 0 )->Definition( )->SetNumberOfOutcomes( 2 );
+	for( i = 0; i < vecstrPCLs.size( ); ++i ) {
+		m_SmileNet.AddNode( DSL_CPT, (char*)CMeta::Filename( CMeta::Deextension( vecstrPCLs[ i ] ) ).c_str( ) );
+		m_SmileNet.GetNode( (int)i + 1 )->Definition( )->SetNumberOfOutcomes( (int)iBins );
+		m_SmileNet.AddArc( 0, (int)i + 1 ); }
+
+	return true; }
+
 }

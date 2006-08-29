@@ -497,6 +497,8 @@ double CMeasurePearNorm::Measure( const float* adX, size_t iM, const float* adY,
 	double	dP;
 
 	dP = CMeasurePearson::Pearson( adX, iM, adY, iN, eMap, adWX, adWY );
+	if( dP >= 1 )
+		dP = 0.999999999999999;
 	dP = ( log( 1 + dP ) - log( 1 - dP ) ) / 2;
 	if( m_dAverage != HUGE_VAL )
 		dP = ( dP - m_dAverage ) / m_dStdDev;

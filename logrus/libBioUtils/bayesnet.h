@@ -31,6 +31,10 @@ class CBayesNetSmile : public CBayesNetSmileImpl, public IBayesNet {
 public:
 	CBayesNetSmile( bool = true );
 
+	bool Open( const std::vector<std::string>&, size_t );
+	bool Convert( CBayesNetPNL& ) const;
+	void SetDefault( const CBayesNetSmile& );
+
 	bool Open( const char* );
 	bool Save( const char* ) const;
 	bool Learn( const IDataset*, size_t, bool = false, bool = false );
@@ -46,15 +50,14 @@ public:
 	void Randomize( size_t );
 	void Reverse( size_t );
 	bool GetCPT( size_t, CDataMatrix& ) const;
-
-	bool Convert( CBayesNetPNL& ) const;
-	void SetDefault( const CBayesNetSmile& );
 };
 
 class CBayesNetPNL : public CBayesNetPNLImpl, public IBayesNet {
 public:
 	CBayesNetPNL( bool = true );
 
+	bool Convert( CBayesNetSmile& ) const;
+
 	bool Open( const char* );
 	bool Save( const char* ) const;
 	bool Learn( const IDataset*, size_t, bool = false, bool = false );
@@ -70,8 +73,6 @@ public:
 	void Randomize( size_t );
 	void Reverse( size_t );
 	bool GetCPT( size_t, CDataMatrix& ) const;
-
-	bool Convert( CBayesNetSmile& ) const;
 };
 
 class CBayesNetFN : CBayesNetFNImpl, public IBayesNet {

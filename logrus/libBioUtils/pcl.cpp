@@ -94,6 +94,8 @@ bool CPCLImpl::OpenExperiments( istream& istmInput, size_t iFeatures ) {
 			m_vecstrFeatures.push_back( strToken );
 		else
 			m_vecstrExperiments.push_back( strToken );
+	if( !iToken )
+		g_CatBioUtils.error( "CPCLImpl::OpenExperiments( %d ) found no experiments", iFeatures );
 
 	return !!iToken; }
 
