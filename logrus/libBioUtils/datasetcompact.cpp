@@ -389,6 +389,9 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 	set<string>				setstrGenes;
 	set<string>::iterator	iterGene;
 
+	g_CatBioUtils.notice( "CDatasetCompact::Open( %d ) opening PCL files",
+		iSkip );
+
 	m_veciMapping.resize( m_iData = 1 + (uint32_t)vecstrPCLs.size( ) );
 	for( i = 0; i < m_veciMapping.size( ); ++i )
 		m_veciMapping[ i ] = i;
@@ -435,10 +438,10 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 		size_t			iGenes, iOne, iTwo;
 		const float*	adOne;
 
-		g_CatBioUtils.notice( "CDatasetCompact::Open( ) opening: %s", vecstrPCLs[ iPCL ].c_str( ) );
+		g_CatBioUtils.notice( "CDatasetCompact::Open( %d ) opening: %s", iSkip, vecstrPCLs[ iPCL ].c_str( ) );
 		ifsm.open( vecstrPCLs[ iPCL ].c_str( ) );
 		if( !PCL.Open( ifsm, iSkip ) ) {
-			g_CatBioUtils.error( "CDatasetCompact::Open( ) could not open: %s", vecstrPCLs[ iPCL ].c_str( ) );
+			g_CatBioUtils.error( "CDatasetCompact::Open( %d ) could not open: %s", iSkip, vecstrPCLs[ iPCL ].c_str( ) );
 			return 1; }
 		if( pMeasure->IsRank( ) )
 			PCL.RankTransform( );

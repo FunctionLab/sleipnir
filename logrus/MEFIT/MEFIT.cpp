@@ -106,10 +106,12 @@ int main( int iArgs, char** aszArgs ) {
 			return 1;
 	}
 
+	cerr << "Learning global network...";
 	BNGlobal.Learn( &Data, 1, !!sArgs.zero_flag );
 	if( !BNGlobal.Save( sArgs.global_arg ) ) {
 		cerr << "Could not save: " << sArgs.global_arg << endl;
 		return 1; }
+	cerr << "done" << endl;
 
 	ofsmPosteriors.open( sArgs.trusts_arg );
 	if( !ofsmPosteriors.is_open( ) ) {
@@ -125,6 +127,8 @@ int main( int iArgs, char** aszArgs ) {
 		string			strFile;
 		CDat			DatOut;
 		ofstream		ofsm;
+
+		cerr << "Learning function: " << vecstrPositives[ iFunction ] << endl;
 
 		DataMask.Attach( &Data );
 		DataMask.FilterGenes( *vecpPositives[ iFunction ], CDat::EFilterTerm );
@@ -147,6 +151,7 @@ int main( int iArgs, char** aszArgs ) {
 		if( !ofsm.is_open( ) ) {
 			cerr << "Could not save: " << strFile << endl;
 			return 1; }
+		DatOut.Invert( );
 		DatOut.Save( ofsm, false ); }
 
 	CMeta::Shutdown( );
@@ -161,6 +166,7 @@ int read_genes( const char* szPositives, const char* szNegatives, CGenome& Genom
 	set<string>		setstrGenes;
 	size_t			i;
 
+	cerr << "Reading related gene pairs...";
 	strDir = szPositives;
 #ifdef _MSC_VER
 	bool			fOK;
@@ -192,7 +198,9 @@ int read_genes( const char* szPositives, const char* szNegatives, CGenome& Genom
 		ifsm.close( );
 		vecstrPositives.push_back( CMeta::Deextension( strBase ) );
 		vecpPositives.push_back( pGenes ); }
+	cerr << "  done" << endl;
 
+	cerr << "Reading unrelated gene pairs...";
 	ifsm.clear( );
 	ifsm.open( szNegatives );
 	if( !DatNegatives.Open( ifsm, false, false, 0 ) ) {
@@ -201,6 +209,7 @@ int read_genes( const char* szPositives, const char* szNegatives, CGenome& Genom
 	ifsm.close( );
 	for( i = 0; i < DatNegatives.GetGenes( ); ++i )
 		Genome.AddGene( DatNegatives.GetGene( i ) );
+	cerr << "  done" << endl;
 
 	return ( Answers.Open( vecpPositives, DatNegatives, Genome ) ? 0 : 1 ); }
 
