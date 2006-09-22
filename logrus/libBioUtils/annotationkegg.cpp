@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "annotation.h"
 #include "genome.h"
+#include "meta.h"
 
 namespace libBioUtils {
 
@@ -8,14 +9,14 @@ COntologyKEGG::COntologyKEGG( ) {
 
 	m_pOntology = this; }
 
-bool COntologyKEGG::Open( istream& istm, CGenome& Genome ) {
-	SParserKEGG					sParser( istm, Genome );
+bool COntologyKEGG::Open( istream& istm, CGenome& Genome, const string& strOrganism ) {
+	SParserKEGG					sParser( istm, Genome, strOrganism );
 	size_t						i, j, iNode;
 	TMapStrI::const_iterator	iterNode;
 	vector<set<CGene*> >		vecsetpGenes;
 	set<CGene*>::iterator		iterGene;
 
-	g_CatBioUtils.info( "COntologyKEGG::Open( )" );
+	g_CatBioUtils.info( "COntologyKEGG::Open( %s )", strOrganism.c_str( ) );
 	Reset( );
 	sParser.GetLine( );
 	while( istm.peek( ) != EOF ) {
@@ -102,11 +103,10 @@ const char	COntologyKEGGImpl::c_szClass[]		= "CLASS";
 const char	COntologyKEGGImpl::c_szPath[]		= "PATH:";
 const char	COntologyKEGGImpl::c_szDBLinks[]	= "DBLINKS";
 const char	COntologyKEGGImpl::c_szGenes[]		= "GENES";
-const char	COntologyKEGGImpl::c_szYeast[]		= "SCE:";
 const char	COntologyKEGGImpl::c_szEnd[]		= "///";
 
-COntologyKEGGImpl::SParserKEGG::SParserKEGG( istream& istm, CGenome& Genome ) :
-	m_fYeast(false), SParser( istm, Genome ) { }
+COntologyKEGGImpl::SParserKEGG::SParserKEGG( istream& istm, CGenome& Genome, const string& strOrganism ) :
+	m_fOrganism(false), m_strOrganism(strOrganism), SParser( istm, Genome ) { }
 
 void COntologyKEGGImpl::SParserKEGG::Reset( ) {
 
@@ -129,6 +129,7 @@ bool COntologyKEGGImpl::OpenEntry( SParserKEGG& sParser ) {
 
 bool COntologyKEGGImpl::OpenName( SParserKEGG& sParser ) {
 
+	g_CatBioUtils.debug( "COntologyKEGGImpl::OpenName( ) %s", sParser.m_szLine );
 	return ( sParser.IsStart( c_szName ) ? sParser.GetLine( ) : true ); }
 
 bool COntologyKEGGImpl::OpenDefinition( SParserKEGG& sParser ) {
@@ -153,16 +154,19 @@ bool COntologyKEGGImpl::OpenClass( SParserKEGG& sParser ) {
 	i = strlen( c_szClass );
 	memmove( sParser.m_szLine, sParser.m_szLine + i, strlen( sParser.m_szLine ) - i + 1 );
 	do
-		OpenGloss( sParser );
+		if( !OpenGloss( sParser ) )
+			return false;
 	while( isspace( sParser.m_szLine[ 0 ] ) );
 
 	return true; }
 
 bool COntologyKEGGImpl::OpenGloss( SParserKEGG& sParser ) {
-	char*	pchStartGloss;
-	char*	pchEndGloss;
-	char*	pchStartPath;
-	char*	pchEndPath;
+	char*			pchStartGloss;
+	char*			pchEndGloss;
+	char*			pchStartPath;
+	char*			pchEndPath;
+	vector<string>	vecstrIDs;
+	size_t			i;
 
 	for( pchStartGloss = sParser.m_szLine; isspace( *pchStartGloss ); ++pchStartGloss );
 	if( pchEndGloss = strstr( pchStartGloss, c_szPath ) ) {
@@ -170,7 +174,9 @@ bool COntologyKEGGImpl::OpenGloss( SParserKEGG& sParser ) {
 		if( !( pchEndPath = strchr( pchStartPath, ']' ) ) )
 			return false;
 		*pchEndPath = 0;
-		sParser.m_vecstrIDs.push_back( pchStartPath );
+		CMeta::Tokenize( pchStartPath, vecstrIDs, " ", true );
+		for( i = 0; i < vecstrIDs.size( ); ++i )
+			sParser.m_vecstrIDs.push_back( vecstrIDs[ i ] );
 		if( pchEndGloss > pchStartGloss ) {
 			*( pchEndGloss - 1 ) = 0;
 			if( sParser.m_strGloss.length( ) )
@@ -220,13 +226,14 @@ bool COntologyKEGGImpl::OpenOrganism( SParserKEGG& sParser ) {
 	if( !*pch )
 		return false;
 
-	if( sParser.m_fYeast ) {
+	if( sParser.m_fOrganism ) {
 		if( ( strlen( pch ) > 3 ) && ( pch[ 3 ] == ':' ) )
-			sParser.m_fYeast = false; }
-	else if( !strncmp( pch, c_szYeast, i = strlen( c_szYeast ) ) ) {
-		sParser.m_fYeast = true;
+			sParser.m_fOrganism = false; }
+	else if( !strncmp( pch, ( sParser.m_strOrganism + ':' ).c_str( ),
+		i = ( sParser.m_strOrganism.length( ) + 1 ) ) ) {
+		sParser.m_fOrganism = true;
 		pch += i + 1; }
-	if( sParser.m_fYeast )
+	if( sParser.m_fOrganism )
 		while( *pch )
 			pch = OpenGene( sParser, pch );
 

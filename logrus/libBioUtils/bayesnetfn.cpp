@@ -642,7 +642,7 @@ bool CBayesNetFN::GetCPT( size_t iNode, CDataMatrix& MatCPT ) const {
 
 	return CBayesNetSmileImpl::GetCPT( m_SmileNet.GetNode( (int)iNode ), MatCPT ); }
 
-bool CBayesNetFN::Evaluate( const CPCLPair&, CPCL&, bool ) const {
+bool CBayesNetFN::Evaluate( const CPCLPair&, CPCL&, bool, int ) const {
 
 	return false; }
 

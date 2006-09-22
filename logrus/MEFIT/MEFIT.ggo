@@ -35,5 +35,5 @@ option	"genex"		G	"Subset of genes to exclude from evaluation"	string	typestr="f
 option	"random"	R	"Seed random generator"	int	default="0"
 option	"skip"		s	"Additional columns to skip in input PCLs"	int	default="2"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"xdsl"		x	"Output .xdsl files in place of .dsls"	flag	off
+option	"xdsl"		x	"Output .xdsl files in place of .dsls"	flag	on
 option	"zero"		z	"Zero missing values"	flag	off

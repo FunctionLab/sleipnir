@@ -502,17 +502,19 @@ bool CBayesNetSmile::GetCPT( size_t iNode, CDataMatrix& MatCPT ) const {
 
 	return CBayesNetSmileImpl::GetCPT( m_SmileNet.GetNode( (int)iNode ), MatCPT ); }
 
-bool CBayesNetSmile::Evaluate( const CPCLPair& PCLIn, CPCL& PCLOut, bool fZero ) const {
+bool CBayesNetSmile::Evaluate( const CPCLPair& PCLIn, CPCL& PCLOut, bool fZero, int iAlgorithm ) const {
 	size_t									i, j, k, iExp;
 	string									strCur;
 	map<string, vector<float> >				mapData;
 	map<string, vector<float> >::iterator	iterDatum;
 	vector<size_t>							veciMap;
 	vector<bool>							vecfHidden;
+	int										iPrev;
 
 	if( !m_fSmileNet || IsContinuous( ) )
 		return false;
 
+	iPrev = ((CBayesNetSmile*)this)->m_SmileNet.GetDefaultBNAlgorithm( );
 	veciMap.resize( m_SmileNet.GetNumberOfNodes( ) );
 	vecfHidden.resize( veciMap.size( ) );
 	for( i = 0; i < veciMap.size( ); ++i ) {
@@ -523,6 +525,7 @@ bool CBayesNetSmile::Evaluate( const CPCLPair& PCLIn, CPCL& PCLOut, bool fZero )
 				vecfHidden[ i ] = false;
 				veciMap[ i ] = (unsigned int)j;
 				break; } }
+	((CBayesNetSmile*)this)->m_SmileNet.SetDefaultBNAlgorithm( iAlgorithm );
 	for( i = 0; i < PCLOut.GetGenes( ); ++i ) {
 		if( !( i % 1 ) )
 			g_CatBioUtils.notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
@@ -550,19 +553,33 @@ bool CBayesNetSmile::Evaluate( const CPCLPair& PCLIn, CPCL& PCLOut, bool fZero )
 			for( j = 0; j < vecfCur.size( ); ++j )
 				vecfCur[ j ] = PCLOut.Get( i, j );
 			mapData[ strCur ] = vecfCur; } }
+	((CBayesNetSmile*)this)->m_SmileNet.SetDefaultBNAlgorithm( iPrev );
 
 	return true; }
 
 bool CBayesNetSmile::Open( const vector<string>& vecstrPCLs, size_t iBins ) {
-	size_t	i;
+	size_t			i, j;
+	DSL_stringArray	vecstrOutcomes;
+	string			strCur;
 
 	m_fSmileNet = true;
 	m_SmileNet.DeleteAllNodes( );
 	m_SmileNet.AddNode( DSL_CPT, (char*)c_szFR );
-	m_SmileNet.GetNode( 0 )->Definition( )->SetNumberOfOutcomes( 2 );
+	vecstrOutcomes.Add( ( (string)c_szFR + "No" ).c_str( ) );
+	vecstrOutcomes.Add( ( (string)c_szFR + "Yes" ).c_str( ) );
+	m_SmileNet.GetNode( 0 )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
 	for( i = 0; i < vecstrPCLs.size( ); ++i ) {
-		m_SmileNet.AddNode( DSL_CPT, (char*)CMeta::Filename( CMeta::Deextension( vecstrPCLs[ i ] ) ).c_str( ) );
-		m_SmileNet.GetNode( (int)i + 1 )->Definition( )->SetNumberOfOutcomes( (int)iBins );
+		m_SmileNet.AddNode( DSL_CPT, (char*)( strCur =
+			CMeta::Filename( CMeta::Deextension( vecstrPCLs[ i ] ) ) ).c_str( ) );
+		vecstrOutcomes.Flush( );
+		for( j = 0; j < iBins; ++j ) {
+			char	acNum[ 8 ];
+
+#pragma warning( disable : 4996 )
+			sprintf( acNum, "%02d", j );
+#pragma warning( default : 4996 )
+			vecstrOutcomes.Add( ( strCur + acNum ).c_str( ) ); }
+		m_SmileNet.GetNode( (int)i + 1 )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
 		m_SmileNet.AddArc( 0, (int)i + 1 ); }
 
 	return true; }

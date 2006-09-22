@@ -249,6 +249,19 @@ size_t CGenome::GetGene( const string& strGene ) const {
 	return ( ( ( iterGene = m_mapGenes.find( strGene ) ) == m_mapGenes.end( ) ) ? -1 :
 		iterGene->second ); }
 
+size_t CGenome::FindGene( const string& strGene ) const {
+	size_t	i, j, iRet;
+
+	if( ( iRet = GetGene( strGene ) ) != -1 )
+		return iRet;
+
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = 0; j < GetGene( i ).GetSynonyms( ); ++j )
+			if( strGene == GetGene( i ).GetSynonym( j ) )
+				return i;
+
+	return -1; }
+
 size_t CGenome::GetGenes( ) const {
 
 	return m_vecpGenes.size( ); }
@@ -286,9 +299,11 @@ CGenes::CGenes( CGenome& Genome ) : CGenesImpl( Genome ) { }
 
 CGenesImpl::CGenesImpl( CGenome& Genome ) : m_Genome(Genome) { }
 
-bool CGenes::Open( istream& istm ) {
+bool CGenes::Open( istream& istm, bool fCreate ) {
 	static const size_t	c_iBuffer	= 1024;
 	char	szBuf[ c_iBuffer ];
+	CGene*	pGene;
+	size_t	iGene;
 
 	if( istm.rdstate( ) != ios_base::goodbit )
 		return false;
@@ -297,12 +312,15 @@ bool CGenes::Open( istream& istm ) {
 	m_vecpGenes.clear( );
 	while( istm.peek( ) != EOF ) {
 		istm.getline( szBuf, c_iBuffer - 1 );
-		{
-			CGene*	pGene	= &m_Genome.AddGene( szBuf );
-
-			m_mapGenes[ pGene->GetName( ) ] = m_vecpGenes.size( );
-			m_vecpGenes.push_back( pGene );
-		} }
+		if( fCreate )
+			pGene = &m_Genome.AddGene( szBuf );
+		else {
+			if( ( iGene = m_Genome.FindGene( szBuf ) ) == -1 ) {
+				g_CatBioUtils.warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, szBuf );
+				continue; }
+			pGene = &m_Genome.GetGene( iGene ); }
+		m_mapGenes[ pGene->GetName( ) ] = m_vecpGenes.size( );
+		m_vecpGenes.push_back( pGene ); }
 
 	return true; }
 

@@ -49,7 +49,7 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.kegg_arg ) {
 		ifsmOnto.open( sArgs.kegg_arg );
-		if( !KEGG.Open( ifsmOnto, Genome ) ) {
+		if( !KEGG.Open( ifsmOnto, Genome, sArgs.kegg_org_arg ) ) {
 			cerr << "Could not open: " << sArgs.kegg_arg << endl;
 			return 1; }
 		ifsmOnto.close( ); }

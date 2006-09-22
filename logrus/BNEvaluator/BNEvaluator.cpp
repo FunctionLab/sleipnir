@@ -74,7 +74,7 @@ int main( int iArgs, char** aszArgs ) {
 			vecstrExperiments.push_back( acTmp ); } }
 
 	PCLOut.Open( vecstrGenes, vecstrExperiments );
-	pBN->Evaluate( PCLIn, PCLOut, !!sArgs.zero_flag );
+	pBN->Evaluate( PCLIn, PCLOut, !!sArgs.zero_flag, sArgs.algorithm_arg );
 	if( sArgs.output_arg )
 		ofsm.open( sArgs.output_arg );
 	PCLOut.Save( sArgs.output_arg ? (ostream&)ofsm : cout );

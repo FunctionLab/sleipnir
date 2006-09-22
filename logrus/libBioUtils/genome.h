@@ -37,6 +37,7 @@ public:
 	CGene& GetGene( size_t ) const;
 	size_t GetGene( const std::string& ) const;
 	size_t GetGenes( ) const;
+	size_t FindGene( const std::string& ) const;
 	std::vector<std::string> GetGeneNames( ) const;
 	size_t CountGenes( const IOntology* ) const;
 	bool AddSynonym( CGene&, const std::string& );
@@ -46,7 +47,7 @@ class CGenes : CGenesImpl {
 public:
 	CGenes( CGenome& );
 
-	bool Open( istream& );
+	bool Open( istream&, bool = true );
 	bool Open( const std::vector<std::string>& );
 	void Filter( const CGenes& );
 	size_t CountAnnotations( const IOntology*, size_t, bool = true, const CGenes* = NULL ) const;

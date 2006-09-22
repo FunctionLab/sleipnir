@@ -11,7 +11,7 @@ int main( int iArgs, char** aszArgs ) {
 	CGenome						Genome;
 	ifstream					ifsm;
 	CGenes						GenesIn( Genome ), GenesEx( Genome );
-	vector<CGenes*>				vecpPositives, vecpNegatives;
+	vector<CGenes*>				vecpPositives;
 	vector<float>				vecdQuants;
 	vector<string>				vecstrPositives, vecstrIDs;
 	int							iRet;
@@ -32,9 +32,7 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
-//#if !( defined(_MSC_VER) && defined(_DEBUG) )
 	EnableXdslFormat( );
-//#endif // !( defined(_MSC_VER) && defined(_DEBUG) )
 
 	pMeasure = NULL;
 	for( i = 0; apMeasures[ i ]; ++i )
@@ -133,6 +131,7 @@ int main( int iArgs, char** aszArgs ) {
 		DataMask.Attach( &Data );
 		DataMask.FilterGenes( *vecpPositives[ iFunction ], CDat::EFilterTerm );
 		BNFunction.Open( vecstrIDs, vecdQuants.size( ) );
+		BNFunction.SetDefault( BNGlobal );
 		BNFunction.Learn( &DataMask, 1, !!sArgs.zero_flag );
 		strFile = (string)sArgs.output_arg + '/' + vecstrPositives[ iFunction ] + '.' +
 			( sArgs.xdsl_flag ? "x" : "" ) + "dsl";
@@ -153,6 +152,9 @@ int main( int iArgs, char** aszArgs ) {
 			return 1; }
 		DatOut.Invert( );
 		DatOut.Save( ofsm, false ); }
+
+	for( i = 0; i < vecpPositives.size( ); ++i )
+		delete vecpPositives[ i ];
 
 	CMeta::Shutdown( );
 	return 0; }

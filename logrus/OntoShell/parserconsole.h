@@ -36,7 +36,9 @@ protected:
 	static const size_t		c_iWidthOnto		= 6;
 	static const size_t		c_iWidthP			= 14;
 	static const size_t		c_iWidthScreen		= 80;
+	static const size_t		c_iSizeCutoff		= 40;
 	static const char		c_cSemicolon		= ';';
+	static const char		c_cShell			= '!';
 	static const char		c_szDotDotDot[];
 	static const char		c_szBackground[];
 	static const char		c_szBonferroni[];
@@ -57,14 +59,15 @@ protected:
 		const STermFound* = NULL );
 	static void PrintGloss( string, size_t, bool );
 	static void PrintGene( const CGene&, const SArgs& );
-	static void PrintGenes( const vector<const CGene*>&, size_t = 0 );
-	static size_t FormatGenes( const vector<const CGene*>&, vector<string>& );
+	static void PrintGenes( const vector<const CGene*>&, size_t = 0, const CGenes* = NULL );
+	static size_t FormatGenes( const vector<const CGene*>&, vector<string>&, const CGenes* = NULL );
 
 	bool ParseCat( const vector<string>& );
 	bool ParseCd( const vector<string>& );
 	bool ParseHelp( const vector<string>& );
 	bool ParseLs( const vector<string>& );
 	bool ParseFind( const vector<string>& );
+	bool ParseShell( const string& ) const;
 	void PrintOntology( const IOntology*, char ) const;
 	void PrintLocations( const vector<SLocation>&, const SArgs& ) const;
 	void PrintGenes( const vector<SLocation>&, const SArgs& ) const;

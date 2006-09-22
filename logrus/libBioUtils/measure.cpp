@@ -4,23 +4,6 @@
 
 namespace libBioUtils {
 
-static double CountWeights( const float* adX, const float* adWX, size_t iN ) {
-	size_t	i;
-	double	dRet;
-
-	if( !adWX ) {
-		for( dRet = i = 0; i < iN; ++i )
-			if( !CMeta::IsNaN( adX[ i ] ) )
-				dRet++;
-		return dRet; }
-
-	dRet = 0;
-	for( i = 0; i < iN; ++i )
-		if( !CMeta::IsNaN( adX[ i ] ) )
-			dRet += adWX[ i ];
-
-	return dRet; }
-
 static float GetWeight( const float* adW, size_t iW ) {
 
 	return ( adW ? adW[ iW ] : 1 ); }
@@ -122,14 +105,16 @@ double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY,
 	if( iM != iN )
 		return CMeta::GetNaN( );
 
-	dMX = dMY = 0;
+	dMX = dMY = dX = dY = 0;
 	for( i = 0; i < iN; ++i ) {
 		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
 			continue;
+		dX += GetWeight( adWX, i );
+		dY += GetWeight( adWY, i );
 		dMX += adX[ i ] * GetWeight( adWX, i );
 		dMY += adY[ i ] * GetWeight( adWY, i ); }
-	dMX /= CountWeights( adX, adWX, iM );
-	dMY /= CountWeights( adY, adWY, iN );
+	dMX /= dX;
+	dMY /= dY;
 
 	dRet = dDX = dDY = 0;
 	for( i = 0; i < iN; ++i ) {
@@ -497,8 +482,6 @@ double CMeasurePearNorm::Measure( const float* adX, size_t iM, const float* adY,
 	double	dP;
 
 	dP = CMeasurePearson::Pearson( adX, iM, adY, iN, eMap, adWX, adWY );
-	if( dP >= 1 )
-		dP = 0.999999999999999;
 	dP = ( log( 1 + dP ) - log( 1 - dP ) ) / 2;
 	if( m_dAverage != HUGE_VAL )
 		dP = ( dP - m_dAverage ) / m_dStdDev;

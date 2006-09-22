@@ -90,16 +90,16 @@ protected:
 	static const char	c_szPath[];
 	static const char	c_szDBLinks[];
 	static const char	c_szGenes[];
-	static const char	c_szYeast[];
 	static const char	c_szEnd[];
 	static const size_t	c_iKEGG		= 10000;
 
 	struct SParserKEGG : SParser {
-		SParserKEGG( std::istream&, CGenome& );
+		SParserKEGG( std::istream&, CGenome&, const std::string& );
 
 		void Reset( );
 
-		bool								m_fYeast;
+		const std::string&					m_strOrganism;
+		bool								m_fOrganism;
 		std::vector<CGene*>					m_vecpGenes;
 		std::vector<std::string>			m_vecstrIDs;
 		std::map<std::string,std::string>	m_mapGlosses;
@@ -133,6 +133,7 @@ protected:
 	static const char	c_szExactSyn[];
 	static const char	c_szGO[];
 	static const char	c_szGOC[];
+	static const char	c_szHUMAN[];
 	static const char	c_szID[];
 	static const char	c_szIsA[];
 	static const char	c_szIsObsolete[];

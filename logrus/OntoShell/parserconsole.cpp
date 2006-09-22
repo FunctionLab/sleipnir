@@ -166,12 +166,12 @@ void CParserConsole::PrintGene( const CGene& Gene, const SArgs& sArgs ) {
 			PrintSpaces( c_iWidthOnto );
 			PrintAnnotation( pOnto, Gene.GetAnnotation( i, j ), sArgs ); } } }
 
-void CParserConsole::PrintGenes( const vector<const CGene*>& vecpGenes, size_t iWidth ) {
+void CParserConsole::PrintGenes( const vector<const CGene*>& vecpGenes, size_t iWidth, const CGenes* pGenes ) {
 	size_t			i, iCol, iCols, iSpaces;
 	vector<string>	vecstrGenes;
 
 	iSpaces = 1;
-	i = FormatGenes( vecpGenes, vecstrGenes );
+	i = FormatGenes( vecpGenes, vecstrGenes, pGenes );
 	if( !iWidth )
 		iWidth = i;
 	iCols = c_iWidthScreen / iWidth;
@@ -187,12 +187,13 @@ void CParserConsole::PrintGenes( const vector<const CGene*>& vecpGenes, size_t i
 		cout << endl; }
 
 size_t CParserConsole::FormatGenes( const vector<const CGene*>& vecpGenes,
-	vector<string>& vecstrGenes ) {
+	vector<string>& vecstrGenes, const CGenes* pGenes ) {
 	size_t	i, j, iRet;
 
 	vecstrGenes.resize( vecpGenes.size( ) );
 	for( iRet = i = 0; i < vecpGenes.size( ); ++i ) {
-		vecstrGenes[ i ] = vecpGenes[ i ]->GetName( );
+		vecstrGenes[ i ] = ( pGenes && pGenes->IsGene( vecpGenes[ i ]->GetName( ) ) ) ? "*" : "";
+		vecstrGenes[ i ] += vecpGenes[ i ]->GetName( );
 		if( vecpGenes[ i ]->GetSynonyms( ) ) {
 			vecstrGenes[ i ] += "(" + vecpGenes[ i ]->GetSynonym( 0 );
 			for( j = 1; j < vecpGenes[ i ]->GetSynonyms( ); ++j )
@@ -204,6 +205,7 @@ size_t CParserConsole::FormatGenes( const vector<const CGene*>& vecpGenes,
 			vecstrGenes[ i ] += "!";
 		if( vecstrGenes[ i ].length( ) > iRet )
 			iRet = vecstrGenes[ i ].length( ); }
+	sort( vecstrGenes.begin( ), vecstrGenes.end( ) );
 
 	return ++iRet; }
 
@@ -234,6 +236,12 @@ bool CParserConsole::ProcessLine( const char* szLine ) {
 		else
 			strLine.assign( pcPrev );
 		CMeta::Tokenize( strLine.c_str( ), vecstrLine, CMeta::c_szWS, true );
+		if( vecstrLine.empty( ) )
+			continue;
+		if( vecstrLine[ 0 ][ 0 ] == c_cShell ) {
+			if( !ParseShell( strLine ) )
+				return false;
+			continue; }
 		for( i = 0; c_aszParsers[ i ]; ++i )
 			if( !strcmp( vecstrLine[ 0 ].c_str( ), c_aszParsers[ i ] ) )
 				break;
@@ -306,7 +314,7 @@ bool CParserConsole::ParseCd( const vector<string>& vecstrLine ) {
 bool CParserConsole::ParseFind( const vector<string>& vecstrLine ) {
 	CGenes					Genes( (CGenome&)m_Genome ), GenesBkg( (CGenome&)m_Genome );
 	ifstream				ifsm;
-	size_t					i, j, k, l, iWidth;
+	size_t					i, j, k, l, iWidth, iTotal;
 	vector<STermFound>		vecsTerms;
 	vector<size_t>			veciOnto;
 	string					strFile, strP, strBkg;
@@ -328,7 +336,7 @@ bool CParserConsole::ParseFind( const vector<string>& vecstrLine ) {
 		else if( !strBkg.length( ) )
 			strBkg = vecstrLine[ i ]; }
 	ifsm.open( strFile.c_str( ) );
-	if( !( ifsm.is_open( ) && Genes.Open( ifsm ) ) ) {
+	if( !( ifsm.is_open( ) && Genes.Open( ifsm, false ) ) ) {
 		cout << "find, can't open file: " << strFile << endl;
 		return false; }
 	ifsm.close( );
@@ -354,22 +362,32 @@ bool CParserConsole::ParseFind( const vector<string>& vecstrLine ) {
 		l = j;
 		if( !sArgs.m_fGenes ) {
 			vecpGenes.clear( );
-			for( ; j < veciOnto[ i ]; ++j )
-				for( k = 0; k < Genes.GetGenes( ); ++k )
-					if( pOnto->IsAnnotated( vecsTerms[ j ].m_iID, Genes.GetGene( k ) ) )
-						vecpGenes.push_back( &Genes.GetGene( k ) );
+			for( ; j < veciOnto[ i ]; ++j ) {
+				iTotal = pOnto->GetGenes( vecsTerms[ j ].m_iID, sArgs.m_fSibs );
+				if( iTotal <= c_iSizeCutoff )
+					for( k = 0; k < pOnto->GetGenes( vecsTerms[ j ].m_iID, sArgs.m_fSibs ); ++k )
+						vecpGenes.push_back( &pOnto->GetGene( vecsTerms[ j ].m_iID, k ) );
+				else
+					for( k = 0; k < Genes.GetGenes( ); ++k )
+						if( pOnto->IsAnnotated( vecsTerms[ j ].m_iID, Genes.GetGene( k ) ) )
+							vecpGenes.push_back( &Genes.GetGene( k ) ); }
 			vecstrGenes.clear( );
-			iWidth = FormatGenes( vecpGenes, vecstrGenes ); }
+			iWidth = FormatGenes( vecpGenes, vecstrGenes, &Genes ); }
 
 		for( j = l; j < veciOnto[ i ]; ++j ) {
 			PrintAnnotation( pOnto, vecsTerms[ j ].m_iID, sArgs, &vecsTerms[ j ] );
 			if( !sArgs.m_fGenes ) {
 				vecpGenes.clear( );
-				for( k = 0; k < Genes.GetGenes( ); ++k )
-					if( pOnto->IsAnnotated( vecsTerms[ j ].m_iID, Genes.GetGene( k ),
-						sArgs.m_fSibs ) )
-						vecpGenes.push_back( &Genes.GetGene( k ) );
-				PrintGenes( vecpGenes, iWidth ); } } }
+				iTotal = pOnto->GetGenes( vecsTerms[ j ].m_iID, sArgs.m_fSibs );
+				if( iTotal <= c_iSizeCutoff )
+					for( k = 0; k < pOnto->GetGenes( vecsTerms[ j ].m_iID, sArgs.m_fSibs ); ++k )
+						vecpGenes.push_back( &pOnto->GetGene( vecsTerms[ j ].m_iID, k ) );
+				else
+					for( k = 0; k < Genes.GetGenes( ); ++k )
+						if( pOnto->IsAnnotated( vecsTerms[ j ].m_iID, Genes.GetGene( k ),
+							sArgs.m_fSibs ) )
+							vecpGenes.push_back( &Genes.GetGene( k ) );
+				PrintGenes( vecpGenes, iWidth, &Genes ); } } }
 
 	return true; }
 
@@ -453,3 +471,10 @@ void CParserConsole::PrintOntology( const IOntology* pOnto, char cType ) const {
 	if( pOnto )
 		cout << (unsigned int)m_Genome.CountGenes( pOnto );
 	cout << endl; }
+
+bool CParserConsole::ParseShell( const string& strCmd ) const {
+	size_t	i;
+
+	i = strCmd.find( c_cShell );
+	system( strCmd.substr( i + 1 ).c_str( ) );
+	return true; }
