@@ -120,10 +120,13 @@ void CClustQTCImpl::InitializeDistances( const CDataMatrix& Data, const IMeasure
 	Dist.Initialize( Data.GetRows( ) );
 	adA = new float[ Data.GetColumns( ) - 1 ];
 	adB = new float[ Data.GetColumns( ) - 1 ];
-	for( i = 0; i < Data.GetRows( ); ++i )
+	for( i = 0; i < Data.GetRows( ); ++i ) {
+		if( !( i % 10 ) )
+			g_CatBioUtils.notice( "CClustQTCImpl::InitializeDistances( %d ) initializing %d/%d genes",
+				fAutoc, i, Data.GetRows( ) );
 		for( j = ( i + 1 ); j < Data.GetRows( ); ++j )
 			Dist.Set( i, j, (float)GetJackDistance( Data.Get( i ), Data.Get( j ),
-				Data.GetColumns( ), fAutoc, adA, adB, pMeasure ) );
+				Data.GetColumns( ), fAutoc, adA, adB, pMeasure ) ); }
 	delete[] adA;
 	delete[] adB; }
 

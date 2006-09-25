@@ -23,8 +23,9 @@ int main( int iArgs, char** aszArgs ) {
 	CMeasureSpearman			Spearman( true );
 	CMeasureNegate				EuclideanNeg( &Euclidean );
 	CMeasurePearNorm			PearNorm;
+	CMeasureHypergeometric		Hypgergeom;
 	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanNeg, &KendallsTau,
-		&KolmSmir, &Spearman, &PearNorm, NULL };
+		&KolmSmir, &Spearman, &PearNorm, &Hypgergeom, NULL };
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );

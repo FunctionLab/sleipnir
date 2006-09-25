@@ -105,6 +105,14 @@ public:
 		const float* ) const;
 };
 
+class CMeasureHypergeometric : public IMeasure {
+public:
+	const char* GetName( ) const;
+	bool IsRank( ) const;
+	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
+		const float* ) const;
+};
+
 }
 
 #endif // MEASURE_H

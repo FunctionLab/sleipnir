@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "measure.h"
 #include "meta.h"
+#include "statistics.h"
 
 namespace libBioUtils {
 
@@ -487,4 +488,29 @@ double CMeasurePearNorm::Measure( const float* adX, size_t iM, const float* adY,
 		dP = ( dP - m_dAverage ) / m_dStdDev;
 	return dP; }
 
+const char* CMeasureHypergeometric::GetName( ) const {
+
+	return "hypergeom"; }
+
+bool CMeasureHypergeometric::IsRank( ) const {
+
+	return false; }
+
+double CMeasureHypergeometric::Measure( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	size_t	i, iOne, iTwo, iBoth;
+
+	if( iM != iN )
+		return CMeta::GetNaN( );
+
+	iOne = iTwo = iBoth = 0;
+	for( i = 0; i < iN; ++i ) {
+		if( adX[ i ] )
+			iOne++;
+		if( adY[ i ] ) {
+			iTwo++;
+			if( adX[ i ] )
+				iBoth++; } }
+
+	return ( 1 - CStatistics::HypergeometricCDF( iBoth, iOne, iTwo, iN ) ); }
 }
