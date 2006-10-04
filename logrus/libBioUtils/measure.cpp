@@ -145,6 +145,52 @@ double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY,
 
 	return dRet; }
 
+const char* CMeasureQuickPearson::GetName( ) const {
+
+	return "quickpear"; }
+
+bool CMeasureQuickPearson::IsRank( ) const {
+
+	return false; }
+
+double CMeasureQuickPearson::Measure( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	double	dMX, dMY, dRet, dDX, dDY, dX, dY;
+	size_t	i;
+
+	dMX = dMY = 0;
+	for( i = 0; i < iN; ++i ) {
+		dMX += adX[ i ];
+		dMY += adY[ i ]; }
+	dMX /= iN;
+	dMY /= iN;
+
+	dRet = dDX = dDY = 0;
+	for( i = 0; i < iN; ++i ) {
+		dX = adX[ i ] - dMX;
+		dY = adY[ i ] - dMY;
+		dRet += dX * dY;
+		dDX += dX * dX;
+		dDY += dY * dY; }
+	if( !( dDX || dDY ) )
+		dRet = CMeta::GetNaN( );
+	else {
+		if( dDX )
+			dRet /= sqrt( dDX );
+		if( dDY )
+			dRet /= sqrt( dDY ); }
+
+	switch( eMap ) {
+		case EMapCenter:
+			dRet = ( 1 + dRet ) / 2;
+			break;
+
+		case EMapAbs:
+			dRet = fabs( dRet );
+			break; }
+
+	return dRet; }
+
 const char* CMeasureKendallsTau::GetName( ) const {
 
 	return "kendalls"; }

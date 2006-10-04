@@ -2,6 +2,7 @@
 #include "clustqtc.h"
 #include "pcl.h"
 #include "measure.h"
+#include "meta.h"
 
 namespace libBioUtils {
 
@@ -10,7 +11,27 @@ uint16_t CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
 	CDistanceMatrix	Dist;
 
 	InitializeDistances( Data, pMeasure, fAutoc, Dist );
-	return QualityThresholdAll( Data, 2 * dDiameter, iSize, Dist, vecsClusters ); }
+	return QualityThresholdAll( Data, dDiameter, iSize, Dist, vecsClusters ); }
+
+void CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
+	float dMin, float dMax, float dDelta, size_t iSize, bool fAutoc, CDistanceMatrix& DatOut ) {
+	CDistanceMatrix		Dist;
+	float				dDiameter;
+	vector<uint16_t>	vecsClusters;
+	uint16_t			sClusters;
+	size_t				i, j;
+
+	InitializeDistances( Data, pMeasure, fAutoc, Dist );
+	for( dDiameter = dMin; dDiameter <= dMax; dDiameter += dDelta ) {
+		g_CatBioUtils.notice( "CClustQTC::Cluster( %g, %g, %g, %d, %d ) processing diameter %g", dMin, dMax,
+			dDelta, iSize, fAutoc, dDiameter );
+		sClusters = QualityThresholdAll( Data, dDiameter, iSize, Dist, vecsClusters );
+		for( i = 0; i < vecsClusters.size( ); ++i ) {
+			if( ( vecsClusters[ i ] + 1 ) == sClusters )
+				continue;
+			for( j = ( i + 1 ); j < vecsClusters.size( ); ++j )
+				if( ( vecsClusters[ j ] == vecsClusters[ i ] ) && CMeta::IsNaN( DatOut.Get( i, j ) ) )
+					DatOut.Set( i, j, dDiameter ); } } }
 
 uint16_t CClustQTCImpl::QualityThresholdAll( const CDataMatrix& Data, float dDiameter,
 	size_t iSize, const CDistanceMatrix& Dist, vector<uint16_t>& vecsClusters ) {
@@ -37,57 +58,46 @@ uint16_t CClustQTCImpl::QualityThresholdAll( const CDataMatrix& Data, float dDia
 					vecsClusters[ i ] = sCluster;
 			break; }
 
-		iAssigned += vecsCur.size( );
-		for( i = 0; i < vecsCur.size( ); ++i )
-			vecfAssigned[ vecsCur[ i ] ] = true;
-
-		for( i = 0; i < vecfAssigned.size( ); ++i )
-			if( vecfAssigned[ i ] )
-				break;
-		if( i >= vecfAssigned.size( ) ) {
+		if( ( iAssigned += vecsCur.size( ) ) >= Data.GetRows( ) ) {
 			sCluster++;
-			break; } }
+			break; }
+		for( i = 0; i < vecsCur.size( ); ++i )
+			vecfAssigned[ vecsCur[ i ] ] = true; }
 
 	return ( sCluster + 1 ); }
 
 void CClustQTCImpl::QualityThresholdLargest( const CDataMatrix& Data, float dDiameter,
 	const CDistanceMatrix& Dist, const vector<bool>& vecfAssigned,
-	vector<uint16_t>& veciCluster ) {
+	vector<uint16_t>& vecsCluster ) {
 	vector<bool>		vecfClone;
-	size_t				i, iGene;
+	size_t				iGene;
 	vector<uint16_t>	vecsCur;
 	vector<float>		vecdDiameter;
 
-	veciCluster.clear( );
+	vecsCluster.clear( );
 	vecfClone.resize( vecfAssigned.size( ) );
 	for( iGene = 0; iGene < vecfAssigned.size( ); ++iGene ) {
 		if( vecfAssigned[ iGene ] )
 			continue;
-		for( i = 0; i < vecfClone.size( ); ++i )
-			vecfClone[ i ] = vecfAssigned[ i ];
+		copy( vecfAssigned.begin( ), vecfAssigned.end( ), vecfClone.begin( ) );
 		vecfClone[ iGene ] = true;
-
-		QualityThresholdGene( iGene, Data, dDiameter, Dist, vecfClone, vecdDiameter,
-			vecsCur );
-
-		if( vecsCur.size( ) > veciCluster.size( ) ) {
-			veciCluster.resize( vecsCur.size( ) );
-			for( i = 0; i < veciCluster.size( ); ++i )
-				veciCluster[ i ] = vecsCur[ i ]; } } }
+		QualityThresholdGene( iGene, Data, dDiameter, Dist, vecfClone, vecdDiameter, vecsCur );
+		if( vecsCur.size( ) > vecsCluster.size( ) ) {
+			vecsCluster.resize( vecsCur.size( ) );
+			copy( vecsCur.begin( ), vecsCur.end( ), vecsCluster.begin( ) ); } } }
 
 void CClustQTCImpl::QualityThresholdGene( size_t iGene, const CDataMatrix& Data,
 	float dDiameter, const CDistanceMatrix& Dist, vector<bool>& vecfAssigned,
-	vector<float>& vecdDiameter, vector<uint16_t>& veciCluster ) {
+	vector<float>& vecdDiameter, vector<uint16_t>& vecsCluster ) {
 	size_t	iAdded, iLocal, iBest;
 	float	dBest;
 
-	veciCluster.resize( 1 );
-	veciCluster[ 0 ] = iAdded = iGene;
+	vecsCluster.resize( 1 );
+	vecsCluster[ 0 ] = iAdded = iGene;
 	vecdDiameter.resize( Data.GetRows( ) );
-	for( iLocal = 0; iLocal < vecfAssigned.size( ); ++iLocal ) {
-		if( vecfAssigned[ iLocal ] )
-			continue;
-		vecdDiameter[ iLocal ] = -(float)HUGE_VAL; }
+	for( iLocal = 0; iLocal < vecfAssigned.size( ); ++iLocal )
+		if( !vecfAssigned[ iLocal ] )
+			vecdDiameter[ iLocal ] = -(float)HUGE_VAL;
 
 	while( true ) {
 		iBest = -1;
@@ -96,9 +106,7 @@ void CClustQTCImpl::QualityThresholdGene( size_t iGene, const CDataMatrix& Data,
 		for( iLocal = 0; iLocal < vecfAssigned.size( ); ++iLocal ) {
 			if( vecfAssigned[ iLocal ] )
 				continue;
-
-			vecdDiameter[ iLocal ] = max( vecdDiameter[ iLocal ],
-				Dist.Get( iLocal, iAdded ) );
+			vecdDiameter[ iLocal ] = max( vecdDiameter[ iLocal ], Dist.Get( iLocal, iAdded ) );
 			if( vecdDiameter[ iLocal ] > dDiameter ) {
 				vecfAssigned[ iLocal ] = true;
 				continue; }
@@ -109,7 +117,7 @@ void CClustQTCImpl::QualityThresholdGene( size_t iGene, const CDataMatrix& Data,
 		if( iBest == -1 )
 			break;
 		vecfAssigned[ iAdded = iBest ] = true;
-		veciCluster.push_back( iAdded ); } }
+		vecsCluster.push_back( iAdded ); } }
 
 void CClustQTCImpl::InitializeDistances( const CDataMatrix& Data, const IMeasure* pMeasure,
 	bool fAutoc, CDistanceMatrix& Dist ) {
@@ -132,7 +140,7 @@ void CClustQTCImpl::InitializeDistances( const CDataMatrix& Data, const IMeasure
 
 double CClustQTCImpl::GetJackDistance( const float* adX, const float* adY, size_t iN,
 	bool fAutoc, float* adA, float* adB, const IMeasure* pMeasure ) {
-	size_t					i, j, k;
+	size_t					i;
 	double					dRet, dCur;
 	CMeasureAutocorrelate	Autocorrelate( pMeasure );
 	const IMeasure*			pAuto	= &Autocorrelate;
@@ -142,11 +150,10 @@ double CClustQTCImpl::GetJackDistance( const float* adX, const float* adY, size_
 	dRet = 1 - dRet;
 
 	for( i = 0; i < iN; ++i ) {
-		for( j = k = 0; j < iN; ++j ) {
-			if( j == i )
-				continue;
-			adA[ k ] = adX[ j ];
-			adB[ k++ ] = adY[ j ]; }
+		memcpy( adA, adX, i * sizeof(*adX) );
+		memcpy( adA + i, adX + i + 1, ( iN - 1 - i ) * sizeof(*adX) );
+		memcpy( adB, adY, i * sizeof(*adY) );
+		memcpy( adB + i, adY + i + 1, ( iN - 1 - i ) * sizeof(*adY) );
 		dCur = fAutoc ? pAuto->Measure( adA, iN - 1, adB, iN - 1 ) :
 			pMeasure->Measure( adA, iN - 1, adB, iN - 1 );
 		if( ( dCur = ( 1 - dCur ) ) > dRet )

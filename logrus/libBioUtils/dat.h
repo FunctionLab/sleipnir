@@ -51,6 +51,10 @@ public:
 
 		return m_Data; }
 
+	CDistanceMatrix& Get( ) {
+
+		return m_Data; }
+
 	bool Set( size_t iX, size_t iY, float dValue ) {
 
 		return CDatImpl::Set( iX, iY, dValue ); }
