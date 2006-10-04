@@ -15,9 +15,9 @@ public:
 	void Open( const CPCL& );
 	bool Open( std::istream& );
 	bool Open( std::istream&, size_t );
-	void Open( const std::vector<size_t>&, const std::vector<string>&,
-		const std::vector<string>& );
-	void Open( const std::vector<string>&, const std::vector<string>& );
+	void Open( const std::vector<size_t>&, const std::vector<std::string>&,
+		const std::vector<std::string>& );
+	void Open( const std::vector<std::string>&, const std::vector<std::string>& );
 	void Save( std::ostream&, const std::vector<size_t>* = NULL ) const;
 	void SaveGene( std::ostream&, size_t, size_t = -1 ) const;
 	void SaveHeader( std::ostream&, bool = false ) const;
@@ -26,6 +26,18 @@ public:
 	bool AddGenes( const std::vector<std::string>& );
 	void Normalize( );
 	void Reset( );
+
+	size_t GetFeatures( ) const {
+
+		return m_vecstrFeatures.size( ); }
+
+	const std::string& GetFeature( size_t iFeature ) const {
+
+		return m_vecstrFeatures[ iFeature ]; }
+
+	const std::string& GetFeature( size_t iGene, size_t iFeature ) const {
+
+		return m_vecvecstrFeatures[ iFeature - 1 ][ iGene ]; }
 
 	float Get( size_t iGene, size_t iExp ) const {
 
@@ -50,10 +62,6 @@ public:
 	size_t GetExperiments( ) const {
 
 		return m_vecstrExperiments.size( ); }
-
-	const std::string& GetFeature( size_t iGene, size_t iFeature ) const {
-
-		return m_vecvecstrFeatures[ iFeature ][ iGene ]; }
 
 	const std::string& GetGene( size_t iGene ) const {
 

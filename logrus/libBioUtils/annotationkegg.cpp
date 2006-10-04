@@ -182,7 +182,8 @@ bool COntologyKEGGImpl::OpenGloss( SParserKEGG& sParser ) {
 			if( sParser.m_strGloss.length( ) )
 				sParser.m_strGloss += ' ';
 			sParser.m_strGloss += pchStartGloss; }
-		sParser.m_mapGlosses[ pchStartPath ] = sParser.m_strGloss;
+		for( i = 0; i < vecstrIDs.size( ); ++i )
+			sParser.m_mapGlosses[ vecstrIDs[ i ] ] = sParser.m_strGloss;
 		sParser.m_strGloss.clear( ); }
 	else {
 		if( sParser.m_strGloss.length( ) )
