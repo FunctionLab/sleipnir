@@ -119,6 +119,11 @@ int main( int iArgs, char** aszArgs ) {
 						CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
 						CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
 						continue;
+					if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
+						( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
+						( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+						continue;
+
 					MatGenes.Set( i, 0, true );
 					MatGenes.Set( j, 0, true );
 					if( dAnswer )
