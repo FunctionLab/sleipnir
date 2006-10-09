@@ -26,7 +26,7 @@ struct SSorter {
 int main( int iArgs, char** aszArgs ) {
 	CDat				Answers, Data;
 	gengetopt_args_info	sArgs;
-	size_t				i, j, k, iOne, iTwo, iGenes, iPositives, iNegatives;
+	size_t				i, j, k, m, iOne, iTwo, iGenes, iPositives, iNegatives;
 	vector<size_t>		veciGenes, veciRec;
 	CFullMatrix<bool>	MatGenes;
 	CFullMatrix<size_t>	MatResults;
@@ -136,9 +136,9 @@ int main( int iArgs, char** aszArgs ) {
 						break;
 					const SDatum&	sDatum	= vecsData[ j + k ];
 
-					for( size_t asdf = ( i + 1 ); asdf > 0; --asdf ) {
-						MatGenes.Set( sDatum.m_iOne, asdf, true );
-						MatGenes.Set( sDatum.m_iTwo, asdf, true ); }
+					for( m = i; m > 0; --m ) {
+						MatGenes.Set( sDatum.m_iOne, m, true );
+						MatGenes.Set( sDatum.m_iTwo, m, true ); }
 					if( Answers.Get( sDatum.m_iOne, sDatum.m_iTwo ) )
 						veciPositives[ i ]++;
 					else
