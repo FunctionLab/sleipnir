@@ -43,9 +43,9 @@ int Dat2Dab( const CGenes& Genes, const gengetopt_args_info& sArgs ) {
 		ifsm.close( );
 		{
 			CMeasurePearNorm	PearNorm;
-			CDatPCL				DatPCL( PCL, &PearNorm );
+//			CDatPCL				DatPCL( PCL, &PearNorm );
 
-			DatPCL.Save( cout, false );
+//			DatPCL.Save( cout, false );
 		} }
 	else if( !!sArgs.output_arg ) {
 		Dat.Open( cin, false );

@@ -267,7 +267,8 @@ void CDataImpl::SaveBinary( ostream& ostm ) const {
 		ostm.write( &c, sizeof(c) ); }
 
 	ac = new char[ iVal = (uint32_t)m_veccQuants.size( ) ];
-	copy( m_veccQuants.begin( ), m_veccQuants.end( ), ac );
+	for( i = 0; i < iVal; ++i )
+		ac[ i ] = m_veccQuants[ i ];
 	ostm.write( (char*)&iVal, sizeof(iVal) );
 	ostm.write( ac, iVal );
 	delete[] ac; }

@@ -142,15 +142,17 @@ DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iOne, size_t iTwo, size_t i
 
 bool CSVM::OpenAlphas( istream& istm ) {
 	static const size_t	c_iBuf	= 1024;
-	char	szBuf[ c_iBuf ];
+	char			szBuf[ c_iBuf ];
 	vector<float>	vecdAlphas;
+	size_t			i;
 
 	Reset( false, false, true );
 	while( istm.peek( ) != EOF ) {
 		istm.getline( szBuf, c_iBuf - 1 );
 		vecdAlphas.push_back( (float)atof( szBuf ) ); }
 	m_adAlphas = new double[ m_iAlphas = vecdAlphas.size( ) ];
-	copy( vecdAlphas.begin( ), vecdAlphas.end( ), m_adAlphas );
+	for( i = 0; i < m_iAlphas; ++i )
+		m_adAlphas[ i ] = vecdAlphas[ i ];
 
 	return true; }
 
