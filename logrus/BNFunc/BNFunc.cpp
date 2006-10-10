@@ -103,20 +103,21 @@ int main( int iArgs, char** aszArgs ) {
 
 		return 0; }
 
-	if( sArgs.negatives_arg ) {
-		ifsmOnto.clear( );
-		ifsmOnto.open( sArgs.negatives_arg );
-		if( !( SlimNeg.Open( ifsmOnto, pOnto ) && Dat.Open( Slim, SlimNeg ) ) ) {
-			cerr << "Couldn't open: " << sArgs.negatives_arg << endl;
+	if( sArgs.output_arg ) {
+		if( sArgs.negatives_arg ) {
+			ifsmOnto.clear( );
+			ifsmOnto.open( sArgs.negatives_arg );
+			if( !( SlimNeg.Open( ifsmOnto, pOnto ) && Dat.Open( Slim, SlimNeg ) ) ) {
+				cerr << "Couldn't open: " << sArgs.negatives_arg << endl;
+				return 1; }
+			ifsmOnto.close( ); }
+		else if( !Dat.Open( Slim ) ) {
+			cerr << "Couldn't open: " << sArgs.input_arg << endl;
 			return 1; }
-		ifsmOnto.close( ); }
-	else if( !Dat.Open( Slim ) ) {
-		cerr << "Couldn't open: " << sArgs.input_arg << endl;
-		return 1; }
 
-	ofsm.open( sArgs.output_arg, ios_base::binary );
-	Dat.Save( ofsm, true );
-	ofsm.close( );
+		ofsm.open( sArgs.output_arg, ios_base::binary );
+		Dat.Save( ofsm, true );
+		ofsm.close( ); }
 
 	if( sArgs.test_arg ) {
 		for( i = 0; i < Slim.GetSlims( ); ++i )

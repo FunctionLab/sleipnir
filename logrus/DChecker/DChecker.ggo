@@ -6,6 +6,7 @@ option	"input"		i	"Correlation file"	string	typestr="filename"	yes
 option	"answers"	w	"Answer file"	string	typestr="filename"	yes
 section "Optional"
 option	"invert"	t	"Invert correlations to distances"	flag	off
+option	"normalize"	n	"Normlize scores before processing"	flag	off
 option	"min"		m	"Minimum correlation to process"	float	default="0"
 option	"max"		M	"Maximum correlation to process"	float	default="1"
 option	"delta"		e	"Size of correlation bins"	double	default="0.01"

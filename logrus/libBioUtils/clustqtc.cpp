@@ -31,7 +31,7 @@ void CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
 				continue;
 			for( j = ( i + 1 ); j < vecsClusters.size( ); ++j )
 				if( ( vecsClusters[ j ] == vecsClusters[ i ] ) && CMeta::IsNaN( DatOut.Get( i, j ) ) )
-					DatOut.Set( i, j, dDiameter ); } } }
+					DatOut.Set( i, j, 1 - dDiameter ); } } }
 
 uint16_t CClustQTCImpl::QualityThresholdAll( const CDataMatrix& Data, float dDiameter,
 	size_t iSize, const CDistanceMatrix& Dist, vector<uint16_t>& vecsClusters ) {

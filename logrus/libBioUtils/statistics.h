@@ -81,7 +81,8 @@ private:
 public:
 	static double WilcoxonRankSum( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes,
 		const CBinaryMatrix& MatPairs, bool fInvert = false ) {
-		size_t				i, j, k, iOne, iTwo, iSum, iPos, iNeg;
+		size_t				i, j, k, iOne, iTwo, iNeg;
+		uint64_t			iSum, iPos;
 		float				d, dAnswer;
 		std::vector<size_t>	veciGenes, veciRanks;
 		std::vector<float>	vecdValues;
@@ -123,7 +124,7 @@ public:
 #pragma warning( default : 4267 )
 		}
 
-		for( iPos = iNeg = iSum = i = k = 0; i < Answers.GetGenes( ); ++i ) {
+		for( iSum = iPos = iNeg = i = k = 0; i < Answers.GetGenes( ); ++i ) {
 			if( ( iOne = veciGenes[ i ] ) == -1 )
 				continue;
 			for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
@@ -142,7 +143,7 @@ public:
 				k++; } }
 		iSum -= ( iPos * ( iPos - 1 ) ) / 2;
 
-		return ( (double)iSum / ( iPos * iNeg ) ); }
+		return ( (double)iSum / iPos / iNeg ); }
 
 	// Probability distributions
 	static double BinomialCDF( size_t, size_t, double );

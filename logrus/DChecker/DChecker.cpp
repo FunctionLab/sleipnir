@@ -60,6 +60,8 @@ int main( int iArgs, char** aszArgs ) {
 	if( !Data.Open( sArgs.input_arg ) ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
+	if( sArgs.normalize_flag )
+		Data.Normalize( );
 
 	veciGenes.resize( Answers.GetGenes( ) );
 	MatResults.Initialize( sArgs.bins_arg ? ( sArgs.bins_arg + 1 ) :
