@@ -1,7 +1,5 @@
 #include "stdafx.h"
 #include "pclset.h"
-#include "pcl.h"
-#include "meta.h"
 
 namespace libBioUtils {
 
@@ -47,39 +45,5 @@ bool CPCLSet::Open( const vector<string>& vecstrData, size_t iSkip ) {
 			m_Genes.Set( i, j, m_aPCLs[ i ].GetGene( m_vecstrGenes[ j ] ) );
 
 	return true; }
-
-size_t CPCLSet::GetGenes( ) const {
-
-	return m_vecstrGenes.size( ); }
-
-size_t CPCLSet::GetPCLs( ) const {
-
-	return m_iPCLs; }
-
-size_t CPCLSet::GetExperiments( size_t iPCL ) const {
-
-	return m_aPCLs[ iPCL ].GetExperiments( ); }
-
-float CPCLSet::Get( size_t iPCL, size_t iGene, size_t iExp ) const {
-	size_t	iMap;
-
-	if( ( iMap = m_Genes.Get( iPCL, iGene ) ) == -1 )
-		return CMeta::GetNaN( );
-
-	return m_aPCLs[ iPCL ].Get( iMap, iExp ); }
-
-size_t CPCLSet::GetGene( const string& strGene ) const {
-	TMapStrI::const_iterator	iterGene;
-
-	return ( ( ( iterGene = m_mapGenes.find( strGene ) ) == m_mapGenes.end( ) ) ? -1 :
-		iterGene->second ); }
-
-const string& CPCLSet::GetGene( size_t iGene ) const {
-
-	return m_vecstrGenes[ iGene ]; }
-
-const vector<string>& CPCLSet::GetGeneNames( ) const {
-
-	return m_vecstrGenes; }
 
 }
