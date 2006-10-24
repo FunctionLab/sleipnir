@@ -16,6 +16,7 @@ option	"mips_onto"	m	"MIPS ontology"	string	typestr="filename"
 option	"mips_anno"	a	"MIPS annotations"	string	typestr="filename"
 option	"random"	r	"Seed random generator"	int	default="0"
 option	"test"		t	"Test fraction"	double	default="0"
+option	"synonyms"	s	"Prefer synonym names"	flag	off
 option	"sql"		q	"Directory in which to place SQL tables"	string	typestr="filename"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"config"	c	"Command line config file"	string	typestr="filename"	default="BNFunc.ini"

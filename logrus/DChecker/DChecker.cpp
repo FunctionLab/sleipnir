@@ -26,7 +26,7 @@ struct SSorter {
 int main( int iArgs, char** aszArgs ) {
 	CDat				Answers, Data;
 	gengetopt_args_info	sArgs;
-	size_t				i, j, k, m, iOne, iTwo, iGenes, iPositives, iNegatives;
+	size_t				i, j, k, m, iOne, iTwo, iGenes, iPositives, iNegatives, iBins;
 	vector<size_t>		veciGenes, veciRec;
 	CFullMatrix<bool>	MatGenes;
 	CFullMatrix<size_t>	MatResults;
@@ -39,6 +39,7 @@ int main( int iArgs, char** aszArgs ) {
 	CBinaryMatrix		MatPairs;
 	ofstream			ofsm;
 	ostream*			postm;
+	map<float,size_t>	mapValues;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -64,11 +65,36 @@ int main( int iArgs, char** aszArgs ) {
 		Data.Normalize( );
 
 	veciGenes.resize( Answers.GetGenes( ) );
-	MatResults.Initialize( sArgs.bins_arg ? ( sArgs.bins_arg + 1 ) :
-		(size_t)( ( sArgs.max_arg - sArgs.min_arg ) / sArgs.delta_arg ) + 1, 4 );
-	MatGenes.Initialize( veciGenes.size( ), MatResults.GetRows( ) );
 	for( i = 0; i < Answers.GetGenes( ); ++i )
 		veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
+	if( sArgs.finite_flag ) {
+		vector<float>	vecdValues;
+		{
+			set<float>		setdValues;
+
+			for( i = 0; i < Answers.GetGenes( ); ++i ) {
+				if( ( iOne = veciGenes[ i ] ) == -1 )
+					continue;
+				for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+					if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+						CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
+						CMeta::IsNaN( Answers.Get( i, j ) ) )
+						continue;
+					if( sArgs.invert_flag )
+						dValue = 1 - dValue;
+					setdValues.insert( dValue ); } }
+			vecdValues.resize( setdValues.size( ) );
+			copy( setdValues.begin( ), setdValues.end( ), vecdValues.begin( ) );
+		}
+		sort( vecdValues.begin( ), vecdValues.end( ) );
+		for( i = 0; i < vecdValues.size( ); ++i )
+			mapValues[ vecdValues[ i ] ] = i;
+		iBins = mapValues.size( ); }
+	else
+		iBins = sArgs.bins_arg;
+	MatResults.Initialize( iBins ? ( iBins + 1 ) :
+		(size_t)( ( sArgs.max_arg - sArgs.min_arg ) / sArgs.delta_arg ) + 1, 4 );
+	MatGenes.Initialize( veciGenes.size( ), MatResults.GetRows( ) );
 
 	if( sArgs.inputs_num ) {
 		MatPairs.Initialize( Answers.GetGenes( ) );
@@ -109,7 +135,28 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Processing " << sArgs.inputs[ iGenes ] << "..." << endl;
 			ifsm.close( ); }
 
-		if( sArgs.bins_arg ) {
+		if( mapValues.size( ) ) {
+			for( i = 0; i < Answers.GetGenes( ); ++i ) {
+				if( ( iOne = veciGenes[ i ] ) == -1 )
+					continue;
+				for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+					if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+						CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
+						CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
+						continue;
+					if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
+						( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
+						( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+						continue;
+					if( sArgs.invert_flag )
+						dValue = 1 - dValue;
+					for( k = 0; k <= mapValues[ dValue ]; ++k ) {
+						MatGenes.Set( i, k, true );
+						MatGenes.Set( j, k, true );
+						MatResults.Get( k, dAnswer ? ETFPN_TP : ETFPN_FP )++; }
+					for( ; k < MatResults.GetRows( ); ++k )
+						MatResults.Get( k, dAnswer ? ETFPN_FN : ETFPN_TN )++; } } }
+		else if( iBins ) {
 			vector<SDatum>	vecsData;
 			size_t			iChunk;
 
@@ -188,6 +235,17 @@ int main( int iArgs, char** aszArgs ) {
 					eTFPN = (ETFPN)( 2 + !eTFPN );
 					for( ; k < (int)MatResults.GetRows( ); ++k )
 						MatResults.Get( k, eTFPN )++; } }
+		for( iPositives = iNegatives = i = 0; i < Answers.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+				if( CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
+					( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
+					( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
+					( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) ) )
+					continue;
+				if( dAnswer )
+					iPositives++;
+				else
+					iNegatives++; }
 
 		veciRec.resize( MatResults.GetRows( ) );
 		for( i = 0; i < veciRec.size( ); ++i ) {
@@ -203,14 +261,16 @@ int main( int iArgs, char** aszArgs ) {
 		else
 			postm = &cout;
 
-		*postm << "Cut\tGenes\tTP\tFP\tTN\tFN" << endl;
+		*postm << "#	P	" << iPositives << endl;
+		*postm << "#	N	" << iNegatives << endl;
+		*postm << "Cut	Genes	TP	FP	TN	FN" << endl;
 		for( i = 0; i < MatResults.GetRows( ); ++i ) {
-			*postm << ( sArgs.bins_arg ? i : ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) ) << '\t' <<
+			*postm << ( iBins ? i : ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) ) << '\t' <<
 				veciRec[ i ];
 			for( j = 0; j < MatResults.GetColumns( ); ++j )
 				*postm << '\t' << MatResults.Get( i, j );
 			*postm << endl; }
-		*postm << "#\tAUC\t" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, MatPairs,
+		*postm << "#	AUC	" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, MatPairs,
 			!!sArgs.invert_flag ) << endl;
 
 		if( sArgs.inputs_num )

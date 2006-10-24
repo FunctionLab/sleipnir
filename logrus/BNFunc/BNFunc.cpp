@@ -134,13 +134,20 @@ int main( int iArgs, char** aszArgs ) {
 			ofsm.clear( );
 			ofsm.open( ( (string)sArgs.directory_arg + '\\' +
 				CMeta::Filename( Slim.GetSlim( i ) ) ).c_str( ) );
-			for( j = 0; j < Slim.GetGenes( i ); ++j )
-				ofsm << Slim.GetGene( i, j ).GetName( ) << endl;
+			for( j = 0; j < Slim.GetGenes( i ); ++j ) {
+				const CGene&	Gene	= Slim.GetGene( i, j );
+				const string&	strName	= ( sArgs.synonyms_flag && Gene.GetSynonyms( ) ) ?
+					Gene.GetSynonym( 0 ) : Gene.GetName( );
+				
+				ofsm << strName << endl; }
 			ofsm.close( ); }
 	if( sArgs.test_arg )
 		for( iterGene = mapGenes.begin( ); iterGene != mapGenes.end( ); ++iterGene )
-			if( iterGene->second )
-				cout << iterGene->first->GetName( ) << endl;
+			if( iterGene->second ) {
+				const string&	strName	= ( sArgs.synonyms_flag && iterGene->first->GetSynonyms( ) ) ?
+					iterGene->first->GetSynonym( 0 ) : iterGene->first->GetName( );
+
+				cout << strName << endl; }
 
 	CMeta::Shutdown( );
 	return 0; }

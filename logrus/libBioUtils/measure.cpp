@@ -127,7 +127,7 @@ double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY,
 		dDX += dX * dX * GetWeight( adWX, i );
 		dDY += dY * dY * GetWeight( adWY, i ); }
 	if( !( dDX || dDY ) )
-		dRet = CMeta::GetNaN( );
+		dRet = 1;
 	else {
 		if( dDX )
 			dRet /= sqrt( dDX );
