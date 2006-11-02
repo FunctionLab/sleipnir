@@ -9,6 +9,7 @@ groupoption	"pcl"		p	"Input pcl file"	string	typestr="filename"	group="input-out
 section "Optional"
 option	"flip"		f	"Calculate one minus dat values"	flag	off
 option	"normalize"	n	"Normalize to the range [0,1]"	flag	off
+option	"zscore"	z	"Convert values to z-scores"	flag	off
 option	"genes"		g	"Process only genes from the given subset"	string	typestr="filename"
 option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
 option	"verbosity"	v	"Message verbosity"	int	default="5"

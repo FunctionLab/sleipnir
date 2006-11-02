@@ -49,8 +49,8 @@ int Dat2Dab( const CGenes& Genes, const gengetopt_args_info& sArgs ) {
 		} }
 	else if( !!sArgs.output_arg ) {
 		Dat.Open( cin, false );
-		if( sArgs.normalize_flag )
-			Dat.Normalize( );
+		if( sArgs.normalize_flag || sArgs.zscore_flag )
+			Dat.Normalize( !!sArgs.normalize_flag );
 		if( sArgs.flip_flag )
 			DatFlip( Dat );
 		if( Genes.GetGenes( ) )
@@ -61,8 +61,8 @@ int Dat2Dab( const CGenes& Genes, const gengetopt_args_info& sArgs ) {
 	else {
 		ifsm.open( sArgs.input_arg, ios_base::binary );
 		Dat.Open( ifsm, true );
-		if( sArgs.normalize_flag )
-			Dat.Normalize( );
+		if( sArgs.normalize_flag || sArgs.zscore_flag )
+			Dat.Normalize( !!sArgs.normalize_flag );
 		if( sArgs.flip_flag )
 			DatFlip( Dat );
 		if( Genes.GetGenes( ) )

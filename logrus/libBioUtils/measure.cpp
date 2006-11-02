@@ -526,10 +526,13 @@ bool CMeasurePearNorm::IsRank( ) const {
 
 double CMeasurePearNorm::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	static const float	c_dBound	= 0.99;
 	double	dP;
 
-	dP = CMeasurePearson::Pearson( adX, iM, adY, iN, eMap, adWX, adWY );
-	dP = ( log( 1 + dP ) - log( 1 - dP ) ) / 2;
+	dP = CMeasurePearson::Pearson( adX, iM, adY, iN, EMapNone, adWX, adWY );
+	if( fabs( dP ) >= c_dBound )
+		dP *= c_dBound;
+	dP = log( ( 1 + dP ) / ( 1 - dP ) ) / 2;
 	if( m_dAverage != HUGE_VAL )
 		dP = ( dP - m_dAverage ) / m_dStdDev;
 	return dP; }

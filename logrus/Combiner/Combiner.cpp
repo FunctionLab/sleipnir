@@ -10,6 +10,7 @@ static const char			c_szMean[]			= "mean";
 static const char			c_szGMean[]			= "gmean";
 static const char			c_szHMean[]			= "hmean";
 static const char			c_szMax[]			= "max";
+static const char			c_szMin[]			= "min";
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -136,6 +137,11 @@ static int MainDATs( const gengetopt_args_info& sArgs ) {
 					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
 						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) &&
 							( CMeta::IsNaN( dMax ) || ( d > dMax ) ) )
+							dMax = d; }
+				else if( !strcmp( c_szMin, sArgs.method_arg ) ) {
+					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
+						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) &&
+							( CMeta::IsNaN( dMax ) || ( d < dMax ) ) )
 							dMax = d; }
 				Dat.Set( i, j, dMax ); } } }
 
