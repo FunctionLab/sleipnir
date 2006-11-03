@@ -36,11 +36,12 @@ int main( int iArgs, char** aszArgs ) {
 	CPCL				PCL;
 	CDat				Dat;
 	vector<SNeighbors>	vecsNeighbors;
-	size_t				i, j, k;
+	size_t				i, j, k, iMissing;
 	float				d, dSum;
 	const float*		ad;
 	int					iRet;
 	ofstream			ofsm;
+	vector<float>		vecdMissing;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -52,29 +53,42 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return iRet; }
 
+	vecdMissing.resize( PCL.GetGenes( ) );
+	for( i = 0; i < vecdMissing.size( ); ++i ) {
+		for( iMissing = j = 0; j < PCL.GetExperiments( ); ++j )
+			if( CMeta::IsNaN( PCL.Get( i, j ) ) )
+				iMissing++;
+		vecdMissing[ i ] = (float)( PCL.GetExperiments( ) - iMissing ) / PCL.GetExperiments( ); }
 	vecsNeighbors.resize( Dat.GetGenes( ) );
 	for( i = 0; i < vecsNeighbors.size( ); ++i )
 		vecsNeighbors[ i ].Initialize( PCL.GetExperiments( ), sArgs.neighbors_arg );
 	for( i = 0; i < Dat.GetGenes( ); ++i ) {
 		if( !( i % 100 ) )
 			cerr << "Finding neighbors for gene " << i << '/' << Dat.GetGenes( ) << endl;
-		// This won't work if only a subset of genes has been selected for the dat...
+		if( vecdMissing[ i ] < sArgs.missing_arg )
+			continue;
 		ad = PCL.Get( i );
 		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+			if( vecdMissing[ j ] < sArgs.missing_arg )
+				continue;
 			d = Dat.Get( i, j );
 			vecsNeighbors[ i ].Add( j, d, PCL.Get( j ) );
 			vecsNeighbors[ j ].Add( i, d, ad ); } }
 
-	for( i = 0; i < PCL.GetGenes( ); ++i )
-		for( j = 0; j < PCL.GetExperiments( ); ++j ) {
+	for( i = 0; i < PCL.GetGenes( ); ++i ) {
+		if( vecdMissing[ i ] < sArgs.missing_arg ) {
+			PCL.MaskGene( i );
+			continue; }
+		for( iMissing = j = 0; j < PCL.GetExperiments( ); ++j ) {
 			if( !CMeta::IsNaN( PCL.Get( i, j ) ) )
 				continue;
+			iMissing++;
 			for( d = dSum = 0,k = 0; k < (size_t)sArgs.neighbors_arg; ++k ) {
 				const pair<size_t, float>&	prNeighbor	= vecsNeighbors[ i ].m_MatNeighbors.Get( k, j );
 
 				dSum += prNeighbor.second;
 				d += PCL.Get( prNeighbor.first, j ) * prNeighbor.second; }
-			PCL.Set( i, j, d / dSum ); }
+			PCL.Set( i, j, d / dSum ); } }
 
 	if( sArgs.output_arg ) {
 		ofsm.open( sArgs.output_arg );
