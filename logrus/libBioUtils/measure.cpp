@@ -9,7 +9,65 @@ static float GetWeight( const float* adW, size_t iW ) {
 
 	return ( adW ? adW[ iW ] : 1 ); }
 
-CMeasureImpl::CMeasureImpl( const IMeasure* pMeasure ) : m_pMeasure(pMeasure) { }
+CMeasureImpl::CMeasureImpl( const IMeasure* pMeasure, bool fMemory ) : m_pMeasure((IMeasure*)pMeasure),
+	m_fMemory(fMemory) { }
+
+CMeasureImpl::~CMeasureImpl( ) {
+
+	if( m_fMemory && m_pMeasure )
+		delete m_pMeasure; }
+
+bool CMeasureImpl::IsNaN( const float* adX, size_t iX ) {
+	size_t	i;
+
+	for( i = 0; i < iX; ++i )
+		if( CMeta::IsNaN( adX[ i ] ) )
+			return true;
+
+	return false; }
+
+double CMeasureImpl::MeasureTrim( const IMeasure* pMeasure, const float* adX, size_t iM, const float* adY,
+	size_t iN, const IMeasure::EMap eMap, const float* adWX, const float* adWY ) {
+	float*	adA;
+	float*	adB;
+	float*	adWA;
+	float*	adWB;
+	size_t	i, j, iA, iB;
+	double	dRet;
+
+	for( iA = i = 0; i < iM; ++i )
+		if( CMeta::IsNaN( adX[ i ] ) )
+			iA++;
+	for( iB = i = 0; i < iN; ++i )
+		if( CMeta::IsNaN( adY[ i ] ) )
+			iB++;
+	iA = iM - iA;
+	iB = iN - iB;
+
+	adA = new float[ iA ];
+	adWA = adWX ? new float[ iA ] : NULL;
+	for( i = j = 0; i < iM; ++i )
+		if( !CMeta::IsNaN( adX[ i ] ) ) {
+			if( adWA )
+				adWA[ j ] = adWX[ i ];
+			adA[ j++ ] = adX[ i ]; }
+	adB = new float[ iB ];
+	adWB = adWY ? new float[ iB ] : NULL;
+	for( i = j = 0; i < iN; ++i )
+		if( !CMeta::IsNaN( adY[ i ] ) ) {
+			if( adWB )
+				adWB[ j ] = adWY[ i ];
+			adB[ j++ ] = adY[ i ]; }
+
+	dRet = pMeasure->Measure( adA, iA, adB, iB, eMap, adWA, adWB );
+	delete[] adA;
+	delete[] adB;
+	if( adWA )
+		delete[] adWA;
+	if( adWB )
+		delete[] adWB;
+
+	return dRet; }
 
 const char* CMeasureKolmogorovSmirnov::GetName( ) const {
 
@@ -19,16 +77,22 @@ bool CMeasureKolmogorovSmirnov::IsRank( ) const {
 
 	return false; }
 
+IMeasure* CMeasureKolmogorovSmirnov::Clone( ) const {
+
+	return new CMeasureKolmogorovSmirnov( ); }
+
 double CMeasureKolmogorovSmirnov::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 	double			dCur, dMax, dRet;
 	size_t			i, iX, iY;
 	vector<float>	vecdX, vecdY, vecdZ;
 
-	if( iM > iN )
-		return Measure( adY, iN, adX, iM, eMap, adWY, adWX );
 	if( adWX || adWY )
 		return CMeta::GetNaN( );
+	if( CMeasureImpl::IsNaN( adX, iM ) || CMeasureImpl::IsNaN( adY, iN ) )
+		return CMeasureImpl::MeasureTrim( this, adX, iM, adY, iN, eMap, adWX, adWY );
+	if( iM > iN )
+		return Measure( adY, iN, adX, iM, eMap, adWY, adWX );
 
 	vecdX.resize( iM );
 	vecdY.resize( iN );
@@ -70,6 +134,10 @@ bool CMeasureEuclidean::IsRank( ) const {
 
 	return false; }
 
+IMeasure* CMeasureEuclidean::Clone( ) const {
+
+	return new CMeasureEuclidean( ); }
+
 double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 	size_t	i;
@@ -80,6 +148,8 @@ double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY
 
 	dRet = 0;
 	for( i = 0; i < iN; ++i ) {
+		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
+			continue;
 		d = adX[ i ] - adY[ i ];
 		dRet += d * d * GetWeight( adWX, i ) * GetWeight( adWY, i ); }
 
@@ -92,6 +162,10 @@ const char* CMeasurePearson::GetName( ) const {
 bool CMeasurePearson::IsRank( ) const {
 
 	return false; }
+
+IMeasure* CMeasurePearson::Clone( ) const {
+
+	return new CMeasurePearson( ); }
 
 double CMeasurePearson::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
@@ -153,6 +227,10 @@ bool CMeasureQuickPearson::IsRank( ) const {
 
 	return false; }
 
+IMeasure* CMeasureQuickPearson::Clone( ) const {
+
+	return new CMeasureQuickPearson( ); }
+
 double CMeasureQuickPearson::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 	double	dMX, dMY, dRet, dDX, dDY, dX, dY;
@@ -199,12 +277,18 @@ bool CMeasureKendallsTau::IsRank( ) const {
 
 	return true; }
 
+IMeasure* CMeasureKendallsTau::Clone( ) const {
+
+	return new CMeasureKendallsTau( ); }
+
 double CMeasureKendallsTau::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 	double	dRet;
 
 	if( iM != iN )
 		return CMeta::GetNaN( );
+	if( CMeasureImpl::IsNaN( adX, iM ) || CMeasureImpl::IsNaN( adY, iN ) )
+		return CMeasureImpl::MeasureTrim( this, adX, iM, adY, iN, eMap, adWX, adWY );
 
 	dRet = ( adWX || adWY ) ? CMeasureKendallsTauImpl::MeasureWeighted( adX, adY, iN, adWX,
 		adWY ) : CMeasureKendallsTauImpl::MeasureUnweighted( adX, adY, iN );
@@ -368,7 +452,7 @@ size_t CMeasureKendallsTauImpl::CountExchanges( size_t* aiPerm, size_t iN,
 	memcpy( aiPerm + iOffset, aiTemp, iN * sizeof(*aiPerm) );
 	return iExchanges; }
 
-CMeasureNegate::CMeasureNegate( const IMeasure* pMeasure ) : CMeasureImpl( pMeasure ) { }
+CMeasureNegate::CMeasureNegate( const IMeasure* pMeasure, bool fMemory ) : CMeasureImpl( pMeasure, fMemory ) { }
 
 const char* CMeasureNegate::GetName( ) const {
 
@@ -378,16 +462,20 @@ bool CMeasureNegate::IsRank( ) const {
 
 	return m_pMeasure->IsRank( ); }
 
+IMeasure* CMeasureNegate::Clone( ) const {
+
+	return new CMeasureNegate( m_pMeasure->Clone( ), true ); }
+
 double CMeasureNegate::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 
 	return -m_pMeasure->Measure( adX, iM, adY, iN, eMap, adWX, adWY ); }
 
-CMeasureSigmoid::CMeasureSigmoid( const IMeasure* pMeasure, float dMult ) :
-	CMeasureSigmoidImpl( pMeasure, dMult ) { }
+CMeasureSigmoid::CMeasureSigmoid( const IMeasure* pMeasure, bool fMemory, float dMult ) :
+	CMeasureSigmoidImpl( pMeasure, fMemory, dMult ) { }
 
-CMeasureSigmoidImpl::CMeasureSigmoidImpl( const IMeasure* pMeasure, float dMult ) :
-	m_dMult(dMult), CMeasureImpl( pMeasure ) { }
+CMeasureSigmoidImpl::CMeasureSigmoidImpl( const IMeasure* pMeasure, bool fMemory, float dMult ) :
+	m_dMult(dMult), CMeasureImpl( pMeasure, fMemory ) { }
 
 const char* CMeasureSigmoid::GetName( ) const {
 
@@ -397,6 +485,10 @@ bool CMeasureSigmoid::IsRank( ) const {
 
 	return m_pMeasure->IsRank( ); }
 
+IMeasure* CMeasureSigmoid::Clone( ) const {
+
+	return new CMeasureSigmoid( m_pMeasure->Clone( ), true, m_dMult ); }
+
 double CMeasureSigmoid::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 	double	dRet;
@@ -404,8 +496,8 @@ double CMeasureSigmoid::Measure( const float* adX, size_t iM, const float* adY,
 	dRet = m_pMeasure->Measure( adX, iM, adY, iN, eMap, adWX, adWY );
 	return ( 2 * ( 1 - ( 1 / ( 1 + exp( -dRet * m_dMult ) ) ) ) ); }
 
-CMeasureAutocorrelate::CMeasureAutocorrelate( const IMeasure* pMeasure ) :
-	CMeasureImpl(pMeasure) { }
+CMeasureAutocorrelate::CMeasureAutocorrelate( const IMeasure* pMeasure, bool fMemory ) :
+	CMeasureImpl( pMeasure, fMemory ) { }
 
 const char* CMeasureAutocorrelate::GetName( ) const {
 
@@ -414,6 +506,10 @@ const char* CMeasureAutocorrelate::GetName( ) const {
 bool CMeasureAutocorrelate::IsRank( ) const {
 
 	return m_pMeasure->IsRank( ); }
+
+IMeasure* CMeasureAutocorrelate::Clone( ) const {
+
+	return new CMeasureAutocorrelate( m_pMeasure->Clone( ), true ); }
 
 double CMeasureAutocorrelate::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
@@ -453,6 +549,10 @@ bool CMeasureSpearman::IsRank( ) const {
 
 	return true; }
 
+IMeasure* CMeasureSpearman::Clone( ) const {
+
+	return new CMeasureSpearman( m_fTransformed ); }
+
 double CMeasureSpearman::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 	static const size_t	c_iCache	= 1024;
@@ -465,6 +565,8 @@ double CMeasureSpearman::Measure( const float* adX, size_t iM, const float* adY,
 
 	if( ( iM != iN ) || adWX || adWY )
 		return CMeta::GetNaN( );
+	if( CMeasureImpl::IsNaN( adX, iM ) || CMeasureImpl::IsNaN( adY, iN ) )
+		return CMeasureImpl::MeasureTrim( this, adX, iM, adY, iN, eMap, adWX, adWY );
 
 	if( m_fTransformed ) {
 		dSum = 0;
@@ -524,9 +626,13 @@ bool CMeasurePearNorm::IsRank( ) const {
 
 	return false; }
 
+IMeasure* CMeasurePearNorm::Clone( ) const {
+
+	return new CMeasurePearNorm( m_dAverage, m_dStdDev ); }
+
 double CMeasurePearNorm::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
-	static const float	c_dBound	= 0.99;
+	static const float	c_dBound	= 0.99f;
 	double	dP;
 
 	dP = CMeasurePearson::Pearson( adX, iM, adY, iN, EMapNone, adWX, adWY );
@@ -545,6 +651,10 @@ bool CMeasureHypergeometric::IsRank( ) const {
 
 	return false; }
 
+IMeasure* CMeasureHypergeometric::Clone( ) const {
+
+	return new CMeasureHypergeometric( ); }
+
 double CMeasureHypergeometric::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 	size_t	i, iOne, iTwo, iBoth;
@@ -554,6 +664,8 @@ double CMeasureHypergeometric::Measure( const float* adX, size_t iM, const float
 
 	iOne = iTwo = iBoth = 0;
 	for( i = 0; i < iN; ++i ) {
+		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
+			continue;
 		if( adX[ i ] )
 			iOne++;
 		if( adY[ i ] ) {
@@ -562,4 +674,5 @@ double CMeasureHypergeometric::Measure( const float* adX, size_t iM, const float
 				iBoth++; } }
 
 	return ( 1 - CStatistics::HypergeometricCDF( iBoth, iOne, iTwo, iN ) ); }
+
 }

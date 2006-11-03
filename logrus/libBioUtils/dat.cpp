@@ -51,7 +51,11 @@ void CDatImpl::Reset( ) {
 
 	m_Data.Reset( );
 	m_vecstrGenes.clear( );
-	m_PCL.Reset( );
+	if( m_pPCL && m_fPCLMemory )
+		delete m_pPCL;
+	m_pPCL = NULL;
+	if( m_pMeasure && m_fMeasureMemory )
+		delete m_pMeasure;
 	m_pMeasure = NULL; }
 
 void CDatImpl::SlimCache( const CSlim& Slim, vector<vector<size_t> >& vecveciGenes ) const {
@@ -193,13 +197,13 @@ bool CDatImpl::OpenPCL( istream& istm ) {
 	float	d, dAve, dStd;
 
 	Reset( );
-	if( !m_PCL.Open( istm ) )
+	m_pPCL = new CPCL( );
+	if( !m_pPCL->Open( istm ) )
 		return false;
 
-// BUGBUG: This is not cool
 	dAve = dStd = 0;
 	m_pMeasure = new CMeasurePearNorm( );
-	for( i = 0; i < 1000; ++i ) {
+	for( i = 0; i < c_iApproximate; ++i ) {
 		iOne = rand( ) % GetGenes( );
 		if( ( iTwo = rand( ) % GetGenes( ) ) == iOne ) {
 			i--;
@@ -210,6 +214,17 @@ bool CDatImpl::OpenPCL( istream& istm ) {
 	dStd = sqrt( ( dStd / i ) - ( dAve * dAve ) );
 	delete m_pMeasure;
 	m_pMeasure = new CMeasurePearNorm( dAve, dStd );
+	m_fMeasureMemory = true;
+
+	return true; }
+
+bool CDat::Open( const CPCL& PCL, const IMeasure* pMeasure, bool fMeasureMemory ) {
+
+	Reset( );
+	m_pPCL = (CPCL*)&PCL;
+	m_fPCLMemory = false;
+	m_pMeasure = pMeasure;
+	m_fMeasureMemory = fMeasureMemory;
 
 	return true; }
 
@@ -298,8 +313,10 @@ bool CDatImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
 
 	Reset( );
 	if( fPCL ) {
-		if( m_PCL.Open( istm ) ) {
+		m_pPCL = new CPCL( );
+		if( m_pPCL->Open( istm ) ) {
 			m_pMeasure = (IMeasure*)1;
+			m_fMeasureMemory = false;
 			return true; }
 		return false; }
 	if( fBinary ) {
@@ -408,7 +425,7 @@ size_t CDatImpl::GetGene( const string& strGene ) const {
 	size_t	i;
 
 	if( m_pMeasure )
-		return m_PCL.GetGene( strGene );
+		return m_pPCL->GetGene( strGene );
 
 	for( i = 0; i < GetGenes( ); ++i )
 		if( m_vecstrGenes[ i ] == strGene )

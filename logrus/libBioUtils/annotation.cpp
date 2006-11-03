@@ -23,12 +23,13 @@ void COntologyImpl::SNode::Reset( ) {
 		delete[] m_apCacheGenes; }
 
 COntologyImpl::SParser::SParser( istream& istm, CGenome& Genome ) : m_istm(istm),
-	m_Genome(Genome) {
+	m_Genome(Genome), m_iLine(0) {
 
 	m_szLine[ 0 ] = 0; }
 
 bool COntologyImpl::SParser::GetLine( ) {
 
+	m_iLine++;
 	m_istm.getline( m_szLine, c_iBuffer - 1 );
 	g_CatBioUtils.debug( "COntologyImpl::SParser::GetLine( ) %s", m_szLine );
 	return true; }

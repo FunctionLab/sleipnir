@@ -5,18 +5,26 @@
 
 namespace libBioUtils {
 
-class IMeasure;
-
 class CMeasureImpl {
 protected:
-	CMeasureImpl( const IMeasure* );
+	friend class CMeasureKendallsTau;
+	friend class CMeasureKolmogorovSmirnov;
+	friend class CMeasureSpearman;
 
-	const IMeasure*	m_pMeasure;
+	static double MeasureTrim( const IMeasure*, const float*, size_t, const float*, size_t, const IMeasure::EMap,
+		const float*, const float* );
+	static bool IsNaN( const float*, size_t );
+
+	CMeasureImpl( const IMeasure*, bool );
+	~CMeasureImpl( );
+
+	IMeasure*	m_pMeasure;
+	bool		m_fMemory;
 };
 
 class CMeasureSigmoidImpl : protected CMeasureImpl {
 protected:
-	CMeasureSigmoidImpl( const IMeasure*, float );
+	CMeasureSigmoidImpl( const IMeasure*, bool, float );
 
 	float	m_dMult;
 };

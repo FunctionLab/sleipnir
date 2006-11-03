@@ -22,6 +22,7 @@ protected:
 	typedef std::vector<TAF>				TAAF;
 
 	static const size_t	c_iGeneLimit	= 100000;
+	static const size_t	c_iApproximate	= 1000;
 	static const float	c_dNaN;
 	static const char	c_szBin[];
 	static const char	c_szPcl[];
@@ -30,7 +31,7 @@ protected:
 	static void ResizeNaN( TAF&, size_t );
 	static std::string DabGene( std::istream& );
 
-	CDatImpl( ) : m_pMeasure(NULL) { }
+	CDatImpl( ) : m_pMeasure(NULL), m_pPCL(NULL) { }
 	~CDatImpl( );
 
 	void Reset( );
@@ -48,8 +49,8 @@ protected:
 
 	float Get( size_t iX, size_t iY ) const {
 
-		return ( m_pMeasure ? (float)m_pMeasure->Measure( m_PCL.Get( iX ), m_PCL.GetExperiments( ), m_PCL.Get( iY ),
-			m_PCL.GetExperiments( ) ) :
+		return ( m_pMeasure ? (float)m_pMeasure->Measure( m_pPCL->Get( iX ), m_pPCL->GetExperiments( ),
+			m_pPCL->Get( iY ), m_pPCL->GetExperiments( ) ) :
 			( ( iX == iY ) ? CMeta::GetNaN( ) : m_Data.Get( iX, iY ) ) ); }
 
 	bool Set( size_t iX, size_t iY, float dValue ) {
@@ -67,16 +68,18 @@ protected:
 
 	size_t GetGenes( ) const {
 
-		return ( m_pMeasure ? m_PCL.GetGenes( ) : m_vecstrGenes.size( ) ); }
+		return ( m_pPCL ? m_pPCL->GetGenes( ) : m_vecstrGenes.size( ) ); }
 
 	std::string GetGene( size_t iGene ) const {
 
-		return ( m_pMeasure ? m_PCL.GetGene( iGene ) : m_vecstrGenes[ iGene ] ); }
+		return ( m_pPCL ? m_pPCL->GetGene( iGene ) : m_vecstrGenes[ iGene ] ); }
 
 	CDistanceMatrix	m_Data;
 	TVecStr			m_vecstrGenes;
-	CPCL			m_PCL;
+	CPCL*			m_pPCL;
+	bool			m_fPCLMemory;
 	const IMeasure*	m_pMeasure;
+	bool			m_fMeasureMemory;
 };
 
 }

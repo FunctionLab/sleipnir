@@ -142,7 +142,7 @@ double CClustQTCImpl::GetJackDistance( const float* adX, const float* adY, size_
 	bool fAutoc, float* adA, float* adB, const IMeasure* pMeasure ) {
 	size_t					i;
 	double					dRet, dCur;
-	CMeasureAutocorrelate	Autocorrelate( pMeasure );
+	CMeasureAutocorrelate	Autocorrelate( pMeasure, false );
 	const IMeasure*			pAuto	= &Autocorrelate;
 
 	dRet = fAutoc ? pAuto->Measure( adX, iN, adY, iN ) :

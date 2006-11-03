@@ -2,6 +2,7 @@
 #include "pcl.h"
 #include "meta.h"
 #include "statistics.h"
+#include "genome.h"
 
 namespace libBioUtils {
 
@@ -11,6 +12,101 @@ const char	CPCLImpl::c_szGID[]		= "GID";
 const char	CPCLImpl::c_szGWEIGHT[]	= "GWEIGHT";
 const char	CPCLImpl::c_szNAME[]	= "NAME";
 const char	CPCLImpl::c_szOne[]		= "1";
+
+int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, bool fNormalize, bool fZScore,
+	bool fAutocorrelate, const char* szGenes, float dCutoff, size_t iLimit, CPCL& PCL, CDat& Dat ) {
+	size_t						i, j, iOne, iTwo;
+	float						d;
+	ifstream					ifsm;
+	vector<string>				vecstrGenes;
+	CGenome						Genome;
+	CGenes						GenesIn( Genome );
+	vector<size_t>				veciGenes;
+	const float*				adOne;
+	IMeasure*					pMeasure;
+	CMeasurePearson				Pearson;
+	CMeasureEuclidean			Euclidean;
+	CMeasureKendallsTau			KendallsTau;
+	CMeasureKolmogorovSmirnov	KolmSmir;
+	CMeasureSpearman			Spearman( true );
+	CMeasureNegate				EuclideanNeg( &Euclidean, false );
+	CMeasurePearNorm			PearNorm;
+	CMeasureHypergeometric		Hypergeom;
+	CMeasureQuickPearson		PearQuick;
+	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanNeg, &KendallsTau,
+		&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick, NULL };
+
+	pMeasure = NULL;
+	for( i = 0; apMeasures[ i ]; ++i )
+		if( !strcmp( apMeasures[ i ]->GetName( ), szDistance ) ) {
+			if( ( pMeasure = apMeasures[ i ] ) == &EuclideanNeg )
+				fNormalize = true;
+			break; }
+	if( !pMeasure )
+		return 1;
+
+	CMeasureAutocorrelate		Autocorrelate( pMeasure, false );
+	if( fAutocorrelate )
+		pMeasure = &Autocorrelate;
+
+	if( szPCL ) {
+		ifsm.open( szPCL );
+		if( !PCL.Open( ifsm, iSkip ) ) {
+			g_CatBioUtils.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", szPCL, iSkip,
+				szDistance, fNormalize, fZScore, fAutocorrelate, szGenes ? szGenes : "", dCutoff );
+			return 1; }
+		ifsm.close( ); }
+	else if( !PCL.Open( cin, iSkip ) ) {
+		g_CatBioUtils.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", "stdin", iSkip,
+			szDistance, fNormalize, fZScore, fAutocorrelate, szGenes ? szGenes : "", dCutoff );
+		return 1; }
+
+	if( szGenes ) {
+		ifsm.clear( );
+		ifsm.open( szGenes );
+		if( !GenesIn.Open( ifsm ) ) {
+			g_CatBioUtils.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open genes", szPCL ? szPCL :
+				"stdin", iSkip, szDistance, fNormalize, fZScore, fAutocorrelate, szGenes, dCutoff );
+			return 1; }
+		ifsm.close( ); }
+	else
+		GenesIn.Open( PCL.GetGeneNames( ) );
+	veciGenes.resize( GenesIn.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = szGenes ? PCL.GetGene( GenesIn.GetGene( i ).GetName( ) ) : i;
+
+	if( pMeasure->IsRank( ) )
+		PCL.RankTransform( );
+
+	if( ( iLimit != -1 ) && ( PCL.GetGenes( ) > iLimit ) )
+		Dat.Open( PCL, pMeasure->Clone( ), true );
+	else {
+		Dat.Open( GenesIn.GetGeneNames( ) );
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				Dat.Set( i, j, CMeta::GetNaN( ) );
+		for( i = 0; i < GenesIn.GetGenes( ); ++i ) {
+			if( !( i % 100 ) )
+				g_CatBioUtils.info( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) processing gene %d/%d", szPCL ? szPCL :
+					"stdin", iSkip, szDistance, fNormalize, fZScore, fAutocorrelate, szGenes ? szGenes : "", dCutoff, i,
+					GenesIn.GetGenes( ) );
+			if( ( iOne = veciGenes[ i ] ) == -1 )
+				continue;
+			adOne = PCL.Get( iOne );
+			for( j = ( i + 1 ); j < GenesIn.GetGenes( ); ++j )
+				if( ( iTwo = veciGenes[ j ] ) != -1 )
+					Dat.Set( i, j, (float)pMeasure->Measure(
+						adOne, PCL.GetExperiments( ), PCL.Get( iTwo ), PCL.GetExperiments( ) ) ); }
+
+		if( fNormalize || fZScore )
+			Dat.Normalize( !!fNormalize );
+		if( !CMeta::IsNaN( dCutoff ) )
+			for( i = 0; i < Dat.GetGenes( ); ++i )
+				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+					if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) && ( d < dCutoff ) )
+						Dat.Set( i, j, CMeta::GetNaN( ) ); }
+
+	return 0; }
 
 size_t CPCL::GetSkip( ) {
 

@@ -50,6 +50,7 @@ protected:
 		CGenome&	m_Genome;
 		char		m_szLine[ c_iBuffer ];
 		std::string	m_strGloss;
+		size_t		m_iLine;
 	};
 
 	COntologyImpl( const std::string& );

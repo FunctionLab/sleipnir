@@ -103,12 +103,25 @@ int main( int iArgs, char** aszArgs ) {
 	CMeta::Shutdown( );
 	return 0; }
 
+struct SSorter {
+	const vector<float>&	m_vecdWeights;
+
+	SSorter( const vector<float>& vecdWeights ) : m_vecdWeights(vecdWeights) { }
+
+	bool operator()( size_t iOne, size_t iTwo ) {
+
+		return ( m_vecdWeights[ iOne ] < m_vecdWeights[ iTwo ] ); }
+};
+
 int open_samba( istream& istm, CGenome& Genome, vector<float>& vecdWeights, vector<CGenes*>& vecpClusters ) {
 	static const size_t	c_iLine	= 1024;
-	char			szLine[ c_iLine ];
-	vector<string>	vecstrLine, vecstrGenes;
-	CGenes*			pCluster;
-	size_t			iCluster, iCur;
+	char				szLine[ c_iLine ];
+	vector<string>		vecstrLine, vecstrGenes;
+	CGenes*				pCluster;
+	size_t				iCluster, iCur, i;
+	vector<size_t>		veciIndices;
+	vector<float>		vecdCopy;
+	vector<CGenes*>		vecpCopy;
 
 	while( !istm.eof( ) ) {
 		istm.getline( szLine, c_iLine - 1 );
@@ -121,7 +134,7 @@ int open_samba( istream& istm, CGenome& Genome, vector<float>& vecdWeights, vect
 		if( vecstrLine.size( ) != 2 ) {
 			cerr << "Illegal line: " << szLine;
 			return 1; }
-		vecdWeights.push_back( (float)atof( vecstrLine[ 1 ].c_str( ) ) ); }
+		vecdCopy.push_back( (float)atof( vecstrLine[ 1 ].c_str( ) ) ); }
 
 	iCluster = -1;
 	while( !istm.eof( ) ) {
@@ -137,14 +150,22 @@ int open_samba( istream& istm, CGenome& Genome, vector<float>& vecdWeights, vect
 			continue;
 		if( ( iCur = atoi( vecstrLine[ 0 ].c_str( ) ) ) != iCluster ) {
 			if( vecstrGenes.size( ) ) {
-				vecpClusters.push_back( pCluster = new CGenes( Genome ) );
+				vecpCopy.push_back( pCluster = new CGenes( Genome ) );
 				pCluster->Open( vecstrGenes ); }
 			vecstrGenes.clear( );
 			iCluster = iCur; }
 		vecstrGenes.push_back( vecstrLine[ 2 ] ); }
 	if( vecstrGenes.size( ) ) {
-		vecpClusters.push_back( pCluster = new CGenes( Genome ) );
+		vecpCopy.push_back( pCluster = new CGenes( Genome ) );
 		pCluster->Open( vecstrGenes ); }
+
+	veciIndices.resize( vecdCopy.size( ) );
+	for( i = 0; i < veciIndices.size( ); ++i )
+		veciIndices[ i ] = i;
+	sort( veciIndices.begin( ), veciIndices.end( ), SSorter( vecdCopy ) );
+	for( i = 0; i < veciIndices.size( ); ++i ) {
+		vecdWeights.push_back( vecdCopy[ veciIndices[ i ] ] );
+		vecpClusters.push_back( vecpCopy[ veciIndices[ i ] ] ); }
 
 	return 0; }
 

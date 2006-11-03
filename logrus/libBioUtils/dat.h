@@ -29,6 +29,7 @@ public:
 	bool Open( const std::vector<std::string>&, const CDistanceMatrix& );
 	bool Open( const std::vector<CGenes*>&, const std::vector<CGenes*>&, const CGenome& );
 	bool Open( const std::vector<CGenes*>&, const CDat&, const CGenome& );
+	bool Open( const CPCL&, const IMeasure*, bool );
 	bool OpenGenes( std::istream&, bool, bool = false );
 	void Save( std::ostream&, bool ) const;
 	void SaveDOT( std::ostream&, float = HUGE_VAL, const CGenome* = NULL, bool = false ) const;
@@ -69,7 +70,7 @@ public:
 
 	const std::vector<std::string>& GetGeneNames( ) const {
 
-		return ( m_pMeasure ? m_PCL.GetGeneNames( ) : m_vecstrGenes ); }
+		return ( m_pMeasure ? m_pPCL->GetGeneNames( ) : m_vecstrGenes ); }
 };
 
 }

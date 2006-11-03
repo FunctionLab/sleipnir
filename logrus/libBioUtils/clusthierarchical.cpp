@@ -154,9 +154,6 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 			if( ( d = Sim.Get( i, j ) ) > vecdMax[ i ] ) {
 				vecdMax[ i ] = d;
 				veciMax[ i ] = j; }
-			if( d > vecdMax[ j ] ) {
-				vecdMax[ j ] = d;
-				veciMax[ j ] = i; }
 			if( d < dMin )
 				dMin = d; } }
 
@@ -195,21 +192,15 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 
 		veciMax[ i ] = i;
 		for( iP = 0; iP < Sim.GetSize( ); ++iP )
-			if( ( veciOwner[ iP ] != -1 ) && ( ( veciMax[ iP ] == i ) || ( veciMax[ iP ] == j ) ) )
-				vecdMax[ iP ] = -FLT_MAX;
-		for( iP = 0; iP < Sim.GetSize( ); ++iP )
-			if( veciOwner[ iP ] != -1 ) {
+			if( ( veciOwner[ iP ] != -1 ) && ( ( veciMax[ iP ] == i ) || ( veciMax[ iP ] == j ) ) ) {
 				if( ( vecdMax[ iP ] == dMin ) && ( iP != i ) ) {
 					veciMax[ iP ] = i;
 					continue; }
+				vecdMax[ iP ] = -FLT_MAX;
 				for( m = ( iP + 1 ); m < Sim.GetSize( ); ++m )
-					if( veciOwner[ m ] != -1 ) {
-						if( ( d = Sim.Get( iP, m ) ) > vecdMax[ iP ] ) {
-							vecdMax[ iP ] = d;
-							veciMax[ iP ] = m; }
-						if( d > vecdMax[ m ] ) {
-							vecdMax[ m ] = d;
-							veciMax[ m ] = iP; } } } }
+					if( ( veciOwner[ m ] != -1 ) && ( ( d = Sim.Get( iP, m ) ) > vecdMax[ iP ] ) ) {
+						vecdMax[ iP ] = d;
+						veciMax[ iP ] = m; } } }
 
 	return ConstructHierarchy( veciChild1, veciChild2, vecdHeight, ( 2 * Sim.GetSize( ) ) - 2 ); }
 

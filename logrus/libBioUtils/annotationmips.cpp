@@ -67,7 +67,16 @@ bool COntologyMIPS::Open( istream& istmOnto, istream& istmGene, CGenome& Genome 
 	SParserMIPS	sParserOnto( istmOnto, Genome );
 	SParserMIPS	sParserGene( istmGene, Genome );
 
-	return ( OpenOntology( sParserOnto ) && OpenGenes( sParserGene ) ); }
+	if( !OpenOntology( sParserOnto ) ) {
+		g_CatBioUtils.error( "COntologyMIPS::Open( ) failed on ontology line %d: %s", sParserOnto.m_iLine,
+			sParserOnto.m_szLine );
+		return false; }
+	if( !OpenGenes( sParserGene ) ) {
+		g_CatBioUtils.error( "COntologyMIPS::Open( ) failed on genes line %d: %s", sParserGene.m_iLine,
+			sParserGene.m_szLine );
+		return false; }
+
+	return true; }
 
 bool COntologyMIPSImpl::OpenOntology( SParserMIPS& sParser ) {
 	size_t					i, j;
