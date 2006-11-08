@@ -4,14 +4,15 @@
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	CDatasetCompact		Data;
+	CGenome				Genome;
+	CGenes				GenesIn( Genome ), GenesEx( Genome );
+	ifstream			ifsm;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
-#if !( defined(_MSC_VER) && defined(_DEBUG) )
     EnableXdslFormat( );
-#endif // !( defined(_MSC_VER) && defined(_DEBUG) )
 
 	if( sArgs.load_arg ) {
 		CDatasetCompactMap	DataMap;
@@ -26,9 +27,22 @@ int main( int iArgs, char** aszArgs ) {
 #endif // _MSC_VER
 		return 0; }
 
-	if( sArgs.input_arg ) {
-		ifstream	ifsm;
+	if( sArgs.genes_arg ) {
+		ifsm.open( sArgs.genes_arg );
+		if( !GenesIn.Open( ifsm ) ) {
+			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+			return 1; }
+		ifsm.close( ); }
+	if( sArgs.genex_arg ) {
+		ifsm.clear( );
+		ifsm.open( sArgs.genex_arg );
+		if( !GenesEx.Open( ifsm ) ) {
+			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
+			return 1; }
+		ifsm.close( ); }
 
+	if( sArgs.input_arg ) {
+		ifsm.clear( );
 		ifsm.open( sArgs.input_arg, ios_base::binary );
 		if( !Data.Open( ifsm ) ) {
 			cerr << "Couldn't open: " << sArgs.input_arg << endl;
@@ -47,7 +61,7 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Answers.Open( sArgs.answers_arg, false ) ) {
 			cerr << "Couldn't open: " << sArgs.answers_arg << endl;
 			return 1; }
-		if( !Data.Open( Answers, sArgs.directory_arg, &BNSmile, !!sArgs.everything_flag ) ) {
+		if( !Data.Open( Answers, sArgs.directory_arg, &BNSmile, GenesIn, GenesEx, !!sArgs.everything_flag ) ) {
 			cerr << "Couldn't open: " << sArgs.directory_arg << endl;
 			return 1; } }
 	else {

@@ -32,8 +32,19 @@ bool CDatasetCompact::Open( const vector<string>& vecstrData ) {
 
 	return true; }
 
+struct SIsGene {
+	const CGenes&	m_Genes;
+	bool			m_fIn;
+
+	SIsGene( const CGenes& Genes, bool fIn ) : m_Genes(Genes), m_fIn(fIn) { }
+
+	bool operator()( const string& strGene ) {
+
+		return ( m_fIn == m_Genes.IsGene( strGene ) ); }
+};
+
 bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
-	const IBayesNet* pBayesNet, bool fEverything ) {
+	const IBayesNet* pBayesNet, const CGenes& GenesIn, const CGenes& GenesEx, bool fEverything ) {
 	size_t			i, j, k;
 	vector<string>	vecstrData;
 	set<string>		setstrGenes;
@@ -55,6 +66,10 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 		m_vecstrGenes.resize( Answers.GetGenes( ) );
 		for( i = 0; i < m_vecstrGenes.size( ); ++i )
 			m_vecstrGenes[ i ] = Answers.GetGene( i ); }
+	if( GenesIn.GetGenes( ) )
+		remove_if( m_vecstrGenes.begin( ), m_vecstrGenes.end( ), SIsGene( GenesIn, false ) );
+	if( GenesEx.GetGenes( ) )
+		remove_if( m_vecstrGenes.begin( ), m_vecstrGenes.end( ), SIsGene( GenesEx, true ) );
 
 	if( !CDatasetCompactImpl::Open( Answers, 0 ) )
 		return false;

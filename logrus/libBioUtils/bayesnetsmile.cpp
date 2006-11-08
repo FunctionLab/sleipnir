@@ -438,9 +438,10 @@ void CBayesNetSmile::Reverse( size_t iNode ) {
 
 bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 	vector<vector<size_t> >	vecveciCounts;
-	size_t					i, j, k, iAnswer, iAnswers, iVal, iCount;
+	size_t					i, j, k, iAnswer, iAnswers, iVal, iCount, iTotal;
 	DSL_nodeDefinition*		pDef;
 	DSL_Dmatrix*			pMat;
+	DSL_Dmatrix*			pDefault;
 	DSL_intArray			veciCoords;
 
 	vecveciCounts.resize( m_SmileNet.GetNumberOfNodes( ) );
@@ -469,27 +470,22 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 		pDef = m_SmileNet.GetNode( (int)i )->Definition( );
 		pMat = pDef->GetMatrix( );
 		pMat->IndexToCoordinates( 0, veciCoords );
+		pDefault = m_pDefaults ? m_pDefaults->m_SmileNet.GetNode( (int)i )->Definition( )->GetMatrix( ) : NULL;
 		for( j = 0; j < iAnswers; ++j ) {
 			veciCoords[ 0 ] = (int)j;
-			for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
+			for( iTotal = k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
 				veciCoords[ 1 ] = (int)k;
-				if( ( iCount = vecveciCounts[ i ][ ( k * iAnswers ) + j ] ) < c_iMinimum ) {
-					g_CatBioUtils.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s, cell %d:%d",
-						fZero, m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), j, k );
-					if( m_pDefaults )
-						break;
-					else
-						iCount = max( iCount, 1 ); }
+				iCount = max( vecveciCounts[ i ][ ( k * iAnswers ) + j ], 1 );
+				iTotal += iCount;
 				(*pMat)[ veciCoords ] = iCount; }
-			if( k < (size_t)pDef->GetNumberOfOutcomes( ) )
-				break; }
-		if( j < iAnswers ) {
-			DSL_Dmatrix*	pDefault;
-
-			pDefault = m_pDefaults->m_SmileNet.GetNode( (int)i )->Definition( )->GetMatrix( );
-			for( j = pMat->IndexToCoordinates( 0, veciCoords ); j != DSL_OUT_OF_RANGE;
-				j = pMat->NextCoordinates( veciCoords ) )
-				(*pMat)[ veciCoords ] = (*pDefault)[ veciCoords ]; }
+			if( iTotal < c_iMinimum ) {
+				g_CatBioUtils.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s, row %d",
+					fZero, m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), j );
+				if( !pDefault )
+					continue;
+				for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
+					veciCoords[ 1 ] = (int)k;
+					(*pMat)[ veciCoords ] = (*pDefault)[ veciCoords ]; } } }
 		pMat->Normalize( ); }
 
 	return true; }

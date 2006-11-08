@@ -27,7 +27,7 @@ int main( int iArgs, char** aszArgs ) {
 		( iRet = read_genes( sArgs.negatives_arg, Genome, vecpNegatives ) ) )
 		return iRet;
 
-	Dat.Open( vecpPositives, vecpNegatives, Genome );
+	Dat.Open( vecpPositives, vecpNegatives, (float)sArgs.overlap_arg, Genome );
 	if( sArgs.test_arg ) {
 		set<string>					setstrGenes;
 		set<string>::const_iterator	iterGenes;

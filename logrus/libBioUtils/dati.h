@@ -46,6 +46,7 @@ protected:
 	void NormalizeMinmax( );
 	void NormalizeStdev( );
 	void OpenHelper( const CGenes*, float );
+	void OpenHelper( const CGenes*, const CGenes*, float );
 
 	float Get( size_t iX, size_t iY ) const {
 

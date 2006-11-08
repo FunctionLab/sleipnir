@@ -3,6 +3,7 @@
 #include "annotation.h"
 #include "genome.h"
 #include "pstdint.h"
+#include "statistics.h"
 
 namespace libBioUtils {
 
@@ -155,9 +156,11 @@ bool CDat::Open( const vector<CGenes*>& vecpPositives, const CDat& DatNegatives,
 	return true; }
 
 bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& vecpNegatives,
-	const CGenome& Genome ) {
-	size_t	i, j;
-	float	d;
+	float dP, const CGenome& Genome ) {
+	size_t			i, j, k, iOne, iTwo, iOverlap;
+	float			d;
+	const CGenes*	pBig;
+	const CGenes*	pSmall;
 
 	Reset( );
 	Open( Genome.GetGeneNames( ) );
@@ -165,6 +168,22 @@ bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& ve
 		OpenHelper( vecpPositives[ i ], 1 );
 	for( i = 0; i < vecpNegatives.size( ); ++i )
 		OpenHelper( vecpNegatives[ i ], 0 );
+	if( dP > 0 )
+		for( i = 0; i < vecpPositives.size( ); ++i ) {
+			iOne = vecpPositives[ i ]->GetGenes( );
+			for( j = ( i + 1 ); j < vecpPositives.size( ); ++j ) {
+				iTwo = vecpPositives[ j ]->GetGenes( );
+				if( iOne < iTwo ) {
+					pSmall = vecpPositives[ i ];
+					pBig = vecpPositives[ j ]; }
+				else {
+					pSmall = vecpPositives[ j ];
+					pBig = vecpPositives[ i ]; }
+				for( iOverlap = k = 0; k < pSmall->GetGenes( ); ++k )
+					if( pBig->IsGene( pSmall->GetGene( k ).GetName( ) ) )
+						iOverlap++;
+				if( CStatistics::HypergeometricCDF( iOverlap, iOne, iTwo, GetGenes( ) ) < dP )
+					OpenHelper( pBig, pSmall, 0 ); } }
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( CMeta::IsNaN( d = Get( i, j ) ) )
@@ -185,6 +204,23 @@ void CDatImpl::OpenHelper( const CGenes* pGenes, float dValue ) {
 		iOne = veciGenes[ i ];
 		for( j = ( i + 1 ); j < veciGenes.size( ); ++j ) {
 			iTwo = veciGenes[ j ];
+			if( CMeta::IsNaN( Get( iOne, iTwo ) ) )
+				Set( iOne, iTwo, dValue ); } } }
+
+void CDatImpl::OpenHelper( const CGenes* pOne, const CGenes* pTwo, float dValue ) {
+	vector<size_t>	veciOne, veciTwo;
+	size_t			i, j, iOne, iTwo;
+
+	veciOne.resize( pOne->GetGenes( ) );
+	for( i = 0; i < veciOne.size( ); ++i )
+		veciOne[ i ] = GetGene( pOne->GetGene( i ).GetName( ) );
+	veciTwo.resize( pTwo->GetGenes( ) );
+	for( i = 0; i < veciTwo.size( ); ++i )
+		veciTwo[ i ] = GetGene( pTwo->GetGene( i ).GetName( ) );
+	for( i = 0; i < veciOne.size( ); ++i ) {
+		iOne = veciOne[ i ];
+		for( j = 0; j < veciTwo.size( ); ++j ) {
+			iTwo = veciTwo[ j ];
 			if( CMeta::IsNaN( Get( iOne, iTwo ) ) )
 				Set( iOne, iTwo, dValue ); } } }
 
