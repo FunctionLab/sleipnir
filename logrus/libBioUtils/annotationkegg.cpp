@@ -101,6 +101,7 @@ const char	COntologyKEGGImpl::c_szName[]		= "NAME";
 const char	COntologyKEGGImpl::c_szDefinition[]	= "DEFINITION";
 const char	COntologyKEGGImpl::c_szClass[]		= "CLASS";
 const char	COntologyKEGGImpl::c_szPath[]		= "PATH:";
+const char	COntologyKEGGImpl::c_szBR[]			= "BR:";
 const char	COntologyKEGGImpl::c_szDBLinks[]	= "DBLINKS";
 const char	COntologyKEGGImpl::c_szGenes[]		= "GENES";
 const char	COntologyKEGGImpl::c_szEnd[]		= "///";
@@ -153,6 +154,7 @@ bool COntologyKEGGImpl::OpenClass( SParserKEGG& sParser ) {
 	sParser.m_strGloss.clear( );
 	i = strlen( c_szClass );
 	memmove( sParser.m_szLine, sParser.m_szLine + i, strlen( sParser.m_szLine ) - i + 1 );
+	sParser.m_fPathing = false;
 	do
 		if( !OpenGloss( sParser ) )
 			return false;
@@ -169,24 +171,31 @@ bool COntologyKEGGImpl::OpenGloss( SParserKEGG& sParser ) {
 	size_t			i;
 
 	for( pchStartGloss = sParser.m_szLine; isspace( *pchStartGloss ); ++pchStartGloss );
-	if( pchEndGloss = strstr( pchStartGloss, c_szPath ) ) {
-		pchStartPath = pchEndGloss + strlen( c_szPath );
+	if( ( pchEndGloss = strstr( pchStartGloss, c_szPath ) ) ||
+		( pchEndGloss = strstr( pchStartGloss, c_szBR ) ) ) {
+		pchStartPath = pchEndGloss + ( strncmp( pchEndGloss, c_szBR, strlen( c_szBR ) ) ?
+			strlen( c_szPath ) : strlen( c_szBR ) );
 		if( !( pchEndPath = strchr( pchStartPath, ']' ) ) )
 			return false;
 		*pchEndPath = 0;
 		CMeta::Tokenize( pchStartPath, vecstrIDs, " ", true );
 		for( i = 0; i < vecstrIDs.size( ); ++i )
 			sParser.m_vecstrIDs.push_back( vecstrIDs[ i ] );
-		if( pchEndGloss > pchStartGloss ) {
+		if( pchEndGloss > ( pchStartGloss + 1 ) ) {
 			*( pchEndGloss - 1 ) = 0;
-			if( sParser.m_strGloss.length( ) )
+			if( sParser.m_fPathing )
+				sParser.m_strGloss.clear( );
+			else if( sParser.m_strGloss.length( ) )
 				sParser.m_strGloss += ' ';
 			sParser.m_strGloss += pchStartGloss; }
+		sParser.m_fPathing = true;
 		for( i = 0; i < vecstrIDs.size( ); ++i )
-			sParser.m_mapGlosses[ vecstrIDs[ i ] ] = sParser.m_strGloss;
-		sParser.m_strGloss.clear( ); }
+			sParser.m_mapGlosses[ vecstrIDs[ i ] ] = sParser.m_strGloss; }
 	else {
-		if( sParser.m_strGloss.length( ) )
+		if( sParser.m_fPathing ) {
+			sParser.m_fPathing = false;
+			sParser.m_strGloss.clear( ); }
+		else if( sParser.m_strGloss.length( ) )
 			sParser.m_strGloss += ' ';
 		sParser.m_strGloss += pchStartGloss; }
 

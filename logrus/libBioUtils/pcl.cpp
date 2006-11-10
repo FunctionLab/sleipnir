@@ -29,25 +29,9 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 	CMeasureKendallsTau			KendallsTau;
 	CMeasureKolmogorovSmirnov	KolmSmir;
 	CMeasureSpearman			Spearman( true );
-	CMeasureNegate				EuclideanNeg( &Euclidean, false );
 	CMeasurePearNorm			PearNorm;
 	CMeasureHypergeometric		Hypergeom;
 	CMeasureQuickPearson		PearQuick;
-	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanNeg, &KendallsTau,
-		&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick, NULL };
-
-	pMeasure = NULL;
-	for( i = 0; apMeasures[ i ]; ++i )
-		if( !strcmp( apMeasures[ i ]->GetName( ), szDistance ) ) {
-			if( ( pMeasure = apMeasures[ i ] ) == &EuclideanNeg )
-				fNormalize = true;
-			break; }
-	if( !pMeasure )
-		return 1;
-
-	CMeasureAutocorrelate		Autocorrelate( pMeasure, false );
-	if( fAutocorrelate )
-		pMeasure = &Autocorrelate;
 
 	if( szPCL ) {
 		ifsm.open( szPCL );
@@ -60,6 +44,22 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 		g_CatBioUtils.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", "stdin", iSkip,
 			szDistance, fNormalize, fZScore, fAutocorrelate, szGenes ? szGenes : "", dCutoff );
 		return 1; }
+
+	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / PCL.GetExperiments( ) );
+	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
+		&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick, NULL };
+
+	pMeasure = NULL;
+	for( i = 0; apMeasures[ i ]; ++i )
+		if( !strcmp( apMeasures[ i ]->GetName( ), szDistance ) ) {
+			pMeasure = apMeasures[ i ];
+			break; }
+	if( !pMeasure )
+		return 1;
+
+	CMeasureAutocorrelate		Autocorrelate( pMeasure, false );
+	if( fAutocorrelate )
+		pMeasure = &Autocorrelate;
 
 	if( szGenes ) {
 		ifsm.clear( );

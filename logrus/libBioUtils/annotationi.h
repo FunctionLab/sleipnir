@@ -89,6 +89,7 @@ protected:
 	static const char	c_szDefinition[];
 	static const char	c_szClass[];
 	static const char	c_szPath[];
+	static const char	c_szBR[];
 	static const char	c_szDBLinks[];
 	static const char	c_szGenes[];
 	static const char	c_szEnd[];
@@ -101,6 +102,7 @@ protected:
 
 		const std::string&					m_strOrganism;
 		bool								m_fOrganism;
+		bool								m_fPathing;
 		std::vector<CGene*>					m_vecpGenes;
 		std::vector<std::string>			m_vecstrIDs;
 		std::map<std::string,std::string>	m_mapGlosses;
