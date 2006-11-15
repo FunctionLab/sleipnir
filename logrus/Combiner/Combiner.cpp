@@ -42,7 +42,7 @@ static int MainPCLs( const gengetopt_args_info& sArgs ) {
 	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
 		ifsm.clear( );
 		ifsm.open( sArgs.inputs[ iArg ] );
-		PCL.Open( ifsm, 2 );
+		PCL.Open( ifsm, sArgs.skip_arg );
 		for( i = 0; i < PCL.GetExperiments( ); ++i )
 			vecstrExps.push_back( PCL.GetExperiment( i ) );
 		for( i = 0; i < PCL.GetGenes( ); ++i )
@@ -57,7 +57,7 @@ static int MainPCLs( const gengetopt_args_info& sArgs ) {
 		cerr << "Processing " << sArgs.inputs[ iArg ] << "..." << endl;
 		ifsm.clear( );
 		ifsm.open( sArgs.inputs[ iArg ] );
-		PCL.Open( ifsm, 2 );
+		PCL.Open( ifsm, sArgs.skip_arg );
 		for( i = 0; i < PCLNew.GetGenes( ); ++i )
 			if( ( iGene = PCL.GetGene( vecstrGenes[ i ] ) ) != -1 )
 				for( j = 0; j < PCL.GetExperiments( ); ++j )

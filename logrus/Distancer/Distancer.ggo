@@ -14,4 +14,5 @@ option	"zscore"	z	"Convert correlations to z-scores"	flag	on
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"cutoff"	e	"Remove scores below cutoff"	double
 option	"limit"		l	"Gene count limit for caching"	int	default="-1"
+option	"flip"		f	"Calculate one minus values"	flag	off
 option	"verbosity"	v	"Message verbosity"	int	default="5"

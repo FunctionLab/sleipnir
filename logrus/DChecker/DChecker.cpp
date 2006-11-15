@@ -272,6 +272,8 @@ int main( int iArgs, char** aszArgs ) {
 			*postm << endl; }
 		*postm << "#	AUC	" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, MatPairs,
 			!!sArgs.invert_flag ) << endl;
+		*postm << "#	SSE	" << CStatistics::SumSquaresError( Data, Answers, vecfGenes, MatPairs,
+			!!sArgs.invert_flag ) << endl;
 
 		if( sArgs.inputs_num )
 			ofsm.close( );

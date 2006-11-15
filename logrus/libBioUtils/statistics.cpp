@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include "statistics.h"
 #include "measure.h"
+#include "dat.h"
 
 namespace libBioUtils {
 
@@ -801,5 +802,95 @@ double CStatistics::FScore( size_t iTP, size_t iFP, size_t iTN, size_t iFN, doub
 	dBeta *= dBeta;
 
 	return ( ( dBeta + 1 ) * dP * dR / ( ( dBeta * dP ) + dR ) ); }
+
+double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes,
+	const CBinaryMatrix& MatPairs, bool fInvert ) {
+	size_t				i, j, k, iOne, iTwo, iNeg;
+	uint64_t			iSum, iPos;
+	float				d, dAnswer;
+	std::vector<size_t>	veciGenes, veciRanks;
+	std::vector<float>	vecdValues;
+
+	veciGenes.resize( Answers.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
+
+	for( i = 0; i < Answers.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 )
+			continue;
+		for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+				CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ||
+				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
+				continue;
+			if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
+				( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
+				( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+				continue;
+			if( fInvert )
+				d = 1 - d;
+			vecdValues.push_back( d ); } }
+	{
+		std::vector<size_t>	veciIndices;
+
+		veciIndices.resize( vecdValues.size( ) );
+		for( i = 0; i < vecdValues.size( ); ++i )
+			veciIndices[ i ] = i;
+		std::sort( veciIndices.begin( ), veciIndices.end( ), SCompareRank<float>( vecdValues ) );
+		veciRanks.resize( veciIndices.size( ) );
+		for( i = 0; i < veciRanks.size( ); ++i )
+			veciRanks[ veciIndices[ i ] ] = i; }
+
+	for( iSum = iPos = iNeg = i = k = 0; i < Answers.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 )
+			continue;
+		for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+				CMeta::IsNaN( Data.Get( iOne, iTwo ) ) ||
+				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
+				( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
+				( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
+				( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) ) )
+				continue;
+			if( dAnswer ) {
+				iPos++;
+				iSum += veciRanks[ k ]; }
+			else
+				iNeg++;
+			k++; } }
+	iSum -= ( iPos * ( iPos - 1 ) ) / 2;
+
+	return ( (double)iSum / iPos / iNeg ); }
+
+double CStatistics::SumSquaredError( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes,
+	const CBinaryMatrix& MatPairs, bool fInvert ) {
+	size_t				i, j, iOne, iTwo;
+	float				d, dAnswer, dCur;
+	double				dRet;
+	std::vector<size_t>	veciGenes;
+
+	veciGenes.resize( Answers.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
+
+	dRet = 0;
+	for( i = 0; i < Answers.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 )
+			continue;
+		for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+				CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ||
+				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
+				continue;
+			if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
+				( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
+				( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+				continue;
+			if( fInvert )
+				d = 1 - d;
+			dCur = d - dAnswer;
+			dRet += dCur * dCur; } }
+
+	return dRet; }
 
 }

@@ -18,6 +18,8 @@ int main( int iArgs, char** aszArgs ) {
 		CMeta::GetNaN( ), sArgs.limit_arg, PCL, Dat ) ) {
 		cmdline_parser_print_help( );
 		return iRet; }
+	if( sArgs.flip_flag )
+		Dat.Invert( );
 
 	if( sArgs.output_arg ) {
 		ofsm.open( sArgs.output_arg, ios_base::binary );

@@ -3,6 +3,8 @@
 #include "meta.h"
 #include "statistics.h"
 #include "genome.h"
+#include "measure.h"
+#include "dat.h"
 
 namespace libBioUtils {
 
