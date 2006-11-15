@@ -44,7 +44,7 @@ class CBayesNetSmileImpl : protected CBayesNetImpl {
 protected:
 	friend class CBayesNetFN;
 
-	static const size_t	c_iMinimum	= 25;
+	static const size_t	c_iMinimum	= 10;
 	static const char	c_szGaussian[];
 
 	static bool IsGaussian( const DSL_network& );

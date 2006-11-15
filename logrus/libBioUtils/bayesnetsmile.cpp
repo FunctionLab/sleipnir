@@ -443,6 +443,7 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 	DSL_Dmatrix*			pMat;
 	DSL_Dmatrix*			pDefault;
 	DSL_intArray			veciCoords;
+	vector<size_t>			veciMinimum;
 
 	vecveciCounts.resize( m_SmileNet.GetNumberOfNodes( ) );
 	iAnswers = m_SmileNet.GetNode( 0 )->Definition( )->GetNumberOfOutcomes( );
@@ -471,6 +472,7 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 		pMat = pDef->GetMatrix( );
 		pMat->IndexToCoordinates( 0, veciCoords );
 		pDefault = m_pDefaults ? m_pDefaults->m_SmileNet.GetNode( (int)i )->Definition( )->GetMatrix( ) : NULL;
+		veciMinimum.clear( );
 		for( j = 0; j < iAnswers; ++j ) {
 			veciCoords[ 0 ] = (int)j;
 			for( iTotal = k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
@@ -478,15 +480,18 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 				iCount = max( vecveciCounts[ i ][ ( k * iAnswers ) + j ], 1 );
 				iTotal += iCount;
 				(*pMat)[ veciCoords ] = iCount; }
-			if( iTotal < c_iMinimum ) {
+			if( iTotal < c_iMinimum )
+				veciMinimum.push_back( j ); }
+		pMat->Normalize( );
+		if( pDefault && !veciMinimum.empty( ) ) {
+			for( j = 0; j < veciMinimum.size( ); ++j ) {
 				g_CatBioUtils.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s, row %d",
-					fZero, m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), j );
-				if( !pDefault )
-					continue;
+					fZero, m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), veciMinimum[ j ] );
+				veciCoords[ 0 ] = (int)veciMinimum[ j ];
 				for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
 					veciCoords[ 1 ] = (int)k;
-					(*pMat)[ veciCoords ] = (*pDefault)[ veciCoords ]; } } }
-		pMat->Normalize( ); }
+					(*pMat)[ veciCoords ] = (*pDefault)[ veciCoords ]; } }
+			pMat->Normalize( ); } }
 
 	return true; }
 

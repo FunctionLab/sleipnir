@@ -281,8 +281,9 @@ int main( int iArgs, char** aszArgs ) {
 		else
 			postm = &cout;
 
-		*postm << "#	P	" << iPositives << endl;
-		*postm << "#	N	" << iNegatives << endl;
+		if( !sArgs.sse_flag ) {
+			*postm << "#	P	" << iPositives << endl;
+			*postm << "#	N	" << iNegatives << endl; }
 		*postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN" ) << endl;
 		for( i = 0; i < MatResults.GetRows( ); ++i ) {
 			*postm << ( iBins ? i : ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) ) << '\t' <<

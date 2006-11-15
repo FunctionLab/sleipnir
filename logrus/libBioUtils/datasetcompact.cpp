@@ -44,6 +44,13 @@ struct SIsGene {
 };
 
 bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
+	const IBayesNet* pBayesNet, bool fEverything ) {
+	CGenome	Genome;
+	CGenes	GenesIn( Genome ), GenesEx( Genome );
+
+	return Open( Answers, szDataDir, pBayesNet, GenesIn, GenesEx, fEverything ); }
+
+bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 	const IBayesNet* pBayesNet, const CGenes& GenesIn, const CGenes& GenesEx, bool fEverything ) {
 	size_t			i, j, k;
 	vector<string>	vecstrData;
