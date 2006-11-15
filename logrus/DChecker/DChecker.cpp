@@ -12,8 +12,10 @@ struct SDatum {
 	float	m_dValue;
 	size_t	m_iOne;
 	size_t	m_iTwo;
+	float	m_dAnswer;
 
-	SDatum( float dValue, size_t iOne, size_t iTwo ) : m_dValue(dValue), m_iOne(iOne), m_iTwo(iTwo) { }
+	SDatum( float dValue, size_t iOne, size_t iTwo, float dAnswer ) : m_dValue(dValue), m_iOne(iOne), m_iTwo(iTwo),
+		m_dAnswer(dAnswer) { }
 };
 
 struct SSorter {
@@ -34,7 +36,7 @@ int main( int iArgs, char** aszArgs ) {
 	int					iMax;
 	float				dAnswer, dValue;
 	vector<bool>		vecfGenes;
-	vector<float>		vecdScores;
+	vector<float>		vecdScores, vecdSSE;
 	vector<size_t>		veciPositives, veciNegatives;
 	CBinaryMatrix		MatPairs;
 	ofstream			ofsm;
@@ -179,35 +181,53 @@ int main( int iArgs, char** aszArgs ) {
 						iPositives++;
 					else
 						iNegatives++;
-					vecsData.push_back( SDatum( dValue, i, j ) ); } }
+					vecsData.push_back( SDatum( dValue, i, j, dAnswer ) ); } }
 			sort( vecsData.begin( ), vecsData.end( ), SSorter( ) );
-			veciPositives.resize( MatResults.GetRows( ) - 1 );
-			veciNegatives.resize( veciPositives.size( ) );
-			iChunk = (size_t)( 0.5 + ( (float)vecsData.size( ) / veciPositives.size( ) ) );
-			for( i = j = 0; i < veciPositives.size( ); ++i,j += iChunk )
-				for( k = 0; k < iChunk; ++k ) {
-					if( ( j + k ) >= vecsData.size( ) )
-						break;
-					const SDatum&	sDatum	= vecsData[ j + k ];
+			iChunk = (size_t)( 0.5 + ( (float)vecsData.size( ) / ( MatResults.GetRows( ) - 1 ) ) );
+			if( sArgs.sse_flag ) {
+				vecdSSE.resize( MatResults.GetRows( ) );
+				veciPositives.resize( vecdSSE.size( ) );
+				for( i = 1,j = 0; i < vecdSSE.size( ); ++i,j += iChunk ) {
+					veciPositives[ veciPositives.size( ) - i - 1 ] = veciPositives[ veciPositives.size( ) - i ];
+					vecdSSE[ vecdSSE.size( ) - i - 1 ] = vecdSSE[ vecdSSE.size( ) - i ];
+					for( k = 0; k < iChunk; ++k ) {
+						if( ( j + k ) >= vecsData.size( ) )
+							break;
+						const SDatum&	sDatum	= vecsData[ vecsData.size( ) - ( j + k ) - 1 ];
 
-					for( m = i; m > 0; --m ) {
-						MatGenes.Set( sDatum.m_iOne, m, true );
-						MatGenes.Set( sDatum.m_iTwo, m, true ); }
-					if( Answers.Get( sDatum.m_iOne, sDatum.m_iTwo ) )
-						veciPositives[ i ]++;
-					else
-						veciNegatives[ i ]++; }
+						for( m = 0; m < ( vecdSSE.size( ) - i ); ++m ) {
+							MatGenes.Set( sDatum.m_iOne, m, true );
+							MatGenes.Set( sDatum.m_iTwo, m, true ); }
+						dValue = sDatum.m_dValue - sDatum.m_dAnswer;
+						veciPositives[ veciPositives.size( ) - i - 1 ]++;
+						vecdSSE[ vecdSSE.size( ) - i - 1 ] += dValue * dValue; } } }
+			else {
+				veciPositives.resize( MatResults.GetRows( ) - 1 );
+				veciNegatives.resize( veciPositives.size( ) );
+				for( i = j = 0; i < veciPositives.size( ); ++i,j += iChunk )
+					for( k = 0; k < iChunk; ++k ) {
+						if( ( j + k ) >= vecsData.size( ) )
+							break;
+						const SDatum&	sDatum	= vecsData[ j + k ];
 
-			MatResults.Set( 0, ETFPN_TP, iPositives );
-			MatResults.Set( 0, ETFPN_FP, iNegatives );
-			MatResults.Set( 0, ETFPN_TN, 0 );
-			MatResults.Set( 0, ETFPN_FN, 0 );
-			for( i = 1; i < MatResults.GetRows( ); ++i ) {
-				MatResults.Set( i, ETFPN_TP, MatResults.Get( i - 1, ETFPN_TP ) - veciPositives[ i - 1 ] );
-				MatResults.Set( i, ETFPN_FP, MatResults.Get( i - 1, ETFPN_FP ) - veciNegatives[ i - 1 ] );
-				MatResults.Set( i, ETFPN_TN, MatResults.Get( i - 1, ETFPN_TN ) + veciNegatives[ i - 1 ] );
-				MatResults.Set( i, ETFPN_FN, MatResults.Get( i - 1, ETFPN_FN ) +
-					veciPositives[ i - 1 ] ); } }
+						for( m = i; m > 0; --m ) {
+							MatGenes.Set( sDatum.m_iOne, m, true );
+							MatGenes.Set( sDatum.m_iTwo, m, true ); }
+						if( Answers.Get( sDatum.m_iOne, sDatum.m_iTwo ) )
+							veciPositives[ i ]++;
+						else
+							veciNegatives[ i ]++; }
+
+				MatResults.Set( 0, ETFPN_TP, iPositives );
+				MatResults.Set( 0, ETFPN_FP, iNegatives );
+				MatResults.Set( 0, ETFPN_TN, 0 );
+				MatResults.Set( 0, ETFPN_FN, 0 );
+				for( i = 1; i < MatResults.GetRows( ); ++i ) {
+					MatResults.Set( i, ETFPN_TP, MatResults.Get( i - 1, ETFPN_TP ) - veciPositives[ i - 1 ] );
+					MatResults.Set( i, ETFPN_FP, MatResults.Get( i - 1, ETFPN_FP ) - veciNegatives[ i - 1 ] );
+					MatResults.Set( i, ETFPN_TN, MatResults.Get( i - 1, ETFPN_TN ) + veciNegatives[ i - 1 ] );
+					MatResults.Set( i, ETFPN_FN, MatResults.Get( i - 1, ETFPN_FN ) +
+						veciPositives[ i - 1 ] ); } } }
 		else
 			for( i = 0; i < Answers.GetGenes( ); ++i ) {
 				if( ( iOne = veciGenes[ i ] ) == -1 )
@@ -263,17 +283,19 @@ int main( int iArgs, char** aszArgs ) {
 
 		*postm << "#	P	" << iPositives << endl;
 		*postm << "#	N	" << iNegatives << endl;
-		*postm << "Cut	Genes	TP	FP	TN	FN" << endl;
+		*postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN" ) << endl;
 		for( i = 0; i < MatResults.GetRows( ); ++i ) {
 			*postm << ( iBins ? i : ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) ) << '\t' <<
 				veciRec[ i ];
-			for( j = 0; j < MatResults.GetColumns( ); ++j )
-				*postm << '\t' << MatResults.Get( i, j );
+			if( sArgs.sse_flag )
+				*postm << '\t' << veciPositives[ i ] << '\t' << vecdSSE[ i ];
+			else
+				for( j = 0; j < MatResults.GetColumns( ); ++j )
+					*postm << '\t' << MatResults.Get( i, j );
 			*postm << endl; }
-		*postm << "#	AUC	" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, MatPairs,
-			!!sArgs.invert_flag ) << endl;
-		*postm << "#	SSE	" << CStatistics::SumSquaresError( Data, Answers, vecfGenes, MatPairs,
-			!!sArgs.invert_flag ) << endl;
+		if( !sArgs.sse_flag )
+			*postm << "#	AUC	" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, MatPairs,
+				!!sArgs.invert_flag ) << endl;
 
 		if( sArgs.inputs_num )
 			ofsm.close( );

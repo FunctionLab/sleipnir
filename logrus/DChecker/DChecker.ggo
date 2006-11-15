@@ -16,4 +16,5 @@ option	"directory"	d	"Output directory"	string	typestr="directory"	default="."
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
 option	"genet"		c	"Term inclusion file"	string	typestr="filename"
+option	"sse"		s	"Calculate sum of squared errors"	flag	off
 option	"verbosity"	v	"Message verbosity"	int	default="5"

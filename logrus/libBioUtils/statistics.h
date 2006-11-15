@@ -3,6 +3,8 @@
 
 #include "statisticsi.h"
 
+#include "meta.h"
+
 namespace libBioUtils {
 
 class CBinaryMatrix;
