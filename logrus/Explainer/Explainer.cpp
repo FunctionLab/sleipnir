@@ -13,7 +13,7 @@ struct SSorter {
 
 	bool operator()( const SDatum& sOne, const SDatum& sTwo ) const {
 
-		return ( sOne.m_dDiff < sTwo.m_dDiff ); }
+		return ( sOne.m_dDiff > sTwo.m_dDiff ); }
 };
 
 int main( int iArgs, char** aszArgs ) {
@@ -48,7 +48,8 @@ int main( int iArgs, char** aszArgs ) {
 	if( !Data.Open( sArgs.input_arg ) ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
-	Data.Normalize( );
+	if( sArgs.normalize_flag )
+		Data.Normalize( );
 	if( sArgs.invert_flag )
 		Data.Invert( );
 
@@ -70,12 +71,12 @@ int main( int iArgs, char** aszArgs ) {
 				CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
 				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
 				continue;
-			if( sArgs.positives_flag && !dAnswer )
+			if( sArgs.positives_flag && ( dAnswer <= 0 ) )
 				continue;
 			vecsData.push_back( SDatum( fabs( dValue - dAnswer ), i, j ) ); } }
 	sort( vecsData.begin( ), vecsData.end( ), SSorter( ) );
 
-	if( ( ( iNumber = sArgs.number_arg ) < 0 ) || ( iNumber >= vecsData.size( ) ) )
+	if( ( ( iNumber = sArgs.count_arg ) < 0 ) || ( iNumber >= vecsData.size( ) ) )
 		iNumber = vecsData.size( );
 	for( i = 0; i < iNumber; ++i ) {
 		const SDatum&	Datum	= vecsData[ i ];

@@ -41,7 +41,7 @@ int main( int iArgs, char** aszArgs ) {
 			if( ( iOne = veciGenes[ i ] ) == -1 ) {
 				for( j = ( i + 1 ); j < DatSmall.GetGenes( ); ++j )
 					if( !CMeta::IsNaN( dOne = DatSmall.Get( i, j ) ) )
-						aiOne[ (size_t)dOne ]++;
+						aiOne[ ( dOne > 0 ) ? 1 : 0 ]++;
 				continue; }
 			for( j = ( i + 1 ); j < DatSmall.GetGenes( ); ++j )
 				if( !CMeta::IsNaN( dOne = DatSmall.Get( i, j ) ) ) {
@@ -49,12 +49,12 @@ int main( int iArgs, char** aszArgs ) {
 						ai = aiOne;
 					else {
 						DatBig.Set( iOne, iTwo, CMeta::GetNaN( ) );
-						ai = ( dOne == dTwo ) ? aiAgree : aiDisagree; }
-					ai[ (size_t)dOne ]++; } }
+						ai = ( ( dOne > 0 ) == ( dTwo > 0 ) ) ? aiAgree : aiDisagree; }
+					ai[ ( dOne > 0 ) ? 1 : 0 ]++; } }
 		for( i = 0; i < DatBig.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < DatBig.GetGenes( ); ++j )
 				if( !CMeta::IsNaN( dTwo = DatBig.Get( i, j ) ) )
-					aiTwo[ (size_t)dTwo ]++;
+					aiTwo[ ( dTwo > 0 ) ? 1 : 0 ]++;
 	}
 
 	cout << szOne << " +" << endl;

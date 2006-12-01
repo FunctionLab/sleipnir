@@ -9,7 +9,8 @@ option	"invert"	t	"Invert correlations to distances"	flag	off
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
 option	"genet"		c	"Term inclusion file"	string	typestr="filename"
-option	"number"	n	"Number of pairs to display"	int	default="-1"
+option	"count"		k	"Number of pairs to display"	int	default="-1"
+option	"normalize"	n	"Normalize to the range [0,1]"	flag	off
 option	"positives"	p	"Include only positive pairs"	flag	on
 option	"features"	f	"SGD gene features"	string	typestr="filename"
 option	"verbosity"	v	"Message verbosity"	int	default="5"

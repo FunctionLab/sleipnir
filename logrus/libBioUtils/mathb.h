@@ -11,6 +11,10 @@ public:
 	static double Min( double, double );
 	static size_t Round( double );
 	static double LogFact( size_t );
+
+	static double Sigmoid( double dHeight, double dShift, double dSlope, double dVertical, double dX ) {
+
+		return ( dVertical + ( dHeight / ( 1 + exp( -dSlope * ( dX - dShift ) ) ) ) ); }
 };
 
 }

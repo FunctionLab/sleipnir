@@ -11,6 +11,7 @@ static const char			c_szGMean[]			= "gmean";
 static const char			c_szHMean[]			= "hmean";
 static const char			c_szMax[]			= "max";
 static const char			c_szMin[]			= "min";
+static const char			c_szVote[]			= "vote";
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -134,15 +135,25 @@ static int MainDATs( const gengetopt_args_info& sArgs ) {
 							iN++; }
 					dMax = iN / dMax; }
 				else if( !strcmp( c_szMax, sArgs.method_arg ) ) {
-					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
+					for( k = 0; k < pData->GetExperiments( ); ++k )
 						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) &&
 							( CMeta::IsNaN( dMax ) || ( d > dMax ) ) )
 							dMax = d; }
 				else if( !strcmp( c_szMin, sArgs.method_arg ) ) {
-					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
+					for( k = 0; k < pData->GetExperiments( ); ++k )
 						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) &&
 							( CMeta::IsNaN( dMax ) || ( d < dMax ) ) )
 							dMax = d; }
+				else if( !strcmp( c_szVote, sArgs.method_arg ) ) {
+					size_t	iPos, iNeg;
+
+					for( iPos = iNeg = k = 0; k < pData->GetExperiments( ); ++k )
+						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) ) {
+							if( d > 0 )
+								iPos++;
+							else
+								iNeg++; }
+					dMax = ( iPos == iNeg ) ? CMeta::GetNaN( ) : ( ( iPos > iNeg ) ? 1 : 0 ); }
 				Dat.Set( i, j, dMax ); } } }
 
 	if( sArgs.output_arg ) {

@@ -675,4 +675,60 @@ double CMeasureHypergeometric::Measure( const float* adX, size_t iM, const float
 
 	return ( 1 - CStatistics::HypergeometricCDF( iBoth, iOne, iTwo, iN ) ); }
 
+const char* CMeasureInnerProduct::GetName( ) const {
+
+	return "innerprod"; }
+
+bool CMeasureInnerProduct::IsRank( ) const {
+
+	return false; }
+
+IMeasure* CMeasureInnerProduct::Clone( ) const {
+
+	return new CMeasureInnerProduct( ); }
+
+double CMeasureInnerProduct::Measure( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	size_t	i;
+	double	dRet;
+
+	if( iM != iN )
+		return CMeta::GetNaN( );
+
+	dRet = 0;
+	for( i = 0; i < iN; ++i ) {
+		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
+			continue;
+		dRet += adX[ i ] * adY[ i ] * GetWeight( adWX, i ) * GetWeight( adWY, i ); }
+
+	return dRet; }
+
+const char* CMeasureBinaryInnerProduct::GetName( ) const {
+
+	return "bininnerprod"; }
+
+bool CMeasureBinaryInnerProduct::IsRank( ) const {
+
+	return false; }
+
+IMeasure* CMeasureBinaryInnerProduct::Clone( ) const {
+
+	return new CMeasureBinaryInnerProduct( ); }
+
+double CMeasureBinaryInnerProduct::Measure( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	size_t	i;
+	double	dRet;
+
+	if( iM != iN )
+		return CMeta::GetNaN( );
+
+	dRet = 0;
+	for( i = 0; i < iN; ++i ) {
+		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) || !adX[ i ] || !adY[ i ] )
+			continue;
+		dRet += GetWeight( adWX, i ) * GetWeight( adWY, i ); }
+
+	return dRet; }
+
 }
