@@ -2,14 +2,14 @@ package	"Dat2Dab"
 version	"1.0"
 purpose	"Text/binary data file interconversion"
 
-defgroup "input-output"	yes
-groupoption	"input"		i	"Input dab file"	string	typestr="filename"	group="input-output"
-groupoption	"output"	o	"Output dab file"	string	typestr="filename"	group="input-output"
-groupoption	"pcl"		p	"Input pcl file"	string	typestr="filename"	group="input-output"
+option	"input"		i	"Input dab file"	string	typestr="filename"
+option	"output"	o	"Output dab file"	string	typestr="filename"
+# option	"pcl"		p	"Input pcl file"	string	typestr="filename"
 section "Optional"
 option	"flip"		f	"Calculate one minus dat values"	flag	off
 option	"normalize"	n	"Normalize to the range [0,1]"	flag	off
 option	"zscore"	z	"Convert values to z-scores"	flag	off
 option	"genes"		g	"Process only genes from the given subset"	string	typestr="filename"
 option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
+option	"rank"		r	"Rank transform data"	flag	off
 option	"verbosity"	v	"Message verbosity"	int	default="5"

@@ -658,4 +658,32 @@ void CDat::SaveNET( ostream& ostm, float dCutoff ) const {
 			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
 				ostm << ( i + 1 ) << ' ' << ( j + 1 ) << ' ' << d << endl; }
 
+struct SSorterRank {
+	const CDat&	m_Dat;
+
+	SSorterRank( const CDat& Dat ) : m_Dat(Dat) { }
+
+	bool operator()( const pair<size_t, size_t>& prOne, const pair<size_t, size_t>& prTwo ) const {
+
+		return ( m_Dat.Get( prOne.first, prOne.second ) < m_Dat.Get( prTwo.first, prTwo.second ) ); }
+
+};
+
+void CDat::Rank( ) {
+	vector<pair<size_t, size_t> >	vecprData;
+	size_t							i, j, iRank;
+	float							d, dPrev;
+
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( Get( i, j ) ) )
+				vecprData.push_back( pair<size_t, size_t>( i, j ) );
+	sort( vecprData.begin( ), vecprData.end( ), SSorterRank( *this ) );
+	for( iRank = i = 0; i < vecprData.size( ); ++i ) {
+		d = Get( vecprData[ i ].first, vecprData[ i ].second );
+		if( i && ( d != dPrev ) )
+			iRank = i;
+		dPrev = d;
+		Set( vecprData[ i ].first, vecprData[ i ].second, (float)iRank ); } }
+
 }

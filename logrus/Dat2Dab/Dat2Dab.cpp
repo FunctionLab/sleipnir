@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "cmdline.h"
+#include "mathb.h"
 
 int Dat2Dab( const CGenes&, const gengetopt_args_info& );
 int DabShuffle( const char*, bool );
@@ -33,6 +34,8 @@ int Dat2Dab( const CGenes& Genes, const gengetopt_args_info& sArgs ) {
 	CDat		Dat;
 	ifstream	ifsm;
 	ofstream	ofsm;
+
+/*
 	CPCL		PCL;
 
 	if( sArgs.pcl_arg ) {
@@ -47,27 +50,54 @@ int Dat2Dab( const CGenes& Genes, const gengetopt_args_info& sArgs ) {
 
 //			DatPCL.Save( cout, false );
 		} }
-	else if( !!sArgs.output_arg ) {
-		Dat.Open( cin, false );
-		if( sArgs.normalize_flag || sArgs.zscore_flag )
-			Dat.Normalize( !!sArgs.normalize_flag );
-		if( sArgs.flip_flag )
-			DatFlip( Dat );
-		if( Genes.GetGenes( ) )
-			Dat.FilterGenes( Genes, CDat::EFilterInclude );
+	else
+*/
+
+	if( sArgs.input_arg ) {
+		ifsm.open( sArgs.input_arg, ios_base::binary );
+		if( !Dat.Open( ifsm, true ) ) {
+			cerr << "Could not open: " << sArgs.input_arg << endl;
+			return 1; }
+		ifsm.close( ); }
+	else if( !Dat.Open( cin, false ) ) {
+		cerr << "Could not open input" << endl;
+		return 1; }
+
+/*
+size_t i, j;
+float d;
+for( i = 0; i < Dat.GetGenes( ); ++i )
+for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
+Dat.Set( i, j, (float)CMath::Sigmoid(
+//1,4.548,0.4906,0 // pixie
+//1,16.77,0.1213,0 // gerstein
+//1,0.8945,0.5995,0 // lee
+//1,3.406,0.5154,0 // albert
+//1,9.033,0.2307,0 // mefit
+//1,4,1.5,0 // tan
+//1,0,1,0
+,d ) );
+ofsm.open( sArgs.input_arg, ios_base::binary );
+Dat.Save( ofsm, true );
+ofsm.close( );
+return 0;
+//*/
+
+	if( sArgs.rank_flag )
+		Dat.Rank( );
+	if( sArgs.normalize_flag || sArgs.zscore_flag )
+		Dat.Normalize( !!sArgs.normalize_flag );
+	if( sArgs.flip_flag )
+		DatFlip( Dat );
+	if( Genes.GetGenes( ) )
+		Dat.FilterGenes( Genes, CDat::EFilterInclude );
+
+	if( sArgs.output_arg ) {
 		ofsm.open( sArgs.output_arg, ios_base::binary );
 		Dat.Save( ofsm, true );
 		ofsm.close( ); }
 	else {
-		ifsm.open( sArgs.input_arg, ios_base::binary );
-		Dat.Open( ifsm, true );
-		if( sArgs.normalize_flag || sArgs.zscore_flag )
-			Dat.Normalize( !!sArgs.normalize_flag );
-		if( sArgs.flip_flag )
-			DatFlip( Dat );
-		if( Genes.GetGenes( ) )
-			Dat.FilterGenes( Genes, CDat::EFilterInclude );
-		ifsm.close( );
 		Dat.Save( cout, false );
 		cout.flush( ); }
 

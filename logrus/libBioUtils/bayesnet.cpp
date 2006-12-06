@@ -4,7 +4,8 @@
 
 namespace libBioUtils {
 
-const char	CBayesNetImpl::c_szFR[]	= "FR";
+const char	CBayesNetImpl::c_szFR[]		= "FR";
+const char	CBayesNetImpl::c_szZero[]	= "zero";
 
 void CBayesNetImpl::EncodeData( const IDataset* pData, TMapData& mapData ) {
 	size_t				i, j;

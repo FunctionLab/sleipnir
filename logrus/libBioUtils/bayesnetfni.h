@@ -21,7 +21,7 @@ protected:
 	virtual const char* GetType( ) const = 0;
 	virtual void Randomize( ) = 0;
 	virtual CBayesNetFNNode* New( DSL_node* ) const = 0;
-	virtual bool Learn( const IDataset*, size_t, bool ) = 0;
+	virtual bool Learn( const IDataset*, size_t, size_t ) = 0;
 	virtual bool Evaluate( float, std::vector<float>& ) const = 0;
 
 	virtual bool IsContinuous( ) const {
@@ -38,7 +38,7 @@ protected:
 	friend class CBayesNetFNNode;
 
 	void Randomize( );
-	bool Learn( const IDataset*, size_t, bool );
+	bool Learn( const IDataset*, size_t, size_t );
 	bool Evaluate( float, std::vector<float>& ) const;
 
 	CBayesNetFNNode* New( DSL_node* pNode ) const {
@@ -62,7 +62,7 @@ protected:
 	static const size_t	c_iSigma	= 1;
 
 	void Randomize( );
-	bool Learn( const IDataset*, size_t, bool );
+	bool Learn( const IDataset*, size_t, size_t );
 	bool Evaluate( float, std::vector<float>& ) const;
 
 	CBayesNetFNNode* New( DSL_node* pNode ) const {
@@ -84,7 +84,7 @@ protected:
 	static const size_t	c_iBeta		= 3;
 
 	void Randomize( );
-	bool Learn( const IDataset*, size_t, bool );
+	bool Learn( const IDataset*, size_t, size_t );
 	bool Evaluate( float, std::vector<float>& ) const;
 
 	CBayesNetFNNode* New( DSL_node* pNode ) const {
@@ -104,7 +104,7 @@ protected:
 	static const size_t	c_iBeta	= 1;
 
 	void Randomize( );
-	bool Learn( const IDataset*, size_t, bool );
+	bool Learn( const IDataset*, size_t, size_t );
 	bool Evaluate( float, std::vector<float>& ) const;
 
 	CBayesNetFNNode* New( DSL_node* pNode ) const {
@@ -124,7 +124,7 @@ protected:
 	static const size_t	c_iSigma	= 1;
 
 	void Randomize( );
-	bool Learn( const IDataset*, size_t, bool );
+	bool Learn( const IDataset*, size_t, size_t );
 	bool Evaluate( float, std::vector<float>& ) const;
 
 	CBayesNetFNNode* New( DSL_node* pNode ) const {

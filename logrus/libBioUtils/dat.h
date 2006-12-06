@@ -37,6 +37,7 @@ public:
 	void SaveNET( std::ostream&, float = HUGE_VAL ) const;
 	void Normalize( bool = true );
 	void Invert( );
+	void Rank( );
 	bool FilterGenes( const char*, EFilter );
 	void FilterGenes( const CGenes&, EFilter );
 

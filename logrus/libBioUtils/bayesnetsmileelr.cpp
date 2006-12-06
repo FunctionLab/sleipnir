@@ -237,8 +237,7 @@ float CBayesNetSmileImpl::ELRAvoidZero( float d ) {
 
 void CBayesNetSmileImpl::ELRBracket( const vector<bool>& vecfHidden, const TMapData& mapData,
 	const TVecVecF& vecvecfDirection, const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, float& dAX,
-	float& dBX, float& dCX, float& dFA,
-	float& dFB, float& dFC, bool fZero ) {
+	float& dBX, float& dCX, float& dFA, float& dFB, float& dFC, bool fZero ) {
 	static const float	c_dGolden		= 1.618034f;
 	static const float	c_dLimit		= 100;
 	static const size_t	c_iIterations	= 100;
@@ -315,8 +314,7 @@ void CBayesNetSmileImpl::ELRBracket( const vector<bool>& vecfHidden, const TMapD
 
 float CBayesNetSmileImpl::ELRBrent( const vector<bool>& vecfHidden, const TMapData& mapData,
 	const TVecVecF& vecvecfDirection, const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, float& dAX,
-	float& dBX, float dCX, float dFA,
-	float dFB, float dFC, bool fZero ) {
+	float& dBX, float dCX, float dFA, float dFB, float dFC, bool fZero ) {
 	static const size_t	c_iIterations	= 100;
 	static const float	c_dZEPS			= 1e-8f;
 	static const float	c_dIGolden		= 0.3819660f;

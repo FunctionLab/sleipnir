@@ -26,7 +26,7 @@ namespace libBioUtils {
 
 class CMeasureSigmoid : CMeasureSigmoidImpl, public IMeasure {
 public:
-	CMeasureSigmoid( const IMeasure*, bool, float dDiv = 1 );
+	CMeasureSigmoid( const IMeasure*, bool, float dMult = 1 );
 
 	const char* GetName( ) const;
 	bool IsRank( ) const;

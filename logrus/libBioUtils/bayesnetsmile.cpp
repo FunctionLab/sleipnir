@@ -75,8 +75,7 @@ bool CBayesNetSmile::Save( const char* szDSL ) const {
 
 	return !((CBayesNetSmile*)this)->m_SmileNet.WriteFile( szDSL ); }
 
-bool CBayesNetSmileImpl::LearnGrouped( const IDataset* pData, size_t iIterations,
-	bool fZero ) {
+bool CBayesNetSmileImpl::LearnGrouped( const IDataset* pData, size_t iIterations, bool fZero ) {
 	size_t					i, j, iIter, iDatum;
 	string					strCur;
 	TMapData				mapData;
@@ -119,7 +118,8 @@ bool CBayesNetSmileImpl::LearnGrouped( const IDataset* pData, size_t iIterations
 	return true; }
 
 bool CBayesNetSmileImpl::FillCPTs( const IDataset* pData, size_t iOne, size_t iTwo, bool fZero, bool fLearn ) {
-	size_t	i, iVal;
+	size_t	i, iVal, iZero;
+	int		iProp;
 
 	if( !pData->IsExample( iOne, iTwo ) || ( fLearn && ( pData->GetDiscrete( iOne, iTwo, 0 ) == -1 ) ) )
 		return false;
@@ -128,18 +128,26 @@ bool CBayesNetSmileImpl::FillCPTs( const IDataset* pData, size_t iOne, size_t iT
 	for( i = fLearn ? 0 : 1; i < (size_t)m_SmileNet.GetNumberOfNodes( ); ++i ) {
 		if( pData->IsHidden( i ) )
 			continue;
+
+		DSL_userProperties&	Props	= m_SmileNet.GetNode( (int)i )->Info( ).UserProperties( );
+
+		if( ( iProp = Props.FindProperty( c_szZero ) ) < 0 )
+			iZero = fZero ? 0 : -1;
+		else
+			iZero = atoi( Props.GetPropertyValue( iProp ) );
+
 		if( ( iVal = pData->GetDiscrete( iOne, iTwo, i ) ) == -1 ) {
-			if( fZero )
-				iVal = 0;
-			else
-				continue; }
+			if( iZero == -1 )
+				continue;
+			iVal = iZero; }
 		m_SmileNet.GetNode( (int)i )->Value( )->SetEvidence( (int)iVal ); }
 
 	return true; }
 
 bool CBayesNetSmileImpl::FillCPTs( const vector<bool>& vecfHidden, const string& strDatum, bool fZero,
 	bool fLearn, bool fAll ) {
-	size_t	i, iVal;
+	size_t	i, iVal, iZero;
+	int		iProp;
 
 	if( !fAll && fLearn && !IsAnswer( strDatum ) )
 		return false;
@@ -148,10 +156,18 @@ bool CBayesNetSmileImpl::FillCPTs( const vector<bool>& vecfHidden, const string&
 	for( i = ( fAll || fLearn ) ? 0 : 1; i < (size_t)m_SmileNet.GetNumberOfNodes( ); ++i ) {
 		if( vecfHidden[ i ] )
 			continue;
+
+		DSL_userProperties&	Props	= m_SmileNet.GetNode( (int)i )->Info( ).UserProperties( );
+
+		if( ( iProp = Props.FindProperty( c_szZero ) ) < 0 )
+			iZero = fZero ? 0 : -1;
+		else
+			iZero = atoi( Props.GetPropertyValue( iProp ) );
+
 		if( strDatum[ i ] == c_cMissing ) {
-			if( !fZero )
+			if( iZero == -1 )
 				continue;
-			iVal = 0; }
+			iVal = iZero; }
 		else
 			iVal = strDatum[ i ] - c_cBase;
 		m_SmileNet.GetNode( (int)i )->Value( )->SetEvidence( (int)iVal ); }
@@ -160,7 +176,8 @@ bool CBayesNetSmileImpl::FillCPTs( const vector<bool>& vecfHidden, const string&
 
 bool CBayesNetSmileImpl::FillCPTs( const vector<bool>& vecfHidden, const vector<unsigned char>& vecbDatum,
 	bool fZero, bool fLearn ) {
-	size_t	i, iVal;
+	size_t	i, iVal, iZero;
+	int		iProp;
 
 	if( fLearn && !vecbDatum[ 0 ] )
 		return false;
@@ -169,18 +186,25 @@ bool CBayesNetSmileImpl::FillCPTs( const vector<bool>& vecfHidden, const vector<
 	for( i = fLearn ? 0 : 1; i < (size_t)m_SmileNet.GetNumberOfNodes( ); ++i ) {
 		if( vecfHidden[ i ] )
 			continue;
+
+		DSL_userProperties&	Props	= m_SmileNet.GetNode( (int)i )->Info( ).UserProperties( );
+
+		if( ( iProp = Props.FindProperty( c_szZero ) ) < 0 )
+			iZero = fZero ? 0 : -1;
+		else
+			iZero = atoi( Props.GetPropertyValue( iProp ) );
+
 		if( !vecbDatum[ i ] ) {
-			if( !fZero )
+			if( iZero == -1 )
 				continue;
-			iVal = 0; }
+			iVal = iZero; }
 		else
 			iVal = vecbDatum[ i ] - 1;
 		m_SmileNet.GetNode( (int)i )->Value( )->SetEvidence( (int)iVal ); }
 
 	return true; }
 
-bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIterations,
-	bool fZero ) {
+bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIterations, bool fZero ) {
 	size_t					iIter, i, j, k;
 	DSL_Dmatrix*			pMat;
 	vector<DSL_Dmatrix*>	vecpExpected;
@@ -443,7 +467,8 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 	DSL_Dmatrix*			pMat;
 	DSL_Dmatrix*			pDefault;
 	DSL_intArray			veciCoords;
-	vector<size_t>			veciMinimum;
+	vector<size_t>			veciMinimum, veciZeros;
+	int						iProp;
 
 	vecveciCounts.resize( m_SmileNet.GetNumberOfNodes( ) );
 	iAnswers = m_SmileNet.GetNode( 0 )->Definition( )->GetNumberOfOutcomes( );
@@ -451,16 +476,23 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 	for( i = 1; i < vecveciCounts.size( ); ++i )
 		vecveciCounts[ i ].resize( iAnswers *
 			m_SmileNet.GetNode( (int)i )->Definition( )->GetNumberOfOutcomes( ) );
+	veciZeros.resize( m_SmileNet.GetNumberOfNodes( ) );
+	for( i = 0; i < veciZeros.size( ); ++i ) {
+		DSL_userProperties&	Props	= m_SmileNet.GetNode( (int)i )->Info( ).UserProperties( );
+
+		if( ( iProp = Props.FindProperty( c_szZero ) ) < 0 )
+			veciZeros[ i ] = fZero ? 0 : -1;
+		else
+			veciZeros[ i ] = atoi( Props.GetPropertyValue( iProp ) ); }
 	for( i = 0; i < pData->GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
 			if( pData->IsExample( i, j ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
 				vecveciCounts[ 0 ][ iAnswer ]++;
 				for( k = 1; k < pData->GetExperiments( ); ++k ) {
 					if( ( iVal = pData->GetDiscrete( i, j, k ) ) == -1 ) {
-						if( fZero )
-							iVal = 0;
-						else
-							continue; }
+						if( veciZeros[ i ] == -1 )
+							continue;
+						iVal = veciZeros[ i ]; }
 					vecveciCounts[ k ][ ( iVal * iAnswers ) + iAnswer ]++; } }
 
 	pMat = m_SmileNet.GetNode( 0 )->Definition( )->GetMatrix( );

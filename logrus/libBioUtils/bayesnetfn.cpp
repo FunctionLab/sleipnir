@@ -121,7 +121,7 @@ void CBayesNetFNNodeDiscrete::Randomize( ) {
 		for( iCol = 0; iCol < veciRow.size( ); ++iCol )
 			m_Params.Set( iRow, iCol, (float)veciRow[ iCol ] / iSum ); } }
 
-bool CBayesNetFNNodeDiscrete::Learn( const IDataset* pData, size_t iNode, bool fZero ) {
+bool CBayesNetFNNodeDiscrete::Learn( const IDataset* pData, size_t iNode, size_t iZero ) {
 	CFullMatrix<size_t>	MatCounts;
 	vector<size_t>		veciSums;
 	size_t				i, j, iAnswer, iVal;
@@ -138,9 +138,9 @@ bool CBayesNetFNNodeDiscrete::Learn( const IDataset* pData, size_t iNode, bool f
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
 			if( pData->IsExample( i, j ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
 				if( ( iVal = pData->GetDiscrete( i, j, iNode ) ) == -1 ) {
-					if( !fZero )
+					if( iZero == -1 )
 						continue;
-					iVal = 0; }
+					iVal = iZero; }
 				if( ( iAnswer >= MatCounts.GetRows( ) ) || ( iVal >= MatCounts.GetColumns( ) ) )
 					return false;
 				MatCounts.Get( iAnswer, iVal )++;
@@ -178,7 +178,7 @@ void CBayesNetFNNodeGaussian::Randomize( ) {
 		m_Params.Set( i, c_iMu, (float)( rand( ) - ( RAND_MAX / 2 ) ) );
 		m_Params.Set( i, c_iSigma, (float)rand( ) / RAND_MAX ); } }
 
-bool CBayesNetFNNodeGaussian::Learn( const IDataset* pData, size_t iNode, bool fZero ) {
+bool CBayesNetFNNodeGaussian::Learn( const IDataset* pData, size_t iNode, size_t iZero ) {
 	float			d, dVal;
 	size_t			i, j, iAnswer;
 	vector<size_t>	veciCounts;
@@ -191,9 +191,9 @@ bool CBayesNetFNNodeGaussian::Learn( const IDataset* pData, size_t iNode, bool f
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
 			if( pData->IsExample( i, j ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
 				if( CMeta::IsNaN( dVal = pData->GetContinuous( i, j, iNode ) ) ) {
-					if( !fZero )
+					if( iZero == -1 )
 						continue;
-					dVal = 0; }
+					dVal = (float)iZero; }
 				if( iAnswer >= m_Params.GetRows( ) )
 					return false;
 				veciCounts[ iAnswer ]++;
@@ -235,7 +235,7 @@ void CBayesNetFNNodeBeta::Randomize( ) {
 		m_Params.Set( i, c_iAlpha, (float)rand( ) / RAND_MAX );
 		m_Params.Set( i, c_iBeta, (float)rand( ) / RAND_MAX ); } }
 
-bool CBayesNetFNNodeBeta::Learn( const IDataset* pData, size_t iNode, bool fZero ) {
+bool CBayesNetFNNodeBeta::Learn( const IDataset* pData, size_t iNode, size_t iZero ) {
 	float			d, dVal, dMean, dVariance;
 	size_t			i, j, iAnswer;
 	vector<size_t>	veciCounts;
@@ -250,9 +250,9 @@ bool CBayesNetFNNodeBeta::Learn( const IDataset* pData, size_t iNode, bool fZero
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
 			if( pData->IsExample( i, j ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
 				if( CMeta::IsNaN( dVal = pData->GetContinuous( i, j, iNode ) ) ) {
-					if( !fZero )
+					if( iZero == -1 )
 						continue;
-					dVal = 0; }
+					dVal = (float)iZero; }
 				if( iAnswer >= m_Params.GetRows( ) )
 					return false;
 				veciCounts[ iAnswer ]++;
@@ -303,7 +303,7 @@ void CBayesNetFNNodeExponential::Randomize( ) {
 		m_Params.Set( i, c_iMin, (float)( rand( ) - ( RAND_MAX / 2 ) ) );
 		m_Params.Set( i, c_iBeta, (float)rand( ) / RAND_MAX ); } }
 
-bool CBayesNetFNNodeExponential::Learn( const IDataset* pData, size_t iNode, bool fZero ) {
+bool CBayesNetFNNodeExponential::Learn( const IDataset* pData, size_t iNode, size_t iZero ) {
 	float			dVal;
 	size_t			i, j, iAnswer;
 	vector<size_t>	veciCounts;
@@ -316,9 +316,9 @@ bool CBayesNetFNNodeExponential::Learn( const IDataset* pData, size_t iNode, boo
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
 			if( pData->IsExample( i, j ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
 				if( CMeta::IsNaN( dVal = pData->GetContinuous( i, j, iNode ) ) ) {
-					if( !fZero )
+					if( iZero == -1 )
 						continue;
-					dVal = 0; }
+					dVal = (float)iZero; }
 				if( iAnswer >= m_Params.GetRows( ) )
 					return false;
 				veciCounts[ iAnswer ]++;
@@ -357,7 +357,7 @@ void CBayesNetFNNodeMOG::Randomize( ) {
 			m_Params.Set( i, j + c_iMu, (float)( rand( ) - ( RAND_MAX / 2 ) ) );
 			m_Params.Set( i, j + c_iSigma, (float)rand( ) / RAND_MAX ); } }
 
-bool CBayesNetFNNodeMOG::Learn( const IDataset* pData, size_t iNode, bool fZero ) {
+bool CBayesNetFNNodeMOG::Learn( const IDataset* pData, size_t iNode, size_t iZero ) {
 
 	return false; }
 /*
@@ -373,9 +373,9 @@ bool CBayesNetFNNodeMOG::Learn( const IDataset* pData, size_t iNode, bool fZero 
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
 			if( pData->IsExample( i, j ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
 				if( CMeta::IsNaN( dVal = pData->GetContinuous( i, j, iNode ) ) ) {
-					if( !fZero )
+					if( iZero == -1 )
 						continue;
-					dVal = 0; }
+					dVal = iZero; }
 				if( iAnswer >= m_Params.GetRows( ) )
 					return false;
 				veciCounts[ iAnswer ]++;
@@ -456,8 +456,9 @@ bool CBayesNetFN::Save( const char* szFile ) const {
 	return !((CBayesNetFN*)this)->m_SmileNet.WriteFile( szFile ); }
 
 bool CBayesNetFN::Learn( const IDataset* pData, size_t iIterations, bool fZero, bool fELR ) {
-	size_t			i, j, iAnswer;
+	size_t			i, j, iAnswer, iZero;
 	vector<size_t>	veciCounts;
+	int				iProp;
 
 	if( !m_iNodes )
 		return false;
@@ -470,9 +471,15 @@ bool CBayesNetFN::Learn( const IDataset* pData, size_t iIterations, bool fZero, 
 
 	if( !m_apNodes[ 0 ]->Learn( veciCounts ) )
 		return false;
-	for( i = 1; i < m_iNodes; ++i )
-		if( !m_apNodes[ i ]->Learn( pData, i, fZero ) )
-			return false;
+	for( i = 1; i < m_iNodes; ++i ) {
+		DSL_userProperties&	Props	= m_SmileNet.GetNode( (int)i )->Info( ).UserProperties( );
+
+		if( ( iProp = Props.FindProperty( c_szZero ) ) < 0 )
+			iZero = fZero ? 0 : -1;
+		else
+			iZero = atoi( Props.GetPropertyValue( iProp ) );
+		if( !m_apNodes[ i ]->Learn( pData, i, iZero ) )
+			return false; }
 
 	return true; }
 
@@ -539,20 +546,32 @@ bool CBayesNetFNImpl::Evaluate( const IDataset* pData, size_t iOne, size_t iTwo,
 	vector<float>& vecdOut ) const {
 	vector<float>	vecdCur;
 	float			dValue;
-	size_t			i, j;
+	size_t			i, j, iZero;
+	int				iProp;
 
 	if( !m_apNodes[ 0 ]->Evaluate( CMeta::GetNaN( ), vecdOut ) )
 		return false;
 	for( i = 0; i < vecdOut.size( ); ++i )
 		vecdOut[ i ] = log( vecdOut[ i ] );
 	for( i = 1; i < m_iNodes; ++i ) {
+		DSL_userProperties&	Props	= m_SmileNet.GetNode( (int)i )->Info( ).UserProperties( );
+
+		if( ( iProp = Props.FindProperty( c_szZero ) ) < 0 )
+			iZero = fZero ? 0 : -1;
+		else
+			iZero = atoi( Props.GetPropertyValue( iProp ) );
+
 		dValue = 0;
 		if( m_apNodes[ i ]->IsContinuous( ) ) {
-			if( CMeta::IsNaN( dValue = pData->GetContinuous( iOne, iTwo, i ) ) && !fZero )
-				continue; }
+			if( CMeta::IsNaN( dValue = pData->GetContinuous( iOne, iTwo, i ) ) ) {
+				if( iZero == -1 )
+					continue;
+				dValue = (float)iZero; } }
 		else {
-			if( ( ( j = pData->GetDiscrete( iOne, iTwo, i ) ) == -1 ) && !fZero )
-				continue;
+			if( ( j = pData->GetDiscrete( iOne, iTwo, i ) ) == -1 ) {
+				if( iZero == -1 )
+					continue;
+				j = iZero; }
 			dValue = (float)j; }
 		if( !m_apNodes[ i ]->Evaluate( dValue, vecdCur ) || ( vecdCur.size( ) != vecdOut.size( ) ) )
 			return false;
@@ -570,7 +589,8 @@ bool CBayesNetFNImpl::Evaluate( const IDataset* pData, size_t iOne, size_t iTwo,
 bool CBayesNetFN::Evaluate( const vector<unsigned char>& vecbDatum, vector<float>& vecdOut, bool fZero ) const {
 	vector<float>	vecdProd, vecdCur;
 	float			dValue;
-	size_t			i, j;
+	size_t			i, j, iZero;
+	int				iProp;
 
 	if( !m_iNodes )
 		return false;
@@ -580,10 +600,17 @@ bool CBayesNetFN::Evaluate( const vector<unsigned char>& vecbDatum, vector<float
 	for( i = 0; i < vecdProd.size( ); ++i )
 		vecdProd[ i ] = log( vecdProd[ i ] );
 	for( i = 1; i < m_iNodes; ++i ) {
+		DSL_userProperties&	Props	= m_SmileNet.GetNode( (int)i )->Info( ).UserProperties( );
+
+		if( ( iProp = Props.FindProperty( c_szZero ) ) < 0 )
+			iZero = fZero ? 0 : -1;
+		else
+			iZero = atoi( Props.GetPropertyValue( iProp ) );
+
 		if( !( dValue = (float)vecbDatum[ i ] ) ) {
-			if( !fZero )
+			if( iZero == -1 )
 				continue;
-			dValue = 0; }
+			dValue = (float)iZero; }
 		else
 			dValue--;
 		if( !m_apNodes[ i ]->Evaluate( dValue, vecdCur ) )

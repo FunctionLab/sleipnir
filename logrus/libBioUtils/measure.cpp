@@ -147,11 +147,10 @@ double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY
 		return CMeta::GetNaN( );
 
 	dRet = 0;
-	for( i = 0; i < iN; ++i ) {
-		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
-			continue;
-		d = adX[ i ] - adY[ i ];
-		dRet += d * d * GetWeight( adWX, i ) * GetWeight( adWY, i ); }
+	for( i = 0; i < iN; ++i )
+		if( ( adX[ i ] || adY[ i ] ) && !( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) ) ) {
+			d = adX[ i ] - adY[ i ];
+			dRet += d * d * GetWeight( adWX, i ) * GetWeight( adWY, i ); }
 
 	return sqrt( dRet ); }
 
@@ -696,10 +695,9 @@ double CMeasureInnerProduct::Measure( const float* adX, size_t iM, const float* 
 		return CMeta::GetNaN( );
 
 	dRet = 0;
-	for( i = 0; i < iN; ++i ) {
-		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
-			continue;
-		dRet += adX[ i ] * adY[ i ] * GetWeight( adWX, i ) * GetWeight( adWY, i ); }
+	for( i = 0; i < iN; ++i )
+		if( ( adX[ i ] || adY[ i ] ) && !( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) ) )
+			dRet += adX[ i ] * adY[ i ] * GetWeight( adWX, i ) * GetWeight( adWY, i );
 
 	return dRet; }
 
