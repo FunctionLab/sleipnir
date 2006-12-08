@@ -128,7 +128,9 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecs
 				if( !Dat.OpenGenes( ifsm, false ) )
 					return false; }
 			for( j = 0; j < Dat.GetGenes( ); ++j )
-				setstrGenes.insert( Dat.GetGene( j ) ); } }
+				setstrGenes.insert( Dat.GetGene( j ) ); }
+		m_vecstrGenes.resize( setstrGenes.size( ) );
+		copy( setstrGenes.begin( ), setstrGenes.end( ), m_vecstrGenes.begin( ) ); }
 	else {
 		m_vecstrGenes.resize( Answers.GetGenes( ) );
 		for( i = 0; i < m_vecstrGenes.size( ); ++i )
@@ -143,13 +145,14 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecs
 			CDatasetCompactImpl::Open( Datum, i + 1 ) ) )
 			return false; }
 
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
-		for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j ) {
-			for( k = 1; k < m_iData; ++k )
-				if( m_aData[ k ].Get( i, j ) )
-					break;
-			if( k >= m_iData )
-				m_aData[ 0 ].Set( i, j, 0 ); }
+	if( !fEverything )
+		for( i = 0; i < m_vecstrGenes.size( ); ++i )
+			for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j ) {
+				for( k = 1; k < m_iData; ++k )
+					if( m_aData[ k ].Get( i, j ) )
+						break;
+				if( k >= m_iData )
+					m_aData[ 0 ].Set( i, j, 0 ); }
 
 	return true; }
 

@@ -55,7 +55,7 @@ int main( int iArgs, char** aszArgs ) {
 		CDatasetCompact	Data;
 		vector<string>	vecstrDummy;
 
-		if( !Data.Open( Answers, vecstrDummy ) ) {
+		if( !Data.Open( Answers, vecstrDummy, true ) ) {
 			cerr << "Couldn't open answer set" << endl;
 			return 1; }
 		vecstrDummy.push_back( "FR" );
@@ -75,7 +75,7 @@ int main( int iArgs, char** aszArgs ) {
 		CBayesNetSmile*	pBN;
 
 		vecstrNames.push_back( sArgs.inputs[ iArg ] );
-		if( !Data.Open( Answers, vecstrNames ) ) {
+		if( !Data.Open( Answers, vecstrNames, true ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ iArg ] << endl;
 			return 1; }
 		vecstrNames.insert( vecstrNames.begin( ), sArgs.answers_arg );
