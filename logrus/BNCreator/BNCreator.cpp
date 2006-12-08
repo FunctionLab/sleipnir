@@ -7,12 +7,32 @@ int main( int iArgs, char** aszArgs ) {
 	size_t					iArg, i;
 	vector<CBayesNetSmile*>	vecpBNs;
 	CBayesNetSmile			BNIn, BNOut, BNDefault;
+	map<string,size_t>		mapZeros;
+	vector<size_t>			veciZeros;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
 	EnableXdslFormat( );
+
+	if( sArgs.zeros_arg ) {
+		ifstream		ifsm;
+		vector<string>	vecstrZeros;
+		char			acLine[ 1024 ];
+
+		ifsm.open( sArgs.zeros_arg );
+		if( !ifsm.is_open( ) ) {
+			cerr << "Couldn't open: " << sArgs.zeros_arg << endl;
+			return 1; }
+		while( !ifsm.eof( ) ) {
+			ifsm.getline( acLine, ARRAYSIZE(acLine) - 1 );
+			acLine[ ARRAYSIZE(acLine) - 1 ] = 0;
+			vecstrZeros.clear( );
+			CMeta::Tokenize( acLine, vecstrZeros );
+			if( vecstrZeros.empty( ) )
+				continue;
+			mapZeros[ vecstrZeros[ 0 ] ] = atoi( vecstrZeros[ 1 ].c_str( ) ); } }
 
 	if( sArgs.default_arg && !BNDefault.Open( sArgs.default_arg ) ) {
 		cerr << "Couldn't open: " << sArgs.default_arg << endl;
@@ -39,7 +59,7 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open answer set" << endl;
 			return 1; }
 		vecstrDummy.push_back( "FR" );
-		if( !BNIn.Open( &Data, vecstrDummy ) ) {
+		if( !BNIn.Open( &Data, vecstrDummy, veciZeros ) ) {
 			cerr << "Couldn't create base network" << endl;
 			return 1; }
 		if( sArgs.default_arg )
@@ -62,7 +82,13 @@ int main( int iArgs, char** aszArgs ) {
 		for( i = 0; i < vecstrNames.size( ); ++i )
 			vecstrNames[ i ] = CMeta::Filename( CMeta::Deextension( CMeta::Basename( vecstrNames[ i ].c_str( ) ) ) );
 		vecpBNs.push_back( pBN = new CBayesNetSmile( ) );
-		if( !pBN->Open( &Data, vecstrNames ) ) {
+		veciZeros.resize( vecstrNames.size( ) );
+		for( i = 0; i < veciZeros.size( ); ++i ) {
+			map<string,size_t>::const_iterator	iterZero;
+
+			veciZeros[ i ] = ( ( iterZero = mapZeros.find( vecstrNames[ i ] ) ) == mapZeros.end( ) ) ? -1 :
+				iterZero->second; }
+		if( !pBN->Open( &Data, vecstrNames, veciZeros ) ) {
 			cerr << "Couldn't create network for: " << sArgs.inputs[ iArg ] << endl;
 			return 1; }
 

@@ -1,6 +1,11 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+static const char	c_szExclude[]	= "exclude";
+static const char	c_szInclude[]	= "include";
+static const char	c_szOnly[]		= "only";
+static const char	c_szUnknown[]	= "GO:0008150";
+
 struct SDatum {
 	float	m_dDiff;
 	size_t	m_iOne;
@@ -10,28 +15,40 @@ struct SDatum {
 };
 
 struct SSorter {
+	bool	m_fReverse;
+
+	SSorter( bool fReverse ) : m_fReverse(fReverse) { }
 
 	bool operator()( const SDatum& sOne, const SDatum& sTwo ) const {
+		bool	fRet;
 
-		return ( sOne.m_dDiff > sTwo.m_dDiff ); }
+		fRet = sOne.m_dDiff > sTwo.m_dDiff;
+		return ( m_fReverse ? !fRet : fRet ); }
 };
 
 int main( int iArgs, char** aszArgs ) {
 	CDat				Answers, Data;
 	gengetopt_args_info	sArgs;
 	vector<size_t>		veciGenes;
-	size_t				i, j, iOne, iTwo, iNumber;
+	size_t				i, j, k, iOne, iTwo, iNumber;
 	float				dValue, dAnswer;
 	vector<SDatum>		vecsData;
 	ifstream			ifsm;
+	COntologyGO			GOBP;
 	CGenome				Genome;
 	CGene*				pOne;
 	CGene*				pTwo;
+	bool				fOne, fTwo;
+	string				strOne, strTwo;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
+
+	if( !strcmp( c_szInclude, sArgs.unknowns_arg ) ||
+		!strcmp( c_szOnly, sArgs.unknowns_arg ) )
+		sArgs.everything_flag = true;
 
 	if( !Answers.Open( sArgs.answers_arg ) ) {
 		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
@@ -60,36 +77,72 @@ int main( int iArgs, char** aszArgs ) {
 			return 1; }
 		ifsm.close( ); }
 
-	veciGenes.resize( Answers.GetGenes( ) );
-	for( i = 0; i < Answers.GetGenes( ); ++i )
-		veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
-	for( i = 0; i < Answers.GetGenes( ); ++i ) {
-		if( ( iOne = veciGenes[ i ] ) == -1 )
+	if( sArgs.go_onto_arg ) {
+		ifstream	ifsmGenes;
+
+		ifsm.clear( );
+		ifsm.open( sArgs.go_onto_arg );
+		if( sArgs.go_anno_arg )
+			ifsmGenes.open( sArgs.go_anno_arg );
+		if( !GOBP.Open( ifsm, ifsmGenes, Genome, COntologyGO::ENamespaceBP ) ) {
+			cerr << "Could not open: " << sArgs.go_onto_arg << ", " << sArgs.go_anno_arg << endl;
+			return 1; }
+		ifsm.close( ); }
+
+	veciGenes.resize( Data.GetGenes( ) );
+	for( i = 0; i < Data.GetGenes( ); ++i )
+		veciGenes[ i ] = Answers.GetGene( Data.GetGene( i ) );
+	for( i = 0; i < Data.GetGenes( ); ++i ) {
+		if( !sArgs.everything_flag && ( ( iOne = veciGenes[ i ] ) == -1 ) )
 			continue;
-		for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
-			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-				CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
-				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
+		for( j = ( i + 1 ); j < Data.GetGenes( ); ++j ) {
+			if( CMeta::IsNaN( dValue = Data.Get( i, j ) ) )
 				continue;
-			if( sArgs.positives_flag && ( dAnswer <= 0 ) )
+			if( !sArgs.everything_flag && ( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+				CMeta::IsNaN( dAnswer = Answers.Get( iOne, iTwo ) ) ||
+				( sArgs.positives_flag && ( dAnswer <= 0 ) ) ) )
 				continue;
+			if( sArgs.everything_flag )
+				dAnswer = dValue - ( 1 / dValue );
 			vecsData.push_back( SDatum( fabs( dValue - dAnswer ), i, j ) ); } }
-	sort( vecsData.begin( ), vecsData.end( ), SSorter( ) );
+	sort( vecsData.begin( ), vecsData.end( ), SSorter( !!sArgs.reverse_flag ) );
 
 	if( ( ( iNumber = sArgs.count_arg ) < 0 ) || ( iNumber >= vecsData.size( ) ) )
 		iNumber = vecsData.size( );
 	for( i = 0; i < iNumber; ++i ) {
 		const SDatum&	Datum	= vecsData[ i ];
 
-		cout << Answers.GetGene( Datum.m_iOne ) << '\t' << Answers.GetGene( Datum.m_iTwo ) << '\t' <<
-			Answers.Get( Datum.m_iOne, Datum.m_iTwo ) << '\t' << Data.Get( veciGenes[ Datum.m_iOne ],
-			veciGenes[ Datum.m_iTwo ] ) << endl;
+		strOne = Data.GetGene( Datum.m_iOne );
+		strTwo = Data.GetGene( Datum.m_iTwo );
 		if( Genome.GetGenes( ) ) {
-			iOne = Genome.GetGene( Answers.GetGene( Datum.m_iOne ) );
+			iOne = Genome.GetGene( strOne );
 			pOne = ( iOne == -1 ) ? NULL : &Genome.GetGene( iOne );
-			iTwo = Genome.GetGene( Answers.GetGene( Datum.m_iTwo ) );
+			iTwo = Genome.GetGene( strTwo );
 			pTwo = ( iTwo == -1 ) ? NULL : &Genome.GetGene( iTwo );
+			fOne = fTwo = true;
+			if( pOne )
+				for( j = 0; j < pOne->GetOntologies( ); ++j )
+					if( pOne->GetAnnotations( j ) && ( ( pOne->GetAnnotations( j ) > 1 ) ||
+						( pOne->GetOntology( j )->GetID( pOne->GetAnnotation( j, 0 ) ) != c_szUnknown ) ) ) {
+						fOne = false;
+						break; }
+			if( pTwo )
+				for( j = 0; j < pTwo->GetOntologies( ); ++j )
+					if( pTwo->GetAnnotations( j ) && ( ( pTwo->GetAnnotations( j ) > 1 ) ||
+						( pTwo->GetOntology( j )->GetID( pTwo->GetAnnotation( j, 0 ) ) != c_szUnknown ) ) ) {
+						fTwo = false;
+						break; }
+			if( fOne || fTwo ) {
+				if( !strcmp( c_szExclude, sArgs.unknowns_arg ) )
+					continue; }
+			else if( !strcmp( c_szOnly, sArgs.unknowns_arg ) )
+				continue; }
 
+		cout << strOne << '\t' << strTwo << '\t' << Data.Get( Datum.m_iOne, Datum.m_iTwo ) << '\t';
+		dAnswer = ( ( ( j = veciGenes[ Datum.m_iOne ] ) == -1 ) || ( ( k = veciGenes[ Datum.m_iTwo ] ) == -1 ) ) ?
+			CMeta::GetNaN( ) : Answers.Get( j, k );
+		cout << dAnswer << endl;
+		if( Genome.GetGenes( ) ) {
 			cout << '\t';
 			if( pOne && pOne->GetSynonyms( ) )
 				cout << pOne->GetSynonym( 0 );

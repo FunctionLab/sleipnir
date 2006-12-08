@@ -617,9 +617,11 @@ bool CBayesNetSmile::Open( const vector<string>& vecstrPCLs, size_t iBins ) {
 
 	return true; }
 
-bool CBayesNetSmile::Open( const IDataset* pData, const vector<string>& vecstrNames ) {
+bool CBayesNetSmile::Open( const IDataset* pData, const vector<string>& vecstrNames,
+	const vector<size_t>& veciZeros ) {
 	size_t			i, j;
 	DSL_stringArray	vecstrOutcomes;
+	char			acNum[ 8 ];
 
 	if( pData->GetExperiments( ) != vecstrNames.size( ) )
 		return false;
@@ -634,13 +636,16 @@ bool CBayesNetSmile::Open( const IDataset* pData, const vector<string>& vecstrNa
 		m_SmileNet.AddNode( DSL_CPT, (char*)vecstrNames[ i ].c_str( ) );
 		vecstrOutcomes.Flush( );
 		for( j = 0; j < pData->GetBins( i ); ++j ) {
-			char	acNum[ 8 ];
-
 #pragma warning( disable : 4996 )
 			sprintf( acNum, "%02d", j );
 #pragma warning( default : 4996 )
 			vecstrOutcomes.Add( ( vecstrNames[ i ] + acNum ).c_str( ) ); }
 		m_SmileNet.GetNode( (int)i )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
+		if( veciZeros[ i ] != -1 ) {
+#pragma warning( disable : 4996 )
+			sprintf( acNum, "%d", veciZeros[ i ] );
+#pragma warning( default : 4996 )
+			m_SmileNet.GetNode( (int)i )->Info( ).UserProperties( ).AddProperty( c_szZero, acNum ); }
 		m_SmileNet.AddArc( 0, (int)i ); }
 
 	return true; }

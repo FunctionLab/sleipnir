@@ -11,6 +11,11 @@ option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
 option	"genet"		c	"Term inclusion file"	string	typestr="filename"
 option	"count"		k	"Number of pairs to display"	int	default="-1"
 option	"normalize"	n	"Normalize to the range [0,1]"	flag	off
-option	"positives"	p	"Include only positive pairs"	flag	on
+option	"positives"	p	"Include only positive pairs"	flag	off
 option	"features"	f	"SGD gene features"	string	typestr="filename"
+option	"everything"	e	"Include pairs without answers"	flag	off
+option	"reverse"	r	"Reverse sort order"	flag	off
+option	"go_onto"	o	"GO ontology"	string	typestr="filename"
+option	"go_anno"	a	"GO annotations"	string	typestr="filename"
+option	"unknowns"	u	"Treatment of unknown genes"	values="exclude","include","only"	default="exclude"
 option	"verbosity"	v	"Message verbosity"	int	default="5"

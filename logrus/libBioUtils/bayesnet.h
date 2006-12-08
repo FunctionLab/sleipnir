@@ -34,7 +34,7 @@ public:
 	bool Open( const std::vector<std::string>&, size_t );
 	bool Convert( CBayesNetPNL& ) const;
 	void SetDefault( const CBayesNetSmile& );
-	bool Open( const IDataset*, const std::vector<std::string>& );
+	bool Open( const IDataset*, const std::vector<std::string>&, const std::vector<size_t>& );
 	bool Open( const CBayesNetSmile&, const std::vector<CBayesNetSmile*>& );
 
 	bool Open( const char* );
