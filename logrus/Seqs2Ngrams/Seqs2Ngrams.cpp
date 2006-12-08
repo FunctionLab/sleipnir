@@ -77,7 +77,8 @@ int main( int iArgs, char** aszArgs ) {
 				continue;
 
 			if( ( iterGene = mapGenes.find( acLine ) ) == mapGenes.end( ) ) {
-				mapGenes[ acLine ] = iGene = mapGenes.size( );
+				iGene = mapGenes.size( );
+				mapGenes[ acLine ] = iGene;
 				vecstrGenes.push_back( acLine );
 				veciCounts.push_back( 1 );
 				vecvecstrSeqs.push_back( vector<string>( ) ); }

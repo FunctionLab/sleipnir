@@ -97,6 +97,62 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 
 	return true; }
 
+bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecstrData, bool fEverything ) {
+	size_t	i, j, k;
+
+	if( Answers.IsContinuous( ) )
+		return false;
+
+	m_veciMapping.resize( m_iData = 1 + vecstrData.size( ) );
+	for( i = 0; i < m_veciMapping.size( ); ++i )
+		m_veciMapping[ i ] = i;
+	m_veccQuants.resize( m_iData );
+	if( m_aData )
+		delete[] m_aData;
+	m_aData = new CCompactMatrix[ m_iData ];
+
+	if( fEverything ) {
+		set<string>	setstrGenes;
+
+		for( i = 0; i < Answers.GetGenes( ); ++i )
+			setstrGenes.insert( Answers.GetGene( i ) );
+		for( i = 0; i < vecstrData.size( ); ++i ) {
+			ifstream	ifsm;
+			CDat		Dat;
+
+			ifsm.open( vecstrData[ i ].c_str( ), ios_base::binary );
+			if( !Dat.OpenGenes( ifsm, true ) ) {
+				ifsm.close( );
+				ifsm.clear( );
+				ifsm.open( vecstrData[ i ].c_str( ) );
+				if( !Dat.OpenGenes( ifsm, false ) )
+					return false; }
+			for( j = 0; j < Dat.GetGenes( ); ++j )
+				setstrGenes.insert( Dat.GetGene( j ) ); } }
+	else {
+		m_vecstrGenes.resize( Answers.GetGenes( ) );
+		for( i = 0; i < m_vecstrGenes.size( ); ++i )
+			m_vecstrGenes[ i ] = Answers.GetGene( i ); }
+
+	if( !CDatasetCompactImpl::Open( Answers, 0 ) )
+		return false;
+	for( i = 0; i < vecstrData.size( ); ++i ) {
+		CDataPair	Datum;
+
+		if( !( Datum.Open( vecstrData[ i ].c_str( ), false ) &&
+			CDatasetCompactImpl::Open( Datum, i + 1 ) ) )
+			return false; }
+
+	for( i = 0; i < m_vecstrGenes.size( ); ++i )
+		for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j ) {
+			for( k = 1; k < m_iData; ++k )
+				if( m_aData[ k ].Get( i, j ) )
+					break;
+			if( k >= m_iData )
+				m_aData[ 0 ].Set( i, j, 0 ); }
+
+	return true; }
+
 bool CDatasetCompactImpl::Open( const CDataPair& Datum, size_t iExp ) {
 	vector<size_t>	veciGenes;
 	size_t			i, j, iOne, iTwo;

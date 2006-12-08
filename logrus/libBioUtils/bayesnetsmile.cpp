@@ -490,9 +490,9 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 				vecveciCounts[ 0 ][ iAnswer ]++;
 				for( k = 1; k < pData->GetExperiments( ); ++k ) {
 					if( ( iVal = pData->GetDiscrete( i, j, k ) ) == -1 ) {
-						if( veciZeros[ i ] == -1 )
+						if( veciZeros[ k ] == -1 )
 							continue;
-						iVal = veciZeros[ i ]; }
+						iVal = veciZeros[ k ]; }
 					vecveciCounts[ k ][ ( iVal * iAnswers ) + iAnswer ]++; } }
 
 	pMat = m_SmileNet.GetNode( 0 )->Definition( )->GetMatrix( );
@@ -614,6 +614,60 @@ bool CBayesNetSmile::Open( const vector<string>& vecstrPCLs, size_t iBins ) {
 			vecstrOutcomes.Add( ( strCur + acNum ).c_str( ) ); }
 		m_SmileNet.GetNode( (int)i + 1 )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
 		m_SmileNet.AddArc( 0, (int)i + 1 ); }
+
+	return true; }
+
+bool CBayesNetSmile::Open( const IDataset* pData, const vector<string>& vecstrNames ) {
+	size_t			i, j;
+	DSL_stringArray	vecstrOutcomes;
+
+	if( pData->GetExperiments( ) != vecstrNames.size( ) )
+		return false;
+
+	m_fSmileNet = true;
+	m_SmileNet.DeleteAllNodes( );
+	m_SmileNet.AddNode( DSL_CPT, (char*)c_szFR );
+	vecstrOutcomes.Add( ( (string)c_szFR + "No" ).c_str( ) );
+	vecstrOutcomes.Add( ( (string)c_szFR + "Yes" ).c_str( ) );
+	m_SmileNet.GetNode( 0 )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
+	for( i = 1; i < pData->GetExperiments( ); ++i ) {
+		m_SmileNet.AddNode( DSL_CPT, (char*)vecstrNames[ i ].c_str( ) );
+		vecstrOutcomes.Flush( );
+		for( j = 0; j < pData->GetBins( i ); ++j ) {
+			char	acNum[ 8 ];
+
+#pragma warning( disable : 4996 )
+			sprintf( acNum, "%02d", j );
+#pragma warning( default : 4996 )
+			vecstrOutcomes.Add( ( vecstrNames[ i ] + acNum ).c_str( ) ); }
+		m_SmileNet.GetNode( (int)i )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
+		m_SmileNet.AddArc( 0, (int)i ); }
+
+	return true; }
+
+bool CBayesNetSmile::Open( const CBayesNetSmile& BNPrior, const vector<CBayesNetSmile*>& vecpBNs ) {
+	DSL_node*	pFrom;
+	size_t		iNet, iNode;
+	int			iTo;
+
+	if( !BNPrior.m_fSmileNet )
+		return false;
+	for( iNet = 0; iNet < vecpBNs.size( ); ++iNet )
+		if( !vecpBNs[ iNet ]->m_fSmileNet )
+			return false;
+
+	m_fSmileNet = true;
+	m_SmileNet.DeleteAllNodes( );
+	pFrom = BNPrior.m_SmileNet.GetNode( 0 );
+	m_SmileNet.AddNode( pFrom->Definition( )->GetType( ), pFrom->Info( ).Header( ).GetId( ) );
+	m_SmileNet.GetNode( 0 )->Definition( )->SetDefinition( *pFrom->Definition( )->GetMatrix( ) );
+	for( iNet = 0; iNet < vecpBNs.size( ); ++iNet )
+		for( iNode = 1; iNode < (size_t)vecpBNs[ iNet ]->m_SmileNet.GetNumberOfNodes( ); ++iNode ) {
+			pFrom = vecpBNs[ iNet ]->m_SmileNet.GetNode( iNode );
+			m_SmileNet.AddNode( pFrom->Definition( )->GetType( ), pFrom->Info( ).Header( ).GetId( ) );
+			m_SmileNet.AddArc( 0, iTo = ( m_SmileNet.GetNumberOfNodes( ) - 1 ) );
+			m_SmileNet.GetNode( iTo )->Definition( )->SetNumberOfOutcomes( *pFrom->Definition( )->GetOutcomesNames( ) );
+			m_SmileNet.GetNode( iTo )->Definition( )->SetDefinition( *pFrom->Definition( )->GetMatrix( ) ); }
 
 	return true; }
 
