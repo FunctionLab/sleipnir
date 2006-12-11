@@ -54,6 +54,16 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Data.OpenGenes( vecstrFiles ) ) {
 			cerr << "Couldn't open: " << sArgs.directory_arg << endl;
 			return 1; }
+		if( sArgs.genes_arg && !Data.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
+			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+			return 1; }
+		if( sArgs.genet_arg && !Data.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) ) {
+			cerr << "Couldn't open: " << sArgs.genet_arg << endl;
+			return 1; }
+		if( sArgs.genex_arg && !Data.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
+			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
+			return 1; }
+
 		DatYes.Open( Data.GetGeneNames( ) );
 		DatNo.Open( Data.GetGeneNames( ) );
 		BNIn.GetCPT( 0, MatCPT );
@@ -75,12 +85,13 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = 0; j < veciGenes.size( ); ++j )
 				veciGenes[ j ] = DatYes.GetGene( DatIn.GetGene( j ) );
 			for( j = 0; j < DatIn.GetGenes( ); ++j ) {
-				iOne = veciGenes[ j ];
+				if( ( iOne = veciGenes[ j ] ) == -1 )
+					continue;
 				for( k = ( j + 1 ); k < DatIn.GetGenes( ); ++k ) {
-					if( CMeta::IsNaN( dYes = DatIn.Get( j, k ) ) )
+					if( ( ( iTwo = veciGenes[ k ] ) == -1 ) ||
+						CMeta::IsNaN( dYes = DatIn.Get( j, k ) ) )
 						continue;
 					iBin = DatIn.Quantify( dYes );
-					iTwo = veciGenes[ k ];
 					DatNo.Get( iOne, iTwo ) += log( MatCPT.Get( iBin, 0 ) );
 					DatYes.Get( iOne, iTwo ) += log( MatCPT.Get( iBin, 1 ) ); } } }
 		for( i = 0; i < DatYes.GetGenes( ); ++i )
