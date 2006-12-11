@@ -53,13 +53,14 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 	const IBayesNet* pBayesNet, const CGenes& GenesIn, const CGenes& GenesEx, bool fEverything ) {
 	size_t			i, j, k;
-	vector<string>	vecstrData;
+	vector<string>	vecstrData, vecstrNodes;
 	set<string>		setstrGenes;
 
 	if( pBayesNet->IsContinuous( ) )
 		return false;
 
-	m_iData = 1 + (uint32_t)OpenMax( szDataDir, pBayesNet->GetNodes( ), true, vecstrData, fEverything ?
+	pBayesNet->GetNodes( vecstrNodes );
+	m_iData = 1 + (uint32_t)OpenMax( szDataDir, vecstrNodes, true, vecstrData, fEverything ?
 		&setstrGenes : NULL );
 	m_veccQuants.resize( m_iData );
 	if( m_aData )
@@ -195,14 +196,15 @@ bool CDatasetCompact::Open( const char* szDataDir, const IBayesNet* pBayesNet,
 bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNet,
 	const CGenes* pGenesIn, const CGenes* pGenesEx ) {
 	size_t						i;
-	vector<string>				vecstrData;
+	vector<string>				vecstrData, vecstrNodes;
 	set<string>					setstrGenes;
 	set<string>::const_iterator	iterGenes;
 
 	if( pBayesNet->IsContinuous( ) )
 		return false;
 
-	m_iData = (uint32_t)OpenMax( szDataDir, pBayesNet->GetNodes( ), false, vecstrData, &setstrGenes );
+	pBayesNet->GetNodes( vecstrNodes );
+	m_iData = (uint32_t)OpenMax( szDataDir, vecstrNodes, false, vecstrData, &setstrGenes );
 	m_veccQuants.resize( m_iData );
 	if( pGenesIn )
 		for( i = 0; i < pGenesIn->GetGenes( ); ++i )
@@ -487,7 +489,7 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 		ifstream	ifsm;
 
 		ifsm.open( vecstrPCLs[ iPCL ].c_str( ) );
-		if( !OpenGenes( ifsm, false, true, setstrGenes ) ) {
+		if( !CDataImpl::OpenGenes( ifsm, false, true, setstrGenes ) ) {
 			g_CatBioUtils.error( "CDatasetCompact::Open( %d ) could not open: %s", iSkip,
 				vecstrPCLs[ iPCL ].c_str( ) );
 			return false; } }
@@ -565,5 +567,9 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 			return false; }
 
 	return true; }
+
+bool CDatasetCompact::OpenGenes( const vector<string>& vecstrData ) {
+
+	return CDataImpl::OpenGenes( vecstrData ); }
 
 }

@@ -309,13 +309,14 @@ bool CDataset::Open( const char* szDataDir, const IBayesNet* pBayesNet ) {
 bool CDatasetImpl::Open( const CDataPair* pAnswers, const char* szDataDir,
 	const IBayesNet* pBayesNet ) {
 	size_t						i;
-	vector<string>				vecstrData;
+	vector<string>				vecstrData, vecstrNodes;
 	set<string>					setstrGenes;
 	set<string>::const_iterator	iterGene;
 
 	Reset( );
 	m_fContinuous = pBayesNet->IsContinuous( );
-	m_veccQuants.resize( ( pAnswers ? 1 : 0 ) + OpenMax( szDataDir, pBayesNet->GetNodes( ), !!pAnswers,
+	pBayesNet->GetNodes( vecstrNodes );
+	m_veccQuants.resize( ( pAnswers ? 1 : 0 ) + OpenMax( szDataDir, vecstrNodes, !!pAnswers,
 		vecstrData, &setstrGenes ) );
 	if( pAnswers ) {
 		m_vecstrGenes.resize( pAnswers->GetGenes( ) );
@@ -582,8 +583,10 @@ bool CDataSubset::Initialize( const char* szDataDir, const IBayesNet* pBayesNet,
 	{
 		set<string>					setstrGenes;
 		set<string>::const_iterator	iterGenes;
+		vector<string>				vecstrNodes;
 
-		OpenMax( szDataDir, pBayesNet->GetNodes( ), false, m_vecstrData, &setstrGenes );
+		pBayesNet->GetNodes( vecstrNodes );
+		OpenMax( szDataDir, vecstrNodes, false, m_vecstrData, &setstrGenes );
 		m_vecstrGenes.resize( setstrGenes.size( ) );
 		i = 0;
 		for( iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( ); ++iterGenes )

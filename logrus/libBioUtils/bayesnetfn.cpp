@@ -622,15 +622,11 @@ bool CBayesNetFN::Evaluate( const vector<unsigned char>& vecbDatum, vector<float
 
 	return true; }
 
-vector<string> CBayesNetFN::GetNodes( ) const {
-	vector<string>	vecstrRet;
-	size_t			i;
+void CBayesNetFN::GetNodes( vector<string>& vecstrNodes ) const {
+	size_t	i;
 
-	vecstrRet.resize( m_iNodes );
-	for( i = 0; i < vecstrRet.size( ); ++i )
-		vecstrRet[ i ] = m_apNodes[ i ]->GetName( );
-
-	return vecstrRet; }
+	for( i = 0; i < m_iNodes; ++i )
+		vecstrNodes.push_back( m_apNodes[ i ]->GetName( ) ); }
 
 unsigned char CBayesNetFN::GetValues( size_t iNode ) const {
 	const CBayesNetFNNode*	pNode;

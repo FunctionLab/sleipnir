@@ -54,6 +54,11 @@ protected:
 			m_pPCL->Get( iY ), m_pPCL->GetExperiments( ) ) :
 			( ( iX == iY ) ? CMeta::GetNaN( ) : m_Data.Get( iX, iY ) ) ); }
 
+	float& Get( size_t iX, size_t iY ) {
+		static float	c_dNull	= CMeta::GetNaN( );
+
+		return ( m_pMeasure ? c_dNull : ( ( iX == iY ) ? c_dNull : m_Data.Get( iX, iY ) ) ); }
+
 	bool Set( size_t iX, size_t iY, float dValue ) {
 
 		if( iX == iY )

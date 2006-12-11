@@ -45,6 +45,10 @@ public:
 
 		return CDatImpl::Get( iX, iY ); }
 
+	float& Get( size_t iX, size_t iY ) {
+
+		return CDatImpl::Get( iX, iY ); }
+
 	size_t GetGenes( ) const {
 
 		return CDatImpl::GetGenes( ); }

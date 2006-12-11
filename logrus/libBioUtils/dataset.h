@@ -59,6 +59,7 @@ public:
 	void Save( std::ostream&, bool ) const;
 	bool FilterGenes( const char*, CDat::EFilter );
 	void FilterAnswers( );
+	bool OpenGenes( const std::vector<std::string>& );
 
 	bool IsHidden( size_t ) const;
 	size_t GetDiscrete( size_t, size_t, size_t ) const;

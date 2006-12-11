@@ -49,10 +49,7 @@ bool CBayesNetPNL::Learn( const IDataset* pData, size_t iIterations, bool fZero,
 	delete pLearner;
 	return true; }
 
-vector<string> CBayesNetPNL::GetNodes( ) const {
-	vector<string>	vecstrRet;
-
-	return vecstrRet; }
+void CBayesNetPNL::GetNodes( vector<string>& ) const { }
 
 bool CBayesNetPNL::IsContinuous( size_t ) const {
 

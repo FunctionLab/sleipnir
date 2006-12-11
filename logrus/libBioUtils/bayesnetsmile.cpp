@@ -299,15 +299,12 @@ bool CBayesNetSmile::Convert( CBayesNetPNL& BNPNL ) const {
 
 	return( ConvertGraph( BNPNL ) && ConvertCPTs( BNPNL ) ); }
 
-vector<string> CBayesNetSmile::GetNodes( ) const {
-	vector<string>	vecRet;
-	int				i;
+void CBayesNetSmile::GetNodes( vector<string>& vecstrNodes ) const {
+	int	i;
 
 	if( m_fSmileNet )
 		for( i = 0; i < m_SmileNet.GetNumberOfNodes( ); ++i )
-			vecRet.push_back( m_SmileNet.GetNode( i )->Info( ).Header( ).GetId( ) );
-
-	return vecRet; }
+			vecstrNodes.push_back( m_SmileNet.GetNode( i )->Info( ).Header( ).GetId( ) ); }
 
 unsigned char CBayesNetSmile::GetValues( size_t iNode ) const {
 
