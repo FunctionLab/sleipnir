@@ -381,75 +381,19 @@ void CDatasetCompactImpl::SaveText( ostream& ostm ) const {
 						ostm << iVal; }
 				ostm << endl; } }
 
-const char	CDatasetCompactMap::c_szMap[]	= "CompactDataSetMap";
-
-CDatasetCompactMap::CDatasetCompactMap( ) : m_pbData(NULL)
-#ifdef _MSC_VER
-	,m_hndlMap(0)
-#endif // _MSC_VER
-{ }
+CDatasetCompactMap::CDatasetCompactMap( ) : m_pbData(NULL), m_hndlMap(0) { }
 
 CDatasetCompactMap::~CDatasetCompactMap( ) {
 
-#ifdef _MSC_VER
-	if( m_pbData )
-		UnmapViewOfFile( m_pbData );
-	if( m_hndlMap )
-		CloseHandle( m_hndlMap );
-#else // _MSC_VER
-	if( m_pbData )
-		munmap( m_pbData, m_iData );
-#endif // _MSC_VER
-}
+	CMeta::Unmap( m_pbData, m_hndlMap, m_iData ); }
 
 bool CDatasetCompactMap::Open( const char* szFile ) {
 	size_t	i, j;
-#ifdef _MSC_VER
-	HANDLE	hFile;
 
-	if( m_pbData )
-		UnmapViewOfFile( m_pbData );
-	if( m_hndlMap )
-		CloseHandle( m_hndlMap );
-
-	if( !( hFile = CreateFile( szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-		FILE_ATTRIBUTE_READONLY, NULL ) ) )
-		return false;
-	if( !( m_hndlMap = CreateFileMapping( hFile, NULL, PAGE_READONLY, 0,
-		(DWORD)( m_iData = GetFileSize( hFile, NULL ) ), c_szMap ) ) ) {
-		CloseHandle( hFile );
-		return false; }
-	CloseHandle( hFile );
-
-	if( !( m_pbData = (unsigned char*)MapViewOfFile( m_hndlMap, FILE_MAP_READ, 0, 0, 0 ) ) ) {
-		CloseHandle( m_hndlMap );
-		return false; }
+	CMeta::MapRead( m_pbData, m_hndlMap, m_iData, szFile );
 	if( !CDatasetCompactImpl::Open( m_pbData ) ) {
-		CloseHandle( m_hndlMap );
+		CMeta::Unmap( m_pbData, m_hndlMap, m_iData );
 		return false; }
-#else // _MSC_VER
-	int			iFile;
-	struct stat	sStat;
-
-	if( m_pbData )
-		munmap( m_pbData, m_iData );
-
-	if( !( iFile = open( szFile, O_RDONLY ) ) )
-		return false;
-	fstat( iFile, &sStat );
-	m_iData = sStat.st_size;
-
-	if( ( m_pbData = (unsigned char*)mmap( NULL, m_iData, PROT_READ, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
-		g_CatBioUtils.error( "CDatasetCompactMap::Open( %s ) %s", szFile, strerror( errno ) );
-		m_pbData = NULL;
-		close( iFile );
-		return false; }
-	close( iFile );
-
-	if( !CDatasetCompactImpl::Open( m_pbData ) ) {
-		munmap( m_pbData, m_iData );
-		return false; }
-#endif // _MSC_VER
 
 	m_Mask.Initialize( GetGenes( ) );
 	for( i = 0; i < m_Mask.GetSize( ); ++i )

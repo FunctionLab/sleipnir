@@ -35,7 +35,8 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.input_arg ) {
 		vector<string>	vecstrFiles;
-		CDat			DatYes, DatNo;
+		CDatMap			DatYes;
+		CDat			DatNo;
 		CDatasetCompact	Data;
 		vector<size_t>	veciGenes;
 		size_t			j, k, iOne, iTwo, iBin;
@@ -64,8 +65,8 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 			return 1; }
 
-		DatYes.Open( Data.GetGeneNames( ) );
-		DatNo.Open( Data.GetGeneNames( ) );
+		DatYes.Open( Data.GetGeneNames( ), sArgs.output_arg, false );
+		DatNo.Open( Data.GetGeneNames( ), false );
 		BNIn.GetCPT( 0, MatCPT );
 		dNo = log( MatCPT.Get( 0, 0 ) );
 		dYes = log( MatCPT.Get( 1, 0 ) );
@@ -75,33 +76,31 @@ int main( int iArgs, char** aszArgs ) {
 				DatYes.Set( i, j, dYes ); }
 
 		for( i = 0; i < vecstrFiles.size( ); ++i ) {
-			CDataPair	DatIn;
+			vector<string>	vecstrDatum;
 
-			if( !DatIn.Open( vecstrFiles[ i ].c_str( ), false ) ) {
+			vecstrDatum.push_back( vecstrFiles[ i ] );
+			if( !Data.Open( vecstrDatum ) ) {
 				cerr << "Couldn't open: " << vecstrFiles[ i ] << endl;
 				return 1; }
 			BNIn.GetCPT( i + 1, MatCPT );
-			veciGenes.resize( DatIn.GetGenes( ) );
+			veciGenes.resize( Data.GetGenes( ) );
 			for( j = 0; j < veciGenes.size( ); ++j )
-				veciGenes[ j ] = DatYes.GetGene( DatIn.GetGene( j ) );
-			for( j = 0; j < DatIn.GetGenes( ); ++j ) {
+				veciGenes[ j ] = DatYes.GetGene( Data.GetGene( j ) );
+			for( j = 0; j < Data.GetGenes( ); ++j ) {
 				if( ( iOne = veciGenes[ j ] ) == -1 )
 					continue;
-				for( k = ( j + 1 ); k < DatIn.GetGenes( ); ++k ) {
+				for( k = ( j + 1 ); k < Data.GetGenes( ); ++k ) {
 					if( ( ( iTwo = veciGenes[ k ] ) == -1 ) ||
-						CMeta::IsNaN( dYes = DatIn.Get( j, k ) ) )
+						!Data.IsExample( j, k ) )
 						continue;
-					iBin = DatIn.Quantify( dYes );
+					iBin = Data.GetDiscrete( j, k, 0 );
 					DatNo.Get( iOne, iTwo ) += log( MatCPT.Get( iBin, 0 ) );
 					DatYes.Get( iOne, iTwo ) += log( MatCPT.Get( iBin, 1 ) ); } } }
 		for( i = 0; i < DatYes.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < DatYes.GetGenes( ); ++j ) {
 				dYes = exp( DatYes.Get( i, j ) );
 				dNo = exp( DatNo.Get( i, j ) );
-				DatYes.Set( i, j, dYes / ( dYes + dNo ) ); }
-
-		ofsm.open( sArgs.output_arg, ios_base::binary );
-		DatYes.Save( ofsm, true ); }
+				DatYes.Set( i, j, dYes / ( dYes + dNo ) ); } }
 	else {
 		CDataPair				Answers;
 		size_t					iArg;

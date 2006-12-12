@@ -88,6 +88,22 @@ protected:
 	bool			m_fMeasureMemory;
 };
 
+class CDatMapImpl : protected CDatImpl {
+protected:
+	CDatMapImpl( ) : m_aadData(NULL), m_hndlData(0) { }
+
+	~CDatMapImpl( ) {
+
+		CMeta::Unmap( m_abData, m_hndlData, m_iData );
+		if( m_aadData )
+			delete[] m_aadData; }
+
+	unsigned char*	m_abData;
+	size_t			m_iData;
+	HANDLE			m_hndlData;
+	float**			m_aadData;
+};
+
 }
 
 #endif // DATI_H

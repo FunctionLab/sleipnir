@@ -26,6 +26,9 @@ public:
 	static void Tokenize( const char*, std::vector<std::string>&, const char* = "\t",
 		bool = false );
 	static std::string Trim( const char* );
+	static bool MapRead( unsigned char*&, HANDLE&, size_t&, const char* );
+	static bool MapWrite( unsigned char*&, HANDLE&, size_t, const char* );
+	static void Unmap( const unsigned char*, HANDLE, size_t );
 
 	template<class tType>
 	static bool IsNaN( tType ) {

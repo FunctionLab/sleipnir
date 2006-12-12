@@ -92,4 +92,87 @@ string CMeta::Deextension( const string& strName ) {
 	return ( ( ( i = strName.rfind( c_cPeriod ) ) == string::npos ) ? strName :
 		strName.substr( 0, i ) ); }
 
+bool CMeta::MapRead( unsigned char*& pbData, HANDLE& hndlMap, size_t& iData, const char* szFile ) {
+
+	Unmap( pbData, hndlMap, iData );
+#ifdef _MSC_VER
+	HANDLE	hndlFile;
+
+	if( !( hndlFile = CreateFile( szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+		FILE_ATTRIBUTE_READONLY, NULL ) ) )
+		return false;
+	if( !( hndlMap = CreateFileMapping( hndlFile, NULL, PAGE_READONLY, 0,
+		(DWORD)( iData = GetFileSize( hndlFile, NULL ) ), szFile ) ) ) {
+		CloseHandle( hndlFile );
+		return false; }
+	CloseHandle( hndlFile );
+
+	if( !( pbData = (unsigned char*)MapViewOfFile( hndlMap, FILE_MAP_READ, 0, 0, 0 ) ) ) {
+		CloseHandle( hndlMap );
+		return false; }
+#else // _MSC_VER
+	int			iFile;
+	struct stat	sStat;
+
+	if( !( iFile = open( szFile, O_RDONLY ) ) )
+		return false;
+	fstat( iFile, &sStat );
+	iData = sStat.st_size;
+
+	if( ( pbData = (unsigned char*)mmap( NULL, iData, PROT_READ, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
+		g_CatBioUtils.error( "CDatasetCompactMap::Open( %s ) %s", szFile, strerror( errno ) );
+		pbData = NULL;
+		close( iFile );
+		return false; }
+	close( iFile );
+#endif // _MSC_VER
+
+	return true; }
+
+bool CMeta::MapWrite( unsigned char*& pbData, HANDLE& hndlMap, size_t iData, const char* szFile ) {
+
+	Unmap( pbData, hndlMap, iData );
+#ifdef _MSC_VER
+	HANDLE	hndlFile;
+
+	if( !( hndlFile = CreateFile( szFile, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, NULL ) ) )
+		return false;
+	if( !( hndlMap = CreateFileMapping( hndlFile, NULL, PAGE_READWRITE, 0, (DWORD)iData, szFile ) ) ) {
+		CloseHandle( hndlFile );
+		return false; }
+	CloseHandle( hndlFile );
+
+	if( !( pbData = (unsigned char*)MapViewOfFile( hndlMap, FILE_MAP_WRITE, 0, 0, iData ) ) ) {
+		CloseHandle( hndlMap );
+		return false; }
+#else // _MSC_VER
+	int			iFile;
+	struct stat	sStat;
+
+	if( !( iFile = open( szFile, O_RDWR | O_CREAT ) ) )
+		return false;
+	if( ( pbData = (unsigned char*)mmap( NULL, iData, PROT_READ | PROT_WRITE, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
+		g_CatBioUtils.error( "CDatasetCompactMap::Open( %s ) %s", szFile, strerror( errno ) );
+		pbData = NULL;
+		close( iFile );
+		return false; }
+	close( iFile );
+#endif // _MSC_VER
+
+	return true; }
+
+void CMeta::Unmap( const unsigned char* pbData, HANDLE hndlMap, size_t iData ) {
+
+#ifdef _MSC_VER
+	if( pbData )
+		UnmapViewOfFile( pbData );
+	if( hndlMap )
+		CloseHandle( hndlMap );
+#else // _MSC_VER
+	if( pbData )
+		munmap( pbData, iData );
+#endif // _MSC_VER
+}
+
 }

@@ -426,7 +426,7 @@ void CDatImpl::SaveBinary( ostream& ostm ) const {
 			pd = m_Data.Get( i );
 			ostm.write( (char*)pd, sizeof(*pd) * ( iSize - i - 1 ) ); } }
 
-bool CDat::Open( const vector<string>& vecstrGenes ) {
+bool CDat::Open( const vector<string>& vecstrGenes, bool fInitialize ) {
 	size_t	i, j;
 
 	Reset( );
@@ -435,9 +435,10 @@ bool CDat::Open( const vector<string>& vecstrGenes ) {
 		m_vecstrGenes[ i ] = vecstrGenes[ i ];
 
 	m_Data.Initialize( m_vecstrGenes.size( ) );
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
-		for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j )
-			Set( i, j, CMeta::GetNaN( ) );
+	if( fInitialize )
+		for( i = 0; i < m_vecstrGenes.size( ); ++i )
+			for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j )
+				Set( i, j, CMeta::GetNaN( ) );
 
 	return true; }
 
@@ -452,10 +453,6 @@ bool CDat::Open( const vector<string>& vecstrGenes, const CDistanceMatrix& Dist 
 	m_Data.Initialize( m_vecstrGenes.size( ), Dist );
 
 	return true; }
-
-size_t CDat::GetGene( const string& strGene ) const {
-
-	return CDatImpl::GetGene( strGene ); }
 
 size_t CDatImpl::GetGene( const string& strGene ) const {
 	size_t	i;
@@ -685,5 +682,42 @@ void CDat::Rank( ) {
 			iRank = i;
 		dPrev = d;
 		Set( vecprData[ i ].first, vecprData[ i ].second, (float)iRank ); } }
+
+bool CDatMap::Open( const vector<string>& vecstrGenes, const char* szFile, bool fInitialize ) {
+	size_t			i, j;
+	uint32_t		iSize;
+	unsigned char*	pb;
+
+	Reset( );
+	m_vecstrGenes.resize( vecstrGenes.size( ) );
+	copy( vecstrGenes.begin( ), vecstrGenes.end( ), m_vecstrGenes.begin( ) );
+
+	iSize = sizeof(iSize);
+	for( i = 0; i < GetGenes( ); ++i )
+		iSize += 2 * ( GetGene( i ).length( ) + 1 );
+	iSize += CDistanceMatrix::GetSpace( m_vecstrGenes.size( ) );
+	if( !CMeta::MapWrite( m_abData, m_hndlData, iSize, szFile ) )
+		return false;
+	*(uint32_t*)( pb = m_abData ) = GetGenes( );
+	pb += sizeof(iSize);
+	for( i = 0; i < GetGenes( ); ++i ) {
+		const string&	strGene	= GetGene( i );
+
+		for( j = 0; j < strGene.length( ); ++j ) {
+			*pb++ = 0;
+			*pb++ = strGene[ j ]; }
+		*pb++ = *pb++ = 0; }
+
+	m_aadData = new float*[ GetGenes( ) - 1 ];
+	m_aadData[ 0 ] = (float*)pb;
+	for( i = 1; ( i + 1 ) < m_vecstrGenes.size( ); ++i )
+		m_aadData[ i ] = m_aadData[ i - 1 ] + GetGenes( ) - i;
+	m_Data.Initialize( m_vecstrGenes.size( ), (float**)m_aadData );
+	if( fInitialize )
+		for( i = 0; i < m_vecstrGenes.size( ); ++i )
+			for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j )
+				Set( i, j, CMeta::GetNaN( ) );
+
+	return true; }
 
 }

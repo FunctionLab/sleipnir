@@ -8,6 +8,10 @@ namespace libBioUtils {
 template<class tType>
 class CHalfMatrix : protected CHalfMatrixBase {
 public:
+	static size_t GetSpace( size_t iSize ) {
+
+		return ( ( ( iSize * ( iSize - 1 ) ) / 2 ) * sizeof(tType) ); }
+
 	CHalfMatrix( ) : m_aaData(NULL) { }
 
 	~CHalfMatrix( ) {

@@ -87,13 +87,9 @@ public:
 
 	unsigned char*	m_pbData;
 private:
-	static const char	c_szMap[];
-
 	CBinaryMatrix	m_Mask;
 	size_t			m_iData;
-#ifdef _MSC_VER
 	HANDLE			m_hndlMap;
-#endif // _MSC_VER
 };
 
 class CDataMask : CDataMaskImpl, public IDataset {
