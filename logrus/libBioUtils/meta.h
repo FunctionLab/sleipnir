@@ -10,6 +10,8 @@
 
 #ifndef _MSC_VER
 #define _finite	isfinite
+
+typedef size_t	HANDLE;
 #endif // _MSC_VER
 
 namespace libBioUtils {

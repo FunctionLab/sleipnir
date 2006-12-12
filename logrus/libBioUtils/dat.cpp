@@ -684,22 +684,21 @@ void CDat::Rank( ) {
 		Set( vecprData[ i ].first, vecprData[ i ].second, (float)iRank ); } }
 
 bool CDatMap::Open( const vector<string>& vecstrGenes, const char* szFile, bool fInitialize ) {
-	size_t			i, j;
-	uint32_t		iSize;
+	size_t			i, j, iSize;
 	unsigned char*	pb;
 
 	Reset( );
 	m_vecstrGenes.resize( vecstrGenes.size( ) );
 	copy( vecstrGenes.begin( ), vecstrGenes.end( ), m_vecstrGenes.begin( ) );
 
-	iSize = sizeof(iSize);
+	iSize = sizeof(uint32_t);
 	for( i = 0; i < GetGenes( ); ++i )
 		iSize += 2 * ( GetGene( i ).length( ) + 1 );
-	iSize += CDistanceMatrix::GetSpace( m_vecstrGenes.size( ) );
+	iSize += CDistanceMatrix::GetSpace( GetGenes( ) );
 	if( !CMeta::MapWrite( m_abData, m_hndlData, iSize, szFile ) )
 		return false;
 	*(uint32_t*)( pb = m_abData ) = GetGenes( );
-	pb += sizeof(iSize);
+	pb += sizeof(uint32_t);
 	for( i = 0; i < GetGenes( ); ++i ) {
 		const string&	strGene	= GetGene( i );
 

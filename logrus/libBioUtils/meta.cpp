@@ -150,8 +150,10 @@ bool CMeta::MapWrite( unsigned char*& pbData, HANDLE& hndlMap, size_t iData, con
 	int			iFile;
 	struct stat	sStat;
 
-	if( !( iFile = open( szFile, O_RDWR | O_CREAT ) ) )
+	if( !( iFile = open( szFile, O_RDWR | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE | S_IRGRP | S_IWGRP | S_IROTH ) ) )
 		return false;
+	lseek( iFile, iData - 1, SEEK_SET );
+	write( iFile, &iData, 1 );
 	if( ( pbData = (unsigned char*)mmap( NULL, iData, PROT_READ | PROT_WRITE, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
 		g_CatBioUtils.error( "CDatasetCompactMap::Open( %s ) %s", szFile, strerror( errno ) );
 		pbData = NULL;
@@ -171,7 +173,7 @@ void CMeta::Unmap( const unsigned char* pbData, HANDLE hndlMap, size_t iData ) {
 		CloseHandle( hndlMap );
 #else // _MSC_VER
 	if( pbData )
-		munmap( pbData, iData );
+		munmap( (void*)pbData, iData );
 #endif // _MSC_VER
 }
 
