@@ -54,11 +54,9 @@ int Dat2Dab( const CGenes& Genes, const gengetopt_args_info& sArgs ) {
 */
 
 	if( sArgs.input_arg ) {
-		ifsm.open( sArgs.input_arg, ios_base::binary );
-		if( !Dat.Open( ifsm, true ) ) {
+		if( !Dat.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
 			cerr << "Could not open: " << sArgs.input_arg << endl;
-			return 1; }
-		ifsm.close( ); }
+			return 1; } }
 	else if( !Dat.Open( cin, false ) ) {
 		cerr << "Could not open input" << endl;
 		return 1; }

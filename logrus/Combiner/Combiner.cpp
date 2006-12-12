@@ -34,7 +34,7 @@ int main( int iArgs, char** aszArgs ) {
 static int MainPCLs( const gengetopt_args_info& sArgs ) {
 	CPCL						PCL, PCLNew;
 	size_t						i, j, iArg, iExp, iGene;
-	vector<string>				vecstrGenes, vecstrExps;
+	vector<string>				vecstrGenes, vecstrExps, vecstrFeatures;
 	set<string>					setstrGenes;
 	set<string>::const_iterator	iterGenes;
 	ifstream					ifsm;
@@ -44,6 +44,9 @@ static int MainPCLs( const gengetopt_args_info& sArgs ) {
 		ifsm.clear( );
 		ifsm.open( sArgs.inputs[ iArg ] );
 		PCL.Open( ifsm, sArgs.skip_arg );
+		if( !iArg )
+			for( i = 0; i < PCL.GetFeatures( ); ++i )
+				vecstrFeatures.push_back( PCL.GetFeature( i ) );
 		for( i = 0; i < PCL.GetExperiments( ); ++i )
 			vecstrExps.push_back( PCL.GetExperiment( i ) );
 		for( i = 0; i < PCL.GetGenes( ); ++i )
@@ -52,7 +55,7 @@ static int MainPCLs( const gengetopt_args_info& sArgs ) {
 	vecstrGenes.resize( setstrGenes.size( ) );
 	copy( setstrGenes.begin( ), setstrGenes.end( ), vecstrGenes.begin( ) );
 
-	PCLNew.Open( vecstrGenes, vecstrExps );
+	PCLNew.Open( vecstrGenes, vecstrExps, vecstrFeatures );
 	iExp = 0;
 	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
 		cerr << "Processing " << sArgs.inputs[ iArg ] << "..." << endl;
@@ -60,9 +63,12 @@ static int MainPCLs( const gengetopt_args_info& sArgs ) {
 		ifsm.open( sArgs.inputs[ iArg ] );
 		PCL.Open( ifsm, sArgs.skip_arg );
 		for( i = 0; i < PCLNew.GetGenes( ); ++i )
-			if( ( iGene = PCL.GetGene( vecstrGenes[ i ] ) ) != -1 )
+			if( ( iGene = PCL.GetGene( vecstrGenes[ i ] ) ) != -1 ) {
+				if( !iArg )
+					for( j = 1; j < PCLNew.GetFeatures( ); ++j )
+						PCLNew.SetFeature( i, j, PCL.GetFeature( iGene, j ) );
 				for( j = 0; j < PCL.GetExperiments( ); ++j )
-					PCLNew.Set( i, iExp + j, PCL.Get( iGene, j ) );
+					PCLNew.Set( i, iExp + j, PCL.Get( iGene, j ) ); }
 		iExp += PCL.GetExperiments( );
 		ifsm.close( ); }
 

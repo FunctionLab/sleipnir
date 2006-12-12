@@ -48,7 +48,7 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
 
-	if( !Answers.Open( sArgs.answers_arg ) ) {
+	if( !Answers.Open( sArgs.answers_arg, !!sArgs.memmap_flag ) ) {
 		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
 		return 1; }
 	if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
@@ -60,7 +60,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
 		cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 		return 1; }
-	if( !Data.Open( sArgs.input_arg ) ) {
+	if( !Data.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
 	if( sArgs.normalize_flag )

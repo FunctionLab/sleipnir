@@ -12,7 +12,7 @@ int main( int iArgs, char** aszArgs ) {
 	CGenes				GenesIn( Genome ), GenesEx( Genome );
 	size_t				i, j;
 	int					iRet;
-	vector<string>		vecstrGenes, vecstrExperiments, vecstrNodes;
+	vector<string>		vecstrGenes, vecstrExperiments, vecstrNodes, vecstrFeatures;
 	vector<size_t>		veciGenes;
 	ofstream			ofsm;
 
@@ -58,7 +58,7 @@ int main( int iArgs, char** aszArgs ) {
 		veciGenes.push_back( i );
 		vecstrGenes.push_back( PCLIn.GetGene( i ) ); }
 
-	vecstrNodes = pBN->GetNodes( );
+	pBN->GetNodes( vecstrNodes );
 	for( i = 0; i < vecstrNodes.size( ); ++i ) {
 		for( j = 0; j < PCLIn.GetExperiments( ); ++j )
 			if( vecstrNodes[ i ] == PCLIn.GetExperiment( j ) )
@@ -73,7 +73,7 @@ int main( int iArgs, char** aszArgs ) {
 #pragma warning( default : 4996 )
 			vecstrExperiments.push_back( acTmp ); } }
 
-	PCLOut.Open( vecstrGenes, vecstrExperiments );
+	PCLOut.Open( vecstrGenes, vecstrExperiments, vecstrFeatures );
 	pBN->Evaluate( PCLIn, PCLOut, !!sArgs.zero_flag, sArgs.algorithm_arg );
 	if( sArgs.output_arg )
 		ofsm.open( sArgs.output_arg );

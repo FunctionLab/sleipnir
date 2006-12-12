@@ -8,7 +8,9 @@
 
 #include "metai.h"
 
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+#include <windows.h>
+#else // _MSC_VER
 #define _finite	isfinite
 
 typedef size_t	HANDLE;

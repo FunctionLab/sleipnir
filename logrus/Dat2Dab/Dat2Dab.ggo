@@ -12,4 +12,5 @@ option	"zscore"	z	"Convert values to z-scores"	flag	off
 option	"genes"		g	"Process only genes from the given subset"	string	typestr="filename"
 option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
 option	"rank"		r	"Rank transform data"	flag	off
+option	"memmap"	m	"Memory map input/output"	flag	off
 option	"verbosity"	v	"Message verbosity"	int	default="5"

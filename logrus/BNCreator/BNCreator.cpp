@@ -35,8 +35,7 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.input_arg ) {
 		vector<string>	vecstrFiles;
-		CDatMap			DatYes;
-		CDat			DatNo;
+		CDat			DatYes, DatNo;
 		CDatasetCompact	Data;
 		vector<size_t>	veciGenes;
 		size_t			j, k, iOne, iTwo, iBin;
@@ -65,7 +64,7 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 			return 1; }
 
-		DatYes.Open( Data.GetGeneNames( ), sArgs.output_arg, false );
+		DatYes.Open( Data.GetGeneNames( ), false, sArgs.output_arg );
 		DatNo.Open( Data.GetGeneNames( ), false );
 		BNIn.GetCPT( 0, MatCPT );
 		dNo = log( MatCPT.Get( 0, 0 ) );

@@ -20,15 +20,16 @@ public:
 		EFilterExclude	= EFilterTerm + 1
 	};
 
-	bool Open( const char* );
+	bool Open( const char*, bool = false );
 	bool Open( std::istream&, bool, bool = false, float = HUGE_VAL );
 	bool Open( const CSlim& );
 	bool Open( const CSlim&, const CSlim& );
-	bool Open( const std::vector<std::string>&, bool = true );
+	bool Open( const std::vector<std::string>&, bool = true, const char* = NULL );
 	bool Open( const std::vector<std::string>&, const CDistanceMatrix& );
 	bool Open( const std::vector<CGenes*>&, const std::vector<CGenes*>&, float, const CGenome& );
 	bool Open( const std::vector<CGenes*>&, const CDat&, const CGenome& );
 	bool Open( const CPCL&, const IMeasure*, bool );
+
 	bool OpenGenes( std::istream&, bool, bool = false );
 	void Save( std::ostream&, bool ) const;
 	void SaveDOT( std::ostream&, float = HUGE_VAL, const CGenome* = NULL, bool = false ) const;
@@ -79,31 +80,6 @@ public:
 	const std::vector<std::string>& GetGeneNames( ) const {
 
 		return ( m_pMeasure ? m_pPCL->GetGeneNames( ) : m_vecstrGenes ); }
-};
-
-class CDatMap : protected CDatMapImpl {
-public:
-	bool Open( const std::vector<std::string>&, const char*, bool = true );
-
-	size_t GetGenes( ) const {
-
-		return CDatImpl::GetGenes( ); }
-
-	size_t GetGene( const std::string& strGene ) const {
-
-		return CDatImpl::GetGene( strGene ); }
-
-	const std::string& GetGene( size_t iGene ) const {
-
-		return m_vecstrGenes[ iGene ]; }
-
-	float& Get( size_t iX, size_t iY ) {
-
-		return CDatImpl::Get( iX, iY ); }
-
-	bool Set( size_t iX, size_t iY, float dValue ) {
-
-		return CDatImpl::Set( iX, iY, dValue ); }
 };
 
 }

@@ -270,20 +270,19 @@ void CPCL::Save( ostream& ostmOutput, const vector<size_t>* pveciGenes ) const {
 			continue;
 		SaveGene( ostmOutput, i, pveciGenes ? (*pveciGenes)[ i ] : -1 ); } }
 
-void CPCL::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrExperiments ) {
+void CPCL::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrExperiments,
+	const vector<string>& vecstrFeatures ) {
 	size_t	i, j;
 
 	Reset( );
-	m_vecstrFeatures.resize( 3 );
-	m_vecstrFeatures[ 0 ] = "GID";
-	m_vecstrFeatures[ 1 ] = "NAME";
-	m_vecstrFeatures[ 2 ] = "GWEIGHT";
-	m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
-	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i )
-		m_vecvecstrFeatures[ i ].resize( vecstrGenes.size( ) );
-	for( i = 0; i < vecstrGenes.size( ); ++i ) {
-		m_vecvecstrFeatures[ 0 ][ i ] = vecstrGenes[ i ];
-		m_vecvecstrFeatures[ 1 ][ i ] = "1"; }
+	if( vecstrFeatures.empty( ) )
+		m_vecstrFeatures.push_back( "GID" );
+	else {
+		m_vecstrFeatures.resize( vecstrFeatures.size( ) );
+		copy( vecstrFeatures.begin( ), vecstrFeatures.end( ), m_vecstrFeatures.begin( ) );
+		m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
+		for( i = 0; i < m_vecvecstrFeatures.size( ); ++i )
+			m_vecvecstrFeatures[ i ].resize( vecstrGenes.size( ) ); }
 
 	m_vecstrGenes.resize( vecstrGenes.size( ) );
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )

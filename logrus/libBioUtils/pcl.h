@@ -21,7 +21,7 @@ public:
 	bool Open( std::istream&, size_t );
 	void Open( const std::vector<size_t>&, const std::vector<std::string>&,
 		const std::vector<std::string>& );
-	void Open( const std::vector<std::string>&, const std::vector<std::string>& );
+	void Open( const std::vector<std::string>&, const std::vector<std::string>&, const std::vector<std::string>& );
 	void Save( std::ostream&, const std::vector<size_t>* = NULL ) const;
 	void SaveGene( std::ostream&, size_t, size_t = -1 ) const;
 	void SaveHeader( std::ostream&, bool = false ) const;
@@ -42,6 +42,10 @@ public:
 	const std::string& GetFeature( size_t iGene, size_t iFeature ) const {
 
 		return m_vecvecstrFeatures[ iFeature - 1 ][ iGene ]; }
+
+	void SetFeature( size_t iGene, size_t iFeature, const std::string& strValue ) {
+
+		m_vecvecstrFeatures[ iFeature - 1 ][ iGene ] = strValue; }
 
 	float Get( size_t iGene, size_t iExp ) const {
 

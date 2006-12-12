@@ -31,7 +31,7 @@ protected:
 	static void ResizeNaN( TAF&, size_t );
 	static std::string DabGene( std::istream& );
 
-	CDatImpl( ) : m_pMeasure(NULL), m_pPCL(NULL) { }
+	CDatImpl( ) : m_pMeasure(NULL), m_pPCL(NULL), m_abData(NULL), m_iData(0), m_aadData(NULL), m_hndlData(0) { }
 	~CDatImpl( );
 
 	void Reset( );
@@ -47,6 +47,8 @@ protected:
 	void NormalizeStdev( );
 	void OpenHelper( const CGenes*, float );
 	void OpenHelper( const CGenes*, const CGenes*, float );
+	bool OpenHelper( );
+	bool OpenMemmap( const unsigned char* );
 
 	float Get( size_t iX, size_t iY ) const {
 
@@ -82,22 +84,12 @@ protected:
 
 	CDistanceMatrix	m_Data;
 	TVecStr			m_vecstrGenes;
+// PCL back end
 	CPCL*			m_pPCL;
 	bool			m_fPCLMemory;
 	const IMeasure*	m_pMeasure;
 	bool			m_fMeasureMemory;
-};
-
-class CDatMapImpl : protected CDatImpl {
-protected:
-	CDatMapImpl( ) : m_aadData(NULL), m_hndlData(0) { }
-
-	~CDatMapImpl( ) {
-
-		CMeta::Unmap( m_abData, m_hndlData, m_iData );
-		if( m_aadData )
-			delete[] m_aadData; }
-
+// Memory mapped back end
 	unsigned char*	m_abData;
 	size_t			m_iData;
 	HANDLE			m_hndlData;

@@ -18,3 +18,4 @@ option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
 option	"genet"		c	"Term inclusion file"	string	typestr="filename"
 option	"sse"		s	"Calculate sum of squared errors"	flag	off
 option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"memmap"	p	"Memory map input DABs"	flag	off

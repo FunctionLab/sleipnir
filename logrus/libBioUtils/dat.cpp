@@ -52,12 +52,21 @@ void CDatImpl::Reset( ) {
 
 	m_Data.Reset( );
 	m_vecstrGenes.clear( );
+
 	if( m_pPCL && m_fPCLMemory )
 		delete m_pPCL;
 	m_pPCL = NULL;
 	if( m_pMeasure && m_fMeasureMemory )
 		delete m_pMeasure;
-	m_pMeasure = NULL; }
+	m_pMeasure = NULL;
+
+	CMeta::Unmap( m_abData, m_hndlData, m_iData );
+	m_abData = NULL;
+	m_hndlData = 0;
+	m_iData = 0;
+	if( m_aadData )
+		delete[] m_aadData;
+	m_aadData = NULL; }
 
 void CDatImpl::SlimCache( const CSlim& Slim, vector<vector<size_t> >& vecveciGenes ) const {
 	size_t	iS, iG;
@@ -426,15 +435,36 @@ void CDatImpl::SaveBinary( ostream& ostm ) const {
 			pd = m_Data.Get( i );
 			ostm.write( (char*)pd, sizeof(*pd) * ( iSize - i - 1 ) ); } }
 
-bool CDat::Open( const vector<string>& vecstrGenes, bool fInitialize ) {
-	size_t	i, j;
+bool CDat::Open( const vector<string>& vecstrGenes, bool fInitialize, const char* szFile ) {
+	size_t			i, j, iSize;
+	unsigned char*	pb;
 
 	Reset( );
 	m_vecstrGenes.resize( vecstrGenes.size( ) );
-	for( i = 0; i < vecstrGenes.size( ); ++i )
-		m_vecstrGenes[ i ] = vecstrGenes[ i ];
+	copy( vecstrGenes.begin( ), vecstrGenes.end( ), m_vecstrGenes.begin( ) );
 
-	m_Data.Initialize( m_vecstrGenes.size( ) );
+	if( szFile ) {
+		iSize = sizeof(uint32_t);
+		for( i = 0; i < GetGenes( ); ++i )
+			iSize += 2 * ( GetGene( i ).length( ) + 1 );
+		iSize += CDistanceMatrix::GetSpace( GetGenes( ) );
+		if( !CMeta::MapWrite( m_abData, m_hndlData, iSize, szFile ) )
+			return false;
+		*(uint32_t*)( pb = m_abData ) = GetGenes( );
+		pb += sizeof(uint32_t);
+		for( i = 0; i < GetGenes( ); ++i ) {
+			const string&	strGene	= GetGene( i );
+
+			for( j = 0; j < strGene.length( ); ++j ) {
+				*pb++ = 0;
+				*pb++ = strGene[ j ]; }
+			*pb++ = *pb++ = 0; }
+
+		if( !OpenMemmap( pb ) )
+			return false; }
+	else
+		m_Data.Initialize( GetGenes( ) );
+
 	if( fInitialize )
 		for( i = 0; i < m_vecstrGenes.size( ); ++i )
 			for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j )
@@ -466,9 +496,16 @@ size_t CDatImpl::GetGene( const string& strGene ) const {
 
 	return -1; }
 
-bool CDat::Open( const char* szFile ) {
+bool CDat::Open( const char* szFile, bool fMemmap ) {
 	ifstream	ifsm;
 	bool		fBinary, fPCL;
+
+	if( fMemmap ) {
+		Reset( );
+		if( !CMeta::MapRead( m_abData, m_hndlData, m_iData, szFile ) ) {
+			g_CatBioUtils.error( "CDat::Open( %s, %d ) failed memory mapping", szFile, fMemmap );
+			return false; }
+		return OpenHelper( ); }
 
 	fBinary = !strcmp( szFile + strlen( szFile ) - strlen( c_szBin ), c_szBin );
 	fPCL = !strcmp( szFile + strlen( szFile ) - strlen( c_szBin ), c_szPcl );
@@ -476,6 +513,32 @@ bool CDat::Open( const char* szFile ) {
 	if( !ifsm.is_open( ) )
 		return false;
 	return Open( ifsm, fBinary, fPCL ); }
+
+bool CDatImpl::OpenHelper( ) {
+	unsigned char*	pb;
+	size_t			i;
+
+	m_vecstrGenes.resize( *(uint32_t*)( pb = m_abData ) );
+	pb += sizeof(uint32_t);
+	for( i = 0; i < GetGenes( ); ++i ) {
+		string&	strGene	= m_vecstrGenes[ i ];
+
+		while( *++pb )
+			strGene += *pb++;
+		pb++; }
+
+	return OpenMemmap( pb ); }
+
+bool CDatImpl::OpenMemmap( const unsigned char* pb ) {
+	size_t	i;
+
+	m_aadData = new float*[ GetGenes( ) - 1 ];
+	m_aadData[ 0 ] = (float*)pb;
+	for( i = 1; ( i + 1 ) < m_vecstrGenes.size( ); ++i )
+		m_aadData[ i ] = m_aadData[ i - 1 ] + GetGenes( ) - i;
+	m_Data.Initialize( GetGenes( ), (float**)m_aadData );
+
+	return true; }
 
 void CDat::Normalize( bool fCap ) {
 
@@ -682,41 +745,5 @@ void CDat::Rank( ) {
 			iRank = i;
 		dPrev = d;
 		Set( vecprData[ i ].first, vecprData[ i ].second, (float)iRank ); } }
-
-bool CDatMap::Open( const vector<string>& vecstrGenes, const char* szFile, bool fInitialize ) {
-	size_t			i, j, iSize;
-	unsigned char*	pb;
-
-	Reset( );
-	m_vecstrGenes.resize( vecstrGenes.size( ) );
-	copy( vecstrGenes.begin( ), vecstrGenes.end( ), m_vecstrGenes.begin( ) );
-
-	iSize = sizeof(uint32_t);
-	for( i = 0; i < GetGenes( ); ++i )
-		iSize += 2 * ( GetGene( i ).length( ) + 1 );
-	iSize += CDistanceMatrix::GetSpace( GetGenes( ) );
-	if( !CMeta::MapWrite( m_abData, m_hndlData, iSize, szFile ) )
-		return false;
-	*(uint32_t*)( pb = m_abData ) = GetGenes( );
-	pb += sizeof(uint32_t);
-	for( i = 0; i < GetGenes( ); ++i ) {
-		const string&	strGene	= GetGene( i );
-
-		for( j = 0; j < strGene.length( ); ++j ) {
-			*pb++ = 0;
-			*pb++ = strGene[ j ]; }
-		*pb++ = *pb++ = 0; }
-
-	m_aadData = new float*[ GetGenes( ) - 1 ];
-	m_aadData[ 0 ] = (float*)pb;
-	for( i = 1; ( i + 1 ) < m_vecstrGenes.size( ); ++i )
-		m_aadData[ i ] = m_aadData[ i - 1 ] + GetGenes( ) - i;
-	m_Data.Initialize( m_vecstrGenes.size( ), (float**)m_aadData );
-	if( fInitialize )
-		for( i = 0; i < m_vecstrGenes.size( ); ++i )
-			for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j )
-				Set( i, j, CMeta::GetNaN( ) );
-
-	return true; }
 
 }
