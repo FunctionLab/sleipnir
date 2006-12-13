@@ -42,13 +42,15 @@ int main( int iArgs, char** aszArgs ) {
 	ofstream			ofsm;
 	ostream*			postm;
 	map<float,size_t>	mapValues;
+	bool				fMapAnswers;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
 
-	if( !Answers.Open( sArgs.answers_arg, !!sArgs.memmap_flag ) ) {
+	fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg );
+	if( !Answers.Open( sArgs.answers_arg, fMapAnswers ) ) {
 		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
 		return 1; }
 	if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
@@ -230,6 +232,8 @@ int main( int iArgs, char** aszArgs ) {
 						veciPositives[ i - 1 ] ); } } }
 		else
 			for( i = 0; i < Answers.GetGenes( ); ++i ) {
+				if( !( i % 1000 ) )
+					cerr << "Processing gene " << i << '/' << Answers.GetGenes( ) << endl;
 				if( ( iOne = veciGenes[ i ] ) == -1 )
 					continue;
 				for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
