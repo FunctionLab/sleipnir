@@ -40,6 +40,9 @@ bool CPairImpl::Open( const char* szLine, vector<float>& vecdQuant ) {
 size_t CPairImpl::Quantify( float dValue, const vector<float>& vecdQuant ) {
 	size_t	i;
 
+	if( CMeta::IsNaN( dValue ) )
+		return -1;
+
 	for( i = 0; i < vecdQuant.size( ); ++i )
 		if( dValue <= vecdQuant[ i ] )
 			break;
