@@ -167,28 +167,32 @@ bool CPCL::Open( istream& istmInput ) {
 bool CPCL::Open( istream& istmInput, size_t iFeatures ) {
 	vector<float>	vecdData;
 	size_t			i, j, k;
+	char*			acBuf;
+	bool			fRet;
 
-	if( !OpenExperiments( istmInput, iFeatures ) )
-		return false;
-	m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
-	while( OpenGene( istmInput, vecdData ) );
+	acBuf = new char[ c_iBufferSize ];
+	if( !OpenExperiments( istmInput, iFeatures, acBuf, c_iBufferSize ) )
+		fRet = false;
+	else {
+		m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
+		while( OpenGene( istmInput, vecdData, acBuf, c_iBufferSize ) );
 
-	m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
-	for( k = i = 0; i < m_Data.GetRows( ); ++i )
-		for( j = 0; j < m_Data.GetColumns( ); ++j )
-			m_Data.Set( i, j, vecdData[ k++ ] );
+		m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
+		for( k = i = 0; i < m_Data.GetRows( ); ++i )
+			for( j = 0; j < m_Data.GetColumns( ); ++j )
+				m_Data.Set( i, j, vecdData[ k++ ] );
+		fRet = true; }
+	delete[] acBuf;
 
-	return true; }
+	return fRet; }
 
-bool CPCLImpl::OpenExperiments( istream& istmInput, size_t iFeatures ) {
-	char		acLine[ c_iBufferSize ];
+bool CPCLImpl::OpenExperiments( istream& istmInput, size_t iFeatures, char* acLine, size_t iLine ) {
 	const char*	pc;
 	string		strToken;
 	size_t		iToken;
 
 	Reset( );
-	istmInput.getline( acLine, c_iBufferSize - 1 );
-	acLine[ c_iBufferSize - 1 ] = 0;
+	istmInput.getline( acLine, iLine - 1 );
 	for( iToken = 0,pc = acLine; ( strToken = OpenToken( pc, &pc ) ).length( ) || *pc; ++iToken )
 		if( iToken <= iFeatures )
 			m_vecstrFeatures.push_back( strToken );
@@ -199,14 +203,12 @@ bool CPCLImpl::OpenExperiments( istream& istmInput, size_t iFeatures ) {
 
 	return !!iToken; }
 
-bool CPCLImpl::OpenGene( istream& istmInput, vector<float>& vecdData ) {
-	char		acLine[ c_iBufferSize ];
+bool CPCLImpl::OpenGene( istream& istmInput, vector<float>& vecdData, char* acLine, size_t iLine ) {
 	const char*	pc;
 	string		strToken;
 	size_t		iToken, iData;
 
-	istmInput.getline( acLine, c_iBufferSize - 1 );
-	acLine[ c_iBufferSize - 1 ] = 0;
+	istmInput.getline( acLine, iLine - 1 );
 	for( iData = iToken = 0,pc = acLine; ( strToken = OpenToken( pc, &pc ) ).length( ) || *pc; ++iToken ) {
 		if( strToken == "EWEIGHT" )
 			return true;

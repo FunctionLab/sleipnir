@@ -68,7 +68,6 @@ int main( int iArgs, char** aszArgs ) {
 
 		while( !istm.eof( ) ) {
 			istm.getline( acLine, ARRAYSIZE(acLine) - 1 );
-			acLine[ ARRAYSIZE(acLine) - 1 ] = 0;
 			if( !( szSeq = strchr( acLine, '\t' ) ) )
 				continue;
 			*szSeq = 0;

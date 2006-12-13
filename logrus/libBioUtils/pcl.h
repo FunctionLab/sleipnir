@@ -10,7 +10,7 @@ namespace libBioUtils {
 
 class CDat;
 
-class CPCL : CPCLImpl {
+class CPCL : protected CPCLImpl {
 public:
 	static int Distance( const char* szPCL, size_t iSkip, const char* szDistance, bool fNormalize, bool fZScore,
 		bool fAutocorrelate, const char* szGenes, float dCutoff, size_t iLimit, CPCL& PCL, CDat& Dat );

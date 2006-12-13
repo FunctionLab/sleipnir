@@ -45,11 +45,7 @@ public:
 
 		return CDatImpl::GetGene( strGene ); }
 
-	float Get( size_t iX, size_t iY ) const {
-
-		return CDatImpl::Get( iX, iY ); }
-
-	float& Get( size_t iX, size_t iY ) {
+	float& Get( size_t iX, size_t iY ) const {
 
 		return CDatImpl::Get( iX, iY ); }
 

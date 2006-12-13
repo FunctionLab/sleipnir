@@ -29,7 +29,7 @@ protected:
 
 	static size_t MapGene( TMapStrI&, TVecStr&, const std::string& );
 	static void ResizeNaN( TAF&, size_t );
-	static std::string DabGene( std::istream& );
+	static void DabGene( std::istream&, char* );
 
 	CDatImpl( ) : m_pMeasure(NULL), m_pPCL(NULL), m_abData(NULL), m_iData(0), m_aadData(NULL), m_hndlData(0) { }
 	~CDatImpl( );
@@ -50,16 +50,12 @@ protected:
 	bool OpenHelper( );
 	bool OpenMemmap( const unsigned char* );
 
-	float Get( size_t iX, size_t iY ) const {
+	float& Get( size_t iX, size_t iY ) const {
+		static float	s_dRet;
 
-		return ( m_pMeasure ? (float)m_pMeasure->Measure( m_pPCL->Get( iX ), m_pPCL->GetExperiments( ),
-			m_pPCL->Get( iY ), m_pPCL->GetExperiments( ) ) :
-			( ( iX == iY ) ? CMeta::GetNaN( ) : m_Data.Get( iX, iY ) ) ); }
-
-	float& Get( size_t iX, size_t iY ) {
-		static float	c_dNull	= CMeta::GetNaN( );
-
-		return ( m_pMeasure ? c_dNull : ( ( iX == iY ) ? c_dNull : m_Data.Get( iX, iY ) ) ); }
+		return ( m_pMeasure ? ( s_dRet = (float)m_pMeasure->Measure( m_pPCL->Get( iX ), m_pPCL->GetExperiments( ),
+			m_pPCL->Get( iY ), m_pPCL->GetExperiments( ) ) ) :
+			( ( iX == iY ) ? ( s_dRet = CMeta::GetNaN( ) ) : m_Data.Get( iX, iY ) ) ); }
 
 	bool Set( size_t iX, size_t iY, float dValue ) {
 

@@ -9,7 +9,7 @@
 
 namespace libBioUtils {
 
-class CPCLImpl : CFile {
+class CPCLImpl : protected CFile {
 protected:
 	static const size_t	c_iSkip			= 2;
 	static const char	c_szEWEIGHT[];
@@ -24,8 +24,8 @@ protected:
 
 	~CPCLImpl( );
 
-	bool OpenExperiments( std::istream&, size_t );
-	bool OpenGene( std::istream&, std::vector<float>& );
+	bool OpenExperiments( std::istream&, size_t, char*, size_t );
+	bool OpenGene( std::istream&, std::vector<float>&, char*, size_t );
 	void Reset( );
 
 	CDataMatrix				m_Data;

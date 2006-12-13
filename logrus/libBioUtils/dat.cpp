@@ -33,16 +33,13 @@ void CDatImpl::ResizeNaN( TAF& vecf, size_t iLast ) {
 	for( ; i < vecf.size( ); ++i )
 		vecf[ i ] = CMeta::GetNaN( ); }
 
-string CDatImpl::DabGene( istream& istm ) {
-	char	szBuffer[ c_iBufferSize ];
+void CDatImpl::DabGene( istream& istm, char* acBuffer ) {
 	size_t	i;
 
 	i = 0;
 	do
 		istm.seekg( 1, ios_base::cur );
-	while( szBuffer[ i++ ] = istm.get( ) );
-
-	return szBuffer; }
+	while( acBuffer[ i++ ] = istm.get( ) ); }
 
 CDatImpl::~CDatImpl( ) {
 
@@ -274,9 +271,9 @@ bool CDat::Open( const CPCL& PCL, const IMeasure* pMeasure, bool fMeasureMemory 
 	return true; }
 
 bool CDatImpl::OpenText( istream& istm, float dDefault ) {
-	char		acBuf[ c_iBufferSize ];
 	const char*	pc;
 	char*		pcTail;
+	char*		acBuf;
 	string		strToken, strCache, strValue;
 	TMapStrI	mapGenes;
 	size_t		iOne, iTwo, i;
@@ -284,8 +281,9 @@ bool CDatImpl::OpenText( istream& istm, float dDefault ) {
 	TAAF		vecvecfScores;
 
 	Reset( );
+	acBuf = new char[ c_iBufferSize ];
 	while( istm.peek( ) != EOF ) {
-		istm.getline( acBuf, ARRAYSIZE(acBuf) - 1 );
+		istm.getline( acBuf, c_iBufferSize - 1 );
 		strToken = OpenToken( acBuf, &pc );
 		if( !strToken.length( ) )
 			break;
@@ -296,16 +294,19 @@ bool CDatImpl::OpenText( istream& istm, float dDefault ) {
 		strToken = OpenToken( pc, &pc );
 		if( !strToken.length( ) ) {
 			Reset( );
+			delete[] acBuf;
 			return false; }
 		iTwo = MapGene( mapGenes, m_vecstrGenes, strToken );
 		strValue = OpenToken( pc );
 		if( !strValue.length( ) ) {
 			if( CMeta::IsNaN( dScore = dDefault ) ) {
 				Reset( );
+				delete[] acBuf;
 				return false; } }
 		else if( !( dScore = (float)strtod( strValue.c_str( ), &pcTail ) ) &&
 			( pcTail != ( strValue.c_str( ) + strValue.length( ) ) ) ) {
 			Reset( );
+			delete[] acBuf;
 			return false; }
 
 		i = ( ( iOne > iTwo ) ? iOne : iTwo );
@@ -318,8 +319,10 @@ bool CDatImpl::OpenText( istream& istm, float dDefault ) {
 				strCache.c_str( ), strToken.c_str( ), vecvecfScores[ iOne ][ iTwo ],
 				dScore );
 			Reset( );
+			delete[] acBuf;
 			return false; }
 		vecvecfScores[ iOne ][ iTwo ] = vecvecfScores[ iTwo ][ iOne ] = dScore; }
+	delete[] acBuf;
 
 	m_Data.Initialize( GetGenes( ) );
 	for( iOne = 0; iOne < GetGenes( ); ++iOne )
@@ -353,8 +356,8 @@ bool CDatImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
 	uint32_t	iCount;
 	string		strToken, strCache;
 	float		d;
-	char		acBuf[ c_iBufferSize ];
 	const char*	pc;
+	char*		acBuf;
 
 	Reset( );
 	if( fPCL ) {
@@ -364,19 +367,22 @@ bool CDatImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
 			m_fMeasureMemory = false;
 			return true; }
 		return false; }
+	acBuf = new char[ c_iBufferSize ];
 	if( fBinary ) {
 		istm.read( (char*)&iCount, sizeof(iCount) );
-		if( iCount > c_iGeneLimit )
-			return false;
+		if( iCount > c_iGeneLimit ) {
+			delete[] acBuf;
+			return false; }
 		m_vecstrGenes.resize( iCount );
-		for( i = 0; i < iCount; ++i )
-			m_vecstrGenes[ i ] = DabGene( istm ); }
+		for( i = 0; i < iCount; ++i ) {
+			DabGene( istm, acBuf );
+			m_vecstrGenes[ i ] = acBuf; } }
 	else {
 		set<string>					setstrGenes;
 		set<string>::const_iterator	iterGenes;
 
 		while( istm.peek( ) != EOF ) {
-			istm.getline( acBuf, ARRAYSIZE(acBuf) - 1 );
+			istm.getline( acBuf, c_iBufferSize - 1 );
 			for( iToken = 0; iToken < 3; ++iToken ) {
 				strToken = OpenToken( acBuf, &pc );
 				if( !strToken.length( ) )
@@ -388,11 +394,13 @@ bool CDatImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
 				strToken = OpenToken( pc, &pc );
 				setstrGenes.insert( strToken );
 				d = (float)strtod( ( strToken = OpenToken( pc ) ).c_str( ), (char**)&pc );
-				if( !d && ( ( pc - strToken.c_str( ) ) != strToken.length( ) ) )
-					return false; } }
+				if( !d && ( ( pc - strToken.c_str( ) ) != strToken.length( ) ) ) {
+					delete[] acBuf;
+					return false; } } }
 		m_vecstrGenes.reserve( setstrGenes.size( ) );
 		for( iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( ); ++iterGenes )
 			m_vecstrGenes.push_back( *iterGenes ); }
+	delete[] acBuf;
 
 	return true; }
 
