@@ -102,12 +102,17 @@ int main( int iArgs, char** aszArgs ) {
 					continue;
 
 				iCol = sGene.GetColumn( j );
-				for( d = dSum = 0,k = 0; k < (size_t)sArgs.neighbors_arg; ++k ) {
+				for( d = dSum = 0,iMissing = k = 0; k < (size_t)sArgs.neighbors_arg; ++k ) {
 					const pair<size_t, float>&	prNeighbor	= sGene.m_MatNeighbors.Get( k, iCol );
 
+					if( prNeighbor.second == -FLT_MAX )
+						continue;
+					iMissing++;
 					dSum += prNeighbor.second;
 					d += PCL.Get( prNeighbor.first, j ) * prNeighbor.second; }
-			PCL.Set( i, j, d / dSum ); }
+				if( dSum )
+					d /= dSum;
+				PCL.Set( i, j, iMissing ? d : CMeta::GetNaN( ) ); }
 		} }
 
 	if( sArgs.output_arg ) {
