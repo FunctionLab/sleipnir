@@ -7,7 +7,6 @@
 
 namespace libBioUtils {
 
-class CBinaryMatrix;
 class CDat;
 
 class CStatistics : CStatisticsImpl {
@@ -79,10 +78,10 @@ private:
 
 public:
 	// Evaluation statistics
-	static double WilcoxonRankSum( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes,
-		const CBinaryMatrix& MatPairs, bool fInvert = false );
-	static double SumSquaredError( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes,
-		const CBinaryMatrix& MatPairs, bool fInvert = false );
+	static double WilcoxonRankSum( const CDat&, const CDat&, const std::vector<bool>&,
+		const std::vector<bool>&, bool = false );
+	static double SumSquaredError( const CDat&, const CDat&, const std::vector<bool>&,
+		const std::vector<bool>&, bool = false );
 
 	// Probability distributions
 	static double BinomialCDF( size_t, size_t, double );

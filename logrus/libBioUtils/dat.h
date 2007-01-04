@@ -27,7 +27,7 @@ public:
 	bool Open( const std::vector<std::string>&, bool = true, const char* = NULL );
 	bool Open( const std::vector<std::string>&, const CDistanceMatrix& );
 	bool Open( const std::vector<CGenes*>&, const std::vector<CGenes*>&, float, const CGenome& );
-	bool Open( const std::vector<CGenes*>&, const CDat&, const CGenome& );
+	bool Open( const CDat&, const std::vector<CGenes*>&, const CGenome&, bool );
 	bool Open( const CPCL&, const IMeasure*, bool );
 
 	bool OpenGenes( std::istream&, bool, bool = false );

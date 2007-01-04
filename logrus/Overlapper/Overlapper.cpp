@@ -24,6 +24,9 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Couldn't open: " << sArgs.second_arg << endl;
 		return 1; }
 
+	cout << sArgs.first_arg << ": " << DatOne.GetGenes( ) << " genes" << endl;
+	cout << sArgs.second_arg << ": " << DatTwo.GetGenes( ) << " genes" << endl << endl;
+
 	memset( aiOne, 0, sizeof(aiOne) );
 	memset( aiTwo, 0, sizeof(aiTwo) );
 	memset( aiAgree, 0, sizeof(aiAgree) );

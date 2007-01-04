@@ -17,10 +17,10 @@ public:
 	bool IsContinuous( ) const;
 	unsigned char GetValues( ) const;
 
-	bool Open( const std::vector<CGenes*>& vecpPositives, const CDat& DatNegatives,
-		const CGenome& Genome ) {
+	bool Open( const CDat& Dat, const std::vector<CGenes*>& vecpOther,
+		const CGenome& Genome, bool fPositives ) {
 
-		return CDat::Open( vecpPositives, DatNegatives, Genome ); }
+		return CDat::Open( Dat, vecpOther, Genome, fPositives ); }
 
 	bool Open( const std::vector<std::string>& vecstrGenes, const CDistanceMatrix& Dist ) {
 

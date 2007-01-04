@@ -35,10 +35,9 @@ int main( int iArgs, char** aszArgs ) {
 	ETFPN				eTFPN;
 	int					iMax;
 	float				dAnswer, dValue;
-	vector<bool>		vecfGenes;
+	vector<bool>		vecfHere, vecfSomewhere;
 	vector<float>		vecdScores, vecdSSE;
 	vector<size_t>		veciPositives, veciNegatives;
-	CBinaryMatrix		MatPairs;
 	ofstream			ofsm;
 	ostream*			postm;
 	map<float,size_t>	mapValues;
@@ -101,10 +100,7 @@ int main( int iArgs, char** aszArgs ) {
 	MatGenes.Initialize( veciGenes.size( ), MatResults.GetRows( ) );
 
 	if( sArgs.inputs_num ) {
-		MatPairs.Initialize( Answers.GetGenes( ) );
-		for( i = 0; i < MatPairs.GetSize( ); ++i )
-			for( j = ( i + 1 ); j < MatPairs.GetSize( ); ++j )
-				MatPairs.Set( i, j, true );
+		vecfSomewhere.resize( Answers.GetGenes( ) );
 		for( i = 0; i < sArgs.inputs_num; ++i ) {
 			ifstream	ifsm( sArgs.inputs[ i ] );
 			CGenome		Genome;
@@ -114,11 +110,9 @@ int main( int iArgs, char** aszArgs ) {
 			if( !Genes.Open( ifsm ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
 				return 1; }
-			for( j = 0; j < Genes.GetGenes( ); ++j ) {
-				if( ( iGene = Answers.GetGene( Genes.GetGene( j ).GetName( ) ) ) == -1 )
-					continue;
-				for( k = 0; k < (int)MatPairs.GetSize( ); ++k )
-					MatPairs.Set( k, iGene, false ); } } }
+			for( j = 0; j < Genes.GetGenes( ); ++j )
+				if( ( iGene = Answers.GetGene( Genes.GetGene( j ).GetName( ) ) ) != -1 )
+					vecfSomewhere[ iGene ] = true; } }
 
 	for( iGenes = 0; !sArgs.inputs_num || ( iGenes < sArgs.inputs_num ); ++iGenes ) {
 		MatResults.Clear( );
@@ -133,9 +127,9 @@ int main( int iArgs, char** aszArgs ) {
 			if( !Genes.Open( ifsm ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ iGenes ] << endl;
 				return 1; }
-			vecfGenes.resize( Answers.GetGenes( ) );
-			for( i = 0; i < vecfGenes.size( ); ++i )
-				vecfGenes[ i ] = Genes.IsGene( Answers.GetGene( i ) );
+			vecfHere.resize( Answers.GetGenes( ) );
+			for( i = 0; i < vecfHere.size( ); ++i )
+				vecfHere[ i ] = Genes.IsGene( Answers.GetGene( i ) );
 			cerr << "Processing " << sArgs.inputs[ iGenes ] << "..." << endl;
 			ifsm.close( ); }
 
@@ -148,9 +142,10 @@ int main( int iArgs, char** aszArgs ) {
 						CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
 						CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
 						continue;
-					if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
-						( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
-						( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+					if( !( vecfHere.empty( ) ||
+						( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
+						( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+						!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 						continue;
 					if( sArgs.invert_flag )
 						dValue = 1 - dValue;
@@ -169,12 +164,13 @@ int main( int iArgs, char** aszArgs ) {
 					continue;
 				for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
 					if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-						CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
-						CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
+						CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
+						CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
 						continue;
-					if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
-						( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
-						( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+					if( !( vecfHere.empty( ) ||
+						( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
+						( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+						!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 						continue;
 
 					MatGenes.Set( i, 0, true );
@@ -206,6 +202,8 @@ int main( int iArgs, char** aszArgs ) {
 			else {
 				veciPositives.resize( MatResults.GetRows( ) - 1 );
 				veciNegatives.resize( veciPositives.size( ) );
+				for( i = 0; i < veciNegatives.size( ); ++i )
+					veciNegatives[ i ] = veciPositives[ i ] = 0;
 				for( i = j = 0; i < veciPositives.size( ); ++i,j += iChunk )
 					for( k = 0; k < iChunk; ++k ) {
 						if( ( j + k ) >= vecsData.size( ) )
@@ -238,12 +236,13 @@ int main( int iArgs, char** aszArgs ) {
 					continue;
 				for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
 					if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-						CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
-						CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
+						CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
+						CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
 						continue;
-					if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
-						( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
-						( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+					if( !( vecfHere.empty( ) ||
+						( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
+						( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+						!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 						continue;
 					if( sArgs.invert_flag )
 						dValue = 1 - dValue;
@@ -262,9 +261,10 @@ int main( int iArgs, char** aszArgs ) {
 		for( iPositives = iNegatives = i = 0; i < Answers.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
 				if( CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-					( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
-					( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
-					( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) ) )
+					!( vecfHere.empty( ) ||
+					( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
+					( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+					!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 					continue;
 				if( dAnswer )
 					iPositives++;
@@ -299,7 +299,7 @@ int main( int iArgs, char** aszArgs ) {
 					*postm << '\t' << MatResults.Get( i, j );
 			*postm << endl; }
 		if( !sArgs.sse_flag )
-			*postm << "#	AUC	" << CStatistics::WilcoxonRankSum( Data, Answers, vecfGenes, MatPairs,
+			*postm << "#	AUC	" << CStatistics::WilcoxonRankSum( Data, Answers, vecfHere, vecfSomewhere,
 				!!sArgs.invert_flag ) << endl;
 
 		if( sArgs.inputs_num )

@@ -141,23 +141,30 @@ bool CDat::Open( const CSlim& SlimPos, const CSlim& SlimNeg ) {
 
 	return true; }
 
-bool CDat::Open( const vector<CGenes*>& vecpPositives, const CDat& DatNegatives,
-	const CGenome& Genome ) {
+bool CDat::Open( const CDat& Dat, const vector<CGenes*>& vecpOther, const CGenome& Genome,
+	bool fPositives ) {
 	size_t			i, j, iOne, iTwo;
 	vector<size_t>	veciGenes;
+	float			d;
 
 	Reset( );
 	Open( Genome.GetGeneNames( ) );
-	for( i = 0; i < vecpPositives.size( ); ++i )
-		OpenHelper( vecpPositives[ i ], 1 );
-	veciGenes.resize( DatNegatives.GetGenes( ) );
+	for( i = 0; i < vecpOther.size( ); ++i )
+		OpenHelper( vecpOther[ i ], 1 );
+	if( !fPositives )
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+				Set( i, j, CMeta::IsNaN( Get( i, j ) ) ? 0 : CMeta::GetNaN( ) );
+
+	veciGenes.resize( Dat.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
-		veciGenes[ i ] = GetGene( DatNegatives.GetGene( i ) );
-	for( i = 0; i < DatNegatives.GetGenes( ); ++i ) {
+		veciGenes[ i ] = GetGene( Dat.GetGene( i ) );
+	for( i = 0; i < Dat.GetGenes( ); ++i ) {
 		iOne = veciGenes[ i ];
-		for( j = ( i + 1 ); j < DatNegatives.GetGenes( ); ++j )
-			if( CMeta::IsNaN( Get( iOne, iTwo = veciGenes[ j ] ) ) )
-				Set( iOne, iTwo, DatNegatives.Get( i, j ) ); }
+		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+			d = Dat.Get( i, j );
+			if( CMeta::IsNaN( Get( iOne, iTwo = veciGenes[ j ] ) ) && ( fPositives == !!d ) )
+				Set( iOne, iTwo, d ); } }
 
 	return true; }
 
@@ -172,30 +179,31 @@ bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& ve
 	Open( Genome.GetGeneNames( ) );
 	for( i = 0; i < vecpPositives.size( ); ++i )
 		OpenHelper( vecpPositives[ i ], 1 );
-	for( i = 0; i < vecpNegatives.size( ); ++i )
-		OpenHelper( vecpNegatives[ i ], 0 );
-	if( dP > 0 )
-		for( i = 0; i < vecpPositives.size( ); ++i ) {
-			iOne = vecpPositives[ i ]->GetGenes( );
-			for( j = ( i + 1 ); j < vecpPositives.size( ); ++j ) {
-				iTwo = vecpPositives[ j ]->GetGenes( );
-				if( iOne < iTwo ) {
-					pSmall = vecpPositives[ i ];
-					pBig = vecpPositives[ j ]; }
-				else {
-					pSmall = vecpPositives[ j ];
-					pBig = vecpPositives[ i ]; }
-				for( iOverlap = k = 0; k < pSmall->GetGenes( ); ++k )
-					if( pBig->IsGene( pSmall->GetGene( k ).GetName( ) ) )
-						iOverlap++;
-				if( CStatistics::HypergeometricCDF( iOverlap, iOne, iTwo, GetGenes( ) ) < dP )
-					OpenHelper( pBig, pSmall, 0 ); } }
-	for( i = 0; i < GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( CMeta::IsNaN( d = Get( i, j ) ) )
-				Set( i, j, 0 );
-			else if( !d )
-				Set( i, j, CMeta::GetNaN( ) );
+	if( vecpNegatives.size( ) ) {
+		for( i = 0; i < vecpNegatives.size( ); ++i )
+			OpenHelper( vecpNegatives[ i ], 0 );
+		if( dP > 0 )
+			for( i = 0; i < vecpPositives.size( ); ++i ) {
+				iOne = vecpPositives[ i ]->GetGenes( );
+				for( j = ( i + 1 ); j < vecpPositives.size( ); ++j ) {
+					iTwo = vecpPositives[ j ]->GetGenes( );
+					if( iOne < iTwo ) {
+						pSmall = vecpPositives[ i ];
+						pBig = vecpPositives[ j ]; }
+					else {
+						pSmall = vecpPositives[ j ];
+						pBig = vecpPositives[ i ]; }
+					for( iOverlap = k = 0; k < pSmall->GetGenes( ); ++k )
+						if( pBig->IsGene( pSmall->GetGene( k ).GetName( ) ) )
+							iOverlap++;
+					if( CStatistics::HypergeometricCDF( iOverlap, iOne, iTwo, GetGenes( ) ) < dP )
+						OpenHelper( pBig, pSmall, 0 ); } }
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+				if( CMeta::IsNaN( d = Get( i, j ) ) )
+					Set( i, j, 0 );
+				else if( !d )
+					Set( i, j, CMeta::GetNaN( ) ); }
 
 	return true; }
 

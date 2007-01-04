@@ -803,8 +803,8 @@ double CStatistics::FScore( size_t iTP, size_t iFP, size_t iTN, size_t iFN, doub
 
 	return ( ( dBeta + 1 ) * dP * dR / ( ( dBeta * dP ) + dR ) ); }
 
-double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes,
-	const CBinaryMatrix& MatPairs, bool fInvert ) {
+double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, const vector<bool>& vecfHere,
+	const vector<bool>& vecfSomewhere, bool fInvert ) {
 	size_t				i, j, k, iOne, iTwo, iNeg;
 	uint64_t			iSum, iPos;
 	float				d, dAnswer;
@@ -820,12 +820,13 @@ double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, cons
 			continue;
 		for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
 			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-				CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ||
-				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
+				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
+				CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) )
 				continue;
-			if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
-				( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
-				( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+			if( !( vecfHere.empty( ) ||
+				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
+				( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+				!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 				continue;
 			if( fInvert )
 				d = 1 - d;
@@ -839,7 +840,8 @@ double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, cons
 		std::sort( veciIndices.begin( ), veciIndices.end( ), SCompareRank<float>( vecdValues ) );
 		veciRanks.resize( veciIndices.size( ) );
 		for( i = 0; i < veciRanks.size( ); ++i )
-			veciRanks[ veciIndices[ i ] ] = i; }
+			veciRanks[ veciIndices[ i ] ] = i;
+	}
 
 	for( iSum = iPos = iNeg = i = k = 0; i < Answers.GetGenes( ); ++i ) {
 		if( ( iOne = veciGenes[ i ] ) == -1 )
@@ -848,9 +850,10 @@ double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, cons
 			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
 				CMeta::IsNaN( Data.Get( iOne, iTwo ) ) ||
 				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-				( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
-				( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
-				( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) ) )
+				!( vecfHere.empty( ) ||
+				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
+				( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+				!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 				continue;
 			if( dAnswer ) {
 				iPos++;
@@ -862,8 +865,8 @@ double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, cons
 
 	return ( (double)iSum / iPos / iNeg ); }
 
-double CStatistics::SumSquaredError( const CDat& Data, const CDat& Answers, const std::vector<bool>& vecfGenes,
-	const CBinaryMatrix& MatPairs, bool fInvert ) {
+double CStatistics::SumSquaredError( const CDat& Data, const CDat& Answers, const vector<bool>& vecfHere,
+	const vector<bool>& vecfSomewhere, bool fInvert ) {
 	size_t				i, j, iOne, iTwo;
 	float				d, dAnswer, dCur;
 	double				dRet;
@@ -882,9 +885,10 @@ double CStatistics::SumSquaredError( const CDat& Data, const CDat& Answers, cons
 				CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ||
 				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
 				continue;
-			if( !vecfGenes.empty( ) && !MatPairs.Get( i, j ) &&
-				( ( dAnswer && !( vecfGenes[ i ] && vecfGenes[ j ] ) ) ||
-				( !dAnswer && !( vecfGenes[ i ] || vecfGenes[ j ] ) ) ) )
+			if( !( vecfHere.empty( ) ||
+				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
+				( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+				!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 				continue;
 			if( fInvert )
 				d = 1 - d;

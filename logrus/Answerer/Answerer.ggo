@@ -2,8 +2,12 @@ package	"Answerer"
 version	"1.0"
 purpose	"Generates an answer file given positives, negatives, and a genome"
 
-option	"positives"	p	"Directory containing related gene lists"	string	typestr="directory"	yes
-option	"negatives"	n	"Directory containing minimally related gene lists"	string	typestr="directory"	yes
+defgroup "Positives"	yes
+groupoption	"positives"	p	"Directory containing related gene lists"	string	typestr="directory"	group="Positives"
+groupoption	"input"		i	"Pre-existing positive DAT file"	string	typestr="filename"	group="Positives"
+defgroup "Negatives"
+groupoption	"negatives"		n	"Directory containing minimally related gene lists"	string	typestr="directory"	group="Negatives"
+groupoption	"interactions"	x	"Expected interactions per gene"	int	group="Negatives"
 section "Optional"
 option	"genome"	g	"List of all genes to be considered"	string	typestr="filename"
 option	"test"		t	"Fraction of genes to randomly select for testing"	double	default="0"
