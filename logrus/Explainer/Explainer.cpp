@@ -50,7 +50,7 @@ int main( int iArgs, char** aszArgs ) {
 		!strcmp( c_szOnly, sArgs.unknowns_arg ) )
 		sArgs.everything_flag = true;
 
-	if( !Answers.Open( sArgs.answers_arg ) ) {
+	if( !Answers.Open( sArgs.answers_arg, sArgs.memmap_flag && !sArgs.genes_arg && !sArgs.genet_arg && !sArgs.genex_arg ) ) {
 		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
 		return 1; }
 	if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
@@ -62,7 +62,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
 		cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 		return 1; }
-	if( !Data.Open( sArgs.input_arg ) ) {
+	if( !Data.Open( sArgs.input_arg, sArgs.memmap_flag && !sArgs.normalize_flag && !sArgs.invert_flag ) ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
 	if( sArgs.normalize_flag )
@@ -93,6 +93,8 @@ int main( int iArgs, char** aszArgs ) {
 	for( i = 0; i < Data.GetGenes( ); ++i )
 		veciGenes[ i ] = Answers.GetGene( Data.GetGene( i ) );
 	for( i = 0; i < Data.GetGenes( ); ++i ) {
+		if( !( i % 1000 ) )
+			cerr << "Gene " << i << '/' << Data.GetGenes( ) << endl;
 		if( !sArgs.everything_flag && ( ( iOne = veciGenes[ i ] ) == -1 ) )
 			continue;
 		for( j = ( i + 1 ); j < Data.GetGenes( ); ++j ) {
@@ -102,8 +104,10 @@ int main( int iArgs, char** aszArgs ) {
 				CMeta::IsNaN( dAnswer = Answers.Get( iOne, iTwo ) ) ||
 				( sArgs.positives_flag && ( dAnswer <= 0 ) ) ) )
 				continue;
+			if( ( (float)rand( ) / RAND_MAX ) > sArgs.fraction_arg )
+				continue;
 			if( sArgs.everything_flag )
-				dAnswer = dValue - ( 1 / dValue );
+				dAnswer = dValue ? ( dValue - ( 1 / dValue ) ) : -FLT_MAX;
 			vecsData.push_back( SDatum( fabs( dValue - dAnswer ), i, j ) ); } }
 	sort( vecsData.begin( ), vecsData.end( ), SSorter( !!sArgs.reverse_flag ) );
 
@@ -142,20 +146,16 @@ int main( int iArgs, char** aszArgs ) {
 		dAnswer = ( ( ( j = veciGenes[ Datum.m_iOne ] ) == -1 ) || ( ( k = veciGenes[ Datum.m_iTwo ] ) == -1 ) ) ?
 			CMeta::GetNaN( ) : Answers.Get( j, k );
 		cout << dAnswer << endl;
-		if( Genome.GetGenes( ) ) {
+		if( pOne ) {
 			cout << '\t';
-			if( pOne && pOne->GetSynonyms( ) )
+			if( pOne->GetSynonyms( ) )
 				cout << pOne->GetSynonym( 0 );
+			cout << '\t' << pOne->GetGloss( ) << endl; }
+		if( pTwo ) {
 			cout << '\t';
-			if( pOne )
-				cout << pOne->GetGloss( );
-			cout << endl << '\t';
-			if( pTwo && pTwo->GetSynonyms( ) )
+			if( pTwo->GetSynonyms( ) )
 				cout << pTwo->GetSynonym( 0 );
-			cout << '\t';
-			if( pTwo )
-				cout << pTwo->GetGloss( );
-			cout << endl; } }
+			cout << '\t' << pTwo->GetGloss( ) << endl; } }
 
 	CMeta::Shutdown( );
 	return 0; }

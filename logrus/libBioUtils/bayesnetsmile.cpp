@@ -459,12 +459,12 @@ void CBayesNetSmile::Reverse( size_t iNode ) {
 
 bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 	vector<vector<size_t> >	vecveciCounts;
-	size_t					i, j, k, iAnswer, iAnswers, iVal, iCount, iTotal;
+	size_t					i, j, k, iAnswer, iAnswers, iVal, iCount;
 	DSL_nodeDefinition*		pDef;
 	DSL_Dmatrix*			pMat;
 	DSL_Dmatrix*			pDefault;
 	DSL_intArray			veciCoords;
-	vector<size_t>			veciMinimum, veciZeros;
+	vector<size_t>			veciMinima, veciZeros, veciTotals;
 	int						iProp;
 	bool					fZeroable;
 
@@ -484,7 +484,7 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 		else {
 			fZeroable = true;
 			veciZeros[ i ] = atoi( Props.GetPropertyValue( iProp ) ); } }
-	for( i = 0; i < pData->GetGenes( ); ++i )
+	for( iCount = i = 0; i < pData->GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
 			if( ( fZeroable || pData->IsExample( i, j ) ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
 				vecveciCounts[ 0 ][ iAnswer ]++;
@@ -493,35 +493,46 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 						if( veciZeros[ k ] == -1 )
 							continue;
 						iVal = veciZeros[ k ]; }
+					if( !k )
+						iCount++;
 					vecveciCounts[ k ][ ( iVal * iAnswers ) + iAnswer ]++; } }
 
 	pMat = m_SmileNet.GetNode( 0 )->Definition( )->GetMatrix( );
-	for( i = 0; i < iAnswers; ++i )
-		(*pMat)[ (int)i ] = vecveciCounts[ 0 ][ (int)i ] + 1;
-	pMat->Normalize( );
+	if( m_pDefaults && ( iCount < c_iMinimum ) ) {
+		pDefault = m_pDefaults->m_SmileNet.GetNode( 0 )->Definition( )->GetMatrix( );
+		for( i = 0; i < iAnswers; ++i )
+			(*pMat)[ (int)i ] = (*pDefault)[ (int)i ]; }
+	else {
+		for( i = 0; i < iAnswers; ++i )
+			(*pMat)[ (int)i ] = ( j = vecveciCounts[ 0 ][ (int)i ] ) ? j : 1;
+		pMat->Normalize( ); }
 	for( i = 1; i < vecveciCounts.size( ); ++i ) {
 		pDef = m_SmileNet.GetNode( (int)i )->Definition( );
 		pMat = pDef->GetMatrix( );
 		pMat->IndexToCoordinates( 0, veciCoords );
 		pDefault = m_pDefaults ? m_pDefaults->m_SmileNet.GetNode( (int)i )->Definition( )->GetMatrix( ) : NULL;
-		veciMinimum.clear( );
+		veciTotals.resize( pDef->GetNumberOfOutcomes( ) );
+		for( j = 0; j < veciTotals.size( ); ++j )
+			veciTotals[ j ] = 0;
 		for( j = 0; j < iAnswers; ++j ) {
 			veciCoords[ 0 ] = (int)j;
-			for( iTotal = k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
+			for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
 				veciCoords[ 1 ] = (int)k;
 				iCount = max( vecveciCounts[ i ][ ( k * iAnswers ) + j ], 1 );
-				iTotal += iCount;
-				(*pMat)[ veciCoords ] = iCount; }
-			if( iTotal < c_iMinimum )
-				veciMinimum.push_back( j ); }
+				veciTotals[ k ] += iCount;
+				(*pMat)[ veciCoords ] = iCount; } }
+		veciMinima.clear( );
+		for( j = 0; j < veciTotals.size( ); ++j )
+			if( veciTotals[ j ] < c_iMinimum )
+				veciMinima.push_back( j );
 		pMat->Normalize( );
-		if( pDefault && !veciMinimum.empty( ) ) {
-			for( j = 0; j < veciMinimum.size( ); ++j ) {
+		if( pDefault && !veciMinima.empty( ) ) {
+			for( j = 0; j < veciMinima.size( ); ++j ) {
 				g_CatBioUtils.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s, row %d",
-					fZero, m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), veciMinimum[ j ] );
-				veciCoords[ 0 ] = (int)veciMinimum[ j ];
-				for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
-					veciCoords[ 1 ] = (int)k;
+					fZero, m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), veciMinima[ j ] );
+				veciCoords[ 1 ] = (int)veciMinima[ j ];
+				for( k = 0; k < iAnswers; ++k ) {
+					veciCoords[ 0 ] = (int)k;
 					(*pMat)[ veciCoords ] = (*pDefault)[ veciCoords ]; } }
 			pMat->Normalize( ); } }
 

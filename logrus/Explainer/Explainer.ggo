@@ -19,3 +19,5 @@ option	"go_onto"	o	"GO ontology"	string	typestr="filename"
 option	"go_anno"	a	"GO annotations"	string	typestr="filename"
 option	"unknowns"	u	"Treatment of unknown genes"	values="exclude","include","only"	default="exclude"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"memmap"	m	"Memory map input files"	flag	off
+option	"fraction"	x	"Random fraction of results to calculate"	double	default="1"

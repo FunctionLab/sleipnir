@@ -38,11 +38,13 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 		size_t			iNode;
 		unsigned char	bValue;
 		float			dPrior;
+		vector<string>	vecstrNodes;
 
 		if( !BNSmile.Open( sArgs.inputs[ iDSL ] ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ iDSL ] << endl;
 			return 1; }
-		vecbDatum.resize( BNSmile.GetNodes( ).size( ) );
+		BNSmile.GetNodes( vecstrNodes );
+		vecbDatum.resize( vecstrNodes.size( ) );
 		for( i = 0; i < vecbDatum.size( ); ++i )
 			vecbDatum[ i ] = 0;
 
@@ -50,12 +52,12 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 		dPrior = vecdOut[ vecdOut.size( ) - 1 ];
 
 		if( !iDSL ) {
-			for( iNode = 1; iNode < BNSmile.GetNodes( ).size( ); ++iNode )
-				cout << '\t' << BNSmile.GetNodes( )[ iNode ];
+			for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode )
+				cout << '\t' << vecstrNodes[ iNode ];
 			cout << endl; }
 
 		cout << sArgs.inputs[ iDSL ];
-		for( iNode = 1; iNode < BNSmile.GetNodes( ).size( ); ++iNode ) {
+		for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode ) {
 			float	d;
 
 			vecbDatum[ iNode - 1 ] = 0;
@@ -80,17 +82,19 @@ int MainSums( const gengetopt_args_info& sArgs ) {
 		size_t			iNode;
 		unsigned char	bValue;
 		float			dSum;
+		vector<string>	vecstrNodes;
 
 		if( !BNSmile.Open( sArgs.inputs[ iDSL ] ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ iDSL ] << endl;
 			return 1; }
+		BNSmile.GetNodes( vecstrNodes );
 		if( !iDSL ) {
-			for( iNode = 1; iNode < BNSmile.GetNodes( ).size( ); ++iNode )
-				cout << '\t' << BNSmile.GetNodes( )[ iNode ];
+			for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode )
+				cout << '\t' << vecstrNodes[ iNode ];
 			cout << endl; }
 
 		cout << sArgs.inputs[ iDSL ];
-		for( iNode = 1; iNode < BNSmile.GetNodes( ).size( ); ++iNode ) {
+		for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode ) {
 			CDataMatrix	MatCPT;
 
 			dSum = 0;
@@ -110,17 +114,19 @@ int MainRatios( const gengetopt_args_info& sArgs ) {
 		size_t			iNode;
 		unsigned char	bValue;
 		float			dProd;
+		vector<string>	vecstrNodes;
 
 		if( !BNSmile.Open( sArgs.inputs[ iDSL ] ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ iDSL ] << endl;
 			return 1; }
+		BNSmile.GetNodes( vecstrNodes );
 		if( !iDSL ) {
-			for( iNode = 1; iNode < BNSmile.GetNodes( ).size( ); ++iNode )
-				cout << '\t' << BNSmile.GetNodes( )[ iNode ];
+			for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode )
+				cout << '\t' << vecstrNodes[ iNode ];
 			cout << endl; }
 
 		cout << sArgs.inputs[ iDSL ];
-		for( iNode = 1; iNode < BNSmile.GetNodes( ).size( ); ++iNode ) {
+		for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode ) {
 			CDataMatrix	MatCPT;
 			float		dMin, dMax;
 
