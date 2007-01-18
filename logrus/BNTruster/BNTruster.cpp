@@ -16,9 +16,7 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
-#if !( defined(_MSC_VER) && defined(_DEBUG) )
 	EnableXdslFormat( );
-#endif // !( defined(_MSC_VER) && defined(_DEBUG) )
 
 	for( iRet = 1,i = 0; c_aszTrusters[ i ]; ++i )
 		if( !strcmp( c_aszTrusters[ i ], sArgs.type_arg ) ) {
@@ -29,7 +27,7 @@ int main( int iArgs, char** aszArgs ) {
 	return iRet; }
 
 int MainPosteriors( const gengetopt_args_info& sArgs ) {
-	size_t					i, iDSL;
+	size_t					i, j, iDSL;
 	vector<unsigned char>	vecbDatum;
 	vector<float>			vecdOut;
 
@@ -39,6 +37,7 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 		unsigned char	bValue;
 		float			dPrior;
 		vector<string>	vecstrNodes;
+		CDataMatrix		MatFR;
 
 		if( !BNSmile.Open( sArgs.inputs[ iDSL ] ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ iDSL ] << endl;
@@ -57,8 +56,10 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 			cout << endl; }
 
 		cout << sArgs.inputs[ iDSL ];
+		BNSmile.GetCPT( 0, MatFR );
 		for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode ) {
-			float	d;
+			float		dSum, d;
+			CDataMatrix	MatCPT;
 
 			vecbDatum[ iNode - 1 ] = 0;
 			vecdOut.clear( );
@@ -66,10 +67,13 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 				vecbDatum[ iNode ] = bValue + 1;
 				BNSmile.Evaluate( vecbDatum, vecdOut, false ); }
 
-			d = 0;
-			for( i = 0; i < vecdOut.size( ); ++i )
-				d += fabs( dPrior - vecdOut[ i ] );
-			cout << '\t' << ( d / BNSmile.GetValues( iNode ) ); }
+			BNSmile.GetCPT( iNode, MatCPT );
+			dSum = 0;
+			for( i = 0; i < vecdOut.size( ); ++i ) {
+				for( d = 0,j = 0; j < MatFR.GetRows( ); ++j )
+					d += MatFR.Get( j, 0 ) * MatCPT.Get( i, j );
+				dSum += fabs( dPrior - vecdOut[ i ] ) * d; }
+			cout << '\t' << ( dSum / BNSmile.GetValues( iNode ) ); }
 		cout << endl; }
 
 	return 0; }

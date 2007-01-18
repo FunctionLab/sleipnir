@@ -464,9 +464,11 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 	DSL_Dmatrix*			pMat;
 	DSL_Dmatrix*			pDefault;
 	DSL_intArray			veciCoords;
-	vector<size_t>			veciMinima, veciZeros, veciTotals;
+	vector<size_t>			veciZeros;
 	int						iProp;
-	bool					fZeroable;
+	bool					fZeroable, fFallback;
+	float					dLambda;
+	double					dCount;
 
 	vecveciCounts.resize( m_SmileNet.GetNumberOfNodes( ) );
 	iAnswers = m_SmileNet.GetNode( 0 )->Definition( )->GetNumberOfOutcomes( );
@@ -488,53 +490,65 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
 			if( ( fZeroable || pData->IsExample( i, j ) ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
 				vecveciCounts[ 0 ][ iAnswer ]++;
+				iCount++;
 				for( k = 1; k < pData->GetExperiments( ); ++k ) {
 					if( ( iVal = pData->GetDiscrete( i, j, k ) ) == -1 ) {
 						if( veciZeros[ k ] == -1 )
 							continue;
 						iVal = veciZeros[ k ]; }
-					if( !k )
-						iCount++;
 					vecveciCounts[ k ][ ( iVal * iAnswers ) + iAnswer ]++; } }
 
+	fFallback = m_pDefaults && ( iCount < c_iMinimum );
 	pMat = m_SmileNet.GetNode( 0 )->Definition( )->GetMatrix( );
-	if( m_pDefaults && ( iCount < c_iMinimum ) ) {
+	for( i = 0; i < iAnswers; ++i )
+		(*pMat)[ (int)i ] = ( j = vecveciCounts[ 0 ][ (int)i ] ) ? j : ( fFallback ? 0 : 1 );
+	if( fFallback ) {
+		g_CatBioUtils.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s",
+			fZero, m_SmileNet.GetNode( 0 )->Info( ).Header( ).GetId( ) );
+		dLambda = 1 - ( (float)iCount / c_iMinimum );
+		pMat->Normalize( );
 		pDefault = m_pDefaults->m_SmileNet.GetNode( 0 )->Definition( )->GetMatrix( );
 		for( i = 0; i < iAnswers; ++i )
-			(*pMat)[ (int)i ] = (*pDefault)[ (int)i ]; }
-	else {
-		for( i = 0; i < iAnswers; ++i )
-			(*pMat)[ (int)i ] = ( j = vecveciCounts[ 0 ][ (int)i ] ) ? j : 1;
-		pMat->Normalize( ); }
+			(*pMat)[ (int)i ] = ( ( 1 - dLambda ) * (*pMat)[ (int)i ] ) +
+				( dLambda * (*pDefault)[ (int)i ] ); }
+	pMat->Normalize( );
 	for( i = 1; i < vecveciCounts.size( ); ++i ) {
 		pDef = m_SmileNet.GetNode( (int)i )->Definition( );
 		pMat = pDef->GetMatrix( );
 		pMat->IndexToCoordinates( 0, veciCoords );
 		pDefault = m_pDefaults ? m_pDefaults->m_SmileNet.GetNode( (int)i )->Definition( )->GetMatrix( ) : NULL;
-		veciTotals.resize( pDef->GetNumberOfOutcomes( ) );
-		for( j = 0; j < veciTotals.size( ); ++j )
-			veciTotals[ j ] = 0;
 		for( j = 0; j < iAnswers; ++j ) {
 			veciCoords[ 0 ] = (int)j;
 			for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
 				veciCoords[ 1 ] = (int)k;
-				iCount = max( vecveciCounts[ i ][ ( k * iAnswers ) + j ], 1 );
-				veciTotals[ k ] += iCount;
-				(*pMat)[ veciCoords ] = iCount; } }
-		veciMinima.clear( );
-		for( j = 0; j < veciTotals.size( ); ++j )
-			if( veciTotals[ j ] < c_iMinimum )
-				veciMinima.push_back( j );
-		pMat->Normalize( );
-		if( pDefault && !veciMinima.empty( ) ) {
-			for( j = 0; j < veciMinima.size( ); ++j ) {
-				g_CatBioUtils.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s, row %d",
-					fZero, m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), veciMinima[ j ] );
-				veciCoords[ 1 ] = (int)veciMinima[ j ];
-				for( k = 0; k < iAnswers; ++k ) {
-					veciCoords[ 0 ] = (int)k;
-					(*pMat)[ veciCoords ] = (*pDefault)[ veciCoords ]; } }
-			pMat->Normalize( ); } }
+				(*pMat)[ veciCoords ] = vecveciCounts[ i ][ ( k * iAnswers ) + j ]; } }
+		if( pDefault )
+			for( j = 0; j < iAnswers; ++j ) {
+				veciCoords[ 0 ] = (int)j;
+				for( dCount = k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
+					veciCoords[ 1 ] = (int)k;
+					dCount += (*pMat)[ veciCoords ]; }
+				if( dCount < c_iMinimum ) {
+					g_CatBioUtils.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s, column %d",
+						fZero, m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), j );
+					dLambda = 1 - ( (float)dCount / c_iMinimum );
+					for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
+						veciCoords[ 1 ] = (int)k;
+						(*pMat)[ veciCoords ] = ( ( 1 - dLambda ) * (*pMat)[ veciCoords ] / dCount ) +
+							( dLambda * (*pDefault)[ veciCoords ] ); } }
+				else
+					for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
+						veciCoords[ 1 ] = (int)k;
+						if( !(*pMat)[ veciCoords ] )
+							(*pMat)[ veciCoords ] = 1; } }
+		else
+			for( j = 0; j < iAnswers; ++j ) {
+				veciCoords[ 0 ] = (int)j;
+				for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
+					veciCoords[ 1 ] = (int)k;
+					if( !(*pMat)[ veciCoords ] )
+						(*pMat)[ veciCoords ] = 1; } }
+		pMat->Normalize( ); }
 
 	return true; }
 

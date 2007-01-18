@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-static const char	c_szDab[]	= ".dab";
+static const char	c_acDab[]	= ".dab";
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -42,6 +42,8 @@ int main( int iArgs, char** aszArgs ) {
 		float			dYes, dNo;
 		CDataMatrix		MatCPT;
 		ofstream		ofsm;
+		char			acTemp[ L_tmpnam + 1 ];
+		const char*		szTemp;
 
 		if( !BNIn.Open( sArgs.input_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.input_arg << endl;
@@ -50,7 +52,7 @@ int main( int iArgs, char** aszArgs ) {
 		BNIn.GetNodes( vecstrFiles );
 		vecstrFiles.erase( vecstrFiles.begin( ) );
 		for( i = 0; i < vecstrFiles.size( ); ++i )
-			vecstrFiles[ i ] = (string)sArgs.directory_arg + '/' + vecstrFiles[ i ] + c_szDab;
+			vecstrFiles[ i ] = (string)sArgs.directory_arg + '/' + vecstrFiles[ i ] + c_acDab;
 		if( !Data.OpenGenes( vecstrFiles ) ) {
 			cerr << "Couldn't open: " << sArgs.directory_arg << endl;
 			return 1; }
@@ -64,8 +66,13 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 			return 1; }
 
+#pragma warning( disable : 4996 )
+		if( !( szTemp = tmpnam( acTemp ) ) ) {
+			cerr << "Couldn't create temp file: " << acTemp << endl;
+			return 1; }
+#pragma warning( default : 4996 )
 		DatYes.Open( Data.GetGeneNames( ), false, sArgs.output_arg );
-		DatNo.Open( Data.GetGeneNames( ), false );
+		DatNo.Open( Data.GetGeneNames( ), false, szTemp );
 		BNIn.GetCPT( 0, MatCPT );
 		dNo = log( MatCPT.Get( 0, 0 ) );
 		dYes = log( MatCPT.Get( 1, 0 ) );
@@ -99,7 +106,8 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = ( i + 1 ); j < DatYes.GetGenes( ); ++j ) {
 				dYes = exp( DatYes.Get( i, j ) );
 				dNo = exp( DatNo.Get( i, j ) );
-				DatYes.Set( i, j, dYes / ( dYes + dNo ) ); } }
+				DatYes.Set( i, j, dYes / ( dYes + dNo ) ); }
+		_unlink( szTemp ); }
 	else {
 		CDataPair				Answers;
 		size_t					iArg;

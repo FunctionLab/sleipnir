@@ -60,7 +60,7 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.go_anno_arg ) {
 			ifsmGenes.clear( );
 			ifsmGenes.open( sArgs.go_anno_arg ); }
-		if( !COntologyGO::Open( ifsmOnto, ifsmGenes, Genome, GOBP, GOMF, GOCC ) ) {
+		if( !COntologyGO::Open( ifsmOnto, ifsmGenes, Genome, GOBP, GOMF, GOCC, !!sArgs.dbids_flag ) ) {
 			cerr << "Could not open: " << sArgs.go_onto_arg << ", " << sArgs.go_anno_arg << endl;
 			return 1; }
 		ifsmOnto.close( );

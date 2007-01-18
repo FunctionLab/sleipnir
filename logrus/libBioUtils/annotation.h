@@ -73,10 +73,10 @@ public:
 	};
 
 	static bool Open( std::istream&, std::istream&, CGenome&, COntologyGO&, COntologyGO&,
-		COntologyGO& );
+		COntologyGO&, bool = false );
 
 	COntologyGO( );
-	bool Open( std::istream&, std::istream&, CGenome&, ENamespace );
+	bool Open( std::istream&, std::istream&, CGenome&, ENamespace, bool = false );
 
 	const std::string& GetID( ) const;
 	size_t GetNodes( ) const;

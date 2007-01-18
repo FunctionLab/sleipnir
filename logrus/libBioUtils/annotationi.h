@@ -159,12 +159,13 @@ protected:
 	struct SParserGO : SParser {
 		typedef std::set<const CGene*>	TSetPGene;
 
-		SParserGO( std::istream&, CGenome& );
+		SParserGO( std::istream&, CGenome&, bool = false );
 
 		void Reset( );
 
 		const char*					m_szTarget;
 		bool						m_fObsolete;
+		bool						m_fDBIDs;
 		std::string					m_strNamespace;
 		std::vector<std::string>	m_vecstrIDs;
 		std::vector<size_t>			m_veciParents;

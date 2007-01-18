@@ -36,7 +36,7 @@ int main( int iArgs, char** aszArgs ) {
 			eName = COntologyGO::ENamespaceCC;
 		else
 			eName = COntologyGO::ENamespaceMF;
-		if( !GO.Open( ifsmOnto, ifsmAnno, Genome, eName ) ) {
+		if( !GO.Open( ifsmOnto, ifsmAnno, Genome, eName, !!sArgs.dbids_flag ) ) {
 			cerr << "Couldn't open: ";
 			if( sArgs.go_anno_arg )
 				cerr << sArgs.go_anno_arg << ", ";

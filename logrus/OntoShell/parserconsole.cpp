@@ -174,7 +174,7 @@ void CParserConsole::PrintGenes( const vector<const CGene*>& vecpGenes, size_t i
 	i = FormatGenes( vecpGenes, vecstrGenes, pGenes );
 	if( !iWidth )
 		iWidth = i;
-	iCols = c_iWidthScreen / iWidth;
+	iCols = ( iWidth >= c_iWidthScreen ) ? 1 : ( c_iWidthScreen / iWidth );
 	for( iCol = i = 0; i < vecpGenes.size( ); ++i,iCol %= iCols ) {
 		PrintSpaces( iSpaces );
 		cout << vecstrGenes[ i ];

@@ -20,3 +20,4 @@ option	"synonyms"	s	"Prefer synonym names"	flag	off
 option	"sql"		q	"Directory in which to place SQL tables"	string	typestr="filename"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"config"	c	"Command line config file"	string	typestr="filename"	default="BNFunc.ini"
+option	"dbids"		b	"Include GO database IDs"	flag	off

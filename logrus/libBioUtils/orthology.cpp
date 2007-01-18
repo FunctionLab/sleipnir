@@ -40,6 +40,8 @@ bool COrthology::Open( istream& istm ) {
 			vector<CGene*>&	vecpGenes	= m_vecvecpGenes[ m_vecvecpGenes.size( ) - 1 ];
 
 			for( i = 0; i < vecstrLine.size( ); ++i ) {
+				if( vecstrLine[ i ].length( ) == 0 )
+					continue;
 				if( ( j = vecstrLine[ i ].find( c_cOrgSep ) ) == string::npos ) {
 					g_CatBioUtils.warn( "COrthology::Open( ) illegal gene token: %s",
 						vecstrLine[ i ].c_str( ) );
@@ -55,4 +57,5 @@ bool COrthology::Open( istream& istm ) {
 	delete[] acBuf;
 
 	return true; }
+
 }

@@ -12,7 +12,7 @@ class CGenome;
 
 class COrthologyImpl : protected CFile {
 protected:
-	static const char	c_cOrgSep	= ':';
+	static const char	c_cOrgSep	= '|';
 
 	typedef std::map<CGene*,std::vector<size_t> >	TMapGeneVecI;
 	typedef std::map<std::string,CGenome*>			TMapStrGenome;
