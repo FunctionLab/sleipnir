@@ -20,7 +20,7 @@ void* learn( void* );
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info					sArgs;
-	size_t								i, j;
+	size_t								i, j, iTerm, iThread;
 	map<string,size_t>					mapZeros;
 	CDataPair							Answers;
 	vector<CBayesNetSmile*>				vecpBNRoots, vecpBNs;
@@ -91,21 +91,24 @@ int main( int iArgs, char** aszArgs ) {
 	vecpBNRoots.resize( vecpGenes.size( ) );
 	vecpthdThreads.resize( vecpBNRoots.size( ) );
 	vecsData.resize( vecpthdThreads.size( ) );
-	for( i = 0; i < vecpBNRoots.size( ); ++i ) {
-		vecsData[ i ].m_pBN = vecpBNRoots[ i ] = new CBayesNetSmile( );
-		vecsData[ i ].m_pData = &Data;
-		vecsData[ i ].m_pGenes = vecpGenes[ i ];
-		vecsData[ i ].m_pAnswers = &Answers;
-		vecsData[ i ].m_pBNDefault = sArgs.default_arg ? &BNDefault : NULL;
-		vecsData[ i ].m_szName = sArgs.inputs[ i ];
-		vecsData[ i ].m_pvecstrNames = &vecstrDummy;
-		vecsData[ i ].m_pveciZeros = &veciZeros;
-		vecsData[ i ].m_fZero = false;
-		if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
-			cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
-			return 1; } }
-	for( i = 0; i < vecpthdThreads.size( ); ++i )
-		pthread_join( vecpthdThreads[ i ], NULL );
+	for( iTerm = 0; iTerm < vecpBNRoots.size( ); iTerm += iThread ) {
+		for( iThread = 0; ( ( sArgs.threads_arg == -1 ) || ( iThread < (size_t)sArgs.threads_arg ) ) &&
+			( ( iTerm + iThread ) < vecpBNRoots.size( ) ); ++iThread ) {
+			i = iTerm + iThread;
+			vecsData[ i ].m_pBN = vecpBNRoots[ i ] = new CBayesNetSmile( );
+			vecsData[ i ].m_pData = &Data;
+			vecsData[ i ].m_pGenes = vecpGenes[ i ];
+			vecsData[ i ].m_pAnswers = &Answers;
+			vecsData[ i ].m_pBNDefault = sArgs.default_arg ? &BNDefault : NULL;
+			vecsData[ i ].m_szName = sArgs.inputs[ i ];
+			vecsData[ i ].m_pvecstrNames = &vecstrDummy;
+			vecsData[ i ].m_pveciZeros = &veciZeros;
+			vecsData[ i ].m_fZero = false;
+			if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
+				cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
+				return 1; } }
+		for( i = 0; i < iThread; ++i )
+			pthread_join( vecpthdThreads[ iTerm + i ], NULL ); }
 
 #ifdef _MSC_VER
 	HANDLE			hSearch;
@@ -147,23 +150,25 @@ int main( int iArgs, char** aszArgs ) {
 				iterZero->second; }
 		pvecpBNData = new vector<CBayesNetSmile*>( );
 		pvecpBNData->resize( vecpGenes.size( ) );
-		for( i = 0; i < pvecpBNData->size( ); ++i ) {
-			vecsData[ i ].m_pBN = (*pvecpBNData)[ i ] = new CBayesNetSmile( );
-			vecsData[ i ].m_pData = &Data;
-			vecsData[ i ].m_pGenes = vecpGenes[ i ];
-			vecsData[ i ].m_pAnswers = &Answers;
-			vecsData[ i ].m_pBNDefault = sArgs.default_arg ? &BNDefault : NULL;
-			vecsData[ i ].m_szName = sArgs.inputs[ i ];
-			vecsData[ i ].m_pvecstrNames = &vecstrNames;
-			vecsData[ i ].m_pveciZeros = &veciZeros;
-			vecsData[ i ].m_fZero = !!sArgs.zero_flag;
-			if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
-				cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
-				return 1; } }
-
-		vecpvecpBNData.push_back( pvecpBNData );
-		for( i = 0; i < vecpthdThreads.size( ); ++i )
-			pthread_join( vecpthdThreads[ i ], NULL ); }
+		for( iTerm = 0; iTerm < vecpBNRoots.size( ); iTerm += iThread ) {
+			for( iThread = 0; ( ( sArgs.threads_arg == -1 ) || ( iThread < (size_t)sArgs.threads_arg ) ) &&
+				( ( iTerm + iThread ) < vecpBNRoots.size( ) ); ++iThread ) {
+				i = iTerm + iThread;
+				vecsData[ i ].m_pBN = (*pvecpBNData)[ i ] = new CBayesNetSmile( );
+				vecsData[ i ].m_pData = &Data;
+				vecsData[ i ].m_pGenes = vecpGenes[ i ];
+				vecsData[ i ].m_pAnswers = &Answers;
+				vecsData[ i ].m_pBNDefault = sArgs.default_arg ? &BNDefault : NULL;
+				vecsData[ i ].m_szName = sArgs.inputs[ i ];
+				vecsData[ i ].m_pvecstrNames = &vecstrNames;
+				vecsData[ i ].m_pveciZeros = &veciZeros;
+				vecsData[ i ].m_fZero = !!sArgs.zero_flag;
+				if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
+					cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
+					return 1; } }
+			for( i = 0; i < iThread; ++i )
+				pthread_join( vecpthdThreads[ iTerm + i ], NULL ); }
+		vecpvecpBNData.push_back( pvecpBNData ); }
 
 #ifdef _MSC_VER
 	FindClose( hSearch );

@@ -15,3 +15,4 @@ option	"group"		u	"Group identical inputs"	flag	on
 option	"default"	b	"Bayes net containing defaults for cases with missing data"	string	typestr="filename"
 option	"memmap"	m	"Memory map answer file"	flag	off
 option	"xdsl"		x	"Generate XDSL output rather than DSL"	flag	on
+option	"threads"	t	"Maximum number of threads to spawn"	int	default="-1"
