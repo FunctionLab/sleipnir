@@ -13,7 +13,6 @@ int main( int iArgs, char** aszArgs ) {
 	CGenome					Genome;
 	CGenes					GenesIn( Genome ), GenesEx( Genome ), GenesOv( Genome );
 	ifstream				ifsm;
-	ofstream				ofsm;
 	vector<vector<float> >	vecvecdResults;
 	float					d;
 	size_t					i, j, k;
@@ -94,9 +93,7 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 					Dat.Set( i, j, 1 - d );
-		ofsm.open( sArgs.output_arg, ios_base::binary );
-		Dat.Save( ofsm, true );
-		ofsm.close( ); }
+		Dat.Save( sArgs.output_arg ); }
 	else {
 		cerr << "Storing..." << endl;
 		for( k = i = 0; i < pData->GetGenes( ); ++i )

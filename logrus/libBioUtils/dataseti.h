@@ -18,6 +18,7 @@ class IBayesNet;
 class IDataset;
 
 class CDataImpl {
+	friend class CDataFilter;
 	friend class CDataMask;
 protected:
 	static const char	c_cSeparator	= '/';
@@ -61,10 +62,37 @@ protected:
 	void**	m_apData;
 };
 
-class CDataMaskImpl {
+class CDataOverlayImpl {
 protected:
+	CDataOverlayImpl( ) : m_pDataset(NULL) { }
+
+	const std::vector<std::string>& GetGeneNames( ) const;
+	size_t GetExperiments( ) const;
+	size_t GetGene( const std::string& ) const;
+	size_t GetBins( size_t ) const;
+	size_t GetGenes( ) const;
+	bool IsHidden( size_t ) const;
+	size_t GetDiscrete( size_t, size_t, size_t ) const;
+	float GetContinuous( size_t, size_t, size_t ) const;
+	const std::string& GetGene( size_t ) const;
+
 	const IDataset*	m_pDataset;
+};
+
+class CDataMaskImpl : protected CDataOverlayImpl {
+protected:
 	CBinaryMatrix	m_Mask;
+};
+
+class CDataFilterImpl : protected CDataOverlayImpl {
+protected:
+	CDataFilterImpl( ) : m_pGenes(NULL), m_pAnswers(NULL) { }
+
+	const CGenes*		m_pGenes;
+	CDat::EFilter		m_eFilter;
+	std::vector<bool>	m_vecfGenes;
+	const CDat*			m_pAnswers;
+	std::vector<size_t>	m_veciAnswers;
 };
 
 class CDataSubsetImpl : protected CDataImpl {

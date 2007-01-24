@@ -132,7 +132,7 @@ static void Evaluate( const IDataset* pData, const IBayesNet* pNet, bool fZero, 
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 					Dat.Set( i, j, 1 - d );
-	Dat.Save( ostm, true ); }
+	Dat.Save( ostm ); }
 
 static void DebugDataset( const IDataset* pData ) {
 	size_t	i, j;

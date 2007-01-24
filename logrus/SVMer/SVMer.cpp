@@ -123,10 +123,8 @@ int main( int iArgs, char** aszArgs ) {
 				else
 					SVM.Evaluate( &Data, Dat ); } }
 		Dat.Normalize( );
-		if( sArgs.output_arg ) {
-			ofsm.open( sArgs.output_arg, ios_base::binary );
-			Dat.Save( ofsm, true );
-			ofsm.close( ); } }
+		if( sArgs.output_arg )
+			Dat.Save( sArgs.output_arg ); }
 	else
 		cmdline_parser_print_help( );
 

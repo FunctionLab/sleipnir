@@ -54,7 +54,7 @@ bool CDataPair::Open( const CSlim& Slim ) {
 	Reset( false );
 	return CDat::Open( Slim ); }
 
-bool CDataPair::Open( const char* szDatafile, bool fContinuous ) {
+bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap ) {
 	static const size_t	c_iBuf	= 8192;
 	char		szBuf[ c_iBuf ];
 	ifstream	ifsm;
@@ -62,7 +62,7 @@ bool CDataPair::Open( const char* szDatafile, bool fContinuous ) {
 	g_CatBioUtils.notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
 
 	Reset( fContinuous );
-	if( !CDat::Open( szDatafile ) )
+	if( !CDat::Open( szDatafile, fMemmap ) )
 		return false;
 	if( m_fContinuous )
 		return true;

@@ -9,7 +9,7 @@ class CSlim;
 
 class CDataPair : public CDataPairImpl {
 public:
-	bool Open( const char*, bool );
+	bool Open( const char*, bool, bool = false );
 	bool Open( const CSlim& );
 	void SetQuants( const float*, size_t );
 	void SetQuants( const std::vector<float>& );

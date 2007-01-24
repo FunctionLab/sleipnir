@@ -20,6 +20,24 @@ public:
 	CGene& GetGene( size_t iCluster, size_t iGene ) const {
 
 		return *m_vecvecpGenes[ iCluster ][ iGene ]; }
+
+	CGenome* GetGenome( const CGene& Gene ) const {
+		TMapGeneGenome::const_iterator	iterGenome;
+
+		return ( ( ( iterGenome = m_mapGenes.find( (CGene*)&Gene ) ) == m_mapGenes.end( ) ) ? NULL :
+			iterGenome->second ); }
+
+	size_t GetGenomes( ) const {
+
+		return m_vecpGenomes.size( ); }
+
+	CGenome* GetGenome( size_t iOrganism ) const {
+
+		return m_vecpGenomes[ iOrganism ]; }
+
+	const std::string& GetOrganism( size_t iOrganism ) const {
+
+		return m_vecstrOrganisms[ iOrganism ]; }
 };
 
 }

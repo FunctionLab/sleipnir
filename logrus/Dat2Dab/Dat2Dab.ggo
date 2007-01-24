@@ -2,8 +2,8 @@ package	"Dat2Dab"
 version	"1.0"
 purpose	"Text/binary data file interconversion"
 
-option	"input"		i	"Input dab file"	string	typestr="filename"
-option	"output"	o	"Output dab file"	string	typestr="filename"
+option	"input"		i	"Input data file"	string	typestr="filename"
+option	"output"	o	"Output data file"	string	typestr="filename"
 # option	"pcl"		p	"Input pcl file"	string	typestr="filename"
 section "Optional"
 option	"flip"		f	"Calculate one minus dat values"	flag	off

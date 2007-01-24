@@ -7,8 +7,15 @@
 
 namespace libBioUtils {
 
-const char	CDatImpl::c_szBin[]	= "dab";
-const char	CDatImpl::c_szPcl[]	= "pcl";
+static const struct {
+	const char*			m_szExtension;
+	const CDat::EFormat	m_eFormat;
+} c_asFormats[]	= {
+	{"dat",	CDat::EFormatText},
+	{"das",	CDat::EFormatSparse},
+	{"pcl",	CDat::EFormatPCL},
+	{NULL,	CDat::EFormatBinary}
+};
 
 size_t CDatImpl::MapGene( TMapStrI& mapGenes, TVecStr& vecGenes, const string& strToken ) {
 	TMapStrI::iterator	iterGenes;
@@ -238,9 +245,19 @@ void CDatImpl::OpenHelper( const CGenes* pOne, const CGenes* pTwo, float dValue 
 			if( CMeta::IsNaN( Get( iOne, iTwo ) ) )
 				Set( iOne, iTwo, dValue ); } } }
 
-bool CDat::Open( istream& istm, bool fBinary, bool fPCL, float dDefault ) {
+bool CDat::Open( istream& istm, EFormat eFormat, float dDefault ) {
 
-	return ( fPCL ? OpenPCL( istm ) : ( fBinary ? OpenBinary( istm ) : OpenText( istm, dDefault ) ) ); }
+	switch( eFormat ) {
+		case EFormatText:
+			return OpenText( istm, dDefault );
+
+		case EFormatPCL:
+			return OpenPCL( istm );
+
+		case EFormatSparse:
+			return OpenSparse( istm ); }
+
+	return OpenBinary( istm ); }
 
 bool CDatImpl::OpenPCL( istream& istm ) {
 	size_t	i, iOne, iTwo;
@@ -355,6 +372,26 @@ bool CDatImpl::OpenBinary( istream& istm ) {
 
 	return true; }
 
+bool CDatImpl::OpenSparse( istream& istm ) {
+	size_t		i;
+	uint32_t	j;
+	float		d;
+
+	if( !OpenGenes( istm, true, false ) )
+		return false;
+	m_Data.Initialize( GetGenes( ) );
+	for( i = 0; ( i + 1 ) < GetGenes( ); ++i ) {
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			Set( i, j, CMeta::GetNaN( ) );
+		while( true ) {
+			istm.read( (char*)&j, sizeof(j) );
+			if( j == -1 )
+				break;
+			istm.read( (char*)&d, sizeof(d) );
+			Set( i, j, d ); } }
+
+	return true; }
+
 bool CDat::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
 
 	return CDatImpl::OpenGenes( istm, fBinary, fPCL ); }
@@ -412,9 +449,37 @@ bool CDatImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
 
 	return true; }
 
-void CDat::Save( ostream& ostm, bool fBinary ) const {
+void CDat::Save( const char* szFile ) const {
+	size_t		i;
+	EFormat		eFormat;
+	ofstream	ofsm;
 
-	fBinary ? SaveBinary( ostm ) : SaveText( ostm ); }
+	if( !szFile ) {
+		Save( cout, EFormatText );
+		cout.flush( );
+		return; }
+
+	for( i = 0; c_asFormats[ i ].m_szExtension; ++i )
+		if( !strcmp( szFile + strlen( szFile ) - strlen( c_asFormats[ i ].m_szExtension ),
+			c_asFormats[ i ].m_szExtension ) )
+			break;
+	eFormat = c_asFormats[ i ].m_eFormat;
+	ofsm.open( szFile, ( ( eFormat == EFormatText ) || ( eFormat == EFormatPCL ) ) ? ios_base::out :
+		ios_base::binary );
+	Save( ofsm, eFormat ); }
+
+void CDat::Save( ostream& ostm, EFormat eFormat ) const {
+
+	switch( eFormat ) {
+		case EFormatText:
+			SaveText( ostm );
+			return;
+
+		case EFormatSparse:
+			SaveSparse( ostm );
+			return; }
+
+	SaveBinary( ostm ); }
 
 void CDatImpl::SaveText( ostream& ostm ) const {
 	size_t	i, j;
@@ -427,10 +492,37 @@ void CDatImpl::SaveText( ostream& ostm ) const {
 
 void CDatImpl::SaveBinary( ostream& ostm ) const {
 	size_t			i, j;
-	uint32_t		iSize;
 	const float*	pd;
-	string			strGene;
 	float			d;
+
+	SaveGenes( ostm );
+	if( m_pMeasure ) {
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+				d = Get( i, j );
+				ostm.write( (char*)&d, sizeof(d) ); } }
+	else
+		for( i = 0; ( i + 1 ) < GetGenes( ); ++i ) {
+			pd = m_Data.Get( i );
+			ostm.write( (char*)pd, sizeof(*pd) * ( GetGenes( ) - i - 1 ) ); } }
+
+void CDatImpl::SaveSparse( ostream& ostm ) const {
+	uint32_t	i, j;
+	float		d;
+
+	SaveGenes( ostm );
+	for( i = 0; i < GetGenes( ); ++i ) {
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+				ostm.write( (char*)&j, sizeof(j) );
+				ostm.write( (char*)&d, sizeof(d) ); }
+		j = -1;
+		ostm.write( (char*)&j, sizeof(j) ); } }
+
+void CDatImpl::SaveGenes( ostream& ostm ) const {
+	size_t		i, j;
+	uint32_t	iSize;
+	string		strGene;
 
 	iSize = GetGenes( );
 	ostm.write( (char*)&iSize, sizeof(iSize) );
@@ -440,16 +532,7 @@ void CDatImpl::SaveBinary( ostream& ostm ) const {
 			ostm.put( 0 );
 			ostm.put( strGene[ j ] ); }
 		ostm.put( 0 );
-		ostm.put( 0 ); }
-	if( m_pMeasure ) {
-		for( i = 0; i < iSize; ++i )
-			for( j = ( i + 1 ); j < iSize; ++j ) {
-				d = Get( i, j );
-				ostm.write( (char*)&d, sizeof(d) ); } }
-	else
-		for( i = 0; ( i + 1 ) < iSize; ++i ) {
-			pd = m_Data.Get( i );
-			ostm.write( (char*)pd, sizeof(*pd) * ( iSize - i - 1 ) ); } }
+		ostm.put( 0 ); } }
 
 bool CDat::Open( const vector<string>& vecstrGenes, bool fInitialize, const char* szFile ) {
 	size_t			i, j, iSize;
@@ -514,7 +597,8 @@ size_t CDatImpl::GetGene( const string& strGene ) const {
 
 bool CDat::Open( const char* szFile, bool fMemmap ) {
 	ifstream	ifsm;
-	bool		fBinary, fPCL;
+	EFormat		eFormat;
+	size_t		i;
 
 	if( fMemmap ) {
 		Reset( );
@@ -523,12 +607,16 @@ bool CDat::Open( const char* szFile, bool fMemmap ) {
 			return false; }
 		return OpenHelper( ); }
 
-	fBinary = !strcmp( szFile + strlen( szFile ) - strlen( c_szBin ), c_szBin );
-	fPCL = !strcmp( szFile + strlen( szFile ) - strlen( c_szBin ), c_szPcl );
-	ifsm.open( szFile, ( fBinary ? ios_base::binary : ios_base::in ) );
+	for( i = 0; c_asFormats[ i ].m_szExtension; ++i )
+		if( !strcmp( szFile + strlen( szFile ) - strlen( c_asFormats[ i ].m_szExtension ),
+			c_asFormats[ i ].m_szExtension ) )
+			break;
+	eFormat = c_asFormats[ i ].m_eFormat;
+	ifsm.open( szFile, ( ( eFormat == EFormatText ) || ( eFormat == EFormatPCL ) ) ? ios_base::in :
+		ios_base::binary );
 	if( !ifsm.is_open( ) )
 		return false;
-	return Open( ifsm, fBinary, fPCL ); }
+	return Open( ifsm, eFormat ); }
 
 bool CDatImpl::OpenHelper( ) {
 	unsigned char*	pb;

@@ -5,7 +5,6 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	CPCL				PCL;
 	CDat				Dat;
-	ofstream			ofsm;
 	int					iRet;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -21,13 +20,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.flip_flag )
 		Dat.Invert( );
 
-	if( sArgs.output_arg ) {
-		ofsm.open( sArgs.output_arg, ios_base::binary );
-		Dat.Save( ofsm, true );
-		ofsm.close( ); }
-	else {
-		Dat.Save( cout, false );
-		cout.flush( ); }
+	Dat.Save( sArgs.output_arg );
 
 	CMeta::Shutdown( );
 	return 0; }

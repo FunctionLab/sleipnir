@@ -55,7 +55,7 @@ public:
 	bool Open( std::istream& );
 	bool Open( const CGenes&, const CGenes&, const CDataPair&, const std::vector<std::string>&, size_t,
 		const IMeasure*, const std::vector<float>&, const IBayesNet* );
-	bool Open( const CDataPair&, const std::vector<std::string>&, bool = false );
+	bool Open( const CDataPair&, const std::vector<std::string>&, bool = false, bool = false );
 	void Save( std::ostream&, bool ) const;
 	bool FilterGenes( const char*, CDat::EFilter );
 	void FilterAnswers( );
@@ -98,18 +98,97 @@ public:
 	void AttachRandom( const IDataset*, float );
 	void AttachComplement( const CDataMask& );
 
-	bool IsHidden( size_t ) const;
-	size_t GetDiscrete( size_t, size_t, size_t ) const;
-	float GetContinuous( size_t, size_t, size_t ) const;
-	const std::string& GetGene( size_t ) const;
-	size_t GetGenes( ) const;
 	bool IsExample( size_t, size_t ) const;
-	const std::vector<std::string>& GetGeneNames( ) const;
-	size_t GetExperiments( ) const;
-	size_t GetGene( const std::string& ) const;
-	size_t GetBins( size_t ) const;
 	void Remove( size_t, size_t );
-	void FilterGenes( const CGenes&, CDat::EFilter );
+
+	const std::vector<std::string>& GetGeneNames( ) const {
+
+		return CDataOverlayImpl::GetGeneNames( ); }
+
+	size_t GetExperiments( ) const {
+
+		return CDataOverlayImpl::GetExperiments( ); }
+
+	size_t GetGene( const std::string& strGene ) const {
+
+		return CDataOverlayImpl::GetGene( strGene ); }
+
+	size_t GetBins( size_t iExp ) const {
+
+		return CDataOverlayImpl::GetBins( iExp ); }
+
+	size_t GetGenes( ) const {
+
+		return CDataOverlayImpl::GetGenes( ); }
+
+	bool IsHidden( size_t iExp ) const {
+
+		return CDataOverlayImpl::IsHidden( iExp ); }
+
+	size_t GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
+
+		return CDataOverlayImpl::GetDiscrete( iX, iY, iNode ); }
+
+	float GetContinuous( size_t iX, size_t iY, size_t iNode ) const {
+
+		return CDataOverlayImpl::GetContinuous( iX, iY, iNode ); }
+
+	const std::string& GetGene( size_t iGene ) const {
+
+		return CDataOverlayImpl::GetGene( iGene ); }
+
+	void FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
+
+		CDataImpl::FilterGenes( this, Genes, eFilt ); }
+};
+
+class CDataFilter : CDataFilterImpl, public IDataset {
+public:
+	void Attach( const IDataset*, const CGenes&, CDat::EFilter, const CDat* = NULL );
+
+	bool IsExample( size_t, size_t ) const;
+	void Remove( size_t, size_t );
+
+	const std::vector<std::string>& GetGeneNames( ) const {
+
+		return CDataOverlayImpl::GetGeneNames( ); }
+
+	size_t GetExperiments( ) const {
+
+		return CDataOverlayImpl::GetExperiments( ); }
+
+	size_t GetGene( const std::string& strGene ) const {
+
+		return CDataOverlayImpl::GetGene( strGene ); }
+
+	size_t GetBins( size_t iExp ) const {
+
+		return CDataOverlayImpl::GetBins( iExp ); }
+
+	size_t GetGenes( ) const {
+
+		return CDataOverlayImpl::GetGenes( ); }
+
+	bool IsHidden( size_t iExp ) const {
+
+		return CDataOverlayImpl::IsHidden( iExp ); }
+
+	size_t GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
+
+		return ( IsExample( iX, iY ) ? CDataOverlayImpl::GetDiscrete( iX, iY, iNode ) : -1 ); }
+
+	float GetContinuous( size_t iX, size_t iY, size_t iNode ) const {
+
+		return ( IsExample( iX, iY ) ? CDataOverlayImpl::GetContinuous( iX, iY, iNode ) :
+			CMeta::GetNaN( ) ); }
+
+	const std::string& GetGene( size_t iGene ) const {
+
+		return CDataOverlayImpl::GetGene( iGene ); }
+
+	void FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
+
+		CDataImpl::FilterGenes( this, Genes, eFilt ); }
 };
 
 class CDataSubset : CDataSubsetImpl, public IDataset {

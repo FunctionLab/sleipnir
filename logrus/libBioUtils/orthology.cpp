@@ -10,21 +10,23 @@ COrthologyImpl::~COrthologyImpl( ) {
 	Reset( ); }
 
 void COrthologyImpl::Reset( ) {
-	TMapStrGenome::iterator	iterGenome;
+	size_t	i;
 
-	for( iterGenome = m_mapGenomes.begin( ); iterGenome != m_mapGenomes.end( ); ++iterGenome )
-		delete iterGenome->second;
-	m_mapGenomes.clear( );
+	for( i = 0; i < m_vecpGenomes.size( ); ++i )
+		delete m_vecpGenomes[ i ];
+	m_vecpGenomes.clear( );
+	m_vecstrOrganisms.clear( );
+	m_mapGenes.clear( );
 	m_mapOrthology.clear( );
 	m_vecvecpGenes.clear( ); }
 
 bool COrthology::Open( istream& istm ) {
-	TMapStrGenome::iterator	iterGenome;
-	vector<string>			vecstrLine;
-	char*					acBuf;
-	size_t					i, j;
-	string					strOrganism, strGene;
-	CGenome*				pGenome;
+	vector<string>	vecstrLine;
+	char*			acBuf;
+	size_t			i, j;
+	string			strOrganism, strGene;
+	CGenome*		pGenome;
+	CGene*			pGene;
 
 	Reset( );
 	acBuf = new char[ c_iBufferSize ];
@@ -48,11 +50,15 @@ bool COrthology::Open( istream& istm ) {
 					continue; }
 				strOrganism = vecstrLine[ i ].substr( 0, j );
 				strGene = vecstrLine[ i ].substr( j + 1 );
-				if( ( iterGenome = m_mapGenomes.find( strOrganism ) ) == m_mapGenomes.end( ) )
-					m_mapGenomes[ strOrganism ] = pGenome = new CGenome( );
+				for( j = 0; j < m_vecstrOrganisms.size( ); ++j )
+					if( strOrganism == m_vecstrOrganisms[ j ] )
+						break;
+				if( j < m_vecpGenomes.size( ) )
+					pGenome = m_vecpGenomes[ j ];
 				else
-					pGenome = iterGenome->second;
-				vecpGenes.push_back( &pGenome->AddGene( strGene ) ); }
+					m_vecpGenomes.push_back( pGenome = new CGenome( ) );
+				vecpGenes.push_back( pGene = &pGenome->AddGene( strGene ) );
+				m_mapGenes[ pGene ] = pGenome; }
 		} }
 	delete[] acBuf;
 

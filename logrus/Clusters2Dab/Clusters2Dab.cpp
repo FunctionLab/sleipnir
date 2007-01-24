@@ -15,7 +15,6 @@ int open_fuzzy( istream&, size_t, CDat& );
 
 int main( int iArgs, char** aszArgs ) {
 	CDat						Dat;
-	ofstream					ofsm;
 	ifstream					ifsm;
 	istream*					pistm;
 	gengetopt_args_info			sArgs;
@@ -90,12 +89,7 @@ int main( int iArgs, char** aszArgs ) {
 						if( CMeta::IsNaN( Dat.Get( iOne, iTwo ) ) )
 							Dat.Set( iOne, iTwo, 0 ); } } } } }
 
-	if( sArgs.output_arg ) {
-		ofsm.open( sArgs.output_arg, ios_base::binary );
-		Dat.Save( ofsm, true );
-		ofsm.close( ); }
-	else
-		Dat.Save( cout, false );
+	Dat.Save( sArgs.output_arg );
 
 	for( i = 0; i < vecpClusters.size( ); ++i )
 		delete vecpClusters[ i ];

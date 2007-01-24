@@ -3,7 +3,6 @@
 
 int main( int iArgs, char** aszArgs ) {
 	size_t						i, j;
-	ofstream					ofsm;
 	ifstream					ifsm;
 	istream*					pistm;
 	CDat						Dat;
@@ -60,13 +59,7 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.Open( pPCL->GetGeneNames( ) );
 		CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diamineter_arg, (float)sArgs.diameter_arg,
 			(float)sArgs.delta_arg, sArgs.size_arg, !!sArgs.autocorrelate_flag, Dat.Get( ) );
-		if( sArgs.output_arg ) {
-			ofsm.open( sArgs.output_arg, ios_base::binary );
-			Dat.Save( ofsm, true );
-			ofsm.close( ); }
-		else {
-			Dat.Save( cout, false );
-			cout.flush( ); } }
+		Dat.Save( sArgs.output_arg ); }
 	else {
 		sClusters = CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diameter_arg, sArgs.size_arg,
 			!!sArgs.autocorrelate_flag, vecsClusters );
@@ -80,9 +73,7 @@ int main( int iArgs, char** aszArgs ) {
 					if( ( vecsClusters[ j ] + 1 ) == sClusters )
 						continue;
 					Dat.Set( i, j, ( vecsClusters[ i ] == vecsClusters[ j ] ) ? 1.0f : 0.0f ); } }
-			ofsm.open( sArgs.output_arg, ios_base::binary );
-			Dat.Save( ofsm, true );
-			ofsm.close( ); }
+			Dat.Save( sArgs.output_arg ); }
 		else
 			for( i = 0; i < vecsClusters.size( ); ++i )
 				cout << pPCL->GetGene( i ) << '\t' << vecsClusters[ i ] << endl; }

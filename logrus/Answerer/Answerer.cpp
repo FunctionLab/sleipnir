@@ -71,13 +71,7 @@ int main( int iArgs, char** aszArgs ) {
 		for( iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( ); ++iterGenes )
 			ostm << *iterGenes << endl; }
 
-	if( sArgs.output_arg ) {
-		ofstream	ofsm;
-
-		ofsm.open( sArgs.output_arg );
-		Dat.Save( ofsm, true ); }
-	else
-		Dat.Save( cout, false );
+	Dat.Save( sArgs.output_arg );
 
 	for( i = 0; i < vecpPositives.size( ); ++i )
 		delete vecpPositives[ i ];

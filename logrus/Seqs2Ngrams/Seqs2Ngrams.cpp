@@ -28,7 +28,6 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info		sArgs;
 	char					acLine[ c_iBuffer ];
 	ifstream				ifsm;
-	ofstream				ofsm;
 	CDat					Dat;
 	size_t					i, j, k, m, iGene, iNgrams, iNgram, iPlaces;
 	vector<vector<string> >	vecvecstrSeqs;
@@ -129,13 +128,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
 		Dat.Normalize( !!sArgs.normalize_flag );
 
-	if( sArgs.output_arg )
-		ofsm.open( sArgs.output_arg, ios_base::binary );
-	Dat.Save( sArgs.output_arg ? (ostream&)ofsm : cout, !!sArgs.output_arg );
-	if( sArgs.output_arg )
-		ofsm.close( );
-	else
-		cout.flush( );
+	Dat.Save( sArgs.output_arg );
 
 	CMeta::Shutdown( );
 	return 0; }

@@ -20,7 +20,7 @@ int main( int iArgs, char** aszArgs ) {
 	CMeasureKendallsTau			KendallsTau;
 	CMeasureKolmogorovSmirnov	KolmSmir;
 	CMeasureSpearman			Spearman;
-	CMeasureNegate				EuclideanNeg( &Euclidean );
+	CMeasureNegate				EuclideanNeg( &Euclidean, false );
 	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanNeg, &KendallsTau,
 		&KolmSmir, &Spearman, NULL };
 
@@ -32,8 +32,6 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg ) {
 		if( Dat.Open( sArgs.input_arg ) ) {
 			cerr << "Opened dat: " << sArgs.input_arg << endl;
-//ifstream asdf( "Data/test.pcl" );
-//if( !PCL.Open( asdf, sArgs.skip_arg ) ) {
 			if( !PCL.Open( cin, sArgs.skip_arg ) ) {
 				cerr << "Could not open PCL" << endl;
 				return 1; } }

@@ -500,6 +500,91 @@ void CDataset::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
 
 	CDataImpl::FilterGenes( this, Genes, eFilt ); }
 
+// CDataOverlayImpl
+
+const vector<string>& CDataOverlayImpl::GetGeneNames( ) const {
+
+	return m_pDataset->GetGeneNames( ); }
+
+size_t CDataOverlayImpl::GetExperiments( ) const {
+
+	return m_pDataset->GetExperiments( ); }
+
+size_t CDataOverlayImpl::GetGene( const string& strGene ) const {
+
+	return m_pDataset->GetGene( strGene ); }
+
+size_t CDataOverlayImpl::GetBins( size_t iExp ) const {
+
+	return m_pDataset->GetBins( iExp ); }
+
+size_t CDataOverlayImpl::GetGenes( ) const {
+
+	return m_pDataset->GetGenes( ); }
+
+bool CDataOverlayImpl::IsHidden( size_t iNode ) const {
+
+	return m_pDataset->IsHidden( iNode ); }
+
+size_t CDataOverlayImpl::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
+
+	return m_pDataset->GetDiscrete( iX, iY, iNode ); }
+
+float CDataOverlayImpl::GetContinuous( size_t iX, size_t iY, size_t iNode ) const {
+
+	return m_pDataset->GetContinuous( iX, iY, iNode ); }
+
+const string& CDataOverlayImpl::GetGene( size_t iGene ) const {
+
+	return m_pDataset->GetGene( iGene ); }
+
+// CDataFilter
+
+void CDataFilter::Attach( const IDataset* pDataset, const CGenes& Genes, CDat::EFilter eFilter,
+	const CDat* pAnswers ) {
+	size_t	i;
+
+	m_pDataset = pDataset;
+	m_pGenes = &Genes;
+	m_eFilter = eFilter;
+	m_pAnswers = pAnswers;
+
+	m_vecfGenes.resize( GetGenes( ) );
+	for( i = 0; i < m_vecfGenes.size( ); ++i )
+		m_vecfGenes[ i ] = m_pGenes->IsGene( GetGene( i ) );
+	m_veciAnswers.resize( GetGenes( ) );
+	for( i = 0; i < m_veciAnswers.size( ); ++i )
+		m_veciAnswers[ i ] = m_pAnswers->GetGene( GetGene( i ) ); }
+
+void CDataFilter::Remove( size_t iX, size_t iY ) {
+
+	throw 0; }
+
+bool CDataFilter::IsExample( size_t iX, size_t iY ) const {
+
+	if( !( m_pGenes && m_pGenes->GetGenes( ) ) )
+		return true;
+
+	switch( m_eFilter ) {
+		case CDat::EFilterInclude:
+			if( !( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) )
+				return false;
+
+		case CDat::EFilterExclude:
+			if( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] )
+				return false;
+
+		case CDat::EFilterTerm:
+			if( ( ( m_veciAnswers[ iX ] == -1 ) || ( m_veciAnswers[ iY ] == -1 ) ) ||
+				( !( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) &&
+				( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) || ( m_pAnswers->Get( m_veciAnswers[ iX ],
+				m_veciAnswers[ iY ] ) > 0 ) ) ) )
+				return false; }
+
+	return m_pDataset->IsExample( iX, iY ); }
+
+// CDataMask
+
 void CDataMask::AttachRandom( const IDataset* pDataset, float dFrac ) {
 	size_t	i, j;
 
@@ -525,53 +610,15 @@ void CDataMask::Attach( const IDataset* pDataset ) {
 		for( j = ( i + 1 ); j < m_Mask.GetSize( ); ++j )
 			m_Mask.Set( i, j, m_pDataset->IsExample( i, j ) ); }
 
-size_t CDataMask::GetGenes( ) const {
-
-	return m_pDataset->GetGenes( ); }
-
-bool CDataMask::IsHidden( size_t iNode ) const {
-
-	return m_pDataset->IsHidden( iNode ); }
-
-size_t CDataMask::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
-
-	return m_pDataset->GetDiscrete( iX, iY, iNode ); }
-
-float CDataMask::GetContinuous( size_t iX, size_t iY, size_t iNode ) const {
-
-	return m_pDataset->GetContinuous( iX, iY, iNode ); }
-
-const string& CDataMask::GetGene( size_t iGene ) const {
-
-	return m_pDataset->GetGene( iGene ); }
-
 bool CDataMask::IsExample( size_t iX, size_t iY ) const {
 
 	return m_Mask.Get( iX, iY ); }
-
-const vector<string>& CDataMask::GetGeneNames( ) const {
-
-	return m_pDataset->GetGeneNames( ); }
-
-size_t CDataMask::GetExperiments( ) const {
-
-	return m_pDataset->GetExperiments( ); }
-
-size_t CDataMask::GetGene( const string& strGene ) const {
-
-	return m_pDataset->GetGene( strGene ); }
-
-size_t CDataMask::GetBins( size_t iExp ) const {
-
-	return m_pDataset->GetBins( iExp ); }
 
 void CDataMask::Remove( size_t iX, size_t iY ) {
 
 	m_Mask.Set( iX, iY, false ); }
 
-void CDataMask::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
-
-	CDataImpl::FilterGenes( this, Genes, eFilt ); }
+// CDataSubset
 
 bool CDataSubset::Initialize( const char* szDataDir, const IBayesNet* pBayesNet,
 	size_t iSize ) {

@@ -115,9 +115,7 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open: " << sArgs.input_arg << endl;
 			return 1; }
 
-		ofsm.open( sArgs.output_arg, ios_base::binary );
-		Dat.Save( ofsm, true );
-		ofsm.close( ); }
+		Dat.Save( sArgs.output_arg ); }
 
 	if( sArgs.test_arg ) {
 		for( i = 0; i < Slim.GetSlims( ); ++i )

@@ -98,7 +98,8 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 
 	return true; }
 
-bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecstrData, bool fEverything ) {
+bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecstrData, bool fEverything,
+	bool fMemmap ) {
 	size_t	i, j, k;
 
 	if( Answers.IsContinuous( ) )
@@ -142,7 +143,7 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecs
 	for( i = 0; i < vecstrData.size( ); ++i ) {
 		CDataPair	Datum;
 
-		if( !( Datum.Open( vecstrData[ i ].c_str( ), false ) &&
+		if( !( Datum.Open( vecstrData[ i ].c_str( ), false, fMemmap ) &&
 			CDatasetCompactImpl::Open( Datum, i + 1 ) ) )
 			return false; }
 

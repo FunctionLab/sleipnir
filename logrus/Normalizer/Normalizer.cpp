@@ -53,9 +53,7 @@ int main( int iArgs, char** aszArgs ) {
 					if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 						Dat.Set( i, j, 1 - d );
 
-		ofsm.open( sArgs.output_arg ? sArgs.output_arg : sArgs.input_arg, ios_base::binary );
-		Dat.Save( ofsm, true );
-		ofsm.close( ); }
+		Dat.Save( sArgs.output_arg ? sArgs.output_arg : sArgs.input_arg ); }
 
 	CMeta::Shutdown( );
 	return 0; }

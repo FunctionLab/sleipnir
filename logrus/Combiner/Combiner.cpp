@@ -90,7 +90,6 @@ static int MainDATs( const gengetopt_args_info& sArgs ) {
 	size_t			i, j, k, iN, iSubset, iSubsets;
 	float			d, dMax;
 	vector<string>	vecstrFiles;
-	ofstream		ofsm;
 
 	if( !sArgs.inputs_num )
 		return 1;
@@ -162,13 +161,7 @@ static int MainDATs( const gengetopt_args_info& sArgs ) {
 					dMax = ( iPos == iNeg ) ? CMeta::GetNaN( ) : ( ( iPos > iNeg ) ? 1 : 0 ); }
 				Dat.Set( i, j, dMax ); } } }
 
-	if( sArgs.output_arg ) {
-		ofsm.open( sArgs.output_arg, ios_base::binary );
-		Dat.Save( ofsm, true );
-		ofsm.close( ); }
-	else {
-		Dat.Save( cout, false );
-		cout.flush( ); }
+	Dat.Save( sArgs.output_arg );
 
 	return 0; }
 
@@ -177,7 +170,6 @@ int MainDATs2( const gengetopt_args_info& sArgs ) {
 	CDat			Dat;
 	size_t			i, j, k;
 	vector<string>	vecstrFiles;
-	ofstream		ofsm;
 
 	if( !sArgs.inputs_num )
 		return 1;
@@ -199,13 +191,7 @@ int MainDATs2( const gengetopt_args_info& sArgs ) {
 					Dat.Set( i, j, 1 );
 					break; }
 
-	if( sArgs.output_arg ) {
-		ofsm.open( sArgs.output_arg );
-		Dat.Save( ofsm, true );
-		ofsm.close( ); }
-	else {
-		Dat.Save( cout, false );
-		cout.flush( ); }
+	Dat.Save( sArgs.output_arg );
 
 	return 0; }
 

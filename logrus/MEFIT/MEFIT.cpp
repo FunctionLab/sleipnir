@@ -13,7 +13,7 @@ int main( int iArgs, char** aszArgs ) {
 	CGenes						GenesIn( Genome ), GenesEx( Genome );
 	vector<CGenes*>				vecpPositives;
 	vector<float>				vecdQuants;
-	vector<string>				vecstrPositives, vecstrIDs;
+	vector<string>				vecstrPositives, vecstrIDs, vecstrNodes;
 	int							iRet;
 	ofstream					ofsmPosteriors;
 	CBayesNetSmile				BNGlobal;
@@ -23,7 +23,7 @@ int main( int iArgs, char** aszArgs ) {
 	CMeasureKendallsTau			KendallsTau;
 	CMeasureKolmogorovSmirnov	KolmSmir;
 	CMeasureSpearman			Spearman( true );
-	CMeasureNegate				EuclideanNeg( &Euclidean );
+	CMeasureNegate				EuclideanNeg( &Euclidean, false );
 	CMeasurePearNorm			PearNorm;
 	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanNeg, &KendallsTau,
 		&KolmSmir, &Spearman, &PearNorm, NULL };
@@ -115,8 +115,9 @@ int main( int iArgs, char** aszArgs ) {
 	if( !ofsmPosteriors.is_open( ) ) {
 		cerr << "Could not open: " << sArgs.trusts_arg << endl;
 		return 1; }
-	for( i = 1; i < BNGlobal.GetNodes( ).size( ); ++i )
-		ofsmPosteriors << '\t' << BNGlobal.GetNodes( )[ i ];
+	BNGlobal.GetNodes( vecstrNodes );
+	for( i = 1; i < vecstrNodes.size( ); ++i )
+		ofsmPosteriors << '\t' << vecstrNodes[ i ];
 	ofsmPosteriors << endl;
 
 	for( iFunction = 0; iFunction < vecpPositives.size( ); ++iFunction ) {
@@ -151,7 +152,7 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not save: " << strFile << endl;
 			return 1; }
 		DatOut.Invert( );
-		DatOut.Save( ofsm, false ); }
+		DatOut.Save( ofsm, CDat::EFormatText ); }
 
 	for( i = 0; i < vecpPositives.size( ); ++i )
 		delete vecpPositives[ i ];
@@ -205,7 +206,7 @@ int read_genes( const char* szPositives, const char* szNegatives, CGenome& Genom
 	cerr << "Reading unrelated gene pairs...";
 	ifsm.clear( );
 	ifsm.open( szNegatives );
-	if( !DatNegatives.Open( ifsm, false, false, 0 ) ) {
+	if( !DatNegatives.Open( ifsm, CDat::EFormatText, 0 ) ) {
 		cerr << "Could not open: " << szNegatives << endl;
 		return 1; }
 	ifsm.close( );

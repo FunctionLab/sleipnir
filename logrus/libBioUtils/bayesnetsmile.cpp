@@ -488,7 +488,8 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 			veciZeros[ i ] = atoi( Props.GetPropertyValue( iProp ) ); } }
 	for( iCount = i = 0; i < pData->GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
-			if( ( fZeroable || pData->IsExample( i, j ) ) && ( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
+			if( ( fZeroable || pData->IsExample( i, j ) ) &&
+				( ( iAnswer = pData->GetDiscrete( i, j, 0 ) ) != -1 ) ) {
 				vecveciCounts[ 0 ][ iAnswer ]++;
 				iCount++;
 				for( k = 1; k < pData->GetExperiments( ); ++k ) {
@@ -534,8 +535,8 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 					dLambda = 1 - ( (float)dCount / c_iMinimum );
 					for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
 						veciCoords[ 1 ] = (int)k;
-						(*pMat)[ veciCoords ] = ( ( 1 - dLambda ) * (*pMat)[ veciCoords ] / dCount ) +
-							( dLambda * (*pDefault)[ veciCoords ] ); } }
+						(*pMat)[ veciCoords ] = ( dCount ? ( ( 1 - dLambda ) * (*pMat)[ veciCoords ] /
+							dCount ) : 0 ) + ( dLambda * (*pDefault)[ veciCoords ] ); } }
 				else
 					for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
 						veciCoords[ 1 ] = (int)k;

@@ -4,7 +4,6 @@
 int main( int iArgs, char** aszArgs ) {
 	CDat				Dat;
 	size_t				i, j;
-	ofstream			ofsm;
 	gengetopt_args_info	sArgs;
 	float				dFrac;
 
@@ -31,9 +30,7 @@ int main( int iArgs, char** aszArgs ) {
 			if( ( (float)rand( ) / RAND_MAX ) < dFrac )
 				Dat.Set( i, j, 1 );
 
-	ofsm.open( sArgs.input_arg, ios_base::binary );
-	Dat.Save( ofsm, true );
-	ofsm.close( );
+	Dat.Save( sArgs.input_arg );
 
 	CMeta::Shutdown( );
 	return 0; }

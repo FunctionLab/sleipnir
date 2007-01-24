@@ -25,7 +25,7 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Dat.Open( sArgs.input_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.input_arg << endl;
 			return 1; } }
-	else if( !Dat.Open( cin, false ) ) {
+	else if( !Dat.Open( cin, CDat::EFormatText ) ) {
 		cerr << "Couldn't open input" << endl;
 		return 1; }
 

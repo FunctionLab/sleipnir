@@ -24,8 +24,6 @@ protected:
 	static const size_t	c_iGeneLimit	= 100000;
 	static const size_t	c_iApproximate	= 1000;
 	static const float	c_dNaN;
-	static const char	c_szBin[];
-	static const char	c_szPcl[];
 
 	static size_t MapGene( TMapStrI&, TVecStr&, const std::string& );
 	static void ResizeNaN( TAF&, size_t );
@@ -38,9 +36,12 @@ protected:
 	bool OpenPCL( std::istream& );
 	bool OpenText( std::istream&, float dDefault );
 	bool OpenBinary( std::istream& );
+	bool OpenSparse( std::istream& );
 	bool OpenGenes( std::istream&, bool, bool );
 	void SaveText( std::ostream& ) const;
 	void SaveBinary( std::ostream& ) const;
+	void SaveSparse( std::ostream& ) const;
+	void SaveGenes( std::ostream& ) const;
 	size_t GetGene( const std::string& ) const;
 	void SlimCache( const CSlim&, std::vector<std::vector<size_t> >& ) const;
 	void NormalizeMinmax( );

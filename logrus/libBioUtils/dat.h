@@ -20,8 +20,15 @@ public:
 		EFilterExclude	= EFilterTerm + 1
 	};
 
+	enum EFormat {
+		EFormatBinary	= 0,
+		EFormatText		= EFormatBinary + 1,
+		EFormatPCL		= EFormatText + 1,
+		EFormatSparse	= EFormatPCL + 1
+	};
+
 	bool Open( const char*, bool = false );
-	bool Open( std::istream&, bool, bool = false, float = HUGE_VAL );
+	bool Open( std::istream&, EFormat = EFormatBinary, float = HUGE_VAL );
 	bool Open( const CSlim& );
 	bool Open( const CSlim&, const CSlim& );
 	bool Open( const std::vector<std::string>&, bool = true, const char* = NULL );
@@ -31,7 +38,8 @@ public:
 	bool Open( const CPCL&, const IMeasure*, bool );
 
 	bool OpenGenes( std::istream&, bool, bool = false );
-	void Save( std::ostream&, bool ) const;
+	void Save( std::ostream&, EFormat = EFormatBinary ) const;
+	void Save( const char* ) const;
 	void SaveDOT( std::ostream&, float = HUGE_VAL, const CGenome* = NULL, bool = false ) const;
 	void SaveGDF( std::ostream&, float = HUGE_VAL ) const;
 	void SaveNET( std::ostream&, float = HUGE_VAL ) const;
