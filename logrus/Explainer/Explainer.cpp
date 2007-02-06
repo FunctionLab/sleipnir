@@ -41,13 +41,13 @@ int main( int iArgs, char** aszArgs ) {
 	bool				fOne, fTwo;
 	string				strOne, strTwo;
 
-	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
+	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) || ( sArgs.config_arg &&
+		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
 
-	if( !strcmp( c_szInclude, sArgs.unknowns_arg ) ||
-		!strcmp( c_szOnly, sArgs.unknowns_arg ) )
+	if( !strcmp( c_szInclude, sArgs.unknowns_arg ) || !strcmp( c_szOnly, sArgs.unknowns_arg ) )
 		sArgs.everything_flag = true;
 
 	if( !Answers.Open( sArgs.answers_arg, sArgs.memmap_flag && !sArgs.genes_arg && !sArgs.genet_arg && !sArgs.genex_arg ) ) {
@@ -145,7 +145,11 @@ int main( int iArgs, char** aszArgs ) {
 		cout << strOne << '\t' << strTwo << '\t' << Data.Get( Datum.m_iOne, Datum.m_iTwo ) << '\t';
 		dAnswer = ( ( ( j = veciGenes[ Datum.m_iOne ] ) == -1 ) || ( ( k = veciGenes[ Datum.m_iTwo ] ) == -1 ) ) ?
 			CMeta::GetNaN( ) : Answers.Get( j, k );
-		cout << dAnswer << endl;
+		if( CMeta::IsNaN( dAnswer ) )
+			cout << '-';
+		else
+			cout << dAnswer;
+		cout << endl;
 		if( pOne ) {
 			cout << '\t';
 			if( pOne->GetSynonyms( ) )

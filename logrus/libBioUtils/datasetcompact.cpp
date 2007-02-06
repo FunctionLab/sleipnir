@@ -102,7 +102,7 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecs
 	bool fMemmap ) {
 	size_t	i, j, k;
 
-	if( Answers.IsContinuous( ) )
+	if( Answers.GetGenes( ) && Answers.IsContinuous( ) )
 		return false;
 
 	m_veciMapping.resize( m_iData = 1 + vecstrData.size( ) );

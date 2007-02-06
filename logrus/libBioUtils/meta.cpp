@@ -138,7 +138,7 @@ bool CMeta::MapWrite( unsigned char*& pbData, HANDLE& hndlMap, size_t iData, con
 	if( !( hndlFile = CreateFile( szFile, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
 		FILE_ATTRIBUTE_NORMAL, NULL ) ) )
 		return false;
-	if( !( hndlMap = CreateFileMapping( hndlFile, NULL, PAGE_READWRITE, 0, (DWORD)iData, szFile ) ) ) {
+	if( !( hndlMap = CreateFileMapping( hndlFile, NULL, PAGE_READWRITE, 0, (DWORD)iData, NULL ) ) ) {
 		CloseHandle( hndlFile );
 		return false; }
 	CloseHandle( hndlFile );

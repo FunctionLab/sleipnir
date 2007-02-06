@@ -28,7 +28,6 @@ int main( int iArgs, char** aszArgs ) {
 	CBayesNetSmile						BNDefault;
 	vector<size_t>						veciZeros;
 	CGenome								Genome;
-	CGenes								GenesEx( Genome );
 	CDatasetCompact						Data;
 	vector<string>						vecstrDummy;
 	vector<CGenes*>						vecpGenes;

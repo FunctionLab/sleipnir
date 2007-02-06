@@ -21,3 +21,4 @@ option	"unknowns"	u	"Treatment of unknown genes"	values="exclude","include","onl
 option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"memmap"	m	"Memory map input files"	flag	off
 option	"fraction"	x	"Random fraction of results to calculate"	double	default="1"
+option	"config"	C	"Command line config file"	string	typestr="filename"	default="Explainer.ini"
