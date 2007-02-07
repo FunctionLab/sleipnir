@@ -84,6 +84,14 @@ public:
 	const std::vector<std::string>& GetGeneNames( ) const {
 
 		return ( m_pMeasure ? m_pPCL->GetGeneNames( ) : m_vecstrGenes ); }
+
+	void Set( size_t iX, const float* adValues ) {
+
+		m_Data.Set( iX, adValues ); }
+
+	const float* Get( size_t iX ) const {
+
+		return m_Data.Get( iX ); }
 };
 
 }

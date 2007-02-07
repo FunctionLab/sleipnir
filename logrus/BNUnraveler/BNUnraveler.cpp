@@ -5,12 +5,12 @@ static const char	c_acDab[]	= ".dab";
 
 struct SEvaluate {
 	CBayesNetSmile*			m_pBN;
-	const IDataset*			m_pData;
+	const CDataPair*		m_pDat;
 	const CGenes*			m_pGenes;
 	const CGenes*			m_pGenesIn;
 	CDat*					m_pYes;
 	CDat*					m_pNo;
-	bool					m_fAnswers;
+	const CDataPair*		m_pAnswers;
 	size_t					m_iZero;
 	bool					m_fZero;
 	size_t					m_iNode;
@@ -33,7 +33,7 @@ int main( int iArgs, char** aszArgs ) {
 	CGenes					GenesIn( Genome );
 	size_t					i, iNode, iThread, iTerm;
 	vector<CGenes*>			vecpGenes;
-	CDatasetCompact			Data;
+	CDatasetCompact			Dataset;
 	vector<pthread_t>		vecpthdThreads;
 	vector<string>			vecstrNodes, vecstrTmps;
 	string					strFile;
@@ -103,11 +103,11 @@ int main( int iArgs, char** aszArgs ) {
 		vecstrFiles.resize( vecstrNodes.size( ) - 1 );
 		for( i = 0; i < vecstrFiles.size( ); ++i )
 			vecstrFiles[ i ] = (string)sArgs.directory_arg + '/' + vecstrNodes[ i + 1 ] + c_acDab;
-		if( !Data.OpenGenes( vecstrFiles ) ) {
+		if( !Dataset.OpenGenes( vecstrFiles ) ) {
 			cerr << "Couldn't open: " << sArgs.directory_arg << endl;
 			return 1; }
-		for( i = 0; i < Data.GetGenes( ); ++i )
-			Genome.AddGene( Data.GetGene( i ) ); }
+		for( i = 0; i < Dataset.GetGenes( ); ++i )
+			Genome.AddGene( Dataset.GetGene( i ) ); }
 	if( sArgs.genes_arg ) {
 		ifstream	ifsm;
 
@@ -157,26 +157,25 @@ int main( int iArgs, char** aszArgs ) {
 
 	veciGenes.resize( vecpYes[ 0 ]->GetGenes( ) );
 	for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode ) {
-		vector<string>	vecstrNames;
+		CDataPair	Dat;
 
-		vecstrNames.push_back( strFile = ( (string)sArgs.directory_arg + '/' + vecstrNodes[ iNode ] +
-			c_acDab ) );
-		if( !Data.Open( Answers, vecstrNames, true, !!sArgs.memmap_flag ) ) {
+		if( !Dat.Open( ( strFile = ( (string)sArgs.directory_arg + '/' + vecstrNodes[ iNode ] +
+			c_acDab ) ).c_str( ), false, !!sArgs.memmap_flag ) ) {
 			cerr << "Couldn't open: " << strFile << endl;
 			return 1; }
 		for( i = 0; i < veciGenes.size( ); ++i )
-			veciGenes[ i ] = Data.GetGene( vecpYes[ 0 ]->GetGene( i ) );
+			veciGenes[ i ] = Dat.GetGene( vecpYes[ 0 ]->GetGene( i ) );
 		for( iTerm = 0; iTerm < vecpGenes.size( ); iTerm += iThread ) {
 			for( iThread = 0; ( ( sArgs.threads_arg == -1 ) || ( iThread < (size_t)sArgs.threads_arg ) ) &&
 				( ( iTerm + iThread ) < vecpGenes.size( ) ); ++iThread ) {
 				i = iTerm + iThread;
 				vecsData[ i ].m_pBN = vecpBNs[ i ];
-				vecsData[ i ].m_pData = &Data;
+				vecsData[ i ].m_pDat = &Dat;
 				vecsData[ i ].m_pGenes = vecpGenes[ i ];
 				vecsData[ i ].m_pGenesIn = GenesIn.GetGenes( ) ? &GenesIn : NULL;
 				vecsData[ i ].m_pYes = vecpYes[ i ];
 				vecsData[ i ].m_pNo = vecpNo[ i ];
-				vecsData[ i ].m_fAnswers = !!sArgs.answers_arg;
+				vecsData[ i ].m_pAnswers = Answers.GetGenes( ) ? &Answers : NULL;
 				vecsData[ i ].m_iZero = veciZeros[ iNode ];
 				vecsData[ i ].m_fZero = !!sArgs.zero_flag;
 				vecsData[ i ].m_iNode = iNode;
@@ -220,23 +219,28 @@ int main( int iArgs, char** aszArgs ) {
 void* initialize( void* pData ) {
 	SEvaluate*	psData;
 	CDataMatrix	MatCPT;
-	float		dNo, dYes;
-	size_t		i, j;
+	float		d;
+	size_t		i;
+	float*		adBuffer;
 
 	psData = (SEvaluate*)pData;
+	adBuffer = new float[ psData->m_pYes->GetGenes( ) ];
 	psData->m_pBN->GetCPT( 0, MatCPT );
-	dNo = log( MatCPT.Get( 0, 0 ) );
-	dYes = log( MatCPT.Get( 1, 0 ) );
-	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
-		if( !( i % 1000 ) )
-			cerr << "IY: " << psData->m_szName << ", " << i << endl;
-		for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j )
-			psData->m_pYes->Set( i, j, dYes ); }
+	d = log( MatCPT.Get( 0, 0 ) );
+	for( i = 0; i < psData->m_pNo->GetGenes( ); ++i )
+		adBuffer[ i ] = d;
 	for( i = 0; i < psData->m_pNo->GetGenes( ); ++i ) {
 		if( !( i % 1000 ) )
 			cerr << "IN: " << psData->m_szName << ", " << i << endl;
-		for( j = ( i + 1 ); j < psData->m_pNo->GetGenes( ); ++j )
-			psData->m_pNo->Set( i, j, dNo ); }
+		psData->m_pNo->Set( i, adBuffer ); }
+	d = log( MatCPT.Get( 1, 0 ) );
+	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i )
+		adBuffer[ i ] = d;
+	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
+		if( !( i % 1000 ) )
+			cerr << "IY: " << psData->m_szName << ", " << i << endl;
+		psData->m_pYes->Set( i, adBuffer ); }
+	delete[] adBuffer;
 
 	pthread_exit( NULL );
 	return NULL; }
@@ -247,8 +251,12 @@ void* evaluate( void* pData ) {
 	size_t			i, j, iOne, iTwo, iBin;
 	vector<bool>	vecfGenes, vecfGenesIn;
 	bool			fTermOne, fListOne;
+	float*			adYes; // OPT
+	float*			adNo; // OPT
 
 	psData = (SEvaluate*)pData;
+	adYes = new float[ psData->m_pYes->GetGenes( ) ]; // OPT
+	adNo = new float[ psData->m_pNo->GetGenes( ) ]; // OPT
 	if( !psData->m_fEverything ) {
 		vecfGenes.resize( psData->m_pYes->GetGenes( ) );
 		for( i = 0; i < vecfGenes.size( ); ++i )
@@ -265,35 +273,47 @@ void* evaluate( void* pData ) {
 			continue;
 		fTermOne = psData->m_fEverything || vecfGenes[ i ];
 		fListOne = !psData->m_pGenesIn || vecfGenesIn[ i ];
+		memcpy( adYes, psData->m_pYes->Get( i ), ( psData->m_pYes->GetGenes( ) - i - 1 ) * sizeof(*adYes) ); // OPT
+		memcpy( adNo, psData->m_pNo->Get( i ), ( psData->m_pNo->GetGenes( ) - i - 1 ) * sizeof(*adNo) ); // OPT
 		for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
 			if( ( ( iTwo = (*psData->m_pveciGenes)[ j ] ) == -1 ) || !( fTermOne || vecfGenes[ j ] ) ||
 				!( fListOne || vecfGenesIn[ j ] ) )
 				continue;
-			if( psData->m_fAnswers && ( psData->m_pData->GetDiscrete( iOne, iTwo, 0 ) == -1 ) )
+			if( psData->m_pAnswers && CMeta::IsNaN( psData->m_pAnswers->Get( i, j ) ) )
 				continue;
-			if( psData->m_pData->IsExample( iOne, iTwo ) )
-				iBin = psData->m_pData->GetDiscrete( iOne, iTwo, 1 );
+			iBin = psData->m_pDat->Quantify( psData->m_pDat->Get( iOne, iTwo ) );
 			if( ( iBin == -1 ) && ( ( iBin = psData->m_fZero ? 0 : psData->m_iZero ) == -1 ) )
 				continue;
-			psData->m_pNo->Get( i, j ) += log( MatCPT.Get( iBin, 0 ) );
-			psData->m_pYes->Get( i, j ) += log( MatCPT.Get( iBin, 1 ) ); } }
+			adNo[ j - i - 1 ] += log( MatCPT.Get( iBin, 0 ) ); // OPT
+			adYes[ j - i - 1 ] += log( MatCPT.Get( iBin, 1 ) ); } // OPT
+		psData->m_pNo->Set( i, adNo ); // OPT
+		psData->m_pYes->Set( i, adYes ); } // OPT
+// OPT			psData->m_pNo->Get( i, j ) += log( MatCPT.Get( iBin, 0 ) );
+// OPT			psData->m_pYes->Get( i, j ) += log( MatCPT.Get( iBin, 1 ) ); } }
+	delete[] adYes; // OPT
+	delete[] adNo; // OPT
 
 	pthread_exit( NULL );
 	return NULL; }
 
 void* finalize( void* pData ) {
 	SEvaluate*	psData;
-	float		dNo, dYes;
 	size_t		i, j;
+	float*		adYes;
+	float*		adNo;
 
 	psData = (SEvaluate*)pData;
+	adYes = new float[ psData->m_pYes->GetGenes( ) ];
+	adNo = new float[ psData->m_pNo->GetGenes( ) ];
 	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
 		if( !( i % 1000 ) )
 			cerr << "F: " << psData->m_szName << ", " << i << endl;
-		for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
-			dYes = exp( psData->m_pYes->Get( i, j ) );
-			dNo = exp( psData->m_pNo->Get( i, j ) );
-			psData->m_pYes->Set( i, j, dYes / ( dYes + dNo ) ); } }
+		memcpy( adYes, psData->m_pYes->Get( i ), ( psData->m_pYes->GetGenes( ) - i - 1 ) * sizeof(*adYes) );
+		memcpy( adNo, psData->m_pNo->Get( i ), ( psData->m_pNo->GetGenes( ) - i - 1 ) * sizeof(*adNo) );
+		for( j = 0; j < ( psData->m_pYes->GetGenes( ) - i - 1 ); ++j ) {
+			adYes[ j ] = exp( adYes[ j ] );
+			adYes[ j ] /= adYes[ j ] + exp( adNo[ j ] ); }
+		psData->m_pYes->Set( i, adYes ); }
 
 	pthread_exit( NULL );
 	return NULL; }
