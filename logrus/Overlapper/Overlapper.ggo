@@ -6,3 +6,4 @@ option	"first"		i	"First DAB file"	string	typestr="filename"	yes
 option	"second"	I	"Second DAB file"	string	typestr="filename"	yes
 section "Optional"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"memmap"	m	"Memory map input files"	flag	on

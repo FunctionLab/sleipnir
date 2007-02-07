@@ -16,6 +16,7 @@ struct SEvaluate {
 	size_t					m_iNode;
 	const vector<size_t>*	m_pveciGenes;
 	bool					m_fEverything;
+	const char*				m_szName;
 };
 
 void* initialize( void* );
@@ -87,9 +88,10 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	if( sArgs.genome_arg ) {
 		ifstream	ifsm;
+		CGenes		Genes( Genome );
 
 		ifsm.open( sArgs.genome_arg );
-		if( !Genome.Open( ifsm ) ) {
+		if( !Genes.Open( ifsm ) ) {
 			cerr << "Couldn't open: " << sArgs.genome_arg << endl;
 			return 1; } }
 	else if( sArgs.answers_arg )
@@ -146,6 +148,7 @@ int main( int iArgs, char** aszArgs ) {
 			vecsData[ i ].m_pGenes = vecpGenes[ i ];
 			vecsData[ i ].m_pYes = vecpYes[ i ];
 			vecsData[ i ].m_pNo = vecpNo[ i ];
+			vecsData[ i ].m_szName = sArgs.inputs[ i ];
 			if( pthread_create( &vecpthdThreads[ i ], NULL, initialize, &vecsData[ i ] ) ) {
 				cerr << "Couldn't create initialization thread: " << sArgs.inputs[ i ] << endl;
 				return 1; } }
@@ -179,6 +182,7 @@ int main( int iArgs, char** aszArgs ) {
 				vecsData[ i ].m_iNode = iNode;
 				vecsData[ i ].m_pveciGenes = &veciGenes;
 				vecsData[ i ].m_fEverything = !!sArgs.everything_flag;
+				vecsData[ i ].m_szName = sArgs.inputs[ i ];
 				if( pthread_create( &vecpthdThreads[ i ], NULL, evaluate, &vecsData[ i ] ) ) {
 					cerr << "Couldn't create evaluation thread: " << sArgs.inputs[ i ] << endl;
 					return 1; } }
@@ -191,6 +195,7 @@ int main( int iArgs, char** aszArgs ) {
 			i = iTerm + iThread;
 			vecsData[ i ].m_pYes = vecpYes[ i ];
 			vecsData[ i ].m_pNo = vecpNo[ i ];
+			vecsData[ i ].m_szName = sArgs.inputs[ i ];
 			if( pthread_create( &vecpthdThreads[ i ], NULL, finalize, &vecsData[ i ] ) ) {
 				cerr << "Couldn't create finalization thread: " << sArgs.inputs[ i ] << endl;
 				return 1; } }
@@ -222,10 +227,16 @@ void* initialize( void* pData ) {
 	psData->m_pBN->GetCPT( 0, MatCPT );
 	dNo = log( MatCPT.Get( 0, 0 ) );
 	dYes = log( MatCPT.Get( 1, 0 ) );
-	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
-			psData->m_pNo->Set( i, j, dNo );
+	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
+		if( !( i % 1000 ) )
+			cerr << "IY: " << psData->m_szName << ", " << i << endl;
+		for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j )
 			psData->m_pYes->Set( i, j, dYes ); }
+	for( i = 0; i < psData->m_pNo->GetGenes( ); ++i ) {
+		if( !( i % 1000 ) )
+			cerr << "IN: " << psData->m_szName << ", " << i << endl;
+		for( j = ( i + 1 ); j < psData->m_pNo->GetGenes( ); ++j )
+			psData->m_pNo->Set( i, j, dNo ); }
 
 	pthread_exit( NULL );
 	return NULL; }
@@ -248,6 +259,8 @@ void* evaluate( void* pData ) {
 			vecfGenesIn[ i ] = psData->m_pGenesIn->IsGene( psData->m_pYes->GetGene( i ) ); }
 	psData->m_pBN->GetCPT( psData->m_iNode, MatCPT );
 	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
+		if( !( i % 1000 ) )
+			cerr << "C: " << psData->m_szName << ", " << i << endl;
 		if( ( iOne = (*psData->m_pveciGenes)[ i ] ) == -1 )
 			continue;
 		fTermOne = psData->m_fEverything || vecfGenes[ i ];
@@ -274,11 +287,13 @@ void* finalize( void* pData ) {
 	size_t		i, j;
 
 	psData = (SEvaluate*)pData;
-	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i )
+	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
+		if( !( i % 1000 ) )
+			cerr << "F: " << psData->m_szName << ", " << i << endl;
 		for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
 			dYes = exp( psData->m_pYes->Get( i, j ) );
 			dNo = exp( psData->m_pNo->Get( i, j ) );
-			psData->m_pYes->Set( i, j, dYes / ( dYes + dNo ) ); }
+			psData->m_pYes->Set( i, j, dYes / ( dYes + dNo ) ); } }
 
 	pthread_exit( NULL );
 	return NULL; }

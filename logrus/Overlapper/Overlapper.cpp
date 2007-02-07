@@ -17,10 +17,10 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
 
-	if( !DatOne.Open( sArgs.first_arg ) ) {
+	if( !DatOne.Open( sArgs.first_arg, !!sArgs.memmap_flag ) ) {
 		cerr << "Couldn't open: " << sArgs.first_arg << endl;
 		return 1; }
-	if( !DatTwo.Open( sArgs.second_arg ) ) {
+	if( !DatTwo.Open( sArgs.second_arg, !!sArgs.memmap_flag ) ) {
 		cerr << "Couldn't open: " << sArgs.second_arg << endl;
 		return 1; }
 
