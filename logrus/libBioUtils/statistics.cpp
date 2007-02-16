@@ -825,7 +825,7 @@ double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, cons
 				continue;
 			if( !( vecfHere.empty( ) ||
 				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-				( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+				( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
 				!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 				continue;
 			if( fInvert )
@@ -852,7 +852,7 @@ double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, cons
 				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
 				!( vecfHere.empty( ) ||
 				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-				( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+				( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
 				!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 				continue;
 			if( dAnswer ) {
@@ -887,7 +887,7 @@ double CStatistics::SumSquaredError( const CDat& Data, const CDat& Answers, cons
 				continue;
 			if( !( vecfHere.empty( ) ||
 				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-				( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+				( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
 				!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 				continue;
 			if( fInvert )

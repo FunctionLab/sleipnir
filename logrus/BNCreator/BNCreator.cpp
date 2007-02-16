@@ -8,6 +8,7 @@ int main( int iArgs, char** aszArgs ) {
 	size_t				i;
 	map<string,size_t>	mapZeros;
 	CBayesNetSmile		BNIn;
+	vector<string>		vecstrNames;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -34,16 +35,20 @@ int main( int iArgs, char** aszArgs ) {
 			mapZeros[ vecstrZeros[ 0 ] ] = atoi( vecstrZeros[ 1 ].c_str( ) ); } }
 
 	if( sArgs.input_arg ) {
-		vector<string>	vecstrFiles;
+		vector<string>	vecstrFiles, vecstrGenes;
 		CDat			DatYes, DatNo;
 		CDatasetCompact	Data;
 		vector<size_t>	veciGenes;
-		size_t			j, k, iOne, iTwo, iBin;
-		float			dYes, dNo;
+		size_t			j, k, iOne, iTwo, iBin, iZero, iIndex;
+		float			d;
 		CDataMatrix		MatCPT;
 		ofstream		ofsm;
 		char			acTemp[ L_tmpnam + 1 ];
 		const char*		szTemp;
+		float*			adYes;
+		float*			adNo;
+		CGenome			Genome;
+		CGenes			GenesIn( Genome ), GenesEx( Genome );
 
 		if( !BNIn.Open( sArgs.input_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.input_arg << endl;
@@ -56,57 +61,76 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Data.OpenGenes( vecstrFiles ) ) {
 			cerr << "Couldn't open: " << sArgs.directory_arg << endl;
 			return 1; }
-		if( sArgs.genes_arg && !Data.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
-			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
-			return 1; }
-		if( sArgs.genet_arg && !Data.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) ) {
-			cerr << "Couldn't open: " << sArgs.genet_arg << endl;
-			return 1; }
-		if( sArgs.genex_arg && !Data.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
-			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
-			return 1; }
+		if( sArgs.genes_arg ) {
+			ifstream	ifsm;
+
+			ifsm.open( sArgs.genes_arg );
+			if( !GenesIn.Open( ifsm ) ) {
+				cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+				return 1; }
+			ifsm.close( );
+			for( i = 0; i < GenesIn.GetGenes( ); ++i )
+				vecstrGenes.push_back( GenesIn.GetGene( i ).GetName( ) ); }
 
 #pragma warning( disable : 4996 )
 		if( !( szTemp = tmpnam( acTemp ) ) ) {
 			cerr << "Couldn't create temp file: " << acTemp << endl;
 			return 1; }
 #pragma warning( default : 4996 )
-		DatYes.Open( Data.GetGeneNames( ), false, sArgs.output_arg );
-		DatNo.Open( Data.GetGeneNames( ), false, szTemp );
+		DatYes.Open( vecstrGenes.size( ) ? vecstrGenes : Data.GetGeneNames( ), false, sArgs.output_arg );
+		DatNo.Open( DatYes.GetGeneNames( ), false ); // , szTemp );
+		adYes = new float[ DatYes.GetGenes( ) ];
+		adNo = new float[ DatNo.GetGenes( ) ];
 		BNIn.GetCPT( 0, MatCPT );
-		dNo = log( MatCPT.Get( 0, 0 ) );
-		dYes = log( MatCPT.Get( 1, 0 ) );
+		d = log( MatCPT.Get( 0, 0 ) );
+		for( i = 0; i < DatNo.GetGenes( ); ++i )
+			adNo[ i ] = d;
+		for( i = 0; i < DatNo.GetGenes( ); ++i )
+			DatNo.Set( i, adNo );
+		d = log( MatCPT.Get( 1, 0 ) );
 		for( i = 0; i < DatYes.GetGenes( ); ++i )
-			for( j = ( i + 1 ); j < DatYes.GetGenes( ); ++j ) {
-				DatNo.Set( i, j, dNo );
-				DatYes.Set( i, j, dYes ); }
+			adYes[ i ] = d;
+		for( i = 0; i < DatYes.GetGenes( ); ++i )
+			DatYes.Set( i, adYes );
 
+		BNIn.GetNodes( vecstrNames );
+		veciGenes.resize( DatYes.GetGenes( ) );
 		for( i = 0; i < vecstrFiles.size( ); ++i ) {
-			vector<string>	vecstrDatum;
+			vector<string>						vecstrDatum;
+			map<string,size_t>::const_iterator	iterZero;
 
 			vecstrDatum.push_back( vecstrFiles[ i ] );
 			if( !Data.Open( vecstrDatum ) ) {
 				cerr << "Couldn't open: " << vecstrFiles[ i ] << endl;
 				return 1; }
+			iZero = ( ( iterZero = mapZeros.find( vecstrNames[ i + 1 ] ) ) == mapZeros.end( ) ) ? -1 :
+					iterZero->second;
 			BNIn.GetCPT( i + 1, MatCPT );
-			veciGenes.resize( Data.GetGenes( ) );
 			for( j = 0; j < veciGenes.size( ); ++j )
-				veciGenes[ j ] = DatYes.GetGene( Data.GetGene( j ) );
-			for( j = 0; j < Data.GetGenes( ); ++j ) {
+				veciGenes[ j ] = Data.GetGene( DatYes.GetGene( j ) );
+			for( j = 0; j < DatYes.GetGenes( ); ++j ) {
 				if( ( iOne = veciGenes[ j ] ) == -1 )
 					continue;
-				for( k = ( j + 1 ); k < Data.GetGenes( ); ++k ) {
-					if( ( ( iTwo = veciGenes[ k ] ) == -1 ) ||
-						!Data.IsExample( j, k ) )
+				memcpy( adYes, DatYes.Get( j ), ( DatYes.GetGenes( ) - j - 1 ) * sizeof(*adYes) );
+				memcpy( adNo, DatNo.Get( j ), ( DatNo.GetGenes( ) - j - 1 ) * sizeof(*adNo) );
+				for( k = ( j + 1 ); k < DatYes.GetGenes( ); ++k ) {
+					if( ( ( iTwo = veciGenes[ k ] ) == -1 ) || !Data.IsExample( iOne, iTwo ) )
 						continue;
-					iBin = Data.GetDiscrete( j, k, 0 );
-					DatNo.Get( iOne, iTwo ) += log( MatCPT.Get( iBin, 0 ) );
-					DatYes.Get( iOne, iTwo ) += log( MatCPT.Get( iBin, 1 ) ); } } }
-		for( i = 0; i < DatYes.GetGenes( ); ++i )
-			for( j = ( i + 1 ); j < DatYes.GetGenes( ); ++j ) {
-				dYes = exp( DatYes.Get( i, j ) );
-				dNo = exp( DatNo.Get( i, j ) );
-				DatYes.Set( i, j, dYes / ( dYes + dNo ) ); }
+					if( ( iBin = Data.GetDiscrete( iOne, iTwo, 0 ) ) == -1 )
+						iBin = iZero;
+					if( iBin == -1 )
+						continue;
+					adNo[ iIndex = ( k - j - 1 ) ] += log( MatCPT.Get( iBin, 0 ) );
+					adYes[ iIndex ] += log( MatCPT.Get( iBin, 1 ) ); }
+				DatYes.Set( j, adYes );
+				DatNo.Set( j, adNo ); } }
+		for( i = 0; i < DatYes.GetGenes( ); ++i ) {
+			memcpy( adYes, DatYes.Get( i ), ( DatYes.GetGenes( ) - i - 1 ) * sizeof(*adYes) );
+			memcpy( adNo, DatNo.Get( i ), ( DatNo.GetGenes( ) - i - 1 ) * sizeof(*adNo) );
+			for( j = 0; j < ( DatYes.GetGenes( ) - i - 1 ); ++j ) {
+				d = exp( adYes[ j ] );
+				adYes[ j ] = d / ( d + exp( adNo[ j ] ) ); }
+			DatYes.Set( i, adYes ); }
 		_unlink( szTemp ); }
 	else {
 		CDataPair				Answers;
@@ -152,9 +176,9 @@ int main( int iArgs, char** aszArgs ) {
 
 		for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
 			CDatasetCompact	Data;
-			vector<string>	vecstrNames;
 			CBayesNetSmile*	pBN;
 
+			vecstrNames.clear( );
 			vecstrNames.push_back( sArgs.inputs[ iArg ] );
 			if( !Data.Open( Answers, vecstrNames, true ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ iArg ] << endl;

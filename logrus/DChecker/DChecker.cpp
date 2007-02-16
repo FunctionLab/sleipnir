@@ -101,18 +101,22 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.inputs_num ) {
 		vecfSomewhere.resize( Answers.GetGenes( ) );
-		for( i = 0; i < sArgs.inputs_num; ++i ) {
-			ifstream	ifsm( sArgs.inputs[ i ] );
-			CGenome		Genome;
-			CGenes		Genes( Genome );
-			size_t		iGene;
+		if( sArgs.unannotated_flag )
+			for( i = 0; i < sArgs.inputs_num; ++i ) {
+				ifstream	ifsm( sArgs.inputs[ i ] );
+				CGenome		Genome;
+				CGenes		Genes( Genome );
+				size_t		iGene;
 
-			if( !Genes.Open( ifsm ) ) {
-				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-				return 1; }
-			for( j = 0; j < Genes.GetGenes( ); ++j )
-				if( ( iGene = Answers.GetGene( Genes.GetGene( j ).GetName( ) ) ) != -1 )
-					vecfSomewhere[ iGene ] = true; } }
+				if( !Genes.Open( ifsm ) ) {
+					cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+					return 1; }
+				for( j = 0; j < Genes.GetGenes( ); ++j )
+					if( ( iGene = Answers.GetGene( Genes.GetGene( j ).GetName( ) ) ) != -1 )
+						vecfSomewhere[ iGene ] = true; }
+		else
+			for( i = 0; i < vecfSomewhere.size( ); ++i )
+				vecfSomewhere[ i ] = true; }
 
 	for( iGenes = 0; !sArgs.inputs_num || ( iGenes < sArgs.inputs_num ); ++iGenes ) {
 		MatResults.Clear( );
@@ -144,7 +148,7 @@ int main( int iArgs, char** aszArgs ) {
 						continue;
 					if( !( vecfHere.empty( ) ||
 						( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-						( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+						( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
 						!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 						continue;
 					if( sArgs.invert_flag )
@@ -169,7 +173,7 @@ int main( int iArgs, char** aszArgs ) {
 						continue;
 					if( !( vecfHere.empty( ) ||
 						( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-						( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+						( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
 						!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 						continue;
 
@@ -241,7 +245,7 @@ int main( int iArgs, char** aszArgs ) {
 						continue;
 					if( !( vecfHere.empty( ) ||
 						( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-						( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+						( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
 						!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 						continue;
 					if( sArgs.invert_flag )
@@ -263,7 +267,7 @@ int main( int iArgs, char** aszArgs ) {
 				if( CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
 					!( vecfHere.empty( ) ||
 					( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-					( !dAnswer && ( !( vecfHere[ i ] && vecfHere[ j ] ) ||
+					( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
 					!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
 					continue;
 				if( dAnswer )

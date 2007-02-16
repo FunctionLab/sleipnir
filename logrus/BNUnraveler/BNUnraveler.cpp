@@ -192,6 +192,7 @@ int main( int iArgs, char** aszArgs ) {
 		for( iThread = 0; ( ( sArgs.threads_arg == -1 ) || ( iThread < (size_t)sArgs.threads_arg ) ) &&
 			( ( iTerm + iThread ) < vecpGenes.size( ) ); ++iThread ) {
 			i = iTerm + iThread;
+			vecsData[ i ].m_pBN = vecpBNs[ i ];
 			vecsData[ i ].m_pYes = vecpYes[ i ];
 			vecsData[ i ].m_pNo = vecpNo[ i ];
 			vecsData[ i ].m_szName = sArgs.inputs[ i ];
@@ -218,24 +219,17 @@ int main( int iArgs, char** aszArgs ) {
 
 void* initialize( void* pData ) {
 	SEvaluate*	psData;
-	CDataMatrix	MatCPT;
-	float		d;
 	size_t		i;
 	float*		adBuffer;
 
 	psData = (SEvaluate*)pData;
 	adBuffer = new float[ psData->m_pYes->GetGenes( ) ];
-	psData->m_pBN->GetCPT( 0, MatCPT );
-	d = log( MatCPT.Get( 0, 0 ) );
 	for( i = 0; i < psData->m_pNo->GetGenes( ); ++i )
-		adBuffer[ i ] = d;
+		adBuffer[ i ] = CMeta::GetNaN( );
 	for( i = 0; i < psData->m_pNo->GetGenes( ); ++i ) {
 		if( !( i % 1000 ) )
 			cerr << "IN: " << psData->m_szName << ", " << i << endl;
 		psData->m_pNo->Set( i, adBuffer ); }
-	d = log( MatCPT.Get( 1, 0 ) );
-	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i )
-		adBuffer[ i ] = d;
 	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
 		if( !( i % 1000 ) )
 			cerr << "IY: " << psData->m_szName << ", " << i << endl;
@@ -248,15 +242,19 @@ void* initialize( void* pData ) {
 void* evaluate( void* pData ) {
 	SEvaluate*		psData;
 	CDataMatrix		MatCPT;
-	size_t			i, j, iOne, iTwo, iBin;
+	size_t			i, j, iOne, iTwo, iBin, iIndex;
 	vector<bool>	vecfGenes, vecfGenesIn;
 	bool			fTermOne, fListOne;
-	float*			adYes; // OPT
-	float*			adNo; // OPT
+	float*			adYes;
+	float*			adNo;
+	float			dNo, dYes;
 
 	psData = (SEvaluate*)pData;
-	adYes = new float[ psData->m_pYes->GetGenes( ) ]; // OPT
-	adNo = new float[ psData->m_pNo->GetGenes( ) ]; // OPT
+	psData->m_pBN->GetCPT( 0, MatCPT );
+	dNo = log( MatCPT.Get( 0, 0 ) );
+	dYes = log( MatCPT.Get( 1, 0 ) );
+	adYes = new float[ psData->m_pYes->GetGenes( ) ];
+	adNo = new float[ psData->m_pNo->GetGenes( ) ];
 	if( !psData->m_fEverything ) {
 		vecfGenes.resize( psData->m_pYes->GetGenes( ) );
 		for( i = 0; i < vecfGenes.size( ); ++i )
@@ -273,25 +271,27 @@ void* evaluate( void* pData ) {
 			continue;
 		fTermOne = psData->m_fEverything || vecfGenes[ i ];
 		fListOne = !psData->m_pGenesIn || vecfGenesIn[ i ];
-		memcpy( adYes, psData->m_pYes->Get( i ), ( psData->m_pYes->GetGenes( ) - i - 1 ) * sizeof(*adYes) ); // OPT
-		memcpy( adNo, psData->m_pNo->Get( i ), ( psData->m_pNo->GetGenes( ) - i - 1 ) * sizeof(*adNo) ); // OPT
+		memcpy( adYes, psData->m_pYes->Get( i ), ( psData->m_pYes->GetGenes( ) - i - 1 ) * sizeof(*adYes) );
+		memcpy( adNo, psData->m_pNo->Get( i ), ( psData->m_pNo->GetGenes( ) - i - 1 ) * sizeof(*adNo) );
 		for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
-			if( ( ( iTwo = (*psData->m_pveciGenes)[ j ] ) == -1 ) || !( fTermOne || vecfGenes[ j ] ) ||
-				!( fListOne || vecfGenesIn[ j ] ) )
+			if( ( iTwo = (*psData->m_pveciGenes)[ j ] ) == -1 )
+				continue;
+			if( !( fTermOne || vecfGenes[ j ] ) || !( fListOne || vecfGenesIn[ j ] ) )
 				continue;
 			if( psData->m_pAnswers && CMeta::IsNaN( psData->m_pAnswers->Get( i, j ) ) )
 				continue;
 			iBin = psData->m_pDat->Quantify( psData->m_pDat->Get( iOne, iTwo ) );
 			if( ( iBin == -1 ) && ( ( iBin = psData->m_fZero ? 0 : psData->m_iZero ) == -1 ) )
 				continue;
-			adNo[ j - i - 1 ] += log( MatCPT.Get( iBin, 0 ) ); // OPT
-			adYes[ j - i - 1 ] += log( MatCPT.Get( iBin, 1 ) ); } // OPT
-		psData->m_pNo->Set( i, adNo ); // OPT
-		psData->m_pYes->Set( i, adYes ); } // OPT
-// OPT			psData->m_pNo->Get( i, j ) += log( MatCPT.Get( iBin, 0 ) );
-// OPT			psData->m_pYes->Get( i, j ) += log( MatCPT.Get( iBin, 1 ) ); } }
-	delete[] adYes; // OPT
-	delete[] adNo; // OPT
+			if( CMeta::IsNaN( adYes[ iIndex = ( j - i - 1 ) ] ) ) {
+				adYes[ iIndex ] = dYes;
+				adNo[ iIndex ] = dNo; }
+			adNo[ iIndex ] += log( MatCPT.Get( iBin, 0 ) );
+			adYes[ iIndex ] += log( MatCPT.Get( iBin, 1 ) ); }
+		psData->m_pNo->Set( i, adNo );
+		psData->m_pYes->Set( i, adYes ); }
+	delete[] adYes;
+	delete[] adNo;
 
 	pthread_exit( NULL );
 	return NULL; }
@@ -301,8 +301,12 @@ void* finalize( void* pData ) {
 	size_t		i, j;
 	float*		adYes;
 	float*		adNo;
+	double		d, dPrior;
+	CDataMatrix	MatCPT;
 
 	psData = (SEvaluate*)pData;
+	psData->m_pBN->GetCPT( 0, MatCPT );
+	dPrior = MatCPT.Get( 1, 0 );
 	adYes = new float[ psData->m_pYes->GetGenes( ) ];
 	adNo = new float[ psData->m_pNo->GetGenes( ) ];
 	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
@@ -310,10 +314,15 @@ void* finalize( void* pData ) {
 			cerr << "F: " << psData->m_szName << ", " << i << endl;
 		memcpy( adYes, psData->m_pYes->Get( i ), ( psData->m_pYes->GetGenes( ) - i - 1 ) * sizeof(*adYes) );
 		memcpy( adNo, psData->m_pNo->Get( i ), ( psData->m_pNo->GetGenes( ) - i - 1 ) * sizeof(*adNo) );
-		for( j = 0; j < ( psData->m_pYes->GetGenes( ) - i - 1 ); ++j ) {
-			adYes[ j ] = exp( adYes[ j ] );
-			adYes[ j ] /= adYes[ j ] + exp( adNo[ j ] ); }
+		for( j = 0; j < ( psData->m_pYes->GetGenes( ) - i - 1 ); ++j )
+			if( CMeta::IsNaN( adYes[ j ] ) )
+				adYes[ j ] = dPrior;
+			else {
+				d = exp( (double)adYes[ j ] );
+				adYes[ j ] = d / ( d + exp( (double)adNo[ j ] ) ); }
 		psData->m_pYes->Set( i, adYes ); }
+	delete[] adNo;
+	delete[] adYes;
 
 	pthread_exit( NULL );
 	return NULL; }
