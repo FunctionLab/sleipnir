@@ -1,0 +1,20 @@
+package	"Data2Svm"
+version	"1.0"
+purpose	"SVM evaluation of data for GO term prediction"
+
+option	"input"		i	"Data set to analyze (PCL)"	string	typestr="filename"	yes
+section "Optional"
+option	"genes"		g	"List of positive genes"	string	typestr="filename"
+option	"genex"		G	"List of test genes"	string	typestr="filename"
+option	"alphas"	a	"SVM alphas file"	string	typestr="filename"
+option	"model"		m	"SVM model file"	string	typestr="filename"
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
+option	"iterations"	t	"SVM iterations"	int	default="100000"
+option	"cache"		e	"SVM cache size"	int	default="40"
+option	"kernel"	k	"SVM kernel function"	values="linear","poly","rbf"	default="linear"
+option	"tradeoff"	c	"Classification tradeoff"	float
+option	"gamma"		M	"RBF gamma"	float	default="1"
+option	"degree"	d	"Polynomial degree"	int	default="3"
+option	"random"	r	"Seed random generator"	int	default="0"
+option	"normalize"	n	"Z-score normalize feature values"	flag	off

@@ -10,6 +10,7 @@ namespace libBioUtils {
 class CDat;
 class CDataPair;
 class CGenes;
+class CPCL;
 class CPCLSet;
 class IDataset;
 
@@ -27,6 +28,7 @@ protected:
 
 	struct SData {
 		enum {
+			EPCL,
 			EPCLs,
 			EData,
 			EFile
@@ -35,8 +37,12 @@ protected:
 			const CPCLSet*	m_pPCLs;
 			const IDataset*	m_pData;
 			const char*		m_szFile;
+			const CPCL*		m_pPCL;
 		}	m_uData;
-		const CDataPair*	m_pAnswers;
+		union {
+			const CDataPair*	m_pAnswers;
+			const CGenes*		m_pGenes;
+		}	m_uAnswers;
 	};
 
 	static SWORD	s_asWords[ c_iWords ];
@@ -51,6 +57,7 @@ protected:
 	bool Learn( const SData& );
 	size_t GetWords( const SData& ) const;
 	DOC* CreateDoc( const SData&, size_t, size_t, size_t ) const;
+	DOC* CreateDoc( const SData&, size_t ) const;
 
 	MODEL*	m_pModel;
 	DOC**	m_apDocs;

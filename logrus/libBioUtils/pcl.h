@@ -83,6 +83,10 @@ public:
 
 		m_setiGenes.insert( iGene ); }
 
+	bool IsMasked( size_t iGene ) const {
+
+		return ( m_setiGenes.find( iGene ) != m_setiGenes.end( ) ); }
+
 	void Set( size_t iX, size_t iY, float dValue ) {
 
 		m_Data.Set( iX, iY, dValue ); }
