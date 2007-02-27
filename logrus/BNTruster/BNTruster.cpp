@@ -27,7 +27,7 @@ int main( int iArgs, char** aszArgs ) {
 	return iRet; }
 
 int MainPosteriors( const gengetopt_args_info& sArgs ) {
-	size_t					i, j, iDSL;
+	size_t					i, iDSL;
 	vector<unsigned char>	vecbDatum;
 	vector<float>			vecdOut;
 
@@ -56,23 +56,24 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 			cout << endl; }
 
 		cout << sArgs.inputs[ iDSL ];
-		BNSmile.GetCPT( 0, MatFR );
 		for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode ) {
-			float		dSum, d;
-			CDataMatrix	MatCPT;
+			float			dSum;
+			CDataMatrix		MatCPT;
+			vector<float>	vecdProbs;
 
 			vecbDatum[ iNode - 1 ] = 0;
+			vecdProbs.clear( );
+			BNSmile.Evaluate( vecbDatum, vecdProbs, false, iNode );
+			for( dSum = 0,i = 0; i < vecdProbs.size( ); ++i )
+				dSum += vecdProbs[ i ];
+			vecdProbs.push_back( 1 - dSum );
 			vecdOut.clear( );
 			for( bValue = 0; bValue < BNSmile.GetValues( iNode ); ++bValue ) {
 				vecbDatum[ iNode ] = bValue + 1;
 				BNSmile.Evaluate( vecbDatum, vecdOut, false ); }
 
-			BNSmile.GetCPT( iNode, MatCPT );
-			dSum = 0;
-			for( i = 0; i < vecdOut.size( ); ++i ) {
-				for( d = 0,j = 0; j < MatFR.GetRows( ); ++j )
-					d += MatFR.Get( j, 0 ) * MatCPT.Get( i, j );
-				dSum += fabs( dPrior - vecdOut[ i ] ) * d; }
+			for( dSum = 0,i = 0; i < vecdOut.size( ); ++i ) {
+				dSum += fabs( dPrior - vecdOut[ i ] ) * vecdProbs[ i ]; }
 			cout << '\t' << ( dSum / BNSmile.GetValues( iNode ) ); }
 		cout << endl; }
 

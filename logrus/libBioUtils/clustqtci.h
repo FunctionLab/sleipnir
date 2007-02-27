@@ -15,9 +15,9 @@ class IMeasure;
 class CClustQTCImpl {
 protected:
 	static void InitializeDistances( const CDataMatrix&, const IMeasure*, bool,
-		CDistanceMatrix& );
+		CDistanceMatrix&, const CDataMatrix* );
 	static double GetJackDistance( const float*, const float*, size_t, bool, float*, float*,
-		const IMeasure* );
+		const IMeasure*, const float*, const float*, float*, float* );
 	static uint16_t QualityThresholdAll( const CDataMatrix&, float, size_t,
 		const CDistanceMatrix&, std::vector<uint16_t>& );
 	static void QualityThresholdLargest( const CDataMatrix&, float, const CDistanceMatrix&,

@@ -381,7 +381,8 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 
 	return true; }
 
-bool CBayesNetSmile::Evaluate( const vector<unsigned char>& vecbDatum, vector<float>& vecdOut, bool fZero ) const {
+bool CBayesNetSmile::Evaluate( const vector<unsigned char>& vecbDatum, vector<float>& vecdOut, bool fZero,
+	size_t iNode ) const {
 	vector<bool>	vecfHidden;
 	DSL_nodeValue*	pValue;
 	size_t			i;
@@ -394,7 +395,7 @@ bool CBayesNetSmile::Evaluate( const vector<unsigned char>& vecbDatum, vector<fl
 		vecfHidden[ i ] = false;
 	((CBayesNetSmile*)this)->FillCPTs( vecfHidden, vecbDatum, fZero, false );
 	((CBayesNetSmile*)this)->m_SmileNet.UpdateBeliefs( );
-	pValue = m_SmileNet.GetNode( 0 )->Value( );
+	pValue = m_SmileNet.GetNode( iNode )->Value( );
 	for( i = 0; ( i + 1 ) < (size_t)pValue->GetSize( ); ++i )
 		vecdOut.push_back( (float)(*pValue->GetMatrix( ))[ (int)i ] );
 

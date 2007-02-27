@@ -200,7 +200,7 @@ void CBayesNetPNL::Randomize( size_t ) { }
 
 void CBayesNetPNL::Reverse( size_t ) { }
 
-bool CBayesNetPNL::Evaluate( const vector<unsigned char>&, vector<float>&, bool ) const {
+bool CBayesNetPNL::Evaluate( const vector<unsigned char>&, vector<float>&, bool, size_t ) const {
 
 	return false; }
 

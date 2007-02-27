@@ -586,7 +586,8 @@ bool CBayesNetFNImpl::Evaluate( const IDataset* pData, size_t iOne, size_t iTwo,
 
 	return true; }
 
-bool CBayesNetFN::Evaluate( const vector<unsigned char>& vecbDatum, vector<float>& vecdOut, bool fZero ) const {
+bool CBayesNetFN::Evaluate( const vector<unsigned char>& vecbDatum, vector<float>& vecdOut, bool fZero,
+	size_t iNode ) const {
 	vector<float>	vecdProd, vecdCur;
 	float			dValue;
 	size_t			i, j, iZero;
@@ -595,7 +596,7 @@ bool CBayesNetFN::Evaluate( const vector<unsigned char>& vecbDatum, vector<float
 	if( !m_iNodes )
 		return false;
 
-	if( !m_apNodes[ 0 ]->Evaluate( CMeta::GetNaN( ), vecdProd ) )
+	if( !m_apNodes[ iNode ]->Evaluate( CMeta::GetNaN( ), vecdProd ) )
 		return false;
 	for( i = 0; i < vecdProd.size( ); ++i )
 		vecdProd[ i ] = log( vecdProd[ i ] );

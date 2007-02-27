@@ -7,21 +7,22 @@
 namespace libBioUtils {
 
 uint16_t CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
-	float dDiameter, size_t iSize, bool fAutoc, vector<uint16_t>& vecsClusters ) {
+	float dDiameter, size_t iSize, bool fAutoc, vector<uint16_t>& vecsClusters, const CDataMatrix* pWeights ) {
 	CDistanceMatrix	Dist;
 
-	InitializeDistances( Data, pMeasure, fAutoc, Dist );
+	InitializeDistances( Data, pMeasure, fAutoc, Dist, pWeights );
 	return QualityThresholdAll( Data, dDiameter, iSize, Dist, vecsClusters ); }
 
 void CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
-	float dMin, float dMax, float dDelta, size_t iSize, bool fAutoc, CDistanceMatrix& DatOut ) {
+	float dMin, float dMax, float dDelta, size_t iSize, bool fAutoc, CDistanceMatrix& DatOut,
+	const CDataMatrix* pWeights ) {
 	CDistanceMatrix		Dist;
 	float				dDiameter;
 	vector<uint16_t>	vecsClusters;
 	uint16_t			sClusters;
 	size_t				i, j;
 
-	InitializeDistances( Data, pMeasure, fAutoc, Dist );
+	InitializeDistances( Data, pMeasure, fAutoc, Dist, pWeights );
 	for( dDiameter = dMin; dDiameter <= dMax; dDiameter += dDelta ) {
 		g_CatBioUtils.notice( "CClustQTC::Cluster( %g, %g, %g, %d, %d ) processing diameter %g", dMin, dMax,
 			dDelta, iSize, fAutoc, dDiameter );
@@ -120,42 +121,56 @@ void CClustQTCImpl::QualityThresholdGene( size_t iGene, const CDataMatrix& Data,
 		vecsCluster.push_back( iAdded ); } }
 
 void CClustQTCImpl::InitializeDistances( const CDataMatrix& Data, const IMeasure* pMeasure,
-	bool fAutoc, CDistanceMatrix& Dist ) {
+	bool fAutoc, CDistanceMatrix& Dist, const CDataMatrix* pWeights ) {
 	size_t	i, j;
 	float*	adA;
 	float*	adB;
+	float*	adWA;
+	float*	adWB;
 
 	Dist.Initialize( Data.GetRows( ) );
 	adA = new float[ Data.GetColumns( ) - 1 ];
 	adB = new float[ Data.GetColumns( ) - 1 ];
+	if( pWeights ) {
+		adWA = new float[ Data.GetColumns( ) - 1 ];
+		adWB = new float[ Data.GetColumns( ) - 1 ]; }
+	else
+		adWA = adWB = NULL;
 	for( i = 0; i < Data.GetRows( ); ++i ) {
 		if( !( i % 10 ) )
 			g_CatBioUtils.notice( "CClustQTCImpl::InitializeDistances( %d ) initializing %d/%d genes",
 				fAutoc, i, Data.GetRows( ) );
 		for( j = ( i + 1 ); j < Data.GetRows( ); ++j )
 			Dist.Set( i, j, (float)GetJackDistance( Data.Get( i ), Data.Get( j ),
-				Data.GetColumns( ), fAutoc, adA, adB, pMeasure ) ); }
+				Data.GetColumns( ), fAutoc, adA, adB, pMeasure, pWeights ? pWeights->Get( i ) : NULL,
+				pWeights ? pWeights->Get( j ) : NULL, adWA, adWB ) ); }
+	if( pWeights ) {
+		delete[] adWA;
+		delete[] adWB; }
 	delete[] adA;
 	delete[] adB; }
 
 double CClustQTCImpl::GetJackDistance( const float* adX, const float* adY, size_t iN,
-	bool fAutoc, float* adA, float* adB, const IMeasure* pMeasure ) {
+	bool fAutoc, float* adA, float* adB, const IMeasure* pMeasure, const float* adWX, const float* adWY,
+	float* adWA, float* adWB ) {
 	size_t					i;
 	double					dRet, dCur;
 	CMeasureAutocorrelate	Autocorrelate( pMeasure, false );
-	const IMeasure*			pAuto	= &Autocorrelate;
+	const IMeasure*			pUse	= fAutoc ? &Autocorrelate : pMeasure;
 
-	dRet = fAutoc ? pAuto->Measure( adX, iN, adY, iN ) :
-		pMeasure->Measure( adX, iN, adY, iN );
+	dRet = pUse->Measure( adX, iN, adY, iN, IMeasure::EMapCenter, adWX, adWY );
 	dRet = 1 - dRet;
-
 	for( i = 0; i < iN; ++i ) {
 		memcpy( adA, adX, i * sizeof(*adX) );
 		memcpy( adA + i, adX + i + 1, ( iN - 1 - i ) * sizeof(*adX) );
 		memcpy( adB, adY, i * sizeof(*adY) );
 		memcpy( adB + i, adY + i + 1, ( iN - 1 - i ) * sizeof(*adY) );
-		dCur = fAutoc ? pAuto->Measure( adA, iN - 1, adB, iN - 1 ) :
-			pMeasure->Measure( adA, iN - 1, adB, iN - 1 );
+		if( adWX && adWY && adWA && adWB ) {
+			memcpy( adWA, adWX, i * sizeof(*adWX) );
+			memcpy( adWA + i, adWX + i + 1, ( iN - 1 - i ) * sizeof(*adWX) );
+			memcpy( adWB, adWY, i * sizeof(*adWY) );
+			memcpy( adWB + i, adWY + i + 1, ( iN - 1 - i ) * sizeof(*adWY) ); }
+		dCur = pUse->Measure( adA, iN - 1, adB, iN - 1, IMeasure::EMapCenter, adWA, adWB );
 		if( ( dCur = ( 1 - dCur ) ) > dRet )
 			dRet = dCur; }
 

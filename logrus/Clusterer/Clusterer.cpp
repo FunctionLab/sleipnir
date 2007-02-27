@@ -9,7 +9,7 @@ int main( int iArgs, char** aszArgs ) {
 	vector<uint16_t>			vecsClusters;
 	const CPCL*					pPCL;
 	uint16_t					sClusters;
-	CPCL						PCL, Ranks;
+	CPCL						PCL, Ranks, Weights;
 	gengetopt_args_info			sArgs;
 	IMeasure*					pMeasure;
 	CMeasurePearson				Pearson;
@@ -48,6 +48,20 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg )
 		ifsm.close( );
 
+	if( sArgs.weights_arg ) {
+		ifsm.clear( );
+		ifsm.open( sArgs.weights_arg );
+		if( !Weights.Open( ifsm, sArgs.skip_arg ) ) {
+			cerr << "Could not open: " << sArgs.weights_arg << endl;
+			return 1; }
+		ifsm.close( );
+
+		if( ( Weights.GetExperiments( ) != PCL.GetExperiments( ) ) ||
+			( Weights.GetGenes( ) != PCL.GetGenes( ) ) ) {
+			cerr << "Illegal data sizes: " << PCL.GetExperiments( ) << 'x' << PCL.GetGenes( ) << ", " <<
+				Weights.GetExperiments( ) << 'x' << Weights.GetGenes( ) << endl;
+			return 1; } }
+
 	if( pMeasure->IsRank( ) ) {
 		Ranks.Open( PCL );
 		Ranks.RankTransform( );
@@ -58,11 +72,12 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.delta_arg ) {
 		Dat.Open( pPCL->GetGeneNames( ) );
 		CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diamineter_arg, (float)sArgs.diameter_arg,
-			(float)sArgs.delta_arg, sArgs.size_arg, !!sArgs.autocorrelate_flag, Dat.Get( ) );
+			(float)sArgs.delta_arg, sArgs.size_arg, !!sArgs.autocorrelate_flag, Dat.Get( ),
+			sArgs.weights_arg ? &Weights.Get( ) : NULL );
 		Dat.Save( sArgs.output_arg ); }
 	else {
 		sClusters = CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diameter_arg, sArgs.size_arg,
-			!!sArgs.autocorrelate_flag, vecsClusters );
+			!!sArgs.autocorrelate_flag, vecsClusters, sArgs.weights_arg ? &Weights.Get( ) : NULL );
 
 		if( sArgs.output_arg ) {
 			Dat.Open( pPCL->GetGeneNames( ) );
