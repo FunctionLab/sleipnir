@@ -54,6 +54,7 @@ int main( int iArgs, char** aszArgs ) {
 			if( !CMeta::IsNaN( Answers.Get( i, j ) ) )
 				iPairs++;
 	MatData.Initialize( iPairs, sArgs.inputs_num );
+	MatData.Clear( );
 
 	veciGenes.resize( Answers.GetGenes( ) );
 	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
@@ -67,7 +68,7 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ iArg ] << endl;
 			return 1; }
 		vecstrNames[ 0 ] = CMeta::Filename( CMeta::Deextension( CMeta::Basename( vecstrNames[ 0 ].c_str( ) ) ) );
-		iZero = ( ( iterZero = mapZeros.find( vecstrNames[ i ] ) ) == mapZeros.end( ) ) ? -1 :
+		iZero = ( ( iterZero = mapZeros.find( vecstrNames[ 0 ] ) ) == mapZeros.end( ) ) ? -1 :
 			iterZero->second;
 		for( i = 0; i < veciGenes.size( ); ++i )
 			veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
@@ -76,10 +77,10 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = ( i + 1 ); j < veciGenes.size( ); ++j ) {
 				if( CMeta::IsNaN( Answers.Get( i, j ) ) )
 					continue;
-				if( ( iOne != -1 ) && ( ( iTwo = veciGenes[ j ] ) == -1 ) )
+				if( ( iOne != -1 ) && ( ( iTwo = veciGenes[ j ] ) != -1 ) ) {
 					iVal = Data.GetDiscrete( iOne, iTwo, 1 );
-				if( ( iVal != -1 ) || ( ( iVal = iZero ) != -1 ) || ( sArgs.zero_flag && !( iVal = 0 ) ) )
-					MatData.Set( iPair, iArg, (unsigned char)iVal );
+					if( ( iVal != -1 ) || ( ( iVal = iZero ) != -1 ) || ( sArgs.zero_flag && !( iVal = 0 ) ) )
+						MatData.Set( iPair, iArg, (unsigned char)( iVal + 1 ) ); }
 				iPair++; } } }
 
 	cout << "Gene 1	Gene 2	Answer";
@@ -92,7 +93,7 @@ int main( int iArgs, char** aszArgs ) {
 				continue;
 			cout << Answers.GetGene( i ) << '\t' << Answers.GetGene( j ) << '\t' << d;
 			for( k = 0; k < MatData.GetColumns( ); ++k )
-				cout << '\t' << MatData.Get( iPair, k );
+				cout << '\t' << ( (int)MatData.Get( iPair, k ) - 1 );
 			cout << endl;
 			iPair++; }
 
