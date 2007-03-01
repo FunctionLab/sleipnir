@@ -1,0 +1,17 @@
+package	"Dab2Dad"
+version	"1.0"
+purpose	"Single/multiple data file interconversion"
+
+defgroup "input-output"
+groupoption	"input"		i	"Input dad file"	string	typestr="filename"	group="input-output"
+groupoption	"load"		l	"Persistent load dad file"	string	typestr="filename"	group="input-output"
+groupoption	"network"	n	"Input Bayesian network [x]dsl"	string	typestr="filename"	group="input-output"
+section "Optional"
+option	"output"		o	"Output dad file"	string	typestr="filename"
+option	"answers"		w	"Answer dab file"	string	typestr="filename"
+option	"directory"		d	"Directory with dab files"	string	typestr="directory"	default="."
+option	"mask"			m	"Mask dab file"	string	typestr="filename"
+option	"verbosity"		v	"Message verbosity"	int	default="5"
+option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
+option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
+option	"everything"	e	"Include pairs without answers"	flag	off

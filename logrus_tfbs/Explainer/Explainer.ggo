@@ -1,0 +1,24 @@
+package	"Explainer"
+version	"1.0"
+purpose	"Allows evaluation of genes contributing to a good AUC"
+
+option	"input"		i	"Correlation file"	string	typestr="filename"	yes
+option	"answers"	w	"Answer file"	string	typestr="filename"	yes
+section "Optional"
+option	"invert"	t	"Invert correlations to distances"	flag	off
+option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
+option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
+option	"genet"		c	"Term inclusion file"	string	typestr="filename"
+option	"count"		k	"Number of pairs to display"	int	default="-1"
+option	"normalize"	n	"Normalize to the range [0,1]"	flag	off
+option	"positives"	p	"Include only positive pairs"	flag	off
+option	"features"	f	"SGD gene features"	string	typestr="filename"
+option	"everything"	e	"Include pairs without answers"	flag	off
+option	"reverse"	r	"Reverse sort order"	flag	off
+option	"go_onto"	o	"GO ontology"	string	typestr="filename"
+option	"go_anno"	a	"GO annotations"	string	typestr="filename"
+option	"unknowns"	u	"Treatment of unknown genes"	values="exclude","include","only"	default="exclude"
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"memmap"	m	"Memory map input files"	flag	off
+option	"fraction"	x	"Random fraction of results to calculate"	double	default="1"
+option	"config"	C	"Command line config file"	string	typestr="filename"	default="Explainer.ini"

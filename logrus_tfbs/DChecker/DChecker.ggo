@@ -1,0 +1,22 @@
+package	"DChecker"
+version	"1.0"
+purpose	"Correlation to answer file checker"
+
+option	"input"		i	"Correlation file"	string	typestr="filename"	yes
+option	"answers"	w	"Answer file"	string	typestr="filename"	yes
+section "Optional"
+option	"invert"	t	"Invert correlations to distances"	flag	off
+option	"normalize"	n	"Normlize scores before processing"	flag	off
+option	"min"		m	"Minimum correlation to process"	float	default="0"
+option	"max"		M	"Maximum correlation to process"	float	default="1"
+option	"delta"		e	"Size of correlation bins"	double	default="0.01"
+option	"bins"		b	"Bins for quantile sorting"	int	default="0"
+option	"finite"	f	"Count finitely many bins"	flag	off
+option	"directory"	d	"Output directory"	string	typestr="directory"	default="."
+option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
+option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
+option	"genet"		c	"Term inclusion file"	string	typestr="filename"
+option	"sse"		s	"Calculate sum of squared errors"	flag	off
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"memmap"	p	"Memory map input DABs"	flag	off
+option	"unannotated"	u	"Include unannotated genes in standard"	flag	off

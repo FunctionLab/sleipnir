@@ -1,0 +1,29 @@
+package	"BNConverter"
+version	"1.0"
+purpose	"Bayes net training and testing"
+
+defgroup "data" yes
+groupoption	"datadir"	d	"Data directory"	string	typestr="directory"	group="data"
+groupoption	"dataset"	D	"Dataset dad file"	string	typestr="filename"	group="data"
+option	"input"		i	"Input dsl file"	string	typestr="filename"	yes
+option	"output"	o	"Output xml file"	string	typestr="filename"	yes
+option	"answers"	w	"Answer file"	string	typestr="filename"
+section "Optional"
+option	"pnl"		p	"Use PNL library"	flag	off
+option	"function"	f	"Use function-fitting networks"	flag	off
+option	"random"	r	"Seed random generator"	int	default="0"
+option	"randomize"	a	"Randomize CPTs before training"	flag	off
+option	"test"		t	"Test fraction"	double	default="0"
+option	"iterations"	s	"EM iterations"	int	default="20"
+option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
+option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
+option	"genet"		c	"Term inclusion file"	string	typestr="filename"
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"checkpoint"	k	"Checkpoint xml file after each iteration"	flag	off
+option	"eval_train"	E	"Training evaluation results"	string	typestr="filename"
+option	"eval_test"	e	"Test evaluation results"	string	typestr="filename"
+option	"zero"		z	"Zero missing values"	flag	off
+option	"group"		u	"Group identical inputs"	flag	on
+option	"murder"	m	"Kill the specified CPT before evaluation"	int
+option	"elr"		l	"Use ELR algorithm for learning"	flag	off
+option	"default"	b	"Bayes net containing defaults for cases with missing data"	string	typestr="filename"

@@ -1,0 +1,39 @@
+package	"MEFIT"
+version	"1.0"
+purpose	"Microarray Expression Functional Integration Technique (Huttenhower et al,
+	Bioinformatics 2006)
+
+MEFIT takes as input:
+1. A collection of microarray data sets (PCL files provided on the command line)
+2. A collection of known biological functions (lists of related genes provided
+   using the -r flag)
+3. A collection of known unrelated gene pairs (provided using the -u flag)
+
+It produces as output:
+1. A global Bayesian network learned by considered all of the data sets
+   independently of biological function (specified using the -O flag)
+2. One Bayesian network per biological function (placed in the directory
+   specified by the -o flag)
+3. Predicted probabilities of functional relationships within each biological
+   function of interest (placed in the directory specified by the -p flag)
+4. Trust scores for each input data set and function indicating how
+   predictive a data set is within a function (specified by the -t flag)"
+
+section "Inputs"
+option	"related"	r	"Directory containing lists of known related genes"	string	typestr="directory"	yes
+option	"unrelated"	u	"List of known unrelated gene pairs"	string	typestr="filename"	yes
+section "Outputs"
+option	"output"	o	"Directory to contain learned per-function Bayesian networks"	string	typestr="directory"	yes
+option	"global"	O	"Global learned Bayesian network"	string	typestr="filename"	yes
+option	"predictions"	p	"Directory to contain predicted probabilities of functional relationship"	string	typestr="directory"	yes
+option	"trusts"	t	"Trust scores learned per data set and function"	string	typestr="filename"	yes
+section "Optional"
+option	"bins"		b	"Tab separated bin cutoffs"	string	typestr="filename"
+option	"distance"	d	"Distance measure"	values="pearson","euclidean","kendalls","kolm-smir","spearman","pearnorm"	default="pearnorm"
+option	"genes"		g	"Subset of genes to include in evaluation"	string	typestr="filename"
+option	"genex"		G	"Subset of genes to exclude from evaluation"	string	typestr="filename"
+option	"random"	R	"Seed random generator"	int	default="0"
+option	"skip"		s	"Additional columns to skip in input PCLs"	int	default="2"
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"xdsl"		x	"Output .xdsl files in place of .dsls"	flag	on
+option	"zero"		z	"Zero missing values"	flag	off

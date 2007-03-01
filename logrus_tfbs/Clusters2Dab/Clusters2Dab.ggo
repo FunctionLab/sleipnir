@@ -1,0 +1,10 @@
+package	"Clusters2Dab"
+version	"1.0"
+purpose	"Generate pairwise scores from preclustered output."
+
+section "Optional"
+option	"output"	o	"Output dab file"	string	typestr="filename"
+option	"input"		i	"Input cluster file"	string	typestr="filename"
+option	"type"		t	"Type of input cluster"	values="samba","list","param","fuzzy"	default="list"
+option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
+option	"verbosity"	v	"Message verbosity"	int	default="5"
