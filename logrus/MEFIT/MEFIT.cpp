@@ -214,7 +214,7 @@ int read_genes( const char* szPositives, const char* szNegatives, CGenome& Genom
 		Genome.AddGene( DatNegatives.GetGene( i ) );
 	cerr << "  done" << endl;
 
-	return ( Answers.Open( vecpPositives, DatNegatives, Genome ) ? 0 : 1 ); }
+	return ( Answers.Open( DatNegatives, vecpPositives, Genome, true ) ? 0 : 1 ); }
 
 int write_posteriors( const string& strFunction, const CBayesNetSmile& BNFunction, ostream& ostm ) {
 	size_t					i, iNode;
@@ -222,15 +222,17 @@ int write_posteriors( const string& strFunction, const CBayesNetSmile& BNFunctio
 	vector<float>			vecdOut;
 	float					dPrior;
 	unsigned char			bValue;
+	vector<string>			vecstrNodes;
 
-	vecbDatum.resize( BNFunction.GetNodes( ).size( ) );
+	BNFunction.GetNodes( vecstrNodes );
+	vecbDatum.resize( vecstrNodes.size( ) );
 	for( i = 0; i < vecbDatum.size( ); ++i )
 		vecbDatum[ i ] = 0;
 
 	BNFunction.Evaluate( vecbDatum, vecdOut, false );
 	dPrior = vecdOut[ vecdOut.size( ) - 1 ];
 	ostm << strFunction;
-	for( iNode = 1; iNode < BNFunction.GetNodes( ).size( ); ++iNode ) {
+	for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode ) {
 		float	d;
 
 		vecbDatum[ iNode - 1 ] = 0;

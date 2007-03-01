@@ -385,7 +385,8 @@ void CPCL::Normalize( ) {
 	for( i = 0; i < GetGenes( ); ++i ) {
 		dAve = CStatistics::Average( Get( i ), Get( i ) + GetExperiments( ) );
 		dStd = sqrt( CStatistics::Variance( Get( i ), Get( i ) + GetExperiments( ), dAve ) );
-		for( j = 0; j < GetExperiments( ); ++j )
-			Set( i, j, (float)( ( Get( i, j ) - dAve ) / dStd ) ); } }
+		if( dStd )
+			for( j = 0; j < GetExperiments( ); ++j )
+				Set( i, j, (float)( ( Get( i, j ) - dAve ) / dStd ) ); } }
 
 }
