@@ -76,10 +76,10 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open: " << sArgs.datadir_arg << endl;
 			return 1; }
 		pData = &Data; }
-	pData->FilterGenes( GenesOv, CDat::EFilterInclude );
+	pData->FilterGenes( GenesOv, CDat::EFilterTerm );
 
 	if( sArgs.output_arg )
-		Dat.Open( pData->GetGeneNames( ) );
+		Dat.Open( sArgs.genes_arg ? GenesIn.GetGeneNames( ) : pData->GetGeneNames( ) );
 	vecvecdResults.clear( );
 	cerr << "Evaluating..." << endl;
 	if( sArgs.output_arg )

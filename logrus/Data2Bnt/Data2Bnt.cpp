@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+static const char	c_szERROR[]	= "ERROR";
 static const char	c_cComment	= '#';
 static const char	c_cDot		= '.';
 
@@ -145,7 +146,7 @@ int main( int iArgs, char** aszArgs ) {
 			ifsm.getline( szBuf, c_iBuf - 1 );
 			vecstrLine.clear( );
 			CMeta::Tokenize( szBuf, vecstrLine );
-			if( vecstrLine.size( ) == 0 )
+			if( ( vecstrLine.size( ) == 0 ) || ( vecstrLine[ 0 ].find( c_szERROR ) == 0 ) )
 				continue;
 			if( vecstrLine.size( ) < 2 ) {
 				cerr << "Illegal line in " << sArgs.inputs[ i ] << ": " << szBuf << endl;

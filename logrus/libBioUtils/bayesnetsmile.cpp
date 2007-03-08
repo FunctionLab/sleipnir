@@ -333,12 +333,15 @@ bool CBayesNetSmile::Evaluate( const IDataset* pData, CDat& DatOut, bool fZero )
 
 bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 	vector<vector<float> >* pvecvecdOut, bool fZero ) const {
-	size_t						i, j, k;
+	size_t						i, j, k, iOne, iTwo;
 	DSL_nodeValue*				pValue;
 	string						strCur;
 	map<string,float>			mapData;
 	map<string,float>::iterator	iterDatum;
 	vector<bool>				vecfHidden;
+	bool						fZeroable;
+	float						dPrior;
+	vector<size_t>				veciGenes;
 
 	if( !m_fSmileNet || IsContinuous( ) )
 		return false;
@@ -346,17 +349,36 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 	vecfHidden.resize( pData->GetExperiments( ) );
 	for( i = 0; i < vecfHidden.size( ); ++i )
 		vecfHidden[ i ] = pData->IsHidden( i );
+	if( !( fZeroable = fZero ) )
+		for( i = 1; i < (size_t)m_SmileNet.GetNumberOfNodes( ); ++i ) {
+			DSL_userProperties&	Props	= m_SmileNet.GetNode( (int)i )->Info( ).UserProperties( );
+			if( Props.FindProperty( c_szZero ) >= 0 ) {
+				fZeroable = true;
+				break; } }
+	if( pDatOut ) {
+		veciGenes.resize( pData->GetGenes( ) );
+		for( i = 0; i < pData->GetGenes( ); ++i )
+			veciGenes[ i ] = pDatOut->GetGene( pData->GetGene( i ) );
+		((CBayesNetSmileImpl*)this)->m_SmileNet.UpdateBeliefs( );
+		pValue = m_SmileNet.GetNode( 0 )->Value( );
+		dPrior = (float)(*pValue->GetMatrix( ))[ 0 ]; }
 	for( i = 0; i < pData->GetGenes( ); ++i ) {
 		if( !( i % 250 ) )
 			g_CatBioUtils.notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
 				pData->GetGenes( ) );
+		if( pDatOut && !pvecvecdOut && ( ( iOne = veciGenes[ i ] ) == -1 ) )
+			continue;
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
-			if( !pData->IsExample( i, j ) )
+			if( pDatOut && !pvecvecdOut && ( ( iTwo = veciGenes[ j ] ) == -1 ) )
 				continue;
+			if( !( fZeroable || pData->IsExample( i, j ) ) ) {
+				if( pDatOut && ( iOne != -1 ) && ( iTwo != -1 ) )
+					pDatOut->Set( iOne, iTwo, dPrior );
+				continue; }
 			strCur = EncodeDatum( pData, i, j );
 			if( m_fGroup && ( ( iterDatum = mapData.find( strCur ) ) != mapData.end( ) ) ) {
-				if( pDatOut )
-					pDatOut->Set( i, j, iterDatum->second );
+				if( pDatOut && ( iOne != -1 ) && ( iTwo != -1 ) )
+					pDatOut->Set( iOne, iTwo, iterDatum->second );
 				if( pvecvecdOut ) {
 					pvecvecdOut->resize( pvecvecdOut->size( ) + 1 );
 					(*pvecvecdOut)[ pvecvecdOut->size( ) - 1 ].push_back(
@@ -376,8 +398,8 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 					for( k = 0; ( k + 1 ) < (size_t)pValue->GetSize( ); ++k )
 						vecdCur.push_back( (float)(*pValue->GetMatrix( ))[ (int)k ] );
 				} }
-			if( pDatOut )
-				pDatOut->Set( i, j, (float)(*pValue->GetMatrix( ))[ 0 ] ); } }
+			if( pDatOut && ( iOne != -1 ) && ( iTwo != -1 ) )
+				pDatOut->Set( iOne, iTwo, (float)(*pValue->GetMatrix( ))[ 0 ] ); } }
 
 	return true; }
 

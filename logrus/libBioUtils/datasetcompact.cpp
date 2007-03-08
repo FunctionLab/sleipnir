@@ -88,6 +88,7 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 			CDatasetCompactImpl::Open( Datum, i + 1 ) ) )
 			return false; }
 
+/*
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )
 		for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j ) {
 			for( k = 1; k < m_iData; ++k )
@@ -95,6 +96,7 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 					break;
 			if( k >= m_iData )
 				m_aData[ 0 ].Set( i, j, 0 ); }
+*/
 
 	return true; }
 

@@ -29,34 +29,49 @@ int main( int iArgs, char** aszArgs ) {
 int MainPosteriors( const gengetopt_args_info& sArgs ) {
 	size_t					i, iDSL;
 	vector<unsigned char>	vecbDatum;
-	vector<float>			vecdOut;
+	vector<float>			vecdOut, vecdCur;
+	vector<string>			vecstrNodes;
+	map<string,size_t>		mapstriNodes;
 
+	for( iDSL = 0; iDSL < sArgs.inputs_num; ++iDSL ) {
+		CBayesNetSmile	BNSmile;
+		vector<string>	vecstrCur;
+
+		if( !BNSmile.Open( sArgs.inputs[ iDSL ] ) ) {
+			cerr << "Couldn't open: " << sArgs.inputs[ iDSL ] << endl;
+			return 1; }
+		BNSmile.GetNodes( vecstrCur );
+		for( i = 1; i < vecstrCur.size( ); ++i )
+			if( mapstriNodes.find( vecstrCur[ i ] ) == mapstriNodes.end( ) ) {
+				mapstriNodes[ vecstrCur[ i ] ] = vecstrNodes.size( );
+				vecstrNodes.push_back( vecstrCur[ i ] ); } }
+	for( i = 0; i < vecstrNodes.size( ); ++i )
+		cout << '\t' << vecstrNodes[ i ];
+	cout << endl;
+
+	vecdCur.resize( vecstrNodes.size( ) );
 	for( iDSL = 0; iDSL < sArgs.inputs_num; ++iDSL ) {
 		CBayesNetSmile	BNSmile;
 		size_t			iNode;
 		unsigned char	bValue;
 		float			dPrior;
-		vector<string>	vecstrNodes;
+		vector<string>	vecstrCur;
 		CDataMatrix		MatFR;
 
 		if( !BNSmile.Open( sArgs.inputs[ iDSL ] ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ iDSL ] << endl;
 			return 1; }
-		BNSmile.GetNodes( vecstrNodes );
-		vecbDatum.resize( vecstrNodes.size( ) );
+		for( i = 0; i < vecdCur.size( ); ++i )
+			vecdCur[ i ] = CMeta::GetNaN( );
+		BNSmile.GetNodes( vecstrCur );
+		vecbDatum.resize( vecstrCur.size( ) );
 		for( i = 0; i < vecbDatum.size( ); ++i )
 			vecbDatum[ i ] = 0;
 
 		BNSmile.Evaluate( vecbDatum, vecdOut, false );
 		dPrior = vecdOut[ vecdOut.size( ) - 1 ];
 
-		if( !iDSL ) {
-			for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode )
-				cout << '\t' << vecstrNodes[ iNode ];
-			cout << endl; }
-
-		cout << sArgs.inputs[ iDSL ];
-		for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode ) {
+		for( iNode = 1; iNode < vecstrCur.size( ); ++iNode ) {
 			float			dSum;
 			CDataMatrix		MatCPT;
 			vector<float>	vecdProbs;
@@ -74,7 +89,13 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 
 			for( dSum = 0,i = 0; i < vecdOut.size( ); ++i ) {
 				dSum += fabs( dPrior - vecdOut[ i ] ) * vecdProbs[ i ]; }
-			cout << '\t' << ( dSum / BNSmile.GetValues( iNode ) ); }
+			vecdCur[ mapstriNodes[ vecstrCur[ iNode ] ] ] = dSum / BNSmile.GetValues( iNode ); }
+
+		cout << sArgs.inputs[ iDSL ];
+		for( i = 0; i < vecdCur.size( ); ++i ) {
+			cout << '\t';
+			if( !CMeta::IsNaN( vecdCur[ i ] ) )
+				cout << vecdCur[ i ]; }
 		cout << endl; }
 
 	return 0; }
