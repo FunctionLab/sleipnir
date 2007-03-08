@@ -1,8 +1,0 @@
-package	"Orthologer"
-version	"1.0"
-purpose	"Orthology-based DAT processing"
-
-section "Optional"
-option	"input"		i	"Orthology file"	string	typestr="filename"
-option	"weight"	w	"Weight of orthologue relationships"	double	default="1"
-option	"verbosity"	v	"Message verbosity"	int	default="5"

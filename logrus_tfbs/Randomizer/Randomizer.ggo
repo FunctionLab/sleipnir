@@ -1,9 +1,0 @@
-package	"Randomizer"
-version	"1.0"
-purpose	"Data file randomizer."
-
-option	"input"		i	"Input/output dat file"	string	typestr="filename"	yes
-section "Optional"
-option	"count"		c	"Target positive pair count"	int	default="0"
-option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"random"	r	"Seed random generator"	int	default="0"
