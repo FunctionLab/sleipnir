@@ -1,5 +1,5 @@
 package	"MEFIT"
-version	"1.0"
+version	"1.1"
 purpose	"Microarray Expression Functional Integration Technique (Huttenhower et al,
 	Bioinformatics 2006)
 

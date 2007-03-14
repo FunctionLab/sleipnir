@@ -43,6 +43,10 @@ public:
 	size_t GetBins( size_t ) const;
 	void Remove( size_t, size_t );
 	void FilterGenes( const CGenes&, CDat::EFilter );
+
+	bool OpenGenes( const std::vector<std::string>& vecstrData ) {
+
+		return CDataImpl::OpenGenes( vecstrData ); }
 };
 
 class CDatasetCompact : protected CDatasetCompactImpl, public IDataset {
@@ -59,7 +63,6 @@ public:
 	void Save( std::ostream&, bool ) const;
 	bool FilterGenes( const char*, CDat::EFilter );
 	void FilterAnswers( );
-	bool OpenGenes( const std::vector<std::string>& );
 
 	bool IsHidden( size_t ) const;
 	size_t GetDiscrete( size_t, size_t, size_t ) const;
@@ -73,6 +76,10 @@ public:
 	size_t GetBins( size_t ) const;
 	virtual void Remove( size_t, size_t );
 	void FilterGenes( const CGenes&, CDat::EFilter );
+
+	bool OpenGenes( const std::vector<std::string>& vecstrData ) {
+
+		return CDataImpl::OpenGenes( vecstrData ); }
 };
 
 class CDatasetCompactMap : public CDatasetCompact {

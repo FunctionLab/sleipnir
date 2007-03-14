@@ -8,6 +8,7 @@ namespace libBioUtils {
 class COrthology : COrthologyImpl {
 public:
 	bool Open( std::istream& );
+	void Save( std::ostream& ) const;
 
 	size_t GetClusters( ) const {
 
@@ -21,12 +22,6 @@ public:
 
 		return *m_vecvecpGenes[ iCluster ][ iGene ]; }
 
-	CGenome* GetGenome( const CGene& Gene ) const {
-		TMapGeneGenome::const_iterator	iterGenome;
-
-		return ( ( ( iterGenome = m_mapGenes.find( (CGene*)&Gene ) ) == m_mapGenes.end( ) ) ? NULL :
-			iterGenome->second ); }
-
 	size_t GetGenomes( ) const {
 
 		return m_vecpGenomes.size( ); }
@@ -38,6 +33,12 @@ public:
 	const std::string& GetOrganism( size_t iOrganism ) const {
 
 		return m_vecstrOrganisms[ iOrganism ]; }
+
+	size_t GetOrganism( const CGene& Gene ) const {
+		TMapGeneI::const_iterator	iterGenome;
+
+		return ( ( ( iterGenome = m_mapGenes.find( (CGene*)&Gene ) ) == m_mapGenes.end( ) ) ? NULL :
+			iterGenome->second ); }
 };
 
 }

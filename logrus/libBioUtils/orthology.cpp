@@ -17,7 +17,6 @@ void COrthologyImpl::Reset( ) {
 	m_vecpGenomes.clear( );
 	m_vecstrOrganisms.clear( );
 	m_mapGenes.clear( );
-	m_mapOrthology.clear( );
 	m_vecvecpGenes.clear( ); }
 
 bool COrthology::Open( istream& istm ) {
@@ -55,13 +54,24 @@ bool COrthology::Open( istream& istm ) {
 						break;
 				if( j < m_vecpGenomes.size( ) )
 					pGenome = m_vecpGenomes[ j ];
-				else
+				else {
 					m_vecpGenomes.push_back( pGenome = new CGenome( ) );
+					m_vecstrOrganisms.push_back( strOrganism ); }
 				vecpGenes.push_back( pGene = &pGenome->AddGene( strGene ) );
-				m_mapGenes[ pGene ] = pGenome; }
+				m_mapGenes[ pGene ] = j; }
 		} }
 	delete[] acBuf;
 
 	return true; }
+
+void COrthology::Save( ostream& ostm ) const {
+	size_t	i, j;
+
+	for( i = 0; i < m_vecvecpGenes.size( ); ++i ) {
+		for( j = 0; j < m_vecvecpGenes[ i ].size( ); ++j )
+			ostm << ( j ? "\t" : "" ) << m_vecstrOrganisms[ ((COrthology*)this)->m_mapGenes[
+				m_vecvecpGenes[ i ][ j ] ] ] << c_cOrgSep << m_vecvecpGenes[ i ][ j ]->GetName( );
+
+		ostm << endl; } }
 
 }

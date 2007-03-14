@@ -52,7 +52,7 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 
 bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 	const IBayesNet* pBayesNet, const CGenes& GenesIn, const CGenes& GenesEx, bool fEverything ) {
-	size_t			i, j, k;
+	size_t			i;
 	vector<string>	vecstrData, vecstrNodes;
 	set<string>		setstrGenes;
 
@@ -178,7 +178,7 @@ bool CDatasetCompactImpl::Open( const CDataPair& Datum, size_t iExp ) {
 			for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
 				if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
 					!CMeta::IsNaN( d = Datum.Get( iOne, iTwo ) ) )
-					Target.Set( i, j, (unsigned char)( Datum.Quantify( d ) + 1 ) );
+					Target.Set( i, j, (unsigned char)( Datum.Quantize( d ) + 1 ) );
 
 	return true; }
 
@@ -514,9 +514,5 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 			return false; }
 
 	return true; }
-
-bool CDatasetCompact::OpenGenes( const vector<string>& vecstrData ) {
-
-	return CDataImpl::OpenGenes( vecstrData ); }
 
 }

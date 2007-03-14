@@ -280,7 +280,7 @@ void* evaluate( void* pData ) {
 				continue;
 			if( psData->m_pAnswers && CMeta::IsNaN( psData->m_pAnswers->Get( i, j ) ) )
 				continue;
-			iBin = psData->m_pDat->Quantify( psData->m_pDat->Get( iOne, iTwo ) );
+			iBin = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) );
 			if( ( iBin == -1 ) && ( ( iBin = psData->m_fZero ? 0 : psData->m_iZero ) == -1 ) )
 				continue;
 			if( CMeta::IsNaN( adYes[ iIndex = ( j - i - 1 ) ] ) ) {
@@ -316,10 +316,10 @@ void* finalize( void* pData ) {
 		memcpy( adNo, psData->m_pNo->Get( i ), ( psData->m_pNo->GetGenes( ) - i - 1 ) * sizeof(*adNo) );
 		for( j = 0; j < ( psData->m_pYes->GetGenes( ) - i - 1 ); ++j )
 			if( CMeta::IsNaN( adYes[ j ] ) )
-				adYes[ j ] = dPrior;
+				adYes[ j ] = (float)dPrior;
 			else {
 				d = exp( (double)adYes[ j ] );
-				adYes[ j ] = d / ( d + exp( (double)adNo[ j ] ) ); }
+				adYes[ j ] = (float)( d / ( d + exp( (double)adNo[ j ] ) ) ); }
 		psData->m_pYes->Set( i, adYes ); }
 	delete[] adNo;
 	delete[] adYes;

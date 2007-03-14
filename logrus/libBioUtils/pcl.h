@@ -1,6 +1,7 @@
 #ifndef PCL_H
 #define PCL_H
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 
@@ -51,7 +52,7 @@ public:
 
 		return m_Data.Get( iGene, iExp ); }
 
-	const float* Get( size_t iGene ) const {
+	float* Get( size_t iGene ) const {
 
 		return m_Data.Get( iGene ); }
 
@@ -108,6 +109,12 @@ public:
 				return GetFeature( iGene, i );
 
 		return ""; }
+
+	void Randomize( ) {
+		size_t	i;
+
+		for( i = 0; i < GetGenes( ); ++i )
+			std::random_shuffle( Get( i ), Get( i ) + GetExperiments( ) ); }
 };
 
 }

@@ -136,8 +136,13 @@ int main( int iArgs, char** aszArgs ) {
 				const CGene&	Gene	= Slim.GetGene( i, j );
 				const string&	strName	= ( sArgs.synonyms_flag && Gene.GetSynonyms( ) ) ?
 					Gene.GetSynonym( 0 ) : Gene.GetName( );
-				
-				ofsm << strName << endl; }
+			
+				ofsm << strName;
+				if( sArgs.allids_flag )
+					for( k = 0; k < Gene.GetSynonyms( ); ++k )
+						ofsm << '\t' << ( ( !k && sArgs.synonyms_flag ) ? Gene.GetName( ) :
+							Gene.GetSynonym( k ) );
+				ofsm << endl; }
 			ofsm.close( ); }
 	if( sArgs.test_arg )
 		for( iterGene = mapGenes.begin( ); iterGene != mapGenes.end( ); ++iterGene )

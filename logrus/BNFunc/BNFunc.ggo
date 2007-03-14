@@ -21,3 +21,4 @@ option	"sql"		q	"Directory in which to place SQL tables"	string	typestr="filenam
 option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"config"	c	"Command line config file"	string	typestr="filename"	default="BNFunc.ini"
 option	"dbids"		b	"Include GO database IDs"	flag	off
+option	"allids"	l	"Output all available IDs"	flag	off

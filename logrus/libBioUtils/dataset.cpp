@@ -375,7 +375,7 @@ bool CDatasetImpl::Open( const CDataPair& Datum, size_t iExp ) {
 				for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
 					if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
 						!CMeta::IsNaN( d = Datum.Get( iOne, iTwo ) ) )
-						pDatum->Set( i, j, (unsigned char)( Datum.Quantify( d ) + 1 ) );
+						pDatum->Set( i, j, (unsigned char)( Datum.Quantize( d ) + 1 ) );
 		m_apData[ iExp ] = pDatum; }
 
 	return true; }

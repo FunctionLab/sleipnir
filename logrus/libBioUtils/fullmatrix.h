@@ -35,7 +35,7 @@ public:
 
 		return m_aaData; }
 
-	const tType* Get( size_t iY ) const {
+	tType* Get( size_t iY ) const {
 
 		return m_aaData[ iY ]; }
 

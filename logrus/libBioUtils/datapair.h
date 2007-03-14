@@ -13,7 +13,7 @@ public:
 	bool Open( const CSlim& );
 	void SetQuants( const float*, size_t );
 	void SetQuants( const std::vector<float>& );
-	size_t Quantify( float ) const;
+	size_t Quantize( float ) const;
 	bool IsContinuous( ) const;
 	unsigned char GetValues( ) const;
 
@@ -30,7 +30,7 @@ public:
 class CPCLPair : public CPCLPairImpl {
 public:
 	bool Open( const char*, size_t );
-	size_t Quantify( float, size_t ) const;
+	size_t Quantize( float, size_t ) const;
 };
 
 }

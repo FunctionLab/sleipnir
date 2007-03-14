@@ -90,6 +90,19 @@ public:
 			aItems[ veciCopy[ i ] ] = Temp;
 			veciCopy[ veciMap[ i ] ] = veciCopy[ i ];
 			veciMap[ veciCopy[ i ] ] = veciMap[ i ]; } }
+
+	template <class tType>
+	static size_t Quantize( tType Value, const std::vector<tType>& vecQuants ) {
+		size_t	i;
+
+		if( IsNaN( Value ) )
+			return -1;
+
+		for( i = 0; i < vecQuants.size( ); ++i )
+			if( Value <= vecQuants[ i ] )
+				break;
+
+		return min( i, vecQuants.size( ) - 1 ); }
 };
 
 }

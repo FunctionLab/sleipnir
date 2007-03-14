@@ -37,7 +37,7 @@ string CBayesNetImpl::EncodeDatum( const CPCLPair& PCL, size_t iGene, const vect
 	size_t	i, iCur;
 
 	for( i = 0; i < veciMap.size( ); ++i )
-		strRet += ( ( veciMap[ i ] == -1 ) || ( ( iCur = PCL.Quantify( PCL.Get( iGene, veciMap[ i ] ),
+		strRet += ( ( veciMap[ i ] == -1 ) || ( ( iCur = PCL.Quantize( PCL.Get( iGene, veciMap[ i ] ),
 			veciMap[ i ] ) ) == -1 ) ) ? c_cMissing : (char)( c_cBase + ( iCur & 0xFF ) );
 
 	return strRet; }

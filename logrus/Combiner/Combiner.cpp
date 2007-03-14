@@ -82,116 +82,88 @@ static int MainPCLs( const gengetopt_args_info& sArgs ) {
 
 	return 0; }
 
-static int MainDATs( const gengetopt_args_info& sArgs ) {
-	CDataset		Dataset;
-	CDataSubset		DataSubset;
-	IDataset*		pData;
-	CDat			Dat;
-	size_t			i, j, k, iN, iSubset, iSubsets;
-	float			d, dMax;
-	vector<string>	vecstrFiles;
+int MainDATs( const gengetopt_args_info& sArgs ) {
+	CDataset					Dataset;
+	CDat						DatOut, DatCur;
+	CHalfMatrix<unsigned char>	HMatCounts;
+	size_t						i, j, k, iOne, iTwo;
+	vector<size_t>				veciGenes;
+	float						d;
+	vector<string>				vecstrFiles;
 
 	if( !sArgs.inputs_num )
 		return 1;
 
 	vecstrFiles.resize( sArgs.inputs_num );
 	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
-	if( sArgs.subset_arg ) {
-		DataSubset.Initialize( vecstrFiles, sArgs.subset_arg );
-		iSubsets = ( DataSubset.GetGenes( ) / sArgs.subset_arg ) +
-			( ( DataSubset.GetGenes( ) % sArgs.subset_arg ) ? 1 : 0 );
-		pData = &DataSubset; }
-	else {
-		if( !Dataset.Open( vecstrFiles ) ) {
-			cerr << "Couldn't open: " << vecstrFiles[ 0 ];
-			for( i = 1; i < vecstrFiles.size( ); ++i )
-				cerr << ", " << vecstrFiles[ i ];
-			cerr << endl;
-			return 1; }
-		iSubsets = 1;
-		pData = &Dataset; }
-
-	Dat.Open( pData->GetGeneNames( ) );
-	for( iSubset = 0; iSubset < iSubsets; ++iSubset ) {
-		if( sArgs.subset_arg ) {
-			cerr << "Processing subset " << iSubset << '/' << iSubsets << endl;
-			DataSubset.Open( iSubset * sArgs.subset_arg ); }
-		for( i = 0; i < Dat.GetGenes( ); ++i ) {
-			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
-				if( !pData->IsExample( i, j ) )
-					continue;
-				dMax = CMeta::GetNaN( );
-				if( !strcmp( c_szMean, sArgs.method_arg ) ) {
-					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
-						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) ) {
-							dMax = ( CMeta::IsNaN( dMax ) ? 0 : dMax ) + d;
-							iN++; }
-					dMax /= iN; }
-				else if( !strcmp( c_szGMean, sArgs.method_arg ) ) {
-					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
-						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) ) {
-							dMax = ( CMeta::IsNaN( dMax ) ? 1 : dMax ) * d;
-							iN++; }
-					dMax = pow( dMax, 1.0f / iN ); }
-				else if( !strcmp( c_szHMean, sArgs.method_arg ) ) {
-					for( iN = k = 0; k < pData->GetExperiments( ); ++k )
-						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) ) {
-							dMax = ( CMeta::IsNaN( dMax ) ? 0 : dMax ) + ( 1 / d );
-							iN++; }
-					dMax = iN / dMax; }
-				else if( !strcmp( c_szMax, sArgs.method_arg ) ) {
-					for( k = 0; k < pData->GetExperiments( ); ++k )
-						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) &&
-							( CMeta::IsNaN( dMax ) || ( d > dMax ) ) )
-							dMax = d; }
-				else if( !strcmp( c_szMin, sArgs.method_arg ) ) {
-					for( k = 0; k < pData->GetExperiments( ); ++k )
-						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) &&
-							( CMeta::IsNaN( dMax ) || ( d < dMax ) ) )
-							dMax = d; }
-				else if( !strcmp( c_szVote, sArgs.method_arg ) ) {
-					size_t	iPos, iNeg;
-
-					for( iPos = iNeg = k = 0; k < pData->GetExperiments( ); ++k )
-						if( !CMeta::IsNaN( d = pData->GetContinuous( i, j, k ) ) ) {
-							if( d > 0 )
-								iPos++;
-							else
-								iNeg++; }
-					dMax = ( iPos == iNeg ) ? CMeta::GetNaN( ) : ( ( iPos > iNeg ) ? 1 : 0 ); }
-				Dat.Set( i, j, dMax ); } } }
-
-	Dat.Save( sArgs.output_arg );
-
-	return 0; }
-
-int MainDATs2( const gengetopt_args_info& sArgs ) {
-	CDatasetCompact	Dataset;
-	CDat			Dat;
-	size_t			i, j, k;
-	vector<string>	vecstrFiles;
-
-	if( !sArgs.inputs_num )
-		return 1;
-
-	vecstrFiles.resize( sArgs.inputs_num );
-	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
-	if( !Dataset.Open( vecstrFiles ) ) {
+	if( !Dataset.OpenGenes( vecstrFiles ) ) {
 		cerr << "Couldn't open: " << vecstrFiles[ 0 ];
 		for( i = 1; i < vecstrFiles.size( ); ++i )
 			cerr << ", " << vecstrFiles[ i ];
 		cerr << endl;
 		return 1; }
 
-	Dat.Open( Dataset.GetGeneNames( ) );
-	for( i = 0; i < Dat.GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
-			for( k = 0; k < Dataset.GetExperiments( ); ++k )
-				if( Dataset.GetDiscrete( i, j, k ) != -1 ) {
-					Dat.Set( i, j, 1 );
-					break; }
+	DatOut.Open( Dataset.GetGeneNames( ), false, sArgs.memmap_flag ? sArgs.output_arg : NULL );
+	if( !strcmp( c_szMax, sArgs.method_arg ) )
+		d = -FLT_MAX;
+	else if( !strcmp( c_szMin, sArgs.method_arg ) )
+		d = FLT_MAX;
+	else
+		d = 0;
+	for( i = 0; i < DatOut.GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
+			DatOut.Set( i, j, d );
+	if( !d ) {
+		HMatCounts.Initialize( DatOut.GetGenes( ) );
+		HMatCounts.Clear( ); }
+	veciGenes.resize( DatOut.GetGenes( ) );
+	for( i = 0; i < sArgs.inputs_num; ++i ) {
+		if( !DatCur.Open( sArgs.inputs[ i ], !!sArgs.memmap_flag ) ) {
+			cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+			return 1; }
+		for( j = 0; j < veciGenes.size( ); ++j )
+			veciGenes[ j ] = DatCur.GetGene( DatOut.GetGene( j ) );
+		for( j = 0; j < veciGenes.size( ); ++j ) {
+			if( ( iOne = veciGenes[ j ] ) == -1 )
+				continue;
+			for( k = ( j + 1 ); k < veciGenes.size( ); ++k ) {
+				if( ( ( iTwo = veciGenes[ k ] ) == -1 ) || CMeta::IsNaN( d = DatCur.Get( iOne, iTwo ) ) )
+					continue;
+				if( !strcmp( c_szMean, sArgs.method_arg ) ) {
+					DatOut.Get( j, k ) += d;
+					HMatCounts.Get( j, k )++; }
+				else if( !strcmp( c_szGMean, sArgs.method_arg ) ) {
+					DatOut.Get( j, k ) *= d;
+					HMatCounts.Get( j, k )++; }
+				else if( !strcmp( c_szHMean, sArgs.method_arg ) ) {
+					DatOut.Get( j, k ) += 1 / d;
+					HMatCounts.Get( j, k )++; }
+				else if( !strcmp( c_szMax, sArgs.method_arg ) ) {
+					if( d > DatOut.Get( j, k ) )
+						DatOut.Set( j, k, d ); }
+				else if( !strcmp( c_szMin, sArgs.method_arg ) ) {
+					if( d < DatOut.Get( j, k ) )
+						DatOut.Set( j, k, d ); } } } }
+	for( i = 0; i < DatOut.GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
+			if( !strcmp( c_szMean, sArgs.method_arg ) )
+				DatOut.Set( i, j, ( k = HMatCounts.Get( i, j ) ) ? ( DatOut.Get( i, j ) / k ) :
+					CMeta::GetNaN( ) );
+			else if( !strcmp( c_szGMean, sArgs.method_arg ) )
+				DatOut.Set( i, j, ( k = HMatCounts.Get( i, j ) ) ?
+					(float)pow( (double)DatOut.Get( i, j ), 1.0 / k ) : CMeta::GetNaN( ) );
+			else if( !strcmp( c_szHMean, sArgs.method_arg ) )
+				DatOut.Set( i, j, ( k = HMatCounts.Get( i, j ) ) ? ( k / DatOut.Get( i, j ) ) :
+					CMeta::GetNaN( ) );
+			else if( !strcmp( c_szMax, sArgs.method_arg ) ) {
+				if( DatOut.Get( i, j ) == -FLT_MAX )
+					DatOut.Set( i, j, CMeta::GetNaN( ) ); }
+			else if( !strcmp( c_szMin, sArgs.method_arg ) ) {
+				if( DatOut.Get( i, j ) == FLT_MAX )
+					DatOut.Set( i, j, CMeta::GetNaN( ) ); }
 
-	Dat.Save( sArgs.output_arg );
+	if( !sArgs.memmap_flag )
+		DatOut.Save( sArgs.output_arg );
 
 	return 0; }
 

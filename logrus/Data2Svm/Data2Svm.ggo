@@ -18,3 +18,5 @@ option	"gamma"		M	"RBF gamma"	float	default="1"
 option	"degree"	d	"Polynomial degree"	int	default="3"
 option	"random"	r	"Seed random generator"	int	default="0"
 option	"normalize"	n	"Z-score normalize feature values"	flag	off
+option	"random_features"	z	"Randomize input features"	flag	off
+option	"random_output"		Z	"Randomize output values"	flag	off

@@ -14,8 +14,7 @@ class COrthologyImpl : protected CFile {
 protected:
 	static const char	c_cOrgSep	= '|';
 
-	typedef std::map<CGene*,std::vector<size_t> >	TMapGeneVecI;
-	typedef std::map<CGene*,CGenome*>				TMapGeneGenome;
+	typedef std::map<CGene*,size_t>	TMapGeneI;
 
 	~COrthologyImpl( );
 
@@ -23,8 +22,7 @@ protected:
 
 	std::vector<std::string>			m_vecstrOrganisms;
 	std::vector<CGenome*>				m_vecpGenomes;
-	TMapGeneVecI						m_mapOrthology;
-	TMapGeneGenome						m_mapGenes;
+	TMapGeneI							m_mapGenes;
 	std::vector<std::vector<CGene*> >	m_vecvecpGenes;
 };
 

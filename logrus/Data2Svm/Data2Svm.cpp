@@ -28,6 +28,8 @@ int main( int iArgs, char** aszArgs ) {
 	ifsm.close( );
 	if( sArgs.normalize_flag )
 		Data.Normalize( );
+	if( sArgs.random_features_flag )
+		Data.Randomize( );
 
 	if( sArgs.genes_arg ) {
 		ifsm.clear( );
@@ -80,6 +82,8 @@ int main( int iArgs, char** aszArgs ) {
 		ofsm.close( ); }
 
 	SVM.Evaluate( Data, vecdResults, !!sArgs.genex_arg );
+	if( sArgs.random_output_flag )
+		random_shuffle( vecdResults.begin( ), vecdResults.end( ) );
 	dAve = (float)CStatistics::Average( vecdResults );
 	dStd = (float)sqrt( CStatistics::Variance( vecdResults, dAve ) );
 	for( i = 0; i < vecdResults.size( ); ++i )

@@ -37,18 +37,6 @@ bool CPairImpl::Open( const char* szLine, vector<float>& vecdQuant ) {
 
 	return true; }
 
-size_t CPairImpl::Quantify( float dValue, const vector<float>& vecdQuant ) {
-	size_t	i;
-
-	if( CMeta::IsNaN( dValue ) )
-		return -1;
-
-	for( i = 0; i < vecdQuant.size( ); ++i )
-		if( dValue <= vecdQuant[ i ] )
-			break;
-
-	return min( i, vecdQuant.size( ) - 1 ); }
-
 bool CDataPair::Open( const CSlim& Slim ) {
 
 	Reset( false );
@@ -73,9 +61,9 @@ bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap ) {
 	ifsm.close( );
 	return CPairImpl::Open( szBuf, m_vecdQuant ); }
 
-size_t CDataPair::Quantify( float dValue ) const {
+size_t CDataPair::Quantize( float dValue ) const {
 
-	return CPairImpl::Quantify( dValue, m_vecdQuant ); }
+	return CMeta::Quantize( dValue, m_vecdQuant ); }
 
 bool CDataPair::IsContinuous( ) const {
 
@@ -127,8 +115,8 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 
 	return true; }
 
-size_t CPCLPair::Quantify( float dValue, size_t iExp ) const {
+size_t CPCLPair::Quantize( float dValue, size_t iExp ) const {
 
-	return CPairImpl::Quantify( dValue, m_vecvecdQuants[ iExp ] ); }
+	return CMeta::Quantize( dValue, m_vecvecdQuants[ iExp ] ); }
 
 }

@@ -11,7 +11,6 @@ protected:
 
 	static bool Open( const char*, std::ifstream& );
 	static bool Open( const char*, std::vector<float>& );
-	static size_t Quantify( float, const std::vector<float>& );
 };
 
 class CDataPairImpl : protected CPairImpl, public CDat {

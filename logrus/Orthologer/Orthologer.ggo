@@ -5,4 +5,5 @@ purpose	"Orthology-based DAT processing"
 section "Optional"
 option	"input"		i	"Orthology file"	string	typestr="filename"
 option	"weight"	w	"Weight of orthologue relationships"	double	default="1"
+option	"memmap"	m	"Memory map input files when possible"	flag	off
 option	"verbosity"	v	"Message verbosity"	int	default="5"

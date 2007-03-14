@@ -664,6 +664,8 @@ void CDatImpl::NormalizeStdev( ) {
 				dDev += d * d; }
 	dAve /= iN;
 	dDev = sqrt( ( dDev / iN ) - ( dAve * dAve ) );
+	if( !( iN && dDev ) )
+		return;
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( !CMeta::IsNaN( (float)( d = Get( i, j ) ) ) )

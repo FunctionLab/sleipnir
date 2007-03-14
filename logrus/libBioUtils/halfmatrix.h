@@ -84,6 +84,12 @@ public:
 
 		return m_iSize; }
 
+	void Clear( ) {
+		size_t	i;
+
+		for( i = 0; ( i + 1 ) < m_iSize; ++i )
+			memset( m_aaData[ i ], 0, ( m_iSize - i - 1 ) * sizeof(*m_aaData[ i ]) ); }
+
 protected:
 	bool	m_fMemory;
 	tType**	m_aaData;
