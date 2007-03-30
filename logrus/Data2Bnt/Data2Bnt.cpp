@@ -234,9 +234,10 @@ int main( int iArgs, char** aszArgs ) {
 						return 1; }
 					mapiiCur[ iFeature ] = vecsFeatures[ iFeature ].quantize( vecstrToken[ 1 ] ); }
 
-				output_row( vecstrLine[ 0 ], Genes, CMeta::Quantize( (float)atof( vecstrLine[ 1 ].c_str( ) ),
-					vecdQuants ), sDatum, vecsFeatures, mapiiCur, !!sArgs.comments_flag, !!sArgs.sparse_flag,
-					false ); }
+				if( !CMeta::IsNaN( d = (float)atof( vecstrLine[ 1 ].c_str( ) ) ) )
+					output_row( vecstrLine[ 0 ], Genes, CMeta::Quantize( d, vecdQuants ),
+						sDatum, vecsFeatures, mapiiCur, !!sArgs.comments_flag, !!sArgs.sparse_flag,
+						false ); }
 			ifsm.close( ); } }
 
 	CMeta::Shutdown( );
