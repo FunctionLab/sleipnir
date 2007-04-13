@@ -557,7 +557,8 @@ bool CDat::Open( const vector<string>& vecstrGenes, bool fInitialize, const char
 			for( j = 0; j < strGene.length( ); ++j ) {
 				*pb++ = 0;
 				*pb++ = strGene[ j ]; }
-			*pb++ = *pb++ = 0; }
+			*pb++ = 0;
+			*pb++ = 0; }
 
 		if( !OpenMemmap( pb ) )
 			return false; }

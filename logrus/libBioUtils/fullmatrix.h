@@ -16,7 +16,7 @@ public:
 		m_iR = m_iC = 0;
 		m_aaData = NULL; }
 
-	~CFullMatrix( ) {
+	virtual ~CFullMatrix( ) {
 
 		Reset( ); }
 

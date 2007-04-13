@@ -14,7 +14,7 @@ public:
 
 	CHalfMatrix( ) : m_aaData(NULL) { }
 
-	~CHalfMatrix( ) {
+	virtual ~CHalfMatrix( ) {
 
 		Reset( ); }
 

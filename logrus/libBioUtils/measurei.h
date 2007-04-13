@@ -16,7 +16,7 @@ protected:
 	static bool IsNaN( const float*, size_t );
 
 	CMeasureImpl( const IMeasure*, bool );
-	~CMeasureImpl( );
+	virtual ~CMeasureImpl( );
 
 	IMeasure*	m_pMeasure;
 	bool		m_fMemory;

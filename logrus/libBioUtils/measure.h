@@ -11,6 +11,8 @@ public:
 		EMapAbs		= EMapCenter + 1
 	};
 
+	virtual ~IMeasure( ) { };
+
 	virtual const char* GetName( ) const = 0;
 	virtual bool IsRank( ) const = 0;
 	virtual double Measure( const float*, size_t, const float*, size_t, EMap = EMapCenter,

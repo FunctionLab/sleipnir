@@ -1,0 +1,9 @@
+package	"Hubber"
+version	"1.0"
+purpose	"Inspect a DAT file for gene network properties"
+
+section "Optional"
+option	"input"		i	"Input data file"	string	typestr="filename"
+option	"memmap"	m	"Memory map input"	flag	off
+option	"normalize"	n	"Normalize input file"	flag	off
+option	"verbosity"	v	"Message verbosity"	int	default="5"
