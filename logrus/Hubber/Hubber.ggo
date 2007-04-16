@@ -6,4 +6,5 @@ section "Optional"
 option	"input"		i	"Input data file"	string	typestr="filename"
 option	"memmap"	m	"Memory map input"	flag	off
 option	"normalize"	n	"Normalize input file"	flag	off
+option	"genes"		g	"Specific genes to output per gene set"	int	default="0"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
