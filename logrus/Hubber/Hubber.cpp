@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+static const char	c_szDab[]	= ".dab";
+
 struct SDatum {
 	float						m_dHubbiness;
 	float						m_dHubbinessStd;
@@ -62,7 +64,26 @@ int main( int iArgs, char** aszArgs ) {
 			cout << '\t' << Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) << '|' <<
 				sDatum.m_vecprSpecific[ i ].second << '|' <<
 				( Genes.IsGene( Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) ) ? 1 : 0 );
-		cout << endl; }
+		cout << endl;
+
+		if( sArgs.clip_arg ) {
+			CDat			DatOut;
+			vector<size_t>	veciGenes;
+			size_t			iOne, iTwo, j;
+
+			DatOut.Open( Genes.GetGeneNames( ) );
+			veciGenes.resize( DatOut.GetGenes( ) );
+			for( i = 0; i < veciGenes.size( ); ++i )
+				veciGenes[ i ] = Dat.GetGene( DatOut.GetGene( i ) );
+			for( i = 0; i < DatOut.GetGenes( ); ++i ) {
+				if( ( iOne = veciGenes[ i ] ) == -1 )
+					continue;
+				for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j ) {
+					if( ( iTwo = veciGenes[ j ] ) == -1 )
+						continue;
+					DatOut.Set( i, j, Dat.Get( iOne, iTwo ) ); } }
+			DatOut.Save( ( (string)sArgs.clip_arg + '/' + CMeta::Deextension( CMeta::Basename(
+				sArgs.inputs[ iGenes ] ) ) + c_szDab ).c_str( ) ); } }
 
 	CMeta::Shutdown( );
 	return 0; }
