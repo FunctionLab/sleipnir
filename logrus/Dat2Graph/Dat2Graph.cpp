@@ -16,10 +16,11 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
 	CDat				Dat;
-	float				dCutoff;
+	float				d, dCutoff;
 	CGenome				Genome;
 	CGenes				GenesIn( Genome ), GenesQr( Genome );
 	int					iRet;
+	size_t				i, j;
 
 	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) && ( sArgs.config_arg &&
 		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) ) {
@@ -40,8 +41,8 @@ int main( int iArgs, char** aszArgs ) {
 		return iRet;
 
 	if( sArgs.input_arg ) {
-		if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !( sArgs.genes_arg ||
-			sArgs.geneq_arg ) ) ) {
+		if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !( sArgs.normalize_flag ||
+			sArgs.genes_arg || sArgs.geneq_arg ) ) ) {
 			cerr << "Couldn't open: " << sArgs.input_arg << endl;
 			return 1; } }
 	else if( !Dat.Open( cin, CDat::EFormatText ) ) {
@@ -49,8 +50,15 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	if( GenesIn.GetGenes( ) )
 		Dat.FilterGenes( GenesIn, CDat::EFilterInclude );
-	if( GenesQr.GetGenes( ) )
-		Dat.FilterGenes( GenesQr, CDat::EFilterPixie );
+	if( GenesQr.GetGenes( ) ) {
+		if( sArgs.cutoff_given )
+			for( i = 0; i < Dat.GetGenes( ); ++i )
+				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+					if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) && ( d < sArgs.cutoff_arg ) )
+						Dat.Set( i, j, CMeta::GetNaN( ) );
+		Dat.FilterGenes( GenesQr, CDat::EFilterPixie ); }
+	if( sArgs.normalize_flag )
+		Dat.Normalize( );
 
 	dCutoff = (float)( sArgs.cutoff_given ? sArgs.cutoff_arg : HUGE_VAL );
 	if( !strcmp( sArgs.format_arg, "dot" ) )

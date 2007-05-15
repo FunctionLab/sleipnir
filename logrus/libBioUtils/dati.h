@@ -26,7 +26,7 @@ protected:
 	static const size_t	c_iNeighborhood1	= 40;
 	static const size_t	c_iNeighborhood2	= 0;
 	static const size_t	c_iDegree			= 1;
-	static const float	c_dScore;
+	static const float	c_dCutoff;
 	static const float	c_adColorMin[];
 	static const float	c_adColorMax[];
 
@@ -49,6 +49,7 @@ protected:
 	void SaveGenes( std::ostream& ) const;
 	size_t GetGene( const std::string& ) const;
 	void SlimCache( const CSlim&, std::vector<std::vector<size_t> >& ) const;
+	void AveStd( double&, double&, size_t& ) const;
 	void NormalizeMinmax( );
 	void NormalizeStdev( );
 	void OpenHelper( const CGenes*, float );

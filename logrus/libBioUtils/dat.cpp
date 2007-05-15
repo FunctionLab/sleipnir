@@ -7,9 +7,9 @@
 
 namespace libBioUtils {
 
-const float	CDat::c_dScore			= 0.2f;
-const float	CDat::c_adColorMin[]	= {0, 1, 0};
-const float	CDat::c_adColorMax[]	= {1, 0, 0};
+const float	CDatImpl::c_dCutoff			= 0.2f;
+const float	CDatImpl::c_adColorMin[]	= {0, 1, 0};
+const float	CDatImpl::c_adColorMax[]	= {1, 0, 0};
 
 static const struct {
 	const char*			m_szExtension;
@@ -656,19 +656,25 @@ void CDat::Normalize( bool fCap ) {
 	else
 		NormalizeStdev( ); }
 
-void CDatImpl::NormalizeStdev( ) {
-	double	d, dAve, dDev;
-	size_t	i, j, iN;
+void CDatImpl::AveStd( double& dAve, double& dDev, size_t& iN ) const {
+	size_t	i, j;
+	float	d;
 
 	dAve = dDev = 0;
 	for( iN = i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( (float)( d = Get( i, j ) ) ) ) {
+			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
 				iN++;
 				dAve += d;
 				dDev += d * d; }
 	dAve /= iN;
-	dDev = sqrt( ( dDev / iN ) - ( dAve * dAve ) );
+	dDev = sqrt( ( dDev / iN ) - ( dAve * dAve ) ); }
+
+void CDatImpl::NormalizeStdev( ) {
+	double	d, dAve, dDev;
+	size_t	i, j, iN;
+
+	AveStd( dAve, dDev, iN );
 	if( !( iN && dDev ) )
 		return;
 	for( i = 0; i < GetGenes( ); ++i )
@@ -768,13 +774,14 @@ struct SPixie {
 
 void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes ) {
 	vector<float>				vecdNeighbors;
-	size_t						i, j, iOne, iTwo, iMinOne, iMinTwo;
+	size_t						i, j, iOne, iTwo, iMinOne, iMinTwo, iN;
 	vector<size_t>				veciGenes, veciFinal, veciDegree;
 	set<size_t>					setiN1, setiN2;
 	set<size_t>::const_iterator	iterN;
-	float						d, d2, dMin;
+	float						d, d2, dMin, dCutoff;
 	priority_queue<SPixie>		pqueNeighbors;
 	bool						fDone;
+	double						dAve, dDev;
 
 	veciGenes.resize( Genes.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
@@ -782,7 +789,7 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes ) 
 
 	vecdNeighbors.resize( GetGenes( ) );
 	for( i = 0; i < vecdNeighbors.size( ); ++i )
-		vecdNeighbors[ i ] = -FLT_MAX;
+		vecdNeighbors[ i ] = 0;
 	for( i = 0; i < veciGenes.size( ); ++i ) {
 		if( ( iOne = veciGenes[ i ] ) == -1 )
 			continue;
@@ -793,7 +800,7 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes ) 
 			if( !CMeta::IsNaN( d = Get( iOne, j ) ) )
 				vecdNeighbors[ j ] += d; } }
 	for( i = 0; i < vecdNeighbors.size( ); ++i )
-		if( ( d = vecdNeighbors[ i ] ) != -FLT_MAX )
+		if( ( d = vecdNeighbors[ i ] ) > 0 )
 			pqueNeighbors.push( SPixie( i, d ) );
 
 	while( !pqueNeighbors.empty( ) && ( setiN1.size( ) < c_iNeighborhood1 ) ) {
@@ -802,9 +809,6 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes ) 
 		pqueNeighbors.pop( ); }
 
 	if( c_iNeighborhood2 ) {
-		for( i = 0; i < vecdNeighbors.size( ); ++i )
-			if( vecdNeighbors[ i ] == -FLT_MAX )
-				vecdNeighbors[ i ] = 0;
 		for( i = 0; i < veciGenes.size( ); ++i ) {
 			if( ( iOne = veciGenes[ i ] ) == -1 )
 				continue;
@@ -843,6 +847,8 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes ) 
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( !vecfGenes[ j ] )
 				Set( i, j, CMeta::GetNaN( ) ); }
+	AveStd( dAve, dDev, iN );
+	dCutoff = min( (float)( dAve + ( 1 * dDev ) ), c_dCutoff );
 
 	veciDegree.resize( veciFinal.size( ) );
 	for( i = 0; i < veciDegree.size( ); ++i ) {
@@ -859,7 +865,7 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes ) 
 			iOne = veciFinal[ i ];
 			for( j = ( i + 1 ); j < veciFinal.size( ); ++j ) {
 				iTwo = veciFinal[ j ];
-				if( !CMeta::IsNaN( d = Get( iOne, iTwo ) ) && ( d < c_dScore ) && ( d < dMin ) &&
+				if( !CMeta::IsNaN( d = Get( iOne, iTwo ) ) && ( d < dCutoff ) && ( d < dMin ) &&
 					( veciDegree[ i ] > c_iDegree ) && ( veciDegree[ j ] > c_iDegree ) ) {
 					fDone = false;
 					dMin = d;

@@ -145,7 +145,7 @@ int heavy( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 				if( connectivity( j, veciCluster, vecdConnectivity, veciConnectivity, 0, 0,
 					vecdConnectivity[ i ], veciConnectivity[ i ], Dat, dIn, iIn, dOut, iOut ) &&
 					( ( dRatio = ( ( dIn / iIn ) / ( dOut / iOut ) ) ) > ( d / 2 ) ) ) {
-					d = max( dRatio, 4 );
+					d = max( dRatio, 4.0f );
 					pqueSeeds.push( SSeed( i, j, dIn, iIn, dOut, iOut, dRatio ) ); } }
 		if( pqueSeeds.empty( ) )
 			break;
