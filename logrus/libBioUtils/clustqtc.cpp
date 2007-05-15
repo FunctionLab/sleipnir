@@ -78,6 +78,9 @@ void CClustQTCImpl::QualityThresholdLargest( const CDataMatrix& Data, float dDia
 	vecsCluster.clear( );
 	vecfClone.resize( vecfAssigned.size( ) );
 	for( iGene = 0; iGene < vecfAssigned.size( ); ++iGene ) {
+		if( !( iGene % 1000 ) )
+			g_CatBioUtils.notice( "CClustQTCImpl::QualityThresholdLargest( %g ) processing gene %d/%d",
+				dDiameter, iGene, vecfAssigned.size( ) );
 		if( vecfAssigned[ iGene ] )
 			continue;
 		copy( vecfAssigned.begin( ), vecfAssigned.end( ), vecfClone.begin( ) );

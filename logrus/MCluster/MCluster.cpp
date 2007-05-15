@@ -7,6 +7,7 @@ int main( int iArgs, char** aszArgs ) {
 	const CPCL*					pPCL;
 	CDat						Dat;
 	size_t						i, j, k, iGene, iGenes;
+	float						d;
 	ofstream					ofsm;
 	ifstream					ifsm;
 	vector<size_t>				veciGenes, veciPCL, veciEpsilon;
@@ -100,6 +101,14 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	if( sArgs.normalize_flag )
 		Dat.Normalize( );
+	if( sArgs.power_arg != 1 ) {
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
+					Dat.Set( i, j, pow( d, (float)sArgs.power_arg ) );
+		Dat.Normalize( ); }
+	if( sArgs.flip_flag )
+		Dat.Invert( );
 
 	if( sArgs.epsilon_given ) {
 		vecfGenes.resize( Dat.GetGenes( ) );

@@ -13,6 +13,7 @@ option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
 option	"genet"		c	"Term inclusion file"	string	typestr="filename"
+option	"terms"		t	"Term inclusion directory"	string	typestr="directory"
 option	"zero"		z	"Zero missing values"	flag	off
 option	"zeros"		Z	"Read zeroed node IDs/outputs from the given file"	string	typestr="filename"
 option	"group"		u	"Group identical inputs"	flag	on

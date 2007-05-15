@@ -3,6 +3,154 @@
 
 static const char	c_acDab[]	= ".dab";
 
+struct STerm {
+	string					m_strInput;
+	string					m_strOutput;
+	CGenes*					m_pGenes;
+	CBayesNetSmile			m_BNRoot;
+	vector<CBayesNetSmile*>	m_vecpBNs;
+
+	STerm( const string& strInput, const string& strOutput ) : m_strInput(strInput),
+		m_strOutput(strOutput), m_pGenes(NULL) { }
+
+	~STerm( ) {
+		size_t	i;
+
+		if( m_pGenes )
+			delete m_pGenes;
+		for( i = 0; i < m_vecpBNs.size( ); ++i )
+			delete m_vecpBNs[ i ]; }
+
+	bool Open( CGenome& Genome ) {
+		ifstream	ifsm;
+
+		m_pGenes = new CGenes( Genome );
+		ifsm.open( m_strInput.c_str( ) );
+		return m_pGenes->Open( ifsm ); }
+
+	bool LearnRoot( const CDataPair& Answers, const IDataset* pData,
+		const CBayesNetSmile* pBNDefault ) {
+		CDataFilter		Data;
+		vector<string>	vecstrDummy;
+		vector<size_t>	veciZeros;
+
+		if( m_pGenes ) {
+			Data.Attach( pData, *m_pGenes, CDat::EFilterTerm, &Answers, true );
+			pData = &Data; }
+		vecstrDummy.push_back( "FR" );
+		if( !m_BNRoot.Open( pData, vecstrDummy, veciZeros ) ) {
+			cerr << "Couldn't create base network (" << m_strInput << ')' << endl;
+			return false; }
+		if( pBNDefault )
+			m_BNRoot.SetDefault( *pBNDefault );
+		if( !m_BNRoot.Learn( pData, 1 ) ) {
+			cerr << "Couldn't learn base network (" << m_strInput << ')' << endl;
+			return false; }
+
+		return true; }
+
+	bool LearnNode( const CDataPair& Answers, const IDataset* pData, const vector<string>& vecstrNames,
+		const vector<size_t>& veciZeros, const CBayesNetSmile* pBNDefault, bool fZero ) {
+		CDataFilter		Data;
+		CBayesNetSmile*	pBN;
+
+		if( m_pGenes ) {
+			Data.Attach( pData, *m_pGenes, CDat::EFilterTerm, &Answers, true );
+			pData = &Data; }
+		m_vecpBNs.push_back( pBN = new CBayesNetSmile( ) );
+		if( !pBN->Open( pData, vecstrNames, veciZeros ) ) {
+			cerr << "Couldn't create network for (" << m_strInput << "): " << vecstrNames[ 1 ] << endl;
+			return false; }
+		if( pBNDefault )
+			pBN->SetDefault( *pBNDefault );
+		if( !pBN->Learn( pData, 1, fZero ) ) {
+			cerr << "Couldn't learn network for (" << m_strInput << "): " << vecstrNames[ 1 ] << endl;
+			return false; }
+
+		return true; }
+
+	bool Save( ) const {
+		CBayesNetSmile	BNOut;
+
+		if( !BNOut.Open( m_BNRoot, m_vecpBNs ) ) {
+			cerr << "Couldn't merge networks (" << m_strInput << ')' << endl;
+			return false; }
+		BNOut.Save( m_strOutput.c_str( ) );
+		return true; }
+};
+
+int learn( const gengetopt_args_info& sArgs, const CDataPair& Answers,
+	const CBayesNetSmile& BNDefault, const char* szOutput, const CGenes& Genes ) {
+	size_t					i, iArg;
+	vector<CBayesNetSmile*>	vecpBNs;
+	CBayesNetSmile			BNOut;
+	vector<size_t>			veciZeros;
+	CBayesNetSmile			BNIn;
+	vector<string>			vecstrNames;
+	map<string,size_t>		mapZeros;
+
+	{
+		CDatasetCompact	Data;
+		vector<string>	vecstrDummy;
+
+		if( !Data.Open( Answers, vecstrDummy, true ) ) {
+			cerr << "Couldn't open answer set" << endl;
+			return 1; }
+		if( Genes.GetGenes( ) )
+			Data.FilterGenes( Genes, CDat::EFilterTerm );
+		vecstrDummy.push_back( "FR" );
+		if( !BNIn.Open( &Data, vecstrDummy, veciZeros ) ) {
+			cerr << "Couldn't create base network" << endl;
+			return 1; }
+		if( sArgs.default_arg )
+			BNIn.SetDefault( BNDefault );
+		if( !BNIn.Learn( &Data, 1 ) ) {
+			cerr << "Couldn't learn base network" << endl;
+			return 1; }
+	}
+
+	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
+		CDatasetCompact	Data;
+		CBayesNetSmile*	pBN;
+
+		vecstrNames.clear( );
+		vecstrNames.push_back( sArgs.inputs[ iArg ] );
+		if( !Data.Open( Answers, vecstrNames, true ) ) {
+			cerr << "Couldn't open: " << sArgs.inputs[ iArg ] << endl;
+			return 1; }
+		if( Genes.GetGenes( ) )
+			Data.FilterGenes( Genes, CDat::EFilterTerm );
+		vecstrNames.insert( vecstrNames.begin( ), sArgs.answers_arg );
+		for( i = 0; i < vecstrNames.size( ); ++i )
+			vecstrNames[ i ] = CMeta::Filename( CMeta::Deextension( CMeta::Basename(
+				vecstrNames[ i ].c_str( ) ) ) );
+		vecpBNs.push_back( pBN = new CBayesNetSmile( ) );
+		veciZeros.resize( vecstrNames.size( ) );
+		for( i = 0; i < veciZeros.size( ); ++i ) {
+			map<string,size_t>::const_iterator	iterZero;
+
+			veciZeros[ i ] = ( ( iterZero = mapZeros.find( vecstrNames[ i ] ) ) == mapZeros.end( ) ) ?
+				-1 : iterZero->second; }
+		if( !pBN->Open( &Data, vecstrNames, veciZeros ) ) {
+			cerr << "Couldn't create network for: " << sArgs.inputs[ iArg ] << endl;
+			return 1; }
+
+		if( sArgs.default_arg )
+			pBN->SetDefault( BNDefault );
+		if( !pBN->Learn( &Data, 1, !!sArgs.zero_flag ) ) {
+			cerr << "Couldn't learn network for: " << sArgs.inputs[ iArg ] << endl;
+			return 1; } }
+
+	if( !BNOut.Open( BNIn, vecpBNs ) ) {
+		cerr << "Couldn't merge networks" << endl;
+		return 1; }
+	BNOut.Save( szOutput );
+
+	for( i = 0; i < vecpBNs.size( ); ++i )
+		delete vecpBNs[ i ];
+
+	return 0; }
+
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	size_t				i;
@@ -133,11 +281,14 @@ int main( int iArgs, char** aszArgs ) {
 			DatYes.Set( i, adYes ); }
 		_unlink( szTemp ); }
 	else {
-		CDataPair				Answers;
-		size_t					iArg;
-		vector<CBayesNetSmile*>	vecpBNs;
-		CBayesNetSmile			BNDefault, BNOut;
-		vector<size_t>			veciZeros;
+		size_t			iArg;
+		CDataPair		Answers;
+		CBayesNetSmile	BNDefault;
+		CGenome			Genome;
+		vector<STerm*>	vecpsOutputs;
+		vector<string>	vecstrDummy, vecstrNames;
+		vector<size_t>	veciZeros;
+		CDatasetCompact	Data;
 
 		if( sArgs.default_arg && !BNDefault.Open( sArgs.default_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.default_arg << endl;
@@ -156,60 +307,73 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 			return 1; }
 
-		{
-			CDatasetCompact	Data;
-			vector<string>	vecstrDummy;
+		if( sArgs.terms_arg ) {
+			string			strFile;
+#ifdef _MSC_VER
+			HANDLE			hSearch;
+			WIN32_FIND_DATA	sEntry;
+			bool			fContinue;
 
-			if( !Data.Open( Answers, vecstrDummy, true ) ) {
-				cerr << "Couldn't open answer set" << endl;
+			for( fContinue = true,hSearch = FindFirstFile( ( (string)sArgs.terms_arg +
+				"/*" ).c_str( ), &sEntry ); fContinue && ( hSearch != INVALID_HANDLE_VALUE );
+				fContinue = !!FindNextFile( hSearch, &sEntry ) ) {
+				strFile = sEntry.cFileName;
+#else // _MSC_VER
+			DIR*			pDir;
+			struct dirent*	psEntry;
+
+			pDir = opendir( sArgs.terms_arg );
+			for( psEntry = readdir( pDir ); psEntry; psEntry = readdir( pDir ) ) {
+				strFile = psEntry->d_name;
+#endif // _MSC_VER
+				if( strFile[ 0 ] == '.' )
+					continue;
+
+				vecpsOutputs.push_back( new STerm( (string)sArgs.terms_arg + '/' + strFile,
+					(string)sArgs.output_arg + '/' + strFile + ".xdsl" ) );
+				if( !vecpsOutputs[ vecpsOutputs.size( ) - 1 ]->Open( Genome ) ) {
+					cerr << "Could not open: " << strFile << endl;
+					return 1; } } }
+		else
+			vecpsOutputs.push_back( new STerm( "", sArgs.output_arg ) );
+
+		if( !Data.Open( Answers, vecstrDummy ) ) {
+			cerr << "Couldn't open answer set" << endl;
+			return 1; }
+		for( i = 0; i < vecpsOutputs.size( ); ++i ) {
+			if( !( i % 50 ) )
+				cerr << "Term " << i << '/' << vecpsOutputs.size( ) << endl;
+			if( !vecpsOutputs[ i ]->LearnRoot( Answers, &Data, sArgs.default_arg ? &BNDefault : NULL ) )
 				return 1; }
-			vecstrDummy.push_back( "FR" );
-			if( !BNIn.Open( &Data, vecstrDummy, veciZeros ) ) {
-				cerr << "Couldn't create base network" << endl;
-				return 1; }
-			if( sArgs.default_arg )
-				BNIn.SetDefault( BNDefault );
-			if( !BNIn.Learn( &Data, 1 ) ) {
-				cerr << "Couldn't learn base network" << endl;
-				return 1; }
-		}
 
 		for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
 			CDatasetCompact	Data;
-			CBayesNetSmile*	pBN;
 
 			vecstrNames.clear( );
 			vecstrNames.push_back( sArgs.inputs[ iArg ] );
-			if( !Data.Open( Answers, vecstrNames, true ) ) {
+			if( !Data.Open( Answers, vecstrNames ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ iArg ] << endl;
 				return 1; }
 			vecstrNames.insert( vecstrNames.begin( ), sArgs.answers_arg );
 			for( i = 0; i < vecstrNames.size( ); ++i )
-				vecstrNames[ i ] = CMeta::Filename( CMeta::Deextension( CMeta::Basename( vecstrNames[ i ].c_str( ) ) ) );
-			vecpBNs.push_back( pBN = new CBayesNetSmile( ) );
+				vecstrNames[ i ] = CMeta::Filename( CMeta::Deextension( CMeta::Basename(
+					vecstrNames[ i ].c_str( ) ) ) );
 			veciZeros.resize( vecstrNames.size( ) );
 			for( i = 0; i < veciZeros.size( ); ++i ) {
 				map<string,size_t>::const_iterator	iterZero;
 
-				veciZeros[ i ] = ( ( iterZero = mapZeros.find( vecstrNames[ i ] ) ) == mapZeros.end( ) ) ? -1 :
-					iterZero->second; }
-			if( !pBN->Open( &Data, vecstrNames, veciZeros ) ) {
-				cerr << "Couldn't create network for: " << sArgs.inputs[ iArg ] << endl;
-				return 1; }
+				veciZeros[ i ] = ( ( iterZero = mapZeros.find( vecstrNames[ i ] ) ) == mapZeros.end( ) ) ?
+					-1 : iterZero->second; }
+			for( i = 0; i < vecpsOutputs.size( ); ++i ) {
+				if( !( i % 50 ) )
+					cerr << "Term " << i << '/' << vecpsOutputs.size( ) << endl;
+				if( !vecpsOutputs[ i ]->LearnNode( Answers, &Data, vecstrNames, veciZeros,
+					sArgs.default_arg ? &BNDefault : NULL, !!sArgs.zero_flag ) )
+					return 1; } }
 
-			if( sArgs.default_arg )
-				pBN->SetDefault( BNDefault );
-			if( !pBN->Learn( &Data, 1, !!sArgs.zero_flag ) ) {
-				cerr << "Couldn't learn network for: " << sArgs.inputs[ iArg ] << endl;
-				return 1; } }
-
-		if( !BNOut.Open( BNIn, vecpBNs ) ) {
-			cerr << "Couldn't merge networks" << endl;
-			return 1; }
-		BNOut.Save( sArgs.output_arg );
-
-		for( i = 0; i < vecpBNs.size( ); ++i )
-			delete vecpBNs[ i ]; }
+		for( i = 0; i < vecpsOutputs.size( ); ++i ) {
+			vecpsOutputs[ i ]->Save( );
+			delete vecpsOutputs[ i ]; } }
 
 	CMeta::Shutdown( );
 	return 0; }

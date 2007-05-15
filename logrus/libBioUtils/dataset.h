@@ -151,7 +151,7 @@ public:
 
 class CDataFilter : CDataFilterImpl, public IDataset {
 public:
-	void Attach( const IDataset*, const CGenes&, CDat::EFilter, const CDat* = NULL );
+	void Attach( const IDataset*, const CGenes&, CDat::EFilter, const CDat* = NULL, bool = false );
 
 	bool IsExample( size_t, size_t ) const;
 	void Remove( size_t, size_t );

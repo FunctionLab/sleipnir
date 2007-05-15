@@ -19,10 +19,13 @@ struct SDatum {
 };
 
 struct SSorter {
+	bool	m_fInvert;
+
+	SSorter( bool fInvert ) : m_fInvert(fInvert) { }
 
 	bool operator()( const SDatum& sOne, const SDatum& sTwo ) const {
 
-		return ( sOne.m_dValue < sTwo.m_dValue ); }
+		return ( m_fInvert ? ( sOne.m_dValue > sTwo.m_dValue ) : ( sOne.m_dValue < sTwo.m_dValue ) ); }
 };
 
 int main( int iArgs, char** aszArgs ) {
@@ -184,7 +187,7 @@ int main( int iArgs, char** aszArgs ) {
 					else
 						iNegatives++;
 					vecsData.push_back( SDatum( dValue, i, j, dAnswer ) ); } }
-			sort( vecsData.begin( ), vecsData.end( ), SSorter( ) );
+			sort( vecsData.begin( ), vecsData.end( ), SSorter( !!sArgs.invert_flag ) );
 			iChunk = (size_t)( 0.5 + ( (float)vecsData.size( ) / ( MatResults.GetRows( ) - 1 ) ) );
 			if( sArgs.sse_flag ) {
 				vecdSSE.resize( MatResults.GetRows( ) );

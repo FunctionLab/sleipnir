@@ -541,7 +541,7 @@ const string& CDataOverlayImpl::GetGene( size_t iGene ) const {
 // CDataFilter
 
 void CDataFilter::Attach( const IDataset* pDataset, const CGenes& Genes, CDat::EFilter eFilter,
-	const CDat* pAnswers ) {
+	const CDat* pAnswers, bool fDirect ) {
 	size_t	i;
 
 	m_pDataset = pDataset;
@@ -552,9 +552,10 @@ void CDataFilter::Attach( const IDataset* pDataset, const CGenes& Genes, CDat::E
 	m_vecfGenes.resize( GetGenes( ) );
 	for( i = 0; i < m_vecfGenes.size( ); ++i )
 		m_vecfGenes[ i ] = m_pGenes->IsGene( GetGene( i ) );
-	m_veciAnswers.resize( GetGenes( ) );
-	for( i = 0; i < m_veciAnswers.size( ); ++i )
-		m_veciAnswers[ i ] = m_pAnswers->GetGene( GetGene( i ) ); }
+	if( m_pAnswers ) {
+		m_veciAnswers.resize( GetGenes( ) );
+		for( i = 0; i < m_veciAnswers.size( ); ++i )
+			m_veciAnswers[ i ] = fDirect ? i : m_pAnswers->GetGene( GetGene( i ) ); } }
 
 void CDataFilter::Remove( size_t iX, size_t iY ) {
 
@@ -575,10 +576,10 @@ bool CDataFilter::IsExample( size_t iX, size_t iY ) const {
 				return false;
 
 		case CDat::EFilterTerm:
-			if( ( ( m_veciAnswers[ iX ] == -1 ) || ( m_veciAnswers[ iY ] == -1 ) ) ||
+			if( ( m_pAnswers && ( m_veciAnswers[ iX ] == -1 ) || ( m_veciAnswers[ iY ] == -1 ) ) ||
 				( !( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) &&
-				( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) || ( m_pAnswers->Get( m_veciAnswers[ iX ],
-				m_veciAnswers[ iY ] ) > 0 ) ) ) )
+				( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) || ( m_pAnswers &&
+				( m_pAnswers->Get( m_veciAnswers[ iX ], m_veciAnswers[ iY ] ) > 0 ) ) ) ) )
 				return false; }
 
 	return m_pDataset->IsExample( iX, iY ); }

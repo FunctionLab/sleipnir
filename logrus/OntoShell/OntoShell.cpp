@@ -33,8 +33,8 @@ int main( int iArgs, char** aszArgs ) {
 	CParserConsole			Parser( apOntologies, Genome );
 
 	g_pParser = &Parser;
-	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) || ( sArgs.config_arg &&
-		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) ) {
+	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) && sArgs.config_arg &&
+		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	g_fZeroes = !!sArgs.zeroes_flag;

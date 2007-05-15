@@ -7,6 +7,10 @@
 
 namespace libBioUtils {
 
+const float	CDat::c_dScore			= 0.2f;
+const float	CDat::c_adColorMin[]	= {0, 1, 0};
+const float	CDat::c_adColorMax[]	= {1, 0, 0};
+
 static const struct {
 	const char*			m_szExtension;
 	const CDat::EFormat	m_eFormat;
@@ -721,6 +725,10 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt ) {
 		if( ( j = GetGene( Genes.GetGene( i ).GetName( ) ) ) != -1 )
 			vecfGenes[ j ] = true;
 
+	if( eFilt == EFilterPixie ) {
+		FilterGenesPixie( Genes, vecfGenes );
+		return; }
+
 	for( i = 0; i < GetGenes( ); ++i ) {
 		if( vecfGenes[ i ] ) {
 			if( eFilt == EFilterInclude )
@@ -739,7 +747,7 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt ) {
 				case EFilterTerm:
 					if( !( vecfGenes[ i ] && vecfGenes[ j ] ) &&
 						( !( vecfGenes[ i ] || vecfGenes[ j ] ) || Get( i, j ) ) )
-							Set( i, j, CMeta::GetNaN( ) );
+						Set( i, j, CMeta::GetNaN( ) );
 					break;
 
 				case EFilterExclude:
@@ -747,17 +755,133 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt ) {
 						Set( i, j, CMeta::GetNaN( ) );
 					break; } } }
 
+struct SPixie {
+	size_t	m_iNode;
+	float	m_dScore;
+
+	SPixie( size_t iNode, float dScore ) : m_iNode(iNode), m_dScore(dScore) { }
+
+	bool operator<( const SPixie& sPixie ) const {
+
+		return ( m_dScore < sPixie.m_dScore ); }
+};
+
+void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes ) {
+	vector<float>				vecdNeighbors;
+	size_t						i, j, iOne, iTwo, iMinOne, iMinTwo;
+	vector<size_t>				veciGenes, veciFinal, veciDegree;
+	set<size_t>					setiN1, setiN2;
+	set<size_t>::const_iterator	iterN;
+	float						d, d2, dMin;
+	priority_queue<SPixie>		pqueNeighbors;
+	bool						fDone;
+
+	veciGenes.resize( Genes.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = GetGene( Genes.GetGene( i ).GetName( ) );
+
+	vecdNeighbors.resize( GetGenes( ) );
+	for( i = 0; i < vecdNeighbors.size( ); ++i )
+		vecdNeighbors[ i ] = -FLT_MAX;
+	for( i = 0; i < veciGenes.size( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 )
+			continue;
+		veciFinal.push_back( iOne );
+		for( j = 0; j < GetGenes( ); ++j ) {
+			if( vecfGenes[ j ] )
+				continue;
+			if( !CMeta::IsNaN( d = Get( iOne, j ) ) )
+				vecdNeighbors[ j ] += d; } }
+	for( i = 0; i < vecdNeighbors.size( ); ++i )
+		if( ( d = vecdNeighbors[ i ] ) != -FLT_MAX )
+			pqueNeighbors.push( SPixie( i, d ) );
+
+	while( !pqueNeighbors.empty( ) && ( setiN1.size( ) < c_iNeighborhood1 ) ) {
+		veciFinal.push_back( pqueNeighbors.top( ).m_iNode );
+		setiN1.insert( pqueNeighbors.top( ).m_iNode );
+		pqueNeighbors.pop( ); }
+
+	if( c_iNeighborhood2 ) {
+		for( i = 0; i < vecdNeighbors.size( ); ++i )
+			if( vecdNeighbors[ i ] == -FLT_MAX )
+				vecdNeighbors[ i ] = 0;
+		for( i = 0; i < veciGenes.size( ); ++i ) {
+			if( ( iOne = veciGenes[ i ] ) == -1 )
+				continue;
+			for( iterN = setiN1.begin( ); iterN != setiN1.end( ); ++iterN ) {
+				iTwo = *iterN;
+				if( CMeta::IsNaN( d = Get( iOne, iTwo ) ) )
+					continue;
+				for( j = 0; j < GetGenes( ); ++j )
+					if( !CMeta::IsNaN( d2 = Get( iTwo, j ) ) )
+						vecdNeighbors[ j ] += d * d2; } }
+		for( i = 0; i < veciGenes.size( ); ++i )
+			if( ( iOne = veciGenes[ i ] ) != -1 )
+				vecdNeighbors[ iOne ] = 0;
+		for( iterN = setiN1.begin( ); iterN != setiN1.end( ); ++iterN )
+			vecdNeighbors[ *iterN ] = 0;
+
+		while( !pqueNeighbors.empty( ) )
+			pqueNeighbors.pop( );
+		for( i = 0; i < vecdNeighbors.size( ); ++i )
+			if( vecdNeighbors[ i ] > 0 )
+				pqueNeighbors.push( SPixie( i, vecdNeighbors[ i ] ) );
+		while( !pqueNeighbors.empty( ) && ( setiN2.size( ) < c_iNeighborhood2 ) ) {
+			veciFinal.push_back( pqueNeighbors.top( ).m_iNode );
+			setiN2.insert( pqueNeighbors.top( ).m_iNode );
+			pqueNeighbors.pop( ); } }
+
+	for( iterN = setiN1.begin( ); iterN != setiN1.end( ); ++iterN )
+		vecfGenes[ *iterN ] = true;
+	for( iterN = setiN2.begin( ); iterN != setiN2.end( ); ++iterN )
+		vecfGenes[ *iterN ] = true;
+	for( i = 0; i < GetGenes( ); ++i ) {
+		if( !vecfGenes[ i ] ) {
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+				Set( i, j, CMeta::GetNaN( ) );
+			continue; }
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !vecfGenes[ j ] )
+				Set( i, j, CMeta::GetNaN( ) ); }
+
+	veciDegree.resize( veciFinal.size( ) );
+	for( i = 0; i < veciDegree.size( ); ++i ) {
+		iOne = veciFinal[ i ];
+		for( j = ( i + 1 ); j < veciDegree.size( ); ++j ) {
+			iTwo = veciFinal[ j ];
+			if( !CMeta::IsNaN( Get( iOne, iTwo ) ) ) {
+				veciDegree[ i ]++;
+				veciDegree[ j ]++; } } }
+	for( fDone = false; !fDone; ) {
+		fDone = true;
+		dMin = FLT_MAX;
+		for( i = 0; i < veciFinal.size( ); ++i ) {
+			iOne = veciFinal[ i ];
+			for( j = ( i + 1 ); j < veciFinal.size( ); ++j ) {
+				iTwo = veciFinal[ j ];
+				if( !CMeta::IsNaN( d = Get( iOne, iTwo ) ) && ( d < c_dScore ) && ( d < dMin ) &&
+					( veciDegree[ i ] > c_iDegree ) && ( veciDegree[ j ] > c_iDegree ) ) {
+					fDone = false;
+					dMin = d;
+					iMinOne = i;
+					iMinTwo = j; } } }
+		if( !fDone ) {
+			veciDegree[ iMinOne ]--;
+			veciDegree[ iMinTwo ]--;
+			Set( veciFinal[ iMinOne ], veciFinal[ iMinTwo ], CMeta::GetNaN( ) ); } } }
+
 void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool fMinimal ) const {
-	size_t			i, j;
-	float			d;
+	size_t			i, j, k;
+	float			d, dMin, dMax, dColor;
 	bool			fAll;
 	vector<string>	vecstrNames;
 	vector<bool>	vecfGenes;
+	float			adColor[ ARRAYSIZE(c_adColorMin) ];
 
 	fAll = CMeta::IsNaN( dCutoff );
 	ostm << "graph G {" << endl;
 	ostm << "	pack = \"true\";" << endl;
-	ostm << "	overlap = \"orthoyx\";" << endl;
+	ostm << "	overlap = \"scale\";" << endl;
 	ostm << "	splines = \"true\";" << endl;
 
 	if( !( fMinimal || fAll ) ) {
@@ -781,10 +905,31 @@ void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool f
 					ostm << vecstrNames[ i ] << " [label=\"" << Gene.GetSynonym( 0 ) << "\"];" << endl; } } }
 
 	ostm << endl;
+	dMin = FLT_MAX;
+	dMax = -FLT_MAX;
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
-				ostm << vecstrNames[ i ] << " -- " << vecstrNames[ j ] << ';' << endl;
+			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+				if( d < dMin )
+					dMin = d;
+				if( d > dMax )
+					dMax = d; }
+	if( !fAll )
+		dMin = max( dMin, dCutoff );
+	dMax -= dMin;
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) ) {
+				char	acColor[ 16 ];
+
+				dColor = ( d - dMin ) / dMax;
+				for( k = 0; k < ARRAYSIZE(adColor); ++k )
+					adColor[ k ] = ( dColor < 0.5 ) ? ( c_adColorMin[ k ] * ( 1 - ( 2 * dColor ) ) ) :
+						( c_adColorMax[ k ] * 2 * ( dColor - 0.5f ) );
+				sprintf_s( acColor, "%02X%02X%02X", (size_t)( adColor[ 0 ] * 255 ),
+					(size_t)( adColor[ 1 ] * 255 ), (size_t)( adColor[ 2 ] * 255 ) );
+				ostm << vecstrNames[ i ] << " -- " << vecstrNames[ j ] << " [weight = " << d <<
+					", color = \"#" << acColor << "\"];" << endl; }
 
 	ostm << "}" << endl; }
 
@@ -824,6 +969,24 @@ void CDat::SaveNET( ostream& ostm, float dCutoff ) const {
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
 				ostm << ( i + 1 ) << ' ' << ( j + 1 ) << ' ' << d << endl; }
+
+void CDat::SaveMATISSE( ostream& ostm, float dCutoff, const CGenome* pGenome ) const {
+	size_t	i, j, k;
+	float	d;
+	bool	fAll;
+
+	fAll = CMeta::IsNaN( dCutoff );
+	for( i = 0; i < GetGenes( ); ++i ) {
+		j = pGenome ? pGenome->GetGene( GetGene( i ) ) : -1;
+		ostm << i << '\t' << GetGene( i ) << '\t' << ( ( ( j == -1 ) ||
+			!pGenome->GetGene( j ).GetSynonyms( ) ) ? GetGene( i ) :
+			pGenome->GetGene( j ).GetSynonym( 0 ) ) << '\t' << ( ( j == -1 ) ? "-" :
+			pGenome->GetGene( j ).GetGloss( ) ) << endl; }
+
+	for( k = i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
+				ostm << k++ << '\t' << i << '\t' << j << "	false	" << d << endl; }
 
 struct SSorterRank {
 	const CDat&	m_Dat;

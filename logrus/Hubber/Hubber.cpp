@@ -12,13 +12,13 @@ struct SDatum {
 };
 
 void hubs( const CDat&, vector<float>& );
-void cliques( const CDat&, const vector<float>&, SDatum&, const CGenes* );
+void cliques( const CDat&, const vector<float>&, bool, SDatum&, const CGenes* );
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	CGenome				Genome;
 	CDat				Dat;
-	size_t				iGenes;
+	size_t				i, iGenes;
 	vector<float>		vecdHub;
 	SDatum				sDatum;
 
@@ -38,11 +38,16 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.Normalize( );
 
 	hubs( Dat, vecdHub );
-	cliques( Dat, vecdHub, sDatum, NULL );
-	cout << "name	size	hubbiness	hubbiness std.	cliquiness	cliquiness std." << endl;
-	cout << "total	" << Dat.GetGenes( ) << '\t' << sDatum.m_dHubbiness << '\t' <<
-		sDatum.m_dHubbinessStd << '\t' << sDatum.m_dCliquiness << '\t' << sDatum.m_dCliquinessStd <<
-		endl;
+	if( sArgs.genes_arg == -1 ) {
+		cout << "Function";
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			cout << '\t' << Dat.GetGene( i ); }
+	else {
+		cliques( Dat, vecdHub, true, sDatum, NULL );
+		cout << "name	size	hubbiness	hubbiness std.	cliquiness	cliquiness std." << endl;
+		cout << "total	" << Dat.GetGenes( ) << '\t' << sDatum.m_dHubbiness << '\t' <<
+			sDatum.m_dHubbinessStd << '\t' << sDatum.m_dCliquiness << '\t' << sDatum.m_dCliquinessStd; }
+	cout << endl;
 
 	for( iGenes = 0; iGenes < sArgs.inputs_num; ++iGenes ) {
 		CGenes		Genes( Genome );
@@ -56,14 +61,20 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open: " << sArgs.inputs[ iGenes ] << endl;
 			return 1; }
 		ifsm.close( );
-		cliques( Dat, vecdHub, sDatum, &Genes );
-		cout << CMeta::Basename( sArgs.inputs[ iGenes ] ) << '\t' << Genes.GetGenes( ) << '\t' <<
-			sDatum.m_dHubbiness << '\t' << sDatum.m_dHubbinessStd << '\t' << sDatum.m_dCliquiness <<
-			'\t' << sDatum.m_dCliquinessStd;
-		for( i = 0; i < min( (size_t)sArgs.genes_arg, sDatum.m_vecprSpecific.size( ) ); ++i )
-			cout << '\t' << Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) << '|' <<
-				sDatum.m_vecprSpecific[ i ].second << '|' <<
-				( Genes.IsGene( Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) ) ? 1 : 0 );
+		cliques( Dat, vecdHub, sArgs.genes_arg != -1, sDatum, &Genes );
+		cout << CMeta::Basename( sArgs.inputs[ iGenes ] );
+		if( sArgs.genes_arg == -1 )
+			for( i = 0; i < sDatum.m_vecprSpecific.size( ); ++i )
+				cout << '\t' << ( sDatum.m_vecprSpecific[ i ].second *
+					( Genes.IsGene( Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) ) ? -1 : 1 ) );
+		else {
+			cout << '\t' << Genes.GetGenes( ) << '\t' << sDatum.m_dHubbiness << '\t' <<
+				sDatum.m_dHubbinessStd << '\t' << sDatum.m_dCliquiness << '\t' <<
+				sDatum.m_dCliquinessStd;
+			for( i = 0; i < min( (size_t)sArgs.genes_arg, sDatum.m_vecprSpecific.size( ) ); ++i )
+				cout << '\t' << Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) << '|' <<
+					sDatum.m_vecprSpecific[ i ].second << '|' <<
+					( Genes.IsGene( Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) ) ? 1 : 0 ); }
 		cout << endl;
 
 		if( sArgs.clip_arg ) {
@@ -115,7 +126,8 @@ struct SSorter {
 		return ( prOne.second > prTwo.second ); }
 };
 
-void cliques( const CDat& Dat, const vector<float>& vecdHub, SDatum& sDatum, const CGenes* pGenes ) {
+void cliques( const CDat& Dat, const vector<float>& vecdHub, bool fSort, SDatum& sDatum,
+	const CGenes* pGenes ) {
 	size_t			i, j;
 	float			d;
 	vector<float>	vecdClique;
@@ -160,4 +172,5 @@ void cliques( const CDat& Dat, const vector<float>& vecdHub, SDatum& sDatum, con
 	for( i = 0; i < sDatum.m_vecprSpecific.size( ); ++i ) {
 		sDatum.m_vecprSpecific[ i ].first = i;
 		sDatum.m_vecprSpecific[ i ].second = vecdClique[ i ] / vecdHub[ i ]; }
-	sort( sDatum.m_vecprSpecific.begin( ), sDatum.m_vecprSpecific.end( ), SSorter( ) ); }
+	if( fSort )
+		sort( sDatum.m_vecprSpecific.begin( ), sDatum.m_vecprSpecific.end( ), SSorter( ) ); }

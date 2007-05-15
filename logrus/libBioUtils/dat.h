@@ -17,7 +17,8 @@ public:
 	enum EFilter {
 		EFilterInclude	= 0,
 		EFilterTerm		= EFilterInclude + 1,
-		EFilterExclude	= EFilterTerm + 1
+		EFilterExclude	= EFilterTerm + 1,
+		EFilterPixie	= EFilterExclude + 1
 	};
 
 	enum EFormat {
@@ -43,6 +44,7 @@ public:
 	void SaveDOT( std::ostream&, float = HUGE_VAL, const CGenome* = NULL, bool = false ) const;
 	void SaveGDF( std::ostream&, float = HUGE_VAL ) const;
 	void SaveNET( std::ostream&, float = HUGE_VAL ) const;
+	void SaveMATISSE( std::ostream&, float = HUGE_VAL, const CGenome* = NULL ) const;
 	void Normalize( bool = true );
 	void Invert( );
 	void Rank( );

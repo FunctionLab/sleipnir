@@ -10,6 +10,7 @@ int main( int iArgs, char** aszArgs ) {
 	CGenes				Genes( Genome );
 	ifstream			ifsm;
 	CDat				Dat;
+	size_t				i, j;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -32,7 +33,6 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 
 /*
-size_t i, j;
 float d;
 for( i = 0; i < Dat.GetGenes( ); ++i )
 for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
@@ -54,10 +54,21 @@ return 0;
 		Dat.Rank( );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
 		Dat.Normalize( !!sArgs.normalize_flag );
+	if( sArgs.zero_flag )
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( CMeta::IsNaN( Dat.Get( i, j ) ) )
+					Dat.Set( i, j, 0 );
 	if( sArgs.flip_flag )
 		Dat.Invert( );
 	if( Genes.GetGenes( ) )
 		Dat.FilterGenes( Genes, CDat::EFilterInclude );
+
+	if( sArgs.cutoff_given )
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( Dat.Get( i, j ) < sArgs.cutoff_arg )
+					Dat.Set( i, j, CMeta::GetNaN( ) );
 
 	if( sArgs.output_arg )
 		Dat.Save( sArgs.output_arg );

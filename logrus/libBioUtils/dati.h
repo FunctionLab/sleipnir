@@ -21,9 +21,14 @@ protected:
 	typedef std::vector<float>				TAF;
 	typedef std::vector<TAF>				TAAF;
 
-	static const size_t	c_iGeneLimit	= 100000;
-	static const size_t	c_iApproximate	= 1000;
-	static const float	c_dNaN;
+	static const size_t	c_iGeneLimit		= 100000;
+	static const size_t	c_iApproximate		= 1000;
+	static const size_t	c_iNeighborhood1	= 40;
+	static const size_t	c_iNeighborhood2	= 0;
+	static const size_t	c_iDegree			= 1;
+	static const float	c_dScore;
+	static const float	c_adColorMin[];
+	static const float	c_adColorMax[];
 
 	static size_t MapGene( TMapStrI&, TVecStr&, const std::string& );
 	static void ResizeNaN( TAF&, size_t );
@@ -50,6 +55,7 @@ protected:
 	void OpenHelper( const CGenes*, const CGenes*, float );
 	bool OpenHelper( );
 	bool OpenMemmap( const unsigned char* );
+	void FilterGenesPixie( const CGenes&, vector<bool>& );
 
 	float& Get( size_t iX, size_t iY ) const {
 		static float	s_dRet;
