@@ -56,7 +56,7 @@ int main( int iArgs, char** aszArgs ) {
 				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 					if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) && ( d < sArgs.cutoff_arg ) )
 						Dat.Set( i, j, CMeta::GetNaN( ) );
-		Dat.FilterGenes( GenesQr, CDat::EFilterPixie ); }
+		Dat.FilterGenes( GenesQr, CDat::EFilterPixie, sArgs.neighbors_arg ); }
 	if( sArgs.normalize_flag )
 		Dat.Normalize( );
 

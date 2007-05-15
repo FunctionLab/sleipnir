@@ -48,8 +48,8 @@ public:
 	void Normalize( bool = true );
 	void Invert( );
 	void Rank( );
-	bool FilterGenes( const char*, EFilter );
-	void FilterGenes( const CGenes&, EFilter );
+	bool FilterGenes( const char*, EFilter, size_t = -1 );
+	void FilterGenes( const CGenes&, EFilter, size_t = -1 );
 
 	size_t GetGene( const std::string& strGene ) const {
 
