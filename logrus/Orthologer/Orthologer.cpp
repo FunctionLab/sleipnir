@@ -67,8 +67,9 @@ int main( int iArgs, char** aszArgs ) {
 		map<const CGene*,size_t>	mapiGenes;
 		size_t						iA, iGenome;
 
-		for( i = 0; i < vecData[ iOrganism ].GetGenes( ); ++i )
-			vecstrGenes.push_back( vecData[ iOrganism ].GetGene( i ) );
+		vecstrGenes.resize( vecData[ iOrganism ].GetGenes( ) );
+		for( i = 0; i < vecstrGenes.size( ); ++i )
+			vecstrGenes[ i ] = vecData[ iOrganism ].GetGene( i );
 		for( iCluster = 0; iCluster < Orthology.GetClusters( ); ++iCluster )
 			for( iOne = 0; iOne < Orthology.GetGenes( iCluster ); ++iOne ) {
 				const CGene&	Gene	= Orthology.GetGene( iCluster, iOne );
@@ -82,8 +83,8 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.Open( vecstrGenes, false );
 		for( iOne = 0; iOne < vecData[ iOrganism ].GetGenes( ); ++iOne )
 			for( iTwo = ( iOne + 1 ); iTwo < vecData[ iOrganism ].GetGenes( ); ++iTwo )
-				Dat.Set( iOne, iTwo, ( ( ( i = vecData[ iOrganism ].GetDiscrete( iOne, iTwo, 0 ) ) == -1 ) ||
-					!i ) ? CMeta::GetNaN( ) : i );
+				Dat.Set( iOne, iTwo, ( ( ( i = vecData[ iOrganism ].GetDiscrete( iOne, iTwo, 0 ) ) ==
+					-1 ) || !i ) ? CMeta::GetNaN( ) : i );
 
 		for( iCluster = 0; iCluster < Orthology.GetClusters( ); ++iCluster )
 			for( iOne = 0; iOne < Orthology.GetGenes( iCluster ); ++iOne ) {

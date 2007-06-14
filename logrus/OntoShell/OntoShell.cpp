@@ -28,15 +28,18 @@ int main( int iArgs, char** aszArgs ) {
 	ifstream				ifsmOnto, ifsmGenes;
 	gengetopt_args_info		sArgs;
 	char*					szLine;
+	int						iRet;
 	const IOntology*		apOntologies[]
 		= { &KEGG, &GOBP, &GOMF, &GOCC, &MIPS, &MIPSPhen, NULL };
 	CParserConsole			Parser( apOntologies, Genome );
 
 	g_pParser = &Parser;
-	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) && sArgs.config_arg &&
-		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) {
+	iRet = cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 );
+	if( sArgs.config_arg )
+		iRet = cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) && iRet;
+	if( iRet ) {
 		cmdline_parser_print_help( );
-		return 1; }
+		return iRet; }
 	g_fZeroes = !!sArgs.zeroes_flag;
 
 	CMeta::Startup( sArgs.verbosity_arg );

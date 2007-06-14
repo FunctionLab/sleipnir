@@ -56,7 +56,39 @@ int main( int iArgs, char** aszArgs ) {
 				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 					if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) && ( d < sArgs.cutoff_arg ) )
 						Dat.Set( i, j, CMeta::GetNaN( ) );
-		Dat.FilterGenes( GenesQr, CDat::EFilterPixie, sArgs.neighbors_arg ); }
+		if( !strcmp( sArgs.format_arg, "correl" ) ) {
+			CMeasurePearson	MeasurePearson;
+			float*			adCentroid;
+			float*			adCur;
+			size_t			iCur;
+			vector<size_t>	veciCounts;
+			vector<float>	vecdScores;
+
+			veciCounts.resize( Dat.GetGenes( ) );
+			adCentroid = new float[ Dat.GetGenes( ) ];
+			for( i = 0; i < GenesQr.GetGenes( ); ++i ) {
+				if( ( iCur = Dat.GetGene( GenesQr.GetGene( i ).GetName( ) ) ) == -1 )
+					continue;
+				for( j = 0; j < Dat.GetGenes( ); ++j )
+					if( !CMeta::IsNaN( d = Dat.Get( iCur, j ) ) ) {
+						adCentroid[ j ] += d;
+						veciCounts[ j ]++; } }
+			for( i = 0; i < Dat.GetGenes( ); ++i )
+				adCentroid[ i ] /= veciCounts[ i ];
+
+			vecdScores.resize( Dat.GetGenes( ) );
+			adCur = new float[ Dat.GetGenes( ) ];
+			for( i = 0; i < Dat.GetGenes( ); ++i ) {
+				for( j = 0; j < Dat.GetGenes( ); ++j )
+					adCur[ j ] = Dat.Get( i, j );
+				vecdScores[ i ] = (float)MeasurePearson.Measure( adCentroid, Dat.GetGenes( ), adCur,
+					Dat.GetGenes( ), IMeasure::EMapNone, NULL, NULL ); }
+			delete[] adCur;
+			delete[] adCentroid;
+			for( i = 0; i < vecdScores.size( ); ++i )
+				cout << Dat.GetGene( i ) << '\t' << vecdScores[ i ] << endl; }
+		else
+			Dat.FilterGenes( GenesQr, CDat::EFilterPixie, sArgs.neighbors_arg ); }
 	if( sArgs.normalize_flag )
 		Dat.Normalize( );
 
@@ -69,6 +101,20 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.SaveNET( cout, dCutoff );
 	else if( !strcmp( sArgs.format_arg, "matisse" ) )
 		Dat.SaveMATISSE( cout, dCutoff, &Genome );
+	else if( !strcmp( sArgs.format_arg, "list" ) ) {
+		set<string>					setstrGenes;
+		set<string>::const_iterator	iterGene;
+
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) &&
+					( CMeta::IsNaN( dCutoff ) || ( d > dCutoff ) ) ) {
+					setstrGenes.insert( Dat.GetGene( i ) );
+					setstrGenes.insert( Dat.GetGene( j ) ); }
+		for( iterGene = setstrGenes.begin( ); iterGene != setstrGenes.end( ); ++iterGene )
+			cout << *iterGene << endl; }
+	else if( !strcmp( sArgs.format_arg, "dat" ) )
+		Dat.Save( cout, CDat::EFormatText );
 
 	CMeta::Shutdown( );
 	return 0; }

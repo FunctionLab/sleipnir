@@ -19,9 +19,12 @@ int main( int iArgs, char** aszArgs ) {
 	size_t								i, j, k;
 	map<const CGene*,bool>				mapGenes;
 	map<const CGene*,bool>::iterator	iterGene;
+	int									iRet;
 
-	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) && sArgs.config_arg &&
-		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) {
+	iRet = cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 );
+	if( sArgs.config_arg )
+		iRet = cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) && iRet;
+	if( iRet ) {
 		cmdline_parser_print_help( );
 		return 1; }
 

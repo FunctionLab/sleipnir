@@ -153,6 +153,7 @@ protected:
 	static const char	c_szSubset[];
 	static const char	c_szSynonym[];
 	static const char	c_szTerm[];
+	static const char	c_szXRef[];
 	static const char	c_szXRefAnalog[];
 	static const char	c_szXRefUnknown[];
 
