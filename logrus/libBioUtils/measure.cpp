@@ -729,4 +729,63 @@ double CMeasureBinaryInnerProduct::Measure( const float* adX, size_t iM, const f
 
 	return dRet; }
 
+const char* CMeasureMutualInformation::GetName( ) const {
+
+	return "mutinfo"; }
+
+bool CMeasureMutualInformation::IsRank( ) const {
+
+	return false; }
+
+IMeasure* CMeasureMutualInformation::Clone( ) const {
+
+	return new CMeasureMutualInformation( ); }
+
+double CMeasureMutualInformation::Measure( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	map<float, size_t>							mapOne, mapTwo;
+	map<float, size_t>::iterator				iter;
+	map<float, size_t>::const_iterator			iterOne, iterTwo;
+	map<pair<float, float>, size_t>				mapJoint;
+	map<pair<float, float>, size_t>::iterator	iterJoint;
+	size_t										i, iOne, iTwo, iJoint;
+	double										dOne, dJoint, dRet;
+
+	if( iM != iN )
+		return CMeta::GetNaN( );
+
+	iOne = iTwo = iJoint = 0;
+	for( i = 0; i < iM; ++i ) {
+		if( !CMeta::IsNaN( adX[ i ] ) ) {
+			if( ( iter = mapOne.find( adX[ i ] ) ) == mapOne.end( ) )
+				mapOne[ adX[ i ] ] = 1;
+			else
+				iter->second += 1;
+			iOne++;
+			if( !CMeta::IsNaN( adY[ i ] ) ) {
+				if( ( iterJoint = mapJoint.find( pair<float, float>( adX[ i ], adY[ i ] ) ) ) ==
+					mapJoint.end( ) )
+					mapJoint[ pair<float, float>( adX[ i ], adY[ i ] ) ] = 1;
+				else
+					iterJoint->second += 1;
+				iJoint++; } }
+		if( !CMeta::IsNaN( adY[ i ] ) ) {
+			if( ( iter = mapTwo.find( adY[ i ] ) ) == mapTwo.end( ) )
+				mapTwo[ adY[ i ] ] = 1;
+			else
+				iter->second += 1;
+			iTwo++; } }
+
+	for( dRet = 0,iterOne = mapOne.begin( ); iterOne != mapOne.end( ); ++iterOne ) {
+		dOne = (double)iterOne->second / iOne;
+		for( iterTwo = mapTwo.begin( ); iterTwo != mapTwo.end( ); ++iterTwo )
+			if( ( iterJoint = mapJoint.find( pair<float, float>( iterOne->first, iterTwo->first ) ) ) !=
+				mapJoint.end( ) ) {
+				dJoint = (double)iterJoint->second / iJoint;
+				dRet += dJoint * log( dJoint * iTwo / dOne / iterTwo->second ); } }
+	dRet /= log( 2.0 );
+	dRet -= (double)max( mapOne.size( ), mapTwo.size( ) ) / ( 2 * max( iOne, iTwo ) * log( 2.0 ) );
+
+	return dRet; }
+
 }

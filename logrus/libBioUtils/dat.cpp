@@ -249,11 +249,11 @@ void CDatImpl::OpenHelper( const CGenes* pOne, const CGenes* pTwo, float dValue 
 			if( CMeta::IsNaN( Get( iOne, iTwo ) ) )
 				Set( iOne, iTwo, dValue ); } } }
 
-bool CDat::Open( istream& istm, EFormat eFormat, float dDefault ) {
+bool CDat::Open( istream& istm, EFormat eFormat, float dDefault, bool fDuplicates ) {
 
 	switch( eFormat ) {
 		case EFormatText:
-			return OpenText( istm, dDefault );
+			return OpenText( istm, dDefault, fDuplicates );
 
 		case EFormatPCL:
 			return OpenPCL( istm );
@@ -299,7 +299,7 @@ bool CDat::Open( const CPCL& PCL, const IMeasure* pMeasure, bool fMeasureMemory 
 
 	return true; }
 
-bool CDatImpl::OpenText( istream& istm, float dDefault ) {
+bool CDatImpl::OpenText( istream& istm, float dDefault, bool fDuplicates ) {
 	const char*	pc;
 	char*		pcTail;
 	char*		acBuf;
@@ -347,9 +347,10 @@ bool CDatImpl::OpenText( istream& istm, float dDefault ) {
 			g_CatBioUtils.error( "CDatImpl::OpenText( ) duplicate genes %s, %s (%g:%g)",
 				strCache.c_str( ), strToken.c_str( ), vecvecfScores[ iOne ][ iTwo ],
 				dScore );
-			Reset( );
-			delete[] acBuf;
-			return false; }
+			if( !fDuplicates ) {
+				Reset( );
+				delete[] acBuf;
+				return false; } }
 		vecvecfScores[ iOne ][ iTwo ] = vecvecfScores[ iTwo ][ iOne ] = dScore; }
 	delete[] acBuf;
 

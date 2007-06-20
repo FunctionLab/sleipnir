@@ -29,7 +29,7 @@ public:
 	};
 
 	bool Open( const char*, bool = false );
-	bool Open( std::istream&, EFormat = EFormatBinary, float = HUGE_VAL );
+	bool Open( std::istream&, EFormat = EFormatBinary, float = HUGE_VAL, bool = false );
 	bool Open( const CSlim& );
 	bool Open( const CSlim&, const CSlim& );
 	bool Open( const std::vector<std::string>&, bool = true, const char* = NULL );

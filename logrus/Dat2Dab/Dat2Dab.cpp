@@ -28,7 +28,7 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Dat.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
 			cerr << "Could not open: " << sArgs.input_arg << endl;
 			return 1; } }
-	else if( !Dat.Open( cin, CDat::EFormatText ) ) {
+	else if( !Dat.Open( cin, CDat::EFormatText, (float)HUGE_VAL, !!sArgs.duplicates_flag ) ) {
 		cerr << "Could not open input" << endl;
 		return 1; }
 

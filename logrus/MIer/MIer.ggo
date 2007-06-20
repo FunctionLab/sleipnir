@@ -1,0 +1,8 @@
+package	"MIer"
+version	"1.0"
+purpose	"Data set pairwise mutual information calculator."
+
+section "Optional"
+option	"table"		t	"Format output as a 2D table"	flag	on
+option	"memmap"	m	"Memory map input/output"	flag	off
+option	"verbosity"	v	"Message verbosity"	int	default="5"
