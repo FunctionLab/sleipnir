@@ -17,11 +17,32 @@ int main( int iArgs, char** aszArgs ) {
 	float					dOne, dJoint, dMI;
 	map<string, size_t>		mapZeros;
 	vector<float>			vecdOne, vecdTwo;
+	float*					adOne;
+	float*					adTwo;
+	IMeasure*					pMeasure;
+	CMeasurePearson				Pearson;
+	CMeasureEuclidean			Euclidean;
+	CMeasureKendallsTau			KendallsTau;
+	CMeasureKolmogorovSmirnov	KolmSmir;
+	CMeasureHypergeometric		Hypergeom;
+	CMeasureQuickPearson		PearQuick;
+	CMeasureInnerProduct		InnerProd;
+	CMeasureBinaryInnerProduct	BinInnerProd;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
+
+	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / sArgs.inputs_num );
+	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
+		&KolmSmir, &Hypergeom, &PearQuick, &InnerProd, &BinInnerProd, NULL };
+
+	pMeasure = NULL;
+	for( i = 0; apMeasures[ i ]; ++i )
+		if( !strcmp( apMeasures[ i ]->GetName( ), sArgs.distance_arg ) ) {
+			pMeasure = apMeasures[ i ];
+			break; }
 
 	if( sArgs.zeros_arg ) {
 		ifstream		ifsm;
@@ -64,6 +85,9 @@ int main( int iArgs, char** aszArgs ) {
 				cout << '\t'; }
 		if( ( iDatOne + 1 ) == sArgs.inputs_num )
 			break;
+		if( pMeasure ) {
+			vecdOne.clear( );
+			vecdTwo.clear( ); }
 		DatOne.Open( sArgs.inputs[ iDatOne ], false, !!sArgs.memmap_flag );
 		veciGenesOne.resize( DatOne.GetGenes( ) );
 		veciOneBase.resize( DatOne.GetValues( ) );
@@ -100,6 +124,9 @@ int main( int iArgs, char** aszArgs ) {
 						veciTwo[ iValueTwo ]++;
 						if( ( iValueOne = find_value( iGeneOne, iGeneTwo, DatOne,
 							veciDefaults[ iDatOne ] ) ) != -1 ) {
+							if( pMeasure ) {
+								vecdOne.push_back( (float)iValueOne );
+								vecdTwo.push_back( (float)iValueTwo ); }
 							if( ( iGeneOne == -1 ) || ( iGeneTwo == -1 ) ) {
 								iCountOne++;
 								veciOne[ iValueOne ]++; }
@@ -115,17 +142,31 @@ int main( int iArgs, char** aszArgs ) {
 							iCountTwo++;
 							veciTwo[ iValueTwo ]++;
 							if( ( iValueOne = find_value( i, j, DatOne, veciDefaults[ iDatOne ] ) ) != -1 ) {
+								if( pMeasure ) {
+									vecdOne.push_back( (float)iValueOne );
+									vecdTwo.push_back( (float)iValueTwo ); }
 								iCountJoint++;
 								vecveciJoint[ iValueOne ][ iValueTwo ]++; } } } }
 
-			for( dMI = 0,i = 0; i < veciOne.size( ); ++i ) {
-				dOne = (float)veciOne[ i ] / iCountOne;
-				for( j = 0; j < veciTwo.size( ); ++j )
-					if( iJoint = vecveciJoint[ i ][ j ] ) {
-						dJoint = (float)iJoint / iCountJoint;
-						dMI += dJoint * log( dJoint * iCountTwo / dOne / veciTwo[ j ] ); } }
-			dMI -= ( veciOne.size( ) - 1 ) * ( veciTwo.size( ) - 1 ) / ( 2.0f * ( iCountOne + iCountTwo ) );
-			dMI = ( dMI < 0 ) ? 0 : ( dMI / log( 2.0f ) );
+			if( pMeasure ) {
+				adOne = new float[ vecdOne.size( ) ];
+				adTwo = new float[ vecdTwo.size( ) ];
+				for( i = 0; i < vecdOne.size( ); ++i ) {
+					adOne[ i ] = vecdOne[ i ];
+					adTwo[ i ] = vecdTwo[ i ]; }
+				dMI = (float)pMeasure->Measure( adOne, vecdOne.size( ), adTwo, vecdTwo.size( ) );
+				delete[] adTwo;
+				delete[] adOne; }
+			else {
+				for( dMI = 0,i = 0; i < veciOne.size( ); ++i ) {
+					dOne = (float)veciOne[ i ] / iCountOne;
+					for( j = 0; j < veciTwo.size( ); ++j )
+						if( iJoint = vecveciJoint[ i ][ j ] ) {
+							dJoint = (float)iJoint / iCountJoint;
+							dMI += dJoint * log( dJoint * iCountTwo / dOne / veciTwo[ j ] ); } }
+				dMI -= ( veciOne.size( ) - 1 ) * ( veciTwo.size( ) - 1 ) / ( 2.0f * ( iCountOne +
+					iCountTwo ) );
+				dMI = ( dMI < 0 ) ? 0 : ( dMI / log( 2.0f ) ); }
 			if( sArgs.table_flag )
 				cout << '\t' << dMI;
 			else
