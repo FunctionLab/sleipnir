@@ -16,6 +16,7 @@ int main( int iArgs, char** aszArgs ) {
 	vector<vector<size_t> >	vecveciJoint;
 	float					dOne, dJoint, dMI;
 	map<string, size_t>		mapZeros;
+	vector<float>			vecdOne, vecdTwo;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -56,6 +57,7 @@ int main( int iArgs, char** aszArgs ) {
 	for( iDatOne = ( ( sArgs.only_arg == -1 ) ? 0 : sArgs.only_arg );
 		iDatOne < ( ( sArgs.only_arg == -1 ) ? sArgs.inputs_num : ( sArgs.only_arg + 1 ) );
 		++iDatOne ) {
+		cerr << "Processing " << iDatOne << '/' << sArgs.inputs_num << endl;
 		if( sArgs.table_flag ) {
 			cout << sArgs.inputs[ iDatOne ];
 			for( i = 0; i <= iDatOne; ++i )
