@@ -53,7 +53,9 @@ int main( int iArgs, char** aszArgs ) {
 		for( i = 0; i < sArgs.inputs_num; ++i )
 			cout << '\t' << sArgs.inputs[ i ];
 		cout << endl; }
-	for( iDatOne = 0; iDatOne < sArgs.inputs_num; ++iDatOne ) {
+	for( iDatOne = ( ( sArgs.only_arg == -1 ) ? 0 : sArgs.only_arg );
+		iDatOne < ( ( sArgs.only_arg == -1 ) ? sArgs.inputs_num : ( sArgs.only_arg + 1 ) );
+		++iDatOne ) {
 		if( sArgs.table_flag ) {
 			cout << sArgs.inputs[ iDatOne ];
 			for( i = 0; i <= iDatOne; ++i )
