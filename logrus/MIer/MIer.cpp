@@ -1,6 +1,16 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+struct SSorter {
+	const vector<size_t>&	m_veciSizes;
+
+	SSorter( const vector<size_t>& veciSizes ) : m_veciSizes(veciSizes) { }
+
+	bool operator()( size_t iOne, size_t iTwo ) const {
+
+		return ( m_veciSizes[ iOne ] > m_veciSizes[ iTwo ] ); }
+};
+
 size_t find_value( size_t iOne, size_t iTwo, const CDataPair& Dat, size_t iDefault ) {
 	float	d;
 
@@ -14,6 +24,7 @@ int main( int iArgs, char** aszArgs ) {
 	size_t					iCountJoint, iJoint, iValueOne, iValueTwo, iCountOneBase;
 	vector<size_t>			veciGenesOne, veciGenesTwo, veciOne, veciTwo, veciOneBase, veciDefaults;
 	vector<vector<size_t> >	vecveciJoint;
+	vector<string>			vecstrInputs;
 	float					dOne, dJoint, dMI;
 	map<string, size_t>		mapZeros;
 	vector<float>			vecdOne, vecdTwo;
@@ -28,15 +39,32 @@ int main( int iArgs, char** aszArgs ) {
 	CMeasureQuickPearson		PearQuick;
 	CMeasureInnerProduct		InnerProd;
 	CMeasureBinaryInnerProduct	BinInnerProd;
+	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / sArgs.inputs_num );
+	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
+		&KolmSmir, &Hypergeom, &PearQuick, &InnerProd, &BinInnerProd, NULL };
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
 
-	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / sArgs.inputs_num );
-	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
-		&KolmSmir, &Hypergeom, &PearQuick, &InnerProd, &BinInnerProd, NULL };
+	vecstrInputs.resize( sArgs.inputs_num );
+	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrInputs.begin( ) );
+	if( sArgs.only_arg == -1 ) {
+		vector<size_t>	veciIndices, veciSizes;
+
+		veciSizes.resize( vecstrInputs.size( ) );
+		veciIndices.resize( vecstrInputs.size( ) );
+		for( i = 0; i < vecstrInputs.size( ); ++i ) {
+			CDat		Dat;
+			ifstream	ifsm;
+
+			veciIndices[ i ] = i;
+			ifsm.open( vecstrInputs[ i ].c_str( ) );
+			Dat.OpenGenes( ifsm, true );
+			veciSizes[ i ] = Dat.GetGenes( ); }
+		sort( veciIndices.begin( ), veciIndices.end( ), SSorter( veciSizes ) );
+		CMeta::Permute( vecstrInputs, veciIndices ); }
 
 	pMeasure = NULL;
 	for( i = 0; apMeasures[ i ]; ++i )
@@ -61,34 +89,31 @@ int main( int iArgs, char** aszArgs ) {
 			if( vecstrZeros.empty( ) )
 				continue;
 			mapZeros[ vecstrZeros[ 0 ] ] = atoi( vecstrZeros[ 1 ].c_str( ) ); } }
-	veciDefaults.resize( sArgs.inputs_num );
+	veciDefaults.resize( vecstrInputs.size( ) );
 	for( i = 0; i < veciDefaults.size( ); ++i ) {
 		map<string, size_t>::const_iterator	iterZero;
 
 		if( ( iterZero = mapZeros.find( CMeta::Deextension( CMeta::Basename(
-			sArgs.inputs[ i ] ) ) ) ) != mapZeros.end( ) )
+			vecstrInputs[ i ].c_str( ) ) ) ) ) != mapZeros.end( ) )
 			veciDefaults[ i ] = iterZero->second;
 		else
 			veciDefaults[ i ] = sArgs.zero_flag ? 0 : -1; }
 
 	if( sArgs.table_flag ) {
-		for( i = 0; i < sArgs.inputs_num; ++i )
-			cout << '\t' << sArgs.inputs[ i ];
+		for( i = 0; i < vecstrInputs.size( ); ++i )
+			cout << '\t' << vecstrInputs[ i ];
 		cout << endl; }
 	for( iDatOne = ( ( sArgs.only_arg == -1 ) ? 0 : sArgs.only_arg );
-		iDatOne < ( ( sArgs.only_arg == -1 ) ? sArgs.inputs_num : ( sArgs.only_arg + 1 ) );
+		iDatOne < ( ( sArgs.only_arg == -1 ) ? vecstrInputs.size( ) : ( sArgs.only_arg + 1 ) );
 		++iDatOne ) {
-		cerr << "Processing " << iDatOne << '/' << sArgs.inputs_num << endl;
+		cerr << "Processing " << iDatOne << '/' << vecstrInputs.size( ) << endl;
 		if( sArgs.table_flag ) {
-			cout << sArgs.inputs[ iDatOne ];
+			cout << vecstrInputs[ iDatOne ];
 			for( i = 0; i <= iDatOne; ++i )
 				cout << '\t'; }
-		if( ( iDatOne + 1 ) == sArgs.inputs_num )
+		if( ( iDatOne + 1 ) == vecstrInputs.size( ) )
 			break;
-		if( pMeasure ) {
-			vecdOne.clear( );
-			vecdTwo.clear( ); }
-		DatOne.Open( sArgs.inputs[ iDatOne ], false, !!sArgs.memmap_flag );
+		DatOne.Open( vecstrInputs[ iDatOne ].c_str( ), false, !!sArgs.memmap_flag );
 		veciGenesOne.resize( DatOne.GetGenes( ) );
 		veciOneBase.resize( DatOne.GetValues( ) );
 		fill( veciOneBase.begin( ), veciOneBase.end( ), 0 );
@@ -97,8 +122,8 @@ int main( int iArgs, char** aszArgs ) {
 				if( ( iValueOne = find_value( i, j, DatOne, veciDefaults[ iDatOne ] ) ) != -1 ) {
 					iCountOneBase++;
 					veciOneBase[ iValueOne ]++; }
-		for( iDatTwo = ( iDatOne + 1 ); iDatTwo < sArgs.inputs_num; ++iDatTwo ) {
-			DatTwo.Open( sArgs.inputs[ iDatTwo ], false, !!sArgs.memmap_flag );
+		for( iDatTwo = ( iDatOne + 1 ); iDatTwo < vecstrInputs.size( ); ++iDatTwo ) {
+			DatTwo.Open( vecstrInputs[ iDatTwo ].c_str( ), false, !!sArgs.memmap_flag );
 			for( i = 0; i < veciGenesOne.size( ); ++i )
 				veciGenesOne[ i ] = DatTwo.GetGene( DatOne.GetGene( i ) );
 			veciGenesTwo.resize( DatTwo.GetGenes( ) );
@@ -115,6 +140,9 @@ int main( int iArgs, char** aszArgs ) {
 				vecveciJoint[ i ].resize( veciTwo.size( ) );
 				fill( vecveciJoint[ i ].begin( ), vecveciJoint[ i ].end( ), 0 ); }
 
+			if( pMeasure ) {
+				vecdOne.clear( );
+				vecdTwo.clear( ); }
 			for( i = iCountTwo = iCountJoint = 0; i < DatTwo.GetGenes( ); ++i ) {
 				iGeneOne = veciGenesTwo[ i ];
 				for( j = ( i + 1 ); j < DatTwo.GetGenes( ); ++j ) {
@@ -170,7 +198,7 @@ int main( int iArgs, char** aszArgs ) {
 			if( sArgs.table_flag )
 				cout << '\t' << dMI;
 			else
-				cout << sArgs.inputs[ iDatOne ] << '\t' << sArgs.inputs[ iDatTwo ] << '\t' << dMI <<
+				cout << vecstrInputs[ iDatOne ] << '\t' << vecstrInputs[ iDatTwo ] << '\t' << dMI <<
 					endl; }
 		if( sArgs.table_flag )
 			cout << endl; }
