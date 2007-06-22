@@ -79,20 +79,17 @@ int main( int iArgs, char** aszArgs ) {
 
 		if( sArgs.clip_arg ) {
 			CDat			DatOut;
-			vector<size_t>	veciGenes;
-			size_t			iOne, iTwo, j;
+			size_t			j;
+			vector<bool>	vecfGenes;
 
-			DatOut.Open( Genes.GetGeneNames( ) );
-			veciGenes.resize( DatOut.GetGenes( ) );
-			for( i = 0; i < veciGenes.size( ); ++i )
-				veciGenes[ i ] = Dat.GetGene( DatOut.GetGene( i ) );
-			for( i = 0; i < DatOut.GetGenes( ); ++i ) {
-				if( ( iOne = veciGenes[ i ] ) == -1 )
-					continue;
-				for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j ) {
-					if( ( iTwo = veciGenes[ j ] ) == -1 )
-						continue;
-					DatOut.Set( i, j, Dat.Get( iOne, iTwo ) ); } }
+			vecfGenes.resize( Dat.GetGenes( ) );
+			for( i = 0; i < vecfGenes.size( ); ++i )
+				vecfGenes[ i ] = Genes.IsGene( Dat.GetGene( i ) );
+			DatOut.Open( Dat.GetGeneNames( ) );
+			for( i = 0; i < DatOut.GetGenes( ); ++i )
+				for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
+					if( vecfGenes[ i ] || vecfGenes[ j ] )
+						DatOut.Set( i, j, Dat.Get( i, j ) );
 			DatOut.Save( ( (string)sArgs.clip_arg + '/' + CMeta::Deextension( CMeta::Basename(
 				sArgs.inputs[ iGenes ] ) ) + c_szDab ).c_str( ) ); } }
 

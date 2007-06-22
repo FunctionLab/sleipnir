@@ -107,6 +107,8 @@ protected:
 
 }
 
+// MEFIT OFF
 #include "bayesnetfni.h"
+// MEFIT ON
 
 #endif // BAYESNETI_H

@@ -11,17 +11,19 @@ class CGene : CGeneImpl {
 public:
 	CGene( const std::string& );
 
-	bool AddAnnotation( const IOntology*, size_t );
 	bool AddSynonym( const std::string& );
+// MEFIT OFF
+	bool AddAnnotation( const IOntology*, size_t );
 	size_t GetOntologies( ) const;
 	size_t GetAnnotations( size_t ) const;
 	size_t GetAnnotation( size_t, size_t ) const;
-	const std::string& GetName( ) const;
 	const IOntology* GetOntology( size_t ) const;
-	size_t GetSynonyms( ) const;
-	const std::string& GetSynonym( size_t ) const;
 	bool IsAnnotated( const IOntology* ) const;
 	bool IsAnnotated( const IOntology*, size_t ) const;
+// MEFIT ON
+	const std::string& GetName( ) const;
+	size_t GetSynonyms( ) const;
+	const std::string& GetSynonym( size_t ) const;
 	void SetRNA( bool );
 	bool GetRNA( ) const;
 	void SetDubious( bool );
@@ -39,7 +41,9 @@ public:
 	size_t GetGenes( ) const;
 	size_t FindGene( const std::string& ) const;
 	std::vector<std::string> GetGeneNames( ) const;
+// MEFIT OFF
 	size_t CountGenes( const IOntology* ) const;
+// MEFIT ON
 	bool AddSynonym( CGene&, const std::string& );
 };
 
@@ -50,7 +54,9 @@ public:
 	bool Open( istream&, bool = true );
 	bool Open( const std::vector<std::string>& );
 	void Filter( const CGenes& );
+// MEFIT OFF
 	size_t CountAnnotations( const IOntology*, size_t, bool = true, const CGenes* = NULL ) const;
+// MEFIT ON
 	std::vector<std::string> GetGeneNames( ) const;
 
 	size_t GetGenes( ) const {

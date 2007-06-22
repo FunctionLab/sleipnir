@@ -91,6 +91,7 @@ int main( int iArgs, char** aszArgs ) {
 	vecpthdThreads.resize( vecpBNRoots.size( ) );
 	vecsData.resize( vecpthdThreads.size( ) );
 	for( iTerm = 0; iTerm < vecpBNRoots.size( ); iTerm += iThread ) {
+		cerr << "Learning root " << iTerm << '/' << vecpBNRoots.size( ) << endl;
 		for( iThread = 0; ( ( sArgs.threads_arg == -1 ) || ( iThread < (size_t)sArgs.threads_arg ) ) &&
 			( ( iTerm + iThread ) < vecpBNRoots.size( ) ); ++iThread ) {
 			i = iTerm + iThread;
@@ -150,6 +151,7 @@ int main( int iArgs, char** aszArgs ) {
 		pvecpBNData = new vector<CBayesNetSmile*>( );
 		pvecpBNData->resize( vecpGenes.size( ) );
 		for( iTerm = 0; iTerm < vecpBNRoots.size( ); iTerm += iThread ) {
+			cerr << "Learning term " << iTerm << '/' << vecpBNRoots.size( ) << endl;
 			for( iThread = 0; ( ( sArgs.threads_arg == -1 ) || ( iThread < (size_t)sArgs.threads_arg ) ) &&
 				( ( iTerm + iThread ) < vecpBNRoots.size( ) ); ++iThread ) {
 				i = iTerm + iThread;

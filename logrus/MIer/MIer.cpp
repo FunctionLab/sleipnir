@@ -145,9 +145,9 @@ for( i = 0; i < veciOne.size( ); ++i )
 cout << ' ' << veciOne[ i ];
 cout << endl;
 //*/
-			for( dMI = 0,i = 0; i < veciOne.size( ); ++i ) {
-				dOne = (float)veciOne[ i ] / iCountOne;
-				dMI += dOne * log( 1 / dOne ); }
+			for( dMI = 0,i = 0; i < veciOne.size( ); ++i )
+				if( dOne = (float)veciOne[ i ] / iCountOne )
+					dMI += dOne * log( 1 / dOne );
 			dMI /= log( 2.0f );
 			if( sArgs.table_flag )
 				cout << '\t' << dMI;
@@ -220,8 +220,8 @@ cout << endl;
 						if( iJoint = vecveciJoint[ i ][ j ] ) {
 							dJoint = (float)iJoint / iCountJoint;
 							dMI += dJoint * log( dJoint * iCountTwo / dOne / veciTwo[ j ] ); } }
-//				dMI -= ( veciOne.size( ) - 1 ) * ( veciTwo.size( ) - 1 ) / ( 2.0f * ( iCountOne +
-//					iCountTwo ) );
+				dMI -= ( veciOne.size( ) - 1 ) * ( veciTwo.size( ) - 1 ) / ( 2.0f * ( iCountOne +
+					iCountTwo ) );
 				dMI = ( dMI < 0 ) ? 0 : ( dMI / log( 2.0f ) ); }
 			if( sArgs.table_flag )
 				cout << '\t' << dMI;

@@ -1,9 +1,11 @@
 #include "stdafx.h"
 #include "dat.h"
-#include "annotation.h"
 #include "genome.h"
 #include "pstdint.h"
 #include "statistics.h"
+// MEFIT OFF
+#include "annotation.h"
+// MEFIT ON
 
 namespace libBioUtils {
 
@@ -75,6 +77,8 @@ void CDatImpl::Reset( ) {
 	if( m_aadData )
 		delete[] m_aadData;
 	m_aadData = NULL; }
+
+// MEFIT OFF
 
 void CDatImpl::SlimCache( const CSlim& Slim, vector<vector<size_t> >& vecveciGenes ) const {
 	size_t	iS, iG;
@@ -151,6 +155,8 @@ bool CDat::Open( const CSlim& SlimPos, const CSlim& SlimNeg ) {
 						Set( iGene1, iGene2, 0 ); } } }
 
 	return true; }
+
+// MEFIT ON
 
 bool CDat::Open( const CDat& Dat, const vector<CGenes*>& vecpOther, const CGenome& Genome,
 	bool fPositives ) {

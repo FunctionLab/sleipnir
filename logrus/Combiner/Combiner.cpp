@@ -118,9 +118,12 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 		HMatCounts.Clear( ); }
 	veciGenes.resize( DatOut.GetGenes( ) );
 	for( i = 0; i < sArgs.inputs_num; ++i ) {
-		if( !DatCur.Open( sArgs.inputs[ i ], !!sArgs.memmap_flag ) ) {
+		if( !DatCur.Open( sArgs.inputs[ i ], !!sArgs.memmap_flag && !sArgs.normalize_flag ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
 			return 1; }
+		cerr << "Opened: " << sArgs.inputs[ i ] << endl;
+		if( sArgs.normalize_flag )
+			DatCur.Normalize( false );
 		for( j = 0; j < veciGenes.size( ); ++j )
 			veciGenes[ j ] = DatCur.GetGene( DatOut.GetGene( j ) );
 		for( j = 0; j < veciGenes.size( ); ++j ) {

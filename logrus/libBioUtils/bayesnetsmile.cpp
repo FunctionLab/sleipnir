@@ -248,8 +248,10 @@ bool CBayesNetSmileImpl::IsNaive( ) const {
 
 bool CBayesNetSmile::Learn( const IDataset* pData, size_t iIterations, bool fZero, bool fELR ) {
 
+// MEFIT OFF
 	if( fELR )
 		return LearnELR( pData, iIterations, fZero );
+// MEFIT ON
 	if( IsNaive( ) )
 		return LearnNaive( pData, fZero );
 
@@ -292,12 +294,16 @@ void CBayesNetSmileImpl::LearnExpected( DSL_node* pNode, DSL_Dmatrix* pExpected,
 
 		pExpected->Subscript( veciCoords ) += dProd * iWeight; } }
 
+// MEFIT OFF
+
 bool CBayesNetSmile::Convert( CBayesNetPNL& BNPNL ) const {
 
 	if( !m_fSmileNet )
 		return false;
 
 	return( ConvertGraph( BNPNL ) && ConvertCPTs( BNPNL ) ); }
+
+// MEFIT ON
 
 void CBayesNetSmile::GetNodes( vector<string>& vecstrNodes ) const {
 	int	i;

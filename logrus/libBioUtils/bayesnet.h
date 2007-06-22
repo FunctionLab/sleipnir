@@ -77,6 +77,8 @@ public:
 	bool GetCPT( size_t, CDataMatrix& ) const;
 };
 
+// MEFIT OFF
+
 class CBayesNetFN : CBayesNetFNImpl, public IBayesNet {
 public:
 	bool Open( const char* );
@@ -95,6 +97,8 @@ public:
 	void Reverse( size_t );
 	bool GetCPT( size_t, CDataMatrix& ) const;
 };
+
+// MEFIT ON
 
 }
 

@@ -37,10 +37,14 @@ bool CPairImpl::Open( const char* szLine, vector<float>& vecdQuant ) {
 
 	return true; }
 
+// MEFIT OFF
+
 bool CDataPair::Open( const CSlim& Slim ) {
 
 	Reset( false );
 	return CDat::Open( Slim ); }
+
+// MEFIT ON
 
 bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap ) {
 

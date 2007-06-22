@@ -30,8 +30,10 @@ public:
 
 	bool Open( const char*, bool = false );
 	bool Open( std::istream&, EFormat = EFormatBinary, float = HUGE_VAL, bool = false );
+// MEFIT OFF
 	bool Open( const CSlim& );
 	bool Open( const CSlim&, const CSlim& );
+// MEFIT ON
 	bool Open( const std::vector<std::string>&, bool = true, const char* = NULL );
 	bool Open( const std::vector<std::string>&, const CDistanceMatrix& );
 	bool Open( const std::vector<CGenes*>&, const std::vector<CGenes*>&, float, const CGenome& );

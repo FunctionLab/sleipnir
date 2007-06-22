@@ -134,7 +134,7 @@ int heavy( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 	iClusters = 0;
 	vecfCluster.resize( Dat.GetGenes( ) );
 	vecdConnectivity.resize( Dat.GetGenes( ) );
-	while( true ) {
+	while( ( sArgs.subgraphs_arg == -1 ) || ( iClusters < sArgs.subgraphs_arg ) ) {
 		priority_queue<SSeed>	pqueSeeds;
 
 		d = 4;
