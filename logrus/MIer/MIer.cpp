@@ -18,18 +18,18 @@ size_t find_value( size_t iOne, size_t iTwo, const CDataPair& Dat, size_t iDefau
 	return ( CMeta::IsNaN( d ) ? iDefault : Dat.Quantize( d ) ); }
 
 int main( int iArgs, char** aszArgs ) {
-	gengetopt_args_info		sArgs;
-	CDataPair				DatOne, DatTwo;
-	size_t					i, j, iDatOne, iDatTwo, iGeneOne, iGeneTwo, iCountOne, iCountTwo;
-	size_t					iCountJoint, iJoint, iValueOne, iValueTwo, iCountOneBase;
-	vector<size_t>			veciGenesOne, veciGenesTwo, veciOne, veciTwo, veciOneBase, veciDefaults;
-	vector<vector<size_t> >	vecveciJoint;
-	vector<string>			vecstrInputs;
-	float					dOne, dJoint, dMI;
-	map<string, size_t>		mapZeros;
-	vector<float>			vecdOne, vecdTwo;
-	float*					adOne;
-	float*					adTwo;
+	gengetopt_args_info			sArgs;
+	CDataPair					DatOne, DatTwo;
+	size_t						i, j, iDatOne, iDatTwo, iGeneOne, iGeneTwo, iCountOne, iCountTwo;
+	size_t						iCountJoint, iJoint, iValueOne, iValueTwo;
+	vector<size_t>				veciGenesOne, veciGenesTwo, veciOne, veciTwo, veciDefaults, veciSizes;
+	vector<vector<size_t> >		vecveciJoint;
+	vector<string>				vecstrInputs, vecstrGenes;
+	float						dOne, dJoint, dMI;
+	map<string, size_t>			mapZeros;
+	vector<float>				vecdOne, vecdTwo;
+	float*						adOne;
+	float*						adTwo;
 	IMeasure*					pMeasure;
 	CMeasurePearson				Pearson;
 	CMeasureEuclidean			Euclidean;
@@ -39,14 +39,15 @@ int main( int iArgs, char** aszArgs ) {
 	CMeasureQuickPearson		PearQuick;
 	CMeasureInnerProduct		InnerProd;
 	CMeasureBinaryInnerProduct	BinInnerProd;
-	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / sArgs.inputs_num );
-	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
-		&KolmSmir, &Hypergeom, &PearQuick, &InnerProd, &BinInnerProd, NULL };
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
+
+	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / sArgs.inputs_num );
+	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
+		&KolmSmir, &Hypergeom, &PearQuick, &InnerProd, &BinInnerProd, NULL };
 
 	vecstrInputs.resize( sArgs.inputs_num );
 	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrInputs.begin( ) );
@@ -65,6 +66,17 @@ int main( int iArgs, char** aszArgs ) {
 			veciSizes[ i ] = Dat.GetGenes( ); }
 		sort( veciIndices.begin( ), veciIndices.end( ), SSorter( veciSizes ) );
 		CMeta::Permute( vecstrInputs, veciIndices ); }
+	{
+		CDataset	Data;
+
+		Data.OpenGenes( vecstrInputs );
+		vecstrGenes.resize( Data.GetGenes( ) );
+		copy( Data.GetGeneNames( ).begin( ), Data.GetGeneNames( ).end( ), vecstrGenes.begin( ) );
+	}
+	veciSizes.resize( vecstrInputs.size( ) );
+	for( i = 0; i < veciSizes.size( ); ++i ) {
+		DatOne.OpenQuants( vecstrInputs[ i ].c_str( ) );
+		veciSizes[ i ] = DatOne.GetValues( ); }
 
 	pMeasure = NULL;
 	for( i = 0; apMeasures[ i ]; ++i )
@@ -97,7 +109,7 @@ int main( int iArgs, char** aszArgs ) {
 			vecstrInputs[ i ].c_str( ) ) ) ) ) != mapZeros.end( ) )
 			veciDefaults[ i ] = iterZero->second;
 		else
-			veciDefaults[ i ] = sArgs.zero_flag ? 0 : -1; }
+			veciDefaults[ i ] = sArgs.zero_flag ? 0 : veciSizes[ i ]++; }
 
 	if( sArgs.table_flag ) {
 		for( i = 0; i < vecstrInputs.size( ); ++i )
@@ -109,32 +121,50 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Processing " << iDatOne << '/' << vecstrInputs.size( ) << endl;
 		if( sArgs.table_flag ) {
 			cout << vecstrInputs[ iDatOne ];
-			for( i = 0; i <= iDatOne; ++i )
+			for( i = 0; i < iDatOne; ++i )
 				cout << '\t'; }
+
+		DatOne.Open( vecstrInputs[ iDatOne ].c_str( ), false, !!sArgs.memmap_flag );
+		veciGenesOne.resize( vecstrGenes.size( ) );
+		for( i = 0; i < vecstrGenes.size( ); ++i )
+			veciGenesOne[ i ] = DatOne.GetGene( vecstrGenes[ i ] );
+		veciOne.resize( veciSizes[ iDatOne ] );
+		fill( veciOne.begin( ), veciOne.end( ), 0 );
+		for( i = iCountOne = 0; i < vecstrGenes.size( ); ++i ) {
+			iGeneOne = veciGenesOne[ i ];
+			for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j )
+				if( ( iValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne,
+					veciDefaults[ iDatOne ] ) ) != -1 ) {
+					iCountOne++;
+					veciOne[ iValueOne ]++; } }
+
+		if( !pMeasure ) {
+/*
+cout << iCountOne<< ':';
+for( i = 0; i < veciOne.size( ); ++i )
+cout << ' ' << veciOne[ i ];
+cout << endl;
+//*/
+			for( dMI = 0,i = 0; i < veciOne.size( ); ++i ) {
+				dOne = (float)veciOne[ i ] / iCountOne;
+				dMI += dOne * log( 1 / dOne ); }
+			dMI /= log( 2.0f );
+			if( sArgs.table_flag )
+				cout << '\t' << dMI;
+			else
+				cout << vecstrInputs[ iDatOne ] << '\t' << vecstrInputs[ iDatOne ] << '\t' << dMI <<
+					endl; }
 		if( ( iDatOne + 1 ) == vecstrInputs.size( ) )
 			break;
-		DatOne.Open( vecstrInputs[ iDatOne ].c_str( ), false, !!sArgs.memmap_flag );
-		veciGenesOne.resize( DatOne.GetGenes( ) );
-		veciOneBase.resize( DatOne.GetValues( ) );
-		fill( veciOneBase.begin( ), veciOneBase.end( ), 0 );
-		for( i = iCountOneBase = 0; i < DatOne.GetGenes( ); ++i )
-			for( j = ( i + 1 ); j < DatOne.GetGenes( ); ++j )
-				if( ( iValueOne = find_value( i, j, DatOne, veciDefaults[ iDatOne ] ) ) != -1 ) {
-					iCountOneBase++;
-					veciOneBase[ iValueOne ]++; }
+
 		for( iDatTwo = ( iDatOne + 1 ); iDatTwo < vecstrInputs.size( ); ++iDatTwo ) {
 			DatTwo.Open( vecstrInputs[ iDatTwo ].c_str( ), false, !!sArgs.memmap_flag );
-			for( i = 0; i < veciGenesOne.size( ); ++i )
-				veciGenesOne[ i ] = DatTwo.GetGene( DatOne.GetGene( i ) );
-			veciGenesTwo.resize( DatTwo.GetGenes( ) );
+			veciGenesTwo.resize( vecstrGenes.size( ) );
 			for( i = 0; i < veciGenesTwo.size( ); ++i )
-				veciGenesTwo[ i ] = DatOne.GetGene( DatTwo.GetGene( i ) );
-			veciTwo.resize( DatTwo.GetValues( ) );
+				veciGenesTwo[ i ] = DatTwo.GetGene( vecstrGenes[ i ] );
+			veciTwo.resize( veciSizes[ iDatTwo ] );
 			fill( veciTwo.begin( ), veciTwo.end( ), 0 );
 
-			iCountOne = iCountOneBase;
-			veciOne.resize( veciOneBase.size( ) );
-			copy( veciOneBase.begin( ), veciOneBase.end( ), veciOne.begin( ) );
 			vecveciJoint.resize( veciOne.size( ) );
 			for( i = 0; i < vecveciJoint.size( ); ++i ) {
 				vecveciJoint[ i ].resize( veciTwo.size( ) );
@@ -143,38 +173,21 @@ int main( int iArgs, char** aszArgs ) {
 			if( pMeasure ) {
 				vecdOne.clear( );
 				vecdTwo.clear( ); }
-			for( i = iCountTwo = iCountJoint = 0; i < DatTwo.GetGenes( ); ++i ) {
-				iGeneOne = veciGenesTwo[ i ];
-				for( j = ( i + 1 ); j < DatTwo.GetGenes( ); ++j ) {
-					iGeneTwo = veciGenesTwo[ j ];
-					if( ( iValueTwo = find_value( i, j, DatTwo, veciDefaults[ iDatTwo ] ) ) != -1 ) {
+			for( i = iCountTwo = iCountJoint = 0; i < vecstrGenes.size( ); ++i ) {
+				iGeneOne = veciGenesOne[ i ];
+				iGeneTwo = veciGenesTwo[ i ];
+				for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j )
+					if( ( iValueTwo = find_value( iGeneTwo, veciGenesTwo[ j ], DatTwo,
+						veciDefaults[ iDatTwo ] ) ) != -1 ) {
 						iCountTwo++;
 						veciTwo[ iValueTwo ]++;
-						if( ( iValueOne = find_value( iGeneOne, iGeneTwo, DatOne,
+						if( ( iValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne,
 							veciDefaults[ iDatOne ] ) ) != -1 ) {
 							if( pMeasure ) {
 								vecdOne.push_back( (float)iValueOne );
 								vecdTwo.push_back( (float)iValueTwo ); }
-							if( ( iGeneOne == -1 ) || ( iGeneTwo == -1 ) ) {
-								iCountOne++;
-								veciOne[ iValueOne ]++; }
 							iCountJoint++;
-							vecveciJoint[ iValueOne ][ iValueTwo ]++; } } } }
-			for( i = 0; i < veciGenesOne.size( ); ++i ) {
-					iGeneOne = veciGenesOne[ i ];
-					for( j = ( i + 1 ); j < veciGenesOne.size( ); ++j ) {
-						iGeneTwo = veciGenesOne[ j ];
-						if( !( ( iGeneOne == -1 ) || ( iGeneTwo == -1 ) ) )
-							continue;
-						if( ( iValueTwo = find_value( -1, -1, DatTwo, veciDefaults[ iDatTwo ] ) ) != -1 ) {
-							iCountTwo++;
-							veciTwo[ iValueTwo ]++;
-							if( ( iValueOne = find_value( i, j, DatOne, veciDefaults[ iDatOne ] ) ) != -1 ) {
-								if( pMeasure ) {
-									vecdOne.push_back( (float)iValueOne );
-									vecdTwo.push_back( (float)iValueTwo ); }
-								iCountJoint++;
-								vecveciJoint[ iValueOne ][ iValueTwo ]++; } } } }
+							vecveciJoint[ iValueOne ][ iValueTwo ]++; } } }
 
 			if( pMeasure ) {
 				adOne = new float[ vecdOne.size( ) ];
@@ -186,14 +199,29 @@ int main( int iArgs, char** aszArgs ) {
 				delete[] adTwo;
 				delete[] adOne; }
 			else {
+/*
+cout << iCountOne << ':';
+for( i = 0; i < veciOne.size( ); ++i )
+cout << ' ' << veciOne[ i ];
+cout << endl;
+cout << iCountTwo << ':';
+for( i = 0; i < veciTwo.size( ); ++i )
+cout << ' ' << veciTwo[ i ];
+cout << endl << endl << iCountJoint << ':' << endl;
+for( i = 0; i < vecveciJoint.size( ); ++i ) {
+for( j = 0; j < vecveciJoint[ i ].size( ); ++j )
+cout << vecveciJoint[ i ][ j ] << ' ';
+cout << endl; }
+cout << endl;
+//*/
 				for( dMI = 0,i = 0; i < veciOne.size( ); ++i ) {
 					dOne = (float)veciOne[ i ] / iCountOne;
 					for( j = 0; j < veciTwo.size( ); ++j )
 						if( iJoint = vecveciJoint[ i ][ j ] ) {
 							dJoint = (float)iJoint / iCountJoint;
 							dMI += dJoint * log( dJoint * iCountTwo / dOne / veciTwo[ j ] ); } }
-				dMI -= ( veciOne.size( ) - 1 ) * ( veciTwo.size( ) - 1 ) / ( 2.0f * ( iCountOne +
-					iCountTwo ) );
+//				dMI -= ( veciOne.size( ) - 1 ) * ( veciTwo.size( ) - 1 ) / ( 2.0f * ( iCountOne +
+//					iCountTwo ) );
 				dMI = ( dMI < 0 ) ? 0 : ( dMI / log( 2.0f ) ); }
 			if( sArgs.table_flag )
 				cout << '\t' << dMI;

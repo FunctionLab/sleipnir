@@ -11,6 +11,7 @@ class CDataPair : public CDataPairImpl {
 public:
 	bool Open( const char*, bool, bool = false );
 	bool Open( const CSlim& );
+	bool OpenQuants( const char* );
 	void SetQuants( const float*, size_t );
 	void SetQuants( const std::vector<float>& );
 	size_t Quantize( float ) const;
