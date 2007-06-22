@@ -11,3 +11,4 @@ option	"size"		S	"Size of subgraphs to find"	int	default="3"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"heavy"		w	"Find generic heavy subgraphs"	double	default="0"
 option	"normalize"	n	"Normalize input file"	flag	off
+option	"specificity"	r	"Minimum subgraph specificity"	double	default="25"

@@ -99,13 +99,13 @@ struct SSeed {
 	size_t	m_iTwo;
 	float	m_dIn;
 	size_t	m_iIn;
-	float	m_dOut;
-	size_t	m_iOut;
+	float	m_dTotal;
+	size_t	m_iTotal;
 	float	m_dRatio;
 
-	SSeed( size_t iOne, size_t iTwo, float dIn, size_t iIn, float dOut, size_t iOut, float dRatio ) :
-		m_iOne(iOne), m_iTwo(iTwo), m_dIn(dIn), m_iIn(iIn), m_dOut(dOut), m_iOut(iOut),
-		m_dRatio(dRatio) { }
+	SSeed( size_t iOne, size_t iTwo, float dIn, size_t iIn, float dTotal, size_t iTotal,
+		float dRatio ) : m_iOne(iOne), m_iTwo(iTwo), m_dIn(dIn), m_iIn(iIn), m_dTotal(dTotal),
+		m_iTotal(iTotal), m_dRatio(dRatio) { }
 
 	bool operator<( const SSeed& sSeed ) const {
 
@@ -117,10 +117,12 @@ int heavy( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 	vector<bool>	vecfCluster;
 	vector<float>	vecdConnectivity;
 	vector<size_t>	veciConnectivity, veciCluster;
-	size_t			i, j, iIn, iOut, iMax, iMaxIn, iMaxOut;
+	size_t			i, j, iIn, iTotal, iMax, iMaxIn, iMaxTotal;
 	size_t			iClusters;
-	float			d, dMaxIn, dMaxOut, dIn, dOut, dRatio;
+	float			d, dMaxIn, dMaxTotal, dIn, dTotal, dRatio;
 
+	// veciConnectivity[ i ] contains the number of edges out of gene i
+	// vecdConnectivity[ i ] contains the sum of edge weights out of gene i
 	veciConnectivity.resize( Dat.GetGenes( ) );
 	vecdConnectivity.resize( Dat.GetGenes( ) );
 	for( i = 0; i < veciConnectivity.size( ); ++i )
@@ -133,20 +135,17 @@ int heavy( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 
 	iClusters = 0;
 	vecfCluster.resize( Dat.GetGenes( ) );
-	vecdConnectivity.resize( Dat.GetGenes( ) );
-	while( ( sArgs.subgraphs_arg == -1 ) || ( iClusters < sArgs.subgraphs_arg ) ) {
+	while( ( sArgs.subgraphs_arg == -1 ) || ( iClusters < (size_t)sArgs.subgraphs_arg ) ) {
 		priority_queue<SSeed>	pqueSeeds;
 
-		d = 4;
 		veciCluster.resize( 1 );
 		for( i = 0; i < Dat.GetGenes( ); ++i ) {
 			veciCluster[ 0 ] = i;
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( connectivity( j, veciCluster, vecdConnectivity, veciConnectivity, 0, 0,
-					vecdConnectivity[ i ], veciConnectivity[ i ], Dat, dIn, iIn, dOut, iOut ) &&
-					( ( dRatio = ( ( dIn / iIn ) / ( dOut / iOut ) ) ) > ( d / 2 ) ) ) {
-					d = max( dRatio, 4.0f );
-					pqueSeeds.push( SSeed( i, j, dIn, iIn, dOut, iOut, dRatio ) ); } }
+					vecdConnectivity[ i ], veciConnectivity[ i ], Dat, dIn, iIn, dTotal, iTotal ) &&
+					( ( dRatio = ( ( dIn / iIn ) / ( dTotal / iTotal ) ) ) >= sArgs.specificity_arg ) )
+					pqueSeeds.push( SSeed( i, j, dIn, iIn, dTotal, iTotal, dRatio ) ); }
 		if( pqueSeeds.empty( ) )
 			break;
 		cerr << "Seeds remaining: " << pqueSeeds.size( ) << endl;
@@ -165,19 +164,19 @@ int heavy( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 				Dat.GetGene( sSeed.m_iTwo ) << ", " << sSeed.m_dRatio << endl;
 			dIn = sSeed.m_dIn;
 			iIn = sSeed.m_iIn;
-			dOut = sSeed.m_dOut;
-			iOut = sSeed.m_iOut;
+			dTotal = sSeed.m_dTotal;
+			iTotal = sSeed.m_iTotal;
 			while( true ) {
 				cerr << "Cluster " << iClusters << ", " << veciCluster.size( ) << " genes" << endl;
-				max_connectivity( vecfCluster, veciCluster, vecdConnectivity, veciConnectivity, dIn, iIn,
-					dOut, iOut, -1, Dat, dRatio, iMax, dMaxIn, iMaxIn, dMaxOut, iMaxOut );
+				max_connectivity( vecfCluster, veciCluster, vecdConnectivity, veciConnectivity, dIn,
+					iIn, dTotal, iTotal, -1, Dat, dRatio, iMax, dMaxIn, iMaxIn, dMaxTotal, iMaxTotal );
 				if( dRatio >= ( sArgs.heavy_arg * sSeed.m_dRatio ) ) {
 					vecfCluster[ iMax ] = true;
 					veciCluster.push_back( iMax );
 					dIn = dMaxIn;
 					iIn = iMaxIn;
-					dOut = dMaxOut;
-					iOut = iMaxOut; }
+					dTotal = dMaxTotal;
+					iTotal = iMaxTotal; }
 				else
 					break; }
 			pqueSeeds.pop( ); }
@@ -185,10 +184,10 @@ int heavy( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 		if( veciCluster.size( ) < 3 )
 			break;
 
-		cerr << "Found cluster: " << ( ( dIn / iIn ) / ( dOut / iOut ) ) << " (" << dIn << '/' << iIn <<
-			", " << dOut << '/' << iOut << ')' << endl;
+		cerr << "Found cluster: " << ( ( dIn / iIn ) / ( dTotal / iTotal ) ) << " (" << dIn << '/' <<
+			iIn << ", " << dTotal << '/' << iTotal << ')' << endl;
 		iClusters++;
-		cout << ( ( dIn / iIn ) / ( dOut / iOut ) );
+		cout << ( ( dIn / iIn ) / ( dTotal / iTotal ) );
 		for( i = 0; i < veciCluster.size( ); ++i )
 			cout << '\t' << Dat.GetGene( veciCluster[ i ] );
 		cout << endl;
@@ -207,22 +206,22 @@ int heavy( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 
 bool connectivity( size_t iNew, const vector<size_t>& veciCluster,
 	const vector<float>& vecdConnectivity, const vector<size_t>& veciConnectivity, float dIn,
-	size_t iIn, float dOut, size_t iOut, const CDat& Dat, float& dSumIn, size_t& iEdgesIn,
-	float& dSumOut, size_t& iEdgesOut ) {
+	size_t iIn, float dTotal, size_t iTotal, const CDat& Dat, float& dSumIn, size_t& iEdgesIn,
+	float& dSumTotal, size_t& iEdgesTotal ) {
 	size_t	i;
 	float	d;
 	bool	fRet;
 
-	iEdgesOut = iOut + veciConnectivity[ iNew ];
-	dSumOut = dOut + vecdConnectivity[ iNew ];
+	iEdgesTotal = iTotal + veciConnectivity[ iNew ];
+	dSumTotal = dTotal + vecdConnectivity[ iNew ];
 	iEdgesIn = iIn;
 	dSumIn = dIn;
 	fRet = false;
 	for( i = 0; i < veciCluster.size( ); ++i )
 		if( !CMeta::IsNaN( d = Dat.Get( iNew, veciCluster[ i ] ) ) ) {
 			fRet = true;
-			iEdgesOut--;
-			dSumOut -= d;
+			iEdgesTotal--;
+			dSumTotal -= d;
 			iEdgesIn++;
 			dSumIn += d; }
 
@@ -230,21 +229,21 @@ bool connectivity( size_t iNew, const vector<size_t>& veciCluster,
 
 void max_connectivity( const vector<bool>& vecfCluster, const vector<size_t>& veciCluster,
 	const vector<float>& vecdConnectivity, const vector<size_t>& veciConnectivity, float dIn,
-	size_t iIn, float dOut, size_t iOut, size_t iStart, const CDat& Dat, float& dMaxRatio, size_t& iMax,
-	float& dMaxIn, size_t& iMaxIn, float& dMaxOut, size_t& iMaxOut ) {
-	size_t	i, iEdgesIn, iEdgesOut;
-	float	dRatio, dSumIn, dSumOut;
+	size_t iIn, float dTotal, size_t iTotal, size_t iStart, const CDat& Dat, float& dMaxRatio,
+	size_t& iMax, float& dMaxIn, size_t& iMaxIn, float& dMaxTotal, size_t& iMaxTotal ) {
+	size_t	i, iEdgesIn, iEdgesTotal;
+	float	dRatio, dSumIn, dSumTotal;
 
 	dMaxRatio = -FLT_MAX;
 	for( iMax = 0,i = ( iStart == -1 ) ? 0 : ( iStart + 1 ); i < vecfCluster.size( ); ++i ) {
 		if( vecfCluster[ i ] || !connectivity( i, veciCluster, vecdConnectivity, veciConnectivity, dIn,
-			iIn, dOut, iOut, Dat, dSumIn, iEdgesIn, dSumOut, iEdgesOut ) )
+			iIn, dTotal, iTotal, Dat, dSumIn, iEdgesIn, dSumTotal, iEdgesTotal ) )
 			continue;
-		dRatio = ( ( dSumIn / iEdgesIn ) / ( dSumOut / iEdgesOut ) );
+		dRatio = ( ( dSumIn / iEdgesIn ) / ( dSumTotal / iEdgesTotal ) );
 		if( dRatio > dMaxRatio ) {
 			dMaxRatio = dRatio;
 			iMax = i;
 			dMaxIn = dSumIn;
 			iMaxIn = iEdgesIn;
-			dMaxOut = dSumOut;
-			iMaxOut = iEdgesOut; } } }
+			dMaxTotal = dSumTotal;
+			iMaxTotal = iEdgesTotal; } } }

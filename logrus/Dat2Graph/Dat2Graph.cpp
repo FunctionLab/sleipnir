@@ -102,17 +102,26 @@ int main( int iArgs, char** aszArgs ) {
 	else if( !strcmp( sArgs.format_arg, "matisse" ) )
 		Dat.SaveMATISSE( cout, dCutoff, &Genome );
 	else if( !strcmp( sArgs.format_arg, "list" ) ) {
-		set<string>					setstrGenes;
-		set<string>::const_iterator	iterGene;
+		vector<bool>					vecfQuery;
+		map<size_t, float>				mapGenes;
+		map<size_t, float>::iterator	iterGene;
+		size_t							iGene;
 
+		vecfQuery.resize( Dat.GetGenes( ) );
+		for( i = 0; i < vecfQuery.size( ); ++i )
+			vecfQuery[ i ] = GenesQr.IsGene( Dat.GetGene( i ) );
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) &&
-					( CMeta::IsNaN( dCutoff ) || ( d > dCutoff ) ) ) {
-					setstrGenes.insert( Dat.GetGene( i ) );
-					setstrGenes.insert( Dat.GetGene( j ) ); }
-		for( iterGene = setstrGenes.begin( ); iterGene != setstrGenes.end( ); ++iterGene )
-			cout << *iterGene << endl; }
+					( CMeta::IsNaN( dCutoff ) || ( d > dCutoff ) ) &&
+					( vecfQuery[ i ] != vecfQuery[ j ] ) ) {
+					iGene = vecfQuery[ i ] ? j : i;
+					if( ( iterGene = mapGenes.find( iGene ) ) == mapGenes.end( ) )
+						mapGenes[ iGene ] = d;
+					else
+						iterGene->second += d; }
+		for( iterGene = mapGenes.begin( ); iterGene != mapGenes.end( ); ++iterGene )
+			cout << Dat.GetGene( iterGene->first ) << '\t' << iterGene->second << endl; }
 	else if( !strcmp( sArgs.format_arg, "dat" ) )
 		Dat.Save( cout, CDat::EFormatText );
 
