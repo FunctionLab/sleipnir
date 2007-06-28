@@ -138,10 +138,7 @@ void cliques( const CDat& Dat, const vector<float>& vecdHub, bool fSort, SDatum&
 				vecfOutside[ i ] = true;
 	veciClique.resize( Dat.GetGenes( ) );
 	vecdClique.resize( Dat.GetGenes( ) );
-	for( sDatum.m_dHubbiness = sDatum.m_dHubbinessStd = 0,i = 0; i < Dat.GetGenes( ); ++i ) {
-		if( !vecfOutside[ i ] ) {
-			sDatum.m_dHubbiness += vecdHub[ i ];
-			sDatum.m_dHubbinessStd += vecdHub[ i ] * vecdHub[ i ]; }
+	for( i = 0; i < Dat.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
 			if( CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 				continue;
@@ -150,20 +147,21 @@ void cliques( const CDat& Dat, const vector<float>& vecdHub, bool fSort, SDatum&
 				vecdClique[ j ] += d; }
 			if( !vecfOutside[ j ] ) {
 				veciClique[ i ]++;
-				vecdClique[ i ] += d; } } }
+				vecdClique[ i ] += d; } }
 	for( sDatum.m_dCliquiness = sDatum.m_dCliquinessStd = 0,i = 0; i < vecdClique.size( ); ++i ) {
 		vecdClique[ i ] /= veciClique[ i ];
 		if( !vecfOutside[ i ] ) {
 			sDatum.m_dCliquiness += vecdClique[ i ];
 			sDatum.m_dCliquinessStd += vecdClique[ i ] * vecdClique[ i ]; } }
-
 	i = pGenes ? pGenes->GetGenes( ) : Dat.GetGenes( );
-	sDatum.m_dHubbiness /= i;
-	sDatum.m_dHubbinessStd = (float)sqrt( ( sDatum.m_dHubbinessStd / i ) -
-		( sDatum.m_dHubbiness * sDatum.m_dHubbiness ) );
 	sDatum.m_dCliquiness /= i;
 	sDatum.m_dCliquinessStd = (float)sqrt( ( sDatum.m_dCliquinessStd / i ) -
 		( sDatum.m_dCliquiness * sDatum.m_dCliquiness ) );
+
+	sDatum.m_dHubbiness = sDatum.m_dHubbinessStd = 0;
+	for( i = 0; i < vecdClique.size( ); ++i )
+		sDatum.m_dHubbiness += vecdClique[ i ];
+	sDatum.m_dHubbiness = ( sDatum.m_dHubbiness - sDatum.m_dCliquiness ) / vecdClique.size( );
 
 	sDatum.m_vecprSpecific.resize( Dat.GetGenes( ) );
 	for( i = 0; i < sDatum.m_vecprSpecific.size( ); ++i ) {
