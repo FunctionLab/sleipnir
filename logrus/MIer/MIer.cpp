@@ -43,7 +43,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta::Startup( sArgs.verbosity_arg );
+	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
 
 	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / sArgs.inputs_num );
 	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
@@ -108,6 +108,8 @@ int main( int iArgs, char** aszArgs ) {
 		if( ( iterZero = mapZeros.find( CMeta::Deextension( CMeta::Basename(
 			vecstrInputs[ i ].c_str( ) ) ) ) ) != mapZeros.end( ) )
 			veciDefaults[ i ] = iterZero->second;
+		else if( sArgs.randomize_flag )
+			veciDefaults[ i ] = rand( ) % veciSizes[ i ];
 		else
 			veciDefaults[ i ] = sArgs.zero_flag ? 0 : veciSizes[ i ]++; }
 

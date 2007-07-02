@@ -115,7 +115,7 @@ public:
 		c = 1 << (unsigned char)( iY % 8 );
 		m_aaData[ iX ][ iY / 8 ] = ( m_aaData[ iX ][ iY / 8 ] & ~c ) | ( fValue ? c : 0 ); }
 
-	void Initialize( size_t, unsigned char** = NULL );
+	void Initialize( size_t, bool = false, unsigned char** = NULL );
 };
 
 class CCompactMatrix : CCompactMatrixImpl {
