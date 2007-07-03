@@ -11,11 +11,12 @@ struct SSorter {
 		return ( m_veciSizes[ iOne ] > m_veciSizes[ iTwo ] ); }
 };
 
-size_t find_value( size_t iOne, size_t iTwo, const CDataPair& Dat, size_t iDefault ) {
+size_t find_value( size_t iOne, size_t iTwo, const CDataPair& Dat, size_t iDefault, bool fRandom ) {
 	float	d;
 
 	d = ( ( iOne == -1 ) || ( iTwo == -1 ) ) ? CMeta::GetNaN( ) : Dat.Get( iOne, iTwo );
-	return ( CMeta::IsNaN( d ) ? iDefault : Dat.Quantize( d ) ); }
+	return ( CMeta::IsNaN( d ) ? ( fRandom ? ( rand( ) % Dat.GetValues( ) ) : iDefault ) :
+		Dat.Quantize( d ) ); }
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info			sArgs;
@@ -108,10 +109,9 @@ int main( int iArgs, char** aszArgs ) {
 		if( ( iterZero = mapZeros.find( CMeta::Deextension( CMeta::Basename(
 			vecstrInputs[ i ].c_str( ) ) ) ) ) != mapZeros.end( ) )
 			veciDefaults[ i ] = iterZero->second;
-		else if( sArgs.randomize_flag )
-			veciDefaults[ i ] = rand( ) % veciSizes[ i ];
 		else
-			veciDefaults[ i ] = sArgs.zero_flag ? 0 : veciSizes[ i ]++; }
+			veciDefaults[ i ] = sArgs.randomize_flag ? -1 :
+				( sArgs.zero_flag ? 0 : veciSizes[ i ]++ ); }
 
 	if( sArgs.table_flag ) {
 		for( i = 0; i < vecstrInputs.size( ); ++i )
@@ -136,7 +136,7 @@ int main( int iArgs, char** aszArgs ) {
 			iGeneOne = veciGenesOne[ i ];
 			for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j )
 				if( ( iValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne,
-					veciDefaults[ iDatOne ] ) ) != -1 ) {
+					veciDefaults[ iDatOne ], !!sArgs.randomize_flag ) ) != -1 ) {
 					iCountOne++;
 					veciOne[ iValueOne ]++; } }
 
@@ -180,11 +180,11 @@ cout << endl;
 				iGeneTwo = veciGenesTwo[ i ];
 				for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j )
 					if( ( iValueTwo = find_value( iGeneTwo, veciGenesTwo[ j ], DatTwo,
-						veciDefaults[ iDatTwo ] ) ) != -1 ) {
+						veciDefaults[ iDatTwo ], !!sArgs.randomize_flag ) ) != -1 ) {
 						iCountTwo++;
 						veciTwo[ iValueTwo ]++;
 						if( ( iValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne,
-							veciDefaults[ iDatOne ] ) ) != -1 ) {
+							veciDefaults[ iDatOne ], !!sArgs.randomize_flag ) ) != -1 ) {
 							if( pMeasure ) {
 								vecdOne.push_back( (float)iValueOne );
 								vecdTwo.push_back( (float)iValueTwo ); }
