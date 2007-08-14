@@ -19,10 +19,6 @@ public:
 
 		return m_iPCLs; }
 
-	size_t GetExperiments( size_t iPCL ) const {
-
-		return m_aPCLs[ iPCL ].GetExperiments( ); }
-
 	float Get( size_t iPCL, size_t iGene, size_t iExp ) const {
 		size_t	iMap;
 
@@ -52,6 +48,10 @@ public:
 	const std::vector<std::string>& GetGeneNames( ) const {
 
 		return m_vecstrGenes; }
+
+	const CPCL& Get( size_t iPCL ) const {
+
+		return m_aPCLs[ iPCL ]; }
 };
 
 }

@@ -91,7 +91,7 @@ size_t CSVMImpl::GetWords( const SData& sData ) const {
 	switch( sData.m_eType ) {
 		case SData::EPCLs:
 			for( iRet = i = 0; i < sData.m_uData.m_pPCLs->GetPCLs( ); ++i )
-				iRet += sData.m_uData.m_pPCLs->GetExperiments( i );
+				iRet += sData.m_uData.m_pPCLs->Get( i ).GetExperiments( );
 			return ( iRet * 2 );
 
 		case SData::EData:
@@ -120,7 +120,7 @@ DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iOne, size_t iTwo, size_t i
 		const CPCLSet&	PCLs	= *sData.m_uData.m_pPCLs;
 
 		for( iWord = i = 0; i < PCLs.GetPCLs( ); ++i ) {
-			for( j = 0; j < PCLs.GetExperiments( i ); ++j ) {
+			for( j = 0; j < PCLs.Get( i ).GetExperiments( ); ++j ) {
 				if( CMeta::IsNaN( d = PCLs.Get( i, iOne, j ) ) )
 					d = 0;
 				assert( ( iWord + j ) < iWords );
@@ -129,7 +129,7 @@ DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iOne, size_t iTwo, size_t i
 					d = 0;
 				assert( ( iWord + ( iWords / 2 ) + j ) < iWords );
 				asWords[ iWord + ( iWords / 2 ) + j ].weight = d; }
-			iWord += PCLs.GetExperiments( i ); } }
+			iWord += PCLs.Get( i ).GetExperiments( ); } }
 	else {
 		const IDataset*	pData	= sData.m_uData.m_pData;
 
@@ -190,15 +190,25 @@ bool CSVMImpl::Initialize( const SData& sData ) {
 		return true; }
 	if( sData.m_eType == SData::EPCL ) {
 		for( m_iDocs = i = 0; i < sData.m_uData.m_pPCL->GetGenes( ); ++i )
-			if( sData.m_uData.m_pPCL->IsMasked( i ) )
+			if( !sData.m_uData.m_pPCL->IsMasked( i ) && ( !sData.m_pNegative ||
+				sData.m_uAnswers.m_pGenes->IsGene( sData.m_uData.m_pPCL->GetGene( i ) ) ||
+				sData.m_pNegative->IsGene( sData.m_uData.m_pPCL->GetGene( i ) ) ) )
 				m_iDocs++;
-		m_apDocs = new DOC*[ m_iDocs = ( sData.m_uData.m_pPCL->GetGenes( ) - m_iDocs ) ];
+		m_apDocs = new DOC*[ m_iDocs ];
 		m_adLabels = new double[ m_iDocs ];
-		for( i = j = 0; i < sData.m_uData.m_pPCL->GetGenes( ); ++i )
+		for( i = j = 0; i < sData.m_uData.m_pPCL->GetGenes( ); ++i ) {
+			const string&	strGene	= sData.m_uData.m_pPCL->GetGene( i );
+
 			if( !sData.m_uData.m_pPCL->IsMasked( i ) ) {
-				m_apDocs[ j ] = CreateDoc( sData, i );
-				m_adLabels[ j++ ] = sData.m_uAnswers.m_pGenes->IsGene( sData.m_uData.m_pPCL->GetGene( i ) ) ?
-					1 : -1; }
+				if( !sData.m_pNegative ) {
+					m_apDocs[ j ] = CreateDoc( sData, i );
+					m_adLabels[ j++ ] = sData.m_uAnswers.m_pGenes->IsGene( strGene ) ? 1 : -1; }
+				else if( sData.m_uAnswers.m_pGenes->IsGene( strGene ) ) {
+					m_apDocs[ j ] = CreateDoc( sData, i );
+					m_adLabels[ j++ ] = 1; }
+				else if( sData.m_pNegative->IsGene( strGene ) ) {
+					m_apDocs[ j ] = CreateDoc( sData, i );
+					m_adLabels[ j++ ] = -1; } } }
 		return true; }
 
 	veciGenes.resize( ( sData.m_eType == SData::EPCLs ) ?
@@ -252,12 +262,13 @@ bool CSVM::Learn( const IDataset* pData, const CDataPair& Answers ) {
 
 	return CSVMImpl::Learn( sData ); }
 
-bool CSVM::Learn( const CPCL& PCL, const CGenes& Genes ) {
+bool CSVM::Learn( const CPCL& PCL, const CGenes& GenesPos, const CGenes& GenesNeg ) {
 	SData	sData;
 
 	sData.m_eType = SData::EPCL;
 	sData.m_uData.m_pPCL = &PCL;
-	sData.m_uAnswers.m_pGenes = &Genes;
+	sData.m_uAnswers.m_pGenes = &GenesPos;
+	sData.m_pNegative = GenesNeg.GetGenes( ) ? &GenesNeg : NULL;
 
 	return CSVMImpl::Learn( sData ); }
 

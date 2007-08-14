@@ -43,6 +43,7 @@ protected:
 			const CDataPair*	m_pAnswers;
 			const CGenes*		m_pGenes;
 		}	m_uAnswers;
+		const CGenes*	m_pNegative;
 	};
 
 	static SWORD	s_asWords[ c_iWords ];

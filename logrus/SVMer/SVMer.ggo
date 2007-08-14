@@ -3,20 +3,24 @@ version	"1.0"
 purpose	"SVM training and evaluation"
 
 section "Optional"
-option	"input"		i	"Input answer dat file"	string	typestr="filename"
-option	"output"	o	"Output prediction dat file"	string	typestr="filename"
-option	"alphas"	a	"SVM alphas file"	string	typestr="filename"
+option	"input"		i	"Input answer DAT file"	string	typestr="filename"
+option	"output"	o	"Output prediction DAT file"	string	typestr="filename"
 option	"model"		m	"SVM model file"	string	typestr="filename"
-option	"random"	r	"Seed random generator"	int	default="0"
-option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
-option	"iterations"	t	"SVM iterations"	int	default="100000"
-option	"cache"		e	"SVM cache size"	int	default="40"
+
+option	"pcl"		p	"PCL input mode"	flag	on
+option	"genewise"	w	"Learn per-gene SVMs for pairwise predictions"	flag	off
+option	"skip"		s	"Columns to skip in input PCLs"	int	default="2"
+option	"binary"	b	"Input binary training file"	string	typestr="filename"
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
+option	"iterations"	t	"SVM iterations"	int	default="100000"
+option	"random"	r	"Seed random generator"	int	default="0"
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+
+section "SVM"
 option	"kernel"	k	"SVM kernel function"	values="linear","poly","rbf"	default="linear"
-option	"pcl"		p	"PCL input mode"	flag	on
-option	"binary"	b	"Input binary training file"	string	typestr="filename"
+option	"cache"		e	"SVM cache size"	int	default="40"
 option	"tradeoff"	c	"Classification tradeoff"	float
 option	"gamma"		M	"RBF gamma"	float	default="1"
 option	"degree"	d	"Polynomial degree"	int	default="3"
+option	"alphas"	a	"SVM alphas file"	string	typestr="filename"

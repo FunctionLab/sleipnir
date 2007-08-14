@@ -180,7 +180,7 @@ bool CDat::Open( const CDat& Dat, const vector<CGenes*>& vecpOther, const CGenom
 		iOne = veciGenes[ i ];
 		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
 			d = Dat.Get( i, j );
-			if( CMeta::IsNaN( Get( iOne, iTwo = veciGenes[ j ] ) ) && ( fPositives == !!d ) )
+			if( CMeta::IsNaN( Get( iOne, iTwo = veciGenes[ j ] ) ) && ( fPositives == !d ) )
 				Set( iOne, iTwo, d ); } }
 
 	return true; }
@@ -729,7 +729,7 @@ bool CDat::FilterGenes( const char* szGenes, EFilter eFilt, size_t iLimit ) {
 	FilterGenes( Genes, eFilt, iLimit );
 	return true; }
 
-void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt, size_t iLimit ) {
+void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt, size_t iLimit, bool fTrim ) {
 	size_t			i, j;
 	vector<bool>	vecfGenes;
 
@@ -739,7 +739,7 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt, size_t iLimit ) {
 			vecfGenes[ j ] = true;
 
 	if( eFilt == EFilterPixie ) {
-		FilterGenesPixie( Genes, vecfGenes, iLimit );
+		FilterGenesPixie( Genes, vecfGenes, iLimit, fTrim );
 		return; }
 
 	for( i = 0; i < GetGenes( ); ++i ) {
@@ -777,7 +777,8 @@ struct SPixie {
 		return ( m_dScore < sPixie.m_dScore ); }
 };
 
-void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes, size_t iLimit ) {
+void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes, size_t iLimit,
+	bool fTrim ) {
 	vector<float>				vecdNeighbors;
 	size_t						i, j, iOne, iTwo, iMinOne, iMinTwo, iN;
 	vector<size_t>				veciGenes, veciFinal, veciDegree;
@@ -865,7 +866,7 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes, s
 			if( !CMeta::IsNaN( Get( iOne, iTwo ) ) ) {
 				veciDegree[ i ]++;
 				veciDegree[ j ]++; } } }
-	for( fDone = false; !fDone; ) {
+	for( fDone = !fTrim; !fDone; ) {
 		fDone = true;
 		dMin = FLT_MAX;
 		for( i = 0; i < veciFinal.size( ); ++i ) {

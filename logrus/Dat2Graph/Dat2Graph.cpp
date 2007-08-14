@@ -88,7 +88,8 @@ int main( int iArgs, char** aszArgs ) {
 			for( i = 0; i < vecdScores.size( ); ++i )
 				cout << Dat.GetGene( i ) << '\t' << vecdScores[ i ] << endl; }
 		else
-			Dat.FilterGenes( GenesQr, CDat::EFilterPixie, sArgs.neighbors_arg ); }
+			Dat.FilterGenes( GenesQr, CDat::EFilterPixie, sArgs.neighbors_arg,
+				!!strcmp( sArgs.format_arg, "list" ) ); }
 	if( sArgs.normalize_flag )
 		Dat.Normalize( );
 

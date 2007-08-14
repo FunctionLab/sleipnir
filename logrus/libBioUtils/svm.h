@@ -18,7 +18,7 @@ public:
 	bool Save( std::ostream& ) const;
 	bool Learn( const CPCLSet&, const CDataPair& );
 	bool Learn( const IDataset*, const CDataPair& );
-	bool Learn( const CPCL&, const CGenes& );
+	bool Learn( const CPCL&, const CGenes&, const CGenes& );
 	bool Learn( const char* );
 	bool Evaluate( const char*, CDat& ) const;
 	bool Evaluate( const CPCLSet&, CDat& ) const;

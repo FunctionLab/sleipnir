@@ -411,9 +411,9 @@ bool CParserConsole::ParseLs( const vector<string>& vecstrLine ) {
 	SArgs				sArgs;
 	vector<SLocation>	vecVisited;
 
-	for( i = 1; i < vecstrLine.size( ); ++i ) {
+	for( i = 1; i < vecstrLine.size( ); ++i )
 		if( !( sArgs.Parse( vecstrLine[ i ] ) || strLoc.size( ) ) )
-			strLoc = vecstrLine[ i ]; }
+			strLoc = vecstrLine[ i ];
 	sLoc = strLoc.size( ) ? GetLocation( strLoc ) : m_sLocation;
 	if( !Recurse( sLoc, sArgs.m_fRecursive, sArgs.m_fZeroes, vecVisited ) ) {
 		cout << "ls, illegal location: " << strLoc << endl;
@@ -459,8 +459,14 @@ void CParserConsole::PrintLocations( const vector<SLocation>& vecVisited,
 				for( j = 0; j < m_vecpOntologies.size( ); ++j )
 					PrintOntology( m_vecpOntologies[ j ], 'O' ); } }
 
-	if( sArgs.m_fGenes && !sArgs.m_fSibs )
-		PrintGenes( vecpGenes ); }
+	if( sArgs.m_fGenes && !sArgs.m_fSibs ) {
+		set<const CGene*>	setpGenes;
+
+		for( i = 0; i < vecpGenes.size( ); ++i )
+			setpGenes.insert( vecpGenes[ i ] );
+		vecpGenes.resize( setpGenes.size( ) );
+		copy( setpGenes.begin( ), setpGenes.end( ), vecpGenes.begin( ) );
+		PrintGenes( vecpGenes ); } }
 
 void CParserConsole::PrintOntology( const IOntology* pOnto, char cType ) const {
 	string	strLoc;

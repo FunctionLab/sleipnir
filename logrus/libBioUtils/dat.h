@@ -51,7 +51,7 @@ public:
 	void Invert( );
 	void Rank( );
 	bool FilterGenes( const char*, EFilter, size_t = -1 );
-	void FilterGenes( const CGenes&, EFilter, size_t = -1 );
+	void FilterGenes( const CGenes&, EFilter, size_t = -1, bool = true );
 
 	size_t GetGene( const std::string& strGene ) const {
 

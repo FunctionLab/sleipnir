@@ -7,7 +7,7 @@ int write_posteriors( const string&, const CBayesNetSmile&, ostream& );
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info			sArgs;
 	CDatasetCompact				Data;
-	size_t						i, iFunction;
+	size_t						i, j, iFunction;
 	CGenome						Genome;
 	ifstream					ifsm;
 	CGenes						GenesIn( Genome ), GenesEx( Genome );
@@ -152,6 +152,11 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not save: " << strFile << endl;
 			return 1; }
 		DatOut.Invert( );
+		if( sArgs.cutoff_arg > 0 )
+			for( i = 0; i < DatOut.GetGenes( ); ++i )
+				for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
+					if( DatOut.Get( i, j ) < sArgs.cutoff_arg )
+						DatOut.Set( i, j, CMeta::GetNaN( ) );
 		DatOut.Save( ofsm, CDat::EFormatText ); }
 
 	for( i = 0; i < vecpPositives.size( ); ++i )
