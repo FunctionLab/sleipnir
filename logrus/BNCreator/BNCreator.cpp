@@ -79,78 +79,6 @@ struct STerm {
 		return true; }
 };
 
-int learn( const gengetopt_args_info& sArgs, const CDataPair& Answers,
-	const CBayesNetSmile& BNDefault, const char* szOutput, const CGenes& Genes ) {
-	size_t					i, iArg;
-	vector<CBayesNetSmile*>	vecpBNs;
-	CBayesNetSmile			BNOut;
-	vector<size_t>			veciZeros;
-	CBayesNetSmile			BNIn;
-	vector<string>			vecstrNames;
-	map<string,size_t>		mapZeros;
-
-	{
-		CDatasetCompact	Data;
-		vector<string>	vecstrDummy;
-
-		if( !Data.Open( Answers, vecstrDummy, true ) ) {
-			cerr << "Couldn't open answer set" << endl;
-			return 1; }
-		if( Genes.GetGenes( ) )
-			Data.FilterGenes( Genes, CDat::EFilterTerm );
-		vecstrDummy.push_back( "FR" );
-		if( !BNIn.Open( &Data, vecstrDummy, veciZeros ) ) {
-			cerr << "Couldn't create base network" << endl;
-			return 1; }
-		if( sArgs.default_arg )
-			BNIn.SetDefault( BNDefault );
-		if( !BNIn.Learn( &Data, 1 ) ) {
-			cerr << "Couldn't learn base network" << endl;
-			return 1; }
-	}
-
-	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
-		CDatasetCompact	Data;
-		CBayesNetSmile*	pBN;
-
-		vecstrNames.clear( );
-		vecstrNames.push_back( sArgs.inputs[ iArg ] );
-		if( !Data.Open( Answers, vecstrNames, true ) ) {
-			cerr << "Couldn't open: " << sArgs.inputs[ iArg ] << endl;
-			return 1; }
-		if( Genes.GetGenes( ) )
-			Data.FilterGenes( Genes, CDat::EFilterTerm );
-		vecstrNames.insert( vecstrNames.begin( ), sArgs.answers_arg );
-		for( i = 0; i < vecstrNames.size( ); ++i )
-			vecstrNames[ i ] = CMeta::Filename( CMeta::Deextension( CMeta::Basename(
-				vecstrNames[ i ].c_str( ) ) ) );
-		vecpBNs.push_back( pBN = new CBayesNetSmile( ) );
-		veciZeros.resize( vecstrNames.size( ) );
-		for( i = 0; i < veciZeros.size( ); ++i ) {
-			map<string,size_t>::const_iterator	iterZero;
-
-			veciZeros[ i ] = ( ( iterZero = mapZeros.find( vecstrNames[ i ] ) ) == mapZeros.end( ) ) ?
-				-1 : iterZero->second; }
-		if( !pBN->Open( &Data, vecstrNames, veciZeros ) ) {
-			cerr << "Couldn't create network for: " << sArgs.inputs[ iArg ] << endl;
-			return 1; }
-
-		if( sArgs.default_arg )
-			pBN->SetDefault( BNDefault );
-		if( !pBN->Learn( &Data, 1, !!sArgs.zero_flag ) ) {
-			cerr << "Couldn't learn network for: " << sArgs.inputs[ iArg ] << endl;
-			return 1; } }
-
-	if( !BNOut.Open( BNIn, vecpBNs ) ) {
-		cerr << "Couldn't merge networks" << endl;
-		return 1; }
-	BNOut.Save( szOutput );
-
-	for( i = 0; i < vecpBNs.size( ); ++i )
-		delete vecpBNs[ i ];
-
-	return 0; }
-
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	size_t				i;
@@ -257,16 +185,16 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = 0; j < veciGenes.size( ); ++j )
 				veciGenes[ j ] = Data.GetGene( DatYes.GetGene( j ) );
 			for( j = 0; j < DatYes.GetGenes( ); ++j ) {
-				if( ( iOne = veciGenes[ j ] ) == -1 )
+				iBin = -1;
+				if( ( ( iOne = veciGenes[ j ] ) == -1 ) && ( iZero == -1 ) )
 					continue;
 				memcpy( adYes, DatYes.Get( j ), ( DatYes.GetGenes( ) - j - 1 ) * sizeof(*adYes) );
 				memcpy( adNo, DatNo.Get( j ), ( DatNo.GetGenes( ) - j - 1 ) * sizeof(*adNo) );
 				for( k = ( j + 1 ); k < DatYes.GetGenes( ); ++k ) {
-					if( ( ( iTwo = veciGenes[ k ] ) == -1 ) || !Data.IsExample( iOne, iTwo ) )
-						continue;
-					if( ( iBin = Data.GetDiscrete( iOne, iTwo, 0 ) ) == -1 )
+					if( ( iOne == -1 ) || ( ( iTwo = veciGenes[ k ] ) == -1 ) ||
+						!Data.IsExample( iOne, iTwo ) )
 						iBin = iZero;
-					if( iBin == -1 )
+					if( ( iBin == -1 ) && ( ( iBin = Data.GetDiscrete( iOne, iTwo, 0 ) ) == -1 ) )
 						continue;
 					adNo[ iIndex = ( k - j - 1 ) ] += log( MatCPT.Get( iBin, 0 ) );
 					adYes[ iIndex ] += log( MatCPT.Get( iBin, 1 ) ); }
@@ -351,7 +279,7 @@ int main( int iArgs, char** aszArgs ) {
 
 			vecstrNames.clear( );
 			vecstrNames.push_back( sArgs.inputs[ iArg ] );
-			if( !Data.Open( Answers, vecstrNames ) ) {
+			if( !Data.Open( Answers, vecstrNames, sArgs.zero_flag || sArgs.zeros_arg ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ iArg ] << endl;
 				return 1; }
 			vecstrNames.insert( vecstrNames.begin( ), sArgs.answers_arg );

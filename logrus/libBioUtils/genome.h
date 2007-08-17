@@ -67,7 +67,7 @@ public:
 
 		return ( m_mapGenes.find( strGene ) != m_mapGenes.end( ) ); }
 
-	const CGenome& GetGenome( ) const {
+	CGenome& GetGenome( ) const {
 
 		return m_Genome; }
 

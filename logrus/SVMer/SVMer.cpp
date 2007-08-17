@@ -157,12 +157,11 @@ int main_one( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CData
 
 int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGenes& GenesIn,
 	const CGenes& GenesEx ) {
-	vector<CSVM>	vecSVMs;
-	size_t			i, j, iGene;
-	int				iRet;
-	CDataPair		Answers;
-	ofstream		ofsm;
-	CPCL			PCL;
+	size_t		i, j, iGene;
+	int			iRet;
+	CDataPair	Answers;
+	ofstream	ofsm;
+	CPCL		PCL;
 
 	if( PCLs.GetPCLs( ) == 0 )
 		PCL.Open( cin, sArgs.skip_arg );
@@ -182,11 +181,6 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 				for( iExp = 0; iExp < PCLs.Get( iPCL ).GetExperiments( ); ++iExp )
 					PCL.Set( iGene, i++, PCLs.Get( iPCL, iGene, iExp ) ); }
 
-	vecSVMs.resize( PCL.GetGenes( ) );
-	for( i = 0; i < vecSVMs.size( ); ++i )
-		if( iRet = init_svm( sArgs, vecSVMs[ i ] ) )
-			return iRet;
-
 	if( sArgs.input_arg ) {
 		vector<size_t>	veciGenes;
 		size_t			iTwo;
@@ -201,12 +195,15 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 		veciGenes.resize( PCL.GetGenes( ) );
 		for( i = 0; i < veciGenes.size( ); ++i )
 			veciGenes[ i ] = Answers.GetGene( PCL.GetGene( i ) );
-		for( i = 0; i < vecSVMs.size( ); ++i ) {
+		for( i = 0; i < PCL.GetGenes( ); ++i ) {
+			CSVM			SVM;
 			CGenome			Genome;
 			CGenes			GenesPos( Genome ), GenesNeg( Genome );
 			vector<string>	vecstrPos, vecstrNeg;
 			float			d;
 
+			if( !( i % 100 ) )
+				cerr << "Processing gene " << i << '/' << PCL.GetGenes( ) << endl;
 			if( ( iGene = veciGenes[ i ] ) == -1 )
 				continue;
 			for( j = 0; j < PCL.GetGenes( ); ++j )
@@ -219,16 +216,52 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 			GenesPos.Open( vecstrPos );
 			GenesNeg.Open( vecstrNeg );
 
-			vecSVMs[ i ].Learn( PCL, GenesPos, GenesNeg );
+			if( iRet = init_svm( sArgs, SVM ) )
+				return iRet;
+			SVM.Learn( PCL, GenesPos, GenesNeg );
 			if( sArgs.model_arg ) {
 				ofsm.clear( );
 				ofsm.open( ( (string)sArgs.model_arg + "/" + CMeta::Filename( PCL.GetGene( i ) ) +
 					".svm" ).c_str( ) ); }
-			vecSVMs[ i ].Save( sArgs.model_arg ? (ostream&)ofsm : cout );
+			SVM.Save( sArgs.model_arg ? (ostream&)ofsm : cout );
 			if( sArgs.model_arg )
 				ofsm.close( );
 			else
 				cout.flush( ); } }
+	else if( sArgs.model_arg ) {
+		CDat	Dat;
+
+		if( GenesIn.GetGenes( ) )
+			for( i = 0; i < PCL.GetGenes( ); ++i )
+				if( !GenesIn.IsGene( PCL.GetGene( i ) ) )
+					PCL.MaskGene( i );
+		if( GenesEx.GetGenes( ) )
+			for( i = 0; i < GenesEx.GetGenes( ); ++i )
+				if( ( iGene = PCL.GetGene( GenesIn.GetGene( i ).GetName( ) ) ) != -1 )
+					PCL.MaskGene( iGene );
+
+		Dat.Open( PCL.GetGeneNames( ) );
+		for( iGene = 0; iGene < Dat.GetGenes( ); ++iGene ) {
+			CSVM			SVM;
+			ifstream		ifsm;
+			string			strFile;
+			vector<float>	vecdScores;
+
+			if( !( iGene % 100 ) )
+				cerr << "Processing gene " << iGene << '/' << Dat.GetGenes( ) << endl;
+			ifsm.open( ( strFile = (string)sArgs.model_arg + "/" + CMeta::Filename(
+				Dat.GetGene( iGene ) ) + ".svm" ).c_str( ) );
+			if( !SVM.Open( ifsm ) ) {
+				cerr << "Could not open: " << strFile << endl;
+				continue; }
+
+			SVM.Evaluate( PCL, vecdScores );
+			for( i = j = 0; i < PCL.GetGenes( ); ++i )
+				if( !PCL.IsMasked( i ) )
+					Dat.Set( iGene, i, vecdScores[ j++ ] ); }
+		Dat.Normalize( );
+		if( sArgs.output_arg )
+			Dat.Save( sArgs.output_arg ); }
 	else {
 		cmdline_parser_print_help( );
 		return 1; }

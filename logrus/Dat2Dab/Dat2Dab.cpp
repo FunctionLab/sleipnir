@@ -70,7 +70,15 @@ return 0;
 				if( Dat.Get( i, j ) < sArgs.cutoff_arg )
 					Dat.Set( i, j, CMeta::GetNaN( ) );
 
-	if( sArgs.output_arg )
+	if( sArgs.lookup1_given && sArgs.lookup2_given ) {
+		if( ( i = Dat.GetGene( sArgs.lookup1_arg ) ) == -1 ) {
+			cerr << "Unknown gene: " << sArgs.lookup1_arg << endl;
+			return 1; }
+		if( ( j = Dat.GetGene( sArgs.lookup2_arg ) ) == -1 ) {
+			cerr << "Unknown gene: " << sArgs.lookup2_arg << endl;
+			return 1; }
+		cout << Dat.GetGene( i ) << '\t' << Dat.GetGene( j ) << '\t' << Dat.Get( i, j ) << endl; }
+	else if( sArgs.output_arg )
 		Dat.Save( sArgs.output_arg );
 	else {
 		Dat.Save( cout, CDat::EFormatText );

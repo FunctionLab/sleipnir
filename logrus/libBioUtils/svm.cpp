@@ -147,6 +147,7 @@ DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iGene ) const {
 	SWORD*	asWords;
 	size_t	i, iWords;
 	DOC*	pRet;
+	float	d;
 
 	iWords = GetWords( sData );
 	asWords = ( iWords >= c_iWords ) ? new SWORD[ iWords + 1 ] : s_asWords;
@@ -155,7 +156,7 @@ DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iGene ) const {
 	asWords[ i ].wnum = 0;
 
 	for( i = 0; i < iWords; ++i )
-		asWords[ i ].weight = sData.m_uData.m_pPCL->Get( iGene, i );
+		asWords[ i ].weight = CMeta::IsNaN( d = sData.m_uData.m_pPCL->Get( iGene, i ) ) ? 0 : d;
 	pRet = create_example( i, 0, 0, 1, create_svector( asWords, "", 1 ) );
 
 	if( asWords != s_asWords )
@@ -196,19 +197,20 @@ bool CSVMImpl::Initialize( const SData& sData ) {
 				m_iDocs++;
 		m_apDocs = new DOC*[ m_iDocs ];
 		m_adLabels = new double[ m_iDocs ];
-		for( i = j = 0; i < sData.m_uData.m_pPCL->GetGenes( ); ++i ) {
-			const string&	strGene	= sData.m_uData.m_pPCL->GetGene( i );
-
+		for( i = j = 0; i < sData.m_uData.m_pPCL->GetGenes( ); ++i )
 			if( !sData.m_uData.m_pPCL->IsMasked( i ) ) {
-				if( !sData.m_pNegative ) {
+				const string&	strGene	= sData.m_uData.m_pPCL->GetGene( i );
+
+				d = 0;
+				if( !sData.m_pNegative )
+					d = sData.m_uAnswers.m_pGenes->IsGene( strGene ) ? 1.0f : -1.0f;
+				else if( sData.m_uAnswers.m_pGenes->IsGene( strGene ) )
+					d = 1;
+				else if( sData.m_pNegative->IsGene( strGene ) )
+					d = -1;
+				if( d ) {
 					m_apDocs[ j ] = CreateDoc( sData, i );
-					m_adLabels[ j++ ] = sData.m_uAnswers.m_pGenes->IsGene( strGene ) ? 1 : -1; }
-				else if( sData.m_uAnswers.m_pGenes->IsGene( strGene ) ) {
-					m_apDocs[ j ] = CreateDoc( sData, i );
-					m_adLabels[ j++ ] = 1; }
-				else if( sData.m_pNegative->IsGene( strGene ) ) {
-					m_apDocs[ j ] = CreateDoc( sData, i );
-					m_adLabels[ j++ ] = -1; } } }
+					m_adLabels[ j++ ] = d; } }
 		return true; }
 
 	veciGenes.resize( ( sData.m_eType == SData::EPCLs ) ?
@@ -261,6 +263,11 @@ bool CSVM::Learn( const IDataset* pData, const CDataPair& Answers ) {
 	sData.m_uAnswers.m_pAnswers = &Answers;
 
 	return CSVMImpl::Learn( sData ); }
+
+bool CSVM::Learn( const CPCL& PCL, const CGenes& GenesPos ) {
+	CGenes	GenesNeg( GenesPos.GetGenome( ) );
+
+	return Learn( PCL, GenesPos, GenesNeg ); }
 
 bool CSVM::Learn( const CPCL& PCL, const CGenes& GenesPos, const CGenes& GenesNeg ) {
 	SData	sData;
@@ -425,7 +432,7 @@ bool CSVMImpl::Evaluate( const SData& sData, const CGenes* pGenesIn, CDat& DatOu
 
 	return true; }
 
-bool CSVM::Evaluate( const CPCL& PCL, vector<float>& vecdOut, bool fMasks ) const {
+bool CSVM::Evaluate( const CPCL& PCL, vector<float>& vecdOut ) const {
 	size_t	i;
 	DOC*	pDoc;
 	SData	sData;
@@ -440,7 +447,7 @@ bool CSVM::Evaluate( const CPCL& PCL, vector<float>& vecdOut, bool fMasks ) cons
 	for( i = 0; i < PCL.GetGenes( ); ++i ) {
 		if( !( i % 1000 ) )
 			g_CatBioUtils.notice( "CSVMImpl::Evaluate( ) gene %d/%d", i, PCL.GetGenes( ) );
-		if( fMasks && !PCL.IsMasked( i ) )
+		if( PCL.IsMasked( i ) )
 			continue;
 
 		if( !( pDoc = CreateDoc( sData, i ) ) )

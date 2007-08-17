@@ -18,6 +18,7 @@ public:
 	bool Save( std::ostream& ) const;
 	bool Learn( const CPCLSet&, const CDataPair& );
 	bool Learn( const IDataset*, const CDataPair& );
+	bool Learn( const CPCL&, const CGenes& );
 	bool Learn( const CPCL&, const CGenes&, const CGenes& );
 	bool Learn( const char* );
 	bool Evaluate( const char*, CDat& ) const;
@@ -25,7 +26,7 @@ public:
 	bool Evaluate( const IDataset*, CDat& ) const;
 	bool Evaluate( const CPCLSet&, const CGenes&, CDat& ) const;
 	bool Evaluate( const IDataset*, const CGenes&, CDat& ) const;
-	bool Evaluate( const CPCL&, std::vector<float>&, bool = false ) const;
+	bool Evaluate( const CPCL&, std::vector<float>& ) const;
 	void SetIterations( size_t );
 	void SetCache( size_t );
 	void SetTradeoff( float );

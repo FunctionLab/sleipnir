@@ -81,7 +81,7 @@ int main( int iArgs, char** aszArgs ) {
 		SVM.Save( sArgs.model_arg ? (ostream&)ofsm : cout );
 		ofsm.close( ); }
 
-	SVM.Evaluate( Data, vecdResults, !!sArgs.genex_arg );
+	SVM.Evaluate( Data, vecdResults );
 	if( sArgs.random_output_flag )
 		random_shuffle( vecdResults.begin( ), vecdResults.end( ) );
 	dAve = (float)CStatistics::Average( vecdResults );
