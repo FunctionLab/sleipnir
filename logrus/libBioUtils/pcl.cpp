@@ -36,6 +36,7 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 	CMeasureQuickPearson		PearQuick;
 	CMeasureInnerProduct		InnerProd;
 	CMeasureBinaryInnerProduct	BinInnerProd;
+	CMeasureMutualInformation	MutualInfo;
 
 	if( szPCL ) {
 		ifsm.open( szPCL );
@@ -51,7 +52,8 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 
 	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / PCL.GetExperiments( ) );
 	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
-		&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick, &InnerProd, &BinInnerProd, NULL };
+		&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick, &InnerProd, &BinInnerProd,
+		&MutualInfo, NULL };
 
 	pMeasure = NULL;
 	for( i = 0; apMeasures[ i ]; ++i )

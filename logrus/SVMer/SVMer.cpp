@@ -204,7 +204,7 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 
 			if( !( i % 100 ) )
 				cerr << "Processing gene " << i << '/' << PCL.GetGenes( ) << endl;
-			if( ( iGene = veciGenes[ i ] ) == -1 )
+			if( ( ( iGene = veciGenes[ i ] ) == -1 ) || GenesEx.IsGene( PCL.GetGene( i ) ) )
 				continue;
 			for( j = 0; j < PCL.GetGenes( ); ++j )
 				if( ( i != j ) && ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
@@ -251,7 +251,7 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 				cerr << "Processing gene " << iGene << '/' << Dat.GetGenes( ) << endl;
 			ifsm.open( ( strFile = (string)sArgs.model_arg + "/" + CMeta::Filename(
 				Dat.GetGene( iGene ) ) + ".svm" ).c_str( ) );
-			if( !SVM.Open( ifsm ) ) {
+			if( !( ifsm.is_open( ) && SVM.Open( ifsm ) ) ) {
 				cerr << "Could not open: " << strFile << endl;
 				continue; }
 
