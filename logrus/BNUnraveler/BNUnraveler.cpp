@@ -12,7 +12,6 @@ struct SEvaluate {
 	CDat*					m_pNo;
 	const CDataPair*		m_pAnswers;
 	size_t					m_iZero;
-	bool					m_fZero;
 	size_t					m_iNode;
 	const vector<size_t>*	m_pveciGenes;
 	bool					m_fEverything;
@@ -176,8 +175,7 @@ int main( int iArgs, char** aszArgs ) {
 				vecsData[ i ].m_pYes = vecpYes[ i ];
 				vecsData[ i ].m_pNo = vecpNo[ i ];
 				vecsData[ i ].m_pAnswers = Answers.GetGenes( ) ? &Answers : NULL;
-				vecsData[ i ].m_iZero = veciZeros[ iNode ];
-				vecsData[ i ].m_fZero = !!sArgs.zero_flag;
+				vecsData[ i ].m_iZero = sArgs.zero_flag ? 0 : veciZeros[ iNode ];
 				vecsData[ i ].m_iNode = iNode;
 				vecsData[ i ].m_pveciGenes = &veciGenes;
 				vecsData[ i ].m_fEverything = !!sArgs.everything_flag;
@@ -267,21 +265,23 @@ void* evaluate( void* pData ) {
 	for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
 		if( !( i % 1000 ) )
 			cerr << "C: " << psData->m_szName << ", " << i << endl;
-		if( ( iOne = (*psData->m_pveciGenes)[ i ] ) == -1 )
+		if( ( ( iOne = (*psData->m_pveciGenes)[ i ] ) == -1 ) && ( psData->m_iZero == -1 ) )
 			continue;
 		fTermOne = psData->m_fEverything || vecfGenes[ i ];
 		fListOne = !psData->m_pGenesIn || vecfGenesIn[ i ];
 		memcpy( adYes, psData->m_pYes->Get( i ), ( psData->m_pYes->GetGenes( ) - i - 1 ) * sizeof(*adYes) );
 		memcpy( adNo, psData->m_pNo->Get( i ), ( psData->m_pNo->GetGenes( ) - i - 1 ) * sizeof(*adNo) );
 		for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
-			if( ( iTwo = (*psData->m_pveciGenes)[ j ] ) == -1 )
+			if( ( ( iTwo = (*psData->m_pveciGenes)[ j ] ) == -1 ) && ( psData->m_iZero == -1 ) )
 				continue;
 			if( !( fTermOne || vecfGenes[ j ] ) || !( fListOne || vecfGenesIn[ j ] ) )
 				continue;
 			if( psData->m_pAnswers && CMeta::IsNaN( psData->m_pAnswers->Get( i, j ) ) )
 				continue;
-			iBin = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) );
-			if( ( iBin == -1 ) && ( ( iBin = psData->m_fZero ? 0 : psData->m_iZero ) == -1 ) )
+			if( ( iOne == -1 ) || ( iTwo == -1 ) ||
+				( ( iBin = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) ) ) == -1 ) )
+				iBin = psData->m_iZero;
+			if( iBin == -1 )
 				continue;
 			if( CMeta::IsNaN( adYes[ iIndex = ( j - i - 1 ) ] ) ) {
 				adYes[ iIndex ] = dYes;
