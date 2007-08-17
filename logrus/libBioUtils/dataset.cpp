@@ -134,8 +134,9 @@ bool CDataImpl::OpenGenes( const vector<string>& vecstrData ) {
 				ifsm.close( );
 				ifsm.clear( );
 				ifsm.open( vecstrData[ i ].c_str( ) );
-				if( !( ifsm.is_open( ) && OpenGenes( ifsm, false, true, setstrGenes ) ) )
-					return false; } }
+				if( !( ifsm.is_open( ) && OpenGenes( ifsm, false, true, setstrGenes ) ) ) {
+					g_CatBioUtils.error( "CDataImpl::OpenGenes( ) failed to open: %s", vecstrData[ i ].c_str( ) );
+					return false; } } }
 		ifsm.close( ); }
 
 	m_vecstrGenes.resize( setstrGenes.size( ) );
