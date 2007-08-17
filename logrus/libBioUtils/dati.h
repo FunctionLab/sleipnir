@@ -60,7 +60,7 @@ protected:
 	void OpenHelper( const CGenes*, const CGenes*, float );
 	bool OpenHelper( );
 	bool OpenMemmap( const unsigned char* );
-	void FilterGenesPixie( const CGenes&, vector<bool>&, size_t, bool );
+	void FilterGenesPixie( const CGenes&, std::vector<bool>&, size_t, bool );
 
 	float& Get( size_t iX, size_t iY ) const {
 		static float	s_dRet;
