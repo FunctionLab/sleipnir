@@ -132,7 +132,9 @@ protected:
 	static const char	c_szCC[];
 	static const char	c_szCelComp[];
 	static const char	c_szComment[];
+	static const char	c_szConsider[];
 	static const char	c_szDef[];
+	static const char	c_szDisjointFrom[];
 	static const char	c_szExactSyn[];
 	static const char	c_szGO[];
 	static const char	c_szGOC[];
@@ -149,6 +151,7 @@ protected:
 	static const char	c_szPartOf[];
 	static const char	c_szRelationship[];
 	static const char	c_szRelatedSyn[];
+	static const char	c_szReplacedBy[];
 	static const char	c_szSGD[];
 	static const char	c_szSubset[];
 	static const char	c_szSynonym[];

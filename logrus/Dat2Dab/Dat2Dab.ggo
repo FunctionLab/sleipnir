@@ -4,7 +4,6 @@ purpose	"Text/binary data file interconversion"
 
 option	"input"		i	"Input data file"	string	typestr="filename"
 option	"output"	o	"Output data file"	string	typestr="filename"
-# option	"pcl"		p	"Input pcl file"	string	typestr="filename"
 section "Optional"
 option	"flip"		f	"Calculate one minus dat values"	flag	off
 option	"normalize"	n	"Normalize to the range [0,1]"	flag	off
@@ -19,3 +18,4 @@ option	"zero"		e	"Zero missing values"	flag	off
 option	"duplicates"	d	"Allow dissimilar duplicate values"	flag	off
 option	"lookup1"	l	"First lookup gene"	string
 option	"lookup2"	L	"Second lookup gene"	string
+option	"remap"		p	"Gene name remapping file"	string	typestr="filename"

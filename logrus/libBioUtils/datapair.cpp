@@ -46,12 +46,13 @@ bool CDataPair::Open( const CSlim& Slim ) {
 
 // MEFIT ON
 
-bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap ) {
+bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
+	bool fZScore ) {
 
 	g_CatBioUtils.notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
 
 	Reset( fContinuous );
-	if( !CDat::Open( szDatafile, fMemmap ) )
+	if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore ) )
 		return false;
 	return ( m_fContinuous ? true : OpenQuants( szDatafile ) ); }
 

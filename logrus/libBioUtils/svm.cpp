@@ -564,6 +564,7 @@ bool CSVM::Open( istream& istm ) {
 	asWords[ m_pModel->totwords ].wnum = 0;
 	for( i = 1; i < (size_t)m_pModel->sv_num; ++i ) {
 		istm.getline( szBuf, c_iBuf - 1 );
+		szBuf[ c_iBuf - 1 ] = 0;
 		vecstrLine.clear( );
 		CMeta::Tokenize( szBuf, vecstrLine, CMeta::c_szWS, true );
 		if( vecstrLine.size( ) != ( m_pModel->totwords + 2 ) ) {

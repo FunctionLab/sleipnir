@@ -101,7 +101,7 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 	return true; }
 
 bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecstrData,
-	bool fEverything, bool fMemmap ) {
+	bool fEverything, bool fMemmap, size_t iSkip, bool fZScore ) {
 	size_t	i, j, k;
 
 	if( Answers.GetGenes( ) && Answers.IsContinuous( ) )
@@ -121,16 +121,10 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecs
 		for( i = 0; i < Answers.GetGenes( ); ++i )
 			setstrGenes.insert( Answers.GetGene( i ) );
 		for( i = 0; i < vecstrData.size( ); ++i ) {
-			ifstream	ifsm;
-			CDat		Dat;
+			CDat	Dat;
 
-			ifsm.open( vecstrData[ i ].c_str( ), ios_base::binary );
-			if( !Dat.OpenGenes( ifsm, true ) ) {
-				ifsm.close( );
-				ifsm.clear( );
-				ifsm.open( vecstrData[ i ].c_str( ) );
-				if( !Dat.OpenGenes( ifsm, false ) )
-					return false; }
+			if( !Dat.OpenGenes( vecstrData[ i ].c_str( ), iSkip ) )
+					return false;
 			for( j = 0; j < Dat.GetGenes( ); ++j )
 				setstrGenes.insert( Dat.GetGene( j ) ); }
 		m_vecstrGenes.resize( setstrGenes.size( ) );
@@ -145,7 +139,7 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecs
 	for( i = 0; i < vecstrData.size( ); ++i ) {
 		CDataPair	Datum;
 
-		if( !( Datum.Open( vecstrData[ i ].c_str( ), false, fMemmap ) &&
+		if( !( Datum.Open( vecstrData[ i ].c_str( ), false, fMemmap, iSkip, fZScore ) &&
 			CDatasetCompactImpl::Open( Datum, i + 1 ) ) )
 			return false; }
 

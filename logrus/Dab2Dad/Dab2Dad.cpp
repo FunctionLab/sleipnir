@@ -64,6 +64,24 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Data.Open( Answers, sArgs.directory_arg, &BNSmile, GenesIn, GenesEx, !!sArgs.everything_flag ) ) {
 			cerr << "Couldn't open: " << sArgs.directory_arg << endl;
 			return 1; } }
+	else if( sArgs.lookup1_arg && sArgs.lookup2_arg ) {
+		size_t	i;
+
+		for( i = 0; i < sArgs.inputs_num; ++i ) {
+			CDataPair	Dat;
+			size_t		iOne, iTwo;
+			float		d;
+
+			if( !Dat.Open( sArgs.inputs[ i ], false, !!sArgs.memmap_flag ) ) {
+				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+				return 1; }
+			cout << sArgs.inputs[ i ];
+			if( ( ( iOne = Dat.GetGene( sArgs.lookup1_arg ) ) != -1 ) &&
+				( ( iTwo = Dat.GetGene( sArgs.lookup2_arg ) ) != -1 ) &&
+				!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
+				cout << '\t' << d;
+			cout << endl; }
+		return 0; }
 	else {
 		vector<string>	vecstrFiles;
 

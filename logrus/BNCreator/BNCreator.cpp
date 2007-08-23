@@ -192,9 +192,10 @@ int main( int iArgs, char** aszArgs ) {
 				memcpy( adNo, DatNo.Get( j ), ( DatNo.GetGenes( ) - j - 1 ) * sizeof(*adNo) );
 				for( k = ( j + 1 ); k < DatYes.GetGenes( ); ++k ) {
 					if( ( iOne == -1 ) || ( ( iTwo = veciGenes[ k ] ) == -1 ) ||
-						!Data.IsExample( iOne, iTwo ) )
+						!Data.IsExample( iOne, iTwo ) ||
+						( ( iBin = Data.GetDiscrete( iOne, iTwo, 0 ) ) == -1 ) )
 						iBin = iZero;
-					if( ( iBin == -1 ) && ( ( iBin = Data.GetDiscrete( iOne, iTwo, 0 ) ) == -1 ) )
+					if( iBin == -1 )
 						continue;
 					adNo[ iIndex = ( k - j - 1 ) ] += log( MatCPT.Get( iBin, 0 ) );
 					adYes[ iIndex ] += log( MatCPT.Get( iBin, 1 ) ); }
@@ -279,7 +280,8 @@ int main( int iArgs, char** aszArgs ) {
 
 			vecstrNames.clear( );
 			vecstrNames.push_back( sArgs.inputs[ iArg ] );
-			if( !Data.Open( Answers, vecstrNames, sArgs.zero_flag || sArgs.zeros_arg ) ) {
+			if( !Data.Open( Answers, vecstrNames, sArgs.zero_flag || sArgs.zeros_arg,
+				!!sArgs.memmap_flag, sArgs.skip_arg, !!sArgs.zscore_flag ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ iArg ] << endl;
 				return 1; }
 			vecstrNames.insert( vecstrNames.begin( ), sArgs.answers_arg );

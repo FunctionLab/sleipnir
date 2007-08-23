@@ -255,43 +255,37 @@ void CDatImpl::OpenHelper( const CGenes* pOne, const CGenes* pTwo, float dValue 
 			if( CMeta::IsNaN( Get( iOne, iTwo ) ) )
 				Set( iOne, iTwo, dValue ); } } }
 
-bool CDat::Open( istream& istm, EFormat eFormat, float dDefault, bool fDuplicates ) {
+bool CDat::Open( istream& istm, EFormat eFormat, float dDefault, bool fDuplicates, size_t iSkip,
+	bool fZScore ) {
 
 	switch( eFormat ) {
 		case EFormatText:
 			return OpenText( istm, dDefault, fDuplicates );
 
 		case EFormatPCL:
-			return OpenPCL( istm );
+			return OpenPCL( istm, iSkip, fZScore );
 
 		case EFormatSparse:
 			return OpenSparse( istm ); }
 
 	return OpenBinary( istm ); }
 
-bool CDatImpl::OpenPCL( istream& istm ) {
-	size_t	i, iOne, iTwo;
-	float	d, dAve, dStd;
+bool CDatImpl::OpenPCL( istream& istm, size_t iSkip, bool fZScore ) {
 
 	Reset( );
 	m_pPCL = new CPCL( );
-	if( !m_pPCL->Open( istm ) )
+	if( !m_pPCL->Open( istm, iSkip ) )
 		return false;
 
-	dAve = dStd = 0;
 	m_pMeasure = new CMeasurePearNorm( );
-	for( i = 0; i < c_iApproximate; ++i ) {
-		iOne = rand( ) % GetGenes( );
-		if( ( iTwo = rand( ) % GetGenes( ) ) == iOne ) {
-			i--;
-			continue; }
-		dAve += ( d = Get( iOne, iTwo ) );
-		dStd += d * d; }
-	dAve /= i;
-	dStd = sqrt( ( dStd / i ) - ( dAve * dAve ) );
-	delete m_pMeasure;
-	m_pMeasure = new CMeasurePearNorm( dAve, dStd );
 	m_fMeasureMemory = true;
+	if( fZScore ) {
+		size_t	iN;
+		double	dAve, dStd;
+
+		AveStd( dAve, dStd, iN );
+		delete m_pMeasure;
+		m_pMeasure = new CMeasurePearNorm( dAve, dStd ); }
 
 	return true; }
 
@@ -402,6 +396,22 @@ bool CDatImpl::OpenSparse( istream& istm ) {
 			Set( i, j, d ); } }
 
 	return true; }
+
+bool CDat::OpenGenes( const char* szFile, size_t iSkip ) {
+	ifstream	ifsm;
+	bool		fBinary;
+	size_t		i;
+	EFormat		eFormat;
+
+	for( i = 0; c_asFormats[ i ].m_szExtension; ++i )
+		if( !strcmp( szFile + strlen( szFile ) - strlen( c_asFormats[ i ].m_szExtension ),
+			c_asFormats[ i ].m_szExtension ) )
+			break;
+	eFormat = c_asFormats[ i ].m_eFormat;
+	fBinary = ( eFormat != EFormatText ) && ( eFormat != EFormatPCL );
+	ifsm.open( szFile, fBinary ? ios_base::binary : ios_base::in );
+
+	return OpenGenes( ifsm, fBinary, ( eFormat == EFormatPCL ) ); }
 
 bool CDat::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
 
@@ -607,28 +617,29 @@ size_t CDatImpl::GetGene( const string& strGene ) const {
 
 	return -1; }
 
-bool CDat::Open( const char* szFile, bool fMemmap ) {
+bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore ) {
 	ifstream	ifsm;
 	EFormat		eFormat;
 	size_t		i;
-
-	if( fMemmap ) {
-		Reset( );
-		if( !CMeta::MapRead( m_abData, m_hndlData, m_iData, szFile ) ) {
-			g_CatBioUtils.error( "CDat::Open( %s, %d ) failed memory mapping", szFile, fMemmap );
-			return false; }
-		return OpenHelper( ); }
 
 	for( i = 0; c_asFormats[ i ].m_szExtension; ++i )
 		if( !strcmp( szFile + strlen( szFile ) - strlen( c_asFormats[ i ].m_szExtension ),
 			c_asFormats[ i ].m_szExtension ) )
 			break;
 	eFormat = c_asFormats[ i ].m_eFormat;
+
+	if( fMemmap && ( eFormat == EFormatBinary ) ) {
+		Reset( );
+		if( !CMeta::MapRead( m_abData, m_hndlData, m_iData, szFile ) ) {
+			g_CatBioUtils.error( "CDat::Open( %s, %d ) failed memory mapping", szFile, fMemmap );
+			return false; }
+		return OpenHelper( ); }
+
 	ifsm.open( szFile, ( ( eFormat == EFormatText ) || ( eFormat == EFormatPCL ) ) ? ios_base::in :
 		ios_base::binary );
 	if( !ifsm.is_open( ) )
 		return false;
-	return Open( ifsm, eFormat ); }
+	return Open( ifsm, eFormat, (float)HUGE_VAL, false, iSkip, fZScore ); }
 
 bool CDatImpl::OpenHelper( ) {
 	unsigned char*	pb;
@@ -663,19 +674,32 @@ void CDat::Normalize( bool fCap ) {
 	else
 		NormalizeStdev( ); }
 
-void CDatImpl::AveStd( double& dAve, double& dDev, size_t& iN ) const {
+void CDatImpl::AveStd( double& dAve, double& dStd, size_t& iN, size_t iApproximate ) const {
 	size_t	i, j;
 	float	d;
 
-	dAve = dDev = 0;
-	for( iN = i = 0; i < GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
-				iN++;
-				dAve += d;
-				dDev += d * d; }
+	dAve = dStd = 0;
+	if( iApproximate == -1 ) {
+		for( iN = i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+					iN++;
+					dAve += d;
+					dStd += d * d; } }
+	else {
+		size_t	iOne, iTwo;
+
+		for( i = 0; i < iApproximate; ++i ) {
+			iOne = rand( ) % GetGenes( );
+			if( ( ( iTwo = rand( ) % GetGenes( ) ) == iOne ) ||
+				CMeta::IsNaN( d = Get( iOne, iTwo ) ) ) {
+				i--;
+				continue; }
+			dAve += d;
+			dStd += d * d; }
+		iN = i; }
 	dAve /= iN;
-	dDev = sqrt( ( dDev / iN ) - ( dAve * dAve ) ); }
+	dStd = sqrt( ( dStd / iN ) - ( dAve * dAve ) ); }
 
 void CDatImpl::NormalizeStdev( ) {
 	double	d, dAve, dDev;

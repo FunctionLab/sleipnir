@@ -28,8 +28,9 @@ public:
 		EFormatSparse	= EFormatPCL + 1
 	};
 
-	bool Open( const char*, bool = false );
-	bool Open( std::istream&, EFormat = EFormatBinary, float = HUGE_VAL, bool = false );
+	bool Open( const char*, bool = false, size_t = 2, bool = false );
+	bool Open( std::istream&, EFormat = EFormatBinary, float = HUGE_VAL, bool = false, size_t = 2,
+		bool = false );
 // MEFIT OFF
 	bool Open( const CSlim& );
 	bool Open( const CSlim&, const CSlim& );
@@ -41,6 +42,7 @@ public:
 	bool Open( const CPCL&, const IMeasure*, bool );
 
 	bool OpenGenes( std::istream&, bool, bool = false );
+	bool OpenGenes( const char*, size_t = 2 );
 	void Save( std::ostream&, EFormat = EFormatBinary ) const;
 	void Save( const char* ) const;
 	void SaveDOT( std::ostream&, float = HUGE_VAL, const CGenome* = NULL, bool = false ) const;
@@ -87,7 +89,7 @@ public:
 
 	const std::vector<std::string>& GetGeneNames( ) const {
 
-		return ( m_pMeasure ? m_pPCL->GetGeneNames( ) : m_vecstrGenes ); }
+		return CDatImpl::GetGeneNames( ); }
 
 	void Set( size_t iX, const float* adValues ) {
 
@@ -96,6 +98,13 @@ public:
 	const float* Get( size_t iX ) const {
 
 		return m_Data.Get( iX ); }
+
+	void SetGene( size_t iGene, const std::string& strGene ) {
+
+		if( m_pPCL )
+			m_pPCL->SetGene( iGene, strGene );
+		else
+			m_vecstrGenes[ iGene ] = strGene; }
 };
 
 }

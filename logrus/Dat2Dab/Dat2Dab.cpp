@@ -32,23 +32,44 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open input" << endl;
 		return 1; }
 
-/*
-float d;
-for( i = 0; i < Dat.GetGenes( ); ++i )
-for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
-if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
-Dat.Set( i, j, (float)CMath::Sigmoid(
-//1,4.548,0.4906,0 // pixie
-//1,16.77,0.1213,0 // gerstein
-//1,0.8945,0.5995,0 // lee
-//1,3.406,0.5154,0 // albert
-//1,9.033,0.2307,0 // mefit
-//1,4,1.5,0 // tan
-//1,0,1,0
-,d ) );
-Dat.Save( sArgs.input_arg, true );
-return 0;
-//*/
+	if( sArgs.remap_arg ) {
+		static const size_t	c_iBuffer	= 1024;
+		char								acBuffer[ c_iBuffer ];
+		vector<string>						vecstrTokens;
+		map<string,string>					mapNames;
+		map<string,string>::const_iterator	iterName;
+
+		ifsm.clear( );
+		ifsm.open( sArgs.remap_arg );
+		if( !ifsm.is_open( ) ) {
+			cerr << "Could not open: " << sArgs.remap_arg << endl;
+			return 1; }
+		while( !ifsm.eof( ) ) {
+			ifsm.getline( acBuffer, c_iBuffer - 1 );
+			acBuffer[ c_iBuffer - 1 ] = 0;
+			vecstrTokens.clear( );
+			CMeta::Tokenize( acBuffer, vecstrTokens );
+			if( vecstrTokens.empty( ) )
+				continue;
+			if( vecstrTokens.size( ) != 2 ) {
+				cerr << "Illegal remap line (" << vecstrTokens.size( ) << "): " << acBuffer << endl;
+				return 1; }
+			if( vecstrTokens[ 0 ] == vecstrTokens[ 1 ] )
+				continue;
+			if( ( iterName = mapNames.find( vecstrTokens[ 0 ] ) ) == mapNames.end( ) )
+				mapNames[ vecstrTokens[ 0 ] ] = vecstrTokens[ 1 ];
+			else if( iterName->second != vecstrTokens[ 1 ] ) {
+				cerr << "Ambiguous mapping: " << vecstrTokens[ 0 ] << " to " << iterName->second <<
+					", " << vecstrTokens[ 1 ] << endl;
+				return 1; } }
+
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			if( ( iterName = mapNames.find( Dat.GetGene( i ) ) ) != mapNames.end( ) ) {
+				if( Dat.GetGene( iterName->second ) ) {
+					cerr << "Duplicate mapping: " << Dat.GetGene( i ) << " to " <<
+						iterName->second << endl;
+					return 1; }
+				Dat.SetGene( i, iterName->second ); } }
 
 	if( sArgs.rank_flag )
 		Dat.Rank( );

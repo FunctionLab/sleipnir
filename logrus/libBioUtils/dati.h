@@ -24,7 +24,6 @@ protected:
 	typedef std::vector<TAF>				TAAF;
 
 	static const size_t	c_iGeneLimit		= 100000;
-	static const size_t	c_iApproximate		= 1000;
 	static const size_t	c_iNeighborhood1	= 40;
 	static const size_t	c_iNeighborhood2	= 0;
 	static const size_t	c_iDegree			= 1;
@@ -40,7 +39,7 @@ protected:
 	~CDatImpl( );
 
 	void Reset( );
-	bool OpenPCL( std::istream& );
+	bool OpenPCL( std::istream&, size_t, bool );
 	bool OpenText( std::istream&, float, bool );
 	bool OpenBinary( std::istream& );
 	bool OpenSparse( std::istream& );
@@ -53,7 +52,7 @@ protected:
 // MEFIT OFF
 	void SlimCache( const CSlim&, std::vector<std::vector<size_t> >& ) const;
 // MEFIT ON
-	void AveStd( double&, double&, size_t& ) const;
+	void AveStd( double&, double&, size_t&, size_t = -1 ) const;
 	void NormalizeMinmax( );
 	void NormalizeStdev( );
 	void OpenHelper( const CGenes*, float );
@@ -89,6 +88,10 @@ protected:
 	std::string GetGene( size_t iGene ) const {
 
 		return ( m_pPCL ? m_pPCL->GetGene( iGene ) : m_vecstrGenes[ iGene ] ); }
+
+	const std::vector<std::string>& GetGeneNames( ) const {
+
+		return ( m_pMeasure ? m_pPCL->GetGeneNames( ) : m_vecstrGenes ); }
 
 	CDistanceMatrix	m_Data;
 	TVecStr			m_vecstrGenes;

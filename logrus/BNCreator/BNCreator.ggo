@@ -18,3 +18,6 @@ option	"zero"		z	"Zero missing values"	flag	off
 option	"zeros"		Z	"Read zeroed node IDs/outputs from the given file"	string	typestr="filename"
 option	"group"		u	"Group identical inputs"	flag	on
 option	"default"	b	"Bayes net containing defaults for cases with missing data"	string	typestr="filename"
+option	"memmap"	m	"Memory map input files"	flag	off
+option	"skip"		s	"Columns to skip for PCL inputs"	int	default="2"
+option	"zscore"	e	"Convert PCL correlations to z-scores"	flag	on

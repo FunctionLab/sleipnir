@@ -65,7 +65,7 @@ CParserConsole::SArgs::SArgs( ) : m_fGenes(m_afFlags[ 0 ]), m_fLong(m_afFlags[ 1
 	m_fSibs(m_afFlags[ 2 ]), m_fZeroes(m_afFlags[ 3 ]), m_fBonferroni(m_afFlags[ 4 ]),
 	m_fRecursive(m_afFlags[ 5 ]), m_fBackground(m_afFlags[ 6 ]) {
 
-	m_fGenes = true;
+	m_fGenes = false;
 	m_fLong = false;
 	m_fSibs = true;
 	m_fZeroes = false;

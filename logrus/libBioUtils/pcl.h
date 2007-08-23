@@ -76,6 +76,10 @@ public:
 
 		return m_vecstrGenes[ iGene ]; }
 
+	void SetGene( size_t iGene, const std::string& strGene ) {
+
+		m_vecstrGenes[ iGene ] = strGene; }
+
 	const std::string& GetExperiment( size_t iExp ) const {
 
 		return m_vecstrExperiments[ iExp ]; }
