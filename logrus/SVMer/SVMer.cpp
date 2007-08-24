@@ -162,6 +162,7 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 	CDataPair	Answers;
 	ofstream	ofsm;
 	CPCL		PCL;
+	CGenes		GenesNl( GenesIn.GetGenome( ) );
 
 	if( PCLs.GetPCLs( ) == 0 )
 		PCL.Open( cin, sArgs.skip_arg );
@@ -180,6 +181,13 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 			for( i = iPCL = 0; iPCL < PCLs.GetPCLs( ); ++iPCL )
 				for( iExp = 0; iExp < PCLs.Get( iPCL ).GetExperiments( ); ++iExp )
 					PCL.Set( iGene, i++, PCLs.Get( iPCL, iGene, iExp ) ); }
+	if( sArgs.genel_arg ) {
+		ifstream	ifsm;
+
+		ifsm.open( sArgs.genel_arg );
+		if( !GenesNl.Open( ifsm ) ) {
+			cerr << "Could not open: " << sArgs.genel_arg << endl;
+			return 1; } }
 
 	if( sArgs.input_arg ) {
 		vector<size_t>	veciGenes;
@@ -204,7 +212,8 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 
 			if( !( i % 100 ) )
 				cerr << "Processing gene " << i << '/' << PCL.GetGenes( ) << endl;
-			if( ( ( iGene = veciGenes[ i ] ) == -1 ) || GenesEx.IsGene( PCL.GetGene( i ) ) )
+			if( ( ( iGene = veciGenes[ i ] ) == -1 ) || GenesNl.IsGene( PCL.GetGene( i ) ) ||
+				GenesEx.IsGene( PCL.GetGene( i ) ) )
 				continue;
 			for( j = 0; j < PCL.GetGenes( ); ++j )
 				if( ( i != j ) && ( ( iTwo = veciGenes[ j ] ) != -1 ) &&

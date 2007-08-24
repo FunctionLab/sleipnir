@@ -7,6 +7,8 @@ int main( int iArgs, char** aszArgs ) {
 	CGenome				Genome;
 	CGenes				GenesIn( Genome ), GenesEx( Genome );
 	ifstream			ifsm;
+	size_t				i, j, k, iOne, iTwo;
+	float				d;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -64,13 +66,45 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Data.Open( Answers, sArgs.directory_arg, &BNSmile, GenesIn, GenesEx, !!sArgs.everything_flag ) ) {
 			cerr << "Couldn't open: " << sArgs.directory_arg << endl;
 			return 1; } }
-	else if( sArgs.lookup1_arg && sArgs.lookup2_arg ) {
-		size_t	i;
+	else if( sArgs.lookups_arg ) {
+		CGenes			GenesLk( Genome );
+		vector<size_t>	veciGenes;
 
+		ifsm.clear( );
+		ifsm.open( sArgs.lookups_arg );
+		if( !GenesLk.Open( ifsm ) ) {
+			cerr << "Couldn't open: " << sArgs.lookups_arg << endl;
+			return 1; }
+		ifsm.close( );
+		veciGenes.resize( GenesLk.GetGenes( ) );
 		for( i = 0; i < sArgs.inputs_num; ++i ) {
 			CDataPair	Dat;
-			size_t		iOne, iTwo;
-			float		d;
+
+			if( !Dat.Open( sArgs.inputs[ i ], false, !!sArgs.memmap_flag ) ) {
+				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+				return 1; }
+			for( j = 0; j < GenesLk.GetGenes( ); ++j )
+				veciGenes[ j ] = Dat.GetGene( GenesLk.GetGene( j ).GetName( ) );
+			cout << sArgs.inputs[ i ];
+			if( sArgs.lookup1_arg ) {
+				if( ( iOne = Dat.GetGene( sArgs.lookup1_arg ) ) != -1 )
+					for( j = 0; j < veciGenes.size( ); ++j )
+						if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
+							!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
+							cout << '\t' << d; }
+			else
+				for( j = 0; j < veciGenes.size( ); ++j ) {
+					if( ( iOne = veciGenes[ j ] ) == -1 )
+						continue;
+					for( k = ( j + 1 ); k < veciGenes.size( ); ++k )
+						if( ( ( iTwo = veciGenes[ k ] ) != -1 ) &&
+							!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
+							cout << '\t' << Dat.Get( iOne, iTwo ); }
+			cout << endl; }
+		return 0; }
+	else if( sArgs.lookup1_arg && sArgs.lookup2_arg ) {
+		for( i = 0; i < sArgs.inputs_num; ++i ) {
+			CDataPair	Dat;
 
 			if( !Dat.Open( sArgs.inputs[ i ], false, !!sArgs.memmap_flag ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
@@ -94,9 +128,6 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.mask_arg ) {
 		CDat		Mask;
 		vector<int>	veciGenes;
-		size_t		i, j;
-		int			iOne, iTwo;
-		float		d;
 
 		if( !Mask.Open( sArgs.mask_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.mask_arg << endl;

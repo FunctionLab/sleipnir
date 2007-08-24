@@ -91,7 +91,35 @@ int main( int iArgs, char** aszArgs ) {
 				if( Dat.Get( i, j ) < sArgs.cutoff_arg )
 					Dat.Set( i, j, CMeta::GetNaN( ) );
 
-	if( sArgs.lookup1_given && sArgs.lookup2_given ) {
+	if( sArgs.lookups_arg ) {
+		CGenes			GenesLk( Genome );
+		vector<size_t>	veciGenes;
+		size_t			iOne, iTwo;
+		float			d;
+
+		ifsm.clear( );
+		ifsm.open( sArgs.lookups_arg );
+		if( !GenesLk.Open( ifsm ) ) {
+			cerr << "Could not open: " << sArgs.lookups_arg << endl;
+			return 1; }
+		veciGenes.resize( GenesLk.GetGenes( ) );
+		for( i = 0; i < veciGenes.size( ); ++i )
+			veciGenes[ i ] = Dat.GetGene( GenesLk.GetGene( i ).GetName( ) );
+		if( sArgs.lookup1_arg ) {
+			if( ( iOne = Dat.GetGene( sArgs.lookup1_arg ) ) != -1 )
+				for( i = 0; i < veciGenes.size( ); ++i )
+					if( ( ( iTwo = veciGenes[ i ] ) != -1 ) &&
+						!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
+						cout << Dat.GetGene( iOne ) << '\t' << Dat.GetGene( iTwo ) << '\t' << d << endl; }
+		else
+			for( i = 0; i < veciGenes.size( ); ++i )
+				if( ( iOne = veciGenes[ i ] ) != -1 )
+					for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
+						if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
+							!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
+							cout << Dat.GetGene( iOne ) << '\t' << Dat.GetGene( iTwo ) << '\t' << d << endl;
+		return 0; }
+	else if( sArgs.lookup1_arg && sArgs.lookup2_arg ) {
 		if( ( i = Dat.GetGene( sArgs.lookup1_arg ) ) == -1 ) {
 			cerr << "Unknown gene: " << sArgs.lookup1_arg << endl;
 			return 1; }

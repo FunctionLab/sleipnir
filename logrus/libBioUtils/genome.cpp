@@ -318,7 +318,7 @@ bool CGenes::Open( istream& istm, bool fCreate ) {
 	static const size_t	c_iBuffer	= 1024;
 	char	szBuf[ c_iBuffer ];
 	CGene*	pGene;
-	size_t	iGene;
+	size_t	i, iGene;
 
 	if( istm.rdstate( ) != ios_base::goodbit )
 		return false;
@@ -334,6 +334,11 @@ bool CGenes::Open( istream& istm, bool fCreate ) {
 				g_CatBioUtils.warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, szBuf );
 				continue; }
 			pGene = &m_Genome.GetGene( iGene ); }
+		for( i = 0; i < m_vecpGenes.size( ); ++i )
+			if( m_vecpGenes[ i ] == pGene )
+				break;
+		if( i != m_vecpGenes.size( ) )
+			continue;
 		m_mapGenes[ pGene->GetName( ) ] = m_vecpGenes.size( );
 		m_vecpGenes.push_back( pGene ); }
 
