@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "dat.h"
 #include "genome.h"
-#include "pstdint.h"
 #include "statistics.h"
 // MEFIT OFF
 #include "annotation.h"

@@ -1,7 +1,11 @@
 #ifndef HALFMATRIXI_H
 #define HALFMATRIXI_H
 
-#include "pstdint.h"
+#ifdef _MSC_VER
+typedef UINT16	uint16_t;
+typedef UINT32	uint32_t;
+typedef UINT64	uint64_t;
+#endif // _MSC_VER
 
 namespace libBioUtils {
 

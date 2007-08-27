@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "halfmatrix.h"
-#include "pstdint.h"
 
 namespace libBioUtils {
 

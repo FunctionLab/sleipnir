@@ -14,7 +14,6 @@ option	"binary"	b	"Input binary training file"	string	typestr="filename"
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
 option	"genel"		l	"Gene skip file for per-gene SVMs"	string	typestr="filename"
-option	"iterations"	t	"SVM iterations"	int	default="100000"
 option	"random"	r	"Seed random generator"	int	default="0"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
 
@@ -25,3 +24,4 @@ option	"tradeoff"	c	"Classification tradeoff"	float
 option	"gamma"		M	"RBF gamma"	float	default="1"
 option	"degree"	d	"Polynomial degree"	int	default="3"
 option	"alphas"	a	"SVM alphas file"	string	typestr="filename"
+option	"iterations"	t	"SVM iterations"	int	default="100000"

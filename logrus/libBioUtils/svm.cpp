@@ -399,9 +399,8 @@ bool CSVM::Evaluate( const IDataset* pData, const CGenes& GenesIn, CDat& DatOut 
 	return CSVMImpl::Evaluate( sData, &GenesIn, DatOut ); }
 
 bool CSVMImpl::Evaluate( const SData& sData, const CGenes* pGenesIn, CDat& DatOut ) const {
-	size_t			i, j, iGenes;
-	DOC*			pDoc;
-	bool			fGene;
+	size_t	i, j, iGenes;
+	DOC*	pDoc;
 
 	if( !m_pModel )
 		return false;
@@ -411,7 +410,6 @@ bool CSVMImpl::Evaluate( const SData& sData, const CGenes* pGenesIn, CDat& DatOu
 	if( sData.m_eType == SData::EFile )
 		return EvaluateFile( sData.m_uData.m_szFile, DatOut );
 
-	fGene = true;
 	iGenes = ( sData.m_eType == SData::EPCLs ) ? sData.m_uData.m_pPCLs->GetGenes( ) :
 		sData.m_uData.m_pData->GetGenes( );
 	for( i = 0; i < iGenes; ++i ) {
@@ -420,13 +418,13 @@ bool CSVMImpl::Evaluate( const SData& sData, const CGenes* pGenesIn, CDat& DatOu
 
 		if( !( i % 10 ) )
 			g_CatBioUtils.notice( "CSVMImpl::Evaluate( ) gene %d/%d", i, iGenes );
-		if( pGenesIn )
-			fGene = pGenesIn->IsGene( strGeneOne );
+		if( pGenesIn && !pGenesIn->IsGene( strGeneOne ) )
+			continue;
 		for( j = ( i + 1 ); j < iGenes; ++j ) {
 			const string&	strGeneTwo	= ( sData.m_eType == SData::EPCLs ) ?
 				sData.m_uData.m_pPCLs->GetGene( j ) : sData.m_uData.m_pData->GetGene( j );
 
-			if( !fGene && !pGenesIn->IsGene( strGeneTwo ) )
+			if( pGenesIn && !pGenesIn->IsGene( strGeneTwo ) )
 				continue;
 			if( !( pDoc = CreateDoc( sData, i, j, 0 ) ) )
 				return false;

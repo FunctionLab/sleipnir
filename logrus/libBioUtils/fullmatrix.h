@@ -4,8 +4,6 @@
 #include <sstream>
 #include <vector>
 
-#include "pstdint.h"
-
 namespace libBioUtils {
 
 template<class tType>

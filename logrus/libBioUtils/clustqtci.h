@@ -5,7 +5,6 @@
 
 #include "fullmatrix.h"
 #include "halfmatrix.h"
-#include "pstdint.h"
 
 namespace libBioUtils {
 
