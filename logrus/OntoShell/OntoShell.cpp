@@ -98,17 +98,6 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.mipsp_anno_arg )
 			ifsmGenes.close( ); }
 
-/*
-set<size_t>	setiGenes;
-srand( (unsigned int)time( NULL ) );
-while( setiGenes.size( ) < 455 )
-setiGenes.insert( rand( ) % Genome.GetGenes( ) );
-for( set<size_t>::const_iterator iterGene = setiGenes.begin( ); iterGene != setiGenes.end( );
-++iterGene )
-cout << Genome.GetGene( *iterGene ).GetName( ) << endl;
-return 0;
-*/
-
 	if( sArgs.server_arg ) {
 		XMLPlatformUtils::Initialize( );
 		XPathEvaluator::initialize( );
@@ -130,7 +119,6 @@ return 0;
 	else if( sArgs.exec_arg )
 		Parser.ProcessLine( sArgs.exec_arg );
 	else {
-//		rl_completion_entry_function = CompletionCommands;
 		rl_attempted_completion_function = CompletionAll;
 		do {
 			if( !( szLine = readline( ( Parser.GetLocation( ).ToString( false ) +

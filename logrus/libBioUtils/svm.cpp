@@ -293,11 +293,6 @@ bool CSVMImpl::Learn( const SData& sData ) {
 		kernel_cache_init( m_iDocs, m_sLearn.kernel_cache_size );
 	switch( m_sLearn.type ) {
 		case CLASSIFICATION:
-for( size_t i = 0; i < m_iDocs; ++i ) {
-cout << m_adLabels[ i ];
-for( size_t j = 0; j < iWords; ++j )
-cout << ' ' << ( j + 1 ) << ':' << m_apDocs[ i ]->fvec->words[ j ].weight;
-cout << endl; }
 			svm_learn_classification( m_apDocs, m_adLabels, m_iDocs, iWords,
 				(LEARN_PARM*)&m_sLearn, (KERNEL_PARM*)&m_sKernel, pCache, m_pModel,
 				m_adAlphas );
