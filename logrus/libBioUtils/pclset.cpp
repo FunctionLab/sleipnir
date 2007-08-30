@@ -18,7 +18,7 @@ void CPCLSetImpl::Reset( ) {
 	m_vecstrGenes.clear( );
 	m_Genes.Reset( ); }
 
-bool CPCLSet::Open( const vector<string>& vecstrData, size_t iSkip ) {
+bool CPCLSet::Open( const vector<string>& vecstrData, size_t iSkip, bool fNormalize ) {
 	size_t						i, j;
 	ifstream					ifsm;
 	set<string>					setstrGenes;
@@ -32,6 +32,8 @@ bool CPCLSet::Open( const vector<string>& vecstrData, size_t iSkip ) {
 		if( !m_aPCLs[ i ].Open( ifsm, iSkip ) )
 			return false;
 		ifsm.close( );
+		if( fNormalize )
+			m_aPCLs[ i ].Normalize( true );
 		for( j = 0; j < m_aPCLs[ i ].GetGenes( ); ++j )
 			setstrGenes.insert( m_aPCLs[ i ].GetGene( j ) ); }
 	m_vecstrGenes.resize( setstrGenes.size( ) );

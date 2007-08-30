@@ -380,15 +380,31 @@ bool CPCL::AddGenes( const vector<string>& vecstrGenes ) {
 
 	return true; }
 
-void CPCL::Normalize( ) {
-	size_t	i, j;
+void CPCL::Normalize( bool fGlobal ) {
+	size_t	i, j, iCount;
 	double	dAve, dStd;
+	float	d;
 
-	for( i = 0; i < GetGenes( ); ++i ) {
-		dAve = CStatistics::Average( Get( i ), Get( i ) + GetExperiments( ) );
-		dStd = sqrt( CStatistics::Variance( Get( i ), Get( i ) + GetExperiments( ), dAve ) );
-		if( dStd )
+	if( fGlobal ) {
+		dAve = dStd = 0;
+		for( iCount = i = 0; i < GetGenes( ); ++i )
 			for( j = 0; j < GetExperiments( ); ++j )
-				Set( i, j, (float)( ( Get( i, j ) - dAve ) / dStd ) ); } }
+				if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+					iCount++;
+					dAve += d;
+					dStd += d * d; }
+		dAve /= iCount;
+		dStd = sqrt( ( dStd / iCount ) - ( dAve * dAve ) );
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = 0; j < GetExperiments( ); ++j )
+				if( !CMeta::IsNaN( d = Get( i, j ) ) )
+					Set( i, j, (float)( ( d - dAve ) / dStd ) ); }
+	else
+		for( i = 0; i < GetGenes( ); ++i ) {
+			dAve = CStatistics::Average( Get( i ), Get( i ) + GetExperiments( ) );
+			dStd = sqrt( CStatistics::Variance( Get( i ), Get( i ) + GetExperiments( ), dAve ) );
+			if( dStd )
+				for( j = 0; j < GetExperiments( ); ++j )
+					Set( i, j, (float)( ( Get( i, j ) - dAve ) / dStd ) ); } }
 
 }

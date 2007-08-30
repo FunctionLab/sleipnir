@@ -29,7 +29,7 @@ public:
 	void SortGenes( const std::vector<size_t>& );
 	void RankTransform( );
 	bool AddGenes( const std::vector<std::string>& );
-	void Normalize( );
+	void Normalize( bool = false );
 	void Reset( );
 
 	size_t GetFeatures( ) const {

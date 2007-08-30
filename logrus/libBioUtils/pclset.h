@@ -9,7 +9,7 @@ namespace libBioUtils {
 
 class CPCLSet : CPCLSetImpl {
 public:
-	bool Open( const std::vector<std::string>&, size_t = 2 );
+	bool Open( const std::vector<std::string>&, size_t = 2, bool = false );
 
 	size_t GetGenes( ) const {
 

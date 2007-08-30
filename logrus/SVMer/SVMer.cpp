@@ -28,7 +28,7 @@ int main( int iArgs, char** aszArgs ) {
 	vecstrInputs.resize( sArgs.inputs_num );
 	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrInputs.begin( ) );
 	if( sArgs.pcl_flag ) {
-		if( !PCLs.Open( vecstrInputs, sArgs.skip_arg ) ) {
+		if( !PCLs.Open( vecstrInputs, sArgs.skip_arg, true ) ) {
 			cerr << "Could not open PCLs" << endl;
 			return 1; } }
 	else {
@@ -156,7 +156,6 @@ int main_one( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CData
 					SVM.Evaluate( PCLs, Dat );
 				else
 					SVM.Evaluate( &Data, Dat ); } }
-		Dat.Normalize( );
 		if( sArgs.output_arg )
 			Dat.Save( sArgs.output_arg ); }
 	else {
