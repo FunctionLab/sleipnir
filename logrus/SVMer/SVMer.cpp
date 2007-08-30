@@ -6,8 +6,9 @@ static const char	c_szPolynomial[]	= "poly";
 
 int init_svm( const gengetopt_args_info&, CSVM& );
 int main_one( const gengetopt_args_info&, const CPCLSet&, const CDataset&, const CGenes&,
+	const CGenes&, const CGenes& );
+int main_many( const gengetopt_args_info&, const CPCLSet&, const CGenes&, const CGenes&,
 	const CGenes& );
-int main_many( const gengetopt_args_info&, const CPCLSet&, const CGenes&, const CGenes& );
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -16,7 +17,7 @@ int main( int iArgs, char** aszArgs ) {
 	vector<string>		vecstrInputs;
 	ifstream			ifsm;
 	CGenome				Genome;
-	CGenes				GenesIn( Genome ), GenesEx( Genome );
+	CGenes				GenesIn( Genome ), GenesEx( Genome ), GenesTm( Genome );
 	int					iRet;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -49,9 +50,16 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open: " << sArgs.genex_arg << endl;
 			return 1; }
 		ifsm.close( ); }
+	if( sArgs.genet_arg ) {
+		ifsm.clear( );
+		ifsm.open( sArgs.genet_arg );
+		if( !GenesTm.Open( ifsm ) ) {
+			cerr << "Could not open: " << sArgs.genet_arg << endl;
+			return 1; }
+		ifsm.close( ); }
 
-	iRet = sArgs.genewise_flag ? main_many( sArgs, PCLs, GenesIn, GenesEx ) :
-		main_one( sArgs, PCLs, Data, GenesIn, GenesEx );
+	iRet = sArgs.genewise_flag ? main_many( sArgs, PCLs, GenesIn, GenesEx, GenesTm ) :
+		main_one( sArgs, PCLs, Data, GenesIn, GenesEx, GenesTm );
 
 	CMeta::Shutdown( );
 	return iRet; }
@@ -83,7 +91,7 @@ int init_svm( const gengetopt_args_info& sArgs, CSVM& SVM ) {
 	return 0; }
 
 int main_one( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CDataset& Data,
-	const CGenes& GenesIn, const CGenes& GenesEx ) {
+	const CGenes& GenesIn, const CGenes& GenesEx, const CGenes& GenesTm ) {
 	CSVM				SVM;
 	CDataPair			Answers;
 	CDat				Dat;
@@ -111,6 +119,8 @@ int main_one( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CData
 			Answers.FilterGenes( GenesIn, CDat::EFilterInclude );
 		if( GenesEx.GetGenes( ) )
 			Answers.FilterGenes( GenesEx, CDat::EFilterExclude );
+		if( GenesTm.GetGenes( ) )
+			Answers.FilterGenes( GenesTm, CDat::EFilterTerm );
 		if( sArgs.pcl_flag )
 			SVM.Learn( PCLs, Answers );
 		else
@@ -156,7 +166,7 @@ int main_one( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CData
 	return 0; }
 
 int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGenes& GenesIn,
-	const CGenes& GenesEx ) {
+	const CGenes& GenesEx, const CGenes& GenesTm ) {
 	size_t		i, j, iGene;
 	int			iRet;
 	CDataPair	Answers;
@@ -200,6 +210,8 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 			Answers.FilterGenes( GenesIn, CDat::EFilterInclude );
 		if( GenesEx.GetGenes( ) )
 			Answers.FilterGenes( GenesEx, CDat::EFilterExclude );
+		if( GenesTm.GetGenes( ) )
+			Answers.FilterGenes( GenesTm, CDat::EFilterTerm );
 		veciGenes.resize( PCL.GetGenes( ) );
 		for( i = 0; i < veciGenes.size( ); ++i )
 			veciGenes[ i ] = Answers.GetGene( PCL.GetGene( i ) );
