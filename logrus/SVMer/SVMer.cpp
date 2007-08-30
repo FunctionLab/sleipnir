@@ -268,7 +268,6 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 			for( i = j = 0; i < PCL.GetGenes( ); ++i )
 				if( !PCL.IsMasked( i ) )
 					Dat.Set( iGene, i, vecdScores[ j++ ] ); }
-		Dat.Normalize( );
 		if( sArgs.output_arg )
 			Dat.Save( sArgs.output_arg );
 		else
