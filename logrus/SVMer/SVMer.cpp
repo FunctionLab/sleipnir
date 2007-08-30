@@ -270,7 +270,9 @@ int main_many( const gengetopt_args_info& sArgs, const CPCLSet& PCLs, const CGen
 					Dat.Set( iGene, i, vecdScores[ j++ ] ); }
 		Dat.Normalize( );
 		if( sArgs.output_arg )
-			Dat.Save( sArgs.output_arg ); }
+			Dat.Save( sArgs.output_arg );
+		else
+			Dat.Save( cout, CDat::EFormatText ); }
 	else {
 		cmdline_parser_print_help( );
 		return 1; }
