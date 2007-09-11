@@ -38,7 +38,7 @@ CSVMImpl::SLearn::SLearn( ) {
 	svm_c = 0;
 	eps = 0.1;
 	transduction_posratio = -1.0;
-	svm_costratio = 1;
+	svm_costratio = 0;
 	svm_costratio_unlab = 1;
 	svm_unlabbound = 1e-5;
 	epsilon_crit = 0.001;
