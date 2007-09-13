@@ -42,7 +42,7 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.input_arg ) {
 		if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !( sArgs.normalize_flag ||
-			sArgs.genes_arg || sArgs.geneq_arg ) ) ) {
+			sArgs.genes_arg || sArgs.geneq_arg || sArgs.knowns_arg ) ) ) {
 			cerr << "Couldn't open: " << sArgs.input_arg << endl;
 			return 1; } }
 	else if( !Dat.Open( cin, CDat::EFormatText ) ) {
@@ -90,6 +90,23 @@ int main( int iArgs, char** aszArgs ) {
 		else
 			Dat.FilterGenes( GenesQr, CDat::EFilterPixie, sArgs.neighbors_arg,
 				!!strcmp( sArgs.format_arg, "list" ) ); }
+	if( sArgs.knowns_arg ) {
+		CDat			DatKnowns;
+		vector<size_t>	veciKnowns;
+		size_t			iOne, iTwo;
+
+		if( !DatKnowns.Open( sArgs.knowns_arg ) ) {
+			cerr << "Could not open: " << sArgs.knowns_arg << endl;
+			return 1; }
+		veciKnowns.resize( Dat.GetGenes( ) );
+		for( i = 0; i < veciKnowns.size( ); ++i )
+			veciKnowns[ i ] = DatKnowns.GetGene( Dat.GetGene( i ) );
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			if( ( iOne = veciKnowns[ i ] ) != -1 )
+				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+					if( ( ( iTwo = veciKnowns[ j ] ) != -1 ) &&
+						!CMeta::IsNaN( d = DatKnowns.Get( iOne, iTwo ) ) && ( d > 0 ) )
+						Dat.Set( i, j, CMeta::GetNaN( ) ); }
 	if( sArgs.normalize_flag )
 		Dat.Normalize( );
 

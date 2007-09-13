@@ -22,7 +22,8 @@ int main( int iArgs, char** aszArgs ) {
 	CMeta::Startup( sArgs.verbosity_arg );
 
 	if( sArgs.input_arg ) {
-		if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !sArgs.normalize_flag ) ) {
+		if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !sArgs.normalize_flag &&
+			!sArgs.heavy_arg ) ) {
 			cerr << "Could not open: " << sArgs.input_arg << endl;
 			return 1; } }
 	else if( !Dat.Open( cin, CDat::EFormatText ) ) {

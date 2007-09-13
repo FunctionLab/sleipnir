@@ -14,3 +14,4 @@ option	"normalize"	n	"Normalize edge weights before processing"	flag	off
 option	"neighbors"	k	"Size of Pixie neighborhood"	int	default="-1"
 option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
 option	"geneq"		q	"Query inclusion file"	string	typestr="filename"
+option	"knowns"	w	"Known interactions (DAT) to ignore"	string	typestr="filename"
