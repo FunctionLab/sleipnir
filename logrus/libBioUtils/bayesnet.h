@@ -36,6 +36,8 @@ public:
 	void SetDefault( const CBayesNetSmile& );
 	bool Open( const IDataset*, const std::vector<std::string>&, const std::vector<size_t>& );
 	bool Open( const CBayesNetSmile&, const std::vector<CBayesNetSmile*>& );
+	float Evaluate( size_t, unsigned char ) const;
+	unsigned char GetZero( size_t ) const;
 
 	bool Open( const char* );
 	bool Save( const char* ) const;

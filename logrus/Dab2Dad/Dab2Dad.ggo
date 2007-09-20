@@ -19,3 +19,4 @@ option	"memmap"		m	"Memory map input/output"	flag	off
 option	"lookup1"		l	"First lookup gene"	string
 option	"lookup2"		L	"Second lookup gene"	string
 option	"lookups"		t	"Lookup gene set"	string	typestr="filename"
+option	"lookupp"		T	"Lookup pair set"	string	typestr="filename"

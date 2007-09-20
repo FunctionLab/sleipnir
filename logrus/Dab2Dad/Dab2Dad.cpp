@@ -66,6 +66,48 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Data.Open( Answers, sArgs.directory_arg, &BNSmile, GenesIn, GenesEx, !!sArgs.everything_flag ) ) {
 			cerr << "Couldn't open: " << sArgs.directory_arg << endl;
 			return 1; } }
+	else if( sArgs.lookupp_arg ) {
+		CDat			DatLookup;
+		vector<size_t>	veciGenes;
+		CPCL			PCLLookup;
+		vector<string>	vecstrNames, vecstrExperiments, vecstrDummy;
+
+		ifsm.clear( );
+		ifsm.open( sArgs.lookupp_arg );
+		if( !DatLookup.Open( ifsm, CDat::EFormatText, 1 ) ) {
+			cerr << "Couldn't open: " << sArgs.lookupp_arg << endl;
+			return 1; }
+		ifsm.close( );
+
+		for( i = 0; i < DatLookup.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < DatLookup.GetGenes( ); ++j )
+				if( DatLookup.Get( i, j ) == 1 )
+					vecstrNames.push_back( DatLookup.GetGene( i ) + " - " + DatLookup.GetGene( j ) );
+		vecstrExperiments.resize( sArgs.inputs_num );
+		copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrExperiments.begin( ) );
+		PCLLookup.Open( vecstrNames, vecstrExperiments, vecstrDummy );
+		
+		veciGenes.resize( DatLookup.GetGenes( ) );
+		for( i = 0; i < sArgs.inputs_num; ++i ) {
+			CDataPair	Dat;
+			size_t		iGene;
+
+			if( !Dat.Open( sArgs.inputs[ i ], false, !!sArgs.memmap_flag ) ) {
+				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+				return 1; }
+			for( j = 0; j < veciGenes.size( ); ++j )
+				veciGenes[ j ] = Dat.GetGene( DatLookup.GetGene( j ) );
+			for( iGene = j = 0; j < DatLookup.GetGenes( ); ++j ) {
+				iOne = veciGenes[ j ];
+				for( k = ( j + 1 ); k < DatLookup.GetGenes( ); ++k ) {
+					if( DatLookup.Get( j, k ) != 1 )
+						continue;
+					iTwo = veciGenes[ k ];
+					if( ( iOne != -1 ) && ( iTwo != -1 ) )
+						PCLLookup.Set( iGene, i, Dat.Get( iOne, iTwo ) );
+					iGene++; } } }
+		PCLLookup.Save( cout );
+		return 0; }
 	else if( sArgs.lookups_arg ) {
 		CGenes			GenesLk( Genome );
 		vector<size_t>	veciGenes;

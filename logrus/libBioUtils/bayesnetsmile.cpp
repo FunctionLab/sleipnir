@@ -429,6 +429,37 @@ bool CBayesNetSmile::Evaluate( const vector<unsigned char>& vecbDatum, vector<fl
 
 	return true; }
 
+float CBayesNetSmile::Evaluate( size_t iNode, unsigned char bValue ) const {
+	vector<bool>			vecfHidden;
+	vector<unsigned char>	vecbDatum;
+	DSL_nodeValue*			pValue;
+	size_t					i;
+
+	if( !m_fSmileNet || IsContinuous( ) )
+		return CMeta::GetNaN( );
+
+	vecbDatum.resize( m_SmileNet.GetNumberOfNodes( ) );
+	vecbDatum[ iNode ] = bValue;
+	vecfHidden.resize( vecbDatum.size( ) );
+	for( i = 0; i < vecbDatum.size( ); ++i )
+		vecfHidden[ i ] = ( i != iNode );
+	((CBayesNetSmile*)this)->FillCPTs( vecfHidden, vecbDatum, false, false );
+	((CBayesNetSmile*)this)->m_SmileNet.UpdateBeliefs( );
+	pValue = m_SmileNet.GetNode( 0 )->Value( );
+
+	return (float)(*pValue->GetMatrix( ))[ 0 ]; }
+
+unsigned char CBayesNetSmile::GetZero( size_t iNode ) const {
+	int	i;
+
+	if( !m_fSmileNet ||
+		( ( i = ((DSL_network&)m_SmileNet).GetNode(
+		iNode )->Info( ).UserProperties( ).FindProperty( c_szZero ) ) < 0 ) )
+		return -1;
+
+	return atoi( ((DSL_network&)m_SmileNet).GetNode(
+		iNode )->Info( ).UserProperties( ).GetPropertyValue( i ) ); }
+
 void CBayesNetSmile::Randomize( ) {
 	int	i;
 

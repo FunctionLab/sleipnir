@@ -1,0 +1,93 @@
+#include "stdafx.h"
+#include "cmdline.h"
+
+static const char	c_acDab[]	= ".dab";
+
+int main( int iArgs, char** aszArgs ) {
+	gengetopt_args_info	sArgs;
+	ifstream			ifsm;
+	CBayesNetSmile		BNSmile;
+	CDat				Dat, DatLookup;
+	istream*			pistm;
+	vector<size_t>		veciGenes;
+	CPCL				PCLLookup;
+	vector<string>		vecstrNodes, vecstrGenes, vecstrDummy;
+	size_t				i, j, k, iOne, iTwo, iGene;
+	float				dPrior;
+	CDataMatrix			MatCPT;
+	unsigned char		b;
+
+	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
+		cmdline_parser_print_help( );
+		return 1; }
+	CMeta::Startup( sArgs.verbosity_arg );
+    EnableXdslFormat( );
+
+	if( !BNSmile.Open( sArgs.network_arg ) ) {
+		cerr << "Could not open: " << sArgs.network_arg << endl;
+		return 1; }
+	if( !Dat.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
+		cerr << "Could not open: " << sArgs.input_arg << endl;
+		return 1; }
+	if( sArgs.lookup_arg ) {
+		ifsm.open( sArgs.lookup_arg );
+		pistm = &ifsm; }
+	else
+		pistm = &cin;
+	if( !DatLookup.Open( *pistm, CDat::EFormatText, 1 ) ) {
+		cerr << "Could not open: " << ( sArgs.lookup_arg ? sArgs.lookup_arg : "stdin" ) << endl;
+		return 1; }
+	ifsm.close( );
+
+	for( i = 0; i < DatLookup.GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < DatLookup.GetGenes( ); ++j )
+			if( DatLookup.Get( i, j ) == 1 )
+				vecstrGenes.push_back( DatLookup.GetGene( i ) + " - " + DatLookup.GetGene( j ) );
+	BNSmile.GetNodes( vecstrNodes );
+	vecstrNodes[ 0 ] = sArgs.input_arg;
+	PCLLookup.Open( vecstrGenes, vecstrNodes, vecstrDummy );
+
+	veciGenes.resize( DatLookup.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = Dat.GetGene( DatLookup.GetGene( i ) );
+	for( iGene = i = 0; i < DatLookup.GetGenes( ); ++i ) {
+		iOne = veciGenes[ i ];
+		for( j = ( i + 1 ); j < DatLookup.GetGenes( ); ++j ) {
+			iTwo = veciGenes[ j ];
+			if( DatLookup.Get( i, j ) != 1 )
+				continue;
+			if( ( iOne != -1 ) && ( iTwo != -1 ) )
+				PCLLookup.Set( iGene, 0, Dat.Get( iOne, iTwo ) );
+			iGene++; } }
+
+	BNSmile.GetCPT( 0, MatCPT );
+	dPrior = 1 - MatCPT.Get( 0, 0 );
+	for( i = 1; i < vecstrNodes.size( ); ++i ) {
+		CDataPair	DatCur;
+		string		strIn;
+		size_t		iValue;
+
+		strIn = (string)sArgs.directory_arg + "/" + vecstrNodes[ i ] + c_acDab;
+		if( !DatCur.Open( strIn.c_str( ), false, !!sArgs.memmap_flag ) ) {
+			cerr << "Could not open: " << strIn << endl;
+			return 1; }
+		for( j = 0; j < veciGenes.size( ); ++j )
+			veciGenes[ j ] = DatCur.GetGene( DatLookup.GetGene( j ) );
+		for( iGene = j = 0; j < DatLookup.GetGenes( ); ++j ) {
+			iOne = veciGenes[ j ];
+			for( k = ( j + 1 ); k < DatLookup.GetGenes( ); ++k ) {
+				if( DatLookup.Get( j, k ) != 1 )
+					continue;
+				iTwo = veciGenes[ k ];
+				iValue = -1;
+				if( ( iOne != -1 ) && ( iTwo != -1 ) )
+					iValue = DatCur.Quantize( Dat.Get( iOne, iTwo ) );
+				if( ( iValue == -1 ) && ( ( b = BNSmile.GetZero( i ) ) != (unsigned char)-1 ) )
+					iValue = b;
+				if( iValue != -1 )
+					PCLLookup.Set( iGene, i, 1 - BNSmile.Evaluate( i, (unsigned char)iValue ) - dPrior );
+				iGene++; } } }
+	PCLLookup.Save( cout );
+
+	CMeta::Shutdown( );
+	return 0; }
