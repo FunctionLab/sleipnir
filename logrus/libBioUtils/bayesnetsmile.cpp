@@ -439,7 +439,7 @@ float CBayesNetSmile::Evaluate( size_t iNode, unsigned char bValue ) const {
 		return CMeta::GetNaN( );
 
 	vecbDatum.resize( m_SmileNet.GetNumberOfNodes( ) );
-	vecbDatum[ iNode ] = bValue;
+	vecbDatum[ iNode ] = bValue + 1;
 	vecfHidden.resize( vecbDatum.size( ) );
 	for( i = 0; i < vecbDatum.size( ); ++i )
 		vecfHidden[ i ] = ( i != iNode );

@@ -18,7 +18,8 @@ public:
 		EFilterInclude	= 0,
 		EFilterTerm		= EFilterInclude + 1,
 		EFilterExclude	= EFilterTerm + 1,
-		EFilterPixie	= EFilterExclude + 1
+		EFilterPixie	= EFilterExclude + 1,
+		EFilterEdge		= EFilterPixie + 1
 	};
 
 	enum EFormat {

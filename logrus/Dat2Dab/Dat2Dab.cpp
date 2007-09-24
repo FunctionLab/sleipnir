@@ -119,14 +119,21 @@ int main( int iArgs, char** aszArgs ) {
 							!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
 							cout << Dat.GetGene( iOne ) << '\t' << Dat.GetGene( iTwo ) << '\t' << d << endl;
 		return 0; }
-	else if( sArgs.lookup1_arg && sArgs.lookup2_arg ) {
+	else if( sArgs.lookup1_arg ) {
 		if( ( i = Dat.GetGene( sArgs.lookup1_arg ) ) == -1 ) {
 			cerr << "Unknown gene: " << sArgs.lookup1_arg << endl;
 			return 1; }
-		if( ( j = Dat.GetGene( sArgs.lookup2_arg ) ) == -1 ) {
-			cerr << "Unknown gene: " << sArgs.lookup2_arg << endl;
-			return 1; }
-		cout << Dat.GetGene( i ) << '\t' << Dat.GetGene( j ) << '\t' << Dat.Get( i, j ) << endl; }
+		if( sArgs.lookup2_arg ) {
+			if( ( j = Dat.GetGene( sArgs.lookup2_arg ) ) == -1 ) {
+				cerr << "Unknown gene: " << sArgs.lookup2_arg << endl;
+				return 1; }
+			cout << Dat.GetGene( i ) << '\t' << Dat.GetGene( j ) << '\t' << Dat.Get( i, j ) << endl; }
+		else
+			for( j = 0; j < Dat.GetGenes( ); ++j ) {
+				float	d;
+
+				if( ( i != j ) && !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
+					cout << Dat.GetGene( i ) << '\t' << Dat.GetGene( j ) << '\t' << d << endl; } }
 	else if( sArgs.output_arg )
 		Dat.Save( sArgs.output_arg );
 	else {

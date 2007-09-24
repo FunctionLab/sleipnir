@@ -81,7 +81,7 @@ int main( int iArgs, char** aszArgs ) {
 				iTwo = veciGenes[ k ];
 				iValue = -1;
 				if( ( iOne != -1 ) && ( iTwo != -1 ) )
-					iValue = DatCur.Quantize( Dat.Get( iOne, iTwo ) );
+					iValue = DatCur.Quantize( DatCur.Get( iOne, iTwo ) );
 				if( ( iValue == -1 ) && ( ( b = BNSmile.GetZero( i ) ) != (unsigned char)-1 ) )
 					iValue = b;
 				if( iValue != -1 )

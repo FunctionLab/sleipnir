@@ -771,9 +771,12 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilt, size_t iLimit, bool 
 			for( j = ( i + 1 ); j < GetGenes( ); ++j )
 				Set( i, j, CMeta::GetNaN( ) );
 			continue; }
+		if( ( eFilt == EFilterEdge ) && vecfGenes[ i ] )
+			continue;
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			switch( eFilt ) {
 				case EFilterInclude:
+				case EFilterEdge:
 					if( !vecfGenes[ j ] )
 						Set( i, j, CMeta::GetNaN( ) );
 					break;

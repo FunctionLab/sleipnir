@@ -51,12 +51,15 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
 
-	fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg );
+	fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg || sArgs.genee_arg );
 	if( !Answers.Open( sArgs.answers_arg, fMapAnswers ) ) {
 		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
 		return 1; }
 	if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
 		cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+		return 1; }
+	if( sArgs.genee_arg && !Answers.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge ) ) {
+		cerr << "Couldn't open: " << sArgs.genee_arg << endl;
 		return 1; }
 	if( sArgs.genet_arg && !Answers.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) ) {
 		cerr << "Couldn't open: " << sArgs.genet_arg << endl;

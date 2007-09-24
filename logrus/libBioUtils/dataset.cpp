@@ -21,16 +21,17 @@ void CDataImpl::FilterGenes( IDataset* pData, const CGenes& Genes, CDat::EFilter
 		vecfGenes[ i ] = Genes.IsGene( pData->GetGene( i ) );
 
 	for( i = 0; i < vecfGenes.size( ); ++i ) {
-		if( vecfGenes[ i ] ) {
-			if( eFilt == CDat::EFilterInclude )
-				continue;
-			if( eFilt == CDat::EFilterExclude ) {
-				for( j = ( i + 1 ); j < vecfGenes.size( ); ++j )
-					pData->Remove( i, j );
-				continue; } }
+		if( ( ( eFilt == CDat::EFilterInclude ) && !vecfGenes[ i ] ) ||
+			( ( eFilt == CDat::EFilterExclude ) && vecfGenes[ i ] ) ) {
+			for( j = ( i + 1 ); j < vecfGenes.size( ); ++j )
+				pData->Remove( i, j );
+			continue; }
+		if( ( eFilt == CDat::EFilterEdge ) && vecfGenes[ i ] )
+			continue;
 		for( j = ( i + 1 ); j < vecfGenes.size( ); ++j )
 			switch( eFilt ) {
 				case CDat::EFilterInclude:
+				case CDat::EFilterEdge:
 					if( !vecfGenes[ j ] )
 						pData->Remove( i, j );
 					break;

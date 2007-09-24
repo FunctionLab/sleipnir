@@ -95,7 +95,7 @@ int main( int iArgs, char** aszArgs ) {
 		vector<size_t>	veciKnowns;
 		size_t			iOne, iTwo;
 
-		if( !DatKnowns.Open( sArgs.knowns_arg ) ) {
+		if( !DatKnowns.Open( sArgs.knowns_arg, !!sArgs.memmap_flag ) ) {
 			cerr << "Could not open: " << sArgs.knowns_arg << endl;
 			return 1; }
 		veciKnowns.resize( Dat.GetGenes( ) );
