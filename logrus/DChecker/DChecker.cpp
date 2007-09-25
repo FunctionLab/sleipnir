@@ -38,7 +38,7 @@ int main( int iArgs, char** aszArgs ) {
 	ETFPN				eTFPN;
 	int					iMax;
 	float				dAnswer, dValue;
-	vector<bool>		vecfHere, vecfSomewhere;
+	vector<bool>		vecfHere;
 	vector<float>		vecdScores, vecdSSE;
 	vector<size_t>		veciPositives, veciNegatives;
 	ofstream			ofsm;
@@ -105,25 +105,6 @@ int main( int iArgs, char** aszArgs ) {
 		(size_t)( ( sArgs.max_arg - sArgs.min_arg ) / sArgs.delta_arg ) + 1, 4 );
 	MatGenes.Initialize( veciGenes.size( ), MatResults.GetRows( ) );
 
-	if( sArgs.inputs_num ) {
-		vecfSomewhere.resize( Answers.GetGenes( ) );
-		if( sArgs.unannotated_flag )
-			for( i = 0; i < sArgs.inputs_num; ++i ) {
-				ifstream	ifsm( sArgs.inputs[ i ] );
-				CGenome		Genome;
-				CGenes		Genes( Genome );
-				size_t		iGene;
-
-				if( !Genes.Open( ifsm ) ) {
-					cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-					return 1; }
-				for( j = 0; j < Genes.GetGenes( ); ++j )
-					if( ( iGene = Answers.GetGene( Genes.GetGene( j ).GetName( ) ) ) != -1 )
-						vecfSomewhere[ iGene ] = true; }
-		else
-			for( i = 0; i < vecfSomewhere.size( ); ++i )
-				vecfSomewhere[ i ] = true; }
-
 	for( iGenes = 0; !sArgs.inputs_num || ( iGenes < sArgs.inputs_num ); ++iGenes ) {
 		MatResults.Clear( );
 		MatGenes.Clear( );
@@ -154,8 +135,7 @@ int main( int iArgs, char** aszArgs ) {
 						continue;
 					if( !( vecfHere.empty( ) ||
 						( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-						( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
-						!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
+						( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
 						continue;
 					if( sArgs.invert_flag )
 						dValue = 1 - dValue;
@@ -179,8 +159,7 @@ int main( int iArgs, char** aszArgs ) {
 						continue;
 					if( !( vecfHere.empty( ) ||
 						( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-						( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
-						!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
+						( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
 						continue;
 
 					MatGenes.Set( i, 0, true );
@@ -251,8 +230,7 @@ int main( int iArgs, char** aszArgs ) {
 						continue;
 					if( !( vecfHere.empty( ) ||
 						( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-						( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
-						!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
+						( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
 						continue;
 					if( sArgs.invert_flag )
 						dValue = 1 - dValue;
@@ -273,8 +251,7 @@ int main( int iArgs, char** aszArgs ) {
 				if( CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
 					!( vecfHere.empty( ) ||
 					( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-					( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
-					!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
+					( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
 					continue;
 				if( dAnswer )
 					iPositives++;
@@ -309,7 +286,7 @@ int main( int iArgs, char** aszArgs ) {
 					*postm << '\t' << MatResults.Get( i, j );
 			*postm << endl; }
 		if( !sArgs.sse_flag )
-			*postm << "#	AUC	" << CStatistics::WilcoxonRankSum( Data, Answers, vecfHere, vecfSomewhere,
+			*postm << "#	AUC	" << CStatistics::WilcoxonRankSum( Data, Answers, vecfHere,
 				!!sArgs.invert_flag ) << endl;
 
 		if( sArgs.inputs_num )

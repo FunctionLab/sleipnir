@@ -804,7 +804,7 @@ double CStatistics::FScore( size_t iTP, size_t iFP, size_t iTN, size_t iFN, doub
 	return ( ( dBeta + 1 ) * dP * dR / ( ( dBeta * dP ) + dR ) ); }
 
 double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, const vector<bool>& vecfHere,
-	const vector<bool>& vecfSomewhere, bool fInvert ) {
+	bool fInvert ) {
 	size_t				i, j, k, iOne, iTwo, iNeg;
 	uint64_t			iSum, iPos;
 	float				d, dAnswer;
@@ -825,8 +825,7 @@ double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, cons
 				continue;
 			if( !( vecfHere.empty( ) ||
 				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-				( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
-				!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
+				( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
 				continue;
 			if( fInvert )
 				d = 1 - d;
@@ -852,8 +851,7 @@ double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, cons
 				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
 				!( vecfHere.empty( ) ||
 				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-				( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
-				!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
+				( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
 				continue;
 			if( dAnswer ) {
 				iPos++;

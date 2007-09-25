@@ -79,7 +79,7 @@ private:
 public:
 	// Evaluation statistics
 	static double WilcoxonRankSum( const CDat&, const CDat&, const std::vector<bool>&,
-		const std::vector<bool>&, bool = false );
+		bool = false );
 	static double SumSquaredError( const CDat&, const CDat&, const std::vector<bool>&,
 		const std::vector<bool>&, bool = false );
 

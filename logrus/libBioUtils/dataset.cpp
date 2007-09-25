@@ -577,6 +577,10 @@ bool CDataFilter::IsExample( size_t iX, size_t iY ) const {
 			if( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] )
 				return false;
 
+		case CDat::EFilterEdge:
+			if( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) )
+				return false;
+
 		case CDat::EFilterTerm:
 			if( ( m_pAnswers && ( ( m_veciAnswers[ iX ] == -1 ) || ( m_veciAnswers[ iY ] == -1 ) ) ) ||
 				( !( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) &&
