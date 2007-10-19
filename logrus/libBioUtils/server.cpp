@@ -10,9 +10,6 @@ const char*	CServerImpl::c_szTimeout	= "timeout";
 
 bool CServer::Initialize( const char* szConfig, IServerClient* pClient ) {
 	SVariant			VarPort, VarTimeout;
-#ifndef _MSC_VER
-	struct sigaction	Sigact;
-#endif // _MSC_VER
 
 	if( !m_Config.Open( szConfig ) )
 		return false;
@@ -26,6 +23,9 @@ bool CServer::Initialize( const char* szConfig, IServerClient* pClient ) {
 	return Initialize( VarPort.m_i, VarTimeout.m_i, pClient ); }
 
 bool CServer::Initialize( size_t iPort, size_t iTimeout, IServerClient* pClient ) {
+#ifndef _MSC_VER
+	struct sigaction	Sigact;
+#endif // _MSC_VER
 
 	m_pClient = pClient;
 	m_iPort = iPort;

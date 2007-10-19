@@ -3,40 +3,41 @@
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
-	CDat				DatOne, DatTwo;
+	CDataPair			DatOne, DatTwo;
 	size_t				i, j, iOne, iTwo;
 	float				dOne, dTwo;
 	vector<size_t>		veciGenes;
-	size_t				aiOne[ 2 ], aiTwo[ 2 ], aiAgree[ 2 ], aiDisagree[ 2 ];
+	CFullMatrix<size_t>	MatConfusion;
 	size_t*				ai;
 	const char*			szOne;
 	const char*			szTwo;
+	bool				fOneSmall;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
 
-	if( !DatOne.Open( sArgs.first_arg, !!sArgs.memmap_flag ) ) {
+	if( !DatOne.Open( sArgs.first_arg, false, !!sArgs.memmap_flag ) ) {
 		cerr << "Couldn't open: " << sArgs.first_arg << endl;
 		return 1; }
-	if( !DatTwo.Open( sArgs.second_arg, !!sArgs.memmap_flag ) ) {
+	if( !DatTwo.Open( sArgs.second_arg, false, !!sArgs.memmap_flag ) ) {
 		cerr << "Couldn't open: " << sArgs.second_arg << endl;
 		return 1; }
 
 	cout << sArgs.first_arg << ": " << DatOne.GetGenes( ) << " genes" << endl;
 	cout << sArgs.second_arg << ": " << DatTwo.GetGenes( ) << " genes" << endl << endl;
 
-	memset( aiOne, 0, sizeof(aiOne) );
-	memset( aiTwo, 0, sizeof(aiTwo) );
-	memset( aiAgree, 0, sizeof(aiAgree) );
-	memset( aiDisagree, 0, sizeof(aiDisagree) );
-	szOne = ( DatOne.GetGenes( ) < DatTwo.GetGenes( ) ) ? sArgs.first_arg : sArgs.second_arg;
-	szTwo = ( DatOne.GetGenes( ) < DatTwo.GetGenes( ) ) ? sArgs.second_arg : sArgs.first_arg;
+	fOneSmall = DatOne.GetGenes( ) < DatTwo.GetGenes( );
+	szOne = fOneSmall ? sArgs.first_arg : sArgs.second_arg;
+	szTwo = fOneSmall ? sArgs.second_arg : sArgs.first_arg;
 	{
-		const CDat&	DatSmall	= ( DatOne.GetGenes( ) < DatTwo.GetGenes( ) ) ? DatOne : DatTwo;
-		CDat&	DatBig			= ( DatOne.GetGenes( ) < DatTwo.GetGenes( ) ) ? DatTwo : DatOne;
+		const CDataPair&	DatSmall	= fOneSmall ? DatOne : DatTwo;
+		CDataPair&			DatBig		= fOneSmall ? DatTwo : DatOne;
+		vector<bool>		vecfShared;
 
+		MatConfusion.Initialize( DatSmall.GetValues( ) + 1, DatBig.GetValues( ) + 1 );
+		MatConfusion.Clear( );
 		veciGenes.resize( DatSmall.GetGenes( ) );
 		for( i = 0; i < veciGenes.size( ); ++i )
 			veciGenes[ i ] = DatBig.GetGene( DatSmall.GetGene( i ) );
@@ -44,39 +45,26 @@ int main( int iArgs, char** aszArgs ) {
 			if( ( iOne = veciGenes[ i ] ) == -1 ) {
 				for( j = ( i + 1 ); j < DatSmall.GetGenes( ); ++j )
 					if( !CMeta::IsNaN( dOne = DatSmall.Get( i, j ) ) )
-						aiOne[ ( dOne > 0 ) ? 1 : 0 ]++;
+						MatConfusion.Get( DatSmall.Quantize( dOne ), DatBig.GetValues( ) )++;
 				continue; }
 			for( j = ( i + 1 ); j < DatSmall.GetGenes( ); ++j )
-				if( !CMeta::IsNaN( dOne = DatSmall.Get( i, j ) ) ) {
-					if( ( ( iTwo = veciGenes[ j ] ) == -1 ) || CMeta::IsNaN( dTwo = DatBig.Get( iOne, iTwo ) ) )
-						ai = aiOne;
-					else {
-						DatBig.Set( iOne, iTwo, CMeta::GetNaN( ) );
-						ai = ( ( dOne > 0 ) == ( dTwo > 0 ) ) ? aiAgree : aiDisagree; }
-					ai[ ( dOne > 0 ) ? 1 : 0 ]++; } }
+				if( !CMeta::IsNaN( dOne = DatSmall.Get( i, j ) ) )
+					MatConfusion.Get( DatSmall.Quantize( dOne ), ( ( iTwo = veciGenes[ j ] ) == -1 ) || CMeta::IsNaN( dTwo = DatBig.Get( iOne, iTwo ) ) ?
+						DatBig.GetValues( ) : DatBig.Quantize( dTwo ) )++; }
+		vecfShared.resize( DatBig.GetGenes( ) );
+		for( i = 0; i < vecfShared.size( ); ++i )
+			vecfShared[ i ] = ( DatSmall.GetGene( DatBig.GetGene( i ) ) != -1 );
 		for( i = 0; i < DatBig.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < DatBig.GetGenes( ); ++j )
-				if( !CMeta::IsNaN( dTwo = DatBig.Get( i, j ) ) )
-					aiTwo[ ( dTwo > 0 ) ? 1 : 0 ]++;
+				if( !( vecfShared[ i ] && vecfShared[ j ] ) && !CMeta::IsNaN( dTwo = DatBig.Get( i, j ) ) )
+					MatConfusion.Get( DatSmall.GetValues( ), DatBig.Quantize( dTwo ) )++;
 	}
 
-	cout << szOne << " +" << endl;
-	cout << aiAgree[ 1 ] << '\t' << aiOne[ 1 ] << '\t' << aiDisagree[ 1 ] << endl;
-	cout << aiTwo[ 1 ] << "\t\t" << aiTwo[ 0 ] << '\t' << szTwo << " -" << endl;
-	cout << aiDisagree[ 0 ] << '\t' << aiOne[ 0 ] << '\t' << aiAgree[ 0 ] << endl;
-	cout << szOne << " -" << endl;
-
-	cout << endl;
-/*
-	dOne = (float)aiAgree[ 1 ] / ( aiAgree[ 1 ] + aiOne[ 1 ] + aiDisagree[ 1 ] );
-	dTwo = (float)aiAgree[ 1 ] / ( aiAgree[ 1 ] + aiTwo[ 1 ] + aiDisagree[ 0 ] );
-	cout << ( ( dOne + dTwo ) / 2 ) << '\t';
-	dOne = (float)aiAgree[ 0 ] / ( aiAgree[ 0 ] + aiOne[ 0 ] + aiDisagree[ 0 ] );
-	dTwo = (float)aiAgree[ 0 ] / ( aiAgree[ 0 ] + aiTwo[ 0 ] + aiDisagree[ 1 ] );
-	cout << ( ( dOne + dTwo ) / 2 ) << endl;
-*/
-	cout << ( (float)aiAgree[ 1 ] / ( aiAgree[ 1 ] + aiDisagree[ 0 ] + aiDisagree[ 1 ] ) ) << '\t';
-	cout << ( (float)aiAgree[ 0 ] / ( aiAgree[ 0 ] + aiDisagree[ 0 ] + aiDisagree[ 1 ] ) ) << endl;
+	cout << '\t' << szTwo << endl << szOne;
+	for( i = 0; i < MatConfusion.GetRows( ); ++i ) {
+		for( j = 0; j < MatConfusion.GetColumns( ); ++j )
+			cout << '\t' << MatConfusion.Get( i, j );
+		cout << endl; }
 
 	CMeta::Shutdown( );
 	return 0; }
