@@ -99,6 +99,7 @@ int main( int iArgs, char** aszArgs ) {
 			ifsmGenes.close( ); }
 
 	if( sArgs.server_arg ) {
+#ifdef XML_ENABLED
 		XMLPlatformUtils::Initialize( );
 		XPathEvaluator::initialize( );
 		{
@@ -115,7 +116,9 @@ int main( int iArgs, char** aszArgs ) {
 #endif // WIN32
 		}
 		XPathEvaluator::terminate( );
-		XMLPlatformUtils::Terminate( ); }
+		XMLPlatformUtils::Terminate( );
+#endif // XML_ENABLED
+	}
 	else if( sArgs.exec_arg )
 		Parser.ProcessLine( sArgs.exec_arg );
 	else {

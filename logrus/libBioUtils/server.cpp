@@ -4,30 +4,32 @@
 
 namespace libBioUtils {
 
+CServer*	CServerImpl::s_pServer		= NULL;
 const char*	CServerImpl::c_szPort		= "port";
 const char*	CServerImpl::c_szTimeout	= "timeout";
-CServer*	CServerImpl::s_pServer		= NULL;
 
 bool CServer::Initialize( const char* szConfig, IServerClient* pClient ) {
-	SVariant			Var;
+	SVariant			VarPort, VarTimeout;
 #ifndef _MSC_VER
 	struct sigaction	Sigact;
 #endif // _MSC_VER
 
-	m_pClient = pClient;
 	if( !m_Config.Open( szConfig ) )
 		return false;
-	
-	Var = m_Config.Get( c_szPort );
-	if( Var.m_eType != SVariant::eInt )
+	VarPort = m_Config.Get( c_szPort );
+	if( VarPort.m_eType != SVariant::eInt )
 		return false;
-	m_iPort = Var.m_i;
-
-	Var = m_Config.Get( c_szTimeout );
-	if( Var.m_eType != SVariant::eInt )
+	VarTimeout = m_Config.Get( c_szTimeout );
+	if( VarTimeout.m_eType != SVariant::eInt )
 		return false;
-	m_iTimeout = Var.m_i;
 
+	return Initialize( VarPort.m_i, VarTimeout.m_i, pClient ); }
+
+bool CServer::Initialize( size_t iPort, size_t iTimeout, IServerClient* pClient ) {
+
+	m_pClient = pClient;
+	m_iPort = iPort;
+	m_iTimeout = iTimeout;
 #ifndef _MSC_VER
 	Sigact.sa_handler = Alarm;
 	memset( &Sigact.sa_mask, 0, sizeof(Sigact.sa_mask) );
@@ -84,13 +86,13 @@ bool CServer::Start( ) {
 	return true; }
 
 void CServer::Listen( ) {
-	SOCKET			iClient;
-	socklen_t		iSize;
-	IServerClient*	pClient;
-	pthread_t		thrdClient;
-	sockaddr_in		Addr;
+	SOCKET				iClient;
+	socklen_t			iSize;
+	CServerClientImpl*	pClient;
+	pthread_t			thrdClient;
+	sockaddr_in			Addr;
 #ifndef _MSC_VER
-	itimerval		Time;
+	itimerval			Time;
 
 	memset( &Time, 0, sizeof(Time) );
 #endif // _MSC_VER
@@ -107,16 +109,12 @@ void CServer::Listen( ) {
 		setitimer( ITIMER_REAL, &Time, NULL );
 #endif // _MSC_VER
 
-		pClient = m_pClient->NewInstance( );
-		pClient->SetParent( this );
-		pClient->SetSocket( iClient );
-		pClient->SetConfig( &m_Config );
-
+		pClient = new CServerClientImpl( iClient, m_pClient->NewInstance( iClient, &m_Config ) );
 		iSize = ntohl( Addr.sin_addr.s_addr );
 		g_CatBioUtils.info( "CServer::Listen( ) client 0x%08x connected from %d.%d.%d.%d",
 			pClient, ( iSize >> 24 ) & 0xFF, ( iSize >> 16 ) & 0xFF, ( iSize >> 8 ) & 0xFF,
 			iSize & 0xFF );
-		pthread_create( &thrdClient, NULL, pClient->GetStartRoutine( ), pClient );
+		pthread_create( &thrdClient, NULL, CServerClientImpl::StartRoutine, pClient );
 		pthread_detach( thrdClient ); } }
 
 void CServer::Stop( ) {

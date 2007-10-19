@@ -670,4 +670,50 @@ bool CBayesNetFN::Evaluate( const CPCLPair&, CPCL&, bool, int ) const {
 
 	return false; }
 
+// CBayesNetMinimal //////////////////////////////////////////////////////////
+
+bool CBayesNetMinimal::Open( const CBayesNetSmile& BNSmile ) {
+	CDataMatrix		Mat;
+	vector<string>	vecstrNodes;
+	size_t			i;
+
+	if( m_adNY ) {
+		delete[] m_adNY;
+		m_adNY = NULL; }
+	BNSmile.GetNodes( vecstrNodes );
+	if( !vecstrNodes.size( ) )
+		return false;
+	BNSmile.GetCPT( 0, m_MatRoot );
+	m_vecNodes.resize( vecstrNodes.size( ) - 1 );
+	for( i = 0; i < m_vecNodes.size( ); ++i ) {
+		BNSmile.GetCPT( i + 1, m_vecNodes[ i ].m_MatCPT );
+		if( m_vecNodes[ i ].m_MatCPT.GetColumns( ) != m_MatRoot.GetRows( ) )
+			return false;
+		m_vecNodes[ i ].m_bDefault = BNSmile.GetZero( i + 1 ); }
+	m_adNY = new float[ m_MatRoot.GetRows( ) ];
+
+	return true; }
+
+float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum ) const {
+	float			dNum, dDen;
+	size_t			i, j;
+	unsigned char	c;
+
+	if( !m_adNY )
+		return CMeta::GetNaN( );
+
+	for( i = 0; i < m_MatRoot.GetRows( ); ++i )
+		m_adNY[ i ] = log( m_MatRoot.Get( i, 0 ) );
+	for( i = 0; i < m_vecNodes.size( ); ++i ) {
+		if( ( ( c = vecbDatum[ i + 1 ] ) == 0xFF ) && ( ( c = m_vecNodes[ i ].m_bDefault ) == 0xFF ) )
+			continue;
+		for( j = 0; j < m_vecNodes[ i ].m_MatCPT.GetColumns( ); ++j )
+			m_adNY[ j ] += log( m_vecNodes[ i ].m_MatCPT.Get( c, j ) ); }
+
+	dNum = dDen = exp( m_adNY[ 0 ] );
+	for( i = 1; i < m_MatRoot.GetRows( ); ++i )
+		dDen += exp( m_adNY[ i ] );
+
+	return ( dNum / dDen ); }
+
 }

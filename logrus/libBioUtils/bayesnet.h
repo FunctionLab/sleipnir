@@ -100,6 +100,12 @@ public:
 	bool GetCPT( size_t, CDataMatrix& ) const;
 };
 
+class CBayesNetMinimal : CBayesNetMinimalImpl {
+public:
+	bool Open( const CBayesNetSmile& );
+	float Evaluate( const std::vector<unsigned char>& ) const;
+};
+
 // MEFIT ON
 
 }

@@ -8,6 +8,7 @@ namespace libBioUtils {
 class CServer : CServerImpl {
 public:
 	bool Initialize( const char*, IServerClient* );
+	bool Initialize( size_t, size_t, IServerClient* );
 	bool Start( );
 	void Listen( );
 	void Stop( );

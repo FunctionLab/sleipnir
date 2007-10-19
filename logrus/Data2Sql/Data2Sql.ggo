@@ -1,0 +1,11 @@
+package	"Data2Sql"
+version	"1.0"
+purpose	"Convert multiple dat files to a single SQL table"
+
+section "Optional"
+option	"input"		i	"Input gene mapping"	string	typestr="filename"
+option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"memmap"	m	"Memory map input/output"	flag	off
+option	"datasets"	d	"Output datasets table"	flag	off
+option	"block"		b	"Block size for SQL chunking"	int	default="1000"
+option	"table"		t	"SQL table name"	string	default="datapairs"

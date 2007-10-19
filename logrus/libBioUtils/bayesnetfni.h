@@ -151,6 +151,21 @@ protected:
 	DSL_network			m_SmileNet;
 };
 
+class CBayesNetMinimalNode {
+public:
+	unsigned char	m_bDefault;
+	CDataMatrix		m_MatCPT;
+};
+
+class CBayesNetMinimalImpl {
+protected:
+	CBayesNetMinimalImpl( ) : m_adNY(NULL) { }
+
+	float*								m_adNY;
+	CDataMatrix							m_MatRoot;
+	std::vector<CBayesNetMinimalNode>	m_vecNodes;
+};
+
 }
 
 #endif // BAYESNETFNI_H
