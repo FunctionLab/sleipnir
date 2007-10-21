@@ -296,12 +296,16 @@ void CBayesNetSmileImpl::LearnExpected( DSL_node* pNode, DSL_Dmatrix* pExpected,
 
 // MEFIT OFF
 
+#ifdef PNL_ENABLED
+
 bool CBayesNetSmile::Convert( CBayesNetPNL& BNPNL ) const {
 
 	if( !m_fSmileNet )
 		return false;
 
 	return( ConvertGraph( BNPNL ) && ConvertCPTs( BNPNL ) ); }
+
+#endif // PNL_ENABLED
 
 // MEFIT ON
 

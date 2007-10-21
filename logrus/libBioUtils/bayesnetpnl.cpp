@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#ifdef PNL_ENABLED
 #pragma warning (disable: 4244 4267)
 #include <pnl_dll.hpp>
 #pragma warning (default: 4244 4267)
@@ -217,3 +218,5 @@ bool CBayesNetPNL::Evaluate( const CPCLPair&, CPCL&, bool, int ) const {
 	return false; }
 
 }
+
+#endif // PNL_ENABLED

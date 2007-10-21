@@ -29,7 +29,9 @@ int main( int iArgs, char** aszArgs ) {
 #endif // !( defined(_MSC_VER) && defined(_DEBUG) )
 
 	CBayesNetSmile	BNSmile( !!sArgs.group_flag );
+#ifdef PNL_ENABLED
 	CBayesNetPNL	BNPNL( !!sArgs.group_flag );
+#endif // PNL_ENABLED
 	CBayesNetFN		BNFN;
 
 	if( sArgs.function_flag ) {
@@ -41,10 +43,12 @@ int main( int iArgs, char** aszArgs ) {
 		if( !BNSmile.Open( sArgs.input_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.input_arg << endl;
 			return 1; }
+#ifdef PNL_ENABLED
 		if( sArgs.pnl_flag ) {
 			BNSmile.Convert( BNPNL );
 			pBN = &BNPNL; }
 		else
+#endif // PNL_ENABLED
 			pBN = &BNSmile; }
 
 	if( ( iRet = Genes( sArgs.genes_arg, GenesIn ) ) ||

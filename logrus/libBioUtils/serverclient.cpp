@@ -81,13 +81,13 @@ void CServerClientImpl::ReadMessage( ) {
 	size_t			iRead, iTotal, iPrev;
 
 	m_vecbMessage.clear( );
-	if( !( iRead = recv( m_iSocket, (char*)acBuffer, c_iBuffer, 0 ) ) || ( iRead < sizeof(uint32_t) ) )
+	if( !( iRead = recv( m_iSocket, (char*)acBuffer, c_iBuffer, 0 ) ) || ( iRead == -1 ) ||
+		( iRead < sizeof(uint32_t) ) )
 		return;
 	iTotal = *(uint32_t*)acBuffer;
 	m_vecbMessage.resize( max( iTotal, iPrev = iRead - sizeof(uint32_t) ) );
 	copy( acBuffer + sizeof(uint32_t), acBuffer + iRead, m_vecbMessage.begin( ) );
-	while( ( m_vecbMessage.size( ) < iTotal ) &&
-		( iRead = recv( m_iSocket, (char*)acBuffer, c_iBuffer, 0 ) ) ) {
+	while( ( iPrev < iTotal ) && ( iRead = recv( m_iSocket, (char*)acBuffer, c_iBuffer, 0 ) ) ) {
 		if( ( iPrev + iRead ) >= m_vecbMessage.size( ) )
 			m_vecbMessage.resize( iPrev + iRead );
 		copy( acBuffer, acBuffer + iRead, m_vecbMessage.begin( ) + iPrev );

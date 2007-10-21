@@ -32,7 +32,9 @@ public:
 	CBayesNetSmile( bool = true );
 
 	bool Open( const std::vector<std::string>&, size_t );
+#ifdef PNL_ENABLED
 	bool Convert( CBayesNetPNL& ) const;
+#endif // PNL_ENABLED
 	void SetDefault( const CBayesNetSmile& );
 	bool Open( const IDataset*, const std::vector<std::string>&, const std::vector<size_t>& );
 	bool Open( const CBayesNetSmile&, const std::vector<CBayesNetSmile*>& );
@@ -56,6 +58,8 @@ public:
 	bool GetCPT( size_t, CDataMatrix& ) const;
 };
 
+#ifdef PNL_ENABLED
+
 class CBayesNetPNL : public CBayesNetPNLImpl, public IBayesNet {
 public:
 	CBayesNetPNL( bool = true );
@@ -78,6 +82,8 @@ public:
 	void Reverse( size_t );
 	bool GetCPT( size_t, CDataMatrix& ) const;
 };
+
+#endif // PNL_ENABLED
 
 // MEFIT OFF
 
@@ -104,6 +110,10 @@ class CBayesNetMinimal : CBayesNetMinimalImpl {
 public:
 	bool Open( const CBayesNetSmile& );
 	float Evaluate( const std::vector<unsigned char>& ) const;
+
+	size_t GetNodes( ) const {
+
+		return ( m_vecNodes.size( ) + 1 ); }
 };
 
 // MEFIT ON

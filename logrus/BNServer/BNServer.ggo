@@ -7,6 +7,16 @@ option	"input"		i	"Context IDs and names"	string	typestr="filename"
 option	"directory"	d	"Bayes net directory"	string	typestr="directory"	default="."
 option	"default"	b	"Bayes net for no context"	string	typestr="filename"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"xdsl"		x	"Use XDSL files instead of DSL"	flag	on
+
+section "Server"
 option	"port"		p	"Server port"	int	default="1234"
 option	"timeout"	t	"Server timeout"	int	default="100"
-option	"xdsl"		x	"Use XDSL files instead of DSL"	flag	on
+option	"cache"		c	"Size of gene cache"	int	default="100"
+
+section "Database"
+option	"host"		H	"Database hostname"	string	default="localhost"
+option	"dbport"	P	"Database port"	int	default="3306"
+option	"database"	D	"Database name"	string
+option	"username"	U	"Database username"	string	default="root"
+option	"password"	L	"Database password"	string

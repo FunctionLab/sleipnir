@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#ifdef PNL_ENABLED
 #pragma warning (disable: 4244 4267)
 #include <pnl_dll.hpp>
 #pragma warning (default: 4244 4267)
@@ -125,3 +126,5 @@ bool CBayesNetSmileImpl::ConvertCPTs( CBayesNetPNL& BNPNL ) const {
 	return true; }
 
 }
+
+#endif // PNL_ENABLED

@@ -109,8 +109,8 @@ void CServer::Listen( ) {
 		setitimer( ITIMER_REAL, &Time, NULL );
 #endif // _MSC_VER
 
-		pClient = new CServerClientImpl( iClient, m_pClient->NewInstance( iClient, &m_Config ) );
-		iSize = ntohl( Addr.sin_addr.s_addr );
+		pClient = new CServerClientImpl( iClient, m_pClient->NewInstance( iClient,
+			iSize = ntohl( Addr.sin_addr.s_addr ), ntohs( Addr.sin_port ), &m_Config ) );
 		g_CatBioUtils.info( "CServer::Listen( ) client 0x%08x connected from %d.%d.%d.%d",
 			pClient, ( iSize >> 24 ) & 0xFF, ( iSize >> 16 ) & 0xFF, ( iSize >> 8 ) & 0xFF,
 			iSize & 0xFF );
