@@ -694,7 +694,7 @@ bool CBayesNetMinimal::Open( const CBayesNetSmile& BNSmile ) {
 
 	return true; }
 
-float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum ) const {
+float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, bool fAnswers ) const {
 	float			dNum, dDen;
 	size_t			i, j;
 	unsigned char	c;
@@ -705,7 +705,8 @@ float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum ) const
 	for( i = 0; i < m_MatRoot.GetRows( ); ++i )
 		m_adNY[ i ] = log( m_MatRoot.Get( i, 0 ) );
 	for( i = 0; i < m_vecNodes.size( ); ++i ) {
-		if( ( ( c = vecbDatum[ i + 1 ] ) == 0xFF ) && ( ( c = m_vecNodes[ i ].m_bDefault ) == 0xFF ) )
+		if( ( ( c = vecbDatum[ i + ( fAnswers ? 1 : 0 ) ] ) == 0xFF ) &&
+			( ( c = m_vecNodes[ i ].m_bDefault ) == 0xFF ) )
 			continue;
 		for( j = 0; j < m_vecNodes[ i ].m_MatCPT.GetColumns( ); ++j )
 			m_adNY[ j ] += log( m_vecNodes[ i ].m_MatCPT.Get( c, j ) ); }

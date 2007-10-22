@@ -12,6 +12,7 @@ bool CDatabaselet::Open( const string& strFile, const vector<string>& vecstrGene
 	uint32_t iDatasets ) {
 	uint32_t	iSize;
 	size_t		i;
+	char*		acFiller;
 
 	if( !m_pfstm )
 		m_pfstm = new fstream( );
@@ -36,6 +37,12 @@ bool CDatabaselet::Open( const string& strFile, const vector<string>& vecstrGene
 		m_iHeader += m_vecstrGenes[ i ].size( ) + 1; }
 	m_pfstm->seekp( 0 );
 	m_pfstm->write( (char*)&m_iHeader, sizeof(m_iHeader) );
+
+	m_pfstm->seekp( m_iHeader );
+	acFiller = new char[ GetOffset( ) ];
+	memset( acFiller, -1, GetOffset( ) );
+	for( i = 0; i < m_vecstrGenes.size( ); ++i )
+		m_pfstm->write( acFiller, GetOffset( ) );
 
 	return true; }
 
@@ -74,8 +81,9 @@ bool CDatabaselet::Open( const string& strFile ) {
 	m_pfstm->read( acBuffer, m_iHeader - sizeof(m_iHeader) - sizeof(m_iGenes) - sizeof(m_iDatasets) -
 		sizeof(iSize) );
 	m_vecstrGenes.resize( iSize );
-	for( i = 0,pc = acBuffer; i < m_vecstrGenes.size( ); ++i,pc += m_vecstrGenes[ i ].length( ) + 1 )
+	for( i = 0,pc = acBuffer; i < m_vecstrGenes.size( ); pc += m_vecstrGenes[ i++ ].length( ) + 1 )
 		m_vecstrGenes[ i ] = pc;
+	delete[] acBuffer;
 
 	return true; }
 
@@ -93,6 +101,7 @@ bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strData, 
 
 	pBN->GetNodes( vecstrNodes );
 	iDatasets = vecstrNodes.size( ) - 1;
+	m_iGenes = vecstrGenes.size( );
 
 	m_vecDBs.resize( iFiles );
 	for( i = 0; i < m_vecDBs.size( ); ++i ) {
@@ -122,12 +131,15 @@ bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strData, 
 		for( j = 0; j < veciGenes.size( ); ++j ) {
 			CDatabaselet&	DB	= m_vecDBs[ j % m_vecDBs.size( ) ];
 
+			if( !( j % 100 ) )
+				g_CatBioUtils.notice( "CDatabase::Open( %s, %d, %d ) gene %d/%d", strDir.c_str( ), iFiles,
+					fMemmap, j, veciGenes.size( ) );
 			iDBOne = DB.GetGene( vecstrGenes[ j ] );
 			iOne = veciGenes[ j ];
-			for( k = 0; k < veciGenes.size( ); ++k ) {
-				b = ( ( iOne == -1 ) || ( ( iTwo = veciGenes[ k ] ) == -1 ) ) ? -1 :
-					Dat.Quantize( Dat.Get( iOne, iTwo ) );
-				DB.Write( iDBOne, k, i, b ); } } }
+			for( k = 0; k < veciGenes.size( ); ++k )
+				if( ( iOne != -1 ) && ( ( iTwo = veciGenes[ k ] ) != -1 ) &&
+					( ( b = Dat.Quantize( Dat.Get( iOne, iTwo )) ) != 0xFF ) )
+					DB.Write( iDBOne, k, i, b ); } }
 
 	return true; }
 
@@ -157,17 +169,18 @@ bool CDatabase::Open( const string& strDir ) {
 
 		i = atoi( CMeta::Deextension( CMeta::Basename( strFile.c_str( ) ) ).c_str( ) );
 		if( vecstrFiles.size( ) <= i )
-			vecstrFiles.resize( i );
+			vecstrFiles.resize( i + 1 );
 		else if( vecstrFiles[ i ].length( ) != 0 ) {
 			g_CatBioUtils.error( "CDatabase::Open( %s ) duplicate file: %s (%d)", strDir.c_str( ),
 				strFile.c_str( ), i );
 			return false; }
-		vecstrFiles[ i ] = strFile; }
+		vecstrFiles[ i ] = strDir + '/' + strFile; }
 
 	m_vecDBs.resize( vecstrFiles.size( ) );
-	for( i = 0; i < m_vecDBs.size( ); ++i )
+	for( m_iGenes = i = 0; i < m_vecDBs.size( ); ++i ) {
 		if( !m_vecDBs[ i ].Open( vecstrFiles[ i ] ) )
 			return false;
+		m_iGenes += m_vecDBs[ i ].GetGenes( ); }
 
 	return true; }
 

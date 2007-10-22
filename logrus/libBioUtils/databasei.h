@@ -31,6 +31,10 @@ public:
 
 		return -1; }
 
+	size_t GetGenes( ) const {
+
+		return m_vecstrGenes.size( ); }
+
 private:
 	size_t GetOffset( ) const {
 
@@ -61,7 +65,7 @@ protected:
 	static const char	c_acExtension[];
 
 	std::vector<CDatabaselet>	m_vecDBs;
-	std::vector<size_t>			m_veciGenes;
+	size_t						m_iGenes;
 };
 
 }
