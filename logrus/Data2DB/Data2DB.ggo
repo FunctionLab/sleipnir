@@ -1,0 +1,11 @@
+package	"Data2DB"
+version	"1.0"
+purpose	"Converts quantized DATs into compact database file collections"
+
+option	"network"	n	"Input (X)DSL Bayes net"	string	typestr="filename"	yes
+section "Optional"
+option	"input"		i	"Input gene mapping"	string	typestr="filename"
+option	"dir_in"	d	"Data directory"	string	typestr="directory"	default="."
+option	"dir_out"	D	"Database directory"	string	typestr="directory"	default="."
+option	"memmap"	m	"Memory map input/output"	flag	off
+option	"verbosity"	v	"Message verbosity"	int	default="5"
