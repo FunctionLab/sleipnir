@@ -1,12 +1,7 @@
 #ifndef SERVERCLIENT_H
 #define SERVERCLIENT_H
 
-#ifdef _MSC_VER
-#include <basetsd.h>
-
-typedef UINT16	uint16_t;
-typedef UINT32	uint32_t;
-#endif // _MSC_VER
+#include "typesi.h"
 
 namespace libBioUtils {
 

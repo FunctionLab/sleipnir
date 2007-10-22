@@ -3,12 +3,6 @@
 #include "server.h"
 #include "xmlvacuum.h"
 
-#ifdef _MSC_VER
-#include <basetsd.h>
-
-typedef UINT32	uint32_t;
-#endif // _MSC_VER
-
 namespace libBioUtils {
 
 #ifdef XML_ENABLED

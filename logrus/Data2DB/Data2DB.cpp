@@ -16,6 +16,7 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
+	EnableXdslFormat( );
 
 	if( sArgs.input_arg ) {
 		ifsm.open( sArgs.input_arg );
@@ -43,7 +44,8 @@ int main( int iArgs, char** aszArgs ) {
 	if( !BNSmile.Open( sArgs.network_arg ) ) {
 		cerr << "Could not open: " << sArgs.network_arg << endl;
 		return 1; }
-	if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, !!sArgs.memmap_flag ) ) {
+	if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, sArgs.files_arg,
+		!!sArgs.memmap_flag ) ) {
 		cerr << "Could not open data" << endl;
 		return 1; }
 
