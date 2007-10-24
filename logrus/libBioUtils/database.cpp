@@ -8,18 +8,32 @@ namespace libBioUtils {
 const char	CDatabaseImpl::c_acDAB[]		= ".dab";
 const char	CDatabaseImpl::c_acExtension[]	= ".db";
 
+CDatabaselet::CDatabaselet( ) : m_pfstm(NULL) {
+
+	pthread_mutex_init( &m_mutx, NULL ); }
+
+CDatabaselet::~CDatabaselet( ) {
+
+	pthread_mutex_destroy( &m_mutx );
+	if( m_pfstm )
+		delete m_pfstm; }
+
 bool CDatabaselet::Open( const string& strFile, const vector<string>& vecstrGenes, uint32_t iGenes,
 	uint32_t iDatasets ) {
 	uint32_t	iSize;
 	size_t		i;
 	char*		acFiller;
 
-	if( !m_pfstm )
+	if( m_pfstm )
+		m_pfstm->clear( );
+	else
 		m_pfstm = new fstream( );
 
 	m_pfstm->open( strFile.c_str( ), ios_base::in | ios_base::out | ios_base::binary | ios_base::trunc );
-	if( !m_pfstm->is_open( ) )
-		return false;
+	if( !m_pfstm->is_open( ) ) {
+		g_CatBioUtils.error( "CDatabaselet::Open( %s, %u, %u ) open failed", strFile.c_str( ), iGenes,
+			iDatasets );
+		return false; }
 
 	m_iGenes = iGenes;
 	m_iDatasets = iDatasets;
@@ -43,6 +57,7 @@ bool CDatabaselet::Open( const string& strFile, const vector<string>& vecstrGene
 	memset( acFiller, -1, GetOffset( ) );
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )
 		m_pfstm->write( acFiller, GetOffset( ) );
+	delete[] acFiller;
 
 	return true; }
 
@@ -53,9 +68,21 @@ void CDatabaselet::Write( size_t iOne, size_t iTwo, size_t iDataset, unsigned ch
 
 bool CDatabaselet::Get( size_t iOne, size_t iTwo, vector<unsigned char>& vecbData ) const {
 
+	pthread_mutex_lock( &m_mutx );
 	m_pfstm->seekg( GetOffset( iOne, iTwo ) );
 	vecbData.resize( m_iDatasets );
 	m_pfstm->read( (char*)&vecbData[ 0 ], vecbData.size( ) );
+	pthread_mutex_unlock( &m_mutx );
+
+	return true; }
+
+bool CDatabaselet::Get( size_t iGene, vector<unsigned char>& vecbData ) const {
+
+	pthread_mutex_lock( &m_mutx );
+	m_pfstm->seekg( GetOffset( iGene ) );
+	vecbData.resize( GetOffset( ) );
+	m_pfstm->read( (char*)&vecbData[ 0 ], vecbData.size( ) );
+	pthread_mutex_unlock( &m_mutx );
 
 	return true; }
 
@@ -65,12 +92,15 @@ bool CDatabaselet::Open( const string& strFile ) {
 	char*		pc;
 	size_t		i;
 
-	if( !m_pfstm )
+	if( m_pfstm )
+		m_pfstm->clear( );
+	else
 		m_pfstm = new fstream( );
 
 	m_pfstm->open( strFile.c_str( ), ios_base::binary | ios_base::in );
-	if( !m_pfstm->is_open( ) )
-		return false;
+	if( !m_pfstm->is_open( ) ) {
+		g_CatBioUtils.error( "CDatabaselet::Open( %s ) open failed", strFile.c_str( ) );
+		return false; }
 
 	m_pfstm->read( (char*)&m_iHeader, sizeof(m_iHeader) );
 	m_pfstm->read( (char*)&m_iGenes, sizeof(m_iGenes) );
@@ -96,8 +126,10 @@ bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strData, 
 	vector<size_t>	veciGenes;
 	unsigned char	b;
 
-	if( !pBN )
-		return false;
+	if( !pBN ) {
+			g_CatBioUtils.error( "CDatabase::Open( %s, %d, %d ) null Bayes net", strDir.c_str( ),
+				iFiles, fMemmap );
+		return false; }
 
 	pBN->GetNodes( vecstrNodes );
 	iDatasets = vecstrNodes.size( ) - 1;

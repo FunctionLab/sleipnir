@@ -17,6 +17,10 @@ public:
 
 		return m_vecDBs[ iOne % m_vecDBs.size( ) ].Get( iOne / m_vecDBs.size( ), iTwo, vecbData ); }
 
+	bool Get( size_t iGene, std::vector<unsigned char>& vecbData ) const {
+
+		return m_vecDBs[ iGene % m_vecDBs.size( ) ].Get( iGene / m_vecDBs.size( ), vecbData ); }
+
 	size_t GetGenes( ) const {
 
 		return m_iGenes; }

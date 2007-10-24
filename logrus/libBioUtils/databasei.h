@@ -10,17 +10,14 @@ namespace libBioUtils {
 
 class CDatabaselet {
 public:
-	CDatabaselet( ) : m_pfstm(NULL) { }
-
-	~CDatabaselet( ) {
-
-		if( m_pfstm )
-			delete m_pfstm; }
+	CDatabaselet( );
+	~CDatabaselet( );
 
 	bool Open( const std::string&, const std::vector<std::string>&, uint32_t, uint32_t );
 	bool Open( const std::string& );
 	void Write( size_t, size_t, size_t, unsigned char );
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
+	bool Get( size_t, std::vector<unsigned char>& ) const;
 
 	size_t GetGene( const std::string& strGene ) const {
 		size_t	i;
@@ -57,6 +54,7 @@ private:
 	uint32_t					m_iDatasets;
 	std::vector<std::string>	m_vecstrGenes;
 	std::fstream*				m_pfstm;
+	mutable pthread_mutex_t		m_mutx;
 };
 
 class CDatabaseImpl {
