@@ -15,11 +15,11 @@ public:
 
 	bool Get( size_t iOne, size_t iTwo, std::vector<unsigned char>& vecbData ) const {
 
-		return m_vecDBs[ iOne % m_vecDBs.size( ) ].Get( iOne / m_vecDBs.size( ), iTwo, vecbData ); }
+		return m_vecpDBs[ iOne % m_vecpDBs.size( ) ]->Get( iOne / m_vecpDBs.size( ), iTwo, vecbData ); }
 
 	bool Get( size_t iGene, std::vector<unsigned char>& vecbData ) const {
 
-		return m_vecDBs[ iGene % m_vecDBs.size( ) ].Get( iGene / m_vecDBs.size( ), vecbData ); }
+		return m_vecpDBs[ iGene % m_vecpDBs.size( ) ]->Get( iGene / m_vecpDBs.size( ), vecbData ); }
 
 	size_t GetGenes( ) const {
 

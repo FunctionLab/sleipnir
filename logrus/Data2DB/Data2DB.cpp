@@ -3,6 +3,9 @@
 
 int main( int iArgs, char** aszArgs ) {
 	static const size_t	c_iBuffer	= 1024;
+#ifdef WIN32
+	pthread_win32_process_attach_np( );
+#endif // WIN32
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
 	istream*			pistm;
@@ -50,4 +53,7 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 
 	CMeta::Shutdown( );
+#ifdef WIN32
+	pthread_win32_process_detach_np( );
+#endif // WIN32
 	return 0; }

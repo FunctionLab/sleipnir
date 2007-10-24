@@ -1,10 +1,14 @@
 #ifndef DATABASEI_H
 #define DATABASEI_H
 
+#define DATABASE_NIBBLES
+
 #include <fstream>
 #include <vector>
 
 #include "typesi.h"
+
+struct pthread_mutex_t_;
 
 namespace libBioUtils {
 
@@ -33,9 +37,27 @@ public:
 		return m_vecstrGenes.size( ); }
 
 private:
+	size_t GetDatasets( ) const {
+
+		return ( ( m_iDatasets
+#ifdef DATABASE_NIBBLES
+			+ 1 ) / 2
+#else // DATABASE_NIBBLES
+			)
+#endif // DATABASE_NIBBLES
+			); }
+
+	size_t GetDataset( size_t iDataset ) const {
+
+		return ( iDataset
+#ifdef DATABASE_NIBBLES
+			/ 2
+#endif // DATABASE_NIBBLES
+			); }
+
 	size_t GetOffset( ) const {
 
-		return ( m_iDatasets * m_iGenes ); }
+		return ( GetDatasets( ) * m_iGenes ); }
 
 	size_t GetOffset( size_t iGene ) const {
 
@@ -43,18 +65,18 @@ private:
 
 	size_t GetOffset( size_t iOne, size_t iTwo ) const {
 
-		return ( GetOffset( iOne ) + ( m_iDatasets * iTwo ) ); }
+		return ( GetOffset( iOne ) + ( GetDatasets( ) * iTwo ) ); }
 
 	size_t GetOffset( size_t iOne, size_t iTwo, size_t iDataset ) const {
 
-		return ( GetOffset( iOne, iTwo ) + iDataset ); }
+		return ( GetOffset( iOne, iTwo ) + GetDataset( iDataset ) ); }
 
 	uint32_t					m_iHeader;
 	uint32_t					m_iGenes;
 	uint32_t					m_iDatasets;
 	std::vector<std::string>	m_vecstrGenes;
-	std::fstream*				m_pfstm;
-	mutable pthread_mutex_t		m_mutx;
+	mutable std::fstream		m_fstm;
+	mutable pthread_mutex_t_*	m_mutx;
 };
 
 class CDatabaseImpl {
@@ -62,7 +84,18 @@ protected:
 	static const char	c_acDAB[];
 	static const char	c_acExtension[];
 
-	std::vector<CDatabaselet>	m_vecDBs;
+	~CDatabaseImpl( ) {
+
+		Clear( ); }
+
+	void Clear( ) {
+		size_t	i;
+
+		for( i = 0; i < m_vecpDBs.size( ); ++i )
+			delete m_vecpDBs[ i ];
+		m_vecpDBs.clear( ); }
+
+	std::vector<CDatabaselet*>	m_vecpDBs;
 	size_t						m_iGenes;
 };
 

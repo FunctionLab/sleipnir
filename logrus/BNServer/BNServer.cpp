@@ -92,7 +92,9 @@ IServerClient* CBNServer::NewInstance( SOCKET iSocket, uint32_t iHost, uint16_t 
 	char	acBuffer[ 16 ];
 	in_addr	sAddr;
 
+#pragma warning(disable : 4996)
 	sprintf( acBuffer, "%hu", sPort );
+#pragma warning(default : 4996)
 	sAddr.s_addr = htonl( iHost );
 	strConnection = (string)inet_ntoa( sAddr ) + ":" + acBuffer;
 	return new CBNServer( m_BNDefault, m_vecBNs, iSocket, m_Database, strConnection ); }
@@ -120,17 +122,17 @@ bool CBNServer::ProcessMessage( const vector<unsigned char>& vecbMessage ) {
 	return true; }
 
 bool CBNServer::Get( size_t iGene, size_t iContext ) {
-	const CBayesNetMinimal&	BNet		= iContext ? m_vecBNs[ iContext ] : m_BNDefault;
-	size_t					i;
-	vector<unsigned char>	vecbDatum;
+	const CBayesNetMinimal&	BNet		= ( iContext && m_vecBNs.size( ) ) ?
+											m_vecBNs[ iContext % m_vecBNs.size( ) ] : m_BNDefault;
+	vector<unsigned char>	vecbData;
 	uint32_t				iSize;
 
+	if( !m_Database.Get( iGene - 1, vecbData ) )
+		return false;
 	if( !m_adValues )
 		m_adValues = new float[ m_iGenes ];
-	for( i = 0; i < m_iGenes; ++i ) {
-		if( !m_Database.Get( iGene - 1, i, vecbDatum ) )
-			return false;
-		m_adValues[ i ] = BNet.Evaluate( vecbDatum, false ); }
+	if( !BNet.Evaluate( vecbData, m_adValues, m_iGenes ) )
+		return false;
 
 	iSize = (uint32_t)( m_iGenes * sizeof(*m_adValues) );
 	send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
