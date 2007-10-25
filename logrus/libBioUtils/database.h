@@ -23,7 +23,11 @@ public:
 
 	size_t GetGenes( ) const {
 
-		return m_iGenes; }
+		return m_mapstriGenes.size( ); }
+
+	size_t GetGene( const std::string& strGene ) const {
+
+		return CDatabaseImpl::GetGene( strGene ); }
 };
 
 }

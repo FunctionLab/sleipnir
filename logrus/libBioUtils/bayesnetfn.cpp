@@ -694,6 +694,40 @@ bool CBayesNetMinimal::Open( const CBayesNetSmile& BNSmile ) {
 
 	return true; }
 
+bool CBayesNetMinimal::Open( istream& istm ) {
+	uint32_t	iSize;
+	size_t		i;
+
+	if( m_adNY ) {
+		delete[] m_adNY;
+		m_adNY = NULL; }
+	if( !m_MatRoot.Open( istm, true ) )
+		return false;
+	m_adNY = new float[ m_MatRoot.GetRows( ) ];
+	istm.read( (char*)&iSize, sizeof(iSize) );
+	m_vecNodes.resize( iSize );
+	for( i = 0; i < m_vecNodes.size( ); ++i ) {
+		CBayesNetMinimalNode&	BNNode	= m_vecNodes[ i ];
+
+		istm.read( (char*)&BNNode.m_bDefault, sizeof(BNNode.m_bDefault) );
+		if( !BNNode.m_MatCPT.Open( istm, true ) )
+			return false; }
+
+	return true; }
+
+void CBayesNetMinimal::Save( ostream& ostm ) const {
+	uint32_t	iSize;
+	size_t		i;
+
+	m_MatRoot.Save( ostm, true );
+	iSize = (uint32_t)m_vecNodes.size( );
+	ostm.write( (char*)&iSize, sizeof(iSize) );
+	for( i = 0; i < m_vecNodes.size( ); ++i ) {
+		const CBayesNetMinimalNode&	BNNode	= m_vecNodes[ i ];
+
+		ostm.write( (char*)&BNNode.m_bDefault, sizeof(BNNode.m_bDefault) );
+		BNNode.m_MatCPT.Save( ostm, true ); } }
+
 float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t iOffset ) const {
 	float			dNum, dDen;
 	size_t			i, j;
@@ -713,8 +747,8 @@ float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t
 		for( j = 0; j < m_vecNodes[ i ].m_MatCPT.GetColumns( ); ++j )
 			m_adNY[ j ] += log( m_vecNodes[ i ].m_MatCPT.Get( c, j ) ); }
 
-	dNum = dDen = exp( m_adNY[ 0 ] );
-	for( i = 1; i < m_MatRoot.GetRows( ); ++i )
+	dNum = dDen = exp( m_adNY[ m_MatRoot.GetRows( ) - 1 ] );
+	for( i = 0; ( i + 1 ) < m_MatRoot.GetRows( ); ++i )
 		dDen += exp( m_adNY[ i ] );
 
 	return ( dNum / dDen ); }

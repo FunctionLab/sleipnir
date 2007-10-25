@@ -3,14 +3,17 @@ version	"1.0"
 purpose	"Real time Bayes net calculation from DB data"
 
 section "Optional"
-option	"input"		i	"Context IDs and names"	string	typestr="filename"
-option	"database"	D	"Database directory"	string	typestr="directory"	default="."
-option	"directory"	d	"Bayes net directory"	string	typestr="directory"	default="."
-option	"default"	b	"Bayes net for no context"	string	typestr="filename"
-option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"xdsl"		x	"Use XDSL files instead of DSL"	flag	on
+option	"input"			i	"Context IDs and names"	string	typestr="filename"
+option	"database"		d	"Database directory"	string	typestr="directory"	default="."
+option	"verbosity"		v	"Message verbosity"	int	default="5"
+
+section "Bayes nets"
+option	"networks"		n	"Bayes net directory"	string	typestr="directory"	default="."
+option	"default"		b	"Bayes net for no context"	string	typestr="filename"
+option	"xdsl"			x	"Use XDSL files instead of DSL"	flag	on
+option	"minimal_in"	m	"Read stored minimal Bayes nets"	flag	off
+option	"minimal_out"	M	"Store minimal Bayes nets"	string	typestr="filename"
 
 section "Server"
-option	"port"		p	"Server port"	int	default="1234"
-option	"timeout"	t	"Server timeout"	int	default="100"
-option	"cache"		c	"Size of gene cache"	int	default="100"
+option	"port"			p	"Server port"	int	default="1234"
+option	"timeout"		t	"Server timeout"	int	default="100"

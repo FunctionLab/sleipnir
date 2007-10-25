@@ -109,6 +109,8 @@ public:
 class CBayesNetMinimal : CBayesNetMinimalImpl {
 public:
 	bool Open( const CBayesNetSmile& );
+	bool Open( std::istream& );
+	void Save( std::ostream& ) const;
 	float Evaluate( const std::vector<unsigned char>&, size_t = 0 ) const;
 	bool Evaluate( const std::vector<unsigned char>&, float*, size_t ) const;
 
