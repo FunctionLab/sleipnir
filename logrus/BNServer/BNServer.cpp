@@ -211,7 +211,7 @@ size_t CBNServer::ProcessData( const vector<unsigned char>& vecbMessage, size_t 
 	uint32_t				iSize, iOne, iTwo;
 	vector<unsigned char>	vecbData, vecbSend;
 	size_t					i;
-	unsigned char			b;
+	unsigned char			b, bValue;
 
 	iSize = sizeof(iOne) + sizeof(iTwo);
 	if( ( iOffset + iSize ) > vecbMessage.size( ) )
@@ -225,8 +225,12 @@ size_t CBNServer::ProcessData( const vector<unsigned char>& vecbMessage, size_t 
 	vecbSend.resize( vecbData.size( ) * 2 );
 	for( i = 0; i < vecbData.size( ); ++i ) {
 		b = vecbData[ i ];
-		vecbSend[ 2 * i ] = b & 0xF;
-		vecbSend[ ( 2 * i ) + 1 ] = ( b >> 4 ) & 0xF; }
+		if( ( bValue = ( b & 0xF ) ) == 0xF )
+			bValue = -1;
+		vecbSend[ 2 * i ] = bValue;
+		if( ( bValue = ( ( b >> 4 ) & 0xF ) ) == 0xF )
+			bValue = -1;
+		vecbSend[ ( 2 * i ) + 1 ] = bValue; }
 	iOne = (uint32_t)vecbSend.size( );
 	send( m_iSocket, (char*)&iOne, sizeof(iOne), 0 );
 	send( m_iSocket, (char*)&vecbSend[ 0 ], (int)vecbSend.size( ), 0 );

@@ -744,8 +744,13 @@ float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t
 			c = c >> 4;
 		if( ( ( c &= 0xF ) == 0xF ) && ( ( c = m_vecNodes[ i ].m_bDefault ) == 0xFF ) )
 			continue;
-		for( j = 0; j < m_vecNodes[ i ].m_MatCPT.GetColumns( ); ++j )
-			m_adNY[ j ] += log( m_vecNodes[ i ].m_MatCPT.Get( c, j ) ); }
+
+		const CDataMatrix&	MatCPT	= m_vecNodes[ i ].m_MatCPT;
+		for( j = 0; j < MatCPT.GetColumns( ); ++j ) {
+			if( c >= MatCPT.GetRows( ) ) {
+				g_CatBioUtils.error( "CBayesNetMinimal::Evaluate( %d ) illegal value: %d/%d in %d", iOffset, c, MatCPT.GetRows( ), i );
+				return CMeta::GetNaN( ); }
+			m_adNY[ j ] += log( MatCPT.Get( c, j ) ); } }
 
 	dNum = dDen = exp( m_adNY[ m_MatRoot.GetRows( ) - 1 ] );
 	for( i = 0; ( i + 1 ) < m_MatRoot.GetRows( ); ++i )

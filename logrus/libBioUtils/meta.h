@@ -11,10 +11,22 @@
 #ifdef _MSC_VER
 #include <windows.h>
 #else // _MSC_VER
+#include <stdarg.h>
+
 #define _finite	isfinite
 
 typedef size_t	HANDLE;
+
+inline int sprintf_s( char* szDest, const char* szFormat, ... ) {
+    va_list valArgs;
+
+    va_start( valArgs, szFormat );
+    return vsprintf( szDest, szFormat, valArgs ); }
 #endif // _MSC_VER
+
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(a)	(sizeof(a)/sizeof(*a))
+#endif // ARRAYSIZE
 
 namespace libBioUtils {
 
