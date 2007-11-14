@@ -2,9 +2,12 @@ package	"BNServer"
 version	"1.0"
 purpose	"Real time Bayes net calculation from DB data"
 
+option	"graphviz"		g	"Graphviz executable path"	string	typestr="filename"	yes
+
 section "Optional"
 option	"input"			i	"Context IDs and names"	string	typestr="filename"
 option	"database"		d	"Database directory"	string	typestr="directory"	default="."
+option	"files"			f	"File directory"	string	typestr="directory"	default="."
 option	"verbosity"		v	"Message verbosity"	int	default="5"
 
 section "Bayes nets"

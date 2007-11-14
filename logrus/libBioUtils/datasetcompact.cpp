@@ -14,7 +14,7 @@ CDatasetCompactImpl::~CDatasetCompactImpl( ) {
 	if( m_aData )
 		delete[] m_aData; }
 
-bool CDatasetCompact::Open( const vector<string>& vecstrData ) {
+bool CDatasetCompact::Open( const vector<string>& vecstrData, bool fMemmap ) {
 	size_t	i;
 
 	if( !OpenGenes( vecstrData ) )
@@ -26,7 +26,7 @@ bool CDatasetCompact::Open( const vector<string>& vecstrData ) {
 	for( i = 0; i < vecstrData.size( ); ++i ) {
 		CDataPair	Datum;
 
-		if( !( Datum.Open( vecstrData[ i ].c_str( ), false ) &&
+		if( !( Datum.Open( vecstrData[ i ].c_str( ), false, fMemmap ) &&
 			CDatasetCompactImpl::Open( Datum, i ) ) )
 			return false; }
 

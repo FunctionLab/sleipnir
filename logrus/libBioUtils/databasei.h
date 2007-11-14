@@ -12,15 +12,16 @@ namespace libBioUtils {
 
 class CDatabaselet {
 public:
-	CDatabaselet( );
+	CDatabaselet( bool = false );
 	~CDatabaselet( );
 
 	bool Open( const std::string&, const std::vector<std::string>&, uint32_t, uint32_t );
 	bool Open( const std::string& );
 	bool Open( const std::vector<std::string>&, const std::vector<std::string>&, bool );
-	void Write( size_t, size_t, size_t, unsigned char );
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, std::vector<unsigned char>& ) const;
+	bool Get( size_t, const std::vector<size_t>&, std::vector<unsigned char>& ) const;
+	bool Write( );
 
 	size_t GetGenes( ) const {
 
@@ -30,7 +31,36 @@ public:
 
 		return m_vecstrGenes[ iGene ]; }
 
+	void Write( size_t iOne, size_t iTwo, size_t iDataset, unsigned char bValue, bool fBoth = false ) {
+		std::streamoff	iOffset;
+
+		iOffset = (std::streamoff)GetOffset( iOne, iTwo, iDataset );
+		if( m_fCache ) {
+			m_vecpribWrites.push_back( TPrIB( iOffset, bValue ) );
+			return; }
+
+#ifdef DATABASE_NIBBLES
+		if( !fBoth ) {
+			unsigned char	b;
+
+			m_fstm.seekg( iOffset );
+			b = m_fstm.get( );
+			bValue = ( iDataset % 2 ) ? ( ( b & 0xF ) | ( bValue << 4 ) ) :
+				( ( b & 0xF0 ) | ( bValue & 0xF ) ); }
+#endif // DATABASE_NIBBLES
+		m_fstm.seekp( iOffset );
+		m_fstm.put( bValue ); }
+
 private:
+	typedef std::pair<size_t, unsigned char>	TPrIB;
+
+	struct SSorter {
+
+		bool operator()( const TPrIB& prOne, const TPrIB& prTwo ) {
+
+			return ( prOne.first < prTwo.first ); }
+	};
+
 	size_t GetDatasets( ) const {
 
 		return ( ( m_iDatasets
@@ -65,10 +95,12 @@ private:
 
 		return ( GetOffset( iOne, iTwo ) + GetDataset( iDataset ) ); }
 
+	bool						m_fCache;
 	uint32_t					m_iHeader;
 	uint32_t					m_iGenes;
 	uint32_t					m_iDatasets;
 	std::vector<std::string>	m_vecstrGenes;
+	std::vector<TPrIB>			m_vecpribWrites;
 	mutable std::fstream		m_fstm;
 	mutable pthread_mutex_t*	m_pmutx;
 };
@@ -82,7 +114,9 @@ protected:
 
 		Clear( ); }
 
-	bool Open( const std::vector<std::string>&, const std::string&, bool, const std::vector<std::string>& );
+	bool Open( const std::vector<std::string>&, const std::string&, bool, const std::vector<std::string>&,
+		bool fCache );
+	bool Open( const std::string&, size_t, bool, bool = false );
 
 	void Clear( ) {
 		size_t	i;

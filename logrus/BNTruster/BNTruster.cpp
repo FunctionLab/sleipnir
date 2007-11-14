@@ -45,9 +45,10 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 			if( mapstriNodes.find( vecstrCur[ i ] ) == mapstriNodes.end( ) ) {
 				mapstriNodes[ vecstrCur[ i ] ] = vecstrNodes.size( );
 				vecstrNodes.push_back( vecstrCur[ i ] ); } }
-	for( i = 0; i < vecstrNodes.size( ); ++i )
-		cout << '\t' << vecstrNodes[ i ];
-	cout << endl;
+	if( !sArgs.bins_flag ) {
+		for( i = 0; i < vecstrNodes.size( ); ++i )
+			cout << '\t' << vecstrNodes[ i ];
+		cout << endl; }
 
 	vecdCur.resize( vecstrNodes.size( ) );
 	for( iDSL = 0; iDSL < sArgs.inputs_num; ++iDSL ) {
@@ -61,6 +62,7 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 		if( !BNSmile.Open( sArgs.inputs[ iDSL ] ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ iDSL ] << endl;
 			return 1; }
+		cerr << "Opened: " << sArgs.inputs[ iDSL ] << endl;
 		for( i = 0; i < vecdCur.size( ); ++i )
 			vecdCur[ i ] = CMeta::GetNaN( );
 		BNSmile.GetNodes( vecstrCur );
@@ -68,11 +70,11 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 		for( i = 0; i < vecbDatum.size( ); ++i )
 			vecbDatum[ i ] = 0;
 
+		vecdOut.clear( );
 		BNSmile.Evaluate( vecbDatum, vecdOut, false );
-		dPrior = vecdOut[ vecdOut.size( ) - 1 ];
-
+		dPrior = 1 - vecdOut[ 0 ];
 		for( iNode = 1; iNode < vecstrCur.size( ); ++iNode ) {
-			float			dSum;
+			float			d, dSum;
 			CDataMatrix		MatCPT;
 			vector<float>	vecdProbs;
 
@@ -88,15 +90,21 @@ int MainPosteriors( const gengetopt_args_info& sArgs ) {
 				BNSmile.Evaluate( vecbDatum, vecdOut, false ); }
 
 			for( dSum = 0,i = 0; i < vecdOut.size( ); ++i ) {
-				dSum += fabs( dPrior - vecdOut[ i ] ) * vecdProbs[ i ]; }
+				vecdOut[ i ] = 1 - vecdOut[ i ];
+				d = fabs( dPrior - vecdOut[ i ] );
+				if( sArgs.bins_flag )
+					cout << iDSL << '\t' << ( iNode - 1 ) << '\t' << i << '\t' << ( ( vecdOut[ i ] > dPrior ) ?
+						( d / ( 1 - dPrior ) ) : -( d / dPrior ) ) << endl;
+				dSum += d * vecdProbs[ i ]; }
 			vecdCur[ mapstriNodes[ vecstrCur[ iNode ] ] ] = dSum / BNSmile.GetValues( iNode ); }
 
-		cout << sArgs.inputs[ iDSL ];
-		for( i = 0; i < vecdCur.size( ); ++i ) {
-			cout << '\t';
-			if( !CMeta::IsNaN( vecdCur[ i ] ) )
-				cout << vecdCur[ i ]; }
-		cout << endl; }
+		if( !sArgs.bins_flag ) {
+			cout << sArgs.inputs[ iDSL ];
+			for( i = 0; i < vecdCur.size( ); ++i ) {
+				cout << '\t';
+				if( !CMeta::IsNaN( vecdCur[ i ] ) )
+					cout << vecdCur[ i ]; }
+			cout << endl; } }
 
 	return 0; }
 

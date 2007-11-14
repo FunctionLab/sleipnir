@@ -9,4 +9,5 @@ option	"dir_in"	d	"Data directory"	string	typestr="directory"	default="."
 option	"dir_out"	D	"Database directory"	string	typestr="directory"	default="."
 option	"files"		f	"Database file count"	int	default="1000"
 option	"memmap"	m	"Memory map input/output"	flag	off
+option	"cache"		c	"Cache disk writes"	flag	off
 option	"verbosity"	v	"Message verbosity"	int	default="5"

@@ -29,6 +29,19 @@ public:
 		EFormatSparse	= EFormatPCL + 1
 	};
 
+	static std::string GetColor( float dValue ) {
+		float	adColor[ 3 ];
+		char	acColor[ 16 ];
+		size_t	i;
+
+		for( i = 0; i < ARRAYSIZE(adColor); ++i )
+			adColor[ i ] = ( dValue < 0.5 ) ? ( c_adColorMin[ i ] * ( 1 - ( 2 * dValue ) ) ) :
+				( c_adColorMax[ i ] * 2 * ( dValue - 0.5f ) );
+		sprintf_s( acColor, "%02X%02X%02X", (size_t)( adColor[ 0 ] * 255 ),
+			(size_t)( adColor[ 1 ] * 255 ), (size_t)( adColor[ 2 ] * 255 ) );
+
+		return acColor; }
+
 	bool Open( const char*, bool = false, size_t = 2, bool = false );
 	bool Open( std::istream&, EFormat = EFormatBinary, float = HUGE_VAL, bool = false, size_t = 2,
 		bool = false );

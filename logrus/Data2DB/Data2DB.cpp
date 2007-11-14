@@ -48,7 +48,7 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open: " << sArgs.network_arg << endl;
 		return 1; }
 	if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-		vecstrGenes.size( )), !!sArgs.memmap_flag ) ) {
+		vecstrGenes.size( )), !!sArgs.memmap_flag, !!sArgs.cache_flag ) ) {
 		cerr << "Could not open data" << endl;
 		return 1; }
 

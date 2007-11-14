@@ -911,12 +911,11 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes, s
 			Set( veciFinal[ iMinOne ], veciFinal[ iMinTwo ], CMeta::GetNaN( ) ); } } }
 
 void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool fMinimal ) const {
-	size_t			i, j, k;
-	float			d, dMin, dMax, dColor;
+	size_t			i, j;
+	float			d, dMin, dMax;
 	bool			fAll;
 	vector<string>	vecstrNames;
 	vector<bool>	vecfGenes;
-	float			adColor[ ARRAYSIZE(c_adColorMin) ];
 
 	fAll = CMeta::IsNaN( dCutoff );
 	ostm << "graph G {" << endl;
@@ -961,17 +960,9 @@ void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool f
 	dMax -= dMin;
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) ) {
-				char	acColor[ 16 ];
-
-				dColor = ( d - dMin ) / dMax;
-				for( k = 0; k < ARRAYSIZE(adColor); ++k )
-					adColor[ k ] = ( dColor < 0.5 ) ? ( c_adColorMin[ k ] * ( 1 - ( 2 * dColor ) ) ) :
-						( c_adColorMax[ k ] * 2 * ( dColor - 0.5f ) );
-				sprintf_s( acColor, "%02X%02X%02X", (size_t)( adColor[ 0 ] * 255 ),
-					(size_t)( adColor[ 1 ] * 255 ), (size_t)( adColor[ 2 ] * 255 ) );
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
 				ostm << vecstrNames[ i ] << " -- " << vecstrNames[ j ] << " [weight = " << d <<
-					", color = \"#" << acColor << "\"];" << endl; }
+					", color = \"" << GetColor( ( d - dMin ) / dMax ) << "\"];" << endl;
 
 	ostm << "}" << endl; }
 

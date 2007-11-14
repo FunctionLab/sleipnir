@@ -4,4 +4,5 @@ purpose	"Bayes net data set trust evaluation"
 
 section "Optional"
 option	"type"		t	"Trust calculation type"	values="posteriors","sums","ratios"	default="posteriors"
+option	"bins"		b	"Output individual bins"	flag	off
 option	"verbosity"	v	"Message verbosity"	int	default="5"
