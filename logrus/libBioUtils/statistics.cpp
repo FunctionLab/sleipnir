@@ -8,6 +8,7 @@
 #include "statistics.h"
 #include "measure.h"
 #include "dat.h"
+#include "typesi.h"
 
 namespace libBioUtils {
 

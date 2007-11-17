@@ -118,17 +118,6 @@ public:
 	void Initialize( size_t, bool = false, unsigned char** = NULL );
 };
 
-class CCompactMatrix : CCompactMatrixImpl {
-public:
-	bool Open( std::istream& );
-	const unsigned char* Open( const unsigned char* );
-	void Save( std::ostream& ) const;
-	unsigned char Get( size_t, size_t ) const;
-	void Set( size_t, size_t, unsigned char );
-	void Initialize( size_t, unsigned char, bool = false );
-	size_t GetSize( ) const;
-};
-
 }
 
 #endif // HALFMATRIX_H

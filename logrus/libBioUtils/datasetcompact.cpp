@@ -2,6 +2,7 @@
 #include "dataset.h"
 #include "bayesnet.h"
 #include "genome.h"
+#include "compactmatrix.h"
 
 namespace libBioUtils {
 

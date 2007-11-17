@@ -1,8 +1,6 @@
 #ifndef HALFMATRIXI_H
 #define HALFMATRIXI_H
 
-#include "typesi.h"
-
 namespace libBioUtils {
 
 class CHalfMatrixBase {
@@ -32,20 +30,6 @@ protected:
 		iY = iIndex; }
 
 	size_t	m_iSize;
-};
-
-class CCompactMatrixImpl : protected CHalfMatrixBase {
-protected:
-	CCompactMatrixImpl( );
-	~CCompactMatrixImpl( );
-
-	size_t* GetWord( size_t, size_t, unsigned char& ) const;
-	size_t CountWords( ) const;
-
-	bool			m_fMemory;
-	uint32_t		m_iSize;
-	unsigned char	m_cBits;
-	size_t*			m_aiData;
 };
 
 }

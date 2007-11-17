@@ -10,9 +10,11 @@
 #include "examplei.h"
 #include "fullmatrix.h"
 #include "halfmatrix.h"
+#include "typesi.h"
 
 namespace libBioUtils {
 
+class CCompactMatrix;
 class CDataPair;
 class IBayesNet;
 class IDataset;

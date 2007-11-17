@@ -6,11 +6,9 @@
 #include <fstream>
 #include <vector>
 
-#include "typesi.h"
+#include "compactmatrix.h"
 
 namespace libBioUtils {
-
-class CDatasetCompact;
 
 class CDatabaselet {
 public:
@@ -25,8 +23,7 @@ public:
 
 	bool Open( const std::string&, const std::vector<std::string>&, uint32_t, uint32_t );
 	bool Open( const std::string& );
-	bool Open( const std::vector<std::string>&, const std::vector<std::string>&, bool );
-	bool Open( const CDatasetCompact&, size_t, const std::vector<size_t>&, bool );
+	bool Open( const std::vector<CCompactFullMatrix>&, size_t, size_t, bool );
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, std::vector<unsigned char>& ) const;

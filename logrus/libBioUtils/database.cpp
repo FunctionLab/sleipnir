@@ -61,48 +61,6 @@ bool CDatabaselet::Open( const string& strFile, const vector<string>& vecstrGene
 
 	return true; }
 
-bool CDatabaselet::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrFiles, bool fMemmap ) {
-	size_t			i, j, iSize, iGeneUs, iGeneThem, iOne, iTwo;
-	vector<size_t>	veciGenesUs, veciGenesThem;
-	unsigned char*	abImage;
-	unsigned char	bValue;
-
-	iSize = GetSizeGene( ) * m_vecstrGenes.size( );
-	abImage = new unsigned char[ iSize ];
-	memset( abImage, -1, iSize );
-	veciGenesUs.resize( m_vecstrGenes.size( ) );
-	veciGenesThem.resize( vecstrGenes.size( ) );
-	for( i = 0; i < vecstrFiles.size( ); ++i ) {
-		CDataPair	Dat;
-
-		if( !Dat.Open( vecstrFiles[ i ].c_str( ), false, fMemmap ) ) {
-			g_CatBioUtils.error( "CDatabaselet::Open( %d ) could not open: %s", fMemmap,
-				vecstrFiles[ i ].c_str( ) );
-			return false; }
-		for( iGeneUs = 0; iGeneUs < veciGenesUs.size( ); ++iGeneUs )
-			veciGenesUs[ iGeneUs ] = Dat.GetGene( m_vecstrGenes[ iGeneUs ] );
-		for( iGeneThem = 0; iGeneThem < veciGenesThem.size( ); ++iGeneThem )
-			veciGenesThem[ iGeneThem ] = Dat.GetGene( vecstrGenes[ iGeneThem ] );
-		for( iGeneUs = 0; iGeneUs < veciGenesUs.size( ); ++iGeneUs ) {
-			if( ( iOne = veciGenesUs[ iGeneUs ] ) == -1 )
-				continue;
-			for( iGeneThem = 0; iGeneThem < veciGenesThem.size( ); ++iGeneThem )
-				if( ( ( iTwo = veciGenesThem[ iGeneThem ] ) != -1 ) &&
-					( ( bValue = Dat.Quantize( Dat.Get( iOne, iTwo ) ) ) != 0xFF ) ) {
-					j = GetOffset( iGeneUs, iGeneThem, i ) - m_iHeader;
-#ifdef DATABASE_NIBBLES
-					unsigned char	b;
-					b = abImage[ j ];
-					bValue = ( i % 2 ) ? ( ( b & 0xF ) | ( bValue << 4 ) ) :
-						( ( b & 0xF0 ) | ( bValue & 0xF ) );
-#endif // DATABASE_NIBBLES
-					abImage[ j ] = bValue; } } }
-	m_fstm.seekp( m_iHeader );
-	m_fstm.write( (char*)abImage, iSize );
-	delete[] abImage;
-
-	return true; }
-
 bool CDatabaselet::OpenWrite( unsigned char bValue, size_t iOffset, ENibbles eNibbles,
 	unsigned char* abImage ) {
 	unsigned char	b;
@@ -138,58 +96,49 @@ bool CDatabaselet::OpenWrite( unsigned char bValue, size_t iOffset, ENibbles eNi
 
 	return true; }
 
-bool CDatabaselet::Open( const CDatasetCompact& Data, size_t iBase, const vector<size_t>& veciGenes,
+bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBaseGenes, size_t iBaseDatasets,
 	bool fBuffer ) {
 	unsigned char*	abImage;
-	size_t			iSize, iDatum, iGeneOne, iGeneTwo, iOne, iTwo, iValueOne, iValueTwo;
+	size_t			iSize, iDatum, iGeneOne, iGeneTwo;
 	unsigned char	bOne, bTwo;
-	vector<size_t>	veciMyGenes;
 
-	veciMyGenes.resize( GetGenes( ) );
-	for( iGeneOne = 0; iGeneOne < veciMyGenes.size( ); ++iGeneOne )
-		veciMyGenes[ iGeneOne ] = Data.GetGene( GetGene( iGeneOne ) );
 	if( fBuffer ) {
 		abImage = new unsigned char[ iSize = ( GetSizeGene( ) * m_vecstrGenes.size( ) ) ];
 		m_fstm.seekg( m_iHeader );
 		m_fstm.read( (char*)abImage, iSize ); }
 	else
 		abImage = NULL;
-	if( iBase % 2 )
-		for( iGeneOne = 0; iGeneOne < veciMyGenes.size( ); ++iGeneOne )
-			if( ( iOne = veciMyGenes[ iGeneOne ] ) != -1 )
-				for( iGeneTwo = 0; iGeneTwo < veciGenes.size( ); ++iGeneTwo )
-					if( ( ( iTwo = veciGenes[ iGeneTwo ] ) != -1 ) &&
-						( ( iValueOne = Data.GetDiscrete( iOne, iTwo, 0 ) ) != -1 ) )
-						OpenWrite( iValueOne, GetOffset( iGeneOne, iGeneTwo, iBase ), ENibblesHigh, abImage );
-	for( iDatum = ( iBase % 2 ); ( iDatum + 1 ) < Data.GetExperiments( ); iDatum += 2 )
-		for( iGeneOne = 0; iGeneOne < veciMyGenes.size( ); ++iGeneOne ) {
-			if( ( iOne = veciMyGenes[ iGeneOne ] ) == -1 )
-				continue;
-			for( iGeneTwo = 0; iGeneTwo < veciGenes.size( ); ++iGeneTwo ) {
-				if( ( iTwo = veciGenes[ iGeneTwo ] ) == -1 )
+	if( iBaseDatasets % 2 )
+		for( iGeneOne = 0; iGeneOne < GetGenes( ); ++iGeneOne )
+			for( iGeneTwo = 0; iGeneTwo < vecData[ 0 ].GetColumns( ); ++iGeneTwo )
+				if( bOne = vecData[ 0 ].Get( iBaseGenes + iGeneOne, iGeneTwo ) )
+					OpenWrite( bOne - 1, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets ), ENibblesHigh,
+						abImage );
+	for( iDatum = ( iBaseDatasets % 2 ); ( iDatum + 1 ) < vecData.size( ); iDatum += 2 )
+		for( iGeneOne = 0; iGeneOne < GetGenes( ); ++iGeneOne )
+			for( iGeneTwo = 0; iGeneTwo < vecData[ iDatum ].GetColumns( ); ++iGeneTwo ) {
+				bOne = vecData[ iDatum ].Get( iBaseGenes + iGeneOne, iGeneTwo );
+				bTwo = vecData[ iDatum + 1 ].Get( iBaseGenes + iGeneOne, iGeneTwo );
+				if( !( bOne || bTwo ) )
 					continue;
-				iValueOne = Data.GetDiscrete( iOne, iTwo, iDatum );
-				iValueTwo = Data.GetDiscrete( iOne, iTwo, iDatum + 1 );
-				if( ( iValueOne == -1 ) && ( iValueTwo == -1 ) )
-					continue;
-				bOne = ( iValueOne == -1 ) ? 0xFF : iValueOne;
-				bTwo = ( iValueTwo == -1 ) ? 0xFF : iValueTwo;
+				bOne -= 1;
+				bTwo -= 1;
 #ifdef DATABASE_NIBBLES
-				OpenWrite( ( bOne & 0xF ) | ( bTwo << 4 ), GetOffset( iGeneOne, iGeneTwo, iBase + iDatum ),
-					ENibblesBoth, abImage );
+				OpenWrite( ( bOne & 0xF ) | ( bTwo << 4 ), GetOffset( iGeneOne, iGeneTwo, iBaseDatasets +
+					iDatum ), ENibblesBoth, abImage );
 #else // DATABASE_NIBBLES
-				OpenWrite( bOne, GetOffset( iGeneOne, iGeneTwo, iBase + iDatum ), ENibblesBoth, abImage );
-				OpenWrite( bTwo, GetOffset( iGeneOne, iGeneTwo, iBase + iDatum + 1 ), ENibblesBoth, abImage );
+				OpenWrite( bOne, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets + iDatum ), ENibblesBoth,
+					abImage );
+				OpenWrite( bTwo, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets + iDatum + 1 ), ENibblesBoth,
+					abImage );
 #endif // DATABASE_NIBBLES
-			} }
-	if( iDatum < Data.GetExperiments( ) )
-		for( iGeneOne = 0; iGeneOne < veciMyGenes.size( ); ++iGeneOne )
-			if( ( iOne = veciMyGenes[ iGeneOne ] ) != -1 )
-				for( iGeneTwo = 0; iGeneTwo < veciGenes.size( ); ++iGeneTwo )
-					if( ( ( iTwo = veciGenes[ iGeneTwo ] ) != -1 ) &&
-						( ( iValueOne = Data.GetDiscrete( iOne, iTwo, iDatum ) ) != -1 ) )
-						OpenWrite( iValueOne, GetOffset( iGeneOne, iGeneTwo, iBase + iDatum ), ENibblesLow,
-							abImage );
+			}
+	if( iDatum < vecData.size( ) )
+		for( iGeneOne = 0; iGeneOne < GetGenes( ); ++iGeneOne )
+			for( iGeneTwo = 0; iGeneTwo < vecData[ iDatum ].GetColumns( ); ++iGeneTwo )
+				if( bOne = vecData[ iDatum ].Get( iBaseGenes + iGeneOne, iGeneTwo ) )
+					OpenWrite( bOne - 1, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets + iDatum ), ENibblesLow,
+						abImage );
 	if( fBuffer ) {
 		m_fstm.seekp( m_iHeader );
 		m_fstm.write( (char*)abImage, iSize );
@@ -311,178 +260,57 @@ bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strData, 
 
 	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes ); }
 
-/*
-bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, bool fMemmap,
-	const vector<string>& vecstrFiles ) {
-	size_t	i;
-
-	for( i = 0; i < m_vecpDBs.size( ); ++i )
-		if( !m_vecpDBs[ i ]->Open( vecstrGenes, vecstrFiles, fMemmap ) )
-			return false;
-
-	return true; }
-
-// Memmapped:		5m46.394s
-// Not memmapped:	5m48.374s
-bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, bool fMemmap,
-	const vector<string>& vecstrFiles ) {
+bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrFiles ) {
+	size_t			i, j, iOne, iTwo, iOutBlock, iOutBase, iOutOffset, iInBlock, iInBase, iInOffset;
 	vector<size_t>	veciGenes;
-	unsigned char	b;
-	size_t			i, j, k, iDBOne, iOne, iTwo;
+	float			d;
 
 	veciGenes.resize( vecstrGenes.size( ) );
-	for( i = 0; i < vecstrFiles.size( ); ++i ) {
-		CDataPair	Dat;
-
-		if( !Dat.Open( vecstrFiles[ i ].c_str( ), false, fMemmap ) ) {
-			g_CatBioUtils.error( "CDatabaseImpl::Open( %d ) could not open %s", fMemmap,
-				vecstrFiles[ i ].c_str( ) );
-			return false; }
-		for( j = 0; j < veciGenes.size( ); ++j )
-			veciGenes[ j ] = Dat.GetGene( vecstrGenes[ j ] );
-		for( j = 0; j < veciGenes.size( ); ++j ) {
-			CDatabaselet&	DB	= *m_vecpDBs[ j % m_vecpDBs.size( ) ];
-
-			if( !( j % 100 ) )
-				g_CatBioUtils.notice( "CDatabaseImpl::Open( %d ) gene %d/%d", fMemmap, j, veciGenes.size( ) );
-			if( ( iOne = veciGenes[ j ] ) == -1 )
-				continue;
-			iDBOne = j / m_vecpDBs.size( );
-			for( k = 0; k < veciGenes.size( ); ++k )
-				if( ( ( iTwo = veciGenes[ k ] ) != -1 ) &&
-					( ( b = Dat.Quantize( Dat.Get( iOne, iTwo ) ) ) != 0xFF ) )
-					DB.Write( iDBOne, k, i, b ); } }
-
-	return true; }
-
-// Memmapped:		2m51.354s
-// Not memmapped:	2m42.590s
-// Open each DAB once
-// Process gene pairs only from that DAB
-// Super-slow for some reason; shoule be fast!
-bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, bool fMemmap,
-	const vector<string>& vecstrFiles ) {
-	size_t	i;
-
-	for( i = 0; i < vecstrFiles.size( ); ++i )
-		if( !Open( vecstrFiles[ i ], i, fMemmap ) )
-			return false;
-
-	return true; }
-
-bool CDatabaseImpl::Open( const string& strFile, size_t iDataset, bool fBoth ) {
-	CDataPair		Dat;
-	vector<size_t>	veciGenes;
-	size_t			i, j, iOne, iTwo, iDBOne;
-	CDatabaselet*	pDB;
-	unsigned char	b;
-
-	if( !Dat.Open( strFile.c_str( ), false, m_fMemmap ) ) {
-		g_CatBioUtils.error( "CDatabaseImpl::Open( %s ) failed", strFile.c_str( ) );
-		return false; }
-	veciGenes.resize( Dat.GetGenes( ) );
-	for( i = 0; i < veciGenes.size( ); ++i )
-		veciGenes[ i ] = GetGene( Dat.GetGene( i ) );
-	for( i = 0; i < veciGenes.size( ); ++i ) {
-		if( ( iOne = veciGenes[ i ] ) == -1 )
-			continue;
-		if( !( i % 100 ) )
-			g_CatBioUtils.notice( "CDatabaseImpl::Open( %s ) gene %d/%d", strFile.c_str( ), i,
-				veciGenes.size( ) );
-		pDB = m_vecpDBs[ iOne % m_vecpDBs.size( ) ];
-		iDBOne = iOne / m_vecpDBs.size( );
-		for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
-			if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
-				( ( b = Dat.Quantize( Dat.Get( i, j ) ) ) != 0xFF ) ) {
-				pDB->Write( iDBOne, iTwo, iDataset, b, fBoth );
-				m_vecpDBs[ iTwo % m_vecpDBs.size( ) ]->Write( iTwo / m_vecpDBs.size( ), iOne, iDataset, b,
-					fBoth ); } }
-
-	return true; }
-
-// Memmapped:		1m31.743s
-// Not memmapped:	4m41.680s
-// Open each DAB once in pairs
-//   This avoids reads on writes
-// Process gene pairs only from those DABs
-bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrFiles ) {
-	vector<size_t>	veciGenes;
-	size_t			i, j, k, iDBOne, iOne, iTwo, iFirst, iSecond;
-	CDatabaselet*	pDB;
-	vector<string>	vecstrCur;
-	unsigned char	b;
-
-	vecstrCur.resize( 2 );
-	for( i = 0; ( i + vecstrCur.size( ) - 1 ) < vecstrFiles.size( ); i += vecstrCur.size( ) ) {
-		CDatasetCompact	Dats;
-
-		for( j = 0; j < vecstrCur.size( ); ++j )
-			vecstrCur[ j ] = vecstrFiles[ i + j ];
-		if( !Dats.Open( vecstrCur, m_fMemmap ) ) {
-			g_CatBioUtils.error( "CDatabaseImpl::Open( ) could not open data" );
-			return false; }
-		veciGenes.resize( Dats.GetGenes( ) );
-		for( j = 0; j < veciGenes.size( ); ++j )
-			veciGenes[ j ] = GetGene( Dats.GetGene( j ) );
-		for( j = 0; j < veciGenes.size( ); ++j ) {
-			if( ( iOne = veciGenes[ j ] ) == -1 )
-				continue;
-			if( !( j % 100 ) )
-				g_CatBioUtils.notice( "CDatabaseImpl::Open( ) gene %d/%d", j, veciGenes.size( ) );
-			pDB = m_vecpDBs[ iOne % m_vecpDBs.size( ) ];
-			iDBOne = iOne / m_vecpDBs.size( );
-			for( k = ( j + 1 ); k < veciGenes.size( ); ++k ) {
-				if( ( iTwo = veciGenes[ k ] ) == -1 )
-					continue;
-				iFirst = Dats.GetDiscrete( j, k, 0 );
-				iSecond = Dats.GetDiscrete( j, k, 1 );
-				if( ( iFirst != -1 ) || ( iSecond != -1 ) ) {
-					b = ( iFirst & 0xF ) | ( ( iSecond << 4 ) & 0xF0 );
-					pDB->Write( iDBOne, iTwo, i, b, true );
-					m_vecpDBs[ iTwo % m_vecpDBs.size( ) ]->Write( iTwo / m_vecpDBs.size( ), iOne, i, b,
-						true ); } } }
-		if( m_fCache )
-			for( j = 0; j < m_vecpDBs.size( ); ++j )
-				if( !m_vecpDBs[ j ]->Write( ) )
-					return false; }
-	for( ; i < vecstrFiles.size( ); ++i )
-		if( !Open( vecstrFiles[ i ], i, true ) )
-			return false;
-	if( m_fCache )
-		for( j = 0; j < m_vecpDBs.size( ); ++j )
-			if( !m_vecpDBs[ j ]->Write( ) )
-				return false;
-
-	return true; }
-*/
-
-// Block on genes (output files) and datasets (input files).
-bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrFiles ) {
-	size_t			iOutBlock, iOutBase, iOutOffset, iInBase;
-	vector<string>	vecstrIn;
-	vector<size_t>	veciGenes;
-
-	veciGenes.resize( vecstrGenes.size( ) );
-	vecstrIn.resize( ( m_iBlockIn == -1 ) ? vecstrFiles.size( ) : m_iBlockIn );
 	iOutBlock = ( m_iBlockOut == -1 ) ? m_vecpDBs.size( ) : m_iBlockOut;
-	for( iOutBase = 0; iOutBase < m_vecpDBs.size( ); iOutBase += iOutBlock )
-		for( iInBase = 0; iInBase < vecstrFiles.size( ); iInBase += vecstrIn.size( ) ) {
-			CDatasetCompact					Data;
-			vector<string>::const_iterator	iterBase;
+	iInBlock = ( m_iBlockIn == -1 ) ? vecstrFiles.size( ) : m_iBlockIn;
+	for( iOutBase = 0; iOutBase < m_vecpDBs.size( ); iOutBase += iOutBlock ) {
+		vector<string>	vecstrMyGenes;
+		vector<size_t>	veciMyGenes;
 
-			if( ( iInBase + vecstrIn.size( ) ) > vecstrFiles.size( ) )
-				vecstrIn.resize( vecstrFiles.size( ) - iInBase );
-			iterBase = vecstrFiles.begin( ) + iInBase;
-			copy( iterBase, iterBase + vecstrIn.size( ), vecstrIn.begin( ) );
-			if( !Data.Open( vecstrIn, m_fMemmap ) ) {
-				g_CatBioUtils.error( "CDatabaseImpl::Open( ) could not open data block %d", iInBase );
-				return false; }
+		for( iOutOffset = 0; ( iOutOffset < iOutBlock ) && ( ( iOutBase + iOutOffset ) < m_vecpDBs.size( ) );
+			++iOutOffset ) {
+			const CDatabaselet&	DB	= *m_vecpDBs[ iOutBase + iOutOffset ];
 
-			for( iOutOffset = 0; iOutOffset < veciGenes.size( ); ++iOutOffset )
-				veciGenes[ iOutOffset ] = Data.GetGene( vecstrGenes[ iOutOffset ] );
-			for( iOutOffset = 0; iOutOffset < iOutBlock; ++iOutOffset )
-				if( !m_vecpDBs[ iOutBase + iOutOffset ]->Open( Data, iInBase, veciGenes, m_fBuffer ) )
+			for( i = 0; i < DB.GetGenes( ); ++i )
+				vecstrMyGenes.push_back( DB.GetGene( i ) ); }
+		veciMyGenes.resize( vecstrMyGenes.size( ) );
+		for( iInBase = 0; iInBase < vecstrFiles.size( ); iInBase += iInBlock ) {
+			vector<CCompactFullMatrix>	vecData;
+
+			vecData.resize( ( ( iInBase + iInBlock ) > vecstrFiles.size( ) ) ?
+				( vecstrFiles.size( ) - iInBase ) : iInBlock );
+			for( iInOffset = 0; iInOffset < vecData.size( ); ++iInOffset ) {
+				CDataPair	Dat;
+
+				if( !Dat.Open( vecstrFiles[ iInBase + iInOffset ].c_str( ), false, m_fMemmap ) ) {
+					g_CatBioUtils.error( "CDatabaseImpl::Open( ) could not open %s",
+						vecstrFiles[ iInBase + iInOffset ].c_str( ) );
 					return false; }
+				for( i = 0; i < veciMyGenes.size( ); ++i )
+					veciMyGenes[ i ] = Dat.GetGene( vecstrMyGenes[ i ] );
+				for( i = 0; i < veciGenes.size( ); ++i )
+					veciGenes[ i ] = Dat.GetGene( vecstrGenes[ i ] );
+				vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 16, true );
+				for( i = 0; i < veciMyGenes.size( ); ++i ) {
+					if( ( iOne = veciMyGenes[ i ] ) == -1 )
+						continue;
+					for( j = 0; j < veciGenes.size( ); ++j )
+						if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
+							!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
+							vecData[ iInOffset ].Set( i, j, Dat.Quantize( d ) + 1 ); } }
+
+			for( i = iOutOffset = 0; ( iOutOffset < iOutBlock ) && ( ( iOutBase + iOutOffset ) <
+				m_vecpDBs.size( ) ); ++iOutOffset ) {
+				CDatabaselet&	DB	= *m_vecpDBs[ iOutBase + iOutOffset ];
+
+				if( !DB.Open( vecData, i, iInBase, m_fBuffer ) )
+					return false;
+				i += DB.GetGenes( ); } } }
 
 	return true; }
 

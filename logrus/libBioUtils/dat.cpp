@@ -2,6 +2,7 @@
 #include "dat.h"
 #include "genome.h"
 #include "statistics.h"
+#include "typesi.h"
 // MEFIT OFF
 #include "annotation.h"
 // MEFIT ON
