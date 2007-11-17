@@ -10,14 +10,24 @@
 
 namespace libBioUtils {
 
+class CDatasetCompact;
+
 class CDatabaselet {
 public:
+	enum ENibbles {
+		ENibblesLow,
+		ENibblesHigh,
+		ENibblesBoth
+	};
+
 	CDatabaselet( bool = false );
 	~CDatabaselet( );
 
 	bool Open( const std::string&, const std::vector<std::string>&, uint32_t, uint32_t );
 	bool Open( const std::string& );
 	bool Open( const std::vector<std::string>&, const std::vector<std::string>&, bool );
+	bool Open( const CDatasetCompact&, size_t, const std::vector<size_t>&, bool );
+	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, const std::vector<size_t>&, std::vector<unsigned char>& ) const;
@@ -61,7 +71,15 @@ private:
 			return ( prOne.first < prTwo.first ); }
 	};
 
-	size_t GetDatasets( ) const {
+	size_t GetOffsetDataset( size_t iDataset ) const {
+
+		return ( iDataset
+#ifdef DATABASE_NIBBLES
+			/ 2
+#endif // DATABASE_NIBBLES
+			); }
+
+	size_t GetSizePair( ) const {
 
 		return ( ( m_iDatasets
 #ifdef DATABASE_NIBBLES
@@ -71,29 +89,25 @@ private:
 #endif // DATABASE_NIBBLES
 			); }
 
-	size_t GetDataset( size_t iDataset ) const {
+	size_t GetSizeGenes( ) const {
 
-		return ( iDataset
-#ifdef DATABASE_NIBBLES
-			/ 2
-#endif // DATABASE_NIBBLES
-			); }
+		return ( GetSizeGene( ) * m_vecstrGenes.size( ) ); }
 
-	size_t GetOffset( ) const {
+	size_t GetSizeGene( ) const {
 
-		return ( GetDatasets( ) * m_iGenes ); }
+		return ( GetSizePair( ) * m_iGenes ); }
 
 	size_t GetOffset( size_t iGene ) const {
 
-		return ( m_iHeader + ( GetOffset( ) * iGene ) ); }
+		return ( m_iHeader + ( GetSizeGene( ) * iGene ) ); }
 
 	size_t GetOffset( size_t iOne, size_t iTwo ) const {
 
-		return ( GetOffset( iOne ) + ( GetDatasets( ) * iTwo ) ); }
+		return ( GetOffset( iOne ) + ( GetSizePair( ) * iTwo ) ); }
 
 	size_t GetOffset( size_t iOne, size_t iTwo, size_t iDataset ) const {
 
-		return ( GetOffset( iOne, iTwo ) + GetDataset( iDataset ) ); }
+		return ( GetOffset( iOne, iTwo ) + GetOffsetDataset( iDataset ) ); }
 
 	bool						m_fCache;
 	uint32_t					m_iHeader;
@@ -110,13 +124,14 @@ protected:
 	static const char	c_acDAB[];
 	static const char	c_acExtension[];
 
+	CDatabaseImpl( ) : m_fMemmap(false), m_fCache(false), m_iBlockIn(-1), m_iBlockOut(-1), m_fBuffer(false) { }
+
 	~CDatabaseImpl( ) {
 
 		Clear( ); }
 
-	bool Open( const std::vector<std::string>&, const std::string&, bool, const std::vector<std::string>&,
-		bool fCache );
-	bool Open( const std::string&, size_t, bool, bool = false );
+	bool Open( const std::vector<std::string>&, const std::vector<std::string>& );
+	bool Open( const std::string&, size_t, bool = false );
 
 	void Clear( ) {
 		size_t	i;
@@ -132,6 +147,11 @@ protected:
 		return ( ( ( iterGene = m_mapstriGenes.find( strGene ) ) == m_mapstriGenes.end( ) ) ? -1 :
 			iterGene->second ); }
 
+	bool							m_fMemmap;
+	bool							m_fCache;
+	bool							m_fBuffer;
+	size_t							m_iBlockIn;
+	size_t							m_iBlockOut;
 	std::vector<CDatabaselet*>		m_vecpDBs;
 	std::map<std::string, size_t>	m_mapstriGenes;
 };

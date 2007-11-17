@@ -8,6 +8,10 @@ namespace libBioUtils {
 const char	CDatabaseImpl::c_acDAB[]		= ".dab";
 const char	CDatabaseImpl::c_acExtension[]	= ".db";
 
+///////////////////////////////////////////////////////////////////////////////
+// CDatabaselet
+///////////////////////////////////////////////////////////////////////////////
+
 CDatabaselet::CDatabaselet( bool fCache ) : m_fCache(fCache) {
 
 	m_pmutx = new pthread_mutex_t( );
@@ -49,10 +53,10 @@ bool CDatabaselet::Open( const string& strFile, const vector<string>& vecstrGene
 	m_fstm.write( (char*)&m_iHeader, sizeof(m_iHeader) );
 
 	m_fstm.seekp( m_iHeader );
-	acFiller = new char[ GetOffset( ) ];
-	memset( acFiller, -1, GetOffset( ) );
+	acFiller = new char[ GetSizeGene( ) ];
+	memset( acFiller, -1, GetSizeGene( ) );
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )
-		m_fstm.write( acFiller, GetOffset( ) );
+		m_fstm.write( acFiller, GetSizeGene( ) );
 	delete[] acFiller;
 
 	return true; }
@@ -63,7 +67,7 @@ bool CDatabaselet::Open( const vector<string>& vecstrGenes, const vector<string>
 	unsigned char*	abImage;
 	unsigned char	bValue;
 
-	iSize = GetOffset( ) * m_vecstrGenes.size( );
+	iSize = GetSizeGene( ) * m_vecstrGenes.size( );
 	abImage = new unsigned char[ iSize ];
 	memset( abImage, -1, iSize );
 	veciGenesUs.resize( m_vecstrGenes.size( ) );
@@ -99,14 +103,108 @@ bool CDatabaselet::Open( const vector<string>& vecstrGenes, const vector<string>
 
 	return true; }
 
+bool CDatabaselet::OpenWrite( unsigned char bValue, size_t iOffset, ENibbles eNibbles,
+	unsigned char* abImage ) {
+	unsigned char	b;
+
+#ifndef DATABASE_NIBBLES
+	eNibbles = ENibblesBoth;
+#endif // DATABASE_NIBBLES
+
+	if( abImage )
+		iOffset -= m_iHeader;
+	if( eNibbles != ENibblesBoth ) {
+		if( abImage )
+			b = abImage[ iOffset ];
+		else {
+			m_fstm.seekg( iOffset );
+			b = m_fstm.get( ); } }
+	switch( eNibbles ) {
+		case ENibblesLow:
+			b = ( bValue & 0xF ) | ( b & 0xF0 );
+			break;
+
+		case ENibblesHigh:
+			b = ( b & 0xF ) | ( bValue << 4 );
+			break;
+
+		case ENibblesBoth:
+			b = bValue; }
+	if( abImage )
+		abImage[ iOffset ] = b;
+	else {
+		m_fstm.seekp( iOffset );
+		m_fstm.put( b ); }
+
+	return true; }
+
+bool CDatabaselet::Open( const CDatasetCompact& Data, size_t iBase, const vector<size_t>& veciGenes,
+	bool fBuffer ) {
+	unsigned char*	abImage;
+	size_t			iSize, iDatum, iGeneOne, iGeneTwo, iOne, iTwo, iValueOne, iValueTwo;
+	unsigned char	bOne, bTwo;
+	vector<size_t>	veciMyGenes;
+
+	veciMyGenes.resize( GetGenes( ) );
+	for( iGeneOne = 0; iGeneOne < veciMyGenes.size( ); ++iGeneOne )
+		veciMyGenes[ iGeneOne ] = Data.GetGene( GetGene( iGeneOne ) );
+	if( fBuffer ) {
+		abImage = new unsigned char[ iSize = ( GetSizeGene( ) * m_vecstrGenes.size( ) ) ];
+		m_fstm.seekg( m_iHeader );
+		m_fstm.read( (char*)abImage, iSize ); }
+	else
+		abImage = NULL;
+	if( iBase % 2 )
+		for( iGeneOne = 0; iGeneOne < veciMyGenes.size( ); ++iGeneOne )
+			if( ( iOne = veciMyGenes[ iGeneOne ] ) != -1 )
+				for( iGeneTwo = 0; iGeneTwo < veciGenes.size( ); ++iGeneTwo )
+					if( ( ( iTwo = veciGenes[ iGeneTwo ] ) != -1 ) &&
+						( ( iValueOne = Data.GetDiscrete( iOne, iTwo, 0 ) ) != -1 ) )
+						OpenWrite( iValueOne, GetOffset( iGeneOne, iGeneTwo, iBase ), ENibblesHigh, abImage );
+	for( iDatum = ( iBase % 2 ); ( iDatum + 1 ) < Data.GetExperiments( ); iDatum += 2 )
+		for( iGeneOne = 0; iGeneOne < veciMyGenes.size( ); ++iGeneOne ) {
+			if( ( iOne = veciMyGenes[ iGeneOne ] ) == -1 )
+				continue;
+			for( iGeneTwo = 0; iGeneTwo < veciGenes.size( ); ++iGeneTwo ) {
+				if( ( iTwo = veciGenes[ iGeneTwo ] ) == -1 )
+					continue;
+				iValueOne = Data.GetDiscrete( iOne, iTwo, iDatum );
+				iValueTwo = Data.GetDiscrete( iOne, iTwo, iDatum + 1 );
+				if( ( iValueOne == -1 ) && ( iValueTwo == -1 ) )
+					continue;
+				bOne = ( iValueOne == -1 ) ? 0xFF : iValueOne;
+				bTwo = ( iValueTwo == -1 ) ? 0xFF : iValueTwo;
+#ifdef DATABASE_NIBBLES
+				OpenWrite( ( bOne & 0xF ) | ( bTwo << 4 ), GetOffset( iGeneOne, iGeneTwo, iBase + iDatum ),
+					ENibblesBoth, abImage );
+#else // DATABASE_NIBBLES
+				OpenWrite( bOne, GetOffset( iGeneOne, iGeneTwo, iBase + iDatum ), ENibblesBoth, abImage );
+				OpenWrite( bTwo, GetOffset( iGeneOne, iGeneTwo, iBase + iDatum + 1 ), ENibblesBoth, abImage );
+#endif // DATABASE_NIBBLES
+			} }
+	if( iDatum < Data.GetExperiments( ) )
+		for( iGeneOne = 0; iGeneOne < veciMyGenes.size( ); ++iGeneOne )
+			if( ( iOne = veciMyGenes[ iGeneOne ] ) != -1 )
+				for( iGeneTwo = 0; iGeneTwo < veciGenes.size( ); ++iGeneTwo )
+					if( ( ( iTwo = veciGenes[ iGeneTwo ] ) != -1 ) &&
+						( ( iValueOne = Data.GetDiscrete( iOne, iTwo, iDatum ) ) != -1 ) )
+						OpenWrite( iValueOne, GetOffset( iGeneOne, iGeneTwo, iBase + iDatum ), ENibblesLow,
+							abImage );
+	if( fBuffer ) {
+		m_fstm.seekp( m_iHeader );
+		m_fstm.write( (char*)abImage, iSize );
+		delete[] abImage; }
+
+	return true; }
+
 bool CDatabaselet::Get( size_t iOne, size_t iTwo, vector<unsigned char>& vecbData ) const {
 	size_t	i;
 
 	i = vecbData.size( );
-	vecbData.resize( i + GetDatasets( ) );
+	vecbData.resize( i + GetSizePair( ) );
 	pthread_mutex_lock( m_pmutx );
 	m_fstm.seekg( GetOffset( iOne, iTwo ) );
-	m_fstm.read( (char*)&vecbData[ i ], GetDatasets( ) );
+	m_fstm.read( (char*)&vecbData[ i ], GetSizePair( ) );
 	pthread_mutex_unlock( m_pmutx );
 
 	return true; }
@@ -115,10 +213,10 @@ bool CDatabaselet::Get( size_t iGene, vector<unsigned char>& vecbData ) const {
 	size_t	i;
 
 	i = vecbData.size( );
-	vecbData.resize( i + GetOffset( ) );
+	vecbData.resize( i + GetSizeGene( ) );
 	pthread_mutex_lock( m_pmutx );
 	m_fstm.seekg( GetOffset( iGene ) );
-	m_fstm.read( (char*)&vecbData[ i ], GetOffset( ) );
+	m_fstm.read( (char*)&vecbData[ i ], GetSizeGene( ) );
 	pthread_mutex_unlock( m_pmutx );
 
 	return true; }
@@ -170,16 +268,19 @@ bool CDatabaselet::Write( ) {
 
 	return true; }
 
+///////////////////////////////////////////////////////////////////////////////
+// CDatabase
+///////////////////////////////////////////////////////////////////////////////
+
 bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strData, const IBayesNet* pBN,
-	const string& strDir, size_t iFiles, bool fMemmap, bool fCache ) {
+	const string& strDir, size_t iFiles ) {
 	vector<string>	vecstrNodes, vecstrSubset;
 	size_t			i, j;
 	char			acNumber[ 16 ];
 	string			strFile;
 
 	if( !pBN ) {
-			g_CatBioUtils.error( "CDatabase::Open( %s, %d, %d ) null Bayes net", strDir.c_str( ),
-				iFiles, fMemmap );
+		g_CatBioUtils.error( "CDatabase::Open( %s, %d ) null Bayes net", strDir.c_str( ), iFiles );
 		return false; }
 
 	Clear( );
@@ -190,7 +291,7 @@ bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strData, 
 		vecstrNodes.resize( vecstrNodes.size( ) - 1 );
 	m_vecpDBs.resize( iFiles );
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
-		m_vecpDBs[ i ] = new CDatabaselet( fCache );
+		m_vecpDBs[ i ] = new CDatabaselet( m_fCache );
 		vecstrSubset.clear( );
 		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
 			vecstrSubset.push_back( vecstrGenes[ j ] );
@@ -199,19 +300,19 @@ bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strData, 
 #pragma warning(default : 4996)
 		strFile = strDir + '/' + acNumber + c_acExtension;
 		if( !( i % 100 ) )
-			g_CatBioUtils.notice( "CDatabase::Open( %s, %d, %d ) initializing file %d/%d", strDir.c_str( ),
-					iFiles, fMemmap, i, m_vecpDBs.size( ) );
+			g_CatBioUtils.notice( "CDatabase::Open( %s, %d ) initializing file %d/%d", strDir.c_str( ),
+					iFiles, i, m_vecpDBs.size( ) );
 		if( !m_vecpDBs[ i ]->Open( strFile, vecstrSubset, vecstrGenes.size( ), vecstrNodes.size( ) ) ) {
-			g_CatBioUtils.error( "CDatabase::Open( %s, %d, %d ) could not open file %s", strDir.c_str( ),
-				iFiles, fMemmap, strFile.c_str( ) );
+			g_CatBioUtils.error( "CDatabase::Open( %s, %d ) could not open file %s", strDir.c_str( ),
+				iFiles, strFile.c_str( ) );
 			return false; } }
 	for( i = 0; i < vecstrGenes.size( ); ++i )
 		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
 
-	return CDatabaseImpl::Open( vecstrGenes, strData, fMemmap, vecstrNodes, fCache ); }
+	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes ); }
 
 /*
-bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strData, bool fMemmap,
+bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, bool fMemmap,
 	const vector<string>& vecstrFiles ) {
 	size_t	i;
 
@@ -223,7 +324,7 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strDa
 
 // Memmapped:		5m46.394s
 // Not memmapped:	5m48.374s
-bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strData, bool fMemmap,
+bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, bool fMemmap,
 	const vector<string>& vecstrFiles ) {
 	vector<size_t>	veciGenes;
 	unsigned char	b;
@@ -234,7 +335,7 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strDa
 		CDataPair	Dat;
 
 		if( !Dat.Open( vecstrFiles[ i ].c_str( ), false, fMemmap ) ) {
-			g_CatBioUtils.error( "CDatabaseImpl::Open( %s, %d ) could not open %s", strData.c_str( ), fMemmap,
+			g_CatBioUtils.error( "CDatabaseImpl::Open( %d ) could not open %s", fMemmap,
 				vecstrFiles[ i ].c_str( ) );
 			return false; }
 		for( j = 0; j < veciGenes.size( ); ++j )
@@ -243,8 +344,7 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strDa
 			CDatabaselet&	DB	= *m_vecpDBs[ j % m_vecpDBs.size( ) ];
 
 			if( !( j % 100 ) )
-				g_CatBioUtils.notice( "CDatabaseImpl::Open( %s, %d ) gene %d/%d", strData.c_str( ), fMemmap,
-					j, veciGenes.size( ) );
+				g_CatBioUtils.notice( "CDatabaseImpl::Open( %d ) gene %d/%d", fMemmap, j, veciGenes.size( ) );
 			if( ( iOne = veciGenes[ j ] ) == -1 )
 				continue;
 			iDBOne = j / m_vecpDBs.size( );
@@ -260,7 +360,7 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strDa
 // Open each DAB once
 // Process gene pairs only from that DAB
 // Super-slow for some reason; shoule be fast!
-bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strData, bool fMemmap,
+bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, bool fMemmap,
 	const vector<string>& vecstrFiles ) {
 	size_t	i;
 
@@ -269,17 +369,16 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strDa
 			return false;
 
 	return true; }
-*/
 
-bool CDatabaseImpl::Open( const string& strFile, size_t iDataset, bool fMemmap, bool fBoth ) {
+bool CDatabaseImpl::Open( const string& strFile, size_t iDataset, bool fBoth ) {
 	CDataPair		Dat;
 	vector<size_t>	veciGenes;
 	size_t			i, j, iOne, iTwo, iDBOne;
 	CDatabaselet*	pDB;
 	unsigned char	b;
 
-	if( !Dat.Open( strFile.c_str( ), false, fMemmap ) ) {
-		g_CatBioUtils.error( "CDatabaseImpl::Open( %s, %d ) filed", strFile.c_str( ), fMemmap );
+	if( !Dat.Open( strFile.c_str( ), false, m_fMemmap ) ) {
+		g_CatBioUtils.error( "CDatabaseImpl::Open( %s ) failed", strFile.c_str( ) );
 		return false; }
 	veciGenes.resize( Dat.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
@@ -288,8 +387,8 @@ bool CDatabaseImpl::Open( const string& strFile, size_t iDataset, bool fMemmap, 
 		if( ( iOne = veciGenes[ i ] ) == -1 )
 			continue;
 		if( !( i % 100 ) )
-			g_CatBioUtils.notice( "CDatabaseImpl::Open( %s, %d ) gene %d/%d", strFile.c_str( ), fMemmap,
-				i, veciGenes.size( ) );
+			g_CatBioUtils.notice( "CDatabaseImpl::Open( %s ) gene %d/%d", strFile.c_str( ), i,
+				veciGenes.size( ) );
 		pDB = m_vecpDBs[ iOne % m_vecpDBs.size( ) ];
 		iDBOne = iOne / m_vecpDBs.size( );
 		for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
@@ -306,8 +405,7 @@ bool CDatabaseImpl::Open( const string& strFile, size_t iDataset, bool fMemmap, 
 // Open each DAB once in pairs
 //   This avoids reads on writes
 // Process gene pairs only from those DABs
-bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strData, bool fMemmap,
-	const vector<string>& vecstrFiles, bool fCache ) {
+bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrFiles ) {
 	vector<size_t>	veciGenes;
 	size_t			i, j, k, iDBOne, iOne, iTwo, iFirst, iSecond;
 	CDatabaselet*	pDB;
@@ -320,9 +418,8 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strDa
 
 		for( j = 0; j < vecstrCur.size( ); ++j )
 			vecstrCur[ j ] = vecstrFiles[ i + j ];
-		if( !Dats.Open( vecstrCur, fMemmap ) ) {
-			g_CatBioUtils.error( "CDatabaseImpl::Open( %s, %d ) could not open data", strData.c_str( ),
-				fMemmap );
+		if( !Dats.Open( vecstrCur, m_fMemmap ) ) {
+			g_CatBioUtils.error( "CDatabaseImpl::Open( ) could not open data" );
 			return false; }
 		veciGenes.resize( Dats.GetGenes( ) );
 		for( j = 0; j < veciGenes.size( ); ++j )
@@ -331,8 +428,7 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strDa
 			if( ( iOne = veciGenes[ j ] ) == -1 )
 				continue;
 			if( !( j % 100 ) )
-				g_CatBioUtils.notice( "CDatabaseImpl::Open( %s, %d ) gene %d/%d", strData.c_str( ), fMemmap,
-					j, veciGenes.size( ) );
+				g_CatBioUtils.notice( "CDatabaseImpl::Open( ) gene %d/%d", j, veciGenes.size( ) );
 			pDB = m_vecpDBs[ iOne % m_vecpDBs.size( ) ];
 			iDBOne = iOne / m_vecpDBs.size( );
 			for( k = ( j + 1 ); k < veciGenes.size( ); ++k ) {
@@ -345,17 +441,48 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const string& strDa
 					pDB->Write( iDBOne, iTwo, i, b, true );
 					m_vecpDBs[ iTwo % m_vecpDBs.size( ) ]->Write( iTwo / m_vecpDBs.size( ), iOne, i, b,
 						true ); } } }
-		if( fCache )
+		if( m_fCache )
 			for( j = 0; j < m_vecpDBs.size( ); ++j )
 				if( !m_vecpDBs[ j ]->Write( ) )
 					return false; }
 	for( ; i < vecstrFiles.size( ); ++i )
-		if( !Open( vecstrFiles[ i ], i, fMemmap, true ) )
+		if( !Open( vecstrFiles[ i ], i, true ) )
 			return false;
-	if( fCache )
+	if( m_fCache )
 		for( j = 0; j < m_vecpDBs.size( ); ++j )
 			if( !m_vecpDBs[ j ]->Write( ) )
 				return false;
+
+	return true; }
+*/
+
+// Block on genes (output files) and datasets (input files).
+bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrFiles ) {
+	size_t			iOutBlock, iOutBase, iOutOffset, iInBase;
+	vector<string>	vecstrIn;
+	vector<size_t>	veciGenes;
+
+	veciGenes.resize( vecstrGenes.size( ) );
+	vecstrIn.resize( ( m_iBlockIn == -1 ) ? vecstrFiles.size( ) : m_iBlockIn );
+	iOutBlock = ( m_iBlockOut == -1 ) ? m_vecpDBs.size( ) : m_iBlockOut;
+	for( iOutBase = 0; iOutBase < m_vecpDBs.size( ); iOutBase += iOutBlock )
+		for( iInBase = 0; iInBase < vecstrFiles.size( ); iInBase += vecstrIn.size( ) ) {
+			CDatasetCompact					Data;
+			vector<string>::const_iterator	iterBase;
+
+			if( ( iInBase + vecstrIn.size( ) ) > vecstrFiles.size( ) )
+				vecstrIn.resize( vecstrFiles.size( ) - iInBase );
+			iterBase = vecstrFiles.begin( ) + iInBase;
+			copy( iterBase, iterBase + vecstrIn.size( ), vecstrIn.begin( ) );
+			if( !Data.Open( vecstrIn, m_fMemmap ) ) {
+				g_CatBioUtils.error( "CDatabaseImpl::Open( ) could not open data block %d", iInBase );
+				return false; }
+
+			for( iOutOffset = 0; iOutOffset < veciGenes.size( ); ++iOutOffset )
+				veciGenes[ iOutOffset ] = Data.GetGene( vecstrGenes[ iOutOffset ] );
+			for( iOutOffset = 0; iOutOffset < iOutBlock; ++iOutOffset )
+				if( !m_vecpDBs[ iOutBase + iOutOffset ]->Open( Data, iInBase, veciGenes, m_fBuffer ) )
+					return false; }
 
 	return true; }
 

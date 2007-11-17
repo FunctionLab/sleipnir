@@ -47,8 +47,13 @@ int main( int iArgs, char** aszArgs ) {
 	if( !BNSmile.Open( sArgs.network_arg ) ) {
 		cerr << "Could not open: " << sArgs.network_arg << endl;
 		return 1; }
+	DB.SetMemmap( !!sArgs.memmap_flag );
+	DB.SetCache( !!sArgs.cache_flag );
+	DB.SetBuffer( !!sArgs.buffer_flag );
+	DB.SetBlockOut( sArgs.block_files_arg );
+	DB.SetBlockIn( sArgs.block_datasets_arg );
 	if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-		vecstrGenes.size( )), !!sArgs.memmap_flag, !!sArgs.cache_flag ) ) {
+		vecstrGenes.size( )) ) ) {
 		cerr << "Could not open data" << endl;
 		return 1; }
 

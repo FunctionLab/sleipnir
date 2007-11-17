@@ -10,7 +10,7 @@ class IBayesNet;
 class CDatabase : CDatabaseImpl {
 public:
 	bool Open( const std::vector<std::string>&, const std::string&, const IBayesNet*, const std::string&,
-		size_t, bool, bool );
+		size_t );
 	bool Open( const std::string& );
 
 	bool Get( size_t iOne, size_t iTwo, std::vector<unsigned char>& vecbData ) const {
@@ -36,6 +36,26 @@ public:
 	const std::string& GetGene( size_t iGene ) const {
 
 		return m_vecpDBs[ iGene % m_vecpDBs.size( ) ]->GetGene( iGene / m_vecpDBs.size( ) ); }
+
+	void SetMemmap( bool fMemmap ) {
+
+		m_fMemmap = fMemmap; }
+
+	void SetCache( bool fCache ) {
+
+		m_fCache = fCache; }
+
+	void SetBlockOut( size_t iSize ) {
+
+		m_iBlockOut = iSize; }
+
+	void SetBlockIn( size_t iSize ) {
+
+		m_iBlockIn = iSize; }
+
+	void SetBuffer( bool fBuffer ) {
+
+		m_fBuffer = fBuffer; }
 };
 
 }
