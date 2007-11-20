@@ -70,7 +70,7 @@ void CSVMImpl::Reset( bool fData, bool fModel, bool fAlphas ) {
 	size_t	i;
 
 	if( fModel && m_pModel ) {
-		free_model( m_pModel, 1 );
+		free_model( m_pModel, 0 );
 		m_pModel = NULL; }
 	if( fAlphas && m_adAlphas ) {
 		free( m_adAlphas );
