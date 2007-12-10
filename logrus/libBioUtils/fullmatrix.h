@@ -106,7 +106,7 @@ protected:
 	static const size_t	c_iBuffer	= 8192;
 
 	bool OpenBinary( std::istream& istm ) {
-		size_t		i, j;
+		size_t		i;
 		uint32_t	iSize;
 
 		Reset( );
@@ -118,8 +118,7 @@ protected:
 		m_aaData = new tType*[ m_iR ];
 		for( i = 0; i < m_iR; ++i ) {
 			m_aaData[ i ] = new tType[ m_iC ];
-			for( j = 0; j < m_iC; ++j )
-				istm.read( (char*)&m_aaData[ i ][ j ], sizeof(m_aaData[ i ][ j ]) ); }
+			istm.read( (char*)m_aaData[ i ], sizeof(*m_aaData[ i ]) * m_iC ); }
 
 		return true; }
 
@@ -161,7 +160,7 @@ protected:
 		return true; }
 
 	bool SaveBinary( std::ostream& ostm ) const {
-		size_t		i, j;
+		size_t		i;
 		uint32_t	iSize;
 
 		iSize = (uint32_t)m_iR;
@@ -169,8 +168,7 @@ protected:
 		iSize = (uint32_t)m_iC;
 		ostm.write( (const char*)&iSize, sizeof(iSize) );
 		for( i = 0; i < m_iR; ++i )
-			for( j = 0; j < m_iC; ++j )
-				ostm.write( (const char*)&m_aaData[ i ][ j ], sizeof(m_aaData[ i ][ j ]) );
+			ostm.write( (const char*)m_aaData[ i ], sizeof(*m_aaData[ i ]) * m_iC );
 
 		return true; }
 

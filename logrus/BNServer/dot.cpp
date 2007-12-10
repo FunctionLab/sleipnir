@@ -5,17 +5,45 @@ using namespace boost;
 
 const float	CDot::c_dEdgeOpacity	= 0.13f;
 const char	CDot::c_szHeader[]		=
-	"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
-	"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">\n"
+//	"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+//	"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">\n"
 	"<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
-//	"	xmlns:a3=\"http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/\"\n"
-//	"	a3:scriptImplementation=\"Adobe\"\n"
-//	"	onload=\"init( )\"\n"
-//	"	viewBox=\"10 10 256 256"\"\n"
+	"	xmlns:a3=\"http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/\"\n"
+	"	a3:scriptImplementation=\"Adobe\"\n"
+	"	onload=\"init( )\"\n"
+	"	viewBox=\"0 0 950 950\"\n"
+	"	width=\"99.9%\" height=\"768\"\n"
 	"	>\n"
-// If we used scripts for the viewbox, they'd go here.
+	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"/javascripts/helper_functions.js\" />\n"
+	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"/javascripts/mapApp.js\" />\n"
+	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"/javascripts/simple.js\" />\n"
 	"	<g id=\"graph\" class=\"graph\" style=\"font-family:Times-Roman;font-size:12pt\">\n"
 	"		<title>G</title>\n";
+const char	CDot::c_szCutoffBox[]	=
+	"		<g id=\"cutoff_control_box\">\n"
+	"			<g transform=\"scale(0.5)\">\n"
+	"				<rect x=\"5\" y=\"5\" width=\"40\" height=\"32\"\n"
+	"					fill=\"white\" stroke=\"none\" />\n"
+	"				<path id=\"cutoff_uparrow\"\n"
+	"					stroke-antialiasing=\"true\"\n"
+	"					stroke=\"black\" fill=\"cyan\"\n"
+	"					d=\"M 10 32 L 40 32 L 25 10 z\" />\n"
+	"				 <rect x=\"5\" y=\"43\" width=\"40\" height=\"32\"\n"
+	"					fill=\"white\" stroke=\"none\" />\n"
+	"				<path id=\"cutoff_downarrow\"\n"
+	"					stroke-antialiasing=\"true\"\n"
+	"					stroke=\"black\" fill=\"cyan\"\n"
+	"					d=\"M 10 48 L 40 48 L 25 70 z\" />\n"
+	"				<rect x=\"0\" y=\"0\" width=\"50\" height=\"80\"\n"
+	"					fill=\"none\" stroke-linejoin=\"round\"\n"
+	"					stroke-width=\"1\" stroke=\"black\" />\n"
+	"			</g>\n"
+	"			<text x=\"35\" y=\"15\"\n"
+	"				font-family=\"Helvetica\" font-size=\"14\">\n"
+	"				Cutoff value:\n"
+	"			</text>\n"
+	"			<g id=\"cutoff_value_text\" x=\"35\" y=\"35\" />\n"
+	"		</g>\n";
 
 bool CDot::Open( const char* szDot ) {
 	ifstream	ifsm;
@@ -46,6 +74,7 @@ bool CDot::Save( ostream& ostm, const vector<bool>& vecfQuery ) const {
 			return false;
 	ostm << "		</g>" << endl;
 
+	ostm << c_szCutoffBox;
 	ostm << "	</g>" << endl << "</svg>" << endl;
 
 	return true; }
@@ -65,14 +94,18 @@ bool CDot::SaveEdge( ostream& ostm, const TEdge& Edge ) const {
 		i = iHead;
 		iHead = iTail;
 		iTail = i; }
-	if( CMeta::IsNaN( dWeight = m_Dat.Get( iHead, iTail ) ) )
-		return false;
+	if( CMeta::IsNaN( dWeight = m_Dat.Get( iHead, iTail ) ) ) {
+		cerr << "CDot::SaveEdge( ) no edge found for: " << iHead << " (" << m_Dat.GetGene( iHead ) << "), " <<
+			iTail << " (" << m_Dat.GetGene( iTail ) << ')' << endl;
+		return false; }
 	sprintf_s( acBuffer, "%d_%d", iHead, iTail );
 
 	strPath = get( "pos", *m_pProperties, Edge );
 	CMeta::Tokenize( strPath.c_str( ), vecstrPath, " " );
-	if( vecstrPath.size( ) < 1 )
-		return false;
+	if( vecstrPath.size( ) < 1 ) {
+		cerr << "CDot::SaveEdge( ) no path found for: " << iHead << " (" << m_Dat.GetGene( iHead ) << "), " <<
+			iTail << " (" << m_Dat.GetGene( iTail ) << ')' << endl;
+		return false; }
 	strPath = "M";
 	strPath += vecstrPath[ 0 ];
 	for( i = 1; i < vecstrPath.size( ); ++i )
@@ -121,9 +154,9 @@ bool CDot::SaveVertex( ostream& ostm, const TVertex& Vertex, const vector<bool>&
 	strRY = acBuffer;
 
 	ostm <<
-		c_acTabs << "<g id=\"node" + strID + "\" class=\"node\">" << endl <<
-		c_acTabs << "	<title>" + m_Dat.GetGene( Vertex ) + "</title>" << endl <<
-		c_acTabs << "	<g id=\"node" + strID + "_edges\" display=\"none\">" << endl;
+		c_acTabs << "<g id=\"node" << Vertex << "\" class=\"node\">" << endl <<
+		c_acTabs << "	<title>" << m_Dat.GetGene( Vertex ) << "</title>" << endl <<
+		c_acTabs << "	<g id=\"node" << Vertex << "_edges\" display=\"none\">" << endl;
 	for( tie( iterEdge, iterEdgeEnd ) = out_edges( Vertex, m_Graph ); iterEdge != iterEdgeEnd; ++iterEdge ) {
 		size_t	iHead, iTail;
 
@@ -141,7 +174,7 @@ bool CDot::SaveVertex( ostream& ostm, const TVertex& Vertex, const vector<bool>&
 	ostm <<
 		c_acTabs << "	<ellipse cx=\"" << strCX << "\" cy=\"" << strCY << "\" rx=\"" << strRX <<
 			"\" ry=\"" << strRY << "\" style=\"fill:" << strBackground << ";stroke:black\" />" << endl <<
-		c_acTabs << "	<text id=\"node" << strID << "_title\" text-anchor=\"middle\" style=\"fill:" <<
+		c_acTabs << "	<text id=\"node" << Vertex << "_title\" text-anchor=\"middle\" style=\"fill:" <<
 			strForeground << ";stroke:" << strForeground << "\" x=\"" << strCX << "\" y=\"" <<
 			( atof( strCY.c_str( ) ) + 5 ) << "\">" << m_Dat.GetGene( Vertex ) << "</text>" << endl <<
 		c_acTabs << "</g>" << endl;

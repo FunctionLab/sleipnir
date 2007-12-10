@@ -238,6 +238,14 @@ bool CGenome::Open( istream& istm ) {
 
 	return true; }
 
+bool CGenome::Open( const vector<string>& vecstrGenes ) {
+	size_t	i;
+
+	for( i = 0; i < vecstrGenes.size( ); ++i )
+		AddGene( vecstrGenes[ i ] );
+
+	return true; }
+
 CGene& CGenome::AddGene( const string& strName ) {
 	TMapStrI::const_iterator	iterGene;
 	CGene*						pGene;

@@ -161,7 +161,8 @@ class CBayesNetMinimalImpl {
 protected:
 	CBayesNetMinimalImpl( ) : m_adNY(NULL) { }
 
-	float*								m_adNY;
+	std::string							m_strID;
+	double*								m_adNY;
 	CDataMatrix							m_MatRoot;
 	std::vector<CBayesNetMinimalNode>	m_vecNodes;
 };

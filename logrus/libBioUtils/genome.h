@@ -35,6 +35,7 @@ public:
 class CGenome : CGenomeImpl {
 public:
 	bool Open( std::istream& );
+	bool Open( const std::vector<std::string>& );
 	CGene& AddGene( const std::string& );
 	CGene& GetGene( size_t ) const;
 	size_t GetGene( const std::string& ) const;

@@ -5,6 +5,7 @@ purpose	"Bayes net evaluation"
 defgroup "data" yes
 groupoption	"datadir"	d	"Data directory"	string	typestr="directory"	group="data"
 groupoption	"dataset"	D	"Dataset dad file"	string	typestr="filename"	group="data"
+groupoption	"database"	b	"Database directory"	string	typestr="directory"	group="data"
 option	"input"		i	"Input dsl file"	string	typestr="filename"	yes
 section "Optional"
 option	"output"	o	"Output dab file"	string	typestr="filename"

@@ -938,13 +938,15 @@ void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool f
 			vecstrNames[ i ] = "_" + vecstrNames[ i ];
 		if( pGenome && ( ( j = pGenome->GetGene( GetGene( i ) ) ) != -1 ) ) {
 			const CGene&	Gene	= pGenome->GetGene( j );
+			string			strName;
 
-			if( Gene.GetSynonyms( ) ) {
-				if( fMinimal ) {
+			strName = Gene.GetSynonyms( ) ? Gene.GetSynonym( 0 ) : Gene.GetName( );
+			if( fMinimal ) {
+				if( strName != vecstrNames[ i ] ) {
 					vecstrNames[ i ] += '_';
-					vecstrNames[ i ] += Gene.GetSynonym( 0 ); }
-				else if( fAll || vecfGenes[ i ] )
-					ostm << vecstrNames[ i ] << " [label=\"" << Gene.GetSynonym( 0 ) << "\"];" << endl; } } }
+					vecstrNames[ i ] += Gene.GetSynonym( 0 ); } }
+			else if( fAll || vecfGenes[ i ] )
+				ostm << vecstrNames[ i ] << " [label=\"" << strName << "\"];" << endl; } }
 
 	ostm << endl;
 	dMin = FLT_MAX;

@@ -690,7 +690,7 @@ bool CBayesNetMinimal::Open( const CBayesNetSmile& BNSmile ) {
 		if( m_vecNodes[ i ].m_MatCPT.GetColumns( ) != m_MatRoot.GetRows( ) )
 			return false;
 		m_vecNodes[ i ].m_bDefault = BNSmile.GetZero( i + 1 ); }
-	m_adNY = new float[ m_MatRoot.GetRows( ) ];
+	m_adNY = new double[ m_MatRoot.GetRows( ) ];
 
 	return true; }
 
@@ -701,9 +701,12 @@ bool CBayesNetMinimal::Open( istream& istm ) {
 	if( m_adNY ) {
 		delete[] m_adNY;
 		m_adNY = NULL; }
+	istm.read( (char*)&iSize, sizeof(iSize) );
+	m_strID.resize( iSize );
+	istm.read( &m_strID[ 0 ], iSize * sizeof(*m_strID.c_str( )) );
 	if( !m_MatRoot.Open( istm, true ) )
 		return false;
-	m_adNY = new float[ m_MatRoot.GetRows( ) ];
+	m_adNY = new double[ m_MatRoot.GetRows( ) ];
 	istm.read( (char*)&iSize, sizeof(iSize) );
 	m_vecNodes.resize( iSize );
 	for( i = 0; i < m_vecNodes.size( ); ++i ) {
@@ -719,17 +722,20 @@ void CBayesNetMinimal::Save( ostream& ostm ) const {
 	uint32_t	iSize;
 	size_t		i;
 
+	iSize = (uint32_t)m_strID.length( );
+	ostm.write( (const char*)&iSize, sizeof(iSize) );
+	ostm.write( m_strID.c_str( ), iSize * sizeof(*m_strID.c_str( )) );
 	m_MatRoot.Save( ostm, true );
 	iSize = (uint32_t)m_vecNodes.size( );
-	ostm.write( (char*)&iSize, sizeof(iSize) );
+	ostm.write( (const char*)&iSize, sizeof(iSize) );
 	for( i = 0; i < m_vecNodes.size( ); ++i ) {
 		const CBayesNetMinimalNode&	BNNode	= m_vecNodes[ i ];
 
-		ostm.write( (char*)&BNNode.m_bDefault, sizeof(BNNode.m_bDefault) );
+		ostm.write( (const char*)&BNNode.m_bDefault, sizeof(BNNode.m_bDefault) );
 		BNNode.m_MatCPT.Save( ostm, true ); } }
 
 float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t iOffset ) const {
-	float			dNum, dDen;
+	double			dNum, dDen;
 	size_t			i, j;
 	unsigned char	c;
 
@@ -737,11 +743,11 @@ float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t
 		return CMeta::GetNaN( );
 
 	for( i = 0; i < m_MatRoot.GetRows( ); ++i )
-		m_adNY[ i ] = log( m_MatRoot.Get( i, 0 ) );
+		m_adNY[ i ] = m_MatRoot.Get( i, 0 );
 	for( i = 0; i < m_vecNodes.size( ); ++i ) {
 		c = vecbDatum[ ( i / 2 ) + iOffset ];
 		if( i % 2 )
-			c = c >> 4;
+			c >>= 4;
 		if( ( ( c &= 0xF ) == 0xF ) && ( ( c = m_vecNodes[ i ].m_bDefault ) == 0xFF ) )
 			continue;
 
@@ -750,23 +756,24 @@ float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t
 			if( c >= MatCPT.GetRows( ) ) {
 				g_CatBioUtils.error( "CBayesNetMinimal::Evaluate( %d ) illegal value: %d/%d in %d", iOffset, c, MatCPT.GetRows( ), i );
 				return CMeta::GetNaN( ); }
-			m_adNY[ j ] += log( MatCPT.Get( c, j ) ); } }
+			m_adNY[ j ] *= MatCPT.Get( c, j ); } }
 
-	dNum = dDen = exp( m_adNY[ m_MatRoot.GetRows( ) - 1 ] );
+	dNum = dDen = m_adNY[ m_MatRoot.GetRows( ) - 1 ];
 	for( i = 0; ( i + 1 ) < m_MatRoot.GetRows( ); ++i )
-		dDen += exp( m_adNY[ i ] );
+		dDen += m_adNY[ i ];
 
-	return ( dNum / dDen ); }
+	return (float)( dNum / dDen ); }
 
 bool CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbData, float* adValues,
-	size_t iGenes ) const {
-	size_t	iGene, iOffset;
+	size_t iGenes, size_t iStart ) const {
+	size_t	iGene, iOffset, iChunk;
 
 	if( !adValues )
 		return false;
 
-	for( iGene = iOffset = 0; ( iGene < iGenes ) && ( iOffset < vecbData.size( ) );
-		++iGene,iOffset += ( ( m_vecNodes.size( ) + 1 ) / 2 ) )
+	iChunk = ( m_vecNodes.size( ) + 1 ) / 2;
+	iOffset = iChunk * iStart;
+	for( iGene = iStart; ( iGene < iGenes ) && ( iOffset < vecbData.size( ) ); ++iGene,iOffset += iChunk )
 		adValues[ iGene ] = Evaluate( vecbData, iOffset );
 
 	return true; }

@@ -34,8 +34,10 @@ public:
 		return CDatabaseImpl::GetGene( strGene ); }
 
 	const std::string& GetGene( size_t iGene ) const {
+		static const std::string	c_strEmpty	= "";
 
-		return m_vecpDBs[ iGene % m_vecpDBs.size( ) ]->GetGene( iGene / m_vecpDBs.size( ) ); }
+		return ( m_vecpDBs.empty( ) ? c_strEmpty : m_vecpDBs[ iGene % m_vecpDBs.size( ) ]->GetGene( iGene /
+			m_vecpDBs.size( ) ) ); }
 
 	void SetMemmap( bool fMemmap ) {
 

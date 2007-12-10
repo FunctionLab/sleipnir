@@ -112,11 +112,19 @@ public:
 	bool Open( std::istream& );
 	void Save( std::ostream& ) const;
 	float Evaluate( const std::vector<unsigned char>&, size_t = 0 ) const;
-	bool Evaluate( const std::vector<unsigned char>&, float*, size_t ) const;
+	bool Evaluate( const std::vector<unsigned char>&, float*, size_t, size_t = 0 ) const;
 
 	size_t GetNodes( ) const {
 
 		return ( m_vecNodes.size( ) + 1 ); }
+
+	void SetID( const std::string& strID ) {
+
+		m_strID = strID; }
+
+	const std::string& GetID( ) const {
+
+		return m_strID; }
 };
 
 // MEFIT ON

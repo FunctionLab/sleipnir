@@ -24,6 +24,7 @@ private:
 	typedef TGraph::edge_descriptor												TEdge;
 	typedef TGraph::vertex_descriptor											TVertex;
 
+	static const char	c_szCutoffBox[];
 	static const char	c_szHeader[];
 	static const float	c_dEdgeOpacity;
 

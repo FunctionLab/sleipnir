@@ -35,8 +35,9 @@ public:
 		return m_vecstrGenes.size( ); }
 
 	const std::string& GetGene( size_t iGene ) const {
+		static const std::string	c_strEmpty	= "";
 
-		return m_vecstrGenes[ iGene ]; }
+		return ( m_vecstrGenes.empty( ) ? c_strEmpty : m_vecstrGenes[ iGene % m_vecstrGenes.size( ) ] ); }
 
 	void Write( size_t iOne, size_t iTwo, size_t iDataset, unsigned char bValue, bool fBoth = false ) {
 		std::streamoff	iOffset;

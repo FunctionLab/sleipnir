@@ -111,7 +111,7 @@ int main( int iArgs, char** aszArgs ) {
 		ifstream	ifsm;
 
 		ifsm.open( sArgs.genes_arg );
-		if( !GenesIn.Open( ifsm, false ) ) {
+		if( !GenesIn.Open( ifsm, !sArgs.genome_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.genes_arg << endl;
 			return 1; } }
 
@@ -125,7 +125,7 @@ int main( int iArgs, char** aszArgs ) {
 
 		vecpGenes[ i ]  = new CGenes( Genome );
 		ifsm.open( sArgs.inputs[ i ] );
-		if( !vecpGenes[ i ]->Open( ifsm, false ) ) {
+		if( !vecpGenes[ i ]->Open( ifsm, !sArgs.genome_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
 			return 1; }
 		vecpYes[ i ] = new CDat( );
