@@ -62,13 +62,6 @@ int main( int iArgs, char** aszArgs ) {
 		DataFull.FilterGenes( GenesIn, CDat::EFilterInclude );
 		DataFull.FilterGenes( GenesEx, CDat::EFilterExclude );
 		pData = &DataFull; }
-	else if( sArgs.database_arg ) {
-		CDatabase			Database;
-		CBayesNetMinimal	BNMinimal;
-
-		if( !BNMinimal.Open( BNSmile ) ) {
-			cerr << "Couldn't open: " << sArgs.input_arg << endl;
-			return 1; }
 
 	else if( sArgs.dataset_arg ) {
 		if( !DataMap.Open( sArgs.dataset_arg ) ) {
