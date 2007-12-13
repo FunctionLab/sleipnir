@@ -116,7 +116,7 @@ int main( int iArgs, char** aszArgs ) {
 		CDatasetCompact	Data;
 		vector<size_t>	veciGenes;
 		size_t			j, k, iOne, iTwo, iBin, iZero, iIndex;
-		float			d;
+		double			d;
 		CDataMatrix		MatCPT;
 		ofstream		ofsm;
 		char			acTemp[ L_tmpnam + 1 ];
@@ -160,12 +160,12 @@ int main( int iArgs, char** aszArgs ) {
 		BNIn.GetCPT( 0, MatCPT );
 		d = log( MatCPT.Get( 0, 0 ) );
 		for( i = 0; i < DatNo.GetGenes( ); ++i )
-			adNo[ i ] = d;
+			adNo[ i ] = (float)d;
 		for( i = 0; i < DatNo.GetGenes( ); ++i )
 			DatNo.Set( i, adNo );
 		d = log( MatCPT.Get( 1, 0 ) );
 		for( i = 0; i < DatYes.GetGenes( ); ++i )
-			adYes[ i ] = d;
+			adYes[ i ] = (float)d;
 		for( i = 0; i < DatYes.GetGenes( ); ++i )
 			DatYes.Set( i, adYes );
 
@@ -176,7 +176,7 @@ int main( int iArgs, char** aszArgs ) {
 			map<string,size_t>::const_iterator	iterZero;
 
 			vecstrDatum.push_back( vecstrFiles[ i ] );
-			if( !Data.Open( vecstrDatum ) ) {
+			if( !Data.Open( vecstrDatum, !!sArgs.memmap_flag ) ) {
 				cerr << "Couldn't open: " << vecstrFiles[ i ] << endl;
 				return 1; }
 			iZero = ( ( iterZero = mapZeros.find( vecstrNames[ i + 1 ] ) ) == mapZeros.end( ) ) ? -1 :
@@ -205,8 +205,8 @@ int main( int iArgs, char** aszArgs ) {
 			memcpy( adYes, DatYes.Get( i ), ( DatYes.GetGenes( ) - i - 1 ) * sizeof(*adYes) );
 			memcpy( adNo, DatNo.Get( i ), ( DatNo.GetGenes( ) - i - 1 ) * sizeof(*adNo) );
 			for( j = 0; j < ( DatYes.GetGenes( ) - i - 1 ); ++j ) {
-				d = exp( adYes[ j ] );
-				adYes[ j ] = d / ( d + exp( adNo[ j ] ) ); }
+				d = exp( (double)adYes[ j ] );
+				adYes[ j ] = (float)( d / ( d + exp( (double)adNo[ j ] ) ) ); }
 			DatYes.Set( i, adYes ); }
 		_unlink( szTemp ); }
 	else {
