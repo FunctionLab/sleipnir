@@ -84,7 +84,7 @@ void CSVMImpl::Reset( bool fData, bool fModel, bool fAlphas ) {
 		if( m_adLabels ) {
 			delete[] m_adLabels;
 			m_adLabels = NULL; } } }
-
+#ifndef SAM
 size_t CSVMImpl::GetWords( const SData& sData ) const {
 	size_t	i, iRet;
 
@@ -142,7 +142,7 @@ DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iOne, size_t iTwo, size_t i
 	if( asWords != s_asWords )
 		delete[] asWords;
 	return pRet; }
-
+#endif
 DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iGene ) const {
 	SWORD*	asWords;
 	size_t	i, iWords;
