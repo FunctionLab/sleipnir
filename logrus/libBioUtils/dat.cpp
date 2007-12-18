@@ -9,6 +9,7 @@
 
 namespace libBioUtils {
 
+const char	CDatImpl::c_acComment[]		= "#";
 const float	CDatImpl::c_dCutoff			= 0.2f;
 const float	CDatImpl::c_adColorMin[]	= {0, 1, 0};
 const float	CDatImpl::c_adColorMax[]	= {1, 0, 0};
@@ -316,6 +317,8 @@ bool CDatImpl::OpenText( istream& istm, float dDefault, bool fDuplicates ) {
 		strToken = OpenToken( acBuf, &pc );
 		if( !strToken.length( ) )
 			break;
+		if( strToken == c_acComment )
+			continue;
 		if( strToken != strCache ) {
 			strCache = strToken;
 			iOne = MapGene( mapGenes, m_vecstrGenes, strToken ); }

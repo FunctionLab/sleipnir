@@ -21,8 +21,8 @@ sock.read( iBytes ).unpack( "C" * iBytes ).each do |i|
 =end
 
 =begin # Pixie graph
-# size, opcode, context, limit, genes
-sock.write( [13, 2, 0, 3, 1].pack( "ICIII" ) )
+# size, opcode, file, context, limit, genes
+sock.write( [14, 2, 0, 0, 3, 1].pack( "ICCIII" ) )
 iBytes = sock.read( 4 ).unpack( "I" )[ 0 ]
 sock.read( iBytes ).unpack( "C" * iBytes ).each do |i|
 	puts( i ); end

@@ -204,9 +204,8 @@ int main( int iArgs, char** aszArgs ) {
 		for( i = 0; i < DatYes.GetGenes( ); ++i ) {
 			memcpy( adYes, DatYes.Get( i ), ( DatYes.GetGenes( ) - i - 1 ) * sizeof(*adYes) );
 			memcpy( adNo, DatNo.Get( i ), ( DatNo.GetGenes( ) - i - 1 ) * sizeof(*adNo) );
-			for( j = 0; j < ( DatYes.GetGenes( ) - i - 1 ); ++j ) {
-				d = exp( (double)adYes[ j ] );
-				adYes[ j ] = (float)( d / ( d + exp( (double)adNo[ j ] ) ) ); }
+			for( j = 0; j < ( DatYes.GetGenes( ) - i - 1 ); ++j )
+				adYes[ j ] = (float)( 1 / ( 1 + exp( (double)adNo[ j ] - (double)adYes[ j ] ) ) );
 			DatYes.Set( i, adYes ); }
 		_unlink( szTemp ); }
 	else {

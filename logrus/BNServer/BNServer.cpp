@@ -236,7 +236,7 @@ bool CBNServer::Get( size_t iGene, size_t iContext, float* adValues ) {
 		adTarget = m_adGenes; }
 	if( !BNet.Evaluate( vecbData, adTarget, m_iGenes ) )
 		return false;
-	adTarget[ iGene - 1 ] = CMeta::GetNaN( );
+	adTarget[ ( iGene - 1 ) % m_iGenes ] = CMeta::GetNaN( );
 
 	if( !adValues ) {
 		iSize = (uint32_t)( m_iGenes * sizeof(*m_adGenes) );
@@ -291,12 +291,14 @@ size_t CBNServer::ProcessGraph( const vector<unsigned char>& vecbMessage, size_t
 	CDat						DatGraph;
 	vector<bool>				vecfQuery;
 	set<size_t>::const_iterator	iterQuery;
+	unsigned char				bFile;
 
-	iSize = sizeof(iContext) + sizeof(iLimit);
+	iSize = sizeof(bFile) + sizeof(iContext) + sizeof(iLimit);
 	if( ( iOffset + iSize ) > vecbMessage.size( ) )
 		return -1;
-	iContext = *(uint32_t*)&vecbMessage[ iOffset ];
-	iLimit = *(uint32_t*)&vecbMessage[ iOffset + sizeof(iContext) ];
+	bFile = vecbMessage[ iOffset ];
+	iContext = *(uint32_t*)&vecbMessage[ iOffset + sizeof(bFile) ];
+	iLimit = *(uint32_t*)&vecbMessage[ iOffset + sizeof(bFile) + sizeof(iContext) ];
 	for( i = iOffset + iSize; ( i + sizeof(iGene) ) <= vecbMessage.size( ); i += sizeof(iGene) ) {
 		iGene = *(uint32_t*)&vecbMessage[ i ];
 		setiQuery.insert( iGene ); }
@@ -306,7 +308,7 @@ size_t CBNServer::ProcessGraph( const vector<unsigned char>& vecbMessage, size_t
 	for( iterQuery = setiQuery.begin( ); iterQuery != setiQuery.end( ); ++iterQuery )
 		veciQuery.push_back( *iterQuery );
 	if( !( PixieCreate( veciQuery, iContext, iLimit, vecfQuery, DatGraph ) &&
-		PixieGraph( DatGraph, vecfQuery ) ) )
+		PixieGraph( DatGraph, vecfQuery, !!bFile ) ) )
 		return -1;
 
 	return iRet; }
@@ -367,7 +369,7 @@ bool CBNServer::PixieCreate( const vector<size_t>& veciQuery, size_t iContext, s
 	DatGraph.Open( vecstrGenes );
 	for( i = 0; i < veciQuery.size( ); ++i ) {
 		for( j = ( i + 1 ); j < veciQuery.size( ); ++j )
-			DatGraph.Set( i, j, MatQuery.Get( i, veciQuery[ j ] - 1 ) );
+			DatGraph.Set( i, j, MatQuery.Get( i, ( veciQuery[ j ] - 1 ) % MatQuery.GetColumns( ) ) );
 		for( j = 0; j < veciNeighbors.size( ); ++j )
 			DatGraph.Set( i, veciQuery.size( ) + j, MatQuery.Get( i, veciNeighbors[ j ] ) ); }
 	for( i = 0; i < veciNeighbors.size( ); ++i ) {
@@ -404,14 +406,13 @@ bool CBNServer::PixieCreate( const vector<size_t>& veciQuery, size_t iContext, s
 
 	return true; }
 
-bool CBNServer::PixieGraph( const CDat& DatGraph, const vector<bool>& vecfQuery ) const {
+bool CBNServer::PixieGraph( const CDat& DatGraph, const vector<bool>& vecfQuery, bool fFile ) const {
 	static const size_t	c_iBuffer	= 1024;
 	char		acBuffer[ c_iBuffer ];
 	string		strCmd, strDotIn, strDotOut, strSvg;
 	ofstream	ofsm;
 	CDot		DotOut( DatGraph );
 	CGenome		Genome;
-	ostrstream	ossm;
 	uint32_t	iSize;
 
 	sprintf_s( acBuffer, ( m_strFiles + "/inXXXXXX" ).c_str( ) );
@@ -434,11 +435,33 @@ bool CBNServer::PixieGraph( const CDat& DatGraph, const vector<bool>& vecfQuery 
 	strCmd = m_strGraphviz + " -Tdot -o" + strDotOut + ' ' + strDotIn;
 	system( strCmd.c_str( ) );
 
-	if( !( DotOut.Open( strDotOut.c_str( ) ) && DotOut.Save( ossm, vecfQuery ) ) )
+	if( !DotOut.Open( strDotOut.c_str( ) ) )
 		return false;
-	iSize = ossm.pcount( );
-	send( m_iSocket, (const char*)&iSize, sizeof(iSize), 0 );
-	send( m_iSocket, ossm.str( ), ossm.pcount( ), 0 );
+	if( fFile ) {
+		sprintf_s( acBuffer, "svgXXXXXX" );
+		if( _mktemp_s( acBuffer ) )
+			return false;
+		strSvg = m_strFiles + '/' + acBuffer + c_szSVG;
+		ofsm.clear( );
+		ofsm.open( strSvg.c_str( ) );
+		if( !( ofsm.is_open( ) && DotOut.Save( ofsm, vecfQuery ) ) )
+			return false;
+		ofsm.close( );
+
+		strSvg = acBuffer;
+		strSvg += c_szSVG;
+		iSize = (uint32_t)strSvg.length( );
+		send( m_iSocket, (const char*)&iSize, sizeof(iSize), 0 );
+		send( m_iSocket, strSvg.c_str( ), iSize, 0 ); }
+	else {
+		strstream	ossm;
+
+		if( !DotOut.Save( ossm, vecfQuery ) )
+			return false;
+
+		iSize = ossm.pcount( );
+		send( m_iSocket, (const char*)&iSize, sizeof(iSize), 0 );
+		send( m_iSocket, ossm.str( ), ossm.pcount( ), 0 ); }
 
 	return true; }
 

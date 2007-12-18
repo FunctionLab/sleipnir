@@ -690,7 +690,7 @@ bool CBayesNetMinimal::Open( const CBayesNetSmile& BNSmile ) {
 		if( m_vecNodes[ i ].m_MatCPT.GetColumns( ) != m_MatRoot.GetRows( ) )
 			return false;
 		m_vecNodes[ i ].m_bDefault = BNSmile.GetZero( i + 1 ); }
-	m_adNY = new double[ m_MatRoot.GetRows( ) ];
+	m_adNY = new long double[ m_MatRoot.GetRows( ) ];
 
 	return true; }
 
@@ -706,7 +706,7 @@ bool CBayesNetMinimal::Open( istream& istm ) {
 	istm.read( &m_strID[ 0 ], iSize * sizeof(*m_strID.c_str( )) );
 	if( !m_MatRoot.Open( istm, true ) )
 		return false;
-	m_adNY = new double[ m_MatRoot.GetRows( ) ];
+	m_adNY = new long double[ m_MatRoot.GetRows( ) ];
 	istm.read( (char*)&iSize, sizeof(iSize) );
 	m_vecNodes.resize( iSize );
 	for( i = 0; i < m_vecNodes.size( ); ++i ) {
@@ -735,7 +735,7 @@ void CBayesNetMinimal::Save( ostream& ostm ) const {
 		BNNode.m_MatCPT.Save( ostm, true ); } }
 
 float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t iOffset ) const {
-	double			dNum, dDen;
+	long double		dNum, dDen;
 	size_t			i, j;
 	unsigned char	c;
 

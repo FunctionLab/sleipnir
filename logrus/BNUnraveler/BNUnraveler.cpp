@@ -301,7 +301,7 @@ void* finalize( void* pData ) {
 	size_t		i, j;
 	float*		adYes;
 	float*		adNo;
-	double		d, dPrior;
+	float		dPrior;
 	CDataMatrix	MatCPT;
 
 	psData = (SEvaluate*)pData;
@@ -315,11 +315,8 @@ void* finalize( void* pData ) {
 		memcpy( adYes, psData->m_pYes->Get( i ), ( psData->m_pYes->GetGenes( ) - i - 1 ) * sizeof(*adYes) );
 		memcpy( adNo, psData->m_pNo->Get( i ), ( psData->m_pNo->GetGenes( ) - i - 1 ) * sizeof(*adNo) );
 		for( j = 0; j < ( psData->m_pYes->GetGenes( ) - i - 1 ); ++j )
-			if( CMeta::IsNaN( adYes[ j ] ) )
-				adYes[ j ] = (float)dPrior;
-			else {
-				d = exp( (double)adYes[ j ] );
-				adYes[ j ] = (float)( d / ( d + exp( (double)adNo[ j ] ) ) ); }
+			adYes[ j ] = CMeta::IsNaN( adYes[ j ] ) ? dPrior :
+				(float)( 1 / ( 1 + exp( (double)adNo[ j ] - (double)adYes[ j ] ) ) );
 		psData->m_pYes->Set( i, adYes ); }
 	delete[] adNo;
 	delete[] adYes;

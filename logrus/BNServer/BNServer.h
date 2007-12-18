@@ -27,7 +27,7 @@ private:
 	bool Get( size_t, const vector<size_t>&, size_t, float* );
 	bool Get( const vector<unsigned char>&, size_t );
 	bool PixieCreate( const vector<size_t>&, size_t, size_t, vector<bool>&, CDat& ) const;
-	bool PixieGraph( const CDat&, const vector<bool>& ) const;
+	bool PixieGraph( const CDat&, const vector<bool>&, bool ) const;
 	bool PixieGraphWrite( const CDat&, const vector<bool>&, const CDot&, ostream& ) const;
 	size_t ProcessInference( const vector<unsigned char>&, size_t );
 	size_t ProcessData( const vector<unsigned char>&, size_t );

@@ -25,8 +25,10 @@ private:
 	typedef TGraph::vertex_descriptor											TVertex;
 
 	static const char	c_szCutoffBox[];
-	static const char	c_szHeader[];
+	static const char	c_szHeaderPreVB[];
+	static const char	c_szHeaderPostVB[];
 	static const float	c_dEdgeOpacity;
+	static const float	c_dScale;
 
 	bool SaveEdge( ostream&, const TEdge& ) const;
 	bool SaveVertex( ostream&, const TVertex&, const vector<bool>& ) const;

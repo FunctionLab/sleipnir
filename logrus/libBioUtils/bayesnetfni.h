@@ -162,7 +162,7 @@ protected:
 	CBayesNetMinimalImpl( ) : m_adNY(NULL) { }
 
 	std::string							m_strID;
-	double*								m_adNY;
+	long double*						m_adNY;
 	CDataMatrix							m_MatRoot;
 	std::vector<CBayesNetMinimalNode>	m_vecNodes;
 };

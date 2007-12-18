@@ -1,48 +1,52 @@
 #include "stdafx.h"
 #include "dot.h"
 
+#define JAVASCRIPT_DIR	"/javascripts/"
+
 using namespace boost;
 
 const float	CDot::c_dEdgeOpacity	= 0.13f;
-const char	CDot::c_szHeader[]		=
-//	"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
-//	"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">\n"
+const float	CDot::c_dScale			= 36;
+const char	CDot::c_szHeaderPreVB[]	=
+	"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+	"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">\n"
 	"<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
 	"	xmlns:a3=\"http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/\"\n"
 	"	a3:scriptImplementation=\"Adobe\"\n"
 	"	onload=\"init( )\"\n"
-	"	viewBox=\"0 0 950 950\"\n"
-	"	width=\"99.9%\" height=\"768\"\n"
+	"	viewBox=\"-20 -5 ";
+const char	CDot::c_szHeaderPostVB[]	= "\"\n"
+	"	width=\"100%\" height=\"100%\"\n"
 	"	>\n"
-	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"/javascripts/helper_functions.js\" />\n"
-	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"/javascripts/mapApp.js\" />\n"
-	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"/javascripts/simple.js\" />\n"
+	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"" JAVASCRIPT_DIR "/helper_functions.js\" />\n"
+	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"" JAVASCRIPT_DIR "/mapApp.js\" />\n"
+	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"" JAVASCRIPT_DIR "/simple.js\" />\n"
 	"	<g id=\"graph\" class=\"graph\" style=\"font-family:Times-Roman;font-size:12pt\">\n"
 	"		<title>G</title>\n";
 const char	CDot::c_szCutoffBox[]	=
 	"		<g id=\"cutoff_control_box\">\n"
 	"			<g transform=\"scale(0.5)\">\n"
-	"				<rect x=\"5\" y=\"5\" width=\"40\" height=\"32\"\n"
+	"				<rect x=\"-10\" y=\"-10\" width=\"40\" height=\"32\"\n"
 	"					fill=\"white\" stroke=\"none\" />\n"
 	"				<path id=\"cutoff_uparrow\"\n"
 	"					stroke-antialiasing=\"true\"\n"
 	"					stroke=\"black\" fill=\"cyan\"\n"
-	"					d=\"M 10 32 L 40 32 L 25 10 z\" />\n"
-	"				 <rect x=\"5\" y=\"43\" width=\"40\" height=\"32\"\n"
+	"					d=\"M -5 32 L 25 32 L 10 10 z\" />\n"
+	"				<rect x=\"-10\" y=\"43\" width=\"40\" height=\"32\"\n"
 	"					fill=\"white\" stroke=\"none\" />\n"
 	"				<path id=\"cutoff_downarrow\"\n"
 	"					stroke-antialiasing=\"true\"\n"
 	"					stroke=\"black\" fill=\"cyan\"\n"
-	"					d=\"M 10 48 L 40 48 L 25 70 z\" />\n"
-	"				<rect x=\"0\" y=\"0\" width=\"50\" height=\"80\"\n"
+	"					d=\"M -5 48 L 25 48 L 10 70 z\" />\n"
+	"				<rect x=\"-15\" y=\"0\" width=\"50\" height=\"80\"\n"
 	"					fill=\"none\" stroke-linejoin=\"round\"\n"
 	"					stroke-width=\"1\" stroke=\"black\" />\n"
 	"			</g>\n"
-	"			<text x=\"35\" y=\"15\"\n"
+	"			<text x=\"20\" y=\"15\"\n"
 	"				font-family=\"Helvetica\" font-size=\"14\">\n"
 	"				Cutoff value:\n"
 	"			</text>\n"
-	"			<g id=\"cutoff_value_text\" x=\"35\" y=\"35\" />\n"
+	"			<g id=\"cutoff_value_text\" x=\"20\" y=\"35\" />\n"
 	"		</g>\n";
 
 bool CDot::Open( const char* szDot ) {
@@ -59,8 +63,29 @@ bool CDot::Open( const char* szDot ) {
 bool CDot::Save( ostream& ostm, const vector<bool>& vecfQuery ) const {
 	graph_traits<TGraph>::edge_iterator		iterEdge, iterEdgeEnd;
 	graph_traits<TGraph>::vertex_iterator	iterVertex, iterVertexEnd;
+	size_t									iMaxX, iMaxY, iCurX, iCurY;
 
-	ostm << c_szHeader;
+	ostm << c_szHeaderPreVB;
+	iMaxX = iMaxY = 0;
+	for( tie( iterVertex, iterVertexEnd ) = vertices( m_Graph ); iterVertex != iterVertexEnd; ++iterVertex ) {
+		string			strPos;
+		float			dWidth, dHeight;
+		vector<string>	vecstrPos;
+
+		dWidth = (float)atof( get( "width", *m_pProperties, *iterVertex ).c_str( ) );
+		dHeight = (float)atof( get( "height", *m_pProperties, *iterVertex ).c_str( ) );
+		strPos = get( "pos", *m_pProperties, *iterVertex );
+		CMeta::Tokenize( strPos.c_str( ), vecstrPos, "," );
+		if( vecstrPos.size( ) != 2 )
+			continue;
+		iCurX = atoi( vecstrPos[ 0 ].c_str( ) ) + (size_t)( c_dScale * dWidth );
+		iCurY = atoi( vecstrPos[ 1 ].c_str( ) ) + (size_t)( c_dScale * dHeight );
+		if( iCurX > iMaxX )
+			iMaxX = iCurX;
+		if( iCurY > iMaxY )
+			iMaxY = iCurY; }
+	ostm << ( iMaxX + 5 ) << ' ' << ( iMaxY + 5 );
+	ostm << c_szHeaderPostVB;
 
 	ostm << "		<g id=\"edges\" class=\"edgeList\">" << endl;
 	for( tie( iterEdge, iterEdgeEnd ) = edges( m_Graph ); iterEdge != iterEdgeEnd; ++iterEdge )
@@ -128,7 +153,6 @@ bool CDot::SaveEdge( ostream& ostm, const TEdge& Edge ) const {
 	return true; }
 
 bool CDot::SaveVertex( ostream& ostm, const TVertex& Vertex, const vector<bool>& vecfQuery ) const {
-	static const float	c_dScale	= 36;
 	static const char	c_acTabs[]	= "			";
 	static const size_t	c_iBuffer	= 16;
 	char									acBuffer[ c_iBuffer ];

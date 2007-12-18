@@ -27,6 +27,7 @@ protected:
 	static const size_t	c_iNeighborhood1	= 40;
 	static const size_t	c_iNeighborhood2	= 0;
 	static const size_t	c_iDegree			= 1;
+	static const char	c_acComment[];
 	static const float	c_dCutoff;
 	static const float	c_adColorMin[];
 	static const float	c_adColorMax[];
