@@ -231,6 +231,9 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.genet_arg && !Answers.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) ) {
 			cerr << "Couldn't open: " << sArgs.genet_arg << endl;
 			return 1; }
+		if( sArgs.genee_arg && !Answers.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge ) ) {
+			cerr << "Couldn't open: " << sArgs.genee_arg << endl;
+			return 1; }
 		if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
 			cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 			return 1; }

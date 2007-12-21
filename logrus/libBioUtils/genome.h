@@ -54,6 +54,7 @@ public:
 
 	bool Open( istream&, bool = true );
 	bool Open( const std::vector<std::string>& );
+	bool Open( const char*, bool = true );
 	void Filter( const CGenes& );
 // MEFIT OFF
 	size_t CountAnnotations( const IOntology*, size_t, bool = true, const CGenes* = NULL ) const;

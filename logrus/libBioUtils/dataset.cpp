@@ -573,21 +573,32 @@ bool CDataFilter::IsExample( size_t iX, size_t iY ) const {
 		case CDat::EFilterInclude:
 			if( !( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) )
 				return false;
+			break;
 
 		case CDat::EFilterExclude:
 			if( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] )
 				return false;
+			break;
 
 		case CDat::EFilterEdge:
 			if( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) )
 				return false;
+			break;
 
 		case CDat::EFilterTerm:
 			if( ( m_pAnswers && ( ( m_veciAnswers[ iX ] == -1 ) || ( m_veciAnswers[ iY ] == -1 ) ) ) ||
 				( !( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) &&
 				( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) || ( m_pAnswers &&
 				( m_pAnswers->Get( m_veciAnswers[ iX ], m_veciAnswers[ iY ] ) > 0 ) ) ) ) )
-				return false; }
+				return false;
+			break;
+
+		case CDat::EFilterPositives:
+			if( m_pAnswers && ( m_veciAnswers[ iX ] != -1 ) && ( m_veciAnswers[ iY ] != -1 ) &&
+				( m_pAnswers->Get( m_veciAnswers[ iX ], m_veciAnswers[ iY ] ) > 0 ) &&
+				!( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) )
+				return false;
+			break; }
 
 	return m_pDataset->IsExample( iX, iY ); }
 

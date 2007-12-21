@@ -15,11 +15,12 @@ class CGenome;
 class CDat : protected CDatImpl {
 public:
 	enum EFilter {
-		EFilterInclude	= 0,
-		EFilterTerm		= EFilterInclude + 1,
-		EFilterExclude	= EFilterTerm + 1,
-		EFilterPixie	= EFilterExclude + 1,
-		EFilterEdge		= EFilterPixie + 1
+		EFilterInclude		= 0,
+		EFilterTerm			= EFilterInclude + 1,
+		EFilterExclude		= EFilterTerm + 1,
+		EFilterPixie		= EFilterExclude + 1,
+		EFilterEdge			= EFilterPixie + 1,
+		EFilterPositives	= EFilterEdge + 1
 	};
 
 	enum EFormat {

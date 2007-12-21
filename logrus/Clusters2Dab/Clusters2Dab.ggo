@@ -8,3 +8,4 @@ option	"input"		i	"Input cluster file"	string	typestr="filename"
 option	"type"		t	"Type of input cluster"	values="samba","list","param","fuzzy"	default="list"
 option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
 option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"counts"	c	"Calculate pair weight by cocluster frequency"	flag	off

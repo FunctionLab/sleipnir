@@ -352,6 +352,12 @@ bool CGenes::Open( istream& istm, bool fCreate ) {
 
 	return true; }
 
+bool CGenes::Open( const char* szFile, bool fCreate ) {
+	ifstream	ifsm;
+
+	ifsm.open( szFile );
+	return ( ifsm.is_open( ) && Open( ifsm, fCreate ) ); }
+
 // MEFIT OFF
 
 size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKids, const CGenes* pBkg ) const {

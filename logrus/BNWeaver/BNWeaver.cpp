@@ -8,6 +8,7 @@ struct SLearn {
 	CBayesNetSmile*			m_pBN;
 	const IDataset*			m_pData;
 	const CGenes*			m_pGenes;
+	const CGenes*			m_pNegatives;
 	const CDat*				m_pAnswers;
 	const CBayesNetSmile*	m_pBNDefault;
 	const char*				m_szName;
@@ -34,6 +35,7 @@ int main( int iArgs, char** aszArgs ) {
 	string								strFile;
 	vector<pthread_t>					vecpthdThreads;
 	vector<SLearn>						vecsData;
+	CGenes								GenesNeg( Genome );
 
 #ifdef WIN32
 	pthread_win32_process_attach_np( );
@@ -73,6 +75,9 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
 		cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 		return 1; }
+	if( sArgs.negatives_arg && !GenesNeg.Open( sArgs.negatives_arg ) ) {
+		cerr << "Couldn't open: " << sArgs.negatives_arg << endl;
+		return 1; }
 
 	vecpGenes.resize( sArgs.inputs_num );
 	for( i = 0; i < vecpGenes.size( ); ++i ) {
@@ -98,6 +103,7 @@ int main( int iArgs, char** aszArgs ) {
 			vecsData[ i ].m_pBN = vecpBNRoots[ i ] = new CBayesNetSmile( );
 			vecsData[ i ].m_pData = &Data;
 			vecsData[ i ].m_pGenes = vecpGenes[ i ];
+			vecsData[ i ].m_pNegatives = &GenesNeg;
 			vecsData[ i ].m_pAnswers = &Answers;
 			vecsData[ i ].m_pBNDefault = sArgs.default_arg ? &BNDefault : NULL;
 			vecsData[ i ].m_szName = sArgs.inputs[ i ];
@@ -158,6 +164,7 @@ int main( int iArgs, char** aszArgs ) {
 				vecsData[ i ].m_pBN = (*pvecpBNData)[ i ] = new CBayesNetSmile( );
 				vecsData[ i ].m_pData = &Data;
 				vecsData[ i ].m_pGenes = vecpGenes[ i ];
+				vecsData[ i ].m_pNegatives = &GenesNeg;
 				vecsData[ i ].m_pAnswers = &Answers;
 				vecsData[ i ].m_pBNDefault = sArgs.default_arg ? &BNDefault : NULL;
 				vecsData[ i ].m_szName = sArgs.inputs[ i ];
@@ -205,11 +212,15 @@ int main( int iArgs, char** aszArgs ) {
 	return 0; }
 
 void* learn( void* pData ) {
-	CDataFilter	DataFilter;
+	CDataFilter	DataFilter, DataNegatives;
 	SLearn*		psData;
 
 	psData = (SLearn*)pData;
-	DataFilter.Attach( psData->m_pData, *psData->m_pGenes, CDat::EFilterTerm, psData->m_pAnswers );
+	if( psData->m_pNegatives->GetGenes( ) ) {
+		DataNegatives.Attach( psData->m_pData, *psData->m_pNegatives, CDat::EFilterEdge, psData->m_pAnswers );
+		DataFilter.Attach( &DataNegatives, *psData->m_pGenes, CDat::EFilterPositives, psData->m_pAnswers ); }
+	else
+		DataFilter.Attach( psData->m_pData, *psData->m_pGenes, CDat::EFilterEdge, psData->m_pAnswers );
 	if( !psData->m_pBN->Open( &DataFilter, *psData->m_pvecstrNames, *psData->m_pveciZeros ) ) {
 		cerr << "Couldn't create base network: " << psData->m_szName << endl;
 		pthread_exit( NULL );
