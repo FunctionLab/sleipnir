@@ -4,6 +4,8 @@
 const char	c_szBP[]	= "bp";
 const char	c_szCC[]	= "cc";
 
+double overlap( const CGenome&, const CSlim&, size_t, size_t );
+
 int main( int iArgs, char** aszArgs ) {
 	CGenome								Genome;
 	gengetopt_args_info					sArgs;
@@ -106,6 +108,31 @@ int main( int iArgs, char** aszArgs ) {
 
 		return 0; }
 
+	if( sArgs.nsets_flag ) {
+		for( i = 0; i < Slim.GetSlims( ); ++i ) {
+			map<const CGene*,bool>				mapGenes;
+			map<const CGene*,bool>::iterator	iterGene;
+
+			for( j = 0; j < Slim.GetSlims( ); ++j ) {
+				if( i == j )
+					continue;
+				if( overlap( Genome, Slim, i, j ) < sArgs.nsetlap_arg )
+					for( k = 0; k < Slim.GetGenes( j ); ++k )
+						mapGenes[ &Slim.GetGene( j, k ) ] = false;
+				else
+					for( k = 0; k < Slim.GetGenes( j ); ++k ) {
+						const CGene*	pGene	= &Slim.GetGene( j, k );
+
+						if( mapGenes.find( pGene ) == mapGenes.end( ) )
+							mapGenes[ pGene ] = true; } }
+
+			ofsm.open( ( (string)sArgs.directory_arg + '/' + CMeta::Filename( Slim.GetSlim( i ) ) ).c_str( ) );
+			for( iterGene = mapGenes.begin( ); iterGene != mapGenes.end( ); ++iterGene )
+				if( iterGene->second )
+					ofsm << iterGene->first->GetName( ) << endl;
+			ofsm.close( ); }
+		return 0; }
+
 	if( sArgs.output_arg ) {
 		if( sArgs.negatives_arg ) {
 			ifsmOnto.clear( );
@@ -157,3 +184,16 @@ int main( int iArgs, char** aszArgs ) {
 
 	CMeta::Shutdown( );
 	return 0; }
+
+double overlap( const CGenome& Genome, const CSlim& Slim, size_t iOne, size_t iTwo ) {
+	size_t				i, iOverlap;
+	set<const CGene*>	setOne;
+
+	for( i = 0; i < Slim.GetGenes( iOne ); ++i )
+		setOne.insert( &Slim.GetGene( iOne, i ) );
+	for( iOverlap = i = 0; i < Slim.GetGenes( iTwo ); ++i )
+		if( setOne.find( &Slim.GetGene( iTwo, i ) ) != setOne.end( ) )
+			iOverlap++;
+
+	return CStatistics::HypergeometricCDF( iOverlap, Slim.GetGenes( iOne ), Slim.GetGenes( iTwo ),
+		Genome.GetGenes( ) ); }

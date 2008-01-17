@@ -13,6 +13,8 @@ int open_genes( const char* szFile, CGenes& Genes ) {
 	return 0; }
 
 int main( int iArgs, char** aszArgs ) {
+	static const size_t	c_iBuf	= 1024;
+	char				szBuf[ c_iBuf ];
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
 	CDat				Dat;
@@ -21,6 +23,7 @@ int main( int iArgs, char** aszArgs ) {
 	CGenes				GenesIn( Genome ), GenesQr( Genome );
 	int					iRet;
 	size_t				i, j;
+	vector<float>		vecdColors, vecdBorders;
 
 	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) && ( sArgs.config_arg &&
 		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) ) {
@@ -33,6 +36,28 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Genome.Open( ifsm ) ) {
 			cerr << "Could not open: " << sArgs.features_arg << endl;
 			return 1; }
+		ifsm.close( ); }
+
+	if( sArgs.colors_arg ) {
+		ifsm.clear( );
+		ifsm.open( sArgs.colors_arg );
+		if( !ifsm.is_open( ) ) {
+			cerr << "Could not open: " << sArgs.colors_arg << endl;
+			return 1; }
+		while( ifsm.peek( ) != EOF ) {
+			ifsm.getline( szBuf, c_iBuf - 1 );
+			vecdColors.push_back( (float)atof( szBuf ) ); }
+		ifsm.close( ); }
+
+	if( sArgs.borders_arg ) {
+		ifsm.clear( );
+		ifsm.open( sArgs.borders_arg );
+		if( !ifsm.is_open( ) ) {
+			cerr << "Could not open: " << sArgs.borders_arg << endl;
+			return 1; }
+		while( ifsm.peek( ) != EOF ) {
+			ifsm.getline( szBuf, c_iBuf - 1 );
+			vecdBorders.push_back( (float)atof( szBuf ) ); }
 		ifsm.close( ); }
 
 	if( iRet = open_genes( sArgs.genes_arg, GenesIn ) )
@@ -112,7 +137,8 @@ int main( int iArgs, char** aszArgs ) {
 
 	dCutoff = (float)( sArgs.cutoff_given ? sArgs.cutoff_arg : HUGE_VAL );
 	if( !strcmp( sArgs.format_arg, "dot" ) )
-		Dat.SaveDOT( cout, dCutoff, &Genome, true );
+		Dat.SaveDOT( cout, dCutoff, &Genome, false, true, vecdColors.empty( ) ? NULL : &vecdColors,
+			vecdBorders.empty( ) ? NULL : &vecdBorders );
 	else if( !strcmp( sArgs.format_arg, "gdf" ) )
 		Dat.SaveGDF( cout, dCutoff );
 	else if( !strcmp( sArgs.format_arg, "net" ) )

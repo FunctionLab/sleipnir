@@ -13,11 +13,18 @@ class CDat;
 
 class CPCL : protected CPCLImpl {
 public:
+	enum ENormalize {
+		ENormalizeZScore,
+		ENormalizeRow,
+		ENormalizeMinMax
+	};
+
 	static int Distance( const char* szPCL, size_t iSkip, const char* szDistance, bool fNormalize, bool fZScore,
 		bool fAutocorrelate, const char* szGenes, float dCutoff, size_t iLimit, CPCL& PCL, CDat& Dat );
 	static size_t GetSkip( );
 
 	void Open( const CPCL& );
+	bool Open( const char*, size_t );
 	bool Open( std::istream& );
 	bool Open( std::istream&, size_t );
 	void Open( const std::vector<size_t>&, const std::vector<std::string>&,
@@ -29,7 +36,7 @@ public:
 	void SortGenes( const std::vector<size_t>& );
 	void RankTransform( );
 	bool AddGenes( const std::vector<std::string>& );
-	void Normalize( bool = false );
+	void Normalize( ENormalize = ENormalizeRow );
 	void Reset( );
 
 	size_t GetFeatures( ) const {
@@ -84,9 +91,12 @@ public:
 
 		return m_vecstrExperiments[ iExp ]; }
 
-	void MaskGene( size_t iGene ) {
+	void MaskGene( size_t iGene, bool fMask = true ) {
 
-		m_setiGenes.insert( iGene ); }
+		if( fMask )
+			m_setiGenes.insert( iGene );
+		else
+			m_setiGenes.erase( iGene ); }
 
 	bool IsMasked( size_t iGene ) const {
 

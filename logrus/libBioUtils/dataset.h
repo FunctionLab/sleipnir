@@ -64,6 +64,7 @@ public:
 	void Save( std::ostream&, bool ) const;
 	bool FilterGenes( const char*, CDat::EFilter );
 	void FilterAnswers( );
+	void Randomize( );
 
 	bool IsHidden( size_t ) const;
 	size_t GetDiscrete( size_t, size_t, size_t ) const;

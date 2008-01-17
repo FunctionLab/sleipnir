@@ -44,7 +44,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta::Startup( sArgs.verbosity_arg );
+	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
 	EnableXdslFormat( );
 
 	if( sArgs.zeros_arg ) {
@@ -141,9 +141,11 @@ int main( int iArgs, char** aszArgs ) {
 			continue;
 
 		vecstrNames.push_back( (string)sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDab );
-		if( !Data.Open( Answers, vecstrNames, true, !!sArgs.memmap_flag ) ) {
+		if( !Data.Open( Answers, vecstrNames, true, sArgs.memmap_flag && !sArgs.randomize_flag ) ) {
 			cerr << "Couldn't open: " << strFile << endl;
 			return 1; }
+		if( sArgs.randomize_flag )
+			Data.Randomize( );
 		vecstrNames.insert( vecstrNames.begin( ), sArgs.answers_arg );
 		for( i = 0; i < vecstrNames.size( ); ++i )
 			vecstrNames[ i ] = CMeta::Filename( CMeta::Deextension( CMeta::Basename(

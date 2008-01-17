@@ -4,7 +4,7 @@ purpose	"PCL gene-gene distance calculation tool."
 
 section "Optional"
 option	"output"	o	"Output dab file"	string	typestr="filename"
-option	"distance"	d	"Distance measure"	values="pearson","euclidean","kendalls","kolm-smir","spearman","pearnorm","hypergeom","innerprod","bininnerprod","quickpear","mi"	default="pearnorm"
+option	"distance"	d	"Distance measure"	values="pearson","euclidean","kendalls","kolm-smir","spearman","pearnorm","hypergeom","innerprod","bininnerprod","quickpear","mi","relauc","pearsig"	default="pearnorm"
 option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
 option	"input"		i	"Input PCL file"	string	typestr="filename"
 option	"weights"	w	"Input weights file"	string	typestr="filename"

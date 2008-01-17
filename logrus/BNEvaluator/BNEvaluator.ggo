@@ -2,7 +2,7 @@ package	"BNEvaluator"
 version	"1.0"
 purpose	"Per-gene whole Bayes net evaluation"
 
-option	"input"		i	"Input DSL file"	string	typestr="filename"	yes
+option	"input"		i	"Input (X)DSL file"	string	typestr="filename"	yes
 option	"data"		d	"Input PCL file"	string	typestr="filename"	yes
 section "Optional"
 option	"output"	o	"Output PCL file"	string	typestr="filename"

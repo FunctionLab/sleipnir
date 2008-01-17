@@ -33,6 +33,10 @@ public:
 
 		return m_aaData[ iX ]; }
 
+	tType* Get( size_t iX ) {
+
+		return m_aaData[ iX ]; }
+
 	tType& Get( size_t iX, size_t iY ) const {
 		static tType	c_Zero	= 0;
 

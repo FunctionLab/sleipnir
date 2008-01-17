@@ -587,7 +587,7 @@ bool CBayesNetFNImpl::Evaluate( const IDataset* pData, size_t iOne, size_t iTwo,
 	return true; }
 
 bool CBayesNetFN::Evaluate( const vector<unsigned char>& vecbDatum, vector<float>& vecdOut, bool fZero,
-	size_t iNode ) const {
+	size_t iNode, bool fNoData ) const {
 	vector<float>	vecdProd, vecdCur;
 	float			dValue;
 	size_t			i, j, iZero;
@@ -609,7 +609,7 @@ bool CBayesNetFN::Evaluate( const vector<unsigned char>& vecbDatum, vector<float
 			iZero = atoi( Props.GetPropertyValue( iProp ) );
 
 		if( !( dValue = (float)vecbDatum[ i ] ) ) {
-			if( iZero == -1 )
+			if( fNoData || ( iZero == -1 ) )
 				continue;
 			dValue = (float)iZero; }
 		else

@@ -81,15 +81,20 @@ int main( int iArgs, char** aszArgs ) {
 		SVM.Save( sArgs.model_arg ? (ostream&)ofsm : cout );
 		ofsm.close( ); }
 
+	if( sArgs.heldout_flag )
+		for( i = 0; i < Data.GetGenes( ); ++i )
+			Data.MaskGene( i, !Data.IsMasked( i ) );
 	SVM.Evaluate( Data, vecdResults );
 	if( sArgs.random_output_flag )
 		random_shuffle( vecdResults.begin( ), vecdResults.end( ) );
+
 	dAve = (float)CStatistics::Average( vecdResults );
 	dStd = (float)sqrt( CStatistics::Variance( vecdResults, dAve ) );
 	for( i = 0; i < vecdResults.size( ); ++i )
 		vecdResults[ i ] = ( vecdResults[ i ] - dAve ) / dStd;
-	for( i = 0; i < vecdResults.size( ); ++i )
-		cout << Data.GetGene( i ) << '\t' << vecdResults[ i ] << endl;
+	for( i = j = 0; i < Data.GetGenes( ); ++i )
+		if( !Data.IsMasked( i ) )
+			cout << Data.GetGene( i ) << '\t' << vecdResults[ j++ ] << endl;
 
 	CMeta::Shutdown( );
 	return 0; }

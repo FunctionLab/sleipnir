@@ -30,14 +30,21 @@ public:
 		EFormatSparse	= EFormatPCL + 1
 	};
 
-	static std::string GetColor( float dValue ) {
+	static std::string GetColor( float dValue, const float* adColorMin = c_adColorMin,
+		const float* adColorMax = c_adColorMax, const float* adColorMid = c_adColorMid ) {
 		float	adColor[ 3 ];
 		char	acColor[ 16 ];
 		size_t	i;
+		float	d;
 
-		for( i = 0; i < ARRAYSIZE(adColor); ++i )
-			adColor[ i ] = ( dValue < 0.5 ) ? ( c_adColorMin[ i ] * ( 1 - ( 2 * dValue ) ) ) :
-				( c_adColorMax[ i ] * 2 * ( dValue - 0.5f ) );
+		if( dValue < 0 )
+			dValue = 0;
+		else if( dValue > 1 )
+			dValue = 1;
+		for( i = 0; i < ARRAYSIZE(adColor); ++i ) {
+			d = ( dValue < 0.5 ) ? ( 2 * ( 0.5f - dValue ) ) : ( 2 * ( dValue - 0.5f ) );
+			adColor[ i ] = ( ( ( dValue < 0.5 ) ? adColorMin[ i ] : adColorMax[ i ] ) * d ) +
+				( adColorMid[ i ] * ( 1 - d ) ); }
 		sprintf_s( acColor, "%02X%02X%02X", (size_t)( adColor[ 0 ] * 255 ),
 			(size_t)( adColor[ 1 ] * 255 ), (size_t)( adColor[ 2 ] * 255 ) );
 
@@ -55,12 +62,14 @@ public:
 	bool Open( const std::vector<CGenes*>&, const std::vector<CGenes*>&, float, const CGenome& );
 	bool Open( const CDat&, const std::vector<CGenes*>&, const CGenome&, bool );
 	bool Open( const CPCL&, const IMeasure*, bool );
+	bool Open( const CDat& );
 
 	bool OpenGenes( std::istream&, bool, bool = false );
 	bool OpenGenes( const char*, size_t = 2 );
 	void Save( std::ostream&, EFormat = EFormatBinary ) const;
 	void Save( const char* ) const;
-	void SaveDOT( std::ostream&, float = HUGE_VAL, const CGenome* = NULL, bool = false ) const;
+	void SaveDOT( std::ostream&, float = HUGE_VAL, const CGenome* = NULL, bool = false, bool = true,
+		const std::vector<float>* = NULL, const std::vector<float>* = NULL ) const;
 	void SaveGDF( std::ostream&, float = HUGE_VAL ) const;
 	void SaveNET( std::ostream&, float = HUGE_VAL ) const;
 	void SaveMATISSE( std::ostream&, float = HUGE_VAL, const CGenome* = NULL ) const;
@@ -111,6 +120,10 @@ public:
 		m_Data.Set( iX, adValues ); }
 
 	const float* Get( size_t iX ) const {
+
+		return m_Data.Get( iX ); }
+
+	float* Get( size_t iX ) {
 
 		return m_Data.Get( iX ); }
 

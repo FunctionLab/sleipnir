@@ -72,7 +72,7 @@ void* posteriorsOneDSL( void* pData ) {
 		fill( psData->m_vecdResults.begin( ), psData->m_vecdResults.end( ), CMeta::GetNaN( ) ); }
 
 	vecdOut.clear( );
-	BNSmile.Evaluate( vecbDatum, vecdOut, false );
+	BNSmile.Evaluate( vecbDatum, vecdOut, false, 0, true );
 	dPrior = 1 - vecdOut[ 0 ];
 	for( iResult = 0,iNode = 1; iNode < vecstrNodes.size( ); ++iNode ) {
 		float			d, dSum;
@@ -81,14 +81,14 @@ void* posteriorsOneDSL( void* pData ) {
 
 		vecbDatum[ iNode - 1 ] = 0;
 		vecdProbs.clear( );
-		BNSmile.Evaluate( vecbDatum, vecdProbs, false, iNode );
+		BNSmile.Evaluate( vecbDatum, vecdProbs, false, iNode, true );
 		for( dSum = 0,i = 0; i < vecdProbs.size( ); ++i )
 			dSum += vecdProbs[ i ];
 		vecdProbs.push_back( 1 - dSum );
 		vecdOut.clear( );
 		for( bValue = 0; bValue < BNSmile.GetValues( iNode ); ++bValue ) {
 			vecbDatum[ iNode ] = bValue + 1;
-			BNSmile.Evaluate( vecbDatum, vecdOut, false ); }
+			BNSmile.Evaluate( vecbDatum, vecdOut, false, 0, true ); }
 
 		for( dSum = 0,i = 0; i < vecdOut.size( ); ++i ) {
 			vecdOut[ i ] = 1 - vecdOut[ i ];

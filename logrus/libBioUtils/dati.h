@@ -29,8 +29,15 @@ protected:
 	static const size_t	c_iDegree			= 1;
 	static const char	c_acComment[];
 	static const float	c_dCutoff;
-	static const float	c_adColorMin[];
-	static const float	c_adColorMax[];
+	static const float*	c_adColorMid;
+	static const float*	c_adColorMin;
+	static const float*	c_adColorMax;
+	static const float	c_adColorWhite[];
+	static const float	c_adColorBlack[];
+	static const float	c_adColorYellow[];
+	static const float	c_adColorCyan[];
+	static const float	c_adColorRed[];
+	static const float	c_adColorGreen[];
 
 	static size_t MapGene( TMapStrI&, TVecStr&, const std::string& );
 	static void ResizeNaN( TAF&, size_t );

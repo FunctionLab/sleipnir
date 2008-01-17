@@ -566,8 +566,10 @@ void CDataFilter::Remove( size_t iX, size_t iY ) {
 
 bool CDataFilter::IsExample( size_t iX, size_t iY ) const {
 
+	if( !m_pDataset )
+		return false;
 	if( !( m_pGenes && m_pGenes->GetGenes( ) ) )
-		return true;
+		return m_pDataset->IsExample( iX, iY );
 
 	switch( m_eFilter ) {
 		case CDat::EFilterInclude:

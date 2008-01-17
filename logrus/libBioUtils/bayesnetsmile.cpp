@@ -175,7 +175,7 @@ bool CBayesNetSmileImpl::FillCPTs( const vector<bool>& vecfHidden, const string&
 	return true; }
 
 bool CBayesNetSmileImpl::FillCPTs( const vector<bool>& vecfHidden, const vector<unsigned char>& vecbDatum,
-	bool fZero, bool fLearn ) {
+	bool fZero, bool fLearn, bool fNoData ) {
 	size_t	i, iVal, iZero;
 	int		iProp;
 
@@ -195,7 +195,7 @@ bool CBayesNetSmileImpl::FillCPTs( const vector<bool>& vecfHidden, const vector<
 			iZero = atoi( Props.GetPropertyValue( iProp ) );
 
 		if( !vecbDatum[ i ] ) {
-			if( iZero == -1 )
+			if( fNoData || ( iZero == -1 ) )
 				continue;
 			iVal = iZero; }
 		else
@@ -414,7 +414,7 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 	return true; }
 
 bool CBayesNetSmile::Evaluate( const vector<unsigned char>& vecbDatum, vector<float>& vecdOut, bool fZero,
-	size_t iNode ) const {
+	size_t iNode, bool fNoData ) const {
 	vector<bool>	vecfHidden;
 	DSL_nodeValue*	pValue;
 	size_t			i;
@@ -425,7 +425,7 @@ bool CBayesNetSmile::Evaluate( const vector<unsigned char>& vecbDatum, vector<fl
 	vecfHidden.resize( vecbDatum.size( ) );
 	for( i = 0; i < vecfHidden.size( ); ++i )
 		vecfHidden[ i ] = false;
-	((CBayesNetSmile*)this)->FillCPTs( vecfHidden, vecbDatum, fZero, false );
+	((CBayesNetSmile*)this)->FillCPTs( vecfHidden, vecbDatum, fZero, false, fNoData );
 	((CBayesNetSmile*)this)->m_SmileNet.UpdateBeliefs( );
 	pValue = m_SmileNet.GetNode( iNode )->Value( );
 	for( i = 0; ( i + 1 ) < (size_t)pValue->GetSize( ); ++i )
@@ -561,6 +561,7 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 						if( veciZeros[ k ] == -1 )
 							continue;
 						iVal = veciZeros[ k ]; }
+//iVal = iVal % m_SmileNet.GetNode( k )->Definition( )->GetNumberOfOutcomes( );
 					vecveciCounts[ k ][ ( iVal * iAnswers ) + iAnswer ]++; } }
 
 	fFallback = m_pDefaults && ( iCount < c_iMinimum );

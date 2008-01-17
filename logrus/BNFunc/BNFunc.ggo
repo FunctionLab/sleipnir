@@ -22,3 +22,5 @@ option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"config"	c	"Command line config file"	string	typestr="filename"	default="BNFunc.ini"
 option	"dbids"		b	"Include GO database IDs"	flag	off
 option	"allids"	l	"Output all available IDs"	flag	off
+option	"nsets"		N	"Generate negative sets for input slim"	flag	off
+option	"nsetlap"	L	"P-value of overlap for negative rejection"	double	default="0.05"

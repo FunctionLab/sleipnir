@@ -424,7 +424,7 @@ bool CBNServer::PixieGraph( const CDat& DatGraph, const vector<bool>& vecfQuery,
 	if( !ofsm.is_open( ) )
 		return false;
 	Genome.Open( DatGraph.GetGeneNames( ) );
-	DatGraph.SaveDOT( ofsm, CMeta::GetNaN( ), &Genome );
+	DatGraph.SaveDOT( ofsm, CMeta::GetNaN( ), &Genome, false, false );
 	ofsm.close( );
 
 	sprintf_s( acBuffer, ( m_strFiles + "/outXXXXXX" ).c_str( ) );

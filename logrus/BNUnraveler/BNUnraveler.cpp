@@ -125,7 +125,7 @@ int main( int iArgs, char** aszArgs ) {
 
 		vecpGenes[ i ]  = new CGenes( Genome );
 		ifsm.open( sArgs.inputs[ i ] );
-		if( !vecpGenes[ i ]->Open( ifsm, !sArgs.genome_arg ) ) {
+		if( !vecpGenes[ i ]->Open( ifsm, false ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
 			return 1; }
 		vecpYes[ i ] = new CDat( );

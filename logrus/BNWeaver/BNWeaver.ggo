@@ -17,3 +17,5 @@ option	"default"	b	"Bayes net containing defaults for cases with missing data"	s
 option	"memmap"	m	"Memory map input files"	flag	off
 option	"xdsl"		x	"Generate XDSL output rather than DSL"	flag	on
 option	"threads"	t	"Maximum number of threads to spawn"	int	default="-1"
+option	"random"	r	"Seed random generator"	int	default="0"
+option	"randomize"	a	"Randomize data before training"	flag	off

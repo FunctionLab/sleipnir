@@ -710,6 +710,10 @@ double CStatistics::TTest( double dMeanOne, double dVarOne, size_t iNOne, double
 
 	return IncompleteBeta( 0.5 * iDegFree, 0.5, iDegFree / ( iDegFree + ( dT * dT ) ) ); }
 
+double CStatistics::TCDF( double dT, size_t iN ) {
+
+	return IncompleteBeta( 0.5 * iN, 0.5, iN / ( iN + ( dT * dT ) ) ); }
+
 double CStatisticsImpl::IncompleteBeta( double dA, double dB, double dX ) {
 	double	dBT;
 

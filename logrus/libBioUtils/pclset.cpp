@@ -33,7 +33,7 @@ bool CPCLSet::Open( const vector<string>& vecstrData, size_t iSkip, bool fNormal
 			return false;
 		ifsm.close( );
 		if( fNormalize )
-			m_aPCLs[ i ].Normalize( true );
+			m_aPCLs[ i ].Normalize( CPCL::ENormalizeZScore );
 		for( j = 0; j < m_aPCLs[ i ].GetGenes( ); ++j )
 			setstrGenes.insert( m_aPCLs[ i ].GetGene( j ) ); }
 	m_vecstrGenes.resize( setstrGenes.size( ) );

@@ -335,6 +335,8 @@ bool CGenes::Open( istream& istm, bool fCreate ) {
 	m_vecpGenes.clear( );
 	while( istm.peek( ) != EOF ) {
 		istm.getline( szBuf, c_iBuffer - 1 );
+		if( !szBuf[ 0 ] || ( szBuf[ 0 ] == c_cComment ) )
+			continue;
 		if( fCreate )
 			pGene = &m_Genome.AddGene( szBuf );
 		else {

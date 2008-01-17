@@ -51,6 +51,8 @@ protected:
 
 class CGenesImpl {
 protected:
+	static const char	c_cComment	= '#';
+
 	typedef std::map<std::string,size_t>	TMapStrI;
 
 	CGenesImpl( CGenome& );

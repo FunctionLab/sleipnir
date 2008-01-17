@@ -69,4 +69,11 @@ void CCompactMatrix::Save( ostream& ostm ) const {
 	ostm.write( (char*)m_aiData, iWords * sizeof(*m_aiData) );
 	ostm.write( abPad, iPad ); }
 
+void CCompactMatrix::Randomize( ) {
+
+	if( !m_aiData )
+		return;
+
+	random_shuffle( m_aiData, m_aiData + CountWords( ) ); }
+
 }

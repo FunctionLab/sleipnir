@@ -10,6 +10,7 @@ public:
 	bool Open( std::istream& );
 	const unsigned char* Open( const unsigned char* );
 	void Save( std::ostream& ) const;
+	void Randomize( );
 
 	void Set( size_t iX, size_t iY, unsigned char cValue ) {
 

@@ -166,6 +166,24 @@ public:
 	IMeasure* Clone( ) const;
 };
 
+class CMeasureRelativeAUC : public IMeasure {
+public:
+	const char* GetName( ) const;
+	bool IsRank( ) const;
+	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
+		const float* ) const;
+	IMeasure* Clone( ) const;
+};
+
+class CMeasurePearsonSignificance : public IMeasure {
+public:
+	const char* GetName( ) const;
+	bool IsRank( ) const;
+	double Measure( const float*, size_t, const float*, size_t, EMap, const float*,
+		const float* ) const;
+	IMeasure* Clone( ) const;
+};
+
 }
 
 #endif // MEASURE_H

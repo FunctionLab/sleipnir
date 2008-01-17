@@ -65,7 +65,7 @@ protected:
 	bool IsNaive( ) const;
 	bool FillCPTs( const IDataset*, size_t, size_t, bool, bool );
 	bool FillCPTs( const std::vector<bool>&, const std::string&, bool, bool, bool = false );
-	bool FillCPTs( const std::vector<bool>&, const std::vector<unsigned char>&, bool, bool );
+	bool FillCPTs( const std::vector<bool>&, const std::vector<unsigned char>&, bool, bool, bool = false );
 	bool LearnGrouped( const IDataset*, size_t, bool );
 	bool LearnUngrouped( const IDataset*, size_t, bool );
 	bool LearnNaive( const IDataset*, bool );

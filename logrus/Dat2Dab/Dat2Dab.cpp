@@ -134,6 +134,15 @@ int main( int iArgs, char** aszArgs ) {
 
 				if( ( i != j ) && !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 					cout << Dat.GetGene( i ) << '\t' << Dat.GetGene( j ) << '\t' << d << endl; } }
+	else if( sArgs.table_flag ) {
+		for( i = 1; i < Dat.GetGenes( ); ++i )
+			cout << '\t' << Dat.GetGene( i );
+		cout << endl;
+		for( i = 0; ( i + 1 ) < Dat.GetGenes( ); ++i ) {
+			cout << Dat.GetGene( i );
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				cout << '\t' << Dat.Get( i, j );
+			cout << endl; } }
 	else if( sArgs.output_arg )
 		Dat.Save( sArgs.output_arg );
 	else {

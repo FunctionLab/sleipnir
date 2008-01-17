@@ -788,4 +788,61 @@ double CMeasureMutualInformation::Measure( const float* adX, size_t iM, const fl
 
 	return dRet; }
 
+const char* CMeasureRelativeAUC::GetName( ) const {
+
+	return "relauc"; }
+
+bool CMeasureRelativeAUC::IsRank( ) const {
+
+	return false; }
+
+IMeasure* CMeasureRelativeAUC::Clone( ) const {
+
+	return new CMeasureRelativeAUC( ); }
+
+double CMeasureRelativeAUC::Measure( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	float	dOne, dTwo, dDiff;
+	size_t	i;
+
+	if( iM != iN )
+		return CMeta::GetNaN( );
+
+	dOne = dTwo = dDiff = 0;
+	for( i = 0; i < iN; ++i ) {
+		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
+			continue;
+		dOne += fabs( adX[ i ] );
+		dTwo += fabs( adY[ i ] );
+		dDiff += fabs( adX[ i ] - adY[ i ] ); }
+
+	return ( 1 - ( dDiff / ( dOne + dTwo ) ) ); }
+
+const char* CMeasurePearsonSignificance::GetName( ) const {
+
+	return "pearsig"; }
+
+bool CMeasurePearsonSignificance::IsRank( ) const {
+
+	return false; }
+
+IMeasure* CMeasurePearsonSignificance::Clone( ) const {
+
+	return new CMeasurePearsonSignificance( ); }
+
+double CMeasurePearsonSignificance::Measure( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	double	dPearson, dT;
+	size_t	i, iCount;
+
+	if( CMeta::IsNaN( dPearson = CMeasurePearson::Pearson( adX, iM, adY, iN, EMapNone, adWX, adWY ) ) )
+		return dPearson;
+
+	for( iCount = i = 0; i < iM; ++i )
+		if( !( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) ) )
+			iCount++;
+	dT = dPearson * sqrt( (double)( iCount - 2 ) ) / sqrt( 1 - ( dPearson * dPearson ) );
+
+	return ( 1 - CStatistics::TCDF( dT, iCount - 2 ) ); }
+
 }

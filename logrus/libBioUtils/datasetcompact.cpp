@@ -510,4 +510,10 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 
 	return true; }
 
+void CDatasetCompact::Randomize( ) {
+	size_t	i;
+
+	for( i = 1; i < m_iData; ++i )
+		m_aData[ i ].Randomize( ); }
+
 }

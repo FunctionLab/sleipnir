@@ -308,6 +308,8 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const vector<string
 				m_vecpDBs.size( ) ); ++iOutOffset ) {
 				CDatabaselet&	DB	= *m_vecpDBs[ iOutBase + iOutOffset ];
 
+				if( !( iOutOffset % 100 ) )
+					cerr << "Processing offset " << iOutOffset << '/' << iOutBlock << endl;
 				if( !DB.Open( vecData, i, iInBase, m_fBuffer ) )
 					return false;
 				i += DB.GetGenes( ); } } }

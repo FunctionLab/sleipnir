@@ -20,3 +20,4 @@ option	"lookup1"	l	"First lookup gene"	string
 option	"lookup2"	L	"Second lookup gene"	string
 option	"lookups"	t	"Lookup gene set"	string	typestr="filename"
 option	"remap"		p	"Gene name remapping file"	string	typestr="filename"
+option	"table"		b	"Produce table formatted output"	flag	off

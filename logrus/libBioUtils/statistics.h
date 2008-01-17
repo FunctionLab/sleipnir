@@ -89,6 +89,7 @@ public:
 	static double NormalCDF( double, double, double );
 	static double HypergeometricPDF( size_t, size_t, size_t, size_t );
 	static double HypergeometricCDF( size_t, size_t, size_t, size_t );
+	static double TCDF( double, size_t );
 	static double SampleChi2( size_t );
 	static double SampleGamma( double, double );
 	static double SampleGammaStandard( double );

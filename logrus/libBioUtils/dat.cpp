@@ -9,10 +9,17 @@
 
 namespace libBioUtils {
 
-const char	CDatImpl::c_acComment[]		= "#";
-const float	CDatImpl::c_dCutoff			= 0.2f;
-const float	CDatImpl::c_adColorMin[]	= {0, 1, 0};
-const float	CDatImpl::c_adColorMax[]	= {1, 0, 0};
+const char		CDatImpl::c_acComment[]		= "#";
+const float		CDatImpl::c_dCutoff			= 0.2f;
+const float		CDatImpl::c_adColorGreen[]	= {0, 1, 0};
+const float		CDatImpl::c_adColorRed[]	= {1, 0, 0};
+const float		CDatImpl::c_adColorBlack[]	= {0, 0, 0};
+const float		CDatImpl::c_adColorWhite[]	= {1, 1, 1};
+const float		CDatImpl::c_adColorYellow[]	= {1, 1, 0};
+const float		CDatImpl::c_adColorCyan[]	= {0, 1, 1};
+const float*	CDatImpl::c_adColorMax		= c_adColorRed;
+const float*	CDatImpl::c_adColorMin		= c_adColorGreen;
+const float*	CDatImpl::c_adColorMid		= c_adColorBlack;
 
 static const struct {
 	const char*			m_szExtension;
@@ -183,6 +190,17 @@ bool CDat::Open( const CDat& Dat, const vector<CGenes*>& vecpOther, const CGenom
 			d = Dat.Get( i, j );
 			if( CMeta::IsNaN( Get( iOne, iTwo = veciGenes[ j ] ) ) && ( fPositives == !d ) )
 				Set( iOne, iTwo, d ); } }
+
+	return true; }
+
+bool CDat::Open( const CDat& Dat ) {
+	size_t	i;
+
+	if( !Open( Dat.GetGeneNames( ) ) )
+		return false;
+
+	for( i = 0; i < GetGenes( ); ++i )
+		memcpy( Get( i ), Dat.Get( i ), ( GetGenes( ) - i - 1 ) * sizeof(*Get( i )) );
 
 	return true; }
 
@@ -914,10 +932,11 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes, s
 			veciDegree[ iMinTwo ]--;
 			Set( veciFinal[ iMinOne ], veciFinal[ iMinTwo ], CMeta::GetNaN( ) ); } } }
 
-void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool fMinimal ) const {
+void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool fMinimal, bool fHashes,
+	const vector<float>* pvecdColors, const vector<float>* pvecdBorders ) const {
 	size_t			i, j;
 	float			d, dMin, dMax;
-	bool			fAll;
+	bool			fAll, fLabel;
 	vector<string>	vecstrNames;
 	vector<bool>	vecfGenes;
 
@@ -927,7 +946,7 @@ void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool f
 	ostm << "	overlap = \"scale\";" << endl;
 	ostm << "	splines = \"true\";" << endl;
 
-	if( !( fMinimal || fAll ) ) {
+	if( pvecdColors || pvecdBorders || !( fMinimal || fAll ) ) {
 		vecfGenes.resize( GetGenes( ) );
 		for( i = 0; i < vecfGenes.size( ); ++i )
 			for( j = ( i + 1 ); j < vecfGenes.size( ); ++j )
@@ -936,7 +955,10 @@ void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool f
 
 	vecstrNames.resize( GetGenes( ) );
 	for( i = 0; i < vecstrNames.size( ); ++i ) {
-		vecstrNames[ i ] = CMeta::Filename( GetGene( i ) );
+		string	strName;
+
+		fLabel = !fMinimal && ( fAll || vecfGenes[ i ] );
+		vecstrNames[ i ] = CMeta::Filename( strName = GetGene( i ) );
 		if( !isalpha( vecstrNames[ i ][ 0 ] ) )
 			vecstrNames[ i ] = "_" + vecstrNames[ i ];
 		if( pGenome && ( ( j = pGenome->GetGene( GetGene( i ) ) ) != -1 ) ) {
@@ -947,28 +969,35 @@ void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool f
 			if( fMinimal ) {
 				if( strName != vecstrNames[ i ] ) {
 					vecstrNames[ i ] += '_';
-					vecstrNames[ i ] += Gene.GetSynonym( 0 ); } }
-			else if( fAll || vecfGenes[ i ] )
-				ostm << vecstrNames[ i ] << " [label=\"" << strName << "\"];" << endl; } }
+					vecstrNames[ i ] += Gene.GetSynonym( 0 ); } } }
+		if( ( pvecdColors || pvecdBorders || fLabel ) && vecfGenes[ i ] ) {
+			ostm << vecstrNames[ i ] << " [shape = \"box\", style = \"filled";
+			if( pvecdBorders )
+				ostm << ", setlinewidth(" << (*pvecdBorders)[ i ] << ")";
+			ostm << "\"";
+			ostm << ", fillcolor = \"" << ( fHashes ? "#" : "" ) << ( pvecdColors ? GetColor(
+				(*pvecdColors)[ i ], c_adColorCyan, c_adColorYellow, c_adColorWhite ) : "FFFFFF" ) << "\"";
+			if( fLabel )
+				ostm << ", label=\"" << strName << "\"";
+			ostm << "];" << endl; } }
 
 	ostm << endl;
 	dMin = FLT_MAX;
 	dMax = -FLT_MAX;
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) ) {
 				if( d < dMin )
 					dMin = d;
 				if( d > dMax )
 					dMax = d; }
-	if( !fAll )
-		dMin = max( dMin, dCutoff );
 	dMax -= dMin;
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
 				ostm << vecstrNames[ i ] << " -- " << vecstrNames[ j ] << " [weight = " << d <<
-					", color = \"" << GetColor( ( d - dMin ) / dMax ) << "\"];" << endl;
+					", color = \"" << ( fHashes ? "#" : "" ) << GetColor( ( d - dMin ) / dMax ) << "\"];" <<
+					endl;
 
 	ostm << "}" << endl; }
 

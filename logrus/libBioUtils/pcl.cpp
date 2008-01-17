@@ -37,6 +37,8 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 	CMeasureInnerProduct		InnerProd;
 	CMeasureBinaryInnerProduct	BinInnerProd;
 	CMeasureMutualInformation	MutualInfo;
+	CMeasureRelativeAUC			RelAuc;
+	CMeasurePearsonSignificance	PearSig;
 
 	if( szPCL ) {
 		ifsm.open( szPCL );
@@ -53,7 +55,7 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / PCL.GetExperiments( ) );
 	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
 		&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick, &InnerProd, &BinInnerProd,
-		&MutualInfo, NULL };
+		&MutualInfo, &RelAuc, &PearSig, NULL };
 
 	pMeasure = NULL;
 	for( i = 0; apMeasures[ i ]; ++i )
@@ -161,6 +163,12 @@ void CPCL::Open( const CPCL& PCL ) {
 		m_vecvecstrFeatures[ i ].resize( PCL.m_vecvecstrFeatures[ i ].size( ) );
 		copy( PCL.m_vecvecstrFeatures[ i ].begin( ), PCL.m_vecvecstrFeatures[ i ].end( ),
 			m_vecvecstrFeatures[ i ].begin( ) ); } }
+
+bool CPCL::Open( const char* szFile, size_t iFeatures ) {
+	ifstream	ifsm;
+
+	ifsm.open( szFile );
+	return Open( ifsm ); }
 
 bool CPCL::Open( istream& istmInput ) {
 
@@ -380,31 +388,52 @@ bool CPCL::AddGenes( const vector<string>& vecstrGenes ) {
 
 	return true; }
 
-void CPCL::Normalize( bool fGlobal ) {
+void CPCL::Normalize( ENormalize eNormalize ) {
 	size_t	i, j, iCount;
 	double	dAve, dStd;
-	float	d;
+	float	d, dMin, dMax;
 
-	if( fGlobal ) {
-		dAve = dStd = 0;
-		for( iCount = i = 0; i < GetGenes( ); ++i )
-			for( j = 0; j < GetExperiments( ); ++j )
-				if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
-					iCount++;
-					dAve += d;
-					dStd += d * d; }
-		dAve /= iCount;
-		dStd = sqrt( ( dStd / iCount ) - ( dAve * dAve ) );
-		for( i = 0; i < GetGenes( ); ++i )
-			for( j = 0; j < GetExperiments( ); ++j )
-				if( !CMeta::IsNaN( d = Get( i, j ) ) )
-					Set( i, j, (float)( ( d - dAve ) / dStd ) ); }
-	else
-		for( i = 0; i < GetGenes( ); ++i ) {
-			dAve = CStatistics::Average( Get( i ), Get( i ) + GetExperiments( ) );
-			dStd = sqrt( CStatistics::Variance( Get( i ), Get( i ) + GetExperiments( ), dAve ) );
-			if( dStd )
+	switch( eNormalize ) {
+		case ENormalizeZScore:
+			dAve = dStd = 0;
+			for( iCount = i = 0; i < GetGenes( ); ++i )
 				for( j = 0; j < GetExperiments( ); ++j )
-					Set( i, j, (float)( ( Get( i, j ) - dAve ) / dStd ) ); } }
+					if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+						iCount++;
+						dAve += d;
+						dStd += d * d; }
+			dAve /= iCount;
+			dStd = sqrt( ( dStd / iCount ) - ( dAve * dAve ) );
+			for( i = 0; i < GetGenes( ); ++i )
+				for( j = 0; j < GetExperiments( ); ++j )
+					if( !CMeta::IsNaN( d = Get( i, j ) ) )
+						Set( i, j, (float)( ( d - dAve ) / dStd ) );
+			break;
+
+		case ENormalizeRow:
+			for( i = 0; i < GetGenes( ); ++i ) {
+				dAve = CStatistics::Average( Get( i ), Get( i ) + GetExperiments( ) );
+				dStd = sqrt( CStatistics::Variance( Get( i ), Get( i ) + GetExperiments( ), dAve ) );
+				if( dStd )
+					for( j = 0; j < GetExperiments( ); ++j )
+						Set( i, j, (float)( ( Get( i, j ) - dAve ) / dStd ) ); }
+			break;
+
+		case ENormalizeMinMax:
+			dMin = FLT_MAX;
+			dMax = -dMin;
+			for( i = 0; i < GetGenes( ); ++i )
+				for( j = 0; j < GetExperiments( ); ++j )
+					if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+						if( d < dMin )
+							dMin = d;
+						if( d > dMax )
+							dMax = d; }
+			dMax -= dMin;
+			for( i = 0; i < GetGenes( ); ++i )
+				for( j = 0; j < GetExperiments( ); ++j )
+					if( !CMeta::IsNaN( d = Get( i, j ) ) )
+						Set( i, j, ( d - dMin ) / dMax );
+			break; } }
 
 }

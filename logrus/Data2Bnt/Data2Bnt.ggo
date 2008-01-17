@@ -12,3 +12,5 @@ option	"fraction"		p	"Fraction of genome to cover with default values"	double	de
 option	"sparse"		s	"Output sparse matrix"	flag	off
 option	"verbosity"		v	"Message verbosity"	int	default="5"
 option	"comments"		c	"Include informational comments"	flag	off
+option	"xrff"			x	"Generate XRFF formatted output"	flag	off
+option	"weights"		w	"Weight XRFF features"	flag	off
