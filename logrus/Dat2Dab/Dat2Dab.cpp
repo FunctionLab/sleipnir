@@ -32,6 +32,11 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open input" << endl;
 		return 1; }
 
+	if( sArgs.genelist_flag ) {
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			cout << Dat.GetGene( i ) << endl;
+		return 0; }
+
 	if( sArgs.remap_arg ) {
 		static const size_t	c_iBuffer	= 1024;
 		char								acBuffer[ c_iBuffer ];

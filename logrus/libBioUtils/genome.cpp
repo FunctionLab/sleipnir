@@ -1,23 +1,28 @@
 #include "stdafx.h"
 #include "genome.h"
 #include "meta.h"
+// KNNImputer OFF
 // MEFIT OFF
 #include "annotation.h"
 // MEFIT ON
+// KNNImputer ON
 
 namespace libBioUtils {
 
 CGene::CGene( const string& strName ) : CGeneImpl(strName) { }
 
 CGeneImpl::CGeneImpl( const string& strName ) : m_strName(strName),
+// KNNImputer OFF
 // MEFIT OFF
 	m_iOntologies(0), m_apOntologies(NULL), m_apveciAnnotations(NULL),
 // MEFIT ON
+// KNNImputer ON
 	m_iSynonyms(0), m_astrSynonyms(NULL), m_fRNA(false), m_fDubious(false) { }
 
 CGeneImpl::~CGeneImpl( ) {
 	size_t	i;
 
+// KNNImputer OFF
 // MEFIT OFF
 	if( m_iOntologies ) {
 		delete[] m_apOntologies;
@@ -25,6 +30,7 @@ CGeneImpl::~CGeneImpl( ) {
 			delete m_apveciAnnotations[ i ];
 		delete[] m_apveciAnnotations; }
 // MEFIT ON
+// KNNImputer ON
 	if( m_iSynonyms )
 		delete[] m_astrSynonyms; }
 
@@ -360,6 +366,7 @@ bool CGenes::Open( const char* szFile, bool fCreate ) {
 	ifsm.open( szFile );
 	return ( ifsm.is_open( ) && Open( ifsm, fCreate ) ); }
 
+// KNNImputer OFF
 // MEFIT OFF
 
 size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKids, const CGenes* pBkg ) const {
@@ -373,6 +380,7 @@ size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKid
 	return iRet; }
 
 // MEFIT ON
+// KNNImputer ON
 
 bool CGenes::Open( const vector<string>& vecstrGenes ) {
 	size_t	i;

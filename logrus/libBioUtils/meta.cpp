@@ -6,10 +6,12 @@ namespace libBioUtils {
 const char	CMeta::c_szWS[]		= " \t\r\n";
 
 void CMeta::Startup( int iVerbosity, size_t iRand ) {
+// KNNImputer OFF
 // MEFIT OFF
 	Category&			CatBioUtils	= Category::getInstance( c_szBioUtils );
 	OstreamAppender*	pAppOstm	= new OstreamAppender( "cerr", &cerr );
 // MEFIT ON
+// KNNImputer ON
 
 	srand( ( iRand == -1 ) ?
 #ifdef _MSC_VER
@@ -18,19 +20,23 @@ void CMeta::Startup( int iVerbosity, size_t iRand ) {
 		time( NULL )
 #endif // _MSC_VER
 		: iRand );
+// KNNImputer OFF
 // MEFIT OFF
 	pAppOstm->setLayout( new BasicLayout( ) );
 	CatBioUtils.setAdditivity( false );
 	CatBioUtils.setAppender( pAppOstm );
 	CatBioUtils.setPriority( iVerbosity * Priority::ALERT );
 // MEFIT ON
+// KNNImputer ON
 }
 
 void CMeta::Shutdown( ) {
 
+// KNNImputer OFF
 // MEFIT OFF
 	Category::shutdown( );
 // MEFIT ON
+// KNNImputer ON
 }
 
 string CMeta::Filename( const string& str, char cRepl ) {

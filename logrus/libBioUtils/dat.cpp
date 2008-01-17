@@ -3,9 +3,11 @@
 #include "genome.h"
 #include "statistics.h"
 #include "typesi.h"
+// KNNImputer OFF
 // MEFIT OFF
 #include "annotation.h"
 // MEFIT ON
+// KNNImputer ON
 
 namespace libBioUtils {
 
@@ -86,6 +88,7 @@ void CDatImpl::Reset( ) {
 		delete[] m_aadData;
 	m_aadData = NULL; }
 
+// KNNImputer OFF
 // MEFIT OFF
 
 void CDatImpl::SlimCache( const CSlim& Slim, vector<vector<size_t> >& vecveciGenes ) const {
@@ -165,6 +168,7 @@ bool CDat::Open( const CSlim& SlimPos, const CSlim& SlimNeg ) {
 	return true; }
 
 // MEFIT ON
+// KNNImputer ON
 
 bool CDat::Open( const CDat& Dat, const vector<CGenes*>& vecpOther, const CGenome& Genome,
 	bool fPositives ) {
