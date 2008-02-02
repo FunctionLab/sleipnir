@@ -13,6 +13,7 @@ struct SDatum {
 
 void hubs( const CDat&, vector<float>& );
 void cliques( const CDat&, const vector<float>&, bool, SDatum&, const CGenes* );
+int background( const char*, const vector<string>&, float* );
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -26,6 +27,46 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
+
+	if( sArgs.output_arg ) {
+		CDataMatrix		MatBackgrounds;
+		int				iRet;
+		vector<string>	vecstrGenes, vecstrContexts;
+
+		if( !( sArgs.contexts_arg && sArgs.genelist_arg ) ) {
+			cmdline_parser_print_help( );
+			return 1; }
+		{
+			CPCL	PCLContexts;
+
+			if( !PCLContexts.Open( sArgs.contexts_arg, 1 ) ) {
+				cerr << "Could not open: " << sArgs.contexts_arg << endl;
+				return 1; }
+			vecstrContexts.resize( PCLContexts.GetGenes( ) );
+			for( i = 0; i < vecstrContexts.size( ); ++i )
+				vecstrContexts[ i ] = PCLContexts.GetFeature( i, 1 );
+		}
+		{
+			CPCL	PCLGenes;
+
+			if( !PCLGenes.Open( sArgs.genelist_arg, 1 ) ) {
+				cerr << "Could not open: " << sArgs.genelist_arg << endl;
+				return 1; }
+			vecstrGenes.resize( PCLGenes.GetGenes( ) );
+			for( i = 0; i < vecstrGenes.size( ); ++i )
+				vecstrGenes[ i ] = PCLGenes.GetFeature( i, 1 );
+		}
+		MatBackgrounds.Initialize( vecstrContexts.size( ) + 1, vecstrGenes.size( ) );
+		if( iRet = background( sArgs.input_arg, vecstrGenes, MatBackgrounds.Get( 0 ) ) )
+			return iRet;
+		for( i = 1; i < MatBackgrounds.GetRows( ); ++i )
+			if( iRet = background( ( (string)sArgs.directory_arg + '/' +
+				CMeta::Filename( vecstrContexts[ i - 1 ] ) + ".dab" ).c_str( ), vecstrGenes,
+				MatBackgrounds.Get( i ) ) )
+				return iRet;
+
+		MatBackgrounds.Save( sArgs.output_arg, true );
+		return 0; }
 
 	if( sArgs.input_arg ) {
 		if( !Dat.Open( sArgs.input_arg, !!sArgs.memmap_flag && !sArgs.normalize_flag ) ) {
@@ -169,3 +210,32 @@ void cliques( const CDat& Dat, const vector<float>& vecdHub, bool fSort, SDatum&
 		sDatum.m_vecprSpecific[ i ].second = vecdClique[ i ] / vecdHub[ i ]; }
 	if( fSort )
 		sort( sDatum.m_vecprSpecific.begin( ), sDatum.m_vecprSpecific.end( ), SSorter( ) ); }
+
+int background( const char* szFile, const vector<string>& vecstrGenes, float* adResults ) {
+	CDat			Dat;
+	size_t			i, j, iOne, iTwo, iCount;
+	vector<size_t>	veciGenes;
+	float			d, dSum;
+
+	if( !Dat.Open( szFile ) ) {
+		cerr << "Could not open: " << szFile << endl;
+		return 1; }
+	cerr << "Calculating backgrounds for: " << szFile << endl;
+	Dat.Normalize( true );
+
+	veciGenes.resize( vecstrGenes.size( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = Dat.GetGene( vecstrGenes[ i ] );
+
+	for( i = 0; i < veciGenes.size( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 ) {
+			adResults[ i ] = CMeta::GetNaN( );
+			continue; }
+		dSum = 0;
+		for( iCount = j = 0; j < veciGenes.size( ); ++j )
+			if( ( ( iTwo = veciGenes[ j ] ) != -1 ) && !CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) ) {
+				iCount++;
+				dSum += d; }
+		adResults[ i ] = dSum / iCount; }
+
+	return 0; }

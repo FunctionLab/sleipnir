@@ -46,7 +46,7 @@ public:
 class COntologyKEGG : COntologyKEGGImpl, public IOntology {
 public:
 	COntologyKEGG( );
-	bool Open( std::istream&, CGenome&, const std::string& );
+	bool Open( std::istream&, CGenome&, const std::string&, bool = false );
 
 	const std::string& GetID( ) const;
 	size_t GetNodes( ) const;
@@ -73,10 +73,10 @@ public:
 	};
 
 	static bool Open( std::istream&, std::istream&, CGenome&, COntologyGO&, COntologyGO&,
-		COntologyGO&, bool = false );
+		COntologyGO&, bool = false, bool = false );
 
 	COntologyGO( );
-	bool Open( std::istream&, std::istream&, CGenome&, ENamespace, bool = false );
+	bool Open( std::istream&, std::istream&, CGenome&, ENamespace, bool = false, bool = false );
 
 	const std::string& GetID( ) const;
 	size_t GetNodes( ) const;

@@ -19,3 +19,4 @@ option	"verbosity"	v	"Message verbosity"	int	default="5"
 option	"zeroes"	z	"Tab-complete zero entries"	flag	off
 option	"config"	c	"Command line config file"	string	typestr="filename"	default="OntoShell.ini"
 option	"dbids"		b	"Include GO database IDs"	flag	off
+option	"altids"	l	"Force alternate (human) IDs"	flag	off

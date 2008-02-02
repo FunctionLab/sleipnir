@@ -4,6 +4,8 @@
 #include <sstream>
 #include <vector>
 
+#include "typesi.h"
+
 namespace libBioUtils {
 
 template<class tType>
@@ -76,6 +78,12 @@ public:
 
 		return ( fBinary ? SaveBinary( ostm ) : SaveText( ostm ) ); }
 
+	bool Save( const char* szFile, bool fBinary ) const {
+		std::ofstream	ofsm;
+
+		ofsm.open( szFile, ( fBinary ? ios_base::binary : ios_base::out ) | ios_base::out );
+		return Save( ofsm, fBinary ); }
+
 	void Clear( ) {
 		size_t	i;
 
@@ -110,6 +118,8 @@ protected:
 		uint32_t	iSize;
 
 		Reset( );
+		if( !istm.good( ) || istm.eof( ) )
+			return false;
 		istm.read( (char*)&iSize, sizeof(iSize) );
 		m_iR = iSize;
 		istm.read( (char*)&iSize, sizeof(iSize) );
@@ -118,7 +128,7 @@ protected:
 		m_aaData = new tType*[ m_iR ];
 		for( i = 0; i < m_iR; ++i ) {
 			m_aaData[ i ] = new tType[ m_iC ];
-			istm.read( (char*)m_aaData[ i ], sizeof(*m_aaData[ i ]) * m_iC ); }
+			istm.read( (char*)m_aaData[ i ], (std::streamsize)( sizeof(*m_aaData[ i ]) * m_iC ) ); }
 
 		return true; }
 
@@ -168,7 +178,7 @@ protected:
 		iSize = (uint32_t)m_iC;
 		ostm.write( (const char*)&iSize, sizeof(iSize) );
 		for( i = 0; i < m_iR; ++i )
-			ostm.write( (const char*)m_aaData[ i ], sizeof(*m_aaData[ i ]) * m_iC );
+			ostm.write( (const char*)m_aaData[ i ], (std::streamsize)( sizeof(*m_aaData[ i ]) * m_iC ) );
 
 		return true; }
 

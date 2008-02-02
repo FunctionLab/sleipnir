@@ -9,8 +9,8 @@ COntologyKEGG::COntologyKEGG( ) {
 
 	m_pOntology = this; }
 
-bool COntologyKEGG::Open( istream& istm, CGenome& Genome, const string& strOrganism ) {
-	SParserKEGG					sParser( istm, Genome, strOrganism );
+bool COntologyKEGG::Open( istream& istm, CGenome& Genome, const string& strOrganism, bool fSynonyms ) {
+	SParserKEGG					sParser( istm, Genome, strOrganism, fSynonyms );
 	size_t						i, j, iNode;
 	TMapStrI::const_iterator	iterNode;
 	vector<set<CGene*> >		vecsetpGenes;
@@ -106,8 +106,9 @@ const char	COntologyKEGGImpl::c_szDBLinks[]	= "DBLINKS";
 const char	COntologyKEGGImpl::c_szGenes[]		= "GENES";
 const char	COntologyKEGGImpl::c_szEnd[]		= "///";
 
-COntologyKEGGImpl::SParserKEGG::SParserKEGG( istream& istm, CGenome& Genome, const string& strOrganism ) :
-	m_fOrganism(false), m_strOrganism(strOrganism), SParser( istm, Genome ) { }
+COntologyKEGGImpl::SParserKEGG::SParserKEGG( istream& istm, CGenome& Genome, const string& strOrganism,
+	bool fSynonyms ) : m_fSynonyms(fSynonyms), m_fOrganism(false), m_strOrganism(strOrganism),
+	SParser( istm, Genome ) { }
 
 void COntologyKEGGImpl::SParserKEGG::Reset( ) {
 
@@ -250,16 +251,19 @@ bool COntologyKEGGImpl::OpenOrganism( SParserKEGG& sParser ) {
 	return sParser.GetLine( ); }
 
 char* COntologyKEGGImpl::OpenGene( SParserKEGG& sParser, char* pch ) {
-	char*	pchEnd;
-	char*	pchSyn;
-	bool	fInc, fSyn;
-	CGene*	pGene;
+	char*			pchEnd;
+	char*			pchSyn;
+	bool			fInc, fSyn;
+	CGene*			pGene;
+	string			strName;
+	vector<string>	vecstrSynonyms;
+	size_t			i;
 
 	for( pchEnd = pch; *pchEnd && !isspace( *pchEnd ) && ( *pchEnd != '(' ); ++pchEnd );
 	if( fInc = !!*pchEnd )
 		fSyn = ( *pchEnd == '(' );
 	*pchEnd = 0;
-	sParser.m_vecpGenes.push_back( pGene = &sParser.m_Genome.AddGene( pch ) );
+	strName = pch;
 
 	if( fInc ) {
 		++pchEnd;
@@ -267,10 +271,18 @@ char* COntologyKEGGImpl::OpenGene( SParserKEGG& sParser, char* pch ) {
 			pchSyn = pchEnd;
 			for( ; *pchEnd != ')'; ++pchEnd );
 			*(pchEnd++) = 0;
-			sParser.m_Genome.AddSynonym( *pGene, pchSyn ); } }
+			vecstrSynonyms.push_back( pchSyn ); } }
 	for( ; *pchEnd && !isspace( *pchEnd ); ++pchEnd );
 	if( isspace( *pchEnd ) )
 		++pchEnd;
+
+	pGene = &sParser.m_Genome.AddGene( ( sParser.m_fSynonyms && !vecstrSynonyms.empty( ) ) ?
+		vecstrSynonyms[ 0 ] : strName );
+	if( sParser.m_fSynonyms )
+		sParser.m_Genome.AddSynonym( *pGene, strName );
+	for( i = 0; i < vecstrSynonyms.size( ); ++i )
+		sParser.m_Genome.AddSynonym( *pGene, vecstrSynonyms[ i ] );
+	sParser.m_vecpGenes.push_back( pGene );
 
 	return pchEnd; }
 

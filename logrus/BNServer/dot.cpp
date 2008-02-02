@@ -7,7 +7,7 @@ using namespace boost;
 
 const float	CDot::c_dEdgeOpacity	= 0.13f;
 const float	CDot::c_dScale			= 36;
-const char	CDot::c_szHeaderPreVB[]	=
+const char	CDot::c_szHeader00[]	=
 	"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
 	"<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">\n"
 	"<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
@@ -15,13 +15,14 @@ const char	CDot::c_szHeaderPreVB[]	=
 	"	a3:scriptImplementation=\"Adobe\"\n"
 	"	onload=\"init( )\"\n"
 	"	viewBox=\"-20 -5 ";
-const char	CDot::c_szHeaderPostVB[]	= "\"\n"
+const char	CDot::c_szHeader01[]	= "\"\n"
 	"	width=\"100%\" height=\"100%\"\n"
 	"	>\n"
 	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"" JAVASCRIPT_DIR "/helper_functions.js\" />\n"
 	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"" JAVASCRIPT_DIR "/mapApp.js\" />\n"
 	"	<script a3:scriptImplementation=\"Adobe\" type=\"text/ecmascript\" xlink:href=\"" JAVASCRIPT_DIR "/simple.js\" />\n"
-	"	<g id=\"graph\" class=\"graph\" style=\"font-family:Times-Roman;font-size:12pt\">\n"
+	"	<g id=\"graph\" class=\"graph\" style=\"font-family:Times-Roman;font-size:12pt\" context=\"";
+const char	CDot::c_szHeader02[]	= "\">\n"
 	"		<title>G</title>\n";
 const char	CDot::c_szCutoffBox[]	=
 	"		<g id=\"cutoff_control_box\">\n"
@@ -51,6 +52,7 @@ const char	CDot::c_szCutoffBox[]	=
 
 bool CDot::Open( const char* szDot ) {
 	ifstream	ifsm;
+	bool		fRet;
 
 	m_pProperties->property( "node_id", get( vertex_name, m_Graph ) );
 	m_pProperties->property( "pos", get( vertex_attribute, m_Graph ) );
@@ -58,14 +60,17 @@ bool CDot::Open( const char* szDot ) {
 	m_pProperties->property( "height", get( vertex_index2, m_Graph ) );
 	m_pProperties->property( "pos", get( edge_attribute, m_Graph ) );
 	ifsm.open( szDot );
-	return ( ifsm.is_open( ) && read_graphviz( ifsm, m_Graph, *m_pProperties ) ); }
+	if( !( fRet = ( ifsm.is_open( ) && read_graphviz( ifsm, m_Graph, *m_pProperties ) ) ) )
+		cerr << "Could not open: " << szDot << endl;
 
-bool CDot::Save( ostream& ostm, const vector<bool>& vecfQuery ) const {
+	return fRet; }
+
+bool CDot::Save( ostream& ostm, const vector<bool>& vecfQuery, size_t iContext ) const {
 	graph_traits<TGraph>::edge_iterator		iterEdge, iterEdgeEnd;
 	graph_traits<TGraph>::vertex_iterator	iterVertex, iterVertexEnd;
 	size_t									iMaxX, iMaxY, iCurX, iCurY;
 
-	ostm << c_szHeaderPreVB;
+	ostm << c_szHeader00;
 	iMaxX = iMaxY = 0;
 	for( tie( iterVertex, iterVertexEnd ) = vertices( m_Graph ); iterVertex != iterVertexEnd; ++iterVertex ) {
 		string			strPos;
@@ -85,7 +90,7 @@ bool CDot::Save( ostream& ostm, const vector<bool>& vecfQuery ) const {
 		if( iCurY > iMaxY )
 			iMaxY = iCurY; }
 	ostm << ( iMaxX + 5 ) << ' ' << ( iMaxY + 5 );
-	ostm << c_szHeaderPostVB;
+	ostm << c_szHeader01 << iContext << c_szHeader02;
 
 	ostm << "		<g id=\"edges\" class=\"edgeList\">" << endl;
 	for( tie( iterEdge, iterEdgeEnd ) = edges( m_Graph ); iterEdge != iterEdgeEnd; ++iterEdge )
@@ -99,7 +104,7 @@ bool CDot::Save( ostream& ostm, const vector<bool>& vecfQuery ) const {
 			return false;
 	ostm << "		</g>" << endl;
 
-	ostm << c_szCutoffBox;
+//	ostm << c_szCutoffBox;
 	ostm << "	</g>" << endl << "</svg>" << endl;
 
 	return true; }
@@ -178,7 +183,8 @@ bool CDot::SaveVertex( ostream& ostm, const TVertex& Vertex, const vector<bool>&
 	strRY = acBuffer;
 
 	ostm <<
-		c_acTabs << "<g id=\"node" << Vertex << "\" class=\"node\">" << endl <<
+		c_acTabs << "<g id=\"node" << Vertex << "\" class=\"node\" gene=\"" << m_Dat.GetGene( Vertex ) <<
+			"\">" << endl <<
 		c_acTabs << "	<title>" << m_Dat.GetGene( Vertex ) << "</title>" << endl <<
 		c_acTabs << "	<g id=\"node" << Vertex << "_edges\" display=\"none\">" << endl;
 	for( tie( iterEdge, iterEdgeEnd ) = out_edges( Vertex, m_Graph ); iterEdge != iterEdgeEnd; ++iterEdge ) {

@@ -96,13 +96,14 @@ protected:
 	static const size_t	c_iKEGG		= 10000;
 
 	struct SParserKEGG : SParser {
-		SParserKEGG( std::istream&, CGenome&, const std::string& );
+		SParserKEGG( std::istream&, CGenome&, const std::string&, bool fSynonyms );
 
 		void Reset( );
 
 		const std::string&					m_strOrganism;
 		bool								m_fOrganism;
 		bool								m_fPathing;
+		bool								m_fSynonyms;
 		std::vector<CGene*>					m_vecpGenes;
 		std::vector<std::string>			m_vecstrIDs;
 		std::map<std::string,std::string>	m_mapGlosses;
@@ -163,13 +164,14 @@ protected:
 	struct SParserGO : SParser {
 		typedef std::set<const CGene*>	TSetPGene;
 
-		SParserGO( std::istream&, CGenome&, bool = false );
+		SParserGO( std::istream&, CGenome&, bool = false, bool = false );
 
 		void Reset( );
 
 		const char*					m_szTarget;
 		bool						m_fObsolete;
 		bool						m_fDBIDs;
+		bool						m_fSynonyms;
 		std::string					m_strNamespace;
 		std::vector<std::string>	m_vecstrIDs;
 		std::vector<size_t>			m_veciParents;

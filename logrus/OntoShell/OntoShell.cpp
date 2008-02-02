@@ -52,7 +52,7 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.kegg_arg ) {
 		ifsmOnto.open( sArgs.kegg_arg );
-		if( !KEGG.Open( ifsmOnto, Genome, sArgs.kegg_org_arg ) ) {
+		if( !KEGG.Open( ifsmOnto, Genome, sArgs.kegg_org_arg, !!sArgs.altids_flag ) ) {
 			cerr << "Could not open: " << sArgs.kegg_arg << endl;
 			return 1; }
 		ifsmOnto.close( ); }
@@ -63,7 +63,8 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.go_anno_arg ) {
 			ifsmGenes.clear( );
 			ifsmGenes.open( sArgs.go_anno_arg ); }
-		if( !COntologyGO::Open( ifsmOnto, ifsmGenes, Genome, GOBP, GOMF, GOCC, !!sArgs.dbids_flag ) ) {
+		if( !COntologyGO::Open( ifsmOnto, ifsmGenes, Genome, GOBP, GOMF, GOCC, !!sArgs.dbids_flag,
+			!!sArgs.altids_flag ) ) {
 			cerr << "Could not open: " << sArgs.go_onto_arg << ", " << sArgs.go_anno_arg << endl;
 			return 1; }
 		ifsmOnto.close( );

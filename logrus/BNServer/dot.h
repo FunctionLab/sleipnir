@@ -12,7 +12,7 @@ public:
 		delete m_pProperties; }
 
 	bool Open( const char* );
-	bool Save( ostream&, const vector<bool>& ) const;
+	bool Save( ostream&, const vector<bool>&, size_t ) const;
 
 private:
 	typedef boost::property<boost::vertex_name_t, string, boost::property<boost::vertex_index1_t, string,
@@ -25,8 +25,9 @@ private:
 	typedef TGraph::vertex_descriptor											TVertex;
 
 	static const char	c_szCutoffBox[];
-	static const char	c_szHeaderPreVB[];
-	static const char	c_szHeaderPostVB[];
+	static const char	c_szHeader00[];
+	static const char	c_szHeader01[];
+	static const char	c_szHeader02[];
 	static const float	c_dEdgeOpacity;
 	static const float	c_dScale;
 

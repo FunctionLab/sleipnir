@@ -53,7 +53,7 @@ public:
 	CGenes( CGenome& );
 
 	bool Open( istream&, bool = true );
-	bool Open( const std::vector<std::string>& );
+	bool Open( const std::vector<std::string>&, bool = true );
 	bool Open( const char*, bool = true );
 	void Filter( const CGenes& );
 // MEFIT OFF

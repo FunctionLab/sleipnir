@@ -967,15 +967,14 @@ void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool f
 			vecstrNames[ i ] = "_" + vecstrNames[ i ];
 		if( pGenome && ( ( j = pGenome->GetGene( GetGene( i ) ) ) != -1 ) ) {
 			const CGene&	Gene	= pGenome->GetGene( j );
-			string			strName;
 
 			strName = Gene.GetSynonyms( ) ? Gene.GetSynonym( 0 ) : Gene.GetName( );
 			if( fMinimal ) {
 				if( strName != vecstrNames[ i ] ) {
 					vecstrNames[ i ] += '_';
 					vecstrNames[ i ] += Gene.GetSynonym( 0 ); } } }
-		if( ( pvecdColors || pvecdBorders || fLabel ) && vecfGenes[ i ] ) {
-			ostm << vecstrNames[ i ] << " [shape = \"box\", style = \"filled";
+		if( ( pvecdColors || pvecdBorders || fLabel ) && ( fAll || vecfGenes[ i ] ) ) {
+			ostm << vecstrNames[ i ] << " [shape = \"ellipse\", style = \"filled";
 			if( pvecdBorders )
 				ostm << ", setlinewidth(" << (*pvecdBorders)[ i ] << ")";
 			ostm << "\"";

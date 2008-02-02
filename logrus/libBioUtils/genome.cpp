@@ -382,14 +382,19 @@ size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKid
 // MEFIT ON
 // KNNImputer ON
 
-bool CGenes::Open( const vector<string>& vecstrGenes ) {
-	size_t	i;
+bool CGenes::Open( const vector<string>& vecstrGenes, bool fCreate ) {
+	size_t	i, iGene;
+	CGene*	pGene;
 
 	m_mapGenes.clear( );
-	m_vecpGenes.resize( vecstrGenes.size( ) );
-	for( i = 0; i < m_vecpGenes.size( ); ++i ) {
-		m_mapGenes[ vecstrGenes[ i ] ] = i;
-		m_vecpGenes[ i ] = &m_Genome.AddGene( vecstrGenes[ i ] ); }
+	m_vecpGenes.clear( );
+	for( i = 0; i < vecstrGenes.size( ); ++i ) {
+		if( !fCreate && ( ( iGene = m_Genome.FindGene( vecstrGenes[ i ] ) ) == -1 ) )
+			continue;
+
+		pGene = fCreate ? &m_Genome.AddGene( vecstrGenes[ i ] ) : &m_Genome.GetGene( iGene );
+		m_mapGenes[ vecstrGenes[ i ] ] = m_vecpGenes.size( );
+		m_vecpGenes.push_back( pGene ); }
 
 	return true; }
 
