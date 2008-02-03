@@ -155,7 +155,7 @@ int main( int iArgs, char** aszArgs ) {
 			if( ( ( iOne = Dat.GetGene( sArgs.lookup1_arg ) ) != -1 ) &&
 				( ( iTwo = Dat.GetGene( sArgs.lookup2_arg ) ) != -1 ) &&
 				!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
-				cout << '\t' << d;
+				cout << '\t' << ( sArgs.quantize_flag ? Dat.Quantize( d ) : d );
 			cout << endl; }
 		return 0; }
 	else {
