@@ -1,0 +1,3 @@
+SUBDIRS				= src
+
+sleipnirdoc_DATA	= AUTHORS ChangeLog INSTALL LICENSE README THANKS
