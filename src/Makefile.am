@@ -1,5 +1,9 @@
 lib_LIBRARIES			= libSleipnir.a
 
+AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_LIGHT_CFLAGS)
+
+LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_LIGHT_LIBS)
+
 libSleipnir_a_SOURCES	=	\
 	annotation.cpp			\
 	annotationgo.cpp		\
