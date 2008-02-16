@@ -3,15 +3,15 @@
 
 #include <math.h>
 #include <pthread.h>
-#ifdef WIN32
+#ifdef _MSC_VER
 #include <winsock2.h>
-#else // WIN32
+#else // _MSC_VER
 #include <sys/socket.h>
 
 #define _strdup		strdup
 #define SOCKET		int
 #define sprintf_s	sprintf
-#endif // WIN32
+#endif // _MSC_VER
 
 #include <algorithm>
 #include <fstream>
