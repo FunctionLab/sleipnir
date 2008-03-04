@@ -313,7 +313,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE LOG4CPP_PREFIX LOG4CPP_LIBS LOG4CPP_CFLAGS SMILE_PREFIX SMILE_CFLAGS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CPP EGREP LIBOBJS POW_LIB sleipnirdocdir LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CPP EGREP LIBOBJS POW_LIB LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS sleipnirdocdir LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1728,137 +1728,10 @@ topleveldir=$PWD
 #!! this may not be portable
 qualify_path () {
   d=${!1}
-  echo d $d
   if ! echo $d | egrep -q '^/'; then
     eval "$1=$topleveldir/$d"
   fi
 }
-
-
-## LOG4CPP
-# If the user specifies a path for log4cpp, use it.
-# If the user says not to use it, or if he doesn't say anything, check for it.
-
-# Check whether --with-log4cpp or --without-log4cpp was given.
-if test "${with_log4cpp+set}" = set; then
-  withval="$with_log4cpp"
-  if test "x$with_log4cpp" = "xno"; then with_log4cpp=check; fi
-else
-  with_log4cpp=check
-fi;
-if test "x$with_log4cpp" = "xcheck"; then
-  #!! need to look for it
-  LOG4CPP_PREFIX=
-  log4cpp_info="?"
-else
-#  if ! echo $with_log4cpp | egrep -q '^/'; then
-#    with_log4cpp=$topleveldir/$with_log4cpp
-#  fi
-  qualify_path with_log4cpp
-  LOG4CPP_PREFIX=$with_log4cpp
-  log4cpp_info=$with_log4cpp
-fi
-if test "x$LOG4CPP_PREFIX" = "x"; then
-  cat >>confdefs.h <<\_ACEOF
-#define USE_LOG4CPP_STUB 1
-_ACEOF
-
-  log4cpp_info=stub
-else
-  # It may be useful to allow a built (but not installed) path for log4cpp,
-  # however the log4cpp distribution does not have a lib/, it has a src/.libs/.
-  if test -d ${LOG4CPP_PREFIX}/lib; then
-    LOG4CPP_LIBS="-L${LOG4CPP_PREFIX}/lib"
-  elif test -d ${LOG4CPP_PREFIX}/src/.libs; then
-    LOG4CPP_LIBS="-L${LOG4CPP_PREFIX}/src/.libs"
-  else
-    #!! should use something besides just echo?
-#    echo "LOG4CPP LIB NOT FOUND - USING STUB"
-    cat >>confdefs.h <<\_ACEOF
-#define USE_LOG4CPP_STUB 1
-_ACEOF
-
-    log4cpp_info="stub (lib not found)"
-  fi
-fi
-
-LOG4CPP_CFLAGS="-I${LOG4CPP_PREFIX}/include"
-
-
-
-
-## SMILE
-
-# Check whether --with-smile or --without-smile was given.
-if test "${with_smile+set}" = set; then
-  withval="$with_smile"
-
-else
-  with_smile=check
-fi;
-if test "x$with_smile" = "xno"; then
-  smile_info="NONE"
-  cat >>confdefs.h <<\_ACEOF
-#define NO_SMILE 1
-_ACEOF
-
-elif test "x$with_smile" = "xcheck"; then
-  #!! check for it
-  SMILE_PREFIX=
-  smile_info="?"
-else
-#  if ! echo $with_smile | egrep -q '^/'; then
-#    with_smile=$topleveldir/$with_smile
-#  fi
-  qualify_path with_smile
-  SMILE_PREFIX=$with_smile
-  smile_info=$with_smile
-fi
-
-if test "x$SMILE_PREFIX" != "x"; then
-  #!! $SMILE_PREFIX/include?
-  SMILE_CFLAGS="-I${SMILE_PREFIX}"
-  #SMILE_LIBS="-L${SMILE_PREFIX}/lib/"
-fi
-#AC_SUBST(SMILE_LIBS)
-
-
-
-## SVM_LIGHT
-
-# Check whether --with-svm_light or --without-svm_light was given.
-if test "${with_svm_light+set}" = set; then
-  withval="$with_svm_light"
-
-else
-  with_svm_light=check
-fi;
-if test "x$with_svm_light" = "xno"; then
-  svm_light_info="NONE"
-  cat >>confdefs.h <<\_ACEOF
-#define NO_SVM_LIGHT 1
-_ACEOF
-
-elif test "x$with_svm_light" = "xcheck"; then
-  #!! check for it
-  SVM_LIGHT_PREFIX=
-  svm_light_info="?"
-else
-#  if ! echo $with_svm_light | egrep -q '^/'; then
-#    with_svm_light=$topleveldir/$with_svm_light
-#  fi
-  qualify_path with_svm_light
-  SVM_LIGHT_PREFIX=$with_svm_light
-  svm_light_info=$with_svm_light
-fi
-
-if test "x$SVM_LIGHT_PREFIX" != "x"; then
-  #!! $SVM_LIGHT_PREFIX/include?
-  SVM_LIGHT_CFLAGS="-I${SVM_LIGHT_PREFIX}"
-  #SVM_LIGHT_LIBS="-L${SVM_LIGHT_PREFIX}/lib/"
-fi
-#AC_SUBST(SVM_LIGHT_LIBS)
-
 
 
 # Checks for programs.
@@ -6710,16 +6583,446 @@ fi
 done
   # tools/Data2Features, tools/Data2Bnt
 
+
+## LOG4CPP
+# If the user specifies a path for log4cpp, use it.
+# If the user says not to use it, or if he doesn't say anything, check for it.
+
+# Check whether --with-log4cpp or --without-log4cpp was given.
+if test "${with_log4cpp+set}" = set; then
+  withval="$with_log4cpp"
+
+else
+  # $with_log4cpp will either be a path or "no"
+	with_log4cpp=check
+fi;
+## set LOG4CPP_PREFIX and log4cpp_info
+if test "x$with_log4cpp" = "xcheck"; then
+  LOG4CPP_PREFIX=
+  echo "$as_me:$LINENO: checking for log4cpp::Category::getInstance in -llog4cpp" >&5
+echo $ECHO_N "checking for log4cpp::Category::getInstance in -llog4cpp... $ECHO_C" >&6
+if test "${ac_cv_lib_log4cpp_log4cpp__Category__getInstance+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-llog4cpp  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char log4cpp::Category::getInstance ();
+int
+main ()
+{
+log4cpp::Category::getInstance ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_log4cpp_log4cpp__Category__getInstance=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_log4cpp_log4cpp__Category__getInstance=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_log4cpp_log4cpp__Category__getInstance" >&5
+echo "${ECHO_T}$ac_cv_lib_log4cpp_log4cpp__Category__getInstance" >&6
+if test $ac_cv_lib_log4cpp_log4cpp__Category__getInstance = yes; then
+  log4cpp_info="-llog4cpp"
+else
+  log4cpp_info="stub"
+fi
+
+elif test "x$with_log4cpp" = "xno"; then
+  LOG4CPP_PREFIX=
+  log4cpp_info=stub
+else
+  #! possibly check path
+  qualify_path with_log4cpp
+  LOG4CPP_PREFIX=$with_log4cpp
+  log4cpp_info=$with_log4cpp
+fi
+## set LOG4CPP_CFLAGS and LOG4CPP_LIBS (and -DUSE_LOG4CPP_STUB=1 if stub)
+if test "x$log4cpp_info" = "xstub"; then
+  cat >>confdefs.h <<\_ACEOF
+#define USE_LOG4CPP_STUB 1
+_ACEOF
+
+  LOG4CPP_CFLAGS=
+  LOG4CPP_LIBS=
+elif test "x$LOG4CPP_PREFIX" = "x"; then
+  LOG4CPP_CFLAGS=
+  LOG4CPP_LIBS=
+else
+  LOG4CPP_CFLAGS="-I${LOG4CPP_PREFIX}/include"
+  # It may be useful to allow a built (but not installed) path for log4cpp,
+  # that is, a source distribution. However the log4cpp distribution does not
+  # have a lib/, it has a src/.libs/.
+  if test -d ${LOG4CPP_PREFIX}/lib; then
+    LOG4CPP_LIBS="-L${LOG4CPP_PREFIX}/lib"
+  elif test -d ${LOG4CPP_PREFIX}/src/.libs; then
+    LOG4CPP_LIBS="-L${LOG4CPP_PREFIX}/src/.libs"
+  else
+    # revert to using the stub
+    echo "COULD NOT LOCATE LOG4CPP LIBRARY AT SPECIFIED PATH" 1>&2
+    cat >>confdefs.h <<\_ACEOF
+#define USE_LOG4CPP_STUB 1
+_ACEOF
+
+    LOG4CPP_PREFIX=
+    LOG4CPP_CFLAGS=
+    LOG4CPP_LIBS=
+    log4cpp_info="stub (lib not found)"
+  fi
+fi
+## include substitutions in output files
+
+
+
+
+
+## SMILE
+
+# Check whether --with-smile or --without-smile was given.
+if test "${with_smile+set}" = set; then
+  withval="$with_smile"
+
+else
+  with_smile=check
+fi;
+## set SMILE_PREFIX and smile_info (and -DNO_SMILE if excluded)
+if test "x$with_smile" = "xno"; then
+  cat >>confdefs.h <<\_ACEOF
+#define NO_SMILE 1
+_ACEOF
+
+  SMILE_PREFIX=
+  smile_info="NONE"
+elif test "x$with_smile" = "xcheck"; then
+  SMILE_PREFIX=
+  if test "${ac_cv_header_smile_h+set}" = set; then
+  echo "$as_me:$LINENO: checking for smile.h" >&5
+echo $ECHO_N "checking for smile.h... $ECHO_C" >&6
+if test "${ac_cv_header_smile_h+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+echo "$as_me:$LINENO: result: $ac_cv_header_smile_h" >&5
+echo "${ECHO_T}$ac_cv_header_smile_h" >&6
+else
+  # Is the header compilable?
+echo "$as_me:$LINENO: checking smile.h usability" >&5
+echo $ECHO_N "checking smile.h usability... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+#include <smile.h>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_header_compiler=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6
+
+# Is the header present?
+echo "$as_me:$LINENO: checking smile.h presence" >&5
+echo $ECHO_N "checking smile.h presence... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <smile.h>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+  yes:no: )
+    { echo "$as_me:$LINENO: WARNING: smile.h: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: smile.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: smile.h: proceeding with the compiler's result" >&5
+echo "$as_me: WARNING: smile.h: proceeding with the compiler's result" >&2;}
+    ac_header_preproc=yes
+    ;;
+  no:yes:* )
+    { echo "$as_me:$LINENO: WARNING: smile.h: present but cannot be compiled" >&5
+echo "$as_me: WARNING: smile.h: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: smile.h:     check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: smile.h:     check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: smile.h: see the Autoconf documentation" >&5
+echo "$as_me: WARNING: smile.h: see the Autoconf documentation" >&2;}
+    { echo "$as_me:$LINENO: WARNING: smile.h:     section \"Present But Cannot Be Compiled\"" >&5
+echo "$as_me: WARNING: smile.h:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { echo "$as_me:$LINENO: WARNING: smile.h: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: smile.h: proceeding with the preprocessor's result" >&2;}
+    { echo "$as_me:$LINENO: WARNING: smile.h: in the future, the compiler will take precedence" >&5
+echo "$as_me: WARNING: smile.h: in the future, the compiler will take precedence" >&2;}
+    (
+      cat <<\_ASBOX
+## -------------------------------- ##
+## Report this to ogt@princeton.edu ##
+## -------------------------------- ##
+_ASBOX
+    ) |
+      sed "s/^/$as_me: WARNING:     /" >&2
+    ;;
+esac
+echo "$as_me:$LINENO: checking for smile.h" >&5
+echo $ECHO_N "checking for smile.h... $ECHO_C" >&6
+if test "${ac_cv_header_smile_h+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_cv_header_smile_h=$ac_header_preproc
+fi
+echo "$as_me:$LINENO: result: $ac_cv_header_smile_h" >&5
+echo "${ECHO_T}$ac_cv_header_smile_h" >&6
+
+fi
+if test $ac_cv_header_smile_h = yes; then
+  smile_info=installed
+else
+  smile_info="NONE (not found)"; cat >>confdefs.h <<\_ACEOF
+#define NO_SMILE 1
+_ACEOF
+
+fi
+
+
+#  AC_CHECK_LIB([smile], [????],
+#        [smile_info="-lsmile"],
+#        [smile_info="not found"])
+else
+  #! possibly check path
+  qualify_path with_smile
+  SMILE_PREFIX=$with_smile
+  smile_info=$with_smile
+fi
+## set SMILE_CFLAGS and SMILE_LIBS
+if test "x$SMILE_PREFIX" != "x"; then
+  #! shouldn't it be $SMILE_PREFIX/include?
+  SMILE_CFLAGS="-I${SMILE_PREFIX}"
+  #SMILE_LIBS="-L${SMILE_PREFIX}/lib"
+fi
+## include substitutions in output files
+
+
+#AC_SUBST(SMILE_LIBS)
+
+
+## SVM_LIGHT
+
+# Check whether --with-svm_light or --without-svm_light was given.
+if test "${with_svm_light+set}" = set; then
+  withval="$with_svm_light"
+
+else
+  with_svm_light=check
+fi;
+## set SVM_LIGHT_PREFIX and svm_light_info (and -DNO_SVM_LIGHT if excluded)
+if test "x$with_svm_light" = "xno"; then
+  cat >>confdefs.h <<\_ACEOF
+#define NO_SVM_LIGHT 1
+_ACEOF
+
+  svm_light_info="NONE"
+elif test "x$with_svm_light" = "xcheck"; then
+  SVM_LIGHT_PREFIX=
+  echo "$as_me:$LINENO: checking for kernel in -lsvmlight" >&5
+echo $ECHO_N "checking for kernel in -lsvmlight... $ECHO_C" >&6
+if test "${ac_cv_lib_svmlight_kernel+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lsvmlight  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char kernel ();
+int
+main ()
+{
+kernel ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_svmlight_kernel=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_svmlight_kernel=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_svmlight_kernel" >&5
+echo "${ECHO_T}$ac_cv_lib_svmlight_kernel" >&6
+if test $ac_cv_lib_svmlight_kernel = yes; then
+  svm_light_info=installed
+else
+  svm_light_info="NONE (not found)"; cat >>confdefs.h <<\_ACEOF
+#define NO_SVM_LIGHT 1
+_ACEOF
+
+fi
+
+else
+  #! possibly check path
+  qualify_path with_svm_light
+  SVM_LIGHT_PREFIX=$with_svm_light
+  svm_light_info=$with_svm_light
+fi
+## set SVM_LIGHT_CFLAGS and SVM_LIGHT_LIBS
+if test "x$SVM_LIGHT_PREFIX" != "x"; then
+  #! shouldn't it be $SVM_LIGHT_PREFIX/include?
+  SVM_LIGHT_CFLAGS="-I${SVM_LIGHT_PREFIX}"
+  #SVM_LIGHT_LIBS="-L${SVM_LIGHT_PREFIX}/lib"
+fi
+
+
+#AC_SUBST(SVM_LIGHT_LIBS)
+
+
 sleipnirdocdir=$datadir/doc/
 
 
+
+# uncomment to print out all variables
 #set
+
 
                     ac_config_files="$ac_config_files Makefile src/Makefile"
 
 
-# deprecated
-#AC_OUTPUT([./src/Makefile])
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -7392,13 +7695,6 @@ s,@ac_ct_STRIP@,$ac_ct_STRIP,;t t
 s,@INSTALL_STRIP_PROGRAM@,$INSTALL_STRIP_PROGRAM,;t t
 s,@AWK@,$AWK,;t t
 s,@SET_MAKE@,$SET_MAKE,;t t
-s,@LOG4CPP_PREFIX@,$LOG4CPP_PREFIX,;t t
-s,@LOG4CPP_LIBS@,$LOG4CPP_LIBS,;t t
-s,@LOG4CPP_CFLAGS@,$LOG4CPP_CFLAGS,;t t
-s,@SMILE_PREFIX@,$SMILE_PREFIX,;t t
-s,@SMILE_CFLAGS@,$SMILE_CFLAGS,;t t
-s,@SVM_LIGHT_PREFIX@,$SVM_LIGHT_PREFIX,;t t
-s,@SVM_LIGHT_CFLAGS@,$SVM_LIGHT_CFLAGS,;t t
 s,@CXX@,$CXX,;t t
 s,@CXXFLAGS@,$CXXFLAGS,;t t
 s,@LDFLAGS@,$LDFLAGS,;t t
@@ -7423,6 +7719,13 @@ s,@CPP@,$CPP,;t t
 s,@EGREP@,$EGREP,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@POW_LIB@,$POW_LIB,;t t
+s,@LOG4CPP_PREFIX@,$LOG4CPP_PREFIX,;t t
+s,@LOG4CPP_CFLAGS@,$LOG4CPP_CFLAGS,;t t
+s,@LOG4CPP_LIBS@,$LOG4CPP_LIBS,;t t
+s,@SMILE_PREFIX@,$SMILE_PREFIX,;t t
+s,@SMILE_CFLAGS@,$SMILE_CFLAGS,;t t
+s,@SVM_LIGHT_PREFIX@,$SVM_LIGHT_PREFIX,;t t
+s,@SVM_LIGHT_CFLAGS@,$SVM_LIGHT_CFLAGS,;t t
 s,@sleipnirdocdir@,$sleipnirdocdir,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
@@ -7902,7 +8205,9 @@ if test "$no_create" != yes; then
 fi
 
 
+
 #AC_CONFIG_SUBDIRS()
+
 
 # Print out a summary.
 echo ""
@@ -7911,21 +8216,21 @@ echo "  SMILE      = $smile_info"
 echo "  SVM light  = $svm_light_info"
 echo ""
 
-if test "x$smile_info" = "xNONE"; then
+if echo $smile_info | grep -q "NONE"; then
   cat << EOF
 BUILDING WITHOUT SMILE
 SMILE is strongly recommended.
 Bayes net functionality will be missing.
-It is available as a binary distribution from http://genie.sis.pitt.edu.
+It is available as a binary distribution from http://genie.sis.pitt.edu/.
 
 EOF
 fi
 
-if test "x$svm_light_info" = "xNONE"; then
+if echo $svm_light_info | grep -q "NONE"; then
   cat << EOF
 BUILDING WITHOUT SVM LIGHT
 SVM light is strongly recommended.
-It is available from http://svmlight.joachims.org.
+It is available from http://svmlight.joachims.org/.
 
 EOF
 fi
