@@ -33,6 +33,8 @@ protected:
 	static void AssertParentage( std::vector<size_t>&, std::vector<size_t>&, std::vector<size_t>&, size_t, size_t );
 	static CHierarchy* ConstructHierarchy( const std::vector<size_t>&, const std::vector<size_t>&,
 		const std::vector<float>&, size_t );
+	static void UpdateDistances( size_t, size_t, CDistanceMatrix&, size_t, size_t, std::vector<float>&,
+		std::vector<size_t>& );
 };
 
 }

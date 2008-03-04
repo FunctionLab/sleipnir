@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+static const char	c_acQTC[]	= "qtc";
+
 int main( int iArgs, char** aszArgs ) {
 	size_t						i, j;
 	ifstream					ifsm;
@@ -37,6 +39,10 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 
+	CMeasureAutocorrelate	Autocorrelate( pMeasure, false );
+	if( sArgs.autocorrelate_flag )
+		pMeasure = &Autocorrelate;
+
 	if( sArgs.input_arg ) {
 		ifsm.open( sArgs.input_arg );
 		pistm = &ifsm; }
@@ -72,14 +78,20 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.delta_arg ) {
 		Dat.Open( pPCL->GetGeneNames( ) );
 		CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diamineter_arg, (float)sArgs.diameter_arg,
-			(float)sArgs.delta_arg, sArgs.size_arg, !!sArgs.autocorrelate_flag, Dat.Get( ),
+			(float)sArgs.delta_arg, sArgs.size_arg, Dat.Get( ),
 			sArgs.weights_arg ? &Weights.Get( ) : NULL );
 		Dat.Save( sArgs.output_arg ); }
 	else {
-		sClusters = CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diameter_arg, sArgs.size_arg,
-			!!sArgs.autocorrelate_flag, vecsClusters, sArgs.weights_arg ? &Weights.Get( ) : NULL );
+		if( !strcmp( sArgs.algorithm_arg, c_acQTC ) )
+			sClusters = CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diameter_arg, sArgs.size_arg,
+				vecsClusters, sArgs.weights_arg ? &Weights.Get( ) : NULL );
+		else
+			sClusters = CClustKMeans::Cluster( pPCL->Get( ), pMeasure, sArgs.size_arg, vecsClusters,
+				sArgs.weights_arg ? &Weights.Get( ) : NULL ) ? sArgs.size_arg : 0;
 
-		if( sArgs.output_arg ) {
+		if( !sClusters )
+			cerr << "No clusters found" <<endl;
+		else if( sArgs.output_arg ) {
 			Dat.Open( pPCL->GetGeneNames( ) );
 			for( i = 0; i < vecsClusters.size( ); ++i ) {
 				if( ( vecsClusters[ i ] + 1 ) == sClusters )

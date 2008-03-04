@@ -110,11 +110,11 @@ CHierarchy* CClustHierarchical::Cluster( const CDistanceMatrix& Dist ) {
 
 	return CClustHierarchicalImpl::Cluster( Dist ); }
 
-// Implementation courtesy of TIGR MeV
+// Implementation inspired by TIGR MeV
 
 CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const vector<bool>* pvecfGenes ) {
 	CDistanceMatrix	Sim;
-	size_t			i, j, k, m, iP, iAssigned, iParentless, iOne, iTwo;
+	size_t			i, j, k, iAssigned, iParentless, iOne, iTwo;
 	float			d, dTotal, dMin;
 	vector<float>	vecdHeight, vecdMax;
 	vector<size_t>	veciChild1, veciChild2, veciChildren, veciMax, veciOwner;
@@ -145,62 +145,47 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 		veciChild1[ i ] = veciChild2[ i ] = -1;
 		veciChildren[ i ] = 1; }
 
-	dMin = FLT_MAX;
 	vecdMax.resize( Sim.GetSize( ) );
 	veciMax.resize( Sim.GetSize( ) );
-	for( i = 0; ( i + 1 ) < Sim.GetSize( ); ++i ) {
-		vecdMax[ i ] = -FLT_MAX;
-		for( j = ( i + 1 ); j < Sim.GetSize( ); ++j ) {
-			if( ( d = Sim.Get( i, j ) ) > vecdMax[ i ] ) {
-				vecdMax[ i ] = d;
-				veciMax[ i ] = j; }
-			if( d < dMin )
-				dMin = d; } }
+	vecdMax[ 0 ] = -FLT_MAX;
+	veciMax[ 0 ] = -1;
+	for( i = 1; i < Sim.GetSize( ); ++i ) {
+		size_t	iMin;
+
+		iMin = 0;
+		dMin = Sim.Get( 0, i );
+		for( j = 1; j < i; ++j )
+			if( ( d = Sim.Get( j, i ) ) > dMin ) {
+				dMin = d;
+				iMin = j; }
+		vecdMax[ i ] = dMin;
+		veciMax[ i ] = iMin; }
 
 	veciOwner.resize( Sim.GetSize( ) );
 	for( i = 0; i < veciOwner.size( ); ++i )
 		veciOwner[ i ] = i;
 	while( iParentless > 1 ) {
 		float	dHeight;
-		size_t	iOne, iTwo;
 
 		if( !( iParentless % 500 ) )
 			g_CatBioUtils.notice( "CClustHierarchical::Cluster( ) %d/%d nodes remaining", iParentless,
 				Sim.GetSize( ) );
 		dHeight = -FLT_MAX;
-		for( i = 0; i < Sim.GetSize( ); ++i )
-			if( ( veciOwner[ i ] != -1 ) && ( vecdMax[ i ] > dHeight ) ) {
-				dHeight = vecdMax[ i ];
-				j = i;
-				iOne = veciMax[ i ]; }
-		i = iOne;
+		for( k = 0; k < Sim.GetSize( ); ++k )
+			if( vecdMax[ k ] > dHeight )
+				dHeight = vecdMax[ i = k ];
+		j = veciMax[ i ];
 
 		if( ( vecdHeight[ ( k = iAssigned++ ) - Sim.GetSize( ) ] = dHeight ) < dTotal )
 			dTotal = dHeight;
-		AssertParentage( veciChildren, veciChild1, veciChild2, veciOwner[ i ], k );
-		AssertParentage( veciChildren, veciChild1, veciChild2, veciOwner[ j ], k );
 		iParentless--;
 
-		iOne = veciChildren[ veciOwner[ i ] ];
-		iTwo = veciChildren[ veciOwner[ j ] ];
+		UpdateDistances( i, j, Sim, veciChildren[ veciOwner[ i ] ], veciChildren[ veciOwner[ j ] ], vecdMax,
+			veciMax );
+		AssertParentage( veciChildren, veciChild1, veciChild2, veciOwner[ i ], k );
+		AssertParentage( veciChildren, veciChild1, veciChild2, veciOwner[ j ], k );
 		veciOwner[ i ] = k;
-		veciOwner[ j ] = -1;
-		for( iP = 0; iP < Sim.GetSize( ); ++iP )
-			if( ( iP != i ) && ( veciOwner[ iP ] != -1 ) )
-				Sim.Set( i, iP, ( ( Sim.Get( i, iP ) * iOne ) + ( Sim.Get( j, iP ) * iTwo ) ) /
-					( iOne + iTwo ) );
-
-		veciMax[ i ] = i;
-		for( iP = 0; iP < Sim.GetSize( ); ++iP )
-			if( ( veciOwner[ iP ] != -1 ) && ( ( veciMax[ iP ] == i ) || ( veciMax[ iP ] == j ) ) ) {
-				if( ( vecdMax[ iP ] == dMin ) && ( iP != i ) ) {
-					veciMax[ iP ] = i;
-					continue; }
-				vecdMax[ iP ] = -FLT_MAX;
-				for( m = ( iP + 1 ); m < Sim.GetSize( ); ++m )
-					if( ( veciOwner[ m ] != -1 ) && ( ( d = Sim.Get( iP, m ) ) > vecdMax[ iP ] ) ) {
-						vecdMax[ iP ] = d;
-						veciMax[ iP ] = m; } } }
+		veciOwner[ j ] = -1; }
 
 	return ConstructHierarchy( veciChild1, veciChild2, vecdHeight, ( 2 * Sim.GetSize( ) ) - 2 ); }
 
@@ -211,6 +196,50 @@ void CClustHierarchicalImpl::AssertParentage( vector<size_t>& veciChildren, vect
 	iParent -= veciChild1.size( );
 	veciChild2[ iParent ] = veciChild1[ iParent ];
 	veciChild1[ iParent ] = iChild; }
+
+void CClustHierarchicalImpl::UpdateDistances( size_t iOne, size_t iTwo, CDistanceMatrix& Sim, size_t iWOne,
+	size_t iWTwo, vector<float>& vecdMax, vector<size_t>& veciMax ) {
+	float	d, dOne, dTwo;
+	size_t	i, j;
+
+	vecdMax[ iOne ] = -FLT_MAX;
+	veciMax[ iOne ] = -1;
+	// Update row iOne across
+	for( i = 0; i < iOne; ++i )
+		if( !CMeta::IsNaN( dOne = Sim.Get( i, iOne ) ) && !CMeta::IsNaN( dTwo = Sim.Get( i, iTwo ) ) ) {
+			Sim.Set( i, iOne, d = ( ( iWOne * dOne ) + ( iWTwo * dTwo ) ) / ( iWOne + iWTwo ) );
+			if( d > vecdMax[ iOne ] ) {
+				vecdMax[ iOne ] = d;
+				veciMax[ iOne ] = i; } }
+	// Update row iOne down
+	for( i = ( iOne + 1 ); i < Sim.GetSize( ); ++i )
+		if( !CMeta::IsNaN( dOne = Sim.Get( iOne, i ) ) && !CMeta::IsNaN( dTwo = Sim.Get( iTwo, i ) ) ) {
+			Sim.Set( iOne, i, d = ( ( iWOne * dOne ) + ( iWTwo * dTwo ) ) / ( iWOne + iWTwo ) );
+			if( veciMax[ i ] == iOne ) {
+				vecdMax[ i ] = -FLT_MAX;
+				veciMax[ i ] = 0;
+				for( j = 0; j < i; ++j )
+					if( !CMeta::IsNaN( d = Sim.Get( j, i ) ) && ( d > vecdMax[ i ] ) ) {
+						vecdMax[ i ] = d;
+						veciMax[ i ] = j; } }
+			else if( d > vecdMax[ i ] ) {
+				vecdMax[ i ] = d;
+				veciMax[ i ] = iOne; } }
+	// Delete row iTwo across
+	for( i = 0; i < iTwo; ++i )
+		Sim.Set( i, iTwo, CMeta::GetNaN( ) );
+	vecdMax[ iTwo ] = -FLT_MAX;
+	veciMax[ iTwo ] = -1;
+	// Delete row iTwo down
+	for( i = ( iTwo + 1 ); i < Sim.GetSize( ); ++i ) {
+		Sim.Set( iTwo, i, CMeta::GetNaN( ) );
+		if( veciMax[ i ] == iTwo ) {
+			vecdMax[ i ] = -FLT_MAX;
+			veciMax[ i ] = 0;
+			for( j = 0; j < i; ++j )
+				if( !CMeta::IsNaN( d = Sim.Get( j, i ) ) && ( d > vecdMax[ i ] ) ) {
+					vecdMax[ i ] = d;
+					veciMax[ i ] = j; } } } }
 
 CHierarchy* CClustHierarchicalImpl::ConstructHierarchy( const vector<size_t>& veciChild1,
 	const vector<size_t>& veciChild2, const vector<float>& vecdHeight, size_t iID ) {

@@ -5,7 +5,7 @@
 
 namespace libBioUtils {
 
-static float GetWeight( const float* adW, size_t iW ) {
+static inline float GetWeight( const float* adW, size_t iW ) {
 
 	return ( adW ? adW[ iW ] : 1 ); }
 
@@ -150,7 +150,10 @@ double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY
 	for( i = 0; i < iN; ++i )
 		if( ( adX[ i ] || adY[ i ] ) && !( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) ) ) {
 			d = adX[ i ] - adY[ i ];
-			dRet += d * d * GetWeight( adWX, i ) * GetWeight( adWY, i ); }
+			d *= d;
+			if( adWX || adWY )
+				d *= GetWeight( adWX, i ) * GetWeight( adWY, i );
+			dRet += d; }
 
 	return sqrt( dRet ); }
 
@@ -469,6 +472,27 @@ double CMeasureNegate::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 
 	return -m_pMeasure->Measure( adX, iM, adY, iN, eMap, adWX, adWY ); }
+
+CMeasureInvert::CMeasureInvert( const IMeasure* pMeasure, bool fMemory ) : CMeasureImpl( pMeasure, fMemory ) { }
+
+const char* CMeasureInvert::GetName( ) const {
+
+	return m_pMeasure->GetName( ); }
+
+bool CMeasureInvert::IsRank( ) const {
+
+	return m_pMeasure->IsRank( ); }
+
+IMeasure* CMeasureInvert::Clone( ) const {
+
+	return new CMeasureInvert( m_pMeasure->Clone( ), true ); }
+
+double CMeasureInvert::Measure( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	double	d;
+
+	d = m_pMeasure->Measure( adX, iM, adY, iN, eMap, adWX, adWY );
+	return ( d ? ( 1 / d ) : DBL_MAX ); }
 
 CMeasureSigmoid::CMeasureSigmoid( const IMeasure* pMeasure, bool fMemory, float dMult ) :
 	CMeasureSigmoidImpl( pMeasure, fMemory, dMult ) { }

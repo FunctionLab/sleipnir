@@ -8,7 +8,6 @@ int main( int iArgs, char** aszArgs ) {
 	float				dOne, dTwo;
 	vector<size_t>		veciGenes;
 	CFullMatrix<size_t>	MatConfusion;
-	size_t*				ai;
 	const char*			szOne;
 	const char*			szTwo;
 	bool				fOneSmall;

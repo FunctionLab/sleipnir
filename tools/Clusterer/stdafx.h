@@ -6,6 +6,7 @@
 using namespace std;
 
 #include "dat.h"
+#include "clustkmeans.h"
 #include "clustqtc.h"
 #include "measure.h"
 #include "pcl.h"

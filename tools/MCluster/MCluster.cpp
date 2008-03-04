@@ -31,19 +31,21 @@ int main( int iArgs, char** aszArgs ) {
 
 	CMeta::Startup( sArgs.verbosity_arg );
 	if( sArgs.input_arg ) {
-		if( Dat.Open( sArgs.input_arg ) ) {
-			cerr << "Opened dat: " << sArgs.input_arg << endl;
-			if( !PCL.Open( cin, sArgs.skip_arg ) ) {
-				cerr << "Could not open PCL" << endl;
-				return 1; } }
+		ifsm.open( sArgs.input_arg );
+		if( PCL.Open( ifsm, sArgs.skip_arg ) ) {
+			ifsm.close( );
+			cerr << "Opened PCL: " << sArgs.input_arg << endl; }
 		else {
-			ifsm.open( sArgs.input_arg );
-			if( !PCL.Open( ifsm, sArgs.skip_arg ) ) {
+			ifsm.close( );
+			if( !Dat.Open( sArgs.input_arg ) ) {
 				cerr << "Could not open input: " << sArgs.input_arg << endl;
 				return 1; }
-			ifsm.close( );
-			cerr << "Opened PCL: " << sArgs.input_arg << endl; } }
-	else if( !PCL.Open( cin, sArgs.skip_arg ) ) {
+			if( !PCL.Open( cin, sArgs.skip_arg ) ) {
+				cerr << "Could not open PCL" << endl;
+				return 1; } } }
+	else if( PCL.Open( cin, sArgs.skip_arg ) )
+		cerr << "Opened PCL" << endl;
+	else {
 		cerr << "Could not open PCL" << endl;
 		return 1; }
 

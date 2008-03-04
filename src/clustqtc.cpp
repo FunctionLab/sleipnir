@@ -7,14 +7,14 @@
 namespace libBioUtils {
 
 uint16_t CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
-	float dDiameter, size_t iSize, bool fAutoc, vector<uint16_t>& vecsClusters, const CDataMatrix* pWeights ) {
+	float dDiameter, size_t iSize, vector<uint16_t>& vecsClusters, const CDataMatrix* pWeights ) {
 	CDistanceMatrix	Dist;
 
-	InitializeDistances( Data, pMeasure, fAutoc, Dist, pWeights );
+	InitializeDistances( Data, pMeasure, Dist, pWeights );
 	return QualityThresholdAll( Data, dDiameter, iSize, Dist, vecsClusters ); }
 
 void CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
-	float dMin, float dMax, float dDelta, size_t iSize, bool fAutoc, CDistanceMatrix& DatOut,
+	float dMin, float dMax, float dDelta, size_t iSize, CDistanceMatrix& DatOut,
 	const CDataMatrix* pWeights ) {
 	CDistanceMatrix		Dist;
 	float				dDiameter;
@@ -22,10 +22,10 @@ void CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
 	uint16_t			sClusters;
 	size_t				i, j;
 
-	InitializeDistances( Data, pMeasure, fAutoc, Dist, pWeights );
+	InitializeDistances( Data, pMeasure, Dist, pWeights );
 	for( dDiameter = dMin; dDiameter <= dMax; dDiameter += dDelta ) {
 		g_CatBioUtils.notice( "CClustQTC::Cluster( %g, %g, %g, %d, %d ) processing diameter %g", dMin, dMax,
-			dDelta, iSize, fAutoc, dDiameter );
+			dDelta, iSize, dDiameter );
 		sClusters = QualityThresholdAll( Data, dDiameter, iSize, Dist, vecsClusters );
 		for( i = 0; i < vecsClusters.size( ); ++i ) {
 			if( ( vecsClusters[ i ] + 1 ) == sClusters )
@@ -124,7 +124,7 @@ void CClustQTCImpl::QualityThresholdGene( size_t iGene, const CDataMatrix& Data,
 		vecsCluster.push_back( iAdded ); } }
 
 void CClustQTCImpl::InitializeDistances( const CDataMatrix& Data, const IMeasure* pMeasure,
-	bool fAutoc, CDistanceMatrix& Dist, const CDataMatrix* pWeights ) {
+	CDistanceMatrix& Dist, const CDataMatrix* pWeights ) {
 	size_t	i, j;
 	float*	adA;
 	float*	adB;
@@ -142,10 +142,10 @@ void CClustQTCImpl::InitializeDistances( const CDataMatrix& Data, const IMeasure
 	for( i = 0; i < Data.GetRows( ); ++i ) {
 		if( !( i % 10 ) )
 			g_CatBioUtils.notice( "CClustQTCImpl::InitializeDistances( %d ) initializing %d/%d genes",
-				fAutoc, i, Data.GetRows( ) );
+				i, Data.GetRows( ) );
 		for( j = ( i + 1 ); j < Data.GetRows( ); ++j )
 			Dist.Set( i, j, (float)GetJackDistance( Data.Get( i ), Data.Get( j ),
-				Data.GetColumns( ), fAutoc, adA, adB, pMeasure, pWeights ? pWeights->Get( i ) : NULL,
+				Data.GetColumns( ), adA, adB, pMeasure, pWeights ? pWeights->Get( i ) : NULL,
 				pWeights ? pWeights->Get( j ) : NULL, adWA, adWB ) ); }
 	if( pWeights ) {
 		delete[] adWA;
@@ -153,15 +153,13 @@ void CClustQTCImpl::InitializeDistances( const CDataMatrix& Data, const IMeasure
 	delete[] adA;
 	delete[] adB; }
 
-double CClustQTCImpl::GetJackDistance( const float* adX, const float* adY, size_t iN,
-	bool fAutoc, float* adA, float* adB, const IMeasure* pMeasure, const float* adWX, const float* adWY,
+double CClustQTCImpl::GetJackDistance( const float* adX, const float* adY, size_t iN, float* adA, float* adB,
+	const IMeasure* pMeasure, const float* adWX, const float* adWY,
 	float* adWA, float* adWB ) {
-	size_t					i;
-	double					dRet, dCur;
-	CMeasureAutocorrelate	Autocorrelate( pMeasure, false );
-	const IMeasure*			pUse	= fAutoc ? &Autocorrelate : pMeasure;
+	size_t	i;
+	double	dRet, dCur;
 
-	dRet = pUse->Measure( adX, iN, adY, iN, IMeasure::EMapCenter, adWX, adWY );
+	dRet = pMeasure->Measure( adX, iN, adY, iN, IMeasure::EMapCenter, adWX, adWY );
 	dRet = 1 - dRet;
 	for( i = 0; i < iN; ++i ) {
 		memcpy( adA, adX, i * sizeof(*adX) );
@@ -173,7 +171,7 @@ double CClustQTCImpl::GetJackDistance( const float* adX, const float* adY, size_
 			memcpy( adWA + i, adWX + i + 1, ( iN - 1 - i ) * sizeof(*adWX) );
 			memcpy( adWB, adWY, i * sizeof(*adWY) );
 			memcpy( adWB + i, adWY + i + 1, ( iN - 1 - i ) * sizeof(*adWY) ); }
-		dCur = pUse->Measure( adA, iN - 1, adB, iN - 1, IMeasure::EMapCenter, adWA, adWB );
+		dCur = pMeasure->Measure( adA, iN - 1, adB, iN - 1, IMeasure::EMapCenter, adWA, adWB );
 		if( ( dCur = ( 1 - dCur ) ) > dRet )
 			dRet = dCur; }
 

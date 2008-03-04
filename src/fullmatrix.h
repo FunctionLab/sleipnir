@@ -24,7 +24,7 @@ public:
 		size_t	i;
 
 		if( m_aaData && m_fMemory ) {
-			for( i = 0; i < m_iR; ++i )
+			for( i = 0; i < GetRows( ); ++i )
 				delete[] m_aaData[ i ];
 			delete[] m_aaData; }
 
@@ -47,6 +47,10 @@ public:
 
 		m_aaData[ iY ][ iX ] = Value; }
 
+	void Set( size_t iY, const tType* aData ) {
+
+		memcpy( m_aaData[ iY ], aData, GetColumns( ) ); }
+
 	void Initialize( size_t iR, size_t iC, const CFullMatrix& Mat ) {
 
 		Initialize( iR, iC, Mat.m_aaData ); }
@@ -58,9 +62,9 @@ public:
 		m_iR = iR;
 		m_iC = iC;
 		if( m_fMemory = !( m_aaData = aaData ) ) {
-			m_aaData = new tType*[ m_iR ];
-			for( i = 0; i < m_iR; ++i )
-				m_aaData[ i ] = new tType[ m_iC ]; } }
+			m_aaData = new tType*[ GetRows( ) ];
+			for( i = 0; i < GetRows( ); ++i )
+				m_aaData[ i ] = new tType[ GetColumns( ) ]; } }
 
 	size_t GetRows( ) const {
 
@@ -90,8 +94,8 @@ public:
 		if( !m_aaData )
 			return;
 
-		for( i = 0; i < m_iR; ++i )
-			memset( m_aaData[ i ], 0, sizeof(*m_aaData[ i ]) * m_iC ); }
+		for( i = 0; i < GetRows( ); ++i )
+			memset( m_aaData[ i ], 0, sizeof(*m_aaData[ i ]) * GetColumns( ) ); }
 
 	bool AddRows( size_t iR ) {
 		tType**	m_aaNew;
@@ -100,12 +104,12 @@ public:
 		if( !m_fMemory )
 			return false;
 
-		m_aaNew = new tType*[ m_iR + iR ];
-		memcpy( m_aaNew, m_aaData, m_iR * sizeof(*m_aaData) );
+		m_aaNew = new tType*[ GetRows( ) + iR ];
+		memcpy( m_aaNew, m_aaData, GetRows( ) * sizeof(*m_aaData) );
 		delete[] m_aaData;
 		m_aaData = m_aaNew;
 		for( i = 0; i < iR; ++i )
-			m_aaNew[ m_iR + i ] = new tType[ m_iC ];
+			m_aaNew[ GetRows( ) + i ] = new tType[ GetColumns( ) ];
 		m_iR += iR;
 
 		return true; }
@@ -125,10 +129,10 @@ protected:
 		istm.read( (char*)&iSize, sizeof(iSize) );
 		m_iC = iSize;
 		m_fMemory = true;
-		m_aaData = new tType*[ m_iR ];
-		for( i = 0; i < m_iR; ++i ) {
-			m_aaData[ i ] = new tType[ m_iC ];
-			istm.read( (char*)m_aaData[ i ], (std::streamsize)( sizeof(*m_aaData[ i ]) * m_iC ) ); }
+		m_aaData = new tType*[ GetRows( ) ];
+		for( i = 0; i < GetRows( ); ++i ) {
+			m_aaData[ i ] = new tType[ GetColumns( ) ];
+			istm.read( (char*)m_aaData[ i ], (std::streamsize)( sizeof(*m_aaData[ i ]) * GetColumns( ) ) ); }
 
 		return true; }
 
@@ -153,18 +157,18 @@ protected:
 			while( sstm.peek( ) != EOF ) {
 				sstm >> Cur;
 				vecRow.push_back( Cur ); }
-			if( !m_iC )
+			if( !GetColumns( ) )
 				m_iC = vecRow.size( );
-			else if( m_iC != vecRow.size( ) )
+			else if( GetColumns( ) != vecRow.size( ) )
 				return false;
 
-			aCur = new tType[ m_iC ];
-			for( i = 0; i < m_iC; ++i )
+			aCur = new tType[ GetColumns( ) ];
+			for( i = 0; i < GetColumns( ); ++i )
 				aCur[ i ] = vecRow[ i ];
 			vecpRows.push_back( aCur ); }
 
 		m_aaData = new tType*[ m_iR = vecpRows.size( ) ];
-		for( i = 0; i < m_iR; ++i )
+		for( i = 0; i < GetRows( ); ++i )
 			m_aaData[ i ] = vecpRows[ i ];
 
 		return true; }
@@ -173,24 +177,25 @@ protected:
 		size_t		i;
 		uint32_t	iSize;
 
-		iSize = (uint32_t)m_iR;
+		iSize = (uint32_t)GetRows( );
 		ostm.write( (const char*)&iSize, sizeof(iSize) );
-		iSize = (uint32_t)m_iC;
+		iSize = (uint32_t)GetColumns( );
 		ostm.write( (const char*)&iSize, sizeof(iSize) );
-		for( i = 0; i < m_iR; ++i )
-			ostm.write( (const char*)m_aaData[ i ], (std::streamsize)( sizeof(*m_aaData[ i ]) * m_iC ) );
+		for( i = 0; i < GetRows( ); ++i )
+			ostm.write( (const char*)m_aaData[ i ], (std::streamsize)( sizeof(*m_aaData[ i ]) *
+				GetColumns( ) ) );
 
 		return true; }
 
 	bool SaveText( std::ostream& ostm ) const {
 		size_t	i, j;
 
-		if( !( m_iR && m_iC ) )
+		if( !( GetRows( ) && GetColumns( ) ) )
 			return false;
 
-		for( i = 0; i < m_iR; ++i ) {
+		for( i = 0; i < GetRows( ); ++i ) {
 			ostm << m_aaData[ i ][ 0 ];
-			for( j = 1; j < m_iC; ++j )
+			for( j = 1; j < GetColumns( ); ++j )
 				ostm << '\t' << m_aaData[ i ][ j ];
 			ostm << std::endl; }
 
