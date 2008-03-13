@@ -3,7 +3,7 @@
 
 #include "mathbi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CMath : CMathImpl {
 public:

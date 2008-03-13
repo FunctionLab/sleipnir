@@ -3,7 +3,7 @@
 #include "measure.h"
 #include "meta.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure, size_t iK,
 	vector<uint16_t>& vecsClusters, const CDataMatrix* pMatWeights ) {
@@ -26,7 +26,7 @@ bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure
 	veciCounts.resize( iK );
 	for( iIteration = 0,fDone = false; !fDone; ++iIteration ) {
 		if( !( iIteration % 10 ) )
-			g_CatBioUtils.info( "CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
+			g_CatSleipnir.info( "CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
 		fill( veciCounts.begin( ), veciCounts.end( ), 0 );
 		fDone = true;
 		for( i = 0; i < vecsClusters.size( ); ++i ) {

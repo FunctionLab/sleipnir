@@ -3,12 +3,48 @@
 #include "genome.h"
 #include "meta.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 COntologyKEGG::COntologyKEGG( ) {
 
 	m_pOntology = this; }
 
+/*!
+ * \brief
+ * Initializes the ontology using a KEGG "ko" file.
+ * 
+ * \param istm
+ * Stream from which ko file is read.
+ * 
+ * \param Genome
+ * Genome into which genes are inserted or read during annotation parsing.
+ * 
+ * \param strOrganism
+ * Organism identifier for which annotations should be read (e.g. "SCE" or "HSA").
+ * 
+ * \param fSynonyms
+ * If true, use the first ko synonym (when present) as the primary gene name; otherwise, use the ko file's
+ * gene identifier.
+ * 
+ * \returns
+ * True if the ontology was successfully initialized.
+ * 
+ * Given an input stream containing a ko file from the KEGG orthology, COntologyKEGG::Open parses both
+ * the structure of KEGG (usually a flat set of non-hierarchical pathways) and the genes annotated to each
+ * KEGG term.  Terms are identified by KEGG IDs (e.g. "ko00624"), and genes are identified by the ko ID or
+ * first synonym as specified by the fSynonyms parameter.  Genes are retrieved from Genome if already present
+ * or inserted if not; it is thus important to ensure that the proper primary gene names are used so as to
+ * agree with any identifiers already present in Genome.
+ * 
+ * \remarks
+ * For yeast, leaving fSynonyms false will use ORF IDs as the primary gene name (usually the desired
+ * behavior); setting it true will use common names.  For mouse or human, leaving fSynonyms false will use
+ * Entrez gene IDs as the primary gene name; setting it true will use HGNC symbols (usually the desired
+ * behavior).  For worm, fSynonyms should always be false to use systematic transcript IDs as the primary
+ * gene name.  For fly, leaving fSynonyms false will use Flybase gene IDs as the primary gene name (usually
+ * the desired behavior); setting it true will use common names.  For other organisms, please inspect the
+ * ko file.
+ */
 bool COntologyKEGG::Open( istream& istm, CGenome& Genome, const string& strOrganism, bool fSynonyms ) {
 	SParserKEGG					sParser( istm, Genome, strOrganism, fSynonyms );
 	size_t						i, j, iNode;
@@ -16,7 +52,7 @@ bool COntologyKEGG::Open( istream& istm, CGenome& Genome, const string& strOrgan
 	vector<set<CGene*> >		vecsetpGenes;
 	set<CGene*>::iterator		iterGene;
 
-	g_CatBioUtils.info( "COntologyKEGG::Open( %s )", strOrganism.c_str( ) );
+	g_CatSleipnir.info( "COntologyKEGG::Open( %s )", strOrganism.c_str( ) );
 	Reset( );
 	sParser.GetLine( );
 	while( istm.peek( ) != EOF ) {
@@ -46,54 +82,6 @@ bool COntologyKEGG::Open( istream& istm, CGenome& Genome, const string& strOrgan
 			m_aNodes[ i ].m_apGenes[ j ] = *iterGene; } }
 
 	return true; }
-
-size_t COntologyKEGG::GetNode( const string& strID ) const {
-
-	return COntologyImpl::GetNode( strID ); }
-
-bool COntologyKEGG::IsAnnotated( size_t iNode, const CGene& Gene, bool fKids ) const {
-
-	return COntologyImpl::IsAnnotated( iNode, Gene, fKids ); }
-
-size_t COntologyKEGG::GetNodes( ) const {
-
-	return COntologyImpl::GetNodes( ); }
-
-const string& COntologyKEGG::GetID( ) const {
-
-	return COntologyImpl::GetID( ); }
-
-const string& COntologyKEGG::GetID( size_t iNode ) const {
-
-	return COntologyImpl::GetID( iNode ); }
-
-const string& COntologyKEGG::GetGloss( size_t iNode ) const {
-
-	return COntologyImpl::GetGloss( iNode ); }
-
-size_t COntologyKEGG::GetParents( size_t iNode ) const {
-
-	return COntologyImpl::GetParents( iNode ); }
-
-size_t COntologyKEGG::GetParent( size_t iNode, size_t iParent ) const {
-
-	return COntologyImpl::GetParent( iNode, iParent ); }
-
-size_t COntologyKEGG::GetChildren( size_t iNode ) const {
-
-	return COntologyImpl::GetChildren( iNode ); }
-
-size_t COntologyKEGG::GetChild( size_t iNode, size_t iChild ) const {
-
-	return COntologyImpl::GetChild( iNode, iChild ); }
-
-size_t COntologyKEGG::GetGenes( size_t iNode, bool fKids ) const {
-
-	return COntologyImpl::GetGenes( iNode, fKids ); }
-
-const CGene& COntologyKEGG::GetGene( size_t iNode, size_t iGene ) const {
-
-	return COntologyImpl::GetGene( iNode, iGene ); }
 
 const char	COntologyKEGGImpl::c_szKEGG[]		= "KEGG";
 const char	COntologyKEGGImpl::c_szEntry[]		= "ENTRY";
@@ -131,7 +119,7 @@ bool COntologyKEGGImpl::OpenEntry( SParserKEGG& sParser ) {
 
 bool COntologyKEGGImpl::OpenName( SParserKEGG& sParser ) {
 
-	g_CatBioUtils.debug( "COntologyKEGGImpl::OpenName( ) %s", sParser.m_szLine );
+	g_CatSleipnir.debug( "COntologyKEGGImpl::OpenName( ) %s", sParser.m_szLine );
 	return ( sParser.IsStart( c_szName ) ? sParser.GetLine( ) : true ); }
 
 bool COntologyKEGGImpl::OpenDefinition( SParserKEGG& sParser ) {
@@ -289,14 +277,5 @@ char* COntologyKEGGImpl::OpenGene( SParserKEGG& sParser, char* pch ) {
 bool COntologyKEGGImpl::OpenEnd( SParserKEGG& sParser ) {
 
 	return ( sParser.IsStart( c_szEnd ) && sParser.GetLine( ) ); }
-
-void COntologyKEGG::GetGeneNames( vector<string>& vecstrGenes ) const {
-
-	return COntologyImpl::GetGeneNames( vecstrGenes ); }
-
-void COntologyKEGG::TermFinder( const CGenes& Genes, vector<STermFound>& vecsTerms,
-	bool fBon, bool fKids, bool fBack, const CGenes* pBkg ) const {
-
-	return COntologyImpl::TermFinder( Genes, vecsTerms, fBon, fKids, fBack, pBkg ); }
 
 }

@@ -9,6 +9,6 @@ using namespace std;
 #include "fullmatrix.h"
 #include "genome.h"
 #include "statistics.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #endif // STDAFX_H

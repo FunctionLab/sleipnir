@@ -4,7 +4,7 @@
 #include "measure.h"
 #include "meta.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 uint16_t CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
 	float dDiameter, size_t iSize, vector<uint16_t>& vecsClusters, const CDataMatrix* pWeights ) {
@@ -24,7 +24,7 @@ void CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
 
 	InitializeDistances( Data, pMeasure, Dist, pWeights );
 	for( dDiameter = dMin; dDiameter <= dMax; dDiameter += dDelta ) {
-		g_CatBioUtils.notice( "CClustQTC::Cluster( %g, %g, %g, %d, %d ) processing diameter %g", dMin, dMax,
+		g_CatSleipnir.notice( "CClustQTC::Cluster( %g, %g, %g, %d, %d ) processing diameter %g", dMin, dMax,
 			dDelta, iSize, dDiameter );
 		sClusters = QualityThresholdAll( Data, dDiameter, iSize, Dist, vecsClusters );
 		for( i = 0; i < vecsClusters.size( ); ++i ) {
@@ -47,7 +47,7 @@ uint16_t CClustQTCImpl::QualityThresholdAll( const CDataMatrix& Data, float dDia
 
 	vecsClusters.resize( Data.GetRows( ) );
 	for( iAssigned = sCluster = 0; ; ++sCluster ) {
-		g_CatBioUtils.notice( "CClustQTCImpl::QualityThresholdAll( ) cluster %d, assigned %d/%d genes",
+		g_CatSleipnir.notice( "CClustQTCImpl::QualityThresholdAll( ) cluster %d, assigned %d/%d genes",
 			sCluster + 1, iAssigned, Data.GetRows( ) );
 		QualityThresholdLargest( Data, dDiameter, Dist, vecfAssigned, vecsCur );
 		for( i = 0; i < vecsCur.size( ); ++i )
@@ -79,7 +79,7 @@ void CClustQTCImpl::QualityThresholdLargest( const CDataMatrix& Data, float dDia
 	vecfClone.resize( vecfAssigned.size( ) );
 	for( iGene = 0; iGene < vecfAssigned.size( ); ++iGene ) {
 		if( !( iGene % 1000 ) )
-			g_CatBioUtils.notice( "CClustQTCImpl::QualityThresholdLargest( %g ) processing gene %d/%d",
+			g_CatSleipnir.notice( "CClustQTCImpl::QualityThresholdLargest( %g ) processing gene %d/%d",
 				dDiameter, iGene, vecfAssigned.size( ) );
 		if( vecfAssigned[ iGene ] )
 			continue;
@@ -141,7 +141,7 @@ void CClustQTCImpl::InitializeDistances( const CDataMatrix& Data, const IMeasure
 		adWA = adWB = NULL;
 	for( i = 0; i < Data.GetRows( ); ++i ) {
 		if( !( i % 10 ) )
-			g_CatBioUtils.notice( "CClustQTCImpl::InitializeDistances( %d ) initializing %d/%d genes",
+			g_CatSleipnir.notice( "CClustQTCImpl::InitializeDistances( %d ) initializing %d/%d genes",
 				i, Data.GetRows( ) );
 		for( j = ( i + 1 ); j < Data.GetRows( ); ++j )
 			Dist.Set( i, j, (float)GetJackDistance( Data.Get( i ), Data.Get( j ),

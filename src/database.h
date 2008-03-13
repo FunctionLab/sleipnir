@@ -3,7 +3,7 @@
 
 #include "databasei.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class IBayesNet;
 

@@ -1,7 +1,7 @@
 #ifndef METAI_H
 #define METAI_H
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CMetaImpl {
 protected:

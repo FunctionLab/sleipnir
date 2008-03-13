@@ -6,7 +6,7 @@
 #include "fullmatrix.h"
 #include "typesi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CClustKMeansImpl {
 protected:

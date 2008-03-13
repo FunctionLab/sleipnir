@@ -1,7 +1,7 @@
 #ifndef FILEI_H
 #define FILEI_H
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CFileImpl {
 protected:

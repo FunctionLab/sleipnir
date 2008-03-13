@@ -5,7 +5,7 @@
 
 #include "fullmatrix.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CPCL;
 

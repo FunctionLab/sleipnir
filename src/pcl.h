@@ -7,7 +7,7 @@
 
 #include "pcli.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CDat;
 

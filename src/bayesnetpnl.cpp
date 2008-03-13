@@ -8,10 +8,17 @@
 #include "dataset.h"
 #include "meta.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const char	CBayesNetPNLImpl::c_szBN[]	= "bn";
 
+/*!
+ * \brief
+ * Construct a new PNL-based Bayes net.
+ * 
+ * \param fGroup
+ * If true, group identical learning/evaluation examples together into a single heavily weighted example.
+ */
 CBayesNetPNL::CBayesNetPNL( bool fGroup ) : CBayesNetPNLImpl(fGroup) { }
 
 CBayesNetPNLImpl::CBayesNetPNLImpl( bool fGroup ) : CBayesNetImpl(fGroup),
@@ -22,20 +29,20 @@ CBayesNetPNLImpl::~CBayesNetPNLImpl( ) {
 	if( m_pPNLNet )
 		delete m_pPNLNet; }
 
-bool CBayesNetPNL::Open( const char* szIn ) {
+bool CBayesNetPNL::Open( const char* szFilename ) {
 	CContextPersistence	ConPer;
 
-	if( !ConPer.LoadXML( szIn ) )
+	if( !ConPer.LoadXML( szFilename ) )
 		return false;
 	if( m_pPNLNet )
 		delete m_pPNLNet;
 	return !!( m_pPNLNet = (CBNet*)ConPer.Get( c_szBN ) ); }
 
-bool CBayesNetPNL::Save( const char* szOut ) const {
+bool CBayesNetPNL::Save( const char* szFilename ) const {
 	CContextPersistence	ConPer;
 
 	ConPer.Put( m_pPNLNet, c_szBN );
-	return ConPer.SaveAsXML( szOut ); }
+	return ConPer.SaveAsXML( szFilename ); }
 
 bool CBayesNetPNL::Learn( const IDataset* pData, size_t iIterations, bool fZero, bool fELR ) {
 	CEMLearningEngineDumb*	pLearner;
@@ -50,28 +57,9 @@ bool CBayesNetPNL::Learn( const IDataset* pData, size_t iIterations, bool fZero,
 	delete pLearner;
 	return true; }
 
-void CBayesNetPNL::GetNodes( vector<string>& ) const { }
-
-bool CBayesNetPNL::IsContinuous( size_t ) const {
-
-	return IsContinuous( ); }
-
-bool CBayesNetPNL::IsContinuous( ) const {
-
-	return CBayesNetPNLImpl::IsContinuous( ); }
-
 bool CBayesNetPNLImpl::IsContinuous( ) const {
 
 	return ( m_pPNLNet ? !m_pPNLNet->GetNodeType( 0 )->IsDiscrete( ) : false ); }
-
-bool CBayesNetPNL::Evaluate( const IDataset* pData,
-	vector<vector<float> >& vecvecdResults, bool fZero ) const {
-
-	return CBayesNetPNLImpl::Evaluate( pData, NULL, &vecvecdResults, fZero ); }
-
-bool CBayesNetPNL::Evaluate( const IDataset* pData, CDat& DatOut, bool fZero ) const {
-
-	return CBayesNetPNLImpl::Evaluate( pData, &DatOut, NULL, fZero ); }
 
 bool CBayesNetPNLImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 	vector<vector<float> >* pvecvecdOut, bool fZero ) const {
@@ -99,7 +87,7 @@ bool CBayesNetPNLImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 	iNode = 0;
 	for( i = 0; i < pData->GetGenes( ); ++i ) {
 		if( !( i % 250 ) )
-			g_CatBioUtils.notice( "CBayesNetPNL::Evaluate( %d ) %d/%d", fZero, i,
+			g_CatSleipnir.notice( "CBayesNetPNL::Evaluate( %d ) %d/%d", fZero, i,
 				pData->GetGenes( ) );
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
 			if( !pData->IsExample( i, j ) )
@@ -194,28 +182,6 @@ bool CBayesNetPNLImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 
 	delete pInferrer;
 	return true; }
-
-void CBayesNetPNL::Randomize( ) { }
-
-void CBayesNetPNL::Randomize( size_t ) { }
-
-void CBayesNetPNL::Reverse( size_t ) { }
-
-bool CBayesNetPNL::Evaluate( const vector<unsigned char>&, vector<float>&, bool, size_t ) const {
-
-	return false; }
-
-unsigned char CBayesNetPNL::GetValues( size_t ) const {
-
-	return 0; }
-
-bool CBayesNetPNL::GetCPT( size_t, CDataMatrix& ) const {
-
-	return false; }
-
-bool CBayesNetPNL::Evaluate( const CPCLPair&, CPCL&, bool, int ) const {
-
-	return false; }
 
 }
 

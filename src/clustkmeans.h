@@ -3,7 +3,7 @@
 
 #include "clustkmeansi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class IMeasure;
 

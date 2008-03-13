@@ -16,7 +16,7 @@ using namespace std;
 #include "dataset.h"
 #include "genome.h"
 #include "meta.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 const unsigned int	c_iLineLength	= 1024;
 

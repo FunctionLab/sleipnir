@@ -3,7 +3,7 @@
 #include "mathb.h"
 #include "meta.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const CColor	CColor::c_Black		= CColor( 0x00, 0x00, 0x00 );
 const CColor	CColor::c_Cyan		= CColor( 0x00, 0xFF, 0xFF );

@@ -3,7 +3,7 @@
 
 #include "triei.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 template<class tType> class CTrieIterator;
 

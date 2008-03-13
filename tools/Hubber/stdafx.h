@@ -8,6 +8,6 @@ using namespace std;
 #include "genome.h"
 #include "meta.h"
 #include "statistics.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #endif // STDAFX_H

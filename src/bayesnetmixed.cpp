@@ -5,7 +5,7 @@
 #pragma warning (default: 4244 4267)
 #include "bayesnet.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 bool CBayesNetSmileImpl::ConvertGraph( CBayesNetPNL& BNPNL ) const {
 	CNodeType*						aNodeTypes;

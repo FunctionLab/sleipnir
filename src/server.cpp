@@ -2,7 +2,7 @@
 #include "server.h"
 #include "serverclient.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 CServer*	CServerImpl::s_pServer		= NULL;
 const char*	CServerImpl::c_szPort		= "port";
@@ -68,16 +68,16 @@ bool CServer::Start( ) {
 			char	acError[ 1024 ];
 
 			strerror_s( acError, ARRAYSIZE(acError) - 1, errno );
-			g_CatBioUtils.error( "CServer::Start( ) bind failed: %s", acError );
+			g_CatSleipnir.error( "CServer::Start( ) bind failed: %s", acError );
 		}
 #else // _MSC_VER
-		g_CatBioUtils.error( "CServer::Start( ) bind failed: %s", strerror( errno ) );
+		g_CatSleipnir.error( "CServer::Start( ) bind failed: %s", strerror( errno ) );
 #endif // _MSC_VER
 		return false; }
 
-	g_CatBioUtils.notice( "CServer::Start( ) bound to port %d", m_iPort );
+	g_CatSleipnir.notice( "CServer::Start( ) bound to port %d", m_iPort );
 	Listen( );
-	g_CatBioUtils.info( "CServer::Start( ) preparing to shutdown..." );
+	g_CatSleipnir.info( "CServer::Start( ) preparing to shutdown..." );
 
 #ifdef _MSC_VER
 	WSACleanup( );
@@ -111,7 +111,7 @@ void CServer::Listen( ) {
 
 		pClient = new CServerClientImpl( iClient, m_pClient->NewInstance( iClient,
 			iSize = ntohl( Addr.sin_addr.s_addr ), ntohs( Addr.sin_port ), &m_Config ) );
-		g_CatBioUtils.info( "CServer::Listen( ) client 0x%08x connected from %d.%d.%d.%d",
+		g_CatSleipnir.info( "CServer::Listen( ) client 0x%08x connected from %d.%d.%d.%d",
 			pClient, ( iSize >> 24 ) & 0xFF, ( iSize >> 16 ) & 0xFF, ( iSize >> 8 ) & 0xFF,
 			iSize & 0xFF );
 		pthread_create( &thrdClient, NULL, CServerClientImpl::StartRoutine, pClient );

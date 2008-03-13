@@ -1,9 +1,11 @@
 #ifndef SVM_H
 #define SVM_H
 
+#ifndef NO_SVM_LIGHT
+
 #include "svmi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CSVM : CSVMImpl {
 public:
@@ -37,5 +39,7 @@ public:
 };
 
 }
+
+#endif // NO_SVM_LIGHT
 
 #endif // SVM_H

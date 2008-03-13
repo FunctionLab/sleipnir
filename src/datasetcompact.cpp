@@ -4,7 +4,7 @@
 #include "genome.h"
 #include "compactmatrix.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 CDatasetCompactImpl::CDatasetCompactImpl( ) : m_iData(0), m_aData(NULL) {
 
@@ -414,7 +414,7 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 	set<string>				setstrGenes;
 	set<string>::iterator	iterGene;
 
-	g_CatBioUtils.notice( "CDatasetCompact::Open( %d ) opening PCL files",
+	g_CatSleipnir.notice( "CDatasetCompact::Open( %d ) opening PCL files",
 		iSkip );
 
 	m_veciMapping.resize( m_iData = 1 + (uint32_t)vecstrPCLs.size( ) );
@@ -432,7 +432,7 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 
 		ifsm.open( vecstrPCLs[ iPCL ].c_str( ) );
 		if( !CDataImpl::OpenGenes( ifsm, false, true, setstrGenes ) ) {
-			g_CatBioUtils.error( "CDatasetCompact::Open( %d ) could not open: %s", iSkip,
+			g_CatSleipnir.error( "CDatasetCompact::Open( %d ) could not open: %s", iSkip,
 				vecstrPCLs[ iPCL ].c_str( ) );
 			return false; } }
 	if( GenesIn.GetGenes( ) ) {
@@ -463,10 +463,10 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 		size_t			iGenes, iOne, iTwo;
 		const float*	adOne;
 
-		g_CatBioUtils.notice( "CDatasetCompact::Open( %d ) opening: %s", iSkip, vecstrPCLs[ iPCL ].c_str( ) );
+		g_CatSleipnir.notice( "CDatasetCompact::Open( %d ) opening: %s", iSkip, vecstrPCLs[ iPCL ].c_str( ) );
 		ifsm.open( vecstrPCLs[ iPCL ].c_str( ) );
 		if( !PCL.Open( ifsm, iSkip ) ) {
-			g_CatBioUtils.error( "CDatasetCompact::Open( %d ) could not open: %s", iSkip, vecstrPCLs[ iPCL ].c_str( ) );
+			g_CatSleipnir.error( "CDatasetCompact::Open( %d ) could not open: %s", iSkip, vecstrPCLs[ iPCL ].c_str( ) );
 			return 1; }
 		if( pMeasure->IsRank( ) )
 			PCL.RankTransform( );

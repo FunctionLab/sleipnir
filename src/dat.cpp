@@ -3,13 +3,9 @@
 #include "genome.h"
 #include "statistics.h"
 #include "typesi.h"
-// KNNImputer OFF
-// MEFIT OFF
 #include "annotation.h"
-// MEFIT ON
-// KNNImputer ON
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const char		CDatImpl::c_acComment[]		= "#";
 const float		CDatImpl::c_dCutoff			= 0.2f;
@@ -88,9 +84,6 @@ void CDatImpl::Reset( ) {
 		delete[] m_aadData;
 	m_aadData = NULL; }
 
-// KNNImputer OFF
-// MEFIT OFF
-
 void CDatImpl::SlimCache( const CSlim& Slim, vector<vector<size_t> >& vecveciGenes ) const {
 	size_t	iS, iG;
 
@@ -112,7 +105,7 @@ bool CDat::Open( const CSlim& Slim ) {
 
 	SlimCache( Slim, vecveciGenes );
 	for( iS1 = 0; iS1 < Slim.GetSlims( ); ++iS1 ) {
-		g_CatBioUtils.info( "CDat::Open( ) processing slim: %s",
+		g_CatSleipnir.info( "CDat::Open( ) processing slim: %s",
 			Slim.GetSlim( iS1 ).c_str( ) );
 		for( iG1 = 0; iG1 < Slim.GetGenes( iS1 ); ++iG1 ) {
 			iGene1 = vecveciGenes[ iS1 ][ iG1 ];
@@ -146,7 +139,7 @@ bool CDat::Open( const CSlim& SlimPos, const CSlim& SlimNeg ) {
 
 	SlimCache( SlimPos, vecveciGenes );
 	for( iS1 = 0; iS1 < SlimPos.GetSlims( ); ++iS1 ) {
-		g_CatBioUtils.info( "CDat::Open( ) processing slim: %s",
+		g_CatSleipnir.info( "CDat::Open( ) processing slim: %s",
 			SlimPos.GetSlim( iS1 ).c_str( ) );
 		for( iG1 = 0; iG1 < SlimPos.GetGenes( iS1 ); ++iG1 ) {
 			iGene1 = vecveciGenes[ iS1 ][ iG1 ];
@@ -155,7 +148,7 @@ bool CDat::Open( const CSlim& SlimPos, const CSlim& SlimNeg ) {
 	vecveciGenes.clear( );
 	SlimCache( SlimNeg, vecveciGenes );
 	for( iS1 = 0; iS1 < SlimNeg.GetSlims( ); ++iS1 ) {
-		g_CatBioUtils.info( "CDat::Open( ) processing slim: %s",
+		g_CatSleipnir.info( "CDat::Open( ) processing slim: %s",
 			SlimNeg.GetSlim( iS1 ).c_str( ) );
 		for( iG1 = 0; iG1 < SlimNeg.GetGenes( iS1 ); ++iG1 ) {
 			iGene1 = vecveciGenes[ iS1 ][ iG1 ];
@@ -166,9 +159,6 @@ bool CDat::Open( const CSlim& SlimPos, const CSlim& SlimNeg ) {
 						Set( iGene1, iGene2, 0 ); } } }
 
 	return true; }
-
-// MEFIT ON
-// KNNImputer ON
 
 bool CDat::Open( const CDat& Dat, const vector<CGenes*>& vecpOther, const CGenome& Genome,
 	bool fPositives ) {
@@ -369,7 +359,7 @@ bool CDatImpl::OpenText( istream& istm, float dDefault, bool fDuplicates ) {
 		ResizeNaN( vecvecfScores[ iOne ], i );
 		ResizeNaN( vecvecfScores[ iTwo ], i );
 		if( !CMeta::IsNaN( vecvecfScores[ iOne ][ iTwo ] ) && ( vecvecfScores[ iOne ][ iTwo ] != dScore ) ) {
-			g_CatBioUtils.error( "CDatImpl::OpenText( ) duplicate genes %s, %s (%g:%g)",
+			g_CatSleipnir.error( "CDatImpl::OpenText( ) duplicate genes %s, %s (%g:%g)",
 				strCache.c_str( ), strToken.c_str( ), vecvecfScores[ iOne ][ iTwo ],
 				dScore );
 			if( !fDuplicates ) {
@@ -656,7 +646,7 @@ bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore ) 
 	if( fMemmap && ( eFormat == EFormatBinary ) ) {
 		Reset( );
 		if( !CMeta::MapRead( m_abData, m_hndlData, m_iData, szFile ) ) {
-			g_CatBioUtils.error( "CDat::Open( %s, %d ) failed memory mapping", szFile, fMemmap );
+			g_CatSleipnir.error( "CDat::Open( %s, %d ) failed memory mapping", szFile, fMemmap );
 			return false; }
 		return OpenHelper( ); }
 

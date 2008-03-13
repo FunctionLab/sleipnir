@@ -2,7 +2,7 @@
 #include "examplei.h"
 #include "meta.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 CExampleImpl::CExampleImpl( ) {
 

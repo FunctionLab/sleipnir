@@ -3,7 +3,7 @@
 
 #include "typesi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CPropertyFile;
 class CServer;

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 template<class tType> class CTrie;
 template<class tType> class CTrieIteratorImpl;

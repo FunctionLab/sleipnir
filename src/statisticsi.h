@@ -3,7 +3,7 @@
 
 #include "mathb.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CStatisticsImpl : protected CMath {
 protected:

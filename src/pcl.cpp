@@ -6,7 +6,7 @@
 #include "measure.h"
 #include "dat.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const char	CPCLImpl::c_szEWEIGHT[]	= "EWEIGHT";
 const char	CPCLImpl::c_szGENE[]	= "GENE";
@@ -43,12 +43,12 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 	if( szPCL ) {
 		ifsm.open( szPCL );
 		if( !PCL.Open( ifsm, iSkip ) ) {
-			g_CatBioUtils.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", szPCL, iSkip,
+			g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", szPCL, iSkip,
 				szDistance, fNormalize, fZScore, fAutocorrelate, szGenes ? szGenes : "", dCutoff );
 			return 1; }
 		ifsm.close( ); }
 	else if( !PCL.Open( cin, iSkip ) ) {
-		g_CatBioUtils.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", "stdin", iSkip,
+		g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", "stdin", iSkip,
 			szDistance, fNormalize, fZScore, fAutocorrelate, szGenes ? szGenes : "", dCutoff );
 		return 1; }
 
@@ -73,7 +73,7 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 		ifsm.clear( );
 		ifsm.open( szGenes );
 		if( !GenesIn.Open( ifsm ) ) {
-			g_CatBioUtils.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open genes", szPCL ? szPCL :
+			g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open genes", szPCL ? szPCL :
 				"stdin", iSkip, szDistance, fNormalize, fZScore, fAutocorrelate, szGenes, dCutoff );
 			return 1; }
 		ifsm.close( ); }
@@ -95,7 +95,7 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 				Dat.Set( i, j, CMeta::GetNaN( ) );
 		for( i = 0; i < GenesIn.GetGenes( ); ++i ) {
 			if( !( i % 100 ) )
-				g_CatBioUtils.info( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) processing gene %d/%d", szPCL ? szPCL :
+				g_CatSleipnir.info( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) processing gene %d/%d", szPCL ? szPCL :
 					"stdin", iSkip, szDistance, fNormalize, fZScore, fAutocorrelate, szGenes ? szGenes : "", dCutoff, i,
 					GenesIn.GetGenes( ) );
 			if( ( iOne = veciGenes[ i ] ) == -1 )
@@ -209,7 +209,7 @@ bool CPCLImpl::OpenExperiments( istream& istmInput, size_t iFeatures, char* acLi
 		else
 			m_vecstrExperiments.push_back( strToken );
 	if( !iToken )
-		g_CatBioUtils.error( "CPCLImpl::OpenExperiments( %d ) found no experiments", iFeatures );
+		g_CatSleipnir.error( "CPCLImpl::OpenExperiments( %d ) found no experiments", iFeatures );
 
 	return !!iToken; }
 

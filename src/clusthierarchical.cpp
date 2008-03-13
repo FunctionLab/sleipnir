@@ -3,7 +3,7 @@
 #include "dat.h"
 #include "measure.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 CHierarchy::CHierarchy( size_t iID, float dScore, const CHierarchy* pLeft,
 	const CHierarchy* pRight ) {
@@ -168,7 +168,7 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 		float	dHeight;
 
 		if( !( iParentless % 500 ) )
-			g_CatBioUtils.notice( "CClustHierarchical::Cluster( ) %d/%d nodes remaining", iParentless,
+			g_CatSleipnir.notice( "CClustHierarchical::Cluster( ) %d/%d nodes remaining", iParentless,
 				Sim.GetSize( ) );
 		dHeight = -FLT_MAX;
 		for( k = 0; k < Sim.GetSize( ); ++k )

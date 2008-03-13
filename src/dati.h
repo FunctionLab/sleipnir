@@ -9,12 +9,10 @@
 #include "meta.h"
 #include "pcl.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CGenes;
-// MEFIT OFF
 class CSlim;
-// MEFIT ON
 
 class CDatImpl : protected CFile {
 protected:
@@ -57,9 +55,7 @@ protected:
 	void SaveSparse( std::ostream& ) const;
 	void SaveGenes( std::ostream& ) const;
 	size_t GetGene( const std::string& ) const;
-// MEFIT OFF
 	void SlimCache( const CSlim&, std::vector<std::vector<size_t> >& ) const;
-// MEFIT ON
 	void AveStd( double&, double&, size_t&, size_t = -1 ) const;
 	void NormalizeMinmax( );
 	void NormalizeStdev( );

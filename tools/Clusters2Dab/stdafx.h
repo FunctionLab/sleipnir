@@ -14,6 +14,6 @@ using namespace std;
 #include "meta.h"
 #include "pcl.h"
 #include "statistics.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #endif // STDAFX_H

@@ -5,7 +5,7 @@
 #include "meta.h"
 #include "pcl.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CPCLSet : CPCLSetImpl {
 public:

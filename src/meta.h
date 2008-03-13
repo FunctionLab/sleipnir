@@ -28,7 +28,7 @@ inline int sprintf_s( char* szDest, const char* szFormat, ... ) {
 #define ARRAYSIZE(a)	(sizeof(a)/sizeof(*a))
 #endif // ARRAYSIZE
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CMeta : CMetaImpl {
 public:

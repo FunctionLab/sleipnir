@@ -2,7 +2,7 @@
 #include "datapair.h"
 #include "meta.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const char	CPairImpl::c_szQuantExt[]	= ".quant";
 
@@ -37,19 +37,15 @@ bool CPairImpl::Open( const char* szLine, vector<float>& vecdQuant ) {
 
 	return true; }
 
-// MEFIT OFF
-
 bool CDataPair::Open( const CSlim& Slim ) {
 
 	Reset( false );
 	return CDat::Open( Slim ); }
 
-// MEFIT ON
-
 bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
 	bool fZScore ) {
 
-	g_CatBioUtils.notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
+	g_CatSleipnir.notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
 
 	Reset( fContinuous );
 	if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore ) )
@@ -102,7 +98,7 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 	ifstream	ifsm;
 	size_t		i;
 
-	g_CatBioUtils.notice( "CPCLPair::Open( %s )", szDatafile );
+	g_CatSleipnir.notice( "CPCLPair::Open( %s )", szDatafile );
 
 	ifsm.open( szDatafile );
 	if( !CPCL::Open( ifsm, iSkip ) )

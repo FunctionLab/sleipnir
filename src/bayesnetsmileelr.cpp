@@ -2,11 +2,13 @@
 #include "bayesnet.h"
 #include "dataset.h"
 
-namespace libBioUtils {
+#ifndef NO_SMILE
+
+namespace Sleipnir {
 
 bool CBayesNetSmileImpl::LearnELR( const IDataset* pData, size_t iIterations, bool fZero ) {
 	size_t			i, j, iParameters;
-	TVecVecF		vecvecfBeta, vecvecfGradient, vecvecfPrev, vecvecfDirection, vecvecfOriginal;
+	TVecVecD		vecvecfBeta, vecvecfGradient, vecvecfPrev, vecvecfDirection, vecvecfOriginal;
 	DSL_Dmatrix*	pMatrix;
 	DSL_intArray	veciCoords;
 	float			dAX, dBX, dDotNew, dDotOld, dDotON, dB;
@@ -46,7 +48,7 @@ bool CBayesNetSmileImpl::LearnELR( const IDataset* pData, size_t iIterations, bo
 	dDotNew = ELRDot( vecvecfGradient, vecvecfPrev );
 
 	for( i = 0; i < iIterations; ++i ) {
-		g_CatBioUtils.notice( "CBayesNetSmile::LearnELR( %d, %d ) iteration %d/%d",
+		g_CatSleipnir.notice( "CBayesNetSmile::LearnELR( %d, %d ) iteration %d/%d",
 			iIterations, fZero, i, iIterations );
 		if( !dDotNew )
 			continue;
@@ -77,7 +79,7 @@ size_t CBayesNetSmileImpl::ELRCountParameters( ) const {
 
 	return iRet; }
 
-void CBayesNetSmileImpl::ELRCopyParameters( TVecVecF& vecvecfBeta ) {
+void CBayesNetSmileImpl::ELRCopyParameters( TVecVecD& vecvecfBeta ) {
 	static const float	c_dMinimum	= log( FLT_MIN );
 	size_t				i, j, k, iIndex, iDomains;
 	float				dSum, dCur, dMax;
@@ -106,7 +108,7 @@ void CBayesNetSmileImpl::ELRCopyParameters( TVecVecF& vecvecfBeta ) {
 
 // EXPENSIVE
 void CBayesNetSmileImpl::ELRComputeGradient( const vector<bool>& vecfHidden, const TMapData& mapData, bool fZero,
-	TVecVecF& vecvecfGradient ) {
+	TVecVecD& vecvecfGradient ) {
 	size_t	i, j;
 
 	for( i = 0; i < vecvecfGradient.size( ); ++i )
@@ -126,7 +128,7 @@ void CBayesNetSmileImpl::ELRComputeGradient( const vector<bool>& vecfHidden, con
 			ELRUpdateGradient( (float)IterData.Get( ), vecvecfGradient ); } }
 */
 
-void CBayesNetSmileImpl::ELRUpdateGradient( float dRate, TVecVecF& vecvecfGradient ) {
+void CBayesNetSmileImpl::ELRUpdateGradient( float dRate, TVecVecD& vecvecfGradient ) {
 	size_t				i, j;
 	double				dSum, dPosterior;
 	int					k, iTmp, iDomain, iDomains, iEvidence;
@@ -174,7 +176,7 @@ void CBayesNetSmileImpl::ELRUpdateGradient( float dRate, TVecVecF& vecvecfGradie
 						(float)( dRate * dSum * (*pDefs)[ veciCoords ] ); }
 				dSum = 0; } } } }
 
-float CBayesNetSmileImpl::ELRDot( const TVecVecF& vecvecfOne, const TVecVecF& vecvecfTwo ) {
+float CBayesNetSmileImpl::ELRDot( const TVecVecD& vecvecfOne, const TVecVecD& vecvecfTwo ) {
 	size_t	i, j;
 	float	dRet;
 
@@ -185,7 +187,7 @@ float CBayesNetSmileImpl::ELRDot( const TVecVecF& vecvecfOne, const TVecVecF& ve
 
 	return dRet; }
 
-void CBayesNetSmileImpl::ELRNormalizeDirection( TVecVecF& vecvecfDirection ) const {
+void CBayesNetSmileImpl::ELRNormalizeDirection( TVecVecD& vecvecfDirection ) const {
 	size_t	i, j;
 	float	d, dSum;
 	int		k, iDomains;
@@ -204,7 +206,7 @@ void CBayesNetSmileImpl::ELRNormalizeDirection( TVecVecF& vecvecfDirection ) con
 
 // EXPENSIVE
 float CBayesNetSmileImpl::ELRLineSearch( const vector<bool>& vecfHidden, const TMapData& mapData,
-	const TVecVecF& vecvecfDirection, const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta,
+	const TVecVecD& vecvecfDirection, const TVecVecD& vecvecfOriginal, TVecVecD& vecvecfBeta,
 	float& dAX, float& dBX, bool fZero ) {
 	float	dFA, dFB, dFC, dCX;
 
@@ -214,7 +216,7 @@ float CBayesNetSmileImpl::ELRLineSearch( const vector<bool>& vecfHidden, const T
 		dAX, dBX, dCX, dFA, dFB, dFC, fZero ); }
 
 float CBayesNetSmileImpl::ELREvalFunction( const vector<bool>& vecfHidden, const TMapData& mapData, float dX,
-	const TVecVecF& vecvecfDirection, const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, bool fZero  ) {
+	const TVecVecD& vecvecfDirection, const TVecVecD& vecvecfOriginal, TVecVecD& vecvecfBeta, bool fZero  ) {
 	size_t	i, j;
 
 	for( i = 0; i < vecvecfBeta.size( ); ++i )
@@ -236,7 +238,7 @@ float CBayesNetSmileImpl::ELRAvoidZero( float d ) {
 	return d; }
 
 void CBayesNetSmileImpl::ELRBracket( const vector<bool>& vecfHidden, const TMapData& mapData,
-	const TVecVecF& vecvecfDirection, const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, float& dAX,
+	const TVecVecD& vecvecfDirection, const TVecVecD& vecvecfOriginal, TVecVecD& vecvecfBeta, float& dAX,
 	float& dBX, float& dCX, float& dFA, float& dFB, float& dFC, bool fZero ) {
 	static const float	c_dGolden		= 1.618034f;
 	static const float	c_dLimit		= 100;
@@ -313,7 +315,7 @@ void CBayesNetSmileImpl::ELRBracket( const vector<bool>& vecfHidden, const TMapD
 		dFC = dFU; } }
 
 float CBayesNetSmileImpl::ELRBrent( const vector<bool>& vecfHidden, const TMapData& mapData,
-	const TVecVecF& vecvecfDirection, const TVecVecF& vecvecfOriginal, TVecVecF& vecvecfBeta, float& dAX,
+	const TVecVecD& vecvecfDirection, const TVecVecD& vecvecfOriginal, TVecVecD& vecvecfBeta, float& dAX,
 	float& dBX, float dCX, float dFA, float dFB, float dFC, bool fZero ) {
 	static const size_t	c_iIterations	= 100;
 	static const float	c_dZEPS			= 1e-8f;
@@ -474,7 +476,7 @@ float CBayesNetSmileImpl::ELRBrent( const vector<bool>& vecfHidden, const TMapDa
 				v = u;
 				fv = fu; } } }
 
-	g_CatBioUtils.warn( "CBayesNetSmileImpl::ELRBrent( ) too many iterations" );
+	g_CatSleipnir.warn( "CBayesNetSmileImpl::ELRBrent( ) too many iterations" );
 	dAX = a;
 	dBX = b;
 	return fx; }
@@ -504,8 +506,8 @@ float CBayesNetSmileImpl::ELRConditionalLikelihood( const vector<bool>& vecfHidd
 
 	return ( dRet / iCount ); }
 
-void CBayesNetSmileImpl::ELRComputeDirection( float dB, const TVecVecF& vecvecfGradient,
-	TVecVecF& vecvecfDirection ) {
+void CBayesNetSmileImpl::ELRComputeDirection( float dB, const TVecVecD& vecvecfGradient,
+	TVecVecD& vecvecfDirection ) {
 	size_t	i, j;
 
 	for( i = 0; i < vecvecfDirection.size( ); ++i )
@@ -513,3 +515,5 @@ void CBayesNetSmileImpl::ELRComputeDirection( float dB, const TVecVecF& vecvecfG
 			vecvecfDirection[ i ][ j ] = vecvecfGradient[ i ][ j ] + ( dB * vecvecfDirection[ i ][ j ] ); }
 
 }
+
+#endif // NO_SMILE

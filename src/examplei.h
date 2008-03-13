@@ -5,7 +5,7 @@
 
 #include "datapair.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CExampleImpl {
 public:

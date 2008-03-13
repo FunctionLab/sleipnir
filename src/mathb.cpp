@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "mathb.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 vector<double>	CMathImpl::s_vecdLogFact;
 

@@ -4,7 +4,7 @@
 #include "halfmatrixi.h"
 #include "typesi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CCompactMatrixBase {
 protected:

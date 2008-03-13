@@ -10,7 +10,7 @@ using namespace std;
 #include "dat.h"
 #include "genome.h"
 #include "meta.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #ifndef ARRAYSIZE
 #define	ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))

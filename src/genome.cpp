@@ -1,36 +1,24 @@
 #include "stdafx.h"
 #include "genome.h"
 #include "meta.h"
-// KNNImputer OFF
-// MEFIT OFF
 #include "annotation.h"
-// MEFIT ON
-// KNNImputer ON
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 CGene::CGene( const string& strName ) : CGeneImpl(strName) { }
 
 CGeneImpl::CGeneImpl( const string& strName ) : m_strName(strName),
-// KNNImputer OFF
-// MEFIT OFF
 	m_iOntologies(0), m_apOntologies(NULL), m_apveciAnnotations(NULL),
-// MEFIT ON
-// KNNImputer ON
 	m_iSynonyms(0), m_astrSynonyms(NULL), m_fRNA(false), m_fDubious(false) { }
 
 CGeneImpl::~CGeneImpl( ) {
 	size_t	i;
 
-// KNNImputer OFF
-// MEFIT OFF
 	if( m_iOntologies ) {
 		delete[] m_apOntologies;
 		for( i = 0; i < m_iOntologies; ++i )
 			delete m_apveciAnnotations[ i ];
 		delete[] m_apveciAnnotations; }
-// MEFIT ON
-// KNNImputer ON
 	if( m_iSynonyms )
 		delete[] m_astrSynonyms; }
 
@@ -42,7 +30,6 @@ CGeneImpl& CGeneImpl::operator=( const CGeneImpl& Gene ) {
 		m_astrSynonyms = new string[ m_iSynonyms ];
 		for( i = 0; i < m_iSynonyms; ++i )
 			m_astrSynonyms[ i ] = Gene.m_astrSynonyms[ i ]; }
-// MEFIT OFF
 	if( m_iOntologies = Gene.m_iOntologies ) {
 		m_apOntologies = new IOntology const*[ m_iOntologies ];
 		m_apveciAnnotations = new vector<size_t>*[ m_iOntologies ];
@@ -52,11 +39,8 @@ CGeneImpl& CGeneImpl::operator=( const CGeneImpl& Gene ) {
 			m_apveciAnnotations[ i ]->resize( Gene.m_apveciAnnotations[ i ]->size( ) );
 			for( j = 0; j < m_apveciAnnotations[ i ]->size( ); ++j )
 				(*m_apveciAnnotations[ i ])[ j ] = (*Gene.m_apveciAnnotations[ i ])[ j ]; } }
-// MEFIT ON
 
 	return *this; }
-
-// MEFIT OFF
 
 bool CGene::AddAnnotation( const IOntology* pOntology, size_t iNode ) {
 	size_t	i, iOnto;
@@ -129,14 +113,12 @@ size_t CGene::GetAnnotation( size_t iOnto, size_t iAnno ) const {
 
 	return (*m_apveciAnnotations[ iOnto ])[ iAnno ]; }
 
-// MEFIT ON
-
 bool CGene::AddSynonym( const string& strSyn ) {
 	size_t	i;
 	string*	astrSynonyms;
 
 	if( !strSyn.length( ) )
-		g_CatBioUtils.warn( "CGene::AddSynonym( %s ) adding null synonym to %s",
+		g_CatSleipnir.warn( "CGene::AddSynonym( %s ) adding null synonym to %s",
 			strSyn.c_str( ), m_strName.c_str( ) );
 	if( strSyn == m_strName )
 		return false;
@@ -301,8 +283,6 @@ vector<string> CGenome::GetGeneNames( ) const {
 
 	return vecstrRet; }
 
-// MEFIT OFF
-
 size_t CGenome::CountGenes( const IOntology* pOnto ) const {
 	size_t	i, j, iRet;
 
@@ -313,8 +293,6 @@ size_t CGenome::CountGenes( const IOntology* pOnto ) const {
 				break; }
 
 	return iRet; }
-
-// MEFIT ON
 
 bool CGenome::AddSynonym( CGene& Gene, const string& strName ) {
 
@@ -347,7 +325,7 @@ bool CGenes::Open( istream& istm, bool fCreate ) {
 			pGene = &m_Genome.AddGene( szBuf );
 		else {
 			if( ( iGene = m_Genome.FindGene( szBuf ) ) == -1 ) {
-				g_CatBioUtils.warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, szBuf );
+				g_CatSleipnir.warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, szBuf );
 				continue; }
 			pGene = &m_Genome.GetGene( iGene ); }
 		for( i = 0; i < m_vecpGenes.size( ); ++i )
@@ -366,9 +344,6 @@ bool CGenes::Open( const char* szFile, bool fCreate ) {
 	ifsm.open( szFile );
 	return ( ifsm.is_open( ) && Open( ifsm, fCreate ) ); }
 
-// KNNImputer OFF
-// MEFIT OFF
-
 size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKids, const CGenes* pBkg ) const {
 	size_t	i, iRet;
 
@@ -378,9 +353,6 @@ size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKid
 			iRet++;
 
 	return iRet; }
-
-// MEFIT ON
-// KNNImputer ON
 
 bool CGenes::Open( const vector<string>& vecstrGenes, bool fCreate ) {
 	size_t	i, iGene;

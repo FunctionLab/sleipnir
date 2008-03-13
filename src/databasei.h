@@ -4,11 +4,12 @@
 #define DATABASE_NIBBLES
 
 #include <fstream>
+#include <map>
 #include <vector>
 
 #include "compactmatrix.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CDatabaselet {
 public:

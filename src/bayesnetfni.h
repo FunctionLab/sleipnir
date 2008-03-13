@@ -1,7 +1,9 @@
 #ifndef BAYESNETFNI_H
 #define BAYESNETFNI_H
 
-namespace libBioUtils {
+namespace Sleipnir {
+
+#ifndef NO_SMILE
 
 class CBayesNetFNNode {
 protected:
@@ -150,6 +152,8 @@ protected:
 	bool				m_fSmileNet;
 	DSL_network			m_SmileNet;
 };
+
+#endif // NO_SMILE
 
 class CBayesNetMinimalNode {
 public:

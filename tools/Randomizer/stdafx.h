@@ -11,6 +11,6 @@ using namespace std;
 
 #include "dat.h"
 #include "meta.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #endif // STDAFX_H

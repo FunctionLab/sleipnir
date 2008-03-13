@@ -1,7 +1,7 @@
 #ifndef COLORI_H
 #define COLORI_H
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CColorImpl {
 protected:

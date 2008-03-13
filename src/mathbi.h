@@ -1,7 +1,7 @@
 #ifndef MATHBI_H
 #define MATHBI_H
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CMathImpl {
 protected:

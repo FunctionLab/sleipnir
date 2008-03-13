@@ -46,15 +46,18 @@ inline size_t max( size_t iOne, size_t iTwo ) {
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <queue>
 #include <set>
 #include <strstream>
 #include <vector>
 using namespace std;
 
+#ifndef USE_LOG4CPP_STUB
 #include <log4cpp/Category.hh>
 #include <log4cpp/OstreamAppender.hh>
 using namespace log4cpp;
+#endif // USE_LOG4CPP_STUB
 
 #if _MSC_VER
 #define WIN32_LEAN_AND_MEAN
@@ -67,10 +70,65 @@ using namespace log4cpp;
 namespace pnl { }
 using namespace pnl;
 
-namespace libBioUtils {
+#ifndef UNUSED_PARAMETER
+#define UNUSED_PARAMETER(x)	(x)
+#endif // UNUSED_PARAMETER
 
-extern const char	c_szBioUtils[];
-extern Category&	g_CatBioUtils;
+namespace Sleipnir {
+
+#ifdef USE_LOG4CPP_STUB
+
+struct Category {
+
+	static void shutdown( ) { }
+
+	static void log4cpp( const char* szTag, const char* szFormat, const va_list& valArgs ) {
+
+		fprintf( stderr, "%d ", time( NULL ) );
+		fprintf( stderr, szTag );
+		fprintf( stderr, " : " );
+		vfprintf( stderr, szFormat, valArgs );
+		fprintf( stderr, "\n" ); }
+
+	void error( const char* szFormat, ... ) const {
+		va_list	valArgs;
+
+		va_start( valArgs, szFormat );
+		log4cpp( "ERROR", szFormat, valArgs ); }
+
+	void info( const char* szFormat, ... ) const {
+		va_list	valArgs;
+
+		va_start( valArgs, szFormat );
+		log4cpp( "INFO", szFormat, valArgs ); }
+
+	void notice( const char* szFormat, ... ) const {
+		va_list	valArgs;
+
+		va_start( valArgs, szFormat );
+		log4cpp( "NOTICE", szFormat, valArgs ); }
+
+	void warn( const char* szFormat, ... ) const {
+		va_list	valArgs;
+
+		va_start( valArgs, szFormat );
+		log4cpp( "WARN", szFormat, valArgs ); }
+
+	void debug( const char* szFormat, ... ) const {
+		va_list	valArgs;
+
+		va_start( valArgs, szFormat );
+		log4cpp( "DEBUG", szFormat, valArgs ); }
+};
+
+#endif // USE_LOG4CPP_STUB
+
+extern const char	c_szSleipnir[];
+#ifdef USE_LOG4CPP_STUB
+extern Category		g_CatSleipnir;
+#else // USE_LOG4CPP_STUB
+extern Category&	g_CatSleipnir;
+#endif // USE_LOG4CPP_STUB
 
 }
 

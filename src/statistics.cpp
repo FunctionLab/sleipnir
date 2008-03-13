@@ -10,7 +10,7 @@
 #include "dat.h"
 #include "typesi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 double ranf( ) {
 

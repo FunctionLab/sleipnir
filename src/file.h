@@ -6,7 +6,7 @@
 
 #include "filei.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CFile : protected CFileImpl {
 public:

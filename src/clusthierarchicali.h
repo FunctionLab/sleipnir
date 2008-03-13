@@ -7,7 +7,7 @@
 #include "fullmatrix.h"
 #include "halfmatrix.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CHierarchy;
 

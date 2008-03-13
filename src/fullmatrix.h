@@ -6,7 +6,7 @@
 
 #include "typesi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 template<class tType>
 class CFullMatrix {

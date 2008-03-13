@@ -3,7 +3,7 @@
 
 #include "fullmatrix.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CMeasureImpl {
 protected:

@@ -5,6 +5,8 @@
 #include "meta.h"
 #include "genome.h"
 
+#ifndef NO_SVM_LIGHT
+
 extern "C" {
 KERNEL_CACHE* kernel_cache_init( long, long );
 void kernel_cache_cleanup( KERNEL_CACHE* );
@@ -18,7 +20,7 @@ void svm_learn_optimization( DOC**, double*, long, long, LEARN_PARM*, KERNEL_PAR
 	KERNEL_CACHE*, MODEL*, double* );
 }
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 SWORD	CSVMImpl::s_asWords[ CSVMImpl::c_iWords ];
 
@@ -85,8 +87,6 @@ void CSVMImpl::Reset( bool fData, bool fModel, bool fAlphas ) {
 			delete[] m_adLabels;
 			m_adLabels = NULL; } } }
 
-#ifndef SAM
-
 size_t CSVMImpl::GetWords( const SData& sData ) const {
 	size_t	i, iRet;
 
@@ -144,8 +144,6 @@ DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iOne, size_t iTwo, size_t i
 	if( asWords != s_asWords )
 		delete[] asWords;
 	return pRet; }
-
-#endif // SAM
 
 DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iGene ) const {
 	SWORD*	asWords;
@@ -416,7 +414,7 @@ bool CSVMImpl::Evaluate( const SData& sData, const CGenes* pGenesIn, CDat& DatOu
 			sData.m_uData.m_pPCLs->GetGene( i ) : sData.m_uData.m_pData->GetGene( i );
 
 		if( !( i % 10 ) )
-			g_CatBioUtils.notice( "CSVMImpl::Evaluate( ) gene %d/%d", i, iGenes );
+			g_CatSleipnir.notice( "CSVMImpl::Evaluate( ) gene %d/%d", i, iGenes );
 		if( pGenesIn && !pGenesIn->IsGene( strGeneOne ) )
 			continue;
 		for( j = ( i + 1 ); j < iGenes; ++j ) {
@@ -448,7 +446,7 @@ bool CSVM::Evaluate( const CPCL& PCL, vector<float>& vecdOut ) const {
 	sData.m_uData.m_pPCL = &PCL;
 	for( i = 0; i < PCL.GetGenes( ); ++i ) {
 		if( !( i % 1000 ) )
-			g_CatBioUtils.notice( "CSVMImpl::Evaluate( ) gene %d/%d", i, PCL.GetGenes( ) );
+			g_CatSleipnir.notice( "CSVMImpl::Evaluate( ) gene %d/%d", i, PCL.GetGenes( ) );
 		if( PCL.IsMasked( i ) )
 			continue;
 
@@ -498,7 +496,7 @@ bool CSVMImpl::EvaluateFile( const char* szFile, CDat& DatOut ) const {
 	ifsm.seekg( 2 * sizeof(iDocs), ios_base::beg );
 	for( i = 0; i < iDocs; ++i ) {
 		if( !( i % 1000 ) )
-			g_CatBioUtils.notice( "CSVMImpl::EvaluateFile( %s ) pair %d/%d", szFile, i,
+			g_CatSleipnir.notice( "CSVMImpl::EvaluateFile( %s ) pair %d/%d", szFile, i,
 				iDocs );
 		ifsm.read( (char*)ad, ( iWords + 1 ) * sizeof(*ad) );
 		for( j = 0; j < iWords; ++j )
@@ -565,7 +563,7 @@ bool CSVM::Open( istream& istm ) {
 		vecstrLine.clear( );
 		CMeta::Tokenize( szBuf, vecstrLine, CMeta::c_szWS, true );
 		if( vecstrLine.size( ) != ( m_pModel->totwords + 2 ) ) {
-			g_CatBioUtils.error( "CSVM::Open( ) wanted %d words but only found %d on line: %s",
+			g_CatSleipnir.error( "CSVM::Open( ) wanted %d words but only found %d on line: %s",
 				( m_pModel->totwords + 2 ), vecstrLine.size( ), szBuf );
 			delete[] asWords;
 			return false; }
@@ -574,7 +572,7 @@ bool CSVM::Open( istream& istm ) {
 			vecstrToken.clear( );
 			CMeta::Tokenize( vecstrLine[ j ].c_str( ), vecstrToken, ":", true );
 			if( vecstrToken.size( ) != 2 ) {
-				g_CatBioUtils.error( "CSVM::Open( ) found illegal token \"%s\" on line: %s",
+				g_CatSleipnir.error( "CSVM::Open( ) found illegal token \"%s\" on line: %s",
 					vecstrLine[ j ].c_str( ), szBuf );
 				delete[] asWords;
 				return false; }
@@ -615,3 +613,5 @@ void CSVM::SetVerbosity( size_t iVerbosity ) {
 	verbosity = iVerbosity; }
 
 }
+
+#endif // NO_SVM_LIGHT

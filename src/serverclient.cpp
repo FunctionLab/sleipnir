@@ -3,7 +3,7 @@
 #include "server.h"
 #include "xmlvacuum.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 #ifdef XML_ENABLED
 const XMLCh	CServerClientImpl::c_pxszLS[]	= { chLatin_L, chLatin_S, 0 };
@@ -36,7 +36,7 @@ void CServerClientImpl::StartRoutine( ) {
 #endif // XML_ENABLED
 			) );
 
-	g_CatBioUtils.info( "Client 0x%08x disconnected", m_pClient ); }
+	g_CatSleipnir.info( "Client 0x%08x disconnected", m_pClient ); }
 
 CServerClientImpl::CServerClientImpl( SOCKET iSocket, IServerClient* pClient ) : m_iSocket(iSocket),
 	m_pClient(pClient) {

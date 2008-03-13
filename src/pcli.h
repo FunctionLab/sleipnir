@@ -7,7 +7,7 @@
 #include "file.h"
 #include "fullmatrix.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CPCLImpl : protected CFile {
 protected:

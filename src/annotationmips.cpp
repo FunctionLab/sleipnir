@@ -2,7 +2,7 @@
 #include "annotation.h"
 #include "genome.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const char	COntologyMIPSImpl::c_szMIPS[]	= "MIPS";
 
@@ -15,64 +15,38 @@ COntologyMIPSImpl::SParserMIPS::SParserMIPS( istream& istm, CGenome& Genome ) :
 
 COntologyMIPSImpl::COntologyMIPSImpl( ) : COntologyImpl( c_szMIPS ) { }
 
-size_t COntologyMIPS::GetNode( const string& strID ) const {
-
-	return COntologyImpl::GetNode( strID ); }
-
-bool COntologyMIPS::IsAnnotated( size_t iNode, const CGene& Gene, bool fKids ) const {
-
-	return COntologyImpl::IsAnnotated( iNode, Gene, fKids ); }
-
-size_t COntologyMIPS::GetNodes( ) const {
-
-	return COntologyImpl::GetNodes( ); }
-
-const string& COntologyMIPS::GetID( ) const {
-
-	return COntologyImpl::GetID( ); }
-
-const string& COntologyMIPS::GetID( size_t iNode ) const {
-
-	return COntologyImpl::GetID( iNode ); }
-
-const string& COntologyMIPS::GetGloss( size_t iNode ) const {
-
-	return COntologyImpl::GetGloss( iNode ); }
-
-size_t COntologyMIPS::GetParents( size_t iNode ) const {
-
-	return COntologyImpl::GetParents( iNode ); }
-
-size_t COntologyMIPS::GetParent( size_t iNode, size_t iParent ) const {
-
-	return COntologyImpl::GetParent( iNode, iParent ); }
-
-size_t COntologyMIPS::GetChildren( size_t iNode ) const {
-
-	return COntologyImpl::GetChildren( iNode ); }
-
-size_t COntologyMIPS::GetChild( size_t iNode, size_t iChild ) const {
-
-	return COntologyImpl::GetChild( iNode, iChild ); }
-
-size_t COntologyMIPS::GetGenes( size_t iNode, bool fKids ) const {
-
-	return COntologyImpl::GetGenes( iNode, fKids ); }
-
-const CGene& COntologyMIPS::GetGene( size_t iNode, size_t iGene ) const {
-
-	return COntologyImpl::GetGene( iNode, iGene ); }
-
+/*!
+ * \brief
+ * Initializes the ontology using the "funcat" scheme (structure) and annotation files.
+ * 
+ * \param istmOntology
+ * Stream from which the catalog structure file is read.
+ * 
+ * \param istmAnnotations
+ * Stream from which the catalog annotation file is read.
+ * 
+ * \param Genome
+ * Genome into which genes are inserted or read during annotation parsing.
+ * 
+ * \returns
+ * True if the ontology was successfully initialized.
+ * 
+ * COntologyMIPS::Open parses the structure of the MIPS functional catalog from the (organism-independent)
+ * funcat scheme file and a set of (organism-dependent) annotations from a data file.  Terms are identified
+ * by MIPS IDs (e.g. "16.03.03"), and genes are identified by the name given by the annotation file.  Genes
+ * are retrieved from Genome if already present or inserted if not; it is thus important to ensure that the
+ * proper primary gene names are used so as to agree with any identifiers already present in Genome.
+ */
 bool COntologyMIPS::Open( istream& istmOnto, istream& istmGene, CGenome& Genome ) {
 	SParserMIPS	sParserOnto( istmOnto, Genome );
 	SParserMIPS	sParserGene( istmGene, Genome );
 
 	if( !OpenOntology( sParserOnto ) ) {
-		g_CatBioUtils.error( "COntologyMIPS::Open( ) failed on ontology line %d: %s", sParserOnto.m_iLine,
+		g_CatSleipnir.error( "COntologyMIPS::Open( ) failed on ontology line %d: %s", sParserOnto.m_iLine,
 			sParserOnto.m_szLine );
 		return false; }
 	if( !OpenGenes( sParserGene ) ) {
-		g_CatBioUtils.error( "COntologyMIPS::Open( ) failed on genes line %d: %s", sParserGene.m_iLine,
+		g_CatSleipnir.error( "COntologyMIPS::Open( ) failed on genes line %d: %s", sParserGene.m_iLine,
 			sParserGene.m_szLine );
 		return false; }
 
@@ -82,7 +56,7 @@ bool COntologyMIPSImpl::OpenOntology( SParserMIPS& sParser ) {
 	size_t					i, j;
 	vector<vector<size_t> >	vecveciChildren;
 
-	g_CatBioUtils.info( "COntologyMIPSImpl::OpenOntology( )" );
+	g_CatSleipnir.info( "COntologyMIPSImpl::OpenOntology( )" );
 	if( !( sParser.GetLine( ) && ( sParser.m_szLine[ 0 ] == '#' ) && sParser.GetLine( ) ) )
 		return false;
 
@@ -148,7 +122,7 @@ size_t COntologyMIPSImpl::OpenID( SParserMIPS& sParser ) {
 bool COntologyMIPSImpl::OpenGenes( SParserMIPS& sParser ) {
 	size_t	i, j;
 
-	g_CatBioUtils.info( "COntologyMIPSImpl::OpenGenes( )" );
+	g_CatSleipnir.info( "COntologyMIPSImpl::OpenGenes( )" );
 	if( !sParser.GetLine( ) )
 		return false;
 	if( !sParser.m_szLine[ 0 ] )
@@ -190,15 +164,6 @@ bool COntologyMIPSImpl::OpenGene( SParserMIPS& sParser ) {
 	}
 
 	return sParser.GetLine( ); }
-
-void COntologyMIPS::GetGeneNames( vector<string>& vecstrGenes ) const {
-
-	return COntologyImpl::GetGeneNames( vecstrGenes ); }
-
-void COntologyMIPS::TermFinder( const CGenes& Genes, vector<STermFound>& vecsTerms,
-	bool fBon, bool fKids, bool fBack, const CGenes* pBkg ) const {
-
-	return COntologyImpl::TermFinder( Genes, vecsTerms, fBon, fKids, fBack, pBkg ); }
 
 const char	COntologyMIPSPhenotypes::c_szMIPSPhen[]	= "MIPSP";
 

@@ -2,7 +2,9 @@
 #include "bayesnet.h"
 #include "statistics.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
+
+#ifndef NO_SMILE
 
 // CBayesNetFNNode //////////////////////////////////////////////////////////
 
@@ -483,14 +485,6 @@ bool CBayesNetFN::Learn( const IDataset* pData, size_t iIterations, bool fZero, 
 
 	return true; }
 
-bool CBayesNetFN::Evaluate( const IDataset* pData, vector<vector<float> >& vecvecdOut, bool fZero ) const {
-
-	return CBayesNetFNImpl::Evaluate( pData, NULL, &vecvecdOut, fZero ); }
-
-bool CBayesNetFN::Evaluate( const IDataset* pData, CDat& DatOut, bool fZero ) const {
-
-	return CBayesNetFNImpl::Evaluate( pData, &DatOut, NULL, fZero ); }
-
 bool CBayesNetFNImpl::Evaluate( const IDataset* pData, CDat* pDatOut, vector<vector<float> >* pvecvecdOut,
 	bool fZero ) const {
 	size_t						i, j, k;
@@ -505,7 +499,7 @@ bool CBayesNetFNImpl::Evaluate( const IDataset* pData, CDat* pDatOut, vector<vec
 
 	for( i = 0; i < pData->GetGenes( ); ++i ) {
 		if( !( i % 250 ) )
-			g_CatBioUtils.notice( "CBayesNetFN::Evaluate( %d ) %d/%d", fZero, i, pData->GetGenes( ) );
+			g_CatSleipnir.notice( "CBayesNetFN::Evaluate( %d ) %d/%d", fZero, i, pData->GetGenes( ) );
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
 			if( !pData->IsExample( i, j ) )
 				continue;
@@ -635,10 +629,6 @@ unsigned char CBayesNetFN::GetValues( size_t iNode ) const {
 	pNode = m_apNodes[ iNode ];
 	return ( pNode->IsContinuous( ) ? -1 : pNode->GetParameters( ) ); }
 
-bool CBayesNetFN::IsContinuous( size_t iNode ) const {
-
-	return m_apNodes[ iNode ]->IsContinuous( ); }
-
 bool CBayesNetFN::IsContinuous( ) const {
 	size_t	i;
 
@@ -648,30 +638,21 @@ bool CBayesNetFN::IsContinuous( ) const {
 
 	return false; }
 
-void CBayesNetFN::Randomize( ) {
-	size_t	i;
-
-	for( i = 0; i < m_iNodes; ++i )
-		Randomize( i ); }
-
-void CBayesNetFN::Randomize( size_t iNode ) {
-
-	m_apNodes[ iNode ]->Randomize( ); }
-
-void CBayesNetFN::Reverse( size_t iNode ) {
-
-	m_apNodes[ iNode ]->Reverse( ); }
-
-bool CBayesNetFN::GetCPT( size_t iNode, CDataMatrix& MatCPT ) const {
-
-	return CBayesNetSmileImpl::GetCPT( m_SmileNet.GetNode( (int)iNode ), MatCPT ); }
-
-bool CBayesNetFN::Evaluate( const CPCLPair&, CPCL&, bool, int ) const {
-
-	return false; }
-
 // CBayesNetMinimal //////////////////////////////////////////////////////////
 
+/*!
+ * \brief
+ * Construct a new minimal Bayes net from the given SMILE-based network.
+ * 
+ * \param BNSmile
+ * SMILE-based network from which to copy node parameters; must have naive structure.
+ * 
+ * \returns
+ * True if Bayes net was successfully constructed.
+ * 
+ * \remarks
+ * BNSmile must have only discrete nodes and naive structure.
+ */
 bool CBayesNetMinimal::Open( const CBayesNetSmile& BNSmile ) {
 	CDataMatrix		Mat;
 	vector<string>	vecstrNodes;
@@ -689,11 +670,26 @@ bool CBayesNetMinimal::Open( const CBayesNetSmile& BNSmile ) {
 		BNSmile.GetCPT( i + 1, m_vecNodes[ i ].m_MatCPT );
 		if( m_vecNodes[ i ].m_MatCPT.GetColumns( ) != m_MatRoot.GetRows( ) )
 			return false;
-		m_vecNodes[ i ].m_bDefault = BNSmile.GetZero( i + 1 ); }
+		m_vecNodes[ i ].m_bDefault = BNSmile.GetDefault( i + 1 ); }
 	m_adNY = new long double[ m_MatRoot.GetRows( ) ];
 
 	return true; }
 
+#endif // NO_SMILE
+
+/*!
+ * \brief
+ * Load a minimal Bayes net from the given binary stream.
+ * 
+ * \param istm
+ * Stream from which Bayes net is loaded.
+ * 
+ * \returns
+ * True if Bayes net was successfully loaded.
+ * 
+ * \remarks
+ * istm must be binary and contain a minimal Bayes net stored by CBayesNetMinimal::Save.
+ */
 bool CBayesNetMinimal::Open( istream& istm ) {
 	uint32_t	iSize;
 	size_t		i;
@@ -718,6 +714,16 @@ bool CBayesNetMinimal::Open( istream& istm ) {
 
 	return true; }
 
+/*!
+ * \brief
+ * Load a minimal Bayes net to the given binary stream.
+ * 
+ * \param ostm
+ * Stream to which Bayes net is saved.
+ * 
+ * \see
+ * CBayesNetMinimal::Open
+ */
 void CBayesNetMinimal::Save( ostream& ostm ) const {
 	uint32_t	iSize;
 	size_t		i;
@@ -734,6 +740,29 @@ void CBayesNetMinimal::Save( ostream& ostm ) const {
 		ostm.write( (const char*)&BNNode.m_bDefault, sizeof(BNNode.m_bDefault) );
 		BNNode.m_MatCPT.Save( ostm, true ); } }
 
+/*!
+ * \brief
+ * Perform Bayesian inference to obtain the class probability given evidence for some number of nodes.
+ * 
+ * \param vecbDatum
+ * Values for each evidence node; 0xF indicates missing data (no evidence) for a particular node.  Note
+ * that each evidence value is stored in <b>four bits</b>, not a full byte.
+ * 
+ * \param iOffset
+ * Position of the first piece of evidence within vecbDatum; zero by default.  This can be used to
+ * store multiple data in a single vector and rapidly perform inference for each subsequent data setting.
+ * 
+ * \returns
+ * Posterior probability of the largest value of the class node given the evidence (generally the
+ * probability of functional relationship).
+ * 
+ * \remarks
+ * Evidence is stored in nibbles, not full bytes, so for a network containing N evidence (non-root) nodes,
+ * vecbDatum must be of size at least iOffset + ceil(N/2).
+ * 
+ * \see
+ * IBayesNet::Evaluate
+ */
 float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t iOffset ) const {
 	long double		dNum, dDen;
 	size_t			i, j;
@@ -754,7 +783,7 @@ float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t
 		const CDataMatrix&	MatCPT	= m_vecNodes[ i ].m_MatCPT;
 		for( j = 0; j < MatCPT.GetColumns( ); ++j ) {
 			if( c >= MatCPT.GetRows( ) ) {
-				g_CatBioUtils.error( "CBayesNetMinimal::Evaluate( %d ) illegal value: %d/%d in %d", iOffset, c, MatCPT.GetRows( ), i );
+				g_CatSleipnir.error( "CBayesNetMinimal::Evaluate( %d ) illegal value: %d/%d in %d", iOffset, c, MatCPT.GetRows( ), i );
 				return CMeta::GetNaN( ); }
 			m_adNY[ j ] *= MatCPT.Get( c, j ); } }
 
@@ -764,17 +793,56 @@ float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t
 
 	return (float)( dNum / dDen ); }
 
-bool CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbData, float* adValues,
+/*!
+ * \brief
+ * Repeatedly perform Bayesian inference to obtain the class probability given evidence for some number of
+ * nodes.
+ * 
+ * \param vecbData
+ * Values for each evidence node; 0xF indicates missing data (no evidence) for a particular node.  Note
+ * that each evidence value is stored in <b>four bits</b>, not a full byte.  Multiple sets of evidence can
+ * be included in vecbData, e.g. for N nodes, entries 0 through floor(N/2) comprise one set of evidence,
+ * floor(N/2)+1 through N the next, and so forth.
+ * 
+ * \param adResults
+ * Array into which posterior probabilities of the largest value of the class node are inserted given the
+ * evidence (generally probabilities of functional relationships).
+ * 
+ * \param iGenes
+ * Number of inferences to perform and probabilities to generate.
+ * 
+ * \param iStart
+ * First gene to process; this means that the first output probability is placed into the iStart element of
+ * adResults, and the first element read from vecbDatum is at iStart * ceil(N/2).
+ * 
+ * \returns
+ * True if evaluation was successful.
+ * 
+ * Perform Bayesian inference iGenes - iStart times using evidence from vecbData, which consists of zero or
+ * more sets of evidence values for the N non-root nodes in the Bayes net.  In pseudocode:
+ * \code
+ * for( i = iStart; i < iGenes; ++i )
+ *   adValues[ i ] = Evaluate( vecbData, i * floor((N+1)/2) );
+ * \endcode
+ * 
+ * \remarks
+ * Evidence is stored in nibbles, not full bytes, so for a network containing N evidence (non-root) nodes,
+ * vecbData must be of size at least iGenes * ceil(N/2).
+ * 
+ * \see
+ * IBayesNet::Evaluate
+ */
+bool CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbData, float* adResults,
 	size_t iGenes, size_t iStart ) const {
 	size_t	iGene, iOffset, iChunk;
 
-	if( !adValues )
+	if( !adResults )
 		return false;
 
 	iChunk = ( m_vecNodes.size( ) + 1 ) / 2;
 	iOffset = iChunk * iStart;
 	for( iGene = iStart; ( iGene < iGenes ) && ( iOffset < vecbData.size( ) ); ++iGene,iOffset += iChunk )
-		adValues[ iGene ] = Evaluate( vecbData, iOffset );
+		adResults[ iGene ] = Evaluate( vecbData, iOffset );
 
 	return true; }
 

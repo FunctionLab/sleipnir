@@ -9,6 +9,6 @@ using namespace mysqlpp;
 
 #include "datapair.h"
 #include "meta.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #endif // STDAFX_H

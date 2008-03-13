@@ -2,7 +2,7 @@
 #include "clustpivot.h"
 #include "meta.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 uint16_t CClustPivot::Cluster( const CDistanceMatrix& Dist, float dCutoff,
 	vector<uint16_t>& vecsClusters ) {

@@ -5,7 +5,7 @@ extern "C" {
 #include "svm_common.h"
 }
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CDat;
 class CDataPair;

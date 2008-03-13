@@ -3,7 +3,7 @@
 #include "genome.h"
 #include "statistics.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 COntologyImpl::SNode::SNode( ) : m_iParents(0), m_aiParents(NULL), m_iChildren(0),
 	m_aiChildren(NULL), m_iGenes(0), m_apGenes(NULL), m_iCacheGenes(-1),
@@ -31,7 +31,7 @@ bool COntologyImpl::SParser::GetLine( ) {
 
 	m_iLine++;
 	m_istm.getline( m_szLine, c_iBuffer - 1 );
-	g_CatBioUtils.debug( "COntologyImpl::SParser::GetLine( ) %s", m_szLine );
+	g_CatSleipnir.debug( "COntologyImpl::SParser::GetLine( ) %s", m_szLine );
 	return true; }
 
 bool COntologyImpl::SParser::IsStart( const char* szStart ) const {
@@ -170,85 +170,6 @@ void COntologyImpl::GetGeneNames( vector<string>& vecstrGenes ) const {
 	for( iterGene = setstrGenes.begin( ); iterGene != setstrGenes.end( ); ++iterGene )
 		vecstrGenes.push_back( *iterGene ); }
 
-void CSlimImpl::Reset( const IOntology* pOntology ) {
-
-	m_pOntology = pOntology;
-	m_vecstrSlims.clear( );
-	m_vecveciTerms.clear( );
-	m_vecvecpGenes.clear( ); }
-
-bool CSlim::Open( istream& istm, const IOntology* pOnto ) {
-	static const size_t	c_iBuffer	= 1024;
-	char								szBuf[ c_iBuffer ];
-	size_t								i, j, k, iNode;
-	string								str;
-	set<const CGene*>					setiGenes;
-	set<const CGene*>::const_iterator	iterGene;
-
-	g_CatBioUtils.info( "CSlim::Open( %s )", pOnto->GetID( ).c_str( ) );
-
-	Reset( pOnto );
-	while( istm.peek( ) != EOF ) {
-		i = m_vecveciTerms.size( );
-		m_vecveciTerms.resize( i + 1 );
-		istm.getline( szBuf, c_iBuffer - 1 );
-		{
-			istrstream	issm( szBuf );
-
-			while( issm.peek( ) != EOF ) {
-				str = OpenToken( issm );
-				if( !str.length( ) )
-					break;
-				if( m_vecstrSlims.size( ) <= i )
-					m_vecstrSlims.push_back( str );
-				else {
-					if( ( j = m_pOntology->GetNode( str ) ) == -1 ) {
-						g_CatBioUtils.error( "CSlim::Open( %s ) unknown node: %s",
-							pOnto->GetID( ).c_str( ), str.c_str( ) );
-						return false; }
-					m_vecveciTerms[ i ].push_back( j ); } }
-		} }
-
-	m_vecvecpGenes.resize( m_vecveciTerms.size( ) );
-	for( i = 0; i < m_vecveciTerms.size( ); ++i ) {
-		setiGenes.clear( );
-		for( j = 0; j < m_vecveciTerms[ i ].size( ); ++j ) {
-			iNode = m_vecveciTerms[ i ][ j ];
-			for( k = 0; k < m_pOntology->GetGenes( iNode, true ); ++k )
-				setiGenes.insert( &m_pOntology->GetGene( iNode, k ) ); }
-		for( iterGene = setiGenes.begin( ); iterGene != setiGenes.end( ); ++iterGene )
-			m_vecvecpGenes[ i ].push_back( *iterGene ); }
-
-	return true; }
-
-const CGene& CSlim::GetGene( size_t iSlim, size_t iGene ) const {
-
-	return *m_vecvecpGenes[ iSlim ][ iGene ]; }
-
-size_t CSlim::GetSlims( ) const {
-
-	return m_vecstrSlims.size( ); }
-
-size_t CSlim::GetGenes( size_t iSlim ) const {
-
-	return m_vecvecpGenes[ iSlim ].size( ); }
-
-void CSlim::GetGeneNames( vector<string>& vecstrGenes ) const {
-	set<const CGene*>					setpGenes;
-	set<const CGene*>::const_iterator	iterGene;
-	size_t								i, j;
-
-	for( i = 0; i < m_vecvecpGenes.size( ); ++i )
-		for( j = 0; j < m_vecvecpGenes[ i ].size( ); ++j )
-			setpGenes.insert( m_vecvecpGenes[ i ][ j ] );
-
-	for( iterGene = setpGenes.begin( ); iterGene != setpGenes.end( ); ++iterGene )
-		vecstrGenes.push_back( (*iterGene)->GetName( ) ); }
-
-const string& CSlim::GetSlim( size_t iSlim ) const {
-
-	return m_vecstrSlims[ iSlim ]; }
-
 void COntologyImpl::TermFinder( const CGenes& Genes, vector<STermFound>& vecsTerms, bool fBon,
 	bool fKids, bool fBack, const CGenes* pBkg ) const {
 	size_t			i, j, iMult, iBkg, iGenes, iGiven;
@@ -279,5 +200,98 @@ void COntologyImpl::TermFinder( const CGenes& Genes, vector<STermFound>& vecsTer
 			if( ( d *= iMult ) > 1 )
 				d = 1; }
 		vecsTerms.push_back( STermFound( i, d, veciAnno[ i ], iGiven, iGenes, iBkg ) ); } }
+
+void CSlimImpl::Reset( const IOntology* pOntology ) {
+
+	m_pOntology = pOntology;
+	m_vecstrSlims.clear( );
+	m_vecveciTerms.clear( );
+	m_vecvecpGenes.clear( ); }
+
+/*!
+ * \brief
+ * Constructs a slim from a text file listing ontology terms.
+ * 
+ * \param istmSlim
+ * Stream containing term ID strings to include in the slim.
+ * 
+ * \param pOntology
+ * Ontology from which terms are drawn.
+ * 
+ * \returns
+ * True if slim construction succeeded (i.e. all terms were found in the ontology).
+ * 
+ * Constructs a slim from a tab-delimited text file of the form:
+ * <pre>gloss1	id1
+gloss2	id2
+...
+glossN	idN</pre>
+ * The glosses are human-readable names for ontology terms (e.g. "protein targeting to ER"); these are
+ * ignored by the parser.  The IDs are the ontology-specific ID strings (e.g. "GO:0009605") used to look up
+ * terms in the given ontology.  Each gloss must be separated from its accompanying ID by a tab, and each
+ * line should consist of a single gloss/ID pair.
+ */
+bool CSlim::Open( istream& istmSlim, const IOntology* pOntology ) {
+	static const size_t	c_iBuffer	= 1024;
+	char								szBuf[ c_iBuffer ];
+	size_t								i, j, k, iNode;
+	string								str;
+	set<const CGene*>					setiGenes;
+	set<const CGene*>::const_iterator	iterGene;
+
+	g_CatSleipnir.info( "CSlim::Open( %s )", pOntology->GetID( ).c_str( ) );
+
+	Reset( pOntology );
+	while( istmSlim.peek( ) != EOF ) {
+		i = m_vecveciTerms.size( );
+		m_vecveciTerms.resize( i + 1 );
+		istmSlim.getline( szBuf, c_iBuffer - 1 );
+		{
+			istrstream	issm( szBuf );
+
+			while( issm.peek( ) != EOF ) {
+				str = OpenToken( issm );
+				if( !str.length( ) )
+					break;
+				if( m_vecstrSlims.size( ) <= i )
+					m_vecstrSlims.push_back( str );
+				else {
+					if( ( j = m_pOntology->GetNode( str ) ) == -1 ) {
+						g_CatSleipnir.error( "CSlim::Open( %s ) unknown node: %s",
+							m_pOntology->GetID( ).c_str( ), str.c_str( ) );
+						return false; }
+					m_vecveciTerms[ i ].push_back( j ); } }
+		} }
+
+	m_vecvecpGenes.resize( m_vecveciTerms.size( ) );
+	for( i = 0; i < m_vecveciTerms.size( ); ++i ) {
+		setiGenes.clear( );
+		for( j = 0; j < m_vecveciTerms[ i ].size( ); ++j ) {
+			iNode = m_vecveciTerms[ i ][ j ];
+			for( k = 0; k < m_pOntology->GetGenes( iNode, true ); ++k )
+				setiGenes.insert( &m_pOntology->GetGene( iNode, k ) ); }
+		for( iterGene = setiGenes.begin( ); iterGene != setiGenes.end( ); ++iterGene )
+			m_vecvecpGenes[ i ].push_back( *iterGene ); }
+
+	return true; }
+
+/*!
+ * \brief
+ * Retrieve the names of all genes annotated below terms in this slim.
+ * 
+ * \param vecstrGenes
+ * Output unique gene names annotated below this slim's ontology terms.
+ */
+void CSlim::GetGeneNames( vector<string>& vecstrGenes ) const {
+	set<const CGene*>					setpGenes;
+	set<const CGene*>::const_iterator	iterGene;
+	size_t								i, j;
+
+	for( i = 0; i < m_vecvecpGenes.size( ); ++i )
+		for( j = 0; j < m_vecvecpGenes[ i ].size( ); ++j )
+			setpGenes.insert( m_vecvecpGenes[ i ][ j ] );
+
+	for( iterGene = setpGenes.begin( ); iterGene != setpGenes.end( ); ++iterGene )
+		vecstrGenes.push_back( (*iterGene)->GetName( ) ); }
 
 }

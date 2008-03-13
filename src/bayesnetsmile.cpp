@@ -4,11 +4,13 @@
 #include "dataset.h"
 #include "meta.h"
 
+#ifndef NO_SMILE
+
 #if ( defined(_MSC_VER) && defined(_DEBUG) )
 extern "C" void __cdecl _invalid_parameter_noinfo( ) { }
 #endif // ( defined(_MSC_VER) && defined(_DEBUG) )
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const char	CBayesNetSmileImpl::c_szGaussian[]	= "gaussian";
 
@@ -62,18 +64,17 @@ bool CBayesNetSmileImpl::IsNaive( const DSL_network& BayesNet ) {
 CBayesNetSmileImpl::CBayesNetSmileImpl( bool fGroup ) : CBayesNetImpl(fGroup),
 	m_fSmileNet(false), m_pDefaults(NULL) { }
 
+/*!
+ * \brief
+ * Construct a new SMILE-based Bayes net.
+ * 
+ * \param fGroup
+ * If true, group identical learning/evaluation examples together into a single heavily weighted example.
+ * 
+ * \remarks
+ * There's essentially never a reason to set fGroup to false.
+ */
 CBayesNetSmile::CBayesNetSmile( bool fGroup ) : CBayesNetSmileImpl( fGroup ) { }
-
-bool CBayesNetSmile::Open( const char* szDSL ) {
-
-	return ( m_fSmileNet = !m_SmileNet.ReadFile( szDSL ) ); }
-
-bool CBayesNetSmile::Save( const char* szDSL ) const {
-
-	if( !m_fSmileNet )
-		return false;
-
-	return !((CBayesNetSmile*)this)->m_SmileNet.WriteFile( szDSL ); }
 
 bool CBayesNetSmileImpl::LearnGrouped( const IDataset* pData, size_t iIterations, bool fZero ) {
 	size_t					i, j, iIter, iDatum;
@@ -98,7 +99,7 @@ bool CBayesNetSmileImpl::LearnGrouped( const IDataset* pData, size_t iIterations
 			vecpExpected[ i ]->FillWith( 0 );
 		for( iterDatum = mapData.begin( ); iterDatum != mapData.end( ); ++iterDatum ) {
 			if( !( iDatum++ % 50 ) )
-				g_CatBioUtils.notice( "CBayesNetSmile::LearnGrouped( %d, %d ) iteration %d, datum %d/%d",
+				g_CatSleipnir.notice( "CBayesNetSmile::LearnGrouped( %d, %d ) iteration %d, datum %d/%d",
 					iIterations, fZero, iIter, ( iDatum - 1 ), mapData.size( ) );
 			FillCPTs( vecfHidden, iterDatum->first, fZero, true );
 			m_SmileNet.UpdateBeliefs( );
@@ -222,7 +223,7 @@ bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIteratio
 			vecpExpected[ i ]->FillWith( 0 );
 		for( i = 0; i < pData->GetGenes( ); ++i ) {
 			if( !( i % 50 ) )
-				g_CatBioUtils.notice( "CBayesNetSmile::LearnUngrouped( %d, %d ) iteration %d, gene %d/%d",
+				g_CatSleipnir.notice( "CBayesNetSmile::LearnUngrouped( %d, %d ) iteration %d, gene %d/%d",
 					iIterations, fZero, iIter, i, pData->GetGenes( ) );
 			for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
 				if( !FillCPTs( pData, i, j, fZero, true ) )
@@ -242,16 +243,10 @@ bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIteratio
 
 	return true; }
 
-bool CBayesNetSmileImpl::IsNaive( ) const {
-
-	return ( m_fSmileNet ? CBayesNetSmileImpl::IsNaive( m_SmileNet ) : false ); }
-
 bool CBayesNetSmile::Learn( const IDataset* pData, size_t iIterations, bool fZero, bool fELR ) {
 
-// MEFIT OFF
 	if( fELR )
 		return LearnELR( pData, iIterations, fZero );
-// MEFIT ON
 	if( IsNaive( ) )
 		return LearnNaive( pData, fZero );
 
@@ -294,10 +289,18 @@ void CBayesNetSmileImpl::LearnExpected( DSL_node* pNode, DSL_Dmatrix* pExpected,
 
 		pExpected->Subscript( veciCoords ) += dProd * iWeight; } }
 
-// MEFIT OFF
-
 #ifdef PNL_ENABLED
 
+/*!
+ * \brief
+ * Generate a PNL-based Bayes net equivalent to the current SMILE-based network.
+ * 
+ * \param BNPNL
+ * PNL-based network into which the current SMILE-based network is copied.
+ * 
+ * If PNL is enabled, generate a PNL-based network with equivalent structure and parameters to the current
+ * SMILE-based network.
+ */
 bool CBayesNetSmile::Convert( CBayesNetPNL& BNPNL ) const {
 
 	if( !m_fSmileNet )
@@ -307,8 +310,6 @@ bool CBayesNetSmile::Convert( CBayesNetPNL& BNPNL ) const {
 
 #endif // PNL_ENABLED
 
-// MEFIT ON
-
 void CBayesNetSmile::GetNodes( vector<string>& vecstrNodes ) const {
 	int	i;
 
@@ -316,33 +317,8 @@ void CBayesNetSmile::GetNodes( vector<string>& vecstrNodes ) const {
 		for( i = 0; i < m_SmileNet.GetNumberOfNodes( ); ++i )
 			vecstrNodes.push_back( m_SmileNet.GetNode( i )->Info( ).Header( ).GetId( ) ); }
 
-unsigned char CBayesNetSmile::GetValues( size_t iNode ) const {
-
-	return m_SmileNet.GetNode( (int)iNode )->Definition( )->GetNumberOfOutcomes( ); }
-
-bool CBayesNetSmile::IsContinuous( size_t ) const {
-
-	return IsContinuous( ); }
-
-bool CBayesNetSmile::IsContinuous( ) const {
-
-	return CBayesNetSmileImpl::IsContinuous( ); }
-
-bool CBayesNetSmileImpl::IsContinuous( ) const {
-
-	return ( m_fSmileNet ? IsGaussian( m_SmileNet ) : false ); }
-
-bool CBayesNetSmile::Evaluate( const IDataset* pData,
-	vector<vector<float> >& vecvecdResults, bool fZero ) const {
-
-	return CBayesNetSmileImpl::Evaluate( pData, NULL, &vecvecdResults, fZero ); }
-
-bool CBayesNetSmile::Evaluate( const IDataset* pData, CDat& DatOut, bool fZero ) const {
-
-	return CBayesNetSmileImpl::Evaluate( pData, &DatOut, NULL, fZero ); }
-
-bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
-	vector<vector<float> >* pvecvecdOut, bool fZero ) const {
+bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut, TVecVecD* pvecvecdOut,
+	bool fZero ) const {
 	size_t						i, j, k, iOne, iTwo;
 	DSL_nodeValue*				pValue;
 	string						strCur;
@@ -374,7 +350,7 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 		dPrior = (float)(*pValue->GetMatrix( ))[ 0 ]; }
 	for( i = 0; i < pData->GetGenes( ); ++i ) {
 		if( !( i % 250 ) )
-			g_CatBioUtils.notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
+			g_CatSleipnir.notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
 				pData->GetGenes( ) );
 		if( pDatOut && !pvecvecdOut && ( ( iOne = veciGenes[ i ] ) == -1 ) )
 			continue;
@@ -413,8 +389,8 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 
 	return true; }
 
-bool CBayesNetSmile::Evaluate( const vector<unsigned char>& vecbDatum, vector<float>& vecdOut, bool fZero,
-	size_t iNode, bool fNoData ) const {
+bool CBayesNetSmile::Evaluate( const vector<unsigned char>& vecbDatum, vector<float>& vecdResults, bool fZero,
+	size_t iNode, bool fIgnoreMissing ) const {
 	vector<bool>	vecfHidden;
 	DSL_nodeValue*	pValue;
 	size_t			i;
@@ -425,14 +401,34 @@ bool CBayesNetSmile::Evaluate( const vector<unsigned char>& vecbDatum, vector<fl
 	vecfHidden.resize( vecbDatum.size( ) );
 	for( i = 0; i < vecfHidden.size( ); ++i )
 		vecfHidden[ i ] = false;
-	((CBayesNetSmile*)this)->FillCPTs( vecfHidden, vecbDatum, fZero, false, fNoData );
+	((CBayesNetSmile*)this)->FillCPTs( vecfHidden, vecbDatum, fZero, false, fIgnoreMissing );
 	((CBayesNetSmile*)this)->m_SmileNet.UpdateBeliefs( );
 	pValue = m_SmileNet.GetNode( iNode )->Value( );
 	for( i = 0; ( i + 1 ) < (size_t)pValue->GetSize( ); ++i )
-		vecdOut.push_back( (float)(*pValue->GetMatrix( ))[ (int)i ] );
+		vecdResults.push_back( (float)(*pValue->GetMatrix( ))[ (int)i ] );
 
 	return true; }
 
+/*!
+ * \brief
+ * Evaluate the output of a Bayesian classifier given only a single node's evidence value.
+ * 
+ * \param iNode
+ * Node for which evidence is set.
+ * 
+ * \param bValue
+ * Value of evidence to set.
+ * 
+ * \returns
+ * Posterior probabillity of classifier node's first value given the data.
+ * 
+ * Evaluates the posterior probability of the Bayesian network's first node (i.e. the class node) given
+ * only a single piece of evidence.  This can be used to calculate the impact of a single dataset on
+ * predicted probabilities, for example.
+ * 
+ * \remarks
+ * Unlike other evaluation methods, ignores default values for all nodes.
+ */
 float CBayesNetSmile::Evaluate( size_t iNode, unsigned char bValue ) const {
 	vector<bool>			vecfHidden;
 	vector<unsigned char>	vecbDatum;
@@ -453,7 +449,17 @@ float CBayesNetSmile::Evaluate( size_t iNode, unsigned char bValue ) const {
 
 	return (float)(*pValue->GetMatrix( ))[ 0 ]; }
 
-unsigned char CBayesNetSmile::GetZero( size_t iNode ) const {
+/*!
+ * \brief
+ * Returns the default value (if any) for the requested node.
+ * 
+ * \param iNode
+ * Node whose default value should be retrieved.
+ * 
+ * \returns
+ * Default value of the requested node, or -1 if none exists.
+ */
+unsigned char CBayesNetSmile::GetDefault( size_t iNode ) const {
 	int	i;
 
 	if( !m_fSmileNet ||
@@ -569,7 +575,7 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 	for( i = 0; i < iAnswers; ++i )
 		(*pMat)[ (int)i ] = ( j = vecveciCounts[ 0 ][ (int)i ] ) ? j : ( fFallback ? 0 : 1 );
 	if( fFallback ) {
-		g_CatBioUtils.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s",
+		g_CatSleipnir.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s",
 			fZero, m_SmileNet.GetNode( 0 )->Info( ).Header( ).GetId( ) );
 		dLambda = 1 - ( (float)iCount / c_iMinimum );
 		pMat->Normalize( );
@@ -595,7 +601,7 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 					veciCoords[ 1 ] = (int)k;
 					dCount += (*pMat)[ veciCoords ]; }
 				if( dCount < c_iMinimum ) {
-					g_CatBioUtils.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s, column %d",
+					g_CatSleipnir.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s, column %d",
 						fZero, m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), j );
 					dLambda = 1 - ( (float)dCount / c_iMinimum );
 					for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
@@ -618,15 +624,7 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 
 	return true; }
 
-void CBayesNetSmile::SetDefault( const CBayesNetSmile& Defaults ) {
-
-	m_pDefaults = &Defaults; }
-
-bool CBayesNetSmile::GetCPT( size_t iNode, CDataMatrix& MatCPT ) const {
-
-	return CBayesNetSmileImpl::GetCPT( m_SmileNet.GetNode( (int)iNode ), MatCPT ); }
-
-bool CBayesNetSmile::Evaluate( const CPCLPair& PCLIn, CPCL& PCLOut, bool fZero, int iAlgorithm ) const {
+bool CBayesNetSmile::Evaluate( const CPCLPair& PCLData, CPCL& PCLResults, bool fZero, int iAlgorithm ) const {
 	size_t									i, j, k, iExp;
 	string									strCur;
 	map<string, vector<float> >				mapData;
@@ -644,20 +642,20 @@ bool CBayesNetSmile::Evaluate( const CPCLPair& PCLIn, CPCL& PCLOut, bool fZero, 
 	for( i = 0; i < veciMap.size( ); ++i ) {
 		veciMap[ i ] = -1;
 		vecfHidden[ i ] = true;
-		for( j = 0; j < PCLIn.GetExperiments( ); ++j )
-			if( PCLIn.GetExperiment( j ) == m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ) ) {
+		for( j = 0; j < PCLData.GetExperiments( ); ++j )
+			if( PCLData.GetExperiment( j ) == m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ) ) {
 				vecfHidden[ i ] = false;
 				veciMap[ i ] = (unsigned int)j;
 				break; } }
 	((CBayesNetSmile*)this)->m_SmileNet.SetDefaultBNAlgorithm( iAlgorithm );
-	for( i = 0; i < PCLOut.GetGenes( ); ++i ) {
+	for( i = 0; i < PCLResults.GetGenes( ); ++i ) {
 		if( !( i % 1 ) )
-			g_CatBioUtils.notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
-				PCLOut.GetGenes( ) );
-		strCur = EncodeDatum( PCLIn, PCLIn.GetGene( PCLOut.GetGene( i ) ), veciMap );
+			g_CatSleipnir.notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
+				PCLResults.GetGenes( ) );
+		strCur = EncodeDatum( PCLData, PCLData.GetGene( PCLResults.GetGene( i ) ), veciMap );
 		if( m_fGroup && ( ( iterDatum = mapData.find( strCur ) ) != mapData.end( ) ) ) {
 			for( j = 0; j < iterDatum->second.size( ); ++j )
-				PCLOut.Set( i, j, iterDatum->second[ j ] );
+				PCLResults.Set( i, j, iterDatum->second[ j ] );
 			continue; }
 
 		((CBayesNetSmile*)this)->FillCPTs( vecfHidden, strCur, fZero, false, true );
@@ -669,19 +667,41 @@ bool CBayesNetSmile::Evaluate( const CPCLPair& PCLIn, CPCL& PCLOut, bool fZero, 
 				continue;
 			pMatrix = m_SmileNet.GetNode( (int)j )->Value( )->GetMatrix( );
 			for( k = 0; k < GetValues( j ); ++k )
-				PCLOut.Set( i, iExp++, (float)(*pMatrix)[ (int)k ] ); }
+				PCLResults.Set( i, iExp++, (float)(*pMatrix)[ (int)k ] ); }
 		if( m_fGroup ) {
 			vector<float>	vecfCur;
 
-			vecfCur.resize( PCLOut.GetExperiments( ) );
+			vecfCur.resize( PCLResults.GetExperiments( ) );
 			for( j = 0; j < vecfCur.size( ); ++j )
-				vecfCur[ j ] = PCLOut.Get( i, j );
+				vecfCur[ j ] = PCLResults.Get( i, j );
 			mapData[ strCur ] = vecfCur; } }
 	((CBayesNetSmile*)this)->m_SmileNet.SetDefaultBNAlgorithm( iPrev );
 
 	return true; }
 
-bool CBayesNetSmile::Open( const vector<string>& vecstrPCLs, size_t iBins ) {
+/*!
+ * \brief
+ * Construct a new SMILE-based naive Bayes net with nodes corresponding to the given datasets.
+ * 
+ * \param vecstrFiles
+ * Filenames of datasets, one per node.
+ * 
+ * \param iValues
+ * Number of values into which each dataset will be quantized.
+ * 
+ * \returns
+ * True if Bayes net was successfully constructed.
+ * 
+ * This version of Open can be used to quickly construct a uniform, naive Bayes net corresponding to a
+ * particular set of data.  These data files are usually PCLs or DATs containing microarray data, since
+ * large numbers of microarray datasets can be processed in this manner.  In addition to one node per
+ * given file, one additional class node will be created at the top of the naive model with two possible
+ * values (generally corresponding to functional unrelatedness or relatedness).
+ * 
+ * \see
+ * CDat | CDataPair | CPCL | CPCLPair
+ */
+bool CBayesNetSmile::Open( const vector<string>& vecstrFiles, size_t iValues ) {
 	size_t			i, j;
 	DSL_stringArray	vecstrOutcomes;
 	string			strCur;
@@ -692,11 +712,11 @@ bool CBayesNetSmile::Open( const vector<string>& vecstrPCLs, size_t iBins ) {
 	vecstrOutcomes.Add( ( (string)c_szFR + "No" ).c_str( ) );
 	vecstrOutcomes.Add( ( (string)c_szFR + "Yes" ).c_str( ) );
 	m_SmileNet.GetNode( 0 )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
-	for( i = 0; i < vecstrPCLs.size( ); ++i ) {
+	for( i = 0; i < vecstrFiles.size( ); ++i ) {
 		m_SmileNet.AddNode( DSL_CPT, (char*)( strCur =
-			CMeta::Filename( CMeta::Deextension( vecstrPCLs[ i ] ) ) ).c_str( ) );
+			CMeta::Filename( CMeta::Deextension( vecstrFiles[ i ] ) ) ).c_str( ) );
 		vecstrOutcomes.Flush( );
-		for( j = 0; j < iBins; ++j ) {
+		for( j = 0; j < iValues; ++j ) {
 			char	acNum[ 8 ];
 
 #pragma warning( disable : 4996 )
@@ -708,8 +728,35 @@ bool CBayesNetSmile::Open( const vector<string>& vecstrPCLs, size_t iBins ) {
 
 	return true; }
 
+/*!
+ * \brief
+ * Construct a new SMILE-based naive Bayes net with nodes corresponding to the given datasets.
+ * 
+ * \param pData
+ * Datasets from which new Bayes net nodes should be constructed.
+ * 
+ * \param vecstrNames
+ * String identifiers of the newly constructed nodes.
+ * 
+ * \param veciDefaults
+ * Default values (if any) for missing data from each dataset.  -1 is ignored, any other value is used as a
+ * default value when data is missing for the corresponding node.
+ * 
+ * \returns
+ * True if Bayes net was successfully constructed.
+ * 
+ * Constructs a naive Bayes classifier from the given datasets, with one node per dataset plus one
+ * additional class node at the top of the naive model.  This class node corresponds to the first dataset
+ * in pData and will take two values, generally corresponding to function unrelatedness and relatedness.
+ * Each other node is named as indicated and takes the number of discrete values indicated by the dataset.
+ * Each value in veciDefaults not equal to -1 is used as a default when data is missing for the corresponding
+ * node.
+ * 
+ * \remarks
+ * The order and length of pData, vecstrNames, and veciDefaults must be identical.
+ */
 bool CBayesNetSmile::Open( const IDataset* pData, const vector<string>& vecstrNames,
-	const vector<size_t>& veciZeros ) {
+	const vector<size_t>& veciDefaults ) {
 	size_t			i, j;
 	DSL_stringArray	vecstrOutcomes;
 	char			acNum[ 8 ];
@@ -732,15 +779,39 @@ bool CBayesNetSmile::Open( const IDataset* pData, const vector<string>& vecstrNa
 #pragma warning( default : 4996 )
 			vecstrOutcomes.Add( ( vecstrNames[ i ] + acNum ).c_str( ) ); }
 		m_SmileNet.GetNode( (int)i )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
-		if( veciZeros[ i ] != -1 ) {
+		if( veciDefaults[ i ] != -1 ) {
 #pragma warning( disable : 4996 )
-			sprintf( acNum, "%d", veciZeros[ i ] );
+			sprintf( acNum, "%d", veciDefaults[ i ] );
 #pragma warning( default : 4996 )
 			m_SmileNet.GetNode( (int)i )->Info( ).UserProperties( ).AddProperty( c_szZero, acNum ); }
 		m_SmileNet.AddArc( 0, (int)i ); }
 
 	return true; }
 
+/*!
+ * \brief
+ * Construct a new SMILE-based naive Bayes net by merging the given class and data nodes.
+ * 
+ * \param BNPrior
+ * Bayes net from which class (root) node is taken.
+ * 
+ * \param vecpBNs
+ * Bayes nets from which data (child) nodes are taken.
+ * 
+ * \returns
+ * True if Bayes net was successfully constructed.
+ * 
+ * Constructs a new SMILE-based Bayes net by merging the root (prior or class) node from one Bayes net with
+ * the child (non-root) nodes from zero or more other networks.  In other words, suppose BNPrior was a naive
+ * network with root P1 and children P2 and P3.  vecpBNs contains two networks, one with root A1 and
+ * data nodes A2 and A3 and one with root B1 and child node B2.  The newly constructed Bayes net would have
+ * a root node with P1's parameters and three children with A2, A3, and B2's parameters.  This can be used
+ * to merge multiple naive classifiers created independently from the same answer set.
+ * 
+ * \remarks
+ * In the prior (class) network, only the root (first) node is used.  In the data (child) networks, only
+ * the root (first) node is ignored, and the rest are copied into the new network as child nodes.
+ */
 bool CBayesNetSmile::Open( const CBayesNetSmile& BNPrior, const vector<CBayesNetSmile*>& vecpBNs ) {
 	DSL_node*	pFrom;
 	size_t		iNet, iNode;
@@ -773,3 +844,5 @@ bool CBayesNetSmile::Open( const CBayesNetSmile& BNPrior, const vector<CBayesNet
 	return true; }
 
 }
+
+#endif // NO_SMILE

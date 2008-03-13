@@ -14,6 +14,6 @@ using namespace std;
 #include "bayesnet.h"
 #include "database.h"
 #include "meta.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #endif // STDAFX_H

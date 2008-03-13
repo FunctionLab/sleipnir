@@ -5,7 +5,7 @@
 
 #include "file.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CGene;
 class CGenome;

@@ -8,7 +8,7 @@ using namespace std;
 
 #include "bayesnet.h"
 #include "meta.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #include "cmdline.h"
 

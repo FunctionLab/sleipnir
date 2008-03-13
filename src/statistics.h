@@ -5,7 +5,7 @@
 
 #include "meta.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CDat;
 

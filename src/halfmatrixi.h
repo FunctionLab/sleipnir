@@ -1,7 +1,7 @@
 #ifndef HALFMATRIXI_H
 #define HALFMATRIXI_H
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CHalfMatrixBase {
 protected:

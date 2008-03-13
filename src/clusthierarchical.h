@@ -3,7 +3,7 @@
 
 #include "clusthierarchicali.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CPCL;
 class IMeasure;

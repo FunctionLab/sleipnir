@@ -1,17 +1,15 @@
 #include "stdafx.h"
 #include "meta.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const char	CMeta::c_szWS[]		= " \t\r\n";
 
 void CMeta::Startup( int iVerbosity, size_t iRand ) {
-// KNNImputer OFF
-// MEFIT OFF
-	Category&			CatBioUtils	= Category::getInstance( c_szBioUtils );
+#ifndef USE_LOG4CPP_STUB
+	Category&			CatSleipnir	= Category::getInstance( c_szSleipnir );
 	OstreamAppender*	pAppOstm	= new OstreamAppender( "cerr", &cerr );
-// MEFIT ON
-// KNNImputer ON
+#endif // USE_LOG4CPP_STUB
 
 	srand( ( iRand == -1 ) ?
 #ifdef _MSC_VER
@@ -20,24 +18,17 @@ void CMeta::Startup( int iVerbosity, size_t iRand ) {
 		time( NULL )
 #endif // _MSC_VER
 		: iRand );
-// KNNImputer OFF
-// MEFIT OFF
+#ifndef USE_LOG4CPP_STUB
 	pAppOstm->setLayout( new BasicLayout( ) );
-	CatBioUtils.setAdditivity( false );
-	CatBioUtils.setAppender( pAppOstm );
-	CatBioUtils.setPriority( iVerbosity * Priority::ALERT );
-// MEFIT ON
-// KNNImputer ON
+	CatSleipnir.setAdditivity( false );
+	CatSleipnir.setAppender( pAppOstm );
+	CatSleipnir.setPriority( iVerbosity * Priority::ALERT );
+#endif // USE_LOG4CPP_STUB
 }
 
 void CMeta::Shutdown( ) {
 
-// KNNImputer OFF
-// MEFIT OFF
-	Category::shutdown( );
-// MEFIT ON
-// KNNImputer ON
-}
+	Category::shutdown( ); }
 
 string CMeta::Filename( const string& str, char cRepl ) {
 	size_t	i;
@@ -134,7 +125,7 @@ bool CMeta::MapRead( unsigned char*& pbData, HANDLE& hndlMap, size_t& iData, con
 	iData = sStat.st_size;
 
 	if( ( pbData = (unsigned char*)mmap( NULL, iData, PROT_READ, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
-		g_CatBioUtils.error( "CMeta::MapRead( %s ) %s", szFile, strerror( errno ) );
+		g_CatSleipnir.error( "CMeta::MapRead( %s ) %s", szFile, strerror( errno ) );
 		pbData = NULL;
 		close( iFile );
 		return false; }
@@ -169,7 +160,7 @@ bool CMeta::MapWrite( unsigned char*& pbData, HANDLE& hndlMap, size_t iData, con
 	lseek( iFile, iData - 1, SEEK_SET );
 	write( iFile, &iData, 1 );
 	if( ( pbData = (unsigned char*)mmap( NULL, iData, PROT_READ | PROT_WRITE, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
-		g_CatBioUtils.error( "CMeta::MapWrite( %s ) %s", szFile, strerror( errno ) );
+		g_CatSleipnir.error( "CMeta::MapWrite( %s ) %s", szFile, strerror( errno ) );
 		pbData = NULL;
 		close( iFile );
 		return false; }

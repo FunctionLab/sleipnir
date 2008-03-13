@@ -3,7 +3,7 @@
 
 #include "clustqtci.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CClustQTC : CClustQTCImpl {
 public:

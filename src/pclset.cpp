@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "pclset.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 CPCLSetImpl::CPCLSetImpl( ) : m_aPCLs(NULL), m_iPCLs(0) { }
 

@@ -3,7 +3,7 @@
 
 #include "compactmatrixi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CCompactMatrix : CCompactMatrixImpl {
 public:

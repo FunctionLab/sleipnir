@@ -82,7 +82,7 @@ int main( int iArgs, char** aszArgs ) {
 				iValue = -1;
 				if( ( iOne != -1 ) && ( iTwo != -1 ) )
 					iValue = DatCur.Quantize( DatCur.Get( iOne, iTwo ) );
-				if( ( iValue == -1 ) && ( ( b = BNSmile.GetZero( i ) ) != (unsigned char)-1 ) )
+				if( ( iValue == -1 ) && ( ( b = BNSmile.GetDefault( i ) ) != (unsigned char)-1 ) )
 					iValue = b;
 				if( iValue != -1 )
 					PCLLookup.Set( iGene, i, 1 - BNSmile.Evaluate( i, (unsigned char)iValue ) - dPrior );

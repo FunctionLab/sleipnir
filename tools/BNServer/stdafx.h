@@ -34,6 +34,6 @@ inline bool _mktemp_s( char* szTemplate ) {
 #include "server.h"
 #include "serverclient.h"
 #include "statistics.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #endif // STDAFX_H

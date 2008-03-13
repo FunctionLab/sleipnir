@@ -3,7 +3,7 @@
 
 #include "propertyfile.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CServer;
 class IServerClient;

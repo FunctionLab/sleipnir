@@ -4,7 +4,7 @@
 #include "genome.h"
 #include "compactmatrix.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const char	CDataImpl::c_szDat[]	= ".dat";
 const char	CDataImpl::c_szDab[]	= ".dab";
@@ -99,7 +99,7 @@ size_t CDataImpl::OpenMax( const char* szDataDir, const vector<string>& vecstrNo
 					if( psetstrGenes )
 						OpenGenes( ifsm, false, true, *psetstrGenes ); }
 				else {
-					g_CatBioUtils.info( "CDataImpl::OpenMax( %s ) assuming %s is hidden",
+					g_CatSleipnir.info( "CDataImpl::OpenMax( %s ) assuming %s is hidden",
 						szDataDir, vecstrNodes[ i ].c_str( ) );
 					continue; } } }
 		ifsm.close( ); }
@@ -137,7 +137,7 @@ bool CDataImpl::OpenGenes( const vector<string>& vecstrData ) {
 				ifsm.clear( );
 				ifsm.open( vecstrData[ i ].c_str( ) );
 				if( !( ifsm.is_open( ) && OpenGenes( ifsm, false, true, setstrGenes ) ) ) {
-					g_CatBioUtils.error( "CDataImpl::OpenGenes( ) failed to open: %s", vecstrData[ i ].c_str( ) );
+					g_CatSleipnir.error( "CDataImpl::OpenGenes( ) failed to open: %s", vecstrData[ i ].c_str( ) );
 					return false; } } }
 		ifsm.close( ); }
 

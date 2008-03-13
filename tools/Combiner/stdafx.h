@@ -7,7 +7,7 @@ using namespace std;
 #include "dataset.h"
 #include "meta.h"
 #include "pcl.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #include "cmdline.h"
 

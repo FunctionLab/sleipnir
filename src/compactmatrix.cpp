@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "compactmatrix.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 ///////////////////////////////////////////////////////////////////////////////
 // CCompactMatrixBase

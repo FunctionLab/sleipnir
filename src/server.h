@@ -3,7 +3,7 @@
 
 #include "serveri.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CServer : CServerImpl {
 public:

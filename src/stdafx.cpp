@@ -1,8 +1,12 @@
 #include "stdafx.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
-const char	c_szBioUtils[]	= "libBioUtils";
-Category&	g_CatBioUtils	= Category::getInstance( c_szBioUtils );
+const char	c_szSleipnir[]	= "Sleipnir";
+#ifdef USE_LOG4CPP_STUB
+Category	g_CatSleipnir;
+#else // USE_LOG4CPP_STUB
+Category&	g_CatSleipnir	= Category::getInstance( c_szSleipnir );
+#endif // USE_LOG4CPP_STUB
 
 }

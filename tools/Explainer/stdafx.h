@@ -8,6 +8,6 @@ using namespace std;
 #include "annotation.h"
 #include "dat.h"
 #include "genome.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #endif // STDAFX_H

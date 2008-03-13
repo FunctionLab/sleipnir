@@ -3,7 +3,7 @@
 
 #include "datapairi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CSlim;
 

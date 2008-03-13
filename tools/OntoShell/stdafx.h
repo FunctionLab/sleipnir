@@ -39,6 +39,6 @@ XALAN_USING_XERCES(XMLPlatformUtils)
 #include "server.h"
 #include "serverclient.h"
 #include "xmlwriter.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #endif // STDAFX_H

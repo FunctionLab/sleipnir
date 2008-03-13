@@ -10,6 +10,6 @@ using namespace std;
 #include "pclset.h"
 #include "statistics.h"
 #include "svm.h"
-using namespace libBioUtils;
+using namespace Sleipnir;
 
 #endif // STDAFX_H

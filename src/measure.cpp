@@ -3,7 +3,7 @@
 #include "meta.h"
 #include "statistics.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 static inline float GetWeight( const float* adW, size_t iW ) {
 

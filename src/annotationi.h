@@ -5,11 +5,12 @@
 #include <iostream>
 #include <set>
 #include <stack>
+#include <string>
 #include <vector>
 
 #include "file.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CGene;
 class CGenes;

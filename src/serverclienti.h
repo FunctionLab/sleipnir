@@ -7,7 +7,7 @@
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/util/XMLChar.hpp>
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CPropertyFile;
 class CServer;

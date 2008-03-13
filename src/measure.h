@@ -1,7 +1,7 @@
 #ifndef MEASURE_H
 #define MEASURE_H
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class IMeasure {
 public:
@@ -24,7 +24,7 @@ public:
 
 #include "measurei.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CMeasureSigmoid : CMeasureSigmoidImpl, public IMeasure {
 public:

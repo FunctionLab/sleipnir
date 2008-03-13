@@ -3,7 +3,7 @@
 
 #include "halfmatrixi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 template<class tType>
 class CHalfMatrix : protected CHalfMatrixBase {

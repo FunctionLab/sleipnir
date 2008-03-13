@@ -3,7 +3,7 @@
 
 #include <map>
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 template<class tType>
 class CSparseMapMatrix {

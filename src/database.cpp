@@ -3,7 +3,7 @@
 #include "meta.h"
 #include "bayesnet.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const char	CDatabaseImpl::c_acDAB[]		= ".dab";
 const char	CDatabaseImpl::c_acExtension[]	= ".db";
@@ -31,7 +31,7 @@ bool CDatabaselet::Open( const string& strFile, const vector<string>& vecstrGene
 	m_fstm.clear( );
 	m_fstm.open( strFile.c_str( ), ios_base::in | ios_base::out | ios_base::binary | ios_base::trunc );
 	if( !m_fstm.is_open( ) ) {
-		g_CatBioUtils.error( "CDatabaselet::Open( %s, %u, %u ) open failed", strFile.c_str( ), iGenes,
+		g_CatSleipnir.error( "CDatabaselet::Open( %s, %u, %u ) open failed", strFile.c_str( ), iGenes,
 			iDatasets );
 		return false; }
 
@@ -188,7 +188,7 @@ bool CDatabaselet::Open( const string& strFile ) {
 	m_fstm.clear( );
 	m_fstm.open( strFile.c_str( ), ios_base::binary | ios_base::in );
 	if( !m_fstm.is_open( ) ) {
-		g_CatBioUtils.error( "CDatabaselet::Open( %s ) open failed", strFile.c_str( ) );
+		g_CatSleipnir.error( "CDatabaselet::Open( %s ) open failed", strFile.c_str( ) );
 		return false; }
 
 	m_fstm.read( (char*)&m_iHeader, sizeof(m_iHeader) );
@@ -229,7 +229,7 @@ bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strData, 
 	string			strFile;
 
 	if( !pBN ) {
-		g_CatBioUtils.error( "CDatabase::Open( %s, %d ) null Bayes net", strDir.c_str( ), iFiles );
+		g_CatSleipnir.error( "CDatabase::Open( %s, %d ) null Bayes net", strDir.c_str( ), iFiles );
 		return false; }
 
 	Clear( );
@@ -249,10 +249,10 @@ bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strData, 
 #pragma warning(default : 4996)
 		strFile = strDir + '/' + acNumber + c_acExtension;
 		if( !( i % 100 ) )
-			g_CatBioUtils.notice( "CDatabase::Open( %s, %d ) initializing file %d/%d", strDir.c_str( ),
+			g_CatSleipnir.notice( "CDatabase::Open( %s, %d ) initializing file %d/%d", strDir.c_str( ),
 					iFiles, i, m_vecpDBs.size( ) );
 		if( !m_vecpDBs[ i ]->Open( strFile, vecstrSubset, vecstrGenes.size( ), vecstrNodes.size( ) ) ) {
-			g_CatBioUtils.error( "CDatabase::Open( %s, %d ) could not open file %s", strDir.c_str( ),
+			g_CatSleipnir.error( "CDatabase::Open( %s, %d ) could not open file %s", strDir.c_str( ),
 				iFiles, strFile.c_str( ) );
 			return false; } }
 	for( i = 0; i < vecstrGenes.size( ); ++i )
@@ -288,7 +288,7 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const vector<string
 				CDataPair	Dat;
 
 				if( !Dat.Open( vecstrFiles[ iInBase + iInOffset ].c_str( ), false, m_fMemmap ) ) {
-					g_CatBioUtils.error( "CDatabaseImpl::Open( ) could not open %s",
+					g_CatSleipnir.error( "CDatabaseImpl::Open( ) could not open %s",
 						vecstrFiles[ iInBase + iInOffset ].c_str( ) );
 					return false; }
 				for( i = 0; i < veciMyGenes.size( ); ++i )
@@ -344,7 +344,7 @@ bool CDatabase::Open( const string& strDir ) {
 		if( vecstrFiles.size( ) <= i )
 			vecstrFiles.resize( i + 1 );
 		else if( vecstrFiles[ i ].length( ) != 0 ) {
-			g_CatBioUtils.error( "CDatabase::Open( %s ) duplicate file: %s (%d)", strDir.c_str( ),
+			g_CatSleipnir.error( "CDatabase::Open( %s ) duplicate file: %s (%d)", strDir.c_str( ),
 				strFile.c_str( ), i );
 			return false; }
 		vecstrFiles[ i ] = strDir + '/' + strFile; }

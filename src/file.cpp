@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "file.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 bool CFileImpl::IsNewline( char c ) {
 

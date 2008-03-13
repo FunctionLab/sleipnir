@@ -3,7 +3,7 @@
 
 #include "colori.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CColor : CColorImpl {
 public:

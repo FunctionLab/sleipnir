@@ -2,7 +2,7 @@
 #include "bayesnet.h"
 #include "dataset.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 const char	CBayesNetImpl::c_szFR[]		= "FR";
 const char	CBayesNetImpl::c_szZero[]	= "zero";

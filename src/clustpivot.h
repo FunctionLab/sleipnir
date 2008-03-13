@@ -6,7 +6,7 @@
 #include "halfmatrix.h"
 #include "typesi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CDat;
 

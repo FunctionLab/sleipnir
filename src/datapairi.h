@@ -3,7 +3,7 @@
 
 #include "dat.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CPairImpl {
 protected:

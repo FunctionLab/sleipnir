@@ -3,16 +3,12 @@
 
 #include <set>
 
-#ifdef _MSC_VER
-#include <windows.h>
-#endif // _MSC_VER
-
 #include "examplei.h"
 #include "fullmatrix.h"
 #include "halfmatrix.h"
 #include "typesi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class CCompactMatrix;
 class CDataPair;

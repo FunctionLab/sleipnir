@@ -3,7 +3,7 @@
 
 #include "orthologyi.h"
 
-namespace libBioUtils {
+namespace Sleipnir {
 
 class COrthology : COrthologyImpl {
 public:
