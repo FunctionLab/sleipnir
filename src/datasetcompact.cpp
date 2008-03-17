@@ -15,19 +15,34 @@ CDatasetCompactImpl::~CDatasetCompactImpl( ) {
 	if( m_aData )
 		delete[] m_aData; }
 
-bool CDatasetCompact::Open( const vector<string>& vecstrData, bool fMemmap ) {
+/*!
+ * \brief
+ * Construct a dataset corresponding to the given files.
+ * 
+ * \param vecstrDataFiles
+ * Vector of file paths to load.
+ * 
+ * \param fMemmap
+ * If true, memory map data files while they are being discretized rather than loading them into memory.
+ * 
+ * \returns
+ * True if dataset was constructed successfully.
+ * 
+ * Creates a dataset with nodes corresponding to the given data files.
+ */
+bool CDatasetCompact::Open( const vector<string>& vecstrDataFiles, bool fMemmap ) {
 	size_t	i;
 
-	if( !OpenGenes( vecstrData ) )
+	if( !OpenGenes( vecstrDataFiles ) )
 		return false;
 	if( m_aData )
 		delete[] m_aData;
-	m_aData = new CCompactMatrix[ m_iData = (uint32_t)vecstrData.size( ) ];
+	m_aData = new CCompactMatrix[ m_iData = (uint32_t)vecstrDataFiles.size( ) ];
 
-	for( i = 0; i < vecstrData.size( ); ++i ) {
+	for( i = 0; i < vecstrDataFiles.size( ); ++i ) {
 		CDataPair	Datum;
 
-		if( !( Datum.Open( vecstrData[ i ].c_str( ), false, fMemmap ) &&
+		if( !( Datum.Open( vecstrDataFiles[ i ].c_str( ), false, fMemmap ) &&
 			CDatasetCompactImpl::Open( Datum, i ) ) )
 			return false; }
 
@@ -44,15 +59,79 @@ struct SIsGene {
 		return ( m_fIn == m_Genes.IsGene( strGene ) ); }
 };
 
-bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
-	const IBayesNet* pBayesNet, bool fEverything ) {
+/*!
+ * \brief
+ * Construct a dataset corresponding to the given Bayes net using the provided answer file and data
+ * files from the given directory.
+ * 
+ * \param Answers
+ * Pre-loaded answer file which will become the first node of the dataset.
+ * 
+ * \param szDataDirectory
+ * Directory from which data files are loaded.
+ * 
+ * \param pBayesNet
+ * Bayes nets whose nodes will correspond to files in the dataset.
+ * 
+ * \param fEverything
+ * If true, load all data; if false, load only data for gene pairs with values in the given answer file.
+ * 
+ * \returns
+ * True if dataset was constructed successfully.
+ * 
+ * Creates a dataset with nodes corresponding to the given Bayes net structure; the given answer file
+ * is always inserted as the first (0th) data file, and thus corresponds to the first node in the Bayes
+ * net (generally the class node predicting functional relationships).  Nodes for which a corresponding
+ * data file (i.e. one with the same name followed by an appropriate CDat extension) cannot be located
+ * are marked as hidden.
+ * 
+ * \see
+ * CDataset::Open
+ */
+bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDirectory, const IBayesNet* pBayesNet,
+	bool fEverything ) {
 	CGenome	Genome;
 	CGenes	GenesIn( Genome ), GenesEx( Genome );
 
-	return Open( Answers, szDataDir, pBayesNet, GenesIn, GenesEx, fEverything ); }
+	return Open( Answers, szDataDirectory, pBayesNet, GenesIn, GenesEx, fEverything ); }
 
-bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
-	const IBayesNet* pBayesNet, const CGenes& GenesIn, const CGenes& GenesEx, bool fEverything ) {
+/*!
+ * \brief
+ * Construct a dataset corresponding to the given Bayes net using the provided answer file and data
+ * files from the given directory.
+ * 
+ * \param Answers
+ * Pre-loaded answer file which will become the first node of the dataset.
+ * 
+ * \param szDataDirectory
+ * Directory from which data files are loaded.
+ * 
+ * \param pBayesNet
+ * Bayes nets whose nodes will correspond to files in the dataset.
+ * 
+ * \param GenesInclude
+ * Data is filtered using FilterGenes with CDat::EFilterInclude and the given gene set (unless empty).
+ * 
+ * \param GenesExclude
+ * Data is filtered using FilterGenes with CDat::EFilterExclude and the given gene set (unless empty).
+ * 
+ * \param fEverything
+ * If true, load all data; if false, load only data for gene pairs with values in the given answer file.
+ * 
+ * \returns
+ * True if dataset was constructed successfully.
+ * 
+ * Creates a dataset with nodes corresponding to the given Bayes net structure; the given answer file
+ * is always inserted as the first (0th) data file, and thus corresponds to the first node in the Bayes
+ * net (generally the class node predicting functional relationships).  Nodes for which a corresponding
+ * data file (i.e. one with the same name followed by an appropriate CDat extension) cannot be located
+ * are marked as hidden.
+ * 
+ * \see
+ * CDataset::Open
+ */
+bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDirectory, const IBayesNet* pBayesNet,
+	const CGenes& GenesInclude, const CGenes& GenesExclude, bool fEverything ) {
 	size_t			i;
 	vector<string>	vecstrData, vecstrNodes;
 	set<string>		setstrGenes;
@@ -61,7 +140,7 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 		return false;
 
 	pBayesNet->GetNodes( vecstrNodes );
-	m_iData = 1 + (uint32_t)OpenMax( szDataDir, vecstrNodes, true, vecstrData, fEverything ?
+	m_iData = 1 + (uint32_t)OpenMax( szDataDirectory, vecstrNodes, true, vecstrData, fEverything ?
 		&setstrGenes : NULL );
 	m_veccQuants.resize( m_iData );
 	if( m_aData )
@@ -75,10 +154,10 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 		m_vecstrGenes.resize( Answers.GetGenes( ) );
 		for( i = 0; i < m_vecstrGenes.size( ); ++i )
 			m_vecstrGenes[ i ] = Answers.GetGene( i ); }
-	if( GenesIn.GetGenes( ) )
-		remove_if( m_vecstrGenes.begin( ), m_vecstrGenes.end( ), SIsGene( GenesIn, false ) );
-	if( GenesEx.GetGenes( ) )
-		remove_if( m_vecstrGenes.begin( ), m_vecstrGenes.end( ), SIsGene( GenesEx, true ) );
+	if( GenesInclude.GetGenes( ) )
+		remove_if( m_vecstrGenes.begin( ), m_vecstrGenes.end( ), SIsGene( GenesInclude, false ) );
+	if( GenesExclude.GetGenes( ) )
+		remove_if( m_vecstrGenes.begin( ), m_vecstrGenes.end( ), SIsGene( GenesExclude, true ) );
 
 	if( !CDatasetCompactImpl::Open( Answers, 0 ) )
 		return false;
@@ -101,14 +180,45 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDir,
 
 	return true; }
 
-bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecstrData,
+/*!
+ * \brief
+ * Construct a dataset corresponding to the given Bayes net using the provided answer file and data files.
+ * 
+ * \param Answers
+ * Pre-loaded answer file which will become the first node of the dataset.
+ * 
+ * \param vecstrDataFiles
+ * Vector of file paths to load.
+ * 
+ * \param fEverything
+ * If true, load all data; if false, load only data for gene pairs with values in the given answer file.
+ * 
+ * \param fMemmap
+ * If true, memory map data files while they are being discretized rather than loading them into memory.
+ * 
+ * \param iSkip
+ * If any of the given files is a PCL, the number of columns to skip between the ID and experiments.
+ * 
+ * \param fZScore
+ * If true and any of the given files is a PCL, z-score similarity measures after pairwise calculation.
+ * 
+ * \returns
+ * True if dataset was constructed successfully.
+ * 
+ * Creates a dataset with nodes corresponding to the given answer and data files.  The given data file
+ * names are each loaded using CDat::Open.  The answer file is always inserted as the first (0th) data file.
+ * 
+ * \remarks
+ * The same number of skip columns and z-score setting will be used for all PCLs.
+ */
+bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecstrDataFiles,
 	bool fEverything, bool fMemmap, size_t iSkip, bool fZScore ) {
 	size_t	i, j, k;
 
 	if( Answers.GetGenes( ) && Answers.IsContinuous( ) )
 		return false;
 
-	m_veciMapping.resize( m_iData = 1 + vecstrData.size( ) );
+	m_veciMapping.resize( m_iData = 1 + vecstrDataFiles.size( ) );
 	for( i = 0; i < m_veciMapping.size( ); ++i )
 		m_veciMapping[ i ] = i;
 	m_veccQuants.resize( m_iData );
@@ -121,10 +231,10 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecs
 
 		for( i = 0; i < Answers.GetGenes( ); ++i )
 			setstrGenes.insert( Answers.GetGene( i ) );
-		for( i = 0; i < vecstrData.size( ); ++i ) {
+		for( i = 0; i < vecstrDataFiles.size( ); ++i ) {
 			CDat	Dat;
 
-			if( !Dat.OpenGenes( vecstrData[ i ].c_str( ), iSkip ) )
+			if( !Dat.OpenGenes( vecstrDataFiles[ i ].c_str( ), iSkip ) )
 					return false;
 			for( j = 0; j < Dat.GetGenes( ); ++j )
 				setstrGenes.insert( Dat.GetGene( j ) ); }
@@ -137,10 +247,10 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const vector<string>& vecs
 
 	if( !CDatasetCompactImpl::Open( Answers, 0 ) )
 		return false;
-	for( i = 0; i < vecstrData.size( ); ++i ) {
+	for( i = 0; i < vecstrDataFiles.size( ); ++i ) {
 		CDataPair	Datum;
 
-		if( !( Datum.Open( vecstrData[ i ].c_str( ), false, fMemmap, iSkip, fZScore ) &&
+		if( !( Datum.Open( vecstrDataFiles[ i ].c_str( ), false, fMemmap, iSkip, fZScore ) &&
 			CDatasetCompactImpl::Open( Datum, i + 1 ) ) )
 			return false; }
 
@@ -174,20 +284,6 @@ bool CDatasetCompactImpl::Open( const CDataPair& Datum, size_t iExp ) {
 				if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
 					!CMeta::IsNaN( d = Datum.Get( iOne, iTwo ) ) )
 					Target.Set( i, j, (unsigned char)( Datum.Quantize( d ) + 1 ) );
-
-	return true; }
-
-bool CDatasetCompact::Open( const char* szDataDir, const IBayesNet* pBayesNet ) {
-
-	return CDatasetCompactImpl::Open( szDataDir, pBayesNet ); }
-
-bool CDatasetCompact::Open( const char* szDataDir, const IBayesNet* pBayesNet,
-	const CGenes& GenesIn, const CGenes& GenesEx ) {
-
-	if( !CDatasetCompactImpl::Open( szDataDir, pBayesNet, &GenesIn, &GenesEx ) )
-		return false;
-	CDataImpl::FilterGenes( this, GenesIn, CDat::EFilterInclude );
-	CDataImpl::FilterGenes( this, GenesEx, CDat::EFilterExclude );
 
 	return true; }
 
@@ -228,7 +324,26 @@ bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNe
 
 	return true; }
 
-bool CDatasetCompact::FilterGenes( const char* szGenes, CDat::EFilter eFilt ) {
+/*!
+ * \brief
+ * Remove values from the dataset based on the given gene file and filter type.
+ * 
+ * \param szGenes
+ * File from which gene names are loaded, one per line.
+ * 
+ * \param eFilter
+ * Way in which to use the given genes to remove values.
+ * 
+ * Remove values and genes (by removing all incident edges) from the dataset based on one of several
+ * algorithms.  For details, see CDat::EFilter.
+ * 
+ * \remarks
+ * Generally implemented using Remove; clears the filtered data.
+ * 
+ * \see
+ * CDat::FilterGenes
+ */
+bool CDatasetCompact::FilterGenes( const char* szGenes, CDat::EFilter eFilter ) {
 	ifstream	ifsm;
 	CGenome		Genome;
 	CGenes		Genes( Genome );
@@ -236,14 +351,17 @@ bool CDatasetCompact::FilterGenes( const char* szGenes, CDat::EFilter eFilt ) {
 	ifsm.open( szGenes );
 	if( !( ifsm.is_open( ) && Genes.Open( ifsm ) ) )
 		return false;
-	FilterGenes( Genes, eFilt );
+	FilterGenes( Genes, eFilter );
 
 	return true; }
 
-void CDatasetCompact::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
-
-	CDataImpl::FilterGenes( this, Genes, eFilt ); }
-
+/*!
+ * \brief
+ * Removes all data for gene pairs lacking a value in the answer (0th) data file.
+ * 
+ * \see
+ * Remove
+ */
 void CDatasetCompact::FilterAnswers( ) {
 	size_t	i, j;
 
@@ -251,14 +369,6 @@ void CDatasetCompact::FilterAnswers( ) {
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( IsExample( i, j ) && ( GetDiscrete( i, j, 0 ) == -1 ) )
 				Remove( i, j ); }
-
-bool CDatasetCompact::IsHidden( size_t iNode ) const {
-
-	return CDataImpl::IsHidden( iNode ); }
-
-size_t CDatasetCompact::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
-
-	return CDatasetCompactImpl::GetDiscrete( iX, iY, iNode ); }
 
 size_t CDatasetCompactImpl::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
 	size_t	iMap;
@@ -268,22 +378,6 @@ size_t CDatasetCompactImpl::GetDiscrete( size_t iX, size_t iY, size_t iNode ) co
 
 	return ( m_aData[ iMap ].Get( iX, iY ) - 1 ); }
 
-float CDatasetCompact::GetContinuous( size_t iX, size_t iY, size_t iNode ) const {
-
-	return CMeta::GetNaN( ); }
-
-const string& CDatasetCompact::GetGene( size_t iGene ) const {
-
-	return CDataImpl::GetGene( iGene ); }
-
-size_t CDatasetCompact::GetGenes( ) const {
-
-	return CDataImpl::GetGenes( ); }
-
-bool CDatasetCompact::IsExample( size_t iX, size_t iY ) const {
-
-	return CDatasetCompactImpl::IsExample( iX, iY ); }
-
 bool CDatasetCompactImpl::IsExample( size_t iX, size_t iY ) const {
 	size_t	i;
 
@@ -292,26 +386,6 @@ bool CDatasetCompactImpl::IsExample( size_t iX, size_t iY ) const {
 			return true;
 
 	return false; }
-
-const vector<string>& CDatasetCompact::GetGeneNames( ) const {
-
-	return CDataImpl::GetGeneNames( ); }
-
-size_t CDatasetCompact::GetExperiments( ) const {
-
-	return CDataImpl::GetExperiments( ); }
-
-size_t CDatasetCompact::GetGene( const string& strGene ) const {
-
-	return CDataImpl::GetGene( strGene ); }
-
-size_t CDatasetCompact::GetBins( size_t iExp ) const {
-
-	return CDataImpl::GetBins( iExp ); }
-
-void CDatasetCompact::Remove( size_t iX, size_t iY ) {
-
-	CDatasetCompactImpl::Remove( iX, iY ); }
 
 void CDatasetCompactImpl::Remove( size_t iX, size_t iY ) {
 	size_t	i;
@@ -336,6 +410,19 @@ bool CDatasetCompactImpl::Open( const unsigned char* pbData ) {
 
 	return true; }
 
+/*!
+ * \brief
+ * Load a binary DAD dataset from the given binary stream.
+ * 
+ * \param istm
+ * Stream from which dataset is loaded.
+ * 
+ * \returns
+ * True if dataset was loaded successfully.
+ * 
+ * \remarks
+ * Should be generated by Save; only used with binary DADs.
+ */
 bool CDatasetCompact::Open( istream& istm ) {
 	size_t	i;
 
@@ -351,10 +438,6 @@ bool CDatasetCompact::Open( istream& istm ) {
 			return false;
 
 	return true; }
-
-void CDatasetCompact::Save( ostream& ostm, bool fBinary ) const {
-
-	fBinary ? SaveBinary( ostm ) : SaveText( ostm ); }
 
 void CDatasetCompactImpl::SaveBinary( ostream& ostm ) const {
 	size_t	i;
@@ -379,37 +462,48 @@ void CDatasetCompactImpl::SaveText( ostream& ostm ) const {
 						ostm << iVal; }
 				ostm << endl; } }
 
-CDatasetCompactMap::CDatasetCompactMap( ) : m_pbData(NULL), m_hndlMap(0) { }
-
-CDatasetCompactMap::~CDatasetCompactMap( ) {
-
-	CMeta::Unmap( m_pbData, m_hndlMap, m_iData ); }
-
-bool CDatasetCompactMap::Open( const char* szFile ) {
-	size_t	i, j;
-
-	CMeta::MapRead( m_pbData, m_hndlMap, m_iData, szFile );
-	if( !CDatasetCompactImpl::Open( m_pbData ) ) {
-		CMeta::Unmap( m_pbData, m_hndlMap, m_iData );
-		return false; }
-
-	m_Mask.Initialize( GetGenes( ) );
-	for( i = 0; i < m_Mask.GetSize( ); ++i )
-		for( j = ( i + 1 ); j < m_Mask.GetSize( ); ++j )
-			m_Mask.Set( i, j, CDatasetCompact::IsExample( i, j ) );
-	return true; }
-
-void CDatasetCompactMap::Remove( size_t iX, size_t iY ) {
-
-	m_Mask.Set( iX, iY, false ); }
-
-bool CDatasetCompactMap::IsExample( size_t iX, size_t iY ) const {
-
-	return m_Mask.Get( iX, iY ); }
-
-bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const CDataPair& Answers,
-	const vector<string>& vecstrPCLs, size_t iSkip, const IMeasure* pMeasure, const vector<float>& vecdQuants,
-	const IBayesNet* pBayesNet ) {
+/*!
+ * \brief
+ * Constructs a dataset corresponding to the given Bayes net using the provided answer file and data matrices
+ * generated from the given PCLs and similarity measure.
+ * 
+ * \param GenesInclude
+ * Data is filtered using FilterGenes with CDat::EFilterInclude and the given gene set (unless empty).
+ * 
+ * \param GenesExclude
+ * Data is filtered using FilterGenes with CDat::EFilterExclude and the given gene set (unless empty).
+ * 
+ * \param Answers
+ * Pre-loaded answer file which will become the first node of the dataset.
+ * 
+ * \param vecstrPCLs
+ * Vector of PCL file paths from which pairwise scores are calculated.
+ * 
+ * \param iSkip
+ * The number of columns to skip between the ID and experiments in each PCL.
+ * 
+ * \param pMeasure
+ * Similarity measure used to calculate pairwise scores between genes.
+ * 
+ * \param vecdBinEdges
+ * Vector of values corresponding to discretization bin edges (the last of which is ignored) for all PCLs.
+ * 
+ * \returns
+ * True if the dataset was constructed successfully.
+ * 
+ * Constructs a dataset by loading each PCL, converting it to pairwise scores using the given similarity
+ * measure, and discretizing these scores using the given bin edges.  The given answer file and the
+ * resulting matrices are collected together in order in the dataset.
+ * 
+ * \remarks
+ * The same number of skip columns and discretization bin edges will be used for all PCLs.
+ * 
+ * \see
+ * CPCL
+ */
+bool CDatasetCompact::Open( const CGenes& GenesInclude, const CGenes& GenesExclude, const CDataPair& Answers,
+	const vector<string>& vecstrPCLs, size_t iSkip, const IMeasure* pMeasure,
+	const vector<float>& vecdBinEdges ) {
 	size_t					i, j, iPCL;
 	set<string>				setstrGenes;
 	set<string>::iterator	iterGene;
@@ -423,7 +517,7 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 	m_veccQuants.resize( m_iData );
 	m_veccQuants[ 0 ] = Answers.GetValues( );
 	for( i = 1; i < m_veccQuants.size( ); ++i )
-		m_veccQuants[ i ] = (unsigned char)vecdQuants.size( );
+		m_veccQuants[ i ] = (unsigned char)vecdBinEdges.size( );
 
 	for( i = 0; i < Answers.GetGenes( ); ++i )
 		setstrGenes.insert( Answers.GetGene( i ) );
@@ -435,15 +529,15 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 			g_CatSleipnir.error( "CDatasetCompact::Open( %d ) could not open: %s", iSkip,
 				vecstrPCLs[ iPCL ].c_str( ) );
 			return false; } }
-	if( GenesIn.GetGenes( ) ) {
+	if( GenesInclude.GetGenes( ) ) {
 		for( iterGene = setstrGenes.begin( ); iterGene != setstrGenes.end( ); ++iterGene )
-			if( !GenesIn.IsGene( *iterGene ) )
+			if( !GenesInclude.IsGene( *iterGene ) )
 				setstrGenes.erase( iterGene );
-		for( i = 0; i < GenesIn.GetGenes( ); ++i )
-			setstrGenes.insert( GenesIn.GetGene( i ).GetName( ) ); }
-	if( GenesEx.GetGenes( ) )
-		for( i = 0; i < GenesEx.GetGenes( ); ++i )
-			setstrGenes.erase( GenesEx.GetGene( i ).GetName( ) );
+		for( i = 0; i < GenesInclude.GetGenes( ); ++i )
+			setstrGenes.insert( GenesInclude.GetGene( i ).GetName( ) ); }
+	if( GenesExclude.GetGenes( ) )
+		for( i = 0; i < GenesExclude.GetGenes( ); ++i )
+			setstrGenes.erase( GenesExclude.GetGene( i ).GetName( ) );
 	m_vecstrGenes.resize( setstrGenes.size( ) );
 	copy( setstrGenes.begin( ), setstrGenes.end( ), m_vecstrGenes.begin( ) );
 
@@ -472,14 +566,14 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 			PCL.RankTransform( );
 
 		veciGenes.resize( PCL.GetGenes( ) );
-		if( GenesIn.GetGenes( ) || GenesEx.GetGenes( ) )
+		if( GenesInclude.GetGenes( ) || GenesExclude.GetGenes( ) )
 			for( i = 0; i < PCL.GetGenes( ); ++i ) {
 				const string&	strGene	= PCL.GetGene( i );
 
-				if( GenesEx.GetGenes( ) && GenesEx.IsGene( strGene ) )
+				if( GenesExclude.GetGenes( ) && GenesExclude.IsGene( strGene ) )
 					veciGenes[ i ] = -1;
-				else if( GenesIn.GetGenes( ) )
-					veciGenes[ i ] = (unsigned int)( GenesIn.IsGene( strGene ) ? iGenes++ : -1 );
+				else if( GenesInclude.GetGenes( ) )
+					veciGenes[ i ] = (unsigned int)( GenesInclude.IsGene( strGene ) ? iGenes++ : -1 );
 				else
 					veciGenes[ i ] = (unsigned int)iGenes++;
 				if( veciGenes[ i ] != -1 )
@@ -504,12 +598,22 @@ bool CDatasetCompact::Open( const CGenes& GenesIn, const CGenes& GenesEx, const 
 
 		Datum.Open( vecstrGenes, Dist );
 		Datum.Normalize( false );
-		Datum.SetQuants( vecdQuants );
+		Datum.SetQuants( vecdBinEdges );
 		if( !CDatasetCompactImpl::Open( Datum, iPCL + 1 ) )
 			return false; }
 
 	return true; }
 
+/*!
+ * \brief
+ * Randomizes the contents all except the answer (0th) data file.
+ * 
+ * \remarks
+ * The first (0th) data node in the dataset is assumed to be an answer file and is left unchanged.
+ * 
+ * \see
+ * CCompactMatrix::Randomize
+ */
 void CDatasetCompact::Randomize( ) {
 	size_t	i;
 
@@ -518,5 +622,35 @@ void CDatasetCompact::Randomize( ) {
 
 	for( i = 1; i < m_iData; ++i )
 		m_aData[ i ].Randomize( ); }
+
+CDatasetCompactMap::CDatasetCompactMap( ) : m_pbData(NULL), m_hndlMap(0) { }
+
+CDatasetCompactMap::~CDatasetCompactMap( ) {
+
+	CMeta::Unmap( m_pbData, m_hndlMap, m_iData ); }
+
+/*!
+ * \brief
+ * Opens a binary DAD file using memory mapping and unmasks it.
+ * 
+ * \param szFile
+ * File from which dataset is opened.
+ * 
+ * \returns
+ * True if dataset was opened successfully.
+ */
+bool CDatasetCompactMap::Open( const char* szFile ) {
+	size_t	i, j;
+
+	CMeta::MapRead( m_pbData, m_hndlMap, m_iData, szFile );
+	if( !CDatasetCompactImpl::Open( m_pbData ) ) {
+		CMeta::Unmap( m_pbData, m_hndlMap, m_iData );
+		return false; }
+
+	m_Mask.Initialize( GetGenes( ) );
+	for( i = 0; i < m_Mask.GetSize( ); ++i )
+		for( j = ( i + 1 ); j < m_Mask.GetSize( ); ++j )
+			m_Mask.Set( i, j, CDatasetCompact::IsExample( i, j ) );
+	return true; }
 
 }

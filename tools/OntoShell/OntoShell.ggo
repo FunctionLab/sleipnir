@@ -4,7 +4,6 @@ purpose	"Ontology exploration utility"
 
 defgroup "mode"
 groupoption	"exec"		x	"Command to execute"	string	group="mode"
-groupoption	"server"	s	"Server mode configuration"	string	typestr="filename"	group="mode"
 section "Optional"
 option	"kegg"		k	"KEGG ontology"	string	typestr="filename"
 option	"kegg_org"	K	"KEGG organism"	string	default="SCE"

@@ -5,6 +5,16 @@
 
 namespace Sleipnir {
 
+/*!
+ * \brief
+ * Create a new gene with the given primary identifier.
+ * 
+ * \param strID
+ * Unique primary identifier of the new gene.
+ * 
+ * \see
+ * GetName
+ */
 CGene::CGene( const string& strName ) : CGeneImpl(strName) { }
 
 CGeneImpl::CGeneImpl( const string& strName ) : m_strName(strName),
@@ -42,7 +52,31 @@ CGeneImpl& CGeneImpl::operator=( const CGeneImpl& Gene ) {
 
 	return *this; }
 
-bool CGene::AddAnnotation( const IOntology* pOntology, size_t iNode ) {
+/*!
+ * \brief
+ * Adds an annotation in the gene object to a specific functional ontology term.
+ * 
+ * \param pOntology
+ * Ontology into which the gene should be annotated.
+ * 
+ * \param iTerm
+ * Ontology term to which the gene should be annotated.
+ * 
+ * \returns
+ * True if the annotation was added successfully.
+ * 
+ * Adds an annotation directly to the current gene based on the given ontology and functional term.
+ * This is usually called from from the appropriate IOntology implementation during parsing and is used
+ * to provide a local cache of direct annotations to the gene object.
+ * 
+ * \remarks
+ * This does not inform pOntology of the annotation, so if it is not already reflected in that ontology,
+ * the annotation will only be visible from the CGene object, not from the IOntology.
+ * 
+ * \see
+ * IsAnnotated
+ */
+bool CGene::AddAnnotation( const IOntology* pOntology, size_t iTerm ) {
 	size_t	i, iOnto;
 
 	for( iOnto = 0; iOnto < m_iOntologies; ++iOnto )
@@ -52,9 +86,9 @@ bool CGene::AddAnnotation( const IOntology* pOntology, size_t iNode ) {
 		IncrementOntologies( pOntology );
 
 	for( i = 0; i < m_apveciAnnotations[ iOnto ]->size( ); ++i )
-		if( (*m_apveciAnnotations[ iOnto ])[ i ] == iNode )
+		if( (*m_apveciAnnotations[ iOnto ])[ i ] == iTerm )
 			return false;
-	m_apveciAnnotations[ iOnto ]->push_back( iNode );
+	m_apveciAnnotations[ iOnto ]->push_back( iTerm );
 	return true; }
 
 void CGeneImpl::IncrementOntologies( const IOntology* pOntology ) {
@@ -76,43 +110,70 @@ void CGeneImpl::IncrementOntologies( const IOntology* pOntology ) {
 	apveciAnnotations[ m_iOntologies++ ] = new vector<size_t>;
 	m_apveciAnnotations = apveciAnnotations; }
 
-bool CGene::IsAnnotated( const IOntology* pOnto ) const {
+/*!
+ * \brief
+ * Return true if the gene is annotated within the given ontology.
+ * 
+ * \param pOntology
+ * Ontology to test for gene annotation.
+ * 
+ * \returns
+ * True if gene is annotated within the given ontology.
+ */
+bool CGene::IsAnnotated( const IOntology* pOntology ) const {
 	size_t	i;
 
 	for( i = 0; i < m_iOntologies; ++i )
-		if( pOnto == m_apOntologies[ i ] )
+		if( pOntology == m_apOntologies[ i ] )
 			return true;
 
 	return false; }
 
-bool CGene::IsAnnotated( const IOntology* pOnto, size_t iNode ) const {
+/*!
+ * \brief
+ * Return true if the gene is directly annotated to the given ontology term.
+ * 
+ * \param pOntology
+ * Ontology to test for gene annotation.
+ * 
+ * \param iTerm
+ * Term to test for direct gene annotation.
+ * 
+ * \returns
+ * True if gene is directly annotated to the given ontology term.
+ * 
+ * \remarks
+ * Does not examine the ontology or term descendants directly, so will only return true if the gene
+ * has been directly annotated to the given term using AddAnnotation.
+ */
+bool CGene::IsAnnotated( const IOntology* pOntology, size_t iTerm ) const {
 	size_t	i, j;
 
 	for( i = 0; i < m_iOntologies; ++i )
-		if( pOnto == m_apOntologies[ i ] ) {
+		if( pOntology == m_apOntologies[ i ] ) {
 			for( j = 0; j < m_apveciAnnotations[ i ]->size( ); ++j )
-				if( iNode == (*m_apveciAnnotations[ i ])[ j ] )
+				if( iTerm == (*m_apveciAnnotations[ i ])[ j ] )
 					return true;
 			break; }
 
 	return false; }
 
-size_t CGene::GetOntologies( ) const {
-
-	return m_iOntologies; }
-
-const IOntology* CGene::GetOntology( size_t iOnto ) const {
-
-	return m_apOntologies[ iOnto ]; }
-
-size_t CGene::GetAnnotations( size_t iOnto ) const {
-
-	return m_apveciAnnotations[ iOnto ]->size( ); }
-
-size_t CGene::GetAnnotation( size_t iOnto, size_t iAnno ) const {
-
-	return (*m_apveciAnnotations[ iOnto ])[ iAnno ]; }
-
+/*!
+ * \brief
+ * Appends the given synonym to the gene's synonym list.
+ * 
+ * \param strName
+ * Synonym to be added.
+ * 
+ * \returns
+ * True if the synonym was successfully added.
+ * 
+ * \remarks
+ * Addition will fail if the synonym is the same as the gene's name or an existing synonym.
+ * 
+ * \see
+ * GetSynonym
+ */
 bool CGene::AddSynonym( const string& strSyn ) {
 	size_t	i;
 	string*	astrSynonyms;
@@ -136,42 +197,6 @@ bool CGene::AddSynonym( const string& strSyn ) {
 	m_astrSynonyms = astrSynonyms;
 	return true; }
 
-const string& CGene::GetName( ) const {
-
-	return m_strName; }
-
-size_t CGene::GetSynonyms( ) const {
-
-	return m_iSynonyms; }
-
-const string& CGene::GetSynonym( size_t iSyn ) const {
-
-	return m_astrSynonyms[ iSyn ]; }
-
-void CGene::SetGloss( const string& strGloss ) {
-
-	m_strGloss = strGloss; }
-
-const string& CGene::GetGloss( ) const {
-
-	return m_strGloss; }
-
-void CGene::SetDubious( bool fDubious ) {
-
-	m_fDubious = fDubious; }
-
-bool CGene::GetDubious( ) const {
-
-	return m_fDubious; }
-
-void CGene::SetRNA( bool fRNA ) {
-
-	m_fRNA = fRNA; }
-
-bool CGene::GetRNA( ) const {
-
-	return m_fRNA; }
-
 const char	CGenomeImpl::c_szDubious[]	= "Dubious";
 const char	CGenomeImpl::c_szORF[]		= "ORF";
 const char*	CGenomeImpl::c_aszRNA[]		= { "ncRNA", "rRNA", "snRNA", "snoRNA", "tRNA",
@@ -183,14 +208,27 @@ CGenomeImpl::~CGenomeImpl( ) {
 	for( i = 0; i < m_vecpGenes.size( ); ++i )
 		delete m_vecpGenes[ i ]; }
 
-bool CGenome::Open( istream& istm ) {
-	static const size_t	c_iBuf	= 1024;
+/*!
+ * \brief
+ * Construct a new genome by loading the SGD features file.
+ * 
+ * \param istmFeatures
+ * Stream containing the SGD features information.
+ * 
+ * \returns
+ * True if the genome was loaded successfully.
+ * 
+ * Loads a (presumably yeast) genome from a file formatted as per the SGD features file (SGD_features.tab).
+ * This includes gene IDs, synonyms, glosses, and RNA and dubious tags.
+ */
+bool CGenome::Open( istream& istmFeatures ) {
+	static const size_t	c_iBuf	= 4096;
 	char			szBuf[ c_iBuf ];
 	vector<string>	vecstrLine, vecstrNames;
 	size_t			i;
 
-	while( istm.peek( ) != EOF ) {
-		istm.getline( szBuf, c_iBuf - 1 );
+	while( istmFeatures.peek( ) != EOF ) {
+		istmFeatures.getline( szBuf, c_iBuf - 1 );
 		vecstrLine.clear( );
 		CMeta::Tokenize( szBuf, vecstrLine );
 		if( vecstrLine.size( ) < 16 )
@@ -226,6 +264,20 @@ bool CGenome::Open( istream& istm ) {
 
 	return true; }
 
+/*!
+ * \brief
+ * Constructs a new genome containing the given gene IDs.
+ * 
+ * \param vecstrGenes
+ * Vector of gene IDs to add to the new genome.
+ * 
+ * \returns
+ * True if the genome was created successfully.
+ * 
+ * \remarks
+ * Genes in the new genome will have no information beyond the provided primary IDs, which should (as
+ * usual) be unique.
+ */
 bool CGenome::Open( const vector<string>& vecstrGenes ) {
 	size_t	i;
 
@@ -234,28 +286,59 @@ bool CGenome::Open( const vector<string>& vecstrGenes ) {
 
 	return true; }
 
-CGene& CGenome::AddGene( const string& strName ) {
+/*!
+ * \brief
+ * Adds a new gene with the given primary ID to the genome.
+ * 
+ * \param strID
+ * Gene ID to be added to the genome.
+ * 
+ * \returns
+ * A reference to the newly added gene, or to an existing gene with the given name.
+ * 
+ * Given a gene name, AddGene will first test to see if any gene in the genome has that ID or synonym; if so,
+ * a reference to the existing gene is returned.  Otherwise, an empty gene with the given primary ID is
+ * created, and a reference to this new gene is returned.
+ * 
+ * \remarks
+ * A newly created gene will have no information beyond the provided primary ID.
+ * 
+ * \see
+ * FindGene
+ */
+CGene& CGenome::AddGene( const string& strID ) {
 	TMapStrI::const_iterator	iterGene;
 	CGene*						pGene;
 
-	if( ( iterGene = m_mapGenes.find( strName ) ) != m_mapGenes.end( ) )
+	if( ( iterGene = m_mapGenes.find( strID ) ) != m_mapGenes.end( ) )
 		return GetGene( iterGene->second );
 
-	pGene = new CGene( strName );
+	pGene = new CGene( strID );
 	m_vecpGenes.push_back( pGene );
-	m_mapGenes[ strName ] = m_vecpGenes.size( ) - 1;
+	m_mapGenes[ strID ] = m_vecpGenes.size( ) - 1;
 	return *pGene; }
 
-CGene& CGenome::GetGene( size_t iGene ) const {
-
-	return *m_vecpGenes[ iGene ]; }
-
-size_t CGenome::GetGene( const string& strGene ) const {
-	TMapStrI::const_iterator	iterGene;
-
-	return ( ( ( iterGene = m_mapGenes.find( strGene ) ) == m_mapGenes.end( ) ) ? -1 :
-		iterGene->second ); }
-
+/*!
+ * \brief
+ * Return the index of a gene within the genome, or -1 if it does not exist.
+ * 
+ * \param strGene
+ * Name of gene to be retrieved from the genome.
+ * 
+ * \returns
+ * Index of the requested gene, or -1 if it does not exist.
+ * 
+ * Search the genome's gene list for a gene with the given name, primary or synonymous, and return its
+ * index if found.
+ * 
+ * \remarks
+ * Both the genome's internal name map and the synonyms of every gene are explicitly searched; the latter
+ * can be very slow, and the internal map will not always contain synonyms (depending on how the genome
+ * was constructed).
+ * 
+ * \see
+ * AddGene
+ */
 size_t CGenome::FindGene( const string& strGene ) const {
 	size_t	i, j, iRet;
 
@@ -269,10 +352,13 @@ size_t CGenome::FindGene( const string& strGene ) const {
 
 	return -1; }
 
-size_t CGenome::GetGenes( ) const {
-
-	return m_vecpGenes.size( ); }
-
+/*!
+ * \brief
+ * Return a vector of all primary gene IDs in the genome.
+ * 
+ * \returns
+ * Vector of all primary gene IDs in the genome.
+ */
 vector<string> CGenome::GetGeneNames( ) const {
 	vector<string>	vecstrRet;
 	size_t			i;
@@ -283,29 +369,92 @@ vector<string> CGenome::GetGeneNames( ) const {
 
 	return vecstrRet; }
 
-size_t CGenome::CountGenes( const IOntology* pOnto ) const {
+/*!
+ * \brief
+ * Returns the number of genes in the genome with annotations in the given ontology.
+ * 
+ * \param pOntology
+ * Ontology to be scanned for annotated genes.
+ * 
+ * \returns
+ * Number of genes in the genome with annotations in the given ontology.
+ * 
+ * \see
+ * CGene::GetOntology
+ */
+size_t CGenome::CountGenes( const IOntology* pOntology ) const {
 	size_t	i, j, iRet;
 
 	for( iRet = i = 0; i < m_vecpGenes.size( ); ++i )
 		for( j = 0; j < m_vecpGenes[ i ]->GetOntologies( ); ++j )
-			if( pOnto == m_vecpGenes[ i ]->GetOntology( j ) ) {
+			if( pOntology == m_vecpGenes[ i ]->GetOntology( j ) ) {
 				iRet++;
 				break; }
 
 	return iRet; }
 
+/*!
+ * \brief
+ * Explicitly add a gene synonym to the gene and to the genome's name map.
+ * 
+ * \param Gene
+ * Gene to which synonym is to be added.
+ * 
+ * \param strName
+ * Synonym to be added to the given gene.
+ * 
+ * \returns
+ * True if the synonym was added successfully.
+ * 
+ * \remarks
+ * Addition will fail if the synonym is the given gene's primary ID or an existing synonym.
+ * 
+ * \see
+ * CGene::AddSynonym
+ */
 bool CGenome::AddSynonym( CGene& Gene, const string& strName ) {
 
-	if( strName == Gene.GetName( ) )
-		return false;
+	if( ( strName != Gene.GetName( ) ) && ( Gene.AddSynonym( strName ) ) ) {
+		m_mapGenes[ strName ] = m_mapGenes[ Gene.GetName( ) ];
+		return true; }
 
-	m_mapGenes[ strName ] = m_mapGenes[ Gene.GetName( ) ];
-	return Gene.AddSynonym( strName ); }
+	return false; }
 
+/*!
+ * \brief
+ * Construct a new gene set containing genomes drawn from the given underlying genome.
+ * 
+ * \param Genome
+ * Genome containing all genes which might become members of this gene set.
+ */
 CGenes::CGenes( CGenome& Genome ) : CGenesImpl( Genome ) { }
 
 CGenesImpl::CGenesImpl( CGenome& Genome ) : m_Genome(Genome) { }
 
+/*!
+ * \brief
+ * Construct a new gene set by loading genes from the given text stream, one per line.
+ * 
+ * \param istm
+ * Stream containing gene IDs to load, one per line.
+ * 
+ * \param fCreate
+ * If true, add unknown genes to the underlying genome; otherwise, unknown gene IDs are ignored.
+ * 
+ * \returns
+ * True if gene set was constructed successfully.
+ * 
+ * Loads a text file of the form:
+ * <pre>GENE1
+GENE2
+GENE3</pre>
+ * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
+ * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
+ * created from the loaded IDs.  If fCreate is false, unrecognized genes are skipped with a warning.
+ * 
+ * \see
+ * CGenome::AddGene
+ */
 bool CGenes::Open( istream& istm, bool fCreate ) {
 	static const size_t	c_iBuffer	= 1024;
 	char	szBuf[ c_iBuffer ];
@@ -338,22 +487,60 @@ bool CGenes::Open( istream& istm, bool fCreate ) {
 
 	return true; }
 
-bool CGenes::Open( const char* szFile, bool fCreate ) {
-	ifstream	ifsm;
-
-	ifsm.open( szFile );
-	return ( ifsm.is_open( ) && Open( ifsm, fCreate ) ); }
-
-size_t CGenes::CountAnnotations( const IOntology* pOnto, size_t iNode, bool fKids, const CGenes* pBkg ) const {
+/*!
+ * \brief
+ * Return the number of genes in the set annotated at or, optionally, below the given ontology term.
+ * 
+ * \param pOntology
+ * Ontology in which annotations are counted.
+ * 
+ * \param iTerm
+ * Ontology term at or below which annotations are counted.
+ * 
+ * \param fRecursive
+ * If true, count annotations at or below the given term; otherwise, count only direct annotations to the
+ * term.
+ * 
+ * \param pBackground
+ * If non-null, count only annotations for genes also contained in the given background set.
+ * 
+ * \returns
+ * Number of genes in the gene set annotated at or below the given ontology term.
+ * 
+ * \see
+ * IOntology::IsAnnotated
+ */
+size_t CGenes::CountAnnotations( const IOntology* pOntology, size_t iTerm, bool fRecursive,
+	const CGenes* pBackground ) const {
 	size_t	i, iRet;
 
 	for( iRet = i = 0; i < m_vecpGenes.size( ); ++i )
-		if( ( !pBkg || pBkg->IsGene( m_vecpGenes[ i ]->GetName( ) ) ) &&
-			pOnto->IsAnnotated( iNode, *m_vecpGenes[ i ], fKids ) )
+		if( ( !pBackground || pBackground->IsGene( m_vecpGenes[ i ]->GetName( ) ) ) &&
+			pOntology->IsAnnotated( iTerm, *m_vecpGenes[ i ], fRecursive ) )
 			iRet++;
 
 	return iRet; }
 
+/*!
+ * \brief
+ * Construct a new gene set containing the given gene IDs.
+ * 
+ * \param vecstrGenes
+ * Primary identifiers of genes in the new gene set.
+ * 
+ * \param fCreate
+ * If true, add unknown genes to the underlying genome; otherwise, unknown gene IDs are ignored.
+ * 
+ * \returns
+ * True if gene set was constructed successfully.
+ * 
+ * If the given gene identifiers are found in the gene set's underlying genome, CGene objects are loaded
+ * from there.  Otherwise, if fCreate is true, new genes are created from the loaded IDs.  If fCreate is
+ * false, unrecognized genes are skipped with a warning.
+ * 
+ * \see
+ * CGenome::AddGene
+ */
 bool CGenes::Open( const vector<string>& vecstrGenes, bool fCreate ) {
 	size_t	i, iGene;
 	CGene*	pGene;
@@ -370,19 +557,37 @@ bool CGenes::Open( const vector<string>& vecstrGenes, bool fCreate ) {
 
 	return true; }
 
-void CGenes::Filter( const CGenes& Genes ) {
+/*!
+ * \brief
+ * Remove the given genes from the gene set.
+ * 
+ * \param GenesExclude
+ * Genes to be removed from the current gene set.
+ * 
+ * \remarks
+ * Comparisons are performed using pointers to CGene objects, so both gene sets should use the same
+ * underlying CGenome for proper behavior.
+ */
+void CGenes::Filter( const CGenes& GenesExclude ) {
 	size_t	i, j, iSize;
 
 	iSize = m_vecpGenes.size( );
-	for( i = 0; i < Genes.GetGenes( ); ++i )
+	for( i = 0; i < GenesExclude.GetGenes( ); ++i )
 		for( j = 0; j < iSize; ++j )
-			if( m_vecpGenes[ j ] == &Genes.GetGene( i ) ) {
+			if( m_vecpGenes[ j ] == &GenesExclude.GetGene( i ) ) {
 				m_mapGenes.erase( m_vecpGenes[ j ]->GetName( ) );
 				m_vecpGenes[ j ] = m_vecpGenes[ m_vecpGenes.size( ) - 1 ];
 				iSize--;
 				break; }
 	m_vecpGenes.resize( iSize ); }
 
+/*!
+ * \brief
+ * Return the primary identifiers of all genes in the set.
+ * 
+ * \returns
+ * Vector of primary identifiers of all genes in the set.
+ */
 vector<string> CGenes::GetGeneNames( ) const {
 	vector<string>	vecstrRet;
 	size_t			i;

@@ -220,7 +220,7 @@ void* learn( void* pData ) {
 	psData = (SLearn*)pData;
 	if( psData->m_pNegatives->GetGenes( ) ) {
 		DataNegatives.Attach( psData->m_pData, *psData->m_pNegatives, CDat::EFilterEdge, psData->m_pAnswers );
-		DataFilter.Attach( &DataNegatives, *psData->m_pGenes, CDat::EFilterPositives, psData->m_pAnswers ); }
+		DataFilter.Attach( &DataNegatives, *psData->m_pGenes, CDat::EFilterTerm, psData->m_pAnswers ); }
 	else
 		DataFilter.Attach( psData->m_pData, *psData->m_pGenes, CDat::EFilterEdge, psData->m_pAnswers );
 	if( !psData->m_pBN->Open( &DataFilter, *psData->m_pvecstrNames, *psData->m_pveciZeros ) ) {

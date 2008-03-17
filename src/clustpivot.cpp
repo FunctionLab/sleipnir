@@ -4,21 +4,47 @@
 
 namespace Sleipnir {
 
-uint16_t CClustPivot::Cluster( const CDistanceMatrix& Dist, float dCutoff,
+/*!
+ * \brief
+ * Implements a randomized pivot clustering algorithm due to Ailon and Charikar.
+ * 
+ * \param MatSimilarities
+ * Matrix of similarity scores between each pair of elements.
+ * 
+ * \param dCutoff
+ * Description of parameter dCutoff.
+ * 
+ * \param vecsClusters
+ * Output cluster IDs for each gene.
+ * 
+ * \returns
+ * Total number of clusters.
+ * 
+ * Performs a hard clustering of a set of elements using the randomized pivot algorithm due to Ailon and
+ * Charikar.  This places each gene in exactly one cluster.  Briefly, an unclustered gene is chosen at
+ * random to be the current pivot.  Each gene more similar than the given cutoff is placed in that pivot's
+ * cluster.  This process is iterated until all genes are clustered.  This algorithm has some nice
+ * theoretical properties, but in practice, it doesn't do so hot at uncovering useful biological information.
+ * 
+ * \remarks
+ * On successful return, the size of vecsClusters will be equal to the size of MatSimilarities.
+ * 
+ * \see
+ * CClustKMeans::Cluster
+ */
+uint16_t CClustPivot::Cluster( const CDistanceMatrix& MatSimilarities, float dCutoff,
 	vector<uint16_t>& vecsClusters ) {
 	size_t			i, j, iRand, iTmp, iPivot;
 	uint16_t		sRet;
 	vector<size_t>	veciPerm;
 	float			d;
 
-	if( vecsClusters.size( ) != Dist.GetSize( ) )
-		return -1;
-
-	veciPerm.resize( Dist.GetSize( ) );
+	vecsClusters.resize( MatSimilarities.GetSize( ) );
+	veciPerm.resize( MatSimilarities.GetSize( ) );
 	// Pick a random permutation of the genes
 	for( i = 0; i < veciPerm.size( ); ++i )
 		veciPerm[ i ] = i;
-	for( i = 0; i < Dist.GetSize( ); ++i ) {
+	for( i = 0; i < MatSimilarities.GetSize( ); ++i ) {
 		iRand = rand( ) % ( veciPerm.size( ) - i );
 		iTmp = veciPerm[ i ];
 		veciPerm[ i ] = veciPerm[ i + iRand ];
@@ -28,19 +54,19 @@ uint16_t CClustPivot::Cluster( const CDistanceMatrix& Dist, float dCutoff,
 	for( i = 0; i < vecsClusters.size( ); ++i )
 		vecsClusters[ i ] = -1;
 
-	for( sRet = i = 0; i < Dist.GetSize( ); ++i ) {
+	for( sRet = i = 0; i < MatSimilarities.GetSize( ); ++i ) {
 		iPivot = veciPerm[ i ];
 		// If gene was already clustered (or excluded), continue
 		if( vecsClusters[ iPivot ] != -1 )
 			continue;
 
 		vecsClusters[ iPivot ] = sRet++;
-		for( j = 0; j < Dist.GetSize( ); ++j ) {
+		for( j = 0; j < MatSimilarities.GetSize( ); ++j ) {
 			// check if already clustered (or thrown away)
 			if( vecsClusters[ j ] != -1 )
 				continue;
 
-		if( !CMeta::IsNaN( d = Dist.Get( iPivot, j ) ) && ( d > dCutoff ) )
+		if( !CMeta::IsNaN( d = MatSimilarities.Get( iPivot, j ) ) && ( d > dCutoff ) )
 			vecsClusters[ j ] = vecsClusters[ iPivot ]; } }
 
 	return sRet; }

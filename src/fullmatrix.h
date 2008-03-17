@@ -8,6 +8,20 @@
 
 namespace Sleipnir {
 
+/*!
+ * \brief
+ * An asymmetric two-dimensional matrix.
+ * 
+ * \param tType
+ * Type of element contained by the matrix.
+ * 
+ * \remarks
+ * Essentially nothing except a lack of bounds checking for efficiency's sake separates this from every
+ * other 2D matrix implementation known to man.
+ * 
+ * \see
+ * CCompactMatrix | CHalfMatrix
+ */
 template<class tType>
 class CFullMatrix {
 public:
@@ -20,6 +34,10 @@ public:
 
 		Reset( ); }
 
+	/*!
+	 * \brief
+	 * Empties the matrix and deallocates all associated memory.
+	 */
 	void Reset( ) {
 		size_t	i;
 
@@ -31,30 +49,139 @@ public:
 		m_iR = m_iC = 0;
 		m_aaData = NULL; }
 
+	/*!
+	 * \brief
+	 * Return the two-dimensional array backing the matrix.
+	 * 
+	 * \returns
+	 * Two-dimensional array backing the matrix.
+	 */
 	tType** const Get( ) const {
 
 		return m_aaData; }
 
+	/*!
+	 * \brief
+	 * Return a single row of the matrix.
+	 * 
+	 * \param iY
+	 * Matrix row.
+	 * 
+	 * \returns
+	 * Requested matrix row.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given row must be smaller than the size.  The
+	 * returned array will contain a number of elements equal to the number of columns.
+	 * 
+	 * \see
+	 * Set
+	 */
 	tType* Get( size_t iY ) const {
 
 		return m_aaData[ iY ]; }
 
+	/*!
+	 * \brief
+	 * Returns the value at the requested matrix position.
+	 * 
+	 * \param iY
+	 * Matrix row.
+	 * 
+	 * \param iX
+	 * Matrix column.
+	 * 
+	 * \returns
+	 * Value at the requested matrix position.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given row and column must be smaller than the
+	 * size.
+	 * 
+	 * \see
+	 * Set
+	 */
 	tType& Get( size_t iY, size_t iX ) const {
 
 		return m_aaData[ iY ][ iX ]; }
 
+	/*!
+	 * \brief
+	 * Set the value at the requested matrix position.
+	 * 
+	 * \param iY
+	 * Matrix row.
+	 * 
+	 * \param iX
+	 * Matrix column.
+	 * 
+	 * \param Value
+	 * Value to store.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given row and column must be smaller than the
+	 * size.
+	 * 
+	 * \see
+	 * Get
+	 */
 	void Set( size_t iY, size_t iX, const tType& Value ) {
 
 		m_aaData[ iY ][ iX ] = Value; }
 
-	void Set( size_t iY, const tType* aData ) {
+	/*!
+	 * \brief
+	 * Set a single row of the matrix.
+	 * 
+	 * \param iY
+	 * Matrix row.
+	 * 
+	 * \param aValues
+	 * Data to be copied into the requested row.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given row must be smaller than the size,
+	 * and the given data array must be at least as long as the number of columns.
+	 * 
+	 * \see
+	 * Get
+	 */
+	void Set( size_t iY, const tType* aValues ) {
 
-		memcpy( m_aaData[ iY ], aData, GetColumns( ) ); }
+		memcpy( m_aaData[ iY ], aValues, GetColumns( ) ); }
 
-	void Initialize( size_t iR, size_t iC, const CFullMatrix& Mat ) {
+	/*!
+	 * \brief
+	 * Create a new matrix using a reference to the given matrix.
+	 * 
+	 * \param Mat
+	 * Matrix to duplicate in the created matrix.
+	 * 
+	 * \remarks
+	 * A reference is held to the given matrix; it is not copied, so it should not be destroyed before
+	 * the newly initialized matrix.
+	 */
+	void Initialize( const CFullMatrix& Mat ) {
 
-		Initialize( iR, iC, Mat.m_aaData ); }
+		Initialize( Mat.GetRows( ), Mat.GetColumns( ), Mat.m_aaData ); }
 
+	/*!
+	 * \brief
+	 * Create a new matrix of the requested size and, optionally, referencing the given data.
+	 * 
+	 * \param iR
+	 * Matrix rows.
+	 * 
+	 * \param iC
+	 * Matrix columns.
+	 * 
+	 * \param aaData
+	 * If non-null, the memory that will back the newly created matrix.
+	 * 
+	 * \remarks
+	 * A reference is held to the given memory; it is not copied, so it should not be destroyed before
+	 * the newly initialized matrix.
+	 */
 	virtual void Initialize( size_t iR, size_t iC, tType** aaData = NULL ) {
 		size_t	i;
 
@@ -66,28 +193,109 @@ public:
 			for( i = 0; i < GetRows( ); ++i )
 				m_aaData[ i ] = new tType[ GetColumns( ) ]; } }
 
+	/*!
+	 * \brief
+	 * Return the number of rows in the matrix.
+	 * 
+	 * \returns
+	 * Number of rows in the matrix.
+	 * 
+	 * \see
+	 * GetColumns
+	 */
 	size_t GetRows( ) const {
 
 		return m_iR; }
 
+	/*!
+	 * \brief
+	 * Return the number of columns in the matrix.
+	 * 
+	 * \returns
+	 * Number of columns in the matrix.
+	 * 
+	 * \see
+	 * GetRows
+	 */
 	size_t GetColumns( ) const {
 
 		return m_iC; }
 
+	/*!
+	 * \brief
+	 * Loads a matrix from the given stream.
+	 * 
+	 * \param istm
+	 * Stream from which matrix is loaded.
+	 * 
+	 * \param fBinary
+	 * If true, matrix and stream are in binary format.
+	 * 
+	 * \returns
+	 * True if matrix was loaded successfully.
+	 * 
+	 * \remarks
+	 * A binary matrix is saved in row-major order and should have been produced using Save.  A text matrix
+	 * is a simple tab-delimited file from which matrix elements are read using >>.
+	 */
 	bool Open( std::istream& istm, bool fBinary ) {
 
 		return ( fBinary ? OpenBinary( istm ) : OpenText( istm ) ); }
 
+	/*!
+	 * \brief
+	 * Saves a matrix to the given stream in either binary or tab-delimited text format.
+	 * 
+	 * \param ostm
+	 * Stream to which matrix is saved.
+	 * 
+	 * \param fBinary
+	 * If true, matrix is saved in binary format; otherwise, matrix is saved as tab-delimited text.
+	 * 
+	 * \returns
+	 * True if matrix was saved successfully.
+	 * 
+	 * \remarks
+	 * A binary matrix is saved in row-major order; a text matrix is a simple tab-delimited file from which
+	 * matrix elements are read using >>.
+	 * 
+	 * \see
+	 * Open
+	 */
 	bool Save( std::ostream& ostm, bool fBinary ) const {
 
 		return ( fBinary ? SaveBinary( ostm ) : SaveText( ostm ) ); }
 
+	/*!
+	 * \brief
+	 * Saves a matrix to the given stream in either binary or tab-delimited text format.
+	 * 
+	 * \param szFile
+	 * File to which matrix is saved.
+	 * 
+	 * \param fBinary
+	 * If true, matrix is saved in binary format; otherwise, matrix is saved as tab-delimited text.
+	 * 
+	 * \returns
+	 * True if matrix was saved successfully.
+	 * 
+	 * \remarks
+	 * A binary matrix is saved in row-major order; a text matrix is a simple tab-delimited file from which
+	 * matrix elements are read using >>.
+	 * 
+	 * \see
+	 * Open
+	 */
 	bool Save( const char* szFile, bool fBinary ) const {
 		std::ofstream	ofsm;
 
 		ofsm.open( szFile, ( fBinary ? ios_base::binary : ios_base::out ) | ios_base::out );
 		return Save( ofsm, fBinary ); }
 
+	/*!
+	 * \brief
+	 * Sets all entries of the matrix to 0 without changing its size.
+	 */
 	void Clear( ) {
 		size_t	i;
 
@@ -97,6 +305,20 @@ public:
 		for( i = 0; i < GetRows( ); ++i )
 			memset( m_aaData[ i ], 0, sizeof(*m_aaData[ i ]) * GetColumns( ) ); }
 
+	/*!
+	 * \brief
+	 * Increases the number of rows in the matrix by the requested amount.
+	 * 
+	 * \param iR
+	 * Number of rows to append to the matrix.
+	 * 
+	 * \returns
+	 * True if the rows were appended successfully.
+	 * 
+	 * \remarks
+	 * On success, GetRows will be increased by the requested amount.  The news rows are not initialized
+	 * to any particular value.
+	 */
 	bool AddRows( size_t iR ) {
 		tType**	m_aaNew;
 		size_t	i;
@@ -114,8 +336,8 @@ public:
 
 		return true; }
 
-protected:
-	static const size_t	c_iBuffer	= 8192;
+private:
+	static const size_t	c_iBuffer	= 131072;
 
 	bool OpenBinary( std::istream& istm ) {
 		size_t		i;
@@ -207,6 +429,10 @@ protected:
 	tType**	m_aaData;
 };
 
+/*!
+ * \brief
+ * A full matrix of four-byte floats, used for almost all Sleipnir continuously valued asymmetric matrices.
+ */
 typedef CFullMatrix<float>	CDataMatrix;
 
 }

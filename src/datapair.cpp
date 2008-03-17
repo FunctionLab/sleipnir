@@ -37,11 +37,52 @@ bool CPairImpl::Open( const char* szLine, vector<float>& vecdQuant ) {
 
 	return true; }
 
+/*!
+ * \brief
+ * Construct an unbinned CDat from the given ontology slim.
+ * 
+ * \param Slim
+ * Set of ontology terms from which to generate a QUANT-less data pair.
+ * 
+ * \returns
+ * True if data pair was generated successfully.
+ * 
+ * \remarks
+ * Quantize will behave inconsistently if the data pair is not assigned bin edges through some other means.
+ * 
+ * \see
+ * CDat::Open
+ */
 bool CDataPair::Open( const CSlim& Slim ) {
 
 	Reset( false );
 	return CDat::Open( Slim ); }
 
+/*!
+ * \brief
+ * Open the given data file as a CDat and load discretization bin edges from an accompanying QUANT file.
+ * 
+ * \param szDatafile
+ * Filename from which CDat is loaded.
+ * 
+ * \param fContinuous
+ * If true, do not load an associated QUANT file and only open the underlying CDat.
+ * 
+ * \param fMemmap
+ * If true, memory map file rather than allocating memory and copying its contents.
+ * 
+ * \param iSkip
+ * If the given file is a PCL, the number of columns to skip between the ID and experiments.
+ * 
+ * \param fZScore
+ * If true and the given file is a PCL, z-score similarity measures after pairwise calculation.
+ * 
+ * \returns
+ * True if data pair was successfully opened.
+ * 
+ * \see
+ * CDat::Open
+ */
 bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
 	bool fZScore ) {
 
@@ -52,6 +93,20 @@ bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, si
 		return false;
 	return ( m_fContinuous ? true : OpenQuants( szDatafile ) ); }
 
+/*!
+ * \brief
+ * Open only the QUANT file associated with the given data file name.
+ * 
+ * \param szDatafile
+ * CDat filename for which the accompanying QUANT file should be loaded.
+ * 
+ * \returns
+ * True if bin edges were loaded successfully.
+ * 
+ * \remarks
+ * Get calls to the underlying CDat will behave inconsistently unless data is loaded through some other means;
+ * this method will only load the data pair's bin edges (which allows Quantize calls to be made).
+ */
 bool CDataPair::OpenQuants( const char* szDatafile ) {
 	static const size_t	c_iBuf	= 8192;
 	char		szBuf[ c_iBuf ];
@@ -63,35 +118,84 @@ bool CDataPair::OpenQuants( const char* szDatafile ) {
 	ifsm.close( );
 	return CPairImpl::Open( szBuf, m_vecdQuant ); }
 
+/*!
+ * \brief
+ * Return the discretized form of the given value using the data pair's current bin edges.
+ * 
+ * \param dValue
+ * Continuous value to be discretized.
+ * 
+ * \returns
+ * Discretized version of the given value, less than GetValues; -1 if the given value is not finite.
+ * 
+ * Discretizes a given continuous value using the data pair's bin edges.  Standard usage is:
+ * \code
+ * DP.Quantize( DP.Get( i, j ) );
+ * \endcode
+ * 
+ * \see
+ * SetQuants | CMeta::Quantize
+ */
 size_t CDataPair::Quantize( float dValue ) const {
 
 	return CMeta::Quantize( dValue, m_vecdQuant ); }
-
-bool CDataPair::IsContinuous( ) const {
-
-	return m_fContinuous; }
 
 void CDataPairImpl::Reset( bool fContinuous ) {
 
 	m_vecdQuant.clear( );
 	m_fContinuous = fContinuous; }
 
-unsigned char CDataPair::GetValues( ) const {
-
-	return m_vecdQuant.size( ); }
-
-void CDataPair::SetQuants( const float* adQuants, size_t iQuants ) {
+/*!
+ * \brief
+ * Set the data pair's bin edges.
+ * 
+ * \param adBinEdges
+ * Array of values corresponding to discretization bin edges (the last of which is ignored).
+ * 
+ * \param iBins
+ * Number of discretization bins.
+ * 
+ * \see
+ * GetValues | Quantize
+ */
+void CDataPair::SetQuants( const float* adBinEdges, size_t iBins ) {
 
 	Reset( false );
-	m_vecdQuant.resize( iQuants );
-	copy( adQuants, adQuants + iQuants, m_vecdQuant.begin( ) ); }
+	m_vecdQuant.resize( iBins );
+	copy( adBinEdges, adBinEdges + iBins, m_vecdQuant.begin( ) ); }
 
-void CDataPair::SetQuants( const vector<float>& vecdQuant ) {
+/*!
+ * \brief
+ * Set the data pair's bin edges.
+ * 
+ * \param vecdBinEdges
+ * Vector of values corresponding to discretization bin edges (the last of which is ignored).
+ * 
+ * \see
+ * GetValues | Quantize
+ */
+void CDataPair::SetQuants( const vector<float>& vecdBinEdges ) {
 
 	Reset( false );
-	m_vecdQuant.resize( vecdQuant.size( ) );
-	copy( vecdQuant.begin( ), vecdQuant.end( ), m_vecdQuant.begin( ) ); }
+	m_vecdQuant.resize( vecdBinEdges.size( ) );
+	copy( vecdBinEdges.begin( ), vecdBinEdges.end( ), m_vecdQuant.begin( ) ); }
 
+/*!
+ * \brief
+ * Open the given data file as a PCL and load discretization bin edges from an accompanying QUANT file.
+ * 
+ * \param szDatafile
+ * Filename from which PCL is loaded.
+ * 
+ * \param iSkip
+ * Number of columns to skip between the ID and experiments.
+ * 
+ * \returns
+ * True if PCL pair was generated successfully.
+ * 
+ * \see
+ * CPCL::Open
+ */
 bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 	static const size_t	c_iBuf	= 8192;
 	char		szBuf[ c_iBuf ];
@@ -117,8 +221,24 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 
 	return true; }
 
-size_t CPCLPair::Quantize( float dValue, size_t iExp ) const {
+/*!
+ * \brief
+ * Return the discretized form of the given value using the PCL pair's current bin edges.
+ * 
+ * \param dValue
+ * Continuous value to be discretized.
+ * 
+ * \param iExperiment
+ * Experiment index whose bin edges should be used for discretization.
+ * 
+ * \returns
+ * Discretized version of the given value, less than the number of bins; -1 if the given value is not finite.
+ * 
+ * \see
+ * CDataPair::Quantize
+ */
+size_t CPCLPair::Quantize( float dValue, size_t iExperiment ) const {
 
-	return CMeta::Quantize( dValue, m_vecvecdQuants[ iExp ] ); }
+	return CMeta::Quantize( dValue, m_vecvecdQuants[ iExperiment ] ); }
 
 }

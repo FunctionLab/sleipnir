@@ -35,7 +35,7 @@ struct STerm {
 		vector<size_t>	veciZeros;
 
 		if( m_pGenes ) {
-			Data.Attach( pData, *m_pGenes, CDat::EFilterTerm, &Answers, true );
+			Data.Attach( pData, *m_pGenes, CDat::EFilterTerm, &Answers );
 			pData = &Data; }
 		vecstrDummy.push_back( "FR" );
 		if( !m_BNRoot.Open( pData, vecstrDummy, veciZeros ) ) {
@@ -55,7 +55,7 @@ struct STerm {
 		CBayesNetSmile*	pBN;
 
 		if( m_pGenes ) {
-			Data.Attach( pData, *m_pGenes, CDat::EFilterTerm, &Answers, true );
+			Data.Attach( pData, *m_pGenes, CDat::EFilterTerm, &Answers );
 			pData = &Data; }
 		m_vecpBNs.push_back( pBN = new CBayesNetSmile( ) );
 		if( !pBN->Open( pData, vecstrNames, veciZeros ) ) {

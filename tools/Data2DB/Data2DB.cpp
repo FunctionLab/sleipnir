@@ -48,7 +48,6 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open: " << sArgs.network_arg << endl;
 		return 1; }
 	DB.SetMemmap( !!sArgs.memmap_flag );
-	DB.SetCache( !!sArgs.cache_flag );
 	DB.SetBuffer( !!sArgs.buffer_flag );
 	DB.SetBlockOut( sArgs.block_files_arg );
 	DB.SetBlockIn( sArgs.block_datasets_arg );

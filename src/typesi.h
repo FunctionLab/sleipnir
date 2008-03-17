@@ -2,6 +2,7 @@
 #define TYPESI_H
 
 #ifdef _MSC_VER
+#include <assert.h>
 #include <basetsd.h>
 
 typedef UINT16	uint16_t;

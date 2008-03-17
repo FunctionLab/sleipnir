@@ -246,8 +246,7 @@ CBNServer::~CBNServer( ) {
 	if( m_adContexts )
 		delete[] m_adContexts; }
 
-IServerClient* CBNServer::NewInstance( SOCKET iSocket, uint32_t iHost, uint16_t sPort,
-	const CPropertyFile* pConfig ) {
+IServerClient* CBNServer::NewInstance( SOCKET iSocket, uint32_t iHost, uint16_t sPort ) {
 	string	strConnection;
 	char	acBuffer[ 16 ];
 	in_addr	sAddr;

@@ -5,6 +5,44 @@
 
 namespace Sleipnir {
 
+/*!
+ * \brief
+ * Cluster a set of elements into k groups using the given data and pairwise similarity score.
+ * 
+ * \param MatData
+ * Data vectors for each element, generally microarray values from a PCL file.
+ * 
+ * \param pMeasure
+ * Similarity measure to use for clustering.
+ * 
+ * \param iK
+ * Number of clusters to generate.
+ * 
+ * \param vecsClusters
+ * Output cluster IDs for each gene.
+ * 
+ * \param pMatWeights
+ * If non-null, weights to use for each gene/condition value.  These can be used to up/downweight aneuploidies
+ * present under only certain conditions, for example.  Default assumes all ones.
+ * 
+ * \returns
+ * True if clustering succeeded.
+ * 
+ * Performs k-means clustering on the given data using the specified similarity measure and number of
+ * clusters.  The indices of each element's final cluster are indicated in the output vector.  If given,
+ * individual gene/condition scores can be weighted (e.g. to up/downweight aneuploidies present only under
+ * certain conditions).  During k-means clustering, K centers are initially chosen at random.  Each gene is
+ * assigned to the center most similar to it, and the centers are moved to the mean of their assigned
+ * genes.  This process is iterated until no gene assignments change.  This places each gene in exactly one
+ * cluster.
+ * 
+ * \remarks
+ * The size of MatData must be at least iK; on successful return, the size of vecsClusters will be equal to
+ * the size of MatData.
+ * 
+ * \see
+ * CClustHierarchical::Cluster
+ */
 bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure, size_t iK,
 	vector<uint16_t>& vecsClusters, const CDataMatrix* pMatWeights ) {
 	size_t			i, j, iIteration;

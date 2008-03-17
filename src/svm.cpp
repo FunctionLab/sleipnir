@@ -240,44 +240,18 @@ bool CSVMImpl::Initialize( const SData& sData ) {
 
 	return true; }
 
-bool CSVM::Learn( const char* szData ) {
-	SData	sData;
+bool CSVM::Learn( const CPCL& PCL, const CGenes& GenesPositive ) {
+	CGenes	GenesNeg( GenesPositive.GetGenome( ) );
 
-	sData.m_eType = SData::EFile;
-	sData.m_uData.m_szFile = szData;
+	return Learn( PCL, GenesPositive, GenesNeg ); }
 
-	return CSVMImpl::Learn( sData ); }
-
-bool CSVM::Learn( const CPCLSet& PCLs, const CDataPair& Answers ) {
-	SData	sData;
-
-	sData.m_eType = SData::EPCLs;
-	sData.m_uData.m_pPCLs = &PCLs;
-	sData.m_uAnswers.m_pAnswers = &Answers;
-
-	return CSVMImpl::Learn( sData ); }
-
-bool CSVM::Learn( const IDataset* pData, const CDataPair& Answers ) {
-	SData	sData;
-
-	sData.m_eType = SData::EData;
-	sData.m_uData.m_pData = pData;
-	sData.m_uAnswers.m_pAnswers = &Answers;
-
-	return CSVMImpl::Learn( sData ); }
-
-bool CSVM::Learn( const CPCL& PCL, const CGenes& GenesPos ) {
-	CGenes	GenesNeg( GenesPos.GetGenome( ) );
-
-	return Learn( PCL, GenesPos, GenesNeg ); }
-
-bool CSVM::Learn( const CPCL& PCL, const CGenes& GenesPos, const CGenes& GenesNeg ) {
+bool CSVM::Learn( const CPCL& PCL, const CGenes& GenesPositive, const CGenes& GenesNegative ) {
 	SData	sData;
 
 	sData.m_eType = SData::EPCL;
 	sData.m_uData.m_pPCL = &PCL;
-	sData.m_uAnswers.m_pGenes = &GenesPos;
-	sData.m_pNegative = GenesNeg.GetGenes( ) ? &GenesNeg : NULL;
+	sData.m_uAnswers.m_pGenes = &GenesPositive;
+	sData.m_pNegative = GenesNegative.GetGenes( ) ? &GenesNegative : NULL;
 
 	return CSVMImpl::Learn( sData ); }
 
@@ -355,46 +329,6 @@ bool CSVM::Save( ostream& ostm ) const {
 
 	return true; }
 
-bool CSVM::Evaluate( const char* szFile, CDat& DatOut ) const {
-	SData	sData;
-
-	sData.m_eType = SData::EFile;
-	sData.m_uData.m_szFile = szFile;
-
-	return CSVMImpl::Evaluate( sData, NULL, DatOut ); }
-
-bool CSVM::Evaluate( const CPCLSet& PCLs, CDat& DatOut ) const {
-	SData	sData;
-
-	sData.m_eType = SData::EPCLs;
-	sData.m_uData.m_pPCLs = &PCLs;
-
-	return CSVMImpl::Evaluate( sData, NULL, DatOut ); }
-
-bool CSVM::Evaluate( const IDataset* pData, CDat& DatOut ) const {
-	SData	sData;
-
-	sData.m_eType = SData::EData;
-	sData.m_uData.m_pData = pData;
-
-	return CSVMImpl::Evaluate( sData, NULL, DatOut ); }
-
-bool CSVM::Evaluate( const CPCLSet& PCLs, const CGenes& GenesIn, CDat& DatOut ) const {
-	SData	sData;
-
-	sData.m_eType = SData::EPCLs;
-	sData.m_uData.m_pPCLs = &PCLs;
-
-	return CSVMImpl::Evaluate( sData, &GenesIn, DatOut ); }
-
-bool CSVM::Evaluate( const IDataset* pData, const CGenes& GenesIn, CDat& DatOut ) const {
-	SData	sData;
-
-	sData.m_eType = SData::EData;
-	sData.m_uData.m_pData = pData;
-
-	return CSVMImpl::Evaluate( sData, &GenesIn, DatOut ); }
-
 bool CSVMImpl::Evaluate( const SData& sData, const CGenes* pGenesIn, CDat& DatOut ) const {
 	size_t	i, j, iGenes;
 	DOC*	pDoc;
@@ -432,7 +366,7 @@ bool CSVMImpl::Evaluate( const SData& sData, const CGenes* pGenesIn, CDat& DatOu
 
 	return true; }
 
-bool CSVM::Evaluate( const CPCL& PCL, vector<float>& vecdOut ) const {
+bool CSVM::Evaluate( const CPCL& PCL, vector<float>& vecdResults ) const {
 	size_t	i;
 	DOC*	pDoc;
 	SData	sData;
@@ -452,7 +386,7 @@ bool CSVM::Evaluate( const CPCL& PCL, vector<float>& vecdOut ) const {
 
 		if( !( pDoc = CreateDoc( sData, i ) ) )
 			return false;
-		vecdOut.push_back( (float)( m_pModel->kernel_parm.kernel_type ?
+		vecdResults.push_back( (float)( m_pModel->kernel_parm.kernel_type ?
 			classify_example( m_pModel, pDoc ) :
 			classify_example_linear( m_pModel, pDoc ) ) );
 		free_example( pDoc, 1 ); }
@@ -583,34 +517,6 @@ bool CSVM::Open( istream& istm ) {
 
 	delete[] asWords;
 	return true; }
-
-void CSVM::SetIterations( size_t iIter ) {
-
-	m_sLearn.maxiter = iIter; }
-
-void CSVM::SetCache( size_t iCache ) {
-
-	m_sLearn.kernel_cache_size = iCache; }
-
-void CSVM::SetTradeoff( float dTradeoff ) {
-
-	m_sLearn.svm_c = dTradeoff; }
-
-void CSVM::SetGamma( float dGamma ) {
-
-	m_sKernel.rbf_gamma = dGamma; }
-
-void CSVM::SetDegree( size_t iDegree ) {
-
-	m_sKernel.poly_degree = iDegree; }
-
-void CSVM::SetKernel( EKernel eKernel ) {
-
-	m_sKernel.kernel_type = eKernel; }
-
-void CSVM::SetVerbosity( size_t iVerbosity ) {
-
-	verbosity = iVerbosity; }
 
 }
 

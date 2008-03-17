@@ -31,16 +31,34 @@ protected:
 	bool OpenGenes( std::istream&, bool, bool, std::set<std::string>& ) const;
 	bool OpenGenes( const std::vector<std::string>& );
 
-	bool IsHidden( size_t ) const;
-	const std::string& GetGene( size_t ) const;
-	size_t GetGenes( ) const;
-	const std::vector<std::string>& GetGeneNames( ) const;
-	size_t GetExperiments( ) const;
 	size_t GetGene( const std::string& ) const;
-	unsigned char GetBins( size_t ) const;
 	bool OpenBinary( std::istream& );
 	const unsigned char* OpenBinary( const unsigned char* );
 	void SaveBinary( std::ostream& ) const;
+
+	bool IsHidden( size_t iNode ) const {
+
+		return ( m_veciMapping[ iNode ] == -1 ); }
+
+	const std::string& GetGene( size_t iGene ) const {
+
+		return m_vecstrGenes[ iGene ]; }
+
+	size_t GetGenes( ) const {
+
+		return m_vecstrGenes.size( ); }
+
+	const std::vector<std::string>& GetGeneNames( ) const {
+
+		return m_vecstrGenes; }
+
+	size_t GetExperiments( ) const {
+
+		return m_veciMapping.size( ); }
+
+	unsigned char GetBins( size_t iExp ) const {
+
+		return m_veccQuants[ iExp ]; }
 
 	bool						m_fContinuous;
 	std::vector<size_t>			m_veciMapping;

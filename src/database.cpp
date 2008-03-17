@@ -12,7 +12,7 @@ const char	CDatabaseImpl::c_acExtension[]	= ".db";
 // CDatabaselet
 ///////////////////////////////////////////////////////////////////////////////
 
-CDatabaselet::CDatabaselet( bool fCache ) : m_fCache(fCache) {
+CDatabaselet::CDatabaselet( ) {
 
 	m_pmutx = new pthread_mutex_t( );
 	pthread_mutex_init( m_pmutx, NULL ); }
@@ -206,54 +206,43 @@ bool CDatabaselet::Open( const string& strFile ) {
 
 	return true; }
 
-bool CDatabaselet::Write( ) {
-	size_t	i;
-
-	sort( m_vecpribWrites.begin( ), m_vecpribWrites.end( ), SSorter( ) );
-	for( i = 0; i < m_vecpribWrites.size( ); ++i ) {
-		m_fstm.seekp( m_vecpribWrites[ i ].first );
-		m_fstm.put( m_vecpribWrites[ i ].second ); }
-	m_vecpribWrites.clear( );
-
-	return true; }
-
 ///////////////////////////////////////////////////////////////////////////////
 // CDatabase
 ///////////////////////////////////////////////////////////////////////////////
 
-bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strData, const IBayesNet* pBN,
-	const string& strDir, size_t iFiles ) {
+bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strInputDirectory,
+	const IBayesNet* pBayesNet, const string& strOutputDirectory, size_t iFiles ) {
 	vector<string>	vecstrNodes, vecstrSubset;
 	size_t			i, j;
 	char			acNumber[ 16 ];
 	string			strFile;
 
-	if( !pBN ) {
-		g_CatSleipnir.error( "CDatabase::Open( %s, %d ) null Bayes net", strDir.c_str( ), iFiles );
+	if( !pBayesNet ) {
+		g_CatSleipnir.error( "CDatabase::Open( %s, %d ) null Bayes net", strOutputDirectory.c_str( ), iFiles );
 		return false; }
 
 	Clear( );
-	pBN->GetNodes( vecstrNodes );
+	pBayesNet->GetNodes( vecstrNodes );
 	for( i = 1; i < vecstrNodes.size( ); ++i )
-		vecstrNodes[ i - 1 ] = strData + '/' + vecstrNodes[ i ] + c_acDAB;
+		vecstrNodes[ i - 1 ] = strInputDirectory + '/' + vecstrNodes[ i ] + c_acDAB;
 	if( vecstrNodes.size( ) )
 		vecstrNodes.resize( vecstrNodes.size( ) - 1 );
 	m_vecpDBs.resize( iFiles );
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
-		m_vecpDBs[ i ] = new CDatabaselet( m_fCache );
+		m_vecpDBs[ i ] = new CDatabaselet( );
 		vecstrSubset.clear( );
 		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
 			vecstrSubset.push_back( vecstrGenes[ j ] );
 #pragma warning(disable : 4996)
 		sprintf( acNumber, "%08u", i );
 #pragma warning(default : 4996)
-		strFile = strDir + '/' + acNumber + c_acExtension;
+		strFile = strOutputDirectory + '/' + acNumber + c_acExtension;
 		if( !( i % 100 ) )
-			g_CatSleipnir.notice( "CDatabase::Open( %s, %d ) initializing file %d/%d", strDir.c_str( ),
-					iFiles, i, m_vecpDBs.size( ) );
+			g_CatSleipnir.notice( "CDatabase::Open( %s, %d ) initializing file %d/%d",
+				strOutputDirectory.c_str( ), iFiles, i, m_vecpDBs.size( ) );
 		if( !m_vecpDBs[ i ]->Open( strFile, vecstrSubset, vecstrGenes.size( ), vecstrNodes.size( ) ) ) {
-			g_CatSleipnir.error( "CDatabase::Open( %s, %d ) could not open file %s", strDir.c_str( ),
-				iFiles, strFile.c_str( ) );
+			g_CatSleipnir.error( "CDatabase::Open( %s, %d ) could not open file %s",
+				strOutputDirectory.c_str( ), iFiles, strFile.c_str( ) );
 			return false; } }
 	for( i = 0; i < vecstrGenes.size( ); ++i )
 		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
@@ -316,7 +305,7 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const vector<string
 
 	return true; }
 
-bool CDatabase::Open( const string& strDir ) {
+bool CDatabase::Open( const string& strInputDirectory ) {
 	size_t			i, j;
 	vector<string>	vecstrFiles;
 	string			strFile;
@@ -325,7 +314,7 @@ bool CDatabase::Open( const string& strDir ) {
 	WIN32_FIND_DATA	sEntry;
 	bool			fContinue;
 
-	for( fContinue = true,hSearch = FindFirstFile( ( strDir + "/*" ).c_str( ), &sEntry );
+	for( fContinue = true,hSearch = FindFirstFile( ( strInputDirectory + "/*" ).c_str( ), &sEntry );
 		fContinue && ( hSearch != INVALID_HANDLE_VALUE );
 		fContinue = !!FindNextFile( hSearch, &sEntry ) ) {
 		strFile = sEntry.cFileName;
@@ -333,7 +322,7 @@ bool CDatabase::Open( const string& strDir ) {
 	DIR*			pDir;
 	struct dirent*	psEntry;
 
-	pDir = opendir( strDir.c_str( ) );
+	pDir = opendir( strInputDirectory.c_str( ) );
 	for( psEntry = readdir( pDir ); psEntry; psEntry = readdir( pDir ) ) {
 		strFile = psEntry->d_name;
 #endif // _MSC_VER
@@ -344,10 +333,10 @@ bool CDatabase::Open( const string& strDir ) {
 		if( vecstrFiles.size( ) <= i )
 			vecstrFiles.resize( i + 1 );
 		else if( vecstrFiles[ i ].length( ) != 0 ) {
-			g_CatSleipnir.error( "CDatabase::Open( %s ) duplicate file: %s (%d)", strDir.c_str( ),
+			g_CatSleipnir.error( "CDatabase::Open( %s ) duplicate file: %s (%d)", strInputDirectory.c_str( ),
 				strFile.c_str( ), i );
 			return false; }
-		vecstrFiles[ i ] = strDir + '/' + strFile; }
+		vecstrFiles[ i ] = strInputDirectory + '/' + strFile; }
 
 	Clear( );
 	m_vecpDBs.resize( vecstrFiles.size( ) );

@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "cmdline.h"
 #include "parserconsole.h"
-#include "parserxml.h"
 
 static const char	c_szCat[]		= "cat";
 static const char	c_szFind[]		= "find";
@@ -99,28 +98,7 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.mipsp_anno_arg )
 			ifsmGenes.close( ); }
 
-	if( sArgs.server_arg ) {
-#ifdef XML_ENABLED
-		XMLPlatformUtils::Initialize( );
-		XPathEvaluator::initialize( );
-		{
-			CServer		Server;
-			CParserXml	ParserXml( apOntologies, Genome );
-
-			Server.Initialize( sArgs.server_arg, &ParserXml );
-#ifdef WIN32
-			pthread_win32_process_attach_np( );
-#endif // WIN32
-			Server.Start( );
-#ifdef WIN32
-			pthread_win32_process_detach_np( );
-#endif // WIN32
-		}
-		XPathEvaluator::terminate( );
-		XMLPlatformUtils::Terminate( );
-#endif // XML_ENABLED
-	}
-	else if( sArgs.exec_arg )
+	if( sArgs.exec_arg )
 		Parser.ProcessLine( sArgs.exec_arg );
 	else {
 		rl_attempted_completion_function = CompletionAll;

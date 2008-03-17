@@ -8,26 +8,39 @@ CServer*	CServerImpl::s_pServer		= NULL;
 const char*	CServerImpl::c_szPort		= "port";
 const char*	CServerImpl::c_szTimeout	= "timeout";
 
-bool CServer::Initialize( const char* szConfig, IServerClient* pClient ) {
-	SVariant			VarPort, VarTimeout;
-
-	if( !m_Config.Open( szConfig ) )
-		return false;
-	VarPort = m_Config.Get( c_szPort );
-	if( VarPort.m_eType != SVariant::eInt )
-		return false;
-	VarTimeout = m_Config.Get( c_szTimeout );
-	if( VarTimeout.m_eType != SVariant::eInt )
-		return false;
-
-	return Initialize( VarPort.m_i, VarTimeout.m_i, pClient ); }
-
-bool CServer::Initialize( size_t iPort, size_t iTimeout, IServerClient* pClient ) {
+/*!
+ * \brief
+ * Prepare a server object to listen for incoming connections on the specified port.
+ * 
+ * \param iPort
+ * TCP/IP port on which the server will listen.
+ * 
+ * \param iTimeout
+ * Timeout interval for socket listening.
+ * 
+ * \param pServerClient
+ * Pointer to a template server client object from which new clients will be created to handle incoming
+ * requests.
+ * 
+ * \returns
+ * True if the server was initialized successfully.
+ * 
+ * Prepares the server to listen for connection requests on the given port.  No actual socket manipulation
+ * happens until the server is started.
+ * 
+ * \remarks
+ * On platforms where listening on a socket must be interrupted periodically, the interrupt will occur
+ * with the given timeout frequency.  This is usually a nonissue, and a value of ~100ms is adequate.
+ * 
+ * \see
+ * Start
+ */
+bool CServer::Initialize( size_t iPort, size_t iTimeout, IServerClient* pServerClient ) {
 #ifndef _MSC_VER
 	struct sigaction	Sigact;
 #endif // _MSC_VER
 
-	m_pClient = pClient;
+	m_pClient = pServerClient;
 	m_iPort = iPort;
 	m_iTimeout = iTimeout;
 #ifndef _MSC_VER
@@ -43,6 +56,22 @@ bool CServer::Initialize( size_t iPort, size_t iTimeout, IServerClient* pClient 
 void CServerImpl::Alarm( int iSig ) { }
 #endif // _MSC_VER
 
+/*!
+ * \brief
+ * Opens a server socket and blocks, listening for incoming connections to which server client threads are
+ * attached.
+ * 
+ * \returns
+ * True if the server was bound and closed cleanly, false otherwise.
+ * 
+ * Begins listening on a TCP/IP server socket for incoming connections.  When such a connection is
+ * detected, a new IServerClient object as provided to Initialize is created and given control of a new thread
+ * in which to handle the request.  The server object then continues to listen for additional connections on
+ * the main thread.  This method will block and not return until the server is closed, e.g. by Stop.
+ * 
+ * \remarks
+ * Initialize must be called before the server is started.
+ */
 bool CServer::Start( ) {
 	sockaddr_in	Addr;
 	char		cOn;
@@ -85,7 +114,7 @@ bool CServer::Start( ) {
 
 	return true; }
 
-void CServer::Listen( ) {
+void CServerImpl::Listen( ) {
 	SOCKET				iClient;
 	socklen_t			iSize;
 	CServerClientImpl*	pClient;
@@ -110,15 +139,11 @@ void CServer::Listen( ) {
 #endif // _MSC_VER
 
 		pClient = new CServerClientImpl( iClient, m_pClient->NewInstance( iClient,
-			iSize = ntohl( Addr.sin_addr.s_addr ), ntohs( Addr.sin_port ), &m_Config ) );
+			iSize = ntohl( Addr.sin_addr.s_addr ), ntohs( Addr.sin_port ) ) );
 		g_CatSleipnir.info( "CServer::Listen( ) client 0x%08x connected from %d.%d.%d.%d",
 			pClient, ( iSize >> 24 ) & 0xFF, ( iSize >> 16 ) & 0xFF, ( iSize >> 8 ) & 0xFF,
 			iSize & 0xFF );
 		pthread_create( &thrdClient, NULL, CServerClientImpl::StartRoutine, pClient );
 		pthread_detach( thrdClient ); } }
-
-void CServer::Stop( ) {
-
-	m_fStop = true; }
 
 }

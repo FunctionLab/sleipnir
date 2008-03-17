@@ -19,7 +19,7 @@ public:
 		ENibblesBoth
 	};
 
-	CDatabaselet( bool = false );
+	CDatabaselet( );
 	~CDatabaselet( );
 
 	bool Open( const std::string&, const std::vector<std::string>&, uint32_t, uint32_t );
@@ -29,7 +29,6 @@ public:
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, const std::vector<size_t>&, std::vector<unsigned char>& ) const;
-	bool Write( );
 
 	size_t GetGenes( ) const {
 
@@ -44,10 +43,6 @@ public:
 		std::streamoff	iOffset;
 
 		iOffset = (std::streamoff)GetOffset( iOne, iTwo, iDataset );
-		if( m_fCache ) {
-			m_vecpribWrites.push_back( TPrIB( iOffset, bValue ) );
-			return; }
-
 #ifdef DATABASE_NIBBLES
 		if( !fBoth ) {
 			unsigned char	b;
@@ -61,14 +56,6 @@ public:
 		m_fstm.put( bValue ); }
 
 private:
-	typedef std::pair<size_t, unsigned char>	TPrIB;
-
-	struct SSorter {
-
-		bool operator()( const TPrIB& prOne, const TPrIB& prTwo ) {
-
-			return ( prOne.first < prTwo.first ); }
-	};
 
 	size_t GetOffsetDataset( size_t iDataset ) const {
 
@@ -108,12 +95,10 @@ private:
 
 		return ( GetOffset( iOne, iTwo ) + GetOffsetDataset( iDataset ) ); }
 
-	bool						m_fCache;
 	uint32_t					m_iHeader;
 	uint32_t					m_iGenes;
 	uint32_t					m_iDatasets;
 	std::vector<std::string>	m_vecstrGenes;
-	std::vector<TPrIB>			m_vecpribWrites;
 	mutable std::fstream		m_fstm;
 	mutable pthread_mutex_t*	m_pmutx;
 };
@@ -123,7 +108,7 @@ protected:
 	static const char	c_acDAB[];
 	static const char	c_acExtension[];
 
-	CDatabaseImpl( ) : m_fMemmap(false), m_fCache(false), m_iBlockIn(-1), m_iBlockOut(-1), m_fBuffer(false) { }
+	CDatabaseImpl( ) : m_fMemmap(false), m_iBlockIn(-1), m_iBlockOut(-1), m_fBuffer(false) { }
 
 	~CDatabaseImpl( ) {
 
@@ -147,7 +132,6 @@ protected:
 			iterGene->second ); }
 
 	bool							m_fMemmap;
-	bool							m_fCache;
 	bool							m_fBuffer;
 	size_t							m_iBlockIn;
 	size_t							m_iBlockOut;

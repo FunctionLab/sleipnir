@@ -15,8 +15,71 @@ const char	CPCLImpl::c_szGWEIGHT[]	= "GWEIGHT";
 const char	CPCLImpl::c_szNAME[]	= "NAME";
 const char	CPCLImpl::c_szOne[]		= "1";
 
-int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, bool fNormalize, bool fZScore,
-	bool fAutocorrelate, const char* szGenes, float dCutoff, size_t iLimit, CPCL& PCL, CDat& Dat ) {
+/*!
+ * \brief
+ * Kitchen sink method for completely loading a PCL and calculating its pairwise similarity scores into a CDat.
+ * 
+ * \param szFile
+ * If non-null, file from which PCL is to be loaded; if null, standard input is used.
+ * 
+ * \param iSkip
+ * Number of columns to skip in the PCL file between gene IDs and experimental data.
+ * 
+ * \param szSimilarityMeasure
+ * String identifier of similarity measure to use for CDat generation.
+ * 
+ * \param fNormalize
+ * If true, normalize the generated CDat to the range [0, 1].
+ * 
+ * \param fZScore
+ * If true, normalize the generated CDat to z-scores (subtract mean, divide by standard deviation).
+ * 
+ * \param fAutocorrelate
+ * If true, autocorrelate the requested similarity measure.
+ * 
+ * \param szGeneFile
+ * If non-null, only convert genes in the given file to pairwise scores in the CDat.
+ * 
+ * \param dCutoff
+ * If finite, remove all pairwise scores less than the given cutoff.
+ * 
+ * \param iLimit
+ * If not equal to -1 and the PCL contains more genes than this limit, do not precalculate pairwise scores;
+ * instead, configure the CDat to calculate scores on the fly as needed from the PCL.
+ * 
+ * \param PCL
+ * Output PCL with the loaded data.
+ * 
+ * \param Dat
+ * Output CDat with the calculated pairwise scores.
+ * 
+ * \returns
+ * 0 on successes, a nonzero value on failure.
+ * 
+ * The (many) steps performed by this method are as follows:
+ * <ol>
+ * <li>A PCL is loaded from szFile into PCL using Open.  If szFile is null, the PCL is loaded from
+ * standard input.</li>
+ * <li>An IMeasure object is constructed by iterating over the available implementations and finding
+ * one whose name corresponds with szSimilarityMeasure.  Names which are distance measures (e.g. Euclidean)
+ * are automatically inverted.  If requested, the measure is autocorrelated.</li>
+ * <li>If given, szGeneFile is loaded into a CGenes object.</li>
+ * <li>If iLimit is not -1 and the PCL contains more than the limiting number of genes, Dat is given a
+ * reference to PCL and configured to calculate pairwise scores as needed.  Processing then stops.</li>
+ * <li>Otherwise, an empty CDat is initialized to contain either the genes in szGeneFile (if given) or
+ * all of the genes in the PCL.</li>
+ * <li>Gene pairs are assigned scores in the CDat using the requested similarity measure.</li>
+ * <li>If given, scores below dCutoff are replaced with missing values.</li>
+ * <li>If requested, the remaining scores are normalized either to the range [0, 1] or to z-scores.</li>
+ * </ol>
+ * 
+ * \remarks
+ * This method is written to make it easy to construct tools that must load a PCL and immediately convert
+ * it to pairwise scores using some user-selected similarity measure.
+ */
+int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMeasure, bool fNormalize,
+	bool fZScore, bool fAutocorrelate, const char* szGeneFile, float dCutoff, size_t iLimit, CPCL& PCL,
+	CDat& Dat ) {
 	size_t						i, j, iOne, iTwo;
 	float						d;
 	ifstream					ifsm;
@@ -40,16 +103,18 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 	CMeasureRelativeAUC			RelAuc;
 	CMeasurePearsonSignificance	PearSig;
 
-	if( szPCL ) {
-		ifsm.open( szPCL );
+	if( szFile ) {
+		ifsm.open( szFile );
 		if( !PCL.Open( ifsm, iSkip ) ) {
-			g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", szPCL, iSkip,
-				szDistance, fNormalize, fZScore, fAutocorrelate, szGenes ? szGenes : "", dCutoff );
+			g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL",
+				szFile, iSkip, szSimilarityMeasure, fNormalize, fZScore, fAutocorrelate, szGeneFile ?
+				szGeneFile : "", dCutoff );
 			return 1; }
 		ifsm.close( ); }
 	else if( !PCL.Open( cin, iSkip ) ) {
-		g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", "stdin", iSkip,
-			szDistance, fNormalize, fZScore, fAutocorrelate, szGenes ? szGenes : "", dCutoff );
+		g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", "stdin",
+			iSkip, szSimilarityMeasure, fNormalize, fZScore, fAutocorrelate, szGeneFile ? szGeneFile : "",
+			dCutoff );
 		return 1; }
 
 	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / PCL.GetExperiments( ) );
@@ -59,7 +124,7 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 
 	pMeasure = NULL;
 	for( i = 0; apMeasures[ i ]; ++i )
-		if( !strcmp( apMeasures[ i ]->GetName( ), szDistance ) ) {
+		if( !strcmp( apMeasures[ i ]->GetName( ), szSimilarityMeasure ) ) {
 			pMeasure = apMeasures[ i ];
 			break; }
 	if( !pMeasure )
@@ -69,19 +134,20 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 	if( fAutocorrelate )
 		pMeasure = &Autocorrelate;
 
-	if( szGenes ) {
+	if( szGeneFile ) {
 		ifsm.clear( );
-		ifsm.open( szGenes );
+		ifsm.open( szGeneFile );
 		if( !GenesIn.Open( ifsm ) ) {
-			g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open genes", szPCL ? szPCL :
-				"stdin", iSkip, szDistance, fNormalize, fZScore, fAutocorrelate, szGenes, dCutoff );
+			g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open genes",
+				szFile ? szFile : "stdin", iSkip, szSimilarityMeasure, fNormalize, fZScore, fAutocorrelate,
+				szGeneFile, dCutoff );
 			return 1; }
 		ifsm.close( ); }
 	else
 		GenesIn.Open( PCL.GetGeneNames( ) );
 	veciGenes.resize( GenesIn.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
-		veciGenes[ i ] = szGenes ? PCL.GetGene( GenesIn.GetGene( i ).GetName( ) ) : i;
+		veciGenes[ i ] = szGeneFile ? PCL.GetGene( GenesIn.GetGene( i ).GetName( ) ) : i;
 
 	if( pMeasure->IsRank( ) )
 		PCL.RankTransform( );
@@ -95,9 +161,9 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 				Dat.Set( i, j, CMeta::GetNaN( ) );
 		for( i = 0; i < GenesIn.GetGenes( ); ++i ) {
 			if( !( i % 100 ) )
-				g_CatSleipnir.info( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) processing gene %d/%d", szPCL ? szPCL :
-					"stdin", iSkip, szDistance, fNormalize, fZScore, fAutocorrelate, szGenes ? szGenes : "", dCutoff, i,
-					GenesIn.GetGenes( ) );
+				g_CatSleipnir.info( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) processing gene %d/%d",
+					szFile ? szFile : "stdin", iSkip, szSimilarityMeasure, fNormalize, fZScore, fAutocorrelate,
+					szGeneFile ? szGeneFile : "", dCutoff, i, GenesIn.GetGenes( ) );
 			if( ( iOne = veciGenes[ i ] ) == -1 )
 				continue;
 			adOne = PCL.Get( iOne );
@@ -116,17 +182,9 @@ int CPCL::Distance( const char* szPCL, size_t iSkip, const char* szDistance, boo
 
 	return 0; }
 
-size_t CPCL::GetSkip( ) {
-
-	return c_iSkip; }
-
 CPCLImpl::~CPCLImpl( ) {
 
 	Reset( ); }
-
-void CPCL::Reset( ) {
-
-	CPCLImpl::Reset( ); }
 
 void CPCLImpl::Reset( ) {
 
@@ -137,6 +195,17 @@ void CPCLImpl::Reset( ) {
 	m_vecvecstrFeatures.clear( );
 	m_setiGenes.clear( ); }
 
+/*!
+ * \brief
+ * Create a new PCL by copying the given one.
+ * 
+ * \param PCL
+ * PCL to be copied into the current one.
+ * 
+ * \remarks
+ * All values are copied into newly allocated memory within the current PCL, so it's safe to destroy the
+ * input PCL after the new one is opened.
+ */
 void CPCL::Open( const CPCL& PCL ) {
 	size_t					i, j;
 	TSetI::const_iterator	iterGene;
@@ -164,28 +233,34 @@ void CPCL::Open( const CPCL& PCL ) {
 		copy( PCL.m_vecvecstrFeatures[ i ].begin( ), PCL.m_vecvecstrFeatures[ i ].end( ),
 			m_vecvecstrFeatures[ i ].begin( ) ); } }
 
-bool CPCL::Open( const char* szFile, size_t iFeatures ) {
-	ifstream	ifsm;
-
-	ifsm.open( szFile );
-	return Open( ifsm ); }
-
-bool CPCL::Open( istream& istmInput ) {
-
-	return Open( istmInput, GetSkip( ) ); }
-
-bool CPCL::Open( istream& istmInput, size_t iFeatures ) {
+/*!
+ * \brief
+ * Load a PCL from the given text stream.
+ * 
+ * \param istm
+ * Stream from which PCL file is loaded.
+ * 
+ * \param iSkip
+ * Number of feature columns to skip between the gene IDs and first experimental column.
+ * 
+ * \returns
+ * True if the PCL was opened successfully.
+ * 
+ * \see
+ * Save
+ */
+bool CPCL::Open( istream& istm, size_t iSkip ) {
 	vector<float>	vecdData;
 	size_t			i, j, k;
 	char*			acBuf;
 	bool			fRet;
 
 	acBuf = new char[ c_iBufferSize ];
-	if( !OpenExperiments( istmInput, iFeatures, acBuf, c_iBufferSize ) )
+	if( !OpenExperiments( istm, iSkip, acBuf, c_iBufferSize ) )
 		fRet = false;
 	else {
 		m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
-		while( OpenGene( istmInput, vecdData, acBuf, c_iBufferSize ) );
+		while( OpenGene( istm, vecdData, acBuf, c_iBufferSize ) );
 
 		m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
 		for( k = i = 0; i < m_Data.GetRows( ); ++i )
@@ -215,8 +290,10 @@ bool CPCLImpl::OpenExperiments( istream& istmInput, size_t iFeatures, char* acLi
 
 bool CPCLImpl::OpenGene( istream& istmInput, vector<float>& vecdData, char* acLine, size_t iLine ) {
 	const char*	pc;
+	char*		pcEnd;
 	string		strToken;
 	size_t		iToken, iData;
+	float		d;
 
 	istmInput.getline( acLine, iLine - 1 );
 	for( iData = iToken = 0,pc = acLine; ( strToken = OpenToken( pc, &pc ) ).length( ) || *pc; ++iToken ) {
@@ -228,20 +305,35 @@ bool CPCLImpl::OpenGene( istream& istmInput, vector<float>& vecdData, char* acLi
 			m_vecvecstrFeatures[ iToken - 1 ].push_back( strToken );
 		else {
 			iData++;
-			if( !strToken.length( ) )
-				vecdData.push_back( CMeta::GetNaN( ) );
-			else
-				vecdData.push_back( (float)atof( strToken.c_str( ) ) ); } }
+			d = (float)strtod( strToken.c_str( ), &pcEnd );
+			vecdData.push_back( ( !pcEnd || ( pcEnd == strToken.c_str( ) ) ) ? CMeta::GetNaN( ) : d ); } }
 
 	while( iData++ < m_vecstrExperiments.size( ) )
 		vecdData.push_back( CMeta::GetNaN( ) );
 
 	return !!iToken; }
 
-void CPCL::SaveHeader( ostream& ostm, bool fCluster ) const {
+/*!
+ * \brief
+ * Save the PCL's header row to the given text stream.
+ * 
+ * \param ostm
+ * Stream into which PCL header is saved.
+ * 
+ * \param fCDT
+ * If true, generate an initial CDT GENE column header.
+ * 
+ * If called with fCDT false, saves standard PCL header and EWEIGHT rows to the given text stream using the
+ * CPCL's current feature and experimental headers.  If fCDT is true, the output will instead be in CDT
+ * format, with an extra initial column header for gene index identifiers.
+ * 
+ * \see
+ * Save
+ */
+void CPCL::SaveHeader( ostream& ostm, bool fCDT ) const {
 	size_t	i;
 
-	if( fCluster )
+	if( fCDT )
 		ostm << c_szGID << '\t';
 	ostm << m_vecstrFeatures[ 0 ];
 	for( i = 1; i < m_vecstrFeatures.size( ); ++i )
@@ -251,18 +343,39 @@ void CPCL::SaveHeader( ostream& ostm, bool fCluster ) const {
 	ostm << endl;
 
 	ostm << c_szEWEIGHT;
-	for( i = fCluster ? 0 : 1; i < m_vecstrFeatures.size( ); ++i )
+	for( i = fCDT ? 0 : 1; i < m_vecstrFeatures.size( ); ++i )
 		ostm << '\t';
 	for( i = 0; i < m_vecstrExperiments.size( ); ++i )
 		ostm << '\t' << 1;
 	ostm << endl; }
 
-void CPCL::SaveGene( ostream& ostm, size_t iGene, size_t iOrig ) const {
+/*!
+ * \brief
+ * Save a single gene row to the given text stream.
+ * 
+ * \param ostm
+ * Stream into which gene row is saved.
+ * 
+ * \param iGene
+ * Gene index to be saved.
+ * 
+ * \param iOriginal
+ * If not equal to -1, generate an initial CDT GENE ID using the given original gene index.
+ * 
+ * If called with iGene set to -1, saves a single row of a standard PCL to the given text stream using the
+ * CPCL's current gene ID, features, and values for the row.  If a gene index is provided, the output will
+ * instead be in CDT format, with an extra initial column of IDs of the form "GENE###", where the number
+ * indicates the gene's original index in the pre-clustered file.
+ * 
+ * \see
+ * Save
+ */
+void CPCL::SaveGene( ostream& ostm, size_t iGene, size_t iOriginal ) const {
 	size_t	i;
 	float	d;
 
-	if( iOrig != -1 )
-		ostm << c_szGENE << iOrig << '\t';
+	if( iOriginal != -1 )
+		ostm << c_szGENE << iOriginal << '\t';
 	ostm << m_vecstrGenes[ iGene ];
 	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i )
 		ostm << '\t' << m_vecvecstrFeatures[ i ][ iGene ];
@@ -272,16 +385,55 @@ void CPCL::SaveGene( ostream& ostm, size_t iGene, size_t iOrig ) const {
 			ostm << Get( iGene, i ); }
 	ostm << endl; }
 
-void CPCL::Save( ostream& ostmOutput, const vector<size_t>* pveciGenes ) const {
+/*!
+ * \brief
+ * Save a PCL to the given text stream.
+ * 
+ * \param ostm
+ * Stream into which PCL file is saved.
+ * 
+ * \param pveciGenes
+ * If non-null, generate an initial CDT GENE column using the given original gene indices.
+ * 
+ * If called without a vector of gene indices, saves a standard PCL to the given text stream using the CPCL's
+ * current gene ID list, features, experiments, and data.  If a vector of gene indices is provided, the
+ * output will instead be in CDT format, with an extra initial column of IDs of the form "GENE###", where the
+ * number indicates the gene's original index in the pre-clustered file.
+ * 
+ * \remarks
+ * If pveciGenes is non-null, it must be of the same length as the PCL's gene list.
+ * 
+ * \see
+ * Open | CClustHierarchical
+ */
+void CPCL::Save( ostream& ostm, const vector<size_t>* pveciGenes ) const {
 	size_t	i;
 
-	SaveHeader( ostmOutput, !!pveciGenes );
+	SaveHeader( ostm, !!pveciGenes );
 
 	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
 		if( m_setiGenes.find( i ) != m_setiGenes.end( ) )
 			continue;
-		SaveGene( ostmOutput, i, pveciGenes ? (*pveciGenes)[ i ] : -1 ); } }
+		SaveGene( ostm, i, pveciGenes ? (*pveciGenes)[ i ] : -1 ); } }
 
+/*!
+ * \brief
+ * Create a new PCL using the given genes, experiments, and features.
+ * 
+ * \param vecstrGenes
+ * Gene IDs to be used in the new PCL.
+ * 
+ * \param vecstrExperiments
+ * Experiment labels to be used in the new PCL.
+ * 
+ * \param vecstrFeatures
+ * Feature labels to be used in the new PCL (possibly empty).
+ * 
+ * This creates an empty PCL (all entries missing) with the requested number of gene rows and experiment
+ * columns; the given gene IDs and experiment labels are inserted into the appropriate header rows/columns.
+ * The PCL will contain the given number of feature columns between the gene IDs and experimental values,
+ * the values for which will be initialized to empty strings.
+ */
 void CPCL::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrExperiments,
 	const vector<string>& vecstrFeatures ) {
 	size_t	i, j;
@@ -308,6 +460,31 @@ void CPCL::Open( const vector<string>& vecstrGenes, const vector<string>& vecstr
 		for( j = 0; j < m_Data.GetColumns( ); ++j )
 			m_Data.Set( i, j, CMeta::GetNaN( ) ); }
 
+/*!
+ * \brief
+ * Create a new PCL using the given genes, experiments, and gene order.
+ * 
+ * \param veciGenes
+ * Order in which genes will be placed in the new PCL.
+ * 
+ * \param vecstrGenes
+ * Gene IDs to be used in the new PCL.
+ * 
+ * \param vecstrExperiments
+ * Experiment labels to be used in the new PCL.
+ * 
+ * This creates an empty PCL (all entries missing) with the requested number of gene rows and experiment
+ * columns; the given gene IDs and experiment labels are inserted into the appropriate header rows/columns.
+ * However, the gene order will be the order of indices given in veciGenes.  For example, if veciGenes is
+ * [1, 0, 2] and vecstrGenes contains [A, B, C], the order of genes within the new PCL will be [B, A, C].
+ * Experiment order is unaffected and will be as given in vecstrExperiments.
+ * 
+ * \remarks
+ * veciGenes and vecstrGenes must be of the same length.
+ * 
+ * \see
+ * SortGenes
+ */
 void CPCL::Open( const vector<size_t>& veciGenes, const vector<string>& vecstrGenes,
 	const vector<string>& vecstrExperiments ) {
 	size_t	i, j;
@@ -341,14 +518,43 @@ void CPCL::Open( const vector<size_t>& veciGenes, const vector<string>& vecstrGe
 		for( j = 0; j < m_Data.GetColumns( ); ++j )
 			m_Data.Set( i, j, CMeta::GetNaN( ) ); }
 
-void CPCL::SortGenes( const vector<size_t>& veciOrder ) {
+/*!
+ * \brief
+ * Reorder the PCL's genes based on the order of the given indices.
+ * 
+ * \param veciOrder
+ * Index order in which genes should be placed.
+ * 
+ * \returns
+ * True if genes were reordered successfully.
+ * 
+ * Reorders the PCL's gene rows based on the given indices.  For example, if the current row order is
+ * [A, B, C] and the given indices are [1, 0, 2], the new row order will be [B, A, C].
+ */
+bool CPCL::SortGenes( const vector<size_t>& veciOrder ) {
 	size_t	i;
 
-	CMeta::Permute( m_Data.Get( ), m_Data.GetRows( ), veciOrder );
+	if( veciOrder.size( ) != m_Data.GetRows( ) )
+		return false;
+
+	CMeta::Permute( m_Data.Get( ), veciOrder );
 	CMeta::Permute( m_vecstrGenes, veciOrder );
 	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i )
-		CMeta::Permute( m_vecvecstrFeatures[ i ], veciOrder ); }
+		CMeta::Permute( m_vecvecstrFeatures[ i ], veciOrder );
 
+	return true; }
+
+/*!
+ * \brief
+ * Rank transform each row of the PCL in increasing order.
+ * 
+ * Replaces all values in the PCL with their increasing ranks by row.  For example, a row containing
+ * [-0.1, 0.1, 0.3] would be replaced with [0, 1, 2]; a row containing [0.5, 0.4, 0.3] would be replaced
+ * with [2, 1, 0].
+ * 
+ * \see
+ * IMeasure::IsRank
+ */
 void CPCL::RankTransform( ) {
 	size_t	i, j, k;
 	size_t*	aiRanks;
@@ -364,6 +570,19 @@ void CPCL::RankTransform( ) {
 			m_Data.Set( i, j, (float)aiRanks[ j ] ); }
 	delete[] aiRanks; }
 
+/*!
+ * \brief
+ * Appends new, empty gene rows to the end of the PCL using the given gene IDs.
+ * 
+ * \param vecstrGenes
+ * Gene names to be appended to the PCL.
+ * 
+ * \returns
+ * True if the gene rows were appended successfully.
+ * 
+ * \remarks
+ * New rows will initially have empty strings for all features and missing values for all data.
+ */
 bool CPCL::AddGenes( const vector<string>& vecstrGenes ) {
 	size_t	i, j, iStart;
 
@@ -388,6 +607,16 @@ bool CPCL::AddGenes( const vector<string>& vecstrGenes ) {
 
 	return true; }
 
+/*!
+ * \brief
+ * Normalizes the PCL's values in the requested manner.
+ * 
+ * \param eNormalize
+ * Algorithm by which the PCL's values should be normalized.
+ * 
+ * \see
+ * ENormalize
+ */
 void CPCL::Normalize( ENormalize eNormalize ) {
 	size_t	i, j, iCount;
 	double	dAve, dStd;
@@ -429,7 +658,8 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 							dMin = d;
 						if( d > dMax )
 							dMax = d; }
-			dMax -= dMin;
+			if( !( dMax -= dMin ) )
+				dMax = 1;
 			for( i = 0; i < GetGenes( ); ++i )
 				for( j = 0; j < GetExperiments( ); ++j )
 					if( !CMeta::IsNaN( d = Get( i, j ) ) )

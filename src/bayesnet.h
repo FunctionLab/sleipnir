@@ -24,7 +24,7 @@ public:
 	 * \brief
 	 * Load a Bayes net from a file.
 	 * 
-	 * \param szFilename
+	 * \param szFile
 	 * Path to file.
 	 * 
 	 * \returns
@@ -35,12 +35,12 @@ public:
 	 * reinitialized from the given file, although it may be left in an inconsistent state if the return
 	 * value is false.
 	 */
-	virtual bool Open( const char* szFilename ) = 0;
+	virtual bool Open( const char* szFile ) = 0;
 	/*!
 	 * \brief
 	 * Save a Bayes net to a file.
 	 * 
-	 * \param szFilename
+	 * \param szFile
 	 * Path to file.
 	 * 
 	 * \returns
@@ -50,13 +50,13 @@ public:
 	 * Specific behavior is implementation specific; the Bayes net will not be modified, but the contents
 	 * of the output file may be inconsistent if the return value is false.
 	 */
-	virtual bool Save( const char* szFilename ) const = 0;
+	virtual bool Save( const char* szFile ) const = 0;
 	/*!
 	 * \brief
 	 * Learn conditional probabilities from data using Expectation Maximization, naive Bayesian learning, or
 	 * Extended Logistic Regression.
 	 * 
-	 * \param pData
+	 * \param pDataset
 	 * Dataset to be used for learning.
 	 * 
 	 * \param iIterations
@@ -82,12 +82,13 @@ public:
 	 * IDataset::IsExample is true will be used, which usually means that the first dataset and at least
 	 * one other dataset must have a value.
 	 */
-	virtual bool Learn( const IDataset* pData, size_t iIterations, bool fZero = false, bool fELR = false ) = 0;
+	virtual bool Learn( const IDataset* pDataset, size_t iIterations, bool fZero = false,
+		bool fELR = false ) = 0;
 	/*!
 	 * \brief
 	 * Perform Bayesian inference to obtain probabilities for each element of a dataset.
 	 * 
-	 * \param pData
+	 * \param pDataset
 	 * Dataset to be used as input for inference.
 	 * 
 	 * \param vecvecdResults
@@ -115,13 +116,13 @@ public:
 	 * dataset must have a value.  If the output node can take N values, each output vector will contain only
 	 * the first N-1 probabilities, since the Nth can be calculated to sum to one.
 	 */
-	virtual bool Evaluate( const IDataset* pData, std::vector<std::vector<float> >& vecvecdResults,
+	virtual bool Evaluate( const IDataset* pDataset, std::vector<std::vector<float> >& vecvecdResults,
 		bool fZero = false ) const = 0;
 	/*!
 	 * \brief
 	 * Perform Bayesian inference to obtain probabilities for each element of a dataset.
 	 * 
-	 * \param pData
+	 * \param pDataset
 	 * Dataset to be used as input for inference.
 	 * 
 	 * \param DatResults
@@ -145,7 +146,7 @@ public:
 	 * data for which IDataset::IsExample is true will be used, which usually means that at least one other
 	 * dataset must have a value.
 	 */
-	virtual bool Evaluate( const IDataset* pData, CDat& DatResults, bool fZero = false ) const = 0;
+	virtual bool Evaluate( const IDataset* pDataset, CDat& DatResults, bool fZero = false ) const = 0;
 	/*!
 	 * \brief
 	 * Perform Bayesian inference to obtain probabilities given values for each other Bayes net node.
@@ -354,7 +355,7 @@ public:
 #ifdef PNL_ENABLED
 	bool Convert( CBayesNetPNL& BNPNL ) const;
 #endif // PNL_ENABLED
-	bool Open( const IDataset* pData, const std::vector<std::string>& vecstrNames,
+	bool Open( const IDataset* pDataset, const std::vector<std::string>& vecstrNames,
 		const std::vector<size_t>& veciDefaults );
 	bool Open( const CBayesNetSmile& BNPrior, const std::vector<CBayesNetSmile*>& vecpBNs );
 	float Evaluate( size_t iNode, unsigned char bValue ) const;
@@ -377,7 +378,7 @@ public:
 
 		m_pDefaults = &Defaults; }
 
-	bool Learn( const IDataset* pData, size_t iIterations, bool fZero = false, bool fELR = false );
+	bool Learn( const IDataset* pDataset, size_t iIterations, bool fZero = false, bool fELR = false );
 	bool Evaluate( const std::vector<unsigned char>& vecbDatum, std::vector<float>& vecdResults,
 		bool fZero = false, size_t iNode = 0, bool fIgnoreMissing = false ) const;
 	bool Evaluate( const CPCLPair& PCLData, CPCL& PCLResults, bool fZero = false,
@@ -387,13 +388,13 @@ public:
 	void Randomize( size_t iNode );
 	void Reverse( size_t iNode );
 
-	bool Open( const char* szFilename ) {
+	bool Open( const char* szFile ) {
 
-		return ( m_fSmileNet = !m_SmileNet.ReadFile( szFilename ) ); }
+		return ( m_fSmileNet = !m_SmileNet.ReadFile( szFile ) ); }
 
-	bool Save( const char* szFilename ) const {
+	bool Save( const char* szFile ) const {
 
-		return ( m_fSmileNet ? !((CBayesNetSmile*)this)->m_SmileNet.WriteFile( szFilename ) : false ); }
+		return ( m_fSmileNet ? !((CBayesNetSmile*)this)->m_SmileNet.WriteFile( szFile ) : false ); }
 
 	bool GetCPT( size_t iNode, CDataMatrix& MatCPT ) const {
 
@@ -412,13 +413,14 @@ public:
 
 		return CBayesNetSmileImpl::IsContinuous( ); }
 
-	bool Evaluate( const IDataset* pData, std::vector<std::vector<float> >& vecvecdResults, bool fZero ) const {
+	bool Evaluate( const IDataset* pDataset, std::vector<std::vector<float> >& vecvecdResults,
+		bool fZero ) const {
 
-		return CBayesNetSmileImpl::Evaluate( pData, NULL, &vecvecdResults, fZero ); }
+		return CBayesNetSmileImpl::Evaluate( pDataset, NULL, &vecvecdResults, fZero ); }
 
-	bool Evaluate( const IDataset* pData, CDat& DatResults, bool fZero ) const {
+	bool Evaluate( const IDataset* pDataset, CDat& DatResults, bool fZero ) const {
 
-		return CBayesNetSmileImpl::Evaluate( pData, &DatResults, NULL, fZero ); }
+		return CBayesNetSmileImpl::Evaluate( pDataset, &DatResults, NULL, fZero ); }
 };
 
 /*!
@@ -442,23 +444,23 @@ public:
  */
 class CBayesNetFN : CBayesNetFNImpl, public IBayesNet {
 public:
-	bool Open( const char* szFilename );
-	bool Save( const char* szFilename ) const;
-	bool Learn( const IDataset* pData, size_t iIterations, bool fZero = false, bool fELR = false );
+	bool Open( const char* szFile );
+	bool Save( const char* szFile ) const;
+	bool Learn( const IDataset* pDataset, size_t iIterations, bool fZero = false, bool fELR = false );
 	bool Evaluate( const std::vector<unsigned char>& vecbDatum, std::vector<float>& vecdResults,
 		bool fZero = false, size_t iNode = 0, bool fIgnoreMissing = false ) const;
 	void GetNodes( std::vector<std::string>& vecstrNodes ) const;
 	unsigned char GetValues( size_t iNode ) const;
 	bool IsContinuous( ) const;
 
-	bool Evaluate( const IDataset* pData, std::vector<std::vector<float> >& vecvecdResults,
+	bool Evaluate( const IDataset* pDataset, std::vector<std::vector<float> >& vecvecdResults,
 		bool fZero ) const {
 
-		return CBayesNetFNImpl::Evaluate( pData, NULL, &vecvecdResults, fZero ); }
+		return CBayesNetFNImpl::Evaluate( pDataset, NULL, &vecvecdResults, fZero ); }
 
-	bool Evaluate( const IDataset* pData, CDat& DatResults, bool fZero ) const {
+	bool Evaluate( const IDataset* pDataset, CDat& DatResults, bool fZero ) const {
 
-		return CBayesNetFNImpl::Evaluate( pData, &DatResults, NULL, fZero ); }
+		return CBayesNetFNImpl::Evaluate( pDataset, &DatResults, NULL, fZero ); }
 
 	bool IsContinuous( size_t iNode ) const {
 
@@ -512,9 +514,9 @@ class CBayesNetPNL : public CBayesNetPNLImpl, public IBayesNet {
 public:
 	CBayesNetPNL( bool fGroup = true );
 
-	bool Open( const char* szFilename );
-	bool Save( const char* szFilename ) const;
-	bool Learn( const IDataset* pData, size_t iIterations, bool fZero = false, bool fELR = false );
+	bool Open( const char* szFile );
+	bool Save( const char* szFile ) const;
+	bool Learn( const IDataset* pDataset, size_t iIterations, bool fZero = false, bool fELR = false );
 
 	void GetNodes( std::vector<std::string>& vecstrNodes ) const {
 		UNUSED_PARAMETER(vecstrNodes); }
@@ -528,14 +530,14 @@ public:
 
 		return CBayesNetPNLImpl::IsContinuous( ); }
 
-	bool Evaluate( const IDataset* pData, std::vector<std::vector<float> >& vecvecdResults,
+	bool Evaluate( const IDataset* pDataset, std::vector<std::vector<float> >& vecvecdResults,
 		bool fZero ) const {
 
-		return CBayesNetPNLImpl::Evaluate( pData, NULL, &vecvecdResults, fZero ); }
+		return CBayesNetPNLImpl::Evaluate( pDataset, NULL, &vecvecdResults, fZero ); }
 
-	bool Evaluate( const IDataset* pData, CDat& DatResults, bool fZero ) const {
+	bool Evaluate( const IDataset* pDataset, CDat& DatResults, bool fZero ) const {
 
-		return CBayesNetPNLImpl::Evaluate( pData, &DatResults, NULL, fZero ); }
+		return CBayesNetPNLImpl::Evaluate( pDataset, &DatResults, NULL, fZero ); }
 
 	void Randomize( ) { }
 

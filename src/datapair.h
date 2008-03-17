@@ -7,31 +7,152 @@ namespace Sleipnir {
 
 class CSlim;
 
+/*!
+ * \brief
+ * Encapsulates a CDat paired with a quantization file.
+ * 
+ * A data pair consists of a CDat (often on disk in DAB format) paired with quantization information.  This
+ * information is generally stored in a QUANT file with the same name and location as the CDat.  For example,
+ * a DAB file named <tt>data.dab</tt> and a QUANT file named <tt>data.quant</tt> might reside in the same
+ * directory; these would be loaded together as a CDataPair.
+ * 
+ * A QUANT file consists of a single line of text containing tab-delimited increasing numbers.  These numbers
+ * represent bin edges for discretizing the CDat associated with the QUANT.  The number of bins is equal to
+ * the number of numbers in the QUANT, meaning that the last number will be ignored.  Upper bin edges are
+ * inclusive, lower bin edges are exclusive.  This means that for a QUANT file containing:
+ * <pre>-0.1	0.3	0.6</pre>
+ * the associated CDat will be discretized into three values:
+ * - 0, corresponding to values less than or equal to -0.1.
+ * - 1, corresponding to values greater than -0.1 but less than or equal to 0.3.
+ * - 2, corresponding to values greater than 0.3.
+ * 
+ * \see
+ * CMeta::Quantize
+ */
 class CDataPair : public CDataPairImpl {
 public:
-	bool Open( const char*, bool, bool = false, size_t = 2, bool = false );
-	bool Open( const CSlim& );
-	bool OpenQuants( const char* );
-	void SetQuants( const float*, size_t );
-	void SetQuants( const std::vector<float>& );
-	size_t Quantize( float ) const;
-	bool IsContinuous( ) const;
-	unsigned char GetValues( ) const;
+	bool Open( const char* szDatafile, bool fContinuous, bool fMemmap = false, size_t iSkip = 2,
+		bool fZScore = false );
+	bool Open( const CSlim& Slim );
+	bool OpenQuants( const char* szDatafile );
+	void SetQuants( const float* adBinEdges, size_t iBins );
+	void SetQuants( const std::vector<float>& vecdBinEdges );
+	size_t Quantize( float dValue ) const;
 
-	bool Open( const CDat& Dat, const std::vector<CGenes*>& vecpOther,
-		const CGenome& Genome, bool fPositives ) {
+	/*!
+	 * \brief
+	 * Returns the number of discrete values taken by this data pair.
+	 * 
+	 * \returns
+	 * Number of discrete values taken by this data pair.
+	 * 
+	 * \remarks
+	 * Equivalent to number of bins in the data pair and number of bin edges in the QUANT file.
+	 * 
+	 * \see
+	 * SetQuants | Quantize
+	 */
+	unsigned char GetValues( ) const {
 
-		return CDat::Open( Dat, vecpOther, Genome, fPositives ); }
+		return (unsigned char)m_vecdQuant.size( ); }
 
-	bool Open( const std::vector<std::string>& vecstrGenes, const CDistanceMatrix& Dist ) {
+	/*!
+	 * \brief
+	 * Returns true if the data pair has no associated discretization information.
+	 * 
+	 * \returns
+	 * True if the data pair has no associated discretization information.
+	 * 
+	 * \remarks
+	 * Generally only useful with continuous Bayes nets, which themselves aren't that useful.
+	 */
+	bool IsContinuous( ) const {
 
-		return CDat::Open( vecstrGenes, Dist ); }
+		return m_fContinuous; }
+
+	/*!
+	 * \brief
+	 * Construct a data pair from the given known gene relationships and gene sets and with no discretization
+	 * information.
+	 * 
+	 * \param DatKnown
+	 * Known pairwise scores, either positive or negative as indicated.
+	 * 
+	 * \param vecpOther
+	 * Gene sets, either positive or nonnegative as indicated (possibly empty).
+	 * 
+	 * \param Genome
+	 * Genome containing all genes of interest.
+	 * 
+	 * \param fKnownNegatives
+	 * If true, DatKnown contains known negative gene pairs (0 scores); if false, it contains known related
+	 * gene pairs (1 scores).  In the former case, positives are generated from pairs coannotated to the
+	 * given gene sets; in the latter, negatives are generated from pairs not coannotated to the given gene
+	 * sets.
+	 * 
+	 * \returns
+	 * True if data pair was generated successfully.
+	 * 
+	 * \remarks
+	 * Quantize will behave inconsistently if the data pair is not assigned bin edges through some other means.
+	 * 
+	 * \see
+	 * CDat::Open
+	 */
+	bool Open( const CDat& DatKnown, const std::vector<CGenes*>& vecpOther, const CGenome& Genome,
+		bool fKnownNegatives ) {
+
+		return CDat::Open( DatKnown, vecpOther, Genome, fKnownNegatives ); }
+
+	/*!
+	 * \brief
+	 * Construct a new data pair with the given gene names and values and with no discretization information.
+	 * 
+	 * \param vecstrGenes
+	 * Gene names and size to associate with the data pair.
+	 * 
+	 * \param MatScores
+	 * Values to associate with the data pair.
+	 * 
+	 * \returns
+	 * True if data pair was generated successfully.
+	 * 
+	 * \remarks
+	 * Quantize will behave inconsistently if the data pair is not assigned bin edges through some other means.
+	 * 
+	 * \see
+	 * CDat::Open
+	 */
+	bool Open( const std::vector<std::string>& vecstrGenes, const CDistanceMatrix& MatScores ) {
+
+		return CDat::Open( vecstrGenes, MatScores ); }
 };
 
+/*!
+ * \brief
+ * Encapsulates a CPCL paired with a quantization file.
+ * 
+ * A PCL pair consists of a CPCL paired with quantization information.  This information is generally stored
+ * in a QUANT file with the same name and location as the PCL.  For example, a PCL file named
+ * <tt>data.pcl</tt> and a QUANT file named <tt>data.quant</tt> might reside in the same directory; these
+ * would be loaded together as a CPCLPair.  The discretization information from the QUANT can be used to
+ * convert continuous values in the PCL into discrete values, e.g. for use with a Bayes net.
+ * 
+ * Unlike a CDataPair, a PCL's QUANT file should contain one line per experiment.  Each line is the equivalent
+ * of one standard QUANT file, i.e. it contains tab delimited bin edges in increasing order, the largest of
+ * which is ignored.  This allows the values for individual experiments to be discretized differently if so
+ * desired.
+ * 
+ * \remarks
+ * The number of lines in the QUANT file must equal the number of experiments in the PCL file.
+ * 
+ * \see
+ * IBayesNet::Evaluate
+ */
 class CPCLPair : public CPCLPairImpl {
 public:
-	bool Open( const char*, size_t );
-	size_t Quantize( float, size_t ) const;
+	bool Open( const char* szDatafile, size_t iSkip );
+	size_t Quantize( float dValue, size_t iExperiment ) const;
 };
 
 }

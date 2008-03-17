@@ -9,7 +9,7 @@ protected:
 
 	void ToHSV( float&, float&, float& ) const;
 
-	unsigned char	m_acRGB[ c_iChannels ];
+	unsigned char	m_abRGB[ c_iChannels ];
 };
 
 }

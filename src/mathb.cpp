@@ -5,26 +5,19 @@ namespace Sleipnir {
 
 vector<double>	CMathImpl::s_vecdLogFact;
 
-size_t CMath::GCD( size_t iA, size_t iB ) {
-	size_t	i;
-
-	while( iB ) {
-		i = iA;
-		iA = iB;
-		iB = i % iB; }
-
-	return iA; }
-
-double CMath::Min( double dA, double dB ) {
-
-	return ( ( dA < dB ) ? dA : dB ); }
-
-size_t CMath::Round( double d ) {
-	size_t	i;
-
-	i = (size_t)d;
-	return ( ( ( d - i ) >= 0.5 ) ? ( i + 1 ) : i ); }
-
+/*!
+ * \brief
+ * Returns the log of N factorial.
+ * 
+ * \param iN
+ * Integer to be factorialed and logged.
+ * 
+ * \returns
+ * log(N!)
+ * 
+ * \remarks
+ * Calculated exactly and cached for small N, calculated using Stirling's approximation for large N.
+ */
 double CMath::LogFact( size_t iN ) {
 	size_t	i;
 

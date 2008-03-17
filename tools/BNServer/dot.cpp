@@ -151,8 +151,9 @@ bool CDot::SaveEdge( ostream& ostm, const TEdge& Edge ) const {
 		c_acTabs << "		<text>node" << iHead << "</text>" << endl <<
 		c_acTabs << "		<text>node" << iTail << "</text>" << endl <<
 		c_acTabs << "	</g>" << endl <<
-		c_acTabs << "	<path style=\"fill:none;stroke:#" << CDat::GetColor( dWeight ) <<
-			";stroke-width:3;\" d=\"" + strPath + "\" />" << endl <<
+		c_acTabs << "	<path style=\"fill:none;stroke:#" << CColor::Interpolate( dWeight, CColor::c_Green,
+			CColor::c_Black, CColor::c_Red ).ToRGB( ) << ";stroke-width:3;\" d=\"" + strPath + "\" />" <<
+			endl <<
 		c_acTabs << "</g>" << endl;
 
 	return true; }

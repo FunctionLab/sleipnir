@@ -716,7 +716,7 @@ bool CBayesNetMinimal::Open( istream& istm ) {
 
 /*!
  * \brief
- * Load a minimal Bayes net to the given binary stream.
+ * Save a minimal Bayes net to the given binary stream.
  * 
  * \param ostm
  * Stream to which Bayes net is saved.

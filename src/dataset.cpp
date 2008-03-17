@@ -148,26 +148,6 @@ bool CDataImpl::OpenGenes( const vector<string>& vecstrData ) {
 
 	return true; }
 
-bool CDataImpl::IsHidden( size_t iNode ) const {
-
-	return ( m_veciMapping[ iNode ] == -1 ); }
-
-const string& CDataImpl::GetGene( size_t iGene ) const {
-
-	return m_vecstrGenes[ iGene ]; }
-
-size_t CDataImpl::GetGenes( ) const {
-
-	return m_vecstrGenes.size( ); }
-
-const vector<string>& CDataImpl::GetGeneNames( ) const {
-
-	return m_vecstrGenes; }
-
-size_t CDataImpl::GetExperiments( ) const {
-
-	return m_veciMapping.size( ); }
-
 size_t CDataImpl::GetGene( const string& strGene ) const {
 	size_t	i;
 
@@ -176,10 +156,6 @@ size_t CDataImpl::GetGene( const string& strGene ) const {
 			return i;
 
 	return -1; }
-
-unsigned char CDataImpl::GetBins( size_t iExp ) const {
-
-	return m_veccQuants[ iExp ]; }
 
 const unsigned char* CDataImpl::OpenBinary( const unsigned char* pbData ) {
 	uint32_t	iVal;
@@ -293,24 +269,40 @@ void CDatasetImpl::Reset( ) {
 				delete (CCompactMatrix*)m_apData[ i ];
 		delete[] m_apData; } }
 
-bool CDataset::Open( const char* szAnswers, const char* szDataDir,
-	const IBayesNet* pBayesNet ) {
+/*!
+ * \brief
+ * Construct a dataset corresponding to the given Bayes net using the provided answer file and data
+ * files from the given directory.
+ * 
+ * \param szAnswerFile
+ * Answer file which will become the first node of the dataset.
+ * 
+ * \param szDataDirectory
+ * Directory from which data files are loaded.
+ * 
+ * \param pBayesNet
+ * Bayes nets whose nodes will correspond to files in the dataset.
+ * 
+ * \returns
+ * True if dataset was constructed successfully.
+ * 
+ * Creates a dataset with nodes corresponding to the given Bayes net structure; the given answer file
+ * is always inserted as the first (0th) data file, and thus corresponds to the first node in the Bayes
+ * net (generally the class node predicting functional relationships).  Data is loaded continuously or
+ * discretely as indicated by the Bayes net, and nodes for which a corresponding data file (i.e. one
+ * with the same name followed by an appropriate CDat extension) cannot be located are marked as hidden.
+ * 
+ * \remarks
+ * Each data file is loaded more or less as-is; continuous data files will be loaded directly into
+ * memory, and discrete files are pre-discretized and stored in compact matrices.
+ */
+bool CDataset::Open( const char* szAnswerFile, const char* szDataDirectory, const IBayesNet* pBayesNet ) {
 	CDataPair	Answers;
 
-	return ( Answers.Open( szAnswers, pBayesNet->IsContinuous( 0 ) ) &&
-		Open( Answers, szDataDir, pBayesNet ) ); }
+	return ( Answers.Open( szAnswerFile, pBayesNet->IsContinuous( 0 ) ) &&
+		Open( Answers, szDataDirectory, pBayesNet ) ); }
 
-bool CDataset::Open( const CDataPair& Answers, const char* szDataDir,
-	const IBayesNet* pBayesNet ) {
-
-	return CDatasetImpl::Open( &Answers, szDataDir, pBayesNet ); }
-
-bool CDataset::Open( const char* szDataDir, const IBayesNet* pBayesNet ) {
-
-	return CDatasetImpl::Open( NULL, szDataDir, pBayesNet ); }
-
-bool CDatasetImpl::Open( const CDataPair* pAnswers, const char* szDataDir,
-	const IBayesNet* pBayesNet ) {
+bool CDatasetImpl::Open( const CDataPair* pAnswers, const char* szDataDir, const IBayesNet* pBayesNet ) {
 	size_t						i;
 	vector<string>				vecstrData, vecstrNodes;
 	set<string>					setstrGenes;
@@ -383,15 +375,30 @@ bool CDatasetImpl::Open( const CDataPair& Datum, size_t iExp ) {
 
 	return true; }
 
-bool CDataset::Open( const char* szAnswers, const vector<string>& vecstrData ) {
+/*!
+ * Construct a dataset corresponding to the given answer file and data files.
+ * 
+ * \param szAnswerFile
+ * Answer file which will become the first node of the dataset.
+ * 
+ * \param vecstrDataFiles
+ * Vector of file paths to load.
+ * 
+ * \returns
+ * True if dataset was constructed successfully.
+ * 
+ * Creates a dataset with nodes corresponding to the given data files; the given answer file is inserted
+ * as the first (0th) node.  All files are assumed to be continuous.
+ */
+bool CDataset::Open( const char* szAnswerFile, const vector<string>& vecstrDataFiles ) {
 	size_t	i;
 
 	Reset( );
-	m_veccQuants.resize( 1 + vecstrData.size( ) );
+	m_veccQuants.resize( 1 + vecstrDataFiles.size( ) );
 	{
 		CDataPair	Answers;
 
-		if( !Answers.Open( szAnswers, true ) )
+		if( !Answers.Open( szAnswerFile, true ) )
 			return false;
 
 		m_vecstrGenes.resize( Answers.GetGenes( ) );
@@ -404,104 +411,85 @@ bool CDataset::Open( const char* szAnswers, const vector<string>& vecstrData ) {
 
 	m_veciMapping.resize( m_veccQuants.size( ) );
 	m_veciMapping[ 0 ] = 0;
-	for( i = 1; i <= vecstrData.size( ); ++i ) {
+	for( i = 1; i <= vecstrDataFiles.size( ); ++i ) {
 		CDataPair	Datum;
 
-		if( !Datum.Open( vecstrData[ i - 1 ].c_str( ), true ) ||
+		if( !Datum.Open( vecstrDataFiles[ i - 1 ].c_str( ), true ) ||
 			!CDatasetImpl::Open( Datum, i ) )
 			return false;
 		m_veciMapping[ i ] = i; }
 
 	return true; }
 
-bool CDataset::Open( const vector<string>& vecstrData ) {
+/*!
+ * \brief
+ * Construct a dataset corresponding to the given files.
+ * 
+ * \param vecstrDataFiles
+ * Vector of file paths to load.
+ * 
+ * \returns
+ * True if dataset was constructed successfully.
+ * 
+ * Creates a dataset with nodes corresponding to the given data files.  All files are assumed to be
+ * continuous.
+ */
+bool CDataset::Open( const vector<string>& vecstrDataFiles ) {
 	size_t	i;
 
-	if( !OpenGenes( vecstrData ) )
+	if( !OpenGenes( vecstrDataFiles ) )
 		return false;
 	Reset( );
 	m_apData = new void*[ m_veccQuants.size( ) ];
 
-	for( i = 0; i < vecstrData.size( ); ++i ) {
+	for( i = 0; i < vecstrDataFiles.size( ); ++i ) {
 		CDataPair	Datum;
 
-		if( !( Datum.Open( vecstrData[ i ].c_str( ), true ) &&
+		if( !( Datum.Open( vecstrDataFiles[ i ].c_str( ), true ) &&
 			CDatasetImpl::Open( Datum, i ) ) )
 			return false; }
 
 	return true; }
 
-bool CDataset::IsHidden( size_t iNode ) const {
-
-	return CDataImpl::IsHidden( iNode ); }
-
-float CDataset::GetContinuous( size_t iX, size_t iY, size_t iNode ) const {
+float CDataset::GetContinuous( size_t iY, size_t iX, size_t iNode ) const {
 	size_t	iMap;
 
 	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
 		return CMeta::GetNaN( );
 
 	return ( ( m_veccQuants[ iMap ] == (unsigned char)-1 ) ?
-		((CDistanceMatrix*)m_apData[ iMap ])->Get( iX, iY ) :
-		((CCompactMatrix*)m_apData[ iMap ])->Get( iX, iY ) ); }
+		((CDistanceMatrix*)m_apData[ iMap ])->Get( iY, iX ) :
+		((CCompactMatrix*)m_apData[ iMap ])->Get( iY, iX ) ); }
 
-size_t CDataset::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
+size_t CDataset::GetDiscrete( size_t iY, size_t iX, size_t iNode ) const {
 	size_t	iMap;
 
 	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
 		return -1;
 
 	return ( ( m_veccQuants[ iMap ] == (unsigned char)-1 ) ? -1 :
-		( ((CCompactMatrix*)m_apData[ iMap ])->Get( iX, iY ) - 1 ) ); }
+		( ((CCompactMatrix*)m_apData[ iMap ])->Get( iY, iX ) - 1 ) ); }
 
-const string& CDataset::GetGene( size_t iGene ) const {
-
-	return CDataImpl::GetGene( iGene ); }
-
-size_t CDataset::GetGenes( ) const {
-
-	return CDataImpl::GetGenes( ); }
-
-bool CDataset::IsExample( size_t iX, size_t iY ) const {
+bool CDataset::IsExample( size_t iY, size_t iX ) const {
 	size_t	i;
 
 	for( i = 0; i < m_veccQuants.size( ); ++i )
 		if( m_veccQuants[ i ] == (unsigned char)-1 ) {
-			if( !CMeta::IsNaN( ((CDistanceMatrix*)m_apData[ i ])->Get( iX, iY ) ) )
+			if( !CMeta::IsNaN( ((CDistanceMatrix*)m_apData[ i ])->Get( iY, iX ) ) )
 				return true; }
-		else if( ((CCompactMatrix*)m_apData[ i ])->Get( iX, iY ) )
+		else if( ((CCompactMatrix*)m_apData[ i ])->Get( iY, iX ) )
 			return true;
 
 	return false; }
 
-const vector<string>& CDataset::GetGeneNames( ) const {
-
-	return CDataImpl::GetGeneNames( ); }
-
-size_t CDataset::GetExperiments( ) const {
-
-	return CDataImpl::GetExperiments( ); }
-
-size_t CDataset::GetGene( const string& strGene ) const {
-
-	return CDataImpl::GetGene( strGene ); }
-
-size_t CDataset::GetBins( size_t iExp ) const {
-
-	return CDataImpl::GetBins( iExp ); }
-
-void CDataset::Remove( size_t iX, size_t iY ) {
+void CDataset::Remove( size_t iY, size_t iX ) {
 	size_t	i;
 
 	for( i = 0; i < m_veccQuants.size( ); ++i )
 		if( m_veccQuants[ i ] == (unsigned char)-1 )
-			((CDistanceMatrix*)m_apData[ i ])->Set( iX, iY, CMeta::GetNaN( ) );
+			((CDistanceMatrix*)m_apData[ i ])->Set( iY, iX, CMeta::GetNaN( ) );
 		else
-			((CCompactMatrix*)m_apData[ i ])->Set( iX, iY, 0 ); }
-
-void CDataset::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
-
-	CDataImpl::FilterGenes( this, Genes, eFilt ); }
+			((CCompactMatrix*)m_apData[ i ])->Set( iY, iX, 0 ); }
 
 // CDataOverlayImpl
 
@@ -543,8 +531,30 @@ const string& CDataOverlayImpl::GetGene( size_t iGene ) const {
 
 // CDataFilter
 
+/*!
+ * \brief
+ * Associates the data filter with the given dataset, gene set, and filter type.
+ * 
+ * \param pDataset
+ * Dataset to be associated with the overlaying mask.
+ * 
+ * \param Genes
+ * Gene set used to filter the dataset.
+ * 
+ * \param eFilter
+ * Way in which to use the given genes to remove gene pairs.
+ * 
+ * \param pAnswers
+ * If non-null, answer set to be used for filter types requiring answers (e.g. CDat::EFilterTerm).
+ * 
+ * \remarks
+ * No calculation occurs during Attach; the gene set and filter type are stored, and calculations are
+ * performed dynamically in IsExample.  The gene set is not copied, so the given object should not be
+ * destroyed until after the filter.  If a filter types requiring an answer file is given without an
+ * accompanying answer file, the filter won't crash, but results might be a little odd.
+ */
 void CDataFilter::Attach( const IDataset* pDataset, const CGenes& Genes, CDat::EFilter eFilter,
-	const CDat* pAnswers, bool fDirect ) {
+	const CDat* pAnswers ) {
 	size_t	i;
 
 	m_pDataset = pDataset;
@@ -558,70 +568,87 @@ void CDataFilter::Attach( const IDataset* pDataset, const CGenes& Genes, CDat::E
 	if( m_pAnswers ) {
 		m_veciAnswers.resize( GetGenes( ) );
 		for( i = 0; i < m_veciAnswers.size( ); ++i )
-			m_veciAnswers[ i ] = fDirect ? i : m_pAnswers->GetGene( GetGene( i ) ); } }
+			m_veciAnswers[ i ] = m_pAnswers->GetGene( GetGene( i ) ); } }
 
-void CDataFilter::Remove( size_t iX, size_t iY ) {
-
-	throw 0; }
-
-bool CDataFilter::IsExample( size_t iX, size_t iY ) const {
+bool CDataFilter::IsExample( size_t iY, size_t iX ) const {
 
 	if( !m_pDataset )
 		return false;
 	if( !( m_pGenes && m_pGenes->GetGenes( ) ) )
-		return m_pDataset->IsExample( iX, iY );
+		return m_pDataset->IsExample( iY, iX );
 
 	switch( m_eFilter ) {
 		case CDat::EFilterInclude:
-			if( !( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) )
+			if( !( m_vecfGenes[ iY ] && m_vecfGenes[ iX ] ) )
 				return false;
 			break;
 
 		case CDat::EFilterExclude:
-			if( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] )
+			if( m_vecfGenes[ iY ] || m_vecfGenes[ iX ] )
 				return false;
 			break;
 
 		case CDat::EFilterEdge:
-			if( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) )
+			if( !( m_vecfGenes[ iY ] || m_vecfGenes[ iX ] ) )
 				return false;
 			break;
 
 		case CDat::EFilterTerm:
-			if( ( m_pAnswers && ( ( m_veciAnswers[ iX ] == -1 ) || ( m_veciAnswers[ iY ] == -1 ) ) ) ||
-				( !( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) &&
-				( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) || ( m_pAnswers &&
-				( m_pAnswers->Get( m_veciAnswers[ iX ], m_veciAnswers[ iY ] ) > 0 ) ) ) ) )
-				return false;
-			break;
-
-		case CDat::EFilterPositives:
-			if( m_pAnswers && ( m_veciAnswers[ iX ] != -1 ) && ( m_veciAnswers[ iY ] != -1 ) &&
-				( m_pAnswers->Get( m_veciAnswers[ iX ], m_veciAnswers[ iY ] ) > 0 ) &&
-				!( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) )
+			if( ( m_pAnswers && ( ( m_veciAnswers[ iY ] == -1 ) || ( m_veciAnswers[ iX ] == -1 ) ) ) ||
+				( !( m_vecfGenes[ iY ] && m_vecfGenes[ iX ] ) &&
+				( !( m_vecfGenes[ iY ] || m_vecfGenes[ iX ] ) || ( m_pAnswers &&
+				( m_pAnswers->Get( m_veciAnswers[ iY ], m_veciAnswers[ iX ] ) > 0 ) ) ) ) )
 				return false;
 			break; }
 
-	return m_pDataset->IsExample( iX, iY ); }
+	return m_pDataset->IsExample( iY, iX ); }
 
 // CDataMask
 
-void CDataMask::AttachRandom( const IDataset* pDataset, float dFrac ) {
+/*!
+ * \brief
+ * Associates the data mask with the given dataset and randomly hides a fraction of its data.
+ * 
+ * \param pDataset
+ * Dataset to be associated with the overlaying mask.
+ * 
+ * \param dFraction
+ * Fraction of gene pairs (between 0 and 1) to be randomly masked.
+ */
+void CDataMask::AttachRandom( const IDataset* pDataset, float dFraction ) {
 	size_t	i, j;
 
 	Attach( pDataset );
 	for( i = 0; i < m_Mask.GetSize( ); ++i )
 		for( j = ( i + 1 ); j < m_Mask.GetSize( ); ++j )
-			m_Mask.Set( i, j, ( m_Mask.Get( i, j ) && ( ( (float)rand( ) / RAND_MAX ) < dFrac ) ) ); }
+			m_Mask.Set( i, j, ( m_Mask.Get( i, j ) && ( ( (float)rand( ) / RAND_MAX ) < dFraction ) ) ); }
 
-void CDataMask::AttachComplement( const CDataMask& Data ) {
+/*!
+ * \brief
+ * Associates the data mask with the given mask's underlying dataset and reverses its mask.
+ * 
+ * \param DataMask
+ * Mask to be reversed by the current mask.
+ * 
+ * This associates the current mask with the given mask's underlying dataset and generates an inverted
+ * mask: all pairs hidden in the given mask are unhidden, and all unhidden pairs are hidden.  Data pairs
+ * missing in the underlying dataset will return false from IsExample regardless.
+ */
+void CDataMask::AttachComplement( const CDataMask& DataMask ) {
 	size_t	i, j;
 
-	Attach( Data.m_pDataset );
+	Attach( DataMask.m_pDataset );
 	for( i = 0; i < m_Mask.GetSize( ); ++i )
 		for( j = ( i + 1 ); j < m_Mask.GetSize( ); ++j )
-			m_Mask.Set( i, j, ( m_Mask.Get( i, j ) && !Data.m_Mask.Get( i, j ) ) ); }
+			m_Mask.Set( i, j, ( m_Mask.Get( i, j ) && !DataMask.m_Mask.Get( i, j ) ) ); }
 
+/*!
+ * \brief
+ * Associates the data mask with the given dataset.
+ * 
+ * \param pDataset
+ * Dataset to be associated with the overlaying mask.
+ */
 void CDataMask::Attach( const IDataset* pDataset ) {
 	size_t	i, j;
 
@@ -631,21 +658,37 @@ void CDataMask::Attach( const IDataset* pDataset ) {
 		for( j = ( i + 1 ); j < m_Mask.GetSize( ); ++j )
 			m_Mask.Set( i, j, m_pDataset->IsExample( i, j ) ); }
 
-bool CDataMask::IsExample( size_t iX, size_t iY ) const {
-
-	return m_Mask.Get( iX, iY ); }
-
-void CDataMask::Remove( size_t iX, size_t iY ) {
-
-	m_Mask.Set( iX, iY, false ); }
-
 // CDataSubset
 
-bool CDataSubset::Initialize( const char* szDataDir, const IBayesNet* pBayesNet,
-	size_t iSize ) {
+/*!
+ * \brief
+ * Construct a data subset corresponding to the given Bayes net using data files from the given directory;
+ * loads only the requested number of genes at a time.
+ * 
+ * \param szDataDirectory
+ * Directory from which data files are loaded.
+ * 
+ * \param pBayesNet
+ * Bayes nets whose nodes will correspond to files in the data subset.
+ * 
+ * \param iGeneSize
+ * Number of genes to be loaded at once; all data for these genes will be loaded.
+ * 
+ * \returns
+ * True if data subset was constructed successfully.
+ * 
+ * Creates a data subset with nodes corresponding to the given Bayes net structure.  Data is loaded
+ * continuously or discretely as indicated by the Bayes net, and nodes for which a corresponding data
+ * file (i.e. one with the same name followed by an appropriate CDat extension) cannot be located are
+ * marked as hidden.  No data is loaded during initialization; this instead occurs during Open.
+ * 
+ * \see
+ * CDataset::Open
+ */
+bool CDataSubset::Initialize( const char* szDataDirectory, const IBayesNet* pBayesNet, size_t iGeneSize ) {
 	size_t	i;
 
-	m_iSize = iSize;
+	m_iSize = iGeneSize;
 	m_vecstrData.clear( );
 	m_fContinuous = pBayesNet->IsContinuous( );
 	{
@@ -654,7 +697,7 @@ bool CDataSubset::Initialize( const char* szDataDir, const IBayesNet* pBayesNet,
 		vector<string>				vecstrNodes;
 
 		pBayesNet->GetNodes( vecstrNodes );
-		OpenMax( szDataDir, vecstrNodes, false, m_vecstrData, &setstrGenes );
+		OpenMax( szDataDirectory, vecstrNodes, false, m_vecstrData, &setstrGenes );
 		m_vecstrGenes.resize( setstrGenes.size( ) );
 		i = 0;
 		for( iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( ); ++iterGenes )
@@ -664,26 +707,62 @@ bool CDataSubset::Initialize( const char* szDataDir, const IBayesNet* pBayesNet,
 
 	return true; }
 
-bool CDataSubset::Initialize( const vector<string>& vecstrData, size_t iSize ) {
+/*!
+ * \brief
+ * Construct a data subset corresponding using the given data files; loads only the requested number of
+ * genes at a time.
+ * 
+ * \param vecstrDataFiles
+ * Vector of file paths to load.
+ * 
+ * \param iGeneSize
+ * Number of genes to be loaded at once; all data for these genes will be loaded.
+ * 
+ * \returns
+ * True if data subset was constructed successfully.
+ * 
+ * Creates a dataset with nodes corresponding to the given data files; all files are assumed to be
+ * continuous.  No data is loaded during initialization; this instead occurs during Open.
+ * 
+ * \see
+ * CDataset::Open
+ */
+bool CDataSubset::Initialize( const vector<string>& vecstrDataFiles, size_t iGeneSize ) {
 	size_t	i;
 
-	m_iSize = iSize;
-	m_vecstrData.resize( vecstrData.size( ) );
-	m_veccQuants.resize( vecstrData.size( ) );
-	for( i = 0; i < vecstrData.size( ); ++i )
-		m_vecstrData[ i ] = vecstrData[ i ];
+	m_iSize = iGeneSize;
+	m_vecstrData.resize( vecstrDataFiles.size( ) );
+	m_veccQuants.resize( vecstrDataFiles.size( ) );
+	for( i = 0; i < vecstrDataFiles.size( ); ++i )
+		m_vecstrData[ i ] = vecstrDataFiles[ i ];
 	m_fContinuous = true;
 
-	if( !OpenGenes( vecstrData ) )
+	if( !OpenGenes( vecstrDataFiles ) )
 		return false;
 	m_Examples.Initialize( m_iSize, m_vecstrGenes.size( ) );
 
 	return true; }
 
-bool CDataSubset::Open( size_t iOffset ) {
+/*!
+ * \brief
+ * Load data for the subset's configured number of genes starting at the given offset.
+ * 
+ * \param iGeneOffset
+ * First gene ID to load into the data subset.
+ * 
+ * \returns
+ * True if data was loaded successfully.
+ * 
+ * For a data subset configured with a particular size, loads all data for that many genes beginning at the
+ * given index.
+ * 
+ * \see
+ * Initialize
+ */
+bool CDataSubset::Open( size_t iGeneOffset ) {
 	size_t	i, j;
 
-	m_iOffset = iOffset;
+	m_iOffset = iGeneOffset;
 	for( i = 0; i < m_Examples.GetRows( ); ++i )
 		for( j = 0; j < m_Examples.GetColumns( ); ++j )
 			m_Examples.Get( i, j ).Reset( );
@@ -718,64 +797,5 @@ bool CDataSubsetImpl::Open( const CDataPair& Datum, size_t iExp ) {
 				m_Examples.Get( i, j ).Set( iExp, d, Datum, m_vecstrData.size( ) ); }
 
 	return true; }
-
-bool CDataSubset::IsHidden( size_t iNode ) const {
-
-	return CDataImpl::IsHidden( iNode ); }
-
-size_t CDataSubset::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
-	size_t	iMap;
-
-	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
-		return -1;
-
-	return m_Examples.Get( iX - m_iOffset, iY ).GetDiscrete( iMap ); }
-
-float CDataSubset::GetContinuous( size_t iX, size_t iY, size_t iNode ) const {
-	size_t	iMap;
-
-	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
-		return CMeta::GetNaN( );
-
-	return m_Examples.Get( iX - m_iOffset, iY ).GetContinuous( iMap ); }
-
-const string& CDataSubset::GetGene( size_t iGene ) const {
-
-	return CDataImpl::GetGene( iGene ); }
-
-size_t CDataSubset::GetGenes( ) const {
-
-	return CDataImpl::GetGenes( ); }
-
-bool CDataSubset::IsExample( size_t iX, size_t iY ) const {
-
-	if( ( iX < m_iOffset ) || ( ( iX - m_iOffset ) >= m_iSize ) )
-		return false;
-
-	return m_Examples.Get( iX - m_iOffset, iY ).IsSet( ); }
-
-const vector<string>& CDataSubset::GetGeneNames( ) const {
-
-	return CDataImpl::GetGeneNames( ); }
-
-size_t CDataSubset::GetExperiments( ) const {
-
-	return CDataImpl::GetExperiments( ); }
-
-size_t CDataSubset::GetGene( const string& strGene ) const {
-
-	return CDataImpl::GetGene( strGene ); }
-
-size_t CDataSubset::GetBins( size_t iExp ) const {
-
-	return CDataImpl::GetBins( iExp ); }
-
-void CDataSubset::Remove( size_t iX, size_t iY ) {
-
-	m_Examples.Get( iX - m_iOffset, iY ).Reset( ); }
-
-void CDataSubset::FilterGenes( const CGenes& Genes, CDat::EFilter eFilt ) {
-
-	CDataImpl::FilterGenes( this, Genes, eFilt ); }
 
 }

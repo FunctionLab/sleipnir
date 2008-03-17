@@ -21,7 +21,8 @@ protected:
 	static void Alarm( int );
 #endif // _MSC_VER
 
-	CPropertyFile	m_Config;
+	void Listen( );
+
 	int				m_iPort;
 	int				m_iTimeout;
 	SOCKET			m_iSocket;
@@ -36,61 +37,17 @@ public:
 	CServerClientImpl( SOCKET, IServerClient* );
 
 private:
-#ifdef XML_ENABLED
-	static const XMLCh	c_pxszLS[];
-
-	xercesc::DOMDocument*		m_pxdocMessage;
-	xercesc::DOMBuilder*		m_pxbld;
-#else // XML_ENABLED
 	static const size_t	c_iBuffer	= 131072;
-
-	std::vector<unsigned char>	m_vecbMessage;
-#endif // XML_ENABLED
 
 	~CServerClientImpl( );
 
 	void StartRoutine( );
 	void ReadMessage( );
 
-	SOCKET			m_iSocket;
-	IServerClient*	m_pClient;
+	SOCKET						m_iSocket;
+	IServerClient*				m_pClient;
+	std::vector<unsigned char>	m_vecbMessage;
 };
-
-#ifdef XML_ENABLED
-class CStringInputSource : public xercesc::DOMInputSource {
-public:
-	CStringInputSource( const std::string& );
-	
-	const XMLCh* getEncoding( ) const;
-	const XMLCh* getPublicId( ) const;
-	const XMLCh* getSystemId( ) const;
-	const XMLCh* getBaseURI( ) const;
-	void setEncoding( const XMLCh* const );
-	void setPublicId( const XMLCh* const );
-	void setSystemId( const XMLCh* const );
-	void setBaseURI( const XMLCh* const );
-	void setIssueFatalErrorIfNotFound( const bool );
-	bool getIssueFatalErrorIfNotFound( ) const;
-	xercesc::BinInputStream* makeStream( ) const;
-	void release( );
-
-private:
-	const std::string&	m_str;
-};
-
-class CBinStringInputStream : public xercesc::BinInputStream {
-public:
-	CBinStringInputStream( const std::string& );
-	
-	unsigned int curPos( ) const;
-	unsigned int readBytes( XMLByte* const, const unsigned int );
-
-private:
-	const std::string&	m_str;
-	int					m_iPos;
-	bool				m_fHalf;
-};
-#endif // XML_ENABLED
 
 }
 

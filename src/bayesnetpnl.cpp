@@ -29,20 +29,20 @@ CBayesNetPNLImpl::~CBayesNetPNLImpl( ) {
 	if( m_pPNLNet )
 		delete m_pPNLNet; }
 
-bool CBayesNetPNL::Open( const char* szFilename ) {
+bool CBayesNetPNL::Open( const char* szFile ) {
 	CContextPersistence	ConPer;
 
-	if( !ConPer.LoadXML( szFilename ) )
+	if( !ConPer.LoadXML( szFile ) )
 		return false;
 	if( m_pPNLNet )
 		delete m_pPNLNet;
 	return !!( m_pPNLNet = (CBNet*)ConPer.Get( c_szBN ) ); }
 
-bool CBayesNetPNL::Save( const char* szFilename ) const {
+bool CBayesNetPNL::Save( const char* szFile ) const {
 	CContextPersistence	ConPer;
 
 	ConPer.Put( m_pPNLNet, c_szBN );
-	return ConPer.SaveAsXML( szFilename ); }
+	return ConPer.SaveAsXML( szFile ); }
 
 bool CBayesNetPNL::Learn( const IDataset* pData, size_t iIterations, bool fZero, bool fELR ) {
 	CEMLearningEngineDumb*	pLearner;

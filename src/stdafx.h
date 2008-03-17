@@ -1,7 +1,6 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
-#include <assert.h>
 #include <float.h>
 #include <math.h>
 #include <pthread.h>
@@ -69,10 +68,6 @@ using namespace log4cpp;
 
 namespace pnl { }
 using namespace pnl;
-
-#ifndef UNUSED_PARAMETER
-#define UNUSED_PARAMETER(x)	(x)
-#endif // UNUSED_PARAMETER
 
 namespace Sleipnir {
 

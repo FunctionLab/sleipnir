@@ -1,30 +1,44 @@
-/*
- * Numerical Recipes in C
- * RANLIB
- * http://www.csit.fsu.edu/~burkardt
- */
-
 #include "stdafx.h"
 #include "statistics.h"
 #include "measure.h"
 #include "dat.h"
 #include "typesi.h"
 
+/*
+ * Implementations thanks to:
+ * Numerical Recipes in C
+ * RANLIB
+ * http://www.csit.fsu.edu/~burkardt
+ */
+
 namespace Sleipnir {
 
-double ranf( ) {
+static double ranf( ) {
 
 	return ( (double)rand( ) / RAND_MAX ); }
 
-double fsign( double dNum, double dSign ) {
+static double fsign( double dNum, double dSign ) {
 
 	return ( ( ( ( dSign > 0 ) && ( dNum < 0 ) ) ||
 		( ( dSign < 0 ) && ( dNum > 0 ) ) ) ? -dNum : dNum ); }
 
-double CStatistics::LjungBox( const float* adX, size_t iN ) {
-
-	return LjungBox( adX, iN, iN - 1 ); }
-
+/*!
+ * \brief
+ * Calculates the p-value of a Ljung-Box portmanteau test for autocorrelation randomness.
+ * 
+ * \param adX
+ * Array of values to test.
+ * 
+ * \param iN
+ * Number of values in array.
+ * 
+ * \param iH
+ * Number of lags to test, at most iN - 1.
+ * 
+ * \returns
+ * Chi-squared of Q = iN * (iN + 2) * sum(autocorrelation(adX, i)^2 / (iN - i), i = 1..iH) with iH degrees
+ * of freedom.
+ */
 double CStatistics::LjungBox( const float* adX, size_t iN, size_t iH ) {
 	float*	adCor;
 	size_t	i, iShift;
@@ -47,7 +61,7 @@ double CStatistics::LjungBox( const float* adX, size_t iN, size_t iH ) {
 		dRet += adCor[ i ] * adCor[ i ] / ( iN - i - 1 );
 	delete[] adCor;
 
-	return 1 - Chi2CDF( sqrt( iN * ( iN + 2 ) * dRet ), 0, 1, iH ); }
+	return ( 1 - Chi2CDF( sqrt( iN * ( iN + 2 ) * dRet ), 0, 1, iH ) ); }
 
 double CStatisticsImpl::Chi2CDF( double dX, double dA, double dB, double dC ) {
 	double	dRet, dX2, dY, dP2;
@@ -132,7 +146,7 @@ double CStatisticsImpl::IncompleteGamma( double p, double x ) {
 
 			if( 0 < fabs( pn6 ) ) {
 				rn = pn5 / pn6;
-				if( fabs( value - rn ) <= CMath::Min( tol, tol * rn ) ) {
+				if( fabs( value - rn ) <= min(tol, tol * rn) ) {
 					arg = arg + log( value );
 					return ( ( exp_arg_min <= arg ) ? ( 1 - exp( arg ) ) : 1 ); }
 
@@ -361,10 +375,20 @@ double CStatisticsImpl::EpsilonDouble( ) {
 
 	return ( 2 * dRet ); }
 
-double CStatistics::SampleChi2( size_t iDF ) {
-
-	return ( 2 * SampleGamma( 1, iDF / 2 ) ); }
-
+/*!
+ * \brief
+ * Return a random sample from a gamma log function with the given parameter.
+ * 
+ * \param dXX
+ * Parameter of gamma log function to sample.
+ * 
+ * \returns
+ * Random sample from a gamma log function with the given parameter.
+ * 
+ * \remarks
+ * Implementation courtesy of Press WH, Teukolsky SA, Vetterling WT, Flannery BP.  Numerical Recipes in C,
+ * 1992, Cambridge University Press.
+ */
 double CStatistics::SampleGammaLogStandard( double dXX ) {
 	static const double	c_adCof[]	= { 76.18009172947146, -86.50532032941677, 24.01409824083091,
 		-1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5 };
@@ -380,10 +404,20 @@ double CStatistics::SampleGammaLogStandard( double dXX ) {
 
 	return ( -dTmp + log( 2.5066282746310005 * dSer / dX ) ); }
 
-double CStatistics::SampleGamma( double dLocation, double dShape ) {
-
-	return ( SampleGammaStandard( dShape ) / dLocation ); }
-
+/*!
+ * \brief
+ * Return a random sample from a standard gamma function with the given shape parameter.
+ * 
+ * \param dShape
+ * Shape parameter of gamma function to sample.
+ * 
+ * \returns
+ * Random sample from a standard gamma function with the given shape parameter.
+ * 
+ * \remarks
+ * Implementation courtesy of Press WH, Teukolsky SA, Vetterling WT, Flannery BP.  Numerical Recipes in C,
+ * 1992, Cambridge University Press.
+ */
 double CStatistics::SampleGammaStandard( double dShape ) {
 static double q1 = 4.166669E-2;
 static double q2 = 2.083148E-2;
@@ -547,6 +581,17 @@ S140:
     return sgamma;
 }
 
+/*!
+ * \brief
+ * Return a random sample from a standard normal distribution.
+ * 
+ * \returns
+ * Random sample from a standard normal distribution.
+ * 
+ * \remarks
+ * Implementation courtesy of Press WH, Teukolsky SA, Vetterling WT, Flannery BP.  Numerical Recipes in C,
+ * 1992, Cambridge University Press.
+ */
 double CStatistics::SampleNormalStandard( ) {
 static double a[32] = {
     0.0,3.917609E-2,7.841241E-2,0.11777,0.1573107,0.1970991,0.2372021,0.2776904,
@@ -647,6 +692,17 @@ S160:
     goto S140;
 }
 
+/*!
+ * \brief
+ * Return a random sample from a standard exponential distribution.
+ * 
+ * \returns
+ * Random sample from a standard exponential distribution.
+ * 
+ * \remarks
+ * Implementation courtesy of Press WH, Teukolsky SA, Vetterling WT, Flannery BP.  Numerical Recipes in C,
+ * 1992, Cambridge University Press.
+ */
 double CStatistics::SampleExponentialStandard( ) {
 static double q[8] = {
     0.6931472,0.9333737,0.9888778,0.9984959,0.9998293,0.9999833,0.9999986,1.0
@@ -678,41 +734,6 @@ S70:
     sexpo = a+umin**q1;
     return sexpo;
 }
-
-double CStatistics::PValueLognormal( double dSample, double dMean, double dVariance ) {
-	double	dCDF;
-
-	dCDF = LognormalCDF( dSample, dMean, dVariance );
-	if( dSample > exp( dMean ) )
-		dCDF = 1 - dCDF;
-
-	return ( 2 * dCDF ); }
-
-double CStatistics::LognormalCDF( double dX, double dMean, double dVariance ) {
-
-	if( dX <= 0 )
-		return 0;
-
-	return NormalCDF( log( dX ), dMean, dVariance ); }
-
-double CStatistics::NormalCDF( double dX, double dMean, double dVariance ) {
-
-	return Normal01CDF( ( dX - dMean ) / dVariance ); }
-
-double CStatistics::TTest( double dMeanOne, double dVarOne, size_t iNOne, double dMeanTwo,
-	double dVarTwo, size_t iNTwo ) {
-	size_t	iDegFree;
-	double	dPoolVar, dT;
-
-	iDegFree = iNOne + iNTwo - 2;
-	dPoolVar = ( ( ( iNOne - 1 ) * dVarOne ) + ( ( iNTwo - 1 ) * dVarTwo ) ) / iDegFree;
-	dT = ( dMeanOne - dMeanTwo ) / sqrt( dPoolVar * ( ( 1.0 / iNOne ) + ( 1.0 / iNTwo ) ) );
-
-	return IncompleteBeta( 0.5 * iDegFree, 0.5, iDegFree / ( iDegFree + ( dT * dT ) ) ); }
-
-double CStatistics::TCDF( double dT, size_t iN ) {
-
-	return IncompleteBeta( 0.5 * iN, 0.5, iN / ( iN + ( dT * dT ) ) ); }
 
 double CStatisticsImpl::IncompleteBeta( double dA, double dB, double dX ) {
 	double	dBT;
@@ -765,20 +786,25 @@ if (m > c_iMaxIt) return -1;
 return h;
 }
 
-double CStatistics::BinomialCDF( size_t iObservations, size_t iSample, double dProb ) {
-	double	d;
-
-	d = ( iObservations - ( iSample * dProb ) ) / sqrt( iSample * dProb * ( 1 - dProb ) );
-	return ( 1 - NormalCDF( d, 0, 1 ) ); }
-
-double CStatistics::HypergeometricPDF( size_t iHitsOne, size_t iSizeOne, size_t iHitsTwo,
-	size_t iSizeTwo ) {
-
-	return exp( LogFact( iSizeTwo - iHitsTwo ) + LogFact( iHitsTwo ) + LogFact( iSizeOne ) +
-		LogFact( iSizeTwo - iSizeOne ) - LogFact( iHitsOne ) -
-		LogFact( iHitsTwo - iHitsOne ) - LogFact( iSizeTwo - iHitsTwo + iHitsOne - iSizeOne ) -
-		LogFact( iSizeOne - iHitsOne ) - LogFact( iSizeTwo ) ); }
-
+/*!
+ * \brief
+ * Calculates the hypergeometric p-value given the sizes and overlap of two sets.
+ * 
+ * \param iHitsOne
+ * Number of hits in the first (query) set.
+ * 
+ * \param iSizeOne
+ * Size of the first (query) set.
+ * 
+ * \param iHitsTwo
+ * Number of hits in the second (background) set.
+ * 
+ * \param iSizeTwo
+ * Size of the second (background) set.
+ * 
+ * \returns
+ * sum(CStatistics::HypergeometricPDF (i, iSizeOne, iHitsTwo, iSizeTwo), i=iHitsOne..min(iHitsTwo, iSizeOne))
+ */
 double CStatistics::HypergeometricCDF( size_t iHitsOne, size_t iSizeOne, size_t iHitsTwo,
 	size_t iSizeTwo ) {
 	size_t	i, iHits;
@@ -791,46 +817,122 @@ double CStatistics::HypergeometricCDF( size_t iHitsOne, size_t iSizeOne, size_t 
 
 	return ( ( dRet > 1 ) ? 1 : dRet ); }
 
-double CStatistics::Precision( size_t iTP, size_t iFP, size_t iTN, size_t iFN ) {
-
-	return ( (double)iTP / ( iTP + iFP ) ); }
-
-double CStatistics::Recall( size_t iTP, size_t iFP, size_t iTN, size_t iFN ) {
-
-	return ( (double)iTP / ( iTP + iFN ) ); }
-
-double CStatistics::FScore( size_t iTP, size_t iFP, size_t iTN, size_t iFN, double dBeta ) {
+/*!
+ * \brief
+ * Calculate a precision/recall f-score.
+ * 
+ * \param iTruePositives
+ * Number of true positives.
+ * 
+ * \param iFalsePositives
+ * Number of false positives.
+ * 
+ * \param iTrueNegatives
+ * Number of true negatives.
+ * 
+ * \param iFalseNegatives
+ * Number of false negatives.
+ * 
+ * \param dBeta
+ * Relative weight given to precision; 0 ignores precision, 1 weights precision and recall equally, and
+ * arbitrary large values ignore recall.
+ * 
+ * \returns
+ * (1 + dBeta^2) * precision * recall / (dBeta^2 * precision + recall)
+ * 
+ * \see
+ * Precision | Recall
+ */
+double CStatistics::FScore( size_t iTruePositives, size_t iFalsePositives, size_t iTrueNegatives,
+	size_t iFalseNegatives, double dBeta ) {
 	double	dP, dR;
 
-	dP = Precision( iTP, iFP, iTN, iFN );
-	dR = Recall( iTP, iFP, iTN, iFN );
+	dP = Precision( iTruePositives, iFalsePositives, iTrueNegatives, iFalseNegatives );
+	dR = Recall( iTruePositives, iFalsePositives, iTrueNegatives, iFalseNegatives );
 	dBeta *= dBeta;
 
 	return ( ( dBeta + 1 ) * dP * dR / ( ( dBeta * dP ) + dR ) ); }
 
-double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, const vector<bool>& vecfHere,
-	bool fInvert ) {
+template<class tType>
+struct SCompareRank {
+	const vector<tType>&	m_vecData;
+
+	SCompareRank( const vector<tType>& vecData ) : m_vecData(vecData) { }
+
+	bool operator()( size_t iOne, size_t iTwo ) const {
+
+		return ( m_vecData[ iOne ] < m_vecData[ iTwo ] ); }
+};
+
+/*!
+ * \brief
+ * Calculate the Wilcoxon Rank Sum p-value (AUC) of a given data (or prediction) set relative to an answer
+ * set.
+ * 
+ * \param DatData
+ * Data or prediction set to evaluate.
+ * 
+ * \param DatAnswers
+ * Answer set against which data is evaluated (values greater than zero are positive).
+ * 
+ * \param vecfGenesOfInterest
+ * If nonempty, genes against which to perform process-specific evaluation.
+ * 
+ * \param fInvert
+ * If true, use one minus data values.
+ * 
+ * \returns
+ * Wilcoxon Rank Sum p-value (AUC, area under ROC curve) of the given data evaluated against the given
+ * answers.
+ * 
+ * Calculates the AUC (equivalent to the Wilxocon Rank Sum p-value) of the given data set (or prediction
+ * set) against the given answers.  The the set of genes of interest is nonempty, only positive pairs in
+ * which both genes are in the set or negative pairs where one gene is in the set will be scored.  In
+ * psuedocode:
+ * \code
+ * For each gene pair i,j:
+ *   If CMeta::IsNaN( dValue = DatData.Get( i, j ) ), continue
+ *   If CMeta::IdNaN( dAnswer = DatAnswers.Get( i, j ) ), continue
+ *   fAnswer = ( dAnswer > 0 )
+ *   If vecfGenesOfInterest is nonempty:
+ *     If fAnswer and !( vecfGenesOfInterest[ i ] && vecfGenesOfInterest[ j ] ), continue
+ *     If !fAnswer and !( vecfGenesOfInterest[ i ] || vecfGenesOfInterest[ j ] ), continue
+ *   Add the pair (dValue, fAnswer) to the list to score
+ * Evaluate the AUC/Wilcoxon Rank Sum p-value of the resulting value/answer list
+ * \endcode
+ * The AUC is evaluated by sorting the pair list by value, summing the ranks of positive pairs, counting
+ * the numbers of positive and negative pairs, and calculating (sum - (positive * (positive - 1)) / 2) /
+ * positive / negative.
+ * 
+ * \remarks
+ * DatData and DatAnswers must be of exactly the same size and have the same gene lists.  If
+ * vecfGenesOfInterest is nonempty, it must also be of the same size and refer to the same gene list.
+ */
+double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,
+	const vector<bool>& vecfGenesOfInterest, bool fInvert ) {
 	size_t				i, j, k, iOne, iTwo, iNeg;
 	uint64_t			iSum, iPos;
 	float				d, dAnswer;
 	std::vector<size_t>	veciGenes, veciRanks;
 	std::vector<float>	vecdValues;
+	bool				fAnswer;
 
-	veciGenes.resize( Answers.GetGenes( ) );
+	veciGenes.resize( DatAnswers.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
-		veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
+		veciGenes[ i ] = DatData.GetGene( DatAnswers.GetGene( i ) );
 
-	for( i = 0; i < Answers.GetGenes( ); ++i ) {
+	for( i = 0; i < DatAnswers.GetGenes( ); ++i ) {
 		if( ( iOne = veciGenes[ i ] ) == -1 )
 			continue;
-		for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
 			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-				CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) )
+				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) ||
+				CMeta::IsNaN( d = DatData.Get( iOne, iTwo ) ) )
 				continue;
-			if( !( vecfHere.empty( ) ||
-				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-				( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
+			fAnswer = dAnswer > 0;
+			if( !( vecfGenesOfInterest.empty( ) ||
+				( fAnswer && vecfGenesOfInterest[ i ] && vecfGenesOfInterest[ j ] ) ||
+				( !fAnswer && ( vecfGenesOfInterest[ i ] || vecfGenesOfInterest[ j ] ) ) ) )
 				continue;
 			if( fInvert )
 				d = 1 - d;
@@ -847,18 +949,18 @@ double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, cons
 			veciRanks[ veciIndices[ i ] ] = i;
 	}
 
-	for( iSum = iPos = iNeg = i = k = 0; i < Answers.GetGenes( ); ++i ) {
+	for( iSum = iPos = iNeg = i = k = 0; i < DatAnswers.GetGenes( ); ++i ) {
 		if( ( iOne = veciGenes[ i ] ) == -1 )
 			continue;
-		for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
 			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-				CMeta::IsNaN( Data.Get( iOne, iTwo ) ) ||
-				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-				!( vecfHere.empty( ) ||
-				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-				( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
+				CMeta::IsNaN( DatData.Get( iOne, iTwo ) ) ||
+				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) ||
+				!( vecfGenesOfInterest.empty( ) ||
+				( ( dAnswer > 0 ) && vecfGenesOfInterest[ i ] && vecfGenesOfInterest[ j ] ) ||
+				( ( dAnswer <= 0 ) && ( vecfGenesOfInterest[ i ] || vecfGenesOfInterest[ j ] ) ) ) )
 				continue;
-			if( dAnswer ) {
+			if( dAnswer > 0 ) {
 				iPos++;
 				iSum += veciRanks[ k ]; }
 			else
@@ -867,37 +969,5 @@ double CStatistics::WilcoxonRankSum( const CDat& Data, const CDat& Answers, cons
 	iSum -= ( iPos * ( iPos - 1 ) ) / 2;
 
 	return ( (double)iSum / iPos / iNeg ); }
-
-double CStatistics::SumSquaredError( const CDat& Data, const CDat& Answers, const vector<bool>& vecfHere,
-	const vector<bool>& vecfSomewhere, bool fInvert ) {
-	size_t				i, j, iOne, iTwo;
-	float				d, dAnswer, dCur;
-	double				dRet;
-	std::vector<size_t>	veciGenes;
-
-	veciGenes.resize( Answers.GetGenes( ) );
-	for( i = 0; i < veciGenes.size( ); ++i )
-		veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
-
-	dRet = 0;
-	for( i = 0; i < Answers.GetGenes( ); ++i ) {
-		if( ( iOne = veciGenes[ i ] ) == -1 )
-			continue;
-		for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
-			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-				CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ) ||
-				CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
-				continue;
-			if( !( vecfHere.empty( ) ||
-				( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-				( !dAnswer && ( ( vecfHere[ i ] || vecfHere[ j ] ) ||
-				!( vecfSomewhere[ i ] || vecfSomewhere[ j ] ) ) ) ) )
-				continue;
-			if( fInvert )
-				d = 1 - d;
-			dCur = d - dAnswer;
-			dRet += dCur * dCur; } }
-
-	return dRet; }
 
 }

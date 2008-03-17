@@ -7,17 +7,84 @@ namespace Sleipnir {
 
 template<class tType> class CTrieIterator;
 
+/*!
+ * \brief
+ * A simple prefix tree implementation.
+ * 
+ * \param tType
+ * Type of element contained by the trie.
+ * 
+ * A trie, or prefix tree, is an n-ary tree which acts as a key to value map.  Keys consist of a sequence
+ * of elements (usually characters making up a string) stored efficiently in overlapping tree nodes.  This
+ * trie implementation can store arbitrary objects as values and use arbitrary byte strings as keys.  At
+ * the simplest, think of a trie like a hash or map dictionary that might save in memory usage and lookup
+ * time for highly structured keys.
+ * 
+ * \remarks
+ * Lookup time is linear in the length of the key, and memory usage is linear in the values and expected
+ * logarithmic in the keys (worst case linear).  However, due to the intended usage of this trie
+ * implementation, it is optimized for densely overlapping keys; the memory usage constant will be large
+ * for sparse tries.
+ * 
+ * \see
+ * CTrieIterator
+ */
 template<class tType>
 class CTrie : public CTrieImpl<tType> {
 public:
 	typedef CTrieIterator<tType>	iterator;
 
-	CTrie( const std::vector<unsigned char>& vecbSizes, const tType& Undef ) : CTrieImpl<tType>( Undef ) {
+	/*!
+	 * \brief
+	 * Construct a new trie with the specified branching factors and default value.
+	 * 
+	 * \param vecbSizes
+	 * Branching factor (maximum number of different values) at each depth within the trie (i.e. at each
+	 * position within the keys).
+	 * 
+	 * \param Default
+	 * Default value to be returned when trie lookup fails for a given key.
+	 * 
+	 * \remarks
+	 * The given sizes indicate the maximum value at each key position; for example, if a trie is initialized
+	 * with sizes [2, 1, 3], then keys such as [0, 0, 0], [1, 0, 2], or [0, 0, 1] are all valid, but
+	 * [2, 1, 3] or [2, 0, 0] are not.  This is equivalent to the maximum branching factor at each level
+	 * of the trie, and it also dictates the maximum depth of the trie (i.e. length of a key).
+	 */
+	CTrie( const std::vector<unsigned char>& vecbSizes, const tType& Default ) : CTrieImpl<tType>( Default ) {
 
 		m_vecbSizes.resize( vecbSizes.size( ) );
 		std::copy( vecbSizes.begin( ), vecbSizes.end( ), m_vecbSizes.begin( ) ); }
 
-	CTrie( const IDataset* pData, const tType& Undef, bool fAnswers = true ) : CTrieImpl<tType>( Undef ) {
+	/*!
+	 * \brief
+	 * Construct a new trie encoding the data from the given dataset.
+	 * 
+	 * \param pData
+	 * Dataset to be encoded as a trie.
+	 * 
+	 * \param Default
+	 * Default value to be returned when trie lookup fails for a given key.
+	 * 
+	 * \param fAnswers
+	 * If true, the first (0th) data file in the dataset represents a gold standard.
+	 * 
+	 * Constructs a trie encoding the given dataset.  Each key in the trie consists of gene pair values from
+	 * each data file within the dataset, and the corresponding trie value is a count of how many times that
+	 * combination of values occurs in the dataset.  If fAnswers is true, only gene pairs with a value
+	 * present in the first (0th) data file are included in the trie.  This can provide a fairly compact
+	 * way to store a highly redundant dataset, but it becomes inefficient rapidly if the dataset is
+	 * sparse.
+	 * 
+	 * For example, suppose a dataset contains an answer file and two data files and spans three genes A,
+	 * B, and C.  The answer file is binary (contains only 0, 1, and missing values), the first data file
+	 * is binary, and the second data file can take three values.  The values present for each gene pair are:
+	 * <pre>A	B	-1	0	-1
+A	C	0	0	0
+B	C	1	-1	2</pre>
+	 * 
+	 */
+	CTrie( const IDataset* pData, const tType& Default, bool fAnswers = true ) : CTrieImpl<tType>( Undef ) {
 		size_t					i, j, k, iExp;
 		vector<unsigned char>	vecbDatum;
 
@@ -43,6 +110,23 @@ public:
 
 		Delete( m_aabData ); }
 
+	/*!
+	 * \brief
+	 * Return a writable reference to the given key's value.
+	 * 
+	 * \param vecbData
+	 * Key to which value should be written.
+	 * 
+	 * \returns
+	 * Writable reference to the given key's trie value.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given key's values should all be smaller than
+	 * the trie's branching factors at the appropriate levels.
+	 * 
+	 * \see
+	 * Get
+	 */
 	tType& Set( const std::vector<unsigned char>& vecbData ) {
 		size_t				iDepth;
 		unsigned char		b;
@@ -60,6 +144,23 @@ public:
 
 		return *(tType*)paabData; }
 
+	/*!
+	 * \brief
+	 * Retrieve the value at the given key, or a default if none exists.
+	 * 
+	 * \param vecbData
+	 * Key whose value should be retrieved.
+	 * 
+	 * \returns
+	 * The value corresponding to the given key, or the trie's default value if none exists.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given key's values should all be smaller than
+	 * the trie's branching factors at the appropriate levels.
+	 * 
+	 * \see
+	 * Set
+	 */
 	const tType Get( const std::vector<unsigned char>& vecbData ) const {
 		size_t			iDepth;
 		unsigned char**	aabData;
@@ -71,10 +172,30 @@ public:
 
 		return (tType)aabData; }
 
+	/*!
+	 * \brief
+	 * Return maximum depth of the trie.
+	 * 
+	 * \returns
+	 * Maximum depth of the trie.
+	 */
 	size_t GetSize( ) const {
 
 		return m_vecbSizes.size( ); }
 
+	/*!
+	 * \brief
+	 * Return branching factor of the requested trie level.
+	 * 
+	 * \param iDepth
+	 * Trie level for which branching factor should be returned.
+	 * 
+	 * \returns
+	 * Maximum branching factor (key value) for the requested depth.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given depth must be smaller than GetSize.
+	 */
 	unsigned char GetSize( size_t iDepth ) const {
 
 		return m_vecbSizes[ iDepth ]; }

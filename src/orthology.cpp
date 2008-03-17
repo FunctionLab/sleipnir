@@ -19,6 +19,22 @@ void COrthologyImpl::Reset( ) {
 	m_mapGenes.clear( );
 	m_vecvecpGenes.clear( ); }
 
+/*!
+ * \brief
+ * Loads a new orthology file from the given stream.
+ * 
+ * \param istm
+ * Stream from which orthology file is loaded.
+ * 
+ * \returns
+ * True if the orthology was loaded successfully.
+ * 
+ * \remarks
+ * Constructs CGenome and CGene objects internally as necessary.
+ * 
+ * \see
+ * Save
+ */
 bool COrthology::Open( istream& istm ) {
 	vector<string>	vecstrLine;
 	char*			acBuf;
@@ -64,6 +80,16 @@ bool COrthology::Open( istream& istm ) {
 
 	return true; }
 
+/*!
+ * \brief
+ * Saves the current orthology to the given stream.
+ * 
+ * \param ostm
+ * Stream into which orthology is saved.
+ * 
+ * \see
+ * Open
+ */
 void COrthology::Save( ostream& ostm ) const {
 	size_t	i, j;
 

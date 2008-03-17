@@ -15,9 +15,12 @@ class CHierarchyImpl {
 protected:
 	~CHierarchyImpl( );
 
-	bool IsGene( ) const;
 	std::string GetSave( ) const;
 	bool Save( std::ostream&, size_t ) const;
+
+	bool CHierarchyImpl::IsGene( ) const {
+
+		return !( m_pLeft && m_pRight ); }
 
 	size_t				m_iID;
 	size_t				m_iWeight;

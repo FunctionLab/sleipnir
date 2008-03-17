@@ -100,7 +100,7 @@ int main( int iArgs, char** aszArgs ) {
 			return iRet;
 		Answers.SetQuants( c_adQuantsBinary, ARRAYSIZE(c_adQuantsBinary) );
 
-		if( !Data.Open( GenesIn, GenesEx, Answers, vecstrPCLs, sArgs.skip_arg, pMeasure, vecdQuants, &BNGlobal ) )
+		if( !Data.Open( GenesIn, GenesEx, Answers, vecstrPCLs, sArgs.skip_arg, pMeasure, vecdQuants ) )
 			return 1;
 	}
 

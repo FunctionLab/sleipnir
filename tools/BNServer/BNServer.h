@@ -13,7 +13,7 @@ public:
 		const IOntology** );
 	~CBNServer( );
 
-	IServerClient* NewInstance( SOCKET, uint32_t, uint16_t, const CPropertyFile* );
+	IServerClient* NewInstance( SOCKET, uint32_t, uint16_t );
 	void Destroy( );
 	bool ProcessMessage( const vector<unsigned char>& );
 

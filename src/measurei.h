@@ -24,14 +24,15 @@ protected:
 
 class CMeasureSigmoidImpl : protected CMeasureImpl {
 protected:
-	CMeasureSigmoidImpl( const IMeasure*, bool, float );
+	CMeasureSigmoidImpl( const IMeasure* pMeasure, bool fMemory, float dMult ) :
+		m_dMult(dMult), CMeasureImpl( pMeasure, fMemory ) { }
 
 	float	m_dMult;
 };
 
 class CMeasureSpearmanImpl {
 protected:
-	CMeasureSpearmanImpl( bool );
+	CMeasureSpearmanImpl::CMeasureSpearmanImpl( bool fTransformed ) : m_fTransformed(fTransformed) { }
 
 	bool	m_fTransformed;
 };
@@ -82,7 +83,7 @@ protected:
 
 class CMeasurePearNormImpl {
 protected:
-	CMeasurePearNormImpl( double, double );
+	CMeasurePearNormImpl( double dAve, double dStd ) : m_dAverage(dAve), m_dStdDev(dStd) { }
 
 	double	m_dAverage;
 	double	m_dStdDev;

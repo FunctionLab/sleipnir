@@ -3,45 +3,155 @@
 
 #include <map>
 
+#include "sparsematrixi.h"
+
 namespace Sleipnir {
 
+/*!
+ * \brief
+ * An asymmetric two-dimensional sparse matrix using maps for each row.
+ * 
+ * \param tType
+ * Type of element contained by the matrix.
+ * 
+ * Implements a two-dimensional matrix assuming few non-default entries in each row.  These entries are
+ * maintained by a map for each row, allowing fairly rapid lookup at the expense of moderate memory usage.
+ * 
+ * \see
+ * CSparseListMatrix | CFullMatrix
+ */
 template<class tType>
-class CSparseMapMatrix {
+class CSparseMapMatrix : protected CSparseMatrixImpl<tType> {
 public:
-	CSparseMapMatrix( tType Default ) : m_iR(0), m_amapData(NULL), m_Default(Default) { }
+	/*!
+	 * \brief
+	 * Create a new sparse matrix with the given default value.
+	 * 
+	 * \param Default
+	 * Default value provided for entries not in the matrix.
+	 */
+	CSparseMapMatrix( const tType& Default ) : CSparseMatrixImpl( Default ), m_amapData(NULL) { }
 
 	~CSparseMapMatrix( ) {
 
 		Reset( ); }
 
+	/*!
+	 * \brief
+	 * Empties the matrix and deallocates all associated memory.
+	 */
 	void Reset( ) {
 
 		if( m_amapData )
 			delete[] m_amapData;
 		m_iR = 0; }
 
+	/*!
+	 * \brief
+	 * Create a new matrix of the requested size.
+	 * 
+	 * \param iR
+	 * Matrix rows.
+	 * 
+	 * \remarks
+	 * Columns are not specified since they are allocated dynamically by each row's map.
+	 */
 	void Initialize( size_t iR ) {
 
 		Reset( );
 		m_amapData = new std::map<size_t,tType>[ m_iR = iR ]; }
 
+	/*!
+	 * \brief
+	 * Return the number of rows in the matrix.
+	 * 
+	 * \returns
+	 * Number of rows in the matrix.
+	 */
+	size_t GetRows( ) const {
+
+		return CSparseMatrixImpl::GetRows( ); }
+
+	/*!
+	 * \brief
+	 * Returns the value at the requested matrix position.
+	 * 
+	 * \param iY
+	 * Matrix row.
+	 * 
+	 * \param iX
+	 * Matrix column.
+	 * 
+	 * \returns
+	 * Value at the requested matrix position.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given row must be smaller than GetRows.  If
+	 * no entry is found for the given position, the default value is returned.
+	 * 
+	 * \see
+	 * Set
+	 */
 	tType Get( size_t iY, size_t iX ) const {
 		typename std::map<size_t,tType>::const_iterator	iter;
 
-		return ( ( ( iter = m_amapData[ iY ].find( iX ) ) == m_amapData[ iY ].end( ) ) ? m_Default : iter->second ); }
+		return ( ( ( iter = m_amapData[ iY ].find( iX ) ) == m_amapData[ iY ].end( ) ) ? m_Default :
+			iter->second ); }
 
+	/*!
+	 * \brief
+	 * Set the value at the requested matrix position.
+	 * 
+	 * \param iY
+	 * Matrix row.
+	 * 
+	 * \param iX
+	 * Matrix column.
+	 * 
+	 * \param Value
+	 * Value to store.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given row must be smaller than GetRows.
+	 * 
+	 * \see
+	 * Get
+	 */
 	void Set( size_t iY, size_t iX, const tType& Value ) {
 
 		m_amapData[ iY ][ iX ] = Value; }
 
-protected:
-	size_t					m_iR;
+	/*!
+	 * \brief
+	 * Return the default value for entries not in the matrix.
+	 * 
+	 * \returns
+	 * Default value for entries not in the matrix.
+	 */
+	const tType& GetDefault( ) const {
+
+		return CSparseMatrixImpl::GetDefault( ); }
+
+private:
 	std::map<size_t,tType>*	m_amapData;
-	tType					m_Default;
 };
 
+/*!
+ * \brief
+ * An asymmetric two-dimensional sparse matrix using linked lists for each row.
+ * 
+ * \param tType
+ * Type of element contained by the matrix.
+ * 
+ * Implements a two-dimensional matrix assuming few non-default entries in each row.  These entries are
+ * maintained by a linked list for each row, allowing very low memory usage (for sufficiently sparse
+ * matrices) at the expense of potentially slow lookup.
+ * 
+ * \see
+ * CSparseMapMatrix | CFullMatrix
+ */
 template<class tType>
-class CSparseListMatrix {
+class CSparseListMatrix : protected CSparseMatrixImpl<tType> {
 private:
 	struct SNode {
 		size_t	m_iX;
@@ -52,12 +162,23 @@ private:
 	};
 
 public:
-	CSparseListMatrix( tType Default ) : m_iR(0), m_apsData(NULL), m_Default(Default) { }
+	/*!
+	 * \brief
+	 * Create a new sparse matrix with the given default value.
+	 * 
+	 * \param Default
+	 * Default value provided for entries not in the matrix.
+	 */
+	CSparseListMatrix( const tType& Default ) : CSparseMatrixImpl( Default ), m_apsData(NULL) { }
 
 	~CSparseListMatrix( ) {
 
 		Reset( ); }
 
+	/*!
+	 * \brief
+	 * Empties the matrix and deallocates all associated memory.
+	 */
 	void Reset( ) {
 		size_t	i;
 		SNode*	pNode;
@@ -71,12 +192,42 @@ public:
 			delete[] m_apsData; }
 		m_iR = 0; }
 
+	/*!
+	 * \brief
+	 * Create a new matrix of the requested size.
+	 * 
+	 * \param iR
+	 * Matrix rows.
+	 * 
+	 * \remarks
+	 * Columns are not specified since they are allocated dynamically by each row's map.
+	 */
 	void Initialize( size_t iR ) {
 
 		Reset( );
 		m_apsData = new SNode*[ m_iR = iR ];
 		memset( m_apsData, 0, m_iR * sizeof(*m_apsData) ); }
 
+	/*!
+	 * \brief
+	 * Returns the value at the requested matrix position.
+	 * 
+	 * \param iY
+	 * Matrix row.
+	 * 
+	 * \param iX
+	 * Matrix column.
+	 * 
+	 * \returns
+	 * Value at the requested matrix position.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given row must be smaller than GetRows.  If
+	 * no entry is found for the given position, the default value is returned.
+	 * 
+	 * \see
+	 * Set
+	 */
 	tType Get( size_t iY, size_t iX ) const {
 		SNode*	pNode;
 
@@ -86,6 +237,25 @@ public:
 
 		return m_Default; }
 
+	/*!
+	 * \brief
+	 * Set the value at the requested matrix position.
+	 * 
+	 * \param iY
+	 * Matrix row.
+	 * 
+	 * \param iX
+	 * Matrix column.
+	 * 
+	 * \param Value
+	 * Value to store.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given row must be smaller than GetRows.
+	 * 
+	 * \see
+	 * Get
+	 */
 	void Set( size_t iY, size_t iX, const tType& Value ) {
 		SNode*	pNode;
 
@@ -104,10 +274,30 @@ public:
 		else
 			pNode->m_pNext = new SNode( iX, Value, NULL ); }
 
-protected:
-	size_t	m_iR;
+	/*!
+	 * \brief
+	 * Return the default value for entries not in the matrix.
+	 * 
+	 * \returns
+	 * Default value for entries not in the matrix.
+	 */
+	const tType& GetDefault( ) const {
+
+		return CSparseMatrixImpl::GetDefault( ); }
+
+	/*!
+	 * \brief
+	 * Return the number of rows in the matrix.
+	 * 
+	 * \returns
+	 * Number of rows in the matrix.
+	 */
+	size_t GetRows( ) const {
+
+		return CSparseMatrixImpl::GetRows( ); }
+
+private:
 	SNode**	m_apsData;
-	tType	m_Default;
 };
 
 }

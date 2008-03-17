@@ -28,6 +28,7 @@ inline bool _mktemp_s( char* szTemplate ) {
 
 #include "annotation.h"
 #include "bayesnet.h"
+#include "color.h"
 #include "database.h"
 #include "genome.h"
 #include "meta.h"

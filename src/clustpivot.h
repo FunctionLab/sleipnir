@@ -10,9 +10,14 @@ namespace Sleipnir {
 
 class CDat;
 
+/*!
+ * \brief
+ * Utility class containing static pivot clustering methods.
+ */
 class CClustPivot {
 public:
-	static uint16_t Cluster( const CDistanceMatrix&, float, std::vector<uint16_t>& );
+	static uint16_t Cluster( const CDistanceMatrix& MatSimilarities, float dCutoff,
+		std::vector<uint16_t>& vecsClusters );
 };
 
 }

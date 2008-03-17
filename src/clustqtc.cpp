@@ -6,33 +6,110 @@
 
 namespace Sleipnir {
 
-uint16_t CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
-	float dDiameter, size_t iSize, vector<uint16_t>& vecsClusters, const CDataMatrix* pWeights ) {
+/*!
+ * \brief
+ * Cluster a set of elements with the quality threshold algorithm using the given data and pairwise
+ * similarity score.
+ * 
+ * \param MatData
+ * Data vectors for each element, generally microarray values from a PCL file.
+ * 
+ * \param pMeasure
+ * Similarity measure to use for clustering.
+ * 
+ * \param dDiameter
+ * Maximum cluster diameter.
+ * 
+ * \param iSize
+ * Minimum cluster size.
+ * 
+ * \param vecsClusters
+ * Output cluster IDs for each gene; unclustered genes are grouped in the last cluster.
+ * 
+ * \param pMatWeights
+ * If non-null, weights to use for each gene/condition value.  These can be used to up/downweight aneuploidies
+ * present under only certain conditions, for example.  Default assumes all ones.
+ * 
+ * \returns
+ * Total number of clusters.
+ * 
+ * Clusters elements using the quality threshold algorithm due to Heyer et al.  Each gene is assigned to at
+ * most one cluster.  Briefly, the most similar gene pair is grouped together, and each other gene within
+ * the given diameter of that group is added to the cluster.  These genes are then removed from the pool and
+ * the process is repeated.  Gene groups that cannot reach the minimum cluster size are discarded.
+ * 
+ * \remarks
+ * If N clusters are generated, unclustered genes will be assigned ID N in the output vector.
+ * 
+ * \see
+ * CClustKMeans::Cluster
+ */
+uint16_t CClustQTC::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure,
+	float dDiameter, size_t iSize, vector<uint16_t>& vecsClusters, const CDataMatrix* pMatWeights ) {
 	CDistanceMatrix	Dist;
 
-	InitializeDistances( Data, pMeasure, Dist, pWeights );
-	return QualityThresholdAll( Data, dDiameter, iSize, Dist, vecsClusters ); }
+	InitializeDistances( MatData, pMeasure, Dist, pMatWeights );
+	return QualityThresholdAll( MatData, dDiameter, iSize, Dist, vecsClusters ); }
 
-void CClustQTC::Cluster( const CDataMatrix& Data, const IMeasure* pMeasure,
-	float dMin, float dMax, float dDelta, size_t iSize, CDistanceMatrix& DatOut,
-	const CDataMatrix* pWeights ) {
+/*!
+ * \brief
+ * Record the smallest cluster diameter within some range at which each gene pair clusters.
+ * 
+ * \param MatData
+ * Data vectors for each element, generally microarray values from a PCL file.
+ * 
+ * \param pMeasure
+ * Similarity measure to use for clustering.
+ * 
+ * \param dMinDiameter
+ * Minimum cluster diameter at which to attempt clustering.
+ * 
+ * \param dMaxDiameter
+ * Maximum cluster diameter at which to attempt clustering.
+ * 
+ * \param dDeltaDiameter
+ * Increment of cluster diameters to scan between minimum and maximum.
+ * 
+ * \param iSize
+ * Minimum cluster size.
+ * 
+ * \param MatResults
+ * Output matrix recording the smallest diameter at which each gene pair coclustered, or NaN if the pair
+ * did not cocluster within the given diameter range.
+ * 
+ * \param pMatWeights
+ * If non-null, weights to use for each gene/condition value.  These can be used to up/downweight aneuploidies
+ * present under only certain conditions, for example.  Default assumes all ones.
+ * 
+ * This clustering method incrementally attempts to quality threshold cluster the given elements at each
+ * cluster diameter between the given minimum and maximum, in steps of the requested delta.  For each gene
+ * pair, the smallest diameter at which they coclustered (appeared in some cluster together) is recorded.
+ * This can be used to rapidly scan through a range of cluster "sizes" to find the strictest diameter
+ * cutoff at which gene pairs cocluster.
+ * 
+ * \remarks
+ * MatResults must be pre-initialized to the same size as MatData.
+ */
+void CClustQTC::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure,
+	float dMinDiameter, float dMaxDiameter, float dDeltaDiameter, size_t iSize, CDistanceMatrix& MatResults,
+	const CDataMatrix* pMatWeights ) {
 	CDistanceMatrix		Dist;
 	float				dDiameter;
 	vector<uint16_t>	vecsClusters;
 	uint16_t			sClusters;
 	size_t				i, j;
 
-	InitializeDistances( Data, pMeasure, Dist, pWeights );
-	for( dDiameter = dMin; dDiameter <= dMax; dDiameter += dDelta ) {
-		g_CatSleipnir.notice( "CClustQTC::Cluster( %g, %g, %g, %d, %d ) processing diameter %g", dMin, dMax,
-			dDelta, iSize, dDiameter );
-		sClusters = QualityThresholdAll( Data, dDiameter, iSize, Dist, vecsClusters );
+	InitializeDistances( MatData, pMeasure, Dist, pMatWeights );
+	for( dDiameter = dMinDiameter; dDiameter <= dMaxDiameter; dDiameter += dDeltaDiameter ) {
+		g_CatSleipnir.notice( "CClustQTC::Cluster( %g, %g, %g, %d, %d ) processing diameter %g", dMinDiameter,
+			dMaxDiameter, dDeltaDiameter, iSize, dDiameter );
+		sClusters = QualityThresholdAll( MatData, dDiameter, iSize, Dist, vecsClusters );
 		for( i = 0; i < vecsClusters.size( ); ++i ) {
 			if( ( vecsClusters[ i ] + 1 ) == sClusters )
 				continue;
 			for( j = ( i + 1 ); j < vecsClusters.size( ); ++j )
-				if( ( vecsClusters[ j ] == vecsClusters[ i ] ) && CMeta::IsNaN( DatOut.Get( i, j ) ) )
-					DatOut.Set( i, j, 1 - dDiameter ); } } }
+				if( ( vecsClusters[ j ] == vecsClusters[ i ] ) && CMeta::IsNaN( MatResults.Get( i, j ) ) )
+					MatResults.Set( i, j, 1 - dDiameter ); } } }
 
 uint16_t CClustQTCImpl::QualityThresholdAll( const CDataMatrix& Data, float dDiameter,
 	size_t iSize, const CDistanceMatrix& Dist, vector<uint16_t>& vecsClusters ) {

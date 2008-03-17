@@ -1,8 +1,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
-#include "mathb.h"
 
-int Dat2Dab( const CGenes&, const gengetopt_args_info& );
+#include "statistics.h"
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
