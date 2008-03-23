@@ -1,14 +1,15 @@
 # TODO
 # a. What is the deal with AM_CONFIG_HEADER and AC_CONFIG_HEADER?
 # b. Installation.
+# c. Ranlib SMILE
+# d. Check SMILE version!
 #
 # Potential portability concerns:
-# a. programs (ls, egrep, dirname)
+# a. programs (ls, egrep, dirname, true, false)
 
 AC_PREREQ(2.59)
 AC_INIT([libSleipnir], [0.9.0], [ogt@princeton.edu])
 
-#!! update
 AC_COPYRIGHT([This software is copyrighted.])
 
 # Any file under src will do.
@@ -17,6 +18,7 @@ AC_CONFIG_SRCDIR([src/stdafx.h])
 #AC_CONFIG_HEADER([config.h])
 #AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
+
 
 topleveldir=$PWD
 
@@ -64,96 +66,6 @@ AC_CHECK_FUNCS([mkdir])  # tools/BNWrangler
 AC_CHECK_FUNCS([strtol])  # tools/Data2Features, tools/Data2Bnt
 
 
-## LOG4CPP
-# If the user specifies a path, use it.
-# If the user says not to use it, use the stub.
-# If the user doesn't say anything, check for it. Use the stub if not found.
-# While checking, look for a source distribution in extlib/.
-# If using stub, set USE_LOG4CPP_STUB=1.
-AC_ARG_WITH([log4cpp],
-	[AS_HELP_STRING([--with-log4cpp=<path>], [prefix of log4cpp installation or build directory])],
-	[],   # $with_log4cpp will either be a path or "no"
-	[with_log4cpp=check])
-## set LOG4CPP_PREFIX and log4cpp_info
-if test "x$with_log4cpp" = "xcheck"; then
-  LOG4CPP_PREFIX=
-  AC_CHECK_LIB([log4cpp], [log4cpp::Category::getInstance],
-        [log4cpp_info="-llog4cpp"],
-        [log4cpp_info="check"])
-  # in case it is not found but it is in extlib, use that
-  if test "x$log4cpp_info" = "xcheck"; then
-    # it would be nice to take whatever version is found, but
-    # since AC_CONFIG_SUBDIRS requires a literal, we must know
-    # what we are looking for exactly.
-#    extlog=`/bin/ls -d extlib/log4cpp* 2>/dev/null | head -1`
-#    if test "x$extlog" = "x"; then
-#      log4cpp_info="stub"
-#    else
-#      LOG4CPP_PREFIX=$extlog
-#      log4cpp_info=$extlog
-#      AC_CONFIG_SUBDIRS([$extlog])
-#    fi
-     extlog=extlib/log4cpp-1.0   # also change AC_CONFIG_SUBDIRS call
-     qualify_path extlog
-     if test -d $extlog; then
-      LOG4CPP_PREFIX=$extlog
-      if test -f $extlog/src/.libs/liblog4cpp.a; then
-        log4cpp_info="$extlog (already built)"
-# there is a problem with running configure on log4cpp from here
-#      else
-#        AC_CONFIG_SUBDIRS([extlib/log4cpp-1.0])
-#        log4cpp_info=$extlog
-      else
-        echo "BUILD LOG4CPP FIRST" 1>&2
-	exit 1
-      fi
-    else
-      log4cpp_info=stub
-    fi
-  fi
-elif test "x$with_log4cpp" = "xno"; then
-  LOG4CPP_PREFIX=
-  log4cpp_info=stub
-else
-  #! possibly check path
-  qualify_path with_log4cpp
-  LOG4CPP_PREFIX=$with_log4cpp
-  log4cpp_info=$with_log4cpp
-fi
-## set LOG4CPP_CFLAGS and LOG4CPP_LIBS (and -DUSE_LOG4CPP_STUB=1 if stub)
-if test "x$log4cpp_info" = "xstub"; then
-  AC_DEFINE([USE_LOG4CPP_STUB], [1])
-  LOG4CPP_CFLAGS=
-  LOG4CPP_LIBS=
-elif test "x$LOG4CPP_PREFIX" = "x"; then
-  LOG4CPP_CFLAGS=
-  LOG4CPP_LIBS=
-else
-  LOG4CPP_CFLAGS="-I${LOG4CPP_PREFIX}/include"
-  # It may be useful to allow a built (but not installed) path for log4cpp,
-  # that is, a source distribution. However the log4cpp distribution does not
-  # have a lib/, it has a src/.libs/.
-  if test -d ${LOG4CPP_PREFIX}/lib; then
-    LOG4CPP_LIBS="-L${LOG4CPP_PREFIX}/lib -llog4cpp"
-  elif test -d ${LOG4CPP_PREFIX}/src/.libs; then
-    LOG4CPP_LIBS="-L${LOG4CPP_PREFIX}/src/.libs -llog4cpp"
-  else
-    #! revert to using the stub?
-    echo "COULD NOT LOCATE LOG4CPP LIBRARY AT SPECIFIED PATH" 1>&2
-    exit 1
-#    AC_DEFINE([USE_LOG4CPP_STUB], [1])
-#    LOG4CPP_PREFIX=
-#    LOG4CPP_CFLAGS=
-#    LOG4CPP_LIBS=
-#    log4cpp_info="stub (lib not found)"
-  fi
-fi
-## include substitutions in output files
-AC_SUBST(LOG4CPP_PREFIX)
-AC_SUBST(LOG4CPP_CFLAGS)
-AC_SUBST(LOG4CPP_LIBS)
-
-
 ## LOCAL_PATH_PROG(prog name, local name, dir in extlib,
 ##   action if found, extra action if found in extlib, action if not found)
 ##
@@ -187,40 +99,57 @@ fi
 ])
 
 
-## LOCAL_CHECK_LIB(lib name, local name, function, dir in extlib,
-##   action if found, extra action if found installed, extra action if found in extlib,
+## LOCAL_CHECK_LIB(lib name, local name, function,
+##   action if found, extra action if found installed, extra action if found in with path,
 ##   action if not found, action if user requested without)
 ## Set $(local_name)_info to "NONE", location, or "installed" (can be overridden with above actions).
 define([LOCAL_CHECK_LIB],
 [
 if test "x$with_$2" = "xno"; then
   $2_info=NONE
-  $9
+  $8
 elif test "x$with_$2" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
-# This may not be necessary.
-  qualify_path with_$2
+# That may not be necessary.
+  if echo with_$2 | egrep -q '^extlib/'; then extlib=true; else extlib=false; fi
   $2_info=$with_$2
-  $5
+  qualify_path with_$2
+  $4
+  $6
 else
+  # In AC_CHECK_LIB, the last argument is optional. If it is specified but is
+  # empty, however, we get a syntax error. But, we have to be careful,
+  # because arguments to this macro may contain quotes, semicolons, etc.
+  # So we work around it by always supplying a last argument.
+  flag=false
   AC_CHECK_LIB([$1], [$3],
     [$2_info=installed
-     $5
-     $6],
-    [$2_info=check])
-  if test "x$$2_info" = "xcheck"; then
-    if test -d extlib/$4; then
-      $2_info=extlib/$4
-      with_$2=extlib/$4
-      qualify_path with_$2
-      $5
-      $7
-    else
-      $8
-    fi
+     $4
+     $5],
+    [flag=true])
+  if $flag; then
+    # we also can't have an empty if block...
+    true
+    $7
   fi
 fi
+])
+
+
+## LOCAL_CHECK_APPEND_PATHS(base dir, paths to append, prefix to set, var to set)
+## Look for one of the paths under the base dir. If found, set the variable
+## to the concatenation of the prefix, the discovered path.
+define([LOCAL_CHECK_APPEND_PATHS],
+[
+result=$3${$1}
+for p in $2; do
+  if test -d "${$1}/$p"; then
+    result=$3${$1}/$p
+    break
+  fi
+done
+$4=$result
 ])
 
 
@@ -250,6 +179,48 @@ AC_SUBST(GENGETOPT_CFLAGS)
 AC_SUBST(GENGETOPT_LIBS)
 
 
+## LOG4CPP
+# If the user specifies a path, use it.
+# If the user says not to use it, use the stub.
+# If the user doesn't say anything, check for it. Use the stub if not found.
+# While checking, look for a source distribution in extlib/.
+# If using stub, set USE_LOG4CPP_STUB=1.
+AC_ARG_WITH([log4cpp],
+	[AS_HELP_STRING([--with-log4cpp=<path>], [prefix of log4cpp installation or build directory])],
+	[],   # $with_log4cpp will either be a path or "no"
+	[with_log4cpp=check])
+LOCAL_CHECK_LIB([log4cpp], [log4cpp], [log4cpp::Category::getInstance],
+	[],                                                        dnl found (sets with_log4cpp_info=installed)
+	[],                                                        dnl and found installed
+	[LOG4CPP_PREFIX=$with_log4cpp],                            dnl and found in specified path
+	[log4cpp_info="stub (not found)";                          dnl not found
+	 AC_DEFINE([USE_LOG4CPP_STUB], [1])],
+	[log4cpp_info=stub; AC_DEFINE([USE_LOG4CPP_STUB], [1])])   dnl requested without
+## set LOG4CPP_CFLAGS and LOG4CPP_LIBS
+if test "x$LOG4CPP_PREFIX" != "x"; then
+  LOCAL_CHECK_APPEND_PATHS([LOG4CPP_PREFIX], [include], [-I], [LOG4CPP_CFLAGS])
+  LOCAL_CHECK_APPEND_PATHS([LOG4CPP_PREFIX], [lib src/.libs], [-L], [LOG4CPP_LIBS])
+  # It may be useful to allow a built (but not installed) path for log4cpp,
+  # that is, a source distribution. However the log4cpp distribution does not
+  # have a lib/, it has a src/.libs/.
+#  if test -d ${LOG4CPP_PREFIX}/lib; then
+#    LOG4CPP_LIBS="-L${LOG4CPP_PREFIX}/lib -llog4cpp"
+#  elif test -d ${LOG4CPP_PREFIX}/src/.libs; then
+#    LOG4CPP_LIBS="-L${LOG4CPP_PREFIX}/src/.libs -llog4cpp"
+#  else
+#    log4cpp_info=
+#    LOG4CPP_PREFIX=
+#    #! revert to using the stub?
+#    echo "COULD NOT LOCATE LOG4CPP LIBRARY AT SPECIFIED PATH" 1>&2
+#    exit 1
+#  fi
+fi
+LOG4CPP_LIBS="$LOG4CPP_LIBS -llog4cpp"
+AC_SUBST(LOG4CPP_PREFIX)
+AC_SUBST(LOG4CPP_CFLAGS)
+AC_SUBST(LOG4CPP_LIBS)
+
+
 ## SMILE
 # If the user specifies a path, use it.
 # If the user says not to use it, then don't.
@@ -260,22 +231,18 @@ AC_ARG_WITH([smile],
 	[AS_HELP_STRING([--with-smile=<path>], [prefix of SMILE installation])],
 	[],
 	[with_smile=check])
-#!! [x]
-LOCAL_CHECK_LIB([smile], [smile], [x], [smile],
-        [],
-        [],
-        [SMILE_PREFIX=$with_smile],
-        [echo "SMILE NOT FOUND"
-         echo "To compile without SMILE, use --without-smile."
-         echo "Otherwise use --with-smile=(path) to specify the location."],
-        [AC_DEFINE([NO_SMILE], [1])])
+LOCAL_CHECK_LIB([smile], [smile], [DSL_header::GetID],
+        [],                                                        dnl found
+        [],                                                        dnl and found installed (sets smile_info=installed)
+        [SMILE_PREFIX=$with_smile],                                dnl and found in specified path
+	[],                                                        dnl not found (smile_info not set)
+        [AC_DEFINE([NO_SMILE], [1])])                              dnl requested without
 ## set SMILE_CFLAGS and SMILE_LIBS
 if test "x$SMILE_PREFIX" != "x"; then
-  #! shouldn't it be $SMILE_PREFIX/include?
-  SMILE_CFLAGS="-I${SMILE_PREFIX}"
-  SMILE_LIBS=
+  LOCAL_CHECK_APPEND_PATHS([SMILE_PREFIX], [include], [-I], [SMILE_CFLAGS])
+  LOCAL_CHECK_APPEND_PATHS([SMILE_PREFIX], [lib], [-L], [SMILE_LIBS])
 fi
-## include substitutions in output files
+SMILE_LIBS="$SMILE_LIBS -lsmile"
 AC_SUBST(SMILE_PREFIX)
 AC_SUBST(SMILE_CFLAGS)
 AC_SUBST(SMILE_LIBS)
@@ -291,20 +258,18 @@ AC_ARG_WITH([svm_light],
 	[AS_HELP_STRING([--with-svm-light=<path>], [prefix of SVM Light installation])],
 	[],
 	[with_svm_light=check])
-LOCAL_CHECK_LIB([svmlight], [svm_light], [kernel], [svm_light],
-        [],
-        [],
-        [SVM_LIGHT_PREFIX=$with_svm_light],
-        [echo "SVM LIGHT NOT FOUND"
-         echo "To compile without SVM Light, use --without-svm-light."
-         echo "Otherwise use --with-svm-light=(path) to specify the location."],
-        [AC_DEFINE([NO_SVM_LIGHT], [1])])
+LOCAL_CHECK_LIB([svmlight], [svm_light], [kernel],
+        [],                                                        dnl found (sets svm_light_info=installed)
+        [],                                                        dnl and found installed
+        [SVM_LIGHT_PREFIX=$with_svm_light],                        dnl and found in specified path
+	[],                                                        dnl not found (svm_light_info not set)
+        [AC_DEFINE([NO_SVM_LIGHT], [1])])                          dnl requested without
 ## set SVM_LIGHT_CFLAGS and SVM_LIGHT_LIBS
 if test "x$SVM_LIGHT_PREFIX" != "x"; then
-  #! shouldn't it be $SVM_LIGHT_PREFIX/include?
-  SVM_LIGHT_CFLAGS="-I${SVM_LIGHT_PREFIX}"
-  SVM_LIGHT_LIBS=
+  LOCAL_CHECK_APPEND_PATHS([SVM_LIGHT_PREFIX], [include], [-I], [SVM_LIGHT_CFLAGS])
+  LOCAL_CHECK_APPEND_PATHS([SVM_LIGHT_PREFIX], [lib], [-L], [SVM_LIGHT_LIBS])
 fi
+SVM_LIGHT_LIBS="$SVM_LIGHT_LIBS -lsvm"
 AC_SUBST(SVM_LIGHT_PREFIX)
 AC_SUBST(SVM_LIGHT_CFLAGS)
 AC_SUBST(SVM_LIGHT_LIBS)
@@ -379,45 +344,71 @@ AC_CONFIG_FILES([Makefile src/Makefile \
 AC_OUTPUT
 
 
-#AC_CONFIG_SUBDIRS()
-
-
 # Print out a summary.
 echo ""
-echo "  log4cpp    = $log4cpp_info"
-echo "  SMILE      = $smile_info"
-echo "  SVM light  = $svm_light_info"
+echo "  log4cpp     = $log4cpp_info"
+echo "  SMILE       = $smile_info"
+echo "  SVM light   = $svm_light_info"
 echo ""
-echo "  gengetopt  = $prog_gengetopt_info"
-echo ""
+echo "  gengetopt   = $prog_gengetopt_info"
+
+ok=true
 
 if test "x$log4cpp_info" = "xstub"; then
   cat << EOF
+
 Using a simple replacement stub for log4cpp.
 If this is insufficient rerun configure with --with-log4cpp.
-
 EOF
 fi
 
-if echo $smile_info | grep -q "NONE"; then
-  cat << EOF
+if test "x$smile_info" = "x"; then
+  ok=false
+cat << EOF
+
+SMILE NOT FOUND
+To compile without SMILE, use --without-smile.
+Otherwise use --with-smile=(path) to specify the location.
+It is available as a binary distribution from http://genie.sis.pitt.edu/.
+EOF
+
+elif echo $smile_info | grep -q "NONE"; then
+cat << EOF
+
 BUILDING WITHOUT SMILE
 SMILE is strongly recommended.
 Bayes net functionality will be missing.
 It is available as a binary distribution from http://genie.sis.pitt.edu/.
-
 EOF
+
 fi
 
-if echo $svm_light_info | grep -q "NONE"; then
-  cat << EOF
+if test "x$svm_light_info" = "x"; then
+  ok=false
+cat << EOF
+
+SVM LIGHT NOT FOUND
+To compile without SVM Light, use --without-svm-light.
+Otherwise use --with-svm-light=(path) to specify the location.
+It is available from http://svmlight.joachims.org/.
+EOF
+
+elif echo $svm_light_info | grep -q "NONE"; then
+cat << EOF
+
 BUILDING WITHOUT SVM LIGHT
 SVM light is strongly recommended.
 It is available from http://svmlight.joachims.org/.
-
 EOF
+
 fi
 
-echo "Now run make."
+if $ok; then
+  echo ""
+  echo "Now run make."
+else
+  echo ""
+  echo "Please correct the above errors before continuing."
+fi
 
 #set
