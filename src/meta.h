@@ -136,7 +136,7 @@ public:
 	static void Permute( tIterator Items, const std::vector<size_t>& veciOrder ) {
 		std::vector<size_t>						veciMap, veciCopy;
 		size_t									i;
-		iterator_traits<tIterator>::value_type	Temp;
+		  typename iterator_traits<tIterator>::value_type	Temp;
 
 		veciCopy.resize( veciOrder.size( ) );
 		veciMap.resize( veciOrder.size( ) );

@@ -68,21 +68,32 @@ AWK = @AWK@
 CC = @CC@
 CXX = @CXX@
 DEPDIR = @DEPDIR@
+GENGETOPT_CFLAGS = @GENGETOPT_CFLAGS@
+GENGETOPT_LIBS = @GENGETOPT_LIBS@
+GENGETOPT_PREFIX = @GENGETOPT_PREFIX@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LOG4CPP_CFLAGS = @LOG4CPP_CFLAGS@
 LOG4CPP_LIBS = @LOG4CPP_LIBS@
 LOG4CPP_PREFIX = @LOG4CPP_PREFIX@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+SLEIPNIR_CFLAGS = @SLEIPNIR_CFLAGS@
+SLEIPNIR_LIBS = @SLEIPNIR_LIBS@
+SLEIPNIR_PREFIX = @SLEIPNIR_PREFIX@
 SMILE_CFLAGS = @SMILE_CFLAGS@
+SMILE_LIBS = @SMILE_LIBS@
 SMILE_PREFIX = @SMILE_PREFIX@
 STRIP = @STRIP@
 SVM_LIGHT_CFLAGS = @SVM_LIGHT_CFLAGS@
+SVM_LIGHT_LIBS = @SVM_LIGHT_LIBS@
 SVM_LIGHT_PREFIX = @SVM_LIGHT_PREFIX@
 VERSION = @VERSION@
 am__include = @am__include@
 am__quote = @am__quote@
 install_sh = @install_sh@
+prog_ = @prog_@
+prog_gengetopt = @prog_gengetopt@
+prog_gengetopt_dir = @prog_gengetopt_dir@
 sleipnirdocdir = @sleipnirdocdir@
 lib_LIBRARIES = libSleipnir.a
 
@@ -114,7 +125,6 @@ libSleipnir_a_SOURCES = \
 	example.cpp				\
 	file.cpp				\
 	genome.cpp				\
-	halfmatrix.cpp			\
 	mathb.cpp				\
 	measure.cpp				\
 	meta.cpp				\
@@ -217,12 +227,12 @@ am_libSleipnir_a_OBJECTS = annotation.$(OBJEXT) annotationgo.$(OBJEXT) \
 	compactmatrix.$(OBJEXT) database.$(OBJEXT) datapair.$(OBJEXT) \
 	datasetcompact.$(OBJEXT) dataset.$(OBJEXT) dat.$(OBJEXT) \
 	example.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) \
-	halfmatrix.$(OBJEXT) mathb.$(OBJEXT) measure.$(OBJEXT) \
-	meta.$(OBJEXT) name.$(OBJEXT) orthology.$(OBJEXT) pcl.$(OBJEXT) \
-	pclset.$(OBJEXT) propertyfile.$(OBJEXT) serverclient.$(OBJEXT) \
-	server.$(OBJEXT) statistics.$(OBJEXT) stdafx.$(OBJEXT) \
-	svm.$(OBJEXT) svm_sam.$(OBJEXT) xmlstring.$(OBJEXT) \
-	xmlvacuum.$(OBJEXT) xmlwriter.$(OBJEXT)
+	mathb.$(OBJEXT) measure.$(OBJEXT) meta.$(OBJEXT) name.$(OBJEXT) \
+	orthology.$(OBJEXT) pcl.$(OBJEXT) pclset.$(OBJEXT) \
+	propertyfile.$(OBJEXT) serverclient.$(OBJEXT) server.$(OBJEXT) \
+	statistics.$(OBJEXT) stdafx.$(OBJEXT) svm.$(OBJEXT) \
+	svm_sam.$(OBJEXT) xmlstring.$(OBJEXT) xmlvacuum.$(OBJEXT) \
+	xmlwriter.$(OBJEXT)
 libSleipnir_a_OBJECTS = $(am_libSleipnir_a_OBJECTS)
 
 DEFS = @DEFS@
@@ -248,12 +258,12 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/datapair.Po ./$(DEPDIR)/dataset.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/datasetcompact.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/example.Po ./$(DEPDIR)/file.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/genome.Po ./$(DEPDIR)/halfmatrix.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mathb.Po ./$(DEPDIR)/measure.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/meta.Po ./$(DEPDIR)/name.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/orthology.Po ./$(DEPDIR)/pcl.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/pclset.Po ./$(DEPDIR)/propertyfile.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/server.Po ./$(DEPDIR)/serverclient.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/genome.Po ./$(DEPDIR)/mathb.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/measure.Po ./$(DEPDIR)/meta.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/name.Po ./$(DEPDIR)/orthology.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/pcl.Po ./$(DEPDIR)/pclset.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/propertyfile.Po ./$(DEPDIR)/server.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/serverclient.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/statistics.Po ./$(DEPDIR)/stdafx.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/svm.Po ./$(DEPDIR)/svm_sam.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/xmlstring.Po ./$(DEPDIR)/xmlvacuum.Po \
@@ -276,7 +286,7 @@ all: all-am
 .SUFFIXES: .cpp .o .obj
 $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
 
@@ -345,7 +355,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/example.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/genome.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/halfmatrix.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mathb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta.Po@am__quote@

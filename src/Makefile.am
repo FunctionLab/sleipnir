@@ -28,7 +28,6 @@ libSleipnir_a_SOURCES	=	\
 	example.cpp				\
 	file.cpp				\
 	genome.cpp				\
-	halfmatrix.cpp			\
 	mathb.cpp				\
 	measure.cpp				\
 	meta.cpp				\
