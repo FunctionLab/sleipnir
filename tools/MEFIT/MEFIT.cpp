@@ -32,8 +32,9 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
+#ifdef SMILEXML_LIB
 	EnableXdslFormat( );
-
+#endif
 	pMeasure = NULL;
 	for( i = 0; apMeasures[ i ]; ++i )
 		if( !strcmp( apMeasures[ i ]->GetName( ), sArgs.distance_arg ) ) {

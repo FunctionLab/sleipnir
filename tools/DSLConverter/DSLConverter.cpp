@@ -10,7 +10,9 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
 #if !( defined(_MSC_VER) && defined(_DEBUG) )
+#ifdef SMILEXML_LIB
 	EnableXdslFormat( );
+#endif
 #endif // !( defined(_MSC_VER) && defined(_DEBUG) )
 
 	if( !BNSmile.Open( sArgs.input_arg ) ) {

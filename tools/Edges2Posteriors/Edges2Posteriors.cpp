@@ -21,7 +21,9 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
+#ifdef SMILEXML_LIB
     EnableXdslFormat( );
+#endif
 
 	if( !BNSmile.Open( sArgs.network_arg ) ) {
 		cerr << "Could not open: " << sArgs.network_arg << endl;

@@ -47,7 +47,9 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta::Startup( sArgs.verbosity_arg );
+#ifdef SMILEXML_LIB
 	EnableXdslFormat( );
+#endif
 
 	vecpBNs.resize( sArgs.inputs_num );
 	for( i = 0; i < vecpBNs.size( ); ++i ) {
