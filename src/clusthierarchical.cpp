@@ -46,7 +46,7 @@ CHierarchyImpl::~CHierarchyImpl( ) {
 	if( m_pRight )
 		delete m_pRight; }
 
-bool CHierarchyImpl::Save( ostream& ostm, size_t iNode ) const {
+bool CHierarchyImpl::Save( std::ostream& ostm, size_t iNode ) const {
 
 	if( IsGene( ) )
 		return false;

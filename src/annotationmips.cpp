@@ -10,7 +10,7 @@ COntologyMIPS::COntologyMIPS( ) {
 
 	m_pOntology = this; }
 
-COntologyMIPSImpl::SParserMIPS::SParserMIPS( istream& istm, CGenome& Genome ) :
+COntologyMIPSImpl::SParserMIPS::SParserMIPS( std::istream& istm, CGenome& Genome ) :
 	SParser( istm, Genome ) { }
 
 COntologyMIPSImpl::COntologyMIPSImpl( ) : COntologyImpl( c_szMIPS ) { }
@@ -37,9 +37,9 @@ COntologyMIPSImpl::COntologyMIPSImpl( ) : COntologyImpl( c_szMIPS ) { }
  * are retrieved from Genome if already present or inserted if not; it is thus important to ensure that the
  * proper primary gene names are used so as to agree with any identifiers already present in Genome.
  */
-bool COntologyMIPS::Open( istream& istmOnto, istream& istmGene, CGenome& Genome ) {
-	SParserMIPS	sParserOnto( istmOnto, Genome );
-	SParserMIPS	sParserGene( istmGene, Genome );
+bool COntologyMIPS::Open( std::istream& istmOntology, std::istream& istmAnnotations, CGenome& Genome ) {
+	SParserMIPS	sParserOnto( istmOntology, Genome );
+	SParserMIPS	sParserGene( istmAnnotations, Genome );
 
 	if( !OpenOntology( sParserOnto ) ) {
 		g_CatSleipnir.error( "COntologyMIPS::Open( ) failed on ontology line %d: %s", sParserOnto.m_iLine,

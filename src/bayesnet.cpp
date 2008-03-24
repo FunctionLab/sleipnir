@@ -42,13 +42,13 @@ string CBayesNetImpl::EncodeDatum( const CPCLPair& PCL, size_t iGene, const vect
 
 	return strRet; }
 
-void CBayesNetImpl::DecodeDatum( const string& strDatum, vector<size_t>& veciDatum ) {
+void CBayesNetImpl::DecodeDatum( const std::string& strDatum, std::vector<size_t>& veciDatum ) {
 	size_t	i;
 
 	for( i = 0; i < strDatum.length( ); ++i )
 		veciDatum[ i ] = ( strDatum[ i ] == c_cMissing ) ? -1 : ( strDatum[ i ] - c_cBase ); }
 
-bool CBayesNetImpl::IsAnswer( const string& strDatum ) {
+bool CBayesNetImpl::IsAnswer( const std::string& strDatum ) {
 
 	return ( strDatum[ 0 ] != c_cMissing ); }
 

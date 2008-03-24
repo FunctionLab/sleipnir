@@ -6,7 +6,7 @@ namespace Sleipnir {
 
 const char	CPairImpl::c_szQuantExt[]	= ".quant";
 
-bool CPairImpl::Open( const char* szDatafile, ifstream& ifsm ) {
+bool CPairImpl::Open( const char* szDatafile, std::ifstream& ifsm ) {
 	string		strToken;
 	const char*	pc;
 

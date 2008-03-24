@@ -19,17 +19,21 @@ namespace Sleipnir {
  * 
  * An orthology is stored in a tab-delimited text file in which each line represents a cluster and each
  * tab-separated token indicates a gene and the organism it is drawn from.  This file is of the form:
- * <pre>O1:G1	O3:G2
-O1:G1	O1:G2
-O1:G3	O2:G1	O3:G1</pre>
+ * \code
+ * O1:G1	O3:G2
+ * O1:G1	O1:G2
+ * O1:G3	O2:G1	O3:G1
+ * \endcode
  * Here, there are three organisms O1, O2, O3; O1 possesses three genes G1, G2, and G3, O2 has one gene G1,
  * and O3 has two genes G1 and G2.  The organism identifiers should be short human-recognizable organism
  * identifiers (similar to those used by KEGG), and the gene identifiers should be standard unique
  * primary name.  A snippet of a real orthology file might resemble:
- * <pre>DME|FBgn0034427	DME|FBgn0033431	MMU|MGI:104873	CEL|R04B3.2	HSA|AGA
-MMU|MGI:87963	HSA|AGT
-HSA|ALAD	SCE|YGL040C	MMU|MGI:96853	DME|FBgn0036271
-DME|FBgn0036208	DME|FBgn0020764	HSA|GCAT	HSA|ALAS1	HSA|ALAS2	MMU|MGI:87989	CEL|T25B9.1	MMU|MGI:1349389	MMU|MGI:87990	SCE|YDR232W</pre>
+ * \code
+ * DME|FBgn0034427	DME|FBgn0033431	MMU|MGI:104873	CEL|R04B3.2	HSA|AGA
+ * MMU|MGI:87963	HSA|AGT
+ * HSA|ALAD	SCE|YGL040C	MMU|MGI:96853	DME|FBgn0036271
+ * DME|FBgn0036208	DME|FBgn0020764	HSA|GCAT	HSA|ALAS1	HSA|ALAS2	MMU|MGI:87989	CEL|T25B9.1	MMU|MGI:1349389	MMU|MGI:87990	SCE|YDR232W</pre>
+ * \endcode
  * 
  * \remarks
  * A COrthology contains many CGenes sets, each containing CGene objects drawn from multiple underlying

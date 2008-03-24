@@ -5,6 +5,8 @@ extern "C" {
 #include "svm_common.h"
 }
 
+#include "typesi.h"
+
 namespace Sleipnir {
 
 class CDat;
@@ -60,15 +62,15 @@ protected:
 	DOC* CreateDoc( const SData&, size_t, size_t, size_t ) const;
 	DOC* CreateDoc( const SData&, size_t ) const;
 
-	MODEL*	m_pModel;
-	DOC**	m_apDocs;
-	size_t	m_iDocs;
-	size_t	m_iWords;
-	double*	m_adLabels;
-	double*	m_adAlphas;
-	size_t	m_iAlphas;
-	SLearn	m_sLearn;
-	SKernel	m_sKernel;
+	MODEL*		m_pModel;
+	DOC**		m_apDocs;
+	uint32_t	m_iDocs;
+	uint32_t	m_iWords;
+	double*		m_adLabels;
+	double*		m_adAlphas;
+	size_t		m_iAlphas;
+	SLearn		m_sLearn;
+	SKernel		m_sKernel;
 };
 
 }

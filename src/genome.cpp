@@ -15,9 +15,9 @@ namespace Sleipnir {
  * \see
  * GetName
  */
-CGene::CGene( const string& strName ) : CGeneImpl(strName) { }
+CGene::CGene( const std::string& strID ) : CGeneImpl(strID) { }
 
-CGeneImpl::CGeneImpl( const string& strName ) : m_strName(strName),
+CGeneImpl::CGeneImpl( const std::string& strName ) : m_strName(strName),
 	m_iOntologies(0), m_apOntologies(NULL), m_apveciAnnotations(NULL),
 	m_iSynonyms(0), m_astrSynonyms(NULL), m_fRNA(false), m_fDubious(false) { }
 
@@ -174,23 +174,23 @@ bool CGene::IsAnnotated( const IOntology* pOntology, size_t iTerm ) const {
  * \see
  * GetSynonym
  */
-bool CGene::AddSynonym( const string& strSyn ) {
+bool CGene::AddSynonym( const std::string& strName ) {
 	size_t	i;
 	string*	astrSynonyms;
 
-	if( !strSyn.length( ) )
+	if( !strName.length( ) )
 		g_CatSleipnir.warn( "CGene::AddSynonym( %s ) adding null synonym to %s",
-			strSyn.c_str( ), m_strName.c_str( ) );
-	if( strSyn == m_strName )
+			strName.c_str( ), m_strName.c_str( ) );
+	if( strName == m_strName )
 		return false;
 	for( i = 0; i < m_iSynonyms; ++i )
-		if( strSyn == m_astrSynonyms[ i ] )
+		if( strName == m_astrSynonyms[ i ] )
 			return false;
 
 	astrSynonyms = new string[ ++m_iSynonyms ];
 	for( i = 0; ( i + 1 ) < m_iSynonyms; ++i )
 		astrSynonyms[ i ] = m_astrSynonyms[ i ];
-	astrSynonyms[ i ] = strSyn;
+	astrSynonyms[ i ] = strName;
 
 	if( m_astrSynonyms )
 		delete[] m_astrSynonyms;
@@ -221,7 +221,7 @@ CGenomeImpl::~CGenomeImpl( ) {
  * Loads a (presumably yeast) genome from a file formatted as per the SGD features file (SGD_features.tab).
  * This includes gene IDs, synonyms, glosses, and RNA and dubious tags.
  */
-bool CGenome::Open( istream& istmFeatures ) {
+bool CGenome::Open( std::istream& istmFeatures ) {
 	static const size_t	c_iBuf	= 4096;
 	char			szBuf[ c_iBuf ];
 	vector<string>	vecstrLine, vecstrNames;
@@ -278,7 +278,7 @@ bool CGenome::Open( istream& istmFeatures ) {
  * Genes in the new genome will have no information beyond the provided primary IDs, which should (as
  * usual) be unique.
  */
-bool CGenome::Open( const vector<string>& vecstrGenes ) {
+bool CGenome::Open( const std::vector<std::string>& vecstrGenes ) {
 	size_t	i;
 
 	for( i = 0; i < vecstrGenes.size( ); ++i )
@@ -306,7 +306,7 @@ bool CGenome::Open( const vector<string>& vecstrGenes ) {
  * \see
  * FindGene
  */
-CGene& CGenome::AddGene( const string& strID ) {
+CGene& CGenome::AddGene( const std::string& strID ) {
 	TMapStrI::const_iterator	iterGene;
 	CGene*						pGene;
 
@@ -339,7 +339,7 @@ CGene& CGenome::AddGene( const string& strID ) {
  * \see
  * AddGene
  */
-size_t CGenome::FindGene( const string& strGene ) const {
+size_t CGenome::FindGene( const std::string& strGene ) const {
 	size_t	i, j, iRet;
 
 	if( ( iRet = GetGene( strGene ) ) != -1 )
@@ -412,7 +412,7 @@ size_t CGenome::CountGenes( const IOntology* pOntology ) const {
  * \see
  * CGene::AddSynonym
  */
-bool CGenome::AddSynonym( CGene& Gene, const string& strName ) {
+bool CGenome::AddSynonym( CGene& Gene, const std::string& strName ) {
 
 	if( ( strName != Gene.GetName( ) ) && ( Gene.AddSynonym( strName ) ) ) {
 		m_mapGenes[ strName ] = m_mapGenes[ Gene.GetName( ) ];
@@ -445,9 +445,11 @@ CGenesImpl::CGenesImpl( CGenome& Genome ) : m_Genome(Genome) { }
  * True if gene set was constructed successfully.
  * 
  * Loads a text file of the form:
- * <pre>GENE1
-GENE2
-GENE3</pre>
+ * \code
+ * GENE1
+ * GENE2
+ * GENE3
+ * \endcode
  * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
  * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
  * created from the loaded IDs.  If fCreate is false, unrecognized genes are skipped with a warning.
@@ -455,7 +457,7 @@ GENE3</pre>
  * \see
  * CGenome::AddGene
  */
-bool CGenes::Open( istream& istm, bool fCreate ) {
+bool CGenes::Open( std::istream& istm, bool fCreate ) {
 	static const size_t	c_iBuffer	= 1024;
 	char	szBuf[ c_iBuffer ];
 	CGene*	pGene;
@@ -541,7 +543,7 @@ size_t CGenes::CountAnnotations( const IOntology* pOntology, size_t iTerm, bool 
  * \see
  * CGenome::AddGene
  */
-bool CGenes::Open( const vector<string>& vecstrGenes, bool fCreate ) {
+bool CGenes::Open( const std::vector<std::string>& vecstrGenes, bool fCreate ) {
 	size_t	i, iGene;
 	CGene*	pGene;
 

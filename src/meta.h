@@ -115,7 +115,7 @@ public:
 	static std::string Deextension( const std::string& strName ) {
 		size_t	i;
 
-		return ( ( ( i = strName.rfind( c_cPeriod ) ) == string::npos ) ? strName :
+		return ( ( ( i = strName.rfind( c_cPeriod ) ) == std::string::npos ) ? strName :
 			strName.substr( 0, i ) ); }
 
 	/*!
@@ -172,7 +172,7 @@ public:
 	 * compromise.  Crazy STL and iterators...
 	 */
 	template <class tType>
-	static void Permute( vector<tType>& vecItems, const std::vector<size_t>& veciOrder ) {
+	static void Permute( std::vector<tType>& vecItems, const std::vector<size_t>& veciOrder ) {
 
 		Permute( vecItems.begin( ), veciOrder ); }
 

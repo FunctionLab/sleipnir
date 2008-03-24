@@ -35,7 +35,7 @@ void CCompactMatrixBase::Initialize( unsigned char cValues, bool fClear ) {
  * \remarks
  * istm must be binary and contain a compact half matrix stored by CCompactMatrix::Save.
  */
-bool CCompactMatrix::Open( istream& istm ) {
+bool CCompactMatrix::Open( std::istream& istm ) {
 	uint32_t	iBytes;
 	size_t		iWords;
 
@@ -97,7 +97,7 @@ const unsigned char* CCompactMatrix::Open( const unsigned char* pbData ) {
  * \see
  * CCompactMatrix::Open
  */
-void CCompactMatrix::Save( ostream& ostm ) const {
+void CCompactMatrix::Save( std::ostream& ostm ) const {
 	static const char	abPad[]	= "\0\0\0\0\0\0\0\0";
 	uint32_t		iPad, iBytes;
 	size_t			iWords;

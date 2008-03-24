@@ -37,7 +37,7 @@ void CPCLSetImpl::Reset( ) {
  * \remarks
  * The same number of skip columns must be used for each PCL in the set.
  */
-bool CPCLSet::Open( const vector<string>& vecstrFiles, size_t iSkip, CPCL::ENormalize eNormalize ) {
+bool CPCLSet::Open( const std::vector<std::string>& vecstrFiles, size_t iSkip, CPCL::ENormalize eNormalize ) {
 	size_t						i, j;
 	ifstream					ifsm;
 	set<string>					setstrGenes;

@@ -617,7 +617,7 @@ bool CBayesNetFN::Evaluate( const vector<unsigned char>& vecbDatum, vector<float
 
 	return true; }
 
-void CBayesNetFN::GetNodes( vector<string>& vecstrNodes ) const {
+void CBayesNetFN::GetNodes( std::vector<std::string>& vecstrNodes ) const {
 	size_t	i;
 
 	for( i = 0; i < m_iNodes; ++i )
@@ -690,7 +690,7 @@ bool CBayesNetMinimal::Open( const CBayesNetSmile& BNSmile ) {
  * \remarks
  * istm must be binary and contain a minimal Bayes net stored by CBayesNetMinimal::Save.
  */
-bool CBayesNetMinimal::Open( istream& istm ) {
+bool CBayesNetMinimal::Open( std::istream& istm ) {
 	uint32_t	iSize;
 	size_t		i;
 
@@ -724,7 +724,7 @@ bool CBayesNetMinimal::Open( istream& istm ) {
  * \see
  * CBayesNetMinimal::Open
  */
-void CBayesNetMinimal::Save( ostream& ostm ) const {
+void CBayesNetMinimal::Save( std::ostream& ostm ) const {
 	uint32_t	iSize;
 	size_t		i;
 

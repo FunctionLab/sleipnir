@@ -10,6 +10,7 @@
 namespace Sleipnir {
 
 class CDat;
+class IMeasure;
 
 /*!
  * \brief
@@ -21,11 +22,13 @@ class CDat;
  * microarray conditions' weights.  There are usually three header columns: unique gene identifiers in the
  * first column, human-readable gene name synonyms in the second column, and gene weights in the third.
  * Thus, a simple PCL might be:
- * <pre>GID	NAME	GWEIGHT	Condition 1	Condition 2	Condition 3
-EWEIGHT			1	1	1
-YKL032C	IXR1	1	-0.02	0.03	-0.1
-YMR027W	HRT2	1	-0.018	0.013	-0.016
-YLR220W	CCC1	1	-0.0050	-0.01	0.015</pre>
+ * \code
+ * GID	NAME	GWEIGHT	Condition 1	Condition 2	Condition 3
+ * EWEIGHT			1	1	1
+ * YKL032C	IXR1	1	-0.02	0.03	-0.1
+ * YMR027W	HRT2	1	-0.018	0.013	-0.016
+ * YLR220W	CCC1	1	-0.0050	-0.01	0.015</pre>
+ * \endcode
  * 
  * In practice, the format of this file is very flexible: the first row's always a header, the first
  * column's always unique gene IDs, and most other columns are data, but everything else changes.  There
@@ -100,6 +103,8 @@ public:
 	void RankTransform( );
 	bool AddGenes( const std::vector<std::string>& vecstrGenes );
 	void Normalize( ENormalize eNormalize = ENormalizeRow );
+	void Impute( size_t iNeighbors, float dMinimumPresent, const CDat& DatSimilarity );
+	void Impute( size_t iNeighbors, float dMinimumPresent, const IMeasure* pMeasure, bool fPrecompute = true );
 
 	/*!
 	 * \brief

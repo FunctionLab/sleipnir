@@ -45,7 +45,8 @@ COntologyKEGG::COntologyKEGG( ) {
  * the desired behavior); setting it true will use common names.  For other organisms, please inspect the
  * ko file.
  */
-bool COntologyKEGG::Open( istream& istm, CGenome& Genome, const string& strOrganism, bool fSynonyms ) {
+bool COntologyKEGG::Open( std::istream& istm, CGenome& Genome, const std::string& strOrganism,
+	bool fSynonyms ) {
 	SParserKEGG					sParser( istm, Genome, strOrganism, fSynonyms );
 	size_t						i, j, iNode;
 	TMapStrI::const_iterator	iterNode;
@@ -94,9 +95,9 @@ const char	COntologyKEGGImpl::c_szDBLinks[]	= "DBLINKS";
 const char	COntologyKEGGImpl::c_szGenes[]		= "GENES";
 const char	COntologyKEGGImpl::c_szEnd[]		= "///";
 
-COntologyKEGGImpl::SParserKEGG::SParserKEGG( istream& istm, CGenome& Genome, const string& strOrganism,
-	bool fSynonyms ) : m_fSynonyms(fSynonyms), m_fOrganism(false), m_strOrganism(strOrganism),
-	SParser( istm, Genome ) { }
+COntologyKEGGImpl::SParserKEGG::SParserKEGG( std::istream& istm, CGenome& Genome,
+	const std::string& strOrganism, bool fSynonyms ) : m_fSynonyms(fSynonyms), m_fOrganism(false),
+	m_strOrganism(strOrganism), SParser( istm, Genome ) { }
 
 void COntologyKEGGImpl::SParserKEGG::Reset( ) {
 

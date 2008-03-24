@@ -20,7 +20,9 @@ class CSlim;
  * represent bin edges for discretizing the CDat associated with the QUANT.  The number of bins is equal to
  * the number of numbers in the QUANT, meaning that the last number will be ignored.  Upper bin edges are
  * inclusive, lower bin edges are exclusive.  This means that for a QUANT file containing:
- * <pre>-0.1	0.3	0.6</pre>
+ * \code
+ * -0.1	0.3	0.6
+ * \endcode
  * the associated CDat will be discretized into three values:
  * - 0, corresponding to values less than or equal to -0.1.
  * - 1, corresponding to values greater than -0.1 but less than or equal to 0.3.

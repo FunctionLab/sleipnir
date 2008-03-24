@@ -24,7 +24,7 @@ static const struct {
 	{NULL,	CDat::EFormatBinary}
 };
 
-size_t CDatImpl::MapGene( TMapStrI& mapGenes, TVecStr& vecGenes, const string& strToken ) {
+size_t CDatImpl::MapGene( TMapStrI& mapGenes, TVecStr& vecGenes, const std::string& strToken ) {
 	TMapStrI::iterator	iterGenes;
 	size_t				iRet;
 
@@ -47,7 +47,7 @@ void CDatImpl::ResizeNaN( TAF& vecf, size_t iLast ) {
 	for( ; i < vecf.size( ); ++i )
 		vecf[ i ] = CMeta::GetNaN( ); }
 
-void CDatImpl::DabGene( istream& istm, char* acBuffer ) {
+void CDatImpl::DabGene( std::istream& istm, char* acBuffer ) {
 	size_t	i;
 
 	i = 0;
@@ -409,7 +409,7 @@ void CDatImpl::OpenHelper( const CGenes* pOne, const CGenes* pTwo, float dValue 
  * \see
  * Save | CPCL
  */
-bool CDat::Open( istream& istm, EFormat eFormat, float dDefault, bool fDuplicates, size_t iSkip,
+bool CDat::Open( std::istream& istm, EFormat eFormat, float dDefault, bool fDuplicates, size_t iSkip,
 	bool fZScore ) {
 
 	switch( eFormat ) {
@@ -424,7 +424,7 @@ bool CDat::Open( istream& istm, EFormat eFormat, float dDefault, bool fDuplicate
 
 	return OpenBinary( istm ); }
 
-bool CDatImpl::OpenPCL( istream& istm, size_t iSkip, bool fZScore ) {
+bool CDatImpl::OpenPCL( std::istream& istm, size_t iSkip, bool fZScore ) {
 
 	Reset( );
 	m_pPCL = new CPCL( );
@@ -479,7 +479,7 @@ bool CDat::Open( const CPCL& PCL, const IMeasure* pMeasure, bool fMeasureMemory 
 
 	return true; }
 
-bool CDatImpl::OpenText( istream& istm, float dDefault, bool fDuplicates ) {
+bool CDatImpl::OpenText( std::istream& istm, float dDefault, bool fDuplicates ) {
 	const char*	pc;
 	char*		pcTail;
 	char*		acBuf;
@@ -544,7 +544,7 @@ bool CDatImpl::OpenText( istream& istm, float dDefault, bool fDuplicates ) {
 
 	return true; }
 
-bool CDatImpl::OpenBinary( istream& istm ) {
+bool CDatImpl::OpenBinary( std::istream& istm ) {
 	size_t	i;
 	float*	adScores;
 
@@ -559,7 +559,7 @@ bool CDatImpl::OpenBinary( istream& istm ) {
 
 	return true; }
 
-bool CDatImpl::OpenSparse( istream& istm ) {
+bool CDatImpl::OpenSparse( std::istream& istm ) {
 	size_t		i;
 	uint32_t	j;
 	float		d;
@@ -643,11 +643,11 @@ bool CDat::OpenGenes( const char* szFile, size_t iSkip ) {
  * \see
  * CPCL
  */
-bool CDat::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
+bool CDat::OpenGenes( std::istream& istm, bool fBinary, bool fPCL ) {
 
 	return CDatImpl::OpenGenes( istm, fBinary, fPCL ); }
 
-bool CDatImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
+bool CDatImpl::OpenGenes( std::istream& istm, bool fBinary, bool fPCL ) {
 	size_t		i, iToken;
 	uint32_t	iCount;
 	string		strToken, strCache;
@@ -707,6 +707,9 @@ bool CDatImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL ) {
  * \param szFile
  * Filename into which CDat is saved.
  * 
+ * Save a CDat to the given file, guessing the format (DAT, DAB, or DAS) from the extension.  If null, the
+ * CDat will be saved as a DAT to standard output.
+ * 
  * \remarks
  * CDats cannot be saved to PCLs, only loaded from them.  If the extension is not recognized, DAB format is
  * assumed.
@@ -750,7 +753,7 @@ void CDat::Save( const char* szFile ) const {
  * \see
  * Open
  */
-void CDat::Save( ostream& ostm, EFormat eFormat ) const {
+void CDat::Save( std::ostream& ostm, EFormat eFormat ) const {
 
 	switch( eFormat ) {
 		case EFormatText:
@@ -763,7 +766,7 @@ void CDat::Save( ostream& ostm, EFormat eFormat ) const {
 
 	SaveBinary( ostm ); }
 
-void CDatImpl::SaveText( ostream& ostm ) const {
+void CDatImpl::SaveText( std::ostream& ostm ) const {
 	size_t	i, j;
 	float	d;
 
@@ -772,7 +775,7 @@ void CDatImpl::SaveText( ostream& ostm ) const {
 			if( !CMeta::IsNaN( d = Get( i, j ) ) )
 				ostm << GetGene( i ) << '\t' << GetGene( j ) << '\t' << d << endl; }
 
-void CDatImpl::SaveBinary( ostream& ostm ) const {
+void CDatImpl::SaveBinary( std::ostream& ostm ) const {
 	size_t			i, j;
 	const float*	pd;
 	float			d;
@@ -788,7 +791,7 @@ void CDatImpl::SaveBinary( ostream& ostm ) const {
 			pd = m_Data.Get( i );
 			ostm.write( (char*)pd, sizeof(*pd) * ( GetGenes( ) - i - 1 ) ); } }
 
-void CDatImpl::SaveSparse( ostream& ostm ) const {
+void CDatImpl::SaveSparse( std::ostream& ostm ) const {
 	uint32_t	i, j;
 	float		d;
 
@@ -801,7 +804,7 @@ void CDatImpl::SaveSparse( ostream& ostm ) const {
 		j = -1;
 		ostm.write( (char*)&j, sizeof(j) ); } }
 
-void CDatImpl::SaveGenes( ostream& ostm ) const {
+void CDatImpl::SaveGenes( std::ostream& ostm ) const {
 	size_t		i, j;
 	uint32_t	iSize;
 	string		strGene;
@@ -835,7 +838,7 @@ void CDatImpl::SaveGenes( ostream& ostm ) const {
  * Generates a CDat over the given genes (and of the same size), optionally initializing it to contain no
  * values or backing it with a memory-mapped file rather than physical memory.
  */
-bool CDat::Open( const vector<string>& vecstrGenes, bool fClear, const char* szFile ) {
+bool CDat::Open( const std::vector<std::string>& vecstrGenes, bool fClear, const char* szFile ) {
 	size_t			i, j, iSize;
 	unsigned char*	pb;
 
@@ -893,7 +896,7 @@ bool CDat::Open( const vector<string>& vecstrGenes, bool fClear, const char* szF
  * vecstrGenes must be the same size as MatScores.  MatScores will not be copied; the new CDat will thus not
  * consume a substantial amount of memory, but MatScores must not be disposed of before the current CDat.
  */
-bool CDat::Open( const vector<string>& vecstrGenes, const CDistanceMatrix& MatScores ) {
+bool CDat::Open( const std::vector<std::string>& vecstrGenes, const CDistanceMatrix& MatScores ) {
 	size_t	i;
 
 	if( vecstrGenes.size( ) != MatScores.GetSize( ) )
@@ -908,7 +911,7 @@ bool CDat::Open( const vector<string>& vecstrGenes, const CDistanceMatrix& MatSc
 
 	return true; }
 
-size_t CDatImpl::GetGene( const string& strGene ) const {
+size_t CDatImpl::GetGene( const std::string& strGene ) const {
 	size_t	i;
 
 	if( m_pMeasure )
@@ -1330,8 +1333,8 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes, s
  * \see
  * SaveGDF | SaveNET | SaveMATISSE
  */
-void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool fUnlabeled, bool fHashes,
-	const vector<float>* pvecdColors, const vector<float>* pvecdBorders ) const {
+void CDat::SaveDOT( std::ostream& ostm, float dCutoff, const CGenome* pGenome, bool fUnlabeled, bool fHashes,
+	const std::vector<float>* pvecdColors, const std::vector<float>* pvecdBorders ) const {
 	size_t			i, j;
 	float			d, dMin, dMax;
 	bool			fAll, fLabel;
@@ -1421,7 +1424,7 @@ void CDat::SaveDOT( ostream& ostm, float dCutoff, const CGenome* pGenome, bool f
  * \see
  * SaveDOT | SaveNET | SaveMATISSE
  */
-void CDat::SaveGDF( ostream& ostm, float dCutoff ) const {
+void CDat::SaveGDF( std::ostream& ostm, float dCutoff ) const {
 	size_t			i, j;
 	float			d;
 	bool			fAll;
@@ -1460,7 +1463,7 @@ void CDat::SaveGDF( ostream& ostm, float dCutoff ) const {
  * \see
  * SaveDOT | SaveGDF | SaveMATISSE
  */
-void CDat::SaveNET( ostream& ostm, float dCutoff ) const {
+void CDat::SaveNET( std::ostream& ostm, float dCutoff ) const {
 	size_t	i, j;
 	float	d;
 	bool	fAll;
@@ -1497,7 +1500,7 @@ void CDat::SaveNET( ostream& ostm, float dCutoff ) const {
  * \see
  * SaveDOT | SaveGDF | SaveNET
  */
-void CDat::SaveMATISSE( ostream& ostm, float dCutoff, const CGenome* pGenome ) const {
+void CDat::SaveMATISSE( std::ostream& ostm, float dCutoff, const CGenome* pGenome ) const {
 	size_t	i, j, k;
 	float	d;
 	bool	fAll;

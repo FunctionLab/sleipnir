@@ -333,7 +333,7 @@ public:
 
 		return COntologyImpl::GetID( iTerm ); }
 
-	const string& GetGloss( size_t iTerm ) const {
+	const std::string& GetGloss( size_t iTerm ) const {
 
 		return COntologyImpl::GetGloss( iTerm ); }
 

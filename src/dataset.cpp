@@ -48,8 +48,8 @@ void CDataImpl::FilterGenes( IDataset* pData, const CGenes& Genes, CDat::EFilter
 						pData->Remove( i, j );
 					break; } } }
 
-size_t CDataImpl::OpenMax( const char* szDataDir, const vector<string>& vecstrNodes,
-	bool fAnswers, vector<string>& vecstrData, set<string>* psetstrGenes ) {
+size_t CDataImpl::OpenMax( const char* szDataDir, const std::vector<std::string>& vecstrNodes,
+	bool fAnswers, std::vector<std::string>& vecstrData, std::set<std::string>* psetstrGenes ) {
 	size_t		i, iLength, iMap, iRet;
 	string		strFile;
 	ifstream	ifsm;
@@ -106,7 +106,8 @@ size_t CDataImpl::OpenMax( const char* szDataDir, const vector<string>& vecstrNo
 
 	return iRet; }
 
-bool CDataImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL, set<string>& setstrGenes ) const {
+bool CDataImpl::OpenGenes( std::istream& istm, bool fBinary, bool fPCL,
+	std::set<std::string>& setstrGenes ) const {
 	CDat	Dat;
 	size_t	i;
 
@@ -116,7 +117,7 @@ bool CDataImpl::OpenGenes( istream& istm, bool fBinary, bool fPCL, set<string>& 
 		setstrGenes.insert( Dat.GetGene( i ) );
 	return true; }
 
-bool CDataImpl::OpenGenes( const vector<string>& vecstrData ) {
+bool CDataImpl::OpenGenes( const std::vector<std::string>& vecstrData ) {
 	size_t						i;
 	ifstream					ifsm;
 	set<string>					setstrGenes;
@@ -148,7 +149,7 @@ bool CDataImpl::OpenGenes( const vector<string>& vecstrData ) {
 
 	return true; }
 
-size_t CDataImpl::GetGene( const string& strGene ) const {
+size_t CDataImpl::GetGene( const std::string& strGene ) const {
 	size_t	i;
 
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )
@@ -187,7 +188,7 @@ const unsigned char* CDataImpl::OpenBinary( const unsigned char* pbData ) {
 
 	return pbData; }
 
-bool CDataImpl::OpenBinary( istream& istm ) {
+bool CDataImpl::OpenBinary( std::istream& istm ) {
 	uint32_t	iVal;
 	size_t		i, j;
 	char*		ac;
@@ -220,7 +221,7 @@ bool CDataImpl::OpenBinary( istream& istm ) {
 
 	return true; }
 
-void CDataImpl::SaveBinary( ostream& ostm ) const {
+void CDataImpl::SaveBinary( std::ostream& ostm ) const {
 	size_t		i;
 	uint32_t	iVal;
 	char*		ac;
@@ -390,7 +391,7 @@ bool CDatasetImpl::Open( const CDataPair& Datum, size_t iExp ) {
  * Creates a dataset with nodes corresponding to the given data files; the given answer file is inserted
  * as the first (0th) node.  All files are assumed to be continuous.
  */
-bool CDataset::Open( const char* szAnswerFile, const vector<string>& vecstrDataFiles ) {
+bool CDataset::Open( const char* szAnswerFile, const std::vector<std::string>& vecstrDataFiles ) {
 	size_t	i;
 
 	Reset( );
@@ -434,7 +435,7 @@ bool CDataset::Open( const char* szAnswerFile, const vector<string>& vecstrDataF
  * Creates a dataset with nodes corresponding to the given data files.  All files are assumed to be
  * continuous.
  */
-bool CDataset::Open( const vector<string>& vecstrDataFiles ) {
+bool CDataset::Open( const std::vector<std::string>& vecstrDataFiles ) {
 	size_t	i;
 
 	if( !OpenGenes( vecstrDataFiles ) )
@@ -501,7 +502,7 @@ size_t CDataOverlayImpl::GetExperiments( ) const {
 
 	return m_pDataset->GetExperiments( ); }
 
-size_t CDataOverlayImpl::GetGene( const string& strGene ) const {
+size_t CDataOverlayImpl::GetGene( const std::string& strGene ) const {
 
 	return m_pDataset->GetGene( strGene ); }
 
@@ -727,7 +728,7 @@ bool CDataSubset::Initialize( const char* szDataDirectory, const IBayesNet* pBay
  * \see
  * CDataset::Open
  */
-bool CDataSubset::Initialize( const vector<string>& vecstrDataFiles, size_t iGeneSize ) {
+bool CDataSubset::Initialize( const std::vector<std::string>& vecstrDataFiles, size_t iGeneSize ) {
 	size_t	i;
 
 	m_iSize = iGeneSize;

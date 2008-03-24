@@ -145,8 +145,8 @@ bool CBayesNetSmileImpl::FillCPTs( const IDataset* pData, size_t iOne, size_t iT
 
 	return true; }
 
-bool CBayesNetSmileImpl::FillCPTs( const vector<bool>& vecfHidden, const string& strDatum, bool fZero,
-	bool fLearn, bool fAll ) {
+bool CBayesNetSmileImpl::FillCPTs( const std::vector<bool>& vecfHidden, const std::string& strDatum,
+	bool fZero, bool fLearn, bool fAll ) {
 	size_t	i, iVal, iZero;
 	int		iProp;
 
@@ -310,7 +310,7 @@ bool CBayesNetSmile::Convert( CBayesNetPNL& BNPNL ) const {
 
 #endif // PNL_ENABLED
 
-void CBayesNetSmile::GetNodes( vector<string>& vecstrNodes ) const {
+void CBayesNetSmile::GetNodes( std::vector<std::string>& vecstrNodes ) const {
 	int	i;
 
 	if( m_fSmileNet )
@@ -701,7 +701,7 @@ bool CBayesNetSmile::Evaluate( const CPCLPair& PCLData, CPCL& PCLResults, bool f
  * \see
  * CDat | CDataPair | CPCL | CPCLPair
  */
-bool CBayesNetSmile::Open( const vector<string>& vecstrFiles, size_t iValues ) {
+bool CBayesNetSmile::Open( const std::vector<std::string>& vecstrFiles, size_t iValues ) {
 	size_t			i, j;
 	DSL_stringArray	vecstrOutcomes;
 	string			strCur;
@@ -755,7 +755,7 @@ bool CBayesNetSmile::Open( const vector<string>& vecstrFiles, size_t iValues ) {
  * \remarks
  * The order and length of pData, vecstrNames, and veciDefaults must be identical.
  */
-bool CBayesNetSmile::Open( const IDataset* pData, const vector<string>& vecstrNames,
+bool CBayesNetSmile::Open( const IDataset* pData, const std::vector<std::string>& vecstrNames,
 	const vector<size_t>& veciDefaults ) {
 	size_t			i, j;
 	DSL_stringArray	vecstrOutcomes;

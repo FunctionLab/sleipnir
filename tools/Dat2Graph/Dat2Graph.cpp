@@ -73,6 +73,8 @@ int main( int iArgs, char** aszArgs ) {
 	else if( !Dat.Open( cin, CDat::EFormatText ) ) {
 		cerr << "Couldn't open input" << endl;
 		return 1; }
+
+	dCutoff = (float)( sArgs.cutoff_given ? sArgs.cutoff_arg : HUGE_VAL );
 	if( GenesIn.GetGenes( ) )
 		Dat.FilterGenes( GenesIn, CDat::EFilterInclude );
 	if( GenesQr.GetGenes( ) ) {
@@ -112,9 +114,16 @@ int main( int iArgs, char** aszArgs ) {
 			delete[] adCentroid;
 			for( i = 0; i < vecdScores.size( ); ++i )
 				cout << Dat.GetGene( i ) << '\t' << vecdScores[ i ] << endl; }
-		else
+		else {
+			dCutoff = 0;
+			if( vecdColors.empty( ) ) {
+				vecdColors.resize( Dat.GetGenes( ) );
+				fill( vecdColors.begin( ), vecdColors.end( ), 0.5f );
+				for( i = 0; i < GenesQr.GetGenes( ); ++i )
+					if( ( j = Dat.GetGene( GenesQr.GetGene( i ).GetName( ) ) ) != -1 )
+						vecdColors[ j ] = 1; }
 			Dat.FilterGenes( GenesQr, CDat::EFilterPixie, sArgs.neighbors_arg,
-				!!strcmp( sArgs.format_arg, "list" ) ); }
+				!!strcmp( sArgs.format_arg, "list" ) ); } }
 	if( sArgs.knowns_arg ) {
 		CDat			DatKnowns;
 		vector<size_t>	veciKnowns;
@@ -135,7 +144,6 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.normalize_flag )
 		Dat.Normalize( );
 
-	dCutoff = (float)( sArgs.cutoff_given ? sArgs.cutoff_arg : HUGE_VAL );
 	if( !strcmp( sArgs.format_arg, "dot" ) )
 		Dat.SaveDOT( cout, dCutoff, &Genome, false, true, vecdColors.empty( ) ? NULL : &vecdColors,
 			vecdBorders.empty( ) ? NULL : &vecdBorders );

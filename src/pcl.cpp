@@ -15,6 +15,52 @@ const char	CPCLImpl::c_szGWEIGHT[]	= "GWEIGHT";
 const char	CPCLImpl::c_szNAME[]	= "NAME";
 const char	CPCLImpl::c_szOne[]		= "1";
 
+struct SNeighbors {
+	CFullMatrix<pair<size_t, float> >	m_MatNeighbors;
+	vector<size_t>						m_veciMin;
+	vector<size_t>						m_veciColumns;
+
+	void Initialize( const float* adValues, size_t iValues, size_t iNeighbors ) {
+		size_t	i, j;
+
+		m_veciColumns.clear( );
+		for( i = 0; i < iValues; ++i )
+			if( CMeta::IsNaN( adValues[ i ] ) )
+				m_veciColumns.push_back( i );
+
+		m_veciMin.resize( m_veciColumns.size( ) );
+		m_MatNeighbors.Initialize( iNeighbors, m_veciColumns.size( ) );
+		for( i = 0; i < m_MatNeighbors.GetRows( ); ++i )
+			for( j = 0; j < m_MatNeighbors.GetColumns( ); ++j )
+				m_MatNeighbors.Get( i, j ).second = -FLT_MAX; }
+
+	bool Add( size_t iNeighbor, float dSim, const float* adValues ) {
+		size_t	i, j, iCol;
+		bool	fRet;
+
+		for( fRet = false,i = 0; i < m_veciColumns.size( ); ++i ) {
+			iCol = m_veciColumns[ i ];
+			if( !CMeta::IsNaN( adValues[ iCol ] ) && ( dSim > m_MatNeighbors.Get( m_veciMin[ i ], i ).second ) ) {
+				fRet = true;
+				m_MatNeighbors.Get( m_veciMin[ i ], i ).first = iNeighbor;
+				m_MatNeighbors.Get( m_veciMin[ i ], i ).second = dSim;
+
+				for( m_veciMin[ i ] = 0,j = 1; j < m_MatNeighbors.GetRows( ); ++j )
+					if( m_MatNeighbors.Get( j, i ).second < m_MatNeighbors.Get( m_veciMin[ i ], i ).second )
+						m_veciMin[ i ] = j; } }
+
+		return fRet; }
+
+	size_t GetColumn( size_t iColumn ) const {
+		size_t	i;
+
+		for( i = 0; i < m_veciColumns.size( ); ++i )
+			if( m_veciColumns[ i ] == iColumn )
+				return i;
+
+		return -1; }
+};
+
 /*!
  * \brief
  * Kitchen sink method for completely loading a PCL and calculating its pairwise similarity scores into a CDat.
@@ -249,7 +295,7 @@ void CPCL::Open( const CPCL& PCL ) {
  * \see
  * Save
  */
-bool CPCL::Open( istream& istm, size_t iSkip ) {
+bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 	vector<float>	vecdData;
 	size_t			i, j, k;
 	char*			acBuf;
@@ -271,7 +317,7 @@ bool CPCL::Open( istream& istm, size_t iSkip ) {
 
 	return fRet; }
 
-bool CPCLImpl::OpenExperiments( istream& istmInput, size_t iFeatures, char* acLine, size_t iLine ) {
+bool CPCLImpl::OpenExperiments( std::istream& istmInput, size_t iFeatures, char* acLine, size_t iLine ) {
 	const char*	pc;
 	string		strToken;
 	size_t		iToken;
@@ -288,7 +334,7 @@ bool CPCLImpl::OpenExperiments( istream& istmInput, size_t iFeatures, char* acLi
 
 	return !!iToken; }
 
-bool CPCLImpl::OpenGene( istream& istmInput, vector<float>& vecdData, char* acLine, size_t iLine ) {
+bool CPCLImpl::OpenGene( std::istream& istmInput, std::vector<float>& vecdData, char* acLine, size_t iLine ) {
 	const char*	pc;
 	char*		pcEnd;
 	string		strToken;
@@ -330,7 +376,7 @@ bool CPCLImpl::OpenGene( istream& istmInput, vector<float>& vecdData, char* acLi
  * \see
  * Save
  */
-void CPCL::SaveHeader( ostream& ostm, bool fCDT ) const {
+void CPCL::SaveHeader( std::ostream& ostm, bool fCDT ) const {
 	size_t	i;
 
 	if( fCDT )
@@ -370,7 +416,7 @@ void CPCL::SaveHeader( ostream& ostm, bool fCDT ) const {
  * \see
  * Save
  */
-void CPCL::SaveGene( ostream& ostm, size_t iGene, size_t iOriginal ) const {
+void CPCL::SaveGene( std::ostream& ostm, size_t iGene, size_t iOriginal ) const {
 	size_t	i;
 	float	d;
 
@@ -406,7 +452,7 @@ void CPCL::SaveGene( ostream& ostm, size_t iGene, size_t iOriginal ) const {
  * \see
  * Open | CClustHierarchical
  */
-void CPCL::Save( ostream& ostm, const vector<size_t>* pveciGenes ) const {
+void CPCL::Save( std::ostream& ostm, const std::vector<size_t>* pveciGenes ) const {
 	size_t	i;
 
 	SaveHeader( ostm, !!pveciGenes );
@@ -434,8 +480,8 @@ void CPCL::Save( ostream& ostm, const vector<size_t>* pveciGenes ) const {
  * The PCL will contain the given number of feature columns between the gene IDs and experimental values,
  * the values for which will be initialized to empty strings.
  */
-void CPCL::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrExperiments,
-	const vector<string>& vecstrFeatures ) {
+void CPCL::Open( const std::vector<std::string>& vecstrGenes,
+	const std::vector<std::string>& vecstrExperiments, const std::vector<std::string>& vecstrFeatures ) {
 	size_t	i, j;
 
 	Reset( );
@@ -485,8 +531,8 @@ void CPCL::Open( const vector<string>& vecstrGenes, const vector<string>& vecstr
  * \see
  * SortGenes
  */
-void CPCL::Open( const vector<size_t>& veciGenes, const vector<string>& vecstrGenes,
-	const vector<string>& vecstrExperiments ) {
+void CPCL::Open( const std::vector<size_t>& veciGenes, const std::vector<std::string>& vecstrGenes,
+	const std::vector<std::string>& vecstrExperiments ) {
 	size_t	i, j;
 	char	ac[ 16 ];
 
@@ -583,7 +629,7 @@ void CPCL::RankTransform( ) {
  * \remarks
  * New rows will initially have empty strings for all features and missing values for all data.
  */
-bool CPCL::AddGenes( const vector<string>& vecstrGenes ) {
+bool CPCL::AddGenes( const std::vector<std::string>& vecstrGenes ) {
 	size_t	i, j, iStart;
 
 	iStart = m_Data.GetRows( );
@@ -665,5 +711,128 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 					if( !CMeta::IsNaN( d = Get( i, j ) ) )
 						Set( i, j, ( d - dMin ) / dMax );
 			break; } }
+
+/*!
+ * \brief
+ * Impute missing values using the knnimpute algorithm; optionally mask genes with too many missing values.
+ * 
+ * \param iNeighbors
+ * Number of nearest neighbors to use for imputation.
+ * 
+ * \param dMinimumPresent
+ * Fraction of conditions that must be present; genes with fewer than this many values present will be masked
+ * instead of imputed.
+ * 
+ * \param DatSimilarity
+ * CDat similarity matrix from which nearest neighbors are determined.
+ * 
+ * Imputes missing values in the PCL using the knnimpute algorithm of Troyanskaya et al, Bioinformatics 2001.
+ * Briefly, for each gene with missing values, the k nearest neighbors (most similar genes) are found, and
+ * the missing value is replaced with a weighted average of the values in the neighbors.  Optionally,
+ * Impute can also completely mask genes that are missing too many values; genes with less than the
+ * requested fraction of data present will be completely masked rather than imputed.
+ * 
+ * \remarks
+ * iNeighbors must be greater than zero, dMinimumPresent must be between zero and one inclusive, and
+ * DatSimilarity must be of exactly the same size as the current PCL.
+ */
+void CPCL::Impute( size_t iNeighbors, float dMinimumPresent, const CDat& DatSimilarity ) {
+	vector<float>		vecdMissing;
+	vector<size_t>		veciMissing;
+	vector<SNeighbors>	vecsNeighbors;
+	size_t				i, j, k, iCol, iMissing, iOne, iTwo;
+	float				d, dSum;
+	const float*		ad;
+
+	vecdMissing.resize( GetGenes( ) );
+	for( i = 0; i < vecdMissing.size( ); ++i ) {
+		for( iMissing = j = 0; j < GetExperiments( ); ++j )
+			if( CMeta::IsNaN( Get( i, j ) ) )
+				iMissing++;
+		if( ( vecdMissing[ i ] = (float)( GetExperiments( ) - iMissing ) / GetExperiments( ) ) >=
+			dMinimumPresent )
+			veciMissing.push_back( i ); }
+	vecsNeighbors.resize( veciMissing.size( ) );
+	for( i = 0; i < vecsNeighbors.size( ); ++i )
+		vecsNeighbors[ i ].Initialize( Get( veciMissing[ i ] ), GetExperiments( ), iNeighbors );
+	for( i = 0; i < veciMissing.size( ); ++i ) {
+		if( !( i % 100 ) )
+			g_CatSleipnir.info( "CPCL::Impute( %d, %g ) finding neighbors for gene %d/%d", iNeighbors,
+				dMinimumPresent, i, veciMissing.size( ) );
+		ad = Get( iOne = veciMissing[ i ] );
+		for( j = ( i + 1 ); j < veciMissing.size( ); ++j ) {
+			d = DatSimilarity.Get( iOne, iTwo = veciMissing[ j ] );
+			vecsNeighbors[ i ].Add( iTwo, d, Get( iTwo ) );
+			vecsNeighbors[ j ].Add( iOne, d, ad ); } }
+
+	for( iOne = i = 0; i < GetGenes( ); ++i ) {
+		if( vecdMissing[ i ] < dMinimumPresent ) {
+			MaskGene( i );
+			continue; }
+		{
+			const SNeighbors&	sGene	= vecsNeighbors[ iOne++ ];
+
+			for( j = 0; j < GetExperiments( ); ++j ) {
+				if( !CMeta::IsNaN( Get( i, j ) ) )
+					continue;
+
+				iCol = sGene.GetColumn( j );
+				for( d = dSum = 0,iMissing = k = 0; k < iNeighbors; ++k ) {
+					const pair<size_t, float>&	prNeighbor	= sGene.m_MatNeighbors.Get( k, iCol );
+
+					if( prNeighbor.second == -FLT_MAX )
+						continue;
+					iMissing++;
+					dSum += prNeighbor.second;
+					d += Get( prNeighbor.first, j ) * prNeighbor.second; }
+				if( dSum )
+					d /= dSum;
+				Set( i, j, iMissing ? d : CMeta::GetNaN( ) ); }
+		} } }
+
+/*!
+ * \brief
+ * Impute missing values using the knnimpute algorithm; optionally mask genes with too many missing values.
+ * 
+ * \param iNeighbors
+ * Number of nearest neighbors to use for imputation.
+ * 
+ * \param dMinimumPresent
+ * Fraction of conditions that must be present; genes with fewer than this many values present will be masked
+ * instead of imputed.
+ * 
+ * \param pMeasure
+ * Similarity measure with which nearest neighbors are determined.
+ * 
+ * \param fPrecompute
+ * If true, precompute and cache in memory all pairwise similarities; otherwise, calculate these on the fly
+ * from values in the PCL.
+ * 
+ * Imputes missing values in the PCL using the knnimpute algorithm of Troyanskaya et al, Bioinformatics 2001.
+ * Briefly, for each gene with missing values, the k nearest neighbors (most similar genes) are found, and
+ * the missing value is replaced with a weighted average of the values in the neighbors.  Optionally,
+ * Impute can also completely mask genes that are missing too many values; genes with less than the
+ * requested fraction of data present will be completely masked rather than imputed.
+ * 
+ * \remarks
+ * iNeighbors must be greater than zero, dMinimumPresent must be between zero and one inclusive.  If
+ * precomputation is requested, imputation will be faster, but memory proportional to the number of genes
+ * squared will be required.  If it is not, imputation will be slower, but no additional memory is required.
+ * As a rule of thumb, precomputation is desirable for anything less than ~25,000 genes (which will consume
+ * roughly 1GB of memory; if you have RAM to spare, feel free to precompute at will).
+ */
+void CPCL::Impute( size_t iNeighbors, float dMinimumPresent, const IMeasure* pMeasure, bool fPrecompute ) {
+	CDat	Dat;
+	size_t	i, j;
+
+	if( fPrecompute ) {
+		Dat.Open( GetGeneNames( ) );
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				Dat.Set( i, j, (float)pMeasure->Measure( Get( i ), GetExperiments( ), Get( j ),
+					GetExperiments( ) ) ); }
+	else
+		Dat.Open( *this, pMeasure, false );
+	Impute( iNeighbors, dMinimumPresent, Dat ); }
 
 }

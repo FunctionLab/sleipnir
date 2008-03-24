@@ -22,7 +22,7 @@ void COntologyImpl::SNode::Reset( ) {
 	if( m_apCacheGenes )
 		delete[] m_apCacheGenes; }
 
-COntologyImpl::SParser::SParser( istream& istm, CGenome& Genome ) : m_istm(istm),
+COntologyImpl::SParser::SParser( std::istream& istm, CGenome& Genome ) : m_istm(istm),
 	m_Genome(Genome), m_iLine(0) {
 
 	m_szLine[ 0 ] = 0; }
@@ -38,7 +38,7 @@ bool COntologyImpl::SParser::IsStart( const char* szStart ) const {
 
 	return !strncmp( m_szLine, szStart, strlen( szStart ) ); }
 
-COntologyImpl::COntologyImpl( const string& strID ) : m_strID(strID), m_iNodes(0),
+COntologyImpl::COntologyImpl( const std::string& strID ) : m_strID(strID), m_iNodes(0),
 	m_aNodes(NULL) { }
 
 COntologyImpl::~COntologyImpl( ) {
@@ -152,13 +152,13 @@ void COntologyImpl::CollectGenes( size_t iNode, TSetPGenes& setpGenes ) {
 			m_aNodes[ iNode ].m_apCacheGenes[ i ] = *iterGenes;
 			setpGenes.insert( *iterGenes ); } } }
 
-size_t COntologyImpl::GetNode( const string& strID ) const {
+size_t COntologyImpl::GetNode( const std::string& strID ) const {
 	TMapStrI::const_iterator	iterNode;
 
 	iterNode = m_mapNodes.find( strID );
 	return ( ( iterNode == m_mapNodes.end( ) ) ? -1 : iterNode->second ); }
 
-void COntologyImpl::GetGeneNames( vector<string>& vecstrGenes ) const {
+void COntologyImpl::GetGeneNames( std::vector<std::string>& vecstrGenes ) const {
 	set<string>					setstrGenes;
 	set<string>::const_iterator	iterGene;
 	size_t						i, j;
@@ -222,16 +222,18 @@ void CSlimImpl::Reset( const IOntology* pOntology ) {
  * True if slim construction succeeded (i.e. all terms were found in the ontology).
  * 
  * Constructs a slim from a tab-delimited text file of the form:
- * <pre>gloss1	id1
-gloss2	id2
-...
-glossN	idN</pre>
+ * \code
+ * gloss1	id1
+ * gloss2	id2
+ * ...
+ * glossN	idN
+ * \endcode
  * The glosses are human-readable names for ontology terms (e.g. "protein targeting to ER"); these are
  * ignored by the parser.  The IDs are the ontology-specific ID strings (e.g. "GO:0009605") used to look up
  * terms in the given ontology.  Each gloss must be separated from its accompanying ID by a tab, and each
  * line should consist of a single gloss/ID pair.
  */
-bool CSlim::Open( istream& istmSlim, const IOntology* pOntology ) {
+bool CSlim::Open( std::istream& istmSlim, const IOntology* pOntology ) {
 	static const size_t	c_iBuffer	= 1024;
 	char								szBuf[ c_iBuffer ];
 	size_t								i, j, k, iNode;
@@ -282,7 +284,7 @@ bool CSlim::Open( istream& istmSlim, const IOntology* pOntology ) {
  * \param vecstrGenes
  * Output unique gene names annotated below this slim's ontology terms.
  */
-void CSlim::GetGeneNames( vector<string>& vecstrGenes ) const {
+void CSlim::GetGeneNames( std::vector<std::string>& vecstrGenes ) const {
 	set<const CGene*>					setpGenes;
 	set<const CGene*>::const_iterator	iterGene;
 	size_t								i, j;

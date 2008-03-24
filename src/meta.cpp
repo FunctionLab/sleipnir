@@ -74,7 +74,7 @@ void CMeta::Shutdown( ) {
  * alphanumeric identifier; given a string, non-alphanumeric characters are replaced with a configurable
  * character, usually underscore.
  */
-string CMeta::Filename( const string& strString, char cReplacement ) {
+string CMeta::Filename( const std::string& strString, char cReplacement ) {
 	size_t	i;
 	string	strRet;
 	char	c;
@@ -100,7 +100,7 @@ string CMeta::Filename( const string& strString, char cReplacement ) {
  * \param fNoEmpties
  * If true, discard empty strings between delimiters; otherwise, include them in the output.
  */
-void CMeta::Tokenize( const char* szString, vector<string>& vecstrTokens, const char* szSeparators,
+void CMeta::Tokenize( const char* szString, std::vector<std::string>& vecstrTokens, const char* szSeparators,
 	bool fNoEmpties ) {
 	const char*	pc;
 	string		strCur;

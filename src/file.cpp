@@ -17,7 +17,7 @@ bool CFileImpl::IsNewline( char c ) {
  * \returns
  * String containing all characters up to (but excluding) the next tab or newline.
  */
-string CFile::OpenToken( istream& istm ) {
+string CFile::OpenToken( std::istream& istm ) {
 	string	strRet;
 	char	c;
 

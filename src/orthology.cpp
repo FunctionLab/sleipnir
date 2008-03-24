@@ -35,7 +35,7 @@ void COrthologyImpl::Reset( ) {
  * \see
  * Save
  */
-bool COrthology::Open( istream& istm ) {
+bool COrthology::Open( std::istream& istm ) {
 	vector<string>	vecstrLine;
 	char*			acBuf;
 	size_t			i, j;
@@ -90,7 +90,7 @@ bool COrthology::Open( istream& istm ) {
  * \see
  * Open
  */
-void COrthology::Save( ostream& ostm ) const {
+void COrthology::Save( std::ostream& ostm ) const {
 	size_t	i, j;
 
 	for( i = 0; i < m_vecvecpGenes.size( ); ++i ) {

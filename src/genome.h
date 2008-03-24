@@ -355,9 +355,11 @@ public:
 	 * True if gene set was constructed successfully.
 	 * 
 	 * Loads a text file of the form:
-	 * <pre>GENE1
-GENE2
-GENE3</pre>
+	 * \code
+	 * GENE1
+	 * GENE2
+	 * GENE3
+	 * \endcode
 	 * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
 	 * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
 	 * created from the loaded IDs.  If fCreate is false, unrecognized genes are skipped with a warning.
@@ -366,7 +368,7 @@ GENE3</pre>
 	 * CGenome::AddGene
 	 */
 	bool Open( const char* szFile, bool fCreate = true ) {
-		ifstream	ifsm;
+		std::ifstream	ifsm;
 
 		ifsm.open( szFile );
 		return ( ifsm.is_open( ) && Open( ifsm, fCreate ) ); }
@@ -395,7 +397,7 @@ GENE3</pre>
 	 * \see
 	 * GetGene
 	 */
-	bool IsGene( const string& strGene ) const {
+	bool IsGene( const std::string& strGene ) const {
 
 		return ( m_mapGenes.find( strGene ) != m_mapGenes.end( ) ); }
 
@@ -440,7 +442,7 @@ GENE3</pre>
 	 * \see
 	 * IsGene
 	 */
-	size_t GetGene( const string& strGene ) const {
+	size_t GetGene( const std::string& strGene ) const {
 		TMapStrI::const_iterator	iterGene;
 
 		return ( ( ( iterGene = m_mapGenes.find( strGene ) ) == m_mapGenes.end( ) ) ? -1 :

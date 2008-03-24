@@ -32,6 +32,10 @@ template<class tType> class CTrieIterator;
 template<class tType>
 class CTrie : public CTrieImpl<tType> {
 public:
+	/*!
+	 * \brief
+	 * Iterator type for trie traversal.
+	 */
 	typedef CTrieIterator<tType>	iterator;
 
 	/*!
@@ -79,10 +83,11 @@ public:
 	 * For example, suppose a dataset contains an answer file and two data files and spans three genes A,
 	 * B, and C.  The answer file is binary (contains only 0, 1, and missing values), the first data file
 	 * is binary, and the second data file can take three values.  The values present for each gene pair are:
-	 * <pre>A	B	-1	0	-1
-A	C	0	0	0
-B	C	1	-1	2</pre>
-	 * 
+	 * \code
+	 * A	B	-1	0	-1
+	 * A	C	0	0	0
+	 * B	C	1	-1	2
+	 * \endcode
 	 */
 	CTrie( const IDataset* pData, const tType& Default, bool fAnswers = true ) : CTrieImpl<tType>( Undef ) {
 		size_t					i, j, k, iExp;
@@ -201,29 +206,111 @@ B	C	1	-1	2</pre>
 		return m_vecbSizes[ iDepth ]; }
 };
 
+/*!
+ * \brief
+ * Iterator for inorder traversal of trie keys.
+ * 
+ * \param tType
+ * Type of element contained by the trie.
+ * 
+ * A trie iterator provides inorder access to each key in the trie.  Given a trie, a new iterator will
+ * subsequently provide read/write access to the value for each key in the dictionary.  Sample usage
+ * might be:
+ * \code
+ * for( TTrieData::iterator SomeIterator( SomeTrie ); !SomeIterator.IsDone( ); SomeIterator.Next( ) ) {
+ *   cout << SomeIterator.Get( ) << endl; }
+ * \endcode
+ * 
+ * \see
+ * CTrie
+ */
 template<class tType>
 class CTrieIterator : protected CTrieIteratorImpl<tType> {
 public:
+	/*!
+	 * \brief
+	 * Copy constructor.
+	 * 
+	 * \param Iter
+	 * Iterator whose values should be copied to the new iterator.
+	 * 
+	 * \remarks
+	 * The newly constructed iterator will begin traversal in the same position as the given iterator.
+	 */
 	CTrieIterator( const CTrieIterator& Iter ) : CTrieIteratorImpl( Iter ) { }
 
+	/*!
+	 * \brief
+	 * Construct a new iterator for the given trie.
+	 * 
+	 * \param Trie
+	 * Trie whose key/value pairs should be traversed.
+	 */
 	CTrieIterator( const CTrie<tType>& Trie ) : CTrieIteratorImpl( Trie ) { }
 
+	/*!
+	 * \brief
+	 * Return true if the iterator has completed its traversal.
+	 * 
+	 * \returns
+	 * True if there are no more valid key/value pairs to be iterated.
+	 * 
+	 * \remarks
+	 * Note that if IsDone returns true, Get, Set, and GetPosition are invalid.
+	 */
 	bool IsDone( ) const {
 
 		return ( m_vecpaaPosition.empty( ) || !m_vecpaaPosition[ m_vecpaaPosition.size( ) - 1 ] ); }
 
+	/*!
+	 * \brief
+	 * Return the key at the current iterator position.
+	 * 
+	 * \returns
+	 * Key at the current iterator position.
+	 */
 	const std::vector<unsigned char>& GetPosition( ) const {
 
 		return m_vecbPosition; }
 
+	/*!
+	 * \brief
+	 * Return the value at the current iterator position.
+	 * 
+	 * \returns
+	 * Value at the current iterator position.
+	 * 
+	 * \see
+	 * Set
+	 */
 	const tType& Get( ) const {
 
 		return Set( ); }
 
+	/*!
+	 * \brief
+	 * Return a writable value at the current iterator position.
+	 * 
+	 * \returns
+	 * Writable value at the current iterator position.
+	 * 
+	 * \see
+	 * Get
+	 */
 	tType& Set( ) const {
 
 		return *GetValue( ); }
 
+	/*!
+	 * \brief
+	 * Advance the iterator to the next key/value position.
+	 * 
+	 * \returns
+	 * True if the iterator was advanced; false if it was already at the end of the trie.
+	 * 
+	 * \remarks
+	 * If IsDone returns true, Next will return false.
+	 */
 	bool Next( ) {
 		size_t	iDepth;
 		bool	fReset;

@@ -389,9 +389,11 @@ public:
  * (or memory mapping) without the overhead of repeated discretization.  Such a file is referred to as a
  * DAD file and can be stored in either binary or text (human readable) form.  As text, it is a large
  * tab-delimited table of the form:
- * <pre>GENE1	GENE2	VALUE1	VALUE2	...	VALUEN
-GENE1	GENE3	VALUE1	VALUE2	...	VALUEN
-GENE2	GENE3	VALUE1	VALUE2	...	VALUEN</pre>
+ * \code
+ * GENE1	GENE2	VALUE1	VALUE2	...	VALUEN
+ * GENE1	GENE3	VALUE1	VALUE2	...	VALUEN
+ * GENE2	GENE3	VALUE1	VALUE2	...	VALUEN
+ * \endcode
  * Like a DAT file, gene pair order is arbitrary, and duplicate gene pairs are not recommended.  Missing
  * values are indicated by blank cells, and all other values should be small integers (i.e. discretized
  * values).

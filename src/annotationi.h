@@ -47,11 +47,11 @@ protected:
 		bool GetLine( );
 		bool IsStart( const char* ) const;
 
-		istream&	m_istm;
-		CGenome&	m_Genome;
-		char		m_szLine[ c_iBuffer ];
-		std::string	m_strGloss;
-		size_t		m_iLine;
+		std::istream&	m_istm;
+		CGenome&		m_Genome;
+		char			m_szLine[ c_iBuffer ];
+		std::string		m_strGloss;
+		size_t			m_iLine;
 	};
 
 	COntologyImpl( const std::string& );
