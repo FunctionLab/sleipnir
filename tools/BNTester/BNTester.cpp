@@ -64,7 +64,6 @@ int main( int iArgs, char** aszArgs ) {
 		DataFull.FilterGenes( GenesIn, CDat::EFilterInclude );
 		DataFull.FilterGenes( GenesEx, CDat::EFilterExclude );
 		pData = &DataFull; }
-
 	else if( sArgs.dataset_arg ) {
 		if( !DataMap.Open( sArgs.dataset_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.dataset_arg << endl;

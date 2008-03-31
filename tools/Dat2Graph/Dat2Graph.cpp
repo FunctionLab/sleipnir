@@ -77,6 +77,8 @@ int main( int iArgs, char** aszArgs ) {
 	dCutoff = (float)( sArgs.cutoff_given ? sArgs.cutoff_arg : HUGE_VAL );
 	if( GenesIn.GetGenes( ) )
 		Dat.FilterGenes( GenesIn, CDat::EFilterInclude );
+	if( sArgs.normalize_flag )
+		Dat.Normalize( );
 	if( GenesQr.GetGenes( ) ) {
 		if( sArgs.cutoff_given )
 			for( i = 0; i < Dat.GetGenes( ); ++i )
@@ -122,8 +124,8 @@ int main( int iArgs, char** aszArgs ) {
 				for( i = 0; i < GenesQr.GetGenes( ); ++i )
 					if( ( j = Dat.GetGene( GenesQr.GetGene( i ).GetName( ) ) ) != -1 )
 						vecdColors[ j ] = 1; }
-			Dat.FilterGenes( GenesQr, CDat::EFilterPixie, sArgs.neighbors_arg,
-				!!strcmp( sArgs.format_arg, "list" ) ); } }
+			Dat.FilterGenes( GenesQr, sArgs.hefalmp_flag ? CDat::EFilterHefalmp : CDat::EFilterPixie,
+				sArgs.neighbors_arg, (float)sArgs.edges_arg ); } }
 	if( sArgs.knowns_arg ) {
 		CDat			DatKnowns;
 		vector<size_t>	veciKnowns;
@@ -141,8 +143,6 @@ int main( int iArgs, char** aszArgs ) {
 					if( ( ( iTwo = veciKnowns[ j ] ) != -1 ) &&
 						!CMeta::IsNaN( d = DatKnowns.Get( iOne, iTwo ) ) && ( d > 0 ) )
 						Dat.Set( i, j, CMeta::GetNaN( ) ); }
-	if( sArgs.normalize_flag )
-		Dat.Normalize( );
 
 	if( !strcmp( sArgs.format_arg, "dot" ) )
 		Dat.SaveDOT( cout, dCutoff, &Genome, false, true, vecdColors.empty( ) ? NULL : &vecdColors,

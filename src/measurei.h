@@ -32,7 +32,7 @@ protected:
 
 class CMeasureSpearmanImpl {
 protected:
-	CMeasureSpearmanImpl::CMeasureSpearmanImpl( bool fTransformed ) : m_fTransformed(fTransformed) { }
+	CMeasureSpearmanImpl( bool fTransformed ) : m_fTransformed(fTransformed) { }
 
 	bool	m_fTransformed;
 };

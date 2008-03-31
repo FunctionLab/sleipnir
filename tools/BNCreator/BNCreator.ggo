@@ -3,22 +3,44 @@ version	"1.0"
 purpose	"Bayes net construction and training from data"
 
 defgroup "input" yes
-groupoption	"answers"	w	"Answer file"	string	typestr="filename"	group="input"
-groupoption	"input"	i	"Input DSL file"	string	typestr="filename"	group="input"
-section "Required"
-option	"output"	o	"Output DAB/DSL file"	string	typestr="filename"	yes
+groupoption	"answers"	w	"Answer file"
+							string	typestr="filename"	group="input"
+groupoption	"input"		i	"Input (X)DSL file"
+							string	typestr="filename"	group="input"
+
+option	"output"		o	"Output DAB/DSL file"
+							string	typestr="filename"	yes
+option	"directory"		d	"Data directory"
+							string	typestr="directory"	default="."
+
+section "Learning/Evaluation"
+option	"genes"			g	"Gene inclusion file"
+							string	typestr="filename"
+option	"genex"			G	"Gene exclusion file"
+							string	typestr="filename"
+option	"genet"			c	"Term inclusion file"
+							string	typestr="filename"
+option	"genee"			C	"Edge inclusion file"
+							string	typestr="filename"
+
+section "Network Features"
+option	"default"		b	"Bayes net containing defaults for cases with missing data"
+							string	typestr="filename"
+option	"zero"			z	"Zero missing values"
+							flag	off
+option	"zeros"			Z	"Read zeroed node IDs/outputs from the given file"
+							string	typestr="filename"
+
 section "Optional"
-option	"directory"	d	"Data directory"	string	typestr="directory"	default="."
-option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
-option	"genex"		G	"Gene exclusion file"	string	typestr="filename"
-option	"genet"		c	"Term inclusion file"	string	typestr="filename"
-option	"genee"		C	"Edge inclusion file"	string	typestr="filename"
-option	"terms"		t	"Term inclusion directory"	string	typestr="directory"
-option	"zero"		z	"Zero missing values"	flag	off
-option	"zeros"		Z	"Read zeroed node IDs/outputs from the given file"	string	typestr="filename"
-option	"group"		u	"Group identical inputs"	flag	on
-option	"default"	b	"Bayes net containing defaults for cases with missing data"	string	typestr="filename"
-option	"memmap"	m	"Memory map input files"	flag	off
-option	"skip"		s	"Columns to skip for PCL inputs"	int	default="2"
-option	"zscore"	e	"Convert PCL correlations to z-scores"	flag	on
+option	"memmap"		m	"Memory map input files"
+							flag	off
+option	"skip"			s	"Columns to skip for PCL inputs"
+							int	default="2"
+option	"zscore"		e	"Convert PCL correlations to z-scores"
+							flag	on
+option	"terms"			t	"Term inclusion directory"
+							string	typestr="directory"
+option	"group"			u	"Group identical inputs"
+							flag	on
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

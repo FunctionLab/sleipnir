@@ -55,6 +55,10 @@ public:
 		m_fstm.seekp( iOffset );
 		m_fstm.put( bValue ); }
 
+	size_t GetDatasets( ) const {
+
+		return m_iDatasets; }
+
 private:
 
 	size_t GetOffsetDataset( size_t iDataset ) const {

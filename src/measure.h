@@ -299,8 +299,7 @@ public:
 	 * If fMemory is true, the autocorrelation measure will delete pMeasure when it is destroyed; otherwise,
 	 * it will only hold a reference.
 	 */
-	CMeasureAutocorrelate::CMeasureAutocorrelate( const IMeasure* pMeasure, bool fMemory ) :
-		CMeasureImpl( pMeasure, fMemory ) { }
+	CMeasureAutocorrelate( const IMeasure* pMeasure, bool fMemory ) : CMeasureImpl( pMeasure, fMemory ) { }
 
 	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
 		const float* adWX = NULL, const float* adWY = NULL ) const;

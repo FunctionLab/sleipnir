@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 /*!
- * \page answerer Answerer
+ * \page Answerer Answerer
  * 
  * Answerer generates gold standard DAT or DAB files for machine learning or evaluation.  These are usually
  * DAB files in which each functionally related gene pair is given the value 1, each unrelated gene pair
@@ -10,11 +10,11 @@
  * \section sec_overview Overview
  * 
  * Given sets of known related genes - pathways, complexes, GO terms, etc. - Answerer generates a gold
- * standard CDat.  By considering every pair of genes coannotated to one of these sets to be related, the gold
- * standard answers will include a collection of known functionally related pairs.  If Answerer is only
- * provided with positive gene sets, it splits the world of gene pairs up into two values, positive
- * (related) and negative (unrelated), modulo any uncertain pairs introduced by the \c overlap option
- * (see below).
+ * standard Sleipnir::CDat.  By considering every pair of genes coannotated to one of these sets to be
+ * related, the gold standard answers will include a collection of known functionally related pairs.
+ * If Answerer is only provided with positive gene sets, it splits the world of gene pairs up into two
+ * values, positive (related) and negative (unrelated), modulo any uncertain pairs introduced by the
+ * \c overlap option (see below).
  * 
  * In addition to these positive gene sets, Answerer optionally also takes one or more negative sets.
  * These represent "minimally related" genes, such that gene pairs \e not coannotated to a negative set
@@ -91,8 +91,8 @@
  *	<td>None</td>
  *	<td>DAT/DAB file</td>
  *	<td>File containing known related pairs.  If given, positive gene pairs will be drawn directly from the
- * 		given CDat rather than calculated from coannotation to gene sets.  Any gene pair with a non-missing,
- *		non-zero value in the given CDat will become a positive pair.</td>
+ * 		given Sleipnir::CDat rather than calculated from coannotation to gene sets.  Any gene pair with a
+ *		non-missing, non-zero value in the given Sleipnir::CDat will become a positive pair.</td>
  * </tr><tr>
  *	<td>-n</td>
  *	<td>None</td>

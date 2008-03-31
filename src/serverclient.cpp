@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "serverclient.h"
 #include "server.h"
-#include "xmlvacuum.h"
 
 namespace Sleipnir {
 

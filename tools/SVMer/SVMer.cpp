@@ -28,7 +28,7 @@ int main( int iArgs, char** aszArgs ) {
 	vecstrInputs.resize( sArgs.inputs_num );
 	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrInputs.begin( ) );
 	if( sArgs.pcl_flag ) {
-		if( !PCLs.Open( vecstrInputs, sArgs.skip_arg, true ) ) {
+		if( !PCLs.Open( vecstrInputs, sArgs.skip_arg, CPCL::ENormalizeRow ) ) {
 			cerr << "Could not open PCLs" << endl;
 			return 1; } }
 	else {

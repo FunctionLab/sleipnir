@@ -18,7 +18,7 @@ int main( int iArgs, char** aszArgs ) {
 	CMeasureEuclidean			Euclidean;
 	CMeasureKendallsTau			KendallsTau;
 	CMeasureKolmogorovSmirnov	KolmSmir;
-	CMeasureSpearman			Spearman;
+	CMeasureSpearman			Spearman( true );
 	CMeasureQuickPearson		QuickPear;
 	CMeasureNegate				EuclideanNeg( &Euclidean, false );
 	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanNeg, &KendallsTau,

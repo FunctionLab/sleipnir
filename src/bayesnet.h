@@ -217,7 +217,8 @@ public:
 	 * 0, 1, and 2, then PCLResults must have 8 experimental columns corresponding to A:0, A:1, B:0, B:1, B:2,
 	 * C:0, C:1, and C:2.  Columns of PCLData are mapped to Bayes net nodes by experiment and node labels;
 	 * experiment labels not corresponding to any Bayes net node ID are ignored, and Bayes net nodes with no
-	 * corresponding experiment are assumed to be unobserved (hidden).
+	 * corresponding experiment are assumed to be unobserved (hidden).  Only the genes in PCLResults are used,
+	 * and they need not be in the same order as in PCLData.
 	 */
 	virtual bool Evaluate( const CPCLPair& PCLData, CPCL& PCLResults, bool fZero = false,
 		int iAlgorithm = -1 ) const = 0;

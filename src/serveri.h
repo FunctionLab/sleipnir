@@ -1,8 +1,6 @@
 #ifndef SERVERI_H
 #define SERVERI_H
 
-#include "propertyfile.h"
-
 namespace Sleipnir {
 
 class CServer;

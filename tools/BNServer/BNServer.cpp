@@ -12,7 +12,7 @@ const float						CBNServer::c_adColorMin[]		= {0, 1, 0};
 const float						CBNServer::c_adColorMax[]		= {1, 0, 0};
 const CBNServer::TPFNProcessor	CBNServer::c_apfnProcessors[]	=
 	{&CBNServer::ProcessInference, &CBNServer::ProcessData, &CBNServer::ProcessGraph,
-	&CBNServer::ProcessContexts, &CBNServer::ProcessTermFinder};
+	&CBNServer::ProcessContexts, &CBNServer::ProcessTermFinder, &CBNServer::ProcessDiseases};
 
 struct SPixie {
 	size_t	m_iNode;
@@ -49,6 +49,7 @@ int main( int iArgs, char** aszArgs ) {
 	COntologyGO							GOBP, GOMF, GOCC;
 	CGenome								Genome;
 	const IOntology*					apOntologies[]	= {&GOBP, &GOMF, &GOCC, &KEGG, NULL };
+	vector<vector<size_t> >				vecveciDiseases;
 
 	iRet = cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 );
 	if( sArgs.config_arg )
@@ -143,6 +144,35 @@ int main( int iArgs, char** aszArgs ) {
 			vecBNs[ i ].Save( ofsm );
 		ofsm.close( ); }
 
+/*
+	if( sArgs.bn_weights_arg ) {
+		vector<float>	vecdWeights;
+
+		ifsm.clear( );
+		ifsm.open( sArgs.bn_weights_arg );
+		if( !ifsm.is_open( ) ) {
+			cerr << "Could not open: " << sArgs.bn_weights_arg << endl;
+			return 1; }
+		while( !ifsm.eof( ) ) {
+			ifsm.getline( acBuffer, c_iBuffer - 1 );
+			acBuffer[ c_iBuffer - 1 ] = 0;
+			if( !acBuffer[ 0 ] )
+				continue;
+			vecstrLine.clear( );
+			CMeta::Tokenize( acBuffer, vecstrLine );
+			if( vecstrLine.size( ) < 2 ) {
+				cerr << "Ignoring line: " << acBuffer << endl;
+				continue; }
+			vecdWeights.push_back( (float)atof( vecstrLine[ 1 ].c_str( ) ) ); }
+		ifsm.close( );
+
+		if( !BNDefault.SetWeights( vecdWeights ) )
+			return 1;
+		for( i = 0; i < vecBNs.size( ); ++i )
+			if( !vecBNs[ i ].SetWeights( vecdWeights ) )
+				return 1; }
+*/
+
 	ifsm.clear( );
 	ifsm.open( sArgs.contexts_arg );
 	if( !ifsm.is_open( ) ) {
@@ -172,6 +202,31 @@ int main( int iArgs, char** aszArgs ) {
 		MatContexts.Set( iContext, iGene, 1 ); }
 	ifsm.close( );
 
+	if( sArgs.diseases_arg ) {
+		ifsm.clear( );
+		ifsm.open( sArgs.diseases_arg );
+		if( !ifsm.is_open( ) ) {
+			cerr << "Could not open: " << sArgs.diseases_arg << endl;
+			return 1; }
+		while( !ifsm.eof( ) ) {
+			size_t	iDisease, iGene;
+
+			ifsm.getline( acBuffer, c_iBuffer - 1 );
+			acBuffer[ c_iBuffer - 1 ] = 0;
+			if( !acBuffer[ 0 ] )
+				continue;
+			vecstrLine.clear( );
+			CMeta::Tokenize( acBuffer, vecstrLine );
+			if( vecstrLine.size( ) != 2 ) {
+				cerr << "Invalid line in " << sArgs.diseases_arg << ": " << acBuffer << endl;
+				return 1; }
+			iDisease = atoi( vecstrLine[ 0 ].c_str( ) ) - 1;
+			iGene = atoi( vecstrLine[ 1 ].c_str( ) ) - 1;
+			if( vecveciDiseases.size( ) <= iDisease )
+				vecveciDiseases.resize( iDisease + 1 );
+			vecveciDiseases[ iDisease ].push_back( iGene ); }
+		ifsm.close( ); }
+
 	if( sArgs.backgrounds_arg ) {
 		ifsm.clear( );
 		ifsm.open( sArgs.backgrounds_arg, ios_base::binary );
@@ -200,7 +255,7 @@ int main( int iArgs, char** aszArgs ) {
 			ofsm.close( ); } }
 
 	CBNServer	BNServer( BNDefault, vecBNs, MatContexts, 0, Database, "", sArgs.files_arg,
-		sArgs.graphviz_arg, MatBackgrounds, Genome, apOntologies );
+		sArgs.graphviz_arg, MatBackgrounds, Genome, apOntologies, vecveciDiseases );
 
 	Server.Initialize( sArgs.port_arg, sArgs.timeout_arg, &BNServer );
 #ifdef WIN32
@@ -231,11 +286,12 @@ bool CBNServer::Get( size_t iGene, size_t iContext, float* adValues, const CData
 CBNServer::CBNServer( const CBayesNetMinimal& BNDefault, const vector<CBayesNetMinimal>& vecBNs,
 	const CCompactFullMatrix& MatContexts, SOCKET iSocket, const CDatabase& Database,
 	const string& strConnection, const char* szFiles, const char* szGraphviz,
-	const CDataMatrix& MatBackgrounds, const CGenome& Genome, const IOntology** apOntologies ) :
-	m_BNDefault(BNDefault), m_vecBNs(vecBNs), m_MatContexts(MatContexts), m_iSocket(iSocket),
-	m_Database(Database), m_strConnection(strConnection), m_adGenes(NULL), m_adContexts(NULL),
-	m_strGraphviz(szGraphviz), m_strFiles(szFiles), m_MatBackgrounds(MatBackgrounds), m_Genome(Genome),
-	m_apOntologies(apOntologies) {
+	const CDataMatrix& MatBackgrounds, const CGenome& Genome, const IOntology** apOntologies,
+	const vector<vector<size_t> >& vecveciDiseases ) : m_BNDefault(BNDefault), m_vecBNs(vecBNs),
+	m_MatContexts(MatContexts), m_iSocket(iSocket), m_Database(Database), m_strConnection(strConnection),
+	m_adGenes(NULL), m_adContexts(NULL), m_adDiseases(NULL), m_strGraphviz(szGraphviz), m_strFiles(szFiles),
+	m_MatBackgrounds(MatBackgrounds), m_Genome(Genome), m_apOntologies(apOntologies),
+	m_vecveciDiseases(vecveciDiseases) {
 
 	for( m_iOntologies = 0; m_apOntologies && m_apOntologies[ m_iOntologies ]; ++m_iOntologies );
 	if( m_strConnection.length( ) > 0 )
@@ -246,7 +302,9 @@ CBNServer::~CBNServer( ) {
 	if( m_adGenes )
 		delete[] m_adGenes;
 	if( m_adContexts )
-		delete[] m_adContexts; }
+		delete[] m_adContexts;
+	if( m_adDiseases )
+		delete[] m_adDiseases; }
 
 IServerClient* CBNServer::NewInstance( SOCKET iSocket, uint32_t iHost, uint16_t sPort ) {
 	string	strConnection;
@@ -259,7 +317,8 @@ IServerClient* CBNServer::NewInstance( SOCKET iSocket, uint32_t iHost, uint16_t 
 	sAddr.s_addr = htonl( iHost );
 	strConnection = (string)inet_ntoa( sAddr ) + ":" + acBuffer;
 	return new CBNServer( m_BNDefault, m_vecBNs, m_MatContexts, iSocket, m_Database, strConnection,
-		m_strFiles.c_str( ), m_strGraphviz.c_str( ), m_MatBackgrounds, m_Genome, m_apOntologies ); }
+		m_strFiles.c_str( ), m_strGraphviz.c_str( ), m_MatBackgrounds, m_Genome, m_apOntologies,
+		m_vecveciDiseases ); }
 
 void CBNServer::Destroy( ) {
 
@@ -437,7 +496,7 @@ bool CBNServer::SelectNeighborsRatio( const vector<size_t>& veciQuery, const vec
 				iCount++;
 				dSum += d; }
 		if( iCount )
-			pqueNeighbors.push( SPixie( i, ( dSum / iCount ) / m_MatBackgrounds.Get( iContext, i ) ) ); }
+			pqueNeighbors.push( SPixie( i, ( dSum / iCount ) / GetBackground( iContext, i ) ) ); }
 	while( !pqueNeighbors.empty( ) && ( ( veciQuery.size( ) + veciNeighbors.size( ) ) < iLimit ) ) {
 		veciNeighbors.push_back( pqueNeighbors.top( ).m_iNode );
 		pqueNeighbors.pop( ); }
@@ -604,51 +663,41 @@ bool CBNServer::SendGenes( const vector<size_t>& veciQuery, const vector<size_t>
 
 size_t CBNServer::ProcessContexts( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
 	uint32_t				iGene;
-	size_t					iPlace, iContext;
+	size_t					iCount, iPlace, iContext;
 	vector<unsigned char>	vecbData;
 
+	iCount = 2 * m_vecBNs.size( );
+	iGene = (uint32_t)( ( ( vecbMessage.size( ) - iOffset ) / sizeof(iGene) ) *
+		( iCount * sizeof(*m_adContexts) ) );
+	send( m_iSocket, (const char*)&iGene, sizeof(iGene), 0 );
 	if( !m_adContexts )
-		m_adContexts = new float[ 2 * m_vecBNs.size( ) ];
+		m_adContexts = new float[ iCount ];
 	for( iPlace = iOffset; ( iPlace + sizeof(iGene) ) <= vecbMessage.size( ); iPlace += sizeof(iGene) ) {
 		iGene = *(uint32_t*)&vecbMessage[ iPlace ];
 		if( ( iGene < 1 ) || !m_Database.Get( iGene - 1, vecbData ) )
 			return -1;
 		cerr << m_strConnection << " contexting " << iGene  << " (" << m_Database.GetGene( iGene - 1 ) <<
 			")" << endl;
-		for( iContext = 0; iContext < m_vecBNs.size( ); ++iContext ) {
-			if( !( iContext % 10 ) )
-				cerr << m_strConnection << " context " << iContext << '/' << m_vecBNs.size( ) << endl;
-			if( !Get( vecbData, iContext ) )
-				return -1; }
-		iGene = (uint32_t)( m_vecBNs.size( ) * 2 * sizeof(*m_adContexts) );
-		send( m_iSocket, (const char*)&iGene, sizeof(iGene), 0 );
-		send( m_iSocket, (const char*)m_adContexts, iGene, 0 ); }
+		for( iContext = 0; iContext < m_vecBNs.size( ); ++iContext )
+			if( !GetContext( iGene, vecbData, iContext ) )
+				return -1;
+		send( m_iSocket, (const char*)m_adContexts, (int)( iCount * sizeof(*m_adContexts) ), 0 ); }
 
 	return ( iPlace - iOffset ); }
 
-bool CBNServer::Get( const vector<unsigned char>& vecbData, size_t iContext ) {
-	size_t	i, iIn, iOut;
-	float	d, dIn, dOut;
+bool CBNServer::GetContext( size_t iGene, const vector<unsigned char>& vecbData, size_t iContext ) {
+	size_t	i, iIn;
+	float	d, dIn;
 
-	if( !m_adGenes )
-		m_adGenes = new float[ GetGenes( ) ];
-	if( !m_vecBNs[ iContext ].Evaluate( vecbData, m_adGenes, GetGenes( ) ) )
-		return false;
-
-// Score is: (sum(w(g, h), h in C)/|C|)/(sum(w(g, h), h in G)/|G|)
-//  for gene of interest g, weight w, context C, and genome G
-// This is equivalent to: |G|/|C|/sum(w(g, h), h notin C)
-	dIn = dOut = 0;
-	for( iIn = iOut = i = 0; i < GetGenes( ); ++i ) {
-		if( CMeta::IsNaN( d = m_adGenes[ i ] ) )
-			continue;
-		if( m_MatContexts.Get( iContext, i ) ) {
+	dIn = 0;
+	for( iIn = i = 0; i < m_MatContexts.GetColumns( ); ++i )
+		if( m_MatContexts.Get( iContext, i ) &&
+			!CMeta::IsNaN( d = m_vecBNs[ iContext ].Evaluate( vecbData, i *
+				( ( m_Database.GetDatasets( ) + 1 ) / 2 ) ) ) ) {
 			iIn++;
 			dIn += d; }
-		iOut++;
-		dOut += d; }
-	m_adContexts[ iContext << 1 ] = iIn ? ( dIn / iIn ) : 0;
-	m_adContexts[ ( iContext << 1 ) | 1 ] = iOut ? ( dOut / iOut ) : 0;
+	m_adContexts[ iContext ] = iIn ? ( dIn / iIn ) : 0;
+	m_adContexts[ m_MatContexts.GetRows( ) + iContext ] = GetBackground( iContext + 1, iGene );
 
 	return true; }
 
@@ -736,3 +785,57 @@ size_t CBNServer::ProcessTermFinder( const vector<unsigned char>& vecbMessage, s
 			send( m_iSocket, (const char*)&iSize, sizeof(iSize), 0 ); } }
 
 	return ( iPlace - iOffset ); }
+
+size_t CBNServer::ProcessDiseases( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+	uint32_t				iGene, iContext;
+	size_t					iCount, iPlace, iDisease;
+	vector<unsigned char>	vecbData;
+
+	if( ( iOffset + sizeof(iContext) ) > vecbMessage.size( ) )
+		return -1;
+	iContext = *(uint32_t*)&vecbMessage[ iOffset ];
+
+	iCount = 2 * m_vecveciDiseases.size( );
+	iGene = (uint32_t)( ( ( vecbMessage.size( ) - iOffset - sizeof(iContext) ) / sizeof(iGene) ) *
+		( iCount * sizeof(*m_adDiseases) ) );
+	send( m_iSocket, (const char*)&iGene, sizeof(iGene), 0 );
+	if( !m_adDiseases )
+		m_adDiseases = new float[ iCount ];
+
+	for( iPlace = iOffset + sizeof(iContext); ( iPlace + sizeof(iGene) ) <= vecbMessage.size( );
+		iPlace += sizeof(iGene) ) {
+		iGene = *(uint32_t*)&vecbMessage[ iPlace ];
+		if( ( iGene < 1 ) || !m_Database.Get( iGene - 1, vecbData ) )
+			return -1;
+		cerr << m_strConnection << " diseasing " << iGene  << " (" << m_Database.GetGene( iGene - 1 ) <<
+			") in " << iContext << endl;
+		for( iDisease = 0; iDisease < m_vecveciDiseases.size( ); ++iDisease )
+			if( !GetDisease( iGene, iContext, vecbData, iDisease ) )
+				return -1;
+		send( m_iSocket, (const char*)m_adDiseases, (int)( iCount * sizeof(*m_adDiseases) ), 0 ); }
+
+	return ( iPlace - iOffset ); }
+
+bool CBNServer::GetDisease( size_t iGene, size_t iContext, const vector<unsigned char>& vecbData,
+	size_t iDisease ) {
+	const CBayesNetMinimal&	BNet		= ( iContext && m_vecBNs.size( ) ) ?
+											m_vecBNs[ iContext % m_vecBNs.size( ) ] : m_BNDefault;
+	size_t					i, iIn, iOut;
+	float					d, dIn, dOut;
+
+	dIn = 0;
+	for( iIn = i = 0; i < m_vecveciDiseases[ iDisease ].size( ); ++i )
+		if( !CMeta::IsNaN( d = BNet.Evaluate( vecbData, m_vecveciDiseases[ iDisease ][ i ] *
+				( ( m_Database.GetDatasets( ) + 1 ) / 2 ) ) ) ) {
+			iIn++;
+			dIn += d; }
+	m_adDiseases[ iDisease ] = iIn ? ( dIn / iIn ) : 0;
+
+	dOut = 0;
+	for( iOut = i = 0; i < m_vecveciDiseases[ iDisease ].size( ); ++i )
+		if( !CMeta::IsNaN( d = GetBackground( iContext, m_vecveciDiseases[ iDisease ][ i ] ) ) ) {
+			iOut++;
+			dOut += d; }
+	m_adDiseases[ m_vecveciDiseases.size( ) + iDisease ] = iOut ? ( dOut / iOut ) : 0;
+
+	return true; }

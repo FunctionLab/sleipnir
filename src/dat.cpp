@@ -9,7 +9,6 @@
 namespace Sleipnir {
 
 const char		CDatImpl::c_acComment[]		= "#";
-const float		CDatImpl::c_dCutoff			= 0.2f;
 const CColor&	CDatImpl::c_ColorMax		= CColor::c_Red;
 const CColor&	CDatImpl::c_ColorMin		= CColor::c_Green;
 const CColor&	CDatImpl::c_ColorMid		= CColor::c_Black;
@@ -1027,8 +1026,9 @@ void CDatImpl::AveStd( double& dAve, double& dStd, size_t& iN, size_t iApproxima
 			dAve += d;
 			dStd += d * d; }
 		iN = i; }
-	dAve /= iN;
-	dStd = sqrt( ( dStd / iN ) - ( dAve * dAve ) ); }
+	if( iN ) {
+		dAve /= iN;
+		dStd = sqrt( ( dStd / iN ) - ( dAve * dAve ) ); } }
 
 void CDatImpl::NormalizeStdev( ) {
 	double	d, dAve, dDev;
@@ -1086,7 +1086,7 @@ void CDat::Invert( ) {
  * Way in which to use the given genes to remove edges.
  * 
  * \param iLimit
- * For EFilterPixie, the maximum number of genes to retain.
+ * For EFilterPixie and EFilterHefalmp, the maximum number of genes to retain.
  * 
  * \returns
  * True if the filter was executed successfully.
@@ -1123,10 +1123,11 @@ bool CDat::FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit ) {
  * Way in which to use the given genes to remove edges.
  * 
  * \param iLimit
- * For EFilterPixie, the maximum number of genes to retain.
+ * For EFilterPixie and EFilterHefalmp, the maximum number of genes to retain.
  * 
- * \param fFilterEdges
- * For EFilterPixie, if false, only filter nodes and retain all edges incident to the retained nodes.
+ * \param dEdgeAggressiveness
+ * For EFilterPixie and EFilterHefalmp, higher values result in more aggressive edge trimming.  NaN
+ * completely skips edge trimming.
  * 
  * Remove edges and nodes (by removing all incident edges) from the CDat based on one of several algorithms.
  * For details, see EFilter.
@@ -1135,7 +1136,7 @@ bool CDat::FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit ) {
  * EFilterTerm and to some degree EFilterEdge don't make a lot of sense for CDats that do not represent
  * gold standards.
  */
-void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, bool fFilterEdges ) {
+void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, float dEdgeAggressiveness ) {
 	size_t			i, j;
 	vector<bool>	vecfGenes;
 
@@ -1144,9 +1145,11 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, boo
 		if( ( j = GetGene( Genes.GetGene( i ).GetName( ) ) ) != -1 )
 			vecfGenes[ j ] = true;
 
-	if( eFilter == EFilterPixie ) {
-		FilterGenesPixie( Genes, vecfGenes, iLimit, fFilterEdges );
-		return; }
+	switch( eFilter ) {
+		case EFilterPixie:
+		case EFilterHefalmp:
+			FilterGenesGraph( Genes, vecfGenes, iLimit, dEdgeAggressiveness, eFilter == EFilterHefalmp );
+			return; }
 
 	for( i = 0; i < GetGenes( ); ++i ) {
 		if( ( ( eFilter == EFilterExclude ) && vecfGenes[ i ] ) ||
@@ -1186,75 +1189,67 @@ struct SPixie {
 		return ( m_dScore < sPixie.m_dScore ); }
 };
 
-void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes, size_t iLimit,
-	bool fFilterEdges ) {
+void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, size_t iLimit,
+	float dEdgeAggressiveness, bool fHefalmp ) {
 	vector<float>				vecdNeighbors;
 	size_t						i, j, iOne, iTwo, iMinOne, iMinTwo, iN;
 	vector<size_t>				veciGenes, veciFinal, veciDegree;
-	set<size_t>					setiN1, setiN2;
+	set<size_t>					setiN;
 	set<size_t>::const_iterator	iterN;
-	float						d, d2, dMin, dCutoff;
+	float						d, dMin, dCutoff;
 	priority_queue<SPixie>		pqueNeighbors;
 	bool						fDone;
 	double						dAve, dDev;
 
 	if( iLimit == -1 )
-		iLimit = c_iNeighborhood1;
+		iLimit = c_iNeighborhood;
 	veciGenes.resize( Genes.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
 		veciGenes[ i ] = GetGene( Genes.GetGene( i ).GetName( ) );
 
 	vecdNeighbors.resize( GetGenes( ) );
-	for( i = 0; i < vecdNeighbors.size( ); ++i )
-		vecdNeighbors[ i ] = 0;
-	for( i = 0; i < veciGenes.size( ); ++i ) {
-		if( ( iOne = veciGenes[ i ] ) == -1 )
-			continue;
-		veciFinal.push_back( iOne );
-		for( j = 0; j < GetGenes( ); ++j ) {
-			if( vecfGenes[ j ] )
+	fill( vecdNeighbors.begin( ), vecdNeighbors.end( ), 0.0f );
+	if( fHefalmp )
+		for( i = 0; i < GetGenes( ); ++i ) {
+			size_t	iIn, iOut;
+			float	dIn, dOut;
+
+			if( vecfGenes[ i ] )
 				continue;
-			if( !CMeta::IsNaN( d = Get( iOne, j ) ) )
-				vecdNeighbors[ j ] += d; } }
+			dIn = dOut = 0;
+			for( iIn = j = 0; j < veciGenes.size( ); ++j ) {
+				if( ( iOne = veciGenes[ j ] ) == -1 )
+					continue;
+				if( !CMeta::IsNaN( d = Get( i, iOne ) ) ) {
+					iIn++;
+					dIn += d; } }
+			for( iOut = j = 0; j < GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+					iOut++;
+					dOut += d; }
+			vecdNeighbors[ i ] = ( iIn && dOut ) ? ( dIn * iOut / iIn / dOut ) : 0; }
+	else
+		for( i = 0; i < veciGenes.size( ); ++i ) {
+			if( ( iOne = veciGenes[ i ] ) == -1 )
+				continue;
+			for( j = 0; j < GetGenes( ); ++j ) {
+				if( vecfGenes[ j ] )
+					continue;
+				if( !CMeta::IsNaN( d = Get( iOne, j ) ) )
+					vecdNeighbors[ j ] += d; } }
 	for( i = 0; i < vecdNeighbors.size( ); ++i )
 		if( ( d = vecdNeighbors[ i ] ) > 0 )
 			pqueNeighbors.push( SPixie( i, d ) );
 
-	while( !pqueNeighbors.empty( ) && ( setiN1.size( ) < iLimit ) ) {
+	for( i = 0; i < veciGenes.size( ); ++i )
+		if( ( iOne = veciGenes[ i ] ) != -1 )
+			veciFinal.push_back( iOne );
+	while( !pqueNeighbors.empty( ) && ( setiN.size( ) < iLimit ) ) {
 		veciFinal.push_back( pqueNeighbors.top( ).m_iNode );
-		setiN1.insert( pqueNeighbors.top( ).m_iNode );
+		setiN.insert( pqueNeighbors.top( ).m_iNode );
 		pqueNeighbors.pop( ); }
 
-	if( c_iNeighborhood2 ) {
-		for( i = 0; i < veciGenes.size( ); ++i ) {
-			if( ( iOne = veciGenes[ i ] ) == -1 )
-				continue;
-			for( iterN = setiN1.begin( ); iterN != setiN1.end( ); ++iterN ) {
-				iTwo = *iterN;
-				if( CMeta::IsNaN( d = Get( iOne, iTwo ) ) )
-					continue;
-				for( j = 0; j < GetGenes( ); ++j )
-					if( !CMeta::IsNaN( d2 = Get( iTwo, j ) ) )
-						vecdNeighbors[ j ] += d * d2; } }
-		for( i = 0; i < veciGenes.size( ); ++i )
-			if( ( iOne = veciGenes[ i ] ) != -1 )
-				vecdNeighbors[ iOne ] = 0;
-		for( iterN = setiN1.begin( ); iterN != setiN1.end( ); ++iterN )
-			vecdNeighbors[ *iterN ] = 0;
-
-		while( !pqueNeighbors.empty( ) )
-			pqueNeighbors.pop( );
-		for( i = 0; i < vecdNeighbors.size( ); ++i )
-			if( vecdNeighbors[ i ] > 0 )
-				pqueNeighbors.push( SPixie( i, vecdNeighbors[ i ] ) );
-		while( !pqueNeighbors.empty( ) && ( setiN2.size( ) < c_iNeighborhood2 ) ) {
-			veciFinal.push_back( pqueNeighbors.top( ).m_iNode );
-			setiN2.insert( pqueNeighbors.top( ).m_iNode );
-			pqueNeighbors.pop( ); } }
-
-	for( iterN = setiN1.begin( ); iterN != setiN1.end( ); ++iterN )
-		vecfGenes[ *iterN ] = true;
-	for( iterN = setiN2.begin( ); iterN != setiN2.end( ); ++iterN )
+	for( iterN = setiN.begin( ); iterN != setiN.end( ); ++iterN )
 		vecfGenes[ *iterN ] = true;
 	for( i = 0; i < GetGenes( ); ++i ) {
 		if( !vecfGenes[ i ] ) {
@@ -1265,7 +1260,7 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes, s
 			if( !vecfGenes[ j ] )
 				Set( i, j, CMeta::GetNaN( ) ); }
 	AveStd( dAve, dDev, iN );
-	dCutoff = min( (float)( dAve + dDev ), c_dCutoff );
+	dCutoff = (float)( dAve + ( dEdgeAggressiveness * dDev ) );
 
 	veciDegree.resize( veciFinal.size( ) );
 	for( i = 0; i < veciDegree.size( ); ++i ) {
@@ -1275,7 +1270,7 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes, s
 			if( !CMeta::IsNaN( Get( iOne, iTwo ) ) ) {
 				veciDegree[ i ]++;
 				veciDegree[ j ]++; } } }
-	for( fDone = !fFilterEdges; !fDone; ) {
+	for( fDone = CMeta::IsNaN( dEdgeAggressiveness ); !fDone; ) {
 		fDone = true;
 		dMin = FLT_MAX;
 		for( i = 0; i < veciFinal.size( ); ++i ) {
@@ -1320,12 +1315,12 @@ void CDatImpl::FilterGenesPixie( const CGenes& Genes, vector<bool>& vecfGenes, s
  * If non-null, contains border widths in pixels for each node.
  * 
  * SaveDOT is one of the most useful methods for visualizing the weighted graph implicit in a CDat,
- * particularly in combination with FilterGenes and EFilterPixie.  Calling SaveDOT will generate a DOT graph
- * file containing (optionally) each node and edge in the CDat, with edges colored by weight (scaled from
- * green for the minimum weight to red at the maximum).  Nodes can optionally be colored or given varying
- * border widths based on external information, or labeled with different gene names (synonyms) than used
- * internally by the CDat.  DOT files can be visualized by a variety of software, notably the Graphviz
- * package from AT&T.
+ * particularly in combination with FilterGenes and EFilterPixie/EFilterHefalmp.  Calling SaveDOT will
+ * generate a DOT graph file containing (optionally) each node and edge in the CDat, with edges colored by
+ * weight (scaled from green for the minimum weight to red at the maximum).  Nodes can optionally be colored
+ * or given varying border widths based on external information, or labeled with different gene names
+ * (synonyms) than used internally by the CDat.  DOT files can be visualized by a variety of software, notably
+ * the Graphviz package from AT&T.
  * 
  * \remarks
  * If given, pvecdColors and pvecdBorders must be of the same size as the CDat.

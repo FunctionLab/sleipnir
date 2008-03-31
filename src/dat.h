@@ -85,7 +85,12 @@ public:
 		 * \brief
 		 * Remove any edge not including a node in the given set.
 		 */
-		EFilterEdge			= EFilterPixie + 1
+		EFilterEdge			= EFilterPixie + 1,
+		/*!
+		 * \brief
+		 * Perform a HEFalMp query using the given set and remove any edge not in the resulting subgraph.
+		 */
+		EFilterHefalmp		= EFilterEdge + 1
 	};
 
 	/*!
@@ -145,7 +150,8 @@ public:
 	void Invert( );
 	void Rank( );
 	bool FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit = -1 );
-	void FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit = -1, bool fFilterEdges = true );
+	void FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit = -1,
+		float dEdgeAggressiveness = 0.5 );
 
 	/*!
 	 * \brief

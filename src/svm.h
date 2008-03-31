@@ -324,7 +324,7 @@ public:
 	 */
 	void SetIterations( size_t iIterations ) {
 
-		m_sLearn.maxiter = iIterations; }
+		m_sLearn.maxiter = (long)iIterations; }
 
 	/*!
 	 * \brief
@@ -338,7 +338,7 @@ public:
 	 */
 	void SetCache( size_t iMegabytes ) {
 
-		m_sLearn.kernel_cache_size = iMegabytes; }
+		m_sLearn.kernel_cache_size = (long)iMegabytes; }
 
 	/*!
 	 * \brief
@@ -380,7 +380,7 @@ public:
 	 */
 	void SetDegree( size_t iDegree ) {
 
-		m_sKernel.poly_degree = iDegree; }
+		m_sKernel.poly_degree = (long)iDegree; }
 
 	/*!
 	 * \brief
@@ -408,7 +408,7 @@ public:
 	 */
 	void SetVerbosity( size_t iVerbosity ) {
 
-		verbosity = iVerbosity; }
+		verbosity = (long)iVerbosity; }
 };
 
 }

@@ -242,6 +242,21 @@ public:
 
 	/*!
 	 * \brief
+	 * Return the number of datasets stored in the database.
+	 * 
+	 * \returns
+	 * Number of datasets in the database.
+	 * 
+	 * \remarks
+	 * Number of datasets is constant across subfiles, so the number in the first subfile (if present) is
+	 * actually returned.
+	 */
+	size_t GetDatasets( ) const {
+
+		return ( m_vecpDBs.empty( ) ? 0 : m_vecpDBs[ 0 ]->GetDatasets( ) ); }
+
+	/*!
+	 * \brief
 	 * Set memory mapping behavior when opening DAB files.
 	 * 
 	 * \param fMemmap

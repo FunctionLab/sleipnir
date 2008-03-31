@@ -10,7 +10,7 @@ public:
 
 	CBNServer( const CBayesNetMinimal&, const vector<CBayesNetMinimal>&, const CCompactFullMatrix&, SOCKET,
 		const CDatabase&, const string&, const char*, const char*, const CDataMatrix&, const CGenome&,
-		const IOntology** );
+		const IOntology**, const vector<vector<size_t> >& );
 	~CBNServer( );
 
 	IServerClient* NewInstance( SOCKET, uint32_t, uint16_t );
@@ -29,7 +29,8 @@ private:
 
 	bool Get( size_t, size_t, float* = NULL );
 	bool Get( size_t, const vector<size_t>&, size_t, float* );
-	bool Get( const vector<unsigned char>&, size_t );
+	bool GetContext( size_t, const vector<unsigned char>&, size_t );
+	bool GetDisease( size_t, size_t, const vector<unsigned char>&, size_t );
 	bool GraphCreate( const vector<size_t>&, size_t, size_t, vector<bool>&, vector<size_t>&, CDat& ) const;
 	bool GraphWrite( const CDat&, const vector<size_t>&, const vector<size_t>&, const vector<bool>&,
 		size_t, bool ) const;
@@ -43,16 +44,23 @@ private:
 	size_t ProcessGraph( const vector<unsigned char>&, size_t );
 	size_t ProcessContexts( const vector<unsigned char>&, size_t );
 	size_t ProcessTermFinder( const vector<unsigned char>&, size_t );
+	size_t ProcessDiseases( const vector<unsigned char>&, size_t );
 
 	size_t GetGenes( ) const {
 
 		return m_Database.GetGenes( ); }
+
+	float GetBackground( size_t iContext, size_t iGene ) const {
+
+		return ( ( m_MatBackgrounds.GetColumns( ) && m_MatBackgrounds.GetRows( ) ) ?
+			m_MatBackgrounds.Get( iContext, iGene ) : 1 ); }
 
 	const CBayesNetMinimal&			m_BNDefault;
 	const vector<CBayesNetMinimal>&	m_vecBNs;
 	SOCKET							m_iSocket;
 	float*							m_adGenes;
 	float*							m_adContexts;
+	float*							m_adDiseases;
 	const CDatabase&				m_Database;
 	string							m_strConnection;
 	string							m_strGraphviz;
@@ -62,6 +70,7 @@ private:
 	const CGenome&					m_Genome;
 	const IOntology**				m_apOntologies;
 	size_t							m_iOntologies;
+	const vector<vector<size_t> >	m_vecveciDiseases;
 };
 
 #endif // BNSERVER_H

@@ -66,6 +66,7 @@ bool read_documents_bin( char* szFile, DOC*** papDocs, double** padLabels,
 	free( ad );
 
 	fclose( pfileDoc );
+	return true;
 }
 
 SWORD	CSVMImpl::s_asWords[ CSVMImpl::c_iWords ];
