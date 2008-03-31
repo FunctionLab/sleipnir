@@ -18,7 +18,7 @@ protected:
 	std::string GetSave( ) const;
 	bool Save( std::ostream&, size_t ) const;
 
-	bool CHierarchyImpl::IsGene( ) const {
+	bool IsGene( ) const {
 
 		return !( m_pLeft && m_pRight ); }
 

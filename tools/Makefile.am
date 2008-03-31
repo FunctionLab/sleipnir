@@ -41,7 +41,6 @@ SUBDIRS		= Answerer \
 		Orthologer \
 		Overlapper \
 		Randomizer \
-		Renamer \
 		SVMer \
 		Seqs2Ngrams \
 		Txt2Bin

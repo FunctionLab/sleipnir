@@ -336,7 +336,6 @@ AC_CONFIG_FILES([Makefile src/Makefile \
 		 tools/Orthologer/Makefile \
 		 tools/Overlapper/Makefile \
 		 tools/Randomizer/Makefile \
-		 tools/Renamer/Makefile \
 		 tools/SVMer/Makefile \
 		 tools/Seqs2Ngrams/Makefile \
 		 tools/Txt2Bin/Makefile ])

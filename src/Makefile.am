@@ -31,20 +31,14 @@ libSleipnir_a_SOURCES	=	\
 	mathb.cpp				\
 	measure.cpp				\
 	meta.cpp				\
-	name.cpp				\
 	orthology.cpp			\
 	pcl.cpp					\
 	pclset.cpp				\
-	propertyfile.cpp		\
 	serverclient.cpp		\
 	server.cpp				\
 	statistics.cpp			\
 	stdafx.cpp				\
-	svm.cpp					\
-	svm_sam.cpp				\
-	xmlstring.cpp			\
-	xmlvacuum.cpp			\
-	xmlwriter.cpp
+	svm.cpp
 include_HEADERS			=	\
 	annotation.h			\
 	annotationi.h			\
@@ -82,16 +76,12 @@ include_HEADERS			=	\
 	measurei.h				\
 	meta.h					\
 	metai.h					\
-	name.h					\
-	namei.h					\
 	orthology.h				\
 	orthologyi.h			\
 	pcl.h					\
 	pcli.h					\
 	pclset.h				\
 	pclseti.h				\
-	propertyfile.h			\
-	propertyfilei.h			\
 	serverclient.h			\
 	serverclienti.h			\
 	server.h				\
@@ -104,11 +94,4 @@ include_HEADERS			=	\
 	svmi.h					\
 	trie.h					\
 	triei.h					\
-	typesi.h				\
-	xml.h					\
-	xmlstring.h				\
-	xmlstringi.h			\
-	xmlvacuum.h				\
-	xmlvacuumi.h			\
-	xmlwriter.h				\
-	xmlwriteri.h
+	typesi.h

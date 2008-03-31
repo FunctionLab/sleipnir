@@ -128,20 +128,14 @@ libSleipnir_a_SOURCES = \
 	mathb.cpp				\
 	measure.cpp				\
 	meta.cpp				\
-	name.cpp				\
 	orthology.cpp			\
 	pcl.cpp					\
 	pclset.cpp				\
-	propertyfile.cpp		\
 	serverclient.cpp		\
 	server.cpp				\
 	statistics.cpp			\
 	stdafx.cpp				\
-	svm.cpp					\
-	svm_sam.cpp				\
-	xmlstring.cpp			\
-	xmlvacuum.cpp			\
-	xmlwriter.cpp
+	svm.cpp
 
 include_HEADERS = \
 	annotation.h			\
@@ -180,16 +174,12 @@ include_HEADERS = \
 	measurei.h				\
 	meta.h					\
 	metai.h					\
-	name.h					\
-	namei.h					\
 	orthology.h				\
 	orthologyi.h			\
 	pcl.h					\
 	pcli.h					\
 	pclset.h				\
 	pclseti.h				\
-	propertyfile.h			\
-	propertyfilei.h			\
 	serverclient.h			\
 	serverclienti.h			\
 	server.h				\
@@ -202,14 +192,7 @@ include_HEADERS = \
 	svmi.h					\
 	trie.h					\
 	triei.h					\
-	typesi.h				\
-	xml.h					\
-	xmlstring.h				\
-	xmlstringi.h			\
-	xmlvacuum.h				\
-	xmlvacuumi.h			\
-	xmlwriter.h				\
-	xmlwriteri.h
+	typesi.h
 
 subdir = src
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -227,12 +210,10 @@ am_libSleipnir_a_OBJECTS = annotation.$(OBJEXT) annotationgo.$(OBJEXT) \
 	compactmatrix.$(OBJEXT) database.$(OBJEXT) datapair.$(OBJEXT) \
 	datasetcompact.$(OBJEXT) dataset.$(OBJEXT) dat.$(OBJEXT) \
 	example.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) \
-	mathb.$(OBJEXT) measure.$(OBJEXT) meta.$(OBJEXT) name.$(OBJEXT) \
+	mathb.$(OBJEXT) measure.$(OBJEXT) meta.$(OBJEXT) \
 	orthology.$(OBJEXT) pcl.$(OBJEXT) pclset.$(OBJEXT) \
-	propertyfile.$(OBJEXT) serverclient.$(OBJEXT) server.$(OBJEXT) \
-	statistics.$(OBJEXT) stdafx.$(OBJEXT) svm.$(OBJEXT) \
-	svm_sam.$(OBJEXT) xmlstring.$(OBJEXT) xmlvacuum.$(OBJEXT) \
-	xmlwriter.$(OBJEXT)
+	serverclient.$(OBJEXT) server.$(OBJEXT) statistics.$(OBJEXT) \
+	stdafx.$(OBJEXT) svm.$(OBJEXT)
 libSleipnir_a_OBJECTS = $(am_libSleipnir_a_OBJECTS)
 
 DEFS = @DEFS@
@@ -260,14 +241,11 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/example.Po ./$(DEPDIR)/file.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/genome.Po ./$(DEPDIR)/mathb.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/measure.Po ./$(DEPDIR)/meta.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/name.Po ./$(DEPDIR)/orthology.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/pcl.Po ./$(DEPDIR)/pclset.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/propertyfile.Po ./$(DEPDIR)/server.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/orthology.Po ./$(DEPDIR)/pcl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/pclset.Po ./$(DEPDIR)/server.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/serverclient.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/statistics.Po ./$(DEPDIR)/stdafx.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/svm.Po ./$(DEPDIR)/svm_sam.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/xmlstring.Po ./$(DEPDIR)/xmlvacuum.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/xmlwriter.Po
+@AMDEP_TRUE@	./$(DEPDIR)/svm.Po
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
@@ -358,20 +336,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mathb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/name.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orthology.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pclset.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/propertyfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serverclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/statistics.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stdafx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svm.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svm_sam.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmlstring.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmlvacuum.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmlwriter.Po@am__quote@
 
 distclean-depend:
 	-rm -rf ./$(DEPDIR)
