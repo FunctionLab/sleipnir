@@ -13,9 +13,6 @@ int main( int iArgs, char** aszArgs ) {
 	vector<string>						vecstrLine;
 	char								acBuffer[ c_iBuffer ];
 	vector<size_t>						veciGenes;
-	Connection							MSQLConnection;
-	Query								MSQLQuery( &MSQLConnection );
-	bool								fConnected;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -39,20 +36,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg )
 		ifsm.close( );
 
-	if( !sArgs.datasets_flag ) {
-		try {
-			i = atoi( sArgs.port_arg );
-			fConnected = MSQLConnection.connect( sArgs.database_arg, sArgs.host_arg, sArgs.username_arg,
-				sArgs.password_arg ? sArgs.password_arg : "", (mysqlpp::uint)i, false, 60,
-				i ? NULL : sArgs.port_arg ); }
-		catch( ConnectionFailed ) {
-			fConnected = false; }
-		if( !fConnected ) {
-			cerr << "Connection failed: " << sArgs.host_arg << ':' << sArgs.port_arg << ' ' <<
-				( sArgs.username_arg ? sArgs.username_arg : "" ) << '@' << sArgs.database_arg << endl;
-			return 1; } }
-
-	for( iFile = 0; iFile < sArgs.inputs_num; ++iFile ) {
+	for( iCount = iFile = 0; iFile < sArgs.inputs_num; ++iFile ) {
 		CDataPair	Dat;
 
 		if( sArgs.datasets_flag ) {
@@ -83,17 +67,15 @@ int main( int iArgs, char** aszArgs ) {
 						iFirst = iTwo;
 						iSecond = iOne; }
 					if( iCount % sArgs.block_arg )
-						MSQLQuery << ',';
+						cout << ',';
 					else
-						MSQLQuery << "INSERT INTO " << sArgs.table_arg << " VALUES " << endl;
-					MSQLQuery << '(' << ( iFile + 1 ) << ',' << iFirst << ',' << iSecond << ',' <<
+						cout << "INSERT INTO " << sArgs.table_arg << " VALUES " << endl;
+					cout << '(' << ( iFile + 1 ) << ',' << iFirst << ',' << iSecond << ',' <<
 						Dat.Quantize( d ) << ')';
-					if( !( ++iCount % sArgs.block_arg ) ) {
-						MSQLQuery.execute( );
-						MSQLQuery.reset( ); } } } }
-	if( !sArgs.datasets_flag ) {
-		MSQLQuery.execute( );
-		MSQLConnection.close( ); }
+					if( !( ++iCount % sArgs.block_arg ) )
+						cout << ';' << endl; } } }
+	if( iCount )
+		cout << ';' << endl;
 
 	CMeta::Shutdown( );
 	return 0; }

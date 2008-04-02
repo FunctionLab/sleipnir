@@ -1,28 +1,16 @@
 package	"Data2Sql"
 version	"1.0"
-purpose	"Convert multiple dat files to a single SQL table"
+purpose	"Convert multiple DAT/DAB files to a single SQL table"
 
 option	"input"		i	"Input gene mapping"
 						string	typestr="filename"
+option	"table"		t	"Database table name"
+						string	default="datapairs"
 
 option	"datasets"	d	"Output datasets table"
 						flag	off
 option	"block"		b	"Block size for SQL chunking"
 						int	default="1000"
-
-section "Database"
-option	"host"		H	"Database hostname"
-						string	default="localhost"
-option	"port"		P	"Database port"
-						string	default="3306"
-option	"database"	D	"Database name"
-						string	yes
-option	"table"		T	"Database table name"
-						string	default="datapairs"
-option	"username"	U	"Database username"
-						string	default="root"
-option	"password"	L	"Database password"
-						string
 
 section "Optional"
 option	"memmap"	m	"Memory map input/output"
