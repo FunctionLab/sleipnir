@@ -313,7 +313,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -778,10 +778,10 @@ ac_env_CFLAGS_set=${CFLAGS+set}
 ac_env_CFLAGS_value=$CFLAGS
 ac_cv_env_CFLAGS_set=${CFLAGS+set}
 ac_cv_env_CFLAGS_value=$CFLAGS
-ac_env_CPP_set=${CPP+set}
-ac_env_CPP_value=$CPP
-ac_cv_env_CPP_set=${CPP+set}
-ac_cv_env_CPP_value=$CPP
+ac_env_CXXCPP_set=${CXXCPP+set}
+ac_env_CXXCPP_value=$CXXCPP
+ac_cv_env_CXXCPP_set=${CXXCPP+set}
+ac_cv_env_CXXCPP_value=$CXXCPP
 
 #
 # Report the --help message.
@@ -865,10 +865,17 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-gengetopt=<path> prefix of gengetopt installation
-  --with-log4cpp=<path>   prefix of log4cpp installation or build directory
-  --with-smile=<path>     prefix of SMILE installation
-  --with-svm-light=<path> prefix of SVM Light installation
+  --with-gengetopt=PATH   prefix of gengetopt installation
+  --with-log4cpp=PATH     prefix of log4cpp installation or build directory
+  --with-smile=PATH       prefix of SMILE installation
+  --with-svm-light=PATH   prefix of SVM Light installation
+  --with-boost=PATH       prefix of boost installation, or:
+  --with-boost-include=PATH
+                          location of boost header files
+  --with-boost-lib=PATH   location of boost libraries
+  --with-readline=PATH    prefix of readline installation
+  --with-pthread=PATH     prefix of pthread installation
+  --without-tools         exclude tools and build lib only
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -879,7 +886,7 @@ Some influential environment variables:
               headers in a nonstandard directory <include dir>
   CC          C compiler command
   CFLAGS      C compiler flags
-  CPP         C preprocessor
+  CXXCPP      C++ preprocessor
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -1337,9 +1344,10 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 # Any file under src will do.
 
-# doesn't work with automake
+# doesn't work with automake?
 #AC_CONFIG_HEADER([config.h])
 #AM_CONFIG_HEADER([config.h])
+
 am__api_version="1.6"
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
@@ -1723,6 +1731,20 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 
 
 
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+
+# why oh why does this break things?
+#AC_PROG_EGREP
+EGREP=egrep
+
+# some don't have this??
+#AC_PROG_GREP
+GREP=$EGREP
 
 topleveldir=$PWD
 
@@ -1730,7 +1752,7 @@ topleveldir=$PWD
 #!! this may not be portable
 qualify_path () {
   d=${!1}
-  if ! echo $d | egrep -q '^/'; then
+  if ! echo $d | $EGREP -q '^/'; then
     eval "$1=$topleveldir/$d"
   fi
 }
@@ -2287,11 +2309,11 @@ if test -n "$ac_declaration"; then
   echo '#endif'             >>confdefs.h
 fi
 
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 rm -f .deps 2>/dev/null
 mkdir .deps 2>/dev/null
 if test -d .deps; then
@@ -3158,11 +3180,11 @@ sed 's/^/| /' conftest.$ac_ext >&5
 
 fi
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 depcc="$CC"   am_compiler_list=
 
@@ -3356,7 +3378,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -3429,7 +3451,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -3484,7 +3506,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -3556,7 +3578,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -3611,7 +3633,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -3646,26 +3668,22 @@ fi
 
 fi
 
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-echo "$as_me:$LINENO: checking how to run the C preprocessor" >&5
-echo $ECHO_N "checking how to run the C preprocessor... $ECHO_C" >&6
-# On Suns, sometimes $CPP names a directory.
-if test -n "$CPP" && test -d "$CPP"; then
-  CPP=
-fi
-if test -z "$CPP"; then
-  if test "${ac_cv_prog_CPP+set}" = set; then
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+echo "$as_me:$LINENO: checking how to run the C++ preprocessor" >&5
+echo $ECHO_N "checking how to run the C++ preprocessor... $ECHO_C" >&6
+if test -z "$CXXCPP"; then
+  if test "${ac_cv_prog_CXXCPP+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-      # Double quotes because CPP needs to be expanded
-    for CPP in "$CC -E" "$CC -E -traditional-cpp" "/lib/cpp"
+      # Double quotes because CXXCPP needs to be expanded
+    for CXXCPP in "$CXX -E" "/lib/cpp"
     do
       ac_preproc_ok=false
-for ac_c_preproc_warn_flag in '' yes
+for ac_cxx_preproc_warn_flag in '' yes
 do
   # Use a header file that comes with gcc, so configuring glibc
   # with a fresh cross-compiler works.
@@ -3695,8 +3713,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } >/dev/null; then
   if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+    ac_cpp_err=$ac_cxx_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_cxx_werror_flag
   else
     ac_cpp_err=
   fi
@@ -3733,8 +3751,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } >/dev/null; then
   if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+    ac_cpp_err=$ac_cxx_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_cxx_werror_flag
   else
     ac_cpp_err=
   fi
@@ -3762,17 +3780,17 @@ if $ac_preproc_ok; then
 fi
 
     done
-    ac_cv_prog_CPP=$CPP
+    ac_cv_prog_CXXCPP=$CXXCPP
 
 fi
-  CPP=$ac_cv_prog_CPP
+  CXXCPP=$ac_cv_prog_CXXCPP
 else
-  ac_cv_prog_CPP=$CPP
+  ac_cv_prog_CXXCPP=$CXXCPP
 fi
-echo "$as_me:$LINENO: result: $CPP" >&5
-echo "${ECHO_T}$CPP" >&6
+echo "$as_me:$LINENO: result: $CXXCPP" >&5
+echo "${ECHO_T}$CXXCPP" >&6
 ac_preproc_ok=false
-for ac_c_preproc_warn_flag in '' yes
+for ac_cxx_preproc_warn_flag in '' yes
 do
   # Use a header file that comes with gcc, so configuring glibc
   # with a fresh cross-compiler works.
@@ -3802,8 +3820,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } >/dev/null; then
   if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+    ac_cpp_err=$ac_cxx_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_cxx_werror_flag
   else
     ac_cpp_err=
   fi
@@ -3840,8 +3858,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } >/dev/null; then
   if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+    ac_cpp_err=$ac_cxx_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_cxx_werror_flag
   else
     ac_cpp_err=
   fi
@@ -3867,18 +3885,18 @@ rm -f conftest.err conftest.$ac_ext
 if $ac_preproc_ok; then
   :
 else
-  { { echo "$as_me:$LINENO: error: C preprocessor \"$CPP\" fails sanity check
+  { { echo "$as_me:$LINENO: error: C++ preprocessor \"$CXXCPP\" fails sanity check
 See \`config.log' for more details." >&5
-echo "$as_me: error: C preprocessor \"$CPP\" fails sanity check
+echo "$as_me: error: C++ preprocessor \"$CXXCPP\" fails sanity check
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 echo "$as_me:$LINENO: checking for egrep" >&5
@@ -3929,7 +3947,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4100,7 +4118,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4138,7 +4156,8 @@ done
 
 
 
-for ac_header in float.h netinet/in.h sys/socket.h sys/time.h
+
+for ac_header in float.h netinet/in.h sys/socket.h sys/time.h pthread.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then
@@ -4171,7 +4190,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4215,8 +4234,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } >/dev/null; then
   if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+    ac_cpp_err=$ac_cxx_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_cxx_werror_flag
   else
     ac_cpp_err=
   fi
@@ -4236,7 +4255,7 @@ echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
 echo "${ECHO_T}$ac_header_preproc" >&6
 
 # So?  What about this header?
-case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+case $ac_header_compiler:$ac_header_preproc:$ac_cxx_preproc_warn_flag in
   yes:no: )
     { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
 echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
@@ -4322,7 +4341,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4366,8 +4385,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } >/dev/null; then
   if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+    ac_cpp_err=$ac_cxx_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_cxx_werror_flag
   else
     ac_cpp_err=
   fi
@@ -4387,7 +4406,7 @@ echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
 echo "${ECHO_T}$ac_header_preproc" >&6
 
 # So?  What about this header?
-case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+case $ac_header_compiler:$ac_header_preproc:$ac_cxx_preproc_warn_flag in
   yes:no: )
     { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
 echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
@@ -4501,7 +4520,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4557,7 +4576,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4673,7 +4692,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4734,7 +4753,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4808,7 +4827,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4873,7 +4892,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4943,7 +4962,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -4987,8 +5006,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } >/dev/null; then
   if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+    ac_cpp_err=$ac_cxx_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_cxx_werror_flag
   else
     ac_cpp_err=
   fi
@@ -5008,7 +5027,7 @@ echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
 echo "${ECHO_T}$ac_header_preproc" >&6
 
 # So?  What about this header?
-case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+case $ac_header_compiler:$ac_header_preproc:$ac_cxx_preproc_warn_flag in
   yes:no: )
     { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
 echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
@@ -5175,7 +5194,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -5219,8 +5238,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } >/dev/null; then
   if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+    ac_cpp_err=$ac_cxx_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_cxx_werror_flag
   else
     ac_cpp_err=
   fi
@@ -5240,7 +5259,7 @@ echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
 echo "${ECHO_T}$ac_header_preproc" >&6
 
 # So?  What about this header?
-case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+case $ac_header_compiler:$ac_header_preproc:$ac_cxx_preproc_warn_flag in
   yes:no: )
     { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
 echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
@@ -5360,7 +5379,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -5709,7 +5728,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -5774,7 +5793,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -5880,7 +5899,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -5975,7 +5994,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -6159,7 +6178,6 @@ _ACEOF
 fi
    # tools/Answerer, tools/MEFIT
 
-#!! AC_CHECK_FUNCS: stop if not found?
 
 
 
@@ -6238,7 +6256,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -6341,7 +6359,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -6443,7 +6461,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -6545,7 +6563,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -6580,8 +6598,9 @@ done
   # tools/Data2Features, tools/Data2Bnt
 
 
-## LOCAL_PATH_PROG(prog name, local name, dir in extlib,
-##   action if found, extra action if found in extlib, action if not found)
+## LOCAL_PATH_PROG(prog name, local name,
+##   action if found, extra action if found installed, extra action if found in with path,
+##   action if not found, action if user requested without)
 ##
 ## Set prog_(local name)_dir to dir containing it, prog_(local name) to the path, prog_(local name)_info.
 
@@ -6589,14 +6608,17 @@ done
 
 ## LOCAL_CHECK_LIB(lib name, local name, function,
 ##   action if found, extra action if found installed, extra action if found in with path,
-##   action if not found, action if user requested without)
+##   action if not found, action if user requested without,
+##   includes)
 ## Set $(local_name)_info to "NONE", location, or "installed" (can be overridden with above actions).
 
 
 
-## LOCAL_CHECK_APPEND_PATHS(base dir, paths to append, prefix to set, var to set)
-## Look for one of the paths under the base dir. If found, set the variable
-## to the concatenation of the prefix, the discovered path.
+## LOCAL_CHECK_APPEND_PATHS(base path, paths to append, common path to look for, var to set)
+## Look for the common path in one of the appendable paths under the base path.
+## If found, set the variable to the concatenation of the prefix and the appended path,
+## not including the common path. If not found use the base dir.
+
 
 
 
@@ -6615,7 +6637,19 @@ else
   with_gengetopt=check
 fi;
 
-# Extract the first word of "gengetopt", so it can be a program name with args.
+if test "x$with_gengetopt" = "xno"; then
+#  prog_gengetopt_info=NONE
+  true   # in case          isn't defined or is empty
+
+elif test "x$with_gengetopt" != "xcheck"; then
+#  if echo with_gengetopt | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
+  prog_gengetopt_info=$with_gengetopt
+  qualify_path with_gengetopt
+  prog_gengetopt=$with_gengetopt
+  GENGETOPT_PREFIX=$prog_gengetopt_prefix; GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
+
+else
+  # Extract the first word of "gengetopt", so it can be a program name with args.
 set dummy gengetopt; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
 echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
@@ -6654,31 +6688,32 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
-if test "x$prog_gengetopt" = "x"; then
-  extpath=extlib/gengetopt-2.22/src/gengetopt
-  if test -x $extpath; then
-    prog_gengetopt_info=$extpath
-    prog_gengetopt=$extpath
-    qualify_path prog_gengetopt
-    prog_gengetopt_dir=extlib/gengetopt-2.22/src
-    qualify_path prog_gengetopt_dir
-    prog_gengetopt_prefix=$prog_gengetopt_dir
-    GENGETOPT_PREFIX=$prog_gengetopt_prefix; GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
-    GENGETOPT_PREFIX=$prog_gengetopt_dir; GENGETOPT_INCLUDES="-I${prog_gengetopt_dir}"
-  fi
-else
-  # prog_gengetopt already set
-  prog_gengetopt_info=installed
-  prog_gengetopt_dir=`dirname $prog_gengetopt`
-  # assumes bin and include are at same level
-  prog_gengetopt_prefix=$prog_gengetopt_dir/..
-  GENGETOPT_PREFIX=$prog_gengetopt_prefix; GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
-fi
-if test "x$prog_gengetopt" = "x"; then
-  echo "GENGETOPT IS REQUIRED" 1>&2; exit 1
-fi
+  if test "x$prog_gengetopt" = "x"; then
+    true   # in case 	 is not defined or is empty
 
-## set CFLAGS and LIBS
+  else
+    prog_gengetopt_info="found installed"
+    GENGETOPT_PREFIX=$prog_gengetopt_prefix; GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
+
+  fi
+fi
+if test "x$prog_gengetopt" != "x"; then
+  prog_gengetopt_dir=`(dirname $prog_gengetopt) 2>/dev/null ||
+$as_expr X$prog_gengetopt : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X$prog_gengetopt : 'X\(//\)[^/]' \| \
+	 X$prog_gengetopt : 'X\(//\)$' \| \
+	 X$prog_gengetopt : 'X\(/\)' \| \
+	 .     : '\(.\)' 2>/dev/null ||
+echo X$prog_gengetopt |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
+  	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
+  	  /^X\(\/\/\)$/{ s//\1/; q; }
+  	  /^X\(\/\).*/{ s//\1/; q; }
+  	  s/.*/./; q'`
+  prog_gengetopt_prefix=$prog_gengetopt_dir/..     # assumes bin and include are at same level
+
+fi
+                                                                                             ## set CFLAGS and LIBS
 if test "x$GENGETOPT_PREFIX" != "x"; then
   GENGETOPT_CFLAGS=$GENGETOPT_INCLUDES
   GENGETOPT_LIBS=
@@ -6707,7 +6742,8 @@ else
 fi;
 
 if test "x$with_log4cpp" = "xno"; then
-  log4cpp_info=NONE
+#  log4cpp_info=NONE
+  true   # in case log4cpp_info=stub; AC_DEFINE([USE_LOG4CPP_STUB], [1]) is not defined or is empty
   log4cpp_info=stub; cat >>confdefs.h <<\_ACEOF
 #define USE_LOG4CPP_STUB 1
 _ACEOF
@@ -6716,42 +6752,29 @@ elif test "x$with_log4cpp" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
 # That may not be necessary.
-  if echo with_log4cpp | egrep -q '^extlib/'; then extlib=true; else extlib=false; fi
+#  if echo with_log4cpp | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   log4cpp_info=$with_log4cpp
   qualify_path with_log4cpp
 
   	LOG4CPP_PREFIX=$with_log4cpp
 else
-  # In AC_CHECK_LIB, the last argument is optional. If it is specified but is
+  # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
   # empty, however, we get a syntax error. But, we have to be careful,
   # because arguments to this macro may contain quotes, semicolons, etc.
   # So we work around it by always supplying a last argument.
   flag=false
-  echo "$as_me:$LINENO: checking for log4cpp::Category::getInstance in -llog4cpp" >&5
-echo $ECHO_N "checking for log4cpp::Category::getInstance in -llog4cpp... $ECHO_C" >&6
-if test "${ac_cv_lib_log4cpp_log4cpp__Category__getInstance+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-llog4cpp  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
+#  echo try link log4cpp::Category::getInstance
+  cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char log4cpp::Category::getInstance ();
+	#include "log4cpp/Category.hh"
 int
 main ()
 {
-log4cpp::Category::getInstance ();
+log4cpp::Category::getInstance
   ;
   return 0;
 }
@@ -6765,7 +6788,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -6778,74 +6801,61 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_lib_log4cpp_log4cpp__Category__getInstance=yes
+  log4cpp_info="found installed"
+
+
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-ac_cv_lib_log4cpp_log4cpp__Category__getInstance=no
+flag=true
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_log4cpp_log4cpp__Category__getInstance" >&5
-echo "${ECHO_T}$ac_cv_lib_log4cpp_log4cpp__Category__getInstance" >&6
-if test $ac_cv_lib_log4cpp_log4cpp__Category__getInstance = yes; then
-  log4cpp_info=installed
-
-
-else
-  flag=true
-fi
-
+#  AC_CHECK_LIB([log4cpp], [log4cpp::Category::getInstance],
+#    [log4cpp_info="found installed"
+#
+#     	],
+#    [flag=true])
   if $flag; then
     # we also can't have an empty if block...
     true
-    	log4cpp_info="stub (not found)";                          	 cat >>confdefs.h <<\_ACEOF
+    	log4cpp_info="stub (library not found)";                  	 cat >>confdefs.h <<\_ACEOF
 #define USE_LOG4CPP_STUB 1
 _ACEOF
 
   fi
 fi
-   ## set LOG4CPP_CFLAGS and LOG4CPP_LIBS
-if test "x$LOG4CPP_PREFIX" != "x"; then
 
-result=-I${LOG4CPP_PREFIX}
+# if stub, there might be additional info, so use grep
+if ! echo $log4cpp_info | $GREP -q stub; then
+  ## set LOG4CPP_CFLAGS and LOG4CPP_LIBS
+  if test "x$LOG4CPP_PREFIX" != "x"; then
+
+result=$LOG4CPP_PREFIX
 for p in include; do
-  if test -d "${LOG4CPP_PREFIX}/$p"; then
-    result=-I${LOG4CPP_PREFIX}/$p
+  if test -e "$LOG4CPP_PREFIX/$p/"; then
+    result=$LOG4CPP_PREFIX/$p
     break
   fi
 done
-LOG4CPP_CFLAGS=$result
+LOG4CPP_INCLUDE_DIR=$result
 
 
-result=-L${LOG4CPP_PREFIX}
+result=$LOG4CPP_PREFIX
 for p in lib src/.libs; do
-  if test -d "${LOG4CPP_PREFIX}/$p"; then
-    result=-L${LOG4CPP_PREFIX}/$p
+  if test -e "$LOG4CPP_PREFIX/$p/"; then
+    result=$LOG4CPP_PREFIX/$p
     break
   fi
 done
-LOG4CPP_LIBS=$result
+LOG4CPP_LIB_DIR=$result
 
-  # It may be useful to allow a built (but not installed) path for log4cpp,
-  # that is, a source distribution. However the log4cpp distribution does not
-  # have a lib/, it has a src/.libs/.
-#  if test -d ${LOG4CPP_PREFIX}/lib; then
-#    LOG4CPP_LIBS="-L${LOG4CPP_PREFIX}/lib -llog4cpp"
-#  elif test -d ${LOG4CPP_PREFIX}/src/.libs; then
-#    LOG4CPP_LIBS="-L${LOG4CPP_PREFIX}/src/.libs -llog4cpp"
-#  else
-#    log4cpp_info=
-#    LOG4CPP_PREFIX=
-#    #! revert to using the stub?
-#    echo "COULD NOT LOCATE LOG4CPP LIBRARY AT SPECIFIED PATH" 1>&2
-#    exit 1
-#  fi
+    LOG4CPP_CFLAGS="-I$LOG4CPP_INCLUDE_DIR"
+    LOG4CPP_LIBS="-L$LOG4CPP_LIB_DIR"
+  fi
+  LOG4CPP_LIBS="$LOG4CPP_LIBS -llog4cpp"
 fi
-LOG4CPP_LIBS="$LOG4CPP_LIBS -llog4cpp"
 
 
 
@@ -6865,10 +6875,12 @@ if test "${with_smile+set}" = set; then
 else
   with_smile=check
 fi;
+# it's hard to find a decent static function to use...
 
 if test "x$with_smile" = "xno"; then
-  smile_info=NONE
-          cat >>confdefs.h <<\_ACEOF
+#  smile_info=NONE
+  true   # in case         smile_info=NONE; AC_DEFINE([NO_SMILE], [1]) is not defined or is empty
+          smile_info=NONE; cat >>confdefs.h <<\_ACEOF
 #define NO_SMILE 1
 _ACEOF
 
@@ -6876,42 +6888,29 @@ elif test "x$with_smile" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
 # That may not be necessary.
-  if echo with_smile | egrep -q '^extlib/'; then extlib=true; else extlib=false; fi
+#  if echo with_smile | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   smile_info=$with_smile
   qualify_path with_smile
 
           SMILE_PREFIX=$with_smile
 else
-  # In AC_CHECK_LIB, the last argument is optional. If it is specified but is
+  # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
   # empty, however, we get a syntax error. But, we have to be careful,
   # because arguments to this macro may contain quotes, semicolons, etc.
   # So we work around it by always supplying a last argument.
   flag=false
-  echo "$as_me:$LINENO: checking for DSL_header::GetID in -lsmile" >&5
-echo $ECHO_N "checking for DSL_header::GetID in -lsmile... $ECHO_C" >&6
-if test "${ac_cv_lib_smile_DSL_header__GetID+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsmile  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
+#  echo try link RoundProbability
+  cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char DSL_header::GetID ();
+	#include "smile.h"
 int
 main ()
 {
-DSL_header::GetID ();
+RoundProbability
   ;
   return 0;
 }
@@ -6925,7 +6924,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -6938,57 +6937,67 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_lib_smile_DSL_header__GetID=yes
+  smile_info="found installed"
+
+
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-ac_cv_lib_smile_DSL_header__GetID=no
+flag=true
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_smile_DSL_header__GetID" >&5
-echo "${ECHO_T}$ac_cv_lib_smile_DSL_header__GetID" >&6
-if test $ac_cv_lib_smile_DSL_header__GetID = yes; then
-  smile_info=installed
-
-
-else
-  flag=true
-fi
-
+#  AC_CHECK_LIB([smile], [RoundProbability],
+#    [smile_info="found installed"
+#
+#             ],
+#    [flag=true])
   if $flag; then
     # we also can't have an empty if block...
     true
+    	smile_info=NONE; cat >>confdefs.h <<\_ACEOF
+#define NO_SMILE 1
+_ACEOF
 
   fi
 fi
-                              ## set SMILE_CFLAGS and SMILE_LIBS
-if test "x$SMILE_PREFIX" != "x"; then
 
-result=-I${SMILE_PREFIX}
+if test "x$smile_info" != "xNONE"; then
+  ## set SMILE_CFLAGS and SMILE_LIBS
+  if test "x$SMILE_PREFIX" != "x"; then
+
+result=$SMILE_PREFIX
 for p in include; do
-  if test -d "${SMILE_PREFIX}/$p"; then
-    result=-I${SMILE_PREFIX}/$p
+  if test -e "$SMILE_PREFIX/$p/"; then
+    result=$SMILE_PREFIX/$p
     break
   fi
 done
-SMILE_CFLAGS=$result
+SMILE_INCLUDE_DIR=$result
 
 
-result=-L${SMILE_PREFIX}
+result=$SMILE_PREFIX
 for p in lib; do
-  if test -d "${SMILE_PREFIX}/$p"; then
-    result=-L${SMILE_PREFIX}/$p
+  if test -e "$SMILE_PREFIX/$p/"; then
+    result=$SMILE_PREFIX/$p
     break
   fi
 done
-SMILE_LIBS=$result
+SMILE_LIB_DIR=$result
 
+    if test -f "$SMILE_LIB_DIR/libsmilexml.a"; then
+      cat >>confdefs.h <<\_ACEOF
+#define SMILEXML_LIB 1
+_ACEOF
+
+      SMILEXML_LIB="-lsmilexml"
+    fi
+    SMILE_CFLAGS="-I$SMILE_INCLUDE_DIR"
+    SMILE_LIBS="-L$SMILE_LIB_DIR"
+  fi
+  SMILE_LIBS="$SMILE_LIBS -lsmile $SMILEXML_LIB"
 fi
-SMILE_LIBS="$SMILE_LIBS -lsmile"
 
 
 
@@ -7008,10 +7017,17 @@ if test "${with_svm_light+set}" = set; then
 else
   with_svm_light=check
 fi;
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
 
 if test "x$with_svm_light" = "xno"; then
-  svm_light_info=NONE
-          cat >>confdefs.h <<\_ACEOF
+#  svm_light_info=NONE
+  true   # in case         svm_light_info=NONE; AC_DEFINE([NO_SVM_LIGHT], [1]) is not defined or is empty
+          svm_light_info=NONE; cat >>confdefs.h <<\_ACEOF
 #define NO_SVM_LIGHT 1
 _ACEOF
 
@@ -7019,42 +7035,32 @@ elif test "x$with_svm_light" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
 # That may not be necessary.
-  if echo with_svm_light | egrep -q '^extlib/'; then extlib=true; else extlib=false; fi
+#  if echo with_svm_light | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   svm_light_info=$with_svm_light
   qualify_path with_svm_light
 
           SVM_LIGHT_PREFIX=$with_svm_light
 else
-  # In AC_CHECK_LIB, the last argument is optional. If it is specified but is
+  # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
   # empty, however, we get a syntax error. But, we have to be careful,
   # because arguments to this macro may contain quotes, semicolons, etc.
   # So we work around it by always supplying a last argument.
   flag=false
-  echo "$as_me:$LINENO: checking for kernel in -lsvmlight" >&5
-echo $ECHO_N "checking for kernel in -lsvmlight... $ECHO_C" >&6
-if test "${ac_cv_lib_svmlight_kernel+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsvmlight  $LIBS"
+#  echo try link optimize_svm
+
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char kernel ();
+	#include <sys/types.h>
+	 #include "svm_common.h"
+	 #include "svm_learn.h"
 int
 main ()
 {
-kernel ();
+optimize_svm
   ;
   return 0;
 }
@@ -7081,63 +7087,519 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_lib_svmlight_kernel=yes
+  svm_light_info="found installed"
+
+
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-ac_cv_lib_svmlight_kernel=no
+flag=true
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_svmlight_kernel" >&5
-echo "${ECHO_T}$ac_cv_lib_svmlight_kernel" >&6
-if test $ac_cv_lib_svmlight_kernel = yes; then
-  svm_light_info=installed
-
-
-else
-  flag=true
-fi
-
+#  AC_CHECK_LIB([svmlight], [optimize_svm],
+#    [svm_light_info="found installed"
+#
+#             ],
+#    [flag=true])
   if $flag; then
     # we also can't have an empty if block...
     true
+    	svm_light_info=NONE; cat >>confdefs.h <<\_ACEOF
+#define NO_SVM_LIGHT 1
+_ACEOF
 
   fi
 fi
-                          ## set SVM_LIGHT_CFLAGS and SVM_LIGHT_LIBS
-if test "x$SVM_LIGHT_PREFIX" != "x"; then
 
-result=-I${SVM_LIGHT_PREFIX}
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+if test "x$svm_light_info" != "xNONE"; then
+  ## set SVM_LIGHT_CFLAGS and SVM_LIGHT_LIBS
+  if test "x$SVM_LIGHT_PREFIX" != "x"; then
+
+result=$SVM_LIGHT_PREFIX
 for p in include; do
-  if test -d "${SVM_LIGHT_PREFIX}/$p"; then
-    result=-I${SVM_LIGHT_PREFIX}/$p
+  if test -e "$SVM_LIGHT_PREFIX/$p/"; then
+    result=$SVM_LIGHT_PREFIX/$p
     break
   fi
 done
-SVM_LIGHT_CFLAGS=$result
+SVM_LIGHT_INCLUDE_DIR=$result
 
 
-result=-L${SVM_LIGHT_PREFIX}
+result=$SVM_LIGHT_PREFIX
 for p in lib; do
-  if test -d "${SVM_LIGHT_PREFIX}/$p"; then
-    result=-L${SVM_LIGHT_PREFIX}/$p
+  if test -e "$SVM_LIGHT_PREFIX/$p/"; then
+    result=$SVM_LIGHT_PREFIX/$p
     break
   fi
 done
-SVM_LIGHT_LIBS=$result
+SVM_LIGHT_LIB_DIR=$result
 
+    SVM_LIGHT_CFLAGS="-I$SVM_LIGHT_INCLUDE_DIR"
+    SVM_LIGHT_LIBS="-L$SVM_LIGHT_LIB_DIR"
+  fi
+  SVM_LIGHT_LIBS="$SVM_LIGHT_LIBS -lsvm"
 fi
-SVM_LIGHT_LIBS="$SVM_LIGHT_LIBS -lsvm"
 
 
 
 
 
-# Now define variables to be used to reference this library.
+## BOOST
+# If the user specifies a path, use it.
+# If not specified, check for it.
+# BOOST graph-mt lib is required.
+
+# Check whether --with-boost or --without-boost was given.
+if test "${with_boost+set}" = set; then
+  withval="$with_boost"
+
+fi;
+# $with_boost will either be a path or "no" or undefined
+if test "x$with_boost" = "xno"; then
+  with_boost_include=no
+  with_boost_lib=no
+else
+
+# Check whether --with-boost_include or --without-boost_include was given.
+if test "${with_boost_include+set}" = set; then
+  withval="$with_boost_include"
+
+else
+  # $with_boost_include will either be a path or "no"
+	if test "x$with_boost" = "x"; then with_boost_include=check; else with_boost_include=$with_boost; fi
+fi;
+
+# Check whether --with-boost_lib or --without-boost_lib was given.
+if test "${with_boost_lib+set}" = set; then
+  withval="$with_boost_lib"
+
+else
+  # $with_boost_lib will either be a path or "no"
+	if test "x$with_boost" = "x"; then with_boost_lib=check; else with_boost_lib=$with_boost; fi
+fi;
+  if test "x$with_boost_include" = "xno" -o "x$with_boost_lib" = "xno"; then
+    with_boost_include=no
+    with_boost_lib=no
+    with_boost=no
+  fi
+fi
+# cases:
+#   all are "no"
+#   with_boost=(path1), with_boost_include=(path2)|with_boost, with_boost_lib=(path3)|with_boost
+#   with_boost="", with_boost_include=(path2)|"check", with_boost_lib=(path3)|"check"
+
+if test "x$with_boost_lib" = "xno"; then
+#  boost_lib_info=NONE
+  true   # in case 	boost_lib_info=NONEl is not defined or is empty
+  	boost_lib_info=NONEl
+elif test "x$with_boost_lib" != "xcheck"; then
+# We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
+# if the user does not specify it. That way it is never undefined.
+# That may not be necessary.
+#  if echo with_boost_lib | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
+  boost_lib_info=$with_boost_lib
+  qualify_path with_boost_lib
+
+  	BOOST_LIB_DIR=$with_boost_lib                             	 boost_include_info=$with_boost_include
+else
+  # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
+  # empty, however, we get a syntax error. But, we have to be careful,
+  # because arguments to this macro may contain quotes, semicolons, etc.
+  # So we work around it by always supplying a last argument.
+  flag=false
+#  echo try link boost::detail::graph::read_graphviz
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+	#include "boost/graph/graphviz.hpp"
+int
+main ()
+{
+boost::detail::graph::read_graphviz
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  boost_lib_info="found installed"
+
+     	boost_include_info="found installed"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+flag=true
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+#  AC_CHECK_LIB([boost_graph-mt], [boost::detail::graph::read_graphviz],
+#    [boost_lib_info="found installed"
+#
+#     	boost_include_info="found installed"],
+#    [flag=true])
+  if $flag; then
+    # we also can't have an empty if block...
+    true
+    boost_lib_info=NONE
+  fi
+fi
+
+# cases:
+#   boost_include_info=boost_lib_info="found installed", BOOST_LIB_DIR=""
+#   boost_lib_info=BOOST_LIB_DIR=(path1), boost_include_info=(path2)
+#   boost_lib_info=NONE, don't care about any others
+if test "x$boost_lib_info" = "xNONE"; then
+  boost_include_info=NONE
+  boost_info=NONE
+else
+  ## set BOOST_CFLAGS and BOOST_LIBS
+  if test "x$BOOST_LIB_DIR" != "x"; then
+    # boost_lib_info and boost_include_info are paths
+
+result=$BOOST_LIB_DIR
+for p in lib; do
+  if test -e "$BOOST_LIB_DIR/$p/"; then
+    result=$BOOST_LIB_DIR/$p
+    break
+  fi
+done
+BOOST_LIB_DIR=$result
+
+    BOOST_LIBS="-L$BOOST_LIB_DIR"
+    # now look for the headers
+    qualify_path with_boost_include
+
+result=$with_boost_include
+for p in ..; do
+  if test -e "$with_boost_include/$p/boost/config.hpp"; then
+    result=$with_boost_include/$p
+    break
+  fi
+done
+BOOST_INCLUDE_DIR=$result
+
+    BOOST_CFLAGS="-I$BOOST_INCLUDE_DIR"
+  fi
+  BOOST_LIBS="$BOOST_LIBS -lboost_graph-mt"
+fi
+#AC_SUBST(BOOST_PREFIX)
+
+
+
+
+## READLINE
+# If the user specifies a path, use it.
+# If not specified, check for it.
+# If no readline, do not build OntoShell.
+
+# Check whether --with-readline or --without-readline was given.
+if test "${with_readline+set}" = set; then
+  withval="$with_readline"
+
+else
+  # $with_readline will either be a path or "no"
+	with_readline=check
+fi;
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+if test "x$with_readline" = "xno"; then
+#  readline_info=NONE
+  true   # in case 	readline_info=NONE is not defined or is empty
+  	readline_info=NONE
+elif test "x$with_readline" != "xcheck"; then
+# We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
+# if the user does not specify it. That way it is never undefined.
+# That may not be necessary.
+#  if echo with_readline | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
+  readline_info=$with_readline
+  qualify_path with_readline
+
+  	READLINE_CFLAGS=$with_readline
+else
+  # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
+  # empty, however, we get a syntax error. But, we have to be careful,
+  # because arguments to this macro may contain quotes, semicolons, etc.
+  # So we work around it by always supplying a last argument.
+  flag=false
+#  echo try link readline
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+	#include <stdio.h>
+	 #include "readline/readline.h"
+int
+main ()
+{
+readline
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  readline_info="found installed"
+
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+flag=true
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+#  AC_CHECK_LIB([readline], [readline],
+#    [readline_info="found installed"
+#
+#     	],
+#    [flag=true])
+  if $flag; then
+    # we also can't have an empty if block...
+    true
+    	readline_info=NONE
+  fi
+fi
+
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+if test "x$readline_info" != "xNONE"; then
+  ## set READLINE_CFLAGS and READLINE_LIBS
+  if test "x$READLINE_PREFIX" != "x"; then
+
+result=$READLINE_PREFIX
+for p in lib; do
+  if test -e "$READLINE_PREFIX/$p/"; then
+    result=$READLINE_PREFIX/$p
+    break
+  fi
+done
+READLINE_LIB_DIR=$result
+
+
+result=$READLINE_PREFIX
+for p in include; do
+  if test -e "$READLINE_PREFIX/$p/"; then
+    result=$READLINE_PREFIX/$p
+    break
+  fi
+done
+READLINE_INCLUDE_DIR=$result
+
+    READLINE_CFLAGS="-I$READLINE_INCLUDE_DIR"
+    READLINE_LIBS="-L$READLINE_LIB_DIR"
+  fi
+  READLINE_LIBS="$READLINE_LIBS -lreadline"
+fi
+
+
+
+
+
+## READLINE
+# If the user specifies a path, use it.
+# If not specified, check for it.
+# If no readline, do not build OntoShell.
+
+# Check whether --with-pthread or --without-pthread was given.
+if test "${with_pthread+set}" = set; then
+  withval="$with_pthread"
+
+else
+  # $with_pthread will either be a path or "no"
+	with_pthread=check
+fi;
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+if test "x$with_pthread" = "xno"; then
+#  pthread_info=NONE
+  true   # in case 	pthread_info=NONE is not defined or is empty
+  	pthread_info=NONE
+elif test "x$with_pthread" != "xcheck"; then
+# We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
+# if the user does not specify it. That way it is never undefined.
+# That may not be necessary.
+#  if echo with_pthread | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
+  pthread_info=$with_pthread
+  qualify_path with_pthread
+
+  	PTHREAD_CFLAGS=$with_pthread
+else
+  # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
+  # empty, however, we get a syntax error. But, we have to be careful,
+  # because arguments to this macro may contain quotes, semicolons, etc.
+  # So we work around it by always supplying a last argument.
+  flag=false
+#  echo try link pthread_create
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+	#include <stdio.h>
+	 #include "pthread.h"
+int
+main ()
+{
+pthread_create
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  pthread_info="found installed"
+
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+flag=true
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+#  AC_CHECK_LIB([pthread], [pthread_create],
+#    [pthread_info="found installed"
+#
+#     	],
+#    [flag=true])
+  if $flag; then
+    # we also can't have an empty if block...
+    true
+    	pthread_info=NONE
+  fi
+fi
+
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+if test "x$pthread_info" != "xNONE"; then
+  ## set PTHREAD_CFLAGS and PTHREAD_LIBS
+  if test "x$PTHREAD_PREFIX" != "x"; then
+
+result=$PTHREAD_PREFIX
+for p in lib; do
+  if test -e "$PTHREAD_PREFIX/$p/"; then
+    result=$PTHREAD_PREFIX/$p
+    break
+  fi
+done
+PTHREAD_LIB_DIR=$result
+
+
+result=$PTHREAD_PREFIX
+for p in include; do
+  if test -e "$PTHREAD_PREFIX/$p/"; then
+    result=$PTHREAD_PREFIX/$p
+    break
+  fi
+done
+PTHREAD_INCLUDE_DIR=$result
+
+    PTHREAD_CFLAGS="-I$PTHREAD_INCLUDE_DIR"
+    PTHREAD_LIBS="-L$PTHREAD_LIB_DIR"
+  fi
+  PTHREAD_LIBS="$PTHREAD_LIBS -lpthread"
+fi
+
+
+
+
+
+## Now define variables to be used to reference this library.
 sleipnirdocdir=$datadir/doc/
 
 SLEIPNIR_PREFIX=src
@@ -7153,7 +7615,126 @@ SLEIPNIR_LIBS="-L${SLEIPNIR_PREFIX} -lSleipnir"
 #set
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ac_config_files="$ac_config_files Makefile src/Makefile tools/Makefile tools/Answerer/Makefile tools/BNConverter/Makefile tools/BNCreator/Makefile tools/BNEvaluator/Makefile tools/BNFunc/Makefile tools/BNServer/Makefile tools/BNTester/Makefile tools/BNTruster/Makefile tools/BNUnraveler/Makefile tools/BNWeaver/Makefile tools/BNWrangler/Makefile tools/Cliquer/Makefile tools/Clusterer/Makefile tools/Clusters2Dab/Makefile tools/Combiner/Makefile tools/Contexter/Makefile tools/DChecker/Makefile tools/DSLConverter/Makefile tools/Dab2Dad/Makefile tools/Dat2Dab/Makefile tools/Dat2Graph/Makefile tools/Data2Bnt/Makefile tools/Data2DB/Makefile tools/Data2Features/Makefile tools/Data2Sql/Makefile tools/Data2Svm/Makefile tools/DataDumper/Makefile tools/Distancer/Makefile tools/Edges2Posteriors/Makefile tools/Explainer/Makefile tools/Funcaeologist/Makefile tools/Funcifier/Makefile tools/Funcographer/Makefile tools/Hubber/Makefile tools/KNNImputer/Makefile tools/MCluster/Makefile tools/MEFIT/Makefile tools/MIer/Makefile tools/Normalizer/Makefile tools/OntoShell/Makefile tools/Orthologer/Makefile tools/Overlapper/Makefile tools/Randomizer/Makefile tools/SVMer/Makefile tools/Seqs2Ngrams/Makefile tools/Txt2Bin/Makefile"
+ok=true
+
+#if test "x$smile_info" = "x"; then
+#  ok=false
+#cat << EOF
+#
+#SMILE NOT FOUND
+#To compile without SMILE, use --without-smile.
+#Otherwise use --with-smile=(path) to specify the location.
+#It is available as a binary distribution from http://genie.sis.pitt.edu/.
+#EOF
+#
+#fi
+#
+#if test "x$svm_light_info" = "x"; then
+#  ok=false
+#cat << EOF
+#
+#SVM LIGHT NOT FOUND
+#To compile without SVM Light, use --without-svm-light.
+#Otherwise use --with-svm-light=(path) to specify the location.
+#It is available from http://svmlight.joachims.org/.
+#EOF
+#
+#fi
+#
+##! or $boost_include_info
+#if test "x$boost_lib_info" = "x"; then
+#  ok=false
+#cat << EOF
+#
+#BOOST LIBRARY NOT FOUND
+#To compile without Boost, use --without-boost.
+#Otherwise use --with-boost=(path) to specify its location.
+#It is available at http://www.boost.org/.
+#Boost is required for BNServer.
+#EOF
+#
+#fi
+
+if test "x$prog_gengetopt_info" = "x"; then
+  ok=false
+cat << EOF
+
+GENGETOPT IS REQUIRED
+Please use --with-gengetopt=(path) to specify its location.
+EOF
+
+fi
+
+if ! $ok; then
+  echo ""
+  echo "Please correct the above errors before continuing."
+  exit 1
+fi
+
+
+
+# Check whether --with-tools or --without-tools was given.
+if test "${with_tools+set}" = set; then
+  withval="$with_tools"
+  if test "x$with_tools" = "xno"; then with_tools=false; else with_tools=true; fi
+else
+  with_tools=true
+fi;
+
+
+
+
+if $with_tools; then
+  WITH_TOOLS_TRUE=
+  WITH_TOOLS_FALSE='#'
+else
+  WITH_TOOLS_TRUE='#'
+  WITH_TOOLS_FALSE=
+fi
+
+
+
+if test "x$smile_info" != "xNONE"; then
+  WITH_SMILE_TOOLS_TRUE=
+  WITH_SMILE_TOOLS_FALSE='#'
+else
+  WITH_SMILE_TOOLS_TRUE='#'
+  WITH_SMILE_TOOLS_FALSE=
+fi
+
+
+
+if test "x$svm_light_info" != "xNONE"; then
+  WITH_SVM_TOOLS_TRUE=
+  WITH_SVM_TOOLS_FALSE='#'
+else
+  WITH_SVM_TOOLS_TRUE='#'
+  WITH_SVM_TOOLS_FALSE=
+fi
+
+
+
+if test "x$readline_info" != "xNONE"; then
+  WITH_READLINE_TOOLS_TRUE=
+  WITH_READLINE_TOOLS_FALSE='#'
+else
+  WITH_READLINE_TOOLS_TRUE='#'
+  WITH_READLINE_TOOLS_FALSE=
+fi
+
+
+
+if test "x$boost_info" != "xNONE"; then
+  WITH_BOOST_TOOLS_TRUE=
+  WITH_BOOST_TOOLS_FALSE='#'
+else
+  WITH_BOOST_TOOLS_TRUE='#'
+  WITH_BOOST_TOOLS_FALSE=
+fi
+
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ac_config_files="$ac_config_files Makefile src/Makefile tools/Makefile tools/Answerer/Makefile tools/Cliquer/Makefile tools/Clusterer/Makefile tools/Clusters2Dab/Makefile tools/Combiner/Makefile tools/DChecker/Makefile tools/Dat2Dab/Makefile tools/Dat2Graph/Makefile tools/Data2Bnt/Makefile tools/Data2Features/Makefile tools/Data2Sql/Makefile tools/DataDumper/Makefile tools/Distancer/Makefile tools/Explainer/Makefile tools/Funcaeologist/Makefile tools/Funcifier/Makefile tools/Funcographer/Makefile tools/Hubber/Makefile tools/KNNImputer/Makefile tools/MCluster/Makefile tools/MIer/Makefile tools/Normalizer/Makefile tools/Orthologer/Makefile tools/Overlapper/Makefile tools/Randomizer/Makefile tools/Seqs2Ngrams/Makefile tools/Txt2Bin/Makefile tools/BNConverter/Makefile tools/BNCreator/Makefile tools/BNEvaluator/Makefile tools/BNFunc/Makefile tools/BNTester/Makefile tools/BNTruster/Makefile tools/BNUnraveler/Makefile tools/BNWeaver/Makefile tools/BNWrangler/Makefile tools/Contexter/Makefile tools/Data2DB/Makefile tools/DSLConverter/Makefile tools/Dab2Dad/Makefile tools/Edges2Posteriors/Makefile tools/MEFIT/Makefile tools/Data2Svm/Makefile tools/SVMer/Makefile tools/OntoShell/Makefile tools/BNServer/Makefile"
+
 
 
 cat >confcache <<\_ACEOF
@@ -7282,6 +7863,41 @@ if test -z "${AMDEP_TRUE}" && test -z "${AMDEP_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"AMDEP\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"AMDEP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${WITH_TOOLS_TRUE}" && test -z "${WITH_TOOLS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"WITH_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"WITH_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${WITH_SMILE_TOOLS_TRUE}" && test -z "${WITH_SMILE_TOOLS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"WITH_SMILE_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"WITH_SMILE_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${WITH_SVM_TOOLS_TRUE}" && test -z "${WITH_SVM_TOOLS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"WITH_SVM_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"WITH_SVM_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${WITH_READLINE_TOOLS_TRUE}" && test -z "${WITH_READLINE_TOOLS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"WITH_READLINE_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"WITH_READLINE_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${WITH_BOOST_TOOLS_TRUE}" && test -z "${WITH_BOOST_TOOLS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"WITH_BOOST_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"WITH_BOOST_TOOLS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -7728,34 +8344,18 @@ do
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "tools/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
   "tools/Answerer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Answerer/Makefile" ;;
-  "tools/BNConverter/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNConverter/Makefile" ;;
-  "tools/BNCreator/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNCreator/Makefile" ;;
-  "tools/BNEvaluator/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNEvaluator/Makefile" ;;
-  "tools/BNFunc/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNFunc/Makefile" ;;
-  "tools/BNServer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNServer/Makefile" ;;
-  "tools/BNTester/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNTester/Makefile" ;;
-  "tools/BNTruster/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNTruster/Makefile" ;;
-  "tools/BNUnraveler/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNUnraveler/Makefile" ;;
-  "tools/BNWeaver/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNWeaver/Makefile" ;;
-  "tools/BNWrangler/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNWrangler/Makefile" ;;
   "tools/Cliquer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Cliquer/Makefile" ;;
   "tools/Clusterer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Clusterer/Makefile" ;;
   "tools/Clusters2Dab/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Clusters2Dab/Makefile" ;;
   "tools/Combiner/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Combiner/Makefile" ;;
-  "tools/Contexter/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Contexter/Makefile" ;;
   "tools/DChecker/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/DChecker/Makefile" ;;
-  "tools/DSLConverter/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/DSLConverter/Makefile" ;;
-  "tools/Dab2Dad/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Dab2Dad/Makefile" ;;
   "tools/Dat2Dab/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Dat2Dab/Makefile" ;;
   "tools/Dat2Graph/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Dat2Graph/Makefile" ;;
   "tools/Data2Bnt/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Data2Bnt/Makefile" ;;
-  "tools/Data2DB/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Data2DB/Makefile" ;;
   "tools/Data2Features/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Data2Features/Makefile" ;;
   "tools/Data2Sql/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Data2Sql/Makefile" ;;
-  "tools/Data2Svm/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Data2Svm/Makefile" ;;
   "tools/DataDumper/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/DataDumper/Makefile" ;;
   "tools/Distancer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Distancer/Makefile" ;;
-  "tools/Edges2Posteriors/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Edges2Posteriors/Makefile" ;;
   "tools/Explainer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Explainer/Makefile" ;;
   "tools/Funcaeologist/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Funcaeologist/Makefile" ;;
   "tools/Funcifier/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Funcifier/Makefile" ;;
@@ -7763,16 +8363,32 @@ do
   "tools/Hubber/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Hubber/Makefile" ;;
   "tools/KNNImputer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/KNNImputer/Makefile" ;;
   "tools/MCluster/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/MCluster/Makefile" ;;
-  "tools/MEFIT/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/MEFIT/Makefile" ;;
   "tools/MIer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/MIer/Makefile" ;;
   "tools/Normalizer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Normalizer/Makefile" ;;
-  "tools/OntoShell/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/OntoShell/Makefile" ;;
   "tools/Orthologer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Orthologer/Makefile" ;;
   "tools/Overlapper/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Overlapper/Makefile" ;;
   "tools/Randomizer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Randomizer/Makefile" ;;
-  "tools/SVMer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/SVMer/Makefile" ;;
   "tools/Seqs2Ngrams/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Seqs2Ngrams/Makefile" ;;
   "tools/Txt2Bin/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Txt2Bin/Makefile" ;;
+  "tools/BNConverter/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNConverter/Makefile" ;;
+  "tools/BNCreator/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNCreator/Makefile" ;;
+  "tools/BNEvaluator/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNEvaluator/Makefile" ;;
+  "tools/BNFunc/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNFunc/Makefile" ;;
+  "tools/BNTester/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNTester/Makefile" ;;
+  "tools/BNTruster/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNTruster/Makefile" ;;
+  "tools/BNUnraveler/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNUnraveler/Makefile" ;;
+  "tools/BNWeaver/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNWeaver/Makefile" ;;
+  "tools/BNWrangler/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNWrangler/Makefile" ;;
+  "tools/Contexter/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Contexter/Makefile" ;;
+  "tools/Data2DB/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Data2DB/Makefile" ;;
+  "tools/DSLConverter/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/DSLConverter/Makefile" ;;
+  "tools/Dab2Dad/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Dab2Dad/Makefile" ;;
+  "tools/Edges2Posteriors/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Edges2Posteriors/Makefile" ;;
+  "tools/MEFIT/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/MEFIT/Makefile" ;;
+  "tools/Data2Svm/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Data2Svm/Makefile" ;;
+  "tools/SVMer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/SVMer/Makefile" ;;
+  "tools/OntoShell/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/OntoShell/Makefile" ;;
+  "tools/BNServer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNServer/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
@@ -7895,7 +8511,7 @@ s,@ac_ct_CC@,$ac_ct_CC,;t t
 s,@CCDEPMODE@,$CCDEPMODE,;t t
 s,@RANLIB@,$RANLIB,;t t
 s,@ac_ct_RANLIB@,$ac_ct_RANLIB,;t t
-s,@CPP@,$CPP,;t t
+s,@CXXCPP@,$CXXCPP,;t t
 s,@EGREP@,$EGREP,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@POW_LIB@,$POW_LIB,;t t
@@ -7913,10 +8529,28 @@ s,@SMILE_LIBS@,$SMILE_LIBS,;t t
 s,@SVM_LIGHT_PREFIX@,$SVM_LIGHT_PREFIX,;t t
 s,@SVM_LIGHT_CFLAGS@,$SVM_LIGHT_CFLAGS,;t t
 s,@SVM_LIGHT_LIBS@,$SVM_LIGHT_LIBS,;t t
+s,@BOOST_CFLAGS@,$BOOST_CFLAGS,;t t
+s,@BOOST_LIBS@,$BOOST_LIBS,;t t
+s,@READLINE_PREFIX@,$READLINE_PREFIX,;t t
+s,@READLINE_CFLAGS@,$READLINE_CFLAGS,;t t
+s,@READLINE_LIBS@,$READLINE_LIBS,;t t
+s,@PTHREAD_PREFIX@,$PTHREAD_PREFIX,;t t
+s,@PTHREAD_CFLAGS@,$PTHREAD_CFLAGS,;t t
+s,@PTHREAD_LIBS@,$PTHREAD_LIBS,;t t
 s,@sleipnirdocdir@,$sleipnirdocdir,;t t
 s,@SLEIPNIR_PREFIX@,$SLEIPNIR_PREFIX,;t t
 s,@SLEIPNIR_CFLAGS@,$SLEIPNIR_CFLAGS,;t t
 s,@SLEIPNIR_LIBS@,$SLEIPNIR_LIBS,;t t
+s,@WITH_TOOLS_TRUE@,$WITH_TOOLS_TRUE,;t t
+s,@WITH_TOOLS_FALSE@,$WITH_TOOLS_FALSE,;t t
+s,@WITH_SMILE_TOOLS_TRUE@,$WITH_SMILE_TOOLS_TRUE,;t t
+s,@WITH_SMILE_TOOLS_FALSE@,$WITH_SMILE_TOOLS_FALSE,;t t
+s,@WITH_SVM_TOOLS_TRUE@,$WITH_SVM_TOOLS_TRUE,;t t
+s,@WITH_SVM_TOOLS_FALSE@,$WITH_SVM_TOOLS_FALSE,;t t
+s,@WITH_READLINE_TOOLS_TRUE@,$WITH_READLINE_TOOLS_TRUE,;t t
+s,@WITH_READLINE_TOOLS_FALSE@,$WITH_READLINE_TOOLS_FALSE,;t t
+s,@WITH_BOOST_TOOLS_TRUE@,$WITH_BOOST_TOOLS_TRUE,;t t
+s,@WITH_BOOST_TOOLS_FALSE@,$WITH_BOOST_TOOLS_FALSE,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
 
@@ -8398,69 +9032,63 @@ fi
 
 # Print out a summary.
 echo ""
-echo "  log4cpp     = $log4cpp_info"
-echo "  SMILE       = $smile_info"
-echo "  SVM light   = $svm_light_info"
-echo ""
-echo "  gengetopt   = $prog_gengetopt_info"
+echo "  log4cpp        = $log4cpp_info"
+echo "  SMILE          = $smile_info"
+echo "  SVM light      = $svm_light_info"
+echo "  boost libs     = $boost_lib_info"
+echo "  boost includes = $boost_include_info"
+echo "  readline       = $readline_info"
+echo "  gengetopt      = $prog_gengetopt_info"
 
-ok=true
+# Print these warnings here, so that they are at the end.
 
-if test "x$log4cpp_info" = "xstub"; then
+# if stub there might be additional info, so use grep
+if echo $log4cpp_info | $GREP -q stub; then
   cat << EOF
 
 Using a simple replacement stub for log4cpp.
-If this is insufficient rerun configure with --with-log4cpp.
+If this is insufficient rerun configure with --with-log4cpp=(path).
 EOF
 fi
 
-if test "x$smile_info" = "x"; then
-  ok=false
-cat << EOF
-
-SMILE NOT FOUND
-To compile without SMILE, use --without-smile.
-Otherwise use --with-smile=(path) to specify the location.
-It is available as a binary distribution from http://genie.sis.pitt.edu/.
-EOF
-
-elif echo $smile_info | grep -q "NONE"; then
+if test "x$smile_info" = "xNONE"; then
 cat << EOF
 
 BUILDING WITHOUT SMILE
 SMILE is strongly recommended.
 Bayes net functionality will be missing.
-It is available as a binary distribution from http://genie.sis.pitt.edu/.
+SMILE is available as a binary distribution from http://genie.sis.pitt.edu/.
 EOF
-
 fi
 
-if test "x$svm_light_info" = "x"; then
-  ok=false
-cat << EOF
-
-SVM LIGHT NOT FOUND
-To compile without SVM Light, use --without-svm-light.
-Otherwise use --with-svm-light=(path) to specify the location.
-It is available from http://svmlight.joachims.org/.
-EOF
-
-elif echo $svm_light_info | grep -q "NONE"; then
+if test "x$svm_light_info" = "xNONE"; then
 cat << EOF
 
 BUILDING WITHOUT SVM LIGHT
 SVM light is strongly recommended.
 It is available from http://svmlight.joachims.org/.
 EOF
-
 fi
 
-if $ok; then
-  echo ""
-  echo "Now run make."
-else
-  echo ""
-  echo "Please correct the above errors before continuing."
+if test "x$readline_info" = "xNONE"; then
+cat << EOF
+
+BUILDING WITHOUT READLINE
+OntoShell will not be made.
+EOF
 fi
+
+if test "x$boost_info" = "xNONE"; then
+cat << EOF
+
+BUILDING WITHOUT BOOST
+BNServer will not be made.
+Boost is available from http://boost.org/.
+EOF
+fi
+
+
+echo ""
+echo "Now run make."
 
 #set
