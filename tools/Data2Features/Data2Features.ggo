@@ -2,18 +2,31 @@ package	"Data2Features"
 version	"1.0"
 purpose	"Data transformation to feature sets for machine learning"
 
-option	"positives"		p	"Positive gene list"	string	typestr="filename"
-option	"negatives"		n	"Negative gene list"	string	typestr="filename"	yes
-option	"environment"	e	"List of environment features and default values"	string	typestr="filename"	yes
-option	"data"			d	"Feature values for each data set"	string	typestr="filename"	yes
-option	"genome"		g	"SGD features file"	string	typestr="filename"
+option	"positives"		p	"Positive gene list"
+							string	typestr="filename"
+option	"negatives"		n	"Negative gene list"
+							string	typestr="filename"	yes
+option	"environment"	e	"List of environment features and default values"
+							string	typestr="filename"	yes
+option	"data"			d	"Feature values for each data set"
+							string	typestr="filename"	yes
 
-section "PCL processing"
-option	"memmap"		m	"Memory map input DABs"	flag	off
-option	"skip"			S	"PCL columns to skip after ID"	int	default="2"
-option	"distance"		D	"Distance measure"	values="pearson","euclidean","kendalls","kolm-smir","spearman","pearnorm","hypergeom","innerprod","bininnerprod","quickpear","mi"	default="pearnorm"
-option	"normalize"		N	"Normalize distances"	flag	off
-option	"zscore"		Z	"Convert correlations to z-scores"	flag	on
+option	"genome"		g	"SGD features file"
+							string	typestr="filename"
+
+section "PCL Processing"
+option	"distance"		D	"Similarity measure"
+							values="pearson","euclidean","kendalls","kolm-smir","spearman","pearnorm",
+							"hypergeom","innerprod","bininnerprod","quickpear","mi"	default="pearnorm"
+option	"normalize"		N	"Normalize distances"
+							flag	off
+option	"zscore"		Z	"Convert correlations to z-scores"
+							flag	on
+option	"skip"			S	"PCL columns to skip after ID"
+							int	default="2"
 
 section "Optional"
-option	"verbosity"		v	"Message verbosity"	int	default="5"
+option	"memmap"		m	"Memory map input DABs"
+							flag	off
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

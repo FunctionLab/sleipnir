@@ -2,11 +2,20 @@ package	"Seqs2Ngrams"
 version	"1.0"
 purpose	"Convert sequence data to n-gram counts"
 
+option	"input"		i	"Sequence input file"
+						string	typestr="filename"
+option	"output"	o	"DAT/DAB output file"
+						string	typestr="filename"
+option	"n"			n	"N-gram size"
+						int	default="8"
+
+option	"normalize"	m	"Normalize to the range [0,1]"
+						flag	off
+option	"zscore"	z	"Convert values to z-scores"
+						flag	off
+option	"genes"		g	"Gene inclusion file"
+						string	typestr="filename"
+
 section "Optional"
-option	"input"		i	"Sequence input file"	string	typestr="filename"
-option	"output"	o	"DAB output file"	string	typestr="filename"
-option	"n"			n	"N-gram size"	int	default="8"
-option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
-option	"normalize"	m	"Normalize to the range [0,1]"	flag	off
-option	"zscore"	z	"Convert values to z-scores"	flag	off
-option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"

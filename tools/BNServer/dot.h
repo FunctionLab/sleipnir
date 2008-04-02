@@ -12,7 +12,7 @@ public:
 		delete m_pProperties; }
 
 	bool Open( const char* );
-	bool Save( ostream&, const vector<bool>&, size_t ) const;
+	bool Save( ostream&, const std::vector<bool>&, size_t ) const;
 
 private:
 	typedef boost::property<boost::vertex_name_t, string, boost::property<boost::vertex_index1_t, string,
@@ -32,7 +32,7 @@ private:
 	static const float	c_dScale;
 
 	bool SaveEdge( ostream&, const TEdge& ) const;
-	bool SaveVertex( ostream&, const TVertex&, const vector<bool>& ) const;
+	bool SaveVertex( ostream&, const TVertex&, const std::vector<bool>& ) const;
 
 	const CDat&					m_Dat;
 	TGraph						m_Graph;

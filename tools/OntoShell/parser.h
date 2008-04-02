@@ -25,7 +25,7 @@ public:
 
 	static const char* GetCommand( size_t );
 
-	CParser( const IOntology**, const CGenome& );
+	CParser( const Sleipnir::IOntology**, const Sleipnir::CGenome& );
 
 	size_t GetOntologies( ) const;
 	const IOntology* GetOntology( size_t ) const;
@@ -34,16 +34,16 @@ public:
 protected:
 	typedef set<const CGene*>	TSetPGenes;
 
-	static bool SplitLocation( const string&, vector<string>& );
+	static bool SplitLocation( const string&, std::vector<string>& );
 	static bool IsRooted( const string& );
-	static SLocation GetLocation( const vector<const IOntology*>&, const string& = c_szDot,
+	static SLocation GetLocation( const std::vector<const Sleipnir::IOntology*>&, const string& = c_szDot,
 		bool = true, const SLocation* = NULL );
-	static bool MoveLocation( SLocation&, const string&, const vector<const IOntology*>& );
-	static void CollectGenes( const vector<SLocation>&, TSetPGenes& );
+	static bool MoveLocation( SLocation&, const string&, const std::vector<const Sleipnir::IOntology*>& );
+	static void CollectGenes( const std::vector<SLocation>&, TSetPGenes& );
 
-	bool Recurse( SLocation, bool, bool, vector<SLocation>& ) const;
-	void TermFinder( const CGenes&, float, const CGenes&, bool, bool, bool, vector<size_t>&,
-		vector<STermFound>& ) const;
+	bool Recurse( SLocation, bool, bool, std::vector<SLocation>& ) const;
+	void TermFinder( const Sleipnir::CGenes&, float, const Sleipnir::CGenes&, bool, bool, bool,
+		std::vector<size_t>&, std::vector<Sleipnir::STermFound>& ) const;
 
 	const CGenome&				m_Genome;
 	vector<const IOntology*>	m_vecpOntologies;

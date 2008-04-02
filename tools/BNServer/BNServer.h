@@ -5,20 +5,21 @@ class CDot;
 
 class CBNServer : public IServerClient {
 public:
-	static bool Get( size_t, size_t, float*, const CDatabase&, const vector<CBayesNetMinimal>&,
-		const CBayesNetMinimal& );
+	static bool Get( size_t, size_t, float*, const Sleipnir::CDatabase&,
+		const std::vector<Sleipnir::CBayesNetMinimal>&, const Sleipnir::CBayesNetMinimal& );
 
-	CBNServer( const CBayesNetMinimal&, const vector<CBayesNetMinimal>&, const CCompactFullMatrix&, SOCKET,
-		const CDatabase&, const string&, const char*, const char*, const CDataMatrix&, const CGenome&,
-		const IOntology**, const vector<vector<size_t> >& );
+	CBNServer( const Sleipnir::CBayesNetMinimal&, const std::vector<Sleipnir::CBayesNetMinimal>&,
+		const Sleipnir::CCompactFullMatrix&, SOCKET, const Sleipnir::CDatabase&, const string&,
+		const char*, const char*, const Sleipnir::CDataMatrix&, const Sleipnir::CGenome&,
+		const Sleipnir::IOntology**, const std::vector<std::vector<size_t> >& );
 	~CBNServer( );
 
 	IServerClient* NewInstance( SOCKET, uint32_t, uint16_t );
 	void Destroy( );
-	bool ProcessMessage( const vector<unsigned char>& );
+	bool ProcessMessage( const std::vector<unsigned char>& );
 
 private:
-	typedef size_t (CBNServer::*TPFNProcessor)( const vector<unsigned char>&, size_t );
+	typedef size_t (CBNServer::*TPFNProcessor)( const std::vector<unsigned char>&, size_t );
 
 	static const size_t			c_iDegree			= 1;
 	static const TPFNProcessor	c_apfnProcessors[];
@@ -28,23 +29,24 @@ private:
 	static const float			c_adColorMax[];
 
 	bool Get( size_t, size_t, float* = NULL );
-	bool Get( size_t, const vector<size_t>&, size_t, float* );
-	bool GetContext( size_t, const vector<unsigned char>&, size_t );
-	bool GetDisease( size_t, size_t, const vector<unsigned char>&, size_t );
-	bool GraphCreate( const vector<size_t>&, size_t, size_t, vector<bool>&, vector<size_t>&, CDat& ) const;
-	bool GraphWrite( const CDat&, const vector<size_t>&, const vector<size_t>&, const vector<bool>&,
-		size_t, bool ) const;
-	bool SelectNeighborsPixie( const vector<size_t>&, const vector<bool>&, size_t, size_t, const CDataMatrix&,
-		vector<size_t>& ) const;
-	bool SelectNeighborsRatio( const vector<size_t>&, const vector<bool>&, size_t, size_t, const CDataMatrix&,
-		vector<size_t>& ) const;
-	bool SendGenes( const vector<size_t>&, const vector<size_t>& ) const;
-	size_t ProcessInference( const vector<unsigned char>&, size_t );
-	size_t ProcessData( const vector<unsigned char>&, size_t );
-	size_t ProcessGraph( const vector<unsigned char>&, size_t );
-	size_t ProcessContexts( const vector<unsigned char>&, size_t );
-	size_t ProcessTermFinder( const vector<unsigned char>&, size_t );
-	size_t ProcessDiseases( const vector<unsigned char>&, size_t );
+	bool Get( size_t, const std::vector<size_t>&, size_t, float* );
+	bool GetContext( size_t, const std::vector<unsigned char>&, size_t );
+	bool GetDisease( size_t, size_t, const std::vector<unsigned char>&, size_t );
+	bool GraphCreate( const std::vector<size_t>&, size_t, size_t, std::vector<bool>&, std::vector<size_t>&,
+		Sleipnir::CDat& ) const;
+	bool GraphWrite( const Sleipnir::CDat&, const std::vector<size_t>&, const std::vector<size_t>&,
+		const std::vector<bool>&, size_t, bool ) const;
+	bool SelectNeighborsPixie( const std::vector<size_t>&, const std::vector<bool>&, size_t, size_t,
+		const Sleipnir::CDataMatrix&, std::vector<size_t>& ) const;
+	bool SelectNeighborsRatio( const std::vector<size_t>&, const std::vector<bool>&, size_t, size_t,
+		const Sleipnir::CDataMatrix&, std::vector<size_t>& ) const;
+	bool SendGenes( const std::vector<size_t>&, const std::vector<size_t>& ) const;
+	size_t ProcessInference( const std::vector<unsigned char>&, size_t );
+	size_t ProcessData( const std::vector<unsigned char>&, size_t );
+	size_t ProcessGraph( const std::vector<unsigned char>&, size_t );
+	size_t ProcessContexts( const std::vector<unsigned char>&, size_t );
+	size_t ProcessTermFinder( const std::vector<unsigned char>&, size_t );
+	size_t ProcessDiseases( const std::vector<unsigned char>&, size_t );
 
 	size_t GetGenes( ) const {
 

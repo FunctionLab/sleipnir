@@ -92,7 +92,7 @@
  * aging.xdsl
  * ...
  * \endcode
- * Note that \u every non-alphanumeric character must be replaced with an underscore.  You should also have
+ * Note that \e every non-alphanumeric character must be replaced with an underscore.  You should also have
  * one more non-context-specific, global Bayesian network containing the "default" probabilities to be
  * used outside of a specific context.  This can be generated with \ref BNWeaver or, better yet,
  * \ref BNCreator.  Call that file \c default.xdsl.

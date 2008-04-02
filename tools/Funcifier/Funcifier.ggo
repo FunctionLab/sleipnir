@@ -2,11 +2,18 @@ package	"Funcifier"
 version	"1.0"
 purpose	"Function interaction network builder"
 
-option	"input"			i	"Input interaction network"	string	typestr="filename"	yes
-option	"output"		o	"Output function network"	string	typestr="filename"	yes
+option	"input"			i	"Input interaction network"
+							string	typestr="filename"	yes
+option	"output"		o	"Output function network"
+							string	typestr="filename"	yes
+
+option	"shared"		s	"Determine shared gene handling"
+							values="ignore","discard","oneonly"	default="ignore"
+option	"colors"		l	"Function coherence output file"
+							string	typestr="filename"
 
 section "Optional"
-option	"colors"		l	"Function coherence output file"	string	typestr="filename"
-option	"memmap"		m	"Memory map input"	flag	off
-option	"verbosity"		v	"Message verbosity"	int	default="5"
-option	"shared"		s	"Determine shared gene handling"	values="ignore","discard","oneonly"	default="ignore"
+option	"memmap"		m	"Memory map input"
+							flag	off
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

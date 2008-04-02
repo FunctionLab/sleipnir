@@ -2,13 +2,26 @@ package	"MIer"
 version	"1.0"
 purpose	"Data set pairwise mutual information calculator."
 
+option	"distance"	d	"Similarity measure"
+						values="pearson","quickpear","euclidean","kendalls","kolm-smir",
+						"hypergeom","innerprod","bininnerprod","mi"	default="mi"
+
+section "Network Features"
+option	"zero"		z	"Zero missing values"
+						flag	off
+option	"zeros"		Z	"Read zeroed node IDs/outputs from the given file"
+						string	typestr="filename"
+option	"randomize"	R	"Assign missing values randomly"
+						flag	on
+
 section "Optional"
-option	"table"		t	"Format output as a 2D table"	flag	on
-option	"memmap"	m	"Memory map input/output"	flag	off
-option	"zero"		z	"Zero missing values"	flag	off
-option	"zeros"		Z	"Read zeroed node IDs/outputs from the given file"	string	typestr="filename"
-option	"distance"	d	"Distance measure"	values="pearson","quickpear","euclidean","kendalls","kolm-smir","hypergeom","innerprod","bininnerprod","mi"	default="mi"
-option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"only"		y	"Process only the given input file"	int	default="-1"
-option	"random"	r	"Seed random generator"	int	default="0"
-option	"randomize"	R	"Assign missing values randomly"	flag	off
+option	"table"		t	"Format output as a 2D table"
+						flag	on
+option	"only"		y	"Process only the given input file"
+						int	default="-1"
+option	"memmap"	m	"Memory map input/output"
+						flag	off
+option	"random"	r	"Seed random generator"
+						int	default="0"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"

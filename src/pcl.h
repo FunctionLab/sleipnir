@@ -2,7 +2,7 @@
 #define PCL_H
 
 #include <algorithm>
-#include <iostream>
+#include <fstream>
 #include <string>
 
 #include "pcli.h"
@@ -123,7 +123,7 @@ public:
 	 * Save
 	 */
 	bool Open( const char* szFile, size_t iSkip ) {
-		ifstream	ifsm;
+		std::ifstream	ifsm;
 
 		ifsm.open( szFile );
 		return Open( ifsm, iSkip ); }
@@ -141,7 +141,7 @@ public:
 	 * \see
 	 * Save
 	 */
-	bool Open( istream& istm ) {
+	bool Open( std::istream& istm ) {
 
 		return Open( istm, GetSkip( ) ); }
 

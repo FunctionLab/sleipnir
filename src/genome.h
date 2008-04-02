@@ -1,6 +1,7 @@
 #ifndef GENOME_H
 #define GENOME_H
 
+#include <fstream>
 #include <string>
 
 #include "genomei.h"

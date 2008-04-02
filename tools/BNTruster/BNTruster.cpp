@@ -101,8 +101,7 @@ void* posteriorsOneDSL( void* pData ) {
 			else
 				dSum += d * vecdProbs[ i ]; }
 		if( !psData->m_fBins )
-			psData->m_vecdResults[ psData->m_pmapstriNodes->find( vecstrNodes[ iNode ] )->second ] =
-				dSum / BNSmile.GetValues( iNode ); }
+			psData->m_vecdResults[ psData->m_pmapstriNodes->find( vecstrNodes[ iNode ] )->second ] = dSum; }
 
 	return NULL; }
 

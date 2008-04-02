@@ -1,9 +1,13 @@
 package	"BNTruster"
 version	"1.0"
-purpose	"Bayes net data set trust evaluation"
+purpose	"Bayes net dataset functional activity evaluation"
 
 section "Optional"
-option	"type"		t	"Trust calculation type"	values="posteriors","sums","ratios"	default="posteriors"
-option	"bins"		b	"Output individual bins"	flag	off
-option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"threads"	d	"Number of simultaneous threads to use"	int	default="1"
+option	"type"		t	"Trust calculation type"
+						values="posteriors","sums","ratios"	default="posteriors"
+option	"bins"		b	"Output individual bins"
+						flag	off
+option	"threads"	d	"Number of simultaneous threads to use"
+						int	default="1"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"

@@ -118,10 +118,10 @@ struct Category {
 
 #endif // USE_LOG4CPP_STUB
 
-extern const char	c_szSleipnir[];
 #ifdef USE_LOG4CPP_STUB
 extern Category		g_CatSleipnir;
 #else // USE_LOG4CPP_STUB
+extern const char	c_szSleipnir[];
 extern Category&	g_CatSleipnir;
 #endif // USE_LOG4CPP_STUB
 

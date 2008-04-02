@@ -147,8 +147,9 @@
  * 
  * \subsection ssec_building_troubleshooting Troubleshooting
  * 
- * - When in doubt, link statically!  Dynamic linking may or may not work in a rational manner with the
- *	prerequisite libraries, particularly on Mac OS.
+ * - On Linux, when in doubt, link statically.  On Windows or Mac OS, when in doubt, link dynamically (e.g.
+ *	in Visual Studio, using the DLL runtime libraries).  Mac OS is not consistently able to link statically,
+ *	and the SMILE library will only link statically in release (not debug) mode on Windows.
  * - Choosing the correct version of <a href="http://genie.sis.pitt.edu/">SMILE</a> can be confusing; be
  *	sure you have a recent version that matches your build environment.  On Windows, this will be a version
  *	of Visual Studio (6.0 through 9.0, also known as 2008) or of gcc for cygwin.  On Linux/Mac OS, this will
@@ -199,18 +200,18 @@
  * \code
  * KNNImputer -i pza1.pcl -o pza1_imputed.pcl
  * \endcode
- * - Now, you could concatenate all four PCLs into one using \ref Combiner:
+ * - Now, you could concatenate all four PCLs into one using \ref Combiner :
  * \code
  * Combiner -o combined_imputed.pcl *_imputed.pcl
  * \endcode
  * - You could hierarchically cluster this combined file (or the individual files) to view with
- *	<a href="http://jtreeview.sourceforge.net/">Java TreeView</a> using \ref MCluster:
+ *	<a href="http://jtreeview.sourceforge.net/">Java TreeView</a> using \ref MCluster :
  * \code
  * MCluster -o combined_imputed.gtr -i combined_imputed.pcl > combined_imputed.cdt
  * \endcode
  * - If you were still concerned about the different references, you could cluster the microarrays in
  *	normalized correlation space instead.  First, generate normalized correlations for each file
- *	individually using \ref Distancer:
+ *	individually using \ref Distancer :
  * \code
  * Distancer -i pza1_imputed.pcl -o pza1_imputed.dab
  * \endcode
@@ -338,7 +339,7 @@ P GO:0048511         0     1     rhythmic process
  * YOR353C
  * \endcode
  * Suppose this is named \c cheeto_genes.txt.  We can test for functional enrichment among this gene set
- * across all three catalogs in \ref OntoShell:
+ * across all three catalogs in \ref OntoShell :
  * \code
 /> find -g -l cheeto_genes.txt 0.01
 KEGG:
@@ -386,7 +387,7 @@ MIPS:
  * boron transport	GO:0046713
  * \endcode
  * - Now, we'll turn these GO term IDs into gene sets by dumping the genes annotated to each term.  Create
- *	a directory named \c positives and run \ref BNFunc:
+ *	a directory named \c positives and run \ref BNFunc :
  * \code
  * BNFunc -o gene_ontology.obo -a gene_assocation.sgd -i GO_functional_slim.txt -d positives
  * \endcode
@@ -423,7 +424,7 @@ MIPS:
  *	interaction between each gene pair.  You can do all sorts of interesting analyses on this network,
  *	including visualizing portions of it using the <a href="http://function.princeton.edu/pixie">bioPIXIE</a>
  *	algorithm.  If you want to see what the portion of the network around your original genes of interest
- *	looks like, use \ref Dat2Graph:
+ *	looks like, use \ref Dat2Graph :
  * \code
  * Dat2Graph -i cheeto_network.dab -q cheeto_genes.txt -k 5 > cheeto_genes_subnetwork.dot
  * \endcode
@@ -432,7 +433,7 @@ MIPS:
  *	\image html cheeto_genes_subnetwork.png
  * - If you want to do follow-up analysis on the predicted interaction network, you can either use the
  *	Sleipnir library to build your own tools (see the \ref ssec_uses_library section below), or you can dump
- *	the network as text using \ref Dat2Dab:
+ *	the network as text using \ref Dat2Dab :
  * \code
  * Dat2Dab -i cheeto_network.dab -o cheeto_network.dat
  * \endcode
@@ -454,7 +455,7 @@ MIPS:
  *		< combined_imputed.pcl > combined_imputed_fr_predictions.cdt
  * \endcode
  * - Or you might like to find dense subgraphs (i.e. clusters) in the predicted functional network using
- *	\ref Cliquer:
+ *	\ref Cliquer :
  * \code
  * Cliquer -i cheeto_network.dab -r 3 -w 0.33 > cheeto_network_clusters.txt
  * \endcode
@@ -741,10 +742,10 @@ MIPS:
 
 namespace Sleipnir {
 
-const char	c_szSleipnir[]	= "Sleipnir";
 #ifdef USE_LOG4CPP_STUB
 Category	g_CatSleipnir;
 #else // USE_LOG4CPP_STUB
+const char	c_szSleipnir[]	= "Sleipnir";
 Category&	g_CatSleipnir	= Category::getInstance( c_szSleipnir );
 #endif // USE_LOG4CPP_STUB
 

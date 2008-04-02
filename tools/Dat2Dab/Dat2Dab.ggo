@@ -2,23 +2,49 @@ package	"Dat2Dab"
 version	"1.0"
 purpose	"Text/binary data file interconversion"
 
-option	"input"		i	"Input data file"	string	typestr="filename"
-option	"output"	o	"Output data file"	string	typestr="filename"
+option	"input"			i	"Input DAT/DAB file"
+							string	typestr="filename"
+option	"output"		o	"Output DAT/DAB file"
+							string	typestr="filename"
+
+section "Preprocessing"
+option	"flip"			f	"Calculate one minus values"
+							flag	off
+option	"normalize"		n	"Normalize to the range [0,1]"
+							flag	off
+option	"zscore"		z	"Convert values to z-scores"
+							flag	off
+option	"rank"			r	"Rank transform data"
+							flag	off
+
+section "Filtering"
+option	"genes"			g	"Process only genes from the given subset"
+							string	typestr="filename"
+option	"cutoff"		c	"Exclude edges below cutoff"
+							double
+option	"zero"			e	"Zero missing values"
+							flag	off
+option	"duplicates"	d	"Allow dissimilar duplicate values"
+							flag	off
+option	"genelist"		G	"Only list genes"
+							flag	off
+
+section "Lookups"
+option	"lookup1"		l	"First lookup gene"
+							string
+option	"lookup2"		L	"Second lookup gene"
+							string
+option	"lookups"		t	"Lookup gene set"
+							string	typestr="filename"
+
 section "Optional"
-option	"flip"		f	"Calculate one minus dat values"	flag	off
-option	"normalize"	n	"Normalize to the range [0,1]"	flag	off
-option	"zscore"	z	"Convert values to z-scores"	flag	off
-option	"genes"		g	"Process only genes from the given subset"	string	typestr="filename"
-option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
-option	"rank"		r	"Rank transform data"	flag	off
-option	"memmap"	m	"Memory map input/output"	flag	off
-option	"cutoff"	c	"Exclude edges below cutoff"	double
-option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"zero"		e	"Zero missing values"	flag	off
-option	"duplicates"	d	"Allow dissimilar duplicate values"	flag	off
-option	"lookup1"	l	"First lookup gene"	string
-option	"lookup2"	L	"Second lookup gene"	string
-option	"lookups"	t	"Lookup gene set"	string	typestr="filename"
-option	"remap"		p	"Gene name remapping file"	string	typestr="filename"
-option	"genelist"	G	"Only list genes"	flag	off
-option	"table"		b	"Produce table formatted output"	flag	off
+option	"remap"			p	"Gene name remapping file"
+							string	typestr="filename"
+option	"table"			b	"Produce table formatted output"
+							flag	off
+option	"skip"			s	"Columns to skip in input PCL"
+							int	default="2"
+option	"memmap"		m	"Memory map input/output"
+							flag	off
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

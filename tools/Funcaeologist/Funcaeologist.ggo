@@ -2,9 +2,13 @@ package	"Funcaeologist"
 version	"1.0"
 purpose	"Measures association of gene sets within a collection of networks"
 
-option	"genes"			g	"Gene set to investigate"	string	typestr="filename"
-option	"directory"		d	"DAB network file directory"	string	typestr="directory"	default="."
+option	"genes"			g	"Gene set to investigate"
+							string	typestr="filename"
+option	"directory"		d	"DAB network file directory"
+							string	typestr="directory"	default="."
 
 section "Optional"
-option	"memmap"		m	"Memory map input"	flag	off
-option	"verbosity"		v	"Message verbosity"	int	default="5"
+option	"memmap"		m	"Memory map input"
+							flag	off
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

@@ -2,25 +2,45 @@ package	"Data2Svm"
 version	"1.0"
 purpose	"SVM evaluation of data for GO term prediction"
 
-option	"input"		i	"Data set to analyze (PCL)"	string	typestr="filename"	yes
+option	"input"				i	"Data set to analyze (PCL)"
+								string	typestr="filename"	yes
+option	"model"				m	"SVM model file"
+								string	typestr="filename"
 
-section "Optional"
-option	"genes"		g	"List of positive genes"	string	typestr="filename"
-option	"genex"		G	"List of test genes"	string	typestr="filename"
-option	"model"		m	"SVM model file"	string	typestr="filename"
-option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
-option	"random"	r	"Seed random generator"	int	default="0"
-option	"normalize"	n	"Z-score normalize feature values"	flag	off
-option	"random_features"	z	"Randomize input features"	flag	off
-option	"random_output"		Z	"Randomize output values"	flag	off
-option	"heldout"	l	"Evaluate only test genes"	flag	off
+section "Learning/Evaluation"
+option	"genes"				g	"List of positive genes"
+								string	typestr="filename"
+option	"genex"				G	"List of test genes"
+								string	typestr="filename"
+option	"heldout"			l	"Evaluate only test genes"
+								flag	off
+option	"random_features"	z	"Randomize input features"
+								flag	off
+option	"random_output"		Z	"Randomize output values"
+								flag	off
 
 section "SVM"
-option	"cache"		e	"SVM cache size"	int	default="40"
-option	"kernel"	k	"SVM kernel function"	values="linear","poly","rbf"	default="linear"
-option	"tradeoff"	C	"Classification tradeoff"	float
-option	"gamma"		M	"RBF gamma"	float	default="1"
-option	"degree"	d	"Polynomial degree"	int	default="3"
-option	"alphas"	a	"SVM alphas file"	string	typestr="filename"
-option	"iterations"	t	"SVM iterations"	int	default="100000"
+option	"cache"				e	"SVM cache size"
+								int	default="40"
+option	"kernel"			k	"SVM kernel function"
+								values="linear","poly","rbf"	default="linear"
+option	"tradeoff"			C	"Classification tradeoff"
+								float
+option	"gamma"				M	"RBF gamma"
+								float	default="1"
+option	"degree"			d	"Polynomial degree"
+								int	default="3"
+option	"alphas"			a	"SVM alphas file"
+								string	typestr="filename"
+option	"iterations"		t	"SVM iterations"
+								int	default="100000"
+
+section "Optional"
+option	"normalize"			n	"Z-score normalize feature values"
+								flag	off
+option	"skip"				s	"Columns to skip in input PCL"
+								int	default="2"
+option	"random"			r	"Seed random generator"
+								int	default="0"
+option	"verbosity"			v	"Message verbosity"
+								int	default="5"

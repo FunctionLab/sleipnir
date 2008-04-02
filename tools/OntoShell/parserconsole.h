@@ -5,7 +5,7 @@
 
 class CParserConsole : public CParser {
 public:
-	CParserConsole( const IOntology**, const CGenome& );
+	CParserConsole( const Sleipnir::IOntology**, const Sleipnir::CGenome& );
 
 	bool ProcessLine( const char* );
 	SLocation GetLocation( const string& = c_szDot, bool = true ) const;
@@ -52,25 +52,27 @@ protected:
 	static const TPFnParser	c_apfnParsers[];
 	static const char*		c_aszHelps[];
 
-	static void PrintLink( const IOntology*, size_t, char, const SArgs& );
+	static void PrintLink( const Sleipnir::IOntology*, size_t, char, const SArgs& );
 	static void PrintNumber( size_t, size_t );
 	static void PrintSpaces( size_t );
-	static void PrintAnnotation( const IOntology*, size_t, const SArgs&,
-		const STermFound* = NULL );
+	static void PrintAnnotation( const Sleipnir::IOntology*, size_t, const SArgs&,
+		const Sleipnir::STermFound* = NULL );
 	static void PrintGloss( string, size_t, bool );
-	static void PrintGene( const CGene&, const SArgs& );
-	static void PrintGenes( const vector<const CGene*>&, size_t = 0, const CGenes* = NULL );
-	static size_t FormatGenes( const vector<const CGene*>&, vector<string>&, const CGenes* = NULL );
+	static void PrintGene( const Sleipnir::CGene&, const SArgs& );
+	static void PrintGenes( const std::vector<const Sleipnir::CGene*>&, size_t = 0,
+		const Sleipnir::CGenes* = NULL );
+	static size_t FormatGenes( const std::vector<const Sleipnir::CGene*>&, std::vector<string>&,
+		const Sleipnir::CGenes* = NULL );
 
-	bool ParseCat( const vector<string>& );
-	bool ParseCd( const vector<string>& );
-	bool ParseHelp( const vector<string>& );
-	bool ParseLs( const vector<string>& );
-	bool ParseFind( const vector<string>& );
+	bool ParseCat( const std::vector<string>& );
+	bool ParseCd( const std::vector<string>& );
+	bool ParseHelp( const std::vector<string>& );
+	bool ParseLs( const std::vector<string>& );
+	bool ParseFind( const std::vector<string>& );
 	bool ParseShell( const string& ) const;
-	void PrintOntology( const IOntology*, char ) const;
-	void PrintLocations( const vector<SLocation>&, const SArgs& ) const;
-	void PrintGenes( const vector<SLocation>&, const SArgs& ) const;
+	void PrintOntology( const Sleipnir::IOntology*, char ) const;
+	void PrintLocations( const std::vector<SLocation>&, const SArgs& ) const;
+	void PrintGenes( const std::vector<SLocation>&, const SArgs& ) const;
 
 	SLocation	m_sLocation;
 };

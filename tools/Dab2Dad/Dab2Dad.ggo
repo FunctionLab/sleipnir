@@ -3,21 +3,45 @@ version	"1.0"
 purpose	"Single/multiple data file interconversion"
 
 defgroup "input-output"
-groupoption	"input"		i	"Input dad file"	string	typestr="filename"	group="input-output"
-groupoption	"load"		a	"Persistent load dad file"	string	typestr="filename"	group="input-output"
-groupoption	"network"	n	"Input Bayesian network [x]dsl"	string	typestr="filename"	group="input-output"
+groupoption	"input"		i	"Input DAD file"
+							string	typestr="filename"	group="input-output"
+groupoption	"load"		a	"Persistent load DAD file"
+							string	typestr="filename"	group="input-output"
+groupoption	"network"	n	"Input Bayesian network (X)DSL"
+							string	typestr="filename"	group="input-output"
+
+option	"output"		o	"Output DAD file"
+							string	typestr="filename"
+option	"answers"		w	"Answer DAT/DAB file"
+							string	typestr="filename"
+option	"directory"		d	"Directory with DAB files"
+							string	typestr="directory"	default="."
+
+option	"everything"	e	"Include pairs without answers"
+							flag	off
+
+section "Learning/Evaluation"
+option	"genes"			g	"Gene inclusion file"
+							string	typestr="filename"
+option	"genex"			G	"Gene exclusion file"
+							string	typestr="filename"
+
+section "Lookups"
+option	"lookup1"		l	"First lookup gene"
+							string
+option	"lookup2"		L	"Second lookup gene"
+							string
+option	"lookups"		t	"Lookup gene set"
+							string	typestr="filename"
+option	"lookupp"		T	"Lookup pair set"
+							string	typestr="filename"
+option	"quantize"		q	"Discretize lookups"
+							flag	off
+
 section "Optional"
-option	"output"		o	"Output dad file"	string	typestr="filename"
-option	"answers"		w	"Answer dab file"	string	typestr="filename"
-option	"directory"		d	"Directory with dab files"	string	typestr="directory"	default="."
-option	"mask"			k	"Mask dab file"	string	typestr="filename"
-option	"verbosity"		v	"Message verbosity"	int	default="5"
-option	"genes"			g	"Gene inclusion file"	string	typestr="filename"
-option	"genex"			G	"Gene exclusion file"	string	typestr="filename"
-option	"everything"	e	"Include pairs without answers"	flag	off
-option	"memmap"		m	"Memory map input/output"	flag	off
-option	"quantize"		q	"Quantify lookups"	flag	off
-option	"lookup1"		l	"First lookup gene"	string
-option	"lookup2"		L	"Second lookup gene"	string
-option	"lookups"		t	"Lookup gene set"	string	typestr="filename"
-option	"lookupp"		T	"Lookup pair set"	string	typestr="filename"
+option	"mask"			k	"Mask dab file"
+							string	typestr="filename"
+option	"memmap"		m	"Memory map input/output"
+							flag	off
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

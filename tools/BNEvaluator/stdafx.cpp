@@ -30,7 +30,7 @@
  * 1.5	2.5	3.5	4.5
  * \endcode
  * Finally, we have a Bayesian network \c network.xdsl with reasonable parameters and the structure:
- * \image html "bn_evaluator.png"
+ * \image html bn_evaluator.png
  * Each of the three data nodes can take four values (to agree with our QUANT file), and the class node
  * \c FR is binary.
  * 

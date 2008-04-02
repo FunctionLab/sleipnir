@@ -2,7 +2,7 @@ package	"BNConverter"
 version	"1.0"
 purpose	"Bayes net training and testing"
 
-defgroup "Data" yes
+defgroup "data" yes
 groupoption	"datadir"	d	"Data directory"
 							string	typestr="directory"	group="data"
 groupoption	"dataset"	D	"Dataset DAD file"

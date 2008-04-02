@@ -2,13 +2,26 @@ package	"Cliquer"
 version	"1.0"
 purpose	"Find heavy subgraphs in a DAT graph"
 
+option	"input"			i	"Input DAT/DAB file"
+							string	typestr="filename"
+option	"subgraphs"		s	"Number of subgraphs to output"
+							int	default="100"
+option	"size"			S	"Size of subgraphs to find"
+							int	default="3"
+
+option	"heavy"			w	"Find generic heavy subgraphs"
+							double	default="0"
+option	"specificity"	r	"Minimum subgraph specificity"
+							double	default="25"
+
+section "Preprocessing"
+option	"knowns"		k	"Known interactions (DAT/DAB) to ignore"
+							string	typestr="filename"
+option	"normalize"		n	"Normalize input file"
+							flag	off
+
 section "Optional"
-option	"input"		i	"Input data file"	string	typestr="filename"
-option	"knowns"	k	"Known interactions (DAT) to ignore"	string	typestr="filename"
-option	"memmap"	m	"Memory map input"	flag	off
-option	"subgraphs"	s	"Number of subgraphs to output"	int	default="100"
-option	"size"		S	"Size of subgraphs to find"	int	default="3"
-option	"verbosity"	v	"Message verbosity"	int	default="5"
-option	"heavy"		w	"Find generic heavy subgraphs"	double	default="0"
-option	"normalize"	n	"Normalize input file"	flag	off
-option	"specificity"	r	"Minimum subgraph specificity"	double	default="25"
+option	"memmap"		m	"Memory map input"
+							flag	off
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

@@ -2,20 +2,34 @@ package	"Funcographer"
 version	"1.0"
 purpose	"Function and dataset interaction network builder"
 
-option	"functions"		f	"Function interaction DAB"	string	typestr="filename"	yes
-option	"datasets"		d	"Dataset interaction DAB"	string	typestr="filename"	yes
-option	"trusts"		t	"Trusts PCL"	string	typestr="filename"	yes
-option	"output"		o	"Merged network DAB"	string	typestr="filename"
+option	"functions"			f	"Function interaction DAB"
+								string	typestr="filename"	yes
+option	"datasets"			d	"Dataset interaction DAB"
+								string	typestr="filename"	yes
+option	"trusts"			t	"Trusts PCL"
+								string	typestr="filename"	yes
+option	"output"			o	"Merged network DAB"
+								string	typestr="filename"
+
+option	"adjust_data"		a	"Adjustment to dataset z-scores"
+								double	default="0"
 
 section "Subgraphs"
-option	"subgraphs"		n	"Number of function subgraphs to explore"	int	default="-1"
-option	"specificity"	r	"Minimum initial subgraph specificity ratio"	double	default="25"
-option	"heavy"			w	"Minimum final subgraph specificity fraction"	double	default="0"
-option	"size_functions"	z	"Minimum size of subgraphs"	int	default="0"
-option	"size_datasets"	Z	"Number of associated datasets to output"	int	default="10"
+option	"subgraphs"			n	"Number of function subgraphs to explore"
+								int	default="-1"
+option	"heavy"				w	"Minimum final subgraph specificity fraction"
+								double	default="0"
+option	"specificity"		r	"Minimum initial subgraph specificity ratio"
+								double	default="25"
+option	"size_functions"	z	"Minimum size of subgraphs"
+								int	default="0"
+option	"size_datasets"		Z	"Number of associated datasets to output"
+								int	default="10"
 
 section "Optional"
-option	"memmap"		m	"Memory map input"	flag	off
-option	"verbosity"		v	"Message verbosity"	int	default="5"
-option	"skip"			s	"Skip columns"	int	default="0"
-option	"adjust_data"	a	"Adjustment to dataset z-scores"	double	default="0"
+option	"skip"				s	"Skip columns"
+								int	default="0"
+option	"memmap"			m	"Memory map input"
+								flag	off
+option	"verbosity"			v	"Message verbosity"
+								int	default="5"

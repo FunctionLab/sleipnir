@@ -2,15 +2,30 @@ package	"Data2Bnt"
 version	"1.0"
 purpose	"BNT data file generation from data"
 
-option	"features"		f	"List of features (nodes) and default values"	string	typestr="filename"	yes
-option	"data"			d	"Feature values for each data set"	string	typestr="filename"	yes
-option	"quants"		q	"Quantization file for membership values"	string	typestr="filename"	yes
+option	"input"			i	"Positive gene list"
+							string	typestr="filename"
+option	"features"		f	"List of features (nodes) and default values"
+							string	typestr="filename"	yes
+option	"data"			d	"Feature values for each data set"
+							string	typestr="filename"	yes
+option	"quants"		q	"Quantization file for membership values"
+							string	typestr="filename"	yes
+
+option	"genome"		g	"SGD features file"
+							string	typestr="filename"
+option	"fraction"		p	"Fraction of genome to cover with default values"
+							double	default="1"
+
+section "Output Format"
+option	"sparse"		s	"Output sparse matrix"
+							flag	off
+option	"comments"		c	"Include informational comments"
+							flag	off
+option	"xrff"			x	"Generate XRFF formatted output"
+							flag	off
+option	"weights"		w	"Weight XRFF features"
+							flag	off
+
 section "Optional"
-option	"input"			i	"Positive gene list"	string	typestr="filename"
-option	"genome"		g	"SGD features file"	string	typestr="filename"
-option	"fraction"		p	"Fraction of genome to cover with default values"	double	default="1"
-option	"sparse"		s	"Output sparse matrix"	flag	off
-option	"verbosity"		v	"Message verbosity"	int	default="5"
-option	"comments"		c	"Include informational comments"	flag	off
-option	"xrff"			x	"Generate XRFF formatted output"	flag	off
-option	"weights"		w	"Weight XRFF features"	flag	off
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

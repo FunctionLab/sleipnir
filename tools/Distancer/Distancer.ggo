@@ -2,17 +2,38 @@ package	"Distancer"
 version	"1.0"
 purpose	"PCL gene-gene distance calculation tool."
 
+option	"input"			i	"Input PCL file"
+							string	typestr="filename"
+option	"output"		o	"Output DAT/DAB file"
+							string	typestr="filename"
+option	"distance"		d	"Similarity measure"
+							values="pearson","euclidean","kendalls","kolm-smir","spearman",
+							"pearnorm","hypergeom","innerprod","bininnerprod","quickpear",
+							"mi","relauc","pearsig"	default="pearnorm"
+
+option	"weights"		w	"Input weights file"
+							string	typestr="filename"
+option	"autocorrelate"	a	"Autocorrelate distances"
+							flag	off
+
+section "Preprocessing"
+option	"normalize"		n	"Normalize distances"
+							flag	off
+option	"zscore"		z	"Convert correlations to z-scores"
+							flag	on
+option	"flip"			f	"Calculate one minus values"
+							flag	off
+
+section "Filtering"
+option	"genes"			g	"Gene inclusion file"
+							string	typestr="filename"
+option	"cutoff"		e	"Remove scores below cutoff"
+							double
+
 section "Optional"
-option	"output"	o	"Output dab file"	string	typestr="filename"
-option	"distance"	d	"Distance measure"	values="pearson","euclidean","kendalls","kolm-smir","spearman","pearnorm","hypergeom","innerprod","bininnerprod","quickpear","mi","relauc","pearsig"	default="pearnorm"
-option	"skip"		s	"Columns to skip in input PCL"	int	default="2"
-option	"input"		i	"Input PCL file"	string	typestr="filename"
-option	"weights"	w	"Input weights file"	string	typestr="filename"
-option	"normalize"	n	"Normalize distances"	flag	off
-option	"autocorrelate"	a	"Autocorrelate distances"	flag	off
-option	"zscore"	z	"Convert correlations to z-scores"	flag	on
-option	"genes"		g	"Gene inclusion file"	string	typestr="filename"
-option	"cutoff"	e	"Remove scores below cutoff"	double
-option	"limit"		l	"Gene count limit for caching"	int	default="-1"
-option	"flip"		f	"Calculate one minus values"	flag	off
-option	"verbosity"	v	"Message verbosity"	int	default="5"
+option	"skip"			s	"Columns to skip in input PCL"
+							int	default="2"
+option	"limit"			l	"Gene count limit for caching"
+							int	default="-1"
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"
