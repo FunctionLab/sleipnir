@@ -19,8 +19,8 @@ using namespace std;
 
 #pragma warning(disable:4275)
 
-#include <history.h>
-#include <readline.h>
+#include <readline/history.h>
+#include <readline/readline.h>
 
 #include "annotation.h"
 #include "genome.h"

@@ -1,46 +1,61 @@
-SUBDIRS		= Answerer \
-		BNConverter \
-		BNCreator \
-		BNEvaluator \
-		BNFunc \
-		BNServer \
-		BNTester \
-		BNTruster \
-		BNUnraveler \
-		BNWeaver \
-		BNWrangler \
-		Cliquer \
-		Clusterer \
-		Clusters2Dab \
-		Combiner \
-		Contexter \
-		DChecker \
-		DSLConverter \
-		Dab2Dad \
-		Dat2Dab \
-		Dat2Graph \
-		Data2Bnt \
-		Data2DB \
-		Data2Features \
-		Data2Sql \
-		Data2Svm \
-		DataDumper \
-		Distancer \
-		Edges2Posteriors \
-		Explainer \
-		Funcaeologist \
-		Funcifier \
-		Funcographer \
-		Hubber \
-		KNNImputer \
-		MCluster \
-		MEFIT \
-		MIer \
-		Normalizer \
-		OntoShell \
-		Orthologer \
-		Overlapper \
-		Randomizer \
-		SVMer \
-		Seqs2Ngrams \
-		Txt2Bin
+if WITH_TOOLS
+  TOOLS_SUBDIRS = \
+          Answerer \
+	  Cliquer \
+	  Clusterer \
+	  Clusters2Dab \
+	  Combiner \
+	  DChecker \
+	  Dat2Dab \
+	  Dat2Graph \
+	  Data2Bnt \
+	  Data2Features \
+	  Data2Sql \
+	  DataDumper \
+	  Distancer \
+	  Explainer \
+	  Funcaeologist \
+	  Funcifier \
+	  Funcographer \
+	  Hubber \
+	  KNNImputer \
+	  MCluster \
+	  MIer \
+	  Normalizer \
+	  Orthologer \
+	  Overlapper \
+	  Randomizer \
+	  Seqs2Ngrams \
+	  Txt2Bin
+if WITH_SMILE_TOOLS
+    SMILE_TOOLS_SUBDIRS = \
+          BNConverter \
+	  BNCreator \
+	  BNEvaluator \
+	  BNFunc \
+	  BNTester \
+	  BNTruster \
+	  BNUnraveler \
+	  BNWeaver \
+	  BNWrangler \
+	  Contexter \
+	  Data2DB \
+	  DSLConverter \
+	  Dab2Dad \
+	  Edges2Posteriors \
+	  MEFIT
+if WITH_BOOST_TOOLS
+      BOOST_TOOLS_SUBDIRS = BNServer
+endif
+endif
+if WITH_SVM_TOOLS
+    SVM_TOOLS_SUBDIRS = \
+          Data2Svm \
+	  SVMer
+endif
+if WITH_READLINE_TOOLS
+    READLINE_TOOLS_SUBDIRS = OntoShell
+endif
+endif
+
+SUBDIRS = $(TOOLS_SUBDIRS) $(SMILE_TOOLS_SUBDIRS) $(BOOST_TOOLS_SUBDIRS) $(SVM_TOOLS_SUBDIRS) $(READLINE_TOOLS_SUBDIRS)
