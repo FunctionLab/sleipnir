@@ -5,8 +5,6 @@
 # g. Check that prefixes are dirs
 # h. Gengetopt, svm_light, boost, readline build directories
 # i. Additional logging?
-# j. without smile, svm_light end comments
-# k. gengetopt with binary
 
 AC_PREREQ(2.59)
 AC_INIT([libSleipnir], [0.9.0], [ogt@princeton.edu])
@@ -192,8 +190,8 @@ LOCAL_PATH_PROG([gengetopt], [gengetopt],
         [GENGETOPT_PREFIX=$prog_gengetopt_prefix; GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"],  dnl found
         [],                                                                                             dnl found installed
 	[],                                                                                             dnl found in with path
-	[],                                                                                             dnl not found
-        [])                                                                                             dnl requested without
+	[prog_gengetopt_info=NONE],                                                                     dnl not found
+        [prog_gengetopt_info=NONE])                                                                     dnl requested without
 ## set CFLAGS and LIBS
 if test "x$GENGETOPT_PREFIX" != "x"; then
   GENGETOPT_CFLAGS=$GENGETOPT_INCLUDES
@@ -321,52 +319,52 @@ AC_ARG_WITH([boost],
 	[AS_HELP_STRING([--with-boost=PATH], [prefix of boost installation, or:])])
 # $with_boost will either be a path or "no" or undefined
 if test "x$with_boost" = "xno"; then
-  with_boost_include=no
-  with_boost_lib=no
+  with_boost_includes=no
+  with_boost_libs=no
 else
-  AC_ARG_WITH([boost_include],
-  	[AS_HELP_STRING([--with-boost-include=PATH], [location of boost header files])],
-	[],   # $with_boost_include will either be a path or "no"
-	[if test "x$with_boost" = "x"; then with_boost_include=check; else with_boost_include=$with_boost; fi])
-  AC_ARG_WITH([boost_lib],
-	[AS_HELP_STRING([--with-boost-lib=PATH], [location of boost libraries])],
-	[],   # $with_boost_lib will either be a path or "no"
-	[if test "x$with_boost" = "x"; then with_boost_lib=check; else with_boost_lib=$with_boost; fi])
-  if test "x$with_boost_include" = "xno" -o "x$with_boost_lib" = "xno"; then
-    with_boost_include=no
-    with_boost_lib=no
+  AC_ARG_WITH([boost_includes],
+  	[AS_HELP_STRING([--with-boost-includes=PATH], [location of boost header files])],
+	[],   # $with_boost_includes will either be a path or "no"
+	[if test "x$with_boost" = "x"; then with_boost_includes=check; else with_boost_includes=$with_boost; fi])
+  AC_ARG_WITH([boost_libs],
+	[AS_HELP_STRING([--with-boost-libs=PATH], [location of boost libraries])],
+	[],   # $with_boost_libs will either be a path or "no"
+	[if test "x$with_boost" = "x"; then with_boost_libs=check; else with_boost_libs=$with_boost; fi])
+  if test "x$with_boost_includes" = "xno" -o "x$with_boost_libs" = "xno"; then
+    with_boost_includes=no
+    with_boost_libs=no
     with_boost=no
   fi
 fi
 # cases:
 #   all are "no"
-#   with_boost=(path1), with_boost_include=(path2)|with_boost, with_boost_lib=(path3)|with_boost
-#   with_boost="", with_boost_include=(path2)|"check", with_boost_lib=(path3)|"check"
-LOCAL_CHECK_LIB([boost_graph-mt], [boost_lib], [boost::detail::graph::read_graphviz],
-	[],                                                        dnl found
-	[boost_include_info="found installed"],                    dnl and found installed (boost_lib_info="found installed")
-	[BOOST_LIB_DIR=$with_boost_lib                             dnl and found in specified path (boost_lib_info=(path))
-	 boost_include_info=$with_boost_include],
-	[boost_lib_info=NONE],                                     dnl not found
-	[boost_lib_info=NONE]l,                                    dnl requested without
+#   with_boost=(path1), with_boost_includes=(path2)|with_boost, with_boost_libs=(path3)|with_boost
+#   with_boost="", with_boost_includes=(path2)|"check", with_boost_libs=(path3)|"check"
+LOCAL_CHECK_LIB([boost_graph-mt], [boost_libs], [boost::detail::graph::read_graphviz],
+	[],                                                         dnl found
+	[boost_includes_info="found installed"],                    dnl and found installed (boost_libs_info="found installed")
+	[BOOST_LIBS_DIR=$with_boost_libs                            dnl and found in specified path (boost_libs_info=(path))
+	 boost_includes_info=$with_boost_includes],
+	[boost_libs_info=NONE],                                     dnl not found
+	[boost_libs_info=NONE],                                     dnl requested without
 	[#include "boost/graph/graphviz.hpp"])
 # cases:
-#   boost_include_info=boost_lib_info="found installed", BOOST_LIB_DIR=""
-#   boost_lib_info=BOOST_LIB_DIR=(path1), boost_include_info=(path2)
-#   boost_lib_info=NONE, don't care about any others
-if test "x$boost_lib_info" = "xNONE"; then
-  boost_include_info=NONE
+#   boost_includes_info=boost_libs_info="found installed", BOOST_LIBS_DIR=""
+#   boost_libs_info=BOOST_LIBS_DIR=(path1), boost_includes_info=(path2)
+#   boost_libs_info=NONE, don't care about any others
+if test "x$boost_libs_info" = "xNONE"; then
+  boost_includes_info=NONE
   boost_info=NONE
 else
-  ## set BOOST_CFLAGS and BOOST_LIBS
-  if test "x$BOOST_LIB_DIR" != "x"; then
-    # boost_lib_info and boost_include_info are paths
-    LOCAL_CHECK_APPEND_PATHS([$BOOST_LIB_DIR], [lib], [], [BOOST_LIB_DIR])
-    BOOST_LIBS="-L$BOOST_LIB_DIR"
+  ## set BOOST_CFLAGS and BOOST_LIBSS
+  if test "x$BOOST_LIBS_DIR" != "x"; then
+    # boost_libs_info and boost_includes_info are paths
+    LOCAL_CHECK_APPEND_PATHS([$BOOST_LIBS_DIR], [lib], [], [BOOST_LIBS_DIR])
+    BOOST_LIBS="-L$BOOST_LIBS_DIR"
     # now look for the headers
-    qualify_path with_boost_include
-    LOCAL_CHECK_APPEND_PATHS([$with_boost_include], [..], [boost/config.hpp], [BOOST_INCLUDE_DIR])
-    BOOST_CFLAGS="-I$BOOST_INCLUDE_DIR"
+    qualify_path with_boost_includes
+    LOCAL_CHECK_APPEND_PATHS([$with_boost_includes], [..], [boost/config.hpp], [BOOST_INCLUDES_DIR])
+    BOOST_CFLAGS="-I$BOOST_INCLUDES_DIR"
   fi
   BOOST_LIBS="$BOOST_LIBS -lboost_graph-mt"
 fi
@@ -483,8 +481,8 @@ ok=true
 #
 #fi
 #
-##! or $boost_include_info
-#if test "x$boost_lib_info" = "x"; then
+##! or $boost_includes_info
+#if test "x$boost_libs_info" = "x"; then
 #  ok=false
 #cat << EOF
 #
@@ -525,6 +523,7 @@ AM_CONDITIONAL([WITH_SMILE_TOOLS], [test "x$smile_info" != "xNONE"])
 AM_CONDITIONAL([WITH_SVM_TOOLS], [test "x$svm_light_info" != "xNONE"])
 AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_info" != "xNONE"])
 AM_CONDITIONAL([WITH_BOOST_TOOLS], [test "x$boost_info" != "xNONE"])
+AM_CONDITIONAL([WITH_GENGETOPT], [test "x$prog_gengetopt_info" != "xNONE"])
 
 AC_CONFIG_FILES([Makefile \
                  src/Makefile \
@@ -582,11 +581,13 @@ AC_OUTPUT
 
 # Print out a summary.
 echo ""
+echo "Used for library and tools:"
 echo "  log4cpp        = $log4cpp_info"
 echo "  SMILE          = $smile_info"
 echo "  SVM light      = $svm_light_info"
-echo "  boost libs     = $boost_lib_info"
-echo "  boost includes = $boost_include_info"
+echo "Used for tools:"
+echo "  boost libs     = $boost_libs_info"
+echo "  boost includes = $boost_includes_info"
 echo "  readline       = $readline_info"
 echo "  gengetopt      = $prog_gengetopt_info"
 
@@ -594,7 +595,7 @@ echo "  gengetopt      = $prog_gengetopt_info"
 
 # if stub there might be additional info, so use grep
 if echo $log4cpp_info | $GREP -q stub; then
-  cat << EOF
+cat << EOF
 
 Using a simple replacement stub for log4cpp.
 If this is insufficient rerun configure with --with-log4cpp=(path).
@@ -620,23 +621,41 @@ It is available from http://svmlight.joachims.org/.
 EOF
 fi
 
-if test "x$readline_info" = "xNONE"; then
-cat << EOF
+if $with_tools; then
+  if test "x$prog_gengetopt_info" = "xNONE"; then
+  cat << EOF
+
+Gengetopt was not found. This is probably fine, but if any of the
+cmdline.c or cmdline.h files are missing or out of date, they
+will not be rebuilt.
+EOF
+  fi
+
+  if test "x$readline_info" = "xNONE"; then
+  cat << EOF
 
 BUILDING WITHOUT READLINE
 OntoShell will not be made.
 EOF
-fi
+  fi
 
-if test "x$boost_info" = "xNONE"; then
-cat << EOF
+  if test "x$boost_info" = "xNONE"; then
+  cat << EOF
 
 BUILDING WITHOUT BOOST
 BNServer will not be made.
 Boost is available from http://boost.org/.
 EOF
-fi
+  fi
 
+else
+
+  cat <<EOF
+
+Tools will not be made.
+EOF
+
+fi
 
 echo ""
 echo "Now run make."

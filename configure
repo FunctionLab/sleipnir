@@ -313,7 +313,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -870,9 +870,9 @@ Optional Packages:
   --with-smile=PATH       prefix of SMILE installation
   --with-svm-light=PATH   prefix of SVM Light installation
   --with-boost=PATH       prefix of boost installation, or:
-  --with-boost-include=PATH
+  --with-boost-includes=PATH
                           location of boost header files
-  --with-boost-lib=PATH   location of boost libraries
+  --with-boost-libs=PATH  location of boost libraries
   --with-readline=PATH    prefix of readline installation
   --with-pthread=PATH     prefix of pthread installation
   --without-tools         exclude tools and build lib only
@@ -6639,8 +6639,8 @@ fi;
 
 if test "x$with_gengetopt" = "xno"; then
 #  prog_gengetopt_info=NONE
-  true   # in case          isn't defined or is empty
-
+  true   # in case         prog_gengetopt_info=NONE isn't defined or is empty
+          prog_gengetopt_info=NONE
 elif test "x$with_gengetopt" != "xcheck"; then
 #  if echo with_gengetopt | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   prog_gengetopt_info=$with_gengetopt
@@ -6689,8 +6689,8 @@ echo "${ECHO_T}no" >&6
 fi
 
   if test "x$prog_gengetopt" = "x"; then
-    true   # in case 	 is not defined or is empty
-
+    true   # in case 	prog_gengetopt_info=NONE is not defined or is empty
+    	prog_gengetopt_info=NONE
   else
     prog_gengetopt_info="found installed"
     GENGETOPT_PREFIX=$prog_gengetopt_prefix; GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
@@ -6713,7 +6713,7 @@ echo X$prog_gengetopt |
   prog_gengetopt_prefix=$prog_gengetopt_dir/..     # assumes bin and include are at same level
 
 fi
-                                                                                             ## set CFLAGS and LIBS
+                                                                     ## set CFLAGS and LIBS
 if test "x$GENGETOPT_PREFIX" != "x"; then
   GENGETOPT_CFLAGS=$GENGETOPT_INCLUDES
   GENGETOPT_LIBS=
@@ -7164,51 +7164,51 @@ if test "${with_boost+set}" = set; then
 fi;
 # $with_boost will either be a path or "no" or undefined
 if test "x$with_boost" = "xno"; then
-  with_boost_include=no
-  with_boost_lib=no
+  with_boost_includes=no
+  with_boost_libs=no
 else
 
-# Check whether --with-boost_include or --without-boost_include was given.
-if test "${with_boost_include+set}" = set; then
-  withval="$with_boost_include"
+# Check whether --with-boost_includes or --without-boost_includes was given.
+if test "${with_boost_includes+set}" = set; then
+  withval="$with_boost_includes"
 
 else
-  # $with_boost_include will either be a path or "no"
-	if test "x$with_boost" = "x"; then with_boost_include=check; else with_boost_include=$with_boost; fi
+  # $with_boost_includes will either be a path or "no"
+	if test "x$with_boost" = "x"; then with_boost_includes=check; else with_boost_includes=$with_boost; fi
 fi;
 
-# Check whether --with-boost_lib or --without-boost_lib was given.
-if test "${with_boost_lib+set}" = set; then
-  withval="$with_boost_lib"
+# Check whether --with-boost_libs or --without-boost_libs was given.
+if test "${with_boost_libs+set}" = set; then
+  withval="$with_boost_libs"
 
 else
-  # $with_boost_lib will either be a path or "no"
-	if test "x$with_boost" = "x"; then with_boost_lib=check; else with_boost_lib=$with_boost; fi
+  # $with_boost_libs will either be a path or "no"
+	if test "x$with_boost" = "x"; then with_boost_libs=check; else with_boost_libs=$with_boost; fi
 fi;
-  if test "x$with_boost_include" = "xno" -o "x$with_boost_lib" = "xno"; then
-    with_boost_include=no
-    with_boost_lib=no
+  if test "x$with_boost_includes" = "xno" -o "x$with_boost_libs" = "xno"; then
+    with_boost_includes=no
+    with_boost_libs=no
     with_boost=no
   fi
 fi
 # cases:
 #   all are "no"
-#   with_boost=(path1), with_boost_include=(path2)|with_boost, with_boost_lib=(path3)|with_boost
-#   with_boost="", with_boost_include=(path2)|"check", with_boost_lib=(path3)|"check"
+#   with_boost=(path1), with_boost_includes=(path2)|with_boost, with_boost_libs=(path3)|with_boost
+#   with_boost="", with_boost_includes=(path2)|"check", with_boost_libs=(path3)|"check"
 
-if test "x$with_boost_lib" = "xno"; then
-#  boost_lib_info=NONE
-  true   # in case 	boost_lib_info=NONEl is not defined or is empty
-  	boost_lib_info=NONEl
-elif test "x$with_boost_lib" != "xcheck"; then
+if test "x$with_boost_libs" = "xno"; then
+#  boost_libs_info=NONE
+  true   # in case 	boost_libs_info=NONE is not defined or is empty
+  	boost_libs_info=NONE
+elif test "x$with_boost_libs" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
 # That may not be necessary.
-#  if echo with_boost_lib | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
-  boost_lib_info=$with_boost_lib
-  qualify_path with_boost_lib
+#  if echo with_boost_libs | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
+  boost_libs_info=$with_boost_libs
+  qualify_path with_boost_libs
 
-  	BOOST_LIB_DIR=$with_boost_lib                             	 boost_include_info=$with_boost_include
+  	BOOST_LIBS_DIR=$with_boost_libs                            	 boost_includes_info=$with_boost_includes
 else
   # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
   # empty, however, we get a syntax error. But, we have to be careful,
@@ -7253,9 +7253,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  boost_lib_info="found installed"
+  boost_libs_info="found installed"
 
-     	boost_include_info="found installed"
+     	boost_includes_info="found installed"
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
@@ -7265,52 +7265,52 @@ fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 #  AC_CHECK_LIB([boost_graph-mt], [boost::detail::graph::read_graphviz],
-#    [boost_lib_info="found installed"
+#    [boost_libs_info="found installed"
 #
-#     	boost_include_info="found installed"],
+#     	boost_includes_info="found installed"],
 #    [flag=true])
   if $flag; then
     # we also can't have an empty if block...
     true
-    boost_lib_info=NONE
+    boost_libs_info=NONE
   fi
 fi
 
 # cases:
-#   boost_include_info=boost_lib_info="found installed", BOOST_LIB_DIR=""
-#   boost_lib_info=BOOST_LIB_DIR=(path1), boost_include_info=(path2)
-#   boost_lib_info=NONE, don't care about any others
-if test "x$boost_lib_info" = "xNONE"; then
-  boost_include_info=NONE
+#   boost_includes_info=boost_libs_info="found installed", BOOST_LIBS_DIR=""
+#   boost_libs_info=BOOST_LIBS_DIR=(path1), boost_includes_info=(path2)
+#   boost_libs_info=NONE, don't care about any others
+if test "x$boost_libs_info" = "xNONE"; then
+  boost_includes_info=NONE
   boost_info=NONE
 else
-  ## set BOOST_CFLAGS and BOOST_LIBS
-  if test "x$BOOST_LIB_DIR" != "x"; then
-    # boost_lib_info and boost_include_info are paths
+  ## set BOOST_CFLAGS and BOOST_LIBSS
+  if test "x$BOOST_LIBS_DIR" != "x"; then
+    # boost_libs_info and boost_includes_info are paths
 
-result=$BOOST_LIB_DIR
+result=$BOOST_LIBS_DIR
 for p in lib; do
-  if test -e "$BOOST_LIB_DIR/$p/"; then
-    result=$BOOST_LIB_DIR/$p
+  if test -e "$BOOST_LIBS_DIR/$p/"; then
+    result=$BOOST_LIBS_DIR/$p
     break
   fi
 done
-BOOST_LIB_DIR=$result
+BOOST_LIBS_DIR=$result
 
-    BOOST_LIBS="-L$BOOST_LIB_DIR"
+    BOOST_LIBS="-L$BOOST_LIBS_DIR"
     # now look for the headers
-    qualify_path with_boost_include
+    qualify_path with_boost_includes
 
-result=$with_boost_include
+result=$with_boost_includes
 for p in ..; do
-  if test -e "$with_boost_include/$p/boost/config.hpp"; then
-    result=$with_boost_include/$p
+  if test -e "$with_boost_includes/$p/boost/config.hpp"; then
+    result=$with_boost_includes/$p
     break
   fi
 done
-BOOST_INCLUDE_DIR=$result
+BOOST_INCLUDES_DIR=$result
 
-    BOOST_CFLAGS="-I$BOOST_INCLUDE_DIR"
+    BOOST_CFLAGS="-I$BOOST_INCLUDES_DIR"
   fi
   BOOST_LIBS="$BOOST_LIBS -lboost_graph-mt"
 fi
@@ -7641,8 +7641,8 @@ ok=true
 #
 #fi
 #
-##! or $boost_include_info
-#if test "x$boost_lib_info" = "x"; then
+##! or $boost_includes_info
+#if test "x$boost_libs_info" = "x"; then
 #  ok=false
 #cat << EOF
 #
@@ -7730,6 +7730,16 @@ if test "x$boost_info" != "xNONE"; then
 else
   WITH_BOOST_TOOLS_TRUE='#'
   WITH_BOOST_TOOLS_FALSE=
+fi
+
+
+
+if test "x$prog_gengetopt_info" != "xNONE"; then
+  WITH_GENGETOPT_TRUE=
+  WITH_GENGETOPT_FALSE='#'
+else
+  WITH_GENGETOPT_TRUE='#'
+  WITH_GENGETOPT_FALSE=
 fi
 
 
@@ -7898,6 +7908,13 @@ if test -z "${WITH_BOOST_TOOLS_TRUE}" && test -z "${WITH_BOOST_TOOLS_FALSE}"; th
   { { echo "$as_me:$LINENO: error: conditional \"WITH_BOOST_TOOLS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"WITH_BOOST_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${WITH_GENGETOPT_TRUE}" && test -z "${WITH_GENGETOPT_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"WITH_GENGETOPT\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"WITH_GENGETOPT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -8551,6 +8568,8 @@ s,@WITH_READLINE_TOOLS_TRUE@,$WITH_READLINE_TOOLS_TRUE,;t t
 s,@WITH_READLINE_TOOLS_FALSE@,$WITH_READLINE_TOOLS_FALSE,;t t
 s,@WITH_BOOST_TOOLS_TRUE@,$WITH_BOOST_TOOLS_TRUE,;t t
 s,@WITH_BOOST_TOOLS_FALSE@,$WITH_BOOST_TOOLS_FALSE,;t t
+s,@WITH_GENGETOPT_TRUE@,$WITH_GENGETOPT_TRUE,;t t
+s,@WITH_GENGETOPT_FALSE@,$WITH_GENGETOPT_FALSE,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
 
@@ -9032,11 +9051,13 @@ fi
 
 # Print out a summary.
 echo ""
+echo "Used for library and tools:"
 echo "  log4cpp        = $log4cpp_info"
 echo "  SMILE          = $smile_info"
 echo "  SVM light      = $svm_light_info"
-echo "  boost libs     = $boost_lib_info"
-echo "  boost includes = $boost_include_info"
+echo "Used for tools:"
+echo "  boost libs     = $boost_libs_info"
+echo "  boost includes = $boost_includes_info"
 echo "  readline       = $readline_info"
 echo "  gengetopt      = $prog_gengetopt_info"
 
@@ -9044,7 +9065,7 @@ echo "  gengetopt      = $prog_gengetopt_info"
 
 # if stub there might be additional info, so use grep
 if echo $log4cpp_info | $GREP -q stub; then
-  cat << EOF
+cat << EOF
 
 Using a simple replacement stub for log4cpp.
 If this is insufficient rerun configure with --with-log4cpp=(path).
@@ -9070,23 +9091,41 @@ It is available from http://svmlight.joachims.org/.
 EOF
 fi
 
-if test "x$readline_info" = "xNONE"; then
-cat << EOF
+if $with_tools; then
+  if test "x$prog_gengetopt_info" = "xNONE"; then
+  cat << EOF
+
+Gengetopt was not found. This is probably fine, but if any of the
+cmdline.c or cmdline.h files are missing or out of date, they
+will not be rebuilt.
+EOF
+  fi
+
+  if test "x$readline_info" = "xNONE"; then
+  cat << EOF
 
 BUILDING WITHOUT READLINE
 OntoShell will not be made.
 EOF
-fi
+  fi
 
-if test "x$boost_info" = "xNONE"; then
-cat << EOF
+  if test "x$boost_info" = "xNONE"; then
+  cat << EOF
 
 BUILDING WITHOUT BOOST
 BNServer will not be made.
 Boost is available from http://boost.org/.
 EOF
-fi
+  fi
 
+else
+
+  cat <<EOF
+
+Tools will not be made.
+EOF
+
+fi
 
 echo ""
 echo "Now run make."
