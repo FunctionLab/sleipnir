@@ -2,13 +2,13 @@ package	"Funcographer"
 version	"1.0"
 purpose	"Function and dataset interaction network builder"
 
-option	"functions"			f	"Function interaction DAB"
-								string	typestr="filename"	yes
-option	"datasets"			d	"Dataset interaction DAB"
+option	"functions"			f	"Function association DAT/DAB"
 								string	typestr="filename"	yes
 option	"trusts"			t	"Trusts PCL"
 								string	typestr="filename"	yes
-option	"output"			o	"Merged network DAB"
+option	"datasets"			d	"Shared dataset activity DAT/DAB"
+								string	typestr="filename"	yes
+option	"output"			o	"Merged network DAT/DAB"
 								string	typestr="filename"
 
 option	"adjust_data"		a	"Adjustment to dataset z-scores"
@@ -18,7 +18,7 @@ section "Subgraphs"
 option	"subgraphs"			n	"Number of function subgraphs to explore"
 								int	default="-1"
 option	"heavy"				w	"Minimum final subgraph specificity fraction"
-								double	default="0"
+								double	default="0.5"
 option	"specificity"		r	"Minimum initial subgraph specificity ratio"
 								double	default="25"
 option	"size_functions"	z	"Minimum size of subgraphs"

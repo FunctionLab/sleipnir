@@ -4,15 +4,15 @@ purpose	"Bayes net evaluation from data"
 
 option	"input"			i	"Input (X)DSL file directory"
 							string	typestr="directory"	default="."
-option	"answers"		w	"Answer file"
-							string	typestr="filename"
-option	"output"		o	"Output directory"
-							string	typestr="directory"	default="."
 option	"directory"		d	"Data directory"
+							string	typestr="directory"	default="."
+option	"output"		o	"Output directory"
 							string	typestr="directory"	default="."
 
 option	"everything"	e	"Evaluate non-term pairs"
 							flag	on
+option	"answers"		w	"Answer file"
+							string	typestr="filename"
 
 section "Learning/Evaluation"
 option	"genes"			g	"Gene inclusion file"

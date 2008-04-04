@@ -40,11 +40,14 @@ int main( int iArgs, char** aszArgs ) {
 	CGene*				pTwo;
 	bool				fOne, fTwo;
 	string				strOne, strTwo;
+	int					iRet;
 
-	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) || ( sArgs.config_arg &&
-		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) ) {
+	iRet = cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 );
+	if( sArgs.config_arg )
+		iRet = cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) && iRet;
+	if( iRet ) {
 		cmdline_parser_print_help( );
-		return 1; }
+		return iRet; }
 	CMeta::Startup( sArgs.verbosity_arg );
 
 	if( !strcmp( c_szInclude, sArgs.unknowns_arg ) || !strcmp( c_szOnly, sArgs.unknowns_arg ) )
@@ -116,6 +119,7 @@ int main( int iArgs, char** aszArgs ) {
 	for( i = 0; i < iNumber; ++i ) {
 		const SDatum&	Datum	= vecsData[ i ];
 
+		pOne = pTwo = NULL;
 		strOne = Data.GetGene( Datum.m_iOne );
 		strTwo = Data.GetGene( Datum.m_iTwo );
 		if( Genome.GetGenes( ) ) {

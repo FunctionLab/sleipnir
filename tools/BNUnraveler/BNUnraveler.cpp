@@ -54,8 +54,8 @@ int main( int iArgs, char** aszArgs ) {
 	vecpBNs.resize( sArgs.inputs_num );
 	for( i = 0; i < vecpBNs.size( ); ++i ) {
 		vecpBNs[ i ] = new CBayesNetSmile( !!sArgs.group_flag );
-		if( !vecpBNs[ i ]->Open( ( strFile = (string)sArgs.input_arg + '/' + CMeta::Basename(
-			sArgs.inputs[ i ] ) + ( sArgs.xdsl_flag ? ".xdsl" : ".dsl" ) ).c_str( ) ) ) {
+		if( !vecpBNs[ i ]->Open( ( strFile = (string)sArgs.input_arg + '/' + CMeta::Deextension(
+			CMeta::Basename( sArgs.inputs[ i ] ) ) + ( sArgs.xdsl_flag ? ".xdsl" : ".dsl" ) ).c_str( ) ) ) {
 			cerr << "Couldn't open: " << strFile << endl;
 			return 1; } }
 

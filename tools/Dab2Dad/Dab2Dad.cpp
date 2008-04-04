@@ -186,7 +186,7 @@ int main( int iArgs, char** aszArgs ) {
 				continue; }
 			for( j = ( i + 1 ); j < Data.GetGenes( ); ++j )
 				if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-					CMeta::IsNaN( d = Mask.Get( iOne, iTwo ) ) || !d )
+					CMeta::IsNaN( d = Mask.Get( iOne, iTwo ) ) || ( d <= 0 ) )
 					Data.Remove( i, j ); } }
 
 	if( sArgs.output_arg ) {

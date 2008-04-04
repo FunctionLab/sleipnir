@@ -76,15 +76,15 @@
  * </tr><tr>
  * <td>-d</td>
  *	<td>None</td>
- *	<td>PCL file</td>
+ *	<td>PCL text file</td>
  *	<td>PCL file containing examples (rows) from which data features (columns) are read and quantized for
  *		use during evaluation of the given Bayes net.  For a non-continuous Bayes net, must have an
  *		associated QUANT file of the same name (e.g. \c data.quant in the same location as a data file
  *		\c data.pcl).</td>
  * </tr><tr>
  *	<td>-o</td>
- *	<td>None</td>
- *	<td>PCL file</td>
+ *	<td>stdout</td>
+ *	<td>PCL text file</td>
  *	<td>PCL file in which inferred class probabilities are saved.  Each row is an example from the input
  *		file, each column a possible value of the class node (zero indexed).</td>
  * </tr><tr>

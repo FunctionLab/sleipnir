@@ -2,9 +2,9 @@ package	"DChecker"
 version	"1.0"
 purpose	"Similarity to answer file checker"
 
-option	"input"			i	"Similarity file"
+option	"input"			i	"Similarity DAT/DAB file"
 							string	typestr="filename"	yes
-option	"answers"		w	"Answer file"
+option	"answers"		w	"Answer DAT/DAB file"
 							string	typestr="filename"	yes
 
 option	"directory"		d	"Output directory"
@@ -12,7 +12,7 @@ option	"directory"		d	"Output directory"
 
 section "Ranking Method"
 option	"bins"			b	"Bins for quantile sorting"
-							int	default="0"
+							int	default="1000"
 option	"finite"		f	"Count finitely many bins"
 							flag	off
 option	"min"			m	"Minimum correlation to process"
@@ -39,8 +39,6 @@ option	"invert"		t	"Invert correlations to distances"
 							flag	off
 
 section "Optional"
-option	"unannotated"	u	"Include unannotated genes in standard"
-							flag	off
 option	"sse"			s	"Calculate sum of squared errors"
 							flag	off
 option	"memmap"		p	"Memory map input DABs"

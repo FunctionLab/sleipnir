@@ -8,6 +8,8 @@ option	"directory"		d	"DAB network file directory"
 							string	typestr="directory"	default="."
 
 section "Optional"
+option	"normalize"		n	"Normalize to the range [0,1]"
+							flag	off
 option	"memmap"		m	"Memory map input"
 							flag	off
 option	"verbosity"		v	"Message verbosity"

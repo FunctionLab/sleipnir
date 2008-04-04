@@ -39,7 +39,7 @@ option	"quantize"		q	"Discretize lookups"
 							flag	off
 
 section "Optional"
-option	"mask"			k	"Mask dab file"
+option	"mask"			k	"Mask DAT/DAB file"
 							string	typestr="filename"
 option	"memmap"		m	"Memory map input/output"
 							flag	off

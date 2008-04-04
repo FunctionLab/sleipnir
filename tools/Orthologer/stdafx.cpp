@@ -3,6 +3,13 @@
 /*!
  * \page Orthologer Orthologer
  * 
+ * Orthologer will read in a text-based orthology file containing orthologous clusters of functionally
+ * equivalent genes across multiple organisms.  It will then "align" gold standards for those organisms in
+ * two ways.  First, gene pairs from the same organism within an orthologous cluster will be assigned one
+ * weight (high) in the aligned standard.  Next, gene pairs in from the same organism spanning different
+ * orthologous clusters that share a gene pair related in some organism will be assigned a second weight
+ * (low).  Existing positive functional relationships in the input files are never overwritten.
+ * 
  * \section sec_overview Overview
  * 
  * \subsection ssec_usage_detailed Detailed Usage
@@ -15,9 +22,32 @@
  *	<th>Type</th>
  *	<th>Description</th>
  * </tr><tr>
- *	<td></td>
- *	<td></td>
- *	<td></td>
- *	<td></td>
+ * 	<td>None</td>
+ * 	<td>None</td>
+ * 	<td>DAT/DAB files</td>
+ * 	<td>Input gold standard answer files for each organism within the orthology to be aligned.</td>
+ * </tr><tr>
+ *	<td>-i</td>
+ *	<td>stdin</td>
+ *	<td>Orthology text file</td>
+ *	<td>Tab-delimited text file in which each line represents an orthologous cluster.  Tab-separated tokens
+ *		within each line should be of the form &lt;organism id>|&lt;gene id>, e.g. SCE|YAL001C or
+ *		MMU|MGI:88064.</td>
+ * </tr><tr>
+ *	<td>-w</td>
+ *	<td>1</td>
+ *	<td>Double</td>
+ *	<td>Weight inserted into aligned gold standards for genes in the same orthologous cluster.</td>
+ * </tr><tr>
+ *	<td>-W</td>
+ *	<td>1</td>
+ *	<td>Double</td>
+ *	<td>Weight inserted into aligned gold standards for genes in different orthologous clusters spanned by
+ *		a gene pair functionally related in at least one organism.</td>
+ * </tr><tr>
+ *	<td>-m</td>
+ *	<td>off</td>
+ *	<td>Flag</td>
+ *	<td>If given, memory map the input files when possible.  DAT and PCL inputs cannot be memmapped.</td>
  * </tr></table>
  */

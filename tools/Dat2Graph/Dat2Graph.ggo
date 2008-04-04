@@ -22,7 +22,7 @@ option	"cutoff"	e	"Minimum edge weight for output"
 						double
 option	"genes"		g	"Gene inclusion file"
 						string	typestr="filename"
-option	"knowns"	w	"Known interactions (DAT) to ignore"
+option	"knowns"	w	"Known interactions (DAT/DAB) to ignore"
 						string	typestr="filename"
 
 section "Annotation"

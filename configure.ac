@@ -70,7 +70,6 @@ AC_FUNC_STAT   # tools/Answerer, tools/MEFIT
 AC_CHECK_FUNCS([memmove memset munmap pow socket sqrt strchr strerror strrchr strstr])
 
 AC_CHECK_FUNCS([inet_ntoa])   # tools/BNServer
-AC_CHECK_FUNCS([mkdir])  # tools/BNWrangler
 AC_CHECK_FUNCS([strtol])  # tools/Data2Features, tools/Data2Bnt
 
 
@@ -563,7 +562,6 @@ AC_CONFIG_FILES([Makefile \
 		 tools/BNTruster/Makefile \
 		 tools/BNUnraveler/Makefile \
 		 tools/BNWeaver/Makefile \
-		 tools/BNWrangler/Makefile \
 		 tools/Contexter/Makefile \
 		 tools/Data2DB/Makefile \
 		 tools/DSLConverter/Makefile \

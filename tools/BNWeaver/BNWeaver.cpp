@@ -197,8 +197,8 @@ int main( int iArgs, char** aszArgs ) {
 		if( !BNOut.Open( *vecpBNRoots[ i ], vecpBNs ) ) {
 			cerr << "Couldn't merge networks: " << sArgs.inputs[ i ] << endl;
 			return 1; }
-		BNOut.Save( ( (string)sArgs.output_arg + "/" + CMeta::Basename( sArgs.inputs[ i ] ) + "." +
-			( sArgs.xdsl_flag ? "x" : "" ) + "dsl" ).c_str( ) ); }
+		BNOut.Save( ( (string)sArgs.output_arg + "/" + CMeta::Deextension( CMeta::Basename(
+			sArgs.inputs[ i ] ) ) + "." + ( sArgs.xdsl_flag ? "x" : "" ) + "dsl" ).c_str( ) ); }
 
 	for( i = 0; i < vecpvecpBNData.size( ); ++i ) {
 		for( j = 0; j < vecpvecpBNData[ i ]->size( ); ++j )
@@ -224,7 +224,7 @@ void* learn( void* pData ) {
 		DataNegatives.Attach( psData->m_pData, *psData->m_pNegatives, CDat::EFilterEdge, psData->m_pAnswers );
 		DataFilter.Attach( &DataNegatives, *psData->m_pGenes, CDat::EFilterTerm, psData->m_pAnswers ); }
 	else
-		DataFilter.Attach( psData->m_pData, *psData->m_pGenes, CDat::EFilterEdge, psData->m_pAnswers );
+		DataFilter.Attach( psData->m_pData, *psData->m_pGenes, CDat::EFilterTerm, psData->m_pAnswers );
 	if( !psData->m_pBN->Open( &DataFilter, *psData->m_pvecstrNames, *psData->m_pveciZeros ) ) {
 		cerr << "Couldn't create base network: " << psData->m_szName << endl;
 		pthread_exit( NULL );

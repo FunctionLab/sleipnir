@@ -214,7 +214,7 @@
  *	<td>Directory from which Sleipnir::CDatabase data files are read.</td>
  * </tr><tr>
  *	<td>-i</td>
- *	<td>None</td>
+ *	<td>stdin</td>
  *	<td>Context text file</td>
  *	<td>Tab-delimited text file from which context indices, names, and string IDs are read.</td>
  * </tr><tr>

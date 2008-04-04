@@ -53,7 +53,9 @@ option	"cutoff"		c	"Include only confidences above cutoff"
 
 option	"skip"			s	"Additional columns to skip in input PCLs"
 							int	default="2"
-option	"xdsl"			x	"Output .xdsl files in place of .dsls"
+option	"xdsl"			x	"Output XDSL files in place of DSLs"
+							flag	on
+option	"dab"			a	"Output DAB files in place of DATs"
 							flag	on
 option	"random"		R	"Seed random generator"
 							int	default="0"

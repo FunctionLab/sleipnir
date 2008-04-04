@@ -88,16 +88,23 @@
  * \include BNCreator/BNCreator.ggo
  * 
  * <table><tr>
- *	<th>Flag</th>
- *	<th>Default</th>
- *	<th>Type</th>
- *	<th>Description</th>
+ * 	<th>Flag</th>
+ * 	<th>Default</th>
+ * 	<th>Type</th>
+ * 	<th>Description</th>
  * </tr><tr>
- *	<td>-w</td>
- *	<td>None</td>
- *	<td>DAT/DAB file</td>
- *	<td>Functional gold standard for learning.  Should consist of gene pairs with scores of 0 (unrelated),
- *		1 (related), or missing (NaN).</td>
+ * 	<td>None</td>
+ * 	<td>None</td>
+ * 	<td>DAT/DAB files</td>
+ * 	<td>Datasets used when learning a Bayesian classifier.  One node will be created in the learned
+ *		classifier for each DAT/DAB file on the command line, with the ID of the given filename (which
+ *		should be alphanumeric).  Must be accompanied by appropriate QUANT files.</td>
+ * </tr><tr>
+ * 	<td>-w</td>
+ * 	<td>None</td>
+ * 	<td>DAT/DAB file</td>
+ * 	<td>Functional gold standard for learning.  Should consist of gene pairs with scores of 0 (unrelated),
+ * 		1 (related), or missing (NaN).</td>
  * </tr><tr>
  *	<td>-i</td>
  *	<td>None</td>

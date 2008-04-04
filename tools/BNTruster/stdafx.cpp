@@ -209,20 +209,25 @@
  *	<th>Type</th>
  *	<th>Description</th>
  * </tr><tr>
- * <td>-t</td>
+ * 	<td>None</td>
+ * 	<td>None</td>
+ * 	<td>(X)DSL files</td>
+ * 	<td>Bayesian networks in which each node's influence on the posterior should be evaluated.</td>
+ * </tr><tr>
+ *	<td>-t</td>
  *	<td>posteriors</td>
  *	<td>posteriors, sums, or ratios</td>
  *	<td>Type of trust score to calculate, as described above.</td>
  * </tr><tr>
- * <td>-b</td>
+ *	<td>-b</td>
  *	<td>off</td>
  *	<td>Flag</td>
- *	<td>If true, output individual bins' influence scores as described above.</td>
+ *	<td>If on, output individual bins' influence scores as described above.</td>
  * </tr><tr>
- *	<td>-t</td>
+ *	<td>-d</td>
  *	<td>1</td>
  *	<td>Integer</td>
  *	<td>Number of simultaneous threads to use for posterior trust calculations.  Threads are per-(X)DSL, so
- *		the number of threads actually used is the minimum of \c -t and the number of input files.</td>
+ *		the number of threads actually used is the minimum of \c -d and the number of input files.</td>
  * </tr></table>
  */

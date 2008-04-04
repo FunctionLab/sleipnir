@@ -34,9 +34,11 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	eShared = (EShared)i;
 
-	if( !DatIn.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
+	if( !DatIn.Open( sArgs.input_arg, sArgs.memmap_flag && !sArgs.normalize_flag ) ) {
 		cerr << "Could not open: " << sArgs.input_arg << endl;
 		return 1; }
+	if( sArgs.normalize_flag )
+		DatIn.Normalize( );
 
 	vecpGenes.resize( sArgs.inputs_num );
 	vecstrNames.resize( vecpGenes.size( ) );

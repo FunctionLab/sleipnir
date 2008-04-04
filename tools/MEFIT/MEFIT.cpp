@@ -143,14 +143,11 @@ int main( int iArgs, char** aszArgs ) {
 		if( iRet = write_posteriors( vecstrPositives[ iFunction ], BNFunction, ofsmPosteriors ) )
 			return iRet;
 
-		strFile = (string)sArgs.predictions_arg + '/' + vecstrPositives[ iFunction ] + ".txt";
+		strFile = (string)sArgs.predictions_arg + '/' + vecstrPositives[ iFunction ] + ( sArgs.dab_flag ?
+			".dab" : ".dat" );
 		DatOut.Open( DataMask.GetGeneNames( ) );
 		if( !BNFunction.Evaluate( &DataMask, DatOut, !!sArgs.zero_flag ) ) {
 			cerr << "Could not evaluate: " << strFile << endl;
-			return 1; }
-		ofsm.open( strFile.c_str( ) );
-		if( !ofsm.is_open( ) ) {
-			cerr << "Could not save: " << strFile << endl;
 			return 1; }
 		DatOut.Invert( );
 		if( sArgs.cutoff_arg > 0 )
@@ -158,7 +155,7 @@ int main( int iArgs, char** aszArgs ) {
 				for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
 					if( DatOut.Get( i, j ) < sArgs.cutoff_arg )
 						DatOut.Set( i, j, CMeta::GetNaN( ) );
-		DatOut.Save( ofsm, CDat::EFormatText ); }
+		DatOut.Save( strFile.c_str( ) ); }
 
 	for( i = 0; i < vecpPositives.size( ); ++i )
 		delete vecpPositives[ i ];

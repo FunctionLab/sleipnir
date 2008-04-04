@@ -2,12 +2,12 @@ package	"Seqs2Ngrams"
 version	"1.0"
 purpose	"Convert sequence data to n-gram counts"
 
-option	"input"		i	"Sequence input file"
+option	"input"		i	"Sequence input FASTA file"
 						string	typestr="filename"
 option	"output"	o	"DAT/DAB output file"
 						string	typestr="filename"
 option	"n"			n	"N-gram size"
-						int	default="8"
+						int	default="7"
 
 option	"normalize"	m	"Normalize to the range [0,1]"
 						flag	off

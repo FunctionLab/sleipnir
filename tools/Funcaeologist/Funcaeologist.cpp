@@ -38,10 +38,13 @@ int main( int iArgs, char** aszArgs ) {
 		if( !GenesFunction.Open( sArgs.inputs[ iFunction ] ) ) {
 			cerr << "Could not open: " << sArgs.inputs[ iFunction ] << endl;
 			return 1; }
-		strDab = (string)sArgs.directory_arg + '/' + CMeta::Basename( sArgs.inputs[ iFunction ] ) + c_szDab;
-		if( !Dat.Open( strDab.c_str( ), !!sArgs.memmap_flag ) ) {
+		strDab = (string)sArgs.directory_arg + '/' + CMeta::Deextension( CMeta::Basename(
+			sArgs.inputs[ iFunction ] ) ) + c_szDab;
+		if( !Dat.Open( strDab.c_str( ), sArgs.memmap_flag && !sArgs.normalize_flag ) ) {
 			cerr << "Could not open: " << strDab << endl;
 			return 1; }
+		if( sArgs.normalize_flag )
+			Dat.Normalize( );
 
 		for( i = 0; i < veciQuery.size( ); ++i )
 			veciQuery[ i ] = Dat.GetGene( GenesQuery.GetGene( i ).GetName( ) );

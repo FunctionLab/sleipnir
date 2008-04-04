@@ -1,10 +1,10 @@
 package	"Explainer"
 version	"1.0"
-purpose	"Allows evaluation of genes contributing to a good AUC"
+purpose	"Allows evaluation of genes contributing to a good prediction score"
 
-option	"input"			i	"Correlation file"
+option	"input"			i	"Similarity DAT/DAB file"
 							string	typestr="filename"	yes
-option	"answers"		w	"Answer file"
+option	"answers"		w	"Answer DAT/DAB file"
 							string	typestr="filename"	yes
 
 option	"count"			k	"Number of pairs to display"

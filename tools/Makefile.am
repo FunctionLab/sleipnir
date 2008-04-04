@@ -37,7 +37,6 @@ if WITH_SMILE_TOOLS
 	  BNTruster \
 	  BNUnraveler \
 	  BNWeaver \
-	  BNWrangler \
 	  Contexter \
 	  Data2DB \
 	  DSLConverter \

@@ -1,12 +1,12 @@
 package	"Contexter"
 version	"1.0"
-purpose	"Real time Bayes net calculation from DB data"
+purpose	"Calculate gene/context association ratios"
 
-option	"input"			i	"DAT file/Context IDs and names"
+option	"input"			i	"DAT/DAB file or context IDs and names"
 							string	typestr="filename"
 
 section "Input"
-option	"dat"			t	"Use DAT file input rather than Bayes nets"
+option	"dat"			t	"Use DAT/DAB file input rather than Bayes nets"
 							flag	off
 option	"database"		d	"Database directory"
 							string	typestr="directory"	default="."

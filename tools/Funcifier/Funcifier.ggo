@@ -8,11 +8,13 @@ option	"output"		o	"Output function network"
 							string	typestr="filename"	yes
 
 option	"shared"		s	"Determine shared gene handling"
-							values="ignore","discard","oneonly"	default="ignore"
-option	"colors"		l	"Function coherence output file"
+							values="ignore","discard","oneonly"	default="discard"
+option	"colors"		l	"Function cohesiveness output file"
 							string	typestr="filename"
 
 section "Optional"
+option	"normalize"		n	"Normalize to the range [0,1]"
+							flag	off
 option	"memmap"		m	"Memory map input"
 							flag	off
 option	"verbosity"		v	"Message verbosity"

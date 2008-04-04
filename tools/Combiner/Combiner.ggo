@@ -2,7 +2,7 @@ package	"Combiner"
 version	"1.0"
 purpose	"PCL and data file combination tool"
 
-option	"type"		t	"Data file type"
+option	"type"		t	"Output data file type"
 						values="pcl","dat","dab"	default="pcl"
 option	"method"	m	"Combination method"
 						values="min","max","mean","gmean","hmean"	default="mean"

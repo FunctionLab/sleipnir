@@ -3,6 +3,12 @@
 /*!
  * \page Funcifier Funcifier
  * 
+ * Funcifier (pronounced funk-if-eyer, not fun-siffier, with flagrant disregard for rules of standard
+ * English) calculates the strength of functional association between processes or pathways in a given
+ * functional relationship (or data) network.  A functional association between two gene sets (e.g. pathways)
+ * measures the amount of cross-talk between those processes, which is calculated from the given individual
+ * gene pair functional relationships.
+ * 
  * \section sec_overview Overview
  * 
  * \subsection ssec_usage_detailed Detailed Usage
@@ -15,9 +21,48 @@
  *	<th>Type</th>
  *	<th>Description</th>
  * </tr><tr>
- *	<td></td>
- *	<td></td>
- *	<td></td>
- *	<td></td>
+ * 	<td>None</td>
+ * 	<td>None</td>
+ * 	<td>Gene text files</td>
+ * 	<td>Gene sets which will be tested for functional association in the given dataset.  Each set
+ *		generally represents a biological context, e.g. process or pathway.  Elements in the output
+ *		DAT/DAB file will be named according to these input filenames.</td>
+ * </tr><tr>
+ *	<td>-i</td>
+ *	<td>stdin</td>
+ *	<td>DAT/DAB file</td>
+ *	<td>Input DAT/DAB file containing the functional relationship or data network to be mined for
+ *		gene set functional associations.</td>
+ * </tr><tr>
+ *	<td>-o</td>
+ *	<td>stdout</td>
+ *	<td>DAT/DAB file</td>
+ *	<td>Output DAT/DAB file containing functional associations between gene sets.  While the input
+ *		network contains individual gene pairs, the output network contains pairs of gene sets (e.g. each
+ *		element is a pair of labels from gene sets given on the command line).</td>
+ * </tr><tr>
+ *	<td>-s</td>
+ *	<td>discard</td>
+ *	<td>discard, ignore, or oneonly</td>
+ *	<td>Way in which genes present in multiple gene sets are handled.  \c discard prevents shared genes
+ *		from contributing to any gene set's associations, \c ignore allows them to contribute to every
+ *		gene set in which they're included, and \c oneonly allows genes to contribute only if they are
+ *		shared between exactly two processes (i.e. they have only one overlap).</td>
+ * </tr><tr>
+ *	<td>-l</td>
+ *	<td>None</td>
+ *	<td>Text file</td>
+ *	<td>If given, output file into which cohesiveness scores for each gene set are placed.  Output is
+ *		compatible with color input for \ref Dat2Graph.</td>
+ * </tr><tr>
+ *	<td>-n</td>
+ *	<td>off</td>
+ *	<td>Flag</td>
+ *	<td>If on, normalize input edges to the range [0,1] before processing.</td>
+ * </tr><tr>
+ *	<td>-m</td>
+ *	<td>off</td>
+ *	<td>Flag</td>
+ *	<td>If given, memory map the input files when possible.  DAT and PCL inputs cannot be memmapped.</td>
  * </tr></table>
  */

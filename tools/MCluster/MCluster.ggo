@@ -7,8 +7,8 @@ option	"input"		i	"Input PCL/DAT/DAB file"
 option	"output"	o	"Output GTR file"
 						string	typestr="filename"	yes
 option	"distance"	d	"Similarity measure"
-						values="pearson","euclidean","kendalls","kolm-smir",
-						"spearman"	default="pearson"
+						values="pearson","euclidean","kendalls","kolm-smir","spearman"
+						default="pearson"
 
 option	"weights"	w	"Input weights file"
 						string	typestr="filename"

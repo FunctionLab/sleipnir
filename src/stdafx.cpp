@@ -726,6 +726,11 @@ MIPS:
  * <a href="http://genome-www5.stanford.edu/help/formats.shtml#cdt">CDT/GTR</a> file pairing system (see
  * Sleipnir::CPCL).
  * 
+ * In Sleipnir's tools, standard input and standard output are used as defaults almost everywhere; a
+ * "DAT/DAB" file generally means any appropriate Sleipnir::CDat format.  If standard input or output is
+ * being used, DAT formatting is generally assumed; if an explicit input or output filename is given, DAB
+ * formatting is generally assumed.
+ * 
  * \section sec_history Version History
  * 
  * - <a href="sleipnir-0.9.tar.gz">0.9</a>, 04-***-08 <br>

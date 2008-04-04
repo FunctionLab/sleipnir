@@ -13,7 +13,8 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	CDat				Dat, DatKnowns;
 	vector<size_t>		veciGenes, veciKnowns;
-	size_t				i;
+	size_t				i, j;
+	float				d;
 	int					iRet;
 	
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -23,7 +24,7 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.input_arg ) {
 		if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !sArgs.normalize_flag &&
-			!sArgs.heavy_arg ) ) {
+			!sArgs.heavy_arg && !sArgs.cutoff_arg ) ) {
 			cerr << "Could not open: " << sArgs.input_arg << endl;
 			return 1; } }
 	else if( !Dat.Open( cin, CDat::EFormatText ) ) {
@@ -31,6 +32,11 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	if( sArgs.normalize_flag )
 		Dat.Normalize( );
+	if( sArgs.cutoff_arg )
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) && ( d < sArgs.cutoff_arg ) )
+					Dat.Set( i, j, CMeta::GetNaN( ) );
 	if( sArgs.knowns_arg ) {
 		if( !DatKnowns.Open( sArgs.knowns_arg, !!sArgs.memmap_flag ) ) {
 			cerr << "Could not open: " << sArgs.knowns_arg << endl;
@@ -69,7 +75,7 @@ int cliques( const gengetopt_args_info& sArgs, const CDat& Dat, const CDat& DatK
 			iOne = sArgs.knowns_arg ? veciKnowns[ veciGenes[ i ] ] : -1;
 			for( j = ( i + 1 ); j < veciGenes.size( ); ++j ) {
 				if( ( iOne != -1 ) && ( ( iTwo = veciKnowns[ veciGenes[ j ] ] ) != -1 ) &&
-					!CMeta::IsNaN( d = DatKnowns.Get( iOne, iTwo ) ) && ( d > 0 ) )
+					!CMeta::IsNaN( d = DatKnowns.Get( iOne, iTwo ) ) )
 					continue;
 				if( !CMeta::IsNaN( d = Dat.Get( veciGenes[ i ], veciGenes[ j ] ) ) )
 					dCur += d; } }
