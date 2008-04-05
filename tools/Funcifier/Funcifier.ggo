@@ -2,11 +2,13 @@ package	"Funcifier"
 version	"1.0"
 purpose	"Function interaction network builder"
 
+section "Main"
 option	"input"			i	"Input interaction network"
 							string	typestr="filename"	yes
 option	"output"		o	"Output function network"
 							string	typestr="filename"	yes
 
+section "Miscellaneous"
 option	"shared"		s	"Determine shared gene handling"
 							values="ignore","discard","oneonly"	default="discard"
 option	"colors"		l	"Function cohesiveness output file"

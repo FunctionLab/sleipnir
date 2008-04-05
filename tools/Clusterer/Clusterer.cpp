@@ -105,5 +105,4 @@ int main( int iArgs, char** aszArgs ) {
 			for( i = 0; i < vecsClusters.size( ); ++i )
 				cout << pPCL->GetGene( i ) << '\t' << vecsClusters[ i ] << endl; }
 
-	CMeta::Shutdown( );
 	return 0; }

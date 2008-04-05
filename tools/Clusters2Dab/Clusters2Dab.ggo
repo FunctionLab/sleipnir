@@ -2,6 +2,7 @@ package	"Clusters2Dab"
 version	"1.0"
 purpose	"Generate pairwise scores from preclustered output."
 
+section "Main"
 option	"input"		i	"Input cluster file"
 						string	typestr="filename"
 option	"output"	o	"Output DAT/DAB file"

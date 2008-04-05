@@ -198,5 +198,4 @@ int main( int iArgs, char** aszArgs ) {
 	else
 		Data.Save( cout, false );
 
-	CMeta::Shutdown( );
 	return 0; }

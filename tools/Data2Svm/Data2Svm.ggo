@@ -2,6 +2,7 @@ package	"Data2Svm"
 version	"1.0"
 purpose	"SVM evaluation of data for GO term prediction"
 
+section "Main"
 option	"input"				i	"Data set to analyze (PCL)"
 								string	typestr="filename"	yes
 option	"model"				m	"SVM model file"

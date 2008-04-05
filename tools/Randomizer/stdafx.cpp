@@ -9,6 +9,17 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Randomizer -i <data.dab>
+ * \endcode
+ * 
+ * Removes all non-missing values in \c data.dab and assigns an equivalent number of 1s randomly across all
+ * gene pairs.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Randomizer/Randomizer.ggo

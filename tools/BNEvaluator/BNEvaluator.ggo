@@ -2,11 +2,13 @@ package	"BNEvaluator"
 version	"1.0"
 purpose	"Per-gene whole Bayes net evaluation"
 
+section "Main"
 option	"input"		i	"Input (X)DSL file"
 						string	typestr="filename"	yes
 option	"data"		d	"Input PCL file"
 						string	typestr="filename"	yes
 
+section "Miscellaneous"
 option	"output"	o	"Output PCL file"
 						string	typestr="filename"
 option	"skip"		s	"Columns to skip in input PCL"

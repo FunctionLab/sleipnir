@@ -8,6 +8,33 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Clusterer -i <data.pcl> -k <clusters>
+ * \endcode
+ * 
+ * Output (to standard output) a list of k-means clusters formed from the microarray PCL data \c data.pcl
+ * with k equal to \c clusters using the default similarity measure (which can be modified using \c -d).
+ * 
+ * \code
+ * Clusterer -i <data.pcl> -a qtc -k <min_size> -m <max_diameter)
+ * \endcode
+ * 
+ * Output a list of quality threshhold clusters formed from the microarray PCL data \c data.pcl with a
+ * minimum cluster size of \c min_size and a maximum cluster diameter of \c max_diameter.
+ * 
+ * \code
+ * Clusterer -i <data.pcl> -o <cocluster.dab> -k <min_size> -M <min_diameter> -m <max_diameter>
+ *		-e <delta_diameter>
+ * \endcode
+ * 
+ * Create a DAT/DAB file \c cocluster.dab with gene pair scores indicating the minimum diameter size at
+ * which each gene pair from \c data.pcl coclustered, using QTC with a minimum cluster size of \c min_size
+ * and testing cluster diameters from \c min_diameter to \c max_diameter by steps fo \c delta_diameter.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Clusterer/Clusterer.ggo

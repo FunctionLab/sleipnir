@@ -2,6 +2,7 @@ package	"Dat2Graph"
 version	"1.0"
 purpose	"Text/binary data file graph output"
 
+section "Main"
 option	"input"		i	"Input DAT/DAB file"
 						string	typestr="filename"
 option	"format"	t	"Output graph format"

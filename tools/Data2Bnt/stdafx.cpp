@@ -11,6 +11,20 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Data2Bnt -i <positives.txt> -f <features.txt> -d <data.txt> -q <bins.quant> <data.pcl/dab>*
+ * \endcode
+ * 
+ * Generate a feature matrix compatible with BNT in which each row represents a gene pair, labeled positive
+ * if one of the genes is in \c positives.txt, with features as described in \c features.txt, default
+ * values drawn from \c data.txt, and feature values from the microarray PCL files \c data.pcl or
+ * DAT/DAB files \c data.dab.  If PCL files are used, they are discretized using the bin edges in the
+ * QUANT file \c bins.quant.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Data2Bnt/Data2Bnt.ggo

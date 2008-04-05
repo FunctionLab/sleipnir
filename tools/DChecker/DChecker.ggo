@@ -2,11 +2,13 @@ package	"DChecker"
 version	"1.0"
 purpose	"Similarity to answer file checker"
 
+section "Main"
 option	"input"			i	"Similarity DAT/DAB file"
 							string	typestr="filename"	yes
 option	"answers"		w	"Answer DAT/DAB file"
 							string	typestr="filename"	yes
 
+section "Miscellaneous"
 option	"directory"		d	"Output directory"
 							string	typestr="directory"	default="."
 

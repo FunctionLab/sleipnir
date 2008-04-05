@@ -9,6 +9,19 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Data2Svm -i <data.pcl> -m <learned.svm> -g <context.txt> -G <holdout.txt>
+ * \endcode
+ * 
+ * Learn a support vector machine model (saved as \c learned.svm) using the microarray expression values in
+ * \c data.pcl as features, labeling the genes in \c context.txt as positive examples (and all other genes
+ * as negatives), and holding out the genes in \c holdout.txt from training.  Outputs (to standard output)
+ * the predicted SVM classifications for all genes after learning.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Data2Svm/Data2Svm.ggo

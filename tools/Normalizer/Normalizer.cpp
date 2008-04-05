@@ -55,5 +55,4 @@ int main( int iArgs, char** aszArgs ) {
 
 		Dat.Save( sArgs.output_arg ? sArgs.output_arg : sArgs.input_arg ); }
 
-	CMeta::Shutdown( );
 	return 0; }

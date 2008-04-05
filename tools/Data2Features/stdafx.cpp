@@ -10,6 +10,19 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Data2Features -p <positives.txt> -e <features.txt> -d <data.txt> <data.pcl/dab>*
+ * \endcode
+ * 
+ * Output (to standard output) an XRFF feature file appropriate for use with Weka; each example represents
+ * a dataset from the microarray PCL files \c data.pcl or DAT/DAB files \c data.dab, with features as
+ * specified in \c features.txt, defaults from \c data.txt, and values calculated as the average across
+ * gene pairs in \c positives.txt.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Data2Features/Data2Features.ggo
@@ -30,12 +43,6 @@
  *	<td>Gene text file</td>
  *	<td>List of genes labeled as positives for machine learning; can be drawn from the same
  *		pathway/process/complex/GO term/etc.</td>
- * </tr><tr>
- *	<td>-n</td>
- *	<td>None</td>
- *	<td>Gene text file</td>
- *	<td>List of genes labeled as negatives for machine learning; usually contains all genes confidently not
- *		associated with the positive set.</td>
  * </tr><tr>
  *	<td>-e</td>
  *	<td>None</td>

@@ -2,11 +2,13 @@ package	"Data2Sql"
 version	"1.0"
 purpose	"Convert multiple DAT/DAB files to a single SQL table"
 
+section "Main"
 option	"input"		i	"Input gene mapping"
 						string	typestr="filename"
 option	"table"		t	"Database table name"
 						string	default="datapairs"
 
+section "Miscellaneous"
 option	"datasets"	d	"Output datasets table"
 						flag	off
 option	"block"		b	"Block size for SQL chunking"

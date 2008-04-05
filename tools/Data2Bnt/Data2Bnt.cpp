@@ -149,7 +149,6 @@ int main( int iArgs, char** aszArgs ) {
 	iRet = sArgs.xrff_flag ? main_xrff( sArgs, vecsFeatures, mapValues, vecdQuants, Genes, Genome ) :
 		main_bnt( sArgs, vecsFeatures, mapValues, vecdQuants, Genes, Genome );
 
-	CMeta::Shutdown( );
 	return iRet; }
 
 void output_row( const string& strGene, const CGenes& Genes, size_t iValue, const SDatum& sDatum,

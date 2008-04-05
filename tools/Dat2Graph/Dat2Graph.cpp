@@ -177,5 +177,4 @@ int main( int iArgs, char** aszArgs ) {
 	else if( !strcmp( sArgs.format_arg, "dat" ) )
 		Dat.Save( cout, CDat::EFormatText );
 
-	CMeta::Shutdown( );
 	return 0; }

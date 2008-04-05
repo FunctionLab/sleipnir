@@ -2,12 +2,13 @@ package	"BNConverter"
 version	"1.0"
 purpose	"Bayes net training and testing"
 
-defgroup "data" yes
+defgroup "Data" yes
 groupoption	"datadir"	d	"Data directory"
-							string	typestr="directory"	group="data"
+							string	typestr="directory"	group="Data"
 groupoption	"dataset"	D	"Dataset DAD file"
-							string	typestr="filename"	group="data"
+							string	typestr="filename"	group="Data"
 
+section "Main"
 option	"input"			i	"Input (X)DSL file"
 							string	typestr="filename"	yes
 option	"output"		o	"Output (X)DSL or DAT/DAB file"

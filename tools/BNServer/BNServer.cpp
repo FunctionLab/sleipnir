@@ -266,7 +266,6 @@ int main( int iArgs, char** aszArgs ) {
 	pthread_win32_process_detach_np( );
 #endif // WIN32
 
-	CMeta::Shutdown( );
 	return 0; }
 
 bool CBNServer::Get( size_t iGene, size_t iContext, float* adValues, const CDatabase& Database,

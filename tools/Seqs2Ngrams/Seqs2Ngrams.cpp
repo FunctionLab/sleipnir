@@ -26,7 +26,7 @@ static inline size_t ipow( size_t iBase, size_t iExp ) {
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info		sArgs;
-	char					acLine[ c_iBuffer ];
+	char*					acLine;
 	ifstream				ifsm;
 	CDat					Dat;
 	size_t					i, j, k, m, iGene, iNgrams, iNgram, iPlaces;
@@ -65,8 +65,9 @@ int main( int iArgs, char** aszArgs ) {
 		map<string,size_t>::const_iterator	iterGene;
 		vector<string>						vecstrGenes;
 
+		acLine = new char[ c_iBuffer ];
 		while( !istm.eof( ) ) {
-			istm.getline( acLine, ARRAYSIZE(acLine) - 1 );
+			istm.getline( acLine, c_iBuffer - 1 );
 			if( !( szSeq = strchr( acLine, '\t' ) ) )
 				continue;
 			*szSeq = 0;
@@ -83,6 +84,7 @@ int main( int iArgs, char** aszArgs ) {
 			else
 				veciCounts[ iGene = iterGene->second ]++;
 			vecvecstrSeqs[ iGene ].push_back( ++szSeq ); }
+		delete[] acLine;
 		Dat.Open( vecstrGenes );
 	}
 	if( sArgs.input_arg )
@@ -130,7 +132,6 @@ int main( int iArgs, char** aszArgs ) {
 
 	Dat.Save( sArgs.output_arg );
 
-	CMeta::Shutdown( );
 	return 0; }
 
 size_t ngram( const string& strSeq, size_t iOff, size_t iLen ) {

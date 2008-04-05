@@ -9,6 +9,24 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Cliquer -i <network.dab> -r <initial_specificity> -w <final_specificity_ratio>
+ * \endcode
+ * 
+ * Output (to standard output) all heavy subgraphs (clusters) in \c network.dab with initial specificity
+ * ratio at least \c initial_specificity and final specificity ratio at least \c final_specificity_ratio
+ * fraction of the initial value.
+ * 
+ * \code
+ * Cliquer -i <network.dab> -r 0 -s <subgraphs> -S <size>
+ * \endcode
+ * 
+ * Output at most \c subgraphs cliques of non-missing, non-zero edges in \c network.dab of size \c size.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Cliquer/Cliquer.ggo

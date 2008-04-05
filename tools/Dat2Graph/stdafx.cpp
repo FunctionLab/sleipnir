@@ -9,6 +9,32 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Dat2Graph -i <data.dab> -e <cutoff>
+ * \endcode
+ * 
+ * Output (to standard output) a DOT file containing all edges in \c data.dab greater than \c cutoff
+ * (and the nodes to which they are incident).
+ * 
+ * \code
+ * Dat2Graph -i <data.dab> -q <genes.txt> [-l <colors.txt>] [-b <borders.txt>]
+ * \endcode
+ * 
+ * Output a DOT file containing the subgraph of \c data.dab resulting from using the gene list in
+ * \c genes.txt as a HEFalMp query, with nodes optionally colored using the [0,1] values from \c colors.txt
+ * or given optional border widths using the pixel counts in \c borders.txt.
+ * 
+ * \code
+ * Dat2Graph -i <data.dab> -t dat -q <genes.txt> -a
+ * \endcode
+ * 
+ * Output a DAT file containing the subgraph of \c data.dab resulting from using the gene list in
+ * \c genes.txt as a bioPIXIE query.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Dat2Graph/Dat2Graph.ggo

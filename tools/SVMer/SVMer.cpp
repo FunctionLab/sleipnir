@@ -61,7 +61,6 @@ int main( int iArgs, char** aszArgs ) {
 	iRet = sArgs.genewise_flag ? main_many( sArgs, PCLs, GenesIn, GenesEx, GenesTm ) :
 		main_one( sArgs, PCLs, Data, GenesIn, GenesEx, GenesTm );
 
-	CMeta::Shutdown( );
 	return iRet; }
 
 int init_svm( const gengetopt_args_info& sArgs, CSVM& SVM ) {

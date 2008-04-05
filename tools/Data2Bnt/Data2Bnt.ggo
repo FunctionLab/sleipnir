@@ -2,6 +2,7 @@ package	"Data2Bnt"
 version	"1.0"
 purpose	"BNT data file generation from data"
 
+section "Main"
 option	"input"			i	"Positive gene list"
 							string	typestr="filename"
 option	"features"		f	"List of features (nodes) and default values"
@@ -11,6 +12,7 @@ option	"data"			d	"Feature values for each data set"
 option	"quants"		q	"Quantization file for membership values"
 							string	typestr="filename"	yes
 
+section "Miscellaneous"
 option	"genome"		g	"SGD features file"
 							string	typestr="filename"
 option	"fraction"		p	"Fraction of genome to cover with default values"

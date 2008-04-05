@@ -48,8 +48,21 @@ public:
 	 */
 	static const char	c_szWS[];
 
-	static void Startup( int iVerbosity, size_t iRandomSeed = 0 );
-	static void Shutdown( );
+	/*!
+	 * \brief
+	 * Utility class that initializes Sleipnir (primarily log4cpp) at construction time and performs
+	 * cleanup when destroyed.
+	 * 
+	 * One (and only one) Startup object should be created in a Sleipnir client's \c main function before
+	 * making any library calls.  The object will be automatically destroyed as \c main exits, guaranteeing
+	 * proper cleanup of Sleipnir (and log4cpp).
+	 */
+	class Startup {
+	public:
+		Startup( int iVerbosity, size_t iRandomSeed = 0 );
+		~Startup( );
+	};
+
 	static std::string Filename( const std::string& strString, char cReplacement = '_' );
 	static std::string Basename( const char* szPath );
 	static void Tokenize( const char* szString, std::vector<std::string>& vecstrTokens,

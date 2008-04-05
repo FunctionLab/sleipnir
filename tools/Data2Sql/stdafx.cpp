@@ -8,6 +8,24 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Data2Sql -i <genes.txt> -t <table> <data.dab>*
+ * \endcode
+ * 
+ * Output (to standard output) SQL commands to construct a table named \c table containing the pairwise data
+ * in the DAT/DAB files \c data.dab, with gene names mapped to numerical IDs using \c genes.txt
+ * (tab-delimited file with two columns, one-based integer indices and gene names).
+ * 
+ * \code
+ * Data2Sql -i <genes.txt> -d <data.dab>*
+ * \endcode
+ * 
+ * Output (to standard output) a table containing a numerical index for each input dataset \c data.dab.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Data2Sql/Data2Sql.ggo

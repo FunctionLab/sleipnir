@@ -233,5 +233,4 @@ cout << endl;
 		if( sArgs.table_flag )
 			cout << endl; }
 
-	CMeta::Shutdown( );
 	return 0; }

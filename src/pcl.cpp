@@ -257,6 +257,7 @@ void CPCL::Open( const CPCL& PCL ) {
 	TSetI::const_iterator	iterGene;
 
 	Reset( );
+	m_fHeader = PCL.m_fHeader;
 	m_Data.Initialize( PCL.m_Data.GetRows( ), PCL.m_Data.GetColumns( ) );
 	for( i = 0; i < m_Data.GetRows( ); ++i )
 		for( j = 0; j < m_Data.GetColumns( ); ++j )
@@ -309,7 +310,7 @@ bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 		while( OpenGene( istm, vecdData, acBuf, c_iBufferSize ) );
 
 		m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
-		for( k = i = 0; i < m_Data.GetRows( ); ++i )
+		for( k = i = 0; ( k < vecdData.size( ) ) && ( i < m_Data.GetRows( ) ); ++i )
 			for( j = 0; j < m_Data.GetColumns( ); ++j )
 				m_Data.Set( i, j, vecdData[ k++ ] );
 		fRet = true; }
@@ -323,6 +324,9 @@ bool CPCLImpl::OpenExperiments( std::istream& istmInput, size_t iFeatures, char*
 	size_t		iToken;
 
 	Reset( );
+	if( !m_fHeader ) {
+		m_vecstrFeatures.resize( 1 );
+		return true; }
 	istmInput.getline( acLine, iLine - 1 );
 	for( iToken = 0,pc = acLine; ( strToken = OpenToken( pc, &pc ) ).length( ) || *pc; ++iToken )
 		if( iToken <= iFeatures )
@@ -354,8 +358,11 @@ bool CPCLImpl::OpenGene( std::istream& istmInput, std::vector<float>& vecdData, 
 			d = (float)strtod( strToken.c_str( ), &pcEnd );
 			vecdData.push_back( ( !pcEnd || ( pcEnd == strToken.c_str( ) ) ) ? CMeta::GetNaN( ) : d ); } }
 
-	while( iData++ < m_vecstrExperiments.size( ) )
-		vecdData.push_back( CMeta::GetNaN( ) );
+	if( m_vecstrExperiments.empty( ) )
+		m_vecstrExperiments.resize( vecdData.size( ) );
+	else
+		while( iData++ < m_vecstrExperiments.size( ) )
+			vecdData.push_back( CMeta::GetNaN( ) );
 
 	return !!iToken; }
 
@@ -378,6 +385,9 @@ bool CPCLImpl::OpenGene( std::istream& istmInput, std::vector<float>& vecdData, 
  */
 void CPCL::SaveHeader( std::ostream& ostm, bool fCDT ) const {
 	size_t	i;
+
+	if( !m_fHeader )
+		return;
 
 	if( fCDT )
 		ostm << c_szGID << '\t';

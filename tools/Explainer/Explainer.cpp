@@ -165,5 +165,4 @@ int main( int iArgs, char** aszArgs ) {
 				cout << pTwo->GetSynonym( 0 );
 			cout << '\t' << pTwo->GetGloss( ) << endl; } }
 
-	CMeta::Shutdown( );
 	return 0; }

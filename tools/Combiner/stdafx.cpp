@@ -12,6 +12,35 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Combiner -t pcl -o <combined.pcl> <data.pcl>*
+ * \endcode
+ * 
+ * Create a new PCL file \c combined.pcl containing all genes in the microarray PCL files \c data.pcl,
+ * with new expression vectors consisting of the concatenation of all data from these input files.  In other
+ * words, take the input PCLs, line up each gene's values, smoosh them all together, and plop the result
+ * into the output file.
+ * 
+ * \code
+ * Combiner -t dat -o <combined.dab> -n <data.dab>*
+ * \endcode
+ * 
+ * Create a new DAT/DAB file \c combined.dab in which each gene pair's score is the average of the
+ * normalized (by z-scoring) scores from all input DAT/DAB files \c data.dab.  The combination method can be
+ * modified using \c -m.
+ * 
+ * \code
+ * Combiner -t dab -o <combined.dad> <data.dab>*
+ * \endcode
+ * 
+ * Create a new DAD file \c combined.dad containing the discretized gene pair scores from all input DAT/DAB
+ * files \c data.dab, which must be accompanied by appropriate QUANT files.  This is equivalent to
+ * \ref Dab2Dad.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Combiner/Combiner.ggo

@@ -11,6 +11,36 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * OntoShell -o gene_ontology.obo -g <gene_association.sgd> -k ko -K <org>
+ *		-m funcat-2.0_scheme -a <funcat-2.0_data_18052006>
+ * \endcode
+ * 
+ * Initiate an interactive command prompt exploring functional catalogs and annotations from the
+ * Gene Ontology (\c gene_ontology.obo and \c gene_association.sgd), KEGG (\c ko and the three-letter
+ * organism code \c org, e.g. SCE, HSA, etc.), and MIPS (\c funcat_scheme and \c funcat_data).
+ * 
+ * \code
+ * OntoShell -o gene_ontology.obo -g <gene_association.sgd> -k ko -K <org>
+ *		-m funcat-2.0_scheme -a <funcat-2.0_data_18052006> -x "<command>"
+ * \endcode
+ * 
+ * Initiate a non-interactive session using the requested functional catalogs; executes the command string
+ * \c command (which may contain multiple commands separated by semicolons) and outputs the results to
+ * standard output.
+ * 
+ * \code
+ * OntoShell -C <configuration.ini>
+ * \endcode
+ * 
+ * Executes OntoShell using the <a href="http://www.gnu.org/software/gengetopt/gengetopt.html">gengetopt</a>
+ * command line arguments stored in the configuration file \c configuration.ini.  This can be extremely
+ * useful for storing complex command lines, e.g. the paths to all of the functional catalog files.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include OntoShell/OntoShell.ggo

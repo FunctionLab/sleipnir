@@ -10,6 +10,18 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Explainer -i <predictions.dab> -w <answers.dab> [-f SGD_features.tab]
+ * \endcode
+ * 
+ * Output (to standard output) all gene pairs in \c predictions.dab as compared to \c answers.dab, sorted
+ * from greatest to least difference; the optional \c SGD_features.tab file can make this output more
+ * informative for networks containing yeast genes.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Explainer/Explainer.ggo

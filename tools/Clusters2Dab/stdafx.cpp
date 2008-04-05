@@ -10,6 +10,32 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Clusters2Dab -i <clusters.txt> -o <coclusters.dab>
+ * \endcode
+ * 
+ * Create a new DAT/DAB file \c coclusters.dab in which each gene pair is given a score of one if they
+ * cluster together in the hard clustering \c clusters.txt and a score of zero if they do not.
+ * 
+ * \code
+ * Clusters2Dab -t samba -i <clusters.txt> -o <coclusters.dab>
+ * \endcode
+ * 
+ * Create a new DAT/DAB file \c coclusters.dab in which each gene pair is given a score equal to the
+ * confidence of their strongest shared SAMBA bicluster in \c clusters.txt if one exists or zero if it
+ * does not.
+ * 
+ * \code
+ * Clusters2Dab -t param -i <clusters.txt> -o <coclusters.dab>
+ * \endcode
+ * 
+ * Create a new DAT/DAB file \c coclusters.dab in which each gene pair is given a score equal to the
+ * maximum parameter value in \c clusters.txt at which they cocluster.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Clusters2Dab/Clusters2Dab.ggo

@@ -91,5 +91,4 @@ int main( int iArgs, char** aszArgs ) {
 				iGene++; } } }
 	PCLLookup.Save( cout );
 
-	CMeta::Shutdown( );
 	return 0; }

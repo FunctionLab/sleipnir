@@ -9,6 +9,18 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Distancer -i <data.pcl> -o <data.dab>
+ * \endcode
+ * 
+ * Output a DAT/DAB file \c data.dab containing pairwise similarity scores calculated from the microarray
+ * data in \c data.pcl.  The default settings will produce z-score, z-transformed Pearson correlations;
+ * this behavior can be extensively configured using the detailed options.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Distancer/Distancer.ggo

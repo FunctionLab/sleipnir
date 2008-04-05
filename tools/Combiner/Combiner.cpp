@@ -28,7 +28,6 @@ int main( int iArgs, char** aszArgs ) {
 			iRet = c_apfnCombiners[ i ]( sArgs );
 			break; }
 
-	CMeta::Shutdown( );
 	return iRet; }
 
 static int MainPCLs( const gengetopt_args_info& sArgs ) {

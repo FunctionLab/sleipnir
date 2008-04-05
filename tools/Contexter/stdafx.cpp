@@ -9,6 +9,29 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Contexter -i <contexts.txt> -d <database_dir> -c <contexts_genes.txt> -e <context>
+ *		-g <genes.txt> -n <contexts_dir> -b <global.xdsl>
+ * \endcode
+ * 
+ * Output (to standard output) the specific association score for each gene in the genome to context number
+ * \c context, using (as with \ref BNServer) the context ID/name mappings in \c contexts.txt, the context/gene
+ * mappings in \c contexts_genes.txt, the gene ID/name mappings in \c genes.txt, the Sleipnir::CDatabase
+ * in \c database_dir, the context-specific Bayesian classifiers in \c contexts_dir, and the global
+ * Bayesian classifier \c global.xdsl.
+ * 
+ * \code
+ * Contexter -t -i <network.dab> -g <genes.txt> -c <contexts_genes.txt>
+ * \endcode
+ * 
+ * Output the specific association score for each gene in the genome to context number \c context, using the
+ * context/gene mappings in \c contexts_genes.txt, the gene ID/name mappings in \c genes.txt, and the
+ * pre-computed interaction network \c network.dab.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Contexter/Contexter.ggo

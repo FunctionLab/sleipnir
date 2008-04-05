@@ -502,8 +502,7 @@ MIPS:
  * - Unless you're ditching gengetopts, make sure to set up your command line arguments first.  An example
  *	of standard gengetopts usage is given below; if you're using something complicated like an INI file, see
  *	\ref BNServer for an example.
- * - Don't forget to call Sleipnir::CMeta::Setup before any other Sleipnir functions; don't forget to call
- *	Sleipnir::CMeta::Shutdown after all other Sleipnir calls.
+ * - Don't forget to create a Sleipnir::CMeta::Startup before calling any other Sleipnir functions.
  * - Certain external libraries have their own setup/shutdown calls that need to be used separately.  Older
  *	versions of SMILE use \c EnableXdslFormat, for example (although it's not required any more), and
  *	on Windows, pthreads needs some setup/teardown (see below).
@@ -533,7 +532,6 @@ MIPS:
  * #ifdef WIN32
  * 	pthread_win32_process_detach_np( );
  * #endif // WIN32
- * 	CMeta::Shutdown( );
  * 	return 0; }
  * \endcode
  * 

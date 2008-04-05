@@ -85,7 +85,6 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.output_arg )
 		ofsm.close( );
 
-	CMeta::Shutdown( );
 	return 0; }
 
 static int Genes( const char* szGenes, CGenes& Genes ) {

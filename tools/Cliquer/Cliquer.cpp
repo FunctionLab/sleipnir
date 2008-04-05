@@ -48,7 +48,6 @@ int main( int iArgs, char** aszArgs ) {
 	iRet = sArgs.heavy_arg ? heavy( sArgs, Dat, DatKnowns, veciKnowns ) :
 		cliques( sArgs, Dat, DatKnowns, veciKnowns );
 
-	CMeta::Shutdown( );
 	return iRet; }
 
 int cliques( const gengetopt_args_info& sArgs, const CDat& Dat, const CDat& DatKnowns,

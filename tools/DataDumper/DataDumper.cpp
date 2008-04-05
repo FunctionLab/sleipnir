@@ -97,5 +97,4 @@ int main( int iArgs, char** aszArgs ) {
 			cout << endl;
 			iPair++; }
 
-	CMeta::Shutdown( );
 	return 0; }

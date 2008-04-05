@@ -11,6 +11,23 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Funcographer -f <functions.dab> -t <trusts.pcl> -d <datasets.dab> -o <cograph.dab>
+ *		-r <initial_specificity> -w <final_specificity_ratio> -Z <datasets>
+ * \endcode
+ * 
+ * Using the process/process associations in \c functions.dab, the dataset/process associations in
+ * \c trusts.pcl (from \ref BNTruster), and the dataset/dataset similarities in \c datasets.dab, construct
+ * a single graph \c cograph.dab containing both node types and all edges.  Then mine the \c functions.dab
+ * portion of this graph, outputting (to standard output) all heavy subgraphs with an initial specificity
+ * ratio of at least \c initial_specificity, a final specificity ratio that's at least
+ * \c final_specificity_ratio fraction of the initial value, and the \c datasets datasets most strongly
+ * associated with those functions.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Funcographer/Funcographer.ggo

@@ -2,15 +2,15 @@ package	"Data2Features"
 version	"1.0"
 purpose	"Data transformation to feature sets for machine learning"
 
+section "Main"
 option	"positives"		p	"Positive gene list"
 							string	typestr="filename"
-option	"negatives"		n	"Negative gene list"
-							string	typestr="filename"	yes
 option	"environment"	e	"List of environment features and default values"
 							string	typestr="filename"	yes
 option	"data"			d	"Feature values for each data set"
 							string	typestr="filename"	yes
 
+section "Miscellaneous"
 option	"genome"		g	"SGD features file"
 							string	typestr="filename"
 

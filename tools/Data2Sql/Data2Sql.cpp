@@ -77,5 +77,4 @@ int main( int iArgs, char** aszArgs ) {
 	if( iCount )
 		cout << ';' << endl;
 
-	CMeta::Shutdown( );
 	return 0; }

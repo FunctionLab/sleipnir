@@ -11,6 +11,19 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Data2DB -n <classifier.xdsl> -i <genes.txt> -d <data_dir> -D <database_dir>
+ * \endcode
+ * 
+ * Construct a Sleipnir::CDatabase in the directory \c database_dir containing the data from DAT/DAB files
+ * in \c data_dir corresponding to nodes in the Bayesian network \c classifier.xdsl and organized using the
+ * gene index/name pairs in \c genes.txt (identical in format to \ref Data2Sql).  If many datasets are
+ * being processed or the target genome is large, blocking should be used (\c -b and \c -B).
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Data2DB/Data2DB.ggo

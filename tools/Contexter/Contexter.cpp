@@ -23,7 +23,6 @@ int main( int iArgs, char** aszArgs ) {
 
 	iRet = sArgs.dat_flag ? main_datfile( sArgs ) : main_database( sArgs );
 
-	CMeta::Shutdown( );
 	return iRet; }
 
 size_t count_contexts( const char* szContexts ) {

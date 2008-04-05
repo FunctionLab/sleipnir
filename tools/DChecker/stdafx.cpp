@@ -9,6 +9,43 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * DChecker -w <answers.dab> -i <predictions.dab>
+ * \endcode
+ * 
+ * Output (to standard output) positive gene counts, true and false positive pair counts, true and false
+ * negative pair counts, and an overall AUC score using the default binning of continuous data in
+ * \c predictions.dab and the binary gold standard answers in \c answers.dab.
+ * 
+ * \code
+ * DChecker -w <answers.dab> -i <predictions.dab> -f
+ * \endcode
+ * 
+ * Output true/false positive and negative pair counts assuming that \c predictions.dab contains only a
+ * finite number of different values and using these as bins.  This is appropriate for inherently
+ * discrete data, e.g. cocluster counts.
+ * 
+ * \code
+ * DChecker -w <answers.dab> -i <predictions.dab> -b 0 -n -m 0 -M 1 -e 0.01
+ * \endcode
+ * 
+ * Output true/false positive and negative pair counts by normalizing the given data \c predictions.dab to
+ * the range [0,1] and creating bin cutoffs at 0.01 increments between 0 and 1.  This can provide a finer
+ * grained binning than the default \c -b setting for some prediction/data sets (and a less fine grained
+ * binning for others; when in doubt, try both).
+ * 
+ * \code
+ * DChecker -w <answers.dab> -i <predictions.dab> -c <context.txt>
+ * \endcode
+ * 
+ * Output true/false positive and negative pair counts for the given \c predictions.dab using only the gene
+ * pairs relevant to the given biological function \c context.txt.  This is appropriate for evaluating
+ * context-specific functional relationship predictions.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include DChecker/DChecker.ggo

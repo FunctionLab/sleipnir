@@ -9,6 +9,24 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Normalizer -i <data.dab> -o <normalized.dab> -t dat
+ * \endcode
+ * 
+ * Normalize the given \c data.dab file by z-scoring all values (subtracting the mean and dividing by the
+ * standard deviation) and store the result in \c normalized.dab.
+ * 
+ * \code
+ * Normalizer -i <data.pcl> -o <normalized.pcl> -t pcl
+ * \endcode
+ * 
+ * Normalize the given \c data.pcl file by z-scoring each row independently (guaranteeing each row has
+ * mean zero, standard deviation one) and store the result in \c normalized.pcl.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Normalizer/Normalizer.ggo

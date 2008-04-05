@@ -309,5 +309,4 @@ int main( int iArgs, char** aszArgs ) {
 			vecpsOutputs[ i ]->Save( );
 			delete vecpsOutputs[ i ]; } }
 
-	CMeta::Shutdown( );
 	return 0; }

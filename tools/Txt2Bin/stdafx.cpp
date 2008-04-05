@@ -11,6 +11,31 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Txt2Bin -f dat -t bin -w <answers.dab> -o <examples.bin> <data.dab>*
+ * \endcode
+ * 
+ * Generates the binary SVM examples/features file \c examples.bin using the labels for gene pairs in
+ * \c answers.dab and the data (features) for those gene pairs in the one or more \c data.dab files.
+ * 
+ * \code
+ * Txt2Bin -f txt -t bin -i <examples.txt> -o <examples.bin>
+ * \endcode
+ * 
+ * Convert the SVM Light text-based examples file \c examples.txt into a Sleipnir binary SVM examples file
+ * \c examples.bin.
+ * 
+ * \code
+ * Txt2Bin -f bin -t txt -i <examples.bin> -o <examples.txt>
+ * \endcode
+ * 
+ * Convert the Sleipnir binary SVM examples file \c examples.bin into an SVM Light text-based examples file
+ * \c examples.txt.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Txt2Bin/Txt2Bin.ggo

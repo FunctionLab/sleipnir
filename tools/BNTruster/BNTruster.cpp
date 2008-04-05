@@ -28,7 +28,6 @@ int main( int iArgs, char** aszArgs ) {
 			iRet = c_apfnTrusters[ i ]( sArgs );
 			break; }
 
-	CMeta::Shutdown( );
 	pthread_exit( NULL );
 #ifdef WIN32
 	pthread_win32_process_detach_np( );

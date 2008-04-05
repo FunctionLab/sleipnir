@@ -11,6 +11,17 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Funcaeologist -g <genes.txt> -d <contexts_dir> <contexts.txt>*
+ * \endcode
+ * 
+ * Output (to standard output) the cohesiveness score for the gene set \c genes.txt in each context-specific
+ * network in the directory \c contexts_dir, which must correspond to a gene set context \c contexts.txt.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Funcaeologist/Funcaeologist.ggo

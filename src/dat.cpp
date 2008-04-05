@@ -957,6 +957,9 @@ bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore ) 
 	EFormat		eFormat;
 	size_t		i;
 
+	if( !szFile )
+		return Open( cin, EFormatText );
+
 	for( i = 0; c_asFormats[ i ].m_szExtension; ++i )
 		if( !strcmp( szFile + strlen( szFile ) - strlen( c_asFormats[ i ].m_szExtension ),
 			c_asFormats[ i ].m_szExtension ) )

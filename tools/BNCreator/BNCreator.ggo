@@ -2,12 +2,13 @@ package	"BNCreator"
 version	"1.0"
 purpose	"Bayes net construction and training from data"
 
-defgroup "input" yes
+defgroup "Input" yes
 groupoption	"answers"	w	"Answer file"
-							string	typestr="filename"	group="input"
+							string	typestr="filename"	group="Input"
 groupoption	"input"		i	"Input (X)DSL file"
-							string	typestr="filename"	group="input"
+							string	typestr="filename"	group="Input"
 
+section "Main"
 option	"output"		o	"Output DAB/DSL file"
 							string	typestr="filename"	yes
 option	"directory"		d	"Data directory"

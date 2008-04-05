@@ -114,7 +114,6 @@ int main( int iArgs, char** aszArgs ) {
 	for( i = 0; i < vecpClusters.size( ); ++i )
 		delete vecpClusters[ i ];
 
-	CMeta::Shutdown( );
 	return 0; }
 
 struct SSorter {

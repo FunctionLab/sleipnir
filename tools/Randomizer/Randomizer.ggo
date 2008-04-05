@@ -2,6 +2,7 @@ package	"Randomizer"
 version	"1.0"
 purpose	"Data file randomizer."
 
+section "Main"
 option	"input"		i	"Input/output DAT/DAB file"
 						string	typestr="filename"	yes
 option	"count"		c	"Target positive pair count"

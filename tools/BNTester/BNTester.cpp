@@ -113,7 +113,6 @@ int main( int iArgs, char** aszArgs ) {
 					endl; }
 		cout.flush( ); }
 
-	CMeta::Shutdown( );
 	return 0; }
 
 static int Genes( const char* szGenes, CGenes& Genes ) {

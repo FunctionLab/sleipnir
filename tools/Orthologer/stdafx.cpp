@@ -12,6 +12,19 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Orthologer -i <orthology.txt> -w <weight1> -W <weight2> <answers.dab>*
+ * \endcode
+ * 
+ * Aligns (modifies) the organism-specific answer files \c answers.dab based on the orthologous clusters in
+ * \c orthology.txt, assigning score \c weight1 to previously unrelated genes sharing an orthologous cluster
+ * and \c weight2 to previously unrelated genes in different orthologous clusters spanned by a gene pair
+ * related in some organism.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Orthologer/Orthologer.ggo

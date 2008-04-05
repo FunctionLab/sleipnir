@@ -2,6 +2,7 @@ package	"DSLConverter"
 version	"1.0"
 purpose	"Interconverts DSL/XDSL files"
 
+section "Main"
 option	"input"		i	"Input (X)DSL file"
 						string	typestr="filename"	yes
 option	"output"	o	"Output (X)DSL file"

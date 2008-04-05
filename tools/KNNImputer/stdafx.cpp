@@ -11,6 +11,17 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * KNNImputer -i <data.pcl> -o <imputed.pcl>
+ * \endcode
+ * 
+ * Replace missing values in the microarray data \c data.pcl based on their nearest neighbors, remove any
+ * genes with too many missing values, and save the result in \c imputed.pcl.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include KNNImputer/KNNImputer.ggo

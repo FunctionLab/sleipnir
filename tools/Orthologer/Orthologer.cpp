@@ -170,5 +170,4 @@ int main( int iArgs, char** aszArgs ) {
 
 		Dat.Save( ( CMeta::Deextension( sArgs.inputs[ iOrganism ] ) + c_szOrthologized ).c_str( ) ); }
 
-	CMeta::Shutdown( );
 	return 0; }

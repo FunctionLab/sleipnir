@@ -2,6 +2,7 @@ package	"Orthologer"
 version	"1.0"
 purpose	"Orthology-based DAT/DAB gold standard processing"
 
+section "Main"
 option	"input"		i	"Orthology file"
 						string	typestr="filename"
 option	"weight1"	w	"Weight of in-cluster ortholog relationships"

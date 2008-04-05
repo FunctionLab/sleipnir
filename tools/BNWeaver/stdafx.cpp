@@ -9,6 +9,20 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * BNWeaver -w <answers.dab> -o <contexts_dir> -d <data_dir> [-b <global.xdsl>] [-t <threads>]
+ *		<contexts.txt>*
+ * \endcode
+ * 
+ * Using the gold standard answers in \c answers.dab and all DAT/DAB files in \c data_dir, create one
+ * context-specific Bayesian classifier in \c contexts_dir for each biological context \c contexts.txt;
+ * optionally, use probability tables from \c global.xdsl as fallbacks when insufficient data is available
+ * for context-specific learning, and use \c threads parallel threads.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include BNWeaver/BNWeaver.ggo

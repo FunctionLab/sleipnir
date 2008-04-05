@@ -8,6 +8,17 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * DSLConverter -i <input.xdsl> -o <output.dsl>
+ * \endcode
+ * 
+ * Output a DSL file \c output.dsl equivalent to the input XDSL file \c input.xdsl.  Of course, you can
+ * input a DSL file and output an XDSL file instead.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include DSLConverter/DSLConverter.ggo

@@ -8,6 +8,37 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Dab2Dad -o <data.dad> <data.dab>*
+ * \endcode
+ * 
+ * Create an output dataset DAD file \c data.dad consisting of the gene pairs and values from all DAT/DAB
+ * files \c data.dab, which must be accompanied by corresponding QUANT files.
+ * 
+ * \code
+ * Dab2Dad -o <data.dad> -n <network.xdsl> -a <answers.dab> <data.dab>*
+ * \endcode
+ * 
+ * Create an output dataset DAD file \c data.dad appropriate for use in training or evaluating Bayesian
+ * networks with the structure \c network.xdsl, using the gold standard answers in \c answers.dab and the
+ * data in the DAT/DAB files \c data.dab.
+ * 
+ * \code
+ * Dab2Dad -i <data.dad>
+ * \endcode
+ * 
+ * Output (to standard output) the contents of \c data.dad as a tab-delimited text table.
+ * 
+ * \code
+ * Dab2Dad -i <data.dad> -m -l <gene1> -L <gene2>
+ * \endcode
+ * 
+ * Open \c data.dad using memory mapping and output all values stored for the gene pair \c gene1 and \c gene2.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Dab2Dad/Dab2Dad.ggo

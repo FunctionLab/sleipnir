@@ -9,6 +9,30 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Dat2Dab -i <data.dab> -o <data.dat>
+ * \endcode
+ * 
+ * Convert the input binary DAB file \c data.dab into the output tab-delimited text DAT file \c data.dat.
+ * 
+ * \code
+ * Dat2Dab -o <data.dab> -n -f -d < <data.dat>
+ * \endcode
+ * 
+ * Read a text DAT file \c data.dat from standard input, allowing duplicates, normalize all scores to the
+ * range [0,1], then invert them and save the results to the binary DAB file \c data.dab.
+ * 
+ * \code
+ * Dat2Dab -i <data.dab> -m -l <gene1> -L <gene2>
+ * \endcode
+ * 
+ * Open the binary DAB file \c data.dab using memory mapping and output the score for the gene pair \c gene1
+ * and \c gene2.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Dat2Dab/Dat2Dab.ggo

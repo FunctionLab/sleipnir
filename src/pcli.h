@@ -22,6 +22,7 @@ protected:
 	typedef std::vector<std::string>	TVecStr;
 	typedef std::set<size_t>			TSetI;
 
+	CPCLImpl( bool fHeader ) : m_fHeader(fHeader) { }
 	~CPCLImpl( );
 
 	bool OpenExperiments( std::istream&, size_t, char*, size_t );
@@ -34,6 +35,7 @@ protected:
 	TVecStr					m_vecstrFeatures;
 	std::vector<TVecStr>	m_vecvecstrFeatures;
 	TSetI					m_setiGenes;
+	bool					m_fHeader;
 };
 
 }

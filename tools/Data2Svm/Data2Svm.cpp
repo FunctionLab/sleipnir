@@ -96,5 +96,4 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Data.IsMasked( i ) )
 			cout << Data.GetGene( i ) << '\t' << vecdResults[ j++ ] << endl;
 
-	CMeta::Shutdown( );
 	return 0; }

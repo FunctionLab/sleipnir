@@ -9,6 +9,25 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * MCluster -i <data.pcl> -o <clustered.gtr> > <clustered.cdt>
+ * \endcode
+ * 
+ * Cluster the microarray data in \c data.pcl using the default similarity measure (Pearson correlation);
+ * save the clustered expression data in \c clustered.cdt and the gene tree in \c clustered.gtr.
+ * 
+ * \code
+ * MCluster -i <data.dab> -o <clustered.gtr> < <data.pcl> > <clustered.cdt>
+ * \endcode
+ * 
+ * Cluster the microarray data in \c data.pcl using the pre-calculated similarity scores (e.g. probabilities
+ * of functional relationship) in \c data.dab; save the clustered expression data in \c clustered.cdt and
+ * the gene tree in \c clustered.gtr.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include MCluster/MCluster.ggo

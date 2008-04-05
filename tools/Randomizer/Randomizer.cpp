@@ -10,8 +10,8 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-
 	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
+
 	if( !Dat.Open( sArgs.input_arg ) ) {
 		cerr << "Could not open input: " << sArgs.input_arg << endl;
 		return 1; }
@@ -32,5 +32,4 @@ int main( int iArgs, char** aszArgs ) {
 
 	Dat.Save( sArgs.input_arg );
 
-	CMeta::Shutdown( );
 	return 0; }

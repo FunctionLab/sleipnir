@@ -45,6 +45,9 @@ int main( int iArgs, char** aszArgs ) {
 			return 1; }
 		ifsm.close( ); }
 	else if( !strcmp( sArgs.from_arg, c_szDat ) ) {
+		if( !sArgs.output_arg ) {
+			cmdline_parser_print_help( );
+			return 1; }
 		ofsm.open( sArgs.output_arg, ios_base::binary );
 		if( !Answers.Open( sArgs.answers_arg, true ) ) {
 			cerr << "Couldn't open: " << sArgs.answers_arg << endl;
@@ -56,7 +59,9 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open DAT files" << endl;
 			return 1; } }
 	else {
-		ofsm.open( sArgs.output_arg, ios_base::binary );
+		if( !sArgs.output_arg ) {
+			cmdline_parser_print_help( );
+			return 1; }
 		if( sArgs.input_arg )
 			ifsm.open( sArgs.input_arg );
 		if( !OpenText( sArgs.input_arg ? (istream&)ifsm : cin, ofsm ) ) {
@@ -71,7 +76,6 @@ int main( int iArgs, char** aszArgs ) {
 	else
 		cout.flush( );
 
-	CMeta::Shutdown( );
 	return 0; }
 
 bool OpenDats( const CDataPair& Answers, const vector<string>& vecstrDATs, ostream& ostm,

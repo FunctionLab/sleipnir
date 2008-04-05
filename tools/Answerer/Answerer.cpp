@@ -77,7 +77,6 @@ int main( int iArgs, char** aszArgs ) {
 		delete vecpPositives[ i ];
 	for( i = 0; i < vecpNegatives.size( ); ++i )
 		delete vecpNegatives[ i ];
-	CMeta::Shutdown( );
 	return 0; }
 
 int read_genes( const char* szDir, CGenome& Genome, vector<CGenes*>& vecpGenes ) {

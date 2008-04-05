@@ -2,6 +2,7 @@ package	"SVMer"
 version	"1.0"
 purpose	"SVM training and evaluation"
 
+section "Main"
 option	"input"			i	"Input answer DAT/DAB file"
 							string	typestr="filename"
 option	"output"		o	"Output prediction DAT/DAB file"

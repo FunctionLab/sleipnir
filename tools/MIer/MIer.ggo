@@ -2,6 +2,7 @@ package	"MIer"
 version	"1.0"
 purpose	"Data set pairwise mutual information calculator."
 
+section "Main"
 option	"distance"	d	"Similarity measure"
 						values="pearson","quickpear","euclidean","kendalls","kolm-smir",
 						"hypergeom","innerprod","bininnerprod","mi"	default="mi"

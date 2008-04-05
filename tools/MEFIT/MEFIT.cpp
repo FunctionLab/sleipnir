@@ -160,7 +160,6 @@ int main( int iArgs, char** aszArgs ) {
 	for( i = 0; i < vecpPositives.size( ); ++i )
 		delete vecpPositives[ i ];
 
-	CMeta::Shutdown( );
 	return 0; }
 
 int read_genes( const char* szPositives, const char* szNegatives, CGenome& Genome, vector<string>& vecstrPositives,

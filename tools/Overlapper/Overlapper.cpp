@@ -65,5 +65,4 @@ int main( int iArgs, char** aszArgs ) {
 			cout << '\t' << MatConfusion.Get( i, j );
 		cout << endl; }
 
-	CMeta::Shutdown( );
 	return 0; }

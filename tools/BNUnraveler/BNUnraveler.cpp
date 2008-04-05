@@ -210,7 +210,6 @@ int main( int iArgs, char** aszArgs ) {
 		delete vecpNo[ i ];
 		delete vecpGenes[ i ]; }
 
-	CMeta::Shutdown( );
 	pthread_exit( NULL );
 #ifdef WIN32
 	pthread_win32_process_detach_np( );

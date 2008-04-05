@@ -39,7 +39,6 @@ int main( int iArgs, char** aszArgs ) {
 			(float)sArgs.adjust_data_arg ) :
 			explore_graphs( sArgs, DatData, DatFunctions, PCLTrusts );
 
-	CMeta::Shutdown( );
 	return iRet; }
 
 int output_cograph( const char* szOutput, const CDat& DatData, const CDat& DatFunctions,

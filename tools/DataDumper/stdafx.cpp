@@ -9,6 +9,20 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * DataDumper -w <answers.dab> <data.dab>*
+ * \endcode
+ * 
+ * Output (to standard output) the discretized answers for all gene pairs in \c answers.dab with data from
+ * the DAT/DAB files \c data.dab (and associated QUANT files) exactly as it would be used in Bayesian
+ * learning.  In combination with the other command line arguments, this allows a user to see exactly what
+ * data is being used for learning/evaluation under specific circumstances, e.g. context-specific learning,
+ * a holdout test set, etc.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include DataDumper/DataDumper.ggo

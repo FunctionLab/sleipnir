@@ -2,11 +2,13 @@ package	"Explainer"
 version	"1.0"
 purpose	"Allows evaluation of genes contributing to a good prediction score"
 
+section "Main"
 option	"input"			i	"Similarity DAT/DAB file"
 							string	typestr="filename"	yes
 option	"answers"		w	"Answer DAT/DAB file"
 							string	typestr="filename"	yes
 
+section "Miscellaneous"
 option	"count"			k	"Number of pairs to display"
 							int	default="-1"
 option	"positives"		p	"Include only positive pairs"

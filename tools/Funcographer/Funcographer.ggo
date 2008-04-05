@@ -2,6 +2,7 @@ package	"Funcographer"
 version	"1.0"
 purpose	"Function and dataset interaction network builder"
 
+section "Main"
 option	"functions"			f	"Function association DAT/DAB"
 								string	typestr="filename"	yes
 option	"trusts"			t	"Trusts PCL"
@@ -11,6 +12,7 @@ option	"datasets"			d	"Shared dataset activity DAT/DAB"
 option	"output"			o	"Merged network DAT/DAB"
 								string	typestr="filename"
 
+section "Miscellaneous"
 option	"adjust_data"		a	"Adjustment to dataset z-scores"
 								double	default="0"
 

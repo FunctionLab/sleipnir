@@ -133,5 +133,4 @@ int main( int iArgs, char** aszArgs ) {
 	for( i = 0; i < vecpGenes.size( ); ++i )
 		delete vecpGenes[ i ];
 
-	CMeta::Shutdown( );
 	return 0; }

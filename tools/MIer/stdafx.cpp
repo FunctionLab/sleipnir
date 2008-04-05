@@ -9,6 +9,17 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * MIer <data.dab>*
+ * \endcode
+ * 
+ * Compute pairwise mutual information scores for each pair of datasets in \c data.dab and output them to
+ * standard output.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include MIer/MIer.ggo

@@ -2,6 +2,7 @@ package	"Funcaeologist"
 version	"1.0"
 purpose	"Measures association of gene sets within a collection of networks"
 
+section "Main"
 option	"genes"			g	"Gene set to investigate"
 							string	typestr="filename"
 option	"directory"		d	"DAB network file directory"

@@ -2,6 +2,7 @@ package	"BNWeaver"
 version	"1.0"
 purpose	"Bayes net construction and training from data"
 
+section "Main"
 option	"answers"	w	"Answer file"
 						string	typestr="filename"	yes
 option	"output"	o	"Output directory"

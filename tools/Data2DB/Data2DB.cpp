@@ -58,7 +58,6 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open data" << endl;
 		return 1; }
 
-	CMeta::Shutdown( );
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32

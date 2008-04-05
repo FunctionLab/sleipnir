@@ -39,7 +39,7 @@ int main( int iArgs, char** aszArgs ) {
 	char				szBuf[ c_iBuf ];
 	map<string,SDatum>	mapValues;
 	CGenome				Genome;
-	CGenes				GenesPos( Genome ), GenesNeg( Genome );
+	CGenes				GenesPos( Genome );
 //	vector<float>		vecdQuants;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -136,11 +136,6 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.positives_arg )
 		ifsm.close( );
 	ifsm.clear( );
-	ifsm.open( sArgs.negatives_arg );
-	if( !GenesNeg.Open( ifsm ) ) {
-		cerr << "Could not open: " << sArgs.negatives_arg << endl;
-		return 1; }
-	ifsm.close( );
 
 	cout << "<?xml version='1.0' encoding='utf-8'?>" << endl;
 	cout << "<dataset name='datasets'>" << endl;
@@ -243,5 +238,4 @@ int main( int iArgs, char** aszArgs ) {
 	cout << "  </body>" << endl;
 	cout << "</dataset>" << endl;
 
-	CMeta::Shutdown( );
 	return 0; }

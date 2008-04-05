@@ -153,5 +153,4 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.Save( cout, CDat::EFormatText );
 		cout.flush( ); }
 
-	CMeta::Shutdown( );
 	return 0; }

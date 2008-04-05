@@ -297,5 +297,4 @@ int main( int iArgs, char** aszArgs ) {
 		if( !sArgs.inputs_num )
 			break; }
 
-	CMeta::Shutdown( );
 	return 0; }

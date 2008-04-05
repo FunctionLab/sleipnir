@@ -2,9 +2,11 @@ package	"BNFunc"
 version	"1.0"
 purpose	"Functional Bayes net preparation"
 
+section "Main"
 option	"input"		i	"Ontology slim file"
 						string	typestr="filename"	yes
 
+section "Miscellaneous"
 option	"directory"	d	"Output directory"
 						string	typestr="directory"	default="."
 option	"output"	o	"Answer file"

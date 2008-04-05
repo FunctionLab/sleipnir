@@ -2,6 +2,7 @@ package	"Edges2Posteriors"
 version	"1.0"
 purpose	"Calculate contribution of each dataset for a given list of edges"
 
+section "Main"
 option	"input"		i	"Prediction DAT/DAB file"
 						string	typestr="filename"	yes
 option	"network"	n	"Input Bayesian network (X)DSL"
@@ -9,6 +10,7 @@ option	"network"	n	"Input Bayesian network (X)DSL"
 option	"directory"	d	"Directory with DAB files"
 						string	typestr="directory"	default="."
 
+section "Miscellaneous"
 option	"zeros"		Z	"Read zeroed node IDs/outputs from the given file"
 						string	typestr="filename"
 option	"lookup"	l	"Lookup pair set"

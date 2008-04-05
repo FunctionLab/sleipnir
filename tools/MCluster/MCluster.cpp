@@ -169,5 +169,4 @@ int main( int iArgs, char** aszArgs ) {
 	PCL.Save( cout, &veciPCL );
 	cout.flush( );
 
-	CMeta::Shutdown( );
 	return 0; }

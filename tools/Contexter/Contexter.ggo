@@ -2,6 +2,7 @@ package	"Contexter"
 version	"1.0"
 purpose	"Calculate gene/context association ratios"
 
+section "Main"
 option	"input"			i	"DAT/DAB file or context IDs and names"
 							string	typestr="filename"
 
@@ -14,7 +15,7 @@ option	"contexts"		c	"Context/gene mapping"
 							string	typestr="filename"	yes
 option	"context"		e	"Context ID to process"
 							int	yes
-option	"genes"			g	"Gene ID to name"
+option	"genes"			g	"Gene ID to name mapping"
 							string	typestr="filename"
 
 section "Bayes nets"

@@ -9,6 +9,20 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * BNUnraveler -i <contexts_dir> -d <data_dir> -o <networks_dir> [-t <threads>]
+ *		<contexts.txt>*
+ * \endcode
+ * 
+ * For each biological context \c contexts.txt, load a context-specific Bayesian classifier (of the
+ * same name) from \c contexts_dir and use Bayesian inference with the data (named identically to the node
+ * IDs in the classifier) from \c data_dir to create a context-specific functional relationship
+ * network in \c networks_dir; optionally, use \c threads parallel threads.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include BNUnraveler/BNUnraveler.ggo

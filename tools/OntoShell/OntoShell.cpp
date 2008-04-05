@@ -111,7 +111,6 @@ int main( int iArgs, char** aszArgs ) {
 			free( szLine ); }
 		while( true ); }
 
-	CMeta::Shutdown( );
 	return 0; }
 
 char** CompletionAll( const char* szText, int iStart, int iEnd ) {

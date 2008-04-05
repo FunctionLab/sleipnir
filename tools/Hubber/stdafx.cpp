@@ -10,6 +10,38 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Hubber -i <network.dab> -g <genes> <contexts.txt>*
+ * \endcode
+ * 
+ * Output (to standard output) the average in- and out-connectivity of each gene set \c contexts.txt in the
+ * network \c network.dab; for each context, display the \c genes genes most specifically associated with
+ * that context.  In-connectivity is the weight of an edge between two genes in the context; out-connectivity
+ * is the weight of an edge incident to a gene in the context.
+ * 
+ * \code
+ * Hubber -i <network.dab> -g -1 <contexts.txt>*
+ * \endcode
+ * 
+ * Output (to standard output) the specificity with which every gene in the genome is associated with
+ * each context \c contexts.txt in the network \c network.dab.  Scores for genes already annotated in the
+ * context are negative.
+ * 
+ * \code
+ * Hubber -i <global.dab> -o <backgrounds.bin> -x <context_ids.txt> -s <gene_ids.txt>
+ *		-d <contexts_dir> <contexts.txt>*
+ * \endcode
+ * 
+ * Save in \c backgrounds.bin the average weight of edges incident to each gene in the global network
+ * \c global.dab and in every context-specific network in \c contexts_dir, each corresponding to a
+ * context gene list \c contexts.txt.  \c context_ids.txt and \c gene_ids.txt are tab-delimited text
+ * files as described below (and used in \ref BNServer) with one-based indices in the first column and
+ * context or gene names, respectively, in the second column.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Hubber/Hubber.ggo
@@ -57,16 +89,16 @@
  *	<td>-x</td>
  *	<td>None</td>
  *	<td>Text file</td>
- *	<td>If \c -o is given, tab-delimited text file containing one header row and at least two columns, the
- *		second of which must be a context name corresponding to that context's functional relationship DAT/DAB
- *		file.  Format nearly identical to the \ref BNServer context list.</td>
+ *	<td>If \c -o is given, tab-delimited text file containing at least two columns, the second of which must
+ *		be a context name corresponding to that context's functional relationship DAT/DAB file.  Identical to
+ *		the \ref BNServer context list.</td>
  * </tr><tr>
  *	<td>-s</td>
  *	<td>None</td>
  *	<td>Text file</td>
- *	<td>If \c -o is given, tab-delimited text file containing one header row and at least two columns, the
- *		second of which must be a gene name; should list all genes for which backgrounds are to be calculated.
- *		Format nearly identical to the \ref BNServer gene list.</td>
+ *	<td>If \c -o is given, tab-delimited text file containing at least two columns, the second of which must
+ *		be a gene name; should list all genes for which backgrounds are to be calculated.  Identical to \c -x
+ *		in format.</td>
  * </tr><tr>
  *	<td>-d</td>
  *	<td>.</td>

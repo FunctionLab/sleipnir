@@ -86,5 +86,4 @@ int main( int iArgs, char** aszArgs ) {
 			( dQueryIn / dQueryOut / dFuncIn * dFuncOut ) << '\t' << dQueryIn << '\t' << dQueryOut << '\t' <<
 			dFuncIn << '\t' << dFuncOut << endl; }
 
-	CMeta::Shutdown( );
 	return 0; }

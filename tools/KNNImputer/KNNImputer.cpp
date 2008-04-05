@@ -28,5 +28,4 @@ int main( int iArgs, char** aszArgs ) {
 		PCL.Save( cout );
 		cout.flush( ); }
 
-	CMeta::Shutdown( );
 	return 0; }

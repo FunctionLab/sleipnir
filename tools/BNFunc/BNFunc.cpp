@@ -182,7 +182,6 @@ int main( int iArgs, char** aszArgs ) {
 
 				cout << strName << endl; }
 
-	CMeta::Shutdown( );
 	return 0; }
 
 double overlap( const CGenome& Genome, const CSlim& Slim, size_t iOne, size_t iTwo ) {

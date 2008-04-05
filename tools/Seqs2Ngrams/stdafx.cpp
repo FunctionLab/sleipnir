@@ -9,6 +9,18 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Seqs2Ngrams -i <sequences.fasta> -o <similarities.dab> -n <ngram>
+ * \endcode
+ * 
+ * Breaks the sequences in \c sequences.fasta into k-mers of size \c ngram, computes k-mer frequency
+ * counts for each gene, and outputs gene pair similarities based on comparisons of these frequency vectors
+ * in \c similarities.dab.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Seqs2Ngrams/Seqs2Ngrams.ggo

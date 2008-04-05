@@ -11,6 +11,19 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Funcifier -i <network.dab> -o <functions.dab> -l <colors.txt> <contexts.txt>*
+ * \endcode
+ * 
+ * Find the strength of functional association between every pair of contexts \c contexts.txt in the
+ * functional relationship network \c network.dab and store the resulting function pair network in
+ * \c functions.dab; if requested, output the cohesiveness score for each function in \c colors.txt for
+ * use with \ref Dat2Graph.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Funcifier/Funcifier.ggo

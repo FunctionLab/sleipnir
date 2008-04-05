@@ -9,6 +9,17 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Overlapper -i <data1.dab> -I <data2.dab>
+ * \endcode
+ * 
+ * Outputs a confusion matrix comparing values for gene pairs in \c data1.dab and \c data2.dab, both of
+ * which must have associated QUANT files.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Overlapper/Overlapper.ggo

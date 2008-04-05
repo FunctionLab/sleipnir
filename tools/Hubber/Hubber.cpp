@@ -37,7 +37,7 @@ int main( int iArgs, char** aszArgs ) {
 			cmdline_parser_print_help( );
 			return 1; }
 		{
-			CPCL	PCLContexts;
+			CPCL	PCLContexts( false );
 
 			if( !PCLContexts.Open( sArgs.contexts_arg, 1 ) ) {
 				cerr << "Could not open: " << sArgs.contexts_arg << endl;
@@ -47,7 +47,7 @@ int main( int iArgs, char** aszArgs ) {
 				vecstrContexts[ i ] = PCLContexts.GetFeature( i, 1 );
 		}
 		{
-			CPCL	PCLGenes;
+			CPCL	PCLGenes( false );
 
 			if( !PCLGenes.Open( sArgs.genelist_arg, 1 ) ) {
 				cerr << "Could not open: " << sArgs.genelist_arg << endl;
@@ -134,7 +134,6 @@ int main( int iArgs, char** aszArgs ) {
 			DatOut.Save( ( (string)sArgs.clip_arg + '/' + CMeta::Deextension( CMeta::Basename(
 				sArgs.inputs[ iGenes ] ) ) + c_szDab ).c_str( ) ); } }
 
-	CMeta::Shutdown( );
 	return 0; }
 
 void hubs( const CDat& Dat, vector<float>& vecdHub ) {

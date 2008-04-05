@@ -2,6 +2,7 @@ package	"MCluster"
 version	"1.0"
 purpose	"Hierarchical clustering tool."
 
+section "Main"
 option	"input"		i	"Input PCL/DAT/DAB file"
 						string	typestr="filename"
 option	"output"	o	"Output GTR file"
@@ -10,6 +11,7 @@ option	"distance"	d	"Similarity measure"
 						values="pearson","euclidean","kendalls","kolm-smir","spearman"
 						default="pearson"
 
+section "Miscellaneous"
 option	"weights"	w	"Input weights file"
 						string	typestr="filename"
 

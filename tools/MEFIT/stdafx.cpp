@@ -10,6 +10,24 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * MEFIT -r <related_dir> -u <unrelated.txt> -b <bins.quant> -o <learned_dir> -O <learned.xdsl>
+ *		-p <predictions_dir> -t <trusts.txt> <data.pcl>*
+ * \endcode
+ * 
+ * First, construct a gold standard by reading related gene set text files from \c related_dir and unrelated
+ * gene pairs from \c unrelated.txt; any two genes coannotated to some set in \c related_dir are considered
+ * functionally related, and any gene pair listed in \c unrelated.txt is considered to be unrelated.  Next,
+ * compute normalized pairwise correlations for all genes in the given \c data.pcl microarray data files and
+ * discretize these scores based on the QUANT file \c bins.quant.  Learn a global Bayesian classifier
+ * \c learned.xdsl and context-specific classifiers for each positive gene set, stored in \c learned_dir.
+ * Finally, save a table of functional activity scores for each dataset in each context in \c trusts.txt,
+ * and save context-specific predicted functional relationship networks in \c predictions_dir.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include MEFIT/MEFIT.ggo

@@ -22,5 +22,4 @@ int main( int iArgs, char** aszArgs ) {
 
 	Dat.Save( sArgs.output_arg );
 
-	CMeta::Shutdown( );
 	return 0; }

@@ -10,6 +10,18 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Edges2Posteriors -i <predictions.dab> -n <learned.xdsl> -d <data_dir>
+ * \endcode
+ * 
+ * Output (to standard output) the contribution of each dataset DAT/DAB file in \c data_dir to the
+ * predicted functional relationship probabilities in \c predictions.dab based on the Bayesian network
+ * \c learned.xdsl; this network must contain node IDs corresponding to the data file names.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include Edges2Posteriors/Edges2Posteriors.ggo

@@ -2,6 +2,7 @@ package	"DataDumper"
 version	"1.0"
 purpose	"Examination of data used for large scale Bayes net learning"
 
+section "Main"
 option	"answers"	w	"Answer file"
 						string	typestr="filename"	yes
 

@@ -123,7 +123,6 @@ int main( int iArgs, char** aszArgs ) {
 		Evaluate( &Test, pNet, !!sArgs.zero_flag, ofsm );
 		ofsm.close( ); }
 
-	CMeta::Shutdown( );
 	return 0; }
 
 static void Evaluate( const IDataset* pData, const IBayesNet* pNet, bool fZero, ostream& ostm ) {

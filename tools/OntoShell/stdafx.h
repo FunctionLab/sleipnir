@@ -19,8 +19,13 @@ using namespace std;
 
 #pragma warning(disable:4275)
 
+#ifdef _MSC_VER
+#include <history.h>
+#include <readline.h>
+#else // _MSC_VER
 #include <readline/history.h>
 #include <readline/readline.h>
+#endif
 
 #include "annotation.h"
 #include "genome.h"

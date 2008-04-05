@@ -2,6 +2,7 @@ package	"BNUnraveler"
 version	"1.0"
 purpose	"Bayes net evaluation from data"
 
+section "Main"
 option	"input"			i	"Input (X)DSL file directory"
 							string	typestr="directory"	default="."
 option	"directory"		d	"Data directory"
@@ -9,6 +10,7 @@ option	"directory"		d	"Data directory"
 option	"output"		o	"Output directory"
 							string	typestr="directory"	default="."
 
+section "Miscellaneous"
 option	"everything"	e	"Evaluate non-term pairs"
 							flag	on
 option	"answers"		w	"Answer file"

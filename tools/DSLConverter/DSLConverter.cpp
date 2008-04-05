@@ -20,5 +20,4 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	BNSmile.Save( sArgs.output_arg );
 
-	CMeta::Shutdown( );
 	return 0; }

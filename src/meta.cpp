@@ -15,17 +15,14 @@ const char	CMeta::c_szWS[]		= " \t\r\n";
  * \param iRandomSeed
  * Random seed for use with srand; if -1, the current time is used.
  * 
- * Startup should be called at the beginning of any process using Sleipnir, usually at the top of main.
- * This serves primarily to initialize logging functions, but if you're doing a test that you want to behave
- * consistently, you can also seed the random number generator with a constant value.
+ * A Startup object should be created at the beginning of any process using Sleipnir, usually at the top of
+ * main.  This serves primarily to initialize logging functions, but if you're doing a test that you want to
+ * behave consistently, you can also seed the random number generator with a constant value.
  * 
  * \remarks
  * If Sleipnir is configured without log4cpp, iVerbosity will be ignored.
- * 
- * \see
- * Shutdown
  */
-void CMeta::Startup( int iVerbosity, size_t iRandomSeed ) {
+CMeta::Startup::Startup( int iVerbosity, size_t iRandomSeed ) {
 #ifndef USE_LOG4CPP_STUB
 	Category&			CatSleipnir	= Category::getInstance( c_szSleipnir );
 	OstreamAppender*	pAppOstm	= new OstreamAppender( "cerr", &cerr );
@@ -49,11 +46,8 @@ void CMeta::Startup( int iVerbosity, size_t iRandomSeed ) {
 /*!
  * \brief
  * Perform Sleipnir cleanup.
- * 
- * \see
- * Startup
  */
-void CMeta::Shutdown( ) {
+CMeta::Startup::~Startup( ) {
 
 	Category::shutdown( ); }
 

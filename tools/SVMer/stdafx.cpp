@@ -11,6 +11,24 @@
  * 
  * \section sec_overview Overview
  * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * SVMer -i <answers.dab> -m <learned.svm> <data.pcl/dab>*
+ * \endcode
+ * 
+ * Learn an SVM model \c learned.svm for gene pairs using labels from \c answers.dab and data from \c data.pcl
+ * (for features built from PCL conditions) or \c data.dab (for feature values drawn from DAT/DAB files).
+ * 
+ * \code
+ * SVMer -m <learned.svm> -o <predictions.dab> <data.pcl/dab>*
+ * \endcode
+ * 
+ * Using the SVM model in \c learned.svm, predict labels for gene pairs using data from \c data.pcl or
+ * \c data.dab and store the resulting predicted functional interaction network in \c predictions.dab.
+ * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include SVMer/SVMer.ggo

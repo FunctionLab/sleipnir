@@ -90,6 +90,18 @@ public:
 
 		return c_iSkip; }
 
+	/*!
+	 * \brief
+	 * Create a new PCL object with or without a header row.
+	 * 
+	 * \param fHeader
+	 * If true, associate a standard PCL header row with this object.
+	 * 
+	 * \remarks
+	 * Header setting influences both Open and Save (by way of SaveHeader).
+	 */
+	CPCL( bool fHeader = true ) : CPCLImpl( fHeader ) { }
+
 	void Open( const CPCL& PCL );
 	bool Open( std::istream& istm, size_t iSkip );
 	void Open( const std::vector<size_t>& veciGenes, const std::vector<std::string>& vecstrGenes,
