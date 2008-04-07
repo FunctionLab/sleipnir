@@ -630,16 +630,16 @@ bool CBNServer::GraphWrite( const CDat& DatGraph, const vector<size_t>& veciQuer
 		SendGenes( veciQuery, veciNeighbors );
 		send( m_iSocket, strSvg.c_str( ), (int)strSvg.length( ), 0 ); }
 	else {
-		strstream	ossm;
+		stringstream	sssm;
 
-		if( !DotOut.Save( ossm, vecfQuery, iContext ) )
+		if( !DotOut.Save( sssm, vecfQuery, iContext ) )
 			return false;
 
-		iSize = ossm.pcount( ) + sizeof(iSize) + (uint32_t)( sizeof(iSize) * ( veciQuery.size( ) +
-			veciNeighbors.size( ) ) );
+		iSize = (uint32_t)( sssm.str( ).length( ) + sizeof(iSize) + ( sizeof(iSize) * ( veciQuery.size( ) +
+			veciNeighbors.size( ) ) ) );
 		send( m_iSocket, (const char*)&iSize, sizeof(iSize), 0 );
 		SendGenes( veciQuery, veciNeighbors );
-		send( m_iSocket, ossm.str( ), ossm.pcount( ), 0 ); }
+		send( m_iSocket, sssm.str( ).c_str( ), (int)sssm.str( ).length( ), 0 ); }
 
 	return true; }
 

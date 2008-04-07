@@ -9,8 +9,6 @@
  * SVM example file for learning/evaluation or for displaying the contents of such a file as human-readable
  * text.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

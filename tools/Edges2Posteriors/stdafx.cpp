@@ -8,8 +8,6 @@
  * down per gene pair (rather than per dataset value, and the output can thus be \e much larger) and given
  * as the actual difference in posterior probability incurred by each gene pair's individual data values.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

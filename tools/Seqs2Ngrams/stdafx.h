@@ -12,8 +12,4 @@ using namespace std;
 #include "meta.h"
 using namespace Sleipnir;
 
-#ifndef ARRAYSIZE
-#define	ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
-#endif // ARRAYSIZE
-
 #endif // STDAFX_H

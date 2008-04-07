@@ -7,8 +7,6 @@
  * formats.  Optionall, the DAT/DAB can also be normalized, filtered, or queried using the bioPIXIE or
  * HEFalMp algorithms to inspect the neighborhood around a given gene set.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

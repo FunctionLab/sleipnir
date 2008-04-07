@@ -7,8 +7,6 @@
  * number) of ones.  This can be used to quickly create a random gold standard with a known number of positive
  * examples.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

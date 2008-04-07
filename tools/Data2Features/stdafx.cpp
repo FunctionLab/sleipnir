@@ -8,8 +8,6 @@
  * collapsing a collection of per-gene or per-gene-pair values into a single summary feature.  Similar to
  * \ref Data2Bnt.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

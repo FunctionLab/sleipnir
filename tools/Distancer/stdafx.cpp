@@ -7,8 +7,6 @@
  * using one of a large variety of similarity/distance measures (Pearson correlation, Euclidean distance,
  * etc.)
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

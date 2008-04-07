@@ -7,8 +7,6 @@
  * This can be used to approximate how much information is shared between two experimental datasets or
  * how similar two predicted functional relationship networks are.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

@@ -7,8 +7,6 @@
  * PCL and DAS files (see Sleipnir::CDat), perform a variety of normalizations or filters during the
  * conversion process, or lookup individual genes' or gene pairs' values from DAB files.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

@@ -7,8 +7,6 @@
  * gene's expression vector to have mean zero and standard deviation one, or of DAT/DAB files
  * (Sleipnir::CDat::Normalize), transforming all values to either z-scores or the range [0, 1].
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

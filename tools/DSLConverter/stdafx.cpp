@@ -6,8 +6,6 @@
  * DSLConverter converts between XDSL and DSL files and vice versa.  This is useful in that certain versions
  * of SMILE won't parse XDSL files on Windows, and other versions won't parse DSL files on Linux.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

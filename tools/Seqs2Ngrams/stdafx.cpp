@@ -7,8 +7,6 @@
  * genes.  This is done simplistically by computing the similarity of each gene pair's vectors of k-mer
  * counts, but could easily be modified to do something more complex.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

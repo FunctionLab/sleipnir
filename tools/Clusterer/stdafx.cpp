@@ -6,8 +6,6 @@
  * Clusterer performs non-hierarchical clustering, k-means or quality threshhold clustering (QTC), on an
  * input microarray dataset (PCL) using one of Sleipnir's many similarity measures.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

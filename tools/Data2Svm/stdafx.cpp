@@ -7,8 +7,6 @@
  * of a given gene set.  Constructs features for each example (gene) based on data in an input PCL.  Similar
  * to \ref SVMer.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

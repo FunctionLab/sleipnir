@@ -5,7 +5,7 @@
 
 #include <fstream>
 #include <queue>
-#include <strstream>
+#include <sstream>
 using namespace std;
 
 #ifdef _MSC_VER

@@ -10,8 +10,6 @@
  * orthologous clusters that share a gene pair related in some organism will be assigned a second weight
  * (low).  Existing positive functional relationships in the input files are never overwritten.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

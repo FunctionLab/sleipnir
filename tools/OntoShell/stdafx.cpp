@@ -9,8 +9,6 @@
  * explored, individual genes' annotations can be catted, and TermFinder queries can be processed either
  * interactively or from the command line.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

@@ -8,8 +8,6 @@
  * is primarily useful for predicting function for genes based on "guilt by association" with genes already
  * known to be in those functions (i.e. gene sets).
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

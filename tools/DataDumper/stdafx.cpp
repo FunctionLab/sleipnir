@@ -7,8 +7,6 @@
  * as it would be provided to the network for Bayesian learning or evaluation.  This provides information on
  * exactly what genes/gene pairs and data are being used for learning under different circumstances.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

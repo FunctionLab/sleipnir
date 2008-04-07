@@ -6,8 +6,6 @@
  * Dab2Dad combines multiple DAT/DAB files, possibly including a gold standard answer file in addition to
  * multiple datasets, into a DAD file as described by Sleipnir::CDatasetCompact.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

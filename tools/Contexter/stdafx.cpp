@@ -7,8 +7,6 @@
  * as-needed basis (like \ref BNServer) or from a given pre-calculated global functional relationship
  * network (DAT/DAB file) and context files.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

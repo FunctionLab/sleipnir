@@ -9,8 +9,6 @@
  * gene pair, but labeling these examples based on the inclusion of one of that pair's genes in a positive
  * gene set (e.g. pathway/process/complex/etc.)  Similar to \ref Data2Features.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

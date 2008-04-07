@@ -7,8 +7,6 @@
  * heavily weighted subgraphs (clusters) based on a greedy algorithm due to Charikar 2000 or full
  * cliques above some cutoff (computationally expensive!)
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

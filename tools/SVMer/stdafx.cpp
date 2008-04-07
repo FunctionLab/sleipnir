@@ -9,8 +9,6 @@
  * gene pair using each dataset as a feature.  In genewise mode, SVMer will learn one model per gene,
  * with one example constructed for each pair in which that gene participates.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

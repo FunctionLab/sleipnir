@@ -7,8 +7,6 @@
  * This summarizes the degree to which the two inputs overlap and agree (or disagree) for all pairwise
  * scores.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

@@ -9,8 +9,6 @@
  * value in those neighbors.  KNNImputer can optionally remove genes with too many missing values to
  * impute.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

@@ -57,13 +57,13 @@ uint16_t CClustPivot::Cluster( const CDistanceMatrix& MatSimilarities, float dCu
 	for( sRet = i = 0; i < MatSimilarities.GetSize( ); ++i ) {
 		iPivot = veciPerm[ i ];
 		// If gene was already clustered (or excluded), continue
-		if( vecsClusters[ iPivot ] != -1 )
+		if( vecsClusters[ iPivot ] != (uint16_t)-1 )
 			continue;
 
 		vecsClusters[ iPivot ] = sRet++;
 		for( j = 0; j < MatSimilarities.GetSize( ); ++j ) {
 			// check if already clustered (or thrown away)
-			if( vecsClusters[ j ] != -1 )
+			if( vecsClusters[ j ] != (uint16_t)-1 )
 				continue;
 
 		if( !CMeta::IsNaN( d = MatSimilarities.Get( iPivot, j ) ) && ( d > dCutoff ) )

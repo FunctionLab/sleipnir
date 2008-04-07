@@ -14,7 +14,7 @@ void CPCLSetImpl::Reset( ) {
 	if( m_aPCLs ) {
 		delete[] m_aPCLs;
 		m_aPCLs = NULL; }
-	m_iPCLs = NULL;
+	m_iPCLs = 0;
 	m_vecstrGenes.clear( );
 	m_Genes.Reset( ); }
 

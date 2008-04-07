@@ -16,8 +16,4 @@ using namespace Sleipnir;
 #define _unlink	unlink
 #endif // _MSC_VER
 
-#ifndef ARRAYSIZE
-#define ARRAYSIZE(x)	(sizeof(x)/sizeof(*(x)))
-#endif // ARRAYSIZE
-
 #endif // STDAFX_H

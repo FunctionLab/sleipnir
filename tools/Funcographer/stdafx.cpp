@@ -9,8 +9,6 @@
  * mining large data collections for pathways that are interacting and the datasets in which those
  * pathways are most active.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

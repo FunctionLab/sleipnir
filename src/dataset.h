@@ -1,6 +1,8 @@
 #ifndef DATASET_H
 #define DATASET_H
 
+#include <assert.h>
+
 #include "dataseti.h"
 
 namespace Sleipnir {

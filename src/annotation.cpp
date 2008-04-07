@@ -249,7 +249,7 @@ bool CSlim::Open( std::istream& istmSlim, const IOntology* pOntology ) {
 		m_vecveciTerms.resize( i + 1 );
 		istmSlim.getline( szBuf, c_iBuffer - 1 );
 		{
-			istrstream	issm( szBuf );
+			istringstream	issm( szBuf );
 
 			while( issm.peek( ) != EOF ) {
 				str = OpenToken( issm );

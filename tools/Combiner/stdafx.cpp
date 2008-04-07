@@ -10,8 +10,6 @@
  * manner.  DAT/DABs are combined into a DAD by ordering their individual scores as detailed in
  * Sleipnir::CDatasetCompact::Save.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

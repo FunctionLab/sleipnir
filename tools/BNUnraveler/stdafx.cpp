@@ -7,8 +7,6 @@
  * to produce predicted functional relationship networks.  It is generally paired with \ref BNWeaver to
  * learn classifiers from data and then infer context-specific functional relationships.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

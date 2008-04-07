@@ -48,7 +48,7 @@ inline size_t max( size_t iOne, size_t iTwo ) {
 #include <map>
 #include <queue>
 #include <set>
-#include <strstream>
+#include <sstream>
 #include <vector>
 using namespace std;
 

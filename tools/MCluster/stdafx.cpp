@@ -7,8 +7,6 @@
  * similarity measures or on a precomputed gene pair similarity matrix (e.g. predicted functional
  * relationships).  Output files are compatible with visualization tools such as Java TreeView.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

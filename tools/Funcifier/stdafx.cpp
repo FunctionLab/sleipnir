@@ -9,8 +9,6 @@
  * measures the amount of cross-talk between those processes, which is calculated from the given individual
  * gene pair functional relationships.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

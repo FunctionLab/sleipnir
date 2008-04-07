@@ -9,8 +9,6 @@
  * of an edge including at least one gene in the set).  Gene sets with higher cohesiveness a overall more
  * functionally related and generally behave more similarly in experimental data.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

@@ -6,8 +6,6 @@
  * Data2Sql converts a collection of DAT/DAB files into relational tables appropriate for insertion into a
  * SQL database.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

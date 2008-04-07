@@ -8,8 +8,6 @@
  * the number of times they cocluster over many random seeds, then high scores will be indicative of a
  * stronger pairwise relationship than low scores.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

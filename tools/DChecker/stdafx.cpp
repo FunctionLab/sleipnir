@@ -7,8 +7,6 @@
  * other interactions) and outputs the information necessary to perform a performance analysis (ROC curve,
  * precision/recall curve, or AUC score) for the given predictions.
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage

@@ -9,8 +9,6 @@
  * a single gene or gene pair can be accessed efficiently.  This is critical for real-time Bayesian inference
  * (e.g. by \ref BNServer).
  * 
- * \section sec_overview Overview
- * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage
