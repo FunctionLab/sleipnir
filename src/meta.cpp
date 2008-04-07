@@ -1,3 +1,7 @@
+#ifndef _MSC_VER
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
 #include "stdafx.h"
 #include "meta.h"
 
