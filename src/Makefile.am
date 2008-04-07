@@ -16,6 +16,7 @@ libSleipnir_a_SOURCES	=	\
 	bayesnetsmile.cpp		\
 	bayesnetsmileelr.cpp	\
 	clusthierarchical.cpp	\
+	clustkmeans.cpp			\
 	clustpivot.cpp			\
 	clustqtc.cpp			\
 	color.cpp				\
@@ -47,6 +48,7 @@ include_HEADERS			=	\
 	bayesneti.h				\
 	clusthierarchical.h		\
 	clusthierarchicali.h	\
+	clustkmeans.h			\
 	clustpivot.h			\
 	clustqtc.h				\
 	clustqtci.h				\
