@@ -6393,108 +6393,6 @@ fi
 done
    # tools/BNServer
 
-for ac_func in mkdir
-do
-as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $ac_func" >&5
-echo $ECHO_N "checking for $ac_func... $ECHO_C" >&6
-if eval "test \"\${$as_ac_var+set}\" = set"; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-/* Define $ac_func to an innocuous variant, in case <limits.h> declares $ac_func.
-   For example, HP-UX 11i <limits.h> declares gettimeofday.  */
-#define $ac_func innocuous_$ac_func
-
-/* System header to define __stub macros and hopefully few prototypes,
-    which can conflict with char $ac_func (); below.
-    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
-    <limits.h> exists even on freestanding compilers.  */
-
-#ifdef __STDC__
-# include <limits.h>
-#else
-# include <assert.h>
-#endif
-
-#undef $ac_func
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char $ac_func ();
-/* The GNU C library defines this for functions which it implements
-    to always fail with ENOSYS.  Some functions are actually named
-    something starting with __ and the normal name is an alias.  */
-#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
-choke me
-#else
-char (*f) () = $ac_func;
-#endif
-#ifdef __cplusplus
-}
-#endif
-
-int
-main ()
-{
-return f != $ac_func;
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  eval "$as_ac_var=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-eval "$as_ac_var=no"
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-fi
-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_var'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ac_var'}'`" >&6
-if test `eval echo '${'$as_ac_var'}'` = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define `echo "HAVE_$ac_func" | $as_tr_cpp` 1
-_ACEOF
-
-fi
-done
-  # tools/BNWrangler
-
 for ac_func in strtol
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
@@ -7453,6 +7351,57 @@ READLINE_INCLUDE_DIR=$result
     READLINE_LIBS="-L$READLINE_LIB_DIR"
   fi
   READLINE_LIBS="$READLINE_LIBS -lreadline"
+  # apparently on Macs, rl_completion_matches() is named completion_matches()
+  # hopefully this is an unusual exception
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include "readline/readline.h"
+int
+main ()
+{
+rl_completion_matches
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  :
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+cat >>confdefs.h <<\_ACEOF
+#define rl_completion_matches completion_matches
+_ACEOF
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
 fi
 
 
@@ -7743,7 +7692,7 @@ else
 fi
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ac_config_files="$ac_config_files Makefile src/Makefile tools/Makefile tools/Answerer/Makefile tools/Cliquer/Makefile tools/Clusterer/Makefile tools/Clusters2Dab/Makefile tools/Combiner/Makefile tools/DChecker/Makefile tools/Dat2Dab/Makefile tools/Dat2Graph/Makefile tools/Data2Bnt/Makefile tools/Data2Features/Makefile tools/Data2Sql/Makefile tools/DataDumper/Makefile tools/Distancer/Makefile tools/Explainer/Makefile tools/Funcaeologist/Makefile tools/Funcifier/Makefile tools/Funcographer/Makefile tools/Hubber/Makefile tools/KNNImputer/Makefile tools/MCluster/Makefile tools/MIer/Makefile tools/Normalizer/Makefile tools/Orthologer/Makefile tools/Overlapper/Makefile tools/Randomizer/Makefile tools/Seqs2Ngrams/Makefile tools/Txt2Bin/Makefile tools/BNConverter/Makefile tools/BNCreator/Makefile tools/BNEvaluator/Makefile tools/BNFunc/Makefile tools/BNTester/Makefile tools/BNTruster/Makefile tools/BNUnraveler/Makefile tools/BNWeaver/Makefile tools/Contexter/Makefile tools/Data2DB/Makefile tools/DSLConverter/Makefile tools/Dab2Dad/Makefile tools/Edges2Posteriors/Makefile tools/MEFIT/Makefile tools/Data2Svm/Makefile tools/SVMer/Makefile tools/OntoShell/Makefile tools/BNServer/Makefile"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ac_config_files="$ac_config_files Makefile src/Makefile tools/Makefile tools/Answerer/Makefile tools/Cliquer/Makefile tools/Clusterer/Makefile tools/Clusters2Dab/Makefile tools/Combiner/Makefile tools/DChecker/Makefile tools/Dat2Dab/Makefile tools/Dat2Graph/Makefile tools/Data2Bnt/Makefile tools/Data2Features/Makefile tools/Data2Sql/Makefile tools/DataDumper/Makefile tools/Distancer/Makefile tools/Explainer/Makefile tools/Funcaeologist/Makefile tools/Funcifier/Makefile tools/Funcographer/Makefile tools/Hubber/Makefile tools/KNNImputer/Makefile tools/MCluster/Makefile tools/MIer/Makefile tools/Normalizer/Makefile tools/Orthologer/Makefile tools/Overlapper/Makefile tools/Randomizer/Makefile tools/Seqs2Ngrams/Makefile tools/Txt2Bin/Makefile tools/BNConverter/Makefile tools/BNCreator/Makefile tools/BNEvaluator/Makefile tools/BNFunc/Makefile tools/BNTester/Makefile tools/BNTruster/Makefile tools/BNUnraveler/Makefile tools/BNWeaver/Makefile tools/Contexter/Makefile tools/Data2DB/Makefile tools/DSLConverter/Makefile tools/Dab2Dad/Makefile tools/Edges2Posteriors/Makefile tools/MEFIT/Makefile tools/Data2Svm/Makefile tools/SVMer/Makefile tools/OntoShell/Makefile tools/BNServer/Makefile"
 
 
 
@@ -9054,6 +9003,7 @@ echo "Used for library and tools:"
 echo "  log4cpp        = $log4cpp_info"
 echo "  SMILE          = $smile_info"
 echo "  SVM light      = $svm_light_info"
+echo "  pthread        = $pthread_info"
 echo "Used for tools:"
 echo "  boost libs     = $boost_libs_info"
 echo "  boost includes = $boost_includes_info"
@@ -9115,6 +9065,22 @@ BUILDING WITHOUT BOOST
 BNServer will not be made.
 Boost is available from http://boost.org/.
 EOF
+  fi
+
+  if test "x$with_boost" != "x" -a "x$with_boost" != "xno"; then
+  cat << EOF
+
+A WARNING ABOUT BOOST
+Boost installs header files under a version-dependent directory,
+for example in /usr/local/include/boost/boost-1_34_1/boost/. I have
+no reliable way of determining the Boost version, so you may run into
+a problem with missing Boost includes. If this is the case,
+simply use --with-boost-includes and --with-boost-libs to direct
+me to their actual locations, for example:
+  --with-boost-includes=/usr/local/include/boost/boost-1_34_1
+  --with-boost-libs=/usr/local/lib
+EOF
+
   fi
 
 else

@@ -399,6 +399,12 @@ if test "x$readline_info" != "xNONE"; then
     READLINE_LIBS="-L$READLINE_LIB_DIR"
   fi
   READLINE_LIBS="$READLINE_LIBS -lreadline"
+  # apparently on Macs, rl_completion_matches() is named completion_matches()
+  # hopefully this is an unusual exception
+  AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM([#include "readline/readline.h"], [rl_completion_matches])],
+    [],
+    [AC_DEFINE([rl_completion_matches], [completion_matches])])
 fi
 AC_SUBST(READLINE_PREFIX)
 AC_SUBST(READLINE_CFLAGS)
@@ -417,9 +423,9 @@ AC_LANG_PUSH([C])
 LOCAL_CHECK_LIB([pthread], [pthread], [pthread_create],
 	[],                                                        dnl found
 	[],                                                        dnl and found installed (pthread_info="found installed")
-	[PTHREAD_CFLAGS=$with_pthread],                          dnl and found in specified path (pthread_info=(path))
-	[pthread_info=NONE],                                      dnl not found
-	[pthread_info=NONE],                                      dnl requested without
+	[PTHREAD_CFLAGS=$with_pthread],                            dnl and found in specified path (pthread_info=(path))
+	[pthread_info=NONE],                                       dnl not found
+	[pthread_info=NONE],                                       dnl requested without
 	[#include <stdio.h>
 	 #include "pthread.h"])
 AC_LANG_POP
@@ -583,6 +589,7 @@ echo "Used for library and tools:"
 echo "  log4cpp        = $log4cpp_info"
 echo "  SMILE          = $smile_info"
 echo "  SVM light      = $svm_light_info"
+echo "  pthread        = $pthread_info"
 echo "Used for tools:"
 echo "  boost libs     = $boost_libs_info"
 echo "  boost includes = $boost_includes_info"
@@ -644,6 +651,22 @@ BUILDING WITHOUT BOOST
 BNServer will not be made.
 Boost is available from http://boost.org/.
 EOF
+  fi
+
+  if test "x$with_boost" != "x" -a "x$with_boost" != "xno"; then
+  cat << EOF
+
+A WARNING ABOUT BOOST
+Boost installs header files under a version-dependent directory,
+for example in /usr/local/include/boost/boost-1_34_1/boost/. I have
+no reliable way of determining the Boost version, so you may run into
+a problem with missing Boost includes. If this is the case,
+simply use --with-boost-includes and --with-boost-libs to direct
+me to their actual locations, for example:
+  --with-boost-includes=/usr/local/include/boost/boost-1_34_1
+  --with-boost-libs=/usr/local/lib
+EOF
+
   fi
 
 else
