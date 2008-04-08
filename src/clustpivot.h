@@ -10,11 +10,13 @@
 * authored by:
 * Curtis Huttenhower (chuttenh@princeton.edu)
 * Mark Schroeder
+* Maria D. Chikina
 * Olga G. Troyanskaya (ogt@princeton.edu, primary contact)
 *
 * If you use this library, the included executable tools, or any related
 * code in your work, please cite the following publication:
-* Curtis Huttenhower, Mark Schroeder, and Olga G. Troyanskaya.
+* Curtis Huttenhower, Mark Schroeder, Maria D. Chikina, and
+* Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #ifndef CLUSTPIVOT_H
