@@ -9,10 +9,11 @@
 * This file is a component of the Sleipnir library for functional genomics,
 * authored by:
 * Curtis Huttenhower (chuttenh@princeton.edu)
+* Mark Schroeder
 * Olga G. Troyanskaya (ogt@princeton.edu, primary contact)
 *
 * If you use this library, the included executable tools, or any related
 * code in your work, please cite the following publication:
-* Curtis Huttenhower, Michael Miller, ***, Olga G. Troyanskaya.
-* The Sleipnir library for large scale functional genomics.
+* Curtis Huttenhower, Mark Schroeder, and Olga G. Troyanskaya.
+* "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
