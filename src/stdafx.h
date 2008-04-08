@@ -96,7 +96,7 @@ struct Category {
 
 	static void shutdown( ) { }
 
-	static void log4cpp( const char* szTag, const char* szFormat, const va_list& valArgs ) {
+	static void log4cpp( const char* szTag, const char* szFormat, va_list& valArgs ) {
 
 		fprintf( stderr, "%d ", time( NULL ) );
 		fprintf( stderr, szTag );
