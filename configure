@@ -313,7 +313,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -869,10 +869,9 @@ Optional Packages:
   --with-log4cpp=PATH     prefix of log4cpp installation or build directory
   --with-smile=PATH       prefix of SMILE installation
   --with-svm-light=PATH   prefix of SVM Light installation
-  --with-boost=PATH       prefix of boost installation, or:
   --with-boost-includes=PATH
                           location of boost header files
-  --with-boost-libs=PATH  location of boost libraries
+  --with-boost-lib=PATH   path to boost_graph-mt library file
   --with-readline=PATH    prefix of readline installation
   --with-pthread=PATH     prefix of pthread installation
   --without-tools         exclude tools and build lib only
@@ -6587,7 +6586,7 @@ echo "${ECHO_T}no" >&6
 fi
 
   if test "x$prog_gengetopt" = "x"; then
-    true   # in case 	prog_gengetopt_info=NONE is not defined or is empty
+    true   # in case is not defined or is empty
     	prog_gengetopt_info=NONE
   else
     prog_gengetopt_info="found installed"
@@ -6641,7 +6640,7 @@ fi;
 
 if test "x$with_log4cpp" = "xno"; then
 #  log4cpp_info=NONE
-  true   # in case log4cpp_info=stub; AC_DEFINE([USE_LOG4CPP_STUB], [1]) is not defined or is empty
+  true   # in case not defined or is empty
   log4cpp_info=stub; cat >>confdefs.h <<\_ACEOF
 #define USE_LOG4CPP_STUB 1
 _ACEOF
@@ -6661,7 +6660,6 @@ else
   # because arguments to this macro may contain quotes, semicolons, etc.
   # So we work around it by always supplying a last argument.
   flag=false
-#  echo try link log4cpp::Category::getInstance
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -6710,11 +6708,6 @@ flag=true
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-#  AC_CHECK_LIB([log4cpp], [log4cpp::Category::getInstance],
-#    [log4cpp_info="found installed"
-#
-#     	],
-#    [flag=true])
   if $flag; then
     # we also can't have an empty if block...
     true
@@ -6777,7 +6770,7 @@ fi;
 
 if test "x$with_smile" = "xno"; then
 #  smile_info=NONE
-  true   # in case         smile_info=NONE; AC_DEFINE([NO_SMILE], [1]) is not defined or is empty
+  true   # in case not defined or is empty
           smile_info=NONE; cat >>confdefs.h <<\_ACEOF
 #define NO_SMILE 1
 _ACEOF
@@ -6797,7 +6790,6 @@ else
   # because arguments to this macro may contain quotes, semicolons, etc.
   # So we work around it by always supplying a last argument.
   flag=false
-#  echo try link RoundProbability
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -6846,11 +6838,6 @@ flag=true
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-#  AC_CHECK_LIB([smile], [RoundProbability],
-#    [smile_info="found installed"
-#
-#             ],
-#    [flag=true])
   if $flag; then
     # we also can't have an empty if block...
     true
@@ -6924,7 +6911,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 if test "x$with_svm_light" = "xno"; then
 #  svm_light_info=NONE
-  true   # in case         svm_light_info=NONE; AC_DEFINE([NO_SVM_LIGHT], [1]) is not defined or is empty
+  true   # in case not defined or is empty
           svm_light_info=NONE; cat >>confdefs.h <<\_ACEOF
 #define NO_SVM_LIGHT 1
 _ACEOF
@@ -6944,7 +6931,6 @@ else
   # because arguments to this macro may contain quotes, semicolons, etc.
   # So we work around it by always supplying a last argument.
   flag=false
-#  echo try link optimize_svm
 
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -6996,11 +6982,6 @@ flag=true
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-#  AC_CHECK_LIB([svmlight], [optimize_svm],
-#    [svm_light_info="found installed"
-#
-#             ],
-#    [flag=true])
   if $flag; then
     # we also can't have an empty if block...
     true
@@ -7055,17 +7036,6 @@ fi
 # If not specified, check for it.
 # BOOST graph-mt lib is required.
 
-# Check whether --with-boost or --without-boost was given.
-if test "${with_boost+set}" = set; then
-  withval="$with_boost"
-
-fi;
-# $with_boost will either be a path or "no" or undefined
-if test "x$with_boost" = "xno"; then
-  with_boost_includes=no
-  with_boost_libs=no
-else
-
 # Check whether --with-boost_includes or --without-boost_includes was given.
 if test "${with_boost_includes+set}" = set; then
   withval="$with_boost_includes"
@@ -7075,45 +7045,40 @@ else
 	if test "x$with_boost" = "x"; then with_boost_includes=check; else with_boost_includes=$with_boost; fi
 fi;
 
-# Check whether --with-boost_libs or --without-boost_libs was given.
-if test "${with_boost_libs+set}" = set; then
-  withval="$with_boost_libs"
+# Check whether --with-boost_lib or --without-boost_lib was given.
+if test "${with_boost_lib+set}" = set; then
+  withval="$with_boost_lib"
 
 else
-  # $with_boost_libs will either be a path or "no"
-	if test "x$with_boost" = "x"; then with_boost_libs=check; else with_boost_libs=$with_boost; fi
+  # $with_boost_lib will either be a path or "no"
+        with_boost_lib=no
 fi;
-  if test "x$with_boost_includes" = "xno" -o "x$with_boost_libs" = "xno"; then
-    with_boost_includes=no
-    with_boost_libs=no
-    with_boost=no
-  fi
+if test "x$with_boost_includes" = "xno" -o "x$with_boost_lib" = "xno"; then
+  with_boost_includes=no
+  with_boost_lib=no
 fi
-# cases:
-#   all are "no"
-#   with_boost=(path1), with_boost_includes=(path2)|with_boost, with_boost_libs=(path3)|with_boost
-#   with_boost="", with_boost_includes=(path2)|"check", with_boost_libs=(path3)|"check"
 
-if test "x$with_boost_libs" = "xno"; then
-#  boost_libs_info=NONE
-  true   # in case 	boost_libs_info=NONE is not defined or is empty
-  	boost_libs_info=NONE
-elif test "x$with_boost_libs" != "xcheck"; then
+if test "x$with_boost_lib" = "xno"; then
+#  boost_lib_info=NONE
+  true   # in case not defined or is empty
+  	boost_lib_info=NONE
+         boost_includes_info=NONE
+elif test "x$with_boost_lib" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
 # That may not be necessary.
-#  if echo with_boost_libs | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
-  boost_libs_info=$with_boost_libs
-  qualify_path with_boost_libs
+#  if echo with_boost_lib | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
+  boost_lib_info=$with_boost_lib
+  qualify_path with_boost_lib
 
-  	BOOST_LIBS_DIR=$with_boost_libs                            	 boost_includes_info=$with_boost_includes
+  	BOOST_LIB_FILE=$with_boost_lib
+	 boost_includes_info=$with_boost_includes
 else
   # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
   # empty, however, we get a syntax error. But, we have to be careful,
   # because arguments to this macro may contain quotes, semicolons, etc.
   # So we work around it by always supplying a last argument.
   flag=false
-#  echo try link boost::detail::graph::read_graphviz
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -7151,7 +7116,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  boost_libs_info="found installed"
+  boost_lib_info="found installed"
 
      	boost_includes_info="found installed"
 else
@@ -7162,41 +7127,20 @@ flag=true
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-#  AC_CHECK_LIB([boost_graph-mt], [boost::detail::graph::read_graphviz],
-#    [boost_libs_info="found installed"
-#
-#     	boost_includes_info="found installed"],
-#    [flag=true])
   if $flag; then
     # we also can't have an empty if block...
     true
-    boost_libs_info=NONE
+    	boost_lib_info=NONE
+         boost_includes_info=NONE
   fi
 fi
 
-# cases:
-#   boost_includes_info=boost_libs_info="found installed", BOOST_LIBS_DIR=""
-#   boost_libs_info=BOOST_LIBS_DIR=(path1), boost_includes_info=(path2)
-#   boost_libs_info=NONE, don't care about any others
-if test "x$boost_libs_info" = "xNONE"; then
-  boost_includes_info=NONE
-  boost_info=NONE
-else
+if test "x$boost_lib_info" != "xNONE"; then
   ## set BOOST_CFLAGS and BOOST_LIBSS
-  if test "x$BOOST_LIBS_DIR" != "x"; then
+  if test "x$BOOST_LIB_FILE" != "x"; then
     # boost_libs_info and boost_includes_info are paths
-
-result=$BOOST_LIBS_DIR
-for p in lib; do
-  if test -e "$BOOST_LIBS_DIR/$p/"; then
-    result=$BOOST_LIBS_DIR/$p
-    break
-  fi
-done
-BOOST_LIBS_DIR=$result
-
-    BOOST_LIBS="-L$BOOST_LIBS_DIR"
     # now look for the headers
+    BOOST_LIBS=$BOOST_LIB_FILE
     qualify_path with_boost_includes
 
 result=$with_boost_includes
@@ -7210,10 +7154,9 @@ BOOST_INCLUDES_DIR=$result
 
     BOOST_CFLAGS="-I$BOOST_INCLUDES_DIR"
   fi
-  BOOST_LIBS="$BOOST_LIBS -lboost_graph-mt"
 fi
 #AC_SUBST(BOOST_PREFIX)
-
+#AC_SUBST(BOOST_CFLAGS)
 
 
 
@@ -7239,7 +7182,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 if test "x$with_readline" = "xno"; then
 #  readline_info=NONE
-  true   # in case 	readline_info=NONE is not defined or is empty
+  true   # in case not defined or is empty
   	readline_info=NONE
 elif test "x$with_readline" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
@@ -7256,7 +7199,6 @@ else
   # because arguments to this macro may contain quotes, semicolons, etc.
   # So we work around it by always supplying a last argument.
   flag=false
-#  echo try link readline
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -7306,11 +7248,6 @@ flag=true
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-#  AC_CHECK_LIB([readline], [readline],
-#    [readline_info="found installed"
-#
-#     	],
-#    [flag=true])
   if $flag; then
     # we also can't have an empty if block...
     true
@@ -7432,7 +7369,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 if test "x$with_pthread" = "xno"; then
 #  pthread_info=NONE
-  true   # in case 	pthread_info=NONE is not defined or is empty
+  true   # in case not defined or is empty
   	pthread_info=NONE
 elif test "x$with_pthread" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
@@ -7449,7 +7386,6 @@ else
   # because arguments to this macro may contain quotes, semicolons, etc.
   # So we work around it by always supplying a last argument.
   flag=false
-#  echo try link pthread_create
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -7499,11 +7435,6 @@ flag=true
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-#  AC_CHECK_LIB([pthread], [pthread_create],
-#    [pthread_info="found installed"
-#
-#     	],
-#    [flag=true])
   if $flag; then
     # we also can't have an empty if block...
     true
@@ -7618,7 +7549,7 @@ fi
 
 
 
-if test "x$boost_info" != "xNONE"; then
+if test "x$boost_lib_info" != "xNONE"; then
   WITH_BOOST_TOOLS_TRUE=
   WITH_BOOST_TOOLS_FALSE='#'
 else
@@ -8439,7 +8370,6 @@ s,@SMILE_LIBS@,$SMILE_LIBS,;t t
 s,@SVM_LIGHT_PREFIX@,$SVM_LIGHT_PREFIX,;t t
 s,@SVM_LIGHT_CFLAGS@,$SVM_LIGHT_CFLAGS,;t t
 s,@SVM_LIGHT_LIBS@,$SVM_LIGHT_LIBS,;t t
-s,@BOOST_CFLAGS@,$BOOST_CFLAGS,;t t
 s,@BOOST_LIBS@,$BOOST_LIBS,;t t
 s,@READLINE_PREFIX@,$READLINE_PREFIX,;t t
 s,@READLINE_CFLAGS@,$READLINE_CFLAGS,;t t
@@ -8950,7 +8880,7 @@ echo "  SMILE          = $smile_info"
 echo "  SVM light      = $svm_light_info"
 echo "  pthread        = $pthread_info"
 echo "Used for tools:"
-echo "  boost libs     = $boost_libs_info"
+echo "  boost lib      = $boost_lib_info"
 echo "  boost includes = $boost_includes_info"
 echo "  readline       = $readline_info"
 echo "  gengetopt      = $prog_gengetopt_info"
@@ -9018,21 +8948,21 @@ EOF
 
   fi
 
-  if test "x$with_boost" != "x" -a "x$with_boost" != "xno"; then
-  cat << EOF
-
-** A WARNING ABOUT BOOST
-Boost installs header files under a version-dependent directory,
-for example in /usr/local/include/boost/boost-1_34_1/boost/. I have
-no reliable way of determining the Boost version, so you may run into
-a problem with missing Boost includes. If this is the case,
-simply use --with-boost-includes and --with-boost-libs to direct
-me to their actual locations, for example:
-  --with-boost-includes=/usr/local/include/boost/boost-1_34_1
-  --with-boost-libs=/usr/local/lib
-EOF
-
-  fi
+#  if test "x$with_boost" != "x" -a "x$with_boost" != "xno"; then
+#  cat << EOF
+#
+#** A WARNING ABOUT BOOST
+#Boost installs header files under a version-dependent directory,
+#for example in /usr/local/include/boost/boost-1_34_1/boost/. I have
+#no reliable way of determining the Boost version, so you may run into
+#a problem with missing Boost includes. If this is the case,
+#simply use --with-boost-includes and --with-boost-libs to direct
+#me to their actual locations, for example:
+#  --with-boost-includes=/usr/local/include/boost/boost-1_34_1
+#  --with-boost-libs=/usr/local/lib
+#EOF
+#
+#  fi
 
 else
 
