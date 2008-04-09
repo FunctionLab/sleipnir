@@ -1,6 +1,5 @@
 # TODO
 # b. Installation
-# c. Ranlib SMILE and other libs?
 # f. Allow specification of full path to lib (ie. ending in lib.a) for with
 # g. Check that prefixes are dirs
 # h. Gengetopt, svm_light, boost, readline build directories
@@ -267,7 +266,7 @@ if test "x$smile_info" != "xNONE"; then
     SMILE_CFLAGS="-I$SMILE_INCLUDE_DIR"
     SMILE_LIBS="-L$SMILE_LIB_DIR"
   fi
-  SMILE_LIBS="$SMILE_LIBS -lsmile $SMILEXML_LIB"
+  SMILE_LIBS="$SMILE_LIBS $SMILEXML_LIB -lsmile"
 fi
 AC_SUBST(SMILE_PREFIX)
 AC_SUBST(SMILE_CFLAGS)
@@ -303,7 +302,7 @@ if test "x$svm_light_info" != "xNONE"; then
     SVM_LIGHT_CFLAGS="-I$SVM_LIGHT_INCLUDE_DIR"
     SVM_LIGHT_LIBS="-L$SVM_LIGHT_LIB_DIR"
   fi
-  SVM_LIGHT_LIBS="$SVM_LIGHT_LIBS -lsvm"
+  SVM_LIGHT_LIBS="$SVM_LIGHT_LIBS -lsvmlight"
 fi
 AC_SUBST(SVM_LIGHT_PREFIX)
 AC_SUBST(SVM_LIGHT_CFLAGS)
@@ -398,11 +397,14 @@ if test "x$readline_info" != "xNONE"; then
     READLINE_CFLAGS="-I$READLINE_INCLUDE_DIR"
     READLINE_LIBS="-L$READLINE_LIB_DIR"
   fi
-  READLINE_LIBS="$READLINE_LIBS -lreadline"
+  # it should be very rare indeed that ncurses is not there if readline is there
+  READLINE_LIBS="$READLINE_LIBS -lreadline -lncurses"
   # apparently on Macs, rl_completion_matches() is named completion_matches()
   # hopefully this is an unusual exception
   AC_LINK_IFELSE(
-    [AC_LANG_PROGRAM([#include "readline/readline.h"], [rl_completion_matches])],
+    [AC_LANG_PROGRAM([#include <stdio.h>
+		      #include "readline/readline.h"],
+		      [rl_completion_matches])],
     [],
     [AC_DEFINE([rl_completion_matches], [completion_matches])])
 fi
@@ -458,63 +460,6 @@ AC_SUBST(SLEIPNIR_LIBS)
 
 # uncomment to print out all variables
 #set
-
-
-ok=true
-
-#if test "x$smile_info" = "x"; then
-#  ok=false
-#cat << EOF
-#
-#SMILE NOT FOUND
-#To compile without SMILE, use --without-smile.
-#Otherwise use --with-smile=(path) to specify the location.
-#It is available as a binary distribution from http://genie.sis.pitt.edu/.
-#EOF
-#
-#fi
-#
-#if test "x$svm_light_info" = "x"; then
-#  ok=false
-#cat << EOF
-#
-#SVM LIGHT NOT FOUND
-#To compile without SVM Light, use --without-svm-light.
-#Otherwise use --with-svm-light=(path) to specify the location.
-#It is available from http://svmlight.joachims.org/.
-#EOF
-#
-#fi
-#
-##! or $boost_includes_info
-#if test "x$boost_libs_info" = "x"; then
-#  ok=false
-#cat << EOF
-#
-#BOOST LIBRARY NOT FOUND
-#To compile without Boost, use --without-boost.
-#Otherwise use --with-boost=(path) to specify its location.
-#It is available at http://www.boost.org/.
-#Boost is required for BNServer.
-#EOF
-#
-#fi
-
-if test "x$prog_gengetopt_info" = "x"; then
-  ok=false
-cat << EOF
-
-GENGETOPT IS REQUIRED
-Please use --with-gengetopt=(path) to specify its location.
-EOF
-
-fi
-
-if ! $ok; then
-  echo ""
-  echo "Please correct the above errors before continuing."
-  exit 1
-fi
 
 
 AC_ARG_WITH([tools],
@@ -600,63 +545,69 @@ echo "  gengetopt      = $prog_gengetopt_info"
 
 # if stub there might be additional info, so use grep
 if echo $log4cpp_info | $GREP -q stub; then
-cat << EOF
+  cat << EOF
 
-Using a simple replacement stub for log4cpp.
+** Using a simple replacement stub for log4cpp.
 If this is insufficient rerun configure with --with-log4cpp=(path).
 EOF
+
 fi
 
 if test "x$smile_info" = "xNONE"; then
-cat << EOF
+  cat << EOF
 
-BUILDING WITHOUT SMILE
+** BUILDING WITHOUT SMILE
 SMILE is strongly recommended.
 Bayes net functionality will be missing.
 SMILE is available as a binary distribution from http://genie.sis.pitt.edu/.
 EOF
+
 fi
 
 if test "x$svm_light_info" = "xNONE"; then
-cat << EOF
+  cat << EOF
 
-BUILDING WITHOUT SVM LIGHT
+** BUILDING WITHOUT SVM LIGHT
 SVM light is strongly recommended.
 It is available from http://svmlight.joachims.org/.
 EOF
+
 fi
 
 if $with_tools; then
   if test "x$prog_gengetopt_info" = "xNONE"; then
   cat << EOF
 
-Gengetopt was not found. This is probably fine, but if any of the
+** Gengetopt was not found. This is probably fine, but if any of the
 cmdline.c or cmdline.h files are missing or out of date, they
 will not be rebuilt.
 EOF
+
   fi
 
   if test "x$readline_info" = "xNONE"; then
   cat << EOF
 
-BUILDING WITHOUT READLINE
+** BUILDING WITHOUT READLINE
 OntoShell will not be made.
 EOF
+
   fi
 
   if test "x$boost_info" = "xNONE"; then
   cat << EOF
 
-BUILDING WITHOUT BOOST
-BNServer will not be made.
+** BUILDING WITHOUT BOOST
+BNServer will not be made (requires boost_graph-mt library).
 Boost is available from http://boost.org/.
 EOF
+
   fi
 
   if test "x$with_boost" != "x" -a "x$with_boost" != "xno"; then
   cat << EOF
 
-A WARNING ABOUT BOOST
+** A WARNING ABOUT BOOST
 Boost installs header files under a version-dependent directory,
 for example in /usr/local/include/boost/boost-1_34_1/boost/. I have
 no reliable way of determining the Boost version, so you may run into
@@ -673,7 +624,7 @@ else
 
   cat <<EOF
 
-Tools will not be made.
+** Tools will not be made.
 EOF
 
 fi
