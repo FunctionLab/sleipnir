@@ -175,6 +175,11 @@
  *	sure you have a recent version that matches your build environment.  On Windows, this will be a version
  *	of Visual Studio (6.0 through 9.0, also known as 2008) or of gcc for cygwin.  On Linux/Mac OS, this will
  *	be a version of gcc, which you can obtain with the \c --version flag.
+ * - Another charming side-effect of SMILE: any tool linked against Sleipnir in Release mode in Visual
+ *	Studio must be built with the preprocessor define _SECURE_SCL=0.  Since SMILE is distributed in binary
+ *	form compiled with that setting, it taints anything it interacts with; building without this flag and
+ *	linking against Sleipnir in Release mode will result in weird memory corruption errors when dealing with
+ *	STL objects.
  * - If you're building the \ref BNServer tool, you'll need the Boost graph library - but only the graph
  *	library!  To keep from building the whole giant Boost package, try building it like this (note that the
  *	\c --prefix argument is optional):
@@ -188,6 +193,11 @@
  * - If you're building prerequisites by hand, you may not need to install them at all; Sleipnir can often
  *	find them if you simply point an appropriate \c --with argument to the prerequisite library's
  *	source directory.
+ * - Boost again: when giving the path to the Boost libraries using \c --with, beware of Boost's
+ *	tendency to append the compiler version to its library names under certain circumstances.  If your
+ *	Boost installation includes something like \c gcc41 in the library file names, use \c --with-boost-libs
+ *	to give the path <em>to the Boost graph library file</em> rather than its parent directory.  Remember,
+ *	Boost is only used for certain tools, so it won't hurt if you need to exclude it.
  * - If all else fails, <a href="mailto:ogt@princeton.edu">contact us</a>!  We're happy to receive
  *	feedback about Sleipnir, good or bad, and we're more than willing to update the code or documentation
  *	based on user contributions.  If you'd like to see your name in lights on this web page, feel free to
