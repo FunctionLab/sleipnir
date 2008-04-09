@@ -65,6 +65,8 @@ OBJEXT = @OBJEXT@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 AMTAR = @AMTAR@
 AWK = @AWK@
+BOOST_CFLAGS = @BOOST_CFLAGS@
+BOOST_LIBS = @BOOST_LIBS@
 CC = @CC@
 CXX = @CXX@
 DEPDIR = @DEPDIR@
@@ -76,7 +78,13 @@ LOG4CPP_CFLAGS = @LOG4CPP_CFLAGS@
 LOG4CPP_LIBS = @LOG4CPP_LIBS@
 LOG4CPP_PREFIX = @LOG4CPP_PREFIX@
 PACKAGE = @PACKAGE@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
+PTHREAD_PREFIX = @PTHREAD_PREFIX@
 RANLIB = @RANLIB@
+READLINE_CFLAGS = @READLINE_CFLAGS@
+READLINE_LIBS = @READLINE_LIBS@
+READLINE_PREFIX = @READLINE_PREFIX@
 SLEIPNIR_CFLAGS = @SLEIPNIR_CFLAGS@
 SLEIPNIR_LIBS = @SLEIPNIR_LIBS@
 SLEIPNIR_PREFIX = @SLEIPNIR_PREFIX@
@@ -97,10 +105,10 @@ prog_gengetopt_dir = @prog_gengetopt_dir@
 sleipnirdocdir = @sleipnirdocdir@
 lib_LIBRARIES = libSleipnir.a
 
-AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_LIGHT_CFLAGS)
+AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_LIGHT_CFLAGS) $(PTHREAD_CFLAGS)
 
-LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_LIGHT_LIBS)
 
+#LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_LIGHT_LIBS) $(PTHREAD_LIBS)
 libSleipnir_a_SOURCES = \
 	annotation.cpp			\
 	annotationgo.cpp		\
@@ -113,6 +121,7 @@ libSleipnir_a_SOURCES = \
 	bayesnetsmile.cpp		\
 	bayesnetsmileelr.cpp	\
 	clusthierarchical.cpp	\
+	clustkmeans.cpp			\
 	clustpivot.cpp			\
 	clustqtc.cpp			\
 	color.cpp				\
@@ -145,6 +154,7 @@ include_HEADERS = \
 	bayesneti.h				\
 	clusthierarchical.h		\
 	clusthierarchicali.h	\
+	clustkmeans.h			\
 	clustpivot.h			\
 	clustqtc.h				\
 	clustqtci.h				\
@@ -206,10 +216,10 @@ am_libSleipnir_a_OBJECTS = annotation.$(OBJEXT) annotationgo.$(OBJEXT) \
 	bayesnet.$(OBJEXT) bayesnetfn.$(OBJEXT) bayesnetmixed.$(OBJEXT) \
 	bayesnetpnl.$(OBJEXT) bayesnetsmile.$(OBJEXT) \
 	bayesnetsmileelr.$(OBJEXT) clusthierarchical.$(OBJEXT) \
-	clustpivot.$(OBJEXT) clustqtc.$(OBJEXT) color.$(OBJEXT) \
-	compactmatrix.$(OBJEXT) database.$(OBJEXT) datapair.$(OBJEXT) \
-	datasetcompact.$(OBJEXT) dataset.$(OBJEXT) dat.$(OBJEXT) \
-	example.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) \
+	clustkmeans.$(OBJEXT) clustpivot.$(OBJEXT) clustqtc.$(OBJEXT) \
+	color.$(OBJEXT) compactmatrix.$(OBJEXT) database.$(OBJEXT) \
+	datapair.$(OBJEXT) datasetcompact.$(OBJEXT) dataset.$(OBJEXT) \
+	dat.$(OBJEXT) example.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) \
 	mathb.$(OBJEXT) measure.$(OBJEXT) meta.$(OBJEXT) \
 	orthology.$(OBJEXT) pcl.$(OBJEXT) pclset.$(OBJEXT) \
 	serverclient.$(OBJEXT) server.$(OBJEXT) statistics.$(OBJEXT) \
@@ -233,6 +243,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/bayesnetsmile.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/bayesnetsmileelr.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/clusthierarchical.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/clustkmeans.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/clustpivot.Po ./$(DEPDIR)/clustqtc.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/color.Po ./$(DEPDIR)/compactmatrix.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/dat.Po ./$(DEPDIR)/database.Po \
@@ -321,6 +332,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bayesnetsmile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bayesnetsmileelr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clusthierarchical.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clustkmeans.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clustpivot.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clustqtc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/color.Po@am__quote@
