@@ -1,9 +1,20 @@
-# TODO
-# b. Installation
-# c. check that known files are found (includes, libs)
-# g. Check that prefixes are dirs
-# h. Gengetopt, svm_light, boost, readline build directories
-# i. Additional logging?
+# This file is provided under the Creative Commons Attribution 3.0 license.
+#
+# You are free to share, copy, distribute, transmit, or adapt this work
+# PROVIDED THAT you attribute the work to the authors listed below.
+# For more information, please see the following web page:
+# http://creativecommons.org/licenses/by/3.0/
+#
+# This file is a component of the Sleipnir library for functional genomics,
+# authored by:
+# Curtis Huttenhower (chuttenh@princeton.edu)
+# Mark Schroeder
+# Olga G. Troyanskaya (ogt@princeton.edu, primary contact)
+#
+# If you use this library, the included executable tools, or any related
+# code in your work, please cite the following publication:
+# Curtis Huttenhower, Mark Schroeder, and Olga G. Troyanskaya.
+# "The Sleipnir library for computational functional genomics"
 
 AC_PREREQ(2.59)
 AC_INIT([libSleipnir], [0.9.0], [ogt@princeton.edu])
@@ -310,38 +321,47 @@ AC_SUBST(SVM_LIGHT_LIBS)
 AC_ARG_WITH([boost_includes],
 	[AS_HELP_STRING([--with-boost-includes=PATH], [location of boost header files])],
 	[],   # $with_boost_includes will either be a path or "no"
-	[if test "x$with_boost" = "x"; then with_boost_includes=check; else with_boost_includes=$with_boost; fi])
-AC_ARG_WITH([boost_lib],
-	[AS_HELP_STRING([--with-boost-lib=PATH], [path to boost_graph-mt library file])],
-	[],   # $with_boost_lib will either be a path or "no"
-        [with_boost_lib=no])
-if test "x$with_boost_includes" = "xno" -o "x$with_boost_lib" = "xno"; then
+	[with_boost_includes=check])
+AC_ARG_WITH([boost_graph_lib],
+	[AS_HELP_STRING([--with-boost-graph-lib=PATH], [path to boost_graph-mt library file])],
+	[],   # $with_boost_graph_lib will either be a path or "no"
+        [with_boost_graph_lib=check])
+# ensure consistency in options
+if test "x$with_boost_includes" = "xno" -o "x$with_boost_graph_lib" = "xno"; then
   with_boost_includes=no
-  with_boost_lib=no
-fi
-LOCAL_CHECK_LIB([boost_graph-mt], [boost_lib], [boost::detail::graph::read_graphviz],
+  with_boost_graph_lib=no
+  boost_includes_info=NONE
+  boost_graph_lib_info=NONE
+elif test "x$with_boost_includes" = "xcheck" -o "x$with_boost_graph_lib" = "xcheck"; then
+  with_boost_includes=no
+  with_boost_graph_lib=no
+  boost_includes_info="NONE (required if using with-boost-graph-lib)"
+  boost_graph_lib_info="NONE (required if using with-boost-includes)"
+else
+  LOCAL_CHECK_LIB([boost_graph-mt], [boost_graph_lib], [boost::detail::graph::read_graphviz],
 	[],                                                         dnl found
-	[boost_includes_info="found installed"],                    dnl and found installed (boost_libs_info="found installed")
-	[BOOST_LIB_FILE=$with_boost_lib
-	 boost_includes_info=$with_boost_includes],                 dnl and found in specified path (boost_libs_info=(path))
-	[boost_lib_info=NONE
+	[boost_includes_info="found installed"],                    dnl and found installed (boost_graph_lib_info="found installed")
+	[BOOST_GRAPH_LIB=$with_boost_graph_lib
+	 boost_includes_info=$with_boost_includes],                 dnl and found in specified path (boost_graph_lib_info=(path))
+	[boost_graph_lib_info=NONE
          boost_includes_info=NONE],                                 dnl not found
-	[boost_lib_info=NONE
+	[boost_graph_lib_info=NONE
          boost_includes_info=NONE],                                 dnl requested without
 	[#include "boost/graph/graphviz.hpp"])
-if test "x$boost_lib_info" != "xNONE"; then
-  ## set BOOST_CFLAGS and BOOST_LIBSS
-  if test "x$BOOST_LIB_FILE" != "x"; then
-    # boost_libs_info and boost_includes_info are paths
+fi
+if echo "$boost_graph_lib_info" | $GREP -q -v "NONE"; then
+  ## set BOOST_CFLAGS and BOOST_LIBS
+  if test "x$BOOST_GRAPH_LIB" != "x"; then
+    # boost_graph_lib_info and boost_includes_info are paths
     # now look for the headers
-    BOOST_LIBS=$BOOST_LIB_FILE
+    BOOST_LIBS=$BOOST_GRAPH_LIB
     qualify_path with_boost_includes
     LOCAL_CHECK_APPEND_PATHS([$with_boost_includes], [..], [boost/config.hpp], [BOOST_INCLUDES_DIR])
     BOOST_CFLAGS="-I$BOOST_INCLUDES_DIR"
   fi
 fi
 #AC_SUBST(BOOST_PREFIX)
-#AC_SUBST(BOOST_CFLAGS)
+AC_SUBST(BOOST_CFLAGS)
 AC_SUBST(BOOST_LIBS)
 
 
@@ -446,7 +466,7 @@ AM_CONDITIONAL([WITH_TOOLS], [$with_tools])
 AM_CONDITIONAL([WITH_SMILE_TOOLS], [test "x$smile_info" != "xNONE"])
 AM_CONDITIONAL([WITH_SVM_TOOLS], [test "x$svm_light_info" != "xNONE"])
 AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_info" != "xNONE"])
-AM_CONDITIONAL([WITH_BOOST_TOOLS], [test "x$boost_lib_info" != "xNONE"])
+AM_CONDITIONAL([WITH_BOOST_TOOLS], [echo "$boost_graph_lib_info" | $GREP -q -v "NONE"])
 AM_CONDITIONAL([WITH_GENGETOPT], [test "x$prog_gengetopt_info" != "xNONE"])
 
 AC_CONFIG_FILES([Makefile \
@@ -505,15 +525,15 @@ AC_OUTPUT
 # Print out a summary.
 echo ""
 echo "Used for library and tools:"
-echo "  log4cpp        = $log4cpp_info"
-echo "  SMILE          = $smile_info"
-echo "  SVM light      = $svm_light_info"
-echo "  pthread        = $pthread_info"
+echo "  log4cpp         = $log4cpp_info"
+echo "  SMILE           = $smile_info"
+echo "  SVM light       = $svm_light_info"
+echo "  pthread         = $pthread_info"
 echo "Used for tools:"
-echo "  boost lib      = $boost_lib_info"
-echo "  boost includes = $boost_includes_info"
-echo "  readline       = $readline_info"
-echo "  gengetopt      = $prog_gengetopt_info"
+echo "  boost graph lib = $boost_graph_lib_info"
+echo "  boost includes  = $boost_includes_info"
+echo "  readline        = $readline_info"
+echo "  gengetopt       = $prog_gengetopt_info"
 
 # Print these warnings here, so that they are at the end.
 
@@ -568,11 +588,12 @@ EOF
 
   fi
 
-  if test "x$boost_info" = "xNONE"; then
+  if echo "$boost_graph_lib_info" | $GREP -q "NONE"; then
   cat << EOF
 
 ** BUILDING WITHOUT BOOST
 BNServer will not be made (requires boost_graph-mt library).
+Both --with-boost-includes and --with-boost-graph-lib are required for Boost.
 Boost is available from http://boost.org/.
 EOF
 
@@ -586,10 +607,10 @@ EOF
 #for example in /usr/local/include/boost/boost-1_34_1/boost/. I have
 #no reliable way of determining the Boost version, so you may run into
 #a problem with missing Boost includes. If this is the case,
-#simply use --with-boost-includes and --with-boost-libs to direct
+#simply use --with-boost-includes and --with-boost-graph-libs to direct
 #me to their actual locations, for example:
 #  --with-boost-includes=/usr/local/include/boost/boost-1_34_1
-#  --with-boost-libs=/usr/local/lib
+#  --with-boost-graph-libs=/usr/local/lib/libboost_graph-mt-gcc34_1_34_1.dylib
 #EOF
 #
 #  fi

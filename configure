@@ -313,7 +313,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -871,7 +871,8 @@ Optional Packages:
   --with-svm-light=PATH   prefix of SVM Light installation
   --with-boost-includes=PATH
                           location of boost header files
-  --with-boost-lib=PATH   path to boost_graph-mt library file
+  --with-boost-graph-lib=PATH
+                          path to boost_graph-mt library file
   --with-readline=PATH    prefix of readline installation
   --with-pthread=PATH     prefix of pthread installation
   --without-tools         exclude tools and build lib only
@@ -7042,36 +7043,44 @@ if test "${with_boost_includes+set}" = set; then
 
 else
   # $with_boost_includes will either be a path or "no"
-	if test "x$with_boost" = "x"; then with_boost_includes=check; else with_boost_includes=$with_boost; fi
+	with_boost_includes=check
 fi;
 
-# Check whether --with-boost_lib or --without-boost_lib was given.
-if test "${with_boost_lib+set}" = set; then
-  withval="$with_boost_lib"
+# Check whether --with-boost_graph_lib or --without-boost_graph_lib was given.
+if test "${with_boost_graph_lib+set}" = set; then
+  withval="$with_boost_graph_lib"
 
 else
-  # $with_boost_lib will either be a path or "no"
-        with_boost_lib=no
+  # $with_boost_graph_lib will either be a path or "no"
+        with_boost_graph_lib=check
 fi;
-if test "x$with_boost_includes" = "xno" -o "x$with_boost_lib" = "xno"; then
+# ensure consistency in options
+if test "x$with_boost_includes" = "xno" -o "x$with_boost_graph_lib" = "xno"; then
   with_boost_includes=no
-  with_boost_lib=no
-fi
+  with_boost_graph_lib=no
+  boost_includes_info=NONE
+  boost_graph_lib_info=NONE
+elif test "x$with_boost_includes" = "xcheck" -o "x$with_boost_graph_lib" = "xcheck"; then
+  with_boost_includes=no
+  with_boost_graph_lib=no
+  boost_includes_info="NONE (required if using with-boost-graph-lib)"
+  boost_graph_lib_info="NONE (required if using with-boost-includes)"
+else
 
-if test "x$with_boost_lib" = "xno"; then
-#  boost_lib_info=NONE
+if test "x$with_boost_graph_lib" = "xno"; then
+#  boost_graph_lib_info=NONE
   true   # in case not defined or is empty
-  	boost_lib_info=NONE
+  	boost_graph_lib_info=NONE
          boost_includes_info=NONE
-elif test "x$with_boost_lib" != "xcheck"; then
+elif test "x$with_boost_graph_lib" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
 # That may not be necessary.
-#  if echo with_boost_lib | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
-  boost_lib_info=$with_boost_lib
-  qualify_path with_boost_lib
+#  if echo with_boost_graph_lib | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
+  boost_graph_lib_info=$with_boost_graph_lib
+  qualify_path with_boost_graph_lib
 
-  	BOOST_LIB_FILE=$with_boost_lib
+  	BOOST_GRAPH_LIB=$with_boost_graph_lib
 	 boost_includes_info=$with_boost_includes
 else
   # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
@@ -7116,7 +7125,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  boost_lib_info="found installed"
+  boost_graph_lib_info="found installed"
 
      	boost_includes_info="found installed"
 else
@@ -7130,17 +7139,18 @@ rm -f conftest.err conftest.$ac_objext \
   if $flag; then
     # we also can't have an empty if block...
     true
-    	boost_lib_info=NONE
+    	boost_graph_lib_info=NONE
          boost_includes_info=NONE
   fi
 fi
 
-if test "x$boost_lib_info" != "xNONE"; then
-  ## set BOOST_CFLAGS and BOOST_LIBSS
-  if test "x$BOOST_LIB_FILE" != "x"; then
-    # boost_libs_info and boost_includes_info are paths
+fi
+if echo "$boost_graph_lib_info" | $GREP -q -v "NONE"; then
+  ## set BOOST_CFLAGS and BOOST_LIBS
+  if test "x$BOOST_GRAPH_LIB" != "x"; then
+    # boost_graph_lib_info and boost_includes_info are paths
     # now look for the headers
-    BOOST_LIBS=$BOOST_LIB_FILE
+    BOOST_LIBS=$BOOST_GRAPH_LIB
     qualify_path with_boost_includes
 
 result=$with_boost_includes
@@ -7156,7 +7166,7 @@ BOOST_INCLUDES_DIR=$result
   fi
 fi
 #AC_SUBST(BOOST_PREFIX)
-#AC_SUBST(BOOST_CFLAGS)
+
 
 
 
@@ -7549,7 +7559,7 @@ fi
 
 
 
-if test "x$boost_lib_info" != "xNONE"; then
+if echo "$boost_graph_lib_info" | $GREP -q -v "NONE"; then
   WITH_BOOST_TOOLS_TRUE=
   WITH_BOOST_TOOLS_FALSE='#'
 else
@@ -8370,6 +8380,7 @@ s,@SMILE_LIBS@,$SMILE_LIBS,;t t
 s,@SVM_LIGHT_PREFIX@,$SVM_LIGHT_PREFIX,;t t
 s,@SVM_LIGHT_CFLAGS@,$SVM_LIGHT_CFLAGS,;t t
 s,@SVM_LIGHT_LIBS@,$SVM_LIGHT_LIBS,;t t
+s,@BOOST_CFLAGS@,$BOOST_CFLAGS,;t t
 s,@BOOST_LIBS@,$BOOST_LIBS,;t t
 s,@READLINE_PREFIX@,$READLINE_PREFIX,;t t
 s,@READLINE_CFLAGS@,$READLINE_CFLAGS,;t t
@@ -8875,15 +8886,15 @@ fi
 # Print out a summary.
 echo ""
 echo "Used for library and tools:"
-echo "  log4cpp        = $log4cpp_info"
-echo "  SMILE          = $smile_info"
-echo "  SVM light      = $svm_light_info"
-echo "  pthread        = $pthread_info"
+echo "  log4cpp         = $log4cpp_info"
+echo "  SMILE           = $smile_info"
+echo "  SVM light       = $svm_light_info"
+echo "  pthread         = $pthread_info"
 echo "Used for tools:"
-echo "  boost lib      = $boost_lib_info"
-echo "  boost includes = $boost_includes_info"
-echo "  readline       = $readline_info"
-echo "  gengetopt      = $prog_gengetopt_info"
+echo "  boost graph lib = $boost_graph_lib_info"
+echo "  boost includes  = $boost_includes_info"
+echo "  readline        = $readline_info"
+echo "  gengetopt       = $prog_gengetopt_info"
 
 # Print these warnings here, so that they are at the end.
 
@@ -8938,11 +8949,12 @@ EOF
 
   fi
 
-  if test "x$boost_info" = "xNONE"; then
+  if echo "$boost_graph_lib_info" | $GREP -q "NONE"; then
   cat << EOF
 
 ** BUILDING WITHOUT BOOST
 BNServer will not be made (requires boost_graph-mt library).
+Both --with-boost-includes and --with-boost-graph-lib are required for Boost.
 Boost is available from http://boost.org/.
 EOF
 
@@ -8956,10 +8968,10 @@ EOF
 #for example in /usr/local/include/boost/boost-1_34_1/boost/. I have
 #no reliable way of determining the Boost version, so you may run into
 #a problem with missing Boost includes. If this is the case,
-#simply use --with-boost-includes and --with-boost-libs to direct
+#simply use --with-boost-includes and --with-boost-graph-libs to direct
 #me to their actual locations, for example:
 #  --with-boost-includes=/usr/local/include/boost/boost-1_34_1
-#  --with-boost-libs=/usr/local/lib
+#  --with-boost-graph-libs=/usr/local/lib/libboost_graph-mt-gcc34_1_34_1.dylib
 #EOF
 #
 #  fi
