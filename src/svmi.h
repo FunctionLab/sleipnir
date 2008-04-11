@@ -69,7 +69,7 @@ protected:
 		const CGenes*	m_pNegative;
 	};
 
-	static SWORD	s_asWords[ c_iWords ];
+	static WORD	s_asWords[ c_iWords ];
 
 	CSVMImpl( );
 	~CSVMImpl( );
