@@ -105,7 +105,9 @@
  *	variety of platforms; if you don't see yours listed, send them an email, and they can probably help.
  * - <a href="http://svmlight.joachims.org/">SVM Light</a> is a support vector machine library used for
  *	SVM learning and evaluation in Sleipnir.  No SVMs without it!  Easily built from source under just about
- *	any environment (it's plain old C).
+ *	any environment (it's plain old C).  Please note that you must use <a href="Makefile" class="crit">this
+ *	Makefile</a> to build SVM Light as a library (rather than an executable) on Linux/Mac OS; in Visual
+ *	Studio, set the project type to "Static Library".
  * 
  * \subsubsection sssec_building_prerequisites_suggestions Suggestions
  * 
@@ -122,7 +124,12 @@
  * <ol>
  * <li>Obtain any \ref ssec_building_prerequisites you need/want.  These can often be installed using your
  *	favorite Linux package manager.  If you need to compile/install them to a nonstandard location by hand,
- *	please note the directory prefix where they are installed.</li>
+ *	please note the directory prefix where they are installed.
+ *	<li>If you're using SVM Light, please use <a href="Makefile">this Makefile</a> to build it as a library
+ *		rather than an executable.</li>
+ *	<li>Note that SVM Light and SMILE are both nonstandard in that they expect header files and libraries to
+ *		reside in the same directory (e.g. \c /usr/local/smile or \c /usr/local/svm_light).</li>
+ * </li>
  * <li>\ref sec_download and unpack Sleipnir.</li>
  * <li>In the Sleipnir directory, run \c ./configure.  If you've installed prerequisite libraries that it
  *	doesn't find automatically, provide an appropriate \c --with switch for each one.  For example, to build
@@ -132,8 +139,10 @@
  * \endcode
  * <li>If you'd like to install Sleipnir itself to a custom location, include a
  *	<tt>--prefix=/custom/path/</tt> flag when you run \c configrue.</li>
- * <li>After \c configure's completed successfully, run \c make and <tt>make install</tt></li>
- * <li>***tools?***</li>
+ * <li>After \c configure's completed successfully, run \c make and <tt>make install</tt>.
+ *	<li>Tools that use Sleipnir will be built an installed automatically if Gengetopt and any other
+ *		prerequisite libraries are available.</li>
+ * </li>
  * </ol>
  * 
  * \subsection ssec_building_windows Windows
@@ -180,6 +189,9 @@
  *	form compiled with that setting, it taints anything it interacts with; building without this flag and
  *	linking against Sleipnir in Release mode will result in weird memory corruption errors when dealing with
  *	STL objects.
+ * - Don't forget to build <a href="http://svmlight.joachims.org/">SVM Light</a> as a library rather than an
+ *	executable, using <a href="Makefile">this Makefile</a> on Linux/Mac OS or setting the project type to
+ *	"Static Library" in Visual Studio.
  * - If you're building the \ref BNServer tool, you'll need the Boost graph library - but only the graph
  *	library!  To keep from building the whole giant Boost package, try building it like this (note that the
  *	\c --prefix argument is optional):
@@ -195,9 +207,9 @@
  *	source directory.
  * - Boost again: when giving the path to the Boost libraries using \c --with, beware of Boost's
  *	tendency to append the compiler version to its library names under certain circumstances.  If your
- *	Boost installation includes something like \c gcc41 in the library file names, use \c --with-boost-libs
- *	to give the path <em>to the Boost graph library file</em> rather than its parent directory.  Remember,
- *	Boost is only used for certain tools, so it won't hurt if you need to exclude it.
+ *	Boost installation includes something like \c gcc41 in the library file names, use
+ *	\c --with-boost-graph-lib to give the path <em>to the Boost graph library file</em> rather than its parent
+ *	directory.  Remember, Boost is only used for certain tools, so it won't hurt if you need to exclude it.
  * - If all else fails, <a href="mailto:ogt@princeton.edu">contact us</a>!  We're happy to receive
  *	feedback about Sleipnir, good or bad, and we're more than willing to update the code or documentation
  *	based on user contributions.  If you'd like to see your name in lights on this web page, feel free to

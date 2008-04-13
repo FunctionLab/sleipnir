@@ -22,9 +22,14 @@
 #ifndef SVMI_H
 #define SVMI_H
 
+namespace SVMLight {
+
 extern "C" {
 #include "svm_common.h"
 }
+
+}
+using namespace SVMLight;
 
 #include "typesi.h"
 
@@ -69,7 +74,7 @@ protected:
 		const CGenes*	m_pNegative;
 	};
 
-	static WORD	s_asWords[ c_iWords ];
+	static SVMLight::WORD	s_asWords[ c_iWords ];
 
 	CSVMImpl( );
 	~CSVMImpl( );

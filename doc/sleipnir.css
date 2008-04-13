@@ -44,6 +44,10 @@ TD, TH {
 .contents, .fragment {
 	clear: both;
 }
+.crit {
+	font-weight: bold;
+	color: red;
+}
 DIV.qindex {
 	width: 100%;
 	background-color: #e8eef2;
