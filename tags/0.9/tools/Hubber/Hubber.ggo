@@ -1,0 +1,31 @@
+package	"Hubber"
+version	"1.0"
+purpose	"Inspect a DAT/DAB file for gene network properties"
+
+section "Main"
+option	"input"		i	"Input DAT/DAB file"
+						string	typestr="filename"
+option	"genes"		g	"Number of genes to output per gene set"
+						int	default="0"
+
+section "Miscellaneous"
+option	"normalize"	n	"Normalize input file"
+						flag	off
+option	"clip"		c	"Output directory to clip subnetworks for each gene set"
+						string	typestr="directory"
+
+section "Backgrounds"
+option	"output"	o	"Output gene backgrounds"
+						string	typestr="filename"
+option	"contexts"	x	"Contexts for gene backgrounds"
+						string	typestr="filename"
+option	"genelist"	s	"Genes for backgrounds"
+						string	typestr="filename"
+option	"directory"	d	"Context network directory"
+						string	typestr="directory"	default="."
+
+section "Optional"
+option	"memmap"	m	"Memory map input"
+						flag	off
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"

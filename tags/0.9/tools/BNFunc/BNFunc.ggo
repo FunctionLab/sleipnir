@@ -1,0 +1,55 @@
+package	"BNFunc"
+version	"1.0"
+purpose	"Functional Bayes net preparation"
+
+section "Main"
+option	"input"		i	"Ontology slim file"
+						string	typestr="filename"	yes
+
+section "Miscellaneous"
+option	"directory"	d	"Output directory"
+						string	typestr="directory"	default="."
+option	"output"	o	"Answer file"
+						string	typestr="filename"
+option	"negatives"	I	"Negative slim file"
+						string	typestr="filename"
+
+section "Function Catalogs"
+option	"go_onto"	y	"GO ontology"
+						string	typestr="filename"
+option	"go_anno"	g	"GO annotations"
+						string	typestr="filename"
+option	"go_name"	n	"GO namespace"
+						values="cc","bp","mf"	default="bp"
+option	"kegg"		k	"KEGG ontology"
+						string	typestr="filename"
+option	"kegg_org"	K	"KEGG organism"
+						string	default="SCE"
+option	"mips_onto"	m	"MIPS ontology"
+						string	typestr="filename"
+option	"mips_anno"	a	"MIPS annotations"
+						string	typestr="filename"
+
+section "Gene Names"
+option	"synonyms"	s	"Prefer synonym names"
+						flag	off
+option	"dbids"		b	"Include GO database IDs"
+						flag	off
+option	"allids"	l	"Output all available IDs"
+						flag	off
+
+section "Optional"
+option	"test"		t	"Test fraction"
+						double	default="0"
+option	"sql"		q	"File in which to save SQL tables"
+						string	typestr="filename"
+option	"nsets"		N	"Generate negative sets for input slim"
+						flag	off
+option	"nsetlap"	L	"P-value of overlap for negative rejection"
+						double	default="0.05"
+option	"config"	c	"Command line config file"
+						string	typestr="filename"	default="BNFunc.ini"
+option	"random"	r	"Seed random generator"
+						int	default="0"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"

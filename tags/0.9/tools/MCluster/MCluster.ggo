@@ -1,0 +1,31 @@
+package	"MCluster"
+version	"1.0"
+purpose	"Hierarchical clustering tool."
+
+section "Main"
+option	"input"		i	"Input PCL/DAT/DAB file"
+						string	typestr="filename"
+option	"output"	o	"Output GTR file"
+						string	typestr="filename"	yes
+option	"distance"	d	"Similarity measure"
+						values="pearson","euclidean","kendalls","kolm-smir","spearman"
+						default="pearson"
+
+section "Miscellaneous"
+option	"weights"	w	"Input weights file"
+						string	typestr="filename"
+
+section "Preprocessing"
+option	"normalize"	n	"Normalize similarities before clustering"
+						flag	on
+option	"flip"		f	"Invert similarities before clustering"
+						flag	off
+option	"epsilon"	e	"Remove genes with no correlations above epsilon"
+						double
+option	"power"		p	"Power transform similarities"
+						double	default="1"
+
+option	"skip"		s	"Columns to skip in input PCL"
+						int	default="2"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"
