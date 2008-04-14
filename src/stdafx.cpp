@@ -177,9 +177,10 @@
  * 
  * \subsection ssec_building_troubleshooting Troubleshooting
  * 
- * - On Linux, when in doubt, link statically.  On Windows or Mac OS, when in doubt, link dynamically (e.g.
- *	in Visual Studio, using the DLL runtime libraries).  Mac OS is not consistently able to link statically,
- *	and the SMILE library will only link statically in release (not debug) mode on Windows.
+ * - On Linux, when in doubt, link statically (use <tt>LDFLAGS=-static</tt> when running \c configure).  On
+ *	Windows or Mac OS, when in doubt, link dynamically (e.g. in Visual Studio, using the DLL runtime
+ *	libraries).  Mac OS is not consistently able to link statically, and the SMILE library will only link
+ *	statically in release (not debug) mode on Windows.
  * - Choosing the correct version of <a href="http://genie.sis.pitt.edu/">SMILE</a> can be confusing; be
  *	sure you have a recent version that matches your build environment.  On Windows, this will be a version
  *	of Visual Studio (6.0 through 9.0, also known as 2008) or of gcc for cygwin.  On Linux/Mac OS, this will
