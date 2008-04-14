@@ -362,10 +362,11 @@ AC_ARG_WITH([boost_includes],
 	[],   # $with_boost_includes will either be a path or "no"
 	[with_boost_includes=check])
 AC_ARG_WITH([boost_graph_lib],
-	[AS_HELP_STRING([--with-boost-graph-lib=PATH], [path to boost_graph-mt library file])],
+	[AS_HELP_STRING([--with-boost-graph-lib=PATH], [path to boost_graph library file])],
 	[],   # $with_boost_graph_lib will either be a path or "no"
         [with_boost_graph_lib=check])
 # ensure consistency in options
+boost_state=ok
 if test "x$with_boost_includes" = "xno" -o "x$with_boost_graph_lib" = "xno"; then
   with_boost_includes=no
   with_boost_graph_lib=no
@@ -389,6 +390,7 @@ else
 	[boost_includes_info=$boost_graph_lib_info],                dnl not found
 	[boost_includes_info=$boost_graph_lib_info],                dnl requested without
 	[#include "boost/graph/graphviz.hpp"])
+  boost_state=$boost_graph_lib_state
 fi
 if test "x$boost_state" != "xno"; then
   ## set BOOST_CFLAGS and BOOST_LIBS
@@ -686,7 +688,7 @@ EOF
 
 ** WARNING: The Boost path(s) may be incorrect.
 I looked for boost/config.hpp and a library whose name
-contains libboost_graph-mt and didn't find one (or both).
+contains libboost_graph and didn't find one (or both).
 EOF
 
   fi
