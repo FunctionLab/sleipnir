@@ -6501,6 +6501,7 @@ done
 ##   action if not found, action if user requested without)
 ##
 ## Set prog_(local name)_dir to dir containing it, prog_(local name) to the path, prog_(local name)_info.
+## Also set prog_(local name)_state to "ok" or "no".
 
 
 
@@ -6509,10 +6510,12 @@ done
 ##   action if not found, action if user requested without,
 ##   includes)
 ## Set $(local_name)_info to "NONE", location, or "installed" (can be overridden with above actions).
+## Also set $(local_name)_state to "ok" or "no".
 
 
 
-## LOCAL_CHECK_APPEND_PATHS(base path, paths to append, common path to look for, var to set)
+## LOCAL_CHECK_APPEND_PATHS(base path, paths to append, common path to look for, var to set,
+##   action if not found)
 ## Look for the common path in one of the appendable paths under the base path.
 ## If found, set the variable to the concatenation of the prefix and the appended path,
 ## not including the common path. If not found use the base dir.
@@ -6536,15 +6539,18 @@ else
 fi;
 
 if test "x$with_gengetopt" = "xno"; then
-#  prog_gengetopt_info=NONE
-  true   # in case         prog_gengetopt_info=NONE isn't defined or is empty
-          prog_gengetopt_info=NONE
+  prog_gengetopt_info=NONE
+  prog_gengetopt_state=no
+#  true   # in case          isn't defined or is empty
+
 elif test "x$with_gengetopt" != "xcheck"; then
 #  if echo with_gengetopt | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   prog_gengetopt_info=$with_gengetopt
+  prog_gengetopt_state=ok
   qualify_path with_gengetopt
   prog_gengetopt=$with_gengetopt
-  GENGETOPT_PREFIX=$prog_gengetopt_prefix; GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
+  GENGETOPT_PREFIX=$prog_gengetopt_prefix
+         GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
 
 else
   # Extract the first word of "gengetopt", so it can be a program name with args.
@@ -6587,11 +6593,15 @@ echo "${ECHO_T}no" >&6
 fi
 
   if test "x$prog_gengetopt" = "x"; then
-    true   # in case is not defined or is empty
-    	prog_gengetopt_info=NONE
+#    true   # in case is not defined or is empty
+    prog_gengetopt_info="not found"
+    prog_gengetopt_state=no
+
   else
     prog_gengetopt_info="found installed"
-    GENGETOPT_PREFIX=$prog_gengetopt_prefix; GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
+    prog_gengetopt_state=ok
+    GENGETOPT_PREFIX=$prog_gengetopt_prefix
+         GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
 
   fi
 fi
@@ -6611,8 +6621,9 @@ echo X$prog_gengetopt |
   prog_gengetopt_prefix=$prog_gengetopt_dir/..     # assumes bin and include are at same level
 
 fi
-                                                                     ## set CFLAGS and LIBS
+                                                    ## set CFLAGS and LIBS
 if test "x$GENGETOPT_PREFIX" != "x"; then
+  #! check (in LOCAL_PATH_PROG?)
   GENGETOPT_CFLAGS=$GENGETOPT_INCLUDES
   GENGETOPT_LIBS=
 fi
@@ -6640,9 +6651,12 @@ else
 fi;
 
 if test "x$with_log4cpp" = "xno"; then
-#  log4cpp_info=NONE
+  log4cpp_info=NONE
+  log4cpp_state=no
   true   # in case not defined or is empty
-  log4cpp_info=stub; cat >>confdefs.h <<\_ACEOF
+  	log4cpp_info=stub
+         log4cpp_state=stub
+         cat >>confdefs.h <<\_ACEOF
 #define USE_LOG4CPP_STUB 1
 _ACEOF
 
@@ -6652,6 +6666,7 @@ elif test "x$with_log4cpp" != "xcheck"; then
 # That may not be necessary.
 #  if echo with_log4cpp | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   log4cpp_info=$with_log4cpp
+  log4cpp_state=ok
   qualify_path with_log4cpp
 
   	LOG4CPP_PREFIX=$with_log4cpp
@@ -6699,6 +6714,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   log4cpp_info="found installed"
+     log4cpp_state=ok
 
 
 else
@@ -6711,8 +6727,12 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
   if $flag; then
     # we also can't have an empty if block...
-    true
-    	log4cpp_info="stub (library not found)";                  	 cat >>confdefs.h <<\_ACEOF
+#    true
+    log4cpp_info="not found"
+    log4cpp_state=no
+    	log4cpp_info="stub (library not found)"
+	 log4cpp_state=stub
+	 cat >>confdefs.h <<\_ACEOF
 #define USE_LOG4CPP_STUB 1
 _ACEOF
 
@@ -6720,31 +6740,49 @@ _ACEOF
 fi
 
 # if stub, there might be additional info, so use grep
-if ! echo $log4cpp_info | $GREP -q stub; then
+if test "x$log4cpp_state" != "xstub"; then
   ## set LOG4CPP_CFLAGS and LOG4CPP_LIBS
   if test "x$LOG4CPP_PREFIX" != "x"; then
 
 result=$LOG4CPP_PREFIX
+found=false
 for p in include; do
-  if test -e "$LOG4CPP_PREFIX/$p/"; then
+  if test -e "$LOG4CPP_PREFIX/$p/log4cpp/Category.hh"; then
     result=$LOG4CPP_PREFIX/$p
+    found=true
     break
   fi
 done
 LOG4CPP_INCLUDE_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    log4cpp_state=warn
+  fi
+fi
 
 
 result=$LOG4CPP_PREFIX
+found=false
 for p in lib src/.libs; do
-  if test -e "$LOG4CPP_PREFIX/$p/"; then
+  if test -e "$LOG4CPP_PREFIX/$p/liblog4cpp.a"; then
     result=$LOG4CPP_PREFIX/$p
+    found=true
     break
   fi
 done
 LOG4CPP_LIB_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    log4cpp_state=warn
+  fi
+fi
 
     LOG4CPP_CFLAGS="-I$LOG4CPP_INCLUDE_DIR"
     LOG4CPP_LIBS="-L$LOG4CPP_LIB_DIR"
+#    if ! test -f "$LOG4CPP_INCLUDE_DIR/log4cpp/Category.hh"; then log4cpp_state=warn; fi
+#    if ! test -f "$LOG4CPP_LIB_DIR/liblog4cpp.a"; then log4cpp_state=warn; fi
   fi
   LOG4CPP_LIBS="$LOG4CPP_LIBS -llog4cpp"
 fi
@@ -6770,9 +6808,10 @@ fi;
 # it's hard to find a decent static function to use...
 
 if test "x$with_smile" = "xno"; then
-#  smile_info=NONE
+  smile_info=NONE
+  smile_state=no
   true   # in case not defined or is empty
-          smile_info=NONE; cat >>confdefs.h <<\_ACEOF
+          cat >>confdefs.h <<\_ACEOF
 #define NO_SMILE 1
 _ACEOF
 
@@ -6782,6 +6821,7 @@ elif test "x$with_smile" != "xcheck"; then
 # That may not be necessary.
 #  if echo with_smile | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   smile_info=$with_smile
+  smile_state=ok
   qualify_path with_smile
 
           SMILE_PREFIX=$with_smile
@@ -6829,6 +6869,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   smile_info="found installed"
+     smile_state=ok
 
 
 else
@@ -6841,37 +6882,57 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
   if $flag; then
     # we also can't have an empty if block...
-    true
-    	smile_info=NONE; cat >>confdefs.h <<\_ACEOF
+#    true
+    smile_info="not found"
+    smile_state=no
+    	cat >>confdefs.h <<\_ACEOF
 #define NO_SMILE 1
 _ACEOF
 
   fi
 fi
 
-if test "x$smile_info" != "xNONE"; then
+if test "x$smile_state" != "xno"; then
   ## set SMILE_CFLAGS and SMILE_LIBS
   if test "x$SMILE_PREFIX" != "x"; then
 
 result=$SMILE_PREFIX
+found=false
 for p in include; do
-  if test -e "$SMILE_PREFIX/$p/"; then
+  if test -e "$SMILE_PREFIX/$p/smile.h"; then
     result=$SMILE_PREFIX/$p
+    found=true
     break
   fi
 done
 SMILE_INCLUDE_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    smile_state=warn
+  fi
+fi
 
 
 result=$SMILE_PREFIX
+found=false
 for p in lib; do
-  if test -e "$SMILE_PREFIX/$p/"; then
+  if test -e "$SMILE_PREFIX/$p/libsmile.a"; then
     result=$SMILE_PREFIX/$p
+    found=true
     break
   fi
 done
 SMILE_LIB_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    smile_state=warn
+  fi
+fi
 
+#    if ! test -f "$SMILE_INCLUDE_DIR/smile.h"; then smile_state=warn; fi
+#    if ! test -f "$SMILE_LIB_DIR/libsmile.a"; then smile_state=warn; fi
     if test -f "$SMILE_LIB_DIR/libsmilexml.a"; then
       cat >>confdefs.h <<\_ACEOF
 #define SMILEXML_LIB 1
@@ -6911,9 +6972,10 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 if test "x$with_svm_light" = "xno"; then
-#  svm_light_info=NONE
+  svm_light_info=NONE
+  svm_light_state=no
   true   # in case not defined or is empty
-          svm_light_info=NONE; cat >>confdefs.h <<\_ACEOF
+          cat >>confdefs.h <<\_ACEOF
 #define NO_SVM_LIGHT 1
 _ACEOF
 
@@ -6923,6 +6985,7 @@ elif test "x$with_svm_light" != "xcheck"; then
 # That may not be necessary.
 #  if echo with_svm_light | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   svm_light_info=$with_svm_light
+  svm_light_state=ok
   qualify_path with_svm_light
 
           SVM_LIGHT_PREFIX=$with_svm_light
@@ -6973,6 +7036,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   svm_light_info="found installed"
+     svm_light_state=ok
 
 
 else
@@ -6985,8 +7049,10 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
   if $flag; then
     # we also can't have an empty if block...
-    true
-    	svm_light_info=NONE; cat >>confdefs.h <<\_ACEOF
+#    true
+    svm_light_info="not found"
+    svm_light_state=no
+    	cat >>confdefs.h <<\_ACEOF
 #define NO_SVM_LIGHT 1
 _ACEOF
 
@@ -6999,29 +7065,47 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-if test "x$svm_light_info" != "xNONE"; then
+if test "x$svm_light_state" != "xno"; then
   ## set SVM_LIGHT_CFLAGS and SVM_LIGHT_LIBS
   if test "x$SVM_LIGHT_PREFIX" != "x"; then
 
 result=$SVM_LIGHT_PREFIX
+found=false
 for p in include; do
-  if test -e "$SVM_LIGHT_PREFIX/$p/"; then
+  if test -e "$SVM_LIGHT_PREFIX/$p/svm_common.h"; then
     result=$SVM_LIGHT_PREFIX/$p
+    found=true
     break
   fi
 done
 SVM_LIGHT_INCLUDE_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    svm_light_state=warn
+  fi
+fi
 
 
 result=$SVM_LIGHT_PREFIX
+found=false
 for p in lib; do
-  if test -e "$SVM_LIGHT_PREFIX/$p/"; then
+  if test -e "$SVM_LIGHT_PREFIX/$p/libsvmlight.a"; then
     result=$SVM_LIGHT_PREFIX/$p
+    found=true
     break
   fi
 done
 SVM_LIGHT_LIB_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    svm_light_state=warn
+  fi
+fi
 
+#    if ! test -f "$SVM_LIGHT_INCLUDE_DIR/svm_common.h"; then svm_light_state=warn; fi
+#    if ! test -f "$SVM_LIGHT_LIB_DIR/libsvmlight.a"; then svm_light_state=warn; fi
     SVM_LIGHT_CFLAGS="-I$SVM_LIGHT_INCLUDE_DIR"
     SVM_LIGHT_LIBS="-L$SVM_LIGHT_LIB_DIR"
   fi
@@ -7059,25 +7143,30 @@ if test "x$with_boost_includes" = "xno" -o "x$with_boost_graph_lib" = "xno"; the
   with_boost_includes=no
   with_boost_graph_lib=no
   boost_includes_info=NONE
+#  boost_includes_state=no
   boost_graph_lib_info=NONE
+  boost_state=no
 elif test "x$with_boost_includes" = "xcheck" -o "x$with_boost_graph_lib" = "xcheck"; then
   with_boost_includes=no
   with_boost_graph_lib=no
-  boost_includes_info="NONE (required if using with-boost-graph-lib)"
-  boost_graph_lib_info="NONE (required if using with-boost-includes)"
+  boost_includes_info="not specified (required if using with-boost-graph-lib)"
+#  boost_includes_state=no
+  boost_graph_lib_info="not specified (required if using with-boost-includes)"
+  boost_state=no
 else
 
 if test "x$with_boost_graph_lib" = "xno"; then
-#  boost_graph_lib_info=NONE
+  boost_graph_lib_info=NONE
+  boost_graph_lib_state=no
   true   # in case not defined or is empty
-  	boost_graph_lib_info=NONE
-         boost_includes_info=NONE
+  	boost_includes_info=$boost_graph_lib_info
 elif test "x$with_boost_graph_lib" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
 # That may not be necessary.
 #  if echo with_boost_graph_lib | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   boost_graph_lib_info=$with_boost_graph_lib
+  boost_graph_lib_state=ok
   qualify_path with_boost_graph_lib
 
   	BOOST_GRAPH_LIB=$with_boost_graph_lib
@@ -7126,6 +7215,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   boost_graph_lib_info="found installed"
+     boost_graph_lib_state=ok
 
      	boost_includes_info="found installed"
 else
@@ -7138,14 +7228,15 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
   if $flag; then
     # we also can't have an empty if block...
-    true
-    	boost_graph_lib_info=NONE
-         boost_includes_info=NONE
+#    true
+    boost_graph_lib_info="not found"
+    boost_graph_lib_state=no
+    	boost_includes_info=$boost_graph_lib_info
   fi
 fi
 
 fi
-if echo "$boost_graph_lib_info" | $GREP -q -v "NONE"; then
+if test "x$boost_state" != "xno"; then
   ## set BOOST_CFLAGS and BOOST_LIBS
   if test "x$BOOST_GRAPH_LIB" != "x"; then
     # boost_graph_lib_info and boost_includes_info are paths
@@ -7154,14 +7245,24 @@ if echo "$boost_graph_lib_info" | $GREP -q -v "NONE"; then
     qualify_path with_boost_includes
 
 result=$with_boost_includes
+found=false
 for p in ..; do
   if test -e "$with_boost_includes/$p/boost/config.hpp"; then
     result=$with_boost_includes/$p
+    found=true
     break
   fi
 done
 BOOST_INCLUDES_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    boost_state=warn
+  fi
+fi
 
+    if ! test -f $BOOST_GRAPH_LIB; then boost_state=warn; fi
+    if ! echo $BOOST_GRAPH_LIB | $GREP -q "libboost_graph-mt"; then boost_state=warn; fi
     BOOST_CFLAGS="-I$BOOST_INCLUDES_DIR"
   fi
 fi
@@ -7191,15 +7292,17 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 if test "x$with_readline" = "xno"; then
-#  readline_info=NONE
+  readline_info=NONE
+  readline_state=no
   true   # in case not defined or is empty
-  	readline_info=NONE
+
 elif test "x$with_readline" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
 # That may not be necessary.
 #  if echo with_readline | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   readline_info=$with_readline
+  readline_state=ok
   qualify_path with_readline
 
   	READLINE_CFLAGS=$with_readline
@@ -7248,6 +7351,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   readline_info="found installed"
+     readline_state=ok
 
 
 else
@@ -7260,8 +7364,10 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
   if $flag; then
     # we also can't have an empty if block...
-    true
-    	readline_info=NONE
+#    true
+    readline_info="not found"
+    readline_state=no
+
   fi
 fi
 
@@ -7271,29 +7377,47 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-if test "x$readline_info" != "xNONE"; then
+if test "x$readline_state" != "xno"; then
   ## set READLINE_CFLAGS and READLINE_LIBS
   if test "x$READLINE_PREFIX" != "x"; then
 
 result=$READLINE_PREFIX
-for p in lib; do
-  if test -e "$READLINE_PREFIX/$p/"; then
-    result=$READLINE_PREFIX/$p
-    break
-  fi
-done
-READLINE_LIB_DIR=$result
-
-
-result=$READLINE_PREFIX
+found=false
 for p in include; do
-  if test -e "$READLINE_PREFIX/$p/"; then
+  if test -e "$READLINE_PREFIX/$p/readline/readline.h"; then
     result=$READLINE_PREFIX/$p
+    found=true
     break
   fi
 done
 READLINE_INCLUDE_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    readline_state=warn
+  fi
+fi
 
+
+result=$READLINE_PREFIX
+found=false
+for p in lib; do
+  if test -e "$READLINE_PREFIX/$p/libreadline.a"; then
+    result=$READLINE_PREFIX/$p
+    found=true
+    break
+  fi
+done
+READLINE_LIB_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    readline_state=warn
+  fi
+fi
+
+#    if ! test -f "$READLINE_INCLUDE_DIR/readline/readline.h"; then readline_state=warn; fi
+#    if ! test -f "$READLINE_LIB_DIR/libreadline.a"; then readline_state=warn; fi
     READLINE_CFLAGS="-I$READLINE_INCLUDE_DIR"
     READLINE_LIBS="-L$READLINE_LIB_DIR"
   fi
@@ -7378,15 +7502,17 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 if test "x$with_pthread" = "xno"; then
-#  pthread_info=NONE
+  pthread_info=NONE
+  pthread_state=no
   true   # in case not defined or is empty
-  	pthread_info=NONE
+
 elif test "x$with_pthread" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
 # That may not be necessary.
 #  if echo with_pthread | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   pthread_info=$with_pthread
+  pthread_state=ok
   qualify_path with_pthread
 
   	PTHREAD_CFLAGS=$with_pthread
@@ -7435,6 +7561,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
   pthread_info="found installed"
+     pthread_state=ok
 
 
 else
@@ -7447,8 +7574,10 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
   if $flag; then
     # we also can't have an empty if block...
-    true
-    	pthread_info=NONE
+#    true
+    pthread_info="not found"
+    pthread_state=no
+
   fi
 fi
 
@@ -7458,28 +7587,44 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-if test "x$pthread_info" != "xNONE"; then
+if test "x$pthread_state" != "xno"; then
   ## set PTHREAD_CFLAGS and PTHREAD_LIBS
   if test "x$PTHREAD_PREFIX" != "x"; then
 
 result=$PTHREAD_PREFIX
-for p in lib; do
-  if test -e "$PTHREAD_PREFIX/$p/"; then
-    result=$PTHREAD_PREFIX/$p
-    break
-  fi
-done
-PTHREAD_LIB_DIR=$result
-
-
-result=$PTHREAD_PREFIX
+found=false
 for p in include; do
-  if test -e "$PTHREAD_PREFIX/$p/"; then
+  if test -e "$PTHREAD_PREFIX/$p/pthread.h"; then
     result=$PTHREAD_PREFIX/$p
+    found=true
     break
   fi
 done
 PTHREAD_INCLUDE_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    pthread_state=warn
+  fi
+fi
+
+
+result=$PTHREAD_PREFIX
+found=false
+for p in lib; do
+  if test -e "$PTHREAD_PREFIX/$p/libpthread.a"; then
+    result=$PTHREAD_PREFIX/$p
+    found=true
+    break
+  fi
+done
+PTHREAD_LIB_DIR=$result
+if ! $found; then
+  if ! test -e $result; then
+    true   # in case the following is empty
+    pthread_state=warn
+  fi
+fi
 
     PTHREAD_CFLAGS="-I$PTHREAD_INCLUDE_DIR"
     PTHREAD_LIBS="-L$PTHREAD_LIB_DIR"
@@ -7529,7 +7674,7 @@ fi
 
 
 
-if test "x$smile_info" != "xNONE"; then
+if test "x$smile_state" != "xno"; then
   WITH_SMILE_TOOLS_TRUE=
   WITH_SMILE_TOOLS_FALSE='#'
 else
@@ -7539,7 +7684,7 @@ fi
 
 
 
-if test "x$svm_light_info" != "xNONE"; then
+if test "x$svm_light_state" != "xno"; then
   WITH_SVM_TOOLS_TRUE=
   WITH_SVM_TOOLS_FALSE='#'
 else
@@ -7549,7 +7694,7 @@ fi
 
 
 
-if test "x$readline_info" != "xNONE"; then
+if test "x$readline_state" != "xno"; then
   WITH_READLINE_TOOLS_TRUE=
   WITH_READLINE_TOOLS_FALSE='#'
 else
@@ -7559,7 +7704,7 @@ fi
 
 
 
-if echo "$boost_graph_lib_info" | $GREP -q -v "NONE"; then
+if test "x$boost_state" != "xno"; then
   WITH_BOOST_TOOLS_TRUE=
   WITH_BOOST_TOOLS_FALSE='#'
 else
@@ -7569,7 +7714,7 @@ fi
 
 
 
-if test "x$prog_gengetopt_info" != "xNONE"; then
+if test "x$prog_gengetopt_state" != "xno"; then
   WITH_GENGETOPT_TRUE=
   WITH_GENGETOPT_FALSE='#'
 else
@@ -8885,30 +9030,44 @@ fi
 
 # Print out a summary.
 echo ""
+if $with_tools; then
 echo "Used for library and tools:"
+else
+echo "Dependencies:"
+fi
 echo "  log4cpp         = $log4cpp_info"
 echo "  SMILE           = $smile_info"
 echo "  SVM light       = $svm_light_info"
 echo "  pthread         = $pthread_info"
+if $with_tools; then
 echo "Used for tools:"
 echo "  boost graph lib = $boost_graph_lib_info"
 echo "  boost includes  = $boost_includes_info"
 echo "  readline        = $readline_info"
 echo "  gengetopt       = $prog_gengetopt_info"
+fi
 
 # Print these warnings here, so that they are at the end.
 
 # if stub there might be additional info, so use grep
-if echo $log4cpp_info | $GREP -q stub; then
+if test "x$log4cpp_state" = "xstub"; then
   cat << EOF
 
 ** Using a simple replacement stub for log4cpp.
 If this is insufficient rerun configure with --with-log4cpp=(path).
 EOF
 
+elif test "x$log4cpp_state" = "xwarn"; then
+  cat << EOF
+
+** WARNING: The path to log4cpp may be incorrect.
+I looked for Category.hh and liblog4cpp.a ane didn't
+find one (or both).
+EOF
+
 fi
 
-if test "x$smile_info" = "xNONE"; then
+if test "x$smile_state" = "xno"; then
   cat << EOF
 
 ** BUILDING WITHOUT SMILE
@@ -8917,9 +9076,17 @@ Bayes net functionality will be missing.
 SMILE is available as a binary distribution from http://genie.sis.pitt.edu/.
 EOF
 
+elif test "x$smile_state" = "xwarn"; then
+  cat << EOF
+
+** WARNING: The path to SMILE may be incorrect.
+I looked for smile.h and libsmile.a and didn't
+find one (or both).
+EOF
+
 fi
 
-if test "x$svm_light_info" = "xNONE"; then
+if test "x$svm_light_state" = "xno"; then
   cat << EOF
 
 ** BUILDING WITHOUT SVM LIGHT
@@ -8927,10 +9094,19 @@ SVM light is strongly recommended.
 It is available from http://svmlight.joachims.org/.
 EOF
 
+elif test "x$svm_light_state" = "xwarn"; then
+  cat << EOF
+
+** WARNING: The path to SVM light may be incorrect.
+I looked for svm_common.h and libsvmlight.a and didn't
+find one (or both).
+EOF
+
 fi
 
 if $with_tools; then
-  if test "x$prog_gengetopt_info" = "xNONE"; then
+
+  if test "x$prog_gengetopt_state" = "xno"; then
   cat << EOF
 
 ** Gengetopt was not found. This is probably fine, but if any of the
@@ -8940,22 +9116,38 @@ EOF
 
   fi
 
-  if test "x$readline_info" = "xNONE"; then
+  if test "x$readline_state" = "xno"; then
   cat << EOF
 
 ** BUILDING WITHOUT READLINE
 OntoShell will not be made.
 EOF
 
+  elif test "x$readline_state" = "xwarn"; then
+  cat << EOF
+
+** WARNING: The path to readline may be incorrect.
+I looked for readline/readline.h and libreadline.a and didn't
+find one (or both).
+EOF
+
   fi
 
-  if echo "$boost_graph_lib_info" | $GREP -q "NONE"; then
+  if test "x$boost_state" = "xno"; then
   cat << EOF
 
 ** BUILDING WITHOUT BOOST
 BNServer will not be made (requires boost_graph-mt library).
 Both --with-boost-includes and --with-boost-graph-lib are required for Boost.
 Boost is available from http://boost.org/.
+EOF
+
+  elif test "x$boost_state" = "xwarn"; then
+  cat << EOF
+
+** WARNING: The Boost path(s) may be incorrect.
+I looked for boost/config.hpp and a library whose name
+contains libboost_graph-mt and didn't find one (or both).
 EOF
 
   fi
