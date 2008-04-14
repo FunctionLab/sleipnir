@@ -872,7 +872,7 @@ Optional Packages:
   --with-boost-includes=PATH
                           location of boost header files
   --with-boost-graph-lib=PATH
-                          path to boost_graph-mt library file
+                          path to boost_graph library file
   --with-readline=PATH    prefix of readline installation
   --with-pthread=PATH     prefix of pthread installation
   --without-tools         exclude tools and build lib only
@@ -7139,6 +7139,7 @@ else
         with_boost_graph_lib=check
 fi;
 # ensure consistency in options
+boost_state=ok
 if test "x$with_boost_includes" = "xno" -o "x$with_boost_graph_lib" = "xno"; then
   with_boost_includes=no
   with_boost_graph_lib=no
@@ -7235,6 +7236,7 @@ rm -f conftest.err conftest.$ac_objext \
   fi
 fi
 
+  boost_state=$boost_graph_lib_state
 fi
 if test "x$boost_state" != "xno"; then
   ## set BOOST_CFLAGS and BOOST_LIBS
@@ -9061,7 +9063,7 @@ elif test "x$log4cpp_state" = "xwarn"; then
   cat << EOF
 
 ** WARNING: The path to log4cpp may be incorrect.
-I looked for Category.hh and liblog4cpp.a ane didn't
+I looked for Category.hh and liblog4cpp.a ane did not
 find one (or both).
 EOF
 
@@ -9080,7 +9082,7 @@ elif test "x$smile_state" = "xwarn"; then
   cat << EOF
 
 ** WARNING: The path to SMILE may be incorrect.
-I looked for smile.h and libsmile.a and didn't
+I looked for smile.h and libsmile.a and did not
 find one (or both).
 EOF
 
@@ -9098,7 +9100,7 @@ elif test "x$svm_light_state" = "xwarn"; then
   cat << EOF
 
 ** WARNING: The path to SVM light may be incorrect.
-I looked for svm_common.h and libsvmlight.a and didn't
+I looked for svm_common.h and libsvmlight.a and did not
 find one (or both).
 EOF
 
@@ -9127,7 +9129,7 @@ EOF
   cat << EOF
 
 ** WARNING: The path to readline may be incorrect.
-I looked for readline/readline.h and libreadline.a and didn't
+I looked for readline/readline.h and libreadline.a and did not
 find one (or both).
 EOF
 
@@ -9147,7 +9149,7 @@ EOF
 
 ** WARNING: The Boost path(s) may be incorrect.
 I looked for boost/config.hpp and a library whose name
-contains libboost_graph-mt and didn't find one (or both).
+contains libboost_graph and did not find one (or both).
 EOF
 
   fi
