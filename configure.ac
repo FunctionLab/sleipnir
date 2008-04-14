@@ -602,7 +602,7 @@ elif test "x$log4cpp_state" = "xwarn"; then
   cat << EOF
 
 ** WARNING: The path to log4cpp may be incorrect.
-I looked for Category.hh and liblog4cpp.a ane didn't
+I looked for Category.hh and liblog4cpp.a ane did not
 find one (or both).
 EOF
 
@@ -621,7 +621,7 @@ elif test "x$smile_state" = "xwarn"; then
   cat << EOF
 
 ** WARNING: The path to SMILE may be incorrect.
-I looked for smile.h and libsmile.a and didn't
+I looked for smile.h and libsmile.a and did not
 find one (or both).
 EOF
 
@@ -639,7 +639,7 @@ elif test "x$svm_light_state" = "xwarn"; then
   cat << EOF
 
 ** WARNING: The path to SVM light may be incorrect.
-I looked for svm_common.h and libsvmlight.a and didn't
+I looked for svm_common.h and libsvmlight.a and did not
 find one (or both).
 EOF
 
@@ -668,7 +668,7 @@ EOF
   cat << EOF
 
 ** WARNING: The path to readline may be incorrect.
-I looked for readline/readline.h and libreadline.a and didn't
+I looked for readline/readline.h and libreadline.a and did not
 find one (or both).
 EOF
 
@@ -688,7 +688,7 @@ EOF
 
 ** WARNING: The Boost path(s) may be incorrect.
 I looked for boost/config.hpp and a library whose name
-contains libboost_graph and didn't find one (or both).
+contains libboost_graph and did not find one (or both).
 EOF
 
   fi
