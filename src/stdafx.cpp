@@ -775,7 +775,7 @@ MIPS:
  * 
  * \section sec_history Version History
  * 
- * - <a href="sleipnir-0.9.tar.gz">0.9</a>, 04-***-08 <br>
+ * - <a href="sleipnir-0.9.tar.gz">0.9</a>, 04-14-08 <br>
  * First version made available to reviewers.
  * 
  * \section sec_license License
