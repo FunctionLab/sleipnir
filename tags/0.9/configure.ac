@@ -9,11 +9,13 @@
 # authored by:
 # Curtis Huttenhower (chuttenh@princeton.edu)
 # Mark Schroeder
+# Maria Chikina
 # Olga G. Troyanskaya (ogt@princeton.edu, primary contact)
 #
 # If you use this library, the included executable tools, or any related
 # code in your work, please cite the following publication:
-# Curtis Huttenhower, Mark Schroeder, and Olga G. Troyanskaya.
+# Curtis Huttenhower, Mark Schroeder, Maria Chikina, and
+# Olga G. Troyanskaya.
 # "The Sleipnir library for computational functional genomics"
 
 #! TODO:
@@ -397,7 +399,7 @@ if test "x$boost_state" != "xno"; then
     qualify_path with_boost_includes
     LOCAL_CHECK_APPEND_PATHS([$with_boost_includes], [..], [boost/config.hpp], [BOOST_INCLUDES_DIR], [boost_state=warn])
     if ! test -f $BOOST_GRAPH_LIB; then boost_state=warn; fi
-    if ! echo $BOOST_GRAPH_LIB | $GREP -q "libboost_graph-mt"; then boost_state=warn; fi
+    if ! echo $BOOST_GRAPH_LIB | $GREP -q "libboost_graph"; then boost_state=warn; fi
     BOOST_CFLAGS="-I$BOOST_INCLUDES_DIR"
   fi
 fi

@@ -7262,7 +7262,7 @@ if ! $found; then
 fi
 
     if ! test -f $BOOST_GRAPH_LIB; then boost_state=warn; fi
-    if ! echo $BOOST_GRAPH_LIB | $GREP -q "libboost_graph-mt"; then boost_state=warn; fi
+    if ! echo $BOOST_GRAPH_LIB | $GREP -q "libboost_graph"; then boost_state=warn; fi
     BOOST_CFLAGS="-I$BOOST_INCLUDES_DIR"
   fi
 fi
