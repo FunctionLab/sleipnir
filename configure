@@ -6755,7 +6755,7 @@ for p in include; do
 done
 LOG4CPP_INCLUDE_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/log4cpp/Category.hh; then
     true   # in case the following is empty
     log4cpp_state=warn
   fi
@@ -6773,7 +6773,7 @@ for p in lib src/.libs; do
 done
 LOG4CPP_LIB_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/liblog4cpp.a; then
     true   # in case the following is empty
     log4cpp_state=warn
   fi
@@ -6907,7 +6907,7 @@ for p in include; do
 done
 SMILE_INCLUDE_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/smile.h; then
     true   # in case the following is empty
     smile_state=warn
   fi
@@ -6925,7 +6925,7 @@ for p in lib; do
 done
 SMILE_LIB_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/libsmile.a; then
     true   # in case the following is empty
     smile_state=warn
   fi
@@ -7080,7 +7080,7 @@ for p in include; do
 done
 SVM_LIGHT_INCLUDE_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/svm_common.h; then
     true   # in case the following is empty
     svm_light_state=warn
   fi
@@ -7098,7 +7098,7 @@ for p in lib; do
 done
 SVM_LIGHT_LIB_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/libsvmlight.a; then
     true   # in case the following is empty
     svm_light_state=warn
   fi
@@ -7257,7 +7257,7 @@ for p in ..; do
 done
 BOOST_INCLUDES_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/boost/config.hpp; then
     true   # in case the following is empty
     boost_state=warn
   fi
@@ -7394,7 +7394,7 @@ for p in include; do
 done
 READLINE_INCLUDE_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/readline/readline.h; then
     true   # in case the following is empty
     readline_state=warn
   fi
@@ -7412,7 +7412,7 @@ for p in lib; do
 done
 READLINE_LIB_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/libreadline.a; then
     true   # in case the following is empty
     readline_state=warn
   fi
@@ -7604,7 +7604,7 @@ for p in include; do
 done
 PTHREAD_INCLUDE_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/pthread.h; then
     true   # in case the following is empty
     pthread_state=warn
   fi
@@ -7622,7 +7622,7 @@ for p in lib; do
 done
 PTHREAD_LIB_DIR=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/libpthread.a; then
     true   # in case the following is empty
     pthread_state=warn
   fi
@@ -9063,8 +9063,8 @@ elif test "x$log4cpp_state" = "xwarn"; then
   cat << EOF
 
 ** WARNING: The path to log4cpp may be incorrect.
-I looked for Category.hh and liblog4cpp.a ane did not
-find one (or both).
+I looked for Category.hh and liblog4cpp.a and did not
+find both.
 EOF
 
 fi
@@ -9082,8 +9082,7 @@ elif test "x$smile_state" = "xwarn"; then
   cat << EOF
 
 ** WARNING: The path to SMILE may be incorrect.
-I looked for smile.h and libsmile.a and did not
-find one (or both).
+I looked for smile.h and libsmile.a and did not find both.
 EOF
 
 fi
@@ -9101,7 +9100,7 @@ elif test "x$svm_light_state" = "xwarn"; then
 
 ** WARNING: The path to SVM light may be incorrect.
 I looked for svm_common.h and libsvmlight.a and did not
-find one (or both).
+find both.
 EOF
 
 fi
@@ -9130,7 +9129,7 @@ EOF
 
 ** WARNING: The path to readline may be incorrect.
 I looked for readline/readline.h and libreadline.a and did not
-find one (or both).
+find both.
 EOF
 
   fi
@@ -9149,7 +9148,7 @@ EOF
 
 ** WARNING: The Boost path(s) may be incorrect.
 I looked for boost/config.hpp and a library whose name
-contains libboost_graph and did not find one (or both).
+contains libboost_graph and did not find both.
 EOF
 
   fi

@@ -21,7 +21,7 @@
 #! TODO:
 #! b. Warn for pthread.
 #! d. Gengetopt checks.
-#! e. Fix boost logic?
+#! e. Improve boost logic?
 
 AC_PREREQ(2.59)
 AC_INIT([libSleipnir], [0.9.0], [ogt@princeton.edu])
@@ -199,7 +199,7 @@ for p in $2; do
 done
 $4=$result
 if ! $found; then
-  if ! test -e $result; then
+  if ! test -e $result/$3; then
     true   # in case the following is empty
     $5
   fi
@@ -602,8 +602,8 @@ elif test "x$log4cpp_state" = "xwarn"; then
   cat << EOF
 
 ** WARNING: The path to log4cpp may be incorrect.
-I looked for Category.hh and liblog4cpp.a ane did not
-find one (or both).
+I looked for Category.hh and liblog4cpp.a and did not
+find both.
 EOF
 
 fi
@@ -621,8 +621,7 @@ elif test "x$smile_state" = "xwarn"; then
   cat << EOF
 
 ** WARNING: The path to SMILE may be incorrect.
-I looked for smile.h and libsmile.a and did not
-find one (or both).
+I looked for smile.h and libsmile.a and did not find both.
 EOF
 
 fi
@@ -640,7 +639,7 @@ elif test "x$svm_light_state" = "xwarn"; then
 
 ** WARNING: The path to SVM light may be incorrect.
 I looked for svm_common.h and libsvmlight.a and did not
-find one (or both).
+find both.
 EOF
 
 fi
@@ -669,7 +668,7 @@ EOF
 
 ** WARNING: The path to readline may be incorrect.
 I looked for readline/readline.h and libreadline.a and did not
-find one (or both).
+find both.
 EOF
 
   fi
@@ -688,7 +687,7 @@ EOF
 
 ** WARNING: The Boost path(s) may be incorrect.
 I looked for boost/config.hpp and a library whose name
-contains libboost_graph and did not find one (or both).
+contains libboost_graph and did not find both.
 EOF
 
   fi
