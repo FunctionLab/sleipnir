@@ -22,7 +22,8 @@
 #include "stdafx.h"
 #include "database.h"
 #include "meta.h"
-#include "bayesnet.h"
+#include "bayesnetint.h"
+#include "datapair.h"
 
 namespace Sleipnir {
 

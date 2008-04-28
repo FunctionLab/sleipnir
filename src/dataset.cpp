@@ -21,7 +21,7 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "dataset.h"
-#include "bayesnet.h"
+#include "bayesnetint.h"
 #include "genome.h"
 #include "compactmatrix.h"
 

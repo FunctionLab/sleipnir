@@ -661,6 +661,41 @@ bool CBayesNetFN::IsContinuous( ) const {
 
 // CBayesNetMinimal //////////////////////////////////////////////////////////
 
+bool CBayesNetMinimalImpl::Counts2Probs( const vector<string>& vecstrCounts, vector<float>& vecdProbs,
+	float dAlpha, size_t iPseudocounts, const CBayesNetMinimal* pBNDefault, size_t iNode, size_t iClass ) {
+	size_t			i, iTotal;
+	vector<size_t>	veciCounts;
+	float			dScale;
+
+	veciCounts.resize( vecstrCounts.size( ) );
+	for( iTotal = i = 0; i < veciCounts.size( ); ++i ) {
+		veciCounts[ i ] = atol( vecstrCounts[ i ].c_str( ) );
+		iTotal += veciCounts[ i ]; }
+
+	vecdProbs.resize( veciCounts.size( ) );
+	if( ( iTotal < c_iMinimum ) && pBNDefault ) {
+		const CDataMatrix&	MatDefault	= pBNDefault->m_vecNodes[ iNode ].m_MatCPT;
+
+		if( MatDefault.GetColumns( ) != vecdProbs.size( ) ) {
+			g_CatSleipnir.error( "CBayesNetMinimal::Counts2Probs( ) default distribution size mismatch: wanted %d, got %d",
+				vecdProbs.size( ), MatDefault.GetColumns( ) );
+			return false; }
+		copy( MatDefault.Get( iClass ), MatDefault.Get( iClass ) + MatDefault.GetColumns( ),
+			vecdProbs.begin( ) ); }
+	else {
+		if( iPseudocounts == -1 )
+			dScale = 1;
+		else if( iTotal ) {
+			dScale = (float)iPseudocounts / iTotal;
+			iTotal = iPseudocounts; }
+		else
+			dScale = 0;
+		for( i = 0; i < vecdProbs.size( ); ++i )
+			vecdProbs[ i ] = ( ( dScale * veciCounts[ i ] ) + dAlpha ) /
+				( iTotal + ( dAlpha * vecdProbs.size( ) ) ); }
+
+	return true; }
+
 /*!
  * \brief
  * Construct a new minimal Bayes net from the given SMILE-based network.
@@ -864,6 +899,140 @@ bool CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbData, float* a
 	iOffset = iChunk * iStart;
 	for( iGene = iStart; ( iGene < iGenes ) && ( iOffset < vecbData.size( ) ); ++iGene,iOffset += iChunk )
 		adResults[ iGene ] = Evaluate( vecbData, iOffset );
+
+	return true; }
+
+/*!
+ * \brief
+ * Constructs a naive Bayesian classifier using count data for each network node.
+ * 
+ * \param szFileCounts
+ * Text file containing counts from which CPTs are derived.
+ * 
+ * \param mapstriNodes
+ * Mapping of node identifiers in counts file to integer indices (zero-based).
+ * 
+ * \param pBNMinimal
+ * If non-null, Bayes net to use for default values when a distribution's counts are too sparse to use
+ * accurately.
+ * 
+ * \returns
+ * True if Bayes net was successfully constructed.
+ * 
+ * Creates a naive Bayesian classifier by estimating maximum likelihood parameter values from counts for
+ * each node's data values.  These counts should be given in a text file where each set of counts is tab
+ * delimited in the form:
+ * \code
+ * network_name	number_of_nodes
+ * class	prior	counts
+ * node_name_1
+ * node	1	counts	for	class	0
+ * node	1	counts	for	class	1
+ * node_name_2
+ * ...
+ * \endcode
+ * 
+ * For example, suppose we are constructing a network with two output classes and three datasets, which can
+ * take two, five, or two distinct values, respectively.  Valid count data might resemble:
+ * \code
+ * my_network_name	3
+ * 90	10
+ * dataset_name_1
+ * 80	20
+ * 1	9
+ * dataset_name_2
+ * 30	40	60	40	30
+ * 5	10	20	30	35
+ * dataset_name_3
+ * 15	19
+ * 30	36
+ * \endcode
+ * 
+ * These would generate prior probabilities of 0.9 and 0.1 for the two classes, for example; CPTs for each
+ * node would similarly be calculated by dividing each set of counts by their sum.  If a fallback network
+ * is provided, probability distributions with too few counts to estimate accurately will be replaced with
+ * fallback values.
+ */
+bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const map<string, size_t>& mapstriNodes,
+	const vector<float>& vecdAlphas, size_t iPseudocounts, const CBayesNetMinimal* pBNDefault ) {
+	static const size_t	c_iStateInitial	= 0;
+	static const size_t	c_iStateRoot	= c_iStateInitial + 1;
+	static const size_t	c_iStatePreCPT	= c_iStateRoot + 1;
+	static const size_t	c_iStateCPT		= c_iStatePreCPT + 1;
+	ifstream		ifsm;
+	char			szBuffer[ c_iBufferSize ];
+	size_t			i, iState, iClass, iNode;
+	vector<string>	vecstrLine;
+	vector<float>	vecdProbs;
+	map<string, size_t>::const_iterator	iterNode;
+
+	if( m_adNY ) {
+		delete[] m_adNY;
+		m_adNY = NULL; }
+
+	iNode = 0;
+	iState = c_iStateInitial;
+	ifsm.open( szFileCounts );
+	if( !ifsm.is_open( ) ) {
+		g_CatSleipnir.error( "CBayesNetMinimal::OpenCounts( %s ) could not open file", szFileCounts );
+		return false; }
+	while( !ifsm.eof( ) ) {
+		ifsm.getline( szBuffer, CFile::c_iBufferSize - 1 );
+		szBuffer[ CFile::c_iBufferSize - 1 ] = 0;
+		if( !szBuffer[ 0 ] )
+			continue;
+		vecstrLine.clear( );
+		CMeta::Tokenize( szBuffer, vecstrLine );
+		switch( iState ) {
+			case c_iStateInitial:
+				if( vecstrLine.size( ) != 2 )
+					return false;
+				m_strID = vecstrLine[ 0 ];
+				m_vecNodes.resize( atol( vecstrLine[ 1 ].c_str( ) ) );
+				iState = c_iStateRoot;
+				break;
+
+			case c_iStateRoot:
+				m_MatRoot.Initialize( vecstrLine.size( ), 1 );
+				if( !Counts2Probs( vecstrLine, vecdProbs ) )
+					return false;
+				for( i = 0; i < m_MatRoot.GetRows( ); ++i )
+					m_MatRoot.Set( i, 0, vecdProbs[ i ] );
+				iState = c_iStatePreCPT;
+				break;
+
+			case c_iStatePreCPT:
+				if( ( iterNode = mapstriNodes.find( vecstrLine[ 0 ] ) ) == mapstriNodes.end( ) ) {
+					g_CatSleipnir.error( "CBayesNetMinimal::OpenCounts( %s ) could not identify node: %s",
+						szFileCounts, vecstrLine[ 0 ].c_str( ) );
+					return false; }
+				iNode = iterNode->second;
+				iClass = 0;
+				iState = c_iStateCPT;
+				break;
+
+			case c_iStateCPT:
+				if( !Counts2Probs( vecstrLine, vecdProbs, vecdAlphas.empty( ) ? 1 : vecdAlphas[ iNode ],
+					iPseudocounts, pBNDefault, iNode, iClass ) )
+					return false;
+				{
+					CDataMatrix&	MatCPT	= m_vecNodes[ iNode ].m_MatCPT;
+
+					if( iClass ) {
+						if( MatCPT.GetColumns( ) != vecdProbs.size( ) ) {
+							g_CatSleipnir.error( "CBayesNetMinimal::OpenCounts( %s ) illegal count number: given %d, expected %d",
+								szFileCounts, vecdProbs.size( ), MatCPT.GetColumns( ) );
+							return false; } }
+					else
+						MatCPT.Initialize( m_MatRoot.GetRows( ), vecdProbs.size( ) );
+#pragma warning( disable : 4996 )
+					copy( vecdProbs.begin( ), vecdProbs.end( ), MatCPT.Get( iClass ) );
+#pragma warning( default : 4996 )
+				}
+				if( ++iClass >= m_MatRoot.GetRows( ) )
+					iState = c_iStatePreCPT;
+				break; } }
+	ifsm.close( );
 
 	return true; }
 

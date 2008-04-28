@@ -44,6 +44,7 @@ class CPCLPair;
 
 class CBayesNetImpl {
 protected:
+	static const size_t	c_iMinimum	= 25;
 	static const char	c_cMissing	= '_';
 	static const char	c_cBase		= 'A';
 	static const char	c_szFR[];
@@ -70,7 +71,6 @@ class CBayesNetSmileImpl : protected CBayesNetImpl {
 protected:
 	friend class CBayesNetFN;
 
-	static const size_t	c_iMinimum	= 25;
 	static const char	c_szGaussian[];
 
 	static bool IsGaussian( const DSL_network& );

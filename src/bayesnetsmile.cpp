@@ -864,6 +864,57 @@ bool CBayesNetSmile::Open( const CBayesNetSmile& BNPrior, const vector<CBayesNet
 
 	return true; }
 
+/*!
+ * \brief
+ * Creates a SMILE Bayes net equivalent to the given minimal naive Bayesian classifier.
+ * 
+ * \param BNMinimal
+ * Minimal naive Bayesian classifier to be copied into the new SMILE network.
+ * 
+ * \param vecstrNames
+ * Node IDs to be assigned to the SMILE network nodes.
+ * 
+ * \returns
+ * True if Bayes net was successfully constructed.
+ * 
+ * \remarks
+ * vecstrNames must contain the same number of strings as BNMinimal has non-root nodes.
+ */
+bool CBayesNetSmile::Open( const CBayesNetMinimal& BNMinimal, const vector<string>& vecstrNames ) {
+	DSL_stringArray	vecstrOutcomes;
+	char			acNum[ 8 ];
+	size_t			i, j, k;
+	string			strCur;
+	DSL_Dmatrix*	pMat;
+
+	m_fSmileNet = true;
+	m_SmileNet.DeleteAllNodes( );
+	m_SmileNet.AddNode( DSL_CPT, (char*)c_szFR );
+	for( i = 0; i < BNMinimal.GetCPT( 0 ).GetRows( ); ++i ) {
+#pragma warning( disable : 4996 )
+		sprintf( acNum, "%02d", i );
+		vecstrOutcomes.Add( ( (string)c_szFR + acNum ).c_str( ) ); }
+	m_SmileNet.GetNode( 0 )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
+	pMat = m_SmileNet.GetNode( 0 )->Definition( )->GetMatrix( );
+	for( i = 0; i < BNMinimal.GetCPT( 0 ).GetRows( ); ++i )
+		(*pMat)[ i ] = BNMinimal.GetCPT( 0 ).Get( i, 0 );
+	for( i = 1; i < BNMinimal.GetNodes( ); ++i ) {
+		m_SmileNet.AddNode( DSL_CPT, (char*)( strCur = CMeta::Filename( vecstrNames[ i - 1 ] ) ).c_str( ) );
+		vecstrOutcomes.Flush( );
+		for( j = 0; j < BNMinimal.GetCPT( i ).GetColumns( ); ++j ) {
+			sprintf( acNum, "%02d", j );
+#pragma warning( default : 4996 )
+			vecstrOutcomes.Add( ( strCur + acNum ).c_str( ) ); }
+		m_SmileNet.GetNode( (int)i )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
+		m_SmileNet.AddArc( 0, (int)i );
+		pMat = m_SmileNet.GetNode( i )->Definition( )->GetMatrix( );
+		for( j = 0; j < BNMinimal.GetCPT( i ).GetRows( ); ++j )
+			for( k = 0; k < BNMinimal.GetCPT( i ).GetColumns( ); ++k )
+				(*pMat)[ ( j * BNMinimal.GetCPT( i ).GetColumns( ) ) + k ] =
+					BNMinimal.GetCPT( i ).Get( j, k ); }
+
+	return true; }
+
 }
 
 #endif // NO_SMILE

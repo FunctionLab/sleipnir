@@ -33,7 +33,8 @@ const float						CBNServer::c_adColorMin[]		= {0, 1, 0};
 const float						CBNServer::c_adColorMax[]		= {1, 0, 0};
 const CBNServer::TPFNProcessor	CBNServer::c_apfnProcessors[]	=
 	{&CBNServer::ProcessInference, &CBNServer::ProcessData, &CBNServer::ProcessGraph,
-	&CBNServer::ProcessContexts, &CBNServer::ProcessTermFinder, &CBNServer::ProcessDiseases};
+	&CBNServer::ProcessContexts, &CBNServer::ProcessTermFinder, &CBNServer::ProcessDiseases,
+	&CBNServer::ProcessDisease};
 
 struct SPixie {
 	size_t	m_iNode;
@@ -857,5 +858,53 @@ bool CBNServer::GetDisease( size_t iGene, size_t iContext, const vector<unsigned
 			iOut++;
 			dOut += d; }
 	m_adDiseases[ m_vecveciDiseases.size( ) + iDisease ] = iOut ? ( dOut / iOut ) : 0;
+
+	return true; }
+
+size_t CBNServer::ProcessDisease( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+	uint32_t				iDisease, iContext, iSize;
+	size_t					iPlace;
+
+	if( ( iOffset + sizeof(iContext) ) > vecbMessage.size( ) )
+		return -1;
+	iContext = *(uint32_t*)&vecbMessage[ iOffset ];
+
+	for( iPlace = iOffset + sizeof(iContext); ( iPlace + sizeof(iDisease) ) <= vecbMessage.size( );
+		iPlace += sizeof(iDisease) ) {
+		iDisease = *(uint32_t*)&vecbMessage[ iPlace ];
+		if( ( iDisease < 1 ) || ( iDisease > m_vecveciDiseases.size( ) ) )
+			return -1;
+		cerr << m_strConnection << " diseasing " << iDisease  << " in " << iContext << endl;
+		if( !GetDisease( iContext, iDisease - 1 ) )
+			return -1;
+
+		iSize = (uint32_t)( GetGenes( ) * sizeof(*m_adGenes) );
+		send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+		send( m_iSocket, (char*)m_adGenes, iSize, 0 ); }
+
+	return ( iPlace - iOffset ); }
+
+bool CBNServer::GetDisease( size_t iContext, size_t iDisease ) {
+	size_t			i, j;
+	CDataMatrix		MatDisease;
+	float			d;
+	vector<size_t>	veciCounts;
+
+	MatDisease.Initialize( m_vecveciDiseases[ iDisease ].size( ), GetGenes( ) );
+	for( i = 0; i < MatDisease.GetRows( ); ++i )
+		Get( m_vecveciDiseases[ iDisease ][ i ] + 1, iContext, MatDisease.Get( i ) );
+
+	if( !m_adGenes )
+		m_adGenes = new float[ GetGenes( ) ];
+	memset( m_adGenes, 0, GetGenes( ) * sizeof(*m_adGenes) );
+	veciCounts.resize( GetGenes( ) );
+	fill( veciCounts.begin( ), veciCounts.end( ), 0 );
+	for( i = 0; i < MatDisease.GetRows( ); ++i )
+		for( j = 0; j < MatDisease.GetColumns( ); ++j )
+			if( !CMeta::IsNaN( d = MatDisease.Get( i, j ) ) ) {
+				m_adGenes[ j ] += d;
+				veciCounts[ j ]++; }
+	for( i = 0; i < GetGenes( ); ++i )
+		m_adGenes[ i ] /= GetBackground( iContext, i ) * veciCounts[ i ];
 
 	return true; }

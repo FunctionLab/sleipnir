@@ -1,0 +1,45 @@
+package	"Counter"
+version	"1.0"
+purpose	"Pre-Bayesian learning tool; counts distributions of values in data"
+
+defgroup "Mode"	yes
+groupoption	"answers"	w	"Answer file"
+							string	typestr="filename"	group="Mode"
+groupoption	"counts"	c	"Directory containing count files"
+							string	typestr="directory"	group="Mode"
+groupoption	"networks"	n	"Bayes nets"
+							string	typestr="filename"	group="Mode"
+
+section "Main"
+option	"directory"		d	"Data directory"
+							string	typestr="directory"	default="."
+option	"output"		o	"Output Bayes nets"
+							string	typestr="filename or directory"
+option	"datasets"		s	"Dataset ID text file"
+							string	typestr="filename"
+option	"genes"			g	"Gene ID text file"
+							string	typestr="filename"
+
+section "Network Features"
+option	"default"		b	"Bayes net containing defaults for cases with missing data"
+							string	typestr="filename"
+option	"zeros"			Z	"Read zeroed node IDs/outputs from the given file"
+							string	typestr="filename"
+
+section "Bayesian Regularization"
+option	"pseudocounts"	p	"Effective number of pseudocounts to use"
+							int	default="-1"
+option	"alphas"		a	"File containing equivalent sample sizes (alphas) for each node"
+							string	typestr="filename"
+
+section "Optional"
+option	"smile"			l	"Output SMILE (X)DSL files rather than minimal networks"
+							flag	off
+option	"xdsl"			x	"Generate XDSL output rather than DSL"
+							flag	on
+option	"memmap"		m	"Memory map input files"
+							flag	off
+option	"threads"		t	"Maximum number of threads to spawn"
+							int	default="-1"
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

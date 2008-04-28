@@ -62,7 +62,7 @@
  * 
  * If you use Sleipnir, please cite our publication:
  * 
- * <b>Curtis Huttenhower, Mark Schroeder, Maria Chikina, and
+ * <b>Curtis Huttenhower, Mark Schroeder, Maria D. Chikina, and
  *	<a href="mailto:ogt@princeton.edu">Olga G. Troyanskaya</a>
  *	"The Sleipnir library for computational functional genomics" ***, 2008</b>
  * <a href="http://www.ncbi.nlm.nih.gov/sites/entrez?Db=pubmed&Cmd=ShowDetailView&TermToSearch=***">PMID ***</a>

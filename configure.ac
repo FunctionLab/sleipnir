@@ -555,6 +555,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/BNUnraveler/Makefile \
 		 tools/BNWeaver/Makefile \
 		 tools/Contexter/Makefile \
+		 tools/Counter/Makefile \
 		 tools/Data2DB/Makefile \
 		 tools/DSLConverter/Makefile \
 		 tools/Dab2Dad/Makefile \

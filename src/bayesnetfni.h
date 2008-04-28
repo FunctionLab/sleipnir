@@ -24,6 +24,8 @@
 
 namespace Sleipnir {
 
+class CBayesNetMinimal;
+
 #ifndef NO_SMILE
 
 class CBayesNetFNNode {
@@ -182,9 +184,12 @@ public:
 	CDataMatrix		m_MatCPT;
 };
 
-class CBayesNetMinimalImpl {
+class CBayesNetMinimalImpl : protected CBayesNetImpl, protected CFile {
 protected:
-	CBayesNetMinimalImpl( ) : m_adNY(NULL) { }
+	static bool Counts2Probs( const std::vector<std::string>&, std::vector<float>&, float dAlpha = 1,
+		size_t = -1, const CBayesNetMinimal* = NULL, size_t = 0, size_t = 0 );
+
+	CBayesNetMinimalImpl( ) : CBayesNetImpl( true ), m_adNY(NULL) { }
 
 	std::string							m_strID;
 	long double*						m_adNY;

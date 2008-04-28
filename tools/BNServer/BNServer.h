@@ -53,6 +53,7 @@ private:
 	bool Get( size_t, const std::vector<size_t>&, size_t, float* );
 	bool GetContext( size_t, const std::vector<unsigned char>&, size_t );
 	bool GetDisease( size_t, size_t, const std::vector<unsigned char>&, size_t );
+	bool GetDisease( size_t, size_t );
 	bool GraphCreate( const std::vector<size_t>&, size_t, size_t, std::vector<bool>&, std::vector<size_t>&,
 		Sleipnir::CDat& ) const;
 	bool GraphWrite( const Sleipnir::CDat&, const std::vector<size_t>&, const std::vector<size_t>&,
@@ -68,6 +69,7 @@ private:
 	size_t ProcessContexts( const std::vector<unsigned char>&, size_t );
 	size_t ProcessTermFinder( const std::vector<unsigned char>&, size_t );
 	size_t ProcessDiseases( const std::vector<unsigned char>&, size_t );
+	size_t ProcessDisease( const std::vector<unsigned char>&, size_t );
 
 	size_t GetGenes( ) const {
 

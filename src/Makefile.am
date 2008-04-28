@@ -46,6 +46,7 @@ include_HEADERS			=	\
 	bayesnetfni.h			\
 	bayesnet.h				\
 	bayesneti.h				\
+	bayesnetint.h			\
 	clusthierarchical.h		\
 	clusthierarchicali.h	\
 	clustkmeans.h			\

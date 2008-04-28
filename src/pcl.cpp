@@ -346,7 +346,7 @@ bool CPCLImpl::OpenExperiments( std::istream& istmInput, size_t iFeatures, char*
 
 	Reset( );
 	if( !m_fHeader ) {
-		m_vecstrFeatures.resize( 1 );
+		m_vecstrFeatures.resize( 1 + iFeatures );
 		return true; }
 	istmInput.getline( acLine, iLine - 1 );
 	for( iToken = 0,pc = acLine; ( strToken = OpenToken( pc, &pc ) ).length( ) || *pc; ++iToken )

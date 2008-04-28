@@ -29,6 +29,7 @@ my %tools_other_packages = (
 			    BNWeaver => ['SMILE'],
 #			    BNWrangler => ['SMILE'],
 			    Contexter  => ['SMILE'],
+			    Counter  => ['SMILE'],
 			    DSLConverter  => ['SMILE'],
 			    Data2DB  => ['SMILE'],
 			    Dab2Dad  => ['SMILE'],

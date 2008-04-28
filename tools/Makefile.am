@@ -5,6 +5,7 @@ if WITH_TOOLS
 	  Clusterer \
 	  Clusters2Dab \
 	  Combiner \
+	  Counter \
 	  DChecker \
 	  Dat2Dab \
 	  Dat2Graph \
@@ -38,6 +39,7 @@ if WITH_SMILE_TOOLS
 	  BNUnraveler \
 	  BNWeaver \
 	  Contexter \
+	  Counter \
 	  Data2DB \
 	  DSLConverter \
 	  Dab2Dad \
