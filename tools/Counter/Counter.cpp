@@ -442,7 +442,7 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
 			Genome.AddGene( PCLGenes.GetFeature( i, 1 ) );
 	}
 
-	vecpGenes.resize( sArgs.inputs_num + 1 );
+	vecpGenes.resize( sArgs.inputs_num ? sArgs.inputs_num : 1 );
 	vecpYes.resize( vecpGenes.size( ) );
 	vecpNo.resize( vecpGenes.size( ) );
 	vecstrTmps.resize( vecpNo.size( ) );
@@ -450,10 +450,10 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
 		char	acTemp[ L_tmpnam + 1 ];
 
 		vecpGenes[ i ]  = new CGenes( Genome );
-		if( i ) {
+		if( sArgs.inputs_num ) {
 			ifstream	ifsm;
 
-			ifsm.open( sArgs.inputs[ i - 1 ] );
+			ifsm.open( sArgs.inputs[ i ] );
 			if( !vecpGenes[ i ]->Open( ifsm, false ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
 				return 1; } }
@@ -461,7 +461,7 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
 			vecpGenes[ i ]->Open( Genome.GetGeneNames( ), false );
 		vecpYes[ i ] = new CDat( );
 		vecpYes[ i ]->Open( Genome.GetGeneNames( ), false, ( (string)sArgs.output_arg + '/' +
-			( i ? CMeta::Basename( sArgs.inputs[ i - 1 ] ) : "global" ) + c_acDab ).c_str( ) );
+			( sArgs.inputs_num ? CMeta::Basename( sArgs.inputs[ i ] ) : "global" ) + c_acDab ).c_str( ) );
 		vecpNo[ i ] = new CDat( );
 #pragma warning( disable : 4996 )
 		vecstrTmps[ i ] = tmpnam( acTemp );
@@ -497,7 +497,7 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
 				vecsData[ i ].m_iNode = iterDataset->second;
 				vecsData[ i ].m_pveciGenes = &veciGenes;
 				vecsData[ i ].m_fFirst = fFirst;
-				vecsData[ i ].m_strName = i ? sArgs.inputs[ i - 1 ] : "global";
+				vecsData[ i ].m_strName = sArgs.inputs_num ? sArgs.inputs[ i ] : "global";
 				if( pthread_create( &vecpthdThreads[ i ], NULL, evaluate, &vecsData[ i ] ) ) {
 					cerr << "Couldn't create evaluation thread: " << sArgs.inputs[ i ] << endl;
 					return 1; } }
@@ -511,7 +511,7 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
 			vecsData[ i ].m_pBN = vecpBNs[ i ];
 			vecsData[ i ].m_pYes = vecpYes[ i ];
 			vecsData[ i ].m_pNo = vecpNo[ i ];
-			vecsData[ i ].m_strName = i ? sArgs.inputs[ i - 1 ] : "global";
+			vecsData[ i ].m_strName = sArgs.inputs_num ? sArgs.inputs[ i ] : "global";
 			if( pthread_create( &vecpthdThreads[ i ], NULL, finalize, &vecsData[ i ] ) ) {
 				cerr << "Couldn't create finalization thread: " << sArgs.inputs[ i ] << endl;
 				return 1; } }
