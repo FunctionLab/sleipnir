@@ -1,0 +1,21 @@
+package	"Normalizer"
+version	"1.0"
+purpose	"Data file normalizer."
+
+section "Main"
+option	"input"		i	"Input/output PCL/DAT/DAB file"
+						string	typestr="filename"
+option	"output"	o	"Output PCL/DAB file"
+						string	typestr="filename"
+option	"type"		t	"Data file type"
+						values="pcl","dat"	default="dat"
+
+section "Optional"
+option	"flip"		f	"Flip high/low scores"
+						flag	off
+option	"zscore"	z	"Normalize values as z-scores"
+						flag	on
+option	"skip"		s	"Columns to skip in input PCL"
+						int	default="2"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"

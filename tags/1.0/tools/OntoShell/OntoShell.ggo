@@ -1,0 +1,39 @@
+package	"OntoShell"
+version	"1.0"
+purpose	"Ontology exploration utility"
+
+section "Main"
+option	"exec"			x	"Command to execute"
+							string
+option	"altids"		l	"Force alternate (human) IDs"
+							flag	off
+option	"dbids"			b	"Include GO database IDs"
+							flag	off
+
+section "Function Catalogs"
+option	"go_onto"		o	"GO ontology"
+							string	typestr="filename"
+option	"go_anno"		g	"GO annotations"
+							string	typestr="filename"
+option	"kegg"			k	"KEGG ontology"
+							string	typestr="filename"
+option	"kegg_org"		K	"KEGG organism"
+							string	default="SCE"
+option	"mips_onto"		m	"MIPS ontology"
+							string	typestr="filename"
+option	"mips_anno"		a	"MIPS annotations"
+							string	typestr="filename"
+option	"mipsp_onto"	M	"MIPS phenotypes ontology"
+							string	typestr="filename"
+option	"mipsp_anno"	A	"MIPS phenotypes annotations"
+							string	typestr="filename"
+option	"features"		f	"SGD gene features"
+							string	typestr="filename"
+
+section "Optional"
+option	"zeroes"		z	"Tab-complete zero entries"
+							flag	off
+option	"config"		c	"Command line config file"
+							string	typestr="filename"	default="OntoShell.ini"
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

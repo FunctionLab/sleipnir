@@ -1,0 +1,45 @@
+package	"Dat2Graph"
+version	"1.0"
+purpose	"Text/binary data file graph output"
+
+section "Main"
+option	"input"		i	"Input DAT/DAB file"
+						string	typestr="filename"
+option	"format"	t	"Output graph format"
+						values="dot","gdf","net","matisse","list","dat","correl"	default="dot"
+
+section "Graph Queries"
+option	"geneq"		q	"Query inclusion file"
+						string	typestr="filename"
+option	"neighbors"	k	"Size of query neighborhood"
+						int	default="-1"
+option	"hefalmp"	a	"Perform HEFalMp query instead of bioPIXIE query"
+						flag	on
+option	"edges"		d	"Aggressiveness of edge trimming after query"
+						double	default="1"
+
+section "Filtering"
+option	"cutoff"	e	"Minimum edge weight for output"
+						double
+option	"genes"		g	"Gene inclusion file"
+						string	typestr="filename"
+option	"knowns"	w	"Known interactions (DAT/DAB) to ignore"
+						string	typestr="filename"
+
+section "Annotation"
+option	"features"	f	"SGD gene features"
+						string	typestr="filename"
+option	"colors"	l	"Colors for graph nodes"
+						string	typestr="filename"
+option	"borders"	b	"Borders for graph nodes"
+						string	typestr="filename"
+
+section "Optional"
+option	"normalize"	n	"Normalize edge weights before processing"
+						flag	off
+option	"memmap"	m	"Memory map input file"
+						flag	off
+option	"config"	c	"Command line config file"
+						string	typestr="filename"	default="Dat2Graph.ini"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"

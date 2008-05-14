@@ -1,0 +1,39 @@
+package	"Contexter"
+version	"1.0"
+purpose	"Calculate gene/context association ratios"
+
+section "Main"
+option	"input"			i	"DAT/DAB file or context IDs and names"
+							string	typestr="filename"
+
+section "Input"
+option	"dat"			t	"Use DAT/DAB file input rather than Bayes nets"
+							flag	off
+option	"database"		d	"Database directory"
+							string	typestr="directory"	default="."
+option	"contexts"		c	"Context/gene mapping"
+							string	typestr="filename"	yes
+option	"context"		e	"Context ID to process"
+							int	yes
+option	"genes"			g	"Gene ID to name mapping"
+							string	typestr="filename"
+
+section "Bayes nets"
+option	"networks"		n	"Bayes net directory"
+							string	typestr="directory"	default="."
+option	"default"		b	"Bayes net for no context"
+							string	typestr="filename"
+option	"xdsl"			x	"Use XDSL files instead of DSL"
+							flag	on
+option	"minimal_in"	m	"Read stored contexts and minimal Bayes nets"
+							flag	off
+option	"minimal_out"	M	"Store contexts and minimal Bayes nets"
+							string	typestr="filename"
+
+section "Options"
+option	"lookup"		l	"Gene name to lookup"
+							string
+option	"memmap"		p	"Memory map input"
+							flag	off
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"
