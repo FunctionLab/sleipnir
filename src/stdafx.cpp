@@ -41,6 +41,7 @@
  * <li>\ref sec_building</li>
  * <li>\ref sec_uses</li>
  * <li>\ref sec_philosophy</li>
+ * <li>\ref sec_contributing</li>
  * <li>\ref sec_history</li>
  * <li>\ref sec_license</li>
  * </ol>
@@ -53,10 +54,12 @@
  * 
  * - <a href="sleipnir-current.tar.gz">sleipnir-current.tar.gz</a>, the current source code.
  * - <a href="sleipnir-doc-current.tar.gz">sleipnir-doc-current.tar.gz</a>, the current documentation.
+ * - You can also access the Sleipnir <a href="http://subversion.tigris.org/">Subversion</a> repository at:
+ *	<tt>svn://gen-svn-anon.princeton.edu/sleipnir/</tt>.
  * 
  * Sleipnir and its associated tools are provided as source code that can be compiled under Linux (using
  * gcc), Windows (using Visual Studio or cygwin), or MacOS (using gcc).  For more information, see
- * \ref sec_building.
+ * \ref sec_building and \ref sec_contributing.
  * 
  * \section sec_citation Citation
  * 
@@ -64,7 +67,7 @@
  * 
  * <b>Curtis Huttenhower, Mark Schroeder, Maria D. Chikina, and
  *	<a href="mailto:ogt@princeton.edu">Olga G. Troyanskaya</a>
- *	"The Sleipnir library for computational functional genomics" ***, 2008</b>
+ *	"The Sleipnir library for computational functional genomics", Bioinformatics 2008</b>
  * <a href="http://www.ncbi.nlm.nih.gov/sites/entrez?Db=pubmed&Cmd=ShowDetailView&TermToSearch=***">PMID ***</a>
  * 
  * \section sec_building Building Sleipnir
@@ -774,7 +777,35 @@ MIPS:
  * being used, DAT formatting is generally assumed; if an explicit input or output filename is given, DAB
  * formatting is generally assumed.
  * 
+ * \section sec_contributing Contributing to Sleipnir
+ * 
+ * While we don't (currently) have the resources to make Sleipnir a full-blown community project, we'd love to
+ * include (with full credit, of course) any patches submitted by the community.  If you're interested in
+ * developing new Sleipnir tools or library components, the following steps may be useful:
+ * 
+ * - First, <a href="mailto:ogt@princeton.edu">let us know</a>!  We'd love to hear how people are using
+ *	Sleipnir and what you plan to do with it.  We're happy to answer questions and offer development tips
+ *	whenever possible.
+ * 
+ * - Check out our <a href="http://subversion.tigris.org/">Subversion</a> repository at
+ *	<tt>svn://gen-svn-anon.princeton.edu/sleipnir/</tt>.  The \c trunk branch always contains the latest development
+ *	version of Sleipnir, and official versioned releases appear under \c tags.  If you'd like to submit
+ *	patches to us for inclusion in Sleipnir, please try to do so against the current development version
+ *	(\c trunk).
+ * 
+ * - Construct a <a href="http://www.gnu.org/software/patch/">patch</a> against the Sleipnir code that
+ *	includes your modifications and additions.  Alternatively, if you've built an independent tool that
+ *	relies on Sleipnir, we can include a link to it on the Sleipnir web site.
+ * 
+ * - And finally, <a href="mailto:ogt@princeton.edu">let us know</a> again!  We'll do our best to include any
+ *	patch or link you send us, always with full credit to the creators.
+ * 
  * \section sec_history Version History
+ * 
+ * - <a href="sleipnir-1.0.tar.gz">1.0</a>, 05-14-08 <br>
+ * First publicly available version. <br>
+ * Added \ref Counter tool for rapid Bayesian classifier construction/inference from raw data counts. <br>
+ * Separate SMILE dependent and independent Bayes net headers.
  * 
  * - <a href="sleipnir-0.9.tar.gz">0.9</a>, 04-14-08 <br>
  * First version made available to reviewers.

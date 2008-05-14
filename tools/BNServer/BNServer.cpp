@@ -166,35 +166,6 @@ int main( int iArgs, char** aszArgs ) {
 			vecBNs[ i ].Save( ofsm );
 		ofsm.close( ); }
 
-/*
-	if( sArgs.bn_weights_arg ) {
-		vector<float>	vecdWeights;
-
-		ifsm.clear( );
-		ifsm.open( sArgs.bn_weights_arg );
-		if( !ifsm.is_open( ) ) {
-			cerr << "Could not open: " << sArgs.bn_weights_arg << endl;
-			return 1; }
-		while( !ifsm.eof( ) ) {
-			ifsm.getline( acBuffer, c_iBuffer - 1 );
-			acBuffer[ c_iBuffer - 1 ] = 0;
-			if( !acBuffer[ 0 ] )
-				continue;
-			vecstrLine.clear( );
-			CMeta::Tokenize( acBuffer, vecstrLine );
-			if( vecstrLine.size( ) < 2 ) {
-				cerr << "Ignoring line: " << acBuffer << endl;
-				continue; }
-			vecdWeights.push_back( (float)atof( vecstrLine[ 1 ].c_str( ) ) ); }
-		ifsm.close( );
-
-		if( !BNDefault.SetWeights( vecdWeights ) )
-			return 1;
-		for( i = 0; i < vecBNs.size( ); ++i )
-			if( !vecBNs[ i ].SetWeights( vecdWeights ) )
-				return 1; }
-*/
-
 	ifsm.clear( );
 	ifsm.open( sArgs.contexts_arg );
 	if( !ifsm.is_open( ) ) {

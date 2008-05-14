@@ -52,7 +52,7 @@ void* learn( void* );
 void* evaluate( void* );
 void* finalize( void* );
 int main_count( const gengetopt_args_info&, const map<string, size_t>& );
-int main_xdsls( const gengetopt_args_info&, const map<string, size_t>& );
+int main_xdsls( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
 int main_inference( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
 
 int main( int iArgs, char** aszArgs ) {
@@ -114,7 +114,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.answers_arg )
 		iRet = main_count( sArgs, mapstriZeros );
 	else if( sArgs.counts_arg )
-		iRet = main_xdsls( sArgs, mapstriDatasets );
+		iRet = main_xdsls( sArgs, mapstriZeros, mapstriDatasets );
 	else if( sArgs.networks_arg )
 		iRet = main_inference( sArgs, mapstriZeros, mapstriDatasets );
 
@@ -229,17 +229,21 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 #endif // _MSC_VER
 
 	for( i = 0; i < vecpMatRoots.size( ); ++i ) {
-		cout << ( sArgs.inputs ? CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) <<
+		ofstream	ofsm;
+
+		ofsm.open( ( (string)sArgs.output_arg + '/' + ( sArgs.inputs ?
+			CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) + ".txt" ).c_str( ) );
+		ofsm << ( sArgs.inputs ? CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) <<
 			'\t' << vecpvecpMats.size( ) << endl;
 		for( j = 0; j < vecpMatRoots[ i ]->GetRows( ); ++j )
-			cout << ( j ? "\t" : "" ) << vecpMatRoots[ i ]->Get( j, 0 );
-		cout << endl;
+			ofsm << ( j ? "\t" : "" ) << vecpMatRoots[ i ]->Get( j, 0 );
+		ofsm << endl;
 		for( j = 0; j < vecpvecpMats.size( ); ++j ) {
-			cout << vecstrNames[ j ] << endl;
+			ofsm << vecstrNames[ j ] << endl;
 			for( k = 0; k < (*vecpvecpMats[ j ])[ i ]->GetColumns( ); ++k ) {
 				for( m = 0; m < (*vecpvecpMats[ j ])[ i ]->GetRows( ); ++m )
-					cout << ( m ? "\t" : "" ) << (*vecpvecpMats[ j ])[ i ]->Get( m, k );
-				cout << endl; } } }
+					ofsm << ( m ? "\t" : "" ) << (*vecpvecpMats[ j ])[ i ]->Get( m, k );
+				ofsm << endl; } } }
 
 	for( i = 0; i < vecpvecpMats.size( ); ++i ) {
 		for( j = 0; j < vecpvecpMats[ i ]->size( ); ++j )
@@ -292,7 +296,8 @@ void* learn( void* pData ) {
 	pthread_exit( NULL );
 	return NULL; }
 
-int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& mapstriDatasets ) {
+int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& mapstriZeros,
+	const map<string, size_t>& mapstriDatasets ) {
 	static const size_t	c_iBuffer	= 1024;
 	char						szBuffer[ c_iBuffer ];
 	string						strFile;
@@ -305,6 +310,8 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 	uint32_t					iSize;
 	size_t						i;
 	vector<float>				vecdAlphas;
+	vector<unsigned char>		vecbZeros;
+	map<string, size_t>::const_iterator	iterZero, iterDataset;
 
 	if( mapstriDatasets.empty( ) ) {
 		cerr << "No datasets given" << endl;
@@ -330,7 +337,16 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 				(float)atof( vecstrLine[ 1 ].c_str( ) ); }
 		ifsm.close( ); }
 
-	if( !BNDefault.OpenCounts( sArgs.default_arg, mapstriDatasets, vecdAlphas, sArgs.pseudocounts_arg ) ) {
+	vecbZeros.resize( mapstriDatasets.size( ) );
+	fill( vecbZeros.begin( ), vecbZeros.end( ), 0xFF );
+	for( iterZero = mapstriZeros.begin( ); iterZero != mapstriZeros.end( ); ++iterZero ) {
+		if( ( iterDataset = mapstriDatasets.find( iterZero->first ) ) == mapstriDatasets.end( ) ) {
+			cerr << "Unknown dataset in zeros file: " << iterZero->first << endl;
+			return 1; }
+		vecbZeros[ iterDataset->second ] = (unsigned char)iterZero->second; }
+
+	if( !BNDefault.OpenCounts( sArgs.default_arg, mapstriDatasets, vecbZeros, vecdAlphas,
+		sArgs.pseudocounts_arg ) ) {
 		cerr << "Could not open default counts: " << ( sArgs.default_arg ? sArgs.default_arg : "not given" ) <<
 			endl;
 		return 1; }
@@ -356,7 +372,7 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 		strFile = (string)sArgs.counts_arg + '/' + strFile;
 		cerr << "Processing: " << strFile << endl;
 		pBN = new CBayesNetMinimal( );
-		if( !pBN->OpenCounts( strFile.c_str( ), mapstriDatasets, vecdAlphas, sArgs.pseudocounts_arg,
+		if( !pBN->OpenCounts( strFile.c_str( ), mapstriDatasets, vecbZeros, vecdAlphas, sArgs.pseudocounts_arg,
 			&BNDefault ) )
 			return 1;
 		vecpBNs.push_back( pBN ); }
@@ -402,7 +418,7 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
 	const map<string, size_t>& mapstriDatasets ) {
 	map<string, size_t>::const_iterator	iterDataset;
 	vector<size_t>						veciGenes;
-	size_t								i, iTerm, iThread;
+	size_t								i, j, iTerm, iThread;
 	vector<CGenes*>						vecpGenes;
 	vector<CDat*>						vecpYes, vecpNo;
 	vector<string>						vecstrTmps;
@@ -429,6 +445,20 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
 			return 1; } }
 	ifsm.close( );
 
+/*
+size_t k, m;
+for( i = 0; i < BNDefault.GetNodes( ); ++i )
+for( j = 0; j < BNDefault.GetCPT( i ).GetRows( ); ++j )
+for( k = 0; k < BNDefault.GetCPT( i ).GetColumns( ); ++k )
+cout << i << '\t' << j << '\t' << k << '\t' << BNDefault.GetCPT( i ).Get( j, k ) << endl;
+for( m = 0; m < vecpBNs.size( ); ++m )
+for( i = 0; i < vecpBNs[ m ]->GetNodes( ); ++i )
+for( j = 0; j < vecpBNs[ m ]->GetCPT( i ).GetRows( ); ++j )
+for( k = 0; k < vecpBNs[ m ]->GetCPT( i ).GetColumns( ); ++k )
+cout << i << '\t' << j << '\t' << k << '\t' << vecpBNs[ m ]->GetCPT( i ).Get( j, k ) << endl;
+return 0;
+//*/
+
 	if( !sArgs.genes_arg ) {
 		cerr << "No genes given" << endl;
 		return 1; }
@@ -447,7 +477,7 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
 	vecpNo.resize( vecpGenes.size( ) );
 	vecstrTmps.resize( vecpNo.size( ) );
 	for( i = 0; i < vecpGenes.size( ); ++i ) {
-		char	acTemp[ L_tmpnam + 1 ];
+		char*	szTemp;
 
 		vecpGenes[ i ]  = new CGenes( Genome );
 		if( sArgs.inputs_num ) {
@@ -463,9 +493,11 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
 		vecpYes[ i ]->Open( Genome.GetGeneNames( ), false, ( (string)sArgs.output_arg + '/' +
 			( sArgs.inputs_num ? CMeta::Basename( sArgs.inputs[ i ] ) : "global" ) + c_acDab ).c_str( ) );
 		vecpNo[ i ] = new CDat( );
-#pragma warning( disable : 4996 )
-		vecstrTmps[ i ] = tmpnam( acTemp );
-#pragma warning( default : 4996 )
+		if( !( szTemp = _tempnam( sArgs.temporary_arg, NULL ) ) ) {
+			cerr << "Could not generate temporary file name in: " << sArgs.temporary_arg << endl;
+			return 1; }
+		vecstrTmps[ i ] = szTemp;
+		free( szTemp );
 		vecpNo[ i ]->Open( Genome.GetGeneNames( ), false, vecstrTmps[ i ].c_str( ) ); }
 
 	veciGenes.resize( vecpYes[ 0 ]->GetGenes( ) );
@@ -487,14 +519,27 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
 			for( iThread = 0; ( ( sArgs.threads_arg == -1 ) || ( iThread < (size_t)sArgs.threads_arg ) ) &&
 				( ( iTerm + iThread ) < vecpGenes.size( ) ); ++iThread ) {
 				i = iTerm + iThread;
-				vecsData[ i ].m_pBN = vecpBNs[ i ];
+				if( sArgs.inputs_num ) {
+					for( j = 0; j < vecpBNs.size( ); ++j )
+						if( vecpBNs[ j ]->GetID( ) == CMeta::Deextension( CMeta::Basename(
+							sArgs.inputs[ i ] ) ) )
+							break;
+					if( j >= vecpBNs.size( ) ) {
+						cerr << "Could not locate Bayes net for: " << sArgs.inputs[ i ] << endl;
+						return 1; }
+					vecsData[ i ].m_pBN = vecpBNs[ j ]; }
+				else
+					vecsData[ i ].m_pBN = &BNDefault;
 				vecsData[ i ].m_pDat = &Dat;
 				vecsData[ i ].m_pGenes = vecpGenes[ i ];
 				vecsData[ i ].m_pYes = vecpYes[ i ];
 				vecsData[ i ].m_pNo = vecpNo[ i ];
 				vecsData[ i ].m_iZero = ( ( iterZero = mapstriZeros.find( iterDataset->first ) ) ==
-					mapstriZeros.end( ) ) ? -1 : iterZero->second;
-				vecsData[ i ].m_iNode = iterDataset->second;
+					mapstriZeros.end( ) ) ? vecpBNs[ i ]->GetDefault( iterDataset->second + 1 ) :
+					iterZero->second;
+				if( vecsData[ i ].m_iZero == 0xFF )
+					vecsData[ i ].m_iZero = -1;
+				vecsData[ i ].m_iNode = iterDataset->second + 1;
 				vecsData[ i ].m_pveciGenes = &veciGenes;
 				vecsData[ i ].m_fFirst = fFirst;
 				vecsData[ i ].m_strName = sArgs.inputs_num ? sArgs.inputs[ i ] : "global";
@@ -574,8 +619,8 @@ void* evaluate( void* pData ) {
 			if( CMeta::IsNaN( adYes[ iIndex = ( j - i - 1 ) ] ) ) {
 				adYes[ iIndex ] = dYes;
 				adNo[ iIndex ] = dNo; }
-			adNo[ iIndex ] += log( psData->m_pBN->GetCPT( psData->m_iNode ).Get( 0, iBin ) );
-			adYes[ iIndex ] += log( psData->m_pBN->GetCPT( psData->m_iNode ).Get( 1, iBin ) ); }
+			adNo[ iIndex ] += log( psData->m_pBN->GetCPT( psData->m_iNode ).Get( iBin, 0 ) );
+			adYes[ iIndex ] += log( psData->m_pBN->GetCPT( psData->m_iNode ).Get( iBin, 1 ) ); }
 		psData->m_pNo->Set( i, adNo );
 		psData->m_pYes->Set( i, adYes ); }
 	delete[] adYes;

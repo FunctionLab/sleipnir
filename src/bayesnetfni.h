@@ -180,6 +180,8 @@ protected:
 
 class CBayesNetMinimalNode {
 public:
+	CBayesNetMinimalNode( ) : m_bDefault(0xFF) { }
+
 	unsigned char	m_bDefault;
 	CDataMatrix		m_MatCPT;
 };

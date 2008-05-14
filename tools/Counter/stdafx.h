@@ -36,7 +36,8 @@ using namespace std;
 using namespace Sleipnir;
 
 #ifndef _MSC_VER
-#define _unlink unlink
+#define _tempnam	tempnam
+#define _unlink		unlink
 #endif // _MSC_VER
 
 #endif // STDAFX_H

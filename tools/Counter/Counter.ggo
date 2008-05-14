@@ -11,17 +11,17 @@ groupoption	"networks"	n	"Bayes nets"
 							string	typestr="filename"	group="Mode"
 
 section "Main"
+option	"output"		o	"Output count directory, Bayes nets, or inferences"
+							string	typestr="filename or directory"	yes
 option	"directory"		d	"Data directory"
 							string	typestr="directory"	default="."
-option	"output"		o	"Output Bayes nets"
-							string	typestr="filename or directory"
 option	"datasets"		s	"Dataset ID text file"
 							string	typestr="filename"
 option	"genes"			g	"Gene ID text file"
 							string	typestr="filename"
 
 section "Network Features"
-option	"default"		b	"Bayes net containing defaults for cases with missing data"
+option	"default"		b	"Count file containing defaults for cases with missing data"
 							string	typestr="filename"
 option	"zeros"			Z	"Read zeroed node IDs/outputs from the given file"
 							string	typestr="filename"
@@ -33,6 +33,8 @@ option	"alphas"		a	"File containing equivalent sample sizes (alphas) for each no
 							string	typestr="filename"
 
 section "Optional"
+option	"temporary"		y	"Directory for temporary files"
+							string	typestr="directory"	default="."
 option	"smile"			l	"Output SMILE (X)DSL files rather than minimal networks"
 							flag	off
 option	"xdsl"			x	"Generate XDSL output rather than DSL"

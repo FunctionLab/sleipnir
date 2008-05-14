@@ -661,8 +661,9 @@ bool CBayesNetFN::IsContinuous( ) const {
 
 // CBayesNetMinimal //////////////////////////////////////////////////////////
 
-bool CBayesNetMinimalImpl::Counts2Probs( const vector<string>& vecstrCounts, vector<float>& vecdProbs,
-	float dAlpha, size_t iPseudocounts, const CBayesNetMinimal* pBNDefault, size_t iNode, size_t iClass ) {
+bool CBayesNetMinimalImpl::Counts2Probs( const std::vector<std::string>& vecstrCounts,
+	std::vector<float>& vecdProbs, float dAlpha, size_t iPseudocounts, const CBayesNetMinimal* pBNDefault,
+	size_t iNode, size_t iClass ) {
 	size_t			i, iTotal;
 	vector<size_t>	veciCounts;
 	float			dScale;
@@ -676,12 +677,12 @@ bool CBayesNetMinimalImpl::Counts2Probs( const vector<string>& vecstrCounts, vec
 	if( ( iTotal < c_iMinimum ) && pBNDefault ) {
 		const CDataMatrix&	MatDefault	= pBNDefault->m_vecNodes[ iNode ].m_MatCPT;
 
-		if( MatDefault.GetColumns( ) != vecdProbs.size( ) ) {
+		if( MatDefault.GetRows( ) != vecdProbs.size( ) ) {
 			g_CatSleipnir.error( "CBayesNetMinimal::Counts2Probs( ) default distribution size mismatch: wanted %d, got %d",
-				vecdProbs.size( ), MatDefault.GetColumns( ) );
+				vecdProbs.size( ), MatDefault.GetRows( ) );
 			return false; }
-		copy( MatDefault.Get( iClass ), MatDefault.Get( iClass ) + MatDefault.GetColumns( ),
-			vecdProbs.begin( ) ); }
+		for( i = 0; i < vecdProbs.size( ); ++i )
+			vecdProbs[ i ] = MatDefault.Get( i, iClass ); }
 	else {
 		if( iPseudocounts == -1 )
 			dScale = 1;
@@ -912,7 +913,16 @@ bool CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbData, float* a
  * \param mapstriNodes
  * Mapping of node identifiers in counts file to integer indices (zero-based).
  * 
- * \param pBNMinimal
+ * \param vecbDefaults
+ * If non-empty, vector of default values for each node if data is missing (-1 for none).
+ * 
+ * \param vecdAlphas
+ * If non-empty, vector of prior beliefs alpha for each node.
+ * 
+ * \param iPseudocounts
+ * If not equal to -1, effective sample size to use for all nodes.
+ * 
+ * \param pBNDefault
  * If non-null, Bayes net to use for default values when a distribution's counts are too sparse to use
  * accurately.
  * 
@@ -949,12 +959,32 @@ bool CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbData, float* a
  * \endcode
  * 
  * These would generate prior probabilities of 0.9 and 0.1 for the two classes, for example; CPTs for each
- * node would similarly be calculated by dividing each set of counts by their sum.  If a fallback network
- * is provided, probability distributions with too few counts to estimate accurately will be replaced with
- * fallback values.
+ * node would similarly be calculated by dividing each set of counts by their sum.  If default values are
+ * provided, they will be recorded and used during inference if there is no data available for the appropriate
+ * nodes.  If a fallback network is provided, probability distributions with too few counts to estimate
+ * accurately will be replaced with fallback values.
+ * 
+ * The parameters can be regularized by providing prior belief weights alpha and an effective sample size
+ * (pseudocounts).  If given, CPT parameters will be calculated as if there were the requested pseudocount
+ * number of data points and a uniform prior for each node with relative weight alpha.  For example, if
+ * \c dataset_name_1 in the example above was given a pseudocount of 5 and an alpha of 6, the CPT parameters
+ * would be calculated as:
+ * \code
+ * P(0|0) = (5 * 80 / (80+20) + 6 * 1 / 2) / (5 + 6) = 0.636
+ * P(1|0) = (5 * 20 / (80+20) + 6 * 1 / 2) / (5 + 6) = 0.363
+ * P(0|1) = (5 * 1 / (1 + 9) + 6 * 1 /2) / (5 + 6) = 0.318
+ * P(1|1) = (5 * 9 / (1 + 9) + 6 * 1 /2) / (5 + 6) = 0.682
+ * \endcode
+ * Regularization "smooths" the parameters towards a uniform prior belief with strength alpha relative to the
+ * effective sample size (pseudocounts), so these probabilities are closer to 0.5 than they would be otherwise.
+ * 
+ * \remarks
+ * If non-empty, \c vecbDefaults and \c vecdAlphas must be of the same length as the number of classifier
+ * nodes (including the root node), which must also agree with the maximum node index in \c mapstriNodes.
  */
-bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const map<string, size_t>& mapstriNodes,
-	const vector<float>& vecdAlphas, size_t iPseudocounts, const CBayesNetMinimal* pBNDefault ) {
+bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const std::map<std::string, size_t>& mapstriNodes,
+	const std::vector<unsigned char>& vecbDefaults, const std::vector<float>& vecdAlphas, size_t iPseudocounts,
+	const CBayesNetMinimal* pBNDefault ) {
 	static const size_t	c_iStateInitial	= 0;
 	static const size_t	c_iStateRoot	= c_iStateInitial + 1;
 	static const size_t	c_iStatePreCPT	= c_iStateRoot + 1;
@@ -985,10 +1015,15 @@ bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const map<string, s
 		CMeta::Tokenize( szBuffer, vecstrLine );
 		switch( iState ) {
 			case c_iStateInitial:
-				if( vecstrLine.size( ) != 2 )
-					return false;
+				if( vecstrLine.size( ) != 2 ) {
+					g_CatSleipnir.error( "CBayesNetMinimal::OpenCounts( %s ) illegal line: %s", szFileCounts,
+						szBuffer );
+					return false; }
 				m_strID = vecstrLine[ 0 ];
 				m_vecNodes.resize( atol( vecstrLine[ 1 ].c_str( ) ) );
+				if( !vecbDefaults.empty( ) )
+					for( i = 0; i < m_vecNodes.size( ); ++i )
+						m_vecNodes[ i ].m_bDefault = vecbDefaults[ i ];
 				iState = c_iStateRoot;
 				break;
 
@@ -1019,15 +1054,14 @@ bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const map<string, s
 					CDataMatrix&	MatCPT	= m_vecNodes[ iNode ].m_MatCPT;
 
 					if( iClass ) {
-						if( MatCPT.GetColumns( ) != vecdProbs.size( ) ) {
+						if( MatCPT.GetRows( ) != vecdProbs.size( ) ) {
 							g_CatSleipnir.error( "CBayesNetMinimal::OpenCounts( %s ) illegal count number: given %d, expected %d",
-								szFileCounts, vecdProbs.size( ), MatCPT.GetColumns( ) );
+								szFileCounts, vecdProbs.size( ), MatCPT.GetRows( ) );
 							return false; } }
 					else
-						MatCPT.Initialize( m_MatRoot.GetRows( ), vecdProbs.size( ) );
-#pragma warning( disable : 4996 )
-					copy( vecdProbs.begin( ), vecdProbs.end( ), MatCPT.Get( iClass ) );
-#pragma warning( default : 4996 )
+						MatCPT.Initialize( vecdProbs.size( ), m_MatRoot.GetRows( ) );
+					for( i = 0; i < vecdProbs.size( ); ++i )
+						MatCPT.Set( i, iClass, vecdProbs[ i ] );
 				}
 				if( ++iClass >= m_MatRoot.GetRows( ) )
 					iState = c_iStatePreCPT;

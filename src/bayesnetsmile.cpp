@@ -880,7 +880,7 @@ bool CBayesNetSmile::Open( const CBayesNetSmile& BNPrior, const vector<CBayesNet
  * \remarks
  * vecstrNames must contain the same number of strings as BNMinimal has non-root nodes.
  */
-bool CBayesNetSmile::Open( const CBayesNetMinimal& BNMinimal, const vector<string>& vecstrNames ) {
+bool CBayesNetSmile::Open( const CBayesNetMinimal& BNMinimal, const std::vector<std::string>& vecstrNames ) {
 	DSL_stringArray	vecstrOutcomes;
 	char			acNum[ 8 ];
 	size_t			i, j, k;
@@ -901,18 +901,25 @@ bool CBayesNetSmile::Open( const CBayesNetMinimal& BNMinimal, const vector<strin
 	for( i = 1; i < BNMinimal.GetNodes( ); ++i ) {
 		m_SmileNet.AddNode( DSL_CPT, (char*)( strCur = CMeta::Filename( vecstrNames[ i - 1 ] ) ).c_str( ) );
 		vecstrOutcomes.Flush( );
-		for( j = 0; j < BNMinimal.GetCPT( i ).GetColumns( ); ++j ) {
+		for( j = 0; j < BNMinimal.GetCPT( i ).GetRows( ); ++j ) {
 			sprintf( acNum, "%02d", j );
 #pragma warning( default : 4996 )
 			vecstrOutcomes.Add( ( strCur + acNum ).c_str( ) ); }
 		m_SmileNet.GetNode( (int)i )->Definition( )->SetNumberOfOutcomes( vecstrOutcomes );
 		m_SmileNet.AddArc( 0, (int)i );
 		pMat = m_SmileNet.GetNode( i )->Definition( )->GetMatrix( );
-		for( j = 0; j < BNMinimal.GetCPT( i ).GetRows( ); ++j )
-			for( k = 0; k < BNMinimal.GetCPT( i ).GetColumns( ); ++k )
-				(*pMat)[ ( j * BNMinimal.GetCPT( i ).GetColumns( ) ) + k ] =
-					BNMinimal.GetCPT( i ).Get( j, k ); }
+		for( j = 0; j < BNMinimal.GetCPT( i ).GetColumns( ); ++j )
+			for( k = 0; k < BNMinimal.GetCPT( i ).GetRows( ); ++k )
+				(*pMat)[ ( j * BNMinimal.GetCPT( i ).GetRows( ) ) + k ] =
+					BNMinimal.GetCPT( i ).Get( k, j );
+		if( BNMinimal.GetDefault( i ) != 0xFF ) {
+			char	acNum[ 16 ];
 
+#pragma warning( disable : 4996 )
+			sprintf( acNum, "%d", BNMinimal.GetDefault( i ) );
+#pragma warning( default : 4996 )
+			m_SmileNet.GetNode( i )->Info( ).UserProperties( ).AddProperty( c_szZero, acNum ); } }
+	
 	return true; }
 
 }

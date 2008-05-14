@@ -295,8 +295,8 @@ public:
 #endif // NO_SMILE
 	bool Open( std::istream& istm );
 	bool OpenCounts( const char* szFileCounts, const std::map<std::string, size_t>& mapstriNodes,
-		const std::vector<float>& vecdAlphas, size_t iPseudocounts = -1,
-		const CBayesNetMinimal* pBNDefault = NULL );
+		const std::vector<unsigned char>& vecbDefaults, const std::vector<float>& vecdAlphas,
+		size_t iPseudocounts = -1, const CBayesNetMinimal* pBNDefault = NULL );
 	void Save( std::ostream& ostm ) const;
 	float Evaluate( const std::vector<unsigned char>& vecbDatum, size_t iOffset = 0 ) const;
 	bool Evaluate( const std::vector<unsigned char>& vecbData, float* adResults, size_t iGenes,
@@ -361,6 +361,23 @@ public:
 	const std::string& GetID( ) const {
 
 		return m_strID; }
+
+	/*!
+	 * \brief
+	 * Returns the default value (if no input is provided) for the requested node.
+	 * 
+	 * \param iNode
+	 * Node for which default value is returned.
+	 * 
+	 * \returns
+	 * Default value for the requested node (-1 if none).
+	 * 
+	 * \remarks
+	 * Requested node index must be less than the number of nodes (beginning with the root node at index 0).
+	 */
+	const unsigned char GetDefault( size_t iNode ) const {
+
+		return ( iNode ? m_vecNodes[ iNode - 1 ].m_bDefault : 0xFF ); }
 };
 
 }
