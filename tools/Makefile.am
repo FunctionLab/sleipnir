@@ -5,7 +5,6 @@ if WITH_TOOLS
 	  Clusterer \
 	  Clusters2Dab \
 	  Combiner \
-	  Counter \
 	  DChecker \
 	  Dat2Dab \
 	  Dat2Graph \

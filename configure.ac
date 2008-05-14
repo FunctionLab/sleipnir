@@ -24,7 +24,7 @@
 #! e. Improve boost logic?
 
 AC_PREREQ(2.59)
-AC_INIT([libSleipnir], [0.9.0], [ogt@princeton.edu])
+AC_INIT([libSleipnir], [1.0.0], [ogt@princeton.edu])
 
 AC_COPYRIGHT([This software is copyrighted.])
 

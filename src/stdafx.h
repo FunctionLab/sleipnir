@@ -22,6 +22,7 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
+#include <assert.h>
 #include <float.h>
 #include <math.h>
 #include <pthread.h>
