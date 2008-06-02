@@ -30,7 +30,7 @@ public:
 		const std::vector<Sleipnir::CBayesNetMinimal>&, const Sleipnir::CBayesNetMinimal& );
 
 	CBNServer( const Sleipnir::CBayesNetMinimal&, const std::vector<Sleipnir::CBayesNetMinimal>&,
-		const Sleipnir::CCompactFullMatrix&, SOCKET, const Sleipnir::CDatabase&, const string&,
+		const std::vector<std::vector<size_t> >&, SOCKET, const Sleipnir::CDatabase&, const string&,
 		const char*, const char*, const Sleipnir::CDataMatrix&, const Sleipnir::CGenome&,
 		const Sleipnir::IOntology**, const std::vector<std::vector<size_t> >& );
 	~CBNServer( );
@@ -62,8 +62,7 @@ private:
 	bool GetContext( size_t, size_t );
 	bool GetDisease( size_t, size_t, const std::vector<unsigned char>&, size_t );
 	bool GetDisease( size_t, size_t );
-	bool GetAssociation( const std::vector<size_t>&, const std::vector<size_t>&, size_t, float&, float& );
-	bool GetAssociation( size_t, const std::vector<unsigned char>&, const std::vector<size_t>&, size_t, float*,
+	bool GetAssociation( const std::vector<unsigned char>&, const std::vector<size_t>&, size_t, float*,
 		float* );
 	bool GraphCreate( const std::vector<size_t>&, size_t, size_t, float, std::vector<bool>&,
 		std::vector<size_t>&, Sleipnir::CDat& ) const;
@@ -129,7 +128,7 @@ private:
 	string							m_strConnection;
 	string							m_strGraphviz;
 	string							m_strFiles;
-	const CCompactFullMatrix&		m_MatContexts;
+	const vector<vector<size_t> >&	m_vecveciContexts;
 	const CDataMatrix&				m_MatBackgrounds;
 	const CGenome&					m_Genome;
 	const IOntology**				m_apOntologies;

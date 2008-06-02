@@ -64,7 +64,6 @@ int main( int iArgs, char** aszArgs ) {
 	size_t								i, j, iMax;
 	CDatabase							Database;
 	uint32_t							iSize;
-	CCompactFullMatrix					MatContexts;
 	CDataMatrix							MatBackgrounds;
 	ofstream							ofsm;
 	int									iRet;
@@ -72,7 +71,7 @@ int main( int iArgs, char** aszArgs ) {
 	COntologyGO							GOBP, GOMF, GOCC;
 	CGenome								Genome;
 	const IOntology*					apOntologies[]	= {&GOBP, &GOMF, &GOCC, &KEGG, NULL };
-	vector<vector<size_t> >				vecveciDiseases;
+	vector<vector<size_t> >				vecveciDiseases, vecveciContexts;
 
 	iRet = cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 );
 	if( sArgs.config_arg )
@@ -172,7 +171,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( !ifsm.is_open( ) ) {
 		cerr << "Could not open: " << sArgs.contexts_arg << endl;
 		return 1; }
-	MatContexts.Initialize( vecBNs.size( ), Database.GetGenes( ), 2, true );
+	vecveciContexts.resize( vecBNs.size( ) );
 	while( !ifsm.eof( ) ) {
 		size_t	iContext, iGene;
 
@@ -187,13 +186,10 @@ int main( int iArgs, char** aszArgs ) {
 			return 1; }
 		iContext = atoi( vecstrLine[ 0 ].c_str( ) ) - 1;
 		iGene = atoi( vecstrLine[ 1 ].c_str( ) ) - 1;
-		if( iContext >= MatContexts.GetRows( ) ) {
+		if( iContext >= vecveciContexts.size( ) ) {
 			cerr << "Invalid context on line: " << acBuffer << endl;
 			return 1; }
-		if( iGene >= MatContexts.GetColumns( ) ) {
-			cerr << "Invalid gene on line: " << acBuffer << endl;
-			return 1; }
-		MatContexts.Set( iContext, iGene, 1 ); }
+		vecveciContexts[ iContext ].push_back( iGene ); }
 	ifsm.close( );
 
 	if( sArgs.diseases_arg ) {
@@ -228,7 +224,7 @@ int main( int iArgs, char** aszArgs ) {
 			float*	adValues;
 
 			cerr << "Calculating gene backgrounds" << endl;
-			MatBackgrounds.Initialize( MatContexts.GetRows( ) + 1, Database.GetGenes( ) );
+			MatBackgrounds.Initialize( vecveciContexts.size( ) + 1, Database.GetGenes( ) );
 			adValues = new float[ MatBackgrounds.GetColumns( ) ];
 			for( i = 0; i < MatBackgrounds.GetColumns( ); ++i ) {
 				if( !( i % 100 ) )
@@ -236,8 +232,8 @@ int main( int iArgs, char** aszArgs ) {
 				CBNServer::Get( i, 0, adValues, Database, vecBNs, BNDefault );
 				MatBackgrounds.Set( 0, i, (float)CStatistics::Average( adValues, adValues +
 					MatBackgrounds.GetColumns( ) ) ); }
-			for( i = 0; i < MatContexts.GetRows( ); ++i ) {
-				cerr << "Context " << i << '/' << MatContexts.GetRows( ) << endl;
+			for( i = 0; i < vecveciContexts.size( ); ++i ) {
+				cerr << "Context " << i << '/' << vecveciContexts.size( ) << endl;
 				for( j = 0; j < MatBackgrounds.GetColumns( ); ++j ) {
 					CBNServer::Get( j, i + 1, adValues, Database, vecBNs, BNDefault );
 					MatBackgrounds.Set( i + 1, j, (float)CStatistics::Average( adValues, adValues +
@@ -248,7 +244,7 @@ int main( int iArgs, char** aszArgs ) {
 			MatBackgrounds.Save( ofsm, true );
 			ofsm.close( ); } }
 
-	CBNServer	BNServer( BNDefault, vecBNs, MatContexts, 0, Database, "", sArgs.files_arg,
+	CBNServer	BNServer( BNDefault, vecBNs, vecveciContexts, 0, Database, "", sArgs.files_arg,
 		sArgs.graphviz_arg, MatBackgrounds, Genome, apOntologies, vecveciDiseases );
 	if( sArgs.networklets_flag && !BNServer.GenerateNetworkIcons( ) )
 		return -1;
@@ -279,14 +275,14 @@ bool CBNServer::Get( size_t iGene, size_t iContext, float* adValues, const CData
 	return true; }
 
 CBNServer::CBNServer( const CBayesNetMinimal& BNDefault, const vector<CBayesNetMinimal>& vecBNs,
-	const CCompactFullMatrix& MatContexts, SOCKET iSocket, const CDatabase& Database,
+	const vector<vector<size_t> >& vecveciContexts, SOCKET iSocket, const CDatabase& Database,
 	const string& strConnection, const char* szFiles, const char* szGraphviz,
 	const CDataMatrix& MatBackgrounds, const CGenome& Genome, const IOntology** apOntologies,
 	const vector<vector<size_t> >& vecveciDiseases ) : m_BNDefault(BNDefault), m_vecBNs(vecBNs),
-	m_MatContexts(MatContexts), m_iSocket(iSocket), m_Database(Database), m_strConnection(strConnection),
-	m_adGenes(NULL), m_adContexts(NULL), m_adDiseases(NULL), m_strGraphviz(szGraphviz), m_strFiles(szFiles),
-	m_MatBackgrounds(MatBackgrounds), m_Genome(Genome), m_apOntologies(apOntologies),
-	m_vecveciDiseases(vecveciDiseases) {
+	m_vecveciContexts(vecveciContexts), m_iSocket(iSocket), m_Database(Database),
+	m_strConnection(strConnection), m_adGenes(NULL), m_adContexts(NULL), m_adDiseases(NULL),
+	m_strGraphviz(szGraphviz), m_strFiles(szFiles), m_MatBackgrounds(MatBackgrounds), m_Genome(Genome),
+	m_apOntologies(apOntologies), m_vecveciDiseases(vecveciDiseases) {
 
 	for( m_iOntologies = 0; m_apOntologies && m_apOntologies[ m_iOntologies ]; ++m_iOntologies );
 	if( m_strConnection.length( ) > 0 )
@@ -311,7 +307,7 @@ IServerClient* CBNServer::NewInstance( SOCKET iSocket, uint32_t iHost, uint16_t 
 #pragma warning(default : 4996)
 	sAddr.s_addr = htonl( iHost );
 	strConnection = (string)inet_ntoa( sAddr ) + ":" + acBuffer;
-	return new CBNServer( m_BNDefault, m_vecBNs, m_MatContexts, iSocket, m_Database, strConnection,
+	return new CBNServer( m_BNDefault, m_vecBNs, m_vecveciContexts, iSocket, m_Database, strConnection,
 		m_strFiles.c_str( ), m_strGraphviz.c_str( ), m_MatBackgrounds, m_Genome, m_apOntologies,
 		m_vecveciDiseases ); }
 
@@ -697,14 +693,13 @@ bool CBNServer::GetContext( size_t iGene, const vector<unsigned char>& vecbData,
 	float	d, dIn;
 
 	dIn = 0;
-	for( iIn = i = 0; i < m_MatContexts.GetColumns( ); ++i )
-		if( m_MatContexts.Get( iContext, i ) &&
-			!CMeta::IsNaN( d = m_vecBNs[ iContext ].Evaluate( vecbData, i *
+	for( iIn = i = 0; i < m_vecveciContexts[ iContext ].size( ); ++i )
+		if( !CMeta::IsNaN( d = m_vecBNs[ iContext ].Evaluate( vecbData, m_vecveciContexts[ iContext ][ i ] *
 				( ( m_Database.GetDatasets( ) + 1 ) / 2 ) ) ) ) {
 			iIn++;
 			dIn += d; }
 	m_adContexts[ iContext ] = iIn ? ( dIn / iIn ) : 0;
-	m_adContexts[ m_MatContexts.GetRows( ) + iContext ] = GetBackground( iContext + 1, iGene );
+	m_adContexts[ m_vecveciContexts.size( ) + iContext ] = GetBackground( iContext + 1, iGene );
 
 	return true; }
 
@@ -919,7 +914,7 @@ size_t CBNServer::ProcessContext( const vector<unsigned char>& vecbMessage, size
 	for( iPlace = iOffset + sizeof(iContext); ( iPlace + sizeof(iSubject) ) <= vecbMessage.size( );
 		iPlace += sizeof(iSubject) ) {
 		iSubject = *(uint32_t*)&vecbMessage[ iPlace ];
-		if( ( iSubject < 1 ) || ( iSubject > m_MatContexts.GetRows( ) ) )
+		if( ( iSubject < 1 ) || ( iSubject > m_vecveciContexts.size( ) ) )
 			return -1;
 		cerr << m_strConnection << " context " << iSubject << " in " << iContext << endl;
 		if( !GetContext( iContext, iSubject ) )
@@ -932,19 +927,15 @@ size_t CBNServer::ProcessContext( const vector<unsigned char>& vecbMessage, size
 	return ( iPlace - iOffset ); }
 
 bool CBNServer::GetContext( size_t iContext, size_t iSubject ) {
-	size_t			i, j, iGene;
-	vector<size_t>	veciContext, veciSubject, veciCounts;
-	bool			fRet, fSubjectSmall;
-	float*			adValues;
+	const vector<size_t>&	veciSubject	= m_vecveciContexts[ iSubject - 1 ];
+	const vector<size_t>&	veciContext	= m_vecveciContexts[ iContext - 1 ];
+	size_t					i, j, iGene;
+	vector<size_t>			veciCounts;
+	bool					fRet, fSubjectSmall;
+	float*					adValues;
 
 	memset( m_adGenes, 0, InitializeGenes( ) * sizeof(*m_adGenes) );
 	if( iContext ) {
-		for( i = 0; i < m_MatContexts.GetColumns( ); ++i ) {
-			if( m_MatContexts.Get( iContext - 1, i ) )
-				veciContext.push_back( i );
-			if( m_MatContexts.Get( iSubject - 1, i ) )
-				veciSubject.push_back( i ); }
-
 		veciCounts.resize( veciContext.size( ) );
 		fill( veciCounts.begin( ), veciCounts.end( ), 0 );
 		fSubjectSmall = ( veciSubject.size( ) < veciContext.size( ) );
@@ -970,14 +961,13 @@ bool CBNServer::GetContext( size_t iContext, size_t iSubject ) {
 		veciCounts.resize( GetGenes( ) );
 		fill( veciCounts.begin( ), veciCounts.end( ), 0 );
 		adValues = new float[ GetGenes( ) ];
-		for( i = 0; i < m_MatContexts.GetColumns( ); ++i )
-			if( m_MatContexts.Get( iSubject - 1, i ) ) {
-				if( !( fRet = Get( i + 1, iContext, adValues ) ) )
-					break;
-				for( j = 0; j < GetGenes( ); ++j )
-					if( !CMeta::IsNaN( adValues[ j ] ) ) {
-						m_adGenes[ j ] += adValues[ j ];
-						veciCounts[ j ]++; } } }
+		for( i = 0; i < veciSubject.size( ); ++i ) {
+			if( !( fRet = Get( veciSubject[ i ] + 1, iContext, adValues ) ) )
+				break;
+			for( j = 0; j < GetGenes( ); ++j )
+				if( !CMeta::IsNaN( adValues[ j ] ) ) {
+					m_adGenes[ j ] += adValues[ j ];
+					veciCounts[ j ]++; } } }
 	delete[] adValues;
 
 	for( i = 0; i < veciCounts.size( ); ++i ) {
@@ -988,11 +978,12 @@ bool CBNServer::GetContext( size_t iContext, size_t iSubject ) {
 
 size_t CBNServer::ProcessAssociation( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
 	uint32_t				iGene, iContext;
-	size_t					iPlace;
+	size_t					i, iPlace;
 	vector<unsigned char>	vecbData;
 	vector<size_t>			veciFore, veciBack;
 	bool					fBack;
-	float					dIn, dOut;
+	vector<float>			vecdScores;
+	float					dIn;
 
 	if( ( iOffset + sizeof(iContext) ) > vecbMessage.size( ) )
 		return -1;
@@ -1001,7 +992,7 @@ size_t CBNServer::ProcessAssociation( const vector<unsigned char>& vecbMessage, 
 		( iPlace + sizeof(iGene) ) <= vecbMessage.size( ); iPlace += sizeof(iGene) ) {
 		iGene = *(uint32_t*)&vecbMessage[ iPlace ];
 		if( iGene )
-			( fBack ? veciBack : veciFore ).push_back( iGene );
+			( fBack ? veciBack : veciFore ).push_back( iGene - 1 );
 		else if( fBack )
 			return -1;
 		else
@@ -1009,46 +1000,33 @@ size_t CBNServer::ProcessAssociation( const vector<unsigned char>& vecbMessage, 
 	if( veciFore.empty( ) || veciBack.empty( ) )
 		return -1;
 
-	if( !GetAssociation( veciFore, veciBack, iContext, dIn, dOut ) )
-		return -1;
-	iGene = sizeof(dIn) + sizeof(dOut);
+	cerr << m_strConnection << " association in " << iContext << ' ';
+	for( i = 0; i < veciFore.size( ); ++i )
+		cerr << ( i ? ' ' : '{' ) << veciFore[ i ];
+	cerr << "} with ";
+	for( i = 0; i < veciBack.size( ); ++i )
+		cerr << ( i ? ' ' : '{' ) << veciBack[ i ];
+	cerr << '}' << endl;
+
+	vecdScores.resize( veciFore.size( ) );
+	for( i = 0; i < veciFore.size( ); ++i ) {
+		if( !( m_Database.Get( veciFore[ i ], vecbData, true ) &&
+			GetAssociation( vecbData, veciBack, iContext, &dIn, NULL ) ) )
+			return -1;
+		vecdScores[ i ] = dIn / GetBackground( iContext, veciFore[ i ] ); }
+
+	iGene = (uint32_t)( vecdScores.size( ) * sizeof(vecdScores.front( )) );
 	send( m_iSocket, (char*)&iGene, sizeof(iGene), 0 );
-	send( m_iSocket, (char*)&dIn, sizeof(dIn), 0 );
-	send( m_iSocket, (char*)&dOut, sizeof(dOut), 0 );
+	send( m_iSocket, (char*)&vecdScores.front( ), iGene, 0 );
 
 	return ( iPlace - iOffset ); }
 
-bool CBNServer::GetAssociation( const vector<size_t>& veciFore, const vector<size_t>& veciBack,
-	size_t iContext, float& dIn, float& dOut ) {
-	const vector<size_t>&	veciSmall	= ( veciFore.size( ) < veciBack.size( ) ) ? veciFore : veciBack;
-	const vector<size_t>&	veciBig		= ( veciFore.size( ) < veciBack.size( ) ) ? veciBack : veciFore;
-	size_t					i, j;
-	float					d;
-	vector<unsigned char>	vecbData;
-
-	for( dIn = 0,i = 0; i < veciSmall.size( ); ++i ) {
-		if( !( m_Database.Get( veciSmall[ i ] - 1, vecbData, true ) ) &&
-			GetAssociation( veciSmall[ i ], vecbData, veciBig, iContext, &d, NULL ) )
-			return false;
-		dIn += d; }
-	dIn /= veciSmall.size( );
-
-	for( dOut = 0,i = j = 0; i < veciBack.size( ); ++i )
-		if( !CMeta::IsNaN( d = m_MatBackgrounds.Get( iContext, veciBack[ i ] ) ) ) {
-			dOut += d;
-			j++; }
-	dOut /= j;
-
-	return true; }
-
-bool CBNServer::GetAssociation( size_t iGene, const vector<unsigned char>& vecbData,
-	const vector<size_t>& veciBack, size_t iContext, float* pdIn, float* pdOut ) {
+bool CBNServer::GetAssociation( const vector<unsigned char>& vecbData, const vector<size_t>& veciBack,
+	size_t iContext, float* pdIn, float* pdOut ) {
 	const CBayesNetMinimal&	BNet	= ( iContext && m_vecBNs.size( ) ) ?
 										m_vecBNs[ ( iContext - 1 ) % m_vecBNs.size( ) ] : m_BNDefault;
 	size_t	i, iIn, iOut;
 	float	d;
-
-	cerr << m_strConnection << " association " << iGene << " in " << iContext << endl;
 
 	if( pdIn )
 		*pdIn = 0;
@@ -1077,6 +1055,7 @@ size_t CBNServer::ProcessAssociations( const vector<unsigned char>& vecbMessage,
 	unsigned char			bDiseases;
 	float					dIn, dOut;
 	float*					ad;
+	vector<float>			vecdValues;
 
 	if( ( iOffset + sizeof(iContext) + sizeof(bDiseases) ) > vecbMessage.size( ) )
 		return -1;
@@ -1095,30 +1074,33 @@ size_t CBNServer::ProcessAssociations( const vector<unsigned char>& vecbMessage,
 	bDiseases ?
 		memset( m_adDiseases, 0, InitializeDiseases( ) * sizeof(*m_adDiseases) ) :
 		memset( m_adContexts, 0, InitializeContexts( ) * sizeof(*m_adContexts) );
-	veciCounts.resize( bDiseases ? m_vecveciDiseases.size( ) : m_MatContexts.GetRows( ) );
-	for( i = 0; i < veciFore.size( ); ++i ) {
-		if( !m_Database.Get( veciFore[ i ] - 1, vecbData, true ) )
-			return -1;
-		if( bDiseases )
-			for( j = 0; j < m_vecveciDiseases.size( ); ++j ) {
-				if( !GetAssociation( veciFore[ i ], vecbData, m_vecveciDiseases[ j ], iContext, &dIn, &dOut ) )
-					return -1;
-				if( !( CMeta::IsNaN( dIn ) || CMeta::IsNaN( dOut ) ) ) {
-					m_adDiseases[ j ] += dIn;
-					m_adDiseases[ m_vecveciDiseases.size( ) + j ] += dOut;
-					veciCounts[ j ]++; } }
-		else
-			for( j = 0; j < m_MatContexts.GetRows( ); ++j ) {
-				veciBack.clear( );
-				for( k = 0; k < m_MatContexts.GetColumns( ); ++k )
-					if( m_MatContexts.Get( j, k ) )
-						veciBack.push_back( k );
-				if( !GetAssociation( veciFore[ i ], vecbData, veciBack,
+	veciCounts.resize( ( bDiseases ? m_vecveciDiseases : m_vecveciContexts ).size( ) );
+	fill( veciCounts.begin( ), veciCounts.end( ), 0 );
+	if( bDiseases )
+		vecdValues.resize( GetGenes( ) );
+	for( i = 0; i < veciFore.size( ); ++i )
+		if( bDiseases ) {
+			if( !Get( veciFore[ i ], iContext, &vecdValues.front( ) ) )
+				return -1;
+			for( j = 0; j < m_vecveciDiseases.size( ); ++j )
+				for( k = 0; k < m_vecveciDiseases[ j ].size( ); ++k ) {
+					size_t	iCur	= m_vecveciDiseases[ j ][ k ];
+					if( !( CMeta::IsNaN( dIn = vecdValues[ iCur ] ) ||
+						CMeta::IsNaN( dOut = m_MatBackgrounds.Get( iContext, iCur ) ) ) ) {
+						m_adDiseases[ j ] += dIn;
+						m_adDiseases[ m_vecveciDiseases.size( ) + j ] += dOut;
+						veciCounts[ j ]++; } } }
+		else {
+			cerr << m_strConnection << " associations " << veciFore[ i ] << " with contexts" << endl;
+			if( !m_Database.Get( veciFore[ i ] - 1, vecbData, true ) )
+				return -1;
+			for( j = 0; j < m_vecveciContexts.size( ); ++j ) {
+				if( !GetAssociation( vecbData, m_vecveciContexts[ j ],
 					( iContext == -1 ) ? ( j + 1 ) : iContext, &dIn, &dOut ) )
 					return -1;
 				if( !( CMeta::IsNaN( dIn ) || CMeta::IsNaN( dOut ) ) ) {
 					m_adContexts[ j ] += dIn;
-					m_adContexts[ m_MatContexts.GetRows( ) + j ] += dOut;
+					m_adContexts[ m_vecveciContexts.size( ) + j ] += dOut;
 					veciCounts[ j ]++; } } }
 	ad = bDiseases ? m_adDiseases : m_adContexts;
 	for( i = 0; i < veciCounts.size( ); ++i ) {
