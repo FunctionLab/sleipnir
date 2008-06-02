@@ -121,12 +121,12 @@
  * from them, either in human-readable (X)DSL format (for use with SMILE/GeNIe) or in a compact binary format
  * for rapid inference.  To generate (X)DSL files, create an empty \c ./networks/ directory and run:
  * \code
- * Counter -c ./output/ -o ./networks/ -s datasets.txt -b ./global.txt -l
+ * Counter -k ./output/ -o ./networks/ -s datasets.txt -b ./global.txt -l
  * \endcode
  * This will generate one (X)DSL file per context in the \c ./networks/ directory (including \c global.xdsl).
  * To instead store these classifiers in a binary format for later Bayesian inferernce, run:
  * \code
- * Counter -c ./output/ -o ./networks.bin -s datasets.txt -b ./global.txt
+ * Counter -k ./output/ -o ./networks.bin -s datasets.txt -b ./global.txt
  * \endcode
  * In these commands, \c datasets.txt is a tab-delimited text file containing two columns, the first a
  * one-based integer index and the second a list of each dataset's name:
@@ -158,14 +158,14 @@
  * those for the \c SYNL_TRAD node will use ~91% information from the data (100/110) and ~9% a uniform prior.
  * To generate Bayesian classifiers reflecting these weights, run:
  * \code
- * Counter -c ./output/ -o ./networks.bin -s datasets.txt -b ./global.txt -p 100 -a ./alphas.txt
+ * Counter -k ./output/ -o ./networks.bin -s datasets.txt -b ./global.txt -p 100 -a ./alphas.txt
  * \endcode
  * For more information, see Sleipnir::CBayesNetMinimal::OpenCounts.
  * 
  * Finally, to use your learned Bayesian classifiers and genomic data to infer functional relationships, you
  * can create an empty \c ./predictions/ directory and run:
  * \code
- * Counter -n ./networks.bin -o ./predictions/ -d ./data/ -s datasets.txt -g genes.txt -m -t 4 ./contexts/*.txt
+ * Counter -n ./networks.bin -o ./predictions/ -d ./data/ -s datasets.txt -e genes.txt -m -t 4 ./contexts/*.txt
  * \endcode
  * This will generate one DAB file per context (e.g. \c ./predictions/DNA_catabolism.dab), each containing the
  * probability of functional relationship for each gene pair predicted from the datasets in \c ./data/ and the
@@ -192,7 +192,7 @@
  * on the command line.
  * 
  * \code
- * Counter -c <counts_dir> -o <networks.bin> -s <datasets.txt> -b <global.txt> -p <pseudocounts> -a <alphas.txt>
+ * Counter -k <counts_dir> -o <networks.bin> -s <datasets.txt> -b <global.txt> -p <pseudocounts> -a <alphas.txt>
  * \endcode
  * 
  * Using the counts previously output to \c counts_dir and the global counts file \c global.txt, save a set of
@@ -202,7 +202,7 @@
  * prior for each node given in \c alphas.txt.
  * 
  * \code
- * Counter -n <networks.bin> -o <output_dir> -d <data_dir> -s <datasets.txt> -g <genes.txt> <contexts.txt>*
+ * Counter -n <networks.bin> -o <output_dir> -d <data_dir> -s <datasets.txt> -e <genes.txt> <contexts.txt>*
  * \endcode
  * 
  * Performs Bayesian inference for each classifier previously saved in \c networks.bin, producing one predicted
@@ -233,7 +233,7 @@
  * 	<td>Activates count generation mode.  Functional gold standard for counting.  Should consist of gene pairs
  *		with scores of 0 (unrelated), 1 (related), or missing (NaN).</td>
  * </tr><tr>
- * 	<td>-c</td>
+ * 	<td>-k</td>
  * 	<td>None</td>
  * 	<td>Directory</td>
  * 	<td>Activates Bayesian classifier generation mode.  Directory containing previously calculated count files,
@@ -265,11 +265,35 @@
  *		the name of each dataset to be used (excluding the DAT/DAB suffix, e.g. \c MICROARRAY,
  *		\c CUR_COMPLEX, etc.)</td>
  * </tr><tr>
- * 	<td>-g</td>
+ * 	<td>-e</td>
  * 	<td>None</td>
  * 	<td>Text file</td>
  * 	<td>Tab-delimited text file containing two columns, the first a one-based integer index and the second
  *		the unique identifier of each gene in the genome.</td>
+ * </tr><tr>
+ *	<td>-g</td>
+ *	<td>None</td>
+ *	<td>Text gene list</td>
+ *	<td>If given, use only gene pairs for which both genes are in the list.  For details, see
+ *		Sleipnir::CDat::FilterGenes.</td>
+ * </tr><tr>
+ *	<td>-G</td>
+ *	<td>None</td>
+ *	<td>Text gene list</td>
+ *	<td>If given, use only gene pairs for which neither gene is in the list.  For details, see
+ *		Sleipnir::CDat::FilterGenes.</td>
+ * </tr><tr>
+ *	<td>-c</td>
+ *	<td>None</td>
+ *	<td>Text gene list</td>
+ *	<td>If given, use only gene pairs passing a "term" filter against the list.  For details, see
+ *		Sleipnir::CDat::FilterGenes.</td>
+ * </tr><tr>
+ *	<td>-C</td>
+ *	<td>None</td>
+ *	<td>Text gene list</td>
+ *	<td>If given, use only gene pairs passing an "edge" filter against the list.  For details, see
+ *		Sleipnir::CDat::FilterGenes.</td>
  * </tr><tr>
  * 	<td>-b</td>
  * 	<td>None</td>

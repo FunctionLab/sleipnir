@@ -38,9 +38,16 @@ public:
 	IServerClient* NewInstance( SOCKET, uint32_t, uint16_t );
 	void Destroy( );
 	bool ProcessMessage( const std::vector<unsigned char>& );
+	bool GenerateNetworkIcons( ) const;
 
 private:
 	typedef size_t (CBNServer::*TPFNProcessor)( const std::vector<unsigned char>&, size_t );
+
+	enum EGraphOutput {
+		EGraphOutputFile,
+		EGraphOutputSocket,
+		EGraphOutputNamed
+	};
 
 	static const size_t			c_iDegree			= 1;
 	static const TPFNProcessor	c_apfnProcessors[];
@@ -52,12 +59,16 @@ private:
 	bool Get( size_t, size_t, float* = NULL );
 	bool Get( size_t, const std::vector<size_t>&, size_t, float* );
 	bool GetContext( size_t, const std::vector<unsigned char>&, size_t );
+	bool GetContext( size_t, size_t );
 	bool GetDisease( size_t, size_t, const std::vector<unsigned char>&, size_t );
 	bool GetDisease( size_t, size_t );
-	bool GraphCreate( const std::vector<size_t>&, size_t, size_t, std::vector<bool>&, std::vector<size_t>&,
-		Sleipnir::CDat& ) const;
+	bool GetAssociation( const std::vector<size_t>&, const std::vector<size_t>&, size_t, float&, float& );
+	bool GetAssociation( size_t, const std::vector<unsigned char>&, const std::vector<size_t>&, size_t, float*,
+		float* );
+	bool GraphCreate( const std::vector<size_t>&, size_t, size_t, float, std::vector<bool>&,
+		std::vector<size_t>&, Sleipnir::CDat& ) const;
 	bool GraphWrite( const Sleipnir::CDat&, const std::vector<size_t>&, const std::vector<size_t>&,
-		const std::vector<bool>&, size_t, bool ) const;
+		const std::vector<bool>&, size_t, EGraphOutput ) const;
 	bool SelectNeighborsPixie( const std::vector<size_t>&, const std::vector<bool>&, size_t, size_t,
 		const Sleipnir::CDataMatrix&, std::vector<size_t>& ) const;
 	bool SelectNeighborsRatio( const std::vector<size_t>&, const std::vector<bool>&, size_t, size_t,
@@ -70,6 +81,9 @@ private:
 	size_t ProcessTermFinder( const std::vector<unsigned char>&, size_t );
 	size_t ProcessDiseases( const std::vector<unsigned char>&, size_t );
 	size_t ProcessDisease( const std::vector<unsigned char>&, size_t );
+	size_t ProcessContext( const std::vector<unsigned char>&, size_t );
+	size_t ProcessAssociation( const std::vector<unsigned char>&, size_t );
+	size_t ProcessAssociations( const std::vector<unsigned char>&, size_t );
 
 	size_t GetGenes( ) const {
 
@@ -79,6 +93,31 @@ private:
 
 		return ( ( m_MatBackgrounds.GetColumns( ) && m_MatBackgrounds.GetRows( ) ) ?
 			m_MatBackgrounds.Get( iContext, iGene ) : 1 ); }
+
+	size_t InitializeDiseases( ) {
+		size_t	iRet;
+
+		iRet = 2 * m_vecveciDiseases.size( );
+		if( !m_adDiseases )
+			m_adDiseases = new float[ iRet ];
+
+		return iRet; }
+
+	size_t InitializeGenes( ) {
+
+		if( !m_adGenes )
+			m_adGenes = new float[ GetGenes( ) ];
+
+		return GetGenes( ); }
+
+	size_t InitializeContexts( ) {
+		size_t	iRet;
+
+		iRet = 2 * m_vecBNs.size( );
+		if( !m_adContexts )
+			m_adContexts = new float[ iRet ];
+
+		return iRet; }
 
 	const CBayesNetMinimal&			m_BNDefault;
 	const vector<CBayesNetMinimal>&	m_vecBNs;

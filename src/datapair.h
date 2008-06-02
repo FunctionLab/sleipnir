@@ -178,6 +178,91 @@ public:
 	size_t Quantize( float dValue, size_t iExperiment ) const;
 };
 
+/*!
+ * \brief
+ * Augments a CDat with a dynamically calculated gene set filter.
+ * 
+ * A filter wraps an underlying CDat with a dynamically calculated filter using a gene set and
+ * CDat::EFilter type.  A filtered gene pair will act like missing data; unfiltered gene pairs will be
+ * retrieved from the underlying CDat.  This allows data to be temporarily hidden without modifying the
+ * underlying (potentially memory mapped) CDat.
+ * 
+ * \remarks
+ * Permanent modifications such as CDat::Set should be performed only on the underlying dataset.  Yes, an
+ * interface would make this a lot cleaner, but it also makes it a lot slower (losing the ability to inline
+ * calls to Get actually has a non-trivial impact on runtime).
+ * 
+ * \see
+ * CDat::FilterGenes | CDataFilter
+ */
+class CDatFilter : public CDatFilterImpl {
+public:
+
+	bool Attach( const CDataPair& Dat, const CGenes& Genes, CDat::EFilter eFilter,
+		const CDat* pAnswers = NULL );
+	bool Attach( const CDatFilter& Dat, const CGenes& Genes, CDat::EFilter eFilter,
+		const CDat* pAnswers = NULL );
+
+	bool Attach( const CDataPair& Dat ) {
+
+		return CDatFilterImpl::Attach( &Dat, NULL, NULL, CDat::EFilterInclude, NULL ); }
+
+	size_t GetValues( ) const {
+
+		return ( m_pFilter ? m_pFilter->GetValues( ) : ( m_pDat ? m_pDat->GetValues( ) : -1 ) ); }
+
+	size_t GetGene( const std::string& strGene ) const {
+
+		return ( m_pFilter ? m_pFilter->GetGene( strGene ) : ( m_pDat ? m_pDat->GetGene( strGene ) : -1 ) ); }
+
+	std::string GetGene( size_t iGene ) const {
+
+		return CDatFilterImpl::GetGene( iGene ); }
+
+	size_t Quantize( float dValue ) const {
+
+		return ( m_pFilter ? m_pFilter->Quantize( dValue ) : ( m_pDat ? m_pDat->Quantize( dValue ) : -1 ) ); }
+
+	float& Get( size_t iY, size_t iX ) const {
+		static float	c_dNaN	= CMeta::GetNaN( );
+
+		if( !( m_pDat || m_pFilter ) )
+			return c_dNaN;
+		if( m_vecfGenes.empty( ) )
+			return ( m_pFilter ? m_pFilter->Get( iY, iX ) : ( m_pDat ? m_pDat->Get( iY, iX ) : c_dNaN ) );
+
+		switch( m_eFilter ) {
+			case CDat::EFilterInclude:
+				if( !( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) )
+					return c_dNaN;
+				break;
+
+			case CDat::EFilterExclude:
+				if( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] )
+					return c_dNaN;
+				break;
+
+			case CDat::EFilterEdge:
+				if( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) )
+					return c_dNaN;
+				break;
+
+			case CDat::EFilterTerm:
+				float	d;
+				size_t	iOne, iTwo;
+
+				if( !m_pAnswers )
+					return c_dNaN;
+				d = ( ( ( iOne = m_veciAnswers[ iX ] ) != -1 ) && ( ( iTwo = m_veciAnswers[ iY ] ) != -1 ) ) ?
+					m_pAnswers->Get( iTwo, iOne ) : CMeta::GetNaN( );
+				if( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) ||
+					( ( m_vecfGenes[ iX ] != m_vecfGenes[ iY ] ) && !CMeta::IsNaN( d ) && ( d > 0 ) ) )
+					return c_dNaN;
+				break; }
+
+		return ( m_pFilter ? m_pFilter->Get( iY, iX ) : m_pDat->Get( iY, iX ) ); }
+};
+
 }
 
 #endif // DATAPAIR_H

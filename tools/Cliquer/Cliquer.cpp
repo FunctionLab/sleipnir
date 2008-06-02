@@ -197,7 +197,7 @@ int heavy( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 				cerr << "Cluster " << iClusters << ", " << veciCluster.size( ) << " genes" << endl;
 				max_connectivity( vecfCluster, veciCluster, vecdConnectivity, veciConnectivity, dIn,
 					iIn, dTotal, iTotal, -1, Dat, dRatio, iMax, dMaxIn, iMaxIn, dMaxTotal, iMaxTotal );
-				if( dRatio >= ( sArgs.heavy_arg * sSeed.m_dRatio ) ) {
+				if( ( dRatio > 1 ) && ( dRatio >= ( sArgs.heavy_arg * sSeed.m_dRatio ) ) ) {
 					vecfCluster[ iMax ] = true;
 					veciCluster.push_back( iMax );
 					dIn = dMaxIn;

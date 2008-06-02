@@ -47,6 +47,8 @@ option	"files"			f	"File directory"
 							string	typestr="directory"	default="."
 option	"graphviz"		z	"Graphviz executable path"
 							string	typestr="filename"	default="fdp"
+option	"networklets"	l	"Generate mini-network icons"
+							flag	off
 option	"config"		C	"Command line config file"
 							string	typestr="filename"	default="BNServer.ini"
 option	"verbosity"		v	"Message verbosity"

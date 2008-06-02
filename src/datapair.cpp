@@ -22,6 +22,7 @@
 #include "stdafx.h"
 #include "datapair.h"
 #include "meta.h"
+#include "genome.h"
 
 namespace Sleipnir {
 
@@ -261,5 +262,53 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 size_t CPCLPair::Quantize( float dValue, size_t iExperiment ) const {
 
 	return CMeta::Quantize( dValue, m_vecvecdQuants[ iExperiment ] ); }
+
+bool CDatFilterImpl::Attach( const CDataPair* pDat, const CDatFilter* pFilter, const CGenes* pGenes,
+	CDat::EFilter eFilter, const CDat* pAnswers ) {
+	size_t	i;
+
+	if( !( ( eFilter == CDat::EFilterInclude ) || ( eFilter == CDat::EFilterExclude ) ||
+		( eFilter == CDat::EFilterTerm ) || ( eFilter == CDat::EFilterEdge ) ) )
+		return false;
+
+	m_pFilter = pFilter;
+	m_pDat = pDat;
+	m_pAnswers = pAnswers;
+	m_eFilter = eFilter;
+	if( m_pAnswers ) {
+		m_veciAnswers.resize( GetGenes( ) );
+		for( i = 0; i < m_veciAnswers.size( ); ++i )
+			m_veciAnswers[ i ] = m_pAnswers->GetGene( GetGene( i ) ); }
+	else {
+		m_veciAnswers.clear( );
+		if( m_eFilter == CDat::EFilterTerm )
+			m_eFilter = CDat::EFilterEdge; }
+
+	if( pGenes ) {
+		m_vecfGenes.resize( GetGenes( ) );
+		for( i = 0; i < m_vecfGenes.size( ); ++i )
+			m_vecfGenes[ i ] = pGenes->IsGene( GetGene( i ) ); }
+	else
+		m_vecfGenes.clear( );
+
+	return true; }
+
+size_t CDatFilterImpl::GetGenes( ) const {
+
+	return ( m_pFilter ? m_pFilter->GetGenes( ) : ( m_pDat ? m_pDat->GetGenes( ) : -1 ) ); }
+
+string CDatFilterImpl::GetGene( size_t iGene ) const {
+
+	return ( m_pFilter ? m_pFilter->GetGene( iGene ) : ( m_pDat ? m_pDat->GetGene( iGene ) : "" ) ); }
+
+bool CDatFilter::Attach( const CDataPair& Dat, const CGenes& Genes, CDat::EFilter eFilter,
+	const CDat* pAnswers ) {
+
+	return CDatFilterImpl::Attach( &Dat, NULL, &Genes, eFilter, pAnswers ); }
+
+bool CDatFilter::Attach( const CDatFilter& Dat, const CGenes& Genes, CDat::EFilter eFilter,
+	const CDat* pAnswers ) {
+
+	return CDatFilterImpl::Attach( NULL, &Dat, &Genes, eFilter, pAnswers ); }
 
 }

@@ -180,10 +180,10 @@ bool CDatabaselet::Get( size_t iOne, size_t iTwo, vector<unsigned char>& vecbDat
 
 	return true; }
 
-bool CDatabaselet::Get( size_t iGene, vector<unsigned char>& vecbData ) const {
+bool CDatabaselet::Get( size_t iGene, vector<unsigned char>& vecbData, bool fReplace ) const {
 	size_t	i;
 
-	i = vecbData.size( );
+	i = fReplace ? 0 : vecbData.size( );
 	vecbData.resize( i + GetSizeGene( ) );
 	pthread_mutex_lock( m_pmutx );
 	m_fstm.seekg( GetOffset( iGene ) );

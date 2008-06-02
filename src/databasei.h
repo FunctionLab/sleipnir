@@ -48,7 +48,7 @@ public:
 	bool Open( const std::vector<CCompactFullMatrix>&, size_t, size_t, bool );
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
-	bool Get( size_t, std::vector<unsigned char>& ) const;
+	bool Get( size_t, std::vector<unsigned char>&, bool ) const;
 	bool Get( size_t, const std::vector<size_t>&, std::vector<unsigned char>& ) const;
 
 	size_t GetGenes( ) const {

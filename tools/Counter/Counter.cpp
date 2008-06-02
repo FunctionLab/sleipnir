@@ -24,6 +24,7 @@
 
 static const char	c_acDab[]	= ".dab";
 static const char	c_acQuant[]	= ".quant";
+static const char	c_acTxt[]	= ".txt";
 
 typedef CFullMatrix<size_t>	CCountMatrix;
 
@@ -31,7 +32,7 @@ struct SLearn {
 	CCountMatrix*		m_pMatCounts;
 	const CGenes*		m_pGenes;
 	const CDataPair*	m_pAnswers;
-	const CDataPair*	m_pDat;
+	const CDatFilter*	m_pDat;
 	size_t				m_iZero;
 };
 
@@ -51,7 +52,8 @@ struct SEvaluate {
 void* learn( void* );
 void* evaluate( void* );
 void* finalize( void* );
-int main_count( const gengetopt_args_info&, const map<string, size_t>& );
+int main_count( const gengetopt_args_info&, const map<string, size_t>&, const CGenes&, const CGenes&,
+	const CGenes&, const CGenes& );
 int main_xdsls( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
 int main_inference( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
 
@@ -59,6 +61,8 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	map<string, size_t>	mapstriZeros, mapstriDatasets;
 	int					iRet;
+	CGenome				Genome;
+	CGenes				GenesIn( Genome ), GenesEx( Genome ), GenesEd( Genome ), GenesTm( Genome );
 
 #ifdef WIN32
 	pthread_win32_process_attach_np( );
@@ -105,14 +109,31 @@ int main( int iArgs, char** aszArgs ) {
 				continue;
 			vecstrLine.clear( );
 			CMeta::Tokenize( acLine, vecstrLine );
-			if( vecstrLine.size( ) != 2 ) {
+			if( vecstrLine.size( ) < 2 ) {
 				cerr << "Illegal datasets line: " << acLine << endl;
 				return 1; }
 			mapstriDatasets[ vecstrLine[ 1 ] ] = atol( vecstrLine[ 0 ].c_str( ) ) - 1; }
 		ifsm.close( ); }
 
+	if( sArgs.genes_arg ) {
+		if( !GenesIn.Open( sArgs.genes_arg ) ) {
+			cerr << "Could not open: " << sArgs.genes_arg << endl;
+			return 1; } }
+	if( sArgs.genex_arg ) {
+		if( !GenesEx.Open( sArgs.genex_arg ) ) {
+			cerr << "Could not open: " << sArgs.genex_arg << endl;
+			return 1; } }
+	if( sArgs.genet_arg ) {
+		if( !GenesTm.Open( sArgs.genet_arg ) ) {
+			cerr << "Could not open: " << sArgs.genet_arg << endl;
+			return 1; } }
+	if( sArgs.genee_arg ) {
+		if( !GenesEd.Open( sArgs.genee_arg ) ) {
+			cerr << "Could not open: " << sArgs.genee_arg << endl;
+			return 1; } }
+
 	if( sArgs.answers_arg )
-		iRet = main_count( sArgs, mapstriZeros );
+		iRet = main_count( sArgs, mapstriZeros, GenesIn, GenesEx, GenesTm, GenesEd );
 	else if( sArgs.counts_arg )
 		iRet = main_xdsls( sArgs, mapstriZeros, mapstriDatasets );
 	else if( sArgs.networks_arg )
@@ -124,12 +145,15 @@ int main( int iArgs, char** aszArgs ) {
 #endif // WIN32
 	return iRet; }
 
-int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& mapstriZeros ) {
+int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& mapstriZeros,
+	const CGenes& GenesIn, const CGenes& GenesEx, const CGenes& GenesTm, const CGenes& GenesEd ) {
 	size_t								i, j, k, m, iTerm, iThread;
 	vector<vector<CCountMatrix*>* >		vecpvecpMats;
 	vector<CCountMatrix*>				vecpMatRoots;
 	vector<CGenes*>						vecpGenes;
 	CDataPair							Answers, Dat;
+	CDatFilter							Filter, FilterIn, FilterEx, FilterTm, FilterEd;
+	CDatFilter*							pFilter;
 	string								strFile;
 	vector<pthread_t>					vecpthdThreads;
 	vector<SLearn>						vecsData;
@@ -203,6 +227,22 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 		cerr << "Processing: " << strName << endl;
 		strName = CMeta::Filename( CMeta::Deextension( CMeta::Basename( strName.c_str( ) ) ) );
 		vecstrNames.push_back( strName );
+
+		Filter.Attach( Dat );
+		pFilter = &Filter;
+		if( GenesIn.GetGenes( ) ) {
+			FilterIn.Attach( *pFilter, GenesIn, CDat::EFilterInclude, &Answers );
+			pFilter = &FilterIn; }
+		if( GenesEx.GetGenes( ) ) {
+			FilterEx.Attach( *pFilter, GenesEx, CDat::EFilterExclude, &Answers );
+			pFilter = &FilterEx; }
+		if( GenesTm.GetGenes( ) ) {
+			FilterTm.Attach( *pFilter, GenesTm, CDat::EFilterTerm, &Answers );
+			pFilter = &FilterTm; }
+		if( GenesEd.GetGenes( ) ) {
+			FilterEd.Attach( *pFilter, GenesEd, CDat::EFilterEdge, &Answers );
+			pFilter = &FilterEd; }
+
 		pvecpMatCounts = new vector<CCountMatrix*>( );
 		pvecpMatCounts->resize( vecpGenes.size( ) );
 		for( iTerm = 0; iTerm < vecpMatRoots.size( ); iTerm += iThread ) {
@@ -211,7 +251,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 				( ( iTerm + iThread ) < vecpMatRoots.size( ) ); ++iThread ) {
 				i = iTerm + iThread;
 				vecsData[ i ].m_pMatCounts = (*pvecpMatCounts)[ i ] = new CCountMatrix( );
-				vecsData[ i ].m_pDat = &Dat;
+				vecsData[ i ].m_pDat = pFilter;
 				vecsData[ i ].m_pGenes = vecpGenes[ i ];
 				vecsData[ i ].m_pAnswers = &Answers;
 				vecsData[ i ].m_iZero = ( ( iterZero = mapstriZeros.find( strName ) ) ==
@@ -232,7 +272,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 		ofstream	ofsm;
 
 		ofsm.open( ( (string)sArgs.output_arg + '/' + ( sArgs.inputs ?
-			CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) + ".txt" ).c_str( ) );
+			CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) + c_acTxt ).c_str( ) );
 		ofsm << ( sArgs.inputs ? CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) <<
 			'\t' << vecpvecpMats.size( ) << endl;
 		for( j = 0; j < vecpMatRoots[ i ]->GetRows( ); ++j )
@@ -333,8 +373,10 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 			if( vecstrLine.size( ) != 2 ) {
 				cerr << "Illegal alphas line: " << szBuffer << endl;
 				return 1; }
-			vecdAlphas[ mapstriDatasets.find( vecstrLine[ 0 ] )->second ] =
-				(float)atof( vecstrLine[ 1 ].c_str( ) ); }
+			if( ( iterDataset = mapstriDatasets.find( vecstrLine[ 0 ] ) ) == mapstriDatasets.end( ) ) {
+				cerr << "Dataset in counts but not database: " << vecstrLine[ 0 ] << endl;
+				return 1; }
+			vecdAlphas[ iterDataset->second ] = (float)atof( vecstrLine[ 1 ].c_str( ) ); }
 		ifsm.close( ); }
 
 	vecbZeros.resize( mapstriDatasets.size( ) );
@@ -356,7 +398,7 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 	WIN32_FIND_DATA	sEntry;
 	bool			fContinue;
 
-	for( fContinue = true,hSearch = FindFirstFile( ( (string)sArgs.counts_arg + "/*.txt" ).c_str( ),
+	for( fContinue = true,hSearch = FindFirstFile( ( (string)sArgs.counts_arg + "/*" + c_acTxt ).c_str( ),
 		&sEntry ); fContinue && ( hSearch != INVALID_HANDLE_VALUE );
 		fContinue = !!FindNextFile( hSearch, &sEntry ) ) {
 		strFile = sEntry.cFileName;
@@ -367,6 +409,8 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 	pDir = opendir( sArgs.counts_arg );
 	for( psEntry = readdir( pDir ); psEntry; psEntry = readdir( pDir ) ) {
 		strFile = psEntry->d_name;
+		if( strFile.rfind( c_acTxt ) != ( strFile.length( ) - strlen( c_acTxt ) ) )
+			continue;
 #endif // _MSC_VER
 
 		strFile = (string)sArgs.counts_arg + '/' + strFile;
@@ -459,14 +503,14 @@ cout << i << '\t' << j << '\t' << k << '\t' << vecpBNs[ m ]->GetCPT( i ).Get( j,
 return 0;
 //*/
 
-	if( !sArgs.genes_arg ) {
+	if( !sArgs.genome_arg ) {
 		cerr << "No genes given" << endl;
 		return 1; }
 	{
 		CPCL	PCLGenes( false );
 
-		if( !PCLGenes.Open( sArgs.genes_arg, 1 ) ) {
-			cerr << "Could not open: " << sArgs.genes_arg << endl;
+		if( !PCLGenes.Open( sArgs.genome_arg, 1 ) ) {
+			cerr << "Could not open: " << sArgs.genome_arg << endl;
 			return 1; }
 		for( i = 0; i < PCLGenes.GetGenes( ); ++i )
 			Genome.AddGene( PCLGenes.GetFeature( i, 1 ) );

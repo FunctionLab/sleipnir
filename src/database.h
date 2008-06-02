@@ -171,6 +171,9 @@ public:
 	 * \param vecbData
 	 * Output vector containing the retrieved values, two per byte.
 	 * 
+	 * \param fReplace
+	 * If true, replace values in output vector rather than appending.
+	 * 
 	 * \returns
 	 * True if data was retrieved successfully.
 	 * 
@@ -181,9 +184,9 @@ public:
 	 * using only four bits, with even numbered datasets in the high order bits.  This is equivalent to
 	 * calling Get with two gene indices repeatedly for iTwo from 0 to G and concatenating the results.
 	 */
-	bool Get( size_t iGene, std::vector<unsigned char>& vecbData ) const {
+	bool Get( size_t iGene, std::vector<unsigned char>& vecbData, bool fReplace = false ) const {
 
-		return m_vecpDBs[ iGene % m_vecpDBs.size( ) ]->Get( iGene / m_vecpDBs.size( ), vecbData ); }
+		return m_vecpDBs[ iGene % m_vecpDBs.size( ) ]->Get( iGene / m_vecpDBs.size( ), vecbData, fReplace ); }
 
 	/*!
 	 * \brief
