@@ -160,6 +160,7 @@ int heavy( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 				vecdConnectivity[ i ] += d;
 				vecdConnectivity[ j ] += d; }
 
+	cout << sArgs.heavy_arg << endl;
 	iClusters = 0;
 	vecfCluster.resize( Dat.GetGenes( ) );
 	while( ( sArgs.subgraphs_arg == -1 ) || ( iClusters < (size_t)sArgs.subgraphs_arg ) ) {

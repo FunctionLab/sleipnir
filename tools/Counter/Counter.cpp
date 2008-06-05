@@ -54,12 +54,14 @@ void* evaluate( void* );
 void* finalize( void* );
 int main_count( const gengetopt_args_info&, const map<string, size_t>&, const CGenes&, const CGenes&,
 	const CGenes&, const CGenes& );
-int main_xdsls( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
+int main_xdsls( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>&,
+	const vector<string>& );
 int main_inference( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	map<string, size_t>	mapstriZeros, mapstriDatasets;
+	vector<string>		vecstrContexts;
 	int					iRet;
 	CGenome				Genome;
 	CGenes				GenesIn( Genome ), GenesEx( Genome ), GenesEd( Genome ), GenesTm( Genome );
@@ -115,6 +117,31 @@ int main( int iArgs, char** aszArgs ) {
 			mapstriDatasets[ vecstrLine[ 1 ] ] = atol( vecstrLine[ 0 ].c_str( ) ) - 1; }
 		ifsm.close( ); }
 
+	if( sArgs.contexts_arg ) {
+		ifstream		ifsm;
+		char			acLine[ 1024 ];
+		vector<string>	vecstrLine;
+
+		ifsm.open( sArgs.contexts_arg );
+		if( !ifsm.is_open( ) ) {
+			cerr << "Could not open: " << sArgs.contexts_arg << endl;
+			return 1; }
+		while( !ifsm.eof( ) ) {
+			ifsm.getline( acLine, ARRAYSIZE(acLine) - 1 );
+			acLine[ ARRAYSIZE(acLine) - 1 ] = 0;
+			if( !acLine[ 0 ] )
+				continue;
+			vecstrLine.clear( );
+			CMeta::Tokenize( acLine, vecstrLine );
+			if( vecstrLine.size( ) < 2 ) {
+				cerr << "Illegal contexts line: " << acLine << endl;
+				return 1; }
+			if( ( atoi( vecstrLine[ 0 ].c_str( ) ) ) != ( vecstrContexts.size( ) + 1 ) ) {
+				cerr << "Inconsistent context ID: " << acLine << endl;
+				return 1; }
+			vecstrContexts.push_back( vecstrLine[ 1 ] ); }
+		ifsm.close( ); }
+
 	if( sArgs.genes_arg ) {
 		if( !GenesIn.Open( sArgs.genes_arg ) ) {
 			cerr << "Could not open: " << sArgs.genes_arg << endl;
@@ -135,7 +162,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.answers_arg )
 		iRet = main_count( sArgs, mapstriZeros, GenesIn, GenesEx, GenesTm, GenesEd );
 	else if( sArgs.counts_arg )
-		iRet = main_xdsls( sArgs, mapstriZeros, mapstriDatasets );
+		iRet = main_xdsls( sArgs, mapstriZeros, mapstriDatasets, vecstrContexts );
 	else if( sArgs.networks_arg )
 		iRet = main_inference( sArgs, mapstriZeros, mapstriDatasets );
 
@@ -337,7 +364,7 @@ void* learn( void* pData ) {
 	return NULL; }
 
 int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& mapstriZeros,
-	const map<string, size_t>& mapstriDatasets ) {
+	const map<string, size_t>& mapstriDatasets, const vector<string>& vecstrContexts ) {
 	static const size_t	c_iBuffer	= 1024;
 	char						szBuffer[ c_iBuffer ];
 	string						strFile;
@@ -355,6 +382,9 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 
 	if( mapstriDatasets.empty( ) ) {
 		cerr << "No datasets given" << endl;
+		return 1; }
+	if( vecstrContexts.empty( ) ) {
+		cerr << "No contexts given" << endl;
 		return 1; }
 	if( sArgs.alphas_arg ) {
 		vecdAlphas.resize( mapstriDatasets.size( ) );
@@ -393,38 +423,14 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 			endl;
 		return 1; }
 
-#ifdef _MSC_VER
-	HANDLE			hSearch;
-	WIN32_FIND_DATA	sEntry;
-	bool			fContinue;
-
-	for( fContinue = true,hSearch = FindFirstFile( ( (string)sArgs.counts_arg + "/*" + c_acTxt ).c_str( ),
-		&sEntry ); fContinue && ( hSearch != INVALID_HANDLE_VALUE );
-		fContinue = !!FindNextFile( hSearch, &sEntry ) ) {
-		strFile = sEntry.cFileName;
-#else // _MSC_VER
-	DIR*			pDir;
-	struct dirent*	psEntry;
-
-	pDir = opendir( sArgs.counts_arg );
-	for( psEntry = readdir( pDir ); psEntry; psEntry = readdir( pDir ) ) {
-		strFile = psEntry->d_name;
-		if( strFile.rfind( c_acTxt ) != ( strFile.length( ) - strlen( c_acTxt ) ) )
-			continue;
-#endif // _MSC_VER
-
-		strFile = (string)sArgs.counts_arg + '/' + strFile;
+	for( i = 0; i < vecstrContexts.size( ); ++i ) {
+		strFile = (string)sArgs.counts_arg + '/' + CMeta::Filename( vecstrContexts[ i ] ) + c_acTxt;
 		cerr << "Processing: " << strFile << endl;
 		pBN = new CBayesNetMinimal( );
 		if( !pBN->OpenCounts( strFile.c_str( ), mapstriDatasets, vecbZeros, vecdAlphas, sArgs.pseudocounts_arg,
 			&BNDefault ) )
 			return 1;
 		vecpBNs.push_back( pBN ); }
-#ifdef _MSC_VER
-	FindClose( hSearch );
-#else // _MSC_VER
-	closedir( pDir );
-#endif // _MSC_VER
 
 	cerr << "Created " << vecpBNs.size( ) << " Bayesian classifiers" << endl;
 

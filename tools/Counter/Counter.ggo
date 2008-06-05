@@ -19,6 +19,8 @@ option	"datasets"		s	"Dataset ID text file"
 							string	typestr="filename"
 option	"genome"		e	"Gene ID text file"
 							string	typestr="filename"
+option	"contexts"		X	"Context ID text file"
+							string	typestr="filename"
 
 section "Learning/Evaluation"
 option	"genes"			g	"Gene inclusion file"

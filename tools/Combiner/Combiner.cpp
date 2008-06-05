@@ -24,9 +24,10 @@
 static int MainDABs( const gengetopt_args_info& );
 static int MainDATs( const gengetopt_args_info& );
 static int MainPCLs( const gengetopt_args_info& );
+static int MainModules( const gengetopt_args_info& );
 
-static const TPFnCombiner	c_apfnCombiners[]	= { MainPCLs, MainDATs, MainDABs, NULL };
-static const char*			c_aszCombiners[]	= { "pcl", "dat", "dab", NULL };
+static const TPFnCombiner	c_apfnCombiners[]	= { MainPCLs, MainDATs, MainDABs, MainModules, NULL };
+static const char*			c_aszCombiners[]	= { "pcl", "dat", "dab", "module", NULL };
 static const char			c_szMean[]			= "mean";
 static const char			c_szGMean[]			= "gmean";
 static const char			c_szHMean[]			= "hmean";
@@ -51,7 +52,7 @@ int main( int iArgs, char** aszArgs ) {
 
 	return iRet; }
 
-static int MainPCLs( const gengetopt_args_info& sArgs ) {
+int MainPCLs( const gengetopt_args_info& sArgs ) {
 	CPCL						PCL, PCLNew;
 	size_t						i, j, iArg, iExp, iGene;
 	vector<string>				vecstrGenes, vecstrExps, vecstrFeatures;
@@ -215,5 +216,252 @@ static int MainDABs( const gengetopt_args_info& sArgs ) {
 	else {
 		Dataset.Save( cout, false );
 		cout.flush( ); }
+
+	return 0; }
+
+struct SSimpleome {
+	map<string, size_t>	m_mapstriGenes;
+	map<size_t, string>	m_mapistrGenes;
+
+	size_t Get( const string& strGene ) {
+		map<string, size_t>::const_iterator	iterGene;
+		size_t								iRet;
+
+		if( ( iterGene = m_mapstriGenes.find( strGene ) ) != m_mapstriGenes.end( ) )
+			return iterGene->second;
+
+		m_mapstriGenes[ strGene ] = iRet = m_mapstriGenes.size( );
+		m_mapistrGenes[ iRet ] = strGene;
+		return iRet; }
+
+	const string& Get( size_t iGene ) const {
+
+		return m_mapistrGenes.find( iGene )->second; }
+};
+
+struct SModule {
+	float				m_dSpecificity;
+	set<size_t>			m_setiGenes;
+	set<const SModule*>	m_setpsChildren;
+
+	static float Open( const char* szFile, SSimpleome& sSimpleome, vector<SModule*>& vecpsModules ) {
+		static const size_t	c_iBuffer	= 131072;
+		ifstream		ifsm;
+		char			acBuffer[ c_iBuffer ];
+		vector<string>	vecstrLine;
+		float			dRet;
+		size_t			i, iModule;
+		SModule*		psModule;
+
+		ifsm.open( szFile );
+		if( !ifsm.is_open( ) ) {
+			cerr << "Could not open: " << szFile << endl;
+			return CMeta::GetNaN( ); }
+		for( iModule = 0; !ifsm.eof( ); ++iModule ) {
+			ifsm.getline( acBuffer, c_iBuffer - 1 );
+			if( !acBuffer[ 0 ] )
+				iModule--; }
+		ifsm.close( );
+		if( !iModule ) {
+			cerr << "No modules found in: " << szFile << endl;
+			return CMeta::GetNaN( ); }
+		cerr << "Found " << --iModule << " modules in: " << szFile << endl;
+		vecpsModules.resize( iModule );
+
+		dRet = CMeta::GetNaN( );
+		ifsm.clear( );
+		ifsm.open( szFile );
+		for( iModule = 0; !ifsm.eof( ); ++iModule ) {
+			ifsm.getline( acBuffer, c_iBuffer - 1 );
+			acBuffer[ c_iBuffer - 1 ] = 0;
+			if( CMeta::IsNaN( dRet ) ) {
+				dRet = (float)atof( acBuffer );
+				iModule--;
+				continue; }
+			vecstrLine.clear( );
+			CMeta::Tokenize( acBuffer, vecstrLine );
+			if( vecstrLine.size( ) < 2 ) {
+				iModule--;
+				continue; }
+			vecpsModules[ iModule ] = psModule = new SModule( );
+			psModule->m_dSpecificity = (float)atof( vecstrLine[ 0 ].c_str( ) );
+			for( i = 1; i < vecstrLine.size( ); ++i )
+				psModule->m_setiGenes.insert( sSimpleome.Get( vecstrLine[ i ] ) ); }
+
+		return dRet; }
+
+	float Jaccard( const SModule& sModule ) const {
+		set<size_t>::const_iterator	iterGene;
+		size_t						iUnion, iIntersection;
+
+		iIntersection = 0;
+		iUnion = sModule.m_setiGenes.size( );
+		for( iterGene = m_setiGenes.begin( ); iterGene != m_setiGenes.end( ); ++iterGene )
+			if( sModule.m_setiGenes.find( *iterGene ) != sModule.m_setiGenes.end( ) )
+				iIntersection++;
+			else
+				iUnion++;
+
+		return ( (float)iIntersection / iUnion ); }
+
+	size_t Intersection( const SModule& sModule ) const {
+		size_t						iRet;
+		set<size_t>::const_iterator	iterGene;
+
+		for( iRet = 0,iterGene = m_setiGenes.begin( ); iterGene != m_setiGenes.end( ); ++iterGene )
+			if( sModule.m_setiGenes.find( *iterGene ) != sModule.m_setiGenes.end( ) )
+				iRet++;
+
+		return iRet; }
+
+	void Merge( const SModule& sModule ) {
+		set<size_t>::const_iterator	iterGene;
+
+		for( iterGene = sModule.m_setiGenes.begin( ); iterGene != sModule.m_setiGenes.end( ); ++iterGene )
+			m_setiGenes.insert( *iterGene );
+		m_dSpecificity = ( m_dSpecificity + sModule.m_dSpecificity ) / 2; }
+
+	bool IsChild( const SModule* psModule ) const {
+
+		return ( m_setpsChildren.find( psModule ) != m_setpsChildren.end( ) ); }
+
+	void Save( ostream& ostm, float dCutoff, const SSimpleome& sSimpleome ) const {
+		set<const SModule*>::const_iterator	iterChild;
+		set<size_t>::const_iterator			iterGene;
+
+		ostm << this << '\t' << dCutoff << '\t' << m_dSpecificity << '\t';
+		for( iterChild = m_setpsChildren.begin( ); iterChild != m_setpsChildren.end( ); ++iterChild ) {
+			if( iterChild != m_setpsChildren.begin( ) )
+				ostm << '|';
+			ostm << *iterChild; }
+		for( iterGene = m_setiGenes.begin( ); iterGene != m_setiGenes.end( ); ++iterGene )
+			ostm << '\t' << sSimpleome.Get( *iterGene );
+		ostm << endl; }
+};
+
+struct SSorterModules {
+	const vector<float>&	m_vecdModules;
+
+	SSorterModules( const vector<float>& vecdModules ) : m_vecdModules(vecdModules) { }
+
+	bool operator()( size_t iOne, size_t iTwo ) const {
+
+		return ( m_vecdModules[ iOne ] > m_vecdModules[ iTwo ] ); }
+};
+
+int MainModules( const gengetopt_args_info& sArgs ) {
+	vector<float>				vecdModules;
+	vector<vector<SModule*> >	vecvecpsModules;
+	vector<size_t>				veciIndices;
+	size_t						i, j, iOuter, iCutoffOne, iCutoffTwo, iModuleOne, iModuleTwo;
+	SSimpleome					sSimpleome;
+	bool						fDone;
+	float						d;
+	ofstream					ofsm;
+	ostream*					postm;
+
+	vecdModules.resize( sArgs.inputs_num );
+	vecvecpsModules.resize( sArgs.inputs_num );
+	veciIndices.resize( sArgs.inputs_num );
+	for( i = 0; i < vecvecpsModules.size( ); ++i ) {
+		veciIndices[ i ] = i;
+		if( CMeta::IsNaN( vecdModules[ i ] = SModule::Open( sArgs.inputs[ i ], sSimpleome,
+			vecvecpsModules[ i ] ) ) )
+			return 1; }
+	sort( veciIndices.begin( ), veciIndices.end( ), SSorterModules( vecdModules ) );
+
+	for( iOuter = 0,fDone = false; !fDone; ++iOuter ) {
+		fDone = true;
+		cerr << "Outer loop: " << iOuter << endl;
+		for( iCutoffOne = 0; iCutoffOne < veciIndices.size( ); ++iCutoffOne ) {
+			vector<SModule*>&	vecpsModulesOne	= vecvecpsModules[ veciIndices[ iCutoffOne ] ];
+
+			cerr << "Merging cutoff: " << vecdModules[ veciIndices[ iCutoffOne ] ] << endl;
+			for( iModuleOne = 0; iModuleOne < vecpsModulesOne.size( ); ++iModuleOne ) {
+				SModule*	psOne	= vecpsModulesOne[ iModuleOne ];
+
+				if( !psOne )
+					continue;
+				for( iModuleTwo = ( iModuleOne + 1 ); iModuleTwo < vecpsModulesOne.size( ); ++iModuleTwo ) {
+					SModule*	psTwo	= vecpsModulesOne[ iModuleTwo ];
+					
+					if( !psTwo )
+						continue;
+					if( ( d = psOne->Jaccard( *psTwo ) ) >= sArgs.jaccard_arg ) {
+						cerr << "Merging @" << d << ' ' << iCutoffOne << ':' << iModuleOne << " (" <<
+							psOne->m_setiGenes.size( ) << ") " << iCutoffOne << ':' << iModuleTwo << " (" <<
+							psTwo->m_setiGenes.size( ) << ')' << endl;
+						psOne->Merge( *psTwo );
+						delete vecpsModulesOne[ iModuleTwo ];
+						vecpsModulesOne[ iModuleTwo ] = NULL;
+						iModuleTwo--;
+						fDone = false; } } }
+			for( iCutoffTwo = ( iCutoffOne + 1 ); iCutoffTwo < veciIndices.size( ); ++iCutoffTwo ) {
+				vector<SModule*>&	vecpsModulesTwo	= vecvecpsModules[ veciIndices[ iCutoffTwo ] ];
+
+				for( iModuleOne = 0; iModuleOne < vecpsModulesOne.size( ); ++iModuleOne ) {
+					SModule*	psOne	= vecpsModulesOne[ iModuleOne ];
+
+					if( !psOne )
+						continue;
+					for( iModuleTwo = 0; iModuleTwo < vecpsModulesTwo.size( ); ++iModuleTwo ) {
+						SModule*	psTwo	= vecpsModulesTwo[ iModuleTwo ];
+						
+						if( !psTwo )
+							continue;
+						if( ( d = psOne->Jaccard( *psTwo ) ) >= sArgs.jaccard_arg ) {
+							cerr << "Merging @" << d << ' ' << iCutoffOne << ':' << iModuleOne << " (" <<
+								psOne->m_setiGenes.size( ) << ") " << iCutoffTwo << ':' << iModuleTwo <<
+								" (" << psTwo->m_setiGenes.size( ) << ')' << endl;
+							psOne->Merge( *psTwo );
+							delete vecpsModulesTwo[ iModuleTwo ];
+							vecpsModulesTwo[ iModuleTwo ] = NULL;
+							iModuleTwo--;
+							fDone = false; } } } } } }
+
+	for( iCutoffOne = 0; iCutoffOne < veciIndices.size( ); ++iCutoffOne ) {
+		vector<SModule*>&	vecpsModulesOne	= vecvecpsModules[ veciIndices[ iCutoffOne ] ];
+
+		for( iCutoffTwo = ( iCutoffOne + 1 ); iCutoffTwo < veciIndices.size( ); ++iCutoffTwo ) {
+			vector<SModule*>&	vecpsModulesTwo	= vecvecpsModules[ veciIndices[ iCutoffTwo ] ];
+
+			for( iModuleOne = 0; iModuleOne < vecpsModulesOne.size( ); ++iModuleOne ) {
+				SModule*	psOne	= vecpsModulesOne[ iModuleOne ];
+
+				if( !psOne )
+					continue;
+				for( iModuleTwo = 0; iModuleTwo < vecpsModulesTwo.size( ); ++iModuleTwo ) {
+					SModule*	psTwo	= vecpsModulesTwo[ iModuleTwo ];
+					
+					if( !psTwo )
+						continue;
+					if( !psTwo->IsChild( psOne ) && ( ( d = ( (float)psOne->Intersection( *psTwo ) /
+						psOne->m_setiGenes.size( ) ) ) >= sArgs.intersection_arg ) ) {
+						cerr << vecdModules[ veciIndices[ iCutoffOne ] ] << ':' << iModuleOne <<
+							" child of " << vecdModules[ veciIndices[ iCutoffTwo ] ] << ':' << iModuleTwo <<
+							" (" << psOne->m_setiGenes.size( ) << ", " << psTwo->m_setiGenes.size( ) << ", " <<
+							d << ')' << endl;
+						psTwo->m_setpsChildren.insert( psOne ); } } } } }
+
+	if( sArgs.output_arg ) {
+		ofsm.open( sArgs.output_arg );
+		postm = &ofsm; }
+	else
+		postm = &cout;
+	for( iCutoffOne = 0; iCutoffOne < veciIndices.size( ); ++iCutoffOne ) {
+		vector<SModule*>&	vecpsModulesOne	= vecvecpsModules[ veciIndices[ iCutoffOne ] ];
+
+		for( iModuleOne = 0; iModuleOne < vecpsModulesOne.size( ); ++iModuleOne ) {
+			SModule*	psOne	= vecpsModulesOne[ iModuleOne ];
+
+			if( psOne )
+				psOne->Save( *postm, vecdModules[ veciIndices[ iCutoffOne ] ], sSimpleome ); } }
+	if( sArgs.output_arg )
+		ofsm.close( );
+
+	for( i = 0; i < vecvecpsModules.size( ); ++i )
+		for( j = 0; j < vecvecpsModules[ i ].size( ); ++j )
+			if( vecvecpsModules[ i ][ j ] )
+				delete vecvecpsModules[ i ][ j ];
 
 	return 0; }

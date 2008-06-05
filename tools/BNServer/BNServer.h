@@ -59,9 +59,8 @@ private:
 	bool Get( size_t, size_t, float* = NULL );
 	bool Get( size_t, const std::vector<size_t>&, size_t, float* );
 	bool GetContext( size_t, const std::vector<unsigned char>&, size_t );
-	bool GetContext( size_t, size_t );
 	bool GetDisease( size_t, size_t, const std::vector<unsigned char>&, size_t );
-	bool GetDisease( size_t, size_t );
+	bool GetGenes( const std::vector<size_t>&, size_t );
 	bool GetAssociation( const std::vector<unsigned char>&, const std::vector<size_t>&, size_t, float*,
 		float* );
 	bool GraphCreate( const std::vector<size_t>&, size_t, size_t, float, std::vector<bool>&,
@@ -79,8 +78,7 @@ private:
 	size_t ProcessContexts( const std::vector<unsigned char>&, size_t );
 	size_t ProcessTermFinder( const std::vector<unsigned char>&, size_t );
 	size_t ProcessDiseases( const std::vector<unsigned char>&, size_t );
-	size_t ProcessDisease( const std::vector<unsigned char>&, size_t );
-	size_t ProcessContext( const std::vector<unsigned char>&, size_t );
+	size_t ProcessGenes( const std::vector<unsigned char>&, size_t );
 	size_t ProcessAssociation( const std::vector<unsigned char>&, size_t );
 	size_t ProcessAssociations( const std::vector<unsigned char>&, size_t );
 
