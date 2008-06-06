@@ -78,7 +78,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( iRet ) {
 		cmdline_parser_print_help( );
 		return iRet; }
-	CMeta::Startup( sArgs.verbosity_arg );
+	CMeta Meta = CMeta( sArgs.verbosity_arg );
 #ifdef SMILEXML_LIB
 	EnableXdslFormat( );
 #endif

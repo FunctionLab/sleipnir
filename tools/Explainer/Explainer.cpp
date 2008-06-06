@@ -69,7 +69,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( iRet ) {
 		cmdline_parser_print_help( );
 		return iRet; }
-	CMeta::Startup( sArgs.verbosity_arg );
+	CMeta Meta = CMeta( sArgs.verbosity_arg );
 
 	if( !strcmp( c_szInclude, sArgs.unknowns_arg ) || !strcmp( c_szOnly, sArgs.unknowns_arg ) )
 		sArgs.everything_flag = true;
@@ -108,7 +108,7 @@ int main( int iArgs, char** aszArgs ) {
 		ifsm.open( sArgs.go_onto_arg );
 		if( sArgs.go_anno_arg )
 			ifsmGenes.open( sArgs.go_anno_arg );
-		if( !GOBP.Open( ifsm, ifsmGenes, Genome, COntologyGO::ENamespaceBP ) ) {
+		if( !GOBP.Open( ifsm, ifsmGenes, Genome, COntologyGO::c_szBiologicalProcess ) ) {
 			cerr << "Could not open: " << sArgs.go_onto_arg << ", " << sArgs.go_anno_arg << endl;
 			return 1; }
 		ifsm.close( ); }

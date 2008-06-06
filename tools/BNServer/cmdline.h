@@ -62,9 +62,6 @@ struct gengetopt_args_info
   char * minimal_out_arg;	/**< @brief Store contexts and minimal Bayes nets.  */
   char * minimal_out_orig;	/**< @brief Store contexts and minimal Bayes nets original value given at command line.  */
   const char *minimal_out_help; /**< @brief Store contexts and minimal Bayes nets help description.  */
-  char * bn_priors_arg;	/**< @brief Bayes net node priors.  */
-  char * bn_priors_orig;	/**< @brief Bayes net node priors original value given at command line.  */
-  const char *bn_priors_help; /**< @brief Bayes net node priors help description.  */
   char * go_onto_arg;	/**< @brief GO ontology.  */
   char * go_onto_orig;	/**< @brief GO ontology original value given at command line.  */
   const char *go_onto_help; /**< @brief GO ontology help description.  */
@@ -89,6 +86,8 @@ struct gengetopt_args_info
   char * graphviz_arg;	/**< @brief Graphviz executable path (default='fdp').  */
   char * graphviz_orig;	/**< @brief Graphviz executable path original value given at command line.  */
   const char *graphviz_help; /**< @brief Graphviz executable path help description.  */
+  int networklets_flag;	/**< @brief Generate mini-network icons (default=off).  */
+  const char *networklets_help; /**< @brief Generate mini-network icons help description.  */
   char * config_arg;	/**< @brief Command line config file (default='BNServer.ini').  */
   char * config_orig;	/**< @brief Command line config file original value given at command line.  */
   const char *config_help; /**< @brief Command line config file help description.  */
@@ -108,7 +107,6 @@ struct gengetopt_args_info
   unsigned int xdsl_given ;	/**< @brief Whether xdsl was given.  */
   unsigned int minimal_in_given ;	/**< @brief Whether minimal_in was given.  */
   unsigned int minimal_out_given ;	/**< @brief Whether minimal_out was given.  */
-  unsigned int bn_priors_given ;	/**< @brief Whether bn_priors was given.  */
   unsigned int go_onto_given ;	/**< @brief Whether go_onto was given.  */
   unsigned int go_anno_given ;	/**< @brief Whether go_anno was given.  */
   unsigned int kegg_given ;	/**< @brief Whether kegg was given.  */
@@ -117,6 +115,7 @@ struct gengetopt_args_info
   unsigned int timeout_given ;	/**< @brief Whether timeout was given.  */
   unsigned int files_given ;	/**< @brief Whether files was given.  */
   unsigned int graphviz_given ;	/**< @brief Whether graphviz was given.  */
+  unsigned int networklets_given ;	/**< @brief Whether networklets was given.  */
   unsigned int config_given ;	/**< @brief Whether config was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 

@@ -264,8 +264,6 @@ int cmdline_parser_config_file (char * const filename,
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
 
-extern char *cmdline_parser_go_name_values[] ;	/**< @brief Possible values for go_name.  */
-
 
 #ifdef __cplusplus
 }

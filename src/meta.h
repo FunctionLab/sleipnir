@@ -69,21 +69,6 @@ public:
 	 */
 	static const char	c_szWS[];
 
-	/*!
-	 * \brief
-	 * Utility class that initializes Sleipnir (primarily log4cpp) at construction time and performs
-	 * cleanup when destroyed.
-	 * 
-	 * One (and only one) Startup object should be created in a Sleipnir client's \c main function before
-	 * making any library calls.  The object will be automatically destroyed as \c main exits, guaranteeing
-	 * proper cleanup of Sleipnir (and log4cpp).
-	 */
-	class Startup {
-	public:
-		Startup( int iVerbosity, size_t iRandomSeed = 0 );
-		~Startup( );
-	};
-
 	static std::string Filename( const std::string& strString, char cReplacement = '_' );
 	static std::string Basename( const char* szPath );
 	static void Tokenize( const char* szString, std::vector<std::string>& vecstrTokens,
@@ -246,6 +231,31 @@ public:
 				break;
 
 		return min( i, vecQuants.size( ) - 1 ); }
+
+	/*!
+	 * \brief
+	 * Utility constructor that initializes Sleipnir (primarily log4cpp) at construction time and performs
+	 * cleanup when destroyed.
+	 * 
+	 * \param iVerbosity
+	 * If linked with log4cpp, the verbosity level for logging.
+	 * 
+	 * \param iRandomSeed
+	 * Random seed for use with srand; if -1, the current time is used.
+	 * 
+	 * One (and only one) CMeta object should be created in a Sleipnir client's \c main function before
+	 * making any library calls.  The object will be automatically destroyed as \c main exits, guaranteeing
+	 * proper cleanup of Sleipnir (and log4cpp).
+	 * 
+	 * \remarks
+	 * If Sleipnir is configured without log4cpp, iVerbosity will be ignored.
+	 */
+	CMeta( int iVerbosity, size_t iRandomSeed = 0 );
+	/* 
+	 * \brief
+	 * Perform Sleipnir cleanup.
+	 */
+	~CMeta( );
 };
 
 }

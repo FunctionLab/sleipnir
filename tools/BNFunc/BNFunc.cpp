@@ -51,8 +51,8 @@ int main( int iArgs, char** aszArgs ) {
 	if( iRet ) {
 		cmdline_parser_print_help( );
 		return 1; }
+	CMeta Meta = CMeta( sArgs.verbosity_arg, sArgs.random_arg );
 
-	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
 	if( sArgs.go_onto_arg ) {
 		ifsmOnto.open( sArgs.go_onto_arg );
 		if( sArgs.go_anno_arg )
@@ -184,7 +184,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.directory_arg )
 		for( i = 0; i < Slim.GetSlims( ); ++i ) {
 			ofsm.clear( );
-			ofsm.open( ( (string)sArgs.directory_arg + '\\' +
+			ofsm.open( ( (string)sArgs.directory_arg + '/' +
 				CMeta::Filename( Slim.GetSlim( i ) ) ).c_str( ) );
 			for( j = 0; j < Slim.GetGenes( i ); ++j ) {
 				const CGene&	Gene	= Slim.GetGene( i, j );

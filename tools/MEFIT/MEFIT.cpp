@@ -52,7 +52,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) || !sArgs.inputs_num ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta::Startup( sArgs.verbosity_arg, sArgs.random_arg );
+	CMeta Meta = CMeta( sArgs.verbosity_arg, sArgs.random_arg );
 #ifdef SMILEXML_LIB
 	EnableXdslFormat( );
 #endif

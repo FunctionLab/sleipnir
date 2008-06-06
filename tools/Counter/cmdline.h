@@ -52,9 +52,24 @@ struct gengetopt_args_info
   char * datasets_arg;	/**< @brief Dataset ID text file.  */
   char * datasets_orig;	/**< @brief Dataset ID text file original value given at command line.  */
   const char *datasets_help; /**< @brief Dataset ID text file help description.  */
-  char * genes_arg;	/**< @brief Gene ID text file.  */
-  char * genes_orig;	/**< @brief Gene ID text file original value given at command line.  */
-  const char *genes_help; /**< @brief Gene ID text file help description.  */
+  char * genome_arg;	/**< @brief Gene ID text file.  */
+  char * genome_orig;	/**< @brief Gene ID text file original value given at command line.  */
+  const char *genome_help; /**< @brief Gene ID text file help description.  */
+  char * contexts_arg;	/**< @brief Context ID text file.  */
+  char * contexts_orig;	/**< @brief Context ID text file original value given at command line.  */
+  const char *contexts_help; /**< @brief Context ID text file help description.  */
+  char * genes_arg;	/**< @brief Gene inclusion file.  */
+  char * genes_orig;	/**< @brief Gene inclusion file original value given at command line.  */
+  const char *genes_help; /**< @brief Gene inclusion file help description.  */
+  char * genex_arg;	/**< @brief Gene exclusion file.  */
+  char * genex_orig;	/**< @brief Gene exclusion file original value given at command line.  */
+  const char *genex_help; /**< @brief Gene exclusion file help description.  */
+  char * genet_arg;	/**< @brief Term inclusion file.  */
+  char * genet_orig;	/**< @brief Term inclusion file original value given at command line.  */
+  const char *genet_help; /**< @brief Term inclusion file help description.  */
+  char * genee_arg;	/**< @brief Edge inclusion file.  */
+  char * genee_orig;	/**< @brief Edge inclusion file original value given at command line.  */
+  const char *genee_help; /**< @brief Edge inclusion file help description.  */
   char * default_arg;	/**< @brief Count file containing defaults for cases with missing data.  */
   char * default_orig;	/**< @brief Count file containing defaults for cases with missing data original value given at command line.  */
   const char *default_help; /**< @brief Count file containing defaults for cases with missing data help description.  */
@@ -91,7 +106,12 @@ struct gengetopt_args_info
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
   unsigned int datasets_given ;	/**< @brief Whether datasets was given.  */
+  unsigned int genome_given ;	/**< @brief Whether genome was given.  */
+  unsigned int contexts_given ;	/**< @brief Whether contexts was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
+  unsigned int genex_given ;	/**< @brief Whether genex was given.  */
+  unsigned int genet_given ;	/**< @brief Whether genet was given.  */
+  unsigned int genee_given ;	/**< @brief Whether genee was given.  */
   unsigned int default_given ;	/**< @brief Whether default was given.  */
   unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
   unsigned int pseudocounts_given ;	/**< @brief Whether pseudocounts was given.  */

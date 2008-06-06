@@ -185,12 +185,12 @@ protected:
 		void Reset( );
 
 		const char*					m_szTarget;
+		std::vector<std::vector<std::string> >	m_vecvecstrParents;
 		bool						m_fObsolete;
 		bool						m_fDBIDs;
 		bool						m_fSynonyms;
 		std::string					m_strNamespace;
 		std::vector<std::string>	m_vecstrIDs;
-		std::vector<size_t>			m_veciParents;
 		std::vector<SNode>			m_vecNodes;
 		std::vector<TSetPGene>		m_vecsetpGenes;
 	};
