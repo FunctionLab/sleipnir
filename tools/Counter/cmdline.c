@@ -39,6 +39,7 @@ const char *gengetopt_args_info_help[] = {
   "  -d, --directory=directory     Data directory  (default=`.')",
   "  -s, --datasets=filename       Dataset ID text file",
   "  -e, --genome=filename         Gene ID text file",
+  "  -X, --contexts=filename       Context ID text file",
   "\nLearning/Evaluation:",
   "  -g, --genes=filename          Gene inclusion file",
   "  -G, --genex=filename          Gene exclusion file",
@@ -93,6 +94,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->directory_given = 0 ;
   args_info->datasets_given = 0 ;
   args_info->genome_given = 0 ;
+  args_info->contexts_given = 0 ;
   args_info->genes_given = 0 ;
   args_info->genex_given = 0 ;
   args_info->genet_given = 0 ;
@@ -127,6 +129,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->datasets_orig = NULL;
   args_info->genome_arg = NULL;
   args_info->genome_orig = NULL;
+  args_info->contexts_arg = NULL;
+  args_info->contexts_orig = NULL;
   args_info->genes_arg = NULL;
   args_info->genes_orig = NULL;
   args_info->genex_arg = NULL;
@@ -169,20 +173,21 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->directory_help = gengetopt_args_info_help[8] ;
   args_info->datasets_help = gengetopt_args_info_help[9] ;
   args_info->genome_help = gengetopt_args_info_help[10] ;
-  args_info->genes_help = gengetopt_args_info_help[12] ;
-  args_info->genex_help = gengetopt_args_info_help[13] ;
-  args_info->genet_help = gengetopt_args_info_help[14] ;
-  args_info->genee_help = gengetopt_args_info_help[15] ;
-  args_info->default_help = gengetopt_args_info_help[17] ;
-  args_info->zeros_help = gengetopt_args_info_help[18] ;
-  args_info->pseudocounts_help = gengetopt_args_info_help[20] ;
-  args_info->alphas_help = gengetopt_args_info_help[21] ;
-  args_info->temporary_help = gengetopt_args_info_help[23] ;
-  args_info->smile_help = gengetopt_args_info_help[24] ;
-  args_info->xdsl_help = gengetopt_args_info_help[25] ;
-  args_info->memmap_help = gengetopt_args_info_help[26] ;
-  args_info->threads_help = gengetopt_args_info_help[27] ;
-  args_info->verbosity_help = gengetopt_args_info_help[28] ;
+  args_info->contexts_help = gengetopt_args_info_help[11] ;
+  args_info->genes_help = gengetopt_args_info_help[13] ;
+  args_info->genex_help = gengetopt_args_info_help[14] ;
+  args_info->genet_help = gengetopt_args_info_help[15] ;
+  args_info->genee_help = gengetopt_args_info_help[16] ;
+  args_info->default_help = gengetopt_args_info_help[18] ;
+  args_info->zeros_help = gengetopt_args_info_help[19] ;
+  args_info->pseudocounts_help = gengetopt_args_info_help[21] ;
+  args_info->alphas_help = gengetopt_args_info_help[22] ;
+  args_info->temporary_help = gengetopt_args_info_help[24] ;
+  args_info->smile_help = gengetopt_args_info_help[25] ;
+  args_info->xdsl_help = gengetopt_args_info_help[26] ;
+  args_info->memmap_help = gengetopt_args_info_help[27] ;
+  args_info->threads_help = gengetopt_args_info_help[28] ;
+  args_info->verbosity_help = gengetopt_args_info_help[29] ;
   
 }
 
@@ -278,6 +283,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->datasets_orig));
   free_string_field (&(args_info->genome_arg));
   free_string_field (&(args_info->genome_orig));
+  free_string_field (&(args_info->contexts_arg));
+  free_string_field (&(args_info->contexts_orig));
   free_string_field (&(args_info->genes_arg));
   free_string_field (&(args_info->genes_orig));
   free_string_field (&(args_info->genex_arg));
@@ -349,6 +356,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "datasets", args_info->datasets_orig, 0);
   if (args_info->genome_given)
     write_into_file(outfile, "genome", args_info->genome_orig, 0);
+  if (args_info->contexts_given)
+    write_into_file(outfile, "contexts", args_info->contexts_orig, 0);
   if (args_info->genes_given)
     write_into_file(outfile, "genes", args_info->genes_orig, 0);
   if (args_info->genex_given)
@@ -670,6 +679,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "directory",	1, NULL, 'd' },
         { "datasets",	1, NULL, 's' },
         { "genome",	1, NULL, 'e' },
+        { "contexts",	1, NULL, 'X' },
         { "genes",	1, NULL, 'g' },
         { "genex",	1, NULL, 'G' },
         { "genet",	1, NULL, 'c' },
@@ -687,7 +697,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVw:k:n:o:d:s:e:g:G:c:C:b:Z:p:a:y:lxmt:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVw:k:n:o:d:s:e:X:g:G:c:C:b:Z:p:a:y:lxmt:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -801,6 +811,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.genome_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "genome", 'e',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'X':	/* Context ID text file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->contexts_arg), 
+               &(args_info->contexts_orig), &(args_info->contexts_given),
+              &(local_args_info.contexts_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "contexts", 'X',
               additional_error))
             goto failure;
         

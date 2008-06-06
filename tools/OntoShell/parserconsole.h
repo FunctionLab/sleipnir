@@ -54,7 +54,7 @@ protected:
 	static const size_t		c_iWidthGenes		= 5;
 	static const size_t		c_iWidthID			= 19;
 	static const size_t		c_iWidthGloss		= 43;
-	static const size_t		c_iWidthOnto		= 6;
+	static const size_t		c_iWidthOnto		= 32;
 	static const size_t		c_iWidthP			= 14;
 	static const size_t		c_iWidthScreen		= 80;
 	static const size_t		c_iSizeCutoff		= 40;

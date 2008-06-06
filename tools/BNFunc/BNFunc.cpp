@@ -24,6 +24,7 @@
 
 const char	c_szBP[]	= "bp";
 const char	c_szCC[]	= "cc";
+const char	c_szMF[]	= "mf";
 
 double overlap( const CGenome&, const CSlim&, size_t, size_t );
 
@@ -32,7 +33,6 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info					sArgs;
 	ifstream							ifsmAnno, ifsmOnto, ifsmTerm;
 	COntologyGO							GO;
-	COntologyGO::ENamespace				eName;
 	COntologyKEGG						KEGG;
 	COntologyMIPS						MIPS;
 	const IOntology*					pOnto;
@@ -43,6 +43,7 @@ int main( int iArgs, char** aszArgs ) {
 	map<const CGene*,bool>				mapGenes;
 	map<const CGene*,bool>::iterator	iterGene;
 	int									iRet;
+	const char*							szNamespace;
 
 	iRet = cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 );
 	if( sArgs.config_arg )
@@ -57,12 +58,14 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.go_anno_arg )
 			ifsmAnno.open( sArgs.go_anno_arg );
 		if( !strcmp( sArgs.go_name_arg, c_szBP ) )
-			eName = COntologyGO::ENamespaceBP;
+			szNamespace = COntologyGO::c_szBiologicalProcess;
 		else if( !strcmp( sArgs.go_name_arg, c_szCC ) )
-			eName = COntologyGO::ENamespaceCC;
+			szNamespace = COntologyGO::c_szCellularComponent;
+		else if( !strcmp( sArgs.go_name_arg, c_szMF ) )
+			szNamespace = COntologyGO::c_szMolecularFunction;
 		else
-			eName = COntologyGO::ENamespaceMF;
-		if( !GO.Open( ifsmOnto, ifsmAnno, Genome, eName, !!sArgs.dbids_flag ) ) {
+			szNamespace = sArgs.go_name_arg;
+		if( !GO.Open( ifsmOnto, ifsmAnno, Genome, szNamespace, !!sArgs.dbids_flag ) ) {
 			cerr << "Couldn't open: ";
 			if( sArgs.go_anno_arg )
 				cerr << sArgs.go_anno_arg << ", ";

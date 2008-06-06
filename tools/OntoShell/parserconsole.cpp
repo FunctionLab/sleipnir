@@ -180,12 +180,10 @@ void CParserConsole::PrintGene( const CGene& Gene, const SArgs& sArgs ) {
 		cout << Gene.GetGloss( ) << endl;
 	for( i = 0; i < Gene.GetOntologies( ); ++i ) {
 		pOnto = Gene.GetOntology( i );
-		cout << pOnto->GetID( ) << ':';
-		PrintSpaces( c_iWidthOnto - pOnto->GetID( ).size( ) - 1 );
+		cout << pOnto->GetID( ) << ':' << endl;
 		PrintAnnotation( pOnto, Gene.GetAnnotation( i, 0 ), sArgs );
-		for( j = 1; j < Gene.GetAnnotations( i ); ++j ) {
-			PrintSpaces( c_iWidthOnto );
-			PrintAnnotation( pOnto, Gene.GetAnnotation( i, j ), sArgs ); } } }
+		for( j = 1; j < Gene.GetAnnotations( i ); ++j )
+			PrintAnnotation( pOnto, Gene.GetAnnotation( i, j ), sArgs ); } }
 
 void CParserConsole::PrintGenes( const vector<const CGene*>& vecpGenes, size_t iWidth, const CGenes* pGenes ) {
 	size_t			i, iCol, iCols, iSpaces;

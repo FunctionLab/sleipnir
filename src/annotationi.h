@@ -149,11 +149,7 @@ protected:
 class COntologyGOImpl : protected COntologyImpl {
 protected:
 	static const char	c_szAltID[];
-	static const char	c_szBP[];
-	static const char	c_szBioProc[];
 	static const char	c_szBroadSyn[];
-	static const char	c_szCC[];
-	static const char	c_szCelComp[];
 	static const char	c_szComment[];
 	static const char	c_szConsider[];
 	static const char	c_szDef[];
@@ -165,10 +161,8 @@ protected:
 	static const char	c_szID[];
 	static const char	c_szIsA[];
 	static const char	c_szIsObsolete[];
-	static const char	c_szMF[];
 	static const char	c_szName[];
 	static const char	c_szNarrowSyn[];
-	static const char	c_szMolFunc[];
 	static const char	c_szNamespace[];
 	static const char	c_szNOT[];
 	static const char	c_szPartOf[];

@@ -395,25 +395,19 @@ class COntologyGO : COntologyGOImpl, public IOntology {
 public:
 	/*!
 	 * \brief
-	 * Gene Ontology aspect/namespace.
+	 * Common Gene Ontology aspects/namespaces: biological process.
 	 */
-	enum ENamespace {
-		/*!
-		 * \brief
-		 * Cellular compartment
-		 */
-		ENamespaceCC,
-		/*!
-		 * \brief
-		 * Biological process
-		 */
-		ENamespaceBP,
-		/*!
-		 * \brief
-		 * Molecular function
-		 */
-		ENamespaceMF
-	};
+	static const char	c_szBiologicalProcess[];
+	/*!
+	 * \brief
+	 * Common Gene Ontology aspects/namespaces: cellular component.
+	 */
+	static const char	c_szCellularComponent[];
+	/*!
+	 * \brief
+	 * Common Gene Ontology aspects/namespaces: molecular function.
+	 */
+	static const char	c_szMolecularFunction[];
 
 	static bool Open( std::istream& istmOntology, std::istream& istmAnnotations, CGenome& Genome,
 		COntologyGO& OntoBP, COntologyGO& OntoMF, COntologyGO& OntoCC, bool fDatabaseIDs = false,
@@ -421,7 +415,7 @@ public:
 
 	COntologyGO( );
 	bool Open( std::istream& istmOntology, std::istream& istmAnnotations, CGenome& Genome,
-		ENamespace eNamespace, bool fDatabaseIDs = false, bool fSynonyms = false );
+		const char* szNamespace, bool fDatabaseIDs = false, bool fSynonyms = false );
 
 	void GetGeneNames( std::vector<std::string>& vecstrGenes ) const {
 

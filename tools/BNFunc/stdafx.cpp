@@ -147,8 +147,10 @@
  * </tr><tr>
  *	<td>-n</td>
  *	<td>bp</td>
- *	<td>bp, mf, or cc</td>
- *	<td>Gene Ontology namespace to be used for term ID lookups.</td>
+ *	<td>String</td>
+ *	<td>Gene Ontology namespace to be used for term ID lookups.  "bp", "cc", and "mf" can be used as
+		abbreviations for the three common namespaces (biological process, cellular component, and molecular
+		function).</td>
  * </tr><tr>
  *	<td>-k</td>
  *	<td>None</td>
