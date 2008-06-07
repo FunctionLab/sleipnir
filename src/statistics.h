@@ -128,7 +128,7 @@ public:
 	 * Average
 	 */
 	template<class tType>
-	static double Variance( tType Begin, tType End, double dMean ) {
+	static double Variance( const tType Begin, const tType End, double dMean ) {
 		tType	Cur;
 		size_t	iN;
 		double	d, dRet;
@@ -215,7 +215,7 @@ public:
 	 * Variance
 	 */
 	template<class tType>
-	static double Average( tType Begin, tType End ) {
+	static double Average( const tType Begin, const tType End ) {
 		tType	Cur;
 		double	dRet;
 		size_t	iN;
@@ -226,6 +226,25 @@ public:
 				dRet += *Cur; }
 
 		return ( dRet / iN ); }
+
+	template<class tType>
+	static bool Winsorize( std::vector<tType>& vecValues ) {
+
+		return Winsorize( vecValues.begin( ), vecValues.end( ) ); }
+
+	template<class tType>
+	static bool Winsorize( tType pBegin, tType pEnd, size_t iCount = 1 ) {
+		size_t	i, iLength;
+
+		iLength = pEnd - pBegin;
+		if( iLength < ( ( 2 * iCount ) + 1 ) )
+			return false;
+		std::sort( pBegin, pEnd );
+		for( i = 0; i < iCount; ++i ) {
+			pBegin[ i ] = pBegin[ i + iCount ];
+			pEnd[ -1 - i ] = pEnd[ -1 - iCount ]; }
+
+		return true; }
 
 	// P-value tests
 	static double LjungBox( const float* adX, size_t iN, size_t iH );

@@ -32,7 +32,8 @@ public:
 	CBNServer( const Sleipnir::CBayesNetMinimal&, const std::vector<Sleipnir::CBayesNetMinimal>&,
 		const std::vector<std::vector<size_t> >&, SOCKET, const Sleipnir::CDatabase&, const string&,
 		const char*, const char*, const Sleipnir::CDataMatrix&, const Sleipnir::CGenome&,
-		const Sleipnir::IOntology**, const std::vector<std::vector<size_t> >& );
+		const Sleipnir::IOntology**, const std::vector<std::vector<size_t> >&, const std::vector<size_t>&,
+		const std::vector<size_t>&, size_t );
 	~CBNServer( );
 
 	IServerClient* NewInstance( SOCKET, uint32_t, uint16_t );
@@ -59,7 +60,7 @@ private:
 	bool Get( size_t, size_t, float* = NULL );
 	bool Get( size_t, const std::vector<size_t>&, size_t, float* );
 	bool GetContext( size_t, const std::vector<unsigned char>&, size_t );
-	bool GetDisease( size_t, size_t, const std::vector<unsigned char>&, size_t );
+	bool GetDisease( size_t, size_t, size_t );
 	bool GetGenes( const std::vector<size_t>&, size_t );
 	bool GetAssociation( const std::vector<unsigned char>&, const std::vector<size_t>&, size_t, float*,
 		float* );
@@ -132,6 +133,9 @@ private:
 	const IOntology**				m_apOntologies;
 	size_t							m_iOntologies;
 	const vector<vector<size_t> >	m_vecveciDiseases;
+	const vector<size_t>&			m_veciDiseases;
+	const vector<size_t>&			m_veciContexts;
+	size_t							m_iLimit;
 };
 
 #endif // BNSERVER_H

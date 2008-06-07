@@ -24,6 +24,7 @@
 
 int cliques( const gengetopt_args_info&, const CDat&, const CDat&, const vector<size_t>& );
 int heavy( const gengetopt_args_info&, CDat&, const CDat&, const vector<size_t>& );
+int heavy2( const gengetopt_args_info&, CDat&, const CDat&, const vector<size_t>& );
 bool connectivity( size_t, const vector<size_t>&, const vector<float>&, const vector<size_t>&,
 	float, size_t, float, size_t, const CDat&, float&, size_t&, float&, size_t& );
 void max_connectivity( const vector<bool>&, const vector<size_t>&, const vector<float>&,
@@ -66,7 +67,7 @@ int main( int iArgs, char** aszArgs ) {
 		for( i = 0; i < veciKnowns.size( ); ++i )
 			veciKnowns[ i ] = DatKnowns.GetGene( Dat.GetGene( i ) ); }
 
-	iRet = sArgs.heavy_arg ? heavy( sArgs, Dat, DatKnowns, veciKnowns ) :
+	iRet = sArgs.heavy_arg ? heavy2( sArgs, Dat, DatKnowns, veciKnowns ) :
 		cliques( sArgs, Dat, DatKnowns, veciKnowns );
 
 	return iRet; }
@@ -181,8 +182,7 @@ int heavy( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 		do {
 			const SSeed&	sSeed	= pqueSeeds.top( );
 
-			for( i = 0; i < veciCluster.size( ); ++i )
-				vecfCluster[ veciCluster[ i ] ] = false;
+			fill( vecfCluster.begin( ), vecfCluster.end( ), false );
 			vecfCluster[ sSeed.m_iOne ] = vecfCluster[ sSeed.m_iTwo ] = true;
 			veciCluster.resize( 2 );
 			veciCluster[ 0 ] = sSeed.m_iOne;
@@ -275,3 +275,94 @@ void max_connectivity( const vector<bool>& vecfCluster, const vector<size_t>& ve
 			iMaxIn = iEdgesIn;
 			dMaxTotal = dSumTotal;
 			iMaxTotal = iEdgesTotal; } } }
+
+int heavy2( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
+	const vector<size_t>& veciKnowns ) {
+	size_t							i, j, iClusters, iMax;
+	float							d, dCur, dMax;
+	vector<size_t>					veciCluster, veciScores;
+	vector<pair<size_t, size_t> >	vecpriiSeeds;
+	vector<float>					vecdScores;
+	vector<bool>					vecfCluster;
+
+	for( i = 0; i < Dat.GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) && ( d >= sArgs.specificity_arg ) )
+				vecpriiSeeds.push_back( pair<size_t, size_t>( i, j ) );
+
+	cout << sArgs.heavy_arg << endl;
+	iClusters = 0;
+	veciScores.resize( Dat.GetGenes( ) );
+	vecdScores.resize( Dat.GetGenes( ) );
+	vecfCluster.resize( Dat.GetGenes( ) );
+	while( ( sArgs.subgraphs_arg == -1 ) || ( iClusters < (size_t)sArgs.subgraphs_arg ) ) {
+		priority_queue<SSeed>	pqueSeeds;
+		bool					fHit;
+
+		for( i = 0; i < vecpriiSeeds.size( ); ++i )
+			if( ( d = Dat.Get( vecpriiSeeds[ i ].first, vecpriiSeeds[ i ].second ) ) >= sArgs.specificity_arg )
+					pqueSeeds.push( SSeed( vecpriiSeeds[ i ].first, vecpriiSeeds[ i ].second, d, 1, 0, 0, d ) );
+		cerr << "Seeds remaining: " << pqueSeeds.size( ) << endl;
+
+		for( fHit = false; !pqueSeeds.empty( ); ) {
+			const SSeed&	sSeed	= pqueSeeds.top( );
+
+			fill( vecfCluster.begin( ), vecfCluster.end( ), false );
+			vecfCluster[ sSeed.m_iOne ] = vecfCluster [ sSeed.m_iTwo ] = true;
+			veciCluster.resize( 2 );
+			veciCluster[ 0 ] = sSeed.m_iOne;
+			veciCluster[ 1 ] = sSeed.m_iTwo;
+
+			cerr << "Cluster " << iClusters << " seed: " << Dat.GetGene( sSeed.m_iOne ) << ", " <<
+				Dat.GetGene( sSeed.m_iTwo ) << ", " << sSeed.m_dRatio << endl;
+			for( i = 0; i < Dat.GetGenes( ); ++i ) {
+				vecdScores[ i ] = 0;
+				for( veciScores[ i ] = j = 0; j < veciCluster.size( ); ++j )
+					if( !CMeta::IsNaN( d = Dat.Get( i, veciCluster[ j ] ) ) ) {
+						vecdScores[ i ] += d;
+						veciScores[ i ]++; } }
+			while( true ) {
+				cerr << "Cluster " << iClusters << ", " << veciCluster.size( ) << " genes" << endl;
+				for( dMax = 0,iMax = i = 0; i < Dat.GetGenes( ); ++i ) {
+					if( vecfCluster[ i ] || !veciScores[ i ] )
+						continue;
+					if( ( dCur = ( vecdScores[ i ] / veciScores[ i ] ) ) > dMax ) {
+						dMax = dCur;
+						iMax = i; } }
+				if( dMax < ( sArgs.heavy_arg * sSeed.m_dRatio ) )
+					break;
+				for( i = 0; i < Dat.GetGenes( ); ++i )
+					if( !CMeta::IsNaN( d = Dat.Get( i, iMax ) ) ) {
+						vecdScores[ i ] += d;
+						veciScores[ i ]++; }
+				vecfCluster[ iMax ] = true;
+				veciCluster.push_back( iMax ); }
+			if( veciCluster.size( ) < 3 ) {
+				pqueSeeds.pop( );
+				continue; }
+
+			fHit = true;
+			for( dMax = 0, iMax = i = 0; i < veciCluster.size( ); ++i )
+				for( j = ( i + 1 ); j < veciCluster.size( ); ++j )
+					if( !CMeta::IsNaN( d = Dat.Get( veciCluster[ i ], veciCluster[ j ] ) ) ) {
+						iMax++;
+						dMax += d; }
+
+			cerr << "Found cluster: " << ( dMax /= iMax ) << endl;
+			iClusters++;
+			cout << dMax;
+			for( i = 0; i < veciCluster.size( ); ++i )
+				cout << '\t' << Dat.GetGene( veciCluster[ i ] );
+			cout << endl;
+			cout.flush( );
+
+			for( i = 0; i < veciCluster.size( ); ++i )
+				for( j = ( i + 1 ); j < veciCluster.size( ); ++j )
+					if( !CMeta::IsNaN( d = Dat.Get( veciCluster[ i ], veciCluster[ j ] ) ) ) {
+						dCur = min( dMax, d );
+						Dat.Set( veciCluster[ i ], veciCluster[ j ], d - dCur ); }
+			break; }
+		if( !fHit )
+			break; }
+
+	return 0; }

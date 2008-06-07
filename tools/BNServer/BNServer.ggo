@@ -43,6 +43,8 @@ option	"timeout"		t	"Server timeout"
 							int	default="100"
 
 section "Optional"
+option	"limit"			L	"Maximum genes to process per set"
+							int	default="500"
 option	"files"			f	"File directory"
 							string	typestr="directory"	default="."
 option	"graphviz"		z	"Graphviz executable path"

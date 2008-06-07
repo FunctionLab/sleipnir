@@ -38,7 +38,8 @@ int main( int iArgs, char** aszArgs ) {
 	char				szBuf[ c_iBuf ];
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
-	CDat				Dat;
+	CDat				Dat, DatNew;
+	CDat*				pDat;
 	float				d, dCutoff;
 	CGenome				Genome;
 	CGenes				GenesIn( Genome ), GenesQr( Genome );
@@ -94,18 +95,31 @@ int main( int iArgs, char** aszArgs ) {
 	else if( !Dat.Open( cin, CDat::EFormatText ) ) {
 		cerr << "Couldn't open input" << endl;
 		return 1; }
+	pDat = &Dat;
 
 	dCutoff = (float)( sArgs.cutoff_given ? sArgs.cutoff_arg : HUGE_VAL );
-	if( GenesIn.GetGenes( ) )
-		Dat.FilterGenes( GenesIn, CDat::EFilterInclude );
+	if( GenesIn.GetGenes( ) ) {
+		vector<size_t>	veciGenes;
+
+		DatNew.Open( GenesIn.GetGeneNames( ) );
+		veciGenes.resize( DatNew.GetGenes( ) );
+		for( i = 0; i < veciGenes.size( ); ++i )
+			veciGenes[ i ] = Dat.GetGene( DatNew.GetGene( i ) );
+		for( i = 0; i < veciGenes.size( ); ++i ) {
+			if( veciGenes[ i ] == -1 )
+				continue;
+			for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
+				if( veciGenes[ j ] != -1 )
+					DatNew.Set( i, j, Dat.Get( veciGenes[ i ], veciGenes[ j ] ) ); }
+		pDat = &DatNew; }
 	if( sArgs.normalize_flag )
-		Dat.Normalize( );
+		pDat->Normalize( );
 	if( GenesQr.GetGenes( ) ) {
 		if( sArgs.cutoff_given )
-			for( i = 0; i < Dat.GetGenes( ); ++i )
-				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
-					if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) && ( d < sArgs.cutoff_arg ) )
-						Dat.Set( i, j, CMeta::GetNaN( ) );
+			for( i = 0; i < pDat->GetGenes( ); ++i )
+				for( j = ( i + 1 ); j < pDat->GetGenes( ); ++j )
+					if( !CMeta::IsNaN( d = pDat->Get( i, j ) ) && ( d < sArgs.cutoff_arg ) )
+						pDat->Set( i, j, CMeta::GetNaN( ) );
 		if( !strcmp( sArgs.format_arg, "correl" ) ) {
 			CMeasurePearson	MeasurePearson;
 			float*			adCentroid;
@@ -114,38 +128,38 @@ int main( int iArgs, char** aszArgs ) {
 			vector<size_t>	veciCounts;
 			vector<float>	vecdScores;
 
-			veciCounts.resize( Dat.GetGenes( ) );
-			adCentroid = new float[ Dat.GetGenes( ) ];
+			veciCounts.resize( pDat->GetGenes( ) );
+			adCentroid = new float[ pDat->GetGenes( ) ];
 			for( i = 0; i < GenesQr.GetGenes( ); ++i ) {
-				if( ( iCur = Dat.GetGene( GenesQr.GetGene( i ).GetName( ) ) ) == -1 )
+				if( ( iCur = pDat->GetGene( GenesQr.GetGene( i ).GetName( ) ) ) == -1 )
 					continue;
-				for( j = 0; j < Dat.GetGenes( ); ++j )
-					if( !CMeta::IsNaN( d = Dat.Get( iCur, j ) ) ) {
+				for( j = 0; j < pDat->GetGenes( ); ++j )
+					if( !CMeta::IsNaN( d = pDat->Get( iCur, j ) ) ) {
 						adCentroid[ j ] += d;
 						veciCounts[ j ]++; } }
-			for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( i = 0; i < pDat->GetGenes( ); ++i )
 				adCentroid[ i ] /= veciCounts[ i ];
 
-			vecdScores.resize( Dat.GetGenes( ) );
-			adCur = new float[ Dat.GetGenes( ) ];
-			for( i = 0; i < Dat.GetGenes( ); ++i ) {
-				for( j = 0; j < Dat.GetGenes( ); ++j )
-					adCur[ j ] = Dat.Get( i, j );
-				vecdScores[ i ] = (float)MeasurePearson.Measure( adCentroid, Dat.GetGenes( ), adCur,
-					Dat.GetGenes( ), IMeasure::EMapNone, NULL, NULL ); }
+			vecdScores.resize( pDat->GetGenes( ) );
+			adCur = new float[ pDat->GetGenes( ) ];
+			for( i = 0; i < pDat->GetGenes( ); ++i ) {
+				for( j = 0; j < pDat->GetGenes( ); ++j )
+					adCur[ j ] = pDat->Get( i, j );
+				vecdScores[ i ] = (float)MeasurePearson.Measure( adCentroid, pDat->GetGenes( ), adCur,
+					pDat->GetGenes( ), IMeasure::EMapNone, NULL, NULL ); }
 			delete[] adCur;
 			delete[] adCentroid;
 			for( i = 0; i < vecdScores.size( ); ++i )
-				cout << Dat.GetGene( i ) << '\t' << vecdScores[ i ] << endl; }
+				cout << pDat->GetGene( i ) << '\t' << vecdScores[ i ] << endl; }
 		else {
 			dCutoff = 0;
 			if( vecdColors.empty( ) ) {
-				vecdColors.resize( Dat.GetGenes( ) );
+				vecdColors.resize( pDat->GetGenes( ) );
 				fill( vecdColors.begin( ), vecdColors.end( ), 0.5f );
 				for( i = 0; i < GenesQr.GetGenes( ); ++i )
-					if( ( j = Dat.GetGene( GenesQr.GetGene( i ).GetName( ) ) ) != -1 )
+					if( ( j = pDat->GetGene( GenesQr.GetGene( i ).GetName( ) ) ) != -1 )
 						vecdColors[ j ] = 1; }
-			Dat.FilterGenes( GenesQr, sArgs.hefalmp_flag ? CDat::EFilterHefalmp : CDat::EFilterPixie,
+			pDat->FilterGenes( GenesQr, sArgs.hefalmp_flag ? CDat::EFilterHefalmp : CDat::EFilterPixie,
 				sArgs.neighbors_arg, (float)sArgs.edges_arg ); } }
 	if( sArgs.knowns_arg ) {
 		CDat			DatKnowns;
@@ -155,37 +169,37 @@ int main( int iArgs, char** aszArgs ) {
 		if( !DatKnowns.Open( sArgs.knowns_arg, !!sArgs.memmap_flag ) ) {
 			cerr << "Could not open: " << sArgs.knowns_arg << endl;
 			return 1; }
-		veciKnowns.resize( Dat.GetGenes( ) );
+		veciKnowns.resize( pDat->GetGenes( ) );
 		for( i = 0; i < veciKnowns.size( ); ++i )
-			veciKnowns[ i ] = DatKnowns.GetGene( Dat.GetGene( i ) );
-		for( i = 0; i < Dat.GetGenes( ); ++i )
+			veciKnowns[ i ] = DatKnowns.GetGene( pDat->GetGene( i ) );
+		for( i = 0; i < pDat->GetGenes( ); ++i )
 			if( ( iOne = veciKnowns[ i ] ) != -1 )
-				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				for( j = ( i + 1 ); j < pDat->GetGenes( ); ++j )
 					if( ( ( iTwo = veciKnowns[ j ] ) != -1 ) &&
 						!CMeta::IsNaN( d = DatKnowns.Get( iOne, iTwo ) ) && ( d > 0 ) )
-						Dat.Set( i, j, CMeta::GetNaN( ) ); }
+						pDat->Set( i, j, CMeta::GetNaN( ) ); }
 
 	if( !strcmp( sArgs.format_arg, "dot" ) )
-		Dat.SaveDOT( cout, dCutoff, &Genome, false, true, vecdColors.empty( ) ? NULL : &vecdColors,
+		pDat->SaveDOT( cout, dCutoff, &Genome, false, true, vecdColors.empty( ) ? NULL : &vecdColors,
 			vecdBorders.empty( ) ? NULL : &vecdBorders );
 	else if( !strcmp( sArgs.format_arg, "gdf" ) )
-		Dat.SaveGDF( cout, dCutoff );
+		pDat->SaveGDF( cout, dCutoff );
 	else if( !strcmp( sArgs.format_arg, "net" ) )
-		Dat.SaveNET( cout, dCutoff );
+		pDat->SaveNET( cout, dCutoff );
 	else if( !strcmp( sArgs.format_arg, "matisse" ) )
-		Dat.SaveMATISSE( cout, dCutoff, &Genome );
+		pDat->SaveMATISSE( cout, dCutoff, &Genome );
 	else if( !strcmp( sArgs.format_arg, "list" ) ) {
 		vector<bool>					vecfQuery;
 		map<size_t, float>				mapGenes;
 		map<size_t, float>::iterator	iterGene;
 		size_t							iGene;
 
-		vecfQuery.resize( Dat.GetGenes( ) );
+		vecfQuery.resize( pDat->GetGenes( ) );
 		for( i = 0; i < vecfQuery.size( ); ++i )
-			vecfQuery[ i ] = GenesQr.IsGene( Dat.GetGene( i ) );
-		for( i = 0; i < Dat.GetGenes( ); ++i )
-			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
-				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) &&
+			vecfQuery[ i ] = GenesQr.IsGene( pDat->GetGene( i ) );
+		for( i = 0; i < pDat->GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < pDat->GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = pDat->Get( i, j ) ) &&
 					( CMeta::IsNaN( dCutoff ) || ( d > dCutoff ) ) &&
 					( vecfQuery[ i ] != vecfQuery[ j ] ) ) {
 					iGene = vecfQuery[ i ] ? j : i;
@@ -194,8 +208,8 @@ int main( int iArgs, char** aszArgs ) {
 					else
 						iterGene->second += d; }
 		for( iterGene = mapGenes.begin( ); iterGene != mapGenes.end( ); ++iterGene )
-			cout << Dat.GetGene( iterGene->first ) << '\t' << iterGene->second << endl; }
+			cout << pDat->GetGene( iterGene->first ) << '\t' << iterGene->second << endl; }
 	else if( !strcmp( sArgs.format_arg, "dat" ) )
-		Dat.Save( cout, CDat::EFormatText );
+		pDat->Save( cout, CDat::EFormatText );
 
 	return 0; }
