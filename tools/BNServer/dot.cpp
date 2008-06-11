@@ -22,7 +22,7 @@
 #include "stdafx.h"
 #include "dot.h"
 
-#define JAVASCRIPT_DIR	"/javascripts/"
+#define JAVASCRIPT_DIR	"../javascripts/"
 
 using namespace boost;
 

@@ -51,6 +51,7 @@ const char *gengetopt_args_info_help[] = {
   "  -p, --port=INT              Server port  (default=`1234')",
   "  -t, --timeout=INT           Server timeout  (default=`100')",
   "\nOptional:",
+  "  -L, --limit=INT             Maximum genes to process per set  (default=`500')",
   "  -f, --files=directory       File directory  (default=`.')",
   "  -z, --graphviz=filename     Graphviz executable path  (default=`fdp')",
   "  -l, --networklets           Generate mini-network icons  (default=off)",
@@ -125,6 +126,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->kegg_org_given = 0 ;
   args_info->port_given = 0 ;
   args_info->timeout_given = 0 ;
+  args_info->limit_given = 0 ;
   args_info->files_given = 0 ;
   args_info->graphviz_given = 0 ;
   args_info->networklets_given = 0 ;
@@ -165,6 +167,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->port_orig = NULL;
   args_info->timeout_arg = 100;
   args_info->timeout_orig = NULL;
+  args_info->limit_arg = 500;
+  args_info->limit_orig = NULL;
   args_info->files_arg = gengetopt_strdup (".");
   args_info->files_orig = NULL;
   args_info->graphviz_arg = gengetopt_strdup ("fdp");
@@ -200,11 +204,12 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->kegg_org_help = gengetopt_args_info_help[18] ;
   args_info->port_help = gengetopt_args_info_help[20] ;
   args_info->timeout_help = gengetopt_args_info_help[21] ;
-  args_info->files_help = gengetopt_args_info_help[23] ;
-  args_info->graphviz_help = gengetopt_args_info_help[24] ;
-  args_info->networklets_help = gengetopt_args_info_help[25] ;
-  args_info->config_help = gengetopt_args_info_help[26] ;
-  args_info->verbosity_help = gengetopt_args_info_help[27] ;
+  args_info->limit_help = gengetopt_args_info_help[23] ;
+  args_info->files_help = gengetopt_args_info_help[24] ;
+  args_info->graphviz_help = gengetopt_args_info_help[25] ;
+  args_info->networklets_help = gengetopt_args_info_help[26] ;
+  args_info->config_help = gengetopt_args_info_help[27] ;
+  args_info->verbosity_help = gengetopt_args_info_help[28] ;
   
 }
 
@@ -309,6 +314,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->kegg_org_orig));
   free_string_field (&(args_info->port_orig));
   free_string_field (&(args_info->timeout_orig));
+  free_string_field (&(args_info->limit_orig));
   free_string_field (&(args_info->files_arg));
   free_string_field (&(args_info->files_orig));
   free_string_field (&(args_info->graphviz_arg));
@@ -381,6 +387,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "port", args_info->port_orig, 0);
   if (args_info->timeout_given)
     write_into_file(outfile, "timeout", args_info->timeout_orig, 0);
+  if (args_info->limit_given)
+    write_into_file(outfile, "limit", args_info->limit_orig, 0);
   if (args_info->files_given)
     write_into_file(outfile, "files", args_info->files_orig, 0);
   if (args_info->graphviz_given)
@@ -668,6 +676,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "kegg_org",	1, NULL, 'K' },
         { "port",	1, NULL, 'p' },
         { "timeout",	1, NULL, 't' },
+        { "limit",	1, NULL, 'L' },
         { "files",	1, NULL, 'f' },
         { "graphviz",	1, NULL, 'z' },
         { "networklets",	0, NULL, 'l' },
@@ -676,7 +685,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVd:i:c:a:s:n:b:xmM:g:G:k:K:p:t:f:z:lC:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVd:i:c:a:s:n:b:xmM:g:G:k:K:p:t:L:f:z:lC:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -885,6 +894,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.timeout_given), optarg, 0, "100", ARG_INT,
               check_ambiguity, override, 0, 0,
               "timeout", 't',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'L':	/* Maximum genes to process per set.  */
+        
+        
+          if (update_arg( (void *)&(args_info->limit_arg), 
+               &(args_info->limit_orig), &(args_info->limit_given),
+              &(local_args_info.limit_given), optarg, 0, "500", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "limit", 'L',
               additional_error))
             goto failure;
         

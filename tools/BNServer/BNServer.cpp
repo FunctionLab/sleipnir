@@ -624,6 +624,12 @@ bool CBNServer::GraphWrite( const CDat& DatGraph, const vector<size_t>& veciQuer
 	strDotOut += c_szDOT;
 	strCmd = m_strGraphviz + " -Tdot -o" + strDotOut + ' ' + strDotIn;
 	system( strCmd.c_str( ) );
+// THE PAIN, IT BURNS!
+// The Boost DOT parser doesn't handle continuation lines.
+// sed doesn't handle newlines unless you beat it with a stick.
+// Backslashes have to be triple escaped to get from here to sed.
+// The combination makes me cry, but it works.
+	system( ( "sed -c -i -n '1h;2,$H;${g;s/\\\\\\n//g;p}' " + strDotOut ).c_str( ) );
 
 	if( !DotOut.Open( strDotOut.c_str( ) ) )
 		return false;
