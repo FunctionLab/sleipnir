@@ -24,19 +24,27 @@
 
 static const char	c_szDab[]	= ".dab";
 
+static int MainSet( const gengetopt_args_info& );
+static int MainBackground( const gengetopt_args_info& );
+static float In( const vector<size_t>&, const vector<size_t>&, const CDat& );
+
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
-	CGenome				Genome;
-	CGenes				GenesQuery( Genome );
-	ifstream			ifsm;
-	size_t				iFunction, i, j;
-	vector<size_t>		veciQuery;
-	float				d;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
+	CMeta Meta = CMeta( sArgs.verbosity_arg, sArgs.random_arg );
+
+	return ( sArgs.sizes_arg ? MainBackground : MainSet )( sArgs ); }
+
+int MainSet( const gengetopt_args_info& sArgs ) {
+	CGenome			Genome;
+	CGenes			GenesQuery( Genome );
+	ifstream		ifsm;
+	size_t			iFunction, i, j;
+	vector<size_t>	veciQuery;
+	float			d;
 
 	if( sArgs.genes_arg )
 		ifsm.open( sArgs.genes_arg );
@@ -108,3 +116,91 @@ int main( int iArgs, char** aszArgs ) {
 			dFuncIn << '\t' << dFuncOut << endl; }
 
 	return 0; }
+
+int MainBackground( const gengetopt_args_info& sArgs ) {
+	CDat			Dat;
+	CDataMatrix		MatAves, MatStds;
+	vector<size_t>	veciSizes;
+	size_t			i, j, iIndexOne, iIndexTwo, iCountOne, iCountTwo;
+	float			d, dAve, dStd, dOut;
+	vector<float>	vecdOut;
+
+	if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !sArgs.normalize_flag ) ) {
+		cerr << "Could not open: " << ( sArgs.input_arg ? sArgs.input_arg : "stdin" ) << endl;
+		return 1; }
+	if( sArgs.normalize_flag )
+		Dat.Normalize( );
+	{
+		CPCL	PCLSizes( false );
+
+		if( !PCLSizes.Open( sArgs.sizes_arg, 0 ) ) {
+			cerr << "Could not open: " << sArgs.sizes_arg << endl;
+			return 1; }
+		veciSizes.resize( PCLSizes.GetGenes( ) );
+		for( i = 0; i < veciSizes.size( ); ++i )
+			veciSizes[ i ] = atoi( PCLSizes.GetGene( i ).c_str( ) );
+	}
+
+	vecdOut.resize( Dat.GetGenes( ) );
+	fill( vecdOut.begin( ), vecdOut.end( ), 0.0f );
+	for( i = 0; i < Dat.GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
+				vecdOut[ i ] += d;
+				vecdOut[ j ] += d; }
+	for( i = 0; i < vecdOut.size( ); ++i )
+		vecdOut[ i ] /= Dat.GetGenes( ) - 1;
+
+	MatAves.Initialize( veciSizes.size( ), veciSizes.size( ) );
+	MatAves.Clear( );
+	MatStds.Initialize( veciSizes.size( ), veciSizes.size( ) );
+	MatStds.Clear( );
+	for( iIndexOne = 0; iIndexOne < veciSizes.size( ); ++iIndexOne ) {
+		vector<size_t>	veciOne;
+
+		veciOne.resize( veciSizes[ iIndexOne ] );
+		for( iCountOne = 0; iCountOne < (size_t)sArgs.count_arg; ++iCountOne ) {
+			for( dOut = 0,i = 0; i < veciOne.size( ); ++i ) {
+				veciOne[ i ] = rand( ) % Dat.GetGenes( );
+				dOut += vecdOut[ veciOne[ i ] ]; }
+			dOut /= veciOne.size( );
+			for( iIndexTwo = 0; iIndexTwo < veciSizes.size( ); ++iIndexTwo ) {
+				vector<size_t>	veciTwo;
+
+				if( !( iCountOne % 10 ) )
+					cerr << veciSizes[ iIndexOne ] << ':' << veciSizes[ iIndexTwo ] << '\t' << iCountOne << '/'
+						<< sArgs.count_arg << endl;
+				veciTwo.resize( veciSizes[ iIndexTwo ] );
+				for( iCountTwo = 0; iCountTwo < (size_t)sArgs.count_arg; ++iCountTwo ) {
+					for( i = 0; i < veciTwo.size( ); ++i )
+						veciTwo[ i ] = rand( ) % Dat.GetGenes( );
+
+					d = In( veciOne, veciTwo, Dat ) / dOut;
+					MatAves.Get( iIndexTwo, iIndexOne ) += d;
+					MatStds.Get( iIndexTwo, iIndexOne ) += d * d; } } } }
+
+	for( i = 0; i < veciSizes.size( ); ++i )
+		cout << '\t' << veciSizes[ i ];
+	cout << endl;
+	for( i = 0; i < MatAves.GetRows( ); ++i ) {
+		cout << veciSizes[ i ];
+		for( j = 0; j < MatAves.GetColumns( ); ++j ) {
+			iCountOne = sArgs.count_arg * sArgs.count_arg;
+			dAve = ( MatAves.Get( i, j ) /= iCountOne );
+			MatStds.Set( i, j, dStd = sqrt( ( MatStds.Get( i, j ) / iCountOne ) - ( dAve * dAve ) ) );
+			cout << '\t' << dStd; }
+		cout << endl; }
+
+	return 0; }
+
+float In( const vector<size_t>& veciOne, const vector<size_t>& veciTwo, const CDat& Dat ) {
+	size_t	i, j, iIn;
+	float	d, dIn;
+
+	for( dIn = 0,iIn = i = 0; i < veciOne.size( ); ++i )
+		for( j = 0; j < veciTwo.size( ); ++j )
+			if( !CMeta::IsNaN( d = Dat.Get( veciOne[ i ], veciTwo[ j ] ) ) ) {
+				iIn++;
+				dIn += d; }
+
+	return ( iIn ? ( dIn / iIn ) : 0 ); }

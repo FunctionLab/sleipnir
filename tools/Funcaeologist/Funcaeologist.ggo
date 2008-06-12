@@ -7,11 +7,21 @@ option	"genes"			g	"Gene set to investigate"
 							string	typestr="filename"
 option	"directory"		d	"DAB network file directory"
 							string	typestr="directory"	default="."
+							
+section "Backgrounds"
+option	"input"			i	"DAT/DAB file in which backgrounds are calculated"
+							string	typestr="filename"
+option	"sizes"			s	"Text file containing set sizes to test"
+							string	typestr="filename"
+option	"count"			c	"Number of random gene sets to test per size"
+							int	default="100"
 
 section "Optional"
 option	"normalize"		n	"Normalize to the range [0,1]"
 							flag	off
 option	"memmap"		m	"Memory map input"
 							flag	off
+option	"random"		r	"Seed random generator"
+							int	default="0"
 option	"verbosity"		v	"Message verbosity"
 							int	default="5"
