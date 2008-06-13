@@ -110,7 +110,49 @@ int main( int iArgs, char** aszArgs ) {
 	if( Genes.GetGenes( ) )
 		Dat.FilterGenes( Genes, CDat::EFilterInclude );
 
-	if( sArgs.cutoff_given )
+	if( sArgs.paircount_flag ) {
+		size_t			iTotal, iCutoff;
+		float			d, dAve, dStd;
+		vector<size_t>	veciCounts;
+		vector<float>	vecdTotals, vecdSquares;
+
+		dAve = dStd = 0;
+		veciCounts.resize( Dat.GetGenes( ) );
+		fill( veciCounts.begin( ), veciCounts.end( ), 0 );
+		vecdTotals.resize( Dat.GetGenes( ) );
+		fill( vecdTotals.begin( ), vecdTotals.end( ), 0.0f );
+		vecdSquares.resize( Dat.GetGenes( ) );
+		fill( vecdSquares.begin( ), vecdSquares.end( ), 0.0f );
+		for( iTotal = iCutoff = i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
+					if( !sArgs.cutoff_arg || ( d >= sArgs.cutoff_arg ) ) {
+						dAve += d;
+						iCutoff++;
+						veciCounts[ i ]++;
+						veciCounts[ j ]++;
+						vecdTotals[ i ] += d;
+						vecdTotals[ j ] += d;
+						d *= d;
+						dStd += d;
+						vecdSquares[ i ] += d;
+						vecdSquares[ j ] += d; }
+					iTotal++; }
+		dAve /= iCutoff;
+		dStd = sqrt( ( dStd / iCutoff ) - ( dAve * dAve ) );
+		for( i = 0; i < vecdSquares.size( ); ++i ) {
+			d = vecdTotals[ i ] / iCutoff;
+			vecdSquares[ i ] = sqrt( ( vecdSquares[ i ] / iCutoff ) - ( d * d ) ); }
+
+		cout << iTotal << endl;
+		if( sArgs.cutoff_arg )
+			cout << iCutoff << endl;
+		cout << dAve << '\t' << dStd << endl;
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			cout << Dat.GetGene( i ) << '\t' << vecdTotals[ i ] << '\t' << veciCounts[ i ] << '\t' <<
+				vecdSquares[ i ] << endl;
+		return 0; }
+	if( sArgs.cutoff_arg )
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( Dat.Get( i, j ) < sArgs.cutoff_arg )
@@ -165,8 +207,14 @@ int main( int iArgs, char** aszArgs ) {
 		cout << endl;
 		for( i = 0; ( i + 1 ) < Dat.GetGenes( ); ++i ) {
 			cout << Dat.GetGene( i );
-			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
-				cout << '\t' << Dat.Get( i, j );
+			for( j = 0; j < i; ++j )
+				cout << '\t';
+			for( ++j; j < Dat.GetGenes( ); ++j ) {
+				float	d;
+
+				cout << '\t';
+				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
+					cout << d; }
 			cout << endl; } }
 	else if( sArgs.output_arg )
 		Dat.Save( sArgs.output_arg );

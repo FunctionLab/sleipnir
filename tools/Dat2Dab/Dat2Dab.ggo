@@ -27,8 +27,6 @@ option	"zero"			e	"Zero missing values"
 							flag	off
 option	"duplicates"	d	"Allow dissimilar duplicate values"
 							flag	off
-option	"genelist"		G	"Only list genes"
-							flag	off
 
 section "Lookups"
 option	"lookup1"		l	"First lookup gene"
@@ -37,6 +35,10 @@ option	"lookup2"		L	"Second lookup gene"
 							string
 option	"lookups"		t	"Lookup gene set"
 							string	typestr="filename"
+option	"genelist"		G	"Only list genes"
+							flag	off
+option	"paircount"		P	"Only count pairs above cutoff"
+							flag	off
 
 section "Optional"
 option	"remap"			p	"Gene name remapping file"

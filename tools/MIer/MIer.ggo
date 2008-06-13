@@ -5,7 +5,7 @@ purpose	"Data set pairwise mutual information calculator."
 section "Main"
 option	"distance"	d	"Similarity measure"
 						values="pearson","quickpear","euclidean","kendalls","kolm-smir",
-						"hypergeom","innerprod","bininnerprod","mi"	default="mi"
+						"hypergeom","innerprod","bininnerprod","mi"
 
 section "Network Features"
 option	"zero"		z	"Zero missing values"

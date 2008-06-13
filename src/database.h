@@ -201,6 +201,9 @@ public:
 	 * \param vecbData
 	 * Output vector containing the retrieved values, two per byte.
 	 * 
+	 * \param fReplace
+	 * If true, replace values in output vector rather than appending.
+	 * 
 	 * \returns
 	 * True if data was retrieved successfully.
 	 * 
@@ -212,9 +215,10 @@ public:
 	 * calling Get with two gene indices repeatedly for iTwo in veciGenes and concatenating the results.
 	 */
 	bool Get( size_t iGene, const std::vector<size_t>& veciGenes,
-		std::vector<unsigned char>& vecbData ) const {
+		std::vector<unsigned char>& vecbData, bool fReplace = false ) const {
 
-		return m_vecpDBs[ iGene % m_vecpDBs.size( ) ]->Get( iGene / m_vecpDBs.size( ), veciGenes, vecbData ); }
+		return m_vecpDBs[ iGene % m_vecpDBs.size( ) ]->Get( iGene / m_vecpDBs.size( ), veciGenes, vecbData,
+			fReplace ); }
 
 	/*!
 	 * \brief

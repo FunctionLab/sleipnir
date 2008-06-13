@@ -39,6 +39,8 @@ option	"lookupp"		T	"Lookup pair set"
 							string	typestr="filename"
 option	"quantize"		q	"Discretize lookups"
 							flag	off
+option	"paircount"		P	"Only count pairs above cutoff"
+							int	default="-1"
 
 section "Optional"
 option	"mask"			k	"Mask DAT/DAB file"

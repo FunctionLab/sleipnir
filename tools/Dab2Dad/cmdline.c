@@ -49,6 +49,7 @@ const char *gengetopt_args_info_help[] = {
   "  -t, --lookups=filename     Lookup gene set",
   "  -T, --lookupp=filename     Lookup pair set",
   "  -q, --quantize             Discretize lookups  (default=off)",
+  "  -P, --paircount=INT        Only count pairs above cutoff  (default=`-1')",
   "\nOptional:",
   "  -k, --mask=filename        Mask DAT/DAB file",
   "  -m, --memmap               Memory map input/output  (default=off)",
@@ -94,6 +95,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->lookups_given = 0 ;
   args_info->lookupp_given = 0 ;
   args_info->quantize_given = 0 ;
+  args_info->paircount_given = 0 ;
   args_info->mask_given = 0 ;
   args_info->memmap_given = 0 ;
   args_info->verbosity_given = 0 ;
@@ -129,6 +131,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->lookupp_arg = NULL;
   args_info->lookupp_orig = NULL;
   args_info->quantize_flag = 0;
+  args_info->paircount_arg = -1;
+  args_info->paircount_orig = NULL;
   args_info->mask_arg = NULL;
   args_info->mask_orig = NULL;
   args_info->memmap_flag = 0;
@@ -158,9 +162,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->lookups_help = gengetopt_args_info_help[18] ;
   args_info->lookupp_help = gengetopt_args_info_help[19] ;
   args_info->quantize_help = gengetopt_args_info_help[20] ;
-  args_info->mask_help = gengetopt_args_info_help[22] ;
-  args_info->memmap_help = gengetopt_args_info_help[23] ;
-  args_info->verbosity_help = gengetopt_args_info_help[24] ;
+  args_info->paircount_help = gengetopt_args_info_help[21] ;
+  args_info->mask_help = gengetopt_args_info_help[23] ;
+  args_info->memmap_help = gengetopt_args_info_help[24] ;
+  args_info->verbosity_help = gengetopt_args_info_help[25] ;
   
 }
 
@@ -266,6 +271,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->lookups_orig));
   free_string_field (&(args_info->lookupp_arg));
   free_string_field (&(args_info->lookupp_orig));
+  free_string_field (&(args_info->paircount_orig));
   free_string_field (&(args_info->mask_arg));
   free_string_field (&(args_info->mask_orig));
   free_string_field (&(args_info->verbosity_orig));
@@ -335,6 +341,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "lookupp", args_info->lookupp_orig, 0);
   if (args_info->quantize_given)
     write_into_file(outfile, "quantize", 0, 0 );
+  if (args_info->paircount_given)
+    write_into_file(outfile, "paircount", args_info->paircount_orig, 0);
   if (args_info->mask_given)
     write_into_file(outfile, "mask", args_info->mask_orig, 0);
   if (args_info->memmap_given)
@@ -612,13 +620,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "lookups",	1, NULL, 't' },
         { "lookupp",	1, NULL, 'T' },
         { "quantize",	0, NULL, 'q' },
+        { "paircount",	1, NULL, 'P' },
         { "mask",	1, NULL, 'k' },
         { "memmap",	0, NULL, 'm' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:a:n:o:w:d:eg:G:l:L:t:T:qk:mv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:a:n:o:w:d:eg:G:l:L:t:T:qP:k:mv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -812,6 +821,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->quantize_flag), 0, &(args_info->quantize_given),
               &(local_args_info.quantize_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "quantize", 'q',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'P':	/* Only count pairs above cutoff.  */
+        
+        
+          if (update_arg( (void *)&(args_info->paircount_arg), 
+               &(args_info->paircount_orig), &(args_info->paircount_given),
+              &(local_args_info.paircount_given), optarg, 0, "-1", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "paircount", 'P',
               additional_error))
             goto failure;
         

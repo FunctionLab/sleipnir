@@ -57,13 +57,15 @@ private:
 	static const float			c_adColorMin[];
 	static const float			c_adColorMax[];
 
+	// Utility
 	bool Get( size_t, size_t, float* = NULL );
 	bool Get( size_t, const std::vector<size_t>&, size_t, float* );
-	bool GetContext( size_t, const std::vector<unsigned char>&, size_t );
-	bool GetDisease( size_t, size_t, size_t );
 	bool GetGenes( const std::vector<size_t>&, size_t );
-	bool GetAssociation( const std::vector<unsigned char>&, const std::vector<size_t>&, size_t, float*,
-		float* );
+	bool GetAssociation( const std::vector<unsigned char>&, float, const std::vector<size_t>&, size_t, bool,
+		float*, float*, std::vector<float>*, std::vector<float>* ) const;
+	bool GetAssociation( const std::vector<size_t>&, const std::vector<size_t>&, size_t, float&,
+		float& ) const;
+	// Graph processing
 	bool GraphCreate( const std::vector<size_t>&, size_t, size_t, float, std::vector<bool>&,
 		std::vector<size_t>&, Sleipnir::CDat& ) const;
 	bool GraphWrite( const Sleipnir::CDat&, const std::vector<size_t>&, const std::vector<size_t>&,
@@ -73,6 +75,7 @@ private:
 	bool SelectNeighborsRatio( const std::vector<size_t>&, const std::vector<bool>&, size_t, size_t,
 		const Sleipnir::CDataMatrix&, std::vector<size_t>& ) const;
 	bool SendGenes( const std::vector<size_t>&, const std::vector<size_t>& ) const;
+	// Message processors
 	size_t ProcessInference( const std::vector<unsigned char>&, size_t );
 	size_t ProcessData( const std::vector<unsigned char>&, size_t );
 	size_t ProcessGraph( const std::vector<unsigned char>&, size_t );
@@ -86,6 +89,14 @@ private:
 	size_t GetGenes( ) const {
 
 		return m_Database.GetGenes( ); }
+
+	size_t GetContexts( ) const {
+
+		return m_vecveciContexts.size( ); }
+
+	size_t GetDiseases( ) const {
+
+		return m_vecveciDiseases.size( ); }
 
 	float GetBackground( size_t iContext, size_t iGene ) const {
 
@@ -102,11 +113,13 @@ private:
 		return iRet; }
 
 	size_t InitializeGenes( ) {
+		size_t	iRet;
 
+		iRet = 2 * GetGenes( );
 		if( !m_adGenes )
-			m_adGenes = new float[ GetGenes( ) ];
+			m_adGenes = new float[ iRet ];
 
-		return GetGenes( ); }
+		return iRet; }
 
 	size_t InitializeContexts( ) {
 		size_t	iRet;
@@ -116,6 +129,31 @@ private:
 			m_adContexts = new float[ iRet ];
 
 		return iRet; }
+
+	const CBayesNetMinimal& GetBN( size_t iContext ) const {
+
+		return ( ( iContext && m_vecBNs.size( ) ) ? m_vecBNs[ ( iContext - 1 ) % m_vecBNs.size( ) ] :
+			m_BNDefault ); }
+
+	const std::string& GetGene( size_t iGene ) const {
+
+		return m_Database.GetGene( iGene ); }
+
+	size_t GetGene( const std::string& strGene ) const {
+
+		return m_Database.GetGene( strGene ); }
+
+	float GetFraction( size_t iSize ) const {
+
+		return ( ( iSize > m_iLimit ) ? ( (float)m_iLimit / iSize ) : 1 ); }
+
+	bool IsFraction( float dFraction ) const {
+
+		return ( ( dFraction < 1 ) && ( ( (float)rand( ) / RAND_MAX ) > dFraction ) ); }
+
+	size_t GetContext( unsigned char bDiseases, size_t iContext, size_t iCurrent ) const {
+
+		return ( ( bDiseases || ( iContext != -1 ) ) ? iContext : ( iCurrent + 1 ) ); }
 
 	const CBayesNetMinimal&			m_BNDefault;
 	const vector<CBayesNetMinimal>&	m_vecBNs;

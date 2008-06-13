@@ -122,7 +122,7 @@ int MainBackground( const gengetopt_args_info& sArgs ) {
 	CDataMatrix		MatAves, MatStds;
 	vector<size_t>	veciSizes;
 	size_t			i, j, iIndexOne, iIndexTwo, iCountOne, iCountTwo;
-	float			d, dAve, dStd, dOut;
+	float			d, dAve, dStd, dOutOne, dOutTwo;
 	vector<float>	vecdOut;
 
 	if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !sArgs.normalize_flag ) ) {
@@ -160,11 +160,11 @@ int MainBackground( const gengetopt_args_info& sArgs ) {
 
 		veciOne.resize( veciSizes[ iIndexOne ] );
 		for( iCountOne = 0; iCountOne < (size_t)sArgs.count_arg; ++iCountOne ) {
-			for( dOut = 0,i = 0; i < veciOne.size( ); ++i ) {
+			for( dOutOne = 0,i = 0; i < veciOne.size( ); ++i ) {
 				veciOne[ i ] = rand( ) % Dat.GetGenes( );
-				dOut += vecdOut[ veciOne[ i ] ]; }
-			dOut /= veciOne.size( );
-			for( iIndexTwo = 0; iIndexTwo < veciSizes.size( ); ++iIndexTwo ) {
+				dOutOne += vecdOut[ veciOne[ i ] ]; }
+			dOutOne /= veciOne.size( );
+			for( iIndexTwo = iIndexOne; iIndexTwo < veciSizes.size( ); ++iIndexTwo ) {
 				vector<size_t>	veciTwo;
 
 				if( !( iCountOne % 10 ) )
@@ -172,19 +172,25 @@ int MainBackground( const gengetopt_args_info& sArgs ) {
 						<< sArgs.count_arg << endl;
 				veciTwo.resize( veciSizes[ iIndexTwo ] );
 				for( iCountTwo = 0; iCountTwo < (size_t)sArgs.count_arg; ++iCountTwo ) {
-					for( i = 0; i < veciTwo.size( ); ++i )
+					for( dOutTwo = 0,i = 0; i < veciTwo.size( ); ++i ) {
 						veciTwo[ i ] = rand( ) % Dat.GetGenes( );
+						dOutTwo += vecdOut[ veciTwo[ i ] ]; }
+					dOutTwo /= veciTwo.size( );
 
-					d = In( veciOne, veciTwo, Dat ) / dOut;
-					MatAves.Get( iIndexTwo, iIndexOne ) += d;
-					MatStds.Get( iIndexTwo, iIndexOne ) += d * d; } } } }
+					d = ( ( veciOne.size( ) * dOutOne ) + ( veciTwo.size( ) * dOutTwo ) ) /
+						( veciOne.size( ) + veciTwo.size( ) );
+					d = In( veciOne, veciTwo, Dat ) / d;
+					MatAves.Get( iIndexOne, iIndexTwo ) += d;
+					MatStds.Get( iIndexOne, iIndexTwo ) += d * d; } } } }
 
 	for( i = 0; i < veciSizes.size( ); ++i )
 		cout << '\t' << veciSizes[ i ];
 	cout << endl;
 	for( i = 0; i < MatAves.GetRows( ); ++i ) {
 		cout << veciSizes[ i ];
-		for( j = 0; j < MatAves.GetColumns( ); ++j ) {
+		for( j = 0; j < i; ++j )
+			cout << '\t';
+		for( ; j < MatAves.GetColumns( ); ++j ) {
 			iCountOne = sArgs.count_arg * sArgs.count_arg;
 			dAve = ( MatAves.Get( i, j ) /= iCountOne );
 			MatStds.Set( i, j, dStd = sqrt( ( MatStds.Get( i, j ) / iCountOne ) - ( dAve * dAve ) ) );

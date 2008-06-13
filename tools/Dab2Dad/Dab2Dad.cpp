@@ -181,6 +181,35 @@ int main( int iArgs, char** aszArgs ) {
 				cout << '\t' << ( sArgs.quantize_flag ? Dat.Quantize( d ) : d );
 			cout << endl; }
 		return 0; }
+	else if( sArgs.paircount_arg != -1 ) {
+		CHalfMatrix<size_t>	DatCounts;
+
+		if( !GenesIn.GetGenes( ) ) {
+			cerr << "Pair count requires gene list -g" << endl;
+			return 1; }
+		DatCounts.Initialize( GenesIn.GetGenes( ) );
+		DatCounts.Clear( );
+		for( i = 0; i < sArgs.inputs_num; ++i ) {
+			CDat			Dat;
+			vector<size_t>	veciGenes;
+
+			if( !Dat.Open( sArgs.inputs[ i ], !!sArgs.memmap_flag ) ) {
+				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+				return 1; }
+			veciGenes.resize( Dat.GetGenes( ) );
+			for( j = 0; j < veciGenes.size( ); ++j )
+				veciGenes[ j ] = GenesIn.GetGene( Dat.GetGene( j ) );
+			for( j = 0; j < veciGenes.size( ); ++j ) {
+				if( ( iOne = veciGenes[ j ] ) == -1 )
+					continue;
+				for( k = ( j + 1 ); k < veciGenes.size( ); ++k )
+					if( ( ( iTwo = veciGenes[ k ] ) != -1 ) && !CMeta::IsNaN( Dat.Get( j, k ) ) )
+						DatCounts.Get( iOne, iTwo )++; } }
+		for( i = 0; i < DatCounts.GetSize( ); ++i )
+			for( j = ( i + 1 ); j < DatCounts.GetSize( ); ++j )
+				if( DatCounts.Get( i, j ) > (size_t)sArgs.paircount_arg )
+					cout << GenesIn.GetGene( i ).GetName( ) << '\t' << GenesIn.GetGene( j ).GetName( ) <<
+						'\t' << DatCounts.Get( i, j ) << endl; }
 	else {
 		vector<string>	vecstrFiles;
 

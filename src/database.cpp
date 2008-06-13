@@ -192,12 +192,17 @@ bool CDatabaselet::Get( size_t iGene, vector<unsigned char>& vecbData, bool fRep
 
 	return true; }
 
-bool CDatabaselet::Get( size_t iGene, const vector<size_t>& veciGenes, vector<unsigned char>& vecbData ) const {
-	size_t	i;
+bool CDatabaselet::Get( size_t iGene, const vector<size_t>& veciGenes, vector<unsigned char>& vecbData,
+	bool fReplace ) const {
+	size_t	i, iOffset;
 
-	for( i = 0; i < veciGenes.size( ); ++i )
-		if( !Get( iGene, veciGenes[ i ], vecbData ) )
-			return false;
+	iOffset = fReplace ? 0 : vecbData.size( );
+	vecbData.resize( iOffset + ( veciGenes.size( ) * GetSizePair( ) ) );
+	pthread_mutex_lock( m_pmutx );
+	for( i = 0; i < veciGenes.size( ); ++i,iOffset += GetSizePair( ) ) {
+		m_fstm.seekg( GetOffset( iGene, veciGenes[ i ] ) );
+		m_fstm.read( (char*)&vecbData[ iOffset ], GetSizePair( ) ); }
+	pthread_mutex_unlock( m_pmutx );
 
 	return true; }
 
