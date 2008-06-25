@@ -42,6 +42,9 @@ struct gengetopt_args_info
   const char *genes_help; /**< @brief Number of genes to output per gene set help description.  */
   int normalize_flag;	/**< @brief Normalize input file (default=off).  */
   const char *normalize_help; /**< @brief Normalize input file help description.  */
+  char * genex_arg;	/**< @brief Gene exclusion list.  */
+  char * genex_orig;	/**< @brief Gene exclusion list original value given at command line.  */
+  const char *genex_help; /**< @brief Gene exclusion list help description.  */
   char * clip_arg;	/**< @brief Output directory to clip subnetworks for each gene set.  */
   char * clip_orig;	/**< @brief Output directory to clip subnetworks for each gene set original value given at command line.  */
   const char *clip_help; /**< @brief Output directory to clip subnetworks for each gene set help description.  */
@@ -51,12 +54,21 @@ struct gengetopt_args_info
   char * contexts_arg;	/**< @brief Contexts for gene backgrounds.  */
   char * contexts_orig;	/**< @brief Contexts for gene backgrounds original value given at command line.  */
   const char *contexts_help; /**< @brief Contexts for gene backgrounds help description.  */
-  char * genelist_arg;	/**< @brief Genes for backgrounds.  */
-  char * genelist_orig;	/**< @brief Genes for backgrounds original value given at command line.  */
-  const char *genelist_help; /**< @brief Genes for backgrounds help description.  */
+  char * genelist_arg;	/**< @brief Genes for backgrounds/withins.  */
+  char * genelist_orig;	/**< @brief Genes for backgrounds/withins original value given at command line.  */
+  const char *genelist_help; /**< @brief Genes for backgrounds/withins help description.  */
   char * directory_arg;	/**< @brief Context network directory (default='.').  */
   char * directory_orig;	/**< @brief Context network directory original value given at command line.  */
   const char *directory_help; /**< @brief Context network directory help description.  */
+  char * genesets_arg;	/**< @brief Gene sets for within calculations.  */
+  char * genesets_orig;	/**< @brief Gene sets for within calculations original value given at command line.  */
+  const char *genesets_help; /**< @brief Gene sets for within calculations help description.  */
+  char * between_arg;	/**< @brief Gene sets for between calculations.  */
+  char * between_orig;	/**< @brief Gene sets for between calculations original value given at command line.  */
+  const char *between_help; /**< @brief Gene sets for between calculations help description.  */
+  int threads_arg;	/**< @brief Number of simultaneous threads to use (default='1').  */
+  char * threads_orig;	/**< @brief Number of simultaneous threads to use original value given at command line.  */
+  const char *threads_help; /**< @brief Number of simultaneous threads to use help description.  */
   int memmap_flag;	/**< @brief Memory map input (default=off).  */
   const char *memmap_help; /**< @brief Memory map input help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
@@ -68,11 +80,15 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int genex_given ;	/**< @brief Whether genex was given.  */
   unsigned int clip_given ;	/**< @brief Whether clip was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int contexts_given ;	/**< @brief Whether contexts was given.  */
   unsigned int genelist_given ;	/**< @brief Whether genelist was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
+  unsigned int genesets_given ;	/**< @brief Whether genesets was given.  */
+  unsigned int between_given ;	/**< @brief Whether between was given.  */
+  unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 

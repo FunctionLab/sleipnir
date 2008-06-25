@@ -28,35 +28,45 @@ const char *gengetopt_args_info_usage = "Usage: BNServer [OPTIONS]...";
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                  Print help and exit",
-  "  -V, --version               Print version and exit",
+  "  -h, --help                    Print help and exit",
+  "  -V, --version                 Print version and exit",
   "\nInput:",
-  "  -d, --database=directory    Database directory  (default=`.')",
-  "  -i, --input=filename        Context IDs and names",
-  "  -c, --contexts=filename     Context/gene mapping",
-  "  -a, --backgrounds=filename  Background connectivities for all genes",
-  "  -s, --diseases=filename     Disease/gene mapping",
+  "  -d, --database=directory      Database directory  (default=`.')",
+  "  -i, --input=filename          Context IDs and names",
+  "  -c, --contexts=filename       Context/gene mapping",
+  "  -s, --diseases=filename       Disease/gene mapping",
   "\nBayes nets:",
-  "  -n, --networks=directory    Bayes net directory  (default=`.')",
-  "  -b, --default=filename      Bayes net for no context",
-  "  -x, --xdsl                  Use XDSL files instead of DSL  (default=on)",
-  "  -m, --minimal_in            Read stored contexts and minimal Bayes nets  \n                                (default=off)",
-  "  -M, --minimal_out=filename  Store contexts and minimal Bayes nets",
+  "  -n, --networks=directory      Bayes net directory  (default=`.')",
+  "  -b, --default=filename        Bayes net for no context",
+  "  -x, --xdsl                    Use XDSL files instead of DSL  (default=on)",
+  "  -m, --minimal_in              Read stored contexts and minimal Bayes nets  \n                                  (default=off)",
+  "  -M, --minimal_out=filename    Store contexts and minimal Bayes nets",
+  "\nP-values:",
+  "  -P, --global=filename         Parameter file for global context p-values",
+  "  -w, --within_c=filename       Within sets matrix for contexts",
+  "  -W, --within_d=filename       Within sets matrix for diseases",
+  "  -e, --between_cc=filename     Between sets matrix for contexts",
+  "  -E, --between_dd=filename     Between sets matrix for diseases",
+  "  -B, --between_dc=filename     Between sets matrix for diseases to contexts",
+  "  -a, --backgrounds=filename    Background connectivities for all genes",
   "\nOntologies:",
-  "  -g, --go_onto=filename      GO ontology",
-  "  -G, --go_anno=filename      GO annotations",
-  "  -k, --kegg=filename         KEGG ontology",
-  "  -K, --kegg_org=STRING       KEGG organism  (default=`HSA')",
+  "  -g, --go_onto=filename        GO ontology",
+  "  -G, --go_anno=filename        GO annotations",
+  "  -k, --kegg=filename           KEGG ontology",
+  "  -K, --kegg_org=STRING         KEGG organism  (default=`HSA')",
   "\nServer:",
-  "  -p, --port=INT              Server port  (default=`1234')",
-  "  -t, --timeout=INT           Server timeout  (default=`100')",
+  "  -p, --port=INT                Server port  (default=`1234')",
+  "  -t, --timeout=INT             Server timeout  (default=`100')",
+  "\nPrecalculation:",
+  "  -l, --networklets             Generate mini-network icons  (default=off)",
+  "  -r, --assoc_diseases=filename Disease names to generate disease/process \n                                  associations",
+  "  -R, --assoc_context=INT       Context in which associations are computed  \n                                  (default=`0')",
   "\nOptional:",
-  "  -L, --limit=INT             Maximum genes to process per set  (default=`500')",
-  "  -f, --files=directory       File directory  (default=`.')",
-  "  -z, --graphviz=filename     Graphviz executable path  (default=`fdp')",
-  "  -l, --networklets           Generate mini-network icons  (default=off)",
-  "  -C, --config=filename       Command line config file  \n                                (default=`BNServer.ini')",
-  "  -v, --verbosity=INT         Message verbosity  (default=`5')",
+  "  -L, --limit=INT               Maximum genes to process per set  \n                                  (default=`500')",
+  "  -f, --files=directory         File directory  (default=`.')",
+  "  -z, --graphviz=filename       Graphviz executable path  (default=`fdp')",
+  "  -C, --config=filename         Command line config file  \n                                  (default=`BNServer.ini')",
+  "  -v, --verbosity=INT           Message verbosity  (default=`5')",
     0
 };
 
@@ -113,23 +123,31 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->database_given = 0 ;
   args_info->input_given = 0 ;
   args_info->contexts_given = 0 ;
-  args_info->backgrounds_given = 0 ;
   args_info->diseases_given = 0 ;
   args_info->networks_given = 0 ;
   args_info->default_given = 0 ;
   args_info->xdsl_given = 0 ;
   args_info->minimal_in_given = 0 ;
   args_info->minimal_out_given = 0 ;
+  args_info->global_given = 0 ;
+  args_info->within_c_given = 0 ;
+  args_info->within_d_given = 0 ;
+  args_info->between_cc_given = 0 ;
+  args_info->between_dd_given = 0 ;
+  args_info->between_dc_given = 0 ;
+  args_info->backgrounds_given = 0 ;
   args_info->go_onto_given = 0 ;
   args_info->go_anno_given = 0 ;
   args_info->kegg_given = 0 ;
   args_info->kegg_org_given = 0 ;
   args_info->port_given = 0 ;
   args_info->timeout_given = 0 ;
+  args_info->networklets_given = 0 ;
+  args_info->assoc_diseases_given = 0 ;
+  args_info->assoc_context_given = 0 ;
   args_info->limit_given = 0 ;
   args_info->files_given = 0 ;
   args_info->graphviz_given = 0 ;
-  args_info->networklets_given = 0 ;
   args_info->config_given = 0 ;
   args_info->verbosity_given = 0 ;
 }
@@ -143,8 +161,6 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->input_orig = NULL;
   args_info->contexts_arg = NULL;
   args_info->contexts_orig = NULL;
-  args_info->backgrounds_arg = NULL;
-  args_info->backgrounds_orig = NULL;
   args_info->diseases_arg = NULL;
   args_info->diseases_orig = NULL;
   args_info->networks_arg = gengetopt_strdup (".");
@@ -155,6 +171,20 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->minimal_in_flag = 0;
   args_info->minimal_out_arg = NULL;
   args_info->minimal_out_orig = NULL;
+  args_info->global_arg = NULL;
+  args_info->global_orig = NULL;
+  args_info->within_c_arg = NULL;
+  args_info->within_c_orig = NULL;
+  args_info->within_d_arg = NULL;
+  args_info->within_d_orig = NULL;
+  args_info->between_cc_arg = NULL;
+  args_info->between_cc_orig = NULL;
+  args_info->between_dd_arg = NULL;
+  args_info->between_dd_orig = NULL;
+  args_info->between_dc_arg = NULL;
+  args_info->between_dc_orig = NULL;
+  args_info->backgrounds_arg = NULL;
+  args_info->backgrounds_orig = NULL;
   args_info->go_onto_arg = NULL;
   args_info->go_onto_orig = NULL;
   args_info->go_anno_arg = NULL;
@@ -167,13 +197,17 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->port_orig = NULL;
   args_info->timeout_arg = 100;
   args_info->timeout_orig = NULL;
+  args_info->networklets_flag = 0;
+  args_info->assoc_diseases_arg = NULL;
+  args_info->assoc_diseases_orig = NULL;
+  args_info->assoc_context_arg = 0;
+  args_info->assoc_context_orig = NULL;
   args_info->limit_arg = 500;
   args_info->limit_orig = NULL;
   args_info->files_arg = gengetopt_strdup (".");
   args_info->files_orig = NULL;
   args_info->graphviz_arg = gengetopt_strdup ("fdp");
   args_info->graphviz_orig = NULL;
-  args_info->networklets_flag = 0;
   args_info->config_arg = gengetopt_strdup ("BNServer.ini");
   args_info->config_orig = NULL;
   args_info->verbosity_arg = 5;
@@ -191,25 +225,33 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->database_help = gengetopt_args_info_help[3] ;
   args_info->input_help = gengetopt_args_info_help[4] ;
   args_info->contexts_help = gengetopt_args_info_help[5] ;
-  args_info->backgrounds_help = gengetopt_args_info_help[6] ;
-  args_info->diseases_help = gengetopt_args_info_help[7] ;
-  args_info->networks_help = gengetopt_args_info_help[9] ;
-  args_info->default_help = gengetopt_args_info_help[10] ;
-  args_info->xdsl_help = gengetopt_args_info_help[11] ;
-  args_info->minimal_in_help = gengetopt_args_info_help[12] ;
-  args_info->minimal_out_help = gengetopt_args_info_help[13] ;
-  args_info->go_onto_help = gengetopt_args_info_help[15] ;
-  args_info->go_anno_help = gengetopt_args_info_help[16] ;
-  args_info->kegg_help = gengetopt_args_info_help[17] ;
-  args_info->kegg_org_help = gengetopt_args_info_help[18] ;
-  args_info->port_help = gengetopt_args_info_help[20] ;
-  args_info->timeout_help = gengetopt_args_info_help[21] ;
-  args_info->limit_help = gengetopt_args_info_help[23] ;
-  args_info->files_help = gengetopt_args_info_help[24] ;
-  args_info->graphviz_help = gengetopt_args_info_help[25] ;
-  args_info->networklets_help = gengetopt_args_info_help[26] ;
-  args_info->config_help = gengetopt_args_info_help[27] ;
-  args_info->verbosity_help = gengetopt_args_info_help[28] ;
+  args_info->diseases_help = gengetopt_args_info_help[6] ;
+  args_info->networks_help = gengetopt_args_info_help[8] ;
+  args_info->default_help = gengetopt_args_info_help[9] ;
+  args_info->xdsl_help = gengetopt_args_info_help[10] ;
+  args_info->minimal_in_help = gengetopt_args_info_help[11] ;
+  args_info->minimal_out_help = gengetopt_args_info_help[12] ;
+  args_info->global_help = gengetopt_args_info_help[14] ;
+  args_info->within_c_help = gengetopt_args_info_help[15] ;
+  args_info->within_d_help = gengetopt_args_info_help[16] ;
+  args_info->between_cc_help = gengetopt_args_info_help[17] ;
+  args_info->between_dd_help = gengetopt_args_info_help[18] ;
+  args_info->between_dc_help = gengetopt_args_info_help[19] ;
+  args_info->backgrounds_help = gengetopt_args_info_help[20] ;
+  args_info->go_onto_help = gengetopt_args_info_help[22] ;
+  args_info->go_anno_help = gengetopt_args_info_help[23] ;
+  args_info->kegg_help = gengetopt_args_info_help[24] ;
+  args_info->kegg_org_help = gengetopt_args_info_help[25] ;
+  args_info->port_help = gengetopt_args_info_help[27] ;
+  args_info->timeout_help = gengetopt_args_info_help[28] ;
+  args_info->networklets_help = gengetopt_args_info_help[30] ;
+  args_info->assoc_diseases_help = gengetopt_args_info_help[31] ;
+  args_info->assoc_context_help = gengetopt_args_info_help[32] ;
+  args_info->limit_help = gengetopt_args_info_help[34] ;
+  args_info->files_help = gengetopt_args_info_help[35] ;
+  args_info->graphviz_help = gengetopt_args_info_help[36] ;
+  args_info->config_help = gengetopt_args_info_help[37] ;
+  args_info->verbosity_help = gengetopt_args_info_help[38] ;
   
 }
 
@@ -294,8 +336,6 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->input_orig));
   free_string_field (&(args_info->contexts_arg));
   free_string_field (&(args_info->contexts_orig));
-  free_string_field (&(args_info->backgrounds_arg));
-  free_string_field (&(args_info->backgrounds_orig));
   free_string_field (&(args_info->diseases_arg));
   free_string_field (&(args_info->diseases_orig));
   free_string_field (&(args_info->networks_arg));
@@ -304,6 +344,20 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->default_orig));
   free_string_field (&(args_info->minimal_out_arg));
   free_string_field (&(args_info->minimal_out_orig));
+  free_string_field (&(args_info->global_arg));
+  free_string_field (&(args_info->global_orig));
+  free_string_field (&(args_info->within_c_arg));
+  free_string_field (&(args_info->within_c_orig));
+  free_string_field (&(args_info->within_d_arg));
+  free_string_field (&(args_info->within_d_orig));
+  free_string_field (&(args_info->between_cc_arg));
+  free_string_field (&(args_info->between_cc_orig));
+  free_string_field (&(args_info->between_dd_arg));
+  free_string_field (&(args_info->between_dd_orig));
+  free_string_field (&(args_info->between_dc_arg));
+  free_string_field (&(args_info->between_dc_orig));
+  free_string_field (&(args_info->backgrounds_arg));
+  free_string_field (&(args_info->backgrounds_orig));
   free_string_field (&(args_info->go_onto_arg));
   free_string_field (&(args_info->go_onto_orig));
   free_string_field (&(args_info->go_anno_arg));
@@ -314,6 +368,9 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->kegg_org_orig));
   free_string_field (&(args_info->port_orig));
   free_string_field (&(args_info->timeout_orig));
+  free_string_field (&(args_info->assoc_diseases_arg));
+  free_string_field (&(args_info->assoc_diseases_orig));
+  free_string_field (&(args_info->assoc_context_orig));
   free_string_field (&(args_info->limit_orig));
   free_string_field (&(args_info->files_arg));
   free_string_field (&(args_info->files_orig));
@@ -361,8 +418,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "input", args_info->input_orig, 0);
   if (args_info->contexts_given)
     write_into_file(outfile, "contexts", args_info->contexts_orig, 0);
-  if (args_info->backgrounds_given)
-    write_into_file(outfile, "backgrounds", args_info->backgrounds_orig, 0);
   if (args_info->diseases_given)
     write_into_file(outfile, "diseases", args_info->diseases_orig, 0);
   if (args_info->networks_given)
@@ -375,6 +430,20 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "minimal_in", 0, 0 );
   if (args_info->minimal_out_given)
     write_into_file(outfile, "minimal_out", args_info->minimal_out_orig, 0);
+  if (args_info->global_given)
+    write_into_file(outfile, "global", args_info->global_orig, 0);
+  if (args_info->within_c_given)
+    write_into_file(outfile, "within_c", args_info->within_c_orig, 0);
+  if (args_info->within_d_given)
+    write_into_file(outfile, "within_d", args_info->within_d_orig, 0);
+  if (args_info->between_cc_given)
+    write_into_file(outfile, "between_cc", args_info->between_cc_orig, 0);
+  if (args_info->between_dd_given)
+    write_into_file(outfile, "between_dd", args_info->between_dd_orig, 0);
+  if (args_info->between_dc_given)
+    write_into_file(outfile, "between_dc", args_info->between_dc_orig, 0);
+  if (args_info->backgrounds_given)
+    write_into_file(outfile, "backgrounds", args_info->backgrounds_orig, 0);
   if (args_info->go_onto_given)
     write_into_file(outfile, "go_onto", args_info->go_onto_orig, 0);
   if (args_info->go_anno_given)
@@ -387,14 +456,18 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "port", args_info->port_orig, 0);
   if (args_info->timeout_given)
     write_into_file(outfile, "timeout", args_info->timeout_orig, 0);
+  if (args_info->networklets_given)
+    write_into_file(outfile, "networklets", 0, 0 );
+  if (args_info->assoc_diseases_given)
+    write_into_file(outfile, "assoc_diseases", args_info->assoc_diseases_orig, 0);
+  if (args_info->assoc_context_given)
+    write_into_file(outfile, "assoc_context", args_info->assoc_context_orig, 0);
   if (args_info->limit_given)
     write_into_file(outfile, "limit", args_info->limit_orig, 0);
   if (args_info->files_given)
     write_into_file(outfile, "files", args_info->files_orig, 0);
   if (args_info->graphviz_given)
     write_into_file(outfile, "graphviz", args_info->graphviz_orig, 0);
-  if (args_info->networklets_given)
-    write_into_file(outfile, "networklets", 0, 0 );
   if (args_info->config_given)
     write_into_file(outfile, "config", args_info->config_orig, 0);
   if (args_info->verbosity_given)
@@ -499,6 +572,12 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   if (! args_info->contexts_given)
     {
       fprintf (stderr, "%s: '--contexts' ('-c') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  if (! args_info->global_given)
+    {
+      fprintf (stderr, "%s: '--global' ('-P') option required%s\n", prog_name, (additional_error ? additional_error : ""));
       error = 1;
     }
   
@@ -663,29 +742,37 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "database",	1, NULL, 'd' },
         { "input",	1, NULL, 'i' },
         { "contexts",	1, NULL, 'c' },
-        { "backgrounds",	1, NULL, 'a' },
         { "diseases",	1, NULL, 's' },
         { "networks",	1, NULL, 'n' },
         { "default",	1, NULL, 'b' },
         { "xdsl",	0, NULL, 'x' },
         { "minimal_in",	0, NULL, 'm' },
         { "minimal_out",	1, NULL, 'M' },
+        { "global",	1, NULL, 'P' },
+        { "within_c",	1, NULL, 'w' },
+        { "within_d",	1, NULL, 'W' },
+        { "between_cc",	1, NULL, 'e' },
+        { "between_dd",	1, NULL, 'E' },
+        { "between_dc",	1, NULL, 'B' },
+        { "backgrounds",	1, NULL, 'a' },
         { "go_onto",	1, NULL, 'g' },
         { "go_anno",	1, NULL, 'G' },
         { "kegg",	1, NULL, 'k' },
         { "kegg_org",	1, NULL, 'K' },
         { "port",	1, NULL, 'p' },
         { "timeout",	1, NULL, 't' },
+        { "networklets",	0, NULL, 'l' },
+        { "assoc_diseases",	1, NULL, 'r' },
+        { "assoc_context",	1, NULL, 'R' },
         { "limit",	1, NULL, 'L' },
         { "files",	1, NULL, 'f' },
         { "graphviz",	1, NULL, 'z' },
-        { "networklets",	0, NULL, 'l' },
         { "config",	1, NULL, 'C' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVd:i:c:a:s:n:b:xmM:g:G:k:K:p:t:L:f:z:lC:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVd:i:c:s:n:b:xmM:P:w:W:e:E:B:a:g:G:k:K:p:t:lr:R:L:f:z:C:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -742,18 +829,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.contexts_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "contexts", 'c',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'a':	/* Background connectivities for all genes.  */
-        
-        
-          if (update_arg( (void *)&(args_info->backgrounds_arg), 
-               &(args_info->backgrounds_orig), &(args_info->backgrounds_given),
-              &(local_args_info.backgrounds_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "backgrounds", 'a',
               additional_error))
             goto failure;
         
@@ -822,6 +897,90 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.minimal_out_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "minimal_out", 'M',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'P':	/* Parameter file for global context p-values.  */
+        
+        
+          if (update_arg( (void *)&(args_info->global_arg), 
+               &(args_info->global_orig), &(args_info->global_given),
+              &(local_args_info.global_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "global", 'P',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'w':	/* Within sets matrix for contexts.  */
+        
+        
+          if (update_arg( (void *)&(args_info->within_c_arg), 
+               &(args_info->within_c_orig), &(args_info->within_c_given),
+              &(local_args_info.within_c_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "within_c", 'w',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'W':	/* Within sets matrix for diseases.  */
+        
+        
+          if (update_arg( (void *)&(args_info->within_d_arg), 
+               &(args_info->within_d_orig), &(args_info->within_d_given),
+              &(local_args_info.within_d_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "within_d", 'W',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'e':	/* Between sets matrix for contexts.  */
+        
+        
+          if (update_arg( (void *)&(args_info->between_cc_arg), 
+               &(args_info->between_cc_orig), &(args_info->between_cc_given),
+              &(local_args_info.between_cc_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "between_cc", 'e',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'E':	/* Between sets matrix for diseases.  */
+        
+        
+          if (update_arg( (void *)&(args_info->between_dd_arg), 
+               &(args_info->between_dd_orig), &(args_info->between_dd_given),
+              &(local_args_info.between_dd_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "between_dd", 'E',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'B':	/* Between sets matrix for diseases to contexts.  */
+        
+        
+          if (update_arg( (void *)&(args_info->between_dc_arg), 
+               &(args_info->between_dc_orig), &(args_info->between_dc_given),
+              &(local_args_info.between_dc_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "between_dc", 'B',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'a':	/* Background connectivities for all genes.  */
+        
+        
+          if (update_arg( (void *)&(args_info->backgrounds_arg), 
+               &(args_info->backgrounds_orig), &(args_info->backgrounds_given),
+              &(local_args_info.backgrounds_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "backgrounds", 'a',
               additional_error))
             goto failure;
         
@@ -898,6 +1057,40 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'l':	/* Generate mini-network icons.  */
+        
+        
+          if (update_arg((void *)&(args_info->networklets_flag), 0, &(args_info->networklets_given),
+              &(local_args_info.networklets_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "networklets", 'l',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'r':	/* Disease names to generate disease/process associations.  */
+        
+        
+          if (update_arg( (void *)&(args_info->assoc_diseases_arg), 
+               &(args_info->assoc_diseases_orig), &(args_info->assoc_diseases_given),
+              &(local_args_info.assoc_diseases_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "assoc_diseases", 'r',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'R':	/* Context in which associations are computed.  */
+        
+        
+          if (update_arg( (void *)&(args_info->assoc_context_arg), 
+               &(args_info->assoc_context_orig), &(args_info->assoc_context_given),
+              &(local_args_info.assoc_context_given), optarg, 0, "0", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "assoc_context", 'R',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'L':	/* Maximum genes to process per set.  */
         
         
@@ -930,16 +1123,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.graphviz_given), optarg, 0, "fdp", ARG_STRING,
               check_ambiguity, override, 0, 0,
               "graphviz", 'z',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'l':	/* Generate mini-network icons.  */
-        
-        
-          if (update_arg((void *)&(args_info->networklets_flag), 0, &(args_info->networklets_given),
-              &(local_args_info.networklets_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "networklets", 'l',
               additional_error))
             goto failure;
         

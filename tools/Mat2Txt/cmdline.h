@@ -21,7 +21,7 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_PACKAGE
 /** @brief the program name */
-#define CMDLINE_PARSER_PACKAGE "Dab2Dad"
+#define CMDLINE_PARSER_PACKAGE "Mat2Txt"
 #endif
 
 #ifndef CMDLINE_PARSER_VERSION
@@ -34,54 +34,12 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * input_arg;	/**< @brief Input DAD file.  */
-  char * input_orig;	/**< @brief Input DAD file original value given at command line.  */
-  const char *input_help; /**< @brief Input DAD file help description.  */
-  char * load_arg;	/**< @brief Persistent load DAD file.  */
-  char * load_orig;	/**< @brief Persistent load DAD file original value given at command line.  */
-  const char *load_help; /**< @brief Persistent load DAD file help description.  */
-  char * network_arg;	/**< @brief Input Bayesian network (X)DSL.  */
-  char * network_orig;	/**< @brief Input Bayesian network (X)DSL original value given at command line.  */
-  const char *network_help; /**< @brief Input Bayesian network (X)DSL help description.  */
-  char * output_arg;	/**< @brief Output DAD file.  */
-  char * output_orig;	/**< @brief Output DAD file original value given at command line.  */
-  const char *output_help; /**< @brief Output DAD file help description.  */
-  char * answers_arg;	/**< @brief Answer DAT/DAB file.  */
-  char * answers_orig;	/**< @brief Answer DAT/DAB file original value given at command line.  */
-  const char *answers_help; /**< @brief Answer DAT/DAB file help description.  */
-  char * directory_arg;	/**< @brief Directory with DAB files (default='.').  */
-  char * directory_orig;	/**< @brief Directory with DAB files original value given at command line.  */
-  const char *directory_help; /**< @brief Directory with DAB files help description.  */
-  int everything_flag;	/**< @brief Include pairs without answers (default=off).  */
-  const char *everything_help; /**< @brief Include pairs without answers help description.  */
-  char * genes_arg;	/**< @brief Gene inclusion file.  */
-  char * genes_orig;	/**< @brief Gene inclusion file original value given at command line.  */
-  const char *genes_help; /**< @brief Gene inclusion file help description.  */
-  char * genex_arg;	/**< @brief Gene exclusion file.  */
-  char * genex_orig;	/**< @brief Gene exclusion file original value given at command line.  */
-  const char *genex_help; /**< @brief Gene exclusion file help description.  */
-  char * lookup1_arg;	/**< @brief First lookup gene.  */
-  char * lookup1_orig;	/**< @brief First lookup gene original value given at command line.  */
-  const char *lookup1_help; /**< @brief First lookup gene help description.  */
-  char * lookup2_arg;	/**< @brief Second lookup gene.  */
-  char * lookup2_orig;	/**< @brief Second lookup gene original value given at command line.  */
-  const char *lookup2_help; /**< @brief Second lookup gene help description.  */
-  char * lookups_arg;	/**< @brief Lookup gene set.  */
-  char * lookups_orig;	/**< @brief Lookup gene set original value given at command line.  */
-  const char *lookups_help; /**< @brief Lookup gene set help description.  */
-  char * lookupp_arg;	/**< @brief Lookup pair set.  */
-  char * lookupp_orig;	/**< @brief Lookup pair set original value given at command line.  */
-  const char *lookupp_help; /**< @brief Lookup pair set help description.  */
-  int quantize_flag;	/**< @brief Discretize lookups (default=off).  */
-  const char *quantize_help; /**< @brief Discretize lookups help description.  */
-  int paircount_arg;	/**< @brief Only count pairs above cutoff (default='-1').  */
-  char * paircount_orig;	/**< @brief Only count pairs above cutoff original value given at command line.  */
-  const char *paircount_help; /**< @brief Only count pairs above cutoff help description.  */
-  char * mask_arg;	/**< @brief Mask DAT/DAB file.  */
-  char * mask_orig;	/**< @brief Mask DAT/DAB file original value given at command line.  */
-  const char *mask_help; /**< @brief Mask DAT/DAB file help description.  */
-  int memmap_flag;	/**< @brief Memory map input/output (default=off).  */
-  const char *memmap_help; /**< @brief Memory map input/output help description.  */
+  char * input_arg;	/**< @brief Input matrix file.  */
+  char * input_orig;	/**< @brief Input matrix file original value given at command line.  */
+  const char *input_help; /**< @brief Input matrix file help description.  */
+  char * output_arg;	/**< @brief Output matrix file.  */
+  char * output_orig;	/**< @brief Output matrix file original value given at command line.  */
+  const char *output_help; /**< @brief Output matrix file help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
@@ -89,27 +47,9 @@ struct gengetopt_args_info
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
-  unsigned int load_given ;	/**< @brief Whether load was given.  */
-  unsigned int network_given ;	/**< @brief Whether network was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
-  unsigned int answers_given ;	/**< @brief Whether answers was given.  */
-  unsigned int directory_given ;	/**< @brief Whether directory was given.  */
-  unsigned int everything_given ;	/**< @brief Whether everything was given.  */
-  unsigned int genes_given ;	/**< @brief Whether genes was given.  */
-  unsigned int genex_given ;	/**< @brief Whether genex was given.  */
-  unsigned int lookup1_given ;	/**< @brief Whether lookup1 was given.  */
-  unsigned int lookup2_given ;	/**< @brief Whether lookup2 was given.  */
-  unsigned int lookups_given ;	/**< @brief Whether lookups was given.  */
-  unsigned int lookupp_given ;	/**< @brief Whether lookupp was given.  */
-  unsigned int quantize_given ;	/**< @brief Whether quantize was given.  */
-  unsigned int paircount_given ;	/**< @brief Whether paircount was given.  */
-  unsigned int mask_given ;	/**< @brief Whether mask was given.  */
-  unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
-  int Input_Output_group_counter; /**< @brief Counter for group Input_Output */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */

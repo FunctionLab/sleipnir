@@ -39,7 +39,8 @@ const char *gengetopt_args_info_help[] = {
   "  -z, --zscore            Convert values to z-scores  (default=off)",
   "  -r, --rank              Rank transform data  (default=off)",
   "\nFiltering:",
-  "  -g, --genes=filename    Process only genes from the given subset",
+  "  -g, --genes=filename    Process only genes from the given set",
+  "  -G, --genex=filename    Exclude all genes from the given set",
   "  -c, --cutoff=DOUBLE     Exclude edges below cutoff",
   "  -e, --zero              Zero missing values  (default=off)",
   "  -d, --duplicates        Allow dissimilar duplicate values  (default=off)",
@@ -47,7 +48,7 @@ const char *gengetopt_args_info_help[] = {
   "  -l, --lookup1=STRING    First lookup gene",
   "  -L, --lookup2=STRING    Second lookup gene",
   "  -t, --lookups=filename  Lookup gene set",
-  "  -G, --genelist          Only list genes  (default=off)",
+  "  -T, --genelist          Only list genes  (default=off)",
   "  -P, --paircount         Only count pairs above cutoff  (default=off)",
   "\nOptional:",
   "  -p, --remap=filename    Gene name remapping file",
@@ -90,6 +91,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->zscore_given = 0 ;
   args_info->rank_given = 0 ;
   args_info->genes_given = 0 ;
+  args_info->genex_given = 0 ;
   args_info->cutoff_given = 0 ;
   args_info->zero_given = 0 ;
   args_info->duplicates_given = 0 ;
@@ -118,6 +120,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->rank_flag = 0;
   args_info->genes_arg = NULL;
   args_info->genes_orig = NULL;
+  args_info->genex_arg = NULL;
+  args_info->genex_orig = NULL;
   args_info->cutoff_orig = NULL;
   args_info->zero_flag = 0;
   args_info->duplicates_flag = 0;
@@ -154,19 +158,20 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->zscore_help = gengetopt_args_info_help[8] ;
   args_info->rank_help = gengetopt_args_info_help[9] ;
   args_info->genes_help = gengetopt_args_info_help[11] ;
-  args_info->cutoff_help = gengetopt_args_info_help[12] ;
-  args_info->zero_help = gengetopt_args_info_help[13] ;
-  args_info->duplicates_help = gengetopt_args_info_help[14] ;
-  args_info->lookup1_help = gengetopt_args_info_help[16] ;
-  args_info->lookup2_help = gengetopt_args_info_help[17] ;
-  args_info->lookups_help = gengetopt_args_info_help[18] ;
-  args_info->genelist_help = gengetopt_args_info_help[19] ;
-  args_info->paircount_help = gengetopt_args_info_help[20] ;
-  args_info->remap_help = gengetopt_args_info_help[22] ;
-  args_info->table_help = gengetopt_args_info_help[23] ;
-  args_info->skip_help = gengetopt_args_info_help[24] ;
-  args_info->memmap_help = gengetopt_args_info_help[25] ;
-  args_info->verbosity_help = gengetopt_args_info_help[26] ;
+  args_info->genex_help = gengetopt_args_info_help[12] ;
+  args_info->cutoff_help = gengetopt_args_info_help[13] ;
+  args_info->zero_help = gengetopt_args_info_help[14] ;
+  args_info->duplicates_help = gengetopt_args_info_help[15] ;
+  args_info->lookup1_help = gengetopt_args_info_help[17] ;
+  args_info->lookup2_help = gengetopt_args_info_help[18] ;
+  args_info->lookups_help = gengetopt_args_info_help[19] ;
+  args_info->genelist_help = gengetopt_args_info_help[20] ;
+  args_info->paircount_help = gengetopt_args_info_help[21] ;
+  args_info->remap_help = gengetopt_args_info_help[23] ;
+  args_info->table_help = gengetopt_args_info_help[24] ;
+  args_info->skip_help = gengetopt_args_info_help[25] ;
+  args_info->memmap_help = gengetopt_args_info_help[26] ;
+  args_info->verbosity_help = gengetopt_args_info_help[27] ;
   
 }
 
@@ -251,6 +256,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->output_orig));
   free_string_field (&(args_info->genes_arg));
   free_string_field (&(args_info->genes_orig));
+  free_string_field (&(args_info->genex_arg));
+  free_string_field (&(args_info->genex_orig));
   free_string_field (&(args_info->cutoff_orig));
   free_string_field (&(args_info->lookup1_arg));
   free_string_field (&(args_info->lookup1_orig));
@@ -309,6 +316,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "rank", 0, 0 );
   if (args_info->genes_given)
     write_into_file(outfile, "genes", args_info->genes_orig, 0);
+  if (args_info->genex_given)
+    write_into_file(outfile, "genex", args_info->genex_orig, 0);
   if (args_info->cutoff_given)
     write_into_file(outfile, "cutoff", args_info->cutoff_orig, 0);
   if (args_info->zero_given)
@@ -584,13 +593,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "zscore",	0, NULL, 'z' },
         { "rank",	0, NULL, 'r' },
         { "genes",	1, NULL, 'g' },
+        { "genex",	1, NULL, 'G' },
         { "cutoff",	1, NULL, 'c' },
         { "zero",	0, NULL, 'e' },
         { "duplicates",	0, NULL, 'd' },
         { "lookup1",	1, NULL, 'l' },
         { "lookup2",	1, NULL, 'L' },
         { "lookups",	1, NULL, 't' },
-        { "genelist",	0, NULL, 'G' },
+        { "genelist",	0, NULL, 'T' },
         { "paircount",	0, NULL, 'P' },
         { "remap",	1, NULL, 'p' },
         { "table",	0, NULL, 'b' },
@@ -600,7 +610,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:o:fnzrg:c:edl:L:t:GPp:bs:mv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:o:fnzrg:G:c:edl:L:t:TPp:bs:mv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -689,7 +699,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'g':	/* Process only genes from the given subset.  */
+        case 'g':	/* Process only genes from the given set.  */
         
         
           if (update_arg( (void *)&(args_info->genes_arg), 
@@ -697,6 +707,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.genes_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "genes", 'g',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'G':	/* Exclude all genes from the given set.  */
+        
+        
+          if (update_arg( (void *)&(args_info->genex_arg), 
+               &(args_info->genex_orig), &(args_info->genex_given),
+              &(local_args_info.genex_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genex", 'G',
               additional_error))
             goto failure;
         
@@ -769,12 +791,12 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'G':	/* Only list genes.  */
+        case 'T':	/* Only list genes.  */
         
         
           if (update_arg((void *)&(args_info->genelist_flag), 0, &(args_info->genelist_given),
               &(local_args_info.genelist_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "genelist", 'G',
+              check_ambiguity, override, 1, 0, "genelist", 'T',
               additional_error))
             goto failure;
         

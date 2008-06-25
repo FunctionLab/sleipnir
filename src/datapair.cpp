@@ -36,15 +36,19 @@ bool CPairImpl::Open( const char* szDatafile, std::ifstream& ifsm ) {
 	strToken += c_szQuantExt;
 	ifsm.open( strToken.c_str( ) );
 	if( !ifsm.is_open( ) ) {
-		if( !( pc = strrchr( szDatafile, '.' ) ) )
-			return false;
+		if( !( pc = strrchr( szDatafile, '.' ) ) ) {
+			g_CatSleipnir.error( "CPairImpl::Open( %s ) could not replace extension for quant file",
+				szDatafile );
+			return false; }
 		strToken = szDatafile;
 		strToken.resize( pc - szDatafile );
 		strToken += c_szQuantExt;
 		ifsm.clear( );
 		ifsm.open( strToken.c_str( ) );
-		if( !ifsm.is_open( ) )
-			return false; }
+		if( !ifsm.is_open( ) ) {
+			g_CatSleipnir.error( "CPairImpl::Open( %s ) could not open quant file: %s", szDatafile,
+				strToken.c_str( ) );
+			return false; } }
 
 	return true; }
 

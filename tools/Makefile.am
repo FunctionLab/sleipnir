@@ -19,6 +19,7 @@ if WITH_TOOLS
 	  Funcographer \
 	  Hubber \
 	  KNNImputer \
+	  Mat2Txt \
 	  MCluster \
 	  MIer \
 	  Normalizer \

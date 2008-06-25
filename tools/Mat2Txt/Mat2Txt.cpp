@@ -19,18 +19,21 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#ifndef STDAFX_H
-#define STDAFX_H
+#include "stdafx.h"
+#include "cmdline.h"
 
-#include <fstream>
-using namespace std;
+int main( int iArgs, char** aszArgs ) {
+	gengetopt_args_info	sArgs;
+	CDataMatrix			Mat;
 
-#include <pthread.h>
+	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
+		cmdline_parser_print_help( );
+		return 1; }
+	CMeta Meta( sArgs.verbosity_arg );
 
-#include "dat.h"
-#include "genome.h"
-#include "meta.h"
-#include "statistics.h"
-using namespace Sleipnir;
+	if( !Mat.Open( sArgs.input_arg ) ) {
+		cerr << "Could not open: " << ( sArgs.input_arg ? sArgs.input_arg : "stdin" ) << endl;
+		return 1; }
+	Mat.Save( sArgs.output_arg );
 
-#endif // STDAFX_H
+	return 0; }

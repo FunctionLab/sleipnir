@@ -40,10 +40,33 @@ struct gengetopt_args_info
   char * directory_arg;	/**< @brief DAB network file directory (default='.').  */
   char * directory_orig;	/**< @brief DAB network file directory original value given at command line.  */
   const char *directory_help; /**< @brief DAB network file directory help description.  */
+  char * input_arg;	/**< @brief DAT/DAB file in which backgrounds are calculated.  */
+  char * input_orig;	/**< @brief DAT/DAB file in which backgrounds are calculated original value given at command line.  */
+  const char *input_help; /**< @brief DAT/DAB file in which backgrounds are calculated help description.  */
+  char * input_within_arg;	/**< @brief If given, DAT/DAB file in which within edges are calculated.  */
+  char * input_within_orig;	/**< @brief If given, DAT/DAB file in which within edges are calculated original value given at command line.  */
+  const char *input_within_help; /**< @brief If given, DAT/DAB file in which within edges are calculated help description.  */
+  char * sizes_arg;	/**< @brief Text file containing set sizes to test.  */
+  char * sizes_orig;	/**< @brief Text file containing set sizes to test original value given at command line.  */
+  const char *sizes_help; /**< @brief Text file containing set sizes to test help description.  */
+  int count_arg;	/**< @brief Number of random gene sets to test per size (default='100').  */
+  char * count_orig;	/**< @brief Number of random gene sets to test per size original value given at command line.  */
+  const char *count_help; /**< @brief Number of random gene sets to test per size help description.  */
+  int invgauss_flag;	/**< @brief Compute inverse gaussian lambda instead of stdev (default=off).  */
+  const char *invgauss_help; /**< @brief Compute inverse gaussian lambda instead of stdev help description.  */
+  double percentile_arg;	/**< @brief Percentile to use for p-value cutoff (default='0.95').  */
+  char * percentile_orig;	/**< @brief Percentile to use for p-value cutoff original value given at command line.  */
+  const char *percentile_help; /**< @brief Percentile to use for p-value cutoff help description.  */
   int normalize_flag;	/**< @brief Normalize to the range [0,1] (default=off).  */
   const char *normalize_help; /**< @brief Normalize to the range [0,1] help description.  */
+  int threads_arg;	/**< @brief Number of simultaneous threads (default='1').  */
+  char * threads_orig;	/**< @brief Number of simultaneous threads original value given at command line.  */
+  const char *threads_help; /**< @brief Number of simultaneous threads help description.  */
   int memmap_flag;	/**< @brief Memory map input (default=off).  */
   const char *memmap_help; /**< @brief Memory map input help description.  */
+  int random_arg;	/**< @brief Seed random generator (default='0').  */
+  char * random_orig;	/**< @brief Seed random generator original value given at command line.  */
+  const char *random_help; /**< @brief Seed random generator help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
@@ -52,8 +75,16 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
+  unsigned int input_given ;	/**< @brief Whether input was given.  */
+  unsigned int input_within_given ;	/**< @brief Whether input_within was given.  */
+  unsigned int sizes_given ;	/**< @brief Whether sizes was given.  */
+  unsigned int count_given ;	/**< @brief Whether count was given.  */
+  unsigned int invgauss_given ;	/**< @brief Whether invgauss was given.  */
+  unsigned int percentile_given ;	/**< @brief Whether percentile was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
+  unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */

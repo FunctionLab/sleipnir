@@ -228,9 +228,31 @@ public:
 		return ( dRet / iN ); }
 
 	template<class tType>
-	static bool Winsorize( std::vector<tType>& vecValues ) {
+	static double Percentile( tType pBegin, tType pEnd, double dPercentile ) {
+		size_t	iOne, iTwo, iSize;
+		double	d, dFrac;
 
-		return Winsorize( vecValues.begin( ), vecValues.end( ) ); }
+		iSize = pEnd - pBegin;
+		if( !iSize )
+			return CMeta::GetNaN( );
+		sort( pBegin, pEnd );
+		d = ( iSize - 1 ) * dPercentile;
+		dFrac = d - (size_t)d;
+		iOne = (size_t)d;
+		iTwo = (size_t)( d + 1 );
+
+		return ( ( iTwo >= iSize ) ? pBegin[ iOne ] :
+			( ( pBegin[ iOne ] * ( 1 - dPercentile ) ) + ( pBegin[ iTwo ] * dPercentile ) ) ); }
+
+	template<class tType>
+	static double Median( std::vector<tType>& vecData ) {
+
+		return Percentile( vecData.begin( ), vecData.end( ), 0.5 ); }
+
+	template<class tType>
+	static bool Winsorize( std::vector<tType>& vecValues, size_t iCount = 1 ) {
+
+		return Winsorize( vecValues.begin( ), vecValues.end( ), iCount ); }
 
 	template<class tType>
 	static bool Winsorize( tType pBegin, tType pEnd, size_t iCount = 1 ) {
@@ -277,17 +299,17 @@ public:
 	 * \param dMean
 	 * Mean of lognormal.
 	 * 
-	 * \param dVariance
-	 * Variance of lognormal.
+	 * \param dStdev
+	 * Standard deviation of lognormal.
 	 * 
 	 * \returns
 	 * For dCDF = CStatistics::LognormalCDF (dX, dMean, dVariance), 2 * ((dX > exp(dMean)) ?
 	 * (1 - dCDF) : dCDF).
 	 */
-	static double PValueLognormal( double dX, double dMean, double dVariance ) {
+	static double PValueLognormal( double dX, double dMean, double dStdev ) {
 		double	dCDF;
 
-		dCDF = LognormalCDF( dX, dMean, dVariance );
+		dCDF = LognormalCDF( dX, dMean, dStdev );
 		if( dX > exp( dMean ) )
 			dCDF = 1 - dCDF;
 
@@ -295,7 +317,7 @@ public:
 
 	/*!
 	 * \brief
-	 * Return the p-value of a t-test between the two given array statistics.
+	 * Return the p-value of a t-test between the two given array statistics assuming equal variance.
 	 * 
 	 * \param dMeanOne
 	 * Mean of the first sample.
@@ -319,7 +341,7 @@ public:
 	 * P-value of T = (dMeanOne - dMeanTwo) / sqrt(((((iNOne - 1) * dVarianceOne) + ((iNTwo - 1) *
 	 * dVarianceTwo)) / (iNOne + iNTwo - 2)) * ((1 / iNOne) + (1 / iNTwo)))
 	 */
-	static double TTest( double dMeanOne, double dVarianceOne, size_t iNOne, double dMeanTwo,
+	static double TTestStudent( double dMeanOne, double dVarianceOne, size_t iNOne, double dMeanTwo,
 		double dVarianceTwo, size_t iNTwo ) {
 		size_t	iDegFree;
 		double	dPoolVar, dT;
@@ -329,6 +351,43 @@ public:
 		dT = ( dMeanOne - dMeanTwo ) / sqrt( dPoolVar * ( ( 1.0 / iNOne ) + ( 1.0 / iNTwo ) ) );
 
 		return IncompleteBeta( 0.5 * iDegFree, 0.5, iDegFree / ( iDegFree + ( dT * dT ) ) ); }
+
+	/*!
+	 * \brief
+	 * Return the p-value of a t-test between the two given array statistics without assuming equal variance.
+	 * 
+	 * \param dMeanOne
+	 * Mean of the first sample.
+	 * 
+	 * \param dVarianceOne
+	 * Variance of the first sample.
+	 * 
+	 * \param iNOne
+	 * Number of elements in the first sample.
+	 * 
+	 * \param dMeanTwo
+	 * Mean of the second sample.
+	 * 
+	 * \param dVarianceTwo
+	 * Variance of the second sample.
+	 * 
+	 * \param iNTwo
+	 * Number of elements in the second sample.
+	 * 
+	 * \returns
+	 * P-value of T = (dMeanOne - dMeanTwo) / sqrt(((((iNOne - 1) * dVarianceOne) + ((iNTwo - 1) *
+	 * dVarianceTwo)) / (iNOne + iNTwo - 2)) * ((1 / iNOne) + (1 / iNTwo)))
+	 */
+	static double TTestWelch( double dMeanOne, double dVarianceOne, size_t iNOne, double dMeanTwo,
+		double dVarianceTwo, size_t iNTwo ) {
+		double	dDegFree, dT;
+
+		dDegFree = ( dVarianceOne / iNOne ) + ( dVarianceTwo / iNTwo );
+		dDegFree = ( dDegFree * dDegFree ) / ( ( ( dVarianceOne * dVarianceOne ) / iNOne / iNOne / ( iNOne - 1 ) ) +
+			( ( dVarianceTwo * dVarianceTwo ) / iNTwo / iNTwo / ( iNTwo - 1 ) ) );
+		dT = ( dMeanOne - dMeanTwo ) / sqrt( ( dVarianceOne / iNOne ) + ( dVarianceTwo / iNTwo ) );
+
+		return IncompleteBeta( 0.5 * dDegFree, 0.5, dDegFree / ( dDegFree + ( dT * dT ) ) ); }
 
 	// Evaluation statistics
 	static double WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,
@@ -428,15 +487,21 @@ public:
 	 * \param dMean
 	 * Mean of lognormal.
 	 * 
-	 * \param dVariance
-	 * Variance of lognormal.
+	 * \param dStdev
+	 * Standard deviation of lognormal.
 	 * 
 	 * \returns
 	 * CStatistics::NormalCDF (log(dX), dMean, dVariance)
 	 */
-	static double LognormalCDF( double dX, double dMean, double dVariance ) {
+	static double LognormalCDF( double dX, double dMean, double dStdev ) {
 
-		return ( ( dX > 0 ) ? NormalCDF( log( dX ), dMean, dVariance ) : 0 ); }
+		return ( ( dX > 0 ) ? NormalCDF( log( dX ), dMean, dStdev ) : 0 ); }
+
+	static double InverseGaussianCDF( double dX, double dMean, double dLambda ) {
+
+		return ( Normal01CDF( sqrt( dLambda / dX ) * ( ( dX / dMean ) - 1 ) ) +
+			exp( ( 2 * dLambda / dMean  ) + log ( Normal01CDF( -sqrt( dLambda / dX ) *
+			( ( dX / dMean ) + 1 ) ) ) ) ); }
 
 	/*!
 	 * \brief
@@ -448,15 +513,29 @@ public:
 	 * \param dMean
 	 * Mean of normal.
 	 * 
-	 * \param dVariance
-	 * Variance of normal.
+	 * \param dStdev
+	 * Standard deviation of normal.
 	 * 
 	 * \returns
-	 * NCDF((dX - dMean) / dVariance), for NCDF a normal CDF with mean 0, variance 1.
+	 * NCDF((dX - dMean) / dStdev), for NCDF a normal CDF with mean 0, variance 1.
 	 */
-	static double NormalCDF( double dX, double dMean, double dVariance ) {
+	static double NormalCDF( double dX, double dMean, double dStdev ) {
 
-		return Normal01CDF( ( dX - dMean ) / dVariance ); }
+		return Normal01CDF( ( dX - dMean ) / dStdev ); }
+
+	/*!
+	 * \brief
+	 * CDF of a standard normal distribution.
+	 * 
+	 * \param dX
+	 * Sample point.
+	 * 
+	 * \returns
+	 * NCDF(dX), for NCDF a normal CDF with mean 0, variance 1.
+	 */
+	static double Normal01CDF( double dX ) {
+
+		return CStatisticsImpl::Normal01CDF( dX ); }
 
 	/*!
 	 * \brief

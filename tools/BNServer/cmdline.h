@@ -43,9 +43,6 @@ struct gengetopt_args_info
   char * contexts_arg;	/**< @brief Context/gene mapping.  */
   char * contexts_orig;	/**< @brief Context/gene mapping original value given at command line.  */
   const char *contexts_help; /**< @brief Context/gene mapping help description.  */
-  char * backgrounds_arg;	/**< @brief Background connectivities for all genes.  */
-  char * backgrounds_orig;	/**< @brief Background connectivities for all genes original value given at command line.  */
-  const char *backgrounds_help; /**< @brief Background connectivities for all genes help description.  */
   char * diseases_arg;	/**< @brief Disease/gene mapping.  */
   char * diseases_orig;	/**< @brief Disease/gene mapping original value given at command line.  */
   const char *diseases_help; /**< @brief Disease/gene mapping help description.  */
@@ -62,6 +59,27 @@ struct gengetopt_args_info
   char * minimal_out_arg;	/**< @brief Store contexts and minimal Bayes nets.  */
   char * minimal_out_orig;	/**< @brief Store contexts and minimal Bayes nets original value given at command line.  */
   const char *minimal_out_help; /**< @brief Store contexts and minimal Bayes nets help description.  */
+  char * global_arg;	/**< @brief Parameter file for global context p-values.  */
+  char * global_orig;	/**< @brief Parameter file for global context p-values original value given at command line.  */
+  const char *global_help; /**< @brief Parameter file for global context p-values help description.  */
+  char * within_c_arg;	/**< @brief Within sets matrix for contexts.  */
+  char * within_c_orig;	/**< @brief Within sets matrix for contexts original value given at command line.  */
+  const char *within_c_help; /**< @brief Within sets matrix for contexts help description.  */
+  char * within_d_arg;	/**< @brief Within sets matrix for diseases.  */
+  char * within_d_orig;	/**< @brief Within sets matrix for diseases original value given at command line.  */
+  const char *within_d_help; /**< @brief Within sets matrix for diseases help description.  */
+  char * between_cc_arg;	/**< @brief Between sets matrix for contexts.  */
+  char * between_cc_orig;	/**< @brief Between sets matrix for contexts original value given at command line.  */
+  const char *between_cc_help; /**< @brief Between sets matrix for contexts help description.  */
+  char * between_dd_arg;	/**< @brief Between sets matrix for diseases.  */
+  char * between_dd_orig;	/**< @brief Between sets matrix for diseases original value given at command line.  */
+  const char *between_dd_help; /**< @brief Between sets matrix for diseases help description.  */
+  char * between_dc_arg;	/**< @brief Between sets matrix for diseases to contexts.  */
+  char * between_dc_orig;	/**< @brief Between sets matrix for diseases to contexts original value given at command line.  */
+  const char *between_dc_help; /**< @brief Between sets matrix for diseases to contexts help description.  */
+  char * backgrounds_arg;	/**< @brief Background connectivities for all genes.  */
+  char * backgrounds_orig;	/**< @brief Background connectivities for all genes original value given at command line.  */
+  const char *backgrounds_help; /**< @brief Background connectivities for all genes help description.  */
   char * go_onto_arg;	/**< @brief GO ontology.  */
   char * go_onto_orig;	/**< @brief GO ontology original value given at command line.  */
   const char *go_onto_help; /**< @brief GO ontology help description.  */
@@ -80,14 +98,23 @@ struct gengetopt_args_info
   int timeout_arg;	/**< @brief Server timeout (default='100').  */
   char * timeout_orig;	/**< @brief Server timeout original value given at command line.  */
   const char *timeout_help; /**< @brief Server timeout help description.  */
+  int networklets_flag;	/**< @brief Generate mini-network icons (default=off).  */
+  const char *networklets_help; /**< @brief Generate mini-network icons help description.  */
+  char * assoc_diseases_arg;	/**< @brief Disease names to generate disease/process associations.  */
+  char * assoc_diseases_orig;	/**< @brief Disease names to generate disease/process associations original value given at command line.  */
+  const char *assoc_diseases_help; /**< @brief Disease names to generate disease/process associations help description.  */
+  int assoc_context_arg;	/**< @brief Context in which associations are computed (default='0').  */
+  char * assoc_context_orig;	/**< @brief Context in which associations are computed original value given at command line.  */
+  const char *assoc_context_help; /**< @brief Context in which associations are computed help description.  */
+  int limit_arg;	/**< @brief Maximum genes to process per set (default='500').  */
+  char * limit_orig;	/**< @brief Maximum genes to process per set original value given at command line.  */
+  const char *limit_help; /**< @brief Maximum genes to process per set help description.  */
   char * files_arg;	/**< @brief File directory (default='.').  */
   char * files_orig;	/**< @brief File directory original value given at command line.  */
   const char *files_help; /**< @brief File directory help description.  */
   char * graphviz_arg;	/**< @brief Graphviz executable path (default='fdp').  */
   char * graphviz_orig;	/**< @brief Graphviz executable path original value given at command line.  */
   const char *graphviz_help; /**< @brief Graphviz executable path help description.  */
-  int networklets_flag;	/**< @brief Generate mini-network icons (default=off).  */
-  const char *networklets_help; /**< @brief Generate mini-network icons help description.  */
   char * config_arg;	/**< @brief Command line config file (default='BNServer.ini').  */
   char * config_orig;	/**< @brief Command line config file original value given at command line.  */
   const char *config_help; /**< @brief Command line config file help description.  */
@@ -100,22 +127,31 @@ struct gengetopt_args_info
   unsigned int database_given ;	/**< @brief Whether database was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int contexts_given ;	/**< @brief Whether contexts was given.  */
-  unsigned int backgrounds_given ;	/**< @brief Whether backgrounds was given.  */
   unsigned int diseases_given ;	/**< @brief Whether diseases was given.  */
   unsigned int networks_given ;	/**< @brief Whether networks was given.  */
   unsigned int default_given ;	/**< @brief Whether default was given.  */
   unsigned int xdsl_given ;	/**< @brief Whether xdsl was given.  */
   unsigned int minimal_in_given ;	/**< @brief Whether minimal_in was given.  */
   unsigned int minimal_out_given ;	/**< @brief Whether minimal_out was given.  */
+  unsigned int global_given ;	/**< @brief Whether global was given.  */
+  unsigned int within_c_given ;	/**< @brief Whether within_c was given.  */
+  unsigned int within_d_given ;	/**< @brief Whether within_d was given.  */
+  unsigned int between_cc_given ;	/**< @brief Whether between_cc was given.  */
+  unsigned int between_dd_given ;	/**< @brief Whether between_dd was given.  */
+  unsigned int between_dc_given ;	/**< @brief Whether between_dc was given.  */
+  unsigned int backgrounds_given ;	/**< @brief Whether backgrounds was given.  */
   unsigned int go_onto_given ;	/**< @brief Whether go_onto was given.  */
   unsigned int go_anno_given ;	/**< @brief Whether go_anno was given.  */
   unsigned int kegg_given ;	/**< @brief Whether kegg was given.  */
   unsigned int kegg_org_given ;	/**< @brief Whether kegg_org was given.  */
   unsigned int port_given ;	/**< @brief Whether port was given.  */
   unsigned int timeout_given ;	/**< @brief Whether timeout was given.  */
+  unsigned int networklets_given ;	/**< @brief Whether networklets was given.  */
+  unsigned int assoc_diseases_given ;	/**< @brief Whether assoc_diseases was given.  */
+  unsigned int assoc_context_given ;	/**< @brief Whether assoc_context was given.  */
+  unsigned int limit_given ;	/**< @brief Whether limit was given.  */
   unsigned int files_given ;	/**< @brief Whether files was given.  */
   unsigned int graphviz_given ;	/**< @brief Whether graphviz was given.  */
-  unsigned int networklets_given ;	/**< @brief Whether networklets was given.  */
   unsigned int config_given ;	/**< @brief Whether config was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 

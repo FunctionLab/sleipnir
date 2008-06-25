@@ -538,6 +538,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Funcographer/Makefile \
 		 tools/Hubber/Makefile \
 		 tools/KNNImputer/Makefile \
+		 tools/Mat2Txt/Makefile \
 		 tools/MCluster/Makefile \
 		 tools/MIer/Makefile \
 		 tools/Normalizer/Makefile \

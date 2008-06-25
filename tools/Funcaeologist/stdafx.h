@@ -26,6 +26,8 @@
 #include <queue>
 using namespace std;
 
+#include <pthread.h>
+
 #include "dat.h"
 #include "genome.h"
 #include "meta.h"

@@ -109,6 +109,8 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.Invert( );
 	if( Genes.GetGenes( ) )
 		Dat.FilterGenes( Genes, CDat::EFilterInclude );
+	if( sArgs.genex_arg )
+		Dat.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude );
 
 	if( sArgs.paircount_flag ) {
 		size_t			iTotal, iCutoff;

@@ -169,7 +169,7 @@ public:
 	 */
 	void Set( size_t iY, const tType* aValues ) {
 
-		memcpy( m_aaData[ iY ], aValues, GetColumns( ) ); }
+		memcpy( m_aaData[ iY ], aValues, GetColumns( ) * sizeof(*aValues) ); }
 
 	/*!
 	 * \brief
@@ -265,6 +265,29 @@ public:
 
 	/*!
 	 * \brief
+	 * Loads a matrix from the given filename, or standard input if null.
+	 * 
+	 * \param szFile
+	 * File from which binary matrix is opened; if null, use text from standard input.
+	 * 
+	 * \returns
+	 * True if open was successful, false otherwise.
+	 * 
+	 * \see
+	 * Save
+	 */
+	bool Open( const char* szFile ) {
+
+		if( szFile ) {
+			std::ifstream	ifsm;
+
+			ifsm.open( szFile, ios_base::binary );
+			return Open( ifsm, true ); }
+
+		return Open( std::cin, false ); }
+
+	/*!
+	 * \brief
 	 * Saves a matrix to the given stream in either binary or tab-delimited text format.
 	 * 
 	 * \param ostm
@@ -286,6 +309,29 @@ public:
 	bool Save( std::ostream& ostm, bool fBinary ) const {
 
 		return ( fBinary ? SaveBinary( ostm ) : SaveText( ostm ) ); }
+
+	/*!
+	 * \brief
+	 * Saves a matrix to the given file in binary form; if null, save text to standard output.
+	 * 
+	 * \param szFile
+	 * File in which binary matrix is saved; if null, text is saved to standard output.
+	 * 
+	 * \returns
+	 * True if matrix was saved successfully.
+	 * 
+	 * \see
+	 * Open
+	 */
+	bool Save( const char* szFile ) const {
+
+		if( szFile ) {
+			std::ofstream	ofsm;
+
+			ofsm.open( szFile, ios_base::binary );
+			return Save( ofsm, true ); }
+
+		return Save( cout, false ); }
 
 	/*!
 	 * \brief

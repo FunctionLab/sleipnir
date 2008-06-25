@@ -19,7 +19,9 @@ option	"rank"			r	"Rank transform data"
 							flag	off
 
 section "Filtering"
-option	"genes"			g	"Process only genes from the given subset"
+option	"genes"			g	"Process only genes from the given set"
+							string	typestr="filename"
+option	"genex"			G	"Exclude all genes from the given set"
 							string	typestr="filename"
 option	"cutoff"		c	"Exclude edges below cutoff"
 							double
@@ -35,7 +37,7 @@ option	"lookup2"		L	"Second lookup gene"
 							string
 option	"lookups"		t	"Lookup gene set"
 							string	typestr="filename"
-option	"genelist"		G	"Only list genes"
+option	"genelist"		T	"Only list genes"
 							flag	off
 option	"paircount"		P	"Only count pairs above cutoff"
 							flag	off

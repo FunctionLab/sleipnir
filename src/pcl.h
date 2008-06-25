@@ -158,8 +158,9 @@ public:
 	bool Open( const char* szFile, size_t iSkip ) {
 		std::ifstream	ifsm;
 
-		ifsm.open( szFile );
-		return Open( ifsm, iSkip ); }
+		if( szFile )
+			ifsm.open( szFile );
+		return Open( szFile ? ifsm : cin, iSkip ); }
 
 	/*!
 	 * \brief

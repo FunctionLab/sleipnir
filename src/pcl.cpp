@@ -323,6 +323,8 @@ bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 	char*			acBuf;
 	bool			fRet;
 
+	if( !istm.good( ) )
+		return false;
 	acBuf = new char[ c_iBufferSize ];
 	if( !OpenExperiments( istm, iSkip, acBuf, c_iBufferSize ) )
 		fRet = false;
