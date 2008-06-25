@@ -34,7 +34,7 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * distance_arg;	/**< @brief Similarity measure (default='mi').  */
+  char * distance_arg;	/**< @brief Similarity measure.  */
   char * distance_orig;	/**< @brief Similarity measure original value given at command line.  */
   const char *distance_help; /**< @brief Similarity measure help description.  */
   int zero_flag;	/**< @brief Zero missing values (default=off).  */

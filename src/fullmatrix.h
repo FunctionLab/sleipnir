@@ -22,6 +22,7 @@
 #ifndef FULLMATRIX_H
 #define FULLMATRIX_H
 
+#include <iostream>
 #include <sstream>
 #include <vector>
 
