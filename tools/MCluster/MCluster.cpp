@@ -123,13 +123,13 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Couldn't reconcile data" << endl;
 		return 1; }
 	if( sArgs.normalize_flag )
-		Dat.Normalize( );
+		Dat.Normalize( CDat::ENormalizeMinMax );
 	if( sArgs.power_arg != 1 ) {
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 					Dat.Set( i, j, pow( d, (float)sArgs.power_arg ) );
-		Dat.Normalize( ); }
+		Dat.Normalize( CDat::ENormalizeMinMax ); }
 	if( sArgs.flip_flag )
 		Dat.Invert( );
 

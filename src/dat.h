@@ -144,6 +144,31 @@ public:
 		EFormatSparse	= EFormatPCL + 1
 	};
 
+	/*!
+	 * \brief
+	 * Ways in which a CDat can have its edge values normalized.
+	 * 
+	 * \see
+	 * Normalize
+	 */
+	enum ENormalize {
+		/*!
+		 * \brief
+		 * Linearly transform the minimum score to 0 and the maximum to 1.
+		 */
+		ENormalizeMinMax	= 0,
+		/*!
+		 * \brief
+		 * Z-score all edges (subtract mean, divide by standard deviation).
+		 */
+		ENormalizeZScore	= ENormalizeMinMax + 1,
+		/*!
+		 * \brief
+		 * Sigmoid transform scores to the range [0, 1].
+		 */
+		ENormalizeSigmoid	= ENormalizeZScore + 1
+	};
+
 	bool Open( const char* szFile, bool fMemmap = false, size_t iSkip = 2, bool fZScore = false );
 	bool Open( std::istream& istm, EFormat eFormat = EFormatBinary, float dDefault = HUGE_VAL,
 		bool fDuplicates = false, size_t iSkip = 2, bool fZScore = false );
@@ -176,35 +201,30 @@ public:
 
 	/*!
 	 * \brief
-	 * Normalize each finite value in the CDat either into the range [0, 1] or to z-scores.
+	 * Normalize each finite value in the CDat by a specific function.
 	 * 
-	 * \param fMinMax
-	 * If true, normalize to [0, 1]; if false, normalize to z-scores.
-	 * 
-	 * When normalizing to the range [0, 1], the following algorithm is used:
-	 * \code
-	 * dMin = min(finite values in CDat)
-	 * dMax = max(finite values in CDat)
-	 * foreach finite value d in CDat
-	 *   d = ( d - dMin ) / ( dMax - dMin )
-	 * \endcode
-	 * When normalizing to z-scores, the following algorithm is used:
-	 * \code
-	 * dAve = mean(finite values in CDat)
-	 * dStd = stdev(finite values in CDat)
-	 * foreach finite value d in CDat
-	 *   d = ( d - dAve ) / dStd
-	 * \endcode
+	 * \param eNormalize
+	 * Method by which scores are normalized.
 	 * 
 	 * \remarks
 	 * Values are left unchanged if ( dMax == dMin ) or ( dStd == 0 ).
 	 * 
 	 * \see
-	 * Invert
+	 * ENormalize | Invert
 	 */
-	void Normalize( bool fMinMax = true ) {
+	void Normalize( ENormalize eNormalize ) {
 
-		fMinMax ? NormalizeMinmax( ) : NormalizeStdev( ); }
+		switch( eNormalize ) {
+			case ENormalizeMinMax:
+				NormalizeMinmax( );
+				break;
+
+			case ENormalizeZScore:
+				NormalizeStdev( );
+				break;
+
+			default:
+				NormalizeSigmoid( ); } }
 
 	/*!
 	 * \brief

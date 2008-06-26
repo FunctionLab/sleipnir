@@ -1066,6 +1066,13 @@ void CDatImpl::NormalizeStdev( ) {
 			if( !CMeta::IsNaN( (float)( d = Get( i, j ) ) ) )
 				Set( i, j, (float)( ( d - dAve ) / dDev ) ); }
 
+void CDatImpl::NormalizeSigmoid( ) {
+	size_t	i, j;
+
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			Set( i, j, 1.0f / ( 1 + exp( -Get( i, j ) ) ) ); }
+
 void CDatImpl::NormalizeMinmax( ) {
 	float	d, dMin, dMax;
 	size_t	i, j;

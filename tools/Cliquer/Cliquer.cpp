@@ -54,7 +54,7 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open input" << endl;
 		return 1; }
 	if( sArgs.normalize_flag )
-		Dat.Normalize( );
+		Dat.Normalize( CDat::ENormalizeSigmoid );
 	if( sArgs.cutoff_arg )
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )

@@ -181,7 +181,7 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open: " << sArgs.genex_arg << endl;
 		return 1; }
 	if( sArgs.normalize_flag )
-		Dat.Normalize( );
+		Dat.Normalize( CDat::ENormalizeSigmoid );
 
 	hubs( Dat, vecdHub );
 	if( sArgs.genes_arg == -1 ) {
@@ -330,7 +330,7 @@ int process( const char* szFile, bool fMemmap, bool fNormalize, const vector<vec
 		return 1; }
 	cerr << "Calculating for: " << szFile << endl;
 	if( fNormalize )
-		Dat.Normalize( true );
+		Dat.Normalize( CDat::ENormalizeSigmoid );
 
 	enset( Dat, vecvecstrSets1, vecveciSets1 );
 	enset( Dat, vecvecstrSets2, vecveciSets2 );

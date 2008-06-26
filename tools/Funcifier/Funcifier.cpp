@@ -59,7 +59,7 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open: " << sArgs.input_arg << endl;
 		return 1; }
 	if( sArgs.normalize_flag )
-		DatIn.Normalize( );
+		DatIn.Normalize( CDat::ENormalizeSigmoid );
 
 	vecpGenes.resize( sArgs.inputs_num );
 	vecstrNames.resize( vecpGenes.size( ) );

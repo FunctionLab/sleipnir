@@ -119,7 +119,7 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.contexts_arg ) {
 		ifstream		ifsm;
-		char			acLine[ 1024 ];
+		char			acLine[ 2048 ];
 		vector<string>	vecstrLine;
 
 		ifsm.open( sArgs.contexts_arg );
@@ -133,13 +133,13 @@ int main( int iArgs, char** aszArgs ) {
 				continue;
 			vecstrLine.clear( );
 			CMeta::Tokenize( acLine, vecstrLine );
-			if( vecstrLine.size( ) < 2 ) {
+			if( vecstrLine.size( ) < 3 ) {
 				cerr << "Illegal contexts line: " << acLine << endl;
 				return 1; }
 			if( ( atoi( vecstrLine[ 0 ].c_str( ) ) ) != ( vecstrContexts.size( ) + 1 ) ) {
 				cerr << "Inconsistent context ID: " << acLine << endl;
 				return 1; }
-			vecstrContexts.push_back( vecstrLine[ 1 ] ); }
+			vecstrContexts.push_back( vecstrLine[ 2 ] ); }
 		ifsm.close( ); }
 
 	if( sArgs.genes_arg ) {

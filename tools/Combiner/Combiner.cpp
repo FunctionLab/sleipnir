@@ -144,7 +144,7 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 			return 1; }
 		cerr << "Opened: " << sArgs.inputs[ i ] << endl;
 		if( sArgs.normalize_flag )
-			DatCur.Normalize( false );
+			DatCur.Normalize( CDat::ENormalizeZScore );
 		for( j = 0; j < veciGenes.size( ); ++j )
 			veciGenes[ j ] = DatCur.GetGene( DatOut.GetGene( j ) );
 		for( j = 0; j < veciGenes.size( ); ++j ) {

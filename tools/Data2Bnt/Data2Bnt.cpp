@@ -246,7 +246,7 @@ int main_bnt( const gengetopt_args_info& sArgs, const vector<SFeature>& vecsFeat
 			size_t								iValue, iDefault, iJ;
 			map<size_t,size_t>::const_iterator	iterDefault;
 
-			Dat.Normalize( false );
+			Dat.Normalize( CDat::ENormalizeZScore );
 			for( j = 0; j < Dat.GetGenes( ); ++j ) {
 				iJ = get_feature( Dat.GetGene( j ), vecsFeatures );
 				for( k = ( j + 1 ); k < Dat.GetGenes( ); ++k ) {

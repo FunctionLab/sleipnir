@@ -90,7 +90,7 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
 	if( sArgs.normalize_flag )
-		Data.Normalize( );
+		Data.Normalize( CDat::ENormalizeMinMax );
 	if( sArgs.invert_flag )
 		Data.Invert( );
 

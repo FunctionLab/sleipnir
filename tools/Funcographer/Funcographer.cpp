@@ -52,8 +52,8 @@ int main( int iArgs, char** aszArgs ) {
 	if( !PCLTrusts.Open( sArgs.trusts_arg, sArgs.skip_arg ) ) {
 		cerr << "Could not open: " << sArgs.trusts_arg << endl;
 		return 1; }
-	DatFunctions.Normalize( !sArgs.output_arg );
-	DatData.Normalize( !sArgs.output_arg );
+	DatFunctions.Normalize( sArgs.output_arg ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
+	DatData.Normalize( sArgs.output_arg ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
 	PCLTrusts.Normalize( sArgs.output_arg ? CPCL::ENormalizeZScore : CPCL::ENormalizeMinMax );
 
 	iRet = sArgs.output_arg ? output_cograph( sArgs.output_arg, DatData, DatFunctions, PCLTrusts,

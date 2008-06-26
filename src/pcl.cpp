@@ -240,7 +240,7 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 						adOne, PCL.GetExperiments( ), PCL.Get( iTwo ), PCL.GetExperiments( ) ) ); }
 
 		if( fNormalize || fZScore )
-			Dat.Normalize( !!fNormalize );
+			Dat.Normalize( fZScore ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
 		if( !CMeta::IsNaN( dCutoff ) )
 			for( i = 0; i < Dat.GetGenes( ); ++i )
 				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )

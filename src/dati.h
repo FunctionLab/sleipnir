@@ -73,6 +73,7 @@ protected:
 	void AveStd( double&, double&, size_t&, size_t = -1 ) const;
 	void NormalizeMinmax( );
 	void NormalizeStdev( );
+	void NormalizeSigmoid( );
 	void OpenHelper( const CGenes*, float );
 	void OpenHelper( const CGenes*, const CGenes*, float );
 	bool OpenHelper( );

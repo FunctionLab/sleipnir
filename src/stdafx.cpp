@@ -68,7 +68,7 @@
  * <b>Curtis Huttenhower, Mark Schroeder, Maria D. Chikina, and
  *	<a href="mailto:ogt@princeton.edu">Olga G. Troyanskaya</a>
  *	"The Sleipnir library for computational functional genomics", Bioinformatics 2008</b>
- * <a href="http://www.ncbi.nlm.nih.gov/sites/entrez?Db=pubmed&Cmd=ShowDetailView&TermToSearch=***">PMID ***</a>
+ * <a href="http://www.ncbi.nlm.nih.gov/sites/entrez?Db=pubmed&Cmd=ShowDetailView&TermToSearch=18499696">PMID 18499696</a>
  * 
  * \section sec_building Building Sleipnir
  * 

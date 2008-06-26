@@ -21,6 +21,8 @@ option	"invgauss"		e	"Compute inverse gaussian lambda instead of stdev"
 							flag	off
 option	"percentile"	p	"Percentile to use for p-value cutoff"
 							double	default="0.95"
+option	"singles"		S	"Process single sets rather than pairs"
+							flag	off
 
 section "Optional"
 option	"normalize"		n	"Normalize to the range [0,1]"

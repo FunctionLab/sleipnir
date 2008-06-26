@@ -40,6 +40,7 @@ struct SBackground {
 static int MainSet( const gengetopt_args_info& );
 static int MainBackground( const gengetopt_args_info& );
 static void* BackgroundThread( void* );
+static void* BackgroundThreadSingle( void* );
 
 int main( int iArgs, char** aszArgs ) {
 #ifdef WIN32
@@ -95,7 +96,7 @@ int MainSet( const gengetopt_args_info& sArgs ) {
 			cerr << "Could not open: " << strDab << endl;
 			return 1; }
 		if( sArgs.normalize_flag )
-			Dat.Normalize( );
+			Dat.Normalize( CDat::ENormalizeSigmoid );
 
 		for( i = 0; i < veciQuery.size( ); ++i )
 			veciQuery[ i ] = Dat.GetGene( GenesQuery.GetGene( i ).GetName( ) );
@@ -155,7 +156,8 @@ int MainBackground( const gengetopt_args_info& sArgs ) {
 		cerr << "Could not open: " << ( sArgs.input_arg ? sArgs.input_arg : "stdin" ) << endl;
 		return 1; }
 	if( sArgs.normalize_flag )
-		Dat.Normalize( );
+		Dat.Normalize( CDat::ENormalizeSigmoid );
+
 	{
 		CPCL	PCLSizes( false );
 
@@ -220,14 +222,15 @@ int MainBackground( const gengetopt_args_info& sArgs ) {
 	vecpthdThreads.resize( min( sArgs.threads_arg, sArgs.count_arg ) );
 	vecsBackground.resize( vecpthdThreads.size( ) );
 	iChunk = 1 + ( ( sArgs.count_arg - 1 ) / vecpthdThreads.size( ) );
-	vecdValues.resize( sArgs.count_arg * iChunk * vecpthdThreads.size( ) );
+	vecdValues.resize( ( sArgs.singles_flag ? 1 : sArgs.count_arg ) * iChunk * vecpthdThreads.size( ) );
 	MatAves.Initialize( veciSizes.size( ), veciSizes.size( ) );
 	MatAves.Clear( );
 	MatStds.Initialize( veciSizes.size( ), veciSizes.size( ) );
 	MatStds.Clear( );
 	MatPValues.Initialize( veciSizes.size( ), veciSizes.size( ) );
 	for( iIndexOne = 0; iIndexOne < veciSizes.size( ); ++iIndexOne )
-		for( iIndexTwo = iIndexOne; iIndexTwo < veciSizes.size( ); ++iIndexTwo ) {
+		for( iIndexTwo = iIndexOne; iIndexTwo < ( sArgs.singles_flag ? ( iIndexOne + 1 ) : veciSizes.size( ) );
+			++iIndexTwo ) {
 			cerr << veciSizes[ iIndexOne ] << ':' << veciSizes[ iIndexTwo ] << endl;
 			for( i = 0; i < vecpthdThreads.size( ); ++i ) {
 				vecsBackground[ i ].m_dPrior = dPrior;
@@ -239,8 +242,8 @@ int MainBackground( const gengetopt_args_info& sArgs ) {
 				vecsBackground[ i ].m_pDatWithin = pDatWithin;
 				vecsBackground[ i ].m_pvecdOut = &vecdOut;
 				vecsBackground[ i ].m_pveciGenes = &veciGenes;
-				if( pthread_create( &vecpthdThreads[ i ], NULL, BackgroundThread,
-					&vecsBackground[ i ] ) ) {
+				if( pthread_create( &vecpthdThreads[ i ], NULL, sArgs.singles_flag ? BackgroundThreadSingle:
+					BackgroundThread, &vecsBackground[ i ] ) ) {
 					cerr << "Couldn't create thread for group: " << i << endl;
 					return 1; } }
 			for( iValue = i = 0; i < vecpthdThreads.size( ); ++i ) {
@@ -259,17 +262,22 @@ int MainBackground( const gengetopt_args_info& sArgs ) {
 			MatPValues.Set( iIndexOne, iIndexTwo, (float)CStatistics::Percentile( vecdValues.begin( ),
 				vecdValues.end( ), sArgs.percentile_arg ) ); }
 
-	for( i = 0; i < veciSizes.size( ); ++i )
-		cout << '\t' << veciSizes[ i ];
-	cout << endl;
-	for( i = 0; i < MatAves.GetRows( ); ++i ) {
-		cout << veciSizes[ i ];
-		for( j = 0; j < i; ++j )
-			cout << '\t';
-		for( ; j < MatAves.GetColumns( ); ++j ) {
-			cout << '\t' << MatAves.Get( i, j ) << '|' << MatStds.Get( i, j ) << '|' <<
-				MatPValues.Get( i, j ); }
-		cout << endl; }
+	if( sArgs.singles_flag )
+		for( i = 0; i < veciSizes.size( ); ++i )
+			cout << veciSizes[ i ] << '\t' << MatAves.Get( i, i ) << '|' << MatStds.Get( i, i ) << '|' <<
+				MatPValues.Get( i, i ) << endl;
+	else {
+		for( i = 0; i < veciSizes.size( ); ++i )
+			cout << '\t' << veciSizes[ i ];
+		cout << endl;
+		for( i = 0; i < MatAves.GetRows( ); ++i ) {
+			cout << veciSizes[ i ];
+			for( j = 0; j < i; ++j )
+				cout << '\t';
+			for( ; j < MatAves.GetColumns( ); ++j ) {
+				cout << '\t' << MatAves.Get( i, j ) << '|' << MatStds.Get( i, j ) << '|' <<
+					MatPValues.Get( i, j ); }
+			cout << endl; } }
 
 	return 0; }
 
@@ -348,5 +356,39 @@ void* BackgroundThread( void* pData ) {
 
 			psData->m_vecdValues[ iValue++ ] = (float)( psData->m_dPrior * dBetween / dWithin /
 				dBackground ); } }
+
+	return NULL; }
+
+void* BackgroundThreadSingle( void* pData ) {
+	size_t			i, j, iCount, iEdges;
+	SBackground*	psData;
+	vector<size_t>	veciOne;
+	long double		dWithin, dBackground;
+	float			d;
+
+	psData = (SBackground*)pData;
+	psData->m_vecdValues.resize( psData->m_iCountOne );
+	veciOne.resize( psData->m_iSizeOne );
+	iEdges = veciOne.size( ) * ( veciOne.size( ) + 1 ) / 2;
+	for( iCount = 0; iCount < psData->m_iCountOne; ++iCount ) {
+		const vector<size_t>&	veciGenes	= *psData->m_pveciGenes;
+		const vector<float>&	vecdOut		= *psData->m_pvecdOut;
+		set<size_t>				setiOne;
+
+		while( setiOne.size( ) < veciOne.size( ) )
+			setiOne.insert( veciGenes[ rand( ) % veciGenes.size( ) ] );
+		copy( setiOne.begin( ), setiOne.end( ), veciOne.begin( ) );
+
+		dBackground = dWithin = 0;
+		for( i = 0; i < veciOne.size( ); ++i ) {
+			dBackground += vecdOut[ veciOne[ i ] ];
+			dWithin += psData->m_dPrior;
+			for( j = ( i + 1 ); j < veciOne.size( ); ++j )
+				if( !CMeta::IsNaN( d = psData->m_pDat->Get( veciOne[ i ], veciOne[ j ] ) ) )
+					dWithin += d; }
+		dBackground /= veciOne.size( );
+		dWithin /= iEdges;
+
+		psData->m_vecdValues[ iCount ] = (float)( dWithin / dBackground ); }
 
 	return NULL; }

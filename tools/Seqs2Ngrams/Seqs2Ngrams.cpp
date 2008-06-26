@@ -149,7 +149,7 @@ int main( int iArgs, char** aszArgs ) {
 	delete[] adTwo;
 
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
-		Dat.Normalize( !!sArgs.normalize_flag );
+		Dat.Normalize( sArgs.zscore_flag ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
 
 	Dat.Save( sArgs.output_arg );
 

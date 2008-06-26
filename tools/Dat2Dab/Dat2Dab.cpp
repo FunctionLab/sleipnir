@@ -99,7 +99,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.rank_flag )
 		Dat.Rank( );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
-		Dat.Normalize( !!sArgs.normalize_flag );
+		Dat.Normalize( sArgs.zscore_flag ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
 	if( sArgs.zero_flag )
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )

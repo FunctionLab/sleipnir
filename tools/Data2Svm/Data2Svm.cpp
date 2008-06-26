@@ -48,7 +48,7 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	ifsm.close( );
 	if( sArgs.normalize_flag )
-		Data.Normalize( );
+		Data.Normalize( CDat::ENormalizeSigmoid );
 	if( sArgs.random_features_flag )
 		Data.Randomize( );
 

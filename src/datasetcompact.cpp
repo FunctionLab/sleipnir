@@ -618,7 +618,7 @@ bool CDatasetCompact::Open( const CGenes& GenesInclude, const CGenes& GenesExclu
 						PCL.GetExperiments( ) ) ); }
 
 		Datum.Open( vecstrGenes, Dist );
-		Datum.Normalize( false );
+		Datum.Normalize( CDat::ENormalizeZScore );
 		Datum.SetQuants( vecdBinEdges );
 		if( !CDatasetCompactImpl::Open( Datum, iPCL + 1 ) )
 			return false; }

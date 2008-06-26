@@ -92,7 +92,7 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Couldn't open: " << sArgs.input_arg << endl;
 		return 1; }
 	if( sArgs.normalize_flag )
-		Data.Normalize( );
+		Data.Normalize( CDat::ENormalizeMinMax );
 
 	veciGenes.resize( Answers.GetGenes( ) );
 	for( i = 0; i < Answers.GetGenes( ); ++i )

@@ -113,7 +113,7 @@ int main( int iArgs, char** aszArgs ) {
 					DatNew.Set( i, j, Dat.Get( veciGenes[ i ], veciGenes[ j ] ) ); }
 		pDat = &DatNew; }
 	if( sArgs.normalize_flag )
-		pDat->Normalize( );
+		pDat->Normalize( CDat::ENormalizeMinMax );
 	if( GenesQr.GetGenes( ) ) {
 		if( sArgs.cutoff_given )
 			for( i = 0; i < pDat->GetGenes( ); ++i )

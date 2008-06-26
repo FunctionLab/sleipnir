@@ -1156,60 +1156,17 @@ size_t CBNServer::ProcessAssociations( const vector<unsigned char>& vecbMessage,
 bool CBNServer::GetAssociationsSet( unsigned char bDiseases, const vector<size_t>& veciGenes,
 	size_t iContext ) const {
 	const vector<vector<size_t> >&	vecveciSets	= GetGeneSets( bDiseases );
-	size_t					i, j, k, iWithinGenes;
+	size_t					i, j, k;
 	vector<unsigned char>	vecbData;
-	float					d, dFrac, dWithinGenes;
+	float					d, dFrac, dWithinGenes, dBetween;
 	float*					ad;
-	vector<vector<float> >	vecvecdBetween, vecvecdBackground;
-	vector<float>			vecdWithin;
+	vector<vector<float> >	vecvecdBackground, vecvecdBetween;
+	vector<float>			vecdCur;
 
-/* Testing code for p-value measures
-for( i = 0; i < vecveciSets.size( ); ++i ) {
-size_t iTmp = GetContext( bDiseases, iContext, i );
-float	dBetween, dWithin, dBackground, dPrior;
-dBetween = dWithin = dBackground = dPrior = 0;
-
-for( j = 0; j < GetGenes( ); ++j )
-dPrior += GetBackground( iTmp, j );
-dPrior /= GetGenes( );
-
-for( j = 0; j < veciGenes.size( ); ++j ) {
-dBackground += GetBackground( iTmp, veciGenes[ j ] );
-dWithin += dPrior;
-m_Database.Get( veciGenes[ j ], veciGenes, vecbData, true );
-for( k = ( j + 1 ); k < veciGenes.size( ); ++k )
-dWithin += GetBN( iTmp ).Evaluate( vecbData, k * ( ( m_Database.GetDatasets( ) + 1 ) / 2 ) );
-m_Database.Get( veciGenes[ j ], vecveciSets[ i ], vecbData, true );
-for( k = 0; k < vecveciSets[ i ].size( ); ++k )
-dBetween += ( veciGenes[ j ] == vecveciSets[ i ][ k ] ) ? 1 : GetBN( iTmp ).Evaluate( vecbData, k * ( ( m_Database.GetDatasets( ) + 1 ) / 2 ) ); }
-for( j = 0; j < vecveciSets[ i ].size( ); ++j ) {
-dBackground += GetBackground( iTmp, vecveciSets[ i ][ j ] );
-dWithin += dPrior;
-m_Database.Get( vecveciSets[ i ][ j ], vecveciSets[ i ], vecbData, true );
-for( k = ( j + 1 ); k < vecveciSets[ i ].size( ); ++k )
-dWithin += GetBN( iTmp ).Evaluate( vecbData, k * ( ( m_Database.GetDatasets( ) + 1 ) / 2 ) ); }
-
-dBackground /= veciGenes.size( ) + vecveciSets[ i ].size( );
-dBetween /= veciGenes.size( ) * vecveciSets[ i ].size( );
-dWithin /= ( veciGenes.size( ) * ( veciGenes.size( ) + 1 ) / 2 ) +
-	( vecveciSets[ i ].size( ) * ( vecveciSets[ i ].size( ) + 1 ) / 2 );
-d = dPrior * dBetween / dWithin / dBackground;
-
-cerr << "D	" << ( i + 1 ) << endl;
-cerr << veciGenes.size( ) << '\t' << vecveciSets[ i ].size( ) << endl;
-cerr << dWithin << '\t' << dBackground << '\t' << dBetween << " = " << d << endl;
-
-size_t iMin, iMax;
-iMin = veciGenes.size( );
-iMax = vecveciSets[ i ].size( );
-if( iMax < iMin )
-	swap( iMax, iMin );
-float dStd;
-// Global context
-dStd = (float)((((0.019543*iMin+0.350954)/(iMin+1))*iMax+0.371982)/(iMax+((1.18837*iMin-0.42435)/(iMin+2.68281))));
-cerr << 1 << '\t' << dStd << '\t' << ( 1 - CStatistics::NormalCDF( d, 1, dStd ) ) << endl; }
-//*/
 	vecvecdBetween.resize( vecveciSets.size( ) );
+	for( i = 0; i < vecvecdBetween.size( ); ++i ) {
+		vecvecdBetween[ i ].resize( veciGenes.size( ) + vecveciSets[ i ].size( ) );
+		fill( vecvecdBetween[ i ].begin( ), vecvecdBetween[ i ].end( ), 0.0f ); }
 	vecvecdBackground.resize( vecveciSets.size( ) );
 	dFrac = GetFraction( veciGenes.size( ) );
 	for( i = 0; i < veciGenes.size( ); ++i ) {
@@ -1222,25 +1179,32 @@ cerr << 1 << '\t' << dStd << '\t' << ( 1 - CStatistics::NormalCDF( d, 1, dStd ) 
 			return false;
 		cerr << m_strConnection << " associations " << GetGene( veciGenes[ i ] ) << endl;
 		for( j = 0; j < vecveciSets.size( ); ++j ) {
+			vecdCur.clear( );
+			vecdCur.reserve( vecveciSets[ j ].size( ) );
 			k = GetContext( bDiseases, iContext, j );
-			if( !GetAssociation( veciGenes[ i ], vecbData, vecveciSets[ j ], k, true, NULL, NULL, NULL,
-				&vecvecdBetween[ j ], &vecvecdBackground[ j ], GetWithin( bDiseases, k, j ) ) )
-				return false; } }
-	vecdWithin.resize( vecveciSets.size( ) );
+			if( !GetAssociation( veciGenes[ i ], vecbData, vecveciSets[ j ], k, true, &dBetween, NULL, NULL,
+				&vecdCur, &vecvecdBackground[ j ], GetWithin( bDiseases, k, j ) ) )
+				return false;
+			vecvecdBetween[ j ][ i ] += dBetween;
+			for( k = 0; k < vecveciSets[ j ].size( ); ++k )
+				vecvecdBetween[ j ][ veciGenes.size( ) + k ] += vecdCur[ k ]; } }
+	for( i = 0; i < vecvecdBetween.size( ); ++i ) {
+		for( j = 0; j < veciGenes.size( ); ++j )
+			vecvecdBetween[ i ][ j ] /= vecveciSets[ i ].size( );
+		for( j = 0; j < vecveciSets[ i ].size( ); ++j )
+			vecvecdBetween[ i ][ veciGenes.size( ) + j ] /= veciGenes.size( ); }
 	for( i = 0; i < vecveciSets.size( ); ++i ) {
 		k = GetContext( bDiseases, iContext, i );
-		vecdWithin[ i ] = GetWithin( bDiseases, k, i );
 		for( j = 0; j < vecveciSets[ i ].size( ); ++j )
 			if( !CMeta::IsNaN( d = GetBackground( k, vecveciSets[ i ][ j ] ) ) )
 				vecvecdBackground[ i ].push_back( d ); }
 	if( ( iContext != -1 ) && !GetWithin( veciGenes, iContext, &dWithinGenes, NULL ) )
 		return false;
-	iWithinGenes = veciGenes.size( ) * ( veciGenes.size( ) + 1 ) / 2;
 
 	ad = bDiseases ? m_adDiseases : m_adContexts;
 	for( i = 0; i < vecveciSets.size( ); ++i ) {
-		float	dBetween, dBackground, dWithin;
-		size_t	iTmp, iWithinSet;
+		float	dBackground, dWithin;
+		size_t	iTmp;
 
 		if( vecvecdBetween[ i ].empty( ) )
 			continue;
@@ -1251,9 +1215,7 @@ cerr << 1 << '\t' << dStd << '\t' << ( 1 - CStatistics::NormalCDF( d, 1, dStd ) 
 		iTmp = GetContext( bDiseases, iContext, i );
 		if( ( iContext == -1 ) && !GetWithin( veciGenes, iTmp, &dWithinGenes, NULL ) )
 			return false;
-		iWithinSet = vecveciSets[ i ].size( ) * ( vecveciSets[ i ].size( ) + 1 ) / 2;
-		dWithin = ( ( iWithinGenes * dWithinGenes ) + ( iWithinSet * GetWithin( bDiseases, iTmp, i ) ) ) /
-			( iWithinGenes + iWithinSet );
+		dWithin = ( dWithinGenes + GetWithin( bDiseases, iTmp, i ) ) / 2;
 		SetArray( ad, vecveciSets.size( ), i, GetPValue( dBetween, dBackground, dWithin, iTmp,
 			veciGenes.size( ), vecveciSets[ i ].size( ), vecveciSets.size( ) ), dBetween, dBackground,
 			dWithin ); }
@@ -1397,6 +1359,8 @@ bool CBNServer::GetAssociation( const vector<size_t>& veciOne, const vector<size
 
 bool CBNServer::GetWithin( const vector<size_t>& veciGenes, size_t iContext, float* pdWithin,
 	vector<float>* pvecdWithin ) const {
+// Alternative: calculate priors in the current context rather than the global context
+	iContext = 0;
 	const CBayesNetMinimal&	BNet	= GetBN( iContext );
 	size_t					i, j;
 	vector<unsigned char>	vecbData;
