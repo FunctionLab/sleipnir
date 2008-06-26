@@ -553,6 +553,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/BNFunc/Makefile \
 		 tools/BNTester/Makefile \
 		 tools/BNTruster/Makefile \
+		 tools/BNs2Txt/Makefile \
 		 tools/BNUnraveler/Makefile \
 		 tools/BNWeaver/Makefile \
 		 tools/Contexter/Makefile \

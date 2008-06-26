@@ -36,6 +36,7 @@ if WITH_SMILE_TOOLS
 	  BNFunc \
 	  BNTester \
 	  BNTruster \
+	  BNs2Txt \
 	  BNUnraveler \
 	  BNWeaver \
 	  Contexter \

@@ -23,7 +23,6 @@
 #include "cmdline.h"
 
 int cliques( const gengetopt_args_info&, const CDat&, const CDat&, const vector<size_t>& );
-int cliques3( const gengetopt_args_info&, const CDat& );
 int heavy( const gengetopt_args_info&, CDat&, const CDat&, const vector<size_t>& );
 int heavy2( const gengetopt_args_info&, CDat&, const CDat&, const vector<size_t>& );
 bool connectivity( size_t, const vector<size_t>&, const vector<float>&, const vector<size_t>&,
@@ -69,7 +68,7 @@ int main( int iArgs, char** aszArgs ) {
 			veciKnowns[ i ] = DatKnowns.GetGene( Dat.GetGene( i ) ); }
 
 	iRet = sArgs.heavy_arg ? heavy2( sArgs, Dat, DatKnowns, veciKnowns ) :
-		( ( sArgs.size_arg == 3 ) ? cliques3( sArgs, Dat ) : cliques( sArgs, Dat, DatKnowns, veciKnowns ) );
+		cliques( sArgs, Dat, DatKnowns, veciKnowns );
 
 	return iRet; }
 
@@ -120,23 +119,6 @@ int cliques( const gengetopt_args_info& sArgs, const CDat& Dat, const CDat& DatK
 		for( j = 0; j < vecprCliques[ i ].first.size( ); ++j )
 			cout << '\t' << Dat.GetGene( vecprCliques[ i ].first[ j ] );
 		cout << endl; }
-
-	return 0; }
-
-int cliques3( const gengetopt_args_info& sArgs, const CDat& Dat ) {
-	size_t	i, j, k;
-	float	dIJ, dIK, dJK;
-
-	for( i = 0; i < Dat.GetGenes( ); ++i ) {
-		if( !( i % 100 ) )
-			cerr << i << '/' << Dat.GetGenes( ) << endl;
-		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
-			if( CMeta::IsNaN( dIJ = Dat.Get( i, j ) ) )
-				continue;
-			for( k = ( j + 1 ); k < Dat.GetGenes( ); ++k )
-				if( !( CMeta::IsNaN( dIK = Dat.Get( i, k ) ) || CMeta::IsNaN( dJK = Dat.Get( j, k ) ) ) )
-					cout << Dat.GetGene( i ) << '\t' << dIJ << '\t' << Dat.GetGene( j ) << '\t' << dJK <<
-						'\t' << Dat.GetGene( k ) << '\t' << dIK << endl; } }
 
 	return 0; }
 
