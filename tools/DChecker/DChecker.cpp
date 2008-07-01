@@ -53,7 +53,7 @@ int main( int iArgs, char** aszArgs ) {
 	CDat				Answers, Data;
 	gengetopt_args_info	sArgs;
 	size_t				i, j, k, m, iOne, iTwo, iGenes, iPositives, iNegatives, iBins;
-	vector<size_t>		veciGenes, veciRec;
+	vector<size_t>		veciGenes, veciRec, veciRecTerm;
 	CFullMatrix<bool>	MatGenes;
 	CFullMatrix<size_t>	MatResults;
 	ETFPN				eTFPN;
@@ -61,11 +61,13 @@ int main( int iArgs, char** aszArgs ) {
 	float				dAnswer, dValue;
 	vector<bool>		vecfHere;
 	vector<float>		vecdScores, vecdSSE;
-	vector<size_t>		veciPositives, veciNegatives;
+	vector<size_t>		veciPositives, veciNegatives, veciGenesTerm;
 	ofstream			ofsm;
 	ostream*			postm;
 	map<float,size_t>	mapValues;
 	bool				fMapAnswers;
+	CGenome				Genome;
+	CGenes				GenesTm( Genome );
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -82,9 +84,15 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.genee_arg && !Answers.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge ) ) {
 		cerr << "Couldn't open: " << sArgs.genee_arg << endl;
 		return 1; }
-	if( sArgs.genet_arg && !Answers.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) ) {
-		cerr << "Couldn't open: " << sArgs.genet_arg << endl;
-		return 1; }
+	if( sArgs.genet_arg ) {
+		if( !( Answers.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) &&
+			GenesTm.Open( sArgs.genet_arg ) ) ) {
+			cerr << "Couldn't open: " << sArgs.genet_arg << endl;
+			return 1; }
+		veciGenesTerm.reserve( GenesTm.GetGenes( ) );
+		for( i = 0; i < GenesTm.GetGenes( ); ++i )
+			if( ( j = Answers.GetGene( GenesTm.GetGene( i ).GetName( ) ) ) != -1 )
+				veciGenesTerm.push_back( j ); }
 	if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
 		cerr << "Couldn't open: " << sArgs.genex_arg << endl;
 		return 1; }
@@ -131,7 +139,6 @@ int main( int iArgs, char** aszArgs ) {
 		MatGenes.Clear( );
 
 		if( sArgs.inputs_num ) {
-			CGenome		Genome;
 			CGenes		Genes( Genome );
 			ifstream	ifsm;
 
@@ -280,11 +287,18 @@ int main( int iArgs, char** aszArgs ) {
 					iNegatives++; }
 
 		veciRec.resize( MatResults.GetRows( ) );
+		veciRecTerm.resize( MatResults.GetRows( ) );
 		for( i = 0; i < veciRec.size( ); ++i ) {
-			veciRec[ i ] = 0;
+			veciRec[ i ] = veciRecTerm[ i ] = 0;
 			for( j = 0; j < MatGenes.GetRows( ); ++j )
-				if( MatGenes.Get( j, i ) )
-					veciRec[ i ]++; }
+				if( MatGenes.Get( j, i ) ) {
+					veciRec[ i ]++;
+					if( vecfHere.size( ) && vecfHere[ j ] )
+						veciRecTerm[ i ]++; }
+			for( j = 0; j < veciGenesTerm.size( ); ++j )
+				if( MatGenes.Get( veciGenesTerm[ j ], i ) &&
+					( vecfHere.empty( ) || !vecfHere[ veciGenesTerm[ j ] ] ) )
+					veciRecTerm[ i ]++; }
 
 		if( sArgs.inputs_num ) {
 			ofsm.open( ( (string)sArgs.directory_arg + '/' +
@@ -305,6 +319,8 @@ int main( int iArgs, char** aszArgs ) {
 			else
 				for( j = 0; j < MatResults.GetColumns( ); ++j )
 					*postm << '\t' << MatResults.Get( i, j );
+			if( veciGenesTerm.size( ) || vecfHere.size( ) )
+				*postm << '\t' << veciRecTerm[ i ];
 			*postm << endl; }
 		if( !sArgs.sse_flag )
 			*postm << "#	AUC	" << CStatistics::WilcoxonRankSum( Data, Answers, vecfHere,

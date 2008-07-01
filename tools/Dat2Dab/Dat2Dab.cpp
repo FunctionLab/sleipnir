@@ -31,6 +31,7 @@ int main( int iArgs, char** aszArgs ) {
 	ifstream			ifsm;
 	CDat				Dat;
 	size_t				i, j;
+	bool				fModified;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -44,8 +45,9 @@ int main( int iArgs, char** aszArgs ) {
 			return 1; }
 		ifsm.close( ); }
 
+	fModified = sArgs.normalize_flag || sArgs.subsample_arg;
 	if( sArgs.input_arg ) {
-		if( !Dat.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
+		if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !fModified ) ) {
 			cerr << "Could not open: " << sArgs.input_arg << endl;
 			return 1; } }
 	else if( !Dat.Open( cin, CDat::EFormatText, (float)HUGE_VAL, !!sArgs.duplicates_flag ) ) {
@@ -158,6 +160,12 @@ int main( int iArgs, char** aszArgs ) {
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( Dat.Get( i, j ) < sArgs.cutoff_arg )
+					Dat.Set( i, j, CMeta::GetNaN( ) );
+	if( sArgs.subsample_arg < 1 )
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( !CMeta::IsNaN( Dat.Get( i, j ) ) &&
+					( ( (float)rand( ) / RAND_MAX ) > sArgs.subsample_arg ) )
 					Dat.Set( i, j, CMeta::GetNaN( ) );
 
 	if( sArgs.lookups_arg ) {

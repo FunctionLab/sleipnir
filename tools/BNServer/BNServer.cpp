@@ -516,10 +516,10 @@ bool CBNServer::SelectNeighborsPixie( const vector<size_t>& veciQuery, const vec
 
 bool CBNServer::SelectNeighborsRatio( const vector<size_t>& veciQuery, const vector<bool>& vecfQuery,
 	size_t iContext, size_t iLimit, const CDataMatrix& MatQuery, vector<size_t>& veciNeighbors ) const {
-	size_t					i, j, iOut;
+	size_t					i, j;
 	priority_queue<SPixie>	pqueNeighbors;
-	float					d, dOut;
-	vector<float>			vecdValues;
+	float					d;
+	vector<float>			vecdValues, vecdBackground, vecdCur;
 
 	cerr << m_strConnection << " RATIO query " << iContext << " (" << ( iContext ?
 		GetBN( iContext ).GetID( ) : "total" ) << "):";
@@ -527,10 +527,10 @@ bool CBNServer::SelectNeighborsRatio( const vector<size_t>& veciQuery, const vec
 		cerr << ' ' << GetGene( veciQuery[ i ] );
 	cerr << endl;
 
-	for( dOut = 0, iOut = i = 0; i < veciQuery.size( ); ++i )
-		if( !CMeta::IsNaN( d = GetBackground( iContext, veciQuery[ i ] ) ) ) {
-			iOut++;
-			dOut += d; }
+	for( i = 0; i < veciQuery.size( ); ++i )
+		if( !CMeta::IsNaN( d = GetBackground( iContext, veciQuery[ i ] ) ) )
+			vecdBackground.push_back( d );
+	vecdCur.resize( vecdBackground.size( ) + 1 );
 	for( i = 0; i < MatQuery.GetColumns( ); ++i ) {
 		if( vecfQuery[ i ] )
 			continue;
@@ -541,8 +541,11 @@ bool CBNServer::SelectNeighborsRatio( const vector<size_t>& veciQuery, const vec
 				vecdValues.push_back( d );
 		if( !vecdValues.empty( ) ) {
 			Winsorize( vecdValues );
-			pqueNeighbors.push( SPixie( i, (float)CStatistics::Average( vecdValues ) * ( iOut + 1 ) /
-				( dOut + GetBackground( iContext, i ) ) ) ); } }
+			copy( vecdBackground.begin( ), vecdBackground.end( ), vecdCur.begin( ) );
+			vecdCur[ vecdBackground.size( ) ] = GetBackground( iContext, i );
+			Winsorize( vecdCur );
+			pqueNeighbors.push( SPixie( i, (float)( CStatistics::Average( vecdValues ) /
+				CStatistics::Average( vecdCur ) ) ) ); } }
 	while( !pqueNeighbors.empty( ) && ( ( veciQuery.size( ) + veciNeighbors.size( ) ) < iLimit ) ) {
 		veciNeighbors.push_back( pqueNeighbors.top( ).m_iNode );
 		pqueNeighbors.pop( ); }

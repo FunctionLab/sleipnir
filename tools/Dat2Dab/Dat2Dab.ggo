@@ -29,6 +29,8 @@ option	"zero"			e	"Zero missing values"
 							flag	off
 option	"duplicates"	d	"Allow dissimilar duplicate values"
 							flag	off
+option	"subsample"		u	"Fraction of output to randomly subsample"
+							float	default="1"
 
 section "Lookups"
 option	"lookup1"		l	"First lookup gene"
