@@ -183,7 +183,7 @@ private:
 	bool GetGenes( const std::vector<size_t>&, size_t, float );
 	bool GetWithin( const std::vector<size_t>&, size_t, float*, std::vector<float>* ) const;
 	// Association processing
-	bool GetAssociationsSet( unsigned char, const vector<size_t>&, size_t ) const;
+	bool GetAssociationsSet( unsigned char, const std::vector<size_t>&, size_t ) const;
 	bool GetAssociationsDC( unsigned char, unsigned char, size_t, size_t, bool = false ) const;
 	bool GetAssociation( size_t, const std::vector<unsigned char>&, const std::vector<size_t>&, size_t, bool,
 		float*, float*, float*, std::vector<float>*, std::vector<float>*, float ) const;

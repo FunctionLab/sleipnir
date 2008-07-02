@@ -203,26 +203,104 @@ public:
 	bool Attach( const CDatFilter& Dat, const CGenes& Genes, CDat::EFilter eFilter,
 		const CDat* pAnswers = NULL );
 
+	/*!
+	 * \brief
+	 * Associates the data filter with the given CDat.
+	 * 
+	 * \param Dat
+	 * CDat to be associated with the overlaying mask.
+	 * 
+	 * \returns
+	 * True if filter was attached successfully.
+	 * 
+	 * \remarks
+	 * This creates an empty, pass-through mask, which can be useful when stacking multiple overlayed filters.
+	 */
 	bool Attach( const CDataPair& Dat ) {
 
 		return CDatFilterImpl::Attach( &Dat, NULL, NULL, CDat::EFilterInclude, NULL ); }
 
+	/*!
+	 * \brief
+	 * Returns the number of values taken by the underlying CDataPair.
+	 * 
+	 * \returns
+	 * Number of different values taken by the underlying CDataPair.
+	 * 
+	 * \see
+	 * CDataPair::GetValues
+	 */
 	size_t GetValues( ) const {
 
 		return ( m_pFilter ? m_pFilter->GetValues( ) : ( m_pDat ? m_pDat->GetValues( ) : -1 ) ); }
 
+	/*!
+	 * \brief
+	 * Returns the index of the requested gene name, or -1 if it does not exist.
+	 * 
+	 * \param strGene
+	 * Gene name whose index is returned.
+	 * 
+	 * \returns
+	 * Index of the requested gene name, or -1 if it does not exist.
+	 * 
+	 * \see
+	 * CDataPair::GetGene
+	 */
 	size_t GetGene( const std::string& strGene ) const {
 
 		return ( m_pFilter ? m_pFilter->GetGene( strGene ) : ( m_pDat ? m_pDat->GetGene( strGene ) : -1 ) ); }
 
+	/*!
+	 * \brief
+	 * Returns the gene name at the requested index.
+	 * 
+	 * \param iGene
+	 * Index of gene name to be returned.
+	 * 
+	 * \returns
+	 * Gene name at requested index.
+	 * 
+	 * \see
+	 * CDataPair::GetGene
+	 */
 	std::string GetGene( size_t iGene ) const {
 
 		return CDatFilterImpl::GetGene( iGene ); }
 
+	/*!
+	 * \brief
+	 * Discretizes the given value using the quantization bins of the underlying CDataPair.
+	 * 
+	 * \param dValue
+	 * Continuous value to be discretized.
+	 * 
+	 * \returns
+	 * Bin number of the given value using the underlying CDataPair quantization.
+	 * 
+	 * \see
+	 * CDataPair::Quantize
+	 */
 	size_t Quantize( float dValue ) const {
 
 		return ( m_pFilter ? m_pFilter->Quantize( dValue ) : ( m_pDat ? m_pDat->Quantize( dValue ) : -1 ) ); }
 
+	/*!
+	 * \brief
+	 * Returns the (potentially filtered) value at the requested indices.
+	 * 
+	 * \param iY
+	 * Row of value to retrieve.
+	 * 
+	 * \param iX
+	 * Column of value to retrieve.
+	 * 
+	 * \returns
+	 * Value at the requested location, or NaN if it does not exist or has been filtered.
+	 * 
+	 * \see
+	 * CDataPair::Get
+	 */
 	float& Get( size_t iY, size_t iX ) const {
 		static float	c_dNaN	= CMeta::GetNaN( );
 

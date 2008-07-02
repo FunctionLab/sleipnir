@@ -20,3 +20,55 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "stdafx.h"
+
+/*!
+ * \page BNs2Txt BNs2Txt
+ * 
+ * BNs2Txt converts a binary representation of a collection of naive Bayesian classifiers
+ * (Sleipnir::CBayesNetMinimal) into a set of (X)DSL files.
+ * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * BNs2Txt -i <networks.bin> -o <network_dir> -d <datasets.txt>
+ * \endcode
+ * 
+ * Reads the binary naive Bayesian classifiers stored in \c networks.bin and the text file containing dataset
+ * (classifier node) names \c datasets.txt and creates one (X)DSL file per classifier in the output directory
+ * \c network_dir.
+ * 
+ * \subsection ssec_usage_detailed Detailed Usage
+ * 
+ * \include BNs2Txt/BNs2Txt.ggo
+ * 
+ * <table><tr>
+ *	<th>Flag</th>
+ *	<th>Default</th>
+ *	<th>Type</th>
+ *	<th>Description</th>
+ * </tr><tr>
+ *	<td>-i</td>
+ *	<td>stdin</td>
+ *	<td>Binary network file</td>
+ *	<td>Binary naive Bayesian classifiers (Sleipnir::CBayesNetMinimal) stored by another tool
+ *		(e.g. \ref Counter).</td>
+ * </tr><tr>
+ *	<td>-o</td>
+ *	<td>.</td>
+ *	<td>Directory</td>
+ *	<td>Directory in which (X)DSL files are created.</td>
+ * </tr><tr>
+ *	<td>-d</td>
+ *	<td>None</td>
+ *	<td>Text file</td>
+ *	<td>Text file containing one dataset name per line.  These correspond to the nodes of each classifier in
+ *		the input file and are used to name the equivalent nodes in the output (X)DSL files.</td>
+ * </tr><tr>
+ *	<td>-x</td>
+ *	<td>on</td>
+ *	<td>Flag</td>
+ *	<td>If on, create XDSL files instead of DSL files.</td>
+ * </tr></table>
+ */

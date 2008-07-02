@@ -20,3 +20,41 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "stdafx.h"
+
+/*!
+ * \page Mat2Txt Mat2Txt
+ * 
+ * Mat2Txt converts a binary full matrix (Sleipnir::CFullMatrix) into a human-readable text format.
+ * 
+ * \section sec_usage Usage
+ * 
+ * \subsection ssec_usage_basic Basic Usage
+ * 
+ * \code
+ * Mat2Txt -i <matrix.bin> -o <matrix.txt>
+ * \endcode
+ * 
+ * Output to \c matrix.txt a tab-delimited text representation of the full floating point matrix stored in
+ * binary format in \c matrix.bin.
+ * 
+ * \subsection ssec_usage_detailed Detailed Usage
+ * 
+ * \include Mat2Txt/Mat2Txt.ggo
+ * 
+ * <table><tr>
+ *	<th>Flag</th>
+ *	<th>Default</th>
+ *	<th>Type</th>
+ *	<th>Description</th>
+ * </tr><tr>
+ *	<td>-i</td>
+ *	<td>stdin</td>
+ *	<td>Binary matrix file</td>
+ *	<td>Binary full matrix (Sleipnir::CFullMatrix) stored by another tool (e.g. \ref Hubber).</td>
+ * </tr><tr>
+ *	<td>-o</td>
+ *	<td>stdout</td>
+ *	<td>Text matrix file</td>
+ *	<td>Tab-delimited textual representation of the input matrix.</td>
+ * </tr></table>
+ */

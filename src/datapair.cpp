@@ -305,11 +305,60 @@ string CDatFilterImpl::GetGene( size_t iGene ) const {
 
 	return ( m_pFilter ? m_pFilter->GetGene( iGene ) : ( m_pDat ? m_pDat->GetGene( iGene ) : "" ) ); }
 
+/*!
+ * \brief
+ * Associates the data filter with the given CDat, gene set, and filter type.
+ * 
+ * \param Dat
+ * CDat to be associated with the overlaying mask.
+ * 
+ * \param Genes
+ * Gene set used to filter the data.
+ * 
+ * \param eFilter
+ * Way in which to use the given genes to remove gene pairs.
+ * 
+ * \param pAnswers
+ * If non-null, answer set to be used for filter types requiring answers (e.g. CDat::EFilterTerm).
+ * 
+ * \returns
+ * True if filter was attached successfully.
+ * 
+ * \remarks
+ * No calculation occurs during Attach; the gene set and filter type are stored, and calculations are
+ * performed dynamically in IsExample.  The gene set is not copied, so the given object should not be
+ * destroyed until after the filter.  If a filter types requiring an answer file is given without an
+ * accompanying answer file, the filter won't crash, but results might be a little odd.
+ */
 bool CDatFilter::Attach( const CDataPair& Dat, const CGenes& Genes, CDat::EFilter eFilter,
 	const CDat* pAnswers ) {
 
 	return CDatFilterImpl::Attach( &Dat, NULL, &Genes, eFilter, pAnswers ); }
 
+/*!
+ * \brief
+ * Associates (overlays0 the data filter with the given pre-existing filter, gene set, and filter type.
+ * 
+ * \param Dat
+ * Filter with which this mask will associate (and overlay).
+ * 
+ * \param Genes
+ * Gene set used to filter the data.
+ * 
+ * \param eFilter
+ * Way in which to use the given genes to remove gene pairs.
+ * 
+ * \param pAnswers
+ * If non-null, answer set to be used for filter types requiring answers (e.g. CDat::EFilterTerm).
+ * 
+ * \returns
+ * True if filter was attached successfully.
+ * 
+ * \remarks
+ * This is a slightly ugly way to allow additive filters without requiring a virtual interface.  The
+ * CDat class is so fundamental, and CDat::Get calls occur so frequently, that a virtual function call can
+ * actually have a noticeable impact on performance.
+ */
 bool CDatFilter::Attach( const CDatFilter& Dat, const CGenes& Genes, CDat::EFilter eFilter,
 	const CDat* pAnswers ) {
 

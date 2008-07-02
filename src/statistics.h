@@ -227,6 +227,29 @@ public:
 
 		return ( dRet / iN ); }
 
+	/*!
+	 * \brief
+	 * Returns the value at the requested percentile of the given sequence.
+	 * 
+	 * \param pBegin
+	 * Pointer/iterator to the beginning of the sequence.
+	 * 
+	 * \param pEnd
+	 * Pointer/iterator to the end of the sequence.
+	 * 
+	 * \param dPercentile
+	 * Value between 0 and 1 indicating the percentile of the value to be retrieved.
+	 * 
+	 * \returns
+	 * Value at the requested percentile.
+	 * 
+	 * \remarks
+	 * The 0th percentile is the first (smallest) element, 1st percentile is the last (largest), and 0.5th is
+	 * the median.  Note that the input sequence is modified (sorted) by this function.
+	 * 
+	 * \see
+	 * Median
+	 */
 	template<class tType>
 	static double Percentile( tType pBegin, tType pEnd, double dPercentile ) {
 		size_t	iOne, iTwo, iSize;
@@ -244,16 +267,77 @@ public:
 		return ( ( iTwo >= iSize ) ? pBegin[ iOne ] :
 			( ( pBegin[ iOne ] * ( 1 - dPercentile ) ) + ( pBegin[ iTwo ] * dPercentile ) ) ); }
 
+	/*!
+	 * \brief
+	 * Returns the median value of the given vector.
+	 * 
+	 * \param vecData
+	 * Vector from which median value is returned.
+	 * 
+	 * \returns
+	 * Median value of the given vector.
+	 * 
+	 * \remarks
+	 * Note that the given vector is modified (sorted) by this function.
+	 * 
+	 * \see
+	 * Percentile
+	 */
 	template<class tType>
 	static double Median( std::vector<tType>& vecData ) {
 
 		return Percentile( vecData.begin( ), vecData.end( ), 0.5 ); }
 
+	/*!
+	 * \brief
+	 * Winsorizes the requested number of items at each end of the given vector.
+	 * 
+	 * \param vecValues
+	 * Vector to be sorted and Winsorized.
+	 * 
+	 * \param iCount
+	 * Number of items at each end of the vector to be Winsorized.
+	 * 
+	 * \returns
+	 * True if Winsorization was necessary, false if there were too few values.
+	 * 
+	 * Winsorization is the process of replacing the n largest and smallest elements of a sequence with
+	 * copies of the n-1st largest and n-1st smallest, respectively.  For example, Winsorizing the sequence
+	 * [1, 2, 3, 4, 5, 6, 7, 8] by two would return [3, 3, 3, 4, 5, 6, 6, 6].  This is a standard method for
+	 * finding a robust average in the presence of outliers.
+	 * 
+	 * \remarks
+	 * Note that the vector is modified (sorted) by this function.
+	 */
 	template<class tType>
 	static bool Winsorize( std::vector<tType>& vecValues, size_t iCount = 1 ) {
 
 		return Winsorize( vecValues.begin( ), vecValues.end( ), iCount ); }
 
+	/*!
+	 * \brief
+	 * Winsorizes the requested number of items at each end of the given sequence.
+	 * 
+	 * \param pBegin
+	 * Pointer/iterator to the beginning of the sequence.
+	 * 
+	 * \param pEnd
+	 * Pointer/iterator to the end of the sequence.
+	 * 
+	 * \param iCount
+	 * Number of items at each end of the sequence to be Winsorized.
+	 * 
+	 * \returns
+	 * True if Winsorization was necessary, false if there were too few values.
+	 * 
+	 * Winsorization is the process of replacing the n largest and smallest elements of a sequence with
+	 * copies of the n-1st largest and n-1st smallest, respectively.  For example, Winsorizing the sequence
+	 * [1, 2, 3, 4, 5, 6, 7, 8] by two would return [3, 3, 3, 4, 5, 6, 6, 6].  This is a standard method for
+	 * finding a robust average in the presence of outliers.
+	 * 
+	 * \remarks
+	 * Note that the sequence is modified (sorted) by this function.
+	 */
 	template<class tType>
 	static bool Winsorize( tType pBegin, tType pEnd, size_t iCount = 1 ) {
 		size_t	i, iLength;
@@ -497,6 +581,24 @@ public:
 
 		return ( ( dX > 0 ) ? NormalCDF( log( dX ), dMean, dStdev ) : 0 ); }
 
+	/*!
+	 * \brief
+	 * CDF of an inverse Gaussian distribution with the given parameters at the given point.
+	 * 
+	 * \param dX
+	 * Sample point.
+	 * 
+	 * \param dMean
+	 * Mean of inverse Gaussian.
+	 * 
+	 * \param dLambda
+	 * Lambda parameter of inverse Gaussian.
+	 * 
+	 * \returns
+	 * CStatistics::Normal01CDF ( sqrt( dLambda / dX ) * ( ( dX / dMean ) - 1 ) ) +
+	 * 		exp( ( 2 * dLambda / dMean  ) + log ( Normal01CDF( -sqrt( dLambda / dX ) *
+	 * 		( ( dX / dMean ) + 1 ) ) )
+	 */
 	static double InverseGaussianCDF( double dX, double dMean, double dLambda ) {
 
 		return ( Normal01CDF( sqrt( dLambda / dX ) * ( ( dX / dMean ) - 1 ) ) +
