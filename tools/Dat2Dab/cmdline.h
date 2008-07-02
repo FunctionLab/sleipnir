@@ -61,6 +61,9 @@ struct gengetopt_args_info
   const char *zero_help; /**< @brief Zero missing values help description.  */
   int duplicates_flag;	/**< @brief Allow dissimilar duplicate values (default=off).  */
   const char *duplicates_help; /**< @brief Allow dissimilar duplicate values help description.  */
+  float subsample_arg;	/**< @brief Fraction of output to randomly subsample (default='1').  */
+  char * subsample_orig;	/**< @brief Fraction of output to randomly subsample original value given at command line.  */
+  const char *subsample_help; /**< @brief Fraction of output to randomly subsample help description.  */
   char * lookup1_arg;	/**< @brief First lookup gene.  */
   char * lookup1_orig;	/**< @brief First lookup gene original value given at command line.  */
   const char *lookup1_help; /**< @brief First lookup gene help description.  */
@@ -101,6 +104,7 @@ struct gengetopt_args_info
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int zero_given ;	/**< @brief Whether zero was given.  */
   unsigned int duplicates_given ;	/**< @brief Whether duplicates was given.  */
+  unsigned int subsample_given ;	/**< @brief Whether subsample was given.  */
   unsigned int lookup1_given ;	/**< @brief Whether lookup1 was given.  */
   unsigned int lookup2_given ;	/**< @brief Whether lookup2 was given.  */
   unsigned int lookups_given ;	/**< @brief Whether lookups was given.  */
