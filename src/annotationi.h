@@ -149,12 +149,6 @@ protected:
 class COntologyGOImpl : protected COntologyImpl {
 protected:
 	static const char	c_szAltID[];
-	static const char	c_szBroadSyn[];
-	static const char	c_szComment[];
-	static const char	c_szConsider[];
-	static const char	c_szDef[];
-	static const char	c_szDisjointFrom[];
-	static const char	c_szExactSyn[];
 	static const char	c_szGO[];
 	static const char	c_szGOC[];
 	static const char	c_szHUMAN[];
@@ -162,20 +156,12 @@ protected:
 	static const char	c_szIsA[];
 	static const char	c_szIsObsolete[];
 	static const char	c_szName[];
-	static const char	c_szNarrowSyn[];
 	static const char	c_szNamespace[];
 	static const char	c_szNOT[];
 	static const char	c_szPartOf[];
 	static const char	c_szRelationship[];
-	static const char	c_szRelatedSyn[];
-	static const char	c_szReplacedBy[];
 	static const char	c_szSGD[];
-	static const char	c_szSubset[];
-	static const char	c_szSynonym[];
 	static const char	c_szTerm[];
-	static const char	c_szXRef[];
-	static const char	c_szXRefAnalog[];
-	static const char	c_szXRefUnknown[];
 
 	struct SParserGO : SParser {
 		typedef std::set<const CGene*>	TSetPGene;
