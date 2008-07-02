@@ -802,6 +802,17 @@ MIPS:
  * 
  * \section sec_history Version History
  * 
+ * - <a href="sleipnir-1.1.tar.gz">1.1</a>, 06-02-08 <br>
+ * Added \ref BNs2Txt and \ref Mat2Txt tools for dumping binary Bayesian classifiers and matrices. <br>
+ * Improved Gene Ontology parser for compatibility with latest versions. <br>
+ * Added term-filtered gene counts to \ref DChecker. <br>
+ * Updated \ref BNServer for HEFalMp. <br>
+ * Added network analysis features to \ref Hubber and \ref Funcaeologist. <br>
+ * Add Sleipnir::Percentile and Sleipnir::Winsorize statistics functions. <br>
+ * Change Sleipnir::CMeta behavior to avoid the compiler optimizing out proper initialization/teardown. <br>
+ * Improve cmdline.[ch] file handling in Visual Studio. <br>
+ * Minor bug fixes.
+ * 
  * - <a href="sleipnir-1.0.tar.gz">1.0</a>, 05-14-08 <br>
  * First publicly available version. <br>
  * Added \ref Counter tool for rapid Bayesian classifier construction/inference from raw data counts. <br>
