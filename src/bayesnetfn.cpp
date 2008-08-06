@@ -56,7 +56,7 @@ CBayesNetFNNode* CBayesNetFNNode::Open( DSL_node* pNode ) {
 				break; } }
 	pMatrix = pNode->Definition( )->GetMatrix( );
 	if( pRet ) {
-		DSL_intArray&	veciDims	= pMatrix->GetDimensions( );
+		DSL_intArray	veciDims	= pMatrix->GetDimensions( );
 
 		iDim = ( veciDims.GetSize( ) > 1 ) ? 1 : 0;
 		pRet->m_strName = pNode->Info( ).Header( ).GetId( );
@@ -93,7 +93,7 @@ bool CBayesNetFNNode::Save( DSL_node* pNode ) const {
 	int				i;
 	size_t			iCol, iRow;
 	DSL_Dmatrix*	pMatrix		= pNode->Definition( )->GetMatrix( );
-	DSL_intArray&	veciDims	= pMatrix->GetDimensions( );
+	DSL_intArray	veciDims	= pMatrix->GetDimensions( );
 
 	if( m_strName != pNode->Info( ).Header( ).GetId( ) )
 		return false;
