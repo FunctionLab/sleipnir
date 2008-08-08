@@ -92,7 +92,7 @@ double CMeasureImpl::MeasureTrim( const IMeasure* pMeasure, const float* adX, si
 
 double CMeasureKolmogorovSmirnov::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
-	double			dCur, dMax, dRet;
+	double			dCur, dMax;
 	size_t			i, iX, iY;
 	vector<float>	vecdX, vecdY, vecdZ;
 
@@ -104,15 +104,14 @@ double CMeasureKolmogorovSmirnov::Measure( const float* adX, size_t iM, const fl
 		return Measure( adY, iN, adX, iM, eMap, adWY, adWX );
 
 	vecdX.resize( iM );
-	vecdY.resize( iN );
-	vecdZ.resize( iM + iN );
-	for( i = 0; i < iM; ++i )
-		vecdZ[ i ] = vecdX[ i ] = adX[ i ];
-	for( i = 0; i < iN; ++i )
-		vecdZ[ iM + i ] = vecdY[ i ] = adY[ i ];
+	copy( adX, adX + iM, vecdX.begin( ) );
 	sort( vecdX.begin( ), vecdX.end( ) );
+	vecdY.resize( iN );
+	copy( adY, adY + iN, vecdY.begin( ) );
 	sort( vecdY.begin( ), vecdY.end( ) );
-	sort( vecdZ.begin( ), vecdZ.end( ) );
+	vecdZ.resize( iM + iN );
+	for( iX = iY = i = 0; i < vecdZ.size( ); ++i )
+		vecdZ[ i ] = ( vecdX[ iX ] < vecdY[ iY ] ) ? vecdX[ iX++ ] : vecdY[ iY++ ];
 
 	for( dMax = iX = iY = i = 0; i < vecdZ.size( ); ++i ) {
 		while( ( iX < iM ) && ( vecdX[ iX ] <= vecdZ[ i ] ) )
@@ -124,16 +123,8 @@ double CMeasureKolmogorovSmirnov::Measure( const float* adX, size_t iM, const fl
 
 	dCur = sqrt( iM * iN / (double)( iM + iN ) );
 	dMax *= dCur + 0.12 + ( 0.11 / dCur );
-	dMax = -2 * pow( dMax, 2 );
-	for( dRet = 0,i = 1; i < 100; ++i ) {
-		dCur = exp( i * i * dMax );
-		if( !( i % 2 ) )
-			dCur *= -1;
-		dRet += dCur; }
-	if( dRet != 1 )
-		dRet *= 2;
 
-	return dRet; }
+	return PValue( dMax ); }
 
 double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {

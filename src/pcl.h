@@ -277,7 +277,7 @@ public:
 	 * \see
 	 * Set
 	 */
-	float Get( size_t iGene, size_t iExperiment ) const {
+	float& Get( size_t iGene, size_t iExperiment ) const {
 
 		return m_Data.Get( iGene, iExperiment ); }
 
@@ -408,6 +408,23 @@ public:
 	const std::string& GetExperiment( size_t iExperiment ) const {
 
 		return m_vecstrExperiments[ iExperiment ]; }
+
+	/*!
+	 * \brief
+	 * Set the experiment label at the given PCL column.
+	 * 
+	 * \param iExperiment
+	 * Index of experiment label to set.
+	 * 
+	 * \param strExperiment
+	 * Experiment label to which the requested column is set.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given index must be smaller than GetExperiments.
+	 */
+	void SetExperiment( size_t iExperiment, const std::string& strExperiment ) {
+
+		m_vecstrExperiments[ iExperiment ] = strExperiment; }
 
 	/*!
 	 * \brief

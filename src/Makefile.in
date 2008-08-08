@@ -124,6 +124,7 @@ libSleipnir_a_SOURCES = \
 	clustkmeans.cpp			\
 	clustpivot.cpp			\
 	clustqtc.cpp			\
+	coalesce.cpp			\
 	color.cpp				\
 	compactmatrix.cpp		\
 	database.cpp			\
@@ -132,6 +133,7 @@ libSleipnir_a_SOURCES = \
 	dataset.cpp				\
 	dat.cpp					\
 	example.cpp				\
+	fasta.cpp				\
 	file.cpp				\
 	genome.cpp				\
 	mathb.cpp				\
@@ -159,6 +161,8 @@ include_HEADERS = \
 	clustpivot.h			\
 	clustqtc.h				\
 	clustqtci.h				\
+	coalesce.h				\
+	coalescei.h				\
 	color.h					\
 	colori.h				\
 	compactmatrix.h			\
@@ -172,6 +176,8 @@ include_HEADERS = \
 	dat.h					\
 	dati.h					\
 	examplei.h				\
+	fasta.h					\
+	fastai.h				\
 	file.h					\
 	filei.h					\
 	fullmatrix.h			\
@@ -218,9 +224,9 @@ am_libSleipnir_a_OBJECTS = annotation.$(OBJEXT) annotationgo.$(OBJEXT) \
 	bayesnetpnl.$(OBJEXT) bayesnetsmile.$(OBJEXT) \
 	bayesnetsmileelr.$(OBJEXT) clusthierarchical.$(OBJEXT) \
 	clustkmeans.$(OBJEXT) clustpivot.$(OBJEXT) clustqtc.$(OBJEXT) \
-	color.$(OBJEXT) compactmatrix.$(OBJEXT) database.$(OBJEXT) \
+	coalesce.$(OBJEXT) color.$(OBJEXT) compactmatrix.$(OBJEXT) database.$(OBJEXT) \
 	datapair.$(OBJEXT) datasetcompact.$(OBJEXT) dataset.$(OBJEXT) \
-	dat.$(OBJEXT) example.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) \
+	dat.$(OBJEXT) example.$(OBJEXT) fasta.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) \
 	mathb.$(OBJEXT) measure.$(OBJEXT) meta.$(OBJEXT) \
 	orthology.$(OBJEXT) pcl.$(OBJEXT) pclset.$(OBJEXT) \
 	serverclient.$(OBJEXT) server.$(OBJEXT) statistics.$(OBJEXT) \
@@ -246,11 +252,12 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/clusthierarchical.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/clustkmeans.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/clustpivot.Po ./$(DEPDIR)/clustqtc.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/coalesce.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/color.Po ./$(DEPDIR)/compactmatrix.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/dat.Po ./$(DEPDIR)/database.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/datapair.Po ./$(DEPDIR)/dataset.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/datasetcompact.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/example.Po ./$(DEPDIR)/file.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/example.Po ./$(DEPDIR)/fasta.Po ./$(DEPDIR)/file.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/genome.Po ./$(DEPDIR)/mathb.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/measure.Po ./$(DEPDIR)/meta.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/orthology.Po ./$(DEPDIR)/pcl.Po \
@@ -336,6 +343,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clustkmeans.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clustpivot.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clustqtc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coalesce.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/color.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compactmatrix.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dat.Po@am__quote@
@@ -344,6 +352,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dataset.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/datasetcompact.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/example.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fasta.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/genome.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mathb.Po@am__quote@

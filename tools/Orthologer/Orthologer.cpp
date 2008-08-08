@@ -129,6 +129,7 @@ int main( int iArgs, char** aszArgs ) {
 		CDat						Dat;
 		vector<string>				vecstrGenes;
 		map<const CGene*,size_t>	mapGenes;
+		size_t						iPositives, iNegatives;
 
 		cerr << "Processing " << sArgs.inputs[ iOrganism ] << endl;
 		vecstrGenes.resize( vecData[ iOrganism ].GetGenes( ) );
@@ -143,12 +144,13 @@ int main( int iArgs, char** aszArgs ) {
 					mapGenes[ &Gene ] = vecstrGenes.size( );
 					vecstrGenes.push_back( Gene.GetName( ) ); } }
 
-		Dat.Open( vecstrGenes, false );
+		Dat.Open( vecstrGenes, true );
 		cerr << "Integrating orthology clusters" << endl;
-		for( iOne = 0; iOne < vecData[ iOrganism ].GetGenes( ); ++iOne )
+		for( iPositives = iOne = 0; iOne < vecData[ iOrganism ].GetGenes( ); ++iOne )
 			for( iTwo = ( iOne + 1 ); iTwo < vecData[ iOrganism ].GetGenes( ); ++iTwo )
-				Dat.Set( iOne, iTwo, ( ( ( i = vecData[ iOrganism ].GetDiscrete( iOne, iTwo, 0 ) ) ==
-					-1 ) || !i ) ? CMeta::GetNaN( ) : i );
+				if( ( ( i = vecData[ iOrganism ].GetDiscrete( iOne, iTwo, 0 ) ) != -1 ) && i ) {
+					iPositives++;
+					Dat.Set( iOne, iTwo, 1 ); }
 		for( iOne = 0; iOne < vecvecpriiOrthology.size( ); ++iOne )
 			for( iGeneOne = 0; iGeneOne < vecvecpriiOrthology[ iOne ].size( ); ++iGeneOne ) {
 				const pair<size_t, size_t>&	priiOne	= vecvecpriiOrthology[ iOne ][ iGeneOne ];
@@ -164,8 +166,9 @@ int main( int iArgs, char** aszArgs ) {
 					if( priiOne.second == priiTwo.second ) {
 						iIndexTwo = ( priiTwo.first == -1 ) ? mapGenes[ &Orthology.GetGene( iOne,
 							iGeneTwo ) ] : priiTwo.first;
-						if( CMeta::IsNaN( Dat.Get( iIndexOne, iIndexTwo ) ) )
-							Dat.Set( iIndexOne, iIndexTwo, (float)sArgs.weight1_arg ); } } }
+						if( CMeta::IsNaN( Dat.Get( iIndexOne, iIndexTwo ) ) ) {
+							iPositives++;
+							Dat.Set( iIndexOne, iIndexTwo, (float)sArgs.weight1_arg ); } } } }
 
 		cerr << "Integrating orthology links" << endl;
 		for( iOne = 0; iOne < MatRelated.GetSize( ); ++iOne ) {
@@ -186,8 +189,21 @@ int main( int iArgs, char** aszArgs ) {
 							if( priiOne.second == priiTwo.second ) {
 								iIndexTwo = ( priiTwo.first == -1 ) ? mapGenes[ &Orthology.GetGene(
 									iTwo, iGeneTwo ) ] : priiTwo.first;
-								if( CMeta::IsNaN( Dat.Get( iIndexOne, iIndexTwo ) ) )
-									Dat.Set( iIndexOne, iIndexTwo, (float)sArgs.weight2_arg ); } } } }
+								if( CMeta::IsNaN( Dat.Get( iIndexOne, iIndexTwo ) ) ) {
+									iPositives++;
+									Dat.Set( iIndexOne, iIndexTwo, (float)sArgs.weight2_arg ); } } } } }
+
+		i = Dat.GetGenes( ) * ( Dat.GetGenes( ) - 1 ) / 2;
+		iNegatives = min( (size_t)( iPositives * ( ( 1 / sArgs.positives_arg ) - 1 ) ), i - iPositives );
+		if( iNegatives ) {
+			float	dNegatives;
+
+			dNegatives = (float)iNegatives / i;
+			cerr << "Generating random negatives (" << ( dNegatives * 100 ) << "%)" << endl;
+			for( i = 0; i < Dat.GetGenes( ); ++i )
+				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+					if( CMeta::IsNaN( Dat.Get( i, j ) ) && ( ( (float)rand( ) / RAND_MAX ) < dNegatives ) )
+						Dat.Set( i, j, 0 ); }
 
 		Dat.Save( ( CMeta::Deextension( sArgs.inputs[ iOrganism ] ) + c_szOrthologized ).c_str( ) ); }
 

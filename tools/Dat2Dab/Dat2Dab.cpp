@@ -36,7 +36,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
+	CMeta Meta( sArgs.verbosity_arg );
 
 	if( sArgs.genes_arg ) {
 		ifsm.open( sArgs.genes_arg );
@@ -168,31 +168,51 @@ int main( int iArgs, char** aszArgs ) {
 					( ( (float)rand( ) / RAND_MAX ) > sArgs.subsample_arg ) )
 					Dat.Set( i, j, CMeta::GetNaN( ) );
 
-	if( sArgs.lookups_arg ) {
-		CGenes			GenesLk( Genome );
-		vector<size_t>	veciGenes;
+	if( sArgs.lookups1_arg ) {
+		CGenes			GenesLk1( Genome );
+		vector<size_t>	veciGenesOne;
 		size_t			iOne, iTwo;
 		float			d;
 
 		ifsm.clear( );
-		ifsm.open( sArgs.lookups_arg );
-		if( !GenesLk.Open( ifsm ) ) {
-			cerr << "Could not open: " << sArgs.lookups_arg << endl;
+		ifsm.open( sArgs.lookups1_arg );
+		if( !GenesLk1.Open( ifsm ) ) {
+			cerr << "Could not open: " << sArgs.lookups1_arg << endl;
 			return 1; }
-		veciGenes.resize( GenesLk.GetGenes( ) );
-		for( i = 0; i < veciGenes.size( ); ++i )
-			veciGenes[ i ] = Dat.GetGene( GenesLk.GetGene( i ).GetName( ) );
-		if( sArgs.lookup1_arg ) {
+		ifsm.close( );
+		veciGenesOne.resize( GenesLk1.GetGenes( ) );
+		for( i = 0; i < veciGenesOne.size( ); ++i )
+			veciGenesOne[ i ] = Dat.GetGene( GenesLk1.GetGene( i ).GetName( ) );
+		if( sArgs.lookups2_arg ) {
+			CGenes			GenesLk2( Genome );
+			vector<size_t>	veciGenesTwo;
+
+			ifsm.clear( );
+			ifsm.open( sArgs.lookups2_arg );
+			if( !GenesLk2.Open( ifsm ) ) {
+				cerr << "Could not open: " << sArgs.lookups2_arg << endl;
+				return 1; }
+			ifsm.close( );
+			veciGenesTwo.resize( GenesLk2.GetGenes( ) );
+			for( i = 0; i < veciGenesTwo.size( ); ++i )
+				veciGenesTwo[ i ] = Dat.GetGene( GenesLk2.GetGene( i ).GetName( ) );
+			for( i = 0; i < veciGenesOne.size( ); ++i ) {
+				if( ( iOne = veciGenesOne[ i ] ) == -1 )
+					continue;
+				for( j = 0; j < veciGenesTwo.size( ); ++j )
+					if( ( ( iTwo = veciGenesTwo[ j ] ) != -1 ) && !CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
+						cout << Dat.GetGene( iOne ) << '\t' << Dat.GetGene( iTwo ) << '\t' << d << endl; } }
+		else if( sArgs.lookup1_arg ) {
 			if( ( iOne = Dat.GetGene( sArgs.lookup1_arg ) ) != -1 )
-				for( i = 0; i < veciGenes.size( ); ++i )
-					if( ( ( iTwo = veciGenes[ i ] ) != -1 ) &&
+				for( i = 0; i < veciGenesOne.size( ); ++i )
+					if( ( ( iTwo = veciGenesOne[ i ] ) != -1 ) &&
 						!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
 						cout << Dat.GetGene( iOne ) << '\t' << Dat.GetGene( iTwo ) << '\t' << d << endl; }
 		else
-			for( i = 0; i < veciGenes.size( ); ++i )
-				if( ( iOne = veciGenes[ i ] ) != -1 )
-					for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
-						if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
+			for( i = 0; i < veciGenesOne.size( ); ++i )
+				if( ( iOne = veciGenesOne[ i ] ) != -1 )
+					for( j = ( i + 1 ); j < veciGenesOne.size( ); ++j )
+						if( ( ( iTwo = veciGenesOne[ j ] ) != -1 ) &&
 							!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
 							cout << Dat.GetGene( iOne ) << '\t' << Dat.GetGene( iTwo ) << '\t' << d << endl;
 		return 0; }

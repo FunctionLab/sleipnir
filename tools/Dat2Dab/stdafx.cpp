@@ -133,7 +133,20 @@
  *	<td>None</td>
  *	<td>Gene text file</td>
  *	<td>If given with \c -l, lookup all pairs between \c -l and the given gene set.  If given alone,
- *		lookup all pairs between genes in the given set.</td>
+ *		lookup all pairs between genes in the given set.  If given with \c -T, lookup all pairs spanning the
+ *		two gene sets.</td>
+ * </tr><tr>
+ *	<td>-T</td>
+ *	<td>None</td>
+ *	<td>Gene text file</td>
+ *	<td>Must be given with \c -t; looks up all gene pairs spanning the two gene sets (i.e. one gene in the set
+ *		\c -t, one in the set \c -T).</td>
+ * </tr><tr>
+ *	<td>-E</td>
+ *	<td>off</td>
+ *	<td>Flag</td>
+ *	<td>If set, produce no output other than a list of genes that would be in at least one of the normally
+ *		output pairs.</td>
  * </tr><tr>
  *	<td>-p</td>
  *	<td>None</td>

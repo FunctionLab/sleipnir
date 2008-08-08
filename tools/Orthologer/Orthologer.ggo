@@ -9,9 +9,9 @@ option	"weight1"	w	"Weight of in-cluster ortholog relationships"
 						double	default="1"
 option	"weight2"	W	"Weight of cross-cluster ortholog relationships"
 						double	default="1"
+option	"positives"	p	"Expected fraction of positives"
+						double	default="1"
 
 section "Optional"
-option	"memmap"	m	"Memory map input files when possible"
-						flag	off
 option	"verbosity"	v	"Message verbosity"
 						int	default="5"

@@ -401,6 +401,29 @@ public:
 
 	/*!
 	 * \brief
+	 * Return the two-tailed p-value of a Pearson correlation.
+	 * 
+	 * \param dR
+	 * Pearson correlation.
+	 * 
+	 * \param iN
+	 * Length of correlated vectors.
+	 * 
+	 * \returns
+	 * P-value corresponding to the given correlation and array size.
+	 * 
+	 * \see
+	 * CMeasurePearson
+	 */
+	static double PValuePearson( double dR, size_t iN ) {
+		double	dT, dF;
+
+		dF = iN - 2;
+		dT = dR * sqrt( dF / ( 1 - ( dR * dR ) ) );
+		return IncompleteBeta( dF / 2, 0.5, dF / ( dF + ( dT * dT ) ) ); }
+
+	/*!
+	 * \brief
 	 * Return the p-value of a t-test between the two given array statistics assuming equal variance.
 	 * 
 	 * \param dMeanOne
@@ -472,6 +495,26 @@ public:
 		dT = ( dMeanOne - dMeanTwo ) / sqrt( ( dVarianceOne / iNOne ) + ( dVarianceTwo / iNTwo ) );
 
 		return IncompleteBeta( 0.5 * dDegFree, 0.5, dDegFree / ( dDegFree + ( dT * dT ) ) ); }
+
+	template<class tType>
+	static double KSTest( const tType* aOne, const tType* aTwo, size_t iN ) {
+		size_t	i;
+		tType	SumOne, SumTwo, CumOne, CumTwo;
+		float	d, dMax;
+
+		if( !iN )
+			return 1;
+		for( SumOne = SumTwo = i = 0; i < iN; ++i ) {
+			SumOne += aOne[ i ];
+			SumTwo += aTwo[ i ]; }
+		for( dMax = 0,CumOne = CumTwo = i = 0; i < iN; ++i ) {
+			CumOne += aOne[ i ];
+			CumTwo += aTwo[ i ];
+			if( ( d = fabs( ( (float)CumOne / SumOne ) - ( (float)CumTwo / SumTwo ) ) ) > dMax )
+				dMax = d; }
+
+		d = sqrt( (float)( SumOne * SumTwo ) / ( SumOne + SumTwo ) );
+		return CMeasureKolmogorovSmirnov::PValue( dMax * ( d + 0.12 + ( 0.11 / d ) ) ); }
 
 	// Evaluation statistics
 	static double WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,

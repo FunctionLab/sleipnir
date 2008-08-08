@@ -4,6 +4,7 @@ if WITH_TOOLS
 	  Cliquer \
 	  Clusterer \
 	  Clusters2Dab \
+	  COALESCE \
 	  Combiner \
 	  DChecker \
 	  Dat2Dab \

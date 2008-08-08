@@ -37,9 +37,11 @@ option	"lookup1"		l	"First lookup gene"
 							string
 option	"lookup2"		L	"Second lookup gene"
 							string
-option	"lookups"		t	"Lookup gene set"
+option	"lookups1"		t	"First lookup gene set"
 							string	typestr="filename"
-option	"genelist"		T	"Only list genes"
+option	"lookups2"		T	"First lookup gene set"
+							string	typestr="filename"
+option	"genelist"		E	"Only list genes"
 							flag	off
 option	"paircount"		P	"Only count pairs above cutoff"
 							flag	off

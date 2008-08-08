@@ -19,6 +19,7 @@ libSleipnir_a_SOURCES	=	\
 	clustkmeans.cpp			\
 	clustpivot.cpp			\
 	clustqtc.cpp			\
+	coalesce.cpp			\
 	color.cpp				\
 	compactmatrix.cpp		\
 	database.cpp			\
@@ -27,6 +28,7 @@ libSleipnir_a_SOURCES	=	\
 	dataset.cpp				\
 	dat.cpp					\
 	example.cpp				\
+	fasta.cpp				\
 	file.cpp				\
 	genome.cpp				\
 	mathb.cpp				\
@@ -53,6 +55,8 @@ include_HEADERS			=	\
 	clustpivot.h			\
 	clustqtc.h				\
 	clustqtci.h				\
+	coalesce.h				\
+	coalescei.h				\
 	color.h					\
 	colori.h				\
 	compactmatrix.h			\
@@ -66,6 +70,8 @@ include_HEADERS			=	\
 	dat.h					\
 	dati.h					\
 	examplei.h				\
+	fasta.h					\
+	fastai.h				\
 	file.h					\
 	filei.h					\
 	fullmatrix.h			\

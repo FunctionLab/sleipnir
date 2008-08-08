@@ -435,6 +435,33 @@ public:
  */
 class CMeasureKolmogorovSmirnov : public IMeasure {
 public:
+	static double PValue( double dD ) {
+		static const float	c_dEpsilon1	= 0.001f;
+		static const float	c_dEpsilon2	= 1e-8f;
+		static const float	c_dEpsilon3	= 0.475f;
+		double	d, dRet, dCur, dPrev;
+		size_t	i, iIterations;
+
+		if( !dD )
+			return 1;
+
+		dD = -2 * pow( dD, 2 );
+		iIterations = max( 250, (size_t)( 1 / dD ) );
+		for( dRet = dPrev = 0,i = 1; i < iIterations; ++i ) {
+			dCur = exp( i * i * dD );
+			if( !( i % 2 ) )
+				dCur *= -1;
+			dRet += dCur;
+			d = fabs( dCur );
+			if( ( ( ( d / dRet ) < c_dEpsilon1 ) && ( dRet > c_dEpsilon3 ) ) ||
+				( ( d / dPrev ) < c_dEpsilon1 ) || ( ( d / dRet ) < c_dEpsilon2 ) )
+				break;
+			dPrev = d; }
+		if( dRet != 1 )
+			dRet *= 2;
+
+		return dRet; }
+
 	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 

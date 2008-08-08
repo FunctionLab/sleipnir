@@ -523,6 +523,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Cliquer/Makefile \
 		 tools/Clusterer/Makefile \
 		 tools/Clusters2Dab/Makefile \
+		 tools/COALESCE/Makefile \
 		 tools/Combiner/Makefile \
 		 tools/DChecker/Makefile \
 		 tools/Dat2Dab/Makefile \
