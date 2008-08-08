@@ -70,9 +70,12 @@ struct gengetopt_args_info
   char * lookup2_arg;	/**< @brief Second lookup gene.  */
   char * lookup2_orig;	/**< @brief Second lookup gene original value given at command line.  */
   const char *lookup2_help; /**< @brief Second lookup gene help description.  */
-  char * lookups_arg;	/**< @brief Lookup gene set.  */
-  char * lookups_orig;	/**< @brief Lookup gene set original value given at command line.  */
-  const char *lookups_help; /**< @brief Lookup gene set help description.  */
+  char * lookups1_arg;	/**< @brief First lookup gene set.  */
+  char * lookups1_orig;	/**< @brief First lookup gene set original value given at command line.  */
+  const char *lookups1_help; /**< @brief First lookup gene set help description.  */
+  char * lookups2_arg;	/**< @brief First lookup gene set.  */
+  char * lookups2_orig;	/**< @brief First lookup gene set original value given at command line.  */
+  const char *lookups2_help; /**< @brief First lookup gene set help description.  */
   int genelist_flag;	/**< @brief Only list genes (default=off).  */
   const char *genelist_help; /**< @brief Only list genes help description.  */
   int paircount_flag;	/**< @brief Only count pairs above cutoff (default=off).  */
@@ -107,7 +110,8 @@ struct gengetopt_args_info
   unsigned int subsample_given ;	/**< @brief Whether subsample was given.  */
   unsigned int lookup1_given ;	/**< @brief Whether lookup1 was given.  */
   unsigned int lookup2_given ;	/**< @brief Whether lookup2 was given.  */
-  unsigned int lookups_given ;	/**< @brief Whether lookups was given.  */
+  unsigned int lookups1_given ;	/**< @brief Whether lookups1 was given.  */
+  unsigned int lookups2_given ;	/**< @brief Whether lookups2 was given.  */
   unsigned int genelist_given ;	/**< @brief Whether genelist was given.  */
   unsigned int paircount_given ;	/**< @brief Whether paircount was given.  */
   unsigned int remap_given ;	/**< @brief Whether remap was given.  */

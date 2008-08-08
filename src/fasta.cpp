@@ -85,7 +85,7 @@ void CFASTA::Save( ostream& ostm, size_t iWrap ) const {
 				string	strCur;
 
 				strCur = sSequence.m_vecstrSequences[ j ];
-				transform( strCur.begin( ), strCur.end( ), strCur.begin( ), fIntron ? tolower : toupper );
+				transform( strCur.begin( ), strCur.end( ), strCur.begin( ), fIntron ? ::tolower : ::toupper );
 				strSequence += strCur; }
 			for( j = 0; j < strSequence.length( ); j += iWrap )
 				ostm << strSequence.substr( j, iWrap ) << endl; } } }
@@ -106,7 +106,7 @@ bool CFASTA::Get( size_t iGene, vector<SFASTASequence>& vecsSequences ) const {
 		m_ifsm.seekg( iterGene->second );
 		if( (size_t)m_ifsm.tellg( ) != iterGene->second ) {
 			g_CatSleipnir.error( "CFASTA::Get( %d ) error parsing: %s %s at %d (%d)", iGene,
-				GetGene( iGene ).c_str( ), iterGene->first.c_str( ), iterGene->second, m_ifsm.tellg( ) );
+				GetGene( iGene ).c_str( ), iterGene->first.c_str( ), iterGene->second, (size_t)m_ifsm.tellg( ) );
 			return false; }
 		while( !m_ifsm.eof( ) ) {
 			m_ifsm.getline( m_szBuffer, c_iBufferSize );
@@ -131,7 +131,7 @@ bool CFASTA::Get( size_t iGene, vector<SFASTASequence>& vecsSequences ) const {
 			for( iEnd = iBegin + 1; ( iEnd < strSequence.size( ) ) &&
 				( fBegin == !!isupper( strSequence[ iEnd ] ) ); ++iEnd );
 			strCur = strSequence.substr( iBegin, iEnd - iBegin );
-			transform( strCur.begin( ), strCur.end( ), strCur.begin( ), toupper );
+			transform( strCur.begin( ), strCur.end( ), strCur.begin( ), ::toupper );
 			sSequence.m_vecstrSequences.push_back( strCur ); }
 		vecsSequences.push_back( sSequence ); }
 

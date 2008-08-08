@@ -28,35 +28,36 @@ const char *gengetopt_args_info_usage = "Usage: Dat2Dab [OPTIONS]... [FILES]..."
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help              Print help and exit",
-  "  -V, --version           Print version and exit",
+  "  -h, --help               Print help and exit",
+  "  -V, --version            Print version and exit",
   "\nMain:",
-  "  -i, --input=filename    Input DAT/DAB file",
-  "  -o, --output=filename   Output DAT/DAB file",
+  "  -i, --input=filename     Input DAT/DAB file",
+  "  -o, --output=filename    Output DAT/DAB file",
   "\nPreprocessing:",
-  "  -f, --flip              Calculate one minus values  (default=off)",
-  "  -n, --normalize         Normalize to the range [0,1]  (default=off)",
-  "  -z, --zscore            Convert values to z-scores  (default=off)",
-  "  -r, --rank              Rank transform data  (default=off)",
+  "  -f, --flip               Calculate one minus values  (default=off)",
+  "  -n, --normalize          Normalize to the range [0,1]  (default=off)",
+  "  -z, --zscore             Convert values to z-scores  (default=off)",
+  "  -r, --rank               Rank transform data  (default=off)",
   "\nFiltering:",
-  "  -g, --genes=filename    Process only genes from the given set",
-  "  -G, --genex=filename    Exclude all genes from the given set",
-  "  -c, --cutoff=DOUBLE     Exclude edges below cutoff",
-  "  -e, --zero              Zero missing values  (default=off)",
-  "  -d, --duplicates        Allow dissimilar duplicate values  (default=off)",
-  "  -u, --subsample=FLOAT   Fraction of output to randomly subsample  \n                            (default=`1')",
+  "  -g, --genes=filename     Process only genes from the given set",
+  "  -G, --genex=filename     Exclude all genes from the given set",
+  "  -c, --cutoff=DOUBLE      Exclude edges below cutoff",
+  "  -e, --zero               Zero missing values  (default=off)",
+  "  -d, --duplicates         Allow dissimilar duplicate values  (default=off)",
+  "  -u, --subsample=FLOAT    Fraction of output to randomly subsample  \n                             (default=`1')",
   "\nLookups:",
-  "  -l, --lookup1=STRING    First lookup gene",
-  "  -L, --lookup2=STRING    Second lookup gene",
-  "  -t, --lookups=filename  Lookup gene set",
-  "  -T, --genelist          Only list genes  (default=off)",
-  "  -P, --paircount         Only count pairs above cutoff  (default=off)",
+  "  -l, --lookup1=STRING     First lookup gene",
+  "  -L, --lookup2=STRING     Second lookup gene",
+  "  -t, --lookups1=filename  First lookup gene set",
+  "  -T, --lookups2=filename  First lookup gene set",
+  "  -E, --genelist           Only list genes  (default=off)",
+  "  -P, --paircount          Only count pairs above cutoff  (default=off)",
   "\nOptional:",
-  "  -p, --remap=filename    Gene name remapping file",
-  "  -b, --table             Produce table formatted output  (default=off)",
-  "  -s, --skip=INT          Columns to skip in input PCL  (default=`2')",
-  "  -m, --memmap            Memory map input/output  (default=off)",
-  "  -v, --verbosity=INT     Message verbosity  (default=`5')",
+  "  -p, --remap=filename     Gene name remapping file",
+  "  -b, --table              Produce table formatted output  (default=off)",
+  "  -s, --skip=INT           Columns to skip in input PCL  (default=`2')",
+  "  -m, --memmap             Memory map input/output  (default=off)",
+  "  -v, --verbosity=INT      Message verbosity  (default=`5')",
     0
 };
 
@@ -100,7 +101,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->subsample_given = 0 ;
   args_info->lookup1_given = 0 ;
   args_info->lookup2_given = 0 ;
-  args_info->lookups_given = 0 ;
+  args_info->lookups1_given = 0 ;
+  args_info->lookups2_given = 0 ;
   args_info->genelist_given = 0 ;
   args_info->paircount_given = 0 ;
   args_info->remap_given = 0 ;
@@ -134,8 +136,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->lookup1_orig = NULL;
   args_info->lookup2_arg = NULL;
   args_info->lookup2_orig = NULL;
-  args_info->lookups_arg = NULL;
-  args_info->lookups_orig = NULL;
+  args_info->lookups1_arg = NULL;
+  args_info->lookups1_orig = NULL;
+  args_info->lookups2_arg = NULL;
+  args_info->lookups2_orig = NULL;
   args_info->genelist_flag = 0;
   args_info->paircount_flag = 0;
   args_info->remap_arg = NULL;
@@ -170,14 +174,15 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->subsample_help = gengetopt_args_info_help[16] ;
   args_info->lookup1_help = gengetopt_args_info_help[18] ;
   args_info->lookup2_help = gengetopt_args_info_help[19] ;
-  args_info->lookups_help = gengetopt_args_info_help[20] ;
-  args_info->genelist_help = gengetopt_args_info_help[21] ;
-  args_info->paircount_help = gengetopt_args_info_help[22] ;
-  args_info->remap_help = gengetopt_args_info_help[24] ;
-  args_info->table_help = gengetopt_args_info_help[25] ;
-  args_info->skip_help = gengetopt_args_info_help[26] ;
-  args_info->memmap_help = gengetopt_args_info_help[27] ;
-  args_info->verbosity_help = gengetopt_args_info_help[28] ;
+  args_info->lookups1_help = gengetopt_args_info_help[20] ;
+  args_info->lookups2_help = gengetopt_args_info_help[21] ;
+  args_info->genelist_help = gengetopt_args_info_help[22] ;
+  args_info->paircount_help = gengetopt_args_info_help[23] ;
+  args_info->remap_help = gengetopt_args_info_help[25] ;
+  args_info->table_help = gengetopt_args_info_help[26] ;
+  args_info->skip_help = gengetopt_args_info_help[27] ;
+  args_info->memmap_help = gengetopt_args_info_help[28] ;
+  args_info->verbosity_help = gengetopt_args_info_help[29] ;
   
 }
 
@@ -273,8 +278,10 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->lookup1_orig));
   free_string_field (&(args_info->lookup2_arg));
   free_string_field (&(args_info->lookup2_orig));
-  free_string_field (&(args_info->lookups_arg));
-  free_string_field (&(args_info->lookups_orig));
+  free_string_field (&(args_info->lookups1_arg));
+  free_string_field (&(args_info->lookups1_orig));
+  free_string_field (&(args_info->lookups2_arg));
+  free_string_field (&(args_info->lookups2_orig));
   free_string_field (&(args_info->remap_arg));
   free_string_field (&(args_info->remap_orig));
   free_string_field (&(args_info->skip_orig));
@@ -345,8 +352,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "lookup1", args_info->lookup1_orig, 0);
   if (args_info->lookup2_given)
     write_into_file(outfile, "lookup2", args_info->lookup2_orig, 0);
-  if (args_info->lookups_given)
-    write_into_file(outfile, "lookups", args_info->lookups_orig, 0);
+  if (args_info->lookups1_given)
+    write_into_file(outfile, "lookups1", args_info->lookups1_orig, 0);
+  if (args_info->lookups2_given)
+    write_into_file(outfile, "lookups2", args_info->lookups2_orig, 0);
   if (args_info->genelist_given)
     write_into_file(outfile, "genelist", 0, 0 );
   if (args_info->paircount_given)
@@ -621,8 +630,9 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "subsample",	1, NULL, 'u' },
         { "lookup1",	1, NULL, 'l' },
         { "lookup2",	1, NULL, 'L' },
-        { "lookups",	1, NULL, 't' },
-        { "genelist",	0, NULL, 'T' },
+        { "lookups1",	1, NULL, 't' },
+        { "lookups2",	1, NULL, 'T' },
+        { "genelist",	0, NULL, 'E' },
         { "paircount",	0, NULL, 'P' },
         { "remap",	1, NULL, 'p' },
         { "table",	0, NULL, 'b' },
@@ -632,7 +642,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:o:fnzrg:G:c:edu:l:L:t:TPp:bs:mv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:o:fnzrg:G:c:edu:l:L:t:T:EPp:bs:mv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -813,24 +823,36 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 't':	/* Lookup gene set.  */
+        case 't':	/* First lookup gene set.  */
         
         
-          if (update_arg( (void *)&(args_info->lookups_arg), 
-               &(args_info->lookups_orig), &(args_info->lookups_given),
-              &(local_args_info.lookups_given), optarg, 0, 0, ARG_STRING,
+          if (update_arg( (void *)&(args_info->lookups1_arg), 
+               &(args_info->lookups1_orig), &(args_info->lookups1_given),
+              &(local_args_info.lookups1_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "lookups", 't',
+              "lookups1", 't',
               additional_error))
             goto failure;
         
           break;
-        case 'T':	/* Only list genes.  */
+        case 'T':	/* First lookup gene set.  */
+        
+        
+          if (update_arg( (void *)&(args_info->lookups2_arg), 
+               &(args_info->lookups2_orig), &(args_info->lookups2_given),
+              &(local_args_info.lookups2_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "lookups2", 'T',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'E':	/* Only list genes.  */
         
         
           if (update_arg((void *)&(args_info->genelist_flag), 0, &(args_info->genelist_given),
               &(local_args_info.genelist_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "genelist", 'T',
+              check_ambiguity, override, 1, 0, "genelist", 'E',
               additional_error))
             goto failure;
         

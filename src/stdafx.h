@@ -47,6 +47,7 @@
 #define _read				read
 #define _write				write
 #define closesocket			close
+#define _mktemp_s			mktemp
 #define SOCKET				int
 #define strcpy_s(a,b,c)		strcpy(a,c)
 #define strncpy_s(a,b,c,d)	strncpy(a,c,d)

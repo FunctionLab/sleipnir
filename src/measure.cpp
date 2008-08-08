@@ -124,7 +124,7 @@ double CMeasureKolmogorovSmirnov::Measure( const float* adX, size_t iM, const fl
 	dCur = sqrt( iM * iN / (double)( iM + iN ) );
 	dMax *= dCur + 0.12 + ( 0.11 / dCur );
 
-	return PValue( dMax ); }
+	return CStatistics::PValueKolmogorovSmirnov( dMax ); }
 
 double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {

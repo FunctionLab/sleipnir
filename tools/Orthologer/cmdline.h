@@ -43,8 +43,9 @@ struct gengetopt_args_info
   double weight2_arg;	/**< @brief Weight of cross-cluster ortholog relationships (default='1').  */
   char * weight2_orig;	/**< @brief Weight of cross-cluster ortholog relationships original value given at command line.  */
   const char *weight2_help; /**< @brief Weight of cross-cluster ortholog relationships help description.  */
-  int memmap_flag;	/**< @brief Memory map input files when possible (default=off).  */
-  const char *memmap_help; /**< @brief Memory map input files when possible help description.  */
+  double positives_arg;	/**< @brief Expected fraction of positives (default='1').  */
+  char * positives_orig;	/**< @brief Expected fraction of positives original value given at command line.  */
+  const char *positives_help; /**< @brief Expected fraction of positives help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
@@ -54,7 +55,7 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int weight1_given ;	/**< @brief Whether weight1 was given.  */
   unsigned int weight2_given ;	/**< @brief Whether weight2 was given.  */
-  unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
+  unsigned int positives_given ;	/**< @brief Whether positives was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */

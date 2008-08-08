@@ -422,6 +422,33 @@ public:
 		dT = dR * sqrt( dF / ( 1 - ( dR * dR ) ) );
 		return IncompleteBeta( dF / 2, 0.5, dF / ( dF + ( dT * dT ) ) ); }
 
+	static double PValueKolmogorovSmirnov( double dD ) {
+		static const float	c_dEpsilon1	= 0.001f;
+		static const float	c_dEpsilon2	= 1e-8f;
+		static const float	c_dEpsilon3	= 0.475f;
+		double	d, dRet, dCur, dPrev;
+		size_t	i, iIterations;
+
+		if( !dD )
+			return 1;
+
+		dD = -2 * pow( dD, 2 );
+		iIterations = max( (size_t)250, (size_t)( 1 / dD ) );
+		for( dRet = dPrev = 0,i = 1; i < iIterations; ++i ) {
+			dCur = exp( i * i * dD );
+			if( !( i % 2 ) )
+				dCur *= -1;
+			dRet += dCur;
+			d = fabs( dCur );
+			if( ( ( ( d / dRet ) < c_dEpsilon1 ) && ( dRet > c_dEpsilon3 ) ) ||
+				( ( d / dPrev ) < c_dEpsilon1 ) || ( ( d / dRet ) < c_dEpsilon2 ) )
+				break;
+			dPrev = d; }
+		if( dRet != 1 )
+			dRet *= 2;
+
+		return dRet; }
+
 	/*!
 	 * \brief
 	 * Return the p-value of a t-test between the two given array statistics assuming equal variance.
@@ -514,7 +541,7 @@ public:
 				dMax = d; }
 
 		d = sqrt( (float)( SumOne * SumTwo ) / ( SumOne + SumTwo ) );
-		return CMeasureKolmogorovSmirnov::PValue( dMax * ( d + 0.12 + ( 0.11 / d ) ) ); }
+		return PValueKolmogorovSmirnov( dMax * ( d + 0.12 + ( 0.11 / d ) ) ); }
 
 	// Evaluation statistics
 	static double WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,

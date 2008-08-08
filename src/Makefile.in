@@ -224,13 +224,14 @@ am_libSleipnir_a_OBJECTS = annotation.$(OBJEXT) annotationgo.$(OBJEXT) \
 	bayesnetpnl.$(OBJEXT) bayesnetsmile.$(OBJEXT) \
 	bayesnetsmileelr.$(OBJEXT) clusthierarchical.$(OBJEXT) \
 	clustkmeans.$(OBJEXT) clustpivot.$(OBJEXT) clustqtc.$(OBJEXT) \
-	coalesce.$(OBJEXT) color.$(OBJEXT) compactmatrix.$(OBJEXT) database.$(OBJEXT) \
-	datapair.$(OBJEXT) datasetcompact.$(OBJEXT) dataset.$(OBJEXT) \
-	dat.$(OBJEXT) example.$(OBJEXT) fasta.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) \
-	mathb.$(OBJEXT) measure.$(OBJEXT) meta.$(OBJEXT) \
-	orthology.$(OBJEXT) pcl.$(OBJEXT) pclset.$(OBJEXT) \
-	serverclient.$(OBJEXT) server.$(OBJEXT) statistics.$(OBJEXT) \
-	stdafx.$(OBJEXT) svm.$(OBJEXT)
+	coalesce.$(OBJEXT) color.$(OBJEXT) compactmatrix.$(OBJEXT) \
+	database.$(OBJEXT) datapair.$(OBJEXT) datasetcompact.$(OBJEXT) \
+	dataset.$(OBJEXT) dat.$(OBJEXT) example.$(OBJEXT) \
+	fasta.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) mathb.$(OBJEXT) \
+	measure.$(OBJEXT) meta.$(OBJEXT) orthology.$(OBJEXT) \
+	pcl.$(OBJEXT) pclset.$(OBJEXT) serverclient.$(OBJEXT) \
+	server.$(OBJEXT) statistics.$(OBJEXT) stdafx.$(OBJEXT) \
+	svm.$(OBJEXT)
 libSleipnir_a_OBJECTS = $(am_libSleipnir_a_OBJECTS)
 
 DEFS = @DEFS@
@@ -252,17 +253,17 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/clusthierarchical.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/clustkmeans.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/clustpivot.Po ./$(DEPDIR)/clustqtc.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/coalesce.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/color.Po ./$(DEPDIR)/compactmatrix.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dat.Po ./$(DEPDIR)/database.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/datapair.Po ./$(DEPDIR)/dataset.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/coalesce.Po ./$(DEPDIR)/color.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/compactmatrix.Po ./$(DEPDIR)/dat.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/database.Po ./$(DEPDIR)/datapair.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dataset.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/datasetcompact.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/example.Po ./$(DEPDIR)/fasta.Po ./$(DEPDIR)/file.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/genome.Po ./$(DEPDIR)/mathb.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/measure.Po ./$(DEPDIR)/meta.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/orthology.Po ./$(DEPDIR)/pcl.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/pclset.Po ./$(DEPDIR)/server.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/serverclient.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/example.Po ./$(DEPDIR)/fasta.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/file.Po ./$(DEPDIR)/genome.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/mathb.Po ./$(DEPDIR)/measure.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/meta.Po ./$(DEPDIR)/orthology.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/pcl.Po ./$(DEPDIR)/pclset.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/server.Po ./$(DEPDIR)/serverclient.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/statistics.Po ./$(DEPDIR)/stdafx.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/svm.Po
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
