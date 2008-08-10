@@ -22,7 +22,7 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
-#include <fstream>
+#include <iostream>
 using namespace std;
 
 #include "coalesce.h"

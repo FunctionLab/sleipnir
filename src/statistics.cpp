@@ -82,7 +82,7 @@ double CStatistics::LjungBox( const float* adX, size_t iN, size_t iH ) {
 		dRet += adCor[ i ] * adCor[ i ] / ( iN - i - 1 );
 	delete[] adCor;
 
-	return ( 1 - Chi2CDF( sqrt( iN * ( iN + 2 ) * dRet ), 0, 1, iH ) ); }
+	return ( 1 - CStatisticsImpl::Chi2CDF( sqrt( iN * ( iN + 2 ) * dRet ), 0, 1, iH ) ); }
 
 double CStatisticsImpl::Chi2CDF( double dX, double dA, double dB, double dC ) {
 	double	dRet, dX2, dY, dP2;
@@ -990,5 +990,78 @@ double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers
 	iSum -= ( iPos * ( iPos - 1 ) ) / 2;
 
 	return ( (double)iSum / iPos / iNeg ); }
+
+double bessi0( double dX ) {
+	double	dAbs, dRet, dY;
+
+	if( ( dAbs = fabs( dX ) ) < 3.75 ) {
+		dY = dX / 3.75;
+		dY *= dY;
+		dRet = 1 + dY * ( 3.5156229 + dY * ( 3.0899424 + dY * ( 1.2067492 + dY * ( 0.2659732 +
+			dY * ( 0.360768e-1 + dY * 0.45813e-2 ) ) ) ) ); }
+	else {
+		dY = 3.75 / dAbs;
+		dRet = ( exp( dAbs ) / sqrt( dAbs ) ) * ( 0.39894228 + dY * ( 0.1328592e-1 + dY * ( 0.225319e-2 +
+			dY * ( -0.157565e-2 + dY * ( 0.916281e-2 + dY * ( -0.2057706e-1 + dY * ( 0.2635537e-1 +
+			dY * ( -0.1647633e-1 + dY * 0.392377e-2 ) ) ) ) ) ) ) ); }
+
+	return dRet; }
+
+double bessi1( double dX ) {
+	double	dAbs, dRet, dY;
+
+	if( ( dAbs = fabs( dX ) ) < 3.75 ) {
+		dY = dX / 3.75;
+		dY *= dY;
+		dRet = dAbs * ( 0.5 + dY * ( 0.87890594 + dY * ( 0.51498869 + dY * ( 0.15084934 + dY * ( 0.2658733e-1 +
+			dY * ( 0.301532e-2 + dY * 0.32411e-3 ) ) ) ) ) ); }
+	else {
+		dY = 3.75 / dAbs;
+		dRet = 0.2282967e-1 + dY * ( -0.2895312e-1 + dY * ( 0.1787654e-1 - dY * 0.420059e-2 ) );
+		dRet = 0.39894228 + dY * ( -0.3988024e-1 + dY * ( -0.362018e-2 + dY * ( 0.163801e-2 +
+			dY * ( -0.1031555e-1 + dY * dRet ) ) ) );
+		dRet *= exp( dAbs ) / sqrt( dAbs ); }
+
+	return dRet; }
+
+double bessi( size_t iN, double dX ) {
+	static const double	ACC		= 40;
+	static const double	BIGN0	= 1e10;
+	static const double	BIGN1	= 1e-10;
+	double	bi, bim, bip, tox, ans;
+	size_t	j;
+
+	if( !dX )
+		return 0;
+
+	tox = 2 / fabs( dX );
+	bip = ans = 0;
+	bi = 1;
+	for( j = 2 * ( iN + (size_t)sqrt( ACC * iN ) ); j > 0; j-- ) {
+		bim = bip + j * tox * bi;
+		bip = bi;
+		bi = bim;
+		if( fabs( bi ) > BIGN0 ) {
+			ans *= BIGN1;
+			bi *= BIGN1;
+			bip *= BIGN1; }
+		if( j == iN )
+			ans = bip; }
+	ans *= bessi0( dX ) / bi;
+	if( ( dX < 0 ) && ( iN & 1 ) )
+		ans *= -1;
+
+	return ans; }
+
+double CStatisticsImpl::ModifiedBesselI( size_t iOrder, double dX ) {
+
+	switch( iOrder ) {
+		case 0:
+			return bessi0( dX );
+
+		case 1:
+			return bessi1( dX ); }
+
+	return bessi( iOrder, dX ); }
 
 }

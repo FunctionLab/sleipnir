@@ -422,7 +422,7 @@ public:
 		dT = dR * sqrt( dF / ( 1 - ( dR * dR ) ) );
 		return IncompleteBeta( dF / 2, 0.5, dF / ( dF + ( dT * dT ) ) ); }
 
-	static double PValueKolmogorovSmirnov( double dD ) {
+	static double PValueKolmogorovSmirnov( double dD, size_t iM, size_t iN ) {
 		static const float	c_dEpsilon1	= 0.001f;
 		static const float	c_dEpsilon2	= 1e-8f;
 		static const float	c_dEpsilon3	= 0.475f;
@@ -432,8 +432,11 @@ public:
 		if( !dD )
 			return 1;
 
-		dD = -2 * pow( dD, 2 );
+		d = sqrt( (double)( iM * iN ) / ( iM + iN ) );
 		iIterations = max( (size_t)250, (size_t)( 1 / dD ) );
+		dD = -2 * pow( dD * d, 2 );
+// This is from NR, but it disagrees with R's results
+//		dD = -2 * pow( dD * ( d + 0.12 + ( 0.11 / d ) ), 2 );
 		for( dRet = dPrev = 0,i = 1; i < iIterations; ++i ) {
 			dCur = exp( i * i * dD );
 			if( !( i % 2 ) )
@@ -444,8 +447,8 @@ public:
 				( ( d / dPrev ) < c_dEpsilon1 ) || ( ( d / dRet ) < c_dEpsilon2 ) )
 				break;
 			dPrev = d; }
-		if( dRet != 1 )
-			dRet *= 2;
+		if( dRet < 1 )
+			dRet = min( 2 * dRet, 1 );
 
 		return dRet; }
 
@@ -523,26 +526,6 @@ public:
 
 		return IncompleteBeta( 0.5 * dDegFree, 0.5, dDegFree / ( dDegFree + ( dT * dT ) ) ); }
 
-	template<class tType>
-	static double KSTest( const tType* aOne, const tType* aTwo, size_t iN ) {
-		size_t	i;
-		tType	SumOne, SumTwo, CumOne, CumTwo;
-		float	d, dMax;
-
-		if( !iN )
-			return 1;
-		for( SumOne = SumTwo = i = 0; i < iN; ++i ) {
-			SumOne += aOne[ i ];
-			SumTwo += aTwo[ i ]; }
-		for( dMax = 0,CumOne = CumTwo = i = 0; i < iN; ++i ) {
-			CumOne += aOne[ i ];
-			CumTwo += aTwo[ i ];
-			if( ( d = fabs( ( (float)CumOne / SumOne ) - ( (float)CumTwo / SumTwo ) ) ) > dMax )
-				dMax = d; }
-
-		d = sqrt( (float)( SumOne * SumTwo ) / ( SumOne + SumTwo ) );
-		return PValueKolmogorovSmirnov( dMax * ( d + 0.12 + ( 0.11 / d ) ) ); }
-
 	// Evaluation statistics
 	static double WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,
 		const std::vector<bool>& vecfGenesOfInterest, bool fInvert = false );
@@ -553,6 +536,11 @@ public:
 	static double SampleGammaLogStandard( double dXX );
 	static double SampleNormalStandard( );
 	static double SampleExponentialStandard( );
+
+	static double SkellamPDF( size_t iX, double dMu1, double dMu2 ) {
+
+		return ( exp( -( dMu1 + dMu2 ) ) * pow( dMu1 / dMu2, 0.5 * iX ) *
+			ModifiedBesselI( iX, 2 * sqrt( dMu1 * dMu2 ) ) ); }
 
 	/*!
 	 * \brief
@@ -722,6 +710,10 @@ public:
 	static double SampleChi2( size_t iDF ) {
 
 		return ( 2 * SampleGamma( 1, iDF / 2 ) ); }
+
+	static double Chi2CDF( double dC2, size_t iDF ) {
+
+		return CStatisticsImpl::Chi2CDF( sqrt( dC2 ), 0, 1, iDF ); }
 
 	/*!
 	 * \brief

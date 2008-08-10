@@ -28,27 +28,28 @@ const char *gengetopt_args_info_usage = "Usage: COALESCE [OPTIONS]...";
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                  Print help and exit",
-  "  -V, --version               Print version and exit",
+  "  -h, --help                    Print help and exit",
+  "  -V, --version                 Print version and exit",
   "\nMain:",
-  "  -i, --input=filename        Input PCL file",
-  "  -f, --fasta=filename        Input FASTA file",
+  "  -i, --input=filename          Input PCL file",
+  "  -f, --fasta=filename          Input FASTA file",
   "\nThreshholds:",
-  "  -k, --k=INT                 Sequence kmer length  (default=`7')",
-  "  -p, --prob_gene=DOUBLE      Probability threshhold for gene inclusion  \n                                (default=`0.95')",
-  "  -P, --pvalue_cond=DOUBLE    P-value threshhold for condition inclusion  \n                                (default=`0.05')",
-  "  -m, --pvalue_motif=DOUBLE   P-value threshhold for motif inclusion  \n                                (default=`0.05')",
-  "  -c, --pvalue_correl=DOUBLE  P-value threshhold for significant correlation  \n                                (default=`0.05')",
+  "  -p, --prob_gene=DOUBLE        Probability threshhold for gene inclusion  \n                                  (default=`0.95')",
+  "  -P, --pvalue_cond=DOUBLE      P-value threshhold for condition inclusion  \n                                  (default=`0.05')",
+  "  -m, --pvalue_motif=DOUBLE     P-value threshhold for motif inclusion  \n                                  (default=`0.05')",
+  "  -c, --pvalue_correl=DOUBLE    P-value threshhold for significant correlation  \n                                  (default=`0.05')",
+  "\nMiscellaneous:",
+  "  -k, --k=INT                   Sequence kmer length  (default=`7')",
+  "  -q, --sequences=STRING        Sequence types to use (comma separated)",
   "\nOptional:",
-  "  -t, --intermediate          Produce intermediate output files (PCLs)  \n                                (default=off)",
-  "  -s, --skip=INT              Columns to skip in input PCL  (default=`2')",
-  "  -r, --random=INT            Seed random generator  (default=`0')",
-  "  -v, --verbosity=INT         Message verbosity  (default=`5')",
+  "  -t, --intermediate=directory  Directory for intermediate output files (PCLs)",
+  "  -s, --skip=INT                Columns to skip in input PCL  (default=`2')",
+  "  -r, --random=INT              Seed random generator  (default=`0')",
+  "  -v, --verbosity=INT           Message verbosity  (default=`5')",
     0
 };
 
 typedef enum {ARG_NO
-  , ARG_FLAG
   , ARG_STRING
   , ARG_INT
   , ARG_DOUBLE
@@ -74,11 +75,12 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->version_given = 0 ;
   args_info->input_given = 0 ;
   args_info->fasta_given = 0 ;
-  args_info->k_given = 0 ;
   args_info->prob_gene_given = 0 ;
   args_info->pvalue_cond_given = 0 ;
   args_info->pvalue_motif_given = 0 ;
   args_info->pvalue_correl_given = 0 ;
+  args_info->k_given = 0 ;
+  args_info->sequences_given = 0 ;
   args_info->intermediate_given = 0 ;
   args_info->skip_given = 0 ;
   args_info->random_given = 0 ;
@@ -92,8 +94,6 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->input_orig = NULL;
   args_info->fasta_arg = NULL;
   args_info->fasta_orig = NULL;
-  args_info->k_arg = 7;
-  args_info->k_orig = NULL;
   args_info->prob_gene_arg = 0.95;
   args_info->prob_gene_orig = NULL;
   args_info->pvalue_cond_arg = 0.05;
@@ -102,7 +102,12 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->pvalue_motif_orig = NULL;
   args_info->pvalue_correl_arg = 0.05;
   args_info->pvalue_correl_orig = NULL;
-  args_info->intermediate_flag = 0;
+  args_info->k_arg = 7;
+  args_info->k_orig = NULL;
+  args_info->sequences_arg = NULL;
+  args_info->sequences_orig = NULL;
+  args_info->intermediate_arg = NULL;
+  args_info->intermediate_orig = NULL;
   args_info->skip_arg = 2;
   args_info->skip_orig = NULL;
   args_info->random_arg = 0;
@@ -121,15 +126,16 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->version_help = gengetopt_args_info_help[1] ;
   args_info->input_help = gengetopt_args_info_help[3] ;
   args_info->fasta_help = gengetopt_args_info_help[4] ;
-  args_info->k_help = gengetopt_args_info_help[6] ;
-  args_info->prob_gene_help = gengetopt_args_info_help[7] ;
-  args_info->pvalue_cond_help = gengetopt_args_info_help[8] ;
-  args_info->pvalue_motif_help = gengetopt_args_info_help[9] ;
-  args_info->pvalue_correl_help = gengetopt_args_info_help[10] ;
-  args_info->intermediate_help = gengetopt_args_info_help[12] ;
-  args_info->skip_help = gengetopt_args_info_help[13] ;
-  args_info->random_help = gengetopt_args_info_help[14] ;
-  args_info->verbosity_help = gengetopt_args_info_help[15] ;
+  args_info->prob_gene_help = gengetopt_args_info_help[6] ;
+  args_info->pvalue_cond_help = gengetopt_args_info_help[7] ;
+  args_info->pvalue_motif_help = gengetopt_args_info_help[8] ;
+  args_info->pvalue_correl_help = gengetopt_args_info_help[9] ;
+  args_info->k_help = gengetopt_args_info_help[11] ;
+  args_info->sequences_help = gengetopt_args_info_help[12] ;
+  args_info->intermediate_help = gengetopt_args_info_help[14] ;
+  args_info->skip_help = gengetopt_args_info_help[15] ;
+  args_info->random_help = gengetopt_args_info_help[16] ;
+  args_info->verbosity_help = gengetopt_args_info_help[17] ;
   
 }
 
@@ -212,11 +218,15 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->input_orig));
   free_string_field (&(args_info->fasta_arg));
   free_string_field (&(args_info->fasta_orig));
-  free_string_field (&(args_info->k_orig));
   free_string_field (&(args_info->prob_gene_orig));
   free_string_field (&(args_info->pvalue_cond_orig));
   free_string_field (&(args_info->pvalue_motif_orig));
   free_string_field (&(args_info->pvalue_correl_orig));
+  free_string_field (&(args_info->k_orig));
+  free_string_field (&(args_info->sequences_arg));
+  free_string_field (&(args_info->sequences_orig));
+  free_string_field (&(args_info->intermediate_arg));
+  free_string_field (&(args_info->intermediate_orig));
   free_string_field (&(args_info->skip_orig));
   free_string_field (&(args_info->random_orig));
   free_string_field (&(args_info->verbosity_orig));
@@ -257,8 +267,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "input", args_info->input_orig, 0);
   if (args_info->fasta_given)
     write_into_file(outfile, "fasta", args_info->fasta_orig, 0);
-  if (args_info->k_given)
-    write_into_file(outfile, "k", args_info->k_orig, 0);
   if (args_info->prob_gene_given)
     write_into_file(outfile, "prob_gene", args_info->prob_gene_orig, 0);
   if (args_info->pvalue_cond_given)
@@ -267,8 +275,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "pvalue_motif", args_info->pvalue_motif_orig, 0);
   if (args_info->pvalue_correl_given)
     write_into_file(outfile, "pvalue_correl", args_info->pvalue_correl_orig, 0);
+  if (args_info->k_given)
+    write_into_file(outfile, "k", args_info->k_orig, 0);
+  if (args_info->sequences_given)
+    write_into_file(outfile, "sequences", args_info->sequences_orig, 0);
   if (args_info->intermediate_given)
-    write_into_file(outfile, "intermediate", 0, 0 );
+    write_into_file(outfile, "intermediate", args_info->intermediate_orig, 0);
   if (args_info->skip_given)
     write_into_file(outfile, "skip", args_info->skip_orig, 0);
   if (args_info->random_given)
@@ -424,9 +436,6 @@ int update_arg(void *field, char **orig_field,
     val = possible_values[found];
 
   switch(arg_type) {
-  case ARG_FLAG:
-    *((int *)field) = !*((int *)field);
-    break;
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
@@ -461,7 +470,6 @@ int update_arg(void *field, char **orig_field,
   /* store the original value */
   switch(arg_type) {
   case ARG_NO:
-  case ARG_FLAG:
     break;
   default:
     if (value && orig_field) {
@@ -519,19 +527,20 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "version",	0, NULL, 'V' },
         { "input",	1, NULL, 'i' },
         { "fasta",	1, NULL, 'f' },
-        { "k",	1, NULL, 'k' },
         { "prob_gene",	1, NULL, 'p' },
         { "pvalue_cond",	1, NULL, 'P' },
         { "pvalue_motif",	1, NULL, 'm' },
         { "pvalue_correl",	1, NULL, 'c' },
-        { "intermediate",	0, NULL, 't' },
+        { "k",	1, NULL, 'k' },
+        { "sequences",	1, NULL, 'q' },
+        { "intermediate",	1, NULL, 't' },
         { "skip",	1, NULL, 's' },
         { "random",	1, NULL, 'r' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:f:k:p:P:m:c:ts:r:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:f:p:P:m:c:k:q:t:s:r:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -576,18 +585,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.fasta_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "fasta", 'f',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'k':	/* Sequence kmer length.  */
-        
-        
-          if (update_arg( (void *)&(args_info->k_arg), 
-               &(args_info->k_orig), &(args_info->k_given),
-              &(local_args_info.k_given), optarg, 0, "7", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "k", 'k',
               additional_error))
             goto failure;
         
@@ -640,12 +637,38 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 't':	/* Produce intermediate output files (PCLs).  */
+        case 'k':	/* Sequence kmer length.  */
         
         
-          if (update_arg((void *)&(args_info->intermediate_flag), 0, &(args_info->intermediate_given),
-              &(local_args_info.intermediate_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "intermediate", 't',
+          if (update_arg( (void *)&(args_info->k_arg), 
+               &(args_info->k_orig), &(args_info->k_given),
+              &(local_args_info.k_given), optarg, 0, "7", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "k", 'k',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'q':	/* Sequence types to use (comma separated).  */
+        
+        
+          if (update_arg( (void *)&(args_info->sequences_arg), 
+               &(args_info->sequences_orig), &(args_info->sequences_given),
+              &(local_args_info.sequences_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "sequences", 'q',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 't':	/* Directory for intermediate output files (PCLs).  */
+        
+        
+          if (update_arg( (void *)&(args_info->intermediate_arg), 
+               &(args_info->intermediate_orig), &(args_info->intermediate_given),
+              &(local_args_info.intermediate_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "intermediate", 't',
               additional_error))
             goto failure;
         

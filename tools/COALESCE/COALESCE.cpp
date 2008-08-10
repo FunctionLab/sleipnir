@@ -22,9 +22,6 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-#include "measure.h"
-#include "statistics.h"
-
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info			sArgs;
 	CFASTA						FASTA;
@@ -32,44 +29,41 @@ int main( int iArgs, char** aszArgs ) {
 	CCoalesce					Coalesce;
 	vector<CCoalesceCluster>	vecClusters;
 	size_t						i;
+	set<string>					setstrTypes;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
 
+	CCoalesceMotifLibrary		Motifs( sArgs.k_arg );
+
+	if( sArgs.sequences_arg ) {
+		vector<string>	vecstrTypes;
+
+		CMeta::Tokenize( sArgs.sequences_arg, vecstrTypes, "," );
+		for( i = 0; i < vecstrTypes.size( ); ++i )
+			setstrTypes.insert( vecstrTypes[ i ] ); }
+
 	if( !PCL.Open( sArgs.input_arg, sArgs.skip_arg ) ) {
 		cerr << "Could not open: " << ( sArgs.input_arg ? sArgs.input_arg : "stdin" ) << endl;
 		return 1; }
-	if( sArgs.fasta_arg && !FASTA.Open( sArgs.fasta_arg ) ) {
+	if( sArgs.fasta_arg && !FASTA.Open( sArgs.fasta_arg, setstrTypes ) ) {
 		cerr << "Could not open: " << sArgs.fasta_arg << endl;
 		return 1; }
 
+	Coalesce.SetMotifs( Motifs );
 	Coalesce.SetProbabilityGene( (float)sArgs.prob_gene_arg );
 	Coalesce.SetPValueCondition( (float)sArgs.pvalue_cond_arg );
 	Coalesce.SetPValueMotif( (float)sArgs.pvalue_motif_arg );
 	Coalesce.SetPValueCorrelation( (float)sArgs.pvalue_correl_arg );
-	Coalesce.SetOutputIntermediate( !!sArgs.intermediate_flag );
+	if( sArgs.intermediate_arg )
+		Coalesce.SetDirectoryIntermediate( sArgs.intermediate_arg );
 	if( !Coalesce.Cluster( PCL, FASTA, vecClusters ) ) {
 		cerr << "Clustering failed" << endl;
 		return 1; }
 
-	for( i = 0; i < vecClusters.size( ); ++i ) {
-		const CCoalesceCluster&		Cluster	= vecClusters[ i ];
-		set<size_t>::const_iterator	iter;
+	for( i = 0; i < vecClusters.size( ); ++i )
+		vecClusters[ i ].Save( cout, i, PCL, &Motifs );
 
-		cout << "Cluster\t" << i << endl;
-		cout << "Genes";
-		for( iter = Cluster.GetGenes( ).begin( ); iter != Cluster.GetGenes( ).end( ); ++iter )
-			cout << '\t' << PCL.GetGene( *iter );
-		cout << endl << "Conditions";
-		for( iter = Cluster.GetConditions( ).begin( ); iter != Cluster.GetConditions( ).end( ); ++iter )
-			cout << '\t' << *iter;
-		cout << endl;
-		if( sArgs.fasta_arg ) {
-			cout << "Motifs";
-			for( iter = Cluster.GetMotifs( ).begin( ); iter != Cluster.GetMotifs( ).end( ); ++iter )
-				cout << '\t' << *iter;
-			cout << endl; } }
-	
 	return 0; }

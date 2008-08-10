@@ -111,7 +111,12 @@ double CMeasureKolmogorovSmirnov::Measure( const float* adX, size_t iM, const fl
 	sort( vecdY.begin( ), vecdY.end( ) );
 	vecdZ.resize( iM + iN );
 	for( iX = iY = i = 0; i < vecdZ.size( ); ++i )
-		vecdZ[ i ] = ( vecdX[ iX ] < vecdY[ iY ] ) ? vecdX[ iX++ ] : vecdY[ iY++ ];
+		if( iX >= vecdX.size( ) )
+			vecdZ[ i ] = vecdY[ iY++ ];
+		else if( iY >= vecdY.size( ) )
+			vecdZ[ i ] = vecdX[ iX++ ];
+		else
+			vecdZ[ i ] = ( vecdX[ iX ] < vecdY[ iY ] ) ? vecdX[ iX++ ] : vecdY[ iY++ ];
 
 	for( dMax = iX = iY = i = 0; i < vecdZ.size( ); ++i ) {
 		while( ( iX < iM ) && ( vecdX[ iX ] <= vecdZ[ i ] ) )
@@ -121,10 +126,7 @@ double CMeasureKolmogorovSmirnov::Measure( const float* adX, size_t iM, const fl
 		if( ( dCur = fabs( ( (double)iX / iM ) - ( (double)iY / iN ) ) ) > dMax )
 			dMax = dCur; }
 
-	dCur = sqrt( iM * iN / (double)( iM + iN ) );
-	dMax *= dCur + 0.12 + ( 0.11 / dCur );
-
-	return CStatistics::PValueKolmogorovSmirnov( dMax ); }
+	return CStatistics::PValueKolmogorovSmirnov( dMax, iM, iN ); }
 
 double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {

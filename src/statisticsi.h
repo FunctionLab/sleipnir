@@ -35,6 +35,7 @@ protected:
 	static double EpsilonDouble( );
 	static double IncompleteBeta( double, double, double );
 	static double IncompleteBetaCF( double, double, double );
+	static double ModifiedBesselI( size_t, double );
 };
 
 }

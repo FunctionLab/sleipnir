@@ -1,3 +1,24 @@
+/*****************************************************************************
+* This file is provided under the Creative Commons Attribution 3.0 license.
+*
+* You are free to share, copy, distribute, transmit, or adapt this work
+* PROVIDED THAT you attribute the work to the authors listed below.
+* For more information, please see the following web page:
+* http://creativecommons.org/licenses/by/3.0/
+*
+* This file is a component of the Sleipnir library for functional genomics,
+* authored by:
+* Curtis Huttenhower (chuttenh@princeton.edu)
+* Mark Schroeder
+* Maria D. Chikina
+* Olga G. Troyanskaya (ogt@princeton.edu, primary contact)
+*
+* If you use this library, the included executable tools, or any related
+* code in your work, please cite the following publication:
+* Curtis Huttenhower, Mark Schroeder, Maria D. Chikina, and
+* Olga G. Troyanskaya.
+* "The Sleipnir library for computational functional genomics"
+*****************************************************************************/
 #ifndef COALESCE_H
 #define COALESCE_H
 
@@ -5,61 +26,56 @@
 
 namespace Sleipnir {
 
-struct SHistogram : SHistogramImpl {
+class CCoalesceMotifLibrary : CCoalesceMotifLibraryImpl {
 public:
-	void Initialize( size_t iSize ) {
+	static size_t KMer2ID( const std::string& strKMer ) {
+		size_t		i, iRet;
+		const char*	pc;
 
-		m_iTotal = 0;
-		m_vecsBins.resize( iSize );
-		std::fill( m_vecsBins.begin( ), m_vecsBins.end( ), 0 ); }
+		for( iRet = i = 0; i < strKMer.size( ); ++i ) {
+			if( !( pc = strchr( c_acBases, strKMer[ i ] ) ) )
+				return -1;
+			iRet = ( iRet << c_iShift ) | ( pc - c_acBases ); }
 
-	bool Add( size_t iBin, unsigned short sCount ) {
+		return iRet; }
 
-		if( m_vecsBins.empty( ) )
-			return false;
-		if( iBin >= m_vecsBins.size( ) )
-			iBin = m_vecsBins.size( ) - 1;
+	static std::string ID2KMer( size_t iID, size_t iK ) {
+		std::string	strRet;
+		size_t		i, iMask;
 
-		m_vecsBins[ iBin ] += sCount;
-		m_iTotal += sCount;
-		return true; }
+		iMask = ( 1 << c_iShift ) - 1;
+		strRet.resize( iK );
+		for( i = 0; i < iK; ++i ) {
+			strRet[ iK - i - 1 ] = c_acBases[ iID & iMask ];
+			iID >>= c_iShift; }
 
-	bool Add( size_t iBin ) {
+		return strRet; }
 
-		return Add( iBin, 1 ); }
+	static size_t CountKMers( size_t iK ) {
 
-	unsigned short Get( size_t iBin ) const {
+		return ( 1 << ( 2 * iK ) ); }
 
-		if( m_vecsBins.empty( ) )
-			return -1;
-		if( iBin >= m_vecsBins.size( ) )
-			iBin = m_vecsBins.size( ) - 1;
+	static bool IsIgnorableKMer( const std::string& strKMer ) {
 
-		return m_vecsBins[ iBin ]; }
+		return ( strKMer.find( 'N' ) != std::string::npos ); }
 
-	size_t GetBins( ) const {
+	CCoalesceMotifLibrary( size_t iK ) : CCoalesceMotifLibraryImpl( iK ) { }
 
-		return Get( ).size( ); }
+	std::string GetMotif( size_t iMotif ) const {
 
-	const std::vector<unsigned short>& Get( ) const {
+		return ID2KMer( iMotif, GetK( ) ); }
 
-		return m_vecsBins; }
+	size_t GetID( const std::string& strKMer ) const {
 
-	bool Add( const SHistogram& Histogram ) {
-		size_t	i;
+		return KMer2ID( strKMer ); }
 
-		if( Histogram.GetBins( ) != GetBins( ) )
-			return false;
+	size_t GetMotifs( ) const {
 
-		for( i = 0; i < GetBins( ); ++i )
-			if( !Add( i, Histogram.Get( i ) ) )
-				return false;
+		return CountKMers( GetK( ) ); }
 
-		return true; }
+	size_t GetK( ) const {
 
-	size_t GetTotal( ) const {
-
-		return m_iTotal; }
+		return m_iK; }
 };
 
 class CCoalesceCluster : public CCoalesceClusterImpl {
@@ -67,24 +83,28 @@ public:
 	bool Initialize( const CPCL& PCL, CCoalesceCluster& Pot, float dPValue );
 	void Subtract( CPCL& PCL ) const;
 	bool SelectConditions( const CPCL& PCL, const CCoalesceCluster& Pot, float dPValue );
-	bool SelectMotifs( const CCoalesceHistograms& HistsCluster, const CCoalesceHistograms& HistsPot,
-		float dPValue );
-	bool SelectGenes( const CPCL& PCL, const std::vector<CCoalesceHistograms>& vecHistograms,
-		const CCoalesceHistograms& HistsCluster, const CCoalesceHistograms& HistsPot, CCoalesceCluster& Pot,
-		float dPValue );
-	void CalculateHistograms( const std::vector<CCoalesceHistograms>& vecHistograms,
-		CCoalesceHistograms& Histograms ) const;
-	bool Save( size_t iID, const CPCL& PCL ) const;
+	bool SelectMotifs( const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
+		float dPValue, const CCoalesceMotifLibrary* pMotifs = NULL );
+	bool SelectGenes( const CPCL& PCL, const std::vector<CCoalesceGeneScores>& vecGeneScores,
+		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
+		CCoalesceCluster& Pot, float dPValue, const CCoalesceMotifLibrary* pMotifs = NULL );
+	void CalculateHistograms( const std::vector<CCoalesceGeneScores>& vecGeneScores,
+		CCoalesceGroupHistograms& Histograms ) const;
+	bool Save( const std::string& strDirectory, size_t iID, const CPCL& PCL,
+		const CCoalesceMotifLibrary* pMotifs = NULL ) const;
+	void Save( std::ostream&, size_t iID, const CPCL& PCL, const CCoalesceMotifLibrary* pMotifs = NULL ) const;
 
 	bool IsConverged( ) {
 
-		return ( CCoalesceClusterImpl::IsConverged( m_setiConditions, m_veciPrevConditions ) &&
+// BUGBUG: this is redundant
+		return ( ( m_setiHistory.find( GetHash( ) ) != m_setiHistory.end( ) ) ||
+			CCoalesceClusterImpl::IsConverged( m_setiConditions, m_veciPrevConditions ) &&
 			CCoalesceClusterImpl::IsConverged( m_setiGenes, m_veciPrevGenes ) &&
-			CCoalesceClusterImpl::IsConverged( m_setiMotifs, m_veciPrevMotifs ) ); }
+			CCoalesceClusterImpl::IsConverged( m_setsMotifs, m_vecsPrevMotifs ) ); }
 
 	bool IsEmpty( ) const {
 
-		return ( m_setiGenes.empty( ) && m_setiConditions.empty( ) ); }
+		return ( m_setiGenes.empty( ) || m_setiConditions.empty( ) ); }
 
 	void Add( size_t iGene ) {
 
@@ -92,8 +112,9 @@ public:
 
 	void Snapshot( ) {
 
+		m_setiHistory.insert( GetHash( ) );
 		CCoalesceClusterImpl::Snapshot( m_setiConditions, m_veciPrevConditions );
-		CCoalesceClusterImpl::Snapshot( m_setiMotifs, m_veciPrevMotifs );
+		CCoalesceClusterImpl::Snapshot( m_setsMotifs, m_vecsPrevMotifs );
 		CCoalesceClusterImpl::Snapshot( m_setiGenes, m_veciPrevGenes ); }
 
 	const std::set<size_t>& GetGenes( ) const {
@@ -104,9 +125,9 @@ public:
 
 		return m_setiConditions; }
 
-	const std::set<size_t>& GetMotifs( ) const {
+	const std::set<SMotifMatch>& GetMotifs( ) const {
 
-		return m_setiMotifs; }
+		return m_setsMotifs; }
 
 	bool IsGene( size_t iGene ) const {
 
@@ -119,21 +140,7 @@ public:
 
 class CCoalesce : CCoalesceImpl {
 public:
-	static size_t GetKMer( const std::string& strKMer );
-
-	static size_t CountKMers( size_t iK ) {
-
-		return ( 1 << ( 2 * iK ) ); }
-
 	bool Cluster( const CPCL& PCL, const CFASTA& FASTA, std::vector<CCoalesceCluster>& vecClusters );
-
-	void SetK( size_t iK ) {
-
-		m_iK = iK; }
-
-	size_t GetK( ) const {
-
-		return m_iK; }
 
 	void SetPValueCorrelation( float dPValue ) {
 
@@ -177,11 +184,33 @@ public:
 
 	bool IsOutputIntermediate( ) const {
 
-		return m_fOutputIntermediate; }
+		return !GetDirectoryIntermediate( ).empty( ); }
 
-	void SetOutputIntermediate( bool fOutputIntermediate ) {
+	const std::string& GetDirectoryIntermediate( ) const {
 
-		m_fOutputIntermediate = fOutputIntermediate; }
+		return m_strDirectoryIntermediate; }
+
+	void SetDirectoryIntermediate( const std::string& strDirectoryIntermediate ) {
+
+		m_strDirectoryIntermediate = strDirectoryIntermediate; }
+
+	void SetMotifs( CCoalesceMotifLibrary& Motifs ) {
+
+		if( m_fMotifs && m_pMotifs && ( m_pMotifs != &Motifs ) )
+			delete m_pMotifs;
+		m_pMotifs = &Motifs; }
+
+	const CCoalesceMotifLibrary* GetMotifs( ) const {
+
+		return m_pMotifs; }
+
+	size_t GetK( ) const {
+
+		return m_iK; }
+
+	void SetK( size_t iK ) {
+
+		m_iK = iK; }
 };
 
 }
