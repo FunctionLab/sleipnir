@@ -140,10 +140,6 @@ public:
 
 		return true; }
 
-	bool Add( size_t iMember, tValue Value ) {
-
-		return Add( iMember, Value, 1 ); }
-
 	tCount Get( size_t iMember, size_t iBin ) const {
 
 		return ( ( ( iMember < m_iMembers ) && ( iBin < GetEdges( ) ) ) ?
@@ -352,7 +348,7 @@ class CCoalesceGroupHistograms : public CCoalesceSequencer<CCoalesceHistogramSet
 public:
 	CCoalesceGroupHistograms( size_t iMotifs, size_t iBins ) : m_iMotifs(iMotifs), m_iBins(iBins) { }
 
-	bool Add( const CCoalesceGeneScores& );
+	bool Add( const CCoalesceGeneScores&, bool );
 
 	size_t GetMotifs( ) const {
 

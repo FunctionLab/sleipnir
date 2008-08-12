@@ -70,10 +70,12 @@ bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const string& strS
 
 // CCoalesceGroupHistograms
 
-bool CCoalesceGroupHistograms::Add( const CCoalesceGeneScores& GeneScores ) {
-	size_t		iTypeThem, iTypeUs, iSubsequence;
-	uint32_t	iMotif;
+bool CCoalesceGroupHistograms::Add( const CCoalesceGeneScores& GeneScores, bool fSubtract ) {
+	size_t			iTypeThem, iTypeUs, iSubsequence;
+	uint32_t		iMotif;
+	unsigned short	sDelta;
 
+	sDelta = fSubtract ? -1 : 1;
 	for( iTypeThem = 0; iTypeThem < GeneScores.GetTypes( ); ++iTypeThem ) {
 		iTypeUs = AddType( GeneScores.GetType( iTypeThem ) );
 		for( iSubsequence = ( ESubsequenceTotal + 1 );
@@ -90,8 +92,8 @@ bool CCoalesceGroupHistograms::Add( const CCoalesceGeneScores& GeneScores ) {
 			for( iMotif = 0; iMotif < GetMotifs( ); ++iMotif ) {
 				unsigned short	s	= GeneScores.Get( iTypeThem, iSubsequence, iMotif );
 
-				HistogramsTotal.Add( iMotif, s );
-				Histograms.Add( iMotif, s ); } } }
+				HistogramsTotal.Add( iMotif, s, sDelta );
+				Histograms.Add( iMotif, s, sDelta ); } } }
 
 	return true; }
 
@@ -167,13 +169,16 @@ bool CCoalesceClusterImpl::AddCorrelatedGenes( const CPCL& PCL, CCoalesceCluster
 void CCoalesceCluster::CalculateHistograms( const vector<CCoalesceGeneScores>& vecGeneScores,
 	CCoalesceGroupHistograms& Histograms ) const {
 	set<size_t>::const_iterator	iterGene;
+	size_t						i;
 
-// BUGBUG: make me incremental
-	Histograms.Clear( );
 	if( vecGeneScores.empty( ) )
 		return;
 	for( iterGene = m_setiGenes.begin( ); iterGene != m_setiGenes.end( ); ++iterGene )
-		Histograms.Add( vecGeneScores[ *iterGene ] ); }
+		if( !binary_search( m_veciPrevGenes.begin( ), m_veciPrevGenes.end( ), *iterGene ) )
+			Histograms.Add( vecGeneScores[ *iterGene ], false );
+	for( i = 0; i < m_veciPrevGenes.size( ); ++i )
+		if( m_setiGenes.find( m_veciPrevGenes[ i ] ) == m_setiGenes.end( ) )
+			Histograms.Add( vecGeneScores[ m_veciPrevGenes[ i ] ], true ); }
 
 void CCoalesceCluster::Subtract( CPCL& PCL ) const {
 	set<size_t>::const_iterator	iterGene, iterCondition;
@@ -538,8 +543,6 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 						return false; } }
 	else
 		Clear( );
-//DWORD iTmp, iHists, iConds, iMotifs, iGenes;
-//iHists = iConds = iMotifs = iGenes = 0;
 	while( true ) {
 		CCoalesceCluster			Cluster, Pot;
 		CCoalesceGroupHistograms	HistsCluster( GetMotifCount( ), GetBins( ) );
@@ -553,30 +556,17 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 			Cluster.GetGenes( ).size( ), PCLCopy.GetGene( *Cluster.GetGenes( ).begin( ) ).c_str( ),
 			PCLCopy.GetGene( *(++Cluster.GetGenes( ).begin( )) ).c_str( ) );
 		while( !( Cluster.IsConverged( ) || Cluster.IsEmpty( ) ) ) {
-//iTmp = GetTickCount( );
 			Cluster.CalculateHistograms( vecGeneScores, HistsCluster );
 			Pot.CalculateHistograms( vecGeneScores, HistsPot );
 			Cluster.Snapshot( );
-//iHists += GetTickCount( ) - iTmp;
-//iTmp = GetTickCount( );
-//Cluster.SelectConditions( PCLCopy, Pot, GetPValueCondition( ) );
-//iConds += GetTickCount( ) - iTmp;
-//iTmp = GetTickCount( );
-//Cluster.SelectMotifs( HistsCluster, HistsPot, GetPValueMotif( ), m_pMotifs );
-//iMotifs += GetTickCount( ) - iTmp;
-//iTmp = GetTickCount( );
-//Cluster.SelectGenes( PCLCopy, vecGeneScores, HistsCluster, HistsPot, Pot, GetProbabilityGene( ), m_pMotifs );
-//iGenes += GetTickCount( ) - iTmp;
-/*
+			Pot.Snapshot( );
 			if( !( Cluster.SelectConditions( PCLCopy, Pot, GetPValueCondition( ) ) &&
 				Cluster.SelectMotifs( HistsCluster, HistsPot, GetPValueMotif( ), m_pMotifs ) &&
 				Cluster.SelectGenes( PCLCopy, vecGeneScores, HistsCluster, HistsPot, Pot,
 				GetProbabilityGene( ), m_pMotifs ) ) )
 				return false;
-*/
 			g_CatSleipnir.info( "CCoalesce::Cluster( ) processed %d genes, %d conditions, %d motifs",
 				Cluster.GetGenes( ).size( ), Cluster.GetConditions( ).size( ), Cluster.GetMotifs( ).size( ) );
-//cerr << "TIMER	" << iHists << '\t' << iConds << '\t' << iMotifs << '\t' << iGenes << endl;
 			if( IsOutputIntermediate( ) )
 				Cluster.Save( GetDirectoryIntermediate( ), vecClusters.size( ), PCLCopy, m_pMotifs ); }
 		if( Cluster.IsConverged( ) ) {

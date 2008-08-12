@@ -22,6 +22,7 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
+// BUGBUG: this shouldn't be necessary, but something about a uint32_t in a map breaks life
 #pragma warning(disable : 4267)
 
 #include <iostream>
