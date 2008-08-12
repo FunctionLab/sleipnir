@@ -28,18 +28,19 @@ namespace Sleipnir {
 
 class CCoalesceMotifLibrary : CCoalesceMotifLibraryImpl {
 public:
-	static size_t KMer2ID( const std::string& strKMer ) {
-		size_t		i, iRet;
+	static uint32_t KMer2ID( const std::string& strKMer ) {
+		size_t		i;
+		uint32_t	iRet;
 		const char*	pc;
 
-		for( iRet = i = 0; i < strKMer.size( ); ++i ) {
+		for( i = iRet = 0; i < strKMer.size( ); ++i ) {
 			if( !( pc = strchr( c_acBases, strKMer[ i ] ) ) )
 				return -1;
 			iRet = ( iRet << c_iShift ) | ( pc - c_acBases ); }
 
 		return iRet; }
 
-	static std::string ID2KMer( size_t iID, size_t iK ) {
+	static std::string ID2KMer( uint32_t iID, size_t iK ) {
 		std::string	strRet;
 		size_t		i, iMask;
 
@@ -61,11 +62,11 @@ public:
 
 	CCoalesceMotifLibrary( size_t iK ) : CCoalesceMotifLibraryImpl( iK ) { }
 
-	std::string GetMotif( size_t iMotif ) const {
+	std::string GetMotif( uint32_t iMotif ) const {
 
 		return ID2KMer( iMotif, GetK( ) ); }
 
-	size_t GetID( const std::string& strKMer ) const {
+	uint32_t GetID( const std::string& strKMer ) const {
 
 		return KMer2ID( strKMer ); }
 

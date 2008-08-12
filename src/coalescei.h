@@ -261,6 +261,10 @@ protected:
 template<class tType>
 class CCoalesceSequencer : public CCoalesceSequencerBase {
 public:
+	tType& Get( size_t iType, ESubsequence eSubsequence ) {
+
+		return m_vecvecValues[ iType ][ eSubsequence ]; }
+
 	const tType& Get( size_t iType, ESubsequence eSubsequence ) const {
 
 		return m_vecvecValues[ iType ][ eSubsequence ]; }
@@ -295,10 +299,6 @@ public:
 				m_vecvecValues[ i ][ j ].Clear( ); }
 
 protected:
-	tType& GetMod( size_t iType, ESubsequence eSubsequence ) {
-
-		return m_vecvecValues[ iType ][ eSubsequence ]; }
-
 // Type by subsequence
 	std::vector<std::vector<tType> >	m_vecvecValues;
 };
@@ -306,28 +306,45 @@ protected:
 // One score per motif atom
 class CCoalesceGeneScores : public CCoalesceSequencer<std::vector<unsigned short> > {
 protected:
-	typedef std::vector<unsigned short>	TVecS;
+	typedef std::vector<unsigned short>		TVecS;
+	typedef std::map<uint32_t, uint32_t>	TMapII;
 
 public:
 	bool Add( CCoalesceMotifLibrary&, const SFASTASequence& );
 
-	size_t GetMotifs( const std::string& strType, size_t iSubsequence ) const {
-		size_t	iType;
+	unsigned short Get( size_t iType, size_t iSubsequence, uint32_t iMotif ) const {
+		const TMapII&			mapiiMotifs	= m_MotifMaps.Get( iType, (ESubsequence)iSubsequence );
+		TMapII::const_iterator	iterMotif;
 
-		return ( ( ( iType = GetType( strType ) ) == -1 ) ? 0 : GetSelf( iType, iSubsequence ).size( ) ); }
+		return ( ( ( iterMotif = mapiiMotifs.find( iMotif ) ) == mapiiMotifs.end( ) ) ? 0 :
+			CCoalesceSequencer::Get( iType, (ESubsequence)iSubsequence )[ iterMotif->second ] ); }
 
-	unsigned short Get( const std::string& strType, size_t iSubsequence, size_t iMotif ) const {
-		size_t	iType;
+	bool IsEmpty( size_t iType, size_t iSubsequence ) const {
 
-		return ( ( ( iType = GetType( strType ) ) == -1 ) ? 0 : GetSelf( iType, iSubsequence )[ iMotif ] ); }
+		return m_MotifMaps.Get( iType, (ESubsequence)iSubsequence ).empty( ); }
 
 protected:
 	bool Add( CCoalesceMotifLibrary&, const std::string&, size_t, bool );
 
-	TVecS& GetSelf( size_t iType, size_t iSubsequence ) const {
+	uint32_t AddMotif( size_t iType, ESubsequence eSubsequence, uint32_t iMotif ) {
+		TMapII::const_iterator	iterMotif;
+		size_t					i;
+		uint32_t				iRet;
 
-		return ((CCoalesceGeneScores*)this)->CCoalesceSequencer::GetMod( iType,
-			(CCoalesceSequencerBase::ESubsequence)iSubsequence ); }
+		for( i = m_MotifMaps.GetTypes( ); m_MotifMaps.GetTypes( ) <= iType; ++i )
+			m_MotifMaps.AddType( m_vecstrTypes[ i ] );
+		{
+			TMapII&					mapiiMotifs	= m_MotifMaps.Get( iType, eSubsequence );
+
+			if( ( iterMotif = mapiiMotifs.find( iMotif ) ) != mapiiMotifs.end( ) )
+				return iterMotif->second;
+
+			mapiiMotifs[ iMotif ] = iRet = (uint32_t)mapiiMotifs.size( );
+			CCoalesceSequencer::Get( iType, eSubsequence ).push_back( 0 );
+			return iRet;
+		} }
+
+	CCoalesceSequencer<TMapII>	m_MotifMaps;
 };
 
 // One histogram per motif atom
@@ -349,7 +366,7 @@ protected:
 struct SMotifMatch {
 	SMotifMatch( ) { }
 
-	SMotifMatch( size_t iMotif, const std::string& strType,
+	SMotifMatch( uint32_t iMotif, const std::string& strType,
 		CCoalesceSequencerBase::ESubsequence eSubsequence ) : m_iMotif(iMotif), m_strType(strType),
 		m_eSubsequence(eSubsequence) { }
 
@@ -382,7 +399,7 @@ struct SMotifMatch {
 
 		return ( iMotif ^ iType ^ iSubsequence ); }
 
-	size_t									m_iMotif;
+	uint32_t								m_iMotif;
 	std::string								m_strType;
 	CCoalesceSequencerBase::ESubsequence	m_eSubsequence;
 };
@@ -432,7 +449,7 @@ protected:
 	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
 	bool AddSeedPair( const CPCL&, CCoalesceCluster&, float );
 	void CalculateCentroid( const CPCL& );
-	void AddSignificant( size_t, const CCoalesceMotifLibrary*, const CCoalesceGroupHistograms&,
+	void AddSignificant( uint32_t, const CCoalesceMotifLibrary*, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, float );
 	bool IsSignificant( size_t, const CPCL&, const CCoalesceMotifLibrary*, const CCoalesceGeneScores&,
 		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, const CCoalesceCluster&,

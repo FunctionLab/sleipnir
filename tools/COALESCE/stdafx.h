@@ -22,6 +22,8 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
+#pragma warning(disable : 4267)
+
 #include <iostream>
 using namespace std;
 
