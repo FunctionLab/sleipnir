@@ -35,15 +35,19 @@ int main( int iArgs, char** aszArgs ) {
 	CBayesNetSmile				BNSmile;
 	CPCL						PCLDatasets( false );
 	string						strDir, strFile;
+	vector<string>				vecstrGenes;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg );
 
-	if( !PCLDatasets.Open( sArgs.datasets_arg, 0 ) ) {
+	if( !PCLDatasets.Open( sArgs.datasets_arg, 1 ) ) {
 		cerr << "Could not open: " << ( sArgs.datasets_arg ? sArgs.datasets_arg : "stdin" ) << endl;
 		return 1; }
+	vecstrGenes.resize( PCLDatasets.GetGenes( ) );
+	for( i = 0; i < vecstrGenes.size( ); ++i )
+		vecstrGenes[ i ] = PCLDatasets.GetFeature( i, 1 );
 
 	ifsm.open( sArgs.input_arg, ios_base::binary );
 	if( !BNDefault.Open( ifsm ) ) {
@@ -58,13 +62,13 @@ int main( int iArgs, char** aszArgs ) {
 	ifsm.close( );
 
 	strDir = (string)sArgs.output_arg + '/';
-	if( !BNSmile.Open( BNDefault, PCLDatasets.GetGeneNames( ) ) )
+	if( !BNSmile.Open( BNDefault, vecstrGenes ) )
 		return 1;
 	strFile = strDir + BNDefault.GetID( ) + ( sArgs.xdsl_flag ? c_acXDSL : c_acDSL );
 	cerr << "Saving: " << strFile << endl;
 	BNSmile.Save( strFile.c_str( ) );
 	for( i = 0; i < vecBNs.size( ); ++i ) {
-		if( !BNSmile.Open( vecBNs[ i ], PCLDatasets.GetGeneNames( ) ) )
+		if( !BNSmile.Open( vecBNs[ i ], vecstrGenes ) )
 			return 1;
 		strFile = strDir + vecBNs[ i ].GetID( ) + ( sArgs.xdsl_flag ? c_acXDSL : c_acDSL );
 		cerr << "Saving: " << strFile << endl;
