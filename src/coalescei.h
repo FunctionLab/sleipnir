@@ -23,12 +23,21 @@
 #define COALESCEI_H
 
 #include <algorithm>
+#ifdef _MSC_VER
 #include <hash_map>
+#else // _MSC_VER
+#include <ext/hash_map>
+
+#define hash_value	hash<const char*>( )
+#define stdext		__gnu_cxx
+#endif // _MSC_VER
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 
+#include "statistics.h"
 #include "typesi.h"
 
 namespace Sleipnir {
@@ -313,7 +322,7 @@ public:
 		TMapII::const_iterator	iterMotif;
 
 		return ( ( ( iterMotif = mapiiMotifs.find( iMotif ) ) == mapiiMotifs.end( ) ) ? 0 :
-			CCoalesceSequencer::Get( iType, (ESubsequence)iSubsequence )[ iterMotif->second ] ); }
+			CCoalesceSequencer<TVecS>::Get( iType, (ESubsequence)iSubsequence )[ iterMotif->second ] ); }
 
 	bool IsEmpty( size_t iType, size_t iSubsequence ) const {
 
@@ -336,7 +345,7 @@ protected:
 				return iterMotif->second;
 
 			mapiiMotifs[ iMotif ] = iRet = (uint32_t)mapiiMotifs.size( );
-			CCoalesceSequencer::Get( iType, eSubsequence ).push_back( 0 );
+			CCoalesceSequencer<TVecS>::Get( iType, eSubsequence ).push_back( 0 );
 			return iRet;
 		} }
 
@@ -390,7 +399,7 @@ struct SMotifMatch {
 		size_t	iMotif, iType, iSubsequence;
 
 		iMotif = m_iMotif * ( (size_t)-1 / 20000 );
-		iType = stdext::hash_value( m_strType ) * ( (size_t)-1 / 5 );
+		iType = stdext::hash_value( m_strType.c_str( ) ) * ( (size_t)-1 / 5 );
 		iSubsequence = m_eSubsequence * ( (size_t)-1 / CCoalesceSequencerBase::ESubsequenceEnd );
 
 		return ( iMotif ^ iType ^ iSubsequence ); }
@@ -425,8 +434,8 @@ protected:
 
 	template<class tType>
 	static size_t GetHash( const std::set<tType>& set ) {
-		size_t							iRet;
-		std::set<tType>::const_iterator	iter;
+		size_t										iRet;
+		typename std::set<tType>::const_iterator	iter;
 
 		for( iRet = 0,iter = set.begin( ); iter != set.end( ); ++iter )
 			iRet ^= GetHash( *iter );

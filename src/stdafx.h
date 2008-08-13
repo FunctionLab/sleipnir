@@ -27,6 +27,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
 #ifdef _MSC_VER
 #include <io.h>
 #include <winsock2.h>
@@ -47,10 +48,13 @@
 #define _read				read
 #define _write				write
 #define closesocket			close
-#define _mktemp_s			mktemp
 #define SOCKET				int
 #define strcpy_s(a,b,c)		strcpy(a,c)
 #define strncpy_s(a,b,c,d)	strncpy(a,c,d)
+
+inline char* _mktemp_s( char* szTemplate, size_t iSize ) {
+
+	return mktemp( szTemplate ); }
 
 inline int sprintf_s( char* szDest, size_t iSize, const char* szFormat,
 	... ) {

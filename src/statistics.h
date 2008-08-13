@@ -448,7 +448,7 @@ public:
 				break;
 			dPrev = d; }
 		if( dRet < 1 )
-			dRet = min( 2 * dRet, 1 );
+			dRet = min( 2 * dRet, 1.0 );
 
 		return dRet; }
 

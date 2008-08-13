@@ -25,13 +25,12 @@
 #include "measure.h"
 #include "statistics.h"
 #include "fasta.h"
-#include "motif.h"
 
 namespace Sleipnir {
 
 // CCoalesceMotifLibrary
 
-const char	CCoalesceMotifLibrary::c_acBases[]	= "ACGT";
+const char	CCoalesceMotifLibraryImpl::c_acBases[]	= "ACGT";
 
 // CCoalesceGeneScores
 
@@ -64,7 +63,7 @@ bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const string& strS
 
 		eSubsequence = fIntron ? ESubsequenceIntrons : ESubsequenceExons;
 		iMotifUs = AddMotif( iType, eSubsequence, iMotifThem );
-		CCoalesceSequencer::Get( iType, eSubsequence )[ iMotifUs ]++; }
+		CCoalesceSequencer<TVecS>::Get( iType, eSubsequence )[ iMotifUs ]++; }
 
 	return true; }
 
@@ -420,7 +419,7 @@ float CCoalesceClusterImpl::CalculateProbabilityMotifs( const CCoalesceGeneScore
 		if( ( dRet < 0 ) || ( dCur < dRet ) )
 			dRet = dCur; }
 
-	return max( dRet, 0 ); }
+	return max( dRet, 0.0f ); }
 
 bool CCoalesceCluster::Save( const string& strDirectory, size_t iID, const CPCL& PCL,
 	const CCoalesceMotifLibrary* pMotifs ) const {
