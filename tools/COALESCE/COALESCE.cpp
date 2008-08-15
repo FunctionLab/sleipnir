@@ -57,6 +57,7 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetPValueCondition( (float)sArgs.pvalue_cond_arg );
 	Coalesce.SetPValueMotif( (float)sArgs.pvalue_motif_arg );
 	Coalesce.SetPValueCorrelation( (float)sArgs.pvalue_correl_arg );
+	Coalesce.SetBasesPerMatch( sArgs.bases_arg );
 	if( sArgs.intermediate_arg )
 		Coalesce.SetDirectoryIntermediate( sArgs.intermediate_arg );
 	if( !Coalesce.Cluster( PCL, FASTA, vecClusters ) ) {

@@ -90,18 +90,14 @@ public:
 		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
 		CCoalesceCluster& Pot, float dPValue, const CCoalesceMotifLibrary* pMotifs = NULL );
 	void CalculateHistograms( const std::vector<CCoalesceGeneScores>& vecGeneScores,
-		CCoalesceGroupHistograms& Histograms ) const;
+		CCoalesceGroupHistograms& HistogramsCluster, CCoalesceGroupHistograms* pHistogramsPot ) const;
 	bool Save( const std::string& strDirectory, size_t iID, const CPCL& PCL,
 		const CCoalesceMotifLibrary* pMotifs = NULL ) const;
 	void Save( std::ostream&, size_t iID, const CPCL& PCL, const CCoalesceMotifLibrary* pMotifs = NULL ) const;
 
 	bool IsConverged( ) {
 
-// BUGBUG: this is redundant
-		return ( ( m_setiHistory.find( GetHash( ) ) != m_setiHistory.end( ) ) ||
-			CCoalesceClusterImpl::IsConverged( m_setiConditions, m_veciPrevConditions ) &&
-			CCoalesceClusterImpl::IsConverged( m_setiGenes, m_veciPrevGenes ) &&
-			CCoalesceClusterImpl::IsConverged( m_setsMotifs, m_vecsPrevMotifs ) ); }
+		return ( m_setiHistory.find( GetHash( ) ) != m_setiHistory.end( ) ); }
 
 	bool IsEmpty( ) const {
 
@@ -111,8 +107,9 @@ public:
 
 		m_setiGenes.insert( iGene ); }
 
-	void Snapshot( ) {
+	void Snapshot( CCoalesceGroupHistograms& Histograms ) {
 
+		Histograms.SetTotal( (unsigned short)m_setiGenes.size( ) );
 		m_setiHistory.insert( GetHash( ) );
 		CCoalesceClusterImpl::Snapshot( m_setiConditions, m_veciPrevConditions );
 		CCoalesceClusterImpl::Snapshot( m_setsMotifs, m_vecsPrevMotifs );
@@ -212,6 +209,14 @@ public:
 	void SetK( size_t iK ) {
 
 		m_iK = iK; }
+
+	size_t GetBasesPerMatch( ) const {
+
+		return m_iBasesPerMatch; }
+
+	void SetBasesPerMatch( size_t iBasesPerMatch ) {
+
+		m_iBasesPerMatch = iBasesPerMatch; }
 };
 
 }
