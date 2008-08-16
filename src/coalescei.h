@@ -78,6 +78,26 @@ public:
 // The real thing isn't sensitive enough, or I'm doing it wrong
 //		return CStatistics::SkellamPDF( 0, dAveOne, dAveTwo ); }
 
+	double ZTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
+		size_t	i;
+		tValue	Cur, AveOne, Ave, Std;
+
+		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
+			return 1;
+
+		for( AveOne = Ave = Std = 0,i = 0; i < GetEdges( ); ++i ) {
+			Cur = Get( iMember, i ) * GetEdge( i );
+			AveOne += Cur;
+			Std += Cur * GetEdge( i );
+			Cur = HistSet.Get( iMember, i ) * HistSet.GetEdge( i );
+			Ave += Cur;
+			Std += Cur * HistSet.GetEdge( i ); }
+		Ave = ( Ave + AveOne ) / ( GetTotal( ) + HistSet.GetTotal( ) );
+		Std = sqrt( ( Std / ( GetTotal( ) + HistSet.GetTotal( ) ) ) - ( Ave * Ave ) );
+		AveOne /= GetTotal( );
+
+		return ( 1 - CStatistics::NormalCDF( fabs( AveOne - Ave ) * sqrt( (tValue)GetTotal( ) ), 0, Std ) ); }
+
 	double KSTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
 		size_t	i;
 		tCount	CumOne, CumTwo, SumOne, SumTwo;
@@ -177,7 +197,7 @@ public:
 			return NULL;
 
 		pRet = &m_vecCounts[ GetOffset( iMember ) ];
-		*pRet = Get( iMember, 0 );
+		*(tCount*)pRet = Get( iMember, (size_t)0 );
 		return pRet; }
 
 	size_t GetMembers( ) const {
@@ -238,12 +258,12 @@ protected:
 
 	void GetAveVar( size_t iMember, double& dAve, double& dVar ) const {
 		size_t	i;
-		tCount	Cur, Ave, Var;
+		tValue	Cur, Ave, Var;
 
 		for( Ave = Var = 0,i = 0; i < GetEdges( ); ++i ) {
-			Cur = Get( iMember, i ) * i;
+			Cur = Get( iMember, i ) * GetEdge( i );
 			Ave += Cur;
-			Var += Cur * Cur; }
+			Var += Cur * GetEdge( i ); }
 
 		dAve = (double)Ave / GetTotal( );
 		dVar = ( (double)Var / GetTotal( ) ) - ( dAve * dAve ); }

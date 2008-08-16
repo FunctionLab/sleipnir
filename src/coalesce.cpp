@@ -201,13 +201,13 @@ bool CCoalesceClusterImpl::AddCorrelatedGenes( const CPCL& PCL, CCoalesceCluster
 	double	dR;
 
 	CalculateCentroid( PCL );
-	for( iGene = 0; iGene < PCL.GetGenes( ); ++iGene ) {
-		if( IsGene( iGene ) || ( ( dR = CMeasurePearson::Pearson( &m_vecdCentroid.front( ),
-			PCL.GetExperiments( ), PCL.Get( iGene ), PCL.GetExperiments( ), IMeasure::EMapNone, NULL,
-			NULL ) ) < 0 ) )
-			continue;
-		if( CStatistics::PValuePearson( dR, PCL.GetExperiments( ) ) < dPValue )
-			Add( iGene, Pot ); }
+	for( iGene = 0; iGene < PCL.GetGenes( ); ++iGene )
+		if( !IsGene( iGene ) &&
+			( ( dR = CMeasurePearson::Pearson( &m_vecdCentroid.front( ), PCL.GetExperiments( ),
+			PCL.Get( iGene ), PCL.GetExperiments( ), IMeasure::EMapNone, NULL, NULL ) ) > 0 ) &&
+			( ( CStatistics::PValuePearson( dR, PCL.GetExperiments( ) ) * ( PCL.GetGenes( ) -
+			m_setiGenes.size( ) ) ) < dPValue ) )
+			Add( iGene, Pot );
 
 	return true; }
 
