@@ -107,9 +107,10 @@ public:
 
 		m_setiGenes.insert( iGene ); }
 
-	void Snapshot( CCoalesceGroupHistograms& Histograms ) {
+	void Snapshot( const std::vector<CCoalesceGeneScores>& vecGeneScores,
+		CCoalesceGroupHistograms& Histograms ) {
 
-		Histograms.SetTotal( (unsigned short)m_setiGenes.size( ) );
+		Histograms.SetTotal( vecGeneScores, GetGenes( ) );
 		m_setiHistory.insert( GetHash( ) );
 		CCoalesceClusterImpl::Snapshot( m_setiConditions, m_veciPrevConditions );
 		CCoalesceClusterImpl::Snapshot( m_setsMotifs, m_vecsPrevMotifs );
@@ -217,6 +218,14 @@ public:
 	void SetBasesPerMatch( size_t iBasesPerMatch ) {
 
 		m_iBasesPerMatch = iBasesPerMatch; }
+
+	const std::string& GetSequenceCache( ) const {
+
+		return m_strSequenceCache; }
+
+	void SetSequenceCache( const std::string& strSequenceCache ) {
+
+		m_strSequenceCache = strSequenceCache; }
 };
 
 }

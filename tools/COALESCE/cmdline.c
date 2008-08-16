@@ -38,11 +38,14 @@ const char *gengetopt_args_info_help[] = {
   "  -P, --pvalue_cond=DOUBLE      P-value threshhold for condition inclusion  \n                                  (default=`0.05')",
   "  -m, --pvalue_motif=DOUBLE     P-value threshhold for motif inclusion  \n                                  (default=`0.05')",
   "  -c, --pvalue_correl=DOUBLE    P-value threshhold for significant correlation  \n                                  (default=`0.05')",
-  "\nMiscellaneous:",
+  "\nParameters:",
   "  -k, --k=INT                   Sequence kmer length  (default=`7')",
   "  -q, --sequences=STRING        Sequence types to use (comma separated)",
-  "\nOptional:",
+  "  -b, --bases=INT               Resolution of bases per motif match  \n                                  (default=`1000')",
+  "\nMiscellaneous:",
   "  -t, --intermediate=directory  Directory for intermediate output files (PCLs)",
+  "  -e, --cache=filename          Cache file for sequence analysis",
+  "\nOptional:",
   "  -s, --skip=INT                Columns to skip in input PCL  (default=`2')",
   "  -r, --random=INT              Seed random generator  (default=`0')",
   "  -v, --verbosity=INT           Message verbosity  (default=`5')",
@@ -81,7 +84,9 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->pvalue_correl_given = 0 ;
   args_info->k_given = 0 ;
   args_info->sequences_given = 0 ;
+  args_info->bases_given = 0 ;
   args_info->intermediate_given = 0 ;
+  args_info->cache_given = 0 ;
   args_info->skip_given = 0 ;
   args_info->random_given = 0 ;
   args_info->verbosity_given = 0 ;
@@ -106,8 +111,12 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->k_orig = NULL;
   args_info->sequences_arg = NULL;
   args_info->sequences_orig = NULL;
+  args_info->bases_arg = 1000;
+  args_info->bases_orig = NULL;
   args_info->intermediate_arg = NULL;
   args_info->intermediate_orig = NULL;
+  args_info->cache_arg = NULL;
+  args_info->cache_orig = NULL;
   args_info->skip_arg = 2;
   args_info->skip_orig = NULL;
   args_info->random_arg = 0;
@@ -132,10 +141,12 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->pvalue_correl_help = gengetopt_args_info_help[9] ;
   args_info->k_help = gengetopt_args_info_help[11] ;
   args_info->sequences_help = gengetopt_args_info_help[12] ;
-  args_info->intermediate_help = gengetopt_args_info_help[14] ;
-  args_info->skip_help = gengetopt_args_info_help[15] ;
-  args_info->random_help = gengetopt_args_info_help[16] ;
-  args_info->verbosity_help = gengetopt_args_info_help[17] ;
+  args_info->bases_help = gengetopt_args_info_help[13] ;
+  args_info->intermediate_help = gengetopt_args_info_help[15] ;
+  args_info->cache_help = gengetopt_args_info_help[16] ;
+  args_info->skip_help = gengetopt_args_info_help[18] ;
+  args_info->random_help = gengetopt_args_info_help[19] ;
+  args_info->verbosity_help = gengetopt_args_info_help[20] ;
   
 }
 
@@ -225,8 +236,11 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->k_orig));
   free_string_field (&(args_info->sequences_arg));
   free_string_field (&(args_info->sequences_orig));
+  free_string_field (&(args_info->bases_orig));
   free_string_field (&(args_info->intermediate_arg));
   free_string_field (&(args_info->intermediate_orig));
+  free_string_field (&(args_info->cache_arg));
+  free_string_field (&(args_info->cache_orig));
   free_string_field (&(args_info->skip_orig));
   free_string_field (&(args_info->random_orig));
   free_string_field (&(args_info->verbosity_orig));
@@ -279,8 +293,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "k", args_info->k_orig, 0);
   if (args_info->sequences_given)
     write_into_file(outfile, "sequences", args_info->sequences_orig, 0);
+  if (args_info->bases_given)
+    write_into_file(outfile, "bases", args_info->bases_orig, 0);
   if (args_info->intermediate_given)
     write_into_file(outfile, "intermediate", args_info->intermediate_orig, 0);
+  if (args_info->cache_given)
+    write_into_file(outfile, "cache", args_info->cache_orig, 0);
   if (args_info->skip_given)
     write_into_file(outfile, "skip", args_info->skip_orig, 0);
   if (args_info->random_given)
@@ -533,14 +551,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "pvalue_correl",	1, NULL, 'c' },
         { "k",	1, NULL, 'k' },
         { "sequences",	1, NULL, 'q' },
+        { "bases",	1, NULL, 'b' },
         { "intermediate",	1, NULL, 't' },
+        { "cache",	1, NULL, 'e' },
         { "skip",	1, NULL, 's' },
         { "random",	1, NULL, 'r' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:f:p:P:m:c:k:q:t:s:r:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:f:p:P:m:c:k:q:b:t:e:s:r:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -661,6 +681,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'b':	/* Resolution of bases per motif match.  */
+        
+        
+          if (update_arg( (void *)&(args_info->bases_arg), 
+               &(args_info->bases_orig), &(args_info->bases_given),
+              &(local_args_info.bases_given), optarg, 0, "1000", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "bases", 'b',
+              additional_error))
+            goto failure;
+        
+          break;
         case 't':	/* Directory for intermediate output files (PCLs).  */
         
         
@@ -669,6 +701,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.intermediate_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "intermediate", 't',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'e':	/* Cache file for sequence analysis.  */
+        
+        
+          if (update_arg( (void *)&(args_info->cache_arg), 
+               &(args_info->cache_orig), &(args_info->cache_given),
+              &(local_args_info.cache_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "cache", 'e',
               additional_error))
             goto failure;
         

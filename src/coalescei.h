@@ -23,6 +23,7 @@
 #define COALESCEI_H
 
 #include <algorithm>
+#include <fstream>
 #ifdef _MSC_VER
 #include <hash_map>
 #else // _MSC_VER
@@ -71,7 +72,7 @@ public:
 		GetAveVar( iMember, dAveOne, dVarOne );
 		HistSet.GetAveVar( iMember, dAveTwo, dVarTwo );
 
-// Fake a Skellam with a normal
+// Fake a Skellam with a normal; Student's T tends to be slightly too sensitive
 		return CStatistics::TTestWelch( dAveOne, dVarOne, GetTotal( ), dAveTwo, dVarTwo,
 			HistSet.GetTotal( ) ); }
 // The real thing isn't sensitive enough, or I'm doing it wrong
@@ -84,8 +85,8 @@ public:
 
 		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
 			return 1;
-		SumOne = GetTotal( iMember );
-		SumTwo = HistSet.GetTotal( iMember );
+		SumOne = GetTotal( );
+		SumTwo = HistSet.GetTotal( );
 		CumOne = CumTwo = 0;
 		for( dMax = 0,i = 0; i < GetEdges( ); ++i ) {
 			CumOne += Get( iMember, i );
@@ -110,7 +111,9 @@ public:
 			Two = HistSet.Get( iMember, i );
 			if( One || Two ) {
 				dTmp = ( dTO * One ) - ( dOT * Two );
-				dC2 += dTmp * dTmp / ( One + Two ); } }
+				dC2 += dTmp * dTmp / ( One + Two ); }
+			else
+				iDF--; }
 
 		return ( 1 - CStatistics::Chi2CDF( dC2, iDF ) ); }
 
@@ -340,6 +343,62 @@ protected:
 	typedef std::map<uint32_t, uint32_t>	TMapII;
 
 public:
+	void Save( std::ofstream& ofsm ) const {
+		size_t		iType, iSubsequence;
+		uint32_t	iSize;
+
+		iSize = (uint32_t)GetTypes( );
+		ofsm.write( (const char*)&iSize, sizeof(iSize) );
+		for( iType = 0; iType < GetTypes( ); ++iType ) {
+			iSize = (uint32_t)GetType( iType ).length( );
+			ofsm.write( (const char*)&iSize, sizeof(iSize) );
+			ofsm.write( (const char*)GetType( iType ).c_str( ), iSize );
+
+			for( iSubsequence = 0; iSubsequence < GetSubsequences( iType ); ++iSubsequence ) {
+				const TVecD&					vecdMotifs	= Get( iType, (ESubsequence)iSubsequence );
+				const std::vector<uint32_t>&	veciMotifs	= m_MotifVecs.Get( iType,
+																(ESubsequence)iSubsequence );
+
+				iSize = (uint32_t)vecdMotifs.size( );
+				ofsm.write( (const char*)&iSize, sizeof(iSize) );
+				if( iSize ) {
+					ofsm.write( (const char*)&vecdMotifs.front( ), (std::streamsize)( vecdMotifs.size( ) *
+						sizeof(vecdMotifs.front( )) ) );
+					ofsm.write( (const char*)&veciMotifs.front( ), (std::streamsize)( veciMotifs.size( ) *
+						sizeof(veciMotifs.front( )) ) ); } } } }
+
+	void Open( std::ifstream& ifsm ) {
+		uint32_t		iSize, iTypes, iType, iMotifs, iMotif;
+		size_t			iSubsequence;
+		vector<char>	veccType;
+
+		ifsm.read( (char*)&iTypes, sizeof(iTypes) );
+		for( iType = 0; iType < iTypes; ++iType ) {
+			ifsm.read( (char*)&iSize, sizeof(iSize) );
+			if( veccType.size( ) <= iSize )
+				veccType.resize( iSize + 1 );
+			ifsm.read( (char*)&veccType.front( ), iSize );
+			veccType[ iSize ] = 0;
+			AddType( &veccType.front( ) );
+			m_MotifMaps.AddType( &veccType.front( ) );
+			m_MotifVecs.AddType( &veccType.front( ) );
+
+			for( iSubsequence = 0; iSubsequence < GetSubsequences( iType ); ++iSubsequence ) {
+				TVecD&					vecdMotifs	= Get( iType, (ESubsequence)iSubsequence );
+				std::vector<uint32_t>&	veciMotifs	= m_MotifVecs.Get( iType, (ESubsequence)iSubsequence );
+				TMapII&					mapiiMotifs	= m_MotifMaps.Get( iType, (ESubsequence)iSubsequence );
+
+				ifsm.read( (char*)&iMotifs, sizeof(iMotifs) );
+				if( iMotifs ) {
+					vecdMotifs.resize( iMotifs );
+					ifsm.read( (char*)&vecdMotifs.front( ), (std::streamsize)( vecdMotifs.size( ) *
+						sizeof(vecdMotifs.front( )) ) );
+					veciMotifs.resize( iMotifs );
+					ifsm.read( (char*)&veciMotifs.front( ), (std::streamsize)( veciMotifs.size( ) *
+						sizeof(veciMotifs.front( )) ) );
+					for( iMotif = 0; iMotif < veciMotifs.size( ); ++iMotif )
+						mapiiMotifs[ veciMotifs[ iMotif ] ] = iMotif; } } } }
+
 	bool Add( CCoalesceMotifLibrary&, const SFASTASequence&, std::vector<std::vector<unsigned short> >&,
 		std::vector<size_t>& );
 
@@ -415,12 +474,18 @@ public:
 
 		return m_iMotifs; }
 
-	void SetTotal( unsigned short sTotal ) {
-		size_t	iType, iSubsequence;
+	void SetTotal( const std::vector<CCoalesceGeneScores>& vecGeneScores, const std::set<size_t>& setiGenes ) {
+		std::set<size_t>::const_iterator	iterGene;
+		size_t								iTypeUs, iTypeThem, iSubsequence;
+		unsigned short						sTotal;
 
-		for( iType = 0; iType < GetTypes( ); ++iType )
-			for( iSubsequence = ESubsequenceBegin; iSubsequence < GetSubsequences( iType ); ++iSubsequence )
-				Get( iType, (ESubsequence)iSubsequence ).SetTotal( sTotal ); }
+		for( iTypeUs = 0; iTypeUs < GetTypes( ); ++iTypeUs )
+			for( iSubsequence = ESubsequenceBegin; iSubsequence < GetSubsequences( iTypeUs ); ++iSubsequence ) {
+				for( sTotal = 0,iterGene = setiGenes.begin( ); iterGene != setiGenes.end( ); ++iterGene )
+					if( ( ( iTypeThem = vecGeneScores[ *iterGene ].GetType( GetType( iTypeUs ) ) ) != -1 ) &&
+						!vecGeneScores[ *iterGene ].Get( iTypeThem, (ESubsequence)iSubsequence ).empty( ) )
+						sTotal++;
+				Get( iTypeUs, (ESubsequence)iSubsequence ).SetTotal( sTotal ); } }
 
 protected:
 	uint32_t	m_iMotifs;
@@ -537,18 +602,16 @@ protected:
 
 		return ( GetHash( m_setiConditions ) ^ GetHash( m_setiGenes ) ^ GetHash( m_setsMotifs ) ); }
 
-	std::set<size_t>					m_setiConditions;
-	std::set<size_t>					m_setiGenes;
-	std::set<SMotifMatch>				m_setsMotifs;
-	std::vector<size_t>					m_veciPrevConditions;
-	std::vector<size_t>					m_veciPrevGenes;
-	std::vector<SMotifMatch>			m_vecsPrevMotifs;
-	std::vector<size_t>					m_veciCounts;
-	std::vector<float>					m_vecdCentroid;
-	std::vector<float>					m_vecdStdevs;
-	mutable std::vector<long double>	m_vecdPIn;
-	mutable std::vector<long double>	m_vecdPOut;
-	std::set<size_t>					m_setiHistory;
+	std::set<size_t>			m_setiConditions;
+	std::set<size_t>			m_setiGenes;
+	std::set<SMotifMatch>		m_setsMotifs;
+	std::vector<size_t>			m_veciPrevConditions;
+	std::vector<size_t>			m_veciPrevGenes;
+	std::vector<SMotifMatch>	m_vecsPrevMotifs;
+	std::vector<size_t>			m_veciCounts;
+	std::vector<float>			m_vecdCentroid;
+	std::vector<float>			m_vecdStdevs;
+	std::set<size_t>			m_setiHistory;
 };
 
 class CCoalesceImpl {
@@ -560,6 +623,8 @@ protected:
 
 	void Clear( );
 	size_t GetMotifCount( ) const;
+	void Save( const std::vector<CCoalesceGeneScores>& ) const;
+	void Open( std::vector<CCoalesceGeneScores>& ) const;
 
 	float					m_dProbabilityGene;
 	float					m_dPValueCondition;
@@ -571,6 +636,7 @@ protected:
 	CCoalesceMotifLibrary*	m_pMotifs;
 	bool					m_fMotifs;
 	size_t					m_iBasesPerMatch;
+	std::string				m_strSequenceCache;
 };
 
 }

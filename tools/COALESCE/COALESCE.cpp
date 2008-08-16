@@ -60,6 +60,8 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetBasesPerMatch( sArgs.bases_arg );
 	if( sArgs.intermediate_arg )
 		Coalesce.SetDirectoryIntermediate( sArgs.intermediate_arg );
+	if( sArgs.cache_arg )
+		Coalesce.SetSequenceCache( sArgs.cache_arg );
 	if( !Coalesce.Cluster( PCL, FASTA, vecClusters ) ) {
 		cerr << "Clustering failed" << endl;
 		return 1; }
