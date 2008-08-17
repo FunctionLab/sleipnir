@@ -30,7 +30,8 @@ namespace Sleipnir {
 
 // CCoalesceMotifLibrary
 
-const char	CCoalesceMotifLibraryImpl::c_acBases[]	= "ACGT";
+// Order independent, but complements must be adjacent
+const char	CCoalesceMotifLibraryImpl::c_acBases[]	= "ATCG";
 
 // CCoalesceGeneScores
 
@@ -67,8 +68,7 @@ bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const SFASTASequen
 
 bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const string& strSequence, size_t iType,
 	bool fIntron, vector<vector<unsigned short> >& vecvecsCounts, vector<size_t>& veciLengths ) {
-	size_t			i;
-	uint32_t		iMotif;
+	size_t			i, j;
 	ESubsequence	eSubsequence;
 
 	eSubsequence = fIntron ? ESubsequenceIntrons : ESubsequenceExons;
@@ -77,16 +77,15 @@ bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const string& strS
 
 // BUGBUG: make me span intron/exon boundaries
 	for( i = 0; ( i + Motifs.GetK( ) ) <= strSequence.size( ); ++i ) {
-		const string&	strKMer	= strSequence.substr( i, Motifs.GetK( ) );
+		const string&		strKMer	= strSequence.substr( i, Motifs.GetK( ) );
+		vector<uint32_t>	veciMotifs;
 
-		if( CCoalesceMotifLibrary::IsIgnorableKMer( strKMer ) )
-			continue;
-		if( ( iMotif = Motifs.GetID( strKMer ) ) == -1 ) {
+		if( !Motifs.GetMatches( strKMer, veciMotifs ) ) {
 			g_CatSleipnir.error( "CCoalesceHistograms::Add( %s, %d, %d ) unrecognized kmer: %s",
 				strSequence.c_str( ), iType, fIntron, strKMer.c_str( ) );
 			return false; }
-
-		Add( eSubsequence, iMotif, Motifs.GetMotifs( ), vecvecsCounts ); }
+		for( j = 0; j < veciMotifs.size( ); ++j )
+			Add( eSubsequence, veciMotifs[ j ], Motifs.GetMotifs( ), vecvecsCounts ); }
 
 	return true; }
 

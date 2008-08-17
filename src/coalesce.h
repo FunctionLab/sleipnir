@@ -28,55 +28,41 @@ namespace Sleipnir {
 
 class CCoalesceMotifLibrary : CCoalesceMotifLibraryImpl {
 public:
-	static uint32_t KMer2ID( const std::string& strKMer ) {
-		size_t		i;
-		uint32_t	iRet;
-		const char*	pc;
-
-		for( i = iRet = 0; i < strKMer.size( ); ++i ) {
-			if( !( pc = strchr( c_acBases, strKMer[ i ] ) ) )
-				return -1;
-			iRet = ( iRet << c_iShift ) | ( pc - c_acBases ); }
-
-		return iRet; }
-
-	static std::string ID2KMer( uint32_t iID, size_t iK ) {
-		std::string	strRet;
-		size_t		i, iMask;
-
-		iMask = ( 1 << c_iShift ) - 1;
-		strRet.resize( iK );
-		for( i = 0; i < iK; ++i ) {
-			strRet[ iK - i - 1 ] = c_acBases[ iID & iMask ];
-			iID >>= c_iShift; }
-
-		return strRet; }
-
-	static size_t CountKMers( size_t iK ) {
-
-		return ( 1 << ( 2 * iK ) ); }
-
-	static bool IsIgnorableKMer( const std::string& strKMer ) {
-
-		return ( strKMer.find( 'N' ) != std::string::npos ); }
-
 	CCoalesceMotifLibrary( size_t iK ) : CCoalesceMotifLibraryImpl( iK ) { }
 
 	std::string GetMotif( uint32_t iMotif ) const {
+		std::string	strKMer;
 
-		return ID2KMer( iMotif, GetK( ) ); }
-
-	uint32_t GetID( const std::string& strKMer ) const {
-
-		return KMer2ID( strKMer ); }
+// kmer
+		if( iMotif < CountKMers( GetK( ) ) )
+			return ID2KMer( iMotif, GetK( ) );
+// reverse complement
+		strKMer = ID2KMer( (uint32_t)m_vecRC2KMer[ iMotif - CountKMers( GetK( ) ) ], GetK( ) );
+		return ( strKMer + c_cSeparator + GetReverseComplement( strKMer ) ); }
 
 	size_t GetMotifs( ) const {
+		size_t	iRet;
 
-		return CountKMers( GetK( ) ); }
+// kmers plus reverse complements
+		iRet = CountKMers( GetK( ) );
+		return ( iRet + ( iRet / 2 ) ); }
 
 	size_t GetK( ) const {
 
 		return m_iK; }
+
+	bool GetMatches( const std::string& strKMer, std::vector<uint32_t>& veciMotifs ) const {
+		uint32_t	iMotif;
+
+		if( IsIgnorableKMer( strKMer ) )
+			return true;
+// kmer
+		if( ( iMotif = KMer2ID( strKMer ) ) == -1 )
+			return false;
+		veciMotifs.push_back( iMotif );
+// reverse complement
+		veciMotifs.push_back( CountKMers( GetK( ) ) + m_vecKMer2RC[ iMotif ] );
+		return true; }
 };
 
 class CCoalesceCluster : public CCoalesceClusterImpl {

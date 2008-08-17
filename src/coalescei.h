@@ -53,10 +53,87 @@ class CCoalesceMotifLibraryImpl {
 protected:
 	static const char	c_acBases[];
 	static const size_t	c_iShift		= 2; // ceil( log2( ARRAYSIZE(c_acBases) ) )
+	static const char	c_cSeparator	= '|';
 
-	CCoalesceMotifLibraryImpl( size_t iK ) : m_iK(iK) { }
+	static size_t CountKMers( size_t iK ) {
 
-	size_t	m_iK;
+		return ( 1 << ( iK << 1 ) ); }
+
+	static std::string GetReverseComplement( const std::string& strKMer ) {
+		std::string	strReverse;
+
+		strReverse = strKMer;
+		std::reverse( strReverse.begin( ), strReverse.end( ) );
+		return GetComplement( strReverse ); }
+
+	static std::string GetComplement( const std::string& strKMer ) {
+		std::string	strRet;
+		size_t		i;
+
+		strRet.resize( strKMer.length( ) );
+		for( i = 0; i < strRet.length( ); ++i )
+			strRet[ i ] = GetComplement( strKMer[ i ] );
+
+		return strRet; }
+
+	static char GetComplement( char cBase ) {
+		const char*	pc;
+		size_t		i;
+
+		if( !( pc = strchr( c_acBases, cBase ) ) )
+			return cBase;
+		i = pc - c_acBases;
+
+		return c_acBases[ ( i & ~1 ) + ( 1 - ( i & 1 ) ) ]; }
+
+	static uint32_t KMer2ID( const std::string& strKMer, bool fRC = false ) {
+		size_t			i, iIndex;
+		uint32_t		iRet;
+		const char*		pc;
+		unsigned char	c;
+
+		for( i = iRet = 0; i < strKMer.length( ); ++i ) {
+			iIndex = fRC ? ( strKMer.length( ) - i - 1 ) : i;
+			if( !( pc = strchr( c_acBases, strKMer[ iIndex ] ) ) )
+				return -1;
+			c = (unsigned char)( pc - c_acBases );
+			if( fRC )
+				c = ( c & ~1 ) | ( 1 - ( c & 1 ) );
+			iRet = ( iRet << c_iShift ) | c; }
+
+		return iRet; }
+
+	static std::string ID2KMer( uint32_t iID, size_t iK ) {
+		static const size_t	c_iMask	= ( 1 << c_iShift ) - 1;
+		std::string	strRet;
+		size_t		i;
+
+		strRet.resize( iK );
+		for( i = 0; i < iK; ++i ) {
+			strRet[ iK - i - 1 ] = c_acBases[ iID & c_iMask ];
+			iID >>= c_iShift; }
+
+		return strRet; }
+
+	static bool IsIgnorableKMer( const std::string& strKMer ) {
+
+		return ( strKMer.find( 'N' ) != std::string::npos ); }
+
+	CCoalesceMotifLibraryImpl( size_t iK ) : m_iK(iK) {
+		uint32_t	i, iRC;
+
+// BUGBUG: if I was smart, I could do this with a direct encoding...
+		m_vecKMer2RC.resize( CountKMers( m_iK ) );
+		m_vecRC2KMer.resize( m_vecKMer2RC.size( ) >> 1 );
+		std::fill( m_vecKMer2RC.begin( ), m_vecKMer2RC.end( ), -1 );
+		for( iRC = i = 0; i < m_vecKMer2RC.size( ); ++i )
+			if( m_vecKMer2RC[ i ] == -1 ) {
+				m_vecKMer2RC[ i ] = m_vecKMer2RC[ KMer2ID( ID2KMer( i, m_iK ), true ) ] = iRC;
+				m_vecRC2KMer[ iRC++ ] = i; } }
+
+	size_t					m_iK;
+	std::vector<uint32_t>	m_vecKMer2RC;
+	std::vector<uint32_t>	m_vecRC2KMer;
 };
 
 template<class tValue = float, class tCount = unsigned short>
@@ -96,7 +173,8 @@ public:
 		Std = sqrt( ( Std / ( GetTotal( ) + HistSet.GetTotal( ) ) ) - ( Ave * Ave ) );
 		AveOne /= GetTotal( );
 
-		return ( 1 - CStatistics::NormalCDF( fabs( AveOne - Ave ) * sqrt( (tValue)GetTotal( ) ), 0, Std ) ); }
+		return ( Std ? ( 1 - CStatistics::NormalCDF( fabs( AveOne - Ave ) * sqrt( GetTotal( ) ), 0, Std ) ) :
+			( ( Ave == AveOne ) ? 1 : 0 ) ); }
 
 	double KSTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
 		size_t	i;
