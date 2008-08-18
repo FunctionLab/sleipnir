@@ -58,7 +58,6 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetPValueMotif( (float)sArgs.pvalue_motif_arg );
 	Coalesce.SetPValueCorrelation( (float)sArgs.pvalue_correl_arg );
 	Coalesce.SetBasesPerMatch( sArgs.bases_arg );
-	Coalesce.SetBootstraps( sArgs.bootstraps_arg );
 	if( sArgs.intermediate_arg )
 		Coalesce.SetDirectoryIntermediate( sArgs.intermediate_arg );
 	if( sArgs.cache_arg )

@@ -48,6 +48,7 @@ class CCoalesceMotifLibrary;
 class CFASTA;
 class CPCL;
 struct SFASTASequence;
+struct SMotifMatch;
 
 class CCoalesceMotifLibraryImpl {
 protected:
@@ -513,6 +514,7 @@ public:
 
 	bool Add( CCoalesceMotifLibrary&, const SFASTASequence&, std::vector<std::vector<unsigned short> >&,
 		std::vector<size_t>& );
+	void Subtract( const SMotifMatch& );
 
 	float GetGlobal( size_t iType, size_t iSubsequence, uint32_t iMotif ) const {
 		const TMapII&			mapiiMotifs	= m_MotifMaps.Get( iType, (ESubsequence)iSubsequence );
@@ -691,8 +693,8 @@ protected:
 	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
 	bool AddSeedPair( const CPCL&, CCoalesceCluster&, float );
 	void CalculateCentroid( const CPCL& );
-	void AddSignificant( uint32_t, const CCoalesceMotifLibrary*, const CCoalesceGroupHistograms&,
-		const CCoalesceGroupHistograms&, double );
+	bool AddSignificant( uint32_t, const CCoalesceMotifLibrary*, const CCoalesceGroupHistograms&,
+		const CCoalesceGroupHistograms&, float );
 	bool IsSignificant( size_t, const CPCL&, const CCoalesceMotifLibrary*, const CCoalesceGeneScores&,
 		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, const CCoalesceCluster&,
 		float ) const;
@@ -701,8 +703,6 @@ protected:
 	bool CalculateProbabilityMotifs( const CCoalesceGeneScores&, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, bool, long double&, long double& ) const;
 	bool SaveCopy( const CPCL&, size_t, CPCL&, size_t, bool ) const;
-	double AdjustPValue( const CCoalesceMotifLibrary*, const std::vector<CCoalesceGeneScores>&,
-		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, float, size_t ) const;
 
 	bool IsGene( size_t iGene ) const {
 

@@ -23,9 +23,7 @@ option	"k"				k	"Sequence kmer length"
 							int	default="7"
 option	"sequences"		q	"Sequence types to use (comma separated)"
 							string
-option	"bootstraps"	b	"Number of bootstrap randomizations to perform"
-							int	default="1000"
-option	"bases"			B	"Resolution of bases per motif match"
+option	"bases"			b	"Resolution of bases per motif match"
 							int	default="1000"
 
 section "Miscellaneous"
