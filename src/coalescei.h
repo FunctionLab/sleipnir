@@ -141,6 +141,11 @@ class CCoalesceHistogramSet {
 public:
 	CCoalesceHistogramSet( ) : m_iMembers(0) { }
 
+	double Test( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
+
+// KS and Chi2 tests are too sensitive for large sample sizes
+		return ZTest( iMember, HistSet ); }
+
 	double PoissonTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
 		double	dAveOne, dVarOne, dAveTwo, dVarTwo;
 
@@ -173,8 +178,8 @@ public:
 		Std = sqrt( ( Std / ( GetTotal( ) + HistSet.GetTotal( ) ) ) - ( Ave * Ave ) );
 		AveOne /= GetTotal( );
 
-		return ( Std ? ( 1 - CStatistics::NormalCDF( fabs( AveOne - Ave ) * sqrt( GetTotal( ) ), 0, Std ) ) :
-			( ( Ave == AveOne ) ? 1 : 0 ) ); }
+		return ( Std ? ( 1 - CStatistics::NormalCDF( fabs( AveOne - Ave ) * sqrt( (tValue)GetTotal( ) ), 0,
+			Std ) ) : ( ( Ave == AveOne ) ? 1 : 0 ) ); }
 
 	double KSTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
 		size_t	i;
@@ -201,6 +206,8 @@ public:
 
 		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
 			return 1;
+		if( !( GetTotal( ) && HistSet.GetTotal( ) ) )
+			return ( ( GetTotal( ) == HistSet.GetTotal( ) ) ? 1 : 0 );
 		iDF = GetEdges( ) - 1;
 		dOT = sqrt( (double)GetTotal( ) / HistSet.GetTotal( ) );
 		dTO = sqrt( (double)HistSet.GetTotal( ) / GetTotal( ) );
@@ -249,9 +256,12 @@ public:
 	tCount Get( size_t iMember, size_t iBin ) const {
 		size_t	iOffset;
 
-		return ( ( ( iMember < m_iMembers ) && ( iBin < GetEdges( ) ) &&
-			( ( iOffset = ( GetOffset( iMember ) + iBin ) ) < m_vecCounts.size( ) ) ) ?
-			( iBin ? m_vecCounts[ iOffset ] : ( GetTotal( ) - m_vecTotal[ iMember ] ) ) : 0 ); }
+		if( ( iMember >= m_iMembers ) || ( iBin >= GetEdges( ) ) )
+			return 0;
+
+		return ( ( ( iOffset = ( GetOffset( iMember ) + iBin ) ) < m_vecCounts.size( ) ) ?
+			( iBin ? m_vecCounts[ iOffset ] : ( GetTotal( ) - m_vecTotal[ iMember ] ) ) :
+			( iBin ? 0 : GetTotal( ) ) ); }
 
 	tCount Get( size_t iMember, tValue Value ) const {
 
@@ -328,6 +338,10 @@ public:
 	void SetTotal( tCount Total ) {
 
 		m_Total = Total; }
+
+	const std::vector<tValue>& GetBins( ) const {
+
+		return m_vecEdges; }
 
 protected:
 	size_t GetOffset( size_t iMember ) const {
@@ -678,7 +692,7 @@ protected:
 	bool AddSeedPair( const CPCL&, CCoalesceCluster&, float );
 	void CalculateCentroid( const CPCL& );
 	void AddSignificant( uint32_t, const CCoalesceMotifLibrary*, const CCoalesceGroupHistograms&,
-		const CCoalesceGroupHistograms&, float );
+		const CCoalesceGroupHistograms&, double );
 	bool IsSignificant( size_t, const CPCL&, const CCoalesceMotifLibrary*, const CCoalesceGeneScores&,
 		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, const CCoalesceCluster&,
 		float ) const;
@@ -687,6 +701,8 @@ protected:
 	bool CalculateProbabilityMotifs( const CCoalesceGeneScores&, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, bool, long double&, long double& ) const;
 	bool SaveCopy( const CPCL&, size_t, CPCL&, size_t, bool ) const;
+	double AdjustPValue( const CCoalesceMotifLibrary*, const std::vector<CCoalesceGeneScores>&,
+		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, float, size_t ) const;
 
 	bool IsGene( size_t iGene ) const {
 
@@ -716,7 +732,7 @@ class CCoalesceImpl {
 protected:
 	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dPValueCondition(0.05f),
 		m_dProbabilityGene(0.95f), m_dPValueMotif(0.05f), m_pMotifs(NULL), m_fMotifs(false),
-		m_iBasesPerMatch(1000) { }
+		m_iBasesPerMatch(1000), m_iBootstraps(1000) { }
 	virtual ~CCoalesceImpl( );
 
 	void Clear( );
@@ -735,6 +751,7 @@ protected:
 	bool					m_fMotifs;
 	size_t					m_iBasesPerMatch;
 	std::string				m_strSequenceCache;
+	size_t					m_iBootstraps;
 };
 
 }

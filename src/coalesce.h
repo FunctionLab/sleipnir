@@ -70,8 +70,9 @@ public:
 	bool Initialize( const CPCL& PCL, CCoalesceCluster& Pot, float dPValue );
 	void Subtract( CPCL& PCL ) const;
 	bool SelectConditions( const CPCL& PCL, const CCoalesceCluster& Pot, float dPValue );
-	bool SelectMotifs( const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
-		float dPValue, const CCoalesceMotifLibrary* pMotifs = NULL );
+	bool SelectMotifs( const vector<CCoalesceGeneScores>& vecGeneScores,
+		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, float dPValue,
+		size_t iBootstraps, const CCoalesceMotifLibrary* pMotifs = NULL );
 	bool SelectGenes( const CPCL& PCL, const std::vector<CCoalesceGeneScores>& vecGeneScores,
 		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
 		CCoalesceCluster& Pot, float dPValue, const CCoalesceMotifLibrary* pMotifs = NULL );
@@ -212,6 +213,14 @@ public:
 	void SetSequenceCache( const std::string& strSequenceCache ) {
 
 		m_strSequenceCache = strSequenceCache; }
+
+	void SetBootstraps( size_t iBootstraps ) {
+
+		m_iBootstraps = iBootstraps; }
+
+	size_t GetBootstraps( ) const {
+
+		return m_iBootstraps; }
 };
 
 }

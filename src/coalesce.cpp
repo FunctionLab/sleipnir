@@ -281,18 +281,70 @@ bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const CCoalesceCluster
 
 	return true; }
 
-bool CCoalesceCluster::SelectMotifs( const CCoalesceGroupHistograms& HistsCluster,
-	const CCoalesceGroupHistograms& HistsPot, float dPValue, const CCoalesceMotifLibrary* pMotifs ) {
+bool CCoalesceCluster::SelectMotifs( const vector<CCoalesceGeneScores>& vecGeneScores,
+	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, float dPValue,
+	size_t iBootstraps, const CCoalesceMotifLibrary* pMotifs ) {
 	uint32_t	iMotif;
+	double		dPValueAdjusted;
 
+	dPValueAdjusted = AdjustPValue( pMotifs, vecGeneScores, HistsCluster, HistsPot, dPValue, iBootstraps );
+	g_CatSleipnir.info( "CCoalesceCluster::SelectMotifs( %g ) adjusted p-value to %g", dPValue,
+		dPValueAdjusted );
 	m_setsMotifs.clear( );
 	for( iMotif = 0; iMotif < HistsCluster.GetMotifs( ); ++iMotif )
-		AddSignificant( iMotif, pMotifs, HistsCluster, HistsPot, dPValue );
+		AddSignificant( iMotif, pMotifs, HistsCluster, HistsPot, dPValueAdjusted );
 
 	return true; }
 
+double CCoalesceClusterImpl::AdjustPValue( const CCoalesceMotifLibrary* pMotifs,
+	const vector<CCoalesceGeneScores>& vecGeneScores, const CCoalesceGroupHistograms& HistsCluster,
+	const CCoalesceGroupHistograms& HistsPot, float dPValue, size_t iBootstraps ) const {
+	CCoalesceHistogramSet<>	HistSetIn, HistSetOut;
+	size_t					iPValue, iGene, iIn, iTotal, iSubsequence, iType;
+	float					dFrac, dScore;
+	vector<double>			vecdPValues;
+
+	if( vecGeneScores.empty( ) )
+		return dPValue;
+	{
+		const CCoalesceHistogramSet<>&	HistSetCluster	= HistsCluster.Get( 0,
+															CCoalesceSequencerBase::ESubsequenceTotal );
+		const CCoalesceHistogramSet<>&	HistSetPot		= HistsPot.Get( 0,
+															CCoalesceSequencerBase::ESubsequenceTotal );
+
+		dFrac = (float)HistSetCluster.GetTotal( ) / ( HistSetCluster.GetTotal( ) + HistSetPot.GetTotal( ) );
+		HistSetIn.Initialize( 1, HistSetCluster.GetBins( ) );
+		HistSetOut.Initialize( 1, HistSetPot.GetBins( ) );
+	}
+	vecdPValues.resize( iBootstraps );
+	for( iPValue = 0; iPValue < vecdPValues.size( ); ++iPValue ) {
+		HistSetIn.Clear( );
+		HistSetOut.Clear( );
+		for( iTotal = iIn = iGene = 0; iGene < vecGeneScores.size( ); ++iGene ) {
+			const CCoalesceGeneScores&	GeneScores	= vecGeneScores[ iGene ];
+
+			if( !GeneScores.GetTypes( ) )
+				continue;
+			iTotal++;
+			iType = rand( ) % GeneScores.GetTypes( );
+			do
+				iSubsequence = rand( ) % GeneScores.GetSubsequences( iType );
+			while( !GeneScores.GetMotifs( iType, iSubsequence ) );
+			dScore = GeneScores.GetGlobal( iType, iSubsequence, rand( ) % HistsCluster.GetMotifs( ) );
+			if( ( (float)rand( ) / RAND_MAX ) < dFrac ) {
+				iIn++;
+				HistSetIn.Add( 0, dScore, 1 ); }
+			else
+				HistSetOut.Add( 0, dScore, 1 ); }
+		HistSetIn.SetTotal( iIn );
+		HistSetOut.SetTotal( iTotal - iIn );
+		vecdPValues[ iPValue ] = HistSetIn.Test( 0, HistSetOut ); }
+	sort( vecdPValues.begin( ), vecdPValues.end( ) );
+
+	return ( vecdPValues[ (size_t)( vecdPValues.size( ) * dPValue ) ] / HistsCluster.GetMotifs( ) ); }
+
 void CCoalesceClusterImpl::AddSignificant( uint32_t iMotif, const CCoalesceMotifLibrary* pMotifs,
-	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, float dPValue ) {
+	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, double dPValue ) {
 	size_t									iTypeCluster, iTypePot;
 	double									dP;
 	CCoalesceSequencerBase::ESubsequence	eSubsequence;
@@ -311,8 +363,7 @@ void CCoalesceClusterImpl::AddSignificant( uint32_t iMotif, const CCoalesceMotif
 			if( ( HistSetCluster.GetMembers( ) <= iMotif ) ||
 				( HistSetPot.GetMembers( ) <= iMotif ) )
 				continue;
-// KS and Chi2 tests are too sensitive for large sample sizes
-			dP = HistSetCluster.PoissonTest( iMotif, HistSetPot ) * HistsCluster.GetMotifs( );
+			dP = HistSetCluster.Test( iMotif, HistSetPot ) * HistsCluster.GetMotifs( );
 			if( dP < dPValue ) {
 				SMotifMatch	sMotif( iMotif, strTypeCluster, eSubsequence );
 
@@ -631,9 +682,9 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 			Cluster.Snapshot( vecGeneScores, HistsCluster );
 			Pot.Snapshot( vecGeneScores, HistsPot );
 			if( !( Cluster.SelectConditions( PCLCopy, Pot, GetPValueCondition( ) ) &&
-				Cluster.SelectMotifs( HistsCluster, HistsPot, GetPValueMotif( ), GetMotifs( ) ) &&
-				Cluster.SelectGenes( PCLCopy, vecGeneScores, HistsCluster, HistsPot, Pot,
-				GetProbabilityGene( ), GetMotifs( ) ) ) )
+				Cluster.SelectMotifs( vecGeneScores, HistsCluster, HistsPot, GetPValueMotif( ),
+				GetBootstraps( ), GetMotifs( ) ) && Cluster.SelectGenes( PCLCopy, vecGeneScores, HistsCluster,
+				HistsPot, Pot, GetProbabilityGene( ), GetMotifs( ) ) ) )
 				return false;
 			g_CatSleipnir.info( "CCoalesce::Cluster( ) processed %d genes, %d conditions, %d motifs",
 				Cluster.GetGenes( ).size( ), Cluster.GetConditions( ).size( ), Cluster.GetMotifs( ).size( ) ); }
