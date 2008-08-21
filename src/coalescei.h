@@ -142,18 +142,13 @@ class CCoalesceHistogramSet {
 public:
 	CCoalesceHistogramSet( ) : m_iMembers(0) { }
 
-	double Test( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
-
-// KS and Chi2 tests are too sensitive for large sample sizes
-		return ZTest( iMember, HistSet ); }
-
 	double PoissonTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
 		double	dAveOne, dVarOne, dAveTwo, dVarTwo;
 
 		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
 			return 1;
-		GetAveVar( iMember, dAveOne, dVarOne );
-		HistSet.GetAveVar( iMember, dAveTwo, dVarTwo );
+		AveVar( iMember, dAveOne, dVarOne );
+		HistSet.AveVar( iMember, dAveTwo, dVarTwo );
 
 // Fake a Skellam with a normal; Student's T tends to be slightly too sensitive
 		return CStatistics::TTestWelch( dAveOne, dVarOne, GetTotal( ), dAveTwo, dVarTwo,
@@ -162,25 +157,47 @@ public:
 //		return CStatistics::SkellamPDF( 0, dAveOne, dAveTwo ); }
 
 	double ZTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
-		size_t	i;
-		tValue	Cur, AveOne, Ave, Std;
+		double	dAverage, dZ;
+
+		ZScore( iMember, HistSet, dAverage, dZ );
+		return CStatistics::ZTest( dZ, GetTotal( ) ); }
+
+	double ZScore( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAverage, double& dZ ) const {
+		tValue	AveOne, StdOne, Ave, Std;
+		double	dAveOne, dAve, dStd;
 
 		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
 			return 1;
 
-		for( AveOne = Ave = Std = 0,i = 0; i < GetEdges( ); ++i ) {
-			Cur = Get( iMember, i ) * GetEdge( i );
-			AveOne += Cur;
-			Std += Cur * GetEdge( i );
-			Cur = HistSet.Get( iMember, i ) * HistSet.GetEdge( i );
-			Ave += Cur;
-			Std += Cur * HistSet.GetEdge( i ); }
-		Ave = ( Ave + AveOne ) / ( GetTotal( ) + HistSet.GetTotal( ) );
-		Std = sqrt( ( Std / ( GetTotal( ) + HistSet.GetTotal( ) ) ) - ( Ave * Ave ) );
-		AveOne /= GetTotal( );
+		Sums( iMember, AveOne, StdOne );
+		HistSet.Sums( iMember, Ave, Std );
+		dAve = (double)( AveOne + Ave ) / ( GetTotal( ) + HistSet.GetTotal( ) );
+		dAveOne = (double)AveOne / GetTotal( );
+		dStd = sqrt( ( (double)( StdOne + Std ) / ( GetTotal( ) + HistSet.GetTotal( ) ) ) - ( dAve * dAve ) );
 
-		return ( Std ? ( 1 - CStatistics::NormalCDF( fabs( AveOne - Ave ) * sqrt( (tValue)GetTotal( ) ), 0,
-			Std ) ) : ( ( Ave == AveOne ) ? 1 : 0 ) ); }
+		dAverage = dAveOne;
+		dZ = dStd ? ( ( dAveOne - dAve ) / dStd ) : 0;
+		return ( dStd ? CStatistics::ZTest( dZ, GetTotal( ) ) : ( ( dAveOne == dAve ) ? 1 : 0 ) ); }
+
+	double CohensD( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAverage, double& dZ ) const {
+		tValue	AveOne, VarOne, AveTwo, VarTwo;
+		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dAve, dStd;
+
+		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
+			return 1;
+
+		Sums( iMember, AveOne, VarOne );
+		HistSet.Sums( iMember, AveTwo, VarTwo );
+		dAve = (double)( AveOne + AveTwo ) / ( GetTotal( ) + HistSet.GetTotal( ) );
+		dAveOne = (double)AveOne / GetTotal( );
+		dAveTwo = (double)AveTwo / HistSet.GetTotal( );
+		dVarOne = ( (double)VarOne / GetTotal( ) ) - ( dAveOne * dAveOne );
+		dVarTwo = ( (double)VarTwo / HistSet.GetTotal( ) ) - ( dAveTwo * dAveTwo );
+		dStd = sqrt( ( dVarOne + dVarTwo ) / 2 );
+
+		dAverage = dAveOne;
+		dZ = dStd ? ( ( dAveOne - dAveTwo ) / dStd ) : 0;
+		return ( dStd ? CStatistics::ZTest( dZ, GetTotal( ) ) : ( ( dAveOne == dAveTwo ) ? 1 : 0 ) ); }
 
 	double KSTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
 		size_t	i;
@@ -253,6 +270,15 @@ public:
 		m_vecTotal[ iMember ] += Count;
 
 		return true; }
+
+	tCount Integrate( size_t iMember, tValue Value, bool fUp ) const {
+		tCount	Ret;
+		size_t	iBin;
+
+		for( Ret = 0,iBin = GetBin( Value ); iBin < GetEdges( ); iBin += ( fUp ? 1 : -1 ) )
+			Ret += Get( iMember, iBin );
+
+		return Ret; }
 
 	tCount Get( size_t iMember, size_t iBin ) const {
 		size_t	iOffset;
@@ -349,15 +375,19 @@ protected:
 
 		return ( iMember * GetEdges( ) ); }
 
-	void GetAveVar( size_t iMember, double& dAve, double& dVar ) const {
+	void Sums( size_t iMember, tValue& Sum, tValue& SumSq ) const {
 		size_t	i;
-		tValue	Cur, Ave, Var;
+		tValue	Cur;
 
-		for( Ave = Var = 0,i = 0; i < GetEdges( ); ++i ) {
+		for( Sum = SumSq = 0,i = 0; i < GetEdges( ); ++i ) {
 			Cur = Get( iMember, i ) * GetEdge( i );
-			Ave += Cur;
-			Var += Cur * GetEdge( i ); }
+			Sum += Cur;
+			SumSq += Cur * GetEdge( i ); } }
 
+	void AveVar( size_t iMember, double& dAve, double& dVar ) const {
+		tValue	Ave, Var;
+
+		Sums( iMember, Ave, Var );
 		dAve = (double)Ave / GetTotal( );
 		dVar = ( (double)Var / GetTotal( ) ) - ( dAve * dAve ); }
 
@@ -611,8 +641,8 @@ struct SMotifMatch {
 	SMotifMatch( ) { }
 
 	SMotifMatch( uint32_t iMotif, const std::string& strType,
-		CCoalesceSequencerBase::ESubsequence eSubsequence ) : m_iMotif(iMotif), m_strType(strType),
-		m_eSubsequence(eSubsequence) { }
+		CCoalesceSequencerBase::ESubsequence eSubsequence, float dZ, float dAverage ) : m_iMotif(iMotif),
+		m_strType(strType), m_eSubsequence(eSubsequence), m_dZ(dZ), m_dAverage(dAverage) { }
 
 	std::string Save( const CCoalesceMotifLibrary* ) const;
 
@@ -646,6 +676,8 @@ struct SMotifMatch {
 	uint32_t								m_iMotif;
 	std::string								m_strType;
 	CCoalesceSequencerBase::ESubsequence	m_eSubsequence;
+	float									m_dZ;
+	float									m_dAverage;
 };
 
 class CCoalesceClusterImpl {
@@ -689,6 +721,14 @@ protected:
 
 		return sMotif.GetHash( ); }
 
+	static void AdjustProbabilities( float dZ, double& dPIn, double& dPOut ) {
+		double	dPAverage;
+
+		dPAverage = ( dPIn + dPOut ) / 2;
+		dZ = fabs( dZ );
+		dPIn = ( ( dPIn * dZ ) + dPAverage ) / ( dZ + 1 );
+		dPOut = ( ( dPOut * dZ ) + dPAverage ) / ( dZ + 1 ); }
+
 	void Add( size_t, CCoalesceCluster& );
 	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
 	bool AddSeedPair( const CPCL&, CCoalesceCluster&, float );
@@ -716,6 +756,7 @@ protected:
 
 		return ( GetHash( m_setiConditions ) ^ GetHash( m_setiGenes ) ^ GetHash( m_setsMotifs ) ); }
 
+	std::vector<float>			m_vecdZs;
 	std::set<size_t>			m_setiConditions;
 	std::set<size_t>			m_setiGenes;
 	std::set<SMotifMatch>		m_setsMotifs;

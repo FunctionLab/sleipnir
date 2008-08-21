@@ -129,17 +129,11 @@ public:
 	 */
 	template<class tType>
 	static double Variance( const tType Begin, const tType End, double dMean ) {
-		tType	Cur;
+		double	dRet;
 		size_t	iN;
-		double	d, dRet;
 
-		for( dRet = iN = 0,Cur = Begin; Cur != End; ++Cur )
-			if( !CMeta::IsNaN( *Cur ) ) {
-				iN++;
-				d = *Cur - dMean;
-				dRet += d * d; }
-
-		return ( ( iN < 2 ) ? 0 : ( dRet / ( iN - 1 ) ) ); }
+		Sums( Begin, End, NULL, &dRet );
+		return ( ( ( iN = ( End - Begin ) ) < 2 ) ? 0 : ( dRet / ( iN - 1 ) ) ); }
 
 	/*!
 	 * \brief
@@ -216,16 +210,10 @@ public:
 	 */
 	template<class tType>
 	static double Average( const tType Begin, const tType End ) {
-		tType	Cur;
 		double	dRet;
-		size_t	iN;
 
-		for( dRet = iN = 0,Cur = Begin; Cur != End; ++Cur )
-			if( !CMeta::IsNaN( *Cur ) ) {
-				iN++;
-				dRet += *Cur; }
-
-		return ( dRet / iN ); }
+		Sums( Begin, End, &dRet, NULL );
+		return ( dRet / ( End - Begin ) ); }
 
 	/*!
 	 * \brief
@@ -351,6 +339,36 @@ public:
 			pEnd[ -1 - i ] = pEnd[ -1 - iCount ]; }
 
 		return true; }
+
+	template<class tType>
+	static double CohensD( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo ) {
+		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dStd;
+
+		Sums( vecOne.begin( ), vecOne.end( ), &dAveOne, &dVarOne );
+		dAveOne /= vecOne.size( );
+		dVarOne = ( dVarOne / vecOne.size( ) ) - ( dAveOne * dAveOne );
+		Sums( vecTwo.begin( ), vecTwo.end( ), &dAveTwo, &dVarTwo );
+		dAveTwo /= vecTwo.size( );
+		dVarTwo = ( dVarTwo / vecTwo.size( ) ) - ( dAveTwo * dAveTwo );
+
+		dStd = sqrt( ( dVarOne + dVarTwo ) / 2 );
+		return ( dStd ? ( ( dAveOne - dAveTwo ) / dStd ) : 0 ); }
+
+	template<class tType>
+	static double ZScore( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo ) {
+		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dAve, dStd;
+
+		Sums( vecOne.begin( ), vecOne.end( ), &dAveOne, &dVarOne );
+		Sums( vecTwo.begin( ), vecTwo.end( ), &dAveTwo, &dVarTwo );
+		dAve = ( dAveOne + dAveTwo ) / ( vecOne.size( ) + vecTwo.size( ) );
+		dAveOne /= vecOne.size( );
+		dStd = sqrt( ( ( dVarOne + dVarTwo ) / ( vecOne.size( ) + vecTwo.size( ) ) ) - ( dAve * dAve ) );
+
+		return ( dStd ? ( ( dAveOne - dAve ) / dStd ) : 0 ); }
+
+	static double ZTest( double dZScore, size_t iN ) {
+
+		return ( 1 - Normal01CDF( fabs( dZScore ) * sqrt( (double)iN ) ) ); }
 
 	// P-value tests
 	static double LjungBox( const float* adX, size_t iN, size_t iH );

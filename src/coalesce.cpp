@@ -102,7 +102,8 @@ void CCoalesceGeneScores::Subtract( const SMotifMatch& sMotif ) {
 			TMapII::const_iterator	iterMotif;
 
 			if( ( iterMotif = mapiiMotifs.find( sMotif.m_iMotif ) ) != mapiiMotifs.end( ) )
-				vecdScores[ iterMotif->second ] = 0; }
+				vecdScores[ iterMotif->second ] = max( 0.0f, vecdScores[ iterMotif->second ] -
+					sMotif.m_dAverage ); }
 	} }
 
 // CCoalesceGroupHistograms
@@ -152,7 +153,8 @@ void CCoalesceGroupHistograms::Save( ostream& ostm, const CCoalesceMotifLibrary*
 string SMotifMatch::Save( const CCoalesceMotifLibrary* pMotifs ) const {
 	ostringstream	ossm;
 
-	ossm << m_strType << '\t' << CCoalesceSequencerBase::GetSubsequence( m_eSubsequence ) << endl;
+	ossm << m_strType << '\t' << CCoalesceSequencerBase::GetSubsequence( m_eSubsequence ) << '\t' << m_dZ <<
+		endl;
 	if( pMotifs )
 		ossm << pMotifs->GetMotif( m_iMotif );
 	else
@@ -286,9 +288,10 @@ bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const CCoalesceCluster
 	vector<float>				vecdCluster, vecdPot;
 	size_t						iGene, iCondition;
 	set<size_t>::const_iterator	iterGene;
-	CMeasureKolmogorovSmirnov	MeasureKS;
-	double						dP;
+	double						dP, dZ;
 
+	dPValue /= PCL.GetExperiments( );
+	m_vecdZs.resize( PCL.GetExperiments( ) );
 	m_setiConditions.clear( );
 	vecdCluster.resize( m_setiGenes.size( ) );
 	vecdPot.resize( Pot.m_setiGenes.size( ) );
@@ -298,10 +301,13 @@ bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const CCoalesceCluster
 		for( iterGene = Pot.m_setiGenes.begin( ),iGene = 0; iterGene != Pot.m_setiGenes.end( );
 			++iterGene,++iGene )
 			vecdPot[ iGene ] = PCL.Get( *iterGene, iCondition );
-		dP = MeasureKS.Measure( &vecdCluster.front( ), vecdCluster.size( ), &vecdPot.front( ), vecdPot.size( ),
-			IMeasure::EMapNone ) * PCL.GetExperiments( );
-		if( dP < dPValue )
-			m_setiConditions.insert( iCondition ); }
+		dZ = CStatistics::CohensD( vecdCluster, vecdPot );
+		dP = CStatistics::ZTest( dZ, vecdCluster.size( ) );
+		if( dP < dPValue ) {
+			g_CatSleipnir.info( "CCoalesceCluster::SelectConditions( %g ) selected %d at %g, z=%g",
+				dPValue, iCondition, dP, dZ );
+			m_setiConditions.insert( iCondition );
+			m_vecdZs[ iCondition ] = (float)dZ; } }
 
 	return true; }
 
@@ -320,7 +326,7 @@ bool CCoalesceCluster::SelectMotifs( const vector<CCoalesceGeneScores>& vecGeneS
 bool CCoalesceClusterImpl::AddSignificant( uint32_t iMotif, const CCoalesceMotifLibrary* pMotifs,
 	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, float dPValue ) {
 	size_t									iTypeCluster, iTypePot;
-	double									dP;
+	double									dP, dAverage, dZ;
 	CCoalesceSequencerBase::ESubsequence	eSubsequence;
 
 	dPValue /= HistsCluster.GetMotifs( );
@@ -338,16 +344,16 @@ bool CCoalesceClusterImpl::AddSignificant( uint32_t iMotif, const CCoalesceMotif
 			if( ( HistSetCluster.GetMembers( ) <= iMotif ) ||
 				( HistSetPot.GetMembers( ) <= iMotif ) )
 				continue;
-			dP = HistSetCluster.Test( iMotif, HistSetPot ) * HistsCluster.GetMotifs( );
+			dP = HistSetCluster.CohensD( iMotif, HistSetPot, dAverage, dZ ) * HistsCluster.GetMotifs( );
 			if( dP < dPValue ) {
-				SMotifMatch	sMotif( iMotif, strTypeCluster, eSubsequence );
+				SMotifMatch	sMotif( iMotif, strTypeCluster, eSubsequence, (float)dZ, (float)dAverage );
 
 				if( g_CatSleipnir.isInfoEnabled( ) ) {
 					g_CatSleipnir.info( "CCoalesceClusterImpl::AddSignificant( %d, %g ) adding at %g:\n%s",
 						iMotif, dPValue, dP, sMotif.Save( pMotifs ).c_str( ) );
 					g_CatSleipnir.info( "Cluster	%s", HistSetCluster.Save( iMotif ).c_str( ) );
 					g_CatSleipnir.info( "Pot	%s", HistSetPot.Save( iMotif ).c_str( ) ); }
-				m_setsMotifs.insert( SMotifMatch( iMotif, strTypeCluster, eSubsequence ) ); } } }
+				m_setsMotifs.insert( sMotif ); } } }
 
 	return true; }
 
@@ -438,6 +444,7 @@ bool CCoalesceClusterImpl::CalculateProbabilityExpression( size_t iGene, const C
 
 		dPCluster = CStatistics::NormalPDF( dGene, dCluster, m_vecdStdevs[ *iterCondition ] );
 		dPPot = CStatistics::NormalPDF( dGene, dPot, m_vecdStdevs[ *iterCondition ] );
+		AdjustProbabilities( m_vecdZs[ *iterCondition ], dPCluster, dPPot );
 		dPIn *= dPCluster;
 		dPOut *= dPPot; }
 
@@ -449,7 +456,8 @@ bool CCoalesceClusterImpl::CalculateProbabilityMotifs( const CCoalesceGeneScores
 	set<SMotifMatch>::const_iterator	iterMotif;
 	size_t								iType, iCluster, iPot;
 	unsigned short						sCluster, sPot;
-	float								dGene, dPCluster, dPPot;
+	double								dPCluster, dPPot;
+	float								dGene;
 
 	dPIn = dPOut = 1;
 	if( m_setsMotifs.empty( ) )
@@ -468,7 +476,6 @@ bool CCoalesceClusterImpl::CalculateProbabilityMotifs( const CCoalesceGeneScores
 			const CCoalesceHistogramSet<>&	HistSetPot		= HistsPot.Get( iterMotif->m_strType,
 																iterMotif->m_eSubsequence );
 
-
 			sCluster = HistSetCluster.Get( iterMotif->m_iMotif, dGene );
 			iCluster = HistSetCluster.GetTotal( );
 			sPot = HistSetPot.Get( iterMotif->m_iMotif, dGene );
@@ -480,9 +487,10 @@ bool CCoalesceClusterImpl::CalculateProbabilityMotifs( const CCoalesceGeneScores
 			else {
 				sPot--;
 				iPot--; }
-			dPCluster = (float)( sCluster + 1 ) / ( iCluster + HistSetCluster.GetEdges( ) );
-			dPPot = (float)( sPot + 1 ) / ( iPot + HistSetPot.GetEdges( ) );
+			dPCluster = (double)( sCluster + 1 ) / ( iCluster + HistSetCluster.GetEdges( ) );
+			dPPot = (double)( sPot + 1 ) / ( iPot + HistSetPot.GetEdges( ) );
 		}
+		AdjustProbabilities( iterMotif->m_dZ, dPCluster, dPPot );
 		dPIn *= dPCluster;
 		dPOut *= dPPot; }
 

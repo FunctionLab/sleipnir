@@ -36,6 +36,20 @@ protected:
 	static double IncompleteBeta( double, double, double );
 	static double IncompleteBetaCF( double, double, double );
 	static double ModifiedBesselI( size_t, double );
+
+	template<class tType>
+	static void Sums( tType Begin, tType End, double* pdSum, double* pdSumSq ) {
+		tType	Cur;
+
+		if( pdSum )
+			*pdSum = 0;
+		if( pdSumSq )
+			*pdSumSq = 0;
+		for( Cur = Begin; Cur != End; ++Cur ) {
+			if( pdSum )
+				*pdSum += *Cur;
+			if( pdSumSq )
+				*pdSumSq += *Cur * *Cur; } }
 };
 
 }
