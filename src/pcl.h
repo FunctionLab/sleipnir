@@ -129,7 +129,9 @@ public:
 		const std::vector<std::string>& vecstrExperiments );
 	void Open( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrExperiments,
 		const std::vector<std::string>& vecstrFeatures );
+	void OpenBinary( std::istream& istm );
 	void Save( std::ostream& ostm, const std::vector<size_t>* pveciGenes = NULL ) const;
+	void SaveBinary( std::ostream& ostm ) const;
 	void SaveGene( std::ostream& ostm, size_t iGene, size_t iOriginal = -1 ) const;
 	void SaveHeader( std::ostream& ostm, bool fCDT = false ) const;
 	bool SortGenes( const std::vector<size_t>& veciOrder );
@@ -186,6 +188,14 @@ public:
 	void Reset( ) {
 
 		CPCLImpl::Reset( ); }
+
+	/*!
+	 * \brief
+	 * Sets all PCL entries to zero (without changing size or memory allocation).
+	 */
+	void Clear( ) {
+
+		m_Data.Clear( ); }
 
 	/*!
 	 * \brief

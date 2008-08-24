@@ -47,10 +47,7 @@ namespace Sleipnir {
 template<class tType>
 class CFullMatrix {
 public:
-	CFullMatrix( ) {
-
-		m_iR = m_iC = 0;
-		m_aaData = NULL; }
+	CFullMatrix( ) : m_iR(0), m_iC(0), m_aaData(NULL) { }
 
 	virtual ~CFullMatrix( ) {
 

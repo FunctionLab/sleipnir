@@ -342,7 +342,8 @@ bool CCoalesceClusterImpl::AddSignificant( uint32_t iMotif, const CCoalesceMotif
 			const CCoalesceHistogramSet<>&	HistSetPot		= HistsPot.Get( iTypePot, eSubsequence );
 
 			if( ( HistSetCluster.GetMembers( ) <= iMotif ) ||
-				( HistSetPot.GetMembers( ) <= iMotif ) )
+				( HistSetPot.GetMembers( ) <= iMotif ) ||
+				!( HistSetCluster.GetTotal( ) && HistSetPot.GetTotal( ) ) )
 				continue;
 			dP = HistSetCluster.CohensD( iMotif, HistSetPot, dAverage, dZ ) * HistsCluster.GetMotifs( );
 			if( dP < dPValue ) {
@@ -666,8 +667,11 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 			Cluster.CalculateHistograms( vecGeneScores, HistsCluster, &HistsPot );
 			Cluster.Snapshot( vecGeneScores, HistsCluster );
 			Pot.Snapshot( vecGeneScores, HistsPot );
-			if( !( Cluster.SelectConditions( PCLCopy, Pot, GetPValueCondition( ) ) &&
-				Cluster.SelectMotifs( vecGeneScores, HistsCluster, HistsPot, GetPValueMotif( ),
+			if( !Cluster.SelectConditions( PCLCopy, Pot, GetPValueCondition( ) ) )
+				return false;
+			if( Cluster.IsEmpty( ) )
+				break;
+			if( !( Cluster.SelectMotifs( vecGeneScores, HistsCluster, HistsPot, GetPValueMotif( ),
 				GetMotifs( ) ) && Cluster.SelectGenes( PCLCopy, vecGeneScores, HistsCluster, HistsPot, Pot,
 				GetProbabilityGene( ), GetMotifs( ) ) ) )
 				return false;

@@ -341,11 +341,14 @@ public:
 		return true; }
 
 	template<class tType>
-	static double CohensD( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo ) {
+	static double CohensD( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo,
+		double* pdAverage = NULL ) {
 		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dStd;
 
 		Sums( vecOne.begin( ), vecOne.end( ), &dAveOne, &dVarOne );
 		dAveOne /= vecOne.size( );
+		if( pdAverage )
+			*pdAverage = dAveOne;
 		dVarOne = ( dVarOne / vecOne.size( ) ) - ( dAveOne * dAveOne );
 		Sums( vecTwo.begin( ), vecTwo.end( ), &dAveTwo, &dVarTwo );
 		dAveTwo /= vecTwo.size( );
@@ -695,7 +698,7 @@ public:
 	 * Standard deviation of normal.
 	 * 
 	 * \returns
-	 * NCDF((dX - dMean) / dStdev), for NCDF a normal CDF with mean 0, variance 1.
+	 * NCDF((dX - dMean) / dStdev), for NCDF a normal CDF with mean 0, standard deviation 1.
 	 */
 	static double NormalCDF( double dX, double dMean, double dStdev ) {
 
@@ -789,7 +792,7 @@ public:
 
 	/*!
 	 * \brief
-	 * Calculate a normal probability density at the given point for the given mean and variance.
+	 * Calculate a normal probability density at the given point for the given mean and standard deviation.
 	 * 
 	 * \param dX
 	 * Point at which to calculate the normal distribution.
@@ -798,7 +801,7 @@ public:
 	 * Mean of the normal distribution.
 	 * 
 	 * \param dSigma
-	 * Variance of the normal distribution.
+	 * Standard deviation of the normal distribution.
 	 * 
 	 * \returns
 	 * exp(-(dX - dMu)^2 / (2 * dSigma^2)) / (dSigma * sqrt(2*PI))
@@ -809,6 +812,10 @@ public:
 
 		d = dX - dMu;
 		return ( exp( -( d * d ) / ( 2 * dSigma * dSigma ) ) / ( dSigma * c_dS2P ) ); }
+
+	static double ExponentialPDF( double dX, double dLambda ) {
+
+		return ( dLambda * exp( -dLambda * dX ) ); }
 };
 
 }

@@ -495,6 +495,48 @@ void CPCL::Save( std::ostream& ostm, const std::vector<size_t>* pveciGenes ) con
 			continue;
 		SaveGene( ostm, i, pveciGenes ? (*pveciGenes)[ i ] : -1 ); } }
 
+void CPCL::SaveBinary( std::ostream& ostm ) const {
+	uint32_t	iTmp;
+	size_t		i;
+
+	iTmp = GetFeatures( );
+	ostm.write( (const char*)&iTmp, sizeof(iTmp) );
+	for( i = 0; i < GetFeatures( ); ++i )
+		SaveString( ostm, GetFeature( i ) );
+	iTmp = GetExperiments( );
+	ostm.write( (const char*)&iTmp, sizeof(iTmp) );
+	for( i = 0; i < GetExperiments( ); ++i )
+		SaveString( ostm, GetExperiment( i ) );
+	iTmp = GetGenes( );
+	ostm.write( (const char*)&iTmp, sizeof(iTmp) );
+	for( i = 0; i < GetGenes( ); ++i )
+		SaveString( ostm, GetGene( i ) );
+
+	for( i = 0; i < GetGenes( ); ++i )
+		ostm.write( (const char*)Get( i ), GetExperiments( ) * sizeof(*Get( i )) ); }
+
+void CPCL::OpenBinary( std::istream& istm ) {
+	uint32_t	iTmp;
+	size_t		i;
+
+	Reset( );
+	istm.read( (char*)&iTmp, sizeof(iTmp) );
+	m_vecstrFeatures.resize( iTmp );
+	for( i = 0; i < m_vecstrFeatures.size( ); ++i )
+		OpenString( istm, m_vecstrFeatures[ i ] );
+	istm.read( (char*)&iTmp, sizeof(iTmp) );
+	m_vecstrExperiments.resize( iTmp );
+	for( i = 0; i < m_vecstrExperiments.size( ); ++i )
+		OpenString( istm, m_vecstrExperiments[ i ] );
+	istm.read( (char*)&iTmp, sizeof(iTmp) );
+	m_vecstrGenes.resize( iTmp );
+	for( i = 0; i < m_vecstrGenes.size( ); ++i )
+		OpenString( istm, m_vecstrGenes[ i ] );
+
+	m_Data.Initialize( GetGenes( ), GetExperiments( ) );
+	for( i = 0; i < m_Data.GetRows( ); ++i )
+		istm.read( (char*)m_Data.Get( i ), GetExperiments( ) * sizeof(*m_Data.Get( i )) ); }
+
 /*!
  * \brief
  * Create a new PCL using the given genes, experiments, and features.

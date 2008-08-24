@@ -22,6 +22,8 @@
 #ifndef FILEI_H
 #define FILEI_H
 
+#include "typesi.h"
+
 namespace Sleipnir {
 
 class CFileImpl {
@@ -29,6 +31,20 @@ protected:
 	static const size_t c_iBufferSize	= 1048576; // 131072;
 
 	static bool IsNewline( char );
+
+	static void SaveString( std::ostream& ostm, const std::string& str ) {
+		uint32_t	iLength;
+
+		iLength = (uint32_t)str.length( );
+		ostm.write( (const char*)&iLength, sizeof(iLength) );
+		ostm.write( str.c_str( ), iLength ); }
+
+	static void OpenString( std::istream& istm, std::string& str ) {
+		uint32_t	iLength;
+
+		istm.read( (char*)&iLength, sizeof(iLength) );
+		str.resize( iLength );
+		istm.read( &str[ 0 ], iLength ); }
 };
 
 }

@@ -60,6 +60,7 @@ bool CFASTA::Open( const char* szFile, const set<string>& setstrTypes ) {
 			vecstrLine.push_back( "" );
 		if( !setstrTypes.empty( ) && ( setstrTypes.find( vecstrLine[ 1 ] ) == setstrTypes.end( ) ) )
 			continue;
+		m_setstrTypes.insert( vecstrLine[ 1 ] );
 		if( ( iterGene = m_mapstriGenes.find( vecstrLine[ 0 ] ) ) == m_mapstriGenes.end( ) ) {
 			m_mapstriGenes[ vecstrLine[ 0 ] ] = iGene = m_vecstrGenes.size( );
 			m_vecstrGenes.push_back( vecstrLine[ 0 ] );

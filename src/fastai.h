@@ -53,6 +53,7 @@ protected:
 	std::vector<TMapStrStr>		m_vecmapstrstrHeaders;
 	std::vector<TMapStrI>		m_vecmapstriSequences;
 	char*						m_szBuffer;
+	std::set<std::string>		m_setstrTypes;
 };
 
 }

@@ -63,6 +63,10 @@ public:
 
 		return ( ( ( iterGene = mapstrstrHeaders.find( strType ) ) == mapstrstrHeaders.end( ) ) ? "" :
 			iterGene->second ); }
+
+	const std::set<std::string>& GetTypes( ) const {
+
+		return m_setstrTypes; }
 };
 
 }

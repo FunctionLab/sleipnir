@@ -197,6 +197,10 @@ public:
 
 		dAverage = dAveOne;
 		dZ = dStd ? ( ( dAveOne - dAveTwo ) / dStd ) : 0;
+// exp( -cluster / total ) doesn't work
+// exp( -cluster / pot ) works pretty well
+// This prevents large clusters from blowing up the motif set
+		dZ *= fabs( (float)( GetTotal( ) - HistSet.GetTotal( ) ) ) / max( GetTotal( ), HistSet.GetTotal( ) );
 		return ( dStd ? CStatistics::ZTest( dZ, GetTotal( ) ) : ( ( dAveOne == dAveTwo ) ? 1 : 0 ) ); }
 
 	double KSTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
@@ -773,7 +777,7 @@ class CCoalesceImpl {
 protected:
 	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dPValueCondition(0.05f),
 		m_dProbabilityGene(0.95f), m_dPValueMotif(0.05f), m_pMotifs(NULL), m_fMotifs(false),
-		m_iBasesPerMatch(1000), m_iBootstraps(1000) { }
+		m_iBasesPerMatch(5000) { }
 	virtual ~CCoalesceImpl( );
 
 	void Clear( );
@@ -792,7 +796,6 @@ protected:
 	bool					m_fMotifs;
 	size_t					m_iBasesPerMatch;
 	std::string				m_strSequenceCache;
-	size_t					m_iBootstraps;
 };
 
 }
