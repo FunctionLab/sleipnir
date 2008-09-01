@@ -36,6 +36,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "statistics.h"
@@ -47,6 +48,7 @@ class CCoalesceCluster;
 class CCoalesceMotifLibrary;
 class CFASTA;
 class CPCL;
+class CPST;
 struct SFASTASequence;
 struct SMotifMatch;
 
@@ -56,9 +58,21 @@ protected:
 	static const size_t	c_iShift		= 2; // ceil( log2( ARRAYSIZE(c_acBases) ) )
 	static const char	c_cSeparator	= '|';
 
+	enum EType {
+		ETypeKMer,
+		ETypeRC,
+		ETypePST
+	};
+
 	static size_t CountKMers( size_t iK ) {
 
 		return ( 1 << ( iK << 1 ) ); }
+
+	static size_t CountRCs( size_t iK ) {
+		size_t	iKMers;
+
+		iKMers = CountKMers( iK ) >> 1;
+		return ( iKMers + ( ( iK % 2 ) ? 0 : CountKMers( iK / 2 ) ) ); }
 
 	static std::string GetReverseComplement( const std::string& strKMer ) {
 		std::string	strReverse;
@@ -120,21 +134,62 @@ protected:
 
 		return ( strKMer.find( 'N' ) != std::string::npos ); }
 
-	CCoalesceMotifLibraryImpl( size_t iK ) : m_iK(iK) {
+	CCoalesceMotifLibraryImpl( size_t iK ) : m_iK(iK), m_dPenaltyGap(1), m_dPenaltyMismatch(2) {
 		uint32_t	i, iRC;
 
 // BUGBUG: if I was smart, I could do this with a direct encoding...
-		m_vecKMer2RC.resize( CountKMers( m_iK ) );
-		m_vecRC2KMer.resize( m_vecKMer2RC.size( ) >> 1 );
+		m_vecKMer2RC.resize( GetKMers( ) );
+		m_vecRC2KMer.resize( GetRCs( ) );
 		std::fill( m_vecKMer2RC.begin( ), m_vecKMer2RC.end( ), -1 );
 		for( iRC = i = 0; i < m_vecKMer2RC.size( ); ++i )
 			if( m_vecKMer2RC[ i ] == -1 ) {
 				m_vecKMer2RC[ i ] = m_vecKMer2RC[ KMer2ID( ID2KMer( i, m_iK ), true ) ] = iRC;
 				m_vecRC2KMer[ iRC++ ] = i; } }
 
-	size_t					m_iK;
-	std::vector<uint32_t>	m_vecKMer2RC;
-	std::vector<uint32_t>	m_vecRC2KMer;
+	virtual ~CCoalesceMotifLibraryImpl( );
+
+	uint32_t MergeKMers( const std::string& strOne, const std::string& strTwo, float dCutoff );
+
+	EType GetType( uint32_t iMotif ) const {
+
+		if( iMotif < GetKMers( ) )
+			return ETypeKMer;
+		if( iMotif < GetBasePSTs( ) )
+			return ETypeRC;
+
+		return ETypePST; }
+
+	uint32_t GetKMers( ) const {
+
+		return (uint32_t)CountKMers( m_iK ); }
+
+	uint32_t GetRCs( ) const {
+
+			return (uint32_t)CountRCs( m_iK ); }
+
+	uint32_t GetBaseRCs( ) const {
+
+		return GetKMers( ); }
+
+	uint32_t GetBasePSTs( ) const {
+
+		return ( GetBaseRCs( ) + GetRCs( ) ); }
+
+	const CPST* GetPST( uint32_t iMotif ) const {
+
+		return m_vecpPSTs[ iMotif - GetBasePSTs( ) ]; }
+
+	uint32_t GetPSTs( ) const {
+
+		return (uint32_t)m_vecpPSTs.size( ); }
+
+	float										m_dPenaltyGap;
+	float										m_dPenaltyMismatch;
+	size_t										m_iK;
+	std::vector<uint32_t>						m_vecKMer2RC;
+	std::vector<uint32_t>						m_vecRC2KMer;
+	std::vector<CPST*>							m_vecpPSTs;
+	std::set<std::pair<uint32_t, uint32_t> >	m_setpriiMerged;
 };
 
 template<class tValue = float, class tCount = unsigned short>
@@ -180,19 +235,24 @@ public:
 		return ( dStd ? CStatistics::ZTest( dZ, GetTotal( ) ) : ( ( dAveOne == dAve ) ? 1 : 0 ) ); }
 
 	double CohensD( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAverage, double& dZ ) const {
+
+		return CohensD( iMember, HistSet, iMember, true, dAverage, dZ ); }
+
+	double CohensD( size_t iOne, const CCoalesceHistogramSet& HistSet, size_t iTwo, bool fCount,
+		double& dAverage, double& dZ ) const {
 		tValue	AveOne, VarOne, AveTwo, VarTwo;
 		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dAve, dStd;
 
 		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
 			return 1;
 
-		Sums( iMember, AveOne, VarOne );
-		HistSet.Sums( iMember, AveTwo, VarTwo );
+		Sums( iOne, AveOne, VarOne );
+		HistSet.Sums( iTwo, AveTwo, VarTwo );
 		dAve = (double)( AveOne + AveTwo ) / ( GetTotal( ) + HistSet.GetTotal( ) );
 		dAveOne = (double)AveOne / GetTotal( );
 		dAveTwo = (double)AveTwo / HistSet.GetTotal( );
-		dVarOne = ( (double)VarOne / GetTotal( ) ) - ( dAveOne * dAveOne );
-		dVarTwo = ( (double)VarTwo / HistSet.GetTotal( ) ) - ( dAveTwo * dAveTwo );
+		dVarOne = max( 0.0, ( (double)VarOne / GetTotal( ) ) - ( dAveOne * dAveOne ) );
+		dVarTwo = max( 0.0, ( (double)VarTwo / HistSet.GetTotal( ) ) - ( dAveTwo * dAveTwo ) );
 		dStd = sqrt( ( dVarOne + dVarTwo ) / 2 );
 
 		dAverage = dAveOne;
@@ -200,8 +260,11 @@ public:
 // exp( -cluster / total ) doesn't work
 // exp( -cluster / pot ) works pretty well
 // This prevents large clusters from blowing up the motif set
-		dZ *= fabs( (float)( GetTotal( ) - HistSet.GetTotal( ) ) ) / max( GetTotal( ), HistSet.GetTotal( ) );
-		return ( dStd ? CStatistics::ZTest( dZ, GetTotal( ) ) : ( ( dAveOne == dAveTwo ) ? 1 : 0 ) ); }
+		if( iOne == iTwo )
+			dZ *= fabs( (float)( GetTotal( ) - HistSet.GetTotal( ) ) ) /
+				max( GetTotal( ), HistSet.GetTotal( ) );
+		return ( dStd ? ( 2 * CStatistics::ZTest( dZ, fCount ? GetTotal( ) : 1 ) ) :
+			( ( dAveOne == dAveTwo ) ? 1 : 0 ) ); }
 
 	double KSTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
 		size_t	i;
@@ -263,14 +326,13 @@ public:
 	bool Add( size_t iMember, tValue Value, tCount Count ) {
 		size_t	i;
 
-		if( m_vecEdges.empty( ) || ( iMember >= m_iMembers ) || !( i = GetBin( Value ) ) )
+		if( m_vecEdges.empty( ) || !( i = GetBin( Value ) ) )
 			return false;
 
-		if( m_vecCounts.empty( ) )
-			m_vecCounts.resize( GetOffset( m_iMembers ) + GetEdges( ) );
+		m_iMembers = max( m_iMembers, iMember );
+		m_vecCounts.resize( GetOffset( m_iMembers ) + GetEdges( ) );
 		m_vecCounts[ GetOffset( iMember ) + i ] += Count;
-		if( m_vecTotal.empty( ) )
-			m_vecTotal.resize( m_iMembers );
+		m_vecTotal.resize( m_iMembers );
 		m_vecTotal[ iMember ] += Count;
 
 		return true; }
@@ -548,6 +610,8 @@ public:
 
 	bool Add( CCoalesceMotifLibrary&, const SFASTASequence&, std::vector<std::vector<unsigned short> >&,
 		std::vector<size_t>& );
+	bool Add( CCoalesceMotifLibrary&, const SFASTASequence&, uint32_t, std::vector<float>&,
+		std::vector<size_t>& );
 	void Subtract( const SMotifMatch& );
 
 	float GetGlobal( size_t iType, size_t iSubsequence, uint32_t iMotif ) const {
@@ -571,7 +635,9 @@ public:
 
 protected:
 	bool Add( CCoalesceMotifLibrary&, const std::string&, size_t, bool,
-		vector<vector<unsigned short> >&, vector<size_t>& );
+		std::vector<vector<unsigned short> >&, std::vector<size_t>& );
+	bool Add( CCoalesceMotifLibrary&, const std::string&, size_t, bool, uint32_t, std::vector<float>&,
+		std::vector<size_t>& );
 
 	uint32_t AddMotif( size_t iType, ESubsequence eSubsequence, uint32_t iMotif ) {
 		TMapII::const_iterator	iterMotif;
@@ -615,8 +681,9 @@ public:
 	CCoalesceGroupHistograms( uint32_t iMotifs, size_t iBins, float dStep ) : m_iMotifs(iMotifs),
 		m_iBins(iBins), m_dStep(dStep) { }
 
-	bool Add( const CCoalesceGeneScores&, bool );
+	bool Add( const CCoalesceGeneScores&, bool, uint32_t = -1 );
 	void Save( std::ostream&, const CCoalesceMotifLibrary* ) const;
+	bool IsSimilar( const CCoalesceMotifLibrary*, const SMotifMatch&, const SMotifMatch&, float ) const;
 
 	uint32_t GetMotifs( ) const {
 
@@ -777,20 +844,28 @@ class CCoalesceImpl {
 protected:
 	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dPValueCondition(0.05f),
 		m_dProbabilityGene(0.95f), m_dPValueMotif(0.05f), m_pMotifs(NULL), m_fMotifs(false),
-		m_iBasesPerMatch(5000) { }
+		m_iBasesPerMatch(5000), m_dPValueMerge(0.05f), m_dCutoffMerge(2), m_dPenaltyGap(1),
+		m_dPenaltyMismatch(2), m_iSizeMinimum(5) { }
 	virtual ~CCoalesceImpl( );
 
 	void Clear( );
 	size_t GetMotifCount( ) const;
 	void Save( const std::vector<CCoalesceGeneScores>& ) const;
 	void Open( std::vector<CCoalesceGeneScores>& ) const;
+	bool CombineMotifs( const CFASTA&, const std::vector<size_t>&, const CCoalesceCluster&,
+		std::vector<CCoalesceGeneScores>&, CCoalesceGroupHistograms&, CCoalesceGroupHistograms& ) const;
 
+	float					m_dPValueMerge;
 	float					m_dProbabilityGene;
 	float					m_dPValueCondition;
 	float					m_dPValueCorrelation;
 	float					m_dPValueMotif;
+	float					m_dCutoffMerge;
+	float					m_dPenaltyGap;
+	float					m_dPenaltyMismatch;
 	size_t					m_iBins;
 	size_t					m_iK;
+	size_t					m_iSizeMinimum;
 	std::string				m_strDirectoryIntermediate;
 	CCoalesceMotifLibrary*	m_pMotifs;
 	bool					m_fMotifs;

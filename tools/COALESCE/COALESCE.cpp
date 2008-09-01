@@ -57,7 +57,12 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetPValueCondition( (float)sArgs.pvalue_cond_arg );
 	Coalesce.SetPValueMotif( (float)sArgs.pvalue_motif_arg );
 	Coalesce.SetPValueCorrelation( (float)sArgs.pvalue_correl_arg );
+	Coalesce.SetPValueMerge( (float)sArgs.pvalue_merge_arg );
+	Coalesce.SetCutoffMerge( (float)sArgs.cutoff_merge_arg );
+	Coalesce.SetPenaltyGap( (float)sArgs.penalty_gap_arg );
+	Coalesce.SetPenaltyMismatch( (float)sArgs.penalty_mismatch_arg );
 	Coalesce.SetBasesPerMatch( sArgs.bases_arg );
+	Coalesce.SetSizeMinimum( sArgs.size_minimum_arg );
 	if( sArgs.intermediate_arg )
 		Coalesce.SetDirectoryIntermediate( sArgs.intermediate_arg );
 	if( sArgs.cache_arg )

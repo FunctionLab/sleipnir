@@ -30,22 +30,55 @@ class CCoalesceMotifLibrary : CCoalesceMotifLibraryImpl {
 public:
 	CCoalesceMotifLibrary( size_t iK ) : CCoalesceMotifLibraryImpl( iK ) { }
 
-	std::string GetMotif( uint32_t iMotif ) const {
-		std::string	strKMer;
+	float GetMatch( const std::string& strSequence, uint32_t iMotif ) const;
+	std::string GetMotif( uint32_t iMotif ) const;
 
-// kmer
-		if( iMotif < CountKMers( GetK( ) ) )
-			return ID2KMer( iMotif, GetK( ) );
-// reverse complement
-		strKMer = ID2KMer( (uint32_t)m_vecRC2KMer[ iMotif - CountKMers( GetK( ) ) ], GetK( ) );
-		return ( strKMer + c_cSeparator + GetReverseComplement( strKMer ) ); }
+	uint32_t Merge( uint32_t iOne, uint32_t iTwo, float dCutoff ) {
+		std::pair<uint32_t, uint32_t>	priiMerged;
+
+		priiMerged.first = min( iOne, iTwo );
+		priiMerged.second = max( iOne, iTwo );
+		if( m_setpriiMerged.find( priiMerged ) != m_setpriiMerged.end( ) )
+			return -1;
+		m_setpriiMerged.insert( priiMerged );
+
+// BUGBUG: finish implementing me
+		switch( GetType( iOne ) ) {
+			case ETypeRC:
+				switch( GetType( iTwo ) ) {
+					case ETypeKMer:
+return -1;//						return MergeKMerRC( GetMotif( iTwo ), iOne, dCutoff );
+
+					case ETypeRC:
+return -1;//						return MergeRCs( iOne, iTwo, dCutoff );
+
+					case ETypePST:
+return -1; }//						return MergeRCPST( iOne, GetPST( iTwo ), dCutoff ); }
+
+			case ETypePST:
+				switch( GetType( iTwo ) ) {
+					case ETypeKMer:
+return -1;//						return MergeKMerPST( GetMotif( iTwo ), GetPST( iOne ), dCutoff );
+
+					case ETypeRC:
+return -1;//						return MergeRCPST( iTwo, GetPST( iOne ), dCutoff );
+
+					case ETypePST:
+return -1; } }//						return MergePSTs( GetPST( iOne ), GetPST( iTwo ), dCutoff ); } }
+
+		switch( GetType( iTwo ) ) {
+			case ETypeRC:
+return -1;//				return MergeKMerRC( GetMotif( iOne ), iTwo, dCutoff );
+
+			case ETypePST:
+return -1; }//				return MergeKMerPST( GetMotif( iOne ), GetPST( iTwo ), dCutoff ); }
+
+		return MergeKMers( GetMotif( iOne ), GetMotif( iTwo ), dCutoff ); }
 
 	size_t GetMotifs( ) const {
-		size_t	iRet;
 
-// kmers plus reverse complements
-		iRet = CountKMers( GetK( ) );
-		return ( iRet + ( iRet / 2 ) ); }
+// kmers plus reverse complements plus psts
+		return ( GetBasePSTs( ) + GetPSTs( ) ); }
 
 	size_t GetK( ) const {
 
@@ -61,8 +94,24 @@ public:
 			return false;
 		veciMotifs.push_back( iMotif );
 // reverse complement
-		veciMotifs.push_back( CountKMers( GetK( ) ) + m_vecKMer2RC[ iMotif ] );
+		veciMotifs.push_back( GetBaseRCs( ) + m_vecKMer2RC[ iMotif ] );
 		return true; }
+
+	void SetPenaltyGap( float dPenalty ) {
+
+		m_dPenaltyGap = dPenalty; }
+
+	float GetPenaltyGap( ) const {
+
+		return m_dPenaltyGap; }
+
+	void SetPenaltyMismatch( float dPenalty ) {
+
+		m_dPenaltyMismatch = dPenalty; }
+
+	float GetPenaltyMismatch( ) const {
+
+		return m_dPenaltyMismatch; }
 };
 
 class CCoalesceCluster : public CCoalesceClusterImpl {
@@ -214,6 +263,46 @@ public:
 	void SetSequenceCache( const std::string& strSequenceCache ) {
 
 		m_strSequenceCache = strSequenceCache; }
+
+	float GetPValueMerge( ) const {
+
+		return m_dPValueMerge; }
+
+	void SetPValueMerge( float dPValue ) {
+
+		m_dPValueMerge = dPValue; }
+
+	float GetCutoffMerge( ) const {
+
+		return m_dCutoffMerge; }
+
+	void SetCutoffMerge( float dCutoff ) {
+
+		m_dCutoffMerge = dCutoff; }
+
+	float GetPenaltyGap( ) const {
+
+		return m_dPenaltyGap; }
+
+	void SetPenaltyGap( float dPenalty ) {
+
+		m_dPenaltyGap = dPenalty; }
+
+	float GetPenaltyMismatch( ) const {
+
+		return m_dPenaltyMismatch; }
+
+	void SetPenaltyMismatch( float dPenalty ) {
+
+		m_dPenaltyMismatch = dPenalty; }
+
+	size_t GetSizeMinimum( ) const {
+
+		return m_iSizeMinimum; }
+
+	void SetSizeMinimum( size_t iSize ) {
+
+		m_iSizeMinimum = iSize; }
 };
 
 }

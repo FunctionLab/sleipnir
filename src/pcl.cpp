@@ -769,6 +769,23 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 						Set( i, j, (float)( ( Get( i, j ) - dAve ) / dStd ) ); }
 			break;
 
+		case ENormalizeColumn:
+			for( i = 0; i < GetExperiments( ); ++i ) {
+				dAve = dStd = 0;
+				for( iCount = j = 0; j < GetGenes( ); ++j )
+					if( !CMeta::IsNaN( d = Get( j, i ) ) ) {
+						iCount++;
+						dAve += d;
+						dStd += d * d; }
+				if( iCount ) {
+					dAve /= iCount;
+					dStd = sqrt( ( dStd / iCount ) - ( dAve * dAve ) );
+					if( dStd )
+						for( j = 0; j < GetGenes( ); ++j )
+							if( !CMeta::IsNaN( d = Get( j, i ) ) )
+								Set( j, i, (float)( ( d - dAve ) / dStd ) ); } }
+			break;
+
 		case ENormalizeMinMax:
 			dMin = FLT_MAX;
 			dMax = -dMin;

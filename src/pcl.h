@@ -93,7 +93,12 @@ public:
 		 * Subtract the global minimum from every value and divide by the global maximum (transforming
 		 * all values to the range [0, 1]).
 		 */
-		ENormalizeMinMax
+		ENormalizeMinMax,
+		/*!
+		 * \brief
+		 * Subtract the column average from every value and divide by the column standard deviation.
+		 */
+		ENormalizeColumn
 	};
 
 	static int Distance( const char* szFile, size_t iSkip, const char* szSimilarityMeasure, bool fNormalize,
