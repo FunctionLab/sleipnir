@@ -148,7 +148,11 @@ protected:
 
 	virtual ~CCoalesceMotifLibraryImpl( );
 
-	uint32_t MergeKMers( const std::string& strOne, const std::string& strTwo, float dCutoff );
+	std::string GetMotif( uint32_t ) const;
+	CPST* CreatePST( uint32_t& );
+	uint32_t MergeKMers( const std::string&, const std::string&, float );
+	uint32_t MergeKMerRC( const std::string&, uint32_t, float );
+	uint32_t MergeRCs( uint32_t, uint32_t, float );
 
 	EType GetType( uint32_t iMotif ) const {
 
@@ -182,6 +186,37 @@ protected:
 	uint32_t GetPSTs( ) const {
 
 		return (uint32_t)m_vecpPSTs.size( ); }
+
+	float Align( const std::string& strFixed, const std::string& strMobile, float dCutoff, int& iRet ) const {
+		const std::string&	strShort	= ( strFixed.length( ) < strMobile.length( ) ) ? strFixed : strMobile;
+		const std::string&	strLong		= ( strFixed.length( ) < strMobile.length( ) ) ? strMobile : strFixed;
+		size_t				iBegin, iEnd, iOffset, i, iLength, iMin;
+		float				dRet, dCur;
+
+		dRet = FLT_MAX;
+		dCur = dCutoff / m_dPenaltyGap;
+		iLength = strShort.length( ) + strLong.length( );
+		iBegin = ( dCur < iLength ) ? (size_t)ceil( ( iLength - dCur ) / 2 ) : 0;
+		iEnd = iLength + 1 - iBegin;
+		for( iMin = 0,iOffset = iBegin; iOffset < iEnd; ++iOffset ) {
+			i = ( iOffset <= strShort.length( ) ) ? iOffset : min( strShort.length( ), iLength - iOffset );
+			dCur = m_dPenaltyGap * ( iLength - ( 2 * i ) );
+			for( i = ( iOffset <= strShort.length( ) ) ? 0 : ( iOffset - strShort.length( ) );
+				i < min( strShort.length( ), iOffset ); ++i )
+				if( strShort[ i ] != strLong[ strLong.length( ) - iOffset + i ] )
+					dCur += m_dPenaltyMismatch;
+			if( dCur < dRet ) {
+				dRet = dCur;
+				iMin = iOffset; } }
+
+		iRet = (int)strLong.length( ) - (int)iMin;
+		if( strFixed.length( ) < strMobile.length( ) )
+			iRet = -iRet;
+		return dRet; }
+
+	std::string GetRCOne( uint32_t iMotif ) const {
+
+		return ID2KMer( (uint32_t)m_vecRC2KMer[ iMotif - GetBaseRCs( ) ], m_iK ); }
 
 	float										m_dPenaltyGap;
 	float										m_dPenaltyMismatch;
@@ -332,7 +367,7 @@ public:
 		m_iMembers = max( m_iMembers, iMember );
 		m_vecCounts.resize( GetOffset( m_iMembers ) + GetEdges( ) );
 		m_vecCounts[ GetOffset( iMember ) + i ] += Count;
-		m_vecTotal.resize( m_iMembers );
+		m_vecTotal.resize( m_iMembers + 1 );
 		m_vecTotal[ iMember ] += Count;
 
 		return true; }

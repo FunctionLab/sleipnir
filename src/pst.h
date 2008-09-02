@@ -30,11 +30,17 @@ class CPST : protected CPSTImpl {
 public:
 	CPST( size_t iArity ) : CPSTImpl(iArity) { }
 
-	void Add( const std::string& strOne, const std::string& strTwo, size_t iOffset ) {
+	void Add( const std::string& strOne, const std::string& strTwo, int iOffset ) {
 		size_t	i;
 
+		if( iOffset < 0 )
+			return Add( strTwo, strOne, -iOffset );
 		if( ( i = CPSTImpl::Add( strOne, strTwo, iOffset, m_sRoot ) ) > GetDepth( ) )
 			m_iDepth = i; }
+
+	void Add( const std::string& str ) {
+
+		return Add( str, "", 0 ); }
 
 	float GetMatch( const std::string& strTarget ) const {
 		long double	dPMatch, dPMismatch;

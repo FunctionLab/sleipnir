@@ -55,55 +55,106 @@ float CCoalesceMotifLibrary::GetMatch( const string& strSequence, uint32_t iMoti
 
 	return dRet; }
 
-std::string CCoalesceMotifLibrary::GetMotif( uint32_t iMotif ) const {
+std::string CCoalesceMotifLibraryImpl::GetMotif( uint32_t iMotif ) const {
 	std::string	strKMer;
 
 // kmer
 	if( iMotif < GetKMers( ) )
-		return ID2KMer( iMotif, GetK( ) );
+		return ID2KMer( iMotif, m_iK );
 // reverse complement
 	if( iMotif < GetBasePSTs( ) ) {
-		strKMer = ID2KMer( (uint32_t)m_vecRC2KMer[ iMotif - GetBaseRCs( ) ], GetK( ) );
+		strKMer = GetRCOne( iMotif );
 		return ( strKMer + c_cSeparator + GetReverseComplement( strKMer ) ); }
 // pst
 	return GetPST( iMotif )->GetMotif( ); }
 
+CPST* CCoalesceMotifLibraryImpl::CreatePST( uint32_t& iMotif ) {
+	CPST*	pRet;
+
+	iMotif = GetBasePSTs( ) + GetPSTs( );
+	m_vecpPSTs.push_back( pRet = new CPST( strlen( c_acBases ) ) );
+	return pRet; }
+
 uint32_t CCoalesceMotifLibraryImpl::MergeKMers( const std::string& strOne, const std::string& strTwo,
 	float dCutoff ) {
-	const std::string&	strShort	= ( strOne.length( ) < strTwo.length( ) ) ? strOne : strTwo;
-	const std::string&	strLong		= ( strOne.length( ) < strTwo.length( ) ) ? strTwo : strOne;
-	size_t				iBegin, iEnd, iOffset, iMin, i, iLength;
-	float				dMin, dCur;
-	CPST*				pPST;
+	int			iOffset;
+	float		dScore;
+	uint32_t	iRet;
+	CPST*		pPST;
 
+	if( ( dScore = Align( strOne, strTwo, dCutoff, iOffset ) ) > dCutoff )
+		return -1;
+
+	pPST = CreatePST( iRet );
+	pPST->Add( strOne, strTwo, iOffset );
+	if( g_CatSleipnir.isInfoEnabled( ) )
+		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeKMers( %s, %s, %g ) merged at %g to %s",
+			strOne.c_str( ), strTwo.c_str( ), dCutoff, dScore, pPST->GetMotif( ).c_str( ) );
+	return iRet; }
+
+uint32_t CCoalesceMotifLibraryImpl::MergeKMerRC( const string& strKMer, uint32_t iRC, float dCutoff ) {
+	string		strOne, strTwo;
+	float		dOne, dTwo;
+	int			iOne, iTwo;
+	uint32_t	iRet;
+	CPST*		pPST;
+
+	strOne = GetRCOne( iRC );
+	strTwo = GetReverseComplement( strOne );
+	dOne = Align( strKMer, strOne, dCutoff, iOne );
+	dTwo = Align( strKMer, strTwo, dCutoff, iTwo );
+	if( ( dOne > dCutoff ) && ( dTwo > dCutoff ) )
+		return -1;
+
+	pPST = CreatePST( iRet );
+	if( dOne < dTwo ) {
+		pPST->Add( strKMer, strOne, iOne );
+		pPST->Add( strTwo ); }
+	else {
+		pPST->Add( strKMer, strTwo, iTwo );
+		pPST->Add( strOne ); }
+	if( g_CatSleipnir.isInfoEnabled( ) )
+		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeKMerRC( %s, %s, %g ) merged at %g to %s",
+			strKMer.c_str( ), GetMotif( iRC ).c_str( ), dCutoff, min( dOne, dTwo ),
+			pPST->GetMotif( ).c_str( ) );
+	return iRet; }
+
+struct SCrossRCs {
+	string	m_strOne;
+	string	m_strTwo;
+	float	m_dScore;
+	int		m_iOffset;
+};
+
+uint32_t CCoalesceMotifLibraryImpl::MergeRCs( uint32_t iOne, uint32_t iTwo, float dCutoff ) {
+	SCrossRCs	asCrosses[ 4 ];
+	uint32_t	iRet;
+	CPST*		pPST;
+	size_t		i, iMin;
+	float		dMin;
+
+	asCrosses[ 0 ].m_strOne = asCrosses[ 1 ].m_strOne = GetRCOne( iOne );
+	asCrosses[ 0 ].m_strTwo = asCrosses[ 2 ].m_strTwo = GetRCOne( iTwo );
+	asCrosses[ 1 ].m_strTwo = asCrosses[ 3 ].m_strTwo = GetReverseComplement( asCrosses[ 0 ].m_strTwo );
+	asCrosses[ 2 ].m_strOne = asCrosses[ 3 ].m_strOne = GetReverseComplement( asCrosses[ 0 ].m_strOne );
 	dMin = FLT_MAX;
-	dCur = dCutoff / m_dPenaltyGap;
-	iLength = strShort.length( ) + strLong.length( );
-	iBegin = ( dCur < iLength ) ? (size_t)ceil( ( iLength - dCur ) / 2 ) : 0;
-	iEnd = iLength + 1 - iBegin;
-	for( iMin = 0,iOffset = iBegin; iOffset < iEnd; ++iOffset ) {
-		i = ( iOffset <= strShort.length( ) ) ? iOffset : min( strShort.length( ), iLength - iOffset );
-		dCur = m_dPenaltyGap * ( iLength - ( 2 * i ) );
-		for( i = ( iOffset <= strShort.length( ) ) ? 0 : ( iOffset - strShort.length( ) );
-			i < min( strShort.length( ), iOffset ); ++i )
-			if( strShort[ i ] != strLong[ strLong.length( ) - iOffset + i ] )
-				dCur += m_dPenaltyMismatch;
-		if( dCur < dMin ) {
-			dMin = dCur;
-			iMin = iOffset; } }
-
+	for( iMin = i = 0; i < ARRAYSIZE(asCrosses); ++i ) {
+		asCrosses[ i ].m_dScore = Align( asCrosses[ i ].m_strOne, asCrosses[ i ].m_strTwo, dCutoff,
+			asCrosses[ i ].m_iOffset );
+		if( asCrosses[ i ].m_dScore < dMin ) {
+			dMin = asCrosses[ i ].m_dScore;
+			iMin = i; } }
 	if( dMin > dCutoff )
 		return -1;
 
-	m_vecpPSTs.push_back( pPST = new CPST( strlen( c_acBases ) ) );
-	if( iMin > strLong.length( ) )
-		pPST->Add( strShort, strLong, iMin - strLong.length( ) );
-	else
-		pPST->Add( strLong, strShort, strLong.length( ) - iMin );
+	pPST = CreatePST( iRet );
+	pPST->Add( asCrosses[ iMin ].m_strOne, asCrosses[ iMin ].m_strTwo, asCrosses[ iMin ].m_iOffset );
+	pPST->Add( asCrosses[ ( iMin + 2 ) % ARRAYSIZE(asCrosses) ].m_strOne );
+	pPST->Add( asCrosses[ ( iMin + 1 ) % ARRAYSIZE(asCrosses) ].m_strTwo );
 	if( g_CatSleipnir.isInfoEnabled( ) )
-		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeKMers( %s, %s, %g ) merged at %g to %s",
-			strOne.c_str( ), strTwo.c_str( ), dCutoff, dMin, pPST->GetMotif( ).c_str( ) );
-	return ( GetBasePSTs( ) + GetPSTs( ) - 1 ); }
+		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeRCs( %s, %s, %g ) merged at %g to %s",
+			GetMotif( iOne ).c_str( ), GetMotif( iTwo ).c_str( ), dCutoff, dMin, pPST->GetMotif( ).c_str( ) );
+	return iRet; }
 
 // CCoalesceGeneScores
 

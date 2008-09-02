@@ -31,7 +31,10 @@ public:
 	CCoalesceMotifLibrary( size_t iK ) : CCoalesceMotifLibraryImpl( iK ) { }
 
 	float GetMatch( const std::string& strSequence, uint32_t iMotif ) const;
-	std::string GetMotif( uint32_t iMotif ) const;
+
+	std::string GetMotif( uint32_t iMotif ) const {
+
+		return CCoalesceMotifLibraryImpl::GetMotif( iMotif ); }
 
 	uint32_t Merge( uint32_t iOne, uint32_t iTwo, float dCutoff ) {
 		std::pair<uint32_t, uint32_t>	priiMerged;
@@ -47,10 +50,10 @@ public:
 			case ETypeRC:
 				switch( GetType( iTwo ) ) {
 					case ETypeKMer:
-return -1;//						return MergeKMerRC( GetMotif( iTwo ), iOne, dCutoff );
+						return MergeKMerRC( GetMotif( iTwo ), iOne, dCutoff );
 
 					case ETypeRC:
-return -1;//						return MergeRCs( iOne, iTwo, dCutoff );
+						return MergeRCs( iOne, iTwo, dCutoff );
 
 					case ETypePST:
 return -1; }//						return MergeRCPST( iOne, GetPST( iTwo ), dCutoff ); }
@@ -68,7 +71,7 @@ return -1; } }//						return MergePSTs( GetPST( iOne ), GetPST( iTwo ), dCutoff 
 
 		switch( GetType( iTwo ) ) {
 			case ETypeRC:
-return -1;//				return MergeKMerRC( GetMotif( iOne ), iTwo, dCutoff );
+				return MergeKMerRC( GetMotif( iOne ), iTwo, dCutoff );
 
 			case ETypePST:
 return -1; }//				return MergeKMerPST( GetMotif( iOne ), GetPST( iTwo ), dCutoff ); }
