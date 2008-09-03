@@ -120,10 +120,10 @@ protected:
 
 	CPSTImpl( size_t iArity ) : m_iDepth(0), m_iArity(iArity) { }
 
-	long double GetMatch( const std::string& strTarget, const SNode& sNode, size_t iOffset,
+	float GetMatch( const std::string& strTarget, const SNode& sNode, size_t iOffset,
 		size_t& iMatched ) const {
-		size_t		i, iCur, iMax;
-		long double	dRet, dCur;
+		size_t	i, iCur, iMax;
+		float	dRet, dCur;
 
 		if( strTarget.empty( ) || sNode.m_vecsChildren.empty( ) )
 			return 1;
@@ -134,7 +134,8 @@ protected:
 			for( iMax = i = 0; i < sNode.m_vecsChildren.size( ); ++i ) {
 				iCur = 0;
 				dCur = GetMatch( strTarget, sNode.m_vecsChildren[ i ], iOffset, iCur );
-				if( dCur > dRet ) {
+				dCur *= (float)sNode.m_vecsChildren[ i ].m_iCount / sNode.m_iTotal;
+				if( !iMax || ( ( dCur / iCur ) > ( dRet / iMax ) ) ) {
 					dRet = dCur;
 					iMax = iCur; } }
 			iMatched = iMax;

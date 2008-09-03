@@ -844,7 +844,7 @@ protected:
 	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
 	bool AddSeedPair( const CPCL&, CCoalesceCluster&, float );
 	void CalculateCentroid( const CPCL& );
-	bool AddSignificant( uint32_t, const CCoalesceMotifLibrary*, const CCoalesceGroupHistograms&,
+	bool AddSignificant( const CCoalesceMotifLibrary&, uint32_t, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, float );
 	bool IsSignificant( size_t, const CPCL&, const CCoalesceMotifLibrary*, const CCoalesceGeneScores&,
 		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, const CCoalesceCluster&,
@@ -884,8 +884,8 @@ class CCoalesceImpl {
 protected:
 	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dPValueCondition(0.05f),
 		m_dProbabilityGene(0.95f), m_dPValueMotif(0.05f), m_pMotifs(NULL), m_fMotifs(false),
-		m_iBasesPerMatch(5000), m_dPValueMerge(0.05f), m_dCutoffMerge(2), m_dPenaltyGap(1),
-		m_dPenaltyMismatch(2), m_iSizeMinimum(5) { }
+		m_iBasesPerMatch(5000), m_dPValueMerge(0.05f), m_dCutoffMerge(2.5f), m_dPenaltyGap(1),
+		m_dPenaltyMismatch(2.1f), m_iSizeMinimum(5) { }
 	virtual ~CCoalesceImpl( );
 
 	void Clear( );

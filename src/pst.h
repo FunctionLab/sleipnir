@@ -62,15 +62,12 @@ public:
 			m_iDepth = i; }
 
 	float GetMatch( const std::string& strTarget, size_t iOffset = 0 ) const {
-		long double	dPMatch, dPMismatch;
-		size_t		iMatched;
+		float	dPMatch;
+		size_t	iMatched;
 
 		iMatched = 0;
-		if( !( ( dPMatch = CPSTImpl::GetMatch( strTarget, m_sRoot, iOffset, iMatched ) ) && iMatched ) )
-			return 0;
-
-		dPMismatch = pow( 1 - ( 1.0 / m_iArity ), (int)iMatched );
-		return (float)( dPMatch / ( dPMatch + dPMismatch ) ); }
+		return ( ( ( dPMatch = CPSTImpl::GetMatch( strTarget, m_sRoot, iOffset, iMatched ) ) && iMatched ) ?
+			( dPMatch * pow( 1.0f / m_iArity, (float)( GetDepth( ) - iMatched ) ) ) : 0 ); }
 
 	size_t GetDepth( ) const {
 

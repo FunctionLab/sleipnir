@@ -378,7 +378,7 @@ void CCoalesceGroupHistograms::Save( ostream& ostm, const CCoalesceMotifLibrary*
 			const CCoalesceHistogramSet<>&	Histograms	= Get( iType, (ESubsequence)iSubsequence );
 
 			ostm << GetType( iType ) << '\t' << GetSubsequence( (ESubsequence)iSubsequence ) << endl;
-			for( iMotif = 0; iMotif < GetMotifs( ); ++iMotif ) {
+			for( iMotif = 0; iMotif < ( pMotifs ? pMotifs->GetMotifs( ) : GetMotifs( ) ); ++iMotif ) {
 				if( pMotifs )
 					ostm << pMotifs->GetMotif( iMotif );
 				else
@@ -573,19 +573,21 @@ bool CCoalesceCluster::SelectMotifs( const vector<CCoalesceGeneScores>& vecGeneS
 	uint32_t	iMotif;
 
 	m_setsMotifs.clear( );
-	for( iMotif = 0; iMotif < HistsCluster.GetMotifs( ); ++iMotif )
-		if( !AddSignificant( iMotif, pMotifs, HistsCluster, HistsPot, dPValue ) )
+	if( !pMotifs )
+		return true;
+	for( iMotif = 0; iMotif < pMotifs->GetMotifs( ); ++iMotif )
+		if( !AddSignificant( *pMotifs, iMotif, HistsCluster, HistsPot, dPValue ) )
 			return false;
 
 	return true; }
 
-bool CCoalesceClusterImpl::AddSignificant( uint32_t iMotif, const CCoalesceMotifLibrary* pMotifs,
+bool CCoalesceClusterImpl::AddSignificant( const CCoalesceMotifLibrary& Motifs, uint32_t iMotif,
 	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, float dPValue ) {
 	size_t									iTypeCluster, iTypePot;
 	double									dP, dAverage, dZ;
 	CCoalesceSequencerBase::ESubsequence	eSubsequence;
 
-	dPValue /= HistsCluster.GetMotifs( );
+	dPValue /= Motifs.GetMotifs( );
 	for( iTypeCluster = 0; iTypeCluster < HistsCluster.GetTypes( ); ++iTypeCluster ) {
 		const string&	strTypeCluster	= HistsCluster.GetType( iTypeCluster );
 
@@ -603,20 +605,20 @@ bool CCoalesceClusterImpl::AddSignificant( uint32_t iMotif, const CCoalesceMotif
 				continue;
 // I have no justification at all for this multiple hypothesis correction, but it seems to work
 			dP = HistSetCluster.CohensD( iMotif, HistSetPot, dAverage, dZ ) *
-				sqrt( HistSetCluster.GetTotal( ) ); // HistsCluster.GetMotifs( );
+				sqrt( (double)HistSetCluster.GetTotal( ) );
 			if( dP < dPValue ) {
 				SMotifMatch	sMotif( iMotif, strTypeCluster, eSubsequence, (float)dZ, (float)dAverage );
 
 				if( g_CatSleipnir.isInfoEnabled( ) ) {
 					g_CatSleipnir.info( "CCoalesceClusterImpl::AddSignificant( %d, %g ) adding at %g:\n%s",
-						iMotif, dPValue, dP, sMotif.Save( pMotifs ).c_str( ) );
+						iMotif, dPValue, dP, sMotif.Save( &Motifs ).c_str( ) );
 					g_CatSleipnir.info( "Cluster	%s", HistSetCluster.Save( iMotif ).c_str( ) );
 					g_CatSleipnir.info( "Pot	%s", HistSetPot.Save( iMotif ).c_str( ) ); }
 				m_setsMotifs.insert( sMotif ); }
 			else if( g_CatSleipnir.isDebugEnabled( ) ) {
 				g_CatSleipnir.debug( "CCoalesceClusterImpl::AddSignificant( %d, %g ) failed at %g:\n%s",
 					iMotif, dPValue, dP, SMotifMatch( iMotif, strTypeCluster, eSubsequence, (float)dZ,
-					(float)dAverage ).Save( pMotifs ).c_str( ) );
+					(float)dAverage ).Save( &Motifs ).c_str( ) );
 				g_CatSleipnir.debug( "Cluster	%s", HistSetCluster.Save( iMotif ).c_str( ) );
 				g_CatSleipnir.debug( "Pot	%s", HistSetPot.Save( iMotif ).c_str( ) ); } } }
 
@@ -728,6 +730,7 @@ bool CCoalesceClusterImpl::CalculateProbabilityMotifs( const CCoalesceGeneScores
 	if( m_setsMotifs.empty( ) )
 		return true;
 
+// TODO: this is the slowest part of the entire algorithm
 	for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif ) {
 		if( ( ( iType = GeneScores.GetType( iterMotif->m_strType ) ) == -1 ) ||
 			( !GeneScores.GetMotifs( iType, iterMotif->m_eSubsequence ) ) ||
