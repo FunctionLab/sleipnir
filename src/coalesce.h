@@ -45,7 +45,6 @@ public:
 			return -1;
 		m_setpriiMerged.insert( priiMerged );
 
-// BUGBUG: finish implementing me
 		switch( GetType( iOne ) ) {
 			case ETypeRC:
 				switch( GetType( iTwo ) ) {
@@ -56,25 +55,25 @@ public:
 						return MergeRCs( iOne, iTwo, dCutoff );
 
 					case ETypePST:
-return -1; }//						return MergeRCPST( iOne, GetPST( iTwo ), dCutoff ); }
+						return MergeRCPST( iOne, *GetPST( iTwo ), dCutoff ); }
 
 			case ETypePST:
 				switch( GetType( iTwo ) ) {
 					case ETypeKMer:
-return -1;//						return MergeKMerPST( GetMotif( iTwo ), GetPST( iOne ), dCutoff );
+						return MergeKMerPST( GetMotif( iTwo ), *GetPST( iOne ), dCutoff );
 
 					case ETypeRC:
-return -1;//						return MergeRCPST( iTwo, GetPST( iOne ), dCutoff );
+						return MergeRCPST( iTwo, *GetPST( iOne ), dCutoff );
 
 					case ETypePST:
-return -1; } }//						return MergePSTs( GetPST( iOne ), GetPST( iTwo ), dCutoff ); } }
+						return MergePSTs( *GetPST( iOne ), *GetPST( iTwo ), dCutoff ); } }
 
 		switch( GetType( iTwo ) ) {
 			case ETypeRC:
 				return MergeKMerRC( GetMotif( iOne ), iTwo, dCutoff );
 
 			case ETypePST:
-return -1; }//				return MergeKMerPST( GetMotif( iOne ), GetPST( iTwo ), dCutoff ); }
+				return MergeKMerPST( GetMotif( iOne ), *GetPST( iTwo ), dCutoff ); }
 
 		return MergeKMers( GetMotif( iOne ), GetMotif( iTwo ), dCutoff ); }
 
@@ -303,9 +302,17 @@ public:
 
 		return m_iSizeMinimum; }
 
-	void SetSizeMinimum( size_t iSize ) {
+	void SetSizeMinimum( size_t iSizeGenes ) {
 
-		m_iSizeMinimum = iSize; }
+		m_iSizeMinimum = iSizeGenes; }
+
+	size_t GetSizeMaximum( ) const {
+
+		return m_iSizeMaximum; }
+
+	void SetSizeMaximum( size_t iSizeMotifs ) {
+
+		m_iSizeMaximum = iSizeMotifs; }
 };
 
 }

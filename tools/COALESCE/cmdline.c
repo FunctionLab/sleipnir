@@ -33,20 +33,22 @@ const char *gengetopt_args_info_help[] = {
   "\nMain:",
   "  -i, --input=filename          Input PCL file",
   "  -f, --fasta=filename          Input FASTA file",
-  "\nThreshholds:",
+  "\nAlgorithm Parameters:",
   "  -p, --prob_gene=DOUBLE        Probability threshhold for gene inclusion  \n                                  (default=`0.95')",
   "  -P, --pvalue_cond=DOUBLE      P-value threshhold for condition inclusion  \n                                  (default=`0.05')",
   "  -m, --pvalue_motif=DOUBLE     P-value threshhold for motif inclusion  \n                                  (default=`0.05')",
+  "\nSequence Parameters:",
+  "  -k, --k=INT                   Sequence kmer length  (default=`7')",
   "  -g, --pvalue_merge=DOUBLE     P-value threshhold for motif merging  \n                                  (default=`0.1')",
   "  -G, --cutoff_merge=DOUBLE     Edit distance cutoff for motif merging  \n                                  (default=`2')",
   "  -y, --penalty_gap=DOUBLE      Edit distance penalty for gaps  (default=`1')",
   "  -Y, --penalty_mismatch=DOUBLE Edit distance penalty for mismatches  \n                                  (default=`2')",
+  "\nPerformance Parameters:",
   "  -c, --pvalue_correl=DOUBLE    P-value threshhold for significant correlation  \n                                  (default=`0.05')",
-  "\nParameters:",
-  "  -k, --k=INT                   Sequence kmer length  (default=`7')",
   "  -q, --sequences=STRING        Sequence types to use (comma separated)",
   "  -b, --bases=INT               Resolution of bases per motif match  \n                                  (default=`5000')",
   "  -z, --size_minimum=INT        Minimum gene count for clusters of interest  \n                                  (default=`5')",
+  "  -Z, --size_maximum=INT        Maximum motif count to consider a cluster \n                                  saturated  (default=`100')",
   "\nMiscellaneous:",
   "  -t, --intermediate=directory  Directory for intermediate output files (PCLs)",
   "  -e, --cache=filename          Cache file for sequence analysis",
@@ -86,15 +88,16 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->prob_gene_given = 0 ;
   args_info->pvalue_cond_given = 0 ;
   args_info->pvalue_motif_given = 0 ;
+  args_info->k_given = 0 ;
   args_info->pvalue_merge_given = 0 ;
   args_info->cutoff_merge_given = 0 ;
   args_info->penalty_gap_given = 0 ;
   args_info->penalty_mismatch_given = 0 ;
   args_info->pvalue_correl_given = 0 ;
-  args_info->k_given = 0 ;
   args_info->sequences_given = 0 ;
   args_info->bases_given = 0 ;
   args_info->size_minimum_given = 0 ;
+  args_info->size_maximum_given = 0 ;
   args_info->intermediate_given = 0 ;
   args_info->cache_given = 0 ;
   args_info->skip_given = 0 ;
@@ -115,6 +118,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->pvalue_cond_orig = NULL;
   args_info->pvalue_motif_arg = 0.05;
   args_info->pvalue_motif_orig = NULL;
+  args_info->k_arg = 7;
+  args_info->k_orig = NULL;
   args_info->pvalue_merge_arg = 0.1;
   args_info->pvalue_merge_orig = NULL;
   args_info->cutoff_merge_arg = 2;
@@ -125,14 +130,14 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->penalty_mismatch_orig = NULL;
   args_info->pvalue_correl_arg = 0.05;
   args_info->pvalue_correl_orig = NULL;
-  args_info->k_arg = 7;
-  args_info->k_orig = NULL;
   args_info->sequences_arg = NULL;
   args_info->sequences_orig = NULL;
   args_info->bases_arg = 5000;
   args_info->bases_orig = NULL;
   args_info->size_minimum_arg = 5;
   args_info->size_minimum_orig = NULL;
+  args_info->size_maximum_arg = 100;
+  args_info->size_maximum_orig = NULL;
   args_info->intermediate_arg = NULL;
   args_info->intermediate_orig = NULL;
   args_info->cache_arg = NULL;
@@ -158,20 +163,21 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->prob_gene_help = gengetopt_args_info_help[6] ;
   args_info->pvalue_cond_help = gengetopt_args_info_help[7] ;
   args_info->pvalue_motif_help = gengetopt_args_info_help[8] ;
-  args_info->pvalue_merge_help = gengetopt_args_info_help[9] ;
-  args_info->cutoff_merge_help = gengetopt_args_info_help[10] ;
-  args_info->penalty_gap_help = gengetopt_args_info_help[11] ;
-  args_info->penalty_mismatch_help = gengetopt_args_info_help[12] ;
-  args_info->pvalue_correl_help = gengetopt_args_info_help[13] ;
-  args_info->k_help = gengetopt_args_info_help[15] ;
-  args_info->sequences_help = gengetopt_args_info_help[16] ;
-  args_info->bases_help = gengetopt_args_info_help[17] ;
-  args_info->size_minimum_help = gengetopt_args_info_help[18] ;
-  args_info->intermediate_help = gengetopt_args_info_help[20] ;
-  args_info->cache_help = gengetopt_args_info_help[21] ;
-  args_info->skip_help = gengetopt_args_info_help[23] ;
-  args_info->random_help = gengetopt_args_info_help[24] ;
-  args_info->verbosity_help = gengetopt_args_info_help[25] ;
+  args_info->k_help = gengetopt_args_info_help[10] ;
+  args_info->pvalue_merge_help = gengetopt_args_info_help[11] ;
+  args_info->cutoff_merge_help = gengetopt_args_info_help[12] ;
+  args_info->penalty_gap_help = gengetopt_args_info_help[13] ;
+  args_info->penalty_mismatch_help = gengetopt_args_info_help[14] ;
+  args_info->pvalue_correl_help = gengetopt_args_info_help[16] ;
+  args_info->sequences_help = gengetopt_args_info_help[17] ;
+  args_info->bases_help = gengetopt_args_info_help[18] ;
+  args_info->size_minimum_help = gengetopt_args_info_help[19] ;
+  args_info->size_maximum_help = gengetopt_args_info_help[20] ;
+  args_info->intermediate_help = gengetopt_args_info_help[22] ;
+  args_info->cache_help = gengetopt_args_info_help[23] ;
+  args_info->skip_help = gengetopt_args_info_help[25] ;
+  args_info->random_help = gengetopt_args_info_help[26] ;
+  args_info->verbosity_help = gengetopt_args_info_help[27] ;
   
 }
 
@@ -257,16 +263,17 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->prob_gene_orig));
   free_string_field (&(args_info->pvalue_cond_orig));
   free_string_field (&(args_info->pvalue_motif_orig));
+  free_string_field (&(args_info->k_orig));
   free_string_field (&(args_info->pvalue_merge_orig));
   free_string_field (&(args_info->cutoff_merge_orig));
   free_string_field (&(args_info->penalty_gap_orig));
   free_string_field (&(args_info->penalty_mismatch_orig));
   free_string_field (&(args_info->pvalue_correl_orig));
-  free_string_field (&(args_info->k_orig));
   free_string_field (&(args_info->sequences_arg));
   free_string_field (&(args_info->sequences_orig));
   free_string_field (&(args_info->bases_orig));
   free_string_field (&(args_info->size_minimum_orig));
+  free_string_field (&(args_info->size_maximum_orig));
   free_string_field (&(args_info->intermediate_arg));
   free_string_field (&(args_info->intermediate_orig));
   free_string_field (&(args_info->cache_arg));
@@ -317,6 +324,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "pvalue_cond", args_info->pvalue_cond_orig, 0);
   if (args_info->pvalue_motif_given)
     write_into_file(outfile, "pvalue_motif", args_info->pvalue_motif_orig, 0);
+  if (args_info->k_given)
+    write_into_file(outfile, "k", args_info->k_orig, 0);
   if (args_info->pvalue_merge_given)
     write_into_file(outfile, "pvalue_merge", args_info->pvalue_merge_orig, 0);
   if (args_info->cutoff_merge_given)
@@ -327,14 +336,14 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "penalty_mismatch", args_info->penalty_mismatch_orig, 0);
   if (args_info->pvalue_correl_given)
     write_into_file(outfile, "pvalue_correl", args_info->pvalue_correl_orig, 0);
-  if (args_info->k_given)
-    write_into_file(outfile, "k", args_info->k_orig, 0);
   if (args_info->sequences_given)
     write_into_file(outfile, "sequences", args_info->sequences_orig, 0);
   if (args_info->bases_given)
     write_into_file(outfile, "bases", args_info->bases_orig, 0);
   if (args_info->size_minimum_given)
     write_into_file(outfile, "size_minimum", args_info->size_minimum_orig, 0);
+  if (args_info->size_maximum_given)
+    write_into_file(outfile, "size_maximum", args_info->size_maximum_orig, 0);
   if (args_info->intermediate_given)
     write_into_file(outfile, "intermediate", args_info->intermediate_orig, 0);
   if (args_info->cache_given)
@@ -588,15 +597,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "prob_gene",	1, NULL, 'p' },
         { "pvalue_cond",	1, NULL, 'P' },
         { "pvalue_motif",	1, NULL, 'm' },
+        { "k",	1, NULL, 'k' },
         { "pvalue_merge",	1, NULL, 'g' },
         { "cutoff_merge",	1, NULL, 'G' },
         { "penalty_gap",	1, NULL, 'y' },
         { "penalty_mismatch",	1, NULL, 'Y' },
         { "pvalue_correl",	1, NULL, 'c' },
-        { "k",	1, NULL, 'k' },
         { "sequences",	1, NULL, 'q' },
         { "bases",	1, NULL, 'b' },
         { "size_minimum",	1, NULL, 'z' },
+        { "size_maximum",	1, NULL, 'Z' },
         { "intermediate",	1, NULL, 't' },
         { "cache",	1, NULL, 'e' },
         { "skip",	1, NULL, 's' },
@@ -605,7 +615,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:f:p:P:m:g:G:y:Y:c:k:q:b:z:t:e:s:r:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:f:p:P:m:k:g:G:y:Y:c:q:b:z:Z:t:e:s:r:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -690,6 +700,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'k':	/* Sequence kmer length.  */
+        
+        
+          if (update_arg( (void *)&(args_info->k_arg), 
+               &(args_info->k_orig), &(args_info->k_given),
+              &(local_args_info.k_given), optarg, 0, "7", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "k", 'k',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'g':	/* P-value threshhold for motif merging.  */
         
         
@@ -750,18 +772,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'k':	/* Sequence kmer length.  */
-        
-        
-          if (update_arg( (void *)&(args_info->k_arg), 
-               &(args_info->k_orig), &(args_info->k_given),
-              &(local_args_info.k_given), optarg, 0, "7", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "k", 'k',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'q':	/* Sequence types to use (comma separated).  */
         
         
@@ -794,6 +804,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.size_minimum_given), optarg, 0, "5", ARG_INT,
               check_ambiguity, override, 0, 0,
               "size_minimum", 'z',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'Z':	/* Maximum motif count to consider a cluster saturated.  */
+        
+        
+          if (update_arg( (void *)&(args_info->size_maximum_arg), 
+               &(args_info->size_maximum_orig), &(args_info->size_maximum_given),
+              &(local_args_info.size_maximum_given), optarg, 0, "100", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "size_maximum", 'Z',
               additional_error))
             goto failure;
         

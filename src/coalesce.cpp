@@ -46,11 +46,13 @@ float CCoalesceMotifLibrary::GetMatch( const string& strSequence, uint32_t iMoti
 	const CPST*	pPST;
 
 // BUGBUG: this could in theory be implemented
-	if( ( GetType( iMotif ) != ETypePST ) || !( pPST = GetPST( iMotif ) ) ||
-		( pPST->GetDepth( ) >= strSequence.length( ) ) )
+	if( ( GetType( iMotif ) != ETypePST ) || !( pPST = GetPST( iMotif ) ) )
 		return CMeta::GetNaN( );
 
-	for( dRet = 0,i = 0; i < ( strSequence.length( ) - pPST->GetDepth( ) ); ++i )
+	dRet = 0;
+	for( i = 1; i < pPST->GetDepth( ); ++i )
+		dRet += pPST->GetMatch( strSequence, pPST->GetDepth( ) - i );
+	for( i = 0; i < strSequence.length( ); ++i )
 		dRet += pPST->GetMatch( strSequence.substr( i ) );
 
 	return dRet; }
@@ -154,6 +156,71 @@ uint32_t CCoalesceMotifLibraryImpl::MergeRCs( uint32_t iOne, uint32_t iTwo, floa
 	if( g_CatSleipnir.isInfoEnabled( ) )
 		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeRCs( %s, %s, %g ) merged at %g to %s",
 			GetMotif( iOne ).c_str( ), GetMotif( iTwo ).c_str( ), dCutoff, dMin, pPST->GetMotif( ).c_str( ) );
+	return iRet; }
+
+uint32_t CCoalesceMotifLibraryImpl::MergeKMerPST( const string& strKMer, const CPST& PSTIn, float dCutoff ) {
+	int			iOffset;
+	float		dScore;
+	uint32_t	iRet;
+	CPST*		pPSTOut;
+
+	if( ( dScore = PSTIn.Align( strKMer, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iOffset ) ) > dCutoff )
+		return -1;
+
+	pPSTOut = CreatePST( iRet );
+	pPSTOut->Add( strKMer, PSTIn, iOffset );
+	if( g_CatSleipnir.isInfoEnabled( ) )
+		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeKMerPST( %s, %s, %g ) merged at %g to %s",
+			strKMer.c_str( ), PSTIn.GetMotif( ).c_str( ), dCutoff, dScore, pPSTOut->GetMotif( ).c_str( ) );
+	return iRet; }
+
+uint32_t CCoalesceMotifLibraryImpl::MergeRCPST( uint32_t iRC, const CPST& PSTIn, float dCutoff ) {
+	int			iOne, iTwo;
+	uint32_t	iRet;
+	CPST*		pPSTOut;
+	string		strOne, strTwo;
+	float		dOne, dTwo;
+
+	strOne = GetRCOne( iRC );
+	strTwo = GetReverseComplement( strOne );
+	dOne = PSTIn.Align( strOne, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iOne );
+	dTwo = PSTIn.Align( strTwo, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iTwo );
+	if( ( dOne > dCutoff ) && ( dTwo > dCutoff ) )
+		return -1;
+
+	pPSTOut = CreatePST( iRet );
+	if( dOne < dTwo ) {
+		pPSTOut->Add( strOne, PSTIn, iOne );
+		pPSTOut->Add( strTwo ); }
+	else {
+		pPSTOut->Add( strTwo, PSTIn, iTwo );
+		pPSTOut->Add( strOne ); }
+	if( g_CatSleipnir.isInfoEnabled( ) )
+		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeRCPST( %s, %s, %g ) merged at %g to %s",
+			GetMotif( iRC ).c_str( ), PSTIn.GetMotif( ).c_str( ), dCutoff, min( dOne, dTwo ),
+			pPSTOut->GetMotif( ).c_str( ) );
+	return iRet; }
+
+uint32_t CCoalesceMotifLibraryImpl::MergePSTs( const CPST& PSTOne, const CPST& PSTTwo, float dCutoff ) {
+	int			iOffset;
+	uint32_t	iRet;
+	CPST*		pPSTOut;
+	float		dScore;
+
+	if( ( dScore = PSTOne.Align( PSTTwo, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iOffset ) ) > dCutoff )
+		return -1;
+
+	pPSTOut = CreatePST( iRet );
+	if( iOffset < 0 ) {
+		pPSTOut->Add( PSTTwo );
+		pPSTOut->Add( PSTOne, -iOffset ); }
+	else {
+		pPSTOut->Add( PSTOne );
+		pPSTOut->Add( PSTTwo, iOffset ); }
+	if( g_CatSleipnir.isInfoEnabled( ) )
+		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergePSTs( %s, %s, %g ) merged at %g to %s",
+			PSTOne.GetMotif( ).c_str( ), PSTTwo.GetMotif( ).c_str( ), dCutoff, dScore,
+			pPSTOut->GetMotif( ).c_str( ) );
 	return iRet; }
 
 // CCoalesceGeneScores
@@ -534,7 +601,9 @@ bool CCoalesceClusterImpl::AddSignificant( uint32_t iMotif, const CCoalesceMotif
 				( HistSetPot.GetMembers( ) <= iMotif ) ||
 				!( HistSetCluster.GetTotal( ) && HistSetPot.GetTotal( ) ) )
 				continue;
-			dP = HistSetCluster.CohensD( iMotif, HistSetPot, dAverage, dZ ) * HistsCluster.GetMotifs( );
+// I have no justification at all for this multiple hypothesis correction, but it seems to work
+			dP = HistSetCluster.CohensD( iMotif, HistSetPot, dAverage, dZ ) *
+				sqrt( HistSetCluster.GetTotal( ) ); // HistsCluster.GetMotifs( );
 			if( dP < dPValue ) {
 				SMotifMatch	sMotif( iMotif, strTypeCluster, eSubsequence, (float)dZ, (float)dAverage );
 
@@ -825,7 +894,7 @@ bool CCoalesceImpl::CombineMotifs( const CFASTA& FASTA, const vector<size_t>& ve
 	vector<float>						vecdScores;
 	vector<size_t>						veciLengths;
 
-	if( vecGeneScores.empty( ) || !m_pMotifs )
+	if( vecGeneScores.empty( ) || !m_pMotifs || ( Cluster.GetMotifs( ).size( ) > m_iSizeMaximum ) )
 		return true;
 
 	for( iterMotifOne = Cluster.GetMotifs( ).begin( ); iterMotifOne != Cluster.GetMotifs( ).end( );

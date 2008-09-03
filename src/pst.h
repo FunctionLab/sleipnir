@@ -30,25 +30,46 @@ class CPST : protected CPSTImpl {
 public:
 	CPST( size_t iArity ) : CPSTImpl(iArity) { }
 
+	void Add( const std::string& strSequence, const CPST& PST, int iOffset ) {
+
+		if( iOffset < 0 ) {
+			Add( strSequence );
+			Add( PST, -iOffset ); }
+		else {
+			Add( PST );
+			Add( strSequence, iOffset ); } }
+
 	void Add( const std::string& strOne, const std::string& strTwo, int iOffset ) {
-		size_t	i;
+		size_t	i, j;
 
 		if( iOffset < 0 )
 			return Add( strTwo, strOne, -iOffset );
-		if( ( i = CPSTImpl::Add( strOne, strTwo, iOffset, m_sRoot ) ) > GetDepth( ) )
+		i = CPSTImpl::Add( strOne, 0, m_sRoot );
+		j = CPSTImpl::Add( strTwo, iOffset, m_sRoot );
+		if( ( i = max( i, j ) ) > m_iDepth )
 			m_iDepth = i; }
 
-	void Add( const std::string& str ) {
+	void Add( const std::string& strSequence, size_t iOffset = 0 ) {
+		size_t	i;
 
-		return Add( str, "", 0 ); }
+		if( ( i = CPSTImpl::Add( strSequence, iOffset, m_sRoot ) ) > GetDepth( ) )
+			m_iDepth = i; }
 
-	float GetMatch( const std::string& strTarget ) const {
+	void Add( const CPST& PST, size_t iOffset = 0 ) {
+		size_t	i;
+
+		if( ( i = CPSTImpl::Add( PST.m_sRoot, iOffset, m_sRoot ) ) > GetDepth( ) )
+			m_iDepth = i; }
+
+	float GetMatch( const std::string& strTarget, size_t iOffset = 0 ) const {
 		long double	dPMatch, dPMismatch;
+		size_t		iMatched;
 
-		if( !( dPMatch = CPSTImpl::GetMatch( strTarget, m_sRoot ) ) )
+		iMatched = 0;
+		if( !( ( dPMatch = CPSTImpl::GetMatch( strTarget, m_sRoot, iOffset, iMatched ) ) && iMatched ) )
 			return 0;
 
-		dPMismatch = pow( 1 - ( 1.0 / m_iArity ), (int)min( strTarget.length( ), GetDepth( ) ) );
+		dPMismatch = pow( 1 - ( 1.0 / m_iArity ), (int)iMatched );
 		return (float)( dPMatch / ( dPMatch + dPMismatch ) ); }
 
 	size_t GetDepth( ) const {
@@ -58,6 +79,21 @@ public:
 	std::string GetMotif( ) const {
 
 		return CPSTImpl::GetMotif( m_sRoot ); }
+
+	float Align( const std::string& strSequence, float dPenaltyGap, float dPenaltyMismatch, float dCutoff,
+		int& iOffset ) const {
+		float	dRet;
+
+		dRet = CPSTImpl::Align( strSequence, strSequence.length( ), dPenaltyGap, dPenaltyMismatch, dCutoff,
+			iOffset );
+		iOffset *= -1;
+		return dRet; }
+
+	float Align( const CPST& PST, float dPenaltyGap, float dPenaltyMismatch, float dCutoff,
+		int& iOffset ) const {
+
+		return CPSTImpl::Align( PST.m_sRoot, PST.GetDepth( ), dPenaltyGap, dPenaltyMismatch, dCutoff,
+			iOffset ); }
 };
 
 }

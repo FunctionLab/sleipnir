@@ -63,6 +63,7 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetPenaltyMismatch( (float)sArgs.penalty_mismatch_arg );
 	Coalesce.SetBasesPerMatch( sArgs.bases_arg );
 	Coalesce.SetSizeMinimum( sArgs.size_minimum_arg );
+	Coalesce.SetSizeMaximum( sArgs.size_maximum_arg );
 	if( sArgs.intermediate_arg )
 		Coalesce.SetDirectoryIntermediate( sArgs.intermediate_arg );
 	if( sArgs.cache_arg )

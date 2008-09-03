@@ -152,7 +152,10 @@ protected:
 	CPST* CreatePST( uint32_t& );
 	uint32_t MergeKMers( const std::string&, const std::string&, float );
 	uint32_t MergeKMerRC( const std::string&, uint32_t, float );
+	uint32_t MergeKMerPST( const std::string&, const CPST&, float );
 	uint32_t MergeRCs( uint32_t, uint32_t, float );
+	uint32_t MergeRCPST( uint32_t, const CPST&, float );
+	uint32_t MergePSTs( const CPST&, const CPST&, float );
 
 	EType GetType( uint32_t iMotif ) const {
 
@@ -275,6 +278,7 @@ public:
 
 	double CohensD( size_t iOne, const CCoalesceHistogramSet& HistSet, size_t iTwo, bool fCount,
 		double& dAverage, double& dZ ) const {
+		static const double	c_dEpsilon	= 1e-6;
 		tValue	AveOne, VarOne, AveTwo, VarTwo;
 		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dAve, dStd;
 
@@ -298,8 +302,9 @@ public:
 		if( iOne == iTwo )
 			dZ *= fabs( (float)( GetTotal( ) - HistSet.GetTotal( ) ) ) /
 				max( GetTotal( ), HistSet.GetTotal( ) );
-		return ( dStd ? ( 2 * CStatistics::ZTest( dZ, fCount ? GetTotal( ) : 1 ) ) :
-			( ( dAveOne == dAveTwo ) ? 1 : 0 ) ); }
+
+		return ( ( dStd > c_dEpsilon ) ? ( 2 * CStatistics::ZTest( dZ, fCount ? GetTotal( ) : 1 ) ) :
+			( ( fabs( dAveOne - dAveTwo ) < c_dEpsilon ) ? 1 : 0 ) ); }
 
 	double KSTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
 		size_t	i;
@@ -901,6 +906,7 @@ protected:
 	size_t					m_iBins;
 	size_t					m_iK;
 	size_t					m_iSizeMinimum;
+	size_t					m_iSizeMaximum;
 	std::string				m_strDirectoryIntermediate;
 	CCoalesceMotifLibrary*	m_pMotifs;
 	bool					m_fMotifs;
