@@ -121,7 +121,8 @@ public:
 	bool Initialize( const CPCL& PCL, CCoalesceCluster& Pot, float dPValue );
 	void Subtract( CPCL& PCL ) const;
 	void Subtract( vector<CCoalesceGeneScores>& vecGeneScores ) const;
-	bool SelectConditions( const CPCL& PCL, const CCoalesceCluster& Pot, float dPValue );
+	bool SelectConditions( const CPCL& PCL, const std::vector<CCoalesceImpl::SDataset>& vecsDatasets,
+		const CCoalesceCluster& Pot, float dPValue );
 	bool SelectMotifs( const vector<CCoalesceGeneScores>& vecGeneScores,
 		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, float dPValue,
 		const CCoalesceMotifLibrary* pMotifs = NULL );
@@ -313,6 +314,24 @@ public:
 	void SetSizeMaximum( size_t iSizeMotifs ) {
 
 		m_iSizeMaximum = iSizeMotifs; }
+
+	void ClearDatasets( ) {
+
+		m_vecsDatasets.clear( ); }
+
+	bool AddDataset( const std::set<size_t>& setiDataset ) {
+		size_t								i;
+		std::set<size_t>::const_iterator	iterExperiment;
+
+		if( setiDataset.empty( ) )
+			return true;
+		for( iterExperiment = setiDataset.begin( ); iterExperiment != setiDataset.end( ); ++iterExperiment )
+			for( i = 0; i < m_vecsDatasets.size( ); ++i )
+				if( m_vecsDatasets[ i ].IsCondition( *iterExperiment ) )
+					return false;
+
+		m_vecsDatasets.push_back( SDataset( setiDataset ) );
+		return true; }
 };
 
 }

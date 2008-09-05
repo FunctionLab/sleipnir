@@ -28,7 +28,7 @@ int main( int iArgs, char** aszArgs ) {
 	CPCL						PCL;
 	CCoalesce					Coalesce;
 	vector<CCoalesceCluster>	vecClusters;
-	size_t						i;
+	size_t						i, j;
 	set<string>					setstrTypes;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -51,6 +51,29 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.fasta_arg && !FASTA.Open( sArgs.fasta_arg, setstrTypes ) ) {
 		cerr << "Could not open: " << sArgs.fasta_arg << endl;
 		return 1; }
+
+	if( sArgs.datasets_arg ) {
+		static const size_t	c_iBuffer	= 131072;
+		ifstream			ifsm;
+		char				acBuffer[ c_iBuffer ];
+
+		ifsm.open( sArgs.datasets_arg );
+		if( !ifsm.is_open( ) ) {
+			cerr << "Could not open: " << sArgs.datasets_arg << endl;
+			return 1; }
+		while( !ifsm.eof( ) ) {
+			vector<string>	vecstrLine;
+			set<size_t>		setiConditions;
+
+			ifsm.getline( acBuffer, c_iBuffer - 1 );
+			acBuffer[ c_iBuffer - 1 ] = 0;
+			CMeta::Tokenize( acBuffer, vecstrLine );
+			for( i = 0; i < vecstrLine.size( ); ++i )
+				for( j = 0; j < PCL.GetExperiments( ); ++j )
+					if( vecstrLine[ i ] == PCL.GetExperiment( j ) ) {
+						setiConditions.insert( j );
+						break; }
+			Coalesce.AddDataset( setiConditions ); } }
 
 	Coalesce.SetMotifs( Motifs );
 	Coalesce.SetProbabilityGene( (float)sArgs.prob_gene_arg );

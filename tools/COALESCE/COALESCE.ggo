@@ -7,6 +7,8 @@ option	"input"			i	"Input PCL file"
 							string	typestr="filename"
 option	"fasta"			f	"Input FASTA file"
 							string	typestr="filename"
+option	"datasets"		d	"Condition groupings into dataset blocks"
+							string	typestr="filename"
 
 section "Algorithm Parameters"
 option	"prob_gene"		p	"Probability threshhold for gene inclusion"

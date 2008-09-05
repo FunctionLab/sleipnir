@@ -39,6 +39,7 @@
 #include <utility>
 #include <vector>
 
+#include "fullmatrix.h"
 #include "statistics.h"
 #include "typesi.h"
 
@@ -296,8 +297,9 @@ public:
 
 		dAverage = dAveOne;
 		dZ = dStd ? ( ( dAveOne - dAveTwo ) / dStd ) : 0;
-// exp( -cluster / total ) doesn't work
-// exp( -cluster / pot ) works pretty well
+// dZ *= 1 - pow( (float)GetTotal( ) / ( GetTotal( ) + HistSet.GetTotal( ) ), 1 ); // doesn't work
+// dZ *= exp( -(float)GetTotal( ) / ( GetTotal( ) + HistSet.GetTotal( ) ) ); // doesn't work
+// dZ *= exp( -(float)GetTotal( ) / HistSet.GetTotal( ) ); // works pretty well
 // This prevents large clusters from blowing up the motif set
 		if( iOne == iTwo )
 			dZ *= fabs( (float)( GetTotal( ) - HistSet.GetTotal( ) ) ) /
@@ -881,6 +883,37 @@ protected:
 };
 
 class CCoalesceImpl {
+public:
+	struct SDataset {
+		template<class tType>
+		SDataset( const tType& Conditions ) {
+
+			m_veciConditions.resize( Conditions.size( ) );
+			std::copy( Conditions.begin( ), Conditions.end( ), m_veciConditions.begin( ) ); }
+
+		SDataset( size_t iCondition ) {
+
+			m_veciConditions.resize( 1 );
+			m_veciConditions[ 0 ] = iCondition; }
+
+		bool IsCondition( size_t iCondition ) const {
+
+			return ( std::find( m_veciConditions.begin( ), m_veciConditions.end( ), iCondition ) !=
+				m_veciConditions.end( ) ); }
+
+		size_t GetConditions( ) const {
+
+			return m_veciConditions.size( ); }
+
+		size_t GetCondition( size_t iCondition ) const {
+
+			return m_veciConditions[ iCondition ]; }
+
+		std::vector<size_t>	m_veciConditions;
+		CDataMatrix			m_MatCovChol;
+		std::vector<float>	m_vecdStdevs;
+	};
+
 protected:
 	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dPValueCondition(0.05f),
 		m_dProbabilityGene(0.95f), m_dPValueMotif(0.05f), m_pMotifs(NULL), m_fMotifs(false),
@@ -894,6 +927,9 @@ protected:
 	void Open( std::vector<CCoalesceGeneScores>& ) const;
 	bool CombineMotifs( const CFASTA&, const std::vector<size_t>&, const CCoalesceCluster&,
 		std::vector<CCoalesceGeneScores>&, CCoalesceGroupHistograms&, CCoalesceGroupHistograms& ) const;
+	bool InitializeDatasets( const CPCL&, std::vector<SDataset>& );
+	bool InitializeGeneScores( const CPCL&, const CFASTA&, CPCL&, std::vector<size_t>&,
+		std::vector<CCoalesceGeneScores>& );
 
 	float					m_dPValueMerge;
 	float					m_dProbabilityGene;
@@ -912,6 +948,7 @@ protected:
 	bool					m_fMotifs;
 	size_t					m_iBasesPerMatch;
 	std::string				m_strSequenceCache;
+	std::vector<SDataset>	m_vecsDatasets;
 };
 
 }

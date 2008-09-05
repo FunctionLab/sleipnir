@@ -44,6 +44,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
+#define _isnan				isnan
 #define _lseek				lseek
 #define _read				read
 #define _write				write

@@ -22,6 +22,8 @@
 #ifndef MATH_H
 #define MATH_H
 
+#include <math.h>
+
 #include "mathbi.h"
 
 namespace Sleipnir {

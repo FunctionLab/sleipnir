@@ -22,9 +22,12 @@
 #ifndef STATISTICS_H
 #define STATISTICS_H
 
-#include "meta.h"
+#include <limits>
 
 #include "statisticsi.h"
+
+#include "fullmatrix.h"
+#include "meta.h"
 
 namespace Sleipnir {
 
@@ -718,6 +721,45 @@ public:
 
 		return CStatisticsImpl::Normal01CDF( dX ); }
 
+	static double InverseNormal01CDF( double dX );
+
+	static double MultivariateNormalCDF( const std::vector<float>& vecdX, const std::vector<float>& vecdMu,
+		const CDataMatrix& MatSigmaCholesky, float dMaxError = 0.01, float dMaxCI = 0.99,
+		size_t iMaxIterations = 300 ) {
+		std::vector<double>	vecdDiff, vecdY, vecdF;
+		size_t				i, j, iIterations;
+		double				d, dRet, dVar, dError, dAlpha, dQ;
+
+		if( vecdX.empty( ) || ( vecdX.size( ) != vecdMu.size( ) ) ||
+			( vecdX.size( ) != MatSigmaCholesky.GetRows( ) ) ||
+			( vecdX.size( ) != MatSigmaCholesky.GetColumns( ) ) )
+			return CMeta::GetNaN( );
+
+		vecdDiff.resize( vecdX.size( ) );
+		for( i = 0; i < vecdDiff.size( ); ++i )
+			vecdDiff[ i ] = vecdX[ i ] - vecdMu[ i ];
+		dAlpha = InverseNormal01CDF( dMaxCI );
+		vecdF.resize( vecdX.size( ) );
+		vecdF[ 0 ] = Normal01CDF( vecdDiff[ 0 ] / MatSigmaCholesky.Get( 0, 0 ) );
+		vecdY.resize( vecdX.size( ) );
+
+		dRet = dVar = 0;
+		dError = 2 * dMaxError;
+		for( iIterations = 1; ( iIterations <= iMaxIterations ) && ( dError > dMaxError ); ++iIterations ) {
+			for( i = 1; i < vecdY.size( ); ++i ) {
+				vecdY[ i - 1 ] = InverseNormal01CDF( vecdF[ i - 1 ] * rand( ) / RAND_MAX );
+				dQ = 0;
+				for( j = 0; j < i; ++j )
+					dQ += MatSigmaCholesky.Get( j, i ) * vecdY[ j ];
+				vecdF[ i ] = Normal01CDF( ( vecdDiff[ i ] - dQ ) / MatSigmaCholesky.Get( i, i ) ) *
+					vecdF[ i - 1 ]; }
+			d = ( vecdF.back( ) - dRet ) / iIterations;
+			dRet += d;
+			dVar = ( ( iIterations - 2 ) * dVar / iIterations ) + ( d * d );
+			dError = dAlpha * sqrt( dVar ); }
+
+		return dRet; }
+
 	/*!
 	 * \brief
 	 * Return a random sample from a chi-squared distribution with the given degrees of freedom.
@@ -816,6 +858,30 @@ public:
 	static double ExponentialPDF( double dX, double dLambda ) {
 
 		return ( dLambda * exp( -dLambda * dX ) ); }
+
+	static bool CholeskyDecomposition( CDataMatrix& Matrix ) {
+		std::vector<float>	vecdP;
+		size_t				i, j, k;
+		float				dSum;
+
+		if( Matrix.GetRows( ) != Matrix.GetColumns( ) )
+			return false;
+
+		vecdP.resize( Matrix.GetRows( ) );
+		for( i = 0; i < vecdP.size( ); ++i )
+			for( j = i; j < vecdP.size( ); ++j ) {
+				dSum = Matrix.Get( i, j );
+				for( k = 0; k < i; ++k )
+					dSum -= Matrix.Get( i, k ) * Matrix.Get( j, k );
+				if( i == j )
+					vecdP[ i ] = ( dSum <= 0 ) ? std::numeric_limits<float>::epsilon( ) : sqrt( dSum );
+				else
+					Matrix.Set( j, i, dSum / vecdP[ i ] ); }
+
+		for( i = 0; i < vecdP.size( ); ++i )
+			for( j = i; j < vecdP.size( ); ++j )
+				Matrix.Set( i, j, ( i == j ) ? vecdP[ i ] : Matrix.Get( j, i ) );
+		return true; }
 };
 
 }
