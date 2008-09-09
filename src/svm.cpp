@@ -102,7 +102,7 @@ CSVMImpl::SLearn::SLearn( ) {
 	skip_final_opt_check = 0;
 	svm_maxqpsize = 10;
 	svm_newvarsinqp = 0;
-	svm_iter_to_shrink = 100;
+	svm_iter_to_shrink = -1;
 	maxiter = 100000;
 	kernel_cache_size = 40;
 	svm_c = 0;
@@ -375,12 +375,21 @@ bool CSVM::Learn( const CPCL& PCL, const CGenes& GenesPositive, const CGenes& Ge
 
 bool CSVMImpl::Learn( const SData& sData ) {
 	KERNEL_CACHE*	pCache;
-	size_t			iWords;
+	size_t			i, iNeg, iPos, iWords;
 
 	Reset( false, true, false );
 	m_pModel = (MODEL*)calloc( 1, sizeof(*m_pModel) );
 	if( !Initialize( sData ) )
 		return false;
+	if( !m_sLearn.svm_costratio ) {
+		for( iNeg = iPos = i = 0; i < m_iDocs; ++i )
+			if( m_adLabels[ i ] == 1 )
+				iPos++;
+			else
+				iNeg++;
+		m_sLearn.svm_costratio = (float)iNeg / iPos; }
+	if( m_sLearn.svm_iter_to_shrink < 0 )
+		m_sLearn.svm_iter_to_shrink = ( m_sKernel.kernel_type == LINEAR ) ? 2 : 100;
 	iWords = GetWords( sData );
 
 	pCache = ( m_sKernel.kernel_type == LINEAR ) ? NULL :
