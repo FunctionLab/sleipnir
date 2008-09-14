@@ -40,9 +40,9 @@ struct gengetopt_args_info
   char * fasta_arg;	/**< @brief Input FASTA file.  */
   char * fasta_orig;	/**< @brief Input FASTA file original value given at command line.  */
   const char *fasta_help; /**< @brief Input FASTA file help description.  */
-  int k_arg;	/**< @brief Sequence kmer length (default='7').  */
-  char * k_orig;	/**< @brief Sequence kmer length original value given at command line.  */
-  const char *k_help; /**< @brief Sequence kmer length help description.  */
+  char * datasets_arg;	/**< @brief Condition groupings into dataset blocks.  */
+  char * datasets_orig;	/**< @brief Condition groupings into dataset blocks original value given at command line.  */
+  const char *datasets_help; /**< @brief Condition groupings into dataset blocks help description.  */
   double prob_gene_arg;	/**< @brief Probability threshhold for gene inclusion (default='0.95').  */
   char * prob_gene_orig;	/**< @brief Probability threshhold for gene inclusion original value given at command line.  */
   const char *prob_gene_help; /**< @brief Probability threshhold for gene inclusion help description.  */
@@ -52,11 +52,45 @@ struct gengetopt_args_info
   double pvalue_motif_arg;	/**< @brief P-value threshhold for motif inclusion (default='0.05').  */
   char * pvalue_motif_orig;	/**< @brief P-value threshhold for motif inclusion original value given at command line.  */
   const char *pvalue_motif_help; /**< @brief P-value threshhold for motif inclusion help description.  */
+  int k_arg;	/**< @brief Sequence kmer length (default='7').  */
+  char * k_orig;	/**< @brief Sequence kmer length original value given at command line.  */
+  const char *k_help; /**< @brief Sequence kmer length help description.  */
+  double pvalue_merge_arg;	/**< @brief P-value threshhold for motif merging (default='0.05').  */
+  char * pvalue_merge_orig;	/**< @brief P-value threshhold for motif merging original value given at command line.  */
+  const char *pvalue_merge_help; /**< @brief P-value threshhold for motif merging help description.  */
+  double cutoff_merge_arg;	/**< @brief Edit distance cutoff for motif merging (default='2.5').  */
+  char * cutoff_merge_orig;	/**< @brief Edit distance cutoff for motif merging original value given at command line.  */
+  const char *cutoff_merge_help; /**< @brief Edit distance cutoff for motif merging help description.  */
+  double penalty_gap_arg;	/**< @brief Edit distance penalty for gaps (default='1').  */
+  char * penalty_gap_orig;	/**< @brief Edit distance penalty for gaps original value given at command line.  */
+  const char *penalty_gap_help; /**< @brief Edit distance penalty for gaps help description.  */
+  double penalty_mismatch_arg;	/**< @brief Edit distance penalty for mismatches (default='2.1').  */
+  char * penalty_mismatch_orig;	/**< @brief Edit distance penalty for mismatches original value given at command line.  */
+  const char *penalty_mismatch_help; /**< @brief Edit distance penalty for mismatches help description.  */
   double pvalue_correl_arg;	/**< @brief P-value threshhold for significant correlation (default='0.05').  */
   char * pvalue_correl_orig;	/**< @brief P-value threshhold for significant correlation original value given at command line.  */
   const char *pvalue_correl_help; /**< @brief P-value threshhold for significant correlation help description.  */
-  int intermediate_flag;	/**< @brief Produce intermediate output files (PCLs) (default=off).  */
-  const char *intermediate_help; /**< @brief Produce intermediate output files (PCLs) help description.  */
+  double frac_correl_arg;	/**< @brief Fraction of pairs to sample for significant correlation (default='0.05').  */
+  char * frac_correl_orig;	/**< @brief Fraction of pairs to sample for significant correlation original value given at command line.  */
+  const char *frac_correl_help; /**< @brief Fraction of pairs to sample for significant correlation help description.  */
+  char * sequences_arg;	/**< @brief Sequence types to use (comma separated).  */
+  char * sequences_orig;	/**< @brief Sequence types to use (comma separated) original value given at command line.  */
+  const char *sequences_help; /**< @brief Sequence types to use (comma separated) help description.  */
+  int bases_arg;	/**< @brief Resolution of bases per motif match (default='5000').  */
+  char * bases_orig;	/**< @brief Resolution of bases per motif match original value given at command line.  */
+  const char *bases_help; /**< @brief Resolution of bases per motif match help description.  */
+  int size_minimum_arg;	/**< @brief Minimum gene count for clusters of interest (default='5').  */
+  char * size_minimum_orig;	/**< @brief Minimum gene count for clusters of interest original value given at command line.  */
+  const char *size_minimum_help; /**< @brief Minimum gene count for clusters of interest help description.  */
+  int size_maximum_arg;	/**< @brief Maximum motif count to consider a cluster saturated (default='100').  */
+  char * size_maximum_orig;	/**< @brief Maximum motif count to consider a cluster saturated original value given at command line.  */
+  const char *size_maximum_help; /**< @brief Maximum motif count to consider a cluster saturated help description.  */
+  char * intermediate_arg;	/**< @brief Directory for intermediate output files (PCLs).  */
+  char * intermediate_orig;	/**< @brief Directory for intermediate output files (PCLs) original value given at command line.  */
+  const char *intermediate_help; /**< @brief Directory for intermediate output files (PCLs) help description.  */
+  char * cache_arg;	/**< @brief Cache file for sequence analysis.  */
+  char * cache_orig;	/**< @brief Cache file for sequence analysis original value given at command line.  */
+  const char *cache_help; /**< @brief Cache file for sequence analysis help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCL (default='2').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
@@ -71,12 +105,23 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int fasta_given ;	/**< @brief Whether fasta was given.  */
-  unsigned int k_given ;	/**< @brief Whether k was given.  */
+  unsigned int datasets_given ;	/**< @brief Whether datasets was given.  */
   unsigned int prob_gene_given ;	/**< @brief Whether prob_gene was given.  */
   unsigned int pvalue_cond_given ;	/**< @brief Whether pvalue_cond was given.  */
   unsigned int pvalue_motif_given ;	/**< @brief Whether pvalue_motif was given.  */
+  unsigned int k_given ;	/**< @brief Whether k was given.  */
+  unsigned int pvalue_merge_given ;	/**< @brief Whether pvalue_merge was given.  */
+  unsigned int cutoff_merge_given ;	/**< @brief Whether cutoff_merge was given.  */
+  unsigned int penalty_gap_given ;	/**< @brief Whether penalty_gap was given.  */
+  unsigned int penalty_mismatch_given ;	/**< @brief Whether penalty_mismatch was given.  */
   unsigned int pvalue_correl_given ;	/**< @brief Whether pvalue_correl was given.  */
+  unsigned int frac_correl_given ;	/**< @brief Whether frac_correl was given.  */
+  unsigned int sequences_given ;	/**< @brief Whether sequences was given.  */
+  unsigned int bases_given ;	/**< @brief Whether bases was given.  */
+  unsigned int size_minimum_given ;	/**< @brief Whether size_minimum was given.  */
+  unsigned int size_maximum_given ;	/**< @brief Whether size_maximum was given.  */
   unsigned int intermediate_given ;	/**< @brief Whether intermediate was given.  */
+  unsigned int cache_given ;	/**< @brief Whether cache was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */

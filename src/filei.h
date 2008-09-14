@@ -28,7 +28,7 @@ namespace Sleipnir {
 
 class CFileImpl {
 protected:
-	static const size_t c_iBufferSize	= 1048576; // 131072;
+	static const size_t c_iBufferSize	= 2097152; // 131072;
 
 	static bool IsNewline( char );
 

@@ -118,7 +118,8 @@ public:
 
 class CCoalesceCluster : public CCoalesceClusterImpl {
 public:
-	bool Initialize( const CPCL& PCL, CCoalesceCluster& Pot, float dPValue );
+	bool Initialize( const CPCL& PCL, CCoalesceCluster& Pot,
+		std::set<std::pair<size_t, size_t> >& setpriiSeeds, float dFracction, float dPValue );
 	void Subtract( CPCL& PCL ) const;
 	void Subtract( vector<CCoalesceGeneScores>& vecGeneScores ) const;
 	bool SelectConditions( const CPCL& PCL, const std::vector<CCoalesceImpl::SDataset>& vecsDatasets,
@@ -332,6 +333,14 @@ public:
 
 		m_vecsDatasets.push_back( SDataset( setiDataset ) );
 		return true; }
+
+	void SetFractionCorrelation( float dFraction ) {
+
+		m_dFractionCorrelation = dFraction; }
+
+	float GetFractionCorrelation( ) const {
+
+		return m_dFractionCorrelation; }
 };
 
 }

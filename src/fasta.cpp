@@ -29,7 +29,7 @@ const char CFASTAImpl::c_acComment[]	= "#";
 const char CFASTAImpl::c_acHeader[]		= ">";
 
 bool CFASTA::Open( const char* szFile, const set<string>& setstrTypes ) {
-	const char*			pc;
+	char*				pc;
 	vector<string>		vecstrLine;
 	TMapStrI::iterator	iterGene;
 	size_t				i, iGene;
@@ -50,6 +50,9 @@ bool CFASTA::Open( const char* szFile, const set<string>& setstrTypes ) {
 		m_szBuffer[ c_iBufferSize - 1 ] = 0;
 		if( !m_szBuffer[ 0 ] || !strchr( c_acHeader, m_szBuffer[ 0 ] ) )
 			continue;
+		for( pc = m_szBuffer + strlen( m_szBuffer ) - 1; pc >= m_szBuffer; --pc )
+			if( strchr( "\n\r", *pc ) )
+				*pc = 0;
 		for( pc = m_szBuffer + 1; *pc && isspace( *pc ); ++pc );
 		vecstrLine.clear( );
 		CMeta::Tokenize( pc, vecstrLine );
@@ -118,6 +121,7 @@ bool CFASTA::Get( size_t iGene, vector<SFASTASequence>& vecsSequences ) const {
 	const TMapStrI&				mapstriSequences	= m_vecmapstriSequences[ iGene ];
 	TMapStrI::const_iterator	iterGene;
 	size_t						iBegin, iEnd;
+	char*						pc;
 
 	if( !m_ifsm.is_open( ) )
 		return false;
@@ -139,6 +143,9 @@ bool CFASTA::Get( size_t iGene, vector<SFASTASequence>& vecsSequences ) const {
 				continue;
 			if( strchr( c_acHeader, m_szBuffer[ 0 ] ) )
 				break;
+			for( pc = m_szBuffer + strlen( m_szBuffer ) - 1; pc >= m_szBuffer; --pc )
+				if( strchr( "\n\r", *pc ) )
+					*pc = 0;
 			strSequence += m_szBuffer; }
 
 		if( strSequence.empty( ) ) {

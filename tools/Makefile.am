@@ -28,6 +28,7 @@ if WITH_TOOLS
 	  Overlapper \
 	  Randomizer \
 	  Seqs2Ngrams \
+	  Synthesizer \
 	  Txt2Bin
 if WITH_SMILE_TOOLS
     SMILE_TOOLS_SUBDIRS = \

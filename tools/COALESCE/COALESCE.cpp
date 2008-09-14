@@ -80,6 +80,7 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetPValueCondition( (float)sArgs.pvalue_cond_arg );
 	Coalesce.SetPValueMotif( (float)sArgs.pvalue_motif_arg );
 	Coalesce.SetPValueCorrelation( (float)sArgs.pvalue_correl_arg );
+	Coalesce.SetFractionCorrelation( (float)sArgs.frac_correl_arg );
 	Coalesce.SetPValueMerge( (float)sArgs.pvalue_merge_arg );
 	Coalesce.SetCutoffMerge( (float)sArgs.cutoff_merge_arg );
 	Coalesce.SetPenaltyGap( (float)sArgs.penalty_gap_arg );

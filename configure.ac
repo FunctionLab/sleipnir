@@ -547,6 +547,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Overlapper/Makefile \
 		 tools/Randomizer/Makefile \
 		 tools/Seqs2Ngrams/Makefile \
+		 tools/Synthesizer/Makefile \
 		 tools/Txt2Bin/Makefile \
                  tools/BNConverter/Makefile \
 		 tools/BNCreator/Makefile \

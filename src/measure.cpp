@@ -172,6 +172,9 @@ double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY
  * \param adWY
  * If non-null, weights of elements in the second array.
  * 
+ * \param piCount
+ * If non-null, outputs the number of non-NaN elements used for the calculation.
+ * 
  * \returns
  * Pearson correlation calculated between the two input vectors and, optionally, weights.
  * 
@@ -179,10 +182,12 @@ double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY
  * product are also multiplied by the appropriate elements' weights.  Centering is performed as per EMap.
  */
 double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY, size_t iN, EMap eMap,
-	const float* adWX, const float* adWY ) {
+	const float* adWX, const float* adWY, size_t* piCount ) {
 	double	dMX, dMY, dRet, dDX, dDY, dX, dY;
 	size_t	i;
 
+	if( piCount )
+		*piCount = 0;
 	if( iM != iN )
 		return CMeta::GetNaN( );
 
@@ -190,6 +195,8 @@ double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY, 
 	for( i = 0; i < iN; ++i ) {
 		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
 			continue;
+		if( piCount )
+			(*piCount)++;
 		dX += GetWeight( adWX, i );
 		dY += GetWeight( adWY, i );
 		dMX += adX[ i ] * GetWeight( adWX, i );

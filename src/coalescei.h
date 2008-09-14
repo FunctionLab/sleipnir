@@ -844,7 +844,7 @@ protected:
 
 	void Add( size_t, CCoalesceCluster& );
 	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
-	bool AddSeedPair( const CPCL&, CCoalesceCluster&, float );
+	bool AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float );
 	void CalculateCentroid( const CPCL& );
 	bool AddSignificant( const CCoalesceMotifLibrary&, uint32_t, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, float );
@@ -880,6 +880,7 @@ protected:
 	std::vector<float>			m_vecdCentroid;
 	std::vector<float>			m_vecdStdevs;
 	std::set<size_t>			m_setiHistory;
+	std::vector<float>			m_vecdPriors;
 };
 
 class CCoalesceImpl {
@@ -939,6 +940,7 @@ protected:
 	float					m_dCutoffMerge;
 	float					m_dPenaltyGap;
 	float					m_dPenaltyMismatch;
+	float					m_dFractionCorrelation;
 	size_t					m_iBins;
 	size_t					m_iK;
 	size_t					m_iSizeMinimum;

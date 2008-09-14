@@ -614,6 +614,18 @@ S140:
  * 1992, Cambridge University Press.
  */
 double CStatistics::SampleNormalStandard( ) {
+double x1, x2, w;
+ 
+do {
+	x1 = 2.0 * ranf() - 1.0;
+	x2 = 2.0 * ranf() - 1.0;
+	w = x1 * x1 + x2 * x2;
+} while ( w >= 1.0 );
+
+w = sqrt( (-2.0 * log( w ) ) / w );
+return x1 * w; }
+
+/*
 static double a[32] = {
     0.0,3.917609E-2,7.841241E-2,0.11777,0.1573107,0.1970991,0.2372021,0.2776904,
     0.3186394,0.36013,0.4022501,0.4450965,0.4887764,0.5334097,0.5791322,
@@ -651,26 +663,20 @@ static double snorm,u,s,ustar,aa,w,y,tt;
     i = (long) (u);
     if(i == 32) i = 31;
     if(i == 0) goto S100;
-/*
-                                START CENTER
-*/
+//                                START CENTER
     ustar = u-(double)i;
     aa = *(a+i-1);
 S40:
     if(ustar <= *(t+i-1)) goto S60;
     w = (ustar-*(t+i-1))**(h+i-1);
 S50:
-/*
-                                EXIT   (BOTH CASES)
-*/
+//                                EXIT   (BOTH CASES)
     y = aa+w;
     snorm = y;
     if(s == 1.0) snorm = -y;
     return snorm;
 S60:
-/*
-                                CENTER CONTINUED
-*/
+//                                CENTER CONTINUED
     u = ranf();
     w = u*(*(a+i)-aa);
     tt = (0.5*w+aa)*w;
@@ -685,9 +691,7 @@ S80:
     ustar = ranf();
     goto S40;
 S100:
-/*
-                                START TAIL
-*/
+//                                START TAIL
     i = 6;
     aa = *(a+31);
     goto S120;
@@ -712,6 +716,7 @@ S160:
     u = ranf();
     goto S140;
 }
+*/
 
 /*!
  * \brief
