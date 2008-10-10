@@ -666,6 +666,6 @@ double CMeasurePearsonSignificance::Measure( const float* adX, size_t iM, const 
 			iCount++;
 	dT = dPearson * sqrt( (double)( iCount - 2 ) ) / sqrt( 1 - ( dPearson * dPearson ) );
 
-	return ( 1 - CStatistics::TCDF( dT, iCount - 2 ) ); }
+	return CStatistics::TCDF( dT, iCount - 2 ); }
 
 }

@@ -30,7 +30,8 @@ class CCoalesceMotifLibrary : CCoalesceMotifLibraryImpl {
 public:
 	CCoalesceMotifLibrary( size_t iK ) : CCoalesceMotifLibraryImpl( iK ) { }
 
-	float GetMatch( const std::string& strSequence, uint32_t iMotif ) const;
+	float GetMatch( const std::string& strSequence, uint32_t iMotif, size_t iOffset,
+		SCoalesceModifiers& sModifiers ) const;
 
 	std::string GetMotif( uint32_t iMotif ) const {
 
@@ -341,6 +342,29 @@ public:
 	float GetFractionCorrelation( ) const {
 
 		return m_dFractionCorrelation; }
+
+	void SetThreads( size_t iThreads ) {
+
+		m_iThreads = iThreads; }
+
+	size_t GetThreads( ) const {
+
+		return m_iThreads; }
+
+	void SetNucleosomes( const CFASTA& FASTANucleosomes ) {
+
+		m_pPCLNucleosomes = NULL;
+		m_pFASTANucleosomes = &FASTANucleosomes; }
+
+	void SetNucleosomes( const CPCL& PCLNucleosomes ) {
+
+		m_pFASTANucleosomes = NULL;
+		m_pPCLNucleosomes = &PCLNucleosomes; }
+
+	void ClearNucleosomes( ) {
+
+		m_pFASTANucleosomes = NULL;
+		m_pPCLNucleosomes = NULL; }
 };
 
 }

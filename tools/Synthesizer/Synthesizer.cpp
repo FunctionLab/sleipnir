@@ -189,8 +189,9 @@ int main( int iArgs, char** aszArgs ) {
 				strHeader = strHeader + '\t' + iterType->first;
 			for( i = 0; i < PCL.GetGenes( ); ++i ) {
 				ofsm << "> " << PCL.GetGene( i ) << strHeader << endl;
-				strSequence = HMM.Get( ( rand( ) % ( sArgs.seq_max_arg - sArgs.seq_min_arg ) ) +
-					sArgs.seq_min_arg );
+				j = ( sArgs.seq_max_arg <= sArgs.seq_min_arg ) ? sArgs.seq_min_arg :
+					( ( rand( ) % ( sArgs.seq_max_arg - sArgs.seq_min_arg ) ) + sArgs.seq_min_arg );
+				strSequence = HMM.Get( j );
 				if( fTFs )
 					for( j = 0; j < vecveciTFs[ i ].size( ); ++j ) {
 						const STF&	sTF	= vecsTFs[ vecveciTFs[ i ][ j ] ];

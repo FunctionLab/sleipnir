@@ -118,15 +118,28 @@ void CFASTA::Save( ostream& ostm, size_t iWrap ) const {
 				ostm << strSequence.substr( j, iWrap ) << endl; } } }
 
 bool CFASTA::Get( size_t iGene, vector<SFASTASequence>& vecsSequences ) const {
+
+	return CFASTAImpl::Get( iGene, &vecsSequences, NULL ); }
+
+bool CFASTA::Get( size_t iGene, vector<SFASTAWiggle>& vecsValues ) const {
+
+	return CFASTAImpl::Get( iGene, NULL, &vecsValues ); }
+
+bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>* pvecsSequences,
+	vector<SFASTAWiggle>* pvecsValues ) const {
+
+	if( iGene == -1 )
+		return false;
+
 	const TMapStrI&				mapstriSequences	= m_vecmapstriSequences[ iGene ];
 	TMapStrI::const_iterator	iterGene;
-	size_t						iBegin, iEnd;
 	char*						pc;
 
 	if( !m_ifsm.is_open( ) )
 		return false;
 	for( iterGene = mapstriSequences.begin( ); iterGene != mapstriSequences.end( ); ++iterGene ) {
 		SFASTASequence	sSequence;
+		SFASTAWiggle	sValues;
 		string			strSequence;
 
 		sSequence.m_strType = iterGene->first;
@@ -134,7 +147,8 @@ bool CFASTA::Get( size_t iGene, vector<SFASTASequence>& vecsSequences ) const {
 		m_ifsm.seekg( iterGene->second );
 		if( (size_t)m_ifsm.tellg( ) != iterGene->second ) {
 			g_CatSleipnir.error( "CFASTA::Get( %d ) error parsing: %s %s at %d (%d)", iGene,
-				GetGene( iGene ).c_str( ), iterGene->first.c_str( ), iterGene->second, (size_t)m_ifsm.tellg( ) );
+				GetGene( iGene ).c_str( ), iterGene->first.c_str( ), iterGene->second,
+				(size_t)m_ifsm.tellg( ) );
 			return false; }
 		while( !m_ifsm.eof( ) ) {
 			m_ifsm.getline( m_szBuffer, c_iBufferSize );
@@ -143,28 +157,55 @@ bool CFASTA::Get( size_t iGene, vector<SFASTASequence>& vecsSequences ) const {
 				continue;
 			if( strchr( c_acHeader, m_szBuffer[ 0 ] ) )
 				break;
-			for( pc = m_szBuffer + strlen( m_szBuffer ) - 1; pc >= m_szBuffer; --pc )
-				if( strchr( "\n\r", *pc ) )
-					*pc = 0;
-			strSequence += m_szBuffer; }
+			if( pvecsValues )
+				sValues.m_vecdValues.push_back( (float)atof( m_szBuffer ) );
+			else {
+				for( pc = m_szBuffer + strlen( m_szBuffer ) - 1; pc >= m_szBuffer; --pc )
+					if( strchr( "\n\r", *pc ) )
+						*pc = 0;
+				strSequence += m_szBuffer; } }
 
-		if( strSequence.empty( ) ) {
-			g_CatSleipnir.error( "CFASTA::Get( %d ) no sequence found: %s %s at %d", iGene,
-				GetGene( iGene ).c_str( ), iterGene->first.c_str( ), iterGene->second );
+		if( pvecsValues ) {
+			if( !Get( iGene, *pvecsValues, iterGene->second, sValues ) )
+				return false; }
+		else if( !Get( iGene, *pvecsSequences, iterGene->second, strSequence, sSequence ) )
 			return false; }
-		for( iBegin = 0; iBegin < strSequence.size( ); iBegin = iEnd ) {
-			bool	fBegin;
-			string	strCur;
 
-			fBegin = !!isupper( strSequence[ iBegin ] );
-			if( !iBegin )
-				sSequence.m_fIntronFirst = !fBegin;
-			for( iEnd = iBegin + 1; ( iEnd < strSequence.size( ) ) &&
-				( fBegin == !!isupper( strSequence[ iEnd ] ) ); ++iEnd );
-			strCur = strSequence.substr( iBegin, iEnd - iBegin );
-			transform( strCur.begin( ), strCur.end( ), strCur.begin( ), ::toupper );
-			sSequence.m_vecstrSequences.push_back( strCur ); }
-		vecsSequences.push_back( sSequence ); }
+	return true; }
+
+bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>& vecsSequences, size_t iOffset,
+	const string& strSequence, SFASTASequence& sSequence ) const {
+	size_t	iBegin, iEnd;
+
+	if( strSequence.empty( ) ) {
+		g_CatSleipnir.error( "CFASTA::Get( %d ) no sequence found: %s %s at %d", iGene,
+			GetGene( iGene ).c_str( ), sSequence.m_strType.c_str( ), iOffset );
+		return false; }
+	for( iBegin = 0; iBegin < strSequence.size( ); iBegin = iEnd ) {
+		bool	fBegin;
+		string	strCur;
+
+		fBegin = !!isupper( strSequence[ iBegin ] );
+		if( !iBegin )
+			sSequence.m_fIntronFirst = !fBegin;
+		for( iEnd = iBegin + 1; ( iEnd < strSequence.size( ) ) &&
+			( fBegin == !!isupper( strSequence[ iEnd ] ) ); ++iEnd );
+		strCur = strSequence.substr( iBegin, iEnd - iBegin );
+		transform( strCur.begin( ), strCur.end( ), strCur.begin( ), ::toupper );
+		sSequence.m_vecstrSequences.push_back( strCur ); }
+	vecsSequences.push_back( sSequence );
+
+	return true; }
+
+
+bool CFASTAImpl::Get( size_t iGene, vector<SFASTAWiggle>& vecsValues, size_t iOffset,
+	SFASTAWiggle& sValues ) const {
+
+	if( sValues.m_vecdValues.empty( ) ) {
+		g_CatSleipnir.error( "CFASTA::Get( %d ) no values found: %s %s at %d", iGene,
+			GetGene( iGene ).c_str( ), sValues.m_strType.c_str( ), iOffset );
+		return false; }
+	vecsValues.push_back( sValues );
 
 	return true; }
 

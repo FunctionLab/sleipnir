@@ -77,8 +77,9 @@ bool CPCLSet::Open( const std::vector<std::string>& vecstrFiles, size_t iSkip, C
 			setstrGenes.insert( m_aPCLs[ i ].GetGene( j ) ); }
 	m_vecstrGenes.resize( setstrGenes.size( ) );
 	for( iterGene = setstrGenes.begin( ),i = 0; iterGene != setstrGenes.end( );
-		++iterGene,++i )
+		++iterGene,++i ) {
 		m_vecstrGenes[ i ] = *iterGene;
+		m_mapGenes[ *iterGene ] = i; }
 
 	m_Genes.Initialize( m_iPCLs, m_vecstrGenes.size( ) );
 	for( i = 0; i < m_iPCLs; ++i )

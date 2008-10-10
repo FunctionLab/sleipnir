@@ -3,7 +3,7 @@ version	"1.0"
 purpose	"QTC and other hard clustering methods"
 
 section "Main"
-option	"input"			i	"Input PCL file"
+option	"input"			i	"Input PCL/DAB file"
 							string	typestr="filename"
 option	"algorithm"		a	"Clustering algorithm"
 							values="qtc","kmeans"	default="kmeans"

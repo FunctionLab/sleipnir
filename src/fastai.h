@@ -32,6 +32,20 @@
 
 namespace Sleipnir {
 
+struct SFASTABase {
+	std::string	m_strType;
+	bool		m_fIntronFirst;
+};
+
+
+struct SFASTASequence : SFASTABase {
+	std::vector<std::string>	m_vecstrSequences;
+};
+
+struct SFASTAWiggle : SFASTABase {
+	std::vector<float>	m_vecdValues;
+};
+
 class CFASTAImpl : public CFile {
 protected:
 	static const char	c_acComment[];
@@ -47,6 +61,14 @@ protected:
 	virtual ~CFASTAImpl( ) {
 
 		delete[] m_szBuffer; }
+
+	bool Get( size_t, std::vector<SFASTASequence>*, std::vector<SFASTAWiggle>* ) const;
+	bool Get( size_t, std::vector<SFASTASequence>&, size_t, const std::string&, SFASTASequence& ) const;
+	bool Get( size_t, std::vector<SFASTAWiggle>&, size_t, SFASTAWiggle& ) const;
+
+	const std::string& GetGene( size_t iGene ) const {
+
+		return m_vecstrGenes[ iGene ]; }
 
 	mutable std::ifstream		m_ifsm;
 	TMapStrI					m_mapstriGenes;

@@ -34,9 +34,9 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * input_arg;	/**< @brief Input PCL file.  */
-  char * input_orig;	/**< @brief Input PCL file original value given at command line.  */
-  const char *input_help; /**< @brief Input PCL file help description.  */
+  char * input_arg;	/**< @brief Input PCL/DAB file.  */
+  char * input_orig;	/**< @brief Input PCL/DAB file original value given at command line.  */
+  const char *input_help; /**< @brief Input PCL/DAB file help description.  */
   char * algorithm_arg;	/**< @brief Clustering algorithm (default='kmeans').  */
   char * algorithm_orig;	/**< @brief Clustering algorithm original value given at command line.  */
   const char *algorithm_help; /**< @brief Clustering algorithm help description.  */
@@ -92,8 +92,6 @@ struct gengetopt_args_info
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */

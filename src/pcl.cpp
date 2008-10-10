@@ -331,12 +331,15 @@ bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 	else {
 		m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
 		while( OpenGene( istm, vecdData, acBuf, c_iBufferSize ) );
-
-		m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
-		for( k = i = 0; ( k < vecdData.size( ) ) && ( i < m_Data.GetRows( ) ); ++i )
-			for( j = 0; j < m_Data.GetColumns( ); ++j )
-				m_Data.Set( i, j, vecdData[ k++ ] );
-		fRet = true; }
+		for( fRet = true,i = 0; i < m_vecstrGenes.size( ); ++i )
+			if( m_vecstrGenes[ i ].empty( ) || !isprint( m_vecstrGenes[ i ][ 0 ] ) ) {
+				fRet = false;
+				break; }
+		if( fRet ) {
+			m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
+			for( k = i = 0; ( k < vecdData.size( ) ) && ( i < m_Data.GetRows( ) ); ++i )
+				for( j = 0; j < m_Data.GetColumns( ); ++j )
+					m_Data.Set( i, j, vecdData[ k++ ] ); } }
 	delete[] acBuf;
 
 	return fRet; }
@@ -351,6 +354,8 @@ bool CPCLImpl::OpenExperiments( std::istream& istmInput, size_t iFeatures, char*
 		m_vecstrFeatures.resize( 1 + iFeatures );
 		return true; }
 	istmInput.getline( acLine, iLine - 1 );
+	if( !acLine[ 0 ] )
+		return false;
 	for( iToken = 0,pc = acLine; ( strToken = OpenToken( pc, &pc ) ).length( ) || *pc; ++iToken )
 		if( iToken <= iFeatures )
 			m_vecstrFeatures.push_back( strToken );

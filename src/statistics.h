@@ -641,7 +641,7 @@ public:
 	 */
 	static double TCDF( double dT, size_t iDF ) {
 
-		return IncompleteBeta( 0.5 * iDF, 0.5, iDF / ( iDF + ( dT * dT ) ) ); }
+		return ( 1 - IncompleteBeta( 0.5 * iDF, 0.5, iDF / ( iDF + ( dT * dT ) ) ) ); }
 
 	/*!
 	 * \brief

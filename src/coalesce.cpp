@@ -29,6 +29,52 @@
 
 namespace Sleipnir {
 
+// SCoalesceModifiers
+
+void SCoalesceModifiers::Get( size_t iPCL ) {
+	size_t	i;
+
+	m_vecvecsWiggles.resize( m_vecpWiggles.size( ) );
+	for( i = 0; i < m_vecvecsWiggles.size( ); ++i ) {
+		m_vecvecsWiggles[ i ].clear( );
+		m_vecpWiggles[ i ]->Get( m_vecveciPCL2Wiggles[ i ][ iPCL ], m_vecvecsWiggles[ i ] ); } }
+
+void SCoalesceModifiers::SetType( const string& strType ) {
+	size_t	i, j;
+
+	m_veciWiggleTypes.resize( m_vecvecsWiggles.size( ) );
+	for( i = 0; i < m_vecvecsWiggles.size( ); ++i ) {
+		for( j = 0; j < m_vecvecsWiggles[ i ].size( ); ++j )
+			if( strType == m_vecvecsWiggles[ i ][ j ].m_strType )
+				break;
+		m_veciWiggleTypes[ i ] = ( j < m_vecvecsWiggles[ i ].size( ) ) ? j : -1; } }
+
+void SCoalesceModifiers::InitializeWeight( size_t iK, size_t iOffset ) {
+	size_t	i, j;
+
+	m_dWeight = 0;
+	for( i = 0; i < m_vecvecsWiggles.size( ); ++i )
+		if( ( j = m_veciWiggleTypes[ i ] ) != -1 ) {
+			const vector<float>&	vecdWiggle	= m_vecvecsWiggles[ i ][ j ].m_vecdValues;
+
+			for( j = 0; ( j < iK ) && ( ( iOffset + j ) < vecdWiggle.size( ) ); ++j )
+				m_dWeight += vecdWiggle[ iOffset + j ]; } }
+
+void SCoalesceModifiers::AddWeight( size_t iK, size_t iOffset, size_t iDelta ) {
+	size_t	i, j;
+
+	for( i = 0; i < m_vecvecsWiggles.size( ); ++i )
+		if( ( j = m_veciWiggleTypes[ i ] ) != -1 ) {
+			const std::vector<float>&	vecdWiggle	= m_vecvecsWiggles[ i ][ j ].m_vecdValues;
+
+			if( iK ) {
+				j = iOffset + iDelta + iK;
+				if( j < vecdWiggle.size( ) ) {
+					m_dWeight -= vecdWiggle[ iOffset + iDelta ];
+					m_dWeight += vecdWiggle[ j ]; } }
+			else
+				m_dWeight += vecdWiggle[ iOffset + iDelta ]; } }
+
 // CCoalesceMotifLibrary
 
 // Order independent, but complements must be adjacent
@@ -40,7 +86,8 @@ CCoalesceMotifLibraryImpl::~CCoalesceMotifLibraryImpl( ) {
 	for( i = 0; i < m_vecpPSTs.size( ); ++i )
 		delete m_vecpPSTs[ i ]; }
 
-float CCoalesceMotifLibrary::GetMatch( const string& strSequence, uint32_t iMotif ) const {
+float CCoalesceMotifLibrary::GetMatch( const string& strSequence, uint32_t iMotif, size_t iOffset,
+	SCoalesceModifiers& sModifiers ) const {
 	size_t		i;
 	float		dRet;
 	const CPST*	pPST;
@@ -49,11 +96,14 @@ float CCoalesceMotifLibrary::GetMatch( const string& strSequence, uint32_t iMoti
 	if( ( GetType( iMotif ) != ETypePST ) || !( pPST = GetPST( iMotif ) ) )
 		return CMeta::GetNaN( );
 
+	sModifiers.InitializeWeight( 0, 0 );
 	dRet = 0;
-	for( i = 1; i < pPST->GetDepth( ); ++i )
-		dRet += pPST->GetMatch( strSequence, pPST->GetDepth( ) - i );
-	for( i = 0; i < strSequence.length( ); ++i )
-		dRet += pPST->GetMatch( strSequence.substr( i ) );
+	for( i = 1; i < pPST->GetDepth( ); ++i ) {
+		sModifiers.AddWeight( 0, iOffset, i - 1 );
+		dRet += pPST->GetMatch( strSequence, pPST->GetDepth( ) - i ) * sModifiers.GetWeight( ) / i; }
+	for( i = 0; i < strSequence.length( ); ++i ) {
+		dRet += pPST->GetMatch( strSequence.substr( i ) ) * sModifiers.GetWeight( ) / pPST->GetDepth( );
+		sModifiers.AddWeight( pPST->GetDepth( ), iOffset, i ); }
 
 	return dRet; }
 
@@ -226,38 +276,40 @@ uint32_t CCoalesceMotifLibraryImpl::MergePSTs( const CPST& PSTOne, const CPST& P
 // CCoalesceGeneScores
 
 bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const SFASTASequence& sSequence,
-	vector<vector<unsigned short> >& vecvecsCounts, vector<size_t>& veciLengths ) {
-	size_t			i, iType, iSubsequence, iLength;
+	SCoalesceModifiers& sModifiers, vector<vector<float> >& vecvecdCounts, vector<size_t>& veciLengths ) {
+	size_t			i, iType, iSubsequence, iLength, iOffset;
 	ESubsequence	eSubsequence;
 	uint32_t		iMotifUs, iMotifThem;
-	unsigned short	s;
+	float			d;
 
-	vecvecsCounts.resize( ESubsequenceEnd );
-	for( i = 0; i < vecvecsCounts.size( ); ++i )
-		fill( vecvecsCounts[ i ].begin( ), vecvecsCounts[ i ].end( ), 0 );
+	sModifiers.SetType( sSequence.m_strType );
+	vecvecdCounts.resize( ESubsequenceEnd );
+	for( i = 0; i < vecvecdCounts.size( ); ++i )
+		fill( vecvecdCounts[ i ].begin( ), vecvecdCounts[ i ].end( ), 0.0f );
 	veciLengths.resize( ESubsequenceEnd );
 	fill( veciLengths.begin( ), veciLengths.end( ), 0 );
 
 	iType = AddType( sSequence.m_strType );
-	for( i = 0; i < sSequence.m_vecstrSequences.size( ); ++i )
+	for( iOffset = i = 0; i < sSequence.m_vecstrSequences.size( );
+		iOffset += sSequence.m_vecstrSequences[ i++ ].length( ) )
 		if( !Add( Motifs, sSequence.m_vecstrSequences[ i ], iType, sSequence.m_fIntronFirst && !( i % 2 ),
-			vecvecsCounts, veciLengths ) )
+			vecvecdCounts, veciLengths, iOffset, sModifiers ) )
 			return false;
-	for( iSubsequence = ESubsequenceBegin; iSubsequence < vecvecsCounts.size( ); ++iSubsequence ) {
-		const vector<unsigned short>&	vecsCounts	= vecvecsCounts[ iSubsequence ];
+	for( iSubsequence = ESubsequenceBegin; iSubsequence < vecvecdCounts.size( ); ++iSubsequence ) {
+		const vector<float>&	vecdCounts	= vecvecdCounts[ iSubsequence ];
 
 		if( iLength = veciLengths[ iSubsequence ] ) {
 			eSubsequence = (ESubsequence)iSubsequence;
-			for( iMotifThem = 0; iMotifThem < vecsCounts.size( ); ++iMotifThem )
-				if( s = vecsCounts[ iMotifThem ] ) {
+			for( iMotifThem = 0; iMotifThem < vecdCounts.size( ); ++iMotifThem )
+				if( d = vecdCounts[ iMotifThem ] ) {
 					iMotifUs = AddMotif( iType, eSubsequence, iMotifThem );
-					CCoalesceSequencer<TVecD>::Get( iType, eSubsequence )[ iMotifUs ] = (float)s /
-						iLength; } } }
+					CCoalesceSequencer<TVecD>::Get( iType, eSubsequence )[ iMotifUs ] = d / iLength; } } }
 
 	return true; }
 
 bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const string& strSequence, size_t iType,
-	bool fIntron, vector<vector<unsigned short> >& vecvecsCounts, vector<size_t>& veciLengths ) {
+	bool fIntron, vector<vector<float> >& vecvecdCounts, vector<size_t>& veciLengths, size_t iOffset,
+	SCoalesceModifiers& sModifiers ) {
 	size_t			i, j;
 	ESubsequence	eSubsequence;
 
@@ -265,6 +317,7 @@ bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const string& strS
 	veciLengths[ ESubsequenceTotal ] += strSequence.length( );
 	veciLengths[ eSubsequence ] += strSequence.length( );
 
+	sModifiers.InitializeWeight( Motifs.GetK( ), iOffset );
 // BUGBUG: make me span intron/exon boundaries
 	for( i = 0; ( i + Motifs.GetK( ) ) <= strSequence.size( ); ++i ) {
 		string				strKMer	= strSequence.substr( i, Motifs.GetK( ) );
@@ -275,26 +328,31 @@ bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const string& strS
 				strSequence.c_str( ), iType, fIntron, strKMer.c_str( ) );
 			return false; }
 		for( j = 0; j < veciMotifs.size( ); ++j )
-			Add( eSubsequence, veciMotifs[ j ], Motifs.GetMotifs( ), vecvecsCounts ); }
+			Add( eSubsequence, veciMotifs[ j ], Motifs.GetMotifs( ), vecvecdCounts, sModifiers.GetWeight( ) /
+				Motifs.GetK( ) );
+		sModifiers.AddWeight( Motifs.GetK( ), iOffset, i ); }
 
 	return true; }
 
 bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const SFASTASequence& sSequence,
-	uint32_t iMotifThem, vector<float>& vecdScores, vector<size_t>& veciLengths ) {
-	size_t			i, iType, iSubsequence, iLength;
+	SCoalesceModifiers& sModifiers, uint32_t iMotifThem, vector<float>& vecdScores,
+	vector<size_t>& veciLengths ) {
+	size_t			i, iType, iSubsequence, iLength, iOffset;
 	ESubsequence	eSubsequence;
 	uint32_t		iMotifUs;
 	float			dScore;
 
+	sModifiers.SetType( sSequence.m_strType );
 	vecdScores.resize( ESubsequenceEnd );
 	fill( vecdScores.begin( ), vecdScores.end( ), 0.0f );
 	veciLengths.resize( ESubsequenceEnd );
 	fill( veciLengths.begin( ), veciLengths.end( ), 0 );
 
 	iType = AddType( sSequence.m_strType );
-	for( i = 0; i < sSequence.m_vecstrSequences.size( ); ++i )
+	for( iOffset = i = 0; i < sSequence.m_vecstrSequences.size( );
+		iOffset += sSequence.m_vecstrSequences[ i++ ].length( ) )
 		if( !Add( Motifs, sSequence.m_vecstrSequences[ i ], iType, sSequence.m_fIntronFirst && !( i % 2 ),
-			iMotifThem, vecdScores, veciLengths ) )
+			iMotifThem, vecdScores, veciLengths, iOffset, sModifiers ) )
 			return false;
 	for( iSubsequence = ESubsequenceBegin; iSubsequence < vecdScores.size( ); ++iSubsequence )
 		if( ( iLength = veciLengths[ iSubsequence ] ) && ( dScore = vecdScores[ iSubsequence ] ) ) {
@@ -305,7 +363,8 @@ bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const SFASTASequen
 	return true; }
 
 bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const string& strSequence, size_t iType,
-	bool fIntron, uint32_t iMotif, vector<float>& vecdScores, vector<size_t>& veciLengths ) {
+	bool fIntron, uint32_t iMotif, vector<float>& vecdScores, vector<size_t>& veciLengths, size_t iOffset,
+	SCoalesceModifiers& sModifiers ) {
 	ESubsequence	eSubsequence;
 	float			dScore;
 
@@ -314,7 +373,7 @@ bool CCoalesceGeneScores::Add( CCoalesceMotifLibrary& Motifs, const string& strS
 	veciLengths[ eSubsequence ] += strSequence.length( );
 
 // BUGBUG: make me span intron/exon boundaries
-	dScore = Motifs.GetMatch( strSequence, iMotif );
+	dScore = Motifs.GetMatch( strSequence, iMotif, iOffset, sModifiers );
 	vecdScores[ ESubsequenceTotal ] += dScore;
 	vecdScores[ eSubsequence ] += dScore;
 
@@ -939,8 +998,9 @@ void CCoalesceImpl::Open( vector<CCoalesceGeneScores>& vecGeneScores ) const {
 		vecGeneScores[ i ].Open( ifsm ); }
 
 bool CCoalesceImpl::CombineMotifs( const CFASTA& FASTA, const vector<size_t>& veciPCL2FASTA,
-	const CCoalesceCluster& Cluster, vector<CCoalesceGeneScores>& vecGeneScores,
-	CCoalesceGroupHistograms& HistsCluster, CCoalesceGroupHistograms& HistsPot ) const {
+	SCoalesceModifiers& sModifiers, const CCoalesceCluster& Cluster,
+	vector<CCoalesceGeneScores>& vecGeneScores, CCoalesceGroupHistograms& HistsCluster,
+	CCoalesceGroupHistograms& HistsPot ) const {
 	set<SMotifMatch>::const_iterator	iterMotifOne, iterMotifTwo;
 	uint32_t							iMotif;
 	size_t								i, j;
@@ -965,9 +1025,10 @@ bool CCoalesceImpl::CombineMotifs( const CFASTA& FASTA, const vector<size_t>& ve
 					vector<SFASTASequence>	vecsSequences;
 
 					if( FASTA.Get( veciPCL2FASTA[ i ], vecsSequences ) ) {
+						sModifiers.Get( i );
 						for( j = 0; j < vecsSequences.size( ); ++j )
-							if( !vecGeneScores[ i ].Add( *m_pMotifs, vecsSequences[ j ], iMotif, vecdScores,
-								veciLengths ) )
+							if( !vecGeneScores[ i ].Add( *m_pMotifs, vecsSequences[ j ], sModifiers, iMotif,
+								vecdScores, veciLengths ) )
 								return false; }
 						if( Cluster.IsGene( i ) )
 							HistsCluster.Add( vecGeneScores[ i ], false, iMotif );
@@ -1037,7 +1098,8 @@ bool CCoalesceImpl::InitializeDatasets( const CPCL& PCL, vector<SDataset>& vecsD
 	return true; }
 
 bool CCoalesceImpl::InitializeGeneScores( const CPCL& PCL, const CFASTA& FASTA, CPCL& PCLCopy,
-	vector<size_t>& veciPCL2FASTA, vector<CCoalesceGeneScores>& vecGeneScores ) {
+	vector<size_t>& veciPCL2FASTA, SCoalesceModifiers& sModifiers,
+	vector<CCoalesceGeneScores>& vecGeneScores ) {
 	size_t	i, j;
 
 	PCLCopy.Open( PCL );
@@ -1046,11 +1108,12 @@ bool CCoalesceImpl::InitializeGeneScores( const CPCL& PCL, const CFASTA& FASTA, 
 		veciPCL2FASTA.resize( PCL.GetGenes( ) );
 		for( i = 0; i < veciPCL2FASTA.size( ); ++i )
 			veciPCL2FASTA[ i ] = FASTA.GetGene( PCL.GetGene( i ) ); }
+	sModifiers.Initialize( PCL );
 	if( !m_strSequenceCache.empty( ) )
 		Open( vecGeneScores );
 	if( vecGeneScores.empty( ) && FASTA.GetGenes( ) ) {
-		vector<vector<unsigned short> >	vecvecsCounts;
-		vector<size_t>					veciLengths;
+		vector<vector<float> >	vecvecdCounts;
+		vector<size_t>			veciLengths;
 
 		if( !m_pMotifs ) {
 			m_fMotifs = true;
@@ -1060,11 +1123,12 @@ bool CCoalesceImpl::InitializeGeneScores( const CPCL& PCL, const CFASTA& FASTA, 
 			if( veciPCL2FASTA[ i ] != -1 ) {
 				vector<SFASTASequence>	vecsSequences;
 
-				if( FASTA.Get( veciPCL2FASTA[ i ], vecsSequences ) )
+				if( FASTA.Get( veciPCL2FASTA[ i ], vecsSequences ) ) {
+					sModifiers.Get( i );
 					for( j = 0; j < vecsSequences.size( ); ++j )
-						if( !vecGeneScores[ i ].Add( *m_pMotifs, vecsSequences[ j ], vecvecsCounts,
-							veciLengths ) )
-							return false; }
+						if( !vecGeneScores[ i ].Add( *m_pMotifs, vecsSequences[ j ], sModifiers,
+							vecvecdCounts, veciLengths ) )
+							return false; } }
 		if( !m_strSequenceCache.empty( ) )
 			Save( vecGeneScores ); }
 	if( vecGeneScores.empty( ) )
@@ -1082,9 +1146,12 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 	vector<CCoalesceGeneScores>	vecGeneScores;
 	vector<SDataset>			vecsDatasets;
 	set<pair<size_t, size_t> >	setpriiSeeds;
+	SCoalesceModifiers			sModifiers;
 
+	sModifiers.Add( m_pFASTANucleosomes );
+	sModifiers.Add( m_pPCLNucleosomes );
 	if( !( InitializeDatasets( PCL, vecsDatasets ) &&
-		InitializeGeneScores( PCL, FASTA, PCLCopy, veciPCL2FASTA, vecGeneScores ) ) )
+		InitializeGeneScores( PCL, FASTA, PCLCopy, veciPCL2FASTA, sModifiers, vecGeneScores ) ) )
 		return false;
 	while( true ) {
 		CCoalesceCluster			Cluster, Pot;
@@ -1110,9 +1177,9 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 				g_CatSleipnir.info( "CCoalesce::Cluster( ) selected no conditions" );
 				break; }
 			if( ( Cluster.GetGenes( ).size( ) >= GetSizeMinimum( ) ) &&
-				!( CombineMotifs( FASTA, veciPCL2FASTA, Cluster, vecGeneScores, HistsCluster, HistsPot ) &&
-				Cluster.SelectMotifs( vecGeneScores, HistsCluster, HistsPot, GetPValueMotif( ),
-				GetMotifs( ) ) ) )
+				!( CombineMotifs( FASTA, veciPCL2FASTA, sModifiers, Cluster, vecGeneScores,
+				HistsCluster, HistsPot ) && Cluster.SelectMotifs( vecGeneScores, HistsCluster, HistsPot,
+				GetPValueMotif( ), GetMotifs( ) ) ) )
 				return false;
 			if( !Cluster.SelectGenes( PCLCopy, vecGeneScores, HistsCluster, HistsPot, Pot,
 				GetProbabilityGene( ), GetMotifs( ) ) )

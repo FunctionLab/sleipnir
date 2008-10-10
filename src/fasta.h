@@ -26,17 +26,12 @@
 
 namespace Sleipnir {
 
-struct SFASTASequence {
-	std::string					m_strType;
-	bool						m_fIntronFirst;
-	std::vector<std::string>	m_vecstrSequences;
-};
-
 class CFASTA : CFASTAImpl {
 public:
 	bool Open( const char* szFile, const std::set<std::string>& setstrTypes );
 	void Save( std::ostream& ostm, size_t iWrap = 80 ) const;
 	bool Get( size_t iGene, std::vector<SFASTASequence>& vecsSequences ) const;
+	bool Get( size_t iGene, std::vector<SFASTAWiggle>& vecsValues ) const;
 
 	bool Open( const char* szFile ) {
 		std::set<std::string>	setstrDummy;
@@ -49,7 +44,7 @@ public:
 
 	const std::string& GetGene( size_t iGene ) const {
 
-		return m_vecstrGenes[ iGene ]; }
+		return CFASTAImpl::GetGene( iGene ); }
 
 	size_t GetGene( const std::string& strGene ) const {
 		TMapStrI::const_iterator	iterGene;

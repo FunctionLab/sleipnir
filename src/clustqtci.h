@@ -39,12 +39,12 @@ protected:
 		const CDataMatrix* );
 	static double GetJackDistance( const float*, const float*, size_t, float*, float*, const IMeasure*,
 		const float*, const float*, float*, float* );
-	static uint16_t QualityThresholdAll( const CDataMatrix&, float, size_t,
-		const CDistanceMatrix&, std::vector<uint16_t>& );
-	static void QualityThresholdLargest( const CDataMatrix&, float, const CDistanceMatrix&,
-		const std::vector<bool>&, std::vector<uint16_t>& );
-	static void QualityThresholdGene( size_t, const CDataMatrix&, float, const CDistanceMatrix&,
-		std::vector<bool>&, std::vector<float>&, std::vector<uint16_t>& );
+	static uint16_t QualityThresholdAll( size_t, float, size_t, const CDistanceMatrix&,
+		std::vector<uint16_t>& );
+	static void QualityThresholdLargest( size_t, float, const CDistanceMatrix&, const std::vector<bool>&,
+		std::vector<uint16_t>& );
+	static void QualityThresholdGene( size_t, size_t, float, const CDistanceMatrix&, std::vector<bool>&,
+		std::vector<float>&, std::vector<uint16_t>& );
 };
 
 }

@@ -51,7 +51,63 @@ class CFASTA;
 class CPCL;
 class CPST;
 struct SFASTASequence;
+struct SFASTAWiggle;
 struct SMotifMatch;
+
+struct SCoalesceModifiers {
+
+	template<class tType>
+	static void Initialize( const CPCL& PCL, const std::vector<const tType*> vecpOuts,
+		std::vector<std::vector<size_t> >& vecveciIn2Out ) {
+		size_t	i, j;
+
+		vecveciIn2Out.resize( vecpOuts.size( ) );
+		for( i = 0; i < vecveciIn2Out.size( ); ++i ) {
+			vecveciIn2Out[ i ].resize( vecpOuts[ i ]->GetGenes( ) );
+			for( j = 0; j < vecveciIn2Out[ i ].size( ); ++j )
+				vecveciIn2Out[ i ][ j ] = vecpOuts[ i ]->GetGene( PCL.GetGene( j ) ); } }
+
+	std::vector<const CFASTA*>				m_vecpWiggles;
+	std::vector<const CPCL*>				m_vecpPCLs;
+	std::vector<std::vector<size_t> >		m_vecveciPCL2Wiggles;
+	std::vector<std::vector<size_t> >		m_vecveciPCL2PCLs;
+	std::vector<std::vector<SFASTAWiggle> >	m_vecvecsWiggles;
+	std::vector<size_t>						m_veciWiggleTypes;
+	float									m_dWeight;
+
+	void Get( size_t );
+	void SetType( const std::string& );
+	void InitializeWeight( size_t, size_t );
+	void AddWeight( size_t, size_t, size_t );
+
+	bool Add( const CFASTA* pWiggle ) {
+
+		if( !pWiggle )
+			return false;
+		m_vecpWiggles.push_back( pWiggle );
+		return true; }
+
+	bool Add( const CPCL* pPCL ) {
+
+		if( !pPCL )
+			return false;
+		m_vecpPCLs.push_back( pPCL );
+		return true; }
+
+	void Initialize( const CPCL& PCL ) {
+
+		Initialize( PCL, m_vecpWiggles, m_vecveciPCL2Wiggles );
+		Initialize( PCL, m_vecpPCLs, m_vecveciPCL2PCLs ); }
+
+	float GetWeight( ) const {
+		size_t	i, iWiggles;
+
+		for( iWiggles = i = 0; i < m_veciWiggleTypes.size( ); ++i )
+			if( m_veciWiggleTypes[ i ] != -1 )
+				iWiggles++;
+
+		return ( iWiggles ? ( m_dWeight / iWiggles ) : 1 ); }
+};
 
 class CCoalesceMotifLibraryImpl {
 protected:
@@ -650,10 +706,10 @@ public:
 					for( iMotif = 0; iMotif < veciMotifs.size( ); ++iMotif )
 						mapiiMotifs[ veciMotifs[ iMotif ] ] = iMotif; } } } }
 
-	bool Add( CCoalesceMotifLibrary&, const SFASTASequence&, std::vector<std::vector<unsigned short> >&,
-		std::vector<size_t>& );
-	bool Add( CCoalesceMotifLibrary&, const SFASTASequence&, uint32_t, std::vector<float>&,
-		std::vector<size_t>& );
+	bool Add( CCoalesceMotifLibrary&, const SFASTASequence&, SCoalesceModifiers&,
+		std::vector<std::vector<float> >&, std::vector<size_t>& );
+	bool Add( CCoalesceMotifLibrary&, const SFASTASequence&, SCoalesceModifiers&, uint32_t,
+		std::vector<float>&, std::vector<size_t>& );
 	void Subtract( const SMotifMatch& );
 
 	float GetGlobal( size_t iType, size_t iSubsequence, uint32_t iMotif ) const {
@@ -676,10 +732,10 @@ public:
 		return (uint32_t)m_MotifVecs.Get( iType, (ESubsequence)iSubsequence )[ iMotif ]; }
 
 protected:
-	bool Add( CCoalesceMotifLibrary&, const std::string&, size_t, bool,
-		std::vector<vector<unsigned short> >&, std::vector<size_t>& );
+	bool Add( CCoalesceMotifLibrary&, const std::string&, size_t, bool, std::vector<vector<float> >&,
+		std::vector<size_t>&, size_t, SCoalesceModifiers& );
 	bool Add( CCoalesceMotifLibrary&, const std::string&, size_t, bool, uint32_t, std::vector<float>&,
-		std::vector<size_t>& );
+		std::vector<size_t>&, size_t, SCoalesceModifiers& );
 
 	uint32_t AddMotif( size_t iType, ESubsequence eSubsequence, uint32_t iMotif ) {
 		TMapII::const_iterator	iterMotif;
@@ -704,14 +760,14 @@ protected:
 		} }
 
 	static void Add( ESubsequence eSubsequence, uint32_t iMotif, uint32_t iMotifs,
-		vector<vector<unsigned short> >& vecvecsCounts ) {
-		std::vector<unsigned short>&	vecsCountsTotal	= vecvecsCounts[ ESubsequenceTotal ];
-		std::vector<unsigned short>&	vecsCounts		= vecvecsCounts[ eSubsequence ];
+		vector<vector<float> >& vecvecdCounts, float dValue ) {
+		std::vector<float>&	vecdCountsTotal	= vecvecdCounts[ ESubsequenceTotal ];
+		std::vector<float>&	vecdCounts		= vecvecdCounts[ eSubsequence ];
 
-		vecsCountsTotal.resize( iMotifs );
-		vecsCountsTotal[ iMotif ]++;
-		vecsCounts.resize( iMotifs );
-		vecsCounts[ iMotif ]++; }
+		vecdCountsTotal.resize( iMotifs );
+		vecdCountsTotal[ iMotif ] += dValue;
+		vecdCounts.resize( iMotifs );
+		vecdCounts[ iMotif ] += dValue; }
 
 	CCoalesceSequencer<TMapII>					m_MotifMaps;
 	CCoalesceSequencer<std::vector<uint32_t> >	m_MotifVecs;
@@ -919,17 +975,19 @@ protected:
 	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dPValueCondition(0.05f),
 		m_dProbabilityGene(0.95f), m_dPValueMotif(0.05f), m_pMotifs(NULL), m_fMotifs(false),
 		m_iBasesPerMatch(5000), m_dPValueMerge(0.05f), m_dCutoffMerge(2.5f), m_dPenaltyGap(1),
-		m_dPenaltyMismatch(2.1f), m_iSizeMinimum(5) { }
+		m_dPenaltyMismatch(2.1f), m_iSizeMinimum(5), m_pFASTANucleosomes(NULL), m_pPCLNucleosomes(NULL),
+		m_iThreads(1) { }
 	virtual ~CCoalesceImpl( );
 
 	void Clear( );
 	size_t GetMotifCount( ) const;
 	void Save( const std::vector<CCoalesceGeneScores>& ) const;
 	void Open( std::vector<CCoalesceGeneScores>& ) const;
-	bool CombineMotifs( const CFASTA&, const std::vector<size_t>&, const CCoalesceCluster&,
-		std::vector<CCoalesceGeneScores>&, CCoalesceGroupHistograms&, CCoalesceGroupHistograms& ) const;
+	bool CombineMotifs( const CFASTA&, const std::vector<size_t>&, SCoalesceModifiers&,
+		const CCoalesceCluster&, std::vector<CCoalesceGeneScores>&, CCoalesceGroupHistograms&,
+		CCoalesceGroupHistograms& ) const;
 	bool InitializeDatasets( const CPCL&, std::vector<SDataset>& );
-	bool InitializeGeneScores( const CPCL&, const CFASTA&, CPCL&, std::vector<size_t>&,
+	bool InitializeGeneScores( const CPCL&, const CFASTA&, CPCL&, std::vector<size_t>&, SCoalesceModifiers&,
 		std::vector<CCoalesceGeneScores>& );
 
 	float					m_dPValueMerge;
@@ -945,12 +1003,15 @@ protected:
 	size_t					m_iK;
 	size_t					m_iSizeMinimum;
 	size_t					m_iSizeMaximum;
+	size_t					m_iThreads;
 	std::string				m_strDirectoryIntermediate;
 	CCoalesceMotifLibrary*	m_pMotifs;
 	bool					m_fMotifs;
 	size_t					m_iBasesPerMatch;
 	std::string				m_strSequenceCache;
 	std::vector<SDataset>	m_vecsDatasets;
+	const CFASTA*			m_pFASTANucleosomes;
+	const CPCL*				m_pPCLNucleosomes;
 };
 
 }

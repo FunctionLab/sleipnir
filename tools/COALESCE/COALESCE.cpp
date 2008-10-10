@@ -24,8 +24,8 @@
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info			sArgs;
-	CFASTA						FASTA;
-	CPCL						PCL;
+	CFASTA						FASTA, FASTANucleosomes;
+	CPCL						PCL, PCLNucleosomes;
 	CCoalesce					Coalesce;
 	vector<CCoalesceCluster>	vecClusters;
 	size_t						i, j;
@@ -88,10 +88,19 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetBasesPerMatch( sArgs.bases_arg );
 	Coalesce.SetSizeMinimum( sArgs.size_minimum_arg );
 	Coalesce.SetSizeMaximum( sArgs.size_maximum_arg );
-	if( sArgs.intermediate_arg )
-		Coalesce.SetDirectoryIntermediate( sArgs.intermediate_arg );
+	Coalesce.SetThreads( sArgs.threads_arg );
+	if( sArgs.output_arg )
+		Coalesce.SetDirectoryIntermediate( sArgs.output_arg );
 	if( sArgs.cache_arg )
 		Coalesce.SetSequenceCache( sArgs.cache_arg );
+	if( sArgs.nucleosomes_arg ) {
+		if( FASTANucleosomes.Open( sArgs.nucleosomes_arg ) )
+			Coalesce.SetNucleosomes( FASTANucleosomes );
+		else if( PCLNucleosomes.Open( sArgs.nucleosomes_arg, sArgs.skip_arg ) )
+			Coalesce.SetNucleosomes( PCLNucleosomes );
+		else {
+			cerr << "Could not open: " << sArgs.nucleosomes_arg << endl;
+			return 1; } }
 	if( !Coalesce.Cluster( PCL, FASTA, vecClusters ) ) {
 		cerr << "Clustering failed" << endl;
 		return 1; }

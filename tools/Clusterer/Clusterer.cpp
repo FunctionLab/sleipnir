@@ -27,8 +27,7 @@ static const char	c_acQTC[]	= "qtc";
 int main( int iArgs, char** aszArgs ) {
 	size_t						i, j;
 	ifstream					ifsm;
-	istream*					pistm;
-	CDat						Dat;
+	CDat						DatIn, DatOut;
 	vector<uint16_t>			vecsClusters;
 	const CPCL*					pPCL;
 	uint16_t					sClusters;
@@ -66,14 +65,22 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.input_arg ) {
 		ifsm.open( sArgs.input_arg );
-		pistm = &ifsm; }
-	else
-		pistm = &cin;
-	if( !PCL.Open( *pistm, sArgs.skip_arg ) ) {
+		if( PCL.Open( ifsm, sArgs.skip_arg ) ) {
+			ifsm.close( );
+			cerr << "Opened PCL: " << sArgs.input_arg << endl; }
+		else {
+			ifsm.close( );
+			if( !DatIn.Open( sArgs.input_arg ) ) {
+				cerr << "Could not open input: " << sArgs.input_arg << endl;
+				return 1; }
+			if( !PCL.Open( cin, sArgs.skip_arg ) ) {
+				cerr << "Could not open PCL" << endl;
+				return 1; } } }
+	else if( PCL.Open( cin, sArgs.skip_arg ) )
+		cerr << "Opened PCL" << endl;
+	else {
 		cerr << "Could not open PCL" << endl;
 		return 1; }
-	if( sArgs.input_arg )
-		ifsm.close( );
 
 	if( sArgs.weights_arg ) {
 		ifsm.clear( );
@@ -97,14 +104,20 @@ int main( int iArgs, char** aszArgs ) {
 		pPCL = &PCL;
 
 	if( sArgs.delta_arg ) {
-		Dat.Open( pPCL->GetGeneNames( ) );
-		CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diamineter_arg, (float)sArgs.diameter_arg,
-			(float)sArgs.delta_arg, sArgs.size_arg, Dat.Get( ),
-			sArgs.weights_arg ? &Weights.Get( ) : NULL );
-		Dat.Save( sArgs.output_arg ); }
+		DatOut.Open( pPCL->GetGeneNames( ) );
+		if( DatIn.GetGenes( ) )
+			CClustQTC::Cluster( DatIn.Get( ), (float)sArgs.diamineter_arg, (float)sArgs.diameter_arg,
+				(float)sArgs.delta_arg, sArgs.size_arg, DatOut.Get( ) );
+		else
+			CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diamineter_arg,
+				(float)sArgs.diameter_arg, (float)sArgs.delta_arg, sArgs.size_arg, DatOut.Get( ),
+				sArgs.weights_arg ? &Weights.Get( ) : NULL );
+		DatOut.Save( sArgs.output_arg ); }
 	else {
 		if( !strcmp( sArgs.algorithm_arg, c_acQTC ) )
-			sClusters = CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diameter_arg, sArgs.size_arg,
+			sClusters = DatIn.GetGenes( ) ?
+				CClustQTC::Cluster( DatIn.Get( ), (float)sArgs.diameter_arg, sArgs.size_arg, vecsClusters ) :
+				CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diameter_arg, sArgs.size_arg,
 				vecsClusters, sArgs.weights_arg ? &Weights.Get( ) : NULL );
 		else
 			sClusters = CClustKMeans::Cluster( pPCL->Get( ), pMeasure, sArgs.size_arg, vecsClusters,
@@ -113,15 +126,15 @@ int main( int iArgs, char** aszArgs ) {
 		if( !sClusters )
 			cerr << "No clusters found" <<endl;
 		else if( sArgs.output_arg ) {
-			Dat.Open( pPCL->GetGeneNames( ) );
+			DatOut.Open( pPCL->GetGeneNames( ) );
 			for( i = 0; i < vecsClusters.size( ); ++i ) {
 				if( ( vecsClusters[ i ] + 1 ) == sClusters )
 					continue;
 				for( j = ( i + 1 ); j < vecsClusters.size( ); ++j ) {
 					if( ( vecsClusters[ j ] + 1 ) == sClusters )
 						continue;
-					Dat.Set( i, j, ( vecsClusters[ i ] == vecsClusters[ j ] ) ? 1.0f : 0.0f ); } }
-			Dat.Save( sArgs.output_arg ); }
+					DatOut.Set( i, j, ( vecsClusters[ i ] == vecsClusters[ j ] ) ? 1.0f : 0.0f ); } }
+			DatOut.Save( sArgs.output_arg ); }
 		else
 			for( i = 0; i < vecsClusters.size( ); ++i )
 				cout << pPCL->GetGene( i ) << '\t' << vecsClusters[ i ] << endl; }

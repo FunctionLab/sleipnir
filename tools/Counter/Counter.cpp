@@ -383,9 +383,6 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 	if( mapstriDatasets.empty( ) ) {
 		cerr << "No datasets given" << endl;
 		return 1; }
-	if( vecstrContexts.empty( ) ) {
-		cerr << "No contexts given" << endl;
-		return 1; }
 	if( sArgs.alphas_arg ) {
 		vecdAlphas.resize( mapstriDatasets.size( ) );
 		ifsm.clear( );
@@ -403,19 +400,19 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 			if( vecstrLine.size( ) != 2 ) {
 				cerr << "Illegal alphas line: " << szBuffer << endl;
 				return 1; }
-			if( ( iterDataset = mapstriDatasets.find( vecstrLine[ 0 ] ) ) == mapstriDatasets.end( ) ) {
+			if( ( iterDataset = mapstriDatasets.find( vecstrLine[ 0 ] ) ) == mapstriDatasets.end( ) )
 				cerr << "Dataset in counts but not database: " << vecstrLine[ 0 ] << endl;
-				return 1; }
-			vecdAlphas[ iterDataset->second ] = (float)atof( vecstrLine[ 1 ].c_str( ) ); }
+			else
+				vecdAlphas[ iterDataset->second ] = (float)atof( vecstrLine[ 1 ].c_str( ) ); }
 		ifsm.close( ); }
 
 	vecbZeros.resize( mapstriDatasets.size( ) );
 	fill( vecbZeros.begin( ), vecbZeros.end( ), 0xFF );
-	for( iterZero = mapstriZeros.begin( ); iterZero != mapstriZeros.end( ); ++iterZero ) {
-		if( ( iterDataset = mapstriDatasets.find( iterZero->first ) ) == mapstriDatasets.end( ) ) {
+	for( iterZero = mapstriZeros.begin( ); iterZero != mapstriZeros.end( ); ++iterZero )
+		if( ( iterDataset = mapstriDatasets.find( iterZero->first ) ) == mapstriDatasets.end( ) )
 			cerr << "Unknown dataset in zeros file: " << iterZero->first << endl;
-			return 1; }
-		vecbZeros[ iterDataset->second ] = (unsigned char)iterZero->second; }
+		else
+			vecbZeros[ iterDataset->second ] = (unsigned char)iterZero->second;
 
 	if( !BNDefault.OpenCounts( sArgs.default_arg, mapstriDatasets, vecbZeros, vecdAlphas,
 		sArgs.pseudocounts_arg ) ) {

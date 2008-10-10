@@ -85,6 +85,9 @@ struct gengetopt_args_info
   int size_maximum_arg;	/**< @brief Maximum motif count to consider a cluster saturated (default='100').  */
   char * size_maximum_orig;	/**< @brief Maximum motif count to consider a cluster saturated original value given at command line.  */
   const char *size_maximum_help; /**< @brief Maximum motif count to consider a cluster saturated help description.  */
+  char * nucleosomes_arg;	/**< @brief Nucleosome position file (ENCODE/PCL).  */
+  char * nucleosomes_orig;	/**< @brief Nucleosome position file (ENCODE/PCL) original value given at command line.  */
+  const char *nucleosomes_help; /**< @brief Nucleosome position file (ENCODE/PCL) help description.  */
   char * intermediate_arg;	/**< @brief Directory for intermediate output files (PCLs).  */
   char * intermediate_orig;	/**< @brief Directory for intermediate output files (PCLs) original value given at command line.  */
   const char *intermediate_help; /**< @brief Directory for intermediate output files (PCLs) help description.  */
@@ -120,6 +123,7 @@ struct gengetopt_args_info
   unsigned int bases_given ;	/**< @brief Whether bases was given.  */
   unsigned int size_minimum_given ;	/**< @brief Whether size_minimum was given.  */
   unsigned int size_maximum_given ;	/**< @brief Whether size_maximum was given.  */
+  unsigned int nucleosomes_given ;	/**< @brief Whether nucleosomes was given.  */
   unsigned int intermediate_given ;	/**< @brief Whether intermediate was given.  */
   unsigned int cache_given ;	/**< @brief Whether cache was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
