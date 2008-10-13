@@ -168,7 +168,12 @@ int main( int iArgs, char** aszArgs ) {
 		vector<string>			vecstrTypes;
 		vector<vector<size_t> >	vecveciTFs;
 
-		CMeta::Tokenize( sArgs.tf_types_arg, vecstrTypes, "," );
+		if( sArgs.tf_types_arg )
+			CMeta::Tokenize( sArgs.tf_types_arg, vecstrTypes, "," );
+		else {
+			vecstrTypes.resize( mapstriTypes.size( ) );
+			for( i = 0,iterType = mapstriTypes.begin( ); iterType != mapstriTypes.end( ); ++i,++iterType )
+				vecstrTypes[ i ] = iterType->first; }
 		vecveciTFs.resize( PCL.GetGenes( ) );
 		for( i = 0; i < vecsTFs.size( ); ++i )
 			for( j = 0; j < vecsTFs[ i ].m_veciGenes.size( ); ++j )

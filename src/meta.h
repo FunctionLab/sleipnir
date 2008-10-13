@@ -232,6 +232,11 @@ public:
 
 		return min( i, vecQuants.size( ) - 1 ); }
 
+	static size_t GetMicroseconds( const struct timeval& sBegin, const struct timeval& sEnd ) {
+
+		return ( ( sBegin.tv_sec == sEnd.tv_sec ) ? ( sEnd.tv_usec - sBegin.tv_usec ) :
+			( ( 1000000 * ( sEnd.tv_sec - sBegin.tv_sec ) ) + sEnd.tv_usec - sBegin.tv_usec ) ); }
+
 	/*!
 	 * \brief
 	 * Utility constructor that initializes Sleipnir (primarily log4cpp) at construction time and performs

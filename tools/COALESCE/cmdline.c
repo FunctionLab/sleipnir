@@ -47,7 +47,7 @@ const char *gengetopt_args_info_help[] = {
   "  -Y, --penalty_mismatch=DOUBLE Edit distance penalty for mismatches  \n                                  (default=`2.1')",
   "\nPerformance Parameters:",
   "  -c, --pvalue_correl=DOUBLE    P-value threshhold for significant correlation  \n                                  (default=`0.05')",
-  "  -C, --frac_correl=DOUBLE      Fraction of pairs to sample for significant \n                                  correlation  (default=`0.05')",
+  "  -C, --number_correl=INT       Maximum number of pairs to sample for \n                                  significant correlation  (default=`100000')",
   "  -q, --sequences=STRING        Sequence types to use (comma separated)",
   "  -b, --bases=INT               Resolution of bases per motif match  \n                                  (default=`5000')",
   "  -z, --size_minimum=INT        Minimum gene count for clusters of interest  \n                                  (default=`5')",
@@ -101,7 +101,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->penalty_gap_given = 0 ;
   args_info->penalty_mismatch_given = 0 ;
   args_info->pvalue_correl_given = 0 ;
-  args_info->frac_correl_given = 0 ;
+  args_info->number_correl_given = 0 ;
   args_info->sequences_given = 0 ;
   args_info->bases_given = 0 ;
   args_info->size_minimum_given = 0 ;
@@ -143,8 +143,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->penalty_mismatch_orig = NULL;
   args_info->pvalue_correl_arg = 0.05;
   args_info->pvalue_correl_orig = NULL;
-  args_info->frac_correl_arg = 0.05;
-  args_info->frac_correl_orig = NULL;
+  args_info->number_correl_arg = 100000;
+  args_info->number_correl_orig = NULL;
   args_info->sequences_arg = NULL;
   args_info->sequences_orig = NULL;
   args_info->bases_arg = 5000;
@@ -188,7 +188,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->penalty_gap_help = gengetopt_args_info_help[15] ;
   args_info->penalty_mismatch_help = gengetopt_args_info_help[16] ;
   args_info->pvalue_correl_help = gengetopt_args_info_help[18] ;
-  args_info->frac_correl_help = gengetopt_args_info_help[19] ;
+  args_info->number_correl_help = gengetopt_args_info_help[19] ;
   args_info->sequences_help = gengetopt_args_info_help[20] ;
   args_info->bases_help = gengetopt_args_info_help[21] ;
   args_info->size_minimum_help = gengetopt_args_info_help[22] ;
@@ -294,7 +294,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->penalty_gap_orig));
   free_string_field (&(args_info->penalty_mismatch_orig));
   free_string_field (&(args_info->pvalue_correl_orig));
-  free_string_field (&(args_info->frac_correl_orig));
+  free_string_field (&(args_info->number_correl_orig));
   free_string_field (&(args_info->sequences_arg));
   free_string_field (&(args_info->sequences_orig));
   free_string_field (&(args_info->bases_orig));
@@ -367,8 +367,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "penalty_mismatch", args_info->penalty_mismatch_orig, 0);
   if (args_info->pvalue_correl_given)
     write_into_file(outfile, "pvalue_correl", args_info->pvalue_correl_orig, 0);
-  if (args_info->frac_correl_given)
-    write_into_file(outfile, "frac_correl", args_info->frac_correl_orig, 0);
+  if (args_info->number_correl_given)
+    write_into_file(outfile, "number_correl", args_info->number_correl_orig, 0);
   if (args_info->sequences_given)
     write_into_file(outfile, "sequences", args_info->sequences_orig, 0);
   if (args_info->bases_given)
@@ -640,7 +640,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "penalty_gap",	1, NULL, 'y' },
         { "penalty_mismatch",	1, NULL, 'Y' },
         { "pvalue_correl",	1, NULL, 'c' },
-        { "frac_correl",	1, NULL, 'C' },
+        { "number_correl",	1, NULL, 'C' },
         { "sequences",	1, NULL, 'q' },
         { "bases",	1, NULL, 'b' },
         { "size_minimum",	1, NULL, 'z' },
@@ -835,14 +835,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'C':	/* Fraction of pairs to sample for significant correlation.  */
+        case 'C':	/* Maximum number of pairs to sample for significant correlation.  */
         
         
-          if (update_arg( (void *)&(args_info->frac_correl_arg), 
-               &(args_info->frac_correl_orig), &(args_info->frac_correl_given),
-              &(local_args_info.frac_correl_given), optarg, 0, "0.05", ARG_DOUBLE,
+          if (update_arg( (void *)&(args_info->number_correl_arg), 
+               &(args_info->number_correl_orig), &(args_info->number_correl_given),
+              &(local_args_info.number_correl_given), optarg, 0, "100000", ARG_INT,
               check_ambiguity, override, 0, 0,
-              "frac_correl", 'C',
+              "number_correl", 'C',
               additional_error))
             goto failure;
         

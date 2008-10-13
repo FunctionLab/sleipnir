@@ -25,6 +25,8 @@
 #include <iostream>
 using namespace std;
 
+#include <pthread.h>
+
 #include "coalesce.h"
 #include "fasta.h"
 #include "meta.h"

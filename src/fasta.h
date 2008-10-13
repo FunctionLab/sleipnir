@@ -30,8 +30,14 @@ class CFASTA : CFASTAImpl {
 public:
 	bool Open( const char* szFile, const std::set<std::string>& setstrTypes );
 	void Save( std::ostream& ostm, size_t iWrap = 80 ) const;
-	bool Get( size_t iGene, std::vector<SFASTASequence>& vecsSequences ) const;
-	bool Get( size_t iGene, std::vector<SFASTAWiggle>& vecsValues ) const;
+
+	bool Get( size_t iGene, std::vector<SFASTASequence>& vecsSequences ) const {
+
+		return CFASTAImpl::Get( iGene, &vecsSequences, NULL ); }
+
+	bool Get( size_t iGene, std::vector<SFASTAWiggle>& vecsValues ) const {
+
+		return CFASTAImpl::Get( iGene, NULL, &vecsValues ); }
 
 	bool Open( const char* szFile ) {
 		std::set<std::string>	setstrDummy;

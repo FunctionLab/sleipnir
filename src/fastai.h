@@ -54,13 +54,8 @@ protected:
 	typedef std::map<std::string, size_t>		TMapStrI;
 	typedef std::map<std::string, std::string>	TMapStrStr;
 
-	CFASTAImpl( ) {
-
-		m_szBuffer = new char[ c_iBufferSize ]; }
-
-	virtual ~CFASTAImpl( ) {
-
-		delete[] m_szBuffer; }
+	CFASTAImpl( );
+	virtual ~CFASTAImpl( );
 
 	bool Get( size_t, std::vector<SFASTASequence>*, std::vector<SFASTAWiggle>* ) const;
 	bool Get( size_t, std::vector<SFASTASequence>&, size_t, const std::string&, SFASTASequence& ) const;
@@ -77,6 +72,7 @@ protected:
 	std::vector<TMapStrI>		m_vecmapstriSequences;
 	char*						m_szBuffer;
 	std::set<std::string>		m_setstrTypes;
+	pthread_mutex_t*			m_pmutx;
 };
 
 }

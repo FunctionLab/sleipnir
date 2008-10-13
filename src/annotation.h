@@ -311,7 +311,7 @@ public:
 		bool fRecursive = true, bool fGenome = false, const CGenes* pBackground = NULL ) const = 0;
 };
 
-// BUGBUG: These should really be templated instead of duplicated like this...
+// TODO: These should really be templated instead of duplicated like this...
 
 /*!
  * \brief

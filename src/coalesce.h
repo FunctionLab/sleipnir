@@ -31,7 +31,7 @@ public:
 	CCoalesceMotifLibrary( size_t iK ) : CCoalesceMotifLibraryImpl( iK ) { }
 
 	float GetMatch( const std::string& strSequence, uint32_t iMotif, size_t iOffset,
-		SCoalesceModifiers& sModifiers ) const;
+		SCoalesceModifierCache& sModifiers ) const;
 
 	std::string GetMotif( uint32_t iMotif ) const {
 
@@ -120,17 +120,17 @@ public:
 class CCoalesceCluster : public CCoalesceClusterImpl {
 public:
 	bool Initialize( const CPCL& PCL, CCoalesceCluster& Pot,
-		std::set<std::pair<size_t, size_t> >& setpriiSeeds, float dFracction, float dPValue );
+		std::set<std::pair<size_t, size_t> >& setpriiSeeds, size_t iPairs, float dPValue, size_t iThreads );
 	void Subtract( CPCL& PCL ) const;
 	void Subtract( vector<CCoalesceGeneScores>& vecGeneScores ) const;
 	bool SelectConditions( const CPCL& PCL, const std::vector<CCoalesceImpl::SDataset>& vecsDatasets,
 		const CCoalesceCluster& Pot, float dPValue );
 	bool SelectMotifs( const vector<CCoalesceGeneScores>& vecGeneScores,
 		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, float dPValue,
-		const CCoalesceMotifLibrary* pMotifs = NULL );
+		size_t iThreads, const CCoalesceMotifLibrary* pMotifs = NULL );
 	bool SelectGenes( const CPCL& PCL, const std::vector<CCoalesceGeneScores>& vecGeneScores,
 		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
-		CCoalesceCluster& Pot, float dPValue, const CCoalesceMotifLibrary* pMotifs = NULL );
+		size_t iThreads, CCoalesceCluster& Pot, float dPValue, const CCoalesceMotifLibrary* pMotifs = NULL );
 	void CalculateHistograms( const std::vector<CCoalesceGeneScores>& vecGeneScores,
 		CCoalesceGroupHistograms& HistogramsCluster, CCoalesceGroupHistograms* pHistogramsPot ) const;
 	bool Save( const std::string& strDirectory, size_t iID, const CPCL& PCL,
@@ -335,13 +335,13 @@ public:
 		m_vecsDatasets.push_back( SDataset( setiDataset ) );
 		return true; }
 
-	void SetFractionCorrelation( float dFraction ) {
+	void SetNumberCorrelation( size_t iPairs ) {
 
-		m_dFractionCorrelation = dFraction; }
+		m_iNumberCorrelation = iPairs; }
 
-	float GetFractionCorrelation( ) const {
+	size_t GetNumberCorrelation( ) const {
 
-		return m_dFractionCorrelation; }
+		return m_iNumberCorrelation; }
 
 	void SetThreads( size_t iThreads ) {
 

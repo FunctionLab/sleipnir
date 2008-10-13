@@ -48,7 +48,7 @@ option	"tf_copm"		p	"Minimum TFBS copies"
 option	"tf_copx"		P	"Maximum TFBS copies"
 							int	default="5"
 option	"tf_types"		y	"Sequence types containing TFBSs, comma separated"
-							string	default="5"
+							string
 
 section "Optional"
 option	"wrap"			w	"Wrap width for FASTA output"

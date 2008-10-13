@@ -31,6 +31,10 @@ int main( int iArgs, char** aszArgs ) {
 	size_t						i, j;
 	set<string>					setstrTypes;
 
+#ifdef WIN32
+	pthread_win32_process_attach_np( );
+#endif // WIN32
+
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
@@ -80,7 +84,7 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetPValueCondition( (float)sArgs.pvalue_cond_arg );
 	Coalesce.SetPValueMotif( (float)sArgs.pvalue_motif_arg );
 	Coalesce.SetPValueCorrelation( (float)sArgs.pvalue_correl_arg );
-	Coalesce.SetFractionCorrelation( (float)sArgs.frac_correl_arg );
+	Coalesce.SetNumberCorrelation( sArgs.number_correl_arg );
 	Coalesce.SetPValueMerge( (float)sArgs.pvalue_merge_arg );
 	Coalesce.SetCutoffMerge( (float)sArgs.cutoff_merge_arg );
 	Coalesce.SetPenaltyGap( (float)sArgs.penalty_gap_arg );
@@ -108,4 +112,8 @@ int main( int iArgs, char** aszArgs ) {
 	for( i = 0; i < vecClusters.size( ); ++i )
 		vecClusters[ i ].Save( cout, i, PCL, &Motifs );
 
+	pthread_exit( NULL );
+#ifdef WIN32
+	pthread_win32_process_detach_np( );
+#endif // WIN32
 	return 0; }
