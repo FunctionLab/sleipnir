@@ -442,6 +442,8 @@ public:
 	static double PValuePearson( double dR, size_t iN ) {
 		double	dT, dF;
 
+		if( dR >= 1 )
+			return 0;
 		dF = iN - 2;
 		dT = dR * sqrt( dF / ( 1 - ( dR * dR ) ) );
 		return IncompleteBeta( dF / 2, 0.5, dF / ( dF + ( dT * dT ) ) ); }

@@ -98,8 +98,10 @@ float CCoalesceMotifLibrary::GetMatch( const string& strSequence, uint32_t iMoti
 	const CPST*	pPST;
 
 // TODO: this could in theory be implemented
-	if( ( GetType( iMotif ) != ETypePST ) || !( pPST = GetPST( iMotif ) ) )
-		return CMeta::GetNaN( );
+	if( ( GetType( iMotif ) != ETypePST ) || !( pPST = GetPST( iMotif ) ) ) {
+		g_CatSleipnir.error( "CCoalesceMotifLibrary::GetMatch( %s, %d, %d ) attempted to match a non-PST motif",
+			strSequence.c_str( ), iMotif, iOffset );
+		return CMeta::GetNaN( ); }
 
 	sModifiers.InitializeWeight( 0, 0 );
 	dRet = 0;
@@ -109,6 +111,10 @@ float CCoalesceMotifLibrary::GetMatch( const string& strSequence, uint32_t iMoti
 	for( i = 0; i < strSequence.length( ); ++i ) {
 		dRet += pPST->GetMatch( strSequence.substr( i ) ) * sModifiers.GetWeight( ) / pPST->GetDepth( );
 		sModifiers.AddWeight( pPST->GetDepth( ), iOffset, i ); }
+	if( dRet < 0 ) {
+		g_CatSleipnir.error( "CCoalesceMotifLibrary::GetMatch( %s, %d, %d ) found negative score: %g",
+			strSequence.c_str( ), iMotif, iOffset, dRet );
+		return CMeta::GetNaN( ); }
 
 	return dRet; }
 
@@ -378,7 +384,8 @@ bool CCoalesceGeneScores::Add( const CCoalesceMotifLibrary& Motifs, const string
 	veciLengths[ eSubsequence ] += strSequence.length( );
 
 // BUGBUG: make me span intron/exon boundaries
-	dScore = Motifs.GetMatch( strSequence, iMotif, iOffset, sModifiers );
+	if( CMeta::IsNaN( dScore = Motifs.GetMatch( strSequence, iMotif, iOffset, sModifiers ) ) )
+		return false;
 	vecdScores[ ESubsequenceTotal ] += dScore;
 	vecdScores[ eSubsequence ] += dScore;
 
@@ -393,11 +400,27 @@ void CCoalesceGeneScores::Subtract( const SMotifMatch& sMotif ) {
 		TVecD&	vecdScores	= Get( iType, sMotif.m_eSubsequence );
 
 		if( !vecdScores.empty( ) ) {
-			const TMapII&			mapiiMotifs	= m_MotifMaps.Get( iType, sMotif.m_eSubsequence );
-			TMapII::const_iterator	iterMotif;
+			TMapII&				mapiiMotifs	= m_MotifMaps.Get( iType, sMotif.m_eSubsequence );
+			TMapII::iterator	iterMotif;
 
-			if( ( iterMotif = mapiiMotifs.find( sMotif.m_iMotif ) ) != mapiiMotifs.end( ) )
-				vecdScores[ iterMotif->second ] -= sMotif.m_dAverage; }
+			if( ( iterMotif = mapiiMotifs.find( sMotif.m_iMotif ) ) == mapiiMotifs.end( ) )
+				return;
+			if( sMotif.m_dAverage < vecdScores[ iterMotif->second ] )
+				vecdScores[ iterMotif->second ] -= sMotif.m_dAverage;
+			else {
+				TMapII::iterator	iterDecrement;
+
+				for( iterDecrement = mapiiMotifs.begin( ); iterDecrement != mapiiMotifs.end( );
+					++iterDecrement )
+					if( iterDecrement->second > iterMotif->second )
+						iterDecrement->second--;
+				{
+					vector<uint32_t>&	veciMotifs	= m_MotifVecs.Get( iType, sMotif.m_eSubsequence );
+
+					veciMotifs.erase( veciMotifs.begin( ) + iterMotif->second );
+				}
+				vecdScores.erase( vecdScores.begin( ) + iterMotif->second );
+				mapiiMotifs.erase( iterMotif ); } }
 	} }
 
 // CCoalesceGroupHistograms
@@ -700,8 +723,14 @@ bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const vector<CCoalesce
 			for( iterGene = Pot.m_setiGenes.begin( ); iterGene != Pot.m_setiGenes.end( ); ++iterGene )
 				if( !CMeta::IsNaN( d = PCL.Get( *iterGene, iCondition ) ) )
 					vecdPot.push_back( d );
-			dZ = CStatistics::CohensD( vecdCluster, vecdPot );
-			dP = CStatistics::ZTest( dZ, vecdCluster.size( ) ) * vecsDatasets.size( );
+			if( vecdCluster.empty( ) && vecdPot.empty( ) )
+				continue;
+			if( vecdCluster.empty( ) || vecdPot.empty( ) ) {
+				dZ = FLT_MAX;
+				dP = 0; }
+			else {
+				dZ = CStatistics::CohensD( vecdCluster, vecdPot );
+				dP = CStatistics::ZTest( dZ, vecdCluster.size( ) ) * vecsDatasets.size( ); }
 			if( dP < dPValue ) {
 				g_CatSleipnir.info( "CCoalesceCluster::SelectConditions( %g ) selected condition %d at %g, z=%g",
 					dPValue, iCondition, dP, dZ );

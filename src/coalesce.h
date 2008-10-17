@@ -89,6 +89,7 @@ public:
 
 	bool GetMatches( const std::string& strKMer, std::vector<uint32_t>& veciMotifs ) const {
 		uint32_t	iMotif;
+		size_t		iRC;
 
 		if( IsIgnorableKMer( strKMer ) )
 			return true;
@@ -97,7 +98,8 @@ public:
 			return false;
 		veciMotifs.push_back( iMotif );
 // reverse complement
-		veciMotifs.push_back( GetBaseRCs( ) + m_vecKMer2RC[ iMotif ] );
+		if( ( iRC = m_vecKMer2RC[ iMotif ] ) != -1 )
+			veciMotifs.push_back( GetBaseRCs( ) + iRC );
 		return true; }
 
 	void SetPenaltyGap( float dPenalty ) {

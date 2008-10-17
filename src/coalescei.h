@@ -134,7 +134,7 @@ protected:
 		size_t	iKMers;
 
 		iKMers = CountKMers( iK ) >> 1;
-		return ( iKMers + ( ( iK % 2 ) ? 0 : CountKMers( iK / 2 ) ) ); }
+		return ( iKMers - ( ( iK % 2 ) ? 0 : ( CountKMers( iK >> 1 ) >> 1 ) ) ); }
 
 	static std::string GetReverseComplement( const std::string& strKMer ) {
 		std::string	strReverse;
@@ -197,16 +197,18 @@ protected:
 		return ( strKMer.find( 'N' ) != std::string::npos ); }
 
 	CCoalesceMotifLibraryImpl( size_t iK ) : m_iK(iK), m_dPenaltyGap(1), m_dPenaltyMismatch(2) {
-		uint32_t	i, iRC;
+		uint32_t	i, j, iRC;
 
 // TODO: if I was smart, I could do this with a direct encoding...
 		m_vecKMer2RC.resize( GetKMers( ) );
 		m_vecRC2KMer.resize( GetRCs( ) );
 		std::fill( m_vecKMer2RC.begin( ), m_vecKMer2RC.end( ), -1 );
-		for( iRC = i = 0; i < m_vecKMer2RC.size( ); ++i )
+		for( i = j = 0; i < m_vecKMer2RC.size( ); ++i )
 			if( m_vecKMer2RC[ i ] == -1 ) {
-				m_vecKMer2RC[ i ] = m_vecKMer2RC[ KMer2ID( ID2KMer( i, m_iK ), true ) ] = iRC;
-				m_vecRC2KMer[ iRC++ ] = i; } }
+				iRC = KMer2ID( ID2KMer( i, m_iK ), true );
+				if( iRC != i ) {
+					m_vecKMer2RC[ i ] = m_vecKMer2RC[ iRC ] = j;
+					m_vecRC2KMer[ j++ ] = i; } } }
 
 	virtual ~CCoalesceMotifLibraryImpl( );
 
@@ -438,10 +440,10 @@ public:
 // unlock
 			return false;
 
-		m_iMembers = max( m_iMembers, iMember );
-		m_vecCounts.resize( GetOffset( m_iMembers ) + GetEdges( ) );
+		m_iMembers = max( m_iMembers, iMember + 1 );
+		m_vecCounts.resize( GetOffset( m_iMembers ) );
 		m_vecCounts[ GetOffset( iMember ) + i ] += Count;
-		m_vecTotal.resize( m_iMembers + 1 );
+		m_vecTotal.resize( m_iMembers );
 		m_vecTotal[ iMember ] += Count;
 // unlock
 

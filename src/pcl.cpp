@@ -120,6 +120,9 @@ struct SNeighbors {
  * \param Dat
  * Output CDat with the calculated pairwise scores.
  * 
+ * \param eMap
+ * Way in which returned value should be centered (implementation-specific).
+ * 
  * \returns
  * 0 on successes, a nonzero value on failure.
  * 
@@ -146,7 +149,7 @@ struct SNeighbors {
  */
 int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMeasure, bool fNormalize,
 	bool fZScore, bool fAutocorrelate, const char* szGeneFile, float dCutoff, size_t iLimit, CPCL& PCL,
-	CDat& Dat ) {
+	CDat& Dat, IMeasure::EMap eMap ) {
 	size_t						i, j, iOne, iTwo;
 	float						d;
 	ifstream					ifsm;
@@ -237,7 +240,7 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 			for( j = ( i + 1 ); j < GenesIn.GetGenes( ); ++j )
 				if( ( iTwo = veciGenes[ j ] ) != -1 )
 					Dat.Set( i, j, (float)pMeasure->Measure(
-						adOne, PCL.GetExperiments( ), PCL.Get( iTwo ), PCL.GetExperiments( ) ) ); }
+						adOne, PCL.GetExperiments( ), PCL.Get( iTwo ), PCL.GetExperiments( ), eMap ) ); }
 
 		if( fNormalize || fZScore )
 			Dat.Normalize( fZScore ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
