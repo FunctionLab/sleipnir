@@ -62,7 +62,7 @@ struct SCoalesceModifiers {
 
 		vecveciIn2Out.resize( vecpOuts.size( ) );
 		for( i = 0; i < vecveciIn2Out.size( ); ++i ) {
-			vecveciIn2Out[ i ].resize( vecpOuts[ i ]->GetGenes( ) );
+			vecveciIn2Out[ i ].resize( PCL.GetGenes( ) );
 			for( j = 0; j < vecveciIn2Out[ i ].size( ); ++j )
 				vecveciIn2Out[ i ][ j ] = vecpOuts[ i ]->GetGene( PCL.GetGene( j ) ); } }
 
@@ -193,8 +193,13 @@ protected:
 		return strRet; }
 
 	static bool IsIgnorableKMer( const std::string& strKMer ) {
+		size_t	i;
 
-		return ( strKMer.find( 'N' ) != std::string::npos ); }
+		for( i = 0; i < strKMer.size( ); ++i )
+			if( !strchr( c_acBases, strKMer[ i ] ) )
+				return true;
+
+		return false; }
 
 	CCoalesceMotifLibraryImpl( size_t iK ) : m_iK(iK), m_dPenaltyGap(1), m_dPenaltyMismatch(2) {
 		uint32_t	i, j, iRC;
@@ -897,6 +902,7 @@ protected:
 		const CCoalesceGroupHistograms*			m_pHistsPot;
 		const CCoalesceCluster*					m_pCluster;
 		const CCoalesceCluster*					m_pPot;
+		size_t									m_iMinimum;
 		float									m_dProbability;
 	};
 
@@ -982,11 +988,11 @@ protected:
 	void CalculateCentroid( const CPCL& );
 	bool IsSignificant( size_t, const CPCL&, const CCoalesceMotifLibrary*, const CCoalesceGeneScores&,
 		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, const CCoalesceCluster&,
-		float ) const;
+		size_t, float ) const;
 	bool CalculateProbabilityExpression( size_t, const CPCL&, const CCoalesceCluster&, bool, long double&,
 		long double& ) const;
 	bool CalculateProbabilityMotifs( const CCoalesceGeneScores&, const CCoalesceGroupHistograms&,
-		const CCoalesceGroupHistograms&, bool, long double&, long double& ) const;
+		const CCoalesceGroupHistograms&, bool, size_t, long double&, long double& ) const;
 	bool SaveCopy( const CPCL&, size_t, CPCL&, size_t, bool ) const;
 
 	bool IsGene( size_t iGene ) const {

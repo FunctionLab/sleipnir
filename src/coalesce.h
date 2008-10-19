@@ -132,7 +132,8 @@ public:
 		size_t iThreads, const CCoalesceMotifLibrary* pMotifs = NULL );
 	bool SelectGenes( const CPCL& PCL, const std::vector<CCoalesceGeneScores>& vecGeneScores,
 		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
-		size_t iThreads, CCoalesceCluster& Pot, float dPValue, const CCoalesceMotifLibrary* pMotifs = NULL );
+		size_t iMinimum, size_t iThreads, CCoalesceCluster& Pot, float dPValue,
+		const CCoalesceMotifLibrary* pMotifs = NULL );
 	void CalculateHistograms( const std::vector<CCoalesceGeneScores>& vecGeneScores,
 		CCoalesceGroupHistograms& HistogramsCluster, CCoalesceGroupHistograms* pHistogramsPot ) const;
 	bool Save( const std::string& strDirectory, size_t iID, const CPCL& PCL,

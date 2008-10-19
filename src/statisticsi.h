@@ -23,6 +23,7 @@
 #define STATISTICSI_H
 
 #include "mathb.h"
+#include "meta.h"
 
 namespace Sleipnir {
 
@@ -38,14 +39,33 @@ protected:
 	static double ModifiedBesselI( size_t, double );
 
 	template<class tType>
-	static void Sums( tType Begin, tType End, double* pdSum, double* pdSumSq ) {
+	static bool SumsSkip( tType Value ) {
+
+		return false; }
+
+	static bool SumsSkip( float dValue ) {
+
+		return CMeta::IsNaN( dValue ); }
+
+	static bool SumsSkip( double dValue ) {
+
+		return CMeta::IsNaN( dValue ); }
+
+	template<class tType>
+	static void Sums( tType Begin, tType End, double* pdSum, double* pdSumSq, size_t* piN ) {
 		tType	Cur;
 
 		if( pdSum )
 			*pdSum = 0;
 		if( pdSumSq )
 			*pdSumSq = 0;
+		if( piN )
+			*piN = 0;
 		for( Cur = Begin; Cur != End; ++Cur ) {
+			if( SumsSkip( *Cur ) )
+				continue;
+			if( piN )
+				*piN += 1;
 			if( pdSum )
 				*pdSum += *Cur;
 			if( pdSumSq )

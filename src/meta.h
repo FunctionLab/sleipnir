@@ -31,8 +31,10 @@
 
 #ifdef _MSC_VER
 #include <windows.h>
+#include <winsock.h>
 #else // _MSC_VER
 #include <stdarg.h>
+#include <sys/time.h>
 
 #define _finite	isfinite
 

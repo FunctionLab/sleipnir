@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 
+#include <pthread.h>
+
 #include "file.h"
 
 namespace Sleipnir {

@@ -149,7 +149,7 @@ bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>* pvecsSequences,
 		SFASTAWiggle	sValues;
 		string			strSequence;
 
-		sSequence.m_strType = iterGene->first;
+		sSequence.m_strType = sValues.m_strType = iterGene->first;
 		pthread_mutex_lock( m_pmutx );
 		m_ifsm.clear( );
 		m_ifsm.seekg( iterGene->second );

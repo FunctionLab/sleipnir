@@ -66,11 +66,13 @@ public:
 		for( iState = 0; strRet.length( ) < iLength; ) {
 			for( iTotal = i = 0; i < m_MatTransitions.GetColumns( ); ++i )
 				iTotal += m_MatTransitions.Get( iState, i );
-			iCur = (size_t)( ( (float)rand( ) / ( RAND_MAX + 1 ) ) * iTotal );
+			if( ( iCur = rand( ) ) == RAND_MAX )
+				iCur--;
+			iCur = (size_t)( ( (float)iCur / RAND_MAX ) * iTotal );
 			for( i = 0; ( i + 1 ) < m_MatTransitions.GetColumns( ); ++i ) {
-				if( iCur < m_MatTransitions.Get( iState, i ) )
-					break;
-				iCur -= m_MatTransitions.Get( iState, i ); }
+				iTotal -= m_MatTransitions.Get( iState, i );
+				if( iCur >= iTotal )
+					break; }
 			strRet += m_strAlphabet[ i ];
 			iState = ( ( iState * GetSymbols( ) ) + i + 1 ) % m_MatTransitions.GetRows( ); }
 

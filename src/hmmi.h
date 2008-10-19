@@ -42,13 +42,11 @@ protected:
 		return ( m_strAlphabet.length( ) + 1 ); }
 
 	size_t Encode( const std::string& strData, size_t iCount ) const {
-		size_t	i, iCur, iRet;
+		size_t	i, iRet;
 
 		iRet = 0;
-		for( i = 0; ( i < iCount ) && ( i < strData.size( ) ); ++i ) {
-			if( ( iCur = Encode( strData[ i ] ) ) == -1 )
-				return -1;
-			iRet = ( iRet * GetSymbols( ) ) + iCur + 1; }
+		for( i = 0; ( i < iCount ) && ( i < strData.size( ) ); ++i )
+			iRet = ( iRet * GetSymbols( ) ) + Encode( strData[ i ] ) + 1;
 
 		return iRet; }
 
@@ -70,7 +68,8 @@ protected:
 			if( cDatum == m_strAlphabet[ i ] )
 				return i;
 
-		return -1; }
+// I can't think of a better way to handle all exception cases...
+		return ( rand( ) % m_strAlphabet.length( ) ); }
 
 	std::string			m_strAlphabet;
 	size_t				m_iDegree;

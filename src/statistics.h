@@ -27,7 +27,6 @@
 #include "statisticsi.h"
 
 #include "fullmatrix.h"
-#include "meta.h"
 
 namespace Sleipnir {
 
@@ -135,8 +134,35 @@ public:
 		double	dRet;
 		size_t	iN;
 
-		Sums( Begin, End, NULL, &dRet );
-		return ( ( ( iN = ( End - Begin ) ) < 2 ) ? 0 : ( dRet / ( iN - 1 ) ) ); }
+		Sums( Begin, End, NULL, &dRet, &iN );
+		return ( ( iN < 2 ) ? 0 : ( ( dRet / ( iN - 1 ) ) - ( dMean * dMean ) ) ); }
+
+	/*!
+	 * \brief
+	 * Calculate the sample variance of a given sequence.
+	 * 
+	 * \param Begin
+	 * Beginning of the sequence over which variance is estimated.
+	 * 
+	 * \param End
+	 * End of the sequence over which variance is estimated.
+	 * 
+	 * \returns
+	 * sum((x - dMean)^2) / (n - 1)
+	 * 
+	 * \see
+	 * Average
+	 */
+	template<class tType>
+	static double Variance( const tType Begin, const tType End ) {
+		double	dSum, dRet;
+		size_t	iN;
+
+		Sums( Begin, End, &dSum, &dRet, &iN );
+		if( iN < 2 )
+			return 0;
+		dSum /= iN;
+		return ( ( dRet / ( iN - 1 ) ) - ( dSum * dSum ) ); }
 
 	/*!
 	 * \brief
@@ -175,7 +201,7 @@ public:
 	template<class tType>
 	static double Variance( const std::vector<tType>& vecValues ) {
 
-		return Variance( vecValues, Average( vecValues ) ); }
+		return Variance( vecValues.begin( ), vecValues.end( ) ); }
 
 	/*!
 	 * \brief
@@ -214,9 +240,10 @@ public:
 	template<class tType>
 	static double Average( const tType Begin, const tType End ) {
 		double	dRet;
+		size_t	iN;
 
-		Sums( Begin, End, &dRet, NULL );
-		return ( dRet / ( End - Begin ) ); }
+		Sums( Begin, End, &dRet, NULL, &iN );
+		return ( iN ? ( dRet / iN ) : dRet ); }
 
 	/*!
 	 * \brief
@@ -347,15 +374,18 @@ public:
 	static double CohensD( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo,
 		double* pdAverage = NULL ) {
 		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dStd;
+		size_t	iOne, iTwo;
 
-		Sums( vecOne.begin( ), vecOne.end( ), &dAveOne, &dVarOne );
-		dAveOne /= vecOne.size( );
+		Sums( vecOne.begin( ), vecOne.end( ), &dAveOne, &dVarOne, &iOne );
+		if( iOne ) {
+			dAveOne /= iOne;
+			dVarOne = ( dVarOne / iOne ) - ( dAveOne * dAveOne ); }
 		if( pdAverage )
 			*pdAverage = dAveOne;
-		dVarOne = ( dVarOne / vecOne.size( ) ) - ( dAveOne * dAveOne );
-		Sums( vecTwo.begin( ), vecTwo.end( ), &dAveTwo, &dVarTwo );
-		dAveTwo /= vecTwo.size( );
-		dVarTwo = ( dVarTwo / vecTwo.size( ) ) - ( dAveTwo * dAveTwo );
+		Sums( vecTwo.begin( ), vecTwo.end( ), &dAveTwo, &dVarTwo, &iTwo );
+		if( iTwo ) {
+			dAveTwo /= iTwo;
+			dVarTwo = ( dVarTwo / iTwo ) - ( dAveTwo * dAveTwo ); }
 
 		dStd = sqrt( ( dVarOne + dVarTwo ) / 2 );
 		return ( dStd ? ( ( dAveOne - dAveTwo ) / dStd ) : 0 ); }
@@ -440,9 +470,10 @@ public:
 	 * CMeasurePearson
 	 */
 	static double PValuePearson( double dR, size_t iN ) {
+		static const double	c_dEpsilon	= 1e-10;
 		double	dT, dF;
 
-		if( dR >= 1 )
+		if( ( 1 - dR ) < c_dEpsilon )
 			return 0;
 		dF = iN - 2;
 		dT = dR * sqrt( dF / ( 1 - ( dR * dR ) ) );

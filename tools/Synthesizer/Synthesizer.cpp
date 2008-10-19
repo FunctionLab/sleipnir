@@ -83,6 +83,9 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
+#ifdef WIN32
+	pthread_win32_process_attach_np( );
+#endif // WIN32
 	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
 
 	vecsTFs.resize( sArgs.tfs_arg );
@@ -140,8 +143,10 @@ int main( int iArgs, char** aszArgs ) {
 		vecHMMs.resize( FASTA.GetTypes( ).size( ) );
 		for( i = 0; i < vecHMMs.size( ); ++i )
 			vecHMMs[ i ].Open( sArgs.degree_arg, c_acAlphabetTotal );
-		for( iterType = FASTA.GetTypes( ).begin( ); iterType != FASTA.GetTypes( ).end( ); ++iterType )
-			mapstriTypes[ *iterType ] = mapstriTypes.size( );
+		for( iterType = FASTA.GetTypes( ).begin( ); iterType != FASTA.GetTypes( ).end( ); ++iterType ) {
+// This is insane - somehow the compiler optimzation horks this if you do it on one line
+			i = mapstriTypes.size( );
+			mapstriTypes[ *iterType ] = i; }
 		for( i = 0; i < FASTA.GetGenes( ); ++i ) {
 			vector<SFASTASequence>	vecsSequences;
 
@@ -152,7 +157,7 @@ int main( int iArgs, char** aszArgs ) {
 
 					for( k = 0; k < sSequence.m_vecstrSequences.size( ); ++k ) {
 						strCur = sSequence.m_vecstrSequences[ k ];
-						if( sSequence.m_fIntronFirst && !( k % 2 ) )
+						if( sSequence.m_fIntronFirst == !( k % 2 ) )
 							transform( strCur.begin( ), strCur.end( ), strCur.begin( ), ::tolower );
 						strSequence += strCur; }
 					if( !vecHMMs[ mapstriTypes[ sSequence.m_strType ] ].Add( strSequence ) ) {
@@ -213,4 +218,7 @@ int main( int iArgs, char** aszArgs ) {
 					ofsm << strSequence.substr( j, sArgs.wrap_arg ) << endl; } }
 		ofsm.close( ); }
 
+#ifdef WIN32
+	pthread_win32_process_detach_np( );
+#endif // WIN32
 	return 0; }

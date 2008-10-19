@@ -47,7 +47,7 @@ option	"size_maximum"	Z	"Maximum motif count to consider a cluster saturated"
 							int	default="100"
 
 section "Additional Data"
-option	"nucleosomes"	n	"Nucleosome position file (ENCODE/PCL)"
+option	"nucleosomes"	n	"Nucleosome position file (WIG/PCL)"
 							string	typestr="filename"
 
 section "Miscellaneous"

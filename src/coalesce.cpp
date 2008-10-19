@@ -63,22 +63,27 @@ void SCoalesceModifierCache::InitializeWeight( size_t iK, size_t iOffset ) {
 			const vector<float>&	vecdWiggle	= m_vecvecsWiggles[ i ][ j ].m_vecdValues;
 
 			for( j = 0; ( j < iK ) && ( ( iOffset + j ) < vecdWiggle.size( ) ); ++j )
-				m_dWeight += vecdWiggle[ iOffset + j ]; } }
+				m_dWeight += vecdWiggle[ iOffset + j ];
+			for( ; j < iK; ++j )
+				m_dWeight += 1; } }
 
 void SCoalesceModifierCache::AddWeight( size_t iK, size_t iOffset, size_t iDelta ) {
 	size_t	i, j;
+	float	dSub, dAdd;
 
 	for( i = 0; i < m_vecvecsWiggles.size( ); ++i )
 		if( ( j = m_veciWiggleTypes[ i ] ) != -1 ) {
 			const std::vector<float>&	vecdWiggle	= m_vecvecsWiggles[ i ][ j ].m_vecdValues;
 
+			dSub = ( ( iOffset + iDelta ) < vecdWiggle.size( ) ) ? vecdWiggle[ iOffset + iDelta ] : 1;
 			if( iK ) {
 				j = iOffset + iDelta + iK;
-				if( j < vecdWiggle.size( ) ) {
-					m_dWeight -= vecdWiggle[ iOffset + iDelta ];
-					m_dWeight += vecdWiggle[ j ]; } }
-			else
-				m_dWeight += vecdWiggle[ iOffset + iDelta ]; } }
+				dAdd = ( j < vecdWiggle.size( ) ) ? vecdWiggle[ j ] : 1; }
+			else {
+				dAdd = dSub;
+				dSub = 0; }
+			m_dWeight -= dSub;
+			m_dWeight += dAdd; } }
 
 // CCoalesceMotifLibrary
 
@@ -562,8 +567,8 @@ void* CCoalesceClusterImpl::ThreadSeedPair( void* pData ) {
 		for( i = 0,iCur = iPair; iCur >= ( psData->m_pPCL->GetGenes( ) - 1 - i );
 			iCur -= psData->m_pPCL->GetGenes( ) - 1 - i++ );
 		j = i + iCur + 1;
-		if( ( dR = CMeasurePearson::Pearson( psData->m_pPCL->Get( i ), iExperiments, psData->m_pPCL->Get( j ),
-			iExperiments, IMeasure::EMapNone, NULL, NULL, &iN ) ) < 0 )
+		if( ( dR = CMeasurePearson::Pearson( psData->m_pPCL->Get( i ), iExperiments,
+			psData->m_pPCL->Get( j ), iExperiments, IMeasure::EMapNone, NULL, NULL, &iN ) ) < 0 )
 			continue;
 		if( ( dCur = CStatistics::PValuePearson( dR, iN ) ) < psData->m_dMin ) {
 			priiSeed.first = i;
@@ -885,13 +890,13 @@ void* CCoalesceClusterImpl::ThreadSignificantGene( void* pData ) {
 		(*psData->m_pvecfSignificant)[ i ] = psData->m_pCluster->IsSignificant( i, *psData->m_pPCL,
 			psData->m_pMotifs, psData->m_pvecGeneScores->empty( ) ? GeneScoresDummy :
 			(*psData->m_pvecGeneScores)[ i ], *psData->m_pHistsCluster, *psData->m_pHistsPot,
-			*psData->m_pPot, psData->m_dProbability );
+			*psData->m_pPot, psData->m_iMinimum, psData->m_dProbability );
 
 	return NULL; }
 
 bool CCoalesceCluster::SelectGenes( const CPCL& PCL, const vector<CCoalesceGeneScores>& vecGeneScores,
-	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, size_t iThreads,
-	CCoalesceCluster& Pot, float dProbability, const CCoalesceMotifLibrary* pMotifs ) {
+	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, size_t iMinimum,
+	size_t iThreads, CCoalesceCluster& Pot, float dProbability, const CCoalesceMotifLibrary* pMotifs ) {
 	size_t							i;
 	vector<pthread_t>				vecpthdThreads;
 	vector<bool>					vecfSignificant;
@@ -930,6 +935,7 @@ gettimeofday( &sOne, NULL );
 		vecsThreads[ i ].m_pHistsPot = &HistsPot;
 		vecsThreads[ i ].m_pCluster = this;
 		vecsThreads[ i ].m_pPot = &Pot;
+		vecsThreads[ i ].m_iMinimum = iMinimum;
 		vecsThreads[ i ].m_dProbability = dProbability;
 		if( pthread_create( &vecpthdThreads[ i ], NULL, ThreadSignificantGene, &vecsThreads[ i ] ) ) {
 			g_CatSleipnir.error( "CCoalesceCluster::SelectGenes( %d, %g ) could not calculate significance",
@@ -952,7 +958,8 @@ cerr << "CCoalesceCluster::SelectGenes" << '\t' << iOne << '\t' << iTwo << endl;
 
 bool CCoalesceClusterImpl::IsSignificant( size_t iGene, const CPCL& PCL, const CCoalesceMotifLibrary* pMotifs,
 	const CCoalesceGeneScores& GeneScores, const CCoalesceGroupHistograms& HistsCluster,
-	const CCoalesceGroupHistograms& HistsPot, const CCoalesceCluster& Pot, float dProbability ) const {
+	const CCoalesceGroupHistograms& HistsPot, const CCoalesceCluster& Pot, size_t iMinimum,
+	float dProbability ) const {
 	long double	dP, dPMotifsGivenIn, dPMotifsGivenOut, dPExpressionGivenIn, dPExpressionGivenOut;
 	bool		fClustered;
 
@@ -963,7 +970,7 @@ bool CCoalesceClusterImpl::IsSignificant( size_t iGene, const CPCL& PCL, const C
 // P(S|g in C)P(E|g in C)P(g in C)/(P(S|g in C)P(E|g in C) + P(S|g notin C)P(E|g notin C))
 	if( !( CalculateProbabilityExpression( iGene, PCL, Pot, fClustered, dPExpressionGivenIn,
 		dPExpressionGivenOut ) && CalculateProbabilityMotifs( GeneScores, HistsCluster, HistsPot, fClustered,
-		dPMotifsGivenIn, dPMotifsGivenOut ) ) )
+		iMinimum, dPMotifsGivenIn, dPMotifsGivenOut ) ) )
 		return false;
 	dP = dPExpressionGivenIn * dPMotifsGivenIn;
 	dP = dP * m_vecdPriors[ iGene ] / ( dP + ( dPExpressionGivenOut * dPMotifsGivenOut ) );
@@ -985,15 +992,17 @@ bool CCoalesceClusterImpl::IsSignificant( size_t iGene, const CPCL& PCL, const C
 bool CCoalesceClusterImpl::CalculateProbabilityExpression( size_t iGene, const CPCL& PCL,
 	const CCoalesceCluster& Pot, bool fClustered, long double& dPIn, long double& dPOut ) const {
 	set<size_t>::const_iterator	iterCondition;
+	static const double			c_dEpsilonZero	= 1e-10;
+	static const double			c_dEpsilonMean	= 1e-3;
 	float						dGene, dCluster, dPot;
-	double						dPCluster, dPPot;
+	double						dPCluster, dPPot, dStdev;
 	size_t						iPot;
 
 	iPot = PCL.GetGenes( ) - m_veciPrevGenes.size( );
 	dPIn = dPOut = 1;
 	for( iterCondition = m_setiConditions.begin( ); iterCondition != m_setiConditions.end( );
 		++iterCondition ) {
-		if( !m_vecdStdevs[ *iterCondition ] || CMeta::IsNaN( dGene = PCL.Get( iGene, *iterCondition ) ) )
+		if( CMeta::IsNaN( dGene = PCL.Get( iGene, *iterCondition ) ) )
 			continue;
 		dCluster = m_vecdCentroid[ *iterCondition ];
 		dPot = Pot.m_vecdCentroid[ *iterCondition ];
@@ -1002,9 +1011,16 @@ bool CCoalesceClusterImpl::CalculateProbabilityExpression( size_t iGene, const C
 		else
 			dPot = ( ( dPot * iPot ) - dGene ) / ( iPot - 1 );
 
-		dPCluster = CStatistics::NormalPDF( dGene, dCluster, m_vecdStdevs[ *iterCondition ] );
-		dPPot = CStatistics::NormalPDF( dGene, dPot, m_vecdStdevs[ *iterCondition ] );
-		AdjustProbabilities( m_vecdZs[ *iterCondition ], dPCluster, dPPot );
+		if( ( dStdev = m_vecdStdevs[ *iterCondition ] ) < c_dEpsilonZero ) {
+			dPCluster = dPPot = c_dEpsilonZero;
+			if( fabs( dGene - dCluster ) < c_dEpsilonMean )
+				dPCluster = FLT_MAX;
+			if( fabs( dGene - dPot ) < c_dEpsilonMean )
+				dPPot = FLT_MAX; }
+		else {
+			dPCluster = max( c_dEpsilonZero, CStatistics::NormalPDF( dGene, dCluster, dStdev ) );
+			dPPot = max( c_dEpsilonZero, CStatistics::NormalPDF( dGene, dPot, dStdev ) );
+			AdjustProbabilities( m_vecdZs[ *iterCondition ], dPCluster, dPPot ); }
 		dPIn *= dPCluster;
 		dPOut *= dPPot; }
 
@@ -1012,7 +1028,7 @@ bool CCoalesceClusterImpl::CalculateProbabilityExpression( size_t iGene, const C
 
 bool CCoalesceClusterImpl::CalculateProbabilityMotifs( const CCoalesceGeneScores& GeneScores,
 	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
-	bool fClustered, long double& dPIn, long double& dPOut ) const {
+	bool fClustered, size_t iMinimum, long double& dPIn, long double& dPOut ) const {
 	set<SMotifMatch>::const_iterator	iterMotif;
 	size_t								iType, iCluster, iPot;
 	unsigned short						sCluster, sPot;
@@ -1041,6 +1057,8 @@ bool CCoalesceClusterImpl::CalculateProbabilityMotifs( const CCoalesceGeneScores
 			iCluster = HistSetCluster.GetTotal( );
 			sPot = HistSetPot.Get( iterMotif->m_iMotif, dGene );
 			iPot = HistSetPot.GetTotal( );
+			if( ( iCluster < iMinimum ) || ( iPot < iMinimum ) )
+				continue;
 
 			if( fClustered ) {
 				sCluster--;
@@ -1370,6 +1388,24 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 	if( !( InitializeDatasets( PCL, vecsDatasets ) &&
 		InitializeGeneScores( PCL, FASTA, PCLCopy, veciPCL2FASTA, sModifiers, vecGeneScores ) ) )
 		return false;
+	if( g_CatSleipnir.isInfoEnabled( ) ) {
+		size_t			iSequences;
+		ostringstream	ossm;
+
+		for( iSequences = i = 0; i < veciPCL2FASTA.size( ); ++i )
+			if( veciPCL2FASTA[ i ] != -1 )
+				iSequences++;
+		g_CatSleipnir.info( "CCoalesce::Cluster( ) running with %d genes, %d conditions, and %d sequences",
+			PCL.GetGenes( ), PCL.GetExperiments( ), iSequences );
+		for( i = 0; i < PCL.GetExperiments( ); ++i )
+			ossm << ( i ? "\t" : "" ) << PCL.GetExperiment( i );
+		g_CatSleipnir.info( ossm.str( ) );
+		g_CatSleipnir.info( "k %d, P gene %g, p condition %g, p motif %g, p correlation %g", GetK( ),
+			GetProbabilityGene( ), GetPValueCondition( ), GetPValueMotif( ), GetPValueCorrelation( ) );
+		g_CatSleipnir.info( "p merge %g, cutoff merge %g, penalty gap %g, penalty mismatch %g",
+			GetPValueMerge( ), GetCutoffMerge( ), GetPenaltyGap( ), GetPenaltyMismatch( ) );
+		g_CatSleipnir.info( "correlation pairs %d, bases %d, min size %d, max size %d",
+			GetNumberCorrelation( ), GetBasesPerMatch( ), GetSizeMinimum( ), GetSizeMaximum( ) ); }
 struct timeval	sOne, sTwo;
 size_t			iOne1, iOne2, iTwo, iThree, iFour, iFive;
 iOne1 = iOne2 = iTwo = iThree = iFour = iFive = 0;
@@ -1417,8 +1453,8 @@ gettimeofday( &sOne, NULL );
 gettimeofday( &sTwo, NULL );
 iFour += CMeta::GetMicroseconds( sOne, sTwo );
 gettimeofday( &sOne, NULL );
-			if( !Cluster.SelectGenes( PCLCopy, vecGeneScores, HistsCluster, HistsPot, GetThreads( ), Pot,
-				GetProbabilityGene( ), GetMotifs( ) ) )
+			if( !Cluster.SelectGenes( PCLCopy, vecGeneScores, HistsCluster, HistsPot, GetSizeMinimum( ),
+				GetThreads( ), Pot, GetProbabilityGene( ), GetMotifs( ) ) )
 				return false;
 			g_CatSleipnir.info( "CCoalesce::Cluster( ) processed %d genes, %d conditions, %d motifs",
 				Cluster.GetGenes( ).size( ), Cluster.GetConditions( ).size( ), Cluster.GetMotifs( ).size( ) );
