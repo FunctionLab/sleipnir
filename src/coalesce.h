@@ -125,8 +125,8 @@ public:
 		std::set<std::pair<size_t, size_t> >& setpriiSeeds, size_t iPairs, float dPValue, size_t iThreads );
 	void Subtract( CPCL& PCL ) const;
 	void Subtract( vector<CCoalesceGeneScores>& vecGeneScores ) const;
-	bool SelectConditions( const CPCL& PCL, const std::vector<CCoalesceImpl::SDataset>& vecsDatasets,
-		const CCoalesceCluster& Pot, float dPValue );
+	bool SelectConditions( const CPCL& PCL, const std::vector<SCoalesceDataset>& vecsDatasets,
+		const CCoalesceCluster& Pot, size_t iThreads, float dPValue );
 	bool SelectMotifs( const vector<CCoalesceGeneScores>& vecGeneScores,
 		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, float dPValue,
 		size_t iThreads, const CCoalesceMotifLibrary* pMotifs = NULL );
@@ -335,7 +335,7 @@ public:
 				if( m_vecsDatasets[ i ].IsCondition( *iterExperiment ) )
 					return false;
 
-		m_vecsDatasets.push_back( SDataset( setiDataset ) );
+		m_vecsDatasets.push_back( SCoalesceDataset( setiDataset ) );
 		return true; }
 
 	void SetNumberCorrelation( size_t iPairs ) {

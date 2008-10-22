@@ -882,6 +882,36 @@ struct SMotifMatch {
 	float									m_dAverage;
 };
 
+struct SCoalesceDataset {
+	template<class tType>
+	SCoalesceDataset( const tType& Conditions ) {
+
+		m_veciConditions.resize( Conditions.size( ) );
+		std::copy( Conditions.begin( ), Conditions.end( ), m_veciConditions.begin( ) ); }
+
+	SCoalesceDataset( size_t iCondition ) {
+
+		m_veciConditions.resize( 1 );
+		m_veciConditions[ 0 ] = iCondition; }
+
+	bool IsCondition( size_t iCondition ) const {
+
+		return ( std::find( m_veciConditions.begin( ), m_veciConditions.end( ), iCondition ) !=
+			m_veciConditions.end( ) ); }
+
+	size_t GetConditions( ) const {
+
+		return m_veciConditions.size( ); }
+
+	size_t GetCondition( size_t iCondition ) const {
+
+		return m_veciConditions[ iCondition ]; }
+
+	std::vector<size_t>	m_veciConditions;
+	CDataMatrix			m_MatCovChol;
+	std::vector<float>	m_vecdStdevs;
+};
+
 class CCoalesceClusterImpl {
 protected:
 	struct SThreadCentroid {
@@ -927,10 +957,23 @@ protected:
 		size_t										m_iTwo;
 	};
 
+	struct SThreadSelectCondition {
+		size_t									m_iOffset;
+		size_t									m_iStep;
+		const std::vector<size_t>*				m_pveciCluster;
+		const std::vector<size_t>*				m_pveciPot;
+		const std::vector<SCoalesceDataset>*	m_pvecsDatasets;
+		const CPCL*								m_pPCL;
+		float									m_dPValue;
+		std::vector<float>*						m_pvecdZs;
+		std::vector<bool>*						m_pvecfSignificant;
+	};
+
 	static void* ThreadCentroid( void* );
 	static void* ThreadSignificantGene( void* );
 	static void* ThreadSelectMotif( void* );
 	static void* ThreadSeedPair( void* );
+	static void* ThreadSelectCondition( void* );
 	static bool AddSignificant( const CCoalesceMotifLibrary&, uint32_t, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, float, std::vector<SMotifMatch>& );
 
@@ -1022,37 +1065,6 @@ protected:
 };
 
 class CCoalesceImpl {
-public:
-	struct SDataset {
-		template<class tType>
-		SDataset( const tType& Conditions ) {
-
-			m_veciConditions.resize( Conditions.size( ) );
-			std::copy( Conditions.begin( ), Conditions.end( ), m_veciConditions.begin( ) ); }
-
-		SDataset( size_t iCondition ) {
-
-			m_veciConditions.resize( 1 );
-			m_veciConditions[ 0 ] = iCondition; }
-
-		bool IsCondition( size_t iCondition ) const {
-
-			return ( std::find( m_veciConditions.begin( ), m_veciConditions.end( ), iCondition ) !=
-				m_veciConditions.end( ) ); }
-
-		size_t GetConditions( ) const {
-
-			return m_veciConditions.size( ); }
-
-		size_t GetCondition( size_t iCondition ) const {
-
-			return m_veciConditions[ iCondition ]; }
-
-		std::vector<size_t>	m_veciConditions;
-		CDataMatrix			m_MatCovChol;
-		std::vector<float>	m_vecdStdevs;
-	};
-
 protected:
 	struct SThreadCombineMotif {
 		size_t								m_iOffset;
@@ -1081,32 +1093,32 @@ protected:
 	bool CombineMotifs( const CFASTA&, const std::vector<size_t>&, SCoalesceModifiers&,
 		const CCoalesceCluster&, size_t, std::vector<CCoalesceGeneScores>&, CCoalesceGroupHistograms&,
 		CCoalesceGroupHistograms& ) const;
-	bool InitializeDatasets( const CPCL&, std::vector<SDataset>& );
+	bool InitializeDatasets( const CPCL&, std::vector<SCoalesceDataset>& );
 	bool InitializeGeneScores( const CPCL&, const CFASTA&, CPCL&, std::vector<size_t>&, SCoalesceModifiers&,
 		std::vector<CCoalesceGeneScores>& );
 
-	float					m_dPValueMerge;
-	float					m_dProbabilityGene;
-	float					m_dPValueCondition;
-	float					m_dPValueCorrelation;
-	float					m_dPValueMotif;
-	float					m_dCutoffMerge;
-	float					m_dPenaltyGap;
-	float					m_dPenaltyMismatch;
-	size_t					m_iNumberCorrelation;
-	size_t					m_iBins;
-	size_t					m_iK;
-	size_t					m_iSizeMinimum;
-	size_t					m_iSizeMaximum;
-	size_t					m_iThreads;
-	std::string				m_strDirectoryIntermediate;
-	CCoalesceMotifLibrary*	m_pMotifs;
-	bool					m_fMotifs;
-	size_t					m_iBasesPerMatch;
-	std::string				m_strSequenceCache;
-	std::vector<SDataset>	m_vecsDatasets;
-	const CFASTA*			m_pFASTANucleosomes;
-	const CPCL*				m_pPCLNucleosomes;
+	float							m_dPValueMerge;
+	float							m_dProbabilityGene;
+	float							m_dPValueCondition;
+	float							m_dPValueCorrelation;
+	float							m_dPValueMotif;
+	float							m_dCutoffMerge;
+	float							m_dPenaltyGap;
+	float							m_dPenaltyMismatch;
+	size_t							m_iNumberCorrelation;
+	size_t							m_iBins;
+	size_t							m_iK;
+	size_t							m_iSizeMinimum;
+	size_t							m_iSizeMaximum;
+	size_t							m_iThreads;
+	std::string						m_strDirectoryIntermediate;
+	CCoalesceMotifLibrary*			m_pMotifs;
+	bool							m_fMotifs;
+	size_t							m_iBasesPerMatch;
+	std::string						m_strSequenceCache;
+	std::vector<SCoalesceDataset>	m_vecsDatasets;
+	const CFASTA*					m_pFASTANucleosomes;
+	const CPCL*						m_pPCLNucleosomes;
 };
 
 }

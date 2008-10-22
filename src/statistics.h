@@ -373,16 +373,22 @@ public:
 	template<class tType>
 	static double CohensD( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo,
 		double* pdAverage = NULL ) {
+
+		return CohensD( vecOne.begin( ), vecOne.end( ), vecTwo.begin( ), vecTwo.end( ), pdAverage ); }
+
+	template<class tType>
+	static double CohensD( const tType BeginOne, const tType EndOne, const tType BeginTwo, const tType EndTwo,
+		double* pdAverage = NULL ) {
 		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dStd;
 		size_t	iOne, iTwo;
 
-		Sums( vecOne.begin( ), vecOne.end( ), &dAveOne, &dVarOne, &iOne );
+		Sums( BeginOne, EndOne, &dAveOne, &dVarOne, &iOne );
 		if( iOne ) {
 			dAveOne /= iOne;
 			dVarOne = ( dVarOne / iOne ) - ( dAveOne * dAveOne ); }
 		if( pdAverage )
 			*pdAverage = dAveOne;
-		Sums( vecTwo.begin( ), vecTwo.end( ), &dAveTwo, &dVarTwo, &iTwo );
+		Sums( BeginTwo, EndTwo, &dAveTwo, &dVarTwo, &iTwo );
 		if( iTwo ) {
 			dAveTwo /= iTwo;
 			dVarTwo = ( dVarTwo / iTwo ) - ( dAveTwo * dAveTwo ); }
@@ -582,6 +588,23 @@ public:
 		dT = ( dMeanOne - dMeanTwo ) / sqrt( ( dVarianceOne / iNOne ) + ( dVarianceTwo / iNTwo ) );
 
 		return IncompleteBeta( 0.5 * dDegFree, 0.5, dDegFree / ( dDegFree + ( dT * dT ) ) ); }
+
+	static double FTest( double dVarianceOne, size_t iNOne, double dVarianceTwo, size_t iNTwo ) {
+		double	dRet, dF;
+		size_t	iDF1, iDF2;
+
+		if( dVarianceOne < dVarianceTwo ) {
+			std::swap( dVarianceOne, dVarianceTwo );
+			std::swap( iNOne, iNTwo ); }
+		dF = dVarianceOne / dVarianceTwo;
+		iDF1 = iNOne - 1;
+		iDF2 = iNTwo - 1;
+
+		dRet = 2 * IncompleteBeta( 0.5 * iDF2, 0.5 * iDF1, iDF2 / ( iDF2 + ( iDF1 * dF ) ) );
+		if( dRet > 1 )
+			dRet = 2 - dRet;
+
+		return dRet; }
 
 	// Evaluation statistics
 	static double WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,

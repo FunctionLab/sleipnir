@@ -53,7 +53,7 @@ const char *gengetopt_args_info_help[] = {
   "  -z, --size_minimum=INT        Minimum gene count for clusters of interest  \n                                  (default=`5')",
   "  -Z, --size_maximum=INT        Maximum motif count to consider a cluster \n                                  saturated  (default=`100')",
   "\nAdditional Data:",
-  "  -n, --nucleosomes=filename    Nucleosome position file (ENCODE/PCL)",
+  "  -n, --nucleosomes=filename    Nucleosome position file (WIG/PCL)",
   "\nMiscellaneous:",
   "  -e, --cache=filename          Cache file for sequence analysis",
   "\nOptional:",
@@ -895,7 +895,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'n':	/* Nucleosome position file (ENCODE/PCL).  */
+        case 'n':	/* Nucleosome position file (WIG/PCL).  */
         
         
           if (update_arg( (void *)&(args_info->nucleosomes_arg), 

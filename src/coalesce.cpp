@@ -702,45 +702,48 @@ void CCoalesceClusterImpl::CalculateCentroid( const CPCL& PCL ) {
 		g_CatSleipnir.info( "CCoalesceClusterImpl::CalculateCentroid( ) condition %d: count %d, mean %g, stdev %g",
 			i, m_veciCounts[ i ], m_vecdCentroid[ i ], m_vecdStdevs[ i ] ); } }
 
-bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const vector<CCoalesceImpl::SDataset>& vecsDatasets,
-	const CCoalesceCluster& Pot, float dPValue ) {
-	vector<float>				vecdCluster, vecdPot, vecdDatasetCluster, vecdDatasetPot;
-	vector<size_t>				veciDatasetCluster, veciDatasetPot;
-	size_t						iDataset, iCondition;
-	set<size_t>::const_iterator	iterGene;
-	double						dP, dZ;
-	float						d;
+void* CCoalesceClusterImpl::ThreadSelectCondition( void* pData ) {
+	vector<float>			vecdDatasetCluster, vecdDatasetPot;
+	vector<size_t>			veciDatasetCluster, veciDatasetPot;
+	size_t					iDataset, iCondition, iCluster, iPot, iGene;
+	double					dP, dZ;
+	float					d;
+	SThreadSelectCondition*	psData;
+	float*					adCluster;
+	float*					adPot;
 
-	m_vecdZs.resize( PCL.GetExperiments( ) );
-	m_setiConditions.clear( );
-	for( iDataset = 0; iDataset < vecsDatasets.size( ); ++iDataset ) {
-		const CCoalesceImpl::SDataset&	sDataset	= vecsDatasets[ iDataset ];
+	psData = (SThreadSelectCondition*)pData;
+	const vector<size_t>&	veciPot		= *psData->m_pveciPot;
+	const vector<size_t>&	veciCluster	= *psData->m_pveciCluster;
+	const CPCL&				PCL			= *psData->m_pPCL;
+
+	adCluster = new float[ veciCluster.size( ) ];
+	adPot = new float[ veciPot.size( ) ];
+	for( iDataset = psData->m_iOffset; iDataset < psData->m_pvecsDatasets->size( );
+		iDataset += psData->m_iStep ) {
+		const SCoalesceDataset&	sDataset	= (*psData->m_pvecsDatasets)[ iDataset ];
 
 		if( sDataset.GetConditions( ) == 1 ) {
 			iCondition = sDataset.GetCondition( 0 );
-			vecdCluster.clear( );
-			vecdCluster.reserve( m_setiGenes.size( ) );
-			vecdPot.clear( );
-			vecdPot.reserve( Pot.m_setiGenes.size( ) );
-			for( iterGene = m_setiGenes.begin( ); iterGene != m_setiGenes.end( ); ++iterGene )
-				if( !CMeta::IsNaN( d = PCL.Get( *iterGene, iCondition ) ) )
-					vecdCluster.push_back( d );
-			for( iterGene = Pot.m_setiGenes.begin( ); iterGene != Pot.m_setiGenes.end( ); ++iterGene )
-				if( !CMeta::IsNaN( d = PCL.Get( *iterGene, iCondition ) ) )
-					vecdPot.push_back( d );
-			if( vecdCluster.empty( ) && vecdPot.empty( ) )
+			for( iCluster = iPot = iGene = 0; iGene < veciCluster.size( ); ++iGene )
+				if( !CMeta::IsNaN( d = PCL.Get( veciCluster[ iGene ], iCondition ) ) )
+					adCluster[ iCluster++ ] = d;
+			for( iGene = 0; iGene < veciPot.size( ); ++iGene )
+				if( !CMeta::IsNaN( d = PCL.Get( veciPot[ iGene ], iCondition ) ) )
+					adPot[ iPot++ ] = d;
+			if( !( iCluster || iPot ) )
 				continue;
-			if( vecdCluster.empty( ) || vecdPot.empty( ) ) {
+			if( !( iCluster && iPot ) ) {
 				dZ = FLT_MAX;
 				dP = 0; }
 			else {
-				dZ = CStatistics::CohensD( vecdCluster, vecdPot );
-				dP = CStatistics::ZTest( dZ, vecdCluster.size( ) ) * vecsDatasets.size( ); }
-			if( dP < dPValue ) {
-				g_CatSleipnir.info( "CCoalesceCluster::SelectConditions( %g ) selected condition %d at %g, z=%g",
-					dPValue, iCondition, dP, dZ );
-				m_setiConditions.insert( iCondition );
-				m_vecdZs[ iCondition ] = (float)dZ; } }
+				dZ = CStatistics::CohensD( adCluster, adCluster + iCluster, adPot, adPot + iPot );
+				dP = CStatistics::ZTest( dZ, iCluster ) * psData->m_pvecsDatasets->size( ); }
+			if( dP < psData->m_dPValue ) {
+				g_CatSleipnir.info( "CCoalesceClusterImpl::ThreadSelectCondition( %g ) selected condition %d at %g, z=%g",
+					psData->m_dPValue, iCondition, dP, dZ );
+				(*psData->m_pvecfSignificant)[ iCondition ] = true;
+				(*psData->m_pvecdZs)[ iCondition ] = (float)dZ; } }
 		else {
 			vecdDatasetCluster.resize( sDataset.GetConditions( ) );
 			fill( vecdDatasetCluster.begin( ), vecdDatasetCluster.end( ), 0.0f );
@@ -750,14 +753,16 @@ bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const vector<CCoalesce
 			fill( veciDatasetCluster.begin( ), veciDatasetCluster.end( ), 0 );
 			veciDatasetPot.resize( sDataset.GetConditions( ) );
 			fill( veciDatasetPot.begin( ), veciDatasetPot.end( ), 0 );
-			for( iterGene = m_setiGenes.begin( ); iterGene != m_setiGenes.end( ); ++iterGene )
+			for( iGene = 0; iGene < veciCluster.size( ); ++iGene )
 				for( iCondition = 0; iCondition < sDataset.GetConditions( ); ++iCondition )
-					if( !CMeta::IsNaN( d = PCL.Get( *iterGene, sDataset.GetCondition( iCondition ) ) ) ) {
+					if( !CMeta::IsNaN( d = PCL.Get( veciCluster[ iGene ],
+						sDataset.GetCondition( iCondition ) ) ) ) {
 						veciDatasetCluster[ iCondition ]++;
 						vecdDatasetCluster[ iCondition ] += d; }
-			for( iterGene = Pot.m_setiGenes.begin( ); iterGene != Pot.m_setiGenes.end( ); ++iterGene )
+			for( iGene = 0; iGene < veciPot.size( ); ++iGene )
 				for( iCondition = 0; iCondition < sDataset.GetConditions( ); ++iCondition )
-					if( !CMeta::IsNaN( d = PCL.Get( *iterGene, sDataset.GetCondition( iCondition ) ) ) ) {
+					if( !CMeta::IsNaN( d = PCL.Get( veciPot[ iGene ],
+						sDataset.GetCondition( iCondition ) ) ) ) {
 						veciDatasetPot[ iCondition ]++;
 						vecdDatasetPot[ iCondition ] += d; }
 			for( iCondition = 0; iCondition < vecdDatasetCluster.size( ); ++iCondition ) {
@@ -769,7 +774,7 @@ bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const vector<CCoalesce
 				sDataset.m_MatCovChol );
 			if( dP > 0.5 )
 				dP = 1 - dP;
-			if( dP < dPValue ) {
+			if( dP < psData->m_dPValue ) {
 				dZ = 0;
 				for( iCondition = 0; iCondition < sDataset.GetConditions( ); ++iCondition )
 					if( sDataset.m_vecdStdevs[ iCondition ] ) {
@@ -777,13 +782,54 @@ bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const vector<CCoalesce
 							sDataset.m_vecdStdevs[ iCondition ];
 						dZ += d * d; }
 				dZ = sqrt( dZ );
-				g_CatSleipnir.info( "CCoalesceCluster::SelectConditions( %g ) selected dataset %d at %g, z=%g",
-					dPValue, iDataset, dP, dZ );
+				g_CatSleipnir.info( "CCoalesceClusterImpl::ThreadSelectCondition( %g ) selected dataset %d at %g, z=%g",
+					psData->m_dPValue, iDataset, dP, dZ );
 				for( iCondition = 0; iCondition < sDataset.GetConditions( ); ++iCondition ) {
-					g_CatSleipnir.info( "CCoalesceCluster::SelectConditions( %g ) contains condition %d",
-						dPValue, sDataset.GetCondition( iCondition ) );
-					m_setiConditions.insert( sDataset.GetCondition( iCondition ) );
-					m_vecdZs[ sDataset.GetCondition( iCondition ) ] = (float)dZ; } } } }
+					g_CatSleipnir.info( "CCoalesceClusterImpl::ThreadSelectCondition( %g ) contains condition %d",
+						psData->m_dPValue, sDataset.GetCondition( iCondition ) );
+					(*psData->m_pvecfSignificant)[ sDataset.GetCondition( iCondition ) ] = true;
+					(*psData->m_pvecdZs)[ sDataset.GetCondition( iCondition ) ] = (float)dZ; } } } }
+	delete[] adCluster;
+	delete[] adPot;
+
+	return NULL; }
+
+bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const vector<SCoalesceDataset>& vecsDatasets,
+	const CCoalesceCluster& Pot, size_t iThreads, float dPValue ) {
+	vector<bool>					vecfSignificant;
+	vector<pthread_t>				vecpthdThreads;
+	vector<SThreadSelectCondition>	vecsThreads;
+	size_t							i;
+	vector<size_t>					veciCluster, veciPot;
+
+	m_vecdZs.resize( PCL.GetExperiments( ) );
+	m_setiConditions.clear( );
+	veciCluster.resize( m_setiGenes.size( ) );
+	copy( m_setiGenes.begin( ), m_setiGenes.end( ), veciCluster.begin( ) );
+	veciPot.resize( Pot.m_setiGenes.size( ) );
+	copy( Pot.m_setiGenes.begin( ), Pot.m_setiGenes.end( ), veciPot.begin( ) );
+	vecfSignificant.resize( PCL.GetExperiments( ) );
+	vecpthdThreads.resize( iThreads );
+	vecsThreads.resize( vecpthdThreads.size( ) );
+	for( i = 0; i < vecsThreads.size( ); ++i ) {
+		vecsThreads[ i ].m_iOffset = i;
+		vecsThreads[ i ].m_iStep = vecsThreads.size( );
+		vecsThreads[ i ].m_pveciCluster = &veciCluster;
+		vecsThreads[ i ].m_pveciPot = &veciPot;
+		vecsThreads[ i ].m_pvecsDatasets = &vecsDatasets;
+		vecsThreads[ i ].m_pPCL = &PCL;
+		vecsThreads[ i ].m_dPValue = dPValue;
+		vecsThreads[ i ].m_pvecdZs = &m_vecdZs;
+		vecsThreads[ i ].m_pvecfSignificant = &vecfSignificant;
+		if( pthread_create( &vecpthdThreads[ i ], NULL, ThreadSelectCondition, &vecsThreads[ i ] ) ) {
+			g_CatSleipnir.error( "CCoalesceCluster::SelectConditions( %d, %g ) could not select conditions",
+				iThreads, dPValue );
+			return false; } }
+	for( i = 0; i < vecpthdThreads.size( ); ++i )
+		pthread_join( vecpthdThreads[ i ], NULL );
+	for( i = 0; i < vecfSignificant.size( ); ++i )
+		if( vecfSignificant[ i ] )
+			m_setiConditions.insert( i );
 
 	return true; }
 
@@ -1272,7 +1318,7 @@ bool CCoalesceImpl::CombineMotifs( const CFASTA& FASTA, const vector<size_t>& ve
 
 	return true; }
 
-bool CCoalesceImpl::InitializeDatasets( const CPCL& PCL, vector<SDataset>& vecsDatasets ) {
+bool CCoalesceImpl::InitializeDatasets( const CPCL& PCL, vector<SCoalesceDataset>& vecsDatasets ) {
 	size_t			i, j, k, iDataset, iCondition;
 	bool			fMultivariate;
 	vector<bool>	vecfDataset;
@@ -1281,8 +1327,8 @@ bool CCoalesceImpl::InitializeDatasets( const CPCL& PCL, vector<SDataset>& vecsD
 	fMultivariate = false;
 	vecfDataset.resize( PCL.GetExperiments( ) );
 	for( i = 0; i < m_vecsDatasets.size( ); ++i ) {
-		const SDataset&	sDataset	= m_vecsDatasets[ i ];
-		vector<size_t>	veciTo;
+		const SCoalesceDataset&	sDataset	= m_vecsDatasets[ i ];
+		vector<size_t>			veciTo;
 
 		veciTo.reserve( sDataset.GetConditions( ) );
 		for( j = 0; j < sDataset.GetConditions( ); ++j )
@@ -1290,19 +1336,19 @@ bool CCoalesceImpl::InitializeDatasets( const CPCL& PCL, vector<SDataset>& vecsD
 				vecfDataset[ iCondition ] = true;
 				veciTo.push_back( iCondition ); }
 		if( !veciTo.empty( ) ) {
-			vecsDatasets.push_back( SDataset( veciTo ) );
+			vecsDatasets.push_back( SCoalesceDataset( veciTo ) );
 			if( veciTo.size( ) > 1 )
 				fMultivariate = true; } }
 	for( i = 0; i < vecfDataset.size( ); ++i )
 		if( !vecfDataset[ i ] )
-			vecsDatasets.push_back( SDataset( i ) );
+			vecsDatasets.push_back( SCoalesceDataset( i ) );
 	if( !fMultivariate )
 		return true;
 
 	for( iDataset = 0; iDataset < vecsDatasets.size( ); ++iDataset ) {
-		SDataset&		sDataset		= vecsDatasets[ iDataset ];
-		CDataMatrix&	MatCovariance	= sDataset.m_MatCovChol;
-		vector<float>	vecdAves;
+		SCoalesceDataset&	sDataset		= vecsDatasets[ iDataset ];
+		CDataMatrix&		MatCovariance	= sDataset.m_MatCovChol;
+		vector<float>		vecdAves;
 
 		if( sDataset.GetConditions( ) == 1 )
 			continue;
@@ -1379,7 +1425,7 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 	size_t						i;
 	vector<size_t>				veciPCL2FASTA;
 	vector<CCoalesceGeneScores>	vecGeneScores;
-	vector<SDataset>			vecsDatasets;
+	vector<SCoalesceDataset>	vecsDatasets;
 	set<pair<size_t, size_t> >	setpriiSeeds;
 	SCoalesceModifiers			sModifiers;
 
@@ -1437,7 +1483,8 @@ gettimeofday( &sOne, NULL );
 gettimeofday( &sTwo, NULL );
 iTwo += CMeta::GetMicroseconds( sOne, sTwo );
 gettimeofday( &sOne, NULL );
-			if( !Cluster.SelectConditions( PCLCopy, vecsDatasets, Pot, GetPValueCondition( ) ) )
+			if( !Cluster.SelectConditions( PCLCopy, vecsDatasets, Pot, GetThreads( ),
+				GetPValueCondition( ) ) )
 				return false;
 			if( Cluster.IsEmpty( ) ) {
 				g_CatSleipnir.info( "CCoalesce::Cluster( ) selected no conditions" );

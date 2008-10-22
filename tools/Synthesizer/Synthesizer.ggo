@@ -32,7 +32,7 @@ option	"stdev"			s	"Expression standard deviation"
 option	"tf_mean"		M	"Up/downregulation mean"
 							double	default="1"
 option	"tf_stdev"		S	"Up/downregulation standard deviation"
-							double	default="1"
+							double	default="2"
 
 section "Sequence"
 option	"fasta"			f	"Input FASTA file"

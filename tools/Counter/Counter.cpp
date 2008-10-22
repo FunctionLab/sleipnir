@@ -582,7 +582,7 @@ return 0;
 				vecsData[ i ].m_pYes = vecpYes[ i ];
 				vecsData[ i ].m_pNo = vecpNo[ i ];
 				vecsData[ i ].m_iZero = ( ( iterZero = mapstriZeros.find( iterDataset->first ) ) ==
-					mapstriZeros.end( ) ) ? vecpBNs[ i ]->GetDefault( iterDataset->second + 1 ) :
+					mapstriZeros.end( ) ) ? vecsData[ i ].m_pBN->GetDefault( iterDataset->second + 1 ) :
 					iterZero->second;
 				if( vecsData[ i ].m_iZero == 0xFF )
 					vecsData[ i ].m_iZero = -1;
