@@ -136,12 +136,14 @@ libSleipnir_a_SOURCES = \
 	fasta.cpp				\
 	file.cpp				\
 	genome.cpp				\
+	hmm.cpp					\
 	mathb.cpp				\
 	measure.cpp				\
 	meta.cpp				\
 	orthology.cpp			\
 	pcl.cpp					\
 	pclset.cpp				\
+	pst.cpp					\
 	serverclient.cpp		\
 	server.cpp				\
 	statistics.cpp			\
@@ -185,6 +187,8 @@ include_HEADERS = \
 	genomei.h				\
 	halfmatrix.h			\
 	halfmatrixi.h			\
+	hmm.h					\
+	hmmi.h					\
 	mathb.h					\
 	mathbi.h				\
 	measure.h				\
@@ -197,6 +201,8 @@ include_HEADERS = \
 	pcli.h					\
 	pclset.h				\
 	pclseti.h				\
+	pst.h					\
+	psti.h					\
 	serverclient.h			\
 	serverclienti.h			\
 	server.h				\
@@ -227,11 +233,11 @@ am_libSleipnir_a_OBJECTS = annotation.$(OBJEXT) annotationgo.$(OBJEXT) \
 	coalesce.$(OBJEXT) color.$(OBJEXT) compactmatrix.$(OBJEXT) \
 	database.$(OBJEXT) datapair.$(OBJEXT) datasetcompact.$(OBJEXT) \
 	dataset.$(OBJEXT) dat.$(OBJEXT) example.$(OBJEXT) \
-	fasta.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) mathb.$(OBJEXT) \
-	measure.$(OBJEXT) meta.$(OBJEXT) orthology.$(OBJEXT) \
-	pcl.$(OBJEXT) pclset.$(OBJEXT) serverclient.$(OBJEXT) \
-	server.$(OBJEXT) statistics.$(OBJEXT) stdafx.$(OBJEXT) \
-	svm.$(OBJEXT)
+	fasta.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) hmm.$(OBJEXT) \
+	mathb.$(OBJEXT) measure.$(OBJEXT) meta.$(OBJEXT) \
+	orthology.$(OBJEXT) pcl.$(OBJEXT) pclset.$(OBJEXT) \
+	pst.$(OBJEXT) serverclient.$(OBJEXT) server.$(OBJEXT) \
+	statistics.$(OBJEXT) stdafx.$(OBJEXT) svm.$(OBJEXT)
 libSleipnir_a_OBJECTS = $(am_libSleipnir_a_OBJECTS)
 
 DEFS = @DEFS@
@@ -260,9 +266,10 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/datasetcompact.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/example.Po ./$(DEPDIR)/fasta.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/file.Po ./$(DEPDIR)/genome.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mathb.Po ./$(DEPDIR)/measure.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/meta.Po ./$(DEPDIR)/orthology.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/pcl.Po ./$(DEPDIR)/pclset.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/hmm.Po ./$(DEPDIR)/mathb.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/measure.Po ./$(DEPDIR)/meta.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/orthology.Po ./$(DEPDIR)/pcl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/pclset.Po ./$(DEPDIR)/pst.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/server.Po ./$(DEPDIR)/serverclient.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/statistics.Po ./$(DEPDIR)/stdafx.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/svm.Po
@@ -356,12 +363,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fasta.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/genome.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hmm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mathb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/orthology.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pclset.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pst.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serverclient.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/statistics.Po@am__quote@

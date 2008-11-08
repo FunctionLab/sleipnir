@@ -123,7 +123,7 @@ int main( int iArgs, char** aszArgs ) {
 			for( iGene = j = 0; j < DatLookup.GetGenes( ); ++j ) {
 				iOne = veciGenes[ j ];
 				for( k = ( j + 1 ); k < DatLookup.GetGenes( ); ++k ) {
-					if( !CMeta::IsNaN( DatLookup.Get( j, k ) ) )
+					if( CMeta::IsNaN( DatLookup.Get( j, k ) ) )
 						continue;
 					iTwo = veciGenes[ k ];
 					if( ( iOne != -1 ) && ( iTwo != -1 ) )

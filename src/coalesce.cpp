@@ -1444,7 +1444,7 @@ gettimeofday( &sOne, NULL );
 				GetPValueCondition( ) ) )
 				return false;
 			if( Cluster.IsEmpty( ) ) {
-				g_CatSleipnir.info( "CCoalesce::Cluster( ) selected no conditions" );
+				g_CatSleipnir.notice( "CCoalesce::Cluster( ) selected no conditions" );
 				break; }
 gettimeofday( &sTwo, NULL );
 iThree += CMeta::GetMicroseconds( sOne, sTwo );
@@ -1460,13 +1460,13 @@ gettimeofday( &sOne, NULL );
 			if( !Cluster.SelectGenes( PCLCopy, GeneScores, HistsCluster, HistsPot, GetSizeMinimum( ),
 				GetThreads( ), Pot, GetProbabilityGene( ), GetMotifs( ) ) )
 				return false;
-			g_CatSleipnir.info( "CCoalesce::Cluster( ) processed %d genes, %d conditions, %d motifs",
+			g_CatSleipnir.notice( "CCoalesce::Cluster( ) processed %d genes, %d conditions, %d motifs",
 				Cluster.GetGenes( ).size( ), Cluster.GetConditions( ).size( ), Cluster.GetMotifs( ).size( ) );
 gettimeofday( &sTwo, NULL );
 iFive += CMeta::GetMicroseconds( sOne, sTwo );
 cerr << "CCoalesce::Cluster" << '\t' << iOne1 << '\t' << iOne2 << '\t' << iTwo << '\t' << iThree << '\t' << iFour << '\t' << iFive << endl; }
 		if( Cluster.IsConverged( ) && ( Cluster.GetGenes( ).size( ) >= GetSizeMinimum( ) ) ) {
-			g_CatSleipnir.info( "CCoalesce::Cluster( ) finalizing cluster" );
+			g_CatSleipnir.notice( "CCoalesce::Cluster( ) finalizing cluster" );
 			setpriiSeeds.clear( );
 			if( IsOutputIntermediate( ) )
 				Cluster.Save( GetDirectoryIntermediate( ), vecClusters.size( ), PCLCopy, GetMotifs( ) );
@@ -1474,7 +1474,7 @@ cerr << "CCoalesce::Cluster" << '\t' << iOne1 << '\t' << iOne2 << '\t' << iTwo <
 			Cluster.Subtract( PCLCopy );
 			Cluster.Subtract( GeneScores ); }
 		else
-			g_CatSleipnir.info( "CCoalesce::Cluster( ) discarding cluster" ); }
+			g_CatSleipnir.notice( "CCoalesce::Cluster( ) discarding cluster" ); }
 
 	return true; }
 

@@ -31,12 +31,14 @@ libSleipnir_a_SOURCES	=	\
 	fasta.cpp				\
 	file.cpp				\
 	genome.cpp				\
+	hmm.cpp					\
 	mathb.cpp				\
 	measure.cpp				\
 	meta.cpp				\
 	orthology.cpp			\
 	pcl.cpp					\
 	pclset.cpp				\
+	pst.cpp					\
 	serverclient.cpp		\
 	server.cpp				\
 	statistics.cpp			\
@@ -79,6 +81,8 @@ include_HEADERS			=	\
 	genomei.h				\
 	halfmatrix.h			\
 	halfmatrixi.h			\
+	hmm.h					\
+	hmmi.h					\
 	mathb.h					\
 	mathbi.h				\
 	measure.h				\
@@ -91,6 +95,8 @@ include_HEADERS			=	\
 	pcli.h					\
 	pclset.h				\
 	pclseti.h				\
+	pst.h					\
+	psti.h					\
 	serverclient.h			\
 	serverclienti.h			\
 	server.h				\

@@ -22,6 +22,8 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+const char	c_szDab[]	= "dab";
+
 int main( int iArgs, char** aszArgs ) {
 	CHierarchy*					pHier;
 	CPCL						PCL, Weights;
@@ -53,7 +55,7 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.input_arg ) {
 		ifsm.open( sArgs.input_arg );
-		if( PCL.Open( ifsm, sArgs.skip_arg ) ) {
+		if( !strstr( sArgs.input_arg, c_szDab ) && PCL.Open( ifsm, sArgs.skip_arg ) ) {
 			ifsm.close( );
 			cerr << "Opened PCL: " << sArgs.input_arg << endl; }
 		else {

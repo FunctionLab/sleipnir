@@ -70,7 +70,7 @@ struct gengetopt_args_info
   double tf_mean_arg;	/**< @brief Up/downregulation mean (default='1').  */
   char * tf_mean_orig;	/**< @brief Up/downregulation mean original value given at command line.  */
   const char *tf_mean_help; /**< @brief Up/downregulation mean help description.  */
-  double tf_stdev_arg;	/**< @brief Up/downregulation standard deviation (default='1').  */
+  double tf_stdev_arg;	/**< @brief Up/downregulation standard deviation (default='2').  */
   char * tf_stdev_orig;	/**< @brief Up/downregulation standard deviation original value given at command line.  */
   const char *tf_stdev_help; /**< @brief Up/downregulation standard deviation help description.  */
   char * fasta_arg;	/**< @brief Input FASTA file.  */
@@ -91,7 +91,7 @@ struct gengetopt_args_info
   int tf_copx_arg;	/**< @brief Maximum TFBS copies (default='5').  */
   char * tf_copx_orig;	/**< @brief Maximum TFBS copies original value given at command line.  */
   const char *tf_copx_help; /**< @brief Maximum TFBS copies help description.  */
-  char * tf_types_arg;	/**< @brief Sequence types containing TFBSs, comma separated (default='5').  */
+  char * tf_types_arg;	/**< @brief Sequence types containing TFBSs, comma separated.  */
   char * tf_types_orig;	/**< @brief Sequence types containing TFBSs, comma separated original value given at command line.  */
   const char *tf_types_help; /**< @brief Sequence types containing TFBSs, comma separated help description.  */
   int wrap_arg;	/**< @brief Wrap width for FASTA output (default='60').  */

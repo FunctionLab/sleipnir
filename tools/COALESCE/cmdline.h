@@ -43,6 +43,9 @@ struct gengetopt_args_info
   char * datasets_arg;	/**< @brief Condition groupings into dataset blocks.  */
   char * datasets_orig;	/**< @brief Condition groupings into dataset blocks original value given at command line.  */
   const char *datasets_help; /**< @brief Condition groupings into dataset blocks help description.  */
+  char * output_arg;	/**< @brief Directory for intermediate output files (PCLs).  */
+  char * output_orig;	/**< @brief Directory for intermediate output files (PCLs) original value given at command line.  */
+  const char *output_help; /**< @brief Directory for intermediate output files (PCLs) help description.  */
   double prob_gene_arg;	/**< @brief Probability threshhold for gene inclusion (default='0.95').  */
   char * prob_gene_orig;	/**< @brief Probability threshhold for gene inclusion original value given at command line.  */
   const char *prob_gene_help; /**< @brief Probability threshhold for gene inclusion help description.  */
@@ -70,9 +73,9 @@ struct gengetopt_args_info
   double pvalue_correl_arg;	/**< @brief P-value threshhold for significant correlation (default='0.05').  */
   char * pvalue_correl_orig;	/**< @brief P-value threshhold for significant correlation original value given at command line.  */
   const char *pvalue_correl_help; /**< @brief P-value threshhold for significant correlation help description.  */
-  double frac_correl_arg;	/**< @brief Fraction of pairs to sample for significant correlation (default='0.05').  */
-  char * frac_correl_orig;	/**< @brief Fraction of pairs to sample for significant correlation original value given at command line.  */
-  const char *frac_correl_help; /**< @brief Fraction of pairs to sample for significant correlation help description.  */
+  int number_correl_arg;	/**< @brief Maximum number of pairs to sample for significant correlation (default='100000').  */
+  char * number_correl_orig;	/**< @brief Maximum number of pairs to sample for significant correlation original value given at command line.  */
+  const char *number_correl_help; /**< @brief Maximum number of pairs to sample for significant correlation help description.  */
   char * sequences_arg;	/**< @brief Sequence types to use (comma separated).  */
   char * sequences_orig;	/**< @brief Sequence types to use (comma separated) original value given at command line.  */
   const char *sequences_help; /**< @brief Sequence types to use (comma separated) help description.  */
@@ -85,15 +88,18 @@ struct gengetopt_args_info
   int size_maximum_arg;	/**< @brief Maximum motif count to consider a cluster saturated (default='100').  */
   char * size_maximum_orig;	/**< @brief Maximum motif count to consider a cluster saturated original value given at command line.  */
   const char *size_maximum_help; /**< @brief Maximum motif count to consider a cluster saturated help description.  */
-  char * nucleosomes_arg;	/**< @brief Nucleosome position file (ENCODE/PCL).  */
-  char * nucleosomes_orig;	/**< @brief Nucleosome position file (ENCODE/PCL) original value given at command line.  */
-  const char *nucleosomes_help; /**< @brief Nucleosome position file (ENCODE/PCL) help description.  */
-  char * intermediate_arg;	/**< @brief Directory for intermediate output files (PCLs).  */
-  char * intermediate_orig;	/**< @brief Directory for intermediate output files (PCLs) original value given at command line.  */
-  const char *intermediate_help; /**< @brief Directory for intermediate output files (PCLs) help description.  */
+  char * nucleosomes_arg;	/**< @brief Nucleosome position file (WIG).  */
+  char * nucleosomes_orig;	/**< @brief Nucleosome position file (WIG) original value given at command line.  */
+  const char *nucleosomes_help; /**< @brief Nucleosome position file (WIG) help description.  */
+  char * conservation_arg;	/**< @brief Evolutionary conservation file (WIG).  */
+  char * conservation_orig;	/**< @brief Evolutionary conservation file (WIG) original value given at command line.  */
+  const char *conservation_help; /**< @brief Evolutionary conservation file (WIG) help description.  */
   char * cache_arg;	/**< @brief Cache file for sequence analysis.  */
   char * cache_orig;	/**< @brief Cache file for sequence analysis original value given at command line.  */
   const char *cache_help; /**< @brief Cache file for sequence analysis help description.  */
+  int threads_arg;	/**< @brief Maximum number of concurrent threads (default='1').  */
+  char * threads_orig;	/**< @brief Maximum number of concurrent threads original value given at command line.  */
+  const char *threads_help; /**< @brief Maximum number of concurrent threads help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCL (default='2').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
@@ -109,6 +115,7 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int fasta_given ;	/**< @brief Whether fasta was given.  */
   unsigned int datasets_given ;	/**< @brief Whether datasets was given.  */
+  unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int prob_gene_given ;	/**< @brief Whether prob_gene was given.  */
   unsigned int pvalue_cond_given ;	/**< @brief Whether pvalue_cond was given.  */
   unsigned int pvalue_motif_given ;	/**< @brief Whether pvalue_motif was given.  */
@@ -118,14 +125,15 @@ struct gengetopt_args_info
   unsigned int penalty_gap_given ;	/**< @brief Whether penalty_gap was given.  */
   unsigned int penalty_mismatch_given ;	/**< @brief Whether penalty_mismatch was given.  */
   unsigned int pvalue_correl_given ;	/**< @brief Whether pvalue_correl was given.  */
-  unsigned int frac_correl_given ;	/**< @brief Whether frac_correl was given.  */
+  unsigned int number_correl_given ;	/**< @brief Whether number_correl was given.  */
   unsigned int sequences_given ;	/**< @brief Whether sequences was given.  */
   unsigned int bases_given ;	/**< @brief Whether bases was given.  */
   unsigned int size_minimum_given ;	/**< @brief Whether size_minimum was given.  */
   unsigned int size_maximum_given ;	/**< @brief Whether size_maximum was given.  */
   unsigned int nucleosomes_given ;	/**< @brief Whether nucleosomes was given.  */
-  unsigned int intermediate_given ;	/**< @brief Whether intermediate was given.  */
+  unsigned int conservation_given ;	/**< @brief Whether conservation was given.  */
   unsigned int cache_given ;	/**< @brief Whether cache was given.  */
+  unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
