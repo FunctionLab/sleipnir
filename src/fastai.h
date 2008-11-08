@@ -74,7 +74,7 @@ protected:
 	std::vector<TMapStrI>		m_vecmapstriSequences;
 	char*						m_szBuffer;
 	std::set<std::string>		m_setstrTypes;
-	pthread_mutex_t*			m_pmutx;
+	mutable pthread_mutex_t		m_mutx;
 };
 
 }

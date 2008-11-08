@@ -47,7 +47,9 @@ option	"size_maximum"	Z	"Maximum motif count to consider a cluster saturated"
 							int	default="100"
 
 section "Additional Data"
-option	"nucleosomes"	n	"Nucleosome position file (WIG/PCL)"
+option	"nucleosomes"	n	"Nucleosome position file (WIG)"
+							string	typestr="filename"
+option	"conservation"	a	"Evolutionary conservation file (WIG)"
 							string	typestr="filename"
 
 section "Miscellaneous"

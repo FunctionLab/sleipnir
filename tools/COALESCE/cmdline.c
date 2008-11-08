@@ -53,7 +53,8 @@ const char *gengetopt_args_info_help[] = {
   "  -z, --size_minimum=INT        Minimum gene count for clusters of interest  \n                                  (default=`5')",
   "  -Z, --size_maximum=INT        Maximum motif count to consider a cluster \n                                  saturated  (default=`100')",
   "\nAdditional Data:",
-  "  -n, --nucleosomes=filename    Nucleosome position file (WIG/PCL)",
+  "  -n, --nucleosomes=filename    Nucleosome position file (WIG)",
+  "  -a, --conservation=filename   Evolutionary conservation file (WIG)",
   "\nMiscellaneous:",
   "  -e, --cache=filename          Cache file for sequence analysis",
   "\nOptional:",
@@ -107,6 +108,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->size_minimum_given = 0 ;
   args_info->size_maximum_given = 0 ;
   args_info->nucleosomes_given = 0 ;
+  args_info->conservation_given = 0 ;
   args_info->cache_given = 0 ;
   args_info->threads_given = 0 ;
   args_info->skip_given = 0 ;
@@ -155,6 +157,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->size_maximum_orig = NULL;
   args_info->nucleosomes_arg = NULL;
   args_info->nucleosomes_orig = NULL;
+  args_info->conservation_arg = NULL;
+  args_info->conservation_orig = NULL;
   args_info->cache_arg = NULL;
   args_info->cache_orig = NULL;
   args_info->threads_arg = 1;
@@ -194,11 +198,12 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->size_minimum_help = gengetopt_args_info_help[22] ;
   args_info->size_maximum_help = gengetopt_args_info_help[23] ;
   args_info->nucleosomes_help = gengetopt_args_info_help[25] ;
-  args_info->cache_help = gengetopt_args_info_help[27] ;
-  args_info->threads_help = gengetopt_args_info_help[29] ;
-  args_info->skip_help = gengetopt_args_info_help[30] ;
-  args_info->random_help = gengetopt_args_info_help[31] ;
-  args_info->verbosity_help = gengetopt_args_info_help[32] ;
+  args_info->conservation_help = gengetopt_args_info_help[26] ;
+  args_info->cache_help = gengetopt_args_info_help[28] ;
+  args_info->threads_help = gengetopt_args_info_help[30] ;
+  args_info->skip_help = gengetopt_args_info_help[31] ;
+  args_info->random_help = gengetopt_args_info_help[32] ;
+  args_info->verbosity_help = gengetopt_args_info_help[33] ;
   
 }
 
@@ -302,6 +307,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->size_maximum_orig));
   free_string_field (&(args_info->nucleosomes_arg));
   free_string_field (&(args_info->nucleosomes_orig));
+  free_string_field (&(args_info->conservation_arg));
+  free_string_field (&(args_info->conservation_orig));
   free_string_field (&(args_info->cache_arg));
   free_string_field (&(args_info->cache_orig));
   free_string_field (&(args_info->threads_orig));
@@ -379,6 +386,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "size_maximum", args_info->size_maximum_orig, 0);
   if (args_info->nucleosomes_given)
     write_into_file(outfile, "nucleosomes", args_info->nucleosomes_orig, 0);
+  if (args_info->conservation_given)
+    write_into_file(outfile, "conservation", args_info->conservation_orig, 0);
   if (args_info->cache_given)
     write_into_file(outfile, "cache", args_info->cache_orig, 0);
   if (args_info->threads_given)
@@ -646,6 +655,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "size_minimum",	1, NULL, 'z' },
         { "size_maximum",	1, NULL, 'Z' },
         { "nucleosomes",	1, NULL, 'n' },
+        { "conservation",	1, NULL, 'a' },
         { "cache",	1, NULL, 'e' },
         { "threads",	1, NULL, 't' },
         { "skip",	1, NULL, 's' },
@@ -654,7 +664,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:f:d:o:p:P:m:k:g:G:y:Y:c:C:q:b:z:Z:n:e:t:s:r:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:f:d:o:p:P:m:k:g:G:y:Y:c:C:q:b:z:Z:n:a:e:t:s:r:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -895,7 +905,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'n':	/* Nucleosome position file (WIG/PCL).  */
+        case 'n':	/* Nucleosome position file (WIG).  */
         
         
           if (update_arg( (void *)&(args_info->nucleosomes_arg), 
@@ -903,6 +913,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.nucleosomes_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "nucleosomes", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'a':	/* Evolutionary conservation file (WIG).  */
+        
+        
+          if (update_arg( (void *)&(args_info->conservation_arg), 
+               &(args_info->conservation_orig), &(args_info->conservation_given),
+              &(local_args_info.conservation_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "conservation", 'a',
               additional_error))
             goto failure;
         

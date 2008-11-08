@@ -22,10 +22,26 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+enum EFile {
+	EFilePCL,
+	EFileWIG,
+	EFileError
+};
+
+EFile open_pclwig( const char* szFile, size_t iSkip, CFASTA& FASTA, CPCL& PCL ) {
+
+	if( FASTA.Open( szFile ) )
+		return EFilePCL;
+	if( PCL.Open( szFile, iSkip ) )
+		return EFileWIG;
+
+	cerr << "Could not open: " << szFile << endl;
+	return EFileError; }
+
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info			sArgs;
-	CFASTA						FASTA, FASTANucleosomes;
-	CPCL						PCL, PCLNucleosomes;
+	CFASTA						FASTA, FASTANucleosomes, FASTAConservation;
+	CPCL						PCL;
 	CCoalesce					Coalesce;
 	vector<CCoalesceCluster>	vecClusters;
 	size_t						i, j;
@@ -98,13 +114,15 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.cache_arg )
 		Coalesce.SetSequenceCache( sArgs.cache_arg );
 	if( sArgs.nucleosomes_arg ) {
-		if( FASTANucleosomes.Open( sArgs.nucleosomes_arg ) )
-			Coalesce.SetNucleosomes( FASTANucleosomes );
-		else if( PCLNucleosomes.Open( sArgs.nucleosomes_arg, sArgs.skip_arg ) )
-			Coalesce.SetNucleosomes( PCLNucleosomes );
-		else {
+		if( !FASTANucleosomes.Open( sArgs.nucleosomes_arg ) ) {
 			cerr << "Could not open: " << sArgs.nucleosomes_arg << endl;
-			return 1; } }
+			return 1; }
+		Coalesce.AddWiggle( FASTANucleosomes ); }
+	if( sArgs.conservation_arg ) {
+		if( !FASTAConservation.Open( sArgs.conservation_arg ) ) {
+			cerr << "Could not open: " << sArgs.conservation_arg << endl;
+			return 1; }
+		Coalesce.AddWiggle( FASTAConservation ); }
 	if( !Coalesce.Cluster( PCL, FASTA, vecClusters ) ) {
 		cerr << "Clustering failed" << endl;
 		return 1; }

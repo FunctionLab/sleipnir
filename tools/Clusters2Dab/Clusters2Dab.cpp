@@ -50,7 +50,7 @@ int main( int iArgs, char** aszArgs ) {
 	size_t						i, j, iClusterOne, iClusterTwo, iGeneOne, iGeneTwo, iOne, iTwo;
 	CGenes*						pClusterOne;
 	CGenes*						pClusterTwo;
-	float						dOne;
+	float						d, dOne;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -120,8 +120,10 @@ int main( int iArgs, char** aszArgs ) {
 			dOne = vecdWeights[ iClusterOne ];
 			for( iGeneOne = 0; iGeneOne < veciOne.size( ); ++iGeneOne ) {
 				iOne = veciOne[ iGeneOne ];
-				for( iGeneTwo = ( iGeneOne + 1 ); iGeneTwo < veciOne.size( ); ++iGeneTwo )
-					Dat.Set( iOne, veciOne[ iGeneTwo ], dOne );
+				for( iGeneTwo = ( iGeneOne + 1 ); iGeneTwo < veciOne.size( ); ++iGeneTwo ) {
+					iTwo = veciOne[ iGeneTwo ];
+					if( CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) || ( dOne > d ) )
+						Dat.Set( iOne, iTwo, dOne ); }
 				for( iClusterTwo = ( iClusterOne + 1 ); iClusterTwo < vecpClusters.size( ); ++iClusterTwo ) {
 					const vector<size_t>&	veciTwo	= vecveciGenes[ iClusterTwo ];
 

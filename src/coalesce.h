@@ -124,17 +124,16 @@ public:
 	bool Initialize( const CPCL& PCL, CCoalesceCluster& Pot,
 		std::set<std::pair<size_t, size_t> >& setpriiSeeds, size_t iPairs, float dPValue, size_t iThreads );
 	void Subtract( CPCL& PCL ) const;
-	void Subtract( vector<CCoalesceGeneScores>& vecGeneScores ) const;
+	void Subtract( CCoalesceGeneScores& GeneScores ) const;
 	bool SelectConditions( const CPCL& PCL, const std::vector<SCoalesceDataset>& vecsDatasets,
 		const CCoalesceCluster& Pot, size_t iThreads, float dPValue );
-	bool SelectMotifs( const vector<CCoalesceGeneScores>& vecGeneScores,
-		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, float dPValue,
-		size_t iThreads, const CCoalesceMotifLibrary* pMotifs = NULL );
-	bool SelectGenes( const CPCL& PCL, const std::vector<CCoalesceGeneScores>& vecGeneScores,
+	bool SelectMotifs( const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
+		float dPValue, size_t iThreads, const CCoalesceMotifLibrary* pMotifs = NULL );
+	bool SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& GeneScores,
 		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
 		size_t iMinimum, size_t iThreads, CCoalesceCluster& Pot, float dPValue,
 		const CCoalesceMotifLibrary* pMotifs = NULL );
-	void CalculateHistograms( const std::vector<CCoalesceGeneScores>& vecGeneScores,
+	void CalculateHistograms( const CCoalesceGeneScores& GeneScores,
 		CCoalesceGroupHistograms& HistogramsCluster, CCoalesceGroupHistograms* pHistogramsPot ) const;
 	bool Save( const std::string& strDirectory, size_t iID, const CPCL& PCL,
 		const CCoalesceMotifLibrary* pMotifs = NULL ) const;
@@ -152,10 +151,9 @@ public:
 
 		m_setiGenes.insert( iGene ); }
 
-	void Snapshot( const std::vector<CCoalesceGeneScores>& vecGeneScores,
-		CCoalesceGroupHistograms& Histograms ) {
+	void Snapshot( const CCoalesceGeneScores& GeneScores, CCoalesceGroupHistograms& Histograms ) {
 
-		Histograms.SetTotal( vecGeneScores, GetGenes( ) );
+		Histograms.SetTotal( GeneScores, GetGenes( ) );
 		m_setiHistory.insert( GetHash( ) );
 		CCoalesceClusterImpl::Snapshot( m_setiConditions, m_veciPrevConditions );
 		CCoalesceClusterImpl::Snapshot( m_setsMotifs, m_vecsPrevMotifs );
@@ -354,20 +352,13 @@ public:
 
 		return m_iThreads; }
 
-	void SetNucleosomes( const CFASTA& FASTANucleosomes ) {
+	void AddWiggle( const CFASTA& FASTA ) {
 
-		m_pPCLNucleosomes = NULL;
-		m_pFASTANucleosomes = &FASTANucleosomes; }
+		m_vecpWiggles.push_back( &FASTA ); }
 
-	void SetNucleosomes( const CPCL& PCLNucleosomes ) {
+	void ClearWiggles( ) {
 
-		m_pFASTANucleosomes = NULL;
-		m_pPCLNucleosomes = &PCLNucleosomes; }
-
-	void ClearNucleosomes( ) {
-
-		m_pFASTANucleosomes = NULL;
-		m_pPCLNucleosomes = NULL; }
+		m_vecpWiggles.clear( ); }
 };
 
 }

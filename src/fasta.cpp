@@ -31,13 +31,11 @@ const char CFASTAImpl::c_acHeader[]		= ">";
 CFASTAImpl::CFASTAImpl( ) {
 
 	m_szBuffer = new char[ c_iBufferSize ];
-	m_pmutx = new pthread_mutex_t( );
-	pthread_mutex_init( m_pmutx, NULL ); }
+	pthread_mutex_init( &m_mutx, NULL ); }
 
 CFASTAImpl::~CFASTAImpl( ) {
 
-	pthread_mutex_destroy( m_pmutx );
-	delete m_pmutx;
+	pthread_mutex_destroy( &m_mutx );
 	delete[] m_szBuffer; }
 
 bool CFASTA::Open( const char* szFile, const set<string>& setstrTypes ) {
@@ -139,9 +137,9 @@ bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>* pvecsSequences,
 	char*						pc;
 	bool						fOpen;
 
-	pthread_mutex_lock( m_pmutx );
+	pthread_mutex_lock( &m_mutx );
 	fOpen = m_ifsm.is_open( );
-	pthread_mutex_unlock( m_pmutx );
+	pthread_mutex_unlock( &m_mutx );
 	if( !fOpen )
 		return false;
 	for( iterGene = mapstriSequences.begin( ); iterGene != mapstriSequences.end( ); ++iterGene ) {
@@ -150,14 +148,14 @@ bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>* pvecsSequences,
 		string			strSequence;
 
 		sSequence.m_strType = sValues.m_strType = iterGene->first;
-		pthread_mutex_lock( m_pmutx );
+		pthread_mutex_lock( &m_mutx );
 		m_ifsm.clear( );
 		m_ifsm.seekg( iterGene->second );
 		if( (size_t)m_ifsm.tellg( ) != iterGene->second ) {
 			g_CatSleipnir.error( "CFASTA::Get( %d ) error parsing: %s %s at %d (%d)", iGene,
 				GetGene( iGene ).c_str( ), iterGene->first.c_str( ), iterGene->second,
 				(size_t)m_ifsm.tellg( ) );
-			pthread_mutex_unlock( m_pmutx );
+			pthread_mutex_unlock( &m_mutx );
 			return false; }
 		while( !m_ifsm.eof( ) ) {
 			m_ifsm.getline( m_szBuffer, c_iBufferSize );
@@ -168,17 +166,16 @@ bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>* pvecsSequences,
 				break;
 			if( pvecsValues )
 				sValues.m_vecdValues.push_back( (float)atof( m_szBuffer ) );
-			else {
+			if( pvecsSequences ) {
 				for( pc = m_szBuffer + strlen( m_szBuffer ) - 1;
 					( pc >= m_szBuffer ) && strchr( "\n\r", *pc ); --pc )
 					*pc = 0;
 				strSequence += m_szBuffer; } }
-		pthread_mutex_unlock( m_pmutx );
+		pthread_mutex_unlock( &m_mutx );
 
-		if( pvecsValues ) {
-			if( !Get( iGene, *pvecsValues, iterGene->second, sValues ) )
-				return false; }
-		else if( !Get( iGene, *pvecsSequences, iterGene->second, strSequence, sSequence ) )
+		if( pvecsValues && !Get( iGene, *pvecsValues, iterGene->second, sValues ) )
+			return false;
+		if( pvecsSequences && !Get( iGene, *pvecsSequences, iterGene->second, strSequence, sSequence ) )
 			return false; }
 
 	return true; }
