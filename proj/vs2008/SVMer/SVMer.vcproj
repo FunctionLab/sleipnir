@@ -67,7 +67,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="log4cpp.lib svm_light.lib"
-				AdditionalLibraryDirectories="../../../../extlib/proj/vs2005/$(ConfigurationName);../../../../extlib/svm_light/;../../../../extlib/smile/"
+				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName);../../../../extlib/svm_light/;../../../../extlib/smile/"
 				GenerateDebugInformation="true"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -150,7 +150,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="log4cpp.lib svm_light.lib"
-				AdditionalLibraryDirectories="../../../../extlib/proj/vs2005/$(ConfigurationName);../../../../extlib/svm_light/;../../../../extlib/smile/"
+				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName);../../../../extlib/svm_light/;../../../../extlib/smile/"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

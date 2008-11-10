@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="log4cpp.lib pthreads.lib ws2_32.lib"
-				AdditionalLibraryDirectories="../../../../extlib/proj/vs2005/$(ConfigurationName)"
+				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName)"
 				GenerateDebugInformation="true"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -151,7 +151,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="log4cpp.lib pthreads.lib ws2_32.lib"
-				AdditionalLibraryDirectories="../../../../extlib/proj/vs2005/$(ConfigurationName)"
+				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName)"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

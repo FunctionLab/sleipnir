@@ -7,7 +7,7 @@
 		<CustomBuildRule
 			Name="GenGetOpts"
 			DisplayName="GenGetOpts"
-			CommandLine="..\..\..\..\extlib\proj\vs2005\release\gengetopt.exe [AllOptions] [AdditionalOptions] -N -e --output-dir=&quot;$(InputDir)\&quot; -i [inputs]"
+			CommandLine="..\..\..\..\extlib\proj\vs2008\release\gengetopt.exe [AllOptions] [AdditionalOptions] -N -e --output-dir=&quot;$(InputDir)\&quot; -i [inputs]"
 			Outputs="$(InputDir)\cmdline.c;$(InputDir)\cmdline.h"
 			FileExtensions="*.ggo"
 			ExecutionDescription="Executing tool..."

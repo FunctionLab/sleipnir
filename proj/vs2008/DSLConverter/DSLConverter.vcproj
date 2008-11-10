@@ -67,7 +67,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="log4cpp.lib"
-				AdditionalLibraryDirectories="../../../../extlib/proj/vs2005/$(ConfigurationName);../../../../extlib/smile/"
+				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName);../../../../extlib/smile/"
 				IgnoreDefaultLibraryNames="libcmt.lib"
 				GenerateDebugInformation="true"
 				RandomizedBaseAddress="1"
@@ -151,7 +151,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="log4cpp.lib"
-				AdditionalLibraryDirectories="../../../../extlib/proj/vs2005/$(ConfigurationName);../../../../extlib/smile/"
+				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName);../../../../extlib/smile/"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
