@@ -1131,4 +1131,153 @@ double CStatistics::InverseNormal01CDF( double dX ) {
  return (p > 0.5 ? -u : u);
 };
 
+/*!
+ * \brief
+ * Replaces the given matrix with its LU decomposition.
+ * 
+ * \param Mat
+ * Matrix to be LU decomposed; overwritten during the calculation.
+ * 
+ * \param veciIndices
+ * Row permutations of the LU decomposition pivots.
+ * 
+ * \param fEven
+ * True if decomposition is of even rank; false otherwise.
+ * 
+ * \returns
+ * True if decomposition was successful; false otherwise.
+ * 
+ * \remarks
+ * Note that MatLU, which must be square, is overwritten by the calculation.  Implementation courtesy of
+ * Press WH, Teukolsky SA, Vetterling WT, Flannery BP.  Numerical Recipes in C, 1992, Cambridge University
+ * Press.
+ * 
+ * \see
+ * MatrixLUInvert | MatrixLUDeterminant
+ */
+bool CStatistics::MatrixLUDecompose( CDataMatrix& Mat, vector<size_t>& veciIndices, bool& fEven ) {
+	const float		c_dEpsilon	= 1e-20f;
+	float			big, dum, sum, temp;
+	vector<float>	vv;
+	size_t			i, j, k, imax;
+
+	if( Mat.GetRows( ) != Mat.GetColumns( ) )
+		return false;
+
+	veciIndices.resize( Mat.GetRows( ) );
+	vv.resize( Mat.GetRows( ) );
+	fEven = true;
+	for (i=0;i<Mat.GetRows( );i++) {
+		big=0.0;
+		for (j=0;j<Mat.GetRows( );j++)
+			if ((temp=fabs(Mat.Get( i, j ))) > big) big=temp;
+		if (big == 0.0)
+			g_CatSleipnir.warn( "CStatisticsImpl::LUDecomposition( ) singular matrix" );
+		vv[i]=1.0f/big; }
+	for (j=0;j<Mat.GetRows( );j++) {
+		for (i=0;i<j;i++) {
+			sum=Mat.Get( i, j );
+			for (k=0;k<i;k++)
+				sum -= Mat.Get( i, k )*Mat.Get( k, j );
+			Mat.Get( i, j )=sum; }
+		big=0.0;
+		for (i=j;i<Mat.GetRows( );i++) {
+			sum=Mat.Get( i, j );
+			for (k=0;k<j;k++)
+				sum -= Mat.Get( i, k )*Mat.Get( k, j );
+			Mat.Set( i, j, sum );
+			if ( (dum=vv[i]*fabs(sum)) >= big) {
+				big=dum;
+				imax=i; } }
+		if (j != imax) {
+			for (k=0;k<Mat.GetRows( );k++) {
+				dum=Mat.Get( imax, k );
+				Mat.Set( imax, k, Mat.Get( j, k ) );
+				Mat.Set( j, k, dum ); }
+			fEven = !fEven;
+			vv[imax]=vv[j]; }
+		veciIndices[j]=imax;
+		if( !Mat.Get( j, j ) )
+			Mat.Set( j, j, c_dEpsilon );
+		if ((j+1) != Mat.GetRows( )) {
+			dum=1.0f/(Mat.Get( j, j ));
+			for (i=j+1;i<Mat.GetRows( );i++)
+				Mat.Get( i, j ) *= dum; } }
+
+	return true; }
+
+bool CStatisticsImpl::MatrixLUSubstitute( CDataMatrix& MatLU, const vector<size_t>& veciIndices,
+	vector<float>& vecdB ) {
+	size_t	i,ii=0,ip,j,k;
+	float	sum;
+
+	if( ( MatLU.GetRows( ) != MatLU.GetColumns( ) ) || ( MatLU.GetRows( ) != veciIndices.size( ) ) ||
+		( MatLU.GetRows( ) != vecdB.size( ) ) )
+		return false;
+
+	for (i=0;i<MatLU.GetRows( );i++) {
+		ip=veciIndices[i];
+		sum=vecdB[ip];
+		vecdB[ip]=vecdB[i];
+		if (ii)
+			for (j=ii-1;j<=i-1;j++)
+				sum -= MatLU.Get( i, j ) * vecdB[j];
+		else if (sum)
+			ii=i+1;
+		vecdB[i]=sum; }
+	for( k = 0; k < MatLU.GetRows( ); ++k ) {
+		i = MatLU.GetRows( )-k-1;
+		sum=vecdB[i];
+		for (j=i+1;j<MatLU.GetRows( );j++)
+			sum -= MatLU.Get( i, j )*vecdB[j];
+		vecdB[i]=sum/MatLU.Get( i, i ); }
+
+	return true; }
+
+/*!
+ * \brief
+ * Calculates the inverse of a matrix given its LU decomposition.
+ * 
+ * \param MatLU
+ * LU decomposition of matrix of interest; destroyed during the inversion calculation.
+ * 
+ * \param veciIndices
+ * Row permutations of the LU decomposition pivots.
+ * 
+ * \param MatInv
+ * Resulting inverted matrix.
+ * 
+ * \returns
+ * True if inversion was successful, false otherwise.
+ * 
+ * \remarks
+ * Note that MatLU, which must be square, is destroyed by the calculation.  MatInv will be initialized to
+ * dimensions identical to MatLU if it is not already.  Implementation courtesy of Press WH, Teukolsky SA,
+ * Vetterling WT, Flannery BP.  Numerical Recipes in C, 1992, Cambridge University Press.
+ * 
+ * \see
+ * MatrixLUDecompose
+ */
+bool CStatistics::MatrixLUInvert( CDataMatrix& MatLU, const vector<size_t>& veciIndices,
+	CDataMatrix& MatInv ) {
+	size_t			i, j;
+	vector<float>	vecdCol;
+
+	if( MatLU.GetRows( ) != MatLU.GetColumns( ) )
+		return false;
+
+	if( ( MatInv.GetRows( ) != MatLU.GetRows( ) ) || ( MatInv.GetColumns( ) != MatLU.GetColumns( ) ) )
+		MatInv.Initialize( MatLU.GetRows( ), MatLU.GetColumns( ) );
+	vecdCol.resize( MatLU.GetRows( ) );
+	for( j = 0; j < MatLU.GetRows( ); ++j ) {
+		for( i = 0; i < MatLU.GetRows( ); ++i )
+			vecdCol[ i ] = 0;
+		vecdCol[ j ] = 1;
+		if( !MatrixLUSubstitute( MatLU, veciIndices, vecdCol ) )
+			return false;
+		for( i = 0; i < MatLU.GetRows( ); ++i )
+			MatInv.Set( i, j, vecdCol[ i ] ); }
+
+	return true; }
+
 }

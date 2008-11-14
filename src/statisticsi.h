@@ -22,6 +22,7 @@
 #ifndef STATISTICSI_H
 #define STATISTICSI_H
 
+#include "fullmatrix.h"
 #include "mathb.h"
 #include "meta.h"
 
@@ -37,6 +38,34 @@ protected:
 	static double IncompleteBeta( double, double, double );
 	static double IncompleteBetaCF( double, double, double );
 	static double ModifiedBesselI( size_t, double );
+	static bool MatrixLUSubstitute( CDataMatrix&, const std::vector<size_t>&, std::vector<float>& );
+
+	static bool MatrixMultiply( const std::vector<float>& vecdLeft, const CDataMatrix& MatRight,
+		std::vector<float>& vecdOut ) {
+		size_t	i, j;
+
+		if( vecdLeft.size( ) != MatRight.GetRows( ) )
+			return false;
+
+		vecdOut.resize( MatRight.GetColumns( ) );
+		for( i = 0; i < vecdOut.size( ); ++i ) {
+			vecdOut[ i ] = 0;
+			for( j = 0; j < vecdLeft.size( ); ++j )
+				vecdOut[ i ] += vecdLeft[ j ] * MatRight.Get( j, i ); }
+
+		return true; }
+
+	static double MatrixMultiply( const std::vector<float>& vecdLeft, const std::vector<float>& vecdRight ) {
+		size_t	i;
+		double	dRet;
+
+		if( vecdLeft.size( ) != vecdRight.size( ) )
+			return CMeta::GetNaN( );
+
+		for( dRet = 0,i = 0; i < vecdLeft.size( ); ++i )
+			dRet += vecdLeft[ i ] * vecdRight[ i ];
+
+		return dRet; }
 
 	template<class tType>
 	static bool SumsSkip( tType Value ) {

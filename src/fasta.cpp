@@ -38,7 +38,7 @@ CFASTAImpl::~CFASTAImpl( ) {
 	pthread_mutex_destroy( &m_mutx );
 	delete[] m_szBuffer; }
 
-bool CFASTA::Open( const char* szFile, const set<string>& setstrTypes ) {
+bool CFASTA::Open( const char* szFile, const std::set<std::string>& setstrTypes ) {
 	char*				pc;
 	vector<string>		vecstrLine;
 	TMapStrI::iterator	iterGene;
@@ -95,7 +95,7 @@ bool CFASTA::Open( const char* szFile, const set<string>& setstrTypes ) {
 
 	return true; }
 
-void CFASTA::Save( ostream& ostm, size_t iWrap ) const {
+void CFASTA::Save( std::ostream& ostm, size_t iWrap ) const {
 	size_t	i, j, iGene;
 
 	for( iGene = 0; iGene < GetGenes( ); ++iGene ) {
@@ -180,8 +180,8 @@ bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>* pvecsSequences,
 
 	return true; }
 
-bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>& vecsSequences, size_t iOffset,
-	const string& strSequence, SFASTASequence& sSequence ) const {
+bool CFASTAImpl::Get( size_t iGene, std::vector<SFASTASequence>& vecsSequences, size_t iOffset,
+	const std::string& strSequence, SFASTASequence& sSequence ) const {
 	size_t	iBegin, iEnd;
 
 	if( strSequence.empty( ) ) {

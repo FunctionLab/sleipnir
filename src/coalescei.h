@@ -689,7 +689,7 @@ protected:
 	static const size_t	c_iLookahead	= 128;
 
 	static bool Add( const CCoalesceMotifLibrary&, const std::string&, size_t, bool,
-		std::vector<vector<float> >&, std::vector<size_t>&, size_t, SCoalesceModifierCache& );
+		std::vector<std::vector<float> >&, std::vector<size_t>&, size_t, SCoalesceModifierCache& );
 	static bool Add( const CCoalesceMotifLibrary&, const std::string&, size_t, bool, uint32_t,
 		std::vector<float>&, std::vector<size_t>&, size_t, SCoalesceModifierCache& );
 
@@ -851,6 +851,8 @@ struct SCoalesceDataset {
 		m_veciConditions.resize( 1 );
 		m_veciConditions[ 0 ] = iCondition; }
 
+	bool CalculateCovariance( const CPCL& );
+
 	bool IsCondition( size_t iCondition ) const {
 
 		return ( std::find( m_veciConditions.begin( ), m_veciConditions.end( ), iCondition ) !=
@@ -865,12 +867,28 @@ struct SCoalesceDataset {
 		return m_veciConditions[ iCondition ]; }
 
 	std::vector<size_t>	m_veciConditions;
-	CDataMatrix			m_MatCovChol;
+	CDataMatrix			m_MatSigmaChol;
+	CDataMatrix			m_MatSigmaInv;
+	double				m_dSigmaDetSqrt;
 	std::vector<float>	m_vecdStdevs;
 };
 
 class CCoalesceClusterImpl {
 protected:
+	struct SDataset {
+		const SCoalesceDataset*	m_psDataset;
+		float					m_dZ;
+		std::vector<float>		m_vecdCentroid;
+
+		size_t GetConditions( ) const {
+
+			return m_psDataset->GetConditions( ); }
+
+		size_t GetCondition( size_t iCondition ) const {
+
+			return m_psDataset->GetCondition( iCondition ); }
+	};
+
 	struct SThreadCentroid {
 		CCoalesceCluster*	m_pCluster;
 		const CPCL&			m_PCL;
@@ -889,7 +907,7 @@ protected:
 		const CCoalesceGroupHistograms*			m_pHistsPot;
 		const CCoalesceCluster*					m_pCluster;
 		const CCoalesceCluster*					m_pPot;
-		const std::vector<size_t>*				m_pveciConditions;
+		const std::vector<size_t>*				m_pveciDatasets;
 		size_t									m_iMinimum;
 		float									m_dProbability;
 	};
@@ -916,15 +934,14 @@ protected:
 	};
 
 	struct SThreadSelectCondition {
-		size_t									m_iOffset;
-		size_t									m_iStep;
-		const std::vector<size_t>*				m_pveciCluster;
-		const std::vector<size_t>*				m_pveciPot;
-		const std::vector<SCoalesceDataset>*	m_pvecsDatasets;
-		const CPCL*								m_pPCL;
-		float									m_dPValue;
-		std::vector<float>*						m_pvecdZs;
-		std::vector<bool>*						m_pvecfSignificant;
+		size_t						m_iOffset;
+		size_t						m_iStep;
+		const std::vector<size_t>*	m_pveciCluster;
+		const std::vector<size_t>*	m_pveciPot;
+		std::vector<SDataset>*		m_pvecsDatasets;
+		const CPCL*					m_pPCL;
+		float						m_dPValue;
+		std::vector<bool>*			m_pvecfSignificant;
 	};
 
 	static void* ThreadCentroid( void* );
@@ -996,23 +1013,33 @@ protected:
 		const CCoalesceGroupHistograms&, bool, size_t, long double&, long double& ) const;
 	bool SaveCopy( const CPCL&, size_t, CPCL&, size_t, bool ) const;
 
+	const SCoalesceDataset& GetDataset( size_t iDataset ) const {
+
+		return *m_vecsDatasets[ iDataset ].m_psDataset; }
+
 	bool IsGene( size_t iGene ) const {
 
 		return ( m_setiGenes.find( iGene ) != m_setiGenes.end( ) ); }
 
 	bool IsCondition( size_t iCondition ) const {
+		std::set<size_t>::const_iterator	iterDataset;
+		size_t								i;
 
-		return ( m_setiConditions.find( iCondition ) != m_setiConditions.end( ) ); }
+		for( iterDataset = m_setiDatasets.begin( ); iterDataset != m_setiDatasets.end( ); ++iterDataset )
+			for( i = 0; i < GetDataset( *iterDataset ).GetConditions( ); ++i )
+				if( iCondition == GetDataset( *iterDataset ).GetCondition( i ) )
+					return true;
+
+		return false; }
 
 	size_t GetHash( ) const {
 
-		return ( GetHash( m_setiConditions ) ^ GetHash( m_setiGenes ) ^ GetHash( m_setsMotifs ) ); }
+		return ( GetHash( m_setiDatasets ) ^ GetHash( m_setiGenes ) ^ GetHash( m_setsMotifs ) ); }
 
-	std::vector<float>			m_vecdZs;
-	std::set<size_t>			m_setiConditions;
+	std::set<size_t>			m_setiDatasets;
 	std::set<size_t>			m_setiGenes;
 	std::set<SMotifMatch>		m_setsMotifs;
-	std::vector<size_t>			m_veciPrevConditions;
+	std::vector<size_t>			m_veciPrevDatasets;
 	std::vector<size_t>			m_veciPrevGenes;
 	std::vector<SMotifMatch>	m_vecsPrevMotifs;
 	std::vector<size_t>			m_veciCounts;
@@ -1020,6 +1047,7 @@ protected:
 	std::vector<float>			m_vecdStdevs;
 	std::set<size_t>			m_setiHistory;
 	std::vector<float>			m_vecdPriors;
+	std::vector<SDataset>		m_vecsDatasets;
 };
 
 class CCoalesceImpl {
@@ -1048,7 +1076,7 @@ protected:
 	bool CombineMotifs( const CFASTA&, const std::vector<size_t>&, SCoalesceModifiers&,
 		const CCoalesceCluster&, size_t, CCoalesceGeneScores&, CCoalesceGroupHistograms&,
 		CCoalesceGroupHistograms& ) const;
-	bool InitializeDatasets( const CPCL&, std::vector<SCoalesceDataset>& );
+	bool InitializeDatasets( const CPCL& );
 	bool InitializeGeneScores( const CPCL&, const CFASTA&, CPCL&, std::vector<size_t>&, SCoalesceModifiers&,
 		CCoalesceGeneScores& );
 

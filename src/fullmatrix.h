@@ -286,6 +286,33 @@ public:
 
 	/*!
 	 * \brief
+	 * Creates a copy of the given matrix's data.
+	 * 
+	 * \param Mat
+	 * Matrix from which data is copied.
+	 * 
+	 * \returns
+	 * True if matrix was copied successfully.
+	 * 
+	 * \remarks
+	 * Matrix will be resized if dimensions do not match exactly.
+	 * 
+	 * \see
+	 * Initialize
+	 */
+	bool Open( const CFullMatrix& Mat ) {
+		size_t	i;
+
+		if( ( GetRows( ) != Mat.GetRows( ) ) || ( GetColumns( ) != Mat.GetColumns( ) ) )
+			Initialize( Mat.GetRows( ), Mat.GetColumns( ) );
+
+		for( i = 0; i < GetRows( ); ++i )
+			memcpy( Get( i ), Mat.Get( i ), GetColumns( ) * sizeof(*Get( i )) );
+
+		return true; }
+
+	/*!
+	 * \brief
 	 * Saves a matrix to the given stream in either binary or tab-delimited text format.
 	 * 
 	 * \param ostm

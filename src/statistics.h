@@ -617,6 +617,22 @@ public:
 	static double SampleNormalStandard( );
 	static double SampleExponentialStandard( );
 
+	/*!
+	 * \brief
+	 * Calculate the Skellam probability distribution given a point and the two distribution parameters.
+	 * 
+	 * \param iX
+	 * Value at which PDF should be evaluated.
+	 * 
+	 * \param dMu1
+	 * First distribution parameter (first expected value).
+	 * 
+	 * \param dMu2
+	 * Second distribution parameter (second expected value).
+	 * 
+	 * \returns
+	 * Value of a Skellam distribution with the requested parameters at the given point.
+	 */
 	static double SkellamPDF( size_t iX, double dMu1, double dMu2 ) {
 
 		return ( exp( -( dMu1 + dMu2 ) ) * pow( dMu1 / dMu2, 0.5 * iX ) *
@@ -818,6 +834,91 @@ public:
 
 	/*!
 	 * \brief
+	 * Calculates the value of a multivariate normal probability density function at the requested point.
+	 * 
+	 * \param vecdX
+	 * Point at which multivariate normal distribution is evaluated.
+	 * 
+	 * \param vecdMu
+	 * Mean of multivariate normal distribution.
+	 * 
+	 * \param MatSigma
+	 * Covariance matrix of multivariate normal distribution.
+	 * 
+	 * \returns
+	 * Value of multivariate normal distribution at the requested point.
+	 * 
+	 * \remarks
+	 * vecdX and vecdMu must be of the same nonzero length, and MatSigma must be a square matrix with
+	 * dimensions equal to that length.
+	 * 
+	 * \see
+	 * MultivariateNormalCDF
+	 */
+	static double MultivariateNormalPDF( const std::vector<float>& vecdX, const std::vector<float>& vecdMu,
+		const CDataMatrix& MatSigma ) {
+		CDataMatrix		MatLU, MatInv;
+		vector<size_t>	veciIndices;
+		bool			fEven;
+		double			dDet;
+
+		if( !MatSigma.GetRows( ) || ( MatSigma.GetRows( ) != MatSigma.GetColumns( ) ) )
+			return CMeta::GetNaN( );
+
+		MatLU.Initialize( MatSigma.GetRows( ), MatSigma.GetColumns( ) );
+		MatLU.Open( MatSigma );
+		MatrixLUDecompose( MatLU, veciIndices, fEven );
+		MatrixLUInvert( MatLU, veciIndices, MatInv );
+		dDet = MatrixLUDeterminant( MatLU, fEven );
+
+		return MultivariateNormalPDF( vecdX, vecdMu, sqrt( dDet ), MatInv ); }
+
+	/*!
+	 * \brief
+	 * Calculates the value of a multivariate normal probability density function at the requested point.
+	 * 
+	 * \param vecdX
+	 * Point at which multivariate normal distribution is evaluated.
+	 * 
+	 * \param vecdMu
+	 * Mean of multivariate normal distribution.
+	 * 
+	 * \param dSigmaDetSqrt
+	 * Square root of the determinant of the requested distribution's covariance matrix.
+	 * 
+	 * \param MatSigmaInv
+	 * Inverse of the requested distribution's covariance matrix.
+	 * 
+	 * \returns
+	 * Value of multivariate normal distribution at the requested point.
+	 * 
+	 * \remarks
+	 * vecdX and vecdMu must be of the same nonzero length, and MatSigmaInv must be a square matrix with
+	 * dimensions equal to that length.
+	 * 
+	 * \see
+	 * MultivariateNormalCDF
+	 */
+	static double MultivariateNormalPDF( const std::vector<float>& vecdX, const std::vector<float>& vecdMu,
+		double dSigmaDetSqrt, const CDataMatrix& MatSigmaInv ) {
+		size_t			i;
+		vector<float>	vecdXmMu, vecdXmMutS;
+		double			d;
+
+		if( !MatSigmaInv.GetRows( ) || ( MatSigmaInv.GetRows( ) != MatSigmaInv.GetColumns( ) ) ||
+			vecdX.empty( ) || ( vecdX.size( ) != vecdMu.size( ) ) )
+			return CMeta::GetNaN( );
+
+		vecdXmMu.resize( vecdX.size( ) );
+		for( i = 0; i < vecdXmMu.size( ); ++i )
+			vecdXmMu[ i ] = vecdX[ i ] - vecdMu[ i ];
+		MatrixMultiply( vecdXmMu, MatSigmaInv, vecdXmMutS );
+		d = MatrixMultiply( vecdXmMutS, vecdXmMu );
+
+		return ( ( 1 / pow( 2 * 3.1415926535898, vecdX.size( ) / 2.0 ) / dSigmaDetSqrt ) * exp( -d / 2 ) ); }
+
+	/*!
+	 * \brief
 	 * Return a random sample from a chi-squared distribution with the given degrees of freedom.
 	 * 
 	 * \param iDF
@@ -825,11 +926,30 @@ public:
 	 * 
 	 * \returns
 	 * Random sample from a chi-squared distribution with the requested degrees of freedom.
+	 * 
+	 * \see
+	 * Chi2CDF
 	 */
 	static double SampleChi2( size_t iDF ) {
 
 		return ( 2 * SampleGamma( 1, iDF / 2 ) ); }
 
+	/*!
+	 * \brief
+	 * Return the value of a chi-squared cumulative density function at the requested point.
+	 * 
+	 * \param dC2
+	 * Point at which chi-squared CDF should be evaluated.
+	 * 
+	 * \param iDF
+	 * Degrees of freedom of the chi-squared distribution.
+	 * 
+	 * \returns
+	 * Value of the chi-squared CDF at the given point with the requested degrees of freedom.
+	 * 
+	 * \see
+	 * SampleChi2
+	 */
 	static double Chi2CDF( double dC2, size_t iDF ) {
 
 		return CStatisticsImpl::Chi2CDF( sqrt( dC2 ), 0, 1, iDF ); }
@@ -911,10 +1031,36 @@ public:
 		d = dX - dMu;
 		return ( exp( -( d * d ) / ( 2 * dSigma * dSigma ) ) / ( dSigma * c_dS2P ) ); }
 
+	/*!
+	 * \brief
+	 * Returns the value of an exponential probability density function at the requested point.
+	 * 
+	 * \param dX
+	 * Point at which the exponential PDF is evaluated.
+	 * 
+	 * \param dLambda
+	 * Rate parameter of the exponential PDF to be evaluated.
+	 * 
+	 * \returns
+	 * Value of an exponeitial PDF at the requested point.
+	 */
 	static double ExponentialPDF( double dX, double dLambda ) {
 
 		return ( dLambda * exp( -dLambda * dX ) ); }
 
+	/*!
+	 * \brief
+	 * Calculates the Cholesky decomposition of the given matrix, overwriting it in the process.
+	 * 
+	 * \param Matrix
+	 * Matrix to be decomposed.
+	 * 
+	 * \returns
+	 * True if the decomposition was successful, false otherwise.
+	 * 
+	 * \remarks
+	 * Matrix must be square.
+	 */
 	static bool CholeskyDecomposition( CDataMatrix& Matrix ) {
 		std::vector<float>	vecdP;
 		size_t				i, j, k;
@@ -938,6 +1084,45 @@ public:
 			for( j = i; j < vecdP.size( ); ++j )
 				Matrix.Set( i, j, ( i == j ) ? vecdP[ i ] : Matrix.Get( j, i ) );
 		return true; }
+
+	// Matrix operations
+	static bool MatrixLUDecompose( CDataMatrix& Mat, std::vector<size_t>& veciIndices, bool& fEven );
+	static bool MatrixLUInvert( CDataMatrix& MatLU, const std::vector<size_t>& veciIndices,
+		CDataMatrix& MatInv );
+
+	/*!
+	 * \brief
+	 * Calculate the determinant of a matrix given its LU decomposition.
+	 * 
+	 * \param MatLU
+	 * LU decomposition of matrix of interest.
+	 * 
+	 * \param fEven
+	 * True if LU decomposition of even rank; false otherwise.
+	 * 
+	 * \returns
+	 * Determinant of original matrix.
+	 * 
+	 * \remarks
+	 * MatLU must be square.  Implementation courtesy of Press WH, Teukolsky SA, Vetterling WT, Flannery BP.
+	 * Numerical Recipes in C, 1992, Cambridge University Press.
+	 * 
+	 * \see
+	 * MatrixLUDecompose
+	 */
+	template<class tType>
+	static double MatrixLUDeterminant( const CFullMatrix<tType>& MatLU, bool fEven ) {
+		double	dRet;
+		size_t	i;
+
+		if( MatLU.GetRows( ) != MatLU.GetColumns( ) )
+			return CMeta::GetNaN( );
+
+		dRet = fEven ? 1 : -1;
+		for( i = 0; i < MatLU.GetRows( ); ++i )
+			dRet *= MatLU.Get( i, i );
+
+		return dRet; }
 };
 
 }
