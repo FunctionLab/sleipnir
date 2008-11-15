@@ -34,17 +34,45 @@
 
 namespace Sleipnir {
 
+/*!
+ * \brief
+ * Base data associated with one entry in a FASTA/WIG file.
+ */
 struct SFASTABase {
+	/*!
+	 * \brief
+	 * Type of the FASTA/WIG entry.
+	 */
 	std::string	m_strType;
-	bool		m_fIntronFirst;
 };
 
 
+/*!
+ * \brief
+ * Data associated with one sequence entry in a FASTA file.
+ */
 struct SFASTASequence : SFASTABase {
+	/*!
+	 * \brief
+	 * True if the first subtype in the sequence is an intron; false otherwise.
+	 */
+	bool						m_fIntronFirst;
+	/*!
+	 * \brief
+	 * Zero or more sequences of alternating subtypes within one entry in a FASTA file.
+	 */
 	std::vector<std::string>	m_vecstrSequences;
 };
 
+/*!
+ * \brief
+ * Data associated with one value entry in a WIG file.
+ */
 struct SFASTAWiggle : SFASTABase {
+	/*!
+	 * \brief
+	 * Zero or more values associated with one entry in a WIG file.
+	 */
 	std::vector<float>	m_vecdValues;
 };
 

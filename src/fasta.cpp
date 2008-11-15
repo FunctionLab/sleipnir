@@ -38,6 +38,27 @@ CFASTAImpl::~CFASTAImpl( ) {
 	pthread_mutex_destroy( &m_mutx );
 	delete[] m_szBuffer; }
 
+/*!
+ * \brief
+ * Opens a FASTA or WIG file and indexes the file without explicitly loading its contents.
+ * 
+ * \param szFile
+ * Path to FASTA/WIG file to open.
+ * 
+ * \param setstrTypes
+ * If nonempty, set of sequence types to be loaded; types not in the set are ignored.
+ * 
+ * \returns
+ * True if file was loaded successfully; false otherwise.
+ * 
+ * \remarks
+ * Supports FASTA and WIG files as described in CFASTA.  No data is loaded on open, but an index is created
+ * over all genes and types of interest; a file handle is held open, and data is loaded as needed by the Get
+ * methods.
+ * 
+ * \see
+ * Save
+ */
 bool CFASTA::Open( const char* szFile, const std::set<std::string>& setstrTypes ) {
 	char*				pc;
 	vector<string>		vecstrLine;
@@ -95,6 +116,22 @@ bool CFASTA::Open( const char* szFile, const std::set<std::string>& setstrTypes 
 
 	return true; }
 
+/*!
+ * \brief
+ * Saves a copy of the FASTA file to the given output stream.
+ * 
+ * \param ostm
+ * Output stream to which FASTA file is saved.
+ * 
+ * \param iWrap
+ * If given, column at which output FASTA is linewrapped.
+ * 
+ * \remarks
+ * Currently only supports FASTA files, not WIGs.
+ * 
+ * \see
+ * Open
+ */
 void CFASTA::Save( std::ostream& ostm, size_t iWrap ) const {
 	size_t	i, j, iGene;
 

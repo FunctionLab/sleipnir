@@ -482,14 +482,9 @@ void CCoalesceGeneScores::Subtract( const SMotifMatch& sMotif, size_t iGene ) {
 	float**	aadScores;
 	float*	adScores;
 
-	if( ( ( iType = GetType( sMotif.m_strType ) ) == -1 ) ||
-		!( aadScores = Get( iType, sMotif.m_eSubsequence ) ) || !( adScores = aadScores[ iGene ] ) )
-		return;
-
-	if( sMotif.m_dAverage < adScores[ sMotif.m_iMotif ] )
-		adScores[ sMotif.m_iMotif ] -= sMotif.m_dAverage;
-	else
-		adScores[ sMotif.m_iMotif ] = 0; }
+	if( ( ( iType = GetType( sMotif.m_strType ) ) != -1 ) &&
+		( aadScores = Get( iType, sMotif.m_eSubsequence ) ) && ( adScores = aadScores[ iGene ] ) )
+		adScores[ sMotif.m_iMotif ] -= sMotif.m_dAverage; }
 
 // CCoalesceGroupHistograms
 
@@ -850,7 +845,7 @@ void* CCoalesceClusterImpl::ThreadSelectCondition( void* pData ) {
 				g_CatSleipnir.info( "CCoalesceClusterImpl::ThreadSelectCondition( %g ) selected dataset %d at %g, z=%g",
 					psData->m_dPValue, iDataset, dP, dZ );
 				(*psData->m_pvecfSignificant)[ iDataset ] = true;
-				(*psData->m_pvecsDatasets)[ iDataset ].m_dZ = (float)dZ; } } }
+				sDataset.m_dZ = (float)dZ; } } }
 	delete[] adCluster;
 	delete[] adPot;
 
@@ -1102,6 +1097,7 @@ bool CCoalesceClusterImpl::CalculateProbabilityExpression( size_t iGene, const C
 		const SCoalesceDataset&	sDataset	= GetDataset( iDataset );
 
 		if( sDataset.GetConditions( ) == 1 ) {
+			iCondition = sDataset.GetCondition( 0 );
 			if( CMeta::IsNaN( dGene = PCL.Get( iGene, iCondition ) ) )
 				continue;
 			dCluster = m_vecdCentroid[ iCondition ];
@@ -1131,7 +1127,8 @@ bool CCoalesceClusterImpl::CalculateProbabilityExpression( size_t iGene, const C
 				m_vecsDatasets[ iDataset ].m_vecdCentroid, sDataset.m_dSigmaDetSqrt, sDataset.m_MatSigmaInv ) );
 			dPPot = max( c_dEpsilonZero, CStatistics::MultivariateNormalPDF( vecdGene,
 				Pot.m_vecsDatasets[ iDataset ].m_vecdCentroid, sDataset.m_dSigmaDetSqrt,
-				sDataset.m_MatSigmaInv ) ); }
+				sDataset.m_MatSigmaInv ) );
+			AdjustProbabilities( m_vecsDatasets[ iDataset ].m_dZ, dPCluster, dPPot ); }
 		dPIn *= dPCluster;
 		dPOut *= dPPot; }
 
@@ -1195,7 +1192,9 @@ bool CCoalesceCluster::Save( const std::string& strDirectory, size_t iID, const 
 	size_t								iGeneFrom, iGeneTo, iExpFrom, iExpTo, iLength;
 	string								strBase;
 	set<SMotifMatch>::const_iterator	iterMotif;
+	set<size_t>							setiConditions;
 
+	GetConditions( setiConditions );
 	szTmp = new char[ iLength = ( strDirectory.length( ) + 16 ) ];
 	sprintf_s( szTmp, iLength - 1, "%s/c%04d_XXXXXX", strDirectory.empty( ) ? "." : strDirectory.c_str( ),
 		iID );
@@ -1214,10 +1213,10 @@ bool CCoalesceCluster::Save( const std::string& strDirectory, size_t iID, const 
 	PCLCopy.Open( PCL );
 // Reorder header
 	for( iExpTo = iExpFrom = 0; iExpFrom < PCL.GetExperiments( ); ++iExpFrom )
-		if( IsCondition( iExpFrom ) )
+		if( setiConditions.find( iExpFrom ) != setiConditions.end( ) )
 			PCLCopy.SetExperiment( iExpTo++, "*" + PCL.GetExperiment( iExpFrom ) );
 	for( iExpFrom = 0; iExpFrom < PCL.GetExperiments( ); ++iExpFrom )
-		if( !IsCondition( iExpFrom ) )
+		if( setiConditions.find( iExpFrom ) == setiConditions.end( ) )
 			PCLCopy.SetExperiment( iExpTo++, PCL.GetExperiment( iExpFrom ) );
 // Reorder genes
 	for( iGeneTo = iGeneFrom = 0; iGeneFrom < PCL.GetGenes( ); ++iGeneFrom )
@@ -1240,17 +1239,19 @@ bool CCoalesceCluster::Save( const std::string& strDirectory, size_t iID, const 
 
 bool CCoalesceClusterImpl::SaveCopy( const CPCL& PCLFrom, size_t iGeneFrom, CPCL& PCLTo, size_t iGeneTo,
 	bool fClustered ) const {
-	size_t	i, iExpTo, iExpFrom;
+	size_t		i, iExpTo, iExpFrom;
+	set<size_t>	setiConditions;
 
+	GetConditions( setiConditions );
 	PCLTo.SetGene( iGeneTo, PCLFrom.GetGene( iGeneFrom ) );
 	for( i = 1; i < PCLFrom.GetFeatures( ); ++i )
 		PCLTo.SetFeature( iGeneTo, i, (string)( ( fClustered && ( i == 1 ) ) ? "*" : "" ) +
 			PCLFrom.GetFeature( iGeneFrom, i ) );
 	for( iExpTo = iExpFrom = 0; iExpFrom < PCLFrom.GetExperiments( ); ++iExpFrom )
-		if( IsCondition( iExpFrom ) )
+		if( setiConditions.find( iExpFrom ) != setiConditions.end( ) )
 			PCLTo.Set( iGeneTo, iExpTo++, PCLFrom.Get( iGeneFrom, iExpFrom ) );
 	for( iExpFrom = 0; iExpFrom < PCLFrom.GetExperiments( ); ++iExpFrom )
-		if( !IsCondition( iExpFrom ) )
+		if( setiConditions.find( iExpFrom ) == setiConditions.end( ) )
 			PCLTo.Set( iGeneTo, iExpTo++, PCLFrom.Get( iGeneFrom, iExpFrom ) );
 
 	return true; }

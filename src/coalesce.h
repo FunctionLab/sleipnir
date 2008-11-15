@@ -327,10 +327,6 @@ public:
 	bool IsGene( size_t iGene ) const {
 
 		return CCoalesceClusterImpl::IsGene( iGene ); }
-
-	bool IsCondition( size_t iCondition ) const {
-
-		return CCoalesceClusterImpl::IsCondition( iCondition ); }
 };
 
 class CCoalesce : CCoalesceImpl {

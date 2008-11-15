@@ -26,8 +26,29 @@
 
 namespace Sleipnir {
 
+/*!
+ * \brief
+ * Extremely simple Hidden Markov Model (HMM) implementation allowing learning and generation from the model.
+ * 
+ * Implements a simple HMM of arbitrary degree over a fixed alphabet of single characters.  The HMM can be
+ * learned from input strings and, after training, can generate random sequences probabilistically from the
+ * model.
+ */
 class CHMM : protected CHMMImpl {
 public:
+	/*!
+	 * \brief
+	 * Initializes an empty HMM of the requested degree over the given alphabet.
+	 * 
+	 * \param iDegree
+	 * Degree of the HMM.
+	 * 
+	 * \param strAlphabet
+	 * Alphabet of characters encoded by the HMM.
+	 * 
+	 * \remarks
+	 * iDegree must be greater than zero; strAlphabet must be nonempty.
+	 */
 	void Open( size_t iDegree, const std::string& strAlphabet ) {
 
 		m_iDegree = iDegree;
@@ -35,6 +56,13 @@ public:
 		m_MatTransitions.Initialize( GetStates( ), GetSymbols( ) - 1 );
 		m_MatTransitions.Clear( ); }
 
+	/*!
+	 * \brief
+	 * Outputs a simple textual representation of the HMM.
+	 * 
+	 * \param ostm
+	 * Stream to which the HMM is saved.
+	 */
 	void Save( std::ostream& ostm ) const {
 		size_t	i, j;
 
@@ -46,6 +74,22 @@ public:
 				ostm << '\t' << m_MatTransitions.Get( i, j );
 			ostm << endl; } }
 
+	/*!
+	 * \brief
+	 * Updates the HMMs transition probabilities using the given string as training data.
+	 * 
+	 * \param strData
+	 * String of characters from which transition probabilities are updated.
+	 * 
+	 * \returns
+	 * True if the transitions were updated successfully; false otherwise.
+	 * 
+	 * \remarks
+	 * Characters not in the HMM's alphabet are ignored.
+	 * 
+	 * \see
+	 * Get
+	 */
 	bool Add( const std::string& strData ) {
 		size_t	i, iState;
 
@@ -59,6 +103,20 @@ public:
 
 		return true; }
 
+	/*!
+	 * \brief
+	 * Randomly generates the requested number of characters from the HMM's alphabet using its current
+	 * transition probabilities.
+	 * 
+	 * \param iLength
+	 * Number of characters to randomly generate.
+	 * 
+	 * \returns
+	 * The requested number of characters randomly generated using the HMM's current transition probabilities.
+	 * 
+	 * \see
+	 * Add
+	 */
 	std::string Get( size_t iLength ) const {
 		std::string	strRet;
 		size_t		i, iState, iTotal, iCur;
@@ -78,6 +136,10 @@ public:
 
 		return strRet; }
 
+	/*!
+	 * \brief
+	 * Sets all transition probabilities in the HMM to uniform probabilities.
+	 */
 	void SetUniform( ) {
 		size_t	i, j;
 

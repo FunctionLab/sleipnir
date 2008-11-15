@@ -401,7 +401,8 @@ public:
 
 		m_iMembers = iMembers;
 		m_vecEdges.resize( vecEdges.size( ) );
-		std::copy( vecEdges.begin( ), vecEdges.end( ), m_vecEdges.begin( ) ); }
+		std::copy( vecEdges.begin( ), vecEdges.end( ), m_vecEdges.begin( ) );
+		m_iZero = GetBin( 0 ); }
 
 	void Initialize( size_t iMembers, size_t iBins, tValue Step ) {
 		std::vector<tValue>	vecEdges;
@@ -416,9 +417,8 @@ public:
 	bool Add( size_t iMember, tValue Value, tCount Count ) {
 		size_t	i;
 
-// BUGBUG: this will treat negative values as zeros
 // lock
-		if( m_vecEdges.empty( ) || !( i = GetBin( Value ) ) )
+		if( m_vecEdges.empty( ) || ( ( i = GetBin( Value ) ) == m_iZero ) )
 // unlock
 			return false;
 
@@ -447,8 +447,8 @@ public:
 			return 0;
 
 		return ( ( ( iOffset = ( GetOffset( iMember ) + iBin ) ) < m_vecCounts.size( ) ) ?
-			( iBin ? m_vecCounts[ iOffset ] : ( GetTotal( ) - m_vecTotal[ iMember ] ) ) :
-			( iBin ? 0 : GetTotal( ) ) ); }
+			( ( iBin == m_iZero ) ? ( GetTotal( ) - m_vecTotal[ iMember ] ) : m_vecCounts[ iOffset ] ) :
+			( ( iBin == m_iZero ) ? GetTotal( ) : 0 ) ); }
 
 	tCount Get( size_t iMember, tValue Value ) const {
 
@@ -552,6 +552,7 @@ protected:
 		dVar = ( (double)Var / GetTotal( ) ) - ( dAve * dAve ); }
 
 	size_t				m_iMembers;
+	size_t				m_iZero;
 	tCount				m_Total;
 	std::vector<tCount>	m_vecTotal;
 	std::vector<tValue>	m_vecEdges;
@@ -1021,20 +1022,17 @@ protected:
 
 		return ( m_setiGenes.find( iGene ) != m_setiGenes.end( ) ); }
 
-	bool IsCondition( size_t iCondition ) const {
-		std::set<size_t>::const_iterator	iterDataset;
-		size_t								i;
-
-		for( iterDataset = m_setiDatasets.begin( ); iterDataset != m_setiDatasets.end( ); ++iterDataset )
-			for( i = 0; i < GetDataset( *iterDataset ).GetConditions( ); ++i )
-				if( iCondition == GetDataset( *iterDataset ).GetCondition( i ) )
-					return true;
-
-		return false; }
-
 	size_t GetHash( ) const {
 
 		return ( GetHash( m_setiDatasets ) ^ GetHash( m_setiGenes ) ^ GetHash( m_setsMotifs ) ); }
+
+	void GetConditions( std::set<size_t>& setiConditions ) const {
+		set<size_t>::const_iterator	iterDataset;
+		size_t						i;
+
+		for( iterDataset = m_setiDatasets.begin( ); iterDataset != m_setiDatasets.end( ); ++iterDataset )
+			for( i = 0; i < GetDataset( *iterDataset ).GetConditions( ); ++i )
+				setiConditions.insert( GetDataset( *iterDataset ).GetCondition( i ) ); }
 
 	std::set<size_t>			m_setiDatasets;
 	std::set<size_t>			m_setiGenes;
