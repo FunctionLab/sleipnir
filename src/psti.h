@@ -23,6 +23,7 @@
 #define PSTI_H
 
 #include <sstream>
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -35,7 +36,8 @@ protected:
 	struct SNode {
 		SNode( ) : m_iTotal(0) { }
 
-		SNode( unsigned char cCharacter ) : m_cCharacter(cCharacter), m_iCount(1), m_iTotal(0) { }
+		SNode( unsigned char cCharacter, uint16_t iCount = 1 ) : m_cCharacter(cCharacter), m_iCount(iCount),
+			m_iTotal(0) { }
 
 		unsigned char		m_cCharacter;
 		uint16_t			m_iCount;
@@ -64,17 +66,17 @@ protected:
 
 		return ossm.str( ); }
 
-	static size_t Add( unsigned char cCharacter, SNode& sNode ) {
+	static size_t Add( unsigned char cCharacter, SNode& sNode, uint16_t iCount = 1 ) {
 		size_t	i;
 
 		for( i = 0; i < sNode.m_vecsChildren.size( ); ++i )
 			if( sNode.m_vecsChildren[ i ].m_cCharacter == cCharacter )
 				break;
 		if( i < sNode.m_vecsChildren.size( ) )
-			sNode.m_vecsChildren[ i ].m_iCount++;
+			sNode.m_vecsChildren[ i ].m_iCount += iCount;
 		else
-			sNode.m_vecsChildren.push_back( SNode( cCharacter ) );
-		sNode.m_iTotal++;
+			sNode.m_vecsChildren.push_back( SNode( cCharacter, iCount ) );
+		sNode.m_iTotal += iCount;
 
 		return i; }
 
@@ -117,6 +119,39 @@ protected:
 				iRet = iCur; }
 
 		return iRet; }
+
+	static bool Open( const std::string& strPST, SNode& sNode ) {
+		std::stack<SNode*>	stckBranch;
+		SNode*				psNode;
+		size_t				i;
+		char				c;
+		uint16_t			iCount;
+
+		psNode = &sNode;
+		iCount = 1;
+		for( i = 0; i < strPST.size( ); ++i )
+			switch( c = strPST[ i ] ) {
+				case '(':
+					stckBranch.push( psNode );
+					break;
+
+				case ')':
+					psNode = stckBranch.top( );
+					stckBranch.pop( );
+					break;
+
+				case '|':
+					break;
+
+				default:
+					if( isdigit( c ) ) {
+						iCount = atoi( strPST.c_str( ) + i );
+						while( isdigit( strPST[ ++i ] ) ); }
+					else {
+						psNode = &psNode->m_vecsChildren[ Add( c, *psNode, iCount ) ];
+						iCount = 1; } }
+
+		return true; }
 
 	CPSTImpl( size_t iArity ) : m_iDepth(0), m_iArity(iArity) { }
 

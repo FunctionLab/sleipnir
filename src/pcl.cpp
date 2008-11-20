@@ -334,7 +334,7 @@ bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 	else {
 		m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
 		while( OpenGene( istm, vecdData, acBuf, c_iBufferSize ) );
-		for( fRet = true,i = 0; i < m_vecstrGenes.size( ); ++i )
+		for( fRet = !m_vecstrGenes.empty( ),i = 0; i < m_vecstrGenes.size( ); ++i )
 			if( m_vecstrGenes[ i ].empty( ) || !isprint( m_vecstrGenes[ i ][ 0 ] ) ) {
 				fRet = false;
 				break; }

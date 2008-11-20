@@ -67,7 +67,9 @@ string CFile::OpenToken( const char* szInput, const char** pcEnd ) {
 	string	strRet;
 	char	c;
 
-	while( isspace( c = *(szInput++) ) && ( c != '\t' ) && c );
+	do
+		c = *(szInput++);
+	while( c && ( c >= 0 ) && ( c < 256 ) && ( c != '\t' ) && isspace( c ) );
 	for( ; c && ( c != -1 ) && ( c != '\t' ) && !IsNewline( c ); c = *(szInput++) )
 		strRet += c;
 	if( pcEnd )

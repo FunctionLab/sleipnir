@@ -271,6 +271,23 @@ public:
 
 		return CPSTImpl::Align( PST.m_sRoot, PST.GetDepth( ), dPenaltyGap, dPenaltyMismatch, dCutoff,
 			iOffset ); }
+
+	/*!
+	 * \brief
+	 * Adds the given PST encoded in string form to the current PST.
+	 * 
+	 * \param strPST
+	 * PST encoded in string form, or a string from the current PST's alphabet.
+	 * 
+	 * \returns
+	 * True if the given PST string was added successfully.
+	 * 
+	 * \see
+	 * GetMotif
+	 */
+	bool Open( const std::string& strPST ) {
+
+		return CPSTImpl::Open( strPST, m_sRoot ); }
 };
 
 }

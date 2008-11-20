@@ -479,6 +479,8 @@ public:
 		static const double	c_dEpsilon	= 1e-10;
 		double	dT, dF;
 
+		if( iN < 2 )
+			return 1;
 		if( ( 1 - dR ) < c_dEpsilon )
 			return 0;
 		dF = iN - 2;

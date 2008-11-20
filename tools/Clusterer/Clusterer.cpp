@@ -73,9 +73,14 @@ int main( int iArgs, char** aszArgs ) {
 			if( !DatIn.Open( sArgs.input_arg ) ) {
 				cerr << "Could not open input: " << sArgs.input_arg << endl;
 				return 1; }
-			if( !PCL.Open( cin, sArgs.skip_arg ) ) {
+			cerr << "Opened DAB: " << sArgs.input_arg << endl;
+			if( sArgs.pcl_arg ) {
+				ifsm.clear( );
+				ifsm.open( sArgs.pcl_arg ); }
+			if( !PCL.Open( sArgs.pcl_arg ? ifsm : cin, sArgs.skip_arg ) ) {
 				cerr << "Could not open PCL" << endl;
-				return 1; } } }
+				return 1; }
+			ifsm.close( ); } }
 	else if( PCL.Open( cin, sArgs.skip_arg ) )
 		cerr << "Opened PCL" << endl;
 	else {
@@ -120,8 +125,9 @@ int main( int iArgs, char** aszArgs ) {
 				CClustQTC::Cluster( pPCL->Get( ), pMeasure, (float)sArgs.diameter_arg, sArgs.size_arg,
 				vecsClusters, sArgs.weights_arg ? &Weights.Get( ) : NULL );
 		else
-			sClusters = CClustKMeans::Cluster( pPCL->Get( ), pMeasure, sArgs.size_arg, vecsClusters,
-				sArgs.weights_arg ? &Weights.Get( ) : NULL ) ? sArgs.size_arg : 0;
+			sClusters = ( DatIn.GetGenes( ) ? CClustKMeans::Cluster( DatIn.Get( ), sArgs.size_arg,
+				vecsClusters ) : CClustKMeans::Cluster( pPCL->Get( ), pMeasure, sArgs.size_arg, vecsClusters,
+				sArgs.weights_arg ? &Weights.Get( ) : NULL ) ) ? sArgs.size_arg : 0;
 
 		if( !sClusters )
 			cerr << "No clusters found" <<endl;

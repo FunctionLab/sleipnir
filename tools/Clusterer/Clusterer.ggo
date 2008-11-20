@@ -28,6 +28,8 @@ option	"delta"			e	"Cluster diameter step size"
 							double	default="0"
 
 section "Optional"
+option	"pcl"			p	"PCL input if precalculated DAB provided"
+							string	typestr="filename"
 option	"skip"			s	"Columns to skip in input PCL"
 							int	default="2"
 option	"normalize"		n	"Normalize distances before clustering"

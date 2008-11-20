@@ -603,13 +603,13 @@ void CCoalesceClusterImpl::Add( size_t iGene, CCoalesceCluster& Pot ) {
 
 void* CCoalesceClusterImpl::ThreadSeedPair( void* pData ) {
 	SThreadSeedPair*		psData;
-	double					dR, dCur;
+	double					dR;
 	size_t					i, j, iN, iExperiments, iPair, iPairs, iCur;
 	pair<size_t, size_t>	priiSeed;
 
 	psData = (SThreadSeedPair*)pData;
 	iExperiments = psData->m_pPCL->GetExperiments( );
-	psData->m_dMin = DBL_MAX;
+	psData->m_dMaxCorr = -DBL_MAX;
 	iPairs = psData->m_pPCL->GetGenes( ) * ( psData->m_pPCL->GetGenes( ) - 1 ) / 2;
 	for( psData->m_iOne = psData->m_iTwo = 0,iPair = psData->m_iOffset; iPair < iPairs;
 		iPair += psData->m_iStep ) {
@@ -618,14 +618,16 @@ void* CCoalesceClusterImpl::ThreadSeedPair( void* pData ) {
 		for( i = 0,iCur = iPair; iCur >= ( psData->m_pPCL->GetGenes( ) - 1 - i );
 			iCur -= psData->m_pPCL->GetGenes( ) - 1 - i++ );
 		j = i + iCur + 1;
-		if( ( dR = CMeasurePearson::Pearson( psData->m_pPCL->Get( i ), iExperiments,
-			psData->m_pPCL->Get( j ), iExperiments, IMeasure::EMapNone, NULL, NULL, &iN ) ) < 0 )
+		if( ( ( dR = CMeasurePearson::Pearson( psData->m_pPCL->Get( i ), iExperiments,
+			psData->m_pPCL->Get( j ), iExperiments, IMeasure::EMapNone, NULL, NULL, &iN ) ) < 0 ) ||
+			CMeta::IsNaN( dR ) )
 			continue;
-		if( ( dCur = CStatistics::PValuePearson( dR, iN ) ) < psData->m_dMin ) {
+		if( dR > psData->m_dMaxCorr ) {
 			priiSeed.first = i;
 			priiSeed.second = j;
 			if( psData->m_psetpriiSeeds->find( priiSeed ) == psData->m_psetpriiSeeds->end( ) ) {
-				psData->m_dMin = dCur;
+				psData->m_dMaxCorr = dR;
+				psData->m_dMinP = CStatistics::PValuePearson( dR, iN );
 				psData->m_iOne = i;
 				psData->m_iTwo = j; } } }
 
@@ -634,7 +636,7 @@ void* CCoalesceClusterImpl::ThreadSeedPair( void* pData ) {
 bool CCoalesceClusterImpl::AddSeedPair( const CPCL& PCL, CCoalesceCluster& Pot,
 	std::set<std::pair<size_t, size_t> >& setpriiSeeds, float dFraction, float dPValue, size_t iThreads ) {
 	size_t					i, iOne, iTwo;
-	double					dMin;
+	double					dMaxCorr, dMinP;
 	pair<size_t, size_t>	priiSeed;
 	vector<pthread_t>		vecpthdThreads;
 	vector<SThreadSeedPair>	vecsThreads;
@@ -654,16 +656,17 @@ bool CCoalesceClusterImpl::AddSeedPair( const CPCL& PCL, CCoalesceCluster& Pot,
 			g_CatSleipnir.error( "CCoalesceClusterImpl::AddSeedPair( %g, %g, %d ) could not seed pair",
 				dFraction, dPValue, iThreads );
 			return false; } }
-	dMin = DBL_MAX;
+	dMaxCorr = dMinP = -DBL_MAX;
 	for( iOne = iTwo = i = 0; i < vecpthdThreads.size( ); ++i ) {
 		pthread_join( vecpthdThreads[ i ], NULL );
-		if( vecsThreads[ i ].m_dMin < dMin ) {
-			dMin = vecsThreads[ i ].m_dMin;
+		if( vecsThreads[ i ].m_dMaxCorr > dMaxCorr ) {
+			dMaxCorr = vecsThreads[ i ].m_dMaxCorr;
+			dMinP = vecsThreads[ i ].m_dMinP;
 			iOne = vecsThreads[ i ].m_iOne;
 			iTwo = vecsThreads[ i ].m_iTwo; } }
-	if( ( dMin * PCL.GetGenes( ) * PCL.GetGenes( ) * dFraction / 2 ) < dPValue ) {
-		g_CatSleipnir.info( "CCoalesceClusterImpl::AddSeedPair( %g, %g ) seeding: %s, %s, %g",
-			dFraction, dPValue, PCL.GetGene( iOne ).c_str( ), PCL.GetGene( iTwo ).c_str( ), dMin );
+	if( ( dMinP * PCL.GetGenes( ) * PCL.GetGenes( ) * dFraction / 2 ) < dPValue ) {
+		g_CatSleipnir.info( "CCoalesceClusterImpl::AddSeedPair( %g, %g ) seeding: %s, %s, %g (p=%g)",
+			dFraction, dPValue, PCL.GetGene( iOne ).c_str( ), PCL.GetGene( iTwo ).c_str( ), dMaxCorr, dMinP );
 		priiSeed.first = iOne;
 		priiSeed.second = iTwo;
 		setpriiSeeds.insert( priiSeed );
@@ -671,8 +674,8 @@ bool CCoalesceClusterImpl::AddSeedPair( const CPCL& PCL, CCoalesceCluster& Pot,
 		Add( iTwo, Pot );
 		return true; }
 
-	g_CatSleipnir.notice( "CCoalesceClusterImpl::AddSeedPair( %g, %g ) inadequate seed pair: %s, %s, %g",
-		dFraction, dPValue, PCL.GetGene( iOne ).c_str( ), PCL.GetGene( iTwo ).c_str( ), dMin );
+	g_CatSleipnir.notice( "CCoalesceClusterImpl::AddSeedPair( %g, %g ) inadequate seed pair: %s, %s, %g (p=%g)",
+		dFraction, dPValue, PCL.GetGene( iOne ).c_str( ), PCL.GetGene( iTwo ).c_str( ), dMaxCorr, dMinP );
 	return false; }
 
 bool CCoalesceClusterImpl::AddCorrelatedGenes( const CPCL& PCL, CCoalesceCluster& Pot, float dPValue ) {

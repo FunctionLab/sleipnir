@@ -929,7 +929,8 @@ protected:
 		const CPCL*									m_pPCL;
 		float										m_dFraction;
 		const std::set<std::pair<size_t, size_t> >*	m_psetpriiSeeds;
-		double										m_dMin;
+		double										m_dMaxCorr;
+		double										m_dMinP;
 		size_t										m_iOne;
 		size_t										m_iTwo;
 	};

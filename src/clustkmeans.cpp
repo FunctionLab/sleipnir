@@ -85,7 +85,7 @@ bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure
 	veciCounts.resize( iK );
 	for( iIteration = 0,fDone = false; !fDone; ++iIteration ) {
 		if( !( iIteration % 10 ) )
-			g_CatSleipnir.info( "CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
+			g_CatSleipnir.notice( "CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
 		fill( veciCounts.begin( ), veciCounts.end( ), 0 );
 		fDone = true;
 		for( i = 0; i < vecsClusters.size( ); ++i ) {
@@ -115,6 +115,78 @@ bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure
 					MatMeans.Get( i, j ) /= veciCounts[ i ];
 			else
 				Randomize( MatMeans, i, MatData ); }
+
+	return true; }
+
+bool CClustKMeans::Cluster( const CDistanceMatrix& MatSimilarities, size_t iK,
+	vector<uint16_t>& vecsClusters ) {
+	size_t			i, j, iOne, iIteration, iChanged;
+	float			d, dMax;
+	CDataMatrix		MatPrev, MatNext;
+	vector<size_t>	veciPrev, veciNext;
+	uint16_t		sMax;
+
+	if( MatSimilarities.GetSize( ) < iK )
+		return false;
+
+	dMax = -FLT_MAX;
+	for( i = 0; i < MatSimilarities.GetSize( ); ++i )
+		for( j = ( i + 1 ); j < MatSimilarities.GetSize( ); ++j )
+			if( ( d = MatSimilarities.Get( i, j ) ) > dMax )
+				dMax = d;
+	MatPrev.Initialize( MatSimilarities.GetSize( ), iK );
+	for( i = 0; i < MatPrev.GetColumns( ); ++i ) {
+		iOne = rand( ) % MatSimilarities.GetSize( );
+		for( j = 0; j < MatPrev.GetRows( ); ++j )
+			MatPrev.Set( j, i, ( i == j ) ? dMax : MatSimilarities.Get( iOne, j ) ); }
+	MatNext.Initialize( MatPrev.GetRows( ), MatPrev.GetColumns( ) );
+	MatNext.Clear( );
+
+	vecsClusters.resize( MatSimilarities.GetSize( ) );
+	fill( vecsClusters.begin( ), vecsClusters.end( ), iK );
+	veciPrev.resize( iK );
+	fill( veciPrev.begin( ), veciPrev.end( ), 1 );
+	veciNext.resize( veciPrev.size( ) );
+	for( iChanged = MatSimilarities.GetSize( ),iIteration = 0; iChanged > 2; ++iIteration ) {
+		if( !( iIteration % 10 ) )
+			g_CatSleipnir.notice( "CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
+		else
+			g_CatSleipnir.debug( "CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
+		for( iChanged = i = 0; i < vecsClusters.size( ); ++i ) {
+			float	dMax;
+
+			dMax = -FLT_MAX;
+			for( sMax = j = 0; j < MatPrev.GetColumns( ); ++j ) {
+				if( CMeta::IsNaN( d = MatPrev.Get( i, j ) ) )
+					return false;
+				d /= veciPrev[ j ];
+				if( d > dMax ) {
+					dMax = d;
+					sMax = j; } }
+			if( vecsClusters[ i ] != sMax ) {
+				iChanged++;
+				if( vecsClusters[ i ] != iK )
+					veciNext[ vecsClusters[ i ] ]--;
+				veciNext[ sMax ]++;
+				for( j = 0; j < MatSimilarities.GetSize( ); ++j ) {
+					d = ( i == j ) ? dMax : MatSimilarities.Get( i, j );
+					if( vecsClusters[ i ] != iK )
+						MatNext.Get( j, vecsClusters[ i ] ) -= d;
+					MatNext.Get( j, sMax ) += d; }
+				vecsClusters[ i ] = sMax; } }
+
+		g_CatSleipnir.notice( "CClustKMeans::Cluster( %d ) updated %d genes", iK, iChanged );
+		if( g_CatSleipnir.isDebugEnabled( ) )
+			for( i = 0; i < MatPrev.GetRows( ); ++i ) {
+				ostringstream	ossm;
+
+				for( j = 0; j < MatPrev.GetColumns( ); ++j )
+					ossm << ( j ? "\t" : "" ) << MatPrev.Get( i, j );
+				g_CatSleipnir.debug( "CClustKMeans::Cluster( %d ) object %d:	%s", iK, i,
+					ossm.str( ).c_str( ) ); }
+		copy( veciNext.begin( ), veciNext.end( ), veciPrev.begin( ) );
+		for( i = 0; i < MatPrev.GetRows( ); ++i )
+			memcpy( MatPrev.Get( i ), MatNext.Get( i ), MatPrev.GetColumns( ) * sizeof(*MatPrev.Get( i )) ); }
 
 	return true; }
 
