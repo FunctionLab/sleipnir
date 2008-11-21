@@ -184,7 +184,7 @@ double CMeasureEuclidean::Measure( const float* adX, size_t iM, const float* adY
 double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY, size_t iN, EMap eMap,
 	const float* adWX, const float* adWY, size_t* piCount ) {
 	double	dMX, dMY, dRet, dDX, dDY, dX, dY;
-	size_t	i;
+	size_t	i, iCount;
 
 	if( piCount )
 		*piCount = 0;
@@ -192,11 +192,10 @@ double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY, 
 		return CMeta::GetNaN( );
 
 	dMX = dMY = dX = dY = 0;
-	for( i = 0; i < iN; ++i ) {
+	for( iCount = i = 0; i < iN; ++i ) {
 		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
 			continue;
-		if( piCount )
-			(*piCount)++;
+		iCount++;
 		dX += GetWeight( adWX, i );
 		dY += GetWeight( adWY, i );
 		dMX += adX[ i ] * GetWeight( adWX, i );
@@ -214,7 +213,7 @@ double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY, 
 		dDX += dX * dX * GetWeight( adWX, i );
 		dDY += dY * dY * GetWeight( adWY, i ); }
 	if( !( dDX || dDY ) )
-		dRet = CMeta::GetNaN( );
+		dRet = iCount ? 1 : CMeta::GetNaN( );
 	else {
 		if( dDX )
 			dRet /= sqrt( dDX );
@@ -229,6 +228,8 @@ double CMeasurePearson::Pearson( const float* adX, size_t iM, const float* adY, 
 		case EMapAbs:
 			dRet = fabs( dRet );
 			break; }
+	if( piCount )
+		*piCount = iCount;
 
 	return dRet; }
 
@@ -252,7 +253,7 @@ double CMeasureQuickPearson::Measure( const float* adX, size_t iM, const float* 
 		dDX += dX * dX;
 		dDY += dY * dY; }
 	if( !( dDX || dDY ) )
-		dRet = CMeta::GetNaN( );
+		dRet = 1;
 	else {
 		if( dDX )
 			dRet /= sqrt( dDX );

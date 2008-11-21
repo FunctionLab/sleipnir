@@ -398,13 +398,23 @@ public:
 
 	template<class tType>
 	static double ZScore( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo ) {
-		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dAve, dStd;
 
-		Sums( vecOne.begin( ), vecOne.end( ), &dAveOne, &dVarOne );
-		Sums( vecTwo.begin( ), vecTwo.end( ), &dAveTwo, &dVarTwo );
-		dAve = ( dAveOne + dAveTwo ) / ( vecOne.size( ) + vecTwo.size( ) );
-		dAveOne /= vecOne.size( );
-		dStd = sqrt( ( ( dVarOne + dVarTwo ) / ( vecOne.size( ) + vecTwo.size( ) ) ) - ( dAve * dAve ) );
+		return ZScore( vecOne.begin( ), vecOne.end( ), vecTwo.begin( ), vecTwo.end( ) ); }
+
+	template<class tType>
+	static double ZScore( const tType BeginOne, const tType EndOne, const tType BeginTwo, const tType EndTwo,
+		double* pdAverage = NULL ) {
+		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dAve, dStd;
+		size_t	iOne, iTwo;
+
+		Sums( BeginOne, EndOne, &dAveOne, &dVarOne, &iOne );
+		Sums( BeginTwo, EndTwo, &dAveTwo, &dVarTwo, &iTwo );
+		dAve = ( iOne || iTwo ) ? ( ( dAveOne + dAveTwo ) / ( iOne + iTwo ) ) : 0;
+		if( iOne )
+			dAveOne /= iOne;
+		if( pdAverage )
+			*pdAverage = dAveOne;
+		dStd = ( iOne || iTwo ) ? sqrt( ( ( dVarOne + dVarTwo ) / ( iOne + iTwo ) ) - ( dAve * dAve ) ) : 0;
 
 		return ( dStd ? ( ( dAveOne - dAve ) / dStd ) : 0 ); }
 
@@ -913,7 +923,8 @@ public:
 
 		vecdXmMu.resize( vecdX.size( ) );
 		for( i = 0; i < vecdXmMu.size( ); ++i )
-			vecdXmMu[ i ] = vecdX[ i ] - vecdMu[ i ];
+			if( CMeta::IsNaN( vecdXmMu[ i ] = vecdX[ i ] - vecdMu[ i ] ) )
+				vecdXmMu[ i ] = 0;
 		MatrixMultiply( vecdXmMu, MatSigmaInv, vecdXmMutS );
 		d = MatrixMultiply( vecdXmMutS, vecdXmMu );
 

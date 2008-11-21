@@ -376,7 +376,7 @@ public:
 class CMeasurePearson : public IMeasure {
 public:
 	static double Pearson( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap,
-		const float* adWX, const float* adWY, size_t* piCount = NULL );
+		const float* adWX = NULL, const float* adWY = NULL, size_t* piCount = NULL );
 
 	const char* GetName( ) const {
 

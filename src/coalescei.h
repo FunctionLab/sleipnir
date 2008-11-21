@@ -318,9 +318,10 @@ public:
 		dZ = dStd ? ( ( dAveOne - dAve ) / dStd ) : 0;
 		return ( dStd ? CStatistics::ZTest( dZ, GetTotal( ) ) : ( ( dAveOne == dAve ) ? 1 : 0 ) ); }
 
-	double CohensD( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAverage, double& dZ ) const {
+	double CohensD( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAverage, double& dZ,
+		bool fCount = true ) const {
 
-		return CohensD( iMember, HistSet, iMember, true, dAverage, dZ ); }
+		return CohensD( iMember, HistSet, iMember, fCount, dAverage, dZ ); }
 
 	double CohensD( size_t iOne, const CCoalesceHistogramSet& HistSet, size_t iTwo, bool fCount,
 		double& dAverage, double& dZ ) const {
@@ -928,6 +929,7 @@ protected:
 		size_t										m_iStep;
 		const CPCL*									m_pPCL;
 		float										m_dFraction;
+		float										m_dPValue;
 		const std::set<std::pair<size_t, size_t> >*	m_psetpriiSeeds;
 		double										m_dMaxCorr;
 		double										m_dMinP;
@@ -1002,17 +1004,17 @@ protected:
 		dPOut = ( ( dPOut * dZ ) + dPAverage ) / ( dZ + 1 ); }
 
 	void Add( size_t, CCoalesceCluster& );
-	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
-	bool AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float,
+	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float, double );
+	double AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float,
 		size_t );
 	void CalculateCentroid( const CPCL& );
 	bool IsSignificant( size_t, const CPCL&, const CCoalesceMotifLibrary*, const CCoalesceGeneScores&,
 		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, const CCoalesceCluster&,
 		const std::vector<size_t>&, size_t, float ) const;
 	bool CalculateProbabilityExpression( size_t, const CPCL&, const CCoalesceCluster&,
-		const std::vector<size_t>&, bool, long double&, long double& ) const;
+		const std::vector<size_t>&, bool, float&, float& ) const;
 	bool CalculateProbabilityMotifs( const CCoalesceGeneScores&, size_t, const CCoalesceGroupHistograms&,
-		const CCoalesceGroupHistograms&, bool, size_t, long double&, long double& ) const;
+		const CCoalesceGroupHistograms&, bool, size_t, float&, float& ) const;
 	bool SaveCopy( const CPCL&, size_t, CPCL&, size_t, bool ) const;
 
 	const SCoalesceDataset& GetDataset( size_t iDataset ) const {
@@ -1076,7 +1078,7 @@ protected:
 		const CCoalesceCluster&, size_t, CCoalesceGeneScores&, CCoalesceGroupHistograms&,
 		CCoalesceGroupHistograms& ) const;
 	bool InitializeDatasets( const CPCL& );
-	bool InitializeGeneScores( const CPCL&, const CFASTA&, CPCL&, std::vector<size_t>&, SCoalesceModifiers&,
+	bool InitializeGeneScores( const CPCL&, const CFASTA&, std::vector<size_t>&, SCoalesceModifiers&,
 		CCoalesceGeneScores& );
 
 	float							m_dPValueMerge;
