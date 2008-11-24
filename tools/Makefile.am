@@ -22,6 +22,7 @@ if WITH_TOOLS
 	  KNNImputer \
 	  Mat2Txt \
 	  MCluster \
+	  Matcher \
 	  MIer \
 	  Normalizer \
 	  Orthologer \

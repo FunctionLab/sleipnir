@@ -67,26 +67,29 @@ CHierarchyImpl::~CHierarchyImpl( ) {
 	if( m_pRight )
 		delete m_pRight; }
 
-bool CHierarchyImpl::Save( std::ostream& ostm, size_t iNode ) const {
+bool CHierarchyImpl::Save( std::ostream& ostm, size_t iNode, const vector<string>* pvecstrGenes ) const {
 
 	if( IsGene( ) )
 		return false;
 
 	if( iNode == m_iID ) {
-		ostm << GetSave( ) << '\t' << m_pLeft->GetSave( ) << '\t' <<
-			m_pRight->GetSave( ) << '\t' << m_dScore << endl;
+		ostm << GetSave( ) << '\t' << m_pLeft->GetSave( pvecstrGenes ) << '\t' <<
+			m_pRight->GetSave( pvecstrGenes ) << '\t' << m_dScore << endl;
 		return true; }
 
-	return ( ((const CHierarchyImpl*)m_pLeft)->Save( ostm, iNode ) ||
-		((const CHierarchyImpl*)m_pRight)->Save( ostm, iNode ) ); }
+	return ( ((const CHierarchyImpl*)m_pLeft)->Save( ostm, iNode, pvecstrGenes ) ||
+		((const CHierarchyImpl*)m_pRight)->Save( ostm, iNode, pvecstrGenes ) ); }
 
-string CHierarchyImpl::GetSave( ) const {
+string CHierarchyImpl::GetSave( const vector<string>* pvecstrGenes ) const {
 	string	strRet;
 	char	achBuf[ 16 ];
 
-	strRet = IsGene( ) ? "GENE" : "NODE";
-	sprintf_s( achBuf, "%d", m_iID );
-	strRet += achBuf;
+	if( !( pvecstrGenes && IsGene( ) ) ) {
+		strRet = IsGene( ) ? "GENE" : "NODE";
+		sprintf_s( achBuf, "%d", m_iID );
+		strRet += achBuf; }
+	else
+		strRet = (*pvecstrGenes)[ m_iID ];
 
 	return strRet; }
 

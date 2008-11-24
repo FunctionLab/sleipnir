@@ -55,16 +55,20 @@ public:
 	 * \param iGenes
 	 * Total number of leaf nodes in the hierarchy.
 	 * 
+	 * \param pvecstrGenes
+	 * If non-NULL, vector of gene names to be emitted in place of GENE IDs.
+	 * 
 	 * \remarks
 	 * iGenes can be calculated from the hierarchy; it is included as an input solely for convenience
 	 * purposes, since the genes must be output in original order (not traversal order) to satisfy GTR
 	 * file formatting requirements.
 	 */
-	void Save( std::ostream& ostm, size_t iGenes ) const {
+	void Save( std::ostream& ostm, size_t iGenes,
+		const std::vector<std::string>* pvecstrGenes = NULL ) const {
 		size_t	i;
 
 		for( i = 0; ( i + 1 ) < iGenes; ++i )
-			CHierarchyImpl::Save( ostm, i ); }
+			CHierarchyImpl::Save( ostm, i, pvecstrGenes ); }
 
 	/*!
 	 * \brief

@@ -336,24 +336,9 @@ bool CDatabase::Open( const string& strInputDirectory ) {
 	size_t			i, j;
 	vector<string>	vecstrFiles;
 	string			strFile;
-#ifdef _MSC_VER
-	HANDLE			hSearch;
-	WIN32_FIND_DATA	sEntry;
-	bool			fContinue;
 
-	for( fContinue = true,hSearch = FindFirstFile( ( strInputDirectory + "/*" ).c_str( ), &sEntry );
-		fContinue && ( hSearch != INVALID_HANDLE_VALUE );
-		fContinue = !!FindNextFile( hSearch, &sEntry ) ) {
-		strFile = sEntry.cFileName;
-#else // _MSC_VER
-	DIR*			pDir;
-	struct dirent*	psEntry;
-
-	pDir = opendir( strInputDirectory.c_str( ) );
-	for( psEntry = readdir( pDir ); psEntry; psEntry = readdir( pDir ) ) {
-		strFile = psEntry->d_name;
-#endif // _MSC_VER
-		if( strFile.find( c_acExtension ) == -1 )
+	FOR_EACH_DIRECTORY_FILE(strInputDirectory, strFile)
+		if( !CMeta::IsExtension( strFile, c_acExtension ) )
 			continue;
 
 		i = atoi( CMeta::Deextension( CMeta::Basename( strFile.c_str( ) ) ).c_str( ) );

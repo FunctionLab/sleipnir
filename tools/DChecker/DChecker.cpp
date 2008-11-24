@@ -72,7 +72,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
+	CMeta Meta( sArgs.verbosity_arg );
 
 	fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg || sArgs.genee_arg );
 	if( !Answers.Open( sArgs.answers_arg, fMapAnswers ) ) {

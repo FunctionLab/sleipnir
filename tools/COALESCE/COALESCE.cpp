@@ -28,6 +28,10 @@ enum EFile {
 	EFileError
 };
 
+int main_postprocess( const gengetopt_args_info&, CCoalesceMotifLibrary& );
+bool recluster( const gengetopt_args_info&, CCoalesceMotifLibrary&, const CHierarchy&,
+	const vector<CCoalesceCluster>&, const vector<string>&, vector<CCoalesceCluster>& );
+
 EFile open_pclwig( const char* szFile, size_t iSkip, CFASTA& FASTA, CPCL& PCL ) {
 
 	if( FASTA.Open( szFile ) )
@@ -57,6 +61,11 @@ int main( int iArgs, char** aszArgs ) {
 	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
 
 	CCoalesceMotifLibrary		Motifs( sArgs.k_arg );
+	Motifs.SetPenaltyGap( (float)sArgs.penalty_gap_arg );
+	Motifs.SetPenaltyMismatch( (float)sArgs.penalty_mismatch_arg );
+
+	if( sArgs.postprocess_arg )
+		return main_postprocess( sArgs, Motifs );
 
 	if( sArgs.sequences_arg ) {
 		vector<string>	vecstrTypes;
@@ -103,8 +112,6 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetNumberCorrelation( sArgs.number_correl_arg );
 	Coalesce.SetPValueMerge( (float)sArgs.pvalue_merge_arg );
 	Coalesce.SetCutoffMerge( (float)sArgs.cutoff_merge_arg );
-	Coalesce.SetPenaltyGap( (float)sArgs.penalty_gap_arg );
-	Coalesce.SetPenaltyMismatch( (float)sArgs.penalty_mismatch_arg );
 	Coalesce.SetBasesPerMatch( sArgs.bases_arg );
 	Coalesce.SetSizeMinimum( sArgs.size_minimum_arg );
 	Coalesce.SetSizeMaximum( sArgs.size_maximum_arg );
@@ -130,8 +137,77 @@ int main( int iArgs, char** aszArgs ) {
 	for( i = 0; i < vecClusters.size( ); ++i )
 		vecClusters[ i ].Save( cout, i, PCL, &Motifs );
 
-	pthread_exit( NULL );
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32
 	return 0; }
+
+int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& Motifs ) {
+	string						strDir, strFile, strBase;
+	vector<CCoalesceCluster>	vecClustersFrom, vecClustersTo;
+	bool						fFailed;
+	CDistanceMatrix				MatSim;
+	size_t						i, j, iDatasets;
+	CHierarchy*					pHier;
+	vector<string>				vecstrClusters;
+	CPCL						PCL;
+
+	if( sArgs.input_arg ) {
+		if( !PCL.Open( sArgs.input_arg, sArgs.skip_arg ) ) {
+			cerr << "Could not open: " << sArgs.input_arg << endl;
+			return 1; } }
+	else if( !PCL.Open( cin, sArgs.skip_arg ) ) {
+		cerr << "Could not open: stdin" << endl;
+		return 1; }
+	fFailed = false;
+	strDir = sArgs.postprocess_arg;
+	FOR_EACH_DIRECTORY_FILE(strDir, strFile)
+		if( !CMeta::IsExtension( strFile, CPCL::GetExtension( ) ) )
+			continue;
+		strBase = CMeta::Deextension( strFile );
+		strFile = strDir + '/' + strFile;
+
+		if( !fFailed )
+			vecClustersFrom.push_back( CCoalesceCluster( ) );
+		if( fFailed = ( ( iDatasets = vecClustersFrom.back( ).Open( strFile, sArgs.skip_arg, PCL,
+			&Motifs ) ) == -1 ) ) {
+			cerr << "Could not open: " << strFile << endl;
+			continue; }
+		vecstrClusters.push_back( strBase ); }
+	if( fFailed )
+		vecClustersFrom.pop_back( );
+
+	MatSim.Initialize( vecClustersFrom.size( ) );
+	for( i = 0; i < MatSim.GetSize( ); ++i )
+		for( j = ( i + 1 ); j < MatSim.GetSize( ); ++j )
+			MatSim.Set( i, j, vecClustersFrom[ i ].GetSimilarity( vecClustersFrom[ j ], PCL.GetGenes( ),
+				iDatasets ) );
+	if( !( ( pHier = CClustHierarchical::Cluster( MatSim ) ) &&
+		recluster( sArgs, Motifs, *pHier, vecClustersFrom, vecstrClusters, vecClustersTo ) ) )
+		return 1;
+
+	for( i = 0; i < vecClustersTo.size( ); ++i ) {
+		if( sArgs.output_arg )
+			vecClustersTo[ i ].Save( sArgs.output_arg, i, PCL, &Motifs );
+		vecClustersTo[ i ].Save( cout, i, PCL, &Motifs ); }
+
+	return 0; }
+
+bool recluster( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& Motifs, const CHierarchy& Hier,
+	const vector<CCoalesceCluster>& vecClustersFrom, const vector<string>& vecstrClustersFrom,
+	vector<CCoalesceCluster>& vecClustersTo ) {
+	bool	fRet;
+
+	if( Hier.IsGene( ) || ( Hier.GetSimilarity( ) > sArgs.cutoff_postprocess_arg ) ) {
+		cerr << "Creating output cluster " << vecClustersTo.size( ) << endl;
+		vecClustersTo.push_back( CCoalesceCluster( ) );
+		fRet = vecClustersTo.back( ).Open( Hier, vecClustersFrom, vecstrClustersFrom,
+			(float)sArgs.fraction_postprocess_arg, (float)sArgs.cutoff_merge_arg, &Motifs );
+		if( fRet && ( vecClustersTo.back( ).GetGenes( ).size( ) < (size_t)sArgs.size_minimum_arg ) ) {
+			cerr << "Cluster too small: " << vecClustersTo.back( ).GetGenes( ).size( ) << endl;
+			vecClustersTo.pop_back( ); }
+		return fRet; }
+
+	return ( recluster( sArgs, Motifs, Hier.Get( false ), vecClustersFrom, vecstrClustersFrom,
+		vecClustersTo ) && recluster( sArgs, Motifs, Hier.Get( true ), vecClustersFrom, vecstrClustersFrom,
+		vecClustersTo ) ); }

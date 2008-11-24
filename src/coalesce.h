@@ -57,6 +57,7 @@ public:
 
 	float GetMatch( const std::string& strSequence, uint32_t iMotif, size_t iOffset,
 		SCoalesceModifierCache& sModifiers ) const;
+	uint32_t Open( const std::string& strMotif );
 
 	/*!
 	 * \brief
@@ -148,6 +149,66 @@ public:
 
 	/*!
 	 * \brief
+	 * Returns a motif ID representing the "merger" of the input motif (which can be of any type) with an
+	 * empty PST.
+	 * 
+	 * \param iMotif
+	 * Motif to be "merged" into a PST.
+	 * 
+	 * \returns
+	 * -1 if the motif cannot be merged; the ID of the new PST otherwise.
+	 */
+	uint32_t Merge( uint32_t iMotif ) {
+		uint32_t	iRet;
+		CPST*		pPST;
+
+		if( !( pPST = CreatePST( iRet ) ) )
+			return -1;
+		switch( GetType( iMotif ) ) {
+			case ETypeRC:
+				return MergeRCPST( iMotif, *pPST, FLT_MAX );
+
+			case ETypePST:
+				return MergePSTs( *GetPST( iMotif ), *pPST, FLT_MAX ); }
+
+		return MergeKMerPST( GetMotif( iMotif ), *pPST, FLT_MAX ); }
+
+	float Align( uint32_t iOne, uint32_t iTwo, float dCutoff ) {
+
+		switch( GetType( iOne ) ) {
+			case ETypeRC:
+				switch( GetType( iTwo ) ) {
+					case ETypeKMer:
+						return AlignKMerRC( GetMotif( iTwo ), iOne, dCutoff );
+
+					case ETypeRC:
+						return AlignRCs( iOne, iTwo, dCutoff );
+
+					case ETypePST:
+						return AlignRCPST( iOne, *GetPST( iTwo ), dCutoff ); }
+
+			case ETypePST:
+				switch( GetType( iTwo ) ) {
+					case ETypeKMer:
+						return AlignKMerPST( GetMotif( iTwo ), *GetPST( iOne ), dCutoff );
+
+					case ETypeRC:
+						return AlignRCPST( iTwo, *GetPST( iOne ), dCutoff );
+
+					case ETypePST:
+						return AlignPSTs( *GetPST( iOne ), *GetPST( iTwo ), dCutoff ); } }
+
+		switch( GetType( iTwo ) ) {
+			case ETypeRC:
+				return AlignKMerRC( GetMotif( iOne ), iTwo, dCutoff );
+
+			case ETypePST:
+				return AlignKMerPST( GetMotif( iOne ), *GetPST( iTwo ), dCutoff ); }
+
+		return AlignKMers( GetMotif( iOne ), GetMotif( iTwo ), dCutoff ); }
+
+	/*!
+	 * \brief
 	 * Returns the number of motifs currently being managed by the library.
 	 * 
 	 * \returns
@@ -206,7 +267,7 @@ public:
 			return false;
 		veciMotifs.push_back( iMotif );
 // reverse complement
-		if( ( iRC = m_vecKMer2RC[ iMotif ] ) != -1 )
+		if( ( iRC = m_veciKMer2RC[ iMotif ] ) != -1 )
 			veciMotifs.push_back( GetBaseRCs( ) + iRC );
 		return true; }
 
@@ -288,9 +349,15 @@ public:
 		const CCoalesceMotifLibrary* pMotifs = NULL );
 	void CalculateHistograms( const CCoalesceGeneScores& GeneScores,
 		CCoalesceGroupHistograms& HistogramsCluster, CCoalesceGroupHistograms* pHistogramsPot ) const;
+	size_t Open( const std::string& strPCL, size_t iSkip, const CPCL& PCL,
+		CCoalesceMotifLibrary* pMotifs = NULL );
+	bool Open( const CHierarchy& Hierarchy, const std::vector<CCoalesceCluster>& vecClusters,
+		const std::vector<std::string>& vecstrClusters, float dFraction, float dCutoff,
+		CCoalesceMotifLibrary* pMotifs = NULL );
 	bool Save( const std::string& strDirectory, size_t iID, const CPCL& PCL,
 		const CCoalesceMotifLibrary* pMotifs = NULL ) const;
 	void Save( std::ostream&, size_t iID, const CPCL& PCL, const CCoalesceMotifLibrary* pMotifs = NULL ) const;
+	float GetSimilarity( const CCoalesceCluster& Cluster, size_t iGenes, size_t iDatasets ) const;
 
 	bool IsConverged( ) {
 
@@ -327,6 +394,10 @@ public:
 	bool IsGene( size_t iGene ) const {
 
 		return CCoalesceClusterImpl::IsGene( iGene ); }
+
+	bool IsDataset( size_t iDataset ) const {
+
+		return ( m_setiDatasets.find( iDataset ) != m_setiDatasets.end( ) ); }
 };
 
 class CCoalesce : CCoalesceImpl {
@@ -434,22 +505,6 @@ public:
 	void SetCutoffMerge( float dCutoff ) {
 
 		m_dCutoffMerge = dCutoff; }
-
-	float GetPenaltyGap( ) const {
-
-		return m_dPenaltyGap; }
-
-	void SetPenaltyGap( float dPenalty ) {
-
-		m_dPenaltyGap = dPenalty; }
-
-	float GetPenaltyMismatch( ) const {
-
-		return m_dPenaltyMismatch; }
-
-	void SetPenaltyMismatch( float dPenalty ) {
-
-		m_dPenaltyMismatch = dPenalty; }
 
 	size_t GetSizeMinimum( ) const {
 

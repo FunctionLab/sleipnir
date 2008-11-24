@@ -118,6 +118,17 @@ public:
 
 	/*!
 	 * \brief
+	 * Returns the standard extension (including period) for PCL files.
+	 * 
+	 * \returns
+	 * Standard extension (including period) for PCL files, ".pcl".
+	 */
+	static const char* GetExtension( ) {
+
+		return CPCLImpl::c_szExtension; }
+
+	/*!
+	 * \brief
 	 * Create a new PCL object with or without a header row.
 	 * 
 	 * \param fHeader

@@ -39,17 +39,13 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
-#ifdef SMILEXML_LIB
-	EnableXdslFormat( );
-#endif
+	CMeta Meta( sArgs.verbosity_arg );
 
 	for( iRet = 1,i = 0; c_aszTrusters[ i ]; ++i )
 		if( !strcmp( c_aszTrusters[ i ], sArgs.type_arg ) ) {
 			iRet = c_apfnTrusters[ i ]( sArgs );
 			break; }
 
-	pthread_exit( NULL );
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32

@@ -29,7 +29,6 @@ namespace Sleipnir {
 
 const char	CDataImpl::c_szDat[]	= ".dat";
 const char	CDataImpl::c_szDab[]	= ".dab";
-const char	CDataImpl::c_szPcl[]	= ".pcl";
 
 void CDataImpl::FilterGenes( IDataset* pData, const CGenes& Genes, CDat::EFilter eFilt ) {
 	vector<bool>	vecfGenes;
@@ -110,7 +109,7 @@ size_t CDataImpl::OpenMax( const char* szDataDir, const std::vector<std::string>
 					OpenGenes( ifsm, false, false, *psetstrGenes ); }
 			else {
 				strFile.resize( strFile.length( ) - strlen( c_szDat ) );
-				strFile += c_szPcl;
+				strFile += CPCL::GetExtension( );
 				ifsm.clear( );
 				ifsm.open( strFile.c_str( ) );
 				if( ifsm.is_open( ) ) {

@@ -52,10 +52,8 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) || !sArgs.inputs_num ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg, sArgs.random_arg );
-#ifdef SMILEXML_LIB
-	EnableXdslFormat( );
-#endif
+	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
+
 	pMeasure = NULL;
 	for( i = 0; apMeasures[ i ]; ++i )
 		if( !strcmp( apMeasures[ i ]->GetName( ), sArgs.distance_arg ) ) {
@@ -194,26 +192,9 @@ int read_genes( const char* szPositives, const char* szNegatives, CGenome& Genom
 
 	cerr << "Reading related gene pairs...";
 	strDir = szPositives;
-#ifdef _MSC_VER
-	bool			fOK;
-	HANDLE			hFind;
-	WIN32_FIND_DATA	sFind;
-	for( fOK = ( hFind = FindFirstFile( ( strDir + "\\*" ).c_str( ), &sFind ) ) !=
-		INVALID_HANDLE_VALUE; fOK; fOK = !!FindNextFile( hFind, &sFind ) ) {
-		if( sFind.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-			continue;
-		strFile = strDir + '/' + ( strBase = sFind.cFileName );
-#else // _MSC_VER
-	DIR*			pDir;
-	struct dirent*	pFind;
-	struct stat		sStat;
-	pDir = opendir( strDir.c_str( ) );
-	while( pFind = readdir( pDir ) ) {
-		strFile = strDir + '/' + ( strBase = pFind->d_name );
-		stat( strFile.c_str( ), &sStat );
-		if( S_ISDIR( sStat.st_mode ) )
-			continue;
-#endif // _MSC_VER
+	FOR_EACH_DIRECTORY_FILE(strDir, strFile)
+		strBase = strFile;
+		strFile = strDir + '/' + strFile;
 
 		ifsm.clear( );
 		ifsm.open( strFile.c_str( ) );

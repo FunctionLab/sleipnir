@@ -241,6 +241,9 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 
 	m_vecvecdQuants.resize( GetExperiments( ) );
 	for( i = 0; i < m_vecvecdQuants.size( ); ++i ) {
+		if( ifsm.eof( ) ) {
+			g_CatSleipnir.error( "CPCLPair::Open( %s, %d ) invalid quant file", szDatafile, iSkip );
+			return false; }
 		ifsm.getline( szBuf, c_iBuf - 1 );
 		if( !CPairImpl::Open( szBuf, m_vecvecdQuants[ i ] ) )
 			return false; }

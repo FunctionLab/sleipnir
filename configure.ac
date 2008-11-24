@@ -541,6 +541,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/KNNImputer/Makefile \
 		 tools/Mat2Txt/Makefile \
 		 tools/MCluster/Makefile \
+		 tools/Matcher/Makefile \
 		 tools/MIer/Makefile \
 		 tools/Normalizer/Makefile \
 		 tools/Orthologer/Makefile \

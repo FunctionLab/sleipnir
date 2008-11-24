@@ -29,12 +29,13 @@
 
 namespace Sleipnir {
 
-const char	CPCLImpl::c_szEWEIGHT[]	= "EWEIGHT";
-const char	CPCLImpl::c_szGENE[]	= "GENE";
-const char	CPCLImpl::c_szGID[]		= "GID";
-const char	CPCLImpl::c_szGWEIGHT[]	= "GWEIGHT";
-const char	CPCLImpl::c_szNAME[]	= "NAME";
-const char	CPCLImpl::c_szOne[]		= "1";
+const char	CPCLImpl::c_szEWEIGHT[]		= "EWEIGHT";
+const char	CPCLImpl::c_szGENE[]		= "GENE";
+const char	CPCLImpl::c_szGID[]			= "GID";
+const char	CPCLImpl::c_szGWEIGHT[]		= "GWEIGHT";
+const char	CPCLImpl::c_szNAME[]		= "NAME";
+const char	CPCLImpl::c_szOne[]			= "1";
+const char	CPCLImpl::c_szExtension[]	= ".pcl";
 
 struct SNeighbors {
 	CFullMatrix<pair<size_t, float> >	m_MatNeighbors;

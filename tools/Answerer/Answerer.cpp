@@ -36,7 +36,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg, sArgs.random_arg );
+	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
 
 	if( sArgs.genome_arg ) {
 		ifstream	ifsm;
@@ -105,28 +105,10 @@ int read_genes( const char* szDir, CGenome& Genome, vector<CGenes*>& vecpGenes )
 	string		strDir, strFile;
 
 	strDir = szDir;
-#ifdef _MSC_VER
-	bool			fOK;
-	HANDLE			hFind;
-	WIN32_FIND_DATA	sFind;
-	for( fOK = ( hFind = FindFirstFile( ( strDir + "\\*" ).c_str( ), &sFind ) ) !=
-		INVALID_HANDLE_VALUE; fOK; fOK = !!FindNextFile( hFind, &sFind ) ) {
-		if( sFind.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-			continue;
-		strFile = strDir + '/' + sFind.cFileName;
-#else // _MSC_VER
-	DIR*			pDir;
-	struct dirent*	pFind;
-	struct stat		sStat;
-	pDir = opendir( szDir );
-	while( pFind = readdir( pDir ) ) {
-		strFile = strDir + '/' + pFind->d_name;
-		stat( strFile.c_str( ), &sStat );
-		if( S_ISDIR( sStat.st_mode ) )
-			continue;
-#endif // _MSC_VER
+	FOR_EACH_DIRECTORY_FILE(strDir, strFile)
 		ifstream	ifsm;
 
+		strFile = strDir + '/' + strFile;
 		ifsm.open( strFile.c_str( ) );
 		pGenes = new CGenes( Genome );
 		if( !pGenes->Open( ifsm ) ) {

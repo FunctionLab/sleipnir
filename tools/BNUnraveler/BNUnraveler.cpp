@@ -67,10 +67,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) || !sArgs.inputs_num ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
-#ifdef SMILEXML_LIB
-	EnableXdslFormat( );
-#endif
+	CMeta Meta( sArgs.verbosity_arg );
 
 	vecpBNs.resize( sArgs.inputs_num );
 	for( i = 0; i < vecpBNs.size( ); ++i ) {
@@ -231,7 +228,6 @@ int main( int iArgs, char** aszArgs ) {
 		delete vecpNo[ i ];
 		delete vecpGenes[ i ]; }
 
-	pthread_exit( NULL );
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32
@@ -256,7 +252,6 @@ void* initialize( void* pData ) {
 		psData->m_pYes->Set( i, adBuffer ); }
 	delete[] adBuffer;
 
-	pthread_exit( NULL );
 	return NULL; }
 
 void* evaluate( void* pData ) {
@@ -315,7 +310,6 @@ void* evaluate( void* pData ) {
 	delete[] adYes;
 	delete[] adNo;
 
-	pthread_exit( NULL );
 	return NULL; }
 
 void* finalize( void* pData ) {
@@ -343,5 +337,4 @@ void* finalize( void* pData ) {
 	delete[] adNo;
 	delete[] adYes;
 
-	pthread_exit( NULL );
 	return NULL; }

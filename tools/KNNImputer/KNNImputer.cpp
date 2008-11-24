@@ -32,7 +32,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
+	CMeta Meta( sArgs.verbosity_arg );
 
 	if( iRet = CPCL::Distance( sArgs.input_arg, sArgs.skip_arg, sArgs.distance_arg, false, false,
 		!!sArgs.autocorrelate_flag, sArgs.genes_arg, CMeta::GetNaN( ), sArgs.limit_arg, PCL, Dat ) ) {

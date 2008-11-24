@@ -80,10 +80,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( iRet ) {
 		cmdline_parser_print_help( );
 		return iRet; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
-#ifdef SMILEXML_LIB
-	EnableXdslFormat( );
-#endif
+	CMeta Meta( sArgs.verbosity_arg );
 
 // Open Gene Ontology
 	if( sArgs.go_onto_arg ) {

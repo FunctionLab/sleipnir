@@ -253,6 +253,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Synthesizer", "Synthesizer\
 		{772E04C2-CF1E-412B-9BAE-3A4A132837DB} = {772E04C2-CF1E-412B-9BAE-3A4A132837DB}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Matcher", "Matcher\Matcher.vcproj", "{56C30EA3-24DF-4AB4-B68E-17C954F8AA86}"
+	ProjectSection(ProjectDependencies) = postProject
+		{772E04C2-CF1E-412B-9BAE-3A4A132837DB} = {772E04C2-CF1E-412B-9BAE-3A4A132837DB}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -467,6 +472,10 @@ Global
 		{56C30EA3-24DF-4AB4-B68E-17C954F8A819}.Debug|Win32.Build.0 = Debug|Win32
 		{56C30EA3-24DF-4AB4-B68E-17C954F8A819}.Release|Win32.ActiveCfg = Release|Win32
 		{56C30EA3-24DF-4AB4-B68E-17C954F8A819}.Release|Win32.Build.0 = Release|Win32
+		{56C30EA3-24DF-4AB4-B68E-17C954F8AA86}.Debug|Win32.ActiveCfg = Debug|Win32
+		{56C30EA3-24DF-4AB4-B68E-17C954F8AA86}.Debug|Win32.Build.0 = Debug|Win32
+		{56C30EA3-24DF-4AB4-B68E-17C954F8AA86}.Release|Win32.ActiveCfg = Release|Win32
+		{56C30EA3-24DF-4AB4-B68E-17C954F8AA86}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

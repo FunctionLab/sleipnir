@@ -51,7 +51,7 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
+	CMeta Meta( sArgs.verbosity_arg );
 
 	if( sArgs.features_arg ) {
 		ifsm.open( sArgs.features_arg );

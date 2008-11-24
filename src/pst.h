@@ -287,7 +287,7 @@ public:
 	 */
 	bool Open( const std::string& strPST ) {
 
-		return CPSTImpl::Open( strPST, m_sRoot ); }
+		return ( ( m_iDepth = CPSTImpl::Open( strPST, m_sRoot ) ) != -1 ); }
 };
 
 }

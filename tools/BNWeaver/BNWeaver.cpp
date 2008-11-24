@@ -65,10 +65,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg, sArgs.random_arg );
-#ifdef SMILEXML_LIB
-	EnableXdslFormat( );
-#endif
+	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
 
 	if( sArgs.zeros_arg ) {
 		ifstream		ifsm;
@@ -139,28 +136,11 @@ int main( int iArgs, char** aszArgs ) {
 		for( i = 0; i < iThread; ++i )
 			pthread_join( vecpthdThreads[ iTerm + i ], NULL ); }
 
-#ifdef _MSC_VER
-	HANDLE			hSearch;
-	WIN32_FIND_DATA	sEntry;
-	bool			fContinue;
-
-	for( fContinue = true,hSearch = FindFirstFile( ( (string)sArgs.directory_arg + "/*.quant" ).c_str( ),
-		&sEntry ); fContinue && ( hSearch != INVALID_HANDLE_VALUE );
-		fContinue = !!FindNextFile( hSearch, &sEntry ) ) {
-		strFile = sEntry.cFileName;
-#else // _MSC_VER
-	DIR*			pDir;
-	struct dirent*	psEntry;
-
-	pDir = opendir( sArgs.directory_arg );
-	for( psEntry = readdir( pDir ); psEntry; psEntry = readdir( pDir ) ) {
-		strFile = psEntry->d_name;
-#endif // _MSC_VER
+	FOR_EACH_DIRECTORY_FILE((string)sArgs.directory_arg, strFile)
 		vector<string>				vecstrNames;
 		vector<CBayesNetSmile*>*	pvecpBNData;
 
-		if( ( strFile.length( ) < ARRAYSIZE(c_acQuant) ) || ( ( i = strFile.rfind( c_acQuant ) ) !=
-			( strFile.length( ) - ARRAYSIZE(c_acQuant) + 1 ) ) )
+		if( !CMeta::IsExtension( strFile, c_acQuant ) )
 			continue;
 
 		vecstrNames.push_back( (string)sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDab );
@@ -229,7 +209,6 @@ int main( int iArgs, char** aszArgs ) {
 		delete vecpBNRoots[ i ];
 		delete vecpGenes[ i ]; }
 
-	pthread_exit( NULL );
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32
@@ -247,12 +226,10 @@ void* learn( void* pData ) {
 		DataFilter.Attach( psData->m_pData, *psData->m_pGenes, CDat::EFilterTerm, psData->m_pAnswers );
 	if( !psData->m_pBN->Open( &DataFilter, *psData->m_pvecstrNames, *psData->m_pveciZeros ) ) {
 		cerr << "Couldn't create base network: " << psData->m_szName << endl;
-		pthread_exit( NULL );
 		return NULL; }
 	if( psData->m_pBNDefault )
 		psData->m_pBN->SetDefault( *psData->m_pBNDefault );
 	if( !psData->m_pBN->Learn( &DataFilter, 1, psData->m_fZero ) )
 		cerr << "Couldn't learn base network: " << psData->m_szName << endl;
 
-	pthread_exit( NULL );
 	return NULL; }

@@ -36,8 +36,8 @@ class CHierarchyImpl {
 protected:
 	~CHierarchyImpl( );
 
-	std::string GetSave( ) const;
-	bool Save( std::ostream&, size_t ) const;
+	std::string GetSave( const std::vector<std::string>* = NULL ) const;
+	bool Save( std::ostream&, size_t, const std::vector<std::string>* ) const;
 
 	bool IsGene( ) const {
 

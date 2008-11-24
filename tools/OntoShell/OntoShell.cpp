@@ -61,7 +61,7 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return iRet; }
 	g_fZeroes = !!sArgs.zeroes_flag;
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
+	CMeta Meta( sArgs.verbosity_arg );
 
 	if( sArgs.features_arg ) {
 		ifsmGenes.open( sArgs.features_arg );

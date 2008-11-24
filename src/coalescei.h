@@ -48,6 +48,7 @@ namespace Sleipnir {
 class CCoalesceCluster;
 class CCoalesceMotifLibrary;
 class CFASTA;
+class CHierarchy;
 class CPST;
 struct SFASTASequence;
 struct SFASTAWiggle;
@@ -182,15 +183,15 @@ protected:
 		uint32_t	i, j, iRC;
 
 // TODO: if I was smart, I could do this with a direct encoding...
-		m_vecKMer2RC.resize( GetKMers( ) );
-		m_vecRC2KMer.resize( GetRCs( ) );
-		std::fill( m_vecKMer2RC.begin( ), m_vecKMer2RC.end( ), -1 );
-		for( i = j = 0; i < m_vecKMer2RC.size( ); ++i )
-			if( m_vecKMer2RC[ i ] == -1 ) {
+		m_veciKMer2RC.resize( GetKMers( ) );
+		m_veciRC2KMer.resize( GetRCs( ) );
+		std::fill( m_veciKMer2RC.begin( ), m_veciKMer2RC.end( ), -1 );
+		for( i = j = 0; i < m_veciKMer2RC.size( ); ++i )
+			if( m_veciKMer2RC[ i ] == -1 ) {
 				iRC = KMer2ID( ID2KMer( i, m_iK ), true );
 				if( iRC != i ) {
-					m_vecKMer2RC[ i ] = m_vecKMer2RC[ iRC ] = j;
-					m_vecRC2KMer[ j++ ] = i; } } }
+					m_veciKMer2RC[ i ] = m_veciKMer2RC[ iRC ] = j;
+					m_veciRC2KMer[ j++ ] = i; } } }
 
 	virtual ~CCoalesceMotifLibraryImpl( );
 
@@ -202,6 +203,12 @@ protected:
 	uint32_t MergeRCs( uint32_t, uint32_t, float );
 	uint32_t MergeRCPST( uint32_t, const CPST&, float );
 	uint32_t MergePSTs( const CPST&, const CPST&, float );
+	float AlignKMers( const std::string&, const std::string&, float ) const;
+	float AlignKMerRC( const std::string&, uint32_t, float ) const;
+	float AlignKMerPST( const std::string&, const CPST&, float ) const;
+	float AlignRCs( uint32_t, uint32_t, float ) const;
+	float AlignRCPST( uint32_t, const CPST&, float ) const;
+	float AlignPSTs( const CPST&, const CPST&, float ) const;
 
 	EType GetType( uint32_t iMotif ) const {
 
@@ -265,13 +272,13 @@ protected:
 
 	std::string GetRCOne( uint32_t iMotif ) const {
 
-		return ID2KMer( (uint32_t)m_vecRC2KMer[ iMotif - GetBaseRCs( ) ], m_iK ); }
+		return ID2KMer( (uint32_t)m_veciRC2KMer[ iMotif - GetBaseRCs( ) ], m_iK ); }
 
 	float										m_dPenaltyGap;
 	float										m_dPenaltyMismatch;
 	size_t										m_iK;
-	std::vector<uint32_t>						m_vecKMer2RC;
-	std::vector<uint32_t>						m_vecRC2KMer;
+	std::vector<uint32_t>						m_veciKMer2RC;
+	std::vector<uint32_t>						m_veciRC2KMer;
 	std::vector<CPST*>							m_vecpPSTs;
 	std::set<std::pair<uint32_t, uint32_t> >	m_setpriiMerged;
 };
@@ -570,10 +577,20 @@ public:
 		ESubsequenceEnd		= ESubsequenceExons + 1
 	};
 
+	static const char*	c_aszSubsequences[];
+
 	static const char* GetSubsequence( ESubsequence eSubsequence ) {
-		static const char*	c_aszSubsequences[]	= {"total", "introns", "exons"};
 
 		return c_aszSubsequences[ eSubsequence ]; }
+
+	static ESubsequence GetSubsequence( const std::string& strSubsequence ) {
+		size_t	i;
+
+		for( i = 0; c_aszSubsequences[ i ]; ++i )
+			if( strSubsequence == c_aszSubsequences[ i ] )
+				return (ESubsequence)i;
+
+		return ESubsequenceEnd; }
 
 	size_t GetTypes( ) const {
 
@@ -805,6 +822,8 @@ struct SMotifMatch {
 		CCoalesceSequencerBase::ESubsequence eSubsequence, float dZ, float dAverage ) : m_iMotif(iMotif),
 		m_strType(strType), m_eSubsequence(eSubsequence), m_dZ(dZ), m_dAverage(dAverage) { }
 
+	bool Open( std::istream&, CCoalesceMotifLibrary& );
+	uint32_t Open( const CHierarchy&, const std::vector<SMotifMatch>&, CCoalesceMotifLibrary&, size_t& );
 	std::string Save( const CCoalesceMotifLibrary* ) const;
 
 	bool operator==( const SMotifMatch& sMotif ) const {
@@ -877,6 +896,11 @@ struct SCoalesceDataset {
 
 class CCoalesceClusterImpl {
 protected:
+	typedef std::vector<std::map<std::string, std::set<SMotifMatch> > >	TVecMapStrSetSMotifs;
+
+	static const char	c_cStar	= '*';
+	static const char	c_szMotifs[];
+
 	struct SDataset {
 		const SCoalesceDataset*	m_psDataset;
 		float					m_dZ;
@@ -910,6 +934,7 @@ protected:
 		const CCoalesceCluster*					m_pCluster;
 		const CCoalesceCluster*					m_pPot;
 		const std::vector<size_t>*				m_pveciDatasets;
+		float									m_dBeta;
 		size_t									m_iMinimum;
 		float									m_dProbability;
 	};
@@ -929,7 +954,6 @@ protected:
 		size_t										m_iStep;
 		const CPCL*									m_pPCL;
 		float										m_dFraction;
-		float										m_dPValue;
 		const std::set<std::pair<size_t, size_t> >*	m_psetpriiSeeds;
 		double										m_dMaxCorr;
 		double										m_dMinP;
@@ -955,6 +979,11 @@ protected:
 	static void* ThreadSelectCondition( void* );
 	static bool AddSignificant( const CCoalesceMotifLibrary&, uint32_t, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, float, std::vector<SMotifMatch>& );
+	static size_t Open( const CHierarchy&, const std::vector<CCoalesceCluster>&,
+		const std::vector<std::string>&, std::map<size_t, size_t>&, std::map<size_t, size_t>&,
+		TVecMapStrSetSMotifs& );
+	static bool Open( CCoalesceMotifLibrary&, const CHierarchy&, const std::vector<SMotifMatch>&, float,
+		std::set<SMotifMatch>& );
 
 	template<class tType>
 	static bool IsConverged( const std::set<tType>& setNew, std::vector<tType>& vecOld ) {
@@ -1004,22 +1033,38 @@ protected:
 		dPOut = ( ( dPOut * dZ ) + dPAverage ) / ( dZ + 1 ); }
 
 	void Add( size_t, CCoalesceCluster& );
-	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float, double );
-	double AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float,
+	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
+	bool AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float,
 		size_t );
 	void CalculateCentroid( const CPCL& );
 	bool IsSignificant( size_t, const CPCL&, const CCoalesceMotifLibrary*, const CCoalesceGeneScores&,
 		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, const CCoalesceCluster&,
-		const std::vector<size_t>&, size_t, float ) const;
+		const std::vector<size_t>&, float, size_t, float ) const;
 	bool CalculateProbabilityExpression( size_t, const CPCL&, const CCoalesceCluster&,
 		const std::vector<size_t>&, bool, float&, float& ) const;
 	bool CalculateProbabilityMotifs( const CCoalesceGeneScores&, size_t, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, bool, size_t, float&, float& ) const;
 	bool SaveCopy( const CPCL&, size_t, CPCL&, size_t, bool ) const;
 
-	const SCoalesceDataset& GetDataset( size_t iDataset ) const {
+	size_t GetConditions( size_t iDataset, size_t iConditions = -1 ) const {
 
-		return *m_vecsDatasets[ iDataset ].m_psDataset; }
+		if( iDataset < m_vecsDatasets.size( ) ) {
+			const SDataset&	sDataset	= m_vecsDatasets[ iDataset ];
+
+			if( sDataset.m_psDataset )
+				return sDataset.m_psDataset->GetConditions( ); }
+
+		return iConditions; }
+
+	size_t GetCondition( size_t iDataset, size_t iCondition ) const {
+
+		if( iDataset < m_vecsDatasets.size( ) ) {
+			const SDataset&	sDataset	= m_vecsDatasets[ iDataset ];
+
+			if( sDataset.m_psDataset )
+				return sDataset.m_psDataset->GetCondition( iCondition ); }
+
+		return iCondition; }
 
 	bool IsGene( size_t iGene ) const {
 
@@ -1029,13 +1074,28 @@ protected:
 
 		return ( GetHash( m_setiDatasets ) ^ GetHash( m_setiGenes ) ^ GetHash( m_setsMotifs ) ); }
 
-	void GetConditions( std::set<size_t>& setiConditions ) const {
+	void GetConditions( std::set<size_t>& setiConditions, size_t iConditions = -1 ) const {
 		set<size_t>::const_iterator	iterDataset;
 		size_t						i;
 
 		for( iterDataset = m_setiDatasets.begin( ); iterDataset != m_setiDatasets.end( ); ++iterDataset )
-			for( i = 0; i < GetDataset( *iterDataset ).GetConditions( ); ++i )
-				setiConditions.insert( GetDataset( *iterDataset ).GetCondition( i ) ); }
+			for( i = 0; i < GetConditions( *iterDataset, iConditions ); ++i )
+				setiConditions.insert( GetCondition( *iterDataset, i ) ); }
+
+	void Clear( ) {
+
+		m_setiDatasets.clear( );
+		m_setiGenes.clear( );
+		m_setsMotifs.clear( );
+		m_veciPrevDatasets.clear( );
+		m_veciPrevGenes.clear( );
+		m_vecsPrevMotifs.clear( );
+		m_veciCounts.clear( );
+		m_vecdCentroid.clear( );
+		m_vecdStdevs.clear( );
+		m_setiHistory.clear( );
+		m_vecdPriors.clear( );
+		m_vecsDatasets.clear( ); }
 
 	std::set<size_t>			m_setiDatasets;
 	std::set<size_t>			m_setiGenes;
@@ -1068,8 +1128,8 @@ protected:
 
 	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dPValueCondition(0.05f),
 		m_dProbabilityGene(0.95f), m_dPValueMotif(0.05f), m_pMotifs(NULL), m_fMotifs(false),
-		m_iBasesPerMatch(5000), m_dPValueMerge(0.05f), m_dCutoffMerge(2.5f), m_dPenaltyGap(1),
-		m_dPenaltyMismatch(2.1f), m_iSizeMinimum(5), m_iThreads(1) { }
+		m_iBasesPerMatch(5000), m_dPValueMerge(0.05f), m_dCutoffMerge(2.5f), m_iSizeMinimum(5),
+		m_iThreads(1) { }
 	virtual ~CCoalesceImpl( );
 
 	void Clear( );
@@ -1087,8 +1147,6 @@ protected:
 	float							m_dPValueCorrelation;
 	float							m_dPValueMotif;
 	float							m_dCutoffMerge;
-	float							m_dPenaltyGap;
-	float							m_dPenaltyMismatch;
 	size_t							m_iNumberCorrelation;
 	size_t							m_iBins;
 	size_t							m_iK;

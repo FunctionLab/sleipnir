@@ -34,7 +34,7 @@ namespace Sleipnir {
 class CPSTImpl {
 protected:
 	struct SNode {
-		SNode( ) : m_iTotal(0) { }
+		SNode( ) : m_iTotal(0), m_iCount(0) { }
 
 		SNode( unsigned char cCharacter, uint16_t iCount = 1 ) : m_cCharacter(cCharacter), m_iCount(iCount),
 			m_iTotal(0) { }
@@ -120,24 +120,28 @@ protected:
 
 		return iRet; }
 
-	static bool Open( const std::string& strPST, SNode& sNode ) {
-		std::stack<SNode*>	stckBranch;
+	static size_t Open( const std::string& strPST, SNode& sNode ) {
+		std::stack<SNode*>	stckpsBranch;
+		std::stack<size_t>	stckiDepth;
 		SNode*				psNode;
-		size_t				i;
+		size_t				i, iCur, iMax;
 		char				c;
 		uint16_t			iCount;
 
 		psNode = &sNode;
 		iCount = 1;
-		for( i = 0; i < strPST.size( ); ++i )
+		for( iCur = iMax = i = 0; i < strPST.size( ); ++i )
 			switch( c = strPST[ i ] ) {
 				case '(':
-					stckBranch.push( psNode );
+					stckpsBranch.push( psNode );
+					stckiDepth.push( iCur );
 					break;
 
 				case ')':
-					psNode = stckBranch.top( );
-					stckBranch.pop( );
+					psNode = stckpsBranch.top( );
+					stckpsBranch.pop( );
+					iCur = stckiDepth.top( );
+					stckiDepth.pop( );
 					break;
 
 				case '|':
@@ -149,9 +153,11 @@ protected:
 						while( isdigit( strPST[ ++i ] ) ); }
 					else {
 						psNode = &psNode->m_vecsChildren[ Add( c, *psNode, iCount ) ];
-						iCount = 1; } }
+						iCount = 1;
+						if( ++iCur > iMax )
+							iMax = iCur; } }
 
-		return true; }
+		return iMax; }
 
 	CPSTImpl( size_t iArity ) : m_iDepth(0), m_iArity(iArity) { }
 
@@ -189,15 +195,20 @@ protected:
 	template<class tType>
 	float Align( const tType& Data, size_t iLength, float dPenaltyGap, float dPenaltyMismatch, float dCutoff,
 		int& iOffset ) const {
-		size_t	iBegin, iEnd, iCur, iMin;
+		size_t	iBegin, iEnd, iCur, iMin, iGaps;
 		float	dRet, dCur;
 
 		dRet = FLT_MAX;
 		dCur = dCutoff / dPenaltyGap;
 		iBegin = (size_t)ceil( iLength - dCur );
-		iEnd = iLength + 1 - iBegin;
+		iEnd = iLength + m_iDepth - iBegin;
 		for( iMin = 0,iCur = iBegin; iCur < iEnd; ++iCur ) {
-			dCur = dPenaltyGap * ( ( iCur < iLength ) ? ( iLength - iCur ) : 0 );
+			iGaps = 0;
+			if( iCur < iLength )
+				iGaps += iLength - iCur;
+			if( iCur > m_iDepth )
+				iGaps += m_iDepth - iCur;
+			dCur = dPenaltyGap * iGaps;
 			dCur += dPenaltyMismatch * CPSTImpl::Align( Data, iLength, iCur, m_sRoot ); 
 			if( dCur < dRet ) {
 				dRet = dCur;

@@ -47,7 +47,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg, sArgs.random_arg );
+	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
 
 	pMeasure = NULL;
 	for( i = 0; apMeasures[ i ]; ++i )

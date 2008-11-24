@@ -42,7 +42,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
+	CMeta Meta( sArgs.verbosity_arg );
 
 	if( sArgs.input_arg ) {
 		if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !sArgs.normalize_flag &&

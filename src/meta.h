@@ -234,10 +234,43 @@ public:
 
 		return min( i, vecQuants.size( ) - 1 ); }
 
+	/*!
+	 * \brief
+	 * Calculates the difference in microseconds between two timevals.
+	 * 
+	 * \param sBegin
+	 * Earlier timeval.
+	 * 
+	 * \param sEnd
+	 * Later timeval.
+	 * 
+	 * \returns
+	 * Difference in microseconds between later and earlier timeval.
+	 */
 	static size_t GetMicroseconds( const struct timeval& sBegin, const struct timeval& sEnd ) {
 
 		return ( ( sBegin.tv_sec == sEnd.tv_sec ) ? ( sEnd.tv_usec - sBegin.tv_usec ) :
 			( ( 1000000 * ( sEnd.tv_sec - sBegin.tv_sec ) ) + sEnd.tv_usec - sBegin.tv_usec ) ); }
+
+	/*!
+	 * \brief
+	 * Returns true if the given file path ends with the given extension.
+	 * 
+	 * \param strFile
+	 * File path (or name).
+	 * 
+	 * \param strExtension
+	 * Extension to test (including period, if desired).
+	 * 
+	 * \returns
+	 * True if the given file path ends with the given extension.
+	 */
+	static bool IsExtension( const std::string& strFile, const std::string& strExtension ) {
+		size_t	i;
+
+		return ( ( strFile.length( ) >= strExtension.length( ) ) &&
+			( ( i = strFile.rfind( strExtension ) ) ==
+			( strFile.length( ) - strExtension.length( ) ) ) ); }
 
 	/*!
 	 * \brief

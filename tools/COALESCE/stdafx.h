@@ -27,8 +27,10 @@ using namespace std;
 
 #include <pthread.h>
 
+#include "clusthierarchical.h"
 #include "coalesce.h"
 #include "fasta.h"
+#include "halfmatrix.h"
 #include "meta.h"
 #include "pcl.h"
 using namespace Sleipnir;

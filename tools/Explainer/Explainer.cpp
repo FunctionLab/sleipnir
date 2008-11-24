@@ -69,7 +69,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( iRet ) {
 		cmdline_parser_print_help( );
 		return iRet; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
+	CMeta Meta( sArgs.verbosity_arg );
 
 	if( !strcmp( c_szInclude, sArgs.unknowns_arg ) || !strcmp( c_szOnly, sArgs.unknowns_arg ) )
 		sArgs.everything_flag = true;

@@ -22,6 +22,33 @@
 #ifndef FILE_H
 #define FILE_H
 
+#ifdef _MSC_VER
+#define	FOR_EACH_DIRECTORY_FILE(strDir, strFile)											\
+	HANDLE			hSearch;																\
+	WIN32_FIND_DATA	sEntry;																	\
+	bool			fOk;																	\
+	for( fOk = ( ( hSearch = FindFirstFile( ( (strDir) + "/*" ).c_str( ), &sEntry ) )		\
+		!= INVALID_HANDLE_VALUE ); fOk; fOk = !!FindNextFile( hSearch, &sEntry ) ) {		\
+		if( sEntry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )							\
+			continue;																		\
+		(strFile) = sEntry.cFileName;
+#else // _MSC_VER
+#include <dirent.h>
+#include <sys/stat.h>
+
+#define	FOR_EACH_DIRECTORY_FILE(strDir, strFile)											\
+	DIR*			pDir;																	\
+	struct dirent*	psEntry;																\
+	struct stat		sStat;																	\
+	pDir = opendir( (strDir).c_str( ) );													\
+	while( psEntry = readdir( pDir ) ) {													\
+		stat( ( (strDir) + '/' + psEntry->d_name ).c_str( ), &sStat );						\
+		if( S_ISDIR( sStat.st_mode ) )														\
+			continue;																		\
+		(strFile) = psEntry->d_name;
+#endif // _MSC_VER
+
+
 #include <iostream>
 #include <string>
 

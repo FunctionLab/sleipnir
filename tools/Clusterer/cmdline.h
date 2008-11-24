@@ -61,6 +61,9 @@ struct gengetopt_args_info
   double delta_arg;	/**< @brief Cluster diameter step size (default='0').  */
   char * delta_orig;	/**< @brief Cluster diameter step size original value given at command line.  */
   const char *delta_help; /**< @brief Cluster diameter step size help description.  */
+  char * pcl_arg;	/**< @brief PCL input if precalculated DAB provided.  */
+  char * pcl_orig;	/**< @brief PCL input if precalculated DAB provided original value given at command line.  */
+  const char *pcl_help; /**< @brief PCL input if precalculated DAB provided help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCL (default='2').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
@@ -86,14 +89,13 @@ struct gengetopt_args_info
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int diamineter_given ;	/**< @brief Whether diamineter was given.  */
   unsigned int delta_given ;	/**< @brief Whether delta was given.  */
+  unsigned int pcl_given ;	/**< @brief Whether pcl was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int autocorrelate_given ;	/**< @brief Whether autocorrelate was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */

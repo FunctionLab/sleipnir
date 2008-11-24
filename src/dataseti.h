@@ -43,7 +43,6 @@ protected:
 	static const char	c_cSeparator	= '/';
 	static const char	c_szDat[];
 	static const char	c_szDab[];
-	static const char	c_szPcl[];
 
 	static void FilterGenes( IDataset*, const CGenes&, CDat::EFilter );
 

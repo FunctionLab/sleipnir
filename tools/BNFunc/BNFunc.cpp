@@ -51,7 +51,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( iRet ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg, sArgs.random_arg );
+	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
 
 	if( sArgs.go_onto_arg ) {
 		ifsmOnto.open( sArgs.go_onto_arg );

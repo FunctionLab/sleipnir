@@ -100,7 +100,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
+	CMeta Meta( sArgs.verbosity_arg );
 
 	if( sArgs.output_arg ) {
 		CDataMatrix				MatBackgrounds;
@@ -239,7 +239,6 @@ int main( int iArgs, char** aszArgs ) {
 			DatOut.Save( ( (string)sArgs.clip_arg + '/' + CMeta::Deextension( CMeta::Basename(
 				sArgs.inputs[ iGenes ] ) ) + c_szDab ).c_str( ) ); } }
 
-	pthread_exit( NULL );
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32

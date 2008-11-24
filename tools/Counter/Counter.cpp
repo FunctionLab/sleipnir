@@ -72,10 +72,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta = CMeta( sArgs.verbosity_arg );
-#ifdef SMILEXML_LIB
-	EnableXdslFormat( );
-#endif
+	CMeta Meta( sArgs.verbosity_arg );
 
 	if( sArgs.zeros_arg ) {
 		ifstream		ifsm;
@@ -166,7 +163,6 @@ int main( int iArgs, char** aszArgs ) {
 	else if( sArgs.networks_arg )
 		iRet = main_inference( sArgs, mapstriZeros, mapstriDatasets );
 
-	pthread_exit( NULL );
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32
@@ -223,28 +219,11 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 		for( i = 0; i < iThread; ++i )
 			pthread_join( vecpthdThreads[ iTerm + i ], NULL ); }
 
-#ifdef _MSC_VER
-	HANDLE			hSearch;
-	WIN32_FIND_DATA	sEntry;
-	bool			fContinue;
-
-	for( fContinue = true,hSearch = FindFirstFile( ( (string)sArgs.directory_arg + "/*.quant" ).c_str( ),
-		&sEntry ); fContinue && ( hSearch != INVALID_HANDLE_VALUE );
-		fContinue = !!FindNextFile( hSearch, &sEntry ) ) {
-		strFile = sEntry.cFileName;
-#else // _MSC_VER
-	DIR*			pDir;
-	struct dirent*	psEntry;
-
-	pDir = opendir( sArgs.directory_arg );
-	for( psEntry = readdir( pDir ); psEntry; psEntry = readdir( pDir ) ) {
-		strFile = psEntry->d_name;
-#endif // _MSC_VER
+	FOR_EACH_DIRECTORY_FILE((string)sArgs.directory_arg, strFile)
 		string					strName;
 		vector<CCountMatrix*>*	pvecpMatCounts;
 
-		if( ( strFile.length( ) < ARRAYSIZE(c_acQuant) ) || ( ( i = strFile.rfind( c_acQuant ) ) !=
-			( strFile.length( ) - ARRAYSIZE(c_acQuant) + 1 ) ) )
+		if( !CMeta::IsExtension( strFile, c_acQuant ) )
 			continue;
 
 		strName = (string)sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDab;
@@ -360,7 +339,6 @@ void* learn( void* pData ) {
 			else
 				psData->m_pMatCounts->Get( iAnswer, 0 )++; } }
 
-	pthread_exit( NULL );
 	return NULL; }
 
 int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& mapstriZeros,
@@ -673,7 +651,6 @@ void* evaluate( void* pData ) {
 	delete[] adYes;
 	delete[] adNo;
 
-	pthread_exit( NULL );
 	return NULL; }
 
 void* finalize( void* pData ) {
@@ -699,5 +676,4 @@ void* finalize( void* pData ) {
 	delete[] adNo;
 	delete[] adYes;
 
-	pthread_exit( NULL );
 	return NULL; }
