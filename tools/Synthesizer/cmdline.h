@@ -67,10 +67,10 @@ struct gengetopt_args_info
   double stdev_arg;	/**< @brief Expression standard deviation (default='1').  */
   char * stdev_orig;	/**< @brief Expression standard deviation original value given at command line.  */
   const char *stdev_help; /**< @brief Expression standard deviation help description.  */
-  double tf_mean_arg;	/**< @brief Up/downregulation mean (default='1').  */
+  double tf_mean_arg;	/**< @brief Up/downregulation mean (default='2').  */
   char * tf_mean_orig;	/**< @brief Up/downregulation mean original value given at command line.  */
   const char *tf_mean_help; /**< @brief Up/downregulation mean help description.  */
-  double tf_stdev_arg;	/**< @brief Up/downregulation standard deviation (default='2').  */
+  double tf_stdev_arg;	/**< @brief Up/downregulation standard deviation (default='1').  */
   char * tf_stdev_orig;	/**< @brief Up/downregulation standard deviation original value given at command line.  */
   const char *tf_stdev_help; /**< @brief Up/downregulation standard deviation help description.  */
   char * fasta_arg;	/**< @brief Input FASTA file.  */

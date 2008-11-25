@@ -44,8 +44,8 @@ const char *gengetopt_args_info_help[] = {
   "\nExpression:",
   "  -m, --mean=DOUBLE            Expression mean  (default=`0')",
   "  -s, --stdev=DOUBLE           Expression standard deviation  (default=`1')",
-  "  -M, --tf_mean=DOUBLE         Up/downregulation mean  (default=`1')",
-  "  -S, --tf_stdev=DOUBLE        Up/downregulation standard deviation  \n                                 (default=`2')",
+  "  -M, --tf_mean=DOUBLE         Up/downregulation mean  (default=`2')",
+  "  -S, --tf_stdev=DOUBLE        Up/downregulation standard deviation  \n                                 (default=`1')",
   "\nSequence:",
   "  -f, --fasta=filename         Input FASTA file",
   "  -d, --degree=INT             Degree of sequence model HMM  (default=`3')",
@@ -135,9 +135,9 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->mean_orig = NULL;
   args_info->stdev_arg = 1;
   args_info->stdev_orig = NULL;
-  args_info->tf_mean_arg = 1;
+  args_info->tf_mean_arg = 2;
   args_info->tf_mean_orig = NULL;
-  args_info->tf_stdev_arg = 2;
+  args_info->tf_stdev_arg = 1;
   args_info->tf_stdev_orig = NULL;
   args_info->fasta_arg = NULL;
   args_info->fasta_orig = NULL;
@@ -802,7 +802,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         
           if (update_arg( (void *)&(args_info->tf_mean_arg), 
                &(args_info->tf_mean_orig), &(args_info->tf_mean_given),
-              &(local_args_info.tf_mean_given), optarg, 0, "1", ARG_DOUBLE,
+              &(local_args_info.tf_mean_given), optarg, 0, "2", ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
               "tf_mean", 'M',
               additional_error))
@@ -814,7 +814,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         
           if (update_arg( (void *)&(args_info->tf_stdev_arg), 
                &(args_info->tf_stdev_orig), &(args_info->tf_stdev_given),
-              &(local_args_info.tf_stdev_given), optarg, 0, "2", ARG_DOUBLE,
+              &(local_args_info.tf_stdev_given), optarg, 0, "1", ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
               "tf_stdev", 'S',
               additional_error))

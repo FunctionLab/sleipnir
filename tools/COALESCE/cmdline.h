@@ -43,9 +43,9 @@ struct gengetopt_args_info
   char * datasets_arg;	/**< @brief Condition groupings into dataset blocks.  */
   char * datasets_orig;	/**< @brief Condition groupings into dataset blocks original value given at command line.  */
   const char *datasets_help; /**< @brief Condition groupings into dataset blocks help description.  */
-  char * output_arg;	/**< @brief Directory for intermediate output files (PCLs).  */
-  char * output_orig;	/**< @brief Directory for intermediate output files (PCLs) original value given at command line.  */
-  const char *output_help; /**< @brief Directory for intermediate output files (PCLs) help description.  */
+  char * output_arg;	/**< @brief Directory for output files (PCLs/motifs).  */
+  char * output_orig;	/**< @brief Directory for output files (PCLs/motifs) original value given at command line.  */
+  const char *output_help; /**< @brief Directory for output files (PCLs/motifs) help description.  */
   double prob_gene_arg;	/**< @brief Probability threshhold for gene inclusion (default='0.95').  */
   char * prob_gene_orig;	/**< @brief Probability threshhold for gene inclusion original value given at command line.  */
   const char *prob_gene_help; /**< @brief Probability threshhold for gene inclusion help description.  */
@@ -94,6 +94,15 @@ struct gengetopt_args_info
   char * conservation_arg;	/**< @brief Evolutionary conservation file (WIG).  */
   char * conservation_orig;	/**< @brief Evolutionary conservation file (WIG) original value given at command line.  */
   const char *conservation_help; /**< @brief Evolutionary conservation file (WIG) help description.  */
+  char * postprocess_arg;	/**< @brief Input directory of clusters to postprocess.  */
+  char * postprocess_orig;	/**< @brief Input directory of clusters to postprocess original value given at command line.  */
+  const char *postprocess_help; /**< @brief Input directory of clusters to postprocess help description.  */
+  double cutoff_postprocess_arg;	/**< @brief Similarity cutoff for cluster merging (default='0.95').  */
+  char * cutoff_postprocess_orig;	/**< @brief Similarity cutoff for cluster merging original value given at command line.  */
+  const char *cutoff_postprocess_help; /**< @brief Similarity cutoff for cluster merging help description.  */
+  double fraction_postprocess_arg;	/**< @brief Overlap fraction for postprocessing gene/condition inclusion (default='0.5').  */
+  char * fraction_postprocess_orig;	/**< @brief Overlap fraction for postprocessing gene/condition inclusion original value given at command line.  */
+  const char *fraction_postprocess_help; /**< @brief Overlap fraction for postprocessing gene/condition inclusion help description.  */
   char * cache_arg;	/**< @brief Cache file for sequence analysis.  */
   char * cache_orig;	/**< @brief Cache file for sequence analysis original value given at command line.  */
   const char *cache_help; /**< @brief Cache file for sequence analysis help description.  */
@@ -132,6 +141,9 @@ struct gengetopt_args_info
   unsigned int size_maximum_given ;	/**< @brief Whether size_maximum was given.  */
   unsigned int nucleosomes_given ;	/**< @brief Whether nucleosomes was given.  */
   unsigned int conservation_given ;	/**< @brief Whether conservation was given.  */
+  unsigned int postprocess_given ;	/**< @brief Whether postprocess was given.  */
+  unsigned int cutoff_postprocess_given ;	/**< @brief Whether cutoff_postprocess was given.  */
+  unsigned int fraction_postprocess_given ;	/**< @brief Whether fraction_postprocess was given.  */
   unsigned int cache_given ;	/**< @brief Whether cache was given.  */
   unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
