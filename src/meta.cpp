@@ -19,10 +19,6 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#ifndef _MSC_VER
-#include <sys/stat.h>
-#include <fcntl.h>
-#endif
 #include "stdafx.h"
 #include "meta.h"
 
@@ -331,6 +327,42 @@ void CMeta::Unmap( const unsigned char* pbData, HANDLE hndlMap, size_t iSize ) {
 	if( pbData )
 		munmap( (void*)pbData, iSize );
 #endif // _MSC_VER
+}
+
+/*!
+ * \brief
+ * Returns (very approximately) the process's current memory usage in bytes.
+ * 
+ * \returns
+ * Current (approximate) memory usage in bytes.
+ * 
+ * \remarks
+ * Disabled by default on Windows because it requires an extra library (psapi.lib); reads /proc/<pid>/statm
+ * on Linux and returns the resident set size, which is better than nothing.
+ */
+size_t CMeta::GetMemoryUsage( ) {
+#if defined(_MSC_VER)
+#if 0
+	PROCESS_MEMORY_COUNTERS	sMem;
+
+	if( !GetProcessMemoryInfo( GetCurrentProcess( ), &sMem, sizeof(sMem) ) )
+		return -1;
+	return sMem.WorkingSetSize;
+#endif // 0
+	return -1;
+#else // defined(_MSC_VER)
+	ifstream			ifsm;
+	char				acBuffer[ 1024 ];
+	size_t				iRet;
+
+	sprintf( acBuffer, "/proc/%d/statm", getpid( ) );
+	ifsm.open( acBuffer );
+	if( !ifsm.is_open( ) )
+		return -1;
+	ifsm >> iRet;
+	ifsm >> iRet;
+	return ( iRet * 4096 );
+#endif // defined(_MSC_VER)
 }
 
 }

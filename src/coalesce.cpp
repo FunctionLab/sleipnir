@@ -563,11 +563,10 @@ bool CCoalesceGeneScores::Add( const CCoalesceMotifLibrary& Motifs, const std::s
 
 void CCoalesceGeneScores::Subtract( const SMotifMatch& sMotif, size_t iGene ) {
 	size_t	iType;
-	float**	aadScores;
 	float*	adScores;
 
 	if( ( ( iType = GetType( sMotif.m_strType ) ) != -1 ) &&
-		( aadScores = Get( iType, sMotif.m_eSubsequence ) ) && ( adScores = aadScores[ iGene ] ) )
+		( adScores = Get( iType, sMotif.m_eSubsequence, iGene ) ) )
 		adScores[ sMotif.m_iMotif ] -= sMotif.m_dAverage; }
 
 // CCoalesceGroupHistograms

@@ -79,6 +79,7 @@ public:
 	static bool MapRead( unsigned char*& pbData, HANDLE& hndlMap, size_t& iSize, const char* szFile );
 	static bool MapWrite( unsigned char*& pbData, HANDLE& hndlMap, size_t iSize, const char* szFile );
 	static void Unmap( const unsigned char* pbData, HANDLE hndlMap, size_t iSize );
+	static size_t GetMemoryUsage( );
 
 	/*!
 	 * \brief

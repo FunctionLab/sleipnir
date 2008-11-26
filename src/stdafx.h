@@ -29,7 +29,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef _MSC_VER
+#include <fcntl.h>
 #include <io.h>
+#include <sys/stat.h>
 #include <winsock2.h>
 
 #define socklen_t	int
@@ -87,8 +89,8 @@ using namespace log4cpp;
 #endif // USE_LOG4CPP_STUB
 
 #if _MSC_VER
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <psapi.h>
 #else // _MSC_VER
 #define ios_base	ios
 #define UINT		unsigned int

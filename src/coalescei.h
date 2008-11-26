@@ -659,22 +659,21 @@ protected:
 };
 
 // One score per type per subtype per gene per motif atom
-class CCoalesceGeneScores : public CCoalesceSequencer<float**> {
+class CCoalesceGeneScores : public CCoalesceSequencer<float*> {
 public:
-	CCoalesceGeneScores( ) : m_iMotifs(0), m_iGenes(0), m_iCapacity(0) { }
+	CCoalesceGeneScores( ) : m_iMotifs(0), m_iGenes(0), m_iCapacity(0) {
+
+		pthread_mutex_init( &m_mutx, NULL ); }
 
 	virtual ~CCoalesceGeneScores( ) {
-		size_t	iType, iSubtype, iGene;
-		float**	aad;
+		size_t	iType, iSubtype;
+		float*	ad;
 
 		for( iType = 0; iType < GetTypes( ); ++iType )
-			for( iSubtype = 0; iSubtype < GetSubsequences( iType ); ++iSubtype ) {
-				if( !( aad = Get( iType, (ESubsequence)iSubtype ) ) )
-					continue;
-				for( iGene = 0; iGene < m_iGenes; ++iGene )
-					if( aad[ iGene ] )
-						delete[] aad[ iGene ];
-				delete[] aad; } }
+			for( iSubtype = 0; iSubtype < GetSubsequences( iType ); ++iSubtype )
+				if( ad = Get( iType, (ESubsequence)iSubtype ) )
+					delete[] ad;
+		pthread_mutex_destroy( &m_mutx ); }
 
 	bool Add( size_t, const CCoalesceMotifLibrary&, const SFASTASequence&, SCoalesceModifierCache&,
 		std::vector<std::vector<float> >&, std::vector<size_t>& );
@@ -682,10 +681,10 @@ public:
 		std::vector<float>&, std::vector<size_t>& );
 	void Subtract( const SMotifMatch&, size_t );
 
-	const float* Get( size_t iType, ESubsequence eSubsequence, size_t iGene ) const {
-		float**	aad;
+	float* Get( size_t iType, ESubsequence eSubsequence, size_t iGene ) const {
+		float*	ad;
 
-		return ( ( aad = Get( iType, eSubsequence ) ) ? aad[ iGene ] : NULL ); }
+		return ( ( ad = Get( iType, eSubsequence ) ) ? ( ad + ( iGene * m_iCapacity ) ) : NULL ); }
 
 	float Get( size_t iType, ESubsequence eSubsequence, size_t iGene, uint32_t iMotif ) const {
 		const float*	ad;
@@ -722,54 +721,52 @@ protected:
 		vecdCounts.resize( iMotifs );
 		vecdCounts[ iMotif ] += dValue; }
 
-	float** Get( size_t iType, ESubsequence eSubsequence ) const {
+	float* Get( size_t iType, ESubsequence eSubsequence ) const {
 
-		return CCoalesceSequencer<float**>::Get( iType, eSubsequence ); }
+		return CCoalesceSequencer<float*>::Get( iType, eSubsequence ); }
 
 	void Set( size_t iType, ESubsequence eSubsequence, size_t iGene, uint32_t iMotif, float dValue,
 		uint32_t iMotifs = 0 ) {
-		float**	aad;
-		float*	ad;
+		float*	adTotal;
 
+		pthread_mutex_lock( &m_mutx );
 		Grow( iMotif, iMotifs );
-		if( !( aad = Get( iType, eSubsequence ) ) ) {
-			m_vecvecValues[ iType ][ eSubsequence ] = aad = new float*[ m_iGenes ];
-			memset( aad, 0, m_iGenes * sizeof(*aad) ); }
-		if( !( ad = aad[ iGene ] ) ) {
-			aad[ iGene ] = ad = new float[ m_iCapacity ];
-			memset( ad, 0, m_iCapacity * sizeof(*ad) ); }
-
-		ad[ iMotif ] = dValue; }
+		if( !( adTotal = Get( iType, eSubsequence ) ) ) {
+			m_vecvecValues[ iType ][ eSubsequence ] = adTotal = new float[ m_iGenes * m_iCapacity ];
+			memset( adTotal, 0, m_iGenes * m_iCapacity * sizeof(*adTotal) ); }
+		Get( iType, eSubsequence, iGene )[ iMotif ] = dValue;
+		pthread_mutex_unlock( &m_mutx ); }
 
 	void Grow( uint32_t iMotif, uint32_t iMotifs ) {
 		size_t	iType, iSubtype, iGene, iTarget;
-		float**	aad;
+		float*	adTotal;
 		float*	ad;
+		float*	adFrom;
+		float*	adTo;
 
 		iTarget = max( iMotif + 1, iMotifs );
-		if( iTarget < m_iCapacity ) {
+		if( iTarget <= m_iCapacity ) {
 			if( iTarget > m_iMotifs )
 				m_iMotifs = iTarget;
 			return; }
 		m_iCapacity = iTarget + c_iLookahead;
 		for( iType = 0; iType < GetTypes( ); ++iType )
 			for( iSubtype = 0; iSubtype < GetSubsequences( iType ); ++iSubtype ) {
-				if( !( aad = Get( iType, (ESubsequence)iSubtype ) ) )
+				if( !( adTotal = Get( iType, (ESubsequence)iSubtype ) ) )
 					continue;
-				for( iGene = 0; iGene < m_iGenes; ++iGene ) {
-					if( !aad[ iGene ] )
-						continue;
-					ad = new float[ m_iCapacity ];
-					memcpy( ad, aad[ iGene ], m_iMotifs * sizeof(*ad) );
-					memset( ad + m_iMotifs, 0, ( m_iCapacity - m_iMotifs ) * sizeof(*ad) );
-					delete[] aad[ iGene ];
-					aad[ iGene ] = ad; } }
-		if( iTarget > m_iMotifs )
-			m_iMotifs = iTarget; }
+				ad = new float[ m_iGenes * m_iCapacity ];
+				for( iGene = 0,adFrom = adTotal,adTo = ad; iGene < m_iGenes;
+					++iGene,adFrom += m_iMotifs,adTo += m_iCapacity ) {
+					memcpy( adTo, adFrom, m_iMotifs * sizeof(*adTo) );
+					memset( adTo + m_iMotifs, 0, ( m_iCapacity - m_iMotifs ) * sizeof(*adTo) ); }
+				delete[] adTotal;
+				m_vecvecValues[ iType ][ iSubtype ] = ad; }
+		m_iMotifs = iTarget; }
 
-	size_t	m_iGenes;
-	size_t	m_iMotifs;
-	size_t	m_iCapacity;
+	size_t			m_iGenes;
+	size_t			m_iMotifs;
+	size_t			m_iCapacity;
+	pthread_mutex_t	m_mutx;
 };
 
 // One histogram per motif atom
