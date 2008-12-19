@@ -35,22 +35,24 @@ int open_param( istream&, CGenome&, vector<float>&, vector<CGenes*>& );
 int open_fuzzy( istream&, size_t, CDat& );
 
 int main( int iArgs, char** aszArgs ) {
-	CDat						Dat;
-	ifstream					ifsm;
-	istream*					pistm;
-	gengetopt_args_info			sArgs;
-	CGenome						Genome;
-	vector<float>				vecdWeights;
-	vector<CGenes*>				vecpClusters;
-	vector<string>				vecstrGenes;
-	set<string>					setstrGenes;
-	set<string>::const_iterator	iterGene;
-	vector<vector<size_t> >		vecveciGenes;
-	int							iRet;
-	size_t						i, j, iClusterOne, iClusterTwo, iGeneOne, iGeneTwo, iOne, iTwo;
-	CGenes*						pClusterOne;
-	CGenes*						pClusterTwo;
-	float						d, dOne;
+	CDat								Dat;
+	ifstream							ifsm;
+	istream*							pistm;
+	gengetopt_args_info					sArgs;
+	CGenome								Genome;
+	vector<float>						vecdWeights;
+	vector<CGenes*>						vecpClusters;
+	vector<string>						vecstrGenes;
+	set<string>							setstrGenes;
+	set<string>::const_iterator			iterGene;
+	vector<vector<size_t> >				vecveciGenes;
+	int									iRet;
+	size_t								i, j, iClusterOne, iClusterTwo, iGeneOne, iGeneTwo, iOne, iTwo;
+	CGenes*								pClusterOne;
+	CGenes*								pClusterTwo;
+	float								d, dOne;
+	map<string, size_t>					mapstriGenes;
+	map<string, size_t>::const_iterator	iterIndex;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -88,13 +90,15 @@ int main( int iArgs, char** aszArgs ) {
 		vecstrGenes[ i ] = *iterGene;
 
 	Dat.Open( vecstrGenes );
+	for( i = 0; i < Dat.GetGenes( ); ++i )
+		mapstriGenes[ Dat.GetGene( i ) ] = i;
 	vecveciGenes.resize( vecpClusters.size( ) );
 	for( i = 0; i < vecveciGenes.size( ); ++i ) {
 		vecveciGenes[ i ].resize( vecpClusters[ i ]->GetGenes( ) );
 		for( j = 0; j < vecveciGenes[ i ].size( ); ++j )
-			vecveciGenes[ i ][ j ] = Dat.GetGene( vecpClusters[ i ]->GetGene( j ).GetName( ) ); }
-
-
+			vecveciGenes[ i ][ j ] = ( ( iterIndex = mapstriGenes.find(
+				vecpClusters[ i ]->GetGene( j ).GetName( ) ) ) == mapstriGenes.end( ) ) ? -1 :
+				iterIndex->second; }
 
 	if( sArgs.counts_flag )
 		for( iClusterOne = 0; iClusterOne < vecpClusters.size( ); ++iClusterOne ) {

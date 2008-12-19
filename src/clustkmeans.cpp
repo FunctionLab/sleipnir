@@ -94,7 +94,7 @@ bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure
 			dMax = -FLT_MAX;
 			for( sMax = j = 0; j < MatMeans.GetRows( ); ++j ) {
 				d = (float)pMeasure->Measure( MatData.Get( i ), MatData.GetColumns( ), MatMeans.Get( j ),
-					MatMeans.GetColumns( ), IMeasure::EMapCenter, pMatWeights ? pMatWeights->Get( i ) : NULL );
+					MatMeans.GetColumns( ), IMeasure::EMapNone, pMatWeights ? pMatWeights->Get( i ) : NULL );
 				if( CMeta::IsNaN( d ) )
 					return false;
 				if( d > dMax ) {
@@ -120,11 +120,12 @@ bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure
 
 bool CClustKMeans::Cluster( const CDistanceMatrix& MatSimilarities, size_t iK,
 	vector<uint16_t>& vecsClusters ) {
-	size_t			i, j, iOne, iIteration, iChanged;
+	size_t			i, j, iOne, iIteration, iChanged, iState;
 	float			d, dMax;
 	CDataMatrix		MatPrev, MatNext;
 	vector<size_t>	veciPrev, veciNext;
 	uint16_t		sMax;
+	set<size_t>		setiStates;
 
 	if( MatSimilarities.GetSize( ) < iK )
 		return false;
@@ -132,13 +133,16 @@ bool CClustKMeans::Cluster( const CDistanceMatrix& MatSimilarities, size_t iK,
 	dMax = -FLT_MAX;
 	for( i = 0; i < MatSimilarities.GetSize( ); ++i )
 		for( j = ( i + 1 ); j < MatSimilarities.GetSize( ); ++j )
-			if( ( d = MatSimilarities.Get( i, j ) ) > dMax )
+			if( !CMeta::IsNaN( d = MatSimilarities.Get( i, j ) ) && ( d > dMax ) )
 				dMax = d;
+	if( dMax == -FLT_MAX )
+		return false;
+	dMax++;
 	MatPrev.Initialize( MatSimilarities.GetSize( ), iK );
 	for( i = 0; i < MatPrev.GetColumns( ); ++i ) {
 		iOne = rand( ) % MatSimilarities.GetSize( );
 		for( j = 0; j < MatPrev.GetRows( ); ++j )
-			MatPrev.Set( j, i, ( i == j ) ? dMax : MatSimilarities.Get( iOne, j ) ); }
+			MatPrev.Set( j, i, ( j == iOne ) ? dMax : MatSimilarities.Get( iOne, j ) ); }
 	MatNext.Initialize( MatPrev.GetRows( ), MatPrev.GetColumns( ) );
 	MatNext.Clear( );
 
@@ -148,17 +152,16 @@ bool CClustKMeans::Cluster( const CDistanceMatrix& MatSimilarities, size_t iK,
 	fill( veciPrev.begin( ), veciPrev.end( ), 1 );
 	veciNext.resize( veciPrev.size( ) );
 	for( iChanged = MatSimilarities.GetSize( ),iIteration = 0; iChanged > 2; ++iIteration ) {
-		if( !( iIteration % 10 ) )
-			g_CatSleipnir.notice( "CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
-		else
-			g_CatSleipnir.debug( "CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
+		g_CatSleipnir.log( ( iIteration % 10 ) ? Priority::DEBUG : Priority::NOTICE,
+			"CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
 		for( iChanged = i = 0; i < vecsClusters.size( ); ++i ) {
 			float	dMax;
 
 			dMax = -FLT_MAX;
 			for( sMax = j = 0; j < MatPrev.GetColumns( ); ++j ) {
-				if( CMeta::IsNaN( d = MatPrev.Get( i, j ) ) )
-					return false;
+				if( CMeta::IsNaN( d = MatPrev.Get( i, j ) ) ) {
+					g_CatSleipnir.error( "CClustKMeans::Cluster( %d ) failed on gene %d, cluster %d", i, j );
+					return false; }
 				d /= veciPrev[ j ];
 				if( d > dMax ) {
 					dMax = d;
@@ -168,12 +171,37 @@ bool CClustKMeans::Cluster( const CDistanceMatrix& MatSimilarities, size_t iK,
 				if( vecsClusters[ i ] != iK )
 					veciNext[ vecsClusters[ i ] ]--;
 				veciNext[ sMax ]++;
-				for( j = 0; j < MatSimilarities.GetSize( ); ++j ) {
-					d = ( i == j ) ? dMax : MatSimilarities.Get( i, j );
-					if( vecsClusters[ i ] != iK )
-						MatNext.Get( j, vecsClusters[ i ] ) -= d;
-					MatNext.Get( j, sMax ) += d; }
+				for( j = 0; j < MatSimilarities.GetSize( ); ++j )
+					if( !CMeta::IsNaN( d = ( ( i == j ) ? dMax : MatSimilarities.Get( i, j ) ) ) ) {
+						if( vecsClusters[ i ] != iK )
+							MatNext.Get( j, vecsClusters[ i ] ) -= d;
+						MatNext.Get( j, sMax ) += d; }
 				vecsClusters[ i ] = sMax; } }
+
+		for( i = 0; i < veciNext.size( ); ++i )
+			if( !veciNext[ i ] ) {
+				do
+					iOne = rand( ) % vecsClusters.size( );
+				while( veciNext[ vecsClusters[ iOne ] ] < 2 );
+				g_CatSleipnir.info( "CClustKMeans::Cluster( %d ) moving gene %d into empty cluster %d", iK,
+					iOne, i );
+				veciNext[ vecsClusters[ iOne ] ]--;
+				for( j = 0; j < MatNext.GetRows( ); ++j )
+					if( !CMeta::IsNaN( d = ( ( j == iOne ) ? dMax : MatSimilarities.Get( iOne, j ) ) ) ) {
+						MatNext.Get( j, vecsClusters[ iOne ] ) -= d;
+						MatNext.Set( j, i, d ); }
+				veciNext[ i ]++; }
+
+// This calculates a simple hash for the current cluster assignments
+		for( iState = i = 0; i < vecsClusters.size( ); ++i ) {
+			j = iState & (size_t)-32768;
+			iState <<= 15;
+			iState ^= j >> ( ( sizeof(size_t) * 8 ) - 15 );
+			iState ^= vecsClusters[ i ] + 1; }
+		if( setiStates.find( iState ) != setiStates.end( ) ) {
+			g_CatSleipnir.info( "CClustKMeans::Cluster( %d ) found redundant state, terminating", iK );
+			break; }
+		setiStates.insert( iState );
 
 		g_CatSleipnir.notice( "CClustKMeans::Cluster( %d ) updated %d genes", iK, iChanged );
 		if( g_CatSleipnir.isDebugEnabled( ) )

@@ -21,6 +21,8 @@ option	"directory"		d	"Directory with DAB files"
 section "Miscellaneous"
 option	"everything"	e	"Include pairs without answers"
 							flag	off
+option	"continuous"	c	"Output continuous values"
+							flag	off
 
 section "Learning/Evaluation"
 option	"genes"			g	"Gene inclusion file"

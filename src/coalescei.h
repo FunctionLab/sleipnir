@@ -95,6 +95,7 @@ struct SCoalesceModifierCache {
 class CCoalesceMotifLibraryImpl {
 protected:
 	static const char	c_acBases[];
+	static const char	c_acComplements[];
 	static const size_t	c_iShift		= 2; // ceil( log2( ARRAYSIZE(c_acBases) ) )
 	static const char	c_cSeparator	= '|';
 
@@ -133,13 +134,8 @@ protected:
 
 	static char GetComplement( char cBase ) {
 		const char*	pc;
-		size_t		i;
 
-		if( !( pc = strchr( c_acBases, cBase ) ) )
-			return cBase;
-		i = pc - c_acBases;
-
-		return c_acBases[ ( i & ~1 ) + ( 1 - ( i & 1 ) ) ]; }
+		return ( ( pc = strchr( c_acBases, cBase ) ) ? c_acComplements[ pc - c_acBases ] : cBase ); }
 
 	static uint32_t KMer2ID( const std::string& strKMer, bool fRC = false ) {
 		size_t			i, iIndex;
@@ -152,8 +148,10 @@ protected:
 			if( !( pc = strchr( c_acBases, strKMer[ iIndex ] ) ) )
 				return -1;
 			c = (unsigned char)( pc - c_acBases );
-			if( fRC )
-				c = ( c & ~1 ) | ( 1 - ( c & 1 ) );
+			if( fRC ) {
+				if( !( pc = strchr( c_acBases, c_acComplements[ c ] ) ) )
+					return -1;
+				c = (unsigned char)( pc - c_acBases ); }
 			iRet = ( iRet << c_iShift ) | c; }
 
 		return iRet; }
@@ -178,6 +176,22 @@ protected:
 				return true;
 
 		return false; }
+
+	static bool GetPWM( const std::string& strKMer, CDataMatrix& MatPWM ) {
+		size_t	i, j;
+
+		if( ( MatPWM.GetColumns( ) != strlen( c_acBases ) ) || ( MatPWM.GetRows( ) != strKMer.length( ) ) ) {
+			MatPWM.Initialize( strlen( c_acBases ), strKMer.length( ) );
+			MatPWM.Clear( ); }
+		for( i = 0; i < strKMer.length( ); ++i ) {
+			for( j = 0; j < MatPWM.GetRows( ); ++j )
+				if( strKMer[ i ] == c_acBases[ j ] )
+					break;
+			if( j >= MatPWM.GetRows( ) )
+				return false;
+			MatPWM.Get( j, i )++; }
+
+		return true; }
 
 	CCoalesceMotifLibraryImpl( size_t iK ) : m_iK(iK), m_dPenaltyGap(1), m_dPenaltyMismatch(2) {
 		uint32_t	i, j, iRC;
@@ -821,7 +835,7 @@ struct SMotifMatch {
 
 	bool Open( std::istream&, CCoalesceMotifLibrary& );
 	uint32_t Open( const CHierarchy&, const std::vector<SMotifMatch>&, CCoalesceMotifLibrary&, size_t& );
-	std::string Save( const CCoalesceMotifLibrary* ) const;
+	std::string Save( const CCoalesceMotifLibrary*, bool = false ) const;
 
 	bool operator==( const SMotifMatch& sMotif ) const {
 
@@ -1041,7 +1055,7 @@ protected:
 		const std::vector<size_t>&, bool, float&, float& ) const;
 	bool CalculateProbabilityMotifs( const CCoalesceGeneScores&, size_t, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, bool, size_t, float&, float& ) const;
-	bool SaveCopy( const CPCL&, size_t, CPCL&, size_t, bool ) const;
+	bool SaveCopy( const CPCL&, const std::set<size_t>&, size_t, CPCL&, size_t, bool ) const;
 
 	size_t GetConditions( size_t iDataset, size_t iConditions = -1 ) const {
 

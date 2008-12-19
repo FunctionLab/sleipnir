@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-#include "typesi.h"
+#include "fullmatrix.h"
 
 namespace Sleipnir {
 
@@ -54,15 +54,20 @@ protected:
 				break;
 
 			case 1:
-				ossm << sNode.m_vecsChildren[ 0 ].m_cCharacter << GetMotif( sNode.m_vecsChildren[ 0 ] );
+				ossm << sNode.m_vecsChildren[ 0 ].m_cCharacter << ':' << sNode.m_vecsChildren[ 0 ].m_iCount;
+				if( !sNode.m_vecsChildren[ 0 ].m_vecsChildren.empty( ) )
+					ossm << ' ';
+				ossm << GetMotif( sNode.m_vecsChildren[ 0 ] );
 				break;
 
 			default:
 				for( i = 0; i < sNode.m_vecsChildren.size( ); ++i ) {
 					const SNode&	sChild	= sNode.m_vecsChildren[ i ];
 
-					ossm << ( i ? "|" : "" ) << '(' << sChild.m_iCount << ':' << sChild.m_cCharacter <<
-						GetMotif( sChild ) << ')'; } }
+					ossm << ( i ? "|" : "" ) << '(' << sChild.m_cCharacter << ':' << sChild.m_iCount;
+					if( !sChild.m_vecsChildren.empty( ) )
+						ossm << ' ';
+					ossm << GetMotif( sChild ) << ')'; } }
 
 		return ossm.str( ); }
 
@@ -145,17 +150,18 @@ protected:
 					break;
 
 				case '|':
+				case ' ':
 					break;
 
 				default:
-					if( isdigit( c ) ) {
-						iCount = atoi( strPST.c_str( ) + i );
-						while( isdigit( strPST[ ++i ] ) ); }
-					else {
-						psNode = &psNode->m_vecsChildren[ Add( c, *psNode, iCount ) ];
-						iCount = 1;
-						if( ++iCur > iMax )
-							iMax = iCur; } }
+					if( ( ( i + 2 ) >= strPST.length( ) ) || ( strPST[ i + 1 ] != ':' ) )
+						return -1;
+					iCount = atoi( strPST.c_str( ) + ++i + 1 );
+					while( isdigit( strPST[ ++i ] ) );
+					--i;
+					psNode = &psNode->m_vecsChildren[ Add( c, *psNode, iCount ) ];
+					if( ++iCur > iMax )
+						iMax = iCur; }
 
 		return iMax; }
 
@@ -200,7 +206,7 @@ protected:
 
 		dRet = FLT_MAX;
 		dCur = dCutoff / dPenaltyGap;
-		iBegin = (size_t)ceil( iLength - dCur );
+		iBegin = ( dCur > iLength ) ? 0 : (size_t)ceil( iLength - dCur );
 		iEnd = iLength + m_iDepth - iBegin;
 		for( iMin = 0,iCur = iBegin; iCur < iEnd; ++iCur ) {
 			iGaps = 0;
@@ -213,6 +219,8 @@ protected:
 			if( dCur < dRet ) {
 				dRet = dCur;
 				iMin = iCur; } }
+		if( dRet == FLT_MAX )
+			dRet = ( max( iLength, m_iDepth ) - min( iLength, m_iDepth ) ) * dPenaltyGap;
 
 		iOffset = (int)iLength - (int)iMin;
 		return dRet; }
@@ -275,6 +283,25 @@ protected:
 					iRet = iCur; } }
 
 		return iRet; }
+
+	bool GetPWM( const SNode& sNode, size_t iDepth, std::map<unsigned char, size_t>& mapciCharacters,
+		CDataMatrix& MatPWM ) const {
+		size_t											i, iChar;
+		std::map<unsigned char, size_t>::const_iterator	iterChar;
+
+		for( i = 0; i < sNode.m_vecsChildren.size( ); ++i ) {
+			const SNode&	sChild	= sNode.m_vecsChildren[ i ];
+
+			if( ( iterChar = mapciCharacters.find( sChild.m_cCharacter ) ) == mapciCharacters.end( ) ) {
+				iChar = mapciCharacters.size( );
+				mapciCharacters[ sChild.m_cCharacter ] = iChar; }
+			else
+				iChar = iterChar->second;
+			MatPWM.Get( iChar, iDepth ) += sChild.m_iCount;
+			if( !GetPWM( sChild, iDepth + 1, mapciCharacters, MatPWM ) )
+				return false; }
+
+		return true; }
 
 	SNode	m_sRoot;
 	size_t	m_iDepth;

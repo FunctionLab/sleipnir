@@ -265,7 +265,63 @@ public:
 		for( i = 0; ( i + 1 ) < m_iSize; ++i )
 			memset( m_aaData[ i ], 0, ( m_iSize - i - 1 ) * sizeof(*m_aaData[ i ]) ); }
 
+	/*!
+	 * \brief
+	 * Saves a matrix to the given stream in either binary or tab-delimited text format.
+	 * 
+	 * \param ostm
+	 * Stream to which matrix is saved.
+	 * 
+	 * \param fBinary
+	 * If true, matrix is saved in binary format; otherwise, matrix is saved as tab-delimited text.
+	 * 
+	 * \param cSeparator
+	 * For non-binary output, delimiter between matrix elements (tab by default).
+	 * 
+	 * \returns
+	 * True if matrix was saved successfully.
+	 * 
+	 * \remarks
+	 * A binary matrix is saved in row-major order; a text matrix is a simple tab-delimited file from which
+	 * matrix elements are read using >>.
+	 * 
+	 * \see
+	 * Open
+	 */
+	bool Save( std::ostream& ostm, bool fBinary, char cSeparator = '\t' ) const {
+
+		return ( fBinary ? SaveBinary( ostm ) : SaveText( ostm, cSeparator ) ); }
+
 protected:
+
+	bool SaveBinary( std::ostream& ostm ) const {
+		size_t		i;
+		uint32_t	iSize;
+
+		iSize = (uint32_t)GetSize( );
+		ostm.write( (const char*)&iSize, sizeof(iSize) );
+		for( i = 0; i < GetSize( ); ++i )
+			ostm.write( (const char*)Get( i ), (std::streamsize)( sizeof(*Get( i )) *
+				( GetSize( ) - i - 1 ) ) );
+
+		return true; }
+
+	bool SaveText( std::ostream& ostm, char cSeparator ) const {
+		size_t	i, j;
+
+		if( !GetSize( ) )
+			return false;
+
+		for( i = 0; ( i + 1 ) < GetSize( ); ++i ) {
+			for( j = 0; j <= i; ++j )
+				ostm << cSeparator;
+			ostm << Get( i, j++ );
+			for( ; j < GetSize( ); ++j )
+				ostm << cSeparator << Get( i, j );
+			ostm << std::endl; }
+
+		return true; }
+
 	/*!
 	 * \brief
 	 * True if the matrix is responsible for disposing of the underlying memory.

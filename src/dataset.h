@@ -268,6 +268,21 @@ public:
 	 * CDat::FilterGenes
 	 */
 	virtual void FilterGenes( const CGenes& Genes, CDat::EFilter eFilter ) = 0;
+
+	/*!
+	 * \brief
+	 * Save a dataset to the given stream in binary or tabular (human readable) form.
+	 * 
+	 * \param ostm
+	 * Stream into which dataset is saved.
+	 * 
+	 * \param fBinary
+	 * If true, save the dataset as a binary file; if false, save it as a text-based tab-delimited file.
+	 * 
+	 * \remarks
+	 * If fBinary is true, output stream must be binary.
+	 */
+	virtual void Save( std::ostream& ostm, bool fBinary ) const = 0;
 };
 
 /*!
@@ -366,9 +381,12 @@ public:
 		return CDataImpl::OpenGenes( vecstrDataFiles ); }
 
 	size_t GetDiscrete( size_t iY, size_t iX, size_t iNode ) const;
-	float GetContinuous( size_t iY, size_t iX, size_t iNode ) const;
 	bool IsExample( size_t iY, size_t iX ) const;
 	void Remove( size_t iY, size_t iX );
+
+	float GetContinuous( size_t iY, size_t iX, size_t iNode ) const {
+
+		return CDatasetImpl::GetContinuous( iY, iX, iNode ); }
 
 	void FilterGenes( const CGenes& Genes, CDat::EFilter eFilter ) {
 
@@ -401,6 +419,11 @@ public:
 	size_t GetBins( size_t iNode ) const {
 
 		return CDataImpl::GetBins( iNode ); }
+
+	void Save( std::ostream& ostm, bool fBinary ) const {
+
+		fBinary ? SaveBinary( ostm ) : SaveText( ostm ); }
+	
 };
 
 /*!
@@ -529,19 +552,6 @@ public:
 
 		return CDataImpl::OpenGenes( vecstrDataFiles ); }
 
-	/*!
-	 * \brief
-	 * Save a dataset to the given stream in binary or tabular (human readable) form.
-	 * 
-	 * \param ostm
-	 * Stream into which dataset is saved.
-	 * 
-	 * \param fBinary
-	 * If true, save the dataset as a binary DAD; if false, save it as a text-based tab-delimited DAD.
-	 * 
-	 * \remarks
-	 * If fBinary is true, output stream must be binary.
-	 */
 	void Save( std::ostream& ostm, bool fBinary ) const {
 
 		fBinary ? SaveBinary( ostm ) : SaveText( ostm ); }
@@ -698,6 +708,10 @@ public:
 	void FilterGenes( const CGenes& Genes, CDat::EFilter eFilter ) {
 
 		CDataImpl::FilterGenes( this, Genes, eFilter ); }
+
+	void Save( std::ostream& ostm, bool fBinary ) const {
+
+		CDataOverlayImpl::Save( ostm, fBinary ); }
 };
 
 /*!
@@ -768,6 +782,10 @@ public:
 	void FilterGenes( const CGenes& Genes, CDat::EFilter eFilter ) {
 
 		CDataImpl::FilterGenes( this, Genes, eFilter ); }
+
+	void Save( std::ostream& ostm, bool fBinary ) const {
+
+		CDataOverlayImpl::Save( ostm, fBinary ); }
 };
 
 /*!

@@ -58,6 +58,7 @@ public:
 	float GetMatch( const std::string& strSequence, uint32_t iMotif, size_t iOffset,
 		SCoalesceModifierCache& sModifiers ) const;
 	uint32_t Open( const std::string& strMotif );
+	std::string GetPWM( uint32_t iMotif ) const;
 
 	/*!
 	 * \brief

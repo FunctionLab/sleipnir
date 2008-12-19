@@ -29,7 +29,7 @@ enum EFile {
 };
 
 int main_postprocess( const gengetopt_args_info&, CCoalesceMotifLibrary& );
-bool recluster( const gengetopt_args_info&, CCoalesceMotifLibrary&, const CHierarchy&,
+bool recluster( const gengetopt_args_info&, size_t, CCoalesceMotifLibrary&, const CHierarchy&,
 	const vector<CCoalesceCluster>&, const vector<string>&, vector<CCoalesceCluster>& );
 
 EFile open_pclwig( const char* szFile, size_t iSkip, CFASTA& FASTA, CPCL& PCL ) {
@@ -183,7 +183,8 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 			MatSim.Set( i, j, vecClustersFrom[ i ].GetSimilarity( vecClustersFrom[ j ], PCL.GetGenes( ),
 				iDatasets ) );
 	if( !( ( pHier = CClustHierarchical::Cluster( MatSim ) ) &&
-		recluster( sArgs, Motifs, *pHier, vecClustersFrom, vecstrClusters, vecClustersTo ) ) )
+		recluster( sArgs, MatSim.GetSize( ) * ( MatSim.GetSize( ) - 1 ) / 2, Motifs, *pHier, vecClustersFrom,
+		vecstrClusters, vecClustersTo ) ) )
 		return 1;
 
 	for( i = 0; i < vecClustersTo.size( ); ++i ) {
@@ -193,12 +194,14 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 
 	return 0; }
 
-bool recluster( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& Motifs, const CHierarchy& Hier,
-	const vector<CCoalesceCluster>& vecClustersFrom, const vector<string>& vecstrClustersFrom,
-	vector<CCoalesceCluster>& vecClustersTo ) {
+bool recluster( const gengetopt_args_info& sArgs, size_t iPairs, CCoalesceMotifLibrary& Motifs,
+	const CHierarchy& Hier, const vector<CCoalesceCluster>& vecClustersFrom,
+	const vector<string>& vecstrClustersFrom, vector<CCoalesceCluster>& vecClustersTo ) {
 	bool	fRet;
 
-	if( Hier.IsGene( ) || ( Hier.GetSimilarity( ) > sArgs.cutoff_postprocess_arg ) ) {
+// This one minus business essentially converts from a similarity to a p-value and back
+	if( Hier.IsGene( ) || ( ( ( 1 - Hier.GetSimilarity( ) ) * iPairs ) <
+		( 1 - sArgs.cutoff_postprocess_arg ) ) ) {
 		cerr << "Creating output cluster " << vecClustersTo.size( ) << endl;
 		vecClustersTo.push_back( CCoalesceCluster( ) );
 		fRet = vecClustersTo.back( ).Open( Hier, vecClustersFrom, vecstrClustersFrom,
@@ -208,6 +211,6 @@ bool recluster( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& Motifs,
 			vecClustersTo.pop_back( ); }
 		return fRet; }
 
-	return ( recluster( sArgs, Motifs, Hier.Get( false ), vecClustersFrom, vecstrClustersFrom,
-		vecClustersTo ) && recluster( sArgs, Motifs, Hier.Get( true ), vecClustersFrom, vecstrClustersFrom,
-		vecClustersTo ) ); }
+	return ( recluster( sArgs, iPairs, Motifs, Hier.Get( false ), vecClustersFrom, vecstrClustersFrom,
+		vecClustersTo ) && recluster( sArgs, iPairs, Motifs, Hier.Get( true ), vecClustersFrom,
+		vecstrClustersFrom, vecClustersTo ) ); }

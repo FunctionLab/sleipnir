@@ -145,8 +145,8 @@ bool SCoalesceDataset::CalculateCovariance( const CPCL& PCL ) {
 
 // CCoalesceMotifLibrary
 
-// Order independent, but complements must be adjacent
-const char	CCoalesceMotifLibraryImpl::c_acBases[]	= "ATCG";
+const char	CCoalesceMotifLibraryImpl::c_acBases[]			= "ACGT";
+const char	CCoalesceMotifLibraryImpl::c_acComplements[]	= "TGCA";
 
 CCoalesceMotifLibraryImpl::~CCoalesceMotifLibraryImpl( ) {
 	size_t	i;
@@ -388,9 +388,12 @@ uint32_t CCoalesceMotifLibraryImpl::MergeKMerPST( const std::string& strKMer, co
 
 	pPSTOut = CreatePST( iRet );
 	pPSTOut->Add( strKMer, PSTIn, iOffset );
-	if( g_CatSleipnir.isInfoEnabled( ) )
-		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeKMerPST( %s, %s, %g ) merged at %g to %s",
-			strKMer.c_str( ), PSTIn.GetMotif( ).c_str( ), dCutoff, dScore, pPSTOut->GetMotif( ).c_str( ) );
+	if( g_CatSleipnir.isInfoEnabled( ) ) {
+		ostringstream	ossm;
+
+		ossm << "CCoalesceMotifLibraryImpl::MergeKMerPST( " << strKMer << ", " << PSTIn.GetMotif( ) <<
+			", " << dCutoff << " ) merged at " << dScore << " to " << pPSTOut->GetMotif( );
+		g_CatSleipnir.info( ossm.str( ) ); }
 	return iRet; }
 
 float CCoalesceMotifLibraryImpl::AlignRCPST( uint32_t iRC, const CPST& PSTIn, float dCutoff ) const {
@@ -426,10 +429,12 @@ uint32_t CCoalesceMotifLibraryImpl::MergeRCPST( uint32_t iRC, const CPST& PSTIn,
 	else {
 		pPSTOut->Add( strTwo, PSTIn, iTwo );
 		pPSTOut->Add( strOne ); }
-	if( g_CatSleipnir.isInfoEnabled( ) )
-		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeRCPST( %s, %s, %g ) merged at %g to %s",
-			GetMotif( iRC ).c_str( ), PSTIn.GetMotif( ).c_str( ), dCutoff, min( dOne, dTwo ),
-			pPSTOut->GetMotif( ).c_str( ) );
+	if( g_CatSleipnir.isInfoEnabled( ) ) {
+		ostringstream	ossm;
+
+		ossm << "CCoalesceMotifLibraryImpl::MergeRCPST( " << GetMotif( iRC ) << ", " << PSTIn.GetMotif( ) <<
+			", " << dCutoff << " ) merged at " << min( dOne, dTwo ) << " to " << pPSTOut->GetMotif( );
+		g_CatSleipnir.info( ossm.str( ) ); }
 	return iRet; }
 
 float CCoalesceMotifLibraryImpl::AlignPSTs( const CPST& PSTOne, const CPST& PSTTwo, float dCutoff ) const {
@@ -453,11 +458,44 @@ uint32_t CCoalesceMotifLibraryImpl::MergePSTs( const CPST& PSTOne, const CPST& P
 	else {
 		pPSTOut->Add( PSTOne );
 		pPSTOut->Add( PSTTwo, iOffset ); }
-	if( g_CatSleipnir.isInfoEnabled( ) )
-		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergePSTs( %s, %s, %g ) merged at %g to %s",
-			PSTOne.GetMotif( ).c_str( ), PSTTwo.GetMotif( ).c_str( ), dCutoff, dScore,
-			pPSTOut->GetMotif( ).c_str( ) );
+	if( g_CatSleipnir.isInfoEnabled( ) ) {
+		ostringstream	ossm;
+
+		ossm << "CCoalesceMotifLibraryImpl::MergePSTs( " << PSTOne.GetMotif( ) << ", " <<
+			PSTTwo.GetMotif( ) << ", " << dCutoff << " ) merged at " << dScore << " to " <<
+			pPSTOut->GetMotif( );
+		g_CatSleipnir.info( ossm.str( ) ); }
+
 	return iRet; }
+
+string CCoalesceMotifLibrary::GetPWM( uint32_t iMotif ) const {
+	CDataMatrix		MatPWM;
+	string			strMotif;
+	size_t			i, j;
+	ostringstream	ossm;
+
+	switch( GetType( iMotif ) ) {
+		case ETypeKMer:
+			if( !CCoalesceMotifLibraryImpl::GetPWM( GetMotif( iMotif ), MatPWM ) )
+				return "";
+			break;
+
+		case ETypeRC:
+			if( !( CCoalesceMotifLibraryImpl::GetPWM( strMotif = GetRCOne( iMotif ), MatPWM ) &&
+				CCoalesceMotifLibraryImpl::GetPWM( GetReverseComplement( strMotif ), MatPWM ) ) )
+				return "";
+			break;
+
+		case ETypePST:
+			GetPST( iMotif )->GetPWM( MatPWM, c_acBases );
+			break; }
+
+	for( i = 0; i < MatPWM.GetRows( ); ++i ) {
+		for( j = 0; j < MatPWM.GetColumns( ); ++j )
+			ossm << ( j ? "\t" : "" ) << MatPWM.Get( i, j );
+		ossm << endl; }
+
+	return ossm.str( ); }
 
 // CCoalesceGeneScores
 
@@ -647,13 +685,14 @@ bool CCoalesceGroupHistograms::IsSimilar( const CCoalesceMotifLibrary* pMotifs, 
 // SMotifMatch
 
 bool SMotifMatch::Open( istream& istm, CCoalesceMotifLibrary& Motifs ) {
-	char			acLine[ 1024 ];
+	string			strLine;
 	vector<string>	vecstrLine;
 
-	istm.getline( acLine, ARRAYSIZE(acLine) - 1 );
-	CMeta::Tokenize( acLine, vecstrLine );
+	strLine.resize( CFile::GetBufferSize( ) );
+	istm.getline( &strLine[ 0 ], strLine.size( ) - 1 );
+	CMeta::Tokenize( strLine.c_str( ), vecstrLine );
 	if( vecstrLine.size( ) != 3 ) {
-		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid line: %s", acLine );
+		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid line: %s", strLine.c_str( ) );
 		return false; }
 	m_strType = vecstrLine[ 0 ];
 	if( ( m_eSubsequence = CCoalesceSequencerBase::GetSubsequence( vecstrLine[ 1 ] ) ) ==
@@ -661,9 +700,9 @@ bool SMotifMatch::Open( istream& istm, CCoalesceMotifLibrary& Motifs ) {
 		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid subsequence: %s", vecstrLine[ 1 ].c_str( ) );
 		return false; }
 	m_dZ = (float)atof( vecstrLine[ 2 ].c_str( ) );
-	istm.getline( acLine, ARRAYSIZE(acLine) - 1 );
-	if( ( m_iMotif = Motifs.Open( acLine ) ) == -1 ) {
-		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid motif: %s", acLine );
+	istm.getline( &strLine[ 0 ], strLine.size( ) - 1 );
+	if( ( m_iMotif = Motifs.Open( strLine.c_str( ) ) ) == -1 ) {
+		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid motif: %s", strLine.c_str( ) );
 		return false; }
 
 	return true; }
@@ -685,13 +724,15 @@ uint32_t SMotifMatch::Open( const CHierarchy& Hier, const vector<SMotifMatch>& v
 		( ( iRight = Open( Hier.Get( true ), vecsMotifs, Motifs, iCount ) ) == -1 ) ) ? -1 :
 		( m_iMotif = Motifs.Merge( iLeft, iRight, FLT_MAX ) ) ); }
 
-string SMotifMatch::Save( const CCoalesceMotifLibrary* pMotifs ) const {
+string SMotifMatch::Save( const CCoalesceMotifLibrary* pMotifs, bool fPWM ) const {
 	ostringstream	ossm;
 
 	ossm << m_strType << '\t' << CCoalesceSequencerBase::GetSubsequence( m_eSubsequence ) << '\t' << m_dZ <<
 		endl;
-	if( pMotifs )
+	if( pMotifs ) {
 		ossm << pMotifs->GetMotif( m_iMotif );
+		if( fPWM )
+			ossm << endl << pMotifs->GetPWM( m_iMotif ); }
 	else
 		ossm << m_iMotif;
 
@@ -1088,17 +1129,23 @@ bool CCoalesceClusterImpl::AddSignificant( const CCoalesceMotifLibrary& Motifs, 
 				SMotifMatch	sMotif( iMotif, strTypeCluster, eSubsequence, (float)dZ, (float)dAverage );
 
 				if( g_CatSleipnir.isInfoEnabled( ) ) {
-					g_CatSleipnir.info( "CCoalesceClusterImpl::AddSignificant( %d, %g ) adding at %g:\n%s",
-						iMotif, dPValue, dP, sMotif.Save( &Motifs ).c_str( ) );
-					g_CatSleipnir.info( "Cluster	%s", HistSetCluster.Save( iMotif ).c_str( ) );
-					g_CatSleipnir.info( "Pot	%s", HistSetPot.Save( iMotif ).c_str( ) ); }
+					ostringstream	ossm;
+
+					ossm << "CCoalesceClusterImpl::AddSignificant( " << iMotif << ", " << dPValue <<
+						" ) adding at " << dP << ":" << endl << sMotif.Save( &Motifs ) << endl <<
+						"Cluster	" << HistSetCluster.Save( iMotif ) << endl <<
+						"Pot	" << HistSetPot.Save( iMotif );
+					g_CatSleipnir.info( ossm.str( ) ); }
 				vecsMotifs.push_back( sMotif ); }
 			else if( g_CatSleipnir.isDebugEnabled( ) ) {
-				g_CatSleipnir.debug( "CCoalesceClusterImpl::AddSignificant( %d, %g ) failed at %g:\n%s",
-					iMotif, dPValue, dP, SMotifMatch( iMotif, strTypeCluster, eSubsequence, (float)dZ,
-					(float)dAverage ).Save( &Motifs ).c_str( ) );
-				g_CatSleipnir.debug( "Cluster	%s", HistSetCluster.Save( iMotif ).c_str( ) );
-				g_CatSleipnir.debug( "Pot	%s", HistSetPot.Save( iMotif ).c_str( ) ); } } }
+				ostringstream	ossm;
+
+				ossm << "CCoalesceClusterImpl::AddSignificant( " << iMotif << ", " << dPValue <<
+					" ) failed at " << dP << ":" << endl << SMotifMatch( iMotif, strTypeCluster, eSubsequence,
+					(float)dZ, (float)dAverage ).Save( &Motifs ) << endl <<
+					"Cluster	" << HistSetCluster.Save( iMotif ) << endl <<
+					"Pot	" << HistSetPot.Save( iMotif );
+				g_CatSleipnir.debug( ossm.str( ) ); } } }
 
 	return true; }
 
@@ -1377,13 +1424,11 @@ bool CCoalesceCluster::Save( const std::string& strDirectory, size_t iID, const 
 			PCLCopy.SetExperiment( iExpTo++, PCL.GetExperiment( iExpFrom ) );
 // Reorder genes
 	for( iGeneTo = iGeneFrom = 0; iGeneFrom < PCL.GetGenes( ); ++iGeneFrom )
-		if( IsGene( iGeneFrom ) && !SaveCopy( PCL, iGeneFrom, PCLCopy, iGeneTo++, false ) ) // true ) )
+		if( IsGene( iGeneFrom ) && !SaveCopy( PCL, setiConditions, iGeneFrom, PCLCopy, iGeneTo++, false ) )
 			return false;
 	for( iGeneFrom = 0; iGeneFrom < PCL.GetGenes( ); ++iGeneFrom )
 		if( !IsGene( iGeneFrom ) )
 			PCLCopy.MaskGene( iGeneTo++ );
-//		if( !IsGene( iGeneFrom ) && !SaveCopy( PCL, iGeneFrom, PCLCopy, iGeneTo++, false ) )
-//			return false;
 
 	ofsm.clear( );
 	ofsm.open( ( strBase + CPCL::GetExtension( ) ).c_str( ) );
@@ -1394,12 +1439,10 @@ bool CCoalesceCluster::Save( const std::string& strDirectory, size_t iID, const 
 
 	return true; }
 
-bool CCoalesceClusterImpl::SaveCopy( const CPCL& PCLFrom, size_t iGeneFrom, CPCL& PCLTo, size_t iGeneTo,
-	bool fClustered ) const {
-	size_t		i, iExpTo, iExpFrom;
-	set<size_t>	setiConditions;
+bool CCoalesceClusterImpl::SaveCopy( const CPCL& PCLFrom, const set<size_t>& setiConditions, size_t iGeneFrom,
+	CPCL& PCLTo, size_t iGeneTo, bool fClustered ) const {
+	size_t	i, iExpTo, iExpFrom;
 
-	GetConditions( setiConditions, PCLFrom.GetExperiments( ) );
 	PCLTo.SetGene( iGeneTo, PCLFrom.GetGene( iGeneFrom ) );
 	for( i = 1; i < PCLFrom.GetFeatures( ); ++i )
 		PCLTo.SetFeature( iGeneTo, i, (string)( ( fClustered && ( i == 1 ) ) ? "*" : "" ) +
@@ -1429,7 +1472,7 @@ void CCoalesceCluster::Save( std::ostream& ostm, size_t iID, const CPCL& PCL,
 			ostm << '\t' << PCL.GetExperiment( GetCondition( *iterID, i ) );
 	ostm << endl << "Motifs" << endl;
 	for( iterMotif = GetMotifs( ).begin( ); iterMotif != GetMotifs( ).end( ); ++iterMotif )
-		ostm << iterMotif->Save( pMotifs ) << endl; }
+		ostm << iterMotif->Save( pMotifs, true ) << endl; }
 
 size_t CCoalesceCluster::Open( const string& strPCL, size_t iSkip, const CPCL& PCL,
 	CCoalesceMotifLibrary* pMotifs ) {
@@ -1571,6 +1614,7 @@ float CCoalesceCluster::GetSimilarity( const CCoalesceCluster& Cluster, size_t i
 	size_t iDatasets ) const {
 	size_t						iOverlapGenes, iOverlapDatasets;
 	set<size_t>::const_iterator	iterItem;
+	float						dGenes, dDatasets, dRet;
 
 	for( iOverlapGenes = 0,iterItem = m_setiGenes.begin( ); iterItem != m_setiGenes.end( ); ++iterItem )
 		if( Cluster.IsGene( *iterItem ) )
@@ -1578,9 +1622,17 @@ float CCoalesceCluster::GetSimilarity( const CCoalesceCluster& Cluster, size_t i
 	for( iOverlapDatasets = 0,iterItem = m_setiDatasets.begin( ); iterItem != m_setiDatasets.end( ); ++iterItem )
 		if( Cluster.IsDataset( *iterItem ) )
 			iOverlapDatasets++;
-	return (float)( ( 2 - CStatistics::HypergeometricCDF( iOverlapGenes, m_setiGenes.size( ),
-		Cluster.m_setiGenes.size( ), iGenes ) - CStatistics::HypergeometricCDF( iOverlapDatasets,
-		m_setiDatasets.size( ), Cluster.m_setiDatasets.size( ), iDatasets ) ) / 2 ); }
+	dGenes = (float)CStatistics::HypergeometricCDF( iOverlapGenes, m_setiGenes.size( ),
+		Cluster.m_setiGenes.size( ), iGenes );
+	dDatasets = (float)CStatistics::HypergeometricCDF( iOverlapDatasets, m_setiDatasets.size( ),
+		Cluster.m_setiDatasets.size( ), iDatasets );
+	if( ( dRet = ( 1 - dGenes - dDatasets ) ) < 0 )
+		dRet = 0;
+	g_CatSleipnir.debug( "CCoalesceCluster::GetSimilarity( %d, %d ) genes: %d, %d, %d = %g", iGenes,
+		iDatasets, iOverlapGenes, m_setiGenes.size( ), Cluster.m_setiGenes.size( ), dGenes );
+	g_CatSleipnir.debug( "CCoalesceCluster::GetSimilarity( %d, %d ) datasets: %d, %d, %d = %g", iGenes,
+		iDatasets, iOverlapDatasets, m_setiDatasets.size( ), Cluster.m_setiDatasets.size( ), dDatasets );
+	return dRet; }
 
 // CCoalesce
 

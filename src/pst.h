@@ -23,6 +23,7 @@
 #define PST_H
 
 #include "psti.h"
+#include "meta.h"
 
 namespace Sleipnir {
 
@@ -288,6 +289,27 @@ public:
 	bool Open( const std::string& strPST ) {
 
 		return ( ( m_iDepth = CPSTImpl::Open( strPST, m_sRoot ) ) != -1 ); }
+
+	bool GetPWM( CDataMatrix& MatPWM, const char* szSymbols ) const {
+		std::map<unsigned char, size_t>					mapciChars;
+		std::vector<size_t>								veciOrder;
+		std::map<unsigned char, size_t>::const_iterator	iterChar;
+		size_t											i, j;
+
+		if( strlen( szSymbols ) != m_iArity )
+			return false;
+
+		MatPWM.Initialize( m_iArity, GetDepth( ) );
+		MatPWM.Clear( );
+		if( !CPSTImpl::GetPWM( m_sRoot, 0, mapciChars, MatPWM ) )
+			return false;
+
+		veciOrder.resize( MatPWM.GetRows( ) );
+		for( i = j = 0; i < m_iArity; ++i )
+			veciOrder[ i ] = ( ( iterChar = mapciChars.find( szSymbols[ i ] ) ) == mapciChars.end( ) ) ?
+				( mapciChars.size( ) + j++ ) : iterChar->second;
+		CMeta::Permute( MatPWM.Get( ), veciOrder );
+		return true; }
 };
 
 }

@@ -94,6 +94,9 @@ protected:
 	void Reset( );
 	bool Open( const CDataPair&, size_t );
 	bool Open( const CDataPair*, const char*, const IBayesNet* );
+	void SaveText( std::ostream& ) const;
+	void SaveBinary( std::ostream& ) const;
+	float GetContinuous( size_t, size_t, size_t ) const;
 
 	void**	m_apData;
 };
@@ -111,6 +114,7 @@ protected:
 	size_t GetDiscrete( size_t, size_t, size_t ) const;
 	float GetContinuous( size_t, size_t, size_t ) const;
 	const std::string& GetGene( size_t ) const;
+	void Save( std::ostream&, bool ) const;
 
 	const IDataset*	m_pDataset;
 };

@@ -25,6 +25,8 @@
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	CDatasetCompact		Data;
+	CDataset			DataContinuous;
+	IDataset*			pData;
 	CGenome				Genome;
 	CGenes				GenesIn( Genome ), GenesEx( Genome );
 	ifstream			ifsm;
@@ -106,7 +108,7 @@ int main( int iArgs, char** aszArgs ) {
 		vecstrExperiments.resize( sArgs.inputs_num );
 		copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrExperiments.begin( ) );
 		PCLLookup.Open( vecstrNames, vecstrExperiments, vecstrDummy );
-		
+
 		veciGenes.resize( DatLookup.GetGenes( ) );
 		for( i = 0; i < sArgs.inputs_num; ++i ) {
 			CDataPair	Dat;
@@ -209,12 +211,15 @@ int main( int iArgs, char** aszArgs ) {
 						'\t' << DatCounts.Get( i, j ) << endl; }
 	else {
 		vector<string>	vecstrFiles;
+		bool			fOpen;
 
 		vecstrFiles.resize( sArgs.inputs_num );
 		copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
-		if( !Data.Open( vecstrFiles ) ) {
+		fOpen = sArgs.continuous_flag ? DataContinuous.Open( vecstrFiles ) : Data.Open( vecstrFiles );
+		if( !fOpen ) {
 			cerr << "Couldn't open inputs" << endl;
-			return 1; } }
+			return 1; }
+		pData = sArgs.continuous_flag ? (IDataset*)&DataContinuous : (IDataset*)&Data; }
 
 	if( sArgs.mask_arg ) {
 		CDat		Mask;
@@ -223,26 +228,26 @@ int main( int iArgs, char** aszArgs ) {
 		if( !Mask.Open( sArgs.mask_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.mask_arg << endl;
 			return 1; }
-		veciGenes.resize( Data.GetGenes( ) );
-		for( i = 0; i < Data.GetGenes( ); ++i )
-			veciGenes[ i ] = (int)Mask.GetGene( Data.GetGene( i ) );
-		for( i = 0; i < Data.GetGenes( ); ++i ) {
+		veciGenes.resize( pData->GetGenes( ) );
+		for( i = 0; i < pData->GetGenes( ); ++i )
+			veciGenes[ i ] = (int)Mask.GetGene( pData->GetGene( i ) );
+		for( i = 0; i < pData->GetGenes( ); ++i ) {
 			if( ( iOne = veciGenes[ i ] ) == -1 ) {
-				for( j = ( i + 1 ); j < Data.GetGenes( ); ++j )
-					Data.Remove( i, j );
+				for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
+					pData->Remove( i, j );
 				continue; }
-			for( j = ( i + 1 ); j < Data.GetGenes( ); ++j )
+			for( j = ( i + 1 ); j < pData->GetGenes( ); ++j )
 				if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
 					CMeta::IsNaN( d = Mask.Get( iOne, iTwo ) ) || ( d <= 0 ) )
-					Data.Remove( i, j ); } }
+					pData->Remove( i, j ); } }
 
 	if( sArgs.output_arg ) {
 		ofstream	ofsm;
 
 		ofsm.open( sArgs.output_arg, ios_base::binary );
-		Data.Save( ofsm, true );
+		pData->Save( ofsm, true );
 		ofsm.close( ); }
 	else
-		Data.Save( cout, false );
+		pData->Save( cout, false );
 
 	return 0; }

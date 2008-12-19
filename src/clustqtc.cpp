@@ -195,7 +195,7 @@ void CClustQTC::Cluster( const CDistanceMatrix& MatSimilarities, float dMinDiame
 	size_t				i, j;
 
 	for( dDiameter = dMinDiameter; dDiameter <= dMaxDiameter; dDiameter += dDeltaDiameter ) {
-		g_CatSleipnir.notice( "CClustQTC::Cluster( %g, %g, %g, %d, %d ) processing diameter %g", dMinDiameter,
+		g_CatSleipnir.notice( "CClustQTC::Cluster( %g, %g, %g, %d ) processing diameter %g", dMinDiameter,
 			dMaxDiameter, dDeltaDiameter, iSize, dDiameter );
 		sClusters = QualityThresholdAll( MatSimilarities.GetSize( ), dDiameter, iSize, MatSimilarities,
 			vecsClusters );

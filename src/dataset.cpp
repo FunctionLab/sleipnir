@@ -290,6 +290,42 @@ void CDatasetImpl::Reset( ) {
 				delete (CCompactMatrix*)m_apData[ i ];
 		delete[] m_apData; } }
 
+void CDatasetImpl::SaveBinary( std::ostream& ostm ) const {
+	size_t		i;
+	uint32_t	iData;
+
+	CDataImpl::SaveBinary( ostm );
+	for( i = iData = 0; i < m_veciMapping.size( ); ++i )
+		if( m_veciMapping[ i ] != -1 )
+			iData++;
+	ostm.write( (char*)&iData, sizeof(iData) );
+	for( i = 0; i < iData; ++i )
+		if( m_veccQuants[ i ] == (unsigned char)-1 )
+			((CDistanceMatrix*)m_apData[ i ])->Save( ostm, true );
+		else
+			((CCompactMatrix*)m_apData[ i ])->Save( ostm ); }
+
+void CDatasetImpl::SaveText( std::ostream& ostm ) const {
+	size_t			i, j, k;
+	vector<float>	vecdValues;
+	bool			fHit;
+
+	vecdValues.resize( GetExperiments( ) );
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+			fHit = false;
+			for( k = 0; k < vecdValues.size( ); ++k )
+				if( !CMeta::IsNaN( vecdValues[ k ] = GetContinuous( i, j, k ) ) )
+					fHit = true;
+			if( !fHit )
+				continue;
+			ostm << GetGene( i ) << '\t' << GetGene( j );
+			for( k = 0; k < vecdValues.size( ); ++k ) {
+				ostm << '\t';
+				if( !CMeta::IsNaN( vecdValues[ k ] ) )
+					ostm << vecdValues[ k ]; }
+			ostm << endl; } }
+
 /*!
  * \brief
  * Construct a dataset corresponding to the given Bayes net using the provided answer file and data
@@ -472,7 +508,7 @@ bool CDataset::Open( const std::vector<std::string>& vecstrDataFiles ) {
 
 	return true; }
 
-float CDataset::GetContinuous( size_t iY, size_t iX, size_t iNode ) const {
+float CDatasetImpl::GetContinuous( size_t iY, size_t iX, size_t iNode ) const {
 	size_t	iMap;
 
 	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
@@ -549,6 +585,10 @@ float CDataOverlayImpl::GetContinuous( size_t iX, size_t iY, size_t iNode ) cons
 const string& CDataOverlayImpl::GetGene( size_t iGene ) const {
 
 	return m_pDataset->GetGene( iGene ); }
+
+void CDataOverlayImpl::Save( ostream& ostm, bool fBinary ) const {
+
+	m_pDataset->Save( ostm, fBinary ); }
 
 // CDataFilter
 

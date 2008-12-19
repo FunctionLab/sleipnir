@@ -215,6 +215,7 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 	vector<float>	vecdHeight, vecdMax;
 	vector<size_t>	veciChild1, veciChild2, veciChildren, veciMax, veciOwner;
 
+	dMin = FLT_MAX;
 	if( pvecfGenes ) {
 		for( i = j = 0; i < pvecfGenes->size( ); ++i )
 			if( (*pvecfGenes)[ i ] )
@@ -230,6 +231,12 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 		Sim.Initialize( Dist.GetSize( ) );
 		for( i = 0; i < Sim.GetSize( ); ++i )
 			Sim.Set( i, Dist.Get( i ) ); }
+	for( i = 0; i < Sim.GetSize( ); ++i )
+		for( j = ( i + 1 ); j < Sim.GetSize( ); ++j )
+			if( Sim.Get( i, j ) == -FLT_MAX ) {
+				g_CatSleipnir.error( "CClustHierarchicalImpl::Cluster( ) illegal input value at %d, %d", i,
+					j );
+				return NULL; }
 	iAssigned = iParentless = Sim.GetSize( );
 	dTotal = FLT_MAX;
 

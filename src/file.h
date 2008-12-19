@@ -68,6 +68,10 @@ class CFile : protected CFileImpl {
 public:
 	static std::string OpenToken( std::istream& istm );
 	static std::string OpenToken( const char* szInput, const char** pcEnd = NULL );
+
+	static size_t GetBufferSize( ) {
+
+		return c_iBufferSize; }
 };
 
 }

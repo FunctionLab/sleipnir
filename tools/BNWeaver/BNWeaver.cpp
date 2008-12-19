@@ -143,9 +143,10 @@ int main( int iArgs, char** aszArgs ) {
 		if( !CMeta::IsExtension( strFile, c_acQuant ) )
 			continue;
 
+		i = strFile.rfind( c_acQuant );
 		vecstrNames.push_back( (string)sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDab );
 		if( !Data.Open( Answers, vecstrNames, true, sArgs.memmap_flag && !sArgs.randomize_flag ) ) {
-			cerr << "Couldn't open: " << strFile << endl;
+			cerr << "Couldn't open: " << vecstrNames.back( ) << endl;
 			return 1; }
 		if( sArgs.randomize_flag )
 			Data.Randomize( );

@@ -111,7 +111,10 @@ int main( int iArgs, char** aszArgs ) {
 			if( vecstrLine.size( ) < 2 ) {
 				cerr << "Illegal datasets line: " << acLine << endl;
 				return 1; }
-			mapstriDatasets[ vecstrLine[ 1 ] ] = atol( vecstrLine[ 0 ].c_str( ) ) - 1; }
+			if( !( iRet = atol( vecstrLine[ 0 ].c_str( ) ) ) ) {
+				cerr << "Dataset indices must be greater than zero: " << acLine << endl;
+				return 1; }
+			mapstriDatasets[ vecstrLine[ 1 ] ] = iRet - 1; }
 		ifsm.close( ); }
 
 	if( sArgs.contexts_arg ) {

@@ -64,7 +64,9 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
 		ifsm.clear( );
 		ifsm.open( sArgs.inputs[ iArg ] );
-		PCL.Open( ifsm, sArgs.skip_arg );
+		if( !PCL.Open( ifsm, sArgs.skip_arg ) ) {
+			cerr << "Could not open: " << sArgs.inputs[ iArg ] << endl;
+			return 1; }
 		if( !iArg )
 			for( i = 0; i < PCL.GetFeatures( ); ++i )
 				vecstrFeatures.push_back( PCL.GetFeature( i ) );

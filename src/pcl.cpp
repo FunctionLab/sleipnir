@@ -338,6 +338,8 @@ bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 		for( fRet = !m_vecstrGenes.empty( ),i = 0; i < m_vecstrGenes.size( ); ++i )
 			if( m_vecstrGenes[ i ].empty( ) || !isprint( m_vecstrGenes[ i ][ 0 ] ) ) {
 				fRet = false;
+				g_CatSleipnir.error( "CPCL::Open( %d ) invalid gene at index %d: %s", i,
+					m_vecstrGenes[ i ].c_str( ) );
 				break; }
 		if( fRet ) {
 			m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
