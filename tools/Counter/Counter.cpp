@@ -229,6 +229,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 		if( !CMeta::IsExtension( strFile, c_acQuant ) )
 			continue;
 
+		i = strFile.rfind( '.' );
 		strName = (string)sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDab;
 		if( !Dat.Open( strName.c_str( ), false, !!sArgs.memmap_flag ) ) {
 			cerr << "Couldn't open: " << strName << endl;

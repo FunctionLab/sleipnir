@@ -57,8 +57,11 @@ const char *gengetopt_args_info_help[] = {
   "  -a, --conservation=filename   Evolutionary conservation file (WIG)",
   "\nPostprocessing Parameters:",
   "  -j, --postprocess=directory   Input directory of clusters to postprocess",
-  "  -J, --cutoff_postprocess=DOUBLE\n                                Similarity cutoff for cluster merging  \n                                  (default=`0.95')",
+  "  -J, --cutoff_postprocess=DOUBLE\n                                Similarity cutoff for cluster merging  \n                                  (default=`0.75')",
   "  -L, --fraction_postprocess=DOUBLE\n                                Overlap fraction for postprocessing \n                                  gene/condition inclusion  (default=`0.5')",
+  "  -R, --remove_rcs              Convert RCs and RC-like PSTs to single strand  \n                                  (default=on)",
+  "  -u, --min_info=DOUBLE         Uninformative motif threshhold (bits)  \n                                  (default=`0.45')",
+  "  -U, --min_zscore=DOUBLE       Minimum motif z-score magnitude  \n                                  (default=`0.25')",
   "\nMiscellaneous:",
   "  -e, --cache=filename          Cache file for sequence analysis",
   "\nOptional:",
@@ -70,6 +73,7 @@ const char *gengetopt_args_info_help[] = {
 };
 
 typedef enum {ARG_NO
+  , ARG_FLAG
   , ARG_STRING
   , ARG_INT
   , ARG_DOUBLE
@@ -116,6 +120,9 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->postprocess_given = 0 ;
   args_info->cutoff_postprocess_given = 0 ;
   args_info->fraction_postprocess_given = 0 ;
+  args_info->remove_rcs_given = 0 ;
+  args_info->min_info_given = 0 ;
+  args_info->min_zscore_given = 0 ;
   args_info->cache_given = 0 ;
   args_info->threads_given = 0 ;
   args_info->skip_given = 0 ;
@@ -168,10 +175,15 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->conservation_orig = NULL;
   args_info->postprocess_arg = NULL;
   args_info->postprocess_orig = NULL;
-  args_info->cutoff_postprocess_arg = 0.95;
+  args_info->cutoff_postprocess_arg = 0.75;
   args_info->cutoff_postprocess_orig = NULL;
   args_info->fraction_postprocess_arg = 0.5;
   args_info->fraction_postprocess_orig = NULL;
+  args_info->remove_rcs_flag = 1;
+  args_info->min_info_arg = 0.45;
+  args_info->min_info_orig = NULL;
+  args_info->min_zscore_arg = 0.25;
+  args_info->min_zscore_orig = NULL;
   args_info->cache_arg = NULL;
   args_info->cache_orig = NULL;
   args_info->threads_arg = 1;
@@ -215,11 +227,14 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->postprocess_help = gengetopt_args_info_help[28] ;
   args_info->cutoff_postprocess_help = gengetopt_args_info_help[29] ;
   args_info->fraction_postprocess_help = gengetopt_args_info_help[30] ;
-  args_info->cache_help = gengetopt_args_info_help[32] ;
-  args_info->threads_help = gengetopt_args_info_help[34] ;
-  args_info->skip_help = gengetopt_args_info_help[35] ;
-  args_info->random_help = gengetopt_args_info_help[36] ;
-  args_info->verbosity_help = gengetopt_args_info_help[37] ;
+  args_info->remove_rcs_help = gengetopt_args_info_help[31] ;
+  args_info->min_info_help = gengetopt_args_info_help[32] ;
+  args_info->min_zscore_help = gengetopt_args_info_help[33] ;
+  args_info->cache_help = gengetopt_args_info_help[35] ;
+  args_info->threads_help = gengetopt_args_info_help[37] ;
+  args_info->skip_help = gengetopt_args_info_help[38] ;
+  args_info->random_help = gengetopt_args_info_help[39] ;
+  args_info->verbosity_help = gengetopt_args_info_help[40] ;
   
 }
 
@@ -329,6 +344,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->postprocess_orig));
   free_string_field (&(args_info->cutoff_postprocess_orig));
   free_string_field (&(args_info->fraction_postprocess_orig));
+  free_string_field (&(args_info->min_info_orig));
+  free_string_field (&(args_info->min_zscore_orig));
   free_string_field (&(args_info->cache_arg));
   free_string_field (&(args_info->cache_orig));
   free_string_field (&(args_info->threads_orig));
@@ -414,6 +431,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "cutoff_postprocess", args_info->cutoff_postprocess_orig, 0);
   if (args_info->fraction_postprocess_given)
     write_into_file(outfile, "fraction_postprocess", args_info->fraction_postprocess_orig, 0);
+  if (args_info->remove_rcs_given)
+    write_into_file(outfile, "remove_rcs", 0, 0 );
+  if (args_info->min_info_given)
+    write_into_file(outfile, "min_info", args_info->min_info_orig, 0);
+  if (args_info->min_zscore_given)
+    write_into_file(outfile, "min_zscore", args_info->min_zscore_orig, 0);
   if (args_info->cache_given)
     write_into_file(outfile, "cache", args_info->cache_orig, 0);
   if (args_info->threads_given)
@@ -573,6 +596,9 @@ int update_arg(void *field, char **orig_field,
     val = possible_values[found];
 
   switch(arg_type) {
+  case ARG_FLAG:
+    *((int *)field) = !*((int *)field);
+    break;
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
@@ -607,6 +633,7 @@ int update_arg(void *field, char **orig_field,
   /* store the original value */
   switch(arg_type) {
   case ARG_NO:
+  case ARG_FLAG:
     break;
   default:
     if (value && orig_field) {
@@ -685,6 +712,9 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "postprocess",	1, NULL, 'j' },
         { "cutoff_postprocess",	1, NULL, 'J' },
         { "fraction_postprocess",	1, NULL, 'L' },
+        { "remove_rcs",	0, NULL, 'R' },
+        { "min_info",	1, NULL, 'u' },
+        { "min_zscore",	1, NULL, 'U' },
         { "cache",	1, NULL, 'e' },
         { "threads",	1, NULL, 't' },
         { "skip",	1, NULL, 's' },
@@ -693,7 +723,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:f:d:o:p:P:m:k:g:G:y:Y:c:C:q:b:z:Z:n:a:j:J:L:e:t:s:r:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:f:d:o:p:P:m:k:g:G:y:Y:c:C:q:b:z:Z:n:a:j:J:L:Ru:U:e:t:s:r:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -975,7 +1005,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         
           if (update_arg( (void *)&(args_info->cutoff_postprocess_arg), 
                &(args_info->cutoff_postprocess_orig), &(args_info->cutoff_postprocess_given),
-              &(local_args_info.cutoff_postprocess_given), optarg, 0, "0.95", ARG_DOUBLE,
+              &(local_args_info.cutoff_postprocess_given), optarg, 0, "0.75", ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
               "cutoff_postprocess", 'J',
               additional_error))
@@ -990,6 +1020,40 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.fraction_postprocess_given), optarg, 0, "0.5", ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
               "fraction_postprocess", 'L',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'R':	/* Convert RCs and RC-like PSTs to single strand.  */
+        
+        
+          if (update_arg((void *)&(args_info->remove_rcs_flag), 0, &(args_info->remove_rcs_given),
+              &(local_args_info.remove_rcs_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "remove_rcs", 'R',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'u':	/* Uninformative motif threshhold (bits).  */
+        
+        
+          if (update_arg( (void *)&(args_info->min_info_arg), 
+               &(args_info->min_info_orig), &(args_info->min_info_given),
+              &(local_args_info.min_info_given), optarg, 0, "0.45", ARG_DOUBLE,
+              check_ambiguity, override, 0, 0,
+              "min_info", 'u',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'U':	/* Minimum motif z-score magnitude.  */
+        
+        
+          if (update_arg( (void *)&(args_info->min_zscore_arg), 
+               &(args_info->min_zscore_orig), &(args_info->min_zscore_given),
+              &(local_args_info.min_zscore_given), optarg, 0, "0.25", ARG_DOUBLE,
+              check_ambiguity, override, 0, 0,
+              "min_zscore", 'U',
               additional_error))
             goto failure;
         

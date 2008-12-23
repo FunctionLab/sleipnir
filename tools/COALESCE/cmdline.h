@@ -97,12 +97,20 @@ struct gengetopt_args_info
   char * postprocess_arg;	/**< @brief Input directory of clusters to postprocess.  */
   char * postprocess_orig;	/**< @brief Input directory of clusters to postprocess original value given at command line.  */
   const char *postprocess_help; /**< @brief Input directory of clusters to postprocess help description.  */
-  double cutoff_postprocess_arg;	/**< @brief Similarity cutoff for cluster merging (default='0.95').  */
+  double cutoff_postprocess_arg;	/**< @brief Similarity cutoff for cluster merging (default='0.75').  */
   char * cutoff_postprocess_orig;	/**< @brief Similarity cutoff for cluster merging original value given at command line.  */
   const char *cutoff_postprocess_help; /**< @brief Similarity cutoff for cluster merging help description.  */
   double fraction_postprocess_arg;	/**< @brief Overlap fraction for postprocessing gene/condition inclusion (default='0.5').  */
   char * fraction_postprocess_orig;	/**< @brief Overlap fraction for postprocessing gene/condition inclusion original value given at command line.  */
   const char *fraction_postprocess_help; /**< @brief Overlap fraction for postprocessing gene/condition inclusion help description.  */
+  int remove_rcs_flag;	/**< @brief Convert RCs and RC-like PSTs to single strand (default=on).  */
+  const char *remove_rcs_help; /**< @brief Convert RCs and RC-like PSTs to single strand help description.  */
+  double min_info_arg;	/**< @brief Uninformative motif threshhold (bits) (default='0.45').  */
+  char * min_info_orig;	/**< @brief Uninformative motif threshhold (bits) original value given at command line.  */
+  const char *min_info_help; /**< @brief Uninformative motif threshhold (bits) help description.  */
+  double min_zscore_arg;	/**< @brief Minimum motif z-score magnitude (default='0.25').  */
+  char * min_zscore_orig;	/**< @brief Minimum motif z-score magnitude original value given at command line.  */
+  const char *min_zscore_help; /**< @brief Minimum motif z-score magnitude help description.  */
   char * cache_arg;	/**< @brief Cache file for sequence analysis.  */
   char * cache_orig;	/**< @brief Cache file for sequence analysis original value given at command line.  */
   const char *cache_help; /**< @brief Cache file for sequence analysis help description.  */
@@ -144,6 +152,9 @@ struct gengetopt_args_info
   unsigned int postprocess_given ;	/**< @brief Whether postprocess was given.  */
   unsigned int cutoff_postprocess_given ;	/**< @brief Whether cutoff_postprocess was given.  */
   unsigned int fraction_postprocess_given ;	/**< @brief Whether fraction_postprocess was given.  */
+  unsigned int remove_rcs_given ;	/**< @brief Whether remove_rcs was given.  */
+  unsigned int min_info_given ;	/**< @brief Whether min_info was given.  */
+  unsigned int min_zscore_given ;	/**< @brief Whether min_zscore was given.  */
   unsigned int cache_given ;	/**< @brief Whether cache was given.  */
   unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */

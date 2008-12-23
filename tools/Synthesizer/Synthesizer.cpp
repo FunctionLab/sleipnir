@@ -88,6 +88,16 @@ int main( int iArgs, char** aszArgs ) {
 #endif // WIN32
 	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
 
+	cout << "#	genes " << sArgs.genes_arg << "	conditions " << sArgs.conditions_arg << endl;
+	cout << "#	tfs " << sArgs.tfs_arg << "	tf_gene " << sArgs.tf_gene_arg << "	tf_condition " <<
+		sArgs.tf_condition_arg << "	tf_min " << sArgs.tf_min_arg << "	tf_max " << sArgs.tf_max_arg << endl;
+	cout << "#	mean " << sArgs.mean_arg << "	stdev " << sArgs.stdev_arg << "	tf_mean " << sArgs.tf_mean_arg <<
+		"	tf_stdev " << sArgs.tf_stdev_arg << endl;
+	cout << "#	fasta " << ( sArgs.fasta_arg ? sArgs.fasta_arg : "none" ) << "	degree " << sArgs.degree_arg <<
+		"	seq_min " << sArgs.seq_min_arg << "	seq_max " << sArgs.seq_max_arg << "	tf_copm " <<
+		sArgs.tf_copm_arg << "	tf_copx " << sArgs.tf_copx_arg << "	tf_types " << ( sArgs.tf_types_arg ?
+		sArgs.tf_types_arg : "all" ) << endl;
+
 	vecsTFs.resize( sArgs.tfs_arg );
 	for( i = 0; i < vecsTFs.size( ); ++i ) {
 		vecsTFs[ i ].Initialize( sArgs.tf_mean_arg, sArgs.tf_stdev_arg, sArgs.genes_arg, sArgs.tf_gene_arg,

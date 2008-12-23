@@ -125,6 +125,9 @@ libSleipnir_a_SOURCES = \
 	clustpivot.cpp			\
 	clustqtc.cpp			\
 	coalesce.cpp			\
+	coalescecluster.cpp		\
+	coalescemotifs.cpp		\
+	coalescestructs.cpp		\
 	color.cpp				\
 	compactmatrix.cpp		\
 	database.cpp			\
@@ -165,6 +168,12 @@ include_HEADERS = \
 	clustqtci.h				\
 	coalesce.h				\
 	coalescei.h				\
+	coalescebasei.h			\
+	coalescecluster.h		\
+	coalesceclusteri.h		\
+	coalescemotifs.h		\
+	coalescemotifsi.h		\
+	coalescestructsi.h		\
 	color.h					\
 	colori.h				\
 	compactmatrix.h			\
@@ -230,14 +239,16 @@ am_libSleipnir_a_OBJECTS = annotation.$(OBJEXT) annotationgo.$(OBJEXT) \
 	bayesnetpnl.$(OBJEXT) bayesnetsmile.$(OBJEXT) \
 	bayesnetsmileelr.$(OBJEXT) clusthierarchical.$(OBJEXT) \
 	clustkmeans.$(OBJEXT) clustpivot.$(OBJEXT) clustqtc.$(OBJEXT) \
-	coalesce.$(OBJEXT) color.$(OBJEXT) compactmatrix.$(OBJEXT) \
-	database.$(OBJEXT) datapair.$(OBJEXT) datasetcompact.$(OBJEXT) \
-	dataset.$(OBJEXT) dat.$(OBJEXT) example.$(OBJEXT) \
-	fasta.$(OBJEXT) file.$(OBJEXT) genome.$(OBJEXT) hmm.$(OBJEXT) \
-	mathb.$(OBJEXT) measure.$(OBJEXT) meta.$(OBJEXT) \
-	orthology.$(OBJEXT) pcl.$(OBJEXT) pclset.$(OBJEXT) \
-	pst.$(OBJEXT) serverclient.$(OBJEXT) server.$(OBJEXT) \
-	statistics.$(OBJEXT) stdafx.$(OBJEXT) svm.$(OBJEXT)
+	coalesce.$(OBJEXT) coalescecluster.$(OBJEXT) \
+	coalescemotifs.$(OBJEXT) coalescestructs.$(OBJEXT) \
+	color.$(OBJEXT) compactmatrix.$(OBJEXT) database.$(OBJEXT) \
+	datapair.$(OBJEXT) datasetcompact.$(OBJEXT) dataset.$(OBJEXT) \
+	dat.$(OBJEXT) example.$(OBJEXT) fasta.$(OBJEXT) file.$(OBJEXT) \
+	genome.$(OBJEXT) hmm.$(OBJEXT) mathb.$(OBJEXT) \
+	measure.$(OBJEXT) meta.$(OBJEXT) orthology.$(OBJEXT) \
+	pcl.$(OBJEXT) pclset.$(OBJEXT) pst.$(OBJEXT) \
+	serverclient.$(OBJEXT) server.$(OBJEXT) statistics.$(OBJEXT) \
+	stdafx.$(OBJEXT) svm.$(OBJEXT)
 libSleipnir_a_OBJECTS = $(am_libSleipnir_a_OBJECTS)
 
 DEFS = @DEFS@
@@ -259,7 +270,10 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/clusthierarchical.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/clustkmeans.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/clustpivot.Po ./$(DEPDIR)/clustqtc.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/coalesce.Po ./$(DEPDIR)/color.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/coalesce.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/coalescecluster.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/coalescemotifs.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/coalescestructs.Po ./$(DEPDIR)/color.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/compactmatrix.Po ./$(DEPDIR)/dat.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/database.Po ./$(DEPDIR)/datapair.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/dataset.Po \
@@ -352,6 +366,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clustpivot.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clustqtc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coalesce.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coalescecluster.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coalescemotifs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coalescestructs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/color.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compactmatrix.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dat.Po@am__quote@

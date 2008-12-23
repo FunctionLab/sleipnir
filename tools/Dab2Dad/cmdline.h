@@ -54,6 +54,8 @@ struct gengetopt_args_info
   const char *directory_help; /**< @brief Directory with DAB files help description.  */
   int everything_flag;	/**< @brief Include pairs without answers (default=off).  */
   const char *everything_help; /**< @brief Include pairs without answers help description.  */
+  int continuous_flag;	/**< @brief Output continuous values (default=off).  */
+  const char *continuous_help; /**< @brief Output continuous values help description.  */
   char * genes_arg;	/**< @brief Gene inclusion file.  */
   char * genes_orig;	/**< @brief Gene inclusion file original value given at command line.  */
   const char *genes_help; /**< @brief Gene inclusion file help description.  */
@@ -95,6 +97,7 @@ struct gengetopt_args_info
   unsigned int answers_given ;	/**< @brief Whether answers was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
   unsigned int everything_given ;	/**< @brief Whether everything was given.  */
+  unsigned int continuous_given ;	/**< @brief Whether continuous was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */
   unsigned int lookup1_given ;	/**< @brief Whether lookup1 was given.  */

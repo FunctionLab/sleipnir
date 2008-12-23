@@ -40,6 +40,7 @@ const char *gengetopt_args_info_help[] = {
   "  -d, --directory=directory  Directory with DAB files  (default=`.')",
   "\nMiscellaneous:",
   "  -e, --everything           Include pairs without answers  (default=off)",
+  "  -c, --continuous           Output continuous values  (default=off)",
   "\nLearning/Evaluation:",
   "  -g, --genes=filename       Gene inclusion file",
   "  -G, --genex=filename       Gene exclusion file",
@@ -88,6 +89,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->answers_given = 0 ;
   args_info->directory_given = 0 ;
   args_info->everything_given = 0 ;
+  args_info->continuous_given = 0 ;
   args_info->genes_given = 0 ;
   args_info->genex_given = 0 ;
   args_info->lookup1_given = 0 ;
@@ -118,6 +120,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->directory_arg = gengetopt_strdup (".");
   args_info->directory_orig = NULL;
   args_info->everything_flag = 0;
+  args_info->continuous_flag = 0;
   args_info->genes_arg = NULL;
   args_info->genes_orig = NULL;
   args_info->genex_arg = NULL;
@@ -155,17 +158,18 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->answers_help = gengetopt_args_info_help[8] ;
   args_info->directory_help = gengetopt_args_info_help[9] ;
   args_info->everything_help = gengetopt_args_info_help[11] ;
-  args_info->genes_help = gengetopt_args_info_help[13] ;
-  args_info->genex_help = gengetopt_args_info_help[14] ;
-  args_info->lookup1_help = gengetopt_args_info_help[16] ;
-  args_info->lookup2_help = gengetopt_args_info_help[17] ;
-  args_info->lookups_help = gengetopt_args_info_help[18] ;
-  args_info->lookupp_help = gengetopt_args_info_help[19] ;
-  args_info->quantize_help = gengetopt_args_info_help[20] ;
-  args_info->paircount_help = gengetopt_args_info_help[21] ;
-  args_info->mask_help = gengetopt_args_info_help[23] ;
-  args_info->memmap_help = gengetopt_args_info_help[24] ;
-  args_info->verbosity_help = gengetopt_args_info_help[25] ;
+  args_info->continuous_help = gengetopt_args_info_help[12] ;
+  args_info->genes_help = gengetopt_args_info_help[14] ;
+  args_info->genex_help = gengetopt_args_info_help[15] ;
+  args_info->lookup1_help = gengetopt_args_info_help[17] ;
+  args_info->lookup2_help = gengetopt_args_info_help[18] ;
+  args_info->lookups_help = gengetopt_args_info_help[19] ;
+  args_info->lookupp_help = gengetopt_args_info_help[20] ;
+  args_info->quantize_help = gengetopt_args_info_help[21] ;
+  args_info->paircount_help = gengetopt_args_info_help[22] ;
+  args_info->mask_help = gengetopt_args_info_help[24] ;
+  args_info->memmap_help = gengetopt_args_info_help[25] ;
+  args_info->verbosity_help = gengetopt_args_info_help[26] ;
   
 }
 
@@ -327,6 +331,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "directory", args_info->directory_orig, 0);
   if (args_info->everything_given)
     write_into_file(outfile, "everything", 0, 0 );
+  if (args_info->continuous_given)
+    write_into_file(outfile, "continuous", 0, 0 );
   if (args_info->genes_given)
     write_into_file(outfile, "genes", args_info->genes_orig, 0);
   if (args_info->genex_given)
@@ -613,6 +619,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "answers",	1, NULL, 'w' },
         { "directory",	1, NULL, 'd' },
         { "everything",	0, NULL, 'e' },
+        { "continuous",	0, NULL, 'c' },
         { "genes",	1, NULL, 'g' },
         { "genex",	1, NULL, 'G' },
         { "lookup1",	1, NULL, 'l' },
@@ -627,7 +634,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:a:n:o:w:d:eg:G:l:L:t:T:qP:k:mv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:a:n:o:w:d:ecg:G:l:L:t:T:qP:k:mv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -739,6 +746,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->everything_flag), 0, &(args_info->everything_given),
               &(local_args_info.everything_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "everything", 'e',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'c':	/* Output continuous values.  */
+        
+        
+          if (update_arg((void *)&(args_info->continuous_flag), 0, &(args_info->continuous_given),
+              &(local_args_info.continuous_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "continuous", 'c',
               additional_error))
             goto failure;
         

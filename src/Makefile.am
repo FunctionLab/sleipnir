@@ -20,6 +20,9 @@ libSleipnir_a_SOURCES	=	\
 	clustpivot.cpp			\
 	clustqtc.cpp			\
 	coalesce.cpp			\
+	coalescecluster.cpp		\
+	coalescemotifs.cpp		\
+	coalescestructs.cpp		\
 	color.cpp				\
 	compactmatrix.cpp		\
 	database.cpp			\
@@ -59,6 +62,12 @@ include_HEADERS			=	\
 	clustqtci.h				\
 	coalesce.h				\
 	coalescei.h				\
+	coalescebasei.h			\
+	coalescecluster.h		\
+	coalesceclusteri.h		\
+	coalescemotifs.h		\
+	coalescemotifsi.h		\
+	coalescestructsi.h		\
 	color.h					\
 	colori.h				\
 	compactmatrix.h			\
