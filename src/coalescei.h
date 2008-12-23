@@ -23,279 +23,26 @@
 #define COALESCEI_H
 
 #include <algorithm>
-#include <fstream>
-#ifdef _MSC_VER
-#include <hash_map>
-#else // _MSC_VER
-#include <ext/hash_map>
-
-#define hash_value	hash<const char*>( )
-#define stdext		__gnu_cxx
-#endif // _MSC_VER
-#include <map>
+#include <iostream>
 #include <set>
 #include <sstream>
-#include <string>
-#include <utility>
-#include <vector>
 
-#include "pcl.h"
+#include "coalescebasei.h"
 #include "statistics.h"
-#include "typesi.h"
 
 namespace Sleipnir {
 
 class CCoalesceCluster;
+class CCoalesceGeneScores;
+class CCoalesceGroupHistograms;
 class CCoalesceMotifLibrary;
 class CFASTA;
-class CHierarchy;
-class CPST;
+class CPCL;
+struct SCoalesceDataset;
+struct SCoalesceModifierCache;
+struct SCoalesceModifiers;
 struct SFASTASequence;
-struct SFASTAWiggle;
 struct SMotifMatch;
-
-struct SCoalesceModifiers {
-
-	void Initialize( const CPCL& );
-
-	bool Add( const CFASTA* pWiggle ) {
-
-		if( !pWiggle )
-			return false;
-		m_vecpWiggles.push_back( pWiggle );
-		return true; }
-
-	std::vector<const CFASTA*>			m_vecpWiggles;
-	std::vector<std::vector<size_t> >	m_vecveciPCL2Wiggles;
-};
-
-struct SCoalesceModifierCache {
-	SCoalesceModifierCache( const SCoalesceModifiers& Modifiers ) : m_Modifiers(Modifiers) { }
-
-	void Get( size_t );
-	void InitializeWeight( size_t, size_t );
-	void AddWeight( size_t, size_t, size_t );
-	void SetType( const std::string& );
-
-	float GetWeight( ) const {
-		size_t	i, iWiggles;
-
-		for( iWiggles = i = 0; i < m_veciWiggleTypes.size( ); ++i )
-			if( m_veciWiggleTypes[ i ] != -1 )
-				iWiggles++;
-
-		return ( iWiggles ? ( m_dWeight / iWiggles ) : 1 ); }
-
-	const SCoalesceModifiers&				m_Modifiers;
-	std::vector<std::vector<SFASTAWiggle> >	m_vecvecsWiggles;
-	std::vector<size_t>						m_veciWiggleTypes;
-	float									m_dWeight;
-};
-
-class CCoalesceMotifLibraryImpl {
-protected:
-	static const char	c_acBases[];
-	static const char	c_acComplements[];
-	static const size_t	c_iShift		= 2; // ceil( log2( ARRAYSIZE(c_acBases) ) )
-	static const char	c_cSeparator	= '|';
-
-	enum EType {
-		ETypeKMer,
-		ETypeRC,
-		ETypePST
-	};
-
-	static size_t CountKMers( size_t iK ) {
-
-		return ( 1 << ( iK << 1 ) ); }
-
-	static size_t CountRCs( size_t iK ) {
-		size_t	iKMers;
-
-		iKMers = CountKMers( iK ) >> 1;
-		return ( iKMers - ( ( iK % 2 ) ? 0 : ( CountKMers( iK >> 1 ) >> 1 ) ) ); }
-
-	static std::string GetReverseComplement( const std::string& strKMer ) {
-		std::string	strReverse;
-
-		strReverse = strKMer;
-		std::reverse( strReverse.begin( ), strReverse.end( ) );
-		return GetComplement( strReverse ); }
-
-	static std::string GetComplement( const std::string& strKMer ) {
-		std::string	strRet;
-		size_t		i;
-
-		strRet.resize( strKMer.length( ) );
-		for( i = 0; i < strRet.length( ); ++i )
-			strRet[ i ] = GetComplement( strKMer[ i ] );
-
-		return strRet; }
-
-	static char GetComplement( char cBase ) {
-		const char*	pc;
-
-		return ( ( pc = strchr( c_acBases, cBase ) ) ? c_acComplements[ pc - c_acBases ] : cBase ); }
-
-	static uint32_t KMer2ID( const std::string& strKMer, bool fRC = false ) {
-		size_t			i, iIndex;
-		uint32_t		iRet;
-		const char*		pc;
-		unsigned char	c;
-
-		for( i = iRet = 0; i < strKMer.length( ); ++i ) {
-			iIndex = fRC ? ( strKMer.length( ) - i - 1 ) : i;
-			if( !( pc = strchr( c_acBases, strKMer[ iIndex ] ) ) )
-				return -1;
-			c = (unsigned char)( pc - c_acBases );
-			if( fRC ) {
-				if( !( pc = strchr( c_acBases, c_acComplements[ c ] ) ) )
-					return -1;
-				c = (unsigned char)( pc - c_acBases ); }
-			iRet = ( iRet << c_iShift ) | c; }
-
-		return iRet; }
-
-	static std::string ID2KMer( uint32_t iID, size_t iK ) {
-		static const size_t	c_iMask	= ( 1 << c_iShift ) - 1;
-		std::string	strRet;
-		size_t		i;
-
-		strRet.resize( iK );
-		for( i = 0; i < iK; ++i ) {
-			strRet[ iK - i - 1 ] = c_acBases[ iID & c_iMask ];
-			iID >>= c_iShift; }
-
-		return strRet; }
-
-	static bool IsIgnorableKMer( const std::string& strKMer ) {
-		size_t	i;
-
-		for( i = 0; i < strKMer.size( ); ++i )
-			if( !strchr( c_acBases, strKMer[ i ] ) )
-				return true;
-
-		return false; }
-
-	static bool GetPWM( const std::string& strKMer, CDataMatrix& MatPWM ) {
-		size_t	i, j;
-
-		if( ( MatPWM.GetColumns( ) != strlen( c_acBases ) ) || ( MatPWM.GetRows( ) != strKMer.length( ) ) ) {
-			MatPWM.Initialize( strlen( c_acBases ), strKMer.length( ) );
-			MatPWM.Clear( ); }
-		for( i = 0; i < strKMer.length( ); ++i ) {
-			for( j = 0; j < MatPWM.GetRows( ); ++j )
-				if( strKMer[ i ] == c_acBases[ j ] )
-					break;
-			if( j >= MatPWM.GetRows( ) )
-				return false;
-			MatPWM.Get( j, i )++; }
-
-		return true; }
-
-	CCoalesceMotifLibraryImpl( size_t iK ) : m_iK(iK), m_dPenaltyGap(1), m_dPenaltyMismatch(2) {
-		uint32_t	i, j, iRC;
-
-// TODO: if I was smart, I could do this with a direct encoding...
-		m_veciKMer2RC.resize( GetKMers( ) );
-		m_veciRC2KMer.resize( GetRCs( ) );
-		std::fill( m_veciKMer2RC.begin( ), m_veciKMer2RC.end( ), -1 );
-		for( i = j = 0; i < m_veciKMer2RC.size( ); ++i )
-			if( m_veciKMer2RC[ i ] == -1 ) {
-				iRC = KMer2ID( ID2KMer( i, m_iK ), true );
-				if( iRC != i ) {
-					m_veciKMer2RC[ i ] = m_veciKMer2RC[ iRC ] = j;
-					m_veciRC2KMer[ j++ ] = i; } } }
-
-	virtual ~CCoalesceMotifLibraryImpl( );
-
-	std::string GetMotif( uint32_t ) const;
-	CPST* CreatePST( uint32_t& );
-	uint32_t MergeKMers( const std::string&, const std::string&, float );
-	uint32_t MergeKMerRC( const std::string&, uint32_t, float );
-	uint32_t MergeKMerPST( const std::string&, const CPST&, float );
-	uint32_t MergeRCs( uint32_t, uint32_t, float );
-	uint32_t MergeRCPST( uint32_t, const CPST&, float );
-	uint32_t MergePSTs( const CPST&, const CPST&, float );
-	float AlignKMers( const std::string&, const std::string&, float ) const;
-	float AlignKMerRC( const std::string&, uint32_t, float ) const;
-	float AlignKMerPST( const std::string&, const CPST&, float ) const;
-	float AlignRCs( uint32_t, uint32_t, float ) const;
-	float AlignRCPST( uint32_t, const CPST&, float ) const;
-	float AlignPSTs( const CPST&, const CPST&, float ) const;
-
-	EType GetType( uint32_t iMotif ) const {
-
-		if( iMotif < GetKMers( ) )
-			return ETypeKMer;
-		if( iMotif < GetBasePSTs( ) )
-			return ETypeRC;
-
-		return ETypePST; }
-
-	uint32_t GetKMers( ) const {
-
-		return (uint32_t)CountKMers( m_iK ); }
-
-	uint32_t GetRCs( ) const {
-
-			return (uint32_t)CountRCs( m_iK ); }
-
-	uint32_t GetBaseRCs( ) const {
-
-		return GetKMers( ); }
-
-	uint32_t GetBasePSTs( ) const {
-
-		return ( GetBaseRCs( ) + GetRCs( ) ); }
-
-	const CPST* GetPST( uint32_t iMotif ) const {
-
-		return m_vecpPSTs[ iMotif - GetBasePSTs( ) ]; }
-
-	uint32_t GetPSTs( ) const {
-
-		return (uint32_t)m_vecpPSTs.size( ); }
-
-	float Align( const std::string& strFixed, const std::string& strMobile, float dCutoff, int& iRet ) const {
-		const std::string&	strShort	= ( strFixed.length( ) < strMobile.length( ) ) ? strFixed : strMobile;
-		const std::string&	strLong		= ( strFixed.length( ) < strMobile.length( ) ) ? strMobile : strFixed;
-		size_t				iBegin, iEnd, iOffset, i, iLength, iMin;
-		float				dRet, dCur;
-
-		dRet = FLT_MAX;
-		dCur = dCutoff / m_dPenaltyGap;
-		iLength = strShort.length( ) + strLong.length( );
-		iBegin = ( dCur < iLength ) ? (size_t)ceil( ( iLength - dCur ) / 2 ) : 0;
-		iEnd = iLength + 1 - iBegin;
-		for( iMin = 0,iOffset = iBegin; iOffset < iEnd; ++iOffset ) {
-			i = ( iOffset <= strShort.length( ) ) ? iOffset : min( strShort.length( ), iLength - iOffset );
-			dCur = m_dPenaltyGap * ( iLength - ( 2 * i ) );
-			for( i = ( iOffset <= strShort.length( ) ) ? 0 : ( iOffset - strShort.length( ) );
-				i < min( strShort.length( ), iOffset ); ++i )
-				if( strShort[ i ] != strLong[ strLong.length( ) - iOffset + i ] )
-					dCur += m_dPenaltyMismatch;
-			if( dCur < dRet ) {
-				dRet = dCur;
-				iMin = iOffset; } }
-
-		iRet = (int)strLong.length( ) - (int)iMin;
-		if( strFixed.length( ) < strMobile.length( ) )
-			iRet = -iRet;
-		return dRet; }
-
-	std::string GetRCOne( uint32_t iMotif ) const {
-
-		return ID2KMer( (uint32_t)m_veciRC2KMer[ iMotif - GetBaseRCs( ) ], m_iK ); }
-
-	float										m_dPenaltyGap;
-	float										m_dPenaltyMismatch;
-	size_t										m_iK;
-	std::vector<uint32_t>						m_veciKMer2RC;
-	std::vector<uint32_t>						m_veciRC2KMer;
-	std::vector<CPST*>							m_vecpPSTs;
-	std::set<std::pair<uint32_t, uint32_t> >	m_setpriiMerged;
-};
 
 template<class tValue = float, class tCount = unsigned short>
 class CCoalesceHistogramSet {
@@ -581,97 +328,6 @@ protected:
 	std::vector<tCount>	m_vecCounts;
 };
 
-class CCoalesceSequencerBase {
-public:
-	enum ESubsequence {
-		ESubsequenceBegin	= 0,
-		ESubsequenceTotal	= ESubsequenceBegin,
-		ESubsequenceIntrons	= ESubsequenceTotal + 1,
-		ESubsequenceExons	= ESubsequenceIntrons + 1,
-		ESubsequenceEnd		= ESubsequenceExons + 1
-	};
-
-	static const char*	c_aszSubsequences[];
-
-	static const char* GetSubsequence( ESubsequence eSubsequence ) {
-
-		return c_aszSubsequences[ eSubsequence ]; }
-
-	static ESubsequence GetSubsequence( const std::string& strSubsequence ) {
-		size_t	i;
-
-		for( i = 0; c_aszSubsequences[ i ]; ++i )
-			if( strSubsequence == c_aszSubsequences[ i ] )
-				return (ESubsequence)i;
-
-		return ESubsequenceEnd; }
-
-	size_t GetTypes( ) const {
-
-		return m_vecstrTypes.size( ); }
-
-	const std::string& GetType( size_t iType ) const {
-
-		return m_vecstrTypes[ iType ]; }
-
-	size_t GetType( const std::string& strType ) const {
-		TMapStrI::const_iterator	iterType;
-
-		return ( ( ( iterType = m_mapstriTypes.find( strType ) ) == m_mapstriTypes.end( ) ) ? -1 :
-			iterType->second ); }
-
-protected:
-	typedef std::map<std::string, size_t>	TMapStrI;
-
-	TMapStrI					m_mapstriTypes;
-	std::vector<std::string>	m_vecstrTypes;
-};
-
-template<class tType>
-class CCoalesceSequencer : public CCoalesceSequencerBase {
-public:
-	tType& Get( size_t iType, ESubsequence eSubsequence ) {
-
-		return m_vecvecValues[ iType ][ eSubsequence ]; }
-
-	const tType& Get( size_t iType, ESubsequence eSubsequence ) const {
-
-		return m_vecvecValues[ iType ][ eSubsequence ]; }
-
-	const tType& Get( const std::string& strType, ESubsequence eSubsequence ) const {
-
-		return Get( GetType( strType ), eSubsequence ); }
-
-	size_t AddType( const std::string& strType ) {
-		TMapStrI::const_iterator	iterType;
-		size_t						iRet;
-
-		if( ( iterType = m_mapstriTypes.find( strType ) ) != m_mapstriTypes.end( ) )
-			return iterType->second;
-
-		m_mapstriTypes[ strType ] = iRet = m_vecvecValues.size( );
-		m_vecstrTypes.push_back( strType );
-		m_vecvecValues.push_back( std::vector<tType>( ) );
-		m_vecvecValues.back( ).resize( ESubsequenceEnd );
-
-		return iRet; }
-
-	size_t GetSubsequences( size_t iType ) const {
-
-		return m_vecvecValues[ iType ].size( ); }
-
-	void Clear( ) {
-		size_t	i, j;
-
-		for( i = 0; i < m_vecvecValues.size( ); ++i )
-			for( j = 0; j < m_vecvecValues[ i ].size( ); ++j )
-				m_vecvecValues[ i ][ j ].Clear( ); }
-
-protected:
-// Type by subsequence
-	std::vector<std::vector<tType> >	m_vecvecValues;
-};
-
 // One score per type per subtype per gene per motif atom
 class CCoalesceGeneScores : public CCoalesceSequencer<float*> {
 public:
@@ -695,10 +351,13 @@ public:
 		std::vector<float>&, std::vector<size_t>& );
 	void Subtract( const SMotifMatch&, size_t );
 
-	float* Get( size_t iType, ESubsequence eSubsequence, size_t iGene ) const {
+	float* Get( size_t iType, ESubsequence eSubsequence, size_t iGene, bool fSet = false ) const {
 		float*	ad;
 
-		return ( ( ad = Get( iType, eSubsequence ) ) ? ( ad + ( iGene * m_iCapacity ) ) : NULL ); }
+		if( !( ad = Get( iType, eSubsequence ) ) )
+			return NULL;
+		ad += iGene * m_iCapacity;
+		return ( ( fSet || !CMeta::IsNaN( ad[ 0 ] ) ) ? ad : NULL ); }
 
 	float Get( size_t iType, ESubsequence eSubsequence, size_t iGene, uint32_t iMotif ) const {
 		const float*	ad;
@@ -742,13 +401,22 @@ protected:
 	void Set( size_t iType, ESubsequence eSubsequence, size_t iGene, uint32_t iMotif, float dValue,
 		uint32_t iMotifs = 0 ) {
 		float*	adTotal;
+		size_t	i;
 
 		pthread_mutex_lock( &m_mutx );
 		Grow( iMotif, iMotifs );
 		if( !( adTotal = Get( iType, eSubsequence ) ) ) {
 			m_vecvecValues[ iType ][ eSubsequence ] = adTotal = new float[ m_iGenes * m_iCapacity ];
-			memset( adTotal, 0, m_iGenes * m_iCapacity * sizeof(*adTotal) ); }
-		Get( iType, eSubsequence, iGene )[ iMotif ] = dValue;
+			memset( adTotal, 0, m_iGenes * m_iCapacity * sizeof(*adTotal) );
+			for( i = 0; i < m_iGenes; ++i )
+				adTotal[ i * m_iCapacity ] = CMeta::GetNaN( ); }
+		{
+			float*	ad	= Get( iType, eSubsequence, iGene, true );
+
+			if( CMeta::IsNaN( ad[ 0 ] ) )
+				ad[ 0 ] = 0;
+			ad[ iMotif ] = dValue;
+		}
 		pthread_mutex_unlock( &m_mutx ); }
 
 	void Grow( uint32_t iMotif, uint32_t iMotifs ) {
@@ -819,307 +487,32 @@ public:
 //					GetType( iTypeUs ).c_str( ), iSubsequence, m_vecsTotals[ i ] );
 				Get( iTypeUs, (ESubsequence)iSubsequence ).SetTotal( m_vecsTotals[ i++ ] ); } }
 
+	void Validate( ) const {
+		size_t		iType, iSubsequence, iEdge;
+		uint32_t	iMotif;
+
+		for( iType = 0; iType < GetTypes( ); ++iType ) {
+			const CCoalesceHistogramSet<>&	HistsTotal	= Get( iType, ESubsequenceTotal );
+
+			for( iSubsequence = ( ESubsequenceBegin + 1 ); iSubsequence < GetSubsequences( iType );
+				++iSubsequence ) {
+				const CCoalesceHistogramSet<>&	HistsCur	= Get( iType, (ESubsequence)iSubsequence );
+
+				if( !HistsCur.GetTotal( ) )
+					continue;
+				for( iMotif = 0; iMotif < GetMotifs( ); ++iMotif )
+					for( iEdge = 0; iEdge < HistsCur.GetEdges( ); ++iEdge )
+						if( HistsCur.Get( iMotif, iEdge ) != HistsTotal.Get( iMotif, iEdge ) ) {
+							cerr << "INVALID" << '\t' << GetType( iType ) << '\t' << iSubsequence << '\t' <<
+								iMotif << endl << HistsTotal.Save( iMotif ) << endl <<
+								HistsCur.Save( iMotif ) << endl;
+							break; } } } }
+
 protected:
 	uint32_t					m_iMotifs;
 	size_t						m_iBins;
 	float						m_dStep;
 	std::vector<unsigned short>	m_vecsTotals;
-};
-
-struct SMotifMatch {
-	SMotifMatch( ) { }
-
-	SMotifMatch( uint32_t iMotif, const std::string& strType,
-		CCoalesceSequencerBase::ESubsequence eSubsequence, float dZ, float dAverage ) : m_iMotif(iMotif),
-		m_strType(strType), m_eSubsequence(eSubsequence), m_dZ(dZ), m_dAverage(dAverage) { }
-
-	bool Open( std::istream&, CCoalesceMotifLibrary& );
-	uint32_t Open( const CHierarchy&, const std::vector<SMotifMatch>&, CCoalesceMotifLibrary&, size_t& );
-	std::string Save( const CCoalesceMotifLibrary*, bool = false ) const;
-
-	bool operator==( const SMotifMatch& sMotif ) const {
-
-		return ( ( m_iMotif == sMotif.m_iMotif ) && ( m_strType == sMotif.m_strType ) &&
-			( m_eSubsequence == sMotif.m_eSubsequence ) ); }
-
-	bool operator!=( const SMotifMatch& sMotif ) const {
-
-		return !( *this == sMotif ); }
-
-	bool operator<( const SMotifMatch& sMotif ) const {
-
-		if( m_iMotif == sMotif.m_iMotif ) {
-			if( m_strType == sMotif.m_strType )
-				return ( m_eSubsequence < sMotif.m_eSubsequence );
-			return ( m_strType < sMotif.m_strType ); }
-
-		return ( m_iMotif < sMotif.m_iMotif ); }
-
-	size_t GetHash( ) const {
-		size_t	iMotif, iType, iSubsequence;
-
-		iMotif = m_iMotif * ( (size_t)-1 / 20000 );
-		iType = stdext::hash_value( m_strType.c_str( ) ) * ( (size_t)-1 / 5 );
-		iSubsequence = m_eSubsequence * ( (size_t)-1 / CCoalesceSequencerBase::ESubsequenceEnd );
-
-		return ( iMotif ^ iType ^ iSubsequence ); }
-
-	uint32_t								m_iMotif;
-	std::string								m_strType;
-	CCoalesceSequencerBase::ESubsequence	m_eSubsequence;
-	float									m_dZ;
-	float									m_dAverage;
-};
-
-struct SCoalesceDataset {
-	template<class tType>
-	SCoalesceDataset( const tType& Conditions ) {
-
-		m_veciConditions.resize( Conditions.size( ) );
-		std::copy( Conditions.begin( ), Conditions.end( ), m_veciConditions.begin( ) ); }
-
-	SCoalesceDataset( size_t iCondition ) {
-
-		m_veciConditions.resize( 1 );
-		m_veciConditions[ 0 ] = iCondition; }
-
-	bool CalculateCovariance( const CPCL& );
-
-	bool IsCondition( size_t iCondition ) const {
-
-		return ( std::find( m_veciConditions.begin( ), m_veciConditions.end( ), iCondition ) !=
-			m_veciConditions.end( ) ); }
-
-	size_t GetConditions( ) const {
-
-		return m_veciConditions.size( ); }
-
-	size_t GetCondition( size_t iCondition ) const {
-
-		return m_veciConditions[ iCondition ]; }
-
-	std::vector<size_t>	m_veciConditions;
-	CDataMatrix			m_MatSigmaChol;
-	CDataMatrix			m_MatSigmaInv;
-	double				m_dSigmaDetSqrt;
-	std::vector<float>	m_vecdStdevs;
-};
-
-class CCoalesceClusterImpl {
-protected:
-	typedef std::vector<std::map<std::string, std::set<SMotifMatch> > >	TVecMapStrSetSMotifs;
-
-	static const char	c_cStar	= '*';
-	static const char	c_szMotifs[];
-
-	struct SDataset {
-		const SCoalesceDataset*	m_psDataset;
-		float					m_dZ;
-		std::vector<float>		m_vecdCentroid;
-
-		size_t GetConditions( ) const {
-
-			return m_psDataset->GetConditions( ); }
-
-		size_t GetCondition( size_t iCondition ) const {
-
-			return m_psDataset->GetCondition( iCondition ); }
-	};
-
-	struct SThreadCentroid {
-		CCoalesceCluster*	m_pCluster;
-		const CPCL&			m_PCL;
-
-		SThreadCentroid( CCoalesceCluster* pCluster, const CPCL& PCL ) : m_pCluster(pCluster), m_PCL(PCL) { }
-	};
-
-	struct SThreadSignificantGene {
-		size_t									m_iOffset;
-		size_t									m_iStep;
-		std::vector<bool>*						m_pvecfSignificant;
-		const CPCL*								m_pPCL;
-		const CCoalesceMotifLibrary*			m_pMotifs;
-		const CCoalesceGeneScores*				m_pGeneScores;
-		const CCoalesceGroupHistograms*			m_pHistsCluster;
-		const CCoalesceGroupHistograms*			m_pHistsPot;
-		const CCoalesceCluster*					m_pCluster;
-		const CCoalesceCluster*					m_pPot;
-		const std::vector<size_t>*				m_pveciDatasets;
-		float									m_dBeta;
-		size_t									m_iMinimum;
-		float									m_dProbability;
-	};
-
-	struct SThreadSelectMotif {
-		uint32_t						m_iOffset;
-		size_t							m_iStep;
-		const CCoalesceMotifLibrary*	m_pMotifs;
-		const CCoalesceGroupHistograms*	m_pHistsCluster;
-		const CCoalesceGroupHistograms*	m_pHistsPot;
-		float							m_dPValue;
-		std::vector<SMotifMatch>		m_vecsMotifs;
-	};
-
-	struct SThreadSeedPair {
-		size_t										m_iOffset;
-		size_t										m_iStep;
-		const CPCL*									m_pPCL;
-		float										m_dFraction;
-		const std::set<std::pair<size_t, size_t> >*	m_psetpriiSeeds;
-		double										m_dMaxCorr;
-		double										m_dMinP;
-		size_t										m_iOne;
-		size_t										m_iTwo;
-	};
-
-	struct SThreadSelectCondition {
-		size_t						m_iOffset;
-		size_t						m_iStep;
-		const std::vector<size_t>*	m_pveciCluster;
-		const std::vector<size_t>*	m_pveciPot;
-		std::vector<SDataset>*		m_pvecsDatasets;
-		const CPCL*					m_pPCL;
-		float						m_dPValue;
-		std::vector<bool>*			m_pvecfSignificant;
-	};
-
-	static void* ThreadCentroid( void* );
-	static void* ThreadSignificantGene( void* );
-	static void* ThreadSelectMotif( void* );
-	static void* ThreadSeedPair( void* );
-	static void* ThreadSelectCondition( void* );
-	static bool AddSignificant( const CCoalesceMotifLibrary&, uint32_t, const CCoalesceGroupHistograms&,
-		const CCoalesceGroupHistograms&, float, std::vector<SMotifMatch>& );
-	static size_t Open( const CHierarchy&, const std::vector<CCoalesceCluster>&,
-		const std::vector<std::string>&, std::map<size_t, size_t>&, std::map<size_t, size_t>&,
-		TVecMapStrSetSMotifs& );
-	static bool Open( CCoalesceMotifLibrary&, const CHierarchy&, const std::vector<SMotifMatch>&, float,
-		std::set<SMotifMatch>& );
-
-	template<class tType>
-	static bool IsConverged( const std::set<tType>& setNew, std::vector<tType>& vecOld ) {
-		size_t				i;
-		std::vector<tType>	vecNew;
-
-		if( setNew.size( ) != vecOld.size( ) )
-			return false;
-		Snapshot( setNew, vecNew );
-		for( i = 0; i < vecNew.size( ); ++i )
-			if( vecNew[ i ] != vecOld[ i ] )
-				return false;
-
-		return true; }
-
-	template<class tType>
-	static void Snapshot( const std::set<tType>& setNew, std::vector<tType>& vecOld ) {
-
-		vecOld.resize( setNew.size( ) );
-		std::copy( setNew.begin( ), setNew.end( ), vecOld.begin( ) );
-		std::sort( vecOld.begin( ), vecOld.end( ) ); }
-
-	template<class tType>
-	static size_t GetHash( const std::set<tType>& set ) {
-		size_t										iRet;
-		typename std::set<tType>::const_iterator	iter;
-
-		for( iRet = 0,iter = set.begin( ); iter != set.end( ); ++iter )
-			iRet ^= GetHash( *iter );
-
-		return iRet; }
-
-	static size_t GetHash( size_t iValue ) {
-
-		return ( iValue * ( (size_t)-1 / 20000 ) ); }
-
-	static size_t GetHash( const SMotifMatch& sMotif ) {
-
-		return sMotif.GetHash( ); }
-
-	static void AdjustProbabilities( float dZ, double& dPIn, double& dPOut ) {
-		double	dPAverage;
-
-		dPAverage = ( dPIn + dPOut ) / 2;
-		dZ = fabs( dZ );
-		dPIn = ( ( dPIn * dZ ) + dPAverage ) / ( dZ + 1 );
-		dPOut = ( ( dPOut * dZ ) + dPAverage ) / ( dZ + 1 ); }
-
-	void Add( size_t, CCoalesceCluster& );
-	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
-	bool AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float,
-		size_t );
-	void CalculateCentroid( const CPCL& );
-	bool IsSignificant( size_t, const CPCL&, const CCoalesceMotifLibrary*, const CCoalesceGeneScores&,
-		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, const CCoalesceCluster&,
-		const std::vector<size_t>&, float, size_t, float ) const;
-	bool CalculateProbabilityExpression( size_t, const CPCL&, const CCoalesceCluster&,
-		const std::vector<size_t>&, bool, float&, float& ) const;
-	bool CalculateProbabilityMotifs( const CCoalesceGeneScores&, size_t, const CCoalesceGroupHistograms&,
-		const CCoalesceGroupHistograms&, bool, size_t, float&, float& ) const;
-	bool SaveCopy( const CPCL&, const std::set<size_t>&, size_t, CPCL&, size_t, bool ) const;
-
-	size_t GetConditions( size_t iDataset, size_t iConditions = -1 ) const {
-
-		if( iDataset < m_vecsDatasets.size( ) ) {
-			const SDataset&	sDataset	= m_vecsDatasets[ iDataset ];
-
-			if( sDataset.m_psDataset )
-				return sDataset.m_psDataset->GetConditions( ); }
-
-		return iConditions; }
-
-	size_t GetCondition( size_t iDataset, size_t iCondition ) const {
-
-		if( iDataset < m_vecsDatasets.size( ) ) {
-			const SDataset&	sDataset	= m_vecsDatasets[ iDataset ];
-
-			if( sDataset.m_psDataset )
-				return sDataset.m_psDataset->GetCondition( iCondition ); }
-
-		return iCondition; }
-
-	bool IsGene( size_t iGene ) const {
-
-		return ( m_setiGenes.find( iGene ) != m_setiGenes.end( ) ); }
-
-	size_t GetHash( ) const {
-
-		return ( GetHash( m_setiDatasets ) ^ GetHash( m_setiGenes ) ^ GetHash( m_setsMotifs ) ); }
-
-	void GetConditions( std::set<size_t>& setiConditions, size_t iConditions = -1 ) const {
-		set<size_t>::const_iterator	iterDataset;
-		size_t						i;
-
-		for( iterDataset = m_setiDatasets.begin( ); iterDataset != m_setiDatasets.end( ); ++iterDataset )
-			for( i = 0; i < GetConditions( *iterDataset, iConditions ); ++i )
-				setiConditions.insert( GetCondition( *iterDataset, i ) ); }
-
-	void Clear( ) {
-
-		m_setiDatasets.clear( );
-		m_setiGenes.clear( );
-		m_setsMotifs.clear( );
-		m_veciPrevDatasets.clear( );
-		m_veciPrevGenes.clear( );
-		m_vecsPrevMotifs.clear( );
-		m_veciCounts.clear( );
-		m_vecdCentroid.clear( );
-		m_vecdStdevs.clear( );
-		m_setiHistory.clear( );
-		m_vecdPriors.clear( );
-		m_vecsDatasets.clear( ); }
-
-	std::set<size_t>			m_setiDatasets;
-	std::set<size_t>			m_setiGenes;
-	std::set<SMotifMatch>		m_setsMotifs;
-	std::vector<size_t>			m_veciPrevDatasets;
-	std::vector<size_t>			m_veciPrevGenes;
-	std::vector<SMotifMatch>	m_vecsPrevMotifs;
-	std::vector<size_t>			m_veciCounts;
-	std::vector<float>			m_vecdCentroid;
-	std::vector<float>			m_vecdStdevs;
-	std::set<size_t>			m_setiHistory;
-	std::vector<float>			m_vecdPriors;
-	std::vector<SDataset>		m_vecsDatasets;
 };
 
 class CCoalesceImpl {

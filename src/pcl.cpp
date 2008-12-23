@@ -264,7 +264,8 @@ void CPCLImpl::Reset( ) {
 	m_vecstrExperiments.clear( );
 	m_vecstrFeatures.clear( );
 	m_vecvecstrFeatures.clear( );
-	m_setiGenes.clear( ); }
+	m_setiGenes.clear( );
+	m_mapstriGenes.clear( ); }
 
 /*!
  * \brief
@@ -278,8 +279,9 @@ void CPCLImpl::Reset( ) {
  * input PCL after the new one is opened.
  */
 void CPCL::Open( const CPCL& PCL ) {
-	size_t					i, j;
-	TSetI::const_iterator	iterGene;
+	size_t						i, j;
+	TSetI::const_iterator		iterGene;
+	TMapStrI::const_iterator	iterGene2;
 
 	Reset( );
 	m_fHeader = PCL.m_fHeader;
@@ -299,6 +301,8 @@ void CPCL::Open( const CPCL& PCL ) {
 		m_vecstrFeatures.begin( ) );
 	m_vecstrGenes.resize( PCL.m_vecstrGenes.size( ) );
 	copy( PCL.m_vecstrGenes.begin( ), PCL.m_vecstrGenes.end( ), m_vecstrGenes.begin( ) );
+	for( iterGene2 = PCL.m_mapstriGenes.begin( ); iterGene2 != PCL.m_mapstriGenes.end( ); ++iterGene2 )
+		m_mapstriGenes[ iterGene2->first ] = iterGene2->second;
 	m_vecvecstrFeatures.resize( PCL.m_vecvecstrFeatures.size( ) );
 	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i ) {
 		m_vecvecstrFeatures[ i ].resize( PCL.m_vecvecstrFeatures[ i ].size( ) );
@@ -335,14 +339,14 @@ bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 	else {
 		m_vecvecstrFeatures.resize( m_vecstrFeatures.size( ) - 1 );
 		while( OpenGene( istm, vecdData, acBuf, c_iBufferSize ) );
-		for( fRet = !m_vecstrGenes.empty( ),i = 0; i < m_vecstrGenes.size( ); ++i )
-			if( m_vecstrGenes[ i ].empty( ) || !isprint( m_vecstrGenes[ i ][ 0 ] ) ) {
+		for( fRet = !!GetGenes( ),i = 0; i < GetGenes( ); ++i )
+			if( GetGene( i ).empty( ) || !isprint( GetGene( i )[ 0 ] ) ) {
 				fRet = false;
 				g_CatSleipnir.error( "CPCL::Open( %d ) invalid gene at index %d: %s", i,
-					m_vecstrGenes[ i ].c_str( ) );
+					GetGene( i ).c_str( ) );
 				break; }
 		if( fRet ) {
-			m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
+			m_Data.Initialize( GetGenes( ), GetExperiments( ) );
 			for( k = i = 0; ( k < vecdData.size( ) ) && ( i < m_Data.GetRows( ) ); ++i )
 				for( j = 0; j < m_Data.GetColumns( ); ++j )
 					m_Data.Set( i, j, vecdData[ k++ ] ); } }
@@ -383,8 +387,9 @@ bool CPCLImpl::OpenGene( std::istream& istmInput, std::vector<float>& vecdData, 
 	for( iData = iToken = 0,pc = acLine; ( strToken = OpenToken( pc, &pc ) ).length( ) || *pc; ++iToken ) {
 		if( strToken == "EWEIGHT" )
 			return true;
-		if( !iToken )
-			m_vecstrGenes.push_back( strToken );
+		if( !iToken ) {
+			m_mapstriGenes[ strToken ] = m_vecstrGenes.size( );
+			m_vecstrGenes.push_back( strToken ); }
 		else if( iToken < m_vecstrFeatures.size( ) )
 			m_vecvecstrFeatures[ iToken - 1 ].push_back( strToken );
 		else {
@@ -466,7 +471,7 @@ void CPCL::SaveGene( std::ostream& ostm, size_t iGene, size_t iOriginal ) const 
 
 	if( iOriginal != -1 )
 		ostm << c_szGENE << iOriginal << '\t';
-	ostm << m_vecstrGenes[ iGene ];
+	ostm << GetGene( iGene );
 	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i )
 		ostm << '\t' << m_vecvecstrFeatures[ i ][ iGene ];
 	for( i = 0; i < m_vecstrExperiments.size( ); ++i ) {
@@ -501,7 +506,7 @@ void CPCL::Save( std::ostream& ostm, const std::vector<size_t>* pveciGenes ) con
 
 	SaveHeader( ostm, !!pveciGenes );
 
-	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
+	for( i = 0; i < GetGenes( ); ++i ) {
 		if( m_setiGenes.find( i ) != m_setiGenes.end( ) )
 			continue;
 		SaveGene( ostm, i, pveciGenes ? (*pveciGenes)[ i ] : -1 ); } }
@@ -541,8 +546,9 @@ void CPCL::OpenBinary( std::istream& istm ) {
 		OpenString( istm, m_vecstrExperiments[ i ] );
 	istm.read( (char*)&iTmp, sizeof(iTmp) );
 	m_vecstrGenes.resize( iTmp );
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
+	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
 		OpenString( istm, m_vecstrGenes[ i ] );
+		m_mapstriGenes[ m_vecstrGenes[ i ] ] = i; }
 
 	m_Data.Initialize( GetGenes( ), GetExperiments( ) );
 	for( i = 0; i < m_Data.GetRows( ); ++i )
@@ -581,13 +587,13 @@ void CPCL::Open( const std::vector<std::string>& vecstrGenes,
 			m_vecvecstrFeatures[ i ].resize( vecstrGenes.size( ) ); }
 
 	m_vecstrGenes.resize( vecstrGenes.size( ) );
-	for( i = 0; i < m_vecstrGenes.size( ); ++i )
-		m_vecstrGenes[ i ] = vecstrGenes[ i ];
+	for( i = 0; i < GetGenes( ); ++i )
+		SetGene( i, vecstrGenes[ i ] );
 	m_vecstrExperiments.resize( vecstrExperiments.size( ) );
-	for( i = 0; i < m_vecstrExperiments.size( ); ++i )
-		m_vecstrExperiments[ i ] = vecstrExperiments[ i ];
+	for( i = 0; i < GetExperiments( ); ++i )
+		SetExperiment( i, vecstrExperiments[ i ] );
 
-	m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
+	m_Data.Initialize( GetGenes( ), GetExperiments( ) );
 	for( i = 0; i < m_Data.GetRows( ); ++i )
 		for( j = 0; j < m_Data.GetColumns( ); ++j )
 			m_Data.Set( i, j, CMeta::GetNaN( ) ); }
@@ -640,12 +646,13 @@ void CPCL::Open( const std::vector<size_t>& veciGenes, const std::vector<std::st
 	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
 		m_vecstrGenes[ i ] = "GENE";
 		sprintf_s( ac, "%d", veciGenes[ i ] );
-		m_vecstrGenes[ i ] += ac; }
+		m_vecstrGenes[ i ] += ac;
+		m_mapstriGenes[ m_vecstrGenes[ i ] ] = i; }
 	m_vecstrExperiments.resize( vecstrExperiments.size( ) );
 	for( i = 0; i < m_vecstrExperiments.size( ); ++i )
 		m_vecstrExperiments[ i ] = vecstrExperiments[ i ];
 
-	m_Data.Initialize( m_vecstrGenes.size( ), m_vecstrExperiments.size( ) );
+	m_Data.Initialize( GetGenes( ), GetExperiments( ) );
 	for( i = 0; i < m_Data.GetRows( ); ++i )
 		for( j = 0; j < m_Data.GetColumns( ); ++j )
 			m_Data.Set( i, j, CMeta::GetNaN( ) ); }
@@ -671,6 +678,8 @@ bool CPCL::SortGenes( const vector<size_t>& veciOrder ) {
 
 	CMeta::Permute( m_Data.Get( ), veciOrder );
 	CMeta::Permute( m_vecstrGenes, veciOrder );
+	for( i = 0; i < GetGenes( ); ++i )
+		m_mapstriGenes[ GetGene( i ) ] = i;
 	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i )
 		CMeta::Permute( m_vecvecstrFeatures[ i ], veciOrder );
 
@@ -727,7 +736,7 @@ bool CPCL::AddGenes( const std::vector<std::string>& vecstrGenes ) {
 
 	m_vecstrGenes.resize( m_vecstrGenes.size( ) + vecstrGenes.size( ) );
 	for( i = 0; i < vecstrGenes.size( ); ++i )
-		m_vecstrGenes[ iStart + i ] = vecstrGenes[ i ];
+		SetGene( iStart + i, vecstrGenes[ i ] );
 	for( i = 0; i < m_vecvecstrFeatures.size( ); ++i ) {
 		m_vecvecstrFeatures[ i ].resize( m_vecvecstrFeatures[ i ].size( ) + vecstrGenes.size( ) );
 		if( m_vecstrFeatures[ i + 1 ] == c_szNAME )

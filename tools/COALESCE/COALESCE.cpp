@@ -21,6 +21,7 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
+#include "pst.h"
 
 enum EFile {
 	EFilePCL,
@@ -188,9 +189,11 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 		return 1;
 
 	for( i = 0; i < vecClustersTo.size( ); ++i ) {
+		vecClustersTo[ i ].RemoveMotifs( (float)sArgs.min_zscore_arg );
 		if( sArgs.output_arg )
 			vecClustersTo[ i ].Save( sArgs.output_arg, i, PCL, &Motifs );
-		vecClustersTo[ i ].Save( cout, i, PCL, &Motifs ); }
+		vecClustersTo[ i ].Save( cout, i, PCL, &Motifs, (float)sArgs.min_info_arg,
+			!!sArgs.remove_rcs_flag ); }
 
 	return 0; }
 
@@ -199,9 +202,7 @@ bool recluster( const gengetopt_args_info& sArgs, size_t iPairs, CCoalesceMotifL
 	const vector<string>& vecstrClustersFrom, vector<CCoalesceCluster>& vecClustersTo ) {
 	bool	fRet;
 
-// This one minus business essentially converts from a similarity to a p-value and back
-	if( Hier.IsGene( ) || ( ( ( 1 - Hier.GetSimilarity( ) ) * iPairs ) <
-		( 1 - sArgs.cutoff_postprocess_arg ) ) ) {
+	if( Hier.IsGene( ) || ( Hier.GetSimilarity( ) >= sArgs.cutoff_postprocess_arg ) ) {
 		cerr << "Creating output cluster " << vecClustersTo.size( ) << endl;
 		vecClustersTo.push_back( CCoalesceCluster( ) );
 		fRet = vecClustersTo.back( ).Open( Hier, vecClustersFrom, vecstrClustersFrom,

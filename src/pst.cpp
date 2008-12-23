@@ -21,7 +21,22 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "pst.h"
+#include "coalescemotifs.h"
 
 namespace Sleipnir {
+
+void CPSTImpl::RemoveRCs( const map<unsigned char, unsigned char>& mapccComplements, const SNode& sNode,
+	size_t iOffset, string& strSeq, vector<SRC>& vecsOut ) {
+	size_t	i;
+
+	strSeq.push_back( sNode.m_cCharacter );
+	if( sNode.m_vecsChildren.size( ) == 0 )
+		vecsOut.push_back( ( CCoalesceMotifLibrary::GetPurines( strSeq ) < 0.5 ) ?
+			SRC( CCoalesceMotifLibrary::GetReverseComplement( strSeq ), iOffset ) : SRC( strSeq, 0 ) );
+	else {
+		iOffset--;
+		for( i = 0; i < sNode.m_vecsChildren.size( ); ++i )
+			RemoveRCs( mapccComplements, sNode.m_vecsChildren[ i ], iOffset, strSeq, vecsOut ); }
+	strSeq.resize( strSeq.size( ) - 1 ); }
 
 }

@@ -1,0 +1,104 @@
+/*****************************************************************************
+* This file is provided under the Creative Commons Attribution 3.0 license.
+*
+* You are free to share, copy, distribute, transmit, or adapt this work
+* PROVIDED THAT you attribute the work to the authors listed below.
+* For more information, please see the following web page:
+* http://creativecommons.org/licenses/by/3.0/
+*
+* This file is a component of the Sleipnir library for functional genomics,
+* authored by:
+* Curtis Huttenhower (chuttenh@princeton.edu)
+* Mark Schroeder
+* Maria D. Chikina
+* Olga G. Troyanskaya (ogt@princeton.edu, primary contact)
+*
+* If you use this library, the included executable tools, or any related
+* code in your work, please cite the following publication:
+* Curtis Huttenhower, Mark Schroeder, Maria D. Chikina, and
+* Olga G. Troyanskaya.
+* "The Sleipnir library for computational functional genomics"
+*****************************************************************************/
+#ifndef COALESCECLUSTER_H
+#define COALESCECLUSTER_H
+
+#include "coalesceclusteri.h"
+
+namespace Sleipnir {
+
+class CCoalesceCluster : public CCoalesceClusterImpl {
+public:
+	bool Initialize( const CPCL& PCL, CCoalesceCluster& Pot, const std::vector<SCoalesceDataset>& vecsDatasets,
+		std::set<std::pair<size_t, size_t> >& setpriiSeeds, size_t iPairs, float dPValue, size_t iThreads );
+	void Subtract( CPCL& PCL ) const;
+	void Subtract( CCoalesceGeneScores& GeneScores ) const;
+	bool SelectConditions( const CPCL& PCL, const CCoalesceCluster& Pot, size_t iThreads, float dPValue );
+	bool SelectMotifs( const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
+		float dPValue, size_t iThreads, const CCoalesceMotifLibrary* pMotifs = NULL );
+	bool SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& GeneScores,
+		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
+		size_t iMinimum, size_t iThreads, CCoalesceCluster& Pot, float dPValue,
+		const CCoalesceMotifLibrary* pMotifs = NULL );
+	void CalculateHistograms( const CCoalesceGeneScores& GeneScores,
+		CCoalesceGroupHistograms& HistogramsCluster, CCoalesceGroupHistograms* pHistogramsPot ) const;
+	size_t Open( const std::string& strPCL, size_t iSkip, const CPCL& PCL,
+		CCoalesceMotifLibrary* pMotifs = NULL );
+	bool Open( const CHierarchy& Hierarchy, const std::vector<CCoalesceCluster>& vecClusters,
+		const std::vector<std::string>& vecstrClusters, float dFraction, float dCutoff,
+		CCoalesceMotifLibrary* pMotifs = NULL );
+	bool Save( const std::string& strDirectory, size_t iID, const CPCL& PCL,
+		const CCoalesceMotifLibrary* pMotifs = NULL ) const;
+	void Save( std::ostream&, size_t iID, const CPCL& PCL, const CCoalesceMotifLibrary* pMotifs = NULL,
+		float dCutoffPWMs = 0, bool fNoRCs = false ) const;
+	float GetSimilarity( const CCoalesceCluster& Cluster, size_t iGenes, size_t iDatasets ) const;
+	void Snapshot( const CCoalesceGeneScores& GeneScores, CCoalesceGroupHistograms& Histograms );
+
+	size_t RemoveMotifs( float dZScore ) {
+		std::set<SMotifMatch>::const_iterator	iterMotif;
+		std::vector<const SMotifMatch*>			vecpsMotifs;
+		size_t									i;
+
+		for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif )
+			if( fabs( iterMotif->m_dZ ) < dZScore )
+				vecpsMotifs.push_back( &*iterMotif );
+		for( i = 0; i < vecpsMotifs.size( ); ++i )
+			m_setsMotifs.erase( *vecpsMotifs[ i ] );
+
+		return vecpsMotifs.size( ); }
+
+	bool IsConverged( ) {
+
+		return ( m_setiHistory.find( GetHash( ) ) != m_setiHistory.end( ) ); }
+
+	bool IsEmpty( ) const {
+
+		return ( m_setiGenes.empty( ) || m_setiDatasets.empty( ) ); }
+
+	void Add( size_t iGene ) {
+
+		m_setiGenes.insert( iGene ); }
+
+	const std::set<size_t>& GetGenes( ) const {
+
+		return m_setiGenes; }
+
+	const std::set<size_t>& GetDatasets( ) const {
+
+		return m_setiDatasets; }
+
+	const std::set<SMotifMatch>& GetMotifs( ) const {
+
+		return m_setsMotifs; }
+
+	bool IsGene( size_t iGene ) const {
+
+		return CCoalesceClusterImpl::IsGene( iGene ); }
+
+	bool IsDataset( size_t iDataset ) const {
+
+		return ( m_setiDatasets.find( iDataset ) != m_setiDatasets.end( ) ); }
+};
+
+}
+
+#endif // COALESCECLUSTER_H

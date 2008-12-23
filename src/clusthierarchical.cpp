@@ -215,6 +215,9 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 	vector<float>	vecdHeight, vecdMax;
 	vector<size_t>	veciChild1, veciChild2, veciChildren, veciMax, veciOwner;
 
+	if( !Dist.GetSize( ) )
+		return NULL;
+
 	dMin = FLT_MAX;
 	if( pvecfGenes ) {
 		for( i = j = 0; i < pvecfGenes->size( ); ++i )

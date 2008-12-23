@@ -129,7 +129,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="../../../../extlib/pthreads-w32-2-8-0-release/;../../../../extlib/gengetopt-2.22/gl/;../../../src/"
-				PreprocessorDefinitions="PTW32_STATIC_LIB"
+				PreprocessorDefinitions="PTW32_STATIC_LIB;_SECURE_SCL=0"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"

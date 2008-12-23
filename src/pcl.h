@@ -416,7 +416,7 @@ public:
 	 */
 	void SetGene( size_t iGene, const std::string& strGene ) {
 
-		m_vecstrGenes[ iGene ] = strGene; }
+		CPCLImpl::SetGene( iGene, strGene ); }
 
 	/*!
 	 * \brief
@@ -536,13 +536,10 @@ public:
 	 * GetGeneNames
 	 */
 	size_t GetGene( const std::string& strGene ) const {
-		size_t	i;
+		TMapStrI::const_iterator	iterGene;
 
-		for( i = 0; i < m_vecstrGenes.size( ); ++i )
-			if( m_vecstrGenes[ i ] == strGene )
-				return i;
-
-		return -1; }
+		return ( ( ( iterGene = m_mapstriGenes.find( strGene ) ) == m_mapstriGenes.end( ) ) ? -1 :
+			iterGene->second ); }
 
 	/*!
 	 * \brief

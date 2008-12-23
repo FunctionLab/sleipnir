@@ -236,8 +236,8 @@ public:
 		int& iOffset ) const {
 		float	dRet;
 
-		dRet = CPSTImpl::Align( strSequence, strSequence.length( ), dPenaltyGap, dPenaltyMismatch, dCutoff,
-			iOffset );
+		dRet = CPSTImpl::Align( m_sRoot, GetDepth( ), strSequence, strSequence.length( ), dPenaltyGap,
+			dPenaltyMismatch, dCutoff, iOffset );
 		iOffset *= -1;
 		return dRet; }
 
@@ -270,8 +270,8 @@ public:
 	float Align( const CPST& PST, float dPenaltyGap, float dPenaltyMismatch, float dCutoff,
 		int& iOffset ) const {
 
-		return CPSTImpl::Align( PST.m_sRoot, PST.GetDepth( ), dPenaltyGap, dPenaltyMismatch, dCutoff,
-			iOffset ); }
+		return CPSTImpl::Align( m_sRoot, GetDepth( ), PST.m_sRoot, PST.GetDepth( ), dPenaltyGap,
+			dPenaltyMismatch, dCutoff, iOffset ); }
 
 	/*!
 	 * \brief
@@ -290,7 +290,7 @@ public:
 
 		return ( ( m_iDepth = CPSTImpl::Open( strPST, m_sRoot ) ) != -1 ); }
 
-	bool GetPWM( CDataMatrix& MatPWM, const char* szSymbols ) const {
+	bool GetPWM( CFullMatrix<size_t>& MatPWM, const char* szSymbols ) const {
 		std::map<unsigned char, size_t>					mapciChars;
 		std::vector<size_t>								veciOrder;
 		std::map<unsigned char, size_t>::const_iterator	iterChar;
@@ -310,6 +310,18 @@ public:
 				( mapciChars.size( ) + j++ ) : iterChar->second;
 		CMeta::Permute( MatPWM.Get( ), veciOrder );
 		return true; }
+
+	void RemoveRCs( const std::map<unsigned char, unsigned char>& mapccComplements, CPST& PSTOut ) const {
+		size_t				i;
+		std::string			str;
+		std::vector<SRC>	vecsAdd;
+
+		for( i = 0; i < m_sRoot.m_vecsChildren.size( ); ++i )
+			CPSTImpl::RemoveRCs( mapccComplements, m_sRoot.m_vecsChildren[ i ], m_iDepth - 1, str,
+				vecsAdd );
+		std::sort( vecsAdd.begin( ), vecsAdd.end( ) );
+		for( i = 0; i < vecsAdd.size( ); ++i )
+			PSTOut.Add( vecsAdd[ i ].m_strSequence, vecsAdd[ i ].m_iOffset ); }
 };
 
 }

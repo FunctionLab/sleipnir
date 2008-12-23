@@ -41,8 +41,9 @@ protected:
 	static const char	c_szOne[];
 	static const char	c_szExtension[];
 
-	typedef std::vector<std::string>	TVecStr;
-	typedef std::set<size_t>			TSetI;
+	typedef std::vector<std::string>		TVecStr;
+	typedef std::set<size_t>				TSetI;
+	typedef std::map<std::string, size_t>	TMapStrI;
 
 	CPCLImpl( bool fHeader ) : m_fHeader(fHeader) { }
 	~CPCLImpl( );
@@ -51,6 +52,11 @@ protected:
 	bool OpenGene( std::istream&, std::vector<float>&, char*, size_t );
 	void Reset( );
 
+	void SetGene( size_t iGene, const std::string& strGene ) {
+
+		m_mapstriGenes.erase( m_vecstrGenes[ iGene ] );
+		m_mapstriGenes[ m_vecstrGenes[ iGene ] = strGene ] = iGene; }
+
 	CDataMatrix				m_Data;
 	TVecStr					m_vecstrGenes;
 	TVecStr					m_vecstrExperiments;
@@ -58,6 +64,7 @@ protected:
 	std::vector<TVecStr>	m_vecvecstrFeatures;
 	TSetI					m_setiGenes;
 	bool					m_fHeader;
+	TMapStrI				m_mapstriGenes;
 };
 
 }

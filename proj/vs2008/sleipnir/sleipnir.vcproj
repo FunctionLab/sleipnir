@@ -216,6 +216,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\coalescecluster.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\coalescemotifs.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\coalescestructs.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\color.cpp"
 				>
 			</File>
@@ -350,6 +362,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\coalescecluster.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\coalescemotifs.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\color.h"
 				>
 			</File>
@@ -481,7 +501,23 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\src\coalescebasei.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\coalesceclusteri.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\coalescei.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\coalescemotifsi.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\coalescestructsi.h"
 					>
 				</File>
 				<File

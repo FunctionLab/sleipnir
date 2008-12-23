@@ -102,6 +102,7 @@ public:
 	template<class tType>
 	static bool IsNaN( tType Value ) {
 
+
 		return !_finite( Value ); }
 
 	/*!

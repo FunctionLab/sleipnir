@@ -45,6 +45,21 @@ protected:
 		std::vector<SNode>	m_vecsChildren;
 	};
 
+	struct SRC {
+		SRC( const std::string& strSequence, size_t iOffset ) : m_strSequence(strSequence),
+			m_iOffset(iOffset) { }
+
+		bool operator<( const SRC& sRC ) const {
+
+			return ( sRC.m_strSequence.length( ) < m_strSequence.length( ) ); }
+
+		std::string	m_strSequence;
+		size_t		m_iOffset;
+	};
+
+	static void RemoveRCs( const std::map<unsigned char, unsigned char>&, const SNode&, size_t, std::string&,
+		std::vector<SRC>& );
+
 	static std::string GetMotif( const SNode& sNode ) {
 		std::ostringstream	ossm;
 		size_t				i;
@@ -165,6 +180,98 @@ protected:
 
 		return iMax; }
 
+	template<class tType>
+	static float Align( const SNode& sRoot, size_t iDepth, const tType& Data, size_t iLength,
+		float dPenaltyGap, float dPenaltyMismatch, float dCutoff, int& iOffset ) {
+		size_t	iBegin, iEnd, iCur, iMin, iGaps;
+		float	dRet, dCur;
+
+		dRet = FLT_MAX;
+		dCur = dCutoff / dPenaltyGap;
+		iBegin = ( dCur > iLength ) ? 0 : (size_t)ceil( iLength - dCur );
+		iEnd = iLength + iDepth - iBegin;
+		for( iMin = 0,iCur = iBegin; iCur < iEnd; ++iCur ) {
+			iGaps = 0;
+			if( iCur < iLength )
+				iGaps += iLength - iCur;
+			if( iCur > iDepth )
+				iGaps += iCur - iDepth;
+			dCur = dPenaltyGap * iGaps;
+			dCur += dPenaltyMismatch * CPSTImpl::Align( Data, iLength, iCur, sRoot ); 
+			if( dCur < dRet ) {
+				dRet = dCur;
+				iMin = iCur; } }
+		if( dRet == FLT_MAX )
+			dRet = ( max( iLength, iDepth ) - min( iLength, iDepth ) ) * dPenaltyGap;
+
+		iOffset = (int)iLength - (int)iMin;
+		return dRet; }
+
+	static size_t Align( const std::string& strSequence, size_t, size_t iOffset, const SNode& sNode ) {
+		size_t	i, iCur, iRet;
+
+		if( strSequence.empty( ) || !iOffset )
+			return 0;
+
+		iRet = strSequence.length( );
+		if( iOffset > iRet ) {
+			iOffset--;
+			for( i = 0; i < sNode.m_vecsChildren.size( ); ++i )
+				if( ( iCur = Align( strSequence, 0, iOffset, sNode.m_vecsChildren[ i ] ) ) < iRet )
+					iRet = iCur;
+			return iRet; }
+
+		for( i = 0; i < sNode.m_vecsChildren.size( ); ++i ) {
+			const SNode&	sChild	= sNode.m_vecsChildren[ i ];
+
+			iCur = ( ( sChild.m_cCharacter == strSequence[ strSequence.length( ) - iOffset ] ) ? 0 : 1 ) +
+				Align( strSequence.substr( strSequence.length( ) - iOffset + 1 ), 0, iOffset - 1, sChild );
+			if( iCur < iRet )
+				iRet = iCur; }
+
+		return iRet; }
+
+	static size_t Align( const SNode& sThem, size_t iDepth, size_t iOffset, const SNode& sUs ) {
+		size_t	iBest, iRet;
+
+		Align( sThem, iDepth, iOffset, sUs, iBest = -1, iRet = 0 );
+//		assert( iBest == iRet );
+		return iRet; }
+
+	static void Align( const SNode& sThem, size_t iDepth, size_t iOffset, const SNode& sUs, size_t& iBest,
+		size_t& iOut ) {
+		size_t	i, j, iCur;
+
+		if( sThem.m_vecsChildren.empty( ) || sUs.m_vecsChildren.empty( ) ) {
+			if( iOut < iBest )
+				iBest = iOut;
+			return; }
+
+		if( iOffset > iDepth ) {
+			iOffset--;
+			for( i = 0; i < sUs.m_vecsChildren.size( ); ++i )
+				Align( sThem, iDepth, iOffset, sUs.m_vecsChildren[ i ], iBest, iOut );
+			return; }
+		if( iOffset < iDepth ) {
+			iDepth--;
+			for( i = 0; i < sThem.m_vecsChildren.size( ); ++i )
+				Align( sThem.m_vecsChildren[ i ], iDepth, iOffset, sUs, iBest, iOut );
+			return; }
+
+		iDepth--;
+		iOffset--;
+		for( i = 0; i < sUs.m_vecsChildren.size( ); ++i ) {
+			const SNode&	sChildUs	= sUs.m_vecsChildren[ i ];
+
+			for( j = 0; j < sThem.m_vecsChildren.size( ); ++j ) {
+				const SNode&	sChildThem	= sThem.m_vecsChildren[ j ];
+
+				if( ( iCur = ( iOut + ( ( sChildUs.m_cCharacter == sChildThem.m_cCharacter ) ? 0 : 1 ) ) ) >=
+					iBest )
+					continue;
+				Align( sChildThem, iDepth, iOffset, sChildUs, iBest, iCur ); } }
+		iOut = iBest; }
+
 	CPSTImpl( size_t iArity ) : m_iDepth(0), m_iArity(iArity) { }
 
 	float GetMatch( const std::string& strTarget, const SNode& sNode, size_t iOffset,
@@ -198,94 +305,8 @@ protected:
 
 		return 1; }
 
-	template<class tType>
-	float Align( const tType& Data, size_t iLength, float dPenaltyGap, float dPenaltyMismatch, float dCutoff,
-		int& iOffset ) const {
-		size_t	iBegin, iEnd, iCur, iMin, iGaps;
-		float	dRet, dCur;
-
-		dRet = FLT_MAX;
-		dCur = dCutoff / dPenaltyGap;
-		iBegin = ( dCur > iLength ) ? 0 : (size_t)ceil( iLength - dCur );
-		iEnd = iLength + m_iDepth - iBegin;
-		for( iMin = 0,iCur = iBegin; iCur < iEnd; ++iCur ) {
-			iGaps = 0;
-			if( iCur < iLength )
-				iGaps += iLength - iCur;
-			if( iCur > m_iDepth )
-				iGaps += m_iDepth - iCur;
-			dCur = dPenaltyGap * iGaps;
-			dCur += dPenaltyMismatch * CPSTImpl::Align( Data, iLength, iCur, m_sRoot ); 
-			if( dCur < dRet ) {
-				dRet = dCur;
-				iMin = iCur; } }
-		if( dRet == FLT_MAX )
-			dRet = ( max( iLength, m_iDepth ) - min( iLength, m_iDepth ) ) * dPenaltyGap;
-
-		iOffset = (int)iLength - (int)iMin;
-		return dRet; }
-
-	size_t Align( const std::string& strSequence, size_t, size_t iOffset, const SNode& sNode ) const {
-		size_t	i, iCur, iRet;
-
-		if( strSequence.empty( ) || !iOffset )
-			return 0;
-
-		iRet = strSequence.length( );
-		if( iOffset > iRet ) {
-			iOffset--;
-			for( i = 0; i < sNode.m_vecsChildren.size( ); ++i )
-				if( ( iCur = Align( strSequence, 0, iOffset, sNode.m_vecsChildren[ i ] ) ) < iRet )
-					iRet = iCur;
-			return iRet; }
-
-		for( i = 0; i < sNode.m_vecsChildren.size( ); ++i ) {
-			const SNode&	sChild	= sNode.m_vecsChildren[ i ];
-
-			iCur = ( ( sChild.m_cCharacter == strSequence[ strSequence.length( ) - iOffset ] ) ? 0 : 1 ) +
-				Align( strSequence.substr( strSequence.length( ) - iOffset + 1 ), 0, iOffset - 1, sChild );
-			if( iCur < iRet )
-				iRet = iCur; }
-
-		return iRet; }
-
-	size_t Align( const SNode& sThem, size_t iDepth, size_t iOffset, const SNode& sUs ) const {
-		size_t	i, j, iCur, iRet;
-
-		if( sThem.m_vecsChildren.empty( ) )
-			return 0;
-
-		iRet = iDepth;
-		if( iOffset > iRet ) {
-			iOffset--;
-			for( i = 0; i < sUs.m_vecsChildren.size( ); ++i )
-				if( ( iCur = Align( sThem, iDepth, iOffset, sUs.m_vecsChildren[ i ] ) ) < iRet )
-					iRet = iCur;
-			return iRet; }
-		if( iOffset < iRet ) {
-			iDepth--;
-			for( i = 0; i < sThem.m_vecsChildren.size( ); ++i )
-				if( ( iCur = Align( sThem.m_vecsChildren[ i ], iDepth, iOffset, sUs ) ) < iRet )
-					iRet = iCur;
-			return iRet; }
-
-		iDepth--;
-		iOffset--;
-		for( i = 0; i < sUs.m_vecsChildren.size( ); ++i ) {
-			const SNode&	sChildUs	= sUs.m_vecsChildren[ i ];
-
-			for( j = 0; j < sThem.m_vecsChildren.size( ); ++j ) {
-				const SNode&	sChildThem	= sThem.m_vecsChildren[ j ];
-
-				iCur = ( ( sChildUs.m_cCharacter == sChildThem.m_cCharacter ) ? 0 : 1 ) +
-					Align( sChildThem, iDepth, iOffset, sChildUs );
-				if( iCur < iRet )
-					iRet = iCur; } }
-
-		return iRet; }
-
 	bool GetPWM( const SNode& sNode, size_t iDepth, std::map<unsigned char, size_t>& mapciCharacters,
-		CDataMatrix& MatPWM ) const {
+		CFullMatrix<size_t>& MatPWM ) const {
 		size_t											i, iChar;
 		std::map<unsigned char, size_t>::const_iterator	iterChar;
 
