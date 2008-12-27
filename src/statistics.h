@@ -394,7 +394,8 @@ public:
 			dVarTwo = ( dVarTwo / iTwo ) - ( dAveTwo * dAveTwo ); }
 
 		dStd = sqrt( ( dVarOne + dVarTwo ) / 2 );
-		return ( dStd ? ( ( dAveOne - dAveTwo ) / dStd ) : 0 ); }
+		return ( dStd ? ( ( dAveOne - dAveTwo ) / dStd ) :
+			( ( dAveOne == dAveTwo ) ? 0 : DBL_MAX ) ); }
 
 	template<class tType>
 	static double ZScore( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo ) {

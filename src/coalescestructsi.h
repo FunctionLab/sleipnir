@@ -65,14 +65,14 @@ struct SCoalesceModifierCache {
 	void AddWeight( size_t, size_t, size_t );
 	void SetType( const std::string& );
 
-	float GetWeight( ) const {
+	float GetWeight( size_t iK ) const {
 		size_t	i, iWiggles;
 
 		for( iWiggles = i = 0; i < m_veciWiggleTypes.size( ); ++i )
 			if( m_veciWiggleTypes[ i ] != -1 )
 				iWiggles++;
 
-		return ( iWiggles ? ( m_dWeight / iWiggles ) : 1 ); }
+		return ( iWiggles ? ( m_dWeight / iWiggles ) : iK ); }
 
 	const SCoalesceModifiers&				m_Modifiers;
 	std::vector<std::vector<SFASTAWiggle> >	m_vecvecsWiggles;

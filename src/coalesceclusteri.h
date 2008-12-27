@@ -219,6 +219,10 @@ protected:
 			for( i = 0; i < GetConditions( *iterDataset ); ++i )
 				setiConditions.insert( GetCondition( *iterDataset, i ) ); }
 
+	const std::set<size_t>& GetGenes( ) const {
+
+		return m_setiGenes; }
+
 	void Clear( ) {
 
 		m_setiDatasets.clear( );

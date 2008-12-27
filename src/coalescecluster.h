@@ -74,13 +74,16 @@ public:
 
 		return ( m_setiGenes.empty( ) || m_setiDatasets.empty( ) ); }
 
-	void Add( size_t iGene ) {
+	void SetGenes( size_t iGenes ) {
+		size_t	i;
 
-		m_setiGenes.insert( iGene ); }
+		m_setiGenes.clear( );
+		for( i = 0; i < iGenes; ++i )
+			m_setiGenes.insert( i ); }
 
 	const std::set<size_t>& GetGenes( ) const {
 
-		return m_setiGenes; }
+		return CCoalesceClusterImpl::GetGenes( ); }
 
 	const std::set<size_t>& GetDatasets( ) const {
 

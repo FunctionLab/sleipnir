@@ -82,10 +82,11 @@ float CCoalesceMotifLibrary::GetMatch( const std::string& strSequence, uint32_t 
 	dRet = 0;
 	for( i = 1; i < pPST->GetDepth( ); ++i ) {
 		sModifiers.AddWeight( 0, iOffset, i - 1 );
-		dRet += pPST->GetMatch( strSequence, pPST->GetDepth( ) - i ) * sModifiers.GetWeight( ) / i; }
+		dRet += pPST->GetMatch( strSequence, pPST->GetDepth( ) - i ) * sModifiers.GetWeight( i ) / i; }
 	sModifiers.AddWeight( 0, iOffset, i - 1 );
 	for( i = 0; i < strSequence.length( ); ++i ) {
-		dRet += pPST->GetMatch( strSequence.substr( i ) ) * sModifiers.GetWeight( ) / pPST->GetDepth( );
+		dRet += pPST->GetMatch( strSequence.substr( i ) ) * sModifiers.GetWeight( pPST->GetDepth( ) ) /
+			pPST->GetDepth( );
 		sModifiers.AddWeight( pPST->GetDepth( ), iOffset, i ); }
 	if( dRet < 0 ) {
 		g_CatSleipnir.error( "CCoalesceMotifLibrary::GetMatch( %s, %d, %d ) found negative score: %g",

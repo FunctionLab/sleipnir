@@ -180,9 +180,11 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 
 	MatSim.Initialize( vecClustersFrom.size( ) );
 	for( i = 0; i < MatSim.GetSize( ); ++i )
-		for( j = ( i + 1 ); j < MatSim.GetSize( ); ++j )
+		for( j = ( i + 1 ); j < MatSim.GetSize( ); ++j ) {
+			if( sArgs.verbosity_arg >= 7 )
+				cerr << "Comparing clusters:	" << i << '\t' << j << endl;
 			MatSim.Set( i, j, vecClustersFrom[ i ].GetSimilarity( vecClustersFrom[ j ], PCL.GetGenes( ),
-				iDatasets ) );
+				iDatasets ) ); }
 	if( !( ( pHier = CClustHierarchical::Cluster( MatSim ) ) &&
 		recluster( sArgs, MatSim.GetSize( ) * ( MatSim.GetSize( ) - 1 ) / 2, Motifs, *pHier, vecClustersFrom,
 		vecstrClusters, vecClustersTo ) ) )

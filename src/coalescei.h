@@ -116,10 +116,12 @@ public:
 // dZ *= exp( -(float)GetTotal( ) / HistSet.GetTotal( ) ); // works pretty well
 // dZ *= fabs( (float)( GetTotal( ) - HistSet.GetTotal( ) ) ) / max( GetTotal( ), HistSet.GetTotal( ) ); // works pretty well
 // This prevents large clusters from blowing up the motif set
+//*
 		if( iOne == iTwo )
 			dZ *= pow( fabs( (float)( GetTotal( ) - HistSet.GetTotal( ) ) ) /
 				max( GetTotal( ), HistSet.GetTotal( ) ), max( 1.0f,
 				log10f( (float)min( GetTotal( ), HistSet.GetTotal( ) ) ) ) );
+//*/
 
 		return ( ( dStd > c_dEpsilon ) ? ( 2 * CStatistics::ZTest( dZ, fCount ?
 			min( GetTotal( ), HistSet.GetTotal( ) ) : 1 ) ) :
@@ -191,10 +193,10 @@ public:
 // unlock
 			return false;
 
-		m_iMembers = max( m_iMembers, iMember + 1 );
-		m_vecCounts.resize( GetOffset( m_iMembers ) );
+		m_iMembers = max( GetMembers( ), iMember + 1 );
+		m_vecCounts.resize( GetOffset( GetMembers( ) ) );
 		m_vecCounts[ GetOffset( iMember ) + i ] += Count;
-		m_vecTotal.resize( m_iMembers );
+		m_vecTotal.resize( GetMembers( ) );
 		m_vecTotal[ iMember ] += Count;
 // unlock
 
@@ -210,14 +212,12 @@ public:
 		return Ret; }
 
 	tCount Get( size_t iMember, size_t iBin ) const {
-		size_t	iOffset;
 
-		if( ( iMember >= m_iMembers ) || ( iBin >= GetEdges( ) ) )
+		if( ( iMember >= GetMembers( ) ) || ( iBin >= GetEdges( ) ) )
 			return 0;
 
-		return ( ( ( iOffset = ( GetOffset( iMember ) + iBin ) ) < m_vecCounts.size( ) ) ?
-			( ( iBin == m_iZero ) ? ( GetTotal( ) - m_vecTotal[ iMember ] ) : m_vecCounts[ iOffset ] ) :
-			( ( iBin == m_iZero ) ? GetTotal( ) : 0 ) ); }
+		return ( ( iBin == m_iZero ) ? ( GetTotal( ) - m_vecTotal[ iMember ] ) :
+			m_vecCounts[ GetOffset( iMember ) + iBin ] ); }
 
 	tCount Get( size_t iMember, tValue Value ) const {
 
@@ -234,15 +234,17 @@ public:
 
 		return min( i, GetEdges( ) - 1 ); }
 
+/*
 	const tCount* Get( size_t iMember ) const {
 		const tCount*	pRet;
 
-		if( !GetEdges( ) || ( iMember >= m_iMembers ) )
+		if( !GetEdges( ) || ( iMember >= GetMembers( ) ) )
 			return NULL;
 
 		pRet = &m_vecCounts[ GetOffset( iMember ) ];
 		*(tCount*)pRet = Get( iMember, (size_t)0 );
 		return pRet; }
+*/
 
 	size_t GetMembers( ) const {
 
@@ -256,6 +258,7 @@ public:
 
 		return m_vecEdges[ iBin ]; }
 
+/*
 	bool Add( const CCoalesceHistogramSet& Histograms ) {
 		size_t	i, j;
 
@@ -270,6 +273,7 @@ public:
 					return false;
 
 		return true; }
+*/
 
 	std::string Save( size_t iMember ) const {
 		std::ostringstream	ossm;
@@ -306,12 +310,14 @@ protected:
 
 	void Sums( size_t iMember, tValue& Sum, tValue& SumSq ) const {
 		size_t	i;
-		tValue	Cur;
+		tValue	Cur, Bin;
 
 		for( Sum = SumSq = 0,i = 0; i < GetEdges( ); ++i ) {
-			Cur = Get( iMember, i ) * GetEdge( i );
+			Bin = ( !i || ( ( i + 1 ) == GetEdges( ) ) ) ? GetEdge( i ) :
+				( ( GetEdge( i ) + GetEdge( i - 1 ) ) / 2 );
+			Cur = Get( iMember, i ) * Bin;
 			Sum += Cur;
-			SumSq += Cur * GetEdge( i ); } }
+			SumSq += Cur * Bin; } }
 
 	void AveVar( size_t iMember, double& dAve, double& dVar ) const {
 		tValue	Ave, Var;
@@ -364,10 +370,6 @@ public:
 
 		return ( ( ad = Get( iType, eSubsequence, iGene ) ) ? ad[ iMotif ] : 0 ); }
 
-	bool IsPresent( size_t iType, ESubsequence eSubsequence ) const {
-
-		return !!Get( iType, eSubsequence ); }
-
 	size_t GetMotifs( ) const {
 
 		return m_iMotifs; }
@@ -375,6 +377,24 @@ public:
 	void SetGenes( size_t iGenes ) {
 
 		m_iGenes = iGenes; }
+
+	void Validate( ) const {
+		size_t		iType, iSubsequence, iGene;
+		uint32_t	iMotif;
+		float		dCur, dTotal;
+
+		for( iType = 0; iType < GetTypes( ); ++iType )
+			for( iSubsequence = ( ESubsequenceBegin + 1 ); iSubsequence < GetSubsequences( iType );
+				++iSubsequence )
+				for( iGene = 0; iGene < m_iGenes; ++iGene ) {
+					if( !Get( iType, (ESubsequence)iSubsequence, iGene ) )
+						continue;
+					for( iMotif = 0; iMotif < m_iMotifs; ++iMotif )
+						if( ( dCur = Get( iType, (ESubsequence)iSubsequence, iGene, iMotif ) ) !=
+							( dTotal = Get( iType, ESubsequenceTotal, iGene, iMotif ) ) )
+							std::cerr << "INVALID" << '\t' << GetType( iType ) << '\t' << iSubsequence <<
+								'\t' << iGene << '\t' << iMotif << '\t' << dCur << '\t' << dTotal <<
+								std::endl; } }
 
 protected:
 	static const size_t	c_iLookahead	= 128;
@@ -477,7 +497,7 @@ public:
 					continue;
 				for( iSubsequence = ESubsequenceBegin; iSubsequence < GetSubsequences( iTypeUs );
 					++iSubsequence )
-					if( GeneScores.IsPresent( iTypeThem, (ESubsequence)iSubsequence ) )
+					if( GeneScores.Get( iTypeThem, (ESubsequence)iSubsequence, *iterGene ) )
 						m_vecsTotals[ ( iTypeUs * ESubsequenceEnd ) + iSubsequence ]++; }
 
 		for( i = iTypeUs = 0; iTypeUs < GetTypes( ); ++iTypeUs )
@@ -503,9 +523,9 @@ public:
 				for( iMotif = 0; iMotif < GetMotifs( ); ++iMotif )
 					for( iEdge = 0; iEdge < HistsCur.GetEdges( ); ++iEdge )
 						if( HistsCur.Get( iMotif, iEdge ) != HistsTotal.Get( iMotif, iEdge ) ) {
-							cerr << "INVALID" << '\t' << GetType( iType ) << '\t' << iSubsequence << '\t' <<
-								iMotif << endl << HistsTotal.Save( iMotif ) << endl <<
-								HistsCur.Save( iMotif ) << endl;
+							std::cerr << "INVALID" << '\t' << GetType( iType ) << '\t' << iSubsequence <<
+								'\t' << iMotif << endl << HistsTotal.Save( iMotif ) << endl <<
+								HistsCur.Save( iMotif ) << std::endl;
 							break; } } } }
 
 protected:
