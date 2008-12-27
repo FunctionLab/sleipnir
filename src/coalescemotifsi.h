@@ -129,11 +129,6 @@ protected:
 		std::reverse( strReverse.begin( ), strReverse.end( ) );
 		return GetComplement( strReverse ); }
 
-	static bool IsPurine( unsigned char c ) {
-		static const char	c_acPurines[]	= "AG";
-
-		return !!strchr( c_acPurines, c ); }
-
 	static float GetInformation( const CFullMatrix<size_t>& MatPWM ) {
 		CDataMatrix			MatProbs;
 		size_t				iPos, iFrom, iTo;
@@ -202,7 +197,7 @@ protected:
 	float AlignRCs( uint32_t, uint32_t, float ) const;
 	float AlignRCPST( uint32_t, const CPST&, float ) const;
 	float AlignPSTs( const CPST&, const CPST&, float ) const;
-	uint32_t RemoveRCs( const CPST& );
+	uint32_t RemoveRCs( const CPST&, float, float );
 
 	EType GetType( uint32_t iMotif ) const {
 

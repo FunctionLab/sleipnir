@@ -181,7 +181,7 @@ uint32_t SMotifMatch::Open( const CHierarchy& Hier, const vector<SMotifMatch>& v
 		( m_iMotif = Motifs.Merge( iLeft, iRight, FLT_MAX ) ) ); }
 
 string SMotifMatch::Save( const CCoalesceMotifLibrary* pMotifs, bool fPWM, float dCutoffPWMs,
-	bool fNoRCs ) const {
+	float dPenaltyGap, float dPenaltyMismatch, bool fNoRCs ) const {
 	ostringstream	ossm;
 	string			strPWM;
 
@@ -190,7 +190,8 @@ string SMotifMatch::Save( const CCoalesceMotifLibrary* pMotifs, bool fPWM, float
 	if( pMotifs ) {
 		ossm << pMotifs->GetMotif( m_iMotif );
 		if( fPWM ) {
-			if( ( strPWM = pMotifs->GetPWM( m_iMotif, dCutoffPWMs, fNoRCs ) ).empty( ) )
+			if( ( strPWM = pMotifs->GetPWM( m_iMotif, dCutoffPWMs, dPenaltyGap, dPenaltyMismatch,
+				fNoRCs ) ).empty( ) )
 				return "";
 			ossm << endl << strPWM; } }
 	else

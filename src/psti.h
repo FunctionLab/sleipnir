@@ -45,20 +45,17 @@ protected:
 		std::vector<SNode>	m_vecsChildren;
 	};
 
-	struct SRC {
-		SRC( const std::string& strSequence, size_t iOffset ) : m_strSequence(strSequence),
-			m_iOffset(iOffset) { }
+	static void RemoveRCs( const std::map<unsigned char, unsigned char>& mapccComplements, const SNode& sNode,
+		std::string& strSeq, std::vector<std::string>& vecstrOut ) {
+		size_t	i;
 
-		bool operator<( const SRC& sRC ) const {
-
-			return ( sRC.m_strSequence.length( ) < m_strSequence.length( ) ); }
-
-		std::string	m_strSequence;
-		size_t		m_iOffset;
-	};
-
-	static void RemoveRCs( const std::map<unsigned char, unsigned char>&, const SNode&, size_t, std::string&,
-		std::vector<SRC>& );
+		strSeq.push_back( sNode.m_cCharacter );
+		if( sNode.m_vecsChildren.empty( ) )
+			vecstrOut.push_back( strSeq );
+		else
+			for( i = 0; i < sNode.m_vecsChildren.size( ); ++i )
+				RemoveRCs( mapccComplements, sNode.m_vecsChildren[ i ], strSeq, vecstrOut );
+		strSeq.resize( strSeq.size( ) - 1 ); }
 
 	static std::string GetMotif( const SNode& sNode ) {
 		std::ostringstream	ossm;

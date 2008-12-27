@@ -350,7 +350,7 @@ uint32_t CCoalesceMotifLibraryImpl::MergePSTs( const CPST& PSTOne, const CPST& P
 
 	return iRet; }
 
-uint32_t CCoalesceMotifLibraryImpl::RemoveRCs( const CPST& PST ) {
+uint32_t CCoalesceMotifLibraryImpl::RemoveRCs( const CPST& PST, float dPenaltyGap, float dPenaltyMismatch ) {
 	CPST*								pPST;
 	uint32_t							iRet;
 	map<unsigned char, unsigned char>	mapccComplements;
@@ -360,10 +360,11 @@ uint32_t CCoalesceMotifLibraryImpl::RemoveRCs( const CPST& PST ) {
 		mapccComplements[ c_szBases[ i ] ] = c_szComplements[ i ];
 	if( !( pPST = CreatePST( iRet ) ) )
 		return -1;
-	PST.RemoveRCs( mapccComplements, *pPST );
+	PST.RemoveRCs( mapccComplements, dPenaltyGap, dPenaltyMismatch, *pPST );
 	return iRet; }
 
-string CCoalesceMotifLibrary::GetPWM( uint32_t iMotif, float dCutoffPWMs, bool fNoRCs ) const {
+string CCoalesceMotifLibrary::GetPWM( uint32_t iMotif, float dCutoffPWMs, float dPenaltyGap,
+	float dPenaltyMismatch, bool fNoRCs ) const {
 	CFullMatrix<size_t>	MatPWM;
 	string				strMotif;
 	size_t				i, j;
@@ -371,7 +372,7 @@ string CCoalesceMotifLibrary::GetPWM( uint32_t iMotif, float dCutoffPWMs, bool f
 	float				d;
 
 	if( fNoRCs )
-		iMotif = ((CCoalesceMotifLibrary*)this)->RemoveRCs( iMotif );
+		iMotif = ((CCoalesceMotifLibrary*)this)->RemoveRCs( iMotif, dPenaltyGap, dPenaltyMismatch );
 	switch( GetType( iMotif ) ) {
 		case ETypeKMer:
 			if( !CCoalesceMotifLibraryImpl::GetPWM( GetMotif( iMotif ), MatPWM ) )

@@ -25,18 +25,34 @@
 
 namespace Sleipnir {
 
-void CPSTImpl::RemoveRCs( const map<unsigned char, unsigned char>& mapccComplements, const SNode& sNode,
-	size_t iOffset, string& strSeq, vector<SRC>& vecsOut ) {
-	size_t	i;
+struct SSortRCs {
+	bool operator()( const string& strOne, const string& strTwo ) const {
 
-	strSeq.push_back( sNode.m_cCharacter );
-	if( sNode.m_vecsChildren.size( ) == 0 )
-		vecsOut.push_back( ( CCoalesceMotifLibrary::GetPurines( strSeq ) < 0.5 ) ?
-			SRC( CCoalesceMotifLibrary::GetReverseComplement( strSeq ), iOffset ) : SRC( strSeq, 0 ) );
-	else {
-		iOffset--;
-		for( i = 0; i < sNode.m_vecsChildren.size( ); ++i )
-			RemoveRCs( mapccComplements, sNode.m_vecsChildren[ i ], iOffset, strSeq, vecsOut ); }
-	strSeq.resize( strSeq.size( ) - 1 ); }
+		return ( strOne.length( ) > strTwo.length( ) ); }
+};
+
+void CPST::RemoveRCs( const map<unsigned char, unsigned char>& mapccComplements, float dPenaltyGap,
+	float dPenaltyMismatch, CPST& PSTOut ) const {
+	size_t			i;
+	string			str;
+	vector<string>	vecstrAdd;
+	float			dOne, dTwo;
+	int				iOne, iTwo;
+
+	for( i = 0; i < m_sRoot.m_vecsChildren.size( ); ++i )
+		CPSTImpl::RemoveRCs( mapccComplements, m_sRoot.m_vecsChildren[ i ], str, vecstrAdd );
+	if( vecstrAdd.empty( ) )
+		return;
+
+	sort( vecstrAdd.begin( ), vecstrAdd.end( ), SSortRCs( ) );
+	PSTOut.Add( vecstrAdd[ 0 ], 0 );
+	for( i = 1; i < vecstrAdd.size( ); ++i ) {
+		dOne = PSTOut.Align( vecstrAdd[ i ], dPenaltyGap, dPenaltyMismatch, FLT_MAX, iOne );
+		dTwo = PSTOut.Align( str = CCoalesceMotifLibrary::GetReverseComplement( vecstrAdd[ i ] ),
+			dPenaltyGap, dPenaltyMismatch, FLT_MAX, iTwo );
+		if( dTwo < dOne )
+			PSTOut.Add( str, iTwo );
+		else
+			PSTOut.Add( vecstrAdd[ i ], iOne ); } }
 
 }

@@ -89,7 +89,8 @@ struct SMotifMatch {
 
 	bool Open( std::istream&, CCoalesceMotifLibrary& );
 	uint32_t Open( const CHierarchy&, const std::vector<SMotifMatch>&, CCoalesceMotifLibrary&, size_t& );
-	std::string Save( const CCoalesceMotifLibrary*, bool = false, float = 0, bool = false ) const;
+	std::string Save( const CCoalesceMotifLibrary*, bool = false, float = 0, float = 0, float = 0,
+		bool = false ) const;
 
 	bool operator==( const SMotifMatch& sMotif ) const {
 

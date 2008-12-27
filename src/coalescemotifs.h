@@ -52,15 +52,6 @@ public:
 
 		return CCoalesceMotifLibraryImpl::GetReverseComplement( strKMer ); }
 
-	static float GetPurines( const std::string& strSequence ) {
-		size_t	i, iCount;
-
-		for( iCount = i = 0; i < strSequence.size( ); ++i )
-			if( IsPurine( strSequence[ i ] ) )
-				iCount++;
-
-		return ( (float)iCount / strSequence.size( ) ); }
-
 	/*!
 	 * \brief
 	 * Initializes a new motif library based on kmers of the given length.
@@ -73,7 +64,8 @@ public:
 	float GetMatch( const std::string& strSequence, uint32_t iMotif, size_t iOffset,
 		SCoalesceModifierCache& sModifiers ) const;
 	uint32_t Open( const std::string& strMotif );
-	std::string GetPWM( uint32_t iMotif, float dCutoffPWMs, bool fNoRCs ) const;
+	std::string GetPWM( uint32_t iMotif, float dCutoffPWMs, float dPenaltyGap, float dPenaltyMismatch,
+		bool fNoRCs ) const;
 
 	/*!
 	 * \brief
@@ -163,11 +155,12 @@ public:
 
 		return MergeKMers( GetMotif( iOne ), GetMotif( iTwo ), dCutoff ); }
 
-	uint32_t RemoveRCs( uint32_t iMotif ) {
+	uint32_t RemoveRCs( uint32_t iMotif, float dPenaltyGap, float dPenaltyMismatch ) {
 
 		switch( GetType( iMotif ) ) {
 			case ETypePST:
-				return CCoalesceMotifLibraryImpl::RemoveRCs( *GetPST( iMotif ) );
+				return CCoalesceMotifLibraryImpl::RemoveRCs( *GetPST( iMotif ), dPenaltyGap,
+					dPenaltyMismatch );
 
 			case ETypeRC:
 				return (uint32_t)m_veciRC2KMer[ iMotif - GetBaseRCs( ) ]; }

@@ -49,7 +49,7 @@ public:
 	bool Save( const std::string& strDirectory, size_t iID, const CPCL& PCL,
 		const CCoalesceMotifLibrary* pMotifs = NULL ) const;
 	void Save( std::ostream&, size_t iID, const CPCL& PCL, const CCoalesceMotifLibrary* pMotifs = NULL,
-		float dCutoffPWMs = 0, bool fNoRCs = false ) const;
+		float dCutoffPWMs = 0, float dPenaltyGap = 0, float dPenaltyMismatch = 0, bool fNoRCs = false ) const;
 	float GetSimilarity( const CCoalesceCluster& Cluster, size_t iGenes, size_t iDatasets ) const;
 	void Snapshot( const CCoalesceGeneScores& GeneScores, CCoalesceGroupHistograms& Histograms );
 

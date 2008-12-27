@@ -761,7 +761,8 @@ bool CCoalesceClusterImpl::SaveCopy( const CPCL& PCLFrom, const set<size_t>& set
 	return true; }
 
 void CCoalesceCluster::Save( std::ostream& ostm, size_t iID, const CPCL& PCL,
-	const CCoalesceMotifLibrary* pMotifs, float dCutoffPWMs, bool fNoRCs ) const {
+	const CCoalesceMotifLibrary* pMotifs, float dCutoffPWMs, float dPenaltyGap, float dPenaltyMismatch,
+	bool fNoRCs ) const {
 	set<size_t>::const_iterator			iterID;
 	set<SMotifMatch>::const_iterator	iterMotif;
 	size_t								i;
@@ -777,7 +778,8 @@ void CCoalesceCluster::Save( std::ostream& ostm, size_t iID, const CPCL& PCL,
 			ostm << '\t' << PCL.GetExperiment( GetCondition( *iterID, i ) );
 	ostm << endl << "Motifs" << endl;
 	for( iterMotif = GetMotifs( ).begin( ); iterMotif != GetMotifs( ).end( ); ++iterMotif )
-		if( !( strMotif = iterMotif->Save( pMotifs, true, dCutoffPWMs, fNoRCs ) ).empty( ) )
+		if( !( strMotif = iterMotif->Save( pMotifs, true, dCutoffPWMs, dPenaltyGap, dPenaltyMismatch,
+			fNoRCs ) ).empty( ) )
 			ostm << strMotif << endl; }
 
 size_t CCoalesceCluster::Open( const string& strPCL, size_t iSkip, const CPCL& PCL,

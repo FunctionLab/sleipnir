@@ -195,7 +195,7 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 		if( sArgs.output_arg )
 			vecClustersTo[ i ].Save( sArgs.output_arg, i, PCL, &Motifs );
 		vecClustersTo[ i ].Save( cout, i, PCL, &Motifs, (float)sArgs.min_info_arg,
-			!!sArgs.remove_rcs_flag ); }
+			(float)sArgs.penalty_gap_arg, (float)sArgs.penalty_mismatch_arg, !!sArgs.remove_rcs_flag ); }
 
 	return 0; }
 
