@@ -223,8 +223,8 @@ void CParser::TermFinder( const CGenes& Genes, float dP, const CGenes& GenesBkg,
 	for( i = 0; i < m_vecpOntologies.size( ); ++i ) {
 		vecsCur.clear( );
 		m_vecpOntologies[ i ]->TermFinder( Genes, vecsCur, fBonferroni,
-			fSibs, fBackground, GenesBkg.GetGenes( ) ? &GenesBkg : NULL );
+			fSibs, fBackground, dP, GenesBkg.GetGenes( ) ? &GenesBkg : NULL );
 		sort( vecsCur.begin( ), vecsCur.end( ), sSort );
-		for( j = 0; ( j < vecsCur.size( ) ) && ( vecsCur[ j ].m_dP <= dP ); ++j )
+		for( j = 0; j < vecsCur.size( ); ++j )
 			vecsTerms.push_back( vecsCur[ j ] );
 		veciOnto[ i ] = vecsTerms.size( ); } }

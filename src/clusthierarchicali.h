@@ -54,11 +54,18 @@ class CClustHierarchicalImpl {
 protected:
 
 	static CHierarchy* Cluster( const CDistanceMatrix&, const std::vector<bool>* = NULL );
-	static void AssertParentage( std::vector<size_t>&, std::vector<size_t>&, std::vector<size_t>&, size_t, size_t );
 	static CHierarchy* ConstructHierarchy( const std::vector<size_t>&, const std::vector<size_t>&,
 		const std::vector<float>&, size_t );
 	static void UpdateDistances( size_t, size_t, CDistanceMatrix&, size_t, size_t, std::vector<float>&,
 		std::vector<size_t>& );
+
+	static void AssertParentage( std::vector<size_t>& veciChildren, std::vector<size_t>& veciChild1,
+		std::vector<size_t>& veciChild2, size_t iChild, size_t iParent ) {
+
+		veciChildren[ iParent ] += veciChildren[ iChild ];
+		iParent -= veciChild1.size( );
+		veciChild2[ iParent ] = veciChild1[ iParent ];
+		veciChild1[ iParent ] = iChild; }
 };
 
 }

@@ -200,7 +200,7 @@ void CCoalesceGroupHistograms::Save( std::ostream& ostm, const CCoalesceMotifLib
 bool CCoalesceGroupHistograms::IsSimilar( const CCoalesceMotifLibrary* pMotifs, const SMotifMatch& sOne,
 	const SMotifMatch& sTwo, float dPValue ) const {
 	size_t	iTypeOne, iTypeTwo;
-	double	dAverage, dZ, dP;
+	double	dAveOne, dAverage, dZ, dP;
 
 	if( ( ( iTypeOne = GetType( sOne.m_strType ) ) == -1 ) ||
 		( ( iTypeTwo = GetType( sTwo.m_strType ) ) == -1 ) )
@@ -209,7 +209,7 @@ bool CCoalesceGroupHistograms::IsSimilar( const CCoalesceMotifLibrary* pMotifs, 
 		const CCoalesceHistogramSet<>&	HistOne	= Get( iTypeOne, sOne.m_eSubsequence );
 		const CCoalesceHistogramSet<>&	HistTwo	= Get( iTypeTwo, sTwo.m_eSubsequence );
 
-		dP = 1 - HistOne.CohensD( sOne.m_iMotif, HistTwo, sTwo.m_iMotif, false, dAverage, dZ );
+		dP = 1 - HistOne.ZScore( sOne.m_iMotif, HistTwo, sTwo.m_iMotif, false, dAveOne, dAverage, dZ );
 		if( g_CatSleipnir.isDebugEnabled( ) )
 			g_CatSleipnir.debug( "CCoalesceGroupHistograms::IsSimilar( %s, %s, %g ) got p-value %g",
 				sOne.Save( pMotifs ).c_str( ), sTwo.Save( pMotifs ).c_str( ), dPValue, dP );
@@ -438,7 +438,7 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 			if( IsOutputIntermediate( ) )
 				Cluster.Save( GetDirectoryIntermediate( ), vecClusters.size( ), PCLCopy, GetMotifs( ) );
 			vecClusters.push_back( Cluster );
-			Cluster.Subtract( PCLCopy );
+			Cluster.Subtract( PCLCopy, Pot );
 			Cluster.Subtract( GeneScores );
 			for( i = 0; i < m_vecsDatasets.size( ); ++i )
 				m_vecsDatasets[ i ].CalculateCovariance( PCLCopy );

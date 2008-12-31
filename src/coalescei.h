@@ -69,22 +69,32 @@ public:
 		ZScore( iMember, HistSet, dAverage, dZ );
 		return CStatistics::ZTest( dZ, GetTotal( ) ); }
 
-	double ZScore( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAverage, double& dZ ) const {
-		tValue	AveOne, StdOne, Ave, Std;
-		double	dAveOne, dAve, dStd;
+	double ZScore( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAveOne, double& dAverage,
+		double& dZ, bool fCount = true ) const {
+
+		return ZScore( iMember, HistSet, iMember, fCount, dAveOne, dAverage, dZ ); }
+
+	double ZScore( size_t iOne, const CCoalesceHistogramSet& HistSet, size_t iTwo, bool fCount,
+		double& dAveOne, double& dAverage, double& dZ ) const {
+		static const double	c_dEpsilon	= 1e-6;
+		tValue	AveOne, VarOne, AveTwo, VarTwo;
+		double	dStd;
+		size_t	iTotal;
 
 		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
 			return 1;
 
-		Sums( iMember, AveOne, StdOne );
-		HistSet.Sums( iMember, Ave, Std );
-		dAve = (double)( AveOne + Ave ) / ( GetTotal( ) + HistSet.GetTotal( ) );
+		Sums( iOne, AveOne, VarOne );
+		HistSet.Sums( iTwo, AveTwo, VarTwo );
+		iTotal = GetTotal( ) + HistSet.GetTotal( );
+		dAverage = (double)( AveOne + AveTwo ) / iTotal;
 		dAveOne = (double)AveOne / GetTotal( );
-		dStd = sqrt( ( (double)( StdOne + Std ) / ( GetTotal( ) + HistSet.GetTotal( ) ) ) - ( dAve * dAve ) );
+		dStd = sqrt( ( (double)( VarOne + VarTwo ) / iTotal ) - ( dAverage * dAverage ) );
 
-		dAverage = dAveOne;
-		dZ = dStd ? ( ( dAveOne - dAve ) / dStd ) : 0;
-		return ( dStd ? CStatistics::ZTest( dZ, GetTotal( ) ) : ( ( dAveOne == dAve ) ? 1 : 0 ) ); }
+		dZ = ( dAveOne - dAverage ) / dStd;
+		return ( ( dStd > c_dEpsilon ) ? ( 2 * CStatistics::ZTest( dZ, fCount ?
+			min( GetTotal( ), HistSet.GetTotal( ) ) : 1 ) ) :
+			( ( fabs( dAveOne - dAverage ) < c_dEpsilon ) ? 1 : 0 ) ); }
 
 	double CohensD( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAverage, double& dZ,
 		bool fCount = true ) const {
@@ -116,7 +126,7 @@ public:
 // dZ *= exp( -(float)GetTotal( ) / HistSet.GetTotal( ) ); // works pretty well
 // dZ *= fabs( (float)( GetTotal( ) - HistSet.GetTotal( ) ) ) / max( GetTotal( ), HistSet.GetTotal( ) ); // works pretty well
 // This prevents large clusters from blowing up the motif set
-//*
+/*
 		if( iOne == iTwo )
 			dZ *= pow( fabs( (float)( GetTotal( ) - HistSet.GetTotal( ) ) ) /
 				max( GetTotal( ), HistSet.GetTotal( ) ), max( 1.0f,

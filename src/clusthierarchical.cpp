@@ -295,14 +295,6 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 
 	return ConstructHierarchy( veciChild1, veciChild2, vecdHeight, ( 2 * Sim.GetSize( ) ) - 2 ); }
 
-void CClustHierarchicalImpl::AssertParentage( vector<size_t>& veciChildren, vector<size_t>& veciChild1,
-	vector<size_t>& veciChild2, size_t iChild, size_t iParent ) {
-
-	veciChildren[ iParent ] += veciChildren[ iChild ];
-	iParent -= veciChild1.size( );
-	veciChild2[ iParent ] = veciChild1[ iParent ];
-	veciChild1[ iParent ] = iChild; }
-
 void CClustHierarchicalImpl::UpdateDistances( size_t iOne, size_t iTwo, CDistanceMatrix& Sim, size_t iWOne,
 	size_t iWTwo, vector<float>& vecdMax, vector<size_t>& veciMax ) {
 	float	d, dOne, dTwo;

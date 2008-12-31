@@ -34,11 +34,17 @@ protected:
 	static double IncompleteGamma( double, double );
 	static double Normal01CDF( double );
 	static double GammaLog( double );
-	static double EpsilonDouble( );
 	static double IncompleteBeta( double, double, double );
 	static double IncompleteBetaCF( double, double, double );
 	static double ModifiedBesselI( size_t, double );
 	static bool MatrixLUSubstitute( CDataMatrix&, const std::vector<size_t>&, std::vector<float>& );
+
+	static double EpsilonDouble( ) {
+		double	dRet;
+
+		for( dRet = 1; 1 < ( 1 + dRet ); dRet /= 2 );
+
+		return ( 2 * dRet ); }
 
 	static bool MatrixMultiply( const std::vector<float>& vecdLeft, const CDataMatrix& MatRight,
 		std::vector<float>& vecdOut ) {

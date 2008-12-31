@@ -117,6 +117,8 @@ public:
 	uint32_t Merge( uint32_t iOne, uint32_t iTwo, float dCutoff ) {
 		std::pair<uint32_t, uint32_t>	priiMerged;
 
+		if( iOne == iTwo )
+			return -1;
 		priiMerged.first = min( iOne, iTwo );
 		priiMerged.second = max( iOne, iTwo );
 		if( m_setpriiMerged.find( priiMerged ) != m_setpriiMerged.end( ) )
@@ -127,7 +129,7 @@ public:
 			case ETypeRC:
 				switch( GetType( iTwo ) ) {
 					case ETypeKMer:
-						return MergeKMerRC( GetMotif( iTwo ), iOne, dCutoff );
+						return MergeKMerRC( iTwo, iOne, dCutoff );
 
 					case ETypeRC:
 						return MergeRCs( iOne, iTwo, dCutoff );
@@ -148,7 +150,7 @@ public:
 
 		switch( GetType( iTwo ) ) {
 			case ETypeRC:
-				return MergeKMerRC( GetMotif( iOne ), iTwo, dCutoff );
+				return MergeKMerRC( iOne, iTwo, dCutoff );
 
 			case ETypePST:
 				return MergeKMerPST( GetMotif( iOne ), *GetPST( iTwo ), dCutoff ); }

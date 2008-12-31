@@ -299,6 +299,9 @@ public:
 	 * If true, use all genes in the genome as background; otherwise, use only genes with at least one
 	 * annotation in the ontology.
 	 * 
+	 * \param dPValue
+	 * Only terms significant below this p-value will be recorded.
+	 * 
 	 * \param pBackground
 	 * If non-null, use the given gene set as the background.
 	 * 
@@ -308,7 +311,8 @@ public:
 	 * test.
 	 */
 	virtual void TermFinder( const CGenes& Genes, std::vector<STermFound>& vecsTerms, bool fBonferroni = true,
-		bool fRecursive = true, bool fGenome = false, const CGenes* pBackground = NULL ) const = 0;
+		bool fRecursive = true, bool fGenome = false, float dPValue = 1,
+		const CGenes* pBackground = NULL ) const = 0;
 };
 
 // TODO: These should really be templated instead of duplicated like this...
@@ -330,9 +334,11 @@ public:
 		return COntologyImpl::GetGeneNames( vecstrGenes ); }
 
 	void TermFinder( const CGenes& Genes, std::vector<STermFound>& vecsTerms, bool fBonferroni = true,
-		bool fRecursive = true, bool fGenome = false, const CGenes* pBackground = NULL ) const {
+		bool fRecursive = true, bool fGenome = false, float dPValue = 1,
+		const CGenes* pBackground = NULL ) const {
 
-		return COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, pBackground ); }
+		return COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
+			pBackground ); }
 
 	size_t GetNode( const std::string& strID ) const {
 
@@ -422,9 +428,11 @@ public:
 		return COntologyImpl::GetGeneNames( vecstrGenes ); }
 
 	void TermFinder( const CGenes& Genes, std::vector<STermFound>& vecsTerms, bool fBonferroni = true,
-		bool fRecursive = true, bool fGenome = false, const CGenes* pBackground = NULL ) const {
+		bool fRecursive = true, bool fGenome = false, float dPValue = 1,
+		const CGenes* pBackground = NULL ) const {
 
-		return COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, pBackground ); }
+		return COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
+			pBackground ); }
 
 	size_t GetNode( const std::string& strID ) const {
 
@@ -492,9 +500,11 @@ public:
 		return COntologyImpl::GetGeneNames( vecstrGenes ); }
 
 	void TermFinder( const CGenes& Genes, std::vector<STermFound>& vecsTerms, bool fBonferroni = true,
-		bool fRecursive = true, bool fGenome = false, const CGenes* pBackground = NULL ) const {
+		bool fRecursive = true, bool fGenome = false, float dPValue = 1,
+		const CGenes* pBackground = NULL ) const {
 
-		return COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, pBackground ); }
+		return COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
+			pBackground ); }
 
 	size_t GetNode( const std::string& strID ) const {
 

@@ -59,43 +59,6 @@ bool COntologyImpl::SParser::IsStart( const char* szStart ) const {
 
 	return !strncmp( m_szLine, szStart, strlen( szStart ) ); }
 
-COntologyImpl::COntologyImpl( const std::string& strID ) : m_strID(strID), m_iNodes(0),
-	m_aNodes(NULL) { }
-
-COntologyImpl::~COntologyImpl( ) {
-
-	Reset( ); }
-
-size_t COntologyImpl::GetNodes( ) const {
-
-	return m_iNodes; }
-
-size_t COntologyImpl::GetParents( size_t iNode ) const {
-
-	return m_aNodes[ iNode ].m_iParents; }
-
-size_t COntologyImpl::GetParent( size_t iNode, size_t iParent ) const {
-
-	return m_aNodes[ iNode ].m_aiParents[ iParent ]; }
-
-size_t COntologyImpl::GetChildren( size_t iNode ) const {
-
-	return m_aNodes[ iNode ].m_iChildren; }
-
-size_t COntologyImpl::GetChild( size_t iNode, size_t iChild ) const {
-
-	return m_aNodes[ iNode ].m_aiChildren[ iChild ]; }
-
-size_t COntologyImpl::GetGenes( size_t iNode, bool fKids ) const {
-	size_t	iRet;
-
-	iRet = m_aNodes[ iNode ].m_iGenes;
-	if( fKids ) {
-		CollectGenes( iNode );
-		iRet += m_aNodes[ iNode ].m_iCacheGenes; }
-
-	return iRet; }
-
 const CGene& COntologyImpl::GetGene( size_t iNode, size_t iGene ) const {
 	size_t	i;
 
@@ -104,18 +67,6 @@ const CGene& COntologyImpl::GetGene( size_t iNode, size_t iGene ) const {
 
 	CollectGenes( iNode );
 	return *m_aNodes[ iNode ].m_apCacheGenes[ iGene - i ]; }
-
-const string& COntologyImpl::GetID( ) const {
-
-	return m_strID; }
-
-const string& COntologyImpl::GetID( size_t iNode ) const {
-
-	return m_aNodes[ iNode ].m_strID; }
-
-const string& COntologyImpl::GetGloss( size_t iNode ) const {
-
-	return m_aNodes[ iNode ].m_strGloss; }
 
 void COntologyImpl::Reset( ) {
 	size_t	i;
@@ -143,12 +94,6 @@ bool COntologyImpl::IsAnnotated( size_t iNode, const CGene& Gene, bool fKids ) c
 				return true; }
 
 	return false; }
-
-void COntologyImpl::CollectGenes( size_t iNode ) const {
-	TSetPGenes	setpGenes;
-
-	if( m_aNodes[ iNode ].m_iCacheGenes == -1 )
-		((COntologyImpl*)this)->CollectGenes( iNode, setpGenes ); }
 
 void COntologyImpl::CollectGenes( size_t iNode, TSetPGenes& setpGenes ) {
 	size_t						i;
@@ -192,7 +137,7 @@ void COntologyImpl::GetGeneNames( std::vector<std::string>& vecstrGenes ) const 
 		vecstrGenes.push_back( *iterGene ); }
 
 void COntologyImpl::TermFinder( const CGenes& Genes, vector<STermFound>& vecsTerms, bool fBon,
-	bool fKids, bool fBack, const CGenes* pBkg ) const {
+	bool fKids, bool fBack, float dPValue, const CGenes* pBkg ) const {
 	size_t			i, j, iMult, iBkg, iGenes, iGiven;
 	double			d;
 	vector<size_t>	veciAnno;
@@ -215,12 +160,12 @@ void COntologyImpl::TermFinder( const CGenes& Genes, vector<STermFound>& vecsTer
 					iGenes++; }
 		else
 			iGenes = GetGenes( i, fKids );
-		d = CStatistics::HypergeometricCDF( veciAnno[ i ], iGiven,
-			iGenes, iBkg );
+		d = CStatistics::HypergeometricCDF( veciAnno[ i ], iGiven, iGenes, iBkg );
 		if( fBon ) {
 			if( ( d *= iMult ) > 1 )
 				d = 1; }
-		vecsTerms.push_back( STermFound( i, d, veciAnno[ i ], iGiven, iGenes, iBkg ) ); } }
+		if( d <= dPValue )
+			vecsTerms.push_back( STermFound( i, d, veciAnno[ i ], iGiven, iGenes, iBkg ) ); } }
 
 void CSlimImpl::Reset( const IOntology* pOntology ) {
 

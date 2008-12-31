@@ -387,15 +387,6 @@ double CStatisticsImpl::GammaLog( double x ) {
 
 	return res; }
 
-double CStatisticsImpl::EpsilonDouble( ) {
-	double	dRet;
-
-	dRet = 1;
-	while( 1 < (double)( 1 + dRet ) )
-		dRet = dRet / 2;
-
-	return ( 2 * dRet ); }
-
 /*!
  * \brief
  * Return a random sample from a gamma log function with the given parameter.

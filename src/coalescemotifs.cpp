@@ -170,13 +170,16 @@ float CCoalesceMotifLibraryImpl::AlignKMerRC( const std::string& strKMer, uint32
 
 	return min( dOne, dTwo ); }
 
-uint32_t CCoalesceMotifLibraryImpl::MergeKMerRC( const std::string& strKMer, uint32_t iRC, float dCutoff ) {
-	string		strOne, strTwo;
+uint32_t CCoalesceMotifLibraryImpl::MergeKMerRC( uint32_t iKMer, uint32_t iRC, float dCutoff ) {
+	string		strKMer, strOne, strTwo;
 	float		dOne, dTwo;
 	int			iOne, iTwo;
 	uint32_t	iRet;
 	CPST*		pPST;
 
+	if( m_veciKMer2RC[ iKMer ] == iRC )
+		return -1;
+	strKMer = GetMotif( iKMer );
 	strOne = GetRCOne( iRC );
 	strTwo = GetReverseComplement( strOne );
 	dOne = Align( strKMer, strOne, dCutoff, iOne );

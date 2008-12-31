@@ -186,7 +186,7 @@ protected:
 	std::string GetMotif( uint32_t ) const;
 	CPST* CreatePST( uint32_t& );
 	uint32_t MergeKMers( const std::string&, const std::string&, float );
-	uint32_t MergeKMerRC( const std::string&, uint32_t, float );
+	uint32_t MergeKMerRC( uint32_t, uint32_t, float );
 	uint32_t MergeKMerPST( const std::string&, const CPST&, float );
 	uint32_t MergeRCs( uint32_t, uint32_t, float );
 	uint32_t MergeRCPST( uint32_t, const CPST&, float );

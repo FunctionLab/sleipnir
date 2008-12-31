@@ -793,10 +793,10 @@ size_t CBNServer::ProcessTermFinder( const vector<unsigned char>& vecbMessage, s
 		for( j = 0; ( j < Gene.GetSynonyms( ) ) && ( veciMapping[ i ] == -1 ); ++j )
 			veciMapping[ i ] = GetGene( Gene.GetSynonym( j ) ); }
 			
-	pOnto->TermFinder( Genes, vecsTerms );
+	pOnto->TermFinder( Genes, vecsTerms, true, true, false, dP );
 	sort( vecsTerms.begin( ), vecsTerms.end( ), SSortFind( ) );
 	iSize = sizeof(iSize);
-	for( i = 0; ( i < vecsTerms.size( ) ) && ( vecsTerms[ i ].m_dP <= dP ); ++i ) {
+	for( i = 0; i < vecsTerms.size( ); ++i ) {
 		iSize += (uint32_t)( sizeof(float) + ( 5 * sizeof(uint32_t) ) + 2 +
 			pOnto->GetGloss( vecsTerms[ i ].m_iID ).length( ) +
 			pOnto->GetID( vecsTerms[ i ].m_iID ).length( ) );

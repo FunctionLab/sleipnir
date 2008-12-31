@@ -483,6 +483,7 @@ bool CGenes::Open( std::istream& istm, bool fCreate ) {
 	char	szBuf[ c_iBuffer ];
 	CGene*	pGene;
 	size_t	i, iGene;
+	char*	pc;
 
 	if( istm.rdstate( ) != ios_base::goodbit )
 		return false;
@@ -491,6 +492,8 @@ bool CGenes::Open( std::istream& istm, bool fCreate ) {
 	m_vecpGenes.clear( );
 	while( istm.peek( ) != EOF ) {
 		istm.getline( szBuf, c_iBuffer - 1 );
+		if( pc = strchr( szBuf, '\t' ) )
+			*pc = 0;
 		if( !szBuf[ 0 ] || ( szBuf[ 0 ] == c_cComment ) )
 			continue;
 		if( fCreate )

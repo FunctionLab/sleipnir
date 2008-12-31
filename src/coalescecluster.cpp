@@ -169,16 +169,22 @@ void CCoalesceCluster::CalculateHistograms( const CCoalesceGeneScores& GeneScore
 			if( pHistogramsPot )
 				pHistogramsPot->Add( GeneScores, m_veciPrevGenes[ i ], false ); } }
 
-void CCoalesceCluster::Subtract( CPCL& PCL ) const {
+void CCoalesceCluster::Subtract( CPCL& PCL, const CCoalesceCluster& Pot ) const {
 	set<size_t>::const_iterator	iterGene, iterDataset;
-	size_t						i;
-	float						d;
+	size_t						i, iCondition;
+	float						d, dAve;
 
 	for( iterGene = GetGenes( ).begin( ); iterGene != GetGenes( ).end( ); ++iterGene )
 		for( iterDataset = m_setiDatasets.begin( ); iterDataset != m_setiDatasets.end( ); ++iterDataset )
-			for( i = 0; i < GetConditions( *iterDataset ); ++i )
-				if( !CMeta::IsNaN( d = m_vecdCentroid[ GetCondition( *iterDataset, i ) ] ) )
-					PCL.Get( *iterGene, GetCondition( *iterDataset, i ) ) -= d; }
+			for( i = 0; i < GetConditions( *iterDataset ); ++i ) {
+				iCondition = GetCondition( *iterDataset, i );
+				if( !CMeta::IsNaN( d = m_vecdCentroid[ iCondition ] ) ) {
+					if( CMeta::IsNaN( dAve = Pot.m_vecdCentroid[ iCondition ] ) )
+						dAve = 0;
+					else
+						dAve = ( ( GetGenes( ).size( ) * d ) + ( Pot.GetGenes( ).size( ) * dAve ) ) /
+							( GetGenes( ).size( ) + Pot.GetGenes( ).size( ) );
+					PCL.Get( *iterGene, GetCondition( *iterDataset, i ) ) -= d - dAve; } } }
 
 void CCoalesceCluster::Subtract( CCoalesceGeneScores& GeneScores ) const {
 	set<size_t>::const_iterator			iterGene;
@@ -206,10 +212,10 @@ void CCoalesceClusterImpl::CalculateCentroid( const CPCL& PCL ) {
 				m_vecdCentroid[ i ] += d;
 				m_vecdStdevs[ i ] += d * d; }
 	for( i = 0; i < m_veciCounts.size( ); ++i ) {
-		if( m_veciCounts[ i ] ) {
-			m_vecdCentroid[ i ] /= m_veciCounts[ i ];
-			m_vecdStdevs[ i ] = ( m_vecdStdevs[ i ] / m_veciCounts[ i ] ) - ( m_vecdCentroid[ i ] *
-				m_vecdCentroid[ i ] );
+		if( j = m_veciCounts[ i ] ) {
+			m_vecdCentroid[ i ] /= j;
+			m_vecdStdevs[ i ] = ( m_vecdStdevs[ i ] / ( ( j == 1 ) ? 1 : ( j - 1 ) ) ) -
+				( m_vecdCentroid[ i ] * m_vecdCentroid[ i ] );
 			m_vecdStdevs[ i ] = ( m_vecdStdevs[ i ] < 0 ) ? 0 : sqrt( m_vecdStdevs[ i ] ); }
 		else
 			m_vecdCentroid[ i ] = CMeta::GetNaN( );
@@ -260,7 +266,7 @@ void* CCoalesceClusterImpl::ThreadSelectCondition( void* pData ) {
 				dZ = FLT_MAX;
 				dP = 0; }
 			else {
-				dZ = CStatistics::CohensD( adCluster, adCluster + iCluster, adPot, adPot + iPot );
+				dZ = CStatistics::ZScore( adCluster, adCluster + iCluster, adPot, adPot + iPot );
 				dP = CStatistics::ZTest( dZ, iCluster ) * psData->m_pvecsDatasets->size( ); }
 			if( dP < psData->m_dPValue ) {
 				g_CatSleipnir.info( "CCoalesceClusterImpl::ThreadSelectCondition( %g ) selected condition %d at %g, z=%g",
@@ -297,7 +303,7 @@ void* CCoalesceClusterImpl::ThreadSelectCondition( void* pData ) {
 				if( veciDatasetPot[ iCondition ] )
 					vecdDatasetPot[ iCondition ] /= veciDatasetPot[ iCondition ]; }
 			dP = CStatistics::MultivariateNormalCDF( vecdDatasetCluster, vecdDatasetPot,
-				sDataset.m_psDataset->m_MatSigmaChol );
+				sDataset.m_psDataset->m_MatSigmaChol ) * psData->m_pvecsDatasets->size( );
 			if( dP > 0.5 )
 				dP = 1 - dP;
 			if( dP < psData->m_dPValue ) {
@@ -400,7 +406,7 @@ bool CCoalesceClusterImpl::AddSignificant( const CCoalesceMotifLibrary& Motifs, 
 	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, float dPValue,
 	vector<SMotifMatch>& vecsMotifs ) {
 	size_t									iTypeCluster, iTypePot;
-	double									dP, dAverage, dZ;
+	double									dP, dAveOne, dAverage, dZ;
 	CCoalesceSequencerBase::ESubsequence	eSubsequence;
 
 	dPValue /= Motifs.GetMotifs( );
@@ -419,9 +425,10 @@ bool CCoalesceClusterImpl::AddSignificant( const CCoalesceMotifLibrary& Motifs, 
 				( HistSetPot.GetMembers( ) <= iMotif ) ||
 				!( HistSetCluster.GetTotal( ) && HistSetPot.GetTotal( ) ) )
 				continue;
-			dP = HistSetCluster.CohensD( iMotif, HistSetPot, dAverage, dZ );
+			dP = HistSetCluster.ZScore( iMotif, HistSetPot, dAveOne, dAverage, dZ );
 			if( dP < dPValue ) {
-				SMotifMatch	sMotif( iMotif, strTypeCluster, eSubsequence, (float)dZ, (float)dAverage );
+				SMotifMatch	sMotif( iMotif, strTypeCluster, eSubsequence, (float)dZ, (float)( dAveOne -
+					dAverage ) );
 
 				if( g_CatSleipnir.isInfoEnabled( ) ) {
 					ostringstream	ossm;
@@ -437,7 +444,7 @@ bool CCoalesceClusterImpl::AddSignificant( const CCoalesceMotifLibrary& Motifs, 
 
 				ossm << "CCoalesceClusterImpl::AddSignificant( " << iMotif << ", " << dPValue <<
 					" ) failed at " << dP << ":" << endl << SMotifMatch( iMotif, strTypeCluster, eSubsequence,
-					(float)dZ, (float)dAverage ).Save( &Motifs ) << endl <<
+					(float)dZ, (float)( dAveOne - dAverage ) ).Save( &Motifs ) << endl <<
 					"Cluster	" << HistSetCluster.Save( iMotif ) << endl <<
 					"Pot	" << HistSetPot.Save( iMotif );
 				g_CatSleipnir.debug( ossm.str( ) ); } } }
@@ -555,6 +562,8 @@ bool CCoalesceClusterImpl::IsSignificant( size_t iGene, const CPCL& PCL, const C
 	dP = m_vecdPriors[ iGene ] / ( 1 + exp( ( dBeta * ( dLogPExpressionGivenOut - dLogPExpressionGivenIn ) +
 		( 1 - dBeta ) * ( dLogPMotifsGivenOut - dLogPMotifsGivenIn ) ) /
 		( 0.5f + 2 * pow( 0.5f - dBeta, 2 ) ) ) );
+//	dP = m_vecdPriors[ iGene ] / ( 1 + exp( dLogPExpressionGivenOut - dLogPExpressionGivenIn +
+//		dLogPMotifsGivenOut - dLogPMotifsGivenIn ) );
 
 	g_CatSleipnir.debug( "CCoalesceClusterImpl::IsSignificant( %s ) is %g beta %g, exp. p=%g vs. %g, seq. p=%g vs %g",
 		PCL.GetGene( iGene ).c_str( ), dP, dBeta, dLogPExpressionGivenIn, dLogPExpressionGivenOut,
@@ -841,10 +850,10 @@ bool CCoalesceCluster::Open( const CHierarchy& Hierarchy, const vector<CCoalesce
 
 	Clear( );
 	for( iterItem = mapiiGenes.begin( ); iterItem != mapiiGenes.end( ); ++iterItem )
-		if( ( (float)iterItem->second / iClusters ) > dFraction )
+		if( ( (float)iterItem->second / iClusters ) >= dFraction )
 			m_setiGenes.insert( iterItem->first );
 	for( iterItem = mapiiDatasets.begin( ); iterItem != mapiiDatasets.end( ); ++iterItem )
-//		if( ( (float)iterItem->second / iClusters ) > dFraction )
+//		if( ( (float)iterItem->second / iClusters ) >= dFraction )
 			m_setiDatasets.insert( iterItem->first );
 	if( !pMotifs )
 		return true;

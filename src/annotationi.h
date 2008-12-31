@@ -75,26 +75,67 @@ protected:
 		size_t			m_iLine;
 	};
 
-	COntologyImpl( const std::string& );
-	~COntologyImpl( );
+	COntologyImpl( const std::string& strID ) : m_strID(strID), m_iNodes(0), m_aNodes(NULL) { }
+
+	~COntologyImpl( ) {
+
+		Reset( ); }
 
 	size_t GetNode( const std::string& ) const;
 	bool IsAnnotated( size_t, const CGene&, bool ) const;
-	size_t GetNodes( ) const;
-	size_t GetParents( size_t ) const;
-	size_t GetParent( size_t, size_t ) const;
-	size_t GetChildren( size_t ) const;
-	size_t GetChild( size_t, size_t ) const;
-	size_t GetGenes( size_t, bool ) const;
 	const CGene& GetGene( size_t, size_t ) const;
-	const std::string& GetID( size_t ) const;
-	const std::string& GetID( ) const;
-	const std::string& GetGloss( size_t ) const;
 	void GetGeneNames( std::vector<std::string>& ) const;
 	void Reset( );
-	void CollectGenes( size_t ) const;
 	void CollectGenes( size_t, TSetPGenes& );
-	void TermFinder( const CGenes&, std::vector<STermFound>&, bool, bool, bool, const CGenes* ) const;
+	void TermFinder( const CGenes&, std::vector<STermFound>&, bool, bool, bool, float, const CGenes* ) const;
+
+	size_t GetNodes( ) const {
+
+		return m_iNodes; }
+
+	size_t GetParents( size_t iNode ) const {
+
+		return m_aNodes[ iNode ].m_iParents; }
+
+	size_t GetParent( size_t iNode, size_t iParent ) const {
+
+		return m_aNodes[ iNode ].m_aiParents[ iParent ]; }
+
+	size_t GetChildren( size_t iNode ) const {
+
+		return m_aNodes[ iNode ].m_iChildren; }
+
+	size_t GetChild( size_t iNode, size_t iChild ) const {
+
+		return m_aNodes[ iNode ].m_aiChildren[ iChild ]; }
+
+	size_t GetGenes( size_t iNode, bool fKids ) const {
+		size_t	iRet;
+
+		iRet = m_aNodes[ iNode ].m_iGenes;
+		if( fKids ) {
+			CollectGenes( iNode );
+			iRet += m_aNodes[ iNode ].m_iCacheGenes; }
+
+		return iRet; }
+
+	const std::string& COntologyImpl::GetID( ) const {
+
+		return m_strID; }
+
+	const std::string& COntologyImpl::GetID( size_t iNode ) const {
+
+		return m_aNodes[ iNode ].m_strID; }
+
+	const std::string& COntologyImpl::GetGloss( size_t iNode ) const {
+
+		return m_aNodes[ iNode ].m_strGloss; }
+
+	void CollectGenes( size_t iNode ) const {
+		TSetPGenes	setpGenes;
+
+		if( m_aNodes[ iNode ].m_iCacheGenes == -1 )
+			((COntologyImpl*)this)->CollectGenes( iNode, setpGenes ); }
 
 	const IOntology*	m_pOntology;
 	std::string			m_strID;

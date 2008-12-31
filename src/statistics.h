@@ -417,7 +417,8 @@ public:
 			*pdAverage = dAveOne;
 		dStd = ( iOne || iTwo ) ? sqrt( ( ( dVarOne + dVarTwo ) / ( iOne + iTwo ) ) - ( dAve * dAve ) ) : 0;
 
-		return ( dStd ? ( ( dAveOne - dAve ) / dStd ) : 0 ); }
+		return ( dStd ? ( ( dAveOne - dAve ) / dStd ) :
+			( ( dAveOne == dAveTwo ) ? 0 : DBL_MAX ) ); }
 
 	static double ZTest( double dZScore, size_t iN ) {
 

@@ -47,9 +47,8 @@ int main( int iArgs, char** aszArgs ) {
 	set<string>::const_iterator			iterGene;
 	vector<vector<size_t> >				vecveciGenes;
 	int									iRet;
-	size_t								i, j, iClusterOne, iClusterTwo, iGeneOne, iGeneTwo, iOne, iTwo;
+	size_t								i, j, iCluster, iGeneOne, iGeneTwo, iOne, iTwo;
 	CGenes*								pClusterOne;
-	CGenes*								pClusterTwo;
 	float								d, dOne;
 	map<string, size_t>					mapstriGenes;
 	map<string, size_t>::const_iterator	iterIndex;
@@ -101,12 +100,12 @@ int main( int iArgs, char** aszArgs ) {
 				iterIndex->second; }
 
 	if( sArgs.counts_flag )
-		for( iClusterOne = 0; iClusterOne < vecpClusters.size( ); ++iClusterOne ) {
-			const vector<size_t>&	veciOne	= vecveciGenes[ iClusterOne ];
+		for( iCluster = 0; iCluster < vecpClusters.size( ); ++iCluster ) {
+			const vector<size_t>&	veciOne	= vecveciGenes[ iCluster ];
 
-			cerr << "Processing cluster " << iClusterOne << "/" << vecpClusters.size( ) << endl;
-			pClusterOne = vecpClusters[ iClusterOne ];
-			dOne = vecdWeights[ iClusterOne ];
+			cerr << "Processing cluster " << iCluster << "/" << vecpClusters.size( ) << endl;
+			pClusterOne = vecpClusters[ iCluster ];
+			dOne = vecdWeights[ iCluster ];
 			for( iGeneOne = 0; iGeneOne < veciOne.size( ); ++iGeneOne ) {
 				iOne = veciOne[ iGeneOne ];
 				for( iGeneTwo = ( iGeneOne + 1 ); iGeneTwo < veciOne.size( ); ++iGeneTwo ) {
@@ -115,27 +114,35 @@ int main( int iArgs, char** aszArgs ) {
 					iTwo = veciOne[ iGeneTwo ];
 					d = Dat.Get( iOne, iTwo );
 					Dat.Set( iOne, iTwo, ( CMeta::IsNaN( d ) ? 0 : d ) + dOne ); } } }
-	else
-		for( iClusterOne = 0; iClusterOne < vecpClusters.size( ); ++iClusterOne ) {
-			const vector<size_t>&	veciOne	= vecveciGenes[ iClusterOne ];
+	else {
+		vector<bool>	vecfClustered;
 
-			cerr << "Processing cluster " << iClusterOne << "/" << vecpClusters.size( ) << endl;
-			pClusterOne = vecpClusters[ iClusterOne ];
-			dOne = vecdWeights[ iClusterOne ];
+		vecfClustered.resize( Dat.GetGenes( ) );
+		for( iGeneOne = 0; iGeneOne < vecfClustered.size( ); ++iGeneOne ) {
+			const string&	strGene	= Dat.GetGene( iGeneOne );
+
+			for( iCluster = 0; iCluster < vecpClusters.size( ); ++iCluster )
+				if( vecpClusters[ iCluster ]->IsGene( strGene ) ) {
+					vecfClustered[ iGeneOne ] = true;
+					break; } }
+		for( iGeneOne = 0; iGeneOne < Dat.GetGenes( ); ++iGeneOne ) {
+			if( !vecfClustered[ iGeneOne ] )
+				continue;
+			for( iGeneTwo = ( iGeneOne + 1 ); iGeneTwo < Dat.GetGenes( ); ++iGeneTwo )
+				if( vecfClustered[ iGeneTwo ] )
+					Dat.Set( iGeneOne, iGeneTwo, 0 ); }
+		for( iCluster = 0; iCluster < vecpClusters.size( ); ++iCluster ) {
+			const vector<size_t>&	veciOne	= vecveciGenes[ iCluster ];
+
+			cerr << "Processing cluster " << iCluster << "/" << vecpClusters.size( ) << endl;
+			pClusterOne = vecpClusters[ iCluster ];
+			dOne = vecdWeights[ iCluster ];
 			for( iGeneOne = 0; iGeneOne < veciOne.size( ); ++iGeneOne ) {
 				iOne = veciOne[ iGeneOne ];
 				for( iGeneTwo = ( iGeneOne + 1 ); iGeneTwo < veciOne.size( ); ++iGeneTwo ) {
 					iTwo = veciOne[ iGeneTwo ];
 					if( CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) || ( dOne > d ) )
-						Dat.Set( iOne, iTwo, dOne ); }
-				for( iClusterTwo = ( iClusterOne + 1 ); iClusterTwo < vecpClusters.size( ); ++iClusterTwo ) {
-					const vector<size_t>&	veciTwo	= vecveciGenes[ iClusterTwo ];
-
-					pClusterTwo = vecpClusters[ iClusterTwo ];
-					for( iGeneTwo = 0; iGeneTwo < veciTwo.size( ); ++iGeneTwo ) {
-						iTwo = veciTwo[ iGeneTwo ];
-						if( CMeta::IsNaN( Dat.Get( iOne, iTwo ) ) )
-							Dat.Set( iOne, iTwo, 0 ); } } } }
+						Dat.Set( iOne, iTwo, dOne ); } } } }
 
 	Dat.Save( sArgs.output_arg );
 	for( i = 0; i < vecpClusters.size( ); ++i )
