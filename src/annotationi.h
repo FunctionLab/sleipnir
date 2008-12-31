@@ -119,15 +119,15 @@ protected:
 
 		return iRet; }
 
-	const std::string& COntologyImpl::GetID( ) const {
+	const std::string& GetID( ) const {
 
 		return m_strID; }
 
-	const std::string& COntologyImpl::GetID( size_t iNode ) const {
+	const std::string& GetID( size_t iNode ) const {
 
 		return m_aNodes[ iNode ].m_strID; }
 
-	const std::string& COntologyImpl::GetGloss( size_t iNode ) const {
+	const std::string& GetGloss( size_t iNode ) const {
 
 		return m_aNodes[ iNode ].m_strGloss; }
 
