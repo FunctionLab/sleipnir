@@ -404,7 +404,7 @@ bool CPCLImpl::OpenGene( std::istream& istmInput, std::vector<float>& vecdData, 
 				d = CMeta::GetNaN( );
 			if( m_vecstrExperiments.empty( ) )
 				vecdData.push_back( d );
-			else if( ( i = ( iBase + iData ) ) >= vecdData.size( ) )
+			else if( ( i = ( iBase + iData++ ) ) >= vecdData.size( ) )
 				return false;
 			else
 				vecdData[ i ] = d; } }
