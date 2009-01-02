@@ -31,16 +31,14 @@ struct SSortRCs {
 		return ( strOne.length( ) > strTwo.length( ) ); }
 };
 
-void CPST::RemoveRCs( const map<unsigned char, unsigned char>& mapccComplements, float dPenaltyGap,
-	float dPenaltyMismatch, CPST& PSTOut ) const {
+void CPST::RemoveRCs( float dPenaltyGap, float dPenaltyMismatch, CPST& PSTOut ) const {
 	size_t			i;
 	string			str;
 	vector<string>	vecstrAdd;
 	float			dOne, dTwo;
 	int				iOne, iTwo;
 
-	for( i = 0; i < m_sRoot.m_vecsChildren.size( ); ++i )
-		CPSTImpl::RemoveRCs( mapccComplements, m_sRoot.m_vecsChildren[ i ], str, vecstrAdd );
+	CPSTImpl::RemoveRCs( m_sRoot, 1.0f / m_iArity, str, vecstrAdd );
 	if( vecstrAdd.empty( ) )
 		return;
 

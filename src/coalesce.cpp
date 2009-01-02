@@ -274,7 +274,7 @@ bool CCoalesceImpl::CombineMotifs( const CFASTA& FASTA, const vector<size_t>& ve
 			if( ( iterMotifOne->m_iMotif == iterMotifTwo->m_iMotif ) ||
 				!HistsCluster.IsSimilar( m_pMotifs, *iterMotifOne, *iterMotifTwo, m_dPValueMerge ) ||
 				( ( iMotif = m_pMotifs->Merge( iterMotifOne->m_iMotif, iterMotifTwo->m_iMotif,
-				m_dCutoffMerge ) ) == -1 ) )
+				m_dCutoffMerge, false ) ) == -1 ) )
 				continue;
 
 			vecpthdThreads.resize( iThreads );

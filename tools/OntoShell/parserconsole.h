@@ -90,6 +90,7 @@ protected:
 	bool ParseHelp( const std::vector<string>& );
 	bool ParseLs( const std::vector<string>& );
 	bool ParseFind( const std::vector<string>& );
+	bool ParseParentage( const std::vector<string>& );
 	bool ParseShell( const string& ) const;
 	void PrintOntology( const Sleipnir::IOntology*, char ) const;
 	void PrintLocations( const std::vector<SLocation>&, const SArgs& ) const;

@@ -45,17 +45,22 @@ protected:
 		std::vector<SNode>	m_vecsChildren;
 	};
 
-	static void RemoveRCs( const std::map<unsigned char, unsigned char>& mapccComplements, const SNode& sNode,
-		std::string& strSeq, std::vector<std::string>& vecstrOut ) {
+	static void RemoveRCs( const SNode& sNode, float dCutoff, std::string& strSeq,
+		std::vector<std::string>& vecstrOut ) {
 		size_t	i;
 
-		strSeq.push_back( sNode.m_cCharacter );
-		if( sNode.m_vecsChildren.empty( ) )
+		if( sNode.m_vecsChildren.empty( ) ) {
 			vecstrOut.push_back( strSeq );
-		else
-			for( i = 0; i < sNode.m_vecsChildren.size( ); ++i )
-				RemoveRCs( mapccComplements, sNode.m_vecsChildren[ i ], strSeq, vecstrOut );
-		strSeq.resize( strSeq.size( ) - 1 ); }
+			return; }
+
+		for( i = 0; i < sNode.m_vecsChildren.size( ); ++i ) {
+			const SNode&	sChild	= sNode.m_vecsChildren[ i ];
+
+			if( ( (float)sChild.m_iCount / sNode.m_iTotal ) < dCutoff )
+				continue;
+			strSeq.push_back( sChild.m_cCharacter );
+			RemoveRCs( sChild, dCutoff, strSeq, vecstrOut );
+			strSeq.resize( strSeq.size( ) - 1 ); } }
 
 	static std::string GetMotif( const SNode& sNode ) {
 		std::ostringstream	ossm;
@@ -269,7 +274,39 @@ protected:
 				Align( sChildThem, iDepth, iOffset, sChildUs, iBest, iCur ); } }
 		iOut = iBest; }
 
+
+	static void Integrate( const SNode& sNode, size_t& iSum ) {
+		size_t	i;
+
+		iSum += sNode.m_iTotal;
+		for( i = 0; i < sNode.m_vecsChildren.size( ); ++i )
+			Integrate( sNode.m_vecsChildren[ i ], iSum ); }
+
+	static bool Simplify( float dMinFrequency, SNode& sNode ) {
+		size_t		i;
+		uint16_t	iTotal;
+
+		iTotal = sNode.m_iTotal;
+		sNode.m_iTotal = 0;
+		for( i = 0; i < sNode.m_vecsChildren.size( ); ++i ) {
+			SNode&	sChild	= sNode.m_vecsChildren[ i ];
+
+			if( ( (float)sChild.m_iCount / iTotal ) < dMinFrequency )
+				sNode.m_vecsChildren.erase( sNode.m_vecsChildren.begin( ) + i-- );
+			else {
+				if( !Simplify( dMinFrequency, sChild ) )
+					return false;
+				sNode.m_iTotal += ( sChild.m_iCount = max( 1, (uint16_t)( sChild.m_iCount *
+					dMinFrequency ) ) ); } }
+
+		return true; }
+
 	CPSTImpl( size_t iArity ) : m_iDepth(0), m_iArity(iArity) { }
+
+	void Clear( ) {
+
+		m_iDepth = m_sRoot.m_iTotal = m_sRoot.m_iCount = 0;
+		m_sRoot.m_vecsChildren.clear( ); }
 
 	float GetMatch( const std::string& strTarget, const SNode& sNode, size_t iOffset,
 		size_t& iMatched ) const {
@@ -303,7 +340,7 @@ protected:
 		return 1; }
 
 	bool GetPWM( const SNode& sNode, size_t iDepth, std::map<unsigned char, size_t>& mapciCharacters,
-		CFullMatrix<size_t>& MatPWM ) const {
+		CFullMatrix<uint16_t>& MatPWM ) const {
 		size_t											i, iChar;
 		std::map<unsigned char, size_t>::const_iterator	iterChar;
 

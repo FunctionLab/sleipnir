@@ -178,7 +178,15 @@ uint32_t SMotifMatch::Open( const CHierarchy& Hier, const vector<SMotifMatch>& v
 
 	return ( ( ( ( iLeft = Open( Hier.Get( false ), vecsMotifs, Motifs, iCount ) ) == -1 ) ||
 		( ( iRight = Open( Hier.Get( true ), vecsMotifs, Motifs, iCount ) ) == -1 ) ) ? -1 :
-		( m_iMotif = Motifs.Merge( iLeft, iRight, FLT_MAX ) ) ); }
+		( m_iMotif = Motifs.Merge( iLeft, iRight, FLT_MAX, true ) ) ); }
+
+uint32_t SMotifMatch::Open( const SMotifMatch& sOne, const SMotifMatch& sTwo,
+	CCoalesceMotifLibrary& Motifs ) {
+
+	m_eSubsequence = sOne.m_eSubsequence;
+	m_strType = sOne.m_strType;
+	m_dZ = ( sOne.m_dZ + sTwo.m_dZ ) / 2;
+	return ( m_iMotif = Motifs.Merge( sOne.m_iMotif, sTwo.m_iMotif, FLT_MAX, true ) ); }
 
 string SMotifMatch::Save( const CCoalesceMotifLibrary* pMotifs, bool fPWM, float dCutoffPWMs,
 	float dPenaltyGap, float dPenaltyMismatch, bool fNoRCs ) const {

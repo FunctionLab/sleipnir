@@ -6,7 +6,7 @@ section "Main"
 option	"type"		t	"Output data file type"
 						values="pcl","dat","dab","module"	default="pcl"
 option	"method"	m	"Combination method"
-						values="min","max","mean","gmean","hmean"	default="mean"
+						values="min","max","mean","gmean","hmean","sum"	default="mean"
 option	"output"	o	"Output file"
 						string	typestr="filename"
 

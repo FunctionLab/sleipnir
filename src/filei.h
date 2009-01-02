@@ -30,8 +30,6 @@ class CFileImpl {
 protected:
 	static const size_t c_iBufferSize	= 2097152;
 
-	static bool IsNewline( char );
-
 	static void SaveString( std::ostream& ostm, const std::string& str ) {
 		uint32_t	iLength;
 
@@ -45,6 +43,10 @@ protected:
 		istm.read( (char*)&iLength, sizeof(iLength) );
 		str.resize( iLength );
 		istm.read( &str[ 0 ], iLength ); }
+
+	static bool IsNewline( char c ) {
+
+		return ( ( c == '\n' ) || ( c == '\r' ) ); }
 };
 
 }

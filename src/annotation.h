@@ -210,6 +210,8 @@ public:
 	 * Requested child must be less than IOntology::GetChildren.
 	 */
 	virtual size_t GetChild( size_t iTerm, size_t iChild ) const = 0;
+	virtual bool GetParents( size_t iTerm, std::set<size_t>& setiParents ) const = 0;
+	virtual bool GetChildren( size_t iTerm, std::set<size_t>& setiChildren ) const = 0;
 	/*!
 	 * \brief
 	 * Returns the number of genes annotated to or (optionally) below this term.
@@ -387,6 +389,14 @@ public:
 	const CGene& GetGene( size_t iTerm, size_t iGene ) const {
 
 		return COntologyImpl::GetGene( iTerm, iGene ); }
+
+	bool GetParents( size_t iTerm, std::set<size_t>& setiParents ) const {
+
+		return COntologyImpl::GetParents( iTerm, setiParents ); }
+
+	bool GetChildren( size_t iTerm, std::set<size_t>& setiChildren ) const {
+
+		return COntologyImpl::GetChildren( iTerm, setiChildren ); }
 };
 
 /*!
@@ -481,6 +491,14 @@ public:
 	const CGene& GetGene( size_t iTerm, size_t iGene ) const {
 
 		return COntologyImpl::GetGene( iTerm, iGene ); }
+
+	bool GetParents( size_t iTerm, std::set<size_t>& setiParents ) const {
+
+		return COntologyImpl::GetParents( iTerm, setiParents ); }
+
+	bool GetChildren( size_t iTerm, std::set<size_t>& setiChildren ) const {
+
+		return COntologyImpl::GetChildren( iTerm, setiChildren ); }
 };
 
 /*!
@@ -553,6 +571,14 @@ public:
 	const CGene& GetGene( size_t iTerm, size_t iGene ) const {
 
 		return COntologyImpl::GetGene( iTerm, iGene ); }
+
+	bool GetParents( size_t iTerm, std::set<size_t>& setiParents ) const {
+
+		return COntologyImpl::GetParents( iTerm, setiParents ); }
+
+	bool GetChildren( size_t iTerm, std::set<size_t>& setiChildren ) const {
+
+		return COntologyImpl::GetChildren( iTerm, setiChildren ); }
 };
 
 /*!
@@ -658,6 +684,14 @@ public:
 	const std::string& GetSlim( size_t iSlim ) const {
 
 		return m_vecstrSlims[ iSlim ]; }
+
+	size_t GetNodes( size_t iSlim ) const {
+
+		return m_vecveciTerms[ iSlim ].size( ); }
+
+	size_t GetNode( size_t iSlim, size_t iTerm ) const {
+
+		return m_vecveciTerms[ iSlim ][ iTerm ]; }
 };
 
 }

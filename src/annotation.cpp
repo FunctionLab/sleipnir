@@ -96,27 +96,32 @@ bool COntologyImpl::IsAnnotated( size_t iNode, const CGene& Gene, bool fKids ) c
 	return false; }
 
 void COntologyImpl::CollectGenes( size_t iNode, TSetPGenes& setpGenes ) {
+	SNode&						sNode	= m_aNodes[ iNode ];
 	size_t						i;
 	TSetPGenes					setpKids;
 	TSetPGenes::const_iterator	iterGenes;
 
-	if( m_aNodes[ iNode ].m_iCacheGenes != -1 ) {
-		for( i = 0; i < m_aNodes[ iNode ].m_iGenes; ++i )
-			setpGenes.insert( m_aNodes[ iNode ].m_apGenes[ i ] );
-		for( i = 0; i < m_aNodes[ iNode ].m_iCacheGenes; ++i )
-			setpGenes.insert( m_aNodes[ iNode ].m_apCacheGenes[ i ] );
+	if( sNode.m_iCacheGenes != -1 ) {
+		for( i = 0; i < sNode.m_iGenes; ++i )
+			setpGenes.insert( sNode.m_apGenes[ i ] );
+		for( i = 0; i < sNode.m_iCacheGenes; ++i )
+			setpGenes.insert( sNode.m_apCacheGenes[ i ] );
 		return; }
 
-	for( i = 0; i < m_aNodes[ iNode ].m_iGenes; ++i )
-		setpGenes.insert( m_aNodes[ iNode ].m_apGenes[ i ] );
-	for( i = 0; i < m_aNodes[ iNode ].m_iChildren; ++i )
-		CollectGenes( m_aNodes[ iNode ].m_aiChildren[ i ], setpKids );
-	if( m_aNodes[ iNode ].m_iCacheGenes = setpKids.size( ) ) {
-		m_aNodes[ iNode ].m_apCacheGenes = new const CGene*[ setpKids.size( ) ];
-		for( i = 0,iterGenes = setpKids.begin( ); iterGenes != setpKids.end( );
-			++i,++iterGenes ) {
-			m_aNodes[ iNode ].m_apCacheGenes[ i ] = *iterGenes;
-			setpGenes.insert( *iterGenes ); } } }
+	for( i = 0; i < sNode.m_iGenes; ++i )
+		setpGenes.insert( sNode.m_apGenes[ i ] );
+	for( i = 0; i < sNode.m_iChildren; ++i )
+		CollectGenes( sNode.m_aiChildren[ i ], setpKids );
+	sNode.m_iCacheGenes = 0;
+	for( iterGenes = setpKids.begin( ); iterGenes != setpKids.end( ); ++iterGenes )
+		if( setpGenes.find( *iterGenes ) == setpGenes.end( ) )
+			sNode.m_iCacheGenes++;
+	if( sNode.m_iCacheGenes ) {
+		sNode.m_apCacheGenes = new const CGene*[ sNode.m_iCacheGenes ];
+		for( i = 0,iterGenes = setpKids.begin( ); iterGenes != setpKids.end( ); ++iterGenes )
+			if( setpGenes.find( *iterGenes ) == setpGenes.end( ) ) {
+				sNode.m_apCacheGenes[ i++ ] = *iterGenes;
+				setpGenes.insert( *iterGenes ); } } }
 
 size_t COntologyImpl::GetNode( const std::string& strID ) const {
 	TMapStrI::const_iterator	iterNode;

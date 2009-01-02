@@ -327,7 +327,7 @@ void CPCL::Open( const CPCL& PCL ) {
  */
 bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 	vector<float>	vecdData;
-	size_t			i, j, k;
+	size_t			i;
 	char*			acBuf;
 	bool			fRet;
 
@@ -347,9 +347,8 @@ bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 				break; }
 		if( fRet ) {
 			m_Data.Initialize( GetGenes( ), GetExperiments( ) );
-			for( k = i = 0; ( k < vecdData.size( ) ) && ( i < m_Data.GetRows( ) ); ++i )
-				for( j = 0; j < m_Data.GetColumns( ); ++j )
-					m_Data.Set( i, j, vecdData[ k++ ] ); } }
+			for( i = 0; i < m_Data.GetRows( ); ++i )
+				m_Data.Set( i, &vecdData[ i * m_Data.GetColumns( ) ] ); } }
 	delete[] acBuf;
 
 	return fRet; }
@@ -371,37 +370,50 @@ bool CPCLImpl::OpenExperiments( std::istream& istmInput, size_t iFeatures, char*
 			m_vecstrFeatures.push_back( strToken );
 		else
 			m_vecstrExperiments.push_back( strToken );
-	if( !iToken )
+	if( m_vecstrExperiments.empty( ) )
 		g_CatSleipnir.error( "CPCLImpl::OpenExperiments( %d ) found no experiments", iFeatures );
 
-	return !!iToken; }
+	return !m_vecstrExperiments.empty( ); }
 
 bool CPCLImpl::OpenGene( std::istream& istmInput, std::vector<float>& vecdData, char* acLine, size_t iLine ) {
 	const char*	pc;
 	char*		pcEnd;
 	string		strToken;
-	size_t		iToken, iData;
+	size_t		iToken, iData, iBase, i;
 	float		d;
 
+	iBase = vecdData.size( );
 	istmInput.getline( acLine, iLine - 1 );
+	if( ( strToken = OpenToken( acLine ) ).empty( ) )
+		return false;
+	if( strToken == "EWEIGHT" )
+		return true;
+	if( !m_vecstrExperiments.empty( ) )
+		vecdData.resize( vecdData.size( ) + m_vecstrExperiments.size( ) );
 	for( iData = iToken = 0,pc = acLine; ( strToken = OpenToken( pc, &pc ) ).length( ) || *pc; ++iToken ) {
-		if( strToken == "EWEIGHT" )
-			return true;
 		if( !iToken ) {
 			m_mapstriGenes[ strToken ] = m_vecstrGenes.size( );
 			m_vecstrGenes.push_back( strToken ); }
 		else if( iToken < m_vecstrFeatures.size( ) )
 			m_vecvecstrFeatures[ iToken - 1 ].push_back( strToken );
+		else if( !m_vecstrExperiments.empty( ) && ( iData >= m_vecstrExperiments.size( ) ) )
+			return false;
 		else {
-			iData++;
 			d = (float)strtod( strToken.c_str( ), &pcEnd );
-			vecdData.push_back( ( !pcEnd || ( pcEnd == strToken.c_str( ) ) ) ? CMeta::GetNaN( ) : d ); } }
+			if( !pcEnd || ( pcEnd == strToken.c_str( ) ) )
+				d = CMeta::GetNaN( );
+			if( m_vecstrExperiments.empty( ) )
+				vecdData.push_back( d );
+			else if( ( i = ( iBase + iData ) ) >= vecdData.size( ) )
+				return false;
+			else
+				vecdData[ i ] = d; } }
 
 	if( m_vecstrExperiments.empty( ) )
 		m_vecstrExperiments.resize( vecdData.size( ) );
 	else
-		while( iData++ < m_vecstrExperiments.size( ) )
-			vecdData.push_back( CMeta::GetNaN( ) );
+		while( iData < m_vecstrExperiments.size( ) )
+			vecdData[ iBase + iData++ ] = CMeta::GetNaN( );
 
 	return !!iToken; }
 

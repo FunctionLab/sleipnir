@@ -27,6 +27,7 @@
 #include "halfmatrix.h"
 #include "statistics.h"
 #include "clusthierarchical.h"
+#include "pst.h"
 
 namespace Sleipnir {
 
@@ -267,7 +268,7 @@ void* CCoalesceClusterImpl::ThreadSelectCondition( void* pData ) {
 				dP = 0; }
 			else {
 				dZ = CStatistics::ZScore( adCluster, adCluster + iCluster, adPot, adPot + iPot );
-				dP = CStatistics::ZTest( dZ, iCluster ) * psData->m_pvecsDatasets->size( ); }
+				dP = CStatistics::ZTest( dZ, min( iCluster, iPot ) ) * psData->m_pvecsDatasets->size( ); }
 			if( dP < psData->m_dPValue ) {
 				g_CatSleipnir.info( "CCoalesceClusterImpl::ThreadSelectCondition( %g ) selected condition %d at %g, z=%g",
 					psData->m_dPValue, iCondition, dP, dZ );
@@ -835,9 +836,10 @@ size_t CCoalesceCluster::Open( const string& strPCL, size_t iSkip, const CPCL& P
 	return PCLCluster.GetExperiments( ); }
 
 bool CCoalesceCluster::Open( const CHierarchy& Hierarchy, const vector<CCoalesceCluster>& vecClusters,
-	const vector<string>& vecstrClusters, float dFraction, float dCutoff, CCoalesceMotifLibrary* pMotifs ) {
+	const vector<string>& vecstrClusters, float dFraction, float dCutoff, size_t iCutoff,
+	CCoalesceMotifLibrary* pMotifs ) {
 	map<size_t, size_t>						mapiiGenes, mapiiDatasets;
-	size_t									i, j, k, iClusters;
+	size_t									i, iClusters;
 	map<size_t, size_t>::const_iterator		iterItem;
 	vector<map<string, set<SMotifMatch> > >	vecmapstrsetsMotifs;
 
@@ -864,23 +866,76 @@ bool CCoalesceCluster::Open( const CHierarchy& Hierarchy, const vector<CCoalesce
 
 		for( iterMotifs = mapstrsetsMotifs.begin( ); iterMotifs != mapstrsetsMotifs.end( ); ++iterMotifs ) {
 			const set<SMotifMatch>&	setsMotifs	= iterMotifs->second;
-			vector<SMotifMatch>		vecsMotifs;
-			CDistanceMatrix			MatSimilarity;
-			CHierarchy*				pHierMotifs;
 
-			vecsMotifs.resize( setsMotifs.size( ) );
-			copy( setsMotifs.begin( ), setsMotifs.end( ), vecsMotifs.begin( ) );
-			MatSimilarity.Initialize( vecsMotifs.size( ) );
-			for( j = 0; j < vecsMotifs.size( ); ++j )
-				for( k = ( j + 1 ); k < vecsMotifs.size( ); ++k )
-					MatSimilarity.Set( j, k, -pMotifs->Align( vecsMotifs[ j ].m_iMotif,
-						vecsMotifs[ k ].m_iMotif, dCutoff ) );
-			if( !( ( pHierMotifs = CClustHierarchical::Cluster( MatSimilarity ) ) &&
-				CCoalesceClusterImpl::Open( *pMotifs, *pHierMotifs, vecsMotifs, dCutoff, m_setsMotifs ) ) )
-				return false;
-			pHierMotifs->Destroy( ); } }
+			if( !( ( setsMotifs.size( ) < iCutoff ) ?
+				CCoalesceClusterImpl::OpenMotifs( setsMotifs, *pMotifs, dCutoff ) :
+				CCoalesceClusterImpl::OpenMotifsHeuristic( setsMotifs, *pMotifs, dCutoff, iCutoff ) ) )
+				return false; } }
 
 	return true; }
+
+bool CCoalesceClusterImpl::OpenMotifsHeuristic( const set<SMotifMatch>& setsMotifs,
+	CCoalesceMotifLibrary& Motifs, float dCutoff, size_t iCutoff ) {
+	vector<SMotifMatch>	vecsMotifs;
+	bool				fDone;
+	size_t				i, iMotifs;
+	set<SMotifMatch>	setsMerged;
+
+	iMotifs = setsMotifs.size( );
+	g_CatSleipnir.notice( "CCoalesceClusterImpl::OpenMotifsHeuristic( %g ) resolving %d motifs", dCutoff,
+		iMotifs );
+
+	vecsMotifs.resize( iMotifs );
+	copy( setsMotifs.begin( ), setsMotifs.end( ), vecsMotifs.begin( ) );
+	do {
+		fDone = true;
+		sort( vecsMotifs.begin( ), vecsMotifs.end( ) );
+		for( i = 0; ( i + 1 ) < vecsMotifs.size( ); ++i ) {
+			SMotifMatch&	sOne	= vecsMotifs[ i ];
+			SMotifMatch&	sTwo	= vecsMotifs[ i + 1 ];
+
+			if( ( sOne.m_iMotif == -1 ) || ( sTwo.m_iMotif == -1 ) )
+				break;
+			if( Motifs.Align( sOne.m_iMotif, sTwo.m_iMotif, dCutoff ) > dCutoff )
+				continue;
+			if( sTwo.Open( sOne, sTwo, Motifs ) == -1 )
+				return false;
+			if( Motifs.GetPST( sTwo.m_iMotif )->Integrate( ) > iCutoff )
+				Motifs.Simplify( sTwo.m_iMotif );
+			fDone = false;
+			iMotifs--;
+			sOne.m_iMotif = -1; } }
+	while( !fDone );
+
+	for( i = 0; i < vecsMotifs.size( ); ++i )
+		if( vecsMotifs[ i ].m_iMotif != -1 )
+			setsMerged.insert( vecsMotifs[ i ] );
+
+	return OpenMotifs( setsMerged, Motifs, dCutoff ); }
+
+bool CCoalesceClusterImpl::OpenMotifs( const set<SMotifMatch>& setsMotifs, CCoalesceMotifLibrary& Motifs,
+	float dCutoff ) {
+	vector<SMotifMatch>	vecsMotifs;
+	CDistanceMatrix		MatSimilarity;
+	CHierarchy*			pHierMotifs;
+	size_t				i, j;
+	bool				fRet;
+
+	g_CatSleipnir.notice( "CCoalesceClusterImpl::OpenMotifs( %g ) resolving %d motifs", dCutoff,
+		setsMotifs.size( ) );
+
+	vecsMotifs.resize( setsMotifs.size( ) );
+	copy( setsMotifs.begin( ), setsMotifs.end( ), vecsMotifs.begin( ) );
+	MatSimilarity.Initialize( vecsMotifs.size( ) );
+	for( i = 0; i < vecsMotifs.size( ); ++i )
+		for( j = ( i + 1 ); j < vecsMotifs.size( ); ++j )
+			MatSimilarity.Set( i, j, -Motifs.Align( vecsMotifs[ i ].m_iMotif,
+				vecsMotifs[ j ].m_iMotif, dCutoff ) );
+	if( !( pHierMotifs = CClustHierarchical::Cluster( MatSimilarity ) ) )
+		return false;
+	fRet = CCoalesceClusterImpl::OpenMotifs( Motifs, *pHierMotifs, vecsMotifs, dCutoff, m_setsMotifs );
+	pHierMotifs->Destroy( );
+	return fRet; }
 
 size_t CCoalesceClusterImpl::Open( const CHierarchy& Hier, const vector<CCoalesceCluster>& vecClusters,
 	const vector<string>& vecstrClusters, map<size_t, size_t>& mapiiGenes, map<size_t, size_t>& mapiiDatasets,
@@ -913,7 +968,7 @@ size_t CCoalesceClusterImpl::Open( const CHierarchy& Hier, const vector<CCoalesc
 
 	return 1; }
 
-bool CCoalesceClusterImpl::Open( CCoalesceMotifLibrary& Motifs, const CHierarchy& Hier,
+bool CCoalesceClusterImpl::OpenMotifs( CCoalesceMotifLibrary& Motifs, const CHierarchy& Hier,
 	const vector<SMotifMatch>& vecsMotifs, float dCutoff, set<SMotifMatch>& setsMotifs ) {
 
 	if( Hier.IsGene( ) || ( -Hier.GetSimilarity( ) < dCutoff ) ) {
@@ -927,8 +982,8 @@ bool CCoalesceClusterImpl::Open( CCoalesceMotifLibrary& Motifs, const CHierarchy
 		setsMotifs.insert( sMotif );
 		return true; }
 
-	return ( Open( Motifs, Hier.Get( false ), vecsMotifs, dCutoff, setsMotifs ) &&
-		Open( Motifs, Hier.Get( true ), vecsMotifs, dCutoff, setsMotifs ) ); }
+	return ( OpenMotifs( Motifs, Hier.Get( false ), vecsMotifs, dCutoff, setsMotifs ) &&
+		OpenMotifs( Motifs, Hier.Get( true ), vecsMotifs, dCutoff, setsMotifs ) ); }
 
 float CCoalesceCluster::GetSimilarity( const CCoalesceCluster& Cluster, size_t iGenes,
 	size_t iDatasets ) const {

@@ -119,7 +119,7 @@ protected:
 	static size_t Open( const CHierarchy&, const std::vector<CCoalesceCluster>&,
 		const std::vector<std::string>&, std::map<size_t, size_t>&, std::map<size_t, size_t>&,
 		TVecMapStrSetSMotifs& );
-	static bool Open( CCoalesceMotifLibrary&, const CHierarchy&, const std::vector<SMotifMatch>&, float,
+	static bool OpenMotifs( CCoalesceMotifLibrary&, const CHierarchy&, const std::vector<SMotifMatch>&, float,
 		std::set<SMotifMatch>& );
 
 	template<class tType>
@@ -182,6 +182,8 @@ protected:
 	bool CalculateProbabilityMotifs( const CCoalesceGeneScores&, size_t, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, bool, size_t, float&, float& ) const;
 	bool SaveCopy( const CPCL&, const std::set<size_t>&, size_t, CPCL&, size_t, bool ) const;
+	bool OpenMotifs( const std::set<SMotifMatch>&, CCoalesceMotifLibrary&, float );
+	bool OpenMotifsHeuristic( const std::set<SMotifMatch>&, CCoalesceMotifLibrary&, float, size_t );
 
 	size_t GetConditions( size_t iDataset ) const {
 

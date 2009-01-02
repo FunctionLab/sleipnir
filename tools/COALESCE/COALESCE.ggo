@@ -65,6 +65,8 @@ option	"min_info"		u	"Uninformative motif threshhold (bits)"
 							double	default="0.45"
 option	"min_zscore"	U	"Minimum motif z-score magnitude"
 							double	default="0.25"
+option	"max_motifs"	x	"Maximum motifs to merge exactly"
+							int	default="2500"
 
 section "Miscellaneous"
 option	"cache"			e	"Cache file for sequence analysis"

@@ -13,6 +13,8 @@ option	"type"		t	"Type of input cluster"
 section "Optional"
 option	"counts"	c	"Calculate pair weight by cocluster frequency"
 						flag	off
+option	"size"		z	"Calculate pair weight by cluster size"
+						flag	off
 option	"skip"		s	"Columns to skip in input PCL"
 						int	default="2"
 option	"verbosity"	v	"Message verbosity"

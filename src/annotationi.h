@@ -137,6 +137,32 @@ protected:
 		if( m_aNodes[ iNode ].m_iCacheGenes == -1 )
 			((COntologyImpl*)this)->CollectGenes( iNode, setpGenes ); }
 
+	bool GetChildren( size_t iNode, std::set<size_t>& setiChildren ) const {
+		size_t	i, iChild;
+
+		if( setiChildren.find( iNode ) != setiChildren.end( ) )
+			return true;
+
+		for( i = 0; i < GetChildren( iNode ); ++i ) {
+			if( !GetChildren( iChild = GetChild( iNode, i ), setiChildren ) )
+				return false;
+			setiChildren.insert( iChild ); }
+
+		return true; }
+
+	bool GetParents( size_t iNode, std::set<size_t>& setiParents ) const {
+		size_t	i, iParent;
+
+		if( setiParents.find( iNode ) != setiParents.end( ) )
+			return true;
+
+		for( i = 0; i < GetParents( iNode ); ++i ) {
+			if( !GetParents( iParent = GetParent( iNode, i ), setiParents ) )
+				return false;
+			setiParents.insert( iParent ); }
+
+		return true; }
+
 	const IOntology*	m_pOntology;
 	std::string			m_strID;
 	size_t				m_iNodes;

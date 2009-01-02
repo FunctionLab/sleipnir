@@ -33,6 +33,7 @@ using namespace std;
 #include "halfmatrix.h"
 #include "meta.h"
 #include "pcl.h"
+#include "pst.h"
 using namespace Sleipnir;
 
 #endif // STDAFX_H

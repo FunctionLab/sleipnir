@@ -25,7 +25,7 @@
 const char	CParser::SLocation::c_szRoot[]	= "/";
 const char	CParser::c_szDot[]				= ".";
 const char	CParser::c_szDotDot[]			= "..";
-const char*	CParser::c_aszParsers[]			= { "cat", "cd", "find", "help", "ls", NULL };
+const char*	CParser::c_aszParsers[]			= { "cat", "cd", "find", "help", "ls", "parentage", NULL };
 
 CParser::SLocation::SLocation( ) : m_pOnto(NULL), m_iNode(-1) { }
 

@@ -21,7 +21,6 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
-#include "pst.h"
 
 enum EFile {
 	EFilePCL,
@@ -174,7 +173,7 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 			&Motifs ) ) == -1 ) ) {
 			cerr << "Could not open: " << strFile << endl;
 			continue; }
-		if( !( vecstrClusters.size( ) % 100 ) )
+		if( !( vecstrClusters.size( ) % 50 ) )
 			cerr << "Opened cluster " << vecstrClusters.size( ) << "..." << endl;
 		vecstrClusters.push_back( strBase ); }
 	if( fFailed )
@@ -203,7 +202,8 @@ bool recluster( const gengetopt_args_info& sArgs, size_t iPairs, CCoalesceMotifL
 
 		cerr << "Creating output cluster " << iID << endl;
 		if( !Cluster.Open( Hier, vecClustersFrom, vecstrClustersFrom,
-			(float)sArgs.fraction_postprocess_arg, (float)sArgs.cutoff_merge_arg, &Motifs ) )
+			(float)sArgs.fraction_postprocess_arg, (float)sArgs.cutoff_merge_arg, sArgs.max_motifs_arg,
+			&Motifs ) )
 			return false;
 		if( Cluster.GetGenes( ).size( ) < (size_t)sArgs.size_minimum_arg ) {
 			cerr << "Cluster too small: " << Cluster.GetGenes( ).size( ) << endl;

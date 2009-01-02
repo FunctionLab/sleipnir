@@ -354,25 +354,21 @@ uint32_t CCoalesceMotifLibraryImpl::MergePSTs( const CPST& PSTOne, const CPST& P
 	return iRet; }
 
 uint32_t CCoalesceMotifLibraryImpl::RemoveRCs( const CPST& PST, float dPenaltyGap, float dPenaltyMismatch ) {
-	CPST*								pPST;
-	uint32_t							iRet;
-	map<unsigned char, unsigned char>	mapccComplements;
-	size_t								i;
+	CPST*		pPST;
+	uint32_t	iRet;
 
-	for( i = 0; c_szBases[ i ]; ++i )
-		mapccComplements[ c_szBases[ i ] ] = c_szComplements[ i ];
 	if( !( pPST = CreatePST( iRet ) ) )
 		return -1;
-	PST.RemoveRCs( mapccComplements, dPenaltyGap, dPenaltyMismatch, *pPST );
+	PST.RemoveRCs( dPenaltyGap, dPenaltyMismatch, *pPST );
 	return iRet; }
 
 string CCoalesceMotifLibrary::GetPWM( uint32_t iMotif, float dCutoffPWMs, float dPenaltyGap,
 	float dPenaltyMismatch, bool fNoRCs ) const {
-	CFullMatrix<size_t>	MatPWM;
-	string				strMotif;
-	size_t				i, j;
-	ostringstream		ossm;
-	float				d;
+	CFullMatrix<uint16_t>	MatPWM;
+	string					strMotif;
+	size_t					i, j;
+	ostringstream			ossm;
+	float					d;
 
 	if( fNoRCs )
 		iMotif = ((CCoalesceMotifLibrary*)this)->RemoveRCs( iMotif, dPenaltyGap, dPenaltyMismatch );
@@ -409,5 +405,10 @@ string CCoalesceMotifLibrary::GetPWM( uint32_t iMotif, float dCutoffPWMs, float 
 		ossm << endl; }
 
 	return ossm.str( ); }
+
+bool CCoalesceMotifLibrary::Simplify( uint32_t iMotif ) const {
+
+	return ( ( GetType( iMotif ) == ETypePST ) ? CCoalesceMotifLibraryImpl::GetPST( iMotif )->Simplify( ) :
+		false ); }
 
 }

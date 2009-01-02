@@ -44,7 +44,7 @@ public:
 	size_t Open( const std::string& strPCL, size_t iSkip, const CPCL& PCL,
 		CCoalesceMotifLibrary* pMotifs = NULL );
 	bool Open( const CHierarchy& Hierarchy, const std::vector<CCoalesceCluster>& vecClusters,
-		const std::vector<std::string>& vecstrClusters, float dFraction, float dCutoff,
+		const std::vector<std::string>& vecstrClusters, float dFraction, float dCutoff, size_t iCutoff,
 		CCoalesceMotifLibrary* pMotifs = NULL );
 	bool Save( const std::string& strDirectory, size_t iID, const CPCL& PCL,
 		const CCoalesceMotifLibrary* pMotifs = NULL ) const;

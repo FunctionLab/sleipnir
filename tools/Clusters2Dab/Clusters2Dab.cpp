@@ -99,6 +99,9 @@ int main( int iArgs, char** aszArgs ) {
 				vecpClusters[ i ]->GetGene( j ).GetName( ) ) ) == mapstriGenes.end( ) ) ? -1 :
 				iterIndex->second; }
 
+	if( sArgs.size_flag )
+		for( iCluster = 0; iCluster < vecpClusters.size( ); ++iCluster )
+			vecdWeights[ iCluster ] = 1.0f / vecpClusters[ iCluster ]->GetGenes( );
 	if( sArgs.counts_flag )
 		for( iCluster = 0; iCluster < vecpClusters.size( ); ++iCluster ) {
 			const vector<size_t>&	veciOne	= vecveciGenes[ iCluster ];

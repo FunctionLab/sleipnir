@@ -33,6 +33,7 @@ static const char			c_szGMean[]			= "gmean";
 static const char			c_szHMean[]			= "hmean";
 static const char			c_szMax[]			= "max";
 static const char			c_szMin[]			= "min";
+static const char			c_szSum[]			= "sum";
 static const char			c_szVote[]			= "vote";
 
 int main( int iArgs, char** aszArgs ) {
@@ -155,7 +156,8 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 			for( k = ( j + 1 ); k < veciGenes.size( ); ++k ) {
 				if( ( ( iTwo = veciGenes[ k ] ) == -1 ) || CMeta::IsNaN( d = DatCur.Get( iOne, iTwo ) ) )
 					continue;
-				if( !strcmp( c_szMean, sArgs.method_arg ) ) {
+				if( !strcmp( c_szMean, sArgs.method_arg ) ||
+					!strcmp( c_szSum, sArgs.method_arg ) ) {
 					DatOut.Get( j, k ) += d;
 					HMatCounts.Get( j, k )++; }
 				else if( !strcmp( c_szGMean, sArgs.method_arg ) ) {

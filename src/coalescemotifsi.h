@@ -35,6 +35,8 @@ protected:
 	static const size_t	c_iShift		= 2; // ceil( log2( strlen( c_szBases ) ) )
 	static const char	c_cSeparator	= '|';
 
+	typedef std::map<std::pair<uint32_t, uint32_t>, uint32_t>	TMapPrIII;
+
 	enum EType {
 		ETypeKMer,
 		ETypeRC,
@@ -106,7 +108,7 @@ protected:
 
 		return false; }
 
-	static bool GetPWM( const std::string& strKMer, CFullMatrix<size_t>& MatPWM ) {
+	static bool GetPWM( const std::string& strKMer, CFullMatrix<uint16_t>& MatPWM ) {
 		size_t	i, j;
 
 		if( ( MatPWM.GetColumns( ) != strlen( c_szBases ) ) || ( MatPWM.GetRows( ) != strKMer.length( ) ) ) {
@@ -129,7 +131,7 @@ protected:
 		std::reverse( strReverse.begin( ), strReverse.end( ) );
 		return GetComplement( strReverse ); }
 
-	static float GetInformation( const CFullMatrix<size_t>& MatPWM ) {
+	static float GetInformation( const CFullMatrix<uint16_t>& MatPWM ) {
 		CDataMatrix			MatProbs;
 		size_t				iPos, iFrom, iTo;
 		std::vector<size_t>	veciTotals;
@@ -224,7 +226,7 @@ protected:
 
 		return ( GetBaseRCs( ) + GetRCs( ) ); }
 
-	const CPST* GetPST( uint32_t iMotif ) const {
+	CPST* GetPST( uint32_t iMotif ) const {
 
 		return m_vecpPSTs[ iMotif - GetBasePSTs( ) ]; }
 
@@ -263,13 +265,13 @@ protected:
 
 		return ID2KMer( (uint32_t)m_veciRC2KMer[ iMotif - GetBaseRCs( ) ], m_iK ); }
 
-	float										m_dPenaltyGap;
-	float										m_dPenaltyMismatch;
-	size_t										m_iK;
-	std::vector<uint32_t>						m_veciKMer2RC;
-	std::vector<uint32_t>						m_veciRC2KMer;
-	std::vector<CPST*>							m_vecpPSTs;
-	std::set<std::pair<uint32_t, uint32_t> >	m_setpriiMerged;
+	float					m_dPenaltyGap;
+	float					m_dPenaltyMismatch;
+	size_t					m_iK;
+	std::vector<uint32_t>	m_veciKMer2RC;
+	std::vector<uint32_t>	m_veciRC2KMer;
+	std::vector<CPST*>		m_vecpPSTs;
+	TMapPrIII				m_mappriiiMerged;
 };
 
 }

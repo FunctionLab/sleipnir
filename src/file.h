@@ -67,11 +67,39 @@ namespace Sleipnir {
 class CFile : protected CFileImpl {
 public:
 	static std::string OpenToken( std::istream& istm );
-	static std::string OpenToken( const char* szInput, const char** pcEnd = NULL );
 
 	static size_t GetBufferSize( ) {
 
 		return c_iBufferSize; }
+
+	/*!
+	 * \brief
+	 * Return the next tab-delimited token from the given string.
+	 * 
+	 * \param szInput
+	 * String from which the token is read.
+	 * 
+	 * \param pcEnd
+	 * If non-null, outputs a pointer to the end of the token in the given string.
+	 * 
+	 * \returns
+	 * String containing all characters up to (but excluding) the next tab or newline.
+	 */
+	static std::string OpenToken( const char* szInput, const char** ppcEnd = NULL ) {
+		const char*	pcStart;
+		const char*	pcEnd;
+		char		c;
+
+		do
+			c = *(szInput++);
+		while( ( c > 0 ) && ( c != '\t' ) && isspace( c ) );
+		pcStart = szInput - 1;
+		for( ; ( c > 0 ) && ( c != '\t' ) && !IsNewline( c ); c = *(szInput++) );
+		pcEnd = szInput;
+		if( ppcEnd )
+			*ppcEnd = pcEnd - ( ( !c || IsNewline( c ) ) ? 1 : 0 );
+
+		return std::string( pcStart, pcEnd - pcStart - 1 ); }
 };
 
 }

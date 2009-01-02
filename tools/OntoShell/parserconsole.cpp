@@ -40,10 +40,11 @@ const char					CParserConsole::c_szHelpHelp[]			= "Commands:\n"
 	"cd [path]                  Display or change current term.\n"
 	"find <filename> [p] [bkg]  Runs term finder on the given gene list.\n"
 	"help [command]             Provides help on command syntax.\n"
-	"ls [path]                  List parents, children, and annotations.";
+	"ls [path]                  List parents, children, and annotations.\n"
+	"parentage <onto> <file>    For terms in onto, list parents in the given set.";
 const CParserConsole::TPFnParser	CParserConsole::c_apfnParsers[]	=
 	{ &CParserConsole::ParseCat, &CParserConsole::ParseCd, &CParserConsole::ParseFind,
-	&CParserConsole::ParseHelp, &CParserConsole::ParseLs, NULL };
+	&CParserConsole::ParseHelp, &CParserConsole::ParseLs, &CParserConsole::ParseParentage, NULL };
 const char*					CParserConsole::c_aszHelps[]			= {
 	"cat [-l] [-r] [path]<gene>+\n\n"
 	"Displays the name, synonyms, and annotations for the given gene(s).\n"
@@ -80,6 +81,12 @@ const char*					CParserConsole::c_aszHelps[]			= {
 	"-g  Genes; deactives gene listings.\n"
 	"-s  Siblings; deactivates parent and child listings.\n"
 	"-r  Recursive; descend into child nodes.",
+	"parentage [-a] <ontology> <filename>\n\n"
+	"Loads an ontology slim from the given filename.  Then, for each term in\n"
+	"the indicated ontology, outputs the zero or more parents of that term that\n"
+	"fall within the given set.  This \"bubbles up\" the ontology to the level\n"
+	"given in the input slim file.  Optional flags are:\n"
+	"-a  All listings; include terms with no parents in the slim.",
 	NULL };
 
 CParserConsole::SArgs::SArgs( ) : m_fGenes(m_afFlags[ 0 ]), m_fLong(m_afFlags[ 1 ]),
@@ -502,4 +509,60 @@ bool CParserConsole::ParseShell( const string& strCmd ) const {
 
 	i = strCmd.find( c_cShell );
 	system( strCmd.substr( i + 1 ).c_str( ) );
+	return true; }
+
+bool CParserConsole::ParseParentage( const vector<string>& vecstrLine ) {
+	string				strOnto, strFile;
+	CSlim				Slim;
+	const IOntology*	pOnto;
+	size_t				i, j;
+	ifstream			ifsm;
+	SArgs				sArgs;
+	vector<bool>		vecfTerms;
+
+	if( vecstrLine.size( ) < 2 )
+		return false;
+	for( i = 1; i < vecstrLine.size( ); ++i ) {
+		if( sArgs.Parse( vecstrLine[ i ] ) )
+			continue;
+		if( strOnto.empty( ) )
+			strOnto = vecstrLine[ i ];
+		else if( strFile.empty( ) )
+			strFile = vecstrLine[ i ]; }
+
+	pOnto = NULL;
+	for( i = 0; i < m_vecpOntologies.size( ); ++i )
+		if( strOnto == m_vecpOntologies[ i ]->GetID( ) ) {
+			pOnto = m_vecpOntologies[ i ];
+			break; }
+	if( !pOnto ) {
+		cout << "parentage, can't find ontology: " << strOnto << endl;
+		return false; }
+
+	ifsm.open( strFile.c_str( ) );
+	if( !( ifsm.is_open( ) && Slim.Open( ifsm, pOnto ) ) ) {
+		cout << "parentage, can't open file: " << strFile << endl;
+		return false; }
+	ifsm.close( );
+
+	vecfTerms.resize( pOnto->GetNodes( ) );
+	for( i = 0; i < Slim.GetSlims( ); ++i )
+		for( j = 0; j < Slim.GetNodes( i ); ++j )
+			vecfTerms[ Slim.GetNode( i, j ) ] = true;
+	for( i = 0; i < pOnto->GetNodes( ); ++i ) {
+		set<size_t>					setiParents;
+		set<size_t>::const_iterator	iterParent;
+		vector<size_t>				veciIntersection;
+
+		pOnto->GetParents( i, setiParents );
+		for( iterParent = setiParents.begin( ); iterParent != setiParents.end( ); ++iterParent )
+			if( vecfTerms[ *iterParent ] )
+				veciIntersection.push_back( *iterParent );
+		if( veciIntersection.empty( ) && !sArgs.m_fZeroes )
+			continue;
+		cout << pOnto->GetID( i );
+		for( j = 0; j < veciIntersection.size( ); ++j )
+			cout << '\t' << pOnto->GetID( veciIntersection[ j ] );
+		cout << endl; }
+
 	return true; }

@@ -66,6 +66,7 @@ public:
 	uint32_t Open( const std::string& strMotif );
 	std::string GetPWM( uint32_t iMotif, float dCutoffPWMs, float dPenaltyGap, float dPenaltyMismatch,
 		bool fNoRCs ) const;
+	bool Simplify( uint32_t iMotif ) const;
 
 	/*!
 	 * \brief
@@ -101,6 +102,10 @@ public:
 	 * \param dCutoff
 	 * Maximum edit distance threshhold for successful merging.
 	 * 
+	 * \param fAllowDuplicates
+	 * If true, duplicate merges will be handled correctly and an ID returned; otherwise -1 is returned in
+	 * such cases.
+	 * 
 	 * \returns
 	 * -1 if the two motifs cannot be merged or have already been merged; the ID of the merged motif
 	 * otherwise, which will always be a PST.
@@ -114,48 +119,67 @@ public:
 	 * \see
 	 * SetPenaltyGap | SetPenaltyMismatch
 	 */
-	uint32_t Merge( uint32_t iOne, uint32_t iTwo, float dCutoff ) {
+	uint32_t Merge( uint32_t iOne, uint32_t iTwo, float dCutoff, bool fAllowDuplicates ) {
 		std::pair<uint32_t, uint32_t>	priiMerged;
+		TMapPrIII::const_iterator		iterMerged;
+		uint32_t						iRet;
 
 		if( iOne == iTwo )
-			return -1;
+			return ( fAllowDuplicates ? iOne : -1 );
 		priiMerged.first = min( iOne, iTwo );
 		priiMerged.second = max( iOne, iTwo );
-		if( m_setpriiMerged.find( priiMerged ) != m_setpriiMerged.end( ) )
-			return -1;
-		m_setpriiMerged.insert( priiMerged );
+		if( ( iterMerged = m_mappriiiMerged.find( priiMerged ) ) != m_mappriiiMerged.end( ) )
+			return ( fAllowDuplicates ? iterMerged->second : -1 );
 
 		switch( GetType( iOne ) ) {
 			case ETypeRC:
 				switch( GetType( iTwo ) ) {
 					case ETypeKMer:
-						return MergeKMerRC( iTwo, iOne, dCutoff );
+						iRet = MergeKMerRC( iTwo, iOne, dCutoff );
+						break;
 
 					case ETypeRC:
-						return MergeRCs( iOne, iTwo, dCutoff );
+						iRet = MergeRCs( iOne, iTwo, dCutoff );
+						break;
 
 					case ETypePST:
-						return MergeRCPST( iOne, *GetPST( iTwo ), dCutoff ); }
+						iRet = MergeRCPST( iOne, *GetPST( iTwo ), dCutoff );
+						break; }
+				break;
 
 			case ETypePST:
 				switch( GetType( iTwo ) ) {
 					case ETypeKMer:
-						return MergeKMerPST( GetMotif( iTwo ), *GetPST( iOne ), dCutoff );
+						iRet = MergeKMerPST( GetMotif( iTwo ), *GetPST( iOne ), dCutoff );
+						break;
 
 					case ETypeRC:
-						return MergeRCPST( iTwo, *GetPST( iOne ), dCutoff );
+						iRet = MergeRCPST( iTwo, *GetPST( iOne ), dCutoff );
+						break;
 
 					case ETypePST:
-						return MergePSTs( *GetPST( iOne ), *GetPST( iTwo ), dCutoff ); } }
+						iRet = MergePSTs( *GetPST( iOne ), *GetPST( iTwo ), dCutoff );
+						break; }
+				break;
 
-		switch( GetType( iTwo ) ) {
-			case ETypeRC:
-				return MergeKMerRC( iOne, iTwo, dCutoff );
+			case ETypeKMer:
+				switch( GetType( iTwo ) ) {
+					case ETypeRC:
+						iRet = MergeKMerRC( iOne, iTwo, dCutoff );
+						break;
 
-			case ETypePST:
-				return MergeKMerPST( GetMotif( iOne ), *GetPST( iTwo ), dCutoff ); }
+					case ETypePST:
+						iRet = MergeKMerPST( GetMotif( iOne ), *GetPST( iTwo ), dCutoff );
+						break;
 
-		return MergeKMers( GetMotif( iOne ), GetMotif( iTwo ), dCutoff ); }
+					case ETypeKMer:
+						iRet = MergeKMers( GetMotif( iOne ), GetMotif( iTwo ), dCutoff );
+						break; }
+				break; }
+
+		if( iRet != -1 )
+			m_mappriiiMerged[ priiMerged ] = iRet;
+		return iRet; }
 
 	uint32_t RemoveRCs( uint32_t iMotif, float dPenaltyGap, float dPenaltyMismatch ) {
 
@@ -354,6 +378,20 @@ public:
 	float GetPenaltyMismatch( ) const {
 
 		return m_dPenaltyMismatch; }
+
+	/*!
+	 * \brief
+	 * Returns the CPST corresponding to the given motif ID.
+	 * 
+	 * \param iMotif
+	 * Motif ID of PST to retrieve.
+	 * 
+	 * \returns
+	 * CPST corresponding to the given most ID, or null if none.
+	 */
+	const CPST* GetPST( uint32_t iMotif ) const {
+
+		return ( ( GetType( iMotif ) == ETypePST ) ? CCoalesceMotifLibraryImpl::GetPST( iMotif ) : NULL ); }
 };
 
 }

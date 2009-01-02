@@ -63,8 +63,7 @@ public:
 	 */
 	CPST( size_t iArity ) : CPSTImpl(iArity) { }
 
-	void RemoveRCs( const std::map<unsigned char, unsigned char>& mapccComplements, float dPenaltyGap,
-		float dPenaltyMismatch, CPST& PSTOut ) const;
+	void RemoveRCs( float dPenaltyGap, float dPenaltyMismatch, CPST& PSTOut ) const;
 
 	/*!
 	 * \brief
@@ -293,7 +292,7 @@ public:
 
 		return ( ( m_iDepth = CPSTImpl::Open( strPST, m_sRoot ) ) != -1 ); }
 
-	bool GetPWM( CFullMatrix<size_t>& MatPWM, const char* szSymbols ) const {
+	bool GetPWM( CFullMatrix<uint16_t>& MatPWM, const char* szSymbols ) const {
 		std::map<unsigned char, size_t>					mapciChars;
 		std::vector<size_t>								veciOrder;
 		std::map<unsigned char, size_t>::const_iterator	iterChar;
@@ -313,6 +312,16 @@ public:
 				( mapciChars.size( ) + j++ ) : iterChar->second;
 		CMeta::Permute( MatPWM.Get( ), veciOrder );
 		return true; }
+
+	size_t Integrate( ) const {
+		size_t	iRet;
+
+		CPSTImpl::Integrate( m_sRoot, iRet = 0 );
+		return iRet; }
+
+	bool Simplify( ) {
+
+		return CPSTImpl::Simplify( 1.0f / m_iArity, m_sRoot ); }
 };
 
 }
