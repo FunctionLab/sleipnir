@@ -296,7 +296,7 @@ protected:
 			else {
 				if( !Simplify( dMinFrequency, sChild ) )
 					return false;
-				sNode.m_iTotal += ( sChild.m_iCount = max( 1, (uint16_t)( sChild.m_iCount *
+				sNode.m_iTotal += ( sChild.m_iCount = max( (uint16_t)1, (uint16_t)( sChild.m_iCount *
 					dMinFrequency ) ) ); } }
 
 		return true; }
