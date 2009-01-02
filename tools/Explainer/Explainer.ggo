@@ -13,6 +13,8 @@ option	"count"			k	"Number of pairs to display"
 							int	default="-1"
 option	"positives"		p	"Include only positive pairs"
 							flag	off
+option	"negatives"		P	"Include only negative pairs"
+							flag	off
 option	"everything"	e	"Include pairs without answers"
 							flag	off
 option	"unknowns"		u	"Treatment of unknown genes"

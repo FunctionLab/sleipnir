@@ -126,7 +126,8 @@ int main( int iArgs, char** aszArgs ) {
 				continue;
 			if( !sArgs.everything_flag && ( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
 				CMeta::IsNaN( dAnswer = Answers.Get( iOne, iTwo ) ) ||
-				( sArgs.positives_flag && ( dAnswer <= 0 ) ) ) )
+				( sArgs.positives_flag && ( dAnswer <= 0 ) ) ||
+				( sArgs.negatives_flag && ( dAnswer > 0 ) ) ) )
 				continue;
 			if( ( (float)rand( ) / RAND_MAX ) > sArgs.fraction_arg )
 				continue;

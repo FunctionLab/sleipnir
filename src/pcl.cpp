@@ -811,11 +811,11 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 						dStd += d * d; }
 				if( iCount ) {
 					dAve /= iCount;
-					dStd = sqrt( ( dStd / iCount ) - ( dAve * dAve ) );
-					if( dStd )
-						for( j = 0; j < GetGenes( ); ++j )
-							if( !CMeta::IsNaN( d = Get( j, i ) ) )
-								Set( j, i, (float)( ( d - dAve ) / dStd ) ); } }
+					if( ( dStd = sqrt( ( dStd / iCount ) - ( dAve * dAve ) ) ) <= 0 )
+						dStd = 1;
+					for( j = 0; j < GetGenes( ); ++j )
+						if( !CMeta::IsNaN( d = Get( j, i ) ) )
+							Set( j, i, (float)( ( d - dAve ) / dStd ) ); } }
 			break;
 
 		case ENormalizeMinMax:
