@@ -236,7 +236,7 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 			Sim.Set( i, Dist.Get( i ) ); }
 	for( i = 0; i < Sim.GetSize( ); ++i )
 		for( j = ( i + 1 ); j < Sim.GetSize( ); ++j )
-			if( Sim.Get( i, j ) == -FLT_MAX ) {
+			if( ( ( d = Sim.Get( i, j ) ) == -FLT_MAX ) || CMeta::IsNaN( d ) ) {
 				g_CatSleipnir.error( "CClustHierarchicalImpl::Cluster( ) illegal input value at %d, %d", i,
 					j );
 				return NULL; }

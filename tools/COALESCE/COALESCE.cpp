@@ -31,6 +31,7 @@ enum EFile {
 int main_postprocess( const gengetopt_args_info&, CCoalesceMotifLibrary& );
 bool recluster( const gengetopt_args_info&, size_t, CCoalesceMotifLibrary&, const CHierarchy&,
 	const vector<CCoalesceCluster>&, const vector<string>&, const CPCL&, size_t& );
+bool trim( const gengetopt_args_info&, const CPCL&, vector<CCoalesceCluster>& );
 
 EFile open_pclwig( const char* szFile, size_t iSkip, CFASTA& FASTA, CPCL& PCL ) {
 
@@ -179,6 +180,10 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 	if( fFailed )
 		vecClustersFrom.pop_back( );
 
+	cerr << "Trimming clusters..." << endl;
+	if( !trim( sArgs, PCL, vecClustersFrom ) )
+		return 1;
+
 	cerr << "Calculating cluster similarities..." << endl;
 	MatSim.Initialize( vecClustersFrom.size( ) );
 	for( i = 0; i < MatSim.GetSize( ); ++i )
@@ -209,7 +214,7 @@ bool recluster( const gengetopt_args_info& sArgs, size_t iPairs, CCoalesceMotifL
 			cerr << "Cluster too small: " << Cluster.GetGenes( ).size( ) << endl;
 			return true; }
 
-		Cluster.RemoveMotifs( (float)sArgs.min_zscore_arg );
+		Cluster.RemoveMotifs( Motifs, (float)sArgs.min_zscore_arg );
 		if( sArgs.output_arg )
 			Cluster.Save( sArgs.output_arg, iID, PCL, &Motifs );
 		Cluster.Save( cout, iID, PCL, &Motifs, (float)sArgs.min_info_arg, (float)sArgs.penalty_gap_arg,
@@ -220,3 +225,74 @@ bool recluster( const gengetopt_args_info& sArgs, size_t iPairs, CCoalesceMotifL
 	return ( recluster( sArgs, iPairs, Motifs, Hier.Get( false ), vecClustersFrom, vecstrClustersFrom, PCL,
 		iID ) && recluster( sArgs, iPairs, Motifs, Hier.Get( true ), vecClustersFrom, vecstrClustersFrom,
 		PCL, iID ) ); }
+
+bool trim( const gengetopt_args_info& sArgs, const CPCL& PCL, vector<CCoalesceCluster>& vecClusters ) {
+	vector<size_t>				veciCounts, veciGenes, veciRemove;
+	CHalfMatrix<size_t>			MatCounts;
+	CDistanceMatrix				MatScores;
+	size_t						i, j, iOne, iCluster;
+	float						dAve, dStd, d, dCutoff;
+	vector<float>				vecdScores;
+
+	veciCounts.resize( PCL.GetGenes( ) );
+	MatCounts.Initialize( PCL.GetGenes( ) );
+	MatCounts.Clear( );
+	for( iCluster = 0; iCluster < vecClusters.size( ); ++iCluster ) {
+		const CCoalesceCluster&	Cluster	= vecClusters[ iCluster ];
+
+		veciGenes.resize( Cluster.GetGenes( ).size( ) );
+		copy( Cluster.GetGenes( ).begin( ), Cluster.GetGenes( ).end( ), veciGenes.begin( ) );
+		for( i = 0; i < veciGenes.size( ); ++i ) {
+			veciCounts[ iOne = veciGenes[ i ] ]++;
+			for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
+				MatCounts.Get( iOne, veciGenes[ j ] )++; } }
+	MatScores.Initialize( MatCounts.GetSize( ) );
+	for( i = 0; i < MatScores.GetSize( ); ++i )
+		for( j = ( i + 1 ); j < MatScores.GetSize( ); ++j ) {
+			iOne = MatCounts.Get( i, j );
+			iCluster = veciCounts[ i ] + veciCounts[ j ] - iOne;
+			MatScores.Set( i, j, iCluster ? ( (float)iOne / iCluster ) : CMeta::GetNaN( ) ); }
+
+	dAve = dStd = 0;
+	for( iOne = i = 0; i < MatScores.GetSize( ); ++i )
+		for( j = ( i + 1 ); j < MatScores.GetSize( ); ++j )
+			if( !CMeta::IsNaN( d = MatScores.Get( i, j ) ) ) {
+				iOne++;
+				dAve += d;
+				dStd += d * d; }
+	dAve /= iOne;
+	dStd = sqrt( ( dStd / iOne ) - ( dAve * dAve ) );
+	dCutoff = dAve + ( (float)sArgs.cutoff_trim_arg * dStd );
+	if( sArgs.verbosity_arg >= 6 )
+		cerr << "Cutoff " << dCutoff << " (" << dAve << ',' << dStd << ')' << endl;
+
+	for( iCluster = 0; iCluster < vecClusters.size( ); ++iCluster ) {
+		CCoalesceCluster&	Cluster	= vecClusters[ iCluster ];
+
+		if( sArgs.verbosity_arg >= 6 )
+			cerr << "Trimming cluster " << iCluster << endl;
+		veciGenes.resize( Cluster.GetGenes( ).size( ) );
+		copy( Cluster.GetGenes( ).begin( ), Cluster.GetGenes( ).end( ), veciGenes.begin( ) );
+		vecdScores.resize( veciGenes.size( ) );
+		for( i = 0; i < vecdScores.size( ); ++i ) {
+			iOne = veciGenes[ i ];
+			for( j = ( i + 1 ); j < vecdScores.size( ); ++j ) {
+				d = MatScores.Get( iOne, veciGenes[ j ] );
+				vecdScores[ i ] += d;
+				vecdScores[ j ] += d; } }
+		for( i = 0; i < vecdScores.size( ); ++i )
+			vecdScores[ i ] /= veciGenes.size( ) - 1;
+		if( sArgs.verbosity_arg >= 7 )
+			for( i = 0; i < vecdScores.size( ); ++i )
+				cerr << "Gene " << i << " (" << PCL.GetGene( veciGenes[ i ] ) << ") " << vecdScores[ i ] <<
+					endl;
+
+		veciRemove.clear( );
+		for( i = 0; i < vecdScores.size( ); ++i )
+			if( vecdScores[ i ] < dCutoff ) {
+				if( sArgs.verbosity_arg >= 6 )
+					cerr << "Removing " << PCL.GetGene( veciGenes[ i ] ) << " at " << vecdScores[ i ] << endl;
+				veciRemove.push_back( veciGenes[ i ] ); }
+		Cluster.RemoveGenes( veciRemove ); }
+
+	return true; }

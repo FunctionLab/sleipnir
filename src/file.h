@@ -41,7 +41,7 @@
 	struct dirent*	psEntry;																\
 	struct stat		sStat;																	\
 	pDir = opendir( (strDir).c_str( ) );													\
-	while( psEntry = readdir( pDir ) ) {													\
+	while( pDir && ( psEntry = readdir( pDir ) ) ) {										\
 		stat( ( (strDir) + '/' + psEntry->d_name ).c_str( ), &sStat );						\
 		if( S_ISDIR( sStat.st_mode ) )														\
 			continue;																		\

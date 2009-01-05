@@ -811,8 +811,7 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 						dStd += d * d; }
 				if( iCount ) {
 					dAve /= iCount;
-					if( ( dStd = sqrt( ( dStd / iCount ) - ( dAve * dAve ) ) ) <= 0 )
-						dStd = 1;
+					dStd = ( ( ( dStd / iCount ) - ( dAve * dAve ) ) <= 0 ) ? 1 : sqrt( dStd );
 					for( j = 0; j < GetGenes( ); ++j )
 						if( !CMeta::IsNaN( d = Get( j, i ) ) )
 							Set( j, i, (float)( ( d - dAve ) / dStd ) ); } }

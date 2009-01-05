@@ -390,15 +390,22 @@ string CCoalesceMotifLibrary::GetPWM( uint32_t iMotif, float dCutoffPWMs, float 
 
 	if( dCutoffPWMs ) {
 		d = GetInformation( MatPWM );
+		if( d < dCutoffPWMs ) {
+			if( g_CatSleipnir.isInfoEnabled( ) ) {
+				ostringstream	ossm;
+
+				ossm << "CCoalesceMotifLibrary::GetPWM( " << iMotif << ", " << dCutoffPWMs << ", " <<
+					fNoRCs << " ) rejected (" << d << "):" << endl;
+				MatPWM.Save( ossm, false );
+				g_CatSleipnir.info( ossm.str( ) ); }
+			return ""; }
 		if( g_CatSleipnir.isDebugEnabled( ) ) {
 			ostringstream	ossm;
 
 			ossm << "CCoalesceMotifLibrary::GetPWM( " << iMotif << ", " << dCutoffPWMs << ", " <<
 				fNoRCs << " ) got information (" << d << "):" << endl;
 			MatPWM.Save( ossm, false );
-			g_CatSleipnir.debug( ossm.str( ) ); }
-		if( d < dCutoffPWMs )
-			return ""; }
+			g_CatSleipnir.debug( ossm.str( ) ); } }
 	for( i = 0; i < MatPWM.GetRows( ); ++i ) {
 		for( j = 0; j < MatPWM.GetColumns( ); ++j )
 			ossm << ( j ? "\t" : "" ) << MatPWM.Get( i, j );

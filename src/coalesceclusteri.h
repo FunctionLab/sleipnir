@@ -71,6 +71,7 @@ protected:
 		const CCoalesceCluster*					m_pCluster;
 		const CCoalesceCluster*					m_pPot;
 		const std::vector<size_t>*				m_pveciDatasets;
+		const std::vector<float>*				m_pvecdStdevs;
 		float									m_dBeta;
 		size_t									m_iMinimum;
 		float									m_dProbability;
@@ -161,24 +162,16 @@ protected:
 
 		return sMotif.GetHash( ); }
 
-	static void AdjustProbabilities( float dZ, double& dPIn, double& dPOut ) {
-		double	dPAverage;
-
-		dPAverage = ( dPIn + dPOut ) / 2;
-		dZ = fabs( dZ );
-		dPIn = ( ( dPIn * dZ ) + dPAverage ) / ( dZ + 1 );
-		dPOut = ( ( dPOut * dZ ) + dPAverage ) / ( dZ + 1 ); }
-
 	void Add( size_t, CCoalesceCluster& );
 	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
 	bool AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float,
 		size_t );
 	void CalculateCentroid( const CPCL& );
-	bool IsSignificant( size_t, const CPCL&, const CCoalesceMotifLibrary*, const CCoalesceGeneScores&,
-		const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&, const CCoalesceCluster&,
-		const std::vector<size_t>&, float, size_t, float ) const;
-	bool CalculateProbabilityExpression( size_t, const CPCL&, const CCoalesceCluster&,
-		const std::vector<size_t>&, bool, float&, float& ) const;
+	bool IsSignificant( size_t, const CPCL&, const std::vector<float>&, const CCoalesceMotifLibrary*,
+		const CCoalesceGeneScores&, const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&,
+		const CCoalesceCluster&, const std::vector<size_t>&, float, size_t, float ) const;
+	bool CalculateProbabilityExpression( size_t, const CPCL&, const std::vector<float>&,
+		const CCoalesceCluster&, const std::vector<size_t>&, bool, float&, float& ) const;
 	bool CalculateProbabilityMotifs( const CCoalesceGeneScores&, size_t, const CCoalesceGroupHistograms&,
 		const CCoalesceGroupHistograms&, bool, size_t, float&, float& ) const;
 	bool SaveCopy( const CPCL&, const std::set<size_t>&, size_t, CPCL&, size_t, bool ) const;

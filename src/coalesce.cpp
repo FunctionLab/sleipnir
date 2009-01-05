@@ -369,7 +369,6 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 	for( i = 0; i < m_vecpWiggles.size( ); ++i )
 		sModifiers.Add( m_vecpWiggles[ i ] );
 	PCLCopy.Open( PCL );
-	PCLCopy.Normalize( CPCL::ENormalizeColumn );
 	if( !( InitializeDatasets( PCLCopy ) && InitializeGeneScores( PCLCopy, FASTA, veciPCL2FASTA, sModifiers,
 		GeneScores ) ) )
 		return false;

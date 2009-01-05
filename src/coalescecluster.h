@@ -52,19 +52,7 @@ public:
 		float dCutoffPWMs = 0, float dPenaltyGap = 0, float dPenaltyMismatch = 0, bool fNoRCs = false ) const;
 	float GetSimilarity( const CCoalesceCluster& Cluster, size_t iGenes, size_t iDatasets ) const;
 	void Snapshot( const CCoalesceGeneScores& GeneScores, CCoalesceGroupHistograms& Histograms );
-
-	size_t RemoveMotifs( float dZScore ) {
-		std::set<SMotifMatch>::const_iterator	iterMotif;
-		std::vector<const SMotifMatch*>			vecpsMotifs;
-		size_t									i;
-
-		for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif )
-			if( fabs( iterMotif->m_dZ ) < dZScore )
-				vecpsMotifs.push_back( &*iterMotif );
-		for( i = 0; i < vecpsMotifs.size( ); ++i )
-			m_setsMotifs.erase( *vecpsMotifs[ i ] );
-
-		return vecpsMotifs.size( ); }
+	size_t RemoveMotifs( const CCoalesceMotifLibrary&, float dZScore );
 
 	bool IsConverged( ) {
 
@@ -100,6 +88,12 @@ public:
 	bool IsDataset( size_t iDataset ) const {
 
 		return ( m_setiDatasets.find( iDataset ) != m_setiDatasets.end( ) ); }
+
+	void RemoveGenes( const std::vector<size_t>& veciGenes ) {
+		size_t	i;
+
+		for( i = 0; i < veciGenes.size( ); ++i )
+			m_setiGenes.erase( veciGenes[ i ] ); }
 };
 
 }
