@@ -313,7 +313,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_PERF_PREFIX SVM_PERF_CFLAGS SVM_PERF_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -868,7 +868,7 @@ Optional Packages:
   --with-gengetopt=PATH   prefix of gengetopt installation
   --with-log4cpp=PATH     prefix of log4cpp installation or build directory
   --with-smile=PATH       prefix of SMILE installation
-  --with-svm-light=PATH   prefix of SVM Light installation
+  --with-svm-perf=PATH    prefix of SVM Perf installation
   --with-boost-includes=PATH
                           location of boost header files
   --with-boost-graph-lib=PATH
@@ -6515,7 +6515,7 @@ done
 
 
 ## LOCAL_CHECK_APPEND_PATHS(base path, paths to append, common path to look for, var to set,
-##   action if found in appended path, action if not found)
+##   action if not found)
 ## Look for the common path in one of the appendable paths under the base path.
 ## If found, set the variable to the concatenation of the prefix and the appended path,
 ## not including the common path. If not found use the base dir.
@@ -6527,8 +6527,8 @@ done
 # If the user specifies a path, use it.
 # If the user doesn't specify anything, check for it.
 # While checking, look for a source distribution in extlib/.
-# Gengetopt is required (for tools) only to rebuild cmdline.[ch] if ggo file is more recent.
-# No CFLAGS or LIBS needed.
+# Gengetopt is required (for tools).
+#! CFLAGS assumes headers in same directory as binaries for installed
 
 # Check whether --with-gengetopt or --without-gengetopt was given.
 if test "${with_gengetopt+set}" = set; then
@@ -6547,9 +6547,10 @@ elif test "x$with_gengetopt" != "xcheck"; then
 #  if echo with_gengetopt | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   prog_gengetopt_info=$with_gengetopt
   prog_gengetopt_state=ok
-  qualify_path with_gengetopt    # need full path since we don't know where we will be
+  qualify_path with_gengetopt
   prog_gengetopt=$with_gengetopt
-
+  GENGETOPT_PREFIX=$prog_gengetopt_prefix
+         GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
 
 else
   # Extract the first word of "gengetopt", so it can be a program name with args.
@@ -6599,7 +6600,8 @@ fi
   else
     prog_gengetopt_info="found installed"
     prog_gengetopt_state=ok
-
+    GENGETOPT_PREFIX=$prog_gengetopt_prefix
+         GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
 
   fi
 fi
@@ -6619,39 +6621,17 @@ echo X$prog_gengetopt |
   prog_gengetopt_prefix=$prog_gengetopt_dir/..     # assumes bin and include are at same level
 
 fi
-                                                    if test "x$prog_gengetopt" != "x"; then
-  # see if it the path is really to a source distribution
-
-result=$prog_gengetopt
-found=false
-for p in src; do
-  if test -e "$prog_gengetopt/$p/gengetopt"; then
-    result=$prog_gengetopt/$p
-    found=true
-    break
-  fi
-done
-prog_gengetopt_alt=$result
-if $found; then
-  true   # in case the following is empty
-  PROG_GENGETOPT_ALT=true
-else
-  if ! test -e $result/gengetopt; then
-    true   # in case the following is empty
-
-  fi
-fi
-
-  if test "x$PROG_GENGETOPT_ALT" != "x"; then
-    prog_gengetopt=$prog_gengetopt_alt/gengetopt
-    prog_gengetopt_info=$prog_gengetopt
-  fi
+                                                    ## set CFLAGS and LIBS
+if test "x$GENGETOPT_PREFIX" != "x"; then
+  #! check (in LOCAL_PATH_PROG?)
+  GENGETOPT_CFLAGS=$GENGETOPT_INCLUDES
+  GENGETOPT_LIBS=
 fi
 
 
-#AC_SUBST(GENGETOPT_PREFIX)
-#AC_SUBST(GENGETOPT_CFLAGS)
-#AC_SUBST(GENGETOPT_LIBS)
+
+
+
 
 
 ## LOG4CPP
@@ -6774,10 +6754,7 @@ for p in include; do
   fi
 done
 LOG4CPP_INCLUDE_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
+if ! $found; then
   if ! test -e $result/log4cpp/Category.hh; then
     true   # in case the following is empty
     log4cpp_state=warn
@@ -6795,10 +6772,7 @@ for p in lib src/.libs; do
   fi
 done
 LOG4CPP_LIB_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
+if ! $found; then
   if ! test -e $result/liblog4cpp.a; then
     true   # in case the following is empty
     log4cpp_state=warn
@@ -6932,10 +6906,7 @@ for p in include; do
   fi
 done
 SMILE_INCLUDE_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
+if ! $found; then
   if ! test -e $result/smile.h; then
     true   # in case the following is empty
     smile_state=warn
@@ -6953,10 +6924,7 @@ for p in lib; do
   fi
 done
 SMILE_LIB_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
+if ! $found; then
   if ! test -e $result/libsmile.a; then
     true   # in case the following is empty
     smile_state=warn
@@ -6982,19 +6950,19 @@ fi
 
 
 
-## SVM LIGHT
+## SVM PERF
 # If the user specifies a path, use it.
 # If the user says not to use it, then don't.
 # If the user doesn't specify anything, check for it.
 # While checking, look for a source distribution in extlib/.
-# If none, set NO_SVM_LIGHT=1.
+# If none, set NO_SVM_PERF=1.
 
-# Check whether --with-svm_light or --without-svm_light was given.
-if test "${with_svm_light+set}" = set; then
-  withval="$with_svm_light"
+# Check whether --with-svm_perf or --without-svm_perf was given.
+if test "${with_svm_perf+set}" = set; then
+  withval="$with_svm_perf"
 
 else
-  with_svm_light=check
+  with_svm_perf=check
 fi;
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -7003,24 +6971,24 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-if test "x$with_svm_light" = "xno"; then
-  svm_light_info=NONE
-  svm_light_state=no
+if test "x$with_svm_perf" = "xno"; then
+  svm_perf_info=NONE
+  svm_perf_state=no
   true   # in case not defined or is empty
           cat >>confdefs.h <<\_ACEOF
-#define NO_SVM_LIGHT 1
+#define NO_SVM_PERF 1
 _ACEOF
 
-elif test "x$with_svm_light" != "xcheck"; then
+elif test "x$with_svm_perf" != "xcheck"; then
 # We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
 # if the user does not specify it. That way it is never undefined.
 # That may not be necessary.
-#  if echo with_svm_light | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
-  svm_light_info=$with_svm_light
-  svm_light_state=ok
-  qualify_path with_svm_light
+#  if echo with_svm_perf | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
+  svm_perf_info=$with_svm_perf
+  svm_perf_state=ok
+  qualify_path with_svm_perf
 
-          SVM_LIGHT_PREFIX=$with_svm_light
+          SVM_PERF_PREFIX=$with_svm_perf
 else
   # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
   # empty, however, we get a syntax error. But, we have to be careful,
@@ -7035,8 +7003,8 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 	#include <sys/types.h>
-	 #include "svm_common.h"
-	 #include "svm_learn.h"
+	 #include "svm_struct_api.h"
+	 #include "svm_struct_api_types.h"
 int
 main ()
 {
@@ -7067,8 +7035,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  svm_light_info="found installed"
-     svm_light_state=ok
+  svm_perf_info="found installed"
+     svm_perf_state=ok
 
 
 else
@@ -7082,10 +7050,10 @@ rm -f conftest.err conftest.$ac_objext \
   if $flag; then
     # we also can't have an empty if block...
 #    true
-    svm_light_info="not found"
-    svm_light_state=no
+    svm_perf_info="not found"
+    svm_perf_state=no
     	cat >>confdefs.h <<\_ACEOF
-#define NO_SVM_LIGHT 1
+#define NO_SVM_PERF 1
 _ACEOF
 
   fi
@@ -7097,57 +7065,51 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-if test "x$svm_light_state" != "xno"; then
-  ## set SVM_LIGHT_CFLAGS and SVM_LIGHT_LIBS
-  if test "x$SVM_LIGHT_PREFIX" != "x"; then
+if test "x$svm_perf_state" != "xno"; then
+  ## set SVM_PERF_CFLAGS and SVM_PERF_LIBS
+  if test "x$SVM_PERF_PREFIX" != "x"; then
 
-result=$SVM_LIGHT_PREFIX
+result=$SVM_PERF_PREFIX
 found=false
 for p in include; do
-  if test -e "$SVM_LIGHT_PREFIX/$p/svm_common.h"; then
-    result=$SVM_LIGHT_PREFIX/$p
+  if test -e "$SVM_PERF_PREFIX/$p/svm_struct_api.h"; then
+    result=$SVM_PERF_PREFIX/$p
     found=true
     break
   fi
 done
-SVM_LIGHT_INCLUDE_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
-  if ! test -e $result/svm_common.h; then
+SVM_PERF_INCLUDE_DIR=$result
+if ! $found; then
+  if ! test -e $result/svm_struct_api.h; then
     true   # in case the following is empty
-    svm_light_state=warn
+    svm_perf_state=warn
   fi
 fi
 
 
-result=$SVM_LIGHT_PREFIX
+result=$SVM_PERF_PREFIX
 found=false
 for p in lib; do
-  if test -e "$SVM_LIGHT_PREFIX/$p/libsvmlight.a"; then
-    result=$SVM_LIGHT_PREFIX/$p
+  if test -e "$SVM_PERF_PREFIX/$p/libsvmperf.a"; then
+    result=$SVM_PERF_PREFIX/$p
     found=true
     break
   fi
 done
-SVM_LIGHT_LIB_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
-  if ! test -e $result/libsvmlight.a; then
+SVM_PERF_LIB_DIR=$result
+if ! $found; then
+  if ! test -e $result/libsvmperf.a; then
     true   # in case the following is empty
-    svm_light_state=warn
+    svm_perf_state=warn
   fi
 fi
 
-#    if ! test -f "$SVM_LIGHT_INCLUDE_DIR/svm_common.h"; then svm_light_state=warn; fi
-#    if ! test -f "$SVM_LIGHT_LIB_DIR/libsvmlight.a"; then svm_light_state=warn; fi
-    SVM_LIGHT_CFLAGS="-I$SVM_LIGHT_INCLUDE_DIR"
-    SVM_LIGHT_LIBS="-L$SVM_LIGHT_LIB_DIR"
+#    if ! test -f "$SVM_PERF_INCLUDE_DIR/svm_struct_api.h"; then svm_perf_state=warn; fi
+#    if ! test -f "$SVM_PERF_LIB_DIR/libsvmperf.a"; then svm_perf_state=warn; fi
+    SVM_PERF_CFLAGS="-I$SVM_PERF_INCLUDE_DIR"
+    SVM_PERF_LIBS="-L$SVM_PERF_LIB_DIR"
   fi
-  SVM_LIGHT_LIBS="$SVM_LIGHT_LIBS -lsvmlight"
+  SVM_PERF_LIBS="$SVM_PERF_LIBS -lsvmperf"
 fi
 
 
@@ -7294,10 +7256,7 @@ for p in ..; do
   fi
 done
 BOOST_INCLUDES_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
+if ! $found; then
   if ! test -e $result/boost/config.hpp; then
     true   # in case the following is empty
     boost_state=warn
@@ -7434,10 +7393,7 @@ for p in include; do
   fi
 done
 READLINE_INCLUDE_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
+if ! $found; then
   if ! test -e $result/readline/readline.h; then
     true   # in case the following is empty
     readline_state=warn
@@ -7455,10 +7411,7 @@ for p in lib; do
   fi
 done
 READLINE_LIB_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
+if ! $found; then
   if ! test -e $result/libreadline.a; then
     true   # in case the following is empty
     readline_state=warn
@@ -7650,10 +7603,7 @@ for p in include; do
   fi
 done
 PTHREAD_INCLUDE_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
+if ! $found; then
   if ! test -e $result/pthread.h; then
     true   # in case the following is empty
     pthread_state=warn
@@ -7671,10 +7621,7 @@ for p in lib; do
   fi
 done
 PTHREAD_LIB_DIR=$result
-if $found; then
-  true   # in case the following is empty
-
-else
+if ! $found; then
   if ! test -e $result/libpthread.a; then
     true   # in case the following is empty
     pthread_state=warn
@@ -7739,7 +7686,7 @@ fi
 
 
 
-if test "x$svm_light_state" != "xno"; then
+if test "x$svm_perf_state" != "xno"; then
   WITH_SVM_TOOLS_TRUE=
   WITH_SVM_TOOLS_FALSE='#'
 else
@@ -7778,7 +7725,7 @@ else
 fi
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ac_config_files="$ac_config_files Makefile src/Makefile tools/Makefile tools/Answerer/Makefile tools/Cliquer/Makefile tools/Clusterer/Makefile tools/Clusters2Dab/Makefile tools/COALESCE/Makefile tools/Combiner/Makefile tools/DChecker/Makefile tools/Dat2Dab/Makefile tools/Dat2Graph/Makefile tools/Data2Bnt/Makefile tools/Data2Features/Makefile tools/Data2Sql/Makefile tools/DataDumper/Makefile tools/Distancer/Makefile tools/Explainer/Makefile tools/Funcaeologist/Makefile tools/Funcifier/Makefile tools/Funcographer/Makefile tools/Hubber/Makefile tools/KNNImputer/Makefile tools/Mat2Txt/Makefile tools/MCluster/Makefile tools/Matcher/Makefile tools/MIer/Makefile tools/Normalizer/Makefile tools/Orthologer/Makefile tools/Overlapper/Makefile tools/Randomizer/Makefile tools/Seqs2Ngrams/Makefile tools/Synthesizer/Makefile tools/Txt2Bin/Makefile tools/BNConverter/Makefile tools/BNCreator/Makefile tools/BNEvaluator/Makefile tools/BNFunc/Makefile tools/BNTester/Makefile tools/BNTruster/Makefile tools/BNs2Txt/Makefile tools/BNUnraveler/Makefile tools/BNWeaver/Makefile tools/Contexter/Makefile tools/Counter/Makefile tools/Data2DB/Makefile tools/DSLConverter/Makefile tools/Dab2Dad/Makefile tools/Edges2Posteriors/Makefile tools/MEFIT/Makefile tools/Data2Svm/Makefile tools/SVMer/Makefile tools/OntoShell/Makefile tools/BNServer/Makefile"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ac_config_files="$ac_config_files Makefile src/Makefile tools/Makefile tools/Answerer/Makefile tools/Cliquer/Makefile tools/Clusterer/Makefile tools/Clusters2Dab/Makefile tools/COALESCE/Makefile tools/Combiner/Makefile tools/DChecker/Makefile tools/Dat2Dab/Makefile tools/Dat2Graph/Makefile tools/Data2Bnt/Makefile tools/Data2Features/Makefile tools/Data2Sql/Makefile tools/DataDumper/Makefile tools/Distancer/Makefile tools/Explainer/Makefile tools/Funcaeologist/Makefile tools/Funcifier/Makefile tools/Funcographer/Makefile tools/Hubber/Makefile tools/KNNImputer/Makefile tools/Mat2Txt/Makefile tools/MCluster/Makefile tools/Matcher/Makefile tools/MIer/Makefile tools/Normalizer/Makefile tools/Orthologer/Makefile tools/Overlapper/Makefile tools/PCLPlotter/Makefile tools/Randomizer/Makefile tools/Seqs2Ngrams/Makefile tools/Synthesizer/Makefile tools/Txt2Bin/Makefile tools/BNConverter/Makefile tools/BNCreator/Makefile tools/BNEvaluator/Makefile tools/BNFunc/Makefile tools/BNTester/Makefile tools/BNTruster/Makefile tools/BNs2Txt/Makefile tools/BNUnraveler/Makefile tools/BNWeaver/Makefile tools/Contexter/Makefile tools/Counter/Makefile tools/Data2DB/Makefile tools/DSLConverter/Makefile tools/Dab2Dad/Makefile tools/Edges2Posteriors/Makefile tools/MEFIT/Makefile tools/Data2Svm/Makefile tools/SVMer/Makefile tools/OntoShell/Makefile tools/BNServer/Makefile"
 
 
 
@@ -8422,6 +8369,7 @@ do
   "tools/Normalizer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Normalizer/Makefile" ;;
   "tools/Orthologer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Orthologer/Makefile" ;;
   "tools/Overlapper/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Overlapper/Makefile" ;;
+  "tools/PCLPlotter/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/PCLPlotter/Makefile" ;;
   "tools/Randomizer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Randomizer/Makefile" ;;
   "tools/Seqs2Ngrams/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Seqs2Ngrams/Makefile" ;;
   "tools/Synthesizer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Synthesizer/Makefile" ;;
@@ -8574,15 +8522,18 @@ s,@LIBOBJS@,$LIBOBJS,;t t
 s,@POW_LIB@,$POW_LIB,;t t
 s,@prog_gengetopt@,$prog_gengetopt,;t t
 s,@prog_gengetopt_dir@,$prog_gengetopt_dir,;t t
+s,@GENGETOPT_PREFIX@,$GENGETOPT_PREFIX,;t t
+s,@GENGETOPT_CFLAGS@,$GENGETOPT_CFLAGS,;t t
+s,@GENGETOPT_LIBS@,$GENGETOPT_LIBS,;t t
 s,@LOG4CPP_PREFIX@,$LOG4CPP_PREFIX,;t t
 s,@LOG4CPP_CFLAGS@,$LOG4CPP_CFLAGS,;t t
 s,@LOG4CPP_LIBS@,$LOG4CPP_LIBS,;t t
 s,@SMILE_PREFIX@,$SMILE_PREFIX,;t t
 s,@SMILE_CFLAGS@,$SMILE_CFLAGS,;t t
 s,@SMILE_LIBS@,$SMILE_LIBS,;t t
-s,@SVM_LIGHT_PREFIX@,$SVM_LIGHT_PREFIX,;t t
-s,@SVM_LIGHT_CFLAGS@,$SVM_LIGHT_CFLAGS,;t t
-s,@SVM_LIGHT_LIBS@,$SVM_LIGHT_LIBS,;t t
+s,@SVM_PERF_PREFIX@,$SVM_PERF_PREFIX,;t t
+s,@SVM_PERF_CFLAGS@,$SVM_PERF_CFLAGS,;t t
+s,@SVM_PERF_LIBS@,$SVM_PERF_LIBS,;t t
 s,@BOOST_CFLAGS@,$BOOST_CFLAGS,;t t
 s,@BOOST_LIBS@,$BOOST_LIBS,;t t
 s,@READLINE_PREFIX@,$READLINE_PREFIX,;t t
@@ -9095,7 +9046,7 @@ echo "Dependencies:"
 fi
 echo "  log4cpp         = $log4cpp_info"
 echo "  SMILE           = $smile_info"
-echo "  SVM light       = $svm_light_info"
+echo "  SVM Perf        = $svm_perf_info"
 echo "  pthread         = $pthread_info"
 if $with_tools; then
 echo "Used for tools:"
@@ -9143,19 +9094,19 @@ EOF
 
 fi
 
-if test "x$svm_light_state" = "xno"; then
+if test "x$svm_perf_state" = "xno"; then
   cat << EOF
 
-** BUILDING WITHOUT SVM LIGHT
-SVM light is strongly recommended.
+** BUILDING WITHOUT SVM PERF
+SVM Perf is strongly recommended.
 It is available from http://svmlight.joachims.org/.
 EOF
 
-elif test "x$svm_light_state" = "xwarn"; then
+elif test "x$svm_perf_state" = "xwarn"; then
   cat << EOF
 
-** WARNING: The path to SVM light may be incorrect.
-I looked for svm_common.h and libsvmlight.a and did not
+** WARNING: The path to SVM Perf may be incorrect.
+I looked for svm_struct_api.h and libsvmperf.a and did not
 find both.
 EOF
 

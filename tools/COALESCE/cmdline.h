@@ -111,7 +111,7 @@ struct gengetopt_args_info
   double min_info_arg;	/**< @brief Uninformative motif threshhold (bits) (default='0.3').  */
   char * min_info_orig;	/**< @brief Uninformative motif threshhold (bits) original value given at command line.  */
   const char *min_info_help; /**< @brief Uninformative motif threshhold (bits) help description.  */
-  double min_zscore_arg;	/**< @brief Minimum motif z-score magnitude (default='0.25').  */
+  double min_zscore_arg;	/**< @brief Minimum motif z-score magnitude (default='0.2').  */
   char * min_zscore_orig;	/**< @brief Minimum motif z-score magnitude original value given at command line.  */
   const char *min_zscore_help; /**< @brief Minimum motif z-score magnitude help description.  */
   int max_motifs_arg;	/**< @brief Maximum motifs to merge exactly (default='2500').  */

@@ -26,7 +26,7 @@
 #include "meta.h"
 #include "genome.h"
 
-#ifndef NO_SVM_LIGHT
+#ifndef NO_SVM_PERF
 
 extern "C" {
 KERNEL_CACHE* kernel_cache_init( long, long );
@@ -47,7 +47,7 @@ bool read_documents_bin( char* szFile, DOC*** papDocs, double** padLabels,
 	uint32_t* piWords, uint32_t* piDocs ) {
 	char			szComment[ 1024 ];
 	FILE*			pfileDoc;
-	SVMLight::WORD*	aWords;
+	SVMPerf::WORD*	aWords;
 	uint32_t		i, iDoc, iWord;
 	float			d;
 	float*			ad;
@@ -66,7 +66,7 @@ bool read_documents_bin( char* szFile, DOC*** papDocs, double** padLabels,
 	(*papDocs) = (DOC**)my_malloc( sizeof(DOC*) * (*piDocs) );
 	(*padLabels) = (double*)my_malloc( sizeof(double) * (*piDocs) );
 	ad = (float*)my_malloc( sizeof(*ad) * (*piWords) );
-	aWords = (SVMLight::WORD*)my_malloc( sizeof(SVMLight::WORD) * ( (*piWords) + 1 ) );
+	aWords = (SVMPerf::WORD*)my_malloc( sizeof(SVMPerf::WORD) * ( (*piWords) + 1 ) );
 	for( iWord = 0; iWord < (*piWords); ++iWord )
 		aWords[ iWord ].wnum = iWord + 1;
 	aWords[ iWord ].wnum = 0;
@@ -90,7 +90,7 @@ bool read_documents_bin( char* szFile, DOC*** papDocs, double** padLabels,
 	return true;
 }
 
-SVMLight::WORD	CSVMImpl::s_asWords[ CSVMImpl::c_iWords ];
+SVMPerf::WORD	CSVMImpl::s_asWords[ CSVMImpl::c_iWords ];
 
 CSVMImpl::SLearn::SLearn( ) {
 
@@ -176,13 +176,13 @@ size_t CSVMImpl::GetWords( const SData& sData ) const {
 	return -1; }
 
 DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iOne, size_t iTwo, size_t iDoc ) const {
-	SVMLight::WORD*	asWords;
+	SVMPerf::WORD*	asWords;
 	size_t			i, j, iWord, iWords;
 	float			d;
 	DOC*			pRet;
 
 	iWords = GetWords( sData );
-	asWords = ( iWords >= c_iWords ) ? new SVMLight::WORD[ iWords + 1 ] : s_asWords;
+	asWords = ( iWords >= c_iWords ) ? new SVMPerf::WORD[ iWords + 1 ] : s_asWords;
 	for( i = 0; i < iWords; ++i )
 		asWords[ i ].wnum = i + 1;
 	asWords[ i ].wnum = 0;
@@ -214,13 +214,13 @@ DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iOne, size_t iTwo, size_t i
 	return pRet; }
 
 DOC* CSVMImpl::CreateDoc( const SData& sData, size_t iGene ) const {
-	SVMLight::WORD*	asWords;
+	SVMPerf::WORD*	asWords;
 	size_t			i, iWords;
 	DOC*			pRet;
 	float			d;
 
 	iWords = GetWords( sData );
-	asWords = ( iWords >= c_iWords ) ? new SVMLight::WORD[ iWords + 1 ] : s_asWords;
+	asWords = ( iWords >= c_iWords ) ? new SVMPerf::WORD[ iWords + 1 ] : s_asWords;
 	for( i = 0; i < iWords; ++i )
 		asWords[ i ].wnum = i + 1;
 	asWords[ i ].wnum = 0;
@@ -554,7 +554,7 @@ bool CSVM::Evaluate( const CPCL& PCL, vector<float>& vecdResults ) const {
 bool CSVMImpl::EvaluateFile( const char* szFile, CDat& DatOut ) const {
 	static const size_t	c_iSize	= 512;
 	char			szGene[ c_iSize ];
-	SVMLight::WORD*	asWords;
+	SVMPerf::WORD*	asWords;
 	char*			pc;
 	ifstream		ifsm;
 	vector<string>	vecstrGenes;
@@ -579,7 +579,7 @@ bool CSVMImpl::EvaluateFile( const char* szFile, CDat& DatOut ) const {
 		vecstrGenes[ i ] = szGene; }
 	DatOut.Open( vecstrGenes );
 
-	asWords = ( iWords >= c_iWords ) ? new SVMLight::WORD[ iWords + 1 ] : s_asWords;
+	asWords = ( iWords >= c_iWords ) ? new SVMPerf::WORD[ iWords + 1 ] : s_asWords;
 	for( i = 0; i < iWords; ++i )
 		asWords[ i ].wnum = i + 1;
 	asWords[ i ].wnum = 0;
@@ -628,7 +628,7 @@ bool CSVM::Open( std::istream& istm ) {
 	static const size_t	c_iBuf	= 131072;
 	char			szBuf[ c_iBuf ];
 	vector<string>	vecstrLine, vecstrToken;
-	SVMLight::WORD*	asWords;
+	SVMPerf::WORD*	asWords;
 	size_t			i, j;
 
 	Reset( false, true, true );
@@ -663,7 +663,7 @@ bool CSVM::Open( std::istream& istm ) {
 	m_pModel->index = NULL;
 	m_pModel->lin_weights = NULL;
 
-	asWords = new SVMLight::WORD[ m_pModel->totwords + 1 ];
+	asWords = new SVMPerf::WORD[ m_pModel->totwords + 1 ];
 	asWords[ m_pModel->totwords ].wnum = 0;
 	for( i = 1; i < (size_t)m_pModel->sv_num; ++i ) {
 		istm.getline( szBuf, c_iBuf - 1 );
@@ -694,4 +694,4 @@ bool CSVM::Open( std::istream& istm ) {
 
 }
 
-#endif // NO_SVM_LIGHT
+#endif // NO_SVM_PERF

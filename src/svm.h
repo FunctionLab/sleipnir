@@ -22,7 +22,7 @@
 #ifndef SVM_H
 #define SVM_H
 
-#ifndef NO_SVM_LIGHT
+#ifndef NO_SVM_PERF
 
 #include "svmi.h"
 
@@ -30,11 +30,11 @@ namespace Sleipnir {
 
 /*!
  * \brief
- * Provides an interface for learning and evaluating support vector machines using svm_light.
+ * Provides an interface for learning and evaluating support vector machines using svm_perf.
  * 
  * The CSVM class provides a variety of methods for learning and evaluating SVMs based on biological
- * data types.  All SVM manipulation is done using the svm_light library (http://svmlight.joachims.org/),
- * but the interface between Sleipnir and svm_light has been optimized to pass appropriate data types
+ * data types.  All SVM manipulation is done using the svm_perf library (http://svmlight.joachims.org/),
+ * but the interface between Sleipnir and svm_perf has been optimized to pass appropriate data types
  * (datasets, PCLs, etc.) as efficiently as possible.  Note that SVM learning requires the entire
  * dataset to be in memory simultaneously, so subsampling large answer sets is often necessary for SVMs
  * when it would not be for Bayesian learning.  On the other hand, individual data points can be evaluated
@@ -201,7 +201,7 @@ public:
 	 * genes and the gene pair indices labeling each example.
 	 * 
 	 * \remarks
-	 * Sorry the file format is so quirky; it was made to play nice with svm_light.  It's at least arranged
+	 * Sorry the file format is so quirky; it was made to play nice with svm_perf.  It's at least arranged
 	 * so that it can be marginally compatible with the equivalent Learn function.  Of course, feeding
 	 * either method bad input will cause who-knows-what horrific consequences.
 	 */
@@ -419,10 +419,10 @@ public:
 
 	/*!
 	 * \brief
-	 * Set the verbosity parameter for svm_light.
+	 * Set the verbosity parameter for svm_perf.
 	 * 
 	 * \param iVerbosity
-	 * Verbosity of messages from svm_light.
+	 * Verbosity of messages from svm_perf.
 	 * 
 	 * \remarks
 	 * Equivalent to the -v parameter to svm_learn/svm_classify.
@@ -434,6 +434,6 @@ public:
 
 }
 
-#endif // NO_SVM_LIGHT
+#endif // NO_SVM_PERF
 
 #endif // SVM_H

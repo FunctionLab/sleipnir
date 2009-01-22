@@ -135,7 +135,7 @@ public:
 		size_t	iN;
 
 		Sums( Begin, End, NULL, &dRet, &iN );
-		return ( iN ? max( ( dRet / iN ) - ( dMean * dMean ), 0 ) : 0 ); }
+		return ( iN ? max( ( dRet / iN ) - ( dMean * dMean ), 0.0 ) : 0 ); }
 
 	/*!
 	 * \brief
@@ -162,7 +162,7 @@ public:
 		if( !iN )
 			return 0;
 		dSum /= iN;
-		return max( ( dRet / iN ) - ( dSum * dSum ), 0 ); }
+		return max( ( dRet / iN ) - ( dSum * dSum ), 0.0 ); }
 
 	/*!
 	 * \brief

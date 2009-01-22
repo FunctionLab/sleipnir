@@ -32,7 +32,7 @@ const char *gengetopt_args_info_help[] = {
   "  -V, --version              Print version and exit",
   "\nMain:",
   "  -t, --type=STRING          Output data file type  (possible values=\"pcl\", \n                               \"dat\", \"dab\", \"module\" default=`pcl')",
-  "  -m, --method=STRING        Combination method  (possible values=\"min\", \n                               \"max\", \"mean\", \"gmean\", \"hmean\" \n                               default=`mean')",
+  "  -m, --method=STRING        Combination method  (possible values=\"min\", \n                               \"max\", \"mean\", \"gmean\", \"hmean\", \"sum\" \n                               default=`mean')",
   "  -o, --output=filename      Output file",
   "\nModules:",
   "  -j, --jaccard=FLOAT        Minimum Jaccard index for module equivalence  \n                               (default=`0.5')",
@@ -65,7 +65,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
 
 
 char *cmdline_parser_type_values[] = {"pcl", "dat", "dab", "module", 0} ;	/* Possible values for type.  */
-char *cmdline_parser_method_values[] = {"min", "max", "mean", "gmean", "hmean", 0} ;	/* Possible values for method.  */
+char *cmdline_parser_method_values[] = {"min", "max", "mean", "gmean", "hmean", "sum", 0} ;	/* Possible values for method.  */
 
 static char *
 gengetopt_strdup (const char *s);

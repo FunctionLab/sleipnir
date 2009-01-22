@@ -554,6 +554,8 @@ bool CParserConsole::ParseParentage( const vector<string>& vecstrLine ) {
 		set<size_t>::const_iterator	iterParent;
 		vector<size_t>				veciIntersection;
 
+		if( vecfTerms[ i ] )
+			veciIntersection.push_back( i );
 		pOnto->GetParents( i, setiParents );
 		for( iterParent = setiParents.begin( ); iterParent != setiParents.end( ); ++iterParent )
 			if( vecfTerms[ *iterParent ] )

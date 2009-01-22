@@ -107,10 +107,10 @@
  *	Library at the University of Pittsburgh.  Sleipnir uses it to do most of its Bayesian analysis, so
  *	no Bayes nets will be available without it!  It is distributed by the DSL as binaries built for a wide
  *	variety of platforms; if you don't see yours listed, send them an email, and they can probably help.
- * - <a href="http://svmlight.joachims.org/">SVM Light</a> is a support vector machine library used for
+ * - <a href="http://svmlight.joachims.org/">SVM Perf</a> is a support vector machine library used for
  *	SVM learning and evaluation in Sleipnir.  No SVMs without it!  Easily built from source under just about
  *	any environment (it's plain old C).  Please note that you must use <a href="Makefile" class="crit">this
- *	Makefile</a> to build SVM Light as a library (rather than an executable) on Linux/Mac OS; in Visual
+ *	Makefile</a> to build SVM Perf as a library (rather than an executable) on Linux/Mac OS; in Visual
  *	Studio, set the project type to "Static Library".
  * 
  * \subsubsection sssec_building_prerequisites_suggestions Suggestions
@@ -129,17 +129,17 @@
  * <li>Obtain any \ref ssec_building_prerequisites you need/want.  These can often be installed using your
  *	favorite Linux package manager.  If you need to compile/install them to a nonstandard location by hand,
  *	please note the directory prefix where they are installed.
- *	<li>If you're using SVM Light, please use <a href="Makefile">this Makefile</a> to build it as a library
+ *	<li>If you're using SVM Perf, please use <a href="Makefile">this Makefile</a> to build it as a library
  *		rather than an executable.</li>
- *	<li>Note that SVM Light and SMILE are both nonstandard in that they expect header files and libraries to
- *		reside in the same directory (e.g. \c /usr/local/smile or \c /usr/local/svm_light).</li>
+ *	<li>Note that SVM Perf and SMILE are both nonstandard in that they expect header files and libraries to
+ *		reside in the same directory (e.g. \c /usr/local/smile or \c /usr/local/svm_perf).</li>
  * </li>
  * <li>\ref sec_download and unpack Sleipnir.</li>
  * <li>In the Sleipnir directory, run \c ./configure.  If you've installed prerequisite libraries that it
  *	doesn't find automatically, provide an appropriate \c --with switch for each one.  For example, to build
- *	Sleipnir with SMILE and SVM Light installed in custom directories under -c /usr/local/, type:</li>
+ *	Sleipnir with SMILE and SVM Perf installed in custom directories under -c /usr/local/, type:</li>
  * \code
- * ./configure --with-smile=/usr/local/smile/ --with-svm-light=/usr/local/svm_light/
+ * ./configure --with-smile=/usr/local/smile/ --with-svm-perf=/usr/local/svm_perf/
  * \endcode
  * <li>If you'd like to install Sleipnir itself to a custom location, include a
  *	<tt>--prefix=/custom/path/</tt> flag when you run \c configrue.</li>
@@ -194,7 +194,7 @@
  *	form compiled with that setting, it taints anything it interacts with; building without this flag and
  *	linking against Sleipnir in Release mode will result in weird memory corruption errors when dealing with
  *	STL objects.
- * - Don't forget to build <a href="http://svmlight.joachims.org/">SVM Light</a> as a library rather than an
+ * - Don't forget to build <a href="http://svmlight.joachims.org/">SVM Perf</a> as a library rather than an
  *	executable, using <a href="Makefile">this Makefile</a> on Linux/Mac OS or setting the project type to
  *	"Static Library" in Visual Studio.
  * - If you're building the \ref BNServer tool, you'll need the Boost graph library - but only the graph

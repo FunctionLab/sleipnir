@@ -16,7 +16,7 @@ my $tools_common_cflags2 = " \$(LOG4CPP_CFLAGS) \$(PTHREAD_CFLAGS)";
 my $tools_common_libs1 = "\$(SLEIPNIR_LIBS)";
 my $tools_common_libs2 = " \$(LOG4CPP_LIBS) \$(PTHREAD_LIBS)";
 
-# packages are: SMILE, SVM_LIGHT, READLINE, PTHREADS, BOOST
+# packages are: SMILE, SVM_PERF, READLINE, PTHREADS, BOOST
 # ordering is important for linking
 my %tools_other_packages = (
 			    BNConverter => ['SMILE'],
@@ -34,11 +34,11 @@ my %tools_other_packages = (
 			    Data2DB  => ['SMILE'],
 			    Dab2Dad  => ['SMILE'],
 			    Dab2DB  => ['SMILE'],
-			    Data2Svm => ['SVM_LIGHT'],
+			    Data2Svm => ['SVM_PERF'],
 			    Edges2Posteriors => ['SMILE'],
 			    MEFIT  => ['SMILE'],
 			    OntoShell => ['READLINE'],
-			    SVMer => ['SVM_LIGHT'],
+			    SVMer => ['SVM_PERF'],
 			    );
 
 if (opendir(TOOLSDIR, "tools")) {
@@ -73,8 +73,8 @@ if (opendir(TOOLSDIR, "tools")) {
 		    }
 		    print AM_MAKEFILE "AM_CPPFLAGS = ".$tools_common_cflags1.$extra_cflags.$tools_common_cflags2."\n";
 		    print AM_MAKEFILE "LDADD = ".$tools_common_libs1.$extra_libs.$tools_common_libs2."\n";
-#		    print AM_MAKEFILE "AM_CPPFLAGS = \$(SLEIPNIR_CFLAGS) \$(SMILE_CFLAGS) \$(SVM_LIGHT_CFLAGS) \$(GENGETOPT_CFLAGS) \$(LOG4CPP_CFLAGS) \$(BOOST_CFLAGS) \$(READLINE_CFLAGS)\n";
-#		    print AM_MAKEFILE "LDADD = \$(SLEIPNIR_LIBS) \$(SMILE_LIBS) \$(SVM_LIGHT_LIBS) \$(GENGETOPT_LIBS) \$(LOG4CPP_LIBS) \$(BOOST_LIBS) \$(READLINE_LIBS)\n";
+#		    print AM_MAKEFILE "AM_CPPFLAGS = \$(SLEIPNIR_CFLAGS) \$(SMILE_CFLAGS) \$(SVM_PERF_CFLAGS) \$(GENGETOPT_CFLAGS) \$(LOG4CPP_CFLAGS) \$(BOOST_CFLAGS) \$(READLINE_CFLAGS)\n";
+#		    print AM_MAKEFILE "LDADD = \$(SLEIPNIR_LIBS) \$(SMILE_LIBS) \$(SVM_PERF_LIBS) \$(GENGETOPT_LIBS) \$(LOG4CPP_LIBS) \$(BOOST_LIBS) \$(READLINE_LIBS)\n";
 		    if ($ggo_file) {
 			print AM_MAKEFILE "\nif WITH_GENGETOPT\n";
 			print AM_MAKEFILE "gengetopt = \$(prog_gengetopt)\n";

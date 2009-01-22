@@ -27,6 +27,7 @@ if WITH_TOOLS
 	  Normalizer \
 	  Orthologer \
 	  Overlapper \
+	  PCLPlotter \
 	  Randomizer \
 	  Seqs2Ngrams \
 	  Synthesizer \
