@@ -142,13 +142,14 @@ float CCoalesceMotifLibraryImpl::AlignKMers( const std::string& strOne, const st
 	return Align( strOne, strTwo, dCutoff, iOffset ); }
 
 uint32_t CCoalesceMotifLibraryImpl::MergeKMers( const std::string& strOne, const std::string& strTwo,
-	float dCutoff ) {
+	float dCutoff, bool fAllowDuplicates ) {
 	int			iOffset;
 	float		dScore;
 	uint32_t	iRet;
 	CPST*		pPST;
 
-	if( ( dScore = Align( strOne, strTwo, dCutoff, iOffset ) ) > dCutoff )
+	if( ( ( dScore = Align( strOne, strTwo, dCutoff, iOffset ) ) > dCutoff ) ||
+		!( fAllowDuplicates || dScore ) )
 		return -1;
 
 	pPST = CreatePST( iRet );
@@ -170,9 +171,10 @@ float CCoalesceMotifLibraryImpl::AlignKMerRC( const std::string& strKMer, uint32
 
 	return min( dOne, dTwo ); }
 
-uint32_t CCoalesceMotifLibraryImpl::MergeKMerRC( uint32_t iKMer, uint32_t iRC, float dCutoff ) {
+uint32_t CCoalesceMotifLibraryImpl::MergeKMerRC( uint32_t iKMer, uint32_t iRC, float dCutoff,
+	bool fAllowDuplicates ) {
 	string		strKMer, strOne, strTwo;
-	float		dOne, dTwo;
+	float		dOne, dTwo, dMin;
 	int			iOne, iTwo;
 	uint32_t	iRet;
 	CPST*		pPST;
@@ -184,7 +186,8 @@ uint32_t CCoalesceMotifLibraryImpl::MergeKMerRC( uint32_t iKMer, uint32_t iRC, f
 	strTwo = GetReverseComplement( strOne );
 	dOne = Align( strKMer, strOne, dCutoff, iOne );
 	dTwo = Align( strKMer, strTwo, dCutoff, iTwo );
-	if( ( dOne > dCutoff ) && ( dTwo > dCutoff ) )
+	dMin = min( dOne, dTwo );
+	if( ( dMin > dCutoff ) || !( fAllowDuplicates || dMin ) )
 		return -1;
 
 	pPST = CreatePST( iRet );
@@ -225,7 +228,8 @@ float CCoalesceMotifLibraryImpl::AlignRCs( uint32_t iOne, uint32_t iTwo, float d
 
 	return dMin; }
 
-uint32_t CCoalesceMotifLibraryImpl::MergeRCs( uint32_t iOne, uint32_t iTwo, float dCutoff ) {
+uint32_t CCoalesceMotifLibraryImpl::MergeRCs( uint32_t iOne, uint32_t iTwo, float dCutoff,
+	bool fAllowDuplicates ) {
 	SCrossRCs	asCrosses[ 4 ];
 	uint32_t	iRet;
 	CPST*		pPST;
@@ -243,7 +247,7 @@ uint32_t CCoalesceMotifLibraryImpl::MergeRCs( uint32_t iOne, uint32_t iTwo, floa
 		if( asCrosses[ i ].m_dScore < dMin ) {
 			dMin = asCrosses[ i ].m_dScore;
 			iMin = i; } }
-	if( dMin > dCutoff )
+	if( ( dMin > dCutoff ) || !( fAllowDuplicates || dMin ) )
 		return -1;
 
 	pPST = CreatePST( iRet );
@@ -262,13 +266,14 @@ float CCoalesceMotifLibraryImpl::AlignKMerPST( const std::string& strKMer, const
 	return PSTIn.Align( strKMer, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iOffset ); }
 
 uint32_t CCoalesceMotifLibraryImpl::MergeKMerPST( const std::string& strKMer, const CPST& PSTIn,
-	float dCutoff ) {
+	float dCutoff, bool fAllowDuplicates ) {
 	int			iOffset;
 	float		dScore;
 	uint32_t	iRet;
 	CPST*		pPSTOut;
 
-	if( ( dScore = PSTIn.Align( strKMer, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iOffset ) ) > dCutoff )
+	if( ( ( dScore = PSTIn.Align( strKMer, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iOffset ) ) >
+		dCutoff ) || !( fAllowDuplicates || dScore ) )
 		return -1;
 
 	pPSTOut = CreatePST( iRet );
@@ -293,18 +298,20 @@ float CCoalesceMotifLibraryImpl::AlignRCPST( uint32_t iRC, const CPST& PSTIn, fl
 
 	return min( dOne, dTwo ); }
 
-uint32_t CCoalesceMotifLibraryImpl::MergeRCPST( uint32_t iRC, const CPST& PSTIn, float dCutoff ) {
+uint32_t CCoalesceMotifLibraryImpl::MergeRCPST( uint32_t iRC, const CPST& PSTIn, float dCutoff,
+	bool fAllowDuplicates ) {
 	int			iOne, iTwo;
 	uint32_t	iRet;
 	CPST*		pPSTOut;
 	string		strOne, strTwo;
-	float		dOne, dTwo;
+	float		dOne, dTwo, dMin;
 
 	strOne = GetRCOne( iRC );
 	strTwo = GetReverseComplement( strOne );
 	dOne = PSTIn.Align( strOne, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iOne );
 	dTwo = PSTIn.Align( strTwo, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iTwo );
-	if( ( dOne > dCutoff ) && ( dTwo > dCutoff ) )
+	dMin = min( dOne, dTwo );
+	if( ( dMin > dCutoff ) || !( fAllowDuplicates || dMin ) )
 		return -1;
 
 	pPSTOut = CreatePST( iRet );
@@ -327,13 +334,15 @@ float CCoalesceMotifLibraryImpl::AlignPSTs( const CPST& PSTOne, const CPST& PSTT
 
 	return PSTOne.Align( PSTTwo, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iOffset ); }
 
-uint32_t CCoalesceMotifLibraryImpl::MergePSTs( const CPST& PSTOne, const CPST& PSTTwo, float dCutoff ) {
+uint32_t CCoalesceMotifLibraryImpl::MergePSTs( const CPST& PSTOne, const CPST& PSTTwo, float dCutoff,
+	bool fAllowDuplicates ) {
 	int			iOffset;
 	uint32_t	iRet;
 	CPST*		pPSTOut;
 	float		dScore;
 
-	if( ( dScore = PSTOne.Align( PSTTwo, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iOffset ) ) > dCutoff )
+	if( ( ( dScore = PSTOne.Align( PSTTwo, m_dPenaltyGap, m_dPenaltyMismatch, dCutoff, iOffset ) ) >
+		dCutoff ) || !( fAllowDuplicates || dScore ) )
 		return -1;
 
 	pPSTOut = CreatePST( iRet );

@@ -124,7 +124,7 @@ public:
 	 * Mean of the sample or population.
 	 * 
 	 * \returns
-	 * sum((x - dMean)^2) / (n - 1)
+	 * sum((x - dMean)^2) / n
 	 * 
 	 * \see
 	 * Average
@@ -135,7 +135,7 @@ public:
 		size_t	iN;
 
 		Sums( Begin, End, NULL, &dRet, &iN );
-		return ( ( iN < 2 ) ? 0 : ( ( dRet / ( iN - 1 ) ) - ( dMean * dMean ) ) ); }
+		return ( iN ? max( ( dRet / iN ) - ( dMean * dMean ), 0 ) : 0 ); }
 
 	/*!
 	 * \brief
@@ -159,10 +159,10 @@ public:
 		size_t	iN;
 
 		Sums( Begin, End, &dSum, &dRet, &iN );
-		if( iN < 2 )
+		if( !iN )
 			return 0;
 		dSum /= iN;
-		return ( ( dRet / ( iN - 1 ) ) - ( dSum * dSum ) ); }
+		return max( ( dRet / iN ) - ( dSum * dSum ), 0 ); }
 
 	/*!
 	 * \brief

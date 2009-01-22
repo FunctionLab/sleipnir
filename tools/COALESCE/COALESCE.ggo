@@ -66,7 +66,7 @@ option	"remove_rcs"	R	"Convert RCs and RC-like PSTs to single strand"
 option	"min_info"		u	"Uninformative motif threshhold (bits)"
 							double	default="0.3"
 option	"min_zscore"	U	"Minimum motif z-score magnitude"
-							double	default="0.25"
+							double	default="0.2"
 option	"max_motifs"	x	"Maximum motifs to merge exactly"
 							int	default="2500"
 

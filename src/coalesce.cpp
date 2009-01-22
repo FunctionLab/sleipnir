@@ -248,7 +248,7 @@ void* CCoalesceImpl::ThreadCombineMotif( void* pData ) {
 			if( psData->m_pFASTA->Get( (*psData->m_pveciPCL2FASTA)[ i ], vecsSequences ) ) {
 				sModifiers.Get( i );
 				for( j = 0; j < vecsSequences.size( ); ++j )
-					if( psData->m_pGeneScores->Add( i, *psData->m_pMotifs, vecsSequences[ j ],
+					if( !psData->m_pGeneScores->Add( i, *psData->m_pMotifs, vecsSequences[ j ],
 						sModifiers, psData->m_iMotif, vecdScores, veciLengths ) )
 						break; } }
 

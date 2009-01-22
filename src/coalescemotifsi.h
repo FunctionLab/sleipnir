@@ -187,12 +187,12 @@ protected:
 
 	std::string GetMotif( uint32_t ) const;
 	CPST* CreatePST( uint32_t& );
-	uint32_t MergeKMers( const std::string&, const std::string&, float );
-	uint32_t MergeKMerRC( uint32_t, uint32_t, float );
-	uint32_t MergeKMerPST( const std::string&, const CPST&, float );
-	uint32_t MergeRCs( uint32_t, uint32_t, float );
-	uint32_t MergeRCPST( uint32_t, const CPST&, float );
-	uint32_t MergePSTs( const CPST&, const CPST&, float );
+	uint32_t MergeKMers( const std::string&, const std::string&, float, bool );
+	uint32_t MergeKMerRC( uint32_t, uint32_t, float, bool );
+	uint32_t MergeKMerPST( const std::string&, const CPST&, float, bool );
+	uint32_t MergeRCs( uint32_t, uint32_t, float, bool );
+	uint32_t MergeRCPST( uint32_t, const CPST&, float, bool );
+	uint32_t MergePSTs( const CPST&, const CPST&, float, bool );
 	float AlignKMers( const std::string&, const std::string&, float ) const;
 	float AlignKMerRC( const std::string&, uint32_t, float ) const;
 	float AlignKMerPST( const std::string&, const CPST&, float ) const;

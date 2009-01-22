@@ -135,45 +135,45 @@ public:
 			case ETypeRC:
 				switch( GetType( iTwo ) ) {
 					case ETypeKMer:
-						iRet = MergeKMerRC( iTwo, iOne, dCutoff );
+						iRet = MergeKMerRC( iTwo, iOne, dCutoff, fAllowDuplicates );
 						break;
 
 					case ETypeRC:
-						iRet = MergeRCs( iOne, iTwo, dCutoff );
+						iRet = MergeRCs( iOne, iTwo, dCutoff, fAllowDuplicates );
 						break;
 
 					case ETypePST:
-						iRet = MergeRCPST( iOne, *GetPST( iTwo ), dCutoff );
+						iRet = MergeRCPST( iOne, *GetPST( iTwo ), dCutoff, fAllowDuplicates );
 						break; }
 				break;
 
 			case ETypePST:
 				switch( GetType( iTwo ) ) {
 					case ETypeKMer:
-						iRet = MergeKMerPST( GetMotif( iTwo ), *GetPST( iOne ), dCutoff );
+						iRet = MergeKMerPST( GetMotif( iTwo ), *GetPST( iOne ), dCutoff, fAllowDuplicates );
 						break;
 
 					case ETypeRC:
-						iRet = MergeRCPST( iTwo, *GetPST( iOne ), dCutoff );
+						iRet = MergeRCPST( iTwo, *GetPST( iOne ), dCutoff, fAllowDuplicates );
 						break;
 
 					case ETypePST:
-						iRet = MergePSTs( *GetPST( iOne ), *GetPST( iTwo ), dCutoff );
+						iRet = MergePSTs( *GetPST( iOne ), *GetPST( iTwo ), dCutoff, fAllowDuplicates );
 						break; }
 				break;
 
 			case ETypeKMer:
 				switch( GetType( iTwo ) ) {
 					case ETypeRC:
-						iRet = MergeKMerRC( iOne, iTwo, dCutoff );
+						iRet = MergeKMerRC( iOne, iTwo, dCutoff, fAllowDuplicates );
 						break;
 
 					case ETypePST:
-						iRet = MergeKMerPST( GetMotif( iOne ), *GetPST( iTwo ), dCutoff );
+						iRet = MergeKMerPST( GetMotif( iOne ), *GetPST( iTwo ), dCutoff, fAllowDuplicates );
 						break;
 
 					case ETypeKMer:
-						iRet = MergeKMers( GetMotif( iOne ), GetMotif( iTwo ), dCutoff );
+						iRet = MergeKMers( GetMotif( iOne ), GetMotif( iTwo ), dCutoff, fAllowDuplicates );
 						break; }
 				break; }
 
@@ -212,12 +212,12 @@ public:
 			return -1;
 		switch( GetType( iMotif ) ) {
 			case ETypeRC:
-				return MergeRCPST( iMotif, *pPST, FLT_MAX );
+				return MergeRCPST( iMotif, *pPST, FLT_MAX, true );
 
 			case ETypePST:
-				return MergePSTs( *GetPST( iMotif ), *pPST, FLT_MAX ); }
+				return MergePSTs( *GetPST( iMotif ), *pPST, FLT_MAX, true ); }
 
-		return MergeKMerPST( GetMotif( iMotif ), *pPST, FLT_MAX ); }
+		return MergeKMerPST( GetMotif( iMotif ), *pPST, FLT_MAX, true ); }
 
 	float Align( uint32_t iOne, uint32_t iTwo, float dCutoff ) {
 

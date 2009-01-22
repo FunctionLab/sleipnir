@@ -209,7 +209,11 @@ int main( int iArgs, char** aszArgs ) {
 						iterGene->second += d; }
 		for( iterGene = mapGenes.begin( ); iterGene != mapGenes.end( ); ++iterGene )
 			cout << pDat->GetGene( iterGene->first ) << '\t' << iterGene->second << endl; }
-	else if( !strcmp( sArgs.format_arg, "dat" ) )
-		pDat->Save( cout, CDat::EFormatText );
+	else if( !strcmp( sArgs.format_arg, "dat" ) ) {
+		for( i = 0; i < pDat->GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < pDat->GetGenes( ); ++j )
+				if( pDat->Get( i, j ) < dCutoff )
+					pDat->Set( i, j, CMeta::GetNaN( ) );
+		pDat->Save( cout, CDat::EFormatText ); }
 
 	return 0; }
