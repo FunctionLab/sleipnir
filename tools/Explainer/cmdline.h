@@ -45,6 +45,8 @@ struct gengetopt_args_info
   const char *count_help; /**< @brief Number of pairs to display help description.  */
   int positives_flag;	/**< @brief Include only positive pairs (default=off).  */
   const char *positives_help; /**< @brief Include only positive pairs help description.  */
+  int negatives_flag;	/**< @brief Include only negative pairs (default=off).  */
+  const char *negatives_help; /**< @brief Include only negative pairs help description.  */
   int everything_flag;	/**< @brief Include pairs without answers (default=off).  */
   const char *everything_help; /**< @brief Include pairs without answers help description.  */
   char * unknowns_arg;	/**< @brief Treatment of unknown genes (default='exclude').  */
@@ -92,6 +94,7 @@ struct gengetopt_args_info
   unsigned int answers_given ;	/**< @brief Whether answers was given.  */
   unsigned int count_given ;	/**< @brief Whether count was given.  */
   unsigned int positives_given ;	/**< @brief Whether positives was given.  */
+  unsigned int negatives_given ;	/**< @brief Whether negatives was given.  */
   unsigned int everything_given ;	/**< @brief Whether everything was given.  */
   unsigned int unknowns_given ;	/**< @brief Whether unknowns was given.  */
   unsigned int fraction_given ;	/**< @brief Whether fraction was given.  */

@@ -313,7 +313,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_LIGHT_PREFIX SVM_LIGHT_CFLAGS SVM_LIGHT_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -6515,7 +6515,7 @@ done
 
 
 ## LOCAL_CHECK_APPEND_PATHS(base path, paths to append, common path to look for, var to set,
-##   action if not found)
+##   action if found in appended path, action if not found)
 ## Look for the common path in one of the appendable paths under the base path.
 ## If found, set the variable to the concatenation of the prefix and the appended path,
 ## not including the common path. If not found use the base dir.
@@ -6527,8 +6527,8 @@ done
 # If the user specifies a path, use it.
 # If the user doesn't specify anything, check for it.
 # While checking, look for a source distribution in extlib/.
-# Gengetopt is required (for tools).
-#! CFLAGS assumes headers in same directory as binaries for installed
+# Gengetopt is required (for tools) only to rebuild cmdline.[ch] if ggo file is more recent.
+# No CFLAGS or LIBS needed.
 
 # Check whether --with-gengetopt or --without-gengetopt was given.
 if test "${with_gengetopt+set}" = set; then
@@ -6547,10 +6547,9 @@ elif test "x$with_gengetopt" != "xcheck"; then
 #  if echo with_gengetopt | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   prog_gengetopt_info=$with_gengetopt
   prog_gengetopt_state=ok
-  qualify_path with_gengetopt
+  qualify_path with_gengetopt    # need full path since we don't know where we will be
   prog_gengetopt=$with_gengetopt
-  GENGETOPT_PREFIX=$prog_gengetopt_prefix
-         GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
+
 
 else
   # Extract the first word of "gengetopt", so it can be a program name with args.
@@ -6600,8 +6599,7 @@ fi
   else
     prog_gengetopt_info="found installed"
     prog_gengetopt_state=ok
-    GENGETOPT_PREFIX=$prog_gengetopt_prefix
-         GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"
+
 
   fi
 fi
@@ -6621,17 +6619,39 @@ echo X$prog_gengetopt |
   prog_gengetopt_prefix=$prog_gengetopt_dir/..     # assumes bin and include are at same level
 
 fi
-                                                    ## set CFLAGS and LIBS
-if test "x$GENGETOPT_PREFIX" != "x"; then
-  #! check (in LOCAL_PATH_PROG?)
-  GENGETOPT_CFLAGS=$GENGETOPT_INCLUDES
-  GENGETOPT_LIBS=
+                                                    if test "x$prog_gengetopt" != "x"; then
+  # see if it the path is really to a source distribution
+
+result=$prog_gengetopt
+found=false
+for p in src; do
+  if test -e "$prog_gengetopt/$p/gengetopt"; then
+    result=$prog_gengetopt/$p
+    found=true
+    break
+  fi
+done
+prog_gengetopt_alt=$result
+if $found; then
+  true   # in case the following is empty
+  PROG_GENGETOPT_ALT=true
+else
+  if ! test -e $result/gengetopt; then
+    true   # in case the following is empty
+
+  fi
+fi
+
+  if test "x$PROG_GENGETOPT_ALT" != "x"; then
+    prog_gengetopt=$prog_gengetopt_alt/gengetopt
+    prog_gengetopt_info=$prog_gengetopt
+  fi
 fi
 
 
-
-
-
+#AC_SUBST(GENGETOPT_PREFIX)
+#AC_SUBST(GENGETOPT_CFLAGS)
+#AC_SUBST(GENGETOPT_LIBS)
 
 
 ## LOG4CPP
@@ -6754,7 +6774,10 @@ for p in include; do
   fi
 done
 LOG4CPP_INCLUDE_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/log4cpp/Category.hh; then
     true   # in case the following is empty
     log4cpp_state=warn
@@ -6772,7 +6795,10 @@ for p in lib src/.libs; do
   fi
 done
 LOG4CPP_LIB_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/liblog4cpp.a; then
     true   # in case the following is empty
     log4cpp_state=warn
@@ -6906,7 +6932,10 @@ for p in include; do
   fi
 done
 SMILE_INCLUDE_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/smile.h; then
     true   # in case the following is empty
     smile_state=warn
@@ -6924,7 +6953,10 @@ for p in lib; do
   fi
 done
 SMILE_LIB_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/libsmile.a; then
     true   # in case the following is empty
     smile_state=warn
@@ -7079,7 +7111,10 @@ for p in include; do
   fi
 done
 SVM_LIGHT_INCLUDE_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/svm_common.h; then
     true   # in case the following is empty
     svm_light_state=warn
@@ -7097,7 +7132,10 @@ for p in lib; do
   fi
 done
 SVM_LIGHT_LIB_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/libsvmlight.a; then
     true   # in case the following is empty
     svm_light_state=warn
@@ -7256,7 +7294,10 @@ for p in ..; do
   fi
 done
 BOOST_INCLUDES_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/boost/config.hpp; then
     true   # in case the following is empty
     boost_state=warn
@@ -7393,7 +7434,10 @@ for p in include; do
   fi
 done
 READLINE_INCLUDE_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/readline/readline.h; then
     true   # in case the following is empty
     readline_state=warn
@@ -7411,7 +7455,10 @@ for p in lib; do
   fi
 done
 READLINE_LIB_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/libreadline.a; then
     true   # in case the following is empty
     readline_state=warn
@@ -7603,7 +7650,10 @@ for p in include; do
   fi
 done
 PTHREAD_INCLUDE_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/pthread.h; then
     true   # in case the following is empty
     pthread_state=warn
@@ -7621,7 +7671,10 @@ for p in lib; do
   fi
 done
 PTHREAD_LIB_DIR=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+
+else
   if ! test -e $result/libpthread.a; then
     true   # in case the following is empty
     pthread_state=warn
@@ -8521,9 +8574,6 @@ s,@LIBOBJS@,$LIBOBJS,;t t
 s,@POW_LIB@,$POW_LIB,;t t
 s,@prog_gengetopt@,$prog_gengetopt,;t t
 s,@prog_gengetopt_dir@,$prog_gengetopt_dir,;t t
-s,@GENGETOPT_PREFIX@,$GENGETOPT_PREFIX,;t t
-s,@GENGETOPT_CFLAGS@,$GENGETOPT_CFLAGS,;t t
-s,@GENGETOPT_LIBS@,$GENGETOPT_LIBS,;t t
 s,@LOG4CPP_PREFIX@,$LOG4CPP_PREFIX,;t t
 s,@LOG4CPP_CFLAGS@,$LOG4CPP_CFLAGS,;t t
 s,@LOG4CPP_LIBS@,$LOG4CPP_LIBS,;t t

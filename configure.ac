@@ -20,7 +20,6 @@
 
 #! TODO:
 #! b. Warn for pthread.
-#! d. Gengetopt checks.
 #! e. Improve boost logic?
 
 AC_PREREQ(2.59)
@@ -107,7 +106,7 @@ elif test "x$with_$2" != "xcheck"; then
 #  if echo with_$2 | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   prog_$2_info=$with_$2
   prog_$2_state=ok
-  qualify_path with_$2
+  qualify_path with_$2    # need full path since we don't know where we will be
   prog_$2=$with_$2
   $3
   $5
@@ -181,7 +180,7 @@ fi
 
 
 ## LOCAL_CHECK_APPEND_PATHS(base path, paths to append, common path to look for, var to set,
-##   action if not found)
+##   action if found in appended path, action if not found)
 ## Look for the common path in one of the appendable paths under the base path.
 ## If found, set the variable to the concatenation of the prefix and the appended path,
 ## not including the common path. If not found use the base dir.
@@ -198,10 +197,13 @@ for p in $2; do
   fi
 done
 $4=$result
-if ! $found; then
+if $found; then
+  true   # in case the following is empty
+  $5
+else
   if ! test -e $result/$3; then
     true   # in case the following is empty
-    $5
+    $6
   fi
 fi
 ])
@@ -211,30 +213,31 @@ fi
 # If the user specifies a path, use it.
 # If the user doesn't specify anything, check for it.
 # While checking, look for a source distribution in extlib/.
-# Gengetopt is required (for tools).
-#! CFLAGS assumes headers in same directory as binaries for installed
+# Gengetopt is required (for tools) only to rebuild cmdline.[ch] if ggo file is more recent.
+# No CFLAGS or LIBS needed.
 AC_ARG_WITH([gengetopt],
 	[AS_HELP_STRING([--with-gengetopt=PATH], [prefix of gengetopt installation])],
 	[],
 	[with_gengetopt=check])
 LOCAL_PATH_PROG([gengetopt], [gengetopt],
-        [GENGETOPT_PREFIX=$prog_gengetopt_prefix
-         GENGETOPT_INCLUDES="-I${GENGETOPT_PREFIX}/include"],  dnl found
+        [],                                                    dnl found
         [],                                                    dnl found installed
 	[],                                                    dnl found in with path
 	[],                                                    dnl not found
         [])                                                    dnl requested without
-## set CFLAGS and LIBS
-if test "x$GENGETOPT_PREFIX" != "x"; then
-  #! check (in LOCAL_PATH_PROG?)
-  GENGETOPT_CFLAGS=$GENGETOPT_INCLUDES
-  GENGETOPT_LIBS=
+if test "x$prog_gengetopt" != "x"; then
+  # see if it the path is really to a source distribution
+  LOCAL_CHECK_APPEND_PATHS([$prog_gengetopt], [src], [gengetopt], [prog_gengetopt_alt], [PROG_GENGETOPT_ALT=true], [])
+  if test "x$PROG_GENGETOPT_ALT" != "x"; then
+    prog_gengetopt=$prog_gengetopt_alt/gengetopt
+    prog_gengetopt_info=$prog_gengetopt
+  fi
 fi
 AC_SUBST(prog_gengetopt)
 AC_SUBST(prog_gengetopt_dir)
-AC_SUBST(GENGETOPT_PREFIX)
-AC_SUBST(GENGETOPT_CFLAGS)
-AC_SUBST(GENGETOPT_LIBS)
+#AC_SUBST(GENGETOPT_PREFIX)
+#AC_SUBST(GENGETOPT_CFLAGS)
+#AC_SUBST(GENGETOPT_LIBS)
 
 
 ## LOG4CPP
@@ -262,8 +265,8 @@ LOCAL_CHECK_LIB([log4cpp], [log4cpp], [log4cpp::Category::getInstance],
 if test "x$log4cpp_state" != "xstub"; then
   ## set LOG4CPP_CFLAGS and LOG4CPP_LIBS
   if test "x$LOG4CPP_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$LOG4CPP_PREFIX], [include], [log4cpp/Category.hh], [LOG4CPP_INCLUDE_DIR], [log4cpp_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$LOG4CPP_PREFIX], [lib src/.libs], [liblog4cpp.a], [LOG4CPP_LIB_DIR], [log4cpp_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$LOG4CPP_PREFIX], [include], [log4cpp/Category.hh], [LOG4CPP_INCLUDE_DIR], [], [log4cpp_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$LOG4CPP_PREFIX], [lib src/.libs], [liblog4cpp.a], [LOG4CPP_LIB_DIR], [], [log4cpp_state=warn])
     LOG4CPP_CFLAGS="-I$LOG4CPP_INCLUDE_DIR"
     LOG4CPP_LIBS="-L$LOG4CPP_LIB_DIR"
 #    if ! test -f "$LOG4CPP_INCLUDE_DIR/log4cpp/Category.hh"; then log4cpp_state=warn; fi
@@ -297,8 +300,8 @@ LOCAL_CHECK_LIB([smile], [smile], [RoundProbability],
 if test "x$smile_state" != "xno"; then
   ## set SMILE_CFLAGS and SMILE_LIBS
   if test "x$SMILE_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$SMILE_PREFIX], [include], [smile.h], [SMILE_INCLUDE_DIR], [smile_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$SMILE_PREFIX], [lib], [libsmile.a], [SMILE_LIB_DIR], [smile_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$SMILE_PREFIX], [include], [smile.h], [SMILE_INCLUDE_DIR], [], [smile_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$SMILE_PREFIX], [lib], [libsmile.a], [SMILE_LIB_DIR], [], [smile_state=warn])
 #    if ! test -f "$SMILE_INCLUDE_DIR/smile.h"; then smile_state=warn; fi
 #    if ! test -f "$SMILE_LIB_DIR/libsmile.a"; then smile_state=warn; fi
     if test -f "$SMILE_LIB_DIR/libsmilexml.a"; then
@@ -339,8 +342,8 @@ AC_LANG_POP
 if test "x$svm_light_state" != "xno"; then
   ## set SVM_LIGHT_CFLAGS and SVM_LIGHT_LIBS
   if test "x$SVM_LIGHT_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$SVM_LIGHT_PREFIX], [include], [svm_common.h], [SVM_LIGHT_INCLUDE_DIR], [svm_light_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$SVM_LIGHT_PREFIX], [lib], [libsvmlight.a], [SVM_LIGHT_LIB_DIR], [svm_light_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$SVM_LIGHT_PREFIX], [include], [svm_common.h], [SVM_LIGHT_INCLUDE_DIR], [], [svm_light_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$SVM_LIGHT_PREFIX], [lib], [libsvmlight.a], [SVM_LIGHT_LIB_DIR], [], [svm_light_state=warn])
 #    if ! test -f "$SVM_LIGHT_INCLUDE_DIR/svm_common.h"; then svm_light_state=warn; fi
 #    if ! test -f "$SVM_LIGHT_LIB_DIR/libsvmlight.a"; then svm_light_state=warn; fi
     SVM_LIGHT_CFLAGS="-I$SVM_LIGHT_INCLUDE_DIR"
@@ -399,7 +402,7 @@ if test "x$boost_state" != "xno"; then
     # now look for the headers
     BOOST_LIBS=$BOOST_GRAPH_LIB
     qualify_path with_boost_includes
-    LOCAL_CHECK_APPEND_PATHS([$with_boost_includes], [..], [boost/config.hpp], [BOOST_INCLUDES_DIR], [boost_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$with_boost_includes], [..], [boost/config.hpp], [BOOST_INCLUDES_DIR], [], [boost_state=warn])
     if ! test -f $BOOST_GRAPH_LIB; then boost_state=warn; fi
     if ! echo $BOOST_GRAPH_LIB | $GREP -q "libboost_graph"; then boost_state=warn; fi
     BOOST_CFLAGS="-I$BOOST_INCLUDES_DIR"
@@ -431,8 +434,8 @@ AC_LANG_POP
 if test "x$readline_state" != "xno"; then
   ## set READLINE_CFLAGS and READLINE_LIBS
   if test "x$READLINE_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$READLINE_PREFIX], [include], [readline/readline.h], [READLINE_INCLUDE_DIR], [readline_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$READLINE_PREFIX], [lib], [libreadline.a], [READLINE_LIB_DIR], [readline_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$READLINE_PREFIX], [include], [readline/readline.h], [READLINE_INCLUDE_DIR], [], [readline_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$READLINE_PREFIX], [lib], [libreadline.a], [READLINE_LIB_DIR], [], [readline_state=warn])
 #    if ! test -f "$READLINE_INCLUDE_DIR/readline/readline.h"; then readline_state=warn; fi
 #    if ! test -f "$READLINE_LIB_DIR/libreadline.a"; then readline_state=warn; fi
     READLINE_CFLAGS="-I$READLINE_INCLUDE_DIR"
@@ -475,8 +478,8 @@ AC_LANG_POP
 if test "x$pthread_state" != "xno"; then
   ## set PTHREAD_CFLAGS and PTHREAD_LIBS
   if test "x$PTHREAD_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$PTHREAD_PREFIX], [include], [pthread.h], [PTHREAD_INCLUDE_DIR], [pthread_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$PTHREAD_PREFIX], [lib], [libpthread.a], [PTHREAD_LIB_DIR], [pthread_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$PTHREAD_PREFIX], [include], [pthread.h], [PTHREAD_INCLUDE_DIR], [], [pthread_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$PTHREAD_PREFIX], [lib], [libpthread.a], [PTHREAD_LIB_DIR], [], [pthread_state=warn])
     PTHREAD_CFLAGS="-I$PTHREAD_INCLUDE_DIR"
     PTHREAD_LIBS="-L$PTHREAD_LIB_DIR"
   fi

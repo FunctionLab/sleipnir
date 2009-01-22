@@ -45,6 +45,8 @@ struct gengetopt_args_info
   const char *type_help; /**< @brief Type of input cluster help description.  */
   int counts_flag;	/**< @brief Calculate pair weight by cocluster frequency (default=off).  */
   const char *counts_help; /**< @brief Calculate pair weight by cocluster frequency help description.  */
+  int size_flag;	/**< @brief Calculate pair weight by cluster size (default=off).  */
+  const char *size_help; /**< @brief Calculate pair weight by cluster size help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCL (default='2').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
@@ -58,6 +60,7 @@ struct gengetopt_args_info
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int type_given ;	/**< @brief Whether type was given.  */
   unsigned int counts_given ;	/**< @brief Whether counts was given.  */
+  unsigned int size_given ;	/**< @brief Whether size was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 

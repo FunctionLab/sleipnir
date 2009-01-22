@@ -103,14 +103,20 @@ struct gengetopt_args_info
   double fraction_postprocess_arg;	/**< @brief Overlap fraction for postprocessing gene/condition inclusion (default='0.5').  */
   char * fraction_postprocess_orig;	/**< @brief Overlap fraction for postprocessing gene/condition inclusion original value given at command line.  */
   const char *fraction_postprocess_help; /**< @brief Overlap fraction for postprocessing gene/condition inclusion help description.  */
+  double cutoff_trim_arg;	/**< @brief Cocluster stdev cutoff for cluster trimming (default='1').  */
+  char * cutoff_trim_orig;	/**< @brief Cocluster stdev cutoff for cluster trimming original value given at command line.  */
+  const char *cutoff_trim_help; /**< @brief Cocluster stdev cutoff for cluster trimming help description.  */
   int remove_rcs_flag;	/**< @brief Convert RCs and RC-like PSTs to single strand (default=on).  */
   const char *remove_rcs_help; /**< @brief Convert RCs and RC-like PSTs to single strand help description.  */
-  double min_info_arg;	/**< @brief Uninformative motif threshhold (bits) (default='0.45').  */
+  double min_info_arg;	/**< @brief Uninformative motif threshhold (bits) (default='0.3').  */
   char * min_info_orig;	/**< @brief Uninformative motif threshhold (bits) original value given at command line.  */
   const char *min_info_help; /**< @brief Uninformative motif threshhold (bits) help description.  */
   double min_zscore_arg;	/**< @brief Minimum motif z-score magnitude (default='0.25').  */
   char * min_zscore_orig;	/**< @brief Minimum motif z-score magnitude original value given at command line.  */
   const char *min_zscore_help; /**< @brief Minimum motif z-score magnitude help description.  */
+  int max_motifs_arg;	/**< @brief Maximum motifs to merge exactly (default='2500').  */
+  char * max_motifs_orig;	/**< @brief Maximum motifs to merge exactly original value given at command line.  */
+  const char *max_motifs_help; /**< @brief Maximum motifs to merge exactly help description.  */
   char * cache_arg;	/**< @brief Cache file for sequence analysis.  */
   char * cache_orig;	/**< @brief Cache file for sequence analysis original value given at command line.  */
   const char *cache_help; /**< @brief Cache file for sequence analysis help description.  */
@@ -152,15 +158,19 @@ struct gengetopt_args_info
   unsigned int postprocess_given ;	/**< @brief Whether postprocess was given.  */
   unsigned int cutoff_postprocess_given ;	/**< @brief Whether cutoff_postprocess was given.  */
   unsigned int fraction_postprocess_given ;	/**< @brief Whether fraction_postprocess was given.  */
+  unsigned int cutoff_trim_given ;	/**< @brief Whether cutoff_trim was given.  */
   unsigned int remove_rcs_given ;	/**< @brief Whether remove_rcs was given.  */
   unsigned int min_info_given ;	/**< @brief Whether min_info was given.  */
   unsigned int min_zscore_given ;	/**< @brief Whether min_zscore was given.  */
+  unsigned int max_motifs_given ;	/**< @brief Whether max_motifs was given.  */
   unsigned int cache_given ;	/**< @brief Whether cache was given.  */
   unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
+  char **inputs ; /**< @brief unamed options (options without names) */
+  unsigned inputs_num ; /**< @brief unamed options number */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */
