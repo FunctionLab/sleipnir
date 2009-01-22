@@ -109,7 +109,7 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 int MainDATs( const gengetopt_args_info& sArgs ) {
 	CDataset					Dataset;
 	CDat						DatOut, DatCur;
-	CHalfMatrix<unsigned char>	HMatCounts;
+	CHalfMatrix<unsigned short>	HMatCounts;
 	size_t						i, j, k, iOne, iTwo;
 	vector<size_t>				veciGenes;
 	float						d;
