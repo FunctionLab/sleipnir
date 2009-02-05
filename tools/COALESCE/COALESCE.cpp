@@ -115,6 +115,7 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetCutoffMerge( (float)sArgs.cutoff_merge_arg );
 	Coalesce.SetBasesPerMatch( sArgs.bases_arg );
 	Coalesce.SetSizeMinimum( sArgs.size_minimum_arg );
+	Coalesce.SetSizeMerge( sArgs.size_merge_arg );
 	Coalesce.SetSizeMaximum( sArgs.size_maximum_arg );
 	Coalesce.SetThreads( sArgs.threads_arg );
 	if( sArgs.output_arg )
@@ -215,6 +216,13 @@ bool recluster( const gengetopt_args_info& sArgs, size_t iPairs, CCoalesceMotifL
 			return true; }
 
 		Cluster.RemoveMotifs( Motifs, (float)sArgs.min_zscore_arg );
+/*
+		if( sArgs.known_motifs_arg ) {
+			if( !Motifs.OpenKnown( sArgs.known_motifs_arg ) ) {
+				cerr << "Could not open: " << sArgs.known_motifs_arg << endl;
+				return 1; }
+			Cluster.LabelMotifs( Motifs, sArgs.known_cutoff_arg ); }
+*/
 		if( sArgs.output_arg )
 			Cluster.Save( sArgs.output_arg, iID, PCL, &Motifs );
 		Cluster.Save( cout, iID, PCL, &Motifs, (float)sArgs.min_info_arg, (float)sArgs.penalty_gap_arg,

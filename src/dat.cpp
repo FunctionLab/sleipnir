@@ -23,7 +23,6 @@
 #include "dat.h"
 #include "genome.h"
 #include "statistics.h"
-#include "typesi.h"
 #include "annotation.h"
 #include "color.h"
 

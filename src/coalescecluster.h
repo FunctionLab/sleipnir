@@ -34,7 +34,7 @@ public:
 	void Subtract( CCoalesceGeneScores& GeneScores ) const;
 	bool SelectConditions( const CPCL& PCL, const CCoalesceCluster& Pot, size_t iThreads, float dPValue );
 	bool SelectMotifs( const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
-		float dPValue, size_t iThreads, const CCoalesceMotifLibrary* pMotifs = NULL );
+		float dPValue, size_t iMaxMotifs, size_t iThreads, const CCoalesceMotifLibrary* pMotifs = NULL );
 	bool SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& GeneScores,
 		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
 		size_t iMinimum, size_t iThreads, CCoalesceCluster& Pot, float dPValue,

@@ -369,23 +369,34 @@ void* CCoalesceClusterImpl::ThreadSelectMotif( void* pData ) {
 	uint32_t			iMotif;
 
 	psData = (SThreadSelectMotif*)pData;
-	for( iMotif = psData->m_iOffset; iMotif < psData->m_pMotifs->GetMotifs( ); iMotif += psData->m_iStep )
-		if( !AddSignificant( *psData->m_pMotifs, iMotif, *psData->m_pHistsCluster, *psData->m_pHistsPot,
-			psData->m_dPValue, psData->m_vecsMotifs ) )
+	for( iMotif = psData->m_iOffset; iMotif < ( psData->m_pveciMotifs ? psData->m_pveciMotifs->size( ) :
+		psData->m_pMotifs->GetMotifs( ) ); iMotif += psData->m_iStep )
+		if( !AddSignificant( *psData->m_pMotifs,  psData->m_pveciMotifs ? (*psData->m_pveciMotifs)[ iMotif ] :
+			iMotif, *psData->m_pHistsCluster, *psData->m_pHistsPot, psData->m_dPValue,
+			psData->m_vecsMotifs ) )
 			break;
 
 	return NULL; }
 
 bool CCoalesceCluster::SelectMotifs( const CCoalesceGroupHistograms& HistsCluster,
-	const CCoalesceGroupHistograms& HistsPot, float dPValue, size_t iThreads,
+	const CCoalesceGroupHistograms& HistsPot, float dPValue, size_t iMaxMotifs, size_t iThreads,
 	const CCoalesceMotifLibrary* pMotifs ) {
 	uint32_t					i, j;
 	vector<pthread_t>			vecpthdThreads;
 	vector<SThreadSelectMotif>	vecsThreads;
+	vector<uint32_t>			veciMotifs;
 
-	m_setsMotifs.clear( );
 	if( !pMotifs )
 		return true;
+	if( m_setsMotifs.size( ) > iMaxMotifs ) {
+		set<uint32_t>						setiMotifs;
+		set<SMotifMatch>::const_iterator	iterMotif;
+
+		for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif )
+			setiMotifs.insert( iterMotif->m_iMotif );
+		veciMotifs.resize( setiMotifs.size( ) );
+		copy( setiMotifs.begin( ), setiMotifs.end( ), veciMotifs.begin( ) ); }
+	m_setsMotifs.clear( );
 	vecpthdThreads.resize( iThreads );
 	vecsThreads.resize( vecpthdThreads.size( ) );
 	for( i = 0; i < vecsThreads.size( ); ++i ) {
@@ -395,6 +406,7 @@ bool CCoalesceCluster::SelectMotifs( const CCoalesceGroupHistograms& HistsCluste
 		vecsThreads[ i ].m_pHistsCluster = &HistsCluster;
 		vecsThreads[ i ].m_pHistsPot = &HistsPot;
 		vecsThreads[ i ].m_dPValue = dPValue;
+		vecsThreads[ i ].m_pveciMotifs = veciMotifs.empty( ) ? NULL : &veciMotifs;
 		if( pthread_create( &vecpthdThreads[ i ], NULL, ThreadSelectMotif, &vecsThreads[ i ] ) ) {
 			g_CatSleipnir.error( "CCoalesceCluster::SelectMotifs( %g, %d ) could not select motifs",
 				dPValue, iThreads );
@@ -429,7 +441,7 @@ bool CCoalesceClusterImpl::AddSignificant( const CCoalesceMotifLibrary& Motifs, 
 				( HistSetPot.GetMembers( ) <= iMotif ) ||
 				!( HistSetCluster.GetTotal( ) && HistSetPot.GetTotal( ) ) )
 				continue;
-			dP = HistSetCluster.ZScore( iMotif, HistSetPot, dAveOne, dAverage, dZ );
+			dP = HistSetCluster.CohensD( iMotif, HistSetPot, dAveOne, dAverage, dZ );
 			if( dP < dPValue ) {
 				SMotifMatch	sMotif( iMotif, strTypeCluster, eSubsequence, (float)dZ, (float)( dAveOne -
 					dAverage ) );
@@ -580,13 +592,13 @@ bool CCoalesceClusterImpl::IsSignificant( size_t iGene, const CPCL& PCL, const v
 		( 1 - dBeta ) * ( dLogPMotifsGivenOut - dLogPMotifsGivenIn ) ) /
 		( 0.5f + 2 * pow( 0.5f - dBeta, 2 ) ) ) );
 
-	g_CatSleipnir.debug( "CCoalesceClusterImpl::IsSignificant( %s ) is %g beta %g, exp. p=%g vs. %g, seq. p=%g vs %g",
-		PCL.GetGene( iGene ).c_str( ), dP, dBeta, dLogPExpressionGivenIn, dLogPExpressionGivenOut,
-		dLogPMotifsGivenIn, dLogPMotifsGivenOut );
 	if( g_CatSleipnir.isDebugEnabled( ) ) {
 		set<SMotifMatch>::const_iterator	iterMotif;
 		size_t								iType;
 
+		g_CatSleipnir.debug( "CCoalesceClusterImpl::IsSignificant( %s ) is %g beta %g, exp. p=%g vs. %g, seq. p=%g vs %g",
+			PCL.GetGene( iGene ).c_str( ), dP, dBeta, dLogPExpressionGivenIn, dLogPExpressionGivenOut,
+			dLogPMotifsGivenIn, dLogPMotifsGivenOut );
 		for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif )
 			if( ( iType = GeneScores.GetType( iterMotif->m_strType ) ) != -1 )
 				g_CatSleipnir.debug( "%g	%s", GeneScores.Get( iType, iterMotif->m_eSubsequence, iGene,

@@ -49,26 +49,6 @@ class CCoalesceHistogramSet {
 public:
 	CCoalesceHistogramSet( ) : m_iMembers(0) { }
 
-	double PoissonTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
-		double	dAveOne, dVarOne, dAveTwo, dVarTwo;
-
-		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
-			return 1;
-		AveVar( iMember, dAveOne, dVarOne );
-		HistSet.AveVar( iMember, dAveTwo, dVarTwo );
-
-// Fake a Skellam with a normal; Student's T tends to be slightly too sensitive
-		return CStatistics::TTestWelch( dAveOne, dVarOne, GetTotal( ), dAveTwo, dVarTwo,
-			HistSet.GetTotal( ) ); }
-// The real thing isn't sensitive enough, or I'm doing it wrong
-//		return CStatistics::SkellamPDF( 0, dAveOne, dAveTwo ); }
-
-	double ZTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
-		double	dAverage, dZ;
-
-		ZScore( iMember, HistSet, dAverage, dZ );
-		return CStatistics::ZTest( dZ, GetTotal( ) ); }
-
 	double ZScore( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAveOne, double& dAverage,
 		double& dZ, bool fCount = true ) const {
 
@@ -94,32 +74,31 @@ public:
 		dZ = ( dAveOne - dAverage ) / dStd;
 		return ( ( dStd > c_dEpsilon ) ? ( 2 * CStatistics::ZTest( dZ, fCount ?
 			min( GetTotal( ), HistSet.GetTotal( ) ) : 1 ) ) :
-			( ( fabs( dAveOne - dAverage ) < c_dEpsilon ) ? 1 : 0 ) ); }
+			( ( fabs( dAveOne - dAverage ) < c_dEpsilon ) ? 0 : 1 ) ); }
 
-	double CohensD( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAverage, double& dZ,
-		bool fCount = true ) const {
+	double CohensD( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAveOne, double& dAverage,
+		double& dZ, bool fCount = true ) const {
 
-		return CohensD( iMember, HistSet, iMember, fCount, dAverage, dZ ); }
+		return CohensD( iMember, HistSet, iMember, fCount, dAveOne, dAverage, dZ ); }
 
 	double CohensD( size_t iOne, const CCoalesceHistogramSet& HistSet, size_t iTwo, bool fCount,
-		double& dAverage, double& dZ ) const {
+		double& dAveOne, double& dAverage, double& dZ ) const {
 		static const double	c_dEpsilon	= 1e-6;
 		tValue	AveOne, VarOne, AveTwo, VarTwo;
-		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dAve, dStd;
+		double	dAveTwo, dVarOne, dVarTwo, dStd;
 
 		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
 			return 1;
 
 		Sums( iOne, AveOne, VarOne );
 		HistSet.Sums( iTwo, AveTwo, VarTwo );
-		dAve = (double)( AveOne + AveTwo ) / ( GetTotal( ) + HistSet.GetTotal( ) );
+		dAverage = (double)( AveOne + AveTwo ) / ( GetTotal( ) + HistSet.GetTotal( ) );
 		dAveOne = (double)AveOne / GetTotal( );
 		dAveTwo = (double)AveTwo / HistSet.GetTotal( );
 		dVarOne = max( 0.0, ( (double)VarOne / GetTotal( ) ) - ( dAveOne * dAveOne ) );
 		dVarTwo = max( 0.0, ( (double)VarTwo / HistSet.GetTotal( ) ) - ( dAveTwo * dAveTwo ) );
 		dStd = sqrt( ( dVarOne + dVarTwo ) / 2 );
 
-		dAverage = dAveOne;
 		dZ = dStd ? ( ( dAveOne - dAveTwo ) / dStd ) : 0;
 // dZ *= 1 - pow( (float)GetTotal( ) / ( GetTotal( ) + HistSet.GetTotal( ) ), 1 ); // doesn't work
 // dZ *= exp( -(float)GetTotal( ) / ( GetTotal( ) + HistSet.GetTotal( ) ) ); // doesn't work
@@ -135,48 +114,7 @@ public:
 
 		return ( ( dStd > c_dEpsilon ) ? ( 2 * CStatistics::ZTest( dZ, fCount ?
 			min( GetTotal( ), HistSet.GetTotal( ) ) : 1 ) ) :
-			( ( fabs( dAveOne - dAveTwo ) < c_dEpsilon ) ? 1 : 0 ) ); }
-
-	double KSTest( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
-		size_t	i;
-		tCount	CumOne, CumTwo, SumOne, SumTwo;
-		float	d, dMax;
-
-		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
-			return 1;
-		SumOne = GetTotal( );
-		SumTwo = HistSet.GetTotal( );
-		CumOne = CumTwo = 0;
-		for( dMax = 0,i = 0; i < GetEdges( ); ++i ) {
-			CumOne += Get( iMember, i );
-			CumTwo += HistSet.Get( iMember, i );
-			if( ( d = fabs( ( (float)CumOne / SumOne ) - ( (float)CumTwo / SumTwo ) ) ) > dMax )
-				dMax = d; }
-
-		return CStatistics::PValueKolmogorovSmirnov( dMax, SumOne, SumTwo ); }
-
-	double Chi2Test( size_t iMember, const CCoalesceHistogramSet& HistSet ) const {
-		size_t	i, iDF;
-		double	dC2, dTmp, dOT, dTO;
-		tCount	One, Two;
-
-		if( !GetEdges( ) || ( GetEdges( ) != HistSet.GetEdges( ) ) )
-			return 1;
-		if( !( GetTotal( ) && HistSet.GetTotal( ) ) )
-			return ( ( GetTotal( ) == HistSet.GetTotal( ) ) ? 1 : 0 );
-		iDF = GetEdges( ) - 1;
-		dOT = sqrt( (double)GetTotal( ) / HistSet.GetTotal( ) );
-		dTO = sqrt( (double)HistSet.GetTotal( ) / GetTotal( ) );
-		for( dC2 = 0,i = 0; i < GetEdges( ); ++i ) {
-			One = Get( iMember, i );
-			Two = HistSet.Get( iMember, i );
-			if( One || Two ) {
-				dTmp = ( dTO * One ) - ( dOT * Two );
-				dC2 += dTmp * dTmp / ( One + Two ); }
-			else
-				iDF--; }
-
-		return ( 1 - CStatistics::Chi2CDF( dC2, iDF ) ); }
+			( ( fabs( dAveOne - dAveTwo ) < c_dEpsilon ) ? 0 : 1 ) ); }
 
 	void Initialize( size_t iMembers, const std::vector<tValue>& vecEdges ) {
 
@@ -320,14 +258,21 @@ protected:
 
 	void Sums( size_t iMember, tValue& Sum, tValue& SumSq ) const {
 		size_t	i;
-		tValue	Cur, Bin;
+		tValue	Cur, BinLow, BinHigh;
 
-		for( Sum = SumSq = 0,i = 0; i < GetEdges( ); ++i ) {
-			Bin = ( !i || ( ( i + 1 ) == GetEdges( ) ) ) ? GetEdge( i ) :
+		for( SumSq = 0,i = 0; i < GetEdges( ); ++i ) {
+			BinLow = i ? BinHigh : ( GetEdge( i ) + GetEdge( i ) - GetEdge( i + 1 ) );
+			BinHigh = GetEdge( i );
+			if( ( i + 1 ) == GetEdges( ) )
+				BinHigh += BinHigh - BinLow;
+// Expected value of x^2 from BinLow to BinHigh
+			Cur = ( pow( BinHigh, 3 ) - pow( BinLow, 3 ) ) / ( BinHigh - BinLow ) / 3;
+			SumSq += Get( iMember, i ) * Cur; }
+		for( Sum = 0,i = 0; i < GetEdges( ); ++i ) {
+			BinLow = ( !i || ( ( i + 1 ) == GetEdges( ) ) ) ? GetEdge( i ) :
 				( ( GetEdge( i ) + GetEdge( i - 1 ) ) / 2 );
-			Cur = Get( iMember, i ) * Bin;
-			Sum += Cur;
-			SumSq += Cur * Bin; } }
+			Cur = Get( iMember, i ) * BinLow;
+			Sum += Cur; } }
 
 	void AveVar( size_t iMember, double& dAve, double& dVar ) const {
 		tValue	Ave, Var;
@@ -563,7 +508,7 @@ protected:
 	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dPValueCondition(0.05f),
 		m_dProbabilityGene(0.95f), m_dPValueMotif(0.05f), m_pMotifs(NULL), m_fMotifs(false),
 		m_iBasesPerMatch(5000), m_dPValueMerge(0.05f), m_dCutoffMerge(2.5f), m_iSizeMinimum(5),
-		m_iThreads(1) { }
+		m_iThreads(1), m_iSizeMerge(100), m_iSizeMaximum(1000) { }
 	virtual ~CCoalesceImpl( );
 
 	void Clear( );
@@ -584,6 +529,7 @@ protected:
 	size_t							m_iNumberCorrelation;
 	size_t							m_iBins;
 	size_t							m_iK;
+	size_t							m_iSizeMerge;
 	size_t							m_iSizeMinimum;
 	size_t							m_iSizeMaximum;
 	size_t							m_iThreads;

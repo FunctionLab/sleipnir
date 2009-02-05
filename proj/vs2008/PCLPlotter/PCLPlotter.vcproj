@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="SVMer"
-	ProjectGUID="{56C30EA3-24DF-4AB4-B68E-17C954F8A7F5}"
-	RootNamespace="SVMer"
+	Name="PCLPlotter"
+	ProjectGUID="{56C30EA3-24DF-4AB4-B68E-17C954F869B0}"
+	RootNamespace="PCLPlotter"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -46,7 +46,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../extlib/svm_perf/;../../../../extlib/gengetopt-2.22/gl/;../../../src/"
+				AdditionalIncludeDirectories="../../../../extlib/gengetopt-2.22/gl/;../../../../extlib/pthreads-w32-2-8-0-release/;../../../src/"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -66,8 +66,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="log4cpp.lib svm_perf.lib"
-				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName);../../../../extlib/svm_perf/;../../../../extlib/smile/"
+				AdditionalDependencies="log4cpp.lib pthreads.lib Ws2_32.lib"
+				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName)"
 				GenerateDebugInformation="true"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -127,7 +127,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="../../../../extlib/svm_perf/;../../../../extlib/gengetopt-2.22/gl/;../../../src/"
+				AdditionalIncludeDirectories="../../../../extlib/gengetopt-2.22/gl/;../../../../extlib/pthreads-w32-2-8-0-release/;../../../src/"
 				PreprocessorDefinitions="_SECURE_SCL=0"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -149,8 +149,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="log4cpp.lib svm_perf.lib"
-				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName);../../../../extlib/svm_perf/;../../../../extlib/smile/"
+				AdditionalDependencies="log4cpp.lib pthreads.lib Ws2_32.lib"
+				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName)"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -187,10 +187,10 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2DE}"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D7523EA6}"
 			>
 			<File
-				RelativePath="..\..\..\tools\SVMer\cmdline.c"
+				RelativePath="..\..\..\tools\PCLPlotter\cmdline.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -234,26 +234,26 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\tools\SVMer\stdafx.cpp"
+				RelativePath="..\..\..\tools\PCLPlotter\PCLPlotter.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\tools\SVMer\SVMer.cpp"
+				RelativePath="..\..\..\tools\PCLPlotter\stdafx.cpp"
 				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFA}"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52AA9E}"
 			>
 			<File
-				RelativePath="..\..\..\tools\SVMer\stdafx.h"
+				RelativePath="..\..\..\tools\PCLPlotter\stdafx.h"
 				>
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\..\tools\SVMer\SVMer.ggo"
+			RelativePath="..\..\..\tools\PCLPlotter\PCLPlotter.ggo"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"

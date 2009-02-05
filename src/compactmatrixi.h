@@ -23,7 +23,6 @@
 #define COMPACTMATRIXI_H
 
 #include "halfmatrixi.h"
-#include "typesi.h"
 
 namespace Sleipnir {
 

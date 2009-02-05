@@ -22,7 +22,8 @@
 #ifndef FILEI_H
 #define FILEI_H
 
-#include "typesi.h"
+#undef int64_t
+#include <stdint.h>
 
 namespace Sleipnir {
 

@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "halfmatrix.h"
-#include "typesi.h"
 
 namespace Sleipnir {
 

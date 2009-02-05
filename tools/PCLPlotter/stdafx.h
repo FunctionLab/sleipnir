@@ -30,7 +30,9 @@
 using namespace std;
 
 #include "dat.h"
+#include "fasta.h"
 #include "genome.h"
+#include "hmm.h"
 #include "measure.h"
 #include "meta.h"
 #include "pcl.h"

@@ -22,12 +22,13 @@
 #ifndef FULLMATRIX_H
 #define FULLMATRIX_H
 
+#undef int64_t
+#include <stdint.h>
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
-
-#include "typesi.h"
 
 namespace Sleipnir {
 

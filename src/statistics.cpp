@@ -23,7 +23,6 @@
 #include "statistics.h"
 #include "measure.h"
 #include "dat.h"
-#include "typesi.h"
 
 /*
  * Implementations thanks to:

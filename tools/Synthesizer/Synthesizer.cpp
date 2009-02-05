@@ -205,6 +205,8 @@ int main( int iArgs, char** aszArgs ) {
 
 			fTFs = ( find( vecstrTypes.begin( ), vecstrTypes.end( ), iterType->first ) !=
 				vecstrTypes.end( ) );
+			cerr << "Generating " << iterType->first << " sequence with" << ( fTFs ? "" : "out" ) <<
+				" TF sequences..." << endl;
 			if( !iterType->first.empty( ) )
 				strHeader = strHeader + '\t' + iterType->first;
 			for( i = 0; i < PCL.GetGenes( ); ++i ) {

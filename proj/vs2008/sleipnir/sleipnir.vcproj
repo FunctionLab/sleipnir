@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../extlib/pthreads-w32-2-8-0-release/;../../../../extlib/log4cpp-1.0/include/;../../../../extlib/smile/;../../../../extlib/svm_light/"
+				AdditionalIncludeDirectories="../../../../extlib/pthreads-w32-2-8-0-release/;../../../../extlib/log4cpp-1.0/include/;../../../../extlib/smile/;../../../../extlib/svm_perf/"
 				PreprocessorDefinitions="PTW32_STATIC_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,7 +107,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="../../../../extlib/pthreads-w32-2-8-0-release/;../../../../extlib/log4cpp-1.0/include/;../../../../extlib/smile/;../../../../extlib/svm_light/"
+				AdditionalIncludeDirectories="../../../../extlib/pthreads-w32-2-8-0-release/;../../../../extlib/log4cpp-1.0/include/;../../../../extlib/smile/;../../../../extlib/svm_perf/"
 				PreprocessorDefinitions="PTW32_STATIC_LIB;NDEBUG;_SECURE_SCL=0"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -618,10 +618,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\triei.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\src\typesi.h"
 					>
 				</File>
 			</Filter>

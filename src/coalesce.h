@@ -150,6 +150,14 @@ public:
 
 		m_iSizeMaximum = iSizeMotifs; }
 
+	size_t GetSizeMerge( ) const {
+
+		return m_iSizeMerge; }
+
+	void SetSizeMerge( size_t iSizeMerge ) {
+
+		m_iSizeMerge = iSizeMerge; }
+
 	void ClearDatasets( ) {
 
 		m_vecsDatasets.clear( ); }

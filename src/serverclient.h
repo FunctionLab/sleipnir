@@ -22,7 +22,8 @@
 #ifndef SERVERCLIENT_H
 #define SERVERCLIENT_H
 
-#include "typesi.h"
+#undef int64_t
+#include <stdint.h>
 
 namespace Sleipnir {
 

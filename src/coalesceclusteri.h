@@ -84,6 +84,7 @@ protected:
 		const CCoalesceGroupHistograms*	m_pHistsCluster;
 		const CCoalesceGroupHistograms*	m_pHistsPot;
 		float							m_dPValue;
+		const std::vector<uint32_t>*	m_pveciMotifs;
 		std::vector<SMotifMatch>		m_vecsMotifs;
 	};
 

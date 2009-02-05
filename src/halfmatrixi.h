@@ -22,6 +22,9 @@
 #ifndef HALFMATRIXI_H
 #define HALFMATRIXI_H
 
+#undef int64_t
+#include <stdint.h>
+
 namespace Sleipnir {
 
 class CHalfMatrixBase {
