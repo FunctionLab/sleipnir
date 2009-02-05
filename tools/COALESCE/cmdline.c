@@ -51,12 +51,15 @@ const char *gengetopt_args_info_help[] = {
   "  -q, --sequences=STRING        Sequence types to use (comma separated)",
   "  -b, --bases=INT               Resolution of bases per motif match  \n                                  (default=`5000')",
   "  -z, --size_minimum=INT        Minimum gene count for clusters of interest  \n                                  (default=`5')",
-  "  -Z, --size_maximum=INT        Maximum motif count to consider a cluster \n                                  saturated  (default=`100')",
+  "  -E, --size_merge=INT          Maximum motif count for realtime merging  \n                                  (default=`100')",
+  "  -Z, --size_maximum=INT        Maximum motif count to consider a cluster \n                                  saturated  (default=`1000')",
   "\nAdditional Data:",
   "  -n, --nucleosomes=filename    Nucleosome position file (WIG)",
   "  -a, --conservation=filename   Evolutionary conservation file (WIG)",
   "\nPostprocessing Parameters:",
   "  -j, --postprocess=directory   Input directory of clusters to postprocess",
+  "  -K, --known_motifs=filename   File containing known motifs",
+  "  -F, --known_cutoff=DOUBLE     P-value cutoff for known motif labeling  \n                                  (default=`0.05')",
   "  -J, --cutoff_postprocess=DOUBLE\n                                Similarity cutoff for cluster merging  \n                                  (default=`0.75')",
   "  -L, --fraction_postprocess=DOUBLE\n                                Overlap fraction for postprocessing \n                                  gene/condition inclusion  (default=`0.5')",
   "  -T, --cutoff_trim=DOUBLE      Cocluster stdev cutoff for cluster trimming  \n                                  (default=`1')",
@@ -116,10 +119,13 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->sequences_given = 0 ;
   args_info->bases_given = 0 ;
   args_info->size_minimum_given = 0 ;
+  args_info->size_merge_given = 0 ;
   args_info->size_maximum_given = 0 ;
   args_info->nucleosomes_given = 0 ;
   args_info->conservation_given = 0 ;
   args_info->postprocess_given = 0 ;
+  args_info->known_motifs_given = 0 ;
+  args_info->known_cutoff_given = 0 ;
   args_info->cutoff_postprocess_given = 0 ;
   args_info->fraction_postprocess_given = 0 ;
   args_info->cutoff_trim_given = 0 ;
@@ -171,7 +177,9 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->bases_orig = NULL;
   args_info->size_minimum_arg = 5;
   args_info->size_minimum_orig = NULL;
-  args_info->size_maximum_arg = 100;
+  args_info->size_merge_arg = 100;
+  args_info->size_merge_orig = NULL;
+  args_info->size_maximum_arg = 1000;
   args_info->size_maximum_orig = NULL;
   args_info->nucleosomes_arg = NULL;
   args_info->nucleosomes_orig = NULL;
@@ -179,6 +187,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->conservation_orig = NULL;
   args_info->postprocess_arg = NULL;
   args_info->postprocess_orig = NULL;
+  args_info->known_motifs_arg = NULL;
+  args_info->known_motifs_orig = NULL;
+  args_info->known_cutoff_arg = 0.05;
+  args_info->known_cutoff_orig = NULL;
   args_info->cutoff_postprocess_arg = 0.75;
   args_info->cutoff_postprocess_orig = NULL;
   args_info->fraction_postprocess_arg = 0.5;
@@ -229,22 +241,25 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->sequences_help = gengetopt_args_info_help[20] ;
   args_info->bases_help = gengetopt_args_info_help[21] ;
   args_info->size_minimum_help = gengetopt_args_info_help[22] ;
-  args_info->size_maximum_help = gengetopt_args_info_help[23] ;
-  args_info->nucleosomes_help = gengetopt_args_info_help[25] ;
-  args_info->conservation_help = gengetopt_args_info_help[26] ;
-  args_info->postprocess_help = gengetopt_args_info_help[28] ;
-  args_info->cutoff_postprocess_help = gengetopt_args_info_help[29] ;
-  args_info->fraction_postprocess_help = gengetopt_args_info_help[30] ;
-  args_info->cutoff_trim_help = gengetopt_args_info_help[31] ;
-  args_info->remove_rcs_help = gengetopt_args_info_help[32] ;
-  args_info->min_info_help = gengetopt_args_info_help[33] ;
-  args_info->min_zscore_help = gengetopt_args_info_help[34] ;
-  args_info->max_motifs_help = gengetopt_args_info_help[35] ;
-  args_info->cache_help = gengetopt_args_info_help[37] ;
-  args_info->threads_help = gengetopt_args_info_help[39] ;
-  args_info->skip_help = gengetopt_args_info_help[40] ;
-  args_info->random_help = gengetopt_args_info_help[41] ;
-  args_info->verbosity_help = gengetopt_args_info_help[42] ;
+  args_info->size_merge_help = gengetopt_args_info_help[23] ;
+  args_info->size_maximum_help = gengetopt_args_info_help[24] ;
+  args_info->nucleosomes_help = gengetopt_args_info_help[26] ;
+  args_info->conservation_help = gengetopt_args_info_help[27] ;
+  args_info->postprocess_help = gengetopt_args_info_help[29] ;
+  args_info->known_motifs_help = gengetopt_args_info_help[30] ;
+  args_info->known_cutoff_help = gengetopt_args_info_help[31] ;
+  args_info->cutoff_postprocess_help = gengetopt_args_info_help[32] ;
+  args_info->fraction_postprocess_help = gengetopt_args_info_help[33] ;
+  args_info->cutoff_trim_help = gengetopt_args_info_help[34] ;
+  args_info->remove_rcs_help = gengetopt_args_info_help[35] ;
+  args_info->min_info_help = gengetopt_args_info_help[36] ;
+  args_info->min_zscore_help = gengetopt_args_info_help[37] ;
+  args_info->max_motifs_help = gengetopt_args_info_help[38] ;
+  args_info->cache_help = gengetopt_args_info_help[40] ;
+  args_info->threads_help = gengetopt_args_info_help[42] ;
+  args_info->skip_help = gengetopt_args_info_help[43] ;
+  args_info->random_help = gengetopt_args_info_help[44] ;
+  args_info->verbosity_help = gengetopt_args_info_help[45] ;
   
 }
 
@@ -348,6 +363,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->sequences_orig));
   free_string_field (&(args_info->bases_orig));
   free_string_field (&(args_info->size_minimum_orig));
+  free_string_field (&(args_info->size_merge_orig));
   free_string_field (&(args_info->size_maximum_orig));
   free_string_field (&(args_info->nucleosomes_arg));
   free_string_field (&(args_info->nucleosomes_orig));
@@ -355,6 +371,9 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->conservation_orig));
   free_string_field (&(args_info->postprocess_arg));
   free_string_field (&(args_info->postprocess_orig));
+  free_string_field (&(args_info->known_motifs_arg));
+  free_string_field (&(args_info->known_motifs_orig));
+  free_string_field (&(args_info->known_cutoff_orig));
   free_string_field (&(args_info->cutoff_postprocess_orig));
   free_string_field (&(args_info->fraction_postprocess_orig));
   free_string_field (&(args_info->cutoff_trim_orig));
@@ -439,6 +458,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "bases", args_info->bases_orig, 0);
   if (args_info->size_minimum_given)
     write_into_file(outfile, "size_minimum", args_info->size_minimum_orig, 0);
+  if (args_info->size_merge_given)
+    write_into_file(outfile, "size_merge", args_info->size_merge_orig, 0);
   if (args_info->size_maximum_given)
     write_into_file(outfile, "size_maximum", args_info->size_maximum_orig, 0);
   if (args_info->nucleosomes_given)
@@ -447,6 +468,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "conservation", args_info->conservation_orig, 0);
   if (args_info->postprocess_given)
     write_into_file(outfile, "postprocess", args_info->postprocess_orig, 0);
+  if (args_info->known_motifs_given)
+    write_into_file(outfile, "known_motifs", args_info->known_motifs_orig, 0);
+  if (args_info->known_cutoff_given)
+    write_into_file(outfile, "known_cutoff", args_info->known_cutoff_orig, 0);
   if (args_info->cutoff_postprocess_given)
     write_into_file(outfile, "cutoff_postprocess", args_info->cutoff_postprocess_orig, 0);
   if (args_info->fraction_postprocess_given)
@@ -730,10 +755,13 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "sequences",	1, NULL, 'q' },
         { "bases",	1, NULL, 'b' },
         { "size_minimum",	1, NULL, 'z' },
+        { "size_merge",	1, NULL, 'E' },
         { "size_maximum",	1, NULL, 'Z' },
         { "nucleosomes",	1, NULL, 'n' },
         { "conservation",	1, NULL, 'a' },
         { "postprocess",	1, NULL, 'j' },
+        { "known_motifs",	1, NULL, 'K' },
+        { "known_cutoff",	1, NULL, 'F' },
         { "cutoff_postprocess",	1, NULL, 'J' },
         { "fraction_postprocess",	1, NULL, 'L' },
         { "cutoff_trim",	1, NULL, 'T' },
@@ -749,7 +777,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:f:d:o:p:P:m:k:g:G:y:Y:c:C:q:b:z:Z:n:a:j:J:L:T:Ru:U:x:e:t:s:r:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:f:d:o:p:P:m:k:g:G:y:Y:c:C:q:b:z:E:Z:n:a:j:K:F:J:L:T:Ru:U:x:e:t:s:r:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -978,12 +1006,24 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'E':	/* Maximum motif count for realtime merging.  */
+        
+        
+          if (update_arg( (void *)&(args_info->size_merge_arg), 
+               &(args_info->size_merge_orig), &(args_info->size_merge_given),
+              &(local_args_info.size_merge_given), optarg, 0, "100", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "size_merge", 'E',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'Z':	/* Maximum motif count to consider a cluster saturated.  */
         
         
           if (update_arg( (void *)&(args_info->size_maximum_arg), 
                &(args_info->size_maximum_orig), &(args_info->size_maximum_given),
-              &(local_args_info.size_maximum_given), optarg, 0, "100", ARG_INT,
+              &(local_args_info.size_maximum_given), optarg, 0, "1000", ARG_INT,
               check_ambiguity, override, 0, 0,
               "size_maximum", 'Z',
               additional_error))
@@ -1022,6 +1062,30 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.postprocess_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "postprocess", 'j',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'K':	/* File containing known motifs.  */
+        
+        
+          if (update_arg( (void *)&(args_info->known_motifs_arg), 
+               &(args_info->known_motifs_orig), &(args_info->known_motifs_given),
+              &(local_args_info.known_motifs_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "known_motifs", 'K',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'F':	/* P-value cutoff for known motif labeling.  */
+        
+        
+          if (update_arg( (void *)&(args_info->known_cutoff_arg), 
+               &(args_info->known_cutoff_orig), &(args_info->known_cutoff_given),
+              &(local_args_info.known_cutoff_given), optarg, 0, "0.05", ARG_DOUBLE,
+              check_ambiguity, override, 0, 0,
+              "known_cutoff", 'F',
               additional_error))
             goto failure;
         

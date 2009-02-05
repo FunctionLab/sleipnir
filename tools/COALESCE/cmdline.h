@@ -85,7 +85,10 @@ struct gengetopt_args_info
   int size_minimum_arg;	/**< @brief Minimum gene count for clusters of interest (default='5').  */
   char * size_minimum_orig;	/**< @brief Minimum gene count for clusters of interest original value given at command line.  */
   const char *size_minimum_help; /**< @brief Minimum gene count for clusters of interest help description.  */
-  int size_maximum_arg;	/**< @brief Maximum motif count to consider a cluster saturated (default='100').  */
+  int size_merge_arg;	/**< @brief Maximum motif count for realtime merging (default='100').  */
+  char * size_merge_orig;	/**< @brief Maximum motif count for realtime merging original value given at command line.  */
+  const char *size_merge_help; /**< @brief Maximum motif count for realtime merging help description.  */
+  int size_maximum_arg;	/**< @brief Maximum motif count to consider a cluster saturated (default='1000').  */
   char * size_maximum_orig;	/**< @brief Maximum motif count to consider a cluster saturated original value given at command line.  */
   const char *size_maximum_help; /**< @brief Maximum motif count to consider a cluster saturated help description.  */
   char * nucleosomes_arg;	/**< @brief Nucleosome position file (WIG).  */
@@ -97,6 +100,12 @@ struct gengetopt_args_info
   char * postprocess_arg;	/**< @brief Input directory of clusters to postprocess.  */
   char * postprocess_orig;	/**< @brief Input directory of clusters to postprocess original value given at command line.  */
   const char *postprocess_help; /**< @brief Input directory of clusters to postprocess help description.  */
+  char * known_motifs_arg;	/**< @brief File containing known motifs.  */
+  char * known_motifs_orig;	/**< @brief File containing known motifs original value given at command line.  */
+  const char *known_motifs_help; /**< @brief File containing known motifs help description.  */
+  double known_cutoff_arg;	/**< @brief P-value cutoff for known motif labeling (default='0.05').  */
+  char * known_cutoff_orig;	/**< @brief P-value cutoff for known motif labeling original value given at command line.  */
+  const char *known_cutoff_help; /**< @brief P-value cutoff for known motif labeling help description.  */
   double cutoff_postprocess_arg;	/**< @brief Similarity cutoff for cluster merging (default='0.75').  */
   char * cutoff_postprocess_orig;	/**< @brief Similarity cutoff for cluster merging original value given at command line.  */
   const char *cutoff_postprocess_help; /**< @brief Similarity cutoff for cluster merging help description.  */
@@ -152,10 +161,13 @@ struct gengetopt_args_info
   unsigned int sequences_given ;	/**< @brief Whether sequences was given.  */
   unsigned int bases_given ;	/**< @brief Whether bases was given.  */
   unsigned int size_minimum_given ;	/**< @brief Whether size_minimum was given.  */
+  unsigned int size_merge_given ;	/**< @brief Whether size_merge was given.  */
   unsigned int size_maximum_given ;	/**< @brief Whether size_maximum was given.  */
   unsigned int nucleosomes_given ;	/**< @brief Whether nucleosomes was given.  */
   unsigned int conservation_given ;	/**< @brief Whether conservation was given.  */
   unsigned int postprocess_given ;	/**< @brief Whether postprocess was given.  */
+  unsigned int known_motifs_given ;	/**< @brief Whether known_motifs was given.  */
+  unsigned int known_cutoff_given ;	/**< @brief Whether known_cutoff was given.  */
   unsigned int cutoff_postprocess_given ;	/**< @brief Whether cutoff_postprocess was given.  */
   unsigned int fraction_postprocess_given ;	/**< @brief Whether fraction_postprocess was given.  */
   unsigned int cutoff_trim_given ;	/**< @brief Whether cutoff_trim was given.  */

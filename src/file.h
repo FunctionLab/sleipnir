@@ -86,9 +86,9 @@ public:
 	 * String containing all characters up to (but excluding) the next tab or newline.
 	 */
 	static std::string OpenToken( const char* szInput, const char** ppcEnd = NULL ) {
-		const char*		pcStart;
-		const char*		pcEnd;
-		unsigned char	c;
+		const char*	pcStart;
+		const char*	pcEnd;
+		char		c;
 
 		do
 			c = *(szInput++);
