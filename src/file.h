@@ -92,9 +92,9 @@ public:
 
 		do
 			c = *(szInput++);
-		while( ( c != -1 ) && ( c != '\t' ) && isspace( c ) );
+		while( c && ( c != -1 ) && ( c != '\t' ) && isspace( c ) );
 		pcStart = szInput - 1;
-		for( ; ( c != -1 ) && ( c != '\t' ) && !IsNewline( c ); c = *(szInput++) );
+		for( ; c && ( c != -1 ) && ( c != '\t' ) && !IsNewline( c ); c = *(szInput++) );
 		pcEnd = szInput;
 		if( ppcEnd )
 			*ppcEnd = pcEnd - ( ( !c || IsNewline( c ) ) ? 1 : 0 );
