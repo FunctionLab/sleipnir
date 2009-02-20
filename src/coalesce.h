@@ -31,7 +31,6 @@ namespace Sleipnir {
 class CCoalesce : CCoalesceImpl {
 public:
 	bool Cluster( const CPCL& PCL, const CFASTA& FASTA, std::vector<CCoalesceCluster>& vecClusters );
-	bool Cluster2( const CPCL& PCL, const CFASTA& FASTA, std::vector<CCoalesceCluster>& vecClusters );
 
 	void SetPValueCorrelation( float dPValue ) {
 

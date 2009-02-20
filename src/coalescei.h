@@ -116,10 +116,10 @@ public:
 
 	void Initialize( size_t iMembers, const std::vector<tValue>& vecEdges ) {
 
-		SetMembers( iMembers );
 		m_vecEdges.resize( vecEdges.size( ) );
 		std::copy( vecEdges.begin( ), vecEdges.end( ), m_vecEdges.begin( ) );
-		m_iZero = GetBin( 0 ); }
+		m_iZero = GetBin( 0 );
+		SetMembers( iMembers ); }
 
 	void Initialize( size_t iMembers, size_t iBins, tValue Step ) {
 		std::vector<tValue>	vecEdges;

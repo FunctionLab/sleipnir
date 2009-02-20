@@ -165,9 +165,7 @@ protected:
 
 		return sMotif.GetHash( ); }
 
-public:
 	void Add( size_t, CCoalesceCluster& );
-protected:
 	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
 	bool AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float,
 		size_t );
