@@ -43,6 +43,7 @@ public:
 		CCoalesceGroupHistograms& HistogramsCluster, CCoalesceGroupHistograms* pHistogramsPot ) const;
 	size_t Open( const std::string& strPCL, size_t iSkip, const CPCL& PCL,
 		CCoalesceMotifLibrary* pMotifs = NULL );
+	size_t Open( std::istream& istm, const CPCL& PCL, CCoalesceMotifLibrary* pMotifs = NULL );
 	bool Open( const CHierarchy& Hierarchy, const std::vector<CCoalesceCluster>& vecClusters,
 		const std::vector<std::string>& vecstrClusters, float dFraction, float dCutoff, size_t iCutoff,
 		CCoalesceMotifLibrary* pMotifs = NULL );
@@ -53,6 +54,8 @@ public:
 	float GetSimilarity( const CCoalesceCluster& Cluster, size_t iGenes, size_t iDatasets ) const;
 	void Snapshot( const CCoalesceGeneScores& GeneScores, CCoalesceGroupHistograms& Histograms );
 	size_t RemoveMotifs( const CCoalesceMotifLibrary&, float dZScore );
+	bool LabelMotifs( const CCoalesceMotifLibrary&, float dPenaltyGap, float dPenaltyMismatch,
+		float dPValue );
 
 	bool IsConverged( ) {
 

@@ -143,11 +143,13 @@ bool SCoalesceDataset::CalculateCovariance( const CPCL& PCL ) {
 bool SMotifMatch::Open( istream& istm, CCoalesceMotifLibrary& Motifs ) {
 	string			strLine;
 	vector<string>	vecstrLine;
+	size_t			i;
 
+	m_vecprstrdKnown.clear( );
 	strLine.resize( CFile::GetBufferSize( ) );
 	istm.getline( &strLine[ 0 ], strLine.size( ) - 1 );
 	CMeta::Tokenize( strLine.c_str( ), vecstrLine );
-	if( vecstrLine.size( ) != 3 ) {
+	if( vecstrLine.size( ) < 3 ) {
 		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid line: %s", strLine.c_str( ) );
 		return false; }
 	m_strType = vecstrLine[ 0 ];
@@ -156,6 +158,21 @@ bool SMotifMatch::Open( istream& istm, CCoalesceMotifLibrary& Motifs ) {
 		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid subsequence: %s", vecstrLine[ 1 ].c_str( ) );
 		return false; }
 	m_dZ = (float)atof( vecstrLine[ 2 ].c_str( ) );
+
+	if( vecstrLine.size( ) > 3 ) {
+		vector<string>	vecstrKnowns;
+
+		CMeta::Tokenize( vecstrLine[ 3 ].c_str( ), vecstrKnowns, "|" );
+		for( i = 0; i < vecstrKnowns.size( ); ++i ) {
+			vector<string>	vecstrKnown;
+
+			CMeta::Tokenize( vecstrKnowns[ i ].c_str( ), vecstrKnown, ":" );
+			if( vecstrKnown.size( ) != 2 ) {
+				g_CatSleipnir.error( "SMotifMatch::Open( ) invalid known: %s", vecstrKnowns[ i ].c_str( ) );
+				return false; }
+			m_vecprstrdKnown.push_back( pair<string, float>( vecstrKnown[ 0 ],
+				(float)atof( vecstrKnown[ 1 ].c_str( ) ) ) ); } }
+
 	istm.getline( &strLine[ 0 ], strLine.size( ) - 1 );
 	if( ( m_iMotif = Motifs.Open( strLine.c_str( ) ) ) == -1 ) {
 		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid motif: %s", strLine.c_str( ) );
@@ -174,7 +191,7 @@ uint32_t SMotifMatch::Open( const CHierarchy& Hier, const vector<SMotifMatch>& v
 		m_strType = sMotif.m_strType;
 		m_dZ += sMotif.m_dZ;
 		iCount++;
-		return ( m_iMotif = Motifs.Merge( sMotif.m_iMotif ) ); }
+		return ( m_iMotif = sMotif.m_iMotif ); }
 
 	return ( ( ( ( iLeft = Open( Hier.Get( false ), vecsMotifs, Motifs, iCount ) ) == -1 ) ||
 		( ( iRight = Open( Hier.Get( true ), vecsMotifs, Motifs, iCount ) ) == -1 ) ) ? -1 :
@@ -192,9 +209,14 @@ string SMotifMatch::Save( const CCoalesceMotifLibrary* pMotifs, bool fPWM, float
 	float dPenaltyGap, float dPenaltyMismatch, bool fNoRCs ) const {
 	ostringstream	ossm;
 	string			strPWM;
+	size_t			i;
 
-	ossm << m_strType << '\t' << CCoalesceSequencerBase::GetSubsequence( m_eSubsequence ) << '\t' << m_dZ <<
-		endl;
+	ossm << m_strType << '\t' << CCoalesceSequencerBase::GetSubsequence( m_eSubsequence ) << '\t' << m_dZ;
+	for( i = 0; i < m_vecprstrdKnown.size( ); ++i ) {
+		const pair<string, float>&	prstrdKnown	= m_vecprstrdKnown[ i ];
+
+		ossm << ( i ? "|" : "\t" ) << prstrdKnown.first << ':' << prstrdKnown.second; }
+	ossm << endl;
 	if( pMotifs ) {
 		ossm << pMotifs->GetMotif( m_iMotif );
 		if( fPWM ) {
@@ -206,5 +228,11 @@ string SMotifMatch::Save( const CCoalesceMotifLibrary* pMotifs, bool fPWM, float
 		ossm << m_iMotif;
 
 	return ossm.str( ); }
+
+bool SMotifMatch::Label( const CCoalesceMotifLibrary& Motifs, float dPenaltyGap, float dPenaltyMismatch,
+	float dPValue ) {
+
+	m_vecprstrdKnown.clear( );
+	return Motifs.GetKnown( m_iMotif, dPenaltyGap, dPenaltyMismatch, m_vecprstrdKnown, dPValue ); }
 
 }

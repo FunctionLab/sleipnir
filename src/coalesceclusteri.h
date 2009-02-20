@@ -35,8 +35,10 @@ class CCoalesceClusterImpl {
 protected:
 	typedef std::vector<std::map<std::string, std::set<SMotifMatch> > >	TVecMapStrSetSMotifs;
 
-	static const char	c_cStar	= '*';
+	static const char	c_cStar		= '*';
 	static const char	c_szMotifs[];
+	static const char	c_szConditions[];
+	static const char	c_szGenes[];
 
 	struct SDataset {
 		const SCoalesceDataset*	m_psDataset;
@@ -163,7 +165,9 @@ protected:
 
 		return sMotif.GetHash( ); }
 
+public:
 	void Add( size_t, CCoalesceCluster& );
+protected:
 	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
 	bool AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float,
 		size_t );

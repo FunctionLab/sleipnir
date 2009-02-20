@@ -29,6 +29,8 @@ enum EFile {
 };
 
 int main_postprocess( const gengetopt_args_info&, CCoalesceMotifLibrary& );
+int main_test( const gengetopt_args_info&, const CPCL&, const CFASTA&, CCoalesceMotifLibrary& );
+int main_test2( const gengetopt_args_info&, const CPCL&, const CFASTA&, CCoalesceMotifLibrary& );
 bool recluster( const gengetopt_args_info&, size_t, CCoalesceMotifLibrary&, const CHierarchy&,
 	const vector<CCoalesceCluster>&, const vector<string>&, const CPCL&, size_t& );
 bool trim( const gengetopt_args_info&, const CPCL&, vector<CCoalesceCluster>& );
@@ -81,6 +83,34 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.fasta_arg && !FASTA.Open( sArgs.fasta_arg, setstrTypes ) ) {
 		cerr << "Could not open: " << sArgs.fasta_arg << endl;
 		return 1; }
+
+/*
+size_t					iGene	= 4;
+uint32_t				iOne;
+float					d;
+vector<SFASTASequence>	vecsSequences;
+SCoalesceModifiers		sMods;
+SCoalesceModifierCache	sCache( sMods );
+vector<float>			vecdScores;
+vector<size_t>			veciLengths;
+CCoalesceGeneScores		GeneScores;
+float*					ad;
+
+GeneScores.SetGenes( PCL.GetGenes( ) );
+iOne = Motifs.Open( "C:1 G:3 A:3 T:3 G:3 A:3 G:3 (A:1)|(C:1)" );
+FASTA.Get( FASTA.GetGene( PCL.GetGene( iGene ) ), vecsSequences );
+for( i = 0; i < vecsSequences.size( ); ++i )
+	if( vecsSequences[ i ].m_strType == "5" ) {
+		d = Motifs.GetMatch( vecsSequences[ i ].m_vecstrSequences[ 0 ], iOne, 0, sCache );
+		cerr << ( d / vecsSequences[ i ].m_vecstrSequences[ 0 ].length( ) ) << endl;
+
+		GeneScores.Add( iGene, Motifs, vecsSequences[ i ], sCache, iOne, vecdScores, veciLengths );
+		ad = GeneScores.Get( GeneScores.GetType( vecsSequences[ i ].m_strType ),
+			CCoalesceSequencerBase::ESubsequenceTotal, iGene );
+		cerr << ad[ iOne ] << endl;
+		return 0; }
+//*/
+//return main_test2( sArgs, PCL, FASTA, Motifs );
 
 	if( sArgs.datasets_arg ) {
 		static const size_t	c_iBuffer	= 131072;
@@ -153,6 +183,7 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 	CHierarchy*					pHier;
 	vector<string>				vecstrClusters;
 	CPCL						PCL;
+	ifstream					ifsm;
 
 	if( sArgs.input_arg ) {
 		if( !PCL.Open( sArgs.input_arg, sArgs.skip_arg ) ) {
@@ -161,6 +192,12 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 	else if( !PCL.Open( cin, sArgs.skip_arg ) ) {
 		cerr << "Could not open: stdin" << endl;
 		return 1; }
+	if( sArgs.known_motifs_arg ) {
+		ifsm.open( sArgs.known_motifs_arg );
+		if( !Motifs.OpenKnown( ifsm ) ) {
+			cerr << "Could not open: " << sArgs.known_motifs_arg << endl;
+			return 1; }
+		ifsm.close( ); }
 	fFailed = false;
 	strDir = sArgs.postprocess_arg;
 	FOR_EACH_DIRECTORY_FILE(strDir, strFile)
@@ -180,6 +217,23 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 		vecstrClusters.push_back( strBase ); }
 	if( fFailed )
 		vecClustersFrom.pop_back( );
+	if( vecClustersFrom.empty( ) ) {
+		char	szBuffer[ 16 ];
+
+		fFailed = false;
+		ifsm.clear( );
+		ifsm.open( sArgs.postprocess_arg );
+		while( !ifsm.eof( ) ) {
+			if( !fFailed )
+				vecClustersFrom.push_back( CCoalesceCluster( ) );
+			if( fFailed = ( ( iDatasets = vecClustersFrom.back( ).Open( ifsm, PCL, &Motifs ) ) == -1 ) )
+				continue;
+			if( !( vecstrClusters.size( ) % 50 ) )
+				cerr << "Opened cluster " << vecstrClusters.size( ) << "..." << endl;
+			sprintf_s( szBuffer, "c%06d", vecstrClusters.size( ) );
+			vecstrClusters.push_back( szBuffer ); }
+		if( fFailed )
+			vecClustersFrom.pop_back( ); }
 
 	cerr << "Trimming clusters..." << endl;
 	if( !trim( sArgs, PCL, vecClustersFrom ) )
@@ -216,13 +270,9 @@ bool recluster( const gengetopt_args_info& sArgs, size_t iPairs, CCoalesceMotifL
 			return true; }
 
 		Cluster.RemoveMotifs( Motifs, (float)sArgs.min_zscore_arg );
-/*
-		if( sArgs.known_motifs_arg ) {
-			if( !Motifs.OpenKnown( sArgs.known_motifs_arg ) ) {
-				cerr << "Could not open: " << sArgs.known_motifs_arg << endl;
-				return 1; }
-			Cluster.LabelMotifs( Motifs, sArgs.known_cutoff_arg ); }
-*/
+		if( !Cluster.LabelMotifs( Motifs, (float)sArgs.penalty_gap_arg, (float)sArgs.penalty_mismatch_arg,
+			(float)sArgs.known_cutoff_arg ) )
+			return false;
 		if( sArgs.output_arg )
 			Cluster.Save( sArgs.output_arg, iID, PCL, &Motifs );
 		Cluster.Save( cout, iID, PCL, &Motifs, (float)sArgs.min_info_arg, (float)sArgs.penalty_gap_arg,
@@ -304,3 +354,316 @@ bool trim( const gengetopt_args_info& sArgs, const CPCL& PCL, vector<CCoalesceCl
 		Cluster.RemoveGenes( veciRemove ); }
 
 	return true; }
+
+struct STestFASTA {
+	string			m_strSequence;
+	const CFASTA*	m_pFASTA;
+	size_t			m_iGene;
+};
+
+void* ThreadTestFASTA( void* pData ) {
+	STestFASTA*				psData;
+	vector<SFASTASequence>	vecsSequences;
+
+	psData = (STestFASTA*)pData;
+	psData->m_pFASTA->Get( psData->m_iGene, vecsSequences );
+	if( !( vecsSequences.empty( ) || vecsSequences[ 0 ].m_vecstrSequences.empty( ) ) )
+		psData->m_strSequence = vecsSequences[ 0 ].m_vecstrSequences[ 0 ];
+
+	return NULL; }
+
+struct SThreadCombineMotif {
+	size_t							m_iOffset;
+	size_t							m_iStep;
+	const std::vector<size_t>*		m_pveciPCL2FASTA;
+	CCoalesceGeneScores*			m_pGeneScores;
+	const CCoalesceMotifLibrary*	m_pMotifs;
+	uint32_t						m_iMotif;
+	const CFASTA*					m_pFASTA;
+	const SCoalesceModifiers*		m_psModifiers;
+};
+
+void* ThreadCombineMotif( void* pData ) {
+	SThreadCombineMotif*	psData;
+	size_t					i, j;
+	vector<float>			vecdScores;
+	vector<size_t>			veciLengths;
+
+	psData = (SThreadCombineMotif*)pData;
+	SCoalesceModifierCache	sModifiers( *psData->m_psModifiers );
+
+	for( i = psData->m_iOffset; i < psData->m_pveciPCL2FASTA->size( ); i += psData->m_iStep )
+		if( (*psData->m_pveciPCL2FASTA)[ i ] != -1 ) {
+			vector<SFASTASequence>	vecsSequences;
+
+			if( psData->m_pFASTA->Get( (*psData->m_pveciPCL2FASTA)[ i ], vecsSequences ) ) {
+				sModifiers.Get( i );
+				for( j = 0; j < vecsSequences.size( ); ++j )
+					if( !psData->m_pGeneScores->Add( i, *psData->m_pMotifs, vecsSequences[ j ],
+						sModifiers, psData->m_iMotif, vecdScores, veciLengths ) )
+						break; } }
+
+	return NULL; }
+
+int main_test( const gengetopt_args_info& sArgs, const CPCL& PCL, const CFASTA& FASTA, CCoalesceMotifLibrary& Motifs ) {
+	CCoalesceGeneScores			GeneScores;
+	vector<size_t>				veciPCL2FASTA;
+	SCoalesceModifiers			sMods;
+	vector<vector<float> >		vecvecdCounts;
+	vector<size_t>				veciLengths;
+	SCoalesceModifierCache		sModifiers( sMods );
+	size_t						i, j, k;
+	uint32_t					iMotifOne, iMotifTwo;
+	vector<uint32_t>			veciMotifs;
+	vector<float>				vecdScores;
+	float						d;
+	CCoalesceCluster			Cluster, Pot;
+	CCoalesceGroupHistograms	HistsCluster( 12, 1.0f / sArgs.bases_arg );
+	CCoalesceGroupHistograms	HistsPot( 12, 1.0f / sArgs.bases_arg );
+	CCoalesceSequencerBase::ESubsequence	eSubsequence;
+	unsigned short				s;
+	vector<pthread_t>			vecpthdThreads;
+	vector<SThreadCombineMotif>	vecsThreads;
+
+/*
+	vector<STestFASTA>			vecsThreads;
+
+	vecpthdThreads.resize( sArgs.threads_arg );
+	vecsThreads.resize( vecpthdThreads.size( ) );
+	for( i = 0; i < 100; ++i ) {
+		iFASTA = rand( ) % FASTA.GetGenes( );
+		cerr << i << '\t' << FASTA.GetGene( iFASTA ) << endl;
+		for( j = 0; j < vecpthdThreads.size( ); ++j ) {
+			vecsThreads[ j ].m_iGene = iFASTA;
+			vecsThreads[ j ].m_pFASTA = &FASTA;
+			vecsThreads[ j ].m_strSequence = "";
+			pthread_create( &vecpthdThreads[ j ], NULL, ThreadTestFASTA, &vecsThreads[ j ] ); }
+		for( j = 0; j < vecpthdThreads.size( ); ++j ) {
+			pthread_join( vecpthdThreads[ j ], NULL );
+			if( j && ( vecsThreads[ j ].m_strSequence != vecsThreads[ 0 ].m_strSequence ) )
+				cerr << "Thread " << j << " failed:" << endl << vecsThreads[ 0 ].m_strSequence << endl <<
+					vecsThreads[ j ].m_strSequence << endl; }
+		cerr << vecsThreads[ 0 ].m_strSequence << endl; }
+	return 0;
+//*/
+
+	veciPCL2FASTA.resize( PCL.GetGenes( ) );
+	for( i = 0; i < veciPCL2FASTA.size( ); ++i )
+		veciPCL2FASTA[ i ] = FASTA.GetGene( PCL.GetGene( i ) );
+	sMods.Initialize( PCL );
+
+	GeneScores.SetGenes( PCL.GetGenes( ) );
+	for( i = 0; i < veciPCL2FASTA.size( ); ++i )
+		if( veciPCL2FASTA[ i ] != -1 ) {
+			vector<SFASTASequence>	vecsSequences;
+
+			if( FASTA.Get( veciPCL2FASTA[ i ], vecsSequences ) ) {
+				sModifiers.Get( i );
+				for( j = 0; j < vecsSequences.size( ); ++j )
+					if( !GeneScores.Add( i, Motifs, vecsSequences[ j ], sModifiers, vecvecdCounts,
+						veciLengths ) )
+						return 1; } }
+
+	Pot.SetGenes( PCL.GetGenes( ) );
+	Pot.CalculateHistograms( GeneScores, HistsPot, NULL );
+	for( i = 0; i < PCL.GetGenes( ); ++i )
+		if( ( (float)rand( ) / RAND_MAX ) < ( 1.0 / 100 ) )
+			Cluster.Add( i, Pot );
+
+	veciMotifs.resize( 20 );
+	vecpthdThreads.resize( sArgs.threads_arg );
+	vecsThreads.resize( vecpthdThreads.size( ) );
+	for( i = 0; i < 100; ++i ) {
+		Cluster.CalculateHistograms( GeneScores, HistsCluster, &HistsPot );
+		Cluster.Snapshot( GeneScores, HistsCluster );
+		Pot.Snapshot( GeneScores, HistsPot );
+		cerr << "Cluster	" << Cluster.GetGenes( ).size( ) << endl << "Pot	" <<
+			Pot.GetGenes( ).size( ) << endl;
+
+		for( j = 0; j < veciMotifs.size( ); ++j ) {
+			iMotifOne = rand( ) % Motifs.GetMotifs( );
+			iMotifTwo = rand( ) % Motifs.GetMotifs( );
+			veciMotifs[ j ] = Motifs.Merge( iMotifOne, iMotifTwo, FLT_MAX, false );
+			cerr << "Merged:" << endl << Motifs.GetMotif( iMotifOne ) << endl <<
+				Motifs.GetMotif( iMotifTwo ) << endl << Motifs.GetMotif( veciMotifs[ j ] ) << endl;
+
+			for( k = 0; k < vecsThreads.size( ); ++k ) {
+				vecsThreads[ k ].m_iOffset = k;
+				vecsThreads[ k ].m_iStep = vecsThreads.size( );
+				vecsThreads[ k ].m_pveciPCL2FASTA = &veciPCL2FASTA;
+				vecsThreads[ k ].m_pGeneScores = &GeneScores;
+				vecsThreads[ k ].m_pMotifs = &Motifs;
+				vecsThreads[ k ].m_iMotif = veciMotifs[ j ];
+				vecsThreads[ k ].m_pFASTA = &FASTA;
+				vecsThreads[ k ].m_psModifiers = &sMods;
+				if( pthread_create( &vecpthdThreads[ k ], NULL, ThreadCombineMotif, &vecsThreads[ k ] ) ) {
+					cerr << "CCoalesceImpl::CombineMotifs( " << sArgs.threads_arg <<
+						" ) could not combine motif: " << Motifs.GetMotif( veciMotifs[ j ] ).c_str( ) << endl;
+					return 1; } }
+			for( k = 0; k < vecpthdThreads.size( ); ++k )
+				pthread_join( vecpthdThreads[ k ], NULL );
+			for( k = 0; k < PCL.GetGenes( ); ++k )
+				if( veciPCL2FASTA[ k ] != -1 ) {
+					if( Cluster.IsGene( k ) )
+						HistsCluster.Add( GeneScores, k, false, veciMotifs[ j ] );
+					else
+						HistsPot.Add( GeneScores, k, false, veciMotifs[ j ] ); } }
+/*
+		for( j = 0; j < veciPCL2FASTA.size( ); ++j )
+			if( ( iFASTA = veciPCL2FASTA[ j ] ) != -1 ) {
+				vector<SFASTASequence>	vecsSequences;
+				float					dFive;
+
+				if( FASTA.Get( iFASTA, vecsSequences ) ) {
+					sModifiers.Get( j );
+					dFive = 0;
+					for( k = 0; k < vecsSequences.size( ); ++k ) {
+						if( !GeneScores.Add( j, Motifs, vecsSequences[ k ],
+							sModifiers, iMotifThree, vecdScores, veciLengths ) ) {
+							cerr << "FAILURE!" << endl;
+							return 1; }
+						if( vecsSequences[ k ].m_strType == "5" )
+							dFive = Motifs.GetMatch( vecsSequences[ k ].m_vecstrSequences[ 0 ],
+								iMotifThree, 0, sModifiers ) / vecsSequences[ k ].m_vecstrSequences[ 0 ].length( ); }
+
+					cerr << "Gene	" << j << '\t' << PCL.GetGene( j ) << endl;
+					if( dFive != ( d = GeneScores.Get( GeneScores.GetType( "5" ), CCoalesceSequencerBase::ESubsequenceTotal, j, iMotifThree ) ) ) {
+						cerr << "C	" << dFive << '\t' << d << endl;
+						return 1; }
+					for( k = 0; k < GeneScores.GetTypes( ); ++k )
+						for( eSubsequence = CCoalesceSequencerBase::ESubsequenceBegin;
+							(size_t)eSubsequence < GeneScores.GetSubsequences( k );
+							eSubsequence = (CCoalesceSequencerBase::ESubsequence)( (size_t)eSubsequence + 1 ) ) {
+							const float*	ad	= GeneScores.Get( k, eSubsequence, j );
+
+							d = GeneScores.Get( k, eSubsequence, j, iMotifThree );
+							if( ad ) {
+								if( ad[ iMotifThree ] != d ) {
+									cerr << "A	" << GeneScores.GetType( k ) << '\t' << eSubsequence << '\t' << ad[ iMotifThree ] <<
+										'\t' << GeneScores.Get( k, eSubsequence, j, iMotifThree ) << endl;
+									return 1; } }
+							else if( d != 0 ) {
+								cerr << "B	" << GeneScores.GetType( k ) << '\t' << eSubsequence << '\t' <<
+									'\t' << GeneScores.Get( k, eSubsequence, j, iMotifThree ) << endl;
+								return 1; } }
+					if( Cluster.IsGene( j ) )
+						HistsCluster.Add( GeneScores, j, false, iMotifThree );
+					else
+						HistsPot.Add( GeneScores, j, false, iMotifThree ); } }
+//*/
+
+/*
+		for( j = 0; j < PCL.GetGenes( ); ++j )
+			if( veciPCL2FASTA[ j ] != -1 ) {
+				vector<SFASTASequence>	vecsSequences;
+
+				FASTA.Get( veciPCL2FASTA[ j ], vecsSequences );
+				for( k = 0; k < vecsSequences.size( ); ++k ) {
+					const SFASTASequence&	sSequence	= vecsSequences[ k ];
+					float*					ad;
+
+					if( sSequence.m_vecstrSequences.size( ) != 1 )
+						continue;
+					d = Motifs.GetMatch( sSequence.m_vecstrSequences[ 0 ], iMotifThree, 0,
+						sModifiers ) / sSequence.m_vecstrSequences[ 0 ].length( );
+					if( !( ad = GeneScores.Get( GeneScores.GetType( sSequence.m_strType ),
+						CCoalesceSequencerBase::ESubsequenceTotal, j ) ) || ( d != ad[ iMotifThree ] ) ) {
+						cerr << j << '\t' << PCL.GetGene( j ) << '\t' << sSequence.m_strType << '\t' <<
+							( ad ? ad[ iMotifThree ] : -1 ) << '\t' << d << endl;
+						return 1; } } }
+//*/
+
+		for( j = 0; j < PCL.GetGenes( ); ++j )
+			for( k = 0; k < GeneScores.GetTypes( ); ++k )
+				for( eSubsequence = CCoalesceSequencerBase::ESubsequenceBegin;
+					(size_t)eSubsequence < GeneScores.GetSubsequences( k );
+					eSubsequence = (CCoalesceSequencerBase::ESubsequence)( (size_t)eSubsequence + 1 ) ) {
+					if( !GeneScores.Get( k, eSubsequence, j ) )
+						continue;
+					for( size_t m = 0; m < veciMotifs.size( ); ++m ) {
+						d = GeneScores.Get( k, eSubsequence, j, veciMotifs[ m ] );
+						s = Cluster.IsGene( j ) ?
+							HistsCluster.Get( k, eSubsequence ).Get( veciMotifs[ m ], d ) :
+							HistsPot.Get( k, eSubsequence ).Get( veciMotifs[ m ], d );
+						if( !s ) {
+							cerr << "D	" << j << '\t' << PCL.GetGene( j ) << '\t' <<
+								GeneScores.GetType( k ) << '\t' << eSubsequence << '\t' << d << '\t' <<
+								Cluster.IsGene( j ) << endl;
+							cerr << Motifs.GetMotif( veciMotifs[ m ] ) << endl;
+							cerr << HistsCluster.Get( k, eSubsequence ).Save( veciMotifs[ m ] ) << endl;
+							cerr << HistsPot.Get( k, eSubsequence ).Save( veciMotifs[ m ] ) << endl;
+							return 1; } } }
+
+		for( j = 0; j < PCL.GetGenes( ); ++j ) {
+			if( ( (float)rand( ) / RAND_MAX ) > ( 1.0 / 100 ) )
+				continue;
+			if( Cluster.IsGene( j ) )
+				Pot.Add( j, Cluster );
+			else
+				Cluster.Add( j, Pot ); } }
+
+	return 0; }
+
+int main_test2( const gengetopt_args_info& sArgs, const CPCL& PCL, const CFASTA& FASTA, CCoalesceMotifLibrary& Motifs ) {
+	CCoalesceGeneScores			GeneScores;
+	size_t						i, j, iIter, iOrig;
+	uint32_t					iOne, iTwo, iThree;
+	SCoalesceModifiers			sMods;
+	vector<vector<float> >		vecvecdCounts, vecvecdOrig;
+	vector<size_t>				veciLengths;
+	vector<float>				vecdScores;
+	SCoalesceModifierCache		sModifiers( sMods );
+	vector<size_t>				veciPCL2FASTA;
+	float						d;
+
+	veciPCL2FASTA.resize( PCL.GetGenes( ) );
+	for( i = 0; i < veciPCL2FASTA.size( ); ++i )
+		veciPCL2FASTA[ i ] = FASTA.GetGene( PCL.GetGene( i ) );
+	sMods.Initialize( PCL );
+
+	GeneScores.SetGenes( PCL.GetGenes( ) );
+	for( i = 0; i < veciPCL2FASTA.size( ); ++i )
+		if( veciPCL2FASTA[ i ] != -1 ) {
+			vector<SFASTASequence>	vecsSequences;
+
+			if( FASTA.Get( veciPCL2FASTA[ i ], vecsSequences ) ) {
+				sModifiers.Get( i );
+				for( j = 0; j < vecsSequences.size( ); ++j )
+					if( !GeneScores.Add( i, Motifs, vecsSequences[ j ], sModifiers, vecvecdCounts,
+						veciLengths ) )
+						return 1; } }
+
+	vecvecdOrig.resize( PCL.GetGenes( ) );
+	for( i = 0; i < vecvecdOrig.size( ); ++i ) {
+		vecvecdOrig[ i ].resize( iOrig = Motifs.GetMotifs( ) );
+		for( j = 0; j < vecvecdOrig[ i ].size( ); ++j )
+			vecvecdOrig[ i ][ j ] = GeneScores.Get( 0, CCoalesceSequencerBase::ESubsequenceTotal, i,
+				(uint32_t)j ); }
+
+	for( iIter = 0; iIter < 1000; ++iIter ) {
+		iOne = rand( ) % Motifs.GetMotifs( );
+		iTwo = rand( ) % Motifs.GetMotifs( );
+		iThree = Motifs.Merge( iOne, iTwo, FLT_MAX, false );
+
+		for( i = 0; i < veciPCL2FASTA.size( ); ++i )
+			if( veciPCL2FASTA[ i ] != -1 ) {
+				vector<SFASTASequence>	vecsSequences;
+
+				if( FASTA.Get( veciPCL2FASTA[ i ], vecsSequences ) ) {
+					sModifiers.Get( i );
+					for( j = 0; j < vecsSequences.size( ); ++j )
+						if( !GeneScores.Add( i, Motifs, vecsSequences[ j ], sModifiers, iThree, vecdScores,
+							veciLengths ) ) {
+							cerr << "FAILURE" << endl;
+							return 1; } } }
+
+		for( i = 0; i < PCL.GetGenes( ); ++i )
+			for( j = 0; j < vecvecdOrig[ i ].size( ); ++j )
+				if( vecvecdOrig[ i ][ j ] != ( d = GeneScores.Get( 0,
+					CCoalesceSequencerBase::ESubsequenceTotal, i, (uint32_t)j ) ) ) {
+					cerr << i << '\t' << PCL.GetGene( i ) << '\t' << j << '\t' << vecvecdOrig[ i ][ j ] <<
+						'\t' << d << endl;
+					cerr << Motifs.GetMotif( (uint32_t)j ) << endl;
+					return 1; } }
+
+	return 0; }

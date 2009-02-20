@@ -92,6 +92,7 @@ struct SMotifMatch {
 	uint32_t Open( const SMotifMatch&, const SMotifMatch&, CCoalesceMotifLibrary& );
 	std::string Save( const CCoalesceMotifLibrary*, bool = false, float = 0, float = 0, float = 0,
 		bool = false ) const;
+	bool Label( const CCoalesceMotifLibrary&, float, float, float );
 
 	bool operator==( const SMotifMatch& sMotif ) const {
 
@@ -120,11 +121,12 @@ struct SMotifMatch {
 
 		return ( iMotif ^ iType ^ iSubsequence ); }
 
-	uint32_t								m_iMotif;
-	std::string								m_strType;
-	CCoalesceSequencerBase::ESubsequence	m_eSubsequence;
-	float									m_dZ;
-	float									m_dAverage;
+	uint32_t									m_iMotif;
+	std::string									m_strType;
+	CCoalesceSequencerBase::ESubsequence		m_eSubsequence;
+	float										m_dZ;
+	float										m_dAverage;
+	std::vector<std::pair<std::string, float> >	m_vecprstrdKnown;
 };
 
 struct SCoalesceDataset {

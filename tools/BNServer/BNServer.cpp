@@ -360,9 +360,13 @@ void CBNServer::Destroy( ) {
 	delete this; }
 
 bool CBNServer::ProcessMessage( const vector<unsigned char>& vecbMessage ) {
-	size_t	iProcessed, iOffset;
+	size_t	i, iProcessed, iOffset;
 
 	for( iOffset = 0; iOffset < vecbMessage.size( ); iOffset += ( iProcessed + 1 ) ) {
+		cerr << "LOG	" << time( NULL ) << '\t' << m_strConnection << '\t' << hex;
+		for( i = 0; i < vecbMessage.size( ); ++i )
+			cerr << setfill( '0' ) << setw( 2 ) << (unsigned int)vecbMessage[ i ];
+		cerr << dec << endl;
 		if( vecbMessage[ iOffset ] >= ARRAYSIZE(c_apfnProcessors) ) {
 			cerr << m_strConnection << " unknown opcode: " << (int)vecbMessage[ iOffset ] << endl;
 			return false; }
@@ -828,7 +832,7 @@ size_t CBNServer::ProcessTermFinder( const vector<unsigned char>& vecbMessage, s
 
 		for( j = 0; j < Genes.GetGenes( ); ++j )
 			if( pOnto->IsAnnotated( vecsTerms[ i ].m_iID, Genes.GetGene( j ) ) && ( veciMapping[ j ] != -1 ) )
-				veciGenes.push_back( veciMapping[ j ] );
+				veciGenes.push_back( (uint32_t)veciMapping[ j ] );
 		iSize = (uint32_t)veciGenes.size( );
 		send( m_iSocket, (const char*)&iSize, sizeof(iSize), 0 );
 		for( j = 0; j < veciGenes.size( ); ++j ) {

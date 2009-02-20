@@ -58,6 +58,64 @@ int main( int iArgs, char** aszArgs ) {
 		if( !FASTA.Open( sArgs.fasta_arg ) ) {
 			cerr << "Could not open: " << sArgs.fasta_arg << endl;
 			return 1; }
+
+		if( sArgs.motifs_arg ) {
+			ifstream				ifsm;
+			vector<SMotifMatch>		vecsMotifs;
+			CCoalesceMotifLibrary	Motifs( sArgs.k_arg );
+			SCoalesceModifiers		sModifiers;
+			SCoalesceModifierCache	sCache( sModifiers );
+			CPCL					PCLScores;
+			vector<string>			vecstrMotifs;
+
+			ifsm.open( sArgs.motifs_arg );
+			if( !CCoalesceMotifLibrary::Open( ifsm, vecsMotifs, &Motifs ) ) {
+				cerr << "Could not open: " << sArgs.motifs_arg << endl;
+				return 1; }
+			ifsm.close( );
+
+			vecstrMotifs.resize( vecsMotifs.size( ) );
+			for( i = 0; i < vecstrMotifs.size( ); ++i )
+				vecstrMotifs[ i ] = Motifs.GetMotif( vecsMotifs[ i ].m_iMotif );
+			PCLScores.Open( PCL.GetGeneNames( ), vecstrMotifs, vector<string>( ) );
+			PCLScores.Clear( );
+
+			for( iRow = 0; iRow < PCL.GetGenes( ); ++iRow ) {
+				vector<SFASTASequence>	vecsSequences;
+
+				if( !( iRow % 100 ) )
+					cerr << "Processing " << iRow << '/' << PCL.GetGenes( ) << endl;
+				if( ( i = FASTA.GetGene( PCL.GetGene( iRow ) ) ) == -1 ) {
+					for( i = 0; i < PCLScores.GetExperiments( ); ++i )
+						PCLScores.Set( iRow, i, CMeta::GetNaN( ) );
+					continue; }
+				if( !FASTA.Get( i, vecsSequences ) )
+					return 1;
+				for( iColumn = 0; iColumn < vecsMotifs.size( ); ++iColumn ) {
+					const SMotifMatch&	sMotif	= vecsMotifs[ iColumn ];
+
+					for( iLength = i = 0; i < vecsSequences.size( ); ++i ) {
+						const SFASTASequence&	sSequence	= vecsSequences[ i ];
+
+						if( sMotif.m_strType != sSequence.m_strType )
+							continue;
+						for( j = 0; j < sSequence.m_vecstrSequences.size( ); ++j ) {
+							const string&	strSequence	= sSequence.m_vecstrSequences[ j ];
+
+							if( ( sMotif.m_eSubsequence != CCoalesceSequencerBase::ESubsequenceTotal ) &&
+								( sMotif.m_eSubsequence != ( ( sSequence.m_fIntronFirst == !( j % 2 ) ) ?
+								CCoalesceSequencerBase::ESubsequenceIntrons :
+								CCoalesceSequencerBase::ESubsequenceExons ) ) )
+								continue;
+							iLength += strSequence.size( );
+							PCLScores.Get( iRow, iColumn ) += Motifs.GetMatch( strSequence,
+								sMotif.m_iMotif, 0, sCache ); } }
+					if( iLength )
+						PCLScores.Get( iRow, iColumn ) /= iLength; } }
+
+			PCLScores.Save( cout );
+			return 0; }
+
 		for( i = 0; i < FASTA.GetGenes( ); ++i )
 			if( PCL.GetGene( FASTA.GetGene( i ) ) != -1 ) {
 				setiGenes.insert( i );
@@ -204,6 +262,6 @@ int main( int iArgs, char** aszArgs ) {
 	for( i = 0; i < PCL.GetExperiments( ); ++i )
 		cout << ( i ? "\t" : "" ) << vecdSumSqsOut[ i ];
 	cout << endl;
-	
+
 
 	return 0; }

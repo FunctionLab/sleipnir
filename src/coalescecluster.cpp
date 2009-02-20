@@ -31,7 +31,9 @@
 
 namespace Sleipnir {
 
-const char	CCoalesceClusterImpl::c_szMotifs[]			= "_motifs.txt";
+const char	CCoalesceClusterImpl::c_szMotifs[]		= "_motifs.txt";
+const char	CCoalesceClusterImpl::c_szGenes[]		= "Genes";
+const char	CCoalesceClusterImpl::c_szConditions[]	= "Conditions";
 
 bool CCoalesceCluster::Initialize( const CPCL& PCL, CCoalesceCluster& Pot,
 	const std::vector<SCoalesceDataset>& vecsDatasets, std::set<std::pair<size_t, size_t> >& setpriiSeeds,
@@ -501,17 +503,22 @@ bool CCoalesceCluster::SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& 
 	set<SMotifMatch>::const_iterator	iterMotif;
 	vector<float>						vecdStdevs;
 
-	vecpthdThreads.resize( max( 2, iThreads ) );
+	vecpthdThreads.resize( iThreads );
 	{
 		SThreadCentroid	sUs( this, PCL ), sThem( &Pot, PCL );
 
-		if( pthread_create( &vecpthdThreads[ 0 ], NULL, ThreadCentroid, &sUs ) ||
-			pthread_create( &vecpthdThreads[ 1 ], NULL, ThreadCentroid, &sThem ) ) {
+		if( iThreads > 1 ) {
+			if( pthread_create( &vecpthdThreads[ 0 ], NULL, ThreadCentroid, &sUs ) ||
+				pthread_create( &vecpthdThreads[ 1 ], NULL, ThreadCentroid, &sThem ) ) {
+				g_CatSleipnir.error( "CCoalesceCluster::SelectGenes( %d, %g ) could not calculate centroids",
+					iThreads, dProbability );
+				return false; }
+			for( i = 0; i < 2; ++i )
+				pthread_join( vecpthdThreads[ i ], NULL ); }
+		else if( ThreadCentroid( &sUs ) || ThreadCentroid( &sThem ) ) {
 			g_CatSleipnir.error( "CCoalesceCluster::SelectGenes( %d, %g ) could not calculate centroids",
 				iThreads, dProbability );
 			return false; }
-		for( i = 0; i < 2; ++i )
-			pthread_join( vecpthdThreads[ i ], NULL );
 	}
 	iCluster = GetGenes( ).size( );
 	iPot = Pot.GetGenes( ).size( );
@@ -627,7 +634,7 @@ bool CCoalesceClusterImpl::CalculateProbabilityExpression( size_t iGene, const C
 				CMeta::IsNaN( dCluster = m_vecdCentroid[ iCondition ] ) ||
 				CMeta::IsNaN( dPot = Pot.m_vecdCentroid[ iCondition ] ) )
 				continue;
-			
+
 			if( fClustered )
 				dCluster = ( ( dCluster * GetGenes( ).size( ) ) - dGene ) /
 					( GetGenes( ).size( ) - 1 );
@@ -701,15 +708,16 @@ bool CCoalesceClusterImpl::CalculateProbabilityMotifs( const CCoalesceGeneScores
 					sCluster--;
 					iCluster--; }
 				else
-					g_CatSleipnir.warn( "CCoalesceClusterImpl::CalculateProbabilityMotifs( %d, %d, %g, %g ) no motifs of %d in cluster: %g, %s",
+					g_CatSleipnir.warn( "CCoalesceClusterImpl::CalculateProbabilityMotifs( %d, %d, %g, %g ) no motifs of %d in cluster: %g, %s\n%s",
 						iGene, fClustered, dLogPIn, dLogPOut, iCluster, dGene,
-						iterMotif->Save( NULL ).c_str( ) ); }
+						iterMotif->Save( NULL ).c_str( ), HistSetCluster.Save( iterMotif->m_iMotif ).c_str( ) ); }
 			else if( sPot ) {
 				sPot--;
 				iPot--; }
 			else
-				g_CatSleipnir.warn( "CCoalesceClusterImpl::CalculateProbabilityMotifs( %d, %d, %g, %g ) no motifs of %d in pot: %g, %s",
-					iGene, fClustered, dLogPIn, dLogPOut, iPot, dGene, iterMotif->Save( NULL ).c_str( ) );
+				g_CatSleipnir.warn( "CCoalesceClusterImpl::CalculateProbabilityMotifs( %d, %d, %g, %g ) no motifs of %d in pot: %g, %s\n%s",
+					iGene, fClustered, dLogPIn, dLogPOut, iPot, dGene, iterMotif->Save( NULL ).c_str( ),
+					HistSetPot.Save( iterMotif->m_iMotif ).c_str( ) );
 			dPCluster = (double)( sCluster + 1 ) / ( iCluster + HistSetCluster.GetEdges( ) );
 			dPPot = (double)( sPot + 1 ) / ( iPot + HistSetPot.GetEdges( ) );
 		}
@@ -801,11 +809,11 @@ void CCoalesceCluster::Save( std::ostream& ostm, size_t iID, const CPCL& PCL,
 	string								strMotif;
 
 	ostm << "Cluster\t" << iID << endl;
-	ostm << "Genes";
+	ostm << c_szGenes;
 	for( iterID = GetGenes( ).begin( ); iterID != GetGenes( ).end( ); ++iterID )
 		ostm << '\t' << PCL.GetGene( *iterID );
-	ostm << endl << "Conditions";
-	for( iterID = m_setiDatasets.begin( ); iterID != m_setiDatasets.end( ); ++iterID ) 
+	ostm << endl << c_szConditions;
+	for( iterID = m_setiDatasets.begin( ); iterID != m_setiDatasets.end( ); ++iterID )
 		for( i = 0; i < GetConditions( *iterID ); ++i )
 			ostm << '\t' << PCL.GetExperiment( GetCondition( *iterID, i ) );
 	ostm << endl << "Motifs" << endl;
@@ -856,6 +864,49 @@ size_t CCoalesceCluster::Open( const string& strPCL, size_t iSkip, const CPCL& P
 		m_setsMotifs.insert( sMotif ); }
 
 	return PCLCluster.GetExperiments( ); }
+
+size_t CCoalesceCluster::Open( istream& istm, const CPCL& PCL, CCoalesceMotifLibrary* pMotifs ) {
+	string				strBuffer;
+	vector<string>		vecstrLine;
+	size_t				i, j;
+	vector<SMotifMatch>	vecsMotifs;
+
+	Clear( );
+	strBuffer.resize( CFile::GetBufferSize( ) );
+	istm.getline( &strBuffer[ 0 ], strBuffer.size( ) );
+
+	istm.getline( &strBuffer[ 0 ], strBuffer.size( ) );
+	CMeta::Tokenize( strBuffer.c_str( ), vecstrLine );
+	if( vecstrLine.empty( ) || ( vecstrLine[ 0 ] != c_szGenes ) ) {
+		g_CatSleipnir.error( "CCoalesceCluster::Open( ) invalid line: %s", strBuffer.c_str( ) );
+		return -1; }
+	for( i = 1; i < vecstrLine.size( ); ++i ) {
+		if( ( j = PCL.GetGene( vecstrLine[ i ] ) ) == -1 ) {
+			g_CatSleipnir.error( "CCoalesceCluster::Open( ) unrecognized gene: %s",
+				vecstrLine[ i ].c_str( ) );
+			return -1; }
+		m_setiGenes.insert( j ); }
+
+	istm.getline( &strBuffer[ 0 ], strBuffer.size( ) );
+	vecstrLine.clear( );
+	CMeta::Tokenize( strBuffer.c_str( ), vecstrLine );
+	if( vecstrLine.empty( ) || ( vecstrLine[ 0 ] != c_szConditions ) ) {
+		g_CatSleipnir.error( "CCoalesceCluster::Open( ) invalid line: %s", strBuffer.c_str( ) );
+		return -1; }
+	for( i = 1; i < vecstrLine.size( ); ++i ) {
+		if( ( j = PCL.GetExperiment( vecstrLine[ i ] ) ) == -1 ) {
+			g_CatSleipnir.error( "CCoalesceCluster::Open( ) unrecognized condition: %s",
+				vecstrLine[ i ].c_str( ) );
+			return -1; }
+		m_setiDatasets.insert( j ); }
+
+	istm.getline( &strBuffer[ 0 ], CFile::GetBufferSize( ) );
+	if( !CCoalesceMotifLibrary::Open( istm, vecsMotifs, pMotifs ) )
+		return -1;
+	for( i = 0; i < vecsMotifs.size( ); ++i )
+		m_setsMotifs.insert( vecsMotifs[ i ] );
+
+	return m_setiDatasets.size( ); }
 
 bool CCoalesceCluster::Open( const CHierarchy& Hierarchy, const vector<CCoalesceCluster>& vecClusters,
 	const vector<string>& vecstrClusters, float dFraction, float dCutoff, size_t iCutoff,
@@ -998,7 +1049,7 @@ bool CCoalesceClusterImpl::OpenMotifs( CCoalesceMotifLibrary& Motifs, const CHie
 		size_t		iCount;
 
 		sMotif.m_dZ = 0;
-		if( !sMotif.Open( Hier, vecsMotifs, Motifs, iCount = 0 ) )
+		if( sMotif.Open( Hier, vecsMotifs, Motifs, iCount = 0 ) == -1 )
 			return false;
 		sMotif.m_dZ /= iCount;
 		setsMotifs.insert( sMotif );
@@ -1036,9 +1087,9 @@ void CCoalesceCluster::Snapshot( const CCoalesceGeneScores& GeneScores,
 	CCoalesceClusterImpl::Snapshot( GetGenes( ), m_veciPrevGenes ); }
 
 size_t CCoalesceCluster::RemoveMotifs( const CCoalesceMotifLibrary& Motifs, float dZScore ) {
-	std::set<SMotifMatch>::const_iterator	iterMotif;
-	std::vector<const SMotifMatch*>			vecpsMotifs;
-	size_t									i;
+	set<SMotifMatch>::const_iterator	iterMotif;
+	vector<const SMotifMatch*>			vecpsMotifs;
+	size_t								i;
 
 	for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif )
 		if( fabs( iterMotif->m_dZ ) < dZScore ) {
@@ -1049,5 +1100,19 @@ size_t CCoalesceCluster::RemoveMotifs( const CCoalesceMotifLibrary& Motifs, floa
 		m_setsMotifs.erase( *vecpsMotifs[ i ] );
 
 	return vecpsMotifs.size( ); }
+
+bool CCoalesceCluster::LabelMotifs( const CCoalesceMotifLibrary& Motifs, float dPenaltyGap,
+	float dPenaltyMismatch, float dPValue ) {
+	set<SMotifMatch>::iterator	iterMotif;
+
+	if( !Motifs.GetKnowns( ) )
+		return true;
+	for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif ) {
+		SMotifMatch&	sMotif	= (SMotifMatch&)*iterMotif;
+// For some obscure reason, Linux won't let me use this as a non-const iterator...
+		if( !sMotif.Label( Motifs, dPenaltyGap, dPenaltyMismatch, dPValue ) )
+			return false; }
+
+	return true; }
 
 }

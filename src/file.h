@@ -72,6 +72,10 @@ public:
 
 		return c_iBufferSize; }
 
+	static bool IsNewline( char c ) {
+
+		return ( ( c == '\n' ) || ( c == '\r' ) ); }
+
 	/*!
 	 * \brief
 	 * Return the next tab-delimited token from the given string.

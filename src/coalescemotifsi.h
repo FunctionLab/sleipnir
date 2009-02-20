@@ -22,6 +22,9 @@
 #ifndef COALESCEMOTIFSI_H
 #define COALESCEMOTIFSI_H
 
+#include <string.h>
+#include <map>
+
 #include "fullmatrix.h"
 
 namespace Sleipnir {
@@ -34,6 +37,7 @@ protected:
 	static const char	c_szComplements[];
 	static const size_t	c_iShift		= 2; // ceil( log2( strlen( c_szBases ) ) )
 	static const char	c_cSeparator	= '|';
+	static const char	c_cCluster		= 'C';
 
 	typedef std::map<std::pair<uint32_t, uint32_t>, uint32_t>	TMapPrIII;
 
@@ -41,6 +45,42 @@ protected:
 		ETypeKMer,
 		ETypeRC,
 		ETypePST
+	};
+
+	struct SKnowns {
+		typedef std::vector<float>			TVecD;
+		typedef std::pair<TVecD, TVecD>		TPrVecDVecD;
+		typedef std::vector<TPrVecDVecD>	TVecPr;
+
+		void Match( const std::vector<float>&, std::map<std::string, float>& ) const;
+
+		size_t GetSize( ) const {
+
+			return m_mapstrvecKnown.size( ); }
+
+		void Add( const std::string& strID, const std::vector<std::string>& vecstrLine ) {
+			size_t	i, iFromPos, iFromBase, iToPos, iToBase;
+			TVecPr&	vecprMotif	= m_mapstrvecKnown[ strID ];
+
+			vecprMotif.push_back( TPrVecDVecD( ) );
+			{
+				TPrVecDVecD&	prvecdvecdMotif	= vecprMotif.back( );
+
+				prvecdvecdMotif.first.resize( vecstrLine.size( ) - 1 );
+				for( i = 1; i < vecstrLine.size( ); ++i )
+					prvecdvecdMotif.first[ i - 1 ] = (float)atof( vecstrLine[ i ].c_str( ) );
+
+				prvecdvecdMotif.second.resize( prvecdvecdMotif.first.size( ) );
+				i = prvecdvecdMotif.second.size( ) / 4;
+				for( iFromPos = 0; iFromPos < i; ++iFromPos ) {
+					iToPos = i - iFromPos - 1;
+					for( iFromBase = 0; iFromBase < 4; ++iFromBase ) {
+						iToBase = 3 - iFromBase;
+						prvecdvecdMotif.second[ ( 4 * iToPos ) + iToBase ] =
+							prvecdvecdMotif.first[ ( 4 * iFromPos ) + iFromBase ]; } }
+			} }
+
+		std::map<std::string, TVecPr>	m_mapstrvecKnown;
 	};
 
 	static size_t CountKMers( size_t iK ) {
@@ -200,6 +240,7 @@ protected:
 	float AlignRCPST( uint32_t, const CPST&, float ) const;
 	float AlignPSTs( const CPST&, const CPST&, float ) const;
 	uint32_t RemoveRCs( const CPST&, float, float );
+	bool GetPWM( uint32_t, float, float, float, bool, CFullMatrix<uint16_t>& ) const;
 
 	EType GetType( uint32_t iMotif ) const {
 
@@ -272,6 +313,7 @@ protected:
 	std::vector<uint32_t>	m_veciRC2KMer;
 	std::vector<CPST*>		m_vecpPSTs;
 	TMapPrIII				m_mappriiiMerged;
+	SKnowns					m_sKnowns;
 };
 
 }

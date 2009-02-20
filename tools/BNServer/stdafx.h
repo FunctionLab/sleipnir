@@ -25,6 +25,7 @@
 #define __STDC_LIMIT_MACROS
 
 #include <fstream>
+#include <iomanip>
 #include <queue>
 #include <sstream>
 using namespace std;

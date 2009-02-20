@@ -47,8 +47,6 @@ struct SMotifMatch;
 template<class tValue = float, class tCount = unsigned short>
 class CCoalesceHistogramSet {
 public:
-	CCoalesceHistogramSet( ) : m_iMembers(0) { }
-
 	double ZScore( size_t iMember, const CCoalesceHistogramSet& HistSet, double& dAveOne, double& dAverage,
 		double& dZ, bool fCount = true ) const {
 
@@ -118,7 +116,7 @@ public:
 
 	void Initialize( size_t iMembers, const std::vector<tValue>& vecEdges ) {
 
-		m_iMembers = iMembers;
+		SetMembers( iMembers );
 		m_vecEdges.resize( vecEdges.size( ) );
 		std::copy( vecEdges.begin( ), vecEdges.end( ), m_vecEdges.begin( ) );
 		m_iZero = GetBin( 0 ); }
@@ -134,18 +132,17 @@ public:
 		Initialize( iMembers, vecEdges ); }
 
 	bool Add( size_t iMember, tValue Value, tCount Count ) {
-		size_t	i;
+		size_t	iBin;
 
 // lock
-		if( m_vecEdges.empty( ) || ( ( i = GetBin( Value ) ) == m_iZero ) )
+		if( m_vecEdges.empty( ) )
 // unlock
 			return false;
 
-		m_iMembers = max( GetMembers( ), iMember + 1 );
-		m_vecCounts.resize( GetOffset( GetMembers( ) ) );
-		m_vecCounts[ GetOffset( iMember ) + i ] += Count;
-		m_vecTotal.resize( GetMembers( ) );
-		m_vecTotal[ iMember ] += Count;
+		SetMembers( max( GetMembers( ), iMember + 1 ) );
+		if( ( iBin = GetBin( Value ) ) != m_iZero ) {
+			m_vecCounts[ GetOffset( iMember ) + iBin ] += Count;
+			m_vecTotal[ iMember ] += Count; }
 // unlock
 
 		return true; }
@@ -161,11 +158,12 @@ public:
 
 	tCount Get( size_t iMember, size_t iBin ) const {
 
-		if( ( iMember >= GetMembers( ) ) || ( iBin >= GetEdges( ) ) )
+		if( iBin >= GetEdges( ) )
 			return 0;
+		if( iBin == m_iZero )
+			return ( GetTotal( ) - ( ( iMember < GetMembers( ) ) ? m_vecTotal[ iMember ] : 0 ) );
 
-		return ( ( iBin == m_iZero ) ? ( GetTotal( ) - m_vecTotal[ iMember ] ) :
-			m_vecCounts[ GetOffset( iMember ) + iBin ] ); }
+		return ( ( iMember < GetMembers( ) ) ? m_vecCounts[ GetOffset( iMember ) + iBin ] : 0 ); }
 
 	tCount Get( size_t iMember, tValue Value ) const {
 
@@ -182,21 +180,9 @@ public:
 
 		return min( i, GetEdges( ) - 1 ); }
 
-/*
-	const tCount* Get( size_t iMember ) const {
-		const tCount*	pRet;
-
-		if( !GetEdges( ) || ( iMember >= GetMembers( ) ) )
-			return NULL;
-
-		pRet = &m_vecCounts[ GetOffset( iMember ) ];
-		*(tCount*)pRet = Get( iMember, (size_t)0 );
-		return pRet; }
-*/
-
 	size_t GetMembers( ) const {
 
-		return m_iMembers; }
+		return m_vecTotal.size( ); }
 
 	size_t GetEdges( ) const {
 
@@ -205,23 +191,6 @@ public:
 	tValue GetEdge( size_t iBin ) const {
 
 		return m_vecEdges[ iBin ]; }
-
-/*
-	bool Add( const CCoalesceHistogramSet& Histograms ) {
-		size_t	i, j;
-
-		if( ( Histograms.GetMembers( ) != GetMembers( ) ) ||
-			( Histograms.GetEdges( ).size( ) != GetEdges( ).size( ) ) )
-			return false;
-
-		m_Total += Histograms.GetTotal( );
-		for( i = 0; i < GetMembers( ); ++i )
-			for( j = 1; j < GetEdges( ).size( ); ++j )
-				if( !Add( i, GetEdges( )[ j ], Histograms.Get( i, j ) ) )
-					return false;
-
-		return true; }
-*/
 
 	std::string Save( size_t iMember ) const {
 		std::ostringstream	ossm;
@@ -252,6 +221,11 @@ public:
 		return m_vecEdges; }
 
 protected:
+	void SetMembers( size_t iMembers ) {
+
+		m_vecTotal.resize( iMembers );
+		m_vecCounts.resize( GetOffset( GetMembers( ) ) ); }
+
 	size_t GetOffset( size_t iMember ) const {
 
 		return ( iMember * GetEdges( ) ); }
@@ -281,7 +255,6 @@ protected:
 		dAve = (double)Ave / GetTotal( );
 		dVar = ( (double)Var / GetTotal( ) ) - ( dAve * dAve ); }
 
-	size_t				m_iMembers;
 	size_t				m_iZero;
 	tCount				m_Total;
 	std::vector<tCount>	m_vecTotal;
@@ -395,7 +368,7 @@ protected:
 		pthread_mutex_unlock( &m_mutx ); }
 
 	void Grow( uint32_t iMotif, uint32_t iMotifs ) {
-		size_t	iType, iSubtype, iGene, iTarget;
+		size_t	iType, iSubtype, iGene, iTarget, iCapacity;
 		float*	adTotal;
 		float*	ad;
 		float*	adFrom;
@@ -406,6 +379,7 @@ protected:
 			if( iTarget > m_iMotifs )
 				m_iMotifs = iTarget;
 			return; }
+		iCapacity = m_iCapacity;
 		m_iCapacity = iTarget + c_iLookahead;
 		for( iType = 0; iType < GetTypes( ); ++iType )
 			for( iSubtype = 0; iSubtype < GetSubsequences( iType ); ++iSubtype ) {
@@ -413,7 +387,7 @@ protected:
 					continue;
 				ad = new float[ m_iGenes * m_iCapacity ];
 				for( iGene = 0,adFrom = adTotal,adTo = ad; iGene < m_iGenes;
-					++iGene,adFrom += m_iMotifs,adTo += m_iCapacity ) {
+					++iGene,adFrom += iCapacity,adTo += m_iCapacity ) {
 					memcpy( adTo, adFrom, m_iMotifs * sizeof(*adTo) );
 					memset( adTo + m_iMotifs, 0, ( m_iCapacity - m_iMotifs ) * sizeof(*adTo) ); }
 				delete[] adTotal;
@@ -429,16 +403,11 @@ protected:
 // One histogram per motif atom
 class CCoalesceGroupHistograms : public CCoalesceSequencer<CCoalesceHistogramSet<> > {
 public:
-	CCoalesceGroupHistograms( uint32_t iMotifs, size_t iBins, float dStep ) : m_iMotifs(iMotifs),
-		m_iBins(iBins), m_dStep(dStep) { }
+	CCoalesceGroupHistograms( size_t iBins, float dStep ) : m_iBins(iBins), m_dStep(dStep) { }
 
 	bool Add( const CCoalesceGeneScores&, size_t, bool, uint32_t = -1 );
 	void Save( std::ostream&, const CCoalesceMotifLibrary* ) const;
 	bool IsSimilar( const CCoalesceMotifLibrary*, const SMotifMatch&, const SMotifMatch&, float ) const;
-
-	uint32_t GetMotifs( ) const {
-
-		return m_iMotifs; }
 
 	void SetTotal( const CCoalesceGeneScores& GeneScores, const std::set<size_t>& setiGenes ) {
 		std::set<size_t>::const_iterator	iterGene;
@@ -475,7 +444,7 @@ public:
 
 				if( !HistsCur.GetTotal( ) )
 					continue;
-				for( iMotif = 0; iMotif < GetMotifs( ); ++iMotif )
+				for( iMotif = 0; iMotif < HistsCur.GetMembers( ); ++iMotif )
 					for( iEdge = 0; iEdge < HistsCur.GetEdges( ); ++iEdge )
 						if( HistsCur.Get( iMotif, iEdge ) != HistsTotal.Get( iMotif, iEdge ) ) {
 							std::cerr << "INVALID" << '\t' << GetType( iType ) << '\t' << iSubsequence <<

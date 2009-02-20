@@ -22,6 +22,8 @@
 #ifndef HALFMATRIX_H
 #define HALFMATRIX_H
 
+#include <string.h>
+
 #include "halfmatrixi.h"
 
 namespace Sleipnir {

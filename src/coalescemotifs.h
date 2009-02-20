@@ -27,6 +27,7 @@
 namespace Sleipnir {
 
 struct SCoalesceModifierCache;
+struct SMotifMatch;
 
 /*!
  * \brief
@@ -48,6 +49,9 @@ struct SCoalesceModifierCache;
  */
 class CCoalesceMotifLibrary : CCoalesceMotifLibraryImpl {
 public:
+	static bool Open( std::istream& istm, std::vector<SMotifMatch>& vecsMotifs,
+		CCoalesceMotifLibrary* pMotifs = NULL );
+
 	static std::string GetReverseComplement( const std::string& strKMer ) {
 
 		return CCoalesceMotifLibraryImpl::GetReverseComplement( strKMer ); }
@@ -64,9 +68,16 @@ public:
 	float GetMatch( const std::string& strSequence, uint32_t iMotif, size_t iOffset,
 		SCoalesceModifierCache& sModifiers ) const;
 	uint32_t Open( const std::string& strMotif );
+	bool OpenKnown( std::istream& istm );
 	std::string GetPWM( uint32_t iMotif, float dCutoffPWMs, float dPenaltyGap, float dPenaltyMismatch,
 		bool fNoRCs ) const;
 	bool Simplify( uint32_t iMotif ) const;
+	bool GetKnown( uint32_t iMotif, float dPenaltyGap, float dPenaltyMismatch,
+		std::vector<std::pair<std::string, float> >& vecprstrdKnown, float dPValue = 1 ) const;
+
+	size_t GetKnowns( ) const {
+
+		return m_sKnowns.GetSize( ); }
 
 	/*!
 	 * \brief
@@ -192,32 +203,6 @@ public:
 				return (uint32_t)m_veciRC2KMer[ iMotif - GetBaseRCs( ) ]; }
 
 		return iMotif; }
-
-	/*!
-	 * \brief
-	 * Returns a motif ID representing the "merger" of the input motif (which can be of any type) with an
-	 * empty PST.
-	 * 
-	 * \param iMotif
-	 * Motif to be "merged" into a PST.
-	 * 
-	 * \returns
-	 * -1 if the motif cannot be merged; the ID of the new PST otherwise.
-	 */
-	uint32_t Merge( uint32_t iMotif ) {
-		uint32_t	iRet;
-		CPST*		pPST;
-
-		if( !( pPST = CreatePST( iRet ) ) )
-			return -1;
-		switch( GetType( iMotif ) ) {
-			case ETypeRC:
-				return MergeRCPST( iMotif, *pPST, FLT_MAX, true );
-
-			case ETypePST:
-				return MergePSTs( *GetPST( iMotif ), *pPST, FLT_MAX, true ); }
-
-		return MergeKMerPST( GetMotif( iMotif ), *pPST, FLT_MAX, true ); }
 
 	float Align( uint32_t iOne, uint32_t iTwo, float dCutoff ) {
 

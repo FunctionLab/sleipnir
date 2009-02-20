@@ -29,6 +29,8 @@
 #include <fstream>
 using namespace std;
 
+#include "coalescemotifs.h"
+#include "coalescestructsi.h"
 #include "dat.h"
 #include "fasta.h"
 #include "genome.h"

@@ -23,11 +23,80 @@
 #include "coalescemotifs.h"
 #include "coalescestructsi.h"
 #include "pst.h"
+#include "measure.h"
+#include "statistics.h"
 
 namespace Sleipnir {
 
 const char	CCoalesceMotifLibraryImpl::c_szBases[]			= "ACGT";
 const char	CCoalesceMotifLibraryImpl::c_szComplements[]	= "TGCA";
+
+void CCoalesceMotifLibraryImpl::SKnowns::Match( const vector<float>& vecdMotif,
+	map<string, float>& mapstrdKnown ) const {
+	static const size_t					c_iOverlap	= 5;
+	map<string, TVecPr>::const_iterator	iterKnown;
+	size_t								i, j, k, iMin, iMax, iTests;
+	float								dP, dR, dMin;
+	const float*						adMotif;
+	const float*						adPWM;
+	const float*						adRC;
+
+	for( iterKnown = m_mapstrvecKnown.begin( ); iterKnown != m_mapstrvecKnown.end( ); ++iterKnown ) {
+		dMin = FLT_MAX;
+		for( iTests = i = 0; i < iterKnown->second.size( ); ++i ) {
+			const vector<float>&	vecdPWM	= iterKnown->second[ i ].first;
+			const vector<float>&	vecdRC	= iterKnown->second[ i ].second;
+
+			iMin = strlen( c_szBases ) * c_iOverlap;
+			iMax = vecdMotif.size( ) + vecdPWM.size( ) - iMin;
+			if( iMax < iMin )
+				continue;
+			for( j = iMin; j <= iMax; j += strlen( c_szBases ) ) {
+				iTests += 2;
+				if( j < vecdMotif.size( ) ) {
+					adMotif = &vecdMotif[ vecdMotif.size( ) - j - 1 ];
+					adPWM = &vecdPWM.front( );
+					adRC = &vecdRC.front( );
+					k = min( vecdPWM.size( ), j ); }
+				else {
+					adMotif = &vecdMotif.front( );
+					k = j - vecdMotif.size( );
+					adPWM = &vecdPWM[ k ];
+					adRC = &vecdRC[ k ];
+					k = min( vecdMotif.size( ), vecdPWM.size( ) - k ); }
+				if( ( dR = (float)max( CMeasurePearson::Pearson( adMotif, k, adPWM, k,
+					IMeasure::EMapNone ), CMeasurePearson::Pearson( adMotif, k, adRC, k,
+					IMeasure::EMapNone ) ) ) < 0 )
+					continue;
+				if( ( dP = (float)CStatistics::PValuePearson( dR, k ) ) < dMin )
+					dMin = dP; } }
+		if( dMin != FLT_MAX )
+			mapstrdKnown[ iterKnown->first ] = dMin * iTests; } }
+
+bool CCoalesceMotifLibrary::Open( istream& istm, vector<SMotifMatch>& vecsMotifs,
+	CCoalesceMotifLibrary* pMotifs ) {
+	string	strBuffer;
+	size_t	i;
+
+	strBuffer.resize( CFile::GetBufferSize( ) );
+	while( CFile::IsNewline( istm.peek( ) ) )
+		istm.getline( &strBuffer[ 0 ], strBuffer.size( ) );
+	while( !istm.eof( ) && ( istm.peek( ) != c_cCluster ) ) {
+		SMotifMatch	sMotif;
+
+		if( pMotifs ) {
+			if( !sMotif.Open( istm, *pMotifs ) )
+				break;
+			vecsMotifs.push_back( sMotif );
+			if( isdigit( istm.peek( ) ) )
+				for( i = 0; i < 4; ++i )
+					istm.getline( &strBuffer[ 0 ], strBuffer.size( ) ); }
+		else
+			istm.getline( &strBuffer[ 0 ], strBuffer.size( ) );
+		while( CFile::IsNewline( istm.peek( ) ) )
+			istm.getline( &strBuffer[ 0 ], strBuffer.size( ) ); }
+
+	return true; }
 
 CCoalesceMotifLibraryImpl::~CCoalesceMotifLibraryImpl( ) {
 	size_t	i;
@@ -55,8 +124,6 @@ CCoalesceMotifLibraryImpl::~CCoalesceMotifLibraryImpl( ) {
  * \returns
  * Length-normalized strength of motif match against the given sequence and offset.
  * 
- * Write detailed description for GetMatch here.
- * 
  * \remarks
  * iMotif must represent a valid motif for the current library, and iOffset must fall within strSequence,
  * although motifs extending from a valid iOffset past the end of the sequence will be handled appropriately.
@@ -68,27 +135,52 @@ CCoalesceMotifLibraryImpl::~CCoalesceMotifLibraryImpl( ) {
  */
 float CCoalesceMotifLibrary::GetMatch( const std::string& strSequence, uint32_t iMotif, size_t iOffset,
 	SCoalesceModifierCache& sModifiers ) const {
-	size_t		i;
-	float		dRet;
+	size_t		i, iDepth;
+	float		d, dRet;
 	const CPST*	pPST;
+	string		strMotif, strRC;
+	EType		eType;
 
-// TODO: this could in theory be implemented
-	if( ( GetType( iMotif ) != ETypePST ) || !( pPST = GetPST( iMotif ) ) ) {
-		g_CatSleipnir.error( "CCoalesceMotifLibrary::GetMatch( %s, %d, %d ) attempted to match a non-PST motif",
-			strSequence.c_str( ), iMotif, iOffset );
-		return CMeta::GetNaN( ); }
+	switch( eType = GetType( iMotif ) ) {
+		case ETypePST:
+			if( !( pPST = GetPST( iMotif ) ) ) {
+				g_CatSleipnir.error( "CCoalesceMotifLibrary::GetMatch( %s, %d, %d ) could not find PST",
+					strSequence.c_str( ), iMotif, iOffset );
+				return CMeta::GetNaN( ); }
+			break;
 
+		case ETypeKMer:
+			strMotif = GetMotif( iMotif );
+			break;
+
+		case ETypeRC:
+			strMotif = GetRCOne( iMotif );
+			strRC = GetReverseComplement( strMotif );
+			break; }
+
+	iDepth = ( eType == ETypePST ) ? pPST->GetDepth( ) : GetK( );
 	sModifiers.InitializeWeight( 0, 0 );
 	dRet = 0;
-	for( i = 1; i < pPST->GetDepth( ); ++i ) {
+	for( i = 1; i < iDepth; ++i ) {
 		sModifiers.AddWeight( 0, iOffset, i - 1 );
-		dRet += pPST->GetMatch( strSequence, pPST->GetDepth( ) - i ) * sModifiers.GetWeight( i ) / i; }
+		if( eType == ETypePST )
+			dRet += pPST->GetMatch( strSequence, iDepth - i ) * sModifiers.GetWeight( i ) / i; }
 	sModifiers.AddWeight( 0, iOffset, i - 1 );
 	for( i = 0; i < strSequence.length( ); ++i ) {
-		dRet += pPST->GetMatch( strSequence.substr( i ) ) * sModifiers.GetWeight( pPST->GetDepth( ) ) /
-			pPST->GetDepth( );
-		sModifiers.AddWeight( pPST->GetDepth( ), iOffset, i ); }
-	if( dRet < 0 ) {
+		switch( eType ) {
+			case ETypePST:
+				d = pPST->GetMatch( strSequence.substr( i ) ) * sModifiers.GetWeight( iDepth ) / iDepth;
+				break;
+
+			case ETypeKMer:
+			case ETypeRC:
+				d = ( strSequence.compare( i, iDepth, strMotif ) &&
+					( strRC.empty( ) || strSequence.compare( i, iDepth, strRC ) ) ) ? 0 :
+					sModifiers.GetWeight( iDepth );
+				break; }
+		dRet += d;
+		sModifiers.AddWeight( iDepth, iOffset, i ); }
+	if( CMeta::IsNaN( dRet ) || ( dRet < 0 ) ) {
 		g_CatSleipnir.error( "CCoalesceMotifLibrary::GetMatch( %s, %d, %d ) found negative score: %g",
 			strSequence.c_str( ), iMotif, iOffset, dRet );
 		return CMeta::GetNaN( ); }
@@ -252,8 +344,13 @@ uint32_t CCoalesceMotifLibraryImpl::MergeRCs( uint32_t iOne, uint32_t iTwo, floa
 
 	pPST = CreatePST( iRet );
 	pPST->Add( asCrosses[ iMin ].m_strOne, asCrosses[ iMin ].m_strTwo, asCrosses[ iMin ].m_iOffset );
-	pPST->Add( asCrosses[ ( iMin + 2 ) % ARRAYSIZE(asCrosses) ].m_strOne );
-	pPST->Add( asCrosses[ ( iMin + 1 ) % ARRAYSIZE(asCrosses) ].m_strTwo );
+	{
+		CPST	PST( strlen( c_szBases ) );
+
+		PST.Add( asCrosses[ ( iMin + 1 ) % ARRAYSIZE(asCrosses) ].m_strTwo,
+			asCrosses[ ( iMin + 2 ) % ARRAYSIZE(asCrosses) ].m_strOne, asCrosses[ iMin ].m_iOffset );
+		pPST->Add( PST );
+	}
 	if( g_CatSleipnir.isInfoEnabled( ) )
 		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeRCs( %s, %s, %g ) merged at %g to %s",
 			GetMotif( iOne ).c_str( ), GetMotif( iTwo ).c_str( ), dCutoff, dMin, pPST->GetMotif( ).c_str( ) );
@@ -374,23 +471,36 @@ uint32_t CCoalesceMotifLibraryImpl::RemoveRCs( const CPST& PST, float dPenaltyGa
 string CCoalesceMotifLibrary::GetPWM( uint32_t iMotif, float dCutoffPWMs, float dPenaltyGap,
 	float dPenaltyMismatch, bool fNoRCs ) const {
 	CFullMatrix<uint16_t>	MatPWM;
-	string					strMotif;
 	size_t					i, j;
 	ostringstream			ossm;
-	float					d;
+
+	if( !CCoalesceMotifLibraryImpl::GetPWM( iMotif, dCutoffPWMs, dPenaltyGap, dPenaltyMismatch, fNoRCs,
+		MatPWM ) )
+		return "";
+	for( i = 0; i < MatPWM.GetRows( ); ++i ) {
+		for( j = 0; j < MatPWM.GetColumns( ); ++j )
+			ossm << ( j ? "\t" : "" ) << MatPWM.Get( i, j );
+		ossm << endl; }
+
+	return ossm.str( ); }
+
+bool CCoalesceMotifLibraryImpl::GetPWM( uint32_t iMotif, float dCutoffPWMs, float dPenaltyGap,
+	float dPenaltyMismatch, bool fNoRCs, CFullMatrix<uint16_t>& MatPWM ) const {
+	string	strMotif;
+	float	d;
 
 	if( fNoRCs )
 		iMotif = ((CCoalesceMotifLibrary*)this)->RemoveRCs( iMotif, dPenaltyGap, dPenaltyMismatch );
 	switch( GetType( iMotif ) ) {
 		case ETypeKMer:
 			if( !CCoalesceMotifLibraryImpl::GetPWM( GetMotif( iMotif ), MatPWM ) )
-				return "";
+				return false;
 			break;
 
 		case ETypeRC:
 			if( !( CCoalesceMotifLibraryImpl::GetPWM( strMotif = GetRCOne( iMotif ), MatPWM ) &&
 				CCoalesceMotifLibraryImpl::GetPWM( GetReverseComplement( strMotif ), MatPWM ) ) )
-				return "";
+				return false;
 			break;
 
 		case ETypePST:
@@ -403,28 +513,74 @@ string CCoalesceMotifLibrary::GetPWM( uint32_t iMotif, float dCutoffPWMs, float 
 			if( g_CatSleipnir.isInfoEnabled( ) ) {
 				ostringstream	ossm;
 
-				ossm << "CCoalesceMotifLibrary::GetPWM( " << iMotif << ", " << dCutoffPWMs << ", " <<
+				ossm << "CCoalesceMotifLibraryImpl::GetPWM( " << iMotif << ", " << dCutoffPWMs << ", " <<
 					fNoRCs << " ) rejected (" << d << "):" << endl;
 				MatPWM.Save( ossm, false );
 				g_CatSleipnir.info( ossm.str( ) ); }
-			return ""; }
+			return false; }
 		if( g_CatSleipnir.isDebugEnabled( ) ) {
 			ostringstream	ossm;
 
-			ossm << "CCoalesceMotifLibrary::GetPWM( " << iMotif << ", " << dCutoffPWMs << ", " <<
+			ossm << "CCoalesceMotifLibraryImpl::GetPWM( " << iMotif << ", " << dCutoffPWMs << ", " <<
 				fNoRCs << " ) got information (" << d << "):" << endl;
 			MatPWM.Save( ossm, false );
 			g_CatSleipnir.debug( ossm.str( ) ); } }
-	for( i = 0; i < MatPWM.GetRows( ); ++i ) {
-		for( j = 0; j < MatPWM.GetColumns( ); ++j )
-			ossm << ( j ? "\t" : "" ) << MatPWM.Get( i, j );
-		ossm << endl; }
 
-	return ossm.str( ); }
+	return true; }
 
 bool CCoalesceMotifLibrary::Simplify( uint32_t iMotif ) const {
 
 	return ( ( GetType( iMotif ) == ETypePST ) ? CCoalesceMotifLibraryImpl::GetPST( iMotif )->Simplify( ) :
 		false ); }
 
+bool CCoalesceMotifLibrary::OpenKnown( istream& istm ) {
+	char*			szBuffer;
+	vector<string>	vecstrLine;
+
+	szBuffer = new char[ CFile::GetBufferSize( ) ];
+	while( !istm.eof( ) ) {
+		istm.getline( szBuffer, CFile::GetBufferSize( ) );
+		if( !szBuffer[ 0 ] )
+			continue;
+		vecstrLine.clear( );
+		CMeta::Tokenize( szBuffer, vecstrLine );
+		if( vecstrLine.empty( ) )
+			continue;
+		if( ( vecstrLine.size( ) - 1 ) % 4 ) {
+			g_CatSleipnir.warn( "CCoalesceMotifLibrary::OpenKnown( ) invalid line: %s" );
+			continue; }
+
+		m_sKnowns.Add( vecstrLine[ 0 ], vecstrLine ); }
+	delete[] szBuffer;
+
+	return true; }
+
+bool CCoalesceMotifLibrary::GetKnown( uint32_t iMotif, float dPenaltyGap, float dPenaltyMismatch,
+	vector<pair<string, float> >& vecprstrdKnown, float dPValue ) const {
+	size_t							i, j, k, iSum;
+	vector<float>					vecdMotif;
+	CFullMatrix<uint16_t>			MatPWM;
+	map<string, float>				mapstrdKnown;
+	map<string, float>::iterator	iterKnown;
+
+	if( !m_sKnowns.GetSize( ) )
+		return true;
+	dPValue /= m_sKnowns.GetSize( );
+	if( !CCoalesceMotifLibraryImpl::GetPWM( iMotif, 0, dPenaltyGap, dPenaltyMismatch, true, MatPWM ) )
+		return false;
+	vecdMotif.resize( MatPWM.GetRows( ) * MatPWM.GetColumns( ) );
+	for( k = i = 0; i < MatPWM.GetColumns( ); ++i ) {
+		for( iSum = j = 0; j < MatPWM.GetRows( ); ++j )
+			iSum += MatPWM.Get( j, i );
+		if( !iSum )
+			iSum = 1;
+		for( j = 0; j < MatPWM.GetRows( ); ++j )
+			vecdMotif[ k++ ] = (float)MatPWM.Get( j, i ) / iSum; }
+
+	m_sKnowns.Match( vecdMotif, mapstrdKnown );
+	for( iterKnown = mapstrdKnown.begin( ); iterKnown != mapstrdKnown.end( ); ++iterKnown )
+		if( iterKnown->second < dPValue )
+			vecprstrdKnown.push_back( *iterKnown );
+
+	return true; }
 }

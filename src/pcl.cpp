@@ -370,10 +370,8 @@ bool CPCLImpl::OpenExperiments( std::istream& istmInput, size_t iFeatures, char*
 			m_vecstrFeatures.push_back( strToken );
 		else
 			m_vecstrExperiments.push_back( strToken );
-	if( m_vecstrExperiments.empty( ) )
-		g_CatSleipnir.error( "CPCLImpl::OpenExperiments( %d ) found no experiments", iFeatures );
 
-	return !m_vecstrExperiments.empty( ); }
+	return true; }
 
 bool CPCLImpl::OpenGene( std::istream& istmInput, std::vector<float>& vecdData, char* acLine, size_t iLine ) {
 	const char*	pc;

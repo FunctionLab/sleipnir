@@ -44,10 +44,6 @@ protected:
 		istm.read( (char*)&iLength, sizeof(iLength) );
 		str.resize( iLength );
 		istm.read( &str[ 0 ], iLength ); }
-
-	static bool IsNewline( char c ) {
-
-		return ( ( c == '\n' ) || ( c == '\r' ) ); }
 };
 
 }

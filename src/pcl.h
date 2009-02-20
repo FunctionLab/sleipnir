@@ -435,6 +435,15 @@ public:
 
 		return m_vecstrExperiments[ iExperiment ]; }
 
+	size_t GetExperiment( const std::string& strExperiment ) const {
+		size_t	i;
+
+		for( i = 0; i < m_vecstrExperiments.size( ); ++i )
+			if( m_vecstrExperiments[ i ] == strExperiment )
+				return i;
+
+		return -1; }
+
 	/*!
 	 * \brief
 	 * Set the experiment label at the given PCL column.
