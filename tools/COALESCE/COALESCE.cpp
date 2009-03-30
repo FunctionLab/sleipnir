@@ -132,12 +132,15 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open: " << sArgs.conservation_arg << endl;
 			return 1; }
 		Coalesce.AddWiggle( FASTAConservation ); }
+	if( sArgs.progressive_flag )
+		Coalesce.AddOutputIntermediate( cout );
 	if( !Coalesce.Cluster( PCL, FASTA, vecClusters ) ) {
 		cerr << "Clustering failed" << endl;
 		return 1; }
 
-	for( i = 0; i < vecClusters.size( ); ++i )
-		vecClusters[ i ].Save( cout, i, PCL, &Motifs );
+	if( !sArgs.progressive_flag )
+		for( i = 0; i < vecClusters.size( ); ++i )
+			vecClusters[ i ].Save( cout, i, PCL, &Motifs );
 
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
@@ -324,53 +327,3 @@ bool trim( const gengetopt_args_info& sArgs, const CPCL& PCL, vector<CCoalesceCl
 		Cluster.RemoveGenes( veciRemove ); }
 
 	return true; }
-
-struct STestFASTA {
-	string			m_strSequence;
-	const CFASTA*	m_pFASTA;
-	size_t			m_iGene;
-};
-
-void* ThreadTestFASTA( void* pData ) {
-	STestFASTA*				psData;
-	vector<SFASTASequence>	vecsSequences;
-
-	psData = (STestFASTA*)pData;
-	psData->m_pFASTA->Get( psData->m_iGene, vecsSequences );
-	if( !( vecsSequences.empty( ) || vecsSequences[ 0 ].m_vecstrSequences.empty( ) ) )
-		psData->m_strSequence = vecsSequences[ 0 ].m_vecstrSequences[ 0 ];
-
-	return NULL; }
-
-struct SThreadCombineMotif {
-	size_t							m_iOffset;
-	size_t							m_iStep;
-	const std::vector<size_t>*		m_pveciPCL2FASTA;
-	CCoalesceGeneScores*			m_pGeneScores;
-	const CCoalesceMotifLibrary*	m_pMotifs;
-	uint32_t						m_iMotif;
-	const CFASTA*					m_pFASTA;
-	const SCoalesceModifiers*		m_psModifiers;
-};
-
-void* ThreadCombineMotif( void* pData ) {
-	SThreadCombineMotif*	psData;
-	size_t					i, j;
-	vector<float>			vecdScores;
-	vector<size_t>			veciLengths;
-
-	psData = (SThreadCombineMotif*)pData;
-	SCoalesceModifierCache	sModifiers( *psData->m_psModifiers );
-
-	for( i = psData->m_iOffset; i < psData->m_pveciPCL2FASTA->size( ); i += psData->m_iStep )
-		if( (*psData->m_pveciPCL2FASTA)[ i ] != -1 ) {
-			vector<SFASTASequence>	vecsSequences;
-
-			if( psData->m_pFASTA->Get( (*psData->m_pveciPCL2FASTA)[ i ], vecsSequences ) ) {
-				sModifiers.Get( i );
-				for( j = 0; j < vecsSequences.size( ); ++j )
-					if( !psData->m_pGeneScores->Add( i, *psData->m_pMotifs, vecsSequences[ j ],
-						sModifiers, psData->m_iMotif, vecdScores, veciLengths ) )
-						break; } }
-
-	return NULL; }

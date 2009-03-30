@@ -53,7 +53,7 @@
  * standard output.
  * 
  * \code
- * OntoShell -C <configuration.ini>
+ * OntoShell -c <configuration.ini>
  * \endcode
  * 
  * Executes OntoShell using the <a href="http://www.gnu.org/software/gengetopt/gengetopt.html">gengetopt</a>

@@ -60,6 +60,8 @@ struct SNeighbors {
 		size_t	i, j, iCol;
 		bool	fRet;
 
+		if( !m_MatNeighbors.GetRows( ) )
+			return false;
 		for( fRet = false,i = 0; i < m_veciColumns.size( ); ++i ) {
 			iCol = m_veciColumns[ i ];
 			if( !CMeta::IsNaN( adValues[ iCol ] ) && ( dSim > m_MatNeighbors.Get( m_veciMin[ i ], i ).second ) ) {
@@ -774,6 +776,25 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 	float	d, dMin, dMax;
 
 	switch( eNormalize ) {
+		case ENormalizeMean:
+			dMin = FLT_MAX;
+			dAve = 0;
+			for( iCount = i = 0; i < GetGenes( ); ++i )
+				for( j = 0; j < GetExperiments( ); ++j )
+					if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+						if( d < dMin )
+							dMin = d;
+						iCount++;
+						dAve += d; }
+			if( !iCount )
+				break;
+			dAve = ( dAve / iCount ) - dMin;
+			for( i = 0; i < GetGenes( ); ++i )
+				for( j = 0; j < GetExperiments( ); ++j )
+					if( !CMeta::IsNaN( d = Get( i, j ) ) )
+						Set( i, j, (float)( ( d - dMin ) / dAve ) );
+			break;
+
 		case ENormalizeZScore:
 			dAve = dStd = 0;
 			for( iCount = i = 0; i < GetGenes( ); ++i )
@@ -890,6 +911,8 @@ void CPCL::Impute( size_t iNeighbors, float dMinimumPresent, const CDat& DatSimi
 		if( vecdMissing[ i ] < dMinimumPresent ) {
 			MaskGene( i );
 			continue; }
+		if( vecsNeighbors.empty( ) )
+			continue;
 		{
 			const SNeighbors&	sGene	= vecsNeighbors[ iOne++ ];
 

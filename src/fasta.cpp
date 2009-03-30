@@ -222,7 +222,7 @@ bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>& vecsSequences, size_
 	size_t	iBegin, iEnd;
 
 	if( strSequence.empty( ) ) {
-		g_CatSleipnir.warn( "CFASTA::Get( %d ) no sequence found: %s %s at %d", iGene,
+		g_CatSleipnir.debug( "CFASTA::Get( %d ) no sequence found: %s %s at %d", iGene,
 			GetGene( iGene ).c_str( ), sSequence.m_strType.c_str( ), iOffset );
 		return true; }
 	for( iBegin = 0; iBegin < strSequence.size( ); iBegin = iEnd ) {
@@ -245,7 +245,7 @@ bool CFASTAImpl::Get( size_t iGene, vector<SFASTAWiggle>& vecsValues, size_t iOf
 	SFASTAWiggle& sValues ) const {
 
 	if( sValues.m_vecdValues.empty( ) ) {
-		g_CatSleipnir.warn( "CFASTA::Get( %d ) no values found: %s %s at %d", iGene,
+		g_CatSleipnir.debug( "CFASTA::Get( %d ) no values found: %s %s at %d", iGene,
 			GetGene( iGene ).c_str( ), sValues.m_strType.c_str( ), iOffset );
 		return true; }
 	vecsValues.push_back( sValues );

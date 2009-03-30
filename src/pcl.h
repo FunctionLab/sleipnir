@@ -98,7 +98,13 @@ public:
 		 * \brief
 		 * Subtract the column average from every value and divide by the column standard deviation.
 		 */
-		ENormalizeColumn
+		ENormalizeColumn,
+		/*!
+		 * \brief
+		 * Subtract the global minimum from every value and divide by the global mean (transforming
+		 * all values to the range [0, inf] with mean 1).
+		 */
+		ENormalizeMean
 	};
 
 	static int Distance( const char* szFile, size_t iSkip, const char* szSimilarityMeasure, bool fNormalize,
@@ -156,6 +162,13 @@ public:
 	void Normalize( ENormalize eNormalize = ENormalizeRow );
 	void Impute( size_t iNeighbors, float dMinimumPresent, const CDat& DatSimilarity );
 	void Impute( size_t iNeighbors, float dMinimumPresent, const IMeasure* pMeasure, bool fPrecompute = true );
+
+	void Save( const char* szFile = NULL ) const {
+		std::ofstream	ofsm;
+
+		if( szFile )
+			ofsm.open( szFile );
+		Save( szFile ? ofsm : std::cout ); }
 
 	/*!
 	 * \brief

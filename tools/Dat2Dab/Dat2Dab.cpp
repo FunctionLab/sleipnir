@@ -130,7 +130,7 @@ int main( int iArgs, char** aszArgs ) {
 		for( iTotal = iCutoff = i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
-					if( !sArgs.cutoff_arg || ( d >= sArgs.cutoff_arg ) ) {
+					if( !sArgs.cutoff_given || ( d >= sArgs.cutoff_arg ) ) {
 						dAve += d;
 						iCutoff++;
 						veciCounts[ i ]++;
@@ -149,14 +149,14 @@ int main( int iArgs, char** aszArgs ) {
 			vecdSquares[ i ] = sqrt( ( vecdSquares[ i ] / iCutoff ) - ( d * d ) ); }
 
 		cout << iTotal << endl;
-		if( sArgs.cutoff_arg )
+		if( sArgs.cutoff_given )
 			cout << iCutoff << endl;
 		cout << dAve << '\t' << dStd << endl;
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			cout << Dat.GetGene( i ) << '\t' << vecdTotals[ i ] << '\t' << veciCounts[ i ] << '\t' <<
 				vecdSquares[ i ] << endl;
 		return 0; }
-	if( sArgs.cutoff_arg )
+	if( sArgs.cutoff_given )
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( Dat.Get( i, j ) < sArgs.cutoff_arg )

@@ -927,10 +927,11 @@ struct SCompareRank {
 double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,
 	const vector<bool>& vecfGenesOfInterest, bool fInvert ) {
 	size_t				i, j, k, iOne, iTwo, iNeg;
-	uint64_t			iSum, iPos;
+	uint64_t			iPos;
 	float				d, dAnswer;
-	std::vector<size_t>	veciGenes, veciRanks;
-	std::vector<float>	vecdValues;
+	double				dSum;
+	std::vector<size_t>	veciGenes;
+	std::vector<float>	vecdValues, vecdRanks;
 	bool				fAnswer;
 
 	veciGenes.resize( DatAnswers.GetGenes( ) );
@@ -955,17 +956,25 @@ double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers
 			vecdValues.push_back( d ); } }
 	{
 		std::vector<size_t>	veciIndices;
+		size_t				iIndex, iCount;
 
 		veciIndices.resize( vecdValues.size( ) );
 		for( i = 0; i < vecdValues.size( ); ++i )
 			veciIndices[ i ] = i;
 		std::sort( veciIndices.begin( ), veciIndices.end( ), SCompareRank<float>( vecdValues ) );
-		veciRanks.resize( veciIndices.size( ) );
-		for( i = 0; i < veciRanks.size( ); ++i )
-			veciRanks[ veciIndices[ i ] ] = i;
+		vecdRanks.resize( veciIndices.size( ) );
+		for( i = 0; i < vecdRanks.size( ); ++i ) {
+			iIndex = veciIndices[ i ];
+			if( !i || ( vecdValues[ iIndex ] != vecdValues[ veciIndices[ i - 1 ] ] ) ) {
+				for( iCount = 0,j = i; j < veciIndices.size( ); ++j ) {
+					if( vecdValues[ veciIndices[ j ] ] != vecdValues[ iIndex ] )
+						break;
+					iCount++; }
+				d = i + ( iCount - 1 ) / 2.0f; }
+			vecdRanks[ iIndex ] = d; }
 	}
 
-	for( iSum = iPos = iNeg = i = k = 0; i < DatAnswers.GetGenes( ); ++i ) {
+	for( dSum = 0,iPos = iNeg = i = k = 0; i < DatAnswers.GetGenes( ); ++i ) {
 		if( ( iOne = veciGenes[ i ] ) == -1 )
 			continue;
 		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
@@ -978,13 +987,13 @@ double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers
 				continue;
 			if( dAnswer > 0 ) {
 				iPos++;
-				iSum += veciRanks[ k ]; }
+				dSum += vecdRanks[ k ]; }
 			else
 				iNeg++;
 			k++; } }
-	iSum -= ( iPos * ( iPos - 1 ) ) / 2;
+	dSum -= ( iPos * ( iPos - 1 ) ) / 2;
 
-	return ( (double)iSum / iPos / iNeg ); }
+	return ( dSum / iPos / iNeg ); }
 
 double bessi0( double dX ) {
 	double	dAbs, dRet, dY;

@@ -27,6 +27,7 @@ const char	c_szBin[]	= "bin";
 const char	c_szDat[]	= "dat";
 
 bool OpenBin( istream&, ostream& );
+bool OpenMat( istream&, bool, ostream&, bool );
 bool OpenText( istream&, ostream& );
 bool OpenDats( const CDataPair&, const vector<string>&, ostream&, const CGenes&,
 	const CGenes& );
@@ -57,7 +58,19 @@ int main( int iArgs, char** aszArgs ) {
 		ifsm.close( ); }
 
 	ifsm.clear( );
-	if( !strcmp( sArgs.from_arg, c_szBin ) ) {
+	if( sArgs.matrix_flag ) {
+		bool	fBinIn, fBinOut;
+
+		fBinIn = !strcmp( sArgs.from_arg, c_szBin );
+		fBinOut = !strcmp( sArgs.to_arg, c_szBin );
+		if( sArgs.output_arg )
+			ofsm.open( sArgs.output_arg, fBinOut ? ios_base::binary : ios_base::out );
+		ifsm.open( sArgs.input_arg, fBinIn ? ios_base::binary : ios_base::in );
+		if( !OpenMat( ifsm, fBinIn, sArgs.output_arg ? (ostream&)ofsm : cout, sArgs.output_arg && fBinOut ) ) {
+			cerr << "Couldn't open: " << sArgs.input_arg << endl;
+			return 1; }
+		ifsm.close( ); }
+	else if( !strcmp( sArgs.from_arg, c_szBin ) ) {
 		if( sArgs.output_arg )
 			ofsm.open( sArgs.output_arg );
 		ifsm.open( sArgs.input_arg, ios_base::binary );
@@ -243,5 +256,14 @@ bool OpenBin( istream& istm, ostream& ostm ) {
 			sz[ j ] = 0;
 			cout << " # " << sz; }
 		cout << endl; }
+
+	return true; }
+
+bool OpenMat( istream& istm, bool fBinIn, ostream& ostm, bool fBinOut ) {
+	CDataMatrix	Mat;
+
+	if( !Mat.Open( istm, fBinIn ) )
+		return false;
+	Mat.Save( ostm, fBinOut );
 
 	return true; }

@@ -274,9 +274,11 @@ public:
 		double	d, dFrac;
 
 		iSize = pEnd - pBegin;
+		std::sort( pBegin, pEnd );
+		while( iSize && CMeta::IsNaN( pBegin[ iSize - 1 ] ) )
+			--iSize;
 		if( !iSize )
 			return CMeta::GetNaN( );
-		sort( pBegin, pEnd );
 		d = ( iSize - 1 ) * dPercentile;
 		dFrac = d - (size_t)d;
 		iOne = (size_t)d;
@@ -810,23 +812,24 @@ public:
 	static double InverseNormal01CDF( double dX );
 
 	static double MultivariateNormalCDF( const std::vector<float>& vecdX, const std::vector<float>& vecdMu,
-		const CDataMatrix& MatSigmaCholesky, float dMaxError = 0.01, float dMaxCI = 0.99,
+		const CDataMatrix& MatSigmaCholesky, size_t iN = 1, float dMaxError = 0.01, float dMaxCI = 0.99,
 		size_t iMaxIterations = 300 ) {
 		std::vector<double>	vecdDiff, vecdY, vecdF;
 		size_t				i, j, iIterations;
-		double				d, dRet, dVar, dError, dAlpha, dQ;
+		double				d, dRet, dVar, dError, dAlpha, dQ, dN;
 
 		if( vecdX.empty( ) || ( vecdX.size( ) != vecdMu.size( ) ) ||
 			( vecdX.size( ) != MatSigmaCholesky.GetRows( ) ) ||
 			( vecdX.size( ) != MatSigmaCholesky.GetColumns( ) ) )
 			return CMeta::GetNaN( );
 
+		dN = sqrt( (double)iN );
 		vecdDiff.resize( vecdX.size( ) );
 		for( i = 0; i < vecdDiff.size( ); ++i )
 			vecdDiff[ i ] = vecdX[ i ] - vecdMu[ i ];
 		dAlpha = InverseNormal01CDF( dMaxCI );
 		vecdF.resize( vecdX.size( ) );
-		vecdF[ 0 ] = Normal01CDF( vecdDiff[ 0 ] / MatSigmaCholesky.Get( 0, 0 ) );
+		vecdF[ 0 ] = Normal01CDF( dN * vecdDiff[ 0 ] / MatSigmaCholesky.Get( 0, 0 ) );
 		vecdY.resize( vecdX.size( ) );
 
 		dRet = dVar = 0;
@@ -836,8 +839,8 @@ public:
 				vecdY[ i - 1 ] = InverseNormal01CDF( vecdF[ i - 1 ] * rand( ) / RAND_MAX );
 				dQ = 0;
 				for( j = 0; j < i; ++j )
-					dQ += MatSigmaCholesky.Get( j, i ) * vecdY[ j ];
-				vecdF[ i ] = Normal01CDF( ( vecdDiff[ i ] - dQ ) / MatSigmaCholesky.Get( i, i ) ) *
+					dQ += MatSigmaCholesky.Get( j, i ) * vecdY[ j ] / dN;
+				vecdF[ i ] = Normal01CDF( dN * ( vecdDiff[ i ] - dQ ) / MatSigmaCholesky.Get( i, i ) ) *
 					vecdF[ i - 1 ]; }
 			d = ( vecdF.back( ) - dRet ) / iIterations;
 			dRet += d;

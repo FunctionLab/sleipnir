@@ -442,8 +442,11 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 					return false;
 				g_CatSleipnir.notice( "CCoalesce::Cluster( ) finalized %d motifs",
 					Cluster.GetMotifs( ).size( ) ); }
-			if( IsOutputIntermediate( ) )
+			if( IsDirectoryIntermediate( ) )
 				Cluster.Save( GetDirectoryIntermediate( ), vecClusters.size( ), PCLCopy, GetMotifs( ) );
+			for( i = 0; i < m_vecpostm.size( ); ++i )
+				if( m_vecpostm[ i ] )
+					Cluster.Save( *m_vecpostm[ i ], vecClusters.size( ), PCLCopy, GetMotifs( ) );
 			vecClusters.push_back( Cluster );
 			Cluster.Subtract( PCLCopy, Pot );
 			Cluster.Subtract( GeneScores );

@@ -79,6 +79,8 @@ option	"max_motifs"	x	"Maximum motifs to merge exactly"
 section "Miscellaneous"
 option	"cache"			e	"Cache file for sequence analysis"
 							string	typestr="filename"
+option	"progressive"	O	"Generate output progressively"
+							flag	on
 
 section "Optional"
 option	"threads"		t	"Maximum number of concurrent threads"

@@ -15,6 +15,8 @@ option	"from"		f	"Source format"
 						values="txt","dat","bin"	default="txt"
 option	"to"		t	"Target format"
 						values="txt","bin"	default="bin"
+option	"matrix"	m	"Read/write simple matrix format"
+						flag	off
 
 section "Learning/Evaluation"
 option	"genes"		g	"Gene inclusion file"

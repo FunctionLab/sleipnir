@@ -63,6 +63,7 @@ int main( int iArgs, char** aszArgs ) {
 	map<string, size_t>	mapstriZeros, mapstriDatasets;
 	vector<string>		vecstrContexts;
 	int					iRet;
+	size_t				i;
 	CGenome				Genome;
 	CGenes				GenesIn( Genome ), GenesEx( Genome ), GenesEd( Genome ), GenesTm( Genome );
 
@@ -95,7 +96,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.datasets_arg ) {
 		ifstream		ifsm;
 		char			acLine[ 1024 ];
-		vector<string>	vecstrLine;
+		vector<string>	vecstrLine, vecstrDatasets;
 
 		ifsm.open( sArgs.datasets_arg );
 		if( !ifsm.is_open( ) ) {
@@ -111,11 +112,18 @@ int main( int iArgs, char** aszArgs ) {
 			if( vecstrLine.size( ) < 2 ) {
 				cerr << "Illegal datasets line: " << acLine << endl;
 				return 1; }
-			if( !( iRet = atol( vecstrLine[ 0 ].c_str( ) ) ) ) {
+			if( ( iRet = atol( vecstrLine[ 0 ].c_str( ) ) ) <= 0 ) {
 				cerr << "Dataset indices must be greater than zero: " << acLine << endl;
 				return 1; }
-			mapstriDatasets[ vecstrLine[ 1 ] ] = iRet - 1; }
-		ifsm.close( ); }
+			mapstriDatasets[ vecstrLine[ 1 ] ] = --iRet;
+			if( vecstrDatasets.size( ) <= (size_t)iRet )
+				vecstrDatasets.resize( iRet + 1 );
+			vecstrDatasets[ iRet ] = vecstrLine[ 1 ]; }
+		ifsm.close( );
+		for( i = 0; i < vecstrDatasets.size( ); ++i )
+			if( vecstrDatasets[ i ].empty( ) ) {
+				cerr << "Missing dataset: " << ( i + 1 ) << endl;
+				return 1; } }
 
 	if( sArgs.contexts_arg ) {
 		ifstream		ifsm;
@@ -582,7 +590,16 @@ return 0;
 		for( iThread = 0; ( ( sArgs.threads_arg == -1 ) || ( iThread < (size_t)sArgs.threads_arg ) ) &&
 			( ( iTerm + iThread ) < vecpGenes.size( ) ); ++iThread ) {
 			i = iTerm + iThread;
-			vecsData[ i ].m_pBN = vecpBNs[ i ];
+			if( sArgs.inputs_num ) {
+				for( j = 0; j < vecpBNs.size( ); ++j )
+					if( vecpBNs[ j ]->GetID( ) == CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) )
+						break;
+				if( j >= vecpBNs.size( ) ) {
+					cerr << "Could not locate Bayes net for: " << sArgs.inputs[ i ] << endl;
+					return 1; }
+				vecsData[ i ].m_pBN = vecpBNs[ j ]; }
+			else
+				vecsData[ i ].m_pBN = &BNDefault;
 			vecsData[ i ].m_pYes = vecpYes[ i ];
 			vecsData[ i ].m_pNo = vecpNo[ i ];
 			vecsData[ i ].m_strName = sArgs.inputs_num ? sArgs.inputs[ i ] : "global";
@@ -594,8 +611,9 @@ return 0;
 
 	for( i = 0; i < vecstrTmps.size( ); ++i )
 		_unlink( vecstrTmps[ i ].c_str( ) );
-	for( i = 0; i < vecpGenes.size( ); ++i ) {
+	for( i = 0; i < vecpBNs.size( ); ++i )
 		delete vecpBNs[ i ];
+	for( i = 0; i < vecpGenes.size( ); ++i ) {
 		delete vecpYes[ i ];
 		delete vecpNo[ i ];
 		delete vecpGenes[ i ]; }

@@ -100,7 +100,7 @@ bool SCoalesceDataset::CalculateCovariance( const CPCL& PCL ) {
 	float			dOne, dTwo;
 	vector<float>	vecdAves;
 	CDataMatrix		MatSigma;
-	vector<size_t>	veciIndices;
+	vector<size_t>	veciIndices, veciCounts;
 	bool			fEven;
 
 	if( GetConditions( ) == 1 )
@@ -110,12 +110,15 @@ bool SCoalesceDataset::CalculateCovariance( const CPCL& PCL ) {
 	MatSigma.Initialize( GetConditions( ), GetConditions( ) );
 	MatSigma.Clear( );
 	vecdAves.resize( GetConditions( ) );
+	veciCounts.resize( GetConditions( ) );
 	for( i = 0; i < PCL.GetGenes( ); ++i )
 		for( j = 0; j < vecdAves.size( ); ++j )
-			if( !CMeta::IsNaN( dOne = PCL.Get( i, GetCondition( j ) ) ) )
-				vecdAves[ j ] += dOne;
+			if( !CMeta::IsNaN( dOne = PCL.Get( i, GetCondition( j ) ) ) ) {
+				veciCounts[ j ]++;
+				vecdAves[ j ] += dOne; }
 	for( i = 0; i < vecdAves.size( ); ++i )
-		vecdAves[ i ] /= PCL.GetGenes( );
+		if( j = veciCounts[ i ] )
+			vecdAves[ i ] /= j;
 	for( i = 0; i < PCL.GetGenes( ); ++i )
 		for( j = 0; j < GetConditions( ); ++j ) {
 			if( CMeta::IsNaN( dOne = PCL.Get( i, GetCondition( j ) ) ) )

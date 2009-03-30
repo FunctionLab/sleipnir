@@ -509,6 +509,7 @@ protected:
 	std::string						m_strSequenceCache;
 	std::vector<SCoalesceDataset>	m_vecsDatasets;
 	std::vector<const CFASTA*>		m_vecpWiggles;
+	std::vector<std::ostream*>		m_vecpostm;
 };
 
 }

@@ -72,7 +72,7 @@ public:
 
 		m_dProbabilityGene = dProbability; }
 
-	bool IsOutputIntermediate( ) const {
+	bool IsDirectoryIntermediate( ) const {
 
 		return !GetDirectoryIntermediate( ).empty( ); }
 
@@ -199,6 +199,20 @@ public:
 	void ClearWiggles( ) {
 
 		m_vecpWiggles.clear( ); }
+
+	void AddOutputIntermediate( std::ostream& ostm ) {
+
+		m_vecpostm.push_back( &ostm ); }
+
+	void RemoveOutputIntermediate( std::ostream& ostm ) {
+		std::vector<std::ostream*>::iterator	iter;
+
+		if( ( iter = std::find( m_vecpostm.begin( ), m_vecpostm.end( ), &ostm ) ) != m_vecpostm.end( ) )
+			m_vecpostm.erase( iter ); }
+
+	void ClearOutputIntermediate( ) {
+
+		m_vecpostm.clear( ); }
 };
 
 }

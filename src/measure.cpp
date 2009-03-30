@@ -656,17 +656,25 @@ double CMeasureRelativeAUC::Measure( const float* adX, size_t iM, const float* a
 
 double CMeasurePearsonSignificance::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
-	double	dPearson, dT;
-	size_t	i, iCount;
+	double	dRet, dPearson;
+	size_t	iCount;
 
-	if( CMeta::IsNaN( dPearson = CMeasurePearson::Pearson( adX, iM, adY, iN, EMapNone, adWX, adWY ) ) )
-		return dPearson;
+	if( CMeta::IsNaN( dPearson = CMeasurePearson::Pearson( adX, iM, adY, iN, EMapNone, adWX, adWY,
+		&iCount ) ) )
+		return CMeta::GetNaN( );
 
-	for( iCount = i = 0; i < iM; ++i )
-		if( !( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) ) )
-			iCount++;
-	dT = dPearson * sqrt( (double)( iCount - 2 ) ) / sqrt( 1 - ( dPearson * dPearson ) );
+	dRet = ( iCount < 2 ) ? 0 : CStatistics::TCDF( dPearson * sqrt( (double)( iCount - 2 ) ) /
+		sqrt( 1 - ( dPearson * dPearson ) ), iCount - 2 );
+	switch( eMap ) {
+		case EMapCenter:
+			dRet = ( dPearson > 0 ) ? ( ( dRet / 2 ) + 0.5 ) : ( 0.5 - ( dRet / 2 ) );
+			break;
 
-	return CStatistics::TCDF( dT, iCount - 2 ); }
+		case EMapNone:
+			if( dPearson < 0 )
+				dRet *= -1;
+			break; }
+
+	return dRet; }
 
 }

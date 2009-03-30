@@ -190,7 +190,7 @@ void CCoalesceCluster::Subtract( CPCL& PCL, const CCoalesceCluster& Pot ) const 
 					else
 						dAve = ( ( GetGenes( ).size( ) * d ) + ( Pot.GetGenes( ).size( ) * dAve ) ) /
 							( GetGenes( ).size( ) + Pot.GetGenes( ).size( ) );
-					PCL.Get( *iterGene, GetCondition( *iterDataset, i ) ) -= d - dAve; } } }
+					PCL.Get( *iterGene, iCondition ) -= d - dAve; } } }
 
 void CCoalesceCluster::Subtract( CCoalesceGeneScores& GeneScores ) const {
 	set<size_t>::const_iterator			iterGene;
@@ -225,7 +225,7 @@ void CCoalesceClusterImpl::CalculateCentroid( const CPCL& PCL ) {
 			m_vecdStdevs[ i ] = ( m_vecdStdevs[ i ] < 0 ) ? 0 : sqrt( m_vecdStdevs[ i ] ); }
 		else
 			m_vecdCentroid[ i ] = CMeta::GetNaN( );
-		g_CatSleipnir.info( "CCoalesceClusterImpl::CalculateCentroid( ) condition %d: count %d, mean %g, stdev %g",
+		g_CatSleipnir.debug( "CCoalesceClusterImpl::CalculateCentroid( ) condition %d: count %d, mean %g, stdev %g",
 			i, m_veciCounts[ i ], m_vecdCentroid[ i ], m_vecdStdevs[ i ] ); }
 
 	for( i = 0; i < m_vecsDatasets.size( ); ++i ) {
@@ -275,7 +275,7 @@ void* CCoalesceClusterImpl::ThreadSelectCondition( void* pData ) {
 				dZ = CStatistics::ZScore( adCluster, adCluster + iCluster, adPot, adPot + iPot );
 				dP = CStatistics::ZTest( dZ, min( iCluster, iPot ) ) * psData->m_pvecsDatasets->size( ); }
 			if( dP < psData->m_dPValue ) {
-				g_CatSleipnir.info( "CCoalesceClusterImpl::ThreadSelectCondition( %g ) selected condition %d at %g, z=%g",
+				g_CatSleipnir.debug( "CCoalesceClusterImpl::ThreadSelectCondition( %g ) selected condition %d at %g, z=%g",
 					psData->m_dPValue, iCondition, dP, dZ );
 				(*psData->m_pvecfSignificant)[ iDataset ] = true;
 				sDataset.m_dZ = (float)min( dZ, (double)FLT_MAX ); }
@@ -303,15 +303,20 @@ void* CCoalesceClusterImpl::ThreadSelectCondition( void* pData ) {
 						sDataset.GetCondition( iCondition ) ) ) ) {
 						veciDatasetPot[ iCondition ]++;
 						vecdDatasetPot[ iCondition ] += d; }
-			for( iCondition = 0; iCondition < vecdDatasetCluster.size( ); ++iCondition ) {
+			for( iCluster = iPot = iCondition = 0; iCondition < vecdDatasetCluster.size( ); ++iCondition ) {
+				if( veciDatasetCluster[ iCondition ] > iCluster )
+					iCluster = veciDatasetCluster[ iCondition ];
+				if( veciDatasetPot[ iCondition ] > iPot )
+					iPot = veciDatasetPot[ iCondition ];
 				if( veciDatasetCluster[ iCondition ] )
 					vecdDatasetCluster[ iCondition ] /= veciDatasetCluster[ iCondition ];
 				if( veciDatasetPot[ iCondition ] )
 					vecdDatasetPot[ iCondition ] /= veciDatasetPot[ iCondition ]; }
 			dP = CStatistics::MultivariateNormalCDF( vecdDatasetCluster, vecdDatasetPot,
-				sDataset.m_psDataset->m_MatSigmaChol ) * psData->m_pvecsDatasets->size( );
+				sDataset.m_psDataset->m_MatSigmaChol, min( iCluster, iPot ) );
 			if( dP > 0.5 )
 				dP = 1 - dP;
+			dP *= 2 * psData->m_pvecsDatasets->size( );
 			if( dP < psData->m_dPValue ) {
 				dZ = 0;
 				for( iCondition = 0; iCondition < sDataset.GetConditions( ); ++iCondition )
@@ -320,7 +325,7 @@ void* CCoalesceClusterImpl::ThreadSelectCondition( void* pData ) {
 							sDataset.m_psDataset->m_vecdStdevs[ iCondition ];
 						dZ += d * d; }
 				dZ = sqrt( dZ );
-				g_CatSleipnir.info( "CCoalesceClusterImpl::ThreadSelectCondition( %g ) selected dataset %d at %g, z=%g",
+				g_CatSleipnir.debug( "CCoalesceClusterImpl::ThreadSelectCondition( %g ) selected dataset %d at %g, z=%g",
 					psData->m_dPValue, iDataset, dP, dZ );
 				(*psData->m_pvecfSignificant)[ iDataset ] = true;
 				sDataset.m_dZ = (float)min( dZ, (double)FLT_MAX ); } } }
@@ -820,7 +825,8 @@ void CCoalesceCluster::Save( std::ostream& ostm, size_t iID, const CPCL& PCL,
 	for( iterMotif = GetMotifs( ).begin( ); iterMotif != GetMotifs( ).end( ); ++iterMotif )
 		if( !( strMotif = iterMotif->Save( pMotifs, true, dCutoffPWMs, dPenaltyGap, dPenaltyMismatch,
 			fNoRCs ) ).empty( ) )
-			ostm << strMotif << endl; }
+			ostm << strMotif << endl;
+	ostm.flush( ); }
 
 size_t CCoalesceCluster::Open( const string& strPCL, size_t iSkip, const CPCL& PCL,
 	CCoalesceMotifLibrary* pMotifs ) {
