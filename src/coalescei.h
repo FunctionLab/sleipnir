@@ -474,10 +474,11 @@ protected:
 
 	static void* ThreadCombineMotif( void* );
 
-	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dPValueCondition(0.05f),
-		m_dProbabilityGene(0.95f), m_dPValueMotif(0.05f), m_pMotifs(NULL), m_fMotifs(false),
+	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dZScoreCondition(0.5f),
+		m_dProbabilityGene(0.95f), m_dZScoreMotif(0.5f), m_pMotifs(NULL), m_fMotifs(false),
 		m_iBasesPerMatch(5000), m_dPValueMerge(0.05f), m_dCutoffMerge(2.5f), m_iSizeMinimum(5),
-		m_iThreads(1), m_iSizeMerge(100), m_iSizeMaximum(1000) { }
+		m_iThreads(1), m_iSizeMerge(100), m_iSizeMaximum(1000), m_dPValueCondition(0.05f),
+		m_dPValueMotif(0.05f) { }
 	virtual ~CCoalesceImpl( );
 
 	void Clear( );
@@ -492,8 +493,10 @@ protected:
 	float							m_dPValueMerge;
 	float							m_dProbabilityGene;
 	float							m_dPValueCondition;
+	float							m_dZScoreCondition;
 	float							m_dPValueCorrelation;
 	float							m_dPValueMotif;
+	float							m_dZScoreMotif;
 	float							m_dCutoffMerge;
 	size_t							m_iNumberCorrelation;
 	size_t							m_iBins;

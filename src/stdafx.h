@@ -40,6 +40,7 @@
 #else // _MSC_VER
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #define __STDC_LIMIT_MACROS
 #include <netinet/in.h>
 #include <signal.h>
@@ -105,6 +106,23 @@ namespace Sleipnir {
 
 #ifdef USE_LOG4CPP_STUB
 
+struct Priority {
+	enum PriorityLevel {
+		EMERG	= 0, 
+		FATAL	= 0,
+		ALERT	= 1,
+		CRIT	= 2,
+		ERROR	= 3, 
+		WARN	= 4,
+		NOTICE	= 5,
+		INFO	= 6,
+		DEBUG	= 7,
+		NOTSET	= 8
+	};
+
+	const static char* c_aszPriorityLevels[];
+};
+
 struct Category {
 
 	static void shutdown( ) { }
@@ -146,6 +164,24 @@ struct Category {
 
 		va_start( valArgs, szFormat );
 		log4cpp( "DEBUG", szFormat, valArgs ); }
+
+	void log( Priority::PriorityLevel ePriority, const char* szFormat, ... ) const {
+		va_list	valArgs;
+
+		va_start( valArgs, szFormat );
+		log4cpp( Priority::c_aszPriorityLevels[ ePriority ], szFormat, valArgs ); }
+
+	bool isDebugEnabled( ) const {
+
+		return true; }
+
+	bool isInfoEnabled( ) const {
+
+		return true; }
+
+	bool isNoticeEnabled( ) const {
+
+		return true; }
 };
 
 #endif // USE_LOG4CPP_STUB

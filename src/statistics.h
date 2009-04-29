@@ -420,11 +420,25 @@ public:
 		dStd = ( iOne || iTwo ) ? sqrt( ( ( dVarOne + dVarTwo ) / ( iOne + iTwo ) ) - ( dAve * dAve ) ) : 0;
 
 		return ( dStd ? ( ( dAveOne - dAve ) / dStd ) :
-			( ( dAveOne == dAveTwo ) ? 0 : DBL_MAX ) ); }
+			( ( dAveOne == dAve ) ? 0 : DBL_MAX ) ); }
 
 	static double ZTest( double dZScore, size_t iN ) {
 
 		return ( 1 - Normal01CDF( fabs( dZScore ) * sqrt( (double)iN ) ) ); }
+
+	template<class tType>
+	static double RootMeanSquareError( tType BeginOne, tType EndOne, tType BeginTwo, tType EndTwo ) {
+		tType	CurOne, CurTwo;
+		double	d, dRet;
+		size_t	iN;
+
+		for( dRet = 0,CurOne = BeginOne,CurTwo = BeginTwo; ( CurOne < EndOne ) && ( CurTwo < EndTwo );
+			++CurOne,++CurTwo ) {
+			d = *CurOne - *CurTwo;
+			dRet += d * d; }
+		iN = min( EndOne - BeginOne, EndTwo - BeginTwo );
+
+		return ( iN ? sqrt( dRet / iN ) : 0 ); }
 
 	// P-value tests
 	static double LjungBox( const float* adX, size_t iN, size_t iH );

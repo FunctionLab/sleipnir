@@ -42,6 +42,7 @@ protected:
 
 	struct SDataset {
 		const SCoalesceDataset*	m_psDataset;
+		double					m_dP;
 		float					m_dZ;
 		std::vector<float>		m_vecdCentroid;
 
@@ -86,6 +87,7 @@ protected:
 		const CCoalesceGroupHistograms*	m_pHistsCluster;
 		const CCoalesceGroupHistograms*	m_pHistsPot;
 		float							m_dPValue;
+		float							m_dZScore;
 		const std::vector<uint32_t>*	m_pveciMotifs;
 		std::vector<SMotifMatch>		m_vecsMotifs;
 	};
@@ -109,8 +111,6 @@ protected:
 		const std::vector<size_t>*	m_pveciPot;
 		std::vector<SDataset>*		m_pvecsDatasets;
 		const CPCL*					m_pPCL;
-		float						m_dPValue;
-		std::vector<bool>*			m_pvecfSignificant;
 	};
 
 	static void* ThreadCentroid( void* );
@@ -119,7 +119,7 @@ protected:
 	static void* ThreadSeedPair( void* );
 	static void* ThreadSelectCondition( void* );
 	static bool AddSignificant( const CCoalesceMotifLibrary&, uint32_t, const CCoalesceGroupHistograms&,
-		const CCoalesceGroupHistograms&, float, std::vector<SMotifMatch>& );
+		const CCoalesceGroupHistograms&, float, float, std::vector<SMotifMatch>& );
 	static size_t Open( const CHierarchy&, const std::vector<CCoalesceCluster>&,
 		const std::vector<std::string>&, std::map<size_t, size_t>&, std::map<size_t, size_t>&,
 		TVecMapStrSetSMotifs& );

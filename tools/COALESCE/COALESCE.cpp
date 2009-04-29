@@ -45,12 +45,13 @@ EFile open_pclwig( const char* szFile, size_t iSkip, CFASTA& FASTA, CPCL& PCL ) 
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info			sArgs;
-	CFASTA						FASTA, FASTANucleosomes, FASTAConservation;
+	CFASTA						FASTA;
 	CPCL						PCL;
 	CCoalesce					Coalesce;
 	vector<CCoalesceCluster>	vecClusters;
 	size_t						i, j;
 	set<string>					setstrTypes;
+	vector<CFASTA*>				vecpFASTAs;
 
 #ifdef WIN32
 	pthread_win32_process_attach_np( );
@@ -108,7 +109,9 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetMotifs( Motifs );
 	Coalesce.SetProbabilityGene( (float)sArgs.prob_gene_arg );
 	Coalesce.SetPValueCondition( (float)sArgs.pvalue_cond_arg );
+	Coalesce.SetZScoreCondition( (float)sArgs.zscore_cond_arg );
 	Coalesce.SetPValueMotif( (float)sArgs.pvalue_motif_arg );
+	Coalesce.SetZScoreMotif( (float)sArgs.zscore_motif_arg );
 	Coalesce.SetPValueCorrelation( (float)sArgs.pvalue_correl_arg );
 	Coalesce.SetNumberCorrelation( sArgs.number_correl_arg );
 	Coalesce.SetPValueMerge( (float)sArgs.pvalue_merge_arg );
@@ -122,22 +125,23 @@ int main( int iArgs, char** aszArgs ) {
 		Coalesce.SetDirectoryIntermediate( sArgs.output_arg );
 	if( sArgs.cache_arg )
 		Coalesce.SetSequenceCache( sArgs.cache_arg );
-	if( sArgs.nucleosomes_arg ) {
-		if( !FASTANucleosomes.Open( sArgs.nucleosomes_arg ) ) {
-			cerr << "Could not open: " << sArgs.nucleosomes_arg << endl;
+
+	vecpFASTAs.resize( sArgs.inputs_num );
+	for( i = 0; i < vecpFASTAs.size( ); ++i ) {
+		vecpFASTAs[ i ] = new CFASTA( );
+		if( !vecpFASTAs[ i ]->Open( sArgs.inputs[ i ] ) ) {
+			cerr << "Could not open: " << sArgs.inputs[ i ] << endl;
 			return 1; }
-		Coalesce.AddWiggle( FASTANucleosomes ); }
-	if( sArgs.conservation_arg ) {
-		if( !FASTAConservation.Open( sArgs.conservation_arg ) ) {
-			cerr << "Could not open: " << sArgs.conservation_arg << endl;
-			return 1; }
-		Coalesce.AddWiggle( FASTAConservation ); }
+		Coalesce.AddWiggle( *vecpFASTAs[ i ] ); }
+
 	if( sArgs.progressive_flag )
 		Coalesce.AddOutputIntermediate( cout );
 	if( !Coalesce.Cluster( PCL, FASTA, vecClusters ) ) {
 		cerr << "Clustering failed" << endl;
 		return 1; }
 
+	for( i = 0; i < vecpFASTAs.size( ); ++i )
+		delete vecpFASTAs[ i ];
 	if( !sArgs.progressive_flag )
 		for( i = 0; i < vecClusters.size( ); ++i )
 			vecClusters[ i ].Save( cout, i, PCL, &Motifs );
@@ -242,7 +246,6 @@ bool recluster( const gengetopt_args_info& sArgs, size_t iPairs, CCoalesceMotifL
 			cerr << "Cluster too small: " << Cluster.GetGenes( ).size( ) << endl;
 			return true; }
 
-		Cluster.RemoveMotifs( Motifs, (float)sArgs.min_zscore_arg );
 		if( !Cluster.LabelMotifs( Motifs, (float)sArgs.penalty_gap_arg, (float)sArgs.penalty_mismatch_arg,
 			(float)sArgs.known_cutoff_arg ) )
 			return false;

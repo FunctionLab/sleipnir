@@ -256,6 +256,22 @@
 		<File
 			RelativePath="..\..\..\tools\COALESCE\COALESCE.ggo"
 			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="GenGetOpts"
+					UnnamedInputs="true"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="GenGetOpts"
+					UnnamedInputs="true"
+				/>
+			</FileConfiguration>
 		</File>
 	</Files>
 	<Globals>

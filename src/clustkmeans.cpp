@@ -95,8 +95,10 @@ bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure
 			for( sMax = j = 0; j < MatMeans.GetRows( ); ++j ) {
 				d = (float)pMeasure->Measure( MatData.Get( i ), MatData.GetColumns( ), MatMeans.Get( j ),
 					MatMeans.GetColumns( ), IMeasure::EMapNone, pMatWeights ? pMatWeights->Get( i ) : NULL );
-				if( CMeta::IsNaN( d ) )
-					return false;
+				if( CMeta::IsNaN( d ) ) {
+					g_CatSleipnir.error( "CClustKMeans::Cluster( %d ) got invalid measure for genes: %d, %d",
+						iK, i, j );
+					return false; }
 				if( d > dMax ) {
 					dMax = d;
 					sMax = j; } }

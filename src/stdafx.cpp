@@ -439,9 +439,11 @@ MIPS:
  * \code
  * BNFunc -o gene_ontology.obo -a gene_assocation.sgd -i GO_functional_slim.txt -d positives
  * \endcode
- * - Using \ref Answerer, we can turn these gene sets into a gold standard DAB file:
+ * - Using \ref Answerer, we can turn these gene sets into a gold standard DAB file.  Note that we're using
+ *	genes \e coannotated to a GO term as positives and \e not coannotated to any GO term as negatives.  See
+ *	the \ref Answerer page for more information on the \c -l flag as well:
  * \code
- * Answerer -p positives -o answers.dab
+ * Answerer -p positives -n positives -l 0.05 -o answers.dab
  * \endcode
  * - You can automatically create and learn a Bayesian network that will integrate your four datasets in a
  *	context-specific manner.  Assuming you've generated the four files \c pza1_imputed.dab and so forth in the
@@ -802,6 +804,9 @@ MIPS:
  * 
  * \section sec_history Version History
  * 
+ * - <a href="sleipnir-2.0.tar.gz">2.0</a>, ***-***-09 <br>
+ * Fixed \ref Answerer usage in the documentation example - thanks to Jim Costello! <br>
+ * 
  * - <a href="sleipnir-1.1.tar.gz">1.1</a>, 06-02-08 <br>
  * Added \ref BNs2Txt and \ref Mat2Txt tools for dumping binary Bayesian classifiers and matrices. <br>
  * Improved Gene Ontology parser for compatibility with latest versions. <br>
@@ -834,6 +839,9 @@ namespace Sleipnir {
 
 #ifdef USE_LOG4CPP_STUB
 Category	g_CatSleipnir;
+
+const char* Priority::c_aszPriorityLevels[]	= {"FATAL", "ALERT", "CRITICAL", "ERROR", "WARN",
+												"NOTICE", "INFO", "DEBUG", "NOTSET"};
 #else // USE_LOG4CPP_STUB
 const char	c_szSleipnir[]	= "Sleipnir";
 Category&	g_CatSleipnir	= Category::getInstance( c_szSleipnir );

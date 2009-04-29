@@ -32,9 +32,11 @@ public:
 		std::set<std::pair<size_t, size_t> >& setpriiSeeds, size_t iPairs, float dPValue, size_t iThreads );
 	void Subtract( CPCL& PCL, const CCoalesceCluster& Pot ) const;
 	void Subtract( CCoalesceGeneScores& GeneScores ) const;
-	bool SelectConditions( const CPCL& PCL, const CCoalesceCluster& Pot, size_t iThreads, float dPValue );
+	bool SelectConditions( const CPCL& PCL, const CCoalesceCluster& Pot, size_t iThreads, float dPValue,
+		float dZScore );
 	bool SelectMotifs( const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
-		float dPValue, size_t iMaxMotifs, size_t iThreads, const CCoalesceMotifLibrary* pMotifs = NULL );
+		float dPValue, float dZScore, size_t iMaxMotifs, size_t iThreads,
+		const CCoalesceMotifLibrary* pMotifs = NULL );
 	bool SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& GeneScores,
 		const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
 		size_t iMinimum, size_t iThreads, CCoalesceCluster& Pot, float dPValue,
@@ -53,7 +55,6 @@ public:
 		float dCutoffPWMs = 0, float dPenaltyGap = 0, float dPenaltyMismatch = 0, bool fNoRCs = false ) const;
 	float GetSimilarity( const CCoalesceCluster& Cluster, size_t iGenes, size_t iDatasets ) const;
 	void Snapshot( const CCoalesceGeneScores& GeneScores, CCoalesceGroupHistograms& Histograms );
-	size_t RemoveMotifs( const CCoalesceMotifLibrary&, float dZScore );
 	bool LabelMotifs( const CCoalesceMotifLibrary&, float dPenaltyGap, float dPenaltyMismatch,
 		float dPValue );
 

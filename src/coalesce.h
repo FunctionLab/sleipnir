@@ -48,6 +48,14 @@ public:
 
 		return m_iBins; }
 
+	float GetZScoreCondition( ) const {
+
+		return m_dZScoreCondition; }
+
+	void SetZScoreCondition( float dZScore ) {
+
+		m_dZScoreCondition = dZScore; }
+
 	float GetPValueCondition( ) const {
 
 		return m_dPValueCondition; }
@@ -55,6 +63,14 @@ public:
 	void SetPValueCondition( float dPValue ) {
 
 		m_dPValueCondition = dPValue; }
+
+	float GetZScoreMotif( ) const {
+
+		return m_dZScoreMotif; }
+
+	void SetZScoreMotif( float dZScore ) {
+
+		m_dZScoreMotif = dZScore; }
 
 	float GetPValueMotif( ) const {
 

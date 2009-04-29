@@ -380,7 +380,7 @@ uint32_t CCoalesceMotifLibraryImpl::MergeKMerPST( const std::string& strKMer, co
 
 		ossm << "CCoalesceMotifLibraryImpl::MergeKMerPST( " << strKMer << ", " << PSTIn.GetMotif( ) <<
 			", " << dCutoff << " ) merged at " << dScore << " to " << pPSTOut->GetMotif( );
-		g_CatSleipnir.info( ossm.str( ) ); }
+		g_CatSleipnir.info( ossm.str( ).c_str( ) ); }
 	return iRet; }
 
 float CCoalesceMotifLibraryImpl::AlignRCPST( uint32_t iRC, const CPST& PSTIn, float dCutoff ) const {
@@ -423,7 +423,7 @@ uint32_t CCoalesceMotifLibraryImpl::MergeRCPST( uint32_t iRC, const CPST& PSTIn,
 
 		ossm << "CCoalesceMotifLibraryImpl::MergeRCPST( " << GetMotif( iRC ) << ", " << PSTIn.GetMotif( ) <<
 			", " << dCutoff << " ) merged at " << min( dOne, dTwo ) << " to " << pPSTOut->GetMotif( );
-		g_CatSleipnir.info( ossm.str( ) ); }
+		g_CatSleipnir.info( ossm.str( ).c_str( ) ); }
 	return iRet; }
 
 float CCoalesceMotifLibraryImpl::AlignPSTs( const CPST& PSTOne, const CPST& PSTTwo, float dCutoff ) const {
@@ -455,7 +455,7 @@ uint32_t CCoalesceMotifLibraryImpl::MergePSTs( const CPST& PSTOne, const CPST& P
 		ossm << "CCoalesceMotifLibraryImpl::MergePSTs( " << PSTOne.GetMotif( ) << ", " <<
 			PSTTwo.GetMotif( ) << ", " << dCutoff << " ) merged at " << dScore << " to " <<
 			pPSTOut->GetMotif( );
-		g_CatSleipnir.info( ossm.str( ) ); }
+		g_CatSleipnir.info( ossm.str( ).c_str( ) ); }
 
 	return iRet; }
 
@@ -516,7 +516,7 @@ bool CCoalesceMotifLibraryImpl::GetPWM( uint32_t iMotif, float dCutoffPWMs, floa
 				ossm << "CCoalesceMotifLibraryImpl::GetPWM( " << iMotif << ", " << dCutoffPWMs << ", " <<
 					fNoRCs << " ) rejected (" << d << "):" << endl;
 				MatPWM.Save( ossm, false );
-				g_CatSleipnir.info( ossm.str( ) ); }
+				g_CatSleipnir.info( ossm.str( ).c_str( ) ); }
 			return false; }
 		if( g_CatSleipnir.isDebugEnabled( ) ) {
 			ostringstream	ossm;
@@ -524,7 +524,7 @@ bool CCoalesceMotifLibraryImpl::GetPWM( uint32_t iMotif, float dCutoffPWMs, floa
 			ossm << "CCoalesceMotifLibraryImpl::GetPWM( " << iMotif << ", " << dCutoffPWMs << ", " <<
 				fNoRCs << " ) got information (" << d << "):" << endl;
 			MatPWM.Save( ossm, false );
-			g_CatSleipnir.debug( ossm.str( ) ); } }
+			g_CatSleipnir.debug( ossm.str( ).c_str( ) ); } }
 
 	return true; }
 

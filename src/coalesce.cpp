@@ -384,9 +384,10 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 			PCL.GetGenes( ), PCL.GetExperiments( ), iSequences );
 		for( i = 0; i < PCL.GetExperiments( ); ++i )
 			ossm << ( i ? "\t" : "" ) << PCL.GetExperiment( i );
-		g_CatSleipnir.notice( ossm.str( ) );
-		g_CatSleipnir.notice( "k %d, P gene %g, p condition %g, p motif %g, p correlation %g", GetK( ),
-			GetProbabilityGene( ), GetPValueCondition( ), GetPValueMotif( ), GetPValueCorrelation( ) );
+		g_CatSleipnir.notice( ossm.str( ).c_str( ) );
+		g_CatSleipnir.notice( "k %d, P gene %g, p condition %g, z condition %g, p motif %g, z motif %g, p correlation %g", GetK( ),
+			GetProbabilityGene( ), GetPValueCondition( ), GetZScoreCondition( ), GetPValueMotif( ),
+			GetZScoreMotif( ), GetPValueCorrelation( ) );
 		g_CatSleipnir.notice( "p merge %g, cutoff merge %g, penalty gap %g, penalty mismatch %g",
 			GetPValueMerge( ), GetCutoffMerge( ), GetMotifs( ) ? GetMotifs( )->GetPenaltyGap( ) : 0,
 			GetMotifs( ) ? GetMotifs( )->GetPenaltyMismatch( ) : 0 );
@@ -411,14 +412,15 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 			ossm << "CCoalesce::Cluster( ) initialized:";
 			for( iterGene = Cluster.GetGenes( ).begin( ); iterGene != Cluster.GetGenes( ).end( ); ++iterGene )
 				ossm << ' ' << PCL.GetGene( *iterGene );
-			g_CatSleipnir.debug( ossm.str( ) ); }
+			g_CatSleipnir.debug( ossm.str( ).c_str( ) ); }
 		if( Cluster.GetGenes( ).size( ) < GetSizeMinimum( ) )
 			continue;
 		while( !( Cluster.IsConverged( ) || Cluster.IsEmpty( ) ) ) {
 			Cluster.CalculateHistograms( GeneScores, HistsCluster, &HistsPot );
 			Cluster.Snapshot( GeneScores, HistsCluster );
 			Pot.Snapshot( GeneScores, HistsPot );
-			if( !Cluster.SelectConditions( PCLCopy, Pot, GetThreads( ), GetPValueCondition( ) ) )
+			if( !Cluster.SelectConditions( PCLCopy, Pot, GetThreads( ), GetPValueCondition( ),
+				GetZScoreCondition( ) ) )
 				return false;
 			if( Cluster.IsEmpty( ) ) {
 				g_CatSleipnir.notice( "CCoalesce::Cluster( ) selected no conditions" );
@@ -426,7 +428,7 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 			if( ( Cluster.GetGenes( ).size( ) >= GetSizeMinimum( ) ) &&
 				!( CombineMotifs( FASTA, veciPCL2FASTA, sModifiers, Cluster, GetThreads( ), GeneScores,
 				HistsCluster, HistsPot ) && Cluster.SelectMotifs( HistsCluster, HistsPot, GetPValueMotif( ),
-				GetSizeMaximum( ), GetThreads( ), GetMotifs( ) ) ) )
+				GetZScoreMotif( ),GetSizeMaximum( ), GetThreads( ), GetMotifs( ) ) ) )
 				return false;
 			if( !Cluster.SelectGenes( PCLCopy, GeneScores, HistsCluster, HistsPot, GetSizeMinimum( ),
 				GetThreads( ), Pot, GetProbabilityGene( ), GetMotifs( ) ) )
@@ -437,8 +439,8 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 			g_CatSleipnir.notice( "CCoalesce::Cluster( ) finalizing cluster" );
 			setpriiSeeds.clear( );
 			if( Cluster.GetMotifs( ).size( ) >= GetSizeMaximum( ) ) {
-				if( !Cluster.SelectMotifs( HistsCluster, HistsPot, GetPValueMotif( ), -1, GetThreads( ),
-					GetMotifs( ) ) )
+				if( !Cluster.SelectMotifs( HistsCluster, HistsPot, GetPValueMotif( ), GetZScoreMotif( ), -1,
+					GetThreads( ), GetMotifs( ) ) )
 					return false;
 				g_CatSleipnir.notice( "CCoalesce::Cluster( ) finalized %d motifs",
 					Cluster.GetMotifs( ).size( ) ); }
