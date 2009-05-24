@@ -24,12 +24,14 @@ if WITH_TOOLS
 	  MCluster \
 	  Matcher \
 	  MIer \
+	  Netwalker \
 	  Normalizer \
 	  Orthologer \
 	  Overlapper \
 	  PCLPlotter \
 	  Randomizer \
 	  Seqs2Ngrams \
+	  SVDer \
 	  Synthesizer \
 	  Txt2Bin
 if WITH_SMILE_TOOLS

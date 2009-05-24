@@ -55,6 +55,12 @@ struct gengetopt_args_info
   double pvalue_motif_arg;	/**< @brief P-value threshhold for motif inclusion (default='0.05').  */
   char * pvalue_motif_orig;	/**< @brief P-value threshhold for motif inclusion original value given at command line.  */
   const char *pvalue_motif_help; /**< @brief P-value threshhold for motif inclusion help description.  */
+  double zscore_cond_arg;	/**< @brief Z-score threshhold for condition inclusion (default='0.5').  */
+  char * zscore_cond_orig;	/**< @brief Z-score threshhold for condition inclusion original value given at command line.  */
+  const char *zscore_cond_help; /**< @brief Z-score threshhold for condition inclusion help description.  */
+  double zscore_motif_arg;	/**< @brief Z-score threshhold for motif inclusion (default='0.5').  */
+  char * zscore_motif_orig;	/**< @brief Z-score threshhold for motif inclusion original value given at command line.  */
+  const char *zscore_motif_help; /**< @brief Z-score threshhold for motif inclusion help description.  */
   int k_arg;	/**< @brief Sequence kmer length (default='7').  */
   char * k_orig;	/**< @brief Sequence kmer length original value given at command line.  */
   const char *k_help; /**< @brief Sequence kmer length help description.  */
@@ -91,22 +97,19 @@ struct gengetopt_args_info
   int size_maximum_arg;	/**< @brief Maximum motif count to consider a cluster saturated (default='1000').  */
   char * size_maximum_orig;	/**< @brief Maximum motif count to consider a cluster saturated original value given at command line.  */
   const char *size_maximum_help; /**< @brief Maximum motif count to consider a cluster saturated help description.  */
-  char * nucleosomes_arg;	/**< @brief Nucleosome position file (WIG).  */
-  char * nucleosomes_orig;	/**< @brief Nucleosome position file (WIG) original value given at command line.  */
-  const char *nucleosomes_help; /**< @brief Nucleosome position file (WIG) help description.  */
-  char * conservation_arg;	/**< @brief Evolutionary conservation file (WIG).  */
-  char * conservation_orig;	/**< @brief Evolutionary conservation file (WIG) original value given at command line.  */
-  const char *conservation_help; /**< @brief Evolutionary conservation file (WIG) help description.  */
   char * postprocess_arg;	/**< @brief Input directory of clusters to postprocess.  */
   char * postprocess_orig;	/**< @brief Input directory of clusters to postprocess original value given at command line.  */
   const char *postprocess_help; /**< @brief Input directory of clusters to postprocess help description.  */
   char * known_motifs_arg;	/**< @brief File containing known motifs.  */
   char * known_motifs_orig;	/**< @brief File containing known motifs original value given at command line.  */
   const char *known_motifs_help; /**< @brief File containing known motifs help description.  */
-  double known_cutoff_arg;	/**< @brief P-value cutoff for known motif labeling (default='0.05').  */
-  char * known_cutoff_orig;	/**< @brief P-value cutoff for known motif labeling original value given at command line.  */
-  const char *known_cutoff_help; /**< @brief P-value cutoff for known motif labeling help description.  */
-  double cutoff_postprocess_arg;	/**< @brief Similarity cutoff for cluster merging (default='0.75').  */
+  double known_cutoff_arg;	/**< @brief Score cutoff for known motif labeling (default='0.05').  */
+  char * known_cutoff_orig;	/**< @brief Score cutoff for known motif labeling original value given at command line.  */
+  const char *known_cutoff_help; /**< @brief Score cutoff for known motif labeling help description.  */
+  char * known_type_arg;	/**< @brief Type of known motif matching (default='pvalue').  */
+  char * known_type_orig;	/**< @brief Type of known motif matching original value given at command line.  */
+  const char *known_type_help; /**< @brief Type of known motif matching help description.  */
+  double cutoff_postprocess_arg;	/**< @brief Similarity cutoff for cluster merging (default='1').  */
   char * cutoff_postprocess_orig;	/**< @brief Similarity cutoff for cluster merging original value given at command line.  */
   const char *cutoff_postprocess_help; /**< @brief Similarity cutoff for cluster merging help description.  */
   double fraction_postprocess_arg;	/**< @brief Overlap fraction for postprocessing gene/condition inclusion (default='0.5').  */
@@ -120,15 +123,14 @@ struct gengetopt_args_info
   double min_info_arg;	/**< @brief Uninformative motif threshhold (bits) (default='0.3').  */
   char * min_info_orig;	/**< @brief Uninformative motif threshhold (bits) original value given at command line.  */
   const char *min_info_help; /**< @brief Uninformative motif threshhold (bits) help description.  */
-  double min_zscore_arg;	/**< @brief Minimum motif z-score magnitude (default='0.2').  */
-  char * min_zscore_orig;	/**< @brief Minimum motif z-score magnitude original value given at command line.  */
-  const char *min_zscore_help; /**< @brief Minimum motif z-score magnitude help description.  */
   int max_motifs_arg;	/**< @brief Maximum motifs to merge exactly (default='2500').  */
   char * max_motifs_orig;	/**< @brief Maximum motifs to merge exactly original value given at command line.  */
   const char *max_motifs_help; /**< @brief Maximum motifs to merge exactly help description.  */
   char * cache_arg;	/**< @brief Cache file for sequence analysis.  */
   char * cache_orig;	/**< @brief Cache file for sequence analysis original value given at command line.  */
   const char *cache_help; /**< @brief Cache file for sequence analysis help description.  */
+  int progressive_flag;	/**< @brief Generate output progressively (default=on).  */
+  const char *progressive_help; /**< @brief Generate output progressively help description.  */
   int threads_arg;	/**< @brief Maximum number of concurrent threads (default='1').  */
   char * threads_orig;	/**< @brief Maximum number of concurrent threads original value given at command line.  */
   const char *threads_help; /**< @brief Maximum number of concurrent threads help description.  */
@@ -151,6 +153,8 @@ struct gengetopt_args_info
   unsigned int prob_gene_given ;	/**< @brief Whether prob_gene was given.  */
   unsigned int pvalue_cond_given ;	/**< @brief Whether pvalue_cond was given.  */
   unsigned int pvalue_motif_given ;	/**< @brief Whether pvalue_motif was given.  */
+  unsigned int zscore_cond_given ;	/**< @brief Whether zscore_cond was given.  */
+  unsigned int zscore_motif_given ;	/**< @brief Whether zscore_motif was given.  */
   unsigned int k_given ;	/**< @brief Whether k was given.  */
   unsigned int pvalue_merge_given ;	/**< @brief Whether pvalue_merge was given.  */
   unsigned int cutoff_merge_given ;	/**< @brief Whether cutoff_merge was given.  */
@@ -163,19 +167,18 @@ struct gengetopt_args_info
   unsigned int size_minimum_given ;	/**< @brief Whether size_minimum was given.  */
   unsigned int size_merge_given ;	/**< @brief Whether size_merge was given.  */
   unsigned int size_maximum_given ;	/**< @brief Whether size_maximum was given.  */
-  unsigned int nucleosomes_given ;	/**< @brief Whether nucleosomes was given.  */
-  unsigned int conservation_given ;	/**< @brief Whether conservation was given.  */
   unsigned int postprocess_given ;	/**< @brief Whether postprocess was given.  */
   unsigned int known_motifs_given ;	/**< @brief Whether known_motifs was given.  */
   unsigned int known_cutoff_given ;	/**< @brief Whether known_cutoff was given.  */
+  unsigned int known_type_given ;	/**< @brief Whether known_type was given.  */
   unsigned int cutoff_postprocess_given ;	/**< @brief Whether cutoff_postprocess was given.  */
   unsigned int fraction_postprocess_given ;	/**< @brief Whether fraction_postprocess was given.  */
   unsigned int cutoff_trim_given ;	/**< @brief Whether cutoff_trim was given.  */
   unsigned int remove_rcs_given ;	/**< @brief Whether remove_rcs was given.  */
   unsigned int min_info_given ;	/**< @brief Whether min_info was given.  */
-  unsigned int min_zscore_given ;	/**< @brief Whether min_zscore was given.  */
   unsigned int max_motifs_given ;	/**< @brief Whether max_motifs was given.  */
   unsigned int cache_given ;	/**< @brief Whether cache was given.  */
+  unsigned int progressive_given ;	/**< @brief Whether progressive was given.  */
   unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
@@ -303,6 +306,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  */
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
+
+extern char *cmdline_parser_known_type_values[] ;	/**< @brief Possible values for known_type.  */
 
 
 #ifdef __cplusplus

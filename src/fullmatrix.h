@@ -484,7 +484,7 @@ public:
 		// in s and the super-diagonal elements in e.
 		fU = fV = true;
 		iCT = min( GetRows( ) - 1, GetColumns( ) );
-		iRT = max( 0, min( GetColumns( ) - 2, GetRows( ) ) );
+		iRT = max( (size_t)0, min( GetColumns( ) - 2, GetRows( ) ) );
 		for( k = 0; k < max( iCT, iRT ); ++k ) {
 			if( k < iCT ) {
 				// Compute the transformation for the k-th column and

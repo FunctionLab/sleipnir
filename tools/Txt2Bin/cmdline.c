@@ -37,6 +37,7 @@ const char *gengetopt_args_info_help[] = {
   "\nMiscellaneous:",
   "  -f, --from=STRING       Source format  (possible values=\"txt\", \"dat\", \n                            \"bin\" default=`txt')",
   "  -t, --to=STRING         Target format  (possible values=\"txt\", \"bin\" \n                            default=`bin')",
+  "  -m, --matrix            Read/write simple matrix format  (default=off)",
   "\nLearning/Evaluation:",
   "  -g, --genes=filename    Gene inclusion file",
   "  -G, --genex=filename    Gene exclusion file",
@@ -46,6 +47,7 @@ const char *gengetopt_args_info_help[] = {
 };
 
 typedef enum {ARG_NO
+  , ARG_FLAG
   , ARG_STRING
   , ARG_INT
 } cmdline_parser_arg_type;
@@ -76,6 +78,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->output_given = 0 ;
   args_info->from_given = 0 ;
   args_info->to_given = 0 ;
+  args_info->matrix_given = 0 ;
   args_info->genes_given = 0 ;
   args_info->genex_given = 0 ;
   args_info->verbosity_given = 0 ;
@@ -94,6 +97,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->from_orig = NULL;
   args_info->to_arg = gengetopt_strdup ("bin");
   args_info->to_orig = NULL;
+  args_info->matrix_flag = 0;
   args_info->genes_arg = NULL;
   args_info->genes_orig = NULL;
   args_info->genex_arg = NULL;
@@ -115,9 +119,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->output_help = gengetopt_args_info_help[5] ;
   args_info->from_help = gengetopt_args_info_help[7] ;
   args_info->to_help = gengetopt_args_info_help[8] ;
-  args_info->genes_help = gengetopt_args_info_help[10] ;
-  args_info->genex_help = gengetopt_args_info_help[11] ;
-  args_info->verbosity_help = gengetopt_args_info_help[13] ;
+  args_info->matrix_help = gengetopt_args_info_help[9] ;
+  args_info->genes_help = gengetopt_args_info_help[11] ;
+  args_info->genex_help = gengetopt_args_info_help[12] ;
+  args_info->verbosity_help = gengetopt_args_info_help[14] ;
   
 }
 
@@ -304,6 +309,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "from", args_info->from_orig, cmdline_parser_from_values);
   if (args_info->to_given)
     write_into_file(outfile, "to", args_info->to_orig, cmdline_parser_to_values);
+  if (args_info->matrix_given)
+    write_into_file(outfile, "matrix", 0, 0 );
   if (args_info->genes_given)
     write_into_file(outfile, "genes", args_info->genes_orig, 0);
   if (args_info->genex_given)
@@ -471,6 +478,9 @@ int update_arg(void *field, char **orig_field,
     val = possible_values[found];
 
   switch(arg_type) {
+  case ARG_FLAG:
+    *((int *)field) = !*((int *)field);
+    break;
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
@@ -501,6 +511,7 @@ int update_arg(void *field, char **orig_field,
   /* store the original value */
   switch(arg_type) {
   case ARG_NO:
+  case ARG_FLAG:
     break;
   default:
     if (value && orig_field) {
@@ -561,13 +572,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "output",	1, NULL, 'o' },
         { "from",	1, NULL, 'f' },
         { "to",	1, NULL, 't' },
+        { "matrix",	0, NULL, 'm' },
         { "genes",	1, NULL, 'g' },
         { "genex",	1, NULL, 'G' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:w:o:f:t:g:G:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:w:o:f:t:mg:G:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -648,6 +660,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.to_given), optarg, cmdline_parser_to_values, "bin", ARG_STRING,
               check_ambiguity, override, 0, 0,
               "to", 't',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'm':	/* Read/write simple matrix format.  */
+        
+        
+          if (update_arg((void *)&(args_info->matrix_flag), 0, &(args_info->matrix_given),
+              &(local_args_info.matrix_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "matrix", 'm',
               additional_error))
             goto failure;
         

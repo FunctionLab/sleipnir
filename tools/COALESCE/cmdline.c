@@ -37,8 +37,10 @@ const char *gengetopt_args_info_help[] = {
   "  -o, --output=directory        Directory for output files (PCLs/motifs)",
   "\nAlgorithm Parameters:",
   "  -p, --prob_gene=DOUBLE        Probability threshhold for gene inclusion  \n                                  (default=`0.95')",
-  "  -P, --pvalue_cond=DOUBLE      P-value threshhold for condition inclusion  \n                                  (default=`0.05')",
+  "  -c, --pvalue_cond=DOUBLE      P-value threshhold for condition inclusion  \n                                  (default=`0.05')",
   "  -m, --pvalue_motif=DOUBLE     P-value threshhold for motif inclusion  \n                                  (default=`0.05')",
+  "  -C, --zscore_cond=DOUBLE      Z-score threshhold for condition inclusion  \n                                  (default=`0.5')",
+  "  -M, --zscore_motif=DOUBLE     Z-score threshhold for motif inclusion  \n                                  (default=`0.5')",
   "\nSequence Parameters:",
   "  -k, --k=INT                   Sequence kmer length  (default=`7')",
   "  -g, --pvalue_merge=DOUBLE     P-value threshhold for motif merging  \n                                  (default=`0.05')",
@@ -46,29 +48,27 @@ const char *gengetopt_args_info_help[] = {
   "  -y, --penalty_gap=DOUBLE      Edit distance penalty for gaps  (default=`1')",
   "  -Y, --penalty_mismatch=DOUBLE Edit distance penalty for mismatches  \n                                  (default=`2.1')",
   "\nPerformance Parameters:",
-  "  -c, --pvalue_correl=DOUBLE    P-value threshhold for significant correlation  \n                                  (default=`0.05')",
-  "  -C, --number_correl=INT       Maximum number of pairs to sample for \n                                  significant correlation  (default=`100000')",
+  "  -n, --pvalue_correl=DOUBLE    P-value threshhold for significant correlation  \n                                  (default=`0.05')",
+  "  -N, --number_correl=INT       Maximum number of pairs to sample for \n                                  significant correlation  (default=`100000')",
   "  -q, --sequences=STRING        Sequence types to use (comma separated)",
   "  -b, --bases=INT               Resolution of bases per motif match  \n                                  (default=`5000')",
   "  -z, --size_minimum=INT        Minimum gene count for clusters of interest  \n                                  (default=`5')",
   "  -E, --size_merge=INT          Maximum motif count for realtime merging  \n                                  (default=`100')",
   "  -Z, --size_maximum=INT        Maximum motif count to consider a cluster \n                                  saturated  (default=`1000')",
-  "\nAdditional Data:",
-  "  -n, --nucleosomes=filename    Nucleosome position file (WIG)",
-  "  -a, --conservation=filename   Evolutionary conservation file (WIG)",
   "\nPostprocessing Parameters:",
   "  -j, --postprocess=directory   Input directory of clusters to postprocess",
   "  -K, --known_motifs=filename   File containing known motifs",
-  "  -F, --known_cutoff=DOUBLE     P-value cutoff for known motif labeling  \n                                  (default=`0.05')",
-  "  -J, --cutoff_postprocess=DOUBLE\n                                Similarity cutoff for cluster merging  \n                                  (default=`0.75')",
+  "  -F, --known_cutoff=DOUBLE     Score cutoff for known motif labeling  \n                                  (default=`0.05')",
+  "  -S, --known_type=STRING       Type of known motif matching  (possible \n                                  values=\"pvalue\", \"rmse\", \"js\" \n                                  default=`pvalue')",
+  "  -J, --cutoff_postprocess=DOUBLE\n                                Similarity cutoff for cluster merging  \n                                  (default=`1')",
   "  -L, --fraction_postprocess=DOUBLE\n                                Overlap fraction for postprocessing \n                                  gene/condition inclusion  (default=`0.5')",
   "  -T, --cutoff_trim=DOUBLE      Cocluster stdev cutoff for cluster trimming  \n                                  (default=`1')",
   "  -R, --remove_rcs              Convert RCs and RC-like PSTs to single strand  \n                                  (default=on)",
   "  -u, --min_info=DOUBLE         Uninformative motif threshhold (bits)  \n                                  (default=`0.3')",
-  "  -U, --min_zscore=DOUBLE       Minimum motif z-score magnitude  \n                                  (default=`0.2')",
   "  -x, --max_motifs=INT          Maximum motifs to merge exactly  \n                                  (default=`2500')",
   "\nMiscellaneous:",
   "  -e, --cache=filename          Cache file for sequence analysis",
+  "  -O, --progressive             Generate output progressively  (default=on)",
   "\nOptional:",
   "  -t, --threads=INT             Maximum number of concurrent threads  \n                                  (default=`1')",
   "  -s, --skip=INT                Columns to skip in input PCL  (default=`2')",
@@ -94,6 +94,8 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
                         struct cmdline_parser_params *params, const char *additional_error);
 
 
+char *cmdline_parser_known_type_values[] = {"pvalue", "rmse", "js", 0} ;	/* Possible values for known_type.  */
+
 static char *
 gengetopt_strdup (const char *s);
 
@@ -109,6 +111,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->prob_gene_given = 0 ;
   args_info->pvalue_cond_given = 0 ;
   args_info->pvalue_motif_given = 0 ;
+  args_info->zscore_cond_given = 0 ;
+  args_info->zscore_motif_given = 0 ;
   args_info->k_given = 0 ;
   args_info->pvalue_merge_given = 0 ;
   args_info->cutoff_merge_given = 0 ;
@@ -121,19 +125,18 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->size_minimum_given = 0 ;
   args_info->size_merge_given = 0 ;
   args_info->size_maximum_given = 0 ;
-  args_info->nucleosomes_given = 0 ;
-  args_info->conservation_given = 0 ;
   args_info->postprocess_given = 0 ;
   args_info->known_motifs_given = 0 ;
   args_info->known_cutoff_given = 0 ;
+  args_info->known_type_given = 0 ;
   args_info->cutoff_postprocess_given = 0 ;
   args_info->fraction_postprocess_given = 0 ;
   args_info->cutoff_trim_given = 0 ;
   args_info->remove_rcs_given = 0 ;
   args_info->min_info_given = 0 ;
-  args_info->min_zscore_given = 0 ;
   args_info->max_motifs_given = 0 ;
   args_info->cache_given = 0 ;
+  args_info->progressive_given = 0 ;
   args_info->threads_given = 0 ;
   args_info->skip_given = 0 ;
   args_info->random_given = 0 ;
@@ -157,6 +160,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->pvalue_cond_orig = NULL;
   args_info->pvalue_motif_arg = 0.05;
   args_info->pvalue_motif_orig = NULL;
+  args_info->zscore_cond_arg = 0.5;
+  args_info->zscore_cond_orig = NULL;
+  args_info->zscore_motif_arg = 0.5;
+  args_info->zscore_motif_orig = NULL;
   args_info->k_arg = 7;
   args_info->k_orig = NULL;
   args_info->pvalue_merge_arg = 0.05;
@@ -181,17 +188,15 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->size_merge_orig = NULL;
   args_info->size_maximum_arg = 1000;
   args_info->size_maximum_orig = NULL;
-  args_info->nucleosomes_arg = NULL;
-  args_info->nucleosomes_orig = NULL;
-  args_info->conservation_arg = NULL;
-  args_info->conservation_orig = NULL;
   args_info->postprocess_arg = NULL;
   args_info->postprocess_orig = NULL;
   args_info->known_motifs_arg = NULL;
   args_info->known_motifs_orig = NULL;
   args_info->known_cutoff_arg = 0.05;
   args_info->known_cutoff_orig = NULL;
-  args_info->cutoff_postprocess_arg = 0.75;
+  args_info->known_type_arg = gengetopt_strdup ("pvalue");
+  args_info->known_type_orig = NULL;
+  args_info->cutoff_postprocess_arg = 1;
   args_info->cutoff_postprocess_orig = NULL;
   args_info->fraction_postprocess_arg = 0.5;
   args_info->fraction_postprocess_orig = NULL;
@@ -200,12 +205,11 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->remove_rcs_flag = 1;
   args_info->min_info_arg = 0.3;
   args_info->min_info_orig = NULL;
-  args_info->min_zscore_arg = 0.2;
-  args_info->min_zscore_orig = NULL;
   args_info->max_motifs_arg = 2500;
   args_info->max_motifs_orig = NULL;
   args_info->cache_arg = NULL;
   args_info->cache_orig = NULL;
+  args_info->progressive_flag = 1;
   args_info->threads_arg = 1;
   args_info->threads_orig = NULL;
   args_info->skip_arg = 2;
@@ -231,31 +235,32 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->prob_gene_help = gengetopt_args_info_help[8] ;
   args_info->pvalue_cond_help = gengetopt_args_info_help[9] ;
   args_info->pvalue_motif_help = gengetopt_args_info_help[10] ;
-  args_info->k_help = gengetopt_args_info_help[12] ;
-  args_info->pvalue_merge_help = gengetopt_args_info_help[13] ;
-  args_info->cutoff_merge_help = gengetopt_args_info_help[14] ;
-  args_info->penalty_gap_help = gengetopt_args_info_help[15] ;
-  args_info->penalty_mismatch_help = gengetopt_args_info_help[16] ;
-  args_info->pvalue_correl_help = gengetopt_args_info_help[18] ;
-  args_info->number_correl_help = gengetopt_args_info_help[19] ;
-  args_info->sequences_help = gengetopt_args_info_help[20] ;
-  args_info->bases_help = gengetopt_args_info_help[21] ;
-  args_info->size_minimum_help = gengetopt_args_info_help[22] ;
-  args_info->size_merge_help = gengetopt_args_info_help[23] ;
-  args_info->size_maximum_help = gengetopt_args_info_help[24] ;
-  args_info->nucleosomes_help = gengetopt_args_info_help[26] ;
-  args_info->conservation_help = gengetopt_args_info_help[27] ;
-  args_info->postprocess_help = gengetopt_args_info_help[29] ;
-  args_info->known_motifs_help = gengetopt_args_info_help[30] ;
-  args_info->known_cutoff_help = gengetopt_args_info_help[31] ;
+  args_info->zscore_cond_help = gengetopt_args_info_help[11] ;
+  args_info->zscore_motif_help = gengetopt_args_info_help[12] ;
+  args_info->k_help = gengetopt_args_info_help[14] ;
+  args_info->pvalue_merge_help = gengetopt_args_info_help[15] ;
+  args_info->cutoff_merge_help = gengetopt_args_info_help[16] ;
+  args_info->penalty_gap_help = gengetopt_args_info_help[17] ;
+  args_info->penalty_mismatch_help = gengetopt_args_info_help[18] ;
+  args_info->pvalue_correl_help = gengetopt_args_info_help[20] ;
+  args_info->number_correl_help = gengetopt_args_info_help[21] ;
+  args_info->sequences_help = gengetopt_args_info_help[22] ;
+  args_info->bases_help = gengetopt_args_info_help[23] ;
+  args_info->size_minimum_help = gengetopt_args_info_help[24] ;
+  args_info->size_merge_help = gengetopt_args_info_help[25] ;
+  args_info->size_maximum_help = gengetopt_args_info_help[26] ;
+  args_info->postprocess_help = gengetopt_args_info_help[28] ;
+  args_info->known_motifs_help = gengetopt_args_info_help[29] ;
+  args_info->known_cutoff_help = gengetopt_args_info_help[30] ;
+  args_info->known_type_help = gengetopt_args_info_help[31] ;
   args_info->cutoff_postprocess_help = gengetopt_args_info_help[32] ;
   args_info->fraction_postprocess_help = gengetopt_args_info_help[33] ;
   args_info->cutoff_trim_help = gengetopt_args_info_help[34] ;
   args_info->remove_rcs_help = gengetopt_args_info_help[35] ;
   args_info->min_info_help = gengetopt_args_info_help[36] ;
-  args_info->min_zscore_help = gengetopt_args_info_help[37] ;
-  args_info->max_motifs_help = gengetopt_args_info_help[38] ;
-  args_info->cache_help = gengetopt_args_info_help[40] ;
+  args_info->max_motifs_help = gengetopt_args_info_help[37] ;
+  args_info->cache_help = gengetopt_args_info_help[39] ;
+  args_info->progressive_help = gengetopt_args_info_help[40] ;
   args_info->threads_help = gengetopt_args_info_help[42] ;
   args_info->skip_help = gengetopt_args_info_help[43] ;
   args_info->random_help = gengetopt_args_info_help[44] ;
@@ -352,6 +357,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->prob_gene_orig));
   free_string_field (&(args_info->pvalue_cond_orig));
   free_string_field (&(args_info->pvalue_motif_orig));
+  free_string_field (&(args_info->zscore_cond_orig));
+  free_string_field (&(args_info->zscore_motif_orig));
   free_string_field (&(args_info->k_orig));
   free_string_field (&(args_info->pvalue_merge_orig));
   free_string_field (&(args_info->cutoff_merge_orig));
@@ -365,20 +372,17 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->size_minimum_orig));
   free_string_field (&(args_info->size_merge_orig));
   free_string_field (&(args_info->size_maximum_orig));
-  free_string_field (&(args_info->nucleosomes_arg));
-  free_string_field (&(args_info->nucleosomes_orig));
-  free_string_field (&(args_info->conservation_arg));
-  free_string_field (&(args_info->conservation_orig));
   free_string_field (&(args_info->postprocess_arg));
   free_string_field (&(args_info->postprocess_orig));
   free_string_field (&(args_info->known_motifs_arg));
   free_string_field (&(args_info->known_motifs_orig));
   free_string_field (&(args_info->known_cutoff_orig));
+  free_string_field (&(args_info->known_type_arg));
+  free_string_field (&(args_info->known_type_orig));
   free_string_field (&(args_info->cutoff_postprocess_orig));
   free_string_field (&(args_info->fraction_postprocess_orig));
   free_string_field (&(args_info->cutoff_trim_orig));
   free_string_field (&(args_info->min_info_orig));
-  free_string_field (&(args_info->min_zscore_orig));
   free_string_field (&(args_info->max_motifs_orig));
   free_string_field (&(args_info->cache_arg));
   free_string_field (&(args_info->cache_orig));
@@ -397,12 +401,54 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   clear_given (args_info);
 }
 
+/**
+ * @param val the value to check
+ * @param values the possible values
+ * @return the index of the matched value:
+ * -1 if no value matched,
+ * -2 if more than one value has matched
+ */
+static int
+check_possible_values(const char *val, char *values[])
+{
+  int i, found, last;
+  size_t len;
+
+  if (!val)   /* otherwise strlen() crashes below */
+    return -1; /* -1 means no argument for the option */
+
+  found = last = 0;
+
+  for (i = 0, len = strlen(val); values[i]; ++i)
+    {
+      if (strncmp(val, values[i], len) == 0)
+        {
+          ++found;
+          last = i;
+          if (strlen(values[i]) == len)
+            return i; /* exact macth no need to check more */
+        }
+    }
+
+  if (found == 1) /* one match: OK */
+    return last;
+
+  return (found ? -2 : -1); /* return many values or none matched */
+}
+
 
 static void
 write_into_file(FILE *outfile, const char *opt, const char *arg, char *values[])
 {
+  int found = -1;
   if (arg) {
-    fprintf(outfile, "%s=\"%s\"\n", opt, arg);
+    if (values) {
+      found = check_possible_values(arg, values);      
+    }
+    if (found >= 0)
+      fprintf(outfile, "%s=\"%s\" # %s\n", opt, arg, values[found]);
+    else
+      fprintf(outfile, "%s=\"%s\"\n", opt, arg);
   } else {
     fprintf(outfile, "%s\n", opt);
   }
@@ -438,6 +484,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "pvalue_cond", args_info->pvalue_cond_orig, 0);
   if (args_info->pvalue_motif_given)
     write_into_file(outfile, "pvalue_motif", args_info->pvalue_motif_orig, 0);
+  if (args_info->zscore_cond_given)
+    write_into_file(outfile, "zscore_cond", args_info->zscore_cond_orig, 0);
+  if (args_info->zscore_motif_given)
+    write_into_file(outfile, "zscore_motif", args_info->zscore_motif_orig, 0);
   if (args_info->k_given)
     write_into_file(outfile, "k", args_info->k_orig, 0);
   if (args_info->pvalue_merge_given)
@@ -462,16 +512,14 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "size_merge", args_info->size_merge_orig, 0);
   if (args_info->size_maximum_given)
     write_into_file(outfile, "size_maximum", args_info->size_maximum_orig, 0);
-  if (args_info->nucleosomes_given)
-    write_into_file(outfile, "nucleosomes", args_info->nucleosomes_orig, 0);
-  if (args_info->conservation_given)
-    write_into_file(outfile, "conservation", args_info->conservation_orig, 0);
   if (args_info->postprocess_given)
     write_into_file(outfile, "postprocess", args_info->postprocess_orig, 0);
   if (args_info->known_motifs_given)
     write_into_file(outfile, "known_motifs", args_info->known_motifs_orig, 0);
   if (args_info->known_cutoff_given)
     write_into_file(outfile, "known_cutoff", args_info->known_cutoff_orig, 0);
+  if (args_info->known_type_given)
+    write_into_file(outfile, "known_type", args_info->known_type_orig, cmdline_parser_known_type_values);
   if (args_info->cutoff_postprocess_given)
     write_into_file(outfile, "cutoff_postprocess", args_info->cutoff_postprocess_orig, 0);
   if (args_info->fraction_postprocess_given)
@@ -482,12 +530,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "remove_rcs", 0, 0 );
   if (args_info->min_info_given)
     write_into_file(outfile, "min_info", args_info->min_info_orig, 0);
-  if (args_info->min_zscore_given)
-    write_into_file(outfile, "min_zscore", args_info->min_zscore_orig, 0);
   if (args_info->max_motifs_given)
     write_into_file(outfile, "max_motifs", args_info->max_motifs_orig, 0);
   if (args_info->cache_given)
     write_into_file(outfile, "cache", args_info->cache_orig, 0);
+  if (args_info->progressive_given)
+    write_into_file(outfile, "progressive", 0, 0 );
   if (args_info->threads_given)
     write_into_file(outfile, "threads", args_info->threads_orig, 0);
   if (args_info->skip_given)
@@ -634,6 +682,18 @@ int update_arg(void *field, char **orig_field,
       return 1; /* failure */
     }
 
+  if (possible_values && (found = check_possible_values((value ? value : default_value), possible_values)) < 0)
+    {
+      if (short_opt != '-')
+        fprintf (stderr, "%s: %s argument, \"%s\", for option `--%s' (`-%c')%s\n", 
+          package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt, short_opt,
+          (additional_error ? additional_error : ""));
+      else
+        fprintf (stderr, "%s: %s argument, \"%s\", for option `--%s'%s\n", 
+          package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt,
+          (additional_error ? additional_error : ""));
+      return 1; /* failure */
+    }
     
   if (field_given && *field_given && ! override)
     return 0;
@@ -743,33 +803,34 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "datasets",	1, NULL, 'd' },
         { "output",	1, NULL, 'o' },
         { "prob_gene",	1, NULL, 'p' },
-        { "pvalue_cond",	1, NULL, 'P' },
+        { "pvalue_cond",	1, NULL, 'c' },
         { "pvalue_motif",	1, NULL, 'm' },
+        { "zscore_cond",	1, NULL, 'C' },
+        { "zscore_motif",	1, NULL, 'M' },
         { "k",	1, NULL, 'k' },
         { "pvalue_merge",	1, NULL, 'g' },
         { "cutoff_merge",	1, NULL, 'G' },
         { "penalty_gap",	1, NULL, 'y' },
         { "penalty_mismatch",	1, NULL, 'Y' },
-        { "pvalue_correl",	1, NULL, 'c' },
-        { "number_correl",	1, NULL, 'C' },
+        { "pvalue_correl",	1, NULL, 'n' },
+        { "number_correl",	1, NULL, 'N' },
         { "sequences",	1, NULL, 'q' },
         { "bases",	1, NULL, 'b' },
         { "size_minimum",	1, NULL, 'z' },
         { "size_merge",	1, NULL, 'E' },
         { "size_maximum",	1, NULL, 'Z' },
-        { "nucleosomes",	1, NULL, 'n' },
-        { "conservation",	1, NULL, 'a' },
         { "postprocess",	1, NULL, 'j' },
         { "known_motifs",	1, NULL, 'K' },
         { "known_cutoff",	1, NULL, 'F' },
+        { "known_type",	1, NULL, 'S' },
         { "cutoff_postprocess",	1, NULL, 'J' },
         { "fraction_postprocess",	1, NULL, 'L' },
         { "cutoff_trim",	1, NULL, 'T' },
         { "remove_rcs",	0, NULL, 'R' },
         { "min_info",	1, NULL, 'u' },
-        { "min_zscore",	1, NULL, 'U' },
         { "max_motifs",	1, NULL, 'x' },
         { "cache",	1, NULL, 'e' },
+        { "progressive",	0, NULL, 'O' },
         { "threads",	1, NULL, 't' },
         { "skip",	1, NULL, 's' },
         { "random",	1, NULL, 'r' },
@@ -777,7 +838,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:f:d:o:p:P:m:k:g:G:y:Y:c:C:q:b:z:E:Z:n:a:j:K:F:J:L:T:Ru:U:x:e:t:s:r:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:f:d:o:p:c:m:C:M:k:g:G:y:Y:n:N:q:b:z:E:Z:j:K:F:S:J:L:T:Ru:x:e:Ot:s:r:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -862,14 +923,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'P':	/* P-value threshhold for condition inclusion.  */
+        case 'c':	/* P-value threshhold for condition inclusion.  */
         
         
           if (update_arg( (void *)&(args_info->pvalue_cond_arg), 
                &(args_info->pvalue_cond_orig), &(args_info->pvalue_cond_given),
               &(local_args_info.pvalue_cond_given), optarg, 0, "0.05", ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
-              "pvalue_cond", 'P',
+              "pvalue_cond", 'c',
               additional_error))
             goto failure;
         
@@ -882,6 +943,30 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.pvalue_motif_given), optarg, 0, "0.05", ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
               "pvalue_motif", 'm',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'C':	/* Z-score threshhold for condition inclusion.  */
+        
+        
+          if (update_arg( (void *)&(args_info->zscore_cond_arg), 
+               &(args_info->zscore_cond_orig), &(args_info->zscore_cond_given),
+              &(local_args_info.zscore_cond_given), optarg, 0, "0.5", ARG_DOUBLE,
+              check_ambiguity, override, 0, 0,
+              "zscore_cond", 'C',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'M':	/* Z-score threshhold for motif inclusion.  */
+        
+        
+          if (update_arg( (void *)&(args_info->zscore_motif_arg), 
+               &(args_info->zscore_motif_orig), &(args_info->zscore_motif_given),
+              &(local_args_info.zscore_motif_given), optarg, 0, "0.5", ARG_DOUBLE,
+              check_ambiguity, override, 0, 0,
+              "zscore_motif", 'M',
               additional_error))
             goto failure;
         
@@ -946,26 +1031,26 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'c':	/* P-value threshhold for significant correlation.  */
+        case 'n':	/* P-value threshhold for significant correlation.  */
         
         
           if (update_arg( (void *)&(args_info->pvalue_correl_arg), 
                &(args_info->pvalue_correl_orig), &(args_info->pvalue_correl_given),
               &(local_args_info.pvalue_correl_given), optarg, 0, "0.05", ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
-              "pvalue_correl", 'c',
+              "pvalue_correl", 'n',
               additional_error))
             goto failure;
         
           break;
-        case 'C':	/* Maximum number of pairs to sample for significant correlation.  */
+        case 'N':	/* Maximum number of pairs to sample for significant correlation.  */
         
         
           if (update_arg( (void *)&(args_info->number_correl_arg), 
                &(args_info->number_correl_orig), &(args_info->number_correl_given),
               &(local_args_info.number_correl_given), optarg, 0, "100000", ARG_INT,
               check_ambiguity, override, 0, 0,
-              "number_correl", 'C',
+              "number_correl", 'N',
               additional_error))
             goto failure;
         
@@ -1030,30 +1115,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'n':	/* Nucleosome position file (WIG).  */
-        
-        
-          if (update_arg( (void *)&(args_info->nucleosomes_arg), 
-               &(args_info->nucleosomes_orig), &(args_info->nucleosomes_given),
-              &(local_args_info.nucleosomes_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "nucleosomes", 'n',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'a':	/* Evolutionary conservation file (WIG).  */
-        
-        
-          if (update_arg( (void *)&(args_info->conservation_arg), 
-               &(args_info->conservation_orig), &(args_info->conservation_given),
-              &(local_args_info.conservation_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "conservation", 'a',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'j':	/* Input directory of clusters to postprocess.  */
         
         
@@ -1078,7 +1139,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'F':	/* P-value cutoff for known motif labeling.  */
+        case 'F':	/* Score cutoff for known motif labeling.  */
         
         
           if (update_arg( (void *)&(args_info->known_cutoff_arg), 
@@ -1090,12 +1151,24 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'S':	/* Type of known motif matching.  */
+        
+        
+          if (update_arg( (void *)&(args_info->known_type_arg), 
+               &(args_info->known_type_orig), &(args_info->known_type_given),
+              &(local_args_info.known_type_given), optarg, cmdline_parser_known_type_values, "pvalue", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "known_type", 'S',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'J':	/* Similarity cutoff for cluster merging.  */
         
         
           if (update_arg( (void *)&(args_info->cutoff_postprocess_arg), 
                &(args_info->cutoff_postprocess_orig), &(args_info->cutoff_postprocess_given),
-              &(local_args_info.cutoff_postprocess_given), optarg, 0, "0.75", ARG_DOUBLE,
+              &(local_args_info.cutoff_postprocess_given), optarg, 0, "1", ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
               "cutoff_postprocess", 'J',
               additional_error))
@@ -1148,18 +1221,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'U':	/* Minimum motif z-score magnitude.  */
-        
-        
-          if (update_arg( (void *)&(args_info->min_zscore_arg), 
-               &(args_info->min_zscore_orig), &(args_info->min_zscore_given),
-              &(local_args_info.min_zscore_given), optarg, 0, "0.2", ARG_DOUBLE,
-              check_ambiguity, override, 0, 0,
-              "min_zscore", 'U',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'x':	/* Maximum motifs to merge exactly.  */
         
         
@@ -1180,6 +1241,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.cache_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "cache", 'e',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'O':	/* Generate output progressively.  */
+        
+        
+          if (update_arg((void *)&(args_info->progressive_flag), 0, &(args_info->progressive_given),
+              &(local_args_info.progressive_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "progressive", 'O',
               additional_error))
             goto failure;
         

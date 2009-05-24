@@ -543,12 +543,14 @@ AC_CONFIG_FILES([Makefile \
 		 tools/MCluster/Makefile \
 		 tools/Matcher/Makefile \
 		 tools/MIer/Makefile \
+		 tools/Netwalker/Makefile \
 		 tools/Normalizer/Makefile \
 		 tools/Orthologer/Makefile \
 		 tools/Overlapper/Makefile \
 		 tools/PCLPlotter/Makefile \
 		 tools/Randomizer/Makefile \
 		 tools/Seqs2Ngrams/Makefile \
+		 tools/SVDer/Makefile \
 		 tools/Synthesizer/Makefile \
 		 tools/Txt2Bin/Makefile \
                  tools/BNConverter/Makefile \

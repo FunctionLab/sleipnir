@@ -37,6 +37,24 @@ struct gengetopt_args_info
   char * input_arg;	/**< @brief Input PCL file.  */
   char * input_orig;	/**< @brief Input PCL file original value given at command line.  */
   const char *input_help; /**< @brief Input PCL file help description.  */
+  char * fasta_arg;	/**< @brief Gene sequence file.  */
+  char * fasta_orig;	/**< @brief Gene sequence file original value given at command line.  */
+  const char *fasta_help; /**< @brief Gene sequence file help description.  */
+  char * background_arg;	/**< @brief Background PCL file.  */
+  char * background_orig;	/**< @brief Background PCL file original value given at command line.  */
+  const char *background_help; /**< @brief Background PCL file help description.  */
+  char * genes_arg;	/**< @brief Foreground gene list.  */
+  char * genes_orig;	/**< @brief Foreground gene list original value given at command line.  */
+  const char *genes_help; /**< @brief Foreground gene list help description.  */
+  char * motifs_arg;	/**< @brief Known motif list.  */
+  char * motifs_orig;	/**< @brief Known motif list original value given at command line.  */
+  const char *motifs_help; /**< @brief Known motif list help description.  */
+  int k_arg;	/**< @brief Length of motif words (default='7').  */
+  char * k_orig;	/**< @brief Length of motif words original value given at command line.  */
+  const char *k_help; /**< @brief Length of motif words help description.  */
+  int degree_arg;	/**< @brief Degree of HMM for sequence summary (default='0').  */
+  char * degree_orig;	/**< @brief Degree of HMM for sequence summary original value given at command line.  */
+  const char *degree_help; /**< @brief Degree of HMM for sequence summary help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCL (default='2').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
@@ -47,11 +65,18 @@ struct gengetopt_args_info
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
+  unsigned int fasta_given ;	/**< @brief Whether fasta was given.  */
+  unsigned int background_given ;	/**< @brief Whether background was given.  */
+  unsigned int genes_given ;	/**< @brief Whether genes was given.  */
+  unsigned int motifs_given ;	/**< @brief Whether motifs was given.  */
+  unsigned int k_given ;	/**< @brief Whether k was given.  */
+  unsigned int degree_given ;	/**< @brief Whether degree was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
+  int Foreground_Background_group_counter; /**< @brief Counter for group Foreground_Background */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */

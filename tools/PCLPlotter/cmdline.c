@@ -28,13 +28,20 @@ const char *gengetopt_args_info_usage = "Usage: PCLPlotter [OPTIONS]... [FILES].
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help            Print help and exit",
-  "  -V, --version         Print version and exit",
+  "  -h, --help                 Print help and exit",
+  "  -V, --version              Print version and exit",
   "\nMain:",
-  "  -i, --input=filename  Input PCL file",
+  "  -i, --input=filename       Input PCL file",
+  "  -f, --fasta=filename       Gene sequence file",
+  "\n Group: Foreground_Background",
+  "  -b, --background=filename  Background PCL file",
+  "  -g, --genes=filename       Foreground gene list",
+  "  -m, --motifs=filename      Known motif list",
   "\nOptional:",
-  "  -s, --skip=INT        Columns to skip in input PCL  (default=`2')",
-  "  -v, --verbosity=INT   Message verbosity  (default=`5')",
+  "  -k, --k=INT                Length of motif words  (default=`7')",
+  "  -d, --degree=INT           Degree of HMM for sequence summary  (default=`0')",
+  "  -s, --skip=INT             Columns to skip in input PCL  (default=`2')",
+  "  -v, --verbosity=INT        Message verbosity  (default=`5')",
     0
 };
 
@@ -62,8 +69,15 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->help_given = 0 ;
   args_info->version_given = 0 ;
   args_info->input_given = 0 ;
+  args_info->fasta_given = 0 ;
+  args_info->background_given = 0 ;
+  args_info->genes_given = 0 ;
+  args_info->motifs_given = 0 ;
+  args_info->k_given = 0 ;
+  args_info->degree_given = 0 ;
   args_info->skip_given = 0 ;
   args_info->verbosity_given = 0 ;
+  args_info->Foreground_Background_group_counter = 0 ;
 }
 
 static
@@ -71,6 +85,18 @@ void clear_args (struct gengetopt_args_info *args_info)
 {
   args_info->input_arg = NULL;
   args_info->input_orig = NULL;
+  args_info->fasta_arg = NULL;
+  args_info->fasta_orig = NULL;
+  args_info->background_arg = NULL;
+  args_info->background_orig = NULL;
+  args_info->genes_arg = NULL;
+  args_info->genes_orig = NULL;
+  args_info->motifs_arg = NULL;
+  args_info->motifs_orig = NULL;
+  args_info->k_arg = 7;
+  args_info->k_orig = NULL;
+  args_info->degree_arg = 0;
+  args_info->degree_orig = NULL;
   args_info->skip_arg = 2;
   args_info->skip_orig = NULL;
   args_info->verbosity_arg = 5;
@@ -86,8 +112,14 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
   args_info->input_help = gengetopt_args_info_help[3] ;
-  args_info->skip_help = gengetopt_args_info_help[5] ;
-  args_info->verbosity_help = gengetopt_args_info_help[6] ;
+  args_info->fasta_help = gengetopt_args_info_help[4] ;
+  args_info->background_help = gengetopt_args_info_help[6] ;
+  args_info->genes_help = gengetopt_args_info_help[7] ;
+  args_info->motifs_help = gengetopt_args_info_help[8] ;
+  args_info->k_help = gengetopt_args_info_help[10] ;
+  args_info->degree_help = gengetopt_args_info_help[11] ;
+  args_info->skip_help = gengetopt_args_info_help[12] ;
+  args_info->verbosity_help = gengetopt_args_info_help[13] ;
   
 }
 
@@ -171,6 +203,16 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   unsigned int i;
   free_string_field (&(args_info->input_arg));
   free_string_field (&(args_info->input_orig));
+  free_string_field (&(args_info->fasta_arg));
+  free_string_field (&(args_info->fasta_orig));
+  free_string_field (&(args_info->background_arg));
+  free_string_field (&(args_info->background_orig));
+  free_string_field (&(args_info->genes_arg));
+  free_string_field (&(args_info->genes_orig));
+  free_string_field (&(args_info->motifs_arg));
+  free_string_field (&(args_info->motifs_orig));
+  free_string_field (&(args_info->k_orig));
+  free_string_field (&(args_info->degree_orig));
   free_string_field (&(args_info->skip_orig));
   free_string_field (&(args_info->verbosity_orig));
   
@@ -213,6 +255,18 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "version", 0, 0 );
   if (args_info->input_given)
     write_into_file(outfile, "input", args_info->input_orig, 0);
+  if (args_info->fasta_given)
+    write_into_file(outfile, "fasta", args_info->fasta_orig, 0);
+  if (args_info->background_given)
+    write_into_file(outfile, "background", args_info->background_orig, 0);
+  if (args_info->genes_given)
+    write_into_file(outfile, "genes", args_info->genes_orig, 0);
+  if (args_info->motifs_given)
+    write_into_file(outfile, "motifs", args_info->motifs_orig, 0);
+  if (args_info->k_given)
+    write_into_file(outfile, "k", args_info->k_orig, 0);
+  if (args_info->degree_given)
+    write_into_file(outfile, "degree", args_info->degree_orig, 0);
   if (args_info->skip_given)
     write_into_file(outfile, "skip", args_info->skip_orig, 0);
   if (args_info->verbosity_given)
@@ -262,6 +316,25 @@ gengetopt_strdup (const char *s)
     return (char*)0;
   strcpy(result, s);
   return result;
+}
+
+static void
+reset_group_Foreground_Background(struct gengetopt_args_info *args_info)
+{
+  if (! args_info->Foreground_Background_group_counter)
+    return;
+  
+  args_info->background_given = 0 ;
+  free_string_field (&(args_info->background_arg));
+  free_string_field (&(args_info->background_orig));
+  args_info->genes_given = 0 ;
+  free_string_field (&(args_info->genes_arg));
+  free_string_field (&(args_info->genes_orig));
+  args_info->motifs_given = 0 ;
+  free_string_field (&(args_info->motifs_arg));
+  free_string_field (&(args_info->motifs_orig));
+
+  args_info->Foreground_Background_group_counter = 0;
 }
 
 int
@@ -452,12 +525,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "help",	0, NULL, 'h' },
         { "version",	0, NULL, 'V' },
         { "input",	1, NULL, 'i' },
+        { "fasta",	1, NULL, 'f' },
+        { "background",	1, NULL, 'b' },
+        { "genes",	1, NULL, 'g' },
+        { "motifs",	1, NULL, 'm' },
+        { "k",	1, NULL, 'k' },
+        { "degree",	1, NULL, 'd' },
         { "skip",	1, NULL, 's' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:s:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:f:b:g:m:k:d:s:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -490,6 +569,87 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.input_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "input", 'i',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'f':	/* Gene sequence file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->fasta_arg), 
+               &(args_info->fasta_orig), &(args_info->fasta_given),
+              &(local_args_info.fasta_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "fasta", 'f',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'b':	/* Background PCL file.  */
+        
+          if (args_info->Foreground_Background_group_counter && override)
+            reset_group_Foreground_Background (args_info);
+          args_info->Foreground_Background_group_counter += 1;
+        
+          if (update_arg( (void *)&(args_info->background_arg), 
+               &(args_info->background_orig), &(args_info->background_given),
+              &(local_args_info.background_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "background", 'b',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'g':	/* Foreground gene list.  */
+        
+          if (args_info->Foreground_Background_group_counter && override)
+            reset_group_Foreground_Background (args_info);
+          args_info->Foreground_Background_group_counter += 1;
+        
+          if (update_arg( (void *)&(args_info->genes_arg), 
+               &(args_info->genes_orig), &(args_info->genes_given),
+              &(local_args_info.genes_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genes", 'g',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'm':	/* Known motif list.  */
+        
+          if (args_info->Foreground_Background_group_counter && override)
+            reset_group_Foreground_Background (args_info);
+          args_info->Foreground_Background_group_counter += 1;
+        
+          if (update_arg( (void *)&(args_info->motifs_arg), 
+               &(args_info->motifs_orig), &(args_info->motifs_given),
+              &(local_args_info.motifs_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "motifs", 'm',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'k':	/* Length of motif words.  */
+        
+        
+          if (update_arg( (void *)&(args_info->k_arg), 
+               &(args_info->k_orig), &(args_info->k_given),
+              &(local_args_info.k_given), optarg, 0, "7", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "k", 'k',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'd':	/* Degree of HMM for sequence summary.  */
+        
+        
+          if (update_arg( (void *)&(args_info->degree_arg), 
+               &(args_info->degree_orig), &(args_info->degree_given),
+              &(local_args_info.degree_given), optarg, 0, "0", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "degree", 'd',
               additional_error))
             goto failure;
         
@@ -530,6 +690,12 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         } /* switch */
     } /* while */
 
+  if (args_info->Foreground_Background_group_counter > 1)
+    {
+      fprintf (stderr, "%s: %d options of group Foreground_Background were given. At most one is required.%s\n", argv[0], args_info->Foreground_Background_group_counter, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
 
 
 

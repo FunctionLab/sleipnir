@@ -21,7 +21,7 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_PACKAGE
 /** @brief the program name */
-#define CMDLINE_PARSER_PACKAGE "Txt2Bin"
+#define CMDLINE_PARSER_PACKAGE "SVDer"
 #endif
 
 #ifndef CMDLINE_PARSER_VERSION
@@ -34,29 +34,26 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * input_arg;	/**< @brief Input text/binary file.  */
-  char * input_orig;	/**< @brief Input text/binary file original value given at command line.  */
-  const char *input_help; /**< @brief Input text/binary file help description.  */
-  char * answers_arg;	/**< @brief Answer file.  */
-  char * answers_orig;	/**< @brief Answer file original value given at command line.  */
-  const char *answers_help; /**< @brief Answer file help description.  */
-  char * output_arg;	/**< @brief Output binary file.  */
-  char * output_orig;	/**< @brief Output binary file original value given at command line.  */
-  const char *output_help; /**< @brief Output binary file help description.  */
-  char * from_arg;	/**< @brief Source format (default='txt').  */
-  char * from_orig;	/**< @brief Source format original value given at command line.  */
-  const char *from_help; /**< @brief Source format help description.  */
-  char * to_arg;	/**< @brief Target format (default='bin').  */
-  char * to_orig;	/**< @brief Target format original value given at command line.  */
-  const char *to_help; /**< @brief Target format help description.  */
-  int matrix_flag;	/**< @brief Read/write simple matrix format (default=off).  */
-  const char *matrix_help; /**< @brief Read/write simple matrix format help description.  */
-  char * genes_arg;	/**< @brief Gene inclusion file.  */
-  char * genes_orig;	/**< @brief Gene inclusion file original value given at command line.  */
-  const char *genes_help; /**< @brief Gene inclusion file help description.  */
-  char * genex_arg;	/**< @brief Gene exclusion file.  */
-  char * genex_orig;	/**< @brief Gene exclusion file original value given at command line.  */
-  const char *genex_help; /**< @brief Gene exclusion file help description.  */
+  char * input_arg;	/**< @brief Input PCL file.  */
+  char * input_orig;	/**< @brief Input PCL file original value given at command line.  */
+  const char *input_help; /**< @brief Input PCL file help description.  */
+  char * output_arg;	/**< @brief Output PCL file.  */
+  char * output_orig;	/**< @brief Output PCL file original value given at command line.  */
+  const char *output_help; /**< @brief Output PCL file help description.  */
+  char * umatrix_arg;	/**< @brief Output U matrix PCL file.  */
+  char * umatrix_orig;	/**< @brief Output U matrix PCL file original value given at command line.  */
+  const char *umatrix_help; /**< @brief Output U matrix PCL file help description.  */
+  double reprojection_arg;	/**< @brief Fraction of variance to reproject (default='1').  */
+  char * reprojection_orig;	/**< @brief Fraction of variance to reproject original value given at command line.  */
+  const char *reprojection_help; /**< @brief Fraction of variance to reproject help description.  */
+  double transform_arg;	/**< @brief Transformation function parameter (default='1').  */
+  char * transform_orig;	/**< @brief Transformation function parameter original value given at command line.  */
+  const char *transform_help; /**< @brief Transformation function parameter help description.  */
+  int signal_balance_flag;	/**< @brief Equally weight all SVs (default=off).  */
+  const char *signal_balance_help; /**< @brief Equally weight all SVs help description.  */
+  int skip_arg;	/**< @brief Columns to skip in input PCL (default='2').  */
+  char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
+  const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
@@ -64,13 +61,12 @@ struct gengetopt_args_info
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
-  unsigned int answers_given ;	/**< @brief Whether answers was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
-  unsigned int from_given ;	/**< @brief Whether from was given.  */
-  unsigned int to_given ;	/**< @brief Whether to was given.  */
-  unsigned int matrix_given ;	/**< @brief Whether matrix was given.  */
-  unsigned int genes_given ;	/**< @brief Whether genes was given.  */
-  unsigned int genex_given ;	/**< @brief Whether genex was given.  */
+  unsigned int umatrix_given ;	/**< @brief Whether umatrix was given.  */
+  unsigned int reprojection_given ;	/**< @brief Whether reprojection was given.  */
+  unsigned int transform_given ;	/**< @brief Whether transform was given.  */
+  unsigned int signal_balance_given ;	/**< @brief Whether signal_balance was given.  */
+  unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
@@ -195,9 +191,6 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  */
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
-
-extern char *cmdline_parser_from_values[] ;	/**< @brief Possible values for from.  */
-extern char *cmdline_parser_to_values[] ;	/**< @brief Possible values for to.  */
 
 
 #ifdef __cplusplus
