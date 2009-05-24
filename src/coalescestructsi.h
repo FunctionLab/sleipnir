@@ -81,6 +81,12 @@ struct SCoalesceModifierCache {
 };
 
 struct SMotifMatch {
+	enum EType {
+		ETypePValue,
+		ETypeRMSE,
+		ETypeJensenShannon
+	};
+
 	SMotifMatch( ) { }
 
 	SMotifMatch( uint32_t iMotif, const std::string& strType,
@@ -92,7 +98,7 @@ struct SMotifMatch {
 	uint32_t Open( const SMotifMatch&, const SMotifMatch&, CCoalesceMotifLibrary& );
 	std::string Save( const CCoalesceMotifLibrary*, bool = false, float = 0, float = 0, float = 0,
 		bool = false ) const;
-	bool Label( const CCoalesceMotifLibrary&, float, float, float );
+	bool Label( const CCoalesceMotifLibrary&, EType, float, float, float );
 
 	bool operator==( const SMotifMatch& sMotif ) const {
 

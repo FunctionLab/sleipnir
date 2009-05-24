@@ -432,13 +432,33 @@ public:
 		double	d, dRet;
 		size_t	iN;
 
-		for( dRet = 0,CurOne = BeginOne,CurTwo = BeginTwo; ( CurOne < EndOne ) && ( CurTwo < EndTwo );
+		for( dRet = 0,CurOne = BeginOne,CurTwo = BeginTwo; ( CurOne != EndOne ) && ( CurTwo != EndTwo );
 			++CurOne,++CurTwo ) {
 			d = *CurOne - *CurTwo;
 			dRet += d * d; }
 		iN = min( EndOne - BeginOne, EndTwo - BeginTwo );
 
 		return ( iN ? sqrt( dRet / iN ) : 0 ); }
+
+	template<class tType>
+	static double JensenShannonDivergence( tType BeginOne, tType EndOne, tType BeginTwo, tType EndTwo ) {
+
+		return ( ( KullbackLeiblerDivergence( BeginOne, EndOne, BeginTwo, EndTwo ) +
+			KullbackLeiblerDivergence( BeginTwo, EndTwo, BeginOne, EndOne ) ) / 2 ); }
+
+	template<class tType>
+	static double KullbackLeiblerDivergence( tType BeginOne, tType EndOne, tType BeginTwo, tType EndTwo ) {
+		double	dRet;
+		tType	CurOne, CurTwo;
+
+		if( ( EndOne - BeginOne ) != ( EndTwo - BeginTwo ) )
+			return CMeta::GetNaN( );
+
+		for( dRet = 0,CurOne = BeginOne,CurTwo = BeginTwo; ( CurOne != EndOne ) && ( CurTwo != EndTwo );
+			++CurOne,++CurTwo )
+			dRet += *CurOne * log( *CurOne / *CurTwo );
+
+		return ( dRet / log( 2.0 ) ); }
 
 	// P-value tests
 	static double LjungBox( const float* adX, size_t iN, size_t iH );

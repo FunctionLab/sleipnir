@@ -1,0 +1,25 @@
+package	"SVDer"
+version	"1.0"
+purpose	"Transforms PCL data through Support Vector Decomposition"
+
+section "Main"
+option	"input"			i	"Input PCL file"
+							string	typestr="filename"
+option	"output"		o	"Output PCL file"
+							string	typestr="filename"
+option	"umatrix"		u	"Output U matrix PCL file"
+							string	typestr="filename"
+
+section "SVD"
+option	"reprojection"	r	"Fraction of variance to reproject"
+							double	default="1"
+option	"transform"		t	"Transformation function parameter"
+							double	default="1"
+option	"signal_balance"	b	"Equally weight all SVs"
+							flag	off
+
+section "Optional"
+option	"skip"			s	"Columns to skip in input PCL"
+							int	default="2"
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

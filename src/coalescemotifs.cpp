@@ -31,7 +31,7 @@ namespace Sleipnir {
 const char	CCoalesceMotifLibraryImpl::c_szBases[]			= "ACGT";
 const char	CCoalesceMotifLibraryImpl::c_szComplements[]	= "TGCA";
 
-void CCoalesceMotifLibraryImpl::SKnowns::Match( const vector<float>& vecdMotif,
+void CCoalesceMotifLibraryImpl::SKnowns::Match( const vector<float>& vecdMotif, SMotifMatch::EType eMatchType,
 	map<string, float>& mapstrdKnown ) const {
 	static const size_t					c_iOverlap	= 5;
 	map<string, TVecPr>::const_iterator	iterKnown;
@@ -52,7 +52,6 @@ void CCoalesceMotifLibraryImpl::SKnowns::Match( const vector<float>& vecdMotif,
 			if( iMax < iMin )
 				continue;
 			for( j = iMin; j <= iMax; j += strlen( c_szBases ) ) {
-				iTests += 2;
 				if( j < vecdMotif.size( ) ) {
 					adMotif = &vecdMotif[ vecdMotif.size( ) - j - 1 ];
 					adPWM = &vecdPWM.front( );
@@ -64,14 +63,32 @@ void CCoalesceMotifLibraryImpl::SKnowns::Match( const vector<float>& vecdMotif,
 					adPWM = &vecdPWM[ k ];
 					adRC = &vecdRC[ k ];
 					k = min( vecdMotif.size( ), vecdPWM.size( ) - k ); }
-				if( ( dR = (float)max( CMeasurePearson::Pearson( adMotif, k, adPWM, k,
-					IMeasure::EMapNone ), CMeasurePearson::Pearson( adMotif, k, adRC, k,
-					IMeasure::EMapNone ) ) ) < 0 )
-					continue;
-				if( ( dP = (float)CStatistics::PValuePearson( dR, k ) ) < dMin )
+				switch( eMatchType ) {
+					case SMotifMatch::ETypeRMSE:
+						dP = (float)min( CStatistics::RootMeanSquareError( adMotif, adMotif + k, adPWM,
+							adPWM + k ), CStatistics::RootMeanSquareError( adMotif, adMotif + k, adRC,
+							adRC + k ) );
+						break;
+
+					case SMotifMatch::ETypeJensenShannon:
+						dP = (float)min( CStatistics::JensenShannonDivergence( adMotif, adMotif + k, adPWM,
+							adPWM + k ), CStatistics::JensenShannonDivergence( adMotif, adMotif + k, adRC,
+							adRC + k ) );
+						break;
+
+					case SMotifMatch::ETypePValue:
+						iTests += 2;
+						if( ( dR = (float)max( CMeasurePearson::Pearson( adMotif, k, adPWM, k,
+							IMeasure::EMapNone ), CMeasurePearson::Pearson( adMotif, k, adRC, k,
+							IMeasure::EMapNone ) ) ) > 0 )
+							dP = (float)CStatistics::PValuePearson( dR, k );
+						else
+							dP = FLT_MAX;
+						break; }
+				if( dP < dMin )
 					dMin = dP; } }
 		if( dMin != FLT_MAX )
-			mapstrdKnown[ iterKnown->first ] = dMin * iTests; } }
+			mapstrdKnown[ iterKnown->first ] = dMin * max( 1, iTests ); } }
 
 bool CCoalesceMotifLibrary::Open( istream& istm, vector<SMotifMatch>& vecsMotifs,
 	CCoalesceMotifLibrary* pMotifs ) {
@@ -555,8 +572,8 @@ bool CCoalesceMotifLibrary::OpenKnown( istream& istm ) {
 
 	return true; }
 
-bool CCoalesceMotifLibrary::GetKnown( uint32_t iMotif, float dPenaltyGap, float dPenaltyMismatch,
-	vector<pair<string, float> >& vecprstrdKnown, float dPValue ) const {
+bool CCoalesceMotifLibrary::GetKnown( uint32_t iMotif, SMotifMatch::EType eMatchType, float dPenaltyGap,
+	float dPenaltyMismatch, vector<pair<string, float> >& vecprstrdKnown, float dPValue ) const {
 	size_t							i, j, k, iSum;
 	vector<float>					vecdMotif;
 	CFullMatrix<uint16_t>			MatPWM;
@@ -565,7 +582,6 @@ bool CCoalesceMotifLibrary::GetKnown( uint32_t iMotif, float dPenaltyGap, float 
 
 	if( !m_sKnowns.GetSize( ) )
 		return true;
-	dPValue /= m_sKnowns.GetSize( );
 	if( !CCoalesceMotifLibraryImpl::GetPWM( iMotif, 0, dPenaltyGap, dPenaltyMismatch, true, MatPWM ) )
 		return false;
 	vecdMotif.resize( MatPWM.GetRows( ) * MatPWM.GetColumns( ) );
@@ -577,7 +593,9 @@ bool CCoalesceMotifLibrary::GetKnown( uint32_t iMotif, float dPenaltyGap, float 
 		for( j = 0; j < MatPWM.GetRows( ); ++j )
 			vecdMotif[ k++ ] = (float)MatPWM.Get( j, i ) / iSum; }
 
-	m_sKnowns.Match( vecdMotif, mapstrdKnown );
+	m_sKnowns.Match( vecdMotif, eMatchType, mapstrdKnown );
+	if( eMatchType == SMotifMatch::ETypePValue )
+		dPValue /= m_sKnowns.GetSize( );
 	for( iterKnown = mapstrdKnown.begin( ); iterKnown != mapstrdKnown.end( ); ++iterKnown )
 		if( iterKnown->second < dPValue )
 			vecprstrdKnown.push_back( *iterKnown );

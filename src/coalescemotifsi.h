@@ -25,7 +25,7 @@
 #include <string.h>
 #include <map>
 
-#include "fullmatrix.h"
+#include "coalescestructsi.h"
 
 namespace Sleipnir {
 
@@ -52,7 +52,7 @@ protected:
 		typedef std::pair<TVecD, TVecD>		TPrVecDVecD;
 		typedef std::vector<TPrVecDVecD>	TVecPr;
 
-		void Match( const std::vector<float>&, std::map<std::string, float>& ) const;
+		void Match( const std::vector<float>&, SMotifMatch::EType, std::map<std::string, float>& ) const;
 
 		size_t GetSize( ) const {
 

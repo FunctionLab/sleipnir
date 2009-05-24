@@ -1084,8 +1084,8 @@ void CCoalesceCluster::Snapshot( const CCoalesceGeneScores& GeneScores,
 	CCoalesceClusterImpl::Snapshot( m_setsMotifs, m_vecsPrevMotifs );
 	CCoalesceClusterImpl::Snapshot( GetGenes( ), m_veciPrevGenes ); }
 
-bool CCoalesceCluster::LabelMotifs( const CCoalesceMotifLibrary& Motifs, float dPenaltyGap,
-	float dPenaltyMismatch, float dPValue ) {
+bool CCoalesceCluster::LabelMotifs( const CCoalesceMotifLibrary& Motifs, SMotifMatch::EType eMatchType,
+	float dPenaltyGap, float dPenaltyMismatch, float dPValue ) {
 	set<SMotifMatch>::iterator	iterMotif;
 
 	if( !Motifs.GetKnowns( ) )
@@ -1093,7 +1093,7 @@ bool CCoalesceCluster::LabelMotifs( const CCoalesceMotifLibrary& Motifs, float d
 	for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif ) {
 		SMotifMatch&	sMotif	= (SMotifMatch&)*iterMotif;
 // For some obscure reason, Linux won't let me use this as a non-const iterator...
-		if( !sMotif.Label( Motifs, dPenaltyGap, dPenaltyMismatch, dPValue ) )
+		if( !sMotif.Label( Motifs, eMatchType, dPenaltyGap, dPenaltyMismatch, dPValue ) )
 			return false; }
 
 	return true; }

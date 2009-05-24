@@ -169,7 +169,8 @@ public:
 		ENormalizeSigmoid	= ENormalizeZScore + 1
 	};
 
-	bool Open( const char* szFile, bool fMemmap = false, size_t iSkip = 2, bool fZScore = false );
+	bool Open( const char* szFile, bool fMemmap = false, size_t iSkip = 2, bool fZScore = false,
+		bool fDuplicates = false );
 	bool Open( std::istream& istm, EFormat eFormat = EFormatBinary, float dDefault = HUGE_VAL,
 		bool fDuplicates = false, size_t iSkip = 2, bool fZScore = false );
 	bool Open( const CSlim& Slim );

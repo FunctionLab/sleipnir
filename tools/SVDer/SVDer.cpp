@@ -24,30 +24,51 @@
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
-	CPCL				PCL;
-	CDat				Dat;
-	int					iRet;
-	ofstream			ofsm;
+	CPCL				PCLIn, PCLOut;
+	CDataMatrix			MatU, MatV;
+	vector<float>		vecdS;
+	size_t				i, iNonzero;
+	float				dSum, dCur;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg );
 
-	if( iRet = CPCL::Distance( sArgs.input_arg, sArgs.skip_arg, sArgs.neighbors_arg ? sArgs.distance_arg : NULL,
-		false, false, !!sArgs.autocorrelate_flag, sArgs.genes_arg, CMeta::GetNaN( ), sArgs.limit_arg, PCL,
-		Dat ) ) {
-		cmdline_parser_print_help( );
-		return iRet; }
+	if( !PCLIn.Open( sArgs.input_arg, sArgs.skip_arg ) ) {
+		cerr << "Could not open: " << ( sArgs.input_arg ? sArgs.input_arg : "stdin" ) << endl;
+		return 1; }
+	PCLIn.Get( ).SVD( MatU, MatV, vecdS );
 
-	PCL.Impute( sArgs.neighbors_arg, (float)sArgs.missing_arg, Dat );
+	PCLOut.Open( PCLIn );
+	if( sArgs.umatrix_arg ) {
+		for( i = 0; i < PCLOut.GetGenes( ); ++i )
+			PCLOut.Set( i, MatU.Get( i ) );
+		PCLOut.Save( sArgs.umatrix_arg ); }
 
-	if( sArgs.output_arg ) {
-		ofsm.open( sArgs.output_arg );
-		PCL.Save( ofsm );
-		ofsm.close( ); }
+	for( dSum = 0,i = 0; i < vecdS.size( ); ++i )
+		dSum += vecdS[ i ];
+	for( dCur = 0,i = 0; i < vecdS.size( ); ++i )
+		if( ( dCur += ( vecdS[ i ] / dSum ) ) > sArgs.reprojection_arg )
+			break;
+	i++;
+	iNonzero = min( vecdS.size( ), i );
+	for( ; i < vecdS.size( ); ++i ) {
+		dSum -= vecdS[ i ];
+		vecdS[ i ] = 0; }
+	if( sArgs.signal_balance_flag ) {
+		dSum /= iNonzero;
+		fill( vecdS.begin( ), vecdS.end( ), dSum ); }
 	else {
-		PCL.Save( cout );
-		cout.flush( ); }
+		for( dCur = 0,i = 0; i < iNonzero; ++i )
+			dCur += ( vecdS[ i ] = pow( vecdS[ i ] / dSum, (float)sArgs.transform_arg ) );
+		for( i = 0; i < iNonzero; ++i )
+			vecdS[ i ] *= dSum / dCur; }
+
+	MatU.Multiply( vecdS );
+	MatU.Multiply( MatV, true );
+	for( i = 0; i < PCLOut.GetGenes( ); ++i )
+		PCLOut.Set( i, MatU.Get( i ) );
+	PCLOut.Save( sArgs.output_arg );
 
 	return 0; }

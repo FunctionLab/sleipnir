@@ -343,6 +343,27 @@ public:
 
 	/*!
 	 * \brief
+	 * Set a single gene's row in the PCL.
+	 * 
+	 * \param iGene
+	 * PCL row.
+	 * 
+	 * \param adValues
+	 * Values to which row is set.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given index must be smaller than GetGenes.
+	 * The given array must contain a number of elements equal to GetExperiments.
+	 * 
+	 * \see
+	 * Get
+	 */
+	void Set( size_t iGene, const float* adValues ) {
+
+		m_Data.Set( iGene, adValues ); }
+
+	/*!
+	 * \brief
 	 * Return the PCL's underlying data matrix.
 	 * 
 	 * \returns

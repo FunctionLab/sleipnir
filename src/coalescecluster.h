@@ -55,8 +55,8 @@ public:
 		float dCutoffPWMs = 0, float dPenaltyGap = 0, float dPenaltyMismatch = 0, bool fNoRCs = false ) const;
 	float GetSimilarity( const CCoalesceCluster& Cluster, size_t iGenes, size_t iDatasets ) const;
 	void Snapshot( const CCoalesceGeneScores& GeneScores, CCoalesceGroupHistograms& Histograms );
-	bool LabelMotifs( const CCoalesceMotifLibrary&, float dPenaltyGap, float dPenaltyMismatch,
-		float dPValue );
+	bool LabelMotifs( const CCoalesceMotifLibrary&, SMotifMatch::EType eMatchType, float dPenaltyGap,
+		float dPenaltyMismatch, float dPValue );
 
 	bool IsConverged( ) {
 

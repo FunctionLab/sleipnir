@@ -22,6 +22,7 @@
 #ifndef PCLI_H
 #define PCLI_H
 
+#include <map>
 #include <set>
 #include <vector>
 

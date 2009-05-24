@@ -72,7 +72,7 @@ public:
 	std::string GetPWM( uint32_t iMotif, float dCutoffPWMs, float dPenaltyGap, float dPenaltyMismatch,
 		bool fNoRCs ) const;
 	bool Simplify( uint32_t iMotif ) const;
-	bool GetKnown( uint32_t iMotif, float dPenaltyGap, float dPenaltyMismatch,
+	bool GetKnown( uint32_t iMotif, SMotifMatch::EType eMatchType, float dPenaltyGap, float dPenaltyMismatch,
 		std::vector<std::pair<std::string, float> >& vecprstrdKnown, float dPValue = 1 ) const;
 
 	size_t GetKnowns( ) const {

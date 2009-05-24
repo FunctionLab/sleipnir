@@ -28,6 +28,10 @@ enum EFile {
 	EFileError
 };
 
+const char*					c_aszMatchTypes[]	= {"pvalue", "rmse", "js", NULL};
+const SMotifMatch::EType	c_aeMatchTypes[]	=
+	{SMotifMatch::ETypePValue, SMotifMatch::ETypeRMSE, SMotifMatch::ETypeJensenShannon, SMotifMatch::ETypePValue};
+
 int main_postprocess( const gengetopt_args_info&, CCoalesceMotifLibrary& );
 bool recluster( const gengetopt_args_info&, size_t, CCoalesceMotifLibrary&, const CHierarchy&,
 	const vector<CCoalesceCluster>&, const vector<string>&, const CPCL&, size_t& );
@@ -233,6 +237,13 @@ int main_postprocess( const gengetopt_args_info& sArgs, CCoalesceMotifLibrary& M
 bool recluster( const gengetopt_args_info& sArgs, size_t iPairs, CCoalesceMotifLibrary& Motifs,
 	const CHierarchy& Hier, const vector<CCoalesceCluster>& vecClustersFrom,
 	const vector<string>& vecstrClustersFrom, const CPCL& PCL, size_t& iID ) {
+	SMotifMatch::EType	eMatchType;
+	size_t				i;
+
+	for( i = 0; c_aszMatchTypes[ i ]; ++i )
+		if( !strcmp( c_aszMatchTypes[ i ], sArgs.known_type_arg ) )
+			break;
+	eMatchType = c_aeMatchTypes[ i ];
 
 	if( Hier.IsGene( ) || ( Hier.GetSimilarity( ) >= sArgs.cutoff_postprocess_arg ) ) {
 		CCoalesceCluster	Cluster;
@@ -246,8 +257,8 @@ bool recluster( const gengetopt_args_info& sArgs, size_t iPairs, CCoalesceMotifL
 			cerr << "Cluster too small: " << Cluster.GetGenes( ).size( ) << endl;
 			return true; }
 
-		if( !Cluster.LabelMotifs( Motifs, (float)sArgs.penalty_gap_arg, (float)sArgs.penalty_mismatch_arg,
-			(float)sArgs.known_cutoff_arg ) )
+		if( !Cluster.LabelMotifs( Motifs, eMatchType, (float)sArgs.penalty_gap_arg,
+			(float)sArgs.penalty_mismatch_arg, (float)sArgs.known_cutoff_arg ) )
 			return false;
 		if( sArgs.output_arg )
 			Cluster.Save( sArgs.output_arg, iID, PCL, &Motifs );

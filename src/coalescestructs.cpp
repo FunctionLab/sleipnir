@@ -232,10 +232,10 @@ string SMotifMatch::Save( const CCoalesceMotifLibrary* pMotifs, bool fPWM, float
 
 	return ossm.str( ); }
 
-bool SMotifMatch::Label( const CCoalesceMotifLibrary& Motifs, float dPenaltyGap, float dPenaltyMismatch,
-	float dPValue ) {
+bool SMotifMatch::Label( const CCoalesceMotifLibrary& Motifs, EType eMatchType, float dPenaltyGap,
+	float dPenaltyMismatch, float dPValue ) {
 
 	m_vecprstrdKnown.clear( );
-	return Motifs.GetKnown( m_iMotif, dPenaltyGap, dPenaltyMismatch, m_vecprstrdKnown, dPValue ); }
+	return Motifs.GetKnown( m_iMotif, eMatchType, dPenaltyGap, dPenaltyMismatch, m_vecprstrdKnown, dPValue ); }
 
 }

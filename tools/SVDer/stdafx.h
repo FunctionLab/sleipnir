@@ -19,35 +19,14 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#include "stdafx.h"
-#include "cmdline.h"
+#ifndef STDAFX_H
+#define STDAFX_H
 
-int main( int iArgs, char** aszArgs ) {
-	gengetopt_args_info	sArgs;
-	CPCL				PCL;
-	CDat				Dat;
-	int					iRet;
-	ofstream			ofsm;
+#include <fstream>
+using namespace std;
 
-	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
-		cmdline_parser_print_help( );
-		return 1; }
-	CMeta Meta( sArgs.verbosity_arg );
+#include "meta.h"
+#include "pcl.h"
+using namespace Sleipnir;
 
-	if( iRet = CPCL::Distance( sArgs.input_arg, sArgs.skip_arg, sArgs.neighbors_arg ? sArgs.distance_arg : NULL,
-		false, false, !!sArgs.autocorrelate_flag, sArgs.genes_arg, CMeta::GetNaN( ), sArgs.limit_arg, PCL,
-		Dat ) ) {
-		cmdline_parser_print_help( );
-		return iRet; }
-
-	PCL.Impute( sArgs.neighbors_arg, (float)sArgs.missing_arg, Dat );
-
-	if( sArgs.output_arg ) {
-		ofsm.open( sArgs.output_arg );
-		PCL.Save( ofsm );
-		ofsm.close( ); }
-	else {
-		PCL.Save( cout );
-		cout.flush( ); }
-
-	return 0; }
+#endif // STDAFX_H

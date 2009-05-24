@@ -189,6 +189,8 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 			iSkip, szSimilarityMeasure, fNormalize, fZScore, fAutocorrelate, szGeneFile ? szGeneFile : "",
 			dCutoff );
 		return 1; }
+	if( !szSimilarityMeasure )
+		return 0;
 
 	CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / PCL.GetExperiments( ) );
 	IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
@@ -830,7 +832,8 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 						dStd += d * d; }
 				if( iCount ) {
 					dAve /= iCount;
-					dStd = ( ( ( dStd / iCount ) - ( dAve * dAve ) ) <= 0 ) ? 1 : sqrt( dStd );
+					dStd = ( dStd / iCount ) - ( dAve * dAve );
+					dStd = ( dStd <= 0 ) ? 1 : sqrt( dStd );
 					for( j = 0; j < GetGenes( ); ++j )
 						if( !CMeta::IsNaN( d = Get( j, i ) ) )
 							Set( j, i, (float)( ( d - dAve ) / dStd ) ); } }
@@ -894,18 +897,19 @@ void CPCL::Impute( size_t iNeighbors, float dMinimumPresent, const CDat& DatSimi
 		if( ( vecdMissing[ i ] = (float)( GetExperiments( ) - iMissing ) / GetExperiments( ) ) >=
 			dMinimumPresent )
 			veciMissing.push_back( i ); }
-	vecsNeighbors.resize( veciMissing.size( ) );
-	for( i = 0; i < vecsNeighbors.size( ); ++i )
-		vecsNeighbors[ i ].Initialize( Get( veciMissing[ i ] ), GetExperiments( ), iNeighbors );
-	for( i = 0; i < veciMissing.size( ); ++i ) {
-		if( !( i % 100 ) )
-			g_CatSleipnir.info( "CPCL::Impute( %d, %g ) finding neighbors for gene %d/%d", iNeighbors,
-				dMinimumPresent, i, veciMissing.size( ) );
-		ad = Get( iOne = veciMissing[ i ] );
-		for( j = ( i + 1 ); j < veciMissing.size( ); ++j ) {
-			d = DatSimilarity.Get( iOne, iTwo = veciMissing[ j ] );
-			vecsNeighbors[ i ].Add( iTwo, d, Get( iTwo ) );
-			vecsNeighbors[ j ].Add( iOne, d, ad ); } }
+	if( iNeighbors ) {
+		vecsNeighbors.resize( veciMissing.size( ) );
+		for( i = 0; i < vecsNeighbors.size( ); ++i )
+			vecsNeighbors[ i ].Initialize( Get( veciMissing[ i ] ), GetExperiments( ), iNeighbors );
+		for( i = 0; i < veciMissing.size( ); ++i ) {
+			if( !( i % 100 ) )
+				g_CatSleipnir.info( "CPCL::Impute( %d, %g ) finding neighbors for gene %d/%d", iNeighbors,
+					dMinimumPresent, i, veciMissing.size( ) );
+			ad = Get( iOne = veciMissing[ i ] );
+			for( j = ( i + 1 ); j < veciMissing.size( ); ++j ) {
+				d = DatSimilarity.Get( iOne, iTwo = veciMissing[ j ] );
+				vecsNeighbors[ i ].Add( iTwo, d, Get( iTwo ) );
+				vecsNeighbors[ j ].Add( iOne, d, ad ); } } }
 
 	for( iOne = i = 0; i < GetGenes( ); ++i ) {
 		if( vecdMissing[ i ] < dMinimumPresent ) {

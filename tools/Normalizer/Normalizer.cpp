@@ -50,7 +50,7 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.input_arg )
 			ifsm.close( );
 
-		PCL.Normalize( );
+		PCL.Normalize( sArgs.zscore_flag ? CPCL::ENormalizeColumn : CPCL::ENormalizeRow );
 		if( sArgs.output_arg ) {
 			ofsm.open( sArgs.output_arg );
 			postm = &ofsm; }

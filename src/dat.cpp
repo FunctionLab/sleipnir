@@ -265,9 +265,11 @@ bool CDat::Open( const CDat& DatKnown, const vector<CGenes*>& vecpOther, const C
 	for( i = 0; i < DatKnown.GetGenes( ); ++i ) {
 		iOne = veciGenes[ i ];
 		for( j = ( i + 1 ); j < DatKnown.GetGenes( ); ++j ) {
-			d = DatKnown.Get( i, j );
-			if( CMeta::IsNaN( Get( iOne, iTwo = veciGenes[ j ] ) ) && ( fKnownNegatives == !d ) )
-				Set( iOne, iTwo, d ); } }
+			if( CMeta::IsNaN( Get( iOne, iTwo = veciGenes[ j ] ) ) ) {
+				if( CMeta::IsNaN( d = DatKnown.Get( i, j ) ) )
+					Set( iOne, iTwo, 0 );
+				else if( fKnownNegatives == !d )
+					Set( iOne, iTwo, d ); } } }
 
 	return true; }
 
@@ -958,6 +960,9 @@ size_t CDatImpl::GetGene( const std::string& strGene ) const {
  * \param fZScore
  * If true and the given file is a PCL, z-score similarity measures after pairwise calculation.
  * 
+ * \param fDuplicates
+ * If true, allow duplicates (DAT format only), ignoring all but the last value for each gene pair.
+ * 
  * \returns
  * True if CDat was successfully opened.
  * 
@@ -972,13 +977,13 @@ size_t CDatImpl::GetGene( const std::string& strGene ) const {
  * \see
  * Save | CPCL
  */
-bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore ) {
+bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore, bool fDuplicates ) {
 	ifstream	ifsm;
 	EFormat		eFormat;
 	size_t		i;
 
 	if( !szFile )
-		return Open( cin, EFormatText );
+		return Open( cin, EFormatText, (float)HUGE_VAL, fDuplicates );
 
 	for( i = 0; c_asFormats[ i ].m_szExtension; ++i )
 		if( !strcmp( szFile + strlen( szFile ) - strlen( c_asFormats[ i ].m_szExtension ),
@@ -997,7 +1002,7 @@ bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore ) 
 		ios_base::binary );
 	if( !ifsm.is_open( ) )
 		return false;
-	return Open( ifsm, eFormat, (float)HUGE_VAL, false, iSkip, fZScore ); }
+	return Open( ifsm, eFormat, (float)HUGE_VAL, fDuplicates, iSkip, fZScore ); }
 
 bool CDatImpl::OpenHelper( ) {
 	unsigned char*	pb;
