@@ -124,11 +124,10 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetSizeMinimum( sArgs.size_minimum_arg );
 	Coalesce.SetSizeMerge( sArgs.size_merge_arg );
 	Coalesce.SetSizeMaximum( sArgs.size_maximum_arg );
+	Coalesce.SetNormalize( !!sArgs.normalize_flag );
 	Coalesce.SetThreads( sArgs.threads_arg );
 	if( sArgs.output_arg )
 		Coalesce.SetDirectoryIntermediate( sArgs.output_arg );
-	if( sArgs.cache_arg )
-		Coalesce.SetSequenceCache( sArgs.cache_arg );
 
 	vecpFASTAs.resize( sArgs.inputs_num );
 	for( i = 0; i < vecpFASTAs.size( ); ++i ) {

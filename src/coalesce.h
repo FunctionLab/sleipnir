@@ -126,14 +126,6 @@ public:
 
 		m_iBasesPerMatch = iBasesPerMatch; }
 
-	const std::string& GetSequenceCache( ) const {
-
-		return m_strSequenceCache; }
-
-	void SetSequenceCache( const std::string& strSequenceCache ) {
-
-		m_strSequenceCache = strSequenceCache; }
-
 	float GetPValueMerge( ) const {
 
 		return m_dPValueMerge; }
@@ -229,6 +221,14 @@ public:
 	void ClearOutputIntermediate( ) {
 
 		m_vecpostm.clear( ); }
+
+	void SetNormalize( bool fNormalize ) {
+
+		m_fNormalize = fNormalize; }
+
+	bool GetNormalize( ) const {
+
+		return m_fNormalize; }
 };
 
 }

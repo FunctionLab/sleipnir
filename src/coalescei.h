@@ -473,12 +473,13 @@ protected:
 	};
 
 	static void* ThreadCombineMotif( void* );
+	static void Normalize( CPCL& );
 
 	CCoalesceImpl( ) : m_iK(7), m_dPValueCorrelation(0.05f), m_iBins(12), m_dZScoreCondition(0.5f),
 		m_dProbabilityGene(0.95f), m_dZScoreMotif(0.5f), m_pMotifs(NULL), m_fMotifs(false),
 		m_iBasesPerMatch(5000), m_dPValueMerge(0.05f), m_dCutoffMerge(2.5f), m_iSizeMinimum(5),
 		m_iThreads(1), m_iSizeMerge(100), m_iSizeMaximum(1000), m_dPValueCondition(0.05f),
-		m_dPValueMotif(0.05f) { }
+		m_dPValueMotif(0.05f), m_fNormalize(false) { }
 	virtual ~CCoalesceImpl( );
 
 	void Clear( );
@@ -508,8 +509,8 @@ protected:
 	std::string						m_strDirectoryIntermediate;
 	CCoalesceMotifLibrary*			m_pMotifs;
 	bool							m_fMotifs;
+	bool							m_fNormalize;
 	size_t							m_iBasesPerMatch;
-	std::string						m_strSequenceCache;
 	std::vector<SCoalesceDataset>	m_vecsDatasets;
 	std::vector<const CFASTA*>		m_vecpWiggles;
 	std::vector<std::ostream*>		m_vecpostm;

@@ -219,6 +219,34 @@ bool CCoalesceGroupHistograms::IsSimilar( const CCoalesceMotifLibrary* pMotifs, 
 
 // CCoalesce
 
+void CCoalesceImpl::Normalize( CPCL& PCL ) {
+	static const double	c_dLog2		= log( 2.0 );
+	vector<float>		vecdMedian;
+	vector<size_t>		veciSingle;
+	size_t				i, j, k;
+	float				d, dMedian;
+
+	for( i = 0; i < PCL.GetExperiments( ); ++i ) {
+		for( j = 0; j < PCL.GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = PCL.Get( j, i ) ) && ( d < 0 ) )
+				break;
+		if( j >= PCL.GetGenes( ) )
+			veciSingle.push_back( i ); }
+	if( veciSingle.empty( ) )
+		return;
+
+	vecdMedian.resize( veciSingle.size( ) );
+	for( i = 0; i < PCL.GetGenes( ); ++i ) {
+		for( j = k = 0; j < veciSingle.size( ); ++j )
+			if( !CMeta::IsNaN( d = PCL.Get( i, veciSingle[ j ] ) ) )
+				vecdMedian[ k++ ] = d;
+		if( !k )
+			continue;
+		dMedian = (float)CStatistics::Percentile( vecdMedian.begin( ), vecdMedian.begin( ) + k, 0.5 );
+		for( j = 0; j < veciSingle.size( ); ++j )
+			if( !CMeta::IsNaN( d = PCL.Get( i, k = veciSingle[ j ] ) ) )
+				PCL.Set( i, k, (float)( log( d / dMedian ) / c_dLog2 ) ); } }
+
 CCoalesceImpl::~CCoalesceImpl( ) {
 
 	Clear( ); }
@@ -370,6 +398,8 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 	for( i = 0; i < m_vecpWiggles.size( ); ++i )
 		sModifiers.Add( m_vecpWiggles[ i ] );
 	PCLCopy.Open( PCL );
+	if( GetNormalize( ) )
+		Normalize( PCLCopy );
 	if( !( InitializeDatasets( PCLCopy ) && InitializeGeneScores( PCLCopy, FASTA, veciPCL2FASTA, sModifiers,
 		GeneScores ) ) )
 		return false;

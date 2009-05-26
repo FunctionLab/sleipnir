@@ -75,8 +75,8 @@ option	"max_motifs"	x	"Maximum motifs to merge exactly"
 							int	default="2500"
 
 section "Miscellaneous"
-option	"cache"			e	"Cache file for sequence analysis"
-							string	typestr="filename"
+option	"normalize"		e	"Automatically detect/normalize single channel data"
+							flag	off
 option	"progressive"	O	"Generate output progressively"
 							flag	on
 
