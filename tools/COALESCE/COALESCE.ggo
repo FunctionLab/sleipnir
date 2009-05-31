@@ -53,7 +53,7 @@ option	"size_maximum"	Z	"Maximum motif count to consider a cluster saturated"
 							int	default="1000"
 
 section "Postprocessing Parameters"
-option	"postprocess"	j	"Input directory of clusters to postprocess"
+option	"postprocess"	j	"Input file/directory of clusters to postprocess"
 							string	typestr="directory"
 option	"known_motifs"	K	"File containing known motifs"
 							string	typestr="filename"

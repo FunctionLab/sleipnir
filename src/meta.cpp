@@ -337,7 +337,7 @@ void CMeta::Unmap( const unsigned char* pbData, HANDLE hndlMap, size_t iSize ) {
  * Current (approximate) memory usage in bytes.
  * 
  * \remarks
- * Disabled by default on Windows because it requires an extra library (psapi.lib); reads /proc/<pid>/statm
+ * Disabled by default on Windows because it requires an extra library (psapi.lib); reads /proc/&lt;pid>/statm
  * on Linux and returns the resident set size, which is better than nothing.
  */
 size_t CMeta::GetMemoryUsage( ) {

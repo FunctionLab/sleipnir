@@ -525,6 +525,21 @@ void CPCL::Save( std::ostream& ostm, const std::vector<size_t>* pveciGenes ) con
 			continue;
 		SaveGene( ostm, i, pveciGenes ? (*pveciGenes)[ i ] : -1 ); } }
 
+/*!
+ * \brief
+ * Save a PCL to the given binary stream.
+ * 
+ * \param ostm
+ * Stream into which PCL file is saved.
+ * 
+ * \remarks
+ * Most PCLs are saved as text files; binary files are more compact but very simple, encoding the size and
+ * gene/feature/experiment values as simple character strings and saving data using the underlying
+ * CFullMatrix::SaveBinary method.
+ * 
+ * \see
+ * OpenBinary
+ */
 void CPCL::SaveBinary( std::ostream& ostm ) const {
 	uint32_t	iTmp;
 	size_t		i;
@@ -545,6 +560,16 @@ void CPCL::SaveBinary( std::ostream& ostm ) const {
 	for( i = 0; i < GetGenes( ); ++i )
 		ostm.write( (const char*)Get( i ), GetExperiments( ) * sizeof(*Get( i )) ); }
 
+/*!
+ * \brief
+ * Load a PCL from the given binary stream.
+ * 
+ * \param istm
+ * Stream from which PCL file is loaded.
+ * 
+ * \see
+ * SaveBinary
+ */
 void CPCL::OpenBinary( std::istream& istm ) {
 	uint32_t	iTmp;
 	size_t		i;

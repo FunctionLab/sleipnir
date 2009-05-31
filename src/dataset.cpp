@@ -586,7 +586,7 @@ const string& CDataOverlayImpl::GetGene( size_t iGene ) const {
 
 	return m_pDataset->GetGene( iGene ); }
 
-void CDataOverlayImpl::Save( ostream& ostm, bool fBinary ) const {
+void CDataOverlayImpl::Save( std::ostream& ostm, bool fBinary ) const {
 
 	m_pDataset->Save( ostm, fBinary ); }
 

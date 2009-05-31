@@ -210,7 +210,45 @@ public:
 	 * Requested child must be less than IOntology::GetChildren.
 	 */
 	virtual size_t GetChild( size_t iTerm, size_t iChild ) const = 0;
+	/*!
+	 * \brief
+	 * Retrieves the parent term IDs of the requested term.
+	 * 
+	 * \param iTerm
+	 * Index of ontology term.
+	 * 
+	 * \param setiParents
+	 * Output set of parent term IDs.
+	 * 
+	 * \returns
+	 * True on success, false otherwise.
+	 * 
+	 * \remarks
+	 * Operates recursively, returning all nodes between iTerm and the ontology root.
+	 * 
+	 * \see
+	 * GetParents | GetParent
+	 */
 	virtual bool GetParents( size_t iTerm, std::set<size_t>& setiParents ) const = 0;
+	/*!
+	 * \brief
+	 * Retrieves the descendant term IDs of the requested term.
+	 * 
+	 * \param iTerm
+	 * Index of ontology term.
+	 * 
+	 * \param setiChildren
+	 * Output set of descendant term IDs.
+	 * 
+	 * \returns
+	 * True on success, false otherwise.
+	 * 
+	 * \remarks
+	 * Operates recursively, returning all nodes between iTerm and the ontology leaves.
+	 * 
+	 * \see
+	 * GetChildren | GetChild
+	 */
 	virtual bool GetChildren( size_t iTerm, std::set<size_t>& setiChildren ) const = 0;
 	/*!
 	 * \brief
@@ -685,10 +723,42 @@ public:
 
 		return m_vecstrSlims[ iSlim ]; }
 
+	/*!
+	 * \brief
+	 * Returns the number of ontology terms in the requested slim.
+	 * 
+	 * \param iSlim
+	 * ID of slim.
+	 * 
+	 * \returns
+	 * Number of ontology terms in the requested slim.
+	 * 
+	 * \see
+	 * GetNode
+	 */
 	size_t GetNodes( size_t iSlim ) const {
 
 		return m_vecveciTerms[ iSlim ].size( ); }
 
+	/*!
+	 * \brief
+	 * Returns the ontology term ID at the requested index in the requested slim.
+	 * 
+	 * \param iSlim
+	 * ID of slim.
+	 * 
+	 * \param iTerm
+	 * Index of ontology term to be returned.
+	 * 
+	 * \returns
+	 * Ontology term at the requested index within the given slim.
+	 * 
+	 * \remarks
+	 * No bounds checking is performed; iSlim must be less than GetSlims, and iTerm must be less than GetNodes.
+	 * 
+	 * \see
+	 * GetNodes
+	 */
 	size_t GetNode( size_t iSlim, size_t iTerm ) const {
 
 		return m_vecveciTerms[ iSlim ][ iTerm ]; }

@@ -62,6 +62,12 @@ inline char* _mktemp_s( char* szTemplate, size_t iSize ) {
 
 	return mktemp( szTemplate ); }
 
+inline size_t GetTickCount( ) {
+	struct timeval	sTime;
+
+	gettimeofday( &sTime, NULL );
+	return ( ( sTime.tv_sec * 1000000 ) + sTime.tv_usec ); }
+
 inline int sprintf_s( char* szDest, size_t iSize, const char* szFormat,
 	... ) {
 	va_list	valArgs;

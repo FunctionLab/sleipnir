@@ -286,9 +286,6 @@ public:
 	 * \remarks
 	 * A binary matrix is saved in row-major order; a text matrix is a simple tab-delimited file from which
 	 * matrix elements are read using >>.
-	 * 
-	 * \see
-	 * Open
 	 */
 	bool Save( std::ostream& ostm, bool fBinary, char cSeparator = '\t' ) const {
 
@@ -296,6 +293,23 @@ public:
 
 protected:
 
+	/*!
+	 * \brief
+	 * Saves a matrix to the given stream in binary format.
+	 * 
+	 * \param ostm
+	 * Stream to which matrix is saved.
+	 * 
+	 * \returns
+	 * True if matrix was saved successfully.
+	 * 
+	 * \remarks
+	 * Saved in row-major order, with a four-byte initial integer encoding the number of elements n followed
+	 * by rows of length n-1, n-2, and so forth.
+	 * 
+	 * \see
+	 * Save
+	 */
 	bool SaveBinary( std::ostream& ostm ) const {
 		size_t		i;
 		uint32_t	iSize;
@@ -308,6 +322,25 @@ protected:
 
 		return true; }
 
+	/*!
+	 * \brief
+	 * Saves a matrix to the given stream in either binary or tab-delimited text format.
+	 * 
+	 * \param ostm
+	 * Stream to which matrix is saved.
+	 * 
+	 * \param cSeparator
+	 * Delimiter saved between distinct values.
+	 * 
+	 * \returns
+	 * True if matrix was saved successfully.
+	 * 
+	 * \remarks
+	 * Saved in a simple tab-delimited file to which matrix elements are written using <<.
+	 * 
+	 * \see
+	 * Save
+	 */
 	bool SaveText( std::ostream& ostm, char cSeparator ) const {
 		size_t	i, j;
 

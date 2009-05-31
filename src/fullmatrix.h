@@ -431,6 +431,22 @@ public:
 
 		return true; }
 
+	/*!
+	 * \brief
+	 * Performs matrix multiplication by applying the given vector on the right of the current matrix.
+	 * 
+	 * \param vecRight
+	 * Vector by which current matrix is multiplied on the right.
+	 * 
+	 * \returns
+	 * True on success, false if the given vector is of an inappropriate size.
+	 * 
+	 * \remarks
+	 * vecRight must have the same number of entries as the current matrix has columns.
+	 * 
+	 * \see
+	 * Multiply
+	 */
 	bool Multiply( std::vector<tType>& vecRight ) {
 		size_t	i, j;
 
@@ -443,6 +459,26 @@ public:
 
 		return true; }
 
+	/*!
+	 * \brief
+	 * Performs matrix multiplication by applying the given matrix on the right of the current matrix.
+	 * 
+	 * \param MatRight
+	 * Matrix by which current matrix is multiplied on the right.
+	 * 
+	 * \param fTranspose
+	 * If true, transpose MatRight prior to multiplication.
+	 * 
+	 * \returns
+	 * True on success, false if MatRight is of inappropriate dimensions.
+	 * 
+	 * \remarks
+	 * If fTranspose is false, MatRight must have the same number of rows as the current matrix has
+	 * columns; if it is true, MatRight and the current matrix must have the same number of columns.
+	 * 
+	 * \see
+	 * Multiply
+	 */
 	bool Multiply( const CFullMatrix& MatRight, bool fTranspose = false ) {
 		CFullMatrix	MatTmp;
 		size_t		i, j, k, iRR, iRC;
@@ -461,6 +497,29 @@ public:
 
 		return Open( MatTmp ); }
 
+	/*!
+	 * \brief
+	 * Performs singular value decomposition of the current matrix.
+	 * 
+	 * \param MatU
+	 * Output U matrix of basis vectors.
+	 * 
+	 * \param MatV
+	 * Output V matrix of analysis vectors.
+	 * 
+	 * \param vecS
+	 * Output diagonal of Sigma matrix of singular values.
+	 * 
+	 * \returns
+	 * True on success, false if the matrix cannot be decomposed.
+	 * 
+	 * Outputs a singular value decomposition of the current matrix M such that M = U * Sigma * V'.
+	 * For a matrix of expression values, V behaves as eigengenes, U as eigenconditions, and S
+	 * quantifies the variability (or weight) attributable to each eigengene.
+	 * 
+	 * \remarks
+	 * Matrix must not contain any missing values.  Implementation courtesy of AJ Sedgewick.
+	 */
 	bool SVD( CFullMatrix<tType>& MatU, CFullMatrix<tType>& MatV, std::vector<tType>& vecS ) const {
 		size_t				i, j, k, iNU, iCT, iRT;
 		vector<tType>		vecE, vecWork;

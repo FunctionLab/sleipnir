@@ -31,6 +31,27 @@ struct SSortRCs {
 		return ( strOne.length( ) > strTwo.length( ) ); }
 };
 
+/*!
+ * \brief
+ * Constructs a new PST containing only a single strand of the current PST by finding the best alignment
+ * of contained sequences and their reverse complements.
+ * 
+ * \param dPenaltyGap
+ * Alignment score penalty for gaps.
+ * 
+ * \param dPenaltyMismatch
+ * Alignment score penalty for mismatches.
+ * 
+ * \param PSTOut
+ * Output PST constructed from the single stranded best alignment of strings in the current PST.
+ * 
+ * Constructs a new PST representing a single strand of the current PST.  Which strand is chosen arbitrarily;
+ * resolution occurs by tracing all possible strings stored in the current PST (i.e. paths from root to a leaf),
+ * aligning each string and its reverse complement with previous strings, and retaining only the best
+ * alignments.  This is a heuristic, but it correctly preserves most PSTs that are already single-stranded and
+ * resolves most reverse complement PSTs.  However, it should only be used for tasks like generating approximate
+ * PWMs from PSTs, since it can seriously diverge from the original PST in the worst cases.
+ */
 void CPST::RemoveRCs( float dPenaltyGap, float dPenaltyMismatch, CPST& PSTOut ) const {
 	size_t			i;
 	string			str;

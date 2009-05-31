@@ -372,12 +372,64 @@ public:
 
 		return true; }
 
+	/*!
+	 * \brief
+	 * Calculates Cohen's D, a modified z-score effect size measure based on unpooled variance.
+	 * 
+	 * \param vecOne
+	 * First array to be compared.
+	 * 
+	 * \param vecTwo
+	 * Second array to be compared.
+	 * 
+	 * \param pdAverage
+	 * If non-null, output average value of elements in both arrays.
+	 * 
+	 * \returns
+	 * Cohen's D effect size measurement of the difference between input arrays.
+	 * 
+	 * Calculate's Cohen's D, a z-score-like effect size measurement based on unpooled variance.
+	 * For two input arrays A1 and A2 with means m(Ai) and standard deviations s(Ai), the standard
+	 * z-score is (m(A1)-m(A2))/s(A1 u A2).  Cohen's D uses the unpooled variance 2(m(A1)-m(A2))/(s(A1)+s(A2)).
+	 * 
+	 * \see
+	 * ZScore
+	 */
 	template<class tType>
 	static double CohensD( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo,
 		double* pdAverage = NULL ) {
 
 		return CohensD( vecOne.begin( ), vecOne.end( ), vecTwo.begin( ), vecTwo.end( ), pdAverage ); }
 
+	/*!
+	 * \brief
+	 * Calculates Cohen's D, a modified z-score effect size measure based on unpooled variance.
+	 * 
+	 * \param BeginOne
+	 * First element of the first array to be compared.
+	 * 
+	 * \param EndOne
+	 * End of last element of the first array to be compared.
+	 * 
+	 * \param BeginTwo
+	 * First element of the second array to be compared.
+	 * 
+	 * \param EndTwo
+	 * End of last element of the second array to be compared.
+	 * 
+	 * \param pdAverage
+	 * If non-null, output average value of elements in both arrays.
+	 * 
+	 * \returns
+	 * Cohen's D effect size measurement of the difference between input arrays.
+	 * 
+	 * Calculate's Cohen's D, a z-score-like effect size measurement based on unpooled variance.
+	 * For two input arrays A1 and A2 with means m(Ai) and standard deviations s(Ai), the standard
+	 * z-score is (m(A1)-m(A2))/s(A1 u A2).  Cohen's D uses the unpooled variance 2(m(A1)-m(A2))/(s(A1)+s(A2)).
+	 * 
+	 * \see
+	 * ZScore
+	 */
 	template<class tType>
 	static double CohensD( const tType BeginOne, const tType EndOne, const tType BeginTwo, const tType EndTwo,
 		double* pdAverage = NULL ) {
@@ -399,11 +451,58 @@ public:
 		return ( dStd ? ( ( dAveOne - dAveTwo ) / dStd ) :
 			( ( dAveOne == dAveTwo ) ? 0 : DBL_MAX ) ); }
 
+	/*!
+	 * \brief
+	 * Calculates the z-score effect size measure.
+	 * 
+	 * \param vecOne
+	 * First array to be compared.
+	 * 
+	 * \param vecTwo
+	 * Second array to be compared.
+	 * 
+	 * \returns
+	 * Z-score effect size measurement of the difference between input arrays.
+	 * 
+	 * For two input arrays A1 and A2 with means m(Ai) and standard deviations s(Ai), the standard
+	 * z-score is (m(A1)-m(A2))/s(A1 u A2).
+	 * 
+	 * \see
+	 * CohensD
+	 */
 	template<class tType>
 	static double ZScore( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo ) {
 
 		return ZScore( vecOne.begin( ), vecOne.end( ), vecTwo.begin( ), vecTwo.end( ) ); }
 
+	/*!
+	 * \brief
+	 * Calculates the z-score effect size measure.
+	 * 
+	 * \param BeginOne
+	 * First element of the first array to be compared.
+	 * 
+	 * \param EndOne
+	 * End of last element of the first array to be compared.
+	 * 
+	 * \param BeginTwo
+	 * First element of the second array to be compared.
+	 * 
+	 * \param EndTwo
+	 * End of last element of the second array to be compared.
+	 * 
+	 * \param pdAverage
+	 * If non-null, output average value of elements in both arrays.
+	 * 
+	 * \returns
+	 * Z-score effect size measurement of the difference between input arrays.
+	 * 
+	 * For two input arrays A1 and A2 with means m(Ai) and standard deviations s(Ai), the standard
+	 * z-score is (m(A1)-m(A2))/s(A1 u A2).
+	 * 
+	 * \see
+	 * CohensD
+	 */
 	template<class tType>
 	static double ZScore( const tType BeginOne, const tType EndOne, const tType BeginTwo, const tType EndTwo,
 		double* pdAverage = NULL ) {
@@ -422,10 +521,55 @@ public:
 		return ( dStd ? ( ( dAveOne - dAve ) / dStd ) :
 			( ( dAveOne == dAve ) ? 0 : DBL_MAX ) ); }
 
+	/*!
+	 * \brief
+	 * Returns the z-test p-value of the given z-score and element count.
+	 * 
+	 * \param dZScore
+	 * Z-score to be converted into a p-value.
+	 * 
+	 * \param iN
+	 * Number of elements used to generate the given z-score.
+	 * 
+	 * \returns
+	 * P-value equivalent to the given z-score and element count.
+	 * 
+	 * \remarks
+	 * Equivalent to 1 - normcdf( 0, sqrt( iN ), |dZScore| )
+	 * 
+	 * \see
+	 * ZScore
+	 */
 	static double ZTest( double dZScore, size_t iN ) {
 
 		return ( 1 - Normal01CDF( fabs( dZScore ) * sqrt( (double)iN ) ) ); }
 
+	/*!
+	 * \brief
+	 * Returns the root-mean-square error distance between two input arrays.
+	 * 
+	 * \param BeginOne
+	 * First element of the first array to be compared.
+	 * 
+	 * \param EndOne
+	 * End of last element of the first array to be compared.
+	 * 
+	 * \param BeginTwo
+	 * First element of the second array to be compared.
+	 * 
+	 * \param EndTwo
+	 * End of last element of the second array to be compared.
+	 * 
+	 * \returns
+	 * Root-mean-square error between the two input arrays.
+	 * 
+	 * Calculates the root-mean-square error (RMSE) between two arrays, equal to
+	 * sqrt( sum( (A1[i] - A2[i])^2 ) / min(|A1|, |A2|) ).
+	 * 
+	 * \remarks
+	 * If the two input arrays are of different lengths m and n, only min(m, n) elements of either
+	 * array are compared.
+	 */
 	template<class tType>
 	static double RootMeanSquareError( tType BeginOne, tType EndOne, tType BeginTwo, tType EndTwo ) {
 		tType	CurOne, CurTwo;
@@ -440,12 +584,70 @@ public:
 
 		return ( iN ? sqrt( dRet / iN ) : 0 ); }
 
+	/*!
+	 * \brief
+	 * Returns the Jensen-Shannon divergence between two discrete probability distributions
+	 * represented as arrays.
+	 * 
+	 * \param BeginOne
+	 * First element of the first array to be compared.
+	 * 
+	 * \param EndOne
+	 * End of last element of the first array to be compared.
+	 * 
+	 * \param BeginTwo
+	 * First element of the second array to be compared.
+	 * 
+	 * \param EndTwo
+	 * End of last element of the second array to be compared.
+	 * 
+	 * \returns
+	 * Jensen-Shannon divergence between the given probability distributions in bits.
+	 * 
+	 * The Jensen-Shannon or JS-divergence between two discrete probability distributions A1 and A2
+	 * is a symmetrized Kullback-Leibler divergence defined as ( KL(A1, A2) + KL(A2, A1 ) / 2.
+	 * 
+	 * \remarks
+	 * The elements of each array should sum to one, and the two arrays should be of the same length.
+	 * 
+	 * \see
+	 * KullbackLeiblerDivergence
+	 */
 	template<class tType>
 	static double JensenShannonDivergence( tType BeginOne, tType EndOne, tType BeginTwo, tType EndTwo ) {
 
 		return ( ( KullbackLeiblerDivergence( BeginOne, EndOne, BeginTwo, EndTwo ) +
 			KullbackLeiblerDivergence( BeginTwo, EndTwo, BeginOne, EndOne ) ) / 2 ); }
 
+	/*!
+	 * \brief
+	 * Returns the Kullback-Leibler divergence between two discrete probability distributions
+	 * represented as arrays.
+	 * 
+	 * \param BeginOne
+	 * First element of the first array to be compared.
+	 * 
+	 * \param EndOne
+	 * End of last element of the first array to be compared.
+	 * 
+	 * \param BeginTwo
+	 * First element of the second array to be compared.
+	 * 
+	 * \param EndTwo
+	 * End of last element of the second array to be compared.
+	 * 
+	 * \returns
+	 * Kullback-Leibler divergence between the given probability distributions in bits.
+	 * 
+	 * The Kullback-Leibler or KL-divergence between two discrete probability distributions A1 and A2
+	 * is defined as sum( A1[i] * log( A1[i]/A2[i] ) ).
+	 * 
+	 * \remarks
+	 * The elements of each array should sum to one, and the two arrays should be of the same length.
+	 * 
+	 * \see
+	 * JensenShannonDivergence
+	 */
 	template<class tType>
 	static double KullbackLeiblerDivergence( tType BeginOne, tType EndOne, tType BeginTwo, tType EndTwo ) {
 		double	dRet;
@@ -535,6 +737,25 @@ public:
 		dT = dR * sqrt( dF / ( 1 - ( dR * dR ) ) );
 		return IncompleteBeta( dF / 2, 0.5, dF / ( dF + ( dT * dT ) ) ); }
 
+	/*!
+	 * \brief
+	 * Returns the p-value corresponding to a D-score obtained from a Kolmogorov-Smirnov test.
+	 * 
+	 * \param dD
+	 * D-value obtained from a Kolmogorov-Smirnov test.
+	 * 
+	 * \param iM
+	 * Number of elements in first tested array.
+	 * 
+	 * \param iN
+	 * Number of elements in second tested array.
+	 * 
+	 * \returns
+	 * P-value equivalent to the given D-score and element count.
+	 * 
+	 * \see
+	 * CMeasureKolmogorovSmirnov
+	 */
 	static double PValueKolmogorovSmirnov( double dD, size_t iM, size_t iN ) {
 		static const float	c_dEpsilon1	= 0.001f;
 		static const float	c_dEpsilon2	= 1e-8f;
@@ -639,6 +860,25 @@ public:
 
 		return IncompleteBeta( 0.5 * dDegFree, 0.5, dDegFree / ( dDegFree + ( dT * dT ) ) ); }
 
+	/*!
+	 * \brief
+	 * Return the p-value of an f-test between the two given array statistics to determine equality of variance.
+	 * 
+	 * \param dVarianceOne
+	 * Variance of the first sample.
+	 * 
+	 * \param iNOne
+	 * Number of elements in the first sample.
+	 * 
+	 * \param dVarianceTwo
+	 * Variance of the second sample.
+	 * 
+	 * \param iNTwo
+	 * Number of elements in the second sample.
+	 * 
+	 * \returns
+	 * P-value of F = dVarianceOne / dVarianceTwo.
+	 */
 	static double FTest( double dVarianceOne, size_t iNOne, double dVarianceTwo, size_t iNTwo ) {
 		double	dRet, dF;
 		size_t	iDF1, iDF2;
@@ -843,8 +1083,52 @@ public:
 
 		return CStatisticsImpl::Normal01CDF( dX ); }
 
+	/*!
+	 * \brief
+	 * Inverse CDF of a standard normal distribution.
+	 * 
+	 * \param dX
+	 * Sample point.
+	 * 
+	 * \returns
+	 * Value of dY, for dX = NCDF(dY) and NCDF a normal CDF with mean 0, variance 1.
+	 */
 	static double InverseNormal01CDF( double dX );
 
+	/*!
+	 * \brief
+	 * CDF of a multivariate normal distribution with the given parameters at the given point.
+	 * 
+	 * \param vecdX
+	 * Sample point.
+	 * 
+	 * \param vecdMu
+	 * Mean of normal.
+	 * 
+	 * \param MatSigmaCholesky
+	 * Cholesky decomposition of covariance matrix of normal.
+	 * 
+	 * \param iN
+	 * Number of elements used to calculate sample point.
+	 * 
+	 * \param dMaxError
+	 * Performance parameter; maximum error tolerance of return value.
+	 * 
+	 * \param dMaxCI
+	 * Performance parameter; confidence interval of return value.
+	 * 
+	 * \param iMaxIterations
+	 * Performance parameter; maximum iteratios to calculate return value.
+	 * 
+	 * \returns
+	 * NCDF((vecdX - vecdMu) / MatSigma), for NCDF a normal CDF with mean 0, standard deviation 1.
+	 * 
+	 * \remarks
+	 * Implementation courtesy of Numerical Recipes.
+	 * 
+	 * \see
+	 * CholeskyDecomposition
+	 */
 	static double MultivariateNormalCDF( const std::vector<float>& vecdX, const std::vector<float>& vecdMu,
 		const CDataMatrix& MatSigmaCholesky, size_t iN = 1, float dMaxError = 0.01, float dMaxCI = 0.99,
 		size_t iMaxIterations = 300 ) {

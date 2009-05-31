@@ -143,7 +143,7 @@ bool SCoalesceDataset::CalculateCovariance( const CPCL& PCL ) {
 
 // SMotifMatch
 
-bool SMotifMatch::Open( istream& istm, CCoalesceMotifLibrary& Motifs ) {
+bool SMotifMatch::Open( std::istream& istm, CCoalesceMotifLibrary& Motifs ) {
 	string			strLine;
 	vector<string>	vecstrLine;
 	size_t			i;

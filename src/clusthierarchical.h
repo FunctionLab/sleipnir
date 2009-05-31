@@ -137,6 +137,17 @@ public:
 	const CHierarchy& Get( bool fRight ) const {
 
 		return *( fRight ? m_pRight : m_pLeft ); }
+
+	/*!
+	 * \brief
+	 * Returns the number of leaves under the current node.
+	 * 
+	 * \returns
+	 * Number of leaves under the current node.
+	 */
+	size_t GetWeight( ) const {
+
+		return m_iWeight; }
 };
 
 /*!

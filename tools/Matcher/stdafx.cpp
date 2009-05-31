@@ -22,26 +22,26 @@
 #include "stdafx.h"
 
 /*!
- * \page MIer MIer
+ * \page Matcher Matcher
  * 
- * MIer calculates the mutual information (or other similarity measure) between pairs of input datasets.
- * This can be used to approximate how much information is shared between two experimental datasets or
- * how similar two predicted functional relationship networks are.
+ * Matcher calculates the similarity between pairs of input datasets using a variety of similarity/distance
+ * measures.  It is similar to \ref MIer, but makes no assumption that the input datasets cover the same
+ * gene sets (or even organisms), and it optimized to quickly assess subsets of the input datasets.
  * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage
  * 
  * \code
- * MIer <data.dab>*
+ * Matcher -d <data1_dir> <data2.dab>*
  * \endcode
  * 
- * Compute pairwise mutual information scores for each pair of datasets in \c data.dab and output them to
- * standard output.
+ * Compute pairwise similarities between each pair of datasets from the directory of DAT/DAB files
+ * \c data1_dir and the individual DAT/DAB files \c data2.dab, outputting a table of scores to standard output.
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
- * \include MIer/MIer.ggo
+ * \include Matcher/Matcher.ggo
  * 
  * <table><tr>
  *	<th>Flag</th>
@@ -52,46 +52,37 @@
  * 	<td>None</td>
  * 	<td>None</td>
  * 	<td>DAT/DAB files</td>
- * 	<td>Datasets for which pairwise mutual information (or other similarity measure) will be calculated.</td>
+ * 	<td>Datasets for which pairwise similarities will be calculated relative to the datasets in \c -i.</td>
+ * </tr><tr>
+ *	<td>-i</td>
+ *	<td>None</td>
+ *	<td>Directory</td>
+ *	<td>Directory of DAT/DAB files for which pairwise similarities will be calculated relative to the
+ *		datasets given on the command line.</td>
  * </tr><tr>
  *	<td>-d</td>
- *	<td>mi</td>
- *	<td>mi, pearson, quickpear, euclidean, kendalls, kolm-smir, hypergeom, innerprod, bininnerprod</td>
+ *	<td>kolm-smir</td>
+ *	<td>pearson, quickpear, euclidean, kendalls, kolm-smir, hypergeom, innerprod, bininnerprod, mi</td>
  *	<td>Similarity measure to be used for dataset comparisons.</td>
  * </tr><tr>
  *	<td>-z</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, assume that all missing gene pairs in all datasets have a value of 0 (i.e. the first bin).</td>
+ *	<td>0</td>
+ *	<td>Integer</td>
+ *	<td>Minimum number of data points to subsample from each dataset.</td>
  * </tr><tr>
  *	<td>-Z</td>
- *	<td>None</td>
- *	<td>Tab-delimited text file</td>
- *	<td>If given, argument must be a tab-delimited text file containing two columns, the first node
- *		IDs (see \ref BNCreator) and the second bin numbers (zero indexed).  For each node ID present in
- *		this file, missing values will be substituted with the given bin number.</td>
- * </tr><tr>
- *	<td>-R</td>
- *	<td>on</td>
- *	<td>Flag</td>
- *	<td>If on, assign missing values randomly; this generally results in much better approximations of
- *		mutual information.</td>
+ *	<td>1000000000</td>
+ *	<td>Integer</td>
+ *	<td>Maximum number of data points to subsample from each dataset.</td>
  * </tr><tr>
  *	<td>-t</td>
  *	<td>on</td>
  *	<td>Flag</td>
- *	<td>If on, format output as a tab-delimited table; otherwise, format as one pair per line.</td>
- * </tr><tr>
- *	<td>-y</td>
- *	<td>-1</td>
- *	<td>Integer</td>
- *	<td>If nonnegative, process only pairs of datasets containing (and beginning with) the given dataset
- *		index.  This can be used to parallelize many mutual information calculations by running
- *		processes with different \c -y values.</td>
+ *	<td>If on, format output as a two-dimensional table; otherwise, format as a list of pairs.</td>
  * </tr><tr>
  *	<td>-m</td>
  *	<td>off</td>
  *	<td>Flag</td>
- *	<td>If given, memory map the input files when possible.  DAT and PCL inputs cannot be memmapped.</td>
+ *	<td>If given, memory map the input files when possible.</td>
  * </tr></table>
  */

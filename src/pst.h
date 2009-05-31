@@ -292,6 +292,24 @@ public:
 
 		return ( ( m_iDepth = CPSTImpl::Open( strPST, m_sRoot ) ) != -1 ); }
 
+	/*!
+	 * \brief
+	 * Retrieves a PWM approximately equivalent to the current PST.
+	 * 
+	 * \param MatPWM
+	 * Output PWM approximating the current PST.
+	 * 
+	 * \param szSymbols
+	 * String of symbols mapped to the indices of the current PST.
+	 * 
+	 * \remarks
+	 * szSymbols must be of the same length as the current PST's arity; it is typically "ACGT".
+	 * GetPWM is most useful if the PST first has its reverse complements removed.  Technically
+	 * returns a PSSM or PFM of counts, not a PWM of continuous probabilities.
+	 * 
+	 * \see
+	 * RemoveRCs
+	 */
 	bool GetPWM( CFullMatrix<uint16_t>& MatPWM, const char* szSymbols ) const {
 		std::map<unsigned char, size_t>					mapciChars;
 		std::vector<size_t>								veciOrder;
@@ -313,12 +331,29 @@ public:
 		CMeta::Permute( MatPWM.Get( ), veciOrder );
 		return true; }
 
+	/*!
+	 * \brief
+	 * Counts the number of possible discrete strings encoded by the PST.
+	 * 
+	 * \returns
+	 * Number of distinct strings encoded by the PST.
+	 */
 	size_t Integrate( ) const {
 		size_t	iRet;
 
 		CPSTImpl::Integrate( m_sRoot, iRet = 0 );
 		return iRet; }
 
+	/*!
+	 * \brief
+	 * Simplifies the current PST by removing all subtrees occurring at relatively low frequency.
+	 * 
+	 * \returns
+	 * True if simplification succeeded, false otherwise.
+	 * 
+	 * \remarks
+	 * Removes all subtrees with frequency below 1/arity.
+	 */
 	bool Simplify( ) {
 
 		return CPSTImpl::Simplify( 1.0f / m_iArity, m_sRoot ); }

@@ -52,6 +52,16 @@ public:
 	static bool Open( std::istream& istm, std::vector<SMotifMatch>& vecsMotifs,
 		CCoalesceMotifLibrary* pMotifs = NULL );
 
+	/*!
+	 * \brief
+	 * Returns the reverse complement of the given sequence.
+	 * 
+	 * \param strKMer
+	 * K-mer sequence to be reverse complemented.
+	 * 
+	 * \returns
+	 * Reverse complement of the given sequence.
+	 */
 	static std::string GetReverseComplement( const std::string& strKMer ) {
 
 		return CCoalesceMotifLibraryImpl::GetReverseComplement( strKMer ); }
@@ -75,6 +85,16 @@ public:
 	bool GetKnown( uint32_t iMotif, SMotifMatch::EType eMatchType, float dPenaltyGap, float dPenaltyMismatch,
 		std::vector<std::pair<std::string, float> >& vecprstrdKnown, float dPValue = 1 ) const;
 
+	/*!
+	 * \brief
+	 * Returns the number of known TF motifs.
+	 * 
+	 * \returns
+	 * Number of known TF motifs.
+	 * 
+	 * \see
+	 * OpenKnown | GetKnown
+	 */
 	size_t GetKnowns( ) const {
 
 		return m_sKnowns.GetSize( ); }
@@ -192,6 +212,29 @@ public:
 			m_mappriiiMerged[ priiMerged ] = iRet;
 		return iRet; }
 
+	/*!
+	 * \brief
+	 * Returns a motif ID corresponding to the given ID with only one strand of reverse complements retained.
+	 * 
+	 * \param iMotif
+	 * Motif ID from which reverse complements should be removed.
+	 * 
+	 * \param dPenaltyGap
+	 * Alignment score penalty for gaps.
+	 * 
+	 * \param dPenaltyMismatch
+	 * Alignment score penalty for mismatches.
+	 * 
+	 * \returns
+	 * Motif ID corresponding to a single strand of the given ID.
+	 * 
+	 * Generates a motif ID corresponding to a single strand of the given ID's motif.  For k-mer motif IDs,
+	 * this does nothing.  For reverse complement IDs, a k-mer ID is returned corresponding to one of the
+	 * two strands.  For PST IDs, a new PST is constructed using CPST::RemoveRCs.
+	 * 
+	 * \see
+	 * CPST::RemoveRCs
+	 */
 	uint32_t RemoveRCs( uint32_t iMotif, float dPenaltyGap, float dPenaltyMismatch ) {
 
 		switch( GetType( iMotif ) ) {
@@ -204,6 +247,28 @@ public:
 
 		return iMotif; }
 
+	/*!
+	 * \brief
+	 * Returns an alignment edit distance score for the given two motif IDs.
+	 * 
+	 * \param iOne
+	 * First motif ID to be aligned.
+	 * 
+	 * \param iTwo
+	 * Second motif ID to be aligned.
+	 * 
+	 * \param dCutoff
+	 * Edit distance threshhold beyond which alignment will be discarded.
+	 * 
+	 * \returns
+	 * Minimum edit distance for alignment of the two given motifs IDs, or dCutoff if no better alignment is
+	 * found.
+	 * 
+	 * Aligns the two given motifs and returns the minimum edit distance.  K-mer motifs are aligned as
+	 * simple strings.  Reverse complement motifs are aligned in all four possible arrangements and the
+	 * minimum edit distance returned.  PSTs are similarly aligned in all possible configurations and the
+	 * best scoring alignment returned.
+	 */
 	float Align( uint32_t iOne, uint32_t iTwo, float dCutoff ) {
 
 		switch( GetType( iOne ) ) {

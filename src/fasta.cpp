@@ -217,8 +217,8 @@ bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>* pvecsSequences,
 
 	return true; }
 
-bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>& vecsSequences, size_t iOffset,
-	const string& strSequence, SFASTASequence& sSequence ) const {
+bool CFASTAImpl::Get( size_t iGene, std::vector<SFASTASequence>& vecsSequences, size_t iOffset,
+	const std::string& strSequence, SFASTASequence& sSequence ) const {
 	size_t	iBegin, iEnd;
 
 	if( strSequence.empty( ) ) {

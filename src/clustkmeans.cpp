@@ -120,6 +120,35 @@ bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure
 
 	return true; }
 
+/*!
+ * \brief
+ * Cluster a set of elements into k groups using the given pairwise similarities.
+ * 
+ * \param MatSimilarities
+ * Matrix of precalculated pairwise similarities between elements to be clustered.
+ * 
+ * \param iK
+ * Number of clusters to generate.
+ * 
+ * \param vecsClusters
+ * Output cluster IDs for each gene.
+ * 
+ * \returns
+ * True if clustering succeeded.
+ * 
+ * Performs k-means clustering on the given data using the specified similarites and number of
+ * clusters.  The indices of each element's final cluster are indicated in the output vector.  During
+ * k-means clustering, K centers are initially chosen at random.  Each gene is assigned to the center
+ * most similar to it, and the centers are moved to the mean of their assigned genes.  This process is
+ * iterated until no gene assignments change.  This places each gene in exactly one cluster.
+ * 
+ * \remarks
+ * The size of MatSimilarities must be at least iK; on successful return, the size of vecsClusters will be equal
+ * to the size of MatSimilarities.
+ * 
+ * \see
+ * CClustHierarchical::Cluster
+ */
 bool CClustKMeans::Cluster( const CDistanceMatrix& MatSimilarities, size_t iK,
 	vector<uint16_t>& vecsClusters ) {
 	size_t			i, j, iOne, iIteration, iChanged, iState;

@@ -44,8 +44,8 @@ CDatabaselet::~CDatabaselet( ) {
 	pthread_mutex_destroy( m_pmutx );
 	delete m_pmutx; }
 
-bool CDatabaselet::Open( const string& strFile, const vector<string>& vecstrGenes, uint32_t iGenes,
-	uint32_t iDatasets ) {
+bool CDatabaselet::Open( const std::string& strFile, const std::vector<std::string>& vecstrGenes,
+	uint32_t iGenes, uint32_t iDatasets ) {
 	uint32_t	iSize;
 	size_t		i;
 	char*		acFiller;
@@ -206,7 +206,7 @@ bool CDatabaselet::Get( size_t iGene, const vector<size_t>& veciGenes, vector<un
 
 	return true; }
 
-bool CDatabaselet::Open( const string& strFile ) {
+bool CDatabaselet::Open( const std::string& strFile ) {
 	uint32_t	iSize;
 	char*		acBuffer;
 	char*		pc;
@@ -237,8 +237,8 @@ bool CDatabaselet::Open( const string& strFile ) {
 // CDatabase
 ///////////////////////////////////////////////////////////////////////////////
 
-bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strInputDirectory,
-	const IBayesNet* pBayesNet, const string& strOutputDirectory, size_t iFiles ) {
+bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::string& strInputDirectory,
+	const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles ) {
 	vector<string>	vecstrNodes, vecstrSubset;
 	size_t			i, j;
 	char			acNumber[ 16 ];
@@ -276,7 +276,8 @@ bool CDatabase::Open( const vector<string>& vecstrGenes, const string& strInputD
 
 	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes ); }
 
-bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const vector<string>& vecstrFiles ) {
+bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
+	const std::vector<std::string>& vecstrFiles ) {
 	size_t			i, j, iOne, iTwo, iOutBlock, iOutBase, iOutOffset, iInBlock, iInBase, iInOffset;
 	vector<size_t>	veciGenes;
 	float			d;
@@ -332,7 +333,7 @@ bool CDatabaseImpl::Open( const vector<string>& vecstrGenes, const vector<string
 
 	return true; }
 
-bool CDatabase::Open( const string& strInputDirectory ) {
+bool CDatabase::Open( const std::string& strInputDirectory ) {
 	size_t			i, j;
 	vector<string>	vecstrFiles;
 	string			strFile;

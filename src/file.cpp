@@ -24,17 +24,7 @@
 
 namespace Sleipnir {
 
-/*!
- * \brief
- * Return the next tab-delimited token from the given input stream.
- * 
- * \param istm
- * Input stream from which the token is read.
- * 
- * \returns
- * String containing all characters up to (but excluding) the next tab or newline.
- */
-string CFile::OpenToken( std::istream& istm ) {
+string CFile::OpenToken( istream& istm ) {
 	string	strRet;
 	char	c;
 

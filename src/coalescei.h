@@ -284,6 +284,7 @@ public:
 	bool Add( size_t, const CCoalesceMotifLibrary&, const SFASTASequence&, SCoalesceModifierCache&, uint32_t,
 		std::vector<float>&, std::vector<size_t>& );
 	void Subtract( const SMotifMatch&, size_t );
+	bool CalculateWeights( );
 
 	float* Get( size_t iType, ESubsequence eSubsequence, size_t iGene, bool fSet = false ) const {
 		float*	ad;
@@ -394,10 +395,11 @@ protected:
 				m_vecvecValues[ iType ][ iSubtype ] = ad; }
 		m_iMotifs = iTarget; }
 
-	size_t			m_iGenes;
-	size_t			m_iMotifs;
-	size_t			m_iCapacity;
-	pthread_mutex_t	m_mutx;
+	size_t								m_iGenes;
+	size_t								m_iMotifs;
+	size_t								m_iCapacity;
+	pthread_mutex_t						m_mutx;
+	std::vector<std::vector<float> >	m_vecvecdWeights;
 };
 
 // One histogram per motif atom

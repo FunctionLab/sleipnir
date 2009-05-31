@@ -805,7 +805,14 @@ MIPS:
  * \section sec_history Version History
  * 
  * - <a href="sleipnir-2.0.tar.gz">2.0</a>, ***-***-09 <br>
+ * Added \ref SVDer - thanks to AJ Sedgewick! <br>
  * Fixed \ref Answerer usage in the documentation example - thanks to Jim Costello! <br>
+ * Added \ref COALESCE and \ref Synthesizer as described in Huttenhower et al. 2009. <br>
+ * Added \ref PCLPlotter and \ref Matcher. <br>
+ * Update version dependencies for SMILE, SVD Light. <br>
+ * Update VS2008 build system. <br>
+ * Add a variety of new matrix operations and statistical functions. <br>
+ * Many, many bug fixes and added features!
  * 
  * - <a href="sleipnir-1.1.tar.gz">1.1</a>, 06-02-08 <br>
  * Added \ref BNs2Txt and \ref Mat2Txt tools for dumping binary Bayesian classifiers and matrices. <br>

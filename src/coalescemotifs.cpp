@@ -31,8 +31,8 @@ namespace Sleipnir {
 const char	CCoalesceMotifLibraryImpl::c_szBases[]			= "ACGT";
 const char	CCoalesceMotifLibraryImpl::c_szComplements[]	= "TGCA";
 
-void CCoalesceMotifLibraryImpl::SKnowns::Match( const vector<float>& vecdMotif, SMotifMatch::EType eMatchType,
-	map<string, float>& mapstrdKnown ) const {
+void CCoalesceMotifLibraryImpl::SKnowns::Match( const std::vector<float>& vecdMotif,
+	SMotifMatch::EType eMatchType, std::map<std::string, float>& mapstrdKnown ) const {
 	static const size_t					c_iOverlap	= 5;
 	map<string, TVecPr>::const_iterator	iterKnown;
 	size_t								i, j, k, iMin, iMax, iTests;
@@ -90,7 +90,32 @@ void CCoalesceMotifLibraryImpl::SKnowns::Match( const vector<float>& vecdMotif, 
 		if( dMin != FLT_MAX )
 			mapstrdKnown[ iterKnown->first ] = dMin * max( 1, iTests ); } }
 
-bool CCoalesceMotifLibrary::Open( istream& istm, vector<SMotifMatch>& vecsMotifs,
+/*!
+ * \brief
+ * Retrieves a set of motifs from the given input text stream.
+ * 
+ * \param istm
+ * Input text stream from which motifs are loaded.
+ * 
+ * \param vecsMotifs
+ * Output set of motifs loaded from the given stream.
+ * 
+ * \param pMotifs
+ * If non-null, motif library used to construct motifs from the given stream.
+ * 
+ * \returns
+ * True if motifs were successfully loaded, false otherwise.
+ * 
+ * Opens motifs in the given input stream, starting at its current position and stopping once non-motif
+ * data is encountered.
+ * 
+ * \remarks
+ * If pMotifs is null, motifs in the given stream will be skipped but not saved.
+ * 
+ * \see
+ * CCoalesceCluster::Open
+ */
+bool CCoalesceMotifLibrary::Open( std::istream& istm, std::vector<SMotifMatch>& vecsMotifs,
 	CCoalesceMotifLibrary* pMotifs ) {
 	string	strBuffer;
 	size_t	i;
@@ -224,6 +249,19 @@ CPST* CCoalesceMotifLibraryImpl::CreatePST( uint32_t& iMotif ) {
 	m_vecpPSTs.push_back( pRet = new CPST( strlen( c_szBases ) ) );
 	return pRet; }
 
+/*!
+ * \brief
+ * Returns a motif ID constructed from the given string representation.
+ * 
+ * \param strMotif
+ * String representation of the desired motif ID.
+ * 
+ * \returns
+ * Motif ID corresponding to the given string representation.
+ * 
+ * \see
+ * GetMotif
+ */
 uint32_t CCoalesceMotifLibrary::Open( const std::string& strMotif ) {
 	uint32_t	iMotif;
 	CPST*		pPST;
@@ -485,6 +523,33 @@ uint32_t CCoalesceMotifLibraryImpl::RemoveRCs( const CPST& PST, float dPenaltyGa
 	PST.RemoveRCs( dPenaltyGap, dPenaltyMismatch, *pPST );
 	return iRet; }
 
+/*!
+ * \brief
+ * Returns a string encoding of the requested motif ID's PWM, with appropriate reverse complement resolution
+ * and low-information motif removal.
+ * 
+ * \param iMotif
+ * Motif ID to be encoded.
+ * 
+ * \param dCutoffPWMs
+ * Minimum information threshhold (in bits) for a PWM to be returned.
+ * 
+ * \param dPenaltyGap
+ * Alignment score penalty for gaps.
+ * 
+ * \param dPenaltyMismatch
+ * Alignment score penalty for mismatches.
+ * 
+ * \param fNoRCs
+ * If true, resolve the given motif into a single strand without reverse complements before generating PWM.
+ * 
+ * \returns
+ * String encoding of the requested motif (tab delimited, one base per line, one position per column), or an
+ * empty string if the given threshholds are not met.
+ * 
+ * \see
+ * RemoveRCs
+ */
 string CCoalesceMotifLibrary::GetPWM( uint32_t iMotif, float dCutoffPWMs, float dPenaltyGap,
 	float dPenaltyMismatch, bool fNoRCs ) const {
 	CFullMatrix<uint16_t>	MatPWM;
@@ -545,12 +610,45 @@ bool CCoalesceMotifLibraryImpl::GetPWM( uint32_t iMotif, float dCutoffPWMs, floa
 
 	return true; }
 
+/*!
+ * \brief
+ * Simplifies the given PST motif ID.
+ * 
+ * \param iMotif
+ * ID of the PST motif to be simplified.
+ * 
+ * \returns
+ * True if the given motif ID represents a PST and has been successfully simplified.
+ * 
+ * \see
+ * CPST::Simplify
+ */
 bool CCoalesceMotifLibrary::Simplify( uint32_t iMotif ) const {
 
 	return ( ( GetType( iMotif ) == ETypePST ) ? CCoalesceMotifLibraryImpl::GetPST( iMotif )->Simplify( ) :
 		false ); }
 
-bool CCoalesceMotifLibrary::OpenKnown( istream& istm ) {
+/*!
+ * \brief
+ * Opens a set of known TF motifs in the given text file input stream.
+ * 
+ * \param istm
+ * Input stream from which known TF motifs are read.
+ * 
+ * \returns
+ * True if known motifs were opened successfully.
+ * 
+ * Opens a set of known TF consensus binding sequences stored as PWMs in a text file.  Each line of the file
+ * should be tab-delimited, with the first column containing an arbitrary TF ID and the remaining 4n columns
+ * containing PWM entries for the n bases of the TF's motif.  TF to PWM mappings can be many-to-one, i.e. a
+ * motif can have multiple known conensus binding sequences on different lines.  PWMs are stored as continuously
+ * valued per-base probabilities in ACGT order, such that one TF line might be:
+ * <tt>GATA 0 0 1 0 1 0 0 0 0 0 0 1 1 0 0 0</tt>.
+ * 
+ * \see
+ * GetKnown | GetKnowns
+ */
+bool CCoalesceMotifLibrary::OpenKnown( std::istream& istm ) {
 	char*			szBuffer;
 	vector<string>	vecstrLine;
 
@@ -572,8 +670,40 @@ bool CCoalesceMotifLibrary::OpenKnown( istream& istm ) {
 
 	return true; }
 
+/*!
+ * \brief
+ * Retrieves all known TF motifs matching a given motif beyond a given threshhold.
+ * 
+ * \param iMotif
+ * Motif ID to be matched against known TF motifs.
+ * 
+ * \param eMatchType
+ * Type of match to be performed: correlation, rmse, etc.
+ * 
+ * \param dPenaltyGap
+ * Alignment score penalty for gaps.
+ * 
+ * \param dPenaltyMismatch
+ * Alignment score penalty for mismatches.
+ * 
+ * \param vecprstrdKnown
+ * Output vector pairing known TF IDs with their match scores, which must be below dPValue.
+ * 
+ * \param dPValue
+ * P-value (or other score) threshhold below which known TFs must match.
+ * 
+ * \returns
+ * True if the retrieval succeeded (possibly with no matches), false otherwise.
+ * 
+ * Retrieves all known motifs matching a given novel motif below a given threshhold.  This is usually
+ * a Bonferroni-corrected p-value of correlation between the known and novel motif PWMs, but other measures
+ * can be used.  For known motifs with multiple known PWMs, only the best matching PWM is used.
+ * 
+ * \see
+ * OpenKnown
+ */
 bool CCoalesceMotifLibrary::GetKnown( uint32_t iMotif, SMotifMatch::EType eMatchType, float dPenaltyGap,
-	float dPenaltyMismatch, vector<pair<string, float> >& vecprstrdKnown, float dPValue ) const {
+	float dPenaltyMismatch, std::vector<std::pair<std::string, float> >& vecprstrdKnown, float dPValue ) const {
 	size_t							i, j, k, iSum;
 	vector<float>					vecdMotif;
 	CFullMatrix<uint16_t>			MatPWM;

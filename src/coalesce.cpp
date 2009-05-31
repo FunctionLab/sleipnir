@@ -23,6 +23,7 @@
 #include "coalesce.h"
 #include "fasta.h"
 #include "pcl.h"
+#include "halfmatrix.h"
 
 namespace Sleipnir {
 
@@ -108,8 +109,9 @@ bool CCoalesceGeneScores::Add( size_t iGene, const CCoalesceMotifLibrary& Motifs
 			iMotif, vecdScores, veciLengths, iOffset, sModifiers ) )
 			return false;
 	for( iSubsequence = ESubsequenceBegin; iSubsequence < vecdScores.size( ); ++iSubsequence )
-		if( ( iLength = veciLengths[ iSubsequence ] ) && ( dScore = vecdScores[ iSubsequence ] ) )
-			Set( iType, (ESubsequence)iSubsequence, iGene, iMotif, dScore / iLength );
+		if( ( iLength = veciLengths[ iSubsequence ] ) && ( dScore = vecdScores[ iSubsequence ] ) ) {
+//			dScore *= m_vecvecdWeights[ iType ][ iGene ];
+			Set( iType, (ESubsequence)iSubsequence, iGene, iMotif, dScore / iLength ); }
 
 	return true; }
 
@@ -138,6 +140,81 @@ void CCoalesceGeneScores::Subtract( const SMotifMatch& sMotif, size_t iGene ) {
 	if( ( ( iType = GetType( sMotif.m_strType ) ) != -1 ) &&
 		( adScores = Get( iType, sMotif.m_eSubsequence, iGene ) ) )
 		adScores[ sMotif.m_iMotif ] -= sMotif.m_dAverage; }
+
+bool CCoalesceGeneScores::CalculateWeights( ) {
+	static const float		c_dCutoff		= 0.95f;
+	static const size_t		c_iSubsample	= 100;
+	size_t					i, j, k, iBin, iType;
+	CMeasureQuickPearson	MeasurePearson;
+	uint32_t				iMotif;
+	vector<float>			vecdSampleOne, vecdSampleTwo;
+	vector<size_t>			veciBins, veciCounts;
+	float					dOne, dTwo, dMaxOne, dMaxTwo;
+
+	g_CatSleipnir.notice( "CCoalesceGeneScores::CalculateWeights( ) calculating %d types for %d genes",
+		GetTypes( ), m_iGenes );
+	veciBins.resize( m_iGenes );
+	veciCounts.resize( m_iGenes );
+	vecdSampleOne.resize( c_iSubsample );
+	vecdSampleTwo.resize( c_iSubsample );
+	m_vecvecdWeights.resize( GetTypes( ) );
+	for( iType = 0; iType < m_vecvecdWeights.size( ); ++iType ) {
+		vector<float>&	vecdWeights	= m_vecvecdWeights[ iType ];
+
+		vecdWeights.resize( m_iGenes );
+		for( i = 0; i < veciBins.size( ); ++i )
+			veciBins[ i ] = i;
+		for( i = 0; i < m_iGenes; ++i ) {
+			const float*	adOne	= Get( iType, ESubsequenceTotal, i );
+
+			if( !( i % 1000 ) )
+				g_CatSleipnir.info( "CCoalesceGeneScores::CalculateWeights( ) calculating type %d/%d, gene %d/%d",
+					iType, m_vecvecdWeights.size( ), i, m_iGenes );
+			if( !adOne )
+				continue;
+			for( j = ( i + 1 ); j < m_iGenes; ++j ) {
+				const float*	adTwo	= Get( iType, ESubsequenceTotal, j );
+
+				if( !adTwo )
+					continue;
+				dMaxOne = dMaxTwo = 0;
+				for( iMotif = k = 0; ( k < vecdSampleOne.size( ) ) && ( iMotif < m_iMotifs ); ++iMotif ) {
+					dOne = adOne[ iMotif ];
+					dTwo = adTwo[ iMotif ];
+					if( dOne || dTwo ) {
+						if( dOne > dMaxOne )
+							dMaxOne = dOne;
+						if( dTwo > dMaxTwo )
+							dMaxTwo = dTwo;
+						vecdSampleOne[ k ] = dOne;
+						vecdSampleTwo[ k++ ] = dTwo; } }
+				if( !k || !dMaxOne || !dMaxTwo || ( MeasurePearson.Measure( &vecdSampleOne[ 0 ], k,
+					&vecdSampleTwo[ 0 ], k, IMeasure::EMapNone, NULL, NULL ) < c_dCutoff ) )
+					continue;
+
+				iBin = veciBins[ j ];
+				for( k = 0; k < veciBins.size( ); ++k )
+					if( veciBins[ k ] == iBin )
+						veciBins[ k ] = veciBins[ i ]; } }
+		fill( veciCounts.begin( ), veciCounts.end( ), 0 );
+		for( i = 0; i < veciBins.size( ); ++i )
+			veciCounts[ veciBins[ i ] ]++;
+		for( i = 0; i < veciBins.size( ); ++i )
+			vecdWeights[ i ] = 1.0f / veciCounts[ veciBins[ i ] ];
+
+		for( i = 0; i < m_iGenes; ++i ) {
+			if( vecdWeights[ i ] == 1 )
+				continue;
+			g_CatSleipnir.info( "CCoalesceGeneScores::CalculateWeights( ) weighting gene %d, type %d to %g",
+				i, iType, vecdWeights[ i ] );
+			for( j = ESubsequenceBegin; j < ESubsequenceEnd; ++j ) {
+				float*	adOne	= Get( iType, (ESubsequence)j, i );
+
+				if( adOne )
+					for( iMotif = 0; iMotif < GetMotifs( ); ++iMotif )
+						adOne[ iMotif ] *= vecdWeights[ i ]; } } }
+
+	return true; }
 
 // CCoalesceGroupHistograms
 
@@ -383,8 +460,40 @@ bool CCoalesceImpl::InitializeGeneScores( const CPCL& PCL, const CFASTA& FASTA, 
 	if( !GeneScores.GetMotifs( ) )
 		Clear( );
 
-	return true; }
+// Disabled because it doesn't really work very well at all.
+	return true; } // GeneScores.CalculateWeights( ); }
 
+/*!
+ * \brief
+ * Executes the COALESCE regulatory module prediction algorithm on the given gene expression (and,
+ * optionally, sequence) data.
+ * 
+ * \param PCL
+ * PCL file containing genes and expression values with which clustering is performed.
+ * 
+ * \param FASTA
+ * FASTA file (possibly empty) containing gene sequences used for motif prediction during clustering.
+ * 
+ * \param vecClusters
+ * Output vector of regulatory modules predicted by COALESCE.
+ * 
+ * \returns
+ * True if clustering succeeded (possibly without predicting any modules), false otherwise.
+ * 
+ * Executes the COALESCE algorithm on the given data, predicting zero or more regulatory modules (expression
+ * biclusters plus putative sequence motifs).  Each predicted module consists of one or more genes, one or
+ * more conditions of the given PCL in which those genes are coregulated, and zero or more sequence motifs
+ * over- or under-enriched (and thus potentially causal) in the module's genes.  For more details, see
+ * CCoalesce and Huttenhower et al. 2009.
+ * 
+ * \remarks
+ * Cluster interacts heavily with CCoalesceCluster, which performs the major steps of condition, motif, and
+ * gene selection.  Cluster itself contains mainly the skeleton of the algorithm, including initialization
+ * and convergence detection.
+ * 
+ * \see
+ * CCoalesce | CCoalesceCluster
+ */
 bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceCluster>& vecClusters ) {
 	static const float			c_dEpsilon	= 1e-10f;
 	CPCL						PCLCopy;

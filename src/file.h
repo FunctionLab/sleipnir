@@ -48,7 +48,6 @@
 		(strFile) = psEntry->d_name;
 #endif // _MSC_VER
 
-
 #include <iostream>
 #include <string>
 
@@ -83,7 +82,7 @@ public:
 	 * \param szInput
 	 * String from which the token is read.
 	 * 
-	 * \param pcEnd
+	 * \param ppcEnd
 	 * If non-null, outputs a pointer to the end of the token in the given string.
 	 * 
 	 * \returns

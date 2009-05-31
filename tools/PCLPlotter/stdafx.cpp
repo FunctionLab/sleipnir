@@ -22,42 +22,52 @@
 #include "stdafx.h"
 
 /*!
- * \page Clusters2Dab Clusters2Dab
+ * \page PCLPlotter PCLPlotter
  * 
- * Clusters2Dab converts the output of many common non-hierarchical clustering algorithms into pairwise
- * scores based on the frequency or confidence of coclustering.  For example, if two genes are scored by
- * the number of times they cocluster over many random seeds, then high scores will be indicative of a
- * stronger pairwise relationship than low scores.
+ * PCLPlotter produces summary statistics from a PCL file and is optimized to show the mean expression values
+ * for subsets (biclusters) of genes and conditions.  It can also provide accompanying bicluster statistics
+ * for associated FASTA files containing gene sequences.
  * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage
  * 
  * \code
- * Clusters2Dab -i <clusters.txt> -o <coclusters.dab>
+ * PCLPlotter -i <data.pcl>
  * \endcode
  * 
- * Create a new DAT/DAB file \c coclusters.dab in which each gene pair is given a score of one if they
- * cluster together in the hard clustering \c clusters.txt and a score of zero if they do not.
+ * Produce a summary of the mean and standard deviation expression for each condition in \c data.pcl.  If a
+ * bicluster is present, member genes should be marked with an initial \c * in their NAME (not ID) column, and
+ * member conditions should be marked with an initial \c *.
  * 
  * \code
- * Clusters2Dab -t samba -i <clusters.txt> -o <coclusters.dab>
+ * PCLPlotter -i <cluster.pcl> -b <genome.pcl>
  * \endcode
  * 
- * Create a new DAT/DAB file \c coclusters.dab in which each gene pair is given a score equal to the
- * confidence of their strongest shared SAMBA bicluster in \c clusters.txt if one exists or zero if it
- * does not.
+ * Produce a summary of the mean and standard deviation expression for each condition in \c cluster.pcl and
+ * \c genome.pcl, which must contain the same conditions.  Genes in \c cluster.pcl are considered to be
+ * members of the bicluster, and member conditions should be marked with an initial \c *.
  * 
  * \code
- * Clusters2Dab -t param -i <clusters.txt> -o <coclusters.dab>
+ * PCLPlotter -i <data.pcl> -g <genes.txt>
  * \endcode
  * 
- * Create a new DAT/DAB file \c coclusters.dab in which each gene pair is given a score equal to the
- * maximum parameter value in \c clusters.txt at which they cocluster.
+ * Produce a summary of the mean and standard deviation expression for each condition in \c data.pcl.
+ * Genes in \c genes.txt are considered to be members of the bicluster, and member conditions should be marked
+ * with an initial \c *.
+ * 
+ * \code
+ * PCLPlotter -i <data.pcl> -f <data.fasta>
+ * \endcode
+ * 
+ * Produce a summary of the mean and standard deviation expression for each condition in \c data.pcl, as well
+ * as an HMM summarizing sequence characteristics.  If a bicluster is present, member genes should be marked
+ * with an initial \c * in their NAME (not ID) column, and member conditions should be marked with an initial
+ * \c *.
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
- * \include Clusters2Dab/Clusters2Dab.ggo
+ * \include PCLPlotter/PCLPlotter.ggo
  * 
  * <table><tr>
  *	<th>Flag</th>
@@ -67,27 +77,44 @@
  * </tr><tr>
  *	<td>-i</td>
  *	<td>stdin</td>
- *	<td>Text file</td>
- *	<td>Input cluster file in one of the text formats supported by \c -t.</td>
+ *	<td>PCL file</td>
+ *	<td>Input PCL file from which bicluster summary information is extracted.  In the absence of \c -b or \c -g
+ *		options, genes and conditions in the bicluster should be marked with a \c * at the beginning of their
+ *		NAME and label, respectively.</td>
  * </tr><tr>
- *	<td>-o</td>
- *	<td>stdout</td>
- *	<td>DAT/DAB file</td>
- *	<td>Output DAT/DAB file containing pairwise scores appropriate to the input cluster type.</td>
+ *	<td>-f</td>
+ *	<td>None</td>
+ *	<td>FASTA file</td>
+ *	<td>If given, input FASTA sequence file from which cluster sequence summary information is extracted.</td>
  * </tr><tr>
- *	<td>-t</td>
- *	<td>list</td>
- *	<td>list, samba, param, or fuzzy</td>
- *	<td>Type of cluster file provided to \c -i.  \c list assumes that each line contains a gene ID and a
- *		cluster index separated by a tab, \c samba reads biclustering output from the EXPANDER program by
- *		Sharan, Shamir, et al, \c param reads hard clustering output from EXPANDER, and \c fuzzy reads
- *		output from the Aerie fuzzy k-means program by Gasch, Eisen, et al.</td>
+ *	<td>-b</td>
+ *	<td>None</td>
+ *	<td>PCL file</td>
+ *	<td>If given, input PCL file from which non-bicluster summary information is extracted; all genes in \c -i
+ *		are considered to be in the bicluster, and conditions should be marked with a \c *.  PCL files for \c -i
+ *		and \c -b should contain exactly the same conditions.</td>
  * </tr><tr>
- *	<td>-c</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, calculate pairwise scores solely by cocluster frequency (counts); otherwise, pairwise scores
- *		are weighted by cluster confidence.</td>
+ *	<td>-g</td>
+ *	<td>None</td>
+ *	<td>Text gene list</td>
+ *	<td>If given, input text file from which biclustered genes are read; other genes in \c -i are considered to
+ *		be out of the bicluster.</td>
+ * </tr><tr>
+ *	<td>-m</td>
+ *	<td>None</td>
+ *	<td>Text motif list</td>
+ *	<td>If given, input text file from which known motifs are read.  In conjunction with \c -f, frequencies
+ *		of each motif in gene sequences in and out of the bicluster will be provided.</td>
+ * </tr><tr>
+ *	<td>-M</td>
+ *	<td>7</td>
+ *	<td>Integer (base pairs)</td>
+ *	<td>Default number of base pairs per motif; largely unrelated to the contents of \c -m.</td>
+ * </tr><tr>
+ *	<td>-k</td>
+ *	<td>0</td>
+ *	<td>Integer</td>
+ *	<td>Degree of HMM used to provide summary statistics of sequences given in \c -f.</td>
  * </tr><tr>
  *	<td>-s</td>
  *	<td>2</td>

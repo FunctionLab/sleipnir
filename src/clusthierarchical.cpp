@@ -67,7 +67,8 @@ CHierarchyImpl::~CHierarchyImpl( ) {
 	if( m_pRight )
 		delete m_pRight; }
 
-bool CHierarchyImpl::Save( std::ostream& ostm, size_t iNode, const vector<string>* pvecstrGenes ) const {
+bool CHierarchyImpl::Save( std::ostream& ostm, size_t iNode,
+	const std::vector<std::string>* pvecstrGenes ) const {
 
 	if( IsGene( ) )
 		return false;
@@ -80,7 +81,7 @@ bool CHierarchyImpl::Save( std::ostream& ostm, size_t iNode, const vector<string
 	return ( ((const CHierarchyImpl*)m_pLeft)->Save( ostm, iNode, pvecstrGenes ) ||
 		((const CHierarchyImpl*)m_pRight)->Save( ostm, iNode, pvecstrGenes ) ); }
 
-string CHierarchyImpl::GetSave( const vector<string>* pvecstrGenes ) const {
+string CHierarchyImpl::GetSave( const std::vector<std::string>* pvecstrGenes ) const {
 	string	strRet;
 	char	achBuf[ 16 ];
 

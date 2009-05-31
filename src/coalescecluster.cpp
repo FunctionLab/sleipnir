@@ -35,6 +35,51 @@ const char	CCoalesceClusterImpl::c_szMotifs[]		= "_motifs.txt";
 const char	CCoalesceClusterImpl::c_szGenes[]		= "Genes";
 const char	CCoalesceClusterImpl::c_szConditions[]	= "Conditions";
 
+/*!
+ * \brief
+ * Randomly initializes a new cluster from the given PCL by selecting a pair of correlated genes and
+ * a surrounding seed of additional genes.
+ * 
+ * \param PCL
+ * Expression data from which cluster is seeded.
+ * 
+ * \param Pot
+ * Cluster initialized to the inverse of the current cluster, i.e. all genes not in the new cluster.
+ * 
+ * \param vecsDatasets
+ * Vector of dataset block structure to be used by the new cluster for subsequent selection of
+ * significant conditions.
+ * 
+ * \param setpriiSeeds
+ * Set of previously failed seed pairs to be excluded for cluster initialization.
+ * 
+ * \param iPairs
+ * Maximum number of gene pairs to be sampled for seed pair discovery.
+ * 
+ * \param dPValue
+ * P-value threshhold for significant correlation.
+ * 
+ * \param iThreads
+ * Maximum number of simultaneous threads for gene pair sampling.
+ * 
+ * \returns
+ * True if the cluster was successfully initialized; false if no appropriate seed could be found.
+ * 
+ * \throws <exception class>
+ * Description of criteria for throwing this exception.
+ * 
+ * A new cluster is initialized by selecting the most highly correlated gene pair from a random sample
+ * of the input PCL that is below the significance threshhold.  The expression centroid of this pair is
+ * then calculated, and all other genes significantly correlated with this centroid are subsequently
+ * added.  Genes not selected for inclusion are added to the inverse cluster instead.  All significance
+ * tests are appropriately Bonferroni corrected for multiple hypothesis testing.
+ * 
+ * \remarks
+ * Initial seed pair is the most highly correlated and significant gene pair sampled from the input PCL;
+ * other genes significantly correlated with the resulting centroid are added subsequently to initialize
+ * the cluster.  The provided dataset blocks are used for all subsequent condition significance tests
+ * and covariance calculations in which the cluster is involved.
+ */
 bool CCoalesceCluster::Initialize( const CPCL& PCL, CCoalesceCluster& Pot,
 	const std::vector<SCoalesceDataset>& vecsDatasets, std::set<std::pair<size_t, size_t> >& setpriiSeeds,
 	size_t iPairs, float dPValue, size_t iThreads ) {
@@ -157,6 +202,56 @@ bool CCoalesceClusterImpl::AddCorrelatedGenes( const CPCL& PCL, CCoalesceCluster
 
 	return true; }
 
+/*!
+ * \brief
+ * Updates the given motif score histograms based on the genes in the current cluster using the
+ * provided per-gene motif scores.
+ * 
+ * \param GeneScores
+ * Per-gene motif scores from which score histograms are calculated.
+ * 
+ * \param HistogramsCluster
+ * Motif score histograms based on genes in the current cluster.
+ * 
+ * \param pHistogramsPot
+ * If non-null, motif score histograms based on genes not in the current cluster.
+ * 
+ * COALESCE finds significant motifs for each cluster by determining which motifs have statistically
+ * different distributions in the cluster versus the genomic background.  To do this, one histogram of
+ * per-gene frequencies is constructed per motif; these histograms are in turn based on the frequencies
+ * with which each motif appears in each gene.  For example, suppose we have three genes \c G1 through \c G3
+ * and three motifs \c M1 through \c M3.  Based each gene's sequence, we determine that the motifs have
+ * the following frequencies:
+ * \code
+ * Motif G1 G2 G3
+ * M1    1  1  2
+ * M2    2  0  2
+ * M3    1  2  0
+ * \endcode
+ * If only genes \c G1 and \c G2 are in the cluster, we build a frequency histogram as follows:
+ * \code
+ * Motif 0  1  2
+ * M1    0  2  0
+ * M2    1  0  1
+ * M3    0  1  1
+ * \endcode
+ * That is, in the cluster, there are zero genes within which \c M1 occurs zero times, two in which it
+ * occurs once, zero in which it occurs twice, and so forth.  Each row (i.e. each motif's total histogram)
+ * must sum to the number of genes in the cluster, and the resulting inverse histograms for genes not
+ * in the cluster (i.e. \c G3) is:
+ * \code
+ * Motif 0  1  2
+ * M1    0  0  1
+ * M2    0  0  1
+ * M3    1  0  0
+ * \endcode
+ * In COALESCE, additional complexity arises since motif frequencies are continuous (and must thus be
+ * discretized in the histograms) and are calculated on a per-subsequence-type basis (giving rise to
+ * multiple histograms per cluster).
+ * 
+ * \see
+ * Snapshot
+ */
 void CCoalesceCluster::CalculateHistograms( const CCoalesceGeneScores& GeneScores,
 	CCoalesceGroupHistograms& HistogramsCluster, CCoalesceGroupHistograms* pHistogramsPot ) const {
 	set<size_t>::const_iterator	iterGene;
@@ -175,6 +270,23 @@ void CCoalesceCluster::CalculateHistograms( const CCoalesceGeneScores& GeneScore
 			if( pHistogramsPot )
 				pHistogramsPot->Add( GeneScores, m_veciPrevGenes[ i ], false ); } }
 
+/*!
+ * \brief
+ * Subtract the average expression value for each condition in the cluster from each gene in the cluster.
+ * 
+ * \param PCL
+ * Expression matrix from which cluster averages are subtracted.
+ * 
+ * \param Pot
+ * Inverse of genes in the cluster; used to determine the difference of the cluster's average from
+ * the existing per-condition average.
+ * 
+ * \remarks
+ * This effectively masks the average effect of each condition in the cluster from the contained genes'
+ * expression values so that the cluster won't be re-found later.  Actually subtracts the difference
+ * between the cluster average and the overall average from each condition, since the overall average
+ * need not be zero.
+ */
 void CCoalesceCluster::Subtract( CPCL& PCL, const CCoalesceCluster& Pot ) const {
 	set<size_t>::const_iterator	iterGene, iterDataset;
 	size_t						i, iCondition;
@@ -192,6 +304,18 @@ void CCoalesceCluster::Subtract( CPCL& PCL, const CCoalesceCluster& Pot ) const 
 							( GetGenes( ).size( ) + Pot.GetGenes( ).size( ) );
 					PCL.Get( *iterGene, iCondition ) -= d - dAve; } } }
 
+/*!
+ * \brief
+ * Subtract the average frequency of each motif in the cluster from the score for that motif in
+ * each gene in the cluster.
+ * 
+ * \param GeneScores
+ * Per-gene motif frequency scores from which the cluster averages are subtracted.
+ * 
+ * \remarks
+ * This effectively masks the average effect of each motif in the cluster from the contained genes'
+ * sequences so that they won't be re-found later.
+ */
 void CCoalesceCluster::Subtract( CCoalesceGeneScores& GeneScores ) const {
 	set<size_t>::const_iterator			iterGene;
 	set<SMotifMatch>::const_iterator	iterMotif;
@@ -320,6 +444,37 @@ void* CCoalesceClusterImpl::ThreadSelectCondition( void* pData ) {
 
 	return NULL; }
 
+/*!
+ * \brief
+ * Performs feature selection to include significant expression conditions in a converging cluster.
+ * 
+ * \param PCL
+ * Expression dataset from which significant datasets are selected.
+ * 
+ * \param Pot
+ * Inverse of current cluster used for genomic background calculations.
+ * 
+ * \param iThreads
+ * Maximum number of simultaneous threads for condition significance calculations.
+ * 
+ * \param dPValue
+ * P-value threshhold for condition significance.
+ * 
+ * \param dZScore
+ * Z-score effect size threshhold for condition significance.
+ * 
+ * \returns
+ * True if zero or more conditions were selected successfully, false otherwise.
+ * 
+ * Selects zero or more conditions in which the cluster's current gene set is differentially expressed.
+ * That is, in each selected condition, the average expression of genes in the cluster must differ from
+ * the genomic background with at least the given significance and effect size threshholds.  If dataset
+ * blocks were given at cluster initialization time, all conditions in the block are added (or not)
+ * simultaneously using a multivariate significance test.
+ * 
+ * \see
+ * SelectMotifs | SelectGenes
+ */
 bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const CCoalesceCluster& Pot, size_t iThreads,
 	float dPValue, float dZScore ) {
 	vector<pthread_t>				vecpthdThreads;
@@ -376,6 +531,49 @@ void* CCoalesceClusterImpl::ThreadSelectMotif( void* pData ) {
 
 	return NULL; }
 
+/*!
+ * \brief
+ * Performs feature selection to include significant sequence motifs in a converging cluster.
+ * 
+ * \param HistsCluster
+ * Precalculated histogram of motif frequencies using genes in the cluster.
+ * 
+ * \param HistsPot
+ * Precalculated histogram of motif frequencies using genes not in the cluster.
+ * 
+ * \param dPValue
+ * P-value threshhold for motif significance.
+ * 
+ * \param dZScore
+ * Z-score effect size threshhold for motif significance.
+ * 
+ * \param iMaxMotifs
+ * Maximum number of motifs associated with a cluster; if more motifs are present, no new selection is
+ * performed.
+ * 
+ * \param iThreads
+ * Maximum number of simultaneous threads for motif significance calculations.
+ * 
+ * \param pMotifs
+ * If non-null, motif library with which motifs are managed.
+ * 
+ * \returns
+ * True if zero or more significant motifs were selected; false otherwise.
+ * 
+ * Selects zero or more motifs differentially over- or under-enriched in the genes currently in a
+ * converging cluster.  Motifs are selected on a per-sequence-subtype basis, so a motif may be enriched,
+ * for example, in an upstream but not downstream flank.  All motifs managed by the given library are tested
+ * for significance, including all k-mers, reverse complements, and any currently constructed PSTs.
+ * Significance testing is performed by z-scoring the within versus without frequency histograms, and all
+ * p-values are Bonferroni corrected.
+ * 
+ * \remarks
+ * No motif selection can be performed if pMotifs is null; this will not generate an error, but only
+ * expression biclustering (i.e. conditions and genes) will be performed.
+ * 
+ * \see
+ * CalculateHistograms | SelectConditions | SelectGenes
+ */
 bool CCoalesceCluster::SelectMotifs( const CCoalesceGroupHistograms& HistsCluster,
 	const CCoalesceGroupHistograms& HistsPot, float dPValue, float dZScore, size_t iMaxMotifs,
 	size_t iThreads, const CCoalesceMotifLibrary* pMotifs ) {
@@ -487,6 +685,62 @@ void* CCoalesceClusterImpl::ThreadSignificantGene( void* pData ) {
 
 	return NULL; }
 
+/*!
+ * \brief
+ * Add and remove (im)probable genes to a converging cluster using Bayesian integration based on the
+ * currently selected expression conditions and sequence motifs.
+ * 
+ * \param PCL
+ * PCL from which genes are selected.
+ * 
+ * \param GeneScores
+ * Per-gene motif scores used to determine each gene's probability based on motif frequencies.
+ * 
+ * \param HistsCluster
+ * Precalculated histogram of motif frequencies using genes in the cluster.
+ * 
+ * \param HistsPot
+ * Precalculated histogram of motif frequencies using genes not in the cluster.
+ * 
+ * \param iMinimum
+ * Minimum number of genes for which data must be present for a given motif for it to contribute to gene
+ * probabilities.
+ * 
+ * \param iThreads
+ * Maximum number of simultaneous threads for gene probability calculations.
+ * 
+ * \param Pot
+ * Inverse of genes in the cluster; used to determine genomic background probabilities.
+ * 
+ * \param dProbability
+ * Probability threshhold above which genes are included in the cluster.
+ * 
+ * \param pMotifs
+ * If non-null, motif library managing significant sequence motifs.
+ * 
+ * \returns
+ * True if zero or more genes were included in the cluster, false otherwise.
+ * 
+ * Adds and removes genes to/from a converging cluster based on the currently selected significant
+ * expression conditions and sequence motifs.  The probability of gene membership in the cluster given
+ * some data, <tt>P(g in C|D)</tt>, is calculated using Bayes rule as <tt>P(D|g in C)P(g in C)/(P(D|g in C) +
+ * P(D|g notin C))</tt>.  All data features are assumed to be independent, such that <tt>P(D|g in C)</tt> is
+ * a product over each significant condition/motif of A) the probability of the gene's expression value being
+ * drawn from the cluster's distribution of expression values or B) the probability of its frequency for some
+ * motif being drawn from the cluster's distribution of frequencies for that motif.  Distributions are assumed
+ * to be normal, and frequencies are Laplace smoothed to avoid zeros.  The prior <tt>P(g in C)</tt> is used
+ * to stabilize cluster convergence, such that it is equal to 1 if a gene was already included in the cluster
+ * in a previous iteration and equal to dProbability if the gene was not previously included.
+ * 
+ * \remarks
+ * A prior is also applied to the two main data types, expression conditions and sequence motifs.  If X and M
+ * are the sets of all possible conditions and motifs, respectively, and CX and CM are the significant
+ * conditions and motifs in the cluster, then expression probabilities have prior |CX|/|C| and motifs have prior
+ * |CM|/|M|.
+ * 
+ * \see
+ * SelectConditions | SelectMotifs
+ */
 bool CCoalesceCluster::SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& GeneScores,
 	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot, size_t iMinimum,
 	size_t iThreads, CCoalesceCluster& Pot, float dProbability, const CCoalesceMotifLibrary* pMotifs ) {
@@ -729,6 +983,45 @@ bool CCoalesceClusterImpl::CalculateProbabilityMotifs( const CCoalesceGeneScores
 
 	return true; }
 
+/*!
+ * \brief
+ * Saves cluster in a pair of PCL and motif text files in the given directory.
+ * 
+ * \param strDirectory
+ * Directory in which cluster files are generated.
+ * 
+ * \param iID
+ * Integer ID assigned to the cluster.
+ * 
+ * \param PCL
+ * PCL from which gene and condition labels are read.
+ * 
+ * \param pMotifs
+ * If non-null, motif library with which cluster motifs are formatted.
+ * 
+ * \returns
+ * True if the cluster was saved successfully, false otherwise.
+ * 
+ * Saves the cluster as a pair of text files (PCL and motifs) in the given directory.  Filenames are randomly
+ * generated in the format \c c<id>_<rand>.pcl and \c c<id>_<rand>_motifs.txt.  The PCL file will contain only
+ * genes included in the bicluster along with all conditions; conditions in the bicluster will be sorted to
+ * the left and tagged with an initial \c *.  Motif files are of the format:
+ * \code
+ * <type1>	<subtype1>	<score1>	<tf1>:<match1>|<tf2>:<match2>|...|<tfy>:<matchx>
+ * <pst1>
+ * <pwm1>
+ * <type2>	<subtype2>	<score2>	<tf1>:<match1>|<tf2>:<match2>|...|<tfy>:<matchx>
+ * <pst2>
+ * <pwm2>
+ * ...
+ * <typez>	<subtypez>	<scorez>	<tf1>:<match1>|<tf2>:<match2>|...|<tfy>:<matchx>
+ * <pstz>
+ * <pwmz>
+ * \endcode
+ * 
+ * \see
+ * Open
+ */
 bool CCoalesceCluster::Save( const std::string& strDirectory, size_t iID, const CPCL& PCL,
 	const CCoalesceMotifLibrary* pMotifs ) const {
 	ofstream							ofsm;
@@ -780,8 +1073,8 @@ bool CCoalesceCluster::Save( const std::string& strDirectory, size_t iID, const 
 
 	return true; }
 
-bool CCoalesceClusterImpl::SaveCopy( const CPCL& PCLFrom, const set<size_t>& setiConditions, size_t iGeneFrom,
-	CPCL& PCLTo, size_t iGeneTo, bool fClustered ) const {
+bool CCoalesceClusterImpl::SaveCopy( const CPCL& PCLFrom, const std::set<size_t>& setiConditions,
+	size_t iGeneFrom, CPCL& PCLTo, size_t iGeneTo, bool fClustered ) const {
 	size_t	i, iExpTo, iExpFrom;
 
 	PCLTo.SetGene( iGeneTo, PCLFrom.GetGene( iGeneFrom ) );
@@ -797,6 +1090,56 @@ bool CCoalesceClusterImpl::SaveCopy( const CPCL& PCLFrom, const set<size_t>& set
 
 	return true; }
 
+/*!
+ * \brief
+ * Saves a textual representation of the cluster (including genes, conditions, and motifs) to the given
+ * output stream.
+ * 
+ * \param ostm
+ * Output stream to which cluster description is saved.
+ * 
+ * \param iID
+ * Integer ID assigned to the cluster.
+ * 
+ * \param PCL
+ * PCL from which gene and condition labels are read.
+ * 
+ * \param pMotifs
+ * If non-null, motif library with which cluster motifs are formatted.
+ * 
+ * \param dCutoffPWMs
+ * Minimum information threshhold (in bits) for a PWM to be saved.
+ * 
+ * \param dPenaltyGap
+ * Alignment score penalty for gaps.
+ * 
+ * \param dPenaltyMismatch
+ * Alignment score penalty for mismatches.
+ * 
+ * \param fNoRCs
+ * If true, resolve the given motif into a single strand without reverse complements before saving PWM.
+ * 
+ * Saves cluster in the following tab-delimited textual format:
+ * \code
+ * Cluster	<id>
+ * Genes	<gene1>	<gene2>	...	<genew>
+ * Conditions	<cond1>	<cond2>	...	<condx>
+ * Motifs
+ * <type1>	<subtype1>	<score1>	<tf1>:<match1>|<tf2>:<match2>|...|<tfy>:<matchy>
+ * <pst1>
+ * <pwm1>
+ * <type2>	<subtype2>	<score2>	<tf1>:<match1>|<tf2>:<match2>|...|<tfy>:<matchy>
+ * <pst2>
+ * <pwm2>
+ * ...
+ * <typez>	<subtypez>	<scorez>	<tf1>:<match1>|<tf2>:<match2>|...|<tfy>:<matchy>
+ * <pstz>
+ * <pwmz>
+ * \endcode
+ * 
+ * \see
+ * Open
+ */
 void CCoalesceCluster::Save( std::ostream& ostm, size_t iID, const CPCL& PCL,
 	const CCoalesceMotifLibrary* pMotifs, float dCutoffPWMs, float dPenaltyGap, float dPenaltyMismatch,
 	bool fNoRCs ) const {
@@ -820,7 +1163,34 @@ void CCoalesceCluster::Save( std::ostream& ostm, size_t iID, const CPCL& PCL,
 			ostm << strMotif << endl;
 	ostm.flush( ); }
 
-size_t CCoalesceCluster::Open( const string& strPCL, size_t iSkip, const CPCL& PCL,
+/*!
+ * \brief
+ * Opens a cluster based on the given PCL file and, if present, accompanying motif file.
+ * 
+ * \param strPCL
+ * Description of parameter strPCL.
+ * 
+ * \param iSkip
+ * Number of feature columns to skip between the gene IDs and first experimental column.
+ * 
+ * \param PCL
+ * PCL with which gene and condition labels are associated.
+ * 
+ * \param pMotifs
+ * If non-null, motif library with which cluster motifs are created.
+ * 
+ * \returns
+ * Number of successfully read cluster conditions, or -1 on failure.
+ * 
+ * \remarks
+ * Input PCL should be in the format generated by Save, i.e. only genes included in the bicluster, all
+ * conditions, included conditions sorted to the left and tagged with an initial \c *.  For a given PCL
+ * file \c &lt;filename>.pcl, motifs are read from \c &lt;filename>_motifs.txt.
+ * 
+ * \see
+ * Save
+ */
+size_t CCoalesceCluster::Open( const std::string& strPCL, size_t iSkip, const CPCL& PCL,
 	CCoalesceMotifLibrary* pMotifs ) {
 	CPCL		PCLCluster;
 	size_t		i, j, iGene;
@@ -863,7 +1233,31 @@ size_t CCoalesceCluster::Open( const string& strPCL, size_t iSkip, const CPCL& P
 
 	return PCLCluster.GetExperiments( ); }
 
-size_t CCoalesceCluster::Open( istream& istm, const CPCL& PCL, CCoalesceMotifLibrary* pMotifs ) {
+/*!
+ * \brief
+ * Opens a cluster based on the textual representation (including genes, conditions, and motifs) in the given
+ * input stream.
+ * 
+ * \param istm
+ * Input stream from which cluster is read.
+ * 
+ * \param PCL
+ * PCL with which gene and condition labels are associated.
+ * 
+ * \param pMotifs
+ * If non-null, motif library with which cluster motifs are created.
+ * 
+ * \returns
+ * True if cluster was opened successfully, false otherwise.
+ * 
+ * \remarks
+ * Opening can fail if the given stream contains gene or cluster IDs not present in the given PCL.
+ * Motifs will be ignored if pMotifs is null.
+ * 
+ * \see
+ * Save
+ */
+size_t CCoalesceCluster::Open( std::istream& istm, const CPCL& PCL, CCoalesceMotifLibrary* pMotifs ) {
 	string				strBuffer;
 	vector<string>		vecstrLine;
 	size_t				i, j;
@@ -906,8 +1300,44 @@ size_t CCoalesceCluster::Open( istream& istm, const CPCL& PCL, CCoalesceMotifLib
 
 	return m_setiDatasets.size( ); }
 
-bool CCoalesceCluster::Open( const CHierarchy& Hierarchy, const vector<CCoalesceCluster>& vecClusters,
-	const vector<string>& vecstrClusters, float dFraction, float dCutoff, size_t iCutoff,
+/*!
+ * \brief
+ * Creates a new cluster by merging the one or more clusters in the given hierarchy.
+ * 
+ * \param Hierarchy
+ * Hierarchy of cluster indices to be merged into the newly opened cluster.
+ * 
+ * \param vecClusters
+ * Vector of preexisting clusters, a superset of those in the given hierarchy.
+ * 
+ * \param vecstrClusters
+ * Vector of preexisting cluster IDs.
+ * 
+ * \param dFraction
+ * Minimum fraction of input cluster in which a gene must appear to be included in the output cluster.
+ * 
+ * \param dCutoff
+ * Edit distance threshhold beyond which merged motif alignments will be discarded.
+ * 
+ * \param iCutoff
+ * Maximum number of input motifs which will be merged exactly; larger numbers of motifs will be merged
+ * heuristically.
+ * 
+ * \param pMotifs
+ * If non-null, motif library by which input and output motifs are managed.
+ * 
+ * \returns
+ * True of the new cluster was created successfully, false otherwise.
+ * 
+ * \remarks
+ * Currently only genes are filtered by dFraction; all conditions and motifs in any input cluster will be
+ * included in the output cluster.
+ * 
+ * \see
+ * GetSimilarity | CClustHierarchical
+ */
+bool CCoalesceCluster::Open( const CHierarchy& Hierarchy, const std::vector<CCoalesceCluster>& vecClusters,
+	const std::vector<std::string>& vecstrClusters, float dFraction, float dCutoff, size_t iCutoff,
 	CCoalesceMotifLibrary* pMotifs ) {
 	map<size_t, size_t>						mapiiGenes, mapiiDatasets;
 	size_t									i, iClusters;
@@ -945,7 +1375,7 @@ bool CCoalesceCluster::Open( const CHierarchy& Hierarchy, const vector<CCoalesce
 
 	return true; }
 
-bool CCoalesceClusterImpl::OpenMotifsHeuristic( const set<SMotifMatch>& setsMotifs,
+bool CCoalesceClusterImpl::OpenMotifsHeuristic( const std::set<SMotifMatch>& setsMotifs,
 	CCoalesceMotifLibrary& Motifs, float dCutoff, size_t iCutoff ) {
 	vector<SMotifMatch>	vecsMotifs;
 	bool				fDone;
@@ -984,7 +1414,7 @@ bool CCoalesceClusterImpl::OpenMotifsHeuristic( const set<SMotifMatch>& setsMoti
 
 	return OpenMotifs( setsMerged, Motifs, dCutoff ); }
 
-bool CCoalesceClusterImpl::OpenMotifs( const set<SMotifMatch>& setsMotifs, CCoalesceMotifLibrary& Motifs,
+bool CCoalesceClusterImpl::OpenMotifs( const std::set<SMotifMatch>& setsMotifs, CCoalesceMotifLibrary& Motifs,
 	float dCutoff ) {
 	vector<SMotifMatch>	vecsMotifs;
 	CDistanceMatrix		MatSimilarity;
@@ -1008,9 +1438,9 @@ bool CCoalesceClusterImpl::OpenMotifs( const set<SMotifMatch>& setsMotifs, CCoal
 	pHierMotifs->Destroy( );
 	return fRet; }
 
-size_t CCoalesceClusterImpl::Open( const CHierarchy& Hier, const vector<CCoalesceCluster>& vecClusters,
-	const vector<string>& vecstrClusters, map<size_t, size_t>& mapiiGenes, map<size_t, size_t>& mapiiDatasets,
-	TVecMapStrSetSMotifs& vecmapstrsetsMotifs ) {
+size_t CCoalesceClusterImpl::Open( const CHierarchy& Hier, const std::vector<CCoalesceCluster>& vecClusters,
+	const std::vector<std::string>& vecstrClusters, std::map<size_t, size_t>& mapiiGenes,
+	std::map<size_t, size_t>& mapiiDatasets, TVecMapStrSetSMotifs& vecmapstrsetsMotifs ) {
 	set<size_t>::const_iterator			iterFrom;
 	map<size_t, size_t>::iterator		iterTo;
 	set<SMotifMatch>::const_iterator	iterMotif;
@@ -1040,7 +1470,7 @@ size_t CCoalesceClusterImpl::Open( const CHierarchy& Hier, const vector<CCoalesc
 	return 1; }
 
 bool CCoalesceClusterImpl::OpenMotifs( CCoalesceMotifLibrary& Motifs, const CHierarchy& Hier,
-	const vector<SMotifMatch>& vecsMotifs, float dCutoff, set<SMotifMatch>& setsMotifs ) {
+	const std::vector<SMotifMatch>& vecsMotifs, float dCutoff, std::set<SMotifMatch>& setsMotifs ) {
 
 	if( Hier.IsGene( ) || ( -Hier.GetSimilarity( ) < dCutoff ) ) {
 		SMotifMatch	sMotif;
@@ -1056,6 +1486,26 @@ bool CCoalesceClusterImpl::OpenMotifs( CCoalesceMotifLibrary& Motifs, const CHie
 	return ( OpenMotifs( Motifs, Hier.Get( false ), vecsMotifs, dCutoff, setsMotifs ) &&
 		OpenMotifs( Motifs, Hier.Get( true ), vecsMotifs, dCutoff, setsMotifs ) ); }
 
+/*!
+ * \brief
+ * Calculates a similarity score between the given and current clusters.
+ * 
+ * \param Cluster
+ * Cluster to be compared to the current cluster.
+ * 
+ * \param iGenes
+ * Total number of available genes.
+ * 
+ * \param iDatasets
+ * Total number of available datasets.
+ * 
+ * \returns
+ * Similarity score for the two clusters (minimum zero, increasing indicates greater similarity).
+ * 
+ * \remarks
+ * Used by COALESCE to postprocess modules.  Generally returns fraction of shared genes proportional
+ * to the smaller of the two clusters; Jaccard index can also work well.
+ */
 float CCoalesceCluster::GetSimilarity( const CCoalesceCluster& Cluster, size_t iGenes,
 	size_t iDatasets ) const {
 	size_t						iOverlapGenes;
@@ -1067,7 +1517,7 @@ float CCoalesceCluster::GetSimilarity( const CCoalesceCluster& Cluster, size_t i
 	for( iOverlapGenes = 0,iterItem = GetGenes( ).begin( ); iterItem != GetGenes( ).end( ); ++iterItem )
 		if( Cluster.IsGene( *iterItem ) )
 			iOverlapGenes++;
-// simple gene overlap works best with an 0.75 cutoff
+// simple gene overlap works best with an ~0.75 cutoff
 	dRet = (float)iOverlapGenes / min( GetGenes( ).size( ), Cluster.GetGenes( ).size( ) );
 // jaccard index works best with an 0.25-0.33 cutoff
 //	dRet = (float)iOverlapGenes / ( GetGenes( ).size( ) + Cluster.GetGenes( ).size( ) - iOverlapGenes );
@@ -1075,6 +1525,23 @@ float CCoalesceCluster::GetSimilarity( const CCoalesceCluster& Cluster, size_t i
 		iDatasets, iOverlapGenes, GetGenes( ).size( ), Cluster.GetGenes( ).size( ), dRet );
 	return dRet; }
 
+/*!
+ * \brief
+ * Records the state of the cluster between convergence iterations.
+ * 
+ * \param GeneScores
+ * Per-gene sequence scores used to snapshot motif histograms.
+ * 
+ * \param Histograms
+ * Motif histograms to be updated using the current gene scores.
+ * 
+ * \remarks
+ * Should be called at the start of each COALESCE iteration, after new histograms are calculated but
+ * before anything else.
+ * 
+ * \see
+ * IsConverged
+ */
 void CCoalesceCluster::Snapshot( const CCoalesceGeneScores& GeneScores,
 	CCoalesceGroupHistograms& Histograms ) {
 
@@ -1084,6 +1551,40 @@ void CCoalesceCluster::Snapshot( const CCoalesceGeneScores& GeneScores,
 	CCoalesceClusterImpl::Snapshot( m_setsMotifs, m_vecsPrevMotifs );
 	CCoalesceClusterImpl::Snapshot( GetGenes( ), m_veciPrevGenes ); }
 
+/*!
+ * \brief
+ * Labels all significant motifs in the cluster with any known TF motifs that match below the given
+ * threshhold.
+ * 
+ * \param Motifs
+ * Motif library to be used for cluster and known motifs.
+ * 
+ * \param eMatchType
+ * Type of match to be performed: correlation, rmse, etc.
+ * 
+ * \param dPenaltyGap
+ * Alignment score penalty for gaps.
+ * 
+ * \param dPenaltyMismatch
+ * Alignment score penalty for mismatches.
+ * 
+ * \param dPValue
+ * P-value (or other score) threshhold below which known TFs must match.
+ * 
+ * \returns
+ * True if the labeling process succeeded (possibly with no matching labels), false otherwise.
+ * 
+ * Labels any significant motifs in the cluster with zero or more matching known TF binding motifs.
+ * These known labels are scored and will be read and written with subsequence Open/Save calls that
+ * include this cluster's motifs.
+ * 
+ * \remarks
+ * For each significant motif in the cluster, scans any known TF motifs in Motifs for matches based
+ * on one of several PWM matching algorithms (usually correlation p-value).
+ * 
+ * \see
+ * CCoalesceMotifLibrary::GetKnown
+ */
 bool CCoalesceCluster::LabelMotifs( const CCoalesceMotifLibrary& Motifs, SMotifMatch::EType eMatchType,
 	float dPenaltyGap, float dPenaltyMismatch, float dPValue ) {
 	set<SMotifMatch>::iterator	iterMotif;

@@ -163,6 +163,19 @@ public:
 	void Impute( size_t iNeighbors, float dMinimumPresent, const CDat& DatSimilarity );
 	void Impute( size_t iNeighbors, float dMinimumPresent, const IMeasure* pMeasure, bool fPrecompute = true );
 
+	/*!
+	 * \brief
+	 * Save a PCL to the given text file.
+	 * 
+	 * \param szFile
+	 * File into which PCL file is saved.
+	 * 
+	 * \remarks
+	 * If null, output defaults to stdout.
+	 * 
+	 * \see
+	 * Save
+	 */
 	void Save( const char* szFile = NULL ) const {
 		std::ofstream	ofsm;
 
@@ -469,6 +482,19 @@ public:
 
 		return m_vecstrExperiments[ iExperiment ]; }
 
+	/*!
+	 * \brief
+	 * Returns the PCL column of the given experiment label.
+	 * 
+	 * \param strExperiment
+	 * Experimental label of index to return.
+	 * 
+	 * \returns
+	 * Column of the requested experiment label, or -1 if it is not found.
+	 * 
+	 * \remarks
+	 * Unlike gene IDs, experiment labels are not hashed, so this can be slow.
+	 */
 	size_t GetExperiment( const std::string& strExperiment ) const {
 		size_t	i;
 
