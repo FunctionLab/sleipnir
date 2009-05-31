@@ -24,7 +24,6 @@ if WITH_TOOLS
 	  MCluster \
 	  Matcher \
 	  MIer \
-	  Netwalker \
 	  Normalizer \
 	  Orthologer \
 	  Overlapper \

@@ -97,9 +97,9 @@ struct gengetopt_args_info
   int size_maximum_arg;	/**< @brief Maximum motif count to consider a cluster saturated (default='1000').  */
   char * size_maximum_orig;	/**< @brief Maximum motif count to consider a cluster saturated original value given at command line.  */
   const char *size_maximum_help; /**< @brief Maximum motif count to consider a cluster saturated help description.  */
-  char * postprocess_arg;	/**< @brief Input directory of clusters to postprocess.  */
-  char * postprocess_orig;	/**< @brief Input directory of clusters to postprocess original value given at command line.  */
-  const char *postprocess_help; /**< @brief Input directory of clusters to postprocess help description.  */
+  char * postprocess_arg;	/**< @brief Input file/directory of clusters to postprocess.  */
+  char * postprocess_orig;	/**< @brief Input file/directory of clusters to postprocess original value given at command line.  */
+  const char *postprocess_help; /**< @brief Input file/directory of clusters to postprocess help description.  */
   char * known_motifs_arg;	/**< @brief File containing known motifs.  */
   char * known_motifs_orig;	/**< @brief File containing known motifs original value given at command line.  */
   const char *known_motifs_help; /**< @brief File containing known motifs help description.  */
@@ -126,9 +126,8 @@ struct gengetopt_args_info
   int max_motifs_arg;	/**< @brief Maximum motifs to merge exactly (default='2500').  */
   char * max_motifs_orig;	/**< @brief Maximum motifs to merge exactly original value given at command line.  */
   const char *max_motifs_help; /**< @brief Maximum motifs to merge exactly help description.  */
-  char * cache_arg;	/**< @brief Cache file for sequence analysis.  */
-  char * cache_orig;	/**< @brief Cache file for sequence analysis original value given at command line.  */
-  const char *cache_help; /**< @brief Cache file for sequence analysis help description.  */
+  int normalize_flag;	/**< @brief Automatically detect/normalize single channel data (default=off).  */
+  const char *normalize_help; /**< @brief Automatically detect/normalize single channel data help description.  */
   int progressive_flag;	/**< @brief Generate output progressively (default=on).  */
   const char *progressive_help; /**< @brief Generate output progressively help description.  */
   int threads_arg;	/**< @brief Maximum number of concurrent threads (default='1').  */
@@ -177,7 +176,7 @@ struct gengetopt_args_info
   unsigned int remove_rcs_given ;	/**< @brief Whether remove_rcs was given.  */
   unsigned int min_info_given ;	/**< @brief Whether min_info was given.  */
   unsigned int max_motifs_given ;	/**< @brief Whether max_motifs was given.  */
-  unsigned int cache_given ;	/**< @brief Whether cache was given.  */
+  unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int progressive_given ;	/**< @brief Whether progressive was given.  */
   unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */

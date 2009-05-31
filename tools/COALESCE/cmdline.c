@@ -56,7 +56,7 @@ const char *gengetopt_args_info_help[] = {
   "  -E, --size_merge=INT          Maximum motif count for realtime merging  \n                                  (default=`100')",
   "  -Z, --size_maximum=INT        Maximum motif count to consider a cluster \n                                  saturated  (default=`1000')",
   "\nPostprocessing Parameters:",
-  "  -j, --postprocess=directory   Input directory of clusters to postprocess",
+  "  -j, --postprocess=directory   Input file/directory of clusters to postprocess",
   "  -K, --known_motifs=filename   File containing known motifs",
   "  -F, --known_cutoff=DOUBLE     Score cutoff for known motif labeling  \n                                  (default=`0.05')",
   "  -S, --known_type=STRING       Type of known motif matching  (possible \n                                  values=\"pvalue\", \"rmse\", \"js\" \n                                  default=`pvalue')",
@@ -67,7 +67,7 @@ const char *gengetopt_args_info_help[] = {
   "  -u, --min_info=DOUBLE         Uninformative motif threshhold (bits)  \n                                  (default=`0.3')",
   "  -x, --max_motifs=INT          Maximum motifs to merge exactly  \n                                  (default=`2500')",
   "\nMiscellaneous:",
-  "  -e, --cache=filename          Cache file for sequence analysis",
+  "  -e, --normalize               Automatically detect/normalize single channel \n                                  data  (default=off)",
   "  -O, --progressive             Generate output progressively  (default=on)",
   "\nOptional:",
   "  -t, --threads=INT             Maximum number of concurrent threads  \n                                  (default=`1')",
@@ -135,7 +135,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->remove_rcs_given = 0 ;
   args_info->min_info_given = 0 ;
   args_info->max_motifs_given = 0 ;
-  args_info->cache_given = 0 ;
+  args_info->normalize_given = 0 ;
   args_info->progressive_given = 0 ;
   args_info->threads_given = 0 ;
   args_info->skip_given = 0 ;
@@ -207,8 +207,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->min_info_orig = NULL;
   args_info->max_motifs_arg = 2500;
   args_info->max_motifs_orig = NULL;
-  args_info->cache_arg = NULL;
-  args_info->cache_orig = NULL;
+  args_info->normalize_flag = 0;
   args_info->progressive_flag = 1;
   args_info->threads_arg = 1;
   args_info->threads_orig = NULL;
@@ -259,7 +258,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->remove_rcs_help = gengetopt_args_info_help[35] ;
   args_info->min_info_help = gengetopt_args_info_help[36] ;
   args_info->max_motifs_help = gengetopt_args_info_help[37] ;
-  args_info->cache_help = gengetopt_args_info_help[39] ;
+  args_info->normalize_help = gengetopt_args_info_help[39] ;
   args_info->progressive_help = gengetopt_args_info_help[40] ;
   args_info->threads_help = gengetopt_args_info_help[42] ;
   args_info->skip_help = gengetopt_args_info_help[43] ;
@@ -384,8 +383,6 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->cutoff_trim_orig));
   free_string_field (&(args_info->min_info_orig));
   free_string_field (&(args_info->max_motifs_orig));
-  free_string_field (&(args_info->cache_arg));
-  free_string_field (&(args_info->cache_orig));
   free_string_field (&(args_info->threads_orig));
   free_string_field (&(args_info->skip_orig));
   free_string_field (&(args_info->random_orig));
@@ -532,8 +529,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "min_info", args_info->min_info_orig, 0);
   if (args_info->max_motifs_given)
     write_into_file(outfile, "max_motifs", args_info->max_motifs_orig, 0);
-  if (args_info->cache_given)
-    write_into_file(outfile, "cache", args_info->cache_orig, 0);
+  if (args_info->normalize_given)
+    write_into_file(outfile, "normalize", 0, 0 );
   if (args_info->progressive_given)
     write_into_file(outfile, "progressive", 0, 0 );
   if (args_info->threads_given)
@@ -829,7 +826,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "remove_rcs",	0, NULL, 'R' },
         { "min_info",	1, NULL, 'u' },
         { "max_motifs",	1, NULL, 'x' },
-        { "cache",	1, NULL, 'e' },
+        { "normalize",	0, NULL, 'e' },
         { "progressive",	0, NULL, 'O' },
         { "threads",	1, NULL, 't' },
         { "skip",	1, NULL, 's' },
@@ -838,7 +835,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:f:d:o:p:c:m:C:M:k:g:G:y:Y:n:N:q:b:z:E:Z:j:K:F:S:J:L:T:Ru:x:e:Ot:s:r:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:f:d:o:p:c:m:C:M:k:g:G:y:Y:n:N:q:b:z:E:Z:j:K:F:S:J:L:T:Ru:x:eOt:s:r:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1115,7 +1112,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'j':	/* Input directory of clusters to postprocess.  */
+        case 'j':	/* Input file/directory of clusters to postprocess.  */
         
         
           if (update_arg( (void *)&(args_info->postprocess_arg), 
@@ -1233,14 +1230,12 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'e':	/* Cache file for sequence analysis.  */
+        case 'e':	/* Automatically detect/normalize single channel data.  */
         
         
-          if (update_arg( (void *)&(args_info->cache_arg), 
-               &(args_info->cache_orig), &(args_info->cache_given),
-              &(local_args_info.cache_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "cache", 'e',
+          if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
+              &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "normalize", 'e',
               additional_error))
             goto failure;
         
