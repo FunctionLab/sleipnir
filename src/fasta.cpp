@@ -87,7 +87,7 @@ bool CFASTA::Open( const char* szFile, const std::set<std::string>& setstrTypes 
 		vecstrLine.clear( );
 		CMeta::Tokenize( pc, vecstrLine );
 		if( vecstrLine.empty( ) ) {
-			g_CatSleipnir.warn( "CFASTA::Open( %s ) invalid header line: %s", szFile, m_szBuffer );
+			g_CatSleipnir( ).warn( "CFASTA::Open( %s ) invalid header line: %s", szFile, m_szBuffer );
 			continue; }
 		if( vecstrLine.size( ) < 2 )
 			vecstrLine.push_back( "" );
@@ -189,7 +189,7 @@ bool CFASTAImpl::Get( size_t iGene, vector<SFASTASequence>* pvecsSequences,
 		m_ifsm.clear( );
 		m_ifsm.seekg( iterGene->second );
 		if( (size_t)m_ifsm.tellg( ) != iterGene->second ) {
-			g_CatSleipnir.error( "CFASTA::Get( %d ) error parsing: %s %s at %d (%d)", iGene,
+			g_CatSleipnir( ).error( "CFASTA::Get( %d ) error parsing: %s %s at %d (%d)", iGene,
 				GetGene( iGene ).c_str( ), iterGene->first.c_str( ), iterGene->second,
 				(size_t)m_ifsm.tellg( ) );
 			pthread_mutex_unlock( &m_mutx );
@@ -222,7 +222,7 @@ bool CFASTAImpl::Get( size_t iGene, std::vector<SFASTASequence>& vecsSequences, 
 	size_t	iBegin, iEnd;
 
 	if( strSequence.empty( ) ) {
-		g_CatSleipnir.debug( "CFASTA::Get( %d ) no sequence found: %s %s at %d", iGene,
+		g_CatSleipnir( ).debug( "CFASTA::Get( %d ) no sequence found: %s %s at %d", iGene,
 			GetGene( iGene ).c_str( ), sSequence.m_strType.c_str( ), iOffset );
 		return true; }
 	for( iBegin = 0; iBegin < strSequence.size( ); iBegin = iEnd ) {
@@ -245,7 +245,7 @@ bool CFASTAImpl::Get( size_t iGene, vector<SFASTAWiggle>& vecsValues, size_t iOf
 	SFASTAWiggle& sValues ) const {
 
 	if( sValues.m_vecdValues.empty( ) ) {
-		g_CatSleipnir.debug( "CFASTA::Get( %d ) no values found: %s %s at %d", iGene,
+		g_CatSleipnir( ).debug( "CFASTA::Get( %d ) no values found: %s %s at %d", iGene,
 			GetGene( iGene ).c_str( ), sValues.m_strType.c_str( ), iOffset );
 		return true; }
 	vecsValues.push_back( sValues );

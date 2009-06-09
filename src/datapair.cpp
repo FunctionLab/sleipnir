@@ -37,7 +37,7 @@ bool CPairImpl::Open( const char* szDatafile, std::ifstream& ifsm ) {
 	ifsm.open( strToken.c_str( ) );
 	if( !ifsm.is_open( ) ) {
 		if( !( pc = strrchr( szDatafile, '.' ) ) ) {
-			g_CatSleipnir.error( "CPairImpl::Open( %s ) could not replace extension for quant file",
+			g_CatSleipnir( ).error( "CPairImpl::Open( %s ) could not replace extension for quant file",
 				szDatafile );
 			return false; }
 		strToken = szDatafile;
@@ -46,7 +46,7 @@ bool CPairImpl::Open( const char* szDatafile, std::ifstream& ifsm ) {
 		ifsm.clear( );
 		ifsm.open( strToken.c_str( ) );
 		if( !ifsm.is_open( ) ) {
-			g_CatSleipnir.error( "CPairImpl::Open( %s ) could not open quant file: %s", szDatafile,
+			g_CatSleipnir( ).error( "CPairImpl::Open( %s ) could not open quant file: %s", szDatafile,
 				strToken.c_str( ) );
 			return false; } }
 
@@ -112,7 +112,7 @@ bool CDataPair::Open( const CSlim& Slim ) {
 bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
 	bool fZScore ) {
 
-	g_CatSleipnir.notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
+	g_CatSleipnir( ).notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
 
 	Reset( fContinuous );
 	if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore ) )
@@ -228,7 +228,7 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 	ifstream	ifsm;
 	size_t		i;
 
-	g_CatSleipnir.notice( "CPCLPair::Open( %s )", szDatafile );
+	g_CatSleipnir( ).notice( "CPCLPair::Open( %s )", szDatafile );
 
 	ifsm.open( szDatafile );
 	if( !CPCL::Open( ifsm, iSkip ) )
@@ -242,7 +242,7 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 	m_vecvecdQuants.resize( GetExperiments( ) );
 	for( i = 0; i < m_vecvecdQuants.size( ); ++i ) {
 		if( ifsm.eof( ) ) {
-			g_CatSleipnir.error( "CPCLPair::Open( %s, %d ) invalid quant file", szDatafile, iSkip );
+			g_CatSleipnir( ).error( "CPCLPair::Open( %s, %d ) invalid quant file", szDatafile, iSkip );
 			return false; }
 		ifsm.getline( szBuf, c_iBuf - 1 );
 		if( !CPairImpl::Open( szBuf, m_vecvecdQuants[ i ] ) )

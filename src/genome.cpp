@@ -200,7 +200,7 @@ bool CGene::AddSynonym( const std::string& strName ) {
 	string*	astrSynonyms;
 
 	if( !strName.length( ) )
-		g_CatSleipnir.warn( "CGene::AddSynonym( %s ) adding null synonym to %s",
+		g_CatSleipnir( ).warn( "CGene::AddSynonym( %s ) adding null synonym to %s",
 			strName.c_str( ), m_strName.c_str( ) );
 	if( strName == m_strName )
 		return false;
@@ -500,7 +500,7 @@ bool CGenes::Open( std::istream& istm, bool fCreate ) {
 			pGene = &m_Genome.AddGene( szBuf );
 		else {
 			if( ( iGene = m_Genome.FindGene( szBuf ) ) == -1 ) {
-				g_CatSleipnir.warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, szBuf );
+				g_CatSleipnir( ).warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, szBuf );
 				continue; }
 			pGene = &m_Genome.GetGene( iGene ); }
 		for( i = 0; i < m_vecpGenes.size( ); ++i )

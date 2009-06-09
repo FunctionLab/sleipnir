@@ -52,12 +52,12 @@ bool read_documents_bin( char* szFile, DOC*** papDocs, double** padLabels,
 	float			d;
 	float*			ad;
 
-	g_CatSleipnir.info( "CSVM::read_documents_bin( ) Reading binary examples into memory..." );
+	g_CatSleipnir( ).info( "CSVM::read_documents_bin( ) Reading binary examples into memory..." );
 
 #pragma warning( disable : 4996 )
 	if( !( pfileDoc = fopen( szFile, "rb" ) ) ) {
 #pragma warning( default : 4996 )
-		g_CatSleipnir.error( "CSVM::read_documents_bin( ) Could not open: %s", szFile );
+		g_CatSleipnir( ).error( "CSVM::read_documents_bin( ) Could not open: %s", szFile );
 		return false; }
 
 	fread( piWords, sizeof(*piWords), 1, pfileDoc );
@@ -72,7 +72,7 @@ bool read_documents_bin( char* szFile, DOC*** papDocs, double** padLabels,
 	aWords[ iWord ].wnum = 0;
 	for( iDoc = 0; iDoc < (*piDocs); ++iDoc ) {
 		if( !( iDoc % 100000 ) )
-			g_CatSleipnir.info( "CSVM::read_documents_bin( ) Read %d/%d", iDoc, *piDocs );
+			g_CatSleipnir( ).info( "CSVM::read_documents_bin( ) Read %d/%d", iDoc, *piDocs );
 		fread( &d, sizeof(d), 1, pfileDoc );
 		(*padLabels)[ iDoc ] = d;
 		fread( ad, sizeof(*ad), (*piWords), pfileDoc );
@@ -491,7 +491,7 @@ bool CSVMImpl::Evaluate( const SData& sData, const CGenes* pGenesIn, CDat& DatOu
 			sData.m_uData.m_pPCLs->GetGene( i ) : sData.m_uData.m_pData->GetGene( i );
 
 		if( !( i % 10 ) )
-			g_CatSleipnir.notice( "CSVMImpl::Evaluate( ) gene %d/%d", i, iGenes );
+			g_CatSleipnir( ).notice( "CSVMImpl::Evaluate( ) gene %d/%d", i, iGenes );
 		if( pGenesIn && !pGenesIn->IsGene( strGeneOne ) )
 			continue;
 		for( j = ( i + 1 ); j < iGenes; ++j ) {
@@ -538,7 +538,7 @@ bool CSVM::Evaluate( const CPCL& PCL, vector<float>& vecdResults ) const {
 	sData.m_uData.m_pPCL = &PCL;
 	for( i = 0; i < PCL.GetGenes( ); ++i ) {
 		if( !( i % 1000 ) )
-			g_CatSleipnir.notice( "CSVMImpl::Evaluate( ) gene %d/%d", i, PCL.GetGenes( ) );
+			g_CatSleipnir( ).notice( "CSVMImpl::Evaluate( ) gene %d/%d", i, PCL.GetGenes( ) );
 		if( PCL.IsMasked( i ) )
 			continue;
 
@@ -588,7 +588,7 @@ bool CSVMImpl::EvaluateFile( const char* szFile, CDat& DatOut ) const {
 	ifsm.seekg( 2 * sizeof(iDocs), ios_base::beg );
 	for( i = 0; i < iDocs; ++i ) {
 		if( !( i % 1000 ) )
-			g_CatSleipnir.notice( "CSVMImpl::EvaluateFile( %s ) pair %d/%d", szFile, i,
+			g_CatSleipnir( ).notice( "CSVMImpl::EvaluateFile( %s ) pair %d/%d", szFile, i,
 				iDocs );
 		ifsm.read( (char*)ad, ( iWords + 1 ) * sizeof(*ad) );
 		for( j = 0; j < iWords; ++j )
@@ -671,7 +671,7 @@ bool CSVM::Open( std::istream& istm ) {
 		vecstrLine.clear( );
 		CMeta::Tokenize( szBuf, vecstrLine, CMeta::c_szWS, true );
 		if( vecstrLine.size( ) != ( m_pModel->totwords + 2 ) ) {
-			g_CatSleipnir.error( "CSVM::Open( ) wanted %d words but only found %d on line: %s",
+			g_CatSleipnir( ).error( "CSVM::Open( ) wanted %d words but only found %d on line: %s",
 				( m_pModel->totwords + 2 ), vecstrLine.size( ), szBuf );
 			delete[] asWords;
 			return false; }
@@ -680,7 +680,7 @@ bool CSVM::Open( std::istream& istm ) {
 			vecstrToken.clear( );
 			CMeta::Tokenize( vecstrLine[ j ].c_str( ), vecstrToken, ":", true );
 			if( vecstrToken.size( ) != 2 ) {
-				g_CatSleipnir.error( "CSVM::Open( ) found illegal token \"%s\" on line: %s",
+				g_CatSleipnir( ).error( "CSVM::Open( ) found illegal token \"%s\" on line: %s",
 					vecstrLine[ j ].c_str( ), szBuf );
 				delete[] asWords;
 				return false; }

@@ -136,7 +136,7 @@ bool CDat::Open( const CSlim& Slim ) {
 
 	SlimCache( Slim, vecveciGenes );
 	for( iS1 = 0; iS1 < Slim.GetSlims( ); ++iS1 ) {
-		g_CatSleipnir.info( "CDat::Open( ) processing slim: %s",
+		g_CatSleipnir( ).info( "CDat::Open( ) processing slim: %s",
 			Slim.GetSlim( iS1 ).c_str( ) );
 		for( iG1 = 0; iG1 < Slim.GetGenes( iS1 ); ++iG1 ) {
 			iGene1 = vecveciGenes[ iS1 ][ iG1 ];
@@ -191,7 +191,7 @@ bool CDat::Open( const CSlim& SlimPositives, const CSlim& SlimNonnegatives ) {
 
 	SlimCache( SlimPositives, vecveciGenes );
 	for( iS1 = 0; iS1 < SlimPositives.GetSlims( ); ++iS1 ) {
-		g_CatSleipnir.info( "CDat::Open( ) processing slim: %s",
+		g_CatSleipnir( ).info( "CDat::Open( ) processing slim: %s",
 			SlimPositives.GetSlim( iS1 ).c_str( ) );
 		for( iG1 = 0; iG1 < SlimPositives.GetGenes( iS1 ); ++iG1 ) {
 			iGene1 = vecveciGenes[ iS1 ][ iG1 ];
@@ -200,7 +200,7 @@ bool CDat::Open( const CSlim& SlimPositives, const CSlim& SlimNonnegatives ) {
 	vecveciGenes.clear( );
 	SlimCache( SlimNonnegatives, vecveciGenes );
 	for( iS1 = 0; iS1 < SlimNonnegatives.GetSlims( ); ++iS1 ) {
-		g_CatSleipnir.info( "CDat::Open( ) processing slim: %s",
+		g_CatSleipnir( ).info( "CDat::Open( ) processing slim: %s",
 			SlimNonnegatives.GetSlim( iS1 ).c_str( ) );
 		for( iG1 = 0; iG1 < SlimNonnegatives.GetGenes( iS1 ); ++iG1 ) {
 			iGene1 = vecveciGenes[ iS1 ][ iG1 ];
@@ -547,7 +547,7 @@ bool CDatImpl::OpenText( std::istream& istm, float dDefault, bool fDuplicates ) 
 		ResizeNaN( vecvecfScores[ iOne ], i );
 		ResizeNaN( vecvecfScores[ iTwo ], i );
 		if( !CMeta::IsNaN( vecvecfScores[ iOne ][ iTwo ] ) && ( vecvecfScores[ iOne ][ iTwo ] != dScore ) ) {
-			g_CatSleipnir.error( "CDatImpl::OpenText( ) duplicate genes %s, %s (%g:%g)",
+			g_CatSleipnir( ).error( "CDatImpl::OpenText( ) duplicate genes %s, %s (%g:%g)",
 				strCache.c_str( ), strToken.c_str( ), vecvecfScores[ iOne ][ iTwo ],
 				dScore );
 			if( !fDuplicates ) {
@@ -994,7 +994,7 @@ bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore, b
 	if( fMemmap && ( eFormat == EFormatBinary ) ) {
 		Reset( );
 		if( !CMeta::MapRead( m_abData, m_hndlData, m_iData, szFile ) ) {
-			g_CatSleipnir.error( "CDat::Open( %s, %d ) failed memory mapping", szFile, fMemmap );
+			g_CatSleipnir( ).error( "CDat::Open( %s, %d ) failed memory mapping", szFile, fMemmap );
 			return false; }
 		return OpenHelper( ); }
 

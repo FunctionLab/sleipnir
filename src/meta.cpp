@@ -225,7 +225,7 @@ bool CMeta::MapRead( unsigned char*& pbData, HANDLE& hndlMap, size_t& iSize, con
 	iSize = sStat.st_size;
 
 	if( ( pbData = (unsigned char*)mmap( NULL, iSize, PROT_READ, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
-		g_CatSleipnir.error( "CMeta::MapRead( %s ) %s", szFile, strerror( errno ) );
+		g_CatSleipnir( ).error( "CMeta::MapRead( %s ) %s", szFile, strerror( errno ) );
 		pbData = NULL;
 		close( iFile );
 		return false; }
@@ -291,7 +291,7 @@ bool CMeta::MapWrite( unsigned char*& pbData, HANDLE& hndlMap, size_t iSize, con
 	lseek( iFile, iSize - 1, SEEK_SET );
 	write( iFile, &iSize, 1 );
 	if( ( pbData = (unsigned char*)mmap( NULL, iSize, PROT_READ | PROT_WRITE, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
-		g_CatSleipnir.error( "CMeta::MapWrite( %s ) %s", szFile, strerror( errno ) );
+		g_CatSleipnir( ).error( "CMeta::MapWrite( %s ) %s", szFile, strerror( errno ) );
 		pbData = NULL;
 		close( iFile );
 		return false; }

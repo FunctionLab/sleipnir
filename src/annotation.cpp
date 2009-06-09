@@ -52,7 +52,7 @@ bool COntologyImpl::SParser::GetLine( ) {
 
 	m_iLine++;
 	m_istm.getline( m_szLine, c_iBuffer - 1 );
-	g_CatSleipnir.debug( "COntologyImpl::SParser::GetLine( ) %s", m_szLine );
+	g_CatSleipnir( ).debug( "COntologyImpl::SParser::GetLine( ) %s", m_szLine );
 	return true; }
 
 bool COntologyImpl::SParser::IsStart( const char* szStart ) const {
@@ -98,7 +98,7 @@ bool COntologyImpl::IsAnnotated( size_t iNode, const CGene& Gene, bool fKids ) c
 void COntologyImpl::CollectGenes( size_t iNode, TSetPGenes& setpGenes ) {
 	SNode&						sNode	= m_aNodes[ iNode ];
 	size_t						i;
-	TSetPGenes					setpKids;
+	TSetPGenes					setpSelf, setpKids;
 	TSetPGenes::const_iterator	iterGenes;
 
 	if( sNode.m_iCacheGenes != -1 ) {
@@ -108,18 +108,19 @@ void COntologyImpl::CollectGenes( size_t iNode, TSetPGenes& setpGenes ) {
 			setpGenes.insert( sNode.m_apCacheGenes[ i ] );
 		return; }
 
-	for( i = 0; i < sNode.m_iGenes; ++i )
-		setpGenes.insert( sNode.m_apGenes[ i ] );
+	for( i = 0; i < sNode.m_iGenes; ++i ) {
+		setpSelf.insert( sNode.m_apGenes[ i ] );
+		setpGenes.insert( sNode.m_apGenes[ i ] ); }
 	for( i = 0; i < sNode.m_iChildren; ++i )
 		CollectGenes( sNode.m_aiChildren[ i ], setpKids );
 	sNode.m_iCacheGenes = 0;
 	for( iterGenes = setpKids.begin( ); iterGenes != setpKids.end( ); ++iterGenes )
-		if( setpGenes.find( *iterGenes ) == setpGenes.end( ) )
+		if( setpSelf.find( *iterGenes ) == setpSelf.end( ) )
 			sNode.m_iCacheGenes++;
 	if( sNode.m_iCacheGenes ) {
 		sNode.m_apCacheGenes = new const CGene*[ sNode.m_iCacheGenes ];
 		for( i = 0,iterGenes = setpKids.begin( ); iterGenes != setpKids.end( ); ++iterGenes )
-			if( setpGenes.find( *iterGenes ) == setpGenes.end( ) ) {
+			if( setpSelf.find( *iterGenes ) == setpSelf.end( ) ) {
 				sNode.m_apCacheGenes[ i++ ] = *iterGenes;
 				setpGenes.insert( *iterGenes ); } } }
 
@@ -212,7 +213,7 @@ bool CSlim::Open( std::istream& istmSlim, const IOntology* pOntology ) {
 	set<const CGene*>					setiGenes;
 	set<const CGene*>::const_iterator	iterGene;
 
-	g_CatSleipnir.info( "CSlim::Open( %s )", pOntology->GetID( ).c_str( ) );
+	g_CatSleipnir( ).info( "CSlim::Open( %s )", pOntology->GetID( ).c_str( ) );
 
 	Reset( pOntology );
 	while( istmSlim.peek( ) != EOF ) {
@@ -230,7 +231,7 @@ bool CSlim::Open( std::istream& istmSlim, const IOntology* pOntology ) {
 					m_vecstrSlims.push_back( str );
 				else {
 					if( ( j = m_pOntology->GetNode( str ) ) == -1 ) {
-						g_CatSleipnir.error( "CSlim::Open( %s ) unknown node: %s",
+						g_CatSleipnir( ).error( "CSlim::Open( %s ) unknown node: %s",
 							m_pOntology->GetID( ).c_str( ), str.c_str( ) );
 						return false; }
 					m_vecveciTerms[ i ].push_back( j ); } }

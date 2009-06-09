@@ -179,13 +179,13 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 	if( szFile ) {
 		ifsm.open( szFile );
 		if( !PCL.Open( ifsm, iSkip ) ) {
-			g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL",
+			g_CatSleipnir( ).error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL",
 				szFile, iSkip, szSimilarityMeasure, fNormalize, fZScore, fAutocorrelate, szGeneFile ?
 				szGeneFile : "", dCutoff );
 			return 1; }
 		ifsm.close( ); }
 	else if( !PCL.Open( cin, iSkip ) ) {
-		g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", "stdin",
+		g_CatSleipnir( ).error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL", "stdin",
 			iSkip, szSimilarityMeasure, fNormalize, fZScore, fAutocorrelate, szGeneFile ? szGeneFile : "",
 			dCutoff );
 		return 1; }
@@ -213,7 +213,7 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 		ifsm.clear( );
 		ifsm.open( szGeneFile );
 		if( !GenesIn.Open( ifsm ) ) {
-			g_CatSleipnir.error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open genes",
+			g_CatSleipnir( ).error( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open genes",
 				szFile ? szFile : "stdin", iSkip, szSimilarityMeasure, fNormalize, fZScore, fAutocorrelate,
 				szGeneFile, dCutoff );
 			return 1; }
@@ -236,7 +236,7 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 				Dat.Set( i, j, CMeta::GetNaN( ) );
 		for( i = 0; i < GenesIn.GetGenes( ); ++i ) {
 			if( !( i % 100 ) )
-				g_CatSleipnir.info( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) processing gene %d/%d",
+				g_CatSleipnir( ).info( "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) processing gene %d/%d",
 					szFile ? szFile : "stdin", iSkip, szSimilarityMeasure, fNormalize, fZScore, fAutocorrelate,
 					szGeneFile ? szGeneFile : "", dCutoff, i, GenesIn.GetGenes( ) );
 			if( ( iOne = veciGenes[ i ] ) == -1 )
@@ -346,7 +346,7 @@ bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 		for( fRet = !!GetGenes( ),i = 0; i < GetGenes( ); ++i )
 			if( GetGene( i ).empty( ) || !isprint( GetGene( i )[ 0 ] ) ) {
 				fRet = false;
-				g_CatSleipnir.error( "CPCL::Open( %d ) invalid gene at index %d: %s", i,
+				g_CatSleipnir( ).error( "CPCL::Open( %d ) invalid gene at index %d: %s", i,
 					GetGene( i ).c_str( ) );
 				break; }
 		if( fRet ) {
@@ -928,7 +928,7 @@ void CPCL::Impute( size_t iNeighbors, float dMinimumPresent, const CDat& DatSimi
 			vecsNeighbors[ i ].Initialize( Get( veciMissing[ i ] ), GetExperiments( ), iNeighbors );
 		for( i = 0; i < veciMissing.size( ); ++i ) {
 			if( !( i % 100 ) )
-				g_CatSleipnir.info( "CPCL::Impute( %d, %g ) finding neighbors for gene %d/%d", iNeighbors,
+				g_CatSleipnir( ).info( "CPCL::Impute( %d, %g ) finding neighbors for gene %d/%d", iNeighbors,
 					dMinimumPresent, i, veciMissing.size( ) );
 			ad = Get( iOne = veciMissing[ i ] );
 			for( j = ( i + 1 ); j < veciMissing.size( ); ++j ) {

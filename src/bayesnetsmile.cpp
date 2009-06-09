@@ -120,7 +120,7 @@ bool CBayesNetSmileImpl::LearnGrouped( const IDataset* pData, size_t iIterations
 			vecpExpected[ i ]->FillWith( 0 );
 		for( iterDatum = mapData.begin( ); iterDatum != mapData.end( ); ++iterDatum ) {
 			if( !( iDatum++ % 50 ) )
-				g_CatSleipnir.notice( "CBayesNetSmile::LearnGrouped( %d, %d ) iteration %d, datum %d/%d",
+				g_CatSleipnir( ).notice( "CBayesNetSmile::LearnGrouped( %d, %d ) iteration %d, datum %d/%d",
 					iIterations, fZero, iIter, ( iDatum - 1 ), mapData.size( ) );
 			FillCPTs( vecfHidden, iterDatum->first, fZero, true );
 			m_SmileNet.UpdateBeliefs( );
@@ -244,7 +244,7 @@ bool CBayesNetSmileImpl::LearnUngrouped( const IDataset* pData, size_t iIteratio
 			vecpExpected[ i ]->FillWith( 0 );
 		for( i = 0; i < pData->GetGenes( ); ++i ) {
 			if( !( i % 50 ) )
-				g_CatSleipnir.notice( "CBayesNetSmile::LearnUngrouped( %d, %d ) iteration %d, gene %d/%d",
+				g_CatSleipnir( ).notice( "CBayesNetSmile::LearnUngrouped( %d, %d ) iteration %d, gene %d/%d",
 					iIterations, fZero, iIter, i, pData->GetGenes( ) );
 			for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
 				if( !FillCPTs( pData, i, j, fZero, true ) )
@@ -371,7 +371,7 @@ bool CBayesNetSmileImpl::Evaluate( const IDataset* pData, CDat* pDatOut, TVecVec
 		dPrior = (float)(*pValue->GetMatrix( ))[ 0 ]; }
 	for( i = 0; i < pData->GetGenes( ); ++i ) {
 		if( !( i % 250 ) )
-			g_CatSleipnir.notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
+			g_CatSleipnir( ).notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
 				pData->GetGenes( ) );
 		if( pDatOut && !pvecvecdOut && ( ( iOne = veciGenes[ i ] ) == -1 ) )
 			continue;
@@ -596,7 +596,7 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 	for( i = 0; i < iAnswers; ++i )
 		(*pMat)[ (int)i ] = ( j = vecveciCounts[ 0 ][ (int)i ] ) ? j : ( fFallback ? 0 : 1 );
 	if( fFallback ) {
-		g_CatSleipnir.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s",
+		g_CatSleipnir( ).warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s",
 			fZero, m_SmileNet.GetNode( 0 )->Info( ).Header( ).GetId( ) );
 		dLambda = 1 - ( (float)iCount / c_iMinimum );
 		pMat->Normalize( );
@@ -622,7 +622,7 @@ bool CBayesNetSmileImpl::LearnNaive( const IDataset* pData, bool fZero ) {
 					veciCoords[ 1 ] = (int)k;
 					dCount += (*pMat)[ veciCoords ]; }
 				if( dCount < c_iMinimum ) {
-					g_CatSleipnir.warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s, column %d",
+					g_CatSleipnir( ).warn( "CBayesNetSmile::LearnNaive( %d ) insufficient data for node %s, column %d",
 						fZero, m_SmileNet.GetNode( (int)i )->Info( ).Header( ).GetId( ), j );
 					dLambda = 1 - ( (float)dCount / c_iMinimum );
 					for( k = 0; k < (size_t)pDef->GetNumberOfOutcomes( ); ++k ) {
@@ -671,7 +671,7 @@ bool CBayesNetSmile::Evaluate( const CPCLPair& PCLData, CPCL& PCLResults, bool f
 	((CBayesNetSmile*)this)->m_SmileNet.SetDefaultBNAlgorithm( iAlgorithm );
 	for( i = 0; i < PCLResults.GetGenes( ); ++i ) {
 		if( !( i % 1 ) )
-			g_CatSleipnir.notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
+			g_CatSleipnir( ).notice( "CBayesNetSmile::Evaluate( %d ) %d/%d", fZero, i,
 				PCLResults.GetGenes( ) );
 		strCur = EncodeDatum( PCLData, PCLData.GetGene( PCLResults.GetGene( i ) ), veciMap );
 		if( m_fGroup && ( ( iterDatum = mapData.find( strCur ) ) != mapData.end( ) ) ) {

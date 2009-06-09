@@ -153,12 +153,12 @@ bool SMotifMatch::Open( std::istream& istm, CCoalesceMotifLibrary& Motifs ) {
 	istm.getline( &strLine[ 0 ], strLine.size( ) - 1 );
 	CMeta::Tokenize( strLine.c_str( ), vecstrLine );
 	if( vecstrLine.size( ) < 3 ) {
-		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid line: %s", strLine.c_str( ) );
+		g_CatSleipnir( ).error( "SMotifMatch::Open( ) invalid line: %s", strLine.c_str( ) );
 		return false; }
 	m_strType = vecstrLine[ 0 ];
 	if( ( m_eSubsequence = CCoalesceSequencerBase::GetSubsequence( vecstrLine[ 1 ] ) ) ==
 		CCoalesceSequencerBase::ESubsequenceEnd ) {
-		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid subsequence: %s", vecstrLine[ 1 ].c_str( ) );
+		g_CatSleipnir( ).error( "SMotifMatch::Open( ) invalid subsequence: %s", vecstrLine[ 1 ].c_str( ) );
 		return false; }
 	m_dZ = (float)atof( vecstrLine[ 2 ].c_str( ) );
 
@@ -171,14 +171,14 @@ bool SMotifMatch::Open( std::istream& istm, CCoalesceMotifLibrary& Motifs ) {
 
 			CMeta::Tokenize( vecstrKnowns[ i ].c_str( ), vecstrKnown, ":" );
 			if( vecstrKnown.size( ) != 2 ) {
-				g_CatSleipnir.error( "SMotifMatch::Open( ) invalid known: %s", vecstrKnowns[ i ].c_str( ) );
+				g_CatSleipnir( ).error( "SMotifMatch::Open( ) invalid known: %s", vecstrKnowns[ i ].c_str( ) );
 				return false; }
 			m_vecprstrdKnown.push_back( pair<string, float>( vecstrKnown[ 0 ],
 				(float)atof( vecstrKnown[ 1 ].c_str( ) ) ) ); } }
 
 	istm.getline( &strLine[ 0 ], strLine.size( ) - 1 );
 	if( ( m_iMotif = Motifs.Open( strLine.c_str( ) ) ) == -1 ) {
-		g_CatSleipnir.error( "SMotifMatch::Open( ) invalid motif: %s", strLine.c_str( ) );
+		g_CatSleipnir( ).error( "SMotifMatch::Open( ) invalid motif: %s", strLine.c_str( ) );
 		return false; }
 
 	return true; }

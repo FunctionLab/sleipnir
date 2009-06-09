@@ -151,7 +151,7 @@ bool CCoalesceClusterImpl::AddSeedPair( const CPCL& PCL, CCoalesceCluster& Pot,
 	vector<SThreadSeedPair>	vecsThreads;
 
 	if( PCL.GetGenes( ) < 2 ) {
-		g_CatSleipnir.error( "CCoalesceClusterImpl::AddSeedPair( %g ) found no genes", dPValue );
+		g_CatSleipnir( ).error( "CCoalesceClusterImpl::AddSeedPair( %g ) found no genes", dPValue );
 		return false; }
 	vecpthdThreads.resize( iThreads );
 	vecsThreads.resize( vecpthdThreads.size( ) );
@@ -162,7 +162,7 @@ bool CCoalesceClusterImpl::AddSeedPair( const CPCL& PCL, CCoalesceCluster& Pot,
 		vecsThreads[ i ].m_dFraction = dFraction;
 		vecsThreads[ i ].m_psetpriiSeeds = &setpriiSeeds;
 		if( pthread_create( &vecpthdThreads[ i ], NULL, ThreadSeedPair, &vecsThreads[ i ] ) ) {
-			g_CatSleipnir.error( "CCoalesceClusterImpl::AddSeedPair( %g, %g, %d ) could not seed pair",
+			g_CatSleipnir( ).error( "CCoalesceClusterImpl::AddSeedPair( %g, %g, %d ) could not seed pair",
 				dFraction, dPValue, iThreads );
 			return false; } }
 	dMaxCorr = -( dMinP = DBL_MAX );
@@ -175,7 +175,7 @@ bool CCoalesceClusterImpl::AddSeedPair( const CPCL& PCL, CCoalesceCluster& Pot,
 			iOne = vecsThreads[ i ].m_iOne;
 			iTwo = vecsThreads[ i ].m_iTwo; } }
 	if( ( dMinP * PCL.GetGenes( ) * ( PCL.GetGenes( ) - 1 ) * dFraction * dFraction ) < ( dPValue * 2 ) ) {
-		g_CatSleipnir.info( "CCoalesceClusterImpl::AddSeedPair( %g, %g ) seeding: %s, %s, %g (p=%g)",
+		g_CatSleipnir( ).info( "CCoalesceClusterImpl::AddSeedPair( %g, %g ) seeding: %s, %s, %g (p=%g)",
 			dFraction, dPValue, PCL.GetGene( iOne ).c_str( ), PCL.GetGene( iTwo ).c_str( ), dMaxCorr, dMinP );
 		priiSeed.first = iOne;
 		priiSeed.second = iTwo;
@@ -184,7 +184,7 @@ bool CCoalesceClusterImpl::AddSeedPair( const CPCL& PCL, CCoalesceCluster& Pot,
 		Add( iTwo, Pot );
 		return true; }
 
-	g_CatSleipnir.notice( "CCoalesceClusterImpl::AddSeedPair( %g, %g ) inadequate seed pair: %s, %s, %g (p=%g)",
+	g_CatSleipnir( ).notice( "CCoalesceClusterImpl::AddSeedPair( %g, %g ) inadequate seed pair: %s, %s, %g (p=%g)",
 		dFraction, dPValue, PCL.GetGene( iOne ).c_str( ), PCL.GetGene( iTwo ).c_str( ), dMaxCorr, dMinP );
 	return false; }
 
@@ -349,7 +349,7 @@ void CCoalesceClusterImpl::CalculateCentroid( const CPCL& PCL ) {
 			m_vecdStdevs[ i ] = ( m_vecdStdevs[ i ] < 0 ) ? 0 : sqrt( m_vecdStdevs[ i ] ); }
 		else
 			m_vecdCentroid[ i ] = CMeta::GetNaN( );
-		g_CatSleipnir.debug( "CCoalesceClusterImpl::CalculateCentroid( ) condition %d: count %d, mean %g, stdev %g",
+		g_CatSleipnir( ).debug( "CCoalesceClusterImpl::CalculateCentroid( ) condition %d: count %d, mean %g, stdev %g",
 			i, m_veciCounts[ i ], m_vecdCentroid[ i ], m_vecdStdevs[ i ] ); }
 
 	for( i = 0; i < m_vecsDatasets.size( ); ++i ) {
@@ -497,7 +497,7 @@ bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const CCoalesceCluster
 		vecsThreads[ i ].m_pvecsDatasets = &m_vecsDatasets;
 		vecsThreads[ i ].m_pPCL = &PCL;
 		if( pthread_create( &vecpthdThreads[ i ], NULL, ThreadSelectCondition, &vecsThreads[ i ] ) ) {
-			g_CatSleipnir.error( "CCoalesceCluster::SelectConditions( %d, %g ) could not select conditions",
+			g_CatSleipnir( ).error( "CCoalesceCluster::SelectConditions( %d, %g ) could not select conditions",
 				iThreads, dZScore );
 			return false; } }
 	for( i = 0; i < vecpthdThreads.size( ); ++i )
@@ -508,11 +508,11 @@ bool CCoalesceCluster::SelectConditions( const CPCL& PCL, const CCoalesceCluster
 		const SDataset&	sDataset	= m_vecsDatasets[ i ];
 
 		if( ( sDataset.m_dP < dPValue ) && ( fabs( sDataset.m_dZ ) > dZScore ) ) {
-			g_CatSleipnir.debug( "CCoalesceCluster::SelectConditions( %d, %g ) selected dataset %d at %g, z=%g",
+			g_CatSleipnir( ).debug( "CCoalesceCluster::SelectConditions( %d, %g ) selected dataset %d at %g, z=%g",
 				iThreads, dZScore, i, sDataset.m_dP, sDataset.m_dZ );
 			m_setiDatasets.insert( i ); }
 		else
-			g_CatSleipnir.debug( "CCoalesceCluster::SelectConditions( %d, %g ) rejected dataset %d at %g, z=%g",
+			g_CatSleipnir( ).debug( "CCoalesceCluster::SelectConditions( %d, %g ) rejected dataset %d at %g, z=%g",
 				iThreads, dZScore, i, sDataset.m_dP, sDataset.m_dZ ); }
 
 	return true; }
@@ -605,7 +605,7 @@ bool CCoalesceCluster::SelectMotifs( const CCoalesceGroupHistograms& HistsCluste
 		vecsThreads[ i ].m_dZScore = dZScore;
 		vecsThreads[ i ].m_pveciMotifs = veciMotifs.empty( ) ? NULL : &veciMotifs;
 		if( pthread_create( &vecpthdThreads[ i ], NULL, ThreadSelectMotif, &vecsThreads[ i ] ) ) {
-			g_CatSleipnir.error( "CCoalesceCluster::SelectMotifs( %g, %d ) could not select motifs",
+			g_CatSleipnir( ).error( "CCoalesceCluster::SelectMotifs( %g, %d ) could not select motifs",
 				dZScore, iThreads );
 			return false; } }
 	for( i = 0; i < vecpthdThreads.size( ); ++i ) {
@@ -643,16 +643,16 @@ bool CCoalesceClusterImpl::AddSignificant( const CCoalesceMotifLibrary& Motifs, 
 				SMotifMatch	sMotif( iMotif, strTypeCluster, eSubsequence, (float)dZ, (float)( dAveOne -
 					dAverage ) );
 
-				if( g_CatSleipnir.isInfoEnabled( ) ) {
+				if( g_CatSleipnir( ).isInfoEnabled( ) ) {
 					ostringstream	ossm;
 
 					ossm << "CCoalesceClusterImpl::AddSignificant( " << iMotif << ", " << dZScore <<
 						" ) adding at " << dP << ":" << endl << sMotif.Save( &Motifs ) << endl <<
 						"Cluster	" << HistSetCluster.Save( iMotif ) << endl <<
 						"Pot	" << HistSetPot.Save( iMotif );
-					g_CatSleipnir.info( ossm.str( ).c_str( ) ); }
+					g_CatSleipnir( ).info( ossm.str( ).c_str( ) ); }
 				vecsMotifs.push_back( sMotif ); }
-			else if( g_CatSleipnir.isDebugEnabled( ) ) {
+			else if( g_CatSleipnir( ).isDebugEnabled( ) ) {
 				ostringstream	ossm;
 
 				ossm << "CCoalesceClusterImpl::AddSignificant( " << iMotif << ", " << dZScore <<
@@ -660,7 +660,7 @@ bool CCoalesceClusterImpl::AddSignificant( const CCoalesceMotifLibrary& Motifs, 
 					(float)dZ, (float)( dAveOne - dAverage ) ).Save( &Motifs ) << endl <<
 					"Cluster	" << HistSetCluster.Save( iMotif ) << endl <<
 					"Pot	" << HistSetPot.Save( iMotif );
-				g_CatSleipnir.debug( ossm.str( ).c_str( ) ); } } }
+				g_CatSleipnir( ).debug( ossm.str( ).c_str( ) ); } } }
 
 	return true; }
 
@@ -761,13 +761,13 @@ bool CCoalesceCluster::SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& 
 		if( iThreads > 1 ) {
 			if( pthread_create( &vecpthdThreads[ 0 ], NULL, ThreadCentroid, &sUs ) ||
 				pthread_create( &vecpthdThreads[ 1 ], NULL, ThreadCentroid, &sThem ) ) {
-				g_CatSleipnir.error( "CCoalesceCluster::SelectGenes( %d, %g ) could not calculate centroids",
+				g_CatSleipnir( ).error( "CCoalesceCluster::SelectGenes( %d, %g ) could not calculate centroids",
 					iThreads, dProbability );
 				return false; }
 			for( i = 0; i < 2; ++i )
 				pthread_join( vecpthdThreads[ i ], NULL ); }
 		else if( ThreadCentroid( &sUs ) || ThreadCentroid( &sThem ) ) {
-			g_CatSleipnir.error( "CCoalesceCluster::SelectGenes( %d, %g ) could not calculate centroids",
+			g_CatSleipnir( ).error( "CCoalesceCluster::SelectGenes( %d, %g ) could not calculate centroids",
 				iThreads, dProbability );
 			return false; }
 	}
@@ -812,7 +812,7 @@ bool CCoalesceCluster::SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& 
 		vecsThreads[ i ].m_iMinimum = iMinimum;
 		vecsThreads[ i ].m_dProbability = dProbability;
 		if( pthread_create( &vecpthdThreads[ i ], NULL, ThreadSignificantGene, &vecsThreads[ i ] ) ) {
-			g_CatSleipnir.error( "CCoalesceCluster::SelectGenes( %d, %g ) could not calculate significance",
+			g_CatSleipnir( ).error( "CCoalesceCluster::SelectGenes( %d, %g ) could not calculate significance",
 				iThreads, dProbability );
 			return false; } }
 	for( i = 0; i < vecpthdThreads.size( ); ++i )
@@ -850,16 +850,16 @@ bool CCoalesceClusterImpl::IsSignificant( size_t iGene, const CPCL& PCL, const v
 		( 1 - dBeta ) * ( dLogPMotifsGivenOut - dLogPMotifsGivenIn ) ) /
 		( 0.5f + 2 * pow( 0.5f - dBeta, 2 ) ) ) );
 
-	if( g_CatSleipnir.isDebugEnabled( ) ) {
+	if( g_CatSleipnir( ).isDebugEnabled( ) ) {
 		set<SMotifMatch>::const_iterator	iterMotif;
 		size_t								iType;
 
-		g_CatSleipnir.debug( "CCoalesceClusterImpl::IsSignificant( %s ) is %g beta %g, exp. p=%g vs. %g, seq. p=%g vs %g",
+		g_CatSleipnir( ).debug( "CCoalesceClusterImpl::IsSignificant( %s ) is %g beta %g, exp. p=%g vs. %g, seq. p=%g vs %g",
 			PCL.GetGene( iGene ).c_str( ), dP, dBeta, dLogPExpressionGivenIn, dLogPExpressionGivenOut,
 			dLogPMotifsGivenIn, dLogPMotifsGivenOut );
 		for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif )
 			if( ( iType = GeneScores.GetType( iterMotif->m_strType ) ) != -1 )
-				g_CatSleipnir.debug( "%g	%s", GeneScores.Get( iType, iterMotif->m_eSubsequence, iGene,
+				g_CatSleipnir( ).debug( "%g	%s", GeneScores.Get( iType, iterMotif->m_eSubsequence, iGene,
 					iterMotif->m_iMotif ), iterMotif->Save( pMotifs ).c_str( ) ); }
 
 	return ( dP > dProbability ); }
@@ -959,14 +959,14 @@ bool CCoalesceClusterImpl::CalculateProbabilityMotifs( const CCoalesceGeneScores
 					sCluster--;
 					iCluster--; }
 				else
-					g_CatSleipnir.warn( "CCoalesceClusterImpl::CalculateProbabilityMotifs( %d, %d, %g, %g ) no motifs of %d in cluster: %g, %s\n%s",
+					g_CatSleipnir( ).warn( "CCoalesceClusterImpl::CalculateProbabilityMotifs( %d, %d, %g, %g ) no motifs of %d in cluster: %g, %s\n%s",
 						iGene, fClustered, dLogPIn, dLogPOut, iCluster, dGene,
 						iterMotif->Save( NULL ).c_str( ), HistSetCluster.Save( iterMotif->m_iMotif ).c_str( ) ); }
 			else if( sPot ) {
 				sPot--;
 				iPot--; }
 			else
-				g_CatSleipnir.warn( "CCoalesceClusterImpl::CalculateProbabilityMotifs( %d, %d, %g, %g ) no motifs of %d in pot: %g, %s\n%s",
+				g_CatSleipnir( ).warn( "CCoalesceClusterImpl::CalculateProbabilityMotifs( %d, %d, %g, %g ) no motifs of %d in pot: %g, %s\n%s",
 					iGene, fClustered, dLogPIn, dLogPOut, iPot, dGene, iterMotif->Save( NULL ).c_str( ),
 					HistSetPot.Save( iterMotif->m_iMotif ).c_str( ) );
 			dPCluster = (double)( sCluster + 1 ) / ( iCluster + HistSetCluster.GetEdges( ) );
@@ -1210,7 +1210,7 @@ size_t CCoalesceCluster::Open( const std::string& strPCL, size_t iSkip, const CP
 				break; } }
 	for( i = 0; i < PCLCluster.GetGenes( ); ++i ) {
 		if( ( iGene = PCL.GetGene( PCLCluster.GetGene( i ) ) ) == -1 ) {
-			g_CatSleipnir.error( "CCoalesceCluster::Open( %s, %i ) unrecognized gene: %s", strPCL.c_str( ),
+			g_CatSleipnir( ).error( "CCoalesceCluster::Open( %s, %i ) unrecognized gene: %s", strPCL.c_str( ),
 				iSkip, PCLCluster.GetGene( i ).c_str( ) );
 			return -1; }
 		m_setiGenes.insert( iGene ); }
@@ -1226,7 +1226,7 @@ size_t CCoalesceCluster::Open( const std::string& strPCL, size_t iSkip, const CP
 		SMotifMatch	sMotif;
 
 		if( !sMotif.Open( ifsm, *pMotifs ) ) {
-			g_CatSleipnir.warn( "CCoalesceCluster::Open( %s, %d ) could not open: %s", strPCL.c_str( ),
+			g_CatSleipnir( ).warn( "CCoalesceCluster::Open( %s, %d ) could not open: %s", strPCL.c_str( ),
 				iSkip, strMotifs.c_str( ) );
 			return -1; }
 		m_setsMotifs.insert( sMotif ); }
@@ -1270,11 +1270,11 @@ size_t CCoalesceCluster::Open( std::istream& istm, const CPCL& PCL, CCoalesceMot
 	istm.getline( &strBuffer[ 0 ], strBuffer.size( ) );
 	CMeta::Tokenize( strBuffer.c_str( ), vecstrLine );
 	if( vecstrLine.empty( ) || ( vecstrLine[ 0 ] != c_szGenes ) ) {
-		g_CatSleipnir.error( "CCoalesceCluster::Open( ) invalid line: %s", strBuffer.c_str( ) );
+		g_CatSleipnir( ).error( "CCoalesceCluster::Open( ) invalid line: %s", strBuffer.c_str( ) );
 		return -1; }
 	for( i = 1; i < vecstrLine.size( ); ++i ) {
 		if( ( j = PCL.GetGene( vecstrLine[ i ] ) ) == -1 ) {
-			g_CatSleipnir.warn( "CCoalesceCluster::Open( ) unrecognized gene: %s",
+			g_CatSleipnir( ).warn( "CCoalesceCluster::Open( ) unrecognized gene: %s",
 				vecstrLine[ i ].c_str( ) );
 			continue; }
 		m_setiGenes.insert( j ); }
@@ -1283,11 +1283,11 @@ size_t CCoalesceCluster::Open( std::istream& istm, const CPCL& PCL, CCoalesceMot
 	vecstrLine.clear( );
 	CMeta::Tokenize( strBuffer.c_str( ), vecstrLine );
 	if( vecstrLine.empty( ) || ( vecstrLine[ 0 ] != c_szConditions ) ) {
-		g_CatSleipnir.error( "CCoalesceCluster::Open( ) invalid line: %s", strBuffer.c_str( ) );
+		g_CatSleipnir( ).error( "CCoalesceCluster::Open( ) invalid line: %s", strBuffer.c_str( ) );
 		return -1; }
 	for( i = 1; i < vecstrLine.size( ); ++i ) {
 		if( ( j = PCL.GetExperiment( vecstrLine[ i ] ) ) == -1 ) {
-			g_CatSleipnir.error( "CCoalesceCluster::Open( ) unrecognized condition: %s",
+			g_CatSleipnir( ).error( "CCoalesceCluster::Open( ) unrecognized condition: %s",
 				vecstrLine[ i ].c_str( ) );
 			return -1; }
 		m_setiDatasets.insert( j ); }
@@ -1345,10 +1345,10 @@ bool CCoalesceCluster::Open( const CHierarchy& Hierarchy, const std::vector<CCoa
 	vector<map<string, set<SMotifMatch> > >	vecmapstrsetsMotifs;
 
 	vecmapstrsetsMotifs.resize( CCoalesceSequencerBase::ESubsequenceEnd );
-	g_CatSleipnir.notice( "CCoalesceCluster::Open( %g ) merging clusters:", dFraction );
+	g_CatSleipnir( ).notice( "CCoalesceCluster::Open( %g ) merging clusters:", dFraction );
 	if( !( iClusters = CCoalesceClusterImpl::Open( Hierarchy, vecClusters, vecstrClusters, mapiiGenes,
 		mapiiDatasets, vecmapstrsetsMotifs ) ) ) {
-		g_CatSleipnir.error( "CCoalesceCluster::Open( %g ) no clusters found", dFraction );
+		g_CatSleipnir( ).error( "CCoalesceCluster::Open( %g ) no clusters found", dFraction );
 		return false; }
 
 	Clear( );
@@ -1383,7 +1383,7 @@ bool CCoalesceClusterImpl::OpenMotifsHeuristic( const std::set<SMotifMatch>& set
 	set<SMotifMatch>	setsMerged;
 
 	iMotifs = setsMotifs.size( );
-	g_CatSleipnir.notice( "CCoalesceClusterImpl::OpenMotifsHeuristic( %g ) resolving %d motifs", dCutoff,
+	g_CatSleipnir( ).notice( "CCoalesceClusterImpl::OpenMotifsHeuristic( %g ) resolving %d motifs", dCutoff,
 		iMotifs );
 
 	vecsMotifs.resize( iMotifs );
@@ -1422,7 +1422,7 @@ bool CCoalesceClusterImpl::OpenMotifs( const std::set<SMotifMatch>& setsMotifs, 
 	size_t				i, j;
 	bool				fRet;
 
-	g_CatSleipnir.notice( "CCoalesceClusterImpl::OpenMotifs( %g ) resolving %d motifs", dCutoff,
+	g_CatSleipnir( ).notice( "CCoalesceClusterImpl::OpenMotifs( %g ) resolving %d motifs", dCutoff,
 		setsMotifs.size( ) );
 
 	vecsMotifs.resize( setsMotifs.size( ) );
@@ -1452,7 +1452,7 @@ size_t CCoalesceClusterImpl::Open( const CHierarchy& Hier, const std::vector<CCo
 
 	const CCoalesceCluster&	Cluster	= vecClusters[ Hier.GetID( ) ];
 
-	g_CatSleipnir.notice( "CCoalesceClusterImpl::Open( ) cluster %s",
+	g_CatSleipnir( ).notice( "CCoalesceClusterImpl::Open( ) cluster %s",
 		vecstrClusters[ Hier.GetID( ) ].c_str( ) );
 	for( iterFrom = Cluster.GetGenes( ).begin( ); iterFrom != Cluster.GetGenes( ).end( ); ++iterFrom )
 		if( ( iterTo = mapiiGenes.find( *iterFrom ) ) == mapiiGenes.end( ) )
@@ -1521,7 +1521,7 @@ float CCoalesceCluster::GetSimilarity( const CCoalesceCluster& Cluster, size_t i
 	dRet = (float)iOverlapGenes / min( GetGenes( ).size( ), Cluster.GetGenes( ).size( ) );
 // jaccard index works best with an 0.25-0.33 cutoff
 //	dRet = (float)iOverlapGenes / ( GetGenes( ).size( ) + Cluster.GetGenes( ).size( ) - iOverlapGenes );
-	g_CatSleipnir.debug( "CCoalesceCluster::GetSimilarity( %d, %d ): %d, %d, %d = %g", iGenes,
+	g_CatSleipnir( ).debug( "CCoalesceCluster::GetSimilarity( %d, %d ): %d, %d, %d = %g", iGenes,
 		iDatasets, iOverlapGenes, GetGenes( ).size( ), Cluster.GetGenes( ).size( ), dRet );
 	return dRet; }
 

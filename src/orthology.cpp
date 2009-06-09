@@ -81,7 +81,7 @@ bool COrthology::Open( std::istream& istm ) {
 				if( vecstrLine[ i ].length( ) == 0 )
 					continue;
 				if( ( j = vecstrLine[ i ].find( c_cOrgSep ) ) == string::npos ) {
-					g_CatSleipnir.warn( "COrthology::Open( ) illegal gene token: %s",
+					g_CatSleipnir( ).warn( "COrthology::Open( ) illegal gene token: %s",
 						vecstrLine[ i ].c_str( ) );
 					continue; }
 				strOrganism = vecstrLine[ i ].substr( 0, j );

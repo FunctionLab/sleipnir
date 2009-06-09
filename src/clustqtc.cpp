@@ -195,7 +195,7 @@ void CClustQTC::Cluster( const CDistanceMatrix& MatSimilarities, float dMinDiame
 	size_t				i, j;
 
 	for( dDiameter = dMinDiameter; dDiameter <= dMaxDiameter; dDiameter += dDeltaDiameter ) {
-		g_CatSleipnir.notice( "CClustQTC::Cluster( %g, %g, %g, %d ) processing diameter %g", dMinDiameter,
+		g_CatSleipnir( ).notice( "CClustQTC::Cluster( %g, %g, %g, %d ) processing diameter %g", dMinDiameter,
 			dMaxDiameter, dDeltaDiameter, iSize, dDiameter );
 		sClusters = QualityThresholdAll( MatSimilarities.GetSize( ), dDiameter, iSize, MatSimilarities,
 			vecsClusters );
@@ -219,7 +219,7 @@ uint16_t CClustQTCImpl::QualityThresholdAll( size_t iGenes, float dDiameter, siz
 
 	vecsClusters.resize( iGenes );
 	for( iAssigned = sCluster = 0; ; ++sCluster ) {
-		g_CatSleipnir.notice( "CClustQTCImpl::QualityThresholdAll( ) cluster %d, assigned %d/%d genes",
+		g_CatSleipnir( ).notice( "CClustQTCImpl::QualityThresholdAll( ) cluster %d, assigned %d/%d genes",
 			sCluster + 1, iAssigned, iGenes );
 		QualityThresholdLargest( iGenes, dDiameter, Dist, vecfAssigned, vecsCur );
 		for( i = 0; i < vecsCur.size( ); ++i )
@@ -251,7 +251,7 @@ void CClustQTCImpl::QualityThresholdLargest( size_t iGenes, float dDiameter, con
 	vecfClone.resize( vecfAssigned.size( ) );
 	for( iGene = 0; iGene < vecfAssigned.size( ); ++iGene ) {
 		if( !( iGene % 1000 ) )
-			g_CatSleipnir.notice( "CClustQTCImpl::QualityThresholdLargest( %g ) processing gene %d/%d",
+			g_CatSleipnir( ).notice( "CClustQTCImpl::QualityThresholdLargest( %g ) processing gene %d/%d",
 				dDiameter, iGene, vecfAssigned.size( ) );
 		if( vecfAssigned[ iGene ] )
 			continue;
@@ -313,7 +313,7 @@ void CClustQTCImpl::InitializeDistances( const CDataMatrix& Data, const IMeasure
 		adWA = adWB = NULL;
 	for( i = 0; i < Data.GetRows( ); ++i ) {
 		if( !( i % 10 ) )
-			g_CatSleipnir.notice( "CClustQTCImpl::InitializeDistances( %d ) initializing %d/%d genes",
+			g_CatSleipnir( ).notice( "CClustQTCImpl::InitializeDistances( %d ) initializing %d/%d genes",
 				i, Data.GetRows( ) );
 		for( j = ( i + 1 ); j < Data.GetRows( ); ++j )
 			Dist.Set( i, j, (float)GetJackDistance( Data.Get( i ), Data.Get( j ),

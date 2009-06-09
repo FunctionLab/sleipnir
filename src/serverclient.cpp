@@ -40,7 +40,7 @@ void CServerClientImpl::StartRoutine( ) {
 		ReadMessage( );
 	while( m_vecbMessage.size( ) && m_pClient->ProcessMessage( m_vecbMessage ) );
 
-	g_CatSleipnir.info( "Client 0x%08x disconnected", m_pClient ); }
+	g_CatSleipnir( ).info( "Client 0x%08x disconnected", m_pClient ); }
 
 CServerClientImpl::CServerClientImpl( SOCKET iSocket, IServerClient* pClient ) : m_iSocket(iSocket),
 	m_pClient(pClient) { }

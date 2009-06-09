@@ -809,7 +809,7 @@ MIPS:
  * Fixed \ref Answerer usage in the documentation example - thanks to Jim Costello! <br>
  * Added \ref COALESCE and \ref Synthesizer as described in Huttenhower et al. 2009. <br>
  * Added \ref PCLPlotter and \ref Matcher. <br>
- * Update version dependencies for SMILE, SVD Light. <br>
+ * Update version dependencies for SMILE, SVM Light/Perf. <br>
  * Update VS2008 build system. <br>
  * Add a variety of new matrix operations and statistical functions. <br>
  * Many, many bug fixes and added features!
@@ -845,13 +845,10 @@ MIPS:
 namespace Sleipnir {
 
 #ifdef USE_LOG4CPP_STUB
-Category	g_CatSleipnir;
-
 const char* Priority::c_aszPriorityLevels[]	= {"FATAL", "ALERT", "CRITICAL", "ERROR", "WARN",
 												"NOTICE", "INFO", "DEBUG", "NOTSET"};
 #else // USE_LOG4CPP_STUB
 const char	c_szSleipnir[]	= "Sleipnir";
-Category&	g_CatSleipnir	= Category::getInstance( c_szSleipnir );
 #endif // USE_LOG4CPP_STUB
 
 }

@@ -63,11 +63,11 @@ bool COntologyMIPS::Open( std::istream& istmOntology, std::istream& istmAnnotati
 	SParserMIPS	sParserGene( istmAnnotations, Genome );
 
 	if( !OpenOntology( sParserOnto ) ) {
-		g_CatSleipnir.error( "COntologyMIPS::Open( ) failed on ontology line %d: %s", sParserOnto.m_iLine,
+		g_CatSleipnir( ).error( "COntologyMIPS::Open( ) failed on ontology line %d: %s", sParserOnto.m_iLine,
 			sParserOnto.m_szLine );
 		return false; }
 	if( !OpenGenes( sParserGene ) ) {
-		g_CatSleipnir.error( "COntologyMIPS::Open( ) failed on genes line %d: %s", sParserGene.m_iLine,
+		g_CatSleipnir( ).error( "COntologyMIPS::Open( ) failed on genes line %d: %s", sParserGene.m_iLine,
 			sParserGene.m_szLine );
 		return false; }
 
@@ -77,7 +77,7 @@ bool COntologyMIPSImpl::OpenOntology( SParserMIPS& sParser ) {
 	size_t					i, j;
 	vector<vector<size_t> >	vecveciChildren;
 
-	g_CatSleipnir.info( "COntologyMIPSImpl::OpenOntology( )" );
+	g_CatSleipnir( ).info( "COntologyMIPSImpl::OpenOntology( )" );
 	if( !( sParser.GetLine( ) && ( sParser.m_szLine[ 0 ] == '#' ) && sParser.GetLine( ) ) )
 		return false;
 
@@ -143,7 +143,7 @@ size_t COntologyMIPSImpl::OpenID( SParserMIPS& sParser ) {
 bool COntologyMIPSImpl::OpenGenes( SParserMIPS& sParser ) {
 	size_t	i, j;
 
-	g_CatSleipnir.info( "COntologyMIPSImpl::OpenGenes( )" );
+	g_CatSleipnir( ).info( "COntologyMIPSImpl::OpenGenes( )" );
 	if( !sParser.GetLine( ) )
 		return false;
 	if( !sParser.m_szLine[ 0 ] )

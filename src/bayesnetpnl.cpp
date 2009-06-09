@@ -108,7 +108,7 @@ bool CBayesNetPNLImpl::Evaluate( const IDataset* pData, CDat* pDatOut,
 	iNode = 0;
 	for( i = 0; i < pData->GetGenes( ); ++i ) {
 		if( !( i % 250 ) )
-			g_CatSleipnir.notice( "CBayesNetPNL::Evaluate( %d ) %d/%d", fZero, i,
+			g_CatSleipnir( ).notice( "CBayesNetPNL::Evaluate( %d ) %d/%d", fZero, i,
 				pData->GetGenes( ) );
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
 			if( !pData->IsExample( i, j ) )

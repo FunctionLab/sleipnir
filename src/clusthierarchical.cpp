@@ -238,7 +238,7 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 	for( i = 0; i < Sim.GetSize( ); ++i )
 		for( j = ( i + 1 ); j < Sim.GetSize( ); ++j )
 			if( ( ( d = Sim.Get( i, j ) ) == -FLT_MAX ) || CMeta::IsNaN( d ) ) {
-				g_CatSleipnir.error( "CClustHierarchicalImpl::Cluster( ) illegal input value at %d, %d", i,
+				g_CatSleipnir( ).error( "CClustHierarchicalImpl::Cluster( ) illegal input value at %d, %d", i,
 					j );
 				return NULL; }
 	iAssigned = iParentless = Sim.GetSize( );
@@ -275,7 +275,7 @@ CHierarchy* CClustHierarchicalImpl::Cluster( const CDistanceMatrix& Dist, const 
 		float	dHeight;
 
 		if( !( iParentless % 500 ) )
-			g_CatSleipnir.notice( "CClustHierarchical::Cluster( ) %d/%d nodes remaining", iParentless,
+			g_CatSleipnir( ).notice( "CClustHierarchical::Cluster( ) %d/%d nodes remaining", iParentless,
 				Sim.GetSize( ) );
 		dHeight = -FLT_MAX;
 		for( k = 0; k < Sim.GetSize( ); ++k )

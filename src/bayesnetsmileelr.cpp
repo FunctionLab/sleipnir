@@ -69,7 +69,7 @@ bool CBayesNetSmileImpl::LearnELR( const IDataset* pData, size_t iIterations, bo
 	dDotNew = ELRDot( vecvecfGradient, vecvecfPrev );
 
 	for( i = 0; i < iIterations; ++i ) {
-		g_CatSleipnir.notice( "CBayesNetSmile::LearnELR( %d, %d ) iteration %d/%d",
+		g_CatSleipnir( ).notice( "CBayesNetSmile::LearnELR( %d, %d ) iteration %d/%d",
 			iIterations, fZero, i, iIterations );
 		if( !dDotNew )
 			continue;
@@ -497,7 +497,7 @@ float CBayesNetSmileImpl::ELRBrent( const vector<bool>& vecfHidden, const TMapDa
 				v = u;
 				fv = fu; } } }
 
-	g_CatSleipnir.warn( "CBayesNetSmileImpl::ELRBrent( ) too many iterations" );
+	g_CatSleipnir( ).warn( "CBayesNetSmileImpl::ELRBrent( ) too many iterations" );
 	dAX = a;
 	dBX = b;
 	return fx; }

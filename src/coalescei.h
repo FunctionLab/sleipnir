@@ -429,7 +429,7 @@ public:
 		for( i = iTypeUs = 0; iTypeUs < GetTypes( ); ++iTypeUs )
 			for( iSubsequence = ESubsequenceBegin; iSubsequence < GetSubsequences( iTypeUs );
 				++iSubsequence ) {
-//				g_CatSleipnir.info( "CCoalesceGroupHistograms::SetTotal( ) type %s, subsequence %d contains %d genes with sequences",
+//				g_CatSleipnir( ).info( "CCoalesceGroupHistograms::SetTotal( ) type %s, subsequence %d contains %d genes with sequences",
 //					GetType( iTypeUs ).c_str( ), iSubsequence, m_vecsTotals[ i ] );
 				Get( iTypeUs, (ESubsequence)iSubsequence ).SetTotal( m_vecsTotals[ i++ ] ); } }
 

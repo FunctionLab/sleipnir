@@ -1171,7 +1171,7 @@ bool CStatistics::MatrixLUDecompose( CDataMatrix& Mat, vector<size_t>& veciIndic
 		for (j=0;j<Mat.GetRows( );j++)
 			if ((temp=fabs(Mat.Get( i, j ))) > big) big=temp;
 		if (big == 0.0)
-			g_CatSleipnir.warn( "CStatisticsImpl::LUDecomposition( ) singular matrix" );
+			g_CatSleipnir( ).warn( "CStatisticsImpl::LUDecomposition( ) singular matrix" );
 		vv[i]=1.0f/big; }
 	for (j=0;j<Mat.GetRows( );j++) {
 		for (i=0;i<j;i++) {

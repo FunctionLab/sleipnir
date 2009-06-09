@@ -193,10 +193,17 @@ struct Category {
 #endif // USE_LOG4CPP_STUB
 
 #ifdef USE_LOG4CPP_STUB
-extern Category		g_CatSleipnir;
+inline Category& g_CatSleipnir( ) {
+	static Category	s_CatSleipnir;
+
+	return s_CatSleipnir; }
 #else // USE_LOG4CPP_STUB
 extern const char	c_szSleipnir[];
-extern Category&	g_CatSleipnir;
+
+inline Category& g_CatSleipnir( ) {
+	static Category&	s_CatSleipnir	= Category::getInstance( c_szSleipnir );
+
+	return s_CatSleipnir; }
 #endif // USE_LOG4CPP_STUB
 
 }

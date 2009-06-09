@@ -186,7 +186,7 @@ float CCoalesceMotifLibrary::GetMatch( const std::string& strSequence, uint32_t 
 	switch( eType = GetType( iMotif ) ) {
 		case ETypePST:
 			if( !( pPST = GetPST( iMotif ) ) ) {
-				g_CatSleipnir.error( "CCoalesceMotifLibrary::GetMatch( %s, %d, %d ) could not find PST",
+				g_CatSleipnir( ).error( "CCoalesceMotifLibrary::GetMatch( %s, %d, %d ) could not find PST",
 					strSequence.c_str( ), iMotif, iOffset );
 				return CMeta::GetNaN( ); }
 			break;
@@ -223,7 +223,7 @@ float CCoalesceMotifLibrary::GetMatch( const std::string& strSequence, uint32_t 
 		dRet += d;
 		sModifiers.AddWeight( iDepth, iOffset, i ); }
 	if( CMeta::IsNaN( dRet ) || ( dRet < 0 ) ) {
-		g_CatSleipnir.error( "CCoalesceMotifLibrary::GetMatch( %s, %d, %d ) found negative score: %g",
+		g_CatSleipnir( ).error( "CCoalesceMotifLibrary::GetMatch( %s, %d, %d ) found negative score: %g",
 			strSequence.c_str( ), iMotif, iOffset, dRet );
 		return CMeta::GetNaN( ); }
 
@@ -301,8 +301,8 @@ uint32_t CCoalesceMotifLibraryImpl::MergeKMers( const std::string& strOne, const
 
 	pPST = CreatePST( iRet );
 	pPST->Add( strOne, strTwo, iOffset );
-	if( g_CatSleipnir.isInfoEnabled( ) )
-		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeKMers( %s, %s, %g ) merged at %g to %s",
+	if( g_CatSleipnir( ).isInfoEnabled( ) )
+		g_CatSleipnir( ).info( "CCoalesceMotifLibraryImpl::MergeKMers( %s, %s, %g ) merged at %g to %s",
 			strOne.c_str( ), strTwo.c_str( ), dCutoff, dScore, pPST->GetMotif( ).c_str( ) );
 	return iRet; }
 
@@ -344,8 +344,8 @@ uint32_t CCoalesceMotifLibraryImpl::MergeKMerRC( uint32_t iKMer, uint32_t iRC, f
 	else {
 		pPST->Add( strKMer, strTwo, iTwo );
 		pPST->Add( strOne ); }
-	if( g_CatSleipnir.isInfoEnabled( ) )
-		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeKMerRC( %s, %s, %g ) merged at %g to %s",
+	if( g_CatSleipnir( ).isInfoEnabled( ) )
+		g_CatSleipnir( ).info( "CCoalesceMotifLibraryImpl::MergeKMerRC( %s, %s, %g ) merged at %g to %s",
 			strKMer.c_str( ), GetMotif( iRC ).c_str( ), dCutoff, min( dOne, dTwo ),
 			pPST->GetMotif( ).c_str( ) );
 	return iRet; }
@@ -406,8 +406,8 @@ uint32_t CCoalesceMotifLibraryImpl::MergeRCs( uint32_t iOne, uint32_t iTwo, floa
 			asCrosses[ ( iMin + 2 ) % ARRAYSIZE(asCrosses) ].m_strOne, asCrosses[ iMin ].m_iOffset );
 		pPST->Add( PST );
 	}
-	if( g_CatSleipnir.isInfoEnabled( ) )
-		g_CatSleipnir.info( "CCoalesceMotifLibraryImpl::MergeRCs( %s, %s, %g ) merged at %g to %s",
+	if( g_CatSleipnir( ).isInfoEnabled( ) )
+		g_CatSleipnir( ).info( "CCoalesceMotifLibraryImpl::MergeRCs( %s, %s, %g ) merged at %g to %s",
 			GetMotif( iOne ).c_str( ), GetMotif( iTwo ).c_str( ), dCutoff, dMin, pPST->GetMotif( ).c_str( ) );
 	return iRet; }
 
@@ -430,12 +430,12 @@ uint32_t CCoalesceMotifLibraryImpl::MergeKMerPST( const std::string& strKMer, co
 
 	pPSTOut = CreatePST( iRet );
 	pPSTOut->Add( strKMer, PSTIn, iOffset );
-	if( g_CatSleipnir.isInfoEnabled( ) ) {
+	if( g_CatSleipnir( ).isInfoEnabled( ) ) {
 		ostringstream	ossm;
 
 		ossm << "CCoalesceMotifLibraryImpl::MergeKMerPST( " << strKMer << ", " << PSTIn.GetMotif( ) <<
 			", " << dCutoff << " ) merged at " << dScore << " to " << pPSTOut->GetMotif( );
-		g_CatSleipnir.info( ossm.str( ).c_str( ) ); }
+		g_CatSleipnir( ).info( ossm.str( ).c_str( ) ); }
 	return iRet; }
 
 float CCoalesceMotifLibraryImpl::AlignRCPST( uint32_t iRC, const CPST& PSTIn, float dCutoff ) const {
@@ -473,12 +473,12 @@ uint32_t CCoalesceMotifLibraryImpl::MergeRCPST( uint32_t iRC, const CPST& PSTIn,
 	else {
 		pPSTOut->Add( strTwo, PSTIn, iTwo );
 		pPSTOut->Add( strOne ); }
-	if( g_CatSleipnir.isInfoEnabled( ) ) {
+	if( g_CatSleipnir( ).isInfoEnabled( ) ) {
 		ostringstream	ossm;
 
 		ossm << "CCoalesceMotifLibraryImpl::MergeRCPST( " << GetMotif( iRC ) << ", " << PSTIn.GetMotif( ) <<
 			", " << dCutoff << " ) merged at " << min( dOne, dTwo ) << " to " << pPSTOut->GetMotif( );
-		g_CatSleipnir.info( ossm.str( ).c_str( ) ); }
+		g_CatSleipnir( ).info( ossm.str( ).c_str( ) ); }
 	return iRet; }
 
 float CCoalesceMotifLibraryImpl::AlignPSTs( const CPST& PSTOne, const CPST& PSTTwo, float dCutoff ) const {
@@ -504,13 +504,13 @@ uint32_t CCoalesceMotifLibraryImpl::MergePSTs( const CPST& PSTOne, const CPST& P
 	else {
 		pPSTOut->Add( PSTTwo );
 		pPSTOut->Add( PSTOne, iOffset ); }
-	if( g_CatSleipnir.isInfoEnabled( ) ) {
+	if( g_CatSleipnir( ).isInfoEnabled( ) ) {
 		ostringstream	ossm;
 
 		ossm << "CCoalesceMotifLibraryImpl::MergePSTs( " << PSTOne.GetMotif( ) << ", " <<
 			PSTTwo.GetMotif( ) << ", " << dCutoff << " ) merged at " << dScore << " to " <<
 			pPSTOut->GetMotif( );
-		g_CatSleipnir.info( ossm.str( ).c_str( ) ); }
+		g_CatSleipnir( ).info( ossm.str( ).c_str( ) ); }
 
 	return iRet; }
 
@@ -592,21 +592,21 @@ bool CCoalesceMotifLibraryImpl::GetPWM( uint32_t iMotif, float dCutoffPWMs, floa
 	if( dCutoffPWMs ) {
 		d = GetInformation( MatPWM );
 		if( d < dCutoffPWMs ) {
-			if( g_CatSleipnir.isInfoEnabled( ) ) {
+			if( g_CatSleipnir( ).isInfoEnabled( ) ) {
 				ostringstream	ossm;
 
 				ossm << "CCoalesceMotifLibraryImpl::GetPWM( " << iMotif << ", " << dCutoffPWMs << ", " <<
 					fNoRCs << " ) rejected (" << d << "):" << endl;
 				MatPWM.Save( ossm, false );
-				g_CatSleipnir.info( ossm.str( ).c_str( ) ); }
+				g_CatSleipnir( ).info( ossm.str( ).c_str( ) ); }
 			return false; }
-		if( g_CatSleipnir.isDebugEnabled( ) ) {
+		if( g_CatSleipnir( ).isDebugEnabled( ) ) {
 			ostringstream	ossm;
 
 			ossm << "CCoalesceMotifLibraryImpl::GetPWM( " << iMotif << ", " << dCutoffPWMs << ", " <<
 				fNoRCs << " ) got information (" << d << "):" << endl;
 			MatPWM.Save( ossm, false );
-			g_CatSleipnir.debug( ossm.str( ).c_str( ) ); } }
+			g_CatSleipnir( ).debug( ossm.str( ).c_str( ) ); } }
 
 	return true; }
 
@@ -662,7 +662,7 @@ bool CCoalesceMotifLibrary::OpenKnown( std::istream& istm ) {
 		if( vecstrLine.empty( ) )
 			continue;
 		if( ( vecstrLine.size( ) - 1 ) % 4 ) {
-			g_CatSleipnir.warn( "CCoalesceMotifLibrary::OpenKnown( ) invalid line: %s" );
+			g_CatSleipnir( ).warn( "CCoalesceMotifLibrary::OpenKnown( ) invalid line: %s" );
 			continue; }
 
 		m_sKnowns.Add( vecstrLine[ 0 ], vecstrLine ); }

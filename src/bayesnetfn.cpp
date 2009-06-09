@@ -520,7 +520,7 @@ bool CBayesNetFNImpl::Evaluate( const IDataset* pData, CDat* pDatOut, vector<vec
 
 	for( i = 0; i < pData->GetGenes( ); ++i ) {
 		if( !( i % 250 ) )
-			g_CatSleipnir.notice( "CBayesNetFN::Evaluate( %d ) %d/%d", fZero, i, pData->GetGenes( ) );
+			g_CatSleipnir( ).notice( "CBayesNetFN::Evaluate( %d ) %d/%d", fZero, i, pData->GetGenes( ) );
 		for( j = ( i + 1 ); j < pData->GetGenes( ); ++j ) {
 			if( !pData->IsExample( i, j ) )
 				continue;
@@ -678,7 +678,7 @@ bool CBayesNetMinimalImpl::Counts2Probs( const std::vector<std::string>& vecstrC
 		const CDataMatrix&	MatDefault	= pBNDefault->m_vecNodes[ iNode ].m_MatCPT;
 
 		if( MatDefault.GetRows( ) != vecdProbs.size( ) ) {
-			g_CatSleipnir.error( "CBayesNetMinimal::Counts2Probs( ) default distribution size mismatch: wanted %d, got %d",
+			g_CatSleipnir( ).error( "CBayesNetMinimal::Counts2Probs( ) default distribution size mismatch: wanted %d, got %d",
 				vecdProbs.size( ), MatDefault.GetRows( ) );
 			return false; }
 		for( i = 0; i < vecdProbs.size( ); ++i )
@@ -840,7 +840,7 @@ float CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbDatum, size_t
 		const CDataMatrix&	MatCPT	= m_vecNodes[ i ].m_MatCPT;
 		for( j = 0; j < MatCPT.GetColumns( ); ++j ) {
 			if( c >= MatCPT.GetRows( ) ) {
-				g_CatSleipnir.error( "CBayesNetMinimal::Evaluate( %d ) illegal value: %d/%d in %d", iOffset, c, MatCPT.GetRows( ), i );
+				g_CatSleipnir( ).error( "CBayesNetMinimal::Evaluate( %d ) illegal value: %d/%d in %d", iOffset, c, MatCPT.GetRows( ), i );
 				return CMeta::GetNaN( ); }
 			m_adNY[ j ] *= MatCPT.Get( c, j ); } }
 
@@ -1004,7 +1004,7 @@ bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const std::map<std:
 	iState = c_iStateInitial;
 	ifsm.open( szFileCounts );
 	if( !ifsm.is_open( ) ) {
-		g_CatSleipnir.error( "CBayesNetMinimal::OpenCounts( %s ) could not open file", szFileCounts );
+		g_CatSleipnir( ).error( "CBayesNetMinimal::OpenCounts( %s ) could not open file", szFileCounts );
 		return false; }
 	while( !ifsm.eof( ) ) {
 		ifsm.getline( szBuffer, CFile::c_iBufferSize - 1 );
@@ -1016,7 +1016,7 @@ bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const std::map<std:
 		switch( iState ) {
 			case c_iStateInitial:
 				if( vecstrLine.size( ) != 2 ) {
-					g_CatSleipnir.error( "CBayesNetMinimal::OpenCounts( %s ) illegal line: %s", szFileCounts,
+					g_CatSleipnir( ).error( "CBayesNetMinimal::OpenCounts( %s ) illegal line: %s", szFileCounts,
 						szBuffer );
 					return false; }
 				m_strID = vecstrLine[ 0 ];
@@ -1038,7 +1038,7 @@ bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const std::map<std:
 
 			case c_iStatePreCPT:
 				if( ( iterNode = mapstriNodes.find( vecstrLine[ 0 ] ) ) == mapstriNodes.end( ) ) {
-					g_CatSleipnir.error( "CBayesNetMinimal::OpenCounts( %s ) could not identify node: %s",
+					g_CatSleipnir( ).error( "CBayesNetMinimal::OpenCounts( %s ) could not identify node: %s",
 						szFileCounts, vecstrLine[ 0 ].c_str( ) );
 					return false; }
 				iNode = iterNode->second;
@@ -1055,7 +1055,7 @@ bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const std::map<std:
 
 					if( iClass ) {
 						if( MatCPT.GetRows( ) != vecdProbs.size( ) ) {
-							g_CatSleipnir.error( "CBayesNetMinimal::OpenCounts( %s ) illegal count number: given %d, expected %d",
+							g_CatSleipnir( ).error( "CBayesNetMinimal::OpenCounts( %s ) illegal count number: given %d, expected %d",
 								szFileCounts, vecdProbs.size( ), MatCPT.GetRows( ) );
 							return false; } }
 					else

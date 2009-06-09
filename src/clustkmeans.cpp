@@ -85,7 +85,7 @@ bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure
 	veciCounts.resize( iK );
 	for( iIteration = 0,fDone = false; !fDone; ++iIteration ) {
 		if( !( iIteration % 10 ) )
-			g_CatSleipnir.notice( "CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
+			g_CatSleipnir( ).notice( "CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
 		fill( veciCounts.begin( ), veciCounts.end( ), 0 );
 		fDone = true;
 		for( i = 0; i < vecsClusters.size( ); ++i ) {
@@ -96,7 +96,7 @@ bool CClustKMeans::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure
 				d = (float)pMeasure->Measure( MatData.Get( i ), MatData.GetColumns( ), MatMeans.Get( j ),
 					MatMeans.GetColumns( ), IMeasure::EMapNone, pMatWeights ? pMatWeights->Get( i ) : NULL );
 				if( CMeta::IsNaN( d ) ) {
-					g_CatSleipnir.error( "CClustKMeans::Cluster( %d ) got invalid measure for genes: %d, %d",
+					g_CatSleipnir( ).error( "CClustKMeans::Cluster( %d ) got invalid measure for genes: %d, %d",
 						iK, i, j );
 					return false; }
 				if( d > dMax ) {
@@ -187,7 +187,7 @@ bool CClustKMeans::Cluster( const CDistanceMatrix& MatSimilarities, size_t iK,
 	fill( veciPrev.begin( ), veciPrev.end( ), 1 );
 	veciNext.resize( veciPrev.size( ) );
 	for( iChanged = MatSimilarities.GetSize( ),iIteration = 0; iChanged > 2; ++iIteration ) {
-		g_CatSleipnir.log( ( iIteration % 10 ) ? Priority::DEBUG : Priority::NOTICE,
+		g_CatSleipnir( ).log( ( iIteration % 10 ) ? Priority::DEBUG : Priority::NOTICE,
 			"CClustKMeans::Cluster( %d ) iteration %d", iK, iIteration );
 		for( iChanged = i = 0; i < vecsClusters.size( ); ++i ) {
 			float	dMax;
@@ -195,7 +195,7 @@ bool CClustKMeans::Cluster( const CDistanceMatrix& MatSimilarities, size_t iK,
 			dMax = -FLT_MAX;
 			for( sMax = j = 0; j < MatPrev.GetColumns( ); ++j ) {
 				if( CMeta::IsNaN( d = MatPrev.Get( i, j ) ) ) {
-					g_CatSleipnir.error( "CClustKMeans::Cluster( %d ) failed on gene %d, cluster %d", i, j );
+					g_CatSleipnir( ).error( "CClustKMeans::Cluster( %d ) failed on gene %d, cluster %d", i, j );
 					return false; }
 				d /= veciPrev[ j ];
 				if( d > dMax ) {
@@ -218,7 +218,7 @@ bool CClustKMeans::Cluster( const CDistanceMatrix& MatSimilarities, size_t iK,
 				do
 					iOne = rand( ) % vecsClusters.size( );
 				while( veciNext[ vecsClusters[ iOne ] ] < 2 );
-				g_CatSleipnir.info( "CClustKMeans::Cluster( %d ) moving gene %d into empty cluster %d", iK,
+				g_CatSleipnir( ).info( "CClustKMeans::Cluster( %d ) moving gene %d into empty cluster %d", iK,
 					iOne, i );
 				veciNext[ vecsClusters[ iOne ] ]--;
 				for( j = 0; j < MatNext.GetRows( ); ++j ) {
@@ -234,18 +234,18 @@ bool CClustKMeans::Cluster( const CDistanceMatrix& MatSimilarities, size_t iK,
 			iState ^= j >> ( ( sizeof(size_t) * 8 ) - 15 );
 			iState ^= vecsClusters[ i ] + 1; }
 		if( setiStates.find( iState ) != setiStates.end( ) ) {
-			g_CatSleipnir.info( "CClustKMeans::Cluster( %d ) found redundant state, terminating", iK );
+			g_CatSleipnir( ).info( "CClustKMeans::Cluster( %d ) found redundant state, terminating", iK );
 			break; }
 		setiStates.insert( iState );
 
-		g_CatSleipnir.notice( "CClustKMeans::Cluster( %d ) updated %d genes", iK, iChanged );
-		if( g_CatSleipnir.isDebugEnabled( ) )
+		g_CatSleipnir( ).notice( "CClustKMeans::Cluster( %d ) updated %d genes", iK, iChanged );
+		if( g_CatSleipnir( ).isDebugEnabled( ) )
 			for( i = 0; i < MatPrev.GetRows( ); ++i ) {
 				ostringstream	ossm;
 
 				for( j = 0; j < MatPrev.GetColumns( ); ++j )
 					ossm << ( j ? "\t" : "" ) << MatPrev.Get( i, j );
-				g_CatSleipnir.debug( "CClustKMeans::Cluster( %d ) object %d:	%s", iK, i,
+				g_CatSleipnir( ).debug( "CClustKMeans::Cluster( %d ) object %d:	%s", iK, i,
 					ossm.str( ).c_str( ) ); }
 		copy( veciNext.begin( ), veciNext.end( ), veciPrev.begin( ) );
 		for( i = 0; i < MatPrev.GetRows( ); ++i )

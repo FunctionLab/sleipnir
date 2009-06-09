@@ -119,7 +119,7 @@ size_t CDataImpl::OpenMax( const char* szDataDir, const std::vector<std::string>
 					if( psetstrGenes )
 						OpenGenes( ifsm, false, true, *psetstrGenes ); }
 				else {
-					g_CatSleipnir.info( "CDataImpl::OpenMax( %s ) assuming %s is hidden",
+					g_CatSleipnir( ).info( "CDataImpl::OpenMax( %s ) assuming %s is hidden",
 						szDataDir, vecstrNodes[ i ].c_str( ) );
 					continue; } } }
 		ifsm.close( ); }
@@ -158,7 +158,7 @@ bool CDataImpl::OpenGenes( const std::vector<std::string>& vecstrData ) {
 				ifsm.clear( );
 				ifsm.open( vecstrData[ i ].c_str( ) );
 				if( !( ifsm.is_open( ) && OpenGenes( ifsm, false, true, setstrGenes ) ) ) {
-					g_CatSleipnir.error( "CDataImpl::OpenGenes( ) failed to open: %s", vecstrData[ i ].c_str( ) );
+					g_CatSleipnir( ).error( "CDataImpl::OpenGenes( ) failed to open: %s", vecstrData[ i ].c_str( ) );
 					return false; } } }
 		ifsm.close( ); }
 

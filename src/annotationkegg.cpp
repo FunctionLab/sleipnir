@@ -74,7 +74,7 @@ bool COntologyKEGG::Open( std::istream& istm, CGenome& Genome, const std::string
 	vector<set<CGene*> >		vecsetpGenes;
 	set<CGene*>::iterator		iterGene;
 
-	g_CatSleipnir.info( "COntologyKEGG::Open( %s )", strOrganism.c_str( ) );
+	g_CatSleipnir( ).info( "COntologyKEGG::Open( %s )", strOrganism.c_str( ) );
 	Reset( );
 	sParser.GetLine( );
 	while( istm.peek( ) != EOF ) {
@@ -141,7 +141,7 @@ bool COntologyKEGGImpl::OpenEntry( SParserKEGG& sParser ) {
 
 bool COntologyKEGGImpl::OpenName( SParserKEGG& sParser ) {
 
-	g_CatSleipnir.debug( "COntologyKEGGImpl::OpenName( ) %s", sParser.m_szLine );
+	g_CatSleipnir( ).debug( "COntologyKEGGImpl::OpenName( ) %s", sParser.m_szLine );
 	return ( sParser.IsStart( c_szName ) ? sParser.GetLine( ) : true ); }
 
 bool COntologyKEGGImpl::OpenDefinition( SParserKEGG& sParser ) {
