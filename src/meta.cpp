@@ -28,7 +28,6 @@ const char	CMeta::c_szWS[]		= " \t\r\n";
 
 CMeta::CMeta( int iVerbosity, size_t iRandomSeed ) {
 #ifndef USE_LOG4CPP_STUB
-	Category&			CatSleipnir	= Category::getInstance( c_szSleipnir );
 	OstreamAppender*	pAppOstm	= new OstreamAppender( "cerr", &cerr );
 #endif // USE_LOG4CPP_STUB
 
@@ -41,9 +40,9 @@ CMeta::CMeta( int iVerbosity, size_t iRandomSeed ) {
 		: iRandomSeed );
 #ifndef USE_LOG4CPP_STUB
 	pAppOstm->setLayout( new BasicLayout( ) );
-	CatSleipnir.setAdditivity( false );
-	CatSleipnir.setAppender( pAppOstm );
-	CatSleipnir.setPriority( iVerbosity * Priority::ALERT );
+	g_CatSleipnir( ).setAdditivity( false );
+	g_CatSleipnir( ).setAppender( pAppOstm );
+	g_CatSleipnir( ).setPriority( iVerbosity * Priority::ALERT );
 #endif // USE_LOG4CPP_STUB
 }
 

@@ -419,7 +419,7 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 			return 1;
 		vecpBNs.push_back( pBN ); }
 
-	cerr << "Created " << vecpBNs.size( ) << " Bayesian classifiers" << endl;
+	cerr << "Created " << ( vecpBNs.size( ) + 1 ) << " Bayesian classifiers" << endl;
 
 	if( sArgs.output_arg ) {
 		if( sArgs.smile_flag ) {

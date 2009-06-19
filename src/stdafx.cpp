@@ -215,6 +215,9 @@
  *	Boost installation includes something like \c gcc41 in the library file names, use
  *	\c --with-boost-graph-lib to give the path <em>to the Boost graph library file</em> rather than its parent
  *	directory.  Remember, Boost is only used for certain tools, so it won't hurt if you need to exclude it.
+ * - If the Sleipnir tools instantaneously crash with a segmentation fault, try compiling Sleipnir \em and
+ *	its external dependencies with \c CXXFLAGS=-fno-threadsafe-statics.  This works around a bug in certain
+ *	versions of g++ and pthreads.
  * - If all else fails, <a href="mailto:ogt@princeton.edu">contact us</a>!  We're happy to receive
  *	feedback about Sleipnir, good or bad, and we're more than willing to update the code or documentation
  *	based on user contributions.  If you'd like to see your name in lights on this web page, feel free to
@@ -804,10 +807,10 @@ MIPS:
  * 
  * \section sec_history Version History
  * 
- * - <a href="sleipnir-2.0.tar.gz">2.0</a>, ***-***-09 <br>
+ * - <a href="sleipnir-2.0.tar.gz">2.0</a>, 06-19-09 <br>
+ * Added \ref COALESCE and \ref Synthesizer as described in Huttenhower et al. 2009. <br>
  * Added \ref SVDer - thanks to AJ Sedgewick! <br>
  * Fixed \ref Answerer usage in the documentation example - thanks to Jim Costello! <br>
- * Added \ref COALESCE and \ref Synthesizer as described in Huttenhower et al. 2009. <br>
  * Added \ref PCLPlotter and \ref Matcher. <br>
  * Update version dependencies for SMILE, SVM Light/Perf. <br>
  * Update VS2008 build system. <br>
