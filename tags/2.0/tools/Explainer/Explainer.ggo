@@ -1,0 +1,55 @@
+package	"Explainer"
+version	"1.0"
+purpose	"Allows evaluation of genes contributing to a good prediction score"
+
+section "Main"
+option	"input"			i	"Similarity DAT/DAB file"
+							string	typestr="filename"	yes
+option	"answers"		w	"Answer DAT/DAB file"
+							string	typestr="filename"	yes
+
+section "Miscellaneous"
+option	"count"			k	"Number of pairs to display"
+							int	default="-1"
+option	"positives"		p	"Include only positive pairs"
+							flag	off
+option	"negatives"		P	"Include only negative pairs"
+							flag	off
+option	"everything"	e	"Include pairs without answers"
+							flag	off
+option	"unknowns"		u	"Treatment of unknown genes"
+							values="exclude","include","only"	default="exclude"
+option	"fraction"		x	"Random fraction of results to calculate"
+							double	default="1"
+
+section "Learning/Evaluation"
+option	"genes"			g	"Gene inclusion file"
+							string	typestr="filename"
+option	"genex"			G	"Gene exclusion file"
+							string	typestr="filename"
+option	"genet"			c	"Term inclusion file"
+							string	typestr="filename"
+
+section "Preprocessing"
+option	"normalize"		n	"Normalize to the range [0,1]"
+							flag	off
+option	"invert"		t	"Invert correlations to distances"
+							flag	off
+option	"reverse"		r	"Reverse sort order"
+							flag	off
+
+section "Function Catalogs"
+option	"go_onto"		o	"GO ontology"
+							string	typestr="filename"
+option	"go_anno"		a	"GO annotations"
+							string	typestr="filename"
+option	"features"		f	"SGD gene features"
+							string	typestr="filename"
+
+section "Optional"
+option	"memmap"		m	"Memory map input files"
+							flag	off
+option	"config"		C	"Command line config file"
+							string	typestr="filename"	default="Explainer.ini"
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

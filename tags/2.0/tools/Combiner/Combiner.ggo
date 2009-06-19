@@ -1,0 +1,29 @@
+package	"Combiner"
+version	"1.0"
+purpose	"PCL and data file combination tool"
+
+section "Main"
+option	"type"		t	"Output data file type"
+						values="pcl","dat","dab","module"	default="pcl"
+option	"method"	m	"Combination method"
+						values="min","max","mean","gmean","hmean","sum"	default="mean"
+option	"output"	o	"Output file"
+						string	typestr="filename"
+
+section "Modules"
+option	"jaccard"	j	"Minimum Jaccard index for module equivalence"
+						float	default="0.5"
+option	"intersection"	r	"Minimum intersection fractino for module inheritance"
+						double	default="0.666"
+
+section "Optional"
+option	"skip"		k	"Columns to skip in input PCLs"
+						int	default="2"
+option	"memmap"	p	"Memory map input files"
+						flag	off
+option	"normalize"	n	"Normalize inputs before combining"
+						flag	off
+option	"subset"	s	"Subset size (none if zero)"
+						int	default="0"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"

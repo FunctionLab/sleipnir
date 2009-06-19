@@ -1,0 +1,17 @@
+package	"BNs2Txt"
+version	"1.0"
+purpose	"Text/binary minimal Bayes net file interconversion"
+
+section "Main"
+option	"input"			i	"Input Bayes net file"
+							string	typestr="filename"
+option	"output"		o	"Output Bayes net directory"
+							string	typestr="directory" default="."
+option	"datasets"		d	"Dataset names"
+							string	typestr="filename"
+
+section "Optional"
+option	"xdsl"			x	"Generate XDSL output rather than DSL"
+							flag	on
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"
