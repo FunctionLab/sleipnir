@@ -1,3 +1,0 @@
-./gen_tools_am
-automake --foreign -a -c
-autoconf
