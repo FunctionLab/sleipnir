@@ -25,6 +25,8 @@
 #include <fstream>
 using namespace std;
 
+#include <pthread.h>
+
 #include "bayesnet.h"
 #include "dataset.h"
 #include "genome.h"

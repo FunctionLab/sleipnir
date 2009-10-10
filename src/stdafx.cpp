@@ -807,6 +807,9 @@ MIPS:
  * 
  * \section sec_history Version History
  * 
+ * - <a href="sleipnir-2.1.tar.gz">2.1</a>, *** <br>
+ * Update #includes for gcc 4.3 compatibility - thanks to Casey Greene!
+ * 
  * - <a href="sleipnir-2.0.tar.gz">2.0</a>, 06-19-09 <br>
  * Added \ref COALESCE and \ref Synthesizer as described in Huttenhower et al. 2009. <br>
  * Added \ref SVDer - thanks to AJ Sedgewick! <br>

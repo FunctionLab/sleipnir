@@ -128,7 +128,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="../../../../extlib/gengetopt-2.22/gl/;../../../src/;../../../../extlib/smile/"
-				PreprocessorDefinitions="_SECURE_SCL=0"
+				PreprocessorDefinitions="NDEBUG;_SECURE_SCL=0"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"

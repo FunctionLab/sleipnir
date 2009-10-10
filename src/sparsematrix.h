@@ -51,7 +51,7 @@ public:
 	 * \param Default
 	 * Default value provided for entries not in the matrix.
 	 */
-	CSparseMapMatrix( const tType& Default ) : CSparseMatrixImpl( Default ), m_amapData(NULL) { }
+	CSparseMapMatrix( const tType& Default ) : CSparseMatrixImpl<tType>( Default ), m_amapData(NULL) { }
 
 	~CSparseMapMatrix( ) {
 
@@ -65,7 +65,7 @@ public:
 
 		if( m_amapData )
 			delete[] m_amapData;
-		m_iR = 0; }
+		CSparseMatrixImpl<tType>::m_iR = 0; }
 
 	/*!
 	 * \brief
@@ -80,7 +80,7 @@ public:
 	void Initialize( size_t iR ) {
 
 		Reset( );
-		m_amapData = new std::map<size_t,tType>[ m_iR = iR ]; }
+		m_amapData = new std::map<size_t,tType>[ CSparseMatrixImpl<tType>::m_iR = iR ]; }
 
 	/*!
 	 * \brief
@@ -91,7 +91,7 @@ public:
 	 */
 	size_t GetRows( ) const {
 
-		return CSparseMatrixImpl::GetRows( ); }
+		return CSparseMatrixImpl<tType>::GetRows( ); }
 
 	/*!
 	 * \brief
@@ -116,8 +116,8 @@ public:
 	tType Get( size_t iY, size_t iX ) const {
 		typename std::map<size_t,tType>::const_iterator	iter;
 
-		return ( ( ( iter = m_amapData[ iY ].find( iX ) ) == m_amapData[ iY ].end( ) ) ? m_Default :
-			iter->second ); }
+		return ( ( ( iter = m_amapData[ iY ].find( iX ) ) == m_amapData[ iY ].end( ) ) ?
+			CSparseMatrixImpl<tType>::m_Default : iter->second ); }
 
 	/*!
 	 * \brief
@@ -151,7 +151,7 @@ public:
 	 */
 	const tType& GetDefault( ) const {
 
-		return CSparseMatrixImpl::GetDefault( ); }
+		return CSparseMatrixImpl<tType>::GetDefault( ); }
 
 private:
 	std::map<size_t,tType>*	m_amapData;
@@ -190,7 +190,7 @@ public:
 	 * \param Default
 	 * Default value provided for entries not in the matrix.
 	 */
-	CSparseListMatrix( const tType& Default ) : CSparseMatrixImpl( Default ), m_apsData(NULL) { }
+	CSparseListMatrix( const tType& Default ) : CSparseMatrixImpl<tType>( Default ), m_apsData(NULL) { }
 
 	~CSparseListMatrix( ) {
 
@@ -206,12 +206,12 @@ public:
 		SNode*	pNext;
 
 		if( m_apsData ) {
-			for( i = 0; i < m_iR; ++i )
+			for( i = 0; i < CSparseMatrixImpl<tType>::m_iR; ++i )
 				for( pNode = m_apsData[ i ]; pNode; pNode = pNext ) {
 					pNext = pNode->m_pNext;
 					delete pNode; }
 			delete[] m_apsData; }
-		m_iR = 0; }
+		CSparseMatrixImpl<tType>::m_iR = 0; }
 
 	/*!
 	 * \brief
@@ -226,8 +226,8 @@ public:
 	void Initialize( size_t iR ) {
 
 		Reset( );
-		m_apsData = new SNode*[ m_iR = iR ];
-		memset( m_apsData, 0, m_iR * sizeof(*m_apsData) ); }
+		m_apsData = new SNode*[ CSparseMatrixImpl<tType>::m_iR = iR ];
+		memset( m_apsData, 0, CSparseMatrixImpl<tType>::m_iR * sizeof(*m_apsData) ); }
 
 	/*!
 	 * \brief
@@ -256,7 +256,7 @@ public:
 			if( pNode->m_iX == iX )
 				return pNode->m_Value;
 
-		return m_Default; }
+		return CSparseMatrixImpl<tType>::m_Default; }
 
 	/*!
 	 * \brief
@@ -304,7 +304,7 @@ public:
 	 */
 	const tType& GetDefault( ) const {
 
-		return CSparseMatrixImpl::GetDefault( ); }
+		return CSparseMatrixImpl<tType>::GetDefault( ); }
 
 	/*!
 	 * \brief
@@ -315,7 +315,7 @@ public:
 	 */
 	size_t GetRows( ) const {
 
-		return CSparseMatrixImpl::GetRows( ); }
+		return CSparseMatrixImpl<tType>::GetRows( ); }
 
 private:
 	SNode**	m_apsData;

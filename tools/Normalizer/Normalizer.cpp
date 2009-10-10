@@ -22,6 +22,27 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+const struct {
+	const char*			m_szName;
+	CPCL::ENormalize	m_eType;
+} c_asTypesPCL[]	= {
+	{"columnz",		CPCL::ENormalizeColumn},
+	{"rowz",		CPCL::ENormalizeRow},
+	{"globalz",		CPCL::ENormalizeZScore},
+	{"0to1",		CPCL::ENormalizeMinMax},
+	{"colcenter",	CPCL::ENormalizeColumnCenter},
+	{NULL,			CPCL::ENormalizeNone}
+};
+
+const struct {
+	const char*			m_szName;
+	CDat::ENormalize	m_eType;
+} c_asTypesDAT[]	= {
+	{"globalz",	CDat::ENormalizeZScore},
+	{"0to1",	CDat::ENormalizeMinMax},
+	{NULL,		CDat::ENormalizeNone}
+};
+
 int main( int iArgs, char** aszArgs ) {
 	CDat				Dat;
 	CPCL				PCL;
@@ -32,13 +53,15 @@ int main( int iArgs, char** aszArgs ) {
 	istream*			pistm;
 	ifstream			ifsm;
 	ostream*			postm;
+	CPCL::ENormalize	eTypePCL;
+	CDat::ENormalize	eTypeDAT;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg );
 
-	if( !strcmp( "pcl", sArgs.type_arg ) ) {
+	if( !strcmp( "pcl", sArgs.itype_arg ) ) {
 		if( sArgs.input_arg ) {
 			ifsm.open( sArgs.input_arg );
 			pistm = &ifsm; }
@@ -50,7 +73,16 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.input_arg )
 			ifsm.close( );
 
-		PCL.Normalize( sArgs.zscore_flag ? CPCL::ENormalizeColumn : CPCL::ENormalizeRow );
+		if( !strcmp( "medmult", sArgs.otype_arg ) )
+			PCL.MedianMultiples( );
+		else {
+			eTypePCL = CPCL::ENormalizeNone;
+			for( i = 0; c_asTypesPCL[i].m_szName; ++i )
+				if( !strcmp( c_asTypesPCL[i].m_szName, sArgs.otype_arg ) ) {
+					eTypePCL = c_asTypesPCL[i].m_eType;
+					break; }
+			PCL.Normalize( eTypePCL ); }
+
 		if( sArgs.output_arg ) {
 			ofsm.open( sArgs.output_arg );
 			postm = &ofsm; }
@@ -67,7 +99,13 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open input: " << sArgs.input_arg << endl;
 			return 1; }
 
-		Dat.Normalize( sArgs.zscore_flag ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
+		eTypeDAT = CDat::ENormalizeNone;
+		for( i = 0; c_asTypesDAT[i].m_szName; ++i )
+			if( !strcmp( c_asTypesDAT[i].m_szName, sArgs.otype_arg ) ) {
+				eTypeDAT = c_asTypesDAT[i].m_eType;
+				break; }
+
+		Dat.Normalize( eTypeDAT );
 		if( sArgs.flip_flag )
 			for( i = 0; i < Dat.GetGenes( ); ++i )
 				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )

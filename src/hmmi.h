@@ -24,6 +24,8 @@
 
 #include "fullmatrix.h"
 
+#include <cstdlib>
+
 namespace Sleipnir {
 
 class CHMMImpl {

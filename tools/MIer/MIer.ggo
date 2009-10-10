@@ -16,6 +16,8 @@ option	"randomize"	R	"Assign missing values randomly"
 						flag	on
 
 section "Optional"
+option	"subsample"	s	"Maximum pairs to subsample"
+						int	default="100000"
 option	"table"		t	"Format output as a 2D table"
 						flag	on
 option	"only"		y	"Process only the given input file"

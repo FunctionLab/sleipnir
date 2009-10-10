@@ -78,6 +78,9 @@ struct gengetopt_args_info
   const char *terms_help; /**< @brief Term inclusion directory help description.  */
   int group_flag;	/**< @brief Group identical inputs (default=on).  */
   const char *group_help; /**< @brief Group identical inputs help description.  */
+  int threads_arg;	/**< @brief Maximum number of threads to spawn (default='1').  */
+  char * threads_orig;	/**< @brief Maximum number of threads to spawn original value given at command line.  */
+  const char *threads_help; /**< @brief Maximum number of threads to spawn help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
@@ -100,6 +103,7 @@ struct gengetopt_args_info
   unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int terms_given ;	/**< @brief Whether terms was given.  */
   unsigned int group_given ;	/**< @brief Whether group was given.  */
+  unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */

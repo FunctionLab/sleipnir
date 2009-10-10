@@ -157,7 +157,7 @@ public:
 
 		if( iOne == iTwo )
 			return ( fAllowDuplicates ? iOne : -1 );
-		priiMerged.first = min( iOne, iTwo );
+		priiMerged.first = (uint32_t)min( iOne, iTwo );
 		priiMerged.second = max( iOne, iTwo );
 		if( ( iterMerged = m_mappriiiMerged.find( priiMerged ) ) != m_mappriiiMerged.end( ) )
 			return ( fAllowDuplicates ? iterMerged->second : -1 );

@@ -152,11 +152,12 @@ public:
 	 * Normalize
 	 */
 	enum ENormalize {
+		ENormalizeNone		= 0,
 		/*!
 		 * \brief
 		 * Linearly transform the minimum score to 0 and the maximum to 1.
 		 */
-		ENormalizeMinMax	= 0,
+		ENormalizeMinMax	= ENormalizeNone + 1,
 		/*!
 		 * \brief
 		 * Z-score all edges (subtract mean, divide by standard deviation).
