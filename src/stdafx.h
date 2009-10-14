@@ -30,10 +30,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #ifdef _MSC_VER
 #include <fcntl.h>
 #include <io.h>
-#include <sys/stat.h>
 #include <winsock2.h>
 
 #define socklen_t	int

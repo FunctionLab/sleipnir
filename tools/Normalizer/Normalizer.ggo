@@ -7,14 +7,14 @@ option	"input"		i	"Input/output PCL/DAT/DAB file"
 						string	typestr="filename"
 option	"output"	o	"Output PCL/DAB file"
 						string	typestr="filename"
-option	"type"		t	"Data file type"
+option	"itype"		t	"Data file type"
 						values="pcl","dat"	default="dat"
+option	"otype"		T	"Normalization type"
+						values="columnz","rowz","globalz","column0","0to1","colcenter","medmult"	default="globalz"
 
 section "Optional"
 option	"flip"		f	"Flip high/low scores"
 						flag	off
-option	"zscore"	z	"Normalize values as z-scores"
-						flag	on
 option	"skip"		s	"Columns to skip in input PCL"
 						int	default="2"
 option	"verbosity"	v	"Message verbosity"

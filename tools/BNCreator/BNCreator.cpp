@@ -31,8 +31,10 @@ struct STerm {
 	CBayesNetSmile			m_BNRoot;
 	vector<CBayesNetSmile*>	m_vecpBNs;
 
-	STerm( const string& strInput, const string& strOutput ) : m_strInput(strInput),
-		m_strOutput(strOutput), m_pGenes(NULL) { }
+	STerm( size_t iNodes, const string& strInput, const string& strOutput ) : m_strInput(strInput),
+		m_strOutput(strOutput), m_pGenes(NULL) {
+
+		m_vecpBNs.resize( iNodes ); }
 
 	~STerm( ) {
 		size_t	i;
@@ -70,7 +72,7 @@ struct STerm {
 
 		return true; }
 
-	bool LearnNode( const CDataPair& Answers, const IDataset* pData, const vector<string>& vecstrNames,
+	bool LearnNode( size_t iNode, const CDataPair& Answers, const IDataset* pData, const vector<string>& vecstrNames,
 		const vector<size_t>& veciZeros, const CBayesNetSmile* pBNDefault, bool fZero ) {
 		CDataFilter		Data;
 		CBayesNetSmile*	pBN;
@@ -78,7 +80,7 @@ struct STerm {
 		if( m_pGenes ) {
 			Data.Attach( pData, *m_pGenes, CDat::EFilterTerm, &Answers );
 			pData = &Data; }
-		m_vecpBNs.push_back( pBN = new CBayesNetSmile( ) );
+		m_vecpBNs[iNode] = pBN = new CBayesNetSmile( );
 		if( !pBN->Open( pData, vecstrNames, veciZeros ) ) {
 			cerr << "Couldn't create network for (" << m_strInput << "): " << vecstrNames[ 1 ] << endl;
 			return false; }
@@ -100,6 +102,18 @@ struct STerm {
 		return true; }
 };
 
+struct SLearn {
+	size_t						m_iNode;
+	string						m_strInput;
+	const CDataPair*			m_pAnswers;
+	const gengetopt_args_info*	m_psArgs;
+	const map<string,size_t>*	m_pmapZeros;
+	const CBayesNetSmile*		m_pBNDefault;
+	vector<STerm*>*				m_pvecpsOutputs;
+};
+
+void* learn( void* );
+
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	size_t				i;
@@ -107,6 +121,9 @@ int main( int iArgs, char** aszArgs ) {
 	CBayesNetSmile		BNIn;
 	vector<string>		vecstrNames;
 
+#ifdef WIN32
+	pthread_win32_process_attach_np( );
+#endif // WIN32
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
@@ -229,14 +246,15 @@ int main( int iArgs, char** aszArgs ) {
 			DatYes.Set( i, adYes ); }
 		_unlink( szTemp ); }
 	else {
-		size_t			iArg;
-		CDataPair		Answers;
-		CBayesNetSmile	BNDefault;
-		CGenome			Genome;
-		vector<STerm*>	vecpsOutputs;
-		vector<string>	vecstrDummy, vecstrNames;
-		vector<size_t>	veciZeros;
-		CDatasetCompact	Data;
+		size_t				iArg, iThread;
+		CDataPair			Answers;
+		CBayesNetSmile		BNDefault;
+		CGenome				Genome;
+		vector<STerm*>		vecpsOutputs;
+		vector<string>		vecstrDummy;
+		CDatasetCompact		Data;
+		vector<pthread_t>	vecpthdThreads;
+		vector<SLearn>		vecsData;
 
 		if( sArgs.default_arg && !BNDefault.Open( sArgs.default_arg ) ) {
 			cerr << "Couldn't open: " << sArgs.default_arg << endl;
@@ -265,13 +283,13 @@ int main( int iArgs, char** aszArgs ) {
 				if( strFile[ 0 ] == '.' )
 					continue;
 
-				vecpsOutputs.push_back( new STerm( (string)sArgs.terms_arg + '/' + strFile,
+				vecpsOutputs.push_back( new STerm( sArgs.inputs_num, (string)sArgs.terms_arg + '/' + strFile,
 					(string)sArgs.output_arg + '/' + strFile + ".xdsl" ) );
 				if( !vecpsOutputs[ vecpsOutputs.size( ) - 1 ]->Open( Genome ) ) {
 					cerr << "Could not open: " << strFile << endl;
 					return 1; } } }
 		else
-			vecpsOutputs.push_back( new STerm( "", sArgs.output_arg ) );
+			vecpsOutputs.push_back( new STerm( sArgs.inputs_num, "", sArgs.output_arg ) );
 
 		if( !Data.Open( Answers, vecstrDummy ) ) {
 			cerr << "Couldn't open answer set" << endl;
@@ -282,34 +300,63 @@ int main( int iArgs, char** aszArgs ) {
 			if( !vecpsOutputs[ i ]->LearnRoot( Answers, &Data, sArgs.default_arg ? &BNDefault : NULL ) )
 				return 1; }
 
-		for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
-			CDatasetCompact	Data;
-
-			vecstrNames.clear( );
-			vecstrNames.push_back( sArgs.inputs[ iArg ] );
-			if( !Data.Open( Answers, vecstrNames, sArgs.zero_flag || sArgs.zeros_arg,
-				!!sArgs.memmap_flag, sArgs.skip_arg, !!sArgs.zscore_flag ) ) {
-				cerr << "Couldn't open: " << sArgs.inputs[ iArg ] << endl;
-				return 1; }
-			vecstrNames.insert( vecstrNames.begin( ), sArgs.answers_arg );
-			for( i = 0; i < vecstrNames.size( ); ++i )
-				vecstrNames[ i ] = CMeta::Filename( CMeta::Deextension( CMeta::Basename(
-					vecstrNames[ i ].c_str( ) ) ) );
-			veciZeros.resize( vecstrNames.size( ) );
-			for( i = 0; i < veciZeros.size( ); ++i ) {
-				map<string,size_t>::const_iterator	iterZero;
-
-				veciZeros[ i ] = ( ( iterZero = mapZeros.find( vecstrNames[ i ] ) ) == mapZeros.end( ) ) ?
-					-1 : iterZero->second; }
-			for( i = 0; i < vecpsOutputs.size( ); ++i ) {
-				if( !( i % 50 ) )
-					cerr << "Term " << i << '/' << vecpsOutputs.size( ) << endl;
-				if( !vecpsOutputs[ i ]->LearnNode( Answers, &Data, vecstrNames, veciZeros,
-					sArgs.default_arg ? &BNDefault : NULL, !!sArgs.zero_flag ) )
+		vecpthdThreads.resize( sArgs.inputs_num );
+		vecsData.resize( vecpthdThreads.size( ) );
+		for( iArg = 0; iArg < sArgs.inputs_num; iArg += iThread ) {
+			for( iThread = 0; ( ( sArgs.threads_arg == -1 ) || ( iThread < (size_t)sArgs.threads_arg ) ) &&
+				( ( iArg + iThread ) < sArgs.inputs_num ); ++iThread ) {
+				i = iArg + iThread;
+				vecsData[ i ].m_iNode = i;
+				vecsData[ i ].m_strInput = sArgs.inputs[ i ];
+				vecsData[ i ].m_pAnswers = &Answers;
+				vecsData[ i ].m_psArgs = &sArgs;
+				vecsData[ i ].m_pmapZeros = &mapZeros;
+				vecsData[ i ].m_pBNDefault = &BNDefault;
+				vecsData[ i ].m_pvecpsOutputs = &vecpsOutputs;
+				if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
+					cerr << "Couldn't create thread: " << sArgs.inputs[ i ] << endl;
 					return 1; } }
+			for( i = 0; i < iThread; ++i )
+				pthread_join( vecpthdThreads[ iArg + i ], NULL ); }
 
 		for( i = 0; i < vecpsOutputs.size( ); ++i ) {
 			vecpsOutputs[ i ]->Save( );
 			delete vecpsOutputs[ i ]; } }
 
+#ifdef WIN32
+	pthread_win32_process_detach_np( );
+#endif // WIN32
 	return 0; }
+
+void* learn( void* pData ) {
+	CDatasetCompact	Data;
+	SLearn*			psData;
+	vector<string>	vecstrNames;
+	vector<size_t>	veciZeros;
+	size_t			i;
+
+	psData = (SLearn*)pData;
+
+	vecstrNames.push_back( psData->m_strInput );
+	if( !Data.Open( *psData->m_pAnswers, vecstrNames, psData->m_psArgs->zero_flag || psData->m_psArgs->zeros_arg,
+		!!psData->m_psArgs->memmap_flag, psData->m_psArgs->skip_arg, !!psData->m_psArgs->zscore_flag ) ) {
+		cerr << "Couldn't open: " << psData->m_strInput << endl;
+		return NULL; }
+	vecstrNames.insert( vecstrNames.begin( ), psData->m_psArgs->answers_arg );
+	for( i = 0; i < vecstrNames.size( ); ++i )
+		vecstrNames[ i ] = CMeta::Filename( CMeta::Deextension( CMeta::Basename(
+			vecstrNames[ i ].c_str( ) ) ) );
+	veciZeros.resize( vecstrNames.size( ) );
+	for( i = 0; i < veciZeros.size( ); ++i ) {
+		map<string,size_t>::const_iterator	iterZero;
+
+		veciZeros[ i ] = ( ( iterZero = psData->m_pmapZeros->find( vecstrNames[ i ] ) ) ==
+			psData->m_pmapZeros->end( ) ) ? -1 : iterZero->second; }
+	for( i = 0; i < psData->m_pvecpsOutputs->size( ); ++i ) {
+		if( !( i % 50 ) )
+			cerr << "Term " << i << '/' << psData->m_pvecpsOutputs->size( ) << endl;
+		if( !(*psData->m_pvecpsOutputs)[ i ]->LearnNode( psData->m_iNode, *psData->m_pAnswers, &Data, vecstrNames, veciZeros,
+			psData->m_psArgs->default_arg ? psData->m_pBNDefault : NULL, !!psData->m_psArgs->zero_flag ) )
+			return NULL; }
+
+	return NULL; }

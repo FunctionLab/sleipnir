@@ -44,6 +44,9 @@ struct gengetopt_args_info
   const char *zeros_help; /**< @brief Read zeroed node IDs/outputs from the given file help description.  */
   int randomize_flag;	/**< @brief Assign missing values randomly (default=on).  */
   const char *randomize_help; /**< @brief Assign missing values randomly help description.  */
+  int subsample_arg;	/**< @brief Maximum pairs to subsample (default='100000').  */
+  char * subsample_orig;	/**< @brief Maximum pairs to subsample original value given at command line.  */
+  const char *subsample_help; /**< @brief Maximum pairs to subsample help description.  */
   int table_flag;	/**< @brief Format output as a 2D table (default=on).  */
   const char *table_help; /**< @brief Format output as a 2D table help description.  */
   int only_arg;	/**< @brief Process only the given input file (default='-1').  */
@@ -64,6 +67,7 @@ struct gengetopt_args_info
   unsigned int zero_given ;	/**< @brief Whether zero was given.  */
   unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
   unsigned int randomize_given ;	/**< @brief Whether randomize was given.  */
+  unsigned int subsample_given ;	/**< @brief Whether subsample was given.  */
   unsigned int table_given ;	/**< @brief Whether table was given.  */
   unsigned int only_given ;	/**< @brief Whether only was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */

@@ -40,13 +40,14 @@ struct gengetopt_args_info
   char * output_arg;	/**< @brief Output PCL/DAB file.  */
   char * output_orig;	/**< @brief Output PCL/DAB file original value given at command line.  */
   const char *output_help; /**< @brief Output PCL/DAB file help description.  */
-  char * type_arg;	/**< @brief Data file type (default='dat').  */
-  char * type_orig;	/**< @brief Data file type original value given at command line.  */
-  const char *type_help; /**< @brief Data file type help description.  */
+  char * itype_arg;	/**< @brief Data file type (default='dat').  */
+  char * itype_orig;	/**< @brief Data file type original value given at command line.  */
+  const char *itype_help; /**< @brief Data file type help description.  */
+  char * otype_arg;	/**< @brief Normalization type (default='globalz').  */
+  char * otype_orig;	/**< @brief Normalization type original value given at command line.  */
+  const char *otype_help; /**< @brief Normalization type help description.  */
   int flip_flag;	/**< @brief Flip high/low scores (default=off).  */
   const char *flip_help; /**< @brief Flip high/low scores help description.  */
-  int zscore_flag;	/**< @brief Normalize values as z-scores (default=on).  */
-  const char *zscore_help; /**< @brief Normalize values as z-scores help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCL (default='2').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
@@ -58,14 +59,12 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
-  unsigned int type_given ;	/**< @brief Whether type was given.  */
+  unsigned int itype_given ;	/**< @brief Whether itype was given.  */
+  unsigned int otype_given ;	/**< @brief Whether otype was given.  */
   unsigned int flip_given ;	/**< @brief Whether flip was given.  */
-  unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */
@@ -187,7 +186,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
 
-extern char *cmdline_parser_type_values[] ;	/**< @brief Possible values for type.  */
+extern char *cmdline_parser_itype_values[] ;	/**< @brief Possible values for itype.  */
+extern char *cmdline_parser_otype_values[] ;	/**< @brief Possible values for otype.  */
 
 
 #ifdef __cplusplus

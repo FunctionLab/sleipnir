@@ -39,9 +39,11 @@ option	"skip"			s	"Columns to skip for PCL inputs"
 							int	default="2"
 option	"zscore"		e	"Convert PCL correlations to z-scores"
 							flag	on
-option	"terms"			t	"Term inclusion directory"
+option	"terms"			r	"Term inclusion directory"
 							string	typestr="directory"
 option	"group"			u	"Group identical inputs"
 							flag	on
+option	"threads"		t	"Maximum number of threads to spawn"
+							int	default="1"
 option	"verbosity"		v	"Message verbosity"
 							int	default="5"

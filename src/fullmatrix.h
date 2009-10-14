@@ -25,6 +25,7 @@
 #undef int64_t
 #include <stdint.h>
 
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <limits>

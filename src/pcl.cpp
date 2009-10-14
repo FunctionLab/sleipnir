@@ -848,6 +848,7 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 			break;
 
 		case ENormalizeColumn:
+		case ENormalizeColumnCenter:
 			for( i = 0; i < GetExperiments( ); ++i ) {
 				dAve = dStd = 0;
 				for( iCount = j = 0; j < GetGenes( ); ++j )
@@ -859,6 +860,8 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 					dAve /= iCount;
 					dStd = ( dStd / iCount ) - ( dAve * dAve );
 					dStd = ( dStd <= 0 ) ? 1 : sqrt( dStd );
+					if( eNormalize == ENormalizeColumnCenter )
+						dStd = 1;
 					for( j = 0; j < GetGenes( ); ++j )
 						if( !CMeta::IsNaN( d = Get( j, i ) ) )
 							Set( j, i, (float)( ( d - dAve ) / dStd ) ); } }
@@ -1007,5 +1010,142 @@ void CPCL::Impute( size_t iNeighbors, float dMinimumPresent, const IMeasure* pMe
 	else
 		Dat.Open( *this, pMeasure, false );
 	Impute( iNeighbors, dMinimumPresent, Dat ); }
+
+void CPCL::MedianMultiples( size_t iSample, size_t iBins, float dBinSize ) {
+	size_t					i, j, k, iBin, iOne, iCutoff;
+	CMeasureEuclidean		Euclidean;
+	vector<float>			vecdEuclidean, vecdMapped, vecdBG, vecdFG, vecdMean;
+	float					d, dAve, dStd, dSample;
+	vector<vector<size_t> >	vecveciGenes;
+	vector<size_t>			veciMean;
+	vector<string>			vecstrAdd;
+
+	{
+		map<string, size_t>				mapstriClasses;
+		map<string, size_t>::iterator	iterClass;
+
+		for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
+			const string&	strGene	= m_vecstrGenes[i];
+
+			if( ( iterClass = mapstriClasses.find( strGene ) ) == mapstriClasses.end( ) ) {
+				mapstriClasses[ strGene ] = vecveciGenes.size( );
+				vecveciGenes.push_back( vector<size_t>( ) );
+				vecveciGenes.back( ).push_back( i ); }
+			else
+				vecveciGenes[iterClass->second].push_back( i ); }
+	}
+
+	dSample = 2.0f * iSample / GetGenes( ) / ( GetGenes( ) - 1 );
+	dAve = dStd = 0;
+	for( k = i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+			if( ( (float)rand( ) / RAND_MAX ) >= dSample )
+				continue;
+			vecdEuclidean.push_back( d = (float)Euclidean.Measure( Get( i ), GetExperiments( ), Get( j ), GetExperiments( ), IMeasure::EMapNone ) );
+			k++;
+			dAve += d;
+			dStd += d * d; }
+	dAve /= k;
+	dStd = sqrt( ( dStd / ( k - 1 ) ) - ( dAve * dAve ) );
+	if( !( iBins % 2 ) )
+		iBins++;
+
+	vecdBG.resize( iBins );
+	for( i = 0; i < vecdEuclidean.size( ); ++i )
+		vecdBG[MedianMultiplesBin( vecdEuclidean[i], dAve, dStd, iBins, dBinSize )]++;
+	for( i = 0; i < vecdBG.size( ); ++i )
+//		vecdBG[i] /= vecdEuclidean.size( );
+		vecdBG[i] = ( vecdBG[i] + 1 ) / ( vecdEuclidean.size( ) + vecdBG.size( ) );
+//*
+	MedianMultiplesSmooth( 2, vecdBG );
+//*/
+
+	MedianMultiplesMapped( vecveciGenes, vecdMapped );
+	vecdFG.resize( iBins );
+	for( i = 0; i < vecdMapped.size( ); ++i )
+		vecdFG[MedianMultiplesBin( vecdMapped[i], dAve, dStd, iBins, dBinSize )]++;
+/*
+	dMax = 0;
+	for( iMax = i = 0; i < vecdBG.size( ); ++i )
+		if( vecdBG[i] > dMax ) {
+			dMax = vecdBG[i];
+			iMax = i; }
+	for( i = 0; i <= iMax; ++i )
+		vecdFG[i]++;
+	for( i = 0; i < vecdFG.size( ); ++i )
+		vecdFG[i] /= vecdMapped.size( ) + iMax + 1;
+//*/
+//*/
+	for( i = 0; i < vecdFG.size( ); ++i )
+//		vecdFG[i] /= vecdMapped.size( );
+		vecdFG[i] = ( vecdFG[i] + 1 ) / ( vecdMapped.size( ) + vecdFG.size( ) );
+	MedianMultiplesSmooth( 2, vecdFG );
+/*
+for( i = 0; i < vecdBG.size( ); ++i )
+cerr << vecdBG[i] << '\t';
+cerr << endl;
+for( i = 0; i < vecdFG.size( ); ++i )
+cerr << vecdFG[i] << '\t';
+cerr << endl;
+//*/
+	for( iCutoff = 0; iCutoff < vecdFG.size( ); ++iCutoff )
+		if( vecdFG[iCutoff] < vecdBG[iCutoff] )
+			break;
+
+	vecstrAdd.resize( 1 );
+	veciMean.resize( GetExperiments( ) );
+	vecdMean.resize( GetExperiments( ) );
+	for( i = 0; i < vecveciGenes.size( ); ++i ) {
+		const vector<size_t>&	veciGenes	= vecveciGenes[i];
+		vector<size_t>			veciAgree;
+
+		if( veciGenes.size( ) < 2 )
+			continue;
+		veciAgree.resize( veciGenes.size( ) );
+		for( j = 0; j < veciGenes.size( ); ++j ) {
+			iOne = veciGenes[j];
+			for( k = ( j + 1 ); k < veciGenes.size( ); ++k ) {
+				iBin = MedianMultiplesBin( (float)Euclidean.Measure( Get( iOne ), GetExperiments( ),
+					Get( veciGenes[k] ), GetExperiments( ), IMeasure::EMapNone ), dAve, dStd, iBins, dBinSize );
+//				if( iBin <= iCutoff ) {
+				if( ( 1.1 * vecdFG[iBin] ) >= vecdBG[iBin] ) {
+					veciAgree[j]++;
+					veciAgree[k]++; } } }
+
+		fill( vecdMean.begin( ), vecdMean.end( ), 0.0f );
+		fill( veciMean.begin( ), veciMean.end( ), 0 );
+		for( iBin = j = 0; j < veciGenes.size( ); ++j )
+			if( ( 2 * veciAgree[j] ) >= ( veciAgree.size( ) - 1 ) ) {
+				iBin++;
+				iOne = veciGenes[j];
+				for( k = 0; k < GetExperiments( ); ++k )
+					if( !CMeta::IsNaN( d = Get( iOne, k ) ) ) {
+						veciMean[k]++;
+						vecdMean[k] += d; } }
+
+		for( j = 0; j < veciGenes.size( ); ++j )
+			MaskGene( veciGenes[j] );
+		if( ( iBin * 2 ) > veciAgree.size( ) ) {
+			for( j = 0; j < vecdMean.size( ); ++j )
+				vecdMean[j] = veciMean[j] ? ( vecdMean[j] / veciMean[j] ) : CMeta::GetNaN( );
+			vecstrAdd[0] = GetGene( veciGenes[0] );
+			AddGenes( vecstrAdd );
+			Set( GetGenes( ) - 1, &vecdMean[0] ); } } }
+
+void CPCLImpl::MedianMultiplesMapped( const vector<vector<size_t> >& vecveciGenes, vector<float>& vecdMapped ) {
+	size_t				i, j, k;
+	CMeasureEuclidean	Euclidean;
+	const float*		adOne;
+
+	for( i = 0; i < vecveciGenes.size( ); ++i ) {
+		const vector<size_t>&	veciGenes	= vecveciGenes[i];
+
+		if( veciGenes.size( ) < 2 )
+			continue;
+		for( j = 0; j < veciGenes.size( ); ++j ) {
+			adOne = m_Data.Get( veciGenes[j] );
+			for( k = ( j + 1 ); k < veciGenes.size( ); ++k )
+				vecdMapped.push_back( (float)Euclidean.Measure( adOne, m_Data.GetColumns( ), m_Data.Get( veciGenes[k] ),
+					m_Data.GetColumns( ), IMeasure::EMapNone ) ); } } }
 
 }

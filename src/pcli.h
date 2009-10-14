@@ -46,12 +46,39 @@ protected:
 	typedef std::set<size_t>				TSetI;
 	typedef std::map<std::string, size_t>	TMapStrI;
 
+	static size_t MedianMultiplesBin( float dValue, float dAve, float dStd, size_t iBins, float dBinSize ) {
+		size_t	iRet;
+		int		i;
+
+		i = (int)( 0.5 + ( ( dValue - dAve ) / dStd / dBinSize ) );
+		iRet = iBins / 2;
+		iRet = ( ( i < 0 ) && ( (size_t)-i > iRet ) ) ? 0 : min( iBins, i + iRet );
+// cerr << dValue << '\t' << dAve << '\t' << dStd << '\t' << i << '\t' << iRet << endl;
+
+		return iRet; }
+
+	static void MedianMultiplesSmooth( float dPower, std::vector<float>& vecdValues ) {
+		static const size_t	c_iRadius	= 40;
+		std::vector<float>	vecdTmp;
+		size_t				i, j, k;
+		float				d, dSum;
+
+		vecdTmp.resize( vecdValues.size( ) );
+		for( dSum = 0,i = 0; i < vecdTmp.size( ); ++i )
+			for( j = ( max( i, c_iRadius ) - c_iRadius ); j < max( vecdTmp.size( ), i + c_iRadius ); ++j ) {
+				k = max( i, j ) - min( i, j );
+				vecdTmp[i] += ( d = ( vecdValues[j] / ( 1 + pow( (float)k, dPower ) ) ) );
+				dSum += d; }
+		for( i = 0; i < vecdValues.size( ); ++i )
+			vecdValues[i] = vecdTmp[i] / dSum; }
+
 	CPCLImpl( bool fHeader ) : m_fHeader(fHeader) { }
 	~CPCLImpl( );
 
 	bool OpenExperiments( std::istream&, size_t, char*, size_t );
 	bool OpenGene( std::istream&, std::vector<float>&, char*, size_t );
 	void Reset( );
+	void MedianMultiplesMapped( const std::vector<std::vector<size_t> >&, std::vector<float>& );
 
 	void SetGene( size_t iGene, const std::string& strGene ) {
 

@@ -46,7 +46,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../extlib/smile/;../../../../extlib/gengetopt-2.22/gl/;../../../src/"
+				AdditionalIncludeDirectories="../../../../extlib/smile/;../../../../extlib/gengetopt-2.22/gl/;../../../src/;../../../../extlib/pthreads-w32-2-8-0-release/"
+				PreprocessorDefinitions="PTW32_STATIC_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -66,7 +67,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="log4cpp.lib"
+				AdditionalDependencies="log4cpp.lib pthreads.lib ws2_32.lib "
 				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName);../../../../extlib/smile/"
 				IgnoreDefaultLibraryNames="libcmt.lib"
 				GenerateDebugInformation="true"
@@ -124,8 +125,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../../extlib/smile/;../../../../extlib/gengetopt-2.22/gl/;../../../src/"
-				PreprocessorDefinitions="NDEBUG;_SECURE_SCL=0"
+				AdditionalIncludeDirectories="../../../../extlib/smile/;../../../../extlib/gengetopt-2.22/gl/;../../../src/;../../../../extlib/pthreads-w32-2-8-0-release/"
+				PreprocessorDefinitions="PTW32_STATIC_LIB;NDEBUG;_SECURE_SCL=0"
 				RuntimeLibrary="2"
 				WarningLevel="3"
 				WarnAsError="true"
@@ -143,7 +144,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="log4cpp.lib"
+				AdditionalDependencies="log4cpp.lib pthreads.lib ws2_32.lib "
 				AdditionalLibraryDirectories="../../../../extlib/proj/vs2008/$(ConfigurationName);../../../../extlib/smile/"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"

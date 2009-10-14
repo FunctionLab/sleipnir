@@ -104,7 +104,12 @@ public:
 		 * Subtract the global minimum from every value and divide by the global mean (transforming
 		 * all values to the range [0, inf] with mean 1).
 		 */
-		ENormalizeMean
+		ENormalizeMean,
+		/*!
+		 * \brief
+		 * Subtract the column average from every value.
+		 */
+		ENormalizeColumnCenter
 	};
 
 	static int Distance( const char* szFile, size_t iSkip, const char* szSimilarityMeasure, bool fNormalize,
@@ -162,6 +167,7 @@ public:
 	void Normalize( ENormalize eNormalize = ENormalizeRow );
 	void Impute( size_t iNeighbors, float dMinimumPresent, const CDat& DatSimilarity );
 	void Impute( size_t iNeighbors, float dMinimumPresent, const IMeasure* pMeasure, bool fPrecompute = true );
+	void MedianMultiples( size_t iSample = 100000, size_t iBins = 40, float dBinSize = 0.25 );
 
 	/*!
 	 * \brief

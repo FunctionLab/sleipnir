@@ -47,7 +47,7 @@ int main( int iArgs, char** aszArgs ) {
 	vector<size_t>				veciGenesOne, veciGenesTwo, veciOne, veciTwo, veciDefaults, veciSizes;
 	vector<vector<size_t> >		vecveciJoint;
 	vector<string>				vecstrInputs, vecstrGenes;
-	float						dOne, dJoint, dMI;
+	float						dOne, dJoint, dMI, dSubsample;
 	map<string, size_t>			mapZeros;
 	vector<float>				vecdOne, vecdTwo;
 	float*						adOne;
@@ -135,6 +135,7 @@ int main( int iArgs, char** aszArgs ) {
 			veciDefaults[ i ] = sArgs.randomize_flag ? -1 :
 				( sArgs.zero_flag ? 0 : veciSizes[ i ]++ ); }
 
+	dSubsample = ( sArgs.subsample_arg == -1 ) ? 1 : ( 2.0f * sArgs.subsample_arg / vecstrGenes.size( ) / ( vecstrGenes.size( ) - 1 ) );
 	if( sArgs.table_flag ) {
 		for( i = 0; i < vecstrInputs.size( ); ++i )
 			cout << '\t' << vecstrInputs[ i ];
@@ -156,11 +157,13 @@ int main( int iArgs, char** aszArgs ) {
 		fill( veciOne.begin( ), veciOne.end( ), 0 );
 		for( i = iCountOne = 0; i < vecstrGenes.size( ); ++i ) {
 			iGeneOne = veciGenesOne[ i ];
-			for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j )
+			for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j ) {
+				if( ( (float)rand( ) / RAND_MAX ) < dSubsample )
+					continue;
 				if( ( iValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne,
 					veciDefaults[ iDatOne ], !!sArgs.randomize_flag ) ) != -1 ) {
 					iCountOne++;
-					veciOne[ iValueOne ]++; } }
+					veciOne[ iValueOne ]++; } } }
 
 		if( !pMeasure ) {
 /*
@@ -200,7 +203,9 @@ cout << endl;
 			for( i = iCountTwo = iCountJoint = 0; i < vecstrGenes.size( ); ++i ) {
 				iGeneOne = veciGenesOne[ i ];
 				iGeneTwo = veciGenesTwo[ i ];
-				for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j )
+				for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j ) {
+					if( ( (float)rand( ) / RAND_MAX ) < dSubsample )
+						continue;
 					if( ( iValueTwo = find_value( iGeneTwo, veciGenesTwo[ j ], DatTwo,
 						veciDefaults[ iDatTwo ], !!sArgs.randomize_flag ) ) != -1 ) {
 						iCountTwo++;
@@ -211,7 +216,7 @@ cout << endl;
 								vecdOne.push_back( (float)iValueOne );
 								vecdTwo.push_back( (float)iValueTwo ); }
 							iCountJoint++;
-							vecveciJoint[ iValueOne ][ iValueTwo ]++; } } }
+							vecveciJoint[ iValueOne ][ iValueTwo ]++; } } } }
 
 			if( pMeasure ) {
 				adOne = new float[ vecdOne.size( ) ];
