@@ -82,7 +82,7 @@ const char	CCoalesceClusterImpl::c_szConditions[]	= "Conditions";
  */
 bool CCoalesceCluster::Initialize( const CPCL& PCL, CCoalesceCluster& Pot,
 	const std::vector<SCoalesceDataset>& vecsDatasets, std::set<std::pair<size_t, size_t> >& setpriiSeeds,
-	size_t iPairs, float dPValue, size_t iThreads ) {
+	size_t iPairs, float dPValue, float dProbability, size_t iThreads ) {
 	size_t	i;
 	float	dFraction;
 	CPCL	PCLCopy;
@@ -96,7 +96,7 @@ bool CCoalesceCluster::Initialize( const CPCL& PCL, CCoalesceCluster& Pot,
 		m_vecsDatasets[ i ].m_psDataset = Pot.m_vecsDatasets[ i ].m_psDataset = &vecsDatasets[ i ];
 		m_setiDatasets.insert( i ); }
 	m_vecdPriors.resize( PCL.GetGenes( ) );
-	fill( m_vecdPriors.begin( ), m_vecdPriors.end( ), 1.0f );
+	fill( m_vecdPriors.begin( ), m_vecdPriors.end( ), 1 - dProbability );
 	dFraction = min( 1.0f, 2.0f * iPairs / PCL.GetGenes( ) / ( PCL.GetGenes( ) - 1 ) );
 
 	PCLCopy.Open( PCL );
@@ -822,10 +822,10 @@ bool CCoalesceCluster::SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& 
 	for( i = 0; i < vecfSignificant.size( ); ++i )
 		if( vecfSignificant[ i ] ) {
 			m_setiGenes.insert( i );
-			m_vecdPriors[ i ] = 1; }
+			m_vecdPriors[ i ] = dProbability; }
 		else {
 			Pot.m_setiGenes.insert( i );
-			m_vecdPriors[ i ] = dProbability; }
+			m_vecdPriors[ i ] = 1 - dProbability; }
 
 	return true; }
 
@@ -834,21 +834,26 @@ bool CCoalesceClusterImpl::IsSignificant( size_t iGene, const CPCL& PCL, const v
 	const CCoalesceGroupHistograms& HistsCluster, const CCoalesceGroupHistograms& HistsPot,
 	const CCoalesceCluster& Pot, const vector<size_t>& veciDatasets, float dBeta, size_t iMinimum,
 	float dProbability ) const {
-	float	dP, dLogPMotifsGivenIn, dLogPMotifsGivenOut, dLogPExpressionGivenIn, dLogPExpressionGivenOut;
+	float	d, dP, dLogPMotifsGivenIn, dLogPMotifsGivenOut, dLogPExpressionGivenIn, dLogPExpressionGivenOut;
 	bool	fClustered;
 
 	fClustered = IsGene( iGene );
 // We want P(g in C|S,E) =
 // P(S,E|g in C)P(g in C)/P(S,E) =
-// P(S|g in C)P(E|g in C)P(g in C)/(P(S,E|g in C) + P(S,E|g notin C)) =
-// P(S|g in C)P(E|g in C)P(g in C)/(P(S|g in C)P(E|g in C) + P(S|g notin C)P(E|g notin C))
+// P(S|g in C)P(E|g in C)P(g in C)/(P(S,E|g in C)P(g in C) + P(S,E|g notin C)P(g notin C)) =
+// P(S|g in C)P(E|g in C)P(g in C)/(P(S|g in C)P(E|g in C)P(g in C) + P(S|g notin C)P(E|g notin C)P(g notin C))
 	if( !( CalculateProbabilityExpression( iGene, PCL, vecdStdevs, Pot, veciDatasets, fClustered,
 		dLogPExpressionGivenIn, dLogPExpressionGivenOut ) && CalculateProbabilityMotifs( GeneScores, iGene,
 		HistsCluster, HistsPot, fClustered, iMinimum, dLogPMotifsGivenIn, dLogPMotifsGivenOut ) ) )
 		return false;
-	dP = m_vecdPriors[ iGene ] / ( 1 + exp( ( dBeta * ( dLogPExpressionGivenOut - dLogPExpressionGivenIn ) +
-		( 1 - dBeta ) * ( dLogPMotifsGivenOut - dLogPMotifsGivenIn ) ) /
-		( 0.5f + 2 * pow( 0.5f - dBeta, 2 ) ) ) );
+	if( ( d = m_vecdPriors[ iGene ] ) >= 1 )
+		dP = 1;
+	else if( d <= 0 )
+		dP = 0;
+	else
+		dP = 1 / ( 1 + exp( ( dBeta * ( dLogPExpressionGivenOut - dLogPExpressionGivenIn ) + ( 1 - dBeta ) *
+			( dLogPMotifsGivenOut - dLogPMotifsGivenIn ) ) / ( 0.5f + 2 * pow( 0.5f - dBeta, 2 ) ) +
+			log( ( 1 - d ) / d ) ) );
 
 	if( g_CatSleipnir( ).isDebugEnabled( ) ) {
 		set<SMotifMatch>::const_iterator	iterMotif;

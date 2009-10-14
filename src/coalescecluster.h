@@ -48,7 +48,8 @@ namespace Sleipnir {
 class CCoalesceCluster : public CCoalesceClusterImpl {
 public:
 	bool Initialize( const CPCL& PCL, CCoalesceCluster& Pot, const std::vector<SCoalesceDataset>& vecsDatasets,
-		std::set<std::pair<size_t, size_t> >& setpriiSeeds, size_t iPairs, float dPValue, size_t iThreads );
+		std::set<std::pair<size_t, size_t> >& setpriiSeeds, size_t iPairs, float dPValue, float dProbability,
+		size_t iThreads );
 	void Subtract( CPCL& PCL, const CCoalesceCluster& Pot ) const;
 	void Subtract( CCoalesceGeneScores& GeneScores ) const;
 	bool SelectConditions( const CPCL& PCL, const CCoalesceCluster& Pot, size_t iThreads, float dPValue,

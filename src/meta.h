@@ -45,6 +45,11 @@ inline int sprintf_s( char* szDest, const char* szFormat, ... ) {
 
     va_start( valArgs, szFormat );
     return vsprintf( szDest, szFormat, valArgs ); }
+
+#if !defined(__PIC__) && defined(__GLIBC__) && defined(__GTHREAD_HAS_COND)
+asm(".globl pthread_cond_wait");
+asm(".globl pthread_cond_broadcast");
+#endif
 #endif // _MSC_VER
 
 #ifndef ARRAYSIZE

@@ -549,6 +549,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/PCLPlotter/Makefile \
 		 tools/Randomizer/Makefile \
 		 tools/Seqs2Ngrams/Makefile \
+		 tools/SMRF/Makefile \
 		 tools/SVDer/Makefile \
 		 tools/Synthesizer/Makefile \
 		 tools/Txt2Bin/Makefile \

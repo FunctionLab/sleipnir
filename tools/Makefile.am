@@ -30,6 +30,7 @@ if WITH_TOOLS
 	  PCLPlotter \
 	  Randomizer \
 	  Seqs2Ngrams \
+	  SMRF \
 	  SVDer \
 	  Synthesizer \
 	  Txt2Bin

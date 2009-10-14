@@ -22,7 +22,7 @@ option	"pvalue_motif"	m	"P-value threshhold for motif inclusion"
 option	"zscore_cond"	C	"Z-score threshhold for condition inclusion"
 							double	default="0.5"
 option	"zscore_motif"	M	"Z-score threshhold for motif inclusion"
-							double	default="0.5"
+							double	default="0.25"
 
 section "Sequence Parameters"
 option	"k"				k	"Sequence kmer length"

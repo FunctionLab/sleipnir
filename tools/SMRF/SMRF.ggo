@@ -1,0 +1,27 @@
+package	"SMRF"
+version	"1.0"
+purpose	"Network models for SNP reranking"
+
+section "Main"
+option	"graph"			i	"Input graph DAT/DAB file"
+							string	typestr="filename"
+option	"pvalues"		I	"Input SNP PCL file"
+							string	typestr="filename"	yes
+
+section "Parameters"
+option	"iterations"	t	"Inference iterations per node"
+							int	default="1000"
+option	"epsilon"		e	"Minimum value"
+							double	default="1e-6"
+option	"neighbors"		n	"Fraction of neighbors to sample"
+							double	default="1"
+
+section "Optional"
+option	"memmap"		m	"Memory map input/output"
+							flag	off
+option	"skip"			s	"Columns to skip in input PCL"
+							int	default="2"
+option	"random"		r	"Seed random generator"
+							int	default="0"
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

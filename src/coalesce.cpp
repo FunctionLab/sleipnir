@@ -541,7 +541,7 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 		Pot.SetGenes( PCLCopy.GetGenes( ) );
 		Pot.CalculateHistograms( GeneScores, HistsPot, NULL );
 		if( !Cluster.Initialize( PCLCopy, Pot, m_vecsDatasets, setpriiSeeds, GetNumberCorrelation( ),
-			GetPValueCorrelation( ), GetThreads( ) ) )
+			GetPValueCorrelation( ), GetProbabilityGene( ), GetThreads( ) ) )
 			continue;
 		g_CatSleipnir( ).notice( "CCoalesce::Cluster( ) initialized %d genes", Cluster.GetGenes( ).size( ) );
 		if( g_CatSleipnir( ).isDebugEnabled( ) ) {
