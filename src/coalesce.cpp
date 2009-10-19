@@ -442,6 +442,10 @@ bool CCoalesceImpl::InitializeGeneScores( const CPCL& PCL, const CFASTA& FASTA, 
 		vector<vector<float> >	vecvecdCounts;
 		vector<size_t>			veciLengths;
 		SCoalesceModifierCache	sModifiers( sMods );
+		vector<float>			vecdMotifs;
+		uint32_t				iMotif;
+		size_t					iCount, iType, iSubsequence, iGene;
+		float*					ad;
 
 		if( !m_pMotifs ) {
 			m_fMotifs = true;
@@ -456,7 +460,24 @@ bool CCoalesceImpl::InitializeGeneScores( const CPCL& PCL, const CFASTA& FASTA, 
 					for( j = 0; j < vecsSequences.size( ); ++j )
 						if( !GeneScores.Add( i, *m_pMotifs, vecsSequences[ j ], sModifiers, vecvecdCounts,
 							veciLengths ) )
-							return false; } } }
+							return false; } }
+
+		vecdMotifs.resize( GeneScores.GetMotifs( ) );
+		for( iCount = iType = 0; iType < GeneScores.GetTypes( ); ++iType )
+			for( iSubsequence = 0; iSubsequence < GeneScores.GetSubsequences( iType ); ++iSubsequence ) {
+				for( iGene = 0; iGene < PCL.GetGenes( ); ++iGene ) {
+					if( !( ad = GeneScores.Get( iType, (CCoalesceSequencerBase::ESubsequence)iSubsequence, iGene ) ) )
+						continue;
+					iCount++;
+					for( iMotif = 0; iMotif < GeneScores.GetMotifs( ); ++iMotif )
+						vecdMotifs[iMotif] += ad[iMotif]; }
+				for( iMotif = 0; iMotif < vecdMotifs.size( ); ++iMotif )
+					vecdMotifs[iMotif] /= iCount;
+				for( iGene = 0; iGene < PCL.GetGenes( ); ++iGene ) {
+					if( ad = GeneScores.Get( iType, (CCoalesceSequencerBase::ESubsequence)iSubsequence, iGene ) )
+						for( iMotif = 0; iMotif < GeneScores.GetMotifs( ); ++iMotif )
+							ad[iMotif] += vecdMotifs[iMotif]; } } }
+
 	if( !GeneScores.GetMotifs( ) )
 		Clear( );
 

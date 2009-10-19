@@ -749,7 +749,7 @@ bool CCoalesceCluster::SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& 
 	vector<bool>						vecfSignificant;
 	vector<SThreadSignificantGene>		vecsThreads;
 	vector<size_t>						veciDatasets;
-	float								dFracExpression, dFracMotifs, dSSCluster, dSSPot, dAve;
+	float								dSSCluster, dSSPot, dAve;
 	set<size_t>							setiMotifs;
 	set<SMotifMatch>::const_iterator	iterMotif;
 	vector<float>						vecdStdevs;
@@ -783,14 +783,6 @@ bool CCoalesceCluster::SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& 
 		dAve = ( ( m_vecdCentroid[ i ] * iCluster ) + ( Pot.m_vecdCentroid[ i ] * iPot ) ) / PCL.GetGenes( );
 		vecdStdevs[ i ] = sqrt( ( ( dSSCluster + dSSPot ) / ( iCluster + iPot ) ) - ( dAve * dAve ) ); }
 
-	dFracExpression = (float)m_setiDatasets.size( ) / m_vecsDatasets.size( );
-	if( pMotifs ) {
-		for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif )
-			setiMotifs.insert( iterMotif->m_iMotif );
-		dFracMotifs = (float)setiMotifs.size( ) / pMotifs->GetMotifs( ); }
-	else
-		dFracMotifs = 0;
-
 	veciDatasets.resize( m_setiDatasets.size( ) );
 	copy( m_setiDatasets.begin( ), m_setiDatasets.end( ), veciDatasets.begin( ) );
 	vecfSignificant.resize( PCL.GetGenes( ) );
@@ -808,7 +800,7 @@ bool CCoalesceCluster::SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& 
 		vecsThreads[ i ].m_pPot = &Pot;
 		vecsThreads[ i ].m_pveciDatasets = &veciDatasets;
 		vecsThreads[ i ].m_pvecdStdevs = &vecdStdevs;
-		vecsThreads[ i ].m_dBeta = dFracExpression / ( dFracExpression + dFracMotifs );
+		vecsThreads[ i ].m_dBeta = m_setsMotifs.size( ) ? ( (float)m_setsMotifs.size( ) / ( m_setiDatasets.size( ) + m_setsMotifs.size( ) ) ) : 0.5;
 		vecsThreads[ i ].m_iMinimum = iMinimum;
 		vecsThreads[ i ].m_dProbability = dProbability;
 		if( pthread_create( &vecpthdThreads[ i ], NULL, ThreadSignificantGene, &vecsThreads[ i ] ) ) {
