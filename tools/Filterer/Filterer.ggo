@@ -1,0 +1,15 @@
+package	"Filterer"
+version	"1.0"
+purpose	"Flexible DAT/DAB data filterer"
+
+section "Main"
+option	"input"			i	"Input DAT/DAB file"
+							string	typestr="filename"
+option	"output"		o	"Output DAT/DAB file"
+							string	typestr="filename"
+
+section "Optional"
+option	"memmap"		m	"Memory map input/output"
+							flag	off
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"
