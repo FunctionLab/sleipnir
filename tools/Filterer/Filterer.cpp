@@ -46,10 +46,10 @@ int main( int iArgs, char** aszArgs ) {
 	fDefaultExclude = false;
 	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
 		vecstrTokens.clear( );
-		CMeta::Tokenize( sArgs.inputs[iArg] + 1, vecstrTokens, "-", true );
+		CMeta::Tokenize( sArgs.inputs[iArg] + 1, vecstrTokens, "=", true );
 		d = (float)atof( vecstrTokens[0].c_str( ) );
 		if( vecstrTokens.size( ) == 1 ) {
-			if( ( sArgs.inputs[iArg][1] ) == '-' ) {
+			if( ( sArgs.inputs[iArg][1] ) == '=' ) {
 				dMin = -FLT_MAX;
 				dMax = d; }
 			else {
