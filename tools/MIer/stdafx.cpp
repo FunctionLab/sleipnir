@@ -41,6 +41,12 @@
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
+ * Note that to use \ref Counter with the output from \c MIer, you should first convert the table of raw
+ * (bit) mutual information scores to exponentially scaled sums of relative shared information.  This can
+ * be done using the \c half2relative.rb and \c half2weights.rb scripts included with Sleipnir.  The
+ * combination of these two files' outputs creates a weights file appropriate for use with \ref Counter 's
+ * alphas parameters.
+ * 
  * \include MIer/MIer.ggo
  * 
  * <table><tr>
