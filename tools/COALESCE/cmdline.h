@@ -85,7 +85,7 @@ struct gengetopt_args_info
   char * sequences_arg;	/**< @brief Sequence types to use (comma separated).  */
   char * sequences_orig;	/**< @brief Sequence types to use (comma separated) original value given at command line.  */
   const char *sequences_help; /**< @brief Sequence types to use (comma separated) help description.  */
-  int bases_arg;	/**< @brief Resolution of bases per motif match (default='5000').  */
+  int bases_arg;	/**< @brief Resolution of bases per motif match (default='2500').  */
   char * bases_orig;	/**< @brief Resolution of bases per motif match original value given at command line.  */
   const char *bases_help; /**< @brief Resolution of bases per motif match help description.  */
   int size_minimum_arg;	/**< @brief Minimum gene count for clusters of interest (default='5').  */

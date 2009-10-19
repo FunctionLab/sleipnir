@@ -534,6 +534,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/DataDumper/Makefile \
 		 tools/Distancer/Makefile \
 		 tools/Explainer/Makefile \
+		 tools/Filterer/Makefile \
 		 tools/Funcaeologist/Makefile \
 		 tools/Funcifier/Makefile \
 		 tools/Funcographer/Makefile \

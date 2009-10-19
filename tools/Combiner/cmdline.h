@@ -43,6 +43,9 @@ struct gengetopt_args_info
   char * output_arg;	/**< @brief Output file.  */
   char * output_orig;	/**< @brief Output file original value given at command line.  */
   const char *output_help; /**< @brief Output file help description.  */
+  char * weights_arg;	/**< @brief Weights file.  */
+  char * weights_orig;	/**< @brief Weights file original value given at command line.  */
+  const char *weights_help; /**< @brief Weights file help description.  */
   float jaccard_arg;	/**< @brief Minimum Jaccard index for module equivalence (default='0.5').  */
   char * jaccard_orig;	/**< @brief Minimum Jaccard index for module equivalence original value given at command line.  */
   const char *jaccard_help; /**< @brief Minimum Jaccard index for module equivalence help description.  */
@@ -68,6 +71,7 @@ struct gengetopt_args_info
   unsigned int type_given ;	/**< @brief Whether type was given.  */
   unsigned int method_given ;	/**< @brief Whether method was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
+  unsigned int weights_given ;	/**< @brief Whether weights was given.  */
   unsigned int jaccard_given ;	/**< @brief Whether jaccard was given.  */
   unsigned int intersection_given ;	/**< @brief Whether intersection was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */

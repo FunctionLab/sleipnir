@@ -15,6 +15,7 @@ if WITH_TOOLS
 	  DataDumper \
 	  Distancer \
 	  Explainer \
+	  Filterer \
 	  Funcaeologist \
 	  Funcifier \
 	  Funcographer \

@@ -823,6 +823,15 @@ public:
 
 		return IncompleteBeta( 0.5 * iDegFree, 0.5, iDegFree / ( iDegFree + ( dT * dT ) ) ); }
 
+	static double TTest( double dMean, double dVariance, size_t iN ) {
+		size_t	iDegFree;
+		double	dT;
+
+		iDegFree = iN - 1;
+		dT = sqrt( (float)iN ) * dMean / sqrt( dVariance );
+
+		return IncompleteBeta( 0.5 * iDegFree, 0.5, iDegFree / ( iDegFree + ( dT * dT ) ) ); }
+
 	/*!
 	 * \brief
 	 * Return the p-value of a t-test between the two given array statistics without assuming equal variance.

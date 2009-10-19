@@ -9,6 +9,8 @@ option	"method"	m	"Combination method"
 						values="min","max","mean","gmean","hmean","sum"	default="mean"
 option	"output"	o	"Output file"
 						string	typestr="filename"
+option	"weights"	w	"Weights file"
+						string	typestr="filename"
 
 section "Modules"
 option	"jaccard"	j	"Minimum Jaccard index for module equivalence"
