@@ -82,7 +82,7 @@ const char	CCoalesceClusterImpl::c_szConditions[]	= "Conditions";
  */
 bool CCoalesceCluster::Initialize( const CPCL& PCL, CCoalesceCluster& Pot,
 	const std::vector<SCoalesceDataset>& vecsDatasets, std::set<std::pair<size_t, size_t> >& setpriiSeeds,
-	size_t iPairs, float dPValue, float dProbability, size_t iThreads ) {
+	const vector<float>& vecdSeed, size_t iPairs, float dPValue, float dProbability, size_t iThreads ) {
 	size_t	i;
 	float	dFraction;
 	CPCL	PCLCopy;
@@ -101,8 +101,8 @@ bool CCoalesceCluster::Initialize( const CPCL& PCL, CCoalesceCluster& Pot,
 
 	PCLCopy.Open( PCL );
 	PCLCopy.Normalize( CPCL::ENormalizeColumn );
-	return ( AddSeedPair( PCLCopy, Pot, setpriiSeeds, dFraction, dPValue, iThreads ) &&
-		AddCorrelatedGenes( PCLCopy, Pot, dPValue ) ); }
+	return ( ( vecdSeed.size( ) || AddSeedPair( PCLCopy, Pot, setpriiSeeds, dFraction, dPValue, iThreads ) ) &&
+		AddCorrelatedGenes( PCLCopy, Pot, vecdSeed, dPValue ) ); }
 
 void CCoalesceClusterImpl::Add( size_t iGene, CCoalesceCluster& Pot ) {
 
@@ -188,11 +188,16 @@ bool CCoalesceClusterImpl::AddSeedPair( const CPCL& PCL, CCoalesceCluster& Pot,
 		dFraction, dPValue, PCL.GetGene( iOne ).c_str( ), PCL.GetGene( iTwo ).c_str( ), dMaxCorr, dMinP );
 	return false; }
 
-bool CCoalesceClusterImpl::AddCorrelatedGenes( const CPCL& PCL, CCoalesceCluster& Pot, float dPValue ) {
+bool CCoalesceClusterImpl::AddCorrelatedGenes( const CPCL& PCL, CCoalesceCluster& Pot, const vector<float>& vecdSeed, float dPValue ) {
 	size_t	iGene, iN;
 	double	dR;
 
 	CalculateCentroid( PCL );
+	if( vecdSeed.size( ) ) {
+		if( vecdSeed.size( ) == m_vecdCentroid.size( ) )
+			copy( vecdSeed.begin( ), vecdSeed.end( ), m_vecdCentroid.begin( ) );
+		else
+			g_CatSleipnir( ).error( "CCoalesceClusterImpl::AddCorrelatedGenes( %g ) invalid seed provided, ignoring", dPValue ); }
 	for( iGene = 0; iGene < PCL.GetGenes( ); ++iGene )
 		if( !IsGene( iGene ) &&
 			( ( dR = CMeasurePearson::Pearson( &m_vecdCentroid.front( ), PCL.GetExperiments( ),
@@ -800,7 +805,7 @@ bool CCoalesceCluster::SelectGenes( const CPCL& PCL, const CCoalesceGeneScores& 
 		vecsThreads[ i ].m_pPot = &Pot;
 		vecsThreads[ i ].m_pveciDatasets = &veciDatasets;
 		vecsThreads[ i ].m_pvecdStdevs = &vecdStdevs;
-		vecsThreads[ i ].m_dBeta = m_setsMotifs.size( ) ? ( (float)m_setsMotifs.size( ) / ( m_setiDatasets.size( ) + m_setsMotifs.size( ) ) ) : 0.5;
+		vecsThreads[ i ].m_dBeta = m_setsMotifs.size( ) ? ( (float)m_setsMotifs.size( ) / ( m_setiDatasets.size( ) + m_setsMotifs.size( ) ) ) : 0.5f;
 		vecsThreads[ i ].m_iMinimum = iMinimum;
 		vecsThreads[ i ].m_dProbability = dProbability;
 		if( pthread_create( &vecpthdThreads[ i ], NULL, ThreadSignificantGene, &vecsThreads[ i ] ) ) {

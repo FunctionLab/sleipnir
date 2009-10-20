@@ -107,14 +107,18 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 	return 0; }
 
 int MainDATs( const gengetopt_args_info& sArgs ) {
-	CDataset			Dataset;
-	CDat				DatOut, DatCur;
-	CHalfMatrix<float>	MatCounts;
-	size_t				i, j, k, iOne, iTwo;
-	vector<size_t>		veciGenes;
-	float				d, dWeight, dWeights;
-	vector<string>		vecstrFiles;
-	CPCL				PCLWeights( false );
+	CDataset				Dataset;
+	CDat					DatOut, DatCur;
+	CHalfMatrix<float>		MatCounts;
+	size_t					i, j, k, iOne, iTwo, iA, iB;
+	vector<vector<size_t> >	vecveciGenes;
+	float					d, dWeight, dWeights;
+	vector<string>			vecstrFiles, vecstrTerms;
+	CPCL					PCLWeights( false );
+	CGenome					Genome;
+	CGenes					GenesIn( Genome );
+	vector<CGenes*>			vecpTerms;
+	vector<set<size_t> >	vecsetiGenes;
 
 	if( !sArgs.inputs_num )
 		return 1;
@@ -130,8 +134,31 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 	if( sArgs.weights_arg && !PCLWeights.Open( sArgs.weights_arg, 0 ) ) {
 		cerr << "Could not open: " << sArgs.weights_arg << endl;
 		return 1; }
+	if( sArgs.genes_arg && !GenesIn.Open( sArgs.genes_arg ) ) {
+		cerr << "Could not open: " << sArgs.genes_arg << endl;
+		return 1; }
+	if( sArgs.terms_arg ) {
+		static const size_t	c_iBuffer	= 131072;
+		ifstream	ifsm;
+		char		acBuffer[ c_iBuffer ];
 
-	DatOut.Open( Dataset.GetGeneNames( ), false, sArgs.memmap_flag ? sArgs.output_arg : NULL );
+		ifsm.open( sArgs.terms_arg );
+		while( !ifsm.eof( ) ) {
+			vector<string>	vecstrLine;
+
+			ifsm.getline( acBuffer, c_iBuffer - 1 );
+			CMeta::Tokenize( acBuffer, vecstrLine );
+			if( vecstrLine.empty( ) )
+				continue;
+			vecstrTerms.push_back( vecstrLine[0] );
+			vecstrLine.erase( vecstrLine.begin( ) );
+			vecpTerms.push_back( new CGenes( Genome ) );
+			vecpTerms.back( )->Open( vecstrLine ); }
+		if( vecpTerms.empty( ) || !vecpTerms[0]->GetGenes( ) ) {
+			cerr << "Could not open: " << sArgs.terms_arg << endl;
+			return 1; } }
+
+	DatOut.Open( vecstrTerms.empty( ) ? Dataset.GetGeneNames( ) : vecstrTerms, false, sArgs.memmap_flag ? sArgs.output_arg : NULL );
 	if( !strcmp( c_szMax, sArgs.method_arg ) )
 		d = -FLT_MAX;
 	else if( !strcmp( c_szMin, sArgs.method_arg ) )
@@ -146,9 +173,10 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 	if( fabs( d ) < 2 ) {
 		MatCounts.Initialize( DatOut.GetGenes( ) );
 		MatCounts.Clear( ); }
-	veciGenes.resize( DatOut.GetGenes( ) );
+	vecveciGenes.resize( DatOut.GetGenes( ) );
+	vecsetiGenes.resize( DatOut.GetGenes( ) );
 	for( dWeights = 0,i = 0; i < sArgs.inputs_num; ++i ) {
-		if( !DatCur.Open( sArgs.inputs[ i ], !!sArgs.memmap_flag && !sArgs.normalize_flag ) ) {
+		if( !DatCur.Open( sArgs.inputs[ i ], !!sArgs.memmap_flag && !sArgs.normalize_flag && !GenesIn.GetGenes( ) ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
 			return 1; }
 		if( PCLWeights.GetGenes( ) ) {
@@ -161,30 +189,44 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 		cerr << "Opened: " << sArgs.inputs[ i ] << endl;
 		if( sArgs.normalize_flag )
 			DatCur.Normalize( CDat::ENormalizeZScore );
-		for( j = 0; j < veciGenes.size( ); ++j )
-			veciGenes[ j ] = DatCur.GetGene( DatOut.GetGene( j ) );
-		for( j = 0; j < veciGenes.size( ); ++j ) {
-			if( ( iOne = veciGenes[ j ] ) == -1 )
-				continue;
-			for( k = ( j + 1 ); k < veciGenes.size( ); ++k ) {
-				if( ( ( iTwo = veciGenes[ k ] ) == -1 ) || CMeta::IsNaN( d = DatCur.Get( iOne, iTwo ) ) )
+		if( GenesIn.GetGenes( ) )
+			DatCur.FilterGenes( GenesIn, CDat::EFilterInclude );
+		for( j = 0; j < vecveciGenes.size( ); ++j ) {
+			vecveciGenes[j].clear( );
+			vecsetiGenes[j].clear( );
+			if( vecstrTerms.empty( ) )
+				vecveciGenes[j].push_back( DatCur.GetGene( DatOut.GetGene( j ) ) );
+			else {
+				for( k = 0; k < vecpTerms[j]->GetGenes( ); ++k )
+					vecveciGenes[j].push_back( DatCur.GetGene( vecpTerms[j]->GetGene( k ).GetName( ) ) );
+				for( k = 0; k < vecveciGenes[j].size( ); ++k )
+					vecsetiGenes[j].insert( vecveciGenes[j][k] ); } }
+		for( j = 0; j < vecveciGenes.size( ); ++j )
+			for( iA = 0; iA < vecveciGenes[j].size( ); ++iA ) {
+				if( ( iOne = vecveciGenes[j][iA] ) == -1 )
 					continue;
-				if( !strcmp( c_szMean, sArgs.method_arg ) ||
-					!strcmp( c_szSum, sArgs.method_arg ) ) {
-					DatOut.Get( j, k ) += dWeight * d;
-					MatCounts.Get( j, k ) += dWeight; }
-				else if( !strcmp( c_szGMean, sArgs.method_arg ) ) {
-					DatOut.Get( j, k ) *= pow( d, dWeight );
-					MatCounts.Get( j, k ) += dWeight; }
-				else if( !strcmp( c_szHMean, sArgs.method_arg ) ) {
-					DatOut.Get( j, k ) += dWeight / d;
-					MatCounts.Get( j, k ) += dWeight; }
-				else if( !strcmp( c_szMax, sArgs.method_arg ) ) {
-					if( d > DatOut.Get( j, k ) )
-						DatOut.Set( j, k, d ); }
-				else if( !strcmp( c_szMin, sArgs.method_arg ) ) {
-					if( d < DatOut.Get( j, k ) )
-						DatOut.Set( j, k, d ); } } } }
+				for( k = ( j + 1 ); k < vecveciGenes.size( ); ++k )
+					for( iB = 0; iB < vecveciGenes[k].size( ); ++iB ) {
+						if( ( ( iTwo = vecveciGenes[k][iB] ) == -1 ) ||
+							( vecsetiGenes[j].find( iTwo ) != vecsetiGenes[j].end( ) ) ||
+							CMeta::IsNaN( d = DatCur.Get( iOne, iTwo ) ) )
+							continue;
+						if( !strcmp( c_szMean, sArgs.method_arg ) ||
+							!strcmp( c_szSum, sArgs.method_arg ) ) {
+							DatOut.Get( j, k ) += dWeight * d;
+							MatCounts.Get( j, k ) += dWeight; }
+						else if( !strcmp( c_szGMean, sArgs.method_arg ) ) {
+							DatOut.Get( j, k ) *= pow( d, dWeight );
+							MatCounts.Get( j, k ) += dWeight; }
+						else if( !strcmp( c_szHMean, sArgs.method_arg ) ) {
+							DatOut.Get( j, k ) += dWeight / d;
+							MatCounts.Get( j, k ) += dWeight; }
+						else if( !strcmp( c_szMax, sArgs.method_arg ) ) {
+							if( d > DatOut.Get( j, k ) )
+								DatOut.Set( j, k, d ); }
+						else if( !strcmp( c_szMin, sArgs.method_arg ) ) {
+							if( d < DatOut.Get( j, k ) )
+								DatOut.Set( j, k, d ); } } } }
 	for( i = 0; i < DatOut.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
 			if( !strcmp( c_szMean, sArgs.method_arg ) )
@@ -206,6 +248,8 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 	if( !sArgs.memmap_flag )
 		DatOut.Save( sArgs.output_arg );
 
+	for( i = 0; i < vecpTerms.size( ); ++i )
+		delete vecpTerms[i];
 	return 0; }
 
 static int MainDABs( const gengetopt_args_info& sArgs ) {

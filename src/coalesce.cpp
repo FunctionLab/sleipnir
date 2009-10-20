@@ -296,6 +296,13 @@ bool CCoalesceGroupHistograms::IsSimilar( const CCoalesceMotifLibrary* pMotifs, 
 
 // CCoalesce
 
+void CCoalesce::SetSeed( const CPCL& PCL ) {
+	size_t	i;
+
+	m_vecdSeed.resize( PCL.GetExperiments( ) );
+	for( i = 0; i < m_vecdSeed.size( ); ++i )
+		m_vecdSeed[i] = PCL.Get( 0, i ); }
+
 void CCoalesceImpl::Normalize( CPCL& PCL ) {
 	static const double	c_dLog2		= log( 2.0 );
 	vector<float>		vecdMedian;
@@ -561,9 +568,10 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 
 		Pot.SetGenes( PCLCopy.GetGenes( ) );
 		Pot.CalculateHistograms( GeneScores, HistsPot, NULL );
-		if( !Cluster.Initialize( PCLCopy, Pot, m_vecsDatasets, setpriiSeeds, GetNumberCorrelation( ),
-			GetPValueCorrelation( ), GetProbabilityGene( ), GetThreads( ) ) )
+		if( !Cluster.Initialize( PCLCopy, Pot, m_vecsDatasets, setpriiSeeds, m_vecdSeed,
+			GetNumberCorrelation( ), GetPValueCorrelation( ), GetProbabilityGene( ), GetThreads( ) ) )
 			continue;
+		m_vecdSeed.clear( );
 		g_CatSleipnir( ).notice( "CCoalesce::Cluster( ) initialized %d genes", Cluster.GetGenes( ).size( ) );
 		if( g_CatSleipnir( ).isDebugEnabled( ) ) {
 			ostringstream				ossm;

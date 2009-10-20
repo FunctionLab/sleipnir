@@ -516,6 +516,7 @@ protected:
 	std::vector<SCoalesceDataset>	m_vecsDatasets;
 	std::vector<const CFASTA*>		m_vecpWiggles;
 	std::vector<std::ostream*>		m_vecpostm;
+	std::vector<float>				m_vecdSeed;
 };
 
 }
