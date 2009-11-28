@@ -4,7 +4,7 @@ purpose	"PCL and data file combination tool"
 
 section "Main"
 option	"type"		t	"Output data file type"
-						values="pcl","dat","dab","module"	default="pcl"
+						values="pcl","dat","dab","module","revdat"	default="pcl"
 option	"method"	m	"Combination method"
 						values="min","max","mean","gmean","hmean","sum"	default="mean"
 option	"output"	o	"Output file"

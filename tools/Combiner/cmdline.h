@@ -49,9 +49,15 @@ struct gengetopt_args_info
   float jaccard_arg;	/**< @brief Minimum Jaccard index for module equivalence (default='0.5').  */
   char * jaccard_orig;	/**< @brief Minimum Jaccard index for module equivalence original value given at command line.  */
   const char *jaccard_help; /**< @brief Minimum Jaccard index for module equivalence help description.  */
-  double intersection_arg;	/**< @brief Minimum intersection fractino for module inheritance (default='0.666').  */
-  char * intersection_orig;	/**< @brief Minimum intersection fractino for module inheritance original value given at command line.  */
-  const char *intersection_help; /**< @brief Minimum intersection fractino for module inheritance help description.  */
+  double intersection_arg;	/**< @brief Minimum intersection fraction for module inheritance (default='0.666').  */
+  char * intersection_orig;	/**< @brief Minimum intersection fraction for module inheritance original value given at command line.  */
+  const char *intersection_help; /**< @brief Minimum intersection fraction for module inheritance help description.  */
+  char * genes_arg;	/**< @brief Process only genes from the given set.  */
+  char * genes_orig;	/**< @brief Process only genes from the given set original value given at command line.  */
+  const char *genes_help; /**< @brief Process only genes from the given set help description.  */
+  char * terms_arg;	/**< @brief Produce DAT/DABs averaging within the provided terms.  */
+  char * terms_orig;	/**< @brief Produce DAT/DABs averaging within the provided terms original value given at command line.  */
+  const char *terms_help; /**< @brief Produce DAT/DABs averaging within the provided terms help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCLs (default='2').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCLs original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCLs help description.  */
@@ -74,6 +80,8 @@ struct gengetopt_args_info
   unsigned int weights_given ;	/**< @brief Whether weights was given.  */
   unsigned int jaccard_given ;	/**< @brief Whether jaccard was given.  */
   unsigned int intersection_given ;	/**< @brief Whether intersection was given.  */
+  unsigned int genes_given ;	/**< @brief Whether genes was given.  */
+  unsigned int terms_given ;	/**< @brief Whether terms was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */

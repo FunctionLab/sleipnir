@@ -31,13 +31,16 @@ const char *gengetopt_args_info_help[] = {
   "  -h, --help                 Print help and exit",
   "  -V, --version              Print version and exit",
   "\nMain:",
-  "  -t, --type=STRING          Output data file type  (possible values=\"pcl\", \n                               \"dat\", \"dab\", \"module\" default=`pcl')",
+  "  -t, --type=STRING          Output data file type  (possible values=\"pcl\", \n                               \"dat\", \"dab\", \"module\", \"revdat\" \n                               default=`pcl')",
   "  -m, --method=STRING        Combination method  (possible values=\"min\", \n                               \"max\", \"mean\", \"gmean\", \"hmean\", \"sum\" \n                               default=`mean')",
   "  -o, --output=filename      Output file",
   "  -w, --weights=filename     Weights file",
   "\nModules:",
   "  -j, --jaccard=FLOAT        Minimum Jaccard index for module equivalence  \n                               (default=`0.5')",
-  "  -r, --intersection=DOUBLE  Minimum intersection fractino for module \n                               inheritance  (default=`0.666')",
+  "  -r, --intersection=DOUBLE  Minimum intersection fraction for module \n                               inheritance  (default=`0.666')",
+  "\nFiltering:",
+  "  -g, --genes=filename       Process only genes from the given set",
+  "  -e, --terms=filename       Produce DAT/DABs averaging within the provided \n                               terms",
   "\nOptional:",
   "  -k, --skip=INT             Columns to skip in input PCLs  (default=`2')",
   "  -p, --memmap               Memory map input files  (default=off)",
@@ -65,7 +68,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
                         struct cmdline_parser_params *params, const char *additional_error);
 
 
-char *cmdline_parser_type_values[] = {"pcl", "dat", "dab", "module", 0} ;	/* Possible values for type.  */
+char *cmdline_parser_type_values[] = {"pcl", "dat", "dab", "module", "revdat", 0} ;	/* Possible values for type.  */
 char *cmdline_parser_method_values[] = {"min", "max", "mean", "gmean", "hmean", "sum", 0} ;	/* Possible values for method.  */
 
 static char *
@@ -82,6 +85,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->weights_given = 0 ;
   args_info->jaccard_given = 0 ;
   args_info->intersection_given = 0 ;
+  args_info->genes_given = 0 ;
+  args_info->terms_given = 0 ;
   args_info->skip_given = 0 ;
   args_info->memmap_given = 0 ;
   args_info->normalize_given = 0 ;
@@ -104,6 +109,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->jaccard_orig = NULL;
   args_info->intersection_arg = 0.666;
   args_info->intersection_orig = NULL;
+  args_info->genes_arg = NULL;
+  args_info->genes_orig = NULL;
+  args_info->terms_arg = NULL;
+  args_info->terms_orig = NULL;
   args_info->skip_arg = 2;
   args_info->skip_orig = NULL;
   args_info->memmap_flag = 0;
@@ -128,11 +137,13 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->weights_help = gengetopt_args_info_help[6] ;
   args_info->jaccard_help = gengetopt_args_info_help[8] ;
   args_info->intersection_help = gengetopt_args_info_help[9] ;
-  args_info->skip_help = gengetopt_args_info_help[11] ;
-  args_info->memmap_help = gengetopt_args_info_help[12] ;
-  args_info->normalize_help = gengetopt_args_info_help[13] ;
-  args_info->subset_help = gengetopt_args_info_help[14] ;
-  args_info->verbosity_help = gengetopt_args_info_help[15] ;
+  args_info->genes_help = gengetopt_args_info_help[11] ;
+  args_info->terms_help = gengetopt_args_info_help[12] ;
+  args_info->skip_help = gengetopt_args_info_help[14] ;
+  args_info->memmap_help = gengetopt_args_info_help[15] ;
+  args_info->normalize_help = gengetopt_args_info_help[16] ;
+  args_info->subset_help = gengetopt_args_info_help[17] ;
+  args_info->verbosity_help = gengetopt_args_info_help[18] ;
   
 }
 
@@ -224,6 +235,10 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->weights_orig));
   free_string_field (&(args_info->jaccard_orig));
   free_string_field (&(args_info->intersection_orig));
+  free_string_field (&(args_info->genes_arg));
+  free_string_field (&(args_info->genes_orig));
+  free_string_field (&(args_info->terms_arg));
+  free_string_field (&(args_info->terms_orig));
   free_string_field (&(args_info->skip_orig));
   free_string_field (&(args_info->subset_orig));
   free_string_field (&(args_info->verbosity_orig));
@@ -319,6 +334,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "jaccard", args_info->jaccard_orig, 0);
   if (args_info->intersection_given)
     write_into_file(outfile, "intersection", args_info->intersection_orig, 0);
+  if (args_info->genes_given)
+    write_into_file(outfile, "genes", args_info->genes_orig, 0);
+  if (args_info->terms_given)
+    write_into_file(outfile, "terms", args_info->terms_orig, 0);
   if (args_info->skip_given)
     write_into_file(outfile, "skip", args_info->skip_orig, 0);
   if (args_info->memmap_given)
@@ -593,6 +612,8 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "weights",	1, NULL, 'w' },
         { "jaccard",	1, NULL, 'j' },
         { "intersection",	1, NULL, 'r' },
+        { "genes",	1, NULL, 'g' },
+        { "terms",	1, NULL, 'e' },
         { "skip",	1, NULL, 'k' },
         { "memmap",	0, NULL, 'p' },
         { "normalize",	0, NULL, 'n' },
@@ -601,7 +622,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVt:m:o:w:j:r:k:pns:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVt:m:o:w:j:r:g:e:k:pns:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -686,7 +707,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'r':	/* Minimum intersection fractino for module inheritance.  */
+        case 'r':	/* Minimum intersection fraction for module inheritance.  */
         
         
           if (update_arg( (void *)&(args_info->intersection_arg), 
@@ -694,6 +715,30 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.intersection_given), optarg, 0, "0.666", ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
               "intersection", 'r',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'g':	/* Process only genes from the given set.  */
+        
+        
+          if (update_arg( (void *)&(args_info->genes_arg), 
+               &(args_info->genes_orig), &(args_info->genes_given),
+              &(local_args_info.genes_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genes", 'g',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'e':	/* Produce DAT/DABs averaging within the provided terms.  */
+        
+        
+          if (update_arg( (void *)&(args_info->terms_arg), 
+               &(args_info->terms_orig), &(args_info->terms_given),
+              &(local_args_info.terms_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "terms", 'e',
               additional_error))
             goto failure;
         

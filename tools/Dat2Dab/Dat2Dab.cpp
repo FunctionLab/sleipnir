@@ -98,6 +98,8 @@ int main( int iArgs, char** aszArgs ) {
 					return 1; }
 				Dat.SetGene( i, iterName->second ); } }
 
+	if( sArgs.randomize_flag )
+		Dat.Randomize( );
 	if( sArgs.rank_flag )
 		Dat.Rank( );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )

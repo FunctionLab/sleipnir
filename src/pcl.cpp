@@ -1108,7 +1108,7 @@ cerr << endl;
 				iBin = MedianMultiplesBin( (float)Euclidean.Measure( Get( iOne ), GetExperiments( ),
 					Get( veciGenes[k] ), GetExperiments( ), IMeasure::EMapNone ), dAve, dStd, iBins, dBinSize );
 //				if( iBin <= iCutoff ) {
-				if( ( 1.1 * vecdFG[iBin] ) >= vecdBG[iBin] ) {
+				if( ( 1.01 * vecdFG[iBin] ) >= vecdBG[iBin] ) {
 					veciAgree[j]++;
 					veciAgree[k]++; } } }
 

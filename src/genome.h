@@ -354,6 +354,8 @@ public:
  */
 class CGenes : CGenesImpl {
 public:
+	static bool Open( const char* szFile, CGenome& Genome, std::vector<std::string>& vecstrGenes, std::vector<CGenes*>& vecpGenes );
+
 	CGenes( CGenome& Genome );
 
 	bool Open( std::istream& istm, bool fCreate = true );

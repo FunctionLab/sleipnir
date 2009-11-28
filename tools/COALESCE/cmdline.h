@@ -130,6 +130,9 @@ struct gengetopt_args_info
   const char *normalize_help; /**< @brief Automatically detect/normalize single channel data help description.  */
   int progressive_flag;	/**< @brief Generate output progressively (default=on).  */
   const char *progressive_help; /**< @brief Generate output progressively help description.  */
+  char * seed_arg;	/**< @brief Expression pattern with which to seed first cluster.  */
+  char * seed_orig;	/**< @brief Expression pattern with which to seed first cluster original value given at command line.  */
+  const char *seed_help; /**< @brief Expression pattern with which to seed first cluster help description.  */
   int threads_arg;	/**< @brief Maximum number of concurrent threads (default='1').  */
   char * threads_orig;	/**< @brief Maximum number of concurrent threads original value given at command line.  */
   const char *threads_help; /**< @brief Maximum number of concurrent threads help description.  */
@@ -178,6 +181,7 @@ struct gengetopt_args_info
   unsigned int max_motifs_given ;	/**< @brief Whether max_motifs was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int progressive_given ;	/**< @brief Whether progressive was given.  */
+  unsigned int seed_given ;	/**< @brief Whether seed was given.  */
   unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */

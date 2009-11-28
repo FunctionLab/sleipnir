@@ -25,6 +25,8 @@
 #include <map>
 #include <vector>
 
+#include "filei.h"
+
 namespace Sleipnir {
 
 class CGene;

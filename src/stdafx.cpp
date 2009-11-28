@@ -810,6 +810,7 @@ MIPS:
  * - <a href="sleipnir-2.1.tar.gz">2.1</a>, *** <br>
  * Update #includes for gcc 4.3 compatibility - thanks to Casey Greene!
  * Add \c half2relative.rb and \c half2weights.rb scripts to \ref MIer - thanks to Arjun Krishnan!
+ * Fix mutual info command line option in \ref Distancer - thanks to Arjun Krishnan!
  * 
  * - <a href="sleipnir-2.0.tar.gz">2.0</a>, 06-19-09 <br>
  * Added \ref COALESCE and \ref Synthesizer as described in Huttenhower et al. 2009. <br>

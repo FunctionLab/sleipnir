@@ -48,6 +48,8 @@ struct gengetopt_args_info
   const char *zscore_help; /**< @brief Convert values to z-scores help description.  */
   int rank_flag;	/**< @brief Rank transform data (default=off).  */
   const char *rank_help; /**< @brief Rank transform data help description.  */
+  int randomize_flag;	/**< @brief Randomize data (default=off).  */
+  const char *randomize_help; /**< @brief Randomize data help description.  */
   char * genes_arg;	/**< @brief Process only genes from the given set.  */
   char * genes_orig;	/**< @brief Process only genes from the given set original value given at command line.  */
   const char *genes_help; /**< @brief Process only genes from the given set help description.  */
@@ -102,6 +104,7 @@ struct gengetopt_args_info
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int rank_given ;	/**< @brief Whether rank was given.  */
+  unsigned int randomize_given ;	/**< @brief Whether randomize was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */

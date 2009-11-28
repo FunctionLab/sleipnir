@@ -17,6 +17,8 @@ option	"zscore"		z	"Convert values to z-scores"
 							flag	off
 option	"rank"			r	"Rank transform data"
 							flag	off
+option	"randomize"			a	"Randomize data"
+							flag	off
 
 section "Filtering"
 option	"genes"			g	"Process only genes from the given set"

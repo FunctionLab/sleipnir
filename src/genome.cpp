@@ -441,6 +441,40 @@ bool CGenome::AddSynonym( CGene& Gene, const std::string& strName ) {
 
 	return false; }
 
+bool CGenes::Open( const char* szFile, CGenome& Genome, vector<string>& vecstrGenes, vector<CGenes*>& vecpGenes ) {
+	ifstream		ifsm;
+	vector<char>	veccBuffer;
+	istream*		pistm;
+	bool			fRet;
+
+	if( szFile ) {
+		ifsm.open( szFile );
+		pistm = &ifsm; }
+	else
+		pistm = &cin;
+	if( !ifsm.is_open( ) ) {
+		g_CatSleipnir( ).error( "CGenes::Open( %s ) could not open file", szFile ? szFile : "stdin" );
+		return false; }
+
+	veccBuffer.resize( CFile::GetBufferSize( ) );
+	fRet = false;
+	while( !pistm->eof( ) ) {
+		vector<string>	vecstrLine;
+
+		pistm->getline( &veccBuffer[0], veccBuffer.size( ) - 1 );
+		CMeta::Tokenize( &veccBuffer[0], vecstrLine );
+		if( vecstrLine.empty( ) )
+			continue;
+		vecstrGenes.push_back( vecstrLine[0] );
+		vecstrLine.erase( vecstrLine.begin( ) );
+		vecpGenes.push_back( new CGenes( Genome ) );
+		if( !( fRet = vecpGenes.back( )->Open( vecstrLine ) ) )
+			break; }
+	if( szFile )
+		ifsm.close( );
+
+	return fRet; }
+
 /*!
  * \brief
  * Construct a new gene set containing genomes drawn from the given underlying genome.

@@ -449,6 +449,24 @@ public:
 			m_pPCL->SetGene( iGene, strGene );
 		else
 			m_vecstrGenes[ iGene ] = strGene; }
+
+	void Randomize( ) {
+		size_t	i, j, iOne, iTwo;
+		float	dOne, dTwo;
+
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+				if( CMeta::IsNaN( dOne = Get( i, j ) ) )
+					continue;
+				while( true ) {
+					iOne = rand( ) % GetGenes( );
+					iTwo = rand( ) % GetGenes( );
+					if( iOne > iTwo )
+						std::swap( iOne, iTwo );
+					if( ( ( iOne != i ) || ( iTwo != j ) ) && !CMeta::IsNaN( dTwo = Get( iOne, iTwo ) ) )
+						break; }
+				Set( i, j, dTwo );
+				Set( iOne, iTwo, dOne ); } }
 };
 
 }
