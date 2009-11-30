@@ -122,7 +122,7 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 	CHalfMatrix<float>		MatCounts;
 	size_t					i, j, k, iOne, iTwo, iA, iB;
 	vector<vector<size_t> >	vecveciGenes;
-	float					d, dWeight, dWeights;
+	float					d, dWeight1, dWeight2;
 	vector<string>			vecstrFiles, vecstrTerms;
 	CPCL					PCLWeights( false );
 	CGenome					Genome;
@@ -181,7 +181,7 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 		MatCounts.Initialize( DatOut.GetGenes( ) );
 		MatCounts.Clear( ); }
 	vecsetiGenes.resize( DatOut.GetGenes( ) );
-	for( dWeights = 0,i = 0; i < sArgs.inputs_num; ++i ) {
+	for( i = 0; i < sArgs.inputs_num; ++i ) {
 		if( !DatCur.Open( sArgs.inputs[ i ], !!sArgs.memmap_flag && !sArgs.normalize_flag && !GenesIn.GetGenes( ) ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
 			return 1; }
@@ -189,9 +189,10 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 			if( ( j = PCLWeights.GetGene( CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) ) ) == -1 ) {
 				cerr << "Ignoring unweighted graph: " << sArgs.inputs[ i ] << endl;
 				continue; }
-			dWeight = PCLWeights.Get( j, 0 ); }
+			dWeight1 = PCLWeights.Get( j, 0 );
+			dWeight2 = sArgs.reweight_flag ? 1 : dWeight1; }
 		else
-			dWeight = 1;
+			dWeight1 = dWeight2 = 1;
 		cerr << "Opened: " << sArgs.inputs[ i ] << endl;
 		if( sArgs.normalize_flag )
 			DatCur.Normalize( CDat::ENormalizeZScore );
@@ -224,13 +225,13 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 							continue;
 						switch( eMethod ) {
 							case EMethodGMean:
-								DatOut.Get( iOne, iTwo ) *= pow( d, dWeight );
-								MatCounts.Get( iOne, iTwo ) += dWeight;
+								DatOut.Get( iOne, iTwo ) *= pow( d, dWeight1 );
+								MatCounts.Get( iOne, iTwo ) += dWeight2;
 								break;
 
 							case EMethodHMean:
-								DatOut.Get( iOne, iTwo ) += dWeight / d;
-								MatCounts.Get( iOne, iTwo ) += dWeight;
+								DatOut.Get( iOne, iTwo ) += dWeight1 / d;
+								MatCounts.Get( iOne, iTwo ) += dWeight2;
 								break;
 
 							case EMethodMax:
@@ -244,8 +245,8 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 								break;
 
 							default:
-								DatOut.Get( iOne, iTwo ) += dWeight * d;
-								MatCounts.Get( iOne, iTwo ) += dWeight; } } } } }
+								DatOut.Get( iOne, iTwo ) += dWeight1 * d;
+								MatCounts.Get( iOne, iTwo ) += dWeight2; } } } } }
 	for( i = 0; i < DatOut.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
 			switch( eMethod ) {

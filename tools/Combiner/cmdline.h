@@ -58,6 +58,8 @@ struct gengetopt_args_info
   char * terms_arg;	/**< @brief Produce DAT/DABs averaging within the provided terms.  */
   char * terms_orig;	/**< @brief Produce DAT/DABs averaging within the provided terms original value given at command line.  */
   const char *terms_help; /**< @brief Produce DAT/DABs averaging within the provided terms help description.  */
+  int reweight_flag;	/**< @brief Treat weights as absolute (default=off).  */
+  const char *reweight_help; /**< @brief Treat weights as absolute help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCLs (default='2').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCLs original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCLs help description.  */
@@ -82,6 +84,7 @@ struct gengetopt_args_info
   unsigned int intersection_given ;	/**< @brief Whether intersection was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int terms_given ;	/**< @brief Whether terms was given.  */
+  unsigned int reweight_given ;	/**< @brief Whether reweight was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */

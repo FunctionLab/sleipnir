@@ -25,6 +25,8 @@ option	"terms"		e	"Produce DAT/DABs averaging within the provided terms"
 						string	typestr="filename"
 
 section "Optional"
+option	"reweight"	W	"Treat weights as absolute"
+						flag	off
 option	"skip"		k	"Columns to skip in input PCLs"
 						int	default="2"
 option	"memmap"	p	"Memory map input files"

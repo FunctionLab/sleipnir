@@ -2,6 +2,7 @@ if WITH_TOOLS
   TOOLS_SUBDIRS = \
           Answerer \
 	  Cliquer \
+	  Clinician \
 	  Clusterer \
 	  Clusters2Dab \
 	  COALESCE \

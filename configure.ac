@@ -521,6 +521,7 @@ AC_CONFIG_FILES([Makefile \
                  tools/Makefile \
 		 tools/Answerer/Makefile \
 		 tools/Cliquer/Makefile \
+		 tools/Clinician/Makefile \
 		 tools/Clusterer/Makefile \
 		 tools/Clusters2Dab/Makefile \
 		 tools/COALESCE/Makefile \

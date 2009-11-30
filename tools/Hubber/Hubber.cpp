@@ -267,7 +267,7 @@ size_t hubs( const CDat& Dat, vector<float>& vecdHub ) {
 	for( iRet = i = 0; i < vecdHub.size( ); ++i ) {
 		if( veciHub[ i ] > iRet )
 			iRet = veciHub[ i ];
-		vecdHub[ i ] /= veciHub[ i ] ? veciHub[ i ] : 1; }
+		vecdHub[ i ] = veciHub[ i ] ? ( vecdHub[ i ] / veciHub[ i ] ) : CMeta::GetNaN( ); }
 
 	return iRet; }
 
@@ -321,9 +321,8 @@ void cliques( const CDat& Dat, size_t iGenes, const vector<float>& vecdHub, bool
 
 	sDatum.m_dHubbiness = sDatum.m_dHubbinessStd = 0;
 	for( iCount = i = 0; i < Dat.GetGenes( ); ++i )
-		if( !vecfOutside[ i ] ) {
+		if( !vecfOutside[ i ] && !CMeta::IsNaN( d = vecdHub[ i ] ) ) {
 			iCount++;
-			d = vecdHub[ i ];
 			sDatum.m_dHubbiness += d;
 			sDatum.m_dHubbinessStd += d * d; }
 	i = pGenes ? iCount : iGenes;

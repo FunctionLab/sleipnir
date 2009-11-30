@@ -42,6 +42,7 @@ const char *gengetopt_args_info_help[] = {
   "  -g, --genes=filename       Process only genes from the given set",
   "  -e, --terms=filename       Produce DAT/DABs averaging within the provided \n                               terms",
   "\nOptional:",
+  "  -W, --reweight             Treat weights as absolute  (default=off)",
   "  -k, --skip=INT             Columns to skip in input PCLs  (default=`2')",
   "  -p, --memmap               Memory map input files  (default=off)",
   "  -n, --normalize            Normalize inputs before combining  (default=off)",
@@ -87,6 +88,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->intersection_given = 0 ;
   args_info->genes_given = 0 ;
   args_info->terms_given = 0 ;
+  args_info->reweight_given = 0 ;
   args_info->skip_given = 0 ;
   args_info->memmap_given = 0 ;
   args_info->normalize_given = 0 ;
@@ -113,6 +115,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->genes_orig = NULL;
   args_info->terms_arg = NULL;
   args_info->terms_orig = NULL;
+  args_info->reweight_flag = 0;
   args_info->skip_arg = 2;
   args_info->skip_orig = NULL;
   args_info->memmap_flag = 0;
@@ -139,11 +142,12 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->intersection_help = gengetopt_args_info_help[9] ;
   args_info->genes_help = gengetopt_args_info_help[11] ;
   args_info->terms_help = gengetopt_args_info_help[12] ;
-  args_info->skip_help = gengetopt_args_info_help[14] ;
-  args_info->memmap_help = gengetopt_args_info_help[15] ;
-  args_info->normalize_help = gengetopt_args_info_help[16] ;
-  args_info->subset_help = gengetopt_args_info_help[17] ;
-  args_info->verbosity_help = gengetopt_args_info_help[18] ;
+  args_info->reweight_help = gengetopt_args_info_help[14] ;
+  args_info->skip_help = gengetopt_args_info_help[15] ;
+  args_info->memmap_help = gengetopt_args_info_help[16] ;
+  args_info->normalize_help = gengetopt_args_info_help[17] ;
+  args_info->subset_help = gengetopt_args_info_help[18] ;
+  args_info->verbosity_help = gengetopt_args_info_help[19] ;
   
 }
 
@@ -338,6 +342,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "genes", args_info->genes_orig, 0);
   if (args_info->terms_given)
     write_into_file(outfile, "terms", args_info->terms_orig, 0);
+  if (args_info->reweight_given)
+    write_into_file(outfile, "reweight", 0, 0 );
   if (args_info->skip_given)
     write_into_file(outfile, "skip", args_info->skip_orig, 0);
   if (args_info->memmap_given)
@@ -614,6 +620,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "intersection",	1, NULL, 'r' },
         { "genes",	1, NULL, 'g' },
         { "terms",	1, NULL, 'e' },
+        { "reweight",	0, NULL, 'W' },
         { "skip",	1, NULL, 'k' },
         { "memmap",	0, NULL, 'p' },
         { "normalize",	0, NULL, 'n' },
@@ -622,7 +629,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVt:m:o:w:j:r:g:e:k:pns:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVt:m:o:w:j:r:g:e:Wk:pns:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -739,6 +746,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.terms_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "terms", 'e',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'W':	/* Treat weights as absolute.  */
+        
+        
+          if (update_arg((void *)&(args_info->reweight_flag), 0, &(args_info->reweight_given),
+              &(local_args_info.reweight_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "reweight", 'W',
               additional_error))
             goto failure;
         
