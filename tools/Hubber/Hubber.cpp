@@ -312,6 +312,9 @@ void cliques( const CDat& Dat, size_t iGenes, const vector<float>& vecdHub, bool
 			iCount += veciClique[ i ];
 			sDatum.m_dCliquiness += vecdClique[ i ];
 			sDatum.m_dCliquinessStd += vecdClique2[ i ]; } }
+	iCount /= 2;
+	sDatum.m_dCliquiness /= 2;
+	sDatum.m_dCliquinessStd /= 2;
 	sDatum.m_dCliquiness /= iCount;
 	sDatum.m_dCliquinessStd = (float)sqrt( ( sDatum.m_dCliquinessStd / ( iCount - 1 ) ) -
 		( sDatum.m_dCliquiness * sDatum.m_dCliquiness ) );

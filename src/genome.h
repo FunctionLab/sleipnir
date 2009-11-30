@@ -471,6 +471,15 @@ public:
 
 		return ( ( ( iterGene = m_mapGenes.find( strGene ) ) == m_mapGenes.end( ) ) ? -1 :
 			iterGene->second ); }
+
+	bool AddGene( const std::string& strGene ) {
+
+		if( GetGene( strGene ) != -1 )
+			return false;
+
+		m_mapGenes[ strGene ] = m_vecpGenes.size( );
+		m_vecpGenes.push_back( &m_Genome.AddGene( strGene ) );
+		return true; }
 };
 
 }

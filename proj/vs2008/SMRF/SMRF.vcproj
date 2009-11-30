@@ -235,11 +235,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\tools\SMRF\stdafx.cpp"
+				RelativePath="..\..\..\tools\SMRF\SMRF.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\tools\SMRF\SMRF.cpp"
+				RelativePath="..\..\..\tools\SMRF\stdafx.cpp"
 				>
 			</File>
 		</Filter>
