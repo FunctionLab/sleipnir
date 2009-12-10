@@ -46,6 +46,7 @@ const char *gengetopt_args_info_help[] = {
   "  -k, --skip=INT             Columns to skip in input PCLs  (default=`2')",
   "  -p, --memmap               Memory map input files  (default=off)",
   "  -n, --normalize            Normalize inputs before combining  (default=off)",
+  "  -z, --zscore               Z-score output after combining  (default=off)",
   "  -s, --subset=INT           Subset size (none if zero)  (default=`0')",
   "  -v, --verbosity=INT        Message verbosity  (default=`5')",
     0
@@ -92,6 +93,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->skip_given = 0 ;
   args_info->memmap_given = 0 ;
   args_info->normalize_given = 0 ;
+  args_info->zscore_given = 0 ;
   args_info->subset_given = 0 ;
   args_info->verbosity_given = 0 ;
 }
@@ -120,6 +122,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->skip_orig = NULL;
   args_info->memmap_flag = 0;
   args_info->normalize_flag = 0;
+  args_info->zscore_flag = 0;
   args_info->subset_arg = 0;
   args_info->subset_orig = NULL;
   args_info->verbosity_arg = 5;
@@ -146,8 +149,9 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->skip_help = gengetopt_args_info_help[15] ;
   args_info->memmap_help = gengetopt_args_info_help[16] ;
   args_info->normalize_help = gengetopt_args_info_help[17] ;
-  args_info->subset_help = gengetopt_args_info_help[18] ;
-  args_info->verbosity_help = gengetopt_args_info_help[19] ;
+  args_info->zscore_help = gengetopt_args_info_help[18] ;
+  args_info->subset_help = gengetopt_args_info_help[19] ;
+  args_info->verbosity_help = gengetopt_args_info_help[20] ;
   
 }
 
@@ -350,6 +354,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "memmap", 0, 0 );
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
+  if (args_info->zscore_given)
+    write_into_file(outfile, "zscore", 0, 0 );
   if (args_info->subset_given)
     write_into_file(outfile, "subset", args_info->subset_orig, 0);
   if (args_info->verbosity_given)
@@ -624,12 +630,13 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "skip",	1, NULL, 'k' },
         { "memmap",	0, NULL, 'p' },
         { "normalize",	0, NULL, 'n' },
+        { "zscore",	0, NULL, 'z' },
         { "subset",	1, NULL, 's' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVt:m:o:w:j:r:g:e:Wk:pns:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVt:m:o:w:j:r:g:e:Wk:pnzs:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -788,6 +795,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
               &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "normalize", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'z':	/* Z-score output after combining.  */
+        
+        
+          if (update_arg((void *)&(args_info->zscore_flag), 0, &(args_info->zscore_given),
+              &(local_args_info.zscore_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "zscore", 'z',
               additional_error))
             goto failure;
         

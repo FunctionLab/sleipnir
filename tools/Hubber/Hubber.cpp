@@ -39,14 +39,6 @@ typedef int (TFnProcessor)( const SProcessor& );
 
 static const char	c_szDab[]	= ".dab";
 
-struct SDatum {
-	float						m_dHubbiness;
-	float						m_dHubbinessStd;
-	float						m_dCliquiness;
-	float						m_dCliquinessStd;
-	vector<pair<size_t,float> >	m_vecprSpecific;
-};
-
 struct SWithin {
 	const CDat*						m_pDat;
 	const vector<vector<size_t> >*	m_pvecveciSets;
@@ -73,8 +65,61 @@ struct SBackground {
 	size_t							m_iLength;
 };
 
-static size_t hubs( const CDat&, vector<float>& );
-static void cliques( const CDat&, size_t, const vector<float>&, bool, SDatum&, const CGenes* );
+struct SSummary {
+	size_t	m_iCount;
+	float	m_dSum;
+	float	m_dSumSquares;
+
+	SSummary( ) {
+
+		Clear( ); }
+
+	void Add( float d ) {
+
+		m_iCount++;
+		m_dSum += d;
+		m_dSumSquares += d * d; }
+
+	void Add( const SSummary& sSummary ) {
+
+		m_iCount += sSummary.m_iCount;
+		m_dSum += sSummary.m_dSum;
+		m_dSumSquares += sSummary.m_dSumSquares; }
+
+	void Multiply( float d ) {
+
+		m_iCount = (size_t)( m_iCount * d );
+		m_dSum *= d;
+		m_dSumSquares *= d; }
+
+	void Clear( ) {
+
+		m_iCount = 0;
+		m_dSum = m_dSumSquares = 0; }
+
+	float GetAverage( ) const {
+
+		return ( m_iCount ? ( m_dSum / m_iCount ) : CMeta::GetNaN( ) ); }
+
+	float GetStdev( ) const {
+
+		return ( m_iCount ? sqrt( ( m_dSumSquares / ( max( (size_t)2, m_iCount ) - 1 ) ) - pow( GetAverage( ), 2 ) ) : CMeta::GetNaN( ) ); }
+};
+
+struct SDatum {
+	SSummary					m_sHubbiness;
+	SSummary					m_sCliquiness;
+	vector<pair<size_t,float> >	m_vecprSpecific;
+
+	void Clear( ) {
+
+		m_sHubbiness.Clear( );
+		m_sCliquiness.Clear( );
+		m_vecprSpecific.clear( ); }
+};
+
+static size_t hubs( const CDat&, vector<SSummary>& );
+static size_t cliques( const CDat&, size_t, const vector<SSummary>&, size_t, SDatum&, const CGenes* );
 static void enset( const CDat&, const vector<vector<string> >&, vector<vector<size_t> >& );
 static int sets( const char*, const vector<string>&, vector<vector<string> >& );
 static int process( const char*, bool, bool, const vector<vector<string> >&, const vector<vector<string> >&,
@@ -94,7 +139,7 @@ int main( int iArgs, char** aszArgs ) {
 	CGenome				Genome;
 	CDat				Dat;
 	size_t				i, j, iGenes, iTotal;
-	vector<float>		vecdHub;
+	vector<SSummary>	vecsHubs;
 	SDatum				sDatum;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -186,22 +231,23 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.normalize_flag )
 		Dat.Normalize( CDat::ENormalizeSigmoid );
 
-	iTotal = hubs( Dat, vecdHub );
+	iTotal = hubs( Dat, vecsHubs );
 	if( sArgs.genes_arg == -1 ) {
 		cout << "Function";
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			cout << '\t' << Dat.GetGene( i ); }
 	else {
-		cliques( Dat, iTotal, vecdHub, true, sDatum, NULL );
-		cout << "name	size	hubbiness	hubbiness std.	cliquiness	cliquiness std." << endl;
-		cout << "total	" << iTotal << '\t' << sDatum.m_dHubbiness << '\t' <<
-			sDatum.m_dHubbinessStd << '\t' << sDatum.m_dCliquiness << '\t' << sDatum.m_dCliquinessStd; }
+		cliques( Dat, iTotal, vecsHubs, 0, sDatum, NULL );
+		cout << "name	size	hubbiness	hubbiness std.	hubbiness n	cliquiness	cliquiness std.	cliquiness n" << endl;
+		cout << "total	" << iTotal << '\t' << sDatum.m_sHubbiness.GetAverage( ) << '\t' <<
+			sDatum.m_sHubbiness.GetStdev( ) << '\t' << sDatum.m_sHubbiness.m_iCount << '\t' << sDatum.m_sCliquiness.GetAverage( ) << '\t' <<
+			sDatum.m_sCliquiness.GetStdev( ) << '\t' << sDatum.m_sCliquiness.m_iCount; }
 	cout << endl;
 
 	for( iGenes = 0; iGenes < sArgs.inputs_num; ++iGenes ) {
 		CGenes		Genes( Genome );
 		ifstream	ifsm;
-		size_t		i;
+		size_t		i, iCur;
 
 		if( !( iGenes % 25 ) )
 			cerr << iGenes << '/' << sArgs.inputs_num << endl;
@@ -210,16 +256,16 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open: " << sArgs.inputs[ iGenes ] << endl;
 			return 1; }
 		ifsm.close( );
-		cliques( Dat, iTotal, vecdHub, sArgs.genes_arg != -1, sDatum, &Genes );
+		iCur = cliques( Dat, iTotal, vecsHubs, sArgs.genes_arg, sDatum, &Genes );
 		cout << CMeta::Basename( sArgs.inputs[ iGenes ] );
 		if( sArgs.genes_arg == -1 )
 			for( i = 0; i < sDatum.m_vecprSpecific.size( ); ++i )
 				cout << '\t' << ( sDatum.m_vecprSpecific[ i ].second *
 					( Genes.IsGene( Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) ) ? -1 : 1 ) );
 		else {
-			cout << '\t' << Genes.GetGenes( ) << '\t' << sDatum.m_dHubbiness << '\t' <<
-				sDatum.m_dHubbinessStd << '\t' << sDatum.m_dCliquiness << '\t' <<
-				sDatum.m_dCliquinessStd;
+			cout << '\t' << iCur << '\t' << sDatum.m_sHubbiness.GetAverage( ) << '\t' <<
+				sDatum.m_sHubbiness.GetStdev( ) << '\t' << sDatum.m_sHubbiness.m_iCount << '\t' << sDatum.m_sCliquiness.GetAverage( ) << '\t' <<
+				sDatum.m_sCliquiness.GetStdev( ) << '\t' << sDatum.m_sCliquiness.m_iCount;
 			for( i = 0; i < min( (size_t)sArgs.genes_arg, sDatum.m_vecprSpecific.size( ) ); ++i )
 				cout << '\t' << Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) << '|' <<
 					sDatum.m_vecprSpecific[ i ].second << '|' <<
@@ -247,27 +293,20 @@ int main( int iArgs, char** aszArgs ) {
 #endif // WIN32
 	return 0; }
 
-size_t hubs( const CDat& Dat, vector<float>& vecdHub ) {
-	size_t			i, j, iRet;
-	float			d;
-	vector<size_t>	veciHub;
+size_t hubs( const CDat& Dat, vector<SSummary>& vecsHubs ) {
+	size_t	i, j, iRet;
+	float	d;
 
-	vecdHub.resize( Dat.GetGenes( ) );
-	veciHub.resize( vecdHub.size( ) );
-	for( i = 0; i < vecdHub.size( ); ++i )
-		vecdHub[ i ] = 0;
+	vecsHubs.resize( Dat.GetGenes( ) );
 	for( i = 0; i < Dat.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
 			if( CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 				continue;
-			veciHub[ i ]++;
-			vecdHub[ i ] += d;
-			veciHub[ j ]++;
-			vecdHub[ j ] += d; }
-	for( iRet = i = 0; i < vecdHub.size( ); ++i ) {
-		if( veciHub[ i ] > iRet )
-			iRet = veciHub[ i ];
-		vecdHub[ i ] = veciHub[ i ] ? ( vecdHub[ i ] / veciHub[ i ] ) : CMeta::GetNaN( ); }
+			vecsHubs[ i ].Add( d );
+			vecsHubs[ j ].Add( d ); }
+	for( iRet = i = 0; i < vecsHubs.size( ); ++i )
+		if( vecsHubs[ i ].m_iCount )
+			iRet++;
 
 	return iRet; }
 
@@ -278,64 +317,48 @@ struct SSorter {
 		return ( prOne.second > prTwo.second ); }
 };
 
-void cliques( const CDat& Dat, size_t iGenes, const vector<float>& vecdHub, bool fSort, SDatum& sDatum,
+size_t cliques( const CDat& Dat, size_t iGenes, const vector<SSummary>& vecsHubs, size_t iSort, SDatum& sDatum,
 	const CGenes* pGenes ) {
-	size_t			i, j, iCount;
-	float			d;
-	vector<float>	vecdClique, vecdClique2;
-	vector<size_t>	veciClique;
-	vector<bool>	vecfOutside;
+	size_t				i, j, iRet;
+	float				d;
+	vector<SSummary>	vecsClique;
+	vector<bool>		vecfOutside;
 
 	vecfOutside.resize( Dat.GetGenes( ) );
 	if( pGenes ) {
 		for( i = 0; i < vecfOutside.size( ); ++i )
 			if( !pGenes->IsGene( Dat.GetGene( i ) ) )
 				vecfOutside[ i ] = true; }
-	veciClique.resize( Dat.GetGenes( ) );
-	vecdClique.resize( Dat.GetGenes( ) );
-	vecdClique2.resize( Dat.GetGenes( ) );
+	vecsClique.resize( Dat.GetGenes( ) );
 	for( i = 0; i < Dat.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
 			if( CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 				continue;
-			if( !vecfOutside[ i ] ) {
-				veciClique[ j ]++;
-				vecdClique[ j ] += d;
-				vecdClique2[ j ] += d * d; }
-			if( !vecfOutside[ j ] ) {
-				veciClique[ i ]++;
-				vecdClique[ i ] += d;
-				vecdClique2[ i ] += d * d; } }
-	for( sDatum.m_dCliquiness = sDatum.m_dCliquinessStd = 0,iCount = i = 0; i < vecdClique.size( ); ++i ) {
-//		vecdClique[ i ] /= veciClique[ i ] ? veciClique[ i ] : 1;
+			if( !vecfOutside[ i ] )
+				vecsClique[ j ].Add( d );
+			if( !vecfOutside[ j ] )
+				vecsClique[ i ].Add( d ); }
+	sDatum.Clear( );
+	for( iRet = i = 0; i < vecsClique.size( ); ++i )
 		if( !vecfOutside[ i ] ) {
-			iCount += veciClique[ i ];
-			sDatum.m_dCliquiness += vecdClique[ i ];
-			sDatum.m_dCliquinessStd += vecdClique2[ i ]; } }
-	iCount /= 2;
-	sDatum.m_dCliquiness /= 2;
-	sDatum.m_dCliquinessStd /= 2;
-	sDatum.m_dCliquiness /= iCount;
-	sDatum.m_dCliquinessStd = (float)sqrt( ( sDatum.m_dCliquinessStd / ( iCount - 1 ) ) -
-		( sDatum.m_dCliquiness * sDatum.m_dCliquiness ) );
+			if( vecsClique[ i ].m_iCount )
+				iRet++;
+			sDatum.m_sCliquiness.Add( vecsClique[ i ] ); }
+	sDatum.m_sCliquiness.Multiply( 0.5 );
 
-	sDatum.m_dHubbiness = sDatum.m_dHubbinessStd = 0;
-	for( iCount = i = 0; i < Dat.GetGenes( ); ++i )
-		if( !vecfOutside[ i ] && !CMeta::IsNaN( d = vecdHub[ i ] ) ) {
-			iCount++;
-			sDatum.m_dHubbiness += d;
-			sDatum.m_dHubbinessStd += d * d; }
-	i = pGenes ? iCount : iGenes;
-	sDatum.m_dHubbiness /= i;
-	sDatum.m_dHubbinessStd = (float)sqrt( ( sDatum.m_dHubbinessStd / ( i - 1 ) ) -
-		( sDatum.m_dHubbiness * sDatum.m_dHubbiness ) );
+	for( i = 0; i < Dat.GetGenes( ); ++i )
+		if( !vecfOutside[ i ] )
+			sDatum.m_sHubbiness.Add( vecsHubs[ i ] );
 
-	sDatum.m_vecprSpecific.resize( Dat.GetGenes( ) );
-	for( i = 0; i < sDatum.m_vecprSpecific.size( ); ++i ) {
-		sDatum.m_vecprSpecific[ i ].first = i;
-		sDatum.m_vecprSpecific[ i ].second = vecdClique[ i ] / vecdHub[ i ]; }
-	if( fSort )
-		sort( sDatum.m_vecprSpecific.begin( ), sDatum.m_vecprSpecific.end( ), SSorter( ) ); }
+	if( iSort ) {
+		sDatum.m_vecprSpecific.resize( Dat.GetGenes( ) );
+		for( i = 0; i < sDatum.m_vecprSpecific.size( ); ++i ) {
+			sDatum.m_vecprSpecific[ i ].first = i;
+			sDatum.m_vecprSpecific[ i ].second = vecsClique[ i ].GetAverage( ) / vecsHubs[ i ].GetAverage( ); }
+		if( iSort != -1 )
+			sort( sDatum.m_vecprSpecific.begin( ), sDatum.m_vecprSpecific.end( ), SSorter( ) ); }
+
+	return iRet; }
 
 int process( const char* szFile, bool fMemmap, bool fNormalize, const vector<vector<string> >& vecvecstrSets1,
 	const vector<vector<string> >& vecvecstrSets2, long double* adResults, TFnProcessor* pfnProcessor,

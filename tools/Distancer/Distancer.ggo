@@ -17,6 +17,8 @@ option	"weights"		w	"Input weights file"
 							string	typestr="filename"
 option	"autocorrelate"	a	"Autocorrelate distances"
 							flag	off
+option	"freqweight"	q	"Weight conditions by frequency"
+							flag	off
 
 section "Preprocessing"
 option	"normalize"		n	"Normalize distances"

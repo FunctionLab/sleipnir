@@ -33,6 +33,8 @@ option	"memmap"	p	"Memory map input files"
 						flag	off
 option	"normalize"	n	"Normalize inputs before combining"
 						flag	off
+option	"zscore"	z	"Z-score output after combining"
+						flag	off
 option	"subset"	s	"Subset size (none if zero)"
 						int	default="0"
 option	"verbosity"	v	"Message verbosity"

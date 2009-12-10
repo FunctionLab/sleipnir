@@ -121,6 +121,8 @@ int main( int iArgs, char** aszArgs ) {
 							iCountIn++;
 							dAveIn += d; } } }
 				DatOut.Set( iF1, iF2, dAveIn / iCountIn ); }
+		if( sArgs.zscore_flag )
+			DatOut.Normalize( CDat::ENormalizeZScore );
 		DatOut.Save( sArgs.output_arg );
 	}
 

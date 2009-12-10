@@ -67,6 +67,8 @@ struct gengetopt_args_info
   const char *memmap_help; /**< @brief Memory map input files help description.  */
   int normalize_flag;	/**< @brief Normalize inputs before combining (default=off).  */
   const char *normalize_help; /**< @brief Normalize inputs before combining help description.  */
+  int zscore_flag;	/**< @brief Z-score output after combining (default=off).  */
+  const char *zscore_help; /**< @brief Z-score output after combining help description.  */
   int subset_arg;	/**< @brief Subset size (none if zero) (default='0').  */
   char * subset_orig;	/**< @brief Subset size (none if zero) original value given at command line.  */
   const char *subset_help; /**< @brief Subset size (none if zero) help description.  */
@@ -88,6 +90,7 @@ struct gengetopt_args_info
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int subset_given ;	/**< @brief Whether subset was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 

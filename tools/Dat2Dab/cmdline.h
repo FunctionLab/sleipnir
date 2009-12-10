@@ -56,6 +56,9 @@ struct gengetopt_args_info
   char * genex_arg;	/**< @brief Exclude all genes from the given set.  */
   char * genex_orig;	/**< @brief Exclude all genes from the given set original value given at command line.  */
   const char *genex_help; /**< @brief Exclude all genes from the given set help description.  */
+  char * edges_arg;	/**< @brief Process only edges from the given DAT/DAB.  */
+  char * edges_orig;	/**< @brief Process only edges from the given DAT/DAB original value given at command line.  */
+  const char *edges_help; /**< @brief Process only edges from the given DAT/DAB help description.  */
   double cutoff_arg;	/**< @brief Exclude edges below cutoff.  */
   char * cutoff_orig;	/**< @brief Exclude edges below cutoff original value given at command line.  */
   const char *cutoff_help; /**< @brief Exclude edges below cutoff help description.  */
@@ -107,6 +110,7 @@ struct gengetopt_args_info
   unsigned int randomize_given ;	/**< @brief Whether randomize was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */
+  unsigned int edges_given ;	/**< @brief Whether edges was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int zero_given ;	/**< @brief Whether zero was given.  */
   unsigned int duplicates_given ;	/**< @brief Whether duplicates was given.  */

@@ -46,8 +46,10 @@ struct gengetopt_args_info
   char * colors_arg;	/**< @brief Function cohesiveness output file.  */
   char * colors_orig;	/**< @brief Function cohesiveness output file original value given at command line.  */
   const char *colors_help; /**< @brief Function cohesiveness output file help description.  */
-  int normalize_flag;	/**< @brief Normalize to the range [0,1] (default=off).  */
-  const char *normalize_help; /**< @brief Normalize to the range [0,1] help description.  */
+  int normalize_flag;	/**< @brief Normalize input to the range [0,1] (default=off).  */
+  const char *normalize_help; /**< @brief Normalize input to the range [0,1] help description.  */
+  int zscore_flag;	/**< @brief Normalize output by z-scoring (default=off).  */
+  const char *zscore_help; /**< @brief Normalize output by z-scoring help description.  */
   int memmap_flag;	/**< @brief Memory map input (default=off).  */
   const char *memmap_help; /**< @brief Memory map input help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
@@ -61,6 +63,7 @@ struct gengetopt_args_info
   unsigned int shared_given ;	/**< @brief Whether shared was given.  */
   unsigned int colors_given ;	/**< @brief Whether colors was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 

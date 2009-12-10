@@ -37,7 +37,8 @@ const char *gengetopt_args_info_help[] = {
   "  -s, --shared=STRING    Determine shared gene handling  (possible \n                           values=\"ignore\", \"discard\", \"oneonly\" \n                           default=`discard')",
   "  -l, --colors=filename  Function cohesiveness output file",
   "\nOptional:",
-  "  -n, --normalize        Normalize to the range [0,1]  (default=off)",
+  "  -n, --normalize        Normalize input to the range [0,1]  (default=off)",
+  "  -z, --zscore           Normalize output by z-scoring  (default=off)",
   "  -m, --memmap           Memory map input  (default=off)",
   "  -v, --verbosity=INT    Message verbosity  (default=`5')",
     0
@@ -76,6 +77,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->shared_given = 0 ;
   args_info->colors_given = 0 ;
   args_info->normalize_given = 0 ;
+  args_info->zscore_given = 0 ;
   args_info->memmap_given = 0 ;
   args_info->verbosity_given = 0 ;
 }
@@ -92,6 +94,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->colors_arg = NULL;
   args_info->colors_orig = NULL;
   args_info->normalize_flag = 0;
+  args_info->zscore_flag = 0;
   args_info->memmap_flag = 0;
   args_info->verbosity_arg = 5;
   args_info->verbosity_orig = NULL;
@@ -110,8 +113,9 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->shared_help = gengetopt_args_info_help[6] ;
   args_info->colors_help = gengetopt_args_info_help[7] ;
   args_info->normalize_help = gengetopt_args_info_help[9] ;
-  args_info->memmap_help = gengetopt_args_info_help[10] ;
-  args_info->verbosity_help = gengetopt_args_info_help[11] ;
+  args_info->zscore_help = gengetopt_args_info_help[10] ;
+  args_info->memmap_help = gengetopt_args_info_help[11] ;
+  args_info->verbosity_help = gengetopt_args_info_help[12] ;
   
 }
 
@@ -292,6 +296,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "colors", args_info->colors_orig, 0);
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
+  if (args_info->zscore_given)
+    write_into_file(outfile, "zscore", 0, 0 );
   if (args_info->memmap_given)
     write_into_file(outfile, "memmap", 0, 0 );
   if (args_info->verbosity_given)
@@ -580,12 +586,13 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "shared",	1, NULL, 's' },
         { "colors",	1, NULL, 'l' },
         { "normalize",	0, NULL, 'n' },
+        { "zscore",	0, NULL, 'z' },
         { "memmap",	0, NULL, 'm' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:o:s:l:nmv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:o:s:l:nzmv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -658,12 +665,22 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'n':	/* Normalize to the range [0,1].  */
+        case 'n':	/* Normalize input to the range [0,1].  */
         
         
           if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
               &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "normalize", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'z':	/* Normalize output by z-scoring.  */
+        
+        
+          if (update_arg((void *)&(args_info->zscore_flag), 0, &(args_info->zscore_given),
+              &(local_args_info.zscore_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "zscore", 'z',
               additional_error))
             goto failure;
         

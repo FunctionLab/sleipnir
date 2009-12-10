@@ -152,7 +152,7 @@ struct SNeighbors {
  */
 int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMeasure, bool fNormalize,
 	bool fZScore, bool fAutocorrelate, const char* szGeneFile, float dCutoff, size_t iLimit, CPCL& PCL,
-	CDat& Dat, IMeasure::EMap eMap ) {
+	CDat& Dat, IMeasure::EMap eMap, bool fFrequencyWeight ) {
 	size_t						i, j, iOne, iTwo;
 	float						d;
 	ifstream					ifsm;
@@ -161,6 +161,8 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 	CGenes						GenesIn( Genome );
 	vector<size_t>				veciGenes;
 	const float*				adOne;
+	const float*				adWeights;
+	vector<float>				vecdWeights;
 	IMeasure*					pMeasure;
 	CMeasurePearson				Pearson;
 	CMeasureEuclidean			Euclidean;
@@ -205,6 +207,15 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 	if( !pMeasure )
 		return 1;
 
+	if( fFrequencyWeight ) {
+		vecdWeights.resize( PCL.GetExperiments( ) );
+		for( i = 0; i < vecdWeights.size( ); ++i ) {
+			for( iOne = j = 0; j < PCL.GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = PCL.Get( j, i ) ) && ( d > 0 ) )
+					iOne++;
+			vecdWeights[ i ] = (float)( ( PCL.GetGenes( ) + 1 ) - iOne ) / PCL.GetGenes( ); } }
+	adWeights = vecdWeights.empty( ) ? NULL : &vecdWeights[ 0 ];
+
 	CMeasureAutocorrelate		Autocorrelate( pMeasure, false );
 	if( fAutocorrelate )
 		pMeasure = &Autocorrelate;
@@ -245,7 +256,7 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 			for( j = ( i + 1 ); j < GenesIn.GetGenes( ); ++j )
 				if( ( iTwo = veciGenes[ j ] ) != -1 )
 					Dat.Set( i, j, (float)pMeasure->Measure(
-						adOne, PCL.GetExperiments( ), PCL.Get( iTwo ), PCL.GetExperiments( ), eMap ) ); }
+						adOne, PCL.GetExperiments( ), PCL.Get( iTwo ), PCL.GetExperiments( ), eMap, adWeights, adWeights ) ); }
 
 		if( fNormalize || fZScore )
 			Dat.Normalize( fZScore ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );

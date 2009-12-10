@@ -122,7 +122,7 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 	CHalfMatrix<float>		MatCounts;
 	size_t					i, j, k, iOne, iTwo, iA, iB;
 	vector<vector<size_t> >	vecveciGenes;
-	float					d, dWeight1, dWeight2;
+	float					d, dWeight;
 	vector<string>			vecstrFiles, vecstrTerms;
 	CPCL					PCLWeights( false );
 	CGenome					Genome;
@@ -189,10 +189,9 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 			if( ( j = PCLWeights.GetGene( CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) ) ) == -1 ) {
 				cerr << "Ignoring unweighted graph: " << sArgs.inputs[ i ] << endl;
 				continue; }
-			dWeight1 = PCLWeights.Get( j, 0 );
-			dWeight2 = sArgs.reweight_flag ? 1 : dWeight1; }
+			dWeight = PCLWeights.Get( j, 0 ); }
 		else
-			dWeight1 = dWeight2 = 1;
+			dWeight = 1;
 		cerr << "Opened: " << sArgs.inputs[ i ] << endl;
 		if( sArgs.normalize_flag )
 			DatCur.Normalize( CDat::ENormalizeZScore );
@@ -225,13 +224,13 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 							continue;
 						switch( eMethod ) {
 							case EMethodGMean:
-								DatOut.Get( iOne, iTwo ) *= pow( d, dWeight1 );
-								MatCounts.Get( iOne, iTwo ) += dWeight2;
+								DatOut.Get( iOne, iTwo ) *= pow( d, dWeight );
+								MatCounts.Get( iOne, iTwo ) += dWeight;
 								break;
 
 							case EMethodHMean:
-								DatOut.Get( iOne, iTwo ) += dWeight1 / d;
-								MatCounts.Get( iOne, iTwo ) += dWeight2;
+								DatOut.Get( iOne, iTwo ) += dWeight / d;
+								MatCounts.Get( iOne, iTwo ) += dWeight;
 								break;
 
 							case EMethodMax:
@@ -245,23 +244,23 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 								break;
 
 							default:
-								DatOut.Get( iOne, iTwo ) += dWeight1 * d;
-								MatCounts.Get( iOne, iTwo ) += dWeight2; } } } } }
+								DatOut.Get( iOne, iTwo ) += dWeight * d;
+								MatCounts.Get( iOne, iTwo ) += dWeight; } } } } }
 	for( i = 0; i < DatOut.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
 			switch( eMethod ) {
 				case EMethodMean:
-					DatOut.Set( i, j, ( d = MatCounts.Get( i, j ) ) ? ( DatOut.Get( i, j ) / d ) :
+					DatOut.Set( i, j, ( d = MatCounts.Get( i, j ) ) ? ( DatOut.Get( i, j ) / ( sArgs.reweight_flag ? 1 : d ) ) :
 						CMeta::GetNaN( ) );
 					break;
 
 				case EMethodGMean:
 					DatOut.Set( i, j, ( d = MatCounts.Get( i, j ) ) ?
-						(float)pow( (double)DatOut.Get( i, j ), 1.0 / d ) : CMeta::GetNaN( ) );
+						(float)pow( (double)DatOut.Get( i, j ), 1.0 / ( sArgs.reweight_flag ? 1 : d ) ) : CMeta::GetNaN( ) );
 					break;
 
 				case EMethodHMean:
-					DatOut.Set( i, j, ( d = MatCounts.Get( i, j ) ) ? ( d / DatOut.Get( i, j ) ) :
+					DatOut.Set( i, j, ( d = MatCounts.Get( i, j ) ) ? ( ( sArgs.reweight_flag ? 1 : d ) / DatOut.Get( i, j ) ) :
 						CMeta::GetNaN( ) );
 					break;
 
@@ -274,6 +273,8 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 					if( DatOut.Get( i, j ) == FLT_MAX )
 						DatOut.Set( i, j, CMeta::GetNaN( ) ); }
 
+	if( sArgs.zscore_flag )
+		DatOut.Normalize( CDat::ENormalizeZScore );
 	if( !sArgs.memmap_flag )
 		DatOut.Save( sArgs.output_arg );
 
