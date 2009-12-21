@@ -126,6 +126,9 @@ struct SNeighbors {
  * \param eMap
  * Way in which returned value should be centered (implementation-specific).
  * 
+ * \param fFrequencyWeight
+ * If true, weight each condition by the frequency with which it is nonzero over all genes.
+ * 
  * \returns
  * 0 on successes, a nonzero value on failure.
  * 
@@ -1022,6 +1025,22 @@ void CPCL::Impute( size_t iNeighbors, float dMinimumPresent, const IMeasure* pMe
 		Dat.Open( *this, pMeasure, false );
 	Impute( iNeighbors, dMinimumPresent, Dat ); }
 
+/*!
+ * \brief
+ * Resolves probesets by averaging agreeing probes and discarding conflicting ones.
+ * 
+ * \param iSample
+ * Number of random samples to generate for probeset null distribution.
+ * 
+ * \param iBins
+ * Number of bins for probeset distribution histogram.
+ * 
+ * \param dBinSize
+ * Size of bins for probeset distribution histogram in z-score units.
+ * 
+ * \remarks
+ * Performance can vary wildly depending on characteristics of the input PCL's probesets; use with caution.
+ */
 void CPCL::MedianMultiples( size_t iSample, size_t iBins, float dBinSize ) {
 	size_t					i, j, k, iBin, iOne, iCutoff;
 	CMeasureEuclidean		Euclidean;

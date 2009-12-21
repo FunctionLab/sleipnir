@@ -22,35 +22,48 @@
 #include "stdafx.h"
 
 /*!
- * \page Dat2Dab Dat2Dab
+ * \page Filterer Filterer
  * 
- * Dat2Dab converts tab-delimited text DAT files into binary DAB files and vice versa.  It can also convert
- * PCL and DAS files (see Sleipnir::CDat), perform a variety of normalizations or filters during the
- * conversion process, or lookup individual genes' or gene pairs' values from DAB files.
+ * Filterer removes values within a given range or ranges from a DAT/DAB file.  These ranges can be
+ * specified using a rudimentary query language allowing inclusions, exclusions, intersections,
+ * and unions.
  * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage
  * 
  * \code
- * Dat2Dab -i <data.dab> -o <data.dat>
+ * Filterer -i <input.dab> -o <output.dab> i0=1
  * \endcode
  * 
- * Convert the input binary DAB file \c data.dab into the output tab-delimited text DAT file \c data.dat.
+ * Include in \c output.dab only the gene pair values from \c input.dab that are between 0 and 1.
  * 
  * \code
- * Dat2Dab -o <data.dab> -n -f -d < <data.dat>
+ * Filterer -i <input.dab> -o <output.dab> x0=1
  * \endcode
  * 
- * Read a text DAT file \c data.dat from standard input, allowing duplicates, normalize all scores to the
- * range [0,1], then invert them and save the results to the binary DAB file \c data.dab.
+ * Include in \c output.dab only the gene pair values from \c input.dab that are not between 0 and 1.
  * 
  * \code
- * Dat2Dab -i <data.dab> -m -l <gene1> -L <gene2>
+ * Filterer -i <input.dab> -o <output.dab> i0=1 i3=
  * \endcode
  * 
- * Open the binary DAB file \c data.dab using memory mapping and output the score for the gene pair \c gene1
- * and \c gene2.
+ * Include in \c output.dab only the gene pair values from \c input.dab that are between 0 and 1 or
+ * at least 3.
+ * 
+ * \code
+ * Filterer -i <input.dab> -o <output.dab> x0=1 i=-0.5
+ * \endcode
+ * 
+ * Include in \c output.dab only the gene pair values from \c input.dab that are at least -0.5 and
+ * not between 0 and 1.
+ * 
+ * \code
+ * Filterer -i <input.dab> -o <output.dab> i=-2 i-1= x-2.5=-0.5
+ * \endcode
+ * 
+ * Include in \c output.dab only the gene pair values from \c input.dab that are at most -2 or at
+ * least -1 and are not between -2.5 and -0.5.
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
@@ -65,106 +78,12 @@
  *	<td>-i</td>
  *	<td>stdin</td>
  *	<td>DAT/DAB file</td>
- *	<td>Input DAT, DAB, DAS, or PCL file.</td>
+ *	<td>Input DAT/DAB file.</td>
  * </tr><tr>
  *	<td>-o</td>
  *	<td>stdout</td>
  *	<td>DAT/DAB file</td>
- *	<td>Output DAT, DAB, or DAS file.</td>
- * </tr><tr>
- *	<td>-f</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, output one minus the input's values.</td>
- * </tr><tr>
- *	<td>-n</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, normalize input edges to the range [0,1] before processing.</td>
- * </tr><tr>
- *	<td>-z</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, normalize input edges to z-scores (subtract mean, divide by standard deviation) before
- *		processing.</td>
- * </tr><tr>
- *	<td>-r</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, transform input values to integer ranks before processing.</td>
- * </tr><tr>
- *	<td>-g</td>
- *	<td>None</td>
- *	<td>Text gene list</td>
- *	<td>If given, use only gene pairs for which both genes are in the list.  For details, see
- *		Sleipnir::CDat::FilterGenes.</td>
- * </tr><tr>
- *	<td>-c</td>
- *	<td>None</td>
- *	<td>Double</td>
- *	<td>If given, remove all input edges below the given cutoff (after optional normalization).</td>
- * </tr><tr>
- *	<td>-e</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, replace all missing values with zeros.</td>
- * </tr><tr>
- *	<td>-d</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, allow (with a warning) duplicate pairs in text-based input.</td>
- * </tr><tr>
- *	<td>-G</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, only print list of genes that would be included in the normal output file.</td>
- * </tr><tr>
- *	<td>-l</td>
- *	<td>None</td>
- *	<td>String</td>
- *	<td>If given, lookup all values for pairs involving the requested gene.</td>
- * </tr><tr>
- *	<td>-L</td>
- *	<td>None</td>
- *	<td>String</td>
- *	<td>If given with \c -l, lookup all values for the requested gene pair.</td>
- * </tr><tr>
- *	<td>-t</td>
- *	<td>None</td>
- *	<td>Gene text file</td>
- *	<td>If given with \c -l, lookup all pairs between \c -l and the given gene set.  If given alone,
- *		lookup all pairs between genes in the given set.  If given with \c -T, lookup all pairs spanning the
- *		two gene sets.</td>
- * </tr><tr>
- *	<td>-T</td>
- *	<td>None</td>
- *	<td>Gene text file</td>
- *	<td>Must be given with \c -t; looks up all gene pairs spanning the two gene sets (i.e. one gene in the set
- *		\c -t, one in the set \c -T).</td>
- * </tr><tr>
- *	<td>-E</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If set, produce no output other than a list of genes that would be in at least one of the normally
- *		output pairs.</td>
- * </tr><tr>
- *	<td>-p</td>
- *	<td>None</td>
- *	<td>Gene pair text file</td>
- *	<td>Tab-delimited text file containing two columns, both gene IDs.  If given, replace each gene ID
- *		from the first column with the corresponding ID in the second column.</td>
- * </tr><tr>
- *	<td>-b</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If given, produce output in a tab-delimited half matrix table.  Not recommended for DAT/DABs with
- *		more than a few dozen genes!</td>
- * </tr><tr>
- *	<td>-s</td>
- *	<td>2</td>
- *	<td>Integer</td>
- *	<td>Number of columns to skip between the initial ID column and the first experimental (data) column
- *		in the input PCL.</td>
+ *	<td>Output (filtered) DAT/DAB file.</td>
  * </tr><tr>
  *	<td>-m</td>
  *	<td>off</td>

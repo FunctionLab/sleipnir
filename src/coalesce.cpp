@@ -296,6 +296,20 @@ bool CCoalesceGroupHistograms::IsSimilar( const CCoalesceMotifLibrary* pMotifs, 
 
 // CCoalesce
 
+/*!
+ * \brief
+ * Explicitly sets the expression profile used to seed the first module.
+ * 
+ * \param PCL
+ * PCL from which expression profile to be seeded is read.
+ * 
+ * Forces the first module to be seeded with the given expression profile rather than a randomly chosen
+ * significantly correlated gene pair.
+ * 
+ * \remarks
+ * Only the first gene from the given PCL is used.  The PCL must contain the same number of conditions as
+ * the main PCL clustered by COALESCE.
+ */
 void CCoalesce::SetSeed( const CPCL& PCL ) {
 	size_t	i;
 

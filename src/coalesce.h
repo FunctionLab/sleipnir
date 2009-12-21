@@ -758,6 +758,13 @@ public:
 
 		return m_fNormalize; }
 
+	/*!
+	 * \brief
+	 * Removes any currently set seed expression profile.
+	 * 
+	 * \see
+	 * SetSeed
+	 */
 	void ClearSeed( ) {
 
 		m_vecdSeed.clear( ); }

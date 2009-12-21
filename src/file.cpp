@@ -24,7 +24,7 @@
 
 namespace Sleipnir {
 
-string CFile::OpenToken( istream& istm ) {
+std::string CFile::OpenToken( std::istream& istm ) {
 	string	strRet;
 	char	c;
 

@@ -823,6 +823,25 @@ public:
 
 		return IncompleteBeta( 0.5 * iDegFree, 0.5, iDegFree / ( iDegFree + ( dT * dT ) ) ); }
 
+	/*!
+	 * \brief
+	 * Return the p-value of a t-test between the given array statistics and zero.
+	 * 
+	 * \param dMean
+	 * Sample mean.
+	 * 
+	 * \param dVariance
+	 * Sample variance.
+	 * 
+	 * \param iN
+	 * Sample size.
+	 * 
+	 * \returns
+	 * P-value of T = sqrt( iN ) * dMean / sqrt( dVariance )
+	 * 
+	 * \see
+	 * TTestStudent | TTestWelch
+	 */
 	static double TTest( double dMean, double dVariance, size_t iN ) {
 		size_t	iDegFree;
 		double	dT;

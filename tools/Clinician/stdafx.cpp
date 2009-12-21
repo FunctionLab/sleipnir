@@ -22,11 +22,12 @@
 #include "stdafx.h"
 
 /*!
- * \page PCLPlotter PCLPlotter
+ * \page Clinician Clinician
  * 
- * PCLPlotter produces summary statistics from a PCL file and is optimized to show the mean expression values
- * for subsets (biclusters) of genes and conditions.  It can also provide accompanying bicluster statistics
- * for associated FASTA files containing gene sequences.
+ * Clinician performs multiple correlation tests of a clinical (or any non-expression) variable against
+ * genomewide expression values.  This can be used to determine transcript correlates of a molecular or
+ * clinical phenotype, and HEFalMp/bioPIXIE queries can be used as a pre-screen to mitigate the effects
+ * of multiple hypothesis testing.
  * 
  * \section sec_usage Usage
  * 
@@ -36,38 +37,24 @@
  * PCLPlotter -i <data.pcl>
  * \endcode
  * 
- * Produce a summary of the mean and standard deviation expression for each condition in \c data.pcl.  If a
- * bicluster is present, member genes should be marked with an initial \c * in their NAME (not ID) column, and
- * member conditions should be marked with an initial \c *.
+ * Produce a list of clinical correlates in the specially formatted \c data.pcl, which should have exactly
+ * one non-data column after the initial ID column (in place of the standard NAME/GWEIGHT columns).  This
+ * column should contain 0 for standard expression values and 1 for clinical variables with which they are
+ * to be correlated.
  * 
  * \code
- * PCLPlotter -i <cluster.pcl> -b <genome.pcl>
+ * PCLPlotter -i <data.pcl> -I <network.dab>
  * \endcode
  * 
- * Produce a summary of the mean and standard deviation expression for each condition in \c cluster.pcl and
- * \c genome.pcl, which must contain the same conditions.  Genes in \c cluster.pcl are considered to be
- * members of the bicluster, and member conditions should be marked with an initial \c *.
- * 
- * \code
- * PCLPlotter -i <data.pcl> -g <genes.txt>
- * \endcode
- * 
- * Produce a summary of the mean and standard deviation expression for each condition in \c data.pcl.
- * Genes in \c genes.txt are considered to be members of the bicluster, and member conditions should be marked
- * with an initial \c *.
- * 
- * \code
- * PCLPlotter -i <data.pcl> -f <data.fasta>
- * \endcode
- * 
- * Produce a summary of the mean and standard deviation expression for each condition in \c data.pcl, as well
- * as an HMM summarizing sequence characteristics.  If a bicluster is present, member genes should be marked
- * with an initial \c * in their NAME (not ID) column, and member conditions should be marked with an initial
- * \c *.
+ * Produce a list of clinical correlates in the specially formatted \c data.pcl, formatted as described
+ * above, but pre-screen the correlates using the interaction network \c network.dab.  For each clinical
+ * variable, a small number of top correlates will be pre-selected and used as a HEFalMp/bioPIXIE query into
+ * the given interaction network.  Only the nearest neighbors from this query will be tested for significant
+ * clinical correlation, reducing the number of necessary multiple hypothesis tests.
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
- * \include PCLPlotter/PCLPlotter.ggo
+ * \include Clinician/Clinician.ggo
  * 
  * <table><tr>
  *	<th>Flag</th>
@@ -78,48 +65,40 @@
  *	<td>-i</td>
  *	<td>stdin</td>
  *	<td>PCL file</td>
- *	<td>Input PCL file from which bicluster summary information is extracted.  In the absence of \c -b or \c -g
- *		options, genes and conditions in the bicluster should be marked with a \c * at the beginning of their
- *		NAME and label, respectively.</td>
+ *	<td>Input PCL file from which expression and clinical variables are read.  Must be formatted with exactly
+ *		one, rather than the standard two, non-ID columns.  Rows containing a 0 in this column will be treated
+ *		as gene expression, rows containing a 1 will be treated as clinical correlates.</td>
  * </tr><tr>
- *	<td>-f</td>
+ *	<td>-I</td>
  *	<td>None</td>
- *	<td>FASTA file</td>
- *	<td>If given, input FASTA sequence file from which cluster sequence summary information is extracted.</td>
+ *	<td>DAT/DAB file</td>
+ *	<td>If given, input DAT/DAB file used to pre-screen potential clinical correlates.</td>
  * </tr><tr>
- *	<td>-b</td>
- *	<td>None</td>
- *	<td>PCL file</td>
- *	<td>If given, input PCL file from which non-bicluster summary information is extracted; all genes in \c -i
- *		are considered to be in the bicluster, and conditions should be marked with a \c *.  PCL files for \c -i
- *		and \c -b should contain exactly the same conditions.</td>
- * </tr><tr>
- *	<td>-g</td>
- *	<td>None</td>
- *	<td>Text gene list</td>
- *	<td>If given, input text file from which biclustered genes are read; other genes in \c -i are considered to
- *		be out of the bicluster.</td>
- * </tr><tr>
- *	<td>-m</td>
- *	<td>None</td>
- *	<td>Text motif list</td>
- *	<td>If given, input text file from which known motifs are read.  In conjunction with \c -f, frequencies
- *		of each motif in gene sequences in and out of the bicluster will be provided.</td>
- * </tr><tr>
- *	<td>-M</td>
- *	<td>7</td>
- *	<td>Integer (base pairs)</td>
- *	<td>Default number of base pairs per motif; largely unrelated to the contents of \c -m.</td>
- * </tr><tr>
- *	<td>-k</td>
- *	<td>0</td>
+ *	<td>-n</td>
+ *	<td>100</td>
  *	<td>Integer</td>
- *	<td>Degree of HMM used to provide summary statistics of sequences given in \c -f.</td>
+ *	<td>If given, number of top correlates used during pre-screening as a HEFalMp/bioPIXIE query.</td>
+ * </tr><tr>
+ *	<td>-N</td>
+ *	<td>1000</td>
+ *	<td>Integer</td>
+ *	<td>If given, number of neighbors retrieved from a HEFalMp/bioPIXIE query to reduce multiple hypothesis
+ *		testing.</td>
+ * </tr><tr>
+ *	<td>-a</td>
+ *	<td>On</td>
+ *	<td>Flag</td>
+ *	<td>If given, perform a HEFalMp rather than bioPIXIE query.</td>
  * </tr><tr>
  *	<td>-s</td>
- *	<td>2</td>
+ *	<td>1</td>
  *	<td>Integer</td>
  *	<td>Number of columns to skip between the initial ID column and the first experimental (data) column
  *		in the input PCL.</td>
+ * </tr><tr>
+ *	<td>-m</td>
+ *	<td>off</td>
+ *	<td>Flag</td>
+ *	<td>If given, memory map the input files when possible.  DAT and PCL inputs cannot be memmapped.</td>
  * </tr></table>
  */

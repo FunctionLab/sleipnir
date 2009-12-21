@@ -441,7 +441,32 @@ bool CGenome::AddSynonym( CGene& Gene, const std::string& strName ) {
 
 	return false; }
 
-bool CGenes::Open( const char* szFile, CGenome& Genome, vector<string>& vecstrGenes, vector<CGenes*>& vecpGenes ) {
+/*!
+ * \brief
+ * Simultaneously construct multiple new gene sets loaded from the given file, one per line, with tab-delimited genes.
+ * 
+ * \param szFile
+ * File from which gene sets are loaded.
+ * 
+ * \param Genome
+ * Genome containing all genes which might become members of these gene sets.
+ * 
+ * \param vecstrNames
+ * Human-readable identifiers for the loaded gene sets.
+ * 
+ * \param vecpGenes
+ * Vector to which loaded gene sets are appended.
+ * 
+ * \returns
+ * True on success, false otherwise.
+ * 
+ * Opens multiple gene sets from the given tab-delimited text file.  Each line should contain a single tab-delimited gene
+ * set, and the first token on each line should be a human-readable identifier for that line's gene set.
+ * 
+ * \see
+ * Open
+ */
+bool CGenes::Open( const char* szFile, CGenome& Genome, std::vector<std::string>& vecstrNames, std::vector<CGenes*>& vecpGenes ) {
 	ifstream		ifsm;
 	vector<char>	veccBuffer;
 	istream*		pistm;

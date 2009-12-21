@@ -354,7 +354,7 @@ public:
  */
 class CGenes : CGenesImpl {
 public:
-	static bool Open( const char* szFile, CGenome& Genome, std::vector<std::string>& vecstrGenes, std::vector<CGenes*>& vecpGenes );
+	static bool Open( const char* szFile, CGenome& Genome, std::vector<std::string>& vecstrNames, std::vector<CGenes*>& vecpGenes );
 
 	CGenes( CGenome& Genome );
 
@@ -472,6 +472,19 @@ public:
 		return ( ( ( iterGene = m_mapGenes.find( strGene ) ) == m_mapGenes.end( ) ) ? -1 :
 			iterGene->second ); }
 
+	/*!
+	 * \brief
+	 * Adds a new gene with the given ID to the gene set.
+	 * 
+	 * \param strGene
+	 * Gene ID to be added.
+	 * 
+	 * \returns
+	 * True if gene was added, false if it was already included.
+	 * 
+	 * \see
+	 * Open | GetGene
+	 */
 	bool AddGene( const std::string& strGene ) {
 
 		if( GetGene( strGene ) != -1 )

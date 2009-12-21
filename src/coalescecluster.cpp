@@ -53,11 +53,17 @@ const char	CCoalesceClusterImpl::c_szConditions[]	= "Conditions";
  * \param setpriiSeeds
  * Set of previously failed seed pairs to be excluded for cluster initialization.
  * 
+ * \param vecdSeed
+ * If non-empty, expression vector to be used as a cluster seed.
+ * 
  * \param iPairs
  * Maximum number of gene pairs to be sampled for seed pair discovery.
  * 
  * \param dPValue
  * P-value threshhold for significant correlation.
+ * 
+ * \param dProbability
+ * Prior probability of gene inclusion.
  * 
  * \param iThreads
  * Maximum number of simultaneous threads for gene pair sampling.

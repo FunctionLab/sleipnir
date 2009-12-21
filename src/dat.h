@@ -450,6 +450,10 @@ public:
 		else
 			m_vecstrGenes[ iGene ] = strGene; }
 
+	/*!
+	 * \brief
+	 * Randomizes the CDat's values by iterated swapping.
+	 */
 	void Randomize( ) {
 		size_t	i, j, iOne, iTwo;
 		float	dOne, dTwo;
