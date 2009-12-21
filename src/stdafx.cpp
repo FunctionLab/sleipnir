@@ -807,15 +807,15 @@ MIPS:
  * 
  * \section sec_history Version History
  * 
- * - <a href="sleipnir-2.1.tar.gz">2.1</a>, *** <br>
- * Update includes for gcc 4.3 compatibility - thanks to Casey Greene!
- * Add \c half2relative.rb and \c half2weights.rb scripts to \ref MIer - thanks to Arjun Krishnan!
- * Fix mutual info command line option in \ref Distancer - thanks to Arjun Krishnan!
- * Add MedianMultiples PCL probe resolution procedure - thanks to Matt Hibbs!
- * Features added to \ref Distancer and \ref Combiner
- * Added \ref Clinician tool for testing clinical correlates with expression values
- * Added \ref Filterer tool for selective data removal from DABs
- * Updated \ref COALESCE algorithm to published version
+ * - <a href="sleipnir-2.1.tar.gz">2.1</a>, 12-20-09 <br>
+ * Update includes for gcc 4.3 compatibility - thanks to Casey Greene! <br>
+ * Add \c half2relative.rb and \c half2weights.rb scripts to \ref MIer - thanks to Arjun Krishnan! <br>
+ * Fix mutual info command line option in \ref Distancer - thanks to Arjun Krishnan! <br>
+ * Add MedianMultiples PCL probe resolution procedure - thanks to Matt Hibbs! <br>
+ * Features added to \ref Distancer and \ref Combiner <br>
+ * Added \ref Clinician tool for testing clinical correlates with expression values <br>
+ * Added \ref Filterer tool for selective data removal from DABs <br>
+ * Updated \ref COALESCE algorithm to published version <br>
  * Several minor bug fixes and other added features
  * 
  * - <a href="sleipnir-2.0.tar.gz">2.0</a>, 06-19-09 <br>
