@@ -490,7 +490,7 @@ bool CGenes::Open( const char* szFile, CGenome& Genome, std::vector<std::string>
 		CMeta::Tokenize( &veccBuffer[0], vecstrLine );
 		if( vecstrLine.empty( ) )
 			continue;
-		vecstrGenes.push_back( vecstrLine[0] );
+		vecstrNames.push_back( vecstrLine[0] );
 		vecstrLine.erase( vecstrLine.begin( ) );
 		vecpGenes.push_back( new CGenes( Genome ) );
 		if( !( fRet = vecpGenes.back( )->Open( vecstrLine ) ) )
