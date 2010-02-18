@@ -31,6 +31,7 @@ const struct {
 	{"globalz",		CPCL::ENormalizeZScore},
 	{"0to1",		CPCL::ENormalizeMinMax},
 	{"colcenter",	CPCL::ENormalizeColumnCenter},
+	{"colfrac",		CPCL::ENormalizeColumnFraction},
 	{NULL,			CPCL::ENormalizeNone}
 };
 

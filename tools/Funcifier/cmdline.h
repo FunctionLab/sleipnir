@@ -46,6 +46,9 @@ struct gengetopt_args_info
   char * colors_arg;	/**< @brief Function cohesiveness output file.  */
   char * colors_orig;	/**< @brief Function cohesiveness output file original value given at command line.  */
   const char *colors_help; /**< @brief Function cohesiveness output file help description.  */
+  char * weights_arg;	/**< @brief PCL file of set-by-gene weights.  */
+  char * weights_orig;	/**< @brief PCL file of set-by-gene weights original value given at command line.  */
+  const char *weights_help; /**< @brief PCL file of set-by-gene weights help description.  */
   int normalize_flag;	/**< @brief Normalize input to the range [0,1] (default=off).  */
   const char *normalize_help; /**< @brief Normalize input to the range [0,1] help description.  */
   int zscore_flag;	/**< @brief Normalize output by z-scoring (default=off).  */
@@ -62,6 +65,7 @@ struct gengetopt_args_info
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int shared_given ;	/**< @brief Whether shared was given.  */
   unsigned int colors_given ;	/**< @brief Whether colors was given.  */
+  unsigned int weights_given ;	/**< @brief Whether weights was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */

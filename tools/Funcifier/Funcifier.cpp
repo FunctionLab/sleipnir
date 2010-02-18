@@ -38,7 +38,9 @@ int main( int iArgs, char** aszArgs ) {
 	vector<CGenes*>			vecpGenes;
 	vector<string>			vecstrNames;
 	vector<vector<size_t> >	vecveciGenes;
-	float					d, dAveIn, dAveOut;
+	vector<vector<float> >	vecvecdGenes;
+	float					d, dAveIn, dAveOut, dOne, dTwo;
+	double					dCountIn;
 	ofstream				ofsm;
 	EShared					eShared;
 
@@ -76,6 +78,22 @@ int main( int iArgs, char** aszArgs ) {
 		vecveciGenes[ i ].resize( vecpGenes[ i ]->GetGenes( ) );
 		for( j = 0; j < vecpGenes[ i ]->GetGenes( ); ++j )
 			vecveciGenes[ i ][ j ] = DatIn.GetGene( vecpGenes[ i ]->GetGene( j ).GetName( ) ); }
+	if( sArgs.weights_arg ) {
+		CPCL	PCLWeights;
+
+		vecvecdGenes.resize( vecpGenes.size( ) );
+		if( !PCLWeights.Open( sArgs.weights_arg, 0 ) ) {
+			cerr << "Could not open: " << sArgs.weights_arg << endl;
+			return 1; }
+		for( i = 0; i < vecstrNames.size( ); ++i ) {
+			vecvecdGenes[i].resize( vecveciGenes[i].size( ) );
+			if( ( iOne = PCLWeights.GetExperiment( vecstrNames[i] ) ) == -1 ) {
+				cerr << "Could not find gene set weight: " << vecstrNames[i] << endl;
+				fill( vecvecdGenes[i].begin( ), vecvecdGenes[i].end( ), 0 );
+				continue; }
+			for( j = 0; j < vecpGenes[i]->GetGenes( ); ++j )
+				vecvecdGenes[i][j] = ( ( iTwo = PCLWeights.GetGene( vecpGenes[i]->GetGene( j ).GetName( ) ) ) == -1 ) ?
+					0 : PCLWeights.Get( iTwo, iOne ); } }
 
 	{
 		CDat	DatOut;
@@ -96,10 +114,11 @@ int main( int iArgs, char** aszArgs ) {
 					else
 						iterGene->second++; }
 
-				dAveIn = 0;
-				for( iCountIn = i = 0; i < vecveciGenes[ iF1 ].size( ); ++i ) {
+				dCountIn = dAveIn = 0;
+				for( i = 0; i < vecveciGenes[ iF1 ].size( ); ++i ) {
 					if( ( iOne = vecveciGenes[ iF1 ][ i ] ) == -1 )
 						continue;
+					dOne = vecvecdGenes.empty( ) ? 1 : vecvecdGenes[iF1][i];
 					iSharedOne = mappiGenes[ &vecpGenes[ iF1 ]->GetGene( i ) ];
 					if( ( eShared == ESharedDiscard ) && ( iSharedOne > 1 ) )
 						continue;
@@ -118,9 +137,10 @@ int main( int iArgs, char** aszArgs ) {
 
 						if( ( ( iTwo = vecveciGenes[ iF2 ][ j ] ) != -1 ) &&
 							!CMeta::IsNaN( d = DatIn.Get( iOne, iTwo ) ) ) {
-							iCountIn++;
-							dAveIn += d; } } }
-				DatOut.Set( iF1, iF2, dAveIn / iCountIn ); }
+							dTwo = vecvecdGenes.empty( ) ? 1 : vecvecdGenes[iF2][j];
+							dCountIn += dOne * dTwo;
+							dAveIn += d * dOne * dTwo; } } }
+				DatOut.Set( iF1, iF2, dCountIn ? (float)( dAveIn / dCountIn ) : CMeta::GetNaN( ) ); }
 		if( sArgs.zscore_flag )
 			DatOut.Normalize( CDat::ENormalizeZScore );
 		DatOut.Save( sArgs.output_arg );

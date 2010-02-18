@@ -1173,7 +1173,8 @@ bool CDat::FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit ) {
  * EFilterTerm and to some degree EFilterEdge don't make a lot of sense for CDats that do not represent
  * gold standards.
  */
-void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, float dEdgeAggressiveness ) {
+void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, float dEdgeAggressiveness,
+	const vector<float>* pvecdWeights ) {
 	size_t			i, j;
 	vector<bool>	vecfGenes;
 
@@ -1185,7 +1186,7 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 	switch( eFilter ) {
 		case EFilterPixie:
 		case EFilterHefalmp:
-			FilterGenesGraph( Genes, vecfGenes, iLimit, dEdgeAggressiveness, eFilter == EFilterHefalmp );
+			FilterGenesGraph( Genes, vecfGenes, iLimit, dEdgeAggressiveness, eFilter == EFilterHefalmp, pvecdWeights );
 			return; }
 
 	for( i = 0; i < GetGenes( ); ++i ) {
@@ -1227,8 +1228,8 @@ struct SPixie {
 };
 
 void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, size_t iLimit,
-	float dEdgeAggressiveness, bool fHefalmp ) {
-	vector<float>				vecdNeighbors;
+	float dEdgeAggressiveness, bool fHefalmp, const vector<float>* pvecdWeights ) {
+	vector<float>				vecdNeighbors, vecdWeights;
 	size_t						i, j, iOne, iTwo, iMinOne, iMinTwo, iN;
 	vector<size_t>				veciGenes, veciFinal, veciDegree;
 	set<size_t>					setiN;
@@ -1243,6 +1244,10 @@ void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, s
 	veciGenes.resize( Genes.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
 		veciGenes[ i ] = GetGene( Genes.GetGene( i ).GetName( ) );
+	if( !pvecdWeights || ( pvecdWeights->size( ) < veciGenes.size( ) ) ) {
+		vecdWeights.resize( veciGenes.size( ) );
+		fill( vecdWeights.begin( ), vecdWeights.end( ), 1.0f );
+		pvecdWeights = &vecdWeights; }
 
 	vecdNeighbors.resize( GetGenes( ) );
 	fill( vecdNeighbors.begin( ), vecdNeighbors.end( ), 0.0f );
@@ -1259,7 +1264,7 @@ void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, s
 					continue;
 				if( !CMeta::IsNaN( d = Get( i, iOne ) ) ) {
 					iIn++;
-					dIn += d; } }
+					dIn += d * (*pvecdWeights)[ j ]; } }
 			for( iOut = j = 0; j < GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
 					iOut++;
@@ -1273,7 +1278,7 @@ void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, s
 				if( vecfGenes[ j ] )
 					continue;
 				if( !CMeta::IsNaN( d = Get( iOne, j ) ) )
-					vecdNeighbors[ j ] += d; } }
+					vecdNeighbors[ j ] += d * (*pvecdWeights)[ i ]; } }
 	for( i = 0; i < vecdNeighbors.size( ); ++i )
 		if( ( d = vecdNeighbors[ i ] ) > 0 )
 			pqueNeighbors.push( SPixie( i, d ) );
@@ -1367,8 +1372,8 @@ void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, s
  */
 void CDat::SaveDOT( std::ostream& ostm, float dCutoff, const CGenome* pGenome, bool fUnlabeled, bool fHashes,
 	const std::vector<float>* pvecdColors, const std::vector<float>* pvecdBorders ) const {
-	size_t			i, j;
-	float			d, dMin, dMax;
+	size_t			i, j, iCount;
+	float			d, dAve, dStd;
 	bool			fAll, fLabel;
 	vector<string>	vecstrNames;
 	vector<bool>	vecfGenes;
@@ -1415,22 +1420,23 @@ void CDat::SaveDOT( std::ostream& ostm, float dCutoff, const CGenome* pGenome, b
 			ostm << "];" << endl; } }
 
 	ostm << endl;
-	dMin = FLT_MAX;
-	dMax = -FLT_MAX;
+	dAve = dStd = 0;
+	for( iCount = i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) ) {
+				iCount++;
+				dAve += d;
+				dStd += d * d; }
+	if( iCount ) {
+		dAve /= iCount;
+		dStd = sqrt( max( 0.0f, ( dStd / iCount ) - ( dAve * dAve ) ) ); }
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) ) {
-				if( d < dMin )
-					dMin = d;
-				if( d > dMax )
-					dMax = d; }
-	dMax -= dMin;
-	for( i = 0; i < GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
+				d = 1.0 / ( 1 + exp( ( dAve - d ) / dStd ) );
 				ostm << vecstrNames[ i ] << " -- " << vecstrNames[ j ] << " [weight = " << d <<
-					", color = \"" << ( fHashes ? "#" : "" ) << CColor::Interpolate( ( d - dMin ) / dMax,
-					CColor::c_Green, CColor::c_Black, CColor::c_Red ).ToRGB( ) << "\"];" << endl;
+					", color = \"" << ( fHashes ? "#" : "" ) << CColor::Interpolate( d,
+					CColor::c_Green, CColor::c_Black, CColor::c_Red ).ToRGB( ) << "\"];" << endl; }
 
 	ostm << "}" << endl; }
 

@@ -862,15 +862,15 @@ bool CCoalesceClusterImpl::IsSignificant( size_t iGene, const CPCL& PCL, const v
 		set<SMotifMatch>::const_iterator	iterMotif;
 		size_t								iType;
 
-		g_CatSleipnir( ).debug( "CCoalesceClusterImpl::IsSignificant( %s ) is %g beta %g, exp. p=%g vs. %g, seq. p=%g vs %g",
-			PCL.GetGene( iGene ).c_str( ), dP, dBeta, dLogPExpressionGivenIn, dLogPExpressionGivenOut,
+		g_CatSleipnir( ).debug( "CCoalesceClusterImpl::IsSignificant( %s ) is %g, prior %g beta %g, exp. p=%g vs. %g, seq. p=%g vs %g",
+			PCL.GetGene( iGene ).c_str( ), dP, d, dBeta, dLogPExpressionGivenIn, dLogPExpressionGivenOut,
 			dLogPMotifsGivenIn, dLogPMotifsGivenOut );
 		for( iterMotif = m_setsMotifs.begin( ); iterMotif != m_setsMotifs.end( ); ++iterMotif )
 			if( ( iType = GeneScores.GetType( iterMotif->m_strType ) ) != -1 )
 				g_CatSleipnir( ).debug( "%g	%s", GeneScores.Get( iType, iterMotif->m_eSubsequence, iGene,
 					iterMotif->m_iMotif ), iterMotif->Save( pMotifs ).c_str( ) ); }
 
-	return ( dP > dProbability ); }
+	return ( dP >= dProbability ); }
 
 bool CCoalesceClusterImpl::CalculateProbabilityExpression( size_t iGene, const CPCL& PCL,
 	const vector<float>& vecdStdevs, const CCoalesceCluster& Pot, const vector<size_t>& veciDatasets,
@@ -908,12 +908,12 @@ bool CCoalesceClusterImpl::CalculateProbabilityExpression( size_t iGene, const C
 			vecdGene.resize( sDataset.GetConditions( ) );
 			for( iCondition = 0; iCondition < sDataset.GetConditions( ); ++iCondition )
 				vecdGene[ iCondition ] = PCL.Get( iGene, sDataset.GetCondition( iCondition ) );
-			dPCluster = max( c_dEpsilonZero, CStatistics::MultivariateNormalPDF( vecdGene,
+			dPCluster = min( 1.0, max( c_dEpsilonZero, CStatistics::MultivariateNormalPDF( vecdGene,
 				sDataset.m_vecdCentroid, sDataset.m_psDataset->m_dSigmaDetSqrt,
-				sDataset.m_psDataset->m_MatSigmaInv ) );
-			dPPot = max( c_dEpsilonZero, CStatistics::MultivariateNormalPDF( vecdGene,
+				sDataset.m_psDataset->m_MatSigmaInv ) ) );
+			dPPot = min( 1.0, max( c_dEpsilonZero, CStatistics::MultivariateNormalPDF( vecdGene,
 				Pot.m_vecsDatasets[ veciDatasets[ iDataset ] ].m_vecdCentroid,
-				sDataset.m_psDataset->m_dSigmaDetSqrt, sDataset.m_psDataset->m_MatSigmaInv ) ); }
+				sDataset.m_psDataset->m_dSigmaDetSqrt, sDataset.m_psDataset->m_MatSigmaInv ) ) ); }
 		dPIn *= dPCluster;
 		dPOut *= dPPot;
 		if( ( dPIn < DBL_MIN ) || ( dPOut < DBL_MIN ) ) {

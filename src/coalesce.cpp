@@ -544,7 +544,7 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 	CCoalesceGeneScores			GeneScores;
 	set<pair<size_t, size_t> >	setpriiSeeds;
 	SCoalesceModifiers			sModifiers;
-	float						dFailure;
+	float						dFailure, dProbability;
 
 	for( i = 0; i < m_vecpWiggles.size( ); ++i )
 		sModifiers.Add( m_vecpWiggles[ i ] );
@@ -564,8 +564,9 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 		g_CatSleipnir( ).notice( "CCoalesce::Cluster( ) running with %d genes, %d conditions, and %d sequences",
 			PCL.GetGenes( ), PCL.GetExperiments( ), iSequences );
 		for( i = 0; i < PCL.GetExperiments( ); ++i )
-			ossm << ( i ? "\t" : "" ) << PCL.GetExperiment( i );
-		g_CatSleipnir( ).notice( ossm.str( ).c_str( ) );
+			g_CatSleipnir( ).notice( PCL.GetExperiment( i ) );
+//			ossm << ( i ? "\t" : "" ) << PCL.GetExperiment( i );
+//		g_CatSleipnir( ).notice( ossm.str( ).c_str( ) );
 		g_CatSleipnir( ).notice( "k %d, P gene %g, p condition %g, z condition %g, p motif %g, z motif %g, p correlation %g", GetK( ),
 			GetProbabilityGene( ), GetPValueCondition( ), GetZScoreCondition( ), GetPValueMotif( ),
 			GetZScoreMotif( ), GetPValueCorrelation( ) );
@@ -597,6 +598,7 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 			g_CatSleipnir( ).debug( ossm.str( ).c_str( ) ); }
 		if( Cluster.GetGenes( ).size( ) < GetSizeMinimum( ) )
 			continue;
+		dProbability = 1 - GetProbabilityGene( );
 		while( !( Cluster.IsConverged( ) || Cluster.IsEmpty( ) ) ) {
 			Cluster.CalculateHistograms( GeneScores, HistsCluster, &HistsPot );
 			Cluster.Snapshot( GeneScores, HistsCluster );
@@ -613,8 +615,9 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 				GetZScoreMotif( ),GetSizeMaximum( ), GetThreads( ), GetMotifs( ) ) ) )
 				return false;
 			if( !Cluster.SelectGenes( PCLCopy, GeneScores, HistsCluster, HistsPot, GetSizeMinimum( ),
-				GetThreads( ), Pot, GetProbabilityGene( ), GetMotifs( ) ) )
+				GetThreads( ), Pot, 1 - dProbability, GetMotifs( ) ) )
 				return false;
+			dProbability *= GetProbabilityGene( );
 			g_CatSleipnir( ).notice( "CCoalesce::Cluster( ) processed %d genes, %d datasets, %d motifs",
 				Cluster.GetGenes( ).size( ), Cluster.GetDatasets( ).size( ), Cluster.GetMotifs( ).size( ) ); }
 		if( Cluster.IsConverged( ) && ( Cluster.GetGenes( ).size( ) >= GetSizeMinimum( ) ) ) {

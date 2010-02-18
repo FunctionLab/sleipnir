@@ -807,6 +807,9 @@ MIPS:
  * 
  * \section sec_history Version History
  * 
+ * - <a href="sleipnir-2.2.tar.gz">2.2</a>, *** <br>
+ * Fix confusing documentation in \ref Answerer - thanks to Arjun Krishnan!
+ * 
  * - <a href="sleipnir-2.1.tar.gz">2.1</a>, 12-20-09 <br>
  * Update includes for gcc 4.3 compatibility - thanks to Casey Greene! <br>
  * Add \c half2relative.rb and \c half2weights.rb scripts to \ref MIer - thanks to Arjun Krishnan! <br>

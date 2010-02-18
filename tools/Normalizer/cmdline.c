@@ -34,7 +34,7 @@ const char *gengetopt_args_info_help[] = {
   "  -i, --input=filename   Input/output PCL/DAT/DAB file",
   "  -o, --output=filename  Output PCL/DAB file",
   "  -t, --itype=STRING     Data file type  (possible values=\"pcl\", \"dat\" \n                           default=`dat')",
-  "  -T, --otype=STRING     Normalization type  (possible values=\"columnz\", \n                           \"rowz\", \"globalz\", \"column0\", \"0to1\", \n                           \"colcenter\", \"medmult\" default=`globalz')",
+  "  -T, --otype=STRING     Normalization type  (possible values=\"columnz\", \n                           \"rowz\", \"globalz\", \"column0\", \"0to1\", \n                           \"colcenter\", \"medmult\", \"colfrac\" \n                           default=`globalz')",
   "\nOptional:",
   "  -f, --flip             Flip high/low scores  (default=off)",
   "  -s, --skip=INT         Columns to skip in input PCL  (default=`2')",
@@ -59,7 +59,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
 
 
 char *cmdline_parser_itype_values[] = {"pcl", "dat", 0} ;	/* Possible values for itype.  */
-char *cmdline_parser_otype_values[] = {"columnz", "rowz", "globalz", "column0", "0to1", "colcenter", "medmult", 0} ;	/* Possible values for otype.  */
+char *cmdline_parser_otype_values[] = {"columnz", "rowz", "globalz", "column0", "0to1", "colcenter", "medmult", "colfrac", 0} ;	/* Possible values for otype.  */
 
 static char *
 gengetopt_strdup (const char *s);

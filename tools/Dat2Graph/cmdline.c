@@ -35,12 +35,14 @@ const char *gengetopt_args_info_help[] = {
   "  -t, --format=STRING      Output graph format  (possible values=\"dot\", \n                             \"gdf\", \"net\", \"matisse\", \"list\", \"dat\", \n                             \"correl\" default=`dot')",
   "\nGraph Queries:",
   "  -q, --geneq=filename     Query inclusion file",
+  "  -Q, --genew=filename     Query weights file",
   "  -k, --neighbors=INT      Size of query neighborhood  (default=`-1')",
   "  -a, --hefalmp            Perform HEFalMp query instead of bioPIXIE query  \n                             (default=on)",
   "  -d, --edges=DOUBLE       Aggressiveness of edge trimming after query  \n                             (default=`1')",
   "\nFiltering:",
   "  -e, --cutoff=DOUBLE      Minimum edge weight for output",
   "  -g, --genes=filename     Gene inclusion file",
+  "  -G, --genex=filename     Gene exclusion file",
   "  -w, --knowns=filename    Known interactions (DAT/DAB) to ignore",
   "\nAnnotation:",
   "  -f, --features=filename  SGD gene features",
@@ -108,11 +110,13 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->input_given = 0 ;
   args_info->format_given = 0 ;
   args_info->geneq_given = 0 ;
+  args_info->genew_given = 0 ;
   args_info->neighbors_given = 0 ;
   args_info->hefalmp_given = 0 ;
   args_info->edges_given = 0 ;
   args_info->cutoff_given = 0 ;
   args_info->genes_given = 0 ;
+  args_info->genex_given = 0 ;
   args_info->knowns_given = 0 ;
   args_info->features_given = 0 ;
   args_info->colors_given = 0 ;
@@ -132,6 +136,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->format_orig = NULL;
   args_info->geneq_arg = NULL;
   args_info->geneq_orig = NULL;
+  args_info->genew_arg = NULL;
+  args_info->genew_orig = NULL;
   args_info->neighbors_arg = -1;
   args_info->neighbors_orig = NULL;
   args_info->hefalmp_flag = 1;
@@ -140,6 +146,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->cutoff_orig = NULL;
   args_info->genes_arg = NULL;
   args_info->genes_orig = NULL;
+  args_info->genex_arg = NULL;
+  args_info->genex_orig = NULL;
   args_info->knowns_arg = NULL;
   args_info->knowns_orig = NULL;
   args_info->features_arg = NULL;
@@ -167,19 +175,21 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->input_help = gengetopt_args_info_help[3] ;
   args_info->format_help = gengetopt_args_info_help[4] ;
   args_info->geneq_help = gengetopt_args_info_help[6] ;
-  args_info->neighbors_help = gengetopt_args_info_help[7] ;
-  args_info->hefalmp_help = gengetopt_args_info_help[8] ;
-  args_info->edges_help = gengetopt_args_info_help[9] ;
-  args_info->cutoff_help = gengetopt_args_info_help[11] ;
-  args_info->genes_help = gengetopt_args_info_help[12] ;
-  args_info->knowns_help = gengetopt_args_info_help[13] ;
-  args_info->features_help = gengetopt_args_info_help[15] ;
-  args_info->colors_help = gengetopt_args_info_help[16] ;
-  args_info->borders_help = gengetopt_args_info_help[17] ;
-  args_info->normalize_help = gengetopt_args_info_help[19] ;
-  args_info->memmap_help = gengetopt_args_info_help[20] ;
-  args_info->config_help = gengetopt_args_info_help[21] ;
-  args_info->verbosity_help = gengetopt_args_info_help[22] ;
+  args_info->genew_help = gengetopt_args_info_help[7] ;
+  args_info->neighbors_help = gengetopt_args_info_help[8] ;
+  args_info->hefalmp_help = gengetopt_args_info_help[9] ;
+  args_info->edges_help = gengetopt_args_info_help[10] ;
+  args_info->cutoff_help = gengetopt_args_info_help[12] ;
+  args_info->genes_help = gengetopt_args_info_help[13] ;
+  args_info->genex_help = gengetopt_args_info_help[14] ;
+  args_info->knowns_help = gengetopt_args_info_help[15] ;
+  args_info->features_help = gengetopt_args_info_help[17] ;
+  args_info->colors_help = gengetopt_args_info_help[18] ;
+  args_info->borders_help = gengetopt_args_info_help[19] ;
+  args_info->normalize_help = gengetopt_args_info_help[21] ;
+  args_info->memmap_help = gengetopt_args_info_help[22] ;
+  args_info->config_help = gengetopt_args_info_help[23] ;
+  args_info->verbosity_help = gengetopt_args_info_help[24] ;
   
 }
 
@@ -264,11 +274,15 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->format_orig));
   free_string_field (&(args_info->geneq_arg));
   free_string_field (&(args_info->geneq_orig));
+  free_string_field (&(args_info->genew_arg));
+  free_string_field (&(args_info->genew_orig));
   free_string_field (&(args_info->neighbors_orig));
   free_string_field (&(args_info->edges_orig));
   free_string_field (&(args_info->cutoff_orig));
   free_string_field (&(args_info->genes_arg));
   free_string_field (&(args_info->genes_orig));
+  free_string_field (&(args_info->genex_arg));
+  free_string_field (&(args_info->genex_orig));
   free_string_field (&(args_info->knowns_arg));
   free_string_field (&(args_info->knowns_orig));
   free_string_field (&(args_info->features_arg));
@@ -361,6 +375,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "format", args_info->format_orig, cmdline_parser_format_values);
   if (args_info->geneq_given)
     write_into_file(outfile, "geneq", args_info->geneq_orig, 0);
+  if (args_info->genew_given)
+    write_into_file(outfile, "genew", args_info->genew_orig, 0);
   if (args_info->neighbors_given)
     write_into_file(outfile, "neighbors", args_info->neighbors_orig, 0);
   if (args_info->hefalmp_given)
@@ -371,6 +387,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "cutoff", args_info->cutoff_orig, 0);
   if (args_info->genes_given)
     write_into_file(outfile, "genes", args_info->genes_orig, 0);
+  if (args_info->genex_given)
+    write_into_file(outfile, "genex", args_info->genex_orig, 0);
   if (args_info->knowns_given)
     write_into_file(outfile, "knowns", args_info->knowns_orig, 0);
   if (args_info->features_given)
@@ -644,11 +662,13 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "input",	1, NULL, 'i' },
         { "format",	1, NULL, 't' },
         { "geneq",	1, NULL, 'q' },
+        { "genew",	1, NULL, 'Q' },
         { "neighbors",	1, NULL, 'k' },
         { "hefalmp",	0, NULL, 'a' },
         { "edges",	1, NULL, 'd' },
         { "cutoff",	1, NULL, 'e' },
         { "genes",	1, NULL, 'g' },
+        { "genex",	1, NULL, 'G' },
         { "knowns",	1, NULL, 'w' },
         { "features",	1, NULL, 'f' },
         { "colors",	1, NULL, 'l' },
@@ -660,7 +680,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:t:q:k:ad:e:g:w:f:l:b:nmc:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:t:q:Q:k:ad:e:g:G:w:f:l:b:nmc:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -721,6 +741,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'Q':	/* Query weights file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->genew_arg), 
+               &(args_info->genew_orig), &(args_info->genew_given),
+              &(local_args_info.genew_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genew", 'Q',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'k':	/* Size of query neighborhood.  */
         
         
@@ -775,6 +807,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.genes_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "genes", 'g',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'G':	/* Gene exclusion file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->genex_arg), 
+               &(args_info->genex_orig), &(args_info->genex_given),
+              &(local_args_info.genex_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genex", 'G',
               additional_error))
             goto failure;
         

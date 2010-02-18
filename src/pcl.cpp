@@ -863,6 +863,7 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 
 		case ENormalizeColumn:
 		case ENormalizeColumnCenter:
+		case ENormalizeColumnFraction:
 			for( i = 0; i < GetExperiments( ); ++i ) {
 				dAve = dStd = 0;
 				for( iCount = j = 0; j < GetGenes( ); ++j )
@@ -871,14 +872,19 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 						dAve += d;
 						dStd += d * d; }
 				if( iCount ) {
-					dAve /= iCount;
-					dStd = ( dStd / iCount ) - ( dAve * dAve );
-					dStd = ( dStd <= 0 ) ? 1 : sqrt( dStd );
-					if( eNormalize == ENormalizeColumnCenter )
-						dStd = 1;
+					if( eNormalize != ENormalizeColumnFraction ) {
+						dAve /= iCount;
+						dStd = ( dStd / iCount ) - ( dAve * dAve );
+						dStd = ( dStd <= 0 ) ? 1 : sqrt( dStd );
+						if( eNormalize == ENormalizeColumnCenter )
+							dStd = 1; }
 					for( j = 0; j < GetGenes( ); ++j )
-						if( !CMeta::IsNaN( d = Get( j, i ) ) )
-							Set( j, i, (float)( ( d - dAve ) / dStd ) ); } }
+						if( !CMeta::IsNaN( d = Get( j, i ) ) ) {
+							if( eNormalize == ENormalizeColumnFraction )
+								d /= dAve;
+							else
+								d = ( d - dAve ) / dStd;
+							Set( j, i, (float)d ); } } }
 			break;
 
 		case ENormalizeMinMax:

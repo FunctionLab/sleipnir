@@ -109,7 +109,12 @@ public:
 		 * \brief
 		 * Subtract the column average from every value.
 		 */
-		ENormalizeColumnCenter
+		ENormalizeColumnCenter,
+		/*!
+		 * \brief
+		 * Divide each entry by the column sum.
+		 */
+		ENormalizeColumnFraction
 	};
 
 	static int Distance( const char* szFile, size_t iSkip, const char* szSimilarityMeasure, bool fNormalize,

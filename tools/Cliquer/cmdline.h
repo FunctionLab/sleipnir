@@ -49,12 +49,15 @@ struct gengetopt_args_info
   int size_arg;	/**< @brief Size of subgraphs to find (default='3').  */
   char * size_orig;	/**< @brief Size of subgraphs to find original value given at command line.  */
   const char *size_help; /**< @brief Size of subgraphs to find help description.  */
+  double motifs_arg;	/**< @brief Extract programmatically defined network motifs (default='0').  */
+  char * motifs_orig;	/**< @brief Extract programmatically defined network motifs original value given at command line.  */
+  const char *motifs_help; /**< @brief Extract programmatically defined network motifs help description.  */
   char * knowns_arg;	/**< @brief Known interactions (DAT/DAB) to ignore.  */
   char * knowns_orig;	/**< @brief Known interactions (DAT/DAB) to ignore original value given at command line.  */
   const char *knowns_help; /**< @brief Known interactions (DAT/DAB) to ignore help description.  */
   int normalize_flag;	/**< @brief Normalize input file (default=off).  */
   const char *normalize_help; /**< @brief Normalize input file help description.  */
-  double cutoff_arg;	/**< @brief Exclude edges below cutoff.  */
+  double cutoff_arg;	/**< @brief Exclude edges below cutoff (default='0').  */
   char * cutoff_orig;	/**< @brief Exclude edges below cutoff original value given at command line.  */
   const char *cutoff_help; /**< @brief Exclude edges below cutoff help description.  */
   int memmap_flag;	/**< @brief Memory map input (default=off).  */
@@ -70,6 +73,7 @@ struct gengetopt_args_info
   unsigned int specificity_given ;	/**< @brief Whether specificity was given.  */
   unsigned int subgraphs_given ;	/**< @brief Whether subgraphs was given.  */
   unsigned int size_given ;	/**< @brief Whether size was given.  */
+  unsigned int motifs_given ;	/**< @brief Whether motifs was given.  */
   unsigned int knowns_given ;	/**< @brief Whether knowns was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */

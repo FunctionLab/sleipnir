@@ -28,19 +28,20 @@ const char *gengetopt_args_info_usage = "Usage: Funcifier [OPTIONS]... [FILES]..
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help             Print help and exit",
-  "  -V, --version          Print version and exit",
+  "  -h, --help              Print help and exit",
+  "  -V, --version           Print version and exit",
   "\nMain:",
-  "  -i, --input=filename   Input interaction network",
-  "  -o, --output=filename  Output function network",
+  "  -i, --input=filename    Input interaction network",
+  "  -o, --output=filename   Output function network",
   "\nMiscellaneous:",
-  "  -s, --shared=STRING    Determine shared gene handling  (possible \n                           values=\"ignore\", \"discard\", \"oneonly\" \n                           default=`discard')",
-  "  -l, --colors=filename  Function cohesiveness output file",
+  "  -s, --shared=STRING     Determine shared gene handling  (possible \n                            values=\"ignore\", \"discard\", \"oneonly\" \n                            default=`discard')",
+  "  -l, --colors=filename   Function cohesiveness output file",
+  "  -w, --weights=filename  PCL file of set-by-gene weights",
   "\nOptional:",
-  "  -n, --normalize        Normalize input to the range [0,1]  (default=off)",
-  "  -z, --zscore           Normalize output by z-scoring  (default=off)",
-  "  -m, --memmap           Memory map input  (default=off)",
-  "  -v, --verbosity=INT    Message verbosity  (default=`5')",
+  "  -n, --normalize         Normalize input to the range [0,1]  (default=off)",
+  "  -z, --zscore            Normalize output by z-scoring  (default=off)",
+  "  -m, --memmap            Memory map input  (default=off)",
+  "  -v, --verbosity=INT     Message verbosity  (default=`5')",
     0
 };
 
@@ -76,6 +77,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->output_given = 0 ;
   args_info->shared_given = 0 ;
   args_info->colors_given = 0 ;
+  args_info->weights_given = 0 ;
   args_info->normalize_given = 0 ;
   args_info->zscore_given = 0 ;
   args_info->memmap_given = 0 ;
@@ -93,6 +95,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->shared_orig = NULL;
   args_info->colors_arg = NULL;
   args_info->colors_orig = NULL;
+  args_info->weights_arg = NULL;
+  args_info->weights_orig = NULL;
   args_info->normalize_flag = 0;
   args_info->zscore_flag = 0;
   args_info->memmap_flag = 0;
@@ -112,10 +116,11 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->output_help = gengetopt_args_info_help[4] ;
   args_info->shared_help = gengetopt_args_info_help[6] ;
   args_info->colors_help = gengetopt_args_info_help[7] ;
-  args_info->normalize_help = gengetopt_args_info_help[9] ;
-  args_info->zscore_help = gengetopt_args_info_help[10] ;
-  args_info->memmap_help = gengetopt_args_info_help[11] ;
-  args_info->verbosity_help = gengetopt_args_info_help[12] ;
+  args_info->weights_help = gengetopt_args_info_help[8] ;
+  args_info->normalize_help = gengetopt_args_info_help[10] ;
+  args_info->zscore_help = gengetopt_args_info_help[11] ;
+  args_info->memmap_help = gengetopt_args_info_help[12] ;
+  args_info->verbosity_help = gengetopt_args_info_help[13] ;
   
 }
 
@@ -205,6 +210,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->shared_orig));
   free_string_field (&(args_info->colors_arg));
   free_string_field (&(args_info->colors_orig));
+  free_string_field (&(args_info->weights_arg));
+  free_string_field (&(args_info->weights_orig));
   free_string_field (&(args_info->verbosity_orig));
   
   
@@ -294,6 +301,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "shared", args_info->shared_orig, cmdline_parser_shared_values);
   if (args_info->colors_given)
     write_into_file(outfile, "colors", args_info->colors_orig, 0);
+  if (args_info->weights_given)
+    write_into_file(outfile, "weights", args_info->weights_orig, 0);
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
   if (args_info->zscore_given)
@@ -585,6 +594,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "output",	1, NULL, 'o' },
         { "shared",	1, NULL, 's' },
         { "colors",	1, NULL, 'l' },
+        { "weights",	1, NULL, 'w' },
         { "normalize",	0, NULL, 'n' },
         { "zscore",	0, NULL, 'z' },
         { "memmap",	0, NULL, 'm' },
@@ -592,7 +602,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:o:s:l:nzmv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:o:s:l:w:nzmv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -661,6 +671,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.colors_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "colors", 'l',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'w':	/* PCL file of set-by-gene weights.  */
+        
+        
+          if (update_arg( (void *)&(args_info->weights_arg), 
+               &(args_info->weights_orig), &(args_info->weights_given),
+              &(local_args_info.weights_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "weights", 'w',
               additional_error))
             goto failure;
         
