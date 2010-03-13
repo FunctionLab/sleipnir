@@ -38,7 +38,7 @@ int main( int iArgs, char** aszArgs ) {
 	CDat				Dat;
 	size_t				i, j, k, iGene;
 	vector<bool>		vecfClinical;
-	vector<size_t>		veciGenes2PCL, veciPCL2Genes, veciIndices, veciScores, veciDAT2PCL;
+	vector<size_t>		veciGenes2PCL, veciPCL2Genes, veciIndices, veciScores;
 	vector<float>		vecdScores;
 	CMeasurePearson		MeasurePearson;
 	CGenome				Genome;
@@ -51,13 +51,13 @@ int main( int iArgs, char** aszArgs ) {
 	if( !PCL.Open( sArgs.input_arg, sArgs.skip_arg ) ) {
 		cerr << "Could not open: " << ( sArgs.input_arg ? sArgs.input_arg : "stdin" ) << endl;
 		return 1; }
-	if( !Dat.Open( sArgs.global_arg, !!sArgs.memmap_flag ) ) {
+	if( PCL.GetFeatures( ) < 2 ) {
+		cerr << "PCL requires at least one clinical variable feature" << endl;
+		return 1; }
+	if( sArgs.global_arg && !Dat.Open( sArgs.global_arg, !!sArgs.memmap_flag ) ) {
 		cerr << "Could not open: " << sArgs.global_arg << endl;
 		return 1; }
 
-	veciDAT2PCL.resize( Dat.GetGenes( ) );
-	for( i = 0; i < veciDAT2PCL.size( ); ++i )
-		veciDAT2PCL[i] = PCL.GetGene( Dat.GetGene( i ) );
 	vecfClinical.resize( PCL.GetGenes( ) );
 	veciPCL2Genes.resize( PCL.GetGenes( ) );
 	fill( veciPCL2Genes.begin( ), veciPCL2Genes.end( ), -1 );
@@ -87,7 +87,7 @@ int main( int iArgs, char** aszArgs ) {
 			veciIndices[j] = j;
 		sort( veciIndices.begin( ), veciIndices.end( ), SSorter( vecdScores ) );
 
-		if( sArgs.initial_arg ) {
+		if( sArgs.global_arg && sArgs.initial_arg ) {
 			CDat	DatCopy;
 			CGenome	Genome;
 			CGenes	GenesInitial( Genome );

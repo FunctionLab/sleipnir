@@ -32,7 +32,7 @@ const char *gengetopt_args_info_help[] = {
   "  -V, --version              Print version and exit",
   "\nMain:",
   "  -t, --type=STRING          Output data file type  (possible values=\"pcl\", \n                               \"dat\", \"dab\", \"module\", \"revdat\" \n                               default=`pcl')",
-  "  -m, --method=STRING        Combination method  (possible values=\"min\", \n                               \"max\", \"mean\", \"gmean\", \"hmean\", \"sum\" \n                               default=`mean')",
+  "  -m, --method=STRING        Combination method  (possible values=\"min\", \n                               \"max\", \"mean\", \"gmean\", \"hmean\", \n                               \"sum\", \"diff\" default=`mean')",
   "  -o, --output=filename      Output file",
   "  -w, --weights=filename     Weights file",
   "\nModules:",
@@ -41,13 +41,15 @@ const char *gengetopt_args_info_help[] = {
   "\nFiltering:",
   "  -g, --genes=filename       Process only genes from the given set",
   "  -e, --terms=filename       Produce DAT/DABs averaging within the provided \n                               terms",
-  "\nOptional:",
+  "\nMiscellaneous:",
   "  -W, --reweight             Treat weights as absolute  (default=off)",
-  "  -k, --skip=INT             Columns to skip in input PCLs  (default=`2')",
-  "  -p, --memmap               Memory map input files  (default=off)",
+  "  -s, --subset=INT           Subset size (none if zero)  (default=`0')",
   "  -n, --normalize            Normalize inputs before combining  (default=off)",
   "  -z, --zscore               Z-score output after combining  (default=off)",
-  "  -s, --subset=INT           Subset size (none if zero)  (default=`0')",
+  "  -Z, --zero                 Default missing values to zero  (default=off)",
+  "\nOptional:",
+  "  -k, --skip=INT             Columns to skip in input PCLs  (default=`2')",
+  "  -p, --memmap               Memory map input files  (default=off)",
   "  -v, --verbosity=INT        Message verbosity  (default=`5')",
     0
 };
@@ -71,7 +73,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
 
 
 char *cmdline_parser_type_values[] = {"pcl", "dat", "dab", "module", "revdat", 0} ;	/* Possible values for type.  */
-char *cmdline_parser_method_values[] = {"min", "max", "mean", "gmean", "hmean", "sum", 0} ;	/* Possible values for method.  */
+char *cmdline_parser_method_values[] = {"min", "max", "mean", "gmean", "hmean", "sum", "diff", 0} ;	/* Possible values for method.  */
 
 static char *
 gengetopt_strdup (const char *s);
@@ -90,11 +92,12 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->genes_given = 0 ;
   args_info->terms_given = 0 ;
   args_info->reweight_given = 0 ;
-  args_info->skip_given = 0 ;
-  args_info->memmap_given = 0 ;
+  args_info->subset_given = 0 ;
   args_info->normalize_given = 0 ;
   args_info->zscore_given = 0 ;
-  args_info->subset_given = 0 ;
+  args_info->zero_given = 0 ;
+  args_info->skip_given = 0 ;
+  args_info->memmap_given = 0 ;
   args_info->verbosity_given = 0 ;
 }
 
@@ -118,13 +121,14 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->terms_arg = NULL;
   args_info->terms_orig = NULL;
   args_info->reweight_flag = 0;
+  args_info->subset_arg = 0;
+  args_info->subset_orig = NULL;
+  args_info->normalize_flag = 0;
+  args_info->zscore_flag = 0;
+  args_info->zero_flag = 0;
   args_info->skip_arg = 2;
   args_info->skip_orig = NULL;
   args_info->memmap_flag = 0;
-  args_info->normalize_flag = 0;
-  args_info->zscore_flag = 0;
-  args_info->subset_arg = 0;
-  args_info->subset_orig = NULL;
   args_info->verbosity_arg = 5;
   args_info->verbosity_orig = NULL;
   
@@ -146,12 +150,13 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->genes_help = gengetopt_args_info_help[11] ;
   args_info->terms_help = gengetopt_args_info_help[12] ;
   args_info->reweight_help = gengetopt_args_info_help[14] ;
-  args_info->skip_help = gengetopt_args_info_help[15] ;
-  args_info->memmap_help = gengetopt_args_info_help[16] ;
-  args_info->normalize_help = gengetopt_args_info_help[17] ;
-  args_info->zscore_help = gengetopt_args_info_help[18] ;
-  args_info->subset_help = gengetopt_args_info_help[19] ;
-  args_info->verbosity_help = gengetopt_args_info_help[20] ;
+  args_info->subset_help = gengetopt_args_info_help[15] ;
+  args_info->normalize_help = gengetopt_args_info_help[16] ;
+  args_info->zscore_help = gengetopt_args_info_help[17] ;
+  args_info->zero_help = gengetopt_args_info_help[18] ;
+  args_info->skip_help = gengetopt_args_info_help[20] ;
+  args_info->memmap_help = gengetopt_args_info_help[21] ;
+  args_info->verbosity_help = gengetopt_args_info_help[22] ;
   
 }
 
@@ -247,8 +252,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->genes_orig));
   free_string_field (&(args_info->terms_arg));
   free_string_field (&(args_info->terms_orig));
-  free_string_field (&(args_info->skip_orig));
   free_string_field (&(args_info->subset_orig));
+  free_string_field (&(args_info->skip_orig));
   free_string_field (&(args_info->verbosity_orig));
   
   
@@ -348,16 +353,18 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "terms", args_info->terms_orig, 0);
   if (args_info->reweight_given)
     write_into_file(outfile, "reweight", 0, 0 );
-  if (args_info->skip_given)
-    write_into_file(outfile, "skip", args_info->skip_orig, 0);
-  if (args_info->memmap_given)
-    write_into_file(outfile, "memmap", 0, 0 );
+  if (args_info->subset_given)
+    write_into_file(outfile, "subset", args_info->subset_orig, 0);
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
   if (args_info->zscore_given)
     write_into_file(outfile, "zscore", 0, 0 );
-  if (args_info->subset_given)
-    write_into_file(outfile, "subset", args_info->subset_orig, 0);
+  if (args_info->zero_given)
+    write_into_file(outfile, "zero", 0, 0 );
+  if (args_info->skip_given)
+    write_into_file(outfile, "skip", args_info->skip_orig, 0);
+  if (args_info->memmap_given)
+    write_into_file(outfile, "memmap", 0, 0 );
   if (args_info->verbosity_given)
     write_into_file(outfile, "verbosity", args_info->verbosity_orig, 0);
   
@@ -627,16 +634,17 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "genes",	1, NULL, 'g' },
         { "terms",	1, NULL, 'e' },
         { "reweight",	0, NULL, 'W' },
-        { "skip",	1, NULL, 'k' },
-        { "memmap",	0, NULL, 'p' },
+        { "subset",	1, NULL, 's' },
         { "normalize",	0, NULL, 'n' },
         { "zscore",	0, NULL, 'z' },
-        { "subset",	1, NULL, 's' },
+        { "zero",	0, NULL, 'Z' },
+        { "skip",	1, NULL, 'k' },
+        { "memmap",	0, NULL, 'p' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVt:m:o:w:j:r:g:e:Wk:pnzs:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVt:m:o:w:j:r:g:e:Ws:nzZk:pv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -767,24 +775,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'k':	/* Columns to skip in input PCLs.  */
+        case 's':	/* Subset size (none if zero).  */
         
         
-          if (update_arg( (void *)&(args_info->skip_arg), 
-               &(args_info->skip_orig), &(args_info->skip_given),
-              &(local_args_info.skip_given), optarg, 0, "2", ARG_INT,
+          if (update_arg( (void *)&(args_info->subset_arg), 
+               &(args_info->subset_orig), &(args_info->subset_given),
+              &(local_args_info.subset_given), optarg, 0, "0", ARG_INT,
               check_ambiguity, override, 0, 0,
-              "skip", 'k',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'p':	/* Memory map input files.  */
-        
-        
-          if (update_arg((void *)&(args_info->memmap_flag), 0, &(args_info->memmap_given),
-              &(local_args_info.memmap_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "memmap", 'p',
+              "subset", 's',
               additional_error))
             goto failure;
         
@@ -809,14 +807,34 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 's':	/* Subset size (none if zero).  */
+        case 'Z':	/* Default missing values to zero.  */
         
         
-          if (update_arg( (void *)&(args_info->subset_arg), 
-               &(args_info->subset_orig), &(args_info->subset_given),
-              &(local_args_info.subset_given), optarg, 0, "0", ARG_INT,
+          if (update_arg((void *)&(args_info->zero_flag), 0, &(args_info->zero_given),
+              &(local_args_info.zero_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "zero", 'Z',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'k':	/* Columns to skip in input PCLs.  */
+        
+        
+          if (update_arg( (void *)&(args_info->skip_arg), 
+               &(args_info->skip_orig), &(args_info->skip_given),
+              &(local_args_info.skip_given), optarg, 0, "2", ARG_INT,
               check_ambiguity, override, 0, 0,
-              "subset", 's',
+              "skip", 'k',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'p':	/* Memory map input files.  */
+        
+        
+          if (update_arg((void *)&(args_info->memmap_flag), 0, &(args_info->memmap_given),
+              &(local_args_info.memmap_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "memmap", 'p',
               additional_error))
             goto failure;
         

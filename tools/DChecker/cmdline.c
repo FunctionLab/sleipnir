@@ -35,6 +35,7 @@ const char *gengetopt_args_info_help[] = {
   "  -w, --answers=filename     Answer DAT/DAB file",
   "\nMiscellaneous:",
   "  -d, --directory=directory  Output directory  (default=`.')",
+  "  -a, --auc=FLOAT            Use alternative AUCn calculation  (default=`0')",
   "\nRanking Method:",
   "  -b, --bins=INT             Bins for quantile sorting  (default=`1000')",
   "  -f, --finite               Count finitely many bins  (default=off)",
@@ -87,6 +88,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->input_given = 0 ;
   args_info->answers_given = 0 ;
   args_info->directory_given = 0 ;
+  args_info->auc_given = 0 ;
   args_info->bins_given = 0 ;
   args_info->finite_given = 0 ;
   args_info->min_given = 0 ;
@@ -112,6 +114,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->answers_orig = NULL;
   args_info->directory_arg = gengetopt_strdup (".");
   args_info->directory_orig = NULL;
+  args_info->auc_arg = 0;
+  args_info->auc_orig = NULL;
   args_info->bins_arg = 1000;
   args_info->bins_orig = NULL;
   args_info->finite_flag = 0;
@@ -148,20 +152,21 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->input_help = gengetopt_args_info_help[3] ;
   args_info->answers_help = gengetopt_args_info_help[4] ;
   args_info->directory_help = gengetopt_args_info_help[6] ;
-  args_info->bins_help = gengetopt_args_info_help[8] ;
-  args_info->finite_help = gengetopt_args_info_help[9] ;
-  args_info->min_help = gengetopt_args_info_help[10] ;
-  args_info->max_help = gengetopt_args_info_help[11] ;
-  args_info->delta_help = gengetopt_args_info_help[12] ;
-  args_info->genes_help = gengetopt_args_info_help[14] ;
-  args_info->genex_help = gengetopt_args_info_help[15] ;
-  args_info->genet_help = gengetopt_args_info_help[16] ;
-  args_info->genee_help = gengetopt_args_info_help[17] ;
-  args_info->normalize_help = gengetopt_args_info_help[19] ;
-  args_info->invert_help = gengetopt_args_info_help[20] ;
-  args_info->sse_help = gengetopt_args_info_help[22] ;
-  args_info->memmap_help = gengetopt_args_info_help[23] ;
-  args_info->verbosity_help = gengetopt_args_info_help[24] ;
+  args_info->auc_help = gengetopt_args_info_help[7] ;
+  args_info->bins_help = gengetopt_args_info_help[9] ;
+  args_info->finite_help = gengetopt_args_info_help[10] ;
+  args_info->min_help = gengetopt_args_info_help[11] ;
+  args_info->max_help = gengetopt_args_info_help[12] ;
+  args_info->delta_help = gengetopt_args_info_help[13] ;
+  args_info->genes_help = gengetopt_args_info_help[15] ;
+  args_info->genex_help = gengetopt_args_info_help[16] ;
+  args_info->genet_help = gengetopt_args_info_help[17] ;
+  args_info->genee_help = gengetopt_args_info_help[18] ;
+  args_info->normalize_help = gengetopt_args_info_help[20] ;
+  args_info->invert_help = gengetopt_args_info_help[21] ;
+  args_info->sse_help = gengetopt_args_info_help[23] ;
+  args_info->memmap_help = gengetopt_args_info_help[24] ;
+  args_info->verbosity_help = gengetopt_args_info_help[25] ;
   
 }
 
@@ -249,6 +254,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->answers_orig));
   free_string_field (&(args_info->directory_arg));
   free_string_field (&(args_info->directory_orig));
+  free_string_field (&(args_info->auc_orig));
   free_string_field (&(args_info->bins_orig));
   free_string_field (&(args_info->min_orig));
   free_string_field (&(args_info->max_orig));
@@ -306,6 +312,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "answers", args_info->answers_orig, 0);
   if (args_info->directory_given)
     write_into_file(outfile, "directory", args_info->directory_orig, 0);
+  if (args_info->auc_given)
+    write_into_file(outfile, "auc", args_info->auc_orig, 0);
   if (args_info->bins_given)
     write_into_file(outfile, "bins", args_info->bins_orig, 0);
   if (args_info->finite_given)
@@ -612,6 +620,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "input",	1, NULL, 'i' },
         { "answers",	1, NULL, 'w' },
         { "directory",	1, NULL, 'd' },
+        { "auc",	1, NULL, 'a' },
         { "bins",	1, NULL, 'b' },
         { "finite",	0, NULL, 'f' },
         { "min",	1, NULL, 'm' },
@@ -629,7 +638,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:w:d:b:fm:M:e:g:G:c:C:ntspv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:w:d:a:b:fm:M:e:g:G:c:C:ntspv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -686,6 +695,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.directory_given), optarg, 0, ".", ARG_STRING,
               check_ambiguity, override, 0, 0,
               "directory", 'd',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'a':	/* Use alternative AUCn calculation.  */
+        
+        
+          if (update_arg( (void *)&(args_info->auc_arg), 
+               &(args_info->auc_orig), &(args_info->auc_given),
+              &(local_args_info.auc_given), optarg, 0, "0", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "auc", 'a',
               additional_error))
             goto failure;
         

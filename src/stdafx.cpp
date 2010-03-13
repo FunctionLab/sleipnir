@@ -809,6 +809,7 @@ MIPS:
  * 
  * - <a href="sleipnir-2.2.tar.gz">2.2</a>, *** <br>
  * Fix confusing documentation in \ref Answerer - thanks to Arjun Krishnan!
+ * Fix missing \c SIZE_MAX definition on Mac OS X - thanks to Alice Koechlin!
  * 
  * - <a href="sleipnir-2.1.tar.gz">2.1</a>, 12-20-09 <br>
  * Update includes for gcc 4.3 compatibility - thanks to Casey Greene! <br>

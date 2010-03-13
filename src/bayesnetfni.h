@@ -189,7 +189,7 @@ public:
 class CBayesNetMinimalImpl : protected CBayesNetImpl, protected CFile {
 protected:
 	static bool Counts2Probs( const std::vector<std::string>&, std::vector<float>&, float dAlpha = 1,
-		size_t = -1, const CBayesNetMinimal* = NULL, size_t = 0, size_t = 0 );
+		float = HUGE_VAL, const CBayesNetMinimal* = NULL, size_t = 0, size_t = 0 );
 
 	CBayesNetMinimalImpl( ) : CBayesNetImpl( true ), m_adNY(NULL) { }
 

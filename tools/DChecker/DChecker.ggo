@@ -11,6 +11,8 @@ option	"answers"		w	"Answer DAT/DAB file"
 section "Miscellaneous"
 option	"directory"		d	"Output directory"
 							string	typestr="directory"	default="."
+option	"auc"			a	"Use alternative AUCn calculation"
+							float	default="0"
 
 section "Ranking Method"
 option	"bins"			b	"Bins for quantile sorting"

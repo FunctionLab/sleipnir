@@ -60,18 +60,20 @@ struct gengetopt_args_info
   const char *terms_help; /**< @brief Produce DAT/DABs averaging within the provided terms help description.  */
   int reweight_flag;	/**< @brief Treat weights as absolute (default=off).  */
   const char *reweight_help; /**< @brief Treat weights as absolute help description.  */
+  int subset_arg;	/**< @brief Subset size (none if zero) (default='0').  */
+  char * subset_orig;	/**< @brief Subset size (none if zero) original value given at command line.  */
+  const char *subset_help; /**< @brief Subset size (none if zero) help description.  */
+  int normalize_flag;	/**< @brief Normalize inputs before combining (default=off).  */
+  const char *normalize_help; /**< @brief Normalize inputs before combining help description.  */
+  int zscore_flag;	/**< @brief Z-score output after combining (default=off).  */
+  const char *zscore_help; /**< @brief Z-score output after combining help description.  */
+  int zero_flag;	/**< @brief Default missing values to zero (default=off).  */
+  const char *zero_help; /**< @brief Default missing values to zero help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCLs (default='2').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCLs original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCLs help description.  */
   int memmap_flag;	/**< @brief Memory map input files (default=off).  */
   const char *memmap_help; /**< @brief Memory map input files help description.  */
-  int normalize_flag;	/**< @brief Normalize inputs before combining (default=off).  */
-  const char *normalize_help; /**< @brief Normalize inputs before combining help description.  */
-  int zscore_flag;	/**< @brief Z-score output after combining (default=off).  */
-  const char *zscore_help; /**< @brief Z-score output after combining help description.  */
-  int subset_arg;	/**< @brief Subset size (none if zero) (default='0').  */
-  char * subset_orig;	/**< @brief Subset size (none if zero) original value given at command line.  */
-  const char *subset_help; /**< @brief Subset size (none if zero) help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
@@ -87,11 +89,12 @@ struct gengetopt_args_info
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int terms_given ;	/**< @brief Whether terms was given.  */
   unsigned int reweight_given ;	/**< @brief Whether reweight was given.  */
-  unsigned int skip_given ;	/**< @brief Whether skip was given.  */
-  unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
+  unsigned int subset_given ;	/**< @brief Whether subset was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
-  unsigned int subset_given ;	/**< @brief Whether subset was given.  */
+  unsigned int zero_given ;	/**< @brief Whether zero was given.  */
+  unsigned int skip_given ;	/**< @brief Whether skip was given.  */
+  unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */

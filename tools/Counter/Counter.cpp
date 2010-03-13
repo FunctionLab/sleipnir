@@ -74,6 +74,8 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg );
+	if( sArgs.pseudocounts_arg < 0 )
+		sArgs.pseudocounts_arg = CMeta::GetNaN( );
 
 	if( sArgs.zeros_arg ) {
 		ifstream		ifsm;
@@ -369,6 +371,7 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 	vector<float>				vecdAlphas;
 	vector<unsigned char>		vecbZeros;
 	map<string, size_t>::const_iterator	iterZero, iterDataset;
+	float						d;
 
 	if( mapstriDatasets.empty( ) ) {
 		cerr << "No datasets given" << endl;
@@ -409,6 +412,9 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 		cerr << "Could not open default counts: " << ( sArgs.default_arg ? sArgs.default_arg : "not given" ) <<
 			endl;
 		return 1; }
+	if( sArgs.regularize_flag ) {
+		d = BNDefault.Regularize( vecdAlphas );
+		BNDefault.OpenCounts( sArgs.default_arg, mapstriDatasets, vecbZeros, vecdAlphas, d ); }
 
 	for( i = 0; i < vecstrContexts.size( ); ++i ) {
 		strFile = (string)sArgs.counts_arg + '/' + CMeta::Filename( vecstrContexts[ i ] ) + c_acTxt;
@@ -417,6 +423,9 @@ int main_xdsls( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 		if( !pBN->OpenCounts( strFile.c_str( ), mapstriDatasets, vecbZeros, vecdAlphas, sArgs.pseudocounts_arg,
 			&BNDefault ) )
 			return 1;
+		if( sArgs.regularize_flag ) {
+			d = pBN->Regularize( vecdAlphas );
+			pBN->OpenCounts( strFile.c_str( ), mapstriDatasets, vecbZeros, vecdAlphas, d, &BNDefault ); }
 		vecpBNs.push_back( pBN ); }
 
 	cerr << "Created " << ( vecpBNs.size( ) + 1 ) << " Bayesian classifiers" << endl;

@@ -35,6 +35,7 @@ static const char			c_szHMean[]			= "hmean";
 static const char			c_szMax[]			= "max";
 static const char			c_szMin[]			= "min";
 static const char			c_szSum[]			= "sum";
+static const char			c_szDiff[]			= "diff";
 static const char			c_szVote[]			= "vote";
 
 int main( int iArgs, char** aszArgs ) {
@@ -113,7 +114,8 @@ enum EMethod {
 	EMethodGMean,
 	EMethodHMean,
 	EMethodMax,
-	EMethodMin
+	EMethodMin,
+	EMethodDiff
 };
 
 int MainDATs( const gengetopt_args_info& sArgs ) {
@@ -154,6 +156,8 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 
 	if( !strcmp( c_szSum, sArgs.method_arg ) )
 		eMethod = EMethodSum;
+	else if( !strcmp( c_szDiff, sArgs.method_arg ) )
+		eMethod = EMethodDiff;
 	else if( !strcmp( c_szGMean, sArgs.method_arg ) )
 		eMethod = EMethodGMean;
 	else if( !strcmp( c_szHMean, sArgs.method_arg ) )
@@ -193,6 +197,17 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 		else
 			dWeight = 1;
 		cerr << "Opened: " << sArgs.inputs[ i ] << endl;
+		if( sArgs.zero_flag ) {
+			vector<string>	vecstrGenes;
+
+			for( j = 0; j < DatOut.GetGenes( ); ++j )
+				if( DatCur.GetGene( DatOut.GetGene( j ) ) == -1 )
+					vecstrGenes.push_back( DatOut.GetGene( j ) );
+			DatCur.AddGenes( vecstrGenes );
+			for( j = 0; j < DatCur.GetGenes( ); ++j )
+				for( k = ( j + 1 ); k < DatCur.GetGenes( ); ++k )
+					if( CMeta::IsNaN( DatCur.Get( j, k ) ) )
+						DatCur.Set( j, k, 0 ); }
 		if( sArgs.normalize_flag )
 			DatCur.Normalize( CDat::ENormalizeZScore );
 		if( GenesIn.GetGenes( ) )
@@ -244,7 +259,7 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 								break;
 
 							default:
-								DatOut.Get( iOne, iTwo ) += dWeight * d;
+								DatOut.Get( iOne, iTwo ) += dWeight * d * ( ( i && ( eMethod == EMethodDiff ) ) ? -1 : 1 );
 								MatCounts.Get( iOne, iTwo ) += dWeight; } } } } }
 	for( i = 0; i < DatOut.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )

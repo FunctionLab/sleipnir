@@ -201,6 +201,20 @@ public:
 	void FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit = -1,
 		float dEdgeAggressiveness = 0.5, const std::vector<float>* pvecdWeights = NULL );
 
+	bool AddGene( const std::string& strGene ) {
+		std::vector<std::string>	vecstrGenes;
+
+		vecstrGenes.push_back( strGene );
+		return AddGenes( vecstrGenes ); }
+
+	bool AddGenes( const std::vector<std::string>& vecstrGenes ) {
+
+		if( m_pPCL || m_abData || !m_Data.SetSize( m_Data.GetSize( ) + vecstrGenes.size( ), true ) )
+			return false;
+
+		m_vecstrGenes.insert( m_vecstrGenes.end( ), vecstrGenes.begin( ), vecstrGenes.end( ) );
+		return true; }
+
 	/*!
 	 * \brief
 	 * Normalize each finite value in the CDat by a specific function.

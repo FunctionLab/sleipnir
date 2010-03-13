@@ -6,7 +6,7 @@ section "Main"
 option	"type"		t	"Output data file type"
 						values="pcl","dat","dab","module","revdat"	default="pcl"
 option	"method"	m	"Combination method"
-						values="min","max","mean","gmean","hmean","sum"	default="mean"
+						values="min","max","mean","gmean","hmean","sum","diff"	default="mean"
 option	"output"	o	"Output file"
 						string	typestr="filename"
 option	"weights"	w	"Weights file"
@@ -24,18 +24,22 @@ option	"genes"		g	"Process only genes from the given set"
 option	"terms"		e	"Produce DAT/DABs averaging within the provided terms"
 						string	typestr="filename"
 
-section "Optional"
+section "Miscellaneous"
 option	"reweight"	W	"Treat weights as absolute"
 						flag	off
-option	"skip"		k	"Columns to skip in input PCLs"
-						int	default="2"
-option	"memmap"	p	"Memory map input files"
-						flag	off
+option	"subset"	s	"Subset size (none if zero)"
+						int	default="0"
 option	"normalize"	n	"Normalize inputs before combining"
 						flag	off
 option	"zscore"	z	"Z-score output after combining"
 						flag	off
-option	"subset"	s	"Subset size (none if zero)"
-						int	default="0"
+option	"zero"		Z	"Default missing values to zero"
+						flag	off
+
+section "Optional"
+option	"skip"		k	"Columns to skip in input PCLs"
+						int	default="2"
+option	"memmap"	p	"Memory map input files"
+						flag	off
 option	"verbosity"	v	"Message verbosity"
 						int	default="5"

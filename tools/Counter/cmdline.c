@@ -49,8 +49,9 @@ const char *gengetopt_args_info_help[] = {
   "  -b, --default=filename        Count file containing defaults for cases with \n                                  missing data",
   "  -Z, --zeros=filename          Read zeroed node IDs/outputs from the given \n                                  file",
   "\nBayesian Regularization:",
-  "  -p, --pseudocounts=INT        Effective number of pseudocounts to use  \n                                  (default=`-1')",
+  "  -p, --pseudocounts=FLOAT      Effective number of pseudocounts to use  \n                                  (default=`-1')",
   "  -a, --alphas=filename         File containing equivalent sample sizes \n                                  (alphas) for each node",
+  "  -r, --regularize              Automatically regularized based on similarity  \n                                  (default=off)",
   "\nOptional:",
   "  -y, --temporary=directory     Directory for temporary files  (default=`.')",
   "  -l, --smile                   Output SMILE (X)DSL files rather than minimal \n                                  networks  (default=off)",
@@ -65,6 +66,7 @@ typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
   , ARG_INT
+  , ARG_FLOAT
 } cmdline_parser_arg_type;
 
 static
@@ -103,6 +105,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->zeros_given = 0 ;
   args_info->pseudocounts_given = 0 ;
   args_info->alphas_given = 0 ;
+  args_info->regularize_given = 0 ;
   args_info->temporary_given = 0 ;
   args_info->smile_given = 0 ;
   args_info->xdsl_given = 0 ;
@@ -147,6 +150,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->pseudocounts_orig = NULL;
   args_info->alphas_arg = NULL;
   args_info->alphas_orig = NULL;
+  args_info->regularize_flag = 0;
   args_info->temporary_arg = gengetopt_strdup (".");
   args_info->temporary_orig = NULL;
   args_info->smile_flag = 0;
@@ -182,12 +186,13 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->zeros_help = gengetopt_args_info_help[19] ;
   args_info->pseudocounts_help = gengetopt_args_info_help[21] ;
   args_info->alphas_help = gengetopt_args_info_help[22] ;
-  args_info->temporary_help = gengetopt_args_info_help[24] ;
-  args_info->smile_help = gengetopt_args_info_help[25] ;
-  args_info->xdsl_help = gengetopt_args_info_help[26] ;
-  args_info->memmap_help = gengetopt_args_info_help[27] ;
-  args_info->threads_help = gengetopt_args_info_help[28] ;
-  args_info->verbosity_help = gengetopt_args_info_help[29] ;
+  args_info->regularize_help = gengetopt_args_info_help[23] ;
+  args_info->temporary_help = gengetopt_args_info_help[25] ;
+  args_info->smile_help = gengetopt_args_info_help[26] ;
+  args_info->xdsl_help = gengetopt_args_info_help[27] ;
+  args_info->memmap_help = gengetopt_args_info_help[28] ;
+  args_info->threads_help = gengetopt_args_info_help[29] ;
+  args_info->verbosity_help = gengetopt_args_info_help[30] ;
   
 }
 
@@ -374,6 +379,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "pseudocounts", args_info->pseudocounts_orig, 0);
   if (args_info->alphas_given)
     write_into_file(outfile, "alphas", args_info->alphas_orig, 0);
+  if (args_info->regularize_given)
+    write_into_file(outfile, "regularize", 0, 0 );
   if (args_info->temporary_given)
     write_into_file(outfile, "temporary", args_info->temporary_orig, 0);
   if (args_info->smile_given)
@@ -589,6 +596,9 @@ int update_arg(void *field, char **orig_field,
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
+  case ARG_FLOAT:
+    if (val) *((float *)field) = (float)strtod (val, &stop_char);
+    break;
   case ARG_STRING:
     if (val) {
       string_field = (char **)field;
@@ -604,6 +614,7 @@ int update_arg(void *field, char **orig_field,
   /* check numeric conversion */
   switch(arg_type) {
   case ARG_INT:
+  case ARG_FLOAT:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
       return 1; /* failure */
@@ -688,6 +699,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "zeros",	1, NULL, 'Z' },
         { "pseudocounts",	1, NULL, 'p' },
         { "alphas",	1, NULL, 'a' },
+        { "regularize",	0, NULL, 'r' },
         { "temporary",	1, NULL, 'y' },
         { "smile",	0, NULL, 'l' },
         { "xdsl",	0, NULL, 'x' },
@@ -697,7 +709,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVw:k:n:o:d:s:e:X:g:G:c:C:b:Z:p:a:y:lxmt:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVw:k:n:o:d:s:e:X:g:G:c:C:b:Z:p:a:ry:lxmt:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -904,7 +916,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         
           if (update_arg( (void *)&(args_info->pseudocounts_arg), 
                &(args_info->pseudocounts_orig), &(args_info->pseudocounts_given),
-              &(local_args_info.pseudocounts_given), optarg, 0, "-1", ARG_INT,
+              &(local_args_info.pseudocounts_given), optarg, 0, "-1", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "pseudocounts", 'p',
               additional_error))
@@ -919,6 +931,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.alphas_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "alphas", 'a',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'r':	/* Automatically regularized based on similarity.  */
+        
+        
+          if (update_arg((void *)&(args_info->regularize_flag), 0, &(args_info->regularize_given),
+              &(local_args_info.regularize_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "regularize", 'r',
               additional_error))
             goto failure;
         

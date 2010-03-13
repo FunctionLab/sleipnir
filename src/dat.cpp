@@ -1429,11 +1429,11 @@ void CDat::SaveDOT( std::ostream& ostm, float dCutoff, const CGenome* pGenome, b
 				dStd += d * d; }
 	if( iCount ) {
 		dAve /= iCount;
-		dStd = sqrt( max( 0.0f, ( dStd / iCount ) - ( dAve * dAve ) ) ); }
+		dStd = sqrt( max( 0.0f, ( dStd / ( max( iCount, 2 ) - 1 ) ) - ( dAve * dAve ) ) ); }
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) ) {
-				d = 1.0 / ( 1 + exp( ( dAve - d ) / dStd ) );
+				d = 1.0f / ( 1 + exp( ( dAve - d ) / dStd ) );
 				ostm << vecstrNames[ i ] << " -- " << vecstrNames[ j ] << " [weight = " << d <<
 					", color = \"" << ( fHashes ? "#" : "" ) << CColor::Interpolate( d,
 					CColor::c_Green, CColor::c_Black, CColor::c_Red ).ToRGB( ) << "\"];" << endl; }

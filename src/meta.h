@@ -55,6 +55,9 @@ asm(".globl pthread_cond_broadcast");
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(a)	(sizeof(a)/sizeof(*a))
 #endif // ARRAYSIZE
+#ifndef SIZE_MAX
+#define SIZE_MAX		((size_t)-1)
+#endif // SIZE_MAX
 
 namespace Sleipnir {
 

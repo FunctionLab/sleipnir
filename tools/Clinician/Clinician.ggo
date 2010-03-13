@@ -6,7 +6,7 @@ section "Main"
 option	"input"				i	"Input PCL file"
 								string	typestr="filename"
 option	"global"			I	"Input DAT/DAB file"
-								string	typestr="filename"	yes
+								string	typestr="filename"
 
 section "Miscellaneous"
 option	"initial"			n	"Initial correlated neighbor count"
