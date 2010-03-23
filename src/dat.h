@@ -201,6 +201,12 @@ public:
 	void FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit = -1,
 		float dEdgeAggressiveness = 0.5, const std::vector<float>* pvecdWeights = NULL );
 
+	void Clear( float dValue ) {
+		size_t	i;
+
+		for( i = 0; i < GetGenes( ); ++i )
+			memset( Get( i ), *(int*)&dValue, ( GetGenes( ) - i - 1 ) * sizeof(*Get( i )) ); }
+
 	bool AddGene( const std::string& strGene ) {
 		std::vector<std::string>	vecstrGenes;
 

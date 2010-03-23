@@ -29,14 +29,23 @@ static int MainModules( const gengetopt_args_info& );
 
 static const TPFnCombiner	c_apfnCombiners[]	= { MainPCLs, MainDATs, MainDABs, MainModules, MainRevDATs, NULL };
 static const char*			c_aszCombiners[]	= { "pcl", "dat", "dab", "module", "revdat", NULL };
-static const char			c_szMean[]			= "mean";
-static const char			c_szGMean[]			= "gmean";
-static const char			c_szHMean[]			= "hmean";
-static const char			c_szMax[]			= "max";
-static const char			c_szMin[]			= "min";
-static const char			c_szSum[]			= "sum";
-static const char			c_szDiff[]			= "diff";
-static const char			c_szVote[]			= "vote";
+
+enum EMethod {
+	EMethodBegin	= 0,
+	EMethodMean		= EMethodBegin,
+	EMethodSum		= EMethodMean + 1,
+	EMethodGMean	= EMethodSum + 1,
+	EMethodHMean	= EMethodGMean + 1,
+	EMethodMax		= EMethodHMean + 1,
+	EMethodMin		= EMethodMax + 1,
+	EMethodDiff		= EMethodMin + 1,
+	EMethodMeta		= EMethodDiff + 1,
+	EMethodEnd		= EMethodMeta + 1
+};
+
+static const char*	c_aszMethods[]	= {
+	"mean", "sum", "gmean", "hmean", "max", "min", "diff", "meta", NULL
+};
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -108,94 +117,74 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 
 	return 0; }
 
-enum EMethod {
-	EMethodMean,
-	EMethodSum,
-	EMethodGMean,
-	EMethodHMean,
-	EMethodMax,
-	EMethodMin,
-	EMethodDiff
+struct SCallbackMeta {
+	CDat					m_DatWei;
+	CDat					m_DatYBare;
+	CDat					m_DatQe;
+	CDat					m_DatDeltaeD;
 };
 
-int MainDATs( const gengetopt_args_info& sArgs ) {
-	CDataset				Dataset;
-	CDat					DatOut, DatCur;
-	CHalfMatrix<float>		MatCounts;
-	size_t					i, j, k, iOne, iTwo, iA, iB;
-	vector<vector<size_t> >	vecveciGenes;
-	float					d, dWeight;
-	vector<string>			vecstrFiles, vecstrTerms;
-	CPCL					PCLWeights( false );
-	CGenome					Genome;
-	CGenes					GenesIn( Genome );
-	vector<CGenes*>			vecpTerms;
-	vector<set<size_t> >	vecsetiGenes;
-	EMethod					eMethod;
+struct SCallbackVars {
+	size_t							m_iDataset;
+	size_t							m_iOne;
+	size_t							m_iTwo;
+	float							m_dValue;
+	float							m_dWeight;
+	EMethod							m_eMethod;
+	size_t							m_iDatasets;
+	CDat*							m_pDatOut;
+	CDat*							m_pDatCur;
+	CHalfMatrix<float>*				m_pMatCounts;
+	const vector<set<size_t> >*		m_pvecsetiGenes;
+	const vector<vector<size_t> >*	m_pvecveciGenes;
+	SCallbackMeta					m_sCallbackMeta;
+};
 
-	if( !sArgs.inputs_num )
-		return 1;
+struct SCallback {
+	const gengetopt_args_info&	m_sArgs;
+	const CGenes&				m_GenesIn;
+	const CPCL&					m_PCLWeights;
+	const vector<string>&		m_vecstrTerms;
+	const vector<CGenes*>&		m_vecpTerms;
+	SCallbackVars				m_sCallbackVars;
 
-	vecstrFiles.resize( sArgs.inputs_num );
-	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
-	if( !Dataset.OpenGenes( vecstrFiles ) ) {
-		cerr << "Couldn't open: " << vecstrFiles[ 0 ];
-		for( i = 1; i < vecstrFiles.size( ); ++i )
-			cerr << ", " << vecstrFiles[ i ];
-		cerr << endl;
-		return 1; }
-	if( sArgs.weights_arg && !PCLWeights.Open( sArgs.weights_arg, 0 ) ) {
-		cerr << "Could not open: " << sArgs.weights_arg << endl;
-		return 1; }
-	if( sArgs.genes_arg && !GenesIn.Open( sArgs.genes_arg ) ) {
-		cerr << "Could not open: " << sArgs.genes_arg << endl;
-		return 1; }
-	if( sArgs.terms_arg && !CGenes::Open( sArgs.terms_arg, Genome, vecstrTerms, vecpTerms ) ) {
-		cerr << "Could not open: " << sArgs.terms_arg << endl;
-		return 1; }
+	SCallback( const gengetopt_args_info& sArgs, const CGenes& GenesIn, const CPCL& PCLWeights,
+		const vector<string>& vecstrTerms, const vector<CGenes*>& vecpTerms ) :
+		m_sArgs(sArgs), m_GenesIn(GenesIn), m_PCLWeights(PCLWeights), m_vecstrTerms(vecstrTerms),
+		m_vecpTerms(vecpTerms) { }
+};
 
-	if( !strcmp( c_szSum, sArgs.method_arg ) )
-		eMethod = EMethodSum;
-	else if( !strcmp( c_szDiff, sArgs.method_arg ) )
-		eMethod = EMethodDiff;
-	else if( !strcmp( c_szGMean, sArgs.method_arg ) )
-		eMethod = EMethodGMean;
-	else if( !strcmp( c_szHMean, sArgs.method_arg ) )
-		eMethod = EMethodHMean;
-	else if( !strcmp( c_szMax, sArgs.method_arg ) )
-		eMethod = EMethodMax;
-	else if( !strcmp( c_szMin, sArgs.method_arg ) )
-		eMethod = EMethodMin;
-	else
-		eMethod = EMethodMean;
+int iterate_inputs( SCallback& sCallback, void (*pfnCallback)( SCallbackVars& ), void (*pfnInitialize)( SCallbackVars& ) = NULL ) {
+	SCallbackVars&				sCallbackVars	= sCallback.m_sCallbackVars;
+	CDat&						DatOut			= *sCallbackVars.m_pDatOut;
+	const gengetopt_args_info&	sArgs			= sCallback.m_sArgs;
+	const CGenes&				GenesIn			= sCallback.m_GenesIn;
+	const CPCL&					PCLWeights		= sCallback.m_PCLWeights;
+	const vector<string>&		vecstrTerms		= sCallback.m_vecstrTerms;
+	const vector<CGenes*>&		vecpTerms		= sCallback.m_vecpTerms;
+	vector<set<size_t> >		vecsetiGenes;
+	vector<vector<size_t> >		vecveciGenes;
+	size_t						i, j, k, iOne, iTwo, iA, iB;
+	CDat						DatCur;
+	float						d;
 
-	DatOut.Open( vecstrTerms.empty( ) ? Dataset.GetGeneNames( ) : vecstrTerms, false, sArgs.memmap_flag ? sArgs.output_arg : NULL );
-	if( !strcmp( c_szMax, sArgs.method_arg ) )
-		d = -FLT_MAX;
-	else if( !strcmp( c_szMin, sArgs.method_arg ) )
-		d = FLT_MAX;
-	else if( !strcmp( c_szGMean, sArgs.method_arg ) )
-		d = 1;
-	else
-		d = 0;
-	for( i = 0; i < DatOut.GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
-			DatOut.Set( i, j, d );
-	if( fabs( d ) < 2 ) {
-		MatCounts.Initialize( DatOut.GetGenes( ) );
-		MatCounts.Clear( ); }
+	sCallbackVars.m_iDatasets = sArgs.inputs_num;
+	sCallbackVars.m_pvecveciGenes = &vecveciGenes;
+	sCallbackVars.m_pvecsetiGenes = &vecsetiGenes;
 	vecsetiGenes.resize( DatOut.GetGenes( ) );
 	for( i = 0; i < sArgs.inputs_num; ++i ) {
 		if( !DatCur.Open( sArgs.inputs[ i ], !!sArgs.memmap_flag && !sArgs.normalize_flag && !GenesIn.GetGenes( ) ) ) {
 			cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
 			return 1; }
+		sCallbackVars.m_iDataset = i;
+		sCallbackVars.m_pDatCur = &DatCur;
 		if( PCLWeights.GetGenes( ) ) {
 			if( ( j = PCLWeights.GetGene( CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) ) ) == -1 ) {
 				cerr << "Ignoring unweighted graph: " << sArgs.inputs[ i ] << endl;
 				continue; }
-			dWeight = PCLWeights.Get( j, 0 ); }
+			sCallbackVars.m_dWeight = PCLWeights.Get( j, 0 ); }
 		else
-			dWeight = 1;
+			sCallbackVars.m_dWeight = 1;
 		cerr << "Opened: " << sArgs.inputs[ i ] << endl;
 		if( sArgs.zero_flag ) {
 			vector<string>	vecstrGenes;
@@ -225,46 +214,263 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 					if( ( iOne = DatCur.GetGene( vecpTerms[j]->GetGene( k ).GetName( ) ) ) != -1 ) {
 						vecveciGenes[iOne].push_back( j );
 						vecsetiGenes[j].insert( iOne ); } }
+		if( pfnInitialize )
+			pfnInitialize( sCallbackVars );
 		for( j = 0; j < DatCur.GetGenes( ); ++j )
 			for( k = ( j + 1 ); k < DatCur.GetGenes( ); ++k ) {
 				if( CMeta::IsNaN( d = DatCur.Get( j, k ) ) )
 					continue;
+				sCallbackVars.m_dValue = d;
 				for( iA = 0; iA < vecveciGenes[j].size( ); ++iA ) {
 					iOne = vecveciGenes[j][iA];
 					if( vecsetiGenes[iOne].find( k ) != vecsetiGenes[iOne].end( ) )
 						continue;
+					sCallbackVars.m_iOne = iOne;
 					for( iB = 0; iB < vecveciGenes[k].size( ); ++iB ) {
 						iTwo = vecveciGenes[k][iB];
 						if( vecsetiGenes[iTwo].find( j ) != vecsetiGenes[iTwo].end( ) )
 							continue;
-						switch( eMethod ) {
-							case EMethodGMean:
-								DatOut.Get( iOne, iTwo ) *= pow( d, dWeight );
-								MatCounts.Get( iOne, iTwo ) += dWeight;
-								break;
+						sCallbackVars.m_iTwo = iTwo;
+						pfnCallback( sCallbackVars ); } } } }
 
-							case EMethodHMean:
-								DatOut.Get( iOne, iTwo ) += dWeight / d;
-								MatCounts.Get( iOne, iTwo ) += dWeight;
-								break;
+	return 0; }
 
-							case EMethodMax:
-								if( d > DatOut.Get( iOne, iTwo ) )
-									DatOut.Set( iOne, iTwo, d );
-								break;
+float weight_weistar( const SCallbackVars& sCallback ) {
+	const SCallbackMeta&	sCallbackMeta	= sCallback.m_sCallbackMeta;
+	float					dDelta2;
 
-							case EMethodMin:
-								if( d < DatOut.Get( iOne, iTwo ) )
-									DatOut.Set( iOne, iTwo, d );
-								break;
+	if( dDelta2 = sCallbackMeta.m_DatDeltaeD.Get( sCallback.m_iOne, sCallback.m_iTwo ) ) {
+		if( ( dDelta2 = ( sCallbackMeta.m_DatQe.Get( sCallback.m_iOne, sCallback.m_iTwo ) -
+			sCallback.m_iDatasets + 1 ) / dDelta2 ) < 0 )
+			dDelta2 = 0; }
+/*
+if( ( (float)rand( ) / RAND_MAX ) < 0.000001 )
+cerr << ( 1 / ( ( 1 / sCallbackMeta.m_DatWei.Get( sCallback.m_iOne, sCallback.m_iTwo ) ) + dDelta2 ) ) << '\t' <<
+sCallbackMeta.m_DatWei.Get( sCallback.m_iOne, sCallback.m_iTwo ) << '\t' << dDelta2 << endl;
+//*/
+	return ( 1 / ( ( 1 / sCallbackMeta.m_DatWei.Get( sCallback.m_iOne, sCallback.m_iTwo ) ) + dDelta2 ) ); }
 
-							default:
-								DatOut.Get( iOne, iTwo ) += dWeight * d * ( ( i && ( eMethod == EMethodDiff ) ) ? -1 : 1 );
-								MatCounts.Get( iOne, iTwo ) += dWeight; } } } } }
+void callback_combine( SCallbackVars& sCallback ) {
+
+	if( sCallback.m_eMethod == EMethodMeta )
+		sCallback.m_dWeight = weight_weistar( sCallback );
+	switch( sCallback.m_eMethod ) {
+		case EMethodGMean:
+			sCallback.m_pDatOut->Get( sCallback.m_iOne, sCallback.m_iTwo ) *= pow( sCallback.m_dValue, sCallback.m_dWeight );
+			sCallback.m_pMatCounts->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallback.m_dWeight;
+			break;
+
+		case EMethodHMean:
+			sCallback.m_pDatOut->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallback.m_dWeight / sCallback.m_dValue;
+			sCallback.m_pMatCounts->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallback.m_dWeight;
+			break;
+
+		case EMethodMax:
+			if( sCallback.m_dValue > sCallback.m_pDatOut->Get( sCallback.m_iOne, sCallback.m_iTwo ) )
+				sCallback.m_pDatOut->Set( sCallback.m_iOne, sCallback.m_iTwo, sCallback.m_dValue );
+			break;
+
+		case EMethodMin:
+			if( sCallback.m_dValue < sCallback.m_pDatOut->Get( sCallback.m_iOne, sCallback.m_iTwo ) )
+				sCallback.m_pDatOut->Set( sCallback.m_iOne, sCallback.m_iTwo, sCallback.m_dValue );
+			break;
+
+		default:
+			sCallback.m_pDatOut->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallback.m_dWeight * sCallback.m_dValue *
+				( ( sCallback.m_iDataset && ( sCallback.m_eMethod == EMethodDiff ) ) ? -1 : 1 );
+			sCallback.m_pMatCounts->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallback.m_dWeight; } }
+
+void callback_wei( SCallbackVars& sCallback ) {
+	SCallbackMeta&					sCallbackMeta	= sCallback.m_sCallbackMeta;
+	const vector<vector<size_t> >&	vecveciGenes	= *sCallback.m_pvecveciGenes;
+	const vector<set<size_t> >&		vecsetiGenes	= *sCallback.m_pvecsetiGenes;
+	size_t							i, j, iOne, iTwo, iA, iB, iGenes;
+	float							d, dSum, dSumSqs;
+	vector<float>					vecdSums, vecdSumSqs;
+
+	iGenes = sCallback.m_pDatCur->GetGenes( );
+	vecdSums.resize( sCallback.m_pDatOut->GetGenes( ) );
+	fill( vecdSums.begin( ), vecdSums.end( ), 0.0f );
+	vecdSumSqs.resize( sCallback.m_pDatOut->GetGenes( ) );
+	fill( vecdSumSqs.begin( ), vecdSumSqs.end( ), 0.0f );
+	dSum = dSumSqs = 0;
+	for( i = 0; i < iGenes; ++i )
+		for( j = ( i + 1 ); j < iGenes; ++j ) {
+			if( CMeta::IsNaN( d = sCallback.m_pDatCur->Get( i, j ) ) )
+				continue;
+			for( iA = 0; iA < vecveciGenes[i].size( ); ++iA ) {
+				iOne = vecveciGenes[i][iA];
+				if( vecsetiGenes[iOne].find( j ) != vecsetiGenes[iOne].end( ) )
+					continue;
+				for( iB = 0; iB < vecveciGenes[j].size( ); ++iB ) {
+					iTwo = vecveciGenes[j][iB];
+					if( vecsetiGenes[iTwo].find( i ) != vecsetiGenes[iTwo].end( ) )
+						continue;
+					dSum += d;
+					vecdSums[iOne] += d;
+					vecdSums[iTwo] += d;
+					d *= d;
+					dSumSqs += d;
+					vecdSumSqs[iOne] += d;
+					vecdSumSqs[iTwo] += d; } } }
+	i = iGenes * ( iGenes - 1 ) / 2;
+	dSum /= i;
+	dSumSqs = ( dSumSqs / ( i - 1 ) ) - ( dSum * dSum );
+	for( i = 0; i < vecdSums.size( ); ++i ) {
+		d = ( vecdSums[i] /= iGenes - 1 );
+		vecdSumSqs[i] = ( vecdSumSqs[i] / ( iGenes - 2 ) ) - ( d * d ); }
+
+	sCallbackMeta.m_DatWei.Open( sCallback.m_pDatOut->GetGeneNames( ) );
+	sCallbackMeta.m_DatWei.Clear( 0 );
+	for( i = 0; i < vecdSumSqs.size( ); ++i )
+		for( j = ( i + 1 ); j < vecdSumSqs.size( ); ++j )
+			sCallbackMeta.m_DatWei.Set( i, j,
+//				2 / ( vecdSumSqs[i] + vecdSumSqs[j] )			// pooled variance of adjacent genes
+				3 / ( vecdSumSqs[i] + vecdSumSqs[j] + dSumSqs )	// unweighted pool of adjanced genes + whole network
+			); }
+
+void callback_deltaed( SCallbackVars& sCallback ) {
+	SCallbackMeta&	sCallbackMeta	= sCallback.m_sCallbackMeta;
+	float			d;
+
+	d = sCallbackMeta.m_DatWei.Get( sCallback.m_iOne, sCallback.m_iTwo );
+	sCallbackMeta.m_DatDeltaeD.Get( sCallback.m_iOne, sCallback.m_iTwo ) += d;
+	sCallback.m_pDatOut->Get( sCallback.m_iOne, sCallback.m_iTwo ) += d * d; }
+
+void callback_ybare( SCallbackVars& sCallback ) {
+	SCallbackMeta&	sCallbackMeta	= sCallback.m_sCallbackMeta;
+
+	sCallbackMeta.m_DatYBare.Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallbackMeta.m_DatWei.Get( sCallback.m_iOne, sCallback.m_iTwo ) *
+		sCallback.m_dValue;
+	sCallback.m_pMatCounts->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallbackMeta.m_DatWei.Get( sCallback.m_iOne, sCallback.m_iTwo ); }
+
+void callback_qe( SCallbackVars& sCallback ) {
+	SCallbackMeta&	sCallbackMeta	= sCallback.m_sCallbackMeta;
+	float			d;
+
+	d = sCallback.m_dValue - sCallbackMeta.m_DatYBare.Get( sCallback.m_iOne, sCallback.m_iTwo );
+	sCallbackMeta.m_DatQe.Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallbackMeta.m_DatWei.Get( sCallback.m_iOne, sCallback.m_iTwo ) * d * d; }
+
+void initialize_meta( SCallback& sCallback ) {
+	SCallbackMeta&			sCallbackMeta	= sCallback.m_sCallbackVars.m_sCallbackMeta;
+	const vector<string>&	vecstrGenes		= sCallback.m_sCallbackVars.m_pDatOut->GetGeneNames( );
+	size_t					i, j;
+	CDat*					pDatOut;
+	CHalfMatrix<float>*		pMatCounts;
+	CHalfMatrix<float>		MatCounts;
+	float					d;
+	CDat					DatTmp;
+
+	sCallbackMeta.m_DatDeltaeD.Open( vecstrGenes );
+	sCallbackMeta.m_DatDeltaeD.Clear( 0 );
+	DatTmp.Open( vecstrGenes, false );
+	DatTmp.Clear( 0 );
+	pDatOut = sCallback.m_sCallbackVars.m_pDatOut;
+	sCallback.m_sCallbackVars.m_pDatOut = &DatTmp;
+	iterate_inputs( sCallback, callback_deltaed, callback_wei );
+	sCallback.m_sCallbackVars.m_pDatOut = pDatOut;
+	for( i = 0; i < sCallbackMeta.m_DatDeltaeD.GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < sCallbackMeta.m_DatDeltaeD.GetGenes( ); ++j )
+			if( d = sCallbackMeta.m_DatDeltaeD.Get( i, j ) )
+				sCallbackMeta.m_DatDeltaeD.Get( i, j ) -= DatTmp.Get( i, j ) / d;
+
+	sCallbackMeta.m_DatYBare.Open( vecstrGenes, false );
+	sCallbackMeta.m_DatYBare.Clear( 0 );
+	MatCounts.Initialize( vecstrGenes.size( ) );
+	MatCounts.Clear( );
+	pMatCounts = sCallback.m_sCallbackVars.m_pMatCounts;
+	sCallback.m_sCallbackVars.m_pMatCounts = &MatCounts;
+	iterate_inputs( sCallback, callback_ybare, callback_wei );
+	sCallback.m_sCallbackVars.m_pMatCounts = pMatCounts;
+	for( i = 0; i < sCallbackMeta.m_DatYBare.GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < sCallbackMeta.m_DatYBare.GetGenes( ); ++j )
+			if( d = MatCounts.Get( i, j ) )
+				sCallbackMeta.m_DatYBare.Get( i, j ) /= d;
+
+	sCallbackMeta.m_DatQe.Open( vecstrGenes, false );
+	sCallbackMeta.m_DatQe.Clear( 0 );
+	iterate_inputs( sCallback, callback_qe, callback_wei ); }
+
+int MainDATs( const gengetopt_args_info& sArgs ) {
+	CDataset				Dataset;
+	CDat					DatOut, DatCur, DatQW;
+	CHalfMatrix<float>		MatCounts;
+	size_t					i, j;
+	float					d;
+	vector<string>			vecstrFiles, vecstrTerms;
+	CPCL					PCLWeights( false );
+	CGenome					Genome;
+	CGenes					GenesIn( Genome );
+	vector<CGenes*>			vecpTerms;
+	EMethod					eMethod;
+	vector<float>			vecdWis;
+	int						iRet;
+	SCallback				sCallback( sArgs, GenesIn, PCLWeights, vecstrTerms, vecpTerms );
+
+	if( !sArgs.inputs_num )
+		return 1;
+
+	vecstrFiles.resize( sArgs.inputs_num );
+	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
+	if( !Dataset.OpenGenes( vecstrFiles ) ) {
+		cerr << "Couldn't open: " << vecstrFiles[ 0 ];
+		for( i = 1; i < vecstrFiles.size( ); ++i )
+			cerr << ", " << vecstrFiles[ i ];
+		cerr << endl;
+		return 1; }
+	if( sArgs.weights_arg && !PCLWeights.Open( sArgs.weights_arg, 0 ) ) {
+		cerr << "Could not open: " << sArgs.weights_arg << endl;
+		return 1; }
+	if( sArgs.genes_arg && !GenesIn.Open( sArgs.genes_arg ) ) {
+		cerr << "Could not open: " << sArgs.genes_arg << endl;
+		return 1; }
+	if( sArgs.terms_arg && !CGenes::Open( sArgs.terms_arg, Genome, vecstrTerms, vecpTerms ) ) {
+		cerr << "Could not open: " << sArgs.terms_arg << endl;
+		return 1; }
+
+	for( eMethod = EMethodBegin; eMethod < EMethodEnd; eMethod = (EMethod)( eMethod + 1 ) )
+		if( !strcmp( c_aszMethods[eMethod], sArgs.method_arg ) )
+			break;
+	if( eMethod >= EMethodEnd ) {
+		cmdline_parser_print_help( );
+		return 1; }
+
+	DatOut.Open( vecstrTerms.empty( ) ? Dataset.GetGeneNames( ) : vecstrTerms, false, sArgs.memmap_flag ? sArgs.output_arg : NULL );
+	switch( eMethod ) {
+		case EMethodMax:
+			d = -FLT_MAX;
+			break;
+
+		case EMethodMin:
+			d = FLT_MAX;
+			break;
+
+		case EMethodGMean:
+			d = 1;
+			break;
+
+		default:
+			d = 0; }
+	for( i = 0; i < DatOut.GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
+			DatOut.Set( i, j, d );
+	if( fabs( d ) < 2 ) {
+		MatCounts.Initialize( DatOut.GetGenes( ) );
+		MatCounts.Clear( ); }
+
+	sCallback.m_sCallbackVars.m_eMethod = eMethod;
+	sCallback.m_sCallbackVars.m_pDatOut = &DatOut;
+	sCallback.m_sCallbackVars.m_pMatCounts = &MatCounts;
+	if( eMethod == EMethodMeta )
+		initialize_meta( sCallback );
+
+	if( iRet = iterate_inputs( sCallback, callback_combine, ( eMethod == EMethodMeta ) ? callback_wei : NULL ) )
+		return iRet;
 	for( i = 0; i < DatOut.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
 			switch( eMethod ) {
 				case EMethodMean:
+				case EMethodMeta:
 					DatOut.Set( i, j, ( d = MatCounts.Get( i, j ) ) ? ( DatOut.Get( i, j ) / ( sArgs.reweight_flag ? 1 : d ) ) :
 						CMeta::GetNaN( ) );
 					break;

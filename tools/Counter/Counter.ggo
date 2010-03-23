@@ -37,6 +37,8 @@ option	"default"		b	"Count file containing defaults for cases with missing data"
 							string	typestr="filename"
 option	"zeros"			Z	"Read zeroed node IDs/outputs from the given file"
 							string	typestr="filename"
+option	"genewise"		S	"Evaluate networks assuming genewise contexts"
+							flag	off
 
 section "Bayesian Regularization"
 option	"pseudocounts"	p	"Effective number of pseudocounts to use"

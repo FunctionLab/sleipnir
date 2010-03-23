@@ -49,14 +49,32 @@ struct SEvaluate {
 	string					m_strName;
 };
 
+struct SEvaluate2 {
+	size_t								m_iBegin;
+	size_t								m_iEnd;
+	const CBayesNetMinimal*				m_pBN;
+	const vector<CBayesNetMinimal*>*	m_pvecpBNs;
+	const CDataPair*					m_pDat;
+	CDat*								m_pYes;
+	CDat*								m_pNo;
+	size_t								m_iZero;
+	const vector<size_t>*				m_pveciGenes;
+	string								m_strName;
+	const vector<size_t>*				m_pveciBNs;
+	size_t								m_iNode;
+	pthread_spinlock_t					m_sLock;
+};
+
 void* learn( void* );
 void* evaluate( void* );
+void* evaluate2( void* );
 void* finalize( void* );
 int main_count( const gengetopt_args_info&, const map<string, size_t>&, const CGenes&, const CGenes&,
 	const CGenes&, const CGenes& );
 int main_xdsls( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>&,
 	const vector<string>& );
 int main_inference( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
+int main_inference2( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -174,7 +192,8 @@ int main( int iArgs, char** aszArgs ) {
 	else if( sArgs.counts_arg )
 		iRet = main_xdsls( sArgs, mapstriZeros, mapstriDatasets, vecstrContexts );
 	else if( sArgs.networks_arg )
-		iRet = main_inference( sArgs, mapstriZeros, mapstriDatasets );
+		iRet = sArgs.genewise_flag ? main_inference2( sArgs, mapstriZeros, mapstriDatasets ) :
+			main_inference( sArgs, mapstriZeros, mapstriDatasets );
 
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
@@ -706,5 +725,239 @@ void* finalize( void* pData ) {
 		psData->m_pYes->Set( i, adYes ); }
 	delete[] adNo;
 	delete[] adYes;
+
+	return NULL; }
+
+////////////////////////
+
+int main_inference2( const gengetopt_args_info& sArgs, const map<string, size_t>& mapstriZeros,
+	const map<string, size_t>& mapstriDatasets ) {
+	map<string, size_t>::const_iterator	iterDataset;
+	vector<size_t>						veciGenes, veciBNs;
+	size_t								i, j, iThread;
+	vector<CGenes*>						vecpGenes;
+	vector<CDat*>						vecpYes, vecpNo;
+	vector<string>						vecstrTmps;
+	CGenome								Genome;
+	vector<SEvaluate2>					vecsData;
+	CBayesNetMinimal					BNDefault;
+	vector<CBayesNetMinimal*>			vecpBNs;
+	ifstream							ifsm;
+	uint32_t							iSize;
+	map<string, size_t>::const_iterator	iterZero;
+	vector<pthread_t>					vecpthdThreads;
+	bool								fFirst;
+
+	ifsm.open( sArgs.networks_arg, ios_base::binary );
+	if( !BNDefault.Open( ifsm ) ) {
+		cerr << "Could not open: " << sArgs.networks_arg << endl;
+		return 1; }
+	ifsm.read( (char*)&iSize, sizeof(iSize) );
+	vecpBNs.resize( iSize );
+	for( i = 0; i < vecpBNs.size( ); ++i ) {
+		vecpBNs[ i ] = new CBayesNetMinimal( );
+		if( !vecpBNs[ i ]->Open( ifsm ) ) {
+			cerr << "Could not open: " << sArgs.networks_arg << endl;
+			return 1; } }
+	ifsm.close( );
+
+	if( !sArgs.genome_arg ) {
+		cerr << "No genes given" << endl;
+		return 1; }
+	{
+		CPCL	PCLGenes( false );
+
+		if( !PCLGenes.Open( sArgs.genome_arg, 1 ) ) {
+			cerr << "Could not open: " << sArgs.genome_arg << endl;
+			return 1; }
+		for( i = 0; i < PCLGenes.GetGenes( ); ++i )
+			Genome.AddGene( PCLGenes.GetFeature( i, 1 ) );
+	}
+
+	vecpGenes.resize( sArgs.inputs_num ? sArgs.inputs_num : 1 );
+	vecpYes.resize( 1 );
+	vecpNo.resize( vecpYes.size( ) );
+	vecstrTmps.resize( vecpNo.size( ) );
+	for( i = 0; i < vecpYes.size( ); ++i ) {
+		char*	szTemp;
+
+		vecpYes[ i ] = new CDat( );
+		vecpYes[ i ]->Open( Genome.GetGeneNames( ), false, ( (string)sArgs.output_arg + '/' + "global" + c_acDab ).c_str( ) );
+		vecpNo[ i ] = new CDat( );
+		if( !( szTemp = _tempnam( sArgs.temporary_arg, NULL ) ) ) {
+			cerr << "Could not generate temporary file name in: " << sArgs.temporary_arg << endl;
+			return 1; }
+		vecstrTmps[ i ] = szTemp;
+		free( szTemp );
+		vecpNo[ i ]->Open( Genome.GetGeneNames( ), false, vecstrTmps[ i ].c_str( ) ); }
+	for( i = 0; i < vecpGenes.size( ); ++i ) {
+		vecpGenes[ i ]  = new CGenes( Genome );
+		if( sArgs.inputs_num ) {
+			ifstream	ifsm;
+
+			ifsm.open( sArgs.inputs[ i ] );
+			if( !vecpGenes[ i ]->Open( ifsm, false ) ) {
+				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+				return 1; } }
+		else
+			vecpGenes[ i ]->Open( Genome.GetGeneNames( ), false ); }
+
+	{
+		map<string, size_t>					mapstriBNs;
+		map<string, size_t>::const_iterator	iterBN;
+		string								strGene;
+
+		for( i = 0; i < vecpBNs.size( ); ++i )
+			mapstriBNs[ vecpBNs[ i ]->GetID( ) ] = i;
+		veciBNs.resize( vecpYes[ 0 ]->GetGenes( ) );
+		for( i = 0; i < veciBNs.size( ); ++i ) {
+			strGene = CMeta::Filename( vecpYes[ 0 ]->GetGene( i ) );
+			veciBNs[ i ] = ( ( iterBN = mapstriBNs.find( strGene ) ) == mapstriBNs.end( ) ) ? -1 :
+				iterBN->second; }
+	}
+
+	for( i = 0; i < vecpYes.size( ); ++i ) {
+		float*	adBuffer;
+
+		adBuffer = new float[ vecpYes[ i ]->GetGenes( ) ];
+		for( j = 0; j < vecpNo[ i ]->GetGenes( ); ++j )
+			adBuffer[ j ] = log( BNDefault.GetCPT( 0 ).Get( 0, 0 ) );
+		for( j = 0; j < vecpNo[ i ]->GetGenes( ); ++j ) {
+			if( !( j % 1000 ) )
+				cerr << "IN: global, " << j << endl;
+			vecpNo[ i ]->Set( j, adBuffer ); }
+		for( j = 0; j < vecpYes[ i ]->GetGenes( ); ++j )
+			adBuffer[ j ] = log( BNDefault.GetCPT( 0 ).Get( 1, 0 ) );
+		for( j = 0; j < vecpYes[ i ]->GetGenes( ); ++j ) {
+			if( !( j % 1000 ) )
+				cerr << "IY: global, " << j << endl;
+			vecpYes[ i ]->Set( j, adBuffer ); }
+		delete[] adBuffer; }
+
+	veciGenes.resize( vecpYes[ 0 ]->GetGenes( ) );
+	vecsData.resize( ( sArgs.threads_arg == -1 ) ? 1 : sArgs.threads_arg );
+	vecpthdThreads.resize( vecsData.size( ) );
+	for( fFirst = true,iterDataset = mapstriDatasets.begin( ); iterDataset != mapstriDatasets.end( );
+		fFirst = false,++iterDataset ) {
+		CDataPair		Dat;
+		string			strFile;
+		vector<size_t>	veciCur;
+		size_t			iZero;
+
+		if( !Dat.Open( ( strFile = ( (string)sArgs.directory_arg + '/' + iterDataset->first +
+			c_acDab ) ).c_str( ), false, !!sArgs.memmap_flag ) ) {
+			cerr << "Couldn't open: " << strFile << endl;
+			return 1; }
+		cerr << "Processing: " << strFile << endl;
+		for( i = 0; i < veciGenes.size( ); ++i )
+			veciGenes[ i ] = Dat.GetGene( vecpYes[ 0 ]->GetGene( i ) );
+		iZero = ( ( iterZero = mapstriZeros.find( iterDataset->first ) ) == mapstriZeros.end( ) ) ?
+			BNDefault.GetDefault( iterDataset->second + 1 ) : iterZero->second;
+		if( iZero == 0xFF )
+			iZero = -1;
+		iThread = ( vecpYes[ 0 ]->GetGenes( ) + 1 ) / vecsData.size( );
+		for( i = j = 0; i < vecsData.size( ); ++i,j += iThread ) {
+			vecsData[ i ].m_iBegin = j;
+			vecsData[ i ].m_iEnd = min( vecpYes[ 0 ]->GetGenes( ), j + iThread );
+			vecsData[ i ].m_pBN = &BNDefault;
+			vecsData[ i ].m_pvecpBNs = &vecpBNs;
+			vecsData[ i ].m_pDat = &Dat;
+			vecsData[ i ].m_pYes = vecpYes[ 0 ];
+			vecsData[ i ].m_pNo = vecpNo[ 0 ];
+			vecsData[ i ].m_iZero = iZero;
+			vecsData[ i ].m_pveciGenes = &veciGenes;
+			vecsData[ i ].m_strName = iterDataset->first;
+			vecsData[ i ].m_pveciBNs = &veciBNs;
+			vecsData[ i ].m_iNode = iterDataset->second + 1;
+			if( fFirst )
+				pthread_spin_init( &vecsData[ i ].m_sLock, 0 );
+			if( pthread_create( &vecpthdThreads[ i ], NULL, evaluate2, &vecsData[ i ] ) ) {
+				cerr << "Couldn't create evaluation thread: " << i << endl;
+				return 1; } }
+		for( i = 0; i < vecpthdThreads.size( ); ++i )
+			pthread_join( vecpthdThreads[ i ], NULL ); }
+
+	{
+		CBayesNetMinimal*	pBN;
+		float*				adYes;
+		float*				adNo;
+		float				dPrior;
+
+		if( sArgs.inputs_num ) {
+			for( j = 0; j < vecpBNs.size( ); ++j )
+				if( vecpBNs[ j ]->GetID( ) == CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) )
+					break;
+			if( j >= vecpBNs.size( ) ) {
+				cerr << "Could not locate Bayes net for: " << sArgs.inputs[ i ] << endl;
+				return 1; }
+			pBN = vecpBNs[ j ]; }
+		else
+			pBN = &BNDefault;
+
+		dPrior = pBN->GetCPT( 0 ).Get( 1, 0 );
+		adYes = new float[ vecpYes[ 0 ]->GetGenes( ) ];
+		adNo = new float[ vecpYes[ 0 ]->GetGenes( ) ];
+		for( i = 0; i < vecpYes[ 0 ]->GetGenes( ); ++i ) {
+			if( !( i % 1000 ) )
+				cerr << "F: global, " << i << endl;
+			memcpy( adYes, vecpYes[ 0 ]->Get( i ), ( vecpYes[ 0 ]->GetGenes( ) - i - 1 ) * sizeof(*adYes) );
+			memcpy( adNo, vecpNo[ 0 ]->Get( i ), ( vecpNo[ 0 ]->GetGenes( ) - i - 1 ) * sizeof(*adNo) );
+			for( j = 0; j < ( vecpYes[ 0 ]->GetGenes( ) - i - 1 ); ++j )
+				adYes[ j ] = CMeta::IsNaN( adYes[ j ] ) ? dPrior :
+					(float)( 1 / ( 1 + exp( (double)adNo[ j ] - (double)adYes[ j ] ) ) );
+			vecpYes[ 0 ]->Set( i, adYes ); }
+	}
+
+	for( i = 0; i < vecsData.size( ); ++i )
+		pthread_spin_destroy( &vecsData[ i ].m_sLock );
+	for( i = 0; i < vecstrTmps.size( ); ++i )
+		_unlink( vecstrTmps[ i ].c_str( ) );
+	for( i = 0; i < vecpBNs.size( ); ++i )
+		delete vecpBNs[ i ];
+	for( i = 0; i < vecpGenes.size( ); ++i )
+		delete vecpGenes[ i ];
+	for( i = 0; i < vecpYes.size( ); ++i ) {
+		delete vecpYes[ i ];
+		delete vecpNo[ i ]; }
+
+	return 0; }
+
+void* evaluate2( void* pData ) {
+	SEvaluate2*		psData;
+	size_t			i, j, iBNOne, iBNTwo;
+	vector<size_t>	veciCur;
+	float			dYes, dNo;
+
+	psData = (SEvaluate2*)pData;
+	for( i = psData->m_iBegin; i < psData->m_iEnd; ++i ) {
+		size_t	iOne, iTwo, iBin, k;
+
+		if( !( i % 1000 ) )
+			cerr << "C: " << psData->m_strName << ", " << i << endl;
+		if( ( ( iOne = (*psData->m_pveciGenes)[ i ] ) == -1 ) && ( psData->m_iZero == -1 ) )
+			continue;
+		veciCur.clear( );
+		if( ( iBNOne = (*psData->m_pveciBNs)[ i ] ) != -1 )
+			veciCur.push_back( iBNOne );
+		for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
+			if( ( ( iTwo = (*psData->m_pveciGenes)[ j ] ) == -1 ) && ( psData->m_iZero == -1 ) )
+				continue;
+			if( ( iOne == -1 ) || ( iTwo == -1 ) || ( ( iBin = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) ) ) == -1 ) )
+				iBin = psData->m_iZero;
+			if( iBin == -1 )
+				continue;
+			if( ( iBNTwo = (*psData->m_pveciBNs)[ j ] ) != -1 )
+				veciCur.push_back( iBNTwo );
+			for( k = 0; k < max( (size_t)1, veciCur.size( ) ); ++k ) {
+				const CBayesNetMinimal*	pBN	= ( k >= veciCur.size( ) ) ? psData->m_pBN: (*psData->m_pvecpBNs)[ veciCur[ k ] ];
+
+				dNo = log( pBN->GetCPT( psData->m_iNode ).Get( iBin, 0 ) );
+				dYes = log( pBN->GetCPT( psData->m_iNode ).Get( iBin, 1 ) );
+				pthread_spin_lock( &psData->m_sLock );
+				psData->m_pNo->Get( i, j ) += dNo;
+				psData->m_pYes->Get( i, j ) += dYes;
+				pthread_spin_unlock( &psData->m_sLock ); }
+			if( iBNTwo != -1 )
+				veciCur.pop_back( ); } }
 
 	return NULL; }

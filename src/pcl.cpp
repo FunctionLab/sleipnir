@@ -881,10 +881,10 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 					for( j = 0; j < GetGenes( ); ++j )
 						if( !CMeta::IsNaN( d = Get( j, i ) ) ) {
 							if( eNormalize == ENormalizeColumnFraction )
-								d /= dAve;
+								d /= (float)dAve;
 							else
-								d = ( d - dAve ) / dStd;
-							Set( j, i, (float)d ); } } }
+								d = (float)( ( d - dAve ) / dStd );
+							Set( j, i, d ); } } }
 			break;
 
 		case ENormalizeMinMax:

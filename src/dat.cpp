@@ -1030,18 +1030,18 @@ bool CDatImpl::OpenMemmap( const unsigned char* pb ) {
 
 	return true; }
 
-void CDatImpl::AveStd( double& dAve, double& dStd, size_t& iN, size_t iApproximate ) const {
+void CDatImpl::AveStd( double& dAverage, double& dStdev, size_t& iN, size_t iApproximate ) const {
 	size_t	i, j;
 	float	d;
 
-	dAve = dStd = 0;
+	dAverage = dStdev = 0;
 	if( iApproximate == -1 ) {
 		for( iN = i = 0; i < GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
 					iN++;
-					dAve += d;
-					dStd += d * d; } }
+					dAverage += d;
+					dStdev += d * d; } }
 	else {
 		size_t	iOne, iTwo;
 
@@ -1051,12 +1051,12 @@ void CDatImpl::AveStd( double& dAve, double& dStd, size_t& iN, size_t iApproxima
 				CMeta::IsNaN( d = Get( iOne, iTwo ) ) ) {
 				i--;
 				continue; }
-			dAve += d;
-			dStd += d * d; }
+			dAverage += d;
+			dStdev += d * d; }
 		iN = i; }
 	if( iN ) {
-		dAve /= iN;
-		dStd = sqrt( ( dStd / iN ) - ( dAve * dAve ) ); } }
+		dAverage /= iN;
+		dStdev = sqrt( ( dStdev / ( iN - ( ( iN > 1 ) ? 1 : 0 ) ) ) - ( dAverage * dAverage ) ); } }
 
 void CDatImpl::NormalizeStdev( ) {
 	double	d, dAve, dDev;

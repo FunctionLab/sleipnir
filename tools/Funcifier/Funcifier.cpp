@@ -89,7 +89,7 @@ int main( int iArgs, char** aszArgs ) {
 			vecvecdGenes[i].resize( vecveciGenes[i].size( ) );
 			if( ( iOne = PCLWeights.GetExperiment( vecstrNames[i] ) ) == -1 ) {
 				cerr << "Could not find gene set weight: " << vecstrNames[i] << endl;
-				fill( vecvecdGenes[i].begin( ), vecvecdGenes[i].end( ), 0 );
+				fill( vecvecdGenes[i].begin( ), vecvecdGenes[i].end( ), 0.0f );
 				continue; }
 			for( j = 0; j < vecpGenes[i]->GetGenes( ); ++j )
 				vecvecdGenes[i][j] = ( ( iTwo = PCLWeights.GetGene( vecpGenes[i]->GetGene( j ).GetName( ) ) ) == -1 ) ?
