@@ -312,6 +312,10 @@ bool CDat::Open( const CDat& Dat ) {
  * \param Genome
  * Genome containing all genes of interest.
  * 
+ * \param fIncident
+ * If true, only allow negative pairs incident to at least one agnostic gene set.  Otherwise,
+ * negative gene pairs can include any non-co-annotated genes.
+ * 
  * \returns
  * True if CDat was generated successfully.
  * 
@@ -326,7 +330,7 @@ bool CDat::Open( const CDat& Dat ) {
  * in two unrelated functions will be marked as unrelated, and other gene pairs will be left unmarked.
  */
 bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& vecpNonnegatives,
-	float dPValue, const CGenome& Genome ) {
+	float dPValue, const CGenome& Genome, bool fIncident ) {
 	size_t			i, j, k, iOne, iTwo, iOverlap;
 	float			d;
 	const CGenes*	pBig;
@@ -360,7 +364,23 @@ bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& ve
 				if( CMeta::IsNaN( d = Get( i, j ) ) )
 					Set( i, j, 0 );
 				else if( !d )
-					Set( i, j, CMeta::GetNaN( ) ); }
+					Set( i, j, CMeta::GetNaN( ) );
+		if( fIncident ) {
+			vector<float>	vecfNegatives;
+
+			vecfNegatives.resize( GetGenes( ) );
+			fill( vecfNegatives.begin( ), vecfNegatives.end( ), false );
+			for( i = 0; i < vecfNegatives.size( ); ++i )
+				for( j = 0; j < vecpNonnegatives.size( ); ++j )
+					if( vecpNonnegatives[j]->IsGene( GetGene( i ) ) ) {
+						vecfNegatives[i] = true;
+						break; }
+			for( i = 0; i < GetGenes( ); ++i ) {
+				if( vecfNegatives[i] )
+					continue;
+				for( j = ( i + 1 ); j < GetGenes( ); ++j )
+					if( !( vecfNegatives[j] || Get( i, j ) ) )
+						Set( i, j, CMeta::GetNaN( ) ); } } }
 
 	return true; }
 
@@ -1590,5 +1610,78 @@ void CDat::Rank( ) {
 			iRank = i;
 		dPrev = d;
 		Set( vecprData[ i ].first, vecprData[ i ].second, (float)iRank ); } }
+
+void CDat::NormalizeQuantiles( size_t iQuantiles ) {
+	static const size_t	c_iTest	= 100;
+	float				d, dTest;
+	size_t				i, j, k, iValues, iPrev, iNext;
+	set<float>			setiTest;
+	bool				fDiscrete;
+	vector<float>		vecdValues;
+
+	for( iValues = i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) )
+				iValues++;
+
+// Heuristic to test for discrete valued dats
+	dTest = (float)c_iTest / iValues;
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( ( (float)rand( ) / RAND_MAX ) < dTest ) )
+				setiTest.insert( d );
+	fDiscrete = ( setiTest.size( ) * 2 ) < c_iTest;
+
+	if( fDiscrete ) {
+		map<float, size_t>				mapdiValues;
+		map<float, size_t>::iterator	iterValue;
+		map<float, float>				mapddQuantiles;
+
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+				if( CMeta::IsNaN( d = Get( i, j ) ) )
+					continue;
+				if( ( iterValue = mapdiValues.find( d ) ) == mapdiValues.end( ) )
+					mapdiValues[d] = 1;
+				else
+					iterValue->second++; }
+		vecdValues.resize( mapdiValues.size( ) );
+		for( iterValue = mapdiValues.begin( ),i = 0; iterValue != mapdiValues.end( ); ++iterValue,++i )
+			vecdValues[i] = iterValue->first;
+		sort( vecdValues.begin( ), vecdValues.end( ) );
+
+		for( i = iPrev = 0; i < vecdValues.size( ); ++i,iPrev = iNext ) {
+			iNext = iPrev + mapdiValues[vecdValues[i]];
+			mapddQuantiles[vecdValues[i]] = iQuantiles * ( iPrev + iNext - 1 ) / 2.0f / iValues; }
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Get( i, j ) ) )
+					Set( i, j, mapddQuantiles[d] ); }
+	else {
+		vector<float>	vecdTops;
+
+		vecdValues.reserve( min( iValues, iQuantiles * c_iTest ) );
+		dTest = (float)vecdValues.capacity( ) / iValues;
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Get( i, j ) ) && ( ( (float)rand( ) / RAND_MAX ) < dTest ) )
+					vecdValues.push_back( d );
+		sort( vecdValues.begin( ), vecdValues.end( ) );
+
+		vecdTops.resize( iQuantiles - 1 );
+		for( i = 0; i < vecdTops.size( ); ++i ) {
+			d = (float)( i + 1 ) * ( vecdValues.size( ) - 1 ) / iQuantiles;
+			j = (size_t)d;
+			vecdTops[i] = ( ( d - j ) && ( ( j + 1 ) < vecdValues.size( ) ) ) ? ( ( vecdValues[j] + vecdValues[j + 1] ) / 2 ) :
+				vecdValues[j]; }
+
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+				if( CMeta::IsNaN( d = Get( i, j ) ) )
+					continue;
+				for( k = 0; k < vecdTops.size( ); ++k )
+					if( d < vecdTops[k] )
+						break;
+				Set( i, j, (float)k ); } } }
 
 }

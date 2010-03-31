@@ -199,6 +199,8 @@ int iterate_inputs( SCallback& sCallback, void (*pfnCallback)( SCallbackVars& ),
 						DatCur.Set( j, k, 0 ); }
 		if( sArgs.normalize_flag )
 			DatCur.Normalize( CDat::ENormalizeZScore );
+		if( sArgs.quantiles_arg > 0 )
+			DatCur.NormalizeQuantiles( sArgs.quantiles_arg );
 		if( GenesIn.GetGenes( ) )
 			DatCur.FilterGenes( GenesIn, CDat::EFilterInclude );
 		vecveciGenes.resize( DatCur.GetGenes( ) );

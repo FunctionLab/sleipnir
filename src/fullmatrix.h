@@ -408,6 +408,9 @@ public:
 	 * \param iR
 	 * Number of rows to append to the matrix.
 	 * 
+	 * \param fClear
+	 * If true, set all values in the new rows to zero.
+	 * 
 	 * \returns
 	 * True if the rows were appended successfully.
 	 * 
@@ -415,7 +418,7 @@ public:
 	 * On success, GetRows will be increased by the requested amount.  The news rows are not initialized
 	 * to any particular value.
 	 */
-	bool AddRows( size_t iR ) {
+	bool AddRows( size_t iR, bool fClear = false ) {
 		tType**	m_aaNew;
 		size_t	i;
 
@@ -426,8 +429,10 @@ public:
 		memcpy( m_aaNew, m_aaData, GetRows( ) * sizeof(*m_aaData) );
 		delete[] m_aaData;
 		m_aaData = m_aaNew;
-		for( i = 0; i < iR; ++i )
+		for( i = 0; i < iR; ++i ) {
 			m_aaNew[ GetRows( ) + i ] = new tType[ GetColumns( ) ];
+			if( fClear )
+				memset( m_aaNew[ GetRows( ) + i ], 0, GetColumns( ) * sizeof(**m_aaNew) ); }
 		m_iR += iR;
 
 		return true; }

@@ -22,6 +22,8 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+class CRegularize;
+
 static const char	c_acDab[]	= ".dab";
 static const char	c_acQuant[]	= ".quant";
 static const char	c_acTxt[]	= ".txt";
@@ -34,6 +36,8 @@ struct SLearn {
 	const CDataPair*	m_pAnswers;
 	const CDatFilter*	m_pDat;
 	size_t				m_iZero;
+	CRegularize*		m_pRegularize;
+	size_t				m_iDat;
 };
 
 struct SEvaluate {
@@ -63,6 +67,154 @@ struct SEvaluate2 {
 	const vector<size_t>*				m_pveciBNs;
 	size_t								m_iNode;
 	pthread_spinlock_t					m_sLock;
+};
+
+class CRegularize {
+public:
+	~CRegularize( ) {
+
+		Clear( ); }
+
+	bool Open( const char* szFile, CGenome& Genome, const CDat& Answers ) {
+		vector<CGenes*>						vecpGenes;
+		size_t								i, j, k;
+		map<string, size_t>					mapstriGenes;
+		map<string, size_t>::const_iterator	iterGene;
+
+		Clear( );
+		if( !Genome.Open( szFile, vecpGenes ) )
+			return false;
+
+		m_vecsetiGenes.resize( vecpGenes.size( ) );
+		m_vecveciGenes.resize( Answers.GetGenes( ) );
+		for( i = 0; i < m_vecsetiGenes.size( ); ++i ) {
+			const CGenes&	Genes	= *vecpGenes[i];
+
+			for( j = 0; j < Genes.GetGenes( ); ++j ) {
+				const string&	strGene	= Genes.GetGene( j ).GetName( );
+
+				if( ( iterGene = mapstriGenes.find( strGene ) ) == mapstriGenes.end( ) )
+					mapstriGenes[strGene] = k = Answers.GetGene( strGene );
+				else
+					k = iterGene->second;
+				if( k != -1 ) {
+					m_vecsetiGenes[i].insert( k );
+					m_vecveciGenes[k].push_back( i ); } } }
+		for( i = 0; i < vecpGenes.size( ); ++i )
+			delete vecpGenes[i];
+
+		return true; }
+
+	void SaveCounts( ostream& ostm, const vector<string>& vecstrNames ) {
+		size_t						iDataset, iValue, iGroup;
+		const CFullMatrix<size_t>*	pMat;
+
+		for( iDataset = 0; iDataset < m_vecpMatCounts.size( ); ++iDataset ) {
+			if( !( pMat = m_vecpMatCounts[iDataset] ) )
+				continue;
+			ostm << vecstrNames[iDataset] << endl;
+			for( iGroup = 0; iGroup < m_vecsetiGenes.size( ); ++iGroup ) {
+				for( iValue = 0; iValue < pMat->GetRows( ); ++iValue )
+					ostm << ( iValue ? "\t" : "" ) << pMat->Get( iValue, iGroup );
+				ostm << endl; } } }
+
+	void Save( ostream& ostm, const vector<string>& vecstrNames ) {
+		size_t						iDatasetOne, iDatasetTwo, iValueOne, iValueTwo, iGroup, iCountOne, iCountTwo;
+		const CFullMatrix<size_t>*	pMatOne;
+		const CFullMatrix<size_t>*	pMatTwo;
+		vector<float>				vecdOne, vecdTwo;
+		CFullMatrix<float>			MatJoint;
+		float						dCountOne, dCountTwo, dCountJoint, dOne, dTwo, dJoint, dMI;
+
+		for( iDatasetOne = 0; iDatasetOne < m_vecpMatCounts.size( ); ++iDatasetOne ) {
+			if( !( pMatOne = m_vecpMatCounts[iDatasetOne] ) )
+				continue;
+			vecdOne.resize( pMatOne->GetRows( ) );
+			for( iDatasetTwo = iDatasetOne; iDatasetTwo < m_vecpMatCounts.size( ); ++iDatasetTwo ) {
+				if( !( pMatTwo = m_vecpMatCounts[iDatasetTwo] ) )
+					continue;
+				vecdTwo.resize( pMatTwo->GetRows( ) );
+				MatJoint.Initialize( vecdOne.size( ), vecdTwo.size( ) );
+
+				dCountOne = dCountTwo = dCountJoint = 0;
+				fill( vecdOne.begin( ), vecdOne.end( ), 0.0f );
+				fill( vecdTwo.begin( ), vecdTwo.end( ), 0.0f );
+				MatJoint.Clear( );
+				for( iGroup = 0; iGroup < m_vecsetiGenes.size( ); ++iGroup ) {
+					for( iCountOne = iValueOne = 0; iValueOne < vecdOne.size( ); ++iValueOne )
+						iCountOne += pMatOne->Get( iValueOne, iGroup );
+					for( iCountTwo = iValueTwo = 0; iValueTwo < vecdTwo.size( ); ++iValueTwo )
+						iCountTwo += pMatTwo->Get( iValueTwo, iGroup );
+					for( iValueOne = 0; iValueOne < vecdOne.size( ); ++iValueOne ) {
+						dOne = (float)pMatOne->Get( iValueOne, iGroup ) / ( iCountOne ? iCountOne : 1 );
+						dCountOne += dOne;
+						vecdOne[iValueOne] += dOne;
+						for( iValueTwo = 0; iValueTwo < vecdTwo.size( ); ++iValueTwo ) {
+							dTwo = (float)pMatTwo->Get( iValueTwo, iGroup ) / ( iCountTwo ? iCountTwo : 1 );
+							if( !iValueOne ) {
+								dCountTwo += dTwo;
+								vecdTwo[iValueTwo] += dTwo; }
+							dTwo *= dOne;
+							dCountJoint += dTwo;
+							MatJoint.Get( iValueOne, iValueTwo ) += dTwo; } } }
+/*
+for( iValueOne = 0; iValueOne < vecdOne.size( ); ++iValueOne )
+cerr << ( iValueOne ? "\t" : "" ) << vecdOne[iValueOne];
+cerr << endl;
+for( iValueTwo = 0; iValueTwo < vecdTwo.size( ); ++iValueTwo )
+cerr << ( iValueTwo ? "\t" : "" ) << vecdTwo[iValueTwo];
+cerr << endl;
+for( iValueOne = 0; iValueOne < vecdOne.size( ); ++iValueOne ) {
+for( iValueTwo = 0; iValueTwo < vecdTwo.size( ); ++iValueTwo )
+cerr << ( iValueTwo ? "\t" : "" ) << MatJoint.Get( iValueOne, iValueTwo );
+cerr << endl; }
+//*/
+
+				for( dMI = 0,iValueOne = 0; iValueOne < vecdOne.size( ); ++iValueOne ) {
+					dOne = vecdOne[iValueOne] / ( dCountOne ? dCountOne : 1 );
+					for( iValueTwo = 0; iValueTwo < vecdTwo.size( ); ++iValueTwo )
+						if( dJoint = MatJoint.Get( iValueOne, iValueTwo ) ) {
+							dJoint /= ( dCountJoint ? dCountJoint : 1 );
+							dMI += dJoint * ( dJoint ? log( dJoint * dCountTwo / dOne / vecdTwo[iValueTwo] ) : 0 ); } }
+				if( dCountOne || dCountTwo )
+					dMI -= ( vecdOne.size( ) - 1 ) * ( vecdTwo.size( ) - 1 ) / ( 2 * ( dCountOne + dCountTwo ) );
+				dMI = ( dMI < 0 ) ? 0 : ( dMI / log( 2.0f ) );
+
+				ostm << vecstrNames[iDatasetOne] << '\t' << vecstrNames[iDatasetTwo] << '\t' << dMI << endl; } } }
+
+	void Add( size_t iDataset, const CDatFilter& Dat, size_t iOne, size_t iTwo, size_t iValue ) {
+		size_t					i;
+		CFullMatrix<size_t>*	pMat;
+
+		if( m_vecsetiGenes.empty( ) )
+			return;
+
+		while( m_vecpMatCounts.size( ) <= iDataset )
+			m_vecpMatCounts.push_back( NULL );
+		if( !( pMat = m_vecpMatCounts[iDataset] ) ) {
+			m_vecpMatCounts[iDataset] = pMat = new CFullMatrix<size_t>( );
+			pMat->Initialize( Dat.GetValues( ), m_vecsetiGenes.size( ) );
+			pMat->Clear( ); }
+		for( i = 0; i < m_vecveciGenes[iOne].size( ); ++i )
+			pMat->Get( iValue, m_vecveciGenes[iOne][i] )++;
+		for( i = 0; i < m_vecveciGenes[iTwo].size( ); ++i )
+			pMat->Get( iValue, m_vecveciGenes[iTwo][i] )++; }
+
+private:
+	vector<set<size_t> >			m_vecsetiGenes;
+	vector<vector<size_t> >			m_vecveciGenes;
+	vector<CFullMatrix<size_t>*>	m_vecpMatCounts;
+
+	void Clear( ) {
+		size_t					i;
+		CFullMatrix<size_t>*	pMat;
+
+		for( i = 0; i < m_vecpMatCounts.size( ); ++i )
+			if( pMat = m_vecpMatCounts[i] )
+				delete pMat;
+		m_vecpMatCounts.clear( );
+		m_vecsetiGenes.clear( );
+		m_vecveciGenes.clear( ); }
 };
 
 void* learn( void* );
@@ -215,9 +367,13 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 	map<string, size_t>::const_iterator	iterZero;
 	CGenome								Genome;
 	vector<string>						vecstrNames;
+	CRegularize							Regularize;
 
 	if( !Answers.Open( sArgs.answers_arg, false, !!sArgs.memmap_flag ) ) {
-		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
+		cerr << "Could not open: " << sArgs.answers_arg << endl;
+		return 1; }
+	if( !sArgs.inputs_num && sArgs.reggroups_arg && !Regularize.Open( sArgs.reggroups_arg, Genome, Answers ) ) {
+		cerr << "Could not open: " << sArgs.reggroups_arg << endl;
 		return 1; }
 
 	vecpGenes.resize( sArgs.inputs_num );
@@ -242,9 +398,11 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 			i = iTerm + iThread;
 			vecsData[ i ].m_pMatCounts = vecpMatRoots[ i ] = new CCountMatrix( );
 			vecsData[ i ].m_pDat = NULL;
+			vecsData[ i ].m_iDat = -1;
 			vecsData[ i ].m_pGenes = vecpGenes[ i ];
 			vecsData[ i ].m_pAnswers = &Answers;
 			vecsData[ i ].m_iZero = -1;
+			vecsData[ i ].m_pRegularize = &Regularize;
 			if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
 				cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
 				return 1; } }
@@ -291,10 +449,12 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 				i = iTerm + iThread;
 				vecsData[ i ].m_pMatCounts = (*pvecpMatCounts)[ i ] = new CCountMatrix( );
 				vecsData[ i ].m_pDat = pFilter;
+				vecsData[ i ].m_iDat = vecstrNames.size( ) - 1;
 				vecsData[ i ].m_pGenes = vecpGenes[ i ];
 				vecsData[ i ].m_pAnswers = &Answers;
 				vecsData[ i ].m_iZero = ( ( iterZero = mapstriZeros.find( strName ) ) ==
 					mapstriZeros.end( ) ) ? -1 : iterZero->second;
+				vecsData[ i ].m_pRegularize = &Regularize;
 				if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
 					cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
 					return 1; } }
@@ -323,6 +483,8 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 				for( m = 0; m < (*vecpvecpMats[ j ])[ i ]->GetRows( ); ++m )
 					ofsm << ( m ? "\t" : "" ) << (*vecpvecpMats[ j ])[ i ]->Get( m, k );
 				ofsm << endl; } } }
+	if( sArgs.reggroups_arg )
+		Regularize.Save( cout, vecstrNames );
 
 	for( i = 0; i < vecpvecpMats.size( ); ++i ) {
 		for( j = 0; j < vecpvecpMats[ i ]->size( ); ++j )
@@ -368,7 +530,8 @@ void* learn( void* pData ) {
 					iVal = psData->m_iZero;
 				if( iVal == -1 )
 					continue;
-				psData->m_pMatCounts->Get( iVal, iAnswer )++; }
+				psData->m_pMatCounts->Get( iVal, iAnswer )++;
+				psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal ); }
 			else
 				psData->m_pMatCounts->Get( iAnswer, 0 )++; } }
 

@@ -179,7 +179,7 @@ public:
 	bool Open( const std::vector<std::string>& vecstrGenes, bool fClear = true, const char* szFile = NULL );
 	bool Open( const std::vector<std::string>& vecstrGenes, const CDistanceMatrix& MatValues );
 	bool Open( const std::vector<CGenes*>& vecpPositives, const std::vector<CGenes*>& vecpNonnegatives,
-		float dPValue, const CGenome& Genome );
+		float dPValue, const CGenome& Genome, bool fIncident = false );
 	bool Open( const CDat& DatKnown, const std::vector<CGenes*>& vecpOther, const CGenome& Genome,
 		bool fKnownNegatives );
 	bool Open( const CPCL& PCL, const IMeasure* pMeasure, bool fMeasureMemory );
@@ -200,6 +200,7 @@ public:
 	bool FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit = -1 );
 	void FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit = -1,
 		float dEdgeAggressiveness = 0.5, const std::vector<float>* pvecdWeights = NULL );
+	void NormalizeQuantiles( size_t iQuantiles );
 
 	void Clear( float dValue ) {
 		size_t	i;

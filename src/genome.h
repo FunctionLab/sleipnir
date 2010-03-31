@@ -29,6 +29,8 @@
 
 namespace Sleipnir {
 
+class CGenes;
+
 /*!
  * \brief
  * Represents a gene with a single primary unique identifier, zero or more synonyms, and zero or more
@@ -287,6 +289,8 @@ class CGenome : CGenomeImpl {
 public:
 	bool Open( std::istream& istmFeatures );
 	bool Open( const std::vector<std::string>& vecstrGenes );
+	bool Open( const char* szFile, std::vector<CGenes*>& vecpGenes );
+	bool Open( std::istream& istmGenes, std::vector<CGenes*>& vecpGenes );
 	CGene& AddGene( const std::string& strID );
 	size_t FindGene( const std::string& strGene ) const;
 	std::vector<std::string> GetGeneNames( ) const;

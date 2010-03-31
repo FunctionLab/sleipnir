@@ -45,8 +45,10 @@ option	"pseudocounts"	p	"Effective number of pseudocounts to use"
 							float default="-1"
 option	"alphas"		a	"File containing equivalent sample sizes (alphas) for each node"
 							string	typestr="filename"
-option	"regularize"	r	"Automatically regularized based on similarity"
+option	"regularize"	r	"Automatically regularize based on similarity"
 							flag	off
+option	"reggroups"		R	"Automatically regularize based on given groups"
+							string	typestr="filename"
 
 section "Optional"
 option	"temporary"		y	"Directory for temporary files"

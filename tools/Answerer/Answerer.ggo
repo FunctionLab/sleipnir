@@ -2,6 +2,9 @@ package	"Answerer"
 version	"1.0"
 purpose	"Generates an answer file given positives, negatives, and a genome"
 
+option	"output"			o	"Output DAB file"
+								string	typestr="filename"
+
 defgroup "Positives"	yes
 groupoption	"positives"		p	"Directory containing related gene lists"
 								string	typestr="directory"	group="Positives"
@@ -14,15 +17,23 @@ groupoption	"negatives"		n	"Directory containing minimally related gene lists"
 groupoption	"interactions"	x	"Expected interactions per gene"
 								double	group="Negatives"
 
-section "Optional"
+section "Modifications"
+option	"incident"			c	"Require negative pairs to include an annotated gene"
+								flag	off
+option	"exclude"			e	"DAT/DAB file of gene pairs to exclude from the standard"
+								string	typestr="filename"
+option	"scramble"			s	"Fraction of gene pairs to set randomly"
+								double	default="0"
+
+section "Miscellaneous"
+option	"overlap"			l	"P-value cutoff for negative term overlap"
+								double	default="0"
 option	"genome"			g	"List of all genes to be considered"
 								string	typestr="filename"
 option	"test"				t	"Fraction of genes to randomly select for testing"
 								double	default="0"
-option	"output"			o	"Output dab file"
-								string	typestr="filename"
-option	"overlap"			l	"P-value cutoff for negative term overlap"
-								double	default="0"
+
+section "Optional"
 option	"random"			r	"Seed random generator"
 								int	default="0"
 option	"verbosity"			v	"Message verbosity"
