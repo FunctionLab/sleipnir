@@ -22,7 +22,7 @@
 #ifndef VW_H
 #define VW_H
 
-#ifndef NO_VW
+#ifndef NO_VOWPAL_WABBIT
 
 #include "vwbi.h"
 
@@ -33,6 +33,6 @@ class CVW : CVWImpl {
 
 }
 
-#endif // NO_VW
+#endif // NO_VOWPAL_WABBIT
 
 #endif // VW_H

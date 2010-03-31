@@ -19,13 +19,14 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#include "stdafx.h"
+#ifndef STDAFX_H
+#define STDAFX_H
+
+#include <fstream>
+using namespace std;
+
+#include "meta.h"
 #include "vwb.h"
+using namespace Sleipnir;
 
-#ifndef NO_VOWPAL_WABBIT
-
-namespace Sleipnir {
-
-}
-
-#endif // NO_VOWPAL_WABBIT
+#endif // STDAFX_H

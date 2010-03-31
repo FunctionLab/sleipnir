@@ -20,12 +20,14 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "stdafx.h"
-#include "vwb.h"
+#include "cmdline.h"
 
-#ifndef NO_VOWPAL_WABBIT
+int main( int iArgs, char** aszArgs ) {
+	gengetopt_args_info	sArgs;
 
-namespace Sleipnir {
+	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
+		cmdline_parser_print_help( );
+		return 1; }
+	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
 
-}
-
-#endif // NO_VOWPAL_WABBIT
+	return 0; }

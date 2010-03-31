@@ -96,6 +96,9 @@ SVM_PERF_CFLAGS = @SVM_PERF_CFLAGS@
 SVM_PERF_LIBS = @SVM_PERF_LIBS@
 SVM_PERF_PREFIX = @SVM_PERF_PREFIX@
 VERSION = @VERSION@
+VOWPAL_WABBIT_CFLAGS = @VOWPAL_WABBIT_CFLAGS@
+VOWPAL_WABBIT_LIBS = @VOWPAL_WABBIT_LIBS@
+VOWPAL_WABBIT_PREFIX = @VOWPAL_WABBIT_PREFIX@
 am__include = @am__include@
 am__quote = @am__quote@
 install_sh = @install_sh@
@@ -125,7 +128,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno
 $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  Makefile
+	  $(AUTOMAKE) --gnu  Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)
 

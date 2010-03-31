@@ -96,6 +96,9 @@ SVM_PERF_CFLAGS = @SVM_PERF_CFLAGS@
 SVM_PERF_LIBS = @SVM_PERF_LIBS@
 SVM_PERF_PREFIX = @SVM_PERF_PREFIX@
 VERSION = @VERSION@
+VOWPAL_WABBIT_CFLAGS = @VOWPAL_WABBIT_CFLAGS@
+VOWPAL_WABBIT_LIBS = @VOWPAL_WABBIT_LIBS@
+VOWPAL_WABBIT_PREFIX = @VOWPAL_WABBIT_PREFIX@
 am__include = @am__include@
 am__quote = @am__quote@
 install_sh = @install_sh@
@@ -105,7 +108,7 @@ prog_gengetopt_dir = @prog_gengetopt_dir@
 sleipnirdocdir = @sleipnirdocdir@
 lib_LIBRARIES = libSleipnir.a
 
-AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFLAGS)
+AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFLAGS) $(VOWPAL_WABBIT_CFLAGS)
 
 
 #LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_PERF_LIBS) $(PTHREAD_LIBS)
@@ -151,7 +154,8 @@ libSleipnir_a_SOURCES = \
 	server.cpp				\
 	statistics.cpp			\
 	stdafx.cpp				\
-	svm.cpp
+	svm.cpp					\
+	vwb.cpp
 
 include_HEADERS = \
 	annotation.h			\
@@ -224,7 +228,9 @@ include_HEADERS = \
 	svmi.h					\
 	trie.h					\
 	triei.h					\
-	typesi.h
+	typesi.h				\
+	vwb.h					\
+	vwbi.h
 
 subdir = src
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -248,7 +254,7 @@ am_libSleipnir_a_OBJECTS = annotation.$(OBJEXT) annotationgo.$(OBJEXT) \
 	measure.$(OBJEXT) meta.$(OBJEXT) orthology.$(OBJEXT) \
 	pcl.$(OBJEXT) pclset.$(OBJEXT) pst.$(OBJEXT) \
 	serverclient.$(OBJEXT) server.$(OBJEXT) statistics.$(OBJEXT) \
-	stdafx.$(OBJEXT) svm.$(OBJEXT)
+	stdafx.$(OBJEXT) svm.$(OBJEXT) vwb.$(OBJEXT)
 libSleipnir_a_OBJECTS = $(am_libSleipnir_a_OBJECTS)
 
 DEFS = @DEFS@
@@ -286,7 +292,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/pclset.Po ./$(DEPDIR)/pst.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/server.Po ./$(DEPDIR)/serverclient.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/statistics.Po ./$(DEPDIR)/stdafx.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/svm.Po
+@AMDEP_TRUE@	./$(DEPDIR)/svm.Po ./$(DEPDIR)/vwb.Po
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
@@ -305,7 +311,7 @@ all: all-am
 .SUFFIXES: .cpp .o .obj
 $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  src/Makefile
+	  $(AUTOMAKE) --gnu  src/Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
 
@@ -393,6 +399,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/statistics.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stdafx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vwb.Po@am__quote@
 
 distclean-depend:
 	-rm -rf ./$(DEPDIR)

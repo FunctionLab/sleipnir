@@ -313,7 +313,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_PERF_PREFIX SVM_PERF_CFLAGS SVM_PERF_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE CC CFLAGS ac_ct_CC CCDEPMODE RANLIB ac_ct_RANLIB CXXCPP EGREP LIBOBJS POW_LIB prog_gengetopt prog_gengetopt_dir GENGETOPT_PREFIX GENGETOPT_CFLAGS GENGETOPT_LIBS LOG4CPP_PREFIX LOG4CPP_CFLAGS LOG4CPP_LIBS SMILE_PREFIX SMILE_CFLAGS SMILE_LIBS SVM_PERF_PREFIX SVM_PERF_CFLAGS SVM_PERF_LIBS VOWPAL_WABBIT_PREFIX VOWPAL_WABBIT_CFLAGS VOWPAL_WABBIT_LIBS BOOST_CFLAGS BOOST_LIBS READLINE_PREFIX READLINE_CFLAGS READLINE_LIBS PTHREAD_PREFIX PTHREAD_CFLAGS PTHREAD_LIBS sleipnirdocdir SLEIPNIR_PREFIX SLEIPNIR_CFLAGS SLEIPNIR_LIBS WITH_TOOLS_TRUE WITH_TOOLS_FALSE WITH_SMILE_TOOLS_TRUE WITH_SMILE_TOOLS_FALSE WITH_SVM_TOOLS_TRUE WITH_SVM_TOOLS_FALSE WITH_VW_TOOLS_TRUE WITH_VW_TOOLS_FALSE WITH_READLINE_TOOLS_TRUE WITH_READLINE_TOOLS_FALSE WITH_BOOST_TOOLS_TRUE WITH_BOOST_TOOLS_FALSE WITH_GENGETOPT_TRUE WITH_GENGETOPT_FALSE LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -869,6 +869,8 @@ Optional Packages:
   --with-log4cpp=PATH     prefix of log4cpp installation or build directory
   --with-smile=PATH       prefix of SMILE installation
   --with-svm-perf=PATH    prefix of SVM Perf installation
+  --with-vowpal-wabbit=PATH
+                          prefix of Vowpal Wabbit installation
   --with-boost-includes=PATH
                           location of boost header files
   --with-boost-graph-lib=PATH
@@ -7116,6 +7118,169 @@ fi
 
 
 
+## Vowpal Wabbit
+# If the user specifies a path, use it.
+# If the user says not to use it, then don't.
+# If the user doesn't specify anything, check for it.
+# While checking, look for a source distribution in extlib/.
+# If none, set NO_VOWPAL_WABBIT=1.
+
+# Check whether --with-vowpal_wabbit or --without-vowpal_wabbit was given.
+if test "${with_vowpal_wabbit+set}" = set; then
+  withval="$with_vowpal_wabbit"
+
+else
+  with_vowpal_wabbit=check
+fi;
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+if test "x$with_vowpal_wabbit" = "xno"; then
+  vowpal_wabbit_info=NONE
+  vowpal_wabbit_state=no
+  true   # in case not defined or is empty
+          cat >>confdefs.h <<\_ACEOF
+#define NO_VOWPAL_WABBIT 1
+_ACEOF
+
+elif test "x$with_vowpal_wabbit" != "xcheck"; then
+# We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
+# if the user does not specify it. That way it is never undefined.
+# That may not be necessary.
+#  if echo with_vowpal_wabbit | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
+  vowpal_wabbit_info=$with_vowpal_wabbit
+  vowpal_wabbit_state=ok
+  qualify_path with_vowpal_wabbit
+
+          VOWPAL_WABBIT_PREFIX=$with_vowpal_wabbit
+else
+  # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
+  # empty, however, we get a syntax error. But, we have to be careful,
+  # because arguments to this macro may contain quotes, semicolons, etc.
+  # So we work around it by always supplying a last argument.
+  flag=false
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+	#include "vw.h"
+int
+main ()
+{
+optimize_vw
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  vowpal_wabbit_info="found installed"
+     vowpal_wabbit_state=ok
+
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+flag=true
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  if $flag; then
+    # we also can't have an empty if block...
+#    true
+    vowpal_wabbit_info="not found"
+    vowpal_wabbit_state=no
+    	cat >>confdefs.h <<\_ACEOF
+#define NO_VOWPAL_WABBIT 1
+_ACEOF
+
+  fi
+fi
+
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+if test "x$vowpal_wabbit_state" != "xno"; then
+  ## set VOWPAL_WABBIT_CFLAGS and VOWPAL_WABBIT_LIBS
+  if test "x$VOWPAL_WABBIT_PREFIX" != "x"; then
+
+result=$VOWPAL_WABBIT_PREFIX
+found=false
+for p in include; do
+  if test -e "$VOWPAL_WABBIT_PREFIX/$p/vw.h"; then
+    result=$VOWPAL_WABBIT_PREFIX/$p
+    found=true
+    break
+  fi
+done
+VOWPAL_WABBIT_INCLUDE_DIR=$result
+if ! $found; then
+  if ! test -e $result/vw.h; then
+    true   # in case the following is empty
+    vowpal_wabbit_state=warn
+  fi
+fi
+
+
+result=$VOWPAL_WABBIT_PREFIX
+found=false
+for p in lib; do
+  if test -e "$VOWPAL_WABBIT_PREFIX/$p/libvw.a"; then
+    result=$VOWPAL_WABBIT_PREFIX/$p
+    found=true
+    break
+  fi
+done
+VOWPAL_WABBIT_LIB_DIR=$result
+if ! $found; then
+  if ! test -e $result/libvw.a; then
+    true   # in case the following is empty
+    vowpal_wabbit_state=warn
+  fi
+fi
+
+#    if ! test -f "$VOWPAL_WABBIT_INCLUDE_DIR/vw.h"; then vowpal_wabbit_state=warn; fi
+#    if ! test -f "$VOWPAL_WABBIT_LIB_DIR/libvw.a"; then vowpal_wabbit_state=warn; fi
+    VOWPAL_WABBIT_CFLAGS="-I$VOWPAL_WABBIT_INCLUDE_DIR"
+    VOWPAL_WABBIT_LIBS="-L$VOWPAL_WABBIT_LIB_DIR"
+  fi
+  VOWPAL_WABBIT_LIBS="$VOWPAL_WABBIT_LIBS -lvw"
+fi
+
+
+
+
+
 ## BOOST
 # If the user specifies a path, use it.
 # If not specified, check for it.
@@ -7696,6 +7861,16 @@ fi
 
 
 
+if test "x$vowpal_wabbit_state" != "xno"; then
+  WITH_VW_TOOLS_TRUE=
+  WITH_VW_TOOLS_FALSE='#'
+else
+  WITH_VW_TOOLS_TRUE='#'
+  WITH_VW_TOOLS_FALSE=
+fi
+
+
+
 if test "x$readline_state" != "xno"; then
   WITH_READLINE_TOOLS_TRUE=
   WITH_READLINE_TOOLS_FALSE='#'
@@ -7725,7 +7900,7 @@ else
 fi
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ac_config_files="$ac_config_files Makefile src/Makefile tools/Makefile tools/Answerer/Makefile tools/Cliquer/Makefile tools/Clinician/Makefile tools/Clusterer/Makefile tools/Clusters2Dab/Makefile tools/COALESCE/Makefile tools/Combiner/Makefile tools/DChecker/Makefile tools/Dat2Dab/Makefile tools/Dat2Graph/Makefile tools/Data2Bnt/Makefile tools/Data2Features/Makefile tools/Data2Sql/Makefile tools/DataDumper/Makefile tools/Distancer/Makefile tools/Explainer/Makefile tools/Filterer/Makefile tools/Funcaeologist/Makefile tools/Funcifier/Makefile tools/Funcographer/Makefile tools/Hubber/Makefile tools/KNNImputer/Makefile tools/Mat2Txt/Makefile tools/MCluster/Makefile tools/Matcher/Makefile tools/MIer/Makefile tools/Normalizer/Makefile tools/Orthologer/Makefile tools/Overlapper/Makefile tools/PCLPlotter/Makefile tools/Randomizer/Makefile tools/Seqs2Ngrams/Makefile tools/SMRF/Makefile tools/SVDer/Makefile tools/Synthesizer/Makefile tools/Txt2Bin/Makefile tools/BNConverter/Makefile tools/BNCreator/Makefile tools/BNEvaluator/Makefile tools/BNFunc/Makefile tools/BNTester/Makefile tools/BNTruster/Makefile tools/BNs2Txt/Makefile tools/BNUnraveler/Makefile tools/BNWeaver/Makefile tools/Contexter/Makefile tools/Counter/Makefile tools/Data2DB/Makefile tools/DSLConverter/Makefile tools/Dab2Dad/Makefile tools/Edges2Posteriors/Makefile tools/MEFIT/Makefile tools/Data2Svm/Makefile tools/SVMer/Makefile tools/OntoShell/Makefile tools/BNServer/Makefile"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ac_config_files="$ac_config_files Makefile src/Makefile tools/Makefile tools/Answerer/Makefile tools/Cliquer/Makefile tools/Clinician/Makefile tools/Clusterer/Makefile tools/Clusters2Dab/Makefile tools/COALESCE/Makefile tools/Combiner/Makefile tools/DChecker/Makefile tools/Dat2Dab/Makefile tools/Dat2Graph/Makefile tools/Data2Bnt/Makefile tools/Data2Features/Makefile tools/Data2Sql/Makefile tools/DataDumper/Makefile tools/Distancer/Makefile tools/Explainer/Makefile tools/Filterer/Makefile tools/Funcaeologist/Makefile tools/Funcifier/Makefile tools/Funcographer/Makefile tools/Hubber/Makefile tools/KNNImputer/Makefile tools/Mat2Txt/Makefile tools/MCluster/Makefile tools/Matcher/Makefile tools/MIer/Makefile tools/Normalizer/Makefile tools/Orthologer/Makefile tools/Overlapper/Makefile tools/PCLPlotter/Makefile tools/Randomizer/Makefile tools/Seqs2Ngrams/Makefile tools/SMRF/Makefile tools/SVDer/Makefile tools/Synthesizer/Makefile tools/Txt2Bin/Makefile tools/BNConverter/Makefile tools/BNCreator/Makefile tools/BNEvaluator/Makefile tools/BNFunc/Makefile tools/BNTester/Makefile tools/BNTruster/Makefile tools/BNs2Txt/Makefile tools/BNUnraveler/Makefile tools/BNWeaver/Makefile tools/Contexter/Makefile tools/Counter/Makefile tools/Data2DB/Makefile tools/DSLConverter/Makefile tools/Dab2Dad/Makefile tools/Edges2Posteriors/Makefile tools/MEFIT/Makefile tools/Data2Svm/Makefile tools/SVMer/Makefile tools/VWer/Makefile tools/OntoShell/Makefile tools/BNServer/Makefile"
 
 
 
@@ -7876,6 +8051,13 @@ if test -z "${WITH_SVM_TOOLS_TRUE}" && test -z "${WITH_SVM_TOOLS_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"WITH_SVM_TOOLS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"WITH_SVM_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${WITH_VW_TOOLS_TRUE}" && test -z "${WITH_VW_TOOLS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"WITH_VW_TOOLS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"WITH_VW_TOOLS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -8396,6 +8578,7 @@ do
   "tools/MEFIT/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/MEFIT/Makefile" ;;
   "tools/Data2Svm/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/Data2Svm/Makefile" ;;
   "tools/SVMer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/SVMer/Makefile" ;;
+  "tools/VWer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/VWer/Makefile" ;;
   "tools/OntoShell/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/OntoShell/Makefile" ;;
   "tools/BNServer/Makefile" ) CONFIG_FILES="$CONFIG_FILES tools/BNServer/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
@@ -8538,6 +8721,9 @@ s,@SMILE_LIBS@,$SMILE_LIBS,;t t
 s,@SVM_PERF_PREFIX@,$SVM_PERF_PREFIX,;t t
 s,@SVM_PERF_CFLAGS@,$SVM_PERF_CFLAGS,;t t
 s,@SVM_PERF_LIBS@,$SVM_PERF_LIBS,;t t
+s,@VOWPAL_WABBIT_PREFIX@,$VOWPAL_WABBIT_PREFIX,;t t
+s,@VOWPAL_WABBIT_CFLAGS@,$VOWPAL_WABBIT_CFLAGS,;t t
+s,@VOWPAL_WABBIT_LIBS@,$VOWPAL_WABBIT_LIBS,;t t
 s,@BOOST_CFLAGS@,$BOOST_CFLAGS,;t t
 s,@BOOST_LIBS@,$BOOST_LIBS,;t t
 s,@READLINE_PREFIX@,$READLINE_PREFIX,;t t
@@ -8556,6 +8742,8 @@ s,@WITH_SMILE_TOOLS_TRUE@,$WITH_SMILE_TOOLS_TRUE,;t t
 s,@WITH_SMILE_TOOLS_FALSE@,$WITH_SMILE_TOOLS_FALSE,;t t
 s,@WITH_SVM_TOOLS_TRUE@,$WITH_SVM_TOOLS_TRUE,;t t
 s,@WITH_SVM_TOOLS_FALSE@,$WITH_SVM_TOOLS_FALSE,;t t
+s,@WITH_VW_TOOLS_TRUE@,$WITH_VW_TOOLS_TRUE,;t t
+s,@WITH_VW_TOOLS_FALSE@,$WITH_VW_TOOLS_FALSE,;t t
 s,@WITH_READLINE_TOOLS_TRUE@,$WITH_READLINE_TOOLS_TRUE,;t t
 s,@WITH_READLINE_TOOLS_FALSE@,$WITH_READLINE_TOOLS_FALSE,;t t
 s,@WITH_BOOST_TOOLS_TRUE@,$WITH_BOOST_TOOLS_TRUE,;t t
@@ -9051,6 +9239,7 @@ fi
 echo "  log4cpp         = $log4cpp_info"
 echo "  SMILE           = $smile_info"
 echo "  SVM Perf        = $svm_perf_info"
+echo "  Vowpal Wabbit   = $vowpal_wabbit_info"
 echo "  pthread         = $pthread_info"
 if $with_tools; then
 echo "Used for tools:"
@@ -9111,6 +9300,24 @@ elif test "x$svm_perf_state" = "xwarn"; then
 
 ** WARNING: The path to SVM Perf may be incorrect.
 I looked for svm_struct_api.h and libsvmperf.a and did not
+find both.
+EOF
+
+fi
+
+if test "x$vowpal_wabbit_state" = "xno"; then
+  cat << EOF
+
+** BUILDING WITHOUT VOWPAL WABBIT
+Vowpal Wabbit is optional.
+It is available from http://hunch.net/~vw/.
+EOF
+
+elif test "x$vowpal_wabbit_state" = "xwarn"; then
+  cat << EOF
+
+** WARNING: The path to Vowpal Wabbit may be incorrect.
+I looked for vw.h and libvw.a and did not
 find both.
 EOF
 

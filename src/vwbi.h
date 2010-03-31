@@ -22,16 +22,18 @@
 #ifndef VWI_H
 #define VWI_H
 
-#ifndef NO_VW
+#ifndef NO_VOWPAL_WABBIT
 
-#define fsync		_commit
 #define go_params	gd_thread_params
+#ifdef _MSC_VER
+#define fsync		_commit
 #define isnan		_isnan
 #define lseek		_lseek
 #define open		_open
 #define SHUT_WR		1
 
 typedef size_t	ssize_t;
+#endif // _MSC_VER
 
 #undef int64_t
 #pragma warning(disable : 4996 4244 4305)
@@ -45,6 +47,6 @@ class CVWImpl {
 
 }
 
-#endif // NO_VW
+#endif // NO_VOWPAL_WABBIT
 
 #endif // VWI_H
