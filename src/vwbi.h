@@ -26,6 +26,9 @@
 
 #define go_params	gd_thread_params
 #ifdef _MSC_VER
+#include <io.h>
+#include <pthread.h>
+
 #define fsync		_commit
 #define isnan		_isnan
 #define lseek		_lseek
@@ -36,9 +39,9 @@ typedef size_t	ssize_t;
 #endif // _MSC_VER
 
 #undef int64_t
-#pragma warning(disable : 4996 4244 4305)
+#pragma warning(disable : 4996 4244 4305 4267)
 #include <vw.h>
-#pragma warning(default : 4996 4244 4305)
+#pragma warning(default : 4996 4244 4305 4267)
 
 namespace Sleipnir {
 
