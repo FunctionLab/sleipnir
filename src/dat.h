@@ -167,7 +167,8 @@ public:
 		 * \brief
 		 * Sigmoid transform scores to the range [0, 1].
 		 */
-		ENormalizeSigmoid	= ENormalizeZScore + 1
+		ENormalizeSigmoid	= ENormalizeZScore + 1,
+		ENormalizeSigmSymm	= ENormalizeSigmoid + 1
 	};
 
 	bool Open( const char* szFile, bool fMemmap = false, size_t iSkip = 2, bool fZScore = false,
@@ -244,6 +245,10 @@ public:
 
 			case ENormalizeZScore:
 				NormalizeStdev( );
+				break;
+
+			case ENormalizeSigmSymm:
+				NormalizeSigmoidSymmetric( );
 				break;
 
 			default:

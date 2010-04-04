@@ -41,6 +41,8 @@ const struct {
 } c_asTypesDAT[]	= {
 	{"globalz",	CDat::ENormalizeZScore},
 	{"0to1",	CDat::ENormalizeMinMax},
+	{"sigmoid",	CDat::ENormalizeSigmoid},
+	{"sigsym",	CDat::ENormalizeSigmSymm},
 	{NULL,		CDat::ENormalizeNone}
 };
 

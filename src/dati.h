@@ -74,6 +74,7 @@ protected:
 	void NormalizeMinmax( );
 	void NormalizeStdev( );
 	void NormalizeSigmoid( );
+	void NormalizeSigmoidSymmetric( );
 	void OpenHelper( const CGenes*, float );
 	void OpenHelper( const CGenes*, const CGenes*, float );
 	bool OpenHelper( );

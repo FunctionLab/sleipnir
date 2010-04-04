@@ -43,7 +43,8 @@ const char *gengetopt_args_info_help[] = {
   "\nLearning/Evaluation:",
   "  -g, --genes=filename     Gene inclusion file",
   "  -G, --genex=filename     Gene exclusion file",
-  "  -c, --genet=filename     Term inclusion file",
+  "  -R, --genet=filename     Term inclusion file",
+  "  -C, --genee=filename     Edge inclusion file",
   "\nPreprocessing:",
   "  -n, --normalize          Normalize to the range [0,1]  (default=off)",
   "  -t, --invert             Invert correlations to distances  (default=off)",
@@ -54,7 +55,7 @@ const char *gengetopt_args_info_help[] = {
   "  -f, --features=filename  SGD gene features",
   "\nOptional:",
   "  -m, --memmap             Memory map input files  (default=off)",
-  "  -C, --config=filename    Command line config file  (default=`Explainer.ini')",
+  "  -c, --config=filename    Command line config file  (default=`Explainer.ini')",
   "  -v, --verbosity=INT      Message verbosity  (default=`5')",
     0
 };
@@ -123,6 +124,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->genes_given = 0 ;
   args_info->genex_given = 0 ;
   args_info->genet_given = 0 ;
+  args_info->genee_given = 0 ;
   args_info->normalize_given = 0 ;
   args_info->invert_given = 0 ;
   args_info->reverse_given = 0 ;
@@ -156,6 +158,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->genex_orig = NULL;
   args_info->genet_arg = NULL;
   args_info->genet_orig = NULL;
+  args_info->genee_arg = NULL;
+  args_info->genee_orig = NULL;
   args_info->normalize_flag = 0;
   args_info->invert_flag = 0;
   args_info->reverse_flag = 0;
@@ -191,15 +195,16 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->genes_help = gengetopt_args_info_help[13] ;
   args_info->genex_help = gengetopt_args_info_help[14] ;
   args_info->genet_help = gengetopt_args_info_help[15] ;
-  args_info->normalize_help = gengetopt_args_info_help[17] ;
-  args_info->invert_help = gengetopt_args_info_help[18] ;
-  args_info->reverse_help = gengetopt_args_info_help[19] ;
-  args_info->go_onto_help = gengetopt_args_info_help[21] ;
-  args_info->go_anno_help = gengetopt_args_info_help[22] ;
-  args_info->features_help = gengetopt_args_info_help[23] ;
-  args_info->memmap_help = gengetopt_args_info_help[25] ;
-  args_info->config_help = gengetopt_args_info_help[26] ;
-  args_info->verbosity_help = gengetopt_args_info_help[27] ;
+  args_info->genee_help = gengetopt_args_info_help[16] ;
+  args_info->normalize_help = gengetopt_args_info_help[18] ;
+  args_info->invert_help = gengetopt_args_info_help[19] ;
+  args_info->reverse_help = gengetopt_args_info_help[20] ;
+  args_info->go_onto_help = gengetopt_args_info_help[22] ;
+  args_info->go_anno_help = gengetopt_args_info_help[23] ;
+  args_info->features_help = gengetopt_args_info_help[24] ;
+  args_info->memmap_help = gengetopt_args_info_help[26] ;
+  args_info->config_help = gengetopt_args_info_help[27] ;
+  args_info->verbosity_help = gengetopt_args_info_help[28] ;
   
 }
 
@@ -292,6 +297,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->genex_orig));
   free_string_field (&(args_info->genet_arg));
   free_string_field (&(args_info->genet_orig));
+  free_string_field (&(args_info->genee_arg));
+  free_string_field (&(args_info->genee_orig));
   free_string_field (&(args_info->go_onto_arg));
   free_string_field (&(args_info->go_onto_orig));
   free_string_field (&(args_info->go_anno_arg));
@@ -398,6 +405,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "genex", args_info->genex_orig, 0);
   if (args_info->genet_given)
     write_into_file(outfile, "genet", args_info->genet_orig, 0);
+  if (args_info->genee_given)
+    write_into_file(outfile, "genee", args_info->genee_orig, 0);
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
   if (args_info->invert_given)
@@ -709,7 +718,8 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "fraction",	1, NULL, 'x' },
         { "genes",	1, NULL, 'g' },
         { "genex",	1, NULL, 'G' },
-        { "genet",	1, NULL, 'c' },
+        { "genet",	1, NULL, 'R' },
+        { "genee",	1, NULL, 'C' },
         { "normalize",	0, NULL, 'n' },
         { "invert",	0, NULL, 't' },
         { "reverse",	0, NULL, 'r' },
@@ -717,12 +727,12 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "go_anno",	1, NULL, 'a' },
         { "features",	1, NULL, 'f' },
         { "memmap",	0, NULL, 'm' },
-        { "config",	1, NULL, 'C' },
+        { "config",	1, NULL, 'c' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:w:k:pPeu:x:g:G:c:ntro:a:f:mC:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:w:k:pPeu:x:g:G:R:C:ntro:a:f:mc:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -861,14 +871,26 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'c':	/* Term inclusion file.  */
+        case 'R':	/* Term inclusion file.  */
         
         
           if (update_arg( (void *)&(args_info->genet_arg), 
                &(args_info->genet_orig), &(args_info->genet_given),
               &(local_args_info.genet_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "genet", 'c',
+              "genet", 'R',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'C':	/* Edge inclusion file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->genee_arg), 
+               &(args_info->genee_orig), &(args_info->genee_given),
+              &(local_args_info.genee_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genee", 'C',
               additional_error))
             goto failure;
         
@@ -949,14 +971,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'C':	/* Command line config file.  */
+        case 'c':	/* Command line config file.  */
         
         
           if (update_arg( (void *)&(args_info->config_arg), 
                &(args_info->config_orig), &(args_info->config_given),
               &(local_args_info.config_given), optarg, 0, "Explainer.ini", ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "config", 'C',
+              "config", 'c',
               additional_error))
             goto failure;
         
