@@ -1126,7 +1126,7 @@ void CDatImpl::NormalizeSigmoidSymmetric( ) {
 	for( iNUp = iNDown = i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
-				d = ( d - dAve ) / ( ( d >= dAve ) ? dStdUp : dStdDown );
+				d = (float)( ( d - dAve ) / ( ( d >= dAve ) ? dStdUp : dStdDown ) );
 				Set( i, j, 1.0f / ( 1 + exp( -d ) ) ); } }
 
 void CDatImpl::NormalizeMinmax( ) {
