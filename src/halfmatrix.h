@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "halfmatrixi.h"
+#include "meta.h"
 
 namespace Sleipnir {
 
@@ -256,6 +257,28 @@ public:
 	size_t GetSize( ) const {
 
 		return m_iSize; }
+
+	bool SetSize( size_t iSize, bool fClear = false ) {
+		tType**	aaData;
+		size_t	i, iCur;
+
+		if( !m_fMemory )
+			return false;
+		if( !iSize ) {
+			Reset( );
+			return true; }
+
+		aaData = new tType*[iSize - 1];
+		for( i = 0; ( i + 1 ) < iSize; ++i ) {
+			aaData[i] = new tType[iCur = ( iSize - i - 1 )];
+			if( i < m_iSize )
+				memcpy( aaData[i], m_aaData[i], ( min( iSize, m_iSize ) - i - 1 ) * sizeof(*aaData[i]) );
+			if( fClear && ( iSize > m_iSize ) )
+				std::fill( aaData[i] + ( ( i < m_iSize ) ? ( m_iSize - i - 1 ) : 0 ), aaData[i] + iCur, CMeta::GetNaN( ) ); }
+		m_iSize = iSize;
+		m_aaData = aaData;
+
+		return true; }
 
 	/*!
 	 * \brief

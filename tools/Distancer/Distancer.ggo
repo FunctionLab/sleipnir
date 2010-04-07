@@ -10,12 +10,14 @@ option	"output"		o	"Output DAT/DAB file"
 option	"distance"		d	"Similarity measure"
 							values="pearson","euclidean","kendalls","kolm-smir","spearman",
 							"pearnorm","hypergeom","innerprod","bininnerprod","quickpear",
-							"mi","relauc","pearsig"	default="pearnorm"
+							"mutinfo","relauc","pearsig"	default="pearnorm"
 
 section "Miscellaneous"
 option	"weights"		w	"Input weights file"
 							string	typestr="filename"
 option	"autocorrelate"	a	"Autocorrelate distances"
+							flag	off
+option	"freqweight"	q	"Weight conditions by frequency"
 							flag	off
 
 section "Preprocessing"

@@ -1,0 +1,9 @@
+package	"VWer"
+version	"1.0"
+purpose	"Vowpal Wabbit training and evaluation"
+
+section "Optional"
+option	"random"		r	"Seed random generator"
+							int	default="0"
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"

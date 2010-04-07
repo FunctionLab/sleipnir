@@ -140,6 +140,11 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open: " << sArgs.lookups_arg << endl;
 			return 1; }
 		ifsm.close( );
+		if( sArgs.lookup1_arg ) {
+			cout << "ID";
+			for( i = 0; i < GenesLk.GetGenes( ); ++i )
+				cout << '\t' << GenesLk.GetGene( i ).GetName( );
+			cout << endl; }
 		veciGenes.resize( GenesLk.GetGenes( ) );
 		for( i = 0; i < sArgs.inputs_num; ++i ) {
 			CDataPair	Dat;
@@ -152,10 +157,11 @@ int main( int iArgs, char** aszArgs ) {
 			cout << sArgs.inputs[ i ];
 			if( sArgs.lookup1_arg ) {
 				if( ( iOne = Dat.GetGene( sArgs.lookup1_arg ) ) != -1 )
-					for( j = 0; j < veciGenes.size( ); ++j )
+					for( j = 0; j < veciGenes.size( ); ++j ) {
+						cout << '\t';
 						if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
 							!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
-							cout << '\t' << d; }
+							cout << d; } }
 			else
 				for( j = 0; j < veciGenes.size( ); ++j ) {
 					if( ( iOne = veciGenes[ j ] ) == -1 )
@@ -219,7 +225,11 @@ int main( int iArgs, char** aszArgs ) {
 		if( !fOpen ) {
 			cerr << "Couldn't open inputs" << endl;
 			return 1; }
-		pData = sArgs.continuous_flag ? (IDataset*)&DataContinuous : (IDataset*)&Data; }
+		pData = sArgs.continuous_flag ? (IDataset*)&DataContinuous : (IDataset*)&Data;
+		if( GenesIn.GetGenes( ) )
+			pData->FilterGenes( GenesIn, CDat::EFilterInclude );
+		if( GenesEx.GetGenes( ) )
+			pData->FilterGenes( GenesEx, CDat::EFilterExclude ); }
 
 	if( sArgs.mask_arg ) {
 		CDat		Mask;

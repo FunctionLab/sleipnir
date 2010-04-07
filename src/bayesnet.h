@@ -296,11 +296,12 @@ public:
 	bool Open( std::istream& istm );
 	bool OpenCounts( const char* szFileCounts, const std::map<std::string, size_t>& mapstriNodes,
 		const std::vector<unsigned char>& vecbDefaults, const std::vector<float>& vecdAlphas,
-		size_t iPseudocounts = -1, const CBayesNetMinimal* pBNDefault = NULL );
+		float dPseudocounts = HUGE_VAL, const CBayesNetMinimal* pBNDefault = NULL );
 	void Save( std::ostream& ostm ) const;
 	float Evaluate( const std::vector<unsigned char>& vecbDatum, size_t iOffset = 0 ) const;
 	bool Evaluate( const std::vector<unsigned char>& vecbData, float* adResults, size_t iGenes,
 		size_t iStart = 0 ) const;
+	float Regularize( std::vector<float>& vecdAlphas ) const;
 
 	/*!
 	 * \brief

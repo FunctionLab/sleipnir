@@ -43,6 +43,9 @@ struct gengetopt_args_info
   char * geneq_arg;	/**< @brief Query inclusion file.  */
   char * geneq_orig;	/**< @brief Query inclusion file original value given at command line.  */
   const char *geneq_help; /**< @brief Query inclusion file help description.  */
+  char * genew_arg;	/**< @brief Query weights file.  */
+  char * genew_orig;	/**< @brief Query weights file original value given at command line.  */
+  const char *genew_help; /**< @brief Query weights file help description.  */
   int neighbors_arg;	/**< @brief Size of query neighborhood (default='-1').  */
   char * neighbors_orig;	/**< @brief Size of query neighborhood original value given at command line.  */
   const char *neighbors_help; /**< @brief Size of query neighborhood help description.  */
@@ -57,6 +60,9 @@ struct gengetopt_args_info
   char * genes_arg;	/**< @brief Gene inclusion file.  */
   char * genes_orig;	/**< @brief Gene inclusion file original value given at command line.  */
   const char *genes_help; /**< @brief Gene inclusion file help description.  */
+  char * genex_arg;	/**< @brief Gene exclusion file.  */
+  char * genex_orig;	/**< @brief Gene exclusion file original value given at command line.  */
+  const char *genex_help; /**< @brief Gene exclusion file help description.  */
   char * knowns_arg;	/**< @brief Known interactions (DAT/DAB) to ignore.  */
   char * knowns_orig;	/**< @brief Known interactions (DAT/DAB) to ignore original value given at command line.  */
   const char *knowns_help; /**< @brief Known interactions (DAT/DAB) to ignore help description.  */
@@ -85,11 +91,13 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int format_given ;	/**< @brief Whether format was given.  */
   unsigned int geneq_given ;	/**< @brief Whether geneq was given.  */
+  unsigned int genew_given ;	/**< @brief Whether genew was given.  */
   unsigned int neighbors_given ;	/**< @brief Whether neighbors was given.  */
   unsigned int hefalmp_given ;	/**< @brief Whether hefalmp was given.  */
   unsigned int edges_given ;	/**< @brief Whether edges was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
+  unsigned int genex_given ;	/**< @brief Whether genex was given.  */
   unsigned int knowns_given ;	/**< @brief Whether knowns was given.  */
   unsigned int features_given ;	/**< @brief Whether features was given.  */
   unsigned int colors_given ;	/**< @brief Whether colors was given.  */

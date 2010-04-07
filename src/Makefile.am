@@ -1,6 +1,6 @@
 lib_LIBRARIES			= libSleipnir.a
 
-AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFLAGS)
+AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFLAGS) $(VOWPAL_WABBIT_CFLAGS)
 
 #LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_PERF_LIBS) $(PTHREAD_LIBS)
 
@@ -46,7 +46,8 @@ libSleipnir_a_SOURCES	=	\
 	server.cpp				\
 	statistics.cpp			\
 	stdafx.cpp				\
-	svm.cpp
+	svm.cpp					\
+	vwb.cpp
 include_HEADERS			=	\
 	annotation.h			\
 	annotationi.h			\
@@ -118,4 +119,6 @@ include_HEADERS			=	\
 	svmi.h					\
 	trie.h					\
 	triei.h					\
-	typesi.h
+	typesi.h				\
+	vwb.h					\
+	vwbi.h

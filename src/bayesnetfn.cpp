@@ -662,11 +662,11 @@ bool CBayesNetFN::IsContinuous( ) const {
 // CBayesNetMinimal //////////////////////////////////////////////////////////
 
 bool CBayesNetMinimalImpl::Counts2Probs( const std::vector<std::string>& vecstrCounts,
-	std::vector<float>& vecdProbs, float dAlpha, size_t iPseudocounts, const CBayesNetMinimal* pBNDefault,
+	std::vector<float>& vecdProbs, float dAlpha, float dPseudocounts, const CBayesNetMinimal* pBNDefault,
 	size_t iNode, size_t iClass ) {
 	size_t			i, iTotal;
 	vector<size_t>	veciCounts;
-	float			dScale;
+	float			dScale, dTotal;
 
 	veciCounts.resize( vecstrCounts.size( ) );
 	for( iTotal = i = 0; i < veciCounts.size( ); ++i ) {
@@ -684,16 +684,17 @@ bool CBayesNetMinimalImpl::Counts2Probs( const std::vector<std::string>& vecstrC
 		for( i = 0; i < vecdProbs.size( ); ++i )
 			vecdProbs[ i ] = MatDefault.Get( i, iClass ); }
 	else {
-		if( iPseudocounts == -1 )
+		dTotal = (float)iTotal;
+		if( CMeta::IsNaN( dPseudocounts ) )
 			dScale = 1;
 		else if( iTotal ) {
-			dScale = (float)iPseudocounts / iTotal;
-			iTotal = iPseudocounts; }
+			dScale = dPseudocounts / iTotal;
+			dTotal = dPseudocounts; }
 		else
 			dScale = 0;
 		for( i = 0; i < vecdProbs.size( ); ++i )
 			vecdProbs[ i ] = ( ( dScale * veciCounts[ i ] ) + dAlpha ) /
-				( iTotal + ( dAlpha * vecdProbs.size( ) ) ); }
+				( dTotal + ( dAlpha * vecdProbs.size( ) ) ); }
 
 	return true; }
 
@@ -919,8 +920,8 @@ bool CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbData, float* a
  * \param vecdAlphas
  * If non-empty, vector of prior beliefs alpha for each node.
  * 
- * \param iPseudocounts
- * If not equal to -1, effective sample size to use for all nodes.
+ * \param dPseudocounts
+ * If not equal to NaN, effective sample size to use for all nodes.
  * 
  * \param pBNDefault
  * If non-null, Bayes net to use for default values when a distribution's counts are too sparse to use
@@ -983,7 +984,7 @@ bool CBayesNetMinimal::Evaluate( const vector<unsigned char>& vecbData, float* a
  * nodes (including the root node), which must also agree with the maximum node index in \c mapstriNodes.
  */
 bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const std::map<std::string, size_t>& mapstriNodes,
-	const std::vector<unsigned char>& vecbDefaults, const std::vector<float>& vecdAlphas, size_t iPseudocounts,
+	const std::vector<unsigned char>& vecbDefaults, const std::vector<float>& vecdAlphas, float dPseudocounts,
 	const CBayesNetMinimal* pBNDefault ) {
 	static const size_t	c_iStateInitial	= 0;
 	static const size_t	c_iStateRoot	= c_iStateInitial + 1;
@@ -1048,7 +1049,7 @@ bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const std::map<std:
 
 			case c_iStateCPT:
 				if( !Counts2Probs( vecstrLine, vecdProbs, vecdAlphas.empty( ) ? 1 : vecdAlphas[ iNode ],
-					iPseudocounts, pBNDefault, iNode, iClass ) )
+					dPseudocounts, pBNDefault, iNode, iClass ) )
 					return false;
 				{
 					CDataMatrix&	MatCPT	= m_vecNodes[ iNode ].m_MatCPT;
@@ -1069,5 +1070,49 @@ bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const std::map<std:
 	ifsm.close( );
 
 	return true; }
+
+float CBayesNetMinimal::Regularize( vector<float>& vecdAlphas ) const {
+	CDistanceMatrix	Mat;
+	size_t			iNodeOne, iNodeTwo, iAnswer, iValOne, iValTwo;
+	float			dPOne, dPTwo, dPostOne, dPostOneTwo, dRet;
+
+	Mat.Initialize( m_vecNodes.size( ) );
+	Mat.Clear( );
+	for( iNodeOne = 0; iNodeOne < m_vecNodes.size( ); ++iNodeOne ) {
+		const CDataMatrix&	MatOne	= m_vecNodes[iNodeOne].m_MatCPT;
+
+		for( iNodeTwo = 0; iNodeTwo < m_vecNodes.size( ); ++iNodeTwo ) {
+			const CDataMatrix&	MatTwo	= m_vecNodes[iNodeTwo].m_MatCPT;
+
+			if( iNodeOne == iNodeTwo )
+				continue;
+			for( iValOne = 0; iValOne < MatOne.GetColumns( ); ++iValOne ) {
+				dPOne = 0;
+				for( iAnswer = 0; iAnswer < m_MatRoot.GetRows( ); ++iAnswer )
+					dPOne += m_MatRoot.Get( iAnswer, 0 ) * MatOne.Get( iAnswer, iValOne );
+				dPostOne = MatOne.Get( 1, iValOne ) * m_MatRoot.Get( 1, 0 ) / dPOne;
+
+				for( iValTwo = 0; iValTwo < MatTwo.GetColumns( ); ++iValTwo ) {
+					dPTwo = 0;
+					for( iAnswer = 0; iAnswer < m_MatRoot.GetRows( ); ++iAnswer )
+						dPTwo += m_MatRoot.Get( iAnswer, 0 ) * MatTwo.Get( iAnswer, iValTwo );
+					dPostOneTwo = dPostOne * MatTwo.Get( 1, iValTwo ) / dPTwo;
+
+					Mat.Get( iNodeOne, iNodeTwo ) += dPOne * dPTwo * fabs( log( dPostOneTwo / dPostOne ) ); } } } }
+
+	dRet = 0;
+	vecdAlphas.resize( m_vecNodes.size( ) );
+	for( iNodeOne = 0; iNodeOne < m_vecNodes.size( ); ++iNodeOne ) {
+		vecdAlphas[iNodeOne] = 0;
+		for( iNodeTwo = 0; iNodeTwo < m_vecNodes.size( ); ++iNodeTwo )
+			if( iNodeOne != iNodeTwo )
+				vecdAlphas[iNodeOne] += Mat.Get( iNodeOne, iNodeTwo );
+		dRet += vecdAlphas[iNodeOne]; }
+	dRet /= m_vecNodes.size( );
+	for( iNodeOne = 0; iNodeOne < m_vecNodes.size( ); ++iNodeOne )
+		vecdAlphas[iNodeOne] = dRet / vecdAlphas[iNodeOne];
+	dRet = 1;
+
+	return dRet; }
 
 }

@@ -167,7 +167,8 @@ public:
 		 * \brief
 		 * Sigmoid transform scores to the range [0, 1].
 		 */
-		ENormalizeSigmoid	= ENormalizeZScore + 1
+		ENormalizeSigmoid	= ENormalizeZScore + 1,
+		ENormalizeSigmSymm	= ENormalizeSigmoid + 1
 	};
 
 	bool Open( const char* szFile, bool fMemmap = false, size_t iSkip = 2, bool fZScore = false,
@@ -179,7 +180,7 @@ public:
 	bool Open( const std::vector<std::string>& vecstrGenes, bool fClear = true, const char* szFile = NULL );
 	bool Open( const std::vector<std::string>& vecstrGenes, const CDistanceMatrix& MatValues );
 	bool Open( const std::vector<CGenes*>& vecpPositives, const std::vector<CGenes*>& vecpNonnegatives,
-		float dPValue, const CGenome& Genome );
+		float dPValue, const CGenome& Genome, bool fIncident = false );
 	bool Open( const CDat& DatKnown, const std::vector<CGenes*>& vecpOther, const CGenome& Genome,
 		bool fKnownNegatives );
 	bool Open( const CPCL& PCL, const IMeasure* pMeasure, bool fMeasureMemory );
@@ -199,7 +200,28 @@ public:
 	void Rank( );
 	bool FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit = -1 );
 	void FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit = -1,
-		float dEdgeAggressiveness = 0.5 );
+		float dEdgeAggressiveness = 0.5, const std::vector<float>* pvecdWeights = NULL );
+	void NormalizeQuantiles( size_t iQuantiles );
+
+	void Clear( float dValue ) {
+		size_t	i;
+
+		for( i = 0; i < GetGenes( ); ++i )
+			memset( Get( i ), *(int*)&dValue, ( GetGenes( ) - i - 1 ) * sizeof(*Get( i )) ); }
+
+	bool AddGene( const std::string& strGene ) {
+		std::vector<std::string>	vecstrGenes;
+
+		vecstrGenes.push_back( strGene );
+		return AddGenes( vecstrGenes ); }
+
+	bool AddGenes( const std::vector<std::string>& vecstrGenes ) {
+
+		if( m_pPCL || m_abData || !m_Data.SetSize( m_Data.GetSize( ) + vecstrGenes.size( ), true ) )
+			return false;
+
+		m_vecstrGenes.insert( m_vecstrGenes.end( ), vecstrGenes.begin( ), vecstrGenes.end( ) );
+		return true; }
 
 	/*!
 	 * \brief
@@ -223,6 +245,10 @@ public:
 
 			case ENormalizeZScore:
 				NormalizeStdev( );
+				break;
+
+			case ENormalizeSigmSymm:
+				NormalizeSigmoidSymmetric( );
 				break;
 
 			default:
@@ -449,6 +475,28 @@ public:
 			m_pPCL->SetGene( iGene, strGene );
 		else
 			m_vecstrGenes[ iGene ] = strGene; }
+
+	/*!
+	 * \brief
+	 * Randomizes the CDat's values by iterated swapping.
+	 */
+	void Randomize( ) {
+		size_t	i, j, iOne, iTwo;
+		float	dOne, dTwo;
+
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+				if( CMeta::IsNaN( dOne = Get( i, j ) ) )
+					continue;
+				while( true ) {
+					iOne = rand( ) % GetGenes( );
+					iTwo = rand( ) % GetGenes( );
+					if( iOne > iTwo )
+						std::swap( iOne, iTwo );
+					if( ( ( iOne != i ) || ( iTwo != j ) ) && !CMeta::IsNaN( dTwo = Get( iOne, iTwo ) ) )
+						break; }
+				Set( i, j, dTwo );
+				Set( iOne, iTwo, dOne ); } }
 };
 
 }

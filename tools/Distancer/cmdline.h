@@ -48,6 +48,8 @@ struct gengetopt_args_info
   const char *weights_help; /**< @brief Input weights file help description.  */
   int autocorrelate_flag;	/**< @brief Autocorrelate distances (default=off).  */
   const char *autocorrelate_help; /**< @brief Autocorrelate distances help description.  */
+  int freqweight_flag;	/**< @brief Weight conditions by frequency (default=off).  */
+  const char *freqweight_help; /**< @brief Weight conditions by frequency help description.  */
   int normalize_flag;	/**< @brief Normalize distances (default=off).  */
   const char *normalize_help; /**< @brief Normalize distances help description.  */
   int zscore_flag;	/**< @brief Convert correlations to z-scores (default=on).  */
@@ -77,6 +79,7 @@ struct gengetopt_args_info
   unsigned int distance_given ;	/**< @brief Whether distance was given.  */
   unsigned int weights_given ;	/**< @brief Whether weights was given.  */
   unsigned int autocorrelate_given ;	/**< @brief Whether autocorrelate was given.  */
+  unsigned int freqweight_given ;	/**< @brief Whether freqweight was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int flip_given ;	/**< @brief Whether flip was given.  */

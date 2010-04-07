@@ -61,7 +61,7 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open " << sArgs.input_arg << " with negatives" << endl;
 			return 1; } }
 	else
-		Dat.Open( vecpPositives, vecpNegatives, (float)sArgs.overlap_arg, Genome );
+		Dat.Open( vecpPositives, vecpNegatives, (float)sArgs.overlap_arg, Genome, !!sArgs.incident_flag );
 	if( sArgs.interactions_given ) {
 		for( iPositives = i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
@@ -93,6 +93,40 @@ int main( int iArgs, char** aszArgs ) {
 			setstrGenes.insert( Dat.GetGene( rand( ) % Dat.GetGenes( ) ) );
 		for( iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( ); ++iterGenes )
 			ostm << *iterGenes << endl; }
+	if( sArgs.exclude_arg ) {
+		CDat			DatExclude;
+		vector<size_t>	veciGenes;
+		size_t			iOne, iTwo;
+
+		if( !DatExclude.Open( sArgs.exclude_arg ) ) {
+			cerr << "Could not open: " << sArgs.exclude_arg << endl;
+			return 1; }
+		veciGenes.resize( DatExclude.GetGenes( ) );
+		for( i = 0; i < veciGenes.size( ); ++i )
+			veciGenes[i] = Dat.GetGene( DatExclude.GetGene( i ) );
+		for( i = 0; i < DatExclude.GetGenes( ); ++i ) {
+			if( ( iOne = veciGenes[i] ) == -1 )
+				continue;
+			for( j = ( i + 1 ); j < DatExclude.GetGenes( ); ++j ) {
+				if( ( iTwo = veciGenes[j] ) == -1 )
+					continue;
+				if( !CMeta::IsNaN( d = DatExclude.Get( i, j ) ) && d )
+					Dat.Set( iOne, iTwo, CMeta::GetNaN( ) ); } } }
+	if( sArgs.scramble_arg > 0 ) {
+		float	dPositives;
+		size_t	iPositives, iTotal;
+
+		for( i = iPositives = iTotal = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
+					iTotal++;
+					if( d )
+						iPositives++; }
+		dPositives = (float)iPositives / iTotal;
+		for( i = 0; i < Dat.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( ( (float)rand( ) / RAND_MAX ) < sArgs.scramble_arg )
+					Dat.Set( i, j, ( ( (float)rand( ) / RAND_MAX ) < dPositives ) ? 1.0f : 0 ); }
 
 	Dat.Save( sArgs.output_arg );
 

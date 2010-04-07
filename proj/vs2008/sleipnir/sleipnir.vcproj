@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../extlib/pthreads-w32-2-8-0-release/;../../../../extlib/log4cpp-1.0/include/;../../../../extlib/smile/;../../../../extlib/svm_perf/"
+				AdditionalIncludeDirectories="../../../../extlib/pthreads-w32-2-8-0-release/;../../../../extlib/log4cpp-1.0/include/;../../../../extlib/smile/;../../../../extlib/svm_perf/;../../../../extlib/vowpal_wabbit_v4.1/;../../../../extlib/boost_1_34_1/"
 				PreprocessorDefinitions="PTW32_STATIC_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,7 +107,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="../../../../extlib/pthreads-w32-2-8-0-release/;../../../../extlib/log4cpp-1.0/include/;../../../../extlib/smile/;../../../../extlib/svm_perf/"
+				AdditionalIncludeDirectories="../../../../extlib/pthreads-w32-2-8-0-release/;../../../../extlib/log4cpp-1.0/include/;../../../../extlib/smile/;../../../../extlib/svm_perf/;../../../../extlib/vowpal_wabbit_v4.1/;../../../../extlib/boost_1_34_1/"
 				PreprocessorDefinitions="PTW32_STATIC_LIB;NDEBUG;_SECURE_SCL=0"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -323,6 +323,10 @@
 				RelativePath="..\..\..\src\svm.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\vwb.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -473,6 +477,10 @@
 				RelativePath="..\..\..\src\trie.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\vwb.h"
+				>
+			</File>
 			<Filter
 				Name="internal"
 				>
@@ -618,6 +626,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\triei.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\vwbi.h"
 					>
 				</File>
 			</Filter>

@@ -44,7 +44,7 @@ option	"number_correl"	N	"Maximum number of pairs to sample for significant corr
 option	"sequences"		q	"Sequence types to use (comma separated)"
 							string
 option	"bases"			b	"Resolution of bases per motif match"
-							int	default="5000"
+							int	default="2500"
 option	"size_minimum"	z	"Minimum gene count for clusters of interest"
 							int	default="5"
 option	"size_merge"	E	"Maximum motif count for realtime merging"
@@ -79,6 +79,8 @@ option	"normalize"		e	"Automatically detect/normalize single channel data"
 							flag	off
 option	"progressive"	O	"Generate output progressively"
 							flag	on
+option	"seed"			D	"Expression pattern with which to seed first cluster"
+							string	typestr="filename"
 
 section "Optional"
 option	"threads"		t	"Maximum number of concurrent threads"

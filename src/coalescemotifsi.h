@@ -22,6 +22,9 @@
 #ifndef COALESCEMOTIFSI_H
 #define COALESCEMOTIFSI_H
 
+#include <float.h>
+#include <math.h>
+
 #include <string.h>
 #include <map>
 

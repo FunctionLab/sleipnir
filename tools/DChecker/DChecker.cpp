@@ -49,6 +49,8 @@ struct SSorter {
 		return ( m_fInvert ? ( sOne.m_dValue > sTwo.m_dValue ) : ( sOne.m_dValue < sTwo.m_dValue ) ); }
 };
 
+double AUCMod( const CDat&, const CDat&, const vector<bool>&, bool, float );
+
 int main( int iArgs, char** aszArgs ) {
 	CDat				Answers, Data;
 	gengetopt_args_info	sArgs;
@@ -323,8 +325,9 @@ int main( int iArgs, char** aszArgs ) {
 				*postm << '\t' << veciRecTerm[ i ];
 			*postm << endl; }
 		if( !sArgs.sse_flag )
-			*postm << "#	AUC	" << CStatistics::WilcoxonRankSum( Data, Answers, vecfHere,
-				!!sArgs.invert_flag ) << endl;
+			*postm << "#	AUC	" << ( sArgs.auc_arg ?
+				AUCMod( Data, Answers, vecfHere, !!sArgs.invert_flag, sArgs.auc_arg ) :
+				CStatistics::WilcoxonRankSum( Data, Answers, vecfHere, !!sArgs.invert_flag ) ) << endl;
 
 		if( sArgs.inputs_num )
 			ofsm.close( );
@@ -335,3 +338,71 @@ int main( int iArgs, char** aszArgs ) {
 			break; }
 
 	return 0; }
+
+struct SSorterMod {
+	const vector<float>&	m_vecdValues;
+
+	SSorterMod( const vector<float>& vecdValues ) : m_vecdValues(vecdValues) { }
+
+	bool operator()( size_t iOne, size_t iTwo ) {
+
+		return ( m_vecdValues[iTwo] < m_vecdValues[iOne] ); }
+};
+
+double AUCMod( const CDat& DatData, const CDat& DatAnswers, const vector<bool>& vecfGenesOfInterest, bool fInvert,
+	float dAUC ) {
+	size_t			i, j, iPos, iNeg, iPosCur, iNegCur, iOne, iTwo, iIndex, iAUC;
+	vector<float>	vecdValues, vecdAnswers;
+	vector<size_t>	veciGenes, veciIndices;
+	bool			fAnswer;
+	double			dRet;
+	float			d, dAnswer, dSens, dSpec, dSensPrev, dSpecPrev;
+
+	veciGenes.resize( DatAnswers.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = DatData.GetGene( DatAnswers.GetGene( i ) );
+
+	for( iPos = iNeg = i = 0; i < DatAnswers.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 )
+			continue;
+		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
+			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) ||
+				CMeta::IsNaN( d = DatData.Get( iOne, iTwo ) ) )
+				continue;
+			fAnswer = dAnswer > 0;
+			if( !( vecfGenesOfInterest.empty( ) ||
+				( fAnswer && vecfGenesOfInterest[ i ] && vecfGenesOfInterest[ j ] ) ||
+				( !fAnswer && ( vecfGenesOfInterest[ i ] || vecfGenesOfInterest[ j ] ) ) ) )
+				continue;
+			if( fAnswer )
+				iPos++;
+			else
+				iNeg++;
+			if( fInvert )
+				d = 1 - d;
+			vecdAnswers.push_back( dAnswer );
+			vecdValues.push_back( d ); } }
+
+	veciIndices.resize( vecdValues.size( ) );
+	for( i = 0; i < veciIndices.size( ); ++i )
+		veciIndices[i] = i;
+	sort( veciIndices.begin( ), veciIndices.end( ), SSorterMod( vecdValues ) );
+
+	iAUC = (size_t)( ( dAUC < 1 ) ? ( dAUC * iNeg ) : dAUC );
+	dRet = dSensPrev = dSpecPrev = 0;
+	for( iPosCur = iNegCur = i = 0; ( i < veciIndices.size( ) ) && ( iNegCur < iAUC ); ++i ) {
+		iIndex = veciIndices[i];
+		if( vecdAnswers[iIndex] > 0 )
+			iPosCur++;
+		else
+			iNegCur++;
+		dSens = (float)iPosCur / iPos;
+		dSpec = 1 - (float)( iNeg - iNegCur ) / iNeg;
+		if( dSpec > dSpecPrev ) {
+			dRet += ( dSpec - dSpecPrev ) * dSens;
+			dSensPrev = dSens;
+			dSpecPrev = dSpec; } }
+	dRet *= max( 1.0f, (float)iNeg / iAUC );
+
+	return dRet; }

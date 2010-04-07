@@ -353,6 +353,42 @@ AC_SUBST(SVM_PERF_CFLAGS)
 AC_SUBST(SVM_PERF_LIBS)
 
 
+## Vowpal Wabbit
+# If the user specifies a path, use it.
+# If the user says not to use it, then don't.
+# If the user doesn't specify anything, check for it.
+# While checking, look for a source distribution in extlib/.
+# If none, set NO_VOWPAL_WABBIT=1.
+AC_ARG_WITH([vowpal_wabbit],
+	[AS_HELP_STRING([--with-vowpal-wabbit=PATH], [prefix of Vowpal Wabbit installation])],
+	[],
+	[with_vowpal_wabbit=check])
+AC_LANG_PUSH([C])
+LOCAL_CHECK_LIB([vowpalwabbit], [vowpal_wabbit], [optimize_vw],
+        [],                                                        dnl found
+        [],                                                        dnl and found installed
+        [VOWPAL_WABBIT_PREFIX=$with_vowpal_wabbit],                        dnl and found in specified path
+	[AC_DEFINE([NO_VOWPAL_WABBIT], [1])],                          dnl not found
+        [AC_DEFINE([NO_VOWPAL_WABBIT], [1])],                          dnl requested without
+	[#include "vw.h"])
+AC_LANG_POP
+if test "x$vowpal_wabbit_state" != "xno"; then
+  ## set VOWPAL_WABBIT_CFLAGS and VOWPAL_WABBIT_LIBS
+  if test "x$VOWPAL_WABBIT_PREFIX" != "x"; then
+    LOCAL_CHECK_APPEND_PATHS([$VOWPAL_WABBIT_PREFIX], [include], [vw.h], [VOWPAL_WABBIT_INCLUDE_DIR], [vowpal_wabbit_state=warn])
+    LOCAL_CHECK_APPEND_PATHS([$VOWPAL_WABBIT_PREFIX], [lib], [libvw.a], [VOWPAL_WABBIT_LIB_DIR], [vowpal_wabbit_state=warn])
+#    if ! test -f "$VOWPAL_WABBIT_INCLUDE_DIR/vw.h"; then vowpal_wabbit_state=warn; fi
+#    if ! test -f "$VOWPAL_WABBIT_LIB_DIR/libvw.a"; then vowpal_wabbit_state=warn; fi
+    VOWPAL_WABBIT_CFLAGS="-I$VOWPAL_WABBIT_INCLUDE_DIR"
+    VOWPAL_WABBIT_LIBS="-L$VOWPAL_WABBIT_LIB_DIR"
+  fi
+  VOWPAL_WABBIT_LIBS="$VOWPAL_WABBIT_LIBS -lvw"
+fi
+AC_SUBST(VOWPAL_WABBIT_PREFIX)
+AC_SUBST(VOWPAL_WABBIT_CFLAGS)
+AC_SUBST(VOWPAL_WABBIT_LIBS)
+
+
 ## BOOST
 # If the user specifies a path, use it.
 # If not specified, check for it.
@@ -512,6 +548,7 @@ AC_ARG_WITH([tools],
 AM_CONDITIONAL([WITH_TOOLS], [$with_tools])
 AM_CONDITIONAL([WITH_SMILE_TOOLS], [test "x$smile_state" != "xno"])
 AM_CONDITIONAL([WITH_SVM_TOOLS], [test "x$svm_perf_state" != "xno"])
+AM_CONDITIONAL([WITH_VW_TOOLS], [test "x$vowpal_wabbit_state" != "xno"])
 AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_state" != "xno"])
 AM_CONDITIONAL([WITH_BOOST_TOOLS], [test "x$boost_state" != "xno"])
 AM_CONDITIONAL([WITH_GENGETOPT], [test "x$prog_gengetopt_state" != "xno"])
@@ -521,6 +558,7 @@ AC_CONFIG_FILES([Makefile \
                  tools/Makefile \
 		 tools/Answerer/Makefile \
 		 tools/Cliquer/Makefile \
+		 tools/Clinician/Makefile \
 		 tools/Clusterer/Makefile \
 		 tools/Clusters2Dab/Makefile \
 		 tools/COALESCE/Makefile \
@@ -534,6 +572,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/DataDumper/Makefile \
 		 tools/Distancer/Makefile \
 		 tools/Explainer/Makefile \
+		 tools/Filterer/Makefile \
 		 tools/Funcaeologist/Makefile \
 		 tools/Funcifier/Makefile \
 		 tools/Funcographer/Makefile \
@@ -549,6 +588,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/PCLPlotter/Makefile \
 		 tools/Randomizer/Makefile \
 		 tools/Seqs2Ngrams/Makefile \
+		 tools/SMRF/Makefile \
 		 tools/SVDer/Makefile \
 		 tools/Synthesizer/Makefile \
 		 tools/Txt2Bin/Makefile \
@@ -570,6 +610,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/MEFIT/Makefile \
                  tools/Data2Svm/Makefile \
 		 tools/SVMer/Makefile \
+		 tools/VWer/Makefile \
                  tools/OntoShell/Makefile \
                  tools/BNServer/Makefile])
 
@@ -587,6 +628,7 @@ fi
 echo "  log4cpp         = $log4cpp_info"
 echo "  SMILE           = $smile_info"
 echo "  SVM Perf        = $svm_perf_info"
+echo "  Vowpal Wabbit   = $vowpal_wabbit_info"
 echo "  pthread         = $pthread_info"
 if $with_tools; then
 echo "Used for tools:"
@@ -647,6 +689,24 @@ elif test "x$svm_perf_state" = "xwarn"; then
 
 ** WARNING: The path to SVM Perf may be incorrect.
 I looked for svm_struct_api.h and libsvmperf.a and did not
+find both.
+EOF
+
+fi
+
+if test "x$vowpal_wabbit_state" = "xno"; then
+  cat << EOF
+
+** BUILDING WITHOUT VOWPAL WABBIT
+Vowpal Wabbit is optional.
+It is available from http://hunch.net/~vw/.
+EOF
+
+elif test "x$vowpal_wabbit_state" = "xwarn"; then
+  cat << EOF
+
+** WARNING: The path to Vowpal Wabbit may be incorrect.
+I looked for vw.h and libvw.a and did not
 find both.
 EOF
 

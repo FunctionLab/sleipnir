@@ -307,6 +307,37 @@ bool CGenome::Open( const std::vector<std::string>& vecstrGenes ) {
 
 	return true; }
 
+bool CGenome::Open( const char* szFile, std::vector<CGenes*>& vecpGenes ) {
+	ifstream	ifsm;
+
+	if( !szFile )
+		return Open( cin, vecpGenes );
+
+	ifsm.open( szFile );
+	return ( ifsm.is_open( ) ? Open( ifsm, vecpGenes ) : false ); }
+
+bool CGenome::Open( std::istream& istmGenes, std::vector<CGenes*>& vecpGenes ) {
+	char			szLine[ c_iBufferSize ];
+	string			strLine;
+	vector<string>	vecstrLine;
+	CGenes*			pGenes;
+
+	while( istmGenes.peek( ) != EOF ) {
+		istmGenes.getline( szLine, c_iBufferSize - 1 );
+		szLine[ c_iBufferSize - 1 ] = 0;
+		if( !( strLine = CMeta::Trim( szLine ) ).length( ) )
+			continue;
+		vecstrLine.clear( );
+		CMeta::Tokenize( strLine.c_str( ), vecstrLine );
+		pGenes = new CGenes( *this );
+		if( !pGenes->Open( vecstrLine ) ) {
+			delete pGenes;
+			g_CatSleipnir( ).error( "CGenome::Open( ) could not open line: %s", szLine );
+			return false; }
+		vecpGenes.push_back( pGenes ); }
+
+	return true; }
+
 /*!
  * \brief
  * Adds a new gene with the given primary ID to the genome.
@@ -440,6 +471,65 @@ bool CGenome::AddSynonym( CGene& Gene, const std::string& strName ) {
 		return true; }
 
 	return false; }
+
+/*!
+ * \brief
+ * Simultaneously construct multiple new gene sets loaded from the given file, one per line, with tab-delimited genes.
+ * 
+ * \param szFile
+ * File from which gene sets are loaded.
+ * 
+ * \param Genome
+ * Genome containing all genes which might become members of these gene sets.
+ * 
+ * \param vecstrNames
+ * Human-readable identifiers for the loaded gene sets.
+ * 
+ * \param vecpGenes
+ * Vector to which loaded gene sets are appended.
+ * 
+ * \returns
+ * True on success, false otherwise.
+ * 
+ * Opens multiple gene sets from the given tab-delimited text file.  Each line should contain a single tab-delimited gene
+ * set, and the first token on each line should be a human-readable identifier for that line's gene set.
+ * 
+ * \see
+ * Open
+ */
+bool CGenes::Open( const char* szFile, CGenome& Genome, std::vector<std::string>& vecstrNames, std::vector<CGenes*>& vecpGenes ) {
+	ifstream		ifsm;
+	vector<char>	veccBuffer;
+	istream*		pistm;
+	bool			fRet;
+
+	if( szFile ) {
+		ifsm.open( szFile );
+		pistm = &ifsm; }
+	else
+		pistm = &cin;
+	if( !ifsm.is_open( ) ) {
+		g_CatSleipnir( ).error( "CGenes::Open( %s ) could not open file", szFile ? szFile : "stdin" );
+		return false; }
+
+	veccBuffer.resize( CFile::GetBufferSize( ) );
+	fRet = false;
+	while( !pistm->eof( ) ) {
+		vector<string>	vecstrLine;
+
+		pistm->getline( &veccBuffer[0], veccBuffer.size( ) - 1 );
+		CMeta::Tokenize( &veccBuffer[0], vecstrLine );
+		if( vecstrLine.empty( ) )
+			continue;
+		vecstrNames.push_back( vecstrLine[0] );
+		vecstrLine.erase( vecstrLine.begin( ) );
+		vecpGenes.push_back( new CGenes( Genome ) );
+		if( !( fRet = vecpGenes.back( )->Open( vecstrLine ) ) )
+			break; }
+	if( szFile )
+		ifsm.close( );
+
+	return fRet; }
 
 /*!
  * \brief

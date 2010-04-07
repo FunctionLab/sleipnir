@@ -98,6 +98,8 @@ int main( int iArgs, char** aszArgs ) {
 					return 1; }
 				Dat.SetGene( i, iterName->second ); } }
 
+	if( sArgs.randomize_flag )
+		Dat.Randomize( );
 	if( sArgs.rank_flag )
 		Dat.Rank( );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
@@ -168,6 +170,26 @@ int main( int iArgs, char** aszArgs ) {
 					( ( (float)rand( ) / RAND_MAX ) > sArgs.subsample_arg ) )
 					Dat.Set( i, j, CMeta::GetNaN( ) );
 
+	if( sArgs.edges_arg ) {
+		CDat			DatLk1;
+		vector<size_t>	veciGenesOne;
+		size_t			iOne, iTwo;
+
+		if( !DatLk1.Open( sArgs.edges_arg ) ) {
+			cerr << "Could not open: " << sArgs.edges_arg << endl;
+			return 1; }
+		veciGenesOne.resize( Dat.GetGenes( ) );
+		for( i = 0; i < veciGenesOne.size( ); ++i )
+			veciGenesOne[ i ] = DatLk1.GetGene( Dat.GetGene( i ) );
+		for( i = 0; i < Dat.GetGenes( ); ++i ) {
+			if( ( iOne = veciGenesOne[ i ] ) == -1 ) {
+				for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+					Dat.Set( i, j, CMeta::GetNaN( ) );
+				continue; }
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+				if( ( ( iTwo = veciGenesOne[ j ] ) == -1 ) ||
+					CMeta::IsNaN( DatLk1.Get( iOne, iTwo ) ) )
+					Dat.Set( i, j, CMeta::GetNaN( ) ); } }
 	if( sArgs.lookups1_arg ) {
 		CGenes			GenesLk1( Genome );
 		vector<size_t>	veciGenesOne;

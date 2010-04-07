@@ -25,6 +25,8 @@
 #include <map>
 #include <vector>
 
+#include "filei.h"
+
 namespace Sleipnir {
 
 class CGene;
@@ -50,7 +52,7 @@ protected:
 	std::string				m_strGloss;
 };
 
-class CGenomeImpl {
+class CGenomeImpl : protected CFileImpl {
 protected:
 	typedef std::map<std::string,size_t>	TMapStrI;
 

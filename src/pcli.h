@@ -65,7 +65,7 @@ protected:
 
 		vecdTmp.resize( vecdValues.size( ) );
 		for( dSum = 0,i = 0; i < vecdTmp.size( ); ++i )
-			for( j = ( max( i, c_iRadius ) - c_iRadius ); j < max( vecdTmp.size( ), i + c_iRadius ); ++j ) {
+			for( j = ( max( i, c_iRadius ) - c_iRadius ); j < min( vecdTmp.size( ), i + c_iRadius ); ++j ) {
 				k = max( i, j ) - min( i, j );
 				vecdTmp[i] += ( d = ( vecdValues[j] / ( 1 + pow( (float)k, dPower ) ) ) );
 				dSum += d; }

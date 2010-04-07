@@ -33,9 +33,8 @@
  * Given sets of known related genes - pathways, complexes, GO terms, etc. - Answerer generates a gold
  * standard Sleipnir::CDat.  By considering every pair of genes coannotated to one of these sets to be
  * related, the gold standard answers will include a collection of known functionally related pairs.
- * If Answerer is only provided with positive gene sets, it splits the world of gene pairs up into two
- * values, positive (related) and negative (unrelated), modulo any uncertain pairs introduced by the
- * \c overlap option (see below).
+ * If Answerer is only provided with positive gene sets, it will only generate positive (related) pairs,
+ *  modulo any uncertain pairs introduced by the \c overlap option (see below).
  * 
  * In addition to these positive gene sets, Answerer optionally also takes one or more negative sets.
  * These represent "minimally related" genes, such that gene pairs \e not coannotated to a negative set

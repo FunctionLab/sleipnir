@@ -25,6 +25,7 @@
 int cliques( const gengetopt_args_info&, const CDat&, const CDat&, const vector<size_t>& );
 int heavy( const gengetopt_args_info&, CDat&, const CDat&, const vector<size_t>& );
 int heavy2( const gengetopt_args_info&, CDat&, const CDat&, const vector<size_t>& );
+int motifs( const gengetopt_args_info&, CDat& );
 bool connectivity( size_t, const vector<size_t>&, const vector<float>&, const vector<size_t>&,
 	float, size_t, float, size_t, const CDat&, float&, size_t&, float&, size_t& );
 void max_connectivity( const vector<bool>&, const vector<size_t>&, const vector<float>&,
@@ -67,8 +68,9 @@ int main( int iArgs, char** aszArgs ) {
 		for( i = 0; i < veciKnowns.size( ); ++i )
 			veciKnowns[ i ] = DatKnowns.GetGene( Dat.GetGene( i ) ); }
 
-	iRet = sArgs.heavy_arg ? heavy2( sArgs, Dat, DatKnowns, veciKnowns ) :
-		cliques( sArgs, Dat, DatKnowns, veciKnowns );
+	iRet = sArgs.motifs_arg ? motifs( sArgs, Dat ) : ( sArgs.heavy_arg ?
+		heavy2( sArgs, Dat, DatKnowns, veciKnowns ) :
+		cliques( sArgs, Dat, DatKnowns, veciKnowns ) );
 
 	return iRet; }
 
@@ -364,5 +366,27 @@ int heavy2( const gengetopt_args_info& sArgs, CDat& Dat, const CDat& DatKnowns,
 			break; }
 		if( !fHit )
 			break; }
+
+	return 0; }
+
+int motifs( const gengetopt_args_info& sArgs, CDat& Dat ) {
+	size_t			i, j, k, iOne, iTwo, iThree;
+	vector<size_t>	veciOne, veciTwo;
+	vector<bool>	vecfSign;
+	float			dOne, dTwo, dThree;
+
+	for( i = 0; i < Dat.GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+			if( !CMeta::IsNaN( dOne = Dat.Get( i, j ) ) && ( fabs( dOne ) >= sArgs.motifs_arg ) ) {
+				iOne = ( dOne >= 0 ) ? 1 : 0;
+				for( k = ( j + 1 ); k < Dat.GetGenes( ); ++k )
+					if( !CMeta::IsNaN( dTwo = Dat.Get( j, k ) ) && ( fabs( dTwo ) >= sArgs.motifs_arg ) &&
+						!CMeta::IsNaN( dThree = Dat.Get( i, k ) ) && ( fabs( dThree ) >= sArgs.motifs_arg ) ) {
+						iTwo = ( dTwo >= 0 ) ? 1 : 0;
+						iThree = ( dThree >= 0 ) ? 1 : 0;
+						if( ( iOne + iTwo + iThree ) == 1 ) {
+							cout << Dat.GetGene( i ) << '\t' << dOne << '\t' <<
+								Dat.GetGene( j ) << '\t' << dTwo << '\t' <<
+								Dat.GetGene( k ) << '\t' << dThree << endl; } } }
 
 	return 0; }

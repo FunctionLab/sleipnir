@@ -2,6 +2,7 @@ if WITH_TOOLS
   TOOLS_SUBDIRS = \
           Answerer \
 	  Cliquer \
+	  Clinician \
 	  Clusterer \
 	  Clusters2Dab \
 	  COALESCE \
@@ -15,6 +16,7 @@ if WITH_TOOLS
 	  DataDumper \
 	  Distancer \
 	  Explainer \
+	  Filterer \
 	  Funcaeologist \
 	  Funcifier \
 	  Funcographer \
@@ -30,6 +32,7 @@ if WITH_TOOLS
 	  PCLPlotter \
 	  Randomizer \
 	  Seqs2Ngrams \
+	  SMRF \
 	  SVDer \
 	  Synthesizer \
 	  Txt2Bin
@@ -60,9 +63,12 @@ if WITH_SVM_TOOLS
           Data2Svm \
 	  SVMer
 endif
+if WITH_VW_TOOLS
+    VW_TOOLS_SUBDIRS = VWer
+endif
 if WITH_READLINE_TOOLS
     READLINE_TOOLS_SUBDIRS = OntoShell
 endif
 endif
 
-SUBDIRS = $(TOOLS_SUBDIRS) $(SMILE_TOOLS_SUBDIRS) $(BOOST_TOOLS_SUBDIRS) $(SVM_TOOLS_SUBDIRS) $(READLINE_TOOLS_SUBDIRS)
+SUBDIRS = $(TOOLS_SUBDIRS) $(SMILE_TOOLS_SUBDIRS) $(BOOST_TOOLS_SUBDIRS) $(SVM_TOOLS_SUBDIRS) $(READLINE_TOOLS_SUBDIRS) $(VW_TOOLS_SUBDIRS)

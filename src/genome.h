@@ -29,6 +29,8 @@
 
 namespace Sleipnir {
 
+class CGenes;
+
 /*!
  * \brief
  * Represents a gene with a single primary unique identifier, zero or more synonyms, and zero or more
@@ -287,6 +289,8 @@ class CGenome : CGenomeImpl {
 public:
 	bool Open( std::istream& istmFeatures );
 	bool Open( const std::vector<std::string>& vecstrGenes );
+	bool Open( const char* szFile, std::vector<CGenes*>& vecpGenes );
+	bool Open( std::istream& istmGenes, std::vector<CGenes*>& vecpGenes );
 	CGene& AddGene( const std::string& strID );
 	size_t FindGene( const std::string& strGene ) const;
 	std::vector<std::string> GetGeneNames( ) const;
@@ -354,6 +358,8 @@ public:
  */
 class CGenes : CGenesImpl {
 public:
+	static bool Open( const char* szFile, CGenome& Genome, std::vector<std::string>& vecstrNames, std::vector<CGenes*>& vecpGenes );
+
 	CGenes( CGenome& Genome );
 
 	bool Open( std::istream& istm, bool fCreate = true );
@@ -469,6 +475,28 @@ public:
 
 		return ( ( ( iterGene = m_mapGenes.find( strGene ) ) == m_mapGenes.end( ) ) ? -1 :
 			iterGene->second ); }
+
+	/*!
+	 * \brief
+	 * Adds a new gene with the given ID to the gene set.
+	 * 
+	 * \param strGene
+	 * Gene ID to be added.
+	 * 
+	 * \returns
+	 * True if gene was added, false if it was already included.
+	 * 
+	 * \see
+	 * Open | GetGene
+	 */
+	bool AddGene( const std::string& strGene ) {
+
+		if( GetGene( strGene ) != -1 )
+			return false;
+
+		m_mapGenes[ strGene ] = m_vecpGenes.size( );
+		m_vecpGenes.push_back( &m_Genome.AddGene( strGene ) );
+		return true; }
 };
 
 }

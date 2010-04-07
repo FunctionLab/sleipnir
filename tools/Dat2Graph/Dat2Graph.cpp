@@ -33,19 +33,35 @@ int open_genes( const char* szFile, CGenes& Genes ) {
 
 	return 0; }
 
-int main( int iArgs, char** aszArgs ) {
+int open_values( const char* szFile, vector<float>& vecdValues ) {
 	static const size_t	c_iBuf	= 1024;
 	char				szBuf[ c_iBuf ];
+	ifstream			ifsm;
+
+	if( szFile ) {
+		ifsm.open( szFile );
+		if( !ifsm.is_open( ) ) {
+			cerr << "Could not open: " << szFile << endl;
+			return 1; }
+		while( ifsm.peek( ) != EOF ) {
+			ifsm.getline( szBuf, c_iBuf - 1 );
+			vecdValues.push_back( (float)atof( szBuf ) ); }
+		ifsm.close( ); }
+
+	return 0; }
+
+int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
 	CDat				Dat, DatNew;
 	CDat*				pDat;
 	float				d, dCutoff;
 	CGenome				Genome;
-	CGenes				GenesIn( Genome ), GenesQr( Genome );
+	CGenes				GenesIn( Genome ), GenesEx( Genome ), GenesQr( Genome );
 	int					iRet;
-	size_t				i, j;
-	vector<float>		vecdColors, vecdBorders;
+	size_t				i, j, k;
+	vector<float>		vecdColors, vecdBorders, vecdWeights;
+	vector<size_t>		veciQuery;
 
 	if( cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 ) && ( sArgs.config_arg &&
 		cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) ) ) {
@@ -59,30 +75,15 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open: " << sArgs.features_arg << endl;
 			return 1; }
 		ifsm.close( ); }
-
-	if( sArgs.colors_arg ) {
-		ifsm.clear( );
-		ifsm.open( sArgs.colors_arg );
-		if( !ifsm.is_open( ) ) {
-			cerr << "Could not open: " << sArgs.colors_arg << endl;
-			return 1; }
-		while( ifsm.peek( ) != EOF ) {
-			ifsm.getline( szBuf, c_iBuf - 1 );
-			vecdColors.push_back( (float)atof( szBuf ) ); }
-		ifsm.close( ); }
-
-	if( sArgs.borders_arg ) {
-		ifsm.clear( );
-		ifsm.open( sArgs.borders_arg );
-		if( !ifsm.is_open( ) ) {
-			cerr << "Could not open: " << sArgs.borders_arg << endl;
-			return 1; }
-		while( ifsm.peek( ) != EOF ) {
-			ifsm.getline( szBuf, c_iBuf - 1 );
-			vecdBorders.push_back( (float)atof( szBuf ) ); }
-		ifsm.close( ); }
-
+	if( iRet = open_values( sArgs.colors_arg, vecdColors ) )
+		return iRet;
+	if( iRet = open_values( sArgs.borders_arg, vecdBorders ) )
+		return iRet;
+	if( iRet = open_values( sArgs.genew_arg, vecdWeights ) )
+		return iRet;
 	if( iRet = open_genes( sArgs.genes_arg, GenesIn ) )
+		return iRet;
+	if( iRet = open_genes( sArgs.genex_arg, GenesEx ) )
 		return iRet;
 	if( iRet = open_genes( sArgs.geneq_arg, GenesQr ) )
 		return iRet;
@@ -97,7 +98,11 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	pDat = &Dat;
 
-	dCutoff = (float)( sArgs.cutoff_given ? sArgs.cutoff_arg : HUGE_VAL );
+	veciQuery.resize( pDat->GetGenes( ) );
+	for( i = 0; i < veciQuery.size( ); ++i )
+		veciQuery[ i ] = GenesQr.GetGene( pDat->GetGene( i ) );
+
+	dCutoff = (float)( sArgs.cutoff_given ? sArgs.cutoff_arg : -FLT_MAX );
 	if( GenesIn.GetGenes( ) ) {
 		vector<size_t>	veciGenes;
 
@@ -112,8 +117,10 @@ int main( int iArgs, char** aszArgs ) {
 				if( veciGenes[ j ] != -1 )
 					DatNew.Set( i, j, Dat.Get( veciGenes[ i ], veciGenes[ j ] ) ); }
 		pDat = &DatNew; }
+	if( GenesEx.GetGenes( ) )
+		pDat->FilterGenes( GenesEx, CDat::EFilterExclude );
 	if( sArgs.normalize_flag )
-		pDat->Normalize( CDat::ENormalizeMinMax );
+		pDat->Normalize( CDat::ENormalizeSigmoid );
 	if( GenesQr.GetGenes( ) ) {
 		if( sArgs.cutoff_given )
 			for( i = 0; i < pDat->GetGenes( ); ++i )
@@ -152,7 +159,6 @@ int main( int iArgs, char** aszArgs ) {
 			for( i = 0; i < vecdScores.size( ); ++i )
 				cout << pDat->GetGene( i ) << '\t' << vecdScores[ i ] << endl; }
 		else {
-			dCutoff = 0;
 			if( vecdColors.empty( ) ) {
 				vecdColors.resize( pDat->GetGenes( ) );
 				fill( vecdColors.begin( ), vecdColors.end( ), 0.5f );
@@ -160,7 +166,7 @@ int main( int iArgs, char** aszArgs ) {
 					if( ( j = pDat->GetGene( GenesQr.GetGene( i ).GetName( ) ) ) != -1 )
 						vecdColors[ j ] = 1; }
 			pDat->FilterGenes( GenesQr, sArgs.hefalmp_flag ? CDat::EFilterHefalmp : CDat::EFilterPixie,
-				sArgs.neighbors_arg, (float)sArgs.edges_arg ); } }
+				sArgs.neighbors_arg, (float)sArgs.edges_arg, vecdWeights.empty( ) ? NULL : &vecdWeights ); } }
 	if( sArgs.knowns_arg ) {
 		CDat			DatKnowns;
 		vector<size_t>	veciKnowns;
@@ -189,30 +195,32 @@ int main( int iArgs, char** aszArgs ) {
 	else if( !strcmp( sArgs.format_arg, "matisse" ) )
 		pDat->SaveMATISSE( cout, dCutoff, &Genome );
 	else if( !strcmp( sArgs.format_arg, "list" ) ) {
-		vector<bool>					vecfQuery;
 		map<size_t, float>				mapGenes;
 		map<size_t, float>::iterator	iterGene;
-		size_t							iGene;
+		float							dCur;
 
-		vecfQuery.resize( pDat->GetGenes( ) );
-		for( i = 0; i < vecfQuery.size( ); ++i )
-			vecfQuery[ i ] = GenesQr.IsGene( pDat->GetGene( i ) );
 		for( i = 0; i < pDat->GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < pDat->GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = pDat->Get( i, j ) ) &&
-					( CMeta::IsNaN( dCutoff ) || ( d > dCutoff ) ) &&
-					( vecfQuery[ i ] != vecfQuery[ j ] ) ) {
-					iGene = vecfQuery[ i ] ? j : i;
-					if( ( iterGene = mapGenes.find( iGene ) ) == mapGenes.end( ) )
-						mapGenes[ iGene ] = d;
-					else
-						iterGene->second += d; }
+					( CMeta::IsNaN( dCutoff ) || ( d > dCutoff ) ) ) {
+					if( ( k = veciQuery[ i ] ) != -1 ) {
+						dCur = d * ( vecdWeights.empty( ) ? 1 : vecdWeights[ k ] );
+						if( ( iterGene = mapGenes.find( j ) ) == mapGenes.end( ) )
+							mapGenes[ j ] = dCur;
+						else
+							iterGene->second += dCur; }
+					if( ( k = veciQuery[ j ] ) != -1 ) {
+						dCur = d * ( vecdWeights.empty( ) ? 1 : vecdWeights[ k ] );
+						if( ( iterGene = mapGenes.find( i ) ) == mapGenes.end( ) )
+							mapGenes[ i ] = dCur;
+						else
+							iterGene->second += dCur; } }
 		for( iterGene = mapGenes.begin( ); iterGene != mapGenes.end( ); ++iterGene )
 			cout << pDat->GetGene( iterGene->first ) << '\t' << iterGene->second << endl; }
 	else if( !strcmp( sArgs.format_arg, "dat" ) ) {
 		for( i = 0; i < pDat->GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < pDat->GetGenes( ); ++j )
-				if( pDat->Get( i, j ) < dCutoff )
+				if( ( d = pDat->Get( i, j ) ) < dCutoff )
 					pDat->Set( i, j, CMeta::GetNaN( ) );
 		pDat->Save( cout, CDat::EFormatText ); }
 

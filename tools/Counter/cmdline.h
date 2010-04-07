@@ -76,12 +76,19 @@ struct gengetopt_args_info
   char * zeros_arg;	/**< @brief Read zeroed node IDs/outputs from the given file.  */
   char * zeros_orig;	/**< @brief Read zeroed node IDs/outputs from the given file original value given at command line.  */
   const char *zeros_help; /**< @brief Read zeroed node IDs/outputs from the given file help description.  */
-  int pseudocounts_arg;	/**< @brief Effective number of pseudocounts to use (default='-1').  */
+  int genewise_flag;	/**< @brief Evaluate networks assuming genewise contexts (default=off).  */
+  const char *genewise_help; /**< @brief Evaluate networks assuming genewise contexts help description.  */
+  float pseudocounts_arg;	/**< @brief Effective number of pseudocounts to use (default='-1').  */
   char * pseudocounts_orig;	/**< @brief Effective number of pseudocounts to use original value given at command line.  */
   const char *pseudocounts_help; /**< @brief Effective number of pseudocounts to use help description.  */
   char * alphas_arg;	/**< @brief File containing equivalent sample sizes (alphas) for each node.  */
   char * alphas_orig;	/**< @brief File containing equivalent sample sizes (alphas) for each node original value given at command line.  */
   const char *alphas_help; /**< @brief File containing equivalent sample sizes (alphas) for each node help description.  */
+  int regularize_flag;	/**< @brief Automatically regularize based on similarity (default=off).  */
+  const char *regularize_help; /**< @brief Automatically regularize based on similarity help description.  */
+  char * reggroups_arg;	/**< @brief Automatically regularize based on given groups.  */
+  char * reggroups_orig;	/**< @brief Automatically regularize based on given groups original value given at command line.  */
+  const char *reggroups_help; /**< @brief Automatically regularize based on given groups help description.  */
   char * temporary_arg;	/**< @brief Directory for temporary files (default='.').  */
   char * temporary_orig;	/**< @brief Directory for temporary files original value given at command line.  */
   const char *temporary_help; /**< @brief Directory for temporary files help description.  */
@@ -114,8 +121,11 @@ struct gengetopt_args_info
   unsigned int genee_given ;	/**< @brief Whether genee was given.  */
   unsigned int default_given ;	/**< @brief Whether default was given.  */
   unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
+  unsigned int genewise_given ;	/**< @brief Whether genewise was given.  */
   unsigned int pseudocounts_given ;	/**< @brief Whether pseudocounts was given.  */
   unsigned int alphas_given ;	/**< @brief Whether alphas was given.  */
+  unsigned int regularize_given ;	/**< @brief Whether regularize was given.  */
+  unsigned int reggroups_given ;	/**< @brief Whether reggroups was given.  */
   unsigned int temporary_given ;	/**< @brief Whether temporary was given.  */
   unsigned int smile_given ;	/**< @brief Whether smile was given.  */
   unsigned int xdsl_given ;	/**< @brief Whether xdsl was given.  */

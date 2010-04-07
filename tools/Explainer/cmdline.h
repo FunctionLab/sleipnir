@@ -64,6 +64,9 @@ struct gengetopt_args_info
   char * genet_arg;	/**< @brief Term inclusion file.  */
   char * genet_orig;	/**< @brief Term inclusion file original value given at command line.  */
   const char *genet_help; /**< @brief Term inclusion file help description.  */
+  char * genee_arg;	/**< @brief Edge inclusion file.  */
+  char * genee_orig;	/**< @brief Edge inclusion file original value given at command line.  */
+  const char *genee_help; /**< @brief Edge inclusion file help description.  */
   int normalize_flag;	/**< @brief Normalize to the range [0,1] (default=off).  */
   const char *normalize_help; /**< @brief Normalize to the range [0,1] help description.  */
   int invert_flag;	/**< @brief Invert correlations to distances (default=off).  */
@@ -101,6 +104,7 @@ struct gengetopt_args_info
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */
   unsigned int genet_given ;	/**< @brief Whether genet was given.  */
+  unsigned int genee_given ;	/**< @brief Whether genee was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int invert_given ;	/**< @brief Whether invert was given.  */
   unsigned int reverse_given ;	/**< @brief Whether reverse was given.  */

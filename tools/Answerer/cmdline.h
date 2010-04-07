@@ -34,6 +34,9 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
+  char * output_arg;	/**< @brief Output DAB file.  */
+  char * output_orig;	/**< @brief Output DAB file original value given at command line.  */
+  const char *output_help; /**< @brief Output DAB file help description.  */
   char * positives_arg;	/**< @brief Directory containing related gene lists.  */
   char * positives_orig;	/**< @brief Directory containing related gene lists original value given at command line.  */
   const char *positives_help; /**< @brief Directory containing related gene lists help description.  */
@@ -46,18 +49,23 @@ struct gengetopt_args_info
   double interactions_arg;	/**< @brief Expected interactions per gene.  */
   char * interactions_orig;	/**< @brief Expected interactions per gene original value given at command line.  */
   const char *interactions_help; /**< @brief Expected interactions per gene help description.  */
+  int incident_flag;	/**< @brief Require negative pairs to include an annotated gene (default=off).  */
+  const char *incident_help; /**< @brief Require negative pairs to include an annotated gene help description.  */
+  char * exclude_arg;	/**< @brief DAT/DAB file of gene pairs to exclude from the standard.  */
+  char * exclude_orig;	/**< @brief DAT/DAB file of gene pairs to exclude from the standard original value given at command line.  */
+  const char *exclude_help; /**< @brief DAT/DAB file of gene pairs to exclude from the standard help description.  */
+  double scramble_arg;	/**< @brief Fraction of gene pairs to set randomly (default='0').  */
+  char * scramble_orig;	/**< @brief Fraction of gene pairs to set randomly original value given at command line.  */
+  const char *scramble_help; /**< @brief Fraction of gene pairs to set randomly help description.  */
+  double overlap_arg;	/**< @brief P-value cutoff for negative term overlap (default='0').  */
+  char * overlap_orig;	/**< @brief P-value cutoff for negative term overlap original value given at command line.  */
+  const char *overlap_help; /**< @brief P-value cutoff for negative term overlap help description.  */
   char * genome_arg;	/**< @brief List of all genes to be considered.  */
   char * genome_orig;	/**< @brief List of all genes to be considered original value given at command line.  */
   const char *genome_help; /**< @brief List of all genes to be considered help description.  */
   double test_arg;	/**< @brief Fraction of genes to randomly select for testing (default='0').  */
   char * test_orig;	/**< @brief Fraction of genes to randomly select for testing original value given at command line.  */
   const char *test_help; /**< @brief Fraction of genes to randomly select for testing help description.  */
-  char * output_arg;	/**< @brief Output dab file.  */
-  char * output_orig;	/**< @brief Output dab file original value given at command line.  */
-  const char *output_help; /**< @brief Output dab file help description.  */
-  double overlap_arg;	/**< @brief P-value cutoff for negative term overlap (default='0').  */
-  char * overlap_orig;	/**< @brief P-value cutoff for negative term overlap original value given at command line.  */
-  const char *overlap_help; /**< @brief P-value cutoff for negative term overlap help description.  */
   int random_arg;	/**< @brief Seed random generator (default='0').  */
   char * random_orig;	/**< @brief Seed random generator original value given at command line.  */
   const char *random_help; /**< @brief Seed random generator help description.  */
@@ -67,14 +75,17 @@ struct gengetopt_args_info
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
+  unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int positives_given ;	/**< @brief Whether positives was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int negatives_given ;	/**< @brief Whether negatives was given.  */
   unsigned int interactions_given ;	/**< @brief Whether interactions was given.  */
+  unsigned int incident_given ;	/**< @brief Whether incident was given.  */
+  unsigned int exclude_given ;	/**< @brief Whether exclude was given.  */
+  unsigned int scramble_given ;	/**< @brief Whether scramble was given.  */
+  unsigned int overlap_given ;	/**< @brief Whether overlap was given.  */
   unsigned int genome_given ;	/**< @brief Whether genome was given.  */
   unsigned int test_given ;	/**< @brief Whether test was given.  */
-  unsigned int output_given ;	/**< @brief Whether output was given.  */
-  unsigned int overlap_given ;	/**< @brief Whether overlap was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 

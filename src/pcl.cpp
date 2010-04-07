@@ -126,6 +126,9 @@ struct SNeighbors {
  * \param eMap
  * Way in which returned value should be centered (implementation-specific).
  * 
+ * \param fFrequencyWeight
+ * If true, weight each condition by the frequency with which it is nonzero over all genes.
+ * 
  * \returns
  * 0 on successes, a nonzero value on failure.
  * 
@@ -152,7 +155,7 @@ struct SNeighbors {
  */
 int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMeasure, bool fNormalize,
 	bool fZScore, bool fAutocorrelate, const char* szGeneFile, float dCutoff, size_t iLimit, CPCL& PCL,
-	CDat& Dat, IMeasure::EMap eMap ) {
+	CDat& Dat, IMeasure::EMap eMap, bool fFrequencyWeight ) {
 	size_t						i, j, iOne, iTwo;
 	float						d;
 	ifstream					ifsm;
@@ -161,6 +164,8 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 	CGenes						GenesIn( Genome );
 	vector<size_t>				veciGenes;
 	const float*				adOne;
+	const float*				adWeights;
+	vector<float>				vecdWeights;
 	IMeasure*					pMeasure;
 	CMeasurePearson				Pearson;
 	CMeasureEuclidean			Euclidean;
@@ -205,6 +210,15 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 	if( !pMeasure )
 		return 1;
 
+	if( fFrequencyWeight ) {
+		vecdWeights.resize( PCL.GetExperiments( ) );
+		for( i = 0; i < vecdWeights.size( ); ++i ) {
+			for( iOne = j = 0; j < PCL.GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = PCL.Get( j, i ) ) && ( d > 0 ) )
+					iOne++;
+			vecdWeights[ i ] = (float)( ( PCL.GetGenes( ) + 1 ) - iOne ) / PCL.GetGenes( ); } }
+	adWeights = vecdWeights.empty( ) ? NULL : &vecdWeights[ 0 ];
+
 	CMeasureAutocorrelate		Autocorrelate( pMeasure, false );
 	if( fAutocorrelate )
 		pMeasure = &Autocorrelate;
@@ -245,7 +259,7 @@ int CPCL::Distance( const char* szFile, size_t iSkip, const char* szSimilarityMe
 			for( j = ( i + 1 ); j < GenesIn.GetGenes( ); ++j )
 				if( ( iTwo = veciGenes[ j ] ) != -1 )
 					Dat.Set( i, j, (float)pMeasure->Measure(
-						adOne, PCL.GetExperiments( ), PCL.Get( iTwo ), PCL.GetExperiments( ), eMap ) ); }
+						adOne, PCL.GetExperiments( ), PCL.Get( iTwo ), PCL.GetExperiments( ), eMap, adWeights, adWeights ) ); }
 
 		if( fNormalize || fZScore )
 			Dat.Normalize( fZScore ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
@@ -849,6 +863,7 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 
 		case ENormalizeColumn:
 		case ENormalizeColumnCenter:
+		case ENormalizeColumnFraction:
 			for( i = 0; i < GetExperiments( ); ++i ) {
 				dAve = dStd = 0;
 				for( iCount = j = 0; j < GetGenes( ); ++j )
@@ -857,14 +872,19 @@ void CPCL::Normalize( ENormalize eNormalize ) {
 						dAve += d;
 						dStd += d * d; }
 				if( iCount ) {
-					dAve /= iCount;
-					dStd = ( dStd / iCount ) - ( dAve * dAve );
-					dStd = ( dStd <= 0 ) ? 1 : sqrt( dStd );
-					if( eNormalize == ENormalizeColumnCenter )
-						dStd = 1;
+					if( eNormalize != ENormalizeColumnFraction ) {
+						dAve /= iCount;
+						dStd = ( dStd / iCount ) - ( dAve * dAve );
+						dStd = ( dStd <= 0 ) ? 1 : sqrt( dStd );
+						if( eNormalize == ENormalizeColumnCenter )
+							dStd = 1; }
 					for( j = 0; j < GetGenes( ); ++j )
-						if( !CMeta::IsNaN( d = Get( j, i ) ) )
-							Set( j, i, (float)( ( d - dAve ) / dStd ) ); } }
+						if( !CMeta::IsNaN( d = Get( j, i ) ) ) {
+							if( eNormalize == ENormalizeColumnFraction )
+								d /= (float)dAve;
+							else
+								d = (float)( ( d - dAve ) / dStd );
+							Set( j, i, d ); } } }
 			break;
 
 		case ENormalizeMinMax:
@@ -1011,6 +1031,22 @@ void CPCL::Impute( size_t iNeighbors, float dMinimumPresent, const IMeasure* pMe
 		Dat.Open( *this, pMeasure, false );
 	Impute( iNeighbors, dMinimumPresent, Dat ); }
 
+/*!
+ * \brief
+ * Resolves probesets by averaging agreeing probes and discarding conflicting ones.
+ * 
+ * \param iSample
+ * Number of random samples to generate for probeset null distribution.
+ * 
+ * \param iBins
+ * Number of bins for probeset distribution histogram.
+ * 
+ * \param dBinSize
+ * Size of bins for probeset distribution histogram in z-score units.
+ * 
+ * \remarks
+ * Performance can vary wildly depending on characteristics of the input PCL's probesets; use with caution.
+ */
 void CPCL::MedianMultiples( size_t iSample, size_t iBins, float dBinSize ) {
 	size_t					i, j, k, iBin, iOne, iCutoff;
 	CMeasureEuclidean		Euclidean;
@@ -1108,7 +1144,7 @@ cerr << endl;
 				iBin = MedianMultiplesBin( (float)Euclidean.Measure( Get( iOne ), GetExperiments( ),
 					Get( veciGenes[k] ), GetExperiments( ), IMeasure::EMapNone ), dAve, dStd, iBins, dBinSize );
 //				if( iBin <= iCutoff ) {
-				if( ( 1.1 * vecdFG[iBin] ) >= vecdBG[iBin] ) {
+				if( ( 1.01 * vecdFG[iBin] ) >= vecdBG[iBin] ) {
 					veciAgree[j]++;
 					veciAgree[k]++; } } }
 

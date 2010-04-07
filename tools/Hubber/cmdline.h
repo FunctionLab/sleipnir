@@ -42,6 +42,9 @@ struct gengetopt_args_info
   const char *genes_help; /**< @brief Number of genes to output per gene set help description.  */
   int normalize_flag;	/**< @brief Normalize input file (default=off).  */
   const char *normalize_help; /**< @brief Normalize input file help description.  */
+  char * genin_arg;	/**< @brief Gene inlusion list.  */
+  char * genin_orig;	/**< @brief Gene inlusion list original value given at command line.  */
+  const char *genin_help; /**< @brief Gene inlusion list help description.  */
   char * genex_arg;	/**< @brief Gene exclusion list.  */
   char * genex_orig;	/**< @brief Gene exclusion list original value given at command line.  */
   const char *genex_help; /**< @brief Gene exclusion list help description.  */
@@ -80,6 +83,7 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int genin_given ;	/**< @brief Whether genin was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */
   unsigned int clip_given ;	/**< @brief Whether clip was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */

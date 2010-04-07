@@ -312,6 +312,10 @@ bool CDat::Open( const CDat& Dat ) {
  * \param Genome
  * Genome containing all genes of interest.
  * 
+ * \param fIncident
+ * If true, only allow negative pairs incident to at least one agnostic gene set.  Otherwise,
+ * negative gene pairs can include any non-co-annotated genes.
+ * 
  * \returns
  * True if CDat was generated successfully.
  * 
@@ -326,7 +330,7 @@ bool CDat::Open( const CDat& Dat ) {
  * in two unrelated functions will be marked as unrelated, and other gene pairs will be left unmarked.
  */
 bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& vecpNonnegatives,
-	float dPValue, const CGenome& Genome ) {
+	float dPValue, const CGenome& Genome, bool fIncident ) {
 	size_t			i, j, k, iOne, iTwo, iOverlap;
 	float			d;
 	const CGenes*	pBig;
@@ -360,7 +364,23 @@ bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& ve
 				if( CMeta::IsNaN( d = Get( i, j ) ) )
 					Set( i, j, 0 );
 				else if( !d )
-					Set( i, j, CMeta::GetNaN( ) ); }
+					Set( i, j, CMeta::GetNaN( ) );
+		if( fIncident ) {
+			vector<float>	vecfNegatives;
+
+			vecfNegatives.resize( GetGenes( ) );
+			fill( vecfNegatives.begin( ), vecfNegatives.end( ), false );
+			for( i = 0; i < vecfNegatives.size( ); ++i )
+				for( j = 0; j < vecpNonnegatives.size( ); ++j )
+					if( vecpNonnegatives[j]->IsGene( GetGene( i ) ) ) {
+						vecfNegatives[i] = true;
+						break; }
+			for( i = 0; i < GetGenes( ); ++i ) {
+				if( vecfNegatives[i] )
+					continue;
+				for( j = ( i + 1 ); j < GetGenes( ); ++j )
+					if( !( vecfNegatives[j] || Get( i, j ) ) )
+						Set( i, j, CMeta::GetNaN( ) ); } } }
 
 	return true; }
 
@@ -1030,18 +1050,18 @@ bool CDatImpl::OpenMemmap( const unsigned char* pb ) {
 
 	return true; }
 
-void CDatImpl::AveStd( double& dAve, double& dStd, size_t& iN, size_t iApproximate ) const {
+void CDatImpl::AveStd( double& dAverage, double& dStdev, size_t& iN, size_t iApproximate ) const {
 	size_t	i, j;
 	float	d;
 
-	dAve = dStd = 0;
+	dAverage = dStdev = 0;
 	if( iApproximate == -1 ) {
 		for( iN = i = 0; i < GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
 					iN++;
-					dAve += d;
-					dStd += d * d; } }
+					dAverage += d;
+					dStdev += d * d; } }
 	else {
 		size_t	iOne, iTwo;
 
@@ -1051,12 +1071,12 @@ void CDatImpl::AveStd( double& dAve, double& dStd, size_t& iN, size_t iApproxima
 				CMeta::IsNaN( d = Get( iOne, iTwo ) ) ) {
 				i--;
 				continue; }
-			dAve += d;
-			dStd += d * d; }
+			dAverage += d;
+			dStdev += d * d; }
 		iN = i; }
 	if( iN ) {
-		dAve /= iN;
-		dStd = sqrt( ( dStd / iN ) - ( dAve * dAve ) ); } }
+		dAverage /= iN;
+		dStdev = sqrt( ( dStdev / ( iN - ( ( iN > 1 ) ? 1 : 0 ) ) ) - ( dAverage * dAverage ) ); } }
 
 void CDatImpl::NormalizeStdev( ) {
 	double	d, dAve, dDev;
@@ -1072,10 +1092,42 @@ void CDatImpl::NormalizeStdev( ) {
 
 void CDatImpl::NormalizeSigmoid( ) {
 	size_t	i, j;
+	float	d;
 
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			Set( i, j, 1.0f / ( 1 + exp( -Get( i, j ) ) ) ); }
+			if( !CMeta::IsNaN( d = Get( i, j ) ) )
+				Set( i, j, 1.0f / ( 1 + exp( -d ) ) ); }
+
+void CDatImpl::NormalizeSigmoidSymmetric( ) {
+	size_t	i, j, iN, iNUp, iNDown;
+	float	d, dAveUp, dAveDown, dStdUp, dStdDown;
+	double	dAve, dStd;
+
+	AveStd( dAve, dStd, iN );
+	dAveUp = dAveDown = dStdUp = dStdDown = 0;
+	for( iNUp = iNDown = i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+				if( d >= dAve ) {
+					iNUp++;
+					dAveUp += d;
+					dStdUp += d * d; }
+				else {
+					iNDown++;
+					dAveDown += d;
+					dStdDown += d * d; } }
+	if( iNUp ) {
+		dAveUp /= iNUp;
+		dStdUp = sqrt( ( dStdUp / ( max( 2, iNUp ) - 1 ) ) - ( dAveUp * dAveUp ) ); }
+	if( iNDown ) {
+		dAveDown /= iNDown;
+		dStdDown = sqrt( ( dStdDown / ( max( 2, iNDown ) - 1 ) ) - ( dAveDown * dAveDown ) ); }
+	for( iNUp = iNDown = i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+				d = (float)( ( d - dAve ) / ( ( d >= dAve ) ? dStdUp : dStdDown ) );
+				Set( i, j, 1.0f / ( 1 + exp( -d ) ) ); } }
 
 void CDatImpl::NormalizeMinmax( ) {
 	float	d, dMin, dMax;
@@ -1171,7 +1223,8 @@ bool CDat::FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit ) {
  * EFilterTerm and to some degree EFilterEdge don't make a lot of sense for CDats that do not represent
  * gold standards.
  */
-void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, float dEdgeAggressiveness ) {
+void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, float dEdgeAggressiveness,
+	const vector<float>* pvecdWeights ) {
 	size_t			i, j;
 	vector<bool>	vecfGenes;
 
@@ -1183,7 +1236,7 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 	switch( eFilter ) {
 		case EFilterPixie:
 		case EFilterHefalmp:
-			FilterGenesGraph( Genes, vecfGenes, iLimit, dEdgeAggressiveness, eFilter == EFilterHefalmp );
+			FilterGenesGraph( Genes, vecfGenes, iLimit, dEdgeAggressiveness, eFilter == EFilterHefalmp, pvecdWeights );
 			return; }
 
 	for( i = 0; i < GetGenes( ); ++i ) {
@@ -1225,8 +1278,8 @@ struct SPixie {
 };
 
 void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, size_t iLimit,
-	float dEdgeAggressiveness, bool fHefalmp ) {
-	vector<float>				vecdNeighbors;
+	float dEdgeAggressiveness, bool fHefalmp, const vector<float>* pvecdWeights ) {
+	vector<float>				vecdNeighbors, vecdWeights;
 	size_t						i, j, iOne, iTwo, iMinOne, iMinTwo, iN;
 	vector<size_t>				veciGenes, veciFinal, veciDegree;
 	set<size_t>					setiN;
@@ -1241,6 +1294,10 @@ void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, s
 	veciGenes.resize( Genes.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
 		veciGenes[ i ] = GetGene( Genes.GetGene( i ).GetName( ) );
+	if( !pvecdWeights || ( pvecdWeights->size( ) < veciGenes.size( ) ) ) {
+		vecdWeights.resize( veciGenes.size( ) );
+		fill( vecdWeights.begin( ), vecdWeights.end( ), 1.0f );
+		pvecdWeights = &vecdWeights; }
 
 	vecdNeighbors.resize( GetGenes( ) );
 	fill( vecdNeighbors.begin( ), vecdNeighbors.end( ), 0.0f );
@@ -1257,7 +1314,7 @@ void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, s
 					continue;
 				if( !CMeta::IsNaN( d = Get( i, iOne ) ) ) {
 					iIn++;
-					dIn += d; } }
+					dIn += d * (*pvecdWeights)[ j ]; } }
 			for( iOut = j = 0; j < GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
 					iOut++;
@@ -1271,7 +1328,7 @@ void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, s
 				if( vecfGenes[ j ] )
 					continue;
 				if( !CMeta::IsNaN( d = Get( iOne, j ) ) )
-					vecdNeighbors[ j ] += d; } }
+					vecdNeighbors[ j ] += d * (*pvecdWeights)[ i ]; } }
 	for( i = 0; i < vecdNeighbors.size( ); ++i )
 		if( ( d = vecdNeighbors[ i ] ) > 0 )
 			pqueNeighbors.push( SPixie( i, d ) );
@@ -1365,8 +1422,8 @@ void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, s
  */
 void CDat::SaveDOT( std::ostream& ostm, float dCutoff, const CGenome* pGenome, bool fUnlabeled, bool fHashes,
 	const std::vector<float>* pvecdColors, const std::vector<float>* pvecdBorders ) const {
-	size_t			i, j;
-	float			d, dMin, dMax;
+	size_t			i, j, iCount;
+	float			d, dAve, dStd;
 	bool			fAll, fLabel;
 	vector<string>	vecstrNames;
 	vector<bool>	vecfGenes;
@@ -1413,22 +1470,23 @@ void CDat::SaveDOT( std::ostream& ostm, float dCutoff, const CGenome* pGenome, b
 			ostm << "];" << endl; } }
 
 	ostm << endl;
-	dMin = FLT_MAX;
-	dMax = -FLT_MAX;
+	dAve = dStd = 0;
+	for( iCount = i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) ) {
+				iCount++;
+				dAve += d;
+				dStd += d * d; }
+	if( iCount ) {
+		dAve /= iCount;
+		dStd = sqrt( max( 0.0f, ( dStd / ( max( iCount, 2 ) - 1 ) ) - ( dAve * dAve ) ) ); }
 	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) ) {
-				if( d < dMin )
-					dMin = d;
-				if( d > dMax )
-					dMax = d; }
-	dMax -= dMin;
-	for( i = 0; i < GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( fAll || ( d >= dCutoff ) ) )
+				d = 1.0f / ( 1 + exp( ( dAve - d ) / dStd ) );
 				ostm << vecstrNames[ i ] << " -- " << vecstrNames[ j ] << " [weight = " << d <<
-					", color = \"" << ( fHashes ? "#" : "" ) << CColor::Interpolate( ( d - dMin ) / dMax,
-					CColor::c_Green, CColor::c_Black, CColor::c_Red ).ToRGB( ) << "\"];" << endl;
+					", color = \"" << ( fHashes ? "#" : "" ) << CColor::Interpolate( d,
+					CColor::c_Green, CColor::c_Black, CColor::c_Red ).ToRGB( ) << "\"];" << endl; }
 
 	ostm << "}" << endl; }
 
@@ -1582,5 +1640,78 @@ void CDat::Rank( ) {
 			iRank = i;
 		dPrev = d;
 		Set( vecprData[ i ].first, vecprData[ i ].second, (float)iRank ); } }
+
+void CDat::NormalizeQuantiles( size_t iQuantiles ) {
+	static const size_t	c_iTest	= 100;
+	float				d, dTest;
+	size_t				i, j, k, iValues, iPrev, iNext;
+	set<float>			setiTest;
+	bool				fDiscrete;
+	vector<float>		vecdValues;
+
+	for( iValues = i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) )
+				iValues++;
+
+// Heuristic to test for discrete valued dats
+	dTest = (float)c_iTest / iValues;
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) && ( ( (float)rand( ) / RAND_MAX ) < dTest ) )
+				setiTest.insert( d );
+	fDiscrete = ( setiTest.size( ) * 2 ) < c_iTest;
+
+	if( fDiscrete ) {
+		map<float, size_t>				mapdiValues;
+		map<float, size_t>::iterator	iterValue;
+		map<float, float>				mapddQuantiles;
+
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+				if( CMeta::IsNaN( d = Get( i, j ) ) )
+					continue;
+				if( ( iterValue = mapdiValues.find( d ) ) == mapdiValues.end( ) )
+					mapdiValues[d] = 1;
+				else
+					iterValue->second++; }
+		vecdValues.resize( mapdiValues.size( ) );
+		for( iterValue = mapdiValues.begin( ),i = 0; iterValue != mapdiValues.end( ); ++iterValue,++i )
+			vecdValues[i] = iterValue->first;
+		sort( vecdValues.begin( ), vecdValues.end( ) );
+
+		for( i = iPrev = 0; i < vecdValues.size( ); ++i,iPrev = iNext ) {
+			iNext = iPrev + mapdiValues[vecdValues[i]];
+			mapddQuantiles[vecdValues[i]] = iQuantiles * ( iPrev + iNext - 1 ) / 2.0f / iValues; }
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Get( i, j ) ) )
+					Set( i, j, mapddQuantiles[d] ); }
+	else {
+		vector<float>	vecdTops;
+
+		vecdValues.reserve( min( iValues, iQuantiles * c_iTest ) );
+		dTest = (float)vecdValues.capacity( ) / iValues;
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+				if( !CMeta::IsNaN( d = Get( i, j ) ) && ( ( (float)rand( ) / RAND_MAX ) < dTest ) )
+					vecdValues.push_back( d );
+		sort( vecdValues.begin( ), vecdValues.end( ) );
+
+		vecdTops.resize( iQuantiles - 1 );
+		for( i = 0; i < vecdTops.size( ); ++i ) {
+			d = (float)( i + 1 ) * ( vecdValues.size( ) - 1 ) / iQuantiles;
+			j = (size_t)d;
+			vecdTops[i] = ( ( d - j ) && ( ( j + 1 ) < vecdValues.size( ) ) ) ? ( ( vecdValues[j] + vecdValues[j + 1] ) / 2 ) :
+				vecdValues[j]; }
+
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+				if( CMeta::IsNaN( d = Get( i, j ) ) )
+					continue;
+				for( k = 0; k < vecdTops.size( ); ++k )
+					if( d < vecdTops[k] )
+						break;
+				Set( i, j, (float)k ); } } }
 
 }

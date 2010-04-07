@@ -50,7 +50,7 @@ EFile open_pclwig( const char* szFile, size_t iSkip, CFASTA& FASTA, CPCL& PCL ) 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info			sArgs;
 	CFASTA						FASTA;
-	CPCL						PCL;
+	CPCL						PCL, PCLSeed;
 	CCoalesce					Coalesce;
 	vector<CCoalesceCluster>	vecClusters;
 	size_t						i, j;
@@ -87,6 +87,9 @@ int main( int iArgs, char** aszArgs ) {
 		cerr << "Could not open: " << sArgs.fasta_arg << endl;
 		return 1; }
 
+	if( sArgs.seed_arg && !PCLSeed.Open( sArgs.seed_arg, sArgs.skip_arg ) ) {
+		cerr << "Could not open: " << sArgs.seed_arg << endl;
+		return 1; }
 	if( sArgs.datasets_arg ) {
 		static const size_t	c_iBuffer	= 131072;
 		ifstream			ifsm;
@@ -126,6 +129,7 @@ int main( int iArgs, char** aszArgs ) {
 	Coalesce.SetSizeMaximum( sArgs.size_maximum_arg );
 	Coalesce.SetNormalize( !!sArgs.normalize_flag );
 	Coalesce.SetThreads( sArgs.threads_arg );
+	Coalesce.SetSeed( PCLSeed );
 	if( sArgs.output_arg )
 		Coalesce.SetDirectoryIntermediate( sArgs.output_arg );
 

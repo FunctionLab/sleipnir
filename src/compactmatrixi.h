@@ -41,6 +41,8 @@ protected:
 		size_t*			pi;
 		unsigned char	cRet, cShift;
 
+		if( !( m_cBits && m_aiData ) )
+			return 0;
 		pi = GetWord( iX, iY, cShift );
 		// Bits starting at Shift, mask m_cBits long
 		cRet = (unsigned char)( ( *pi >> cShift ) & ( SIZE_MAX >> ( ( 8 * sizeof(*m_aiData) ) - m_cBits ) ) );
@@ -57,6 +59,8 @@ protected:
 		size_t			iMask;
 		size_t*			pi;
 
+		if( !( m_cBits && m_aiData ) )
+			return;
 		pi = GetWord( iX, iY, cShift );
 		iMask = ( SIZE_MAX >> ( ( 8 * sizeof(*m_aiData) ) - m_cBits ) ) << cShift;
 		*pi = ( *pi & ~iMask ) | ( ( (size_t)cValue << cShift ) & iMask );
@@ -92,8 +96,8 @@ protected:
 	size_t CountWords( ) const {
 		size_t	iRet;
 
-		iRet = m_iSize * ( m_iSize - 1 ) / 2;
-		return ( ( ( ( iRet * m_cBits ) - 1 ) / ( 8 * sizeof(*m_aiData) ) ) + 1 ); }
+		return ( ( m_cBits && ( iRet = m_iSize * ( m_iSize - 1 ) / 2 ) ) ?
+			( ( ( ( iRet * m_cBits ) - 1 ) / ( 8 * sizeof(*m_aiData) ) ) + 1 ) : 0 ); }
 
 	uint32_t	m_iSize;
 };

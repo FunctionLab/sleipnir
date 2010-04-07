@@ -62,6 +62,8 @@ class CCoalesce : CCoalesceImpl {
 public:
 	bool Cluster( const CPCL& PCL, const CFASTA& FASTA, std::vector<CCoalesceCluster>& vecClusters );
 
+	void SetSeed( const CPCL& PCL );
+
 	/*!
 	 * \brief
 	 * Sets the correlation p-value threshhold for genes to be included in a cluster during initialization.
@@ -755,6 +757,17 @@ public:
 	bool GetNormalize( ) const {
 
 		return m_fNormalize; }
+
+	/*!
+	 * \brief
+	 * Removes any currently set seed expression profile.
+	 * 
+	 * \see
+	 * SetSeed
+	 */
+	void ClearSeed( ) {
+
+		m_vecdSeed.clear( ); }
 };
 
 }

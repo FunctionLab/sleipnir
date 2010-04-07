@@ -166,7 +166,7 @@ protected:
 		return sMotif.GetHash( ); }
 
 	void Add( size_t, CCoalesceCluster& );
-	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, float );
+	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, const std::vector<float>&, float );
 	bool AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float,
 		size_t );
 	void CalculateCentroid( const CPCL& );

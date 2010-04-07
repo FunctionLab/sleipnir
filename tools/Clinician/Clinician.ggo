@@ -1,0 +1,25 @@
+package	"Clinician"
+version	"1.0"
+purpose	"Calculates significance of clinical variables associated with genomewide expression."
+
+section "Main"
+option	"input"				i	"Input PCL file"
+								string	typestr="filename"
+option	"global"			I	"Input DAT/DAB file"
+								string	typestr="filename"
+
+section "Miscellaneous"
+option	"initial"			n	"Initial correlated neighbor count"
+								int	default="100"
+option	"final"				N	"Final query result count"
+								int	default="1000"
+option	"hefalmp"			a	"Perform HEFalMp query instead of bioPIXIE query"
+								flag	on
+
+section "Optional"
+option	"skip"				s	"Columns to skip in input PCL"
+								int	default="1"
+option	"memmap"			m	"Memory map input file"
+								flag	off
+option	"verbosity"			v	"Message verbosity"
+								int	default="5"

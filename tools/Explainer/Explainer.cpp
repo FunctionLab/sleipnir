@@ -71,8 +71,8 @@ int main( int iArgs, char** aszArgs ) {
 		return iRet; }
 	CMeta Meta( sArgs.verbosity_arg );
 
-	if( !strcmp( c_szInclude, sArgs.unknowns_arg ) || !strcmp( c_szOnly, sArgs.unknowns_arg ) )
-		sArgs.everything_flag = true;
+//	if( !strcmp( c_szInclude, sArgs.unknowns_arg ) || !strcmp( c_szOnly, sArgs.unknowns_arg ) )
+//		sArgs.everything_flag = true;
 
 	if( !Answers.Open( sArgs.answers_arg, sArgs.memmap_flag && !sArgs.genes_arg && !sArgs.genet_arg && !sArgs.genex_arg ) ) {
 		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
@@ -82,6 +82,9 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	if( sArgs.genet_arg && !Answers.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) ) {
 		cerr << "Couldn't open: " << sArgs.genet_arg << endl;
+		return 1; }
+	if( sArgs.genee_arg && !Answers.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge ) ) {
+		cerr << "Couldn't open: " << sArgs.genee_arg << endl;
 		return 1; }
 	if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
 		cerr << "Couldn't open: " << sArgs.genex_arg << endl;
@@ -124,6 +127,7 @@ int main( int iArgs, char** aszArgs ) {
 		for( j = ( i + 1 ); j < Data.GetGenes( ); ++j ) {
 			if( CMeta::IsNaN( dValue = Data.Get( i, j ) ) )
 				continue;
+			dAnswer = CMeta::GetNaN( );
 			if( !sArgs.everything_flag && ( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
 				CMeta::IsNaN( dAnswer = Answers.Get( iOne, iTwo ) ) ||
 				( sArgs.positives_flag && ( dAnswer <= 0 ) ) ||
@@ -131,7 +135,7 @@ int main( int iArgs, char** aszArgs ) {
 				continue;
 			if( ( (float)rand( ) / RAND_MAX ) > sArgs.fraction_arg )
 				continue;
-			if( sArgs.everything_flag )
+			if( sArgs.everything_flag && CMeta::IsNaN( dAnswer ) )
 				dAnswer = dValue ? ( dValue - ( 1 / dValue ) ) : -FLT_MAX;
 			vecsData.push_back( SDatum( fabs( dValue - dAnswer ), i, j ) ); } }
 	sort( vecsData.begin( ), vecsData.end( ), SSorter( !!sArgs.reverse_flag ) );
@@ -180,11 +184,15 @@ int main( int iArgs, char** aszArgs ) {
 			cout << '\t';
 			if( pOne->GetSynonyms( ) )
 				cout << pOne->GetSynonym( 0 );
-			cout << '\t' << pOne->GetGloss( ) << endl; }
+			cout << '\t' << pOne->GetGloss( ); }
+		if( Genome.GetGenes( ) )
+			cout << endl;
 		if( pTwo ) {
 			cout << '\t';
 			if( pTwo->GetSynonyms( ) )
 				cout << pTwo->GetSynonym( 0 );
-			cout << '\t' << pTwo->GetGloss( ) << endl; } }
+			cout << '\t' << pTwo->GetGloss( ); }
+		if( Genome.GetGenes( ) )
+			cout << endl; }
 
 	return 0; }

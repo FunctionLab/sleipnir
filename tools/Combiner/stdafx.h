@@ -26,6 +26,7 @@
 using namespace std;
 
 #include "dataset.h"
+#include "genome.h"
 #include "meta.h"
 #include "pcl.h"
 using namespace Sleipnir;

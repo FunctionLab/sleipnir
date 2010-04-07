@@ -105,6 +105,36 @@ public:
 	static size_t Round( double d ) {
 
 		return (size_t)floor( d + 0.5 ); }
+
+	template<class tType, class tIter>
+	static bool LeastSquares( const tIter BeginY, const tIter EndY, const tIter BeginX, const tIter EndX,
+		tType& Alpha, tType& Beta, bool fAlpha = true ) {
+		tIter	CurX, CurY;
+		tType	AveX, AveY, AveXY, AveX2, Tmp;
+		size_t	iN;
+
+		AveX = AveY = AveXY = AveX2 = 0;
+		for( iN = 0,CurX = BeginX,CurY = BeginY; ( CurX != EndX ) && ( CurY != EndY ); ++CurX,++CurY,++iN ) {
+			AveX += *CurX;
+			AveY += *CurY;
+			AveXY += *CurX * *CurY;
+			AveX2 += *CurX * *CurX; }
+		if( !iN )
+			return false;
+		if( !fAlpha ) {
+			Beta = AveXY / AveX2;
+			return ( AveX2 != 0 ); }
+		AveX /= iN;
+		AveX2 /= iN;
+		Tmp = AveX * AveX;
+		if( Tmp == AveX2 )
+			return false;
+		AveY /= iN;
+		AveXY /= iN;
+
+		Beta = ( AveXY - ( AveX * AveY ) ) / ( AveX2 - Tmp );
+		Alpha = AveY - ( Beta * AveX );
+		return true; }
 };
 
 }

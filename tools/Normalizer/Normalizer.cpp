@@ -31,6 +31,7 @@ const struct {
 	{"globalz",		CPCL::ENormalizeZScore},
 	{"0to1",		CPCL::ENormalizeMinMax},
 	{"colcenter",	CPCL::ENormalizeColumnCenter},
+	{"colfrac",		CPCL::ENormalizeColumnFraction},
 	{NULL,			CPCL::ENormalizeNone}
 };
 
@@ -40,6 +41,8 @@ const struct {
 } c_asTypesDAT[]	= {
 	{"globalz",	CDat::ENormalizeZScore},
 	{"0to1",	CDat::ENormalizeMinMax},
+	{"sigmoid",	CDat::ENormalizeSigmoid},
+	{"sigsym",	CDat::ENormalizeSigmSymm},
 	{NULL,		CDat::ENormalizeNone}
 };
 

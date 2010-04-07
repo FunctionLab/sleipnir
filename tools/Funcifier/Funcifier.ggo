@@ -13,9 +13,13 @@ option	"shared"		s	"Determine shared gene handling"
 							values="ignore","discard","oneonly"	default="discard"
 option	"colors"		l	"Function cohesiveness output file"
 							string	typestr="filename"
+option	"weights"		w	"PCL file of set-by-gene weights"
+							string	typestr="filename"
 
 section "Optional"
-option	"normalize"		n	"Normalize to the range [0,1]"
+option	"normalize"		n	"Normalize input to the range [0,1]"
+							flag	off
+option	"zscore"		z	"Normalize output by z-scoring"
 							flag	off
 option	"memmap"		m	"Memory map input"
 							flag	off

@@ -576,16 +576,20 @@ double CMeasureInnerProduct::Measure( const float* adX, size_t iM, const float* 
 double CMeasureBinaryInnerProduct::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
 	size_t	i;
-	double	dRet;
+	double	dRet, dCount;
 
 	if( iM != iN )
 		return CMeta::GetNaN( );
 
-	dRet = 0;
+	dRet = dCount = 0;
 	for( i = 0; i < iN; ++i ) {
+		if( !( CMeta::IsNaN( adX[ i ] ) && CMeta::IsNaN( adY[ i ] ) ) )
+			dCount += GetWeight( adWX, i ) + GetWeight( adWY, i );
 		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) || !adX[ i ] || !adY[ i ] )
 			continue;
 		dRet += GetWeight( adWX, i ) * GetWeight( adWY, i ); }
+	if( dCount )
+		dRet /= dCount / 2;
 
 	return dRet; }
 

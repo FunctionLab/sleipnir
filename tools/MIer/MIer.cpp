@@ -32,12 +32,21 @@ struct SSorter {
 		return ( m_veciSizes[ iOne ] > m_veciSizes[ iTwo ] ); }
 };
 
-size_t find_value( size_t iOne, size_t iTwo, const CDataPair& Dat, size_t iDefault, bool fRandom ) {
-	float	d;
+float find_value( size_t iOne, size_t iTwo, const CDat& Dat ) {
 
-	d = ( ( iOne == -1 ) || ( iTwo == -1 ) ) ? CMeta::GetNaN( ) : Dat.Get( iOne, iTwo );
-	return ( CMeta::IsNaN( d ) ? ( fRandom ? ( rand( ) % Dat.GetValues( ) ) : iDefault ) :
-		Dat.Quantize( d ) ); }
+	return ( ( ( iOne == -1 ) || ( iTwo == -1 ) ) ? CMeta::GetNaN( ) : Dat.Get( iOne, iTwo ) ); }
+
+size_t find_value( float dValue, const CDataPair& Dat, size_t iDefault, bool fRandom ) {
+
+	if( Dat.IsContinuous( ) )
+		return 0;
+
+	return ( CMeta::IsNaN( dValue ) ? ( fRandom ? ( rand( ) % Dat.GetValues( ) ) : iDefault ) :
+		Dat.Quantize( dValue ) ); }
+
+size_t find_value( size_t iOne, size_t iTwo, const CDataPair& Dat, size_t iDefault, bool fRandom ) {
+
+	return find_value( find_value( iOne, iTwo, Dat ), Dat, iDefault, fRandom ); }
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info			sArgs;
@@ -47,7 +56,7 @@ int main( int iArgs, char** aszArgs ) {
 	vector<size_t>				veciGenesOne, veciGenesTwo, veciOne, veciTwo, veciDefaults, veciSizes;
 	vector<vector<size_t> >		vecveciJoint;
 	vector<string>				vecstrInputs, vecstrGenes;
-	float						dOne, dJoint, dMI, dSubsample;
+	float						dOne, dJoint, dMI, dSubsample, dValueOne, dValueTwo;
 	map<string, size_t>			mapZeros;
 	vector<float>				vecdOne, vecdTwo;
 	float*						adOne;
@@ -149,23 +158,26 @@ int main( int iArgs, char** aszArgs ) {
 			for( i = 0; i < iDatOne; ++i )
 				cout << '\t'; }
 
-		DatOne.Open( vecstrInputs[ iDatOne ].c_str( ), false, !!sArgs.memmap_flag );
+		if( !( DatOne.Open( vecstrInputs[ iDatOne ].c_str( ), false, !!sArgs.memmap_flag ) ||
+			DatOne.Open( vecstrInputs[ iDatOne ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
+			cerr << "Could not open: " << vecstrInputs[ iDatOne ] << endl;
+			return 1; }
 		veciGenesOne.resize( vecstrGenes.size( ) );
 		for( i = 0; i < vecstrGenes.size( ); ++i )
 			veciGenesOne[ i ] = DatOne.GetGene( vecstrGenes[ i ] );
-		veciOne.resize( veciSizes[ iDatOne ] );
-		fill( veciOne.begin( ), veciOne.end( ), 0 );
-		for( i = iCountOne = 0; i < vecstrGenes.size( ); ++i ) {
-			iGeneOne = veciGenesOne[ i ];
-			for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j ) {
-				if( ( (float)rand( ) / RAND_MAX ) < dSubsample )
-					continue;
-				if( ( iValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne,
-					veciDefaults[ iDatOne ], !!sArgs.randomize_flag ) ) != -1 ) {
-					iCountOne++;
-					veciOne[ iValueOne ]++; } } }
 
 		if( !pMeasure ) {
+			veciOne.resize( veciSizes[ iDatOne ] );
+			fill( veciOne.begin( ), veciOne.end( ), 0 );
+			for( i = iCountOne = 0; i < vecstrGenes.size( ); ++i ) {
+				iGeneOne = veciGenesOne[ i ];
+				for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j ) {
+					if( ( (float)rand( ) / RAND_MAX ) < dSubsample )
+						continue;
+					if( ( iValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne,
+						veciDefaults[ iDatOne ], !!sArgs.randomize_flag ) ) != -1 ) {
+						iCountOne++;
+						veciOne[ iValueOne ]++; } } }
 /*
 cout << iCountOne<< ':';
 for( i = 0; i < veciOne.size( ); ++i )
@@ -185,7 +197,10 @@ cout << endl;
 			break;
 
 		for( iDatTwo = ( iDatOne + 1 ); iDatTwo < vecstrInputs.size( ); ++iDatTwo ) {
-			DatTwo.Open( vecstrInputs[ iDatTwo ].c_str( ), false, !!sArgs.memmap_flag );
+			if( !( DatTwo.Open( vecstrInputs[ iDatTwo ].c_str( ), false, !!sArgs.memmap_flag ) ||
+				DatTwo.Open( vecstrInputs[ iDatTwo ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
+				cerr << "Could not open: " << vecstrInputs[ iDatTwo ] << endl;
+				return 1; }
 			veciGenesTwo.resize( vecstrGenes.size( ) );
 			for( i = 0; i < veciGenesTwo.size( ); ++i )
 				veciGenesTwo[ i ] = DatTwo.GetGene( vecstrGenes[ i ] );
@@ -206,17 +221,21 @@ cout << endl;
 				for( j = ( i + 1 ); j < vecstrGenes.size( ); ++j ) {
 					if( ( (float)rand( ) / RAND_MAX ) < dSubsample )
 						continue;
-					if( ( iValueTwo = find_value( iGeneTwo, veciGenesTwo[ j ], DatTwo,
+					dValueTwo = find_value( iGeneTwo, veciGenesTwo[ j ], DatTwo );
+					if( ( iValueTwo = find_value( dValueTwo, DatTwo,
 						veciDefaults[ iDatTwo ], !!sArgs.randomize_flag ) ) != -1 ) {
 						iCountTwo++;
-						veciTwo[ iValueTwo ]++;
-						if( ( iValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne,
+						if( !pMeasure )
+							veciTwo[ iValueTwo ]++;
+						dValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne );
+						if( ( iValueOne = find_value( dValueOne, DatOne,
 							veciDefaults[ iDatOne ], !!sArgs.randomize_flag ) ) != -1 ) {
 							if( pMeasure ) {
-								vecdOne.push_back( (float)iValueOne );
-								vecdTwo.push_back( (float)iValueTwo ); }
+								vecdOne.push_back( dValueOne );
+								vecdTwo.push_back( dValueTwo ); }
 							iCountJoint++;
-							vecveciJoint[ iValueOne ][ iValueTwo ]++; } } } }
+							if( !pMeasure )
+								vecveciJoint[ iValueOne ][ iValueTwo ]++; } } } }
 
 			if( pMeasure ) {
 				adOne = new float[ vecdOne.size( ) ];
