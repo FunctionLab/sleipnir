@@ -7071,6 +7071,7 @@ if test "x$svm_perf_state" != "xno"; then
 
 result=$SVM_PERF_PREFIX
 found=false
+
 for p in include; do
   if test -e "$SVM_PERF_PREFIX/$p/svm_struct_api.h"; then
     result=$SVM_PERF_PREFIX/$p
@@ -7090,8 +7091,12 @@ fi
 result=$SVM_PERF_PREFIX
 found=false
 for p in lib; do
-  if test -e "$SVM_PERF_PREFIX/$p/libsvmperf.a"; then
-    result=$SVM_PERF_PREFIX/$p
+#rm
+#  if test -e "$SVM_PERF_PREFIX/$p/libsvmperf.a"; then
+  if test -e "$SVM_PERF_PREFIX/libsvmperf.a"; then
+#rm
+#    result=$SVM_PERF_PREFIX/$p
+    result=$SVM_PERF_PREFIX
     found=true
     break
   fi
