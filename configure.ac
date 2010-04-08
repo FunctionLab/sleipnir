@@ -433,7 +433,7 @@ if test "x$boost_state" != "xno"; then
   if test "x$BOOST_GRAPH_LIB" != "x"; then
     # boost_graph_lib_info and boost_includes_info are paths
     # now look for the headers
-    BOOST_LIBS=$BOOST_GRAPH_LIB
+    BOOST_LIBS="$BOOST_GRAPH_LIB ${BOOST_GRAPH_LIB/graph/regex}"
     qualify_path with_boost_includes
     LOCAL_CHECK_APPEND_PATHS([$with_boost_includes], [..], [boost/config.hpp], [BOOST_INCLUDES_DIR], [boost_state=warn])
     if ! test -f $BOOST_GRAPH_LIB; then boost_state=warn; fi

@@ -7,5 +7,5 @@ echo $DATESTAMP > $MSGFILE;
 echo $PWD >> $MSGFILE;
 
 hg -v tip >> $MSGFILE;
-
 mail -s "Sleipnir: Hg Changegroup Received" hut-dev@hsphsun3.harvard.edu < $MSGFILE;
+rm -f $MSGFILE
