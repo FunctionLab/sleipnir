@@ -16,7 +16,7 @@ my $tools_common_cflags2 = " \$(LOG4CPP_CFLAGS) \$(PTHREAD_CFLAGS)";
 my $tools_common_libs1 = "\$(SLEIPNIR_LIBS)";
 my $tools_common_libs2 = " \$(LOG4CPP_LIBS) \$(PTHREAD_LIBS)";
 
-# packages are: SMILE, SVM_PERF, READLINE, PTHREADS, BOOST
+# packages are: SMILE, SVM_PERF, READLINE, PTHREADS, BOOST, VOWPAL_WABBIT
 # ordering is important for linking
 my %tools_other_packages = (
 			    BNConverter => ['SMILE'],
@@ -39,6 +39,7 @@ my %tools_other_packages = (
 			    MEFIT  => ['SMILE'],
 			    OntoShell => ['READLINE'],
 			    SVMer => ['SVM_PERF'],
+			    VWer => ['VOWPAL_WABBIG'],
 			    );
 
 if (opendir(TOOLSDIR, "tools")) {
@@ -79,8 +80,8 @@ if (opendir(TOOLSDIR, "tools")) {
 			print AM_MAKEFILE "\nif WITH_GENGETOPT\n";
 			print AM_MAKEFILE "gengetopt = \$(prog_gengetopt)\n";
 			print AM_MAKEFILE "BUILT_SOURCES = cmdline.c cmdline.h\n";
-#			print AM_MAKEFILE "cmdline.c cmdline.h: $ggo_file\n";
-			print AM_MAKEFILE "cmdline.c: $ggo_file\n";
+			print AM_MAKEFILE "cmdline.c cmdline.h: $ggo_file\n";
+#			print AM_MAKEFILE "cmdline.c: $ggo_file\n";
 			print AM_MAKEFILE "\t\$(gengetopt) -i".$ggo_file." --default-optional ";
 			if ($tools_ggo_flags{$dent}) {
 			    print AM_MAKEFILE $tools_ggo_flags{$dent};

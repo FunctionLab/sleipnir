@@ -1,0 +1,4 @@
+#!/bin/sh
+
+./configure --with-gengetopt=../extlib/gengetopt-2.22/bin/gengetopt --with-log4cpp=../extlib/log4cpp-1.0/ --with-smile=../extlib/smile_1_1_linux64_gcc_4_1_2/ --with-svm-perf=../extlib/svm_perf/ --with-boost-includes=../extlib/boost_1_34_1/include/boost-1_34_1/ --with-boost-graph-lib=../extlib/boost_1_34_1/lib/libboost_graph-gcc41-mt.a --with-vowpal-wabbit=../extlib/vowpal_wabbit_v4.1/ LDFLAGS=-static
+# CXXFLAGS=-fno-threadsafe-statics
