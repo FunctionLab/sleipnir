@@ -1,5 +1,6 @@
 #!/bin/sh
 #
+HGDIR=/shared/hg/sleipnir/
 MAKEDIR=/shared/hg/sleipnir/trunk
 SCRIPTDIR=/shared/hg/sleipnir/scripts/
 #
@@ -8,6 +9,13 @@ LOGDIR=/shared/proj/build/
 LOGFILE="${LOGDIR}sleipnir.build.${DATESTAMP}.log"
 #
 # ---
+#
+cd ${HGDIR}
+INDIR=`pwd`
+#
+echo "[inDir] " ${INDIR}    2>&1 >> ${LOGFILE}
+echo "[step:hgUpdate] "     2>&1 >> ${LOGFILE}
+hg update                   2>&1 >> ${LOGFILE}
 #
 cd ${MAKEDIR}
 INDIR=`pwd`
