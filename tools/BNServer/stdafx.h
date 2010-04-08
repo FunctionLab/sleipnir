@@ -48,6 +48,8 @@ inline bool _mktemp_s( char* szTemplate ) {
 #include <pthread.h>
 
 #include <boost/graph/graphviz.hpp>
+#undef INTMAX_C
+#undef UINTMAX_C
 
 #include "annotation.h"
 #include "bayesnet.h"
