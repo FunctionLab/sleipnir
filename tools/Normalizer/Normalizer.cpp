@@ -42,7 +42,7 @@ const struct {
 	{"globalz",	CDat::ENormalizeZScore},
 	{"0to1",	CDat::ENormalizeMinMax},
 	{"sigmoid",	CDat::ENormalizeSigmoid},
-	{"sigsym",	CDat::ENormalizeSigmSymm},
+	{"normcdf",	CDat::ENormalizeNormCDF},
 	{NULL,		CDat::ENormalizeNone}
 };
 

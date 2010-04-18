@@ -1099,35 +1099,16 @@ void CDatImpl::NormalizeSigmoid( ) {
 			if( !CMeta::IsNaN( d = Get( i, j ) ) )
 				Set( i, j, 1.0f / ( 1 + exp( -d ) ) ); }
 
-void CDatImpl::NormalizeSigmoidSymmetric( ) {
-	size_t	i, j, iN, iNUp, iNDown;
-	float	d, dAveUp, dAveDown, dStdUp, dStdDown;
+void CDatImpl::NormalizeNormCDF( ) {
+	size_t	i, j, iN;
+	float	d;
 	double	dAve, dStd;
 
 	AveStd( dAve, dStd, iN );
-	dAveUp = dAveDown = dStdUp = dStdDown = 0;
-	for( iNUp = iNDown = i = 0; i < GetGenes( ); ++i )
+	for( i = 0; i < GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
-				if( d >= dAve ) {
-					iNUp++;
-					dAveUp += d;
-					dStdUp += d * d; }
-				else {
-					iNDown++;
-					dAveDown += d;
-					dStdDown += d * d; } }
-	if( iNUp ) {
-		dAveUp /= iNUp;
-		dStdUp = sqrt( ( dStdUp / ( max( 2, iNUp ) - 1 ) ) - ( dAveUp * dAveUp ) ); }
-	if( iNDown ) {
-		dAveDown /= iNDown;
-		dStdDown = sqrt( ( dStdDown / ( max( 2, iNDown ) - 1 ) ) - ( dAveDown * dAveDown ) ); }
-	for( iNUp = iNDown = i = 0; i < GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
-				d = (float)( ( d - dAve ) / ( ( d >= dAve ) ? dStdUp : dStdDown ) );
-				Set( i, j, 1.0f / ( 1 + exp( -d ) ) ); } }
+			if( !CMeta::IsNaN( d = Get( i, j ) ) )
+				Set( i, j, (float)CStatistics::NormalCDF( d, dAve, dStd ) ); }
 
 void CDatImpl::NormalizeMinmax( ) {
 	float	d, dMin, dMax;

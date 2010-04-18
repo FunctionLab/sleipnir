@@ -122,13 +122,36 @@ public:
 		size_t						iDatasetOne, iDatasetTwo, iValueOne, iValueTwo, iGroup, iCountOne, iCountTwo;
 		const CFullMatrix<size_t>*	pMatOne;
 		const CFullMatrix<size_t>*	pMatTwo;
-		vector<float>				vecdOne, vecdTwo;
-		CFullMatrix<float>			MatJoint;
-		float						dCountOne, dCountTwo, dCountJoint, dOne, dTwo, dJoint, dMI;
+		vector<double>				vecdOne, vecdTwo, vecdGroups;
+		vector<size_t>				veciCounts;
+		CFullMatrix<double>			MatJoint;
+		double						dOne, dTwo, dJoint, dMI;
+
+		veciCounts.resize( m_vecsetiGenes.size( ) );
+		fill( veciCounts.begin( ), veciCounts.end( ), 0 );
+		for( iCountOne = iDatasetOne = 0; iDatasetOne < m_vecpMatCounts.size( ); ++iDatasetOne ) {
+			if( !( pMatOne = m_vecpMatCounts[iDatasetOne] ) )
+				continue;
+			for( iValueOne = 0; iValueOne < pMatOne->GetRows( ); ++iValueOne )
+				for( iGroup = 0; iGroup < pMatOne->GetColumns( ); ++iGroup ) {
+					iCountTwo = pMatOne->Get( iValueOne, iGroup );
+					veciCounts[iGroup] += iCountTwo;
+					iCountOne += iCountTwo; } }
+		vecdGroups.resize( veciCounts.size( ) );
+		for( iGroup = 0; iGroup < vecdGroups.size( ); ++iGroup )
+			vecdGroups[iGroup] = (double)veciCounts[iGroup] / iCountOne;
 
 		for( iDatasetOne = 0; iDatasetOne < m_vecpMatCounts.size( ); ++iDatasetOne ) {
 			if( !( pMatOne = m_vecpMatCounts[iDatasetOne] ) )
 				continue;
+/*
+for( iGroup = 0; iGroup < m_vecsetiGenes.size( ); ++iGroup ) {
+for( iCountOne = iValueOne = 0; iValueOne < pMatOne->GetRows( ); ++iValueOne )
+iCountOne += pMatOne->Get( iValueOne, iGroup );
+for( iValueOne = 0; iValueOne < pMatOne->GetRows( ); ++iValueOne )
+cerr << ( iValueOne ? "\t" : "" ) << ( (double)pMatOne->Get( iValueOne, iGroup ) / iCountOne );
+cerr << endl; }
+//*/
 			vecdOne.resize( pMatOne->GetRows( ) );
 			for( iDatasetTwo = iDatasetOne; iDatasetTwo < m_vecpMatCounts.size( ); ++iDatasetTwo ) {
 				if( !( pMatTwo = m_vecpMatCounts[iDatasetTwo] ) )
@@ -136,7 +159,6 @@ public:
 				vecdTwo.resize( pMatTwo->GetRows( ) );
 				MatJoint.Initialize( vecdOne.size( ), vecdTwo.size( ) );
 
-				dCountOne = dCountTwo = dCountJoint = 0;
 				fill( vecdOne.begin( ), vecdOne.end( ), 0.0f );
 				fill( vecdTwo.begin( ), vecdTwo.end( ), 0.0f );
 				MatJoint.Clear( );
@@ -146,24 +168,29 @@ public:
 					for( iCountTwo = iValueTwo = 0; iValueTwo < vecdTwo.size( ); ++iValueTwo )
 						iCountTwo += pMatTwo->Get( iValueTwo, iGroup );
 					for( iValueOne = 0; iValueOne < vecdOne.size( ); ++iValueOne ) {
-						dOne = (float)pMatOne->Get( iValueOne, iGroup ) / ( iCountOne ? iCountOne : 1 );
-						dCountOne += dOne;
-						vecdOne[iValueOne] += dOne;
+						dOne = (double)pMatOne->Get( iValueOne, iGroup ) / ( iCountOne ? iCountOne : 1 );
+						vecdOne[iValueOne] += dOne * vecdGroups[iGroup];
 						for( iValueTwo = 0; iValueTwo < vecdTwo.size( ); ++iValueTwo ) {
-							dTwo = (float)pMatTwo->Get( iValueTwo, iGroup ) / ( iCountTwo ? iCountTwo : 1 );
-							if( !iValueOne ) {
-								dCountTwo += dTwo;
-								vecdTwo[iValueTwo] += dTwo; }
-							dTwo *= dOne;
-							dCountJoint += dTwo;
-							MatJoint.Get( iValueOne, iValueTwo ) += dTwo; } } }
+							dTwo = (double)pMatTwo->Get( iValueTwo, iGroup ) / ( iCountTwo ? iCountTwo : 1 );
+							if( !iValueOne )
+								vecdTwo[iValueTwo] += dTwo * vecdGroups[iGroup];
+							MatJoint.Get( iValueOne, iValueTwo ) += dOne * dTwo * vecdGroups[iGroup]; } } }
 /*
+				if( iDatasetOne == iDatasetTwo ) {
+					MatJoint.Clear( );
+					for( iValueOne = 0; iValueOne < vecdOne.size( ); ++iValueOne )
+						MatJoint.Set( iValueOne, iValueOne, vecdOne[iValueOne] ); }
+//*/
+/*
+cerr << "One: " << vecstrNames[iDatasetOne] << endl;
 for( iValueOne = 0; iValueOne < vecdOne.size( ); ++iValueOne )
 cerr << ( iValueOne ? "\t" : "" ) << vecdOne[iValueOne];
 cerr << endl;
+cerr << "Two: " << vecstrNames[iDatasetTwo] << endl;
 for( iValueTwo = 0; iValueTwo < vecdTwo.size( ); ++iValueTwo )
 cerr << ( iValueTwo ? "\t" : "" ) << vecdTwo[iValueTwo];
 cerr << endl;
+cerr << "Joint:" << endl;
 for( iValueOne = 0; iValueOne < vecdOne.size( ); ++iValueOne ) {
 for( iValueTwo = 0; iValueTwo < vecdTwo.size( ); ++iValueTwo )
 cerr << ( iValueTwo ? "\t" : "" ) << MatJoint.Get( iValueOne, iValueTwo );
@@ -171,13 +198,11 @@ cerr << endl; }
 //*/
 
 				for( dMI = 0,iValueOne = 0; iValueOne < vecdOne.size( ); ++iValueOne ) {
-					dOne = vecdOne[iValueOne] / ( dCountOne ? dCountOne : 1 );
+					dOne = vecdOne[iValueOne];
 					for( iValueTwo = 0; iValueTwo < vecdTwo.size( ); ++iValueTwo )
-						if( dJoint = MatJoint.Get( iValueOne, iValueTwo ) ) {
-							dJoint /= ( dCountJoint ? dCountJoint : 1 );
-							dMI += dJoint * ( dJoint ? log( dJoint * dCountTwo / dOne / vecdTwo[iValueTwo] ) : 0 ); } }
-				if( dCountOne || dCountTwo )
-					dMI -= ( vecdOne.size( ) - 1 ) * ( vecdTwo.size( ) - 1 ) / ( 2 * ( dCountOne + dCountTwo ) );
+						if( dJoint = MatJoint.Get( iValueOne, iValueTwo ) )
+							dMI += dJoint * ( dJoint ? log( dJoint / dOne / vecdTwo[iValueTwo] ) : 0 ); }
+//cerr << "MI: " << dMI << endl;
 				dMI = ( dMI < 0 ) ? 0 : ( dMI / log( 2.0f ) );
 
 				ostm << vecstrNames[iDatasetOne] << '\t' << vecstrNames[iDatasetTwo] << '\t' << dMI << endl; } } }
