@@ -10,7 +10,7 @@ option	"output"	o	"Output PCL/DAB file"
 option	"itype"		t	"Data file type"
 						values="pcl","dat"	default="dat"
 option	"otype"		T	"Normalization type"
-						values="columnz","rowz","globalz","column0","0to1","colcenter","medmult","colfrac","sigmoid","normcdf"	default="globalz"
+						values="columnz","rowz","globalz","column0","0to1","colcenter","medmult","colfrac","sigmoid","normcdf","pcc"	default="globalz"
 
 section "Optional"
 option	"flip"		f	"Flip high/low scores"

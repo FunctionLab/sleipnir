@@ -544,6 +544,57 @@ public:
 
 		return ( 1 - Normal01CDF( fabs( dZScore ) * sqrt( (double)iN ) ) ); }
 
+	template<class tType, class tIter>
+	static double AndersonDarlingScore( tIter Begin, tIter End ) {
+		tIter				Cur;
+		double				d, dA2, dAve, dStd;
+		size_t				i, iN;
+		std::vector<tType>	vecValues;
+
+		dAve = dStd = 0;
+		for( iN = 0,Cur = Begin; Cur != End; ++iN,++Cur ) {
+			dAve += *Cur;
+			dStd += *Cur * *Cur; }
+		if( iN < 2 )
+			return CMeta::GetNaN( );
+		dAve /= iN;
+		dStd = sqrt( ( dStd / ( iN - 1 ) ) - ( dAve * dAve ) );
+		if( dStd <= 0 )
+			dStd = 1;
+
+		vecValues.resize( iN );
+		std::copy( Begin, End, vecValues.begin( ) );
+		std::sort( vecValues.begin( ), vecValues.end( ) );
+
+		dA2 = 0;
+		for( i = 0; i < vecValues.size( ); ++i ) {
+			d = Normal01CDF( ( vecValues[i] - dAve ) / dStd );
+			if( d <= std::numeric_limits<double>::epsilon( ) )
+				d = std::numeric_limits<double>::epsilon( );
+			else if( ( 1 - d ) <= std::numeric_limits<double>::epsilon( ) )
+				d = 1 - std::numeric_limits<double>::epsilon( );
+			dA2 += ( ( ( 2 * ( i + 1 ) ) - 1 ) * log( d ) ) + ( ( ( 2 * ( iN - i ) ) - 1 ) * log( 1 - d ) ); }
+		dA2 = ( -dA2 / iN ) - iN;
+		dA2 *= 1 + ( 0.75 / iN ) + ( 2.25 / ( iN * iN ) );
+
+		return dA2; }
+
+	static double AndersonDarlingTest( double dA2 ) {
+		double	dRet;
+
+		if( dA2 < 0.2 )
+			dRet = 1 - exp( -13.436 + ( 101.14 * dA2 ) - ( 223.73 * dA2 * dA2 ) );
+		else if( dA2 < 0.34 )
+			dRet = 1 - exp( -8.318 + ( 42.796 * dA2 ) - ( 59.938 * dA2 * dA2 ) );
+		else if( dA2 < 0.6 )
+			dRet = exp( 0.9177 - ( 4.279 * dA2 ) - ( 1.38 * dA2 * dA2 ) );
+		else if( dA2 < 13 )
+			dRet = exp( 1.2937 - ( 5.709 * dA2 ) + ( 0.0186 * dA2 * dA2 ) );
+		else
+			dRet = 0;
+
+		return dRet; }
+
 	/*!
 	 * \brief
 	 * Returns the root-mean-square error distance between two input arrays.

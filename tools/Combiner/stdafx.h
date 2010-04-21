@@ -29,6 +29,7 @@ using namespace std;
 #include "genome.h"
 #include "meta.h"
 #include "pcl.h"
+#include "statistics.h"
 using namespace Sleipnir;
 
 #include "cmdline.h"

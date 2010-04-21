@@ -140,7 +140,7 @@ int main( int iArgs, char** aszArgs ) {
 							dTwo = vecvecdGenes.empty( ) ? 1 : vecvecdGenes[iF2][j];
 							dCountIn += dOne * dTwo;
 							dAveIn += d * dOne * dTwo; } } }
-				DatOut.Set( iF1, iF2, dCountIn ? (float)( dAveIn / dCountIn ) : CMeta::GetNaN( ) ); }
+				DatOut.Set( iF1, iF2, ( dCountIn >= sArgs.minimum_arg ) ? (float)( dAveIn / dCountIn ) : CMeta::GetNaN( ) ); }
 		if( sArgs.zscore_flag )
 			DatOut.Normalize( CDat::ENormalizeZScore );
 		DatOut.Save( sArgs.output_arg );

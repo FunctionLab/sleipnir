@@ -43,6 +43,7 @@ const struct {
 	{"0to1",	CDat::ENormalizeMinMax},
 	{"sigmoid",	CDat::ENormalizeSigmoid},
 	{"normcdf",	CDat::ENormalizeNormCDF},
+	{"pcc",		CDat::ENormalizePCC},
 	{NULL,		CDat::ENormalizeNone}
 };
 

@@ -168,7 +168,8 @@ public:
 		 * Sigmoid transform scores to the range [0, 1].
 		 */
 		ENormalizeSigmoid	= ENormalizeZScore + 1,
-		ENormalizeNormCDF	= ENormalizeSigmoid + 1
+		ENormalizeNormCDF	= ENormalizeSigmoid + 1,
+		ENormalizePCC		= ENormalizeNormCDF + 1
 	};
 
 	bool Open( const char* szFile, bool fMemmap = false, size_t iSkip = 2, bool fZScore = false,
@@ -249,6 +250,10 @@ public:
 
 			case ENormalizeNormCDF:
 				NormalizeNormCDF( );
+				break;
+
+			case ENormalizePCC:
+				NormalizePCC( );
 				break;
 
 			default:

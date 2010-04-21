@@ -15,6 +15,8 @@ option	"colors"		l	"Function cohesiveness output file"
 							string	typestr="filename"
 option	"weights"		w	"PCL file of set-by-gene weights"
 							string	typestr="filename"
+option	"minimum"		u	"Minimum edge count/weight to use"
+							double	default="0"
 
 section "Optional"
 option	"normalize"		n	"Normalize input to the range [0,1]"

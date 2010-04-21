@@ -275,6 +275,7 @@ public:
 				memcpy( aaData[i], m_aaData[i], ( min( iSize, m_iSize ) - i - 1 ) * sizeof(*aaData[i]) );
 			if( fClear && ( iSize > m_iSize ) )
 				std::fill( aaData[i] + ( ( i < m_iSize ) ? ( m_iSize - i - 1 ) : 0 ), aaData[i] + iCur, CMeta::GetNaN( ) ); }
+		Reset( );
 		m_iSize = iSize;
 		m_aaData = aaData;
 

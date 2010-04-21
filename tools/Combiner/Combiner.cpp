@@ -40,11 +40,12 @@ enum EMethod {
 	EMethodMin		= EMethodMax + 1,
 	EMethodDiff		= EMethodMin + 1,
 	EMethodMeta		= EMethodDiff + 1,
-	EMethodEnd		= EMethodMeta + 1
+	EMethodQMeta	= EMethodMeta + 1,
+	EMethodEnd		= EMethodQMeta + 1
 };
 
 static const char*	c_aszMethods[]	= {
-	"mean", "sum", "gmean", "hmean", "max", "min", "diff", "meta", NULL
+	"mean", "sum", "gmean", "hmean", "max", "min", "diff", "meta", "qmeta", NULL
 };
 
 int main( int iArgs, char** aszArgs ) {
@@ -252,6 +253,22 @@ sCallbackMeta.m_DatWei.Get( sCallback.m_iOne, sCallback.m_iTwo ) << '\t' << dDel
 //*/
 	return ( 1 / ( ( 1 / sCallbackMeta.m_DatWei.Get( sCallback.m_iOne, sCallback.m_iTwo ) ) + dDelta2 ) ); }
 
+void callback_andersondarling( SCallbackVars& sCallback ) {
+	static const float	c_dFrac		= 0.001f;
+	vector<float>		vecdValues;
+	size_t				i, j, iGenes;
+	float				d;
+
+	iGenes = sCallback.m_pDatCur->GetGenes( );
+	vecdValues.reserve( (size_t)( iGenes * iGenes * c_dFrac ) );
+	for( i = 0; i < iGenes; ++i )
+		for( j = ( i + 1 ); j < iGenes; ++j )
+			if( !CMeta::IsNaN( d = sCallback.m_pDatCur->Get( i, j ) ) &&
+				( ( (float)rand( ) / RAND_MAX ) < c_dFrac ) )
+				vecdValues.push_back( d );
+	sCallback.m_dWeight = (float)( log( CStatistics::AndersonDarlingScore<float>(
+		vecdValues.begin( ), vecdValues.end( ) ) ) / log( 2.0 ) ); }
+
 void callback_combine( SCallbackVars& sCallback ) {
 
 	if( sCallback.m_eMethod == EMethodMeta )
@@ -283,14 +300,16 @@ void callback_combine( SCallbackVars& sCallback ) {
 			sCallback.m_pMatCounts->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallback.m_dWeight; } }
 
 void callback_wei( SCallbackVars& sCallback ) {
+	static const float				c_dFrac			= 0.001f;
 	SCallbackMeta&					sCallbackMeta	= sCallback.m_sCallbackMeta;
 	const vector<vector<size_t> >&	vecveciGenes	= *sCallback.m_pvecveciGenes;
 	const vector<set<size_t> >&		vecsetiGenes	= *sCallback.m_pvecsetiGenes;
 	size_t							i, j, iOne, iTwo, iA, iB, iGenes;
 	float							d, dSum, dSumSqs;
-	vector<float>					vecdSums, vecdSumSqs;
+	vector<float>					vecdSums, vecdSumSqs, vecdValues;
 
 	iGenes = sCallback.m_pDatCur->GetGenes( );
+	vecdValues.reserve( (size_t)( iGenes * ( iGenes - 1 ) * c_dFrac ) );
 	vecdSums.resize( sCallback.m_pDatOut->GetGenes( ) );
 	fill( vecdSums.begin( ), vecdSums.end( ), 0.0f );
 	vecdSumSqs.resize( sCallback.m_pDatOut->GetGenes( ) );
@@ -308,6 +327,8 @@ void callback_wei( SCallbackVars& sCallback ) {
 					iTwo = vecveciGenes[j][iB];
 					if( vecsetiGenes[iTwo].find( i ) != vecsetiGenes[iTwo].end( ) )
 						continue;
+					if( !( iA || iB ) && ( ( (float)rand( ) / RAND_MAX ) < c_dFrac ) )
+						vecdValues.push_back( d );
 					dSum += d;
 					vecdSums[iOne] += d;
 					vecdSums[iTwo] += d;
@@ -322,13 +343,16 @@ void callback_wei( SCallbackVars& sCallback ) {
 		d = ( vecdSums[i] /= iGenes - 1 );
 		vecdSumSqs[i] = ( vecdSumSqs[i] / ( iGenes - 2 ) ) - ( d * d ); }
 
+	d = (float)( log( CStatistics::AndersonDarlingScore<float>( vecdValues.begin( ), vecdValues.end( ) ) ) /
+		log( 2.0 ) );
 	sCallbackMeta.m_DatWei.Open( sCallback.m_pDatOut->GetGeneNames( ) );
 	sCallbackMeta.m_DatWei.Clear( 0 );
 	for( i = 0; i < vecdSumSqs.size( ); ++i )
 		for( j = ( i + 1 ); j < vecdSumSqs.size( ); ++j )
 			sCallbackMeta.m_DatWei.Set( i, j,
 //				2 / ( vecdSumSqs[i] + vecdSumSqs[j] )			// pooled variance of adjacent genes
-				3 / ( vecdSumSqs[i] + vecdSumSqs[j] + dSumSqs )	// unweighted pool of adjanced genes + whole network
+//				3 / ( vecdSumSqs[i] + vecdSumSqs[j] + dSumSqs )	// unweighted pool of adjanced genes + whole network
+				3 * d / ( vecdSumSqs[i] + vecdSumSqs[j] + dSumSqs )
 			); }
 
 void callback_deltaed( SCallbackVars& sCallback ) {
@@ -408,6 +432,7 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 	vector<float>			vecdWis;
 	int						iRet;
 	SCallback				sCallback( sArgs, GenesIn, PCLWeights, vecstrTerms, vecpTerms );
+	void (*pfnInitialize)( SCallbackVars& );
 
 	if( !sArgs.inputs_num )
 		return 1;
@@ -466,13 +491,25 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 	if( eMethod == EMethodMeta )
 		initialize_meta( sCallback );
 
-	if( iRet = iterate_inputs( sCallback, callback_combine, ( eMethod == EMethodMeta ) ? callback_wei : NULL ) )
+	switch( eMethod ) {
+		case EMethodMeta:
+			pfnInitialize = callback_wei;
+			break;
+
+		case EMethodQMeta:
+			pfnInitialize = callback_andersondarling;
+			break;
+
+		default:
+			pfnInitialize = NULL; }
+	if( iRet = iterate_inputs( sCallback, callback_combine, pfnInitialize ) )
 		return iRet;
 	for( i = 0; i < DatOut.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
 			switch( eMethod ) {
 				case EMethodMean:
 				case EMethodMeta:
+				case EMethodQMeta:
 					DatOut.Set( i, j, ( d = MatCounts.Get( i, j ) ) ? ( DatOut.Get( i, j ) / ( sArgs.reweight_flag ? 1 : d ) ) :
 						CMeta::GetNaN( ) );
 					break;

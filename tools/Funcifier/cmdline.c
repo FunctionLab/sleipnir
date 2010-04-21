@@ -37,6 +37,7 @@ const char *gengetopt_args_info_help[] = {
   "  -s, --shared=STRING     Determine shared gene handling  (possible \n                            values=\"ignore\", \"discard\", \"oneonly\" \n                            default=`discard')",
   "  -l, --colors=filename   Function cohesiveness output file",
   "  -w, --weights=filename  PCL file of set-by-gene weights",
+  "  -u, --minimum=DOUBLE    Minimum edge count/weight to use  (default=`0')",
   "\nOptional:",
   "  -n, --normalize         Normalize input to the range [0,1]  (default=off)",
   "  -z, --zscore            Normalize output by z-scoring  (default=off)",
@@ -49,6 +50,7 @@ typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
   , ARG_INT
+  , ARG_DOUBLE
 } cmdline_parser_arg_type;
 
 static
@@ -78,6 +80,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->shared_given = 0 ;
   args_info->colors_given = 0 ;
   args_info->weights_given = 0 ;
+  args_info->minimum_given = 0 ;
   args_info->normalize_given = 0 ;
   args_info->zscore_given = 0 ;
   args_info->memmap_given = 0 ;
@@ -97,6 +100,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->colors_orig = NULL;
   args_info->weights_arg = NULL;
   args_info->weights_orig = NULL;
+  args_info->minimum_arg = 0;
+  args_info->minimum_orig = NULL;
   args_info->normalize_flag = 0;
   args_info->zscore_flag = 0;
   args_info->memmap_flag = 0;
@@ -117,10 +122,11 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->shared_help = gengetopt_args_info_help[6] ;
   args_info->colors_help = gengetopt_args_info_help[7] ;
   args_info->weights_help = gengetopt_args_info_help[8] ;
-  args_info->normalize_help = gengetopt_args_info_help[10] ;
-  args_info->zscore_help = gengetopt_args_info_help[11] ;
-  args_info->memmap_help = gengetopt_args_info_help[12] ;
-  args_info->verbosity_help = gengetopt_args_info_help[13] ;
+  args_info->minimum_help = gengetopt_args_info_help[9] ;
+  args_info->normalize_help = gengetopt_args_info_help[11] ;
+  args_info->zscore_help = gengetopt_args_info_help[12] ;
+  args_info->memmap_help = gengetopt_args_info_help[13] ;
+  args_info->verbosity_help = gengetopt_args_info_help[14] ;
   
 }
 
@@ -212,6 +218,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->colors_orig));
   free_string_field (&(args_info->weights_arg));
   free_string_field (&(args_info->weights_orig));
+  free_string_field (&(args_info->minimum_orig));
   free_string_field (&(args_info->verbosity_orig));
   
   
@@ -303,6 +310,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "colors", args_info->colors_orig, 0);
   if (args_info->weights_given)
     write_into_file(outfile, "weights", args_info->weights_orig, 0);
+  if (args_info->minimum_given)
+    write_into_file(outfile, "minimum", args_info->minimum_orig, 0);
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
   if (args_info->zscore_given)
@@ -507,6 +516,9 @@ int update_arg(void *field, char **orig_field,
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
+  case ARG_DOUBLE:
+    if (val) *((double *)field) = strtod (val, &stop_char);
+    break;
   case ARG_STRING:
     if (val) {
       string_field = (char **)field;
@@ -522,6 +534,7 @@ int update_arg(void *field, char **orig_field,
   /* check numeric conversion */
   switch(arg_type) {
   case ARG_INT:
+  case ARG_DOUBLE:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
       return 1; /* failure */
@@ -595,6 +608,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "shared",	1, NULL, 's' },
         { "colors",	1, NULL, 'l' },
         { "weights",	1, NULL, 'w' },
+        { "minimum",	1, NULL, 'u' },
         { "normalize",	0, NULL, 'n' },
         { "zscore",	0, NULL, 'z' },
         { "memmap",	0, NULL, 'm' },
@@ -602,7 +616,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:o:s:l:w:nzmv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:o:s:l:w:u:nzmv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -683,6 +697,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.weights_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "weights", 'w',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'u':	/* Minimum edge count/weight to use.  */
+        
+        
+          if (update_arg( (void *)&(args_info->minimum_arg), 
+               &(args_info->minimum_orig), &(args_info->minimum_given),
+              &(local_args_info.minimum_given), optarg, 0, "0", ARG_DOUBLE,
+              check_ambiguity, override, 0, 0,
+              "minimum", 'u',
               additional_error))
             goto failure;
         

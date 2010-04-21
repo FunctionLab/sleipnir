@@ -54,8 +54,8 @@
  * 
  * - <a href="sleipnir-current.tar.gz">sleipnir-current.tar.gz</a>, the current source code.
  * - <a href="sleipnir-doc-current.tar.gz">sleipnir-doc-current.tar.gz</a>, the current documentation.
- * - You can also access the Sleipnir <a href="http://subversion.tigris.org/">Subversion</a> repository at:
- *	<tt>svn://gen-svn-anon.princeton.edu/sleipnir/</tt>.
+ * - You can also access the Sleipnir <a href="http://mercurial.selenic.com">Mercurial</a> repository at:
+ *	<tt>http://huttenhower.sph.harvard.edu/hg/sleipnir/</tt>.
  * 
  * Sleipnir and its associated tools are provided as source code that can be compiled under Linux (using
  * gcc), Windows (using Visual Studio or cygwin), or MacOS (using gcc).  For more information, see
@@ -65,16 +65,16 @@
  * 
  * If you use Sleipnir, please cite our publication:
  * 
- * <b>Curtis Huttenhower, Mark Schroeder, Maria D. Chikina, and
- *	<a href="mailto:ogt@princeton.edu">Olga G. Troyanskaya</a>
+ * <b><a href="mailto:chuttenh@hsph.harvard.edu">Curtis Huttenhower</a>, Mark Schroeder, Maria D. Chikina, and
+ *	Olga G. Troyanskaya
  *	"The Sleipnir library for computational functional genomics", Bioinformatics 2008</b>
- * <a href="http://www.ncbi.nlm.nih.gov/sites/entrez?Db=pubmed&Cmd=ShowDetailView&TermToSearch=18499696">PMID 18499696</a>
+ * <a href="http://www.ncbi.nlm.nih.gov/pubmed/18499696">PMID 18499696</a>
  * 
  * \section sec_building Building Sleipnir
  * 
  * We avoid distributing binaries directly due to licensing issues, but if you have problems building
  * Sleipnir or need a binary distribution for some other reason, please
- * <a href="mail:ogt@princeton.edu">contact us</a>!  We're happy to help, and if you have suggestions or
+ * <a href="mail:chuttenh@hsph.harvard.edu">contact us</a>!  We're happy to help, and if you have suggestions or
  * contributions, we'll post them here with appropriate credit.
  * 
  * \subsection ssec_building_prerequisites Prerequisites
@@ -218,7 +218,7 @@
  * - If the Sleipnir tools instantaneously crash with a segmentation fault, try compiling Sleipnir \em and
  *	its external dependencies with \c CXXFLAGS=-fno-threadsafe-statics.  This works around a bug in certain
  *	versions of g++ and pthreads.
- * - If all else fails, <a href="mailto:ogt@princeton.edu">contact us</a>!  We're happy to receive
+ * - If all else fails, <a href="mailto:chuttenh@hsph.harvard.edu">contact us</a>!  We're happy to receive
  *	feedback about Sleipnir, good or bad, and we're more than willing to update the code or documentation
  *	based on user contributions.  If you'd like to see your name in lights on this web page, feel free to
  *	send patches, questions, or suggestions, and we'll post them whenever possible.
@@ -788,12 +788,12 @@ MIPS:
  * include (with full credit, of course) any patches submitted by the community.  If you're interested in
  * developing new Sleipnir tools or library components, the following steps may be useful:
  * 
- * - First, <a href="mailto:ogt@princeton.edu">let us know</a>!  We'd love to hear how people are using
+ * - First, <a href="mailto:chuttenh@hsph.harvard.edu">let us know</a>!  We'd love to hear how people are using
  *	Sleipnir and what you plan to do with it.  We're happy to answer questions and offer development tips
  *	whenever possible.
  * 
- * - Check out our <a href="http://subversion.tigris.org/">Subversion</a> repository at
- *	<tt>svn://gen-svn-anon.princeton.edu/sleipnir/</tt>.  The \c trunk branch always contains the latest development
+ * - Check out our <a href="http://mercurial.selenic.com/">Mercurial</a> repository at
+ *	<tt>http://huttenhower.sph.harvard.edu/hg/sleipnir/</tt>.  The \c trunk branch always contains the latest development
  *	version of Sleipnir, and official versioned releases appear under \c tags.  If you'd like to submit
  *	patches to us for inclusion in Sleipnir, please try to do so against the current development version
  *	(\c trunk).
@@ -802,14 +802,15 @@ MIPS:
  *	includes your modifications and additions.  Alternatively, if you've built an independent tool that
  *	relies on Sleipnir, we can include a link to it on the Sleipnir web site.
  * 
- * - And finally, <a href="mailto:ogt@princeton.edu">let us know</a> again!  We'll do our best to include any
+ * - And finally, <a href="mailto:chuttenh@hsph.harvard.edu">let us know</a> again!  We'll do our best to include any
  *	patch or link you send us, always with full credit to the creators.
  * 
  * \section sec_history Version History
  * 
  * - <a href="sleipnir-2.2.tar.gz">2.2</a>, *** <br>
- * Fix confusing documentation in \ref Answerer - thanks to Arjun Krishnan!
- * Fix missing \c SIZE_MAX definition on Mac OS X - thanks to Alice Koechlin!
+ * Fix confusing documentation in \ref Answerer - thanks to Arjun Krishnan! <br>
+ * Fix missing \c SIZE_MAX definition on Mac OS X - thanks to Alice Koechlin! <br>
+ * Add Partial Correlation Coefficient normalization to \t CDat and \ref Normalizer - thanks to Arjun Krishnan!
  * 
  * - <a href="sleipnir-2.1.tar.gz">2.1</a>, 12-20-09 <br>
  * Update includes for gcc 4.3 compatibility - thanks to Casey Greene! <br>

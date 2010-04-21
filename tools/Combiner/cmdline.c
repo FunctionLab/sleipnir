@@ -32,7 +32,7 @@ const char *gengetopt_args_info_help[] = {
   "  -V, --version              Print version and exit",
   "\nMain:",
   "  -t, --type=STRING          Output data file type  (possible values=\"pcl\", \n                               \"dat\", \"dab\", \"module\", \"revdat\" \n                               default=`pcl')",
-  "  -m, --method=STRING        Combination method  (possible values=\"min\", \n                               \"max\", \"mean\", \"gmean\", \"hmean\", \n                               \"sum\", \"diff\", \"meta\" default=`mean')",
+  "  -m, --method=STRING        Combination method  (possible values=\"min\", \n                               \"max\", \"mean\", \"gmean\", \"hmean\", \n                               \"sum\", \"diff\", \"meta\", \"qmeta\" \n                               default=`mean')",
   "  -o, --output=filename      Output file",
   "  -w, --weights=filename     Weights file",
   "\nModules:",
@@ -74,7 +74,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
 
 
 char *cmdline_parser_type_values[] = {"pcl", "dat", "dab", "module", "revdat", 0} ;	/* Possible values for type.  */
-char *cmdline_parser_method_values[] = {"min", "max", "mean", "gmean", "hmean", "sum", "diff", "meta", 0} ;	/* Possible values for method.  */
+char *cmdline_parser_method_values[] = {"min", "max", "mean", "gmean", "hmean", "sum", "diff", "meta", "qmeta", 0} ;	/* Possible values for method.  */
 
 static char *
 gengetopt_strdup (const char *s);

@@ -111,6 +111,10 @@ const char	COntologyKEGGImpl::c_szName[]		= "NAME";
 const char	COntologyKEGGImpl::c_szDefinition[]	= "DEFINITION";
 const char	COntologyKEGGImpl::c_szClass[]		= "CLASS";
 const char	COntologyKEGGImpl::c_szPath[]		= "PATH:";
+const char	COntologyKEGGImpl::c_szReference[]	= "REFERENCE";
+const char	COntologyKEGGImpl::c_szDisease[]	= "DISEASE";
+const char	COntologyKEGGImpl::c_szPathway[]	= "PATHWAY";
+const char	COntologyKEGGImpl::c_szModule[]		= "MODULE";
 const char	COntologyKEGGImpl::c_szBR[]			= "BR:";
 const char	COntologyKEGGImpl::c_szDBLinks[]	= "DBLINKS";
 const char	COntologyKEGGImpl::c_szGenes[]		= "GENES";
@@ -131,8 +135,10 @@ bool COntologyKEGGImpl::Open( SParserKEGG& sParser ) {
 
 	sParser.Reset( );
 	return ( OpenEntry( sParser ) && OpenName( sParser ) &&
-		OpenDefinition( sParser ) && OpenClass( sParser ) &&
-		OpenDBLinks( sParser ) && OpenGenes( sParser ) &&
+		OpenDefinition( sParser ) && OpenPathway( sParser ) &&
+		OpenModule( sParser ) && OpenDisease( sParser ) &&
+		OpenClass( sParser ) && OpenDBLinks( sParser ) &&
+		OpenGenes( sParser ) && OpenReferences( sParser ) &&
 		OpenEnd( sParser ) ); }
 
 bool COntologyKEGGImpl::OpenEntry( SParserKEGG& sParser ) {
@@ -143,6 +149,60 @@ bool COntologyKEGGImpl::OpenName( SParserKEGG& sParser ) {
 
 	g_CatSleipnir( ).debug( "COntologyKEGGImpl::OpenName( ) %s", sParser.m_szLine );
 	return ( sParser.IsStart( c_szName ) ? sParser.GetLine( ) : true ); }
+
+bool COntologyKEGGImpl::OpenPathway( SParserKEGG& sParser ) {
+
+	if( !sParser.IsStart( c_szPathway ) )
+		return true;
+
+	do
+		if( !sParser.GetLine( ) )
+			return false;
+	while( isspace( sParser.m_szLine[ 0 ] ) );
+
+	return true; }
+
+bool COntologyKEGGImpl::OpenReferences( SParserKEGG& sParser ) {
+
+	while( OpenReference( sParser ) );
+
+	return true; }
+
+bool COntologyKEGGImpl::OpenReference( SParserKEGG& sParser ) {
+
+	if( !sParser.IsStart( c_szReference ) )
+		return false;
+
+	do
+		if( !sParser.GetLine( ) )
+			return false;
+	while( isspace( sParser.m_szLine[ 0 ] ) );
+
+	return true; }
+
+bool COntologyKEGGImpl::OpenDisease( SParserKEGG& sParser ) {
+
+	if( !sParser.IsStart( c_szDisease ) )
+		return true;
+
+	do
+		if( !sParser.GetLine( ) )
+			return false;
+	while( isspace( sParser.m_szLine[ 0 ] ) );
+
+	return true; }
+
+bool COntologyKEGGImpl::OpenModule( SParserKEGG& sParser ) {
+
+	if( !sParser.IsStart( c_szModule ) )
+		return true;
+
+	do
+		if( !sParser.GetLine( ) )
+			return false;
+	while( isspace( sParser.m_szLine[ 0 ] ) );
+
+	return true; }
 
 bool COntologyKEGGImpl::OpenDefinition( SParserKEGG& sParser ) {
 

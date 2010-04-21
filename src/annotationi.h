@@ -178,6 +178,10 @@ protected:
 	static const char	c_szDefinition[];
 	static const char	c_szClass[];
 	static const char	c_szPath[];
+	static const char	c_szReference[];
+	static const char	c_szDisease[];
+	static const char	c_szPathway[];
+	static const char	c_szModule[];
 	static const char	c_szBR[];
 	static const char	c_szDBLinks[];
 	static const char	c_szGenes[];
@@ -202,7 +206,12 @@ protected:
 
 	bool Open( SParserKEGG& );
 	bool OpenEntry( SParserKEGG& );
+	bool OpenReferences( SParserKEGG& );
+	bool OpenReference( SParserKEGG& );
 	bool OpenName( SParserKEGG& );
+	bool OpenDisease( SParserKEGG& );
+	bool OpenPathway( SParserKEGG& );
+	bool OpenModule( SParserKEGG& );
 	bool OpenDefinition( SParserKEGG& );
 	bool OpenClass( SParserKEGG& );
 	bool OpenDBLinks( SParserKEGG& );

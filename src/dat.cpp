@@ -1127,6 +1127,39 @@ void CDatImpl::NormalizeMinmax( ) {
 			for( j = ( i + 1 ); j < GetGenes( ); ++j )
 				Set( i, j, ( Get( i, j ) - dMin ) / dMax ); }
 
+void CDatImpl::NormalizePCC( ) {
+	size_t			i, j;
+	vector<float>	vecdAves, vecdStds;
+	vector<size_t>	veciCounts;
+	float			d, dOne, dTwo;
+
+	vecdAves.resize( GetGenes( ) );
+	vecdStds.resize( GetGenes( ) );
+	veciCounts.resize( GetGenes( ) );
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+				veciCounts[i]++;
+				veciCounts[j]++;
+				vecdAves[i] += d;
+				vecdAves[j] += d;
+				d *= d;
+				vecdStds[i] += d;
+				vecdStds[j] += d; }
+	for( i = 0; i < GetGenes( ); ++i ) {
+		if( veciCounts[i] ) {
+			vecdAves[i] /= veciCounts[i];
+			vecdStds[i] = sqrt( ( vecdStds[i] / ( max( veciCounts[i], 2 ) - 1 ) ) -
+				( vecdAves[i] * vecdAves[i] ) ); }
+		if( !vecdStds[i] )
+			vecdStds[i] = 1; }
+	for( i = 0; i < GetGenes( ); ++i ) {
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+				dOne = ( d - vecdAves[i] ) / vecdStds[i];
+				dTwo = ( d - vecdAves[j] ) / vecdStds[j];
+				Set( i, j, sqrt( ( dOne * dOne ) + ( dTwo * dTwo ) ) ); } } }
+
 /*!
  * \brief
  * Replace each finite value in the CDat with one minus that value.
