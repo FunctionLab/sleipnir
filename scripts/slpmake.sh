@@ -22,7 +22,8 @@ INDIR=`pwd`
 #
 echo "[inDir] " ${INDIR}    2>&1 >> ${LOGFILE}
 echo "[step:clean] "        2>&1 >> ${LOGFILE}
-make clean                  2>&1 >> ${LOGFILE}
+make -j18 clean             2>&1 >> ${LOGFILE}
+rm -f tools/*/cmdline.[ch]  2>&1 >> ${LOGFILE}
 #
 cd ${SCRIPTDIR}
 INDIR=`pwd`
@@ -36,7 +37,7 @@ INDIR=`pwd`
 #
 echo "[inDir] " ${INDIR}    2>&1 >> ${LOGFILE}
 echo "[step:make] "         2>&1 >> ${LOGFILE}
-make                        2>&1 >> ${LOGFILE}
+make -j18                   2>&1 >> ${LOGFILE}
 #
 echo "[inDir] " ${INDIR}    2>&1 >> ${LOGFILE}
 echo "[step:install] "      2>&1 >> ${LOGFILE}
@@ -45,3 +46,4 @@ make install                2>&1 >> ${LOGFILE}
 #
 #mail -s "Sleipnir: Out-of-CycleBuild" hut-dev@hsphsun3.harvard.edu < ${LOGFILE};
 mail -s "Sleipnir: Nightly Build" hut-dev@hsphsun3.harvard.edu < ${LOGFILE};
+#mail -s "Sleipnir: Test Build" rmcgover < ${LOGFILE};
