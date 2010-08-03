@@ -92,7 +92,7 @@ int main( int iArgs, char** aszArgs ) {
 
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			if( ( iterName = mapNames.find( Dat.GetGene( i ) ) ) != mapNames.end( ) ) {
-				if( Dat.GetGene( iterName->second ) ) {
+				if( Dat.GetGene( iterName->second ) != -1 ) {
 					cerr << "Duplicate mapping: " << Dat.GetGene( i ) << " to " <<
 						iterName->second << endl;
 					return 1; }
