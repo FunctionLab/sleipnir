@@ -149,10 +149,10 @@ int main( int iArgs, char** aszArgs ) {
 				continue;
 			mapZeros[ vecstrZeros[ 0 ] ] = atoi( vecstrZeros[ 1 ].c_str( ) ); } }
 
-	vector<vector<float>>					vecPrior;
-	vector<vector<vector<float>>>			vecDataGSpZero;
-	vector<vector<vector<float>>>			vecDataGSpOne;
-	vector<vector<string>>					vecvecSpDat;
+	vector<vector<float> >					vecPrior;
+	vector<vector<vector<float> > >			vecDataGSpZero;
+	vector<vector<vector<float> > >			vecDataGSpOne;
+	vector<vector<string> >					vecvecSpDat;
 	CDataMatrix		MatCPT;
 	vector<string>	vecstrFiles;
 
@@ -184,7 +184,7 @@ int main( int iArgs, char** aszArgs ) {
 				vecDataGSpOne[ i ][ j ][ k ] = MatCPT.Get( k , 1 );}}
 		vecstrFiles.clear( );}
 
-	vector<vector<vector<vector<float>>>>		vec4OSpGSp;
+	vector<vector<vector<vector<float> > > >		vec4OSpGSp;
 	vec4OSpGSp.resize( sArgs.inputs_num/2 );
 
 	for( iDatOne = 0; iDatOne < vecstrInputs.size( ); ++iDatOne ) {
@@ -332,7 +332,7 @@ int main( int iArgs, char** aszArgs ) {
 	DatOut10.Open( vecstrlInputs );
 	
 	for( i = 0; i < NGibbs; ++i ){ 
-		vector<vector<size_t>>		vecvecDSp;
+		vector<vector<size_t> >		vecvecDSp;
 		vecvecDSp.resize( sArgs.inputs_num/2 );
 		for( j = 0; j < sArgs.inputs_num/2; ++j ){
 //			const vector<float>&	vecdCur	= ( vecTSamples[j] ? vecDataGSpOne : vecDataGSpZero );
@@ -398,11 +398,11 @@ int main( int iArgs, char** aszArgs ) {
 							DatOut10.Set( j, k, 1 );
 						else
 							DatOut10.Set( j, k, ++DatOut10.Get( j, k ) );}}}}	
-	}
-	
+	}	
+
 	_mkdir( sArgs.directory_arg );
-	
-	vector<vector<vector<vector<float>>>>		vec4FSpGSp;
+
+	vector<vector<vector<vector<float> > > >		vec4FSpGSp;
 	vec4FSpGSp.resize( sArgs.inputs_num/2 );
 	
 	for( iDatOne = 0; iDatOne < vecstrInputs.size( ); ++iDatOne ) {
@@ -445,7 +445,7 @@ int main( int iArgs, char** aszArgs ) {
 
     for( iDatOne = 0; iDatOne < vec4FSpGSp.size( ); ++iDatOne ) {
         for( iDatTwo = ( iDatOne + 1 ); iDatTwo < vec4FSpGSp[ iDatOne ].size( ); ++iDatTwo ) {
-            vector<vector<float>>			vecvecFTJoint;
+            vector<vector<float> >			vecvecFTJoint;
             float							MaxFJoint = 0;
             size_t							ZeroFCount = 0;
             vecvecFTJoint.resize( vec4FSpGSp[ iDatOne ][ iDatTwo ].size( ) );
@@ -497,7 +497,7 @@ int main( int iArgs, char** aszArgs ) {
                     vec4FSpGSp[ iDatOne ][ iDatTwo ][ i ][ j ] = vecvecFTJoint[ i ][ j ] / vecFValueOnep[ i ];
                     vec4FSpGSp[ iDatTwo ][ iDatOne ][ i ][ j ] = vecvecFTJoint[ j ][ i ] / vecFValueTwop[ i ];}}}}
     
-    vector<vector<string>>		vecvecstrInputs;
+    vector<vector<string> >		vecvecstrInputs;
     size_t						countstrInputs;
     vecvecstrInputs.resize( vecvecSpDat.size( ) );
     countstrInputs = 0;
@@ -508,7 +508,7 @@ int main( int iArgs, char** aszArgs ) {
             countstrInputs++;}}
 
     vector<string>				vecstrFInputs;
-    vector<vector<size_t>>		InputMaps;				
+    vector<vector<size_t> >		InputMaps;				
     vecstrFInputs.resize( countstrInputs );
     countstrInputs = 0;
     InputMaps.resize( vecvecstrInputs.size( ) );
@@ -555,7 +555,7 @@ int main( int iArgs, char** aszArgs ) {
         DatOutB[ i ] = new CDat( );
         DatOutB[ i ]->Open( vecstrFGenes );}
 
-    vector<vector<vector<size_t>>>		vec3GeneIndex;
+    vector<vector<vector<size_t> > >		vec3GeneIndex;
     vec3GeneIndex.resize( vecvecstrInputs.size( ) );
     for( i = 0; i < vecvecstrInputs.size( ); ++i ){
         vec3GeneIndex[ i ].resize( vecvecstrInputs[ i ].size( ) );

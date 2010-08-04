@@ -594,6 +594,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Txt2Bin/Makefile \
                  tools/BNConverter/Makefile \
 		 tools/BNCreator/Makefile \
+		 tools/SpeciesConnector/Makefile \
 		 tools/BNEvaluator/Makefile \
 		 tools/BNFunc/Makefile \
 		 tools/BNTester/Makefile \

@@ -22,10 +22,16 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
+#ifdef _MSC_VER
 #include <direct.h>
+#else
+#include<sys/stat.h>
+
+inline int _mkdir(char *str) {
+	return mkdir( str, S_IRWXU );}
+#endif
+
 #include <fstream>
-//#include <cstring>
-//#include <cctype>
 using namespace std;
 
 #include <pthread.h>
@@ -34,13 +40,6 @@ using namespace std;
 #include "dataset.h"
 #include "genome.h"
 #include "meta.h"
-//#include "string.h"
 using namespace Sleipnir;
-
-#ifndef _MSC_VER
-#include <dirent.h>
-
-#define _unlink	unlink
-#endif // _MSC_VER
 
 #endif // STDAFX_H

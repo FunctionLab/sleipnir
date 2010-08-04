@@ -40,6 +40,7 @@ if WITH_SMILE_TOOLS
     SMILE_TOOLS_SUBDIRS = \
           BNConverter \
 	  BNCreator \
+	  SpeciesConnector \
 	  BNEvaluator \
 	  BNFunc \
 	  BNTester \
