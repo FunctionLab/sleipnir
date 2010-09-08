@@ -40,20 +40,12 @@ struct gengetopt_args_info
   char * directory_arg;	/**< @brief Output directory (default='.').  */
   char * directory_orig;	/**< @brief Output directory original value given at command line.  */
   const char *directory_help; /**< @brief Output directory help description.  */
-  int gibbs_arg;	/**< @brief Gibbs run (default='100000').  */
-  char * gibbs_orig;	/**< @brief Gibbs run original value given at command line.  */
-  const char *gibbs_help; /**< @brief Gibbs run help description.  */
-  int zero_flag;	/**< @brief Zero missing values (default=off).  */
-  const char *zero_help; /**< @brief Zero missing values help description.  */
   char * zeros_arg;	/**< @brief Read zeroed node IDs/outputs from the given file.  */
   char * zeros_orig;	/**< @brief Read zeroed node IDs/outputs from the given file original value given at command line.  */
   const char *zeros_help; /**< @brief Read zeroed node IDs/outputs from the given file help description.  */
   char * genex_arg;	/**< @brief Gene exclusion file.  */
   char * genex_orig;	/**< @brief Gene exclusion file original value given at command line.  */
   const char *genex_help; /**< @brief Gene exclusion file help description.  */
-  int subsample_arg;	/**< @brief Maximum pairs to subsample (default='100000').  */
-  char * subsample_orig;	/**< @brief Maximum pairs to subsample original value given at command line.  */
-  const char *subsample_help; /**< @brief Maximum pairs to subsample help description.  */
   int memmap_flag;	/**< @brief Memory map input/output (default=off).  */
   const char *memmap_help; /**< @brief Memory map input/output help description.  */
   int random_arg;	/**< @brief Seed random generator (default='0').  */
@@ -67,11 +59,8 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int ndirectory_given ;	/**< @brief Whether ndirectory was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
-  unsigned int gibbs_given ;	/**< @brief Whether gibbs was given.  */
-  unsigned int zero_given ;	/**< @brief Whether zero was given.  */
   unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */
-  unsigned int subsample_given ;	/**< @brief Whether subsample was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
