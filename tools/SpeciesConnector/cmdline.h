@@ -34,6 +34,9 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
+  char * adirectory_arg;	/**< @brief Answer directory (default='.').  */
+  char * adirectory_orig;	/**< @brief Answer directory original value given at command line.  */
+  const char *adirectory_help; /**< @brief Answer directory help description.  */
   char * ndirectory_arg;	/**< @brief Input directory (default='.').  */
   char * ndirectory_orig;	/**< @brief Input directory original value given at command line.  */
   const char *ndirectory_help; /**< @brief Input directory help description.  */
@@ -54,9 +57,21 @@ struct gengetopt_args_info
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
+  int holdout_flag;	/**< @brief Holdout target dataset (default=off).  */
+  const char *holdout_help; /**< @brief Holdout target dataset help description.  */
+  int genelist_flag;	/**< @brief Print gene list on the screen (default=off).  */
+  const char *genelist_help; /**< @brief Print gene list on the screen help description.  */
+  int uniformjoint_flag;	/**< @brief Uniform joint distribution (default=off).  */
+  const char *uniformjoint_help; /**< @brief Uniform joint distribution help description.  */
+  int normaljoint_flag;	/**< @brief Normal joint distribution (default=off).  */
+  const char *normaljoint_help; /**< @brief Normal joint distribution help description.  */
+  float threshold_arg;	/**< @brief Threshold for joint (default='0.5').  */
+  char * threshold_orig;	/**< @brief Threshold for joint original value given at command line.  */
+  const char *threshold_help; /**< @brief Threshold for joint help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
+  unsigned int adirectory_given ;	/**< @brief Whether adirectory was given.  */
   unsigned int ndirectory_given ;	/**< @brief Whether ndirectory was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
   unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
@@ -64,6 +79,11 @@ struct gengetopt_args_info
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+  unsigned int holdout_given ;	/**< @brief Whether holdout was given.  */
+  unsigned int genelist_given ;	/**< @brief Whether genelist was given.  */
+  unsigned int uniformjoint_given ;	/**< @brief Whether uniformjoint was given.  */
+  unsigned int normaljoint_given ;	/**< @brief Whether normaljoint was given.  */
+  unsigned int threshold_given ;	/**< @brief Whether threshold was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

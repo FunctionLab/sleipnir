@@ -3,6 +3,8 @@ version	"1.0"
 purpose	"Cross species connection calculator."
 
 section "Main"
+option	"adirectory" w	"Answer directory"
+						string	typestr="directory"	default="."
 option	"ndirectory" n	"Input directory"
 						string	typestr="directory"	default="."
 option	"directory"	d	"Output directory"
@@ -21,3 +23,13 @@ option	"random"	r	"Seed random generator"
 						int	default="0"
 option	"verbosity"	v	"Message verbosity"
 						int	default="5"
+option	"holdout"	h	"Holdout target dataset"
+						flag	off	
+option	"genelist"	l	"Print gene list on the screen"
+						flag	off			
+option	"uniformjoint"		u	"Uniform joint distribution"
+								flag	off
+option	"normaljoint"		g	"Normal joint distribution"
+								flag	off
+option	"threshold"	t	"Threshold for joint"
+						float	default="0.5"
