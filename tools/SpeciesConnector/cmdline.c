@@ -28,24 +28,28 @@ const char *gengetopt_args_info_usage = "Usage: SpeciesConnector [OPTIONS]... [F
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "      --help                  Print help and exit",
-  "  -V, --version               Print version and exit",
+  "      --help                   Print help and exit",
+  "  -V, --version                Print version and exit",
   "\nMain:",
-  "  -w, --adirectory=directory  Answer directory  (default=`.')",
-  "  -n, --ndirectory=directory  Input directory  (default=`.')",
-  "  -d, --directory=directory   Output directory  (default=`.')",
+  "  -d, --ddirectory=directory   Data directory  (default=`.')",
+  "  -w, --adirectory=directory   Answer directory  (default=`.')",
+  "  -o, --odirectory=directory   Output directory  (default=`.')",
+  "  -p, --jdirectory=directory   Learned joint directory  (default=`.')",
+  "  -j, --l1directory=directory  Likelihood wrt 1 directory  (default=`.')",
+  "  -k, --l0directory=directory  Likelihood wrt 0 directory  (default=`.')",
+  "\nStage: Learn/Prediction:",
+  "  -L, --learn                  Learn flag  (default=off)",
   "\nNetwork Features:",
-  "  -Z, --zeros=filename        Read zeroed node IDs/outputs from the given file",
+  "  -Z, --zeros=filename         Read zeroed node IDs/outputs from the given file",
   "\nOptional:",
-  "  -G, --genex=filename        Gene exclusion file",
-  "  -m, --memmap                Memory map input/output  (default=off)",
-  "  -r, --random=INT            Seed random generator  (default=`0')",
-  "  -v, --verbosity=INT         Message verbosity  (default=`5')",
-  "  -h, --holdout               Holdout target dataset  (default=off)",
-  "  -l, --genelist              Print gene list on the screen  (default=off)",
-  "  -u, --uniformjoint          Uniform joint distribution  (default=off)",
-  "  -g, --normaljoint           Normal joint distribution  (default=off)",
-  "  -t, --threshold=FLOAT       Threshold for joint  (default=`0.5')",
+  "  -m, --memmap                 Memory map input/output  (default=off)",
+  "  -r, --random=INT             Seed random generator  (default=`0')",
+  "  -v, --verbosity=INT          Message verbosity  (default=`5')",
+  "  -G, --genex=filename         Gene exclusion file",
+  "  -l, --genelist               Print gene list on the screen  (default=off)",
+  "  -u, --uniformjoint           Uniform joint distribution  (default=off)",
+  "  -t, --threshold=FLOAT        Threshold for joint  (default=`0.5')",
+  "  -h, --holdout                Holdout target dataset  (default=off)",
     0
 };
 
@@ -74,45 +78,54 @@ void clear_given (struct gengetopt_args_info *args_info)
 {
   args_info->help_given = 0 ;
   args_info->version_given = 0 ;
+  args_info->ddirectory_given = 0 ;
   args_info->adirectory_given = 0 ;
-  args_info->ndirectory_given = 0 ;
-  args_info->directory_given = 0 ;
+  args_info->odirectory_given = 0 ;
+  args_info->jdirectory_given = 0 ;
+  args_info->l1directory_given = 0 ;
+  args_info->l0directory_given = 0 ;
+  args_info->learn_given = 0 ;
   args_info->zeros_given = 0 ;
-  args_info->genex_given = 0 ;
   args_info->memmap_given = 0 ;
   args_info->random_given = 0 ;
   args_info->verbosity_given = 0 ;
-  args_info->holdout_given = 0 ;
+  args_info->genex_given = 0 ;
   args_info->genelist_given = 0 ;
   args_info->uniformjoint_given = 0 ;
-  args_info->normaljoint_given = 0 ;
   args_info->threshold_given = 0 ;
+  args_info->holdout_given = 0 ;
 }
 
 static
 void clear_args (struct gengetopt_args_info *args_info)
 {
+  args_info->ddirectory_arg = gengetopt_strdup (".");
+  args_info->ddirectory_orig = NULL;
   args_info->adirectory_arg = gengetopt_strdup (".");
   args_info->adirectory_orig = NULL;
-  args_info->ndirectory_arg = gengetopt_strdup (".");
-  args_info->ndirectory_orig = NULL;
-  args_info->directory_arg = gengetopt_strdup (".");
-  args_info->directory_orig = NULL;
+  args_info->odirectory_arg = gengetopt_strdup (".");
+  args_info->odirectory_orig = NULL;
+  args_info->jdirectory_arg = gengetopt_strdup (".");
+  args_info->jdirectory_orig = NULL;
+  args_info->l1directory_arg = gengetopt_strdup (".");
+  args_info->l1directory_orig = NULL;
+  args_info->l0directory_arg = gengetopt_strdup (".");
+  args_info->l0directory_orig = NULL;
+  args_info->learn_flag = 0;
   args_info->zeros_arg = NULL;
   args_info->zeros_orig = NULL;
-  args_info->genex_arg = NULL;
-  args_info->genex_orig = NULL;
   args_info->memmap_flag = 0;
   args_info->random_arg = 0;
   args_info->random_orig = NULL;
   args_info->verbosity_arg = 5;
   args_info->verbosity_orig = NULL;
-  args_info->holdout_flag = 0;
+  args_info->genex_arg = NULL;
+  args_info->genex_orig = NULL;
   args_info->genelist_flag = 0;
   args_info->uniformjoint_flag = 0;
-  args_info->normaljoint_flag = 0;
   args_info->threshold_arg = 0.5;
   args_info->threshold_orig = NULL;
+  args_info->holdout_flag = 0;
   
 }
 
@@ -123,19 +136,22 @@ void init_args_info(struct gengetopt_args_info *args_info)
 
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
-  args_info->adirectory_help = gengetopt_args_info_help[3] ;
-  args_info->ndirectory_help = gengetopt_args_info_help[4] ;
-  args_info->directory_help = gengetopt_args_info_help[5] ;
-  args_info->zeros_help = gengetopt_args_info_help[7] ;
-  args_info->genex_help = gengetopt_args_info_help[9] ;
-  args_info->memmap_help = gengetopt_args_info_help[10] ;
-  args_info->random_help = gengetopt_args_info_help[11] ;
-  args_info->verbosity_help = gengetopt_args_info_help[12] ;
-  args_info->holdout_help = gengetopt_args_info_help[13] ;
-  args_info->genelist_help = gengetopt_args_info_help[14] ;
-  args_info->uniformjoint_help = gengetopt_args_info_help[15] ;
-  args_info->normaljoint_help = gengetopt_args_info_help[16] ;
-  args_info->threshold_help = gengetopt_args_info_help[17] ;
+  args_info->ddirectory_help = gengetopt_args_info_help[3] ;
+  args_info->adirectory_help = gengetopt_args_info_help[4] ;
+  args_info->odirectory_help = gengetopt_args_info_help[5] ;
+  args_info->jdirectory_help = gengetopt_args_info_help[6] ;
+  args_info->l1directory_help = gengetopt_args_info_help[7] ;
+  args_info->l0directory_help = gengetopt_args_info_help[8] ;
+  args_info->learn_help = gengetopt_args_info_help[10] ;
+  args_info->zeros_help = gengetopt_args_info_help[12] ;
+  args_info->memmap_help = gengetopt_args_info_help[14] ;
+  args_info->random_help = gengetopt_args_info_help[15] ;
+  args_info->verbosity_help = gengetopt_args_info_help[16] ;
+  args_info->genex_help = gengetopt_args_info_help[17] ;
+  args_info->genelist_help = gengetopt_args_info_help[18] ;
+  args_info->uniformjoint_help = gengetopt_args_info_help[19] ;
+  args_info->threshold_help = gengetopt_args_info_help[20] ;
+  args_info->holdout_help = gengetopt_args_info_help[21] ;
   
 }
 
@@ -217,18 +233,24 @@ static void
 cmdline_parser_release (struct gengetopt_args_info *args_info)
 {
   unsigned int i;
+  free_string_field (&(args_info->ddirectory_arg));
+  free_string_field (&(args_info->ddirectory_orig));
   free_string_field (&(args_info->adirectory_arg));
   free_string_field (&(args_info->adirectory_orig));
-  free_string_field (&(args_info->ndirectory_arg));
-  free_string_field (&(args_info->ndirectory_orig));
-  free_string_field (&(args_info->directory_arg));
-  free_string_field (&(args_info->directory_orig));
+  free_string_field (&(args_info->odirectory_arg));
+  free_string_field (&(args_info->odirectory_orig));
+  free_string_field (&(args_info->jdirectory_arg));
+  free_string_field (&(args_info->jdirectory_orig));
+  free_string_field (&(args_info->l1directory_arg));
+  free_string_field (&(args_info->l1directory_orig));
+  free_string_field (&(args_info->l0directory_arg));
+  free_string_field (&(args_info->l0directory_orig));
   free_string_field (&(args_info->zeros_arg));
   free_string_field (&(args_info->zeros_orig));
-  free_string_field (&(args_info->genex_arg));
-  free_string_field (&(args_info->genex_orig));
   free_string_field (&(args_info->random_orig));
   free_string_field (&(args_info->verbosity_orig));
+  free_string_field (&(args_info->genex_arg));
+  free_string_field (&(args_info->genex_orig));
   free_string_field (&(args_info->threshold_orig));
   
   
@@ -268,32 +290,38 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "help", 0, 0 );
   if (args_info->version_given)
     write_into_file(outfile, "version", 0, 0 );
+  if (args_info->ddirectory_given)
+    write_into_file(outfile, "ddirectory", args_info->ddirectory_orig, 0);
   if (args_info->adirectory_given)
     write_into_file(outfile, "adirectory", args_info->adirectory_orig, 0);
-  if (args_info->ndirectory_given)
-    write_into_file(outfile, "ndirectory", args_info->ndirectory_orig, 0);
-  if (args_info->directory_given)
-    write_into_file(outfile, "directory", args_info->directory_orig, 0);
+  if (args_info->odirectory_given)
+    write_into_file(outfile, "odirectory", args_info->odirectory_orig, 0);
+  if (args_info->jdirectory_given)
+    write_into_file(outfile, "jdirectory", args_info->jdirectory_orig, 0);
+  if (args_info->l1directory_given)
+    write_into_file(outfile, "l1directory", args_info->l1directory_orig, 0);
+  if (args_info->l0directory_given)
+    write_into_file(outfile, "l0directory", args_info->l0directory_orig, 0);
+  if (args_info->learn_given)
+    write_into_file(outfile, "learn", 0, 0 );
   if (args_info->zeros_given)
     write_into_file(outfile, "zeros", args_info->zeros_orig, 0);
-  if (args_info->genex_given)
-    write_into_file(outfile, "genex", args_info->genex_orig, 0);
   if (args_info->memmap_given)
     write_into_file(outfile, "memmap", 0, 0 );
   if (args_info->random_given)
     write_into_file(outfile, "random", args_info->random_orig, 0);
   if (args_info->verbosity_given)
     write_into_file(outfile, "verbosity", args_info->verbosity_orig, 0);
-  if (args_info->holdout_given)
-    write_into_file(outfile, "holdout", 0, 0 );
+  if (args_info->genex_given)
+    write_into_file(outfile, "genex", args_info->genex_orig, 0);
   if (args_info->genelist_given)
     write_into_file(outfile, "genelist", 0, 0 );
   if (args_info->uniformjoint_given)
     write_into_file(outfile, "uniformjoint", 0, 0 );
-  if (args_info->normaljoint_given)
-    write_into_file(outfile, "normaljoint", 0, 0 );
   if (args_info->threshold_given)
     write_into_file(outfile, "threshold", args_info->threshold_orig, 0);
+  if (args_info->holdout_given)
+    write_into_file(outfile, "holdout", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -536,23 +564,26 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
       static struct option long_options[] = {
         { "help",	0, NULL, 0 },
         { "version",	0, NULL, 'V' },
+        { "ddirectory",	1, NULL, 'd' },
         { "adirectory",	1, NULL, 'w' },
-        { "ndirectory",	1, NULL, 'n' },
-        { "directory",	1, NULL, 'd' },
+        { "odirectory",	1, NULL, 'o' },
+        { "jdirectory",	1, NULL, 'p' },
+        { "l1directory",	1, NULL, 'j' },
+        { "l0directory",	1, NULL, 'k' },
+        { "learn",	0, NULL, 'L' },
         { "zeros",	1, NULL, 'Z' },
-        { "genex",	1, NULL, 'G' },
         { "memmap",	0, NULL, 'm' },
         { "random",	1, NULL, 'r' },
         { "verbosity",	1, NULL, 'v' },
-        { "holdout",	0, NULL, 'h' },
+        { "genex",	1, NULL, 'G' },
         { "genelist",	0, NULL, 'l' },
         { "uniformjoint",	0, NULL, 'u' },
-        { "normaljoint",	0, NULL, 'g' },
         { "threshold",	1, NULL, 't' },
+        { "holdout",	0, NULL, 'h' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "Vw:n:d:Z:G:mr:v:hlugt:", long_options, &option_index);
+      c = getopt_long (argc, argv, "Vd:w:o:p:j:k:LZ:mr:v:G:lut:h", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -572,6 +603,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           return 0;
         
           break;
+        case 'd':	/* Data directory.  */
+        
+        
+          if (update_arg( (void *)&(args_info->ddirectory_arg), 
+               &(args_info->ddirectory_orig), &(args_info->ddirectory_given),
+              &(local_args_info.ddirectory_given), optarg, 0, ".", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "ddirectory", 'd',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'w':	/* Answer directory.  */
         
         
@@ -584,26 +627,60 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'n':	/* Input directory.  */
+        case 'o':	/* Output directory.  */
         
         
-          if (update_arg( (void *)&(args_info->ndirectory_arg), 
-               &(args_info->ndirectory_orig), &(args_info->ndirectory_given),
-              &(local_args_info.ndirectory_given), optarg, 0, ".", ARG_STRING,
+          if (update_arg( (void *)&(args_info->odirectory_arg), 
+               &(args_info->odirectory_orig), &(args_info->odirectory_given),
+              &(local_args_info.odirectory_given), optarg, 0, ".", ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "ndirectory", 'n',
+              "odirectory", 'o',
               additional_error))
             goto failure;
         
           break;
-        case 'd':	/* Output directory.  */
+        case 'p':	/* Learned joint directory.  */
         
         
-          if (update_arg( (void *)&(args_info->directory_arg), 
-               &(args_info->directory_orig), &(args_info->directory_given),
-              &(local_args_info.directory_given), optarg, 0, ".", ARG_STRING,
+          if (update_arg( (void *)&(args_info->jdirectory_arg), 
+               &(args_info->jdirectory_orig), &(args_info->jdirectory_given),
+              &(local_args_info.jdirectory_given), optarg, 0, ".", ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "directory", 'd',
+              "jdirectory", 'p',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'j':	/* Likelihood wrt 1 directory.  */
+        
+        
+          if (update_arg( (void *)&(args_info->l1directory_arg), 
+               &(args_info->l1directory_orig), &(args_info->l1directory_given),
+              &(local_args_info.l1directory_given), optarg, 0, ".", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "l1directory", 'j',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'k':	/* Likelihood wrt 0 directory.  */
+        
+        
+          if (update_arg( (void *)&(args_info->l0directory_arg), 
+               &(args_info->l0directory_orig), &(args_info->l0directory_given),
+              &(local_args_info.l0directory_given), optarg, 0, ".", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "l0directory", 'k',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'L':	/* Learn flag.  */
+        
+        
+          if (update_arg((void *)&(args_info->learn_flag), 0, &(args_info->learn_given),
+              &(local_args_info.learn_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "learn", 'L',
               additional_error))
             goto failure;
         
@@ -616,18 +693,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.zeros_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "zeros", 'Z',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'G':	/* Gene exclusion file.  */
-        
-        
-          if (update_arg( (void *)&(args_info->genex_arg), 
-               &(args_info->genex_orig), &(args_info->genex_given),
-              &(local_args_info.genex_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "genex", 'G',
               additional_error))
             goto failure;
         
@@ -666,12 +731,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'h':	/* Holdout target dataset.  */
+        case 'G':	/* Gene exclusion file.  */
         
         
-          if (update_arg((void *)&(args_info->holdout_flag), 0, &(args_info->holdout_given),
-              &(local_args_info.holdout_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "holdout", 'h',
+          if (update_arg( (void *)&(args_info->genex_arg), 
+               &(args_info->genex_orig), &(args_info->genex_given),
+              &(local_args_info.genex_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genex", 'G',
               additional_error))
             goto failure;
         
@@ -696,16 +763,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'g':	/* Normal joint distribution.  */
-        
-        
-          if (update_arg((void *)&(args_info->normaljoint_flag), 0, &(args_info->normaljoint_given),
-              &(local_args_info.normaljoint_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "normaljoint", 'g',
-              additional_error))
-            goto failure;
-        
-          break;
         case 't':	/* Threshold for joint.  */
         
         
@@ -714,6 +771,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.threshold_given), optarg, 0, "0.5", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "threshold", 't',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'h':	/* Holdout target dataset.  */
+        
+        
+          if (update_arg((void *)&(args_info->holdout_flag), 0, &(args_info->holdout_given),
+              &(local_args_info.holdout_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "holdout", 'h',
               additional_error))
             goto failure;
         

@@ -3,33 +3,41 @@ version	"1.0"
 purpose	"Cross species connection calculator."
 
 section "Main"
+option	"ddirectory" d	"Data directory"
+						string	typestr="directory"	default="."
 option	"adirectory" w	"Answer directory"
 						string	typestr="directory"	default="."
-option	"ndirectory" n	"Input directory"
+option	"odirectory"	o	"Output directory"
+						string	typestr="directory"	default="."						
+option	"jdirectory"	p	"Learned joint directory"
+						string	typestr="directory"	default="."						
+option	"l1directory"	j	"Likelihood wrt 1 directory"
 						string	typestr="directory"	default="."
-option	"directory"	d	"Output directory"
-						string	typestr="directory"	default="."
+option	"l0directory"	k	"Likelihood wrt 0 directory"
+						string	typestr="directory"	default="."					
+
+section "Stage: Learn/Prediction"						
+option	"learn"	L	"Learn flag"
+						flag	off												
 
 section "Network Features"
 option	"zeros"		Z	"Read zeroed node IDs/outputs from the given file"
 						string	typestr="filename"
 
 section "Optional"
-option	"genex"		G	"Gene exclusion file"
-						string	typestr="filename"
 option	"memmap"	m	"Memory map input/output"
 						flag	off
 option	"random"	r	"Seed random generator"
 						int	default="0"
 option	"verbosity"	v	"Message verbosity"
 						int	default="5"
-option	"holdout"	h	"Holdout target dataset"
-						flag	off	
+option	"genex"		G	"Gene exclusion file"
+						string	typestr="filename"
 option	"genelist"	l	"Print gene list on the screen"
-						flag	off			
+						flag	off
 option	"uniformjoint"		u	"Uniform joint distribution"
 								flag	off
-option	"normaljoint"		g	"Normal joint distribution"
-								flag	off
 option	"threshold"	t	"Threshold for joint"
-						float	default="0.5"
+						float	default="0.5"						
+option	"holdout"	h	"Holdout target dataset"
+						flag	off			
