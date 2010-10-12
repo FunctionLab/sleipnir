@@ -367,17 +367,15 @@ int main( int iArgs, char** aszArgs ) {
 		DataZero.resize( vecDataIntZero.size( ) );
 		for( i = 0; i < vecDataIntZero.size( ); ++i ){
 			DataZero[ i ] = new CDataPair( );
-			if( !( DataZero[ i ]->Open( vecDataIntZero[ i ].c_str( ), false, !!sArgs.memmap_flag ) ||
-				DataZero[ i ]->Open( vecDataIntZero[ i ].c_str( ), true, !!sArgs.memmap_flag ) ) ){
+			if( !( DataZero[ i ]->Open( vecDataIntZero[ i ].c_str( ), true, !!sArgs.memmap_flag ) ) ){
 					cerr << "Could not open:" << vecDataIntZero[ i ] << endl;
 					return 1;}}
-		
+								
 		vector<CDataPair*>			DataOne;
 		DataOne.resize( vecDataIntOne.size( ) );
 		for( i = 0; i < vecDataIntOne.size( ); ++i ){
 			DataOne[ i ] = new CDataPair( );
-			if( !( DataOne[ i ]->Open( vecDataIntOne[ i ].c_str( ), false, !!sArgs.memmap_flag ) ||
-				DataOne[ i ]->Open( vecDataIntOne[ i ].c_str( ), true, !!sArgs.memmap_flag ) ) ){
+			if( !( DataOne[ i ]->Open( vecDataIntOne[ i ].c_str( ), true, !!sArgs.memmap_flag ) ) ){
 					cerr << "Could not open:" << vecDataIntOne[ i ] << endl;
 					return 1;}}
 
@@ -395,10 +393,10 @@ int main( int iArgs, char** aszArgs ) {
 		VecLearnedNames.resize( JointDim );
 		VecLearnedNames[ 0 ].resize( JointDim );
 		VecLearnedNames[ 1 ].resize( JointDim );
-		VecLearnedNames[ 0 ][ 0 ] = "Learned00";
-		VecLearnedNames[ 0 ][ 1 ] = "Learned01";
-		VecLearnedNames[ 1 ][ 0 ] = "Learned10";
-		VecLearnedNames[ 1 ][ 1 ] = "Learned11";
+		VecLearnedNames[ 0 ][ 0 ] = "/Learned00";
+		VecLearnedNames[ 0 ][ 1 ] = "/Learned01";
+		VecLearnedNames[ 1 ][ 0 ] = "/Learned10";
+		VecLearnedNames[ 1 ][ 1 ] = "/Learned11";
 
 		vec4OSpGSp.resize( vecstrxInputs.size( ) );
 		for( iDatOne = 0; iDatOne < vecstrxInputs.size( ); ++iDatOne ) {
@@ -414,11 +412,10 @@ int main( int iArgs, char** aszArgs ) {
 		for( j = 0; j < JointDim; ++j ){
 			CDataPair		DataF;
 			string			JointFile = ( string )sArgs.jdirectory_arg + VecLearnedNames[ i ][ j ] + c_acDab; 
-			if( !( DataF.Open( JointFile.c_str( ), false, !!sArgs.memmap_flag ) ||
-					DataF.Open( JointFile.c_str( ), true, !!sArgs.memmap_flag ) ) ){
+			if( !( DataF.Open( JointFile.c_str( ), true, !!sArgs.memmap_flag ) ) ){
 						cerr << "Could not open:" << JointFile << endl;
 						return 1;}
-
+			
 			vector<size_t>	veciSpecies;
 			veciSpecies.resize( vecstrxInputs.size( ) );
 			for( k = 0; k < vecstrxInputs.size( ); ++k )
