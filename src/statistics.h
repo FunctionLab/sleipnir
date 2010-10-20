@@ -774,7 +774,7 @@ public:
 	 * P-value corresponding to the given correlation and array size.
 	 * 
 	 * \see
-	 * CMeasurePearson
+	 * CMeasurePearson | PValueSpearman
 	 */
 	static double PValuePearson( double dR, size_t iN ) {
 		static const double	c_dEpsilon	= 1e-10;
@@ -786,7 +786,37 @@ public:
 			return 0;
 		dF = iN - 2;
 		dT = dR * sqrt( dF / ( 1 - ( dR * dR ) ) );
-		return IncompleteBeta( dF / 2, 0.5, dF / ( dF + ( dT * dT ) ) ); }
+		return ( 1 - TCDF( dT, dF ) ); }
+
+	/*!
+	 * \brief
+	 * Return the two-tailed p-value of a Spearman correlation.
+	 * 
+	 * \param dR
+	 * Spearman correlation.
+	 * 
+	 * \param iN
+	 * Length of correlated vectors.
+	 * 
+	 * \returns
+	 * P-value corresponding to the given correlation and array size.
+	 * 
+	 * \see
+	 * CMeasureSpearman | PValuePearson
+	 */
+	static double PValueSpearman( double dR, size_t iN ) {
+		double	dT;
+
+		if( iN < 3 )
+			return 1;
+
+//		dZ = sqrt( ( iN - 3 ) / 1.06 ) * CStatistics::FisherTransform( dR );
+		dT = dR * sqrt( ( iN - 2 ) / ( 1 - ( dR * dR ) ) );
+		return ( 1 - TCDF( dT, iN - 2 ) ); }
+
+	static double FisherTransform( double dR ) {
+
+		return ( log( ( 1 + dR ) / ( 1 - dR ) ) / 2 ); }
 
 	/*!
 	 * \brief
@@ -872,7 +902,7 @@ public:
 		dPoolVar = ( ( ( iNOne - 1 ) * dVarianceOne ) + ( ( iNTwo - 1 ) * dVarianceTwo ) ) / iDegFree;
 		dT = ( dMeanOne - dMeanTwo ) / sqrt( dPoolVar * ( ( 1.0 / iNOne ) + ( 1.0 / iNTwo ) ) );
 
-		return IncompleteBeta( 0.5 * iDegFree, 0.5, iDegFree / ( iDegFree + ( dT * dT ) ) ); }
+		return ( 1 - TCDF( dT, iDegFree ) ); }
 
 	/*!
 	 * \brief
@@ -900,7 +930,7 @@ public:
 		iDegFree = iN - 1;
 		dT = sqrt( (float)iN ) * dMean / sqrt( dVariance );
 
-		return IncompleteBeta( 0.5 * iDegFree, 0.5, iDegFree / ( iDegFree + ( dT * dT ) ) ); }
+		return ( 1 - TCDF( dT, iDegFree ) ); }
 
 	/*!
 	 * \brief
@@ -937,7 +967,7 @@ public:
 			( ( dVarianceTwo * dVarianceTwo ) / iNTwo / iNTwo / ( iNTwo - 1 ) ) );
 		dT = ( dMeanOne - dMeanTwo ) / sqrt( ( dVarianceOne / iNOne ) + ( dVarianceTwo / iNTwo ) );
 
-		return IncompleteBeta( 0.5 * dDegFree, 0.5, dDegFree / ( dDegFree + ( dT * dT ) ) ); }
+		return ( 1 - TCDF( dT, dDegFree ) ); }
 
 	/*!
 	 * \brief
@@ -1074,15 +1104,15 @@ public:
 	 * \param dT
 	 * T value at which to sample the t-distribution.
 	 * 
-	 * \param iDF
+	 * \param dDF
 	 * Degrees of freedom of the desired t-distribution.
 	 * 
 	 * \returns
 	 * p-value of the given T and degrees of freedom.
 	 */
-	static double TCDF( double dT, size_t iDF ) {
+	static double TCDF( double dT, double dDF ) {
 
-		return ( 1 - IncompleteBeta( 0.5 * iDF, 0.5, iDF / ( iDF + ( dT * dT ) ) ) ); }
+		return ( 1 - IncompleteBeta( 0.5 * dDF, 0.5, dDF / ( dDF + ( dT * dT ) ) ) ); }
 
 	/*!
 	 * \brief

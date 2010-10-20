@@ -48,7 +48,7 @@ bool CMeasureImpl::IsNaN( const float* adX, size_t iX ) {
 	return false; }
 
 double CMeasureImpl::MeasureTrim( const IMeasure* pMeasure, const float* adX, size_t iM, const float* adY,
-	size_t iN, const IMeasure::EMap eMap, const float* adWX, const float* adWY ) {
+	size_t iN, const IMeasure::EMap eMap, const float* adWX, const float* adWY, bool fAlign ) {
 	float*	adA;
 	float*	adB;
 	float*	adWA;
@@ -56,29 +56,30 @@ double CMeasureImpl::MeasureTrim( const IMeasure* pMeasure, const float* adX, si
 	size_t	i, j, iA, iB;
 	double	dRet;
 
-	for( iA = i = 0; i < iM; ++i )
-		if( CMeta::IsNaN( adX[ i ] ) )
-			iA++;
-	for( iB = i = 0; i < iN; ++i )
-		if( CMeta::IsNaN( adY[ i ] ) )
-			iB++;
-	iA = iM - iA;
-	iB = iN - iB;
-
-	adA = new float[ iA ];
-	adWA = adWX ? new float[ iA ] : NULL;
-	for( i = j = 0; i < iM; ++i )
-		if( !CMeta::IsNaN( adX[ i ] ) ) {
-			if( adWA )
-				adWA[ j ] = adWX[ i ];
-			adA[ j++ ] = adX[ i ]; }
-	adB = new float[ iB ];
-	adWB = adWY ? new float[ iB ] : NULL;
-	for( i = j = 0; i < iN; ++i )
-		if( !CMeta::IsNaN( adY[ i ] ) ) {
-			if( adWB )
-				adWB[ j ] = adWY[ i ];
-			adB[ j++ ] = adY[ i ]; }
+	adA = new float[ iM ];
+	adB = new float[ iN ];
+	adWA = adWX ? new float[ iM ] : NULL;
+	adWB = adWY ? new float[ iN ] : NULL;
+	if( fAlign ) {
+		for( i = j = 0; i < min( iM, iN ); ++i )
+			if( !( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) ) ) {
+				if( adWA )
+					adWA[ j ] = adWX[ i ];
+				if( adWB )
+					adWB[ j ] = adWY[ i ];
+				adA[ j ] = adX[ i ];
+				adB[ j++ ] = adY[ i ]; } }
+	else {
+		for( i = j = 0; i < iM; ++i )
+			if( !CMeta::IsNaN( adX[ i ] ) ) {
+				if( adWA )
+					adWA[ j ] = adWX[ i ];
+				adA[ j++ ] = adX[ i ]; }
+		for( i = j = 0; i < iN; ++i )
+			if( !CMeta::IsNaN( adY[ i ] ) ) {
+				if( adWB )
+					adWB[ j ] = adWY[ i ];
+				adB[ j++ ] = adY[ i ]; } }
 
 	dRet = pMeasure->Measure( adA, iA, adB, iB, eMap, adWA, adWB );
 	delete[] adA;
@@ -99,7 +100,7 @@ double CMeasureKolmogorovSmirnov::Measure( const float* adX, size_t iM, const fl
 	if( adWX || adWY )
 		return CMeta::GetNaN( );
 	if( CMeasureImpl::IsNaN( adX, iM ) || CMeasureImpl::IsNaN( adY, iN ) )
-		return CMeasureImpl::MeasureTrim( this, adX, iM, adY, iN, eMap, adWX, adWY );
+		return CMeasureImpl::MeasureTrim( this, adX, iM, adY, iN, eMap, adWX, adWY, false );
 	if( iM > iN )
 		return Measure( adY, iN, adX, iM, eMap, adWY, adWX );
 
@@ -278,7 +279,7 @@ double CMeasureKendallsTau::Measure( const float* adX, size_t iM, const float* a
 	if( iM != iN )
 		return CMeta::GetNaN( );
 	if( CMeasureImpl::IsNaN( adX, iM ) || CMeasureImpl::IsNaN( adY, iN ) )
-		return CMeasureImpl::MeasureTrim( this, adX, iM, adY, iN, eMap, adWX, adWY );
+		return CMeasureImpl::MeasureTrim( this, adX, iM, adY, iN, eMap, adWX, adWY, true );
 
 	dRet = ( adWX || adWY ) ? CMeasureKendallsTauImpl::MeasureWeighted( adX, adY, iN, adWX,
 		adWY ) : CMeasureKendallsTauImpl::MeasureUnweighted( adX, adY, iN );
@@ -479,7 +480,7 @@ double CMeasureSpearman::Measure( const float* adX, size_t iM, const float* adY,
 	if( ( iM != iN ) || adWX || adWY )
 		return CMeta::GetNaN( );
 	if( CMeasureImpl::IsNaN( adX, iM ) || CMeasureImpl::IsNaN( adY, iN ) )
-		return CMeasureImpl::MeasureTrim( this, adX, iM, adY, iN, eMap, adWX, adWY );
+		return CMeasureImpl::MeasureTrim( this, adX, iM, adY, iN, eMap, adWX, adWY, true );
 
 	if( m_fTransformed ) {
 		dSum = 0;
@@ -533,7 +534,7 @@ double CMeasurePearNorm::Measure( const float* adX, size_t iM, const float* adY,
 	dP = CMeasurePearson::Pearson( adX, iM, adY, iN, EMapNone, adWX, adWY );
 	if( fabs( dP ) >= c_dBound )
 		dP *= c_dBound;
-	dP = log( ( 1 + dP ) / ( 1 - dP ) ) / 2;
+	dP = CStatistics::FisherTransform( dP );
 	if( m_dAverage != HUGE_VAL )
 		dP = ( dP - m_dAverage ) / m_dStdDev;
 	return dP; }

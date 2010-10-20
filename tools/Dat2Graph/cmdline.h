@@ -54,6 +54,9 @@ struct gengetopt_args_info
   double edges_arg;	/**< @brief Aggressiveness of edge trimming after query (default='1').  */
   char * edges_orig;	/**< @brief Aggressiveness of edge trimming after query original value given at command line.  */
   const char *edges_help; /**< @brief Aggressiveness of edge trimming after query help description.  */
+  int hubs_arg;	/**< @brief Number of neighbors to query hubs (default='-1').  */
+  char * hubs_orig;	/**< @brief Number of neighbors to query hubs original value given at command line.  */
+  const char *hubs_help; /**< @brief Number of neighbors to query hubs help description.  */
   double cutoff_arg;	/**< @brief Minimum edge weight for output.  */
   char * cutoff_orig;	/**< @brief Minimum edge weight for output original value given at command line.  */
   const char *cutoff_help; /**< @brief Minimum edge weight for output help description.  */
@@ -95,6 +98,7 @@ struct gengetopt_args_info
   unsigned int neighbors_given ;	/**< @brief Whether neighbors was given.  */
   unsigned int hefalmp_given ;	/**< @brief Whether hefalmp was given.  */
   unsigned int edges_given ;	/**< @brief Whether edges was given.  */
+  unsigned int hubs_given ;	/**< @brief Whether hubs was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */

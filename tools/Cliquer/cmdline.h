@@ -57,7 +57,7 @@ struct gengetopt_args_info
   const char *knowns_help; /**< @brief Known interactions (DAT/DAB) to ignore help description.  */
   int normalize_flag;	/**< @brief Normalize input file (default=off).  */
   const char *normalize_help; /**< @brief Normalize input file help description.  */
-  double cutoff_arg;	/**< @brief Exclude edges below cutoff (default='0').  */
+  double cutoff_arg;	/**< @brief Exclude edges below cutoff (default='-1e30').  */
   char * cutoff_orig;	/**< @brief Exclude edges below cutoff original value given at command line.  */
   const char *cutoff_help; /**< @brief Exclude edges below cutoff help description.  */
   int memmap_flag;	/**< @brief Memory map input (default=off).  */

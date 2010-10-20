@@ -105,7 +105,7 @@ int main( int iArgs, char** aszArgs ) {
 
 			ifsm.getline( acBuffer, c_iBuffer - 1 );
 			acBuffer[ c_iBuffer - 1 ] = 0;
-			CMeta::Tokenize( acBuffer, vecstrLine );
+			CMeta::Tokenize( CMeta::Trim( acBuffer ).c_str( ), vecstrLine );
 			for( i = 0; i < vecstrLine.size( ); ++i )
 				for( j = 0; j < PCL.GetExperiments( ); ++j )
 					if( vecstrLine[ i ] == PCL.GetExperiment( j ) ) {

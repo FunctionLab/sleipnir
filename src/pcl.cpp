@@ -750,19 +750,32 @@ bool CPCL::SortGenes( const vector<size_t>& veciOrder ) {
  * IMeasure::IsRank
  */
 void CPCL::RankTransform( ) {
-	size_t	i, j, k;
-	size_t*	aiRanks;
+	size_t			i, j, k;
+	vector<size_t>	veciRanks, veciCounts;
 
-	aiRanks = new size_t[ m_Data.GetColumns( ) ];
-	for( i = 0; i < m_Data.GetRows( ); ++i ) {
-		memset( aiRanks, 0, m_Data.GetColumns( ) * sizeof(*aiRanks) );
-		for( j = 0; j < m_Data.GetColumns( ); ++j )
-			for( k = 0; k < m_Data.GetColumns( ); ++k )
-				if( ( j != k ) && ( m_Data.Get( i, k ) < m_Data.Get( i, j ) ) )
-					aiRanks[ j ]++;
-		for( j = 0; j < m_Data.GetColumns( ); ++j )
-			m_Data.Set( i, j, (float)aiRanks[ j ] ); }
-	delete[] aiRanks; }
+	veciRanks.resize( GetExperiments( ) );
+	veciCounts.resize( GetExperiments( ) );
+	for( i = 0; i < GetGenes( ); ++i ) {
+		fill( veciRanks.begin( ), veciRanks.end( ), 0 );
+		for( j = 0; j < GetExperiments( ); ++j ) {
+			if( CMeta::IsNaN( Get( i, j ) ) )
+				continue;
+			for( k = 0; k < GetExperiments( ); ++k ) {
+				if( CMeta::IsNaN( Get( i, k ) ) )
+					continue;
+				if( ( j != k ) && ( Get( i, k ) < Get( i, j ) ) )
+					veciRanks[ j ]++; } }
+
+		fill( veciCounts.begin( ), veciCounts.end( ), 0 );
+		for( j = 0; j < GetExperiments( ); ++j )
+			if( !CMeta::IsNaN( Get( i, j ) ) )
+				veciCounts[ veciRanks[ j ] ]++;
+
+		for( j = 0; j < GetExperiments( ); ++j )
+			if( !CMeta::IsNaN( Get( i, j ) ) ) {
+				k = veciRanks[ j ];
+// Closed form for sum(rank, rank + n) / n
+				Set( i, j, k + ( ( veciCounts[ k ] + 1 ) / 2.0f ) ); } } }
 
 /*!
  * \brief

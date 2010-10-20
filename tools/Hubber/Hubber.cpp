@@ -118,8 +118,20 @@ struct SDatum {
 		m_vecprSpecific.clear( ); }
 };
 
-static size_t hubs( const CDat&, vector<SSummary>& );
-static size_t cliques( const CDat&, size_t, const vector<SSummary>&, size_t, SDatum&, const CGenes* );
+struct STerm {
+	string					m_strFile;
+	size_t					m_iGenes;
+	size_t					m_iTotal;
+	const CDat*				m_pDat;
+	const CPCL*				m_pPCLWeights;
+	string					m_strClip;
+	const vector<size_t>*	m_pveciDat2PCL;
+	const vector<SSummary>*	m_pvecsHubs;
+	pthread_mutex_t*		m_pmutx;
+};
+
+static size_t hubs( const CDat&, vector<SSummary>&, const CPCL&, const vector<size_t>& );
+static size_t cliques( const CDat&, size_t, const vector<SSummary>&, size_t, SDatum&, const CGenes*, const CPCL&, const vector<size_t>& );
 static void enset( const CDat&, const vector<vector<string> >&, vector<vector<size_t> >& );
 static int sets( const char*, const vector<string>&, vector<vector<string> >& );
 static int process( const char*, bool, bool, const vector<vector<string> >&, const vector<vector<string> >&,
@@ -130,17 +142,22 @@ static TFnProcessor between;
 static void* between_thread( void* );
 static void* within_thread( void* );
 static void* background_thread( void* );
+static void* term_thread( void* );
 
 int main( int iArgs, char** aszArgs ) {
 #ifdef WIN32
 	pthread_win32_process_attach_np( );
 #endif // WIN32
 	gengetopt_args_info	sArgs;
-	CGenome				Genome;
 	CDat				Dat;
-	size_t				i, j, iGenes, iTotal;
+	size_t				i, j, iGenes, iTotal, iThread;
 	vector<SSummary>	vecsHubs;
 	SDatum				sDatum;
+	CPCL				PCLWeights;
+	vector<size_t>		veciDat2PCL;
+	vector<STerm>		vecsTerms;
+	vector<pthread_t>	vecpthdThreads;
+	pthread_mutex_t		mutxTerms;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -231,69 +248,65 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.normalize_flag )
 		Dat.Normalize( CDat::ENormalizeSigmoid );
 
-	iTotal = hubs( Dat, vecsHubs );
+	if( sArgs.weights_arg ) {
+		if( !PCLWeights.Open( sArgs.weights_arg, 0 ) ) {
+			cerr << "Could not open weights: " << sArgs.weights_arg << endl;
+			return 1; }
+		veciDat2PCL.resize( Dat.GetGenes( ) );
+		for( i = 0; i < veciDat2PCL.size( ); ++i )
+			veciDat2PCL[i] = PCLWeights.GetGene( Dat.GetGene( i ) ); }
+
+	iTotal = hubs( Dat, vecsHubs, PCLWeights, veciDat2PCL );
 	if( sArgs.genes_arg == -1 ) {
 		cout << "Function";
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			cout << '\t' << Dat.GetGene( i ); }
 	else {
-		cliques( Dat, iTotal, vecsHubs, 0, sDatum, NULL );
+		cliques( Dat, iTotal, vecsHubs, 0, sDatum, NULL, PCLWeights, veciDat2PCL );
 		cout << "name	size	hubbiness	hubbiness std.	hubbiness n	cliquiness	cliquiness std.	cliquiness n" << endl;
 		cout << "total	" << iTotal << '\t' << sDatum.m_sHubbiness.GetAverage( ) << '\t' <<
 			sDatum.m_sHubbiness.GetStdev( ) << '\t' << sDatum.m_sHubbiness.m_iCount << '\t' << sDatum.m_sCliquiness.GetAverage( ) << '\t' <<
 			sDatum.m_sCliquiness.GetStdev( ) << '\t' << sDatum.m_sCliquiness.m_iCount; }
 	cout << endl;
 
-	for( iGenes = 0; iGenes < sArgs.inputs_num; ++iGenes ) {
-		CGenes		Genes( Genome );
-		ifstream	ifsm;
-		size_t		i, iCur;
-
-		if( !( iGenes % 25 ) )
-			cerr << iGenes << '/' << sArgs.inputs_num << endl;
-		ifsm.open( sArgs.inputs[ iGenes ] );
-		if( !Genes.Open( ifsm ) ) {
-			cerr << "Could not open: " << sArgs.inputs[ iGenes ] << endl;
-			return 1; }
-		ifsm.close( );
-		iCur = cliques( Dat, iTotal, vecsHubs, sArgs.genes_arg, sDatum, &Genes );
-		cout << CMeta::Basename( sArgs.inputs[ iGenes ] );
-		if( sArgs.genes_arg == -1 )
-			for( i = 0; i < sDatum.m_vecprSpecific.size( ); ++i )
-				cout << '\t' << ( sDatum.m_vecprSpecific[ i ].second *
-					( Genes.IsGene( Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) ) ? -1 : 1 ) );
-		else {
-			cout << '\t' << iCur << '\t' << sDatum.m_sHubbiness.GetAverage( ) << '\t' <<
-				sDatum.m_sHubbiness.GetStdev( ) << '\t' << sDatum.m_sHubbiness.m_iCount << '\t' << sDatum.m_sCliquiness.GetAverage( ) << '\t' <<
-				sDatum.m_sCliquiness.GetStdev( ) << '\t' << sDatum.m_sCliquiness.m_iCount;
-			for( i = 0; i < min( (size_t)sArgs.genes_arg, sDatum.m_vecprSpecific.size( ) ); ++i )
-				cout << '\t' << Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) << '|' <<
-					sDatum.m_vecprSpecific[ i ].second << '|' <<
-					( Genes.IsGene( Dat.GetGene( sDatum.m_vecprSpecific[ i ].first ) ) ? 1 : 0 ); }
-		cout << endl;
-
-		if( sArgs.clip_arg ) {
-			CDat			DatOut;
-			size_t			j;
-			vector<bool>	vecfGenes;
-
-			vecfGenes.resize( Dat.GetGenes( ) );
-			for( i = 0; i < vecfGenes.size( ); ++i )
-				vecfGenes[ i ] = Genes.IsGene( Dat.GetGene( i ) );
-			DatOut.Open( Dat.GetGeneNames( ) );
-			for( i = 0; i < DatOut.GetGenes( ); ++i )
-				for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
-					if( vecfGenes[ i ] || vecfGenes[ j ] )
-						DatOut.Set( i, j, Dat.Get( i, j ) );
-			DatOut.Save( ( (string)sArgs.clip_arg + '/' + CMeta::Deextension( CMeta::Basename(
-				sArgs.inputs[ iGenes ] ) ) + c_szDab ).c_str( ) ); } }
+	pthread_mutex_init( &mutxTerms, NULL );
+	vecsTerms.resize( sArgs.threads_arg );
+	vecpthdThreads.resize( sArgs.threads_arg );
+	for( iGenes = 0; iGenes < sArgs.inputs_num; iGenes += sArgs.threads_arg ) {
+		for( iThread = 0; ( iThread < (size_t)sArgs.threads_arg ) && ( ( iGenes + iThread ) < sArgs.inputs_num ); ++iThread ) {
+			if( !( ( iGenes + iThread ) % 25 ) )
+				cerr << ( iGenes + iThread ) << '/' << sArgs.inputs_num << endl;
+			vecsTerms[iThread].m_strFile = sArgs.inputs[iGenes + iThread];
+			vecsTerms[iThread].m_iGenes = sArgs.genes_arg;
+			vecsTerms[iThread].m_pDat = &Dat;
+			vecsTerms[iThread].m_iTotal = iTotal;
+			vecsTerms[iThread].m_pPCLWeights = &PCLWeights;
+			vecsTerms[iThread].m_strClip = sArgs.clip_arg ? sArgs.clip_arg : "";
+			vecsTerms[iThread].m_pveciDat2PCL = &veciDat2PCL;
+			vecsTerms[iThread].m_pvecsHubs = &vecsHubs;
+			vecsTerms[iThread].m_pmutx = &mutxTerms;
+			if( pthread_create( &vecpthdThreads[iThread], NULL, term_thread, &vecsTerms[iThread] ) ) {
+				cerr << "Couldn't create thread for term: " << sArgs.input_arg[iGenes + iThread] << endl;
+				return 1; } }
+		for( i = 0; ( i < vecpthdThreads.size( ) ) && ( ( i + iGenes ) < sArgs.inputs_num ); ++i )
+			pthread_join( vecpthdThreads[i], NULL ); }
+	pthread_mutex_destroy( &mutxTerms );
 
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32
 	return 0; }
 
-size_t hubs( const CDat& Dat, vector<SSummary>& vecsHubs ) {
+static inline float get_weight( size_t iGene, const vector<size_t>& veciDat2PCL, const CPCL& PCLWeights ) {
+	size_t	iPCL;
+
+	if( iGene >= veciDat2PCL.size( ) )
+		return 1;
+
+	iPCL = veciDat2PCL[iGene];
+	return ( ( ( iPCL == -1 ) || ( iPCL >= PCLWeights.GetGenes( ) ) ) ? 1 : PCLWeights.Get( iPCL, 0 ) ); }
+
+size_t hubs( const CDat& Dat, vector<SSummary>& vecsHubs, const CPCL& PCLWeights, const vector<size_t>& veciDat2PCL ) {
 	size_t	i, j, iRet;
 	float	d;
 
@@ -302,6 +315,7 @@ size_t hubs( const CDat& Dat, vector<SSummary>& vecsHubs ) {
 		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
 			if( CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 				continue;
+			d *= get_weight( i, veciDat2PCL, PCLWeights ) * get_weight( j, veciDat2PCL, PCLWeights );
 			vecsHubs[ i ].Add( d );
 			vecsHubs[ j ].Add( d ); }
 	for( iRet = i = 0; i < vecsHubs.size( ); ++i )
@@ -318,7 +332,7 @@ struct SSorter {
 };
 
 size_t cliques( const CDat& Dat, size_t iGenes, const vector<SSummary>& vecsHubs, size_t iSort, SDatum& sDatum,
-	const CGenes* pGenes ) {
+	const CGenes* pGenes, const CPCL& PCLWeights, const vector<size_t>& veciDat2PCL ) {
 	size_t				i, j, iRet;
 	float				d;
 	vector<SSummary>	vecsClique;
@@ -334,6 +348,7 @@ size_t cliques( const CDat& Dat, size_t iGenes, const vector<SSummary>& vecsHubs
 		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
 			if( CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 				continue;
+			d *= get_weight( i, veciDat2PCL, PCLWeights ) * get_weight( j, veciDat2PCL, PCLWeights );
 			if( !vecfOutside[ i ] )
 				vecsClique[ j ].Add( d );
 			if( !vecfOutside[ j ] )
@@ -603,3 +618,53 @@ void enset( const CDat& Dat, const vector<vector<string> >& vecvecstrSets,
 		for( j = 0; j < vecstrSet.size( ); ++j )
 			if( ( iGene = mapstriGenes[ vecstrSet[ j ] ] ) != -1 )
 				veciSet.push_back( iGene ); } }
+
+void* term_thread( void* pData ) {
+	CGenome		Genome;
+	CGenes		Genes( Genome );
+	ifstream	ifsm;
+	size_t		i, iCur;
+	STerm*		psData;
+	SDatum		sDatum;
+
+	psData = (STerm*)pData;
+	ifsm.open( psData->m_strFile.c_str( ) );
+	if( !Genes.Open( ifsm ) ) {
+		cerr << "Could not open: " << psData->m_strFile << endl;
+		return NULL; }
+	ifsm.close( );
+	iCur = cliques( *psData->m_pDat, psData->m_iTotal, *psData->m_pvecsHubs, psData->m_iGenes, sDatum, &Genes, *psData->m_pPCLWeights, *psData->m_pveciDat2PCL );
+	pthread_mutex_lock( psData->m_pmutx );
+	cout << CMeta::Basename( psData->m_strFile.c_str( ) );
+	if( psData->m_iGenes == -1 )
+		for( i = 0; i < sDatum.m_vecprSpecific.size( ); ++i )
+			cout << '\t' << ( sDatum.m_vecprSpecific[ i ].second *
+				( Genes.IsGene( psData->m_pDat->GetGene( sDatum.m_vecprSpecific[ i ].first ) ) ? -1 : 1 ) );
+	else {
+		cout << '\t' << iCur << '\t' << sDatum.m_sHubbiness.GetAverage( ) << '\t' <<
+			sDatum.m_sHubbiness.GetStdev( ) << '\t' << sDatum.m_sHubbiness.m_iCount << '\t' << sDatum.m_sCliquiness.GetAverage( ) << '\t' <<
+			sDatum.m_sCliquiness.GetStdev( ) << '\t' << sDatum.m_sCliquiness.m_iCount;
+		for( i = 0; i < min( psData->m_iGenes, sDatum.m_vecprSpecific.size( ) ); ++i )
+			cout << '\t' << psData->m_pDat->GetGene( sDatum.m_vecprSpecific[ i ].first ) << '|' <<
+				sDatum.m_vecprSpecific[ i ].second << '|' <<
+				( Genes.IsGene( psData->m_pDat->GetGene( sDatum.m_vecprSpecific[ i ].first ) ) ? 1 : 0 ); }
+	cout << endl;
+	pthread_mutex_unlock( psData->m_pmutx );
+
+	if( psData->m_strClip.length( ) ) {
+		CDat			DatOut;
+		size_t			j;
+		vector<bool>	vecfGenes;
+
+		vecfGenes.resize( psData->m_pDat->GetGenes( ) );
+		for( i = 0; i < vecfGenes.size( ); ++i )
+			vecfGenes[ i ] = Genes.IsGene( psData->m_pDat->GetGene( i ) );
+		DatOut.Open( psData->m_pDat->GetGeneNames( ) );
+		for( i = 0; i < DatOut.GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < DatOut.GetGenes( ); ++j )
+				if( vecfGenes[ i ] || vecfGenes[ j ] )
+					DatOut.Set( i, j, psData->m_pDat->Get( i, j ) );
+		DatOut.Save( ( psData->m_strClip + '/' + CMeta::Deextension( CMeta::Basename(
+			psData->m_strFile.c_str( ) ) ) + c_szDab ).c_str( ) ); }
+
+	return NULL; }

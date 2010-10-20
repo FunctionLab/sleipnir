@@ -180,7 +180,7 @@ bool CCoalesceClusterImpl::AddSeedPair( const CPCL& PCL, CCoalesceCluster& Pot,
 			dMaxCorr = vecsThreads[ i ].m_dMaxCorr;
 			iOne = vecsThreads[ i ].m_iOne;
 			iTwo = vecsThreads[ i ].m_iTwo; } }
-	if( ( dMinP * PCL.GetGenes( ) * ( PCL.GetGenes( ) - 1 ) * dFraction * dFraction ) < ( dPValue * 2 ) ) {
+	if( ( dMinP * PCL.GetGenes( ) * ( PCL.GetGenes( ) - 1 ) * dFraction * dFraction ) <= ( dPValue * 2 ) ) {
 		g_CatSleipnir( ).info( "CCoalesceClusterImpl::AddSeedPair( %g, %g ) seeding: %s, %s, %g (p=%g)",
 			dFraction, dPValue, PCL.GetGene( iOne ).c_str( ), PCL.GetGene( iTwo ).c_str( ), dMaxCorr, dMinP );
 		priiSeed.first = iOne;
@@ -208,7 +208,7 @@ bool CCoalesceClusterImpl::AddCorrelatedGenes( const CPCL& PCL, CCoalesceCluster
 		if( !IsGene( iGene ) &&
 			( ( dR = CMeasurePearson::Pearson( &m_vecdCentroid.front( ), PCL.GetExperiments( ),
 			PCL.Get( iGene ), PCL.GetExperiments( ), IMeasure::EMapNone, NULL, NULL, &iN ) ) > 0 ) &&
-			( ( CStatistics::PValuePearson( dR, iN ) * PCL.GetGenes( ) ) < dPValue ) )
+			( ( CStatistics::PValuePearson( dR, iN ) * PCL.GetGenes( ) ) <= dPValue ) )
 			Add( iGene, Pot );
 
 	return true; }

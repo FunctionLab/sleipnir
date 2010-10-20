@@ -40,8 +40,8 @@ int main( int iArgs, char** aszArgs ) {
 	vector<bool>		vecfClinical;
 	vector<size_t>		veciGenes2PCL, veciPCL2Genes, veciIndices, veciScores;
 	vector<float>		vecdScores;
-	CMeasurePearson		MeasurePearson;
 	CGenome				Genome;
+	float				d;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -54,6 +54,8 @@ int main( int iArgs, char** aszArgs ) {
 	if( PCL.GetFeatures( ) < 2 ) {
 		cerr << "PCL requires at least one clinical variable feature" << endl;
 		return 1; }
+	if( sArgs.spearman_flag )
+		PCL.RankTransform( );
 	if( sArgs.global_arg && !Dat.Open( sArgs.global_arg, !!sArgs.memmap_flag ) ) {
 		cerr << "Could not open: " << sArgs.global_arg << endl;
 		return 1; }
@@ -116,7 +118,8 @@ int main( int iArgs, char** aszArgs ) {
 
 		for( j = 0; j < veciFinal.size( ); ++j ) {
 			k = veciPCL2Genes[veciFinal[j]];
+			d = (float)( sArgs.spearman_flag ? CStatistics::PValueSpearman : CStatistics::PValuePearson )( vecdScores[k], veciScores[k] );
 			cout << PCL.GetGene( i ) << '\t' << PCL.GetGene( veciFinal[j] ) << '\t' << vecdScores[k] << '\t' << veciScores[k] << '\t' <<
-				( CStatistics::PValuePearson( vecdScores[k], veciScores[k] ) * iGene ) << endl; } }
+				( d * iGene ) << endl; } }
 
 	return 0; }

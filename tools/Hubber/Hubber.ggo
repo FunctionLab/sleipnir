@@ -7,6 +7,8 @@ option	"input"		i	"Input DAT/DAB file"
 						string	typestr="filename"
 option	"genes"		g	"Number of genes to output per gene set"
 						int	default="0"
+option	"weights"	w	"Input weights PCL file"
+						string	typestr="filename"
 
 section "Miscellaneous"
 option	"normalize"	n	"Normalize input file"

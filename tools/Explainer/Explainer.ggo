@@ -7,6 +7,8 @@ option	"input"			i	"Similarity DAT/DAB file"
 							string	typestr="filename"	yes
 option	"answers"		w	"Answer DAT/DAB file"
 							string	typestr="filename"	yes
+option	"mode"			d	"Sort mode"
+							values="diff","data","answer"	default="diff"
 
 section "Miscellaneous"
 option	"count"			k	"Number of pairs to display"

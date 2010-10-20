@@ -33,7 +33,7 @@ protected:
 	friend class CMeasureSpearman;
 
 	static double MeasureTrim( const IMeasure*, const float*, size_t, const float*, size_t, const IMeasure::EMap,
-		const float*, const float* );
+		const float*, const float*, bool );
 	static bool IsNaN( const float*, size_t );
 
 	CMeasureImpl( const IMeasure*, bool );

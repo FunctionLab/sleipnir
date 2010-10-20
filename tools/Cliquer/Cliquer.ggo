@@ -24,7 +24,7 @@ option	"knowns"		k	"Known interactions (DAT/DAB) to ignore"
 option	"normalize"		n	"Normalize input file"
 							flag	off
 option	"cutoff"		c	"Exclude edges below cutoff"
-							double	default="0"
+							double	default="-1e30"
 
 section "Optional"
 option	"memmap"		m	"Memory map input"

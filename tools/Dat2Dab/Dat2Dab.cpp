@@ -78,7 +78,7 @@ int main( int iArgs, char** aszArgs ) {
 			CMeta::Tokenize( acBuffer, vecstrTokens );
 			if( vecstrTokens.empty( ) )
 				continue;
-			if( vecstrTokens.size( ) != 2 ) {
+			if( vecstrTokens.size( ) < 2 ) {
 				cerr << "Illegal remap line (" << vecstrTokens.size( ) << "): " << acBuffer << endl;
 				return 1; }
 			if( vecstrTokens[ 0 ] == vecstrTokens[ 1 ] )
@@ -115,6 +115,8 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.FilterGenes( Genes, CDat::EFilterInclude );
 	if( sArgs.genex_arg )
 		Dat.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude );
+	if( sArgs.genee_arg )
+		Dat.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge );
 
 	if( sArgs.paircount_flag ) {
 		size_t			iTotal, iCutoff;

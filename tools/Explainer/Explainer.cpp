@@ -29,22 +29,48 @@ static const char	c_szUnknown[]	= "GO:0008150";
 
 struct SDatum {
 	float	m_dDiff;
+	float	m_dData;
+	float	m_dAnswer;
 	size_t	m_iOne;
 	size_t	m_iTwo;
 
-	SDatum( float dDiff, size_t iOne, size_t iTwo ) : m_dDiff(dDiff), m_iOne(iOne), m_iTwo(iTwo) { }
+	SDatum( float dAnswer, float dData, size_t iOne, size_t iTwo ) : m_dData(dData), m_dAnswer(dAnswer), m_iOne(iOne), m_iTwo(iTwo) {
+
+		m_dDiff = fabs( dData - dAnswer ); }
 };
 
 struct SSorter {
+	enum EMode {
+		EModeDiff,
+		EModeData,
+		EModeAnswer
+	};
+
+	EMode	m_eMode;
 	bool	m_fReverse;
 
-	SSorter( bool fReverse ) : m_fReverse(fReverse) { }
+	SSorter( EMode eMode, bool fReverse ) : m_eMode(eMode), m_fReverse(fReverse) { }
 
 	bool operator()( const SDatum& sOne, const SDatum& sTwo ) const {
 		bool	fRet;
+		float	dOne, dTwo;
 
-		fRet = sOne.m_dDiff > sTwo.m_dDiff;
-		return ( m_fReverse ? !fRet : fRet ); }
+		switch( m_eMode ) {
+			case EModeData:
+				dOne = sOne.m_dData;
+				dTwo = sTwo.m_dData;
+				break;
+
+			case EModeAnswer:
+				dOne = sOne.m_dAnswer;
+				dTwo = sTwo.m_dAnswer;
+
+			default:
+				dOne = sOne.m_dDiff;
+				dTwo = sTwo.m_dDiff;
+				break; }
+
+		return ( m_fReverse ? ( dOne < dTwo ) : ( dTwo < dOne ) ); }
 };
 
 int main( int iArgs, char** aszArgs ) {
@@ -62,6 +88,7 @@ int main( int iArgs, char** aszArgs ) {
 	bool				fOne, fTwo;
 	string				strOne, strTwo;
 	int					iRet;
+	SSorter::EMode		eMode;
 
 	iRet = cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 );
 	if( sArgs.config_arg )
@@ -116,6 +143,13 @@ int main( int iArgs, char** aszArgs ) {
 			return 1; }
 		ifsm.close( ); }
 
+	if( !strcmp( sArgs.mode_arg, "data" ) )
+		eMode = SSorter::EModeData;
+	else if( !strcmp( sArgs.mode_arg, "ans" ) )
+		eMode = SSorter::EModeAnswer;
+	else
+		eMode = SSorter::EModeDiff;
+
 	veciGenes.resize( Data.GetGenes( ) );
 	for( i = 0; i < Data.GetGenes( ); ++i )
 		veciGenes[ i ] = Answers.GetGene( Data.GetGene( i ) );
@@ -137,8 +171,8 @@ int main( int iArgs, char** aszArgs ) {
 				continue;
 			if( sArgs.everything_flag && CMeta::IsNaN( dAnswer ) )
 				dAnswer = dValue ? ( dValue - ( 1 / dValue ) ) : -FLT_MAX;
-			vecsData.push_back( SDatum( fabs( dValue - dAnswer ), i, j ) ); } }
-	sort( vecsData.begin( ), vecsData.end( ), SSorter( !!sArgs.reverse_flag ) );
+			vecsData.push_back( SDatum( dAnswer, dValue, i, j ) ); } }
+	sort( vecsData.begin( ), vecsData.end( ), SSorter( eMode, !!sArgs.reverse_flag ) );
 
 	if( ( ( iNumber = sArgs.count_arg ) < 0 ) || ( iNumber >= vecsData.size( ) ) )
 		iNumber = vecsData.size( );

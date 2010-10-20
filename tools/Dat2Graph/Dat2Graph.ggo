@@ -19,6 +19,8 @@ option	"hefalmp"	a	"Perform HEFalMp query instead of bioPIXIE query"
 						flag	on
 option	"edges"		d	"Aggressiveness of edge trimming after query"
 						double	default="1"
+option	"hubs"		H	"Number of neighbors to query hubs"
+						int	default="-1"
 
 section "Filtering"
 option	"cutoff"	e	"Minimum edge weight for output"

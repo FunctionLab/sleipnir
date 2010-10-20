@@ -40,6 +40,9 @@ struct gengetopt_args_info
   char * answers_arg;	/**< @brief Answer DAT/DAB file.  */
   char * answers_orig;	/**< @brief Answer DAT/DAB file original value given at command line.  */
   const char *answers_help; /**< @brief Answer DAT/DAB file help description.  */
+  char * mode_arg;	/**< @brief Sort mode (default='diff').  */
+  char * mode_orig;	/**< @brief Sort mode original value given at command line.  */
+  const char *mode_help; /**< @brief Sort mode help description.  */
   int count_arg;	/**< @brief Number of pairs to display (default='-1').  */
   char * count_orig;	/**< @brief Number of pairs to display original value given at command line.  */
   const char *count_help; /**< @brief Number of pairs to display help description.  */
@@ -95,6 +98,7 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int answers_given ;	/**< @brief Whether answers was given.  */
+  unsigned int mode_given ;	/**< @brief Whether mode was given.  */
   unsigned int count_given ;	/**< @brief Whether count was given.  */
   unsigned int positives_given ;	/**< @brief Whether positives was given.  */
   unsigned int negatives_given ;	/**< @brief Whether negatives was given.  */
@@ -261,6 +265,7 @@ int cmdline_parser_config_file (char * const filename,
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
 
+extern char *cmdline_parser_mode_values[] ;	/**< @brief Possible values for mode.  */
 extern char *cmdline_parser_unknowns_values[] ;	/**< @brief Possible values for unknowns.  */
 
 

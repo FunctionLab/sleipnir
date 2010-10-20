@@ -187,6 +187,8 @@ cout << endl;
 			for( dMI = 0,i = 0; i < veciOne.size( ); ++i )
 				if( dOne = (float)veciOne[ i ] / iCountOne )
 					dMI += dOne * log( 1 / dOne );
+// This corrects for bias introduced by empirical estimation:
+			dMI -= ( veciOne.size( ) - 1 ) * ( veciOne.size( ) - 1 ) / ( 4.0f * iCountOne );
 			dMI /= log( 2.0f );
 			if( sArgs.table_flag )
 				cout << '\t' << dMI;
@@ -247,27 +249,14 @@ cout << endl;
 				delete[] adTwo;
 				delete[] adOne; }
 			else {
-/*
-cout << iCountOne << ':';
-for( i = 0; i < veciOne.size( ); ++i )
-cout << ' ' << veciOne[ i ];
-cout << endl;
-cout << iCountTwo << ':';
-for( i = 0; i < veciTwo.size( ); ++i )
-cout << ' ' << veciTwo[ i ];
-cout << endl << endl << iCountJoint << ':' << endl;
-for( i = 0; i < vecveciJoint.size( ); ++i ) {
-for( j = 0; j < vecveciJoint[ i ].size( ); ++j )
-cout << vecveciJoint[ i ][ j ] << ' ';
-cout << endl; }
-cout << endl;
-//*/
 				for( dMI = 0,i = 0; i < veciOne.size( ); ++i ) {
 					dOne = (float)veciOne[ i ] / iCountOne;
 					for( j = 0; j < veciTwo.size( ); ++j )
 						if( iJoint = vecveciJoint[ i ][ j ] ) {
 							dJoint = (float)iJoint / iCountJoint;
 							dMI += dJoint * log( dJoint * iCountTwo / dOne / veciTwo[ j ] ); } }
+// This corrects for bias introduced by empirical estimation:
+// http://robotics.stanford.edu/~gal/Research/Redundancy-Reduction/Neuron_suppl/node2.html
 				dMI -= ( veciOne.size( ) - 1 ) * ( veciTwo.size( ) - 1 ) / ( 2.0f * ( iCountOne +
 					iCountTwo ) );
 				dMI = ( dMI < 0 ) ? 0 : ( dMI / log( 2.0f ) ); }

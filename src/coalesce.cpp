@@ -576,7 +576,7 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 		g_CatSleipnir( ).notice( "correlation pairs %d, bases %d, min size %d, merge size %d, max size %d",
 			GetNumberCorrelation( ), GetBasesPerMatch( ), GetSizeMinimum( ), GetSizeMerge( ),
 			GetSizeMaximum( ) ); }
-	for( dFailure = 1; dFailure > c_dEpsilon; dFailure *= GetPValueCorrelation( ) ) {
+	for( dFailure = 1; dFailure >= c_dEpsilon; dFailure *= max( pow( c_dEpsilon, 0.125 ), (double)GetPValueCorrelation( ) ) ) {
 		CCoalesceCluster			Cluster, Pot;
 		CCoalesceGroupHistograms	HistsCluster( GetBins( ), 1.0f / GetBasesPerMatch( ) );
 		CCoalesceGroupHistograms	HistsPot( GetBins( ), 1.0f / GetBasesPerMatch( ) );

@@ -43,6 +43,8 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
+	if( sArgs.cutoff_arg < -1e-20 )
+		sArgs.cutoff_arg = CMeta::GetNaN( );
 	CMeta Meta( sArgs.verbosity_arg );
 
 	if( sArgs.input_arg ) {
@@ -55,7 +57,7 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	if( sArgs.normalize_flag )
 		Dat.Normalize( CDat::ENormalizeSigmoid );
-	if( sArgs.cutoff_arg )
+	if( !CMeta::IsNaN( sArgs.cutoff_arg ) )
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) && ( d < sArgs.cutoff_arg ) )

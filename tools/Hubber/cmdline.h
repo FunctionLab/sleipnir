@@ -40,6 +40,9 @@ struct gengetopt_args_info
   int genes_arg;	/**< @brief Number of genes to output per gene set (default='0').  */
   char * genes_orig;	/**< @brief Number of genes to output per gene set original value given at command line.  */
   const char *genes_help; /**< @brief Number of genes to output per gene set help description.  */
+  char * weights_arg;	/**< @brief Input weights PCL file.  */
+  char * weights_orig;	/**< @brief Input weights PCL file original value given at command line.  */
+  const char *weights_help; /**< @brief Input weights PCL file help description.  */
   int normalize_flag;	/**< @brief Normalize input file (default=off).  */
   const char *normalize_help; /**< @brief Normalize input file help description.  */
   char * genin_arg;	/**< @brief Gene inlusion list.  */
@@ -82,6 +85,7 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
+  unsigned int weights_given ;	/**< @brief Whether weights was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int genin_given ;	/**< @brief Whether genin was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */

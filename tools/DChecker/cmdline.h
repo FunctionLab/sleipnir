@@ -46,6 +46,9 @@ struct gengetopt_args_info
   float auc_arg;	/**< @brief Use alternative AUCn calculation (default='0').  */
   char * auc_orig;	/**< @brief Use alternative AUCn calculation original value given at command line.  */
   const char *auc_help; /**< @brief Use alternative AUCn calculation help description.  */
+  int randomize_arg;	/**< @brief Calculate specified number of randomized scores (default='0').  */
+  char * randomize_orig;	/**< @brief Calculate specified number of randomized scores original value given at command line.  */
+  const char *randomize_help; /**< @brief Calculate specified number of randomized scores help description.  */
   int bins_arg;	/**< @brief Bins for quantile sorting (default='1000').  */
   char * bins_orig;	/**< @brief Bins for quantile sorting original value given at command line.  */
   const char *bins_help; /**< @brief Bins for quantile sorting help description.  */
@@ -90,6 +93,7 @@ struct gengetopt_args_info
   unsigned int answers_given ;	/**< @brief Whether answers was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
   unsigned int auc_given ;	/**< @brief Whether auc was given.  */
+  unsigned int randomize_given ;	/**< @brief Whether randomize was given.  */
   unsigned int bins_given ;	/**< @brief Whether bins was given.  */
   unsigned int finite_given ;	/**< @brief Whether finite was given.  */
   unsigned int min_given ;	/**< @brief Whether min was given.  */

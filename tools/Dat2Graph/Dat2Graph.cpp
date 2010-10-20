@@ -22,6 +22,16 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+struct SSorter {
+	const vector<float>&	m_vecdScores;
+
+	SSorter( const vector<float>& vecdScores ) : m_vecdScores(vecdScores) { }
+
+	bool operator()( size_t iOne, size_t iTwo ) {
+
+		return ( m_vecdScores[iTwo] < m_vecdScores[iOne] ); }
+};
+
 int open_genes( const char* szFile, CGenes& Genes ) {
 	ifstream	ifsm;
 
@@ -127,7 +137,36 @@ int main( int iArgs, char** aszArgs ) {
 				for( j = ( i + 1 ); j < pDat->GetGenes( ); ++j )
 					if( !CMeta::IsNaN( d = pDat->Get( i, j ) ) && ( d < sArgs.cutoff_arg ) )
 						pDat->Set( i, j, CMeta::GetNaN( ) );
-		if( !strcmp( sArgs.format_arg, "correl" ) ) {
+		if( sArgs.hubs_arg >= 0 ) {
+			vector<float>	vecdScores;
+			vector<size_t>	veciIndices;
+			vector<bool>	vecfHits;
+
+			veciIndices.resize( pDat->GetGenes( ) );
+			vecdScores.resize( pDat->GetGenes( ) );
+			vecfHits.resize( pDat->GetGenes( ) );
+			for( i = 0; i < pDat->GetGenes( ); ++i )
+				if( veciQuery[i] == -1 ) {
+					for( j = 0; j < pDat->GetGenes( ); ++j )
+						if( veciQuery[j] == -1 )
+							pDat->Set( i, j, CMeta::GetNaN( ) ); }
+				else {
+					fill( vecdScores.begin( ), vecdScores.end( ), -FLT_MAX );
+					for( j = 0; j < pDat->GetGenes( ); ++j ) {
+						if( CMeta::IsNaN( d = pDat->Get( i, j ) ) )
+							d = -FLT_MAX;
+						vecdScores[j] = d; }
+					for( j = 0; j < veciIndices.size( ); ++j )
+						veciIndices[j] = j;
+					sort( veciIndices.begin( ), veciIndices.end( ), SSorter( vecdScores ) );
+					fill( vecfHits.begin( ), vecfHits.end( ), false );
+					for( j = 0; j < (size_t)sArgs.hubs_arg; ++j )
+						vecfHits[veciIndices[j]] = true;
+					for( j = 0; j < pDat->GetGenes( ); ++j )
+						if( !vecfHits[j] )
+							pDat->Set( i, j, CMeta::GetNaN( ) ); }
+			pDat->Normalize( CDat::ENormalizeZScore ); }
+		else if( !strcmp( sArgs.format_arg, "correl" ) ) {
 			CMeasurePearson	MeasurePearson;
 			float*			adCentroid;
 			float*			adCur;
