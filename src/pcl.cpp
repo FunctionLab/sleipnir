@@ -360,8 +360,8 @@ bool CPCL::Open( std::istream& istm, size_t iSkip ) {
 		for( fRet = !!GetGenes( ),i = 0; i < GetGenes( ); ++i )
 			if( GetGene( i ).empty( ) || !isprint( GetGene( i )[ 0 ] ) ) {
 				fRet = false;
-				g_CatSleipnir( ).error( "CPCL::Open( %d ) invalid gene at index %d: %s", i,
-					GetGene( i ).c_str( ) );
+				g_CatSleipnir( ).error( "CPCL::Open( %d ) invalid gene at index %d: %s", iSkip,
+					i, GetGene( i ).c_str( ) );
 				break; }
 		if( fRet ) {
 			m_Data.Initialize( GetGenes( ), GetExperiments( ) );
@@ -392,11 +392,13 @@ bool CPCLImpl::OpenExperiments( std::istream& istmInput, size_t iFeatures, char*
 	return true; }
 
 bool CPCLImpl::OpenGene( std::istream& istmInput, std::vector<float>& vecdData, char* acLine, size_t iLine ) {
-	const char*	pc;
-	char*		pcEnd;
-	string		strToken;
-	size_t		iToken, iData, iBase, i;
-	float		d;
+	const char*			pc;
+	char*				pcEnd;
+	string				strToken;
+	size_t				iToken, iData, iBase, i;
+	float				d;
+	map<string, size_t>	mapstriValues;
+	map<string, size_t>::iterator	iterValue;
 
 	iBase = vecdData.size( );
 	istmInput.getline( acLine, iLine - 1 );
@@ -415,9 +417,18 @@ bool CPCLImpl::OpenGene( std::istream& istmInput, std::vector<float>& vecdData, 
 		else if( !m_vecstrExperiments.empty( ) && ( iData >= m_vecstrExperiments.size( ) ) )
 			return false;
 		else {
-			d = (float)strtod( strToken.c_str( ), &pcEnd );
-			if( !pcEnd || ( pcEnd == strToken.c_str( ) ) )
-				d = CMeta::GetNaN( );
+			d = CMeta::GetNaN( );
+			strToken = CMeta::Trim( strToken.c_str( ) );
+			if( strToken.length( ) ) {
+				d = (float)strtod( strToken.c_str( ), &pcEnd );
+				if( pcEnd != ( strToken.c_str( ) + strToken.length( ) ) ) {
+					iterValue = mapstriValues.find( strToken );
+					if( iterValue == mapstriValues.end( ) ) {
+						i = mapstriValues.size( );
+						mapstriValues[strToken] = i;
+						d = i; }
+					else
+						d = iterValue->second; } }
 			if( m_vecstrExperiments.empty( ) )
 				vecdData.push_back( d );
 			else if( ( i = ( iBase + iData++ ) ) >= vecdData.size( ) )

@@ -140,11 +140,18 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Couldn't open: " << sArgs.lookups_arg << endl;
 			return 1; }
 		ifsm.close( );
-		if( sArgs.lookup1_arg ) {
-			cout << "ID";
+
+		cout << "GID";
+		if( sArgs.lookup1_arg )
 			for( i = 0; i < GenesLk.GetGenes( ); ++i )
 				cout << '\t' << GenesLk.GetGene( i ).GetName( );
-			cout << endl; }
+		else
+			for( i = 0; i < GenesLk.GetGenes( ); ++i ) {
+				const string&	strOne	= GenesLk.GetGene( i ).GetName( );
+				for( j = ( i + 1 ); j < GenesLk.GetGenes( ); ++j )
+					cout << '\t' << strOne << '-' << GenesLk.GetGene( j ).GetName( ); }
+		cout << endl;
+
 		veciGenes.resize( GenesLk.GetGenes( ) );
 		for( i = 0; i < sArgs.inputs_num; ++i ) {
 			CDataPair	Dat;
@@ -164,12 +171,12 @@ int main( int iArgs, char** aszArgs ) {
 							cout << d; } }
 			else
 				for( j = 0; j < veciGenes.size( ); ++j ) {
-					if( ( iOne = veciGenes[ j ] ) == -1 )
-						continue;
-					for( k = ( j + 1 ); k < veciGenes.size( ); ++k )
-						if( ( ( iTwo = veciGenes[ k ] ) != -1 ) &&
+					iOne = veciGenes[ j ];
+					for( k = ( j + 1 ); k < veciGenes.size( ); ++k ) {
+						cout << '\t';
+						if( ( iOne != -1 ) && ( ( iTwo = veciGenes[ k ] ) != -1 ) &&
 							!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
-							cout << '\t' << Dat.Get( iOne, iTwo ); }
+							cout << Dat.Get( iOne, iTwo ); } }
 			cout << endl; }
 		return 0; }
 	else if( sArgs.lookup1_arg && sArgs.lookup2_arg ) {

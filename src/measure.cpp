@@ -53,7 +53,7 @@ double CMeasureImpl::MeasureTrim( const IMeasure* pMeasure, const float* adX, si
 	float*	adB;
 	float*	adWA;
 	float*	adWB;
-	size_t	i, j, iA, iB;
+	size_t	i, iA, iB;
 	double	dRet;
 
 	adA = new float[ iM ];
@@ -61,25 +61,25 @@ double CMeasureImpl::MeasureTrim( const IMeasure* pMeasure, const float* adX, si
 	adWA = adWX ? new float[ iM ] : NULL;
 	adWB = adWY ? new float[ iN ] : NULL;
 	if( fAlign ) {
-		for( i = j = 0; i < min( iM, iN ); ++i )
+		for( i = iA = 0; i < min( iM, iN ); ++i )
 			if( !( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) ) ) {
 				if( adWA )
-					adWA[ j ] = adWX[ i ];
+					adWA[ iA ] = adWX[ i ];
 				if( adWB )
-					adWB[ j ] = adWY[ i ];
-				adA[ j ] = adX[ i ];
-				adB[ j++ ] = adY[ i ]; } }
+					adWB[ iA ] = adWY[ i ];
+				adA[ iA ] = adX[ i ];
+				adB[ iA++ ] = adY[ i ]; } }
 	else {
-		for( i = j = 0; i < iM; ++i )
+		for( i = iA = 0; i < iM; ++i )
 			if( !CMeta::IsNaN( adX[ i ] ) ) {
 				if( adWA )
-					adWA[ j ] = adWX[ i ];
-				adA[ j++ ] = adX[ i ]; }
-		for( i = j = 0; i < iN; ++i )
+					adWA[ iA ] = adWX[ i ];
+				adA[ iA++ ] = adX[ i ]; }
+		for( i = iB = 0; i < iN; ++i )
 			if( !CMeta::IsNaN( adY[ i ] ) ) {
 				if( adWB )
-					adWB[ j ] = adWY[ i ];
-				adB[ j++ ] = adY[ i ]; } }
+					adWB[ iB ] = adWY[ i ];
+				adB[ iB++ ] = adY[ i ]; } }
 
 	dRet = pMeasure->Measure( adA, iA, adB, iB, eMap, adWA, adWB );
 	delete[] adA;

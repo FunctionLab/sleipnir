@@ -57,7 +57,7 @@ int main( int iArgs, char** aszArgs ) {
 			return 1; }
 		for( i = 0; i < DatPositives.GetGenes( ); ++i )
 			Genome.AddGene( DatPositives.GetGene( i ) );
-		if( !Dat.Open( DatPositives, vecpNegatives, Genome, true ) ) {
+		if( !Dat.Open( DatPositives, vecpNegatives, Genome, false ) ) {
 			cerr << "Could not open " << sArgs.input_arg << " with negatives" << endl;
 			return 1; } }
 	else

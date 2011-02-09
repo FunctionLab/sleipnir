@@ -807,9 +807,10 @@ MIPS:
  * 
  * \section sec_history Version History
  * 
- * - <a href="sleipnir-2.2.tar.gz">2.2</a>, *** <br>
+ * - <a href="sleipnir-3.0.tar.gz">3.0</a>, *** <br>
  * Fix confusing documentation in \ref Answerer - thanks to Arjun Krishnan! <br>
  * Fix missing \c SIZE_MAX definition on Mac OS X - thanks to Alice Koechlin! <br>
+ * Fix bug in \ref Answerer when using predefined positive pairs - thanks to Chris Park! <br>
  * Add Partial Correlation Coefficient normalization to \t CDat and \ref Normalizer - thanks to Arjun Krishnan!
  * 
  * - <a href="sleipnir-2.1.tar.gz">2.1</a>, 12-20-09 <br>

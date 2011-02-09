@@ -120,6 +120,6 @@ int main( int iArgs, char** aszArgs ) {
 			k = veciPCL2Genes[veciFinal[j]];
 			d = (float)( sArgs.spearman_flag ? CStatistics::PValueSpearman : CStatistics::PValuePearson )( vecdScores[k], veciScores[k] );
 			cout << PCL.GetGene( i ) << '\t' << PCL.GetGene( veciFinal[j] ) << '\t' << vecdScores[k] << '\t' << veciScores[k] << '\t' <<
-				( d * iGene ) << endl; } }
+				d << '\t' << ( d * iGene ) << endl; } }
 
 	return 0; }

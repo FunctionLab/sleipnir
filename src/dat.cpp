@@ -265,11 +265,12 @@ bool CDat::Open( const CDat& DatKnown, const vector<CGenes*>& vecpOther, const C
 	for( i = 0; i < DatKnown.GetGenes( ); ++i ) {
 		iOne = veciGenes[ i ];
 		for( j = ( i + 1 ); j < DatKnown.GetGenes( ); ++j ) {
-			if( CMeta::IsNaN( Get( iOne, iTwo = veciGenes[ j ] ) ) ) {
-				if( CMeta::IsNaN( d = DatKnown.Get( i, j ) ) )
-					Set( iOne, iTwo, 0 );
-				else if( fKnownNegatives == !d )
-					Set( iOne, iTwo, d ); } } }
+			iTwo = veciGenes[ j ];
+			if( CMeta::IsNaN( d = DatKnown.Get( i, j ) ) ) {
+				if( fKnownNegatives && CMeta::IsNaN( Get( iOne, iTwo ) ) )
+					Set( iOne, iTwo, 0 ); }
+			else if( fKnownNegatives == !d )
+				Set( iOne, iTwo, d ); } }
 
 	return true; }
 
