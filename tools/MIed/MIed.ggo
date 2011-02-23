@@ -1,0 +1,24 @@
+package	"MIed"
+version	"1.0"
+purpose	"A Dab data set pairwise mutual information calculator."
+
+section "Main"
+option "output"		o 	"Output file"		string  typestr="filename"  no
+
+section "Optional"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"
+option	"random"	r	"Seed random generator"
+						int	default="0"
+option	"start"		S	"Process only the starting at dataset index"
+						int	default="-1"
+option	"end"		E	"Process only up to this ending dataset index"
+						int	default="-1"
+option	"union"		u	"Use the union genes of two datasets while assign missing values randomly"
+						flag	off
+option  "directory"     d       "input directory"
+                                                string  typestr="directory"
+option  "datasets"     f       "Calculate MI for datasets in given file against all datasets"
+                                                string  typestr="file"
+option	"zeros"		Z	"Read zeroed node IDs/outputs from the given file"
+						string	typestr="filename"

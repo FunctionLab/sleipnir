@@ -26,6 +26,7 @@ if WITH_TOOLS
 	  MCluster \
 	  Matcher \
 	  MIer \
+	  MIed \
 	  Normalizer \
 	  Orthologer \
 	  Overlapper \
