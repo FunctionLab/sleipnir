@@ -59,6 +59,8 @@ option	"xdsl"			x	"Generate XDSL output rather than DSL"
 							flag	on
 option	"memmap"		m	"Memory map input files"
 							flag	off
+option  "memmapout" M "Memory map output files (only for inference mode)"
+              flag  off
 option	"threads"		t	"Maximum number of threads to spawn"
 							int	default="-1"
 option	"verbosity"		v	"Message verbosity"

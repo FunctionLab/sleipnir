@@ -743,15 +743,25 @@ return 0;
 		else
 			vecpGenes[ i ]->Open( Genome.GetGeneNames( ), false );
 		vecpYes[ i ] = new CDat( );
-		vecpYes[ i ]->Open( Genome.GetGeneNames( ), false, ( (string)sArgs.output_arg + '/' +
-			( sArgs.inputs_num ? CMeta::Basename( sArgs.inputs[ i ] ) : "global" ) + c_acDab ).c_str( ) );
 		vecpNo[ i ] = new CDat( );
-		if( !( szTemp = _tempnam( sArgs.temporary_arg, NULL ) ) ) {
-			cerr << "Could not generate temporary file name in: " << sArgs.temporary_arg << endl;
-			return 1; }
-		vecstrTmps[ i ] = szTemp;
-		free( szTemp );
-		vecpNo[ i ]->Open( Genome.GetGeneNames( ), false, vecstrTmps[ i ].c_str( ) ); }
+		if( sArgs.memmapout_flag ) {
+			vecpYes[ i ]->Open( Genome.GetGeneNames( ), false,
+					((string) sArgs.output_arg + '/' + (sArgs.inputs_num ? CMeta::Basename(
+							sArgs.inputs[ i ] ) : "global") + c_acDab).c_str( ) );
+			/*FIXME: _tempnam can result in a filename that ends up in use later via race condition */
+			if( !(szTemp = _tempnam( sArgs.temporary_arg, NULL )) ) {
+				cerr << "Could not generate temporary file name in: " << sArgs.temporary_arg << endl;
+				return 1;
+			}
+			cout << "File: " << szTemp << endl;
+			vecstrTmps[ i ] = szTemp;
+			free( szTemp );
+			vecpNo[ i ]->Open( Genome.GetGeneNames( ), false, vecstrTmps[ i ].c_str( ) );
+		} else {
+			vecpYes[ i ]->Open( Genome.GetGeneNames( ), false, NULL );
+			vecpNo[ i ]->Open( Genome.GetGeneNames( ), false, NULL );
+		}
+	}
 
 	veciGenes.resize( vecpYes[ 0 ]->GetGenes( ) );
 	vecsData.resize( vecpGenes.size( ) );
@@ -825,14 +835,22 @@ return 0;
 		for( i = 0; i < iThread; ++i )
 			pthread_join( vecpthdThreads[ iTerm + i ], NULL ); }
 
-	for( i = 0; i < vecstrTmps.size( ); ++i )
-		_unlink( vecstrTmps[ i ].c_str( ) );
+	if( sArgs.memmapout_flag ) {
+		for( i = 0; i < vecstrTmps.size( ); ++i ) {
+			_unlink( vecstrTmps[ i ].c_str( ) );
+		}
+	}
 	for( i = 0; i < vecpBNs.size( ); ++i )
 		delete vecpBNs[ i ];
 	for( i = 0; i < vecpGenes.size( ); ++i ) {
-		delete vecpYes[ i ];
 		delete vecpNo[ i ];
-		delete vecpGenes[ i ]; }
+		if( !sArgs.memmapout_flag ) {
+			vecpYes[ i ]->Save( ((string) sArgs.output_arg + '/' + (sArgs.inputs_num ? CMeta::Basename(
+					sArgs.inputs[ i ] ) : "global") + c_acDab).c_str( ) );
+		}
+		delete vecpYes[ i ];
+		delete vecpGenes[ i ];
+	}
 
 	return 0; }
 
