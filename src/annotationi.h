@@ -61,7 +61,7 @@ protected:
 	};
 
 	struct SParser {
-		static const size_t	c_iBuffer	= 4096;
+		static const size_t	c_iBuffer	= 65536;
 
 		SParser( std::istream&, CGenome& );
 
