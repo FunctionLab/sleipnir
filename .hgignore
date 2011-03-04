@@ -1,0 +1,8 @@
+syntax: glob
+.deps
+*.cache
+*.Po
+*~
+Makefile
+*.log
+config.status
