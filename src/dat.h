@@ -141,7 +141,13 @@ public:
 		 * \brief
 		 * Binary format listing null-terminated element name strings followed by index/value pairs.
 		 */
-		EFormatSparse	= EFormatPCL + 1
+		EFormatSparse	= EFormatPCL + 1,
+
+		/*!
+		 * \brief
+		 * Binary format listing null-terminated element name strings followed by bits representing the quantized bins.
+		 */		
+		EFormatQdab = EFormatSparse + 1 
 	};
 
 	/*!

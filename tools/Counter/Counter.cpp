@@ -25,6 +25,7 @@
 class CRegularize;
 
 static const char	c_acDab[]	= ".dab";
+static const char	c_acQDab[]	= ".qdab";
 static const char	c_acQuant[]	= ".quant";
 static const char	c_acTxt[]	= ".txt";
 
@@ -435,7 +436,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 			pthread_join( vecpthdThreads[ iTerm + i ], NULL ); }
 
 	FOR_EACH_DIRECTORY_FILE((string)sArgs.directory_arg, strFile)
-		string					strName;
+		string					strName, strNameQ;
 		vector<CCountMatrix*>*	pvecpMatCounts;
 
 		if( !CMeta::IsExtension( strFile, c_acQuant ) )
@@ -443,8 +444,10 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 
 		i = strFile.rfind( '.' );
 		strName = (string)sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDab;
-		if( !Dat.Open( strName.c_str( ), false, !!sArgs.memmap_flag ) ) {
-			cerr << "Couldn't open: " << strName << endl;
+		strNameQ = (string)sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acQDab;
+		if( !( Dat.Open( strName.c_str( ), false, !!sArgs.memmap_flag ) ||  
+					Dat.Open( strNameQ.c_str(), false, !!sArgs.memmap_flag ) ) ) {
+			cerr << "Couldn't open: " << strName << ", " << strNameQ << endl;
 			return 1; }
 		cerr << "Processing: " << strName << endl;
 		strName = CMeta::Filename( CMeta::Deextension( CMeta::Basename( strName.c_str( ) ) ) );
@@ -772,7 +775,8 @@ return 0;
 		string		strFile;
 
 		if( !Dat.Open( ( strFile = ( (string)sArgs.directory_arg + '/' + iterDataset->first +
-			c_acDab ) ).c_str( ), false, !!sArgs.memmap_flag ) ) {
+			c_acDab ) ).c_str( ), false, !!sArgs.memmap_flag ) && !Dat.Open( ( strFile = ( (string)sArgs.directory_arg + '/' + iterDataset->first +
+                        c_acQDab ) ).c_str( ), false, !!sArgs.memmap_flag ) ) {
 			cerr << "Couldn't open: " << strFile << endl;
 			return 1; }
 		cerr << "Processing: " << strFile << endl;

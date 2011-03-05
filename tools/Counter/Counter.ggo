@@ -3,11 +3,11 @@ version	"1.0"
 purpose	"Pre-Bayesian learning tool; counts distributions of values in data"
 
 defgroup "Mode"	yes
-groupoption	"answers"	w	"Answer file"
+groupoption	"answers"	w	"Answer file (-w triggers counts mode)"
 							string	typestr="filename"	group="Mode"
-groupoption	"counts"	k	"Directory containing count files"
+groupoption	"counts"	k	"Directory containing count files (-k triggers learning mode)"
 							string	typestr="directory"	group="Mode"
-groupoption	"networks"	n	"Bayes nets"
+groupoption	"networks"	n	"Bayes nets (-n triggers inference mode)"
 							string	typestr="filename"	group="Mode"
 
 section "Main"

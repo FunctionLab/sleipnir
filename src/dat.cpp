@@ -25,6 +25,7 @@
 #include "statistics.h"
 #include "annotation.h"
 #include "color.h"
+#include "meta.h"
 
 namespace Sleipnir {
 
@@ -40,6 +41,7 @@ static const struct {
 	{"dat",	CDat::EFormatText},
 	{"das",	CDat::EFormatSparse},
 	{"pcl",	CDat::EFormatPCL},
+	{"qdab",CDat::EFormatQdab},
 	{NULL,	CDat::EFormatBinary}
 };
 
@@ -462,8 +464,11 @@ bool CDat::Open( std::istream& istm, EFormat eFormat, float dDefault, bool fDupl
 			return OpenPCL( istm, iSkip, fZScore );
 
 		case EFormatSparse:
-			return OpenSparse( istm ); }
-
+			return OpenSparse( istm ); 
+	
+		case EFormatQdab:
+			return OpenQdab( istm ); 		       
+	}
 	return OpenBinary( istm ); }
 
 bool CDatImpl::OpenPCL( std::istream& istm, size_t iSkip, bool fZScore ) {
@@ -600,6 +605,82 @@ bool CDatImpl::OpenBinary( std::istream& istm ) {
 	delete[] adScores;
 
 	return true; }
+
+bool CDatImpl::OpenQdab( std::istream& istm ) {
+  size_t	iTotal, i, j, num_bins, num_bits, iPos;
+	float*	adScores;
+	char tmp;
+	float* bounds;
+	unsigned char btmpf;
+	unsigned char btmpb;
+	
+	unsigned char bufferA;
+	unsigned char bufferB;
+	
+	float nan_val;
+
+	if( !OpenGenes( istm, true, false ) )
+		return false;
+	m_Data.Initialize( GetGenes( ) );
+	
+	// read the number of bins 
+	istm.read((char*)&tmp, sizeof(char));       
+	num_bins = (size_t)tmp;
+
+	//read the bin boundaries
+	bounds = new float[num_bins];
+	istm.read((char*)bounds, sizeof(float) * num_bins);
+	
+	// number of bits required for each bin representation
+	num_bits = (size_t)ceil(log( num_bins ) / log ( 2.0 ));	
+	
+	// add one more bit for NaN case
+	if( pow(2, num_bits) == num_bins )
+	  ++num_bits;
+	
+	// set nan value
+	nan_val = pow(2, num_bits) -1;
+	
+	// read the data	
+	adScores = new float[ GetGenes( ) - 1 ];
+	
+	istm.read( (char*)&bufferA, sizeof(bufferA));
+	istm.read( (char*)&bufferB, sizeof(bufferB));
+	
+	for( iTotal = i = 0; ( i + 1 ) < GetGenes( ); ++i ) {
+		for(j = 0; j < ( GetGenes( ) - i - 1 ); ++j){
+		  iPos = (iTotal * num_bits) % 8;
+		  
+		  // check bit data overflow??
+		  if( iPos + num_bits > 8){
+		    btmpb = (bufferA << iPos);
+		    btmpf = (bufferB >> (16 - num_bits - iPos)) << (8-num_bits);		    
+		    adScores[j] = ((btmpb | btmpf) >> (8 - num_bits));		    
+		    ++iTotal;
+		    bufferA = bufferB;
+		    istm.read( (char*)&bufferB, sizeof(bufferB));
+		  }
+		  else{
+		    adScores[j] = (((bufferA << iPos) & 0xFF) >> (8 - num_bits));
+		    ++iTotal;
+			if( iPos + num_bits == 8 ) {
+				bufferA = bufferB;
+                    		istm.read( (char*)&bufferB, sizeof(bufferB));
+			}
+		  }
+
+		  // check if value added was promised 2^#bits -1 (NaN value)
+		  if(adScores[j] == nan_val)
+		    adScores[j] =  CMeta::GetNaN( );
+		}
+		
+		Set( i, adScores ); 
+	}
+	
+	delete[] adScores;
+	delete[] bounds;
+	return true; }
+
 
 bool CDatImpl::OpenSparse( std::istream& istm ) {
 	size_t		i;

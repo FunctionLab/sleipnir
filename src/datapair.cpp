@@ -23,10 +23,12 @@
 #include "datapair.h"
 #include "meta.h"
 #include "genome.h"
+#include "math.h"
 
 namespace Sleipnir {
 
 const char	CPairImpl::c_szQuantExt[]	= ".quant";
+const char   CDataPairImpl::c_acQdab[]   = ".qdab";
 
 bool CPairImpl::Open( const char* szDatafile, std::ifstream& ifsm ) {
 	string		strToken;
@@ -80,7 +82,7 @@ bool CPairImpl::Open( const char* szLine, vector<float>& vecdQuant ) {
  * CDat::Open
  */
 bool CDataPair::Open( const CSlim& Slim ) {
-
+	m_fQuantized = false;
 	Reset( false );
 	return CDat::Open( Slim ); }
 
@@ -112,12 +114,122 @@ bool CDataPair::Open( const CSlim& Slim ) {
 bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
 	bool fZScore ) {
 
-	g_CatSleipnir( ).notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
 
+	g_CatSleipnir( ).notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
+	
 	Reset( fContinuous );
-	if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore ) )
-		return false;
-	return ( m_fContinuous ? true : OpenQuants( szDatafile ) ); }
+	m_fQuantized = false;
+	
+	const char* file_ext = NULL;
+	
+	if((file_ext = strstr(szDatafile, c_acQdab)) != NULL){
+
+	  return OpenQdab( szDatafile );
+	}
+	else{
+	  if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore ) )
+	    return false;
+	  return ( m_fContinuous ? true : OpenQuants( szDatafile ) ); 	  
+	}
+}
+
+bool CDataPairImpl::OpenQdab( const char* szDatafile ){
+  size_t	iTotal, i, j, num_bins, num_bits, iPos;
+  float*	adScores;
+  char tmp;
+  float* bounds;
+  unsigned char btmpf;
+  unsigned char btmpb;
+  
+  unsigned char bufferA;
+  unsigned char bufferB;
+  ifstream        istm;
+  
+  float nan_val;
+
+  g_CatSleipnir( ).notice( "CDataPair::OpenQdab( %s )", szDatafile );
+
+  istm.open( szDatafile, ios_base::binary );
+  
+  if( !CDat::OpenGenes( istm, true, false ) )
+    return false;
+  m_Data.Initialize( GetGenes( ) );
+  
+  // read the number of bins 
+  istm.read((char*)&tmp, sizeof(char));       
+  num_bins = (size_t)tmp;
+  
+  //read the bin boundaries
+  bounds = new float[num_bins];
+  istm.read((char*)bounds, sizeof(float) * num_bins);
+  
+  // set quant values
+  SetQuants( bounds, num_bins );
+  
+  // number of bits required for each bin representation
+  num_bits = (size_t)ceil(log( num_bins ) / log ( 2.0 ));	
+  
+  // add one more bit for NaN case
+  if( pow(2, num_bits) == num_bins )
+    ++num_bits;
+  
+  // set nan value
+  nan_val = pow(2, num_bits) -1;
+  
+  // read the data	
+  adScores = new float[ GetGenes( ) - 1 ];
+  
+  istm.read( (char*)&bufferA, sizeof(bufferA));
+  istm.read( (char*)&bufferB, sizeof(bufferB));
+  
+  for( iTotal = i = 0; ( i + 1 ) < GetGenes( ); ++i ) {
+    for(j = 0; j < ( GetGenes( ) - i - 1 ); ++j){
+      iPos = (iTotal * num_bits) % 8;
+      
+      // check bit data overflow??
+      if( iPos + num_bits > 8){
+	btmpb = (bufferA << iPos);
+	btmpf = (bufferB >> (16 - num_bits - iPos)) << (8-num_bits);
+	adScores[j] = (float)((btmpb | btmpf) >> (8 - num_bits));
+	++iTotal;
+	bufferA = bufferB;
+	istm.read( (char*)&bufferB, sizeof(bufferB));
+      }
+      else{
+	adScores[j] = (((bufferA << iPos) & 0xFF) >> (8 - num_bits));
+	++iTotal;
+	if( iPos + num_bits == 8 ) {
+		bufferA = bufferB;
+		istm.read( (char*)&bufferB, sizeof(bufferB));
+        }
+
+      }
+      
+      // check if value added was promised 2^#bits -1 (NaN value)
+      if(adScores[j] == nan_val)
+	adScores[j] =  CMeta::GetNaN( );
+      
+    }    
+    
+    CDat::Set( i, adScores ); 
+  }
+  
+  istm.close();
+  
+  delete[] adScores;
+  delete[] bounds;
+
+  m_fQuantized = true;
+
+  return true; 
+}
+  
+  
+bool CDataPair::Open( const CDat& dat ) {
+	m_fContinuous = true;	
+	Reset( true );
+	if( !CDat::Open( dat ) ) return false;
+}
 
 /*!
  * \brief
@@ -163,8 +275,25 @@ bool CDataPair::OpenQuants( const char* szDatafile ) {
  * SetQuants | CMeta::Quantize
  */
 size_t CDataPair::Quantize( float dValue ) const {
+	if ( m_fQuantized ) 
+		return (size_t)dValue;
+	else
+		return CMeta::Quantize( dValue, m_vecdQuant ); }
 
-	return CMeta::Quantize( dValue, m_vecdQuant ); }
+
+void CDataPair::Quantize() {
+	if ( m_fQuantized )
+		return;
+	for( size_t i = 0; i < GetGenes( ); ++i ) {
+                for( size_t j = ( i + 1 ); j < GetGenes( ); ++j ) {
+			float d = Get( i, j );
+			if( CMeta::IsNaN( d ) ) continue;
+
+			Set( i, j, Quantize( d ) );
+		}
+	}
+	m_fQuantized = true;
+}
 
 void CDataPairImpl::Reset( bool fContinuous ) {
 
@@ -184,11 +313,12 @@ void CDataPairImpl::Reset( bool fContinuous ) {
  * \see
  * GetValues | Quantize
  */
-void CDataPair::SetQuants( const float* adBinEdges, size_t iBins ) {
+void CDataPairImpl::SetQuants( const float* adBinEdges, size_t iBins ) {
 
 	Reset( false );
 	m_vecdQuant.resize( iBins );
 	copy( adBinEdges, adBinEdges + iBins, m_vecdQuant.begin( ) ); }
+
 
 /*!
  * \brief
@@ -205,6 +335,71 @@ void CDataPair::SetQuants( const vector<float>& vecdBinEdges ) {
 	Reset( false );
 	m_vecdQuant.resize( vecdBinEdges.size( ) );
 	copy( vecdBinEdges.begin( ), vecdBinEdges.end( ), m_vecdQuant.begin( ) ); }
+
+void CDataPair::Save( const char* szFile ) const {
+
+	if( !strcmp( szFile + strlen( szFile ) - strlen( "qdab" ), "qdab" ) ) {
+		g_CatSleipnir().info( "CDataPair::Save( ) qdab file: %s", szFile );	
+		ofstream ofsm;
+		ofsm.open( szFile, ios_base::binary );		
+		CDat::SaveGenes( ofsm );
+		
+		unsigned char bins = (unsigned char)m_vecdQuant.size();
+		size_t bit_len = (size_t)ceil( log((size_t)bins)/log(2) );
+
+		//reserve largest value for NaN		
+		if( (size_t)pow(2, bit_len) == (size_t)bins )
+			bit_len++;
+
+		//NaN = 2^N - 1
+		size_t nan_val = (size_t)pow(2, bit_len) -1;
+
+		//write out total bins, bin boundaries
+		ofsm.write( (char*)&bins, sizeof(bins) );
+		for( size_t i =0; i < m_vecdQuant.size(); i++ ) {
+			float b = m_vecdQuant[i];
+			ofsm.write( (char*)&b, sizeof(b) );
+		}
+	
+		size_t offset = 0, byte_count = 0;
+		unsigned char cur_byte = 0;
+
+                for( size_t i = 0; i < GetGenes( ); ++i ) {
+                        for( size_t j = ( i + 1 ); j < GetGenes( ); ++j ) {
+                                unsigned char d = (unsigned char)Get( i, j );
+				if( CMeta::IsNaN( Get(i,j) ) ) {
+					d = nan_val;
+				}
+				//check if fits in one byte
+				if( offset + bit_len <= 8 ) { 
+					cur_byte = cur_byte | (d << (8-bit_len-offset));
+					offset = offset + bit_len;
+					if( offset == 8 ) {
+						ofsm.write((char*)&cur_byte, 1);
+						cur_byte = offset = 0;
+						byte_count++;
+					}
+				}
+				else {
+					//spans byte boundary; offset+bit_len > 8
+					cur_byte = cur_byte | (d >> (offset+bit_len-8));
+					ofsm.write((char*)&cur_byte, 1);
+					cur_byte = d << (16-offset-bit_len);
+					offset = offset+bit_len-8;
+					byte_count++;
+				}	
+			}
+		}
+		size_t bytes_req = (size_t)ceil((GetGenes()*(GetGenes()-1)/2.0) * bit_len / 8.0);
+		if( byte_count < bytes_req ) {
+			ofsm.write((char*)&cur_byte, 1);
+		}	
+		//g_CatSleipnir().info( "CDataPair::Save( ) byte count: %s", byte_count );
+	}
+	else {
+        	CDat::Save( szFile );
+	}
+}
 
 /*!
  * \brief
@@ -229,13 +424,10 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 	size_t		i;
 
 	g_CatSleipnir( ).notice( "CPCLPair::Open( %s )", szDatafile );
-
-	ifsm.open( szDatafile );
-	if( !CPCL::Open( ifsm, iSkip ) )
+	
+	if( !CPCL::Open( szDatafile, iSkip ) )
 		return false;
-	ifsm.close( );
-
-	ifsm.clear( );
+	
 	if( !CPairImpl::Open( szDatafile, ifsm ) )
 		return false;
 
@@ -269,6 +461,16 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
 size_t CPCLPair::Quantize( float dValue, size_t iExperiment ) const {
 
 	return CMeta::Quantize( dValue, m_vecvecdQuants[ iExperiment ] ); }
+
+void CPCLPair::Quantize() {
+  for( size_t i = 0; i < GetGenes( ); ++i ) {
+    for( size_t j = 0; j < GetExperiments( ); ++j ) {
+      float d = Get( i, j );
+      if( CMeta::IsNaN( d ) ) continue;      
+      Set( i, j, Quantize( d, j ) );
+    }
+  }
+}
 
 bool CDatFilterImpl::Attach( const CDataPair* pDat, const CDatFilter* pFilter, const CGenes* pGenes,
 	CDat::EFilter eFilter, const CDat* pAnswers ) {

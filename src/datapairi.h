@@ -39,10 +39,15 @@ protected:
 
 class CDataPairImpl : protected CPairImpl, public CDat {
 protected:
+  	CDataPairImpl( ) : m_fQuantized(false) {}
 	void Reset( bool );
-
 	bool				m_fContinuous;
+	bool				m_fQuantized;
 	std::vector<float>	m_vecdQuant;
+
+	static const char  c_acQdab[];
+	bool OpenQdab( const char* szDatafile );
+	void SetQuants( const float* adBinEdges, size_t iBins );
 };
 
 class CPCLPairImpl : protected CPairImpl, public CPCL {

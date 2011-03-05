@@ -63,6 +63,7 @@ protected:
 	bool OpenText( std::istream&, float, bool );
 	bool OpenBinary( std::istream& );
 	bool OpenSparse( std::istream& );
+	bool OpenQdab( std::istream& );
 	bool OpenGenes( std::istream&, bool, bool );
 	void SaveText( std::ostream& ) const;
 	void SaveBinary( std::ostream& ) const;

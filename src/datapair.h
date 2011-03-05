@@ -57,11 +57,17 @@ public:
 	bool Open( const char* szDatafile, bool fContinuous, bool fMemmap = false, size_t iSkip = 2,
 		bool fZScore = false );
 	bool Open( const CSlim& Slim );
+	bool Open( const CDat& dat );
 	bool OpenQuants( const char* szDatafile );
-	void SetQuants( const float* adBinEdges, size_t iBins );
+	void SetQuants( const float* adBinEdges, size_t iBins ){
+	  SetQuants(adBinEdges, iBins );
+	}
 	void SetQuants( const std::vector<float>& vecdBinEdges );
 	size_t Quantize( float dValue ) const;
-
+	void Quantize( );
+	void Save( const char* szFile ) const;
+	
+	
 	/*!
 	 * \brief
 	 * Returns the number of discrete values taken by this data pair.
@@ -176,6 +182,27 @@ class CPCLPair : public CPCLPairImpl {
 public:
 	bool Open( const char* szDatafile, size_t iSkip );
 	size_t Quantize( float dValue, size_t iExperiment ) const;
+	void Quantize( );
+
+
+	/*!
+	 * \brief
+	 * Returns the number of discrete values taken by this PCL pair.
+	 * 
+	 * \returns
+	 * Number of discrete values taken by this PCL pair.
+	 * 
+	 * \remarks
+	 * Equivalent to number of bins in the PCL pair and number of bin edges in the QUANT file.
+	 * 
+	 * \see
+	 * SetQuants | Quantize
+	 */
+	unsigned char GetValues( size_t iExperiment ) const {
+	  
+	  return (unsigned char)m_vecvecdQuants[ iExperiment ].size( ); }
+	
+
 };
 
 /*!

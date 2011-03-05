@@ -23,6 +23,7 @@
 #include "cmdline.h"
 
 #include "statistics.h"
+#include "datapair.h"
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -36,8 +37,9 @@ int main( int iArgs, char** aszArgs ) {
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta( sArgs.verbosity_arg );
 
+	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
+	
 	if( sArgs.genes_arg ) {
 		ifsm.open( sArgs.genes_arg );
 		if( !Genes.Open( ifsm ) ) {
@@ -47,9 +49,10 @@ int main( int iArgs, char** aszArgs ) {
 
 	fModified = sArgs.normalize_flag || sArgs.subsample_arg;
 	if( sArgs.input_arg ) {
-		if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !fModified ) ) {
-			cerr << "Could not open: " << sArgs.input_arg << endl;
-			return 1; } }
+	  if( !Dat.Open( sArgs.input_arg, sArgs.memmap_flag && !fModified,
+			 sArgs.skip_arg, !!sArgs.zscore_flag, !!sArgs.duplicates_flag ) ) {
+	    cerr << "Could not open: " << sArgs.input_arg << endl;
+	    return 1; } }	
 	else if( !Dat.Open( cin, CDat::EFormatText, (float)HUGE_VAL, !!sArgs.duplicates_flag ) ) {
 		cerr << "Could not open input" << endl;
 		return 1; }
@@ -98,17 +101,32 @@ int main( int iArgs, char** aszArgs ) {
 					return 1; }
 				Dat.SetGene( i, iterName->second ); } }
 
+	// should I add random noise from standard Normal?
+	if( sArgs.noise_flag ){
+	  float d;
+	  for( i = 0; i < Dat.GetGenes( ); ++i )
+	    for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+	      if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ){
+		Dat.Set( i, j, d + CStatistics::SampleNormalStandard() );		  
+	      }	
+	}      
 	if( sArgs.randomize_flag )
 		Dat.Randomize( );
 	if( sArgs.rank_flag )
 		Dat.Rank( );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
 		Dat.Normalize( sArgs.zscore_flag ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
-	if( sArgs.zero_flag )
-		for( i = 0; i < Dat.GetGenes( ); ++i )
-			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
-				if( CMeta::IsNaN( Dat.Get( i, j ) ) )
-					Dat.Set( i, j, 0 );
+	if( sArgs.zero_flag || sArgs.dmissing_arg )
+	  for( i = 0; i < Dat.GetGenes( ); ++i )
+	    for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+	      if( CMeta::IsNaN( Dat.Get( i, j ) ) ){
+		if ( sArgs.zero_flag ){
+		  Dat.Set( i, j, 0 );
+		}
+		else{
+		  Dat.Set( i, j, sArgs.dmissing_arg );
+		}
+	      }
 	if( sArgs.flip_flag )
 		Dat.Invert( );
 	if( Genes.GetGenes( ) )
@@ -192,6 +210,33 @@ int main( int iArgs, char** aszArgs ) {
 				if( ( ( iTwo = veciGenesOne[ j ] ) == -1 ) ||
 					CMeta::IsNaN( DatLk1.Get( iOne, iTwo ) ) )
 					Dat.Set( i, j, CMeta::GetNaN( ) ); } }
+	
+	if( sArgs.exedges_arg ) {
+		CDat			DatLk1;
+		vector<size_t>	veciGenesOne;
+		size_t			iOne, iTwo;
+
+		if( !DatLk1.Open( sArgs.exedges_arg ) ) {
+			cerr << "Could not open: " << sArgs.exedges_arg << endl;
+			return 1; }
+		
+		veciGenesOne.resize( Dat.GetGenes( ) );
+		
+		for( i = 0; i < veciGenesOne.size( ); ++i )
+			veciGenesOne[ i ] = DatLk1.GetGene( Dat.GetGene( i ) );
+		
+		for( i = 0; i < Dat.GetGenes( ); ++i ) {
+		  if( ( iOne = veciGenesOne[ i ] ) == -1 ) 
+			  continue;
+			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ){
+			  if( (( iTwo = veciGenesOne[ j ] ) == -1 ) ||
+			      CMeta::IsNaN( DatLk1.Get( iOne, iTwo )))
+			    continue;
+			  Dat.Set( i, j, CMeta::GetNaN( ) ); 
+			}			
+		} 
+	}
+
 	if( sArgs.lookups1_arg ) {
 		CGenes			GenesLk1( Genome );
 		vector<size_t>	veciGenesOne;
@@ -269,9 +314,16 @@ int main( int iArgs, char** aszArgs ) {
 				cout << '\t';
 				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 					cout << d; }
-			cout << endl; } }
-	else if( sArgs.output_arg )
-		Dat.Save( sArgs.output_arg );
+			cout << endl; } }	
+	else if( sArgs.output_arg ) {
+		CDataPair datOut;
+		datOut.Open( Dat );
+		if( sArgs.quant_arg ) {
+			datOut.OpenQuants( sArgs.quant_arg );
+			datOut.Quantize();
+		}
+		datOut.Save( sArgs.output_arg );  
+	}
 	else {
 		Dat.Save( cout, CDat::EFormatText );
 		cout.flush( ); }
