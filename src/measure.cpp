@@ -541,15 +541,16 @@ double CMeasurePearNorm::Measure( const float* adX, size_t iM, const float* adY,
 
 double CMeasureHypergeometric::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
-	size_t	i, iOne, iTwo, iBoth;
+	size_t	i, iOne, iTwo, iBoth, iTotalPresent;
 
 	if( iM != iN )
 		return CMeta::GetNaN( );
 
-	iOne = iTwo = iBoth = 0;
+	iOne = iTwo = iTotalPresent = iBoth = 0;
 	for( i = 0; i < iN; ++i ) {
 		if( CMeta::IsNaN( adX[ i ] ) || CMeta::IsNaN( adY[ i ] ) )
 			continue;
+		iTotalPresent ++;
 		if( adX[ i ] )
 			iOne++;
 		if( adY[ i ] ) {
@@ -557,7 +558,7 @@ double CMeasureHypergeometric::Measure( const float* adX, size_t iM, const float
 			if( adX[ i ] )
 				iBoth++; } }
 
-	return ( 1 - CStatistics::HypergeometricCDF( iBoth, iOne, iTwo, iN ) ); }
+	return ( 1 - CStatistics::HypergeometricCDF( iBoth, iOne, iTwo, iTotalPresent ) ); }
 
 double CMeasureInnerProduct::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {

@@ -806,32 +806,80 @@ return h;
  * \brief
  * Calculates the hypergeometric p-value given the sizes and overlap of two sets.
  * 
- * \param iHitsOne
- * Number of hits in the first (query) set.
- * 
- * \param iSizeOne
- * Size of the first (query) set.
- * 
- * \param iHitsTwo
- * Number of hits in the second (background) set.
- * 
- * \param iSizeTwo
- * Size of the second (background) set.
- * 
+ * \param iBoth
+ * Number of non-zero in both query sets together.
+ *
+ * \param iNonZeroInOne
+ * Number of non-zero in query one
+ *
+ * \param iTwo
+ * Number of non-zero in query two
+ *
+ * \param iN
+ * Total number of sites in the query.
+ *
  * \returns
- * sum(CStatistics::HypergeometricPDF (i, iSizeOne, iHitsTwo, iSizeTwo), i=iHitsOne..min(iHitsTwo, iSizeOne))
+ * sum(CStatistics::HypergeometricPDF (iBoth, iNonZeroInOne, iTwo, iN), i=iBoth..min(iNonZeroInTwo, iNonZeroInOne))
  */
-double CStatistics::HypergeometricCDF( size_t iHitsOne, size_t iSizeOne, size_t iHitsTwo,
-	size_t iSizeTwo ) {
+double CStatistics::HypergeometricCDF( size_t iBoth, size_t iNonZeroInOne, size_t iNonZeroInTwo,
+	size_t iN ) {
 	size_t	i, iHits;
 	double	dRet;
 
 	dRet = 0;
-	iHits = ( iHitsTwo < iSizeOne ) ? iHitsTwo : iSizeOne;
-	for( i = iHitsOne; i <= iHits; ++i )
-		dRet += HypergeometricPDF( i, iSizeOne, iHitsTwo, iSizeTwo );
+	iHits = ( iNonZeroInTwo < iNonZeroInOne ) ? iNonZeroInTwo : iNonZeroInOne;
+	for( i = iBoth; i <= iHits; ++i )
+		dRet += HypergeometricPDF( i, iNonZeroInOne, iNonZeroInTwo, iN );
 
 	return ( ( dRet > 1 ) ? 1 : dRet ); }
+
+/*!
+ * \brief
+ * Calculates the two sided hypergeometric p-value given the sizes and overlap of two sets.
+ *
+ * \param iNonZeroInCommon
+ * Number of non-zero in both query sets together.
+ * 
+ * \param iNonZeroInOne
+ * Number of non-zero in query one
+ * 
+ * \param iNonZeroInTwo
+ * Number of non-zero in query two
+ * 
+ * \param iTotalNumValues
+ * Total number of sites in the query.
+ * 
+ * \returns
+ * sum(CStatistics::HypergeometricPDF (iBoth, iNonZeroInOne, iNonZeroInTwo, iN), i=iBoth..min(iNonZeroInTwo, iNonZeroInOne))
+ */
+double CStatistics::TwoSidedHypergeometricCDF( size_t iNonZeroInCommon, size_t iNonZeroInOne, size_t iNonZeroInTwo,
+	size_t iTotalNumValues ) {
+	size_t	i, iHits;
+	double	dRet;
+
+	int a = iTotalNumValues - iNonZeroInTwo + iNonZeroInCommon - iNonZeroInOne ;
+	int b = iNonZeroInOne - iNonZeroInCommon;
+	int c = iNonZeroInTwo - iNonZeroInCommon;
+	int d = iNonZeroInCommon;
+
+	dRet = 0;
+
+	if (a*d - b*c < 0) {
+		while (a >= 0 && d >= 0) {
+			dRet += HypergeometricPDF( d, b+d, c+d, a+b+c+d );
+			a--;d--;c++;b++;
+			cout << dRet << endl;
+		}
+	}
+	else {
+		while (c >= 0 && b >= 0) {
+			dRet += HypergeometricPDF( d, b+d, c+d, a+b+c+d );
+			a++;d++;c--;b--;
+		}
+	}
+	dRet *= 2;
+	return ( ( dRet > 1 ) ? 1 : dRet ); }
+
 
 /*!
  * \brief

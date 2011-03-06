@@ -1010,7 +1010,8 @@ public:
 		const std::vector<bool>& vecfGenesOfInterest, bool fInvert = false );
 
 	// Probability distributions
-	static double HypergeometricCDF( size_t iHitsOne, size_t iSizeOne, size_t iHitsTwo, size_t iSizeTwo );
+	static double HypergeometricCDF( size_t iBoth, size_t iNonZeroInOne, size_t iNonZeroInTwo, size_t iN );
+	static double TwoSidedHypergeometricCDF( size_t iHitsOne, size_t iSizeOne, size_t iHitsTwo, size_t iSizeTwo );
 	static double SampleGammaStandard( double dShape );
 	static double SampleGammaLogStandard( double dXX );
 	static double SampleNormalStandard( );
@@ -1065,38 +1066,43 @@ public:
 		d = ( iObservations - ( iSample * dProbability ) ) / sqrt( iSample * dProbability *
 			( 1 - dProbability ) );
 		return ( 1 - NormalCDF( d, 0, 1 ) ); }
-
+	
 	/*!
 	 * \brief
 	 * Calculate the hypergeometric probability distribution given the sizes and overlap of two sets.
 	 * 
-	 * \param iHitsOne
-	 * Number of hits in the first (query) set.
+	 * \param iNonZeroInCommon
+	 * Number of non zero values that both share.
 	 * 
-	 * \param iSizeOne
+	 * \param iNonZeroInOne
 	 * Size of the first (query) set.
 	 * 
-	 * \param iHitsTwo
+	 * \param iNonZeroInTwo
 	 * Number of hits in the second (background) set.
 	 * 
-	 * \param iSizeTwo
-	 * Size of the second (background) set.
+	 * \param iTotalNumValues
+	 * Total number of values that were compared.
 	 * 
 	 * \returns
-	 * choose(iHitsTwo, iHitsOne) * choose(iSizeTwo - iHitsTwo, iSizeOne - iHitsOne) /
-	 * choose(iSizeTwo, iSizeOne)
+	 * choose(iNonZeroInTwo, iNonZeroInCommon) * choose(iTotalNumValues - iNonZeroInTwo, iNonZeroInOne - iNonZeroInCommon) /
+	 * choose(iTotalNumValues, iNonZeroInOne)
 	 * 
 	 * \remarks
 	 * Calculated using the exponential of CStatistics::LogFact results for increased speed and precision.
 	 */
-	static double HypergeometricPDF( size_t iHitsOne, size_t iSizeOne, size_t iHitsTwo,
-		size_t iSizeTwo ) {
+	static double HypergeometricPDF( size_t iNonZeroInCommon, size_t iNonZeroInOne,
+			size_t iNonZeroInTwo, size_t iTotalNumValues ) {
 
-		return exp( LogFact( iSizeTwo - iHitsTwo ) + LogFact( iHitsTwo ) + LogFact( iSizeOne ) +
-			LogFact( iSizeTwo - iSizeOne ) - LogFact( iHitsOne ) -
-			LogFact( iHitsTwo - iHitsOne ) - LogFact( iSizeTwo - iHitsTwo + iHitsOne - iSizeOne ) -
-			LogFact( iSizeOne - iHitsOne ) - LogFact( iSizeTwo ) ); }
-
+		return exp( LogFact( iTotalNumValues - iNonZeroInTwo ) + LogFact( iNonZeroInTwo ) //right margin
+				+ LogFact( iNonZeroInOne ) + LogFact( iTotalNumValues - iNonZeroInOne ) // bottom margin
+				- LogFact( iTotalNumValues ) // total
+				- LogFact( iNonZeroInCommon ) //1,1
+				- LogFact( iNonZeroInTwo - iNonZeroInCommon ) //1,0
+				- LogFact( iTotalNumValues - iNonZeroInTwo + iNonZeroInCommon - iNonZeroInOne ) //0, 0
+				- LogFact( iNonZeroInOne - iNonZeroInCommon ) //0,1
+		);
+	}
+	
 	/*!
 	 * \brief
 	 * Calculate a p-value for the given T and degrees of freedom.
