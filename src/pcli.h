@@ -41,7 +41,8 @@ protected:
 	static const char	c_szNAME[];
 	static const char	c_szOne[];
 	static const char	c_szExtension[];
-
+	static const char	c_szBinExtension[];
+	
 	typedef std::vector<std::string>		TVecStr;
 	typedef std::set<size_t>				TSetI;
 	typedef std::map<std::string, size_t>	TMapStrI;

@@ -36,6 +36,7 @@ const char	CPCLImpl::c_szGWEIGHT[]		= "GWEIGHT";
 const char	CPCLImpl::c_szNAME[]		= "NAME";
 const char	CPCLImpl::c_szOne[]			= "1";
 const char	CPCLImpl::c_szExtension[]	= ".pcl";
+const char	CPCLImpl::c_szBinExtension[]	= ".bin";
 
 struct SNeighbors {
 	CFullMatrix<pair<size_t, float> >	m_MatNeighbors;
@@ -284,6 +285,57 @@ void CPCLImpl::Reset( ) {
 	m_vecvecstrFeatures.clear( );
 	m_setiGenes.clear( );
 	m_mapstriGenes.clear( ); }
+
+/*!
+ * \brief
+ * Create a new PCL by reading from text or binary
+ * 
+ * \param szFile
+ * File from which PCL file is loaded.
+ * 
+ * \returns
+ * True if the PCL was opened successfully.
+ * 
+ */
+bool CPCL::Open( const char* szFile, size_t iSkip ) {
+  std::ifstream	ifsm;
+  if( szFile )
+    ifsm.open( szFile );
+  
+    // is this a binary binary file?
+  if( !strcmp( szFile + strlen( szFile ) - strlen(c_szBinExtension ), c_szBinExtension ) )
+    return OpenBinary(szFile ? ifsm : cin);  
+  else
+  // is this a text based PCL file?
+    return Open( szFile ? ifsm : cin, iSkip );
+}
+
+/*!
+ * \brief
+ * Save a PCL to the given text file.
+ * 
+ * \param szFile
+ * File into which PCL file is saved.
+ * 
+ * \remarks
+ * If null, output defaults to stdout.
+ * 
+ * \see
+ * Save
+ */
+void CPCL::Save( const char* szFile ) {
+  std::ofstream	ofsm;
+  
+  if( szFile )
+    ofsm.open( szFile );
+  
+  // Save as text based PCL file?
+  if( !strcmp( szFile + strlen( szFile ) - strlen(c_szExtension ), c_szExtension ) )
+    Save( szFile ? ofsm : cout );
+  else
+    // Save as binary binary file?
+    SaveBinary(szFile ? ofsm : cout);  
+}
 
 /*!
  * \brief
@@ -563,7 +615,7 @@ void CPCL::Save( std::ostream& ostm, const std::vector<size_t>* pveciGenes ) con
  * CFullMatrix::SaveBinary method.
  * 
  * \see
- * OpenBinary
+ * SaveBinary
  */
 void CPCL::SaveBinary( std::ostream& ostm ) const {
 	uint32_t	iTmp;
@@ -593,9 +645,9 @@ void CPCL::SaveBinary( std::ostream& ostm ) const {
  * Stream from which PCL file is loaded.
  * 
  * \see
- * SaveBinary
+ * OpenBinary
  */
-void CPCL::OpenBinary( std::istream& istm ) {
+bool CPCL::OpenBinary( std::istream& istm ) {
 	uint32_t	iTmp;
 	size_t		i;
 
@@ -616,7 +668,10 @@ void CPCL::OpenBinary( std::istream& istm ) {
 
 	m_Data.Initialize( GetGenes( ), GetExperiments( ) );
 	for( i = 0; i < m_Data.GetRows( ); ++i )
-		istm.read( (char*)m_Data.Get( i ), GetExperiments( ) * sizeof(*m_Data.Get( i )) ); }
+		istm.read( (char*)m_Data.Get( i ), GetExperiments( ) * sizeof(*m_Data.Get( i )) ); 
+	
+	return true;
+}
 
 /*!
  * \brief

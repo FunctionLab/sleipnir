@@ -161,7 +161,7 @@ public:
 		const std::vector<std::string>& vecstrExperiments );
 	void Open( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrExperiments,
 		const std::vector<std::string>& vecstrFeatures );
-	void OpenBinary( std::istream& istm );
+	bool OpenBinary( std::istream& istm );
 	void Save( std::ostream& ostm, const std::vector<size_t>* pveciGenes = NULL ) const;
 	void SaveBinary( std::ostream& ostm ) const;
 	void SaveGene( std::ostream& ostm, size_t iGene, size_t iOriginal = -1 ) const;
@@ -187,13 +187,8 @@ public:
 	 * \see
 	 * Save
 	 */
-	void Save( const char* szFile = NULL ) const {
-		std::ofstream	ofsm;
-
-		if( szFile )
-			ofsm.open( szFile );
-		Save( szFile ? ofsm : std::cout ); }
-
+	void Save( const char* szFile = NULL );
+	
 	/*!
 	 * \brief
 	 * Load a PCL from the given text file.
@@ -210,13 +205,8 @@ public:
 	 * \see
 	 * Save
 	 */
-	bool Open( const char* szFile, size_t iSkip ) {
-		std::ifstream	ifsm;
-
-		if( szFile )
-			ifsm.open( szFile );
-		return Open( szFile ? ifsm : cin, iSkip ); }
-
+	bool Open( const char* szFile, size_t iSkip );
+	
 	/*!
 	 * \brief
 	 * Load a PCL from the given text stream using the default number of skip columns.
