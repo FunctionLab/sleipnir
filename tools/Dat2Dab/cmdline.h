@@ -40,6 +40,9 @@ struct gengetopt_args_info
   char * output_arg;	/**< @brief Output DAT/DAB file.  */
   char * output_orig;	/**< @brief Output DAT/DAB file original value given at command line.  */
   const char *output_help; /**< @brief Output DAT/DAB file help description.  */
+  char * quant_arg;	/**< @brief Input Quant file.  */
+  char * quant_orig;	/**< @brief Input Quant file original value given at command line.  */
+  const char *quant_help; /**< @brief Input Quant file help description.  */
   int flip_flag;	/**< @brief Calculate one minus values (default=off).  */
   const char *flip_help; /**< @brief Calculate one minus values help description.  */
   int normalize_flag;	/**< @brief Normalize to the range [0,1] (default=off).  */
@@ -62,11 +65,17 @@ struct gengetopt_args_info
   char * edges_arg;	/**< @brief Process only edges from the given DAT/DAB.  */
   char * edges_orig;	/**< @brief Process only edges from the given DAT/DAB original value given at command line.  */
   const char *edges_help; /**< @brief Process only edges from the given DAT/DAB help description.  */
+  char * exedges_arg;	/**< @brief Exclude edges from the given DAT/DAB.  */
+  char * exedges_orig;	/**< @brief Exclude edges from the given DAT/DAB original value given at command line.  */
+  const char *exedges_help; /**< @brief Exclude edges from the given DAT/DAB help description.  */
   double cutoff_arg;	/**< @brief Exclude edges below cutoff.  */
   char * cutoff_orig;	/**< @brief Exclude edges below cutoff original value given at command line.  */
   const char *cutoff_help; /**< @brief Exclude edges below cutoff help description.  */
   int zero_flag;	/**< @brief Zero missing values (default=off).  */
   const char *zero_help; /**< @brief Zero missing values help description.  */
+  float dmissing_arg;	/**< @brief set missing values to a set default value.  */
+  char * dmissing_orig;	/**< @brief set missing values to a set default value original value given at command line.  */
+  const char *dmissing_help; /**< @brief set missing values to a set default value help description.  */
   int duplicates_flag;	/**< @brief Allow dissimilar duplicate values (default=off).  */
   const char *duplicates_help; /**< @brief Allow dissimilar duplicate values help description.  */
   float subsample_arg;	/**< @brief Fraction of output to randomly subsample (default='1').  */
@@ -98,6 +107,11 @@ struct gengetopt_args_info
   const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
   int memmap_flag;	/**< @brief Memory map input/output (default=off).  */
   const char *memmap_help; /**< @brief Memory map input/output help description.  */
+  int random_arg;	/**< @brief Seed random generator (default -1 uses current time) (default='-1').  */
+  char * random_orig;	/**< @brief Seed random generator (default -1 uses current time) original value given at command line.  */
+  const char *random_help; /**< @brief Seed random generator (default -1 uses current time) help description.  */
+  int noise_flag;	/**< @brief Add noise from standard Normal to all non-missing values (default=off).  */
+  const char *noise_help; /**< @brief Add noise from standard Normal to all non-missing values help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
@@ -106,6 +120,7 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
+  unsigned int quant_given ;	/**< @brief Whether quant was given.  */
   unsigned int flip_given ;	/**< @brief Whether flip was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
@@ -115,8 +130,10 @@ struct gengetopt_args_info
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */
   unsigned int genee_given ;	/**< @brief Whether genee was given.  */
   unsigned int edges_given ;	/**< @brief Whether edges was given.  */
+  unsigned int exedges_given ;	/**< @brief Whether exedges was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int zero_given ;	/**< @brief Whether zero was given.  */
+  unsigned int dmissing_given ;	/**< @brief Whether dmissing was given.  */
   unsigned int duplicates_given ;	/**< @brief Whether duplicates was given.  */
   unsigned int subsample_given ;	/**< @brief Whether subsample was given.  */
   unsigned int lookup1_given ;	/**< @brief Whether lookup1 was given.  */
@@ -129,6 +146,8 @@ struct gengetopt_args_info
   unsigned int table_given ;	/**< @brief Whether table was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
+  unsigned int random_given ;	/**< @brief Whether random was given.  */
+  unsigned int noise_given ;	/**< @brief Whether noise was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */

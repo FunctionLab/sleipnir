@@ -225,6 +225,7 @@ bool CSlim::Open( std::istream& istmSlim, const IOntology* pOntology ) {
 
 			while( issm.peek( ) != EOF ) {
 				str = OpenToken( issm );
+				cout << str << endl;
 				if( !str.length( ) )
 					break;
 				if( m_vecstrSlims.size( ) <= i )

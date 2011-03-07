@@ -222,11 +222,10 @@ protected:
 	bool OpenGloss( SParserKEGG& );
 };
 
-class COntologyGOImpl : protected COntologyImpl {
+class COntologyOBOImpl : protected COntologyImpl {
 protected:
 	static const char	c_szAltID[];
-	static const char	c_szGO[];
-	static const char	c_szGOC[];
+	static const char	c_szOBO[];
 	static const char	c_szHUMAN[];
 	static const char	c_szID[];
 	static const char	c_szIsA[];
@@ -238,11 +237,11 @@ protected:
 	static const char	c_szRelationship[];
 	static const char	c_szSGD[];
 	static const char	c_szTerm[];
-
-	struct SParserGO : SParser {
+	
+	struct SParserOBO : SParser {
 		typedef std::set<const CGene*>	TSetPGene;
 
-		SParserGO( std::istream&, CGenome&, bool = false, bool = false );
+		SParserOBO( std::istream&, CGenome&, bool = false, bool = false );
 
 		void Reset( );
 
@@ -257,21 +256,21 @@ protected:
 		std::vector<TSetPGene>		m_vecsetpGenes;
 	};
 
-	COntologyGOImpl( );
-
-	bool OpenOntology( SParserGO& );
-	bool OpenHeader( SParserGO& );
-	bool OpenBlock( SParserGO& );
-	bool OpenTerm( SParserGO& );
-	bool OpenID( SParserGO& );
-	bool OpenName( SParserGO& );
-	bool OpenNamespace( SParserGO& );
-	bool OpenRelationship( SParserGO& );
-	bool OpenParent( SParserGO& );
-	bool OpenAltID( SParserGO& );
-	bool OpenObsolete( SParserGO& );
-	bool OpenGenes( SParserGO& );
-	bool OpenGene( SParserGO& );
+	COntologyOBOImpl( );
+	
+	bool OpenOntology( SParserOBO& );
+	bool OpenHeader( SParserOBO& );
+	bool OpenBlock( SParserOBO& );
+	bool OpenTerm( SParserOBO& );
+	bool OpenID( SParserOBO& );
+	bool OpenName( SParserOBO& );
+	bool OpenNamespace( SParserOBO& );
+	bool OpenRelationship( SParserOBO& );
+	bool OpenParent( SParserOBO& );
+	bool OpenAltID( SParserOBO& );
+	bool OpenObsolete( SParserOBO& );
+	bool OpenGenes( SParserOBO& );
+	bool OpenGene( SParserOBO& );
 };
 
 class COntologyMIPSImpl : protected COntologyImpl {

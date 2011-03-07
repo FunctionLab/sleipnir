@@ -112,7 +112,7 @@ namespace Sleipnir {
  * annotated to that term's ancestors.
  * 
  * \see
- * COntologyKEGG | COntologyGO | COntologyMIPS | COntologyMIPSPhenotypes | CSlim
+ * COntologyKEGG | COntologyOBO | COntologyMIPS | COntologyMIPSPhenotypes | CSlim
  */
 class IOntology {
 public:
@@ -439,13 +439,12 @@ public:
 
 /*!
  * \brief
- * Implements IOntology for the Gene Ontology.
+ * Implements IOntology for OBO based Ontologies.
  * 
- * COntologyGO parses OBO and GO annotation files to obtain the structure and annotations to the Gene
- * Ontology.  Aspects of the ontology (e.g. biological process, molecular function, cellular compartment)
- * can be opened individually to obtain independent IOntology objects.
+ * COntologyOBO parses OBO and annotation files to obtain the structure and annotations
+ * for OBO ontologies.
  */
-class COntologyGO : COntologyGOImpl, public IOntology {
+class COntologyOBO : COntologyOBOImpl, public IOntology {
 public:
 	/*!
 	 * \brief
@@ -464,10 +463,10 @@ public:
 	static const char	c_szMolecularFunction[];
 
 	static bool Open( std::istream& istmOntology, std::istream& istmAnnotations, CGenome& Genome,
-		COntologyGO& OntoBP, COntologyGO& OntoMF, COntologyGO& OntoCC, bool fDatabaseIDs = false,
+			COntologyOBO& OntoBP, COntologyOBO& OntoMF, COntologyOBO& OntoCC, bool fDatabaseIDs = false,
 		bool fSynonyms = false );
 
-	COntologyGO( );
+	COntologyOBO( );
 	bool Open( std::istream& istmOntology, std::istream& istmAnnotations, CGenome& Genome,
 		const char* szNamespace, bool fDatabaseIDs = false, bool fSynonyms = false );
 

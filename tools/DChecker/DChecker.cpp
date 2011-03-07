@@ -315,7 +315,7 @@ int main( int iArgs, char** aszArgs ) {
 			if( !sArgs.sse_flag ) {
 				*postm << "#	P	" << iPositives << endl;
 				*postm << "#	N	" << iNegatives << endl; }
-			*postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN" ) << endl;
+			*postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN	PR	RC" ) << endl;
 			for( i = 0; i < MatResults.GetRows( ); ++i ) {
 				*postm << ( iBins ? i : ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) ) << '\t' <<
 					veciRec[ i ];
@@ -326,6 +326,11 @@ int main( int iArgs, char** aszArgs ) {
 						*postm << '\t' << MatResults.Get( i, j );
 				if( veciGenesTerm.size( ) || vecfHere.size( ) )
 					*postm << '\t' << veciRecTerm[ i ];
+				
+				// print precision/recall
+				*postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(0,0));
+				*postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(i,1)+MatResults.Get(i,0)+1);
+				
 				*postm << endl; }
 			if( !sArgs.sse_flag )
 				*postm << "#	AUC	" << ( sArgs.auc_arg ?

@@ -46,15 +46,15 @@ struct gengetopt_args_info
   char * negatives_arg;	/**< @brief Negative slim file.  */
   char * negatives_orig;	/**< @brief Negative slim file original value given at command line.  */
   const char *negatives_help; /**< @brief Negative slim file help description.  */
-  char * go_onto_arg;	/**< @brief GO ontology.  */
-  char * go_onto_orig;	/**< @brief GO ontology original value given at command line.  */
-  const char *go_onto_help; /**< @brief GO ontology help description.  */
-  char * go_anno_arg;	/**< @brief GO annotations.  */
-  char * go_anno_orig;	/**< @brief GO annotations original value given at command line.  */
-  const char *go_anno_help; /**< @brief GO annotations help description.  */
-  char * go_name_arg;	/**< @brief GO namespace (default='bp').  */
-  char * go_name_orig;	/**< @brief GO namespace original value given at command line.  */
-  const char *go_name_help; /**< @brief GO namespace help description.  */
+  char * onto_arg;	/**< @brief ontology (obo file).  */
+  char * onto_orig;	/**< @brief ontology (obo file) original value given at command line.  */
+  const char *onto_help; /**< @brief ontology (obo file) help description.  */
+  char * obo_anno_arg;	/**< @brief Gene annotations that correspond to the OBO ontology for the organism of interest..  */
+  char * obo_anno_orig;	/**< @brief Gene annotations that correspond to the OBO ontology for the organism of interest. original value given at command line.  */
+  const char *obo_anno_help; /**< @brief Gene annotations that correspond to the OBO ontology for the organism of interest. help description.  */
+  char * namespace_arg;	/**< @brief Namespace (the gene ontology namespaces can be abbreviated bp, mf, and cc) (default='').  */
+  char * namespace_orig;	/**< @brief Namespace (the gene ontology namespaces can be abbreviated bp, mf, and cc) original value given at command line.  */
+  const char *namespace_help; /**< @brief Namespace (the gene ontology namespaces can be abbreviated bp, mf, and cc) help description.  */
   char * kegg_arg;	/**< @brief KEGG ontology.  */
   char * kegg_orig;	/**< @brief KEGG ontology original value given at command line.  */
   const char *kegg_help; /**< @brief KEGG ontology help description.  */
@@ -93,6 +93,9 @@ struct gengetopt_args_info
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
+  char * annotations_arg;	/**< @brief File for propogated annotations.  */
+  char * annotations_orig;	/**< @brief File for propogated annotations original value given at command line.  */
+  const char *annotations_help; /**< @brief File for propogated annotations help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -100,9 +103,9 @@ struct gengetopt_args_info
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int negatives_given ;	/**< @brief Whether negatives was given.  */
-  unsigned int go_onto_given ;	/**< @brief Whether go_onto was given.  */
-  unsigned int go_anno_given ;	/**< @brief Whether go_anno was given.  */
-  unsigned int go_name_given ;	/**< @brief Whether go_name was given.  */
+  unsigned int onto_given ;	/**< @brief Whether onto was given.  */
+  unsigned int obo_anno_given ;	/**< @brief Whether obo_anno was given.  */
+  unsigned int namespace_given ;	/**< @brief Whether namespace was given.  */
   unsigned int kegg_given ;	/**< @brief Whether kegg was given.  */
   unsigned int kegg_org_given ;	/**< @brief Whether kegg_org was given.  */
   unsigned int mips_onto_given ;	/**< @brief Whether mips_onto was given.  */
@@ -117,6 +120,7 @@ struct gengetopt_args_info
   unsigned int config_given ;	/**< @brief Whether config was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+  unsigned int annotations_given ;	/**< @brief Whether annotations was given.  */
 
 } ;
 

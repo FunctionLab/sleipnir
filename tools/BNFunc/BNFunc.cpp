@@ -32,7 +32,7 @@ int main( int iArgs, char** aszArgs ) {
 	CGenome								Genome;
 	gengetopt_args_info					sArgs;
 	ifstream							ifsmAnno, ifsmOnto, ifsmTerm;
-	COntologyGO							GO;
+	COntologyOBO OBO;
 	COntologyKEGG						KEGG;
 	COntologyMIPS						MIPS;
 	const IOntology*					pOnto;
@@ -52,29 +52,35 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
-
-	if( sArgs.go_onto_arg ) {
-		ifsmOnto.open( sArgs.go_onto_arg );
-		if( sArgs.go_anno_arg )
-			ifsmAnno.open( sArgs.go_anno_arg );
-		if( !strcmp( sArgs.go_name_arg, c_szBP ) )
-			szNamespace = COntologyGO::c_szBiologicalProcess;
-		else if( !strcmp( sArgs.go_name_arg, c_szCC ) )
-			szNamespace = COntologyGO::c_szCellularComponent;
-		else if( !strcmp( sArgs.go_name_arg, c_szMF ) )
-			szNamespace = COntologyGO::c_szMolecularFunction;
+		
+	if( sArgs.onto_arg ) {
+		ifsmOnto.open( sArgs.onto_arg );
+		if( !strcmp( sArgs.namespace_arg, c_szBP ) )
+			szNamespace = COntologyOBO::c_szBiologicalProcess;
+		else if( !strcmp( sArgs.namespace_arg, c_szCC ) )
+			szNamespace = COntologyOBO::c_szCellularComponent;
+		else if( !strcmp( sArgs.namespace_arg, c_szMF ) )
+			szNamespace = COntologyOBO::c_szMolecularFunction;
 		else
-			szNamespace = sArgs.go_name_arg;
-		if( !GO.Open( ifsmOnto, ifsmAnno, Genome, szNamespace, !!sArgs.dbids_flag ) ) {
-			cerr << "Couldn't open: ";
-			if( sArgs.go_anno_arg )
-				cerr << sArgs.go_anno_arg << ", ";
-			cerr << sArgs.go_onto_arg << endl;
-			return 1; }
-		ifsmOnto.close( );
-		if( sArgs.go_anno_arg )
+			szNamespace = sArgs.namespace_arg;
+
+		if( sArgs.obo_anno_arg ) {
+			ifsmAnno.open( sArgs.obo_anno_arg );
+
+			if( !OBO.Open( ifsmOnto, ifsmAnno, Genome, szNamespace, !!sArgs.dbids_flag ) ) {
+				cerr << "Couldn't open: ";
+				if( sArgs.obo_anno_arg )
+					cerr << sArgs.obo_anno_arg << ", ";
+				cerr << sArgs.onto_arg << endl;
+				return 1;
+			}
+
 			ifsmAnno.close( );
-		pOnto = &GO; }
+			pOnto = &OBO;
+		}
+		ifsmOnto.close( );
+	}
+
 	else if( sArgs.mips_onto_arg ) {
 		ifsmOnto.open( sArgs.mips_onto_arg );
 		if( sArgs.mips_anno_arg )
@@ -180,6 +186,24 @@ int main( int iArgs, char** aszArgs ) {
 		for( iterGene = mapGenes.begin( ); iterGene != mapGenes.end( ); ++iterGene )
 			if( ( (float)rand( ) / RAND_MAX ) < sArgs.test_arg )
 				iterGene->second = true; }
+
+	if( sArgs.annotations_arg ) {
+		ofsm.clear( );
+		ofsm.open( sArgs.annotations_arg );
+		for( i = 0; i < Slim.GetSlims( ); ++i ) {
+		
+			for( j = 0; j < Slim.GetGenes( i ); ++j ) {
+				const CGene& Gene = Slim.GetGene( i, j );
+				const string& strName =
+						(sArgs.synonyms_flag && Gene.GetSynonyms( )) ? Gene.GetSynonym( 0 )
+								: Gene.GetName( );
+
+				ofsm << Slim.GetSlim( i ) << "\t" << strName;
+				ofsm << endl;
+			}
+		}
+		ofsm.close( );
+	}
 
 	if( sArgs.directory_arg )
 		for( i = 0; i < Slim.GetSlims( ); ++i ) {

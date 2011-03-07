@@ -6,7 +6,7 @@ AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFL
 
 libSleipnir_a_SOURCES	=	\
 	annotation.cpp			\
-	annotationgo.cpp		\
+	annotationobo.cpp		\
 	annotationkegg.cpp		\
 	annotationmips.cpp		\
 	bayesnet.cpp			\

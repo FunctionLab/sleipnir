@@ -60,7 +60,7 @@ int main( int iArgs, char** aszArgs ) {
 	ofstream					ofsm;
 	int							iRet;
 	COntologyKEGG				KEGG;
-	COntologyGO					GOBP, GOMF, GOCC;
+	COntologyOBO					GOBP, GOMF, GOCC;
 	set<size_t>					setiContexts;
 // Server data
 	vector<float>				vecdPriors;
@@ -90,7 +90,7 @@ int main( int iArgs, char** aszArgs ) {
 		if( sArgs.go_anno_arg ) {
 			ifsmGenes.clear( );
 			ifsmGenes.open( sArgs.go_anno_arg ); }
-		if( !COntologyGO::Open( ifsm, ifsmGenes, Genome, GOBP, GOMF, GOCC, false, true ) ) {
+		if( !COntologyOBO::Open( ifsm, ifsmGenes, Genome, GOBP, GOMF, GOCC, false, true ) ) {
 			cerr << "Could not open: " << sArgs.go_onto_arg << ", " << sArgs.go_anno_arg << endl;
 			return 1; }
 		ifsm.close( );

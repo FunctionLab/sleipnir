@@ -57,18 +57,18 @@ AR = ar
 ARFLAGS = cru
 libSleipnir_a_AR = $(AR) $(ARFLAGS)
 libSleipnir_a_LIBADD =
-am_libSleipnir_a_OBJECTS = annotation.$(OBJEXT) annotationgo.$(OBJEXT) \
-	annotationkegg.$(OBJEXT) annotationmips.$(OBJEXT) \
-	bayesnet.$(OBJEXT) bayesnetfn.$(OBJEXT) \
-	bayesnetmixed.$(OBJEXT) bayesnetpnl.$(OBJEXT) \
-	bayesnetsmile.$(OBJEXT) bayesnetsmileelr.$(OBJEXT) \
-	clusthierarchical.$(OBJEXT) clustkmeans.$(OBJEXT) \
-	clustpivot.$(OBJEXT) clustqtc.$(OBJEXT) coalesce.$(OBJEXT) \
-	coalescecluster.$(OBJEXT) coalescemotifs.$(OBJEXT) \
-	coalescestructs.$(OBJEXT) color.$(OBJEXT) \
-	compactmatrix.$(OBJEXT) database.$(OBJEXT) datapair.$(OBJEXT) \
-	datasetcompact.$(OBJEXT) dataset.$(OBJEXT) dat.$(OBJEXT) \
-	example.$(OBJEXT) fasta.$(OBJEXT) file.$(OBJEXT) \
+am_libSleipnir_a_OBJECTS = annotation.$(OBJEXT) \
+	annotationobo.$(OBJEXT) annotationkegg.$(OBJEXT) \
+	annotationmips.$(OBJEXT) bayesnet.$(OBJEXT) \
+	bayesnetfn.$(OBJEXT) bayesnetmixed.$(OBJEXT) \
+	bayesnetpnl.$(OBJEXT) bayesnetsmile.$(OBJEXT) \
+	bayesnetsmileelr.$(OBJEXT) clusthierarchical.$(OBJEXT) \
+	clustkmeans.$(OBJEXT) clustpivot.$(OBJEXT) clustqtc.$(OBJEXT) \
+	coalesce.$(OBJEXT) coalescecluster.$(OBJEXT) \
+	coalescemotifs.$(OBJEXT) coalescestructs.$(OBJEXT) \
+	color.$(OBJEXT) compactmatrix.$(OBJEXT) database.$(OBJEXT) \
+	datapair.$(OBJEXT) datasetcompact.$(OBJEXT) dataset.$(OBJEXT) \
+	dat.$(OBJEXT) example.$(OBJEXT) fasta.$(OBJEXT) file.$(OBJEXT) \
 	genome.$(OBJEXT) hmm.$(OBJEXT) mathb.$(OBJEXT) \
 	measure.$(OBJEXT) meta.$(OBJEXT) orthology.$(OBJEXT) \
 	pcl.$(OBJEXT) pclset.$(OBJEXT) pst.$(OBJEXT) \
@@ -219,7 +219,7 @@ AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFL
 #LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_PERF_LIBS) $(PTHREAD_LIBS)
 libSleipnir_a_SOURCES = \
 	annotation.cpp			\
-	annotationgo.cpp		\
+	annotationobo.cpp		\
 	annotationkegg.cpp		\
 	annotationmips.cpp		\
 	bayesnet.cpp			\
@@ -411,9 +411,9 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotation.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotationgo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotationkegg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotationmips.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/annotationobo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bayesnet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bayesnetfn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bayesnetmixed.Po@am__quote@
