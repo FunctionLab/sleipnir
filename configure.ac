@@ -587,6 +587,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Orthologer/Makefile \
 		 tools/Overlapper/Makefile \
 		 tools/PCLPlotter/Makefile \
+		 tools/PCL2Bin/Makefile \
 		 tools/Randomizer/Makefile \
 		 tools/Seqs2Ngrams/Makefile \
 		 tools/SMRF/Makefile \

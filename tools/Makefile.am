@@ -31,6 +31,7 @@ if WITH_TOOLS
 	  Orthologer \
 	  Overlapper \
 	  PCLPlotter \
+	  PCL2Bin \
 	  Randomizer \
 	  Seqs2Ngrams \
 	  SMRF \
@@ -69,7 +70,7 @@ if WITH_VW_TOOLS
     VW_TOOLS_SUBDIRS = VWer
 endif
 if WITH_READLINE_TOOLS
-    READLINE_TOOLS_SUBDIRS = OntoShell
+#    READLINE_TOOLS_SUBDIRS = OntoShell
 endif
 endif
 

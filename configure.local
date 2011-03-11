@@ -1,11 +1,11 @@
 #!/bin/sh
 
-./configure --with-gengetopt=../extlib/gengetopt-2.22/bin/gengetopt \
-	--with-log4cpp=../extlib/log4cpp-1.0/ \
+./configure --with-gengetopt=/usr/bin/gengetopt\
+	--with-log4cpp=/usr/include/log4cpp/ \
 	--with-smile=../extlib/smile_1_1_linux64_gcc_4_1_2/ \
 	--with-svm-perf=../extlib/svm_perf/ \
-	--with-boost-includes=../extlib/boost_1_42_0/include/boost/ \
-	--with-boost-graph-lib=../extlib/boost_1_42_0/lib/libboost_graph.a \
-	--with-vowpal-wabbit=../extlib/vowpal_wabbit_v4.1/ \
+	--with-boost-includes=/usr/include/boost/\
+	--with-boost-graph-lib=/usr/lib/libboost_graph.a \
+#	--with-vowpal-wabbit=../extlib/vowpal_wabbit_v4.1/ \
 	LDFLAGS=-static
 # CXXFLAGS=-fno-threadsafe-statics

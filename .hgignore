@@ -5,4 +5,7 @@ syntax: glob
 *~
 Makefile
 *.log
+*.o
+*.in
+history
 config.status
