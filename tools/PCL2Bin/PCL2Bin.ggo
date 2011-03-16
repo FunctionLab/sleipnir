@@ -1,0 +1,33 @@
+package	"PCL2Bin"
+version	"1.0"
+purpose	"Text/binary data file interconversion"
+
+section "Main"
+option	"input"			i	"Input PCL/BIN file"
+							string	typestr="filename"
+option	"output"		o	"Output PCL/BIN file"
+							string	typestr="filename"	no
+
+section "Filtering"
+option	"genes"			g	"Process only genes from the given set"
+							string	typestr="filename" no
+option	"genex"			G	"Exclude all genes from the given set"
+							string	typestr="filename" no
+section "Optional"
+option "Genes"			E   "Only print genes and their indecies"
+							flag off
+option	"zrow"		r	"Normalize Z score row"
+						flag	off
+option	"zcol"		c	"Normalize Z score column"
+						flag	off
+option	"scol"		C	"Subtract mean per column"
+						flag	off						
+option	"normalize"		n	"Normalize 0 1 range"
+						flag	off
+						
+option	"skip"			s	"Columns to skip in input PCL"
+							int	default="0" no
+option	"verbosity"		v	"Message verbosity"
+							int	default="5" no
+option	"mmap"		m	"Memmap binary input"
+						flag	off 
