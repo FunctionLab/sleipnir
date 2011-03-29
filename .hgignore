@@ -13,6 +13,8 @@ history
 config.status
 *~
 src/libSleipnir.a
+aclocal.m4
+configure
 
 syntax: regexp
 tools/(?P<tool>.*)/(?P=tool)
