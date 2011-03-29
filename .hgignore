@@ -8,6 +8,11 @@ Makefile
 *.log
 *.o
 *.in
+tools/*/*.am
 history
 config.status
 *~
+src/libSleipnir.a
+
+syntax: regexp
+tools/(?P<tool>.*)/(?P=tool)

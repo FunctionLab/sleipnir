@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 
 my $default_ggo_flags = "-u -N -e";
 my %tools_ggo_flags = (
