@@ -1,20 +1,19 @@
 syntax: glob
 .deps
-*.cache
 *.Po
-*.o
-*~
-Makefile
+*.cache
+*.in
 *.log
 *.o
-*.in
-tools/*/*.am
-history
-config.status
 *~
-src/libSleipnir.a
+tools/*/*.am
+config.status
+Makefile
 aclocal.m4
 configure
+history
+src/libSleipnir.a
 
 syntax: regexp
-tools/(?P<tool>.*)/(?P=tool)
+# ignore the binaries
+^tools/(?P<tool>[^/]*)/(?P=tool)$
