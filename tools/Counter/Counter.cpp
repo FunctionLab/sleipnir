@@ -436,19 +436,23 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 			pthread_join( vecpthdThreads[ iTerm + i ], NULL ); }
 
 	FOR_EACH_DIRECTORY_FILE((string)sArgs.directory_arg, strFile)
-		string					strName, strNameQ;
+		string					strName;
 		vector<CCountMatrix*>*	pvecpMatCounts;
 
-		if( !CMeta::IsExtension( strFile, c_acQuant ) )
+		if( CMeta::IsExtension( strFile, c_acDab ) ) {
+			i = strFile.rfind( '.' );
+			strName = (string) sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDab;
+		} else if( CMeta::IsExtension( strFile, c_acQDab ) ) {
+			i = strFile.rfind( '.' );
+			strName = (string) sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acQDab;
+		} else {
 			continue;
+		}
 
-		i = strFile.rfind( '.' );
-		strName = (string)sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDab;
-		strNameQ = (string)sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acQDab;
-		if( !( Dat.Open( strName.c_str( ), false, !!sArgs.memmap_flag ) ||  
-					Dat.Open( strNameQ.c_str(), false, !!sArgs.memmap_flag ) ) ) {
-			cerr << "Couldn't open: " << strName << ", " << strNameQ << endl;
-			return 1; }
+		if( !(Dat.Open( strName.c_str( ), false, !!sArgs.memmap_flag )) ) {
+			cerr << "Couldn't open: " << strName << endl;
+			return 1;
+		}
 		cerr << "Processing: " << strName << endl;
 		strName = CMeta::Filename( CMeta::Deextension( CMeta::Basename( strName.c_str( ) ) ) );
 		vecstrNames.push_back( strName );
