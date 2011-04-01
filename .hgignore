@@ -13,6 +13,8 @@ aclocal.m4
 configure
 history
 src/libSleipnir.a
+doc/html
+doc/latex
 
 syntax: regexp
 # ignore the binaries
