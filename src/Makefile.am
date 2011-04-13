@@ -47,6 +47,7 @@ libSleipnir_a_SOURCES	=	\
 	statistics.cpp			\
 	stdafx.cpp				\
 	svm.cpp					\
+	svmperf.cpp					\
 	vwb.cpp
 include_HEADERS			=	\
 	annotation.h			\
@@ -117,6 +118,7 @@ include_HEADERS			=	\
 	stdafx.h				\
 	svm.h					\
 	svmi.h					\
+	svmperf.h					\
 	trie.h					\
 	triei.h					\
 	typesi.h				\
