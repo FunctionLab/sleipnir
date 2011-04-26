@@ -90,6 +90,30 @@ AC_CHECK_FUNCS([inet_ntoa])   # tools/BNServer
 AC_CHECK_FUNCS([strtol])  # tools/Data2Features, tools/Data2Bnt
 
 
+# Common AC functions (see www.gnu.org/autoconf/manual)
+#
+# AC_DEFINE(var[,val[,desc]])
+# Specify a C preprocessor definition. Val defaults to 1.
+#
+# AC_SUBST(var)
+# Output variable (to automake).
+#
+# AC_ARG_WITH(n,help[,given[,not-given]])
+# For "with" package n, use this help string (usually formed with AS_HELP_STRING), perform "given" if given, "not-given" if not.
+#
+# AC_PATH_PROG(v,p[,nf[,path]])
+# Set $v to absolute name of p if p is found. Set $v to "nf" if not found. Use PATH=$path if specified.
+#
+# AC_LINK_IFELSE(in[,true[,false]])
+# Run the complier and linker on "in", and execute "true" or "false" depending on success.
+#
+# AC_LANG_PROGRAM(prologue,body)
+# Create source file using "prologue" and then "body" with main function. Usually used in an AC_LINK_IFELSE or similar.
+#
+# AC_CHECK_HEADER(h[,found[,not-found]])
+# Check for header. Do "found" if found, "not-found" if not.
+
+
 ## LOCAL_PATH_PROG(prog name, local name,
 ##   action if found, extra action if found installed, extra action if found in with path,
 ##   action if not found, action if user requested without)
@@ -98,28 +122,27 @@ AC_CHECK_FUNCS([strtol])  # tools/Data2Features, tools/Data2Bnt
 ## Also set prog_(local name)_state to "ok" or "no".
 define([LOCAL_PATH_PROG],
 [
-if test "x$with_$2" = "xno"; then
+if test "x$with_$2" = "xno"; then  # user said no
   prog_$2_info=NONE
   prog_$2_state=no
-#  true   # in case $7 isn't defined or is empty
   $7
 elif test "x$with_$2" != "xcheck"; then
 #  if echo with_$2 | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
   prog_$2_info=$with_$2
   prog_$2_state=ok
-  qualify_path with_$2
+#  qualify_path with_$2
   prog_$2=$with_$2
   $3
   $5
 else
   AC_PATH_PROG([prog_$2], [$1])
   if test "x$prog_$2" = "x"; then
-#    true   # in case is not defined or is empty
     prog_$2_info="not found"
     prog_$2_state=no
     $6
   else
-    prog_$2_info="found installed"
+#    prog_$2_info="found installed"
+    prog_$2_info=$prog_$2
     prog_$2_state=ok
     $3
     $4
@@ -128,53 +151,67 @@ fi
 if test "x$prog_$2" != "x"; then
   prog_$2_dir=`AS_DIRNAME([$prog_$2])`
   prog_$2_prefix=$prog_$2_dir/..     # assumes bin and include are at same level
-  $4
+#  $4
 fi
 ])
 
 
-## LOCAL_CHECK_LIB(lib name, local name, function,
-##   action if found, extra action if found installed, extra action if found in with path,
-##   action if not found, action if user requested without,
-##   includes)
-## Set $(local_name)_info to "NONE", location, or "installed" (can be overridden with above actions).
-## Also set $(local_name)_state to "ok" or "no".
+## LOCAL_CHECK_LIB(1 lib name, 2 local name, 3 function,
+##   4 action if found, 5 extra action if found installed, 6 extra action if found in 'with' path,
+##   7 action if not found, 8 action if not found installed, 9 action if not found installed in 'with' path,
+##   10 action if requested without,
+##   11 headers, extra libs
+##   12 extra cflags for testing 'with' path)
+## Set $(local_name)_info to "NO", location, or "found installed".
 define([LOCAL_CHECK_LIB],
 [
-if test "x$with_$2" = "xno"; then
-  $2_info=NONE
-  $2_state=no
-  true   # in case not defined or is empty
-  $8
-elif test "x$with_$2" != "xcheck"; then
-# We rely on the AC_ARG_WITH call to set $with_(local name) to "check"
-# if the user does not specify it. That way it is never undefined.
-# That may not be necessary.
-#  if echo with_$2 | $EGREP -q '^extlib/'; then extlib=true; else extlib=false; fi
-  $2_info=$with_$2
-  $2_state=ok
-  qualify_path with_$2
-  $4
-  $6
+if test "x${$2_state}" = "xno"; then
+  $2_info=NO
+  $10
+elif test "x${$2_state}" = "xwarn"; then
+  $2_info="INVALID PATH"
+  $7
+  $9
 else
-  # In AC_LINK_IFELSE, the last argument is optional. If it is specified but is
-  # empty, however, we get a syntax error. But, we have to be careful,
-  # because arguments to this macro may contain quotes, semicolons, etc.
-  # So we work around it by always supplying a last argument.
-  flag=false
+  found=true
+  oLIBS=$LIBS
+  LIBS="$LIBS -l$1 $12"
+  if test "x${$2_state}" = "xtry"; then
+# CFLAGS not respected here - how are we supposed to do this?
+#    oCFLAGS=$CFLAGS
+#    export CFLAGS="$CFLAGS $13"
+    LIBS="$13 $LIBS"
+  fi
   AC_LINK_IFELSE(
-    [AC_LANG_PROGRAM([[$9]], [[$3]])],
-    [$2_info="found installed"
-     $2_state=ok
-     $4
-     $5],
-    [flag=true])
-  if $flag; then
-    # we also can't have an empty if block...
-#    true
+    [AC_LANG_PROGRAM([[$11]], [[$3]])],
+    [
+     if test "x${$2_state}" = "xtry"; then
+       $2_info=${with_$2}
+#       qualify_path with_$2
+       $4
+       $6
+     else
+       $2_info="found installed"
+       $4
+       $5
+     fi
+    ],
+    [found=false])
+  LIBS=$oLIBS
+#  if test "x${$2_state}" = "xtry"; then
+#    CFLAGS=$oCFLAGS
+#  fi
+  if ! $found; then
     $2_info="not found"
-    $2_state=no
-    $7
+    if test "x${$2_state}" = "xtry"; then
+      $7
+      $9
+      true   # in case 7 and 9 are empty
+    else
+      $7
+      $8
+      true   # in case 7 and 8 are empty
+    fi
   fi
 fi
 ])
@@ -185,24 +222,27 @@ fi
 ## Look for the common path in one of the appendable paths under the base path.
 ## If found, set the variable to the concatenation of the prefix and the appended path,
 ## not including the common path. If not found use the base dir.
-
 define([LOCAL_CHECK_APPEND_PATHS],
 [
-result=$1
+#result=$1
+result=
 found=false
+echo -n "looking for $3... "
 for p in $2; do
   if test -e "$1/$p/$3"; then
     result=$1/$p
+    echo found $1/$p/$3
     found=true
     break
   fi
 done
 $4=$result
 if ! $found; then
-  if ! test -e $result/$3; then
-    true   # in case the following is empty
+#  if ! test -e $result/$3; then
+    echo not found
+#    true   # in case the following is empty
     $5
-  fi
+#  fi
 fi
 ])
 
@@ -210,12 +250,19 @@ fi
 ## GENGETOPT
 # If the user specifies a path, use it.
 # If the user doesn't specify anything, check for it.
-# While checking, look for a source distribution in extlib/.
-# Gengetopt is required (for tools).
+# Gengetopt is required to update cmdline.c and cmdline.h (in tools) if out of date.
 #! CFLAGS assumes headers in same directory as binaries for installed
 AC_ARG_WITH([gengetopt],
 	[AS_HELP_STRING([--with-gengetopt=PATH], [prefix of gengetopt installation])],
-	[],
+	[
+	  if test "x$with_gengetopt" = "xyes"; then
+	    with_gengetopt=check
+	  elif test "x$with_gengetopt" = "xno"; then
+	    with_gengetopt = no
+          else
+	    qualify_path with_gengetopt
+	  fi
+	],
 	[with_gengetopt=check])
 LOCAL_PATH_PROG([gengetopt], [gengetopt],
         [GENGETOPT_PREFIX=$prog_gengetopt_prefix
@@ -232,9 +279,105 @@ if test "x$GENGETOPT_PREFIX" != "x"; then
 fi
 AC_SUBST(prog_gengetopt)
 AC_SUBST(prog_gengetopt_dir)
-AC_SUBST(GENGETOPT_PREFIX)
+#AC_SUBST(GENGETOPT_PREFIX)
 AC_SUBST(GENGETOPT_CFLAGS)
 AC_SUBST(GENGETOPT_LIBS)
+
+
+## READLINE
+# If the user specifies a path, use it.
+# If not specified, check for it.
+# If no readline, do not build OntoShell.
+AC_ARG_WITH([readline],
+	[AS_HELP_STRING([--with-readline=PATH], [prefix of readline installation])],
+	[
+         if test "x$with_readline" = "xyes"; then
+	   readline_state=check
+         elif test "x$with_readline" != "xno"; then
+           readline_state=try
+	   qualify_path with_readline
+           LOCAL_CHECK_APPEND_PATHS([$with_readline], [. include], [readline/readline.h], [READLINE_INCLUDE_DIR], [readline_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_readline], [. lib], [libreadline.a], [READLINE_LIB_DIR], [readline_state=warn])
+         else
+           readline_state=no
+         fi
+        ],
+	[readline_state=check])
+AC_LANG_PUSH([C])
+LOCAL_CHECK_LIB([readline], [readline], [readline("foo")],
+	[readline_state=ok],                                       dnl found
+	[READLINE_LIBS="-lreadline -lncurses"],                    dnl and found installed
+	[
+	  READLINE_CFLAGS="-I $READLINE_INCLUDE_DIR"
+	  READLINE_LIBS="-L $READLINE_LIB_DIR -lreadline -lncurses"
+	],                                                         dnl and found in specified path
+	[],                                                        dnl not found
+        [readline_state=no],                                       dnl and not found installed
+        [readline_state=warn],                                     dnl and not found in specified path
+	[],                                                        dnl requested without
+	[#include <stdio.h>
+	 #include "readline/readline.h"],	
+	[-lncurses],
+	[-L $READLINE_LIB_DIR -I $READLINE_INCLUDE_DIR])
+AC_LANG_POP
+if test "x$readline_state" != "xok"; then
+  AC_DEFINE([NO_READLINE], [1])
+fi
+#  # apparently on Macs, rl_completion_matches() is named completion_matches()
+#  # hopefully this is an unusual exception
+#  AC_LINK_IFELSE(
+#    [AC_LANG_PROGRAM([#include <stdio.h>
+#		      #include "readline/readline.h"],
+#		      [rl_completion_matches])],
+#    [],
+#    [AC_DEFINE([rl_completion_matches], [completion_matches])])
+#AC_SUBST(READLINE_PREFIX)
+AC_SUBST(READLINE_CFLAGS)
+AC_SUBST(READLINE_LIBS)
+
+
+## PTHREAD
+# If the user specifies a path, use it.
+# If not specified, check for it.
+# If no readline, do not build OntoShell.
+AC_ARG_WITH([pthread],
+	[AS_HELP_STRING([--with-pthread=PATH], [prefix of pthread installation])],
+	[
+         if test "x$with_pthread" = "xyes"; then
+	   pthread_state=check
+         elif test "x$with_pthread" != "xno"; then
+           pthread_state=try
+	   qualify_path with_pthread
+           LOCAL_CHECK_APPEND_PATHS([$with_pthread], [. include], [pthread.h], [PTHREAD_INCLUDE_DIR], [pthread_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_pthread], [. lib], [libpthread.a], [PTHREAD_LIB_DIR], [pthread_state=warn])
+         else
+           pthread_state=no
+         fi
+        ],
+	[pthread_state=check])
+AC_LANG_PUSH([C])
+LOCAL_CHECK_LIB([pthread], [pthread], [pthread_create],
+	[pthread_state=ok],                                        dnl found
+	[PTHREAD_LIBS="-lpthread"],                                dnl and found installed
+	[
+	  PTHREAD_CFLAGS="-I $PTHREAD_INCLUDE_DIR"
+	  PTHREAD_LIBS="-L $PTHREAD_LIB_DIR -lpthread"
+	],                                                         dnl and found in specified path
+	[],                                                        dnl not found
+        [pthread_state=no],                                        dnl and not found installed
+        [pthread_state=warn],                                      dnl and not found in specified path
+	[],                                                        dnl requested without
+	[#include <stdio.h>
+	 #include "pthread.h"],	
+	[],
+	[-L $PTHREAD_LIB_DIR -I $PTHREAD_INCLUDE_DIR])
+AC_LANG_POP
+if test "x$pthread_state" != "xok"; then
+  AC_DEFINE([NO_PTHREAD], [1])
+fi
+#AC_SUBST(PTHREAD_PREFIX)
+AC_SUBST(PTHREAD_CFLAGS)
+AC_SUBST(PTHREAD_LIBS)
 
 
 ## LOG4CPP
@@ -243,35 +386,45 @@ AC_SUBST(GENGETOPT_LIBS)
 # If the user doesn't say anything, check for it. Use the stub if not found.
 # While checking, look for a source distribution in extlib/.
 # If using stub, set USE_LOG4CPP_STUB=1.
+if test "x$pthread_state" != "xok"; then
+  log4cpp_info=stub
+  log4cpp_state=no
+else
 AC_ARG_WITH([log4cpp],
 	[AS_HELP_STRING([--with-log4cpp=PATH], [prefix of log4cpp installation or build directory])],
-	[],   # $with_log4cpp will either be a path or "no"
-	[with_log4cpp=check])
-LOCAL_CHECK_LIB([log4cpp], [log4cpp], [log4cpp::Category::getInstance],
-	[],                                                        dnl found
-	[],                                                        dnl and found installed
-	[LOG4CPP_PREFIX=$with_log4cpp],                            dnl and found in specified path
-	[log4cpp_info="stub (library not found)"
-	 log4cpp_state=stub
-	 AC_DEFINE([USE_LOG4CPP_STUB], [1])],                      dnl not found
-	[log4cpp_info=stub
-         log4cpp_state=stub
-         AC_DEFINE([USE_LOG4CPP_STUB], [1])],                      dnl requested without
-	[#include "log4cpp/Category.hh"])
-# if stub, there might be additional info, so use grep
-if test "x$log4cpp_state" != "xstub"; then
-  ## set LOG4CPP_CFLAGS and LOG4CPP_LIBS
-  if test "x$LOG4CPP_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$LOG4CPP_PREFIX], [include], [log4cpp/Category.hh], [LOG4CPP_INCLUDE_DIR], [log4cpp_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$LOG4CPP_PREFIX], [lib src/.libs], [liblog4cpp.a], [LOG4CPP_LIB_DIR], [log4cpp_state=warn])
-    LOG4CPP_CFLAGS="-I$LOG4CPP_INCLUDE_DIR"
-    LOG4CPP_LIBS="-L$LOG4CPP_LIB_DIR"
-#    if ! test -f "$LOG4CPP_INCLUDE_DIR/log4cpp/Category.hh"; then log4cpp_state=warn; fi
-#    if ! test -f "$LOG4CPP_LIB_DIR/liblog4cpp.a"; then log4cpp_state=warn; fi
-  fi
-  LOG4CPP_LIBS="$LOG4CPP_LIBS -llog4cpp"
+	[
+         if test "x$with_log4cpp" = "xyes"; then
+           log4cpp_state=check
+         elif test "x$with_log4cpp" != "xno"; then
+           log4cpp_state=try
+	   qualify_path with_log4cpp
+           LOCAL_CHECK_APPEND_PATHS([$with_log4cpp], [. include], [log4cpp/Category.hh], [LOG4CPP_INCLUDE_DIR], [log4cpp_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_log4cpp], [. lib src/.libs], [liblog4cpp.a], [LOG4CPP_LIB_DIR], [log4cpp_state=warn])
+         else
+           log4cpp_state=no
+         fi
+        ],
+	[log4cpp_state=check])
+LOCAL_CHECK_LIB([log4cpp], [log4cpp], [log4cpp::Category::getInstance("foo")],
+        [log4cpp_state=ok],                                       dnl found
+        [LOG4CPP_LIBS="-llog4cpp"],                               dnl and found installed
+        [
+         LOG4CPP_CFLAGS="-I $LOG4CPP_INCLUDE_DIR"
+         LOG4CPP_LIBS="-L $LOG4CPP_LIB_DIR -llog4cpp"
+        ],                                                        dnl and found in specified path
+	[],                                                       dnl not found
+        [log4cpp_state=no],                                       dnl and not found installed
+        [log4cpp_state=warn],                                     dnl and not found in specified path
+        [],                                                       dnl requested without
+	[#include "log4cpp/Category.hh"],
+        [-lpthread],
+        [-L $LOG4CPP_LIB_DIR -I $LOG4CPP_INCLUDE_DIR])
 fi
-AC_SUBST(LOG4CPP_PREFIX)
+if test "x$log4cpp_state" != "xok"; then
+  log4cpp_info=stub
+  AC_DEFINE([USE_LOG4CPP_STUB], [1])
+fi
+#AC_SUBST(LOG4CPP_PREFIX)
 AC_SUBST(LOG4CPP_CFLAGS)
 AC_SUBST(LOG4CPP_LIBS)
 
@@ -280,37 +433,49 @@ AC_SUBST(LOG4CPP_LIBS)
 # If the user specifies a path, use it.
 # If the user says not to use it, then don't.
 # If the user doesn't specify anything, check for it.
-# While checking, look for a source distribution in extlib/.
+# Also check for libsmilexml.a and define SMILEXML_LIB if found (not used?)
 # If none, set NO_SMILE=1.
 AC_ARG_WITH([smile],
 	[AS_HELP_STRING([--with-smile=PATH], [prefix of SMILE installation])],
-	[],
-	[with_smile=check])
-# it's hard to find a decent static function to use...
-LOCAL_CHECK_LIB([smile], [smile], [RoundProbability],
-        [],                                                        dnl found
-        [],                                                        dnl and found installed
-        [SMILE_PREFIX=$with_smile],                                dnl and found in specified path
-	[AC_DEFINE([NO_SMILE], [1])],                              dnl not found
-        [AC_DEFINE([NO_SMILE], [1])],                              dnl requested without
-	[#include "smile.h"])
-if test "x$smile_state" != "xno"; then
-  ## set SMILE_CFLAGS and SMILE_LIBS
-  if test "x$SMILE_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$SMILE_PREFIX], [include], [smile.h], [SMILE_INCLUDE_DIR], [smile_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$SMILE_PREFIX], [lib], [libsmile.a], [SMILE_LIB_DIR], [smile_state=warn])
-#    if ! test -f "$SMILE_INCLUDE_DIR/smile.h"; then smile_state=warn; fi
-#    if ! test -f "$SMILE_LIB_DIR/libsmile.a"; then smile_state=warn; fi
-    if test -f "$SMILE_LIB_DIR/libsmilexml.a"; then
-      AC_DEFINE([SMILEXML_LIB], [1])
-      SMILEXML_LIB="-lsmilexml"
-    fi
-    SMILE_CFLAGS="-I$SMILE_INCLUDE_DIR"
-    SMILE_LIBS="-L$SMILE_LIB_DIR"
-  fi
-  SMILE_LIBS="$SMILE_LIBS $SMILEXML_LIB -lsmile"
+	[
+         if test "x$with_smile" = "xyes"; then
+	   smile_state=check
+         elif test "x$with_smile" != "xno"; then
+           smile_state=try
+	   qualify_path with_smile
+           LOCAL_CHECK_APPEND_PATHS([$with_smile], [. include], [smile.h], [SMILE_INCLUDE_DIR], [smile_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_smile], [. lib], [libsmile.a], [SMILE_LIB_DIR], [smile_state=warn])
+         else
+           smile_state=no
+         fi
+        ],
+	[smile_state=check])
+LOCAL_CHECK_LIB([smile], [smile], [RoundProbability(0,0)],
+        [smile_state=ok],                                         dnl found
+        [
+	  SMILE_LIBS="-lsmile"
+# SMILEXML_LIB
+	],                                                       dnl and found installed
+        [
+#    if test -f "$SMILE_LIB_DIR/libsmilexml.a"; then
+#      AC_DEFINE([SMILEXML_LIB], [1])
+#      SMILEXML_LIB="-lsmilexml"
+#    fi
+         SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR"
+#         SMILE_LIBS="-L $SMILE_LIB_DIR $SMILEXML_LIB -lsmile"
+         SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile"
+        ],                                                        dnl and found in specified path
+	[],                                                       dnl not found
+        [smile_state=no],                                         dnl and not found installed
+        [smile_state=warn],                                       dnl and not found in specified path
+        [],                                                       dnl requested without
+	[#include "smile.h"],
+        [],
+        [-L $SMILE_LIB_DIR -I $SMILE_INCLUDE_DIR])
+if test "x$smile_state" != "xok"; then
+  AC_DEFINE([NO_SMILE], [1])
 fi
-AC_SUBST(SMILE_PREFIX)
+#AC_SUBST(SMILE_PREFIX)
 AC_SUBST(SMILE_CFLAGS)
 AC_SUBST(SMILE_LIBS)
 
@@ -323,34 +488,103 @@ AC_SUBST(SMILE_LIBS)
 # If none, set NO_SVM_PERF=1.
 AC_ARG_WITH([svm_perf],
 	[AS_HELP_STRING([--with-svm-perf=PATH], [prefix of SVM Perf installation])],
-	[],
-	[with_svm_perf=check])
+	[
+         if test "x$with_svm_perf" = "xyes"; then
+	   svm_perf_state=check
+         elif test "x$with_svm_perf" != "xno"; then
+           svm_perf_state=try
+	   qualify_path with_svm_perf
+           LOCAL_CHECK_APPEND_PATHS([$with_svm_perf], [. include], [svm_struct_api.h], [SVM_PERF_INCLUDE_DIR], [svm_perf_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_svm_perf], [. lib], [libsvmperf.a], [SVM_PERF_LIB_DIR], [svm_perf_state=warn])
+         else
+           svm_perf_state=no
+         fi
+        ],
+	[svm_perf_state=check])
 AC_LANG_PUSH([C])
 LOCAL_CHECK_LIB([svmperf], [svm_perf], [optimize_svm],
-        [],                                                        dnl found
-        [],                                                        dnl and found installed
-        [SVM_PERF_PREFIX=$with_svm_perf],                        dnl and found in specified path
-	[AC_DEFINE([NO_SVM_PERF], [1])],                          dnl not found
-        [AC_DEFINE([NO_SVM_PERF], [1])],                          dnl requested without
+        [svm_perf_state=ok],                                      dnl found
+        [SVM_PERF_LIBS="-lsvmperf"],                              dnl and found installed
+        [
+         SVM_PERF_CFLAGS="-I $SVM_PERF_INCLUDE_DIR"
+         SVM_PERF_LIBS="-L $SVM_PERF_LIB_DIR -lsvmperf"
+        ],                                                        dnl and found in specified path
+	[],                                                       dnl not found
+        [svm_perf_state=no],                                      dnl and not found installed
+        [svm_perf_state=warn],                                    dnl and not found in specified path
+        [],                                                       dnl requested without
 	[#include <sys/types.h>
 	 #include "svm_struct_api.h"
-	 #include "svm_struct_api_types.h"])
+	 #include "svm_struct_api_types.h"],
+        [],
+        [-L $SVM_PERF_LIB_DIR -I $SVM_PERF_INCLUDE_DIR])
 AC_LANG_POP
-if test "x$svm_perf_state" != "xno"; then
-  ## set SVM_PERF_CFLAGS and SVM_PERF_LIBS
-  if test "x$SVM_PERF_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$SVM_PERF_PREFIX], [include], [svm_struct_api.h], [SVM_PERF_INCLUDE_DIR], [svm_perf_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$SVM_PERF_PREFIX], [lib], [libsvmperf.a], [SVM_PERF_LIB_DIR], [svm_perf_state=warn])
-#    if ! test -f "$SVM_PERF_INCLUDE_DIR/svm_struct_api.h"; then svm_perf_state=warn; fi
-#    if ! test -f "$SVM_PERF_LIB_DIR/libsvmperf.a"; then svm_perf_state=warn; fi
-    SVM_PERF_CFLAGS="-I$SVM_PERF_INCLUDE_DIR"
-    SVM_PERF_LIBS="-L$SVM_PERF_LIB_DIR"
-  fi
-  SVM_PERF_LIBS="$SVM_PERF_LIBS -lsvmperf"
+if test "x$svm_perf_state" != "xok"; then
+  AC_DEFINE([NO_SVM_PERF], [1])
 fi
-AC_SUBST(SVM_PERF_PREFIX)
+#AC_SUBST(SVM_PERF_PREFIX)
 AC_SUBST(SVM_PERF_CFLAGS)
 AC_SUBST(SVM_PERF_LIBS)
+
+
+## BOOST
+# If the user specifies a path, use it.
+# If not specified, check for it.
+# BOOST graph lib is required for BNServer.
+AC_ARG_WITH([boost],
+	[AS_HELP_STRING([--with-boost=PATH], [prefix of Boost installation])],
+	[ 
+         if test "x$with_boost" = "xyes"; then
+	   boost_state=check
+         elif test "x$with_boost" != "xno"; then
+           boost_state=try
+	   qualify_path with_boost
+           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. .. include], [boost/graph/graphviz.hpp], [BOOST_INCLUDE_DIR], [boost_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. lib], [libboost_graph.a], [BOOST_GRAPH_LIB_DIR], [boost_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. lib], [libboost_regex.a], [BOOST_REGEX_LIB_DIR], [boost_state=warn])
+           if test "x$BOOST_GRAPH_LIB_DIR" != "x$BOOST_REGEX_LIB_DIR"; then
+	     boost_state=warn
+ 	   else
+	     BOOST_LIB_DIR=$BOOST_GRAPH_LIB_DIR
+	   fi
+         else
+           boost_state=no
+         fi
+        ],
+	[boost_state=check])
+LOCAL_CHECK_LIB([boost_graph], [boost], [],
+        [boost_state=ok],                                         dnl found
+        [],                                                       dnl and found installed
+        [],                                                       dnl and found in specified path
+	[],                                                       dnl not found
+        [boost_state=no],                                         dnl and not found installed
+        [boost_state=warn],                                       dnl and not found in specified path
+        [],                                                       dnl requested without
+	[#include "boost/graph/graphviz.hpp"],
+        [],
+        [-L $BOOST_LIB_DIR -I $BOOST_INCLUDE_DIR])
+if test "x$boost_state" = "xok"; then
+LOCAL_CHECK_LIB([boost_regex], [boost], [],
+        [boost_state=ok],                                         dnl found
+        [BOOST_LIBS="-lboost_graph -lboost_regex"],               dnl and found installed
+        [
+         BOOST_CFLAGS="-I $BOOST_INCLUDE_DIR"
+         BOOST_LIBS="-L $BOOST_LIB_DIR -lboost_graph -lboost_regex"
+        ],                                                        dnl and found in specified path
+	[],                                                       dnl not found
+        [boost_state=no],                                         dnl and not found installed
+        [boost_state=warn],                                       dnl and not found in specified path
+        [],                                                       dnl requested without
+	[#include "boost/graph/graphviz.hpp"],
+        [],
+        [-L $BOOST_LIB_DIR -I $BOOST_INCLUDE_DIR])
+fi
+if test "x$boost_state" != "xok"; then
+  AC_DEFINE([NO_BOOST], [1])
+fi
+#AC_SUBST(BOOST_PREFIX)
+AC_SUBST(BOOST_CFLAGS)
+AC_SUBST(BOOST_LIBS)
 
 
 ## Vowpal Wabbit
@@ -359,168 +593,48 @@ AC_SUBST(SVM_PERF_LIBS)
 # If the user doesn't specify anything, check for it.
 # While checking, look for a source distribution in extlib/.
 # If none, set NO_VOWPAL_WABBIT=1.
+if test "x$pthread_state" != "xok" -o "x$boost_state" != "xok"; then
+  vowpal_wabbit_info=no
+  vowpal_wabbit_state=no
+else
 AC_ARG_WITH([vowpal_wabbit],
-	[AS_HELP_STRING([--with-vowpal-wabbit=PATH], [prefix of Vowpal Wabbit installation])],
-	[],
-	[with_vowpal_wabbit=check])
-AC_LANG_PUSH([C])
-LOCAL_CHECK_LIB([vowpalwabbit], [vowpal_wabbit], [optimize_vw],
-        [],                                                        dnl found
-        [],                                                        dnl and found installed
-        [VOWPAL_WABBIT_PREFIX=$with_vowpal_wabbit],                        dnl and found in specified path
-	[AC_DEFINE([NO_VOWPAL_WABBIT], [1])],                          dnl not found
-        [AC_DEFINE([NO_VOWPAL_WABBIT], [1])],                          dnl requested without
-	[#include "vw.h"])
-AC_LANG_POP
-if test "x$vowpal_wabbit_state" != "xno"; then
-  ## set VOWPAL_WABBIT_CFLAGS and VOWPAL_WABBIT_LIBS
-  if test "x$VOWPAL_WABBIT_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$VOWPAL_WABBIT_PREFIX], [include], [vw.h], [VOWPAL_WABBIT_INCLUDE_DIR], [vowpal_wabbit_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$VOWPAL_WABBIT_PREFIX], [lib], [libvw.a], [VOWPAL_WABBIT_LIB_DIR], [vowpal_wabbit_state=warn])
-#    if ! test -f "$VOWPAL_WABBIT_INCLUDE_DIR/vw.h"; then vowpal_wabbit_state=warn; fi
-#    if ! test -f "$VOWPAL_WABBIT_LIB_DIR/libvw.a"; then vowpal_wabbit_state=warn; fi
-    VOWPAL_WABBIT_CFLAGS="-I$VOWPAL_WABBIT_INCLUDE_DIR"
-    VOWPAL_WABBIT_LIBS="-L$VOWPAL_WABBIT_LIB_DIR"
-  fi
-  VOWPAL_WABBIT_LIBS="$VOWPAL_WABBIT_LIBS -lvw"
+	[AS_HELP_STRING([--with-vowpal-wabbit=PATH], [prefix of Vowpal Wabbit installation or build dir])],
+	[ 
+         if test "x$with_vowpal_wabbit" = "xyes"; then
+	   vowpal_wabbit_state=check
+         elif test "x$with_vowpal_wabbit" != "xno"; then
+           vowpal_wabbit_state=try
+	   qualify_path with_vowpal_wabbit
+           LOCAL_CHECK_APPEND_PATHS([$with_vowpal_wabbit], [. include], [vw.h], [VOWPAL_WABBIT_INCLUDE_DIR], [vowpal_wabbit_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_vowpal_wabbit], [. lib], [libvw.a], [VOWPAL_WABBIT_LIB_DIR], [vowpal_wabbit_state=warn])
+         else
+           vowpal_wabbit_state=no
+         fi
+        ],
+	[vowpal_wabbit_state=check])
+LOCAL_CHECK_LIB([vw], [vowpal_wabbit], [start_noop()],
+        [vowpal_wabbit_state=ok],                                 dnl found
+        [VOWPAL_WABBIT_LIBS="-lvw"],                              dnl and found installed
+        [
+         VOWPAL_WABBIT_CFLAGS="-I $VOWPAL_WABBIT_INCLUDE_DIR"
+         VOWPAL_WABBIT_LIBS="-L $VOWPAL_WABBIT_LIB_DIR -lvw"
+        ],                                                        dnl and found in specified path
+	[],                                                       dnl not found
+        [vowpal_wabbit_state=no],                                 dnl and not found installed
+        [vowpal_wabbit_state=warn],                               dnl and not found in specified path
+        [],                                                       dnl requested without
+	[#include "boost/program_options.hpp"
+	 #include "zlib.h"
+	 #include "noop.h"],
+        [-lboost_program_options -lpthread -lz],
+        [-L $VOWPAL_WABBIT_LIB_DIR -I $VOWPAL_WABBIT_INCLUDE_DIR])
 fi
-AC_SUBST(VOWPAL_WABBIT_PREFIX)
+if test "x$vowpal_wabbit_state" != "xok"; then
+  AC_DEFINE([NO_VOWPAL_WABBIT], [1])
+fi
+#AC_SUBST(VOWPAL_WABBIT_PREFIX)
 AC_SUBST(VOWPAL_WABBIT_CFLAGS)
 AC_SUBST(VOWPAL_WABBIT_LIBS)
-
-
-## BOOST
-# If the user specifies a path, use it.
-# If not specified, check for it.
-# BOOST graph-mt lib is required.
-AC_ARG_WITH([boost_includes],
-	[AS_HELP_STRING([--with-boost-includes=PATH], [location of boost header files])],
-	[],   # $with_boost_includes will either be a path or "no"
-	[with_boost_includes=check])
-AC_ARG_WITH([boost_graph_lib],
-	[AS_HELP_STRING([--with-boost-graph-lib=PATH], [path to boost_graph library file])],
-	[],   # $with_boost_graph_lib will either be a path or "no"
-        [with_boost_graph_lib=check])
-# ensure consistency in options
-boost_state=ok
-if test "x$with_boost_includes" = "xno" -o "x$with_boost_graph_lib" = "xno"; then
-  with_boost_includes=no
-  with_boost_graph_lib=no
-  boost_includes_info=NONE
-#  boost_includes_state=no
-  boost_graph_lib_info=NONE
-  boost_state=no
-elif test "x$with_boost_includes" = "xcheck" -o "x$with_boost_graph_lib" = "xcheck"; then
-  with_boost_includes=no
-  with_boost_graph_lib=no
-  boost_includes_info="not specified (required if using with-boost-graph-lib)"
-#  boost_includes_state=no
-  boost_graph_lib_info="not specified (required if using with-boost-includes)"
-  boost_state=no
-else
-  LOCAL_CHECK_LIB([boost_graph-mt], [boost_graph_lib], [boost::detail::graph::read_graphviz],
-	[],                                                         dnl found
-	[boost_includes_info="found installed"],                    dnl and found installed
-	[BOOST_GRAPH_LIB=$with_boost_graph_lib
-	 boost_includes_info=$with_boost_includes],                 dnl and found in specified path
-	[boost_includes_info=$boost_graph_lib_info],                dnl not found
-	[boost_includes_info=$boost_graph_lib_info],                dnl requested without
-	[#include "boost/graph/graphviz.hpp"])
-  boost_state=$boost_graph_lib_state
-fi
-if test "x$boost_state" != "xno"; then
-  ## set BOOST_CFLAGS and BOOST_LIBS
-  if test "x$BOOST_GRAPH_LIB" != "x"; then
-    # boost_graph_lib_info and boost_includes_info are paths
-    # now look for the headers
-    BOOST_LIBS="$BOOST_GRAPH_LIB ${BOOST_GRAPH_LIB/graph/regex}"
-    qualify_path with_boost_includes
-    LOCAL_CHECK_APPEND_PATHS([$with_boost_includes], [..], [boost/config.hpp], [BOOST_INCLUDES_DIR], [boost_state=warn])
-    if ! test -f $BOOST_GRAPH_LIB; then boost_state=warn; fi
-    if ! echo $BOOST_GRAPH_LIB | $GREP -q "libboost_graph"; then boost_state=warn; fi
-    BOOST_CFLAGS="-I$BOOST_INCLUDES_DIR"
-  fi
-fi
-#AC_SUBST(BOOST_PREFIX)
-AC_SUBST(BOOST_CFLAGS)
-AC_SUBST(BOOST_LIBS)
-
-
-## READLINE
-# If the user specifies a path, use it.
-# If not specified, check for it.
-# If no readline, do not build OntoShell.
-AC_ARG_WITH([readline],
-	[AS_HELP_STRING([--with-readline=PATH], [prefix of readline installation])],
-	[],   # $with_readline will either be a path or "no"
-	[with_readline=check])
-AC_LANG_PUSH([C])
-LOCAL_CHECK_LIB([readline], [readline], [readline],
-	[],                                                        dnl found
-	[],                                                        dnl and found installed
-	[READLINE_CFLAGS=$with_readline],                          dnl and found in specified path
-	[],                                                        dnl not found
-	[],                                                        dnl requested without
-	[#include <stdio.h>
-	 #include "readline/readline.h"])
-AC_LANG_POP
-if test "x$readline_state" != "xno"; then
-  ## set READLINE_CFLAGS and READLINE_LIBS
-  if test "x$READLINE_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$READLINE_PREFIX], [include], [readline/readline.h], [READLINE_INCLUDE_DIR], [readline_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$READLINE_PREFIX], [lib], [libreadline.a], [READLINE_LIB_DIR], [readline_state=warn])
-#    if ! test -f "$READLINE_INCLUDE_DIR/readline/readline.h"; then readline_state=warn; fi
-#    if ! test -f "$READLINE_LIB_DIR/libreadline.a"; then readline_state=warn; fi
-    READLINE_CFLAGS="-I$READLINE_INCLUDE_DIR"
-    READLINE_LIBS="-L$READLINE_LIB_DIR"
-  fi
-  # it should be very rare indeed that ncurses is not there if readline is there
-  READLINE_LIBS="$READLINE_LIBS -lreadline -lncurses"
-  # apparently on Macs, rl_completion_matches() is named completion_matches()
-  # hopefully this is an unusual exception
-  AC_LINK_IFELSE(
-    [AC_LANG_PROGRAM([#include <stdio.h>
-		      #include "readline/readline.h"],
-		      [rl_completion_matches])],
-    [],
-    [AC_DEFINE([rl_completion_matches], [completion_matches])])
-fi
-AC_SUBST(READLINE_PREFIX)
-AC_SUBST(READLINE_CFLAGS)
-AC_SUBST(READLINE_LIBS)
-
-
-## READLINE
-# If the user specifies a path, use it.
-# If not specified, check for it.
-# If no readline, do not build OntoShell.
-AC_ARG_WITH([pthread],
-	[AS_HELP_STRING([--with-pthread=PATH], [prefix of pthread installation])],
-	[],   # $with_pthread will either be a path or "no"
-	[with_pthread=check])
-AC_LANG_PUSH([C])
-LOCAL_CHECK_LIB([pthread], [pthread], [pthread_create],
-	[],                                                        dnl found
-	[],                                                        dnl and found installed
-	[PTHREAD_CFLAGS=$with_pthread],                            dnl and found in specified path
-	[],                                                        dnl not found
-	[],                                                        dnl requested without
-	[#include <stdio.h>
-	 #include "pthread.h"])
-AC_LANG_POP
-if test "x$pthread_state" != "xno"; then
-  ## set PTHREAD_CFLAGS and PTHREAD_LIBS
-  if test "x$PTHREAD_PREFIX" != "x"; then
-    LOCAL_CHECK_APPEND_PATHS([$PTHREAD_PREFIX], [include], [pthread.h], [PTHREAD_INCLUDE_DIR], [pthread_state=warn])
-    LOCAL_CHECK_APPEND_PATHS([$PTHREAD_PREFIX], [lib], [libpthread.a], [PTHREAD_LIB_DIR], [pthread_state=warn])
-    PTHREAD_CFLAGS="-I$PTHREAD_INCLUDE_DIR"
-    PTHREAD_LIBS="-L$PTHREAD_LIB_DIR"
-  fi
-  PTHREAD_LIBS="$PTHREAD_LIBS -lpthread"
-fi
-AC_SUBST(PTHREAD_PREFIX)
-AC_SUBST(PTHREAD_CFLAGS)
-AC_SUBST(PTHREAD_LIBS)
 
 
 ## Now define variables to be used to reference this library.
@@ -546,12 +660,12 @@ AC_ARG_WITH([tools],
 
 
 AM_CONDITIONAL([WITH_TOOLS], [$with_tools])
-AM_CONDITIONAL([WITH_SMILE_TOOLS], [test "x$smile_state" != "xno"])
-AM_CONDITIONAL([WITH_SVM_TOOLS], [test "x$svm_perf_state" != "xno"])
-AM_CONDITIONAL([WITH_VW_TOOLS], [test "x$vowpal_wabbit_state" != "xno"])
-AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_state" != "xno"])
-AM_CONDITIONAL([WITH_BOOST_TOOLS], [test "x$boost_state" != "xno"])
-AM_CONDITIONAL([WITH_GENGETOPT], [test "x$prog_gengetopt_state" != "xno"])
+AM_CONDITIONAL([WITH_SMILE_TOOLS], [test "x$smile_state" = "xok"])
+AM_CONDITIONAL([WITH_SVM_TOOLS], [test "x$svm_perf_state" = "xok"])
+AM_CONDITIONAL([WITH_VW_TOOLS], [test "x$vowpal_wabbit_state" = "xok"])
+AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_state" = "xok"])
+AM_CONDITIONAL([WITH_BOOST_TOOLS], [test "x$boost_state" = "xok"])
+AM_CONDITIONAL([WITH_GENGETOPT], [test "x$prog_gengetopt_state" = "xok"])
 
 AC_CONFIG_FILES([Makefile \
                  src/Makefile \
@@ -619,7 +733,16 @@ AC_CONFIG_FILES([Makefile \
                  tools/BNServer/Makefile])
 
 
+if test "x$pthread_state" != "xok"; then
+   LOCAL_STATE=warn
+else
+   LOCAL_STATE=ok
+fi
+
+
+if test "x$LOCAL_STATE" = "xok"; then
 AC_OUTPUT
+fi
 
 
 # Print out a summary.
@@ -629,40 +752,43 @@ echo "Used for library and tools:"
 else
 echo "Dependencies:"
 fi
-echo "  log4cpp         = $log4cpp_info"
-echo "  SMILE           = $smile_info"
-echo "  SVM Perf        = $svm_perf_info"
-echo "  Vowpal Wabbit   = $vowpal_wabbit_info"
-echo "  pthread         = $pthread_info"
+echo "  log4cpp                 = $log4cpp_info"
+echo "  SMILE                   = $smile_info"
+echo "  SVM Perf                = $svm_perf_info"
+echo "  Vowpal Wabbit           = $vowpal_wabbit_info"
+echo "  pthread                 = $pthread_info"
 if $with_tools; then
 echo "Used for tools:"
-echo "  boost graph lib = $boost_graph_lib_info"
-echo "  boost includes  = $boost_includes_info"
-echo "  readline        = $readline_info"
-echo "  gengetopt       = $prog_gengetopt_info"
+echo "  boost graph, regex      = $boost_info"
+echo "  readline                = $readline_info"
+echo "  gengetopt               = $prog_gengetopt_info"
 fi
+
+echo ""
+echo "Installation prefix = $prefix"
 
 # Print these warnings here, so that they are at the end.
 
-# if stub there might be additional info, so use grep
-if test "x$log4cpp_state" = "xstub"; then
+if test "x$log4cpp_info" = "xstub"; then
   cat << EOF
 
-** Using a simple replacement stub for log4cpp.
+** WARNING: Using a simple replacement stub for log4cpp.
 If this is insufficient rerun configure with --with-log4cpp=(path).
-EOF
-
-elif test "x$log4cpp_state" = "xwarn"; then
-  cat << EOF
-
-** WARNING: The path to log4cpp may be incorrect.
-I looked for Category.hh and liblog4cpp.a and did not
-find both.
+Sometimes there is no installed static library for log4cpp.
+The full log4cpp library also requires pthreads.
 EOF
 
 fi
 
-if test "x$smile_state" = "xno"; then
+if test "x$log4cpp_state" = "xwarn"; then
+  cat << EOF
+The path to log4cpp may be incorrect. I looked for Category.hh
+and liblog4cpp.a and did not find both.
+EOF
+
+fi
+
+if test "x$smile_state" != "xok"; then
   cat << EOF
 
 ** BUILDING WITHOUT SMILE
@@ -671,16 +797,17 @@ Bayes net functionality will be missing.
 SMILE is available as a binary distribution from http://genie.sis.pitt.edu/.
 EOF
 
-elif test "x$smile_state" = "xwarn"; then
-  cat << EOF
+fi
 
+if test "x$smile_state" = "xwarn"; then
+  cat << EOF
 ** WARNING: The path to SMILE may be incorrect.
 I looked for smile.h and libsmile.a and did not find both.
 EOF
 
 fi
 
-if test "x$svm_perf_state" = "xno"; then
+if test "x$svm_perf_state" != "xok"; then
   cat << EOF
 
 ** BUILDING WITHOUT SVM PERF
@@ -688,29 +815,12 @@ SVM Perf is strongly recommended.
 It is available from http://svmlight.joachims.org/.
 EOF
 
-elif test "x$svm_perf_state" = "xwarn"; then
-  cat << EOF
-
-** WARNING: The path to SVM Perf may be incorrect.
-I looked for svm_struct_api.h and libsvmperf.a and did not
-find both.
-EOF
-
 fi
 
-if test "x$vowpal_wabbit_state" = "xno"; then
+if test "x$svm_perf_state" = "xwarn"; then
   cat << EOF
-
-** BUILDING WITHOUT VOWPAL WABBIT
-Vowpal Wabbit is optional.
-It is available from http://hunch.net/~vw/.
-EOF
-
-elif test "x$vowpal_wabbit_state" = "xwarn"; then
-  cat << EOF
-
-** WARNING: The path to Vowpal Wabbit may be incorrect.
-I looked for vw.h and libvw.a and did not
+** WARNING: The path to SVM Perf may be incorrect.
+I looked for svm_struct_api.h and libsvmperf.a and did not
 find both.
 EOF
 
@@ -721,23 +831,25 @@ if $with_tools; then
   if test "x$prog_gengetopt_state" = "xno"; then
   cat << EOF
 
-** Gengetopt was not found. This is probably fine, but if any of the
-cmdline.c or cmdline.h files are missing or out of date, they
+** WARNING: gengetopt was not found. This is probably fine, but if any
+of the cmdline.c or cmdline.h files are missing or out of date, they
 will not be rebuilt.
 EOF
 
   fi
 
-  if test "x$readline_state" = "xno"; then
+  if test "x$readline_state" != "xok"; then
   cat << EOF
 
 ** BUILDING WITHOUT READLINE
-OntoShell will not be made.
+OntoShell will not be made. It's possible the problem could be with
+your ncurses library.
 EOF
 
-  elif test "x$readline_state" = "xwarn"; then
-  cat << EOF
+  fi
 
+  if test "x$readline_state" = "xwarn"; then
+  cat << EOF
 ** WARNING: The path to readline may be incorrect.
 I looked for readline/readline.h and libreadline.a and did not
 find both.
@@ -745,21 +857,21 @@ EOF
 
   fi
 
-  if test "x$boost_state" = "xno"; then
+  if test "x$boost_state" != "xok"; then
   cat << EOF
 
 ** BUILDING WITHOUT BOOST
-BNServer will not be made (requires boost_graph-mt library).
-Both --with-boost-includes and --with-boost-graph-lib are required for Boost.
+BNServer will not be made (requires boost_graph and boost_regex libraries).
 Boost is available from http://boost.org/.
 EOF
 
-  elif test "x$boost_state" = "xwarn"; then
-  cat << EOF
+  fi
 
+  if test "x$boost_state" = "xwarn"; then
+  cat << EOF
 ** WARNING: The Boost path(s) may be incorrect.
-I looked for boost/config.hpp and a library whose name
-contains libboost_graph and did not find both.
+I looked for boost/graph/graphviz.hpp, libboost_graph.a, libboost_regex.a
+and did not find them all.
 EOF
 
   fi
@@ -789,7 +901,34 @@ EOF
 
 fi
 
+if test "x$vowpal_wabbit_state" != "xok"; then
+  cat << EOF
+
+** BUILDING WITHOUT VOWPAL WABBIT
+Vowpal Wabbit is optional.
+It is available from http://hunch.net/~vw/.
+Vowpal Wabbit also requires pthreads, boost, and zlib.
+EOF
+# boost::program_options
+
+fi
+
+if test "x$vowpal_wabbit_state" = "xwarn"; then
+  cat << EOF
+** WARNING: The path to Vowpal Wabbit may be incorrect.
+I looked for vw.h and libvw.a and did not find both.
+EOF
+
+fi
+
 echo ""
-echo "Now run make."
+
+if test "x$LOCAL_STATE" = "xok"; then
+  echo "Now run make."
+else
+  echo "** Some requirements were not met. Please review and try again. **"
+fi
+
+echo ""
 
 #set
