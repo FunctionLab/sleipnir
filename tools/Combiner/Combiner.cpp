@@ -28,7 +28,7 @@ static int MainPCLs( const gengetopt_args_info& );
 static int MainModules( const gengetopt_args_info& );
 
 static const TPFnCombiner	c_apfnCombiners[]	= { MainPCLs, MainDATs, MainDABs, MainModules, MainRevDATs, NULL };
-static const char*			c_aszCombiners[]	= { "pcl", "dat", "dab", "module", "revdat", NULL };
+static const char*			c_aszCombiners[]	= { "pcl", "dat", "dad", "module", "revdat", NULL };
 
 enum EMethod {
 	EMethodBegin	= 0,
