@@ -16,6 +16,14 @@ src/libSleipnir.a
 doc/html
 doc/latex
 
+extlib
+
+.configure.local
+.local_bash_history.txt
+.cproject
+.project
+
 syntax: regexp
 # ignore the binaries
 ^tools/(?P<tool>[^/]*)/(?P=tool)$
+hgignore

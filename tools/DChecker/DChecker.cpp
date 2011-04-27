@@ -329,7 +329,11 @@ int main( int iArgs, char** aszArgs ) {
 				
 				// print precision/recall
 				*postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(0,0));
-				*postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(i,1)+MatResults.Get(i,0)+1);
+
+				if( (MatResults.Get(i,1)+MatResults.Get(i,0)) != 0)
+				  *postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(i,1)+MatResults.Get(i,0));
+				else
+				  *postm << '\t' << 0.0;
 				
 				*postm << endl; }
 			if( !sArgs.sse_flag )

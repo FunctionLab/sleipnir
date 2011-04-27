@@ -64,13 +64,14 @@ endif
 if WITH_SVM_TOOLS
     SVM_TOOLS_SUBDIRS = \
           Data2Svm \
-	  SVMer
+	  SVMer \
+	  SVMperfer
 endif
 if WITH_VW_TOOLS
     VW_TOOLS_SUBDIRS = VWer
 endif
 if WITH_READLINE_TOOLS
-#    READLINE_TOOLS_SUBDIRS = OntoShell
+    READLINE_TOOLS_SUBDIRS = OntoShell
 endif
 endif
 

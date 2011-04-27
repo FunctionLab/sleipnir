@@ -41,7 +41,8 @@ my %tools_other_packages = (
 			    MEFIT  => ['SMILE'],
 			    OntoShell => ['READLINE'],
 			    SVMer => ['SVM_PERF'],
-			    VWer => ['VOWPAL_WABBIG'],
+			    SVMperfer => ['SVM_PERF'],
+			    VWer => ['VOWPAL_WABBIT'],
 			    );
 
 if (opendir(TOOLSDIR, "tools")) {
