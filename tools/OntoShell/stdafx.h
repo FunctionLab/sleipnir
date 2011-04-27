@@ -31,7 +31,7 @@
 
 #define _strdup		strdup
 #define SOCKET		int
-#define sprintf_s	sprintf
+// #define sprintf_s	sprintf
 #endif // _MSC_VER
 
 #include <algorithm>
