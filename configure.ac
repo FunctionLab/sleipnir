@@ -160,8 +160,8 @@ fi
 ##   4 action if found, 5 extra action if found installed, 6 extra action if found in 'with' path,
 ##   7 action if not found, 8 action if not found installed, 9 action if not found installed in 'with' path,
 ##   10 action if requested without,
-##   11 headers, extra libs
-##   12 extra cflags for testing 'with' path)
+##   11 headers, 12 extra libs
+##   13 extra cflags for testing 'with' path)
 ## Set $(local_name)_info to "NO", location, or "found installed".
 define([LOCAL_CHECK_LIB],
 [
@@ -443,7 +443,7 @@ AC_ARG_WITH([smile],
          elif test "x$with_smile" != "xno"; then
            smile_state=try
 	   qualify_path with_smile
-           LOCAL_CHECK_APPEND_PATHS([$with_smile], [. include], [smile.h], [SMILE_INCLUDE_DIR], [smile_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_smile], [. include smile include/smile], [smile.h], [SMILE_INCLUDE_DIR], [smile_state=warn])
            LOCAL_CHECK_APPEND_PATHS([$with_smile], [. lib], [libsmile.a], [SMILE_LIB_DIR], [smile_state=warn])
          else
            smile_state=no
@@ -514,8 +514,8 @@ LOCAL_CHECK_LIB([svmperf], [svm_perf], [optimize_svm],
         [svm_perf_state=warn],                                    dnl and not found in specified path
         [],                                                       dnl requested without
 	[#include <sys/types.h>
-	 #include "svm_struct_api.h"
-	 #include "svm_struct_api_types.h"],
+	 #include "svm_light/svm_common.h",
+	 #include "svm_light/svm_learn.h"],
         [],
         [-L $SVM_PERF_LIB_DIR -I $SVM_PERF_INCLUDE_DIR])
 AC_LANG_POP
@@ -525,6 +525,8 @@ fi
 #AC_SUBST(SVM_PERF_PREFIX)
 AC_SUBST(SVM_PERF_CFLAGS)
 AC_SUBST(SVM_PERF_LIBS)
+#	 #include "svm/svm_struct_api.h"
+#	 #include "svm/svm_struct_api_types.h"],
 
 
 ## BOOST
@@ -777,11 +779,11 @@ If this is insufficient rerun configure with --with-log4cpp=(path).
 Sometimes there is no installed static library for log4cpp.
 The full log4cpp library also requires pthreads.
 EOF
-
 fi
 
 if test "x$log4cpp_state" = "xwarn"; then
   cat << EOF
+
 The path to log4cpp may be incorrect. I looked for Category.hh
 and liblog4cpp.a and did not find both.
 EOF
@@ -821,7 +823,7 @@ if test "x$svm_perf_state" = "xwarn"; then
   cat << EOF
 ** WARNING: The path to SVM Perf may be incorrect.
 I looked for svm_struct_api.h and libsvmperf.a and did not
-find both.
+find both. NOTE: You may need to make libsvmperf.a. See the README.
 EOF
 
 fi
