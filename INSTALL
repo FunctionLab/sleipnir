@@ -1,79 +1,92 @@
-Basic Installation
-==================
+This file describes the dependencies, configuration and build options,
+and other information specific to Sleipnir.
 
-    For more information specific to this package, please read the README
-file. This source code distribution  is autoconfiguring and you should be 
-able to compile it and install it without manual interventions such as 
-editing Makefiles, configuration files, and so on. These are generic 
-instructions for people who are not familiar with installing autoconfiguring
-software.
+For more information specific to this package, please check the web
+sites (http://huttenhower.sph.harvard.edu/sleipnir/ or
+http://bitbucket.org/libsleipnir/), or build the documentation (in
+doc/) with Doxygen.
 
-The simplest way to compile this package is to enter the source code
-main directory and do the following:
-   
-  1. Configure the source code by typing:
-        % sh ./configure
 
-     If you're planning to install the package into your home directory
-     or to a location other than `/usr/local' then add the flag
-     `--prefix=PATH' to `configure'. For example, if your home directory  
-     is `/home/luser' you can configure the package to install itself there
-     by invoking:
-        % sh ./configure --prefix=/home/luser
-     
-     While running, `configure' prints some messages telling which
-     features is it checking for. 
+Getting Started
+===============
 
-  2. Compile the package by typing:
-        % make
-     Running `make' takes a while. If this is a very large package, now
-     is the time to go make some coffee.
-     
-  3. This package is bundled with self-tests for source-code 
-     verification. You can optionally run them after compilation by typing 
-        % make check
+You may wish to get started by checking how the software will be
+configured based on your current system and the default options. To do
+this, simply start by typing:
 
-  4. Type `make install' to install the programs and any data files and
-     documentation. Type `make uninstall' to undo the installation.
-     During installation, the following files go to the following directories:
-        Executables          -> /prefix/bin
-        Libraries            -> /prefix/lib
-        Public header files  -> /prefix/include
-        Man pages            -> /prefix/man/man?
-        Info files           -> /prefix/info
-        Doc files            -> /prefix/share/doc/<prog name>
-        Share files          -> /prefix/share/<prog name>
-     where `prefix' is either `/usr/local' or the PATH that you specified
-     in the `--prefix' flag.
+   % sh ./gen_auto
+   % sh ./configure LDFLAGS=-static
 
-     If any of these directories do not presently exist, they will be
-     created on demand. 
+First, this will generate the necessary autoconf (configure) and
+automake files.
 
-     If you are installing in your home directory make sure that 
-     `/home/luser/bin' is in your path. If you're using the bash shell
-     add this line at the end of your .cshrc file:
-        PATH="/home/luser/bin:${PATH}"
-        export PATH
-     If you are using csh or tcsh, then use this line instead:
-        setenv PATH /home/luser/bin:${PATH}
-     By prepending your home directory to the rest of the PATH you can
-     override systemwide installed software with your own custom installation.
+Second, configure will attempt to check your compiler and details
+about the development environment on your system (looking for required
+headers, libraries, the characteristics of specific functions in
+those libraries, etc.). At the end, you will see a summary of the
+primary package dependencies and information about what library
+options and tools are supported.
 
-  5. You can remove the program binaries and object files from the
-     source code directory by typing `make clean'.  To also remove the
-     files that `configure' created (so you can compile the package for
-     a different kind of computer), type `make distclean'.
+Note that the LDFLAGS=-static will cause the library and all tools
+to be built statically (not using dynamic or shared libraries). This
+has been known to avoid certain run-time issues on some linux
+platforms. Also, it allows the library and tools to be built using
+libraries that are compiled but not installed. (For example, if you
+have built a library within your home directory, you can just use the
+build directory instead of fully installing the library (which may
+require administrator status).)
+
+If some dependencies are missing, check the Dependencies section.
+
+
+Quirks
+======
+
+Before reading further, you should know that there are a couple of
+important facts that are buried elsewhere in this document that need
+to be made more obvious. So I put them here as well.
+
+log4cpp (optional)
+
+Some systems do not have the static library installed. You may need to
+download log4cpp and build it from source to get the static library.
+
+SMILE (optional)
+
+Smile is distibuted as binary (headers and library), all in one
+directory.  In order for most compilers to find the headers and the
+library, they typically need to be installed in separate
+directories. Further, the headers are sometimes put in a smile/
+directory (ie. /usr/include/smile/smile.h). The compiler may complain
+that the headers are not found. The solution to this is to use
+--with-smile=(dir), where (dir) may contain smile.h, smile/smile.h,
+include/smile.h, or include/smile.h. and also either libsmile.a or
+lib/libsmile.a
+
+SVM Perf (optional)
+
+When building this from source, the Makefile distributed with it does
+not actually make the library (libsvmperf.a). You will need to make
+this yourself. From within the svm_perf source code top level
+directory, do:
+
+   % ar rcs libsvmperf.a *.o */*.o
+
+Use --with-svm-perf=(dir) to point configure to the source top level
+directory and you should be fine.
+
 
 Known compilation problems
 ==========================
 
-  Alpha OSF/1 4.0 cxx isn't up-to-date enough to build gengetopt, 
+Alpha OSF/1 4.0 cxx isn't up-to-date enough to build gengetopt, 
 but gcc works fine on that system.
+
 
 Compiler configuration
 ======================
 
-   The `configure' shell script is responsible for choosing and configuring
+The `configure' shell script is responsible for choosing and configuring
 the compiler(s). 
 
 The following options allow you to specify whether you
@@ -90,91 +103,241 @@ Occasionally that confuses the debugger when code is inlined. To disable
 optimization and enable debugging, set the shell environment variables
 CFLAGS, CXXFLAGS, FFLAGS to `-g'. On the bash shell, you can do this
 like this:
-  $ export CFLAGS="-g"
-  $ export CXXFLAGS="-g"
-  $ export FFLAGS="-g"
+   $ export CFLAGS="-g"
+   $ export CXXFLAGS="-g"
+   $ export FFLAGS="-g"
 On the tcsh shell, use the `setenv' command instead:
-  % setenv CFLAGS "-g"
-  ...etc...
+   % setenv CFLAGS "-g"
+   ...etc...
 For other shell, please consult your shell's documentation.
 
 Similarly, you can increase the optimization level by assigning these
 variables to "-g -O3". 
 
-The following options allow you to reconsider the `configure' shell script's
-choice of Fortran compilers.
 
-`--with-f2c'
-      Compile the Fortran code by translating it to C, even if a native
-      Fortran compiler is available. A copy of the f2c translator should be
-      bundled in the distribution. It will be compiled and then used to 
-      compile your Fortran code.
-`--with-g77'
-      Compile the Fortran code with g77 even if a proprietary Fortran  
-      compiler is available
-`--with-f77=F77'
-      Compile the Fortran code with the specified Fortran compiler.
+Dependencies
+============
 
-Depending on what languages the package uses, some of these options may
-or may not be available. To see what is available, type:
-    % sh ./configure --help
+Certain tools require specific optional libraries, and some features
+of the Sleipnir library are enabled if certain optional libraries are
+available.
 
-About the configure script
-==========================
- 
-   The `configure' shell script attempts to guess correct values for
-various system-dependent variables used during compilation.  It uses
-those values to create a `Makefile' in each directory of the package.
-It may also create one or more `.h' files containing system-dependent
-definitions.  Finally, it creates a shell script `config.status' that
-you can run in the future to recreate the current configuration, a file
-`config.cache' that saves the results of its tests to speed up
-reconfiguring, and a file `config.log' containing compiler output
-(useful mainly for debugging `configure').
+If these are installed in standard locations, there's a good chance
+the build programs will find them. However, if they are not found, you
+can specify their locations with "--with-*" arguments to configure
+(see below). If you download and build them, you do not need to
+actually install them. You can just point configure to the build
+directories, so long as you use LDFLAGS=-static.
 
-   If you need to do unusual things to compile the package, please try
-to figure out how `configure' could check whether to do them, and mail
-diffs or instructions to the address given in the `README' so they can
-be considered for the next release.  If at some point `config.cache'
-contains results you don't want to keep, you may remove or edit it.
+[ pthreads ]
+Required.
 
-   The file `configure.in' is used to create `configure' by a program
-called `autoconf'.  You only need `configure.in' if you want to change
-it or regenerate `configure' using a newer version of `autoconf'.
+This is required by everything. This is ubiquitous and available on most systems.
+For Windows, you may need the pthreads-w32 library.
 
-Advanced installation options.
-==============================
+[ log4cpp ]
+Recommended.
+Requires pthreads.
 
-   The `configure' script also understands the following more advanced
-options, to handle situations for which `--prefix' alone is not sufficient.
+This is available as binary or source, and in easily-installed
+packages on some platforms.
 
-   You can specify separate installation prefixes for
-architecture-specific files and architecture-independent files.  If you
-give `configure' the option `--exec-prefix=PATH', the package will use
-PATH as the prefix for installing programs and libraries.
-Documentation and other data files will still use the regular prefix.
+Some installations do not have a static library. In this case, you may
+choose to download it and build it yourself. There is also some code
+included in Sleipnir (the log4cpp "stub") which attempts to provide
+minimal functionality in the absence of this library. Better logging
+is done with the actual library, so using that is recommended.
 
-   In addition, if you use an unusual directory layout you can give
-options like `--bindir=PATH' to specify different values for particular
-kinds of files.  Run `configure --help' for a list of the directories
-you can set and what kinds of files go in them.
+[ SMILE ]
+Recommended, required for Bayesian networks (and BN* tools, SpeciesConnector,
+Contexter, Counter, Data2DB, DSLConverter, Dab2Dad, Edges2Posteriors,
+and MEFIT)
 
-   If the package supports it, you can cause programs to be installed
-with an extra prefix or suffix on their names by giving `configure' the
-option `--program-prefix=PREFIX' or `--program-suffix=SUFFIX'.
+This is available in binary only. It was last seen at http://genie.sis.pitt.edu/.
 
-Optional Features
-=================
+NOTE: Due to the way SMILE is distributed and typically installed,
+gcc (or whatever) probably cannot find it on its own, so you most
+likely will need to use --with-smile=(dir), even if it is only
+--with-smile=/usr/local/ or even --with-smile=/usr/.
 
-   Some packages pay attention to `--enable-FEATURE' options to
-`configure', where FEATURE indicates an optional part of the package.
-They may also pay attention to `--with-PACKAGE' options, where PACKAGE
-is something like `gnu-as' or `x' (for the X Window System).  The
-`README' should mention any `--enable-' and `--with-' options that the
-package recognizes.
+[ SVM Perf ]
+Recommended, required for SVM support (and Data2Svm, SVMer, SVMperfer).
 
-   For packages that use the X Window System, `configure' can usually
-find the X include and library files automatically, but if it doesn't,
-you can use the `configure' options `--x-includes=DIR' and
-`--x-libraries=DIR' to specify their locations.
+This was least seen at http://svmlight.joachims.org/.
 
+[ Vowpal Wabbit ]
+Required for VWer, optional for library.
+Requires pthreads, boost::program_options, and zlib.
+
+[ GNU Gengetopt ]
+Optional.
+
+This is only required for updating cmdline.[ch] files if those become
+out of date.
+
+[ readline ]
+Required for OntoShell.
+Requires ncurses.
+
+[ ncurses ]
+Required for OntoShell.
+
+[ Boost ]
+The graph and regex libraries are required for BNServer.
+
+
+Building
+========
+
+A. Run "./gen-auto" to create autoconf (eg. configure) and automake files
+
+B. Options for configure
+
+To see all available options, do
+
+   % sh configure --help
+
+Any of the '--with-*' options may instead be set to "no", which will
+force them to be excluded.
+
+--prefix=(dir)
+
+The default installation prefix is /usr/local. If you specify a
+directory, the files will be installed in "include", "bin", and "lib"
+within that directory.
+
+--with-gengetopt=(file)
+
+If this is needed and not already found in your PATH, you can tell
+configure the path using this. For example:
+--with-gengetopt=/usr/local/extras/bin/gengetopt
+
+--with-log4cpp=(dir)
+
+If not already found, use this to point to the installation prefix or
+the build directory. Configure will look within this directory for
+include/log4cpp/Category.hh and either lib/liblog4cpp.a or
+src/.libs/liblog4cpp.a (depending on whether this is the install
+prefix or build directory).
+
+--with-smile=(dir)
+
+Specify the installation prefix for SMILE (which is only distributed
+as binary). Configure will look within this directory for smile.h,
+smile/smile.h, include/smile.h, or include/smile/smile.h,
+and libsmile.a or lib/libsmile.a. (SMILE follows its own installation
+paradigm.)
+
+--with-svm-perf=(dir)
+
+Specify the installation or build directory for SVM Perf. Configure
+will look for svm_struct_api.h and libsvmperf.a either in this
+directory or within include and lib directories (respectively).
+
+--with-vowpal-wabbit=(dir)
+
+Help configure find the vw.h and libvw.a files for this library. This
+can be the installation prefix or the build directory. Configure will
+look in this directory and within include and lib subdirectories
+(respectively).
+
+--with-boost=(dir)
+
+Use this to tell configure where to look for the boost/graph/graphviz.hpp,
+libboost_graph.a, and libboost_regex.a files. The exact paths may vary.
+
+C. Run "make"
+
+This may generate some warnings. That is probably ok, as long as the
+build actually succeeds. It may take a while...
+
+D. Run "make install"
+
+This will copy the programs, libraries, and headers to the bin, lib,
+and include installation directories under that specified by --prefix
+(/usr/local by default).
+
+
+Example build
+=============
+
+% hg clone https://bitbucket.org/libsleipnir/libsleipnir.bitbucket.org sleipnir
+% cd sleipnir
+% sh ./gen_auto
+% extlib=$HOME/extlib
+% sh ./configure LDFLAGS=-static --prefix=/usr/local/sleipnir/2.1 \
+   --with-smile=$extlib/smile_1_1_linux_gcc_4_1_1 \
+   --with-svm-perf=$extlib/svm_perf \
+   --with-vowpal-wabbit=$extlib/vowpal_wabbit+v4.1 \
+   --with-log4cpp=$extlib/log4cpp-1.0
+
+[...]
+
+Used for library and tools:
+  log4cpp                 = /home/mark/extlib/log4cpp-1.0
+  SMILE                   = /home/mark/extlib/smile_1_1_linux_gcc_4_1_1
+  SVM Perf                = /home/mark/extlib/svm_perf
+  Vowpal Wabbit           = /home/mark/extlib/vowpal_wabbit_v4.1
+  pthread                 = found installed
+Used for tools:
+  boost graph, regex      = found installed
+  readline                = found installed
+  gengetopt               = /usr/local/bin/gengetopt
+
+Installation prefix = /usr/local/sleipnir/2.1
+
+Now run make.
+
+% make
+
+[...]
+
+% make install
+
+[...]
+
+% ls /usr/local/sleipnir/2.1/bin
+Answerer      Combiner          Explainer      Overlapper
+BNConverter   Contexter         Filterer       PCL2Bin
+BNCreator     Counter           Funcaeologist  PCLPlotter
+BNEvaluator   Dab2Dad           Funcifier      Randomizer
+BNFunc        Dat2Dab           Funcographer   Seqs2Ngrams
+BNs2Txt       Dat2Graph         Hubber         SMRF
+BNServer      Data2Bnt          KNNImputer     SpeciesConnector
+BNTester      Data2DB           Mat2Txt        SVDer
+BNTruster     Data2Features     Matcher        SVMer
+BNUnraveler   Data2Sql          MCluster       SVMperfer
+BNWeaver      Data2Svm          MEFIT          Synthesizer
+Clinician     DataDumper        MIed           Txt2Bin
+Cliquer       DChecker          MIer           VWer
+Clusterer     Distancer         Normalizer
+Clusters2Dab  DSLConverter      OntoShell
+COALESCE      Edges2Posteriors  Orthologer
+% ls /usr/local/sleipnir/2.1/lib
+libSleipnir.a
+% ls /usr/local/sleipnir/2.1/include
+annotation.h          databasei.h    orthology.h
+annotationi.h         datapair.h     orthologyi.h
+bayesnetfni.h         datapairi.h    pcl.h
+bayesnet.h            dataset.h      pcli.h
+bayesneti.h           dataseti.h     pclset.h
+bayesnetint.h         dat.h          pclseti.h
+clusthierarchical.h   dati.h         pst.h
+clusthierarchicali.h  examplei.h     psti.h
+clustkmeans.h         fasta.h        serverclient.h
+clustpivot.h          fastai.h       serverclienti.h
+clustqtc.h            file.h         server.h
+clustqtci.h           filei.h        serveri.h
+coalescebasei.h       fullmatrix.h   sparsematrix.h
+coalescecluster.h     genome.h       statistics.h
+coalesceclusteri.h    genomei.h      statisticsi.h
+coalesce.h            halfmatrix.h   stdafx.h
+coalescei.h           halfmatrixi.h  svm.h
+coalescemotifs.h      hmm.h          svmi.h
+coalescemotifsi.h     hmmi.h         svmperf.h
+coalescestructsi.h    mathb.h        trie.h
+color.h               mathbi.h       triei.h
+colori.h              measure.h      typesi.h
+compactmatrix.h       measurei.h     vwb.h
+compactmatrixi.h      meta.h         vwbi.h
+database.h            metai.h
