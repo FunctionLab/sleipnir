@@ -1,11 +1,12 @@
 This file describes the dependencies, configuration and build options,
 and other information specific to Sleipnir.
 
-For more information specific to this package, please check the web
-sites (http://huttenhower.sph.harvard.edu/sleipnir/ or
-http://bitbucket.org/libsleipnir/), or build the documentation (in
-doc/) with Doxygen.
+For more information specific to this package, please visit
+http://bitbucket.org/libsleipnir/sleipnir 
 
+Documentation about Sleipnir programs can be built (in doc/) with
+Doxygen or, in most cases, viewed online at
+http://huttenhower.sph.harvard.edu/sleipnir 
 
 Getting Started
 ===============
@@ -261,7 +262,11 @@ and include installation directories under that specified by --prefix
 Example build
 =============
 
-% hg clone https://bitbucket.org/libsleipnir/libsleipnir.bitbucket.org sleipnir
+# The following assumes the dependencies are in a single
+# directory, $HOME/extlib, and that you have privileges to
+# write in /usr/local/sleipnir
+
+% hg clone https://bitbucket.org/libsleipnir/sleipnir
 % cd sleipnir
 % sh ./gen_auto
 % extlib=$HOME/extlib
