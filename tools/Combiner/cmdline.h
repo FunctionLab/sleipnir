@@ -34,9 +34,9 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * type_arg;	/**< @brief Output data file type (default='pcl').  */
-  char * type_orig;	/**< @brief Output data file type original value given at command line.  */
-  const char *type_help; /**< @brief Output data file type help description.  */
+  char * type_arg;	/**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). (default='pcl').  */
+  char * type_orig;	/**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). original value given at command line.  */
+  const char *type_help; /**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). help description.  */
   char * method_arg;	/**< @brief Combination method (default='mean').  */
   char * method_orig;	/**< @brief Combination method original value given at command line.  */
   const char *method_help; /**< @brief Combination method help description.  */
@@ -80,6 +80,9 @@ struct gengetopt_args_info
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
+  char * directory_arg;	/**< @brief input directory (must only contain input files).  */
+  char * directory_orig;	/**< @brief input directory (must only contain input files) original value given at command line.  */
+  const char *directory_help; /**< @brief input directory (must only contain input files) help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -100,6 +103,7 @@ struct gengetopt_args_info
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+  unsigned int directory_given ;	/**< @brief Whether directory was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

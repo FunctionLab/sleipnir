@@ -29,6 +29,12 @@ static int MainModules( const gengetopt_args_info& );
 
 static const TPFnCombiner	c_apfnCombiners[]	= { MainPCLs, MainDATs, MainDABs, MainModules, MainRevDATs, NULL };
 static const char*			c_aszCombiners[]	= { "pcl", "dat", "dad", "module", "revdat", NULL };
+static const char   c_acDab[]   = ".dab";
+static const char   c_acDat[]   = ".dat";
+static const char   c_acQDab[]   = ".qdab";
+
+// store all input file names
+vector<string> input_files;
 
 enum EMethod {
 	EMethodBegin	= 0,
@@ -52,17 +58,43 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	int					iRet;
 	size_t				i;
-
+	DIR* dp;
+	struct dirent* ep;
+		
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg );
-
+	
+	// now collect the data files from directory if given
+	if(sArgs.directory_arg){
+	  dp = opendir (sArgs.directory_arg);
+	  if (dp != NULL){
+	    while (ep = readdir (dp)){
+	      // skip . .. files and temp files with ~
+	      if (ep->d_name[0] == '.' || ep->d_name[strlen(ep->d_name)-1] == '~') 
+		continue;
+	      
+	      // currently opens all files. Add filter here if want pick file extensions
+	      input_files.push_back((string)sArgs.directory_arg + "/" + ep->d_name);	      
+	    }
+	    (void) closedir (dp);	    
+	  }
+	  else{
+	    cerr << "Couldn't open the directory: " << sArgs.directory_arg << '\n';
+	    return 1;
+	  }
+	}
+	else{
+	  input_files.resize( sArgs.inputs_num );
+	  copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, input_files.begin( ) );
+	}
+	
 	for( i = 0; c_aszCombiners[ i ]; ++i )
 		if( !strcmp( c_aszCombiners[ i ], sArgs.type_arg ) ) {
 			iRet = c_apfnCombiners[ i ]( sArgs );
 			break; }
-
+	
 	return iRet; }
 
 int MainPCLs( const gengetopt_args_info& sArgs ) {
@@ -74,11 +106,11 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 	ifstream					ifsm;
 	ofstream					ofsm;
 
-	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
+	for( iArg = 0; iArg < input_files.size(); ++iArg ) {
 		ifsm.clear( );
-		ifsm.open( sArgs.inputs[ iArg ] );
+		ifsm.open( input_files[ iArg ].c_str() );
 		if( !PCL.Open( ifsm, sArgs.skip_arg ) ) {
-			cerr << "Could not open: " << sArgs.inputs[ iArg ] << endl;
+			cerr << "Could not open: " << input_files[ iArg ] << endl;
 			return 1; }
 		if( !iArg )
 			for( i = 0; i < PCL.GetFeatures( ); ++i )
@@ -93,10 +125,10 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 
 	PCLNew.Open( vecstrGenes, vecstrExps, vecstrFeatures );
 	iExp = 0;
-	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
-		cerr << "Processing " << sArgs.inputs[ iArg ] << "..." << endl;
+	for( iArg = 0; iArg < input_files.size(); ++iArg ) {
+		cerr << "Processing " << input_files[ iArg ] << "..." << endl;
 		ifsm.clear( );
-		ifsm.open( sArgs.inputs[ iArg ] );
+		ifsm.open( input_files[ iArg ].c_str() );
 		PCL.Open( ifsm, sArgs.skip_arg );
 		for( i = 0; i < PCLNew.GetGenes( ); ++i )
 			if( ( iGene = PCL.GetGene( vecstrGenes[ i ] ) ) != -1 ) {
@@ -155,7 +187,7 @@ struct SCallback {
 		m_vecpTerms(vecpTerms) { }
 };
 
-int iterate_inputs( SCallback& sCallback, void (*pfnCallback)( SCallbackVars& ), void (*pfnInitialize)( SCallbackVars& ) = NULL ) {
+int iterate_inputs(SCallback& sCallback, void (*pfnCallback)( SCallbackVars& ), void (*pfnInitialize)( SCallbackVars& ) = NULL ) {
 	SCallbackVars&				sCallbackVars	= sCallback.m_sCallbackVars;
 	CDat&						DatOut			= *sCallbackVars.m_pDatOut;
 	const gengetopt_args_info&	sArgs			= sCallback.m_sArgs;
@@ -168,25 +200,25 @@ int iterate_inputs( SCallback& sCallback, void (*pfnCallback)( SCallbackVars& ),
 	size_t						i, j, k, iOne, iTwo, iA, iB;
 	CDat						DatCur;
 	float						d;
-
-	sCallbackVars.m_iDatasets = sArgs.inputs_num;
+	
+	sCallbackVars.m_iDatasets = input_files.size( );
 	sCallbackVars.m_pvecveciGenes = &vecveciGenes;
 	sCallbackVars.m_pvecsetiGenes = &vecsetiGenes;
 	vecsetiGenes.resize( DatOut.GetGenes( ) );
-	for( i = 0; i < sArgs.inputs_num; ++i ) {
-		if( !DatCur.Open( sArgs.inputs[ i ], !!sArgs.memmap_flag && !sArgs.normalize_flag && !GenesIn.GetGenes( ) ) ) {
-			cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+	for( i = 0; i < input_files.size( ); ++i ) {
+	  if( !DatCur.Open( input_files[ i ].c_str(), !!sArgs.memmap_flag && !sArgs.normalize_flag && !GenesIn.GetGenes( ) ) ) {
+			cerr << "Couldn't open: " << input_files[ i ] << endl;
 			return 1; }
 		sCallbackVars.m_iDataset = i;
 		sCallbackVars.m_pDatCur = &DatCur;
 		if( PCLWeights.GetGenes( ) ) {
-			if( ( j = PCLWeights.GetGene( CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) ) ) == -1 ) {
-				cerr << "Ignoring unweighted graph: " << sArgs.inputs[ i ] << endl;
+			if( ( j = PCLWeights.GetGene( CMeta::Deextension( CMeta::Basename( input_files[ i ].c_str() ) ) ) ) == -1 ) {
+				cerr << "Ignoring unweighted graph: " << input_files[ i ] << endl;
 				continue; }
 			sCallbackVars.m_dWeight = PCLWeights.Get( j, 0 ); }
 		else
 			sCallbackVars.m_dWeight = 1;
-		cerr << "Opened: " << sArgs.inputs[ i ] << endl;
+		cerr << "Opened: " << input_files[ i ] << endl;
 		if( sArgs.zero_flag ) {
 			vector<string>	vecstrGenes;
 
@@ -423,7 +455,7 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 	CHalfMatrix<float>		MatCounts;
 	size_t					i, j;
 	float					d;
-	vector<string>			vecstrFiles, vecstrTerms;
+	vector<string>			vecstrTerms;
 	CPCL					PCLWeights( false );
 	CGenome					Genome;
 	CGenes					GenesIn( Genome );
@@ -434,15 +466,13 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 	SCallback				sCallback( sArgs, GenesIn, PCLWeights, vecstrTerms, vecpTerms );
 	void (*pfnInitialize)( SCallbackVars& );
 
-	if( !sArgs.inputs_num )
-		return 1;
-
-	vecstrFiles.resize( sArgs.inputs_num );
-	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
-	if( !Dataset.OpenGenes( vecstrFiles ) ) {
-		cerr << "Couldn't open: " << vecstrFiles[ 0 ];
-		for( i = 1; i < vecstrFiles.size( ); ++i )
-			cerr << ", " << vecstrFiles[ i ];
+	if( !input_files.size() )
+	  return 1;
+	
+	if( !Dataset.OpenGenes( input_files ) ) {
+		cerr << "Couldn't open: " << input_files[ 0 ];
+		for( i = 1; i < input_files.size( ); ++i )
+			cerr << ", " << input_files[ i ];
 		cerr << endl;
 		return 1; }
 	if( sArgs.weights_arg && !PCLWeights.Open( sArgs.weights_arg, 0 ) ) {
@@ -545,18 +575,15 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 static int MainDABs( const gengetopt_args_info& sArgs ) {
 	CDatasetCompact	Dataset;
 	size_t			i;
-	vector<string>	vecstrFiles;
 	ofstream		ofsm;
 
-	if( !sArgs.inputs_num )
+	if( !input_files.size() )
 		return 1;
 
-	vecstrFiles.resize( sArgs.inputs_num );
-	copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrFiles.begin( ) );
-	if( !Dataset.Open( vecstrFiles ) ) {
-		cerr << "Couldn't open: " << vecstrFiles[ 0 ];
-		for( i = 1; i < vecstrFiles.size( ); ++i )
-			cerr << ", " << vecstrFiles[ i ];
+	if( !Dataset.Open( input_files ) ) {
+		cerr << "Couldn't open: " << input_files[ 0 ];
+		for( i = 1; i < input_files.size( ); ++i )
+			cerr << ", " << input_files[ i ];
 		cerr << endl;
 		return 1; }
 
@@ -711,12 +738,12 @@ int MainModules( const gengetopt_args_info& sArgs ) {
 	ofstream					ofsm;
 	ostream*					postm;
 
-	vecdModules.resize( sArgs.inputs_num );
-	vecvecpsModules.resize( sArgs.inputs_num );
-	veciIndices.resize( sArgs.inputs_num );
+	vecdModules.resize( input_files.size() );
+	vecvecpsModules.resize( input_files.size() );
+	veciIndices.resize( input_files.size() );
 	for( i = 0; i < vecvecpsModules.size( ); ++i ) {
 		veciIndices[ i ] = i;
-		if( CMeta::IsNaN( vecdModules[ i ] = SModule::Open( sArgs.inputs[ i ], sSimpleome,
+		if( CMeta::IsNaN( vecdModules[ i ] = SModule::Open( input_files[ i ].c_str(), sSimpleome,
 			vecvecpsModules[ i ] ) ) )
 			return 1; }
 	sort( veciIndices.begin( ), veciIndices.end( ), SSorterModules( vecdModules ) );
@@ -848,12 +875,12 @@ int MainRevDATs( const gengetopt_args_info& sArgs ) {
 		memset( DatOut.Get( i ), 0, ( DatOut.GetGenes( ) - i - 1 ) * sizeof(*DatOut.Get( i )) );
 	MatCounts.Initialize( DatOut.GetGenes( ) );
 	MatCounts.Clear( );
-	for( iArg = 0; iArg < sArgs.inputs_num; ++iArg ) {
+	for( iArg = 0; iArg < input_files.size(); ++iArg ) {
 		CDat					DatIn;
 		vector<vector<size_t> >	vecveciGenes;
 
-		if( !DatIn.Open( sArgs.inputs[iArg] ) ) {
-			cerr << "Could not open: " << sArgs.inputs[iArg] << endl;
+		if( !DatIn.Open( input_files[iArg].c_str() ) ) {
+			cerr << "Could not open: " << input_files[iArg] << endl;
 			return 1; }
 		vecveciGenes.resize( DatIn.GetGenes( ) );
 		for( i = 0; i < DatIn.GetGenes( ); ++i ) {
