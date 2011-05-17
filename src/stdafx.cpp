@@ -55,7 +55,7 @@
  * - <a href="sleipnir-current.tar.gz">sleipnir-current.tar.gz</a>, the current source code.
  * - <a href="sleipnir-doc-current.tar.gz">sleipnir-doc-current.tar.gz</a>, the current documentation.
  * - You can also access the Sleipnir <a href="http://mercurial.selenic.com">Mercurial</a> repository at:
- *	<tt>http://huttenhower.sph.harvard.edu/hg/sleipnir/</tt>.
+ *	<tt>https://bitbucket.org/libsleipnir/sleipnir/overview</tt>.
  * 
  * Sleipnir and its associated tools are provided as source code that can be compiled under Linux (using
  * gcc), Windows (using Visual Studio or cygwin), or MacOS (using gcc).  For more information, see
@@ -793,7 +793,7 @@ MIPS:
  *	whenever possible.
  * 
  * - Check out our <a href="http://mercurial.selenic.com/">Mercurial</a> repository at
- *	<tt>http://huttenhower.sph.harvard.edu/hg/sleipnir/</tt>.  The \c trunk branch always contains the latest development
+ *	<tt>https://bitbucket.org/libsleipnir/sleipnir/overview</tt>.  The \c trunk branch always contains the latest development
  *	version of Sleipnir, and official versioned releases appear under \c tags.  If you'd like to submit
  *	patches to us for inclusion in Sleipnir, please try to do so against the current development version
  *	(\c trunk).
