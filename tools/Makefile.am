@@ -7,6 +7,7 @@ if WITH_TOOLS
 	  Clusters2Dab \
 	  COALESCE \
 	  Combiner \
+	  NetworkCombiner \
 	  DChecker \
 	  Dat2Dab \
 	  Dat2Graph \

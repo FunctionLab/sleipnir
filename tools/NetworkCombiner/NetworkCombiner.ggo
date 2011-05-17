@@ -1,0 +1,13 @@
+package	"NetworkCombiner"
+version	"1.0"
+purpose	"Network(Dat/Dab) file combination(mean) tool; Assumes fully connected network with identical gene sets. It's faster than Combiner."
+
+section "Main"
+option	"output"	o	"Output file"
+						string	typestr="filename"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"
+option  "directory"     d       "input directory (must only contain input files)"
+                                                string  typestr="directory"
+option	"map"		m	"Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs)"
+						flag	on
