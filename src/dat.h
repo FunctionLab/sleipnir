@@ -111,7 +111,13 @@ public:
 		 * \brief
 		 * Perform a HEFalMp query using the given set and remove any edge not in the resulting subgraph.
 		 */
-		EFilterHefalmp		= EFilterEdge + 1
+		EFilterHefalmp		= EFilterEdge + 1,
+		/*!
+		 * \brief
+		 * Remove any positive edge including a node outside the given set. 
+		 */
+		EFilterIncludePos	= EFilterHefalmp +1
+		
 	};
 
 	/*!

@@ -1285,7 +1285,6 @@ bool CDat::FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit ) {
 	CGenome		Genome;
 	CGenes		Genes( Genome );
 	ifstream	ifsm;
-
 	if( !szGenes )
 		return false;
 
@@ -1323,7 +1322,6 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 	const vector<float>* pvecdWeights ) {
 	size_t			i, j;
 	vector<bool>	vecfGenes;
-
 	vecfGenes.resize( GetGenes( ) );
 	for( i = 0; i < Genes.GetGenes( ); ++i )
 		if( ( j = GetGene( Genes.GetGene( i ).GetName( ) ) ) != -1 )
@@ -1337,9 +1335,12 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 
 	for( i = 0; i < GetGenes( ); ++i ) {
 		if( ( ( eFilter == EFilterExclude ) && vecfGenes[ i ] ) ||
-			( ( eFilter == EFilterInclude ) && !vecfGenes[ i ] ) ) {
-			for( j = ( i + 1 ); j < GetGenes( ); ++j )
-				Set( i, j, CMeta::GetNaN( ) );
+			( ( eFilter == EFilterInclude ) && !vecfGenes[ i ] ) ||
+			( ( eFilter == EFilterIncludePos ) && !vecfGenes[ i ] ) ) {
+			for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+				if ( Get( i, j ) || eFilter != EFilterIncludePos )  
+					Set( i, j, CMeta::GetNaN( ) );
+			}
 			continue; }
 		if( ( eFilter == EFilterEdge ) && vecfGenes[ i ] )
 			continue;
@@ -1350,7 +1351,10 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 					if( !vecfGenes[ j ] )
 						Set( i, j, CMeta::GetNaN( ) );
 					break;
-
+				case EFilterIncludePos:
+					if( !vecfGenes[ j ] && Get( i, j ) )
+						Set( i, j, CMeta::GetNaN( ) );
+					break;
 				case EFilterTerm:
 					if( !( vecfGenes[ i ] && vecfGenes[ j ] ) &&
 						( !( vecfGenes[ i ] || vecfGenes[ j ] ) || Get( i, j ) ) )
