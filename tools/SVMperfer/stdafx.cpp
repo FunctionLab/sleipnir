@@ -22,39 +22,65 @@
 #include "stdafx.h"
 
 /*!
- * \page Dat2Dab Dat2Dab
+ * \page SVMperfer SVMperfer
  * 
- * Dat2Dab converts tab-delimited text DAT files into binary DAB files and vice versa.  It can also convert
- * PCL and DAS files (see Sleipnir::CDat), perform a variety of normalizations or filters during the
- * conversion process, or lookup individual genes' or gene pairs' values from DAB files.
+ * SVMperfer performs SVM learning using the SVMperf library.  It supports cross validation and
+ * reading from binary PCL files created by PCL2Bin.
  * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage
  * 
  * \code
- * Dat2Dab -i <data.dab> -o <data.dat>
+ * SVMperfer -l <labels_file> -p <params_file> -i <data.bin> -o <output_directory> -a
  * \endcode
  * 
- * Convert the input binary DAB file \c data.dab into the output tab-delimited text DAT file \c data.dat.
- * 
+ * The labels file is of the format (NOTE WELL: IN ALL THE FOLLOWING FORMATS DELIMITERS ARE TABS --
+ * doxygen converts them to spaces automatically).
  * \code
- * Dat2Dab -o <data.dab> -n -f -d < <data.dat>
+ * ACTA2	-1
+ * ACTN4	1
+ * ADAM10	-1
+ * AGRN	1
+ * AGTR1	-1
+ * ALDOB	-1
+ * ALOX12	1
+ * ANGPT2	1
+ * APOA4	1
+ * AQP1	1
  * \endcode
+ * where -1 indicates negative and 1 indicates positive.  The examples must be separated with tabs.
  * 
- * Read a text DAT file \c data.dat from standard input, allowing duplicates, normalize all scores to the
- * range [0,1], then invert them and save the results to the binary DAB file \c data.dab.
- * 
+ * Output is of the format
  * \code
- * Dat2Dab -i <data.dab> -m -l <gene1> -L <gene2>
+ * IGHV1-69	0	1.94073
+ * DAG1	1	1.9401
+ * FNDC3B	0	1.93543
+ * HPGD	-1	1.93181
+ * TPSAB1	0	1.92928
+ * CLIC5	1	1.92759
  * \endcode
+ * where the first column is the example name, the second column is the gold standard status (matching labels)
+ * and the third column is the prediction from the SVM.
  * 
- * Open the binary DAB file \c data.dab using memory mapping and output the score for the gene pair \c gene1
- * and \c gene2.
+ * The params_file is of the format
+ * \code
+ * 10	0.1	0.5
+ * 10	0.01	0.5
+ * 10	0.001	0.5
+ * 10	0.0001	0.5
+ * 10	0.00001	0.5
+ * 10	0.000001	0.5
+ * \endcode
+ * where the first column represents the error function, the second column represents the tradeoff constant
+ * and the third column represents k_value (for precision at k recall, but unused for the AUC error function
+ * in the example above.
+ * 
+ * SVMperfer can also be used to output a model or learn a network, although currently those features are undocumented.
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
- * \include Dat2Dab/Dat2Dab.ggo
+ * \include SVMperfer/SVMperfer.ggo
  * 
  * <table><tr>
  *	<th>Flag</th>
@@ -63,99 +89,73 @@
  *	<th>Description</th>
  * </tr><tr>
  *	<td>-i</td>
- *	<td>stdin</td>
- *	<td>DAT/DAB file</td>
- *	<td>Input DAT, DAB, DAS, or PCL file.</td>
+ *	<td>None</td>
+ *	<td>PCL/BIN file</td>
+ *	<td>Input PCL file</td>
  * </tr><tr>
  *	<td>-o</td>
- *	<td>stdout</td>
- *	<td>DAT/DAB file</td>
- *	<td>Output DAT, DAB, or DAS file.</td>
+ *	<td>None</td>
+ *	<td>Directory</td>
+ *	<td>Output directory.</td>
  * </tr><tr>
- *	<td>-f</td>
+ *	<td>-l</td>
+ *	<td>None</td>
+ *	<td>Labels file</td>
+ *	<td>The file with examples formatted as noted above.</td>
+ * </tr><tr>
+ *	<td>-m</td>
+ *	<td>None</td>
+ *	<td>Model file</td>
+ *	<td>If present, output the learned model to this file.</td>
+ * </tr><tr>
+ *	<td>-a</td>
  *	<td>off</td>
  *	<td>Flag</td>
- *	<td>If on, output one minus the input's values.</td>
+ *	<td>If on output predictions for all genes in the PCL.</td>
+ * </tr><tr>
+ *	<td>-S</td>
+ *	<td>off</td>
+ *	<td>Flag</td>
+ *	<td>If on, use slack rescaling.</td>
+ * </tr><tr>
+ *	<td>-s</td>
+ *	<td>2</td>
+ *	<td>int</td>
+ *	<td>Number of columns to skip from PCL file.</td>
  * </tr><tr>
  *	<td>-n</td>
  *	<td>off</td>
  *	<td>Flag</td>
- *	<td>If on, normalize input edges to the range [0,1] before processing.</td>
- * </tr><tr>
- *	<td>-z</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, normalize input edges to z-scores (subtract mean, divide by standard deviation) before
- *		processing.</td>
- * </tr><tr>
- *	<td>-r</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, transform input values to integer ranks before processing.</td>
- * </tr><tr>
- *	<td>-g</td>
- *	<td>None</td>
- *	<td>Text gene list</td>
- *	<td>If given, use only gene pairs for which both genes are in the list.  For details, see
- *		Sleipnir::CDat::FilterGenes.</td>
+ *	<td>Normalize PCL to 0 mean, 1 variance.</td>
  * </tr><tr>
  *	<td>-c</td>
- *	<td>None</td>
- *	<td>Double</td>
- *	<td>If given, remove all input edges below the given cutoff (after optional normalization).</td>
+ *	<td>5</td>
+ *	<td>int</td>
+ *	<td>Number of cross validation intervals.</td>
  * </tr><tr>
  *	<td>-e</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, replace all missing values with zeros.</td>
+ *	<td>10</td>
+ *	<td>int</td>
+ *	<td>Which loss function should be used? (options: 0, 1, 2, 3, 4, 5, 10).</td>
  * </tr><tr>
- *	<td>-d</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, allow (with a warning) duplicate pairs in text-based input.</td>
- * </tr><tr>
- *	<td>-G</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If on, only print list of genes that would be included in the normal output file.</td>
- * </tr><tr>
- *	<td>-l</td>
- *	<td>None</td>
- *	<td>String</td>
- *	<td>If given, lookup all values for pairs involving the requested gene.</td>
- * </tr><tr>
- *	<td>-L</td>
- *	<td>None</td>
- *	<td>String</td>
- *	<td>If given with \c -l, lookup all values for the requested gene pair.</td>
+ *	<td>-k</td>
+ *	<td>0.5</td>
+ *	<td>float</td>
+ *	<td>value of k for precision@k or recall@k.</td>
  * </tr><tr>
  *	<td>-t</td>
- *	<td>None</td>
- *	<td>Gene text file</td>
- *	<td>If given with \c -l, lookup all pairs between \c -l and the given gene set.  If given alone,
- *		lookup all pairs between genes in the given set.</td>
+ *	<td>1</td>
+ *	<td>float</td>
+ *	<td>SVM tradeoff constant C (note that this differs from the version in SVM light by a constant factor, check SVMPerf docs for details).</td>
  * </tr><tr>
  *	<td>-p</td>
  *	<td>None</td>
- *	<td>Gene pair text file</td>
- *	<td>Tab-delimited text file containing two columns, both gene IDs.  If given, replace each gene ID
- *		from the first column with the corresponding ID in the second column.</td>
+ *	<td>Filename</td>
+ *	<td>Parameters file (to test with multiple parameters).</td>
  * </tr><tr>
- *	<td>-b</td>
+ *	<td>-M</td>
  *	<td>off</td>
  *	<td>Flag</td>
- *	<td>If given, produce output in a tab-delimited half matrix table.  Not recommended for DAT/DABs with
- *		more than a few dozen genes!</td>
- * </tr><tr>
- *	<td>-s</td>
- *	<td>2</td>
- *	<td>Integer</td>
- *	<td>Number of columns to skip between the initial ID column and the first experimental (data) column
- *		in the input PCL.</td>
- * </tr><tr>
- *	<td>-m</td>
- *	<td>off</td>
- *	<td>Flag</td>
- *	<td>If given, memory map the input files when possible.  DAT and PCL inputs cannot be memmapped.</td>
+ *	<td>Memory map binary input PCLs (BIN files).</td>
  * </tr></table>
  */
