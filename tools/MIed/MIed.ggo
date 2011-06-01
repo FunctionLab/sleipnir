@@ -18,7 +18,9 @@ option	"union"		u	"Use the union genes of two datasets while assign missing valu
 						flag	off
 option  "directory"     d       "input directory"
                                                 string  typestr="directory"
-option  "datasets"     f       "Calculate MI for datasets in given file against all datasets"
+option  "datasets"      f       "Calculate MI for datasets in given file against all datasets"
                                                 string  typestr="file"
 option	"zeros"		Z	"Read zeroed node IDs/outputs from the given file"
+						string	typestr="filename"
+option	"edges"		e	"Process only edges from the given DAT/DAB, should be used with Beta values"
 						string	typestr="filename"

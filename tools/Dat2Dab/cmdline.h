@@ -73,6 +73,9 @@ struct gengetopt_args_info
   const char *cutoff_help; /**< @brief Exclude edges below cutoff help description.  */
   int zero_flag;	/**< @brief Zero missing values (default=off).  */
   const char *zero_help; /**< @brief Zero missing values help description.  */
+  float dval_arg;	/**< @brief set all non-missing values to a set default value.  */
+  char * dval_orig;	/**< @brief set all non-missing values to a set default value original value given at command line.  */
+  const char *dval_help; /**< @brief set all non-missing values to a set default value help description.  */
   float dmissing_arg;	/**< @brief set missing values to a set default value.  */
   char * dmissing_orig;	/**< @brief set missing values to a set default value original value given at command line.  */
   const char *dmissing_help; /**< @brief set missing values to a set default value help description.  */
@@ -133,6 +136,7 @@ struct gengetopt_args_info
   unsigned int exedges_given ;	/**< @brief Whether exedges was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int zero_given ;	/**< @brief Whether zero was given.  */
+  unsigned int dval_given ;	/**< @brief Whether dval was given.  */
   unsigned int dmissing_given ;	/**< @brief Whether dmissing was given.  */
   unsigned int duplicates_given ;	/**< @brief Whether duplicates was given.  */
   unsigned int subsample_given ;	/**< @brief Whether subsample was given.  */
