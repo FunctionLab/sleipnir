@@ -87,7 +87,9 @@ protected:
 	~CPCLImpl();
 
 	bool OpenExperiments(std::istream&, size_t, char*, size_t);
+	bool OpenExperiments(std::istream&, size_t, string&);
 	bool OpenGene(std::istream&, std::vector<float>&, char*, size_t);
+	bool OpenGene(std::istream&, std::vector<float>&, string&);
 	void Reset();
 	void MedianMultiplesMapped(const std::vector<std::vector<size_t> >&,
 			std::vector<float>&);
