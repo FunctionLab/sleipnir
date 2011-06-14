@@ -394,12 +394,13 @@ void CPCL::Save(const char* szFile) {
 	if (szFile)
 		ofsm.open(szFile);
 
-	// Save as text based PCL file?
-	if (!strcmp(szFile + strlen(szFile) - strlen(c_szExtension), c_szExtension))
-		Save(szFile ? ofsm : cout);
-	else
-		// Save as binary binary file?
+	// Save as binary PCL file?
+	if (!strcmp(szFile + strlen(szFile) - strlen(c_szExtension), c_szBinExtension))
 		SaveBinary(szFile ? ofsm : cout);
+	else
+		Save(szFile ? ofsm : cout);
+		// Save as text file
+
 }
 
 /*!
@@ -673,21 +674,21 @@ void CPCL::SaveHeader(std::ostream& ostm, bool fCDT) const {
 	if (!m_fHeader)
 		return;
 
-	if (fCDT)
+/*	if (fCDT)
 		ostm << c_szGID << '\t';
-	ostm << m_vecstrFeatures[0];
+	ostm << m_vecstrFeatures[0];*/
 	for (i = 1; i < m_vecstrFeatures.size(); ++i)
 		ostm << '\t' << m_vecstrFeatures[i];
 	for (i = 0; i < m_vecstrExperiments.size(); ++i)
 		ostm << '\t' << m_vecstrExperiments[i];
 	ostm << endl;
 
-	ostm << c_szEWEIGHT;
-	for (i = fCDT ? 0 : 1; i < m_vecstrFeatures.size(); ++i)
-		ostm << '\t';
-	for (i = 0; i < m_vecstrExperiments.size(); ++i)
-		ostm << '\t' << 1;
-	ostm << endl;
+//	ostm << c_szEWEIGHT;
+//	for (i = fCDT ? 0 : 1; i < m_vecstrFeatures.size(); ++i)
+//		ostm << '\t';
+//	for (i = 0; i < m_vecstrExperiments.size(); ++i)
+//		ostm << '\t' << 1;
+//	ostm << endl;
 }
 
 /*!
