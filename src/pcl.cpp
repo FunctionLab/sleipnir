@@ -363,8 +363,7 @@ bool CPCL::Open(const char* szFile, size_t iSkip, bool Memmap) {
 	}
 	else if (isBinary) {
 		ifsm.open(szFile, ios::binary);
-		OpenBinary(ifsm);
-		return true;
+		return OpenBinary(ifsm);
 	} else {
 		ifstream ifsm;
 		if (szFile)
@@ -903,6 +902,10 @@ void CPCL::SaveBinary(std::ostream& ostm) const {
 bool CPCL::OpenBinary(std::istream& istm) {
 	uint32_t iTmp;
 	size_t i;
+
+	if (!istm.good())
+		return false;
+	
 
 	Reset();
 	istm.read((char*) &iTmp, sizeof(iTmp));

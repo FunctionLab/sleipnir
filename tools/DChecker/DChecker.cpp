@@ -206,7 +206,7 @@ int main( int iArgs, char** aszArgs ) {
 							iNegatives++;
 						vecsData.push_back( SDatum( dValue, i, j, dAnswer ) ); } }
 				sort( vecsData.begin( ), vecsData.end( ), SSorter( !!sArgs.invert_flag ) );
-				iChunk = (size_t)( 0.5 + ( (float)vecsData.size( ) / ( MatResults.GetRows( ) - 1 ) ) );
+				iChunk = (size_t)( 0.5 + ( (float)vecsData.size( ) / ( MatResults.GetRows( ) ) ) );
 				if( sArgs.sse_flag ) {
 					vecdSSE.resize( MatResults.GetRows( ) );
 					veciPositives.resize( vecdSSE.size( ) );
@@ -229,7 +229,7 @@ int main( int iArgs, char** aszArgs ) {
 					veciNegatives.resize( veciPositives.size( ) );
 					for( i = 0; i < veciNegatives.size( ); ++i )
 						veciNegatives[ i ] = veciPositives[ i ] = 0;
-					for( i = j = 0; i < veciPositives.size( ); ++i,j += iChunk )
+					for( i = j = 0; i < veciPositives.size( )+1; ++i,j += iChunk )
 						for( k = 0; k < iChunk; ++k ) {
 							if( ( j + k ) >= vecsData.size( ) )
 								break;
@@ -238,6 +238,8 @@ int main( int iArgs, char** aszArgs ) {
 							for( m = i; m > 0; --m ) {
 								MatGenes.Set( sDatum.m_iOne, m, true );
 								MatGenes.Set( sDatum.m_iTwo, m, true ); }
+							if( i >= veciPositives.size() )
+								continue;
 							if( Answers.Get( sDatum.m_iOne, sDatum.m_iTwo ) )
 								veciPositives[ i ]++;
 							else

@@ -290,7 +290,7 @@ int main(int iArgs, char** aszArgs) {
 					AllResults.insert(AllResults.end(), tmpAllResults.begin(),
 							tmpAllResults.end());
 					tmpAllResults.resize(0);
-					if (sArgs.all_flag) {
+					if (sArgs.all_flag && vec_allUnlabeledLabels.size() > 0) {
 						vec_tmpUnlabeledResults = SVM.Classify(PCL,
 								vec_allUnlabeledLabels);
 						for (j = 0; j < vec_tmpUnlabeledResults.size(); j++)
