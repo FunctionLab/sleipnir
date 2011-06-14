@@ -137,7 +137,7 @@ public:
 	 * \remarks
 	 * Pretty much every implementation will puke if given bad input; bounds checking etc. is minimal.
 	 */
-	virtual double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	virtual double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const = 0;
 };
 
@@ -322,7 +322,7 @@ public:
 	 */
 	CMeasureAutocorrelate( const IMeasure* pMeasure, bool fMemory ) : CMeasureImpl( pMeasure, fMemory ) { }
 
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -347,7 +347,7 @@ public:
  */
 class CMeasureEuclidean : public IMeasure {
 public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -408,7 +408,7 @@ public:
  */
 class CMeasureQuickPearson : public IMeasure {
 public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -435,7 +435,7 @@ public:
  */
 class CMeasureKolmogorovSmirnov : public IMeasure {
 public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -458,7 +458,7 @@ public:
  */
 class CMeasureKendallsTau : CMeasureKendallsTauImpl, public IMeasure {
 public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -495,7 +495,7 @@ public:
 	 */
 	CMeasureSpearman( bool fTransformed ) : CMeasureSpearmanImpl( fTransformed ) { }
 
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -552,7 +552,7 @@ public:
 	 */
 	CMeasurePearNorm( double dAverage, double dStdev ) : CMeasurePearNormImpl( dAverage, dStdev ) { }
 
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -579,7 +579,7 @@ public:
  */
 class CMeasureHypergeometric : public IMeasure {
 public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -601,7 +601,7 @@ public:
  */
 class CMeasureInnerProduct : public IMeasure {
 public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -624,7 +624,7 @@ public:
  */
 class CMeasureBinaryInnerProduct : public IMeasure {
 public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -650,7 +650,7 @@ public:
  */
 class CMeasureMutualInformation : public IMeasure {
 public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -679,7 +679,7 @@ public:
  */
 class CMeasureRelativeAUC : public IMeasure {
 public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {
@@ -705,7 +705,7 @@ public:
  */
 class CMeasurePearsonSignificance : public IMeasure {
 public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;
 
 	const char* GetName( ) const {

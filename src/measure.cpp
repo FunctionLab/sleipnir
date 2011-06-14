@@ -528,7 +528,7 @@ double CMeasureSpearman::Measure( const float* adX, size_t iM, const float* adY,
 
 double CMeasurePearNorm::Measure( const float* adX, size_t iM, const float* adY,
 	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
-	static const float	c_dBound	= 0.99f;
+	static const float	c_dBound	= 0.9999f;
 	double	dP;
 
 	dP = CMeasurePearson::Pearson( adX, iM, adY, iN, EMapNone, adWX, adWY );
