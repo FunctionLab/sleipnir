@@ -206,6 +206,10 @@ int main( int iArgs, char** aszArgs ) {
 							iNegatives++;
 						vecsData.push_back( SDatum( dValue, i, j, dAnswer ) ); } }
 				sort( vecsData.begin( ), vecsData.end( ), SSorter( !!sArgs.invert_flag ) );
+				//instead of putting all of the uneveness in one bin, spread it out into each bin.
+				//N.B. only the part without the sse_flag is fixed in this regard
+				size_t perChunk = (size_t)(vecsData.size()/MatResults.GetRows());
+				size_t chnkRem = (size_t)(vecsData.size()%MatResults.GetRows());
 				iChunk = (size_t)( 0.5 + ( (float)vecsData.size( ) / ( MatResults.GetRows( ) ) ) );
 				if( sArgs.sse_flag ) {
 					vecdSSE.resize( MatResults.GetRows( ) );
@@ -229,10 +233,11 @@ int main( int iArgs, char** aszArgs ) {
 					veciNegatives.resize( veciPositives.size( ) );
 					for( i = 0; i < veciNegatives.size( ); ++i )
 						veciNegatives[ i ] = veciPositives[ i ] = 0;
-					for( i = j = 0; i < veciPositives.size( )+1; ++i,j += iChunk )
-						for( k = 0; k < iChunk; ++k ) {
-							if( ( j + k ) >= vecsData.size( ) )
-								break;
+					for( i = j = 0; i < veciPositives.size( )+1; ++i,j += k ) {
+						size_t thisChunk = (i < chnkRem) ? (perChunk + 1) : (perChunk);
+						for( k = 0; k < thisChunk; ++k ) {
+							//if( ( j + k ) >= vecsData.size( ) )
+							//	break;
 							const SDatum&	sDatum	= vecsData[ j + k ];
 
 							for( m = i; m > 0; --m ) {
@@ -243,7 +248,7 @@ int main( int iArgs, char** aszArgs ) {
 							if( Answers.Get( sDatum.m_iOne, sDatum.m_iTwo ) )
 								veciPositives[ i ]++;
 							else
-								veciNegatives[ i ]++; }
+								veciNegatives[ i ]++; }}
 
 					MatResults.Set( 0, ETFPN_TP, iPositives );
 					MatResults.Set( 0, ETFPN_FP, iNegatives );
