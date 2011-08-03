@@ -21,7 +21,7 @@
 
 #include "cmdline.h"
 
-const char *gengetopt_args_info_purpose = "Network(Dat/Dab) file combination(mean) tool; Assumes fully connected network \nwith identical gene sets.";
+const char *gengetopt_args_info_purpose = "Network(Dat/Dab) file combination(mean) tool; Assumes fully connected network \nwith identical gene sets. It's faster than Combiner.";
 
 const char *gengetopt_args_info_usage = "Usage: NetworkCombiner [OPTIONS]... [FILES]...";
 
