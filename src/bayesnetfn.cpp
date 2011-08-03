@@ -692,10 +692,15 @@ bool CBayesNetMinimalImpl::Counts2Probs( const std::vector<std::string>& vecstrC
 			dTotal = dPseudocounts; }
 		else
 			dScale = 0;
-		for( i = 0; i < vecdProbs.size( ); ++i )
-			vecdProbs[ i ] = ( ( dScale * veciCounts[ i ] ) + dAlpha ) /
-				( dTotal + ( dAlpha * vecdProbs.size( ) ) ); }
-
+		for( i = 0; i < vecdProbs.size( ); ++i ){
+		  // skip zero                                                                                                                                                                                                       
+                  if(dTotal == 0 && dAlpha == 0)
+                    vecdProbs[ i ] = 1.0 / vecdProbs.size( );
+                  else
+                    vecdProbs[ i ] = ( ( dScale * veciCounts[ i ] ) + dAlpha ) /
+                      ( dTotal + ( dAlpha * vecdProbs.size( ) ) );
+		}
+	}
 	return true; }
 
 /*!
