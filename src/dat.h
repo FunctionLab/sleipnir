@@ -195,7 +195,7 @@ public:
 	bool Open( const std::vector<CGenes*>& vecpPositives, const std::vector<CGenes*>& vecpNonnegatives,
 		float dPValue, const CGenome& Genome, bool fIncident = false );
 	bool Open( const CDat& DatKnown, const std::vector<CGenes*>& vecpOther, const CGenome& Genome,
-		bool fKnownNegatives );
+		   bool fKnownNegatives, bool fIncident = false );
 	bool Open( const CPCL& PCL, const IMeasure* pMeasure, bool fMeasureMemory );
 	bool Open( const CDat& Dat );
 

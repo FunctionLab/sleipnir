@@ -11,11 +11,13 @@ groupoption	"positives"		p	"Directory containing related gene lists"
 groupoption	"input"			i	"Pre-existing positive DAT file"
 								string	typestr="filename"	group="Positives"
 
-defgroup "Negatives"
-groupoption	"negatives"		n	"Directory containing minimally related gene lists"
-								string	typestr="directory"	group="Negatives"
-groupoption	"interactions"	x	"Expected interactions per gene"
-								double	group="Negatives"
+section "Negatives"
+option	"negatives"		n	"Directory containing minimally related gene lists"
+								string	typestr="directory"
+option	"interactions"		x	"Expected interactions per gene"
+								double
+option	"prior"			P	"Target prior for the answer file. This prior is only a target, may turn out to be lower."
+								double
 
 section "Modifications"
 option	"incident"			c	"Require negative pairs to include an annotated gene"

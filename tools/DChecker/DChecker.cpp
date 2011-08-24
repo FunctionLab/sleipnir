@@ -62,7 +62,7 @@ int main( int iArgs, char** aszArgs ) {
 	int					iMax;
 	float				dAnswer, dValue;
 	vector<bool>		vecfHere;
-	vector<float>		vecdScores, vecdSSE;
+	vector<float>		vecdScores, vecdSSE, vecdBinValue;
 	vector<size_t>		veciPositives, veciNegatives, veciGenesTerm;
 	ofstream			ofsm;
 	ostream*			postm;
@@ -231,6 +231,7 @@ int main( int iArgs, char** aszArgs ) {
 				else {
 					veciPositives.resize( MatResults.GetRows( ) - 1 );
 					veciNegatives.resize( veciPositives.size( ) );
+					vecdBinValue.resize( veciPositives.size( )+1 );
 					for( i = 0; i < veciNegatives.size( ); ++i )
 						veciNegatives[ i ] = veciPositives[ i ] = 0;
 					for( i = j = 0; i < veciPositives.size( )+1; ++i,j += k ) {
@@ -239,6 +240,7 @@ int main( int iArgs, char** aszArgs ) {
 							//if( ( j + k ) >= vecsData.size( ) )
 							//	break;
 							const SDatum&	sDatum	= vecsData[ j + k ];
+							vecdBinValue[ i ] = sDatum.m_dValue;
 
 							for( m = i; m > 0; --m ) {
 								MatGenes.Set( sDatum.m_iOne, m, true );
@@ -325,7 +327,7 @@ int main( int iArgs, char** aszArgs ) {
 			if( !sArgs.sse_flag ) {
 				*postm << "#	P	" << iPositives << endl;
 				*postm << "#	N	" << iNegatives << endl; }
-			*postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN	RC	PR" ) << endl;
+			*postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN	RC	PR	VALUE" ) << endl;
 			for( i = 0; i < MatResults.GetRows( ); ++i ) {
 				*postm << ( iBins ? i : ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) ) << '\t' <<
 					veciRec[ i ];
@@ -344,7 +346,8 @@ int main( int iArgs, char** aszArgs ) {
 				  *postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(i,1)+MatResults.Get(i,0));
 				else
 				  *postm << '\t' << 0.0;
-				
+				*postm << '\t' << vecdBinValue[ i ];				
+
 				*postm << endl; }
 			if( !sArgs.sse_flag )
 				*postm << "#	AUC	" << ( sArgs.auc_arg ?
