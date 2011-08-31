@@ -507,7 +507,7 @@ bool CPCLImpl::OpenHelper() {
 	size_t i, j;
 	m_vecstrFeatures.resize(*(uint32_t*) pb);
 	pb += sizeof(uint32_t);
-	for (i = 0; i < GetFeatures(); ++i) {
+	for (i = 0; i < m_vecstrFeatures.size(); ++i) {
 		string& strFeature = m_vecstrFeatures[i];
 		strFeature.resize(*(uint32_t*) pb);
 		pb += sizeof(uint32_t);
@@ -517,7 +517,7 @@ bool CPCLImpl::OpenHelper() {
 	m_vecstrExperiments.resize(*(uint32_t*) pb);
 	i = 0;
 	pb += sizeof(uint32_t);
-	for (i = 0; i < GetExperiments(); ++i) {
+	for (i = 0; i < m_vecstrExperiments.size(); ++i) {
 		string& strExperiment = m_vecstrExperiments[i];
 		strExperiment.resize(*(uint32_t*) pb);
 		pb += sizeof(uint32_t);
@@ -527,7 +527,7 @@ bool CPCLImpl::OpenHelper() {
 	}
 	m_vecstrGenes.resize(*(uint32_t*) pb);
 	pb += sizeof(uint32_t);
-	for (i = 0; i < GetGenes(); ++i) {
+	for (i = 0; i < m_vecstrGenes.size(); ++i) {
 		string& strGene = m_vecstrGenes[i];
 		strGene.resize(*(uint32_t*) pb);
 		pb += sizeof(uint32_t);
@@ -542,11 +542,11 @@ bool CPCLImpl::OpenHelper() {
 bool CPCLImpl::OpenMemmap(const unsigned char* pb) {
 	size_t i;
 
-	m_aadData = new float*[GetGenes()];
+	m_aadData = new float*[m_vecstrGenes.size()];
 	m_aadData[0] = (float*) pb;
 	for (i = 1; i < m_vecstrGenes.size(); ++i)
-		m_aadData[i] = m_aadData[i - 1] + GetExperiments();
-	m_Data.Initialize(GetGenes(), GetExperiments(), (float**) m_aadData);
+		m_aadData[i] = m_aadData[i - 1] + m_vecstrExperiments.size();
+	m_Data.Initialize(m_vecstrGenes.size(), m_vecstrExperiments.size(), (float**) m_aadData);
 	return true;
 }
 
@@ -575,32 +575,6 @@ bool CPCLImpl::OpenExperiments(std::istream& istmInput, size_t iFeatures,
 	return true;
 }
 
-bool CPCLImpl::OpenExperiments(std::istream& istmInput, size_t iFeatures,
-		char* acLine, size_t iLine) {
-	const char* pc;
-	string strToken;
-	size_t iToken;
-
-	Reset();
-	if (!m_fHeader) {
-		m_vecstrFeatures.resize(1 + iFeatures);
-		return true;
-	}
-	istmInput.getline(acLine, iLine - 1);
-	if (!acLine[0]) {
-		cout << "Error:" << acLine << endl;
-		return false;
-	}
-	for (iToken = 0, pc = acLine; (strToken = OpenToken(pc, &pc)).length()
-			|| *pc; ++iToken)
-		if (iToken <= iFeatures)
-			m_vecstrFeatures.push_back(strToken);
-		else
-			m_vecstrExperiments.push_back(strToken);
-
-	return true;
-}
-
 bool CPCLImpl::OpenGene(std::istream& istmInput, std::vector<float>& vecdData,
 		string& acStr) {
 	const char* pc;
@@ -614,67 +588,6 @@ bool CPCLImpl::OpenGene(std::istream& istmInput, std::vector<float>& vecdData,
 
 	iBase = vecdData.size();
 	getline(istmInput, acStr);
-	if ((strToken = OpenToken(acLine)).empty())
-		return false;
-	if (strToken == "EWEIGHT")
-		return true;
-	if (!m_vecstrExperiments.empty())
-		vecdData.resize(vecdData.size() + m_vecstrExperiments.size());
-	for (iData = iToken = 0, pc = acLine; (strToken = OpenToken(pc, &pc)).length()
-			|| *pc; ++iToken) {
-		if (!iToken) {
-			m_mapstriGenes[strToken] = m_vecstrGenes.size();
-			m_vecstrGenes.push_back(strToken);
-		} else if (iToken < m_vecstrFeatures.size())
-			m_vecvecstrFeatures[iToken - 1].push_back(strToken);
-		else if (!m_vecstrExperiments.empty() && (iData
-				>= m_vecstrExperiments.size()))
-			return false;
-		else {
-			d = CMeta::GetNaN();
-			strToken = CMeta::Trim(strToken.c_str());
-			if (strToken.length()) {
-				d = (float) strtod(strToken.c_str(), &pcEnd);
-				if (pcEnd != (strToken.c_str() + strToken.length())) {
-					iterValue = mapstriValues.find(strToken);
-					if (iterValue == mapstriValues.end()) {
-						i = mapstriValues.size();
-						mapstriValues[strToken] = i;
-						d = i;
-					} else
-						d = iterValue->second;
-				}
-			}
-			if (m_vecstrExperiments.empty())
-				vecdData.push_back(d);
-			else if ((i = (iBase + iData++)) >= vecdData.size())
-				return false;
-			else
-				vecdData[i] = d;
-		}
-	}
-
-	if (m_vecstrExperiments.empty())
-		m_vecstrExperiments.resize(vecdData.size());
-	else
-		while (iData < m_vecstrExperiments.size())
-			vecdData[iBase + iData++] = CMeta::GetNaN();
-
-	return !!iToken;
-}
-
-bool CPCLImpl::OpenGene(std::istream& istmInput, std::vector<float>& vecdData,
-		char* acLine, size_t iLine) {
-	const char* pc;
-	char* pcEnd;
-	string strToken;
-	size_t iToken, iData, iBase, i;
-	float d;
-	map<string, size_t> mapstriValues;
-	map<string, size_t>::iterator iterValue;
-
-	iBase = vecdData.size();
-	istmInput.getline(acLine, iLine - 1);
 	if ((strToken = OpenToken(acLine)).empty())
 		return false;
 	if (strToken == "EWEIGHT")
