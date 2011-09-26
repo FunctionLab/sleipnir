@@ -54,6 +54,12 @@ struct gengetopt_args_info
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
+  int start_arg;	/**< @brief Process only the starting at dataset index (default='-1').  */
+  char * start_orig;	/**< @brief Process only the starting at dataset index original value given at command line.  */
+  const char *start_help; /**< @brief Process only the starting at dataset index help description.  */
+  int end_arg;	/**< @brief Process only up to this ending dataset index (default='-1').  */
+  char * end_orig;	/**< @brief Process only up to this ending dataset index original value given at command line.  */
+  const char *end_help; /**< @brief Process only up to this ending dataset index help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -64,6 +70,8 @@ struct gengetopt_args_info
   unsigned int lookup_given ;	/**< @brief Whether lookup was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+  unsigned int start_given ;	/**< @brief Whether start was given.  */
+  unsigned int end_given ;	/**< @brief Whether end was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

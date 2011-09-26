@@ -21,3 +21,7 @@ option	"memmap"	m	"Memory map input/output"
 						flag	off
 option	"verbosity"	v	"Message verbosity"
 						int	default="5"
+option	"start"		S	"Process only the starting at dataset index"
+						int	default="-1"
+option	"end"		E	"Process only up to this ending dataset index"
+						int	default="-1"
