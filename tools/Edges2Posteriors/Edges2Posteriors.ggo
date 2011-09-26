@@ -15,7 +15,8 @@ option	"zeros"		Z	"Read zeroed node IDs/outputs from the given file"
 						string	typestr="filename"
 option	"lookup"	l	"Lookup pair set"
 						string	typestr="filename"
-
+option	"cutoff"	c	"Use input network edges and exclude edges below cutoff"
+						double
 section "Optional"
 option	"memmap"	m	"Memory map input/output"
 						flag	off
