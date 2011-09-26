@@ -49,11 +49,20 @@ struct gengetopt_args_info
   char * lookup_arg;	/**< @brief Lookup pair set.  */
   char * lookup_orig;	/**< @brief Lookup pair set original value given at command line.  */
   const char *lookup_help; /**< @brief Lookup pair set help description.  */
+  double cutoff_arg;	/**< @brief Use input network edges and exclude edges below cutoff.  */
+  char * cutoff_orig;	/**< @brief Use input network edges and exclude edges below cutoff original value given at command line.  */
+  const char *cutoff_help; /**< @brief Use input network edges and exclude edges below cutoff help description.  */
   int memmap_flag;	/**< @brief Memory map input/output (default=off).  */
   const char *memmap_help; /**< @brief Memory map input/output help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
+  int start_arg;	/**< @brief Process only the starting at dataset index (default='-1').  */
+  char * start_orig;	/**< @brief Process only the starting at dataset index original value given at command line.  */
+  const char *start_help; /**< @brief Process only the starting at dataset index help description.  */
+  int end_arg;	/**< @brief Process only up to this ending dataset index (default='-1').  */
+  char * end_orig;	/**< @brief Process only up to this ending dataset index original value given at command line.  */
+  const char *end_help; /**< @brief Process only up to this ending dataset index help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -62,8 +71,11 @@ struct gengetopt_args_info
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
   unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
   unsigned int lookup_given ;	/**< @brief Whether lookup was given.  */
+  unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+  unsigned int start_given ;	/**< @brief Whether start was given.  */
+  unsigned int end_given ;	/**< @brief Whether end was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
