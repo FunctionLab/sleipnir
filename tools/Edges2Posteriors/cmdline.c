@@ -124,12 +124,8 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->cutoff_help = gengetopt_args_info_help[9] ;
   args_info->memmap_help = gengetopt_args_info_help[11] ;
   args_info->verbosity_help = gengetopt_args_info_help[12] ;
-<<<<<<< local
-=======
   args_info->start_help = gengetopt_args_info_help[13] ;
   args_info->end_help = gengetopt_args_info_help[14] ;
->>>>>>> other
-  
 }
 
 void
@@ -566,12 +562,8 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-<<<<<<< local
-      c = getopt_long (argc, argv, "hVi:n:d:Z:l:c:mv:", long_options, &option_index);
-=======
       c = getopt_long (argc, argv, "hVi:n:d:Z:l:c:mv:S:E:", long_options, &option_index);
->>>>>>> other
-
+      
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
       switch (c)
