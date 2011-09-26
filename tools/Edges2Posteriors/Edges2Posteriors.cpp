@@ -77,7 +77,7 @@ int main( int iArgs, char** aszArgs ) {
 			if( DatLookup.Get( i, j ) == 1 )
 				vecstrGenes.push_back( DatLookup.GetGene( i ) + " - " + DatLookup.GetGene( j ) );
 	cerr << vecstrGenes.size() << endl;
-
+	
 	BNSmile.GetNodes( vecstrNodes );
 	vecstrNodes[ 0 ] = sArgs.input_arg;
 	
@@ -87,7 +87,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.start_arg > -1){
 	  nStart = sArgs.start_arg + 1;
 	  
-	  if( nStart == 1 )
+	  if( nStart == 2 )
 	    vecstrNodes.erase( vecstrNodes.begin() + 1 );
 	  else if( nStart <= vecstrNodes.size() )
 	    vecstrNodes.erase( vecstrNodes.begin() + 1, vecstrNodes.begin() + nStart );
