@@ -110,6 +110,10 @@ int main( int iArgs, char** aszArgs ) {
 	    (void) closedir (dp);
 	    
 	    inputNums = vecstrInputs.size();
+	    
+	    // sort by ASCI 
+	    std::sort( vecstrInputs.begin(), vecstrInputs.end() );
+	    
 	    cerr << "Number of datasets: " << inputNums << '\n';
 	  }
 	  else{
@@ -175,7 +179,7 @@ int main( int iArgs, char** aszArgs ) {
 	for( iDatOne = iRuns = 0; iDatOne < ( sArgs.datasets_arg ? vecstrDatasets.size() : inputNums ); ++iDatOne){	  	  
 	  opened_DatOne = false;
 	  for( iDatTwo = ( sArgs.datasets_arg ? 0 : iDatOne );  iDatTwo < inputNums; ++iDatTwo, ++iRuns){
-
+	    
 	    // ok skip runs not in range
 	    if(sArgs.start_arg != -1 && iRuns < sArgs.start_arg ){
 	      continue;
