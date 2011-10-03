@@ -24,6 +24,8 @@ option	"scol"		C	"Subtract mean per column"
 						flag	off						
 option	"normalize"		n	"Normalize 0 1 range"
 						flag	off
+option	"transpose"		t	"transpose dataset (prints text to stdout)"
+						flag	off
 						
 option	"skip"			s	"Columns to skip in input PCL"
 							int	default="0" no

@@ -1,24 +1,24 @@
 /*****************************************************************************
-* This file is provided under the Creative Commons Attribution 3.0 license.
-*
-* You are free to share, copy, distribute, transmit, or adapt this work
-* PROVIDED THAT you attribute the work to the authors listed below.
-* For more information, please see the following web page:
-* http://creativecommons.org/licenses/by/3.0/
-*
-* This file is a component of the Sleipnir library for functional genomics,
-* authored by:
-* Curtis Huttenhower (chuttenh@princeton.edu)
-* Mark Schroeder
-* Maria D. Chikina
-* Olga G. Troyanskaya (ogt@princeton.edu, primary contact)
-*
-* If you use this library, the included executable tools, or any related
-* code in your work, please cite the following publication:
-* Curtis Huttenhower, Mark Schroeder, Maria D. Chikina, and
-* Olga G. Troyanskaya.
-* "The Sleipnir library for computational functional genomics"
-*****************************************************************************/
+ * This file is provided under the Creative Commons Attribution 3.0 license.
+ *
+ * You are free to share, copy, distribute, transmit, or adapt this work
+ * PROVIDED THAT you attribute the work to the authors listed below.
+ * For more information, please see the following web page:
+ * http://creativecommons.org/licenses/by/3.0/
+ *
+ * This file is a component of the Sleipnir library for functional genomics,
+ * authored by:
+ * Curtis Huttenhower (chuttenh@princeton.edu)
+ * Mark Schroeder
+ * Maria D. Chikina
+ * Olga G. Troyanskaya (ogt@princeton.edu, primary contact)
+ *
+ * If you use this library, the included executable tools, or any related
+ * code in your work, please cite the following publication:
+ * Curtis Huttenhower, Mark Schroeder, Maria D. Chikina, and
+ * Olga G. Troyanskaya.
+ * "The Sleipnir library for computational functional genomics"
+ *****************************************************************************/
 #ifndef STATISTICS_H
 #define STATISTICS_H
 
@@ -40,11 +40,11 @@ class CDat;
  * Credit for many of these implementations goes to Press WH, Teukolsky SA, Vetterling WT, Flannery BP.
  * Numerical Recipes in C, 1992, Cambridge University Press.
  */
-class CStatistics : CStatisticsImpl {
+class CStatistics: CStatisticsImpl {
 public:
 	// Simple stuff
-	static double FScore( size_t iTruePositives, size_t iFalsePositives, size_t iTrueNegatives,
-		size_t iFalseNegatives, double dBeta = 1 );
+	static double FScore(size_t iTruePositives, size_t iFalsePositives,
+			size_t iTrueNegatives, size_t iFalseNegatives, double dBeta = 1);
 
 	/*!
 	 * \brief
@@ -71,12 +71,13 @@ public:
 	 * \see
 	 * Recall | FScore
 	 */
-	static double Precision( size_t iTruePositives, size_t iFalsePositives, size_t iTrueNegatives,
-		size_t iFalseNegatives ) {
+	static double Precision(size_t iTruePositives, size_t iFalsePositives,
+			size_t iTrueNegatives, size_t iFalseNegatives) {
 		UNUSED_PARAMETER(iTrueNegatives);
 		UNUSED_PARAMETER(iFalseNegatives);
 
-		return ( (double)iTruePositives / ( iTruePositives + iFalsePositives ) ); }
+		return ((double) iTruePositives / (iTruePositives + iFalsePositives));
+	}
 
 	/*!
 	 * \brief
@@ -103,12 +104,13 @@ public:
 	 * \see
 	 * Precision | FScore
 	 */
-	static double Recall( size_t iTruePositives, size_t iFalsePositives, size_t iTrueNegatives,
-		size_t iFalseNegatives ) {
+	static double Recall(size_t iTruePositives, size_t iFalsePositives,
+			size_t iTrueNegatives, size_t iFalseNegatives) {
 		UNUSED_PARAMETER(iFalsePositives);
 		UNUSED_PARAMETER(iTrueNegatives);
 
-		return ( (double)iTruePositives / ( iTruePositives + iFalseNegatives ) ); }
+		return ((double) iTruePositives / (iTruePositives + iFalseNegatives));
+	}
 
 	/*!
 	 * \brief
@@ -130,13 +132,26 @@ public:
 	 * Average
 	 */
 	template<class tType>
-	static double Variance( const tType Begin, const tType End, double dMean ) {
-		double	dRet;
-		size_t	iN;
+	static double Variance(const tType Begin, const tType End, double dMean) {
+		double dRet;
+		size_t iN;
 
-		Sums( Begin, End, NULL, &dRet, &iN );
-		return ( iN ? max( ( dRet / iN ) - ( dMean * dMean ), 0.0 ) : 0 ); }
+		Sums(Begin, End, NULL, &dRet, &iN);
+		return (iN ? max((dRet / iN) - (dMean * dMean), 0.0) : 0);
+	}
 
+	template<class tType>
+	static double NormalizeMeanStd(const tType Begin, const tType End) {
+		double dSum, dSqSum;
+		size_t iN;
+		Sums(Begin, End, &dSum, &dSqSum, &iN);
+		float dMean = dSum /= iN;
+		float dStd = sqrt(iN ? max((dSqSum / iN) - (dMean * dMean), 0.0) : 0);
+		tType Cur;
+		for (Cur = Begin; Cur != End; Cur++) {
+			(*Cur) = (*Cur - dMean) / dStd;
+		}
+	}
 	/*!
 	 * \brief
 	 * Calculate the sample variance of a given sequence.
@@ -154,15 +169,16 @@ public:
 	 * Average
 	 */
 	template<class tType>
-	static double Variance( const tType Begin, const tType End ) {
-		double	dSum, dRet;
-		size_t	iN;
+	static double Variance(const tType Begin, const tType End) {
+		double dSum, dRet;
+		size_t iN;
 
-		Sums( Begin, End, &dSum, &dRet, &iN );
-		if( !iN )
+		Sums(Begin, End, &dSum, &dRet, &iN);
+		if (!iN)
 			return 0;
 		dSum /= iN;
-		return max( ( dRet / iN ) - ( dSum * dSum ), 0.0 ); }
+		return max((dRet / iN) - (dSum * dSum), 0.0);
+	}
 
 	/*!
 	 * \brief
@@ -181,9 +197,10 @@ public:
 	 * Average
 	 */
 	template<class tType>
-	static double Variance( const std::vector<tType>& vecValues, double dMean ) {
+	static double Variance(const std::vector<tType>& vecValues, double dMean) {
 
-		return Variance( vecValues.begin( ), vecValues.end( ), dMean ); }
+		return Variance(vecValues.begin(), vecValues.end(), dMean);
+	}
 
 	/*!
 	 * \brief
@@ -199,9 +216,10 @@ public:
 	 * Average
 	 */
 	template<class tType>
-	static double Variance( const std::vector<tType>& vecValues ) {
+	static double Variance(const std::vector<tType>& vecValues) {
 
-		return Variance( vecValues.begin( ), vecValues.end( ) ); }
+		return Variance(vecValues.begin(), vecValues.end());
+	}
 
 	/*!
 	 * \brief
@@ -217,9 +235,10 @@ public:
 	 * Variance
 	 */
 	template<class tType>
-	static double Average( const std::vector<tType>& vecValues ) {
+	static double Average(const std::vector<tType>& vecValues) {
 
-		return Average( vecValues.begin( ), vecValues.end( ) ); }
+		return Average(vecValues.begin(), vecValues.end());
+	}
 
 	/*!
 	 * \brief
@@ -238,12 +257,13 @@ public:
 	 * Variance
 	 */
 	template<class tType>
-	static double Average( const tType Begin, const tType End ) {
-		double	dRet;
-		size_t	iN;
+	static double Average(const tType Begin, const tType End) {
+		double dRet;
+		size_t iN;
 
-		Sums( Begin, End, &dRet, NULL, &iN );
-		return ( iN ? ( dRet / iN ) : dRet ); }
+		Sums(Begin, End, &dRet, NULL, &iN);
+		return (iN ? (dRet / iN) : dRet);
+	}
 
 	/*!
 	 * \brief
@@ -269,23 +289,24 @@ public:
 	 * Median
 	 */
 	template<class tType>
-	static double Percentile( tType pBegin, tType pEnd, double dPercentile ) {
-		size_t	iOne, iTwo, iSize;
-		double	d, dFrac;
+	static double Percentile(tType pBegin, tType pEnd, double dPercentile) {
+		size_t iOne, iTwo, iSize;
+		double d, dFrac;
 
 		iSize = pEnd - pBegin;
-		std::sort( pBegin, pEnd );
-		while( iSize && CMeta::IsNaN( pBegin[ iSize - 1 ] ) )
+		std::sort(pBegin, pEnd);
+		while (iSize && CMeta::IsNaN(pBegin[iSize - 1]))
 			--iSize;
-		if( !iSize )
-			return CMeta::GetNaN( );
-		d = ( iSize - 1 ) * dPercentile;
-		dFrac = d - (size_t)d;
-		iOne = (size_t)d;
-		iTwo = (size_t)( d + 1 );
+		if (!iSize)
+			return CMeta::GetNaN();
+		d = (iSize - 1) * dPercentile;
+		dFrac = d - (size_t) d;
+		iOne = (size_t) d;
+		iTwo = (size_t) (d + 1);
 
-		return ( ( iTwo >= iSize ) ? pBegin[ iOne ] :
-			( ( pBegin[ iOne ] * ( 1 - dPercentile ) ) + ( pBegin[ iTwo ] * dPercentile ) ) ); }
+		return ((iTwo >= iSize) ? pBegin[iOne] : ((pBegin[iOne] * (1
+				- dPercentile)) + (pBegin[iTwo] * dPercentile)));
+	}
 
 	/*!
 	 * \brief
@@ -304,9 +325,10 @@ public:
 	 * Percentile
 	 */
 	template<class tType>
-	static double Median( std::vector<tType>& vecData ) {
+	static double Median(std::vector<tType>& vecData) {
 
-		return Percentile( vecData.begin( ), vecData.end( ), 0.5 ); }
+		return Percentile(vecData.begin(), vecData.end(), 0.5);
+	}
 
 	/*!
 	 * \brief
@@ -330,9 +352,10 @@ public:
 	 * Note that the vector is modified (sorted) by this function.
 	 */
 	template<class tType>
-	static bool Winsorize( std::vector<tType>& vecValues, size_t iCount = 1 ) {
+	static bool Winsorize(std::vector<tType>& vecValues, size_t iCount = 1) {
 
-		return Winsorize( vecValues.begin( ), vecValues.end( ), iCount ); }
+		return Winsorize(vecValues.begin(), vecValues.end(), iCount);
+	}
 
 	/*!
 	 * \brief
@@ -359,18 +382,20 @@ public:
 	 * Note that the sequence is modified (sorted) by this function.
 	 */
 	template<class tType>
-	static bool Winsorize( tType pBegin, tType pEnd, size_t iCount = 1 ) {
-		size_t	i, iLength;
+	static bool Winsorize(tType pBegin, tType pEnd, size_t iCount = 1) {
+		size_t i, iLength;
 
 		iLength = pEnd - pBegin;
-		if( iLength < ( ( 2 * iCount ) + 1 ) )
+		if (iLength < ((2 * iCount) + 1))
 			return false;
-		std::sort( pBegin, pEnd );
-		for( i = 0; i < iCount; ++i ) {
-			pBegin[ i ] = pBegin[ i + iCount ];
-			pEnd[ -1 - i ] = pEnd[ -1 - iCount ]; }
+		std::sort(pBegin, pEnd);
+		for (i = 0; i < iCount; ++i) {
+			pBegin[i] = pBegin[i + iCount];
+			pEnd[-1 - i] = pEnd[-1 - iCount];
+		}
 
-		return true; }
+		return true;
+	}
 
 	/*!
 	 * \brief
@@ -396,10 +421,12 @@ public:
 	 * ZScore
 	 */
 	template<class tType>
-	static double CohensD( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo,
-		double* pdAverage = NULL ) {
+	static double CohensD(const std::vector<tType>& vecOne, const std::vector<
+			tType>& vecTwo, double* pdAverage = NULL) {
 
-		return CohensD( vecOne.begin( ), vecOne.end( ), vecTwo.begin( ), vecTwo.end( ), pdAverage ); }
+		return CohensD(vecOne.begin(), vecOne.end(), vecTwo.begin(),
+				vecTwo.end(), pdAverage);
+	}
 
 	/*!
 	 * \brief
@@ -431,25 +458,28 @@ public:
 	 * ZScore
 	 */
 	template<class tType>
-	static double CohensD( const tType BeginOne, const tType EndOne, const tType BeginTwo, const tType EndTwo,
-		double* pdAverage = NULL ) {
-		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dStd;
-		size_t	iOne, iTwo;
+	static double CohensD(const tType BeginOne, const tType EndOne,
+			const tType BeginTwo, const tType EndTwo, double* pdAverage = NULL) {
+		double dAveOne, dAveTwo, dVarOne, dVarTwo, dStd;
+		size_t iOne, iTwo;
 
-		Sums( BeginOne, EndOne, &dAveOne, &dVarOne, &iOne );
-		if( iOne ) {
+		Sums(BeginOne, EndOne, &dAveOne, &dVarOne, &iOne);
+		if (iOne) {
 			dAveOne /= iOne;
-			dVarOne = ( dVarOne / iOne ) - ( dAveOne * dAveOne ); }
-		if( pdAverage )
+			dVarOne = (dVarOne / iOne) - (dAveOne * dAveOne);
+		}
+		if (pdAverage)
 			*pdAverage = dAveOne;
-		Sums( BeginTwo, EndTwo, &dAveTwo, &dVarTwo, &iTwo );
-		if( iTwo ) {
+		Sums(BeginTwo, EndTwo, &dAveTwo, &dVarTwo, &iTwo);
+		if (iTwo) {
 			dAveTwo /= iTwo;
-			dVarTwo = ( dVarTwo / iTwo ) - ( dAveTwo * dAveTwo ); }
+			dVarTwo = (dVarTwo / iTwo) - (dAveTwo * dAveTwo);
+		}
 
-		dStd = sqrt( ( dVarOne + dVarTwo ) / 2 );
-		return ( dStd ? ( ( dAveOne - dAveTwo ) / dStd ) :
-			( ( dAveOne == dAveTwo ) ? 0 : DBL_MAX ) ); }
+		dStd = sqrt((dVarOne + dVarTwo) / 2);
+		return (dStd ? ((dAveOne - dAveTwo) / dStd) : ((dAveOne == dAveTwo) ? 0
+				: DBL_MAX));
+	}
 
 	/*!
 	 * \brief
@@ -471,9 +501,12 @@ public:
 	 * CohensD
 	 */
 	template<class tType>
-	static double ZScore( const std::vector<tType>& vecOne, const std::vector<tType>& vecTwo ) {
+	static double ZScore(const std::vector<tType>& vecOne, const std::vector<
+			tType>& vecTwo) {
 
-		return ZScore( vecOne.begin( ), vecOne.end( ), vecTwo.begin( ), vecTwo.end( ) ); }
+		return ZScore(vecOne.begin(), vecOne.end(), vecTwo.begin(),
+				vecTwo.end());
+	}
 
 	/*!
 	 * \brief
@@ -504,22 +537,24 @@ public:
 	 * CohensD
 	 */
 	template<class tType>
-	static double ZScore( const tType BeginOne, const tType EndOne, const tType BeginTwo, const tType EndTwo,
-		double* pdAverage = NULL ) {
-		double	dAveOne, dAveTwo, dVarOne, dVarTwo, dAve, dStd;
-		size_t	iOne, iTwo;
+	static double ZScore(const tType BeginOne, const tType EndOne,
+			const tType BeginTwo, const tType EndTwo, double* pdAverage = NULL) {
+		double dAveOne, dAveTwo, dVarOne, dVarTwo, dAve, dStd;
+		size_t iOne, iTwo;
 
-		Sums( BeginOne, EndOne, &dAveOne, &dVarOne, &iOne );
-		Sums( BeginTwo, EndTwo, &dAveTwo, &dVarTwo, &iTwo );
-		dAve = ( iOne || iTwo ) ? ( ( dAveOne + dAveTwo ) / ( iOne + iTwo ) ) : 0;
-		if( iOne )
+		Sums(BeginOne, EndOne, &dAveOne, &dVarOne, &iOne);
+		Sums(BeginTwo, EndTwo, &dAveTwo, &dVarTwo, &iTwo);
+		dAve = (iOne || iTwo) ? ((dAveOne + dAveTwo) / (iOne + iTwo)) : 0;
+		if (iOne)
 			dAveOne /= iOne;
-		if( pdAverage )
+		if (pdAverage)
 			*pdAverage = dAveOne;
-		dStd = ( iOne || iTwo ) ? sqrt( ( ( dVarOne + dVarTwo ) / ( iOne + iTwo ) ) - ( dAve * dAve ) ) : 0;
+		dStd = (iOne || iTwo) ? sqrt(((dVarOne + dVarTwo) / (iOne + iTwo))
+				- (dAve * dAve)) : 0;
 
-		return ( dStd ? ( ( dAveOne - dAve ) / dStd ) :
-			( ( dAveOne == dAve ) ? 0 : DBL_MAX ) ); }
+		return (dStd ? ((dAveOne - dAve) / dStd) : ((dAveOne == dAve) ? 0
+				: DBL_MAX));
+	}
 
 	/*!
 	 * \brief
@@ -540,60 +575,66 @@ public:
 	 * \see
 	 * ZScore
 	 */
-	static double ZTest( double dZScore, size_t iN ) {
+	static double ZTest(double dZScore, size_t iN) {
 
-		return ( 1 - Normal01CDF( fabs( dZScore ) * sqrt( (double)iN ) ) ); }
+		return (1 - Normal01CDF(fabs(dZScore) * sqrt((double) iN)));
+	}
 
 	template<class tType, class tIter>
-	static double AndersonDarlingScore( tIter Begin, tIter End ) {
-		tIter				Cur;
-		double				d, dA2, dAve, dStd;
-		size_t				i, iN;
-		std::vector<tType>	vecValues;
+	static double AndersonDarlingScore(tIter Begin, tIter End) {
+		tIter Cur;
+		double d, dA2, dAve, dStd;
+		size_t i, iN;
+		std::vector<tType> vecValues;
 
 		dAve = dStd = 0;
-		for( iN = 0,Cur = Begin; Cur != End; ++iN,++Cur ) {
+		for (iN = 0, Cur = Begin; Cur != End; ++iN, ++Cur) {
 			dAve += *Cur;
-			dStd += *Cur * *Cur; }
-		if( iN < 2 )
-			return CMeta::GetNaN( );
+			dStd += *Cur * *Cur;
+		}
+		if (iN < 2)
+			return CMeta::GetNaN();
 		dAve /= iN;
-		dStd = sqrt( ( dStd / ( iN - 1 ) ) - ( dAve * dAve ) );
-		if( dStd <= 0 )
+		dStd = sqrt((dStd / (iN - 1)) - (dAve * dAve));
+		if (dStd <= 0)
 			dStd = 1;
 
-		vecValues.resize( iN );
-		std::copy( Begin, End, vecValues.begin( ) );
-		std::sort( vecValues.begin( ), vecValues.end( ) );
+		vecValues.resize(iN);
+		std::copy(Begin, End, vecValues.begin());
+		std::sort(vecValues.begin(), vecValues.end());
 
 		dA2 = 0;
-		for( i = 0; i < vecValues.size( ); ++i ) {
-			d = Normal01CDF( ( vecValues[i] - dAve ) / dStd );
-			if( d <= std::numeric_limits<double>::epsilon( ) )
-				d = std::numeric_limits<double>::epsilon( );
-			else if( ( 1 - d ) <= std::numeric_limits<double>::epsilon( ) )
-				d = 1 - std::numeric_limits<double>::epsilon( );
-			dA2 += ( ( ( 2 * ( i + 1 ) ) - 1 ) * log( d ) ) + ( ( ( 2 * ( iN - i ) ) - 1 ) * log( 1 - d ) ); }
-		dA2 = ( -dA2 / iN ) - iN;
-		dA2 *= 1 + ( 0.75 / iN ) + ( 2.25 / ( iN * iN ) );
+		for (i = 0; i < vecValues.size(); ++i) {
+			d = Normal01CDF((vecValues[i] - dAve) / dStd);
+			if (d <= std::numeric_limits<double>::epsilon())
+				d = std::numeric_limits<double>::epsilon();
+			else if ((1 - d) <= std::numeric_limits<double>::epsilon())
+				d = 1 - std::numeric_limits<double>::epsilon();
+			dA2 += (((2 * (i + 1)) - 1) * log(d)) + (((2 * (iN - i)) - 1)
+					* log(1 - d));
+		}
+		dA2 = (-dA2 / iN) - iN;
+		dA2 *= 1 + (0.75 / iN) + (2.25 / (iN * iN));
 
-		return dA2; }
+		return dA2;
+	}
 
-	static double AndersonDarlingTest( double dA2 ) {
-		double	dRet;
+	static double AndersonDarlingTest(double dA2) {
+		double dRet;
 
-		if( dA2 < 0.2 )
-			dRet = 1 - exp( -13.436 + ( 101.14 * dA2 ) - ( 223.73 * dA2 * dA2 ) );
-		else if( dA2 < 0.34 )
-			dRet = 1 - exp( -8.318 + ( 42.796 * dA2 ) - ( 59.938 * dA2 * dA2 ) );
-		else if( dA2 < 0.6 )
-			dRet = exp( 0.9177 - ( 4.279 * dA2 ) - ( 1.38 * dA2 * dA2 ) );
-		else if( dA2 < 13 )
-			dRet = exp( 1.2937 - ( 5.709 * dA2 ) + ( 0.0186 * dA2 * dA2 ) );
+		if (dA2 < 0.2)
+			dRet = 1 - exp(-13.436 + (101.14 * dA2) - (223.73 * dA2 * dA2));
+		else if (dA2 < 0.34)
+			dRet = 1 - exp(-8.318 + (42.796 * dA2) - (59.938 * dA2 * dA2));
+		else if (dA2 < 0.6)
+			dRet = exp(0.9177 - (4.279 * dA2) - (1.38 * dA2 * dA2));
+		else if (dA2 < 13)
+			dRet = exp(1.2937 - (5.709 * dA2) + (0.0186 * dA2 * dA2));
 		else
 			dRet = 0;
 
-		return dRet; }
+		return dRet;
+	}
 
 	/*!
 	 * \brief
@@ -622,18 +663,21 @@ public:
 	 * array are compared.
 	 */
 	template<class tType>
-	static double RootMeanSquareError( tType BeginOne, tType EndOne, tType BeginTwo, tType EndTwo ) {
-		tType	CurOne, CurTwo;
-		double	d, dRet;
-		size_t	iN;
+	static double RootMeanSquareError(tType BeginOne, tType EndOne,
+			tType BeginTwo, tType EndTwo) {
+		tType CurOne, CurTwo;
+		double d, dRet;
+		size_t iN;
 
-		for( dRet = 0,CurOne = BeginOne,CurTwo = BeginTwo; ( CurOne != EndOne ) && ( CurTwo != EndTwo );
-			++CurOne,++CurTwo ) {
+		for (dRet = 0, CurOne = BeginOne, CurTwo = BeginTwo; (CurOne != EndOne)
+				&& (CurTwo != EndTwo); ++CurOne, ++CurTwo) {
 			d = *CurOne - *CurTwo;
-			dRet += d * d; }
-		iN = min( EndOne - BeginOne, EndTwo - BeginTwo );
+			dRet += d * d;
+		}
+		iN = min(EndOne - BeginOne, EndTwo - BeginTwo);
 
-		return ( iN ? sqrt( dRet / iN ) : 0 ); }
+		return (iN ? sqrt(dRet / iN) : 0);
+	}
 
 	/*!
 	 * \brief
@@ -665,10 +709,13 @@ public:
 	 * KullbackLeiblerDivergence
 	 */
 	template<class tType>
-	static double JensenShannonDivergence( tType BeginOne, tType EndOne, tType BeginTwo, tType EndTwo ) {
+	static double JensenShannonDivergence(tType BeginOne, tType EndOne,
+			tType BeginTwo, tType EndTwo) {
 
-		return ( ( KullbackLeiblerDivergence( BeginOne, EndOne, BeginTwo, EndTwo ) +
-			KullbackLeiblerDivergence( BeginTwo, EndTwo, BeginOne, EndOne ) ) / 2 ); }
+		return ((KullbackLeiblerDivergence(BeginOne, EndOne, BeginTwo, EndTwo)
+				+ KullbackLeiblerDivergence(BeginTwo, EndTwo, BeginOne, EndOne))
+				/ 2);
+	}
 
 	/*!
 	 * \brief
@@ -700,21 +747,23 @@ public:
 	 * JensenShannonDivergence
 	 */
 	template<class tType>
-	static double KullbackLeiblerDivergence( tType BeginOne, tType EndOne, tType BeginTwo, tType EndTwo ) {
-		double	dRet;
-		tType	CurOne, CurTwo;
+	static double KullbackLeiblerDivergence(tType BeginOne, tType EndOne,
+			tType BeginTwo, tType EndTwo) {
+		double dRet;
+		tType CurOne, CurTwo;
 
-		if( ( EndOne - BeginOne ) != ( EndTwo - BeginTwo ) )
-			return CMeta::GetNaN( );
+		if ((EndOne - BeginOne) != (EndTwo - BeginTwo))
+			return CMeta::GetNaN();
 
-		for( dRet = 0,CurOne = BeginOne,CurTwo = BeginTwo; ( CurOne != EndOne ) && ( CurTwo != EndTwo );
-			++CurOne,++CurTwo )
-			dRet += *CurOne * log( *CurOne / *CurTwo );
+		for (dRet = 0, CurOne = BeginOne, CurTwo = BeginTwo; (CurOne != EndOne)
+				&& (CurTwo != EndTwo); ++CurOne, ++CurTwo)
+			dRet += *CurOne * log(*CurOne / *CurTwo);
 
-		return ( dRet / log( 2.0 ) ); }
+		return (dRet / log(2.0));
+	}
 
 	// P-value tests
-	static double LjungBox( const float* adX, size_t iN, size_t iH );
+	static double LjungBox(const float* adX, size_t iN, size_t iH);
 
 	/*!
 	 * \brief
@@ -730,9 +779,10 @@ public:
 	 * Chi-squared of Q = iN * (iN + 2) * sum(autocorrelation(adX, i)^2 / (iN - i), i = 1..(iN - 1)) with
 	 * iN - 1 degrees of freedom.
 	 */
-	static double LjungBox( const float* adX, size_t iN ) {
+	static double LjungBox(const float* adX, size_t iN) {
 
-		return LjungBox( adX, iN, iN - 1 ); }
+		return LjungBox(adX, iN, iN - 1);
+	}
 
 	/*!
 	 * \brief
@@ -751,14 +801,15 @@ public:
 	 * For dCDF = CStatistics::LognormalCDF (dX, dMean, dVariance), 2 * ((dX > exp(dMean)) ?
 	 * (1 - dCDF) : dCDF).
 	 */
-	static double PValueLognormal( double dX, double dMean, double dStdev ) {
-		double	dCDF;
+	static double PValueLognormal(double dX, double dMean, double dStdev) {
+		double dCDF;
 
-		dCDF = LognormalCDF( dX, dMean, dStdev );
-		if( dX > exp( dMean ) )
+		dCDF = LognormalCDF(dX, dMean, dStdev);
+		if (dX > exp(dMean))
 			dCDF = 1 - dCDF;
 
-		return ( 2 * dCDF ); }
+		return (2 * dCDF);
+	}
 
 	/*!
 	 * \brief
@@ -776,17 +827,18 @@ public:
 	 * \see
 	 * CMeasurePearson | PValueSpearman
 	 */
-	static double PValuePearson( double dR, size_t iN ) {
-		static const double	c_dEpsilon	= 1e-10;
-		double	dT, dF;
+	static double PValuePearson(double dR, size_t iN) {
+		static const double c_dEpsilon = 1e-10;
+		double dT, dF;
 
-		if( iN < 2 )
+		if (iN < 2)
 			return 1;
-		if( ( 1 - dR ) < c_dEpsilon )
+		if ((1 - dR) < c_dEpsilon)
 			return 0;
 		dF = iN - 2;
-		dT = dR * sqrt( dF / ( 1 - ( dR * dR ) ) );
-		return ( 1 - TCDF( dT, dF ) ); }
+		dT = dR * sqrt(dF / (1 - (dR * dR)));
+		return (1 - TCDF(dT, dF));
+	}
 
 	/*!
 	 * \brief
@@ -804,19 +856,23 @@ public:
 	 * \see
 	 * CMeasureSpearman | PValuePearson
 	 */
-	static double PValueSpearman( double dR, size_t iN ) {
-		double	dT;
+	static double PValueSpearman(double dR, size_t iN) {
+		double dT;
 
-		if( iN < 3 )
+		if (iN < 3)
 			return 1;
 
-//		dZ = sqrt( ( iN - 3 ) / 1.06 ) * CStatistics::FisherTransform( dR );
-		dT = dR * sqrt( ( iN - 2 ) / ( 1 - ( dR * dR ) ) );
-		return ( 1 - TCDF( dT, iN - 2 ) ); }
+		//		dZ = sqrt( ( iN - 3 ) / 1.06 ) * CStatistics::FisherTransform( dR );
+		dT = dR * sqrt((iN - 2) / (1 - (dR * dR)));
+		return (1 - TCDF(dT, iN - 2));
+	}
 
-	static double FisherTransform( double dR ) {
-
-		return ( log( ( 1 + dR ) / ( 1 - dR ) ) / 2 ); }
+	static double FisherTransform(double dR) {
+		static const double c_dBound = 0.9999f;
+		if (fabs(dR) >= c_dBound)
+			dR *= c_dBound;
+		return (log((1 + dR) / (1 - dR)) / 2);
+	}
 
 	/*!
 	 * \brief
@@ -837,35 +893,37 @@ public:
 	 * \see
 	 * CMeasureKolmogorovSmirnov
 	 */
-	static double PValueKolmogorovSmirnov( double dD, size_t iM, size_t iN ) {
-		static const float	c_dEpsilon1	= 0.001f;
-		static const float	c_dEpsilon2	= 1e-8f;
-		static const float	c_dEpsilon3	= 0.475f;
-		double	d, dRet, dCur, dPrev;
-		size_t	i, iIterations;
+	static double PValueKolmogorovSmirnov(double dD, size_t iM, size_t iN) {
+		static const float c_dEpsilon1 = 0.001f;
+		static const float c_dEpsilon2 = 1e-8f;
+		static const float c_dEpsilon3 = 0.475f;
+		double d, dRet, dCur, dPrev;
+		size_t i, iIterations;
 
-		if( !dD )
+		if (!dD)
 			return 1;
 
-		d = sqrt( (double)( iM * iN ) / ( iM + iN ) );
-		iIterations = max( (size_t)250, (size_t)( 1 / dD ) );
-		dD = -2 * pow( dD * d, 2 );
-// This is from NR, but it disagrees with R's results
-//		dD = -2 * pow( dD * ( d + 0.12 + ( 0.11 / d ) ), 2 );
-		for( dRet = dPrev = 0,i = 1; i < iIterations; ++i ) {
-			dCur = exp( i * i * dD );
-			if( !( i % 2 ) )
+		d = sqrt((double) (iM * iN) / (iM + iN));
+		iIterations = max((size_t) 250, (size_t) (1 / dD));
+		dD = -2 * pow(dD * d, 2);
+		// This is from NR, but it disagrees with R's results
+		//		dD = -2 * pow( dD * ( d + 0.12 + ( 0.11 / d ) ), 2 );
+		for (dRet = dPrev = 0, i = 1; i < iIterations; ++i) {
+			dCur = exp(i * i * dD);
+			if (!(i % 2))
 				dCur *= -1;
 			dRet += dCur;
-			d = fabs( dCur );
-			if( ( ( ( d / dRet ) < c_dEpsilon1 ) && ( dRet > c_dEpsilon3 ) ) ||
-				( ( d / dPrev ) < c_dEpsilon1 ) || ( ( d / dRet ) < c_dEpsilon2 ) )
+			d = fabs(dCur);
+			if ((((d / dRet) < c_dEpsilon1) && (dRet > c_dEpsilon3)) || ((d
+					/ dPrev) < c_dEpsilon1) || ((d / dRet) < c_dEpsilon2))
 				break;
-			dPrev = d; }
-		if( dRet < 1 )
-			dRet = min( 2 * dRet, 1.0 );
+			dPrev = d;
+		}
+		if (dRet < 1)
+			dRet = min(2 * dRet, 1.0);
 
-		return dRet; }
+		return dRet;
+	}
 
 	/*!
 	 * \brief
@@ -893,16 +951,20 @@ public:
 	 * P-value of T = (dMeanOne - dMeanTwo) / sqrt(((((iNOne - 1) * dVarianceOne) + ((iNTwo - 1) *
 	 * dVarianceTwo)) / (iNOne + iNTwo - 2)) * ((1 / iNOne) + (1 / iNTwo)))
 	 */
-	static double TTestStudent( double dMeanOne, double dVarianceOne, size_t iNOne, double dMeanTwo,
-		double dVarianceTwo, size_t iNTwo ) {
-		size_t	iDegFree;
-		double	dPoolVar, dT;
+	static double TTestStudent(double dMeanOne, double dVarianceOne,
+			size_t iNOne, double dMeanTwo, double dVarianceTwo, size_t iNTwo) {
+		size_t iDegFree;
+		double dPoolVar, dT;
 
 		iDegFree = iNOne + iNTwo - 2;
-		dPoolVar = ( ( ( iNOne - 1 ) * dVarianceOne ) + ( ( iNTwo - 1 ) * dVarianceTwo ) ) / iDegFree;
-		dT = ( dMeanOne - dMeanTwo ) / sqrt( dPoolVar * ( ( 1.0 / iNOne ) + ( 1.0 / iNTwo ) ) );
+		dPoolVar
+				= (((iNOne - 1) * dVarianceOne) + ((iNTwo - 1) * dVarianceTwo))
+						/ iDegFree;
+		dT = (dMeanOne - dMeanTwo) / sqrt(dPoolVar * ((1.0 / iNOne) + (1.0
+				/ iNTwo)));
 
-		return ( 1 - TCDF( dT, iDegFree ) ); }
+		return (1 - TCDF(dT, iDegFree));
+	}
 
 	/*!
 	 * \brief
@@ -923,14 +985,15 @@ public:
 	 * \see
 	 * TTestStudent | TTestWelch
 	 */
-	static double TTest( double dMean, double dVariance, size_t iN ) {
-		size_t	iDegFree;
-		double	dT;
+	static double TTest(double dMean, double dVariance, size_t iN) {
+		size_t iDegFree;
+		double dT;
 
 		iDegFree = iN - 1;
-		dT = sqrt( (float)iN ) * dMean / sqrt( dVariance );
+		dT = sqrt((float) iN) * dMean / sqrt(dVariance);
 
-		return ( 1 - TCDF( dT, iDegFree ) ); }
+		return (1 - TCDF(dT, iDegFree));
+	}
 
 	/*!
 	 * \brief
@@ -958,16 +1021,19 @@ public:
 	 * P-value of T = (dMeanOne - dMeanTwo) / sqrt(((((iNOne - 1) * dVarianceOne) + ((iNTwo - 1) *
 	 * dVarianceTwo)) / (iNOne + iNTwo - 2)) * ((1 / iNOne) + (1 / iNTwo)))
 	 */
-	static double TTestWelch( double dMeanOne, double dVarianceOne, size_t iNOne, double dMeanTwo,
-		double dVarianceTwo, size_t iNTwo ) {
-		double	dDegFree, dT;
+	static double TTestWelch(double dMeanOne, double dVarianceOne,
+			size_t iNOne, double dMeanTwo, double dVarianceTwo, size_t iNTwo) {
+		double dDegFree, dT;
 
-		dDegFree = ( dVarianceOne / iNOne ) + ( dVarianceTwo / iNTwo );
-		dDegFree = ( dDegFree * dDegFree ) / ( ( ( dVarianceOne * dVarianceOne ) / iNOne / iNOne / ( iNOne - 1 ) ) +
-			( ( dVarianceTwo * dVarianceTwo ) / iNTwo / iNTwo / ( iNTwo - 1 ) ) );
-		dT = ( dMeanOne - dMeanTwo ) / sqrt( ( dVarianceOne / iNOne ) + ( dVarianceTwo / iNTwo ) );
+		dDegFree = (dVarianceOne / iNOne) + (dVarianceTwo / iNTwo);
+		dDegFree = (dDegFree * dDegFree) / (((dVarianceOne * dVarianceOne)
+				/ iNOne / iNOne / (iNOne - 1)) + ((dVarianceTwo * dVarianceTwo)
+				/ iNTwo / iNTwo / (iNTwo - 1)));
+		dT = (dMeanOne - dMeanTwo) / sqrt((dVarianceOne / iNOne)
+				+ (dVarianceTwo / iNTwo));
 
-		return ( 1 - TCDF( dT, dDegFree ) ); }
+		return (1 - TCDF(dT, dDegFree));
+	}
 
 	/*!
 	 * \brief
@@ -988,34 +1054,40 @@ public:
 	 * \returns
 	 * P-value of F = dVarianceOne / dVarianceTwo.
 	 */
-	static double FTest( double dVarianceOne, size_t iNOne, double dVarianceTwo, size_t iNTwo ) {
-		double	dRet, dF;
-		size_t	iDF1, iDF2;
+	static double FTest(double dVarianceOne, size_t iNOne, double dVarianceTwo,
+			size_t iNTwo) {
+		double dRet, dF;
+		size_t iDF1, iDF2;
 
-		if( dVarianceOne < dVarianceTwo ) {
-			std::swap( dVarianceOne, dVarianceTwo );
-			std::swap( iNOne, iNTwo ); }
+		if (dVarianceOne < dVarianceTwo) {
+			std::swap(dVarianceOne, dVarianceTwo);
+			std::swap(iNOne, iNTwo);
+		}
 		dF = dVarianceOne / dVarianceTwo;
 		iDF1 = iNOne - 1;
 		iDF2 = iNTwo - 1;
 
-		dRet = 2 * IncompleteBeta( 0.5 * iDF2, 0.5 * iDF1, iDF2 / ( iDF2 + ( iDF1 * dF ) ) );
-		if( dRet > 1 )
+		dRet = 2 * IncompleteBeta(0.5 * iDF2, 0.5 * iDF1, iDF2 / (iDF2 + (iDF1
+				* dF)));
+		if (dRet > 1)
 			dRet = 2 - dRet;
 
-		return dRet; }
+		return dRet;
+	}
 
 	// Evaluation statistics
-	static double WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,
-		const std::vector<bool>& vecfGenesOfInterest, bool fInvert = false );
+	static double WilcoxonRankSum(const CDat& DatData, const CDat& DatAnswers,
+			const std::vector<bool>& vecfGenesOfInterest, bool fInvert = false);
 
 	// Probability distributions
-	static double HypergeometricCDF( size_t iBoth, size_t iNonZeroInOne, size_t iNonZeroInTwo, size_t iN );
-	static double TwoSidedHypergeometricCDF( size_t iHitsOne, size_t iSizeOne, size_t iHitsTwo, size_t iSizeTwo );
-	static double SampleGammaStandard( double dShape );
-	static double SampleGammaLogStandard( double dXX );
-	static double SampleNormalStandard( );
-	static double SampleExponentialStandard( );
+	static double HypergeometricCDF(size_t iBoth, size_t iNonZeroInOne,
+			size_t iNonZeroInTwo, size_t iN);
+	static double TwoSidedHypergeometricCDF(size_t iHitsOne, size_t iSizeOne,
+			size_t iHitsTwo, size_t iSizeTwo);
+	static double SampleGammaStandard(double dShape);
+	static double SampleGammaLogStandard(double dXX);
+	static double SampleNormalStandard();
+	static double SampleExponentialStandard();
 
 	/*!
 	 * \brief
@@ -1033,10 +1105,11 @@ public:
 	 * \returns
 	 * Value of a Skellam distribution with the requested parameters at the given point.
 	 */
-	static double SkellamPDF( size_t iX, double dMu1, double dMu2 ) {
+	static double SkellamPDF(size_t iX, double dMu1, double dMu2) {
 
-		return ( exp( -( dMu1 + dMu2 ) ) * pow( dMu1 / dMu2, 0.5 * iX ) *
-			ModifiedBesselI( iX, 2 * sqrt( dMu1 * dMu2 ) ) ); }
+		return (exp(-(dMu1 + dMu2)) * pow(dMu1 / dMu2, 0.5 * iX)
+				* ModifiedBesselI(iX, 2 * sqrt(dMu1 * dMu2)));
+	}
 
 	/*!
 	 * \brief
@@ -1060,13 +1133,15 @@ public:
 	 * Implementation courtesy of Press WH, Teukolsky SA, Vetterling WT, Flannery BP.  Numerical Recipes in C,
 	 * 1992, Cambridge University Press.
 	 */
-	static double BinomialCDF( size_t iObservations, size_t iSample, double dProbability ) {
-		double	d;
+	static double BinomialCDF(size_t iObservations, size_t iSample,
+			double dProbability) {
+		double d;
 
-		d = ( iObservations - ( iSample * dProbability ) ) / sqrt( iSample * dProbability *
-			( 1 - dProbability ) );
-		return ( 1 - NormalCDF( d, 0, 1 ) ); }
-	
+		d = (iObservations - (iSample * dProbability)) / sqrt(iSample
+				* dProbability * (1 - dProbability));
+		return (1 - NormalCDF(d, 0, 1));
+	}
+
 	/*!
 	 * \brief
 	 * Calculate the hypergeometric probability distribution given the sizes and overlap of two sets.
@@ -1090,19 +1165,22 @@ public:
 	 * \remarks
 	 * Calculated using the exponential of CStatistics::LogFact results for increased speed and precision.
 	 */
-	static double HypergeometricPDF( size_t iNonZeroInCommon, size_t iNonZeroInOne,
-			size_t iNonZeroInTwo, size_t iTotalNumValues ) {
+	static double HypergeometricPDF(size_t iNonZeroInCommon,
+			size_t iNonZeroInOne, size_t iNonZeroInTwo, size_t iTotalNumValues) {
 
-		return exp( LogFact( iTotalNumValues - iNonZeroInTwo ) + LogFact( iNonZeroInTwo ) //right margin
-				+ LogFact( iNonZeroInOne ) + LogFact( iTotalNumValues - iNonZeroInOne ) // bottom margin
-				- LogFact( iTotalNumValues ) // total
-				- LogFact( iNonZeroInCommon ) //1,1
-				- LogFact( iNonZeroInTwo - iNonZeroInCommon ) //1,0
-				- LogFact( iTotalNumValues - iNonZeroInTwo + iNonZeroInCommon - iNonZeroInOne ) //0, 0
-				- LogFact( iNonZeroInOne - iNonZeroInCommon ) //0,1
+		return exp(LogFact(iTotalNumValues - iNonZeroInTwo) + LogFact(
+				iNonZeroInTwo) //right margin
+				+ LogFact(iNonZeroInOne) + LogFact(iTotalNumValues
+				- iNonZeroInOne) // bottom margin
+				- LogFact(iTotalNumValues) // total
+				- LogFact(iNonZeroInCommon) //1,1
+				- LogFact(iNonZeroInTwo - iNonZeroInCommon) //1,0
+				- LogFact(iTotalNumValues - iNonZeroInTwo + iNonZeroInCommon
+						- iNonZeroInOne) //0, 0
+				- LogFact(iNonZeroInOne - iNonZeroInCommon) //0,1
 		);
 	}
-	
+
 	/*!
 	 * \brief
 	 * Calculate a p-value for the given T and degrees of freedom.
@@ -1116,9 +1194,10 @@ public:
 	 * \returns
 	 * p-value of the given T and degrees of freedom.
 	 */
-	static double TCDF( double dT, double dDF ) {
+	static double TCDF(double dT, double dDF) {
 
-		return ( 1 - IncompleteBeta( 0.5 * dDF, 0.5, dDF / ( dDF + ( dT * dT ) ) ) ); }
+		return (1 - IncompleteBeta(0.5 * dDF, 0.5, dDF / (dDF + (dT * dT))));
+	}
 
 	/*!
 	 * \brief
@@ -1136,9 +1215,10 @@ public:
 	 * \returns
 	 * CStatistics::NormalCDF (log(dX), dMean, dVariance)
 	 */
-	static double LognormalCDF( double dX, double dMean, double dStdev ) {
+	static double LognormalCDF(double dX, double dMean, double dStdev) {
 
-		return ( ( dX > 0 ) ? NormalCDF( log( dX ), dMean, dStdev ) : 0 ); }
+		return ((dX > 0) ? NormalCDF(log(dX), dMean, dStdev) : 0);
+	}
 
 	/*!
 	 * \brief
@@ -1158,11 +1238,12 @@ public:
 	 * 		exp( ( 2 * dLambda / dMean  ) + log ( Normal01CDF( -sqrt( dLambda / dX ) *
 	 * 		( ( dX / dMean ) + 1 ) ) )
 	 */
-	static double InverseGaussianCDF( double dX, double dMean, double dLambda ) {
+	static double InverseGaussianCDF(double dX, double dMean, double dLambda) {
 
-		return ( Normal01CDF( sqrt( dLambda / dX ) * ( ( dX / dMean ) - 1 ) ) +
-			exp( ( 2 * dLambda / dMean  ) + log ( Normal01CDF( -sqrt( dLambda / dX ) *
-			( ( dX / dMean ) + 1 ) ) ) ) ); }
+		return (Normal01CDF(sqrt(dLambda / dX) * ((dX / dMean) - 1)) + exp((2
+				* dLambda / dMean) + log(Normal01CDF(-sqrt(dLambda / dX) * ((dX
+				/ dMean) + 1)))));
+	}
 
 	/*!
 	 * \brief
@@ -1180,9 +1261,10 @@ public:
 	 * \returns
 	 * NCDF((dX - dMean) / dStdev), for NCDF a normal CDF with mean 0, standard deviation 1.
 	 */
-	static double NormalCDF( double dX, double dMean, double dStdev ) {
+	static double NormalCDF(double dX, double dMean, double dStdev) {
 
-		return Normal01CDF( ( dX - dMean ) / dStdev ); }
+		return Normal01CDF((dX - dMean) / dStdev);
+	}
 
 	/*!
 	 * \brief
@@ -1194,9 +1276,10 @@ public:
 	 * \returns
 	 * NCDF(dX), for NCDF a normal CDF with mean 0, variance 1.
 	 */
-	static double Normal01CDF( double dX ) {
+	static double Normal01CDF(double dX) {
 
-		return CStatisticsImpl::Normal01CDF( dX ); }
+		return CStatisticsImpl::Normal01CDF(dX);
+	}
 
 	/*!
 	 * \brief
@@ -1208,7 +1291,7 @@ public:
 	 * \returns
 	 * Value of dY, for dX = NCDF(dY) and NCDF a normal CDF with mean 0, variance 1.
 	 */
-	static double InverseNormal01CDF( double dX );
+	static double InverseNormal01CDF(double dX);
 
 	/*!
 	 * \brief
@@ -1244,43 +1327,50 @@ public:
 	 * \see
 	 * CholeskyDecomposition
 	 */
-	static double MultivariateNormalCDF( const std::vector<float>& vecdX, const std::vector<float>& vecdMu,
-		const CDataMatrix& MatSigmaCholesky, size_t iN = 1, float dMaxError = 0.01, float dMaxCI = 0.99,
-		size_t iMaxIterations = 300 ) {
-		std::vector<double>	vecdDiff, vecdY, vecdF;
-		size_t				i, j, iIterations;
-		double				d, dRet, dVar, dError, dAlpha, dQ, dN;
+	static double MultivariateNormalCDF(const std::vector<float>& vecdX,
+			const std::vector<float>& vecdMu,
+			const CDataMatrix& MatSigmaCholesky, size_t iN = 1,
+			float dMaxError = 0.01, float dMaxCI = 0.99, size_t iMaxIterations =
+					300) {
+		std::vector<double> vecdDiff, vecdY, vecdF;
+		size_t i, j, iIterations;
+		double d, dRet, dVar, dError, dAlpha, dQ, dN;
 
-		if( vecdX.empty( ) || ( vecdX.size( ) != vecdMu.size( ) ) ||
-			( vecdX.size( ) != MatSigmaCholesky.GetRows( ) ) ||
-			( vecdX.size( ) != MatSigmaCholesky.GetColumns( ) ) )
-			return CMeta::GetNaN( );
+		if (vecdX.empty() || (vecdX.size() != vecdMu.size()) || (vecdX.size()
+				!= MatSigmaCholesky.GetRows()) || (vecdX.size()
+				!= MatSigmaCholesky.GetColumns()))
+			return CMeta::GetNaN();
 
-		dN = sqrt( (double)iN );
-		vecdDiff.resize( vecdX.size( ) );
-		for( i = 0; i < vecdDiff.size( ); ++i )
-			vecdDiff[ i ] = vecdX[ i ] - vecdMu[ i ];
-		dAlpha = InverseNormal01CDF( dMaxCI );
-		vecdF.resize( vecdX.size( ) );
-		vecdF[ 0 ] = Normal01CDF( dN * vecdDiff[ 0 ] / MatSigmaCholesky.Get( 0, 0 ) );
-		vecdY.resize( vecdX.size( ) );
+		dN = sqrt((double) iN);
+		vecdDiff.resize(vecdX.size());
+		for (i = 0; i < vecdDiff.size(); ++i)
+			vecdDiff[i] = vecdX[i] - vecdMu[i];
+		dAlpha = InverseNormal01CDF(dMaxCI);
+		vecdF.resize(vecdX.size());
+		vecdF[0] = Normal01CDF(dN * vecdDiff[0] / MatSigmaCholesky.Get(0, 0));
+		vecdY.resize(vecdX.size());
 
 		dRet = dVar = 0;
 		dError = 2 * dMaxError;
-		for( iIterations = 1; ( iIterations <= iMaxIterations ) && ( dError > dMaxError ); ++iIterations ) {
-			for( i = 1; i < vecdY.size( ); ++i ) {
-				vecdY[ i - 1 ] = InverseNormal01CDF( vecdF[ i - 1 ] * rand( ) / RAND_MAX );
+		for (iIterations = 1; (iIterations <= iMaxIterations) && (dError
+				> dMaxError); ++iIterations) {
+			for (i = 1; i < vecdY.size(); ++i) {
+				vecdY[i - 1] = InverseNormal01CDF(vecdF[i - 1] * rand()
+						/ RAND_MAX);
 				dQ = 0;
-				for( j = 0; j < i; ++j )
-					dQ += MatSigmaCholesky.Get( j, i ) * vecdY[ j ] / dN;
-				vecdF[ i ] = Normal01CDF( dN * ( vecdDiff[ i ] - dQ ) / MatSigmaCholesky.Get( i, i ) ) *
-					vecdF[ i - 1 ]; }
-			d = ( vecdF.back( ) - dRet ) / iIterations;
+				for (j = 0; j < i; ++j)
+					dQ += MatSigmaCholesky.Get(j, i) * vecdY[j] / dN;
+				vecdF[i] = Normal01CDF(dN * (vecdDiff[i] - dQ)
+						/ MatSigmaCholesky.Get(i, i)) * vecdF[i - 1];
+			}
+			d = (vecdF.back() - dRet) / iIterations;
 			dRet += d;
-			dVar = ( ( iIterations - 2 ) * dVar / iIterations ) + ( d * d );
-			dError = dAlpha * sqrt( dVar ); }
+			dVar = ((iIterations - 2) * dVar / iIterations) + (d * d);
+			dError = dAlpha * sqrt(dVar);
+		}
 
-		return dRet; }
+		return dRet;
+	}
 
 	/*!
 	 * \brief
@@ -1305,23 +1395,25 @@ public:
 	 * \see
 	 * MultivariateNormalCDF
 	 */
-	static double MultivariateNormalPDF( const std::vector<float>& vecdX, const std::vector<float>& vecdMu,
-		const CDataMatrix& MatSigma ) {
-		CDataMatrix		MatLU, MatInv;
-		vector<size_t>	veciIndices;
-		bool			fEven;
-		double			dDet;
+	static double MultivariateNormalPDF(const std::vector<float>& vecdX,
+			const std::vector<float>& vecdMu, const CDataMatrix& MatSigma) {
+		CDataMatrix MatLU, MatInv;
+		vector<size_t> veciIndices;
+		bool fEven;
+		double dDet;
 
-		if( !MatSigma.GetRows( ) || ( MatSigma.GetRows( ) != MatSigma.GetColumns( ) ) )
-			return CMeta::GetNaN( );
+		if (!MatSigma.GetRows()
+				|| (MatSigma.GetRows() != MatSigma.GetColumns()))
+			return CMeta::GetNaN();
 
-		MatLU.Initialize( MatSigma.GetRows( ), MatSigma.GetColumns( ) );
-		MatLU.Open( MatSigma );
-		MatrixLUDecompose( MatLU, veciIndices, fEven );
-		MatrixLUInvert( MatLU, veciIndices, MatInv );
-		dDet = MatrixLUDeterminant( MatLU, fEven );
+		MatLU.Initialize(MatSigma.GetRows(), MatSigma.GetColumns());
+		MatLU.Open(MatSigma);
+		MatrixLUDecompose(MatLU, veciIndices, fEven);
+		MatrixLUInvert(MatLU, veciIndices, MatInv);
+		dDet = MatrixLUDeterminant(MatLU, fEven);
 
-		return MultivariateNormalPDF( vecdX, vecdMu, sqrt( dDet ), MatInv ); }
+		return MultivariateNormalPDF(vecdX, vecdMu, sqrt(dDet), MatInv);
+	}
 
 	/*!
 	 * \brief
@@ -1349,24 +1441,28 @@ public:
 	 * \see
 	 * MultivariateNormalCDF
 	 */
-	static double MultivariateNormalPDF( const std::vector<float>& vecdX, const std::vector<float>& vecdMu,
-		double dSigmaDetSqrt, const CDataMatrix& MatSigmaInv ) {
-		size_t			i;
-		vector<float>	vecdXmMu, vecdXmMutS;
-		double			d;
+	static double MultivariateNormalPDF(const std::vector<float>& vecdX,
+			const std::vector<float>& vecdMu, double dSigmaDetSqrt,
+			const CDataMatrix& MatSigmaInv) {
+		size_t i;
+		vector<float> vecdXmMu, vecdXmMutS;
+		double d;
 
-		if( !MatSigmaInv.GetRows( ) || ( MatSigmaInv.GetRows( ) != MatSigmaInv.GetColumns( ) ) ||
-			vecdX.empty( ) || ( vecdX.size( ) != vecdMu.size( ) ) )
-			return CMeta::GetNaN( );
+		if (!MatSigmaInv.GetRows() || (MatSigmaInv.GetRows()
+				!= MatSigmaInv.GetColumns()) || vecdX.empty() || (vecdX.size()
+				!= vecdMu.size()))
+			return CMeta::GetNaN();
 
-		vecdXmMu.resize( vecdX.size( ) );
-		for( i = 0; i < vecdXmMu.size( ); ++i )
-			if( CMeta::IsNaN( vecdXmMu[ i ] = vecdX[ i ] - vecdMu[ i ] ) )
-				vecdXmMu[ i ] = 0;
-		MatrixMultiply( vecdXmMu, MatSigmaInv, vecdXmMutS );
-		d = MatrixMultiply( vecdXmMutS, vecdXmMu );
+		vecdXmMu.resize(vecdX.size());
+		for (i = 0; i < vecdXmMu.size(); ++i)
+			if (CMeta::IsNaN(vecdXmMu[i] = vecdX[i] - vecdMu[i]))
+				vecdXmMu[i] = 0;
+		MatrixMultiply(vecdXmMu, MatSigmaInv, vecdXmMutS);
+		d = MatrixMultiply(vecdXmMutS, vecdXmMu);
 
-		return ( ( 1 / pow( 2 * 3.1415926535898, vecdX.size( ) / 2.0 ) / dSigmaDetSqrt ) * exp( -d / 2 ) ); }
+		return ((1 / pow(2 * 3.1415926535898, vecdX.size() / 2.0)
+				/ dSigmaDetSqrt) * exp(-d / 2));
+	}
 
 	/*!
 	 * \brief
@@ -1381,9 +1477,10 @@ public:
 	 * \see
 	 * Chi2CDF
 	 */
-	static double SampleChi2( size_t iDF ) {
+	static double SampleChi2(size_t iDF) {
 
-		return ( 2 * SampleGamma( 1, iDF / 2 ) ); }
+		return (2 * SampleGamma(1, iDF / 2));
+	}
 
 	/*!
 	 * \brief
@@ -1401,9 +1498,10 @@ public:
 	 * \see
 	 * SampleChi2
 	 */
-	static double Chi2CDF( double dC2, size_t iDF ) {
+	static double Chi2CDF(double dC2, size_t iDF) {
 
-		return CStatisticsImpl::Chi2CDF( sqrt( dC2 ), 0, 1, iDF ); }
+		return CStatisticsImpl::Chi2CDF(sqrt(dC2), 0, 1, iDF);
+	}
 
 	/*!
 	 * \brief
@@ -1418,9 +1516,10 @@ public:
 	 * \returns
 	 * Random sample from a gamma function with the given shape and location parameters.
 	 */
-	static double SampleGamma( double dLocation, double dShape ) {
+	static double SampleGamma(double dLocation, double dShape) {
 
-		return ( SampleGammaStandard( dShape ) / dLocation ); }
+		return (SampleGammaStandard(dShape) / dLocation);
+	}
 
 	/*!
 	 * \brief
@@ -1449,15 +1548,17 @@ public:
 	 * Implementation courtesy of Press WH, Teukolsky SA, Vetterling WT, Flannery BP.  Numerical Recipes in C,
 	 * 1992, Cambridge University Press.
 	 */
-	static double BetaPDF( double dX, double dMinimum, double dMaximum, double dAlpha, double dBeta ) {
-		double	dFunc, dLocation, dScale;
+	static double BetaPDF(double dX, double dMinimum, double dMaximum,
+			double dAlpha, double dBeta) {
+		double dFunc, dLocation, dScale;
 
 		dLocation = dMinimum;
 		dScale = dMaximum - dMinimum;
-		dX = ( dX - dLocation ) / dScale;
-		dFunc = exp( SampleGammaLogStandard( dAlpha ) + SampleGammaLogStandard( dBeta ) -
-			SampleGammaLogStandard( dAlpha + dBeta ) );
-		return ( pow( dX, dAlpha - 1 ) * pow( 1 - dX, dBeta - 1 ) / dFunc / dScale ); }
+		dX = (dX - dLocation) / dScale;
+		dFunc = exp(SampleGammaLogStandard(dAlpha) + SampleGammaLogStandard(
+				dBeta) - SampleGammaLogStandard(dAlpha + dBeta));
+		return (pow(dX, dAlpha - 1) * pow(1 - dX, dBeta - 1) / dFunc / dScale);
+	}
 
 	/*!
 	 * \brief
@@ -1475,12 +1576,13 @@ public:
 	 * \returns
 	 * exp(-(dX - dMu)^2 / (2 * dSigma^2)) / (dSigma * sqrt(2*PI))
 	 */
-	static double NormalPDF( double dX, double dMu, double dSigma ) {
-		static const double	c_dS2P	= sqrt( 2 * 3.1415926535898 );
-		double	d;
+	static double NormalPDF(double dX, double dMu, double dSigma) {
+		static const double c_dS2P = sqrt(2 * 3.1415926535898);
+		double d;
 
 		d = dX - dMu;
-		return ( exp( -( d * d ) / ( 2 * dSigma * dSigma ) ) / ( dSigma * c_dS2P ) ); }
+		return (exp(-(d * d) / (2 * dSigma * dSigma)) / (dSigma * c_dS2P));
+	}
 
 	/*!
 	 * \brief
@@ -1495,9 +1597,10 @@ public:
 	 * \returns
 	 * Value of an exponeitial PDF at the requested point.
 	 */
-	static double ExponentialPDF( double dX, double dLambda ) {
+	static double ExponentialPDF(double dX, double dLambda) {
 
-		return ( dLambda * exp( -dLambda * dX ) ); }
+		return (dLambda * exp(-dLambda * dX));
+	}
 
 	/*!
 	 * \brief
@@ -1512,34 +1615,39 @@ public:
 	 * \remarks
 	 * Matrix must be square.
 	 */
-	static bool CholeskyDecomposition( CDataMatrix& Matrix ) {
-		std::vector<float>	vecdP;
-		size_t				i, j, k;
-		float				dSum;
+	static bool CholeskyDecomposition(CDataMatrix& Matrix) {
+		std::vector<float> vecdP;
+		size_t i, j, k;
+		float dSum;
 
-		if( Matrix.GetRows( ) != Matrix.GetColumns( ) )
+		if (Matrix.GetRows() != Matrix.GetColumns())
 			return false;
 
-		vecdP.resize( Matrix.GetRows( ) );
-		for( i = 0; i < vecdP.size( ); ++i )
-			for( j = i; j < vecdP.size( ); ++j ) {
-				dSum = Matrix.Get( i, j );
-				for( k = 0; k < i; ++k )
-					dSum -= Matrix.Get( i, k ) * Matrix.Get( j, k );
-				if( i == j )
-					vecdP[ i ] = ( dSum <= 0 ) ? std::numeric_limits<float>::epsilon( ) : sqrt( dSum );
+		vecdP.resize(Matrix.GetRows());
+		for (i = 0; i < vecdP.size(); ++i)
+			for (j = i; j < vecdP.size(); ++j) {
+				dSum = Matrix.Get(i, j);
+				for (k = 0; k < i; ++k)
+					dSum -= Matrix.Get(i, k) * Matrix.Get(j, k);
+				if (i == j)
+					vecdP[i]
+							= (dSum <= 0) ? std::numeric_limits<float>::epsilon()
+									: sqrt(dSum);
 				else
-					Matrix.Set( j, i, dSum / vecdP[ i ] ); }
+					Matrix.Set(j, i, dSum / vecdP[i]);
+			}
 
-		for( i = 0; i < vecdP.size( ); ++i )
-			for( j = i; j < vecdP.size( ); ++j )
-				Matrix.Set( i, j, ( i == j ) ? vecdP[ i ] : Matrix.Get( j, i ) );
-		return true; }
+		for (i = 0; i < vecdP.size(); ++i)
+			for (j = i; j < vecdP.size(); ++j)
+				Matrix.Set(i, j, (i == j) ? vecdP[i] : Matrix.Get(j, i));
+		return true;
+	}
 
 	// Matrix operations
-	static bool MatrixLUDecompose( CDataMatrix& Mat, std::vector<size_t>& veciIndices, bool& fEven );
-	static bool MatrixLUInvert( CDataMatrix& MatLU, const std::vector<size_t>& veciIndices,
-		CDataMatrix& MatInv );
+	static bool MatrixLUDecompose(CDataMatrix& Mat,
+			std::vector<size_t>& veciIndices, bool& fEven);
+	static bool MatrixLUInvert(CDataMatrix& MatLU,
+			const std::vector<size_t>& veciIndices, CDataMatrix& MatInv);
 
 	/*!
 	 * \brief
@@ -1562,18 +1670,20 @@ public:
 	 * MatrixLUDecompose
 	 */
 	template<class tType>
-	static double MatrixLUDeterminant( const CFullMatrix<tType>& MatLU, bool fEven ) {
-		double	dRet;
-		size_t	i;
+	static double MatrixLUDeterminant(const CFullMatrix<tType>& MatLU,
+			bool fEven) {
+		double dRet;
+		size_t i;
 
-		if( MatLU.GetRows( ) != MatLU.GetColumns( ) )
-			return CMeta::GetNaN( );
+		if (MatLU.GetRows() != MatLU.GetColumns())
+			return CMeta::GetNaN();
 
 		dRet = fEven ? 1 : -1;
-		for( i = 0; i < MatLU.GetRows( ); ++i )
-			dRet *= MatLU.Get( i, i );
+		for (i = 0; i < MatLU.GetRows(); ++i)
+			dRet *= MatLU.Get(i, i);
 
-		return dRet; }
+		return dRet;
+	}
 };
 
 }

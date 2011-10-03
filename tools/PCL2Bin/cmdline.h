@@ -61,6 +61,8 @@ struct gengetopt_args_info
   const char *scol_help; /**< @brief Subtract mean per column help description.  */
   int normalize_flag;	/**< @brief Normalize 0 1 range (default=off).  */
   const char *normalize_help; /**< @brief Normalize 0 1 range help description.  */
+  int transpose_flag;	/**< @brief transpose dataset (prints text to stdout) (default=off).  */
+  const char *transpose_help; /**< @brief transpose dataset (prints text to stdout) help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCL (default='0').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
@@ -81,6 +83,7 @@ struct gengetopt_args_info
   unsigned int zcol_given ;	/**< @brief Whether zcol was given.  */
   unsigned int scol_given ;	/**< @brief Whether scol was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int transpose_given ;	/**< @brief Whether transpose was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
   unsigned int mmap_given ;	/**< @brief Whether mmap was given.  */
