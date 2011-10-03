@@ -62,7 +62,7 @@ int main( int iArgs, char** aszArgs ) {
 	int					iMax;
 	float				dAnswer, dValue;
 	vector<bool>		vecfHere;
-	vector<float>		vecdScores, vecdSSE;
+	vector<float>		vecdScores, vecdSSE, vecdBinValue;
 	vector<size_t>		veciPositives, veciNegatives, veciGenesTerm;
 	ofstream			ofsm;
 	ostream*			postm;
@@ -76,12 +76,15 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg );
 
-	fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg || sArgs.genee_arg );
+	fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genep_arg || sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg || sArgs.genee_arg );
 	if( !Answers.Open( sArgs.answers_arg, fMapAnswers ) ) {
 		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
 		return 1; }
 	if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
 		cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+		return 1; }
+	if( sArgs.genep_arg && !Answers.FilterGenes( sArgs.genep_arg, CDat::EFilterIncludePos ) ) {
+		cerr << "Couldn't open: " << sArgs.genep_arg << endl;
 		return 1; }
 	if( sArgs.genee_arg && !Answers.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge ) ) {
 		cerr << "Couldn't open: " << sArgs.genee_arg << endl;
@@ -203,7 +206,11 @@ int main( int iArgs, char** aszArgs ) {
 							iNegatives++;
 						vecsData.push_back( SDatum( dValue, i, j, dAnswer ) ); } }
 				sort( vecsData.begin( ), vecsData.end( ), SSorter( !!sArgs.invert_flag ) );
-				iChunk = (size_t)( 0.5 + ( (float)vecsData.size( ) / ( MatResults.GetRows( ) - 1 ) ) );
+				//instead of putting all of the uneveness in one bin, spread it out into each bin.
+				//N.B. only the part without the sse_flag is fixed in this regard
+				size_t perChunk = (size_t)(vecsData.size()/MatResults.GetRows());
+				size_t chnkRem = (size_t)(vecsData.size()%MatResults.GetRows());
+				iChunk = (size_t)( 0.5 + ( (float)vecsData.size( ) / ( MatResults.GetRows( ) ) ) );
 				if( sArgs.sse_flag ) {
 					vecdSSE.resize( MatResults.GetRows( ) );
 					veciPositives.resize( vecdSSE.size( ) );
@@ -224,21 +231,26 @@ int main( int iArgs, char** aszArgs ) {
 				else {
 					veciPositives.resize( MatResults.GetRows( ) - 1 );
 					veciNegatives.resize( veciPositives.size( ) );
+					vecdBinValue.resize( veciPositives.size( )+1 );
 					for( i = 0; i < veciNegatives.size( ); ++i )
 						veciNegatives[ i ] = veciPositives[ i ] = 0;
-					for( i = j = 0; i < veciPositives.size( ); ++i,j += iChunk )
-						for( k = 0; k < iChunk; ++k ) {
-							if( ( j + k ) >= vecsData.size( ) )
-								break;
+					for( i = j = 0; i < veciPositives.size( )+1; ++i,j += k ) {
+						size_t thisChunk = (i < chnkRem) ? (perChunk + 1) : (perChunk);
+						for( k = 0; k < thisChunk; ++k ) {
+							//if( ( j + k ) >= vecsData.size( ) )
+							//	break;
 							const SDatum&	sDatum	= vecsData[ j + k ];
+							vecdBinValue[ i ] = sDatum.m_dValue;
 
 							for( m = i; m > 0; --m ) {
 								MatGenes.Set( sDatum.m_iOne, m, true );
 								MatGenes.Set( sDatum.m_iTwo, m, true ); }
+							if( i >= veciPositives.size() )
+								continue;
 							if( Answers.Get( sDatum.m_iOne, sDatum.m_iTwo ) )
 								veciPositives[ i ]++;
 							else
-								veciNegatives[ i ]++; }
+								veciNegatives[ i ]++; }}
 
 					MatResults.Set( 0, ETFPN_TP, iPositives );
 					MatResults.Set( 0, ETFPN_FP, iNegatives );
@@ -315,7 +327,7 @@ int main( int iArgs, char** aszArgs ) {
 			if( !sArgs.sse_flag ) {
 				*postm << "#	P	" << iPositives << endl;
 				*postm << "#	N	" << iNegatives << endl; }
-			*postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN	PR	RC" ) << endl;
+			*postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN	RC	PR	VALUE" ) << endl;
 			for( i = 0; i < MatResults.GetRows( ); ++i ) {
 				*postm << ( iBins ? i : ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) ) << '\t' <<
 					veciRec[ i ];
@@ -334,7 +346,8 @@ int main( int iArgs, char** aszArgs ) {
 				  *postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(i,1)+MatResults.Get(i,0));
 				else
 				  *postm << '\t' << 0.0;
-				
+				*postm << '\t' << vecdBinValue[ i ];				
+
 				*postm << endl; }
 			if( !sArgs.sse_flag )
 				*postm << "#	AUC	" << ( sArgs.auc_arg ?

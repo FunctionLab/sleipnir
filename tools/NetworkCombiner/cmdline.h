@@ -21,7 +21,7 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_PACKAGE
 /** @brief the program name */
-#define CMDLINE_PARSER_PACKAGE "Combiner"
+#define CMDLINE_PARSER_PACKAGE "NetworkCombiner"
 #endif
 
 #ifndef CMDLINE_PARSER_VERSION
@@ -34,76 +34,24 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * type_arg;	/**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). (default='pcl').  */
-  char * type_orig;	/**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). original value given at command line.  */
-  const char *type_help; /**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). help description.  */
-  char * method_arg;	/**< @brief Combination method (default='mean').  */
-  char * method_orig;	/**< @brief Combination method original value given at command line.  */
-  const char *method_help; /**< @brief Combination method help description.  */
   char * output_arg;	/**< @brief Output file.  */
   char * output_orig;	/**< @brief Output file original value given at command line.  */
   const char *output_help; /**< @brief Output file help description.  */
-  char * weights_arg;	/**< @brief Weights file.  */
-  char * weights_orig;	/**< @brief Weights file original value given at command line.  */
-  const char *weights_help; /**< @brief Weights file help description.  */
-  float jaccard_arg;	/**< @brief Minimum Jaccard index for module equivalence (default='0.5').  */
-  char * jaccard_orig;	/**< @brief Minimum Jaccard index for module equivalence original value given at command line.  */
-  const char *jaccard_help; /**< @brief Minimum Jaccard index for module equivalence help description.  */
-  double intersection_arg;	/**< @brief Minimum intersection fraction for module inheritance (default='0.666').  */
-  char * intersection_orig;	/**< @brief Minimum intersection fraction for module inheritance original value given at command line.  */
-  const char *intersection_help; /**< @brief Minimum intersection fraction for module inheritance help description.  */
-  char * genes_arg;	/**< @brief Process only genes from the given set.  */
-  char * genes_orig;	/**< @brief Process only genes from the given set original value given at command line.  */
-  const char *genes_help; /**< @brief Process only genes from the given set help description.  */
-  char * terms_arg;	/**< @brief Produce DAT/DABs averaging within the provided terms.  */
-  char * terms_orig;	/**< @brief Produce DAT/DABs averaging within the provided terms original value given at command line.  */
-  const char *terms_help; /**< @brief Produce DAT/DABs averaging within the provided terms help description.  */
-  int reweight_flag;	/**< @brief Treat weights as absolute (default=off).  */
-  const char *reweight_help; /**< @brief Treat weights as absolute help description.  */
-  int subset_arg;	/**< @brief Subset size (none if zero) (default='0').  */
-  char * subset_orig;	/**< @brief Subset size (none if zero) original value given at command line.  */
-  const char *subset_help; /**< @brief Subset size (none if zero) help description.  */
-  int normalize_flag;	/**< @brief Normalize inputs before combining (default=off).  */
-  const char *normalize_help; /**< @brief Normalize inputs before combining help description.  */
-  int quantiles_arg;	/**< @brief Replace values with quantiles (default='0').  */
-  char * quantiles_orig;	/**< @brief Replace values with quantiles original value given at command line.  */
-  const char *quantiles_help; /**< @brief Replace values with quantiles help description.  */
-  int zscore_flag;	/**< @brief Z-score output after combining (default=off).  */
-  const char *zscore_help; /**< @brief Z-score output after combining help description.  */
-  int zero_flag;	/**< @brief Default missing values to zero (default=off).  */
-  const char *zero_help; /**< @brief Default missing values to zero help description.  */
-  int skip_arg;	/**< @brief Columns to skip in input PCLs (default='2').  */
-  char * skip_orig;	/**< @brief Columns to skip in input PCLs original value given at command line.  */
-  const char *skip_help; /**< @brief Columns to skip in input PCLs help description.  */
-  int memmap_flag;	/**< @brief Memory map input files (default=off).  */
-  const char *memmap_help; /**< @brief Memory map input files help description.  */
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
   char * directory_arg;	/**< @brief input directory (must only contain input files).  */
   char * directory_orig;	/**< @brief input directory (must only contain input files) original value given at command line.  */
   const char *directory_help; /**< @brief input directory (must only contain input files) help description.  */
+  int map_flag;	/**< @brief Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs) (default=on).  */
+  const char *map_help; /**< @brief Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs) help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int type_given ;	/**< @brief Whether type was given.  */
-  unsigned int method_given ;	/**< @brief Whether method was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
-  unsigned int weights_given ;	/**< @brief Whether weights was given.  */
-  unsigned int jaccard_given ;	/**< @brief Whether jaccard was given.  */
-  unsigned int intersection_given ;	/**< @brief Whether intersection was given.  */
-  unsigned int genes_given ;	/**< @brief Whether genes was given.  */
-  unsigned int terms_given ;	/**< @brief Whether terms was given.  */
-  unsigned int reweight_given ;	/**< @brief Whether reweight was given.  */
-  unsigned int subset_given ;	/**< @brief Whether subset was given.  */
-  unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
-  unsigned int quantiles_given ;	/**< @brief Whether quantiles was given.  */
-  unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
-  unsigned int zero_given ;	/**< @brief Whether zero was given.  */
-  unsigned int skip_given ;	/**< @brief Whether skip was given.  */
-  unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
+  unsigned int map_given ;	/**< @brief Whether map was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
@@ -227,9 +175,6 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  */
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
-
-extern char *cmdline_parser_type_values[] ;	/**< @brief Possible values for type.  */
-extern char *cmdline_parser_method_values[] ;	/**< @brief Possible values for method.  */
 
 
 #ifdef __cplusplus

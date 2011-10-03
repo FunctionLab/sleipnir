@@ -233,6 +233,10 @@ bool CDat::Open( const CSlim& SlimPositives, const CSlim& SlimNonnegatives ) {
  * given gene sets; in the latter, negatives are generated from pairs not coannotated to the given gene
  * sets.
  * 
+ * \param fIncident
+ * If true, only allow negative pairs incident to at least one agnostic gene set.  Otherwise,
+ * negative gene pairs can include any non-co-annotated genes.
+ *
  * \returns
  * True if CDat was generated successfully.
  * 
@@ -247,7 +251,7 @@ bool CDat::Open( const CSlim& SlimPositives, const CSlim& SlimNonnegatives ) {
  * gene pairs are given a negative (0) score.
  */
 bool CDat::Open( const CDat& DatKnown, const vector<CGenes*>& vecpOther, const CGenome& Genome,
-	bool fKnownNegatives ) {
+	bool fKnownNegatives, bool fIncident) {
 	size_t			i, j, iOne, iTwo;
 	vector<size_t>	veciGenes;
 	float			d;
@@ -260,7 +264,7 @@ bool CDat::Open( const CDat& DatKnown, const vector<CGenes*>& vecpOther, const C
 		for( i = 0; i < GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < GetGenes( ); ++j )
 				Set( i, j, CMeta::IsNaN( Get( i, j ) ) ? 0 : CMeta::GetNaN( ) );
-
+	
 	veciGenes.resize( DatKnown.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
 		veciGenes[ i ] = GetGene( DatKnown.GetGene( i ) );
@@ -273,7 +277,35 @@ bool CDat::Open( const CDat& DatKnown, const vector<CGenes*>& vecpOther, const C
 					Set( iOne, iTwo, 0 ); }
 			else if( fKnownNegatives == !d )
 				Set( iOne, iTwo, d ); } }
+	
 
+	if( fIncident ) {
+	  vector<float>	vecfNegatives;
+	  vecfNegatives.resize( GetGenes( ) );
+	  fill( vecfNegatives.begin( ), vecfNegatives.end( ), false );
+	  
+	  for( i = 0; i < vecfNegatives.size( ); ++i )	    
+	    for( j = 0; j < vecpOther.size( ); ++j )	      
+	      if( vecpOther[j]->IsGene( GetGene( i ) ) ) {
+		vecfNegatives[i] = true;		
+		break; 
+	      }
+	  
+	  for( i = 0; i < vecfNegatives.size( ); ++i )
+	    if( DatKnown.GetGene( GetGene( i ) ) != -1 )
+	      vecfNegatives[i] = true;
+	  
+	  for( i = 0; i < GetGenes( ); ++i ) {
+	    if(  vecfNegatives[i] )
+	      continue;
+	    for( j = ( i + 1 ); j < GetGenes( ); ++j )
+	      if( !( vecfNegatives[j] || Get( i, j ) ) ){
+		Set( i, j, CMeta::GetNaN( ) ); 
+		//cerr << "setting to NaN" << endl;
+	      }
+	  } 
+	}
+	
 	return true; }
 
 /*!
@@ -361,7 +393,7 @@ bool CDat::Open( const vector<CGenes*>& vecpPositives, const vector<CGenes*>& ve
 						if( pBig->IsGene( pSmall->GetGene( k ).GetName( ) ) )
 							iOverlap++;
 					if( CStatistics::HypergeometricCDF( iOverlap, iOne, iTwo, GetGenes( ) ) < dPValue )
-						OpenHelper( pBig, pSmall, 0 ); } }
+					  OpenHelper( pBig, pSmall, 0 ); } }
 		for( i = 0; i < GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < GetGenes( ); ++j )
 				if( CMeta::IsNaN( d = Get( i, j ) ) )
@@ -1285,7 +1317,6 @@ bool CDat::FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit ) {
 	CGenome		Genome;
 	CGenes		Genes( Genome );
 	ifstream	ifsm;
-
 	if( !szGenes )
 		return false;
 
@@ -1323,7 +1354,6 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 	const vector<float>* pvecdWeights ) {
 	size_t			i, j;
 	vector<bool>	vecfGenes;
-
 	vecfGenes.resize( GetGenes( ) );
 	for( i = 0; i < Genes.GetGenes( ); ++i )
 		if( ( j = GetGene( Genes.GetGene( i ).GetName( ) ) ) != -1 )
@@ -1337,9 +1367,12 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 
 	for( i = 0; i < GetGenes( ); ++i ) {
 		if( ( ( eFilter == EFilterExclude ) && vecfGenes[ i ] ) ||
-			( ( eFilter == EFilterInclude ) && !vecfGenes[ i ] ) ) {
-			for( j = ( i + 1 ); j < GetGenes( ); ++j )
-				Set( i, j, CMeta::GetNaN( ) );
+			( ( eFilter == EFilterInclude ) && !vecfGenes[ i ] ) ||
+			( ( eFilter == EFilterIncludePos ) && !vecfGenes[ i ] ) ) {
+			for( j = ( i + 1 ); j < GetGenes( ); ++j ) {
+				if ( Get( i, j ) || eFilter != EFilterIncludePos )  
+					Set( i, j, CMeta::GetNaN( ) );
+			}
 			continue; }
 		if( ( eFilter == EFilterEdge ) && vecfGenes[ i ] )
 			continue;
@@ -1350,7 +1383,10 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 					if( !vecfGenes[ j ] )
 						Set( i, j, CMeta::GetNaN( ) );
 					break;
-
+				case EFilterIncludePos:
+					if( !vecfGenes[ j ] && Get( i, j ) )
+						Set( i, j, CMeta::GetNaN( ) );
+					break;
 				case EFilterTerm:
 					if( !( vecfGenes[ i ] && vecfGenes[ j ] ) &&
 						( !( vecfGenes[ i ] || vecfGenes[ j ] ) || Get( i, j ) ) )

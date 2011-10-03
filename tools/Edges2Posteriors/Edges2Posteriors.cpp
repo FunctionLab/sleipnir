@@ -21,8 +21,10 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
+#include <vector>
 
 static const char	c_acDab[]	= ".dab";
+static const char	c_acQdab[]	= ".qdab";
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -33,11 +35,11 @@ int main( int iArgs, char** aszArgs ) {
 	vector<size_t>		veciGenes;
 	CPCL				PCLLookup;
 	vector<string>		vecstrNodes, vecstrGenes, vecstrDummy;
-	size_t				i, j, k, iOne, iTwo, iGene;
+	size_t				i, j, k, iOne, iTwo, iGene, nStart, nEnd;
 	float				dPrior;
 	CDataMatrix			MatCPT;
 	unsigned char		b;
-
+	
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
@@ -49,24 +51,56 @@ int main( int iArgs, char** aszArgs ) {
 	if( !Dat.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
 		cerr << "Could not open: " << sArgs.input_arg << endl;
 		return 1; }
-	if( sArgs.lookup_arg ) {
+
+        if( sArgs.cutoff_given ) {
+		DatLookup.Open(Dat.GetGeneNames());
+                for( i = 0; i < Dat.GetGenes( ); ++i )
+                        for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+                                if( Dat.Get( i, j ) < sArgs.cutoff_arg )
+                                        Dat.Set( i, j, CMeta::GetNaN( ) );
+				else
+					DatLookup.Set( i, j, 1);
+	}
+	else if( sArgs.lookup_arg ) {
 		ifsm.open( sArgs.lookup_arg );
 		pistm = &ifsm; }
 	else
 		pistm = &cin;
-	if( !DatLookup.Open( *pistm, CDat::EFormatText, 1 ) ) {
+
+	if( sArgs.lookup_given && !DatLookup.Open( *pistm, CDat::EFormatText, 1 ) ) {
 		cerr << "Could not open: " << ( sArgs.lookup_arg ? sArgs.lookup_arg : "stdin" ) << endl;
 		return 1; }
 	ifsm.close( );
-
+	
 	for( i = 0; i < DatLookup.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < DatLookup.GetGenes( ); ++j )
 			if( DatLookup.Get( i, j ) == 1 )
 				vecstrGenes.push_back( DatLookup.GetGene( i ) + " - " + DatLookup.GetGene( j ) );
+	cerr << vecstrGenes.size() << endl;
+	
 	BNSmile.GetNodes( vecstrNodes );
 	vecstrNodes[ 0 ] = sArgs.input_arg;
+	
+	///// Set for start idx and end idx	  
+	nStart = 0;
+	nEnd = 0;
+	if( sArgs.start_arg > -1){
+	  nStart = sArgs.start_arg + 1;
+	  
+	  if( nStart == 2 )
+	    vecstrNodes.erase( vecstrNodes.begin() + 1 );
+	  else if( nStart <= vecstrNodes.size() )
+	    vecstrNodes.erase( vecstrNodes.begin() + 1, vecstrNodes.begin() + nStart );
+	}	
+	if( sArgs.end_arg > -1 ){
+	  nEnd = (sArgs.end_arg+1) - nStart + 1;
+	  
+	  if( (nEnd+1) < vecstrNodes.size() )
+	    vecstrNodes.erase( (vecstrNodes.begin() + nEnd + 1), vecstrNodes.end() );
+	}
+	
 	PCLLookup.Open( vecstrGenes, vecstrNodes, vecstrDummy );
-
+	
 	veciGenes.resize( DatLookup.GetGenes( ) );
 	for( i = 0; i < veciGenes.size( ); ++i )
 		veciGenes[ i ] = Dat.GetGene( DatLookup.GetGene( i ) );
@@ -87,10 +121,13 @@ int main( int iArgs, char** aszArgs ) {
 		string		strIn;
 		size_t		iValue;
 
+		cerr << vecstrNodes[ i ] << endl;
 		strIn = (string)sArgs.directory_arg + "/" + vecstrNodes[ i ] + c_acDab;
 		if( !DatCur.Open( strIn.c_str( ), false, !!sArgs.memmap_flag ) ) {
-			cerr << "Could not open: " << strIn << endl;
-			return 1; }
+			strIn = (string)sArgs.directory_arg + "/" + vecstrNodes[ i ] + c_acQdab;
+			if( !DatCur.Open( strIn.c_str( ), false, !!sArgs.memmap_flag ) ) {
+				cerr << "Could not open: " << strIn << endl;
+				return 1; }}
 		for( j = 0; j < veciGenes.size( ); ++j )
 			veciGenes[ j ] = DatCur.GetGene( DatLookup.GetGene( j ) );
 		for( iGene = j = 0; j < DatLookup.GetGenes( ); ++j ) {

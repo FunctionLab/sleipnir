@@ -363,8 +363,7 @@ bool CPCL::Open(const char* szFile, size_t iSkip, bool Memmap) {
 	}
 	else if (isBinary) {
 		ifsm.open(szFile, ios::binary);
-		OpenBinary(ifsm);
-		return true;
+		return OpenBinary(ifsm);
 	} else {
 		ifstream ifsm;
 		if (szFile)
@@ -471,32 +470,18 @@ bool CPCL::Open(std::istream& istm, size_t iSkip) {
 	size_t i;
 	char* acBuf;
 	bool fRet;
+	string acStr;
 
 	if (!istm.good())
 		return false;
-	//	acBuf = new char[c_iBufferSize];
-	/*We have a problem with some really giant files so I'm making the buffer
-	 size dynamic. Not really elegant but quick and easy.*/
-	char c;
-	size_t iNeededBufferSize = 0;
-	while (c != '\n') {
-		istm.get(c);
-		if (c == '\t')
-			iNeededBufferSize++;
-	}
-	istm.seekg(ios_base::beg);
-	iNeededBufferSize *= 40;
-	size_t iTmp = 1;
-	while (iTmp < iNeededBufferSize)
-		iTmp <<= 1;
-	iNeededBufferSize = iTmp;
-	acBuf = new char[iNeededBufferSize];
 
-	if (!OpenExperiments(istm, iSkip, acBuf, iNeededBufferSize))
+	acStr.reserve(c_iBufferSize);
+
+	if (!OpenExperiments(istm, iSkip, acStr))
 		fRet = false;
 	else {
 		m_vecvecstrFeatures.resize(m_vecstrFeatures.size() - 1);
-		while (OpenGene(istm, vecdData, acBuf, iNeededBufferSize))
+		while (OpenGene(istm, vecdData, acStr))
 			;
 		for (fRet = !!GetGenes(), i = 0; i < GetGenes(); ++i)
 			if (GetGene(i).empty() || !isprint(GetGene(i)[0])) {
@@ -512,7 +497,7 @@ bool CPCL::Open(std::istream& istm, size_t iSkip) {
 				m_Data.Set(i, &vecdData[i * m_Data.GetColumns()]);
 		}
 	}
-	delete[] acBuf;
+	//delete[] acBuf;
 
 	return fRet;
 }
@@ -523,7 +508,7 @@ bool CPCLImpl::OpenHelper() {
 	size_t i, j;
 	m_vecstrFeatures.resize(*(uint32_t*) pb);
 	pb += sizeof(uint32_t);
-	for (i = 0; i < GetFeatures(); ++i) {
+	for (i = 0; i < m_vecstrFeatures.size(); ++i) {
 		string& strFeature = m_vecstrFeatures[i];
 		strFeature.resize(*(uint32_t*) pb);
 		pb += sizeof(uint32_t);
@@ -533,7 +518,7 @@ bool CPCLImpl::OpenHelper() {
 	m_vecstrExperiments.resize(*(uint32_t*) pb);
 	i = 0;
 	pb += sizeof(uint32_t);
-	for (i = 0; i < GetExperiments(); ++i) {
+	for (i = 0; i < m_vecstrExperiments.size(); ++i) {
 		string& strExperiment = m_vecstrExperiments[i];
 		strExperiment.resize(*(uint32_t*) pb);
 		pb += sizeof(uint32_t);
@@ -543,7 +528,7 @@ bool CPCLImpl::OpenHelper() {
 	}
 	m_vecstrGenes.resize(*(uint32_t*) pb);
 	pb += sizeof(uint32_t);
-	for (i = 0; i < GetGenes(); ++i) {
+	for (i = 0; i < m_vecstrGenes.size(); ++i) {
 		string& strGene = m_vecstrGenes[i];
 		strGene.resize(*(uint32_t*) pb);
 		pb += sizeof(uint32_t);
@@ -558,16 +543,16 @@ bool CPCLImpl::OpenHelper() {
 bool CPCLImpl::OpenMemmap(const unsigned char* pb) {
 	size_t i;
 
-	m_aadData = new float*[GetGenes()];
+	m_aadData = new float*[m_vecstrGenes.size()];
 	m_aadData[0] = (float*) pb;
 	for (i = 1; i < m_vecstrGenes.size(); ++i)
-		m_aadData[i] = m_aadData[i - 1] + GetExperiments();
-	m_Data.Initialize(GetGenes(), GetExperiments(), (float**) m_aadData);
+		m_aadData[i] = m_aadData[i - 1] + m_vecstrExperiments.size();
+	m_Data.Initialize(m_vecstrGenes.size(), m_vecstrExperiments.size(), (float**) m_aadData);
 	return true;
 }
 
 bool CPCLImpl::OpenExperiments(std::istream& istmInput, size_t iFeatures,
-		char* acLine, size_t iLine) {
+		string& acStr) {
 	const char* pc;
 	string strToken;
 	size_t iToken;
@@ -577,10 +562,11 @@ bool CPCLImpl::OpenExperiments(std::istream& istmInput, size_t iFeatures,
 		m_vecstrFeatures.resize(1 + iFeatures);
 		return true;
 	}
-	istmInput.getline(acLine, iLine - 1);
-	if (!acLine[0])
+	getline(istmInput, acStr);
+	if (!acStr.size()) {
 		return false;
-	for (iToken = 0, pc = acLine; (strToken = OpenToken(pc, &pc)).length()
+	}
+	for (iToken = 0, pc = acStr.c_str(); (strToken = OpenToken(pc, &pc)).length()
 			|| *pc; ++iToken)
 		if (iToken <= iFeatures)
 			m_vecstrFeatures.push_back(strToken);
@@ -591,7 +577,7 @@ bool CPCLImpl::OpenExperiments(std::istream& istmInput, size_t iFeatures,
 }
 
 bool CPCLImpl::OpenGene(std::istream& istmInput, std::vector<float>& vecdData,
-		char* acLine, size_t iLine) {
+		string& acStr) {
 	const char* pc;
 	char* pcEnd;
 	string strToken;
@@ -599,9 +585,10 @@ bool CPCLImpl::OpenGene(std::istream& istmInput, std::vector<float>& vecdData,
 	float d;
 	map<string, size_t> mapstriValues;
 	map<string, size_t>::iterator iterValue;
+	const char* acLine = acStr.c_str();
 
 	iBase = vecdData.size();
-	istmInput.getline(acLine, iLine - 1);
+	getline(istmInput, acStr);
 	if ((strToken = OpenToken(acLine)).empty())
 		return false;
 	if (strToken == "EWEIGHT")
@@ -829,6 +816,10 @@ void CPCL::SaveBinary(std::ostream& ostm) const {
 bool CPCL::OpenBinary(std::istream& istm) {
 	uint32_t iTmp;
 	size_t i;
+
+	if (!istm.good())
+		return false;
+	
 
 	Reset();
 	istm.read((char*) &iTmp, sizeof(iTmp));

@@ -31,19 +31,20 @@ int main( int iArgs, char** aszArgs ) {
 	CDataPair					DatOne, DatTwo;
 	size_t						iDatOne, iDatTwo;	
 	size_t						i, j, iGeneOne, iGeneTwo, iCountOne, iCountTwo;
-	size_t						iCountJoint, iJoint, iValueOne, iValueTwo;
+	size_t						iCountJoint, iJoint;
 	size_t    iRuns, inputNums;
+	float     iValueOne, iValueTwo;
 	vector<size_t>				veciGenesOne, veciGenesTwo, veciOne, veciTwo, veciDefaults, veciSizes;
 	vector<vector<size_t> >		vecveciJoint;
 	vector<string>		vecstrInputs, vecstrDatasets; 
 	map<string, size_t>			mapZeros;
-	float						dOne, dJoint, dMI, dSubsample, dValueOne, dValueTwo;
+	float						dOne, dJoint, dMI, dSubsample, dValueOne, dValueTwo;	
 	size_t  non_zero_bins;
 	DIR* dp;
 	struct dirent* ep;
 	const char* fileOne;
 	const char* fileTwo;
-
+	
 	set<string>               setstrGenes;
 	set<string>::const_iterator iterGene;
 	
@@ -56,7 +57,8 @@ int main( int iArgs, char** aszArgs ) {
 	ofstream ofsm;
 	ifstream ifsm;
 	bool opened_DatOne;
-
+	CDat	DatLk1;
+	
 	// open output file
 	if (sArgs.output_given){
 	  ofsm.open(sArgs.output_arg);
@@ -162,7 +164,12 @@ int main( int iArgs, char** aszArgs ) {
 	  }
 	
 	
-	
+	// open dab to filter edges for each dataset
+	if( sArgs.edges_arg ) {
+	  if( !DatLk1.Open( sArgs.edges_arg ) ) {
+	    cerr << "Could not open: " << sArgs.edges_arg << endl;
+	    return 1; }	  
+	}
 	
 	// now iterate through experiments to calculate MI
 	for( iDatOne = iRuns = 0; iDatOne < ( sArgs.datasets_arg ? vecstrDatasets.size() : inputNums ); ++iDatOne){	  	  
@@ -181,7 +188,7 @@ int main( int iArgs, char** aszArgs ) {
 	      cerr << "Processing " << iRuns << " among # of datasets: " << inputNums << '\n';
 	    
 	    // have I opned the first Data file?
-	    if(!opened_DatOne){	      
+	    if(!opened_DatOne){ 
 	      // now open first Dat
 	      if(sArgs.datasets_arg) {
 		fileOne = vecstrDatasets[iDatOne].c_str();
@@ -193,9 +200,37 @@ int main( int iArgs, char** aszArgs ) {
 		fileOne = sArgs.inputs[ iDatOne ];		
 	      }
 	      
-	      if( !DatOne.Open(fileOne, false) ) {
+	      if(!DatOne.Open(fileOne, false) ) {
 		cerr << "Could not open: " << fileOne << '\n';
 		return 1; }
+	      
+	      // removed edges not wanted
+	      if( sArgs.edges_arg ) {
+		vector<size_t>	veciGenesOne;
+		size_t			iOne, iTwo;
+		float valx;
+		
+		veciGenesOne.resize( DatOne.GetGenes( ) );
+		
+		for( i = 0; i < veciGenesOne.size( ); ++i )
+		  veciGenesOne[ i ] = DatLk1.GetGene( DatOne.GetGene( i ) );
+		
+		for( i = 0; i < DatOne.GetGenes( ); ++i ) {
+		  
+		  if( ( iOne = veciGenesOne[ i ] ) == -1 ) {
+		    for( j = ( i + 1 ); j < DatOne.GetGenes( ); ++j )
+		      DatOne.Set( i, j, CMeta::GetNaN( ) );
+		    continue; 
+		  }
+		  
+		  for( j = ( i + 1 ); j < DatOne.GetGenes( ); ++j ){
+		    if( ( ( iTwo = veciGenesOne[ j ] ) == -1 ) ||
+			CMeta::IsNaN( (valx = DatLk1.Get( iOne, iTwo )) ) ){
+		      DatOne.Set( i, j, CMeta::GetNaN( ) );
+		    }
+		  }
+		}		
+	      }
 	      
 	      DatOne.Quantize();
 	      opened_DatOne = true;
@@ -206,22 +241,17 @@ int main( int iArgs, char** aszArgs ) {
 	      fill( veciOne.begin( ), veciOne.end( ), 1 );
 	      iCountOne = DatOne.GetValues();
 	      
-	      // for entropy calculation
-	      if(iDatTwo == iDatOne || !sArgs.union_flag){		
+	      // When equal Only calculate self Entropy!
+	      if( iDatTwo == iDatOne ){
 		// now get the count distribution of experiment i
 		for(i = 0; i < DatOne.GetGenes(); ++i){
 		  for( j = ( i + 1 ); j < DatOne.GetGenes(); ++j ) {
-		    if( !CMeta::IsNaN( iValueOne = (size_t)DatOne.Get(i, j) ) ){
-		      veciOne[ iValueOne ]++;
+		    if( !CMeta::IsNaN( iValueOne = DatOne.Get(i, j) ) ){
+		      veciOne[ (size_t)iValueOne ]++;
 		      iCountOne++;
 		    }
 		  }
-		}
-		
-	      }
-	      
-	      // When equal Only calculate self Entropy!
-	      if( iDatTwo == iDatOne ){
+		}		
 		
 		// compute the Entropy
 		for( non_zero_bins = 0, dMI = 0,i = 0; i < veciOne.size( ); ++i )
@@ -240,13 +270,12 @@ int main( int iArgs, char** aszArgs ) {
 		continue;
 	      }
 	    }
-	    else if(sArgs.union_flag){
+	    else{
 	      // reset since now you  have different number of genes	      
 	      // laplace smoothingand also prevent devision by zeros
 	      fill( veciOne.begin( ), veciOne.end( ), 1 );
 	      
-	      iCountOne = DatOne.GetValues();
-
+	      iCountOne = DatOne.GetValues();	      
 	    }
 	    
 	    // now open Second Dat
@@ -261,6 +290,31 @@ int main( int iArgs, char** aszArgs ) {
 	      cerr << "Could not open: " << fileTwo << '\n';
 	      return 1; }
 	    
+	    // removed edges not wanted
+	    if( sArgs.edges_arg ) {
+	      vector<size_t>	veciGenesTwo;
+	      size_t			iOne, iTwo;
+	      float valx;
+	      
+	      veciGenesTwo.resize( DatTwo.GetGenes( ) );
+	      
+	      for( i = 0; i < veciGenesTwo.size( ); ++i )
+		veciGenesTwo[ i ] = DatLk1.GetGene( DatTwo.GetGene( i ) );
+	      
+	      for( i = 0; i < DatTwo.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenesTwo[ i ] ) == -1 ) {
+		  for( j = ( i + 1 ); j < DatTwo.GetGenes( ); ++j )
+		    DatTwo.Set( i, j, CMeta::GetNaN( ) );
+		  continue; 
+		}
+		for( j = ( i + 1 ); j < DatTwo.GetGenes( ); ++j ){
+		  if( ( ( iTwo = veciGenesTwo[ j ] ) == -1 ) ||
+		      CMeta::IsNaN( (valx = DatLk1.Get( iOne, iTwo )) ) ){
+		    DatTwo.Set( i, j, CMeta::GetNaN( ) );
+		  }
+		}
+	      }
+	    }
 	    
 	    DatTwo.Quantize();	    
 	    veciTwo.resize( DatTwo.GetValues() );
@@ -268,7 +322,7 @@ int main( int iArgs, char** aszArgs ) {
 	    // laplace smoothingand also prevent devision by zeros
 	    fill( veciTwo.begin( ), veciTwo.end( ), 1 );
 	    iCountTwo = DatTwo.GetValues();
-
+	    
 	    // create & initialize joint bins
 	    vecveciJoint.resize( veciOne.size( ) );
 	    for( i = 0; i < vecveciJoint.size( ); ++i ) {
@@ -294,77 +348,55 @@ int main( int iArgs, char** aszArgs ) {
 	      veciGenesTwo[ i ] = DatTwo.GetGene(*iterGene);
 	    }
 	    
-	    // when using only shared genes
-	    if(!sArgs.union_flag){
-	    
-	      for( i = iCountJoint = 0; i < setstrGenes.size(); ++i ) {
-		for( j = i + 1; j < setstrGenes.size(); ++j ) {
-		  
-		  // does this gene belong to DatTwo?
-		  if(veciGenesTwo[ i ] != -1 && 
-		     veciGenesTwo[ j ] != -1 &&
-		     !CMeta::IsNaN( iValueTwo = (size_t)DatTwo.Get(veciGenesTwo[ i ], veciGenesTwo[ j ]) )){		  
-		    
-		    iCountTwo++;
-		    veciTwo[ iValueTwo ]++;		  
-		    
-		    if( iValueTwo >= veciTwo.size( ) ){
-		      cerr << iValueTwo << "\tj-1:" << j << endl;
-		      return 1;
-		    }
-		  }
-		  else{
-		    // ok data set two doesn't have this gene pair
-		    continue;
-		  }
-		  
-		  // does this gene belong to DatOne?
-		  if ( veciGenesOne[ i ] != -1 && 
-		       veciGenesOne[ j ] != -1 && 
-		       !CMeta::IsNaN( iValueOne = (size_t)DatOne.Get(veciGenesOne[ i ], veciGenesOne[ j ]))){
-		    
-		    iCountJoint++;		  
-		    vecveciJoint[ iValueOne ][ iValueTwo ]++; 		  
-		  }		
+	    for( i =  iCountOne = iCountJoint = 0; i < setstrGenes.size(); ++i ) {
+	      for( j = i + 1; j < setstrGenes.size(); ++j ) {
+		
+		// filter Dat with no edges in both dats
+		if( sArgs.edges_arg &&
+		    veciGenesOne[ i ] != -1 && 
+		    veciGenesOne[ j ] != -1 && 
+		    CMeta::IsNaN( DatOne.Get(veciGenesOne[ i ], veciGenesOne[ j ]) ) &&
+		    veciGenesTwo[ i ] != -1 && 
+		    veciGenesTwo[ j ] != -1 &&
+		    CMeta::IsNaN( DatTwo.Get(veciGenesTwo[ i ], veciGenesTwo[ j ]) )		   
+		    ){		  
+		  continue;		  
 		}
-	      }
-	    }
-	    else{ // when using union of genes of two datasets
-	      
-	      for( i =  iCountOne = iCountJoint = 0; i < setstrGenes.size(); ++i ) {
-		for( j = i + 1; j < setstrGenes.size(); ++j ) {
+		
+		// does this gene belong to DatOne? If not, randomize it.
+		if ( veciGenesOne[ i ] == -1 || 
+		     veciGenesOne[ j ] == -1 || 
+		     CMeta::IsNaN( iValueOne = DatOne.Get(veciGenesOne[ i ], veciGenesOne[ j ]))){
 		  
-		  // does this gene belong to DatOne? If not, randomize it.
-		  if ( veciGenesOne[ i ] == -1 || 
-		       veciGenesOne[ j ] == -1 || 
-		       CMeta::IsNaN( iValueOne = (size_t)DatOne.Get(veciGenesOne[ i ], veciGenesOne[ j ]))){
-		    
-		    if( veciDefaults[ iDatOne ] == -1 )
-		      iValueOne = rand( ) % DatOne.GetValues( );
-		    else
-		      iValueOne = veciDefaults[ iDatOne ];
-		  }
+		  if( !sArgs.union_flag )
+		    continue;
+		  else if( veciDefaults[ iDatOne ] == -1 )
+		    iValueOne = rand( ) % DatOne.GetValues( );
+		  else
+		    iValueOne = veciDefaults[ iDatOne ];
+		}
 		  
-		  // does this gene belong to DatTwo? If not, randomize it.
-		  if(veciGenesTwo[ i ] == -1 || 
-		     veciGenesTwo[ j ] == -1 ||
-		     CMeta::IsNaN( iValueTwo = (size_t)DatTwo.Get(veciGenesTwo[ i ], veciGenesTwo[ j ]) )){		  
-		    
-		    if( veciDefaults[ iDatTwo ] == -1 )
-		      iValueTwo = rand( ) % DatTwo.GetValues( );
-		    else
-		      iValueTwo = veciDefaults[ iDatTwo ];
-		  }
+		// does this gene belong to DatTwo? If not, randomize it.
+		if(veciGenesTwo[ i ] == -1 || 
+		   veciGenesTwo[ j ] == -1 ||
+		   CMeta::IsNaN( iValueTwo = DatTwo.Get(veciGenesTwo[ i ], veciGenesTwo[ j ]) )){		  
 		  
-		  iCountJoint++;
-		  iCountTwo++;
-		  iCountOne++;
-		  veciOne[ iValueOne ]++;
-		  veciTwo[ iValueTwo ]++;		  
-		  vecveciJoint[ iValueOne ][ iValueTwo ]++;		  
-		}	      
+		  if( !sArgs.union_flag )
+		    continue;
+		  else if( veciDefaults[ iDatTwo ] == -1 )
+		    iValueTwo = rand( ) % DatTwo.GetValues( );
+		  else
+		    iValueTwo = veciDefaults[ iDatTwo ];
+		}		    
+		
+		iCountJoint++;
+		iCountTwo++;
+		iCountOne++;
+		veciOne[ (size_t)iValueOne ]++;
+		veciTwo[ (size_t)iValueTwo ]++;		  
+		vecveciJoint[ (size_t)iValueOne ][ (size_t)iValueTwo ]++;		  
 	      }	      
-	    }
+	    }	      
 	    
 	    if(iCountJoint > 0){
 	      // now calculate the MI between the two experiments
@@ -385,7 +417,7 @@ int main( int iArgs, char** aszArgs ) {
 	    else{
 	      dMI = 0;
 	    }
-	    	    
+	    
 	    *posm << fileOne << '\t' << fileTwo << '\t' << dMI << '\n';	    	    
 	  }  
 	}

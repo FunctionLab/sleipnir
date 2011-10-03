@@ -111,7 +111,13 @@ public:
 		 * \brief
 		 * Perform a HEFalMp query using the given set and remove any edge not in the resulting subgraph.
 		 */
-		EFilterHefalmp		= EFilterEdge + 1
+		EFilterHefalmp		= EFilterEdge + 1,
+		/*!
+		 * \brief
+		 * Remove any positive edge including a node outside the given set. 
+		 */
+		EFilterIncludePos	= EFilterHefalmp +1
+		
 	};
 
 	/*!
@@ -189,7 +195,7 @@ public:
 	bool Open( const std::vector<CGenes*>& vecpPositives, const std::vector<CGenes*>& vecpNonnegatives,
 		float dPValue, const CGenome& Genome, bool fIncident = false );
 	bool Open( const CDat& DatKnown, const std::vector<CGenes*>& vecpOther, const CGenome& Genome,
-		bool fKnownNegatives );
+		   bool fKnownNegatives, bool fIncident = false );
 	bool Open( const CPCL& PCL, const IMeasure* pMeasure, bool fMeasureMemory );
 	bool Open( const CDat& Dat );
 

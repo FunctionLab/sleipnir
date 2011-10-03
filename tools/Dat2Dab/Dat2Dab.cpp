@@ -100,7 +100,16 @@ int main( int iArgs, char** aszArgs ) {
 						iterName->second << endl;
 					return 1; }
 				Dat.SetGene( i, iterName->second ); } }
-
+	
+	// should I set all non-missing values to defualt value?
+	if( sArgs.dval_given ){
+	  for( i = 0; i < Dat.GetGenes( ); ++i )
+	    for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ){
+	      if( CMeta::IsNaN( Dat.Get( i, j ) ) )
+		continue;
+	      Dat.Set( i, j, sArgs.dval_arg );
+	    } 
+	}
 	// should I add random noise from standard Normal?
 	if( sArgs.noise_flag ){
 	  float d;
@@ -127,6 +136,7 @@ int main( int iArgs, char** aszArgs ) {
 		  Dat.Set( i, j, sArgs.dmissing_arg );
 		}
 	      }
+	
 	if( sArgs.flip_flag )
 		Dat.Invert( );
 	if( Genes.GetGenes( ) )

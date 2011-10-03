@@ -86,8 +86,8 @@ protected:
 	}
 	~CPCLImpl();
 
-	bool OpenExperiments(std::istream&, size_t, char*, size_t);
-	bool OpenGene(std::istream&, std::vector<float>&, char*, size_t);
+	bool OpenExperiments(std::istream&, size_t, string&);
+	bool OpenGene(std::istream&, std::vector<float>&, string&);
 	void Reset();
 	void MedianMultiplesMapped(const std::vector<std::vector<size_t> >&,
 			std::vector<float>&);
@@ -108,15 +108,7 @@ protected:
 	TSetI m_setiGenes;
 	bool m_fHeader;
 	TMapStrI m_mapstriGenes;
-	size_t GetGenes() const {
-		return m_vecstrGenes.size();
-	}
-	size_t GetExperiments() const {
-		return m_vecstrExperiments.size();
-	}
-	size_t GetFeatures() const {
-		return m_vecstrFeatures.size();
-	}
+
 	// Memory mapped back end
 	unsigned char* m_abData;
 	size_t m_iData;

@@ -53,7 +53,7 @@
  * modified using \c -m.
  * 
  * \code
- * Combiner -t dab -o <combined.dad> <data.dab>*
+ * Combiner -t dad -o <combined.dad> <data.dab>*
  * \endcode
  * 
  * Create a new DAD file \c combined.dad containing the discretized gene pair scores from all input DAT/DAB
@@ -77,7 +77,7 @@
  * </tr><tr>
  *	<td>-t</td>
  *	<td>pcl</td>
- *	<td>pcl, dat, or dab</td>
+ *	<td>pcl, dat, or dad</td>
  *	<td>Type of combination to perform: \c pcl combines PCLs into a PCL, \c dat combines DAT/DABs into a
  *		DAT/DAB, and \c dad combines DAT/DABs into a DAD.</td>
  * </tr><tr>

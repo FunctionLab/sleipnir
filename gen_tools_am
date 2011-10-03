@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
 
 my $default_ggo_flags = "-u -N -e";
 my %tools_ggo_flags = (
@@ -42,8 +42,8 @@ my %tools_other_packages = (
 			    OntoShell => ['READLINE'],
 			    SVMer => ['SVM_PERF'],
 			    SVMperfer => ['SVM_PERF'],
-			    SVMperfNetwork => ['SVM_PERF'],
-			    VWer => ['VOWPAL_WABBIG'],
+
+			    VWer => ['VOWPAL_WABBIT'],
 			    );
 
 if (opendir(TOOLSDIR, "tools")) {

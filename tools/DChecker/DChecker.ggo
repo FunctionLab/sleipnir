@@ -37,6 +37,8 @@ option	"genet"			c	"Term inclusion file"
 							string	typestr="filename"
 option	"genee"			C	"Edge inclusion file"
 							string	typestr="filename"
+option	"genep"			l	"Gene inclusion file for positives"
+							string	typestr="filename"
 
 section "Preprocessing"
 option	"normalize"		n	"Normalize scores before processing"

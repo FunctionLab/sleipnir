@@ -49,6 +49,9 @@ struct gengetopt_args_info
   double interactions_arg;	/**< @brief Expected interactions per gene.  */
   char * interactions_orig;	/**< @brief Expected interactions per gene original value given at command line.  */
   const char *interactions_help; /**< @brief Expected interactions per gene help description.  */
+  double prior_arg;	/**< @brief Target prior for the answer file. This prior is only a target, may turn out to be lower..  */
+  char * prior_orig;	/**< @brief Target prior for the answer file. This prior is only a target, may turn out to be lower. original value given at command line.  */
+  const char *prior_help; /**< @brief Target prior for the answer file. This prior is only a target, may turn out to be lower. help description.  */
   int incident_flag;	/**< @brief Require negative pairs to include an annotated gene (default=off).  */
   const char *incident_help; /**< @brief Require negative pairs to include an annotated gene help description.  */
   char * exclude_arg;	/**< @brief DAT/DAB file of gene pairs to exclude from the standard.  */
@@ -80,6 +83,7 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int negatives_given ;	/**< @brief Whether negatives was given.  */
   unsigned int interactions_given ;	/**< @brief Whether interactions was given.  */
+  unsigned int prior_given ;	/**< @brief Whether prior was given.  */
   unsigned int incident_given ;	/**< @brief Whether incident was given.  */
   unsigned int exclude_given ;	/**< @brief Whether exclude was given.  */
   unsigned int scramble_given ;	/**< @brief Whether scramble was given.  */
@@ -91,7 +95,6 @@ struct gengetopt_args_info
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
-  int Negatives_group_counter; /**< @brief Counter for group Negatives */
   int Positives_group_counter; /**< @brief Counter for group Positives */
 } ;
 

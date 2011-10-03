@@ -1,0 +1,22 @@
+Developer notes
+===============
+
+A. Adding tools
+
+i. Put it under a directory in tools/.
+
+ii. Add it to the tools/Makefile.am.
+
+Be sure to add it to the correct conditional block area if dependent
+on optional libraries, otherwise just add it to TOOLS_SUBDIRS.
+
+iii. Add it to AC_CONFIG_FILES in configure.ac.
+
+iv. Add AM_CONDITIONAL statements in configure.ac if dependent on optional libraries
+
+v. Edit gen_tools_am:
+
+Add to %tools_ggo_flags if the defaults are not sufficient. Also, add
+to %tools_other_packages if dependent on optional libraries.
+
+vi. Be sure to run gen_auto to recreate configure and Makefile.am files.
