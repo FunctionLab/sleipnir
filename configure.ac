@@ -693,7 +693,6 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Funcaeologist/Makefile \
 		 tools/Funcifier/Makefile \
 		 tools/Funcographer/Makefile \
-		 tools/GeneCollapser/Makefile \
 		 tools/Hubber/Makefile \
 		 tools/KNNImputer/Makefile \
 		 tools/Mat2Txt/Makefile \
@@ -712,7 +711,6 @@ AC_CONFIG_FILES([Makefile \
 		 tools/SVDer/Makefile \
 		 tools/Synthesizer/Makefile \
 		 tools/Txt2Bin/Makefile \
-		 tools/ThriftyDistancer/Makefile \
                  tools/BNConverter/Makefile \
 		 tools/BNCreator/Makefile \
 		 tools/SpeciesConnector/Makefile \
@@ -733,10 +731,8 @@ AC_CONFIG_FILES([Makefile \
                  tools/Data2Svm/Makefile \
 		 tools/SVMer/Makefile \
 		 tools/SVMperfer/Makefile \
-		 tools/SVMperfNetwork/Makefile \
 		 tools/VWer/Makefile \
                  tools/OntoShell/Makefile \
-                 tools/QuickHist/Makefile \
                  tools/BNServer/Makefile])
 
 
