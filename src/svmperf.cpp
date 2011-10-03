@@ -603,11 +603,12 @@ vector<Result> CSVMPERF::Classify(Sleipnir::CPCL &PCL,
 		if (iGene != -1) {
 			iDoc++;
 
-			//  cout << "CLASS iDOC=" << iDoc << endl;
+			//cout << "CLASS iDOC=" << iDoc << endl;
 			ppDoc[0] = CreateDoc(PCL, iGene, iDoc);
 			label
 					= classify_struct_example(pattern, &structmodel,
 							&struct_parm);
+
 			vecClass.push_back(SVMLabels[i].Target);
 			vecResult.resize(iDoc);
 			vecResult[iDoc - 1].GeneName = SVMLabels[i].GeneName;
@@ -618,13 +619,7 @@ vector<Result> CSVMPERF::Classify(Sleipnir::CPCL &PCL,
 			//cerr<<"CLASSIFY End FreeDoc"<<endl;
 		}
 	}
-	//    cerr << "copying" << endl;
-	for (i = 0; i < label.totdoc; i++) {
-		vecResult[i].Value = label.Class[i];
-		//     cout << "CLASS: i=" << i << " value=" << vecResult[i].Value << endl;
-	}
-	//cerr << "CLASSIFY:done copying" << endl;
-	//  FreePattern(pattern);
+
 	delete ppDoc;
 	return vecResult;
 }
@@ -765,7 +760,7 @@ SAMPLE* CSVMPERF::CreateSample(Sleipnir::CPCL &PCL, Sleipnir::CDat& Answers,
 	set<string>::iterator iterSet;
 	float w;
 	for (i = 0; i < CVGenes.size(); i++) {
-			setGenes.insert(CVGenes[i]);
+		setGenes.insert(CVGenes[i]);
 	}
 	for (i = 0; i < Answers.GetGenes() - 1; i++) {
 		if ((setGenes.find(Answers.GetGene(i)) != setGenes.end()) && ((iGene
@@ -865,7 +860,7 @@ void CSVMPERF::Classify(Sleipnir::CPCL& PCL, Sleipnir::CDat& Answers,
 		else
 			Counts.Set(tmpPair.first, tmpPair.second, 1);
 	}
-		FreePattern(pattern);
+	FreePattern(pattern);
 
 }
 

@@ -74,17 +74,29 @@ public:
 	std::string GeneName;
 	double Target;
 	double Value;
-
+	int CVround;
+	int Rank;
 	Result() {
 		GeneName = "";
 		Target = 0;
 		Value = Sleipnir::CMeta::GetNaN();
 	}
 
-	Result(std::string name) {
+	Result(std::string name, int cv = -1) {
 		GeneName = name;
 		Target = 0;
 		Value = 0;
+		CVround = cv;
+		Rank = -1;
+	}
+	string toString() {
+		stringstream ss;
+		ss << GeneName << '\t' << Target << '\t' << Value << '\t' << "CV"
+				<< CVround;
+		if (Rank != -1) {
+			ss << '\t' << Rank;
+		}
+		return ss.str();
 	}
 
 };
@@ -101,8 +113,9 @@ public:
 	KERNEL_PARM kernel_parm;
 	STRUCT_LEARN_PARM struct_parm;
 	STRUCTMODEL structmodel;
-
-	CSVMPERF() {
+	int Alg;
+	CSVMPERF(int a = 3) {
+		Alg = a;
 		initialize();
 		//set_struct_verbosity(5);
 	}
@@ -115,10 +128,29 @@ public:
 		struct_parm.C = tradeoff;
 
 	}
+	void SetKernel(int K) {
+		kernel_parm.kernel_type = K;
+	}
+	void SetPolyD(int D) {
+		kernel_parm.poly_degree = D;
+	}
+
+	void UseCPSP() {
+		Alg = 9;
+		struct_parm.preimage_method = 2;
+		struct_parm.sparse_kernel_size = 500;
+		struct_parm.bias = 0;
+	}
+
+	void SetRBFGamma(double g) {
+		kernel_parm.rbf_gamma = g;
+		UseCPSP();
+	}
 
 	void UseSlackRescaling() {
 		struct_parm.loss_type = SLACK_RESCALING;
 	}
+
 	void UseMarginRescaling() {
 		struct_parm.loss_type = MARGIN_RESCALING;
 	}
@@ -133,7 +165,15 @@ public:
 	}
 
 	void WriteModel(char* model_file) {
-		write_struct_model(model_file, &structmodel, &struct_parm);
+		if (kernel_parm.kernel_type == LINEAR) {
+			ofstream ofsm;
+			ofsm.open(model_file);
+			for (size_t i = 0; i < structmodel.sizePsi; i++) {
+				ofsm << structmodel.w[i+1] << endl;
+			}
+		} else {
+			write_struct_model(model_file, &structmodel, &struct_parm);
+		}
 	}
 
 	void WriteWeights(ostream& osm) {
@@ -199,7 +239,8 @@ public:
 	vector<Result> Classify(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels);
 
 	//MEMBER functions wraps learning
-	void Learn(SAMPLE &sample, size_t Alg = 3) {
+	void Learn(SAMPLE &sample) {
+		cerr << "SLACK NORM =" << struct_parm.slack_norm << endl;
 		/*  if (kernel_parm.kernel_type==CUSTOM)
 		 svm_learn_struct_joint_custom(sample, &struct_parm, &learn_parm, &kernel_parm, &structmodel);
 		 else*/
@@ -239,8 +280,8 @@ public:
 					sample.examples[0].y.Class[i] = 0.5 * 100.0 / nump;
 				else
 					sample.examples[0].y.Class[i] = -0.5 * 100.0 / numn;
-				cerr << sample.examples[0].x.doc[i]->fvec->words[0].weight
-						<< '\t' << sample.examples[0].y.Class[i] << endl;
+				/*				cerr << sample.examples[0].x.doc[i]->fvec->words[0].weight
+				 << '\t' << sample.examples[0].y.Class[i] << endl;*/
 			}
 		}
 		if (struct_parm.loss_function == AVGPREC) {
@@ -251,7 +292,7 @@ public:
 					sample.examples[0].y.Class[i] = -nump;
 			}
 		}
-
+		cerr << "ALG=" << Alg << endl;
 		svm_learn_struct_joint(sample, &struct_parm, &learn_parm, &kernel_parm,
 				&structmodel, Alg);
 		//
