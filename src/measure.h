@@ -363,6 +363,26 @@ public:
 		return new CMeasureEuclidean( ); }
 };
 
+
+class CMeasureEuclideanScaled : public IMeasure {
+public:
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
+		const float* adWX = NULL, const float* adWY = NULL ) const;
+
+	const char* GetName( ) const {
+
+		return "euclid_scaled"; }
+
+	bool IsRank( ) const {
+
+		return false; }
+
+	IMeasure* Clone( ) const {
+
+		return new CMeasureEuclidean( ); }
+};
+
+
 /*!
  * \brief
  * Calculates the Pearson correlation between the two vectors.

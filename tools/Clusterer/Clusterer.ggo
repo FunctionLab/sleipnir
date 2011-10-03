@@ -28,6 +28,9 @@ option	"delta"			e	"Cluster diameter step size"
 							double	default="0"
 
 section "Optional"
+option	"output_info"		O	"Output file for clustering info (membership or summary)"
+							string	typestr="filename"
+
 option	"pcl"			p	"PCL input if precalculated DAB provided"
 							string	typestr="filename"
 option	"skip"			s	"Columns to skip in input PCL"
@@ -36,6 +39,10 @@ option	"normalize"		n	"Normalize distances before clustering"
 							flag	on
 option	"autocorrelate"	c	"Autocorrelate similarity measures"
 							flag	off
+option	"summary"	S	"Summarize cluster info"
+							flag	off			
+option	"pcl_out"	P	"Output PCL and clusters as a single PCL"
+							flag	off												
 option	"random"		r	"Seed random generator"
 							int	default="0"
 option	"verbosity"		v	"Message verbosity"

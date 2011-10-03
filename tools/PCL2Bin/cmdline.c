@@ -46,6 +46,7 @@ const char *gengetopt_args_info_help[] = {
   "  -c, --zcol             Normalize Z score column  (default=off)",
   "  -C, --scol             Subtract mean per column  (default=off)",
   "  -n, --normalize        Normalize 0 1 range  (default=off)",
+  "  -t, --transpose        transpose dataset (prints text to stdout)  \n                           (default=off)",
   "  -s, --skip=INT         Columns to skip in input PCL  (default=`0')",
   "  -v, --verbosity=INT    Message verbosity  (default=`5')",
   "  -m, --mmap             Memmap binary input  (default=off)",
@@ -85,6 +86,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->zcol_given = 0 ;
   args_info->scol_given = 0 ;
   args_info->normalize_given = 0 ;
+  args_info->transpose_given = 0 ;
   args_info->skip_given = 0 ;
   args_info->verbosity_given = 0 ;
   args_info->mmap_given = 0 ;
@@ -107,6 +109,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->zcol_flag = 0;
   args_info->scol_flag = 0;
   args_info->normalize_flag = 0;
+  args_info->transpose_flag = 0;
   args_info->skip_arg = 0;
   args_info->skip_orig = NULL;
   args_info->verbosity_arg = 5;
@@ -131,9 +134,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->zcol_help = gengetopt_args_info_help[11] ;
   args_info->scol_help = gengetopt_args_info_help[12] ;
   args_info->normalize_help = gengetopt_args_info_help[13] ;
-  args_info->skip_help = gengetopt_args_info_help[14] ;
-  args_info->verbosity_help = gengetopt_args_info_help[15] ;
-  args_info->mmap_help = gengetopt_args_info_help[16] ;
+  args_info->transpose_help = gengetopt_args_info_help[14] ;
+  args_info->skip_help = gengetopt_args_info_help[15] ;
+  args_info->verbosity_help = gengetopt_args_info_help[16] ;
+  args_info->mmap_help = gengetopt_args_info_help[17] ;
   
 }
 
@@ -284,6 +288,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "scol", 0, 0 );
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
+  if (args_info->transpose_given)
+    write_into_file(outfile, "transpose", 0, 0 );
   if (args_info->skip_given)
     write_into_file(outfile, "skip", args_info->skip_orig, 0);
   if (args_info->verbosity_given)
@@ -543,13 +549,14 @@ cmdline_parser_internal (
         { "zcol",	0, NULL, 'c' },
         { "scol",	0, NULL, 'C' },
         { "normalize",	0, NULL, 'n' },
+        { "transpose",	0, NULL, 't' },
         { "skip",	1, NULL, 's' },
         { "verbosity",	1, NULL, 'v' },
         { "mmap",	0, NULL, 'm' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:o:g:G:ErcCns:v:m", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:o:g:G:ErcCnts:v:m", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -668,6 +675,16 @@ cmdline_parser_internal (
           if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
               &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "normalize", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 't':	/* transpose dataset (prints text to stdout).  */
+        
+        
+          if (update_arg((void *)&(args_info->transpose_flag), 0, &(args_info->transpose_given),
+              &(local_args_info.transpose_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "transpose", 't',
               additional_error))
             goto failure;
         

@@ -59,7 +59,20 @@ int main(int iArgs, char** aszArgs) {
 		for (size_t i = 0; i < PCL.GetGenes(); i++) {
 			cout << i << '\t' << PCL.GetGene(i) << endl;
 		}
-	} else {
+	}
+	else if (sArgs.transpose_flag){
+	  for ( j = 0; j < PCL.GetGenes(); j++)
+	    cout<<'\t'<<PCL.GetGene(j);
+	  cout<<endl;
+	  for ( i = 0; i < PCL.GetExperiments(); i++) {
+	    cout<<PCL.GetExperiment(i);
+	    for ( j = 0; j < PCL.GetGenes(); j++) {
+	      cout << '\t' << PCL.Get(j,i);
+	    }
+	    cout<<endl;
+	  }
+	}
+ else {
 		//vector<size_t> vec_iGenes;
 		ifstream ifsm;
 

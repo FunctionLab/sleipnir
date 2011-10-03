@@ -6,6 +6,7 @@
 	--with-svm-perf=extlib/svm_perf/ \
 	--with-boost-includes=/usr/include/boost/\
 	--with-boost-graph-lib=/usr/lib/libboost_graph.a \
-#	--with-vowpal-wabbit=../extlib/vowpal_wabbit_v4.1/ \
 	LDFLAGS=-static
+#	--with-vowpal-wabbit=../extlib/vowpal_wabbit_v4.1/ \
+
 # CXXFLAGS=-fno-threadsafe-statics

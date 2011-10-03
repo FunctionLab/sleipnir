@@ -329,7 +329,7 @@ public:
 	 */
 	void SetFeature(size_t iGene, size_t iFeature, const std::string& strValue) {
 
-		m_vecvecstrFeatures[iFeature - 1][iGene] = strValue;
+		m_vecvecstrFeatures[iFeature-1][iGene] = strValue;
 	}
 
 	/*!
@@ -677,6 +677,14 @@ public:
 				return GetFeature(iGene, i);
 
 		return "";
+	}
+
+	size_t AddFeature(string strName){
+		m_vecstrFeatures.push_back(strName);
+		size_t iF=m_vecstrFeatures.size()-1;
+		m_vecvecstrFeatures.resize(iF);
+		m_vecvecstrFeatures[iF-1].resize(GetGenes());
+		return iF;
 	}
 
 	/*!
