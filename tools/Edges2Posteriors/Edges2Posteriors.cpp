@@ -35,7 +35,7 @@ int main( int iArgs, char** aszArgs ) {
 	vector<size_t>		veciGenes;
 	CPCL				PCLLookup;
 	vector<string>		vecstrNodes, vecstrGenes, vecstrDummy;
-	size_t				i, j, k, iOne, iTwo, iGene, nStart, nEnd;
+	size_t				i, j, k, iOne, iTwo, iGene, nStart, nEnd, num_to_skip;
 	float				dPrior;
 	CDataMatrix			MatCPT;
 	unsigned char		b;
@@ -84,9 +84,11 @@ int main( int iArgs, char** aszArgs ) {
 	///// Set for start idx and end idx	  
 	nStart = 0;
 	nEnd = 0;
+	num_to_skip = 0;
 	if( sArgs.start_arg > -1){
 	  nStart = sArgs.start_arg + 1;
-	  
+	  num_to_skip = sArgs.start_arg;
+
 	  if( nStart == 2 )
 	    vecstrNodes.erase( vecstrNodes.begin() + 1 );
 	  else if( nStart <= vecstrNodes.size() )
@@ -139,10 +141,10 @@ int main( int iArgs, char** aszArgs ) {
 				iValue = -1;
 				if( ( iOne != -1 ) && ( iTwo != -1 ) )
 					iValue = DatCur.Quantize( DatCur.Get( iOne, iTwo ) );
-				if( ( iValue == -1 ) && ( ( b = BNSmile.GetDefault( i ) ) != (unsigned char)-1 ) )
+				if( ( iValue == -1 ) && ( ( b = BNSmile.GetDefault( i + num_to_skip ) ) != (unsigned char)-1 ) )
 					iValue = b;
 				if( iValue != -1 )
-					PCLLookup.Set( iGene, i, 1 - BNSmile.Evaluate( i, (unsigned char)iValue ) - dPrior );
+					PCLLookup.Set( iGene, i, 1 - BNSmile.Evaluate( i + num_to_skip, (unsigned char)iValue ) - dPrior );
 				iGene++; } } }
 	PCLLookup.Save( cout );
 
