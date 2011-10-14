@@ -43,6 +43,9 @@ struct gengetopt_args_info
   char * directory_arg;	/**< @brief Directory with DAB files (default='.').  */
   char * directory_orig;	/**< @brief Directory with DAB files original value given at command line.  */
   const char *directory_help; /**< @brief Directory with DAB files help description.  */
+  char * netdir_arg;	/**< @brief Directory with Bayesian network (X)DSL files for context average.  */
+  char * netdir_orig;	/**< @brief Directory with Bayesian network (X)DSL files for context average original value given at command line.  */
+  const char *netdir_help; /**< @brief Directory with Bayesian network (X)DSL files for context average help description.  */
   char * zeros_arg;	/**< @brief Read zeroed node IDs/outputs from the given file.  */
   char * zeros_orig;	/**< @brief Read zeroed node IDs/outputs from the given file original value given at command line.  */
   const char *zeros_help; /**< @brief Read zeroed node IDs/outputs from the given file help description.  */
@@ -69,6 +72,7 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int network_given ;	/**< @brief Whether network was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
+  unsigned int netdir_given ;	/**< @brief Whether netdir was given.  */
   unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
   unsigned int lookup_given ;	/**< @brief Whether lookup was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */

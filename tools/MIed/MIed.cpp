@@ -68,7 +68,7 @@ int main( int iArgs, char** aszArgs ) {
 	  posm=&cout;
 	}
 		
-	if (sArgs.datasets_arg) {
+	if (sArgs.datasets_given) {
 		char acLine[ 1024 ];
 		vector<string> vecstrTok;
 		string datstr;
@@ -97,7 +97,7 @@ int main( int iArgs, char** aszArgs ) {
 
 
 	// now collect the data files from directory if given
-	if(sArgs.directory_arg){
+	if(sArgs.directory_given){
 	  dp = opendir (sArgs.directory_arg);
 	  if (dp != NULL){
 	    while (ep = readdir (dp)){
@@ -127,7 +127,7 @@ int main( int iArgs, char** aszArgs ) {
 	
 	
 	// read in zeros file if given
-	if( sArgs.zeros_arg ) {
+	if( sArgs.zeros_given ) {
 	  ifstream		ifsm;
 	  vector<string>	vecstrZeros;
 	  char			acLine[ 1024 ];
@@ -152,7 +152,7 @@ int main( int iArgs, char** aszArgs ) {
 	// represents to use random values
 	veciDefaults.resize( inputNums );
 	fill( veciDefaults.begin(), veciDefaults.end(), -1);
-	if( sArgs.zeros_arg )
+	if( sArgs.zeros_given )
 	  for( i = 0; i < veciDefaults.size( ); ++i ) {
 	    map<string, size_t>::const_iterator	iterZero;
 	    if( sArgs.inputs_num == 0 &&
@@ -169,16 +169,16 @@ int main( int iArgs, char** aszArgs ) {
 	
 	
 	// open dab to filter edges for each dataset
-	if( sArgs.edges_arg ) {
+	if( sArgs.edges_given ) {
 	  if( !DatLk1.Open( sArgs.edges_arg ) ) {
 	    cerr << "Could not open: " << sArgs.edges_arg << endl;
 	    return 1; }	  
 	}
 	
 	// now iterate through experiments to calculate MI
-	for( iDatOne = iRuns = 0; iDatOne < ( sArgs.datasets_arg ? vecstrDatasets.size() : inputNums ); ++iDatOne){	  	  
+	for( iDatOne = iRuns = 0; iDatOne < ( sArgs.datasets_given ? vecstrDatasets.size() : inputNums ); ++iDatOne){	  	  
 	  opened_DatOne = false;
-	  for( iDatTwo = ( sArgs.datasets_arg ? 0 : iDatOne );  iDatTwo < inputNums; ++iDatTwo, ++iRuns){
+	  for( iDatTwo = ( sArgs.datasets_given ? 0 : iDatOne );  iDatTwo < inputNums; ++iDatTwo, ++iRuns){
 	    
 	    // ok skip runs not in range
 	    if(sArgs.start_arg != -1 && iRuns < sArgs.start_arg ){
@@ -194,10 +194,10 @@ int main( int iArgs, char** aszArgs ) {
 	    // have I opned the first Data file?
 	    if(!opened_DatOne){ 
 	      // now open first Dat
-	      if(sArgs.datasets_arg) {
+	      if(sArgs.datasets_given) {
 		fileOne = vecstrDatasets[iDatOne].c_str();
 	      }
-	      else if(sArgs.directory_arg){
+	      else if(sArgs.directory_given){
 		fileOne = vecstrInputs[iDatOne].c_str();		
 	      }
 	      else{
@@ -209,7 +209,7 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	      
 	      // removed edges not wanted
-	      if( sArgs.edges_arg ) {
+	      if( sArgs.edges_given ) {
 		vector<size_t>	veciGenesOne;
 		size_t			iOne, iTwo;
 		float valx;
@@ -283,7 +283,7 @@ int main( int iArgs, char** aszArgs ) {
 	    }
 	    
 	    // now open Second Dat
-	    if(sArgs.directory_arg){
+	    if(sArgs.directory_given){
 	      fileTwo = vecstrInputs[iDatTwo].c_str( );
 	    }
 	    else{
@@ -295,7 +295,7 @@ int main( int iArgs, char** aszArgs ) {
 	      return 1; }
 	    
 	    // removed edges not wanted
-	    if( sArgs.edges_arg ) {
+	    if( sArgs.edges_given ) {
 	      vector<size_t>	veciGenesTwo;
 	      size_t			iOne, iTwo;
 	      float valx;
@@ -356,7 +356,7 @@ int main( int iArgs, char** aszArgs ) {
 	      for( j = i + 1; j < setstrGenes.size(); ++j ) {
 		
 		// filter Dat with no edges in both dats
-		if( sArgs.edges_arg &&
+		if( sArgs.edges_given &&
 		    veciGenesOne[ i ] != -1 && 
 		    veciGenesOne[ j ] != -1 && 
 		    CMeta::IsNaN( DatOne.Get(veciGenesOne[ i ], veciGenesOne[ j ]) ) &&

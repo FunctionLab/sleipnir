@@ -25,6 +25,7 @@
 
 static const char	c_acDab[]	= ".dab";
 static const char	c_acQdab[]	= ".qdab";
+static const char	c_acXdsl[]	= ".xdsl";
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -35,19 +36,57 @@ int main( int iArgs, char** aszArgs ) {
 	vector<size_t>		veciGenes;
 	CPCL				PCLLookup;
 	vector<string>		vecstrNodes, vecstrGenes, vecstrDummy;
-	size_t				i, j, k, iOne, iTwo, iGene, nStart, nEnd, num_to_skip;
+	size_t				i, j, k, l, iOne, iTwo, iGene, nStart, nEnd, num_to_skip;
 	float				dPrior;
 	CDataMatrix			MatCPT;
 	unsigned char		b;
+	
+	vector<CBayesNetSmile>  BNSmileList;
+	vector<float>		dPriorList;	
+	float    SumPosterior;
+	DIR* dp;
+	struct dirent* ep;
 	
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg );
-
-	if( !BNSmile.Open( sArgs.network_arg ) ) {
-		cerr << "Could not open: " << sArgs.network_arg << endl;
-		return 1; }
+	
+	// single network xdsl file
+	if( sArgs.network_given ){
+	  if( !BNSmile.Open( sArgs.network_arg ) ) {
+	    cerr << "Could not open: " << sArgs.network_arg << endl;
+	    return 1; }
+	  
+	  BNSmileList.push_back( BNSmile );
+	}
+	// directory directory network xdsl files: used for context average Edge2Post
+	else if( sArgs.netdir_given ){	  
+	  i = 0;
+	  dp = opendir (sArgs.netdir_arg);
+	  if (dp != NULL){
+	    while (ep = readdir (dp)){
+	      if(  strstr(ep->d_name, c_acXdsl) != NULL ){		
+		BNSmileList.push_back( CBayesNetSmile() );
+		if( !BNSmileList[i].Open(((string)sArgs.netdir_arg + "/" + ep->d_name).c_str() ) ){
+		  cerr << "Could not open: " << (string)sArgs.netdir_arg + "/" + ep->d_name << endl;
+		  return 1; }
+		i++;
+	      }
+	    }
+	    (void) closedir (dp);
+	  }
+	  
+	  if ( BNSmileList.size() == 0 ){
+	    cerr << "No xdsl files in given directory:" << sArgs.netdir_arg << endl;
+	    return 1;
+	  }
+	}
+	else{
+	  cerr << "Need Network file or directory" << endl;
+	  return 1;
+	}
+	
 	if( !Dat.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
 		cerr << "Could not open: " << sArgs.input_arg << endl;
 		return 1; }
@@ -78,7 +117,8 @@ int main( int iArgs, char** aszArgs ) {
 				vecstrGenes.push_back( DatLookup.GetGene( i ) + " - " + DatLookup.GetGene( j ) );
 	cerr << vecstrGenes.size() << endl;
 	
-	BNSmile.GetNodes( vecstrNodes );
+	// Assumes all network xdsl has same datasets!!
+	BNSmileList[ 0 ].GetNodes( vecstrNodes );
 	vecstrNodes[ 0 ] = sArgs.input_arg;
 	
 	///// Set for start idx and end idx	  
@@ -116,8 +156,13 @@ int main( int iArgs, char** aszArgs ) {
 				PCLLookup.Set( iGene, 0, Dat.Get( iOne, iTwo ) );
 			iGene++; } }
 
-	BNSmile.GetCPT( 0, MatCPT );
-	dPrior = 1 - MatCPT.Get( 0, 0 );
+	// store all priors from each network       
+	dPriorList.resize( BNSmileList.size( ) );
+	for( i = 0; i < BNSmileList.size( ); ++i ) {
+	  BNSmileList[i].GetCPT( 0, MatCPT );
+	  dPriorList[i] = 1 - MatCPT.Get( 0, 0 );	  
+	}
+	
 	for( i = 1; i < vecstrNodes.size( ); ++i ) {
 		CDataPair	DatCur;
 		string		strIn;
@@ -140,11 +185,21 @@ int main( int iArgs, char** aszArgs ) {
 				iTwo = veciGenes[ k ];
 				iValue = -1;
 				if( ( iOne != -1 ) && ( iTwo != -1 ) )
-					iValue = DatCur.Quantize( DatCur.Get( iOne, iTwo ) );
-				if( ( iValue == -1 ) && ( ( b = BNSmile.GetDefault( i + num_to_skip ) ) != (unsigned char)-1 ) )
-					iValue = b;
-				if( iValue != -1 )
-					PCLLookup.Set( iGene, i, 1 - BNSmile.Evaluate( i + num_to_skip, (unsigned char)iValue ) - dPrior );
+					iValue = DatCur.Quantize( DatCur.Get( iOne, iTwo ) );				
+				
+				// Assume default values are identical for all contexts
+				if( ( iValue == -1 ) && ( ( b = BNSmileList[0].GetDefault( i + num_to_skip ) ) != (unsigned char)-1 ) ){
+				  iValue = b;
+				}
+				
+				if( iValue != -1 ){
+				  // iterate through network xdsl files and average the posteriors
+				  for( l = 0; l < BNSmileList.size( ); ++l ) {
+				    SumPosterior += (1 - BNSmileList[l].Evaluate( i + num_to_skip, (unsigned char)iValue ) - dPriorList[l]);
+				  }
+				  PCLLookup.Set( iGene, i, SumPosterior / BNSmileList.size() );
+				}
+				
 				iGene++; } } }
 	PCLLookup.Save( cout );
 
