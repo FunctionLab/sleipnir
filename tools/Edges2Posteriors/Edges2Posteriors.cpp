@@ -194,6 +194,7 @@ int main( int iArgs, char** aszArgs ) {
 				
 				if( iValue != -1 ){
 				  // iterate through network xdsl files and average the posteriors
+				  SumPosterior = 0;
 				  for( l = 0; l < BNSmileList.size( ); ++l ) {
 				    SumPosterior += (1 - BNSmileList[l].Evaluate( i + num_to_skip, (unsigned char)iValue ) - dPriorList[l]);
 				  }
