@@ -175,8 +175,20 @@ int main( int iArgs, char** aszArgs ) {
 			if( !DatCur.Open( strIn.c_str( ), false, !!sArgs.memmap_flag ) ) {
 				cerr << "Could not open: " << strIn << endl;
 				return 1; }}
+
 		for( j = 0; j < veciGenes.size( ); ++j )
 			veciGenes[ j ] = DatCur.GetGene( DatLookup.GetGene( j ) );
+
+		// Cache each context's bin posterior prob
+		// num bins * num contexts
+		// DatCur.GetValues( ) * BNSmileList.size( );
+		float CacheBinPost[BNSmileList.size( )][DatCur.GetValues( )];
+		for(l = 0; l < BNSmileList.size( ); ++l){
+		  for( j = 0; j < DatCur.GetValues( ); ++j ){
+		    CacheBinPost[l][j] = (1 - BNSmileList[l].Evaluate( i + num_to_skip, (unsigned char)j ) - dPriorList[l]);
+		  }
+		}
+		
 		for( iGene = j = 0; j < DatLookup.GetGenes( ); ++j ) {
 			iOne = veciGenes[ j ];
 			for( k = ( j + 1 ); k < DatLookup.GetGenes( ); ++k ) {
@@ -196,7 +208,7 @@ int main( int iArgs, char** aszArgs ) {
 				  // iterate through network xdsl files and average the posteriors
 				  SumPosterior = 0;
 				  for( l = 0; l < BNSmileList.size( ); ++l ) {
-				    SumPosterior += (1 - BNSmileList[l].Evaluate( i + num_to_skip, (unsigned char)iValue ) - dPriorList[l]);
+				    SumPosterior += CacheBinPost[l][iValue];
 				  }
 				  PCLLookup.Set( iGene, i, SumPosterior / BNSmileList.size() );
 				}
