@@ -80,6 +80,8 @@ struct gengetopt_args_info
   const char *borders_help; /**< @brief Borders for graph nodes help description.  */
   int normalize_flag;	/**< @brief Normalize edge weights before processing (default=off).  */
   const char *normalize_help; /**< @brief Normalize edge weights before processing help description.  */
+  int absolute_flag;	/**< @brief Use absolute value of edge weights (default=off).  */
+  const char *absolute_help; /**< @brief Use absolute value of edge weights help description.  */
   int memmap_flag;	/**< @brief Memory map input file (default=off).  */
   const char *memmap_help; /**< @brief Memory map input file help description.  */
   char * config_arg;	/**< @brief Command line config file (default='Dat2Graph.ini').  */
@@ -107,6 +109,7 @@ struct gengetopt_args_info
   unsigned int colors_given ;	/**< @brief Whether colors was given.  */
   unsigned int borders_given ;	/**< @brief Whether borders was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int absolute_given ;	/**< @brief Whether absolute was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int config_given ;	/**< @brief Whether config was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */

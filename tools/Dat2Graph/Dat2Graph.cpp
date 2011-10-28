@@ -205,7 +205,8 @@ int main( int iArgs, char** aszArgs ) {
 					if( ( j = pDat->GetGene( GenesQr.GetGene( i ).GetName( ) ) ) != -1 )
 						vecdColors[ j ] = 1; }
 			pDat->FilterGenes( GenesQr, sArgs.hefalmp_flag ? CDat::EFilterHefalmp : CDat::EFilterPixie,
-				sArgs.neighbors_arg, (float)sArgs.edges_arg, vecdWeights.empty( ) ? NULL : &vecdWeights ); } }
+				sArgs.neighbors_arg, (float)sArgs.edges_arg, !!sArgs.absolute_flag,
+				vecdWeights.empty( ) ? NULL : &vecdWeights ); } }
 	if( sArgs.knowns_arg ) {
 		CDat			DatKnowns;
 		vector<size_t>	veciKnowns;

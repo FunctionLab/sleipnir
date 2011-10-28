@@ -122,7 +122,7 @@ public:
 			const char* szSimilarityMeasure, bool fNormalize, bool fZScore,
 			bool fAutocorrelate, const char* szGeneFile, float dCutoff,
 			size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap =
-					IMeasure::EMapCenter, bool fFrequencyWeight = false);
+					IMeasure::EMapCenter, bool fFrequencyWeight = false, float dAlpha = 0);
 
 	/*!
 	 * \brief

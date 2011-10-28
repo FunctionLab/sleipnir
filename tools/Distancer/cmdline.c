@@ -33,7 +33,7 @@ const char *gengetopt_args_info_help[] = {
   "\nMain:",
   "  -i, --input=filename    Input PCL file",
   "  -o, --output=filename   Output DAT/DAB file",
-  "  -d, --distance=STRING   Similarity measure  (possible values=\"pearson\", \n                            \"euclidean\", \"kendalls\", \"kolm-smir\", \n                            \"spearman\", \"pearnorm\", \"hypergeom\", \n                            \"innerprod\", \"bininnerprod\", \"quickpear\", \n                            \"mutinfo\", \"relauc\", \"pearsig\" \n                            default=`pearnorm')",
+  "  -d, --distance=STRING   Similarity measure  (possible values=\"pearson\", \n                            \"euclidean\", \"kendalls\", \"kolm-smir\", \n                            \"spearman\", \"pearnorm\", \"hypergeom\", \n                            \"innerprod\", \"bininnerprod\", \"quickpear\", \n                            \"mutinfo\", \"relauc\", \"pearsig\", \"dice\" \n                            default=`pearnorm')",
   "\nMiscellaneous:",
   "  -w, --weights=filename  Input weights file",
   "  -a, --autocorrelate     Autocorrelate distances  (default=off)",
@@ -46,6 +46,7 @@ const char *gengetopt_args_info_help[] = {
   "  -g, --genes=filename    Gene inclusion file",
   "  -e, --cutoff=DOUBLE     Remove scores below cutoff",
   "\nOptional:",
+  "  -A, --alpha=FLOAT       Alpha parameter for similarity measure  (default=`0')",
   "  -s, --skip=INT          Columns to skip in input PCL  (default=`2')",
   "  -l, --limit=INT         Gene count limit for caching  (default=`-1')",
   "  -v, --verbosity=INT     Message verbosity  (default=`5')",
@@ -56,6 +57,7 @@ typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
   , ARG_INT
+  , ARG_FLOAT
   , ARG_DOUBLE
 } cmdline_parser_arg_type;
 
@@ -69,7 +71,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
                         struct cmdline_parser_params *params, const char *additional_error);
 
 
-char *cmdline_parser_distance_values[] = {"pearson", "euclidean", "kendalls", "kolm-smir", "spearman", "pearnorm", "hypergeom", "innerprod", "bininnerprod", "quickpear", "mutinfo", "relauc", "pearsig", 0} ;	/* Possible values for distance.  */
+char *cmdline_parser_distance_values[] = {"pearson", "euclidean", "kendalls", "kolm-smir", "spearman", "pearnorm", "hypergeom", "innerprod", "bininnerprod", "quickpear", "mutinfo", "relauc", "pearsig", "dice", 0} ;	/* Possible values for distance.  */
 
 static char *
 gengetopt_strdup (const char *s);
@@ -90,6 +92,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->flip_given = 0 ;
   args_info->genes_given = 0 ;
   args_info->cutoff_given = 0 ;
+  args_info->alpha_given = 0 ;
   args_info->skip_given = 0 ;
   args_info->limit_given = 0 ;
   args_info->verbosity_given = 0 ;
@@ -114,6 +117,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->genes_arg = NULL;
   args_info->genes_orig = NULL;
   args_info->cutoff_orig = NULL;
+  args_info->alpha_arg = 0;
+  args_info->alpha_orig = NULL;
   args_info->skip_arg = 2;
   args_info->skip_orig = NULL;
   args_info->limit_arg = -1;
@@ -141,9 +146,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->flip_help = gengetopt_args_info_help[13] ;
   args_info->genes_help = gengetopt_args_info_help[15] ;
   args_info->cutoff_help = gengetopt_args_info_help[16] ;
-  args_info->skip_help = gengetopt_args_info_help[18] ;
-  args_info->limit_help = gengetopt_args_info_help[19] ;
-  args_info->verbosity_help = gengetopt_args_info_help[20] ;
+  args_info->alpha_help = gengetopt_args_info_help[18] ;
+  args_info->skip_help = gengetopt_args_info_help[19] ;
+  args_info->limit_help = gengetopt_args_info_help[20] ;
+  args_info->verbosity_help = gengetopt_args_info_help[21] ;
   
 }
 
@@ -236,6 +242,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->genes_arg));
   free_string_field (&(args_info->genes_orig));
   free_string_field (&(args_info->cutoff_orig));
+  free_string_field (&(args_info->alpha_orig));
   free_string_field (&(args_info->skip_orig));
   free_string_field (&(args_info->limit_orig));
   free_string_field (&(args_info->verbosity_orig));
@@ -341,6 +348,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "genes", args_info->genes_orig, 0);
   if (args_info->cutoff_given)
     write_into_file(outfile, "cutoff", args_info->cutoff_orig, 0);
+  if (args_info->alpha_given)
+    write_into_file(outfile, "alpha", args_info->alpha_orig, 0);
   if (args_info->skip_given)
     write_into_file(outfile, "skip", args_info->skip_orig, 0);
   if (args_info->limit_given)
@@ -514,6 +523,9 @@ int update_arg(void *field, char **orig_field,
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
+  case ARG_FLOAT:
+    if (val) *((float *)field) = (float)strtod (val, &stop_char);
+    break;
   case ARG_DOUBLE:
     if (val) *((double *)field) = strtod (val, &stop_char);
     break;
@@ -532,6 +544,7 @@ int update_arg(void *field, char **orig_field,
   /* check numeric conversion */
   switch(arg_type) {
   case ARG_INT:
+  case ARG_FLOAT:
   case ARG_DOUBLE:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
@@ -612,13 +625,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "flip",	0, NULL, 'f' },
         { "genes",	1, NULL, 'g' },
         { "cutoff",	1, NULL, 'e' },
+        { "alpha",	1, NULL, 'A' },
         { "skip",	1, NULL, 's' },
         { "limit",	1, NULL, 'l' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:o:d:w:aqnzfg:e:s:l:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:o:d:w:aqnzfg:e:A:s:l:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -761,6 +775,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.cutoff_given), optarg, 0, 0, ARG_DOUBLE,
               check_ambiguity, override, 0, 0,
               "cutoff", 'e',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'A':	/* Alpha parameter for similarity measure.  */
+        
+        
+          if (update_arg( (void *)&(args_info->alpha_arg), 
+               &(args_info->alpha_orig), &(args_info->alpha_given),
+              &(local_args_info.alpha_given), optarg, 0, "0", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "alpha", 'A',
               additional_error))
             goto failure;
         

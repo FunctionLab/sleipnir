@@ -796,4 +796,21 @@ double CMeasurePearsonSignificance::Measure(const float* adX, size_t iM,
 	return dRet;
 }
 
+double CMeasureDice::Measure( const float* adX, size_t iM, const float* adY,
+	size_t iN, EMap eMap, const float* adWX, const float* adWY ) const {
+	double	dDot, dXY, dYX, dX, dY;
+	size_t	i;
+
+	dDot = dXY = dYX = 0;
+	for( i = 0; i < min(iM, iN); ++i ) {
+		if( CMeta::IsNaN( dX = adX[i] ) || CMeta::IsNaN( dY = adY[i] ) )
+			continue;
+		dX *= GetWeight( adWX, i );
+		dY *= GetWeight( adWY, i );
+		dDot += dX * dY;
+		dXY += pow( max(0.0, dX - dY), 2 );
+		dYX += pow( max(0.0, dY - dX), 2 ); }
+	dX = dDot + ( m_dAlpha * dXY ) + ( ( 1 - m_dAlpha ) * dYX );
+	return ( dX ? ( dDot / dX ) : CMeta::GetNaN( ) ); }
+
 }

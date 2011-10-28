@@ -81,7 +81,7 @@ protected:
 	void OpenHelper( const CGenes*, const CGenes*, float );
 	bool OpenHelper( );
 	bool OpenMemmap( const unsigned char* );
-	void FilterGenesGraph( const CGenes&, std::vector<bool>&, size_t, float, bool, const std::vector<float>* );
+	void FilterGenesGraph( const CGenes&, std::vector<bool>&, size_t, float, bool, bool, const std::vector<float>* );
 
 	float& Get( size_t iX, size_t iY ) const {
 		static float	s_dRet;

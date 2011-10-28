@@ -165,7 +165,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 		const char* szSimilarityMeasure, bool fNormalize, bool fZScore,
 		bool fAutocorrelate, const char* szGeneFile, float dCutoff,
 		size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap,
-		bool fFrequencyWeight) {
+		bool fFrequencyWeight, float dAlpha) {
 	size_t i, j, iOne, iTwo;
 	float d;
 	ifstream ifsm;
@@ -190,6 +190,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 	CMeasureMutualInformation MutualInfo;
 	CMeasureRelativeAUC RelAuc;
 	CMeasurePearsonSignificance PearSig;
+	CMeasureDice Dice( dAlpha );
 
 	if (szFile) {
 		ifsm.open(szFile);
@@ -215,7 +216,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 			EuclideanSig(&Euclidean, false, 1.0f / PCL.GetExperiments());
 	IMeasure* apMeasures[] = { &Pearson, &EuclideanSig, &KendallsTau,
 			&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick,
-			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, NULL };
+			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice, NULL };
 
 	pMeasure = NULL;
 	for (i = 0; apMeasures[i]; ++i)

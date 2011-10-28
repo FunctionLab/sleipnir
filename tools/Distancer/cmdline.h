@@ -62,6 +62,9 @@ struct gengetopt_args_info
   double cutoff_arg;	/**< @brief Remove scores below cutoff.  */
   char * cutoff_orig;	/**< @brief Remove scores below cutoff original value given at command line.  */
   const char *cutoff_help; /**< @brief Remove scores below cutoff help description.  */
+  float alpha_arg;	/**< @brief Alpha parameter for similarity measure (default='0').  */
+  char * alpha_orig;	/**< @brief Alpha parameter for similarity measure original value given at command line.  */
+  const char *alpha_help; /**< @brief Alpha parameter for similarity measure help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCL (default='2').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
@@ -85,6 +88,7 @@ struct gengetopt_args_info
   unsigned int flip_given ;	/**< @brief Whether flip was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
+  unsigned int alpha_given ;	/**< @brief Whether alpha was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int limit_given ;	/**< @brief Whether limit was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */

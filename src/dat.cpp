@@ -1351,7 +1351,7 @@ bool CDat::FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit ) {
  * gold standards.
  */
 void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, float dEdgeAggressiveness,
-	const vector<float>* pvecdWeights ) {
+	bool fAbsolute, const vector<float>* pvecdWeights ) {
 	size_t			i, j;
 	vector<bool>	vecfGenes;
 	vecfGenes.resize( GetGenes( ) );
@@ -1362,7 +1362,7 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 	switch( eFilter ) {
 		case EFilterPixie:
 		case EFilterHefalmp:
-			FilterGenesGraph( Genes, vecfGenes, iLimit, dEdgeAggressiveness, eFilter == EFilterHefalmp, pvecdWeights );
+			FilterGenesGraph( Genes, vecfGenes, iLimit, dEdgeAggressiveness, eFilter == EFilterHefalmp, fAbsolute, pvecdWeights );
 			return; }
 
 	for( i = 0; i < GetGenes( ); ++i ) {
@@ -1410,7 +1410,7 @@ struct SPixie {
 };
 
 void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, size_t iLimit,
-	float dEdgeAggressiveness, bool fHefalmp, const vector<float>* pvecdWeights ) {
+	float dEdgeAggressiveness, bool fHefalmp, bool fAbsolute, const vector<float>* pvecdWeights ) {
 	vector<float>				vecdNeighbors, vecdWeights;
 	size_t						i, j, iOne, iTwo, iMinOne, iMinTwo, iN;
 	vector<size_t>				veciGenes, veciFinal, veciDegree;
@@ -1445,10 +1445,14 @@ void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, s
 				if( ( iOne = veciGenes[ j ] ) == -1 )
 					continue;
 				if( !CMeta::IsNaN( d = Get( i, iOne ) ) ) {
+					if( fAbsolute )
+						d = fabs( d );
 					iIn++;
 					dIn += d * (*pvecdWeights)[ j ]; } }
 			for( iOut = j = 0; j < GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+					if( fAbsolute )
+						d = fabs( d );
 					iOut++;
 					dOut += d; }
 			vecdNeighbors[ i ] = ( iIn && dOut ) ? ( dIn * iOut / iIn / dOut ) : 0; }
@@ -1459,8 +1463,10 @@ void CDatImpl::FilterGenesGraph( const CGenes& Genes, vector<bool>& vecfGenes, s
 			for( j = 0; j < GetGenes( ); ++j ) {
 				if( vecfGenes[ j ] )
 					continue;
-				if( !CMeta::IsNaN( d = Get( iOne, j ) ) )
-					vecdNeighbors[ j ] += d * (*pvecdWeights)[ i ]; } }
+				if( !CMeta::IsNaN( d = Get( iOne, j ) ) ) {
+					if( fAbsolute )
+						d = fabs( d );
+					vecdNeighbors[ j ] += d * (*pvecdWeights)[ i ]; } } }
 	for( i = 0; i < vecdNeighbors.size( ); ++i )
 		if( ( d = vecdNeighbors[ i ] ) > 0 )
 			pqueNeighbors.push( SPixie( i, d ) );

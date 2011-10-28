@@ -51,6 +51,7 @@ const char *gengetopt_args_info_help[] = {
   "  -b, --borders=filename   Borders for graph nodes",
   "\nOptional:",
   "  -n, --normalize          Normalize edge weights before processing  \n                             (default=off)",
+  "  -A, --absolute           Use absolute value of edge weights  (default=off)",
   "  -m, --memmap             Memory map input file  (default=off)",
   "  -c, --config=filename    Command line config file  (default=`Dat2Graph.ini')",
   "  -v, --verbosity=INT      Message verbosity  (default=`5')",
@@ -124,6 +125,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->colors_given = 0 ;
   args_info->borders_given = 0 ;
   args_info->normalize_given = 0 ;
+  args_info->absolute_given = 0 ;
   args_info->memmap_given = 0 ;
   args_info->config_given = 0 ;
   args_info->verbosity_given = 0 ;
@@ -161,6 +163,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->borders_arg = NULL;
   args_info->borders_orig = NULL;
   args_info->normalize_flag = 0;
+  args_info->absolute_flag = 0;
   args_info->memmap_flag = 0;
   args_info->config_arg = gengetopt_strdup ("Dat2Graph.ini");
   args_info->config_orig = NULL;
@@ -192,9 +195,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->colors_help = gengetopt_args_info_help[19] ;
   args_info->borders_help = gengetopt_args_info_help[20] ;
   args_info->normalize_help = gengetopt_args_info_help[22] ;
-  args_info->memmap_help = gengetopt_args_info_help[23] ;
-  args_info->config_help = gengetopt_args_info_help[24] ;
-  args_info->verbosity_help = gengetopt_args_info_help[25] ;
+  args_info->absolute_help = gengetopt_args_info_help[23] ;
+  args_info->memmap_help = gengetopt_args_info_help[24] ;
+  args_info->config_help = gengetopt_args_info_help[25] ;
+  args_info->verbosity_help = gengetopt_args_info_help[26] ;
   
 }
 
@@ -407,6 +411,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "borders", args_info->borders_orig, 0);
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
+  if (args_info->absolute_given)
+    write_into_file(outfile, "absolute", 0, 0 );
   if (args_info->memmap_given)
     write_into_file(outfile, "memmap", 0, 0 );
   if (args_info->config_given)
@@ -683,13 +689,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "colors",	1, NULL, 'l' },
         { "borders",	1, NULL, 'b' },
         { "normalize",	0, NULL, 'n' },
+        { "absolute",	0, NULL, 'A' },
         { "memmap",	0, NULL, 'm' },
         { "config",	1, NULL, 'c' },
         { "verbosity",	1, NULL, 'v' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:t:q:Q:k:ad:H:e:g:G:w:f:l:b:nmc:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:t:q:Q:k:ad:H:e:g:G:w:f:l:b:nAmc:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -898,6 +905,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
               &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "normalize", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'A':	/* Use absolute value of edge weights.  */
+        
+        
+          if (update_arg((void *)&(args_info->absolute_flag), 0, &(args_info->absolute_given),
+              &(local_args_info.absolute_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "absolute", 'A',
               additional_error))
             goto failure;
         

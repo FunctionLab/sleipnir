@@ -43,6 +43,8 @@ option	"borders"	b	"Borders for graph nodes"
 section "Optional"
 option	"normalize"	n	"Normalize edge weights before processing"
 						flag	off
+option	"absolute"	A	"Use absolute value of edge weights"
+						flag	off
 option	"memmap"	m	"Memory map input file"
 						flag	off
 option	"config"	c	"Command line config file"

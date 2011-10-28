@@ -741,6 +741,34 @@ public:
 		return new CMeasurePearsonSignificance( ); }
 };
 
+/*!
+ * \brief
+ * Calculates the continuous of Dice coefficient between two vectors, dot(x, y) /
+ * ( dot(x, y) + a*||x-y|| + (1-a)*||y-x|| ).
+ */
+class CMeasureDice : public IMeasure {
+public:
+	CMeasureDice( float dAlpha = 0.5 ) : m_dAlpha(dAlpha) { }
+
+	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
+		const float* adWX = NULL, const float* adWY = NULL ) const;
+
+	const char* GetName( ) const {
+
+		return "dice"; }
+
+	bool IsRank( ) const {
+
+		return false; }
+
+	IMeasure* Clone( ) const {
+
+		return new CMeasureDice( ); }
+
+private:
+	float	m_dAlpha;
+};
+
 }
 
 #endif // MEASURE_H

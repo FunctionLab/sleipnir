@@ -213,7 +213,7 @@ public:
 	void Rank( );
 	bool FilterGenes( const char* szGenes, EFilter eFilter, size_t iLimit = -1 );
 	void FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit = -1,
-		float dEdgeAggressiveness = 0.5, const std::vector<float>* pvecdWeights = NULL );
++ 		float dEdgeAggressiveness = 0.5, bool fAbsolute = false, const std::vector<float>* pvecdWeights = NULL );
 	void NormalizeQuantiles( size_t iQuantiles );
 
 	void Clear( float dValue ) {
