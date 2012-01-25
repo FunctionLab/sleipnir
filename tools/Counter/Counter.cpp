@@ -36,9 +36,15 @@ struct SLearn {
 	const CGenes*		m_pGenes;
 	const CDataPair*	m_pAnswers;
 	const CDatFilter*	m_pDat;
-	size_t				m_iZero;
+	size_t			m_iZero;
 	CRegularize*		m_pRegularize;
-	size_t				m_iDat;
+	size_t			m_iDat;
+	bool                    m_bInPos;
+	bool                    m_bInNeg;
+	bool                    m_bBridgePos;
+	bool                    m_bBridgeNeg;
+	bool                    m_bOutPos;
+	bool                    m_bOutNeg;
 };
 
 struct SEvaluate {
@@ -380,21 +386,20 @@ int main( int iArgs, char** aszArgs ) {
 
 int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& mapstriZeros,
 	const CGenes& GenesIn, const CGenes& GenesEx, const CGenes& GenesTm, const CGenes& GenesEd ) {
-	size_t								i, j, k, m, iTerm, iThread;
+	size_t			    		i, j, k, m, iTerm, iThread;
 	vector<vector<CCountMatrix*>* >		vecpvecpMats;
-	vector<CCountMatrix*>				vecpMatRoots;
-	vector<CGenes*>						vecpGenes;
-	CDataPair							Answers, Dat;
-	CDatFilter							Filter, FilterIn, FilterEx, FilterTm, FilterEd;
-	CDatFilter*							pFilter;
-	string								strFile;
-	vector<pthread_t>					vecpthdThreads;
-	vector<SLearn>						vecsData;
+	vector<CCountMatrix*>			vecpMatRoots;
+	vector<CGenes*>				vecpGenes;
+	CDataPair				Answers, Dat;
+	CDatFilter				Filter, FilterIn, FilterEx, FilterTm, FilterEd;
+	CDatFilter*				pFilter;
+	string	    				strFile;
+	vector<pthread_t>	    		vecpthdThreads;
+	vector<SLearn>				vecsData;
 	map<string, size_t>::const_iterator	iterZero;
-	CGenome								Genome;
-	vector<string>						vecstrNames;
-	CRegularize							Regularize;
-
+	CGenome			    		Genome;
+	vector<string>				vecstrNames;
+	CRegularize			        Regularize;
 	if( !Answers.Open( sArgs.answers_arg, false, !!sArgs.memmap_flag ) ) {
 		cerr << "Could not open: " << sArgs.answers_arg << endl;
 		return 1; }
@@ -429,6 +434,12 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 			vecsData[ i ].m_pAnswers = &Answers;
 			vecsData[ i ].m_iZero = -1;
 			vecsData[ i ].m_pRegularize = &Regularize;
+			vecsData[ i ].m_bInPos = sArgs.ctxtpos_flag;
+			vecsData[ i ].m_bInNeg = sArgs.ctxtneg_flag;
+			vecsData[ i ].m_bBridgePos = sArgs.bridgepos_flag;
+			vecsData[ i ].m_bBridgeNeg = sArgs.bridgeneg_flag;
+			vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
+			vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
 			if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
 				cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
 				return 1; } }
@@ -487,6 +498,12 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 				vecsData[ i ].m_iZero = ( ( iterZero = mapstriZeros.find( strName ) ) ==
 					mapstriZeros.end( ) ) ? -1 : iterZero->second;
 				vecsData[ i ].m_pRegularize = &Regularize;
+				vecsData[ i ].m_bInPos = sArgs.ctxtpos_flag;
+				vecsData[ i ].m_bInNeg = sArgs.ctxtneg_flag;
+				vecsData[ i ].m_bBridgePos = sArgs.bridgepos_flag;
+				vecsData[ i ].m_bBridgeNeg = sArgs.bridgeneg_flag;
+				vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
+				vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
 				if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
 					cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
 					return 1; } }
@@ -529,8 +546,8 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 	return 0; }
 
 void* learn( void* pData ) {
-	SLearn*			psData;
-	size_t			i, j, iAnswer, iVal, iOne, iTwo;
+	SLearn*		psData;
+	size_t		i, j, iAnswer, iVal, iOne, iTwo;
 	vector<bool>	vecfGenes;
 	vector<size_t>	veciGenes;
 
@@ -550,9 +567,35 @@ void* learn( void* pData ) {
 		if( psData->m_pDat )
 			iOne = veciGenes[ i ];
 		for( j = ( i + 1 ); j < psData->m_pAnswers->GetGenes( ); ++j ) {
-			if( ( ( iAnswer = psData->m_pAnswers->Quantize( psData->m_pAnswers->Get( i, j ) ) ) == -1 ) ||
-				!( vecfGenes[ i ] || vecfGenes[ j ] ) || ( ( vecfGenes[ i ] != vecfGenes[ j ] ) && iAnswer ) )
+			if( iAnswer = psData->m_pAnswers->Quantize( psData->m_pAnswers->Get( i, j ) ) == -1 ) {
+			    continue; }
+			bool bOut = !( vecfGenes[ i ] || vecfGenes[ j ] );
+			if( bOut ) {
+			    if ( iAnswer && !psData->m_bOutPos) {
 				continue;
+			    }
+			    else if ( !iAnswer && !psData->m_bOutNeg ) {
+				continue;
+			    }
+			}
+			bool bIn = vecfGenes[ i ] && vecfGenes[ j ];
+			if( bIn ) {
+			    if ( iAnswer && !psData->m_bInPos ){
+				continue;
+			    }
+			    else if ( !iAnswer && !psData->m_bInNeg ) {
+				continue;
+			    }
+			}
+			bool bBridge = !( bOut || bIn );
+			if( bBridge ) {
+			    if ( iAnswer && !psData->m_bBridgePos ){
+				continue;
+			    }
+			    else if ( !iAnswer && !psData->m_bBridgeNeg ) {
+				continue;
+			    }
+			}
 			if( psData->m_pDat ) {
 				iTwo = veciGenes[ j ];
 				iVal = -1;
