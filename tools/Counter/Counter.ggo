@@ -35,9 +35,9 @@ option  "ctxtpos"               q       "Use positive edges between context gene
                                                         flag    on
 option  "ctxtneg"               Q       "Use negative edges between context genes"
                                                         flag    on
-option  "bridgepos"             i       "Use bridging positives between context and non-context genes"
+option  "bridgepos"             j       "Use bridging positives between context and non-context genes"
                                                         flag    off
-option  "bridgeneg"             I       "Use bridging negatives between context and non-context genes"
+option  "bridgeneg"             J       "Use bridging negatives between context and non-context genes"
                                                         flag    on
 option  "outpos"                u       "Use positive edges outside the context"
                                                         flag    off

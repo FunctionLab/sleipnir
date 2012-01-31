@@ -53,24 +53,24 @@ struct SSorter {
 double AUCMod( const CDat&, const CDat&, const vector<bool>&, bool, float );
 
 int main( int iArgs, char** aszArgs ) {
-    CDat			Answers, Data;
-    gengetopt_args_info	sArgs;
-    size_t			i, j, k, m, iOne, iTwo, iGenes, iPositives, iNegatives, iBins, iRand;
-    vector<size_t>		veciGenes, veciRec, veciRecTerm;
-    CFullMatrix<bool>	MatGenes;
-    CFullMatrix<size_t>	MatResults;
-    ETFPN			eTFPN;
-    int			iMax;
-    float			dAnswer, dValue;
-    vector<bool>		vecfHere;
-    vector<float>		vecdScores, vecdSSE, vecdBinValue;
-    vector<size_t>		veciPositives, veciNegatives, veciGenesTerm;
-    ofstream		ofsm;
-    ostream*		postm;
-    map<float,size_t>	mapValues;
-    bool			fMapAnswers;
-    CGenome			Genome;
-    CGenes			GenesTm( Genome );
+    CDat		    Answers, Data;
+    gengetopt_args_info	    sArgs;
+    size_t	    	    i, j, k, m, iOne, iTwo, iGenes, iPositives, iNegatives, iBins, iRand;
+    vector<size_t>	    veciGenes, veciRec, veciRecTerm;
+    CFullMatrix<bool>	    MatGenes;
+    CFullMatrix<size_t>	    MatResults;
+    ETFPN		    eTFPN;
+    int			    iMax;
+    float		    dAnswer, dValue;
+    vector<bool>    	    vecfHere;
+    vector<float>	    vecdScores, vecdSSE, vecdBinValue;
+    vector<size_t>	    veciPositives, veciNegatives, veciGenesTerm;
+    ofstream		    ofsm;
+    ostream*		    postm;
+    map<float,size_t>	    mapValues;
+    bool		    fMapAnswers;
+    CGenome		    Genome;
+    CGenes		    GenesTm( Genome );
 
     if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
         cmdline_parser_print_help( );
@@ -212,10 +212,38 @@ int main( int iArgs, char** aszArgs ) {
                                 CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
                                 CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
                             continue;
-                        if( !( vecfHere.empty( ) ||
-                                ( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-                                ( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
-                            continue;
+/* flags for positives/negatives/bridging only work in this situation, no plans
+ * for using in the other situations
+ */
+                        if( !( vecfHere.empty( ) ) ) {
+                            bool bOut = !( vecfHere[ i ] || vecfHere[ j ] );
+                            if( bOut ) {
+                                if ( dAnswer && !sArgs.outpos_flag) {
+                                    continue;
+                                }
+                                else if ( !dAnswer && !sArgs.outneg_flag ) {
+                                    continue;
+                                }
+                            }
+                            bool bIn = vecfHere[ i ] && vecfHere[ j ];
+                            if( bIn ) {
+                                if ( dAnswer && !sArgs.ctxtpos_flag ) {
+                                    continue;
+                                }
+                                else if ( !dAnswer && !sArgs.ctxtneg_flag ) {
+                                    continue;
+                                }
+                            }
+                            bool bBridge = !( bOut || bIn );
+                            if( bBridge ) {
+                                if ( dAnswer && !sArgs.bridgepos_flag ) {
+                                    continue;
+                                }
+                                else if ( !dAnswer && !sArgs.bridgeneg_flag ) {
+                                    continue;
+                                }
+                            }
+                        }
 
                         MatGenes.Set( i, 0, true );
                         MatGenes.Set( j, 0, true );

@@ -551,8 +551,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_iDat = vecstrNames.size( ) - 1;
             vecsData[ i ].m_pGenes = vecpGenes[ i ];
             vecsData[ i ].m_pAnswers = &Answers;
-            vecsData[ i ].m_iZero = ( ( iterZero = mapstriZeros.find( strName ) ) ==
-                                      mapstriZeros.end( ) ) ? -1 : iterZero->second;
+            vecsData[ i ].m_iZero = ( ( iterZero = mapstriZeros.find( strName ) ) == mapstriZeros.end( ) ) ? -1 : iterZero->second;
             vecsData[ i ].m_pRegularize = &Regularize;
             vecsData[ i ].m_bInPos = sArgs.ctxtpos_flag;
             vecsData[ i ].m_bInNeg = sArgs.ctxtneg_flag;

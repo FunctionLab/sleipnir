@@ -39,6 +39,18 @@ option	"genee"			C	"Edge inclusion file"
 							string	typestr="filename"
 option	"genep"			l	"Gene inclusion file for positives"
 							string	typestr="filename"
+option  "ctxtpos"               q       "Use positive edges between context genes"
+                                                        flag    on
+option  "ctxtneg"               Q       "Use negative edges between context genes"
+                                                        flag    on
+option  "bridgepos"             j       "Use bridging positives between context and non-context genes"
+                                                        flag    off
+option  "bridgeneg"             J       "Use bridging negatives between context and non-context genes"
+                                                        flag    on
+option  "outpos"                u       "Use positive edges outside the context"
+                                                        flag    off
+option  "outneg"                U       "Use negative edges outside the context"
+                                                        flag    off
 
 section "Preprocessing"
 option	"normalize"		n	"Normalize scores before processing"

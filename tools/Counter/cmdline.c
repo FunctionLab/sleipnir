@@ -51,8 +51,8 @@ const char *gengetopt_args_info_help[] = {
   "  -C, --genee=filename          Edge inclusion file",
   "  -q, --ctxtpos                 Use positive edges between context genes  \n                                  (default=on)",
   "  -Q, --ctxtneg                 Use negative edges between context genes  \n                                  (default=on)",
-  "  -i, --bridgepos               Use bridging positives between context and \n                                  non-context genes  (default=off)",
-  "  -I, --bridgeneg               Use bridging negatives between context and \n                                  non-context genes  (default=on)",
+  "  -j, --bridgepos               Use bridging positives between context and \n                                  non-context genes  (default=off)",
+  "  -J, --bridgeneg               Use bridging negatives between context and \n                                  non-context genes  (default=on)",
   "  -u, --outpos                  Use positive edges outside the context  \n                                  (default=off)",
   "  -U, --outneg                  Use negative edges outside the context  \n                                  (default=off)",
   "\nNetwork Features:",
@@ -767,8 +767,8 @@ cmdline_parser_internal (
         { "genee",	1, NULL, 'C' },
         { "ctxtpos",	0, NULL, 'q' },
         { "ctxtneg",	0, NULL, 'Q' },
-        { "bridgepos",	0, NULL, 'i' },
-        { "bridgeneg",	0, NULL, 'I' },
+        { "bridgepos",	0, NULL, 'j' },
+        { "bridgeneg",	0, NULL, 'J' },
         { "outpos",	0, NULL, 'u' },
         { "outneg",	0, NULL, 'U' },
         { "default",	1, NULL, 'b' },
@@ -788,7 +788,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVw:k:n:o:d:s:e:X:g:G:c:C:qQiIuUb:Z:Sp:a:rR:y:lxmMt:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVw:k:n:o:d:s:e:X:g:G:c:C:qQjJuUb:Z:Sp:a:rR:y:lxmMt:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -986,22 +986,22 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'i':	/* Use bridging positives between context and non-context genes.  */
+        case 'j':	/* Use bridging positives between context and non-context genes.  */
         
         
           if (update_arg((void *)&(args_info->bridgepos_flag), 0, &(args_info->bridgepos_given),
               &(local_args_info.bridgepos_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "bridgepos", 'i',
+              check_ambiguity, override, 1, 0, "bridgepos", 'j',
               additional_error))
             goto failure;
         
           break;
-        case 'I':	/* Use bridging negatives between context and non-context genes.  */
+        case 'J':	/* Use bridging negatives between context and non-context genes.  */
         
         
           if (update_arg((void *)&(args_info->bridgeneg_flag), 0, &(args_info->bridgeneg_given),
               &(local_args_info.bridgeneg_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "bridgeneg", 'I',
+              check_ambiguity, override, 1, 0, "bridgeneg", 'J',
               additional_error))
             goto failure;
         
