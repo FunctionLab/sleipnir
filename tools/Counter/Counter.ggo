@@ -27,6 +27,8 @@ option	"genes"			g	"Gene inclusion file"
 							string	typestr="filename"
 option	"genex"			G	"Gene exclusion file"
 							string	typestr="filename"
+option  "ubiqg"                 P       "Ubiquitous gene file (-j and -J refer to connections to ubiq instead of all bridging pairs)"
+                                                        string  typestr="filename"
 option	"genet"			c	"Term inclusion file"
 							string	typestr="filename"
 option	"genee"			C	"Edge inclusion file"
@@ -53,11 +55,11 @@ option	"genewise"		S	"Evaluate networks assuming genewise contexts"
 							flag	off
 
 section "Bayesian Regularization"
-option	"pseudocounts"	p	"Effective number of pseudocounts to use"
+option	"pseudocounts"	        p	"Effective number of pseudocounts to use"
 							float default="-1"
 option	"alphas"		a	"File containing equivalent sample sizes (alphas) for each node"
 							string	typestr="filename"
-option	"regularize"	r	"Automatically regularize based on similarity"
+option	"regularize"	        r	"Automatically regularize based on similarity"
 							flag	off
 option	"reggroups"		R	"Automatically regularize based on given groups"
 							string	typestr="filename"
@@ -71,8 +73,8 @@ option	"xdsl"			x	"Generate XDSL output rather than DSL"
 							flag	on
 option	"memmap"		m	"Memory map input files"
 							flag	off
-option  "memmapout" M "Memory map output files (only for inference mode)"
-              flag  off
+option  "memmapout"             M       "Memory map output files (only for inference mode)"
+                                                        flag  off
 option	"threads"		t	"Maximum number of threads to spawn"
 							int	default="-1"
 option	"verbosity"		v	"Message verbosity"

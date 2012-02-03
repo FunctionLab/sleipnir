@@ -62,7 +62,7 @@ int main( int iArgs, char** aszArgs ) {
     ETFPN		    eTFPN;
     int			    iMax;
     float		    dAnswer, dValue;
-    vector<bool>    	    vecfHere;
+    vector<bool>    	    vecfHere, vecfUbik;
     vector<float>	    vecdScores, vecdSSE, vecdBinValue;
     vector<size_t>	    veciPositives, veciNegatives, veciGenesTerm;
     ofstream		    ofsm;
@@ -70,7 +70,7 @@ int main( int iArgs, char** aszArgs ) {
     map<float,size_t>	    mapValues;
     bool		    fMapAnswers;
     CGenome		    Genome;
-    CGenes		    GenesTm( Genome );
+    CGenes		    GenesTm( Genome ), GenesUbik( Genome );
 
     if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
         cmdline_parser_print_help( );
@@ -78,17 +78,13 @@ int main( int iArgs, char** aszArgs ) {
     }
     CMeta Meta( sArgs.verbosity_arg );
 
-    fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genep_arg || sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg || sArgs.genee_arg );
+    fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg || sArgs.genee_arg );
     if( !Answers.Open( sArgs.answers_arg, fMapAnswers ) ) {
         cerr << "Couldn't open: " << sArgs.answers_arg << endl;
         return 1;
     }
     if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
         cerr << "Couldn't open: " << sArgs.genes_arg << endl;
-        return 1;
-    }
-    if( sArgs.genep_arg && !Answers.FilterGenes( sArgs.genep_arg, CDat::EFilterIncludePos ) ) {
-        cerr << "Couldn't open: " << sArgs.genep_arg << endl;
         return 1;
     }
     if( sArgs.genee_arg && !Answers.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge ) ) {
@@ -159,21 +155,27 @@ int main( int iArgs, char** aszArgs ) {
             MatResults.Clear( );
             MatGenes.Clear( );
 
-            if( sArgs.inputs_num ) {
+            if( sArgs.genep_arg ) {
                 CGenes		Genes( Genome );
-                ifstream	ifsm;
-
-                ifsm.open( sArgs.inputs[ iGenes ] );
-                if( !Genes.Open( ifsm ) ) {
-                    cerr << "Couldn't open: " << sArgs.inputs[ iGenes ] << endl;
+                if( !Genes.Open( sArgs.genep_arg ) ) {
+                    cerr << "Couldn't open: " << sArgs.genep_arg << endl;
                     return 1;
                 }
                 vecfHere.resize( Answers.GetGenes( ) );
-                for( i = 0; i < vecfHere.size( ); ++i )
+                for( i = 0; i < vecfHere.size( ); ++i ) {
                     vecfHere[ i ] = Genes.IsGene( Answers.GetGene( i ) );
-                cerr << "Processing " << sArgs.inputs[ iGenes ] << "..." << endl;
-                ifsm.close( );
+		}
             }
+	    if( sArgs.ubiqg_arg ) {
+		if( !GenesUbik.Open( sArgs.ubiqg_arg ) ) {
+		    cerr << "Could not open: " << sArgs.ubiqg_arg << endl;
+		    return 1;
+		}
+		vecfUbik.resize( Answers.GetGenes( ) );
+		for( i = 0; i < vecfUbik.size( ); ++i ) {
+		    vecfUbik[ i ] = GenesUbik.IsGene( Answers.GetGene( i ) );
+		}
+	    }
 
             if( mapValues.size( ) ) {
                 for( i = 0; i < Answers.GetGenes( ); ++i ) {
@@ -184,10 +186,41 @@ int main( int iArgs, char** aszArgs ) {
                                 CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
                                 CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
                             continue;
-                        if( !( vecfHere.empty( ) ||
-                                ( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-                                ( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
-                            continue;
+ 			if( vecfHere.size( ) ) {
+			    bool fIn = vecfHere[ i ] && vecfHere[j];
+                            if( fIn ) {
+                                if ( dAnswer && !sArgs.ctxtpos_flag ) {
+                                    continue;
+                                }
+                                else if ( !dAnswer && !sArgs.ctxtneg_flag ) {
+                                    continue;
+                                }
+                            }
+			    bool fBridge;
+			    if ( vecfUbik.size( ) ) {
+				fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
+			    }
+			    else {
+				fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
+			    }
+                            if( fBridge ) {
+                                if ( dAnswer && !sArgs.bridgepos_flag ) {
+                                    continue;
+                                }
+                                else if ( !dAnswer && !sArgs.bridgeneg_flag ) {
+                                    continue;
+                                }
+                            }
+			    bool fOut = !( fIn || fBridge);
+                            if( fOut ) {
+                                if ( dAnswer && !sArgs.outpos_flag) {
+                                    continue;
+                                }
+                                else if ( !dAnswer && !sArgs.outneg_flag ) {
+                                    continue;
+                                }
+                            }
+                        }
                         if( sArgs.invert_flag )
                             dValue = 1 - dValue;
                         for( k = 0; k <= mapValues[ dValue ]; ++k ) {
@@ -212,21 +245,9 @@ int main( int iArgs, char** aszArgs ) {
                                 CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
                                 CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
                             continue;
-/* flags for positives/negatives/bridging only work in this situation, no plans
- * for using in the other situations
- */
-                        if( !( vecfHere.empty( ) ) ) {
-                            bool bOut = !( vecfHere[ i ] || vecfHere[ j ] );
-                            if( bOut ) {
-                                if ( dAnswer && !sArgs.outpos_flag) {
-                                    continue;
-                                }
-                                else if ( !dAnswer && !sArgs.outneg_flag ) {
-                                    continue;
-                                }
-                            }
-                            bool bIn = vecfHere[ i ] && vecfHere[ j ];
-                            if( bIn ) {
+			if( vecfHere.size( ) ) {
+			    bool fIn = vecfHere[ i ] && vecfHere[j];
+                            if( fIn ) {
                                 if ( dAnswer && !sArgs.ctxtpos_flag ) {
                                     continue;
                                 }
@@ -234,8 +255,14 @@ int main( int iArgs, char** aszArgs ) {
                                     continue;
                                 }
                             }
-                            bool bBridge = !( bOut || bIn );
-                            if( bBridge ) {
+			    bool fBridge;
+			    if ( vecfUbik.size( ) ) {
+				fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
+			    }
+			    else {
+				fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
+			    }
+                            if( fBridge ) {
                                 if ( dAnswer && !sArgs.bridgepos_flag ) {
                                     continue;
                                 }
@@ -243,8 +270,17 @@ int main( int iArgs, char** aszArgs ) {
                                     continue;
                                 }
                             }
+			    bool fOut = !( fIn || fBridge);
+                            if( fOut ) {
+                                if ( dAnswer && !sArgs.outpos_flag) {
+                                    continue;
+                                }
+                                else if ( !dAnswer && !sArgs.outneg_flag ) {
+                                    continue;
+                                }
+                            }
                         }
-
+			
                         MatGenes.Set( i, 0, true );
                         MatGenes.Set( j, 0, true );
                         if( dAnswer )
@@ -307,7 +343,6 @@ int main( int iArgs, char** aszArgs ) {
                                 veciNegatives[ i ]++;
                         }
                     }
-
                     MatResults.Set( 0, ETFPN_TP, iPositives );
                     MatResults.Set( 0, ETFPN_FP, iNegatives );
                     MatResults.Set( 0, ETFPN_TN, 0 );
@@ -332,10 +367,42 @@ int main( int iArgs, char** aszArgs ) {
                                 CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
                                 CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
                             continue;
-                        if( !( vecfHere.empty( ) ||
-                                ( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-                                ( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
-                            continue;
+			if( vecfHere.size( ) ) {
+			    cout << "Here" << endl;
+			    bool fIn = vecfHere[ i ] && vecfHere[j];
+                            if( fIn ) {
+                                if ( dAnswer && !sArgs.ctxtpos_flag ) {
+                                    continue;
+                                }
+                                else if ( !dAnswer && !sArgs.ctxtneg_flag ) {
+                                    continue;
+                                }
+                            }
+			    bool fBridge;
+			    if ( vecfUbik.size( ) ) {
+				fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
+			    }
+			    else {
+				fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
+			    }
+                            if( fBridge ) {
+                                if ( dAnswer && !sArgs.bridgepos_flag ) {
+                                    continue;
+                                }
+                                else if ( !dAnswer && !sArgs.bridgeneg_flag ) {
+                                    continue;
+                                }
+                            }
+			    bool fOut = !( fIn || fBridge );
+                            if( fOut ) {
+                                if ( dAnswer && !sArgs.outpos_flag) {
+                                    continue;
+                                }
+                                else if ( !dAnswer && !sArgs.outneg_flag ) {
+                                    continue;
+                                }
+                            }
+                        }
                         if( sArgs.invert_flag )
                             dValue = 1 - dValue;
 
@@ -355,15 +422,49 @@ int main( int iArgs, char** aszArgs ) {
                 }
             for( iPositives = iNegatives = i = 0; i < Answers.GetGenes( ); ++i )
                 for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
-                    if( CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-                            !( vecfHere.empty( ) ||
-                               ( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-                               ( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
+                    if( CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ) {
                         continue;
+		    }
+ 		    if( vecfHere.size( ) ) {
+			bool fIn = vecfHere[ i ] && vecfHere[j];
+                        if( fIn ) {
+                            if ( dAnswer && !sArgs.ctxtpos_flag ) {
+                                continue;
+                            }
+                            else if ( !dAnswer && !sArgs.ctxtneg_flag ) {
+                                continue;
+                            }
+                        }
+			bool fBridge;
+		        if ( vecfUbik.size( ) ) {
+	    		fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
+			}
+			else {
+			   fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
+			}
+                        if( fBridge ) {
+                            if ( dAnswer && !sArgs.bridgepos_flag ) {
+                                continue;
+                            }
+                            else if ( !dAnswer && !sArgs.bridgeneg_flag ) {
+                                continue;
+                            }
+                        }
+		        bool fOut = !( fIn || fBridge );
+                        if( fOut ) {
+                            if ( dAnswer && !sArgs.outpos_flag) {
+                                continue;
+                            }
+                            else if ( !dAnswer && !sArgs.outneg_flag ) {
+                                continue;
+                            }
+                        }
+                    }
                     if( dAnswer )
                         iPositives++;
-                    else
+                    else {
                         iNegatives++;
+		    }
                 }
 
             veciRec.resize( MatResults.GetRows( ) );

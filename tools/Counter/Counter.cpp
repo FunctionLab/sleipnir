@@ -25,6 +25,7 @@
 class CRegularize;
 
 static const char	c_acDab[]	= ".dab";
+static const char	c_acDat[]	= ".dat";
 static const char	c_acQDab[]	= ".qdab";
 static const char	c_acQuant[]	= ".quant";
 static const char	c_acTxt[]	= ".txt";
@@ -32,13 +33,14 @@ static const char	c_acTxt[]	= ".txt";
 typedef CFullMatrix<size_t>	CCountMatrix;
 
 struct SLearn {
-    CCountMatrix*		m_pMatCounts;
-    const CGenes*		m_pGenes;
-    const CDataPair*	m_pAnswers;
-    const CDatFilter*	m_pDat;
-    size_t			m_iZero;
-    CRegularize*		m_pRegularize;
-    size_t			m_iDat;
+    CCountMatrix*	    m_pMatCounts;
+    const CGenes*	    m_pGenes;
+    const CGenes*           m_pUbikGenes;
+    const CDataPair*	    m_pAnswers;
+    const CDatFilter*	    m_pDat;
+    size_t	            m_iZero;
+    CRegularize*	    m_pRegularize;
+    size_t		    m_iDat;
     bool                    m_bInPos;
     bool                    m_bInNeg;
     bool                    m_bBridgePos;
@@ -50,30 +52,30 @@ struct SLearn {
 struct SEvaluate {
     const CBayesNetMinimal*	m_pBN;
     const CDataPair*		m_pDat;
-    const CGenes*			m_pGenes;
-    CDat*					m_pYes;
-    CDat*					m_pNo;
-    size_t					m_iZero;
-    size_t					m_iNode;
+    const CGenes*		m_pGenes;
+    CDat*			m_pYes;
+    CDat*			m_pNo;
+    size_t			m_iZero;
+    size_t			m_iNode;
     const vector<size_t>*	m_pveciGenes;
-    bool					m_fFirst;
-    string					m_strName;
+    bool			m_fFirst;
+    string			m_strName;
 };
 
 struct SEvaluate2 {
-    size_t								m_iBegin;
-    size_t								m_iEnd;
-    const CBayesNetMinimal*				m_pBN;
+    size_t				m_iBegin;
+    size_t				m_iEnd;
+    const CBayesNetMinimal*		m_pBN;
     const vector<CBayesNetMinimal*>*	m_pvecpBNs;
-    const CDataPair*					m_pDat;
-    CDat*								m_pYes;
-    CDat*								m_pNo;
-    size_t								m_iZero;
-    const vector<size_t>*				m_pveciGenes;
-    string								m_strName;
-    const vector<size_t>*				m_pveciBNs;
-    size_t								m_iNode;
-    pthread_spinlock_t					m_sLock;
+    const CDataPair*			m_pDat;
+    CDat*				m_pYes;
+    CDat*				m_pNo;
+    size_t				m_iZero;
+    const vector<size_t>*		m_pveciGenes;
+    string				m_strName;
+    const vector<size_t>*		m_pveciBNs;
+    size_t				m_iNode;
+    pthread_spinlock_t			m_sLock;
 };
 
 class CRegularize {
@@ -274,7 +276,7 @@ void* evaluate( void* );
 void* evaluate2( void* );
 void* finalize( void* );
 int main_count( const gengetopt_args_info&, const map<string, size_t>&, const CGenes&, const CGenes&,
-                const CGenes&, const CGenes& );
+                const CGenes&, const CGenes&, const CGenes& );
 int main_xdsls( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>&,
                 const vector<string>& );
 int main_inference( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
@@ -287,7 +289,7 @@ int main( int iArgs, char** aszArgs ) {
     int					iRet;
     size_t				i;
     CGenome				Genome;
-    CGenes				GenesIn( Genome ), GenesEx( Genome ), GenesEd( Genome ), GenesTm( Genome );
+    CGenes				GenesIn( Genome ), GenesEx( Genome ), GenesEd( Genome ), GenesTm( Genome ), GenesUbik( Genome);
 
 #ifdef WIN32
     pthread_win32_process_attach_np( );
@@ -413,9 +415,15 @@ int main( int iArgs, char** aszArgs ) {
             return 1;
         }
     }
+    if( sArgs.ubiqg_arg ) {
+        if( !GenesUbik.Open( sArgs.ubiqg_arg ) ) {
+            cerr << "Could not open: " << sArgs.ubiqg_arg << endl;
+            return 1;
+        }
+    }
 
     if( sArgs.answers_arg )
-        iRet = main_count( sArgs, mapstriZeros, GenesIn, GenesEx, GenesTm, GenesEd );
+        iRet = main_count( sArgs, mapstriZeros, GenesIn, GenesEx, GenesTm, GenesEd, GenesUbik );
     else if( sArgs.counts_arg )
         iRet = main_xdsls( sArgs, mapstriZeros, mapstriDatasets, vecstrContexts );
     else if( sArgs.networks_arg )
@@ -429,20 +437,20 @@ int main( int iArgs, char** aszArgs ) {
 }
 
 int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& mapstriZeros,
-                const CGenes& GenesIn, const CGenes& GenesEx, const CGenes& GenesTm, const CGenes& GenesEd ) {
-    size_t			    		i, j, k, m, iTerm, iThread;
-    vector<vector<CCountMatrix*>* >		vecpvecpMats;
-    vector<CCountMatrix*>			vecpMatRoots;
-    vector<CGenes*>				vecpGenes;
+                const CGenes& GenesIn, const CGenes& GenesEx, const CGenes& GenesTm, const CGenes& GenesEd, const CGenes& GenesUbik ) {
+    size_t				i, j, k, m, iTerm, iThread;
+    vector<vector<CCountMatrix*>* >	vecpvecpMats;
+    vector<CCountMatrix*>		vecpMatRoots;
+    vector<CGenes*>			vecpGenes;
     CDataPair				Answers, Dat;
     CDatFilter				Filter, FilterIn, FilterEx, FilterTm, FilterEd;
     CDatFilter*				pFilter;
-    string	    				strFile;
+    string	    			strFile;
     vector<pthread_t>	    		vecpthdThreads;
-    vector<SLearn>				vecsData;
+    vector<SLearn>			vecsData;
     map<string, size_t>::const_iterator	iterZero;
-    CGenome			    		Genome;
-    vector<string>				vecstrNames;
+    CGenome			    	Genome;
+    vector<string>			vecstrNames;
     CRegularize			        Regularize;
     if( !Answers.Open( sArgs.answers_arg, false, !!sArgs.memmap_flag ) ) {
         cerr << "Could not open: " << sArgs.answers_arg << endl;
@@ -480,6 +488,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_pDat = NULL;
             vecsData[ i ].m_iDat = -1;
             vecsData[ i ].m_pGenes = vecpGenes[ i ];
+	    vecsData[ i ].m_pUbikGenes = &GenesUbik;
             vecsData[ i ].m_pAnswers = &Answers;
             vecsData[ i ].m_iZero = -1;
             vecsData[ i ].m_pRegularize = &Regularize;
@@ -497,17 +506,19 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
         for( i = 0; i < iThread; ++i )
             pthread_join( vecpthdThreads[ iTerm + i ], NULL );
     }
-
     FOR_EACH_DIRECTORY_FILE((string)sArgs.directory_arg, strFile)
     string					strName;
     vector<CCountMatrix*>*	pvecpMatCounts;
-
+    
     if( CMeta::IsExtension( strFile, c_acDab ) ) {
         i = strFile.rfind( '.' );
         strName = (string) sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDab;
     } else if( CMeta::IsExtension( strFile, c_acQDab ) ) {
         i = strFile.rfind( '.' );
         strName = (string) sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acQDab;
+    } else if( CMeta::IsExtension( strFile, c_acDat ) ) {
+	i = strFile.rfind( '.' );
+	strName = (string) sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDat;
     } else {
         continue;
     }
@@ -550,6 +561,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_pDat = pFilter;
             vecsData[ i ].m_iDat = vecstrNames.size( ) - 1;
             vecsData[ i ].m_pGenes = vecpGenes[ i ];
+	    vecsData[ i ].m_pUbikGenes = &GenesUbik;
             vecsData[ i ].m_pAnswers = &Answers;
             vecsData[ i ].m_iZero = ( ( iterZero = mapstriZeros.find( strName ) ) == mapstriZeros.end( ) ) ? -1 : iterZero->second;
             vecsData[ i ].m_pRegularize = &Regularize;
@@ -613,10 +625,16 @@ return 0;
 void* learn( void* pData ) {
     SLearn*		psData;
     size_t		i, j, iAnswer, iVal, iOne, iTwo;
-    vector<bool>	vecfGenes;
+    vector<bool>	vecfGenes, vecfUbik;
     vector<size_t>	veciGenes;
 
     psData = (SLearn*)pData;
+    if (psData->m_pUbikGenes->GetGenes( )) {
+	vecfUbik.resize( psData->m_pAnswers->GetGenes( ) );
+	for( i = 0; i < vecfUbik.size( ); ++i) {
+	    vecfUbik[ i ] = psData->m_pUbikGenes->IsGene( psData->m_pAnswers->GetGene( i ) );
+	}
+    }
     vecfGenes.resize( psData->m_pAnswers->GetGenes( ) );
     for( i = 0; i < vecfGenes.size( ); ++i )
         vecfGenes[ i ] = psData->m_pGenes->IsGene( psData->m_pAnswers->GetGene( i ) );
@@ -633,20 +651,12 @@ void* learn( void* pData ) {
         if( psData->m_pDat )
             iOne = veciGenes[ i ];
         for( j = ( i + 1 ); j < psData->m_pAnswers->GetGenes( ); ++j ) {
-            if( iAnswer = psData->m_pAnswers->Quantize( psData->m_pAnswers->Get( i, j ) ) == -1 ) {
+	    iAnswer = psData->m_pAnswers->Quantize( psData->m_pAnswers->Get( i, j ) );
+            if( iAnswer == -1 ) {
                 continue;
             }
-            bool bOut = !( vecfGenes[ i ] || vecfGenes[ j ] );
-            if( bOut ) {
-                if ( iAnswer && !psData->m_bOutPos) {
-                    continue;
-                }
-                else if ( !iAnswer && !psData->m_bOutNeg ) {
-                    continue;
-                }
-            }
-            bool bIn = vecfGenes[ i ] && vecfGenes[ j ];
-            if( bIn ) {
+            bool fIn = vecfGenes[ i ] && vecfGenes[ j ];
+            if( fIn ) {
                 if ( iAnswer && !psData->m_bInPos ) {
                     continue;
                 }
@@ -654,12 +664,27 @@ void* learn( void* pData ) {
                     continue;
                 }
             }
-            bool bBridge = !( bOut || bIn );
-            if( bBridge ) {
-                if ( iAnswer && !psData->m_bBridgePos ) {
+	    bool fBridge;
+	    if ( vecfUbik.size( ) ) {
+		fBridge = ( vecfUbik[ i ] && vecfGenes[ j ] ) || ( vecfGenes[ i ] && vecfUbik[ j ] );
+	    }
+	    else {
+		fBridge = ( vecfGenes[ i ] ^ vecfGenes[ j ] );
+	    }
+	    if( fBridge ) {
+		if ( iAnswer && !psData->m_bBridgePos ) {
+		    continue;
+		}
+		else if ( !iAnswer && !psData->m_bBridgeNeg ) {
+		    continue;
+		}
+	    }
+            bool fOut = !( fIn || fBridge );
+            if( fOut ) {
+                if ( iAnswer && !psData->m_bOutPos) {
                     continue;
                 }
-                else if ( !iAnswer && !psData->m_bBridgeNeg ) {
+                else if ( !iAnswer && !psData->m_bOutNeg ) {
                     continue;
                 }
             }
