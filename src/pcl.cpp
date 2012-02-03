@@ -37,7 +37,6 @@ const char CPCLImpl::c_szNAME[] = "NAME";
 const char CPCLImpl::c_szOne[] = "1";
 const char CPCLImpl::c_szExtension[] = ".pcl";
 const char CPCLImpl::c_szBinExtension[] = ".bin";
-const char CPCLImpl::c_szDabExtension[] = ".dab";
 
 struct SNeighbors {
 	CFullMatrix<pair<size_t, float> > m_MatNeighbors;
@@ -166,7 +165,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 		const char* szSimilarityMeasure, bool fNormalize, bool fZScore,
 		bool fAutocorrelate, const char* szGeneFile, float dCutoff,
 		size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap,
-		bool fFrequencyWeight) {
+		bool fFrequencyWeight, float dAlpha) {
 	size_t i, j, iOne, iTwo;
 	float d;
 	ifstream ifsm;
@@ -191,6 +190,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 	CMeasureMutualInformation MutualInfo;
 	CMeasureRelativeAUC RelAuc;
 	CMeasurePearsonSignificance PearSig;
+	CMeasureDice Dice( dAlpha );
 
 	if (szFile) {
 		ifsm.open(szFile);
@@ -216,7 +216,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 			EuclideanSig(&Euclidean, false, 1.0f / PCL.GetExperiments());
 	IMeasure* apMeasures[] = { &Pearson, &EuclideanSig, &KendallsTau,
 			&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick,
-			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, NULL };
+			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice, NULL };
 
 	pMeasure = NULL;
 	for (i = 0; apMeasures[i]; ++i)
@@ -346,13 +346,9 @@ void CPCLImpl::Reset() {
 
 bool CPCL::Open(const char* szFile, size_t iSkip, bool Memmap) {
 	bool isBinary = false;
-	bool isDAB = false;
 	ifstream ifsm;
 	if (!strcmp(szFile + strlen(szFile) - strlen(c_szBinExtension), c_szBinExtension)) {
 		isBinary = true;
-	}
-	if (!strcmp(szFile + strlen(szFile) - strlen(c_szDabExtension), c_szDabExtension)) {
-		isDAB = true;
 	}
 	if (isBinary && Memmap) {
 		g_CatSleipnir().notice("CPCL::Open, openning with memory mapping");
@@ -369,28 +365,6 @@ bool CPCL::Open(const char* szFile, size_t iSkip, bool Memmap) {
 	else if (isBinary) {
 		ifsm.open(szFile, ios::binary);
 		return OpenBinary(ifsm);
-	} else if (isDAB) {
-		CDat dat;
-		if (!dat.Open(szFile,false, 0, false, false)) {
-		    cerr << "Could not open dab to make pcl." << endl;
-		    return false;
-		}
-		std::vector<std::string> features;
-		std::vector<std::string> genes = dat.GetGeneNames();
-		Open(genes, genes, features);
-		for (size_t i = 0; i < dat.GetGenes(); i++) {
-		    for (size_t j = i; j < dat.GetGenes(); j++) {
-			if (i == j) {
-			    Set(i, j, 1);
-			}
-			else {
-			    float pairVal = dat.Get(i,j);
-			    Set(i, j, pairVal);
-			    Set(j, i, pairVal);
-			}
-		    }
-		}
-		return true;
 	} else {
 		ifstream ifsm;
 		if (szFile)
