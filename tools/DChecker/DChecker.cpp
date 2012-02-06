@@ -50,7 +50,7 @@ struct SSorter {
     }
 };
 
-double AUCMod( const CDat&, const CDat&, const vector<bool>&, bool, float );
+double AUCMod( const CDat&, const CDat&, const vector<bool>&, const vector<bool>&, const gengetopt_args_info&, bool, float );
 
 int main( int iArgs, char** aszArgs ) {
     CDat		    Answers, Data;
