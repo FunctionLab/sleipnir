@@ -521,7 +521,7 @@ int main( int iArgs, char** aszArgs ) {
             if( !sArgs.sse_flag )
                 *postm << "#	AUC	" << ( sArgs.auc_arg ?
                                            AUCMod( Data, Answers, vecfHere, vecfUbik, sArgs, !!sArgs.invert_flag, sArgs.auc_arg ) :
-                                           CStatistics::WilcoxonRankSum( Data, Answers, vecfHere, !!sArgs.invert_flag ) ) << endl;
+                                           CStatistics::WilcoxonRankSum( Data, Answers, vecfHere, vecfUbik, !!sArgs.ctxtpos_flag, !!sArgs.ctxtneg_flag, !!sArgs.bridgepos_flag, !!sArgs.bridgeneg_flag, !!sArgs.outpos_flag, !!sArgs.outneg_flag, !!sArgs.invert_flag ) ) << endl;
 
             if( sArgs.inputs_num )
                 ofsm.close( );
