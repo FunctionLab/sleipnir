@@ -520,7 +520,7 @@ int main( int iArgs, char** aszArgs ) {
             }
             if( !sArgs.sse_flag )
                 *postm << "#	AUC	" << ( sArgs.auc_arg ?
-                                           AUCMod( Data, Answers, vecfHere, !!sArgs.invert_flag, sArgs.auc_arg ) :
+                                           AUCMod( Data, Answers, vecfHere, vecfUbik, sArgs, !!sArgs.invert_flag, sArgs.auc_arg ) :
                                            CStatistics::WilcoxonRankSum( Data, Answers, vecfHere, !!sArgs.invert_flag ) ) << endl;
 
             if( sArgs.inputs_num )
@@ -547,11 +547,11 @@ struct SSorterMod {
     }
 };
 
-double AUCMod( const CDat& DatData, const CDat& DatAnswers, const vector<bool>& vecfGenesOfInterest, bool fInvert,
+double AUCMod( const CDat& DatData, const CDat& DatAnswers, const vector<bool>& vecfHere, const vector<bool>& vecfUbik, const gengetopt_args_info& sArgs, bool fInvert,
                float dAUC ) {
     size_t			i, j, iPos, iNeg, iPosCur, iNegCur, iOne, iTwo, iIndex, iAUC;
-    vector<float>	vecdValues, vecdAnswers;
-    vector<size_t>	veciGenes, veciIndices;
+    vector<float>		vecdValues, vecdAnswers;
+    vector<size_t>		veciGenes, veciIndices;
     bool			fAnswer;
     double			dRet;
     float			d, dAnswer, dSens, dSpec, dSensPrev, dSpecPrev;
@@ -569,10 +569,41 @@ double AUCMod( const CDat& DatData, const CDat& DatAnswers, const vector<bool>& 
                     CMeta::IsNaN( d = DatData.Get( iOne, iTwo ) ) )
                 continue;
             fAnswer = dAnswer > 0;
-            if( !( vecfGenesOfInterest.empty( ) ||
-                    ( fAnswer && vecfGenesOfInterest[ i ] && vecfGenesOfInterest[ j ] ) ||
-                    ( !fAnswer && ( vecfGenesOfInterest[ i ] || vecfGenesOfInterest[ j ] ) ) ) )
-                continue;
+  	    if( vecfHere.size( ) ) {
+		bool fIn = vecfHere[ i ] && vecfHere[j];
+                if( fIn ) {
+                    if ( dAnswer && !sArgs.ctxtpos_flag ) {
+                        continue;
+                    }
+                    else if ( !dAnswer && !sArgs.ctxtneg_flag ) {
+                        continue;
+                    }
+                }
+		bool fBridge;
+		if ( vecfUbik.size( ) ) {
+		   fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
+		}
+		else {
+		   fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
+		}
+                if( fBridge ) {
+                    if ( dAnswer && !sArgs.bridgepos_flag ) {
+                        continue;
+	            }
+                    else if ( !dAnswer && !sArgs.bridgeneg_flag ) {
+                        continue;
+                    }
+                }
+		bool fOut = !( fIn || fBridge );
+                if( fOut ) {
+                    if ( dAnswer && !sArgs.outpos_flag) {
+                        continue;
+                    }
+                    else if ( !dAnswer && !sArgs.outneg_flag ) {
+                        continue;
+                    }
+                }
+            }
             if( fAnswer )
                 iPos++;
             else
