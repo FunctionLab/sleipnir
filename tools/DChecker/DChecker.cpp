@@ -437,10 +437,10 @@ int main( int iArgs, char** aszArgs ) {
                         }
 			bool fBridge;
 		        if ( vecfUbik.size( ) ) {
-	    		fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
+			    fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
 			}
 			else {
-			   fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
+			    fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
 			}
                         if( fBridge ) {
                             if ( dAnswer && !sArgs.bridgepos_flag ) {
