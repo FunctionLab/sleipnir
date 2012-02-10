@@ -186,41 +186,9 @@ int main( int iArgs, char** aszArgs ) {
                                 CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
                                 CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
                             continue;
- 			if( vecfHere.size( ) ) {
-			    bool fIn = vecfHere[ i ] && vecfHere[j];
-                            if( fIn ) {
-                                if ( dAnswer && !sArgs.ctxtpos_flag ) {
-                                    continue;
-                                }
-                                else if ( !dAnswer && !sArgs.ctxtneg_flag ) {
-                                    continue;
-                                }
-                            }
-			    bool fBridge;
-			    if ( vecfUbik.size( ) ) {
-				fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
-			    }
-			    else {
-				fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
-			    }
-                            if( fBridge ) {
-                                if ( dAnswer && !sArgs.bridgepos_flag ) {
-                                    continue;
-                                }
-                                else if ( !dAnswer && !sArgs.bridgeneg_flag ) {
-                                    continue;
-                                }
-                            }
-			    bool fOut = !( fIn || fBridge);
-                            if( fOut ) {
-                                if ( dAnswer && !sArgs.outpos_flag) {
-                                    continue;
-                                }
-                                else if ( !dAnswer && !sArgs.outneg_flag ) {
-                                    continue;
-                                }
-                            }
-                        }
+			if ( CMeta::SkipEdge( !!dAnswer, i, j, vecfHere, vecfUbik, sArgs.ctxtpos_flag, sArgs.ctxtneg_flag, sArgs.bridgepos_flag, sArgs.bridgeneg_flag, sArgs.outpos_flag, sArgs.outneg_flag ) ) {
+			    continue;
+			}
                         if( sArgs.invert_flag )
                             dValue = 1 - dValue;
                         for( k = 0; k <= mapValues[ dValue ]; ++k ) {
@@ -245,42 +213,10 @@ int main( int iArgs, char** aszArgs ) {
                                 CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
                                 CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
                             continue;
-			if( vecfHere.size( ) ) {
-			    bool fIn = vecfHere[ i ] && vecfHere[j];
-                            if( fIn ) {
-                                if ( dAnswer && !sArgs.ctxtpos_flag ) {
-                                    continue;
-                                }
-                                else if ( !dAnswer && !sArgs.ctxtneg_flag ) {
-                                    continue;
-                                }
-                            }
-			    bool fBridge;
-			    if ( vecfUbik.size( ) ) {
-				fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
-			    }
-			    else {
-				fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
-			    }
-                            if( fBridge ) {
-                                if ( dAnswer && !sArgs.bridgepos_flag ) {
-                                    continue;
-                                }
-                                else if ( !dAnswer && !sArgs.bridgeneg_flag ) {
-                                    continue;
-                                }
-                            }
-			    bool fOut = !( fIn || fBridge);
-                            if( fOut ) {
-                                if ( dAnswer && !sArgs.outpos_flag) {
-                                    continue;
-                                }
-                                else if ( !dAnswer && !sArgs.outneg_flag ) {
-                                    continue;
-                                }
-                            }
-                        }
-			
+			if ( CMeta::SkipEdge( !!dAnswer, i, j, vecfHere, vecfUbik, sArgs.ctxtpos_flag, sArgs.ctxtneg_flag, sArgs.bridgepos_flag, sArgs.bridgeneg_flag, sArgs.outpos_flag, sArgs.outneg_flag ) ) {
+			    continue;
+			}
+	
                         MatGenes.Set( i, 0, true );
                         MatGenes.Set( j, 0, true );
                         if( dAnswer )
@@ -367,42 +303,10 @@ int main( int iArgs, char** aszArgs ) {
                                 CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
                                 CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
                             continue;
-			if( vecfHere.size( ) ) {
-			    cout << "Here" << endl;
-			    bool fIn = vecfHere[ i ] && vecfHere[j];
-                            if( fIn ) {
-                                if ( dAnswer && !sArgs.ctxtpos_flag ) {
-                                    continue;
-                                }
-                                else if ( !dAnswer && !sArgs.ctxtneg_flag ) {
-                                    continue;
-                                }
-                            }
-			    bool fBridge;
-			    if ( vecfUbik.size( ) ) {
-				fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
-			    }
-			    else {
-				fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
-			    }
-                            if( fBridge ) {
-                                if ( dAnswer && !sArgs.bridgepos_flag ) {
-                                    continue;
-                                }
-                                else if ( !dAnswer && !sArgs.bridgeneg_flag ) {
-                                    continue;
-                                }
-                            }
-			    bool fOut = !( fIn || fBridge );
-                            if( fOut ) {
-                                if ( dAnswer && !sArgs.outpos_flag) {
-                                    continue;
-                                }
-                                else if ( !dAnswer && !sArgs.outneg_flag ) {
-                                    continue;
-                                }
-                            }
-                        }
+			if ( CMeta::SkipEdge( !!dAnswer, i, j, vecfHere, vecfUbik, sArgs.ctxtpos_flag, sArgs.ctxtneg_flag, sArgs.bridgepos_flag, sArgs.bridgeneg_flag, sArgs.outpos_flag, sArgs.outneg_flag ) ) {
+			    continue;
+			}
+
                         if( sArgs.invert_flag )
                             dValue = 1 - dValue;
 
@@ -425,41 +329,11 @@ int main( int iArgs, char** aszArgs ) {
                     if( CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ) {
                         continue;
 		    }
- 		    if( vecfHere.size( ) ) {
-			bool fIn = vecfHere[ i ] && vecfHere[j];
-                        if( fIn ) {
-                            if ( dAnswer && !sArgs.ctxtpos_flag ) {
-                                continue;
-                            }
-                            else if ( !dAnswer && !sArgs.ctxtneg_flag ) {
-                                continue;
-                            }
-                        }
-			bool fBridge;
-		        if ( vecfUbik.size( ) ) {
-			    fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
-			}
-			else {
-			    fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
-			}
-                        if( fBridge ) {
-                            if ( dAnswer && !sArgs.bridgepos_flag ) {
-                                continue;
-                            }
-                            else if ( !dAnswer && !sArgs.bridgeneg_flag ) {
-                                continue;
-                            }
-                        }
-		        bool fOut = !( fIn || fBridge );
-                        if( fOut ) {
-                            if ( dAnswer && !sArgs.outpos_flag) {
-                                continue;
-                            }
-                            else if ( !dAnswer && !sArgs.outneg_flag ) {
-                                continue;
-                            }
-                        }
-                    }
+
+		    if ( CMeta::SkipEdge( !!dAnswer, i, j, vecfHere, vecfUbik, sArgs.ctxtpos_flag, sArgs.ctxtneg_flag, sArgs.bridgepos_flag, sArgs.bridgeneg_flag, sArgs.outpos_flag, sArgs.outneg_flag ) ) {
+			continue;
+		    }
+
                     if( dAnswer )
                         iPositives++;
                     else {
@@ -569,41 +443,11 @@ double AUCMod( const CDat& DatData, const CDat& DatAnswers, const vector<bool>& 
                     CMeta::IsNaN( d = DatData.Get( iOne, iTwo ) ) )
                 continue;
             fAnswer = dAnswer > 0;
-  	    if( vecfHere.size( ) ) {
-		bool fIn = vecfHere[ i ] && vecfHere[j];
-                if( fIn ) {
-                    if ( dAnswer && !sArgs.ctxtpos_flag ) {
-                        continue;
-                    }
-                    else if ( !dAnswer && !sArgs.ctxtneg_flag ) {
-                        continue;
-                    }
-                }
-		bool fBridge;
-		if ( vecfUbik.size( ) ) {
-		   fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
-		}
-		else {
-		   fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
-		}
-                if( fBridge ) {
-                    if ( dAnswer && !sArgs.bridgepos_flag ) {
-                        continue;
-	            }
-                    else if ( !dAnswer && !sArgs.bridgeneg_flag ) {
-                        continue;
-                    }
-                }
-		bool fOut = !( fIn || fBridge );
-                if( fOut ) {
-                    if ( dAnswer && !sArgs.outpos_flag) {
-                        continue;
-                    }
-                    else if ( !dAnswer && !sArgs.outneg_flag ) {
-                        continue;
-                    }
-                }
-            }
+
+ 	    if ( CMeta::SkipEdge( fAnswer, i, j, vecfHere, vecfUbik, sArgs.ctxtpos_flag, sArgs.ctxtneg_flag, sArgs.bridgepos_flag, sArgs.bridgeneg_flag, sArgs.outpos_flag, sArgs.outneg_flag ) ) {
+		continue;
+	    }
+
             if( fAnswer )
                 iPos++;
             else

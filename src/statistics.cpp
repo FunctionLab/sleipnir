@@ -1133,41 +1133,10 @@ double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers
 				CMeta::IsNaN( d = DatData.Get( iOne, iTwo ) ) )
 				continue;
 			fAnswer = dAnswer > 0;
-	 		if( vecfHere.size( ) ) {
-			    bool fIn = vecfHere[ i ] && vecfHere[j];
-                            if( fIn ) {
-	                        if ( fAnswer && !fPosIn ) {
-	                            continue;
-		                }
-		                else if ( !fAnswer && !fNegIn ) {
-			            continue;
-			        }
-                            }
-			    bool fBridge;
-			    if ( vecfUbik.size( ) ) {
-				fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
-			    }
-			    else {
-				fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
-			    }
-			    if( fBridge ) {
-				if ( fAnswer && !fPosBridge ) {
-				    continue;
-				}
-				else if ( !fAnswer && !fNegBridge ) {
-				    continue;
-				}
-			    }
-			    bool fOut = !( fIn || fBridge );
-			    if( fOut ) {
-				if ( fAnswer && !fPosOut) {
-				    continue;
-				}
-				else if ( !fAnswer && !fNegOut ) {
-				    continue;
-				}
-			    }
+			if ( CMeta::SkipEdge( fAnswer, i, j, vecfHere, vecfUbik, fPosIn, fNegIn, fPosBridge, fNegBridge, fPosOut, fNegOut ) ) {
+			    continue;
 			}
+
 			if( fInvert )
 				d = 1 - d;
 			vecdValues.push_back( d ); } }
@@ -1200,41 +1169,11 @@ double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers
 				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) )
 			    continue;
 			fAnswer = dAnswer > 0;
-		 	if( vecfHere.size( ) ) {
-			    bool fIn = vecfHere[ i ] && vecfHere[j];
-                            if( fIn ) {
-	                        if ( fAnswer && !fPosIn ) {
-	                            continue;
-		                }
-		                else if ( !fAnswer && !fNegIn ) {
-			            continue;
-			        }
-                            }
-			    bool fBridge;
-			    if ( vecfUbik.size( ) ) {
-				fBridge = ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] );
-			    }
-			    else {
-				fBridge = ( vecfHere[ i ] ^ vecfHere[ j ] );
-			    }
-			    if( fBridge ) {
-				if ( fAnswer && !fPosBridge ) {
-				    continue;
-				}
-				else if ( !fAnswer && !fNegBridge ) {
-				    continue;
-				}
-			    }
-			    bool fOut = !( fIn || fBridge );
-			    if( fOut ) {
-				if ( fAnswer && !fPosOut) {
-				    continue;
-				}
-				else if ( !fAnswer && !fNegOut ) {
-				    continue;
-				}
-			    }
+
+			if ( CMeta::SkipEdge( fAnswer, i, j, vecfHere, vecfUbik, fPosIn, fNegIn, fPosBridge, fNegBridge, fPosOut, fNegOut ) ) {
+			    continue;
 			}
+
 			if( dAnswer > 0 ) {
 				iPos++;
 				dSum += vecdRanks[ k ]; }

@@ -655,39 +655,11 @@ void* learn( void* pData ) {
             if( iAnswer == -1 ) {
                 continue;
             }
-            bool fIn = vecfGenes[ i ] && vecfGenes[ j ];
-            if( fIn ) {
-                if ( iAnswer && !psData->m_bInPos ) {
-                    continue;
-                }
-                else if ( !iAnswer && !psData->m_bInNeg ) {
-                    continue;
-                }
-            }
-	    bool fBridge;
-	    if ( vecfUbik.size( ) ) {
-		fBridge = ( vecfUbik[ i ] && vecfGenes[ j ] ) || ( vecfGenes[ i ] && vecfUbik[ j ] );
+	    
+	    if ( CMeta::SkipEdge( !!iAnswer, i, j, vecfGenes, vecfUbik, psData->m_bInPos, psData->m_bInNeg, psData->m_bBridgePos, psData->m_bBridgeNeg, psData->m_bOutPos, psData->m_bOutNeg ) ) {
+		continue;
 	    }
-	    else {
-		fBridge = ( vecfGenes[ i ] ^ vecfGenes[ j ] );
-	    }
-	    if( fBridge ) {
-		if ( iAnswer && !psData->m_bBridgePos ) {
-		    continue;
-		}
-		else if ( !iAnswer && !psData->m_bBridgeNeg ) {
-		    continue;
-		}
-	    }
-            bool fOut = !( fIn || fBridge );
-            if( fOut ) {
-                if ( iAnswer && !psData->m_bOutPos) {
-                    continue;
-                }
-                else if ( !iAnswer && !psData->m_bOutNeg ) {
-                    continue;
-                }
-            }
+
             if( psData->m_pDat ) {
                 iTwo = veciGenes[ j ];
                 iVal = -1;

@@ -264,6 +264,85 @@ public:
 
 	/*!
 	 * \brief
+	 * Determines whether or not an item should be skipped (based on potential ubiquitous genes, context genes, and flags).
+	 *
+	 * \param fAnswer
+	 * The answer (pos/neg) as a boolean.
+	 *
+	 * \param i
+	 * The index of the first gene
+	 *
+	 * \param j
+	 * the index of the second gene
+	 *
+	 * \param vecfHere
+	 * A vector representing genes in the context (if any) as bool
+	 *
+	 * \param vecfUbik
+	 * A vector representing ubiquitous genes (as bool)
+	 *
+	 * \param fCtxtPos
+	 * Should within-context positives be used?
+	 *
+	 * \param fCtxtNeg
+	 * Should within-context negatives be used?
+	 *
+	 * \param fBridgePos
+	 * Should bridging positives be used?
+	 *
+	 * \param fBridgeNeg
+	 * Should bridging negatives be used?
+	 *
+	 * \param fOutPos
+	 * Should outside positives be used?
+	 *
+	 * \param fOutNeg
+	 * Should outside negatives be used?
+	 *
+	 * \returns
+	 * True if this edge should be used given these parameters.
+	 */
+	static bool SkipEdge( bool fAnswer, size_t i, size_t j, const std::vector<bool>& vecfHere, const std::vector<bool>& vecfUbik, bool fCtxtPos, bool fCtxtNeg, bool fBridgePos, bool fBridgeNeg, bool fOutPos, bool fOutNeg ) {
+	    if ( vecfHere.size( ) ) {
+		bool fIn = vecfHere[ i ] && vecfHere[ j ];
+                if( fIn ) {
+	            if ( fAnswer && !fCtxtPos ) {
+	                return true;
+		    }
+		    else if ( !fAnswer && !fCtxtNeg ) {
+                        return true;
+	            }
+	        }
+		bool fBridge;
+        	if ( vecfUbik.size( ) ) {
+		    fBridge = !fIn && ( ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] ) );
+		}
+	 	else {
+		    fBridge = ( !!vecfHere[ i ] ^ !!vecfHere[ j ] );
+		}
+		if( fBridge ) {
+		    if ( fAnswer && !fBridgePos ) {
+			return true;
+		    }
+		    else if ( !fAnswer && !fBridgeNeg ) {
+			return true;
+		    }
+		}
+		bool fOut = !( fIn || fBridge );
+		if( fOut ) {
+		    if ( fAnswer && !fOutPos) {
+			return true;
+		    }
+		    else if ( !fAnswer && !fOutNeg ) {
+			return true;
+		    }
+		}
+	    }
+	    return false;
+	}
+
+	/*!
+	 * \brief
 	 * Returns true if the given file path ends with the given extension.
 	 * 
 	 * \param strFile
