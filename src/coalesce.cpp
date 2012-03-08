@@ -564,7 +564,7 @@ bool CCoalesce::Cluster( const CPCL& PCL, const CFASTA& FASTA, vector<CCoalesceC
 		g_CatSleipnir( ).notice( "CCoalesce::Cluster( ) running with %d genes, %d conditions, and %d sequences",
 			PCL.GetGenes( ), PCL.GetExperiments( ), iSequences );
 		for( i = 0; i < PCL.GetExperiments( ); ++i )
-			g_CatSleipnir( ).notice( PCL.GetExperiment( i ) );
+			g_CatSleipnir( ).notice( PCL.GetExperiment( i ).c_str( ) );
 //			ossm << ( i ? "\t" : "" ) << PCL.GetExperiment( i );
 //		g_CatSleipnir( ).notice( ossm.str( ).c_str( ) );
 		g_CatSleipnir( ).notice( "k %d, P gene %g, p condition %g, z condition %g, p motif %g, z motif %g, p correlation %g", GetK( ),
