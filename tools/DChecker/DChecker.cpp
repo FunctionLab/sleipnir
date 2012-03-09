@@ -23,411 +23,464 @@
 #include "cmdline.h"
 
 enum ETFPN {
-	ETFPN_TP	= 0,
-	ETFPN_FP	= ETFPN_TP + 1,
-	ETFPN_TN	= ETFPN_FP + 1,
-	ETFPN_FN	= ETFPN_TN + 1
+    ETFPN_TP	= 0,
+    ETFPN_FP	= ETFPN_TP + 1,
+    ETFPN_TN	= ETFPN_FP + 1,
+    ETFPN_FN	= ETFPN_TN + 1
 };
 
 struct SDatum {
-	float	m_dValue;
-	size_t	m_iOne;
-	size_t	m_iTwo;
-	float	m_dAnswer;
+    float	m_dValue;
+    size_t	m_iOne;
+    size_t	m_iTwo;
+    float	m_dAnswer;
 
-	SDatum( float dValue, size_t iOne, size_t iTwo, float dAnswer ) : m_dValue(dValue), m_iOne(iOne), m_iTwo(iTwo),
-		m_dAnswer(dAnswer) { }
+    SDatum( float dValue, size_t iOne, size_t iTwo, float dAnswer ) : m_dValue(dValue), m_iOne(iOne), m_iTwo(iTwo),
+        m_dAnswer(dAnswer) { }
 };
 
 struct SSorter {
-	bool	m_fInvert;
+    bool	m_fInvert;
 
-	SSorter( bool fInvert ) : m_fInvert(fInvert) { }
+    SSorter( bool fInvert ) : m_fInvert(fInvert) { }
 
-	bool operator()( const SDatum& sOne, const SDatum& sTwo ) const {
+    bool operator()( const SDatum& sOne, const SDatum& sTwo ) const {
 
-		return ( m_fInvert ? ( sOne.m_dValue > sTwo.m_dValue ) : ( sOne.m_dValue < sTwo.m_dValue ) ); }
+        return ( m_fInvert ? ( sOne.m_dValue > sTwo.m_dValue ) : ( sOne.m_dValue < sTwo.m_dValue ) );
+    }
 };
 
-double AUCMod( const CDat&, const CDat&, const vector<bool>&, bool, float );
+double AUCMod( const CDat&, const CDat&, const vector<bool>&, const vector<bool>&, const gengetopt_args_info&, bool, float );
 
 int main( int iArgs, char** aszArgs ) {
-	CDat				Answers, Data;
-	gengetopt_args_info	sArgs;
-	size_t				i, j, k, m, iOne, iTwo, iGenes, iPositives, iNegatives, iBins, iRand;
-	vector<size_t>		veciGenes, veciRec, veciRecTerm;
-	CFullMatrix<bool>	MatGenes;
-	CFullMatrix<size_t>	MatResults;
-	ETFPN				eTFPN;
-	int					iMax;
-	float				dAnswer, dValue;
-	vector<bool>		vecfHere;
-	vector<float>		vecdScores, vecdSSE, vecdBinValue;
-	vector<size_t>		veciPositives, veciNegatives, veciGenesTerm;
-	ofstream			ofsm;
-	ostream*			postm;
-	map<float,size_t>	mapValues;
-	bool				fMapAnswers;
-	CGenome				Genome;
-	CGenes				GenesTm( Genome );
+    CDat		    Answers, Data;
+    gengetopt_args_info	    sArgs;
+    size_t	    	    i, j, k, m, iOne, iTwo, iGenes, iPositives, iNegatives, iBins, iRand;
+    vector<size_t>	    veciGenes, veciRec, veciRecTerm;
+    CFullMatrix<bool>	    MatGenes;
+    CFullMatrix<size_t>	    MatResults;
+    ETFPN		    eTFPN;
+    int			    iMax;
+    float		    dAnswer, dValue;
+    vector<bool>    	    vecfHere, vecfUbik;
+    vector<float>	    vecdScores, vecdSSE, vecdBinValue;
+    vector<size_t>	    veciPositives, veciNegatives, veciGenesTerm;
+    ofstream		    ofsm;
+    ostream*		    postm;
+    map<float,size_t>	    mapValues;
+    bool		    fMapAnswers;
+    CGenome		    Genome;
+    CGenes		    GenesTm( Genome ), GenesUbik( Genome );
 
-	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
-		cmdline_parser_print_help( );
-		return 1; }
-	CMeta Meta( sArgs.verbosity_arg );
+    if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
+        cmdline_parser_print_help( );
+        return 1;
+    }
+    CMeta Meta( sArgs.verbosity_arg );
 
-	fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genep_arg || sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg || sArgs.genee_arg );
-	if( !Answers.Open( sArgs.answers_arg, fMapAnswers ) ) {
-		cerr << "Couldn't open: " << sArgs.answers_arg << endl;
-		return 1; }
-	if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
-		cerr << "Couldn't open: " << sArgs.genes_arg << endl;
-		return 1; }
-	if( sArgs.genep_arg && !Answers.FilterGenes( sArgs.genep_arg, CDat::EFilterIncludePos ) ) {
-		cerr << "Couldn't open: " << sArgs.genep_arg << endl;
-		return 1; }
-	if( sArgs.genee_arg && !Answers.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge ) ) {
-		cerr << "Couldn't open: " << sArgs.genee_arg << endl;
-		return 1; }
-	if( sArgs.genet_arg ) {
-		if( !( Answers.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) &&
-			GenesTm.Open( sArgs.genet_arg ) ) ) {
-			cerr << "Couldn't open: " << sArgs.genet_arg << endl;
-			return 1; }
-		veciGenesTerm.reserve( GenesTm.GetGenes( ) );
-		for( i = 0; i < GenesTm.GetGenes( ); ++i )
-			if( ( j = Answers.GetGene( GenesTm.GetGene( i ).GetName( ) ) ) != -1 )
-				veciGenesTerm.push_back( j ); }
-	if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
-		cerr << "Couldn't open: " << sArgs.genex_arg << endl;
-		return 1; }
-	if( !Data.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
-		cerr << "Couldn't open: " << sArgs.input_arg << endl;
-		return 1; }
-	if( sArgs.normalize_flag )
-		Data.Normalize( CDat::ENormalizeMinMax );
+    fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg || sArgs.genee_arg );
+    if( !Answers.Open( sArgs.answers_arg, fMapAnswers ) ) {
+        cerr << "Couldn't open: " << sArgs.answers_arg << endl;
+        return 1;
+    }
+    if( sArgs.genes_arg && !Answers.FilterGenes( sArgs.genes_arg, CDat::EFilterInclude ) ) {
+        cerr << "Couldn't open: " << sArgs.genes_arg << endl;
+        return 1;
+    }
+    if( sArgs.genee_arg && !Answers.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge ) ) {
+        cerr << "Couldn't open: " << sArgs.genee_arg << endl;
+        return 1;
+    }
+    if( sArgs.genet_arg ) {
+        if( !( Answers.FilterGenes( sArgs.genet_arg, CDat::EFilterTerm ) &&
+                GenesTm.Open( sArgs.genet_arg ) ) ) {
+            cerr << "Couldn't open: " << sArgs.genet_arg << endl;
+            return 1;
+        }
+        veciGenesTerm.reserve( GenesTm.GetGenes( ) );
+        for( i = 0; i < GenesTm.GetGenes( ); ++i )
+            if( ( j = Answers.GetGene( GenesTm.GetGene( i ).GetName( ) ) ) != -1 )
+                veciGenesTerm.push_back( j );
+    }
+    if( sArgs.genex_arg && !Answers.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude ) ) {
+        cerr << "Couldn't open: " << sArgs.genex_arg << endl;
+        return 1;
+    }
+    if( !Data.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
+        cerr << "Couldn't open: " << sArgs.input_arg << endl;
+        return 1;
+    }
+    if( sArgs.normalize_flag )
+        Data.Normalize( CDat::ENormalizeMinMax );
 
-	veciGenes.resize( Answers.GetGenes( ) );
-	for( i = 0; i < Answers.GetGenes( ); ++i )
-		veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
-	for( iRand = 0; iRand <= (size_t)sArgs.randomize_arg; ++iRand ) {
-		if( iRand )
-			Data.Randomize( );
-		if( sArgs.finite_flag ) {
-			vector<float>	vecdValues;
-			{
-				set<float>		setdValues;
+    veciGenes.resize( Answers.GetGenes( ) );
+    for( i = 0; i < Answers.GetGenes( ); ++i )
+        veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
+    for( iRand = 0; iRand <= (size_t)sArgs.randomize_arg; ++iRand ) {
+        if( iRand )
+            Data.Randomize( );
+        if( sArgs.finite_flag ) {
+            vector<float>	vecdValues;
+            {
+                set<float>		setdValues;
 
-				for( i = 0; i < Answers.GetGenes( ); ++i ) {
-					if( ( iOne = veciGenes[ i ] ) == -1 )
-						continue;
-					for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
-						if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-							CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
-							CMeta::IsNaN( Answers.Get( i, j ) ) )
-							continue;
-						if( sArgs.invert_flag )
-							dValue = 1 - dValue;
-						setdValues.insert( dValue ); } }
-				vecdValues.resize( setdValues.size( ) );
-				copy( setdValues.begin( ), setdValues.end( ), vecdValues.begin( ) );
+                for( i = 0; i < Answers.GetGenes( ); ++i ) {
+                    if( ( iOne = veciGenes[ i ] ) == -1 )
+                        continue;
+                    for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+                        if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+                                CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
+                                CMeta::IsNaN( Answers.Get( i, j ) ) )
+                            continue;
+                        if( sArgs.invert_flag )
+                            dValue = 1 - dValue;
+                        setdValues.insert( dValue );
+                    }
+                }
+                vecdValues.resize( setdValues.size( ) );
+                copy( setdValues.begin( ), setdValues.end( ), vecdValues.begin( ) );
+            }
+            sort( vecdValues.begin( ), vecdValues.end( ) );
+            for( i = 0; i < vecdValues.size( ); ++i )
+                mapValues[ vecdValues[ i ] ] = i;
+            iBins = mapValues.size( );
+        }
+        else
+            iBins = sArgs.bins_arg;
+        MatResults.Initialize( iBins ? ( iBins + 1 ) :
+                               (size_t)( ( sArgs.max_arg - sArgs.min_arg ) / sArgs.delta_arg ) + 1, 4 );
+        MatGenes.Initialize( veciGenes.size( ), MatResults.GetRows( ) );
+
+        for( iGenes = 0; !sArgs.inputs_num || ( iGenes < sArgs.inputs_num ); ++iGenes ) {
+            MatResults.Clear( );
+            MatGenes.Clear( );
+
+            if( sArgs.genep_arg ) {
+                CGenes		Genes( Genome );
+                if( !Genes.Open( sArgs.genep_arg ) ) {
+                    cerr << "Couldn't open: " << sArgs.genep_arg << endl;
+                    return 1;
+                }
+                vecfHere.resize( Answers.GetGenes( ) );
+                for( i = 0; i < vecfHere.size( ); ++i ) {
+                    vecfHere[ i ] = Genes.IsGene( Answers.GetGene( i ) );
+		}
+            }
+	    if( sArgs.ubiqg_arg ) {
+		if( !GenesUbik.Open( sArgs.ubiqg_arg ) ) {
+		    cerr << "Could not open: " << sArgs.ubiqg_arg << endl;
+		    return 1;
+		}
+		vecfUbik.resize( Answers.GetGenes( ) );
+		for( i = 0; i < vecfUbik.size( ); ++i ) {
+		    vecfUbik[ i ] = GenesUbik.IsGene( Answers.GetGene( i ) );
+		}
+	    }
+
+            if( mapValues.size( ) ) {
+                for( i = 0; i < Answers.GetGenes( ); ++i ) {
+                    if( ( iOne = veciGenes[ i ] ) == -1 )
+                        continue;
+                    for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+                        if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+                                CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
+                                CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
+                            continue;
+			if ( CMeta::SkipEdge( !!dAnswer, i, j, vecfHere, vecfUbik, sArgs.ctxtpos_flag, sArgs.ctxtneg_flag, sArgs.bridgepos_flag, sArgs.bridgeneg_flag, sArgs.outpos_flag, sArgs.outneg_flag ) ) {
+			    continue;
 			}
-			sort( vecdValues.begin( ), vecdValues.end( ) );
-			for( i = 0; i < vecdValues.size( ); ++i )
-				mapValues[ vecdValues[ i ] ] = i;
-			iBins = mapValues.size( ); }
-		else
-			iBins = sArgs.bins_arg;
-		MatResults.Initialize( iBins ? ( iBins + 1 ) :
-			(size_t)( ( sArgs.max_arg - sArgs.min_arg ) / sArgs.delta_arg ) + 1, 4 );
-		MatGenes.Initialize( veciGenes.size( ), MatResults.GetRows( ) );
+                        if( sArgs.invert_flag )
+                            dValue = 1 - dValue;
+                        for( k = 0; k <= mapValues[ dValue ]; ++k ) {
+                            MatGenes.Set( i, k, true );
+                            MatGenes.Set( j, k, true );
+                            MatResults.Get( k, dAnswer ? ETFPN_TP : ETFPN_FP )++;
+                        }
+                        for( ; k < MatResults.GetRows( ); ++k )
+                            MatResults.Get( k, dAnswer ? ETFPN_FN : ETFPN_TN )++;
+                    }
+                }
+            }
+            else if( iBins ) {
+                vector<SDatum>		vecsData;
+                size_t			iChunk;
 
-		for( iGenes = 0; !sArgs.inputs_num || ( iGenes < sArgs.inputs_num ); ++iGenes ) {
-			MatResults.Clear( );
-			MatGenes.Clear( );
+                for( iPositives = iNegatives = i = 0; i < Answers.GetGenes( ); ++i ) {
+                    if( ( iOne = veciGenes[ i ] ) == -1 )
+                        continue;
+                    for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+                        if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+                                CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
+                                CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
+                            continue;
+			if ( CMeta::SkipEdge( !!dAnswer, i, j, vecfHere, vecfUbik, sArgs.ctxtpos_flag, sArgs.ctxtneg_flag, sArgs.bridgepos_flag, sArgs.bridgeneg_flag, sArgs.outpos_flag, sArgs.outneg_flag ) ) {
+			    continue;
+			}
+	
+                        MatGenes.Set( i, 0, true );
+                        MatGenes.Set( j, 0, true );
+                        if( dAnswer )
+                            iPositives++;
+                        else
+                            iNegatives++;
+                        vecsData.push_back( SDatum( dValue, i, j, dAnswer ) );
+                    }
+                }
+                sort( vecsData.begin( ), vecsData.end( ), SSorter( !!sArgs.invert_flag ) );
+                //instead of putting all of the uneveness in one bin, spread it out into each bin.
+                //N.B. only the part without the sse_flag is fixed in this regard
+                size_t perChunk = (size_t)(vecsData.size()/MatResults.GetRows());
+                size_t chnkRem = (size_t)(vecsData.size()%MatResults.GetRows());
+                iChunk = (size_t)( 0.5 + ( (float)vecsData.size( ) / ( MatResults.GetRows( ) ) ) );
+                if( sArgs.sse_flag ) {
+                    vecdSSE.resize( MatResults.GetRows( ) );
+                    veciPositives.resize( vecdSSE.size( ) );
+                    for( i = 1,j = 0; i < vecdSSE.size( ); ++i,j += iChunk ) {
+                        veciPositives[ veciPositives.size( ) - i - 1 ] = veciPositives[ veciPositives.size( ) - i ];
+                        vecdSSE[ vecdSSE.size( ) - i - 1 ] = vecdSSE[ vecdSSE.size( ) - i ];
+                        for( k = 0; k < iChunk; ++k ) {
+                            if( ( j + k ) >= vecsData.size( ) )
+                                break;
+                            const SDatum&	sDatum	= vecsData[ vecsData.size( ) - ( j + k ) - 1 ];
 
-			if( sArgs.inputs_num ) {
-				CGenes		Genes( Genome );
-				ifstream	ifsm;
+                            for( m = 0; m < ( vecdSSE.size( ) - i ); ++m ) {
+                                MatGenes.Set( sDatum.m_iOne, m, true );
+                                MatGenes.Set( sDatum.m_iTwo, m, true );
+                            }
+                            dValue = sDatum.m_dValue - sDatum.m_dAnswer;
+                            veciPositives[ veciPositives.size( ) - i - 1 ]++;
+                            vecdSSE[ vecdSSE.size( ) - i - 1 ] += dValue * dValue;
+                        }
+                    }
+                }
+                else {
+                    veciPositives.resize( MatResults.GetRows( ) - 1 );
+                    veciNegatives.resize( veciPositives.size( ) );
+                    vecdBinValue.resize( veciPositives.size( )+1 );
+                    for( i = 0; i < veciNegatives.size( ); ++i )
+                        veciNegatives[ i ] = veciPositives[ i ] = 0;
+                    for( i = j = 0; i < veciPositives.size( )+1; ++i,j += k ) {
+                        size_t thisChunk = (i < chnkRem) ? (perChunk + 1) : (perChunk);
+                        for( k = 0; k < thisChunk; ++k ) {
+                            //if( ( j + k ) >= vecsData.size( ) )
+                            //	break;
+                            const SDatum&	sDatum	= vecsData[ j + k ];
+                            vecdBinValue[ i ] = sDatum.m_dValue;
 
-				ifsm.open( sArgs.inputs[ iGenes ] );
-				if( !Genes.Open( ifsm ) ) {
-					cerr << "Couldn't open: " << sArgs.inputs[ iGenes ] << endl;
-					return 1; }
-				vecfHere.resize( Answers.GetGenes( ) );
-				for( i = 0; i < vecfHere.size( ); ++i )
-					vecfHere[ i ] = Genes.IsGene( Answers.GetGene( i ) );
-				cerr << "Processing " << sArgs.inputs[ iGenes ] << "..." << endl;
-				ifsm.close( ); }
+                            for( m = i; m > 0; --m ) {
+                                MatGenes.Set( sDatum.m_iOne, m, true );
+                                MatGenes.Set( sDatum.m_iTwo, m, true );
+                            }
+                            if( i >= veciPositives.size() )
+                                continue;
+                            if( Answers.Get( sDatum.m_iOne, sDatum.m_iTwo ) )
+                                veciPositives[ i ]++;
+                            else
+                                veciNegatives[ i ]++;
+                        }
+                    }
+                    MatResults.Set( 0, ETFPN_TP, iPositives );
+                    MatResults.Set( 0, ETFPN_FP, iNegatives );
+                    MatResults.Set( 0, ETFPN_TN, 0 );
+                    MatResults.Set( 0, ETFPN_FN, 0 );
+                    for( i = 1; i < MatResults.GetRows( ); ++i ) {
+                        MatResults.Set( i, ETFPN_TP, MatResults.Get( i - 1, ETFPN_TP ) - veciPositives[ i - 1 ] );
+                        MatResults.Set( i, ETFPN_FP, MatResults.Get( i - 1, ETFPN_FP ) - veciNegatives[ i - 1 ] );
+                        MatResults.Set( i, ETFPN_TN, MatResults.Get( i - 1, ETFPN_TN ) + veciNegatives[ i - 1 ] );
+                        MatResults.Set( i, ETFPN_FN, MatResults.Get( i - 1, ETFPN_FN ) +
+                                        veciPositives[ i - 1 ] );
+                    }
+                }
+            }
+            else
+                for( i = 0; i < Answers.GetGenes( ); ++i ) {
+                    if( !( i % 1000 ) )
+                        cerr << "Processing gene " << i << '/' << Answers.GetGenes( ) << endl;
+                    if( ( iOne = veciGenes[ i ] ) == -1 )
+                        continue;
+                    for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+                        if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+                                CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
+                                CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
+                            continue;
+			if ( CMeta::SkipEdge( !!dAnswer, i, j, vecfHere, vecfUbik, sArgs.ctxtpos_flag, sArgs.ctxtneg_flag, sArgs.bridgepos_flag, sArgs.bridgeneg_flag, sArgs.outpos_flag, sArgs.outneg_flag ) ) {
+			    continue;
+			}
 
-			if( mapValues.size( ) ) {
-				for( i = 0; i < Answers.GetGenes( ); ++i ) {
-					if( ( iOne = veciGenes[ i ] ) == -1 )
-						continue;
-					for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
-						if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-							CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) ||
-							CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) )
-							continue;
-						if( !( vecfHere.empty( ) ||
-							( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-							( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
-							continue;
-						if( sArgs.invert_flag )
-							dValue = 1 - dValue;
-						for( k = 0; k <= mapValues[ dValue ]; ++k ) {
-							MatGenes.Set( i, k, true );
-							MatGenes.Set( j, k, true );
-							MatResults.Get( k, dAnswer ? ETFPN_TP : ETFPN_FP )++; }
-						for( ; k < MatResults.GetRows( ); ++k )
-							MatResults.Get( k, dAnswer ? ETFPN_FN : ETFPN_TN )++; } } }
-			else if( iBins ) {
-				vector<SDatum>	vecsData;
-				size_t			iChunk;
+                        if( sArgs.invert_flag )
+                            dValue = 1 - dValue;
 
-				for( iPositives = iNegatives = i = 0; i < Answers.GetGenes( ); ++i ) {
-					if( ( iOne = veciGenes[ i ] ) == -1 )
-						continue;
-					for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
-						if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-							CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-							CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
-							continue;
-						if( !( vecfHere.empty( ) ||
-							( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-							( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
-							continue;
+                        iMax = (int)ceil( ( dValue - sArgs.min_arg ) / sArgs.delta_arg );
+                        if( iMax > (int)MatResults.GetRows( ) )
+                            iMax = (int)MatResults.GetRows( );
+                        eTFPN = (ETFPN)!dAnswer;
+                        for( k = 0; (int)k < iMax; ++k ) {
+                            MatResults.Get( k, eTFPN )++;
+                            MatGenes.Set( i, k, true );
+                            MatGenes.Set( j, k, true );
+                        }
+                        eTFPN = (ETFPN)( 2 + !eTFPN );
+                        for( ; k < (int)MatResults.GetRows( ); ++k )
+                            MatResults.Get( k, eTFPN )++;
+                    }
+                }
+            for( iPositives = iNegatives = i = 0; i < Answers.GetGenes( ); ++i )
+                for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+                    if( CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ) {
+                        continue;
+		    }
 
-						MatGenes.Set( i, 0, true );
-						MatGenes.Set( j, 0, true );
-						if( dAnswer )
-							iPositives++;
-						else
-							iNegatives++;
-						vecsData.push_back( SDatum( dValue, i, j, dAnswer ) ); } }
-				sort( vecsData.begin( ), vecsData.end( ), SSorter( !!sArgs.invert_flag ) );
-				//instead of putting all of the uneveness in one bin, spread it out into each bin.
-				//N.B. only the part without the sse_flag is fixed in this regard
-				size_t perChunk = (size_t)(vecsData.size()/MatResults.GetRows());
-				size_t chnkRem = (size_t)(vecsData.size()%MatResults.GetRows());
-				iChunk = (size_t)( 0.5 + ( (float)vecsData.size( ) / ( MatResults.GetRows( ) ) ) );
-				if( sArgs.sse_flag ) {
-					vecdSSE.resize( MatResults.GetRows( ) );
-					veciPositives.resize( vecdSSE.size( ) );
-					for( i = 1,j = 0; i < vecdSSE.size( ); ++i,j += iChunk ) {
-						veciPositives[ veciPositives.size( ) - i - 1 ] = veciPositives[ veciPositives.size( ) - i ];
-						vecdSSE[ vecdSSE.size( ) - i - 1 ] = vecdSSE[ vecdSSE.size( ) - i ];
-						for( k = 0; k < iChunk; ++k ) {
-							if( ( j + k ) >= vecsData.size( ) )
-								break;
-							const SDatum&	sDatum	= vecsData[ vecsData.size( ) - ( j + k ) - 1 ];
+		    if ( CMeta::SkipEdge( !!dAnswer, i, j, vecfHere, vecfUbik, sArgs.ctxtpos_flag, sArgs.ctxtneg_flag, sArgs.bridgepos_flag, sArgs.bridgeneg_flag, sArgs.outpos_flag, sArgs.outneg_flag ) ) {
+			continue;
+		    }
 
-							for( m = 0; m < ( vecdSSE.size( ) - i ); ++m ) {
-								MatGenes.Set( sDatum.m_iOne, m, true );
-								MatGenes.Set( sDatum.m_iTwo, m, true ); }
-							dValue = sDatum.m_dValue - sDatum.m_dAnswer;
-							veciPositives[ veciPositives.size( ) - i - 1 ]++;
-							vecdSSE[ vecdSSE.size( ) - i - 1 ] += dValue * dValue; } } }
-				else {
-					veciPositives.resize( MatResults.GetRows( ) - 1 );
-					veciNegatives.resize( veciPositives.size( ) );
-					vecdBinValue.resize( veciPositives.size( )+1 );
-					for( i = 0; i < veciNegatives.size( ); ++i )
-						veciNegatives[ i ] = veciPositives[ i ] = 0;
-					for( i = j = 0; i < veciPositives.size( )+1; ++i,j += k ) {
-						size_t thisChunk = (i < chnkRem) ? (perChunk + 1) : (perChunk);
-						for( k = 0; k < thisChunk; ++k ) {
-							//if( ( j + k ) >= vecsData.size( ) )
-							//	break;
-							const SDatum&	sDatum	= vecsData[ j + k ];
-							vecdBinValue[ i ] = sDatum.m_dValue;
+                    if( dAnswer )
+                        iPositives++;
+                    else {
+                        iNegatives++;
+		    }
+                }
 
-							for( m = i; m > 0; --m ) {
-								MatGenes.Set( sDatum.m_iOne, m, true );
-								MatGenes.Set( sDatum.m_iTwo, m, true ); }
-							if( i >= veciPositives.size() )
-								continue;
-							if( Answers.Get( sDatum.m_iOne, sDatum.m_iTwo ) )
-								veciPositives[ i ]++;
-							else
-								veciNegatives[ i ]++; }}
+            veciRec.resize( MatResults.GetRows( ) );
+            veciRecTerm.resize( MatResults.GetRows( ) );
+            for( i = 0; i < veciRec.size( ); ++i ) {
+                veciRec[ i ] = veciRecTerm[ i ] = 0;
+                for( j = 0; j < MatGenes.GetRows( ); ++j )
+                    if( MatGenes.Get( j, i ) ) {
+                        veciRec[ i ]++;
+                        if( vecfHere.size( ) && vecfHere[ j ] )
+                            veciRecTerm[ i ]++;
+                    }
+                for( j = 0; j < veciGenesTerm.size( ); ++j )
+                    if( MatGenes.Get( veciGenesTerm[ j ], i ) &&
+                            ( vecfHere.empty( ) || !vecfHere[ veciGenesTerm[ j ] ] ) )
+                        veciRecTerm[ i ]++;
+            }
 
-					MatResults.Set( 0, ETFPN_TP, iPositives );
-					MatResults.Set( 0, ETFPN_FP, iNegatives );
-					MatResults.Set( 0, ETFPN_TN, 0 );
-					MatResults.Set( 0, ETFPN_FN, 0 );
-					for( i = 1; i < MatResults.GetRows( ); ++i ) {
-						MatResults.Set( i, ETFPN_TP, MatResults.Get( i - 1, ETFPN_TP ) - veciPositives[ i - 1 ] );
-						MatResults.Set( i, ETFPN_FP, MatResults.Get( i - 1, ETFPN_FP ) - veciNegatives[ i - 1 ] );
-						MatResults.Set( i, ETFPN_TN, MatResults.Get( i - 1, ETFPN_TN ) + veciNegatives[ i - 1 ] );
-						MatResults.Set( i, ETFPN_FN, MatResults.Get( i - 1, ETFPN_FN ) +
-							veciPositives[ i - 1 ] ); } } }
-			else
-				for( i = 0; i < Answers.GetGenes( ); ++i ) {
-					if( !( i % 1000 ) )
-						cerr << "Processing gene " << i << '/' << Answers.GetGenes( ) << endl;
-					if( ( iOne = veciGenes[ i ] ) == -1 )
-						continue;
-					for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
-						if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-							CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-							CMeta::IsNaN( dValue = Data.Get( iOne, iTwo ) ) )
-							continue;
-						if( !( vecfHere.empty( ) ||
-							( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-							( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
-							continue;
-						if( sArgs.invert_flag )
-							dValue = 1 - dValue;
+            if( sArgs.inputs_num ) {
+                ofsm.open( ( (string)sArgs.directory_arg + '/' +
+                             CMeta::Basename( sArgs.inputs[ iGenes ] ) + ".bins" ).c_str( ) );
+                postm = &ofsm;
+            }
+            else
+                postm = &cout;
 
-						iMax = (int)ceil( ( dValue - sArgs.min_arg ) / sArgs.delta_arg );
-						if( iMax > (int)MatResults.GetRows( ) )
-							iMax = (int)MatResults.GetRows( );
-						eTFPN = (ETFPN)!dAnswer;
-						for( k = 0; (int)k < iMax; ++k ) {
-							MatResults.Get( k, eTFPN )++;
-							MatGenes.Set( i, k, true );
-							MatGenes.Set( j, k, true ); }
-						eTFPN = (ETFPN)( 2 + !eTFPN );
-						for( ; k < (int)MatResults.GetRows( ); ++k )
-							MatResults.Get( k, eTFPN )++; } }
-			for( iPositives = iNegatives = i = 0; i < Answers.GetGenes( ); ++i )
-				for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
-					if( CMeta::IsNaN( dAnswer = Answers.Get( i, j ) ) ||
-						!( vecfHere.empty( ) ||
-						( dAnswer && vecfHere[ i ] && vecfHere[ j ] ) ||
-						( !dAnswer && ( vecfHere[ i ] || vecfHere[ j ] ) ) ) )
-						continue;
-					if( dAnswer )
-						iPositives++;
-					else
-						iNegatives++; }
+            if( !sArgs.sse_flag ) {
+                *postm << "#	P	" << iPositives << endl;
+                *postm << "#	N	" << iNegatives << endl;
+            }
+            *postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN	RC	PR	VALUE" ) << endl;
+            for( i = 0; i < MatResults.GetRows( ); ++i ) {
+                *postm << ( iBins ? i : ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) ) << '\t' <<
+                       veciRec[ i ];
+                if( sArgs.sse_flag )
+                    *postm << '\t' << veciPositives[ i ] << '\t' << vecdSSE[ i ];
+                else
+                    for( j = 0; j < MatResults.GetColumns( ); ++j )
+                        *postm << '\t' << MatResults.Get( i, j );
+                if( veciGenesTerm.size( ) || vecfHere.size( ) )
+                    *postm << '\t' << veciRecTerm[ i ];
 
-			veciRec.resize( MatResults.GetRows( ) );
-			veciRecTerm.resize( MatResults.GetRows( ) );
-			for( i = 0; i < veciRec.size( ); ++i ) {
-				veciRec[ i ] = veciRecTerm[ i ] = 0;
-				for( j = 0; j < MatGenes.GetRows( ); ++j )
-					if( MatGenes.Get( j, i ) ) {
-						veciRec[ i ]++;
-						if( vecfHere.size( ) && vecfHere[ j ] )
-							veciRecTerm[ i ]++; }
-				for( j = 0; j < veciGenesTerm.size( ); ++j )
-					if( MatGenes.Get( veciGenesTerm[ j ], i ) &&
-						( vecfHere.empty( ) || !vecfHere[ veciGenesTerm[ j ] ] ) )
-						veciRecTerm[ i ]++; }
+                // print precision/recall
+                *postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(0,0));
 
-			if( sArgs.inputs_num ) {
-				ofsm.open( ( (string)sArgs.directory_arg + '/' +
-					CMeta::Basename( sArgs.inputs[ iGenes ] ) + ".bins" ).c_str( ) );
-				postm = &ofsm; }
-			else
-				postm = &cout;
+                if( (MatResults.Get(i,1)+MatResults.Get(i,0)) != 0)
+                    *postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(i,1)+MatResults.Get(i,0));
+                else
+                    *postm << '\t' << 0.0;
+                *postm << '\t' << vecdBinValue[ i ];
 
-			if( !sArgs.sse_flag ) {
-				*postm << "#	P	" << iPositives << endl;
-				*postm << "#	N	" << iNegatives << endl; }
-			*postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN	RC	PR	VALUE" ) << endl;
-			for( i = 0; i < MatResults.GetRows( ); ++i ) {
-				*postm << ( iBins ? i : ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) ) << '\t' <<
-					veciRec[ i ];
-				if( sArgs.sse_flag )
-					*postm << '\t' << veciPositives[ i ] << '\t' << vecdSSE[ i ];
-				else
-					for( j = 0; j < MatResults.GetColumns( ); ++j )
-						*postm << '\t' << MatResults.Get( i, j );
-				if( veciGenesTerm.size( ) || vecfHere.size( ) )
-					*postm << '\t' << veciRecTerm[ i ];
-				
-				// print precision/recall
-				*postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(0,0));
+                *postm << endl;
+            }
+            if( !sArgs.sse_flag )
+                *postm << "#	AUC	" << ( sArgs.auc_arg ?
+                                           AUCMod( Data, Answers, vecfHere, vecfUbik, sArgs, !!sArgs.invert_flag, sArgs.auc_arg ) :
+                                           CStatistics::WilcoxonRankSum( Data, Answers, vecfHere, vecfUbik, !!sArgs.ctxtpos_flag, !!sArgs.ctxtneg_flag, !!sArgs.bridgepos_flag, !!sArgs.bridgeneg_flag, !!sArgs.outpos_flag, !!sArgs.outneg_flag, !!sArgs.invert_flag ) ) << endl;
 
-				if( (MatResults.Get(i,1)+MatResults.Get(i,0)) != 0)
-				  *postm << '\t' << (float)MatResults.Get(i,0)/(MatResults.Get(i,1)+MatResults.Get(i,0));
-				else
-				  *postm << '\t' << 0.0;
-				*postm << '\t' << vecdBinValue[ i ];				
+            if( sArgs.inputs_num )
+                ofsm.close( );
+            else
+                cout.flush( );
 
-				*postm << endl; }
-			if( !sArgs.sse_flag )
-				*postm << "#	AUC	" << ( sArgs.auc_arg ?
-					AUCMod( Data, Answers, vecfHere, !!sArgs.invert_flag, sArgs.auc_arg ) :
-					CStatistics::WilcoxonRankSum( Data, Answers, vecfHere, !!sArgs.invert_flag ) ) << endl;
+            if( !sArgs.inputs_num )
+                break;
+        }
+    }
 
-			if( sArgs.inputs_num )
-				ofsm.close( );
-			else
-				cout.flush( );
-
-			if( !sArgs.inputs_num )
-				break; } }
-
-	return 0; }
+    return 0;
+}
 
 struct SSorterMod {
-	const vector<float>&	m_vecdValues;
+    const vector<float>&	m_vecdValues;
 
-	SSorterMod( const vector<float>& vecdValues ) : m_vecdValues(vecdValues) { }
+    SSorterMod( const vector<float>& vecdValues ) : m_vecdValues(vecdValues) { }
 
-	bool operator()( size_t iOne, size_t iTwo ) {
+    bool operator()( size_t iOne, size_t iTwo ) {
 
-		return ( m_vecdValues[iTwo] < m_vecdValues[iOne] ); }
+        return ( m_vecdValues[iTwo] < m_vecdValues[iOne] );
+    }
 };
 
-double AUCMod( const CDat& DatData, const CDat& DatAnswers, const vector<bool>& vecfGenesOfInterest, bool fInvert,
-	float dAUC ) {
-	size_t			i, j, iPos, iNeg, iPosCur, iNegCur, iOne, iTwo, iIndex, iAUC;
-	vector<float>	vecdValues, vecdAnswers;
-	vector<size_t>	veciGenes, veciIndices;
-	bool			fAnswer;
-	double			dRet;
-	float			d, dAnswer, dSens, dSpec, dSensPrev, dSpecPrev;
+double AUCMod( const CDat& DatData, const CDat& DatAnswers, const vector<bool>& vecfHere, const vector<bool>& vecfUbik, const gengetopt_args_info& sArgs, bool fInvert,
+               float dAUC ) {
+    size_t			i, j, iPos, iNeg, iPosCur, iNegCur, iOne, iTwo, iIndex, iAUC;
+    vector<float>		vecdValues, vecdAnswers;
+    vector<size_t>		veciGenes, veciIndices;
+    bool			fAnswer;
+    double			dRet;
+    float			d, dAnswer, dSens, dSpec, dSensPrev, dSpecPrev;
 
-	veciGenes.resize( DatAnswers.GetGenes( ) );
-	for( i = 0; i < veciGenes.size( ); ++i )
-		veciGenes[ i ] = DatData.GetGene( DatAnswers.GetGene( i ) );
+    veciGenes.resize( DatAnswers.GetGenes( ) );
+    for( i = 0; i < veciGenes.size( ); ++i )
+        veciGenes[ i ] = DatData.GetGene( DatAnswers.GetGene( i ) );
 
-	for( iPos = iNeg = i = 0; i < DatAnswers.GetGenes( ); ++i ) {
-		if( ( iOne = veciGenes[ i ] ) == -1 )
-			continue;
-		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
-			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
-				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) ||
-				CMeta::IsNaN( d = DatData.Get( iOne, iTwo ) ) )
-				continue;
-			fAnswer = dAnswer > 0;
-			if( !( vecfGenesOfInterest.empty( ) ||
-				( fAnswer && vecfGenesOfInterest[ i ] && vecfGenesOfInterest[ j ] ) ||
-				( !fAnswer && ( vecfGenesOfInterest[ i ] || vecfGenesOfInterest[ j ] ) ) ) )
-				continue;
-			if( fAnswer )
-				iPos++;
-			else
-				iNeg++;
-			if( fInvert )
-				d = 1 - d;
-			vecdAnswers.push_back( dAnswer );
-			vecdValues.push_back( d ); } }
+    for( iPos = iNeg = i = 0; i < DatAnswers.GetGenes( ); ++i ) {
+        if( ( iOne = veciGenes[ i ] ) == -1 )
+            continue;
+        for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
+            if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+                    CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) ||
+                    CMeta::IsNaN( d = DatData.Get( iOne, iTwo ) ) )
+                continue;
+            fAnswer = dAnswer > 0;
 
-	veciIndices.resize( vecdValues.size( ) );
-	for( i = 0; i < veciIndices.size( ); ++i )
-		veciIndices[i] = i;
-	sort( veciIndices.begin( ), veciIndices.end( ), SSorterMod( vecdValues ) );
+ 	    if ( CMeta::SkipEdge( fAnswer, i, j, vecfHere, vecfUbik, sArgs.ctxtpos_flag, sArgs.ctxtneg_flag, sArgs.bridgepos_flag, sArgs.bridgeneg_flag, sArgs.outpos_flag, sArgs.outneg_flag ) ) {
+		continue;
+	    }
 
-	iAUC = (size_t)( ( dAUC < 1 ) ? ( dAUC * iNeg ) : dAUC );
-	dRet = dSensPrev = dSpecPrev = 0;
-	for( iPosCur = iNegCur = i = 0; ( i < veciIndices.size( ) ) && ( iNegCur < iAUC ); ++i ) {
-		iIndex = veciIndices[i];
-		if( vecdAnswers[iIndex] > 0 )
-			iPosCur++;
-		else
-			iNegCur++;
-		dSens = (float)iPosCur / iPos;
-		dSpec = 1 - (float)( iNeg - iNegCur ) / iNeg;
-		if( dSpec > dSpecPrev ) {
-			dRet += ( dSpec - dSpecPrev ) * dSens;
-			dSensPrev = dSens;
-			dSpecPrev = dSpec; } }
-	dRet *= max( 1.0f, (float)iNeg / iAUC );
+            if( fAnswer )
+                iPos++;
+            else
+                iNeg++;
+            if( fInvert )
+                d = 1 - d;
+            vecdAnswers.push_back( dAnswer );
+            vecdValues.push_back( d );
+        }
+    }
 
-	return dRet; }
+    veciIndices.resize( vecdValues.size( ) );
+    for( i = 0; i < veciIndices.size( ); ++i )
+        veciIndices[i] = i;
+    sort( veciIndices.begin( ), veciIndices.end( ), SSorterMod( vecdValues ) );
+
+    iAUC = (size_t)( ( dAUC < 1 ) ? ( dAUC * iNeg ) : dAUC );
+    dRet = dSensPrev = dSpecPrev = 0;
+    for( iPosCur = iNegCur = i = 0; ( i < veciIndices.size( ) ) && ( iNegCur < iAUC ); ++i ) {
+        iIndex = veciIndices[i];
+        if( vecdAnswers[iIndex] > 0 )
+            iPosCur++;
+        else
+            iNegCur++;
+        dSens = (float)iPosCur / iPos;
+        dSpec = 1 - (float)( iNeg - iNegCur ) / iNeg;
+        if( dSpec > dSpecPrev ) {
+            dRet += ( dSpec - dSpecPrev ) * dSens;
+            dSensPrev = dSens;
+            dSpecPrev = dSpec;
+        }
+    }
+    dRet *= max( 1.0f, (float)iNeg / iAUC );
+
+    return dRet;
+}

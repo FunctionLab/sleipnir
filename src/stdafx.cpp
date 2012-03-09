@@ -109,7 +109,7 @@
  *	variety of platforms; if you don't see yours listed, send them an email, and they can probably help.
  * - <a href="http://svmlight.joachims.org/">SVM Perf</a> is a support vector machine library used for
  *	SVM learning and evaluation in Sleipnir.  No SVMs without it!  Easily built from source under just about
- *	any environment (it's plain old C).  Please note that you must use <a href="Makefile" class="crit">this
+ *	any environment (it's plain old C).  Please note that you must use <a href="SVMperf/Makefile" class="crit">this
  *	Makefile</a> to build SVM Perf as a library (rather than an executable) on Linux/Mac OS; in Visual
  *	Studio, set the project type to "Static Library".
  * 
@@ -134,7 +134,7 @@
  *	<li>Note that SVM Perf and SMILE are both nonstandard in that they expect header files and libraries to
  *		reside in the same directory (e.g. \c /usr/local/smile or \c /usr/local/svm_perf).</li>
  * </li>
- * <li>\ref sec_download and unpack Sleipnir.</li>
+ * <li>\ref sec_download and unpack Sleipnir. If you elected to obtain sleipnir from the Mercurial repository, you will need to run both gen_auto and gen_tools_am (a step which requires GNU autotools).</li>
  * <li>In the Sleipnir directory, run \c ./configure.  If you've installed prerequisite libraries that it
  *	doesn't find automatically, provide an appropriate \c --with switch for each one.  For example, to build
  *	Sleipnir with SMILE and SVM Perf installed in custom directories under -c /usr/local/, type:</li>

@@ -1043,6 +1043,147 @@ double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers
 
 	return ( dSum / iPos / iNeg ); }
 
+/*!
+ * \brief
+ * Calculate the Wilcoxon Rank Sum p-value (AUC) of a given data (or prediction) set relative to an answer
+ * set.  Allows for ubiquitous genes.
+ * 
+ * \param DatData
+ * Data or prediction set to evaluate.
+ * 
+ * \param DatAnswers
+ * Answer set against which data is evaluated (values greater than zero are positive).
+ * 
+ * \param vecfGenesOfInterest
+ * If nonempty, genes against which to perform process-specific evaluation.
+ * 
+ * \param vecfUbik
+ * If nonempty, ubiquitous genes.
+ *
+ * \param fPosIn
+ * Should positives within the vecfGenesOfInterest be used?
+ *
+ * \param fNegIn
+ * Should negatives within the vecfGenesOfInterest be used?
+ *
+ * \param fPosBridge
+ * Should bridging (between ctxt and outside if empty vecfUbik or between ctxt and Ubik if non-empty) positives be used
+ * 
+ * \param fNegBridge
+ * Should bridging (between ctxt and outside if empty vecfUbik or between ctxt and Ubik if non-empty) negatives be used
+ *
+ * \param fPosOut
+ * Should positive edges outside the context (non in/bridging) be used?
+ *
+ * \param fNegOut
+ * Should negative edges outside the context (non in/bridging) be used)
+ *
+ * \param fInvert
+ * If true, use one minus data values.
+ * 
+ * \returns
+ * Wilcoxon Rank Sum p-value (AUC, area under ROC curve) of the given data evaluated against the given
+ * answers.
+ * 
+ * Calculates the AUC (equivalent to the Wilxocon Rank Sum p-value) of the given data set (or prediction
+ * set) against the given answers.  The the set of genes of interest is nonempty, only positive pairs in
+ * which both genes are in the set or negative pairs where one gene is in the set will be scored.  In
+ * psuedocode:
+ * \code
+ * For each gene pair i,j:
+ *   If CMeta::IsNaN( dValue = DatData.Get( i, j ) ), continue
+ *   If CMeta::IdNaN( dAnswer = DatAnswers.Get( i, j ) ), continue
+ *   fAnswer = ( dAnswer > 0 )
+ *   If vecfGenesOfInterest is nonempty:
+ *     If fAnswer and !( vecfGenesOfInterest[ i ] && vecfGenesOfInterest[ j ] ), continue
+ *     If !fAnswer and !( vecfGenesOfInterest[ i ] || vecfGenesOfInterest[ j ] ), continue
+ *   Add the pair (dValue, fAnswer) to the list to score
+ * Evaluate the AUC/Wilcoxon Rank Sum p-value of the resulting value/answer list
+ * \endcode
+ * The AUC is evaluated by sorting the pair list by value, summing the ranks of positive pairs, counting
+ * the numbers of positive and negative pairs, and calculating (sum - (positive * (positive - 1)) / 2) /
+ * positive / negative.
+ * 
+ * \remarks
+ * DatData and DatAnswers must be of exactly the same size and have the same gene lists.  If
+ * vecfGenesOfInterest is nonempty, it must also be of the same size and refer to the same gene list.
+ */
+double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,
+	const vector<bool>& vecfHere, const vector<bool>& vecfUbik,
+	bool fPosIn, bool fNegIn, bool fPosBridge, bool fNegBridge,
+	bool fPosOut, bool fNegOut, bool fInvert ) {
+	size_t				i, j, k, iOne, iTwo, iNeg;
+	uint64_t			iPos;
+	float				d, dAnswer;
+	double				dSum;
+	std::vector<size_t>		veciGenes;
+	std::vector<float>		vecdValues, vecdRanks;
+	bool				fAnswer;
+
+	veciGenes.resize( DatAnswers.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = DatData.GetGene( DatAnswers.GetGene( i ) );
+
+	for( i = 0; i < DatAnswers.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 )
+			continue;
+		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
+			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) ||
+				CMeta::IsNaN( d = DatData.Get( iOne, iTwo ) ) )
+				continue;
+			fAnswer = dAnswer > 0;
+			if ( CMeta::SkipEdge( fAnswer, i, j, vecfHere, vecfUbik, fPosIn, fNegIn, fPosBridge, fNegBridge, fPosOut, fNegOut ) ) {
+			    continue;
+			}
+
+			if( fInvert )
+				d = 1 - d;
+			vecdValues.push_back( d ); } }
+	{
+		std::vector<size_t>	veciIndices;
+		size_t				iIndex, iCount;
+
+		veciIndices.resize( vecdValues.size( ) );
+		for( i = 0; i < vecdValues.size( ); ++i )
+			veciIndices[ i ] = i;
+		std::sort( veciIndices.begin( ), veciIndices.end( ), SCompareRank<float>( vecdValues ) );
+		vecdRanks.resize( veciIndices.size( ) );
+		for( i = 0; i < vecdRanks.size( ); ++i ) {
+			iIndex = veciIndices[ i ];
+			if( !i || ( vecdValues[ iIndex ] != vecdValues[ veciIndices[ i - 1 ] ] ) ) {
+				for( iCount = 0,j = i; j < veciIndices.size( ); ++j ) {
+					if( vecdValues[ veciIndices[ j ] ] != vecdValues[ iIndex ] )
+						break;
+					iCount++; }
+				d = i + ( iCount - 1 ) / 2.0f; }
+			vecdRanks[ iIndex ] = d; }
+	}
+
+	for( dSum = 0,iPos = iNeg = i = k = 0; i < DatAnswers.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 )
+			continue;
+		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
+			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+				CMeta::IsNaN( DatData.Get( iOne, iTwo ) ) ||
+				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) )
+			    continue;
+			fAnswer = dAnswer > 0;
+
+			if ( CMeta::SkipEdge( fAnswer, i, j, vecfHere, vecfUbik, fPosIn, fNegIn, fPosBridge, fNegBridge, fPosOut, fNegOut ) ) {
+			    continue;
+			}
+
+			if( dAnswer > 0 ) {
+				iPos++;
+				dSum += vecdRanks[ k ]; }
+			else
+				iNeg++;
+			k++; } }
+	dSum -= ( iPos * ( iPos - 1 ) ) / 2;
+
+	return ( dSum / iPos / iNeg ); }
+
 double bessi0( double dX ) {
 	double	dAbs, dRet, dY;
 
