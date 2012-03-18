@@ -79,3 +79,5 @@ option	"threads"		t	"Maximum number of threads to spawn"
 							int	default="-1"
 option	"verbosity"		v	"Message verbosity"
 							int	default="5"
+option	"logratio"		L	"Output log ratios (instead of posteriors)"
+							flag	off

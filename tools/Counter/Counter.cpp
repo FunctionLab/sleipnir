@@ -60,6 +60,7 @@ struct SEvaluate {
     const vector<size_t>*	m_pveciGenes;
     bool			m_fFirst;
     string			m_strName;
+    bool			m_bLogratio;
 };
 
 struct SEvaluate2 {
@@ -978,6 +979,7 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
             vecsData[ i ].m_pYes = vecpYes[ i ];
             vecsData[ i ].m_pNo = vecpNo[ i ];
             vecsData[ i ].m_strName = sArgs.inputs_num ? sArgs.inputs[ i ] : "global";
+	    vecsData[ i ].m_bLogratio = sArgs.logratio_flag;
             if( pthread_create( &vecpthdThreads[ i ], NULL, finalize, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create finalization thread: " << sArgs.inputs[ i ] << endl;
                 return 1;
@@ -1074,20 +1076,31 @@ void* finalize( void* pData ) {
     size_t		i, j;
     float*		adYes;
     float*		adNo;
-    float		dPrior;
+    float		dPrior, dYes, dNo;
 
     psData = (SEvaluate*)pData;
     dPrior = psData->m_pBN->GetCPT( 0 ).Get( 1, 0 );
     adYes = new float[ psData->m_pYes->GetGenes( ) ];
     adNo = new float[ psData->m_pNo->GetGenes( ) ];
+
+    dYes = log( dPrior );
+    dNo = log( psData->m_pBN->GetCPT( 0 ).Get( 0, 0 ) );
+
     for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
         if( !( i % 1000 ) )
             cerr << "F: " << psData->m_strName << ", " << i << endl;
         memcpy( adYes, psData->m_pYes->Get( i ), ( psData->m_pYes->GetGenes( ) - i - 1 ) * sizeof(*adYes) );
         memcpy( adNo, psData->m_pNo->Get( i ), ( psData->m_pNo->GetGenes( ) - i - 1 ) * sizeof(*adNo) );
-        for( j = 0; j < ( psData->m_pYes->GetGenes( ) - i - 1 ); ++j )
-            adYes[ j ] = CMeta::IsNaN( adYes[ j ] ) ? dPrior :
-                         (float)( 1 / ( 1 + exp( (double)adNo[ j ] - (double)adYes[ j ] ) ) );
+        for( j = 0; j < ( psData->m_pYes->GetGenes( ) - i - 1 ); ++j ) {
+	    if( psData->m_bLogratio ) {
+		adYes[ j ] = CMeta::IsNaN( adYes[ j ] ) ? 0.0 :
+		             (float)( (double)(adYes[ j ] - dYes) - (double)(adNo[ j ] - dNo) );
+	    }
+	    else {
+		adYes[ j ] = CMeta::IsNaN( adYes[ j ] ) ? dPrior :
+		             (float)( 1 / ( 1 + exp( (double)adNo[ j ] - (double)adYes[ j ] ) ) );
+	    }
+	}
         psData->m_pYes->Set( i, adYes );
     }
     delete[] adNo;
