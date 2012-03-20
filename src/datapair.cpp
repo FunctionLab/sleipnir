@@ -295,6 +295,22 @@ void CDataPair::Quantize() {
 	m_fQuantized = true;
 }
 
+size_t CDataPair::Quantize( size_t iY, size_t iX, size_t iZero ) const {
+    float d;
+    if( iY == -1 || iX == -1 ) {
+	return -1;
+    }
+    else if( CMeta::IsNaN( (d = Get( iY, iX )) ) ) {
+	return iZero;
+    }
+    else {
+	return Quantize(d); 
+    }
+}
+
+
+
+
 void CDataPairImpl::Reset( bool fContinuous ) {
 
 	m_vecdQuant.clear( );
