@@ -295,11 +295,11 @@ void* evaluate( void* pData ) {
 				continue;
 			if( psData->m_pAnswers && CMeta::IsNaN( psData->m_pAnswers->Get( i, j ) ) )
 				continue;
-			if( ( iOne == -1 ) || ( iTwo == -1 ) ||
-				( ( iBin = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) ) ) == -1 ) )
-				iBin = psData->m_iZero;
+
+			iBin = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
 			if( iBin == -1 )
 				continue;
+
 			if( CMeta::IsNaN( adYes[ iIndex = ( j - i - 1 ) ] ) ) {
 				adYes[ iIndex ] = dYes;
 				adNo[ iIndex ] = dNo; }
