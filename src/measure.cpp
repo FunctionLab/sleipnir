@@ -28,13 +28,8 @@
 #include <math.h>
 
 namespace Sleipnir {
-// ADDED for distance correlation
-static inline void dCOV(const float *x, const float *y, int *dims, float  *DCOV);
 
-static inline float Akl(float **akl, float **A, int n);
-static inline float **alloc_matrix(int r, int c);
-static inline void   free_matrix(float **matrix, int r, int c);
-static inline void 	Euclidean_distance(const float *x, float **Dx, int n);
+//Added for calculating distance correlation. Code partly adapted from R "energy" package by Maria L. Rizzo and Gabor J. Szekely.
 static inline void dCOV(const float *x,const float *y, int *dims, float *DCOV) {
     /*  computes dCov(x,y), dCor(x,y), dVar(x), dVar(y)
         V-statistic is n*dCov^2 where n*dCov^2 --> Q
@@ -42,23 +37,86 @@ static inline void dCOV(const float *x,const float *y, int *dims, float *DCOV) {
         DCOV  : vector [dCov, dCor, dVar(x), dVar(y)]
      */
 
-    int    j, k, n, n2, p, q, dst;
+    int    i,j, k, n, n2;
     float **Dx, **Dy, **A, **B;
+    float *akbar;
+    float abar;
     float V;
 
     n = *dims;
 
+    /* allocate a n*n matrix  */
 
-    Dx = alloc_matrix(n, n);
-    Dy = alloc_matrix(n, n);
-	Euclidean_distance(x, Dx, n);
-	Euclidean_distance(y, Dy, n);
-    A = alloc_matrix(n, n);
-    B = alloc_matrix(n, n);
-    Akl(Dx, A, n);
-    Akl(Dy, B, n);
-    free_matrix(Dx, n, n);
-    free_matrix(Dy, n, n);
+    Dx = (float **)calloc(n, sizeof(float *));
+    Dy = (float **)calloc(n, sizeof(float *));
+    A = (float **)calloc(n, sizeof(float *));
+    B = (float **)calloc(n, sizeof(float *));
+    for (i = 0; i < n; i++)
+    {
+    Dx[i] = (float *)calloc(n, sizeof(float));
+    Dy[i] = (float *)calloc(n, sizeof(float));
+    A[i] = (float *)calloc(n, sizeof(float));
+    B[i] = (float *)calloc(n, sizeof(float));
+    }
+
+    for (i=1; i<n; i++) {
+        Dx[i][i] = 0.0;
+        Dy[i][i] = 0.0;
+        for (j=0; j<i; j++) {
+            Dx[i][j] = Dx[j][i] = fabs(*(x+i) - *(x+j));
+            Dy[i][j] = Dy[j][i] = fabs(*(y+i) - *(y+j));
+        }
+    }
+
+
+
+    akbar = (float*)  calloc(n, sizeof(float));
+    abar = 0.0;
+    for (k=0; k<n; k++) {
+        akbar[k] = 0.0;
+        for (j=0; j<n; j++) {
+            akbar[k] += Dx[k][j];
+        }
+        abar += akbar[k];
+        akbar[k] /= (float) n;
+    }
+    abar /= (float) (n*n);
+
+    for (k=0; k<n; k++)
+        for (j=k; j<n; j++) {
+            A[k][j] = Dx[k][j] - akbar[k] - akbar[j] + abar;
+            A[j][k] = A[k][j];
+        }
+    free(akbar);
+
+
+    akbar = (float*)  calloc(n, sizeof(float));
+    abar = 0.0;
+    for (k=0; k<n; k++) {
+        akbar[k] = 0.0;
+        for (j=0; j<n; j++) {
+            akbar[k] += Dy[k][j];
+        }
+        abar += akbar[k];
+        akbar[k] /= (float) n;
+    }
+    abar /= (float) (n*n);
+
+    for (k=0; k<n; k++)
+        for (j=k; j<n; j++) {
+            B[k][j] = Dy[k][j] - akbar[k] - akbar[j] + abar;
+            B[j][k] = B[k][j];
+        }
+    free(akbar);
+
+
+    for (i = 0; i < n; i++) {
+    	free(Dx[i]);
+    	free(Dy[i]);
+    	}
+    free(Dx);
+    free(Dy);
+
 
     n2 = ( n) * n;
 
@@ -84,101 +142,15 @@ static inline void dCOV(const float *x,const float *y, int *dims, float *DCOV) {
         DCOV[1] = DCOV[0] / sqrt(V);
         else DCOV[1] = 0.0;
 
-    free_matrix(A, n, n);
-    free_matrix(B, n, n);
+
+    for (i = 0; i < n; i++) {
+    	free(A[i]);
+    	free(B[i]);
+    	}
+    free(A);
+    free(B);
 
 }
-
-
-static inline float Akl(float **akl, float **A, int n) {
-    /* -computes the A_{kl} or B_{kl} distances from the
-        distance matrix (a_{kl}) or (b_{kl}) for dCov, dCor, dVar
-        dCov = mean(Akl*Bkl), dVar(X) = mean(Akl^2), etc.
-    */
-    int j, k;
-    float *akbar;
-    float abar;
-
-    akbar = (float*)  calloc(n, sizeof(float));
-    abar = 0.0;
-    for (k=0; k<n; k++) {
-        akbar[k] = 0.0;
-        for (j=0; j<n; j++) {
-            akbar[k] += akl[k][j];
-        }
-        abar += akbar[k];
-        akbar[k] /= (float) n;
-    }
-    abar /= (float) (n*n);
-
-    for (k=0; k<n; k++)
-        for (j=k; j<n; j++) {
-            A[k][j] = akl[k][j] - akbar[k] - akbar[j] + abar;
-            A[j][k] = A[k][j];
-        }
-    free(akbar);
-    return(abar);
-}
-
-
-
-static inline float **alloc_matrix(int r, int c)
-{
-    /* allocate a matrix with r rows and c columns */
-    int i;
-    float **matrix;
-    matrix = (float **)calloc(r, sizeof(float *));
-    for (i = 0; i < r; i++)
-    matrix[i] = (float *)calloc(c, sizeof(float));
-    return matrix;
-}
-
-
-
-static inline void free_matrix(float **matrix, int r, int c)
-{
-    /* free a matrix with r rows and c columns */
-    int i;
-    for (i = 0; i < r; i++) free(matrix[i]);
-    free(matrix);
-}
-
-
-static inline void Euclidean_distance(const float *x, float **Dx, int n)
-{
-    /*
-        interpret x as an n by d matrix, in row order (n vectors in R^d)
-        compute the Euclidean distance matrix Dx
-    */
-    int i, j;
-    float  dif;
-    for (i=1; i<n; i++) {
-        Dx[i][i] = 0.0;
-        for (j=0; j<i; j++) {
-            dif = *(x+i) - *(x+j);
-            Dx[i][j] = Dx[j][i] = fabs(dif);
-        }
-    }
-}
-
-
-// Above ADDED for distance correlation
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
