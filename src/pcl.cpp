@@ -192,7 +192,8 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 	CMeasureRelativeAUC RelAuc;
 	CMeasurePearsonSignificance PearSig;
 	CMeasureDice Dice( dAlpha );
-
+	CMeasureDistanceCorrelation DCor;
+	CMeasureSignedDistanceCorrelation SDCor;
 	if (szFile) {
 		ifsm.open(szFile);
 		if (!PCL.Open(ifsm, iSkip)) {
@@ -217,7 +218,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 			EuclideanSig(&Euclidean, false, 1.0f / PCL.GetExperiments());
 	IMeasure* apMeasures[] = { &Pearson, &EuclideanSig, &KendallsTau,
 			&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick,
-			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice, NULL };
+			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, NULL };
 
 	pMeasure = NULL;
 	for (i = 0; apMeasures[i]; ++i)
@@ -227,7 +228,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 		}
 	if (!pMeasure)
 		return 1;
-
+	g_CatSleipnir().info("Method: %s ", pMeasure->GetName(), i);
 	if (fFrequencyWeight) {
 		vecdWeights.resize(PCL.GetExperiments());
 		for (i = 0; i < vecdWeights.size(); ++i) {
