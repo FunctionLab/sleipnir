@@ -24,7 +24,7 @@ option "skip"      				s   "Number of columns to skip in input pcls"
 										int default="2" no
 option	"normalize"				n	"Normalize PCLS to 0 mean 1 variance"
 										flag	off
-option	"cross_validation"		c	"Number of cross-validation sets"
+option	"cross_validation"		c	"Number of cross-validation sets ( arg of 1 will turn off cross-validation )"
 										int default="5" no
 option "error_function" 		e   "Sets the loss function for SVM learning: Choice of:
 0\tZero/one loss: 1 if vector of predictions contains error, 0 otherwise.
