@@ -28,6 +28,7 @@
 namespace Sleipnir {
 
 const char	CDatabaseImpl::c_acDAB[]		= ".dab";
+const char	CDatabaseImpl::c_acQDAB[]		= ".qdab";
 const char	CDatabaseImpl::c_acExtension[]	= ".db";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -251,7 +252,7 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::st
 	Clear( );
 	pBayesNet->GetNodes( vecstrNodes );
 	for( i = 1; i < vecstrNodes.size( ); ++i )
-		vecstrNodes[ i - 1 ] = strInputDirectory + '/' + vecstrNodes[ i ] + c_acDAB;
+		vecstrNodes[ i - 1 ] = strInputDirectory + '/' + vecstrNodes[ i ];
 	if( vecstrNodes.size( ) )
 		vecstrNodes.resize( vecstrNodes.size( ) - 1 );
 	m_vecpDBs.resize( iFiles );
@@ -304,10 +305,15 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 			for( iInOffset = 0; iInOffset < vecData.size( ); ++iInOffset ) {
 				CDataPair	Dat;
 
-				if( !Dat.Open( vecstrFiles[ iInBase + iInOffset ].c_str( ), false, m_fMemmap ) ) {
+				if( !Dat.Open( (vecstrFiles[ iInBase + iInOffset ] + c_acDAB).c_str( ), false, m_fMemmap ) ) {
 					g_CatSleipnir( ).error( "CDatabaseImpl::Open( ) could not open %s",
-						vecstrFiles[ iInBase + iInOffset ].c_str( ) );
-					return false; }
+						(vecstrFiles[ iInBase + iInOffset ] + c_acDAB).c_str( ) );
+				    if( !Dat.Open( (vecstrFiles[ iInBase + iInOffset ] + c_acQDAB).c_str( ), false, m_fMemmap ) ) {
+					g_CatSleipnir( ).error( "CDatabaseImpl::Open( ) could not open %s",
+						(vecstrFiles[ iInBase + iInOffset ] + c_acQDAB).c_str( ) );
+					return false;
+				    }
+				}
 				for( i = 0; i < veciMyGenes.size( ); ++i )
 					veciMyGenes[ i ] = Dat.GetGene( vecstrMyGenes[ i ] );
 				for( i = 0; i < veciGenes.size( ); ++i )
