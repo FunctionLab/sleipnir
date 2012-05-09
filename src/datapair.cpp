@@ -295,6 +295,45 @@ void CDataPair::Quantize() {
 	m_fQuantized = true;
 }
 
+
+/*!
+ * \brief
+ * Return the discretized form of the given value using the data pair's current bin edges, or
+ * return the provided missing data value.
+ *
+ * \param dValue
+ * Continuous value to be discretized.
+ * 
+ * \returns
+ * Discretized version of the given value, less than GetValues; -1 if the given value is not finite, or
+ * if either gene does not exist in dataset
+ * 
+ * Discretizes a given continuous value using the data pair's bin edges.  Standard usage is:
+ * \code
+ * DP.Quantize( DP.Get( i, j, 0 ) );
+ * \endcode
+ * 
+ * \see
+ * SetQuants | CMeta::Quantize
+ */
+
+
+size_t CDataPair::Quantize( size_t iY, size_t iX, size_t iZero ) const {
+    float d;
+    if( iY == -1 || iX == -1 ) {
+	return -1;
+    }
+    else if( CMeta::IsNaN( (d = Get( iY, iX )) ) ) {
+	return iZero;
+    }
+    else {
+	return Quantize(d); 
+    }
+}
+
+
+
+
 void CDataPairImpl::Reset( bool fContinuous ) {
 
 	m_vecdQuant.clear( );

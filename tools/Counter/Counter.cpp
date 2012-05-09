@@ -664,12 +664,9 @@ void* learn( void* pData ) {
             if( psData->m_pDat ) {
                 iTwo = veciGenes[ j ];
                 iVal = -1;
-                if( ( iOne != -1 ) && ( iTwo != -1 ) )
-                    iVal = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) );
-                if( iVal == -1 )
-                    iVal = psData->m_iZero;
-                if( iVal == -1 )
-                    continue;
+		iVal = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
+		if( iVal == -1 )
+		    continue;
                 psData->m_pMatCounts->Get( iVal, iAnswer )++;
                 psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );
             }
@@ -1050,9 +1047,8 @@ void* evaluate( void* pData ) {
         for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
             if( ( ( iTwo = (*psData->m_pveciGenes)[ j ] ) == -1 ) && ( psData->m_iZero == -1 ) )
                 continue;
-            if( ( iOne == -1 ) || ( iTwo == -1 ) ||
-                    ( ( iBin = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) ) ) == -1 ) )
-                iBin = psData->m_iZero;
+
+	    iBin = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
             if( iBin == -1 )
                 continue;
             if( CMeta::IsNaN( adYes[ iIndex = ( j - i - 1 ) ] ) ) {
@@ -1346,10 +1342,11 @@ void* evaluate2( void* pData ) {
         for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
             if( ( ( iTwo = (*psData->m_pveciGenes)[ j ] ) == -1 ) && ( psData->m_iZero == -1 ) )
                 continue;
-            if( ( iOne == -1 ) || ( iTwo == -1 ) || ( ( iBin = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) ) ) == -1 ) )
-                iBin = psData->m_iZero;
+
+	    iBin = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
             if( iBin == -1 )
                 continue;
+
             if( ( iBNTwo = (*psData->m_pveciBNs)[ j ] ) != -1 )
                 veciCur.push_back( iBNTwo );
             for( k = 0; k < max( (size_t)1, veciCur.size( ) ); ++k ) {

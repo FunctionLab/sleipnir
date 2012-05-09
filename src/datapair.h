@@ -65,6 +65,8 @@ public:
 	void SetQuants( const std::vector<float>& vecdBinEdges );
 	size_t Quantize( float dValue ) const;
 	void Quantize( );
+        size_t Quantize( size_t iY, size_t iX, size_t iZero ) const;
+
 	void Save( const char* szFile ) const;
 	
 	
@@ -183,7 +185,6 @@ public:
 	bool Open( const char* szDatafile, size_t iSkip );
 	size_t Quantize( float dValue, size_t iExperiment ) const;
 	void Quantize( );
-
 
 	/*!
 	 * \brief
@@ -311,6 +312,22 @@ public:
 	size_t Quantize( float dValue ) const {
 
 		return ( m_pFilter ? m_pFilter->Quantize( dValue ) : ( m_pDat ? m_pDat->Quantize( dValue ) : -1 ) ); }
+
+
+        size_t Quantize( size_t iY, size_t iX, size_t iZero ) const {
+            float d;
+            if( iY == -1 || iX == -1 ) {
+                return -1;
+            }
+            else if( CMeta::IsNaN( (d = Get( iY, iX )) ) ) {
+                return iZero;
+            }
+            else {
+                return Quantize(d); 
+            }
+        }
+
+
 
 	/*!
 	 * \brief

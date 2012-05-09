@@ -196,13 +196,9 @@ int main( int iArgs, char** aszArgs ) {
 					continue;
 				iTwo = veciGenes[ k ];
 				iValue = -1;
-				if( ( iOne != -1 ) && ( iTwo != -1 ) )
-					iValue = DatCur.Quantize( DatCur.Get( iOne, iTwo ) );				
-				
-				// Assume default values are identical for all contexts
-				if( ( iValue == -1 ) && ( ( b = BNSmileList[0].GetDefault( i + num_to_skip ) ) != (unsigned char)-1 ) ){
-				  iValue = b;
-				}
+
+				// Use zeros flag if edge is missing and both genes exist in dataset
+				iValue = DatCur.Quantize( iOne, iTwo, BNSmileList[0].GetDefault( i + num_to_skip ) );
 				
 				if( iValue != -1 ){
 				  // iterate through network xdsl files and average the posteriors

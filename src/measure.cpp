@@ -23,8 +23,139 @@
 #include "measure.h"
 #include "meta.h"
 #include "statistics.h"
+#include <stdlib.h>
+#include <float.h>
+#include <math.h>
 
 namespace Sleipnir {
+
+//Added for calculating distance correlation. Code partly adapted from R "energy" package by Maria L. Rizzo and Gabor J. Szekely.
+static inline void dCOV(const float *x,const float *y, int *dims, float *DCOV) {
+    /*  computes dCov(x,y), dCor(x,y), dVar(x), dVar(y)
+        V-statistic is n*dCov^2 where n*dCov^2 --> Q
+        dims = sample size
+        DCOV  : vector [dCov, dCor, dVar(x), dVar(y)]
+     */
+
+    int    i,j, k, n, n2;
+    float **Dx, **Dy, **A, **B;
+    float *akbar;
+    float abar;
+    float V;
+
+    n = *dims;
+
+    /* allocate a n*n matrix  */
+
+    Dx = (float **)calloc(n, sizeof(float *));
+    Dy = (float **)calloc(n, sizeof(float *));
+    A = (float **)calloc(n, sizeof(float *));
+    B = (float **)calloc(n, sizeof(float *));
+    for (i = 0; i < n; i++)
+    {
+    Dx[i] = (float *)calloc(n, sizeof(float));
+    Dy[i] = (float *)calloc(n, sizeof(float));
+    A[i] = (float *)calloc(n, sizeof(float));
+    B[i] = (float *)calloc(n, sizeof(float));
+    }
+
+    for (i=1; i<n; i++) {
+        Dx[i][i] = 0.0;
+        Dy[i][i] = 0.0;
+        for (j=0; j<i; j++) {
+            Dx[i][j] = Dx[j][i] = fabs(*(x+i) - *(x+j));
+            Dy[i][j] = Dy[j][i] = fabs(*(y+i) - *(y+j));
+        }
+    }
+
+
+
+    akbar = (float*)  calloc(n, sizeof(float));
+    abar = 0.0;
+    for (k=0; k<n; k++) {
+        akbar[k] = 0.0;
+        for (j=0; j<n; j++) {
+            akbar[k] += Dx[k][j];
+        }
+        abar += akbar[k];
+        akbar[k] /= (float) n;
+    }
+    abar /= (float) (n*n);
+
+    for (k=0; k<n; k++)
+        for (j=k; j<n; j++) {
+            A[k][j] = Dx[k][j] - akbar[k] - akbar[j] + abar;
+            A[j][k] = A[k][j];
+        }
+    free(akbar);
+
+
+    akbar = (float*)  calloc(n, sizeof(float));
+    abar = 0.0;
+    for (k=0; k<n; k++) {
+        akbar[k] = 0.0;
+        for (j=0; j<n; j++) {
+            akbar[k] += Dy[k][j];
+        }
+        abar += akbar[k];
+        akbar[k] /= (float) n;
+    }
+    abar /= (float) (n*n);
+
+    for (k=0; k<n; k++)
+        for (j=k; j<n; j++) {
+            B[k][j] = Dy[k][j] - akbar[k] - akbar[j] + abar;
+            B[j][k] = B[k][j];
+        }
+    free(akbar);
+
+
+    for (i = 0; i < n; i++) {
+    	free(Dx[i]);
+    	free(Dy[i]);
+    	}
+    free(Dx);
+    free(Dy);
+
+
+    n2 = ( n) * n;
+
+    /* compute dCov(x,y), dVar(x), dVar(y) */
+    for (k=0; k<4; k++)
+        DCOV[k] = 0.0;
+    for (k=0; k<n; k++)
+        for (j=0; j<n; j++) {
+            DCOV[0] += A[k][j]*B[k][j];
+            DCOV[2] += A[k][j]*A[k][j];
+            DCOV[3] += B[k][j]*B[k][j];
+        }
+
+    for (k=0; k<4; k++) {
+        DCOV[k] /= n2;
+        if (DCOV[k] > 0)
+            DCOV[k] = sqrt(DCOV[k]);
+            else DCOV[k] = 0.0;
+    }
+    /* compute dCor(x, y) */
+    V = DCOV[2]*DCOV[3];
+    if (V > DBL_EPSILON)
+        DCOV[1] = DCOV[0] / sqrt(V);
+        else DCOV[1] = 0.0;
+
+
+    for (i = 0; i < n; i++) {
+    	free(A[i]);
+    	free(B[i]);
+    	}
+    free(A);
+    free(B);
+
+}
+
+
+
+
+
 
 static inline float GetWeight(const float* adW, size_t iW) {
 
@@ -164,6 +295,45 @@ double CMeasureEuclidean::Measure(const float* adX, size_t iM,
 		}
 
 	return sqrt(dRet);
+}
+
+double CMeasureDistanceCorrelation::Measure(const float* adX, size_t iM,
+		const float* adY, size_t iN, EMap eMap, const float* adWX,
+		const float* adWY) const {
+	size_t i;
+	float dRet, d;
+	int size=iN;
+	float DCOV[4]={0,0,0,0};
+
+	if (iM != iN)
+		return CMeta::GetNaN();
+
+	dRet = 0;
+	dCOV(adX,adY,&size,DCOV);
+	dRet = DCOV[1];
+	return (double)dRet;
+}
+
+double CMeasureSignedDistanceCorrelation::Measure(const float* adX, size_t iM,
+		const float* adY, size_t iN, EMap eMap, const float* adWX,
+		const float* adWY) const {
+	size_t i;
+		float dRet, d;
+		int size=iN;
+		float DCOV[4]={0,0,0,0};
+		double dP;
+
+		if (iM != iN)
+			return CMeta::GetNaN();
+
+		dRet = 0;
+		dCOV(adX,adY,&size,DCOV);
+	dRet = DCOV[1];
+	dP=CMeasurePearson::Pearson(adX, iM, adY, iN, EMapNone, adWX, adWY);
+	if(dP<0)
+		dRet *=-1;
+
+	return (double)dRet;
 }
 
 double CMeasureEuclideanScaled::Measure(const float* adX, size_t iM,
@@ -610,8 +780,8 @@ double CMeasureSpearman::Measure(const float* adX, size_t iM, const float* adY,
 	return dRet;
 }
 
-double CMeasurePearNorm::Measure(const float* adX, size_t iM, const float* adY,
-		size_t iN, EMap eMap, const float* adWX, const float* adWY) const {
+double CMeasurePearNorm::Measure(const float* adX, size_t iM,
+		const float* adY,size_t iN, EMap eMap, const float* adWX, const float* adWY) const {
 	static const float c_dBound = 0.9999f;
 	double dP;
 
@@ -813,4 +983,15 @@ double CMeasureDice::Measure( const float* adX, size_t iM, const float* adY,
 	dX = dDot + ( m_dAlpha * dXY ) + ( ( 1 - m_dAlpha ) * dYX );
 	return ( dX ? ( dDot / dX ) : CMeta::GetNaN( ) ); }
 
+
+
+
+
+
+
+
+
 }
+
+
+
