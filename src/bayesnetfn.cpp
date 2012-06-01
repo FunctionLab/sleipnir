@@ -696,8 +696,8 @@ bool CBayesNetMinimalImpl::Counts2Probs( const std::vector<std::string>& vecstrC
 		  // skip zero                                                                                                                                                                                                       
                   if(dTotal == 0 && dAlpha == 0)
                     vecdProbs[ i ] = 1.0 / vecdProbs.size( );
-                  else
-                    vecdProbs[ i ] = ( ( dScale * veciCounts[ i ] ) + dAlpha ) /
+                  else // laplace smooth and regularize 
+                    vecdProbs[ i ] = ( ( dScale * (veciCounts[ i ] + 1) ) + dAlpha ) /
                       ( dTotal + ( dAlpha * vecdProbs.size( ) ) );
 		}
 	}
@@ -1053,7 +1053,7 @@ bool CBayesNetMinimal::OpenCounts( const char* szFileCounts, const std::map<std:
 				break;
 
 			case c_iStateCPT:
-				if( !Counts2Probs( vecstrLine, vecdProbs, vecdAlphas.empty( ) ? 1 : vecdAlphas[ iNode ],
+				if( !Counts2Probs( vecstrLine, vecdProbs, vecdAlphas.empty( ) ? 0 : vecdAlphas[ iNode ],
 					dPseudocounts, pBNDefault, iNode, iClass ) )
 					return false;
 				{
