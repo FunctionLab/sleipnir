@@ -83,6 +83,12 @@ protected:
 	bool OpenMemmap( const unsigned char* );
 	void FilterGenesGraph( const CGenes&, std::vector<bool>&, size_t, float, bool, bool, const std::vector<float>* );
 
+	float* GetFullRow(size_t iY){
+		float *d_array = m_Data.GetFullRow(iY);
+		d_array[iY] = CMeta::GetNaN();
+		return d_array;
+	}
+
 	float& Get( size_t iX, size_t iY ) const {
 		static float	s_dRet;
 

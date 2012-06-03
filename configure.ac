@@ -461,7 +461,7 @@ LOCAL_CHECK_LIB([smile], [smile], [RoundProbability(0,0)],
 #      AC_DEFINE([SMILEXML_LIB], [1])
 #      SMILEXML_LIB="-lsmilexml"
 #    fi
-         SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR"
+         SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR -fopenmp"
 #         SMILE_LIBS="-L $SMILE_LIB_DIR $SMILEXML_LIB -lsmile"
          SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile"
         ],                                                        dnl and found in specified path

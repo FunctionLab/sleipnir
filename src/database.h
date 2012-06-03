@@ -28,6 +28,14 @@ namespace Sleipnir {
 
 class IBayesNet;
 
+struct ArrayValueFloat{
+	size_t iX;
+	float v;
+};
+
+int FloatComp(const void * a, const void* b);
+
+
 /*!
  * \brief
  * Encapsulates a simple indexless database allowing rapid per-gene access to values from many datasets.

@@ -108,9 +108,9 @@ protected:
 
 	size_t CountWords( ) const {
 		size_t	iRet;
-
 		iRet = m_iRows * m_iColumns;
-		return ( ( ( ( iRet * m_cBits ) - 1 ) / ( 8 * sizeof(*m_aiData) ) ) + 1 ); }
+		return ( ( ( ( iRet * m_cBits ) - 1 ) / ( 8 * sizeof(*m_aiData) ) ) + 1 );
+	}
 
 	size_t* GetWord( size_t iY, size_t iX, unsigned char& cShift ) const {
 		size_t	iIndex;

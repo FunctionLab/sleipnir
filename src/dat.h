@@ -288,6 +288,11 @@ public:
 
 		return CDatImpl::GetGene( strGene ); }
 
+	float* GetFullRow( size_t iY ) {
+		return CDatImpl::GetFullRow(iY);
+	}
+
+
 	/*!
 	 * \brief
 	 * Return the value at the requested CDat position.

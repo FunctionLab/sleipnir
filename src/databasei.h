@@ -22,7 +22,7 @@
 #ifndef DATABASEI_H
 #define DATABASEI_H
 
-#define DATABASE_NIBBLES
+//#define DATABASE_NIBBLES
 
 #include <fstream>
 #include <map>
