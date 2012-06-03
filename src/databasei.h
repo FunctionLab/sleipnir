@@ -28,6 +28,9 @@
 #include <map>
 #include <vector>
 
+//Qian added
+#include <stdio.h>
+
 #include "compactmatrix.h"
 
 namespace Sleipnir {
@@ -74,7 +77,8 @@ public:
 				( ( b & 0xF0 ) | ( bValue & 0xF ) ); }
 #endif // DATABASE_NIBBLES
 		m_fstm.seekp( iOffset );
-		m_fstm.put( bValue ); }
+		m_fstm.put( bValue );
+	}
 
 	size_t GetDatasets( ) const {
 
@@ -124,6 +128,7 @@ private:
 	uint32_t					m_iGenes;
 	uint32_t					m_iDatasets;
 	std::vector<std::string>	m_vecstrGenes;
+
 	mutable std::fstream		m_fstm;
 	mutable pthread_mutex_t*	m_pmutx;
 };
@@ -131,7 +136,6 @@ private:
 class CDatabaseImpl {
 protected:
 	static const char	c_acDAB[];
-	static const char	c_acQDAB[];
 	static const char	c_acExtension[];
 
 	CDatabaseImpl( ) : m_fMemmap(false), m_iBlockIn(-1), m_iBlockOut(-1), m_fBuffer(false) { }

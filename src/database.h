@@ -123,6 +123,11 @@ public:
 	 */
 	bool Open( const std::vector<std::string>& vecstrGenes, const std::string& strInputDirectory,
 		const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles );
+
+	//Qian
+	bool Open( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrDatasets,
+		const std::string& strInputDirectory, const std::string& strOutputDirectory, size_t iFiles);
+
 	/*!
 	 * \brief
 	 * Open an existing database from subfiles in the given directory.

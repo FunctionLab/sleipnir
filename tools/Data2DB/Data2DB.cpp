@@ -30,7 +30,7 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
 	istream*			pistm;
-	vector<string>		vecstrLine, vecstrGenes;
+	vector<string>		vecstrLine, vecstrGenes, vecstrDatasets;
 	char				acBuffer[ c_iBuffer ];
 	CDatabase			DB;
 	CBayesNetSmile		BNSmile;
@@ -64,17 +64,37 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg )
 		ifsm.close( );
 
-	if( !BNSmile.Open( sArgs.network_arg ) ) {
-		cerr << "Could not open: " << sArgs.network_arg << endl;
-		return 1; }
 	DB.SetMemmap( !!sArgs.memmap_flag );
 	DB.SetBuffer( !!sArgs.buffer_flag );
 	DB.SetBlockOut( sArgs.block_files_arg );
 	DB.SetBlockIn( sArgs.block_datasets_arg );
-	if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-		vecstrGenes.size( )) ) ) {
-		cerr << "Could not open data" << endl;
-		return 1; }
+
+	if(sArgs.network_arg){
+		if( !BNSmile.Open( sArgs.network_arg ) ) {
+			cerr << "Could not open: " << sArgs.network_arg << endl;
+			return 1; }
+		if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
+			vecstrGenes.size( )) ) ) {
+			cerr << "Could not open data" << endl;
+			return 1; }
+	}else if(sArgs.dataset_arg){
+		ifsm.open(sArgs.dataset_arg);
+
+		while(!pistm->eof()){
+			pistm->getline(acBuffer, c_iBuffer -1);
+			if(acBuffer[0]==0){
+				break;
+			}
+			acBuffer[c_iBuffer-1] = 0;
+			vecstrDatasets.push_back(acBuffer);
+		}
+		vecstrDatasets.resize(vecstrDatasets.size());
+		ifsm.close();
+		if( !DB.Open( vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
+			vecstrGenes.size( )) ) ) {
+			cerr << "Could not open data" << endl;
+			return 1; }
+	}
 
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
