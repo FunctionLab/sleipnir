@@ -312,7 +312,7 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 
 	vecstrNodes.resize(vecstrDatasets.size());
 	for(i=0; i<vecstrDatasets.size(); i++){
-		vecstrNodes[i] = strInputDirectory + '/' + vecstrDatasets[i] + c_acDAB;
+		vecstrNodes[i] = strInputDirectory + '/' + vecstrDatasets[i];
 	}
 
 	m_vecpDBs.resize( iFiles );
