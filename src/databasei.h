@@ -136,6 +136,7 @@ private:
 class CDatabaseImpl {
 protected:
 	static const char	c_acDAB[];
+	static const char	c_acQDAB[];
 	static const char	c_acExtension[];
 
 	CDatabaseImpl( ) : m_fMemmap(false), m_iBlockIn(-1), m_iBlockOut(-1), m_fBuffer(false) { }
