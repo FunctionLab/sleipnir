@@ -50,10 +50,8 @@ public:
 	bool Open( const std::string& );
 	bool Open( const std::vector<CCompactFullMatrix>&, size_t, size_t, bool );
 
-	//Qian added======
 	bool OpenFileFast();
 	bool OpenFast( const vector<CUcharFullMatrix>&, size_t, size_t);
-	//================
 
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
@@ -74,16 +72,14 @@ public:
 
 		iOffset = (std::streamoff)GetOffset( iOne, iTwo, iDataset );
 
-		//#ifdef DATABASE_NIBBLES
 		if(m_useNibble){
 			if( !fBoth ) {
 				unsigned char	b;
-
 				m_fstm.seekg( iOffset );
 				b = m_fstm.get( );
 				bValue = ( iDataset % 2 ) ? ( ( b & 0xF ) | ( bValue << 4 ) ) :
-						( ( b & 0xF0 ) | ( bValue & 0xF ) ); }
-			//#endif // DATABASE_NIBBLES
+						( ( b & 0xF0 ) | ( bValue & 0xF ) ); 
+				}
 		}
 
 		m_fstm.seekp( iOffset );
@@ -160,8 +156,6 @@ protected:
 	static const char	c_acDAB[];
 	static const char	c_acQDAB[];
 	static const char	c_acExtension[];
-
-	//CDatabaseImpl( ) : m_fMemmap(false), m_iBlockIn(-1), m_iBlockOut(-1), m_fBuffer(false) { }
 
 	CDatabaseImpl(bool useNibble){
 		m_fMemmap = false;

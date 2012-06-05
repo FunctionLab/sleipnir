@@ -122,8 +122,6 @@ bool CDatabaselet::OpenFileFast() {
 	return true;
 }
 
-
-
 bool CDatabaselet::OpenWrite( unsigned char bValue, size_t iOffset, ENibbles eNibbles,
 	unsigned char* abImage ) {
 	unsigned char	b;
@@ -196,7 +194,6 @@ bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBase
 			}
 		}
 	}
-
 
 	for( iDatum = ( iBaseDatasets % 2 ); ( iDatum + 1 ) < vecData.size( ); iDatum += 2 ){
 		for( iGeneOne = 0; iGeneOne < GetGenes( ); ++iGeneOne ){
@@ -451,63 +448,64 @@ bool CDatabaseImpl::OpenFast( const std::vector<std::string>& vecstrGenes,
 
 	int block_size = 1000;
 
-		for( iInBase = 0; iInBase < vecstrFiles.size( ); iInBase += iInBlock ) {
-			vector<CUcharFullMatrix> vecData;
-			vecData.resize( ( ( iInBase + iInBlock ) > vecstrFiles.size( ) ) ?
-				( vecstrFiles.size( ) - iInBase ) : iInBlock );
-			for( iInOffset = 0; iInOffset < vecData.size( ); ++iInOffset ) {
-				CDataPair	Dat;
-				if( !Dat.Open( (vecstrFiles[ iInBase + iInOffset ] + c_acDAB).c_str( ), false, m_fMemmap ) ) {
-					g_CatSleipnir( ).error( "CDatabaseImpl::Open( ) could not open %s",
-						(vecstrFiles[ iInBase + iInOffset ] + c_acDAB).c_str( ) );
-					return false;
-				}
-
-				vecData[iInOffset].Initialize(veciGenes.size(), veciGenes.size(), 256);
-
-				for( i = 0; i < veciGenes.size( ); ++i ){
-					veciGenes[ i ] = Dat.GetGene( vecstrGenes[ i ] );
-					vecData[iInOffset].AddGeneMap(i, vecstrGenes[i]);
-				}
-
-				#pragma omp parallel for \
-				shared(Dat, veciGenes, vecData) \
-				private(j, i) \
-				schedule(static)
-				for(j=0; j<veciGenes.size(); j++){
-					size_t s = veciGenes[j];
-					if(s == -1) continue;
-					float *d_array = Dat.GetFullRow(s);
-					for(i=0; i<veciGenes.size(); i++){
-						size_t t = veciGenes[i];
-						if(t==-1 || s==t) continue;
-						vecData[iInOffset].Set(i,j,Dat.Quantize(d_array[t])+1);
-					}
-					delete d_array;
-				}
-
+	for( iInBase = 0; iInBase < vecstrFiles.size( ); iInBase += iInBlock ) {
+		vector<CUcharFullMatrix> vecData;
+		vecData.resize( ( ( iInBase + iInBlock ) > vecstrFiles.size( ) ) ?
+			( vecstrFiles.size( ) - iInBase ) : iInBlock );
+		for( iInOffset = 0; iInOffset < vecData.size( ); ++iInOffset ) {
+			CDataPair	Dat;
+			if( !Dat.Open( (vecstrFiles[ iInBase + iInOffset ] + c_acDAB).c_str( ), false, m_fMemmap ) ) {
+				g_CatSleipnir( ).error( "CDatabaseImpl::Open( ) could not open %s",
+					(vecstrFiles[ iInBase + iInOffset ] + c_acDAB).c_str( ) );
+				return false;
 			}
 
-			printf("Processing offset\n");
-			size_t iBaseGene = 0;
-			for(ii=0; ii<m_vecpDBs.size(); ii++){
-				if(ii%100==0){
-					printf("%d\n", ii);
-				}
-				if(ii>0 && (ii%block_size==0 || ii==m_vecpDBs.size()-1)){
-					for(k=0; k<block_size && (ii-k-1) < m_vecpDBs.size(); k++){
-						m_vecpDBs[ii-k-1]->CloseFile();
-					}
-				}
+			vecData[iInOffset].Initialize(veciGenes.size(), veciGenes.size(), 256);
 
-				m_vecpDBs[ii]->OpenFileFast();
-
-				if(!m_vecpDBs[ii]->OpenFast(vecData, iBaseGene, iInBase)){
-					return false;
-				}
-
-				iBaseGene+=m_vecpDBs[ii]->GetGenes();
+			for( i = 0; i < veciGenes.size( ); ++i ){
+				veciGenes[ i ] = Dat.GetGene( vecstrGenes[ i ] );
+				vecData[iInOffset].AddGeneMap(i, vecstrGenes[i]);
 			}
+
+			#pragma omp parallel for \
+			shared(Dat, veciGenes, vecData) \
+			private(j, i) \
+			schedule(static)
+			for(j=0; j<veciGenes.size(); j++){
+				size_t s = veciGenes[j];
+				if(s == -1) continue;
+				float *d_array = Dat.GetFullRow(s);
+				for(i=0; i<veciGenes.size(); i++){
+					size_t t = veciGenes[i];
+					if(t==-1 || s==t) continue;
+					vecData[iInOffset].Set(i,j,Dat.Quantize(d_array[t])+1);
+				}
+				delete d_array;
+			}
+
+		}
+
+		printf("Processing offset\n");
+		size_t iBaseGene = 0;
+		for(ii=0; ii<m_vecpDBs.size(); ii++){
+			if(ii%100==0){
+				printf("%d\n", ii);
+			}
+
+			if(ii>0 && (ii%block_size==0 || ii==m_vecpDBs.size()-1)){
+				for(k=0; k<block_size && (ii-k-1) < m_vecpDBs.size(); k++){
+					m_vecpDBs[ii-k-1]->CloseFile();
+				}
+			}
+
+			m_vecpDBs[ii]->OpenFileFast();
+
+			if(!m_vecpDBs[ii]->OpenFast(vecData, iBaseGene, iInBase)){
+				return false;
+			}
+
+			iBaseGene+=m_vecpDBs[ii]->GetGenes();
+		}
 	}
 
 	return true;
@@ -529,7 +527,6 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 		vecstrNodes[i] = strInputDirectory + '/' + vecstrDatasets[i];
 	}
 
-
 	m_vecpDBs.resize( iFiles );
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {	//block size, 1000
 		m_vecpDBs[ i ] = new CDatabaselet(m_useNibble);
@@ -548,7 +545,8 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 	for( i = 0; i < vecstrGenes.size( ); ++i )
 		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
 
-	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes ); }
+	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes ); 
+}
 
 
 bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
@@ -599,19 +597,16 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 				for( i = 0; i < veciGenes.size( ); ++i )
 					veciGenes[ i ] = Dat.GetGene( vecstrGenes[ i ] );
 
-//#ifdef DATABASE_NIBBLES
 				if(m_useNibble){
 					vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 16, true );
 				}else{
-//#else
 					vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 256, true );
 				}
-//#endif
 
-#pragma omp parallel for \
-	shared(Dat, veciGenes, veciMyGenes, vecData) \
-	private(j, i) \
-	schedule(static)
+				#pragma omp parallel for \
+				shared(Dat, veciGenes, veciMyGenes, vecData) \
+				private(j, i) \
+				schedule(static)
 				for(j=0; j<veciGenes.size(); j++){
 					size_t s = veciGenes[j];
 					if(s == -1) continue;
