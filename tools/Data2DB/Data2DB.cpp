@@ -33,7 +33,6 @@ int main( int iArgs, char** aszArgs ) {
 	istream*			pistm;
 	vector<string>		vecstrLine, vecstrGenes, vecstrDatasets;
 	char				acBuffer[ c_iBuffer ];
-	CDatabase			DB;
 	CBayesNetSmile		BNSmile;
 	size_t				i;
 
@@ -65,20 +64,49 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg )
 		ifsm.close( );
 
+	bool useNibble = false;
+	if(sArgs.use_nibble_flag==1){
+		useNibble = true;
+	}
+
+	CDatabase DB(useNibble);
 	DB.SetMemmap( !!sArgs.memmap_flag );
 	DB.SetBuffer( !!sArgs.buffer_flag );
 	DB.SetBlockOut( sArgs.block_files_arg );
 	DB.SetBlockIn( sArgs.block_datasets_arg );
 
+
 	if(sArgs.network_arg){
+		if(sArgs.dataset_arg){
+			cerr << "Confused. Only network OR dataset list." << endl;
+			return 1;
+		}
+
 		if( !BNSmile.Open( sArgs.network_arg ) ) {
 			cerr << "Could not open: " << sArgs.network_arg << endl;
 			return 1; }
 		if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
 			vecstrGenes.size( )) ) ) {
 			cerr << "Could not open data" << endl;
-			return 1; }
+			return 1;
+		}
+
 	}else if(sArgs.dataset_arg){
+		if(sArgs.fast_flag==1){
+			if(sArgs.buffer_flag!=1){
+				cerr << "-u must be included." << endl;
+				return 1;
+			}
+			if(sArgs.use_nibble_flag==1){
+				cerr << "-N must be removed." << endl;
+				return 1;
+			}
+			if(sArgs.block_files_arg!=-1){
+				cerr << "-b must be removed." << endl;
+				return 1;
+			}
+		}
+
 		ifsm.open(sArgs.dataset_arg);
 
 		while(!pistm->eof()){
@@ -91,10 +119,25 @@ int main( int iArgs, char** aszArgs ) {
 		}
 		vecstrDatasets.resize(vecstrDatasets.size());
 		ifsm.close();
-		if( !DB.OpenFast( vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-			vecstrGenes.size( )) ) ) {
-			cerr << "Could not open data" << endl;
-			return 1; }
+
+		if(sArgs.fast_flag==1){
+			if( !DB.OpenFast( vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
+				vecstrGenes.size( )) ) ) {
+				cerr << "Could not open data" << endl;
+				return 1;
+			}
+		}else{
+			if( !DB.Open( vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
+				vecstrGenes.size( ))) ) {
+				cerr << "Could not open data" << endl;
+				return 1;
+			}
+		}
+
+	}else{
+		cerr << "Must give a network or a dataset list." << endl;
+		return 1;
+
 	}
 
 #ifdef WIN32

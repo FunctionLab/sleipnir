@@ -21,6 +21,10 @@ option	"block_files"		b	"Number of database files per block"
 								int	default="-1"
 option	"block_datasets"	B	"Number of datasets per block"
 								int	default="-1"
+option	"use_nibble"		N	"Use nibble for compact storage"
+								flag	off
+option	"fast"				F	"Fast processing. Requires -u, -x. The options -n, -N, -b are not supported."
+								flag	off	dependon="buffer"	dependon="dataset"
 
 section "Optional"
 option	"buffer"			u	"Memory buffer disk writes"

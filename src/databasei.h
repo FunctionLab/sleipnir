@@ -43,14 +43,17 @@ public:
 		ENibblesBoth
 	};
 
-	CDatabaselet( );
+	CDatabaselet( bool );
 	~CDatabaselet( );
 
 	bool Open( const std::string&, const std::vector<std::string>&, uint32_t, uint32_t );
 	bool Open( const std::string& );
 	bool Open( const std::vector<CCompactFullMatrix>&, size_t, size_t, bool );
+
+	//Qian added======
 	bool OpenFileFast();
 	bool OpenFast( const vector<CUcharFullMatrix>&, size_t, size_t);
+	//================
 
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
@@ -70,15 +73,19 @@ public:
 		std::streamoff	iOffset;
 
 		iOffset = (std::streamoff)GetOffset( iOne, iTwo, iDataset );
-#ifdef DATABASE_NIBBLES
-		if( !fBoth ) {
-			unsigned char	b;
 
-			m_fstm.seekg( iOffset );
-			b = m_fstm.get( );
-			bValue = ( iDataset % 2 ) ? ( ( b & 0xF ) | ( bValue << 4 ) ) :
-				( ( b & 0xF0 ) | ( bValue & 0xF ) ); }
-#endif // DATABASE_NIBBLES
+		//#ifdef DATABASE_NIBBLES
+		if(m_useNibble){
+			if( !fBoth ) {
+				unsigned char	b;
+
+				m_fstm.seekg( iOffset );
+				b = m_fstm.get( );
+				bValue = ( iDataset % 2 ) ? ( ( b & 0xF ) | ( bValue << 4 ) ) :
+						( ( b & 0xF0 ) | ( bValue & 0xF ) ); }
+			//#endif // DATABASE_NIBBLES
+		}
+
 		m_fstm.seekp( iOffset );
 		m_fstm.put( bValue );
 	}
@@ -100,22 +107,22 @@ public:
 private:
 
 	size_t GetOffsetDataset( size_t iDataset ) const {
-
-		return ( iDataset
-#ifdef DATABASE_NIBBLES
-			/ 2
-#endif // DATABASE_NIBBLES
-			); }
+		if(m_useNibble){
+			return (iDataset / 2);
+		}else{
+			return iDataset;
+		}
+	}
 
 	size_t GetSizePair( ) const {
 
-		return ( ( m_iDatasets
-#ifdef DATABASE_NIBBLES
-			+ 1 ) / 2
-#else // DATABASE_NIBBLES
-			)
-#endif // DATABASE_NIBBLES
-			); }
+		if(m_useNibble){
+			return (m_iDatasets + 1) / 2;
+		}else{
+			return m_iDatasets;
+		}
+
+	}
 
 	size_t GetSizeGenes( ) const {
 
@@ -143,7 +150,7 @@ private:
 	std::vector<std::string>	m_vecstrGenes;
 	std::string					strFileName;
 
-
+	bool						m_useNibble;
 	mutable std::fstream		m_fstm;
 	mutable pthread_mutex_t*	m_pmutx;
 };
@@ -154,7 +161,15 @@ protected:
 	static const char	c_acQDAB[];
 	static const char	c_acExtension[];
 
-	CDatabaseImpl( ) : m_fMemmap(false), m_iBlockIn(-1), m_iBlockOut(-1), m_fBuffer(false) { }
+	//CDatabaseImpl( ) : m_fMemmap(false), m_iBlockIn(-1), m_iBlockOut(-1), m_fBuffer(false) { }
+
+	CDatabaseImpl(bool useNibble){
+		m_fMemmap = false;
+		m_iBlockIn = -1;
+		m_iBlockOut = -1;
+		m_fBuffer = false;
+		m_useNibble = useNibble;
+	}
 
 	~CDatabaseImpl( ) {
 
@@ -185,6 +200,7 @@ protected:
 	size_t							m_iBlockOut;
 	std::vector<CDatabaselet*>		m_vecpDBs;
 	std::map<std::string, size_t>	m_mapstriGenes;
+	bool							m_useNibble;
 };
 
 }

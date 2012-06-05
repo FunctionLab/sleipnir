@@ -463,7 +463,7 @@ LOCAL_CHECK_LIB([smile], [smile], [RoundProbability(0,0)],
 #    fi
          SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR -fopenmp"
 #         SMILE_LIBS="-L $SMILE_LIB_DIR $SMILEXML_LIB -lsmile"
-         SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile"
+         SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile -fopenmp"
         ],                                                        dnl and found in specified path
 	[],                                                       dnl not found
         [smile_state=no],                                         dnl and not found installed

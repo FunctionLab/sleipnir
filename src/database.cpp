@@ -45,8 +45,8 @@ int FloatComp(const void * a, const void* b){
 	return(0);
 }
 
-CDatabaselet::CDatabaselet( ) {
-
+CDatabaselet::CDatabaselet( bool useNibble) {
+	m_useNibble = useNibble;
 	m_pmutx = new pthread_mutex_t( );
 	pthread_mutex_init( m_pmutx, NULL );
 }
@@ -128,9 +128,9 @@ bool CDatabaselet::OpenWrite( unsigned char bValue, size_t iOffset, ENibbles eNi
 	unsigned char* abImage ) {
 	unsigned char	b;
 
-#ifndef DATABASE_NIBBLES
-	eNibbles = ENibblesBoth;
-#endif // DATABASE_NIBBLES
+	if(m_useNibble==0){
+		eNibbles = ENibblesBoth;
+	}
 
 	if( abImage )
 		iOffset -= m_iHeader;
@@ -172,7 +172,7 @@ bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBase
 	if( fBuffer ) {
 		//iBaseGenes: gene id of first gene in each databaselet
 		//iDataset: dataset id
-		printf("Number: %d %d %d %d\n", GetSizeGene(), GetSizePair(), iBaseGenes, iBaseDatasets);
+		//printf("Number: %d %d %d %d\n", GetSizeGene(), GetSizePair(), iBaseGenes, iBaseDatasets);
 		abImage = new unsigned char[ iSize = ( GetSizeGene( ) * m_vecstrGenes.size( ) ) ];
 		m_fstm.seekg( m_iHeader );
 		m_fstm.read( (char*)abImage, iSize );
@@ -184,7 +184,6 @@ bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBase
 
 	//if this is not the first dataset in the dataset block
 	if( iBaseDatasets % 2 ){
-		printf("Here"); getchar();
 		//iGeneOne: iterate over all genes in this databaselet (# of genes in each databaselet)
 		for( iGeneOne = 0; iGeneOne < GetGenes( ); ++iGeneOne ){
 			//iGeneTwo: iterate overall genes in user's gene list
@@ -192,7 +191,6 @@ bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBase
 				//bOne, get the value of the gene located at the position (iBaseGene + iGeneOne, iGeneTwo)
 				if( bOne = vecData[ 0 ].Get( iBaseGenes + iGeneOne, iGeneTwo ) ){
 					//Offset is: m_iHeader + (GetSizeGene() * iOne) + (GetSizePair() * iTwo) + iDataset (for byte case)
-
 					OpenWrite( bOne - 1, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets ), ENibblesHigh, abImage );
 				}
 			}
@@ -209,15 +207,15 @@ bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBase
 					continue;
 				bOne -= 1;
 				bTwo -= 1;
-#ifdef DATABASE_NIBBLES
-				OpenWrite( ( bOne & 0xF ) | ( bTwo << 4 ), GetOffset( iGeneOne, iGeneTwo, iBaseDatasets +
-					iDatum ), ENibblesBoth, abImage );
-#else // DATABASE_NIBBLES
-				OpenWrite( bOne, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets + iDatum ), ENibblesBoth,
-					abImage );
-				OpenWrite( bTwo, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets + iDatum + 1 ), ENibblesBoth,
-					abImage );
-#endif // DATABASE_NIBBLES
+				if(m_useNibble){
+					OpenWrite( ( bOne & 0xF ) | ( bTwo << 4 ), GetOffset( iGeneOne, iGeneTwo, iBaseDatasets +
+							iDatum ), ENibblesBoth, abImage );
+				}else{
+					OpenWrite( bOne, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets + iDatum ), ENibblesBoth,
+							abImage );
+					OpenWrite( bTwo, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets + iDatum + 1 ), ENibblesBoth,
+							abImage );
+				}
 			}
 		}
 	}
@@ -341,11 +339,12 @@ bool CDatabaselet::Open( const std::string& strFile ) {
 ///////////////////////////////////////////////////////////////////////////////
 
 bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::string& strInputDirectory,
-	const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles ) {
+	const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles) {
 	vector<string>	vecstrNodes, vecstrSubset;
 	size_t			i, j;
 	char			acNumber[ 16 ];
 	string			strFile;
+
 
 	if( !pBayesNet ) {
 		g_CatSleipnir( ).error( "CDatabase::Open( %s, %d ) null Bayes net", strOutputDirectory.c_str( ), iFiles );
@@ -360,7 +359,7 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::st
 		vecstrNodes.resize( vecstrNodes.size( ) - 1 );
 	m_vecpDBs.resize( iFiles );
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
-		m_vecpDBs[ i ] = new CDatabaselet( );
+		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble);
 		vecstrSubset.clear( );
 		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
 			vecstrSubset.push_back( vecstrGenes[ j ] );
@@ -399,7 +398,7 @@ bool CDatabase::OpenFast( const std::vector<std::string>& vecstrGenes, const std
 	m_vecpDBs.resize(iFiles);
 	int block_size = 1000;
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {	//block size, 1000
-		m_vecpDBs[ i ] = new CDatabaselet( );
+		m_vecpDBs[ i ] = new CDatabaselet( false );
 	}
 
 	size_t k;
@@ -446,6 +445,7 @@ bool CDatabaseImpl::OpenFast( const std::vector<std::string>& vecstrGenes,
 	veciGenes.resize( vecstrGenes.size( ) );
 	iOutBlock = ( m_iBlockOut == -1 ) ? m_vecpDBs.size( ) : m_iBlockOut;
 	iInBlock = ( m_iBlockIn == -1 ) ? vecstrFiles.size( ) : m_iBlockIn;
+
 
 	size_t ii, jj, kk;
 
@@ -529,9 +529,10 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 		vecstrNodes[i] = strInputDirectory + '/' + vecstrDatasets[i];
 	}
 
+
 	m_vecpDBs.resize( iFiles );
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {	//block size, 1000
-		m_vecpDBs[ i ] = new CDatabaselet( );
+		m_vecpDBs[ i ] = new CDatabaselet(m_useNibble);
 		vecstrSubset.clear( );
 		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
 			vecstrSubset.push_back( vecstrGenes[ j ] ); //contains index for 1000, 2000, 3000th genes
@@ -662,7 +663,7 @@ bool CDatabase::Open( const std::string& strInputDirectory ) {
 	Clear( );
 	m_vecpDBs.resize( vecstrFiles.size( ) );
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
-		m_vecpDBs[ i ] = new CDatabaselet( );
+		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble);
 		if( !m_vecpDBs[ i ]->Open( vecstrFiles[ i ] ) )
 			return false;
 		for( j = 0; j < m_vecpDBs[ i ]->GetGenes( ); ++j )
