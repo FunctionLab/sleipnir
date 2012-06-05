@@ -248,59 +248,16 @@ bool CDatabaselet::OpenFast( const vector<CUcharFullMatrix>& vecData, size_t iBa
 
 	for( iDatum = 0; iDatum  < vecData.size( ); iDatum ++ ){
 		for( iGeneOne = 0; iGeneOne < GetGenes( ); ++iGeneOne ){
-			//iGeneTwo: iterate overall genes in user's gene list
 			size_t index = vecData[iDatum].GetGeneIndex(GetGene(iGeneOne));
 			size_t iOffset = (GetSizeGene() * iGeneOne) + iBaseDatasets + iDatum;
 
 			for( iGeneTwo = 0; iGeneTwo < vecData[iDatum].GetColumns(); ++iGeneTwo ){
-				//bOne, get the value of the gene located at the position (iBaseGene + iGeneOne, iGeneTwo)
-
 				if( bOne = vecData[ iDatum].Get(index, iGeneTwo ) ){
-					//Offset is: m_iHeader + (GetSizeGene() * iOne) + (GetSizePair() * iTwo) + iDataset (for byte case)
 					abImage[ iOffset + GetSizePair() * iGeneTwo ] = bOne - 1;
-					//OpenWrite( bOne - 1, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets ), ENibblesHigh, abImage );
 				}
 			}
 		}
 	}
-
-	/*
-	if( iBaseDatasets % 2 ){
-		for( iGeneOne = 0; iGeneOne < GetGenes( ); ++iGeneOne ){
-			for( iGeneTwo = 0; iGeneTwo < vecData[ 0 ].GetColumns( ); ++iGeneTwo ){
-				if( bOne = vecData[ 0 ].Get( iBaseGenes + iGeneOne, iGeneTwo ) ){
-					OpenWrite( bOne - 1, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets ), ENibblesHigh, abImage );
-				}
-			}
-		}
-	}
-
-	for( iDatum = ( iBaseDatasets % 2 ); ( iDatum + 1 ) < vecData.size( ); iDatum += 2 ){
-		for( iGeneOne = 0; iGeneOne < GetGenes( ); ++iGeneOne ){
-			for( iGeneTwo = 0; iGeneTwo < vecData[ iDatum ].GetColumns( ); ++iGeneTwo ) {
-				bOne = vecData[ iDatum ].Get( iBaseGenes + iGeneOne, iGeneTwo );
-				bTwo = vecData[ iDatum + 1 ].Get( iBaseGenes + iGeneOne, iGeneTwo );
-				if( !( bOne || bTwo ) )
-					continue;
-				bOne -= 1;
-				bTwo -= 1;
-
-				OpenWrite( bOne, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets + iDatum ), ENibblesBoth,
-					abImage );
-				OpenWrite( bTwo, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets + iDatum + 1 ), ENibblesBoth,
-					abImage );
-			}
-		}
-	}
-
-
-	if( iDatum < vecData.size( ) )
-		for( iGeneOne = 0; iGeneOne < GetGenes( ); ++iGeneOne )
-			for( iGeneTwo = 0; iGeneTwo < vecData[ iDatum ].GetColumns( ); ++iGeneTwo )
-				if( bOne = vecData[ iDatum ].Get( iBaseGenes + iGeneOne, iGeneTwo ) )
-					OpenWrite( bOne - 1, GetOffset( iGeneOne, iGeneTwo, iBaseDatasets + iDatum ), ENibblesLow,
-						abImage );
-	 */
 
 	m_fstm.seekp( m_iHeader );
 	m_fstm.write( (char*)abImage, iSize );
@@ -490,9 +447,6 @@ bool CDatabaseImpl::OpenFast( const std::vector<std::string>& vecstrGenes,
 	iOutBlock = ( m_iBlockOut == -1 ) ? m_vecpDBs.size( ) : m_iBlockOut;
 	iInBlock = ( m_iBlockIn == -1 ) ? vecstrFiles.size( ) : m_iBlockIn;
 
-	printf("m_vecpDBs size: %d\n", m_vecpDBs.size());
-	printf("iInBlock %d, iOutBase %d, iOutBlock %d\n", iInBlock, iOutBase, iOutBlock);
-
 	size_t ii, jj, kk;
 
 	int block_size = 1000;
@@ -516,7 +470,6 @@ bool CDatabaseImpl::OpenFast( const std::vector<std::string>& vecstrGenes,
 					vecData[iInOffset].AddGeneMap(i, vecstrGenes[i]);
 				}
 
-
 				#pragma omp parallel for \
 				shared(Dat, veciGenes, vecData) \
 				private(j, i) \
@@ -532,10 +485,6 @@ bool CDatabaseImpl::OpenFast( const std::vector<std::string>& vecstrGenes,
 					}
 					delete d_array;
 				}
-
-				//printf("(1,1) %d\n", vecData[iInOffset].Get(1,1));
-				//printf("(1,0) %d\n", vecData[iInOffset].Get(1,0));
-				//printf("(0,1) %d\n", vecData[iInOffset].Get(0,1));
 
 			}
 
@@ -553,52 +502,16 @@ bool CDatabaseImpl::OpenFast( const std::vector<std::string>& vecstrGenes,
 
 				m_vecpDBs[ii]->OpenFileFast();
 
-				/*vector<string>	vecstrMyGenes;
-				vector<size_t>	veciMyGenes;
-
-				for(i=0; i<m_vecpDBs[ii]->GetGenes(); i++){
-					vecstrMyGenes.push_back(m_vecpDBs[ii]->GetGene(i));
-				}
-				veciMyGenes.resize( vecstrMyGenes.size( ) );
-				for( i = 0; i < veciMyGenes.size( ); ++i ){
-					veciMyGenes[i] = GetGene(vecstrMyGenes[i]);
-				}*/
-
 				if(!m_vecpDBs[ii]->OpenFast(vecData, iBaseGene, iInBase)){
 					return false;
 				}
 
 				iBaseGene+=m_vecpDBs[ii]->GetGenes();
-
 			}
-
-
-
 	}
 
-/*
-			printf("Reached here!");
-			getchar();
-
-			for( i = iOutOffset = 0; ( iOutOffset < iOutBlock ) && ( ( iOutBase + iOutOffset ) <
-				m_vecpDBs.size( ) ); ++iOutOffset ) {
-				CDatabaselet&	DB	= *m_vecpDBs[ iOutBase + iOutOffset ];
-
-				if( !( iOutOffset % 100 ) )
-					cerr << "Processing offset " << iOutOffset << '/' << iOutBlock << endl;
-				//iInBase, for B=2, iInBase = 0, 2, 4 (total 5 datasets)
-				//i = 0 18 36 ...
-				//if( !DB.Open( vecData, i, iInBase, m_fBuffer ) ){
-				//	return false;
-				//}
-				i += DB.GetGenes( );
-			}
-		}
-	}
-*/
 	return true;
 }
-
 
 //Qian added
 bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrDatasets,
@@ -649,9 +562,6 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 	iOutBlock = ( m_iBlockOut == -1 ) ? m_vecpDBs.size( ) : m_iBlockOut;
 	iInBlock = ( m_iBlockIn == -1 ) ? vecstrFiles.size( ) : m_iBlockIn;
 
-	printf("m_vecpDBs size: %d\n", m_vecpDBs.size());
-	printf("iOutBase %d, iOutBlock %d\n", iOutBase, iOutBlock);
-
 	for( iOutBase = 0; iOutBase < m_vecpDBs.size( ); iOutBase += iOutBlock ) {
 		vector<string>	vecstrMyGenes;
 		vector<size_t>	veciMyGenes;
@@ -668,8 +578,6 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 
 		for( iInBase = 0; iInBase < vecstrFiles.size( ); iInBase += iInBlock ) {
 			vector<CCompactFullMatrix>	vecData;
-			//vector<CUcharFullMatrix> vecData;
-
 			vecData.resize( ( ( iInBase + iInBlock ) > vecstrFiles.size( ) ) ?
 				( vecstrFiles.size( ) - iInBase ) : iInBlock );
 			for( iInOffset = 0; iInOffset < vecData.size( ); ++iInOffset ) {
@@ -692,32 +600,9 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 
 #ifdef DATABASE_NIBBLES
 				vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 16, true );
-				//vecData[iInOffset].Initialize(veciMyGenes.size(), veciGenes.size(), 16);
 #else
 				vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 256, true );
-				//vecData[iInOffset].Initialize(veciMyGenes.size(), veciGenes.size(), 256);
 #endif
-				//printf("Done\n");
-
-				/*printf("veciMyGenes %d\n", veciMyGenes.size());
-				for(i=0; i<veciMyGenes.size(); i++){
-					printf("%d ", veciMyGenes[i]);
-				}
-				printf("\n");*/
-
-				/*char **tmp = (char**)malloc(veciMyGenes.size()*sizeof(char*));
-				tmp[0] = (char*)malloc(veciMyGenes.size()*veciGenes.size()*sizeof(char));
-				for(i=1; i<veciMyGenes.size(); i++){
-					tmp[i] = tmp[i-1] + veciGenes.size();
-				}
-				for(i=0; i<veciMyGenes.size(); i++){
-					for(j=0; j<veciGenes.size(); j++){
-						tmp[i][j] = 0;
-					}
-				}*/
-
-				//printf("H1\n");
-				//int numNonNaN = 0;
 
 #pragma omp parallel for \
 	shared(Dat, veciGenes, veciMyGenes, vecData) \
@@ -735,71 +620,7 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 					delete d_array;
 				}
 
-				//printf("(1,1) %d\n", vecData[iInOffset].Get(1,1));
-				//printf("(1,0) %d\n", vecData[iInOffset].Get(1,0));
-				//printf("(0,1) %d\n", vecData[iInOffset].Get(0,1));
-
-
-				/*printf("H2 %d %d %d\n", numNonNaN, veciGenes.size(), veciMyGenes.size());
-				k=0;
-				struct MatrixValueFloat *m = (struct MatrixValueFloat*)
-						malloc(numNonNaN*sizeof(struct MatrixValueFloat));
-				for(j=0; j<veciGenes.size(); i++){
-					size_t s = veciGenes[j];
-					if(s == -1) continue;
-					for(i=0; i<veciMyGenes.size(); i++){
-						size_t t = veciMyGenes[i];
-						if(t==-1) continue;
-						if(s==t) continue;
-						m[k].iX = i;
-						m[k].iY = j;
-						m[k].v = tmp[i][j];
-						k++;
-					}
-				}*/
-
-				//printf("H3 %d\n", numNonNaN);
-				//qsort(m, numNonNaN, sizeof(struct MatrixValueFloat), FloatComp);
-				//vector<float> quant = Dat.GetQuants();
-
-				/*for( i = 0; i < quant.size( ); ++i )
-					if( Value <= vecQuants[ i ] )
-						break;
-				*/
-				//min( i, vecQuants.size( ) - 1 ); }
-
-				/*printf("H4\n");
-
-				i = 0;
-				for(k=0; k<numNonNaN; k++){
-					while(i<quant.size()){
-						if(m[k].v <= quant[i]){
-							break;
-						}
-						i++;
-					}
-					vecData[iInOffset].Set(m[k].iX, m[k].iY, min(i, quant.size()-1) + 1);
-				}*/
-				//printf("H5\n");
-
-
-				//free(m);
-
-				/*for( i = 0; i < veciMyGenes.size( ); ++i ) {
-					if( ( iOne = veciMyGenes[ i ] ) == -1 )
-						continue;
-					for( j = 0; j < veciGenes.size( ); ++j ){
-						if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
-							!CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) ){
-							vecData[ iInOffset ].Set( i, j, Dat.Quantize( d ) + 1 ); 
-						}
-					}
-				}*/
-
 			}
-
-			printf("Reached here!");
-			getchar();
 
 			for( i = iOutOffset = 0; ( iOutOffset < iOutBlock ) && ( ( iOutBase + iOutOffset ) <
 				m_vecpDBs.size( ) ); ++iOutOffset ) {
