@@ -599,11 +599,14 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 				for( i = 0; i < veciGenes.size( ); ++i )
 					veciGenes[ i ] = Dat.GetGene( vecstrGenes[ i ] );
 
-#ifdef DATABASE_NIBBLES
-				vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 16, true );
-#else
-				vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 256, true );
-#endif
+//#ifdef DATABASE_NIBBLES
+				if(m_useNibble){
+					vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 16, true );
+				}else{
+//#else
+					vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 256, true );
+				}
+//#endif
 
 #pragma omp parallel for \
 	shared(Dat, veciGenes, veciMyGenes, vecData) \
