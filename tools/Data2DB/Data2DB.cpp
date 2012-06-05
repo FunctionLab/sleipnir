@@ -22,6 +22,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+
 int main( int iArgs, char** aszArgs ) {
 	static const size_t	c_iBuffer	= 1024;
 #ifdef WIN32
@@ -90,7 +91,7 @@ int main( int iArgs, char** aszArgs ) {
 		}
 		vecstrDatasets.resize(vecstrDatasets.size());
 		ifsm.close();
-		if( !DB.Open( vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
+		if( !DB.OpenFast( vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
 			vecstrGenes.size( )) ) ) {
 			cerr << "Could not open data" << endl;
 			return 1; }

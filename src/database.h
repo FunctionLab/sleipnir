@@ -132,6 +132,11 @@ public:
 	bool Open( const std::vector<std::string>& vecstrGenes, const std::string& strInputDirectory,
 		const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles );
 
+
+	//Quick open
+	bool OpenFast( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrDatasets,
+			const std::string& strInputDirectory, const std::string& strOutputDirectory, size_t iFiles);
+
 	//Qian
 	bool Open( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrDatasets,
 		const std::string& strInputDirectory, const std::string& strOutputDirectory, size_t iFiles);
@@ -147,6 +152,7 @@ public:
 	 * True if the database was opened successfully.
 	 */
 	bool Open( const std::string& strInputDirectory );
+
 
 	/*!
 	 * \brief

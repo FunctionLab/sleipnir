@@ -26,6 +26,70 @@
 
 namespace Sleipnir {
 
+class CUcharFullMatrix {	//unsigned char full matrix
+public:
+	CUcharFullMatrix(): m_cBits(0), m_aiData(NULL), m_fMemory(true), m_iRows(0), m_iColumns(0){ }
+	~CUcharFullMatrix(){
+		if(m_aiData!=NULL){
+			free(m_aiData[0]);
+			free(m_aiData);
+		}
+	}
+
+	void Initialize(size_t numRows, size_t numColumns, unsigned char Value){
+		size_t i, j;
+		m_aiData = (unsigned char**)malloc(numRows*sizeof(unsigned char*));
+		m_aiData[0] = (unsigned char*)malloc(numRows*numColumns*sizeof(unsigned char));
+		for(i=1; i<numRows; i++){
+			m_aiData[i] = m_aiData[i-1] + numColumns;
+		}
+		for(i=0; i<numRows; i++){
+			for(j=0; j<numColumns; j++){
+				m_aiData[i][j] = 0;
+			}
+		}
+		m_iColumns = numColumns;
+		m_iRows = numRows;
+	}
+
+	unsigned char Get(size_t iRow, size_t iColumn) const{
+		return m_aiData[iRow][iColumn];
+	}
+
+	void Set(size_t iRow, size_t iColumn, unsigned char cValue){
+		m_aiData[iRow][iColumn] = cValue;
+	}
+
+	size_t GetRows() const{
+		return m_iRows;
+	}
+
+	size_t GetColumns() const{
+		return m_iColumns;
+	}
+
+	void AddGeneMap(size_t i, std::string s){
+		m_mapstriGenes[s] = i;
+		//m_vecstrGenes[i] = s;
+	}
+
+	size_t GetGeneIndex(std::string strGene) const{
+		std::map<std::string, size_t>::const_iterator	iterGene;
+		return ( ( ( iterGene = m_mapstriGenes.find( strGene ) ) == m_mapstriGenes.end( ) ) ? -1 :
+					iterGene->second );
+	}
+
+private:
+	bool			m_fMemory; //so far does not work
+	unsigned char	m_cBits; //so far does not work
+	unsigned char**	m_aiData;
+	size_t		m_iRows;
+	size_t		m_iColumns;
+	std::map<std::string, size_t>	m_mapstriGenes;
+	//vector<std::string> m_vecstrGenes;
+};
+
+
 class CCompactMatrixBase {
 protected:
 	CCompactMatrixBase( ) : m_cBits(0), m_aiData(NULL), m_fMemory(true) { }
@@ -52,7 +116,8 @@ protected:
 			cRet |= ( *( pi + 1 ) & ( SIZE_MAX >> ( ( 16 * sizeof(*m_aiData) ) - m_cBits -
 				cShift ) ) ) << ( ( 8 * sizeof(*m_aiData) ) - cShift );
 
-		return cRet; }
+		return cRet;
+	}
 
 	void Set( size_t iX, size_t iY, unsigned char cValue ) {
 		unsigned char	cShift;
@@ -68,7 +133,9 @@ protected:
 			pi++;
 			iMask = SIZE_MAX >> ( ( 16 * sizeof(*m_aiData) ) - m_cBits - cShift );
 			*pi = ( *pi & ~iMask ) |
-				( ( cValue >> ( ( 8 * sizeof(*m_aiData) ) - cShift ) ) & iMask ); } }
+				( ( cValue >> ( ( 8 * sizeof(*m_aiData) ) - cShift ) ) & iMask );
+		}
+	}
 
 	virtual size_t CountWords( ) const = 0;
 	virtual size_t* GetWord( size_t, size_t, unsigned char& ) const = 0;

@@ -49,6 +49,9 @@ public:
 	bool Open( const std::string&, const std::vector<std::string>&, uint32_t, uint32_t );
 	bool Open( const std::string& );
 	bool Open( const std::vector<CCompactFullMatrix>&, size_t, size_t, bool );
+	bool OpenFileFast();
+	bool OpenFast( const vector<CUcharFullMatrix>&, size_t, size_t);
+
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, std::vector<unsigned char>&, bool ) const;
@@ -83,6 +86,16 @@ public:
 	size_t GetDatasets( ) const {
 
 		return m_iDatasets; }
+
+	void CloseFile(){
+		if(m_fstm.is_open()){
+			m_fstm.close();
+		}
+	}
+
+	void SetFile(string std){
+		strFileName = std;
+	}
 
 private:
 
@@ -128,6 +141,8 @@ private:
 	uint32_t					m_iGenes;
 	uint32_t					m_iDatasets;
 	std::vector<std::string>	m_vecstrGenes;
+	std::string					strFileName;
+
 
 	mutable std::fstream		m_fstm;
 	mutable pthread_mutex_t*	m_pmutx;
@@ -146,6 +161,8 @@ protected:
 		Clear( ); }
 
 	bool Open( const std::vector<std::string>&, const std::vector<std::string>& );
+	bool OpenFast( const std::vector<std::string>&, const std::vector<std::string>& );
+
 	bool Open( const std::string&, size_t, bool = false );
 
 	void Clear( ) {
