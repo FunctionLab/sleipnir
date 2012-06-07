@@ -46,6 +46,13 @@ public:
 	CDatabaselet( bool );
 	~CDatabaselet( );
 
+	struct mysort{
+		bool operator()(size_t i, size_t j){
+			return (i<j);
+		}
+	} size_t_comp;
+
+
 	bool Open( const std::string&, const std::vector<std::string>&, uint32_t, uint32_t );
 	bool Open( const std::string& );
 	bool Open( const std::vector<CCompactFullMatrix>&, size_t, size_t, bool );
@@ -54,9 +61,14 @@ public:
 	bool OpenFast( const vector<CUcharFullMatrix>&, size_t, size_t);
 
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
+	bool Get( size_t iOne, size_t iTwo, vector<unsigned char>& vecbData, unsigned char *charImage);
+
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, std::vector<unsigned char>&, bool ) const;
 	bool Get( size_t, const std::vector<size_t>&, std::vector<unsigned char>&, bool ) const;
+
+	static bool Combine(std::vector<CDatabaselet>& vecDatabaselet,
+			std::string strOutDirectory, bool bSplit = true);
 
 	size_t GetGenes( ) const {
 
@@ -176,7 +188,6 @@ protected:
 
 	void Clear( ) {
 		size_t	i;
-
 		m_mapstriGenes.clear( );
 		for( i = 0; i < m_vecpDBs.size( ); ++i )
 			delete m_vecpDBs[ i ];
