@@ -55,7 +55,7 @@ class CSlim;
 class CDataPair : public CDataPairImpl {
 public:
 	bool Open( const char* szDatafile, bool fContinuous, bool fMemmap = false, size_t iSkip = 2,
-		bool fZScore = false );
+		bool fZScore = false, bool fSeek = false );
 	bool Open( const CSlim& Slim );
 	bool Open( const CDat& dat );
 	bool OpenQuants( const char* szDatafile );

@@ -473,6 +473,10 @@ void CDatImpl::OpenHelper( const CGenes* pOne, const CGenes* pTwo, float dValue 
  * \param fZScore
  * If true and the given stream contains a PCL, z-score similarity measures after pairwise calculation.
  * 
+ * \param fSeek
+ * If true, read by seeking in the file, particularly useful if reading a few values, since there is no
+ * need to read the entire file. (for binary format only)
+ *
  * \returns
  * True if CDat was successfully opened.
  * 
@@ -486,7 +490,7 @@ void CDatImpl::OpenHelper( const CGenes* pOne, const CGenes* pTwo, float dValue 
  * Save | CPCL
  */
 bool CDat::Open( std::istream& istm, EFormat eFormat, float dDefault, bool fDuplicates, size_t iSkip,
-	bool fZScore ) {
+	bool fZScore, bool fSeek ) {
 
 	switch( eFormat ) {
 		case EFormatText:
@@ -500,8 +504,16 @@ bool CDat::Open( std::istream& istm, EFormat eFormat, float dDefault, bool fDupl
 	
 		case EFormatQdab:
 			return OpenQdab( istm ); 		       
+
 	}
-	return OpenBinary( istm ); }
+
+	if(fSeek){
+		m_fSeek = true;
+	}
+
+	//return OpenHeader(istm);
+	return OpenBinary( istm, fSeek );
+}
 
 bool CDatImpl::OpenPCL( std::istream& istm, size_t iSkip, bool fZScore ) {
 
@@ -623,9 +635,17 @@ bool CDatImpl::OpenText( std::istream& istm, float dDefault, bool fDuplicates ) 
 
 	return true; }
 
-bool CDatImpl::OpenBinary( std::istream& istm ) {
+bool CDatImpl::OpenBinary( std::istream& istm, bool fSeek ) {
 	size_t	i;
 	float*	adScores;
+
+	if(fSeek){
+		if(!OpenHeader(istm)){
+			cerr << "Error opening header" << endl;
+			return false;
+		}
+		return true;
+	}
 
 	if( !OpenGenes( istm, true, false ) )
 		return false;
@@ -637,6 +657,84 @@ bool CDatImpl::OpenBinary( std::istream& istm ) {
 	delete[] adScores;
 
 	return true; }
+
+/* still to be tested
+ * used for BINARY mode, and DAB file only, ie Float matrix
+ */
+bool CDatImpl::OpenHeader(std::istream& istm){
+	if(!m_fSeek){
+		cerr << "Don't know how you got here" << endl;
+	}
+
+	if(!OpenGenes(istm, true, false)){
+		return false;
+	}
+	EstimateSeekPositions(istm);
+	return true;
+}
+
+/* still to be tested
+ * used for BINARY mode, and DAB file only, ie Float matrix
+ */
+float* CDatImpl::GetRowSeek(std::istream& istm, size_t ind){
+	if(!m_fSeek){
+		cerr << "Don't know how you got here" << endl;
+	}
+
+	size_t iRow, iColumn;
+	size_t i, iNumGenes;
+	iNumGenes = GetGenes();
+	float* adScores = (float*)malloc(iNumGenes * sizeof(float));
+
+	size_t j;
+	for(i=0; i<ind; i++){
+		iRow = i;
+		iColumn = ind - 1;
+		size_t offset1 = m_iHeader + m_veciSeekPos[iRow] + iColumn * sizeof(float);
+		istm.seekg(offset1, ios_base::beg);
+		float v;
+		char *p = (char*) &v;
+		istm.read(p, sizeof(float));
+		adScores[i] = v;
+	}
+
+	adScores[ind] = CMeta::GetNaN();
+
+	int iSize = iNumGenes - (ind+1);
+	if(iSize==0){
+		return adScores;
+	}
+
+	float *v = (float*)malloc(iSize*sizeof(float));
+	char *p = (char*) v;
+	istm.seekg(m_iHeader+m_veciSeekPos[ind], ios_base::beg);
+	istm.read(p, iSize*sizeof(float));
+	for(i=0; i<iSize; i++){
+		adScores[i+ind+1] = v[i];
+	}
+	free(v);
+
+	return adScores;
+}
+
+/* still to be tested
+ * used for BINARY mode, and DAB file only, ie Float matrix
+ */
+float* CDatImpl::GetRowSeek(std::istream& istm, std::string &strGene){
+	if(!m_fSeek){
+		cerr << "Don't know how you got here" << endl;
+	}
+	size_t i;
+	size_t iNumGenes = GetGenes();
+	size_t ind;
+
+	if( (ind = GetGeneIndex(strGene) ) ==-1){
+		return NULL; //missing gene
+	}
+
+	return GetRowSeek(istm, ind);
+}
+
 
 bool CDatImpl::OpenQdab( std::istream& istm ) {
   size_t	iTotal, i, j, num_bins, num_bits, iPos;
@@ -827,7 +925,8 @@ bool CDatImpl::OpenGenes( std::istream& istm, bool fBinary, bool fPCL ) {
 		m_vecstrGenes.resize( iCount );
 		for( i = 0; i < iCount; ++i ) {
 			DabGene( istm, acBuf );
-			m_vecstrGenes[ i ] = acBuf; } }
+			m_vecstrGenes[ i ] = acBuf;
+			m_mapstrGenes[ acBuf ] = i; } }
 	else {
 		set<string>					setstrGenes;
 		set<string>::const_iterator	iterGenes;
@@ -1111,8 +1210,7 @@ size_t CDatImpl::GetGene( const std::string& strGene ) const {
  * \see
  * Save | CPCL
  */
-bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore, bool fDuplicates ) {
-	ifstream	ifsm;
+bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore, bool fDuplicates, bool fSeek ) {
 	EFormat		eFormat;
 	size_t		i;
 
@@ -1132,11 +1230,16 @@ bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore, b
 			return false; }
 		return OpenHelper( ); }
 
-	ifsm.open( szFile, ( ( eFormat == EFormatText ) || ( eFormat == EFormatPCL ) ) ? ios_base::in :
+	m_ifsm.open( szFile, ( ( eFormat == EFormatText ) || ( eFormat == EFormatPCL ) ) ? ios_base::in :
 		ios_base::binary );
-	if( !ifsm.is_open( ) )
+	if( !m_ifsm.is_open( ) )
 		return false;
-	return Open( ifsm, eFormat, (float)HUGE_VAL, fDuplicates, iSkip, fZScore ); }
+
+	if(fSeek){
+		m_fSeek = true;
+	}
+
+	return Open( m_ifsm, eFormat, (float)HUGE_VAL, fDuplicates, iSkip, fZScore, fSeek ); }
 
 bool CDatImpl::OpenHelper( ) {
 	unsigned char*	pb;

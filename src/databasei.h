@@ -58,7 +58,7 @@ public:
 	bool Open( const std::vector<CCompactFullMatrix>&, size_t, size_t, bool );
 
 	bool OpenFileFast();
-	bool OpenFast( const vector<CUcharFullMatrix>&, size_t, size_t);
+	bool OpenFast( const vector<CUcharFullMatrix>&, size_t, size_t, bool);
 
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
 	bool Get( size_t iOne, size_t iTwo, vector<unsigned char>& vecbData, unsigned char *charImage);
