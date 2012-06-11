@@ -681,6 +681,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Combiner/Makefile \
 		 tools/NetworkCombiner/Makefile \
 		 tools/DChecker/Makefile \
+		 tools/PCLEvaluator/Makefile \
 		 tools/Dat2Dab/Makefile \
 		 tools/Dat2Graph/Makefile \
 		 tools/Data2Bnt/Makefile \
@@ -705,6 +706,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Overlapper/Makefile \
 		 tools/PCLPlotter/Makefile \
 		 tools/PCL2Bin/Makefile \
+		 tools/Dat2PCL/Makefile \
 		 tools/Randomizer/Makefile \
 		 tools/Seqs2Ngrams/Makefile \
 		 tools/SMRF/Makefile \

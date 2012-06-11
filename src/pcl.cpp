@@ -1547,4 +1547,58 @@ void CPCLImpl::MedianMultiplesMapped(
 		}
 	}
 }
+
+/**
+ * Fills a PCL object from a tab text file (gene1 gene2 val)
+ * gene1 is row, gene2 is col
+ * used for creating a directed gene-gene network
+ */
+  bool CPCL::populate(const char* szFile, float dDefault){
+  ifstream istm;
+  const char*	pc;
+  char*		pcTail;
+  char*		acBuf;
+  string		strToken, strCache, strValue;
+  size_t		iOne, iTwo, i;
+  float		dScore;
+  
+  istm.open( szFile );
+  
+  acBuf = new char[ c_iBufferSize ];
+  while( istm.peek( ) != EOF ) {
+    istm.getline( acBuf, c_iBufferSize - 1 );
+    strToken = OpenToken( acBuf, &pc );
+    if( !strToken.length( ) )
+      break;
+    //if( strToken == c_acComment )
+    //  continue;
+    if( strToken != strCache ) {
+      strCache = strToken;			
+      iOne = GetGene( strToken );
+    }
+    
+    strToken = OpenToken( pc, &pc );
+    if( !strToken.length( ) ) {
+      delete[] acBuf;
+      return false; }
+    iTwo = GetGene( strToken );
+    
+    strValue = OpenToken( pc );
+    if( !strValue.length( ) ) {
+      if( CMeta::IsNaN( dScore = dDefault ) ) {
+	delete[] acBuf;
+	return false; } }
+    else if( !( dScore = (float)strtod( strValue.c_str( ), &pcTail ) ) &&
+	     ( pcTail != ( strValue.c_str( ) + strValue.length( ) ) ) ) {
+      delete[] acBuf;
+      return false; }
+    
+    Set(iOne, iTwo, dScore);
+    
+  }
+  delete[] acBuf;
+  
+  return true;
+}
+  
 }

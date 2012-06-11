@@ -9,6 +9,7 @@ if WITH_TOOLS
 	  Combiner \
 	  NetworkCombiner \
 	  DChecker \
+	  PCLEvaluator \
 	  Dat2Dab \
 	  Dat2Graph \
 	  Data2Bnt \

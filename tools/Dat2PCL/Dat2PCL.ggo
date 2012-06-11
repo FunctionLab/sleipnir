@@ -1,0 +1,13 @@
+package	"Dat2PCL"
+version	"1.0"
+purpose	"Text/binary data file interconversion"
+
+section "Main"
+option	"input"			i	"Input DAT file"
+							string	typestr="filename"
+option	"output"		o	"Output PCL/BIN file"
+							string	typestr="filename"	no
+
+section "Optional"
+option	"verbosity"		v	"Message verbosity"
+							int	default="5" no

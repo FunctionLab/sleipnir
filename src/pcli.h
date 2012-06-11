@@ -44,7 +44,7 @@ protected:
 	static const char c_szExtension[];
 	static const char c_szBinExtension[];
 	static const char c_szDabExtension[];
-
+	
 	typedef std::vector<std::string> TVecStr;
 	typedef std::set<size_t> TSetI;
 	typedef std::map<std::string, size_t> TMapStrI;

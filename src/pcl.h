@@ -185,7 +185,9 @@ public:
 			const IMeasure* pMeasure, bool fPrecompute = true);
 	void MedianMultiples(size_t iSample = 100000, size_t iBins = 40,
 			float dBinSize = 0.25);
-
+	
+	bool populate(const char* szFile, float dDefault = HUGE_VAL);
+	
 	/*!
 	 * \brief
 	 * Save a PCL to the given text file.
