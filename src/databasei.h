@@ -57,7 +57,7 @@ public:
 	bool Open( const std::string& );
 	bool Open( const std::vector<CCompactFullMatrix>&, size_t, size_t, bool );
 
-	bool OpenFileFast();
+	bool OpenNoOverwrite();
 	bool OpenFast( const vector<CUcharFullMatrix>&, size_t, size_t, bool);
 
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
@@ -182,8 +182,6 @@ protected:
 		Clear( ); }
 
 	bool Open( const std::vector<std::string>&, const std::vector<std::string>& );
-	bool OpenFast( const std::vector<std::string>&, const std::vector<std::string>& );
-
 	bool Open( const std::string&, size_t, bool = false );
 
 	void Clear( ) {

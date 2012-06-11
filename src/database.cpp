@@ -13,6 +13,8 @@
 * Maria D. Chikina
 * Olga G. Troyanskaya (ogt@princeton.edu, primary contact)
 *
+* Changes made Jun 2012 by Qian Zhu
+*
 * If you use this library, the included executable tools, or any related
 * code in your work, please cite the following publication:
 * Curtis Huttenhower, Mark Schroeder, Maria D. Chikina, and
@@ -35,8 +37,6 @@ const char	CDatabaseImpl::c_acExtension[]	= ".db";
 // CDatabaselet
 ///////////////////////////////////////////////////////////////////////////////
 
-
-
 CDatabaselet::CDatabaselet( bool useNibble) {
 	m_useNibble = useNibble;
 	m_pmutx = new pthread_mutex_t( );
@@ -52,7 +52,7 @@ CDatabaselet::~CDatabaselet( ) {
 	}
 }
 
-
+/* original method for initializing databaselets, including writing header + pre-allocation */
 bool CDatabaselet::Open( const std::string& strFile, const std::vector<std::string>& vecstrGenes,
 	uint32_t iGenes, uint32_t iDatasets ) {
 	uint32_t	iSize;
@@ -60,6 +60,7 @@ bool CDatabaselet::Open( const std::string& strFile, const std::vector<std::stri
 	char*		acFiller;
 
 	m_fstm.clear( );
+	/* Open with overwriting */
 	m_fstm.open( strFile.c_str( ), ios_base::in | ios_base::out | ios_base::binary | ios_base::trunc );
 
 	if( !m_fstm.is_open( ) ) {
@@ -105,10 +106,10 @@ bool CDatabaselet::Open( const std::string& strFile, const std::vector<std::stri
 
 }
 
-
-bool CDatabaselet::OpenFileFast() {
+/* simply opens the file without overwriting */
+bool CDatabaselet::OpenNoOverwrite() {
 	m_fstm.clear( );
-	//open without overwriting
+	/* open without overwriting */
 	m_fstm.open( strFileName.c_str( ), ios_base::in | ios_base::out | ios_base::binary);
 
 	if( !m_fstm.is_open( ) ) {
@@ -159,7 +160,7 @@ bool CDatabaselet::OpenWrite( unsigned char bValue, size_t iOffset, ENibbles eNi
 
 	return true; }
 
-/* original open method */
+/* original file writing method */
 bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBaseGenes, size_t iBaseDatasets, bool fBuffer ) {
 	unsigned char*	abImage;
 	size_t			iSize, iDatum, iGeneOne, iGeneTwo;
@@ -230,13 +231,17 @@ bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBase
 
 	return true; }
 
-/* 	A faster writing method for the matrix. 
+/* 	A faster and simpler writing method for the matrix.
 	takes UcharFullMatrix
-	and requires buffering to be enabled
+	and requires buffering to be enabled, and works only with byte output
 */
 bool CDatabaselet::OpenFast( const vector<CUcharFullMatrix>& vecData, size_t iBaseGenes, size_t iBaseDatasets, bool fBuffer) {
 	if(fBuffer){
 		cerr << "Requires buferring to be enabled." << endl;
+		return false;
+	}
+	if(m_useNibble){
+		cerr << "Requires byte." << endl;
 		return false;
 	}
 
@@ -351,8 +356,8 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet>& vecDatabaselet,
 		}
 	}
 
-
-	if(bSplit){ //splitting to one gene per file after combine
+	/* splitting to one gene per file after combine */
+	if(bSplit){
 
 		for(i=0; i<iGenes; i++){
 
@@ -413,7 +418,8 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet>& vecDatabaselet,
 
 		}
 
-	}else{ //do not split, just combine into one file
+	/* do not split, just combine into one file */
+	}else{
 
 		vector<string> strTok;
 		CMeta::Tokenize(first->strFileName.c_str(), strTok, "/");
@@ -586,145 +592,7 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::st
 	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes );
 }
 
-bool CDatabase::OpenFast( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrDatasets,
-	const std::string& strInputDirectory, const std::string& strOutputDirectory, size_t iFiles){
-
-	vector<string>	vecstrNodes, vecstrSubset;
-	size_t			i, j;
-	char			acNumber[ 16 ];
-	string			strFile;
-
-	Clear();
-
-	vecstrNodes.resize(vecstrDatasets.size());
-	for(i=0; i<vecstrDatasets.size(); i++){
-		vecstrNodes[i] = strInputDirectory + '/' + vecstrDatasets[i];
-	}
-
-	m_vecpDBs.resize(iFiles);
-	int iNumFilesOpen = 1000;
-	for( i = 0; i < m_vecpDBs.size( ); ++i ) {	//block size, 1000
-		m_vecpDBs[ i ] = new CDatabaselet( false );
-	}
-
-	size_t k;
-	for( i = 0; i < m_vecpDBs.size( ); ++i ) {	//1000 (number of files)
-		if(i%iNumFilesOpen==0 && i>0){
-			for(k=0; k<iNumFilesOpen; k++){
-				m_vecpDBs[i-k-1]->CloseFile();
-			}
-		}
-		vecstrSubset.clear( );
-		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
-				vecstrSubset.push_back( vecstrGenes[ j ] ); //contains index for 1000, 2000, 3000th genes
-		sprintf( acNumber, "%08u", i );
-		if(iFiles>=vecstrGenes.size()){
-			strFile = strOutputDirectory + '/' + vecstrSubset[0] + c_acExtension;
-		}else{
-			strFile = strOutputDirectory + '/' + acNumber + c_acExtension;
-		}
-		m_vecpDBs[i]->SetFile(strFile);
-
-		if( !m_vecpDBs[ i ]->Open( strFile, vecstrSubset, vecstrGenes.size( ), vecstrNodes.size( ) ) ) {
-			g_CatSleipnir( ).error( "CDatabase::Open( %s, %d ) could not open file %s",
-				strOutputDirectory.c_str( ), iFiles, strFile.c_str( ) );
-			return false;
-		}
-	}
-
-	for( i = 0; i < m_vecpDBs.size( ); ++i ){
-		m_vecpDBs[i]->CloseFile();
-	}
-
-	for( i = 0; i < vecstrGenes.size( ); ++i ){
-		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
-	}
-
-	return CDatabaseImpl::OpenFast( vecstrGenes, vecstrNodes );
-}
-
-bool CDatabaseImpl::OpenFast( const std::vector<std::string>& vecstrGenes,
-	const std::vector<std::string>& vecstrFiles ) {
-	size_t			i, j, k, iOne, iTwo, iOutBlock, iOutBase, iOutOffset, iInBlock, iInBase, iInOffset;
-	vector<size_t>	veciGenes;
-	float			d;
-
-	omp_set_num_threads(4);
-
-	veciGenes.resize( vecstrGenes.size( ) );
-	iOutBlock = ( m_iBlockOut == -1 ) ? m_vecpDBs.size( ) : m_iBlockOut;
-	iInBlock = ( m_iBlockIn == -1 ) ? vecstrFiles.size( ) : m_iBlockIn;
-
-	size_t ii, jj, kk;
-
-	int iNumFilesOpen = 1000;
-
-	for( iInBase = 0; iInBase < vecstrFiles.size( ); iInBase += iInBlock ) {
-		vector<CUcharFullMatrix> vecData;
-		vecData.resize( ( ( iInBase + iInBlock ) > vecstrFiles.size( ) ) ?
-			( vecstrFiles.size( ) - iInBase ) : iInBlock );
-		for( iInOffset = 0; iInOffset < vecData.size( ); ++iInOffset ) {
-
-			CDataPair	Dat;
-			if( !Dat.Open( (vecstrFiles[ iInBase + iInOffset ] + c_acDAB).c_str( ), false, m_fMemmap) ) {
-				g_CatSleipnir( ).error( "CDatabaseImpl::Open( ) could not open %s",
-					(vecstrFiles[ iInBase + iInOffset ] + c_acDAB).c_str( ) );
-				return false;
-			}
-
-			vecData[iInOffset].Initialize(veciGenes.size(), veciGenes.size(), 256);
-
-			for( i = 0; i < veciGenes.size( ); ++i ){
-				veciGenes[ i ] = Dat.GetGene( vecstrGenes[ i ] );
-				vecData[iInOffset].AddGeneMap(i, vecstrGenes[i]);
-			}
-
-			#pragma omp parallel for \
-			shared(Dat, veciGenes, vecData) \
-			private(j, i) \
-			schedule(static)
-			for(j=0; j<veciGenes.size(); j++){
-				size_t s = veciGenes[j];
-				if(s == -1) continue;
-				//get full row for this gene in the half-matrix
-				float *d_array = Dat.GetFullRow(s);
-				for(i=0; i<veciGenes.size(); i++){
-					size_t t = veciGenes[i];
-					if(t==-1 || s==t) continue;
-					vecData[iInOffset].Set(i,j,Dat.Quantize(d_array[t])+1);
-				}
-				delete d_array;
-			}
-
-		}
-
-		printf("Processing offset\n");
-		size_t iBaseGene = 0;
-		for(ii=0; ii<m_vecpDBs.size(); ii++){
-			if(ii%100==0){
-				printf("%d\n", ii);
-			}
-
-			if(ii>0 && (ii%iNumFilesOpen==0 || ii==m_vecpDBs.size()-1)){
-				for(k=0; k<iNumFilesOpen && (ii-k-1) < m_vecpDBs.size(); k++){
-					m_vecpDBs[ii-k-1]->CloseFile();
-				}
-			}
-
-			m_vecpDBs[ii]->OpenFileFast();
-
-			if(!m_vecpDBs[ii]->OpenFast(vecData, iBaseGene, iInBase, m_fBuffer)){
-				return false;
-			}
-
-			iBaseGene+=m_vecpDBs[ii]->GetGenes();
-		}
-	}
-
-	return true;
-}
-
-//Qian added
+/* Version of Open() that takes a list of datasets as input. Key method */
 bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrDatasets,
 	const std::string& strInputDirectory, const std::string& strOutputDirectory, size_t iFiles){
 
@@ -742,13 +610,13 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 
 	m_vecpDBs.resize( iFiles );
 	int iNumFilesOpen = 1000;
-	for( i = 0; i < m_vecpDBs.size( ); ++i ) {	//block size, 1000
+	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
 		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble );
 	}
 
 	size_t k;
 
-	for( i = 0; i < m_vecpDBs.size( ); ++i ) {	//block size, 1000
+	for( i = 0; i < m_vecpDBs.size( ); ++i ) { //block size (such as 1000)
 		if(i%iNumFilesOpen==0 && i>0){
 			for(k=0; k<iNumFilesOpen; k++){
 				m_vecpDBs[i-k-1]->CloseFile();
@@ -765,6 +633,7 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 			strFile = strOutputDirectory + '/' + acNumber + c_acExtension;
 		}
 
+		/* save the file name */
 		m_vecpDBs[i]->SetFile(strFile);
 
 		if( !( i % 100 ) )
@@ -869,6 +738,7 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 				m_vecpDBs.size( ) ); ++iOutOffset ) {
 				CDatabaselet&	DB	= *m_vecpDBs[ iOutBase + iOutOffset ];
 
+				/* close files if too many file handles opened */
 				if(iOutOffset>0 && (iOutOffset%iNumFilesOpen==0 || 
 					(iOutBase + iOutOffset)==m_vecpDBs.size()-1)){
 					for(k=0; k<iNumFilesOpen; k++){
@@ -877,12 +747,9 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 						}
 						m_vecpDBs[iOutOffset + iOutBase - 1 - k]->CloseFile();
 					}
-					//for(k=iOutBase+iOutOffset-1; k>=0 && k>=iOutBase+iOutOffset-1-iNumFilesOpen; k--){
-					//	m_vecpDBs[k]->CloseFile();
-					//}
 				}
 
-				DB.OpenFileFast();
+				DB.OpenNoOverwrite();
 
 				if( !( iOutOffset % 100 ) )
 					cerr << "Processing offset " << iOutOffset << '/' << iOutBlock << endl;
