@@ -28,7 +28,9 @@
 #include "dat.h"
 
 #include <stdio.h>
-#include <execinfo.h>
+
+/* removed to support cygwin */
+//#include <execinfo.h>
 
 namespace SVMLight {
 extern "C" {

@@ -1,0 +1,7 @@
+#cygwin: readline requires libncurses library, and readline-dev
+#cygwin: link /usr/lib/libboost_graph-mt.a to /usr/lib/libboost_graph.a
+#cygwin: link /usr/lib/libboost_regex-mt.a to /usr/lib/libboost_regex.a
+#cygwin: need to install log4cpp, and gengetopt manually, as not included in cygwin packages
+#cygwin: need to download smile specific for cygwin (linux version does not work)
+#cygwin: need to modify svmperf.h to remove execinfo.h include line
+./configure --prefix=/home/Bernard/sleipnir_build --with-smile=/home/Bernard/sleipnir/smile --with-svm-perf=/home/Bernard/sleipnir/svmperf --with-log4cpp=/usr/local --with-readline=/usr
