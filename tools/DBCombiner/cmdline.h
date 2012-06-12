@@ -39,15 +39,12 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * db_arg;	/**< @brief Input a set of databaselet filenames.  */
-  char * db_orig;	/**< @brief Input a set of databaselet filenames original value given at command line.  */
-  const char *db_help; /**< @brief Input a set of databaselet filenames help description.  */
+  char * db_arg;	/**< @brief Input a set of databaselet filenames (including path).  */
+  char * db_orig;	/**< @brief Input a set of databaselet filenames (including path) original value given at command line.  */
+  const char *db_help; /**< @brief Input a set of databaselet filenames (including path) help description.  */
   char * input_arg;	/**< @brief Input gene mapping.  */
   char * input_orig;	/**< @brief Input gene mapping original value given at command line.  */
   const char *input_help; /**< @brief Input gene mapping help description.  */
-  char * dir_in_arg;	/**< @brief Data directory (default='.').  */
-  char * dir_in_orig;	/**< @brief Data directory original value given at command line.  */
-  const char *dir_in_help; /**< @brief Data directory help description.  */
   char * dir_out_arg;	/**< @brief Database directory (default='.').  */
   char * dir_out_orig;	/**< @brief Database directory original value given at command line.  */
   const char *dir_out_help; /**< @brief Database directory help description.  */
@@ -60,7 +57,6 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int db_given ;	/**< @brief Whether db was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
-  unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */
   unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
   unsigned int split_given ;	/**< @brief Whether split was given.  */

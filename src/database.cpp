@@ -720,9 +720,6 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 			strFile = strOutputDirectory + '/' + acNumber + c_acExtension;
 		}
 
-		/* save the file name */
-		//m_vecpDBs[i]->SetFile(strFile);
-
 		if( !( i % 100 ) )
 			g_CatSleipnir( ).notice( "CDatabase::Open( %s, %d ) initializing file %d/%d",
 				strOutputDirectory.c_str( ), iFiles, i, m_vecpDBs.size( ) );
