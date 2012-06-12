@@ -179,6 +179,7 @@ protected:
 
 	void Clear( ) {
 		size_t	i;
+
 		m_mapstriGenes.clear( );
 		for( i = 0; i < m_vecpDBs.size( ); ++i )
 			delete m_vecpDBs[ i ];

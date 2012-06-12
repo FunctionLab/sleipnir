@@ -36,6 +36,7 @@ void CCompactMatrixBase::Initialize( unsigned char cValues, bool fClear ) {
 	m_fMemory = true;
 	for( m_cBits = 0,--cValues; cValues; ++m_cBits,cValues >>= 1 );
 	m_aiData = new size_t[ iWords = CountWords( ) ];
+	//printf("size %d\n", iWords);
 	if( fClear )
 		memset( m_aiData, 0, iWords * sizeof(*m_aiData) ); }
 

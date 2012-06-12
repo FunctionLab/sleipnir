@@ -234,7 +234,6 @@ public:
 	template <class tType>
 	static size_t Quantize( tType Value, const std::vector<tType>& vecQuants ) {
 
-
 		if( IsNaN( Value ) )
 			return -1;
 

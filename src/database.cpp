@@ -170,7 +170,6 @@ bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBase
 	if( fBuffer ) {
 		//iBaseGenes: gene id of first gene in each databaselet
 		//iDataset: dataset id
-		//printf("Number: %d %d %d %d\n", GetSizeGene(), GetSizePair(), iBaseGenes, iBaseDatasets);
 		abImage = new unsigned char[ iSize = ( GetSizeGene( ) * m_vecstrGenes.size( ) ) ];
 		m_fstm.seekg( m_iHeader, ios_base::beg );
 		m_fstm.read( (char*)abImage, iSize );
@@ -234,6 +233,48 @@ bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBase
 	}
 
 	return true; }
+
+/* 	A faster and simpler writing method for the matrix.
+	takes UcharFullMatrix
+	and requires buffering to be enabled, and works only with byte output
+*/
+bool CDatabaselet::OpenFast( const vector<CUcharFullMatrix>& vecData, size_t iBaseGenes, size_t iBaseDatasets, bool fBuffer) {
+	if(fBuffer){
+		cerr << "Requires buferring to be enabled." << endl;
+		return false;
+	}
+	if(m_useNibble){
+		cerr << "Requires byte." << endl;
+		return false;
+	}
+
+	unsigned char*	abImage;
+	size_t			iSize, iDatum, iGeneOne, iGeneTwo;
+	unsigned char	bOne, bTwo;
+
+	abImage = new unsigned char[ iSize = ( GetSizeGene( ) * m_vecstrGenes.size( ) ) ];
+	m_fstm.seekg( m_iHeader );
+	m_fstm.read( (char*)abImage, iSize );
+
+	for( iDatum = 0; iDatum  < vecData.size( ); iDatum ++ ){
+		for( iGeneOne = 0; iGeneOne < GetGenes( ); ++iGeneOne ){
+			size_t index = vecData[iDatum].GetGeneIndex(GetGene(iGeneOne));
+			size_t iOffset = (GetSizeGene() * iGeneOne) + iBaseDatasets + iDatum;
+
+			for( iGeneTwo = 0; iGeneTwo < vecData[iDatum].GetColumns(); ++iGeneTwo ){
+				if( bOne = vecData[ iDatum].Get(index, iGeneTwo ) ){
+					abImage[ iOffset + GetSizePair() * iGeneTwo ] = bOne - 1;
+				}
+			}
+		}
+	}
+
+	m_fstm.seekp( m_iHeader );
+	m_fstm.write( (char*)abImage, iSize );
+	delete[] abImage;
+
+	return true;
+}
 
 bool CDatabaselet::Get( size_t iOne, size_t iTwo,
 		vector<unsigned char>& vecbData, unsigned char *charImage){
@@ -704,7 +745,7 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 	float			d;
 
 	/* define number of threads to concurrently process datasets */
-	omp_set_num_threads(4);
+	//omp_set_num_threads(4);
 
 	veciGenes.resize( vecstrGenes.size( ) );
 	iOutBlock = ( m_iBlockOut == -1 ) ? m_vecpDBs.size( ) : m_iBlockOut;
@@ -729,6 +770,7 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 
 		for( iInBase = 0; iInBase < vecstrFiles.size( ); iInBase += iInBlock ) {
 			vector<CCompactFullMatrix>	vecData;
+
 			vecData.resize( ( ( iInBase + iInBlock ) > vecstrFiles.size( ) ) ?
 				( vecstrFiles.size( ) - iInBase ) : iInBlock );
 			for( iInOffset = 0; iInOffset < vecData.size( ); ++iInOffset ) {
