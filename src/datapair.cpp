@@ -112,7 +112,7 @@ bool CDataPair::Open( const CSlim& Slim ) {
  * CDat::Open
  */
 bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
-	bool fZScore ) {
+	bool fZScore, bool fSeek ) {
 
 
 	g_CatSleipnir( ).notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
@@ -127,7 +127,7 @@ bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, si
 	  return OpenQdab( szDatafile );
 	}
 	else{
-	  if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore ) )
+	  if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore, false, fSeek ) )
 	    return false;
 	  return ( m_fContinuous ? true : OpenQuants( szDatafile ) ); 	  
 	}

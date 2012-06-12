@@ -11,6 +11,8 @@ option	"contexts"		c	"Context/gene mapping"
 							string	typestr="filename"	yes
 option	"diseases"		s	"Disease/gene mapping"
 							string	typestr="filename"
+option	"is_nibble"		N	"Specify whether the database is nibble type"
+							int default="1"
 
 section "Bayes nets"
 option	"networks"		n	"Bayes net directory"

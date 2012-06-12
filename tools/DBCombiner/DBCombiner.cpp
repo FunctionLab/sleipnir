@@ -31,15 +31,13 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
 	istream*			pistm;
-	vector<string>		vecstrLine, vecstrGenes, vecstrDatasets;
+	vector<string>		vecstrLine, vecstrGenes, vecstrDBs;
 	char				acBuffer[ c_iBuffer ];
-	CBayesNetSmile		BNSmile;
 	size_t				i;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
-	CMeta Meta( sArgs.verbosity_arg );
 
 	if( sArgs.input_arg ) {
 		ifsm.open( sArgs.input_arg );
@@ -65,54 +63,46 @@ int main( int iArgs, char** aszArgs ) {
 		ifsm.close( );
 
 	bool useNibble = false;
-	if(sArgs.use_nibble_flag==1){
+	if(sArgs.is_nibble_flag==1){
 		useNibble = true;
 	}
 
 	CDatabase DB(useNibble);
-	DB.SetMemmap( !!sArgs.memmap_flag );
-	DB.SetBuffer( !!sArgs.buffer_flag );
-	DB.SetBlockOut( sArgs.block_files_arg );
-	DB.SetBlockIn( sArgs.block_datasets_arg );
 
+	bool fSplit = false;
+	if(sArgs.split_flag==1){
+		fSplit = true;
+	}
 
-	if(sArgs.network_arg){
-		if(sArgs.dataset_arg){
-			cerr << "Confused. Only network OR dataset list." << endl;
-			return 1;
-		}
-
-		if( !BNSmile.Open( sArgs.network_arg ) ) {
-			cerr << "Could not open: " << sArgs.network_arg << endl;
-			return 1; }
-		if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-			vecstrGenes.size( )) ) ) {
-			cerr << "Could not open data" << endl;
-			return 1;
-		}
-
-	}else if(sArgs.dataset_arg){
-
-		ifsm.open(sArgs.dataset_arg);
+	if(sArgs.db_arg){
+		ifsm.open(sArgs.db_arg);
 		while(!pistm->eof()){
 			pistm->getline(acBuffer, c_iBuffer -1);
 			if(acBuffer[0]==0){
 				break;
 			}
 			acBuffer[c_iBuffer-1] = 0;
-			vecstrDatasets.push_back(acBuffer);
+			vecstrDBs.push_back(acBuffer);
 		}
-		vecstrDatasets.resize(vecstrDatasets.size());
+		vecstrDBs.resize(vecstrDBs.size());
 		ifsm.close();
 
-		if( !DB.Open( vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-			vecstrGenes.size( ))) ) {
-			cerr << "Could not open data" << endl;
-			return 1;
-		}
+		//printf("Reading DBS"); getchar();
+		vector<CDatabaselet*> DBS;
+		DBS.resize(vecstrDBs.size());
+		for(i=0; i<vecstrDBs.size(); i++){
+	    	DBS[i] = new CDatabaselet(useNibble);
+	    	DBS[i]->Open(vecstrDBs[i]);
+	    }
+		//printf("Finished reading DBS"); getchar();
+
+	    CDatabaselet::Combine(DBS, sArgs.dir_out_arg, fSplit);
+	    for(i=0; i<vecstrDBs.size(); i++){
+	    	free(DBS[i]);
+	    }
 
 	}else{
-		cerr << "Must give a network or a dataset list." << endl;
+		cerr << "Must give a db list." << endl;
 		return 1;
 
 	}

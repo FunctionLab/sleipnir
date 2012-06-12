@@ -21,12 +21,12 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_PACKAGE
 /** @brief the program name (used for printing errors) */
-#define CMDLINE_PARSER_PACKAGE "Data2DB"
+#define CMDLINE_PARSER_PACKAGE "DBCombiner"
 #endif
 
 #ifndef CMDLINE_PARSER_PACKAGE_NAME
 /** @brief the complete program name (used for help and version) */
-#define CMDLINE_PARSER_PACKAGE_NAME "Data2DB"
+#define CMDLINE_PARSER_PACKAGE_NAME "DBCombiner"
 #endif
 
 #ifndef CMDLINE_PARSER_VERSION
@@ -39,54 +39,27 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * dataset_arg;	/**< @brief Input a set of dataset filenames.  */
-  char * dataset_orig;	/**< @brief Input a set of dataset filenames original value given at command line.  */
-  const char *dataset_help; /**< @brief Input a set of dataset filenames help description.  */
-  char * network_arg;	/**< @brief Input (X)DSL Bayes net.  */
-  char * network_orig;	/**< @brief Input (X)DSL Bayes net original value given at command line.  */
-  const char *network_help; /**< @brief Input (X)DSL Bayes net help description.  */
+  char * db_arg;	/**< @brief Input a set of databaselet filenames (including path).  */
+  char * db_orig;	/**< @brief Input a set of databaselet filenames (including path) original value given at command line.  */
+  const char *db_help; /**< @brief Input a set of databaselet filenames (including path) help description.  */
   char * input_arg;	/**< @brief Input gene mapping.  */
   char * input_orig;	/**< @brief Input gene mapping original value given at command line.  */
   const char *input_help; /**< @brief Input gene mapping help description.  */
-  char * dir_in_arg;	/**< @brief Data directory (default='.').  */
-  char * dir_in_orig;	/**< @brief Data directory original value given at command line.  */
-  const char *dir_in_help; /**< @brief Data directory help description.  */
   char * dir_out_arg;	/**< @brief Database directory (default='.').  */
   char * dir_out_orig;	/**< @brief Database directory original value given at command line.  */
   const char *dir_out_help; /**< @brief Database directory help description.  */
-  int files_arg;	/**< @brief Database file count (default='1000').  */
-  char * files_orig;	/**< @brief Database file count original value given at command line.  */
-  const char *files_help; /**< @brief Database file count help description.  */
-  int block_files_arg;	/**< @brief Number of database files per block (default='-1').  */
-  char * block_files_orig;	/**< @brief Number of database files per block original value given at command line.  */
-  const char *block_files_help; /**< @brief Number of database files per block help description.  */
-  int block_datasets_arg;	/**< @brief Number of datasets per block (default='-1').  */
-  char * block_datasets_orig;	/**< @brief Number of datasets per block original value given at command line.  */
-  const char *block_datasets_help; /**< @brief Number of datasets per block help description.  */
-  int use_nibble_flag;	/**< @brief Use nibble for compact storage (default=off).  */
-  const char *use_nibble_help; /**< @brief Use nibble for compact storage help description.  */
-  int buffer_flag;	/**< @brief Memory buffer disk writes (default=off).  */
-  const char *buffer_help; /**< @brief Memory buffer disk writes help description.  */
-  int memmap_flag;	/**< @brief Memory map input/output (default=off).  */
-  const char *memmap_help; /**< @brief Memory map input/output help description.  */
-  int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
-  char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
-  const char *verbosity_help; /**< @brief Message verbosity help description.  */
+  int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
+  const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
+  int split_flag;	/**< @brief Split to one-gene per file (default=off).  */
+  const char *split_help; /**< @brief Split to one-gene per file help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
-  unsigned int network_given ;	/**< @brief Whether network was given.  */
+  unsigned int db_given ;	/**< @brief Whether db was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
-  unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */
   unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
-  unsigned int files_given ;	/**< @brief Whether files was given.  */
-  unsigned int block_files_given ;	/**< @brief Whether block_files was given.  */
-  unsigned int block_datasets_given ;	/**< @brief Whether block_datasets was given.  */
-  unsigned int use_nibble_given ;	/**< @brief Whether use_nibble was given.  */
-  unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
-  unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
-  unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+  unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
+  unsigned int split_given ;	/**< @brief Whether split was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

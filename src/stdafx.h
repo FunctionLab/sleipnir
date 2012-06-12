@@ -48,6 +48,7 @@
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <omp.h>
 
 #define _isnan				isnan
 #define _lseek				lseek

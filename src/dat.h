@@ -153,7 +153,8 @@ public:
 		 * \brief
 		 * Binary format listing null-terminated element name strings followed by bits representing the quantized bins.
 		 */		
-		EFormatQdab = EFormatSparse + 1 
+		EFormatQdab = EFormatSparse + 1
+
 	};
 
 	/*!
@@ -184,10 +185,11 @@ public:
 		ENormalizePCC		= ENormalizeNormCDF + 1
 	};
 
+
 	bool Open( const char* szFile, bool fMemmap = false, size_t iSkip = 2, bool fZScore = false,
-		bool fDuplicates = false );
+		bool fDuplicates = false, bool fSeek = false );
 	bool Open( std::istream& istm, EFormat eFormat = EFormatBinary, float dDefault = HUGE_VAL,
-		bool fDuplicates = false, size_t iSkip = 2, bool fZScore = false );
+		bool fDuplicates = false, size_t iSkip = 2, bool fZScore = false, bool fSeek = false );
 	bool Open( const CSlim& Slim );
 	bool Open( const CSlim& SlimPositives, const CSlim& SlimNonnegatives );
 	bool Open( const std::vector<std::string>& vecstrGenes, bool fClear = true, const char* szFile = NULL );
@@ -215,6 +217,13 @@ public:
 	void FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit = -1,
 			  float dEdgeAggressiveness = 0.5, bool fAbsolute = false, const std::vector<float>* pvecdWeights = NULL );
 	void NormalizeQuantiles( size_t iQuantiles );
+
+	float* GetRowSeek(std::string &strGene){
+		return CDatImpl::GetRowSeek(m_ifsm, strGene);
+	}
+	float* GetRowSeek(size_t &i){
+		return CDatImpl::GetRowSeek(m_ifsm, i);
+	}
 
 	void Clear( float dValue ) {
 		size_t	i;
@@ -287,6 +296,11 @@ public:
 	size_t GetGene( const std::string& strGene ) const {
 
 		return CDatImpl::GetGene( strGene ); }
+
+	float* GetFullRow( size_t iY ) {
+		return CDatImpl::GetFullRow(iY);
+	}
+
 
 	/*!
 	 * \brief
@@ -514,6 +528,8 @@ public:
 						break; }
 				Set( i, j, dTwo );
 				Set( iOne, iTwo, dOne ); } }
+
+
 };
 
 }

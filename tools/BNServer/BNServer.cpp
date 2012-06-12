@@ -66,7 +66,12 @@ int main( int iArgs, char** aszArgs ) {
 	vector<float>				vecdPriors;
 	CBayesNetMinimal			BNDefault;
 	vector<CBayesNetMinimal>	vecBNs;
-	CDatabase					Database;
+
+	bool isNibble = true;
+	if(sArgs.is_nibble_arg==0){
+		isNibble = false;
+	}
+	CDatabase Database(isNibble);
 	CDataMatrix					MatBackgrounds, MatParameters, MatWithinC, MatWithinD;
 	CDataMatrix					MatBetweenCC, MatBetweenDD, MatBetweenDC;
 	vector<vector<size_t> >		vecveciDiseases, vecveciContexts;

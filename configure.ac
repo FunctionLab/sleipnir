@@ -461,9 +461,9 @@ LOCAL_CHECK_LIB([smile], [smile], [RoundProbability(0,0)],
 #      AC_DEFINE([SMILEXML_LIB], [1])
 #      SMILEXML_LIB="-lsmilexml"
 #    fi
-         SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR"
+         SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR -fopenmp"
 #         SMILE_LIBS="-L $SMILE_LIB_DIR $SMILEXML_LIB -lsmile"
-         SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile"
+         SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile -fopenmp"
         ],                                                        dnl and found in specified path
 	[],                                                       dnl not found
         [smile_state=no],                                         dnl and not found installed
@@ -681,7 +681,6 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Combiner/Makefile \
 		 tools/NetworkCombiner/Makefile \
 		 tools/DChecker/Makefile \
-		 tools/PCLEvaluator/Makefile \
 		 tools/Dat2Dab/Makefile \
 		 tools/Dat2Graph/Makefile \
 		 tools/Data2Bnt/Makefile \
@@ -726,6 +725,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Contexter/Makefile \
 		 tools/Counter/Makefile \
 		 tools/Data2DB/Makefile \
+         tools/DBCombiner/Makefile \
 		 tools/DSLConverter/Makefile \
 		 tools/Dab2Dad/Makefile \
 		 tools/Edges2Posteriors/Makefile \

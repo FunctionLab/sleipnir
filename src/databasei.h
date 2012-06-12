@@ -22,8 +22,6 @@
 #ifndef DATABASEI_H
 #define DATABASEI_H
 
-#define DATABASE_NIBBLES
-
 #include <fstream>
 #include <map>
 #include <vector>
@@ -43,16 +41,27 @@ public:
 		ENibblesBoth
 	};
 
-	CDatabaselet( );
+	CDatabaselet( bool );
 	~CDatabaselet( );
 
 	bool Open( const std::string&, const std::vector<std::string>&, uint32_t, uint32_t );
 	bool Open( const std::string& );
 	bool Open( const std::vector<CCompactFullMatrix>&, size_t, size_t, bool );
+
+	bool OpenNoOverwrite();
+
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
+
+	/* Get pair by referring to memory cache (ie charImage) of the db file */
+	bool Get( size_t iOne, size_t iTwo, vector<unsigned char>& vecbData, unsigned char *charImage);
+
+	/* Get pair by seeking in db file */
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, std::vector<unsigned char>&, bool ) const;
 	bool Get( size_t, const std::vector<size_t>&, std::vector<unsigned char>&, bool ) const;
+
+	static bool Combine(std::vector<CDatabaselet*>& vecDatabaselet,
+			std::string strOutDirectory, bool bSplit = true);
 
 	size_t GetGenes( ) const {
 
@@ -67,15 +76,17 @@ public:
 		std::streamoff	iOffset;
 
 		iOffset = (std::streamoff)GetOffset( iOne, iTwo, iDataset );
-#ifdef DATABASE_NIBBLES
-		if( !fBoth ) {
-			unsigned char	b;
 
-			m_fstm.seekg( iOffset );
-			b = m_fstm.get( );
-			bValue = ( iDataset % 2 ) ? ( ( b & 0xF ) | ( bValue << 4 ) ) :
-				( ( b & 0xF0 ) | ( bValue & 0xF ) ); }
-#endif // DATABASE_NIBBLES
+		if(m_useNibble){
+			if( !fBoth ) {
+				unsigned char	b;
+				m_fstm.seekg( iOffset );
+				b = m_fstm.get( );
+				bValue = ( iDataset % 2 ) ? ( ( b & 0xF ) | ( bValue << 4 ) ) :
+						( ( b & 0xF0 ) | ( bValue & 0xF ) ); 
+				}
+		}
+
 		m_fstm.seekp( iOffset );
 		m_fstm.put( bValue );
 	}
@@ -84,25 +95,35 @@ public:
 
 		return m_iDatasets; }
 
+	void CloseFile(){
+		if(m_fstm.is_open()){
+			m_fstm.close();
+		}
+	}
+
+	void SetFile(string std){
+		strFileName = std;
+	}
+
 private:
 
 	size_t GetOffsetDataset( size_t iDataset ) const {
-
-		return ( iDataset
-#ifdef DATABASE_NIBBLES
-			/ 2
-#endif // DATABASE_NIBBLES
-			); }
+		if(m_useNibble){
+			return (iDataset / 2);
+		}else{
+			return iDataset;
+		}
+	}
 
 	size_t GetSizePair( ) const {
 
-		return ( ( m_iDatasets
-#ifdef DATABASE_NIBBLES
-			+ 1 ) / 2
-#else // DATABASE_NIBBLES
-			)
-#endif // DATABASE_NIBBLES
-			); }
+		if(m_useNibble){
+			return (m_iDatasets + 1) / 2;
+		}else{
+			return m_iDatasets;
+		}
+
+	}
 
 	size_t GetSizeGenes( ) const {
 
@@ -128,7 +149,9 @@ private:
 	uint32_t					m_iGenes;
 	uint32_t					m_iDatasets;
 	std::vector<std::string>	m_vecstrGenes;
+	std::string					strFileName;
 
+	bool						m_useNibble;
 	mutable std::fstream		m_fstm;
 	mutable pthread_mutex_t*	m_pmutx;
 };
@@ -139,7 +162,13 @@ protected:
 	static const char	c_acQDAB[];
 	static const char	c_acExtension[];
 
-	CDatabaseImpl( ) : m_fMemmap(false), m_iBlockIn(-1), m_iBlockOut(-1), m_fBuffer(false) { }
+	CDatabaseImpl(bool useNibble){
+		m_fMemmap = false;
+		m_iBlockIn = -1;
+		m_iBlockOut = -1;
+		m_fBuffer = false;
+		m_useNibble = useNibble;
+	}
 
 	~CDatabaseImpl( ) {
 
@@ -150,7 +179,6 @@ protected:
 
 	void Clear( ) {
 		size_t	i;
-
 		m_mapstriGenes.clear( );
 		for( i = 0; i < m_vecpDBs.size( ); ++i )
 			delete m_vecpDBs[ i ];
@@ -168,6 +196,8 @@ protected:
 	size_t							m_iBlockOut;
 	std::vector<CDatabaselet*>		m_vecpDBs;
 	std::map<std::string, size_t>	m_mapstriGenes;
+	/* defines whether the CDatabaselet is nibble type. If false, it is byte by default.*/
+	bool							m_useNibble;
 };
 
 }

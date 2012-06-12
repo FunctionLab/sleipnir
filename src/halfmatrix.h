@@ -85,6 +85,24 @@ public:
 		m_iSize = 0;
 		m_aaData = NULL; }
 
+	tType* GetFullRow( size_t iY ) {
+		size_t i, j;
+		tType *newData = new tType[m_iSize];
+		for(i=0; i<m_iSize; i++){
+			if(i==iY){
+				newData[i] = 0;
+			}else if(i<iY){
+				newData[i] = m_aaData[i][iY-i-1];
+			}else{
+				for(j=i; j<m_iSize; j++){
+					newData[j] = m_aaData[iY][j-iY-1];
+				}
+				break;
+			}
+		}
+		return newData;
+	}
+
 	/*!
 	 * \brief
 	 * Return a single row of the matrix.

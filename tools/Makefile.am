@@ -9,7 +9,6 @@ if WITH_TOOLS
 	  Combiner \
 	  NetworkCombiner \
 	  DChecker \
-	  PCLEvaluator \
 	  Dat2Dab \
 	  Dat2Graph \
 	  Data2Bnt \
@@ -55,6 +54,7 @@ if WITH_SMILE_TOOLS
 	  Contexter \
 	  Counter \
 	  Data2DB \
+	  DBCombiner \
 	  DSLConverter \
 	  Dab2Dad \
 	  Edges2Posteriors \
