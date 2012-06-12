@@ -58,11 +58,16 @@ public:
 	bool Open( const std::vector<CCompactFullMatrix>&, size_t, size_t, bool );
 
 	bool OpenNoOverwrite();
+
+	/* A write method specific for byte output */
 	bool OpenFast( const vector<CUcharFullMatrix>&, size_t, size_t, bool);
 
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
+
+	/* Get pair by referring to memory cache (ie charImage) of the db file */
 	bool Get( size_t iOne, size_t iTwo, vector<unsigned char>& vecbData, unsigned char *charImage);
 
+	/* Get pair by seeking in db file */
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, std::vector<unsigned char>&, bool ) const;
 	bool Get( size_t, const std::vector<size_t>&, std::vector<unsigned char>&, bool ) const;
@@ -203,6 +208,7 @@ protected:
 	size_t							m_iBlockOut;
 	std::vector<CDatabaselet*>		m_vecpDBs;
 	std::map<std::string, size_t>	m_mapstriGenes;
+	/* defines whether the CDatabaselet is nibble type. If false, it is byte by default.*/
 	bool							m_useNibble;
 };
 

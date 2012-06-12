@@ -35,9 +35,8 @@ const char *gengetopt_args_info_help[] = {
   "  -h, --help               Print help and exit",
   "  -V, --version            Print version and exit",
   "\nMain:",
-  "  -x, --db=filename        Input a set of databaselet filenames",
+  "  -x, --db=filename        Input a set of databaselet filenames (including \n                             path)",
   "  -i, --input=filename     Input gene mapping",
-  "  -d, --dir_in=directory   Data directory  (default=`.')",
   "  -D, --dir_out=directory  Database directory  (default=`.')",
   "  -N, --is_nibble          Whether the input DB is nibble type  (default=off)",
   "  -s, --split              Split to one-gene per file  (default=off)",
@@ -69,7 +68,6 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->version_given = 0 ;
   args_info->db_given = 0 ;
   args_info->input_given = 0 ;
-  args_info->dir_in_given = 0 ;
   args_info->dir_out_given = 0 ;
   args_info->is_nibble_given = 0 ;
   args_info->split_given = 0 ;
@@ -83,8 +81,6 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->db_orig = NULL;
   args_info->input_arg = NULL;
   args_info->input_orig = NULL;
-  args_info->dir_in_arg = gengetopt_strdup (".");
-  args_info->dir_in_orig = NULL;
   args_info->dir_out_arg = gengetopt_strdup (".");
   args_info->dir_out_orig = NULL;
   args_info->is_nibble_flag = 0;
@@ -101,10 +97,9 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->version_help = gengetopt_args_info_help[1] ;
   args_info->db_help = gengetopt_args_info_help[3] ;
   args_info->input_help = gengetopt_args_info_help[4] ;
-  args_info->dir_in_help = gengetopt_args_info_help[5] ;
-  args_info->dir_out_help = gengetopt_args_info_help[6] ;
-  args_info->is_nibble_help = gengetopt_args_info_help[7] ;
-  args_info->split_help = gengetopt_args_info_help[8] ;
+  args_info->dir_out_help = gengetopt_args_info_help[5] ;
+  args_info->is_nibble_help = gengetopt_args_info_help[6] ;
+  args_info->split_help = gengetopt_args_info_help[7] ;
   
 }
 
@@ -192,8 +187,6 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->db_orig));
   free_string_field (&(args_info->input_arg));
   free_string_field (&(args_info->input_orig));
-  free_string_field (&(args_info->dir_in_arg));
-  free_string_field (&(args_info->dir_in_orig));
   free_string_field (&(args_info->dir_out_arg));
   free_string_field (&(args_info->dir_out_orig));
   
@@ -239,8 +232,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "db", args_info->db_orig, 0);
   if (args_info->input_given)
     write_into_file(outfile, "input", args_info->input_orig, 0);
-  if (args_info->dir_in_given)
-    write_into_file(outfile, "dir_in", args_info->dir_in_orig, 0);
   if (args_info->dir_out_given)
     write_into_file(outfile, "dir_out", args_info->dir_out_orig, 0);
   if (args_info->is_nibble_given)
@@ -479,14 +470,13 @@ cmdline_parser_internal (
         { "version",	0, NULL, 'V' },
         { "db",	1, NULL, 'x' },
         { "input",	1, NULL, 'i' },
-        { "dir_in",	1, NULL, 'd' },
         { "dir_out",	1, NULL, 'D' },
         { "is_nibble",	0, NULL, 'N' },
         { "split",	0, NULL, 's' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVx:i:d:D:Ns", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVx:i:D:Ns", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -511,7 +501,7 @@ cmdline_parser_internal (
           return 0;
         
           break;
-        case 'x':	/* Input a set of databaselet filenames.  */
+        case 'x':	/* Input a set of databaselet filenames (including path).  */
         
         
           if (update_arg( (void *)&(args_info->db_arg), 
@@ -531,18 +521,6 @@ cmdline_parser_internal (
               &(local_args_info.input_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "input", 'i',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'd':	/* Data directory.  */
-        
-        
-          if (update_arg( (void *)&(args_info->dir_in_arg), 
-               &(args_info->dir_in_orig), &(args_info->dir_in_given),
-              &(local_args_info.dir_in_given), optarg, 0, ".", ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "dir_in", 'd',
               additional_error))
             goto failure;
         
