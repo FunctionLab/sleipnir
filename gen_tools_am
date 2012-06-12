@@ -34,6 +34,7 @@ my %tools_other_packages = (
 			    Counter  => ['SMILE'],
 			    DSLConverter  => ['SMILE'],
 			    Data2DB  => ['SMILE'],
+				DBCombiner => ['SMILE'],
 			    Dab2Dad  => ['SMILE'],
 			    Dab2DB  => ['SMILE'],
 			    Data2Svm => ['SVM_PERF'],

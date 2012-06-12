@@ -724,6 +724,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Contexter/Makefile \
 		 tools/Counter/Makefile \
 		 tools/Data2DB/Makefile \
+         tools/DBCombiner/Makefile \
 		 tools/DSLConverter/Makefile \
 		 tools/Dab2Dad/Makefile \
 		 tools/Edges2Posteriors/Makefile \

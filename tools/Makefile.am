@@ -54,6 +54,7 @@ if WITH_SMILE_TOOLS
 	  Contexter \
 	  Counter \
 	  Data2DB \
+      DBCombiner \
 	  DSLConverter \
 	  Dab2Dad \
 	  Edges2Posteriors \
