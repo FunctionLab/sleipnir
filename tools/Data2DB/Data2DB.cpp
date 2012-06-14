@@ -35,6 +35,7 @@ int main( int iArgs, char** aszArgs ) {
 	char				acBuffer[ c_iBuffer ];
 	CBayesNetSmile		BNSmile;
 	size_t				i;
+	map<string, size_t>	mapstriZeros;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -64,6 +65,30 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg )
 		ifsm.close( );
 
+    
+	if( sArgs.zeros_arg ) {
+		ifstream		ifsm;
+		vector<string>	vecstrLine;
+		char			acLine[ 1024 ];
+
+		ifsm.open( sArgs.zeros_arg );
+		if( !ifsm.is_open( ) ) {
+		    cerr << "Couldn't open: " << sArgs.zeros_arg << endl;
+		    return 1;
+		}
+		while( !ifsm.eof( ) ) {
+		    ifsm.getline( acLine, ARRAYSIZE(acLine) - 1 );
+		    acLine[ ARRAYSIZE(acLine) - 1 ] = 0;
+		    vecstrLine.clear( );
+		    CMeta::Tokenize( acLine, vecstrLine );
+		    if( vecstrLine.empty( ) )
+			continue;
+		    mapstriZeros[ vecstrLine[ 0 ] ] = atoi( vecstrLine[ 1 ].c_str( ) );
+		}
+	}
+
+
+
 	bool useNibble = false;
 	if(sArgs.use_nibble_flag==1){
 		useNibble = true;
@@ -86,7 +111,7 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open: " << sArgs.network_arg << endl;
 			return 1; }
 		if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-			vecstrGenes.size( )) ) ) {
+			vecstrGenes.size( )), mapstriZeros ) ) {
 			cerr << "Could not open data" << endl;
 			return 1;
 		}
@@ -106,7 +131,7 @@ int main( int iArgs, char** aszArgs ) {
 		ifsm.close();
 
 		if( !DB.Open( vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-			vecstrGenes.size( ))) ) {
+			vecstrGenes.size( )), mapstriZeros ) ) {
 			cerr << "Could not open data" << endl;
 			return 1;
 		}

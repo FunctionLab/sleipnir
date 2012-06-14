@@ -2,8 +2,8 @@
 
 ./configure --with-gengetopt=/usr/bin/gengetopt\
 	--with-log4cpp=/usr/include/log4cpp/ \
-	--with-smile=extlib/smile_1_1_linux64_gcc_4_1_2/ \
-	--with-svm-perf=extlib/svm_perf/ \
+	--with-smile=/Genomics/fgrid/function/sleipnir-extlib/smile_1_1_linux64_gcc_4_1_2/ \
+	--with-svm-perf=/Genomics/fgrid/function/sleipnir-extlib/svm_perf/ \
 	--with-boost-includes=/usr/include/boost/\
 	--with-boost-graph-lib=/usr/lib/libboost_graph.a \
 #	--with-vowpal-wabbit=../extlib/vowpal_wabbit_v4.1/ \

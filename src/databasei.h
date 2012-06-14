@@ -174,7 +174,7 @@ protected:
 
 		Clear( ); }
 
-	bool Open( const std::vector<std::string>&, const std::vector<std::string>& );
+	bool Open( const std::vector<std::string>&, const std::vector<std::string>&, const map<string, size_t>& );
 	bool Open( const std::string&, size_t, bool = false );
 
 	void Clear( ) {

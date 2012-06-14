@@ -23,6 +23,8 @@ option	"block_datasets"	B	"Number of datasets per block"
 								int	default="-1"
 option	"use_nibble"		N	"Use nibble for compact storage"
 								flag	off
+option	"zeros"			Z	"Read zeroed node IDs/outputs from the given file"
+								string typestr="filename"
 
 section "Optional"
 option	"buffer"			u	"Memory buffer disk writes"

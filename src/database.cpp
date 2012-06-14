@@ -597,7 +597,7 @@ bool CDatabaselet::Open( const std::string& strFile ) {
 ///////////////////////////////////////////////////////////////////////////////
 
 bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::string& strInputDirectory,
-	const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles) {
+	const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles, const map<string, size_t>& mapstriZeros ) {
 	vector<string>	vecstrNodes, vecstrSubset;
 	size_t			i, j;
 	char			acNumber[ 16 ];
@@ -634,12 +634,12 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::st
 	for( i = 0; i < vecstrGenes.size( ); ++i )
 		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
 
-	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes );
+	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes, mapstriZeros );
 }
 
 /* Version of Open() that takes a list of datasets as input. Key method */
 bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrDatasets,
-	const std::string& strInputDirectory, const std::string& strOutputDirectory, size_t iFiles){
+	const std::string& strInputDirectory, const std::string& strOutputDirectory, size_t iFiles, const map<string, size_t>& mapstriZeros ){
 
 	vector<string>	vecstrNodes, vecstrSubset;
 	size_t			i, j;
@@ -693,15 +693,16 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 	for( i = 0; i < vecstrGenes.size( ); ++i )
 		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
 
-	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes ); 
+	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes, mapstriZeros ); 
 }
 
 /* the key Open() method for Data2DB conversion */
 bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
-	const std::vector<std::string>& vecstrFiles ) {
+	const std::vector<std::string>& vecstrFiles, const map<string, size_t>& mapstriZeros ) {
 	size_t			i, j, k, iOne, iTwo, iOutBlock, iOutBase, iOutOffset, iInBlock, iInBase, iInOffset;
 	vector<size_t>	veciGenes;
 	float			d;
+	map<string, size_t>::const_iterator iterZero;
 
 	/* define number of threads to concurrently process datasets */
 	omp_set_num_threads(4);
@@ -733,7 +734,6 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 				( vecstrFiles.size( ) - iInBase ) : iInBlock );
 			for( iInOffset = 0; iInOffset < vecData.size( ); ++iInOffset ) {
 				CDataPair	Dat;
-
 				if( !Dat.Open( (vecstrFiles[ iInBase + iInOffset ] + c_acDAB).c_str( ),
 						false, m_fMemmap) ) {
 				    if( !Dat.Open( (vecstrFiles[ iInBase + iInOffset ] + c_acQDAB).c_str( ), false, m_fMemmap ) ) {
@@ -756,21 +756,35 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 					vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 256, true );
 				}
 
+
+				string	strName = CMeta::Filename( CMeta::Deextension( CMeta::Basename( vecstrFiles[ iInBase + iInOffset ].c_str() ) ) );
+
+				size_t iZero = ( ( iterZero = mapstriZeros.find( strName ) ) == mapstriZeros.end( ) ) ? -1 : iterZero->second;
+
 				//#pragma omp parallel for \
 				shared(Dat, veciGenes, veciMyGenes, vecData) \
 				private(j, i) \
 				schedule(static)
 				for(i=0; i<veciMyGenes.size(); i++){
-					size_t t = veciMyGenes[i];
-					if(t==-1) continue;
-					float *d_array = Dat.GetFullRow(t);
-					for(j=0; j<veciGenes.size(); j++){
-						size_t s = veciGenes[j];
-						if(s == -1) continue;
-						if(s == t) continue;
-						vecData[iInOffset].Set(i,j,Dat.Quantize(d_array[s])+1);
+					size_t iOne = veciMyGenes[i];
+					//if( t == -1 && iZero == -1 ) continue;
+					//float *d_array = Dat.GetFullRow(t);
+					for( j = 0; j < veciGenes.size(); j++ ){
+						size_t iTwo = veciGenes[j];
+						//if( s == -1 && iZero == -1 ) continue;
+						//if( s == t ) continue;
+
+						size_t iVal = -1;
+						if( ( iOne != -1 ) && ( iTwo != -1 ) ) 
+						    iVal = Dat.Quantize( Dat.Get( iOne, iTwo ) );
+						if( iVal == -1 )
+						    iVal = iZero;
+						if( iVal == -1 )
+						    continue; 
+
+						vecData[iInOffset].Set(i,j,iVal+1);
 					}
-					free(d_array);
+					//free(d_array);
 				}
 
 
