@@ -35,7 +35,7 @@ int main( int iArgs, char** aszArgs ) {
 	char				acBuffer[ c_iBuffer ];
 	CBayesNetSmile		BNSmile;
 	size_t				i;
-	map<string, size_t>	mapstriZeros;
+	//map<string, size_t>	mapstriZeros;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -65,7 +65,7 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg )
 		ifsm.close( );
 
-    
+   /* 
 	if( sArgs.zeros_arg ) {
 		ifstream		ifsm;
 		vector<string>	vecstrLine;
@@ -86,7 +86,7 @@ int main( int iArgs, char** aszArgs ) {
 		    mapstriZeros[ vecstrLine[ 0 ] ] = atoi( vecstrLine[ 1 ].c_str( ) );
 		}
 	}
-
+	*/
 
 
 	bool useNibble = false;

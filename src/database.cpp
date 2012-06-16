@@ -280,7 +280,7 @@ bool CDatabaselet::Get( size_t iOne, size_t iTwo,
 	Works for both nibble and byte
 */
 bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
-		std::string strOutDirectory, bool bSplit){
+		std::string strOutDirectory, vector<string> &vecstrGenes, bool bSplit){
 
 	/* for checking on consistency of databaselets */
 	bool bIsConsistent = true;
@@ -344,6 +344,12 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 		}
 	}
 
+	map<string, size_t> mapstrintGenes;
+	for(i=0; i<vecstrGenes.size(); i++){
+		mapstrintGenes[vecstrGenes[i]] = i;
+	}
+	char acNumber[16];
+
 	/* splitting to one gene per file after combine */
 	if(bSplit){
 
@@ -351,7 +357,10 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 
 			/* open a new Databaselet containing only one gene */
 			string thisGene = first->GetGene(i);
-			string path = strOutDirectory + "/" + thisGene + ".db";
+			size_t iGeneID = mapstrintGenes[thisGene];
+			sprintf(acNumber, "%08u", iGeneID);
+
+			string path = strOutDirectory + "/" + acNumber + ".db";
 			vector<string> vecstrThisGene;
 			vecstrThisGene.push_back(thisGene);
 
@@ -615,8 +624,19 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::st
 	if( vecstrNodes.size( ) )
 		vecstrNodes.resize( vecstrNodes.size( ) - 1 );
 	m_vecpDBs.resize( iFiles );
+
+	int iNumFilesOpen = 1000;
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
-		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble);
+		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble );
+	}
+
+	size_t k;
+	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
+		if(i%iNumFilesOpen==0 && i>0){
+			for(k=0; k<iNumFilesOpen; k++){
+				m_vecpDBs[i-k-1]->CloseFile();
+			}
+		}
 		vecstrSubset.clear( );
 		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
 			vecstrSubset.push_back( vecstrGenes[ j ] );
@@ -631,6 +651,11 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::st
 			g_CatSleipnir( ).error( "CDatabase::Open( %s, %d ) could not open file %s",
 				strOutputDirectory.c_str( ), iFiles, strFile.c_str( ) );
 			return false; } }
+
+	for( i = 0; i < m_vecpDBs.size( ); ++i ){
+		m_vecpDBs[i]->CloseFile();
+	}
+
 	for( i = 0; i < vecstrGenes.size( ); ++i )
 		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
 
@@ -671,12 +696,7 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
 			vecstrSubset.push_back( vecstrGenes[ j ] ); //contains index for 1000, 2000, 3000th genes
 		sprintf( acNumber, "%08u", i );
-		if(iFiles>=vecstrGenes.size()){
-			//if one gene per file, let databaselet filename be gene-name
-			strFile = strOutputDirectory + '/' + vecstrSubset[0] + c_acExtension;
-		}else{
-			strFile = strOutputDirectory + '/' + acNumber + c_acExtension;
-		}
+		strFile = strOutputDirectory + '/' + acNumber + c_acExtension;
 
 		if( !( i % 100 ) )
 			g_CatSleipnir( ).notice( "CDatabase::Open( %s, %d ) initializing file %d/%d",

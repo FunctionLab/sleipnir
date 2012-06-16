@@ -96,7 +96,7 @@ int main( int iArgs, char** aszArgs ) {
 	    }
 		//printf("Finished reading DBS"); getchar();
 
-	    CDatabaselet::Combine(DBS, sArgs.dir_out_arg, fSplit);
+	    CDatabaselet::Combine(DBS, sArgs.dir_out_arg, vecstrGenes, fSplit);
 	    for(i=0; i<vecstrDBs.size(); i++){
 	    	free(DBS[i]);
 	    }

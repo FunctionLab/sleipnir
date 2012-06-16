@@ -61,7 +61,7 @@ public:
 	bool Get( size_t, const std::vector<size_t>&, std::vector<unsigned char>&, bool ) const;
 
 	static bool Combine(std::vector<CDatabaselet*>& vecDatabaselet,
-			std::string strOutDirectory, bool bSplit = true);
+			std::string strOutDirectory, vector<string> &vecstrGenes, bool bSplit = true);
 
 	size_t GetGenes( ) const {
 
