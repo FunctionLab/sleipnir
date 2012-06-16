@@ -768,6 +768,7 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 						size_t s = veciGenes[j];
 						if(s == -1) continue;
 						if(s == t) continue;
+						if(CMeta::IsNaN(d_array[s])) continue;
 						vecData[iInOffset].Set(i,j,Dat.Quantize(d_array[s])+1);
 					}
 					free(d_array);
