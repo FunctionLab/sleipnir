@@ -111,7 +111,7 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open: " << sArgs.network_arg << endl;
 			return 1; }
 		if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-			vecstrGenes.size( )), mapstriZeros ) ) {
+			vecstrGenes.size( ))) ) {
 			cerr << "Could not open data" << endl;
 			return 1;
 		}
@@ -131,7 +131,7 @@ int main( int iArgs, char** aszArgs ) {
 		ifsm.close();
 
 		if( !DB.Open( vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-			vecstrGenes.size( )), mapstriZeros ) ) {
+			vecstrGenes.size( ))) ) {
 			cerr << "Could not open data" << endl;
 			return 1;
 		}
