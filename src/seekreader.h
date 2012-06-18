@@ -26,6 +26,7 @@
 #include "stdafx.h"
 #include "datapair.h"
 
+
 namespace Sleipnir {
 
 class CSeekTools{
@@ -84,8 +85,20 @@ public:
 		return true;
 	}
 
-};
+	static bool CreatePresenceVector(vector<int> &srcData, vector<char> &destData, size_t iSize){
+		size_t i;
+		destData.clear();
+		destData.resize(iSize);
+		for(i=0; i<iSize; i++){
+			destData[i] = 0;
+		}
+		for(i=0; i<srcData.size(); i++){
+			destData[srcData[i]] = 1;
+		}
+		return true;
+	}
 
+};
 
 class CSeekDataset{
 public:
@@ -184,6 +197,44 @@ public:
 		return true;
 	}
 
+	CFullMatrix<float> *GetFloatMatrix(){
+		return rData;
+	}
+
+	bool InitializeFloatMatrix(bool bSubtractAvg = true){
+		//hard coded quant file
+		vector<float> quant;
+		float w = -5.0;
+		while(w<5.01){
+			quant.push_back(w);
+			w+=1.0;
+		}
+		quant.resize(quant.size());
+		rData = new CFullMatrix<float>();
+		rData->Initialize(r->GetRows(), r->GetColumns());
+		size_t i,j;
+		if(bSubtractAvg){
+			for(i=0; i<rData->GetRows(); i++){
+				for(j=0; j<rData->GetColumns(); j++){
+					float a = GetGeneAverage(j);
+					rData->Set(i, j, quant[r->Get(i, j)] - a);
+				}
+			}
+		}else{
+			for(i=0; i<rData->GetRows(); i++){
+				for(j=0; j<rData->GetColumns(); j++){
+					rData->Set(i, j, quant[r->Get(i, j)]);
+				}
+			}
+		}
+		return true;
+	}
+
+	bool FreeFloatMatrix(){
+		delete rData;
+		return true;
+	}
+
 	CFullMatrix<unsigned char> *GetMatrix(){
 		return r;
 	}
@@ -222,6 +273,9 @@ private:
 
 	size_t iQuerySize;
 	size_t iNumGenes;
+
+	vector<float> weight;
+	CFullMatrix<float> *rData;
 
 	bool m_bIsNibble;
 };

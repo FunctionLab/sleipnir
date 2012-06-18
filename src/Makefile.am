@@ -51,6 +51,9 @@ libSleipnir_a_SOURCES	=	\
 	vwb.cpp					\
 	seekmap.cpp				\
 include_HEADERS			=	\
+	seekquery.h				\
+	seekevaluate.h			\
+	seekweight.h			\
 	seekreader.h			\
 	seekwriter.h			\
 	seekmap.h				\
