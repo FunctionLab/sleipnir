@@ -31,7 +31,7 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
 	istream*			pistm;
-	vector<string>		vecstrLine, vecstrGenes, vecstrDBs;
+	vector<string>		vecstrLine, vecstrGenes, vecstrDBs, vecstrQuery;
 	char				acBuffer[ c_iBuffer ];
 	size_t				i;
 
@@ -62,47 +62,34 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg )
 		ifsm.close( );
 
-	bool useNibble = false;
-	if(sArgs.is_nibble_flag==1){
-		useNibble = true;
-	}
-
-	CDatabase DB(useNibble);
-
-	bool fSplit = false;
-	if(sArgs.split_flag==1){
-		fSplit = true;
-	}
-
-	if(sArgs.db_arg){
-		ifsm.open(sArgs.db_arg);
-		while(!pistm->eof()){
-			pistm->getline(acBuffer, c_iBuffer -1);
-			if(acBuffer[0]==0){
-				break;
-			}
-			acBuffer[c_iBuffer-1] = 0;
-			vecstrDBs.push_back(acBuffer);
+	if(sArgs.dab_arg){
+		CDataPair Dat;
+		char outFile[125];
+		if(!Dat.Open(sArgs.dab_arg, false, false)){
+			cerr << "error opening file" << endl;
+			return 1;
 		}
-		vecstrDBs.resize(vecstrDBs.size());
-		ifsm.close();
 
-		//printf("Reading DBS"); getchar();
-		vector<CDatabaselet*> DBS;
-		DBS.resize(vecstrDBs.size());
-		for(i=0; i<vecstrDBs.size(); i++){
-	    	DBS[i] = new CDatabaselet(useNibble);
-	    	DBS[i]->Open(vecstrDBs[i]);
-	    }
-		//printf("Finished reading DBS"); getchar();
+		if(sArgs.gavg_flag==1){
+			vector<float> vecGeneAvg;
+			string fileName = CMeta::Basename(sArgs.dab_arg);
+			string fileStem = CMeta::Deextension(fileName);
+			sprintf(outFile, "%s/%s.gavg", sArgs.dir_out_arg, fileStem.c_str());
+			CSeekWriter::GetGeneAverage(Dat, vecstrGenes, vecGeneAvg);
+			CSeekTools::WriteArray(outFile, vecGeneAvg);
+		}
 
-	    CDatabaselet::Combine(DBS, sArgs.dir_out_arg, vecstrGenes, fSplit);
-	    for(i=0; i<vecstrDBs.size(); i++){
-	    	free(DBS[i]);
-	    }
+		if(sArgs.gpres_flag==1){
+			vector<char> vecGenePresence;
+			string fileName = CMeta::Basename(sArgs.dab_arg);
+			string fileStem = CMeta::Deextension(fileName);
+			sprintf(outFile, "%s/%s.gpres", sArgs.dir_out_arg, fileStem.c_str());
+			CSeekWriter::GetGenePresence(Dat, vecstrGenes, vecGenePresence);
+			CSeekTools::WriteArray(outFile, vecGenePresence);
+		}
 
 	}else{
-		cerr << "Must give a db list." << endl;
+		cerr << "Must give a dab." << endl;
 		return 1;
 
 	}

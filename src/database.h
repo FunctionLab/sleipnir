@@ -73,21 +73,6 @@ class IBayesNet;
 class CDatabase : CDatabaseImpl {
 public:
 
-	struct ArrayULInt{
-		size_t iX;
-		unsigned long int v;
-	};
-
-	int ULIntComp(const void * a, const void* b){
-		if ( *(unsigned long int*) a > *(unsigned long int*) b){
-			return(1);
-		}
-		if ( *(unsigned long int*) a < *(unsigned long int*) b){
-			return(-1);
-		}
-		return(0);
-	}
-
 	/*!
 	 * \brief
 	 * Construct a new database over the given genes from the given datasets and Bayes net.
@@ -148,6 +133,8 @@ public:
 	//Qian
 	CDatabase(bool isNibble) : CDatabaseImpl(isNibble){
 	}
+
+	bool GetGene(string, vector<unsigned char>&);
 
 	/*!
 	 * \brief

@@ -30,7 +30,7 @@ class CSeekPresence{
 public:
 	CSeekPresence(size_t);
 	CSeekPresence(char*, size_t);
-	CSeekPresence(CSeekPresence&);
+	CSeekPresence(CSeekPresence*);
 	~CSeekPresence();
 	void Clear();
 	bool Check(size_t);
@@ -45,13 +45,20 @@ private:
 class CSeekIntIntMap{
 public:
 	CSeekIntIntMap(size_t);
-	CSeekIntIntMap(CSeekPresence&, bool=false);
+	CSeekIntIntMap(CSeekPresence*, bool=false);
+	CSeekIntIntMap(vector<char>&, bool=false);
+	CSeekIntIntMap(char*, size_t, bool=false);
+	void Initialize(size_t);
+
 	~CSeekIntIntMap();
 	int GetForward(int);
 	int GetReverse(int);
 	void Add(int);
 	void Clear();
-	void Reset(CSeekPresence&, bool=false);
+	void Reset(CSeekPresence*, bool=false);
+	void Reset(vector<char>&, bool=false);
+	void Reset(char*, bool=false);
+	int GetNumSet();
 
 private:
 	int *m_iF;
@@ -68,8 +75,8 @@ public:
 	int Get(string);
 	size_t GetSize();
 	string Get(int);
-	vector<string>& GetAllString();
-	vector<int>& GetAllInteger();
+	vector<string> GetAllString();
+	vector<int> GetAllInteger();
 private:
 	map<string, int> m_mapstrint;
 	map<int, string> m_mapintstr;

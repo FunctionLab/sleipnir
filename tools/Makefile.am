@@ -55,6 +55,8 @@ if WITH_SMILE_TOOLS
 	  Counter \
 	  Data2DB \
       DBCombiner \
+      SeekPrep \
+      SeekReader \
 	  DSLConverter \
 	  Dab2Dad \
 	  Edges2Posteriors \

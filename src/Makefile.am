@@ -48,8 +48,12 @@ libSleipnir_a_SOURCES	=	\
 	stdafx.cpp				\
 	svm.cpp					\
 	svmperf.cpp					\
-	vwb.cpp
+	vwb.cpp					\
+	seekmap.cpp				\
 include_HEADERS			=	\
+	seekreader.h			\
+	seekwriter.h			\
+	seekmap.h				\
 	annotation.h			\
 	annotationi.h			\
 	bayesnetfni.h			\

@@ -705,7 +705,6 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Overlapper/Makefile \
 		 tools/PCLPlotter/Makefile \
 		 tools/PCL2Bin/Makefile \
-		 tools/Dat2PCL/Makefile \
 		 tools/Randomizer/Makefile \
 		 tools/Seqs2Ngrams/Makefile \
 		 tools/SMRF/Makefile \
@@ -725,6 +724,8 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Contexter/Makefile \
 		 tools/Counter/Makefile \
 		 tools/Data2DB/Makefile \
+		 tools/SeekReader/Makefile \
+		 tools/SeekPrep/Makefile \
          tools/DBCombiner/Makefile \
 		 tools/DSLConverter/Makefile \
 		 tools/Dab2Dad/Makefile \

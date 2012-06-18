@@ -59,9 +59,10 @@ public:
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;
 	bool Get( size_t, std::vector<unsigned char>&, bool ) const;
 	bool Get( size_t, const std::vector<size_t>&, std::vector<unsigned char>&, bool ) const;
+	bool Get(size_t, vector<unsigned char>&);
 
 	static bool Combine(std::vector<CDatabaselet*>& vecDatabaselet,
-			std::string strOutDirectory, bool bSplit = true);
+			std::string strOutDirectory, vector<string> &vecstrGenes, bool bSplit = true);
 
 	size_t GetGenes( ) const {
 
@@ -80,14 +81,14 @@ public:
 		if(m_useNibble){
 			if( !fBoth ) {
 				unsigned char	b;
-				m_fstm.seekg( iOffset );
+				m_fstm.seekg( iOffset, ios_base::beg );
 				b = m_fstm.get( );
 				bValue = ( iDataset % 2 ) ? ( ( b & 0xF ) | ( bValue << 4 ) ) :
 						( ( b & 0xF0 ) | ( bValue & 0xF ) ); 
 				}
 		}
 
-		m_fstm.seekp( iOffset );
+		m_fstm.seekp( iOffset, ios_base::beg);
 		m_fstm.put( bValue );
 	}
 
@@ -179,7 +180,6 @@ protected:
 
 	void Clear( ) {
 		size_t	i;
-
 		m_mapstriGenes.clear( );
 		for( i = 0; i < m_vecpDBs.size( ); ++i )
 			delete m_vecpDBs[ i ];

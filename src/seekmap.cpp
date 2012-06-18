@@ -39,10 +39,10 @@ CSeekPresence::CSeekPresence(char *cP, size_t i){
 	iSize = i;
 }
 
-CSeekPresence::CSeekPresence(CSeekPresence& cP){
-	p = (char*)malloc(cP.iSize);
-	memcpy(p, cP.p, cP.iSize);
-	iSize = cP.iSize;
+CSeekPresence::CSeekPresence(CSeekPresence* cP){
+	p = (char*)malloc(cP->iSize);
+	memcpy(p, cP->p, cP->iSize);
+	iSize = cP->iSize;
 }
 
 CSeekPresence::~CSeekPresence(){
@@ -76,20 +76,32 @@ size_t CSeekPresence::GetSize(){
 /*
  * IntIntMap Data Structure
  */
-CSeekIntIntMap::CSeekIntIntMap(size_t iSize){
+void CSeekIntIntMap::Initialize(size_t iSize){
 	m_iF = (int*)malloc(iSize * sizeof(int));
 	m_iR = (int*)malloc(iSize * sizeof(int));
 	m_iSize = iSize;
 	Clear();
 }
+CSeekIntIntMap::CSeekIntIntMap(size_t iSize){
+	Initialize(iSize);
+}
 
-CSeekIntIntMap::CSeekIntIntMap(CSeekPresence &cP, bool bReverse){
-	m_iSize = cP.GetSize();
-	m_iF = (int*)malloc(m_iSize * sizeof(int));
-	m_iR = (int*)malloc(m_iSize * sizeof(int));
-	Clear();
+CSeekIntIntMap::CSeekIntIntMap(CSeekPresence *cP, bool bReverse){
+	Initialize(cP->GetSize());
 	Reset(cP, bReverse);
 }
+
+CSeekIntIntMap::CSeekIntIntMap(vector<char> &cP, bool bReverse){
+	Initialize(cP.size());
+	Reset(cP, bReverse);
+}
+
+
+CSeekIntIntMap::CSeekIntIntMap(char *cP, size_t iSize, bool bReverse){
+	Initialize(iSize);
+	Reset(cP, bReverse);
+}
+
 
 CSeekIntIntMap::~CSeekIntIntMap(){
 	free(m_iF);
@@ -122,24 +134,68 @@ void CSeekIntIntMap::Clear(){
 	m_iNumSet = 0;
 }
 
-void CSeekIntIntMap::Reset(CSeekPresence &cP, bool bReverse){
+int CSeekIntIntMap::GetNumSet(){
+	return m_iNumSet;
+}
+
+void CSeekIntIntMap::Reset(CSeekPresence *cP, bool bReverse){
 	int i;
 	if(bReverse==false){
 		int j = 0;
 		for(i=0; i<m_iSize; i++){
-			if(cP.Check(i)==true){
+			if(cP->Check(i)==true){
 				Add(i);
 			}
 		}
 	}else{
 		int j = 0;
 		for(i=0; i<m_iSize; i++){
-			if(cP.Check(i)==false){
+			if(cP->Check(i)==false){
 				Add(i);
 			}
 		}
 	}
 }
+
+void CSeekIntIntMap::Reset(char *cP, bool bReverse){
+	int i;
+	if(bReverse==false){
+		int j = 0;
+		for(i=0; i<m_iSize; i++){
+			if(cP[i]==1){
+				Add(i);
+			}
+		}
+	}else{
+		int j = 0;
+		for(i=0; i<m_iSize; i++){
+			if(cP[i]==0){
+				Add(i);
+			}
+		}
+	}
+}
+
+void CSeekIntIntMap::Reset(vector<char> &cP, bool bReverse){
+	int i;
+	if(bReverse==false){
+		int j = 0;
+		for(i=0; i<m_iSize; i++){
+			if(cP[i]==1){
+				Add(i);
+			}
+		}
+	}else{
+		int j = 0;
+		for(i=0; i<m_iSize; i++){
+			if(cP[i]==0){
+				Add(i);
+			}
+		}
+	}
+}
+
+
 
 /*
  * StrIntMap Data Structure
@@ -168,7 +224,7 @@ size_t CSeekStrIntMap::GetSize(){
 	return m_mapintstr.size();
 }
 
-vector<string>& CSeekStrIntMap::GetAllString(){
+vector<string> CSeekStrIntMap::GetAllString(){
 	vector<string> vecStr;
 	vecStr.clear();
 	vecStr.resize(GetSize());
@@ -176,11 +232,12 @@ vector<string>& CSeekStrIntMap::GetAllString(){
 	size_t i = 0;
 	for(iter = m_mapstrint.begin(); iter!=m_mapstrint.end(); iter++){
 		vecStr[i] = iter->first;
+		i++;
 	}
 	return vecStr;
 }
 
-vector<int>& CSeekStrIntMap::GetAllInteger(){
+vector<int> CSeekStrIntMap::GetAllInteger(){
 	vector<int> vecInt;
 	vecInt.clear();
 	vecInt.resize(GetSize());
@@ -188,7 +245,9 @@ vector<int>& CSeekStrIntMap::GetAllInteger(){
 	size_t i = 0;
 	for(iter = m_mapintstr.begin(); iter!=m_mapintstr.end(); iter++){
 		vecInt[i] = iter->first;
+		i++;
 	}
 	return vecInt;
+}
 }
 
