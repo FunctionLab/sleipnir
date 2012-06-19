@@ -68,6 +68,10 @@ public:
 		return true;
 	}
 
+	size_t GetNumFold(){
+		return iNumFold;
+	}
+
 	vector<int>& GetQuery(){
 		return queryGenes;
 	}

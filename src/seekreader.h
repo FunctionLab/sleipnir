@@ -255,6 +255,21 @@ public:
 		return geneAverage[i];
 	}
 
+	size_t GetNumGenes(){
+		return iNumGenes;
+	}
+
+	bool InitializeCVWeight(size_t i){
+		weight.clear();
+		weight.resize(i);
+		return true;
+	}
+
+	bool SetCVWeight(size_t i, float f){
+		weight[i] = f;
+		return true;
+	}
+
 
 private:
 	string strName;
