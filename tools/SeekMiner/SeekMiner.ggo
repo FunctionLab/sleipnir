@@ -1,0 +1,17 @@
+package	"SeekMiner"
+version	"1.0"
+purpose	"Performs cross-platform microarray query-guided search"
+
+section "Main"
+option	"db"				x	"Input a set of datasets"
+								string typestr="filename"	yes
+option	"input"				i	"Input gene mapping"
+								string	typestr="filename"	yes
+option	"query"				q	"Query gene list"
+								string typestr="filename"	yes
+option	"dir_in"			d	"Database directory"
+								string	typestr="directory"	yes
+option	"dir_prep_in"		p	"Prep directory (containing .gavg, .gpres files)"
+								string	typestr="directory"	yes				
+option	"is_nibble"			N	"Whether the input DB is nibble type"
+								flag	off
