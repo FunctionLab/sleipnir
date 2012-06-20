@@ -50,12 +50,21 @@ libSleipnir_a_SOURCES	=	\
 	svmperf.cpp					\
 	vwb.cpp					\
 	seekmap.cpp				\
+	seekdataset.cpp			\
+	seekweight.cpp			\
+	seekevaluate.cpp		\
+	seekquery.cpp			\
+	seekreader.cpp			\
+	seekwriter.cpp			\
 include_HEADERS			=	\
+	seekreader.h			\
+	seekwriter.h			\
 	seekquery.h				\
 	seekevaluate.h			\
 	seekweight.h			\
 	seekreader.h			\
 	seekwriter.h			\
+	seekdataset.h			\
 	seekmap.h				\
 	annotation.h			\
 	annotationi.h			\

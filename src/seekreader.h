@@ -25,12 +25,14 @@
 #include "seekmap.h"
 #include "stdafx.h"
 #include "datapair.h"
-
+#include "seekdataset.h"
+#include "database.h"
 
 namespace Sleipnir {
 
 class CSeekTools{
 public:
+	/* binary */
 	template<class tType>
 	static bool ReadArray(const char *fileName, vector<tType> &vData){
 		FILE *f = fopen(fileName, "rb");
@@ -54,6 +56,7 @@ public:
 		return true;
 	}
 
+	/* binary */
 	template<class tType>
 	static bool WriteArray(const char *fileName, vector<tType> &vData){
 		FILE *f = fopen(fileName, "wb");
@@ -85,216 +88,13 @@ public:
 		return true;
 	}
 
-	static bool CreatePresenceVector(vector<int> &srcData, vector<char> &destData, size_t iSize){
-		size_t i;
-		destData.clear();
-		destData.resize(iSize);
-		for(i=0; i<iSize; i++){
-			destData[i] = 0;
-		}
-		for(i=0; i<srcData.size(); i++){
-			destData[srcData[i]] = 1;
-		}
-		return true;
-	}
+	static bool CreatePresenceVector(vector<int> &srcData, vector<char> &destData, size_t iSize);
+	static bool LoadDatabase(CDatabase &DB, string &strInputDirectory, 
+	string &strPrepInputDirectory, vector<char> &cQuery, 
+	vector<string> &vecstrQuery, vector<string> &vecstrDatasets, 
+	vector<CSeekDataset*> &vc);
 
 };
-
-class CSeekDataset{
-public:
-	CSeekDataset(){
-		r = NULL;
-		geneAverage.clear();
-		geneVariance.clear();
-		genePresence.clear();
-		m_fDsetAverage = CMeta::GetNaN();
-		m_fDsetStdev = CMeta::GetNaN();
-	}
-	~CSeekDataset(){
-		if(r!=NULL){
-			delete r;
-		}
-		geneAverage.clear();
-		geneVariance.clear();
-		genePresence.clear();
-	}
-	bool ReadGeneAverage(const string &strFileName){
-		return CSeekTools::ReadArray(strFileName.c_str(), geneAverage);
-	}
-	bool ReadGeneVariance(const string &strFileName){
-		return CSeekTools::ReadArray(strFileName.c_str(), geneVariance);
-	}
-	bool ReadGenePresence(const string &strFileName){
-		bool ret = CSeekTools::ReadArray(strFileName.c_str(), genePresence);
-		if(!ret) return ret;
-		geneMap = new CSeekIntIntMap(genePresence);
-		return true;
-	}
-
-	/* requires presence vector */
-	bool InitializeQuery(vector<char> &query){
-		size_t iSize = query.size();
-		size_t i, j;
-		queryMap = new CSeekIntIntMap(iSize);
-		for(i=0; i<geneMap->GetNumSet(); i++){
-			size_t j = geneMap->GetReverse(i);
-			if(query[j]==0) continue;
-			queryMap->Add(j);
-		}
-		iQuerySize = queryMap->GetNumSet();
-		iNumGenes = iSize;
-
-		if(iQuerySize==0){
-			cerr << "Dataset will be skipped" << endl;
-			return true;
-		}
-		r = new CFullMatrix<unsigned char>();
-		r->Initialize(iQuerySize, iNumGenes);
-		for(i=0; i<iQuerySize; i++){
-			for(j=0; j<iNumGenes; j++){
-				r->Set(i, j, 255);
-			}
-		}
-
-		return true;
-	}
-
-	bool DeleteQuery(){
-		if(queryMap!=NULL){
-			delete queryMap;
-		}
-		iQuerySize = 0;
-		iNumGenes = 0;
-		if(r!=NULL){
-			delete r;
-		}
-		return true;
-	}
-
-	bool SetQuery(size_t &i, size_t &j, unsigned char &c){
-		size_t query = queryMap->GetForward(i);
-		if(query==-1){
-			return false;
-		}
-		r->Set(query, j, c);
-		return true;
-	}
-
-	bool SetQueryNoMapping(size_t &i, size_t &j, unsigned char &c){
-		r->Set(i, j, c);
-		return true;
-	}
-
-	bool SetQuery(size_t &i, vector<unsigned char> &c){
-		size_t query = queryMap->GetForward(i);
-		if(query==-1){
-			return false;
-		}
-		size_t j = 0;
-		for(j=0; j<c.size(); j++){
-			r->Set(query, j, c[j]);
-		}
-		return true;
-	}
-
-	CFullMatrix<float> *GetFloatMatrix(){
-		return rData;
-	}
-
-	bool InitializeFloatMatrix(bool bSubtractAvg = true){
-		//hard coded quant file
-		vector<float> quant;
-		float w = -5.0;
-		while(w<5.01){
-			quant.push_back(w);
-			w+=1.0;
-		}
-		quant.resize(quant.size());
-		rData = new CFullMatrix<float>();
-		rData->Initialize(r->GetRows(), r->GetColumns());
-		size_t i,j;
-		if(bSubtractAvg){
-			for(i=0; i<rData->GetRows(); i++){
-				for(j=0; j<rData->GetColumns(); j++){
-					float a = GetGeneAverage(j);
-					rData->Set(i, j, quant[r->Get(i, j)] - a);
-				}
-			}
-		}else{
-			for(i=0; i<rData->GetRows(); i++){
-				for(j=0; j<rData->GetColumns(); j++){
-					rData->Set(i, j, quant[r->Get(i, j)]);
-				}
-			}
-		}
-		return true;
-	}
-
-	bool FreeFloatMatrix(){
-		delete rData;
-		return true;
-	}
-
-	CFullMatrix<unsigned char> *GetMatrix(){
-		return r;
-	}
-
-	CSeekIntIntMap* GetGeneMap(){
-		return geneMap;
-	}
-
-	CSeekIntIntMap* GetQueryMap(){
-		return queryMap;
-	}
-
-	float GetGeneVariance(size_t i){
-		return geneVariance[i];
-	}
-
-	float GetGeneAverage(size_t i){
-		return geneAverage[i];
-	}
-
-	size_t GetNumGenes(){
-		return iNumGenes;
-	}
-
-	bool InitializeCVWeight(size_t i){
-		weight.clear();
-		weight.resize(i);
-		return true;
-	}
-
-	bool SetCVWeight(size_t i, float f){
-		weight[i] = f;
-		return true;
-	}
-
-
-private:
-	string strName;
-	string strPlatform;
-	CFullMatrix<unsigned char> *r;
-	vector<float> geneAverage;
-	vector<float> geneVariance;
-
-	vector<char> genePresence;
-	CSeekIntIntMap *geneMap;
-	CSeekIntIntMap *queryMap;
-
-	/* previously known as sinfo file */
-	float m_fDsetAverage;
-	float m_fDsetStdev;
-
-	size_t iQuerySize;
-	size_t iNumGenes;
-
-	vector<float> weight;
-	CFullMatrix<float> *rData;
-
-	bool m_bIsNibble;
-};
-
 
 
 }

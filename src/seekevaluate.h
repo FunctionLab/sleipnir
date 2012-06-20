@@ -31,7 +31,7 @@ struct AResult{
 	int i;
 	float f;
 	bool operator<(const AResult& val) const{
-		if(f < val.f){
+		if(f <= val.f){
 			return false;
 		}else{
 			return true;
@@ -41,79 +41,12 @@ struct AResult{
 
 class CSeekPerformanceMeasure{
 public:
-	static bool SortRankVector(const vector<float> &rank, CSeekIntIntMap &mapG, vector<AResult> &a){
-		a.clear();
-		int numGenesD = mapG.GetNumSet();
-		float old_target = 0;
-		float new_target = 0;
-		float prev_target = 0;
-		int prev_numNonZero = 0;
-		int numNonZero = 0;
-		int ii, i, jj;
-
-		while(1){
-			numNonZero = 0;
-			for(ii=0; ii<numGenesD; ii++){
-				i = mapG.GetReverse(ii);
-				if(rank[i]<=old_target) continue;
-				new_target += rank[i];
-				numNonZero++;
-			}
-			/* 1000 is adjustable, this is the top number of items to sort */
-			if(numNonZero==0 || numNonZero<1000){
-				old_target = prev_target;
-				numNonZero = prev_numNonZero;
-				break;
-			}
-			new_target /= (float) numNonZero;
-			if(new_target == old_target){
-				break;
-			}
-			prev_target = old_target;
-			old_target = new_target;
-			prev_numNonZero = numNonZero;
-		}
-
-		if(numNonZero==0){
-			return a;
-		}
-
-		a.resize(numNonZero);
-		jj = 0;
-		for(ii=0; ii<numGenesD; ii++){
-			i = mapG.GetReverse(ii);
-			if(rank[i]<=old_target) continue;
-			a[jj].i = i;
-			a[jj].f = rank[i];
-			jj++;
-		}
-		sort(a.begin(), a.end());
-		return true;
-	}
-
+	static bool SortRankVector(vector<float> &rank,
+		CSeekIntIntMap &mapG, vector<AResult> &a);
 	/* designed specifically for a CSeekDataset */
 	/* mask: the query genes which are not included in RBP calcualtion */
-	static bool RankBiasedPrecision(const float rate, const vector<float> &rank, float &rbp,
-			const vector<char> &mask, const vector<char> &gold, CSeekIntIntMap &mapG){
-
-		int i, ii, j, jj;
-		vector<AResult> sing;
-		CSeekPerformanceMeasure::SortRankVector(rank, mapG, sing);
-
-		float x = 0;
-		int numNonZero = sing.size();
-		for(i=0; i<numNonZero; i++){
-			if(sing[i].f<=0) break;
-			if(mask[sing[i].i]==1) continue;
-			if(gold[sing[i].i]==1){
-				x+=pow(rate, jj);
-			}
-			jj++;
-		}
-		x*=(1.0-rate);
-		rbp = x;
-		return true;
-	}
+	static bool RankBiasedPrecision(float rate, vector<float> &rank, float &rbp,
+		vector<char> &mask, vector<char> &gold, CSeekIntIntMap &mapG);
 };
 
 

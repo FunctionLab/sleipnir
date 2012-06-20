@@ -25,58 +25,17 @@
 #include "stdafx.h"
 #include "seekreader.h"
 #include "seekquery.h"
+#include "seekevaluate.h"
 
 namespace Sleipnir {
 
 
 class CSeekWeighter{
 public:
-	CSeekWeighter(){
-
-	}
-	~CSeekWeighter(){
-
-	}
-	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset){
-		sDataset.InitializeFloatMatrix();
-		size_t iFold = sQuery.GetNumFold();
-		sDataset.InitializeCVWeight(iFold);
-
-		int i, j, qi, qj;
-
-		vector<char> is_query_cross, is_gold;
-		CSeekTools::InitVector(is_query_cross, sDataset.GetNumGenes(), (char) 0);
-		CSeekTools::InitVector(is_gold, sDataset.GetNumGenes(), (char) 0);
-
-		for(qi=0; qi<iFold; qi++){
-			vector<int> vi = sQuery.GetCVQuery(qi);
-			CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
-			int num_q = 0;
-			int num_v = 0;
-			for(i=0; i<vi.size(); i++){
-				if(mapQ->GetForward(vi[i])==-1) continue;
-				is_query_cross[vi[i]] = 1;
-				num_q++;
-			}
-			vector<int> allQ = sQuery.GetQuery();
-			for(i=0; i<allQ.size(); i++){
-				if(mapQ->GetForward(allQ[i])==-1) continue;
-				if(is_query_cross[allQ[i]]==1) continue;
-				is_gold[allQ[i]] = 1;
-				num_v++;
-			}
-			if(num_q==0 || num_v==0){
-				sDataset.SetCVWeight(qi, 0);
-				continue;
-			}
-
-		}
-		sDataset.FreeFloatMatrix();
-		return true;
-	}
-
-
-
+	/*cv_query must be present in sDataset */
+	static bool LinearCombine(vector<float> &rank, vector<int> &cv_query,
+			CSeekDataset &sDataset);
+	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset);
 };
 
 
