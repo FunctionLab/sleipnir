@@ -91,6 +91,7 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(float rate, vector<float> &ran
 	}
 
 	float x = 0;
+	jj = 0;
 	int numNonZero = sing.size();
 	for(i=0; i<numNonZero; i++){
 		if(sing[i].f<=0) break;

@@ -54,8 +54,14 @@ struct gengetopt_args_info
   char * dir_prep_in_arg;	/**< @brief Prep directory (containing .gavg, .gpres files).  */
   char * dir_prep_in_orig;	/**< @brief Prep directory (containing .gavg, .gpres files) original value given at command line.  */
   const char *dir_prep_in_help; /**< @brief Prep directory (containing .gavg, .gpres files) help description.  */
+  char * dir_platform_arg;	/**< @brief Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files).  */
+  char * dir_platform_orig;	/**< @brief Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files) original value given at command line.  */
+  const char *dir_platform_help; /**< @brief Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files) help description.  */
   int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
   const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
+  int num_db_arg;	/**< @brief Number of databaselets in database (default='1000').  */
+  char * num_db_orig;	/**< @brief Number of databaselets in database original value given at command line.  */
+  const char *num_db_help; /**< @brief Number of databaselets in database help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -64,7 +70,9 @@ struct gengetopt_args_info
   unsigned int query_given ;	/**< @brief Whether query was given.  */
   unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */
   unsigned int dir_prep_in_given ;	/**< @brief Whether dir_prep_in was given.  */
+  unsigned int dir_platform_given ;	/**< @brief Whether dir_platform was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
+  unsigned int num_db_given ;	/**< @brief Whether num_db was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

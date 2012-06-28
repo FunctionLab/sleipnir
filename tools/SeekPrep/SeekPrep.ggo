@@ -3,11 +3,13 @@ version	"1.0"
 purpose	"Preprocess datasets for Seek"
 
 section "Main"
-option	"dab"				x	"Input dataset (.dab)"
+option	"dab"				x	"Input dataset (.dab) or databaselet (.db)"
 								string typestr="filename"	yes
 option	"sinfo"				s	"Generates sinfo file (with dataset wide mean and stdev)"
 								flag	off
 option	"gavg"				a	"Generates gene-average file"
+								flag	off
+option	"gplat"				P	"Generates gene-platform average + stdev file (requires .db input)"
 								flag	off
 option	"gpres"				p	"Generates gene-presence file"
 								flag	off
@@ -17,3 +19,9 @@ option	"dir_out"			D	"Output directory"
 								string typestr="directory"	yes
 option	"input"				i	"Gene mapping file"
 								string typestr="filename"	yes
+option	"dir_prep_in"		I	"Prep input directory"
+								string typestr="directory"
+option	"dset"				A	"Dataset ordering file (with platform info) (required for -P)"
+								string typestr="filename"	yes
+option	"useNibble"			N	"Is DB file nibble? (required for -P)"
+								flag	off

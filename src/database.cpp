@@ -179,7 +179,6 @@ bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBase
 		abImage = NULL;
 
 	//vecData: # of genes in databaselet x # of genes user's list
-
 	//if this is not the first dataset in the dataset block
 	if( iBaseDatasets % 2 ){
 		//iGeneOne: iterate over all genes in this databaselet (# of genes in each databaselet)
@@ -246,18 +245,23 @@ bool CDatabase::GetGene(string strGene, vector<unsigned char> &vecbData){
 }
 
 
+/* mainly used by SeekMinder */
 bool CDatabaselet::Get(size_t iOne, vector<unsigned char>& vecbData){
 	size_t iSize;
 	size_t i, j;
 	size_t offset1 = GetOffset(iOne);
-	if(!this->m_fstm.is_open()){
-		cerr << "file not opened" << endl;
-		return false;
+	if(this->m_fstm.is_open()){
+		cerr << "file is already opened" << endl;
+	}else{
+		m_fstm.clear( );
+		m_fstm.open( this->strFileName.c_str( ), ios_base::binary | ios_base::in );
 	}
 
 	this->m_fstm.seekg(offset1, ios_base::beg);
 	unsigned char *abImage = (unsigned char*)malloc( iSize = GetSizeGene());
 	this->m_fstm.read((char*)abImage, iSize);
+
+	m_fstm.close();
 
 	if(m_useNibble==false){
 		vecbData.clear();
@@ -386,24 +390,25 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 	/* load all Databaselets into memory, for efficiency */
 	unsigned char **charImages =
 			(unsigned char**)malloc(vecDatabaselet.size()*sizeof(unsigned char*));
-	size_t iImageSize = iDatasets * iGenes * first->m_iGenes;
-	charImages[0] = (unsigned char*)malloc(iImageSize*sizeof(unsigned char));
+	size_t totSize = 0;
+	size_t numPairs = first->m_iGenes * iGenes;
+	for(i=0; i<vecDatabaselet.size(); i++){
+		totSize += vecDatabaselet[i]->GetSizePair() * numPairs;
+	}
+	charImages[0] = (unsigned char*)malloc(totSize*sizeof(unsigned char));
 	for(i=1; i<vecDatabaselet.size(); i++){
-		charImages[i] = charImages[i-1] + vecDatabaselet[i-1]->m_iDatasets * first->m_iGenes * iGenes;
+		charImages[i] = charImages[i-1] + vecDatabaselet[i-1]->GetSizePair() * numPairs;
 	}
 
 	/* read databaselet into charImages */
 	for(i=0; i<vecDatabaselet.size(); i++){
 		CDatabaselet *current = vecDatabaselet[i];
-		if(current->m_fstm.is_open()){
-			current->m_fstm.seekg(current->m_iHeader, ios_base::beg);
-			current->m_fstm.read((char*) charImages[i], iImageSize);
-		}else{
-			cerr << "CDatabaselet is not open." << endl;
-			free(charImages[0]);
-			free(charImages);
-			return false;
+		if(!current->m_fstm.is_open()){
+			cerr << "CDatabaselet is not opened. Opening..." << endl;
+			current->m_fstm.open( current->strFileName.c_str( ), ios_base::binary | ios_base::in );
 		}
+		current->m_fstm.seekg(current->m_iHeader, ios_base::beg);
+		current->m_fstm.read((char*) charImages[i], vecDatabaselet[i]->GetSizePair() * numPairs);
 	}
 
 	map<string, size_t> mapstrintGenes;
@@ -417,7 +422,6 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 	if(bSplit){
 
 		for(i=0; i<iGenes; i++){
-
 			/* open a new Databaselet containing only one gene */
 			string thisGene = first->GetGene(i);
 			size_t iGeneID = mapstrintGenes[thisGene];
@@ -456,8 +460,7 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 				}
 			}else{
 				size_t j;
-				unsigned char *abImage2 = (unsigned char*)
-					malloc(iDatasets);
+				unsigned char *abImage2 = (unsigned char*)malloc(iDatasets);
 
 				/* m_iGenes is all the genes in the genome */
 				for( iGeneTwo = 0; iGeneTwo < first->m_iGenes; ++iGeneTwo ){
@@ -487,18 +490,13 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 			}
 
 			/* close fstream */
-			if(DBS.m_fstm.is_open()){
-				DBS.m_fstm.seekp( DBS.m_iHeader, ios_base::beg );
-				DBS.m_fstm.write( (char*)abImage, iSize );
-				DBS.m_fstm.close();
-			}else{
-				cerr << "CDatabaselet is not opened." << endl;
-				free(abImage);
-				free(charImages[0]);
-				free(charImages);
-				return false;
+			if(!DBS.m_fstm.is_open()){
+				cerr << "CDatabaselet is not opened. Opening..." << endl;
+				DBS.m_fstm.open(DBS.strFileName.c_str( ), ios_base::binary | ios_base::in);
 			}
-
+			DBS.m_fstm.seekp( DBS.m_iHeader, ios_base::beg );
+			DBS.m_fstm.write( (char*)abImage, iSize );
+			DBS.m_fstm.close();
 			free(abImage);
 
 		}
@@ -573,18 +571,13 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 		}
 
 		/* close the databaselet */
-		if(DBS.m_fstm.is_open()){
-			DBS.m_fstm.seekp( DBS.m_iHeader, ios_base::beg );
-			DBS.m_fstm.write( (char*)abImage, iSize );
-			DBS.m_fstm.close();
-		}else{
+		if(!DBS.m_fstm.is_open()){
 			cerr << "CDatabaselet is not opened." << endl;
-			free(abImage);
-			free(charImages[0]);
-			free(charImages);
-			return false;
+			DBS.m_fstm.open(DBS.strFileName.c_str( ), ios_base::binary | ios_base::in);
 		}
-
+		DBS.m_fstm.seekp( DBS.m_iHeader, ios_base::beg );
+		DBS.m_fstm.write( (char*)abImage, iSize );
+		DBS.m_fstm.close();
 		free(abImage);
 	}
 
@@ -922,7 +915,57 @@ bool CDatabase::Open( const std::string& strInputDirectory ) {
 	return true;
 }
 
+bool CDatabaselet::Set(uint32_t &iGenes, uint32_t &iDatasets, vector<string> &vecstrSubsetGenes){
+	size_t i;
+	m_vecstrGenes.clear();
+	m_vecstrGenes.resize(vecstrSubsetGenes.size());
+	for(i=0; i<vecstrSubsetGenes.size(); i++){
+		m_vecstrGenes[i] = vecstrSubsetGenes[i];
+	}
+
+	m_iGenes = iGenes;
+	m_iDatasets = iDatasets;
+	uint32_t iSize = m_vecstrGenes.size( );
+	m_iHeader = sizeof(m_iHeader) + sizeof(m_iGenes) + sizeof(m_iDatasets) + sizeof(iSize);
+	for( i = 0; i < m_vecstrGenes.size( ); ++i ) {
+		m_iHeader += m_vecstrGenes[ i ].size( ) + 1;
+	}
+
+	return true;
+}
 
 
+
+bool CDatabase::Open(string &strDBDirectory,
+		vector<string> &vecstrGenes, size_t &iDatasets, size_t &iNumDBs){
+	size_t i, j, k;
+	Clear();
+	m_vecpDBs.resize(iNumDBs);
+	char acNumber[ 16 ];
+
+	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
+		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble );
+	}
+
+	for(i=0; i<iNumDBs; i++){
+		vector<string> vecstrSubset;
+		vecstrSubset.clear( );
+		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
+			vecstrSubset.push_back( vecstrGenes[ j ] ); //contains index for 1000, 2000, 3000th genes
+		sprintf( acNumber, "%08u", i );
+		string strFile = strDBDirectory + '/' + acNumber + c_acExtension;
+		uint32_t iGenes = vecstrGenes.size();
+		uint32_t iDset = iDatasets;
+		m_vecpDBs[i]->Set(iGenes, iDset, vecstrSubset);
+		m_vecpDBs[i]->SetFile(strFile);
+	}
+
+	for( i = 0; i < vecstrGenes.size( ); ++i ){
+		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
+	}
+
+
+	return true;
+}
 
 }

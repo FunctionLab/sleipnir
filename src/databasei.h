@@ -61,6 +61,8 @@ public:
 	bool Get( size_t, const std::vector<size_t>&, std::vector<unsigned char>&, bool ) const;
 	bool Get(size_t, vector<unsigned char>&);
 
+	bool Set(uint32_t&, uint32_t&, vector<string>&);
+
 	static bool Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 			std::string strOutDirectory, vector<string> &vecstrGenes, bool bSplit = true);
 
@@ -106,7 +108,33 @@ public:
 		strFileName = std;
 	}
 
+
+	unsigned char* GetCharImage(){
+		size_t iImageSize = GetSizeGenes();
+		unsigned char *charImage = (unsigned char*)malloc(iImageSize*sizeof(unsigned char));
+
+		/* read databaselet into charImage */
+		if(m_fstm.is_open()){
+			m_fstm.seekg(m_iHeader, ios_base::beg);
+			m_fstm.read((char*) charImage, iImageSize);
+		}else{
+			cerr << "CDatabaselet is not open." << endl;
+			free(charImage);
+			return NULL;
+		}
+
+		return charImage;
+	}
+
+	size_t GetImageSize(){
+		return GetSizeGenes();
+	}
+
+
 private:
+	size_t GetSizeGenes( ) const {
+		return ( GetSizeGene( ) * m_vecstrGenes.size( ) ); }
+
 
 	size_t GetOffsetDataset( size_t iDataset ) const {
 		if(m_useNibble){
@@ -126,10 +154,6 @@ private:
 
 	}
 
-	size_t GetSizeGenes( ) const {
-
-		return ( GetSizeGene( ) * m_vecstrGenes.size( ) ); }
-
 	size_t GetSizeGene( ) const {
 
 		return ( GetSizePair( ) * m_iGenes ); }
@@ -146,14 +170,15 @@ private:
 
 		return ( GetOffset( iOne, iTwo ) + GetOffsetDataset( iDataset ) ); }
 
-	uint32_t					m_iHeader;
 	uint32_t					m_iGenes;
 	uint32_t					m_iDatasets;
 	std::vector<std::string>	m_vecstrGenes;
 	std::string					strFileName;
 
-	bool						m_useNibble;
 	mutable std::fstream		m_fstm;
+	uint32_t					m_iHeader;
+
+	bool						m_useNibble;
 	mutable pthread_mutex_t*	m_pmutx;
 };
 

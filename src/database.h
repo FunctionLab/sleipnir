@@ -297,6 +297,9 @@ public:
 
 		return ( m_vecpDBs.empty( ) ? 0 : m_vecpDBs[ 0 ]->GetDatasets( ) ); }
 
+
+	bool Open(string &, vector<string> &, size_t &, size_t &);
+
 	/*!
 	 * \brief
 	 * Set memory mapping behavior when opening DAB files.

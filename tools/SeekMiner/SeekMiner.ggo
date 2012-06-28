@@ -13,5 +13,9 @@ option	"dir_in"			d	"Database directory"
 								string	typestr="directory"	yes
 option	"dir_prep_in"		p	"Prep directory (containing .gavg, .gpres files)"
 								string	typestr="directory"	yes				
+option	"dir_platform"		P	"Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files)"
+								string	typestr="directory"	yes
 option	"is_nibble"			N	"Whether the input DB is nibble type"
 								flag	off
+option	"num_db"			n	"Number of databaselets in database"
+								int	default="1000"	yes

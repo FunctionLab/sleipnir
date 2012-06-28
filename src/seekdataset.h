@@ -25,6 +25,7 @@
 #include "seekmap.h"
 #include "stdafx.h"
 #include "datapair.h"
+#include "seekplatform.h"
 
 
 namespace Sleipnir {
@@ -42,7 +43,7 @@ public:
 	bool SetQueryNoMapping(size_t &, size_t &, unsigned char &);
 	bool SetQuery(size_t &, vector<unsigned char> &);
 	CFullMatrix<float> *GetFloatMatrix();
-	bool InitializeFloatMatrix(bool=true);
+	bool InitializeFloatMatrix(bool=true, bool=true);
 	bool FreeFloatMatrix();
 	CFullMatrix<unsigned char> *GetMatrix();
 	CSeekIntIntMap* GetGeneMap();
@@ -53,10 +54,12 @@ public:
 	bool InitializeCVWeight(size_t);
 	bool SetCVWeight(size_t, float);
 	float GetDatasetSumWeight();
+	void SetPlatform(CSeekPlatform &);
+	CSeekPlatform& GetPlatform();
 
 private:
 	string strName;
-	string strPlatform;
+	CSeekPlatform *platform;
 	CFullMatrix<unsigned char> *r;
 	vector<float> geneAverage;
 	vector<float> geneVariance;

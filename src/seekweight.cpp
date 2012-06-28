@@ -36,15 +36,15 @@ bool CSeekWeighter::LinearCombine(vector<float> &rank, vector<int> &cv_query,
 	}
 	size_t iNumGenes = sDataset.GetNumGenes();
 
-	vector<float> new_rank;
+	//vector<float> new_rank;
 	CSeekTools::InitVector(rank, iNumGenes, (float)0);
-	CSeekTools::InitVector(new_rank, iNumGenes, (float)0);
+	//CSeekTools::InitVector(new_rank, iNumGenes, (float)0);
 	size_t i, j, k;
 
 	int q_size = cv_query.size();
-	for(i=0; i<q_size; i++){
+	/*for(i=0; i<q_size; i++){
 		rank[cv_query[i]] = 1.0 / q_size;
-	}
+	}*/
 
 	/*if(q_size==0){
 		printf("Bad!\n");
@@ -67,15 +67,16 @@ bool CSeekWeighter::LinearCombine(vector<float> &rank, vector<int> &cv_query,
 				printf("Bad %.5f\n", f->Get(g,q));
 				getchar();
 			}*/
-			new_rank[g] += rank[qq] * f->Get(g, q);
+			rank[g] += f->Get(g, q);
 		}
+		rank[g] /= (float) q_size;
 	}
 
-	for(i=0; i<iGenesPresent; i++){
-		size_t g = mapG->GetReverse(i);
-		rank[g] = new_rank[g];
+	//for(i=0; i<iGenesPresent; i++){
+	//	size_t g = mapG->GetReverse(i);
+	//	rank[g] = new_rank[g];
 		//printf("Gene %d %.5f\n", g, rank[g]);
-	}
+	//}
 
 	//getchar();
 

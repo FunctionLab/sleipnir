@@ -19,31 +19,50 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#ifndef STDAFX_H
-#define STDAFX_H
-
-#define __STDC_LIMIT_MACROS
-
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <string>
-#include <omp.h>
-using namespace std;
-
-#include <pthread.h>
-
-#include "bayesnet.h"
-#include "database.h"
-#include "seekmap.h"
-#include "seekweight.h"
-#include "seekdataset.h"
-#include "seekevaluate.h"
+#include "stdafx.h"
 #include "seekplatform.h"
 #include "seekreader.h"
-#include "seekwriter.h"
-#include "seekquery.h"
-#include "meta.h"
-using namespace Sleipnir;
 
-#endif // STDAFX_H
+namespace Sleipnir {
+
+CSeekPlatform::CSeekPlatform(){
+	m_iNumGenes = 0;
+	m_vecfPlatformAvg.clear();
+	m_vecfPlatformStdev.clear();
+	m_strPlatformName = "";
+}
+
+CSeekPlatform::~CSeekPlatform(){
+}
+
+void CSeekPlatform::InitializePlatform(const size_t &numGenes, string &strPlatformName){
+	m_iNumGenes = numGenes;
+	CSeekTools::InitVector(m_vecfPlatformAvg, numGenes, (float) 0);
+	CSeekTools::InitVector(m_vecfPlatformStdev, numGenes, (float) 0);
+	m_strPlatformName = strPlatformName;
+}
+
+void CSeekPlatform::SetPlatformAvg(const size_t &i, float val){
+	m_vecfPlatformAvg[i] = val;
+}
+	
+void CSeekPlatform::SetPlatformStdev(const size_t &i, float val){
+	m_vecfPlatformStdev[i] = val;
+}
+	
+float CSeekPlatform::GetPlatformAvg(const size_t &i){
+	return m_vecfPlatformAvg[i];
+}
+
+float CSeekPlatform::GetPlatformStdev(const size_t &i){
+	return m_vecfPlatformStdev[i];
+}
+
+void CSeekPlatform::ResetPlatform(){
+	m_iNumGenes = 0;
+	m_vecfPlatformAvg.clear();
+	m_vecfPlatformStdev.clear();
+	m_strPlatformName = "";
+}
+
+}

@@ -26,6 +26,7 @@
 #include "stdafx.h"
 #include "datapair.h"
 #include "seekdataset.h"
+#include "seekplatform.h"
 #include "database.h"
 
 namespace Sleipnir {
@@ -88,11 +89,39 @@ public:
 		return true;
 	}
 
-	static bool CreatePresenceVector(vector<int> &srcData, vector<char> &destData, size_t iSize);
-	static bool LoadDatabase(CDatabase &DB, string &strInputDirectory, 
-	string &strPrepInputDirectory, vector<char> &cQuery, 
-	vector<string> &vecstrQuery, vector<string> &vecstrDatasets, 
-	vector<CSeekDataset*> &vc);
+	template<class tType>
+	static tType** Init2DArray(size_t iSize1, size_t iSize2, tType tValue){
+		tType **f = (tType**)malloc(iSize1*sizeof(tType*));
+		f[0] = (tType*)malloc(iSize1*iSize2*sizeof(tType));
+		size_t i, j;
+		for(i=1; i<iSize1; i++){
+			f[i] = f[i-1] + iSize2;
+		}
+		for(i=0; i<iSize1; i++){
+			for(j=0; j<iSize2; j++){
+				f[i][j] = tValue;
+			}
+		}
+		return f;
+	}
+
+	template<class tType>
+	static void Free2DArray(tType** f){
+		free(f[0]);
+		free(f);
+	}
+
+	static bool CreatePresenceVector(vector<int> &, vector<char> &, size_t);
+	static bool LoadDatabase(CDatabase &, string &, vector<char> &,
+	vector<string> &, vector<string> &, map<string, string> &, map<string, size_t> &,
+	vector<CSeekPlatform> &, vector<CSeekDataset*> &);
+
+	static bool ReadPlatforms(string &strPlatformDirectory, vector<CSeekPlatform> &plat,
+			vector<string> &vecstrPlatforms, map<string, size_t> &mapstriPlatforms);
+
+	static bool ReadListOneColumn(string &strFile, vector<string> &vecstrList, CSeekStrIntMap &mapstriList);
+
+	static bool ReadListTwoColumns(string &strFile, vector<string> &list1, vector<string> &list2);
 
 };
 

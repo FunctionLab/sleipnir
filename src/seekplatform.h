@@ -19,31 +19,32 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#ifndef STDAFX_H
-#define STDAFX_H
+#ifndef SEEKPLATFORM_H
+#define SEEKPLATFORM_H
 
-#define __STDC_LIMIT_MACROS
+#include "stdafx.h"
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <string>
-#include <omp.h>
-using namespace std;
+namespace Sleipnir {
 
-#include <pthread.h>
+class CSeekPlatform{
+public:
+	CSeekPlatform();
+	~CSeekPlatform();
 
-#include "bayesnet.h"
-#include "database.h"
-#include "seekmap.h"
-#include "seekweight.h"
-#include "seekdataset.h"
-#include "seekevaluate.h"
-#include "seekplatform.h"
-#include "seekreader.h"
-#include "seekwriter.h"
-#include "seekquery.h"
-#include "meta.h"
-using namespace Sleipnir;
+	void InitializePlatform(const size_t &, string &);
+	void SetPlatformAvg(const size_t &, float);
+	void SetPlatformStdev(const size_t &, float);
+	float GetPlatformAvg(const size_t &);
+	float GetPlatformStdev(const size_t &);
+	void ResetPlatform();
 
-#endif // STDAFX_H
+private:
+	vector<float> m_vecfPlatformAvg;
+	vector<float> m_vecfPlatformStdev;
+	size_t m_iPlatformID;
+	string m_strPlatformName;
+	size_t m_iNumGenes;
+};
+
+}
+#endif

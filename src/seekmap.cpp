@@ -195,8 +195,6 @@ void CSeekIntIntMap::Reset(vector<char> &cP, bool bReverse){
 	}
 }
 
-
-
 /*
  * StrIntMap Data Structure
  */
@@ -207,16 +205,39 @@ CSeekStrIntMap::CSeekStrIntMap(){
 
 CSeekStrIntMap::~CSeekStrIntMap(){}
 
-void CSeekStrIntMap::Set(string s, int i){
+void CSeekStrIntMap::Clear(){
+	m_mapstrint.clear();
+	m_mapintstr.clear();
+}
+
+void CSeekStrIntMap::SetAll(vector<string> &s){
+	Clear();
+	size_t i = 0;
+	for(i=0; i<s.size(); i++){
+		m_mapstrint[s[i]] = i;
+		m_mapintstr[i] = s[i];
+	}
+}
+
+void CSeekStrIntMap::Set(string s, size_t i){
 	m_mapstrint[s] = i;
 	m_mapintstr[i] = s;
 }
+
+map<string, size_t>& CSeekStrIntMap::GetMapForward(){
+	return m_mapstrint;
+}
+
+map<size_t, string>& CSeekStrIntMap::GetMapReverse(){
+	return m_mapintstr;
+}
+
 
 int CSeekStrIntMap::Get(string s){
 	return m_mapstrint[s];
 }
 
-string CSeekStrIntMap::Get(int i){
+string CSeekStrIntMap::Get(size_t i){
 	return m_mapintstr[i];
 }
 
@@ -228,7 +249,7 @@ vector<string> CSeekStrIntMap::GetAllString(){
 	vector<string> vecStr;
 	vecStr.clear();
 	vecStr.resize(GetSize());
-	map<string, int>::iterator	iter;
+	map<string, size_t>::iterator	iter;
 	size_t i = 0;
 	for(iter = m_mapstrint.begin(); iter!=m_mapstrint.end(); iter++){
 		vecStr[i] = iter->first;
@@ -237,11 +258,11 @@ vector<string> CSeekStrIntMap::GetAllString(){
 	return vecStr;
 }
 
-vector<int> CSeekStrIntMap::GetAllInteger(){
-	vector<int> vecInt;
+vector<size_t> CSeekStrIntMap::GetAllInteger(){
+	vector<size_t> vecInt;
 	vecInt.clear();
 	vecInt.resize(GetSize());
-	map<int, string>::iterator	iter;
+	map<size_t, string>::iterator	iter;
 	size_t i = 0;
 	for(iter = m_mapintstr.begin(); iter!=m_mapintstr.end(); iter++){
 		vecInt[i] = iter->first;

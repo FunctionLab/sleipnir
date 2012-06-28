@@ -71,15 +71,19 @@ class CSeekStrIntMap{
 public:
 	CSeekStrIntMap();
 	~CSeekStrIntMap();
-	void Set(string, int);
+	void Clear();
+	void Set(string, size_t);
+	void SetAll(vector<string>&);
 	int Get(string);
+	map<string, size_t>& GetMapForward();
+	map<size_t, string>& GetMapReverse();
 	size_t GetSize();
-	string Get(int);
+	string Get(size_t);
 	vector<string> GetAllString();
-	vector<int> GetAllInteger();
+	vector<size_t> GetAllInteger();
 private:
-	map<string, int> m_mapstrint;
-	map<int, string> m_mapintstr;
+	map<string, size_t> m_mapstrint;
+	map<size_t, string> m_mapintstr;
 };
 
 }
