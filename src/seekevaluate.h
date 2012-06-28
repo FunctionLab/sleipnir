@@ -29,8 +29,21 @@ namespace Sleipnir {
 
 struct AResult{
 	int i;
-	float f;
+	//float f;
+	short f;
 	bool operator<(const AResult& val) const{
+		if(f <= val.f){
+			return false;
+		}else{
+			return true;
+		}
+	}
+};
+
+struct AResultFloat{
+	int i;
+	float f;
+	bool operator<(const AResultFloat& val) const{
 		if(f <= val.f){
 			return false;
 		}else{
@@ -41,11 +54,11 @@ struct AResult{
 
 class CSeekPerformanceMeasure{
 public:
-	static bool SortRankVector(vector<float> &rank,
+	static bool SortRankVector(vector<short> &rank,
 		CSeekIntIntMap &mapG, vector<AResult> &a);
 	/* designed specifically for a CSeekDataset */
 	/* mask: the query genes which are not included in RBP calcualtion */
-	static bool RankBiasedPrecision(float rate, vector<float> &rank, float &rbp,
+	static bool RankBiasedPrecision(float rate, vector<short> &rank, float &rbp,
 		vector<char> &mask, vector<char> &gold, CSeekIntIntMap &mapG);
 };
 

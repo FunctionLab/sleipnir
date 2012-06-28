@@ -131,11 +131,11 @@ bool CSeekDataset::SetQuery(size_t &i, vector<unsigned char> &c){
 	return true;
 }
 
-CFullMatrix<float>* CSeekDataset::GetFloatMatrix(){
+CFullMatrix<short>* CSeekDataset::GetDataMatrix(){
 	return rData;
 }
 
-bool CSeekDataset::InitializeFloatMatrix(bool bSubtractAvg,
+bool CSeekDataset::InitializeDataMatrix(bool bSubtractAvg,
 	bool bSubtractPlatformAvg){
 	/* assume platform is already set */
 
@@ -147,7 +147,9 @@ bool CSeekDataset::InitializeFloatMatrix(bool bSubtractAvg,
 		w+=0.1;
 	}
 	quant.resize(quant.size());
-	rData = new CFullMatrix<float>();
+
+	//rData = new CFullMatrix<float>();
+	rData = new CFullMatrix<short>();
 
 	/* transpose */
 	/* numGenes * numQueries */
@@ -155,59 +157,68 @@ bool CSeekDataset::InitializeFloatMatrix(bool bSubtractAvg,
 
 	size_t i,j;
 	if(bSubtractAvg){
-		float *platform_avg = new float[rData->GetColumns()];
-		float *platform_stdev = new float[rData->GetColumns()];
 
 		if(bSubtractPlatformAvg){
+			float *platform_avg = new float[rData->GetColumns()];
+			float *platform_stdev = new float[rData->GetColumns()];
+
 			for(j=0; j<rData->GetColumns(); j++){
 				size_t jj = queryMap->GetReverse(j);
 				platform_avg[j] = platform->GetPlatformAvg(jj);
 				platform_stdev[j] = platform->GetPlatformStdev(jj);
 			}
-		}
-
-		/* numGenes */
-		for(i=0; i<rData->GetRows(); i++){
-			float a = GetGeneAverage(i);
-			if(isnan(a) || isinf(a)){
-				for(j=0; j<rData->GetColumns(); j++){
-					rData->Set(i, j, -50.0);
-				}
-				continue;
-			}
-
-			/* numQueries */
-			for(j=0; j<rData->GetColumns(); j++){
-				unsigned char x = r->Get(j, i);
-
-				if(x==255){
-					rData->Set(i, j, -50.0);
-					//printf("Bad %.5f %d\n", x, r->Get(j, i));
-					//getchar();
-					/*}else if(x>=quant.size()){
-					printf("Bad oversize %d\n", x);
-					getchar();*/
+			for(i=0; i<rData->GetRows(); i++){
+				/* numGenes */
+				float a = GetGeneAverage(i);
+				if(CMeta::IsNaN(a)){
+					for(j=0; j<rData->GetColumns(); j++){
+						rData->Set(i, j, -32768);
+					}
 					continue;
 				}
-
-				float v = quant[x] - a;
-				if(bSubtractPlatformAvg){
+				/* numQueries */
+				for(j=0; j<rData->GetColumns(); j++){
+					unsigned char x = r->Get(j, i);
+					if(x==255){
+						rData->Set(i, j, -32768);
+						continue;
+					}
 					/*if(CMeta::IsNaN(platform_avg[j]) ||
 						CMeta::IsNaN(platform_stdev[j])){
 						printf("platform average or stdev is NaN\n");
 						getchar();
 						continue;
 					}*/
-					rData->Set(i, j, (v - platform_avg[j] / platform_stdev[j]));
+					float vv = (quant[x] - a - platform_avg[j]) / platform_stdev[j];
+					rData->Set(i, j, (short)(vv*100.0));
+				}
+			}
+			delete[] platform_avg;
+			delete[] platform_stdev;
+
+		}else{
+			for(i=0; i<rData->GetRows(); i++){
+				float a = GetGeneAverage(i);
+				if(CMeta::IsNaN(a)){
+					for(j=0; j<rData->GetColumns(); j++){
+						rData->Set(i, j, -32768);
+					}
 					continue;
 				}
-				rData->Set(i, j, v);
+				/* numQueries */
+				for(j=0; j<rData->GetColumns(); j++){
+					unsigned char x = r->Get(j, i);
+					if(x==255){
+						rData->Set(i, j, -32768);
+						continue;
+					}
+					float v = quant[x] - a;
+					rData->Set(i, j, (short)(v*100.0));
+				}
 			}
 
 		}
 
-		delete[] platform_avg;
-		delete[] platform_stdev;
 
 		return true;
 	}
@@ -216,14 +227,14 @@ bool CSeekDataset::InitializeFloatMatrix(bool bSubtractAvg,
 	for(i=0; i<rData->GetRows(); i++){
 		/* numQueries */
 		for(j=0; j<rData->GetColumns(); j++){
-			rData->Set(i, j, quant[r->Get(j, i)]);
+			rData->Set(i, j, (short) (quant[r->Get(j, i)] * 100.0));
 		}
 	}
 
 	return true;
 }
 
-bool CSeekDataset::FreeFloatMatrix(){
+bool CSeekDataset::FreeDataMatrix(){
 	delete rData;
 	return true;
 }

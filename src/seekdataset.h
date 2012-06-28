@@ -42,9 +42,11 @@ public:
 	bool SetQuery(size_t &, size_t &, unsigned char &);
 	bool SetQueryNoMapping(size_t &, size_t &, unsigned char &);
 	bool SetQuery(size_t &, vector<unsigned char> &);
-	CFullMatrix<float> *GetFloatMatrix();
-	bool InitializeFloatMatrix(bool=true, bool=true);
-	bool FreeFloatMatrix();
+
+	CFullMatrix<short> *GetDataMatrix();
+	bool InitializeDataMatrix(bool=true, bool=true);
+	bool FreeDataMatrix();
+
 	CFullMatrix<unsigned char> *GetMatrix();
 	CSeekIntIntMap* GetGeneMap();
 	CSeekIntIntMap* GetQueryMap();
@@ -77,7 +79,9 @@ private:
 
 	vector<float> weight;
 	float sum_weight;
-	CFullMatrix<float> *rData;
+	//CFullMatrix<float> *rData;
+	CFullMatrix<short> *rData;
+
 	bool m_bIsNibble;
 
 };

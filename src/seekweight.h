@@ -33,7 +33,7 @@ namespace Sleipnir {
 class CSeekWeighter{
 public:
 	/*cv_query must be present in sDataset */
-	static bool LinearCombine(vector<float> &rank, vector<int> &cv_query,
+	static bool LinearCombine(vector<short> &rank, vector<int> &cv_query,
 			CSeekDataset &sDataset);
 	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset);
 };

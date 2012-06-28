@@ -28,58 +28,35 @@
 
 namespace Sleipnir {
 
-bool CSeekWeighter::LinearCombine(vector<float> &rank, vector<int> &cv_query,
+bool CSeekWeighter::LinearCombine(vector<short> &rank, vector<int> &cv_query,
 	CSeekDataset &sDataset){
 	if(cv_query.size()==0){
 		cerr << "cv_query empty" << endl;
 		return true;
 	}
 	size_t iNumGenes = sDataset.GetNumGenes();
-
-	//vector<float> new_rank;
-	CSeekTools::InitVector(rank, iNumGenes, (float)0);
-	//CSeekTools::InitVector(new_rank, iNumGenes, (float)0);
+	CSeekTools::InitVector(rank, iNumGenes, (short)-32768);
 	size_t i, j, k;
 
 	int q_size = cv_query.size();
-	/*for(i=0; i<q_size; i++){
-		rank[cv_query[i]] = 1.0 / q_size;
-	}*/
-
-	/*if(q_size==0){
-		printf("Bad!\n");
-		getchar();
-	}*/
-
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
-
-	CFullMatrix<float> *f = sDataset.GetFloatMatrix();
+	CFullMatrix<short> *f = sDataset.GetDataMatrix();
 
 	size_t iGenesPresent = mapG->GetNumSet();
+	/* as long as rank[g] does not overflow, due to too many queries, we are fine
+	 * should control query size to be <100. */
 	for(i=0; i<iGenesPresent; i++){
 		size_t g = mapG->GetReverse(i);
+		rank[g] = 0;
 		for(j=0; j<q_size; j++){
 			int qq = cv_query[j];
 			if(g==qq) continue;
 			size_t q = mapQ->GetForward(qq);
-			/*if(f->Get(g,q)<-50.0 || f->Get(g,q)>50.0){
-				printf("Bad %.5f\n", f->Get(g,q));
-				getchar();
-			}*/
 			rank[g] += f->Get(g, q);
 		}
-		rank[g] /= (float) q_size;
+		rank[g] /= (short) q_size;
 	}
-
-	//for(i=0; i<iGenesPresent; i++){
-	//	size_t g = mapG->GetReverse(i);
-	//	rank[g] = new_rank[g];
-		//printf("Gene %d %.5f\n", g, rank[g]);
-	//}
-
-	//getchar();
-
 	return true;
 }
 
@@ -118,18 +95,11 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset){
 			num_v++;
 		}
 
-		/*printf("Cross Val %d %d %d\n", qi, num_q, num_v);
-		printf("Cross Val %d\n", qi);
-		for(i=0; i<vi.size(); i++){
-			printf("%d ", vi[i]);
-		}
-		printf("\n");
-		*/
 		if(num_q==0 || num_v==0){
 			sDataset.SetCVWeight(qi, -1);
 		}else{
 			/* actual weighting */
-			vector<float> rank;
+			vector<short> rank;
 			float w = 0;
 			bool ret = LinearCombine(rank, cv_query, sDataset);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(0.95,

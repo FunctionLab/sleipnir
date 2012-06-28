@@ -188,7 +188,7 @@ int main( int iArgs, char** aszArgs ) {
 			shared(vc) \
 			private(d, j) \
 			firstprivate(iDatasets) \
-			schedule(static)
+			schedule(dynamic)
 
 			for(d=0; d<iDatasets; d++){
 				int tid = omp_get_thread_num();
@@ -207,31 +207,37 @@ int main( int iArgs, char** aszArgs ) {
 				}
 
 				//printf("Initializing\n");
-				vc[d]->InitializeFloatMatrix();
+				vc[d]->InitializeDataMatrix();
 				//printf("Weighting dataset\n");
 				CSeekWeighter::CVWeighting(query, *vc[d]);
 				float w = vc[d]->GetDatasetSumWeight();
 				if(w==-1){
 					//printf("Bad weight\n");
-					vc[d]->FreeFloatMatrix();
+					vc[d]->FreeDataMatrix();
 					continue;
 					//getchar();
 				}
-				vector<float> rank_normal;
+				vector<short> rank_normal;
 				//printf("Doing linear combination\n");
 				CSeekWeighter::LinearCombine(rank_normal, this_q, *vc[d]);
 				/*for(j=0; j<1000; j++){
 					size_t g = mapG->GetReverse(j);
-					printf("Gene %d %.5f\n", g, rank_normal[g]);
+					printf("Gene %d %d\n", g, rank_normal[g]);
 				}*/
-				vc[d]->FreeFloatMatrix();
+				vc[d]->FreeDataMatrix();
 
 				//printf("Adding contribution of dataset to master ranking: %.5f\n", w);
 				for(j=0; j<mapG->GetNumSet(); j++){
 					size_t g = mapG->GetReverse(j);
-					master_rank_threads[tid][g] += rank_normal[g] * w;
 					counts_threads[tid][g]++;
-					sum_weight_threads[tid][g] += w;
+				}
+
+				if(w>0.000005){
+					for(j=0; j<mapG->GetNumSet(); j++){
+						size_t g = mapG->GetReverse(j);
+						master_rank_threads[tid][g] += (float) rank_normal[g] / 100.0 * w;
+						sum_weight_threads[tid][g] += w;
+					}
 				}
 			}
 
@@ -262,7 +268,7 @@ int main( int iArgs, char** aszArgs ) {
 			}
 
 			printf("Sorting genes\n");
-			vector<AResult> a;
+			vector<AResultFloat> a;
 			a.clear();
 			a.resize(iGenes);
 			for(j=0; j<iGenes; j++){

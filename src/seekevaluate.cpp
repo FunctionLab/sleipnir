@@ -25,13 +25,13 @@
 
 namespace Sleipnir {
 
-bool CSeekPerformanceMeasure::SortRankVector(vector<float> &rank,
+bool CSeekPerformanceMeasure::SortRankVector(vector<short> &rank,
 	CSeekIntIntMap &mapG, vector<AResult> &a){
 	a.clear();
 	int numGenesD = mapG.GetNumSet();
-	float old_target = 0;
-	float new_target = 0;
-	float prev_target = 0;
+	float old_target = -32769;
+	float new_target = -32769;
+	float prev_target = -32769;
 	int prev_numNonZero = 0;
 	int numNonZero = 0;
 	int ii, i, jj;
@@ -44,14 +44,20 @@ bool CSeekPerformanceMeasure::SortRankVector(vector<float> &rank,
 			new_target += rank[i];
 			numNonZero++;
 		}
+
+		//printf("Non Zero %d %d\n", numNonZero, new_target);
+
 		/* 1000 is adjustable, this is the top number of items to sort */
 		if(numNonZero==0 || numNonZero<1000){
 			old_target = prev_target;
 			numNonZero = prev_numNonZero;
 			break;
 		}
+
 		new_target /= (float) numNonZero;
-		if(new_target == old_target){
+
+		if(new_target <= old_target){
+			numNonZero = prev_numNonZero;
 			break;
 		}
 		prev_target = old_target;
@@ -79,7 +85,7 @@ bool CSeekPerformanceMeasure::SortRankVector(vector<float> &rank,
 
 /* designed specifically for a CSeekDataset */
 /* mask: the query genes which are not included in RBP calcualtion */
-bool CSeekPerformanceMeasure::RankBiasedPrecision(float rate, vector<float> &rank, float &rbp,
+bool CSeekPerformanceMeasure::RankBiasedPrecision(float rate, vector<short> &rank, float &rbp,
 	vector<char> &mask, vector<char> &gold, CSeekIntIntMap &mapG){
 
 	int i, ii, j, jj;
@@ -94,7 +100,7 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(float rate, vector<float> &ran
 	jj = 0;
 	int numNonZero = sing.size();
 	for(i=0; i<numNonZero; i++){
-		if(sing[i].f<=0) break;
+		if(sing[i].f<=-32768) break;
 		if(mask[sing[i].i]==1) continue;
 		if(gold[sing[i].i]==1){
 			x+=pow(rate, jj);
