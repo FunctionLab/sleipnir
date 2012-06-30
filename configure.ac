@@ -528,6 +528,55 @@ AC_SUBST(SVM_PERF_LIBS)
 #	 #include "svm/svm_struct_api.h"
 #	 #include "svm/svm_struct_api_types.h"],
 
+## LIBLINEAR
+# If the user specifies a path, use it.
+# If the user says not to use it, then don't.
+# If the user doesn't specify anything, check for it.
+# While checking, look for a source distribution in extlib/.
+# If none, set NO_LIBLINEAR=1.
+AC_ARG_WITH([liblinear],
+        [AS_HELP_STRING([--with-liblinear=PATH], [prefix of Liblinear installation])],
+        [
+         if test "x$with_liblinear" = "xyes"; then
+           liblinear_state=check
+         elif test "x$with_liblinear" != "xno"; then
+           liblinear_state=try
+           qualify_path with_liblinear
+#           LOCAL_CHECK_APPEND_PATHS([$with_liblinear], [. include], [svm_struct_api.h], [LIBLINEAR_INCLUDE_DIR], [liblinear_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_liblinear], [. lib], [libliblinear.a], [LIBLINEAR_LIB_DIR], [liblinear_state=warn])
+         else
+           liblinear_state=no
+         fi
+        ],
+        [liblinear_state=check])
+AC_LANG_PUSH([C])
+LOCAL_CHECK_LIB([liblinear],
+        [liblinear_state=ok],                                      dnl found
+        [LIBLINEAR_LIBS="-lliblinear"],                              dnl and found installed
+        [
+         LIBLINEAR_CFLAGS="-I $LIBLINEAR_INCLUDE_DIR"
+         LIBLINEAR_LIBS="-L $LIBLINEAR_LIB_DIR -lliblinear"
+        ],                                                        dnl and found in specified path
+        [],                                                       dnl not found
+        [liblinear_state=no],                                      dnl and not found installed
+        [liblinear_state=warn],                                    dnl and not found in specified path
+        [],                                                       dnl requested without
+        [#include <sys/types.h>
+         #include "svm_light/svm_common.h",
+         #include "svm_light/svm_learn.h"],
+        [],
+        [-L $LIBLINEAR_LIB_DIR -I $LIBLINEAR_INCLUDE_DIR])
+AC_LANG_POP
+if test "x$liblinear_state" != "xok"; then
+  AC_DEFINE([NO_LIBLINEAR], [1])
+fi
+
+AC_SUBST(LIBLINEAR_CFLAGS)
+AC_SUBST(LIBLINEAR_LIBS)
+
+
+
+
 
 ## BOOST
 # If the user specifies a path, use it.
@@ -668,6 +717,7 @@ AM_CONDITIONAL([WITH_VW_TOOLS], [test "x$vowpal_wabbit_state" = "xok"])
 AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_state" = "xok"])
 AM_CONDITIONAL([WITH_BOOST_TOOLS], [test "x$boost_state" = "xok"])
 AM_CONDITIONAL([WITH_GENGETOPT], [test "x$prog_gengetopt_state" = "xok"])
+AM_CONDITIONAL([WITH_LINEAR_TOOLS],[test "x$liblinear_state" = "xok"])
 
 AC_CONFIG_FILES([Makefile \
                  src/Makefile \
@@ -735,6 +785,7 @@ AC_CONFIG_FILES([Makefile \
                  tools/Data2Svm/Makefile \
 		 tools/SVMer/Makefile \
 		 tools/SVMperfer/Makefile \
+		tools/Liblinear/Makefile \
 		 tools/VWer/Makefile \
                  tools/OntoShell/Makefile \
                  tools/BNServer/Makefile])
@@ -762,6 +813,7 @@ fi
 echo "  log4cpp                 = $log4cpp_info"
 echo "  SMILE                   = $smile_info"
 echo "  SVM Perf                = $svm_perf_info"
+echo "  LIBLINEAR		= $liblinear_info"
 echo "  Vowpal Wabbit           = $vowpal_wabbit_info"
 echo "  pthread                 = $pthread_info"
 if $with_tools; then
@@ -829,6 +881,28 @@ if test "x$svm_perf_state" = "xwarn"; then
 ** WARNING: The path to SVM Perf may be incorrect.
 I looked for svm_struct_api.h and libsvmperf.a and did not
 find both. NOTE: You may need to make libsvmperf.a. See the README.
+EOF
+
+fi
+
+if test "x$liblinear_state" != "xok"; then
+  cat << EOF
+
+** BUILDING WITHOUT LIBLINEAR
+LIBLINEAR is strongly recommended
+It is available from http://www.csie.ntu.edu.tw/~cjlin/liblinear/.
+EOF
+
+fi
+
+if test "x$liblinear_state" = "xwarn"; then
+  cat << EOF
+** WARNING: The path to liblinear may be incorrect.
+I looked for liblinear.a and did not find it.  NOTE: You may need to make libliblinear.a: 
+
+ar rcs libliblinear.a *.o
+
+See the README.
 EOF
 
 fi

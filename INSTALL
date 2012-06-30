@@ -76,6 +76,17 @@ directory, do:
 Use --with-svm-perf=(dir) to point configure to the source top level
 directory and you should be fine.
 
+Liblinear (optional)
+
+When building this from source, the Makefile distributed with it does
+not actually make the library (libliblinear.a).  You will need to make
+this yourself. From within the liblinear source code top level
+directory, do:
+
+   $ ar rcs libliblinear.a *.o
+
+Use --with-liblinear=(dir) to point configure to the source top level
+direcotry and you should be fine.
 
 Known compilation problems
 ==========================
@@ -164,7 +175,12 @@ likely will need to use --with-smile=(dir), even if it is only
 [ SVM Perf ]
 Recommended, required for SVM support (and Data2Svm, SVMer, SVMperfer).
 
-This was least seen at http://svmlight.joachims.org/.
+This was last seen at http://svmlight.joachims.org/.
+
+[ Liblinear ]
+Recommended, required for Liblinearer support.
+
+This was last seen at http://www.csie.ntu.edu.tw/~cjlin/liblinear/.
 
 [ Vowpal Wabbit ]
 Required for VWer, optional for library.
@@ -233,6 +249,12 @@ paradigm.)
 
 Specify the installation or build directory for SVM Perf. Configure
 will look for svm_struct_api.h and libsvmperf.a either in this
+directory or within include and lib directories (respectively).
+
+--with-liblinear=(dir)
+
+Specify the installation or build directory for Liblinear. Configure
+will look for libliblinear.a either in this
 directory or within include and lib directories (respectively).
 
 --with-vowpal-wabbit=(dir)
