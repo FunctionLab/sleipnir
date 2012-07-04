@@ -92,20 +92,14 @@ bool CSeekDataset::InitializeQuery(const vector<char> &query){
 	}
 	iQuerySize = queryMap->GetNumSet();
 	iNumGenes = iSize;
+	bool DEBUG = false;
 
 	if(iQuerySize==0){
-		//cerr << "Dataset will be skipped" << endl;
+		if(DEBUG) cerr << "Dataset will be skipped" << endl;
 		r = NULL;
 		return true;
 	}
 	r = CSeekTools::Init2DArray(iQuerySize, iNumGenes, (unsigned char) 255);
-	/*r = new CFullMatrix<unsigned char>();
-	r->Initialize(iQuerySize, iNumGenes);
-	for(i=0; i<iQuerySize; i++){
-		for(j=0; j<iNumGenes; j++){
-			r->Set(i, j, 255);
-		}
-	}*/
 	return true;
 }
 
@@ -130,13 +124,11 @@ bool CSeekDataset::SetQuery(const ushort &i, const ushort &j, const unsigned cha
 		return false;
 	}
 	r[query][j] = c;
-	//r->Set(query, j, c);
 	return true;
 }
 
 bool CSeekDataset::SetQueryNoMapping(const ushort &i, const ushort &j, const unsigned char &c){
 	r[i][j] = c;
-	//r->Set(i, j, c);
 	return true;
 }
 
@@ -148,7 +140,6 @@ bool CSeekDataset::SetQuery(const ushort &i, const vector<unsigned char> &c){
 	ushort j = 0;
 	for(j=0; j<c.size(); j++){
 		r[query][j] = c[j];
-		//r->Set(query, j, c[j]);
 	}
 	return true;
 }
@@ -173,7 +164,6 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 	//Assuming rData is not NULL
 	/* transpose */
 	/* numGenes * numQueries */
-	//rData->Initialize(r->GetColumns(), r->GetRows());
 	ushort i, j;
 	rData = rD;
 	ushort ii;
@@ -182,13 +172,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 
 	//iRows is the gene id, iColumns is the query id
 	memset(&rData[0][0], 0, sizeof(ushort)*iRows*iColumns);
-	/*for(i=0; i<iRows; i++){
-		for(j=0; j<iColumns; j++){
-			rData[i][j] = 0;
-		}
-	}
-	printf("iRows and iColumns %d %d\n", iRows, iColumns);
-	 */
+
 	if(bSubtractAvg){
 
 		if(bSubtractPlatformAvg){
@@ -206,33 +190,15 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 				i = geneMap->GetReverse(ii);
 				/* numGenes */
 				float a = GetGeneAverage(i);
-				//if(isnan(a) || isinf(a)){
-					/*for(j=0; j<rData->GetColumns(); j++){
-						rData->Set(i, j, 0);
-					}*/
-				//	continue;
-				//}
 				/* numQueries */
 				for(j=0; j<iNumQueries; j++){
 					unsigned char x = r[j][i];
 					if(x==255){
-						//rData->Set(i, j, 0);
 						continue;
 					}
-					/*if(CMeta::IsNaN(platform_avg[j]) ||
-						CMeta::IsNaN(platform_stdev[j])){
-						printf("platform average or stdev is NaN\n");
-						getchar();
-						continue;
-					}*/
 					float vv = (quant[x] - a - platform_avg[j]) / platform_stdev[j];
-					vv = max(min(vv, (float)3.2), (float)-3.2);
-					/*if(vv>=3.2){
-						vv = 3.2;
-					}
-					else if(vv<=-3.2){
-						vv = -3.2;
-					}*/
+					//Do not remove the (float) cast in front of min
+					vv = max((float) min(vv, (float)3.2), (float)-3.2);
 					rData[i][j] = (ushort) (vv*100.0) + 320;
 				}
 			}
@@ -243,26 +209,14 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 			for(ii=0; ii<iNumGenes; ii++){
 				i = geneMap->GetReverse(ii);
 				float a = GetGeneAverage(i);
-				//if(isnan(a) || isinf(a)){
-					/*for(j=0; j<rData->GetColumns(); j++){
-						rData->Set(i, j, 0);
-					}*/
-				//	continue;
-				//}
 				/* numQueries */
 				for(j=0; j<iNumQueries; j++){
 					unsigned char x = r[j][i];
 					if(x==255){
-						//rData->Set(i, j, 0);
 						continue;
 					}
 					float vv = quant[x] - a;
-					if(vv>=3.2){
-						vv = 3.2;
-					}
-					else if(vv<=-3.2){
-						vv = -3.2;
-					}
+					vv = max((float) min(vv, (float)3.2), (float)-3.2);
 					rData[i][j]= (ushort) (vv*100.0) + 320;
 				}
 			}
@@ -277,11 +231,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 		/* numQueries */
 		for(j=0; j<iNumQueries; j++){
 			float vv = quant[r[j][i]];
-			if(vv>=3.2){
-				vv = 3.2;
-			} else if(vv<=-3.2){
-				vv = -3.2;
-			}
+			vv = max((float) min(vv, (float)3.2), (float)-3.2);
 			rData[i][j] = (ushort) (vv*100.0) + 320;
 		}
 	}

@@ -111,8 +111,6 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDir
 	fprintf(stderr, "Done reading genes cdatabaselet\n"); system("date +%s%N 1>&2");
 
 	size_t m;
-	CSeekIntIntMap *qu;
-	ushort query;
 
 	fprintf(stderr, "Start changing to query centric\n"); system("date +%s%N 1>&2");
 	for(i=0; i<vecstrQuery.size(); i++){
@@ -123,12 +121,12 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDir
 
 		#pragma omp parallel for \
 		shared(vc, cQuery, Q) \
-		private(j, k, query, qu) \
+		private(j, k) \
 		firstprivate(i, iDatasets, iGenes, m) \
 		schedule(dynamic)
 		for(j=0; j<iDatasets; j++){
-			qu = vc[j]->GetQueryMap();
-			query = qu->GetForward(m);
+			CSeekIntIntMap *qu = vc[j]->GetQueryMap();
+			ushort query = qu->GetForward(m);
 			if(CSeekTools::IsNaN(query)) continue;
 			//printf("i j %d %d %d %d\n", i, j, (int) query, k*iDatasets + j);
 			for(k=0; k<iGenes; k++){

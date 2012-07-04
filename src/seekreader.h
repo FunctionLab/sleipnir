@@ -51,10 +51,14 @@ public:
 		vData.resize(iSize);
 		tType *m_Data = (tType*)malloc(iSize*sizeof(tType));
 		ret = fread((char*)m_Data, 1, iSize*sizeof(tType), f);
-		ushort i;
-		for(i=0; i<iSize; i++){
-			vData[i] = m_Data[i];
+		typename vector<tType>::iterator iter;
+		tType *mp;
+		for(iter=vData.begin(), mp=&m_Data[0]; iter!=vData.end(); iter++, mp++){
+			*iter = *mp;
 		}
+		/*for(i=0; i<iSize; i++){
+			vData[i] = m_Data[i];
+		}*/
 		free(m_Data);
 		fclose(f);
 		return true;

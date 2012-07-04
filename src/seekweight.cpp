@@ -58,17 +58,22 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank, const vector<ushort> &cv
 		queryPos[i] = mapQ->GetForward(cv_query[i]);
 	}
 
-	for(g=0; g<iNumGenes; g++){
+	vector<ushort>::iterator iter_g;
+	ushort **pf;
+	for(iter_g=rank.begin(), pf = &f[0]; iter_g!=rank.end(); iter_g++, pf++){
+	//for(g=0; g<iNumGenes; g++){
 		for(iter=queryPos.begin(); iter!=queryPos.end(); iter++){
-			rank[g] += f[g][*iter];
+			//rank[g] += f[g][*iter];
+			(*iter_g) += (*pf)[*iter];
 		}
-		rank[g] /= q_size;
+		//rank[g] /= q_size;
+		(*iter_g) /= q_size;
 	}
 	return true;
 }
 
 
-bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset){
+bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vector<ushort> *rank, const bool bAllocate){
 	ushort iFold = sQuery.GetNumFold();
 	sDataset.InitializeCVWeight(iFold);
 
@@ -78,12 +83,16 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset){
 	CSeekTools::InitVector(is_query_cross, sDataset.GetNumGenes(), (char) 0);
 	CSeekTools::InitVector(is_gold, sDataset.GetNumGenes(), (char) 0);
 
-	vector<ushort> rank;
-	CSeekTools::InitVector(rank, sDataset.GetNumGenes(), (ushort) 0);
+	if(bAllocate){
+		rank = (vector<ushort>*)malloc(sizeof(vector<ushort>));
+		CSeekTools::InitVector(*rank, sDataset.GetNumGenes(), (ushort) 0);
+	}else{
+		fill(rank->begin(), rank->end(), (ushort)0);
+	}
 
 	ushort TOP = 1000;
 	vector<AResult> ar;
-	ar.resize(rank.size());
+	ar.resize(rank->size());
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
@@ -116,11 +125,10 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset){
 			//printf("num_q %d or num_v %d\n", num_q, num_v);
 		}else{
 			/* actual weighting */
-			//vector<unsigned short> rank;
 			float w = 0;
-			bool ret = LinearCombine(rank, cv_query, sDataset, false);
+			bool ret = LinearCombine(*rank, cv_query, sDataset, false);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(0.95,
-				rank, w, is_query_cross, is_gold, *mapG, false, &ar, TOP);
+				*rank, w, is_query_cross, is_gold, *mapG, false, &ar, TOP);
 			if(!ret){
 				sDataset.SetCVWeight(qi, -1);
 			}else{
@@ -139,6 +147,11 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset){
 		}
 
 	}
+
+	if(bAllocate){
+		free(rank);
+	}
+
 	return true;
 }
 

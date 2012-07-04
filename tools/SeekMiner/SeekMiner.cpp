@@ -106,6 +106,7 @@ int main( int iArgs, char** aszArgs ) {
 		ushort FOLD = 5;
 		enum PartitionMode PART_M = CUSTOM_PARTITION;
 
+		/* Random Number Generator Initializations */
 		const gsl_rng_type *T;
 		gsl_rng *rnd;
 		gsl_rng_env_setup();
@@ -113,6 +114,7 @@ int main( int iArgs, char** aszArgs ) {
 		rnd = gsl_rng_alloc(T);
 
 		ushort numThreads = omp_get_max_threads();
+		bool DEBUG = false;
 
 		for(i=0; i<1; i++){
 			CSeekQuery query;
@@ -138,17 +140,30 @@ int main( int iArgs, char** aszArgs ) {
 			float **sum_weight_threads = CSeekTools::Init2DArray(numThreads, iGenes, (float) 0);
 			ushort **counts_threads = CSeekTools::Init2DArray(numThreads, iGenes, (ushort) 0);
 
-			fprintf(stderr, "Entering search\n"); system("date +%s%N 1>&2");
+			vector<ushort> *rank_threads = (vector<ushort>*)malloc(numThreads * sizeof(vector<ushort>));
+			vector<ushort> *rank_normal_threads = (vector<ushort>*)malloc(numThreads * sizeof(vector<ushort>));
+			for(j=0; j<numThreads; j++){
+				rank_threads[j].resize(iGenes);
+				rank_normal_threads[j].resize(iGenes);
+			}
+
+			fprintf(stderr, "Entering search\n");
+			system("date +%s%N 1>&2");
 
 			#pragma omp parallel for \
-			shared(vc, rData) \
+			shared(vc, rData, rank_normal_threads, \
+			rank_threads, master_rank_threads, sum_weight_threads, counts_threads) \
 			private(d, j) \
 			firstprivate(iDatasets) \
 			schedule(dynamic)
 
 			for(d=0; d<iDatasets; d++){
 				ushort tid = omp_get_thread_num();
-				//printf("Dataset %d\n", d);
+				vector<ushort> &rank_normal = rank_normal_threads[tid];
+				vector<ushort> &rank = rank_threads[tid];
+
+				if(DEBUG) fprintf(stderr, "Dataset %d\n", d);
+
 				CSeekIntIntMap *mapQ = vc[d]->GetQueryMap();
 				CSeekIntIntMap *mapG = vc[d]->GetGeneMap();
 
@@ -162,46 +177,41 @@ int main( int iArgs, char** aszArgs ) {
 					continue;
 				}
 
-				//printf("Initializing\n");
+				if(DEBUG) fprintf(stderr, "Initializing\n");
+
 				vc[d]->InitializeDataMatrix(rData[tid], iGenes, iQuery);
-				//printf("Weighting dataset\n");
-				CSeekWeighter::CVWeighting(query, *vc[d]);
+
+				if(DEBUG) fprintf(stderr, "Weighting dataset\n");
+
+				CSeekWeighter::CVWeighting(query, *vc[d], &rank, false);
 				float w = vc[d]->GetDatasetSumWeight();
+
 				if(w==-1){
-					//printf("Bad weight\n");
-					//vc[d]->FreeDataMatrix();
+					if(DEBUG) fprintf(stderr, "Bad weight\n");
 					continue;
-					//getchar();
 				}
-				vector<ushort> rank_normal;
-				//printf("Doing linear combination\n");
-				CSeekWeighter::LinearCombine(rank_normal, this_q, *vc[d]);
+				//vector<ushort> rank_normal;
+
+				if(DEBUG) fprintf(stderr, "Doing linear combination\n");
+
+				CSeekWeighter::LinearCombine(rank_normal, this_q, *vc[d], false);
+
 				/*for(j=0; j<1000; j++){
 					size_t g = mapG->GetReverse(j);
 					printf("Gene %d %d\n", g, rank_normal[g]);
 				}*/
-				//vc[d]->FreeDataMatrix();
 
-				//printf("Adding contribution of dataset to master ranking: %.5f\n", w);
+				if(DEBUG) fprintf(stderr, "Adding contribution of dataset to master ranking: %.5f\n", w);
 
-				//int BAD = 0;
 				for(j=0; j<mapG->GetNumSet(); j++){
 					ushort g = mapG->GetReverse(j);
 					if(rank_normal[g]==0){
-						//printf("BAD %d\n", g);
-						//BAD++;
 						continue;
 					}
 					master_rank_threads[tid][g] += (float) rank_normal[g] * w;
 					sum_weight_threads[tid][g] += w;
 					counts_threads[tid][g]++;
 				}
-
-				/*if(BAD==0){
-					printf("Good!\n");
-				}else{
-					printf("BAD: %d %d\n", BAD, mapG->GetNumSet());
-				}*/
 			}
 
 			for(j=0; j<numThreads; j++){
@@ -221,8 +231,10 @@ int main( int iArgs, char** aszArgs ) {
 				CSeekTools::Free2DArray(rData[j]);
 			}
 			delete[] rData;
+			free(rank_threads);
+			free(rank_normal_threads);
 
-			fprintf(stderr, "Aggregating genes\n");
+			if(DEBUG) fprintf(stderr, "Aggregating genes\n");
 			for(j=0; j<iGenes; j++){
 				if(counts[j]<(int)(0.5*iDatasets)){
 					master_rank[j] = -320;
@@ -231,10 +243,10 @@ int main( int iArgs, char** aszArgs ) {
 				}else{
 					master_rank[j] = (master_rank[j] / sum_weight[j] - 320) / 100.0;
 				}
-				//printf("Gene %d %.5f\n", j, master_rank[j]);
+				if(DEBUG) fprintf(stderr, "Gene %d %.5f\n", j, master_rank[j]);
 			}
 
-			fprintf(stderr, "Sorting genes\n");
+			if(DEBUG) fprintf(stderr, "Sorting genes\n");
 			vector<AResultFloat> a;
 			a.clear();
 			a.resize(iGenes);
@@ -242,43 +254,22 @@ int main( int iArgs, char** aszArgs ) {
 				a[j].i = j;
 				a[j].f = master_rank[j];
 			}
-			fprintf(stderr, "Begin Sorting genes\n");
+			if(DEBUG) fprintf(stderr, "Begin Sorting genes\n");
 			sort(a.begin(), a.end());
 
-			fprintf(stderr, "Results:\n");
+			if(DEBUG) fprintf(stderr, "Results:\n");
 			ushort jj;
 			ushort ii;
 			for(ii=0, jj=0; jj<500; ii++){
 				if(cQuery[a[ii].i]==1) continue;
-				printf("%d %.5f\n", a[ii].i, a[ii].f);
+				fprintf(stderr, "%d %.5f\n", a[ii].i, a[ii].f);
 				jj++;
 			}
 
-			fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
+			fprintf(stderr, "Done search\n");
+			system("date +%s%N 1>&2");
+
 		}
-
-		/*for(i=0; i<iDatasets; i++){
-			printf("Dataset %ld\n", i);
-			CSeekMatrix<unsigned char> *cm = vc[i]->GetMatrix();
-			for(j=0; j<cm->GetNumRow(); j++){
-				printf("Row %ld\n", j);
-				for(k=0; k<1000; k++){
-					printf("%d ", cm->Get(j, k));
-				}
-				printf("\n");
-			}
-		}*/
-		/*size_t j;
-		for(i=0; i<vecstrQuery.size(); i++){
-			printf("Query: %s\n", vecstrQuery[i].c_str());
-			for(j=0; j<Q[i].size(); j++){
-				printf("%d ", (int) Q[i][j]);
-			}
-			printf("\n");
-			getchar();
-		}*/
-
-		//printf("Done"); getchar();
 
 	}else{
 		cerr << "Must give a db list." << endl;

@@ -34,6 +34,7 @@ bool CSeekPerformanceMeasure::SortRankVector(
 	ushort TOP = 0;
 	ushort numNonZero = 0;
 	ushort i;
+	bool DEBUG = false;
 
 	if(bAllocate){
 		a.clear();
@@ -55,7 +56,7 @@ bool CSeekPerformanceMeasure::SortRankVector(
 		}
 	}
 	if(numNonZero==0){
-		//cerr << "This dataset is all zero!" << endl;
+		if(DEBUG) cerr << "This dataset is all zero!" << endl;
 		return false;
 	}
 
