@@ -33,7 +33,7 @@ int main( int iArgs, char** aszArgs ) {
 	istream*			pistm;
 	vector<string>		vecstrGenes;
 	char				acBuffer[ c_iBuffer ];
-	size_t				i;
+	ushort				i;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -53,6 +53,7 @@ int main( int iArgs, char** aszArgs ) {
 	}
 
 	CDatabase DB(useNibble);
+	omp_set_num_threads(8);
 
 	if(sArgs.db_arg){
 		string strDBInput = sArgs.db_arg;
@@ -72,14 +73,15 @@ int main( int iArgs, char** aszArgs ) {
 			return false;
 		}
 
+		fprintf(stderr, "Start reading platform\n"); system("date +%s%N 1>&2");
 		string strPlatformDirectory = sArgs.dir_platform_arg;
 		vector<CSeekPlatform> vp;
-		map<string, size_t> mapstriPlatform;
+		map<string, ushort> mapstriPlatform;
 		vector<string> vecstrPlatforms;
 		CSeekTools::ReadPlatforms(strPlatformDirectory, vp, vecstrPlatforms,
 				mapstriPlatform);
 
-		//printf("Done reading"); getchar();
+		fprintf(stderr, "Done reading platform\n"); system("date +%s%N 1>&2");
 
 		string strInputDirectory = sArgs.dir_in_arg;
 		string strPrepInputDirectory = sArgs.dir_prep_in_arg;
@@ -87,71 +89,21 @@ int main( int iArgs, char** aszArgs ) {
 		size_t iDatasets = vecstrDatasets.size();
 		size_t iGenes = vecstrGenes.size();
 
+		fprintf(stderr, "Start reading CDatabase header\n"); system("date +%s%N 1>&2");
 		DB.Open(strInputDirectory, vecstrGenes, iDatasets, iNumDBs);
+		fprintf(stderr, "Done reading CDatabase header\n"); system("date +%s%N 1>&2");
+
+		//printf("Done opening"); getchar();
 
 		vector<CSeekDataset*> vc;
 		vector<char> cQuery;
 		CSeekTools::LoadDatabase(DB, strPrepInputDirectory, cQuery, vecstrQuery,
 			vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
 
-		/*
-		DB.Open(strInputDirectory);
-		size_t j,k;
-		vc.clear();
-		vc.resize(iDatasets);
-		for(i=0; i<iDatasets; i++){
-			vc[i] = new CSeekDataset();
-			string strPrepInputDirectory = sArgs.dir_prep_in_arg;
-			string strFileStem = vecstrDatasets[i];
-			//string strFileStem = CMeta::Deextension(CMeta::Basename(vecstrDatasets[i].c_str()));
-			string strAvgPath = strPrepInputDirectory + "/" + strFileStem + ".gavg";
-			string strPresencePath = strPrepInputDirectory + "/" + strFileStem + ".gpres";
-			vc[i]->ReadGeneAverage(strAvgPath);
-			vc[i]->ReadGenePresence(strPresencePath);
-		}
-
-		CSeekTools::InitVector(cQuery, iGenes, (char) 0);
-
-		for(i=0; i<vecstrQuery.size(); i++){
-			k = DB.GetGene(vecstrQuery[i]);
-			if(k==-1) continue;
-			cQuery[k] = 1;
-		}
-
-		for(i=0; i<iDatasets; i++){
-			vc[i]->InitializeQuery(cQuery);
-		}
-
-		vector<unsigned char> *Q = new vector<unsigned char>[vecstrQuery.size()];
-
-		for(i=0; i<vecstrQuery.size(); i++){
-			if(!DB.GetGene(vecstrQuery[i], Q[i])){
-				cerr << "Gene does not exist" << endl;
-			}
-		}
-
-		//printf("Before"); getchar();
-		for(i=0; i<vecstrQuery.size(); i++){
-			if(DB.GetGene(vecstrQuery[i])==-1){
-				continue;
-			}
-			size_t m = DB.GetGene(vecstrQuery[i]);
-			size_t l = 0;
-			for(j=0; j<iDatasets; j++){
-				CSeekIntIntMap *qu = vc[j]->GetQueryMap();
-			    size_t query = qu->GetForward(m);
-			    if(query==-1) continue;
-			    for(k=0; k<iGenes; k++){
-			    	unsigned char c = Q[i][k*iDatasets + j];
-			    	vc[j]->SetQueryNoMapping(query, k, c);
-			    }
-			}
-		}
-		delete[] Q;
-		*/
-		size_t j;
+		ushort j;
+		ushort d;
 		float RATE = 0.95;
-		int FOLD = 5;
+		ushort FOLD = 5;
 		enum PartitionMode PART_M = CUSTOM_PARTITION;
 
 		const gsl_rng_type *T;
@@ -160,14 +112,18 @@ int main( int iArgs, char** aszArgs ) {
 		T = gsl_rng_default;
 		rnd = gsl_rng_alloc(T);
 
-		int d;
-		omp_set_num_threads(8);
-		int numThreads = omp_get_max_threads();
+		ushort numThreads = omp_get_max_threads();
 
 		for(i=0; i<1; i++){
 			CSeekQuery query;
 			query.InitializeQuery(cQuery);
 			query.CreateCVPartitions(rnd, PART_M, FOLD);
+			ushort iQuery = query.GetQuery().size();
+
+			ushort ***rData = new ushort**[numThreads];
+			for(j=0; j<numThreads; j++){
+				rData[j] = CSeekTools::Init2DArray(iGenes, iQuery, (ushort)0);
+			}
 
 			vector<float> master_rank;
 			CSeekTools::InitVector(master_rank, iGenes, (float) 0);
@@ -175,28 +131,28 @@ int main( int iArgs, char** aszArgs ) {
 			vector<float> sum_weight;
 			CSeekTools::InitVector(sum_weight, iGenes, (float) 0);
 
-			vector<int> counts;
-			CSeekTools::InitVector(counts, iGenes, (int) 0);
+			vector<ushort> counts;
+			CSeekTools::InitVector(counts, iGenes, (ushort) 0);
 
 			float **master_rank_threads = CSeekTools::Init2DArray(numThreads, iGenes, (float) 0);
 			float **sum_weight_threads = CSeekTools::Init2DArray(numThreads, iGenes, (float) 0);
-			int **counts_threads = CSeekTools::Init2DArray(numThreads, iGenes, (int) 0);
+			ushort **counts_threads = CSeekTools::Init2DArray(numThreads, iGenes, (ushort) 0);
 
-			printf("Entering search\n");
+			fprintf(stderr, "Entering search\n"); system("date +%s%N 1>&2");
 
 			#pragma omp parallel for \
-			shared(vc) \
+			shared(vc, rData) \
 			private(d, j) \
 			firstprivate(iDatasets) \
 			schedule(dynamic)
 
 			for(d=0; d<iDatasets; d++){
-				int tid = omp_get_thread_num();
+				ushort tid = omp_get_thread_num();
 				//printf("Dataset %d\n", d);
 				CSeekIntIntMap *mapQ = vc[d]->GetQueryMap();
 				CSeekIntIntMap *mapG = vc[d]->GetGeneMap();
 
-				vector<int> this_q;
+				vector<ushort> this_q;
 				for(j=0; j<mapQ->GetNumSet(); j++){
 					this_q.push_back(mapQ->GetReverse(j));
 				}
@@ -207,42 +163,49 @@ int main( int iArgs, char** aszArgs ) {
 				}
 
 				//printf("Initializing\n");
-				vc[d]->InitializeDataMatrix();
+				vc[d]->InitializeDataMatrix(rData[tid], iGenes, iQuery);
 				//printf("Weighting dataset\n");
 				CSeekWeighter::CVWeighting(query, *vc[d]);
 				float w = vc[d]->GetDatasetSumWeight();
 				if(w==-1){
 					//printf("Bad weight\n");
-					vc[d]->FreeDataMatrix();
+					//vc[d]->FreeDataMatrix();
 					continue;
 					//getchar();
 				}
-				vector<short> rank_normal;
+				vector<ushort> rank_normal;
 				//printf("Doing linear combination\n");
 				CSeekWeighter::LinearCombine(rank_normal, this_q, *vc[d]);
 				/*for(j=0; j<1000; j++){
 					size_t g = mapG->GetReverse(j);
 					printf("Gene %d %d\n", g, rank_normal[g]);
 				}*/
-				vc[d]->FreeDataMatrix();
+				//vc[d]->FreeDataMatrix();
 
 				//printf("Adding contribution of dataset to master ranking: %.5f\n", w);
+
+				//int BAD = 0;
 				for(j=0; j<mapG->GetNumSet(); j++){
-					size_t g = mapG->GetReverse(j);
+					ushort g = mapG->GetReverse(j);
+					if(rank_normal[g]==0){
+						//printf("BAD %d\n", g);
+						//BAD++;
+						continue;
+					}
+					master_rank_threads[tid][g] += (float) rank_normal[g] * w;
+					sum_weight_threads[tid][g] += w;
 					counts_threads[tid][g]++;
 				}
 
-				if(w>0.000005){
-					for(j=0; j<mapG->GetNumSet(); j++){
-						size_t g = mapG->GetReverse(j);
-						master_rank_threads[tid][g] += (float) rank_normal[g] / 100.0 * w;
-						sum_weight_threads[tid][g] += w;
-					}
-				}
+				/*if(BAD==0){
+					printf("Good!\n");
+				}else{
+					printf("BAD: %d %d\n", BAD, mapG->GetNumSet());
+				}*/
 			}
 
 			for(j=0; j<numThreads; j++){
-				size_t k;
+				ushort k;
 				for(k=0; k<iGenes; k++){
 					master_rank[k] += master_rank_threads[j][k];
 					counts[k] += counts_threads[j][k];
@@ -254,20 +217,24 @@ int main( int iArgs, char** aszArgs ) {
 			CSeekTools::Free2DArray(counts_threads);
 			CSeekTools::Free2DArray(sum_weight_threads);
 
+			for(j=0; j<numThreads; j++){
+				CSeekTools::Free2DArray(rData[j]);
+			}
+			delete[] rData;
 
-			printf("Aggregating genes\n");
+			fprintf(stderr, "Aggregating genes\n");
 			for(j=0; j<iGenes; j++){
 				if(counts[j]<(int)(0.5*iDatasets)){
-					master_rank[j] = -50.0;
+					master_rank[j] = -320;
 				}else if(sum_weight[j]==0){
-					master_rank[j] = -50.0;
+					master_rank[j] = -320;
 				}else{
-					master_rank[j] /= sum_weight[j];
+					master_rank[j] = (master_rank[j] / sum_weight[j] - 320) / 100.0;
 				}
 				//printf("Gene %d %.5f\n", j, master_rank[j]);
 			}
 
-			printf("Sorting genes\n");
+			fprintf(stderr, "Sorting genes\n");
 			vector<AResultFloat> a;
 			a.clear();
 			a.resize(iGenes);
@@ -275,17 +242,19 @@ int main( int iArgs, char** aszArgs ) {
 				a[j].i = j;
 				a[j].f = master_rank[j];
 			}
-			printf("Begin Sorting genes\n");
+			fprintf(stderr, "Begin Sorting genes\n");
 			sort(a.begin(), a.end());
 
-			printf("Results:\n");
-			size_t jj;
-			size_t ii;
+			fprintf(stderr, "Results:\n");
+			ushort jj;
+			ushort ii;
 			for(ii=0, jj=0; jj<500; ii++){
-				//if(cQuery[a[ii].i]==1) continue;
+				if(cQuery[a[ii].i]==1) continue;
 				printf("%d %.5f\n", a[ii].i, a[ii].f);
 				jj++;
 			}
+
+			fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
 		}
 
 		/*for(i=0; i<iDatasets; i++){

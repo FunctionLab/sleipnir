@@ -28,68 +28,84 @@
 
 namespace Sleipnir {
 
-bool CSeekWeighter::LinearCombine(vector<short> &rank, vector<int> &cv_query,
-	CSeekDataset &sDataset){
+bool CSeekWeighter::LinearCombine(vector<ushort> &rank, const vector<ushort> &cv_query,
+	CSeekDataset &sDataset, const bool bAllocate){
 	if(cv_query.size()==0){
 		cerr << "cv_query empty" << endl;
 		return true;
 	}
-	size_t iNumGenes = sDataset.GetNumGenes();
-	CSeekTools::InitVector(rank, iNumGenes, (short)-32768);
-	size_t i, j, k;
+	ushort i, j;
+	ushort g, q;
+	vector<ushort>::const_iterator iter;
 
-	int q_size = cv_query.size();
+	ushort iNumGenes = sDataset.GetNumGenes();
+	ushort q_size = cv_query.size();
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
-	CFullMatrix<short> *f = sDataset.GetDataMatrix();
+	ushort **f = sDataset.GetDataMatrix();
 
-	size_t iGenesPresent = mapG->GetNumSet();
+	if(bAllocate){
+		CSeekTools::InitVector(rank, iNumGenes, (ushort) 0);
+	}else{
+		fill(rank.begin(), rank.end(), 0);
+	}
+
 	/* as long as rank[g] does not overflow, due to too many queries, we are fine
 	 * should control query size to be <100. */
-	for(i=0; i<iGenesPresent; i++){
-		size_t g = mapG->GetReverse(i);
-		rank[g] = 0;
-		for(j=0; j<q_size; j++){
-			int qq = cv_query[j];
-			if(g==qq) continue;
-			size_t q = mapQ->GetForward(qq);
-			rank[g] += f->Get(g, q);
+	vector<ushort> queryPos;
+	queryPos.resize(q_size);
+	for(i=0; i<q_size; i++){
+		queryPos[i] = mapQ->GetForward(cv_query[i]);
+	}
+
+	for(g=0; g<iNumGenes; g++){
+		for(iter=queryPos.begin(); iter!=queryPos.end(); iter++){
+			rank[g] += f[g][*iter];
 		}
-		rank[g] /= (short) q_size;
+		rank[g] /= q_size;
 	}
 	return true;
 }
 
 
 bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset){
-	size_t iFold = sQuery.GetNumFold();
+	ushort iFold = sQuery.GetNumFold();
 	sDataset.InitializeCVWeight(iFold);
 
-	int i, j, qi, qj;
+	ushort i, j, qi, qj;
 
 	vector<char> is_query_cross, is_gold;
 	CSeekTools::InitVector(is_query_cross, sDataset.GetNumGenes(), (char) 0);
 	CSeekTools::InitVector(is_gold, sDataset.GetNumGenes(), (char) 0);
 
+	vector<ushort> rank;
+	CSeekTools::InitVector(rank, sDataset.GetNumGenes(), (ushort) 0);
+
+	ushort TOP = 1000;
+	vector<AResult> ar;
+	ar.resize(rank.size());
+
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
+	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
+	vector<ushort> &allQ = sQuery.GetQuery();
+
 	for(qi=0; qi<iFold; qi++){
-		vector<int> vi = sQuery.GetCVQuery(qi);
-		vector<int> cv_query;
-		CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
-		int num_q = 0;
-		int num_v = 0;
+		vector<ushort> cv_query;
+		ushort num_q = 0;
+		ushort num_v = 0;
+
+		vector<ushort> &vi = sQuery.GetCVQuery(qi);
 
 		/* Set query and gold standard */
 		for(i=0; i<vi.size(); i++){
-			if(mapQ->GetForward(vi[i])==-1) continue;
+			if(CSeekTools::IsNaN(mapQ->GetForward(vi[i]))) continue;
 			is_query_cross[vi[i]] = 1;
 			cv_query.push_back(vi[i]);
 			num_q++;
 		}
 
-		vector<int> allQ = sQuery.GetQuery();
 		for(i=0; i<allQ.size(); i++){
-			if(mapQ->GetForward(allQ[i])==-1) continue;
+			if(CSeekTools::IsNaN(mapQ->GetForward(allQ[i]))) continue;
 			if(is_query_cross[allQ[i]]==1) continue;
 			is_gold[allQ[i]] = 1;
 			num_v++;
@@ -97,13 +113,14 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset){
 
 		if(num_q==0 || num_v==0){
 			sDataset.SetCVWeight(qi, -1);
+			//printf("num_q %d or num_v %d\n", num_q, num_v);
 		}else{
 			/* actual weighting */
-			vector<short> rank;
+			//vector<unsigned short> rank;
 			float w = 0;
-			bool ret = LinearCombine(rank, cv_query, sDataset);
+			bool ret = LinearCombine(rank, cv_query, sDataset, false);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(0.95,
-				rank, w, is_query_cross, is_gold, *mapG);
+				rank, w, is_query_cross, is_gold, *mapG, false, &ar, TOP);
 			if(!ret){
 				sDataset.SetCVWeight(qi, -1);
 			}else{
@@ -113,11 +130,11 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset){
 		}
 		/* Reset query and gold standard */
 		for(i=0; i<vi.size(); i++){
-			if(mapQ->GetForward(vi[i])==-1) continue;
+			if(CSeekTools::IsNaN(mapQ->GetForward(vi[i]))) continue;
 			is_query_cross[vi[i]] = 0;
 		}
 		for(i=0; i<allQ.size(); i++){
-			if(mapQ->GetForward(allQ[i])==-1) continue;
+			if(CSeekTools::IsNaN(mapQ->GetForward(allQ[i]))) continue;
 			is_gold[allQ[i]] = 0;
 		}
 

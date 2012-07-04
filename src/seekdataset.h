@@ -37,32 +37,34 @@ public:
 	bool ReadGeneAverage(const string &);
 	bool ReadGeneVariance(const string &);
 	bool ReadGenePresence(const string &);
-	bool InitializeQuery(vector<char> &);
+	bool InitializeQuery(const vector<char> &);
 	bool DeleteQuery();
-	bool SetQuery(size_t &, size_t &, unsigned char &);
-	bool SetQueryNoMapping(size_t &, size_t &, unsigned char &);
-	bool SetQuery(size_t &, vector<unsigned char> &);
+	bool SetQuery(const ushort &, const ushort &, const unsigned char &);
+	bool SetQueryNoMapping(const ushort &, const ushort &, const unsigned char &);
+	bool SetQuery(const ushort &, const vector<unsigned char> &);
 
-	CFullMatrix<short> *GetDataMatrix();
-	bool InitializeDataMatrix(bool=true, bool=true);
-	bool FreeDataMatrix();
+	bool InitializeDataMatrix(ushort**, const ushort&, const ushort&,
+		const bool=true, const bool=true);
+	ushort** GetDataMatrix();
 
-	CFullMatrix<unsigned char> *GetMatrix();
+	unsigned char** GetMatrix();
 	CSeekIntIntMap* GetGeneMap();
 	CSeekIntIntMap* GetQueryMap();
-	float GetGeneVariance(size_t);
-	float GetGeneAverage(size_t);
-	size_t GetNumGenes();
-	bool InitializeCVWeight(size_t);
-	bool SetCVWeight(size_t, float);
+	float GetGeneVariance(const ushort&) const;
+	float GetGeneAverage(const ushort&) const;
+	ushort GetNumGenes() const;
+	bool InitializeCVWeight(const ushort&);
+	bool SetCVWeight(const ushort&, const float&);
 	float GetDatasetSumWeight();
 	void SetPlatform(CSeekPlatform &);
-	CSeekPlatform& GetPlatform();
+	CSeekPlatform& GetPlatform() const;
+	bool InitializeGeneMap();
+
 
 private:
 	string strName;
 	CSeekPlatform *platform;
-	CFullMatrix<unsigned char> *r;
+	unsigned char **r;
 	vector<float> geneAverage;
 	vector<float> geneVariance;
 
@@ -74,14 +76,12 @@ private:
 	float m_fDsetAverage;
 	float m_fDsetStdev;
 
-	size_t iQuerySize;
-	size_t iNumGenes;
+	ushort iQuerySize;
+	ushort iNumGenes;
 
 	vector<float> weight;
+	ushort **rData;
 	float sum_weight;
-	//CFullMatrix<float> *rData;
-	CFullMatrix<short> *rData;
-
 	bool m_bIsNibble;
 
 };

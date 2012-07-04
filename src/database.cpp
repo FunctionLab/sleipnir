@@ -234,7 +234,7 @@ bool CDatabaselet::Open( const vector<CCompactFullMatrix>& vecData, size_t iBase
 
 	return true; }
 
-bool CDatabase::GetGene(string strGene, vector<unsigned char> &vecbData){
+bool CDatabase::GetGene(const string &strGene, vector<unsigned char> &vecbData) const{
 	size_t iGene = this->GetGene(strGene);
 	if(iGene==-1){
 		cerr << "Gene not found" << endl;

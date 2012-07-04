@@ -21,6 +21,7 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "seekquery.h"
+#include "seekreader.h"
 
 
 namespace Sleipnir {
@@ -40,8 +41,8 @@ CSeekQuery::~CSeekQuery(){
 	iFoldSize = 0;
 }
 
-bool CSeekQuery::InitializeQuery(vector<char> query){
-	size_t i;
+bool CSeekQuery::InitializeQuery(const vector<char> &query){
+	ushort i;
 	for(i=0; i<query.size(); i++){
 		if(query[i]==1){
 			queryGenes.push_back(i);
@@ -51,32 +52,33 @@ bool CSeekQuery::InitializeQuery(vector<char> query){
 	return true;
 }
 
-size_t CSeekQuery::GetNumFold(){
+ushort CSeekQuery::GetNumFold() const{
 	return iNumFold;
 }
 
-vector<int>& CSeekQuery::GetQuery(){
+vector<ushort>& CSeekQuery::GetQuery(){
 	return queryGenes;
 }
 
-vector<int>& CSeekQuery::GetCVQuery(size_t i){
+vector<ushort>& CSeekQuery::GetCVQuery(ushort &i){
 	return crossValGenes[i];
 }
 
-bool CSeekQuery::CreateCVPartitions(gsl_rng *rnd, enum PartitionMode p, size_t iFold){
+bool CSeekQuery::CreateCVPartitions(const gsl_rng *rnd, const enum PartitionMode &p, const ushort iFold){
 	//must have run initializequery beforehand
 	if(p!=LEAVE_ONE_IN && p!=LEAVE_ONE_OUT && p!=CUSTOM_PARTITION){
 		cerr << "Error, unknown partition mode" << endl;
 		return false;
 	}
 	qSize = queryGenes.size();
-	size_t fold_size = 0;
-	if(iFold==-1){
+	ushort fold_size = 0;
+	ushort iFoldx = iFold;
+	if(CSeekTools::IsNaN(iFold)){
 		if(p==LEAVE_ONE_IN){
-			iFold = qSize;
+			iFoldx = qSize;
 			fold_size = 1;
 		}else if(p==LEAVE_ONE_OUT){
-			iFold = qSize;
+			iFoldx = qSize;
 			fold_size = qSize-1;
 		}else{
 			cerr << "Error, must specify number of folds if CustomPartition mode" << endl;
@@ -87,28 +89,29 @@ bool CSeekQuery::CreateCVPartitions(gsl_rng *rnd, enum PartitionMode p, size_t i
 			cerr << "Error, specified number of folds, so this must NOT be LEAVE_ONE_OUT or LEAVE_ONE_IN" << endl;
 			return false;
 		}
-		fold_size = qSize / iFold;
-		if(qSize % iFold > 0){
+		fold_size = qSize / iFoldx;
+		if(qSize % iFoldx > 0){
 			fold_size++;
 		}
 	}
-	iNumFold = iFold;
+	iNumFold = iFoldx;
 	iFoldSize = fold_size;
-	crossValGenes = new vector<int>[iNumFold];
+	crossValGenes = new vector<ushort>[iNumFold];
+	//printf("Fold size %d %d\n", iNumFold, iFoldSize);
 
-	size_t i, j, k;
-	int *q_b = (int*)malloc(qSize*sizeof(int));
+	ushort i, j, k;
+	ushort *q_b = (ushort*)malloc(qSize*sizeof(ushort));
 	for(i=0; i<qSize; i++){
 		q_b[i] = queryGenes[i];
 		//printf("%d ", q_b[i]);
 	}
 	//printf("\n");
 	//getchar();
-	gsl_ran_shuffle(rnd, q_b, qSize, sizeof(int));
+	gsl_ran_shuffle(rnd, q_b, qSize, sizeof(ushort));
 
 	if(p==LEAVE_ONE_IN || p==CUSTOM_PARTITION){
 		k = 0;
-		for(i=0; i<iFold; i++){
+		for(i=0; i<iNumFold; i++){
 			for(j=0; j<iFoldSize; j++){
 				if(k==qSize) continue;
 				crossValGenes[i].push_back(q_b[k]);
@@ -117,8 +120,8 @@ bool CSeekQuery::CreateCVPartitions(gsl_rng *rnd, enum PartitionMode p, size_t i
 			crossValGenes[i].resize(crossValGenes[i].size());
 		}
 	}else if(p==LEAVE_ONE_OUT){
-		int current_index = -1;
-		for(i=0; i<iFold; i++){
+		ushort current_index = -1;
+		for(i=0; i<iNumFold; i++){
 			for(j=0; j<iFoldSize; j++){
 				current_index = (i+j) % qSize;
 				crossValGenes[i].push_back(q_b[current_index]);

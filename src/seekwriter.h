@@ -30,9 +30,11 @@ namespace Sleipnir {
 
 class CSeekWriter{
 public:
-	static bool GetGeneAverage(CDataPair &Dat, vector<string> &vecstrGenes,
+	static bool GetGeneAverage(CDataPair &Dat,
+			const vector<string> &vecstrGenes,
 			vector<float> &vecResult);
-	static bool GetGenePresence(CDataPair &Dat, vector<string> &vecstrGenes,
+	static bool GetGenePresence(CDataPair &Dat,
+			const vector<string> &vecstrGenes,
 			vector<char> &vecResult);
 
 };

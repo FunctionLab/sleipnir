@@ -41,14 +41,17 @@ public:
 			cerr << "File not found" << endl;
 			return false;
 		}
+
+		//do not change type
 		size_t iSize;
-		int ret;
+
+		ushort ret;
 		ret = fread((char*) (&iSize), 1, sizeof(iSize), f);
 		vData.clear();
 		vData.resize(iSize);
 		tType *m_Data = (tType*)malloc(iSize*sizeof(tType));
 		ret = fread((char*)m_Data, 1, iSize*sizeof(tType), f);
-		size_t i;
+		ushort i;
 		for(i=0; i<iSize; i++){
 			vData[i] = m_Data[i];
 		}
@@ -59,17 +62,18 @@ public:
 
 	/* binary */
 	template<class tType>
-	static bool WriteArray(const char *fileName, vector<tType> &vData){
+	static bool WriteArray(const char *fileName, const vector<tType> &vData){
 		FILE *f = fopen(fileName, "wb");
 		if(f==NULL){
 			cerr << "File not found" << endl;
 			return false;
 		}
-		size_t i;
+		ushort i;
 		tType *m_Data = (tType*)malloc(vData.size()*sizeof(tType));
 		for(i=0; i<vData.size(); i++){
 			m_Data[i] = vData[i];
 		}
+		//do not change type
 		size_t iSize = vData.size();
 		fwrite((char*) (&iSize), 1, sizeof(iSize), f);
 		fwrite((char*) (m_Data), 1, iSize*sizeof(tType), f);
@@ -79,21 +83,18 @@ public:
 	}
 
 	template<class tType>
-	static bool InitVector(vector<tType> &vData, size_t iSize, tType tValue){
-		size_t i;
+	static bool InitVector(vector<tType> &vData, const ushort &iSize, const tType &tValue) {
 		vData.clear();
 		vData.resize(iSize);
-		for(i=0; i<iSize; i++){
-			vData[i] = tValue;
-		}
+		fill(vData.begin(), vData.end(), tValue);
 		return true;
 	}
 
 	template<class tType>
-	static tType** Init2DArray(size_t iSize1, size_t iSize2, tType tValue){
+	static tType** Init2DArray(const size_t &iSize1, const size_t &iSize2, const tType &tValue){
 		tType **f = (tType**)malloc(iSize1*sizeof(tType*));
 		f[0] = (tType*)malloc(iSize1*iSize2*sizeof(tType));
-		size_t i, j;
+		ushort i, j;
 		for(i=1; i<iSize1; i++){
 			f[i] = f[i-1] + iSize2;
 		}
@@ -111,17 +112,19 @@ public:
 		free(f);
 	}
 
-	static bool CreatePresenceVector(vector<int> &, vector<char> &, size_t);
-	static bool LoadDatabase(CDatabase &, string &, vector<char> &,
-	vector<string> &, vector<string> &, map<string, string> &, map<string, size_t> &,
-	vector<CSeekPlatform> &, vector<CSeekDataset*> &);
+	static bool IsNaN(const ushort &);
 
-	static bool ReadPlatforms(string &strPlatformDirectory, vector<CSeekPlatform> &plat,
-			vector<string> &vecstrPlatforms, map<string, size_t> &mapstriPlatforms);
+	static bool CreatePresenceVector(const vector<ushort> &, vector<char> &, const ushort &);
+	static bool LoadDatabase(const CDatabase &, const string &, vector<char> &,
+	const vector<string> &, const vector<string> &, const map<string, string> &,
+	const map<string, ushort> &, vector<CSeekPlatform> &, vector<CSeekDataset*> &);
 
-	static bool ReadListOneColumn(string &strFile, vector<string> &vecstrList, CSeekStrIntMap &mapstriList);
+	static bool ReadPlatforms(const string &strPlatformDirectory, vector<CSeekPlatform> &plat,
+			vector<string> &vecstrPlatforms, map<string, ushort> &mapstriPlatforms);
 
-	static bool ReadListTwoColumns(string &strFile, vector<string> &list1, vector<string> &list2);
+	static bool ReadListOneColumn(const string &strFile, vector<string> &vecstrList, CSeekStrIntMap &mapstriList);
+
+	static bool ReadListTwoColumns(const string &strFile, vector<string> &list1, vector<string> &list2);
 
 };
 

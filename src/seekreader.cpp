@@ -28,8 +28,16 @@
 
 namespace Sleipnir {
 
-bool CSeekTools::CreatePresenceVector(vector<int> &srcData, vector<char> &destData, size_t iSize){
-	size_t i;
+bool CSeekTools::IsNaN(const ushort &v){
+	if(v==65535){
+		return true;
+	}
+	return false;
+}
+
+bool CSeekTools::CreatePresenceVector(const vector<ushort> &srcData,
+	vector<char> &destData, const ushort &iSize){
+	ushort i;
 	destData.clear();
 	destData.resize(iSize);
 	for(i=0; i<iSize; i++){
@@ -41,9 +49,9 @@ bool CSeekTools::CreatePresenceVector(vector<int> &srcData, vector<char> &destDa
 	return true;
 }
 
-bool CSeekTools::LoadDatabase(CDatabase &DB, string &strPrepInputDirectory,
-	vector<char> &cQuery, vector<string> &vecstrQuery, vector<string> &vecstrDatasets, 
-	map<string, string> &mapstrstrDatasetPlatform, map<string, size_t> &mapstriPlatform,
+bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDirectory,
+	vector<char> &cQuery, const vector<string> &vecstrQuery, const vector<string> &vecstrDatasets,
+	const map<string, string> &mapstrstrDatasetPlatform, const map<string, ushort> &mapstriPlatform,
 	vector<CSeekPlatform> &vp, vector<CSeekDataset*> &vc){
 		
 	size_t iDatasets = DB.GetDatasets();
@@ -51,20 +59,22 @@ bool CSeekTools::LoadDatabase(CDatabase &DB, string &strPrepInputDirectory,
 	size_t i, j, k;
 	vc.clear();
 	vc.resize(iDatasets);
+
+	fprintf(stderr, "Start reading average and presence files\n"); system("date +%s%N 1>&2");
 	for(i=0; i<iDatasets; i++){
 		vc[i] = new CSeekDataset();
 		string strFileStem = vecstrDatasets[i];
-		//string strFileStem = CMeta::Deextension(CMeta::Basename(vecstrDatasets[i].c_str()));
 		string strAvgPath = strPrepInputDirectory + "/" + strFileStem + ".gavg";
 		string strPresencePath = strPrepInputDirectory + "/" + strFileStem + ".gpres";
 		vc[i]->ReadGeneAverage(strAvgPath);
 		vc[i]->ReadGenePresence(strPresencePath);
-		string strPlatform = mapstrstrDatasetPlatform[strFileStem];
-		size_t platform_id = mapstriPlatform[strPlatform];
-		//printf("Platform id %s %d\n", strPlatform.c_str(), platform_id);
+		string strPlatform = mapstrstrDatasetPlatform.find(strFileStem)->second;
+		ushort platform_id = mapstriPlatform.find(strPlatform)->second;
 		vc[i]->SetPlatform(vp[platform_id]);
 	}
+	fprintf(stderr, "Done reading average and presence files\n"); system("date +%s%N 1>&2");
 
+	//printf("Done loading gene average and presence"); getchar();
 	CSeekTools::InitVector(cQuery, iGenes, (char) 0);
 
 	for(i=0; i<vecstrQuery.size(); i++){
@@ -72,44 +82,70 @@ bool CSeekTools::LoadDatabase(CDatabase &DB, string &strPrepInputDirectory,
 		if(k==-1) continue;
 		cQuery[k] = 1;
 	}
+
+	#pragma omp parallel for \
+	shared(vc, cQuery) \
+	private(i) \
+	firstprivate(iDatasets) \
+	schedule(dynamic)
 	for(i=0; i<iDatasets; i++){
+		vc[i]->InitializeGeneMap();
 		vc[i]->InitializeQuery(cQuery);
 	}
+
+	//printf("Done initializing datasets with query map"); getchar();
 
 	vector<unsigned char> *Q =
 		new vector<unsigned char>[vecstrQuery.size()];
 
+	fprintf(stderr, "Start reading genes cdatabaselet\n"); system("date +%s%N 1>&2");
+	/*#pragma omp parallel for \
+	shared(DB, vecstrQuery, Q) \
+	private(i) \
+	schedule(dynamic)*/
 	for(i=0; i<vecstrQuery.size(); i++){
 		if(!DB.GetGene(vecstrQuery[i], Q[i])){
 			cerr << "Gene does not exist" << endl;
 		}
 	}
+	fprintf(stderr, "Done reading genes cdatabaselet\n"); system("date +%s%N 1>&2");
 
+	size_t m;
+	CSeekIntIntMap *qu;
+	ushort query;
+
+	fprintf(stderr, "Start changing to query centric\n"); system("date +%s%N 1>&2");
 	for(i=0; i<vecstrQuery.size(); i++){
 		if(DB.GetGene(vecstrQuery[i])==-1){
 			continue;
 		}
-		size_t m = DB.GetGene(vecstrQuery[i]);
-		size_t l = 0;
+		m = DB.GetGene(vecstrQuery[i]);
 
+		#pragma omp parallel for \
+		shared(vc, cQuery, Q) \
+		private(j, k, query, qu) \
+		firstprivate(i, iDatasets, iGenes, m) \
+		schedule(dynamic)
 		for(j=0; j<iDatasets; j++){
-			CSeekIntIntMap *qu = vc[j]->GetQueryMap();
-			size_t query = qu->GetForward(m);
-			if(query==-1) continue;
+			qu = vc[j]->GetQueryMap();
+			query = qu->GetForward(m);
+			if(CSeekTools::IsNaN(query)) continue;
+			//printf("i j %d %d %d %d\n", i, j, (int) query, k*iDatasets + j);
 			for(k=0; k<iGenes; k++){
-				unsigned char c = Q[i][k*iDatasets + j];
-				vc[j]->SetQueryNoMapping(query, k, c);
+				vc[j]->SetQueryNoMapping(query, k, Q[i][k*iDatasets + j]);
 			}
 		}
 	}
+	fprintf(stderr, "Done changing to query centric\n"); system("date +%s%N 1>&2");
 
 	delete[] Q;
 
 	return true;
 }
 
-bool CSeekTools::ReadPlatforms(string &strPlatformDirectory, vector<CSeekPlatform> &plat,
-		vector<string> &vecstrPlatforms, map<string, size_t> &mapstriPlatforms){
+bool CSeekTools::ReadPlatforms(const string &strPlatformDirectory,
+		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
+		map<string, ushort> &mapstriPlatforms){
 
 	string strAvgFile = strPlatformDirectory + "/" + "all_platforms.gplatavg";
 	string strStdevFile = strPlatformDirectory + "/" + "all_platforms.gplatstdev";
@@ -121,27 +157,14 @@ bool CSeekTools::ReadPlatforms(string &strPlatformDirectory, vector<CSeekPlatfor
 	plat_stdev.Open(strStdevFile.c_str());
 	plat.clear();
 	plat.resize(plat_avg.GetRows());
-	size_t i, j;
+	ushort i, j;
 
-	/*for(i=0; i<plat_avg.GetRows(); i++){
-		int c = 0;
-		for(j=0; j<plat_avg.GetColumns(); j++){
-			if(CMeta::IsNaN(plat_avg.Get(i,j))){
-				continue;
-			}
-			c++;
-			//printf("Gene %d %d: %.5f %.5f\n", i, j, plat_avg.Get(i, j), plat_stdev.Get(i,j));
-		}
-		printf("Platform %d, %d\n", i, c);
-	}
-	printf("Done");
-	 */
 	vecstrPlatforms.clear();
 	mapstriPlatforms.clear();
 	ifstream ifsm;
 	ifsm.open(strPlatformOrderFile.c_str());
 	char acBuffer[1024];
-	int c_iBuffer = 1024;
+	ushort c_iBuffer = 1024;
 	i = 0;
 	while(!ifsm.eof()){
 		ifsm.getline(acBuffer, c_iBuffer -1);
@@ -167,7 +190,8 @@ bool CSeekTools::ReadPlatforms(string &strPlatformDirectory, vector<CSeekPlatfor
 	return true;
 }
 
-bool CSeekTools::ReadListTwoColumns(string &strFile, vector<string> &vecstrList1, vector<string> &vecstrList2){
+bool CSeekTools::ReadListTwoColumns(const string &strFile,
+		vector<string> &vecstrList1, vector<string> &vecstrList2){
 	ifstream ifsm;
 	ifsm.open(strFile.c_str());
 	if(!ifsm.is_open()){
@@ -175,7 +199,7 @@ bool CSeekTools::ReadListTwoColumns(string &strFile, vector<string> &vecstrList1
 		return false;
 	}
 	char acBuffer[1024];
-	int c_iBuffer = 1024;
+	ushort c_iBuffer = 1024;
 	vecstrList1.clear();
 	vecstrList2.clear();
 
@@ -196,7 +220,7 @@ bool CSeekTools::ReadListTwoColumns(string &strFile, vector<string> &vecstrList1
 	return true;
 }
 
-bool CSeekTools::ReadListOneColumn(string &strFile, vector<string> &vecstrList, CSeekStrIntMap &mapstriList){
+bool CSeekTools::ReadListOneColumn(const string &strFile, vector<string> &vecstrList, CSeekStrIntMap &mapstriList){
 	ifstream ifsm;
 	ifsm.open(strFile.c_str());
 	if(!ifsm.is_open()){
@@ -205,10 +229,10 @@ bool CSeekTools::ReadListOneColumn(string &strFile, vector<string> &vecstrList, 
 	}
 
 	char acBuffer[1024];
-	int c_iBuffer = 1024;
+	ushort c_iBuffer = 1024;
 	vecstrList.clear();
 
-	size_t i = 0;
+	ushort i = 0;
 	while(!ifsm.eof()){
 		ifsm.getline(acBuffer, c_iBuffer -1);
 		if(acBuffer[0]==0){

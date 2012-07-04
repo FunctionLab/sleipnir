@@ -28,9 +28,8 @@
 namespace Sleipnir {
 
 struct AResult{
-	int i;
-	//float f;
-	short f;
+	ushort i;
+	unsigned short f;
 	bool operator<(const AResult& val) const{
 		if(f <= val.f){
 			return false;
@@ -40,8 +39,9 @@ struct AResult{
 	}
 };
 
+
 struct AResultFloat{
-	int i;
+	ushort i;
 	float f;
 	bool operator<(const AResultFloat& val) const{
 		if(f <= val.f){
@@ -52,14 +52,22 @@ struct AResultFloat{
 	}
 };
 
+
 class CSeekPerformanceMeasure{
 public:
-	static bool SortRankVector(vector<short> &rank,
-		CSeekIntIntMap &mapG, vector<AResult> &a);
+	static bool SortRankVector(const vector<unsigned short> &rank,
+		const CSeekIntIntMap &mapG, vector<AResult> &a, const bool bAllocate = true,
+		const ushort top = 0);
 	/* designed specifically for a CSeekDataset */
 	/* mask: the query genes which are not included in RBP calcualtion */
-	static bool RankBiasedPrecision(float rate, vector<short> &rank, float &rbp,
-		vector<char> &mask, vector<char> &gold, CSeekIntIntMap &mapG);
+	static bool RankBiasedPrecision(const float &rate,
+		const vector<unsigned short> &rank, float &rbp,
+		const vector<char> &mask, const vector<char> &gold,
+		const CSeekIntIntMap &mapG,
+		/* optional */
+		const bool bAllocate = true,
+		vector<AResult> *sing= NULL,
+		const ushort top = 0);
 };
 
 

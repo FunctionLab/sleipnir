@@ -25,7 +25,7 @@
 #include "stdafx.h"
 
 namespace Sleipnir {
-
+/*
 class CSeekPresence{
 public:
 	CSeekPresence(size_t);
@@ -41,30 +41,31 @@ private:
 	char *p;
 	int iSize;
 };
+*/
 
 class CSeekIntIntMap{
 public:
-	CSeekIntIntMap(size_t);
-	CSeekIntIntMap(CSeekPresence*, bool=false);
-	CSeekIntIntMap(vector<char>&, bool=false);
-	CSeekIntIntMap(char*, size_t, bool=false);
-	void Initialize(size_t);
+	CSeekIntIntMap(const ushort&);
+	//CSeekIntIntMap(const CSeekPresence*, const bool=false);
+	CSeekIntIntMap(const vector<char>&, const bool=false);
+	CSeekIntIntMap(const char*, const ushort &, const bool=false);
+	void Initialize(const ushort&);
 
 	~CSeekIntIntMap();
-	int GetForward(int);
-	int GetReverse(int);
-	void Add(int);
+	ushort GetForward(const ushort &) const;
+	ushort GetReverse(const ushort &) const;
+	void Add(const ushort&);
 	void Clear();
-	void Reset(CSeekPresence*, bool=false);
-	void Reset(vector<char>&, bool=false);
-	void Reset(char*, bool=false);
-	int GetNumSet();
+	//void Reset(const CSeekPresence*, const bool=false) const;
+	void Reset(const vector<char>&, const bool=false);
+	void Reset(const char*, const bool=false);
+	ushort GetNumSet() const;
 
 private:
-	int *m_iF;
-	int *m_iR;
-	int m_iSize;
-	int m_iNumSet;
+	ushort *m_iF;
+	ushort *m_iR;
+	ushort m_iSize;
+	ushort m_iNumSet;
 };
 
 class CSeekStrIntMap{
@@ -72,18 +73,18 @@ public:
 	CSeekStrIntMap();
 	~CSeekStrIntMap();
 	void Clear();
-	void Set(string, size_t);
-	void SetAll(vector<string>&);
-	int Get(string);
-	map<string, size_t>& GetMapForward();
-	map<size_t, string>& GetMapReverse();
-	size_t GetSize();
-	string Get(size_t);
-	vector<string> GetAllString();
-	vector<size_t> GetAllInteger();
+	void Set(const string&, const ushort&);
+	void SetAll(const vector<string>&);
+	ushort Get(const string&) const;
+	map<string, ushort>& GetMapForward();
+	map<ushort, string>& GetMapReverse();
+	ushort GetSize() const;
+	string Get(const ushort &) const;
+	vector<string> GetAllString() const;
+	vector<ushort> GetAllInteger() const;
 private:
-	map<string, size_t> m_mapstrint;
-	map<size_t, string> m_mapintstr;
+	map<string, ushort> m_mapstrint;
+	map<ushort, string> m_mapintstr;
 };
 
 }

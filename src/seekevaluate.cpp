@@ -25,89 +25,100 @@
 
 namespace Sleipnir {
 
-bool CSeekPerformanceMeasure::SortRankVector(vector<short> &rank,
-	CSeekIntIntMap &mapG, vector<AResult> &a){
-	a.clear();
-	int numGenesD = mapG.GetNumSet();
-	float old_target = -32769;
-	float new_target = -32769;
-	float prev_target = -32769;
-	int prev_numNonZero = 0;
-	int numNonZero = 0;
-	int ii, i, jj;
+bool CSeekPerformanceMeasure::SortRankVector(
+	const vector<unsigned short> &rank,
+	const CSeekIntIntMap &mapG, vector<AResult> &a, const bool bAllocate,
+	const ushort top){
 
-	while(1){
-		numNonZero = 0;
-		for(ii=0; ii<numGenesD; ii++){
-			i = mapG.GetReverse(ii);
-			if(rank[i]<=old_target) continue;
-			new_target += rank[i];
-			numNonZero++;
-		}
+	ushort numGenesD = mapG.GetNumSet();
+	ushort TOP = 0;
+	ushort numNonZero = 0;
+	ushort i;
 
-		//printf("Non Zero %d %d\n", numNonZero, new_target);
-
-		/* 1000 is adjustable, this is the top number of items to sort */
-		if(numNonZero==0 || numNonZero<1000){
-			old_target = prev_target;
-			numNonZero = prev_numNonZero;
-			break;
-		}
-
-		new_target /= (float) numNonZero;
-
-		if(new_target <= old_target){
-			numNonZero = prev_numNonZero;
-			break;
-		}
-		prev_target = old_target;
-		old_target = new_target;
-		prev_numNonZero = numNonZero;
+	if(bAllocate){
+		a.clear();
+		a.resize(rank.size());
 	}
 
+	//a should be the same size as rank
+	if(top==0){
+		TOP = rank.size();
+	}else{
+		TOP = top;
+	}
+
+	for(i=0; i<rank.size(); i++){
+		a[i].i = i;
+		a[i].f = rank[i];
+		if(rank[i]>0){
+			numNonZero++;
+		}
+	}
 	if(numNonZero==0){
-		cerr << "This dataset is all zero!" << endl;
+		//cerr << "This dataset is all zero!" << endl;
 		return false;
 	}
 
-	a.resize(numNonZero);
-	jj = 0;
-	for(ii=0; ii<numGenesD; ii++){
-		i = mapG.GetReverse(ii);
-		if(rank[i]<=old_target) continue;
-		a[jj].i = i;
-		a[jj].f = rank[i];
-		jj++;
+	//printf("Top is %d", TOP); getchar();
+	if(TOP==rank.size()){
+		sort(a.begin(), a.end());
+	}else{
+		nth_element(a.begin(), a.begin()+TOP, a.end());
+		sort(a.begin(), a.begin()+TOP);
 	}
-	sort(a.begin(), a.end());
+
 	return true;
 }
 
 /* designed specifically for a CSeekDataset */
 /* mask: the query genes which are not included in RBP calcualtion */
-bool CSeekPerformanceMeasure::RankBiasedPrecision(float rate, vector<short> &rank, float &rbp,
-	vector<char> &mask, vector<char> &gold, CSeekIntIntMap &mapG){
+bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
+	const vector<unsigned short> &rank, float &rbp,
+	const vector<char> &mask, const vector<char> &gold,
+	const CSeekIntIntMap &mapG,
+	/* optional arguments */
+	const bool bAllocate, vector<AResult> *ar, const ushort top
+	){
 
-	int i, ii, j, jj;
-	vector<AResult> sing;
-	bool ret = CSeekPerformanceMeasure::SortRankVector(rank, mapG, sing);
+	ushort i, ii, j, jj;
+	float x;
+	bool ret;
+
+	vector<AResult> *sing;
+	vector<AResult> asing;
+	AResult *aa;
+
+	ushort TOP = top;
+
+	if(top==0){
+		TOP = rank.size();
+	}
+
+	if(bAllocate==true){
+		sing = &asing;
+	}else{
+		sing = ar;
+	}
+
+	ret = CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing, bAllocate, top);
+
 	if(!ret){
 		rbp = -1;
 		return false;
 	}
 
-	float x = 0;
+	x = 0;
 	jj = 0;
-	int numNonZero = sing.size();
-	for(i=0; i<numNonZero; i++){
-		if(sing[i].f<=-32768) break;
-		if(mask[sing[i].i]==1) continue;
-		if(gold[sing[i].i]==1){
+	for(i=0; i<TOP; i++){
+		aa = &sing->at(i);
+		if(aa->f==0) break;
+		if(mask[aa->i]==1) continue;
+		if(gold[aa->i]==1){
 			x+=pow(rate, jj);
 		}
 		jj++;
 	}
-	x*=(1.0-rate);
+	x *= (1.0-rate);
 	rbp = x;
 	return true;
 }

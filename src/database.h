@@ -134,7 +134,7 @@ public:
 	CDatabase(bool isNibble) : CDatabaseImpl(isNibble){
 	}
 
-	bool GetGene(string, vector<unsigned char>&);
+	bool GetGene(const string &, vector<unsigned char>&) const;
 
 	/*!
 	 * \brief

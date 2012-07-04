@@ -27,11 +27,13 @@
 
 namespace Sleipnir {
 
-bool CSeekWriter::GetGeneAverage(CDataPair &Dat, vector<string> &vecstrGenes,
+bool CSeekWriter::GetGeneAverage(CDataPair &Dat,
+		const vector<string> &vecstrGenes,
 		vector<float> &vecResult){
+
 	/* assume datapair is already opened */
-	size_t i, j;
-	vector<size_t> veciGenes;
+	ushort i, j;
+	vector<ushort> veciGenes;
 	veciGenes.clear();
 	veciGenes.resize(vecstrGenes.size());
 	for( i = 0; i < vecstrGenes.size( ); ++i )
@@ -39,14 +41,14 @@ bool CSeekWriter::GetGeneAverage(CDataPair &Dat, vector<string> &vecstrGenes,
 
 	CSeekTools::InitVector(vecResult, vecstrGenes.size(), CMeta::GetNaN());
 	for(i=0; i<vecstrGenes.size(); i++){
-		size_t s = veciGenes[i];
-		if(s==-1) continue;
+		ushort s = veciGenes[i];
+		if(CSeekTools::IsNaN(s)) continue;
 		float *v = Dat.GetFullRow(s);
 		float sum = 0;
-		int num = 0;
+		ushort num = 0;
 		for(j=0; j<vecstrGenes.size(); j++){
-			size_t t = veciGenes[j];
-			if(t==-1) continue;
+			ushort t = veciGenes[j];
+			if(CSeekTools::IsNaN(t)) continue;
 			if(CMeta::IsNaN(v[t])) continue;
 			sum+=v[t];
 			num++;
@@ -57,11 +59,12 @@ bool CSeekWriter::GetGeneAverage(CDataPair &Dat, vector<string> &vecstrGenes,
 	return true;
 }
 
-bool CSeekWriter::GetGenePresence(CDataPair &Dat, vector<string> &vecstrGenes,
+bool CSeekWriter::GetGenePresence(CDataPair &Dat,
+		const vector<string> &vecstrGenes,
 		vector<char> &vecResult){
 	/* assume datapair is already opened */
-	size_t i, j;
-	vector<size_t> veciGenes;
+	ushort i, j;
+	vector<ushort> veciGenes;
 	veciGenes.clear();
 	veciGenes.resize(vecstrGenes.size());
 	for( i = 0; i < vecstrGenes.size( ); ++i )
@@ -70,7 +73,7 @@ bool CSeekWriter::GetGenePresence(CDataPair &Dat, vector<string> &vecstrGenes,
 	CSeekTools::InitVector(vecResult, vecstrGenes.size(), (char) 0);
 
 	for(i=0; i<vecstrGenes.size(); i++){
-		if(veciGenes[i]==-1) continue;
+		if(CSeekTools::IsNaN(veciGenes[i])) continue;
 		vecResult[i]=1;
 	}
 	return true;

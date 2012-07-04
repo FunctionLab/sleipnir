@@ -31,19 +31,19 @@ public:
 	CSeekPlatform();
 	~CSeekPlatform();
 
-	void InitializePlatform(const size_t &, string &);
-	void SetPlatformAvg(const size_t &, float);
-	void SetPlatformStdev(const size_t &, float);
-	float GetPlatformAvg(const size_t &);
-	float GetPlatformStdev(const size_t &);
+	void InitializePlatform(const ushort &, const string &);
+	void SetPlatformAvg(const ushort &, const float &);
+	void SetPlatformStdev(const ushort &, const float &);
+	float GetPlatformAvg(const ushort &) const;
+	float GetPlatformStdev(const ushort &) const;
 	void ResetPlatform();
 
 private:
 	vector<float> m_vecfPlatformAvg;
 	vector<float> m_vecfPlatformStdev;
-	size_t m_iPlatformID;
+	ushort m_iPlatformID;
 	string m_strPlatformName;
-	size_t m_iNumGenes;
+	ushort m_iNumGenes;
 };
 
 }
