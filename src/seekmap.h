@@ -54,6 +54,9 @@ public:
 	~CSeekIntIntMap();
 	ushort GetForward(const ushort &) const;
 	ushort GetReverse(const ushort &) const;
+	const vector<ushort>& GetAllForward() const;
+	const vector<ushort>& GetAllReverse() const;
+
 	void Add(const ushort&);
 	void Clear();
 	//void Reset(const CSeekPresence*, const bool=false) const;
@@ -62,8 +65,9 @@ public:
 	ushort GetNumSet() const;
 
 private:
-	ushort *m_iF;
-	ushort *m_iR;
+	vector<ushort> m_iF;
+	vector<ushort> m_iR;
+	vector<ushort>::iterator m_iterR;
 	ushort m_iSize;
 	ushort m_iNumSet;
 };

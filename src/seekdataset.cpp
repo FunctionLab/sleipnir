@@ -68,11 +68,14 @@ bool CSeekDataset::InitializeGeneMap(){
 		cerr << "Gene average or gene presence unread" << endl;
 		return false;
 	}
-	geneMap = new CSeekIntIntMap(genePresence.size());
 	ushort i;
 	ushort iSize = genePresence.size();
-	for(i=0; i<iSize; i++){
-		if(genePresence[i]==1 && !isnan(geneAverage[i]) && !isinf(geneAverage[i])){
+	geneMap = new CSeekIntIntMap(iSize);
+	vector<char>::const_iterator iterGenePresence = genePresence.begin();
+	vector<float>::const_iterator iterGeneAverage = geneAverage.begin();
+
+	for(i=0; iterGenePresence!=genePresence.end(); i++, iterGenePresence++, iterGeneAverage++){
+		if(*iterGenePresence==1 && !CMeta::IsNaN(*iterGeneAverage)){
 			geneMap->Add(i);
 		}
 	}
@@ -82,13 +85,14 @@ bool CSeekDataset::InitializeGeneMap(){
 /* requires presence vector */
 bool CSeekDataset::InitializeQuery(const vector<char> &query){
 	ushort iSize = query.size();
-	ushort i, j;
 	queryMap = new CSeekIntIntMap(iSize);
 	ushort iGenes = geneMap->GetNumSet();
-	for(i=0; i<iGenes; i++){
-		j = geneMap->GetReverse(i);
-		if(query[j]==0) continue;
-		queryMap->Add(j);
+	const vector<ushort> &allRGenes = geneMap->GetAllReverse();
+	vector<ushort>::const_iterator iterR = allRGenes.begin();
+	vector<ushort>::const_iterator endR = allRGenes.begin() + iGenes;
+	for(; iterR!=endR; iterR++){
+		if(query[*iterR]==0) continue;
+		queryMap->Add(*iterR);
 	}
 	iQuerySize = queryMap->GetNumSet();
 	iNumGenes = iSize;
@@ -186,20 +190,28 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 				platform_stdev[j] = platform->GetPlatformStdev(jj);
 			}
 
-			for(ii=0; ii<iNumGenes; ii++){
-				i = geneMap->GetReverse(ii);
+			const vector<ushort> &allRGenes = geneMap->GetAllReverse();
+			vector<ushort>::const_iterator iterRGenes = allRGenes.begin();
+			vector<ushort>::const_iterator lastRGenes = allRGenes.begin() + geneMap->GetNumSet();
+			for(; iterRGenes != lastRGenes; iterRGenes++){
+				i = *iterRGenes;
 				/* numGenes */
 				float a = GetGeneAverage(i);
 				/* numQueries */
-				for(j=0; j<iNumQueries; j++){
-					unsigned char x = r[j][i];
-					if(x==255){
+				ushort *rDataP = &rData[i][0];
+				unsigned char *rP = &r[0][i];
+				float *plAvgP = &platform_avg[0];
+				float *plStdevP = &platform_stdev[0];
+				ushort *end = &rData[i][0] + iNumQueries;
+
+				for(; rDataP!=end; plAvgP++, plStdevP++, rDataP++, rP+=iRows){
+					if(*rP==255){
 						continue;
 					}
-					float vv = (quant[x] - a - platform_avg[j]) / platform_stdev[j];
+					float vv = (quant[*rP] - a - *plAvgP) / *plStdevP;
 					//Do not remove the (float) cast in front of min
 					vv = max((float) min(vv, (float)3.2), (float)-3.2);
-					rData[i][j] = (ushort) (vv*100.0) + 320;
+					*rDataP = (ushort) (vv*100.0) + 320;
 				}
 			}
 			delete[] platform_avg;

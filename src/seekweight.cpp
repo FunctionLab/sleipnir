@@ -45,9 +45,7 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank, const vector<ushort> &cv
 	ushort **f = sDataset.GetDataMatrix();
 
 	if(bAllocate){
-		CSeekTools::InitVector(rank, iNumGenes, (ushort) 0);
-	}else{
-		fill(rank.begin(), rank.end(), 0);
+		CSeekTools::InitVector(rank, iNumGenes);
 	}
 
 	/* as long as rank[g] does not overflow, due to too many queries, we are fine
@@ -61,6 +59,7 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank, const vector<ushort> &cv
 	vector<ushort>::iterator iter_g;
 	ushort **pf;
 	for(iter_g=rank.begin(), pf = &f[0]; iter_g!=rank.end(); iter_g++, pf++){
+		*iter_g = 0;
 	//for(g=0; g<iNumGenes; g++){
 		for(iter=queryPos.begin(); iter!=queryPos.end(); iter++){
 			//rank[g] += f[g][*iter];
@@ -73,7 +72,8 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank, const vector<ushort> &cv
 }
 
 
-bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vector<ushort> *rank, const bool bAllocate){
+bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vector<ushort> *rrank,
+		const bool bAllocate){
 	ushort iFold = sQuery.GetNumFold();
 	sDataset.InitializeCVWeight(iFold);
 
@@ -84,15 +84,19 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vect
 	CSeekTools::InitVector(is_gold, sDataset.GetNumGenes(), (char) 0);
 
 	if(bAllocate){
-		rank = (vector<ushort>*)malloc(sizeof(vector<ushort>));
-		CSeekTools::InitVector(*rank, sDataset.GetNumGenes(), (ushort) 0);
-	}else{
-		fill(rank->begin(), rank->end(), (ushort)0);
+		if(rrank!=NULL){
+			cerr << "rank not null" << endl;
+			return false;
+		}
+		rrank = new vector<ushort>();
+		CSeekTools::InitVector(*rrank, sDataset.GetNumGenes());
 	}
+
+	vector<ushort> &rank = *rrank;
 
 	ushort TOP = 1000;
 	vector<AResult> ar;
-	ar.resize(rank->size());
+	ar.resize(rank.size());
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
@@ -126,9 +130,9 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vect
 		}else{
 			/* actual weighting */
 			float w = 0;
-			bool ret = LinearCombine(*rank, cv_query, sDataset, false);
+			bool ret = LinearCombine(rank, cv_query, sDataset, false);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(0.95,
-				*rank, w, is_query_cross, is_gold, *mapG, false, &ar, TOP);
+				rank, w, is_query_cross, is_gold, *mapG, false, &ar, TOP);
 			if(!ret){
 				sDataset.SetCVWeight(qi, -1);
 			}else{
@@ -149,7 +153,7 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vect
 	}
 
 	if(bAllocate){
-		free(rank);
+		delete rrank;
 	}
 
 	return true;

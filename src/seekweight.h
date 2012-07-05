@@ -35,7 +35,8 @@ public:
 	/*cv_query must be present in sDataset */
 	static bool LinearCombine(vector<ushort> &rank, const vector<ushort> &cv_query,
 			CSeekDataset &sDataset, const bool bAllocate = true);
-	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vector<ushort> *rank = NULL, const bool bAllocate=true);
+	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vector<ushort> *rrank = NULL,
+			const bool bAllocate = true);
 };
 
 

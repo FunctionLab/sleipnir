@@ -48,10 +48,12 @@ bool CSeekPerformanceMeasure::SortRankVector(
 		TOP = top;
 	}
 
-	for(i=0; i<rank.size(); i++){
-		a[i].i = i;
-		a[i].f = rank[i];
-		if(rank[i]>0){
+	vector<ushort>::const_iterator itRank;
+	vector<AResult>::iterator itA;
+	for(itRank=rank.begin(), itA = a.begin(), i = 0; itRank!=rank.end(); itRank++, itA++, i++){
+		itA->i = i;
+		itA->f = *itRank;
+		if(*itRank>0){
 			numNonZero++;
 		}
 	}

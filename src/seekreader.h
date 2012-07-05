@@ -95,17 +95,25 @@ public:
 	}
 
 	template<class tType>
+	static bool InitVector(vector<tType> &vData, const ushort &iSize) {
+		vData.clear();
+		vData.resize(iSize);
+		return true;
+	}
+
+	template<class tType>
 	static tType** Init2DArray(const size_t &iSize1, const size_t &iSize2, const tType &tValue){
 		tType **f = (tType**)malloc(iSize1*sizeof(tType*));
 		f[0] = (tType*)malloc(iSize1*iSize2*sizeof(tType));
-		ushort i, j;
-		for(i=1; i<iSize1; i++){
-			f[i] = f[i-1] + iSize2;
+		tType **itF = &f[1];
+		tType **itLast = &f[0] + iSize1;
+		for(; itF!=itLast; itF++){
+			*itF = *(itF - 1) + iSize2;
 		}
-		for(i=0; i<iSize1; i++){
-			for(j=0; j<iSize2; j++){
-				f[i][j] = tValue;
-			}
+		tType *itVal = &f[0][0];
+		tType *itValLast = &f[iSize1-1][iSize2-1] + 1;
+		for(; itVal!=itValLast; itVal++){
+			*itVal = tValue;
 		}
 		return f;
 	}

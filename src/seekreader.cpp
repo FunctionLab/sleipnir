@@ -74,7 +74,6 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDir
 	}
 	fprintf(stderr, "Done reading average and presence files\n"); system("date +%s%N 1>&2");
 
-	//printf("Done loading gene average and presence"); getchar();
 	CSeekTools::InitVector(cQuery, iGenes, (char) 0);
 
 	for(i=0; i<vecstrQuery.size(); i++){
@@ -82,6 +81,8 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDir
 		if(k==-1) continue;
 		cQuery[k] = 1;
 	}
+
+	fprintf(stderr, "Initializing gene and query map\n"); system("date +%s%N 1>&2");
 
 	#pragma omp parallel for \
 	shared(vc, cQuery) \
@@ -93,7 +94,7 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDir
 		vc[i]->InitializeQuery(cQuery);
 	}
 
-	//printf("Done initializing datasets with query map"); getchar();
+	fprintf(stderr, "Done initializing gene and query map\n"); system("date +%s%N 1>&2");
 
 	vector<unsigned char> *Q =
 		new vector<unsigned char>[vecstrQuery.size()];
@@ -119,19 +120,26 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDir
 		}
 		m = DB.GetGene(vecstrQuery[i]);
 
+		vector<unsigned char> &Qi = Q[i];
+
 		#pragma omp parallel for \
-		shared(vc, cQuery, Q) \
-		private(j, k) \
-		firstprivate(i, iDatasets, iGenes, m) \
+		shared(vc, Qi) \
+		private(j) \
+		firstprivate(iDatasets, iGenes, m) \
 		schedule(dynamic)
+
 		for(j=0; j<iDatasets; j++){
 			CSeekIntIntMap *qu = vc[j]->GetQueryMap();
 			ushort query = qu->GetForward(m);
 			if(CSeekTools::IsNaN(query)) continue;
-			//printf("i j %d %d %d %d\n", i, j, (int) query, k*iDatasets + j);
-			for(k=0; k<iGenes; k++){
-				vc[j]->SetQueryNoMapping(query, k, Q[i][k*iDatasets + j]);
+			unsigned char **r = vc[j]->GetMatrix();
+			vector<unsigned char>::iterator iterQ = Qi.begin() + j;
+			unsigned char *rp = &r[query][0];
+			unsigned char *rp_end = &r[query][0] + iGenes;
+			for(; rp!=rp_end; rp++, iterQ+=iDatasets){
+				*rp = *iterQ;
 			}
+
 		}
 	}
 	fprintf(stderr, "Done changing to query centric\n"); system("date +%s%N 1>&2");

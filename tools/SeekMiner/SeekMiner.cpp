@@ -53,7 +53,7 @@ int main( int iArgs, char** aszArgs ) {
 	}
 
 	CDatabase DB(useNibble);
-	omp_set_num_threads(8);
+	omp_set_num_threads(1);
 
 	if(sArgs.db_arg){
 		string strDBInput = sArgs.db_arg;
@@ -117,9 +117,12 @@ int main( int iArgs, char** aszArgs ) {
 		bool DEBUG = false;
 
 		for(i=0; i<1; i++){
+			//fprintf(stderr, "Start creating CV partitions\n"); system("date +%s%M 1>&2");
 			CSeekQuery query;
 			query.InitializeQuery(cQuery);
 			query.CreateCVPartitions(rnd, PART_M, FOLD);
+			//fprintf(stderr, "Done creating CV partitions\n"); system("date +%s%M 1>&2");
+
 			ushort iQuery = query.GetQuery().size();
 
 			ushort ***rData = new ushort**[numThreads];
@@ -139,9 +142,8 @@ int main( int iArgs, char** aszArgs ) {
 			float **master_rank_threads = CSeekTools::Init2DArray(numThreads, iGenes, (float) 0);
 			float **sum_weight_threads = CSeekTools::Init2DArray(numThreads, iGenes, (float) 0);
 			ushort **counts_threads = CSeekTools::Init2DArray(numThreads, iGenes, (ushort) 0);
-
-			vector<ushort> *rank_threads = (vector<ushort>*)malloc(numThreads * sizeof(vector<ushort>));
-			vector<ushort> *rank_normal_threads = (vector<ushort>*)malloc(numThreads * sizeof(vector<ushort>));
+			vector<ushort> *rank_threads = new vector<ushort>[numThreads];
+			vector<ushort> *rank_normal_threads = new vector<ushort>[numThreads];
 			for(j=0; j<numThreads; j++){
 				rank_threads[j].resize(iGenes);
 				rank_normal_threads[j].resize(iGenes);
@@ -151,17 +153,13 @@ int main( int iArgs, char** aszArgs ) {
 			system("date +%s%N 1>&2");
 
 			#pragma omp parallel for \
-			shared(vc, rData, rank_normal_threads, \
-			rank_threads, master_rank_threads, sum_weight_threads, counts_threads) \
+			shared(vc, rData, master_rank_threads, sum_weight_threads, counts_threads) \
 			private(d, j) \
 			firstprivate(iDatasets) \
 			schedule(dynamic)
 
 			for(d=0; d<iDatasets; d++){
 				ushort tid = omp_get_thread_num();
-				vector<ushort> &rank_normal = rank_normal_threads[tid];
-				vector<ushort> &rank = rank_threads[tid];
-
 				if(DEBUG) fprintf(stderr, "Dataset %d\n", d);
 
 				CSeekIntIntMap *mapQ = vc[d]->GetQueryMap();
@@ -183,18 +181,17 @@ int main( int iArgs, char** aszArgs ) {
 
 				if(DEBUG) fprintf(stderr, "Weighting dataset\n");
 
-				CSeekWeighter::CVWeighting(query, *vc[d], &rank, false);
+				CSeekWeighter::CVWeighting(query, *vc[d], &rank_threads[tid], false);
 				float w = vc[d]->GetDatasetSumWeight();
 
 				if(w==-1){
 					if(DEBUG) fprintf(stderr, "Bad weight\n");
 					continue;
 				}
-				//vector<ushort> rank_normal;
 
 				if(DEBUG) fprintf(stderr, "Doing linear combination\n");
 
-				CSeekWeighter::LinearCombine(rank_normal, this_q, *vc[d], false);
+				CSeekWeighter::LinearCombine(rank_normal_threads[tid], this_q, *vc[d], false);
 
 				/*for(j=0; j<1000; j++){
 					size_t g = mapG->GetReverse(j);
@@ -203,14 +200,23 @@ int main( int iArgs, char** aszArgs ) {
 
 				if(DEBUG) fprintf(stderr, "Adding contribution of dataset to master ranking: %.5f\n", w);
 
-				for(j=0; j<mapG->GetNumSet(); j++){
-					ushort g = mapG->GetReverse(j);
-					if(rank_normal[g]==0){
+				ushort iGenes = mapG->GetNumSet();
+				const vector<ushort> &allRGenes = mapG->GetAllReverse();
+				vector<ushort>::const_iterator iterR = allRGenes.begin();
+				vector<ushort>::const_iterator endR = allRGenes.begin() + iGenes;
+
+				vector<ushort> &rank_normal = rank_normal_threads[tid];
+				float* master_rank = &master_rank_threads[tid][0];
+				float* sum_weight = &sum_weight_threads[tid][0];
+				ushort* counts = &counts_threads[tid][0];
+
+				for(; iterR!=endR; iterR++){
+					if(rank_normal[*iterR]==0){
 						continue;
 					}
-					master_rank_threads[tid][g] += (float) rank_normal[g] * w;
-					sum_weight_threads[tid][g] += w;
-					counts_threads[tid][g]++;
+					master_rank[*iterR] += (float) rank_normal[*iterR] * w;
+					sum_weight[*iterR] += w;
+					counts[*iterR]++;
 				}
 			}
 
@@ -231,8 +237,8 @@ int main( int iArgs, char** aszArgs ) {
 				CSeekTools::Free2DArray(rData[j]);
 			}
 			delete[] rData;
-			free(rank_threads);
-			free(rank_normal_threads);
+			delete[] rank_threads;
+			delete[] rank_normal_threads;
 
 			if(DEBUG) fprintf(stderr, "Aggregating genes\n");
 			for(j=0; j<iGenes; j++){

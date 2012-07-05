@@ -79,13 +79,22 @@ size_t CSeekPresence::GetSize(){
  * IntIntMap Data Structure
  */
 void CSeekIntIntMap::Initialize(const ushort &iSize){
-	m_iF = new ushort[iSize];
-	m_iR = new ushort[iSize];
+	m_iF.resize(iSize);
+	m_iR.resize(iSize);
 	m_iSize = iSize;
 	Clear();
+	m_iterR = m_iR.begin();
 }
 CSeekIntIntMap::CSeekIntIntMap(const ushort &iSize){
 	Initialize(iSize);
+}
+
+const vector<ushort>& CSeekIntIntMap::GetAllForward() const{
+	return m_iF;
+}
+
+const vector<ushort>& CSeekIntIntMap::GetAllReverse() const{
+	return m_iR;
 }
 
 /*
@@ -107,8 +116,8 @@ CSeekIntIntMap::CSeekIntIntMap(const char *cP, const ushort &iSize, const bool b
 
 
 CSeekIntIntMap::~CSeekIntIntMap(){
-	delete[] m_iF;
-	delete[] m_iR;
+	m_iF.clear();
+	m_iR.clear();
 	m_iNumSet = 0;
 	m_iSize = 0;
 }
@@ -123,15 +132,17 @@ ushort CSeekIntIntMap::GetReverse(const ushort &i) const{
 
 void CSeekIntIntMap::Add(const ushort &i){
 	m_iF[i] = m_iNumSet;
-	m_iR[m_iNumSet] = i;
+	*m_iterR = i;
+	m_iterR++;
 	m_iNumSet++;
 }
 
 void CSeekIntIntMap::Clear(){
-	ushort i;
-	for(i=0; i<m_iSize; i++){
-		m_iF[i] = -1;
-		m_iR[i] = -1;
+	vector<ushort>::iterator iterF = m_iF.begin();
+	vector<ushort>::iterator iterR = m_iR.begin();
+	for(; iterF!=m_iF.end(); iterF++, iterR++){
+		*iterF = -1;
+		*iterR = -1;
 	}
 	m_iNumSet = 0;
 }
