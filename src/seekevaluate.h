@@ -39,6 +39,14 @@ struct AResult{
 	}
 };
 
+struct Ascending
+{
+    bool operator()( const AResult& lx, const AResult& rx ) const {
+        return lx.f <= rx.f;
+    }
+};
+
+
 
 struct AResultFloat{
 	ushort i;

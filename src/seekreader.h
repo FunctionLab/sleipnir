@@ -128,7 +128,7 @@ public:
 
 	static bool CreatePresenceVector(const vector<ushort> &, vector<char> &, const ushort &);
 	static bool LoadDatabase(const CDatabase &, const string &, vector<char> &,
-	const vector<string> &, const vector<string> &, const map<string, string> &,
+	const vector< vector<string> > &, const vector<string> &, const map<string, string> &,
 	const map<string, ushort> &, vector<CSeekPlatform> &, vector<CSeekDataset*> &);
 
 	static bool ReadPlatforms(const string &strPlatformDirectory, vector<CSeekPlatform> &plat,
@@ -137,6 +137,9 @@ public:
 	static bool ReadListOneColumn(const string &strFile, vector<string> &vecstrList, CSeekStrIntMap &mapstriList);
 
 	static bool ReadListTwoColumns(const string &strFile, vector<string> &list1, vector<string> &list2);
+
+	static bool ReadMultipleQueries(const string &strFile, vector< vector<string> > &qList);
+
 
 };
 

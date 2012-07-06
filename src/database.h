@@ -135,6 +135,8 @@ public:
 	}
 
 	bool GetGene(const string &, vector<unsigned char>&) const;
+	bool GetGene(const size_t &, vector<unsigned char>&) const;
+
 
 	/*!
 	 * \brief

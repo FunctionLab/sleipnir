@@ -244,6 +244,12 @@ bool CDatabase::GetGene(const string &strGene, vector<unsigned char> &vecbData) 
 	return true;
 }
 
+bool CDatabase::GetGene(const size_t &iGene, vector<unsigned char> &vecbData) const{
+	m_vecpDBs[ iGene % m_vecpDBs.size( ) ]->Get( iGene / m_vecpDBs.size( ), vecbData);
+	return true;
+}
+
+
 
 /* mainly used by SeekMinder */
 bool CDatabaselet::Get(size_t iOne, vector<unsigned char>& vecbData){

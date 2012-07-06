@@ -151,6 +151,10 @@ ushort CSeekIntIntMap::GetNumSet() const{
 	return m_iNumSet;
 }
 
+ushort CSeekIntIntMap::GetSize() const{
+	return m_iSize;
+}
+
 /*void CSeekIntIntMap::Reset(CSeekPresence *cP, bool bReverse){
 	int i;
 	if(bReverse==false){

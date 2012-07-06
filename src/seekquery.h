@@ -46,6 +46,8 @@ public:
 	~CSeekQuery();
 
 	bool InitializeQuery(const vector<char>&);
+	bool InitializeQuery(const vector<ushort>&);
+
 	ushort GetNumFold() const;
 	vector<ushort>& GetQuery();
 	vector<ushort>& GetCVQuery(ushort&);

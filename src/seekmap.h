@@ -63,6 +63,7 @@ public:
 	void Reset(const vector<char>&, const bool=false);
 	void Reset(const char*, const bool=false);
 	ushort GetNumSet() const;
+	ushort GetSize() const;
 
 private:
 	vector<ushort> m_iF;

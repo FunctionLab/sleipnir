@@ -50,7 +50,7 @@ bool CSeekTools::CreatePresenceVector(const vector<ushort> &srcData,
 }
 
 bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDirectory,
-	vector<char> &cQuery, const vector<string> &vecstrQuery, const vector<string> &vecstrDatasets,
+	vector<char> &cAllQuery, const vector< vector<string> > &vecstrAllQuery, const vector<string> &vecstrDatasets,
 	const map<string, string> &mapstrstrDatasetPlatform, const map<string, ushort> &mapstriPlatform,
 	vector<CSeekPlatform> &vp, vector<CSeekDataset*> &vc){
 		
@@ -74,38 +74,49 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDir
 	}
 	fprintf(stderr, "Done reading average and presence files\n"); system("date +%s%N 1>&2");
 
-	CSeekTools::InitVector(cQuery, iGenes, (char) 0);
+	CSeekTools::InitVector(cAllQuery, iGenes, (char) 0);
 
-	for(i=0; i<vecstrQuery.size(); i++){
-		k = DB.GetGene(vecstrQuery[i]);
-		if(k==-1) continue;
-		cQuery[k] = 1;
+	for(i=0; i<vecstrAllQuery.size(); i++){
+		for(j=0; j<vecstrAllQuery[i].size(); j++){
+			k = DB.GetGene(vecstrAllQuery[i][j]);
+			if(k==-1) continue;
+			cAllQuery[k] = 1;
+		}
 	}
+
+	vector<ushort> allQ;
+	for(i=0; i<cAllQuery.size(); i++){
+		if(cAllQuery[i]==1){
+			allQ.push_back(i);
+		}
+	}
+	allQ.resize(allQ.size());
+
 
 	fprintf(stderr, "Initializing gene and query map\n"); system("date +%s%N 1>&2");
 
 	#pragma omp parallel for \
-	shared(vc, cQuery) \
+	shared(vc, allQ) \
 	private(i) \
 	firstprivate(iDatasets) \
 	schedule(dynamic)
 	for(i=0; i<iDatasets; i++){
 		vc[i]->InitializeGeneMap();
-		vc[i]->InitializeQuery(cQuery);
+		vc[i]->InitializeQueryBlock(allQ);
 	}
 
 	fprintf(stderr, "Done initializing gene and query map\n"); system("date +%s%N 1>&2");
 
 	vector<unsigned char> *Q =
-		new vector<unsigned char>[vecstrQuery.size()];
+		new vector<unsigned char>[allQ.size()];
 
 	fprintf(stderr, "Start reading genes cdatabaselet\n"); system("date +%s%N 1>&2");
 	/*#pragma omp parallel for \
 	shared(DB, vecstrQuery, Q) \
 	private(i) \
 	schedule(dynamic)*/
-	for(i=0; i<vecstrQuery.size(); i++){
-		if(!DB.GetGene(vecstrQuery[i], Q[i])){
+	for(i=0; i<allQ.size(); i++){
+		if(!DB.GetGene(allQ[i], Q[i])){
 			cerr << "Gene does not exist" << endl;
 		}
 	}
@@ -114,11 +125,8 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDir
 	size_t m;
 
 	fprintf(stderr, "Start changing to query centric\n"); system("date +%s%N 1>&2");
-	for(i=0; i<vecstrQuery.size(); i++){
-		if(DB.GetGene(vecstrQuery[i])==-1){
-			continue;
-		}
-		m = DB.GetGene(vecstrQuery[i]);
+	for(i=0; i<allQ.size(); i++){
+		m = allQ[i];
 
 		vector<unsigned char> &Qi = Q[i];
 
@@ -129,13 +137,13 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDir
 		schedule(dynamic)
 
 		for(j=0; j<iDatasets; j++){
-			CSeekIntIntMap *qu = vc[j]->GetQueryMap();
-			ushort query = qu->GetForward(m);
-			if(CSeekTools::IsNaN(query)) continue;
+			CSeekIntIntMap *qu = vc[j]->GetDBMap();
+			ushort db = qu->GetForward(m);
+			if(CSeekTools::IsNaN(db)) continue;
 			unsigned char **r = vc[j]->GetMatrix();
 			vector<unsigned char>::iterator iterQ = Qi.begin() + j;
-			unsigned char *rp = &r[query][0];
-			unsigned char *rp_end = &r[query][0] + iGenes;
+			unsigned char *rp = &r[db][0];
+			unsigned char *rp_end = &r[db][0] + iGenes;
 			for(; rp!=rp_end; rp++, iterQ+=iDatasets){
 				*rp = *iterQ;
 			}
@@ -254,6 +262,36 @@ bool CSeekTools::ReadListOneColumn(const string &strFile, vector<string> &vecstr
 	ifsm.close();
 	return true;
 }
+
+bool CSeekTools::ReadMultipleQueries(const string &strFile, vector< vector<string> > &qList){
+	qList.clear();
+	ifstream ifsm;
+	ifsm.open(strFile.c_str());
+	if(!ifsm.is_open()){
+		cerr << "Error opening file " << strFile << endl;
+		return false;
+	}
+
+	char acBuffer[1024];
+	ushort c_iBuffer = 1024;
+
+	ushort i = 0;
+	while(!ifsm.eof()){
+		ifsm.getline(acBuffer, c_iBuffer -1);
+		if(acBuffer[0]==0){
+			break;
+		}
+		acBuffer[c_iBuffer-1] = 0;
+		vector<string> tok;
+		CMeta::Tokenize(acBuffer, tok, " ");
+		qList.push_back(tok);
+		i++;
+	}
+	qList.resize(qList.size());
+	ifsm.close();
+	return true;
+}
+
 
 
 }

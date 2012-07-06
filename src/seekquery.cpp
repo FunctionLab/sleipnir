@@ -52,6 +52,15 @@ bool CSeekQuery::InitializeQuery(const vector<char> &query){
 	return true;
 }
 
+bool CSeekQuery::InitializeQuery(const vector<ushort> &query){
+	ushort i;
+	for(i=0; i<query.size(); i++){
+		queryGenes.push_back(query[i]);
+	}
+	queryGenes.resize(queryGenes.size());
+	return true;
+}
+
 ushort CSeekQuery::GetNumFold() const{
 	return iNumFold;
 }

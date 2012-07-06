@@ -56,14 +56,30 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank, const vector<ushort> &cv
 		queryPos[i] = mapQ->GetForward(cv_query[i]);
 	}
 
+	sort(queryPos.begin(), queryPos.end());
+	vector<ushort> offset;
+	offset.push_back(0);
+	for(i=1; i<q_size; i++){
+		offset.push_back(queryPos[i] - queryPos[i-1]);
+	}
+	offset.resize(offset.size());
+
+
 	vector<ushort>::iterator iter_g;
+	vector<ushort>::const_iterator iterOffset;
 	ushort **pf;
+	ushort *pp;
 	for(iter_g=rank.begin(), pf = &f[0]; iter_g!=rank.end(); iter_g++, pf++){
 		*iter_g = 0;
 	//for(g=0; g<iNumGenes; g++){
-		for(iter=queryPos.begin(); iter!=queryPos.end(); iter++){
-			//rank[g] += f[g][*iter];
-			(*iter_g) += (*pf)[*iter];
+		//rank[g] = 0;
+		pp = &(*pf)[queryPos[0]];
+		for(iterOffset = offset.begin(); iterOffset!=offset.end(); iterOffset++, pp+=(*iterOffset)){
+		//for(iter = queryPos.begin(); iter!=queryPos.end(); iter++){
+		//for(i=0; i<queryPos.size(); i++){
+			//rank[g] += f[g][queryPos[i]];
+			(*iter_g) += *pp;
+			//(*iter_g) += (*pf)[*iter];
 		}
 		//rank[g] /= q_size;
 		(*iter_g) /= q_size;

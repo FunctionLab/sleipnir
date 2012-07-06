@@ -37,19 +37,27 @@ public:
 	bool ReadGeneAverage(const string &);
 	bool ReadGeneVariance(const string &);
 	bool ReadGenePresence(const string &);
-	bool InitializeQuery(const vector<char> &);
+	bool InitializeQuery(const vector<ushort> &);
+	bool InitializeQueryBlock(const vector<ushort> &);
 	bool DeleteQuery();
-	bool SetQuery(const ushort &, const ushort &, const unsigned char &);
+	bool DeleteQueryBlock();
+
+	/*bool SetQuery(const ushort &, const ushort &, const unsigned char &);
 	bool SetQueryNoMapping(const ushort &, const ushort &, const unsigned char &);
 	bool SetQuery(const ushort &, const vector<unsigned char> &);
-
+	 */
 	bool InitializeDataMatrix(ushort**, const ushort&, const ushort&,
 		const bool=true, const bool=true);
 	ushort** GetDataMatrix();
 
 	unsigned char** GetMatrix();
 	CSeekIntIntMap* GetGeneMap();
+	CSeekIntIntMap* GetDBMap();
 	CSeekIntIntMap* GetQueryMap();
+
+	const vector<ushort>& GetQuery() const;
+	const vector<ushort>& GetQueryIndex() const;
+
 	float GetGeneVariance(const ushort&) const;
 	float GetGeneAverage(const ushort&) const;
 	ushort GetNumGenes() const;
@@ -64,13 +72,15 @@ public:
 private:
 	string strName;
 	CSeekPlatform *platform;
-	unsigned char **r;
 	vector<float> geneAverage;
 	vector<float> geneVariance;
 
 	vector<char> genePresence;
 	CSeekIntIntMap *geneMap;
+	CSeekIntIntMap *dbMap;
 	CSeekIntIntMap *queryMap;
+	vector<ushort> query;
+	vector<ushort> queryIndex;
 
 	/* previously known as sinfo file */
 	float m_fDsetAverage;
@@ -78,9 +88,13 @@ private:
 
 	ushort iQuerySize;
 	ushort iNumGenes;
+	ushort iDBSize;
 
 	vector<float> weight;
+
 	ushort **rData;
+	unsigned char **r;
+
 	float sum_weight;
 	bool m_bIsNibble;
 

@@ -39,6 +39,7 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 
+	//Reading gene mapping
 	if( sArgs.input_arg ) {
 		string strGeneInput = sArgs.input_arg;
 		vector<string> vecstrGeneID;
@@ -67,9 +68,8 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 		string strQueryInput = sArgs.query_arg;
-		vector<string> vecstrQuery;
-		CSeekStrIntMap mapstriQuery;
-		if(!CSeekTools::ReadListOneColumn(strQueryInput, vecstrQuery, mapstriQuery)){
+		vector< vector<string> > vecstrAllQuery;
+		if(!CSeekTools::ReadMultipleQueries(strQueryInput, vecstrAllQuery)){
 			return false;
 		}
 
@@ -96,8 +96,8 @@ int main( int iArgs, char** aszArgs ) {
 		//printf("Done opening"); getchar();
 
 		vector<CSeekDataset*> vc;
-		vector<char> cQuery;
-		CSeekTools::LoadDatabase(DB, strPrepInputDirectory, cQuery, vecstrQuery,
+		vector<char> cAllQuery;
+		CSeekTools::LoadDatabase(DB, strPrepInputDirectory, cAllQuery, vecstrAllQuery,
 			vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
 
 		ushort j;
@@ -116,14 +116,31 @@ int main( int iArgs, char** aszArgs ) {
 		ushort numThreads = omp_get_max_threads();
 		bool DEBUG = false;
 
-		for(i=0; i<1; i++){
+		for(i=0; i<vecstrAllQuery.size(); i++){
+
+			vector<ushort> queryGenes;
+			for(j=0; j<vecstrAllQuery[i].size(); j++){
+				size_t m = DB.GetGene(vecstrAllQuery[i][j]);
+				if(m==-1) continue;
+				queryGenes.push_back(m);
+			}
+			queryGenes.resize(queryGenes.size());
+
+			vector<char> cQuery;
+			CSeekTools::CreatePresenceVector(queryGenes, cQuery, iGenes);
+
+			for(j=0; j<iDatasets; j++){
+				vc[j]->InitializeQuery(queryGenes);
+			}
+
 			//fprintf(stderr, "Start creating CV partitions\n"); system("date +%s%M 1>&2");
 			CSeekQuery query;
-			query.InitializeQuery(cQuery);
+			query.InitializeQuery(queryGenes);
 			query.CreateCVPartitions(rnd, PART_M, FOLD);
 			//fprintf(stderr, "Done creating CV partitions\n"); system("date +%s%M 1>&2");
 
 			ushort iQuery = query.GetQuery().size();
+			//if(DEBUG) fprintf(stderr, "Query size: %d\n", iQuery);
 
 			ushort ***rData = new ushort**[numThreads];
 			for(j=0; j<numThreads; j++){
@@ -171,7 +188,7 @@ int main( int iArgs, char** aszArgs ) {
 				}
 
 				if(mapQ->GetNumSet()==0){
-					//printf("This dataset is skipped\n");
+					if(DEBUG) fprintf(stderr, "This dataset is skipped\n");
 					continue;
 				}
 
@@ -192,6 +209,8 @@ int main( int iArgs, char** aszArgs ) {
 				if(DEBUG) fprintf(stderr, "Doing linear combination\n");
 
 				CSeekWeighter::LinearCombine(rank_normal_threads[tid], this_q, *vc[d], false);
+
+				vc[d]->DeleteQuery();
 
 				/*for(j=0; j<1000; j++){
 					size_t g = mapG->GetReverse(j);
@@ -268,7 +287,7 @@ int main( int iArgs, char** aszArgs ) {
 			ushort ii;
 			for(ii=0, jj=0; jj<500; ii++){
 				if(cQuery[a[ii].i]==1) continue;
-				fprintf(stderr, "%d %.5f\n", a[ii].i, a[ii].f);
+				//fprintf(stderr, "%d %.5f\n", a[ii].i, a[ii].f);
 				jj++;
 			}
 
@@ -276,6 +295,16 @@ int main( int iArgs, char** aszArgs ) {
 			system("date +%s%N 1>&2");
 
 		}
+
+		for(j=0; j<iDatasets; j++){
+			vc[j]->DeleteQueryBlock();
+		}
+
+		for(j=0; j<iDatasets; j++){
+			delete vc[j];
+		}
+
+
 
 	}else{
 		cerr << "Must give a db list." << endl;

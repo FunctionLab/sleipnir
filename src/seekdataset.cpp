@@ -22,6 +22,7 @@
 #include "seekmap.h"
 #include "seekreader.h"
 #include "seekdataset.h"
+#include "seekevaluate.h"
 #include "stdafx.h"
 #include "datapair.h"
 
@@ -40,15 +41,15 @@ CSeekDataset::CSeekDataset(){
 }
 
 CSeekDataset::~CSeekDataset(){
-	if(r!=NULL){
-		CSeekTools::Free2DArray(r);
-	}
-	if(rData!=NULL){
-		CSeekTools::Free2DArray(rData);
+	DeleteQuery();
+	DeleteQueryBlock();
+	if(geneMap!=NULL){
+		delete geneMap;
 	}
 	geneAverage.clear();
 	geneVariance.clear();
 	genePresence.clear();
+	platform = NULL;
 }
 
 bool CSeekDataset::ReadGeneAverage(const string &strFileName){
@@ -70,6 +71,7 @@ bool CSeekDataset::InitializeGeneMap(){
 	}
 	ushort i;
 	ushort iSize = genePresence.size();
+	iNumGenes = iSize;
 	geneMap = new CSeekIntIntMap(iSize);
 	vector<char>::const_iterator iterGenePresence = genePresence.begin();
 	vector<float>::const_iterator iterGeneAverage = geneAverage.begin();
@@ -83,27 +85,78 @@ bool CSeekDataset::InitializeGeneMap(){
 }
 
 /* requires presence vector */
-bool CSeekDataset::InitializeQuery(const vector<char> &query){
-	ushort iSize = query.size();
-	queryMap = new CSeekIntIntMap(iSize);
-	ushort iGenes = geneMap->GetNumSet();
-	const vector<ushort> &allRGenes = geneMap->GetAllReverse();
-	vector<ushort>::const_iterator iterR = allRGenes.begin();
-	vector<ushort>::const_iterator endR = allRGenes.begin() + iGenes;
-	for(; iterR!=endR; iterR++){
-		if(query[*iterR]==0) continue;
-		queryMap->Add(*iterR);
+bool CSeekDataset::InitializeQueryBlock(const vector<ushort> &queryBlock){
+	dbMap = new CSeekIntIntMap(iNumGenes);
+	vector<ushort>::const_iterator iterQ = queryBlock.begin();
+	for(; iterQ!=queryBlock.end(); iterQ++){
+		if(CSeekTools::IsNaN(geneMap->GetForward(*iterQ))){
+			//this query gene is not present in the dataset
+			continue;
+		}
+		dbMap->Add(*iterQ);
 	}
-	iQuerySize = queryMap->GetNumSet();
-	iNumGenes = iSize;
+	iDBSize = dbMap->GetNumSet();
+
 	bool DEBUG = false;
 
-	if(iQuerySize==0){
+	if(iDBSize==0){
 		if(DEBUG) cerr << "Dataset will be skipped" << endl;
 		r = NULL;
 		return true;
 	}
-	r = CSeekTools::Init2DArray(iQuerySize, iNumGenes, (unsigned char) 255);
+
+	r = CSeekTools::Init2DArray(iDBSize, iNumGenes, (unsigned char) 255);
+
+	return true;
+}
+
+bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
+	//must require initializequeryBlock be executed first
+	this->queryIndex.clear();
+	this->query.clear();
+
+	queryMap = new CSeekIntIntMap(iNumGenes);
+
+	if(iDBSize==0){
+		return true;
+	}
+
+	ushort i;
+	vector<ushort>::const_iterator iterQ = query.begin();
+
+	vector<AResult> a;
+	a.resize(query.size());
+	vector<AResult>::iterator iterA = a.begin();
+	iQuerySize = 0;
+	for(; iterQ!=query.end(); iterQ++){
+		if(CSeekTools::IsNaN(i = dbMap->GetForward(*iterQ))){
+			continue;
+		}
+		(*iterA).i = *iterQ;
+		(*iterA).f = i;
+		iterA++;
+		iQuerySize++;
+	}
+
+	bool DEBUG = false;
+	if(iQuerySize==0){
+		if(DEBUG) cerr << "Dataset will be skipped" << endl;
+		return true;
+	}
+
+	a.resize(iQuerySize);
+	sort(a.begin(), a.end(), Ascending());
+
+
+	for(iterA = a.begin(); iterA!=a.end(); iterA++){
+		queryMap->Add((*iterA).i);
+		this->query.push_back((*iterA).i);
+		this->queryIndex.push_back((*iterA).f);
+	}
+
+	this->queryIndex.resize(this->queryIndex.size());
+	this->query.resize(this->query.size());
+
 	return true;
 }
 
@@ -113,15 +166,35 @@ bool CSeekDataset::DeleteQuery(){
 		queryMap = NULL;
 	}
 	iQuerySize = 0;
-	iNumGenes = 0;
+	rData = NULL;
+	weight.clear();
+	sum_weight = -1;
+	return true;
+}
+
+bool CSeekDataset::DeleteQueryBlock(){
+	if(dbMap!=NULL){
+		delete dbMap;
+		dbMap = NULL;
+	}
 	if(r!=NULL){
 		CSeekTools::Free2DArray(r);
 		r = NULL;
 	}
+	iDBSize = 0;
 	return true;
 }
 
+const vector<ushort>& CSeekDataset::GetQuery() const{
+	return this->query;
+}
 
+const vector<ushort>& CSeekDataset::GetQueryIndex() const{
+	return this->queryIndex;
+}
+
+
+/*
 bool CSeekDataset::SetQuery(const ushort &i, const ushort &j, const unsigned char &c){
 	ushort query = queryMap->GetForward(i);
 	if(CSeekTools::IsNaN(query)){
@@ -147,6 +220,7 @@ bool CSeekDataset::SetQuery(const ushort &i, const vector<unsigned char> &c){
 	}
 	return true;
 }
+*/
 
 ushort** CSeekDataset::GetDataMatrix(){
 	return rData;
@@ -172,10 +246,17 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 	rData = rD;
 	ushort ii;
 	ushort iNumGenes = geneMap->GetNumSet();
-	ushort iNumQueries = queryMap->GetNumSet();
+	ushort iNumQueries = iQuerySize;
 
 	//iRows is the gene id, iColumns is the query id
 	memset(&rData[0][0], 0, sizeof(ushort)*iRows*iColumns);
+
+	//assume queryIndex is already sorted
+	vector<ushort> offset;
+	offset.push_back(0);
+	for(i=1; i<queryIndex.size(); i++){
+		offset.push_back(queryIndex[i] - queryIndex[i-1]);
+	}
 
 	if(bSubtractAvg){
 
@@ -184,8 +265,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 			float *platform_stdev = new float[iColumns];
 
 			//GetColumns() is numQuery
-			for(j=0; j<queryMap->GetNumSet(); j++){
-				ushort jj = queryMap->GetReverse(j);
+			for(j=0; j<iNumQueries; j++){
+				ushort jj = this->query[j];
 				platform_avg[j] = platform->GetPlatformAvg(jj);
 				platform_stdev[j] = platform->GetPlatformStdev(jj);
 			}
@@ -193,18 +274,22 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 			const vector<ushort> &allRGenes = geneMap->GetAllReverse();
 			vector<ushort>::const_iterator iterRGenes = allRGenes.begin();
 			vector<ushort>::const_iterator lastRGenes = allRGenes.begin() + geneMap->GetNumSet();
+
 			for(; iterRGenes != lastRGenes; iterRGenes++){
 				i = *iterRGenes;
-				/* numGenes */
+				// numGenes
+			//for(ii=0; ii<iNumGenes; ii++){
+			//	i = geneMap->GetReverse(ii);
 				float a = GetGeneAverage(i);
-				/* numQueries */
+
+				// numQueries
 				ushort *rDataP = &rData[i][0];
-				unsigned char *rP = &r[0][i];
+				unsigned char *rP = &r[queryIndex[0]][i];
 				float *plAvgP = &platform_avg[0];
 				float *plStdevP = &platform_stdev[0];
 				ushort *end = &rData[i][0] + iNumQueries;
-
-				for(; rDataP!=end; plAvgP++, plStdevP++, rDataP++, rP+=iRows){
+				vector<ushort>::const_iterator iterOffset = offset.begin();
+				for(; rDataP!=end; plAvgP++, plStdevP++, rDataP++, iterOffset++, rP+=iRows*(*iterOffset)){
 					if(*rP==255){
 						continue;
 					}
@@ -213,7 +298,22 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 					vv = max((float) min(vv, (float)3.2), (float)-3.2);
 					*rDataP = (ushort) (vv*100.0) + 320;
 				}
+
+				/*for(j=0; j<iNumQueries; j++){
+					unsigned char x = r[queryIndex[j]][i];
+					if(x==255){
+						continue;
+					}
+					float vv = (quant[x] - a - platform_avg[j]) / platform_stdev[j];
+					vv = max((float) min(vv, (float)3.2), (float)-3.2);
+					rData[i][j]= (ushort) (vv*100.0) + 320;
+				}*/
+
+
 			}
+
+
+
 			delete[] platform_avg;
 			delete[] platform_stdev;
 
@@ -223,7 +323,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 				float a = GetGeneAverage(i);
 				/* numQueries */
 				for(j=0; j<iNumQueries; j++){
-					unsigned char x = r[j][i];
+					unsigned char x = r[queryIndex[j]][i];
 					if(x==255){
 						continue;
 					}
@@ -242,7 +342,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 		i = geneMap->GetReverse(ii);
 		/* numQueries */
 		for(j=0; j<iNumQueries; j++){
-			float vv = quant[r[j][i]];
+			float vv = quant[r[queryIndex[j]][i]];
 			vv = max((float) min(vv, (float)3.2), (float)-3.2);
 			rData[i][j] = (ushort) (vv*100.0) + 320;
 		}
@@ -264,6 +364,11 @@ CSeekIntIntMap* CSeekDataset::GetQueryMap(){
 	return queryMap;
 }
 
+CSeekIntIntMap* CSeekDataset::GetDBMap(){
+	return dbMap;
+}
+
+
 float CSeekDataset::GetGeneVariance(const ushort &i) const{
 	return geneVariance[i];
 }
@@ -279,6 +384,7 @@ ushort CSeekDataset::GetNumGenes() const{
 bool CSeekDataset::InitializeCVWeight(const ushort &i){
 	weight.clear();
 	weight.resize(i);
+	sum_weight = -1;
 	return true;
 }
 
