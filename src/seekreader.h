@@ -87,6 +87,20 @@ public:
 	}
 
 	template<class tType>
+	static bool WriteArrayText(const char *fileName, const vector<tType> &vData){
+		ofstream outfile;
+		outfile.open(fileName);
+		ushort i;
+		for(i=0; i<vData.size()-1; i++){
+			outfile << vData[i] << " ";
+		}
+		outfile << vData[vData.size()-1] << endl;
+		outfile.close();
+		return true;
+	}
+
+
+	template<class tType>
 	static bool InitVector(vector<tType> &vData, const ushort &iSize, const tType &tValue) {
 		vData.clear();
 		vData.resize(iSize);

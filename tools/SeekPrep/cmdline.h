@@ -39,43 +39,60 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * dab_arg;	/**< @brief Input dataset (.dab) or databaselet (.db).  */
-  char * dab_orig;	/**< @brief Input dataset (.dab) or databaselet (.db) original value given at command line.  */
-  const char *dab_help; /**< @brief Input dataset (.dab) or databaselet (.db) help description.  */
-  int sinfo_flag;	/**< @brief Generates sinfo file (with dataset wide mean and stdev) (default=off).  */
-  const char *sinfo_help; /**< @brief Generates sinfo file (with dataset wide mean and stdev) help description.  */
-  int gavg_flag;	/**< @brief Generates gene-average file (default=off).  */
-  const char *gavg_help; /**< @brief Generates gene-average file help description.  */
-  int gplat_flag;	/**< @brief Generates gene-platform average + stdev file (requires .db input) (default=off).  */
-  const char *gplat_help; /**< @brief Generates gene-platform average + stdev file (requires .db input) help description.  */
-  int gpres_flag;	/**< @brief Generates gene-presence file (default=off).  */
-  const char *gpres_help; /**< @brief Generates gene-presence file help description.  */
-  int gvar_flag;	/**< @brief Generates gene-variance file (default=off).  */
-  const char *gvar_help; /**< @brief Generates gene-variance file help description.  */
-  char * dir_out_arg;	/**< @brief Output directory.  */
-  char * dir_out_orig;	/**< @brief Output directory original value given at command line.  */
-  const char *dir_out_help; /**< @brief Output directory help description.  */
+  int dab_flag;	/**< @brief DAB mode, suitable for dataset wide gene average and stdev calculation (default=off).  */
+  const char *dab_help; /**< @brief DAB mode, suitable for dataset wide gene average and stdev calculation help description.  */
+  int pcl_flag;	/**< @brief PCL mode, suitable for dataset gene variance calculation (default=off).  */
+  const char *pcl_help; /**< @brief PCL mode, suitable for dataset gene variance calculation help description.  */
+  int db_flag;	/**< @brief DB mode, suitable for platform wide gene average and stdev calculation (default=off).  */
+  const char *db_help; /**< @brief DB mode, suitable for platform wide gene average and stdev calculation help description.  */
+  int sinfo_flag;	/**< @brief Generates sinfo file (dataset z score mean and stdev) (default=off).  */
+  const char *sinfo_help; /**< @brief Generates sinfo file (dataset z score mean and stdev) help description.  */
+  int gavg_flag;	/**< @brief Generates gene average file (default=off).  */
+  const char *gavg_help; /**< @brief Generates gene average file help description.  */
+  int gpres_flag;	/**< @brief Generates gene presence file (default=off).  */
+  const char *gpres_help; /**< @brief Generates gene presence file help description.  */
+  char * dabinput_arg;	/**< @brief DAB dataset file.  */
+  char * dabinput_orig;	/**< @brief DAB dataset file original value given at command line.  */
+  const char *dabinput_help; /**< @brief DAB dataset file help description.  */
+  int gvar_flag;	/**< @brief Generates gene variance file (default=off).  */
+  const char *gvar_help; /**< @brief Generates gene variance file help description.  */
+  int gplat_flag;	/**< @brief Generates platform wide gene average and stdev file (default=off).  */
+  const char *gplat_help; /**< @brief Generates platform wide gene average and stdev file help description.  */
+  char * dblist_arg;	/**< @brief The DB file list (incl. file path).  */
+  char * dblist_orig;	/**< @brief The DB file list (incl. file path) original value given at command line.  */
+  const char *dblist_help; /**< @brief The DB file list (incl. file path) help description.  */
+  char * dir_prep_in_arg;	/**< @brief The prep directory containing the .gavg and .gpres files.  */
+  char * dir_prep_in_orig;	/**< @brief The prep directory containing the .gavg and .gpres files original value given at command line.  */
+  const char *dir_prep_in_help; /**< @brief The prep directory containing the .gavg and .gpres files help description.  */
+  char * dset_arg;	/**< @brief The dataset platform mapping file.  */
+  char * dset_orig;	/**< @brief The dataset platform mapping file original value given at command line.  */
+  const char *dset_help; /**< @brief The dataset platform mapping file help description.  */
+  int useNibble_flag;	/**< @brief If the DB is nibble type (default=off).  */
+  const char *useNibble_help; /**< @brief If the DB is nibble type help description.  */
   char * input_arg;	/**< @brief Gene mapping file.  */
   char * input_orig;	/**< @brief Gene mapping file original value given at command line.  */
   const char *input_help; /**< @brief Gene mapping file help description.  */
-  char * dset_arg;	/**< @brief Dataset ordering file (with platform info) (required for -P).  */
-  char * dset_orig;	/**< @brief Dataset ordering file (with platform info) (required for -P) original value given at command line.  */
-  const char *dset_help; /**< @brief Dataset ordering file (with platform info) (required for -P) help description.  */
-  int useNibble_flag;	/**< @brief Is DB file nibble? (required for -P) (default=off).  */
-  const char *useNibble_help; /**< @brief Is DB file nibble? (required for -P) help description.  */
+  char * dir_out_arg;	/**< @brief Output directory.  */
+  char * dir_out_orig;	/**< @brief Output directory original value given at command line.  */
+  const char *dir_out_help; /**< @brief Output directory help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int dab_given ;	/**< @brief Whether dab was given.  */
+  unsigned int pcl_given ;	/**< @brief Whether pcl was given.  */
+  unsigned int db_given ;	/**< @brief Whether db was given.  */
   unsigned int sinfo_given ;	/**< @brief Whether sinfo was given.  */
   unsigned int gavg_given ;	/**< @brief Whether gavg was given.  */
-  unsigned int gplat_given ;	/**< @brief Whether gplat was given.  */
   unsigned int gpres_given ;	/**< @brief Whether gpres was given.  */
+  unsigned int dabinput_given ;	/**< @brief Whether dabinput was given.  */
   unsigned int gvar_given ;	/**< @brief Whether gvar was given.  */
-  unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
-  unsigned int input_given ;	/**< @brief Whether input was given.  */
+  unsigned int gplat_given ;	/**< @brief Whether gplat was given.  */
+  unsigned int dblist_given ;	/**< @brief Whether dblist was given.  */
+  unsigned int dir_prep_in_given ;	/**< @brief Whether dir_prep_in was given.  */
   unsigned int dset_given ;	/**< @brief Whether dset was given.  */
   unsigned int useNibble_given ;	/**< @brief Whether useNibble was given.  */
+  unsigned int input_given ;	/**< @brief Whether input was given.  */
+  unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

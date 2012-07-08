@@ -71,17 +71,10 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank, const vector<ushort> &cv
 	ushort *pp;
 	for(iter_g=rank.begin(), pf = &f[0]; iter_g!=rank.end(); iter_g++, pf++){
 		*iter_g = 0;
-	//for(g=0; g<iNumGenes; g++){
-		//rank[g] = 0;
 		pp = &(*pf)[queryPos[0]];
 		for(iterOffset = offset.begin(); iterOffset!=offset.end(); iterOffset++, pp+=(*iterOffset)){
-		//for(iter = queryPos.begin(); iter!=queryPos.end(); iter++){
-		//for(i=0; i<queryPos.size(); i++){
-			//rank[g] += f[g][queryPos[i]];
 			(*iter_g) += *pp;
-			//(*iter_g) += (*pf)[*iter];
 		}
-		//rank[g] /= q_size;
 		(*iter_g) /= q_size;
 	}
 	return true;

@@ -2,26 +2,45 @@ package	"SeekPrep"
 version	"1.0"
 purpose	"Preprocess datasets for Seek"
 
-section "Main"
-option	"dab"				x	"Input dataset (.dab) or databaselet (.db)"
-								string typestr="filename"	yes
-option	"sinfo"				s	"Generates sinfo file (with dataset wide mean and stdev)"
+section "Mode"
+option	"dab"				d	"DAB mode, suitable for dataset wide gene average and stdev calculation"
 								flag	off
-option	"gavg"				a	"Generates gene-average file"
+option	"pcl"				e	"PCL mode, suitable for dataset gene variance calculation"
 								flag	off
-option	"gplat"				P	"Generates gene-platform average + stdev file (requires .db input)"
+option	"db"				f	"DB mode, suitable for platform wide gene average and stdev calculation"
 								flag	off
-option	"gpres"				p	"Generates gene-presence file"
+
+section "DAB mode"
+option	"sinfo"				s	"Generates sinfo file (dataset z score mean and stdev)"
 								flag	off
-option	"gvar"				v	"Generates gene-variance file"
+option	"gavg"				a	"Generates gene average file"
 								flag	off
-option	"dir_out"			D	"Output directory"
-								string typestr="directory"	yes
+option	"gpres"				p	"Generates gene presence file"
+								flag	off
+option	"dabinput"			B	"DAB dataset file"
+								string typestr="filename"
+
+section "PCL mode"
+option	"gvar"				v	"Generates gene variance file"
+								flag	off
+
+section "DB mode"
+option	"gplat"				P	"Generates platform wide gene average and stdev file"
+								flag	off
+option	"dblist"			b	"The DB file list (incl. file path)"
+								string typestr="filename"
+option	"dir_prep_in"		I	"The prep directory containing the .gavg and .gpres files"
+								string typestr="directory"
+option	"dset"				A	"The dataset platform mapping file"
+								string typestr="filename"
+option	"useNibble"			N	"If the DB is nibble type"
+								flag	off
+
+section "Input"
 option	"input"				i	"Gene mapping file"
 								string typestr="filename"	yes
-option	"dir_prep_in"		I	"Prep input directory"
-								string typestr="directory"
-option	"dset"				A	"Dataset ordering file (with platform info) (required for -P)"
-								string typestr="filename"	yes
-option	"useNibble"			N	"Is DB file nibble? (required for -P)"
-								flag	off
+
+section "Output"
+option	"dir_out"			D	"Output directory"
+								string typestr="directory"	yes
+

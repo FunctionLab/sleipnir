@@ -147,7 +147,6 @@ bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
 	a.resize(iQuerySize);
 	sort(a.begin(), a.end(), Ascending());
 
-
 	for(iterA = a.begin(); iterA!=a.end(); iterA++){
 		queryMap->Add((*iterA).i);
 		this->query.push_back((*iterA).i);
@@ -192,35 +191,6 @@ const vector<ushort>& CSeekDataset::GetQuery() const{
 const vector<ushort>& CSeekDataset::GetQueryIndex() const{
 	return this->queryIndex;
 }
-
-
-/*
-bool CSeekDataset::SetQuery(const ushort &i, const ushort &j, const unsigned char &c){
-	ushort query = queryMap->GetForward(i);
-	if(CSeekTools::IsNaN(query)){
-		return false;
-	}
-	r[query][j] = c;
-	return true;
-}
-
-bool CSeekDataset::SetQueryNoMapping(const ushort &i, const ushort &j, const unsigned char &c){
-	r[i][j] = c;
-	return true;
-}
-
-bool CSeekDataset::SetQuery(const ushort &i, const vector<unsigned char> &c){
-	ushort query = queryMap->GetForward(i);
-	if(CSeekTools::IsNaN(query)){
-		return false;
-	}
-	ushort j = 0;
-	for(j=0; j<c.size(); j++){
-		r[query][j] = c[j];
-	}
-	return true;
-}
-*/
 
 ushort** CSeekDataset::GetDataMatrix(){
 	return rData;
@@ -277,9 +247,6 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 
 			for(; iterRGenes != lastRGenes; iterRGenes++){
 				i = *iterRGenes;
-				// numGenes
-			//for(ii=0; ii<iNumGenes; ii++){
-			//	i = geneMap->GetReverse(ii);
 				float a = GetGeneAverage(i);
 
 				// numQueries
@@ -298,21 +265,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 					vv = max((float) min(vv, (float)3.2), (float)-3.2);
 					*rDataP = (ushort) (vv*100.0) + 320;
 				}
-
-				/*for(j=0; j<iNumQueries; j++){
-					unsigned char x = r[queryIndex[j]][i];
-					if(x==255){
-						continue;
-					}
-					float vv = (quant[x] - a - platform_avg[j]) / platform_stdev[j];
-					vv = max((float) min(vv, (float)3.2), (float)-3.2);
-					rData[i][j]= (ushort) (vv*100.0) + 320;
-				}*/
-
-
 			}
-
-
 
 			delete[] platform_avg;
 			delete[] platform_stdev;

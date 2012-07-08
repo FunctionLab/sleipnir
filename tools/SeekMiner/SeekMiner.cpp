@@ -156,6 +156,9 @@ int main( int iArgs, char** aszArgs ) {
 			vector<ushort> counts;
 			CSeekTools::InitVector(counts, iGenes, (ushort) 0);
 
+			vector<float> weight;
+			CSeekTools::InitVector(weight, iDatasets, (float) 0);
+
 			float **master_rank_threads = CSeekTools::Init2DArray(numThreads, iGenes, (float) 0);
 			float **sum_weight_threads = CSeekTools::Init2DArray(numThreads, iGenes, (float) 0);
 			ushort **counts_threads = CSeekTools::Init2DArray(numThreads, iGenes, (ushort) 0);
@@ -237,6 +240,8 @@ int main( int iArgs, char** aszArgs ) {
 					sum_weight[*iterR] += w;
 					counts[*iterR]++;
 				}
+
+				weight[d] = w;
 			}
 
 			for(j=0; j<numThreads; j++){
@@ -291,8 +296,18 @@ int main( int iArgs, char** aszArgs ) {
 				jj++;
 			}
 
-			fprintf(stderr, "Done search\n");
-			system("date +%s%N 1>&2");
+			fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
+
+			sprintf(acBuffer, "results/%d.query", i);
+			CSeekTools::WriteArrayText(acBuffer, vecstrAllQuery[i]);
+
+			sprintf(acBuffer, "results/%d.dweight", i);
+			CSeekTools::WriteArray(acBuffer, weight);
+
+			sprintf(acBuffer, "results/%d.gscore", i);
+			CSeekTools::WriteArray(acBuffer, master_rank);
+
+
 
 		}
 

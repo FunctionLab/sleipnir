@@ -54,16 +54,19 @@ bool InitializeDB(size_t &iDatasets, size_t &iGenes, vector<string> &vecstrGenes
 
 	/* Databaselet mapping */
 	map<string, size_t> dbmap;
+	vector<ushort> veciQuery;
 	for(i=0; i<DBL.GetGenes(); i++){
 		string strQuery = DBL.GetGene(i);
 		dbmap[strQuery] = i;
 		allQuery.push_back(strQuery);
 		/* global mapping */
 		cQuery[mapstrGenes[strQuery]] = 1;
+		veciQuery.push_back((ushort) mapstrGenes[strQuery]);
 	}
 
 	for(i=0; i<iDatasets; i++){
-		vc[i]->InitializeQuery(cQuery);
+		vc[i]->InitializeGeneMap();
+		vc[i]->InitializeQueryBlock(veciQuery);
 	}
 
 	for(i=0; i<DBL.GetGenes(); i++){
@@ -71,15 +74,14 @@ bool InitializeDB(size_t &iDatasets, size_t &iGenes, vector<string> &vecstrGenes
 		/* expanded */
 		DBL.Get(i, Q);
 		size_t m = mapstrGenes[DBL.GetGene(i)];
-		size_t l = 0;
 		for(j=0; j<iDatasets; j++){
-			CSeekIntIntMap *qu = vc[j]->GetQueryMap();
-			size_t query = qu->GetForward(m);
-			if(query==-1) continue;
+			CSeekIntIntMap *qu = vc[j]->GetDBMap();
+			size_t db = qu->GetForward(m);
+			if(CSeekTools::IsNaN(db)) continue;
+			unsigned char **r = vc[j]->GetMatrix();
 			for(k=0; k<iGenes; k++){
 				unsigned char c = Q[k*iDatasets + j];
-				//printf("c is %d", c); getchar();
-				vc[j]->SetQueryNoMapping(query, k, c);
+				r[db][k] = c;
 			}
 		}
 	}
@@ -138,10 +140,10 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes
 		size_t geneID = mapstriGenes[thisGene];
 		vecstrQuery.push_back(thisGene);
 		for(k=0; k<iDatasets; k++){
-			CSeekIntIntMap *mapQ = vc[k]->GetQueryMap();
-			CFullMatrix<unsigned char> *f = vc[k]->GetMatrix();
-			size_t iQ = mapQ->GetForward(geneID);
-			if(iQ==-1){
+			CSeekIntIntMap *mapQ = vc[k]->GetDBMap();
+			unsigned char **f = vc[k]->GetMatrix();
+			ushort iQ = mapQ->GetForward(geneID);
+			if(CSeekTools::IsNaN(iQ)){
 				continue;
 			}
 			int platform_id = mapiPlatform[k];
@@ -149,7 +151,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes
 				printf("Error, platforms are equal %d %d", platform_id, numPlatforms); getchar();
 			}
 			for(j=0; j<m_iGenes; j++){
-				unsigned char uc = f->Get(iQ, j);
+				unsigned char uc = f[iQ][j];
 				float v = 0;
 				if(uc==255){
 					v = CMeta::GetNaN();
@@ -177,6 +179,8 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes
 
 	for(i=0; i<iDatasets; i++){
 		vc[i]->DeleteQuery();
+		vc[i]->DeleteQueryBlock();
+		delete vc[i];
 	}
 
 	free(charImage);
@@ -200,6 +204,7 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 
+	/* reading gene-mapping file */
 	if( sArgs.input_arg ) {
 		ifsm.open( sArgs.input_arg );
 		pistm = &ifsm; }
@@ -227,6 +232,7 @@ int main( int iArgs, char** aszArgs ) {
 		mapstriGenes[vecstrGenes[i]] = i;
 	}
 
+	/* TEMPORARY: quant ====================================*/
 	vector<float> quant;
 	float w = -5.0;
 	while(w<5.01){
@@ -235,10 +241,12 @@ int main( int iArgs, char** aszArgs ) {
 	}
 	quant.resize(quant.size());
 
+
 	if( sArgs.input_arg )
 		ifsm.close( );
 
-	if(sArgs.dab_arg){
+	/* DB mode */
+	if(sArgs.db_flag==1){
 
 		if(sArgs.gplat_flag==1){
 			map<string, int> mapstrPlatform;
@@ -275,7 +283,7 @@ int main( int iArgs, char** aszArgs ) {
 			ifsm.close();
 
 			vector<string> dblist;
-			ifsm.open(sArgs.dab_arg);
+			ifsm.open(sArgs.dblist_arg);
 			i = 0;
 			while(!pistm->eof()){
 				pistm->getline(acBuffer, c_iBuffer -1);
@@ -332,20 +340,24 @@ int main( int iArgs, char** aszArgs ) {
 				}*/
 			}
 
-			platform_avg.Save("all_platform.gplatavg");
-			platform_stdev.Save("all_platform.gplatstdev");
+			char outFile[125];
+			sprintf(outFile, "%s/all_platform.gplatavg", sArgs.dir_out_arg);
+			platform_avg.Save(outFile);
+			sprintf(outFile, "%s/all_platform.gplatstdev", sArgs.dir_out_arg);
+			platform_stdev.Save(outFile);
 
 		}
 
-		else if(sArgs.gavg_flag==1){
+	} else if(sArgs.dab_flag==1){
+		if(sArgs.gavg_flag==1){
 			CDataPair Dat;
 			char outFile[125];
-			if(!Dat.Open(sArgs.dab_arg, false, false)){
+			if(!Dat.Open(sArgs.dabinput_arg, false, false)){
 				cerr << "error opening file" << endl;
 				return 1;
 			}
 			vector<float> vecGeneAvg;
-			string fileName = CMeta::Basename(sArgs.dab_arg);
+			string fileName = CMeta::Basename(sArgs.dabinput_arg);
 			string fileStem = CMeta::Deextension(fileName);
 			sprintf(outFile, "%s/%s.gavg", sArgs.dir_out_arg, fileStem.c_str());
 			CSeekWriter::GetGeneAverage(Dat, vecstrGenes, vecGeneAvg);
@@ -355,12 +367,12 @@ int main( int iArgs, char** aszArgs ) {
 		else if(sArgs.gpres_flag==1){
 			CDataPair Dat;
 			char outFile[125];
-			if(!Dat.Open(sArgs.dab_arg, false, false)){
+			if(!Dat.Open(sArgs.dabinput_arg, false, false)){
 				cerr << "error opening file" << endl;
 				return 1;
 			}
 			vector<char> vecGenePresence;
-			string fileName = CMeta::Basename(sArgs.dab_arg);
+			string fileName = CMeta::Basename(sArgs.dabinput_arg);
 			string fileStem = CMeta::Deextension(fileName);
 			sprintf(outFile, "%s/%s.gpres", sArgs.dir_out_arg, fileStem.c_str());
 			CSeekWriter::GetGenePresence(Dat, vecstrGenes, vecGenePresence);
