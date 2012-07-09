@@ -463,7 +463,7 @@ LOCAL_CHECK_LIB([smile], [smile], [RoundProbability(0,0)],
 #    fi
          SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR -fopenmp"
 #         SMILE_LIBS="-L $SMILE_LIB_DIR $SMILEXML_LIB -lsmile"
-         SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile -fopenmp"
+         SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile -fopenmp -lgsl -lgslcblas"
         ],                                                        dnl and found in specified path
 	[],                                                       dnl not found
         [smile_state=no],                                         dnl and not found installed
@@ -724,7 +724,6 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Contexter/Makefile \
 		 tools/Counter/Makefile \
 		 tools/Data2DB/Makefile \
-		 tools/SeekReader/Makefile \
 		 tools/SeekMiner/Makefile \
 		 tools/SeekPrep/Makefile \
 		 tools/SeekEvaluator/Makefile \

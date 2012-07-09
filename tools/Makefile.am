@@ -56,7 +56,6 @@ if WITH_SMILE_TOOLS
 	  Data2DB \
       DBCombiner \
       SeekPrep \
-      SeekReader \
       SeekMiner \
       SeekEvaluator \
 	  DSLConverter \
