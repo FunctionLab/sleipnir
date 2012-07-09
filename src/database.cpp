@@ -309,8 +309,12 @@ bool CDatabaselet::Get(size_t iOne, vector<unsigned char>& vecbData){
 
 bool CDatabaselet::Get( size_t iOne, size_t iTwo,
 		vector<unsigned char>& vecbData, unsigned char *charImage){
-	size_t	i;
 	size_t offset = GetOffset(iOne, iTwo) - m_iHeader;
+	return Get(offset, vecbData, charImage);
+}
+
+bool CDatabaselet::Get(size_t offset, vector<unsigned char>& vecbData, unsigned char *charImage){
+	size_t	i;
 
 	if(this->m_useNibble==false){
 		vecbData.clear();
@@ -345,6 +349,7 @@ bool CDatabaselet::Get( size_t iOne, size_t iTwo,
 
 	return true;
 }
+
 
 /*	static function, combine multiple databaselets (that share the same genes, ie m_vecStrGenes),
 	and output result to a single file, or output one-gene per file (if databaselet contains multiple genes)
@@ -393,202 +398,254 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 		return false;
 	}
 
-	/* load all Databaselets into memory, for efficiency */
-	unsigned char **charImages =
+	/* adjustable parameter */
+	int BUFFER = 150;
+
+	if(BUFFER>iGenes){
+		BUFFER = iGenes;
+	}
+
+
+	vector<size_t> sizes;
+	int numTimes = iGenes / BUFFER;
+	for(i=0; i<numTimes; i++){
+		sizes.push_back(BUFFER);
+	}
+	if(iGenes % BUFFER > 0){
+		numTimes++;
+		sizes.push_back(iGenes % BUFFER);
+	}
+
+	size_t bb = 0;
+	size_t sofar = 0;
+	for(bb=0; bb<numTimes; sofar+=sizes[bb], bb++){
+
+		fprintf(stderr, "Started allocated memory %d\n", bb);
+		/* load all Databaselets into memory, for efficiency */
+		unsigned char **charImages =
 			(unsigned char**)malloc(vecDatabaselet.size()*sizeof(unsigned char*));
-	size_t totSize = 0;
-	size_t numPairs = first->m_iGenes * iGenes;
-	for(i=0; i<vecDatabaselet.size(); i++){
-		totSize += vecDatabaselet[i]->GetSizePair() * numPairs;
-	}
-	charImages[0] = (unsigned char*)malloc(totSize*sizeof(unsigned char));
-	for(i=1; i<vecDatabaselet.size(); i++){
-		charImages[i] = charImages[i-1] + vecDatabaselet[i-1]->GetSizePair() * numPairs;
-	}
+		size_t totSize = 0;
+		size_t numPairs = first->m_iGenes * sizes[bb];
 
-	/* read databaselet into charImages */
-	for(i=0; i<vecDatabaselet.size(); i++){
-		CDatabaselet *current = vecDatabaselet[i];
-		if(!current->m_fstm.is_open()){
-			cerr << "CDatabaselet is not opened. Opening..." << endl;
-			current->m_fstm.open( current->strFileName.c_str( ), ios_base::binary | ios_base::in );
+		for(i=0; i<vecDatabaselet.size(); i++){
+			totSize += vecDatabaselet[i]->GetSizePair() * numPairs;
 		}
-		current->m_fstm.seekg(current->m_iHeader, ios_base::beg);
-		current->m_fstm.read((char*) charImages[i], vecDatabaselet[i]->GetSizePair() * numPairs);
-	}
+		charImages[0] = (unsigned char*)malloc(totSize*sizeof(unsigned char));
+		for(i=1; i<vecDatabaselet.size(); i++){
+			charImages[i] = charImages[i-1] + vecDatabaselet[i-1]->GetSizePair() * numPairs;
+		}
 
-	map<string, size_t> mapstrintGenes;
-	for(i=0; i<vecstrGenes.size(); i++){
-		mapstrintGenes[vecstrGenes[i]] = i;
-	}
+		fprintf(stderr, "Finished allocated memory\n");
 
-	char acNumber[16];
+		fprintf(stderr, "Started reading into memory\n");
 
-	/* splitting to one gene per file after combine */
-	if(bSplit){
+		/* read databaselet into charImages */
+		for(i=0; i<vecDatabaselet.size(); i++){
+			CDatabaselet *current = vecDatabaselet[i];
+			if(!current->m_fstm.is_open()){
+				cerr << "CDatabaselet is not opened. Opening..." << endl;
+				current->m_fstm.open( current->strFileName.c_str( ), ios_base::binary | ios_base::in );
+			}
+			current->m_fstm.seekg(current->m_iHeader + current->GetSizePair()*first->m_iGenes*sofar, ios_base::beg);
+			current->m_fstm.read((char*) charImages[i], current->GetSizePair() * numPairs);
+		}
 
-		for(i=0; i<iGenes; i++){
-			/* open a new Databaselet containing only one gene */
-			string thisGene = first->GetGene(i);
-			size_t iGeneID = mapstrintGenes[thisGene];
-			sprintf(acNumber, "%08u", iGeneID);
+		fprintf(stderr, "Finished reading into memory\n");
 
-			string path = strOutDirectory + "/" + acNumber + ".db";
-			vector<string> vecstrThisGene;
-			vecstrThisGene.push_back(thisGene);
+		//Global gene name mapping
+		map<string, size_t> mapstrintGenes;
+		for(i=0; i<vecstrGenes.size(); i++){
+			mapstrintGenes[vecstrGenes[i]] = i;
+		}
 
-			/* Create a new Databaselet */
-			size_t iSize;
+		char acNumber[16];
+
+		/* splitting to one gene per file after combine */
+		if(bSplit){
+
+			for(i=0; i<sizes[bb]; i++){
+				/* open a new Databaselet containing only one gene */
+				string thisGene = first->GetGene(sofar + i);
+				size_t iGeneID = mapstrintGenes[thisGene];
+				sprintf(acNumber, "%08u", iGeneID);
+
+				string path = strOutDirectory + "/" + acNumber + ".db";
+				vector<string> vecstrThisGene;
+				vecstrThisGene.push_back(thisGene);
+
+				//fprintf(stderr, "Setting up gene %d in %d\n", i, bb);
+
+				CDatabaselet DBS(first->m_useNibble);
+				DBS.Open(path.c_str(), vecstrThisGene, first->m_iGenes, iDatasets);
+
+				/* Create a new Databaselet */
+				size_t iSize;
+				unsigned char *abImage = (unsigned char*)
+					malloc( iSize = (DBS.GetSizeGene( ) * DBS.m_vecstrGenes.size( ) ));
+				size_t iDatum;
+				size_t iGeneOne, iGeneTwo;
+				size_t offset2, offset3;
+				iGeneOne = i;
+
+				//fprintf(stderr, "Finished setting up abImage gene %d in %d\n", i, bb);
+
+				if(first->m_useNibble==false){
+					/* m_iGenes is all the genes in the genome */
+					for( iGeneTwo = 0; iGeneTwo < first->m_iGenes; ++iGeneTwo ){
+						offset2 = DBS.GetSizePair()*iGeneTwo;
+						int totalSum = 0;
+						for( iDatum = 0; iDatum  < vecDatabaselet.size(); iDatum ++ ){
+							vector<unsigned char> vc;
+							CDatabaselet *current = vecDatabaselet[iDatum];
+							size_t offset_c = current->GetSizeGene() * i + current->GetSizePair() * iGeneTwo;
+							current->Get( offset_c, vc, charImages[iDatum]);
+							offset3 = offset2 + totalSum;
+							for(j=0; j<vc.size(); j++){
+								abImage[offset3 + j] = vc[j];
+							}
+							totalSum+=vc.size();
+						}
+					}
+				}else{
+					size_t j;
+					unsigned char *abImage2 = (unsigned char*)malloc(iDatasets);
+
+					/* m_iGenes is all the genes in the genome */
+					for( iGeneTwo = 0; iGeneTwo < first->m_iGenes; ++iGeneTwo ){
+						offset2 = DBS.GetSizePair() * iGeneTwo;
+						int totalSum = 0;
+						for( iDatum = 0; iDatum  < vecDatabaselet.size(); iDatum ++ ){
+							vector<unsigned char> vc;
+							CDatabaselet *current = vecDatabaselet[iDatum];
+							size_t offset_c = current->GetSizeGene() * i + current->GetSizePair() * iGeneTwo;
+							current->Get( offset_c, vc, charImages[iDatum]);
+							offset3 = totalSum;
+							for(j=0; j<vc.size(); j++){
+								abImage2[offset3+j] = vc[j];
+							}
+							totalSum+=vc.size();
+						}
+						for(j=0; j+1 < iDatasets; j+=2){
+							abImage[offset2 + j / 2] = (abImage2[j] & 0xF) | (abImage2[j+1] << 4);
+						}
+						if(j<iDatasets){
+							unsigned char bValue = abImage2[iDatasets - 1];
+							unsigned char b = 255;
+							abImage[offset2 + j / 2] = ( bValue & 0xF ) | ( b & 0xF0 );
+						}
+					}
+
+					free(abImage2);
+				}
+
+				//fprintf(stderr, "Writing abImage gene %d in %d\n", i, bb);
+
+				/* close fstream */
+				if(!DBS.m_fstm.is_open()){
+					cerr << "CDatabaselet is not opened. Opening..." << endl;
+					DBS.m_fstm.open(DBS.strFileName.c_str( ), ios_base::binary | ios_base::in);
+				}
+				DBS.m_fstm.seekp( DBS.m_iHeader, ios_base::beg );
+				DBS.m_fstm.write( (char*)abImage, iSize );
+				DBS.m_fstm.close();
+				free(abImage);
+
+				fprintf(stderr, "Finished writing abImage gene %d (of %d) in %d (of %d)\n", i, 
+					sizes[bb], bb, sizes.size());
+
+			}
+
+			/* do not split, just combine into one file */
+		}else{
+
+			vector<string> strTok;
+			CMeta::Tokenize(first->strFileName.c_str(), strTok, "/");
+			string path = strOutDirectory + "/" + strTok[strTok.size()-1];
+
 			CDatabaselet DBS(first->m_useNibble);
-			DBS.Open(path.c_str(), vecstrThisGene, first->m_iGenes, iDatasets);
-			unsigned char *abImage = (unsigned char*)
-				malloc( iSize = (DBS.GetSizeGene( ) * DBS.m_vecstrGenes.size( ) ));
+			if(bb==0){
+				DBS.Open(path.c_str(), first->m_vecstrGenes, first->m_iGenes, iDatasets);
+			}else{
+				DBS.OpenNoOverwrite();
+			}
+
 			size_t iDatum;
+			size_t iSize;
+			unsigned char *abImage = (unsigned char*)
+				malloc( iSize = (DBS.GetSizeGene( ) * sizes[bb] ) );
 			size_t iGeneOne, iGeneTwo;
-			size_t offset2, offset3;
-			iGeneOne = i;
+			size_t offset1, offset2, offset3;
 
 			if(first->m_useNibble==false){
-				/* m_iGenes is all the genes in the genome */
-				for( iGeneTwo = 0; iGeneTwo < first->m_iGenes; ++iGeneTwo ){
-					offset2 = DBS.GetSizePair()*iGeneTwo;
-					int totalSum = 0;
-					for( iDatum = 0; iDatum  < vecDatabaselet.size(); iDatum ++ ){
-						vector<unsigned char> vc;
-						CDatabaselet *current = vecDatabaselet[iDatum];
-						current->Get( iGeneOne, iGeneTwo, vc, charImages[iDatum]);
-						offset3 = offset2 + totalSum;
-						for(j=0; j<vc.size(); j++){
-							abImage[offset3 + j] = vc[j];
+				for(iGeneOne = 0; iGeneOne < sizes[bb]; ++iGeneOne){
+					offset1 = DBS.GetSizeGene() * iGeneOne;
+					for( iGeneTwo = 0; iGeneTwo < first->m_iGenes; ++iGeneTwo ){
+						offset2 = DBS.GetSizePair()*iGeneTwo;
+						int totalSum = 0;
+						for( iDatum = 0; iDatum  < vecDatabaselet.size(); iDatum ++ ){
+							vector<unsigned char> vc;
+							CDatabaselet *current = vecDatabaselet[iDatum];
+							//size_t offset_c = current->GetSizeGene() * iGeneOne + current->GetSizePair() * iGeneTwo;
+							current->Get( offset1 + offset2, vc, charImages[iDatum]);
+							//current->Get( iGeneOne, iGeneTwo, vc, charImages[iDatum]);
+							offset3 = offset1 + offset2 + totalSum;
+							for(j=0; j<vc.size(); j++){
+								abImage[offset3 + j] = vc[j];
+							}
+							totalSum+=vc.size();
 						}
-						totalSum+=vc.size();
 					}
 				}
 			}else{
 				size_t j;
-				unsigned char *abImage2 = (unsigned char*)malloc(iDatasets);
-
+				unsigned char *abImage2 = (unsigned char*)
+					malloc(DBS.m_iDatasets);
 				/* m_iGenes is all the genes in the genome */
-				for( iGeneTwo = 0; iGeneTwo < first->m_iGenes; ++iGeneTwo ){
-					offset2 = DBS.GetSizePair() * iGeneTwo;
-					int totalSum = 0;
-					for( iDatum = 0; iDatum  < vecDatabaselet.size(); iDatum ++ ){
-						vector<unsigned char> vc;
-						CDatabaselet *current = vecDatabaselet[iDatum];
-						current->Get( iGeneOne, iGeneTwo, vc, charImages[iDatum]);
-						offset3 = totalSum;
-						for(j=0; j<vc.size(); j++){
-							abImage2[offset3+j] = vc[j];
+				for(iGeneOne = 0; iGeneOne < sizes[bb]; ++iGeneOne){
+					offset1 = DBS.GetSizeGene() * iGeneOne;
+					for( iGeneTwo = 0; iGeneTwo < first->m_iGenes; ++iGeneTwo ){
+						offset2 = DBS.GetSizePair()*iGeneTwo;
+						int totalSum = 0;
+						for( iDatum = 0; iDatum  < vecDatabaselet.size(); iDatum ++ ){
+							vector<unsigned char> vc;
+							CDatabaselet *current = vecDatabaselet[iDatum];
+							current->Get( offset1 + offset2, vc, charImages[iDatum]);
+							//current->Get( iGeneOne, iGeneTwo, vc, charImages[iDatum]);
+							offset3 = totalSum;
+							for(j=0; j<vc.size(); j++){
+								abImage2[offset3 + j] = vc[j];
+							}
+							totalSum+=vc.size();
 						}
-						totalSum+=vc.size();
-					}
-					for(j=0; j+1 < iDatasets; j+=2){
-						abImage[offset2 + j / 2] = (abImage2[j] & 0xF) | (abImage2[j+1] << 4);
-					}
-					if(j<iDatasets){
-						unsigned char bValue = abImage2[iDatasets - 1];
-						unsigned char b = 255;
-						abImage[offset2 + j / 2] = ( bValue & 0xF ) | ( b & 0xF0 );
+						for(j=0; j+1 < iDatasets; j+=2){
+							abImage[offset1 + offset2 + j / 2] = (abImage2[j] & 0xF) | (abImage2[j+1] << 4);
+						}
+						if(j<iDatasets){
+							unsigned char bValue = abImage2[iDatasets - 1];
+							unsigned char b = 255;
+							abImage[offset1 + offset2 + j / 2] = ( bValue & 0xF ) | ( b & 0xF0 );
+						}
 					}
 				}
-
 				free(abImage2);
 			}
 
-			/* close fstream */
+			/* close the databaselet */
 			if(!DBS.m_fstm.is_open()){
-				cerr << "CDatabaselet is not opened. Opening..." << endl;
+				cerr << "CDatabaselet is not opened." << endl;
 				DBS.m_fstm.open(DBS.strFileName.c_str( ), ios_base::binary | ios_base::in);
 			}
-			DBS.m_fstm.seekp( DBS.m_iHeader, ios_base::beg );
+			//DBS.m_fstm.seekp( DBS.m_iHeader, ios_base::beg );
+			DBS.m_fstm.seekg(DBS.m_iHeader + DBS.GetSizePair()*first->m_iGenes*sofar, ios_base::beg);
 			DBS.m_fstm.write( (char*)abImage, iSize );
 			DBS.m_fstm.close();
 			free(abImage);
-
 		}
 
-	/* do not split, just combine into one file */
-	}else{
+		free(charImages[0]);
+		free(charImages);
 
-		vector<string> strTok;
-		CMeta::Tokenize(first->strFileName.c_str(), strTok, "/");
-		string path = strOutDirectory + "/" + strTok[strTok.size()-1];
-
-		CDatabaselet DBS(first->m_useNibble);
-
-		DBS.Open(path.c_str(), first->m_vecstrGenes, first->m_iGenes, iDatasets);
-
-		size_t iDatum;
-		size_t iSize;
-		unsigned char *abImage = (unsigned char*)
-				malloc( iSize = (DBS.GetSizeGene( ) * DBS.m_vecstrGenes.size( ) ) );
-		size_t iGeneOne, iGeneTwo;
-		size_t offset1, offset2, offset3;
-
-		if(first->m_useNibble==false){
-			for(iGeneOne = 0; iGeneOne < first->GetGenes(); ++iGeneOne){
-				offset1 = DBS.GetSizeGene() * iGeneOne;
-				for( iGeneTwo = 0; iGeneTwo < first->m_iGenes; ++iGeneTwo ){
-					offset2 = DBS.GetSizePair()*iGeneTwo;
-					int totalSum = 0;
-					for( iDatum = 0; iDatum  < vecDatabaselet.size(); iDatum ++ ){
-						vector<unsigned char> vc;
-						CDatabaselet *current = vecDatabaselet[iDatum];
-						current->Get( iGeneOne, iGeneTwo, vc, charImages[iDatum]);
-						offset3 = offset1 + offset2 + totalSum;
-						for(j=0; j<vc.size(); j++){
-							abImage[offset3 + j] = vc[j];
-						}
-						totalSum+=vc.size();
-					}
-				}
-			}
-		}else{
-			size_t j;
-			unsigned char *abImage2 = (unsigned char*)
-				malloc(DBS.m_iDatasets);
-			/* m_iGenes is all the genes in the genome */
-			for(iGeneOne = 0; iGeneOne < first->GetGenes(); ++iGeneOne){
-				offset1 = DBS.GetSizeGene() * iGeneOne;
-				for( iGeneTwo = 0; iGeneTwo < first->m_iGenes; ++iGeneTwo ){
-					offset2 = DBS.GetSizePair()*iGeneTwo;
-					int totalSum = 0;
-					for( iDatum = 0; iDatum  < vecDatabaselet.size(); iDatum ++ ){
-						vector<unsigned char> vc;
-						CDatabaselet *current = vecDatabaselet[iDatum];
-						current->Get( iGeneOne, iGeneTwo, vc, charImages[iDatum]);
-						offset3 = totalSum;
-						for(j=0; j<vc.size(); j++){
-							abImage2[offset3 + j] = vc[j];
-						}
-						totalSum+=vc.size();
-					}
-					for(j=0; j+1 < iDatasets; j+=2){
-						abImage[offset1 + offset2 + j / 2] = (abImage2[j] & 0xF) | (abImage2[j+1] << 4);
-					}
-					if(j<iDatasets){
-						unsigned char bValue = abImage2[iDatasets - 1];
-						unsigned char b = 255;
-						abImage[offset1 + offset2 + j / 2] = ( bValue & 0xF ) | ( b & 0xF0 );
-					}
-				}
-			}
-			free(abImage2);
-		}
-
-		/* close the databaselet */
-		if(!DBS.m_fstm.is_open()){
-			cerr << "CDatabaselet is not opened." << endl;
-			DBS.m_fstm.open(DBS.strFileName.c_str( ), ios_base::binary | ios_base::in);
-		}
-		DBS.m_fstm.seekp( DBS.m_iHeader, ios_base::beg );
-		DBS.m_fstm.write( (char*)abImage, iSize );
-		DBS.m_fstm.close();
-		free(abImage);
 	}
-
-	free(charImages[0]);
-	free(charImages);
 
 	return true;
 }

@@ -675,7 +675,7 @@ bool CDatImpl::OpenHeader(std::istream& istm){
 /* still to be tested
  * used for BINARY mode, and DAB file only, ie Float matrix
  */
-float* CDatImpl::GetRowSeek(std::istream& istm, size_t ind){
+float* CDatImpl::GetRowSeek(std::istream& istm, const size_t &ind) const {
 	if(!m_fSeek){
 		cerr << "Don't know how you got here" << endl;
 	}
@@ -719,7 +719,7 @@ float* CDatImpl::GetRowSeek(std::istream& istm, size_t ind){
 /* still to be tested
  * used for BINARY mode, and DAB file only, ie Float matrix
  */
-float* CDatImpl::GetRowSeek(std::istream& istm, std::string &strGene){
+float* CDatImpl::GetRowSeek(std::istream& istm, const std::string &strGene) const{
 	if(!m_fSeek){
 		cerr << "Don't know how you got here" << endl;
 	}

@@ -154,6 +154,10 @@ public:
 
 	static bool ReadMultipleQueries(const string &strFile, vector< vector<string> > &qList);
 
+	static bool ReadMultiGeneOneLine(const string &strFile, vector<string> &list1);
+
+	static bool ReadListOneColumn(const string &strFile, vector<string> &vecstrList);
+
 
 };
 

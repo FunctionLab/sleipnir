@@ -90,7 +90,7 @@ protected:
 	} size_t_comp;
 
 
-	float* GetFullRow(size_t iY){
+	float* GetFullRow(const size_t &iY){
 		float *d_array = m_Data.GetFullRow(iY);
 		d_array[iY] = CMeta::GetNaN();
 		return d_array;
@@ -120,7 +120,7 @@ protected:
 
 		return ( m_pPCL ? m_pPCL->GetGenes( ) : m_vecstrGenes.size( ) ); }
 
-	size_t GetGeneIndex(std::string &strGene){
+	size_t GetGeneIndex(const std::string &strGene) const {
 		std::map<std::string, size_t>::const_iterator	iterGene;
 		return ( ( ( iterGene = m_mapstrGenes.find( strGene ) ) == m_mapstrGenes.end( ) ) ? -1 :
 			iterGene->second );
@@ -145,8 +145,8 @@ protected:
 		}
 	}
 
-	float* GetRowSeek(std::istream& istm, std::string &strGene);
-	float* GetRowSeek(std::istream& istm, size_t ind);
+	float* GetRowSeek(std::istream& istm, const std::string &strGene) const;
+	float* GetRowSeek(std::istream& istm, const size_t &ind) const;
 	bool OpenHeader(std::istream& istm);
 
 

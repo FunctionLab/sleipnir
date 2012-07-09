@@ -207,6 +207,8 @@ inline Category& g_CatSleipnir( ) {
 	return s_CatSleipnir; }
 #endif // USE_LOG4CPP_STUB
 
+typedef unsigned short ushort;
+
 }
 
 #endif // STDAFX_H

@@ -54,6 +54,7 @@ public:
 
 	/* Get pair by referring to memory cache (ie charImage) of the db file */
 	bool Get( size_t iOne, size_t iTwo, vector<unsigned char>& vecbData, unsigned char *charImage);
+	bool Get(size_t offset, vector<unsigned char>& vecbData, unsigned char *charImage);
 
 	/* Get pair by seeking in db file */
 	bool Get( size_t, size_t, std::vector<unsigned char>& ) const;

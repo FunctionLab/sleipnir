@@ -218,10 +218,10 @@ public:
 			  float dEdgeAggressiveness = 0.5, bool fAbsolute = false, const std::vector<float>* pvecdWeights = NULL );
 	void NormalizeQuantiles( size_t iQuantiles );
 
-	float* GetRowSeek(std::string &strGene){
+	float* GetRowSeek(const string &strGene) {
 		return CDatImpl::GetRowSeek(m_ifsm, strGene);
 	}
-	float* GetRowSeek(size_t &i){
+	float* GetRowSeek(const size_t &i){
 		return CDatImpl::GetRowSeek(m_ifsm, i);
 	}
 
@@ -297,7 +297,7 @@ public:
 
 		return CDatImpl::GetGene( strGene ); }
 
-	float* GetFullRow( size_t iY ) {
+	float* GetFullRow( const size_t &iY ) {
 		return CDatImpl::GetFullRow(iY);
 	}
 

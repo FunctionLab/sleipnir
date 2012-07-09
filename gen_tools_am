@@ -36,6 +36,7 @@ my %tools_other_packages = (
 			    Data2DB  => ['SMILE'],
 				DBCombiner => ['SMILE'],
 				SeekReader => ['SMILE'],
+				SeekEvaluator => ['SMILE'],
 				SeekPrep => ['SMILE'],
 				SeekMiner => ['SMILE'],
 			    Dab2Dad  => ['SMILE'],

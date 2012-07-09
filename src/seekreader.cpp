@@ -292,6 +292,60 @@ bool CSeekTools::ReadMultipleQueries(const string &strFile, vector< vector<strin
 	return true;
 }
 
+bool CSeekTools::ReadMultiGeneOneLine(const string &strFile, vector<string> &list){
+	list.clear();
+	ifstream ifsm;
+	ifsm.open(strFile.c_str());
+	if(!ifsm.is_open()){
+		cerr << "Error opening file " << strFile << endl;
+		return false;
+	}
+
+	char acBuffer[1024];
+	ushort c_iBuffer = 1024;
+
+	ushort i = 0;
+	ifsm.getline(acBuffer, c_iBuffer -1);
+	acBuffer[c_iBuffer-1] = 0;
+	vector<string> tok;
+	CMeta::Tokenize(acBuffer, tok, " ");
+	for(i = 0; i<tok.size(); i++){
+		list.push_back(tok[i]);
+	}
+
+	list.resize(list.size());
+	ifsm.close();
+	return true;
+}
+
+bool CSeekTools::ReadListOneColumn(const string &strFile, vector<string> &vecstrList){
+	ifstream ifsm;
+	ifsm.open(strFile.c_str());
+	if(!ifsm.is_open()){
+		cerr << "Error opening file " << strFile << endl;
+		return false;
+	}
+
+	char acBuffer[1024];
+	ushort c_iBuffer = 1024;
+	vecstrList.clear();
+
+	ushort i = 0;
+	while(!ifsm.eof()){
+		ifsm.getline(acBuffer, c_iBuffer -1);
+		if(acBuffer[0]==0){
+			break;
+		}
+		acBuffer[c_iBuffer-1] = 0;
+		string line = acBuffer;
+		vecstrList.push_back(line);
+	}
+
+	vecstrList.resize(vecstrList.size());
+	ifsm.close();
+	return true;
+}
+
 
 
 }

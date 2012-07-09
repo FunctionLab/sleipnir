@@ -85,7 +85,7 @@ public:
 		m_iSize = 0;
 		m_aaData = NULL; }
 
-	tType* GetFullRow( size_t iY ) {
+	tType* GetFullRow( const size_t &iY ) const {
 		size_t i, j;
 		tType *newData = new tType[m_iSize];
 		for(i=0; i<m_iSize; i++){
