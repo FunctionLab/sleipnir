@@ -182,15 +182,25 @@ else
 #    export CFLAGS="$CFLAGS $13"
     LIBS="$13 $LIBS"
   fi
+
+echo $13
+echo "$3"
+echo $13
+#echo $3
+
   AC_LINK_IFELSE(
     [AC_LANG_PROGRAM([[$11]], [[$3]])],
     [
+echo 'here'
+echo x${$2_state}
      if test "x${$2_state}" = "xtry"; then
+echo 'here2'
        $2_info=${with_$2}
 #       qualify_path with_$2
        $4
        $6
      else
+echo 'here1'
        $2_info="found installed"
        $4
        $5
@@ -198,6 +208,8 @@ else
     ],
     [found=false])
   LIBS=$oLIBS
+
+echo 'youngl'
 #  if test "x${$2_state}" = "xtry"; then
 #    CFLAGS=$oCFLAGS
 #  fi
@@ -479,7 +491,6 @@ fi
 AC_SUBST(SMILE_CFLAGS)
 AC_SUBST(SMILE_LIBS)
 
-
 ## SVM PERF
 # If the user specifies a path, use it.
 # If the user says not to use it, then don't.
@@ -513,10 +524,10 @@ LOCAL_CHECK_LIB([svmperf], [svm_perf], [optimize_svm],
         [svm_perf_state=no],                                      dnl and not found installed
         [svm_perf_state=warn],                                    dnl and not found in specified path
         [],                                                       dnl requested without
-	[#include <sys/types.h>
-	 #include "svm_light/svm_common.h",
-	 #include "svm_light/svm_learn.h"],
-        [],
+	[#include <sys/types.h> 
+	#include "svm_light/svm_common.h", 
+	#include "svm_light/svm_learn.h"], 
+	[],
         [-L $SVM_PERF_LIB_DIR -I $SVM_PERF_INCLUDE_DIR])
 AC_LANG_POP
 if test "x$svm_perf_state" != "xok"; then
@@ -536,13 +547,13 @@ AC_SUBST(SVM_PERF_LIBS)
 # If none, set NO_LIBLINEAR=1.
 AC_ARG_WITH([liblinear],
         [AS_HELP_STRING([--with-liblinear=PATH], [prefix of Liblinear installation])],
-        [
+        [ 
          if test "x$with_liblinear" = "xyes"; then
            liblinear_state=check
          elif test "x$with_liblinear" != "xno"; then
            liblinear_state=try
            qualify_path with_liblinear
-#           LOCAL_CHECK_APPEND_PATHS([$with_liblinear], [. include], [svm_struct_api.h], [LIBLINEAR_INCLUDE_DIR], [liblinear_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_liblinear], [. include], [linear.h], [LIBLINEAR_INCLUDE_DIR], [liblinear_state=warn])
            LOCAL_CHECK_APPEND_PATHS([$with_liblinear], [. lib], [libliblinear.a], [LIBLINEAR_LIB_DIR], [liblinear_state=warn])
          else
            liblinear_state=no
@@ -550,11 +561,11 @@ AC_ARG_WITH([liblinear],
         ],
         [liblinear_state=check])
 AC_LANG_PUSH([C])
-LOCAL_CHECK_LIB([liblinear],
+LOCAL_CHECK_LIB([liblinear],[lib_linear],[optimize_linear],
         [liblinear_state=ok],                                      dnl found
         [LIBLINEAR_LIBS="-lliblinear"],                              dnl and found installed
         [
-         LIBLINEAR_CFLAGS="-I $LIBLINEAR_INCLUDE_DIR"
+	 LIBLINEAR_CFLAGS="-I $LIBLINEAR_INCLUDE_DIR"
          LIBLINEAR_LIBS="-L $LIBLINEAR_LIB_DIR -lliblinear"
         ],                                                        dnl and found in specified path
         [],                                                       dnl not found
@@ -562,9 +573,9 @@ LOCAL_CHECK_LIB([liblinear],
         [liblinear_state=warn],                                    dnl and not found in specified path
         [],                                                       dnl requested without
         [#include <sys/types.h>
-         #include "svm_light/svm_common.h",
-         #include "svm_light/svm_learn.h"],
-        [],
+	#include "linear.h",
+	#include "tron.h"],
+	[],
         [-L $LIBLINEAR_LIB_DIR -I $LIBLINEAR_INCLUDE_DIR])
 AC_LANG_POP
 if test "x$liblinear_state" != "xok"; then
@@ -573,7 +584,6 @@ fi
 
 AC_SUBST(LIBLINEAR_CFLAGS)
 AC_SUBST(LIBLINEAR_LIBS)
-
 
 
 
@@ -785,7 +795,7 @@ AC_CONFIG_FILES([Makefile \
                  tools/Data2Svm/Makefile \
 		 tools/SVMer/Makefile \
 		 tools/SVMperfer/Makefile \
-		tools/Liblinear/Makefile \
+		tools/Liblinearer/Makefile \
 		 tools/VWer/Makefile \
                  tools/OntoShell/Makefile \
                  tools/BNServer/Makefile])
@@ -813,7 +823,7 @@ fi
 echo "  log4cpp                 = $log4cpp_info"
 echo "  SMILE                   = $smile_info"
 echo "  SVM Perf                = $svm_perf_info"
-echo "  LIBLINEAR		= $liblinear_info"
+echo "  LIBLINEAR               = $liblinear_info"
 echo "  Vowpal Wabbit           = $vowpal_wabbit_info"
 echo "  pthread                 = $pthread_info"
 if $with_tools; then
@@ -898,7 +908,8 @@ fi
 if test "x$liblinear_state" = "xwarn"; then
   cat << EOF
 ** WARNING: The path to liblinear may be incorrect.
-I looked for liblinear.a and did not find it.  NOTE: You may need to make libliblinear.a: 
+I looked for liblinear.a and did not find it.  
+NOTE: You may need to make libliblinear.a: 
 
 ar rcs libliblinear.a *.o
 
