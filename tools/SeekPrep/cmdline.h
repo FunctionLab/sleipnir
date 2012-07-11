@@ -58,11 +58,6 @@ struct gengetopt_args_info
   const char *gvar_help; /**< @brief Generates gene variance file help description.  */
   int gplat_flag;	/**< @brief Generates platform wide gene average and stdev file (default=off).  */
   const char *gplat_help; /**< @brief Generates platform wide gene average and stdev file help description.  */
-  int increment_flag;	/**< @brief Incremental update (default=off).  */
-  const char *increment_help; /**< @brief Incremental update help description.  */
-  char * curr_plat_dir_arg;	/**< @brief Current platform directory.  */
-  char * curr_plat_dir_orig;	/**< @brief Current platform directory original value given at command line.  */
-  const char *curr_plat_dir_help; /**< @brief Current platform directory help description.  */
   char * dblist_arg;	/**< @brief The DB file list (incl. file path).  */
   char * dblist_orig;	/**< @brief The DB file list (incl. file path) original value given at command line.  */
   const char *dblist_help; /**< @brief The DB file list (incl. file path) help description.  */
@@ -92,8 +87,6 @@ struct gengetopt_args_info
   unsigned int dabinput_given ;	/**< @brief Whether dabinput was given.  */
   unsigned int gvar_given ;	/**< @brief Whether gvar was given.  */
   unsigned int gplat_given ;	/**< @brief Whether gplat was given.  */
-  unsigned int increment_given ;	/**< @brief Whether increment was given.  */
-  unsigned int curr_plat_dir_given ;	/**< @brief Whether curr_plat_dir was given.  */
   unsigned int dblist_given ;	/**< @brief Whether dblist was given.  */
   unsigned int dir_prep_in_given ;	/**< @brief Whether dir_prep_in was given.  */
   unsigned int dset_given ;	/**< @brief Whether dset was given.  */
