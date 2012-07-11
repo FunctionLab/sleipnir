@@ -32,29 +32,31 @@ const char *gengetopt_args_info_usage = "Usage: SeekPrep [OPTIONS]... [FILES]...
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                   Print help and exit",
-  "  -V, --version                Print version and exit",
+  "  -h, --help                    Print help and exit",
+  "  -V, --version                 Print version and exit",
   "\nMode:",
-  "  -d, --dab                    DAB mode, suitable for dataset wide gene average \n                                 and stdev calculation  (default=off)",
-  "  -e, --pcl                    PCL mode, suitable for dataset gene variance \n                                 calculation  (default=off)",
-  "  -f, --db                     DB mode, suitable for platform wide gene average \n                                 and stdev calculation  (default=off)",
+  "  -d, --dab                     DAB mode, suitable for dataset wide gene \n                                  average and stdev calculation  (default=off)",
+  "  -e, --pcl                     PCL mode, suitable for dataset gene variance \n                                  calculation  (default=off)",
+  "  -f, --db                      DB mode, suitable for platform wide gene \n                                  average and stdev calculation  (default=off)",
   "\nDAB mode:",
-  "  -s, --sinfo                  Generates sinfo file (dataset z score mean and \n                                 stdev)  (default=off)",
-  "  -a, --gavg                   Generates gene average file  (default=off)",
-  "  -p, --gpres                  Generates gene presence file  (default=off)",
-  "  -B, --dabinput=filename      DAB dataset file",
+  "  -s, --sinfo                   Generates sinfo file (dataset z score mean and \n                                  stdev)  (default=off)",
+  "  -a, --gavg                    Generates gene average file  (default=off)",
+  "  -p, --gpres                   Generates gene presence file  (default=off)",
+  "  -B, --dabinput=filename       DAB dataset file",
   "\nPCL mode:",
-  "  -v, --gvar                   Generates gene variance file  (default=off)",
+  "  -v, --gvar                    Generates gene variance file  (default=off)",
   "\nDB mode:",
-  "  -P, --gplat                  Generates platform wide gene average and stdev \n                                 file  (default=off)",
-  "  -b, --dblist=filename        The DB file list (incl. file path)",
-  "  -I, --dir_prep_in=directory  The prep directory containing the .gavg and \n                                 .gpres files",
-  "  -A, --dset=filename          The dataset platform mapping file",
-  "  -N, --useNibble              If the DB is nibble type  (default=off)",
+  "  -P, --gplat                   Generates platform wide gene average and stdev \n                                  file  (default=off)",
+  "  -c, --increment               Incremental update  (default=off)",
+  "  -u, --curr_plat_dir=directory Current platform directory",
+  "  -b, --dblist=filename         The DB file list (incl. file path)",
+  "  -I, --dir_prep_in=directory   The prep directory containing the .gavg and \n                                  .gpres files",
+  "  -A, --dset=filename           The dataset platform mapping file",
+  "  -N, --useNibble               If the DB is nibble type  (default=off)",
   "\nInput:",
-  "  -i, --input=filename         Gene mapping file",
+  "  -i, --input=filename          Gene mapping file",
   "\nOutput:",
-  "  -D, --dir_out=directory      Output directory",
+  "  -D, --dir_out=directory       Output directory",
     0
 };
 
@@ -92,6 +94,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->dabinput_given = 0 ;
   args_info->gvar_given = 0 ;
   args_info->gplat_given = 0 ;
+  args_info->increment_given = 0 ;
+  args_info->curr_plat_dir_given = 0 ;
   args_info->dblist_given = 0 ;
   args_info->dir_prep_in_given = 0 ;
   args_info->dset_given = 0 ;
@@ -114,6 +118,9 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->dabinput_orig = NULL;
   args_info->gvar_flag = 0;
   args_info->gplat_flag = 0;
+  args_info->increment_flag = 0;
+  args_info->curr_plat_dir_arg = NULL;
+  args_info->curr_plat_dir_orig = NULL;
   args_info->dblist_arg = NULL;
   args_info->dblist_orig = NULL;
   args_info->dir_prep_in_arg = NULL;
@@ -144,12 +151,14 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->dabinput_help = gengetopt_args_info_help[10] ;
   args_info->gvar_help = gengetopt_args_info_help[12] ;
   args_info->gplat_help = gengetopt_args_info_help[14] ;
-  args_info->dblist_help = gengetopt_args_info_help[15] ;
-  args_info->dir_prep_in_help = gengetopt_args_info_help[16] ;
-  args_info->dset_help = gengetopt_args_info_help[17] ;
-  args_info->useNibble_help = gengetopt_args_info_help[18] ;
-  args_info->input_help = gengetopt_args_info_help[20] ;
-  args_info->dir_out_help = gengetopt_args_info_help[22] ;
+  args_info->increment_help = gengetopt_args_info_help[15] ;
+  args_info->curr_plat_dir_help = gengetopt_args_info_help[16] ;
+  args_info->dblist_help = gengetopt_args_info_help[17] ;
+  args_info->dir_prep_in_help = gengetopt_args_info_help[18] ;
+  args_info->dset_help = gengetopt_args_info_help[19] ;
+  args_info->useNibble_help = gengetopt_args_info_help[20] ;
+  args_info->input_help = gengetopt_args_info_help[22] ;
+  args_info->dir_out_help = gengetopt_args_info_help[24] ;
   
 }
 
@@ -235,6 +244,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   unsigned int i;
   free_string_field (&(args_info->dabinput_arg));
   free_string_field (&(args_info->dabinput_orig));
+  free_string_field (&(args_info->curr_plat_dir_arg));
+  free_string_field (&(args_info->curr_plat_dir_orig));
   free_string_field (&(args_info->dblist_arg));
   free_string_field (&(args_info->dblist_orig));
   free_string_field (&(args_info->dir_prep_in_arg));
@@ -302,6 +313,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "gvar", 0, 0 );
   if (args_info->gplat_given)
     write_into_file(outfile, "gplat", 0, 0 );
+  if (args_info->increment_given)
+    write_into_file(outfile, "increment", 0, 0 );
+  if (args_info->curr_plat_dir_given)
+    write_into_file(outfile, "curr_plat_dir", args_info->curr_plat_dir_orig, 0);
   if (args_info->dblist_given)
     write_into_file(outfile, "dblist", args_info->dblist_orig, 0);
   if (args_info->dir_prep_in_given)
@@ -581,6 +596,8 @@ cmdline_parser_internal (
         { "dabinput",	1, NULL, 'B' },
         { "gvar",	0, NULL, 'v' },
         { "gplat",	0, NULL, 'P' },
+        { "increment",	0, NULL, 'c' },
+        { "curr_plat_dir",	1, NULL, 'u' },
         { "dblist",	1, NULL, 'b' },
         { "dir_prep_in",	1, NULL, 'I' },
         { "dset",	1, NULL, 'A' },
@@ -590,7 +607,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVdefsapB:vPb:I:A:Ni:D:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVdefsapB:vPcu:b:I:A:Ni:D:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -703,6 +720,28 @@ cmdline_parser_internal (
           if (update_arg((void *)&(args_info->gplat_flag), 0, &(args_info->gplat_given),
               &(local_args_info.gplat_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "gplat", 'P',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'c':	/* Incremental update.  */
+        
+        
+          if (update_arg((void *)&(args_info->increment_flag), 0, &(args_info->increment_given),
+              &(local_args_info.increment_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "increment", 'c',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'u':	/* Current platform directory.  */
+        
+        
+          if (update_arg( (void *)&(args_info->curr_plat_dir_arg), 
+               &(args_info->curr_plat_dir_orig), &(args_info->curr_plat_dir_given),
+              &(local_args_info.curr_plat_dir_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "curr_plat_dir", 'u',
               additional_error))
             goto failure;
         

@@ -35,6 +35,7 @@ bool InitializeDataset(size_t &iDatasets, vector<string> &vecstrDatasets,
 		string strPresencePath = strPrepInputDirectory + "/" + strFileStem + ".gpres";
 		vc[i]->ReadGeneAverage(strAvgPath);
 		vc[i]->ReadGenePresence(strPresencePath);
+		vc[i]->InitializeGeneMap();
 	}
 	return true;
 }
@@ -43,7 +44,7 @@ bool InitializeDataset(size_t &iDatasets, vector<string> &vecstrDatasets,
 bool InitializeDB(size_t &iDatasets, size_t &iGenes, vector<string> &vecstrGenes,
 	vector<CSeekDataset*> &vc, CDatabaselet &DBL){
 
-	size_t i,j,k;
+	ushort i,j,k;
 	vector<char> cQuery;
 	CSeekTools::InitVector(cQuery, iGenes, (char) 0);
 	vector<string> allQuery;
@@ -64,19 +65,25 @@ bool InitializeDB(size_t &iDatasets, size_t &iGenes, vector<string> &vecstrGenes
 		veciQuery.push_back((ushort) mapstrGenes[strQuery]);
 	}
 
+	fprintf(stderr, "Start initializing map...\n");
 	for(i=0; i<iDatasets; i++){
-		vc[i]->InitializeGeneMap();
+		//vc[i]->InitializeGeneMap();
 		vc[i]->InitializeQueryBlock(veciQuery);
 	}
 
+	fprintf(stderr, "Finished initializing map\n");
+
+	fprintf(stderr, "Start making gene-centric...\n");
 	for(i=0; i<DBL.GetGenes(); i++){
 		vector<unsigned char> Q;
 		/* expanded */
 		DBL.Get(i, Q);
-		size_t m = mapstrGenes[DBL.GetGene(i)];
+		ushort m = mapstrGenes[DBL.GetGene(i)];
+
+
 		for(j=0; j<iDatasets; j++){
 			CSeekIntIntMap *qu = vc[j]->GetDBMap();
-			size_t db = qu->GetForward(m);
+			ushort db = qu->GetForward(m);
 			if(CSeekTools::IsNaN(db)) continue;
 			unsigned char **r = vc[j]->GetMatrix();
 			for(k=0; k<iGenes; k++){
@@ -85,27 +92,32 @@ bool InitializeDB(size_t &iDatasets, size_t &iGenes, vector<string> &vecstrGenes
 			}
 		}
 	}
+
+	fprintf(stderr, "Finished making gene-centric\n");
+
 	return true;
 }
 
+bool OpenDBFiles(string &DBFile, vector<unsigned char *> &cc, bool &useNibble){
+	CDatabaselet *CD;
+	CD = new CDatabaselet(useNibble);
+	CD->Open(DBFile);
+	unsigned char *charImage = CD->GetCharImage();
+	cc.push_back(charImage);
+	return true;
+}
+
+
 bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes,
-	vector<string> &vecstrGenes, map<int, int> &mapiPlatform,
+	vector<string> &vecstrGenes, map<ushort, ushort> &mapiPlatform,
 	vector<float> &quant, vector<CSeekDataset*> &vc,
 	CFullMatrix<float> &platform_avg, CFullMatrix<float> &platform_stdev,
 	vector<string> &vecstrQuery){
-
-	string fileName = CMeta::Basename(DBFile.c_str());
-	string fileStem = CMeta::Deextension(DBFile);
-	if(!CMeta::IsExtension(fileName, ".db")){
-		cerr << "Wrong extension." << endl;
-		return false;
-	}
 
 	size_t i, j, k;
 
 	CDatabaselet CD(useNibble);
 	CD.Open(DBFile);
-	unsigned char *charImage = CD.GetCharImage();
 	InitializeDB(iDatasets, m_iGenes, vecstrGenes, vc, CD);
 
 	vector<string> presGenes;
@@ -119,6 +131,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes
 		mapstriGenes[vecstrGenes[i]] = i;
 	}
 
+	fprintf(stderr, "Start calculating platform average\n");
 	for(i=0; i<CD.GetGenes(); i++){
 		vector<float> sum, sq_sum, mean, stdev;
 		vector<int> num;
@@ -146,9 +159,9 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes
 			if(CSeekTools::IsNaN(iQ)){
 				continue;
 			}
-			int platform_id = mapiPlatform[k];
-			if(platform_id>=numPlatforms){
-				printf("Error, platforms are equal %d %d", platform_id, numPlatforms); getchar();
+			ushort platform_id = mapiPlatform[k];
+			if(platform_id>=(ushort) numPlatforms){
+				printf("Error, platforms are equal %d %d", (int) platform_id, (int) numPlatforms); getchar();
 			}
 			for(j=0; j<m_iGenes; j++){
 				unsigned char uc = f[iQ][j];
@@ -177,13 +190,17 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes
 		}
 	}
 
-	for(i=0; i<iDatasets; i++){
-		vc[i]->DeleteQuery();
-		vc[i]->DeleteQueryBlock();
-		delete vc[i];
-	}
+	fprintf(stderr, "Finished calculating platform average\n");
+	fprintf(stderr, "Start deleting\n");
 
-	free(charImage);
+	for(i=0; i<iDatasets; i++){
+		//vc[i]->DeleteQuery();
+		vc[i]->DeleteQueryBlock();
+		//delete vc[i];
+	}
+	fprintf(stderr, "Finished deleting\n");
+
+
 	return true;
 }
 
@@ -198,7 +215,7 @@ int main( int iArgs, char** aszArgs ) {
 	istream*			pistm;
 	vector<string>		vecstrLine, vecstrGenes, vecstrDBs, vecstrQuery;
 	char				acBuffer[ c_iBuffer ];
-	size_t				i, j;
+	ushort				i, j, k;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -237,7 +254,7 @@ int main( int iArgs, char** aszArgs ) {
 	float w = -5.0;
 	while(w<5.01){
 		quant.push_back(w);
-		w+=0.1;
+		w+=0.04;
 	}
 	quant.resize(quant.size());
 
@@ -245,13 +262,19 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg )
 		ifsm.close( );
 
+
+	omp_set_num_threads(8);
+	int numThreads = omp_get_max_threads();
+
 	/* DB mode */
 	if(sArgs.db_flag==1){
 
 		if(sArgs.gplat_flag==1){
-			map<string, int> mapstrPlatform;
-			map<int, int> mapiPlatform;
-			map<int, string> mapistrPlatform;
+			vector<CSeekPlatform> vp;
+			map<string, ushort> mapstriPlatform;
+			map<ushort, string> mapistrPlatform;
+			map<ushort, ushort> mapiPlatform;
+			vector<string> vecstrPlatforms;
 
 			vector<string> vecstrDatasets;
 
@@ -269,14 +292,15 @@ int main( int iArgs, char** aszArgs ) {
 				vecstrDatasets.push_back(vecstrLine[0]);
 				/* just read the platform information */
 				string pl = vecstrLine[1];
-				map< string, int >::const_iterator	iter;
-				iter = mapstrPlatform.find(pl);
-				if(iter== mapstrPlatform.end()){
-					int s = mapstrPlatform.size();
-					mapstrPlatform[pl] = s;
+				map< string, ushort >::const_iterator	iter;
+				iter = mapstriPlatform.find(pl);
+				if(iter== mapstriPlatform.end()){
+					ushort s = mapstriPlatform.size();
+					mapstriPlatform[pl] = s;
 					mapistrPlatform[s] = pl;
+					vecstrPlatforms.push_back(pl);
 				}
-				int platform_id = mapstrPlatform[pl];
+				ushort platform_id = mapstriPlatform[pl];
 				mapiPlatform[i] = platform_id;
 				i++;
 			}
@@ -301,12 +325,15 @@ int main( int iArgs, char** aszArgs ) {
 				useNibble = true;
 			}
 
-			size_t numPlatforms = mapstrPlatform.size();
+			size_t numPlatforms = mapstriPlatform.size();
 			size_t iDatasets = vecstrDatasets.size();
 			size_t m_iGenes = vecstrGenes.size();
 			CFullMatrix<float> platform_avg, platform_stdev;
 			platform_avg.Initialize(numPlatforms, m_iGenes);
 			platform_stdev.Initialize(numPlatforms, m_iGenes);
+
+
+			//printf("Size: %d %d\n", numPlatforms, m_iGenes); getchar();
 
 			for(i=0; i<numPlatforms; i++){
 				for(j=0; j<m_iGenes; j++){
@@ -316,23 +343,58 @@ int main( int iArgs, char** aszArgs ) {
 			}
 
 			string strPrepInputDirectory = sArgs.dir_prep_in_arg;
-			vector<CSeekDataset*> vc;
-			InitializeDataset(iDatasets, vecstrDatasets, strPrepInputDirectory, vc);
+			vector<CSeekDataset*> *vc = new vector<CSeekDataset*>[numThreads];
+			CFullMatrix<float> *platform_avg_threads = new CFullMatrix<float>[numThreads];
+			CFullMatrix<float> *platform_stdev_threads= new CFullMatrix<float>[numThreads];
+
+			for(i=0; i<numThreads; i++){
+				InitializeDataset(iDatasets, vecstrDatasets, strPrepInputDirectory, vc[i]);
+				platform_avg_threads[i].Initialize(numPlatforms, m_iGenes);
+				platform_stdev_threads[i].Initialize(numPlatforms, m_iGenes);
+				for(j=0; j<numPlatforms; j++){
+					for(k=0; k<m_iGenes; k++){
+						platform_avg_threads[i].Set(j, k, CMeta::GetNaN());
+						platform_stdev_threads[i].Set(j, k, CMeta::GetNaN());
+					}
+				}
+			}
 
 			//printf("Dataset initialized"); getchar();
 			vector<string> vecstrQuery;
 
+			#pragma omp parallel for \
+			shared(vc, iDatasets, m_iGenes, vecstrGenes, mapiPlatform, quant, \
+				platform_avg_threads, platform_stdev_threads, vecstrQuery) \
+			private(i) \
+			firstprivate(useNibble) \
+			schedule(dynamic)
 			for(i=0; i<dblist.size(); i++){
+				int tid = omp_get_thread_num();
 				string DBFile = dblist[i];
-				printf("opening db file %s\n", DBFile.c_str()); //getchar();
+				fprintf(stderr, "opening db file %s\n", DBFile.c_str()); //getchar();
 				OpenDB(DBFile, useNibble, iDatasets, m_iGenes,
-				vecstrGenes, mapiPlatform, quant, vc, platform_avg,
-				platform_stdev, vecstrQuery);
-				printf("finished opening db file %s\n", DBFile.c_str()); //getchar();
+				vecstrGenes, mapiPlatform, quant, vc[tid], platform_avg_threads[tid],
+				platform_stdev_threads[tid], vecstrQuery);
+				fprintf(stderr, "finished opening db file %s\n", DBFile.c_str()); //getchar();
+			}
+
+			for(i=0; i<numThreads; i++){
+				for(j=0; j<numPlatforms; j++){
+					for(k=0; k<m_iGenes; k++){
+						float ca = platform_avg_threads[i].Get(j, k);
+						float cs = platform_stdev_threads[i].Get(j, k);
+
+						if(ca==CMeta::GetNaN() || cs==CMeta::GetNaN()){
+							continue;
+						}
+						platform_avg.Set(j, k, ca);
+						platform_stdev.Set(j, k, cs);
+					}
+				}
 			}
 
 			for(i=0; i<numPlatforms; i++){
-				printf("Platform %s\n", mapistrPlatform[i].c_str());
+				//printf("Platform %s\n", mapistrPlatform[i].c_str());
 				/*for(j=0; j<vecstrQuery.size(); j++){
 					size_t iGene = mapstriGenes[vecstrQuery[j]];
 					printf("Gene %s %.5f %.5f\n", vecstrQuery[j].c_str(), platform_avg.Get(i, iGene),
@@ -341,11 +403,17 @@ int main( int iArgs, char** aszArgs ) {
 			}
 
 			char outFile[125];
-			sprintf(outFile, "%s/all_platform.gplatavg", sArgs.dir_out_arg);
+			sprintf(outFile, "%s/all_platforms.gplatavg", sArgs.dir_out_arg);
 			platform_avg.Save(outFile);
-			sprintf(outFile, "%s/all_platform.gplatstdev", sArgs.dir_out_arg);
+			sprintf(outFile, "%s/all_platforms.gplatstdev", sArgs.dir_out_arg);
 			platform_stdev.Save(outFile);
-
+			sprintf(outFile, "%s/all_platforms.gplatorder", sArgs.dir_out_arg);
+			ofstream outfile;
+			outfile.open(outFile);
+			for(i=0; i<vecstrPlatforms.size(); i++){
+				outfile << vecstrPlatforms[i] << "\n";
+			}
+			outfile.close();
 		}
 
 	} else if(sArgs.dab_flag==1){
