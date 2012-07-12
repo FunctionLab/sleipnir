@@ -805,7 +805,7 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 				CDatabaselet&	DB	= *m_vecpDBs[ iOutBase + iOutOffset ];
 
 				/* close files if too many file handles opened */
-				if(iOutOffset>0 && (iOutOffset%iNumFilesOpen==0 || 
+				/*if(iOutOffset>0 && (iOutOffset%iNumFilesOpen==0 || 
 					(iOutBase + iOutOffset)==m_vecpDBs.size()-1)){
 					for(k=0; k<iNumFilesOpen; k++){
 						if(iOutOffset + iOutBase - 1 - k == 0){
@@ -813,7 +813,7 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 						}
 						m_vecpDBs[iOutOffset + iOutBase - 1 - k]->CloseFile();
 					}
-				}
+				}*/
 
 				DB.OpenNoOverwrite();
 
@@ -826,6 +826,8 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 				}
 
 				i += DB.GetGenes( );
+
+				DB.CloseFile();
 			}
 		}
 	}
