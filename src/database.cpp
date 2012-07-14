@@ -744,6 +744,7 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::st
 		vecstrNodes.resize( vecstrNodes.size( ) - 1 );
 	m_vecpDBs.resize( iFiles );
 	int iNumFilesOpen = 1000;
+
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
 		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble );
 	}
@@ -798,6 +799,7 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 
 	m_vecpDBs.resize( iFiles );
 	int iNumFilesOpen = 1000;
+
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
 		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble );
 	}
@@ -920,10 +922,10 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 				CDatabaselet&	DB	= *m_vecpDBs[ iOutBase + iOutOffset ];
 
 				/* close files if too many file handles opened */
-				/*if(iOutOffset>0 && (iOutOffset%iNumFilesOpen==0 || 
-					(iOutBase + iOutOffset)==m_vecpDBs.size()-1)){
+				/*if(iOutOffset>0 && (iOutOffset % iNumFilesOpen==0 ||
+					(iOutOffset + 1) >= iOutBlock || (iOutBase + iOutOffset + 1) >= m_vecpDBs.size() ) ){
 					for(k=0; k<iNumFilesOpen; k++){
-						if(iOutOffset + iOutBase - 1 - k == 0){
+						if(iOutOffset + iOutBase - k - 1 < 0){
 							break;
 						}
 						m_vecpDBs[iOutOffset + iOutBase - 1 - k]->CloseFile();
@@ -941,7 +943,9 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 				}
 
 				i += DB.GetGenes( );
+
 				DB.CloseFile();
+
 			}
 		}
 	}

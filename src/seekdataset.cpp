@@ -205,6 +205,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 	float w = -5.0;
 	while(w<5.01){
 		quant.push_back(w);
+		//w+=0.04;
 		w+=0.1;
 	}
 	quant.resize(quant.size());
@@ -218,6 +219,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 	ushort iNumGenes = geneMap->GetNumSet();
 	ushort iNumQueries = iQuerySize;
 
+	//fprintf(stderr, "iNumQueries is %d\n", iNumQueries);
 	//iRows is the gene id, iColumns is the query id
 	memset(&rData[0][0], 0, sizeof(ushort)*iRows*iColumns);
 
@@ -239,9 +241,31 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 				ushort jj = this->query[j];
 				platform_avg[j] = platform->GetPlatformAvg(jj);
 				platform_stdev[j] = platform->GetPlatformStdev(jj);
+				//fprintf(stderr, "Q%d ", jj);
 			}
+			//fprintf(stderr, "\n");
 
 			const vector<ushort> &allRGenes = geneMap->GetAllReverse();
+			for(ii=0; ii<geneMap->GetNumSet(); ii++){
+				i = allRGenes[ii];
+				float a = GetGeneAverage(i);
+				/* numQueries */
+				for(j=0; j<iNumQueries; j++){
+					/*if(ii<100){
+						fprintf(stderr, "%d %d %d %d\n", i, j, queryIndex[j], r[queryIndex[j]][i]);
+					}*/
+					unsigned char x = r[queryIndex[j]][i];
+					if(x==255){
+						continue;
+					}
+					float vv = (quant[x] - a - platform_avg[j]) / platform_stdev[j];
+
+					vv = max((float) min(vv, (float)3.2), (float)-3.2);
+					rData[i][j]= (ushort) (vv*100.0) + 320;
+				}
+			}
+
+			/*const vector<ushort> &allRGenes = geneMap->GetAllReverse();
 			vector<ushort>::const_iterator iterRGenes = allRGenes.begin();
 			vector<ushort>::const_iterator lastRGenes = allRGenes.begin() + geneMap->GetNumSet();
 
@@ -261,11 +285,12 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 						continue;
 					}
 					float vv = (quant[*rP] - a - *plAvgP) / *plStdevP;
+					//fprintf(stderr, "%.3f\n", vv);
 					//Do not remove the (float) cast in front of min
 					vv = max((float) min(vv, (float)3.2), (float)-3.2);
 					*rDataP = (ushort) (vv*100.0) + 320;
 				}
-			}
+			}*/
 
 			delete[] platform_avg;
 			delete[] platform_stdev;

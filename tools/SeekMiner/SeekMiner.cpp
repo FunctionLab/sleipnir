@@ -46,6 +46,7 @@ int main( int iArgs, char** aszArgs ) {
 		if(!CSeekTools::ReadListTwoColumns(strGeneInput, vecstrGeneID, vecstrGenes)){
 			return false;
 		}
+
 	}
 
 	bool useNibble = false;
@@ -97,8 +98,9 @@ int main( int iArgs, char** aszArgs ) {
 
 		vector<CSeekDataset*> vc;
 		vector<char> cAllQuery;
-		CSeekTools::LoadDatabase(DB, strPrepInputDirectory, cAllQuery, vecstrAllQuery,
+		CSeekTools::LoadDatabase(DB, strPrepInputDirectory, 
 			vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
+		CSeekTools::ReadDatabaselets(DB, vecstrAllQuery, cAllQuery, vc);
 
 		ushort j;
 		ushort d;
@@ -173,14 +175,15 @@ int main( int iArgs, char** aszArgs ) {
 			system("date +%s%N 1>&2");
 
 			#pragma omp parallel for \
-			shared(vc, rData, master_rank_threads, sum_weight_threads, counts_threads) \
+			shared(weight, query, vc, rData, master_rank_threads, \
+				sum_weight_threads, counts_threads, rank_threads) \
 			private(d, j) \
-			firstprivate(iDatasets) \
+			firstprivate(iDatasets, iGenes, iQuery) \
 			schedule(dynamic)
 
 			for(d=0; d<iDatasets; d++){
 				ushort tid = omp_get_thread_num();
-				if(DEBUG) fprintf(stderr, "Dataset %d\n", d);
+				if(DEBUG) fprintf(stderr, "Dataset %d, %s\n", d, vecstrDatasets[d].c_str());
 
 				CSeekIntIntMap *mapQ = vc[d]->GetQueryMap();
 				CSeekIntIntMap *mapG = vc[d]->GetGeneMap();
@@ -195,9 +198,45 @@ int main( int iArgs, char** aszArgs ) {
 					continue;
 				}
 
-				if(DEBUG) fprintf(stderr, "Initializing\n");
+				if(DEBUG) fprintf(stderr, "Initializing %d\n", this_q.size());
+				/*if(DEBUG){
+					for(j=0; j<this_q.size(); j++){
+						fprintf(stderr, "%d ", this_q[j]);
+					}
+					fprintf(stderr, "\n");
+				}*/
 
 				vc[d]->InitializeDataMatrix(rData[tid], iGenes, iQuery);
+
+				/*
+				unsigned char **rr = vc[d]->GetMatrix();
+				CSeekIntIntMap *mapDB = vc[d]->GetDBMap();
+				CSeekPlatform *plat = &vc[d]->GetPlatform();
+				vector<float> vf;
+				for(j=0; j<mapDB->GetNumSet(); j++){
+					vf.push_back(plat->GetPlatformStdev(mapDB->GetReverse(j)));
+				}
+				for(j=0; j<vf.size(); j++){
+					fprintf(stderr, "%.3f ", vf[j]);
+				}
+				fprintf(stderr, "\n");
+				for(j=0; j<1000; j++){
+					size_t g = mapG->GetReverse(j);
+					size_t k = 0;
+					vector<unsigned char> vv;
+					for(k=0; k<mapDB->GetNumSet(); k++){
+				 		vv.push_back(rr[k][g]);
+					}
+					if(vecstrDatasets[d]=="GSE4527.GPL570.pcl"){
+						fprintf(stderr, "Gene %d ", g);
+						for(k=0; k<mapDB->GetNumSet(); k++){
+							fprintf(stderr, "%d ", vv[k]);
+						}
+						fprintf(stderr, "\n");
+					}
+				}*/
+
+
 
 				if(DEBUG) fprintf(stderr, "Weighting dataset\n");
 
@@ -214,35 +253,44 @@ int main( int iArgs, char** aszArgs ) {
 				CSeekWeighter::LinearCombine(rank_normal_threads[tid], this_q, *vc[d], false);
 
 				vc[d]->DeleteQuery();
-
-				/*for(j=0; j<1000; j++){
+				/*
+				if(DEBUG){
+				float avg_expr = 0;
+				for(j=0; j<1000; j++){
 					size_t g = mapG->GetReverse(j);
-					printf("Gene %d %d\n", g, rank_normal[g]);
+					float vv = (rank_normal_threads[tid][g] - 320) / 100.0;
+					if(vecstrDatasets[d]=="GSE4527.GPL570.pcl"){
+						fprintf(stderr, "Gene %d %.3f\n", g, vv);
+					}
+					avg_expr+=vv;
+				}
+				fprintf(stderr, "Average 1000 Genes is %.3f\n", avg_expr / 1000.0);
 				}*/
 
 				if(DEBUG) fprintf(stderr, "Adding contribution of dataset to master ranking: %.5f\n", w);
 
-				ushort iGenes = mapG->GetNumSet();
+				ushort iGeneSet = mapG->GetNumSet();
 				const vector<ushort> &allRGenes = mapG->GetAllReverse();
 				vector<ushort>::const_iterator iterR = allRGenes.begin();
-				vector<ushort>::const_iterator endR = allRGenes.begin() + iGenes;
+				vector<ushort>::const_iterator endR = allRGenes.begin() + iGeneSet;
 
-				vector<ushort> &rank_normal = rank_normal_threads[tid];
-				float* master_rank = &master_rank_threads[tid][0];
-				float* sum_weight = &sum_weight_threads[tid][0];
-				ushort* counts = &counts_threads[tid][0];
+				vector<ushort> &Rank_Normal = rank_normal_threads[tid];
+				float* Master_Rank = &master_rank_threads[tid][0];
+				float* Sum_Weight = &sum_weight_threads[tid][0];
+				ushort* Counts = &counts_threads[tid][0];
 
 				for(; iterR!=endR; iterR++){
-					if(rank_normal[*iterR]==0){
+					if(Rank_Normal[*iterR]==0){
 						continue;
 					}
-					master_rank[*iterR] += (float) rank_normal[*iterR] * w;
-					sum_weight[*iterR] += w;
-					counts[*iterR]++;
+					Master_Rank[*iterR] += (float) Rank_Normal[*iterR] * w;
+					Sum_Weight[*iterR] += w;
+					Counts[*iterR]++;
 				}
 
 				weight[d] = w;
 			}
+			//omp finishes
 
 			for(j=0; j<numThreads; j++){
 				ushort k;
@@ -281,6 +329,7 @@ int main( int iArgs, char** aszArgs ) {
 			a.clear();
 			a.resize(iGenes);
 			for(j=0; j<iGenes; j++){
+				fprintf(stderr, "%d %s\n", j, DB.GetGene((size_t) j).c_str());
 				a[j].i = j;
 				a[j].f = master_rank[j];
 			}
@@ -292,7 +341,7 @@ int main( int iArgs, char** aszArgs ) {
 			ushort ii;
 			for(ii=0, jj=0; jj<500; ii++){
 				if(cQuery[a[ii].i]==1) continue;
-				//fprintf(stderr, "%d %.5f\n", a[ii].i, a[ii].f);
+				fprintf(stderr, "%s %.5f\n", DB.GetGene((size_t)a[ii].i).c_str(), a[ii].f);
 				jj++;
 			}
 

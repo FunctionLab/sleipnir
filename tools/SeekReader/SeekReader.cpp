@@ -116,6 +116,7 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 		vector<char> cQuery;
+		vector<ushort> allQ;
 		CSeekTools::InitVector(cQuery, iGenes, (char) 0);
 
 		for(i=0; i<vecstrQuery.size(); i++){
@@ -124,8 +125,15 @@ int main( int iArgs, char** aszArgs ) {
 			cQuery[k] = 1;
 		}
 
+		for(k=0; k<iGenes; k++){
+			if(cQuery[k]==1){
+				allQ.push_back(k);
+			}
+		}
+
 		for(i=0; i<iDatasets; i++){
-			vc[i]->InitializeQuery(cQuery);
+			vc[i]->InitializeGeneMap();
+			vc[i]->InitializeQueryBlock(allQ);
 		}
 
 		vector<unsigned char> *Q =
@@ -145,27 +153,31 @@ int main( int iArgs, char** aszArgs ) {
 			size_t m = DB.GetGene(vecstrQuery[i]);
 			size_t l = 0;
 			for(j=0; j<iDatasets; j++){
-				CSeekIntIntMap *qu = vc[j]->GetQueryMap();
-			    size_t query = qu->GetForward(m);
-			    if(query==-1) continue;
+				CSeekIntIntMap *qu = vc[j]->GetDBMap();
+				unsigned char **r = vc[j]->GetMatrix();
+				ushort query = qu->GetForward(m);
+				if(CSeekTools::IsNaN(query)) continue;
 			    for(k=0; k<iGenes; k++){
 			    	unsigned char c = Q[i][k*iDatasets + j];
-			    	vc[j]->SetQueryNoMapping(query, k, c);
+			    	r[query][k] = c;
 			    }
 			}
 		}
 
-		/*for(i=0; i<iDatasets; i++){
+		for(i=0; i<iDatasets; i++){
 			printf("Dataset %ld\n", i);
-			CSeekMatrix<unsigned char> *cm = vc[i]->GetMatrix();
-			for(j=0; j<cm->GetNumRow(); j++){
+			unsigned char **r = vc[i]->GetMatrix();
+			CSeekIntIntMap *mapG = vc[i]->GetGeneMap();
+			for(j=0; j<vc[i]->GetDBMap()->GetNumSet(); j++){
+				if(vecstrDatasets[i]=="GSE19470.GPL5175.pcl"){
 				printf("Row %ld\n", j);
-				for(k=0; k<1000; k++){
-					printf("%d ", cm->Get(j, k));
+				for(k=0; k<mapG->GetNumSet(); k++){
+					printf("%d ", r[j][mapG->GetReverse(k)]);
 				}
 				printf("\n");
+				}
 			}
-		}*/
+		}
 		/*size_t j;
 		for(i=0; i<vecstrQuery.size(); i++){
 			printf("Query: %s\n", vecstrQuery[i].c_str());

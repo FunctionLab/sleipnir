@@ -24,7 +24,6 @@
 
 #include <float.h>
 #include <math.h>
-
 #include <vector>
 
 #include "metai.h"

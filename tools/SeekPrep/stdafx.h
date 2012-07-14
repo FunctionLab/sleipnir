@@ -37,7 +37,6 @@ using namespace std;
 #include "seekmap.h"
 #include "seekreader.h"
 #include "seekwriter.h"
-
 #include "meta.h"
 using namespace Sleipnir;
 

@@ -1,0 +1,9 @@
+package	"PCLServer"
+version	"1.0"
+purpose	"PCLServer that serves pcl data to client"
+
+section "Main"
+option	"port"				p	"Port to listen to"
+								string typestr="9000"
+option	"input"				i	"Input PCL directory"
+								string	typestr="directory"

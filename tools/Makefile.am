@@ -32,6 +32,7 @@ if WITH_TOOLS
 	  Orthologer \
 	  Overlapper \
 	  PCLPlotter \
+	  PCLServer \
 	  PCL2Bin \
 	  Randomizer \
 	  Seqs2Ngrams \
@@ -56,8 +57,9 @@ if WITH_SMILE_TOOLS
 	  Data2DB \
       DBCombiner \
       SeekPrep \
+      SeekReader \
       SeekMiner \
-      SeekEvaluator \
+	  SeekServer \
 	  DSLConverter \
 	  Dab2Dad \
 	  Edges2Posteriors \

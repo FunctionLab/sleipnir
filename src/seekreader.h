@@ -141,9 +141,13 @@ public:
 	static bool IsNaN(const ushort &);
 
 	static bool CreatePresenceVector(const vector<ushort> &, vector<char> &, const ushort &);
-	static bool LoadDatabase(const CDatabase &, const string &, vector<char> &,
-	const vector< vector<string> > &, const vector<string> &, const map<string, string> &,
-	const map<string, ushort> &, vector<CSeekPlatform> &, vector<CSeekDataset*> &);
+
+	static bool ReadDatabaselets(const CDatabase &, 
+		const vector< vector<string> > &, vector<char> &, vector<CSeekDataset*> &);
+
+	static bool LoadDatabase(const CDatabase &, const string &, const vector<string> &, 
+	const map<string, string> &, const map<string, ushort> &, 
+	vector<CSeekPlatform> &, vector<CSeekDataset*> &);
 
 	static bool ReadPlatforms(const string &strPlatformDirectory, vector<CSeekPlatform> &plat,
 			vector<string> &vecstrPlatforms, map<string, ushort> &mapstriPlatforms);
@@ -153,10 +157,6 @@ public:
 	static bool ReadListTwoColumns(const string &strFile, vector<string> &list1, vector<string> &list2);
 
 	static bool ReadMultipleQueries(const string &strFile, vector< vector<string> > &qList);
-
-	static bool ReadMultiGeneOneLine(const string &strFile, vector<string> &list1);
-
-	static bool ReadListOneColumn(const string &strFile, vector<string> &vecstrList);
 
 
 };

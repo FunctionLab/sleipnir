@@ -704,6 +704,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Orthologer/Makefile \
 		 tools/Overlapper/Makefile \
 		 tools/PCLPlotter/Makefile \
+		 tools/PCLServer/Makefile \
 		 tools/PCL2Bin/Makefile \
 		 tools/Randomizer/Makefile \
 		 tools/Seqs2Ngrams/Makefile \
@@ -724,9 +725,10 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Contexter/Makefile \
 		 tools/Counter/Makefile \
 		 tools/Data2DB/Makefile \
+		 tools/SeekReader/Makefile \
 		 tools/SeekMiner/Makefile \
 		 tools/SeekPrep/Makefile \
-		 tools/SeekEvaluator/Makefile \
+		 tools/SeekServer/Makefile \
          tools/DBCombiner/Makefile \
 		 tools/DSLConverter/Makefile \
 		 tools/Dab2Dad/Makefile \
