@@ -22,6 +22,9 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+
+
+
 bool InitializeDataset(size_t &iDatasets, vector<string> &vecstrDatasets,
 	string &strPrepInputDirectory, vector<CSeekDataset*> &vc){
 	vc.clear();
@@ -31,8 +34,10 @@ bool InitializeDataset(size_t &iDatasets, vector<string> &vecstrDatasets,
 	for(i=0; i<iDatasets; i++){
 		vc[i] = new CSeekDataset();
 		string strFileStem = vecstrDatasets[i];
-		string strAvgPath = strPrepInputDirectory + "/" + strFileStem + ".gavg";
-		string strPresencePath = strPrepInputDirectory + "/" + strFileStem + ".gpres";
+		string strAvgPath = strPrepInputDirectory + "/" + strFileStem
+			+ ".gavg";
+		string strPresencePath = strPrepInputDirectory + "/" + strFileStem
+			+ ".gpres";
 		vc[i]->ReadGeneAverage(strAvgPath);
 		vc[i]->ReadGenePresence(strPresencePath);
 		vc[i]->InitializeGeneMap();
@@ -41,8 +46,8 @@ bool InitializeDataset(size_t &iDatasets, vector<string> &vecstrDatasets,
 }
 
 
-bool InitializeDB(size_t &iDatasets, size_t &iGenes, vector<string> &vecstrGenes,
-	vector<CSeekDataset*> &vc, CDatabaselet &DBL){
+bool InitializeDB(size_t &iDatasets, size_t &iGenes,
+	vector<string> &vecstrGenes, vector<CSeekDataset*> &vc, CDatabaselet &DBL){
 
 	ushort i,j,k;
 	vector<char> cQuery;
@@ -65,9 +70,8 @@ bool InitializeDB(size_t &iDatasets, size_t &iGenes, vector<string> &vecstrGenes
 		veciQuery.push_back((ushort) mapstrGenes[strQuery]);
 	}
 
-	fprintf(stderr, "Start initializing map...\n");
+	fprintf(stderr, "Start initializing query map...\n");
 	for(i=0; i<iDatasets; i++){
-		//vc[i]->InitializeGeneMap();
 		vc[i]->InitializeQueryBlock(veciQuery);
 	}
 
@@ -79,11 +83,8 @@ bool InitializeDB(size_t &iDatasets, size_t &iGenes, vector<string> &vecstrGenes
 		/* expanded */
 		DBL.Get(i, Q);
 		ushort m = mapstrGenes[DBL.GetGene(i)];
-
-
 		for(j=0; j<iDatasets; j++){
-			CSeekIntIntMap *qu = vc[j]->GetDBMap();
-			ushort db = qu->GetForward(m);
+			ushort db = vc[j]->GetDBMap()->GetForward(m);
 			if(CSeekTools::IsNaN(db)) continue;
 			unsigned char **r = vc[j]->GetMatrix();
 			for(k=0; k<iGenes; k++){
@@ -100,19 +101,17 @@ bool InitializeDB(size_t &iDatasets, size_t &iGenes, vector<string> &vecstrGenes
 
 bool OpenDBFiles(string &DBFile, vector<unsigned char *> &cc, bool &useNibble){
 	CDatabaselet *CD;
-	CD = new CDatabaselet(useNibble);
-	CD->Open(DBFile);
-	unsigned char *charImage = CD->GetCharImage();
-	cc.push_back(charImage);
+	(CD = new CDatabaselet(useNibble))->Open(DBFile);
+	cc.push_back(CD->GetCharImage());
 	return true;
 }
 
 
-bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes,
-	vector<string> &vecstrGenes, map<ushort, ushort> &mapiPlatform,
-	vector<float> &quant, vector<CSeekDataset*> &vc,
-	CFullMatrix<float> &platform_avg, CFullMatrix<float> &platform_stdev,
-	vector<string> &vecstrQuery){
+bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
+	size_t &m_iGenes, vector<string> &vecstrGenes,
+	map<ushort, ushort> &mapiPlatform, vector<float> &quant,
+	vector<CSeekDataset*> &vc, CFullMatrix<float> &platform_avg,
+	CFullMatrix<float> &platform_stdev, vector<string> &vecstrQuery){
 
 	size_t i, j, k;
 
@@ -161,14 +160,14 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes
 			}
 			ushort platform_id = mapiPlatform[k];
 			if(platform_id>=(ushort) numPlatforms){
-				printf("Error, platforms are equal %d %d", (int) platform_id, (int) numPlatforms); getchar();
+				printf("Error, platforms are equal %d %d",
+					(int) platform_id, (int) numPlatforms); getchar();
 			}
 			for(j=0; j<m_iGenes; j++){
 				unsigned char uc = f[iQ][j];
 				float v = 0;
-				if(uc==255){
-					v = CMeta::GetNaN();
-				}else{
+				if(uc==255) v = CMeta::GetNaN();
+				else{
 					v = quant[uc] - vc[k]->GetGeneAverage(j);
 					//v = quant[uc];
 					sum[platform_id] += v;
@@ -179,9 +178,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes
 		}
 
 		for(k=0; k<numPlatforms; k++){
-			if(num[k]==0){
-				continue;
-			}
+			if(num[k]==0) continue;
 			mean[k] = sum[k] / (float) num[k];
 			stdev[k] = sq_sum[k] / (float) num[k] - mean[k] * mean[k];
 			stdev[k] = sqrt(stdev[k]);
@@ -193,14 +190,8 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets, size_t &m_iGenes
 	fprintf(stderr, "Finished calculating platform average\n");
 	fprintf(stderr, "Start deleting\n");
 
-	for(i=0; i<iDatasets; i++){
-		//vc[i]->DeleteQuery();
-		vc[i]->DeleteQueryBlock();
-		//delete vc[i];
-	}
+	for(i=0; i<iDatasets; i++) vc[i]->DeleteQueryBlock();
 	fprintf(stderr, "Finished deleting\n");
-
-
 	return true;
 }
 
@@ -239,7 +230,8 @@ int main( int iArgs, char** aszArgs ) {
 			continue;
 		}
 		if( !( i = atoi( vecstrLine[ 0 ].c_str( ) ) ) ) {
-			cerr << "Illegal gene ID: " << vecstrLine[ 0 ] << " for " << vecstrLine[ 1 ] << endl;
+			cerr << "Illegal gene ID: " << vecstrLine[ 0 ] << " for "
+				<< vecstrLine[ 1 ] << endl;
 			return 1;
 		}
 		i--;
@@ -258,10 +250,7 @@ int main( int iArgs, char** aszArgs ) {
 	}
 	quant.resize(quant.size());
 
-
-	if( sArgs.input_arg )
-		ifsm.close( );
-
+	if( sArgs.input_arg ) ifsm.close( );
 
 	omp_set_num_threads(8);
 	int numThreads = omp_get_max_threads();
@@ -311,9 +300,7 @@ int main( int iArgs, char** aszArgs ) {
 			i = 0;
 			while(!pistm->eof()){
 				pistm->getline(acBuffer, c_iBuffer -1);
-				if(acBuffer[0]==0){
-					break;
-				}
+				if(acBuffer[0]==0) break;
 				acBuffer[c_iBuffer-1] = 0;
 				dblist.push_back(acBuffer);
 			}
@@ -321,9 +308,7 @@ int main( int iArgs, char** aszArgs ) {
 			ifsm.close();
 
 			bool useNibble = false;
-			if(sArgs.useNibble_flag==1){
-				useNibble = true;
-			}
+			if(sArgs.useNibble_flag==1) useNibble = true;
 
 			size_t numPlatforms = mapstriPlatform.size();
 			size_t iDatasets = vecstrDatasets.size();
@@ -344,11 +329,14 @@ int main( int iArgs, char** aszArgs ) {
 
 			string strPrepInputDirectory = sArgs.dir_prep_in_arg;
 			vector<CSeekDataset*> *vc = new vector<CSeekDataset*>[numThreads];
-			CFullMatrix<float> *platform_avg_threads = new CFullMatrix<float>[numThreads];
-			CFullMatrix<float> *platform_stdev_threads= new CFullMatrix<float>[numThreads];
+			CFullMatrix<float> *platform_avg_threads =
+				new CFullMatrix<float>[numThreads];
+			CFullMatrix<float> *platform_stdev_threads=
+				new CFullMatrix<float>[numThreads];
 
 			for(i=0; i<numThreads; i++){
-				InitializeDataset(iDatasets, vecstrDatasets, strPrepInputDirectory, vc[i]);
+				InitializeDataset(iDatasets, vecstrDatasets,
+					strPrepInputDirectory, vc[i]);
 				platform_avg_threads[i].Initialize(numPlatforms, m_iGenes);
 				platform_stdev_threads[i].Initialize(numPlatforms, m_iGenes);
 				for(j=0; j<numPlatforms; j++){
@@ -371,11 +359,13 @@ int main( int iArgs, char** aszArgs ) {
 			for(i=0; i<dblist.size(); i++){
 				int tid = omp_get_thread_num();
 				string DBFile = dblist[i];
-				fprintf(stderr, "opening db file %s\n", DBFile.c_str()); //getchar();
+				fprintf(stderr, "opening db file %s\n", DBFile.c_str());
 				OpenDB(DBFile, useNibble, iDatasets, m_iGenes,
-				vecstrGenes, mapiPlatform, quant, vc[tid], platform_avg_threads[tid],
-				platform_stdev_threads[tid], vecstrQuery);
-				fprintf(stderr, "finished opening db file %s\n", DBFile.c_str()); //getchar();
+				vecstrGenes, mapiPlatform, quant, vc[tid],
+				platform_avg_threads[tid], platform_stdev_threads[tid],
+				vecstrQuery);
+				fprintf(stderr, "finished opening db file %s\n",
+					DBFile.c_str());
 			}
 
 			for(i=0; i<numThreads; i++){
@@ -427,7 +417,8 @@ int main( int iArgs, char** aszArgs ) {
 			vector<float> vecGeneAvg;
 			string fileName = CMeta::Basename(sArgs.dabinput_arg);
 			string fileStem = CMeta::Deextension(fileName);
-			sprintf(outFile, "%s/%s.gavg", sArgs.dir_out_arg, fileStem.c_str());
+			sprintf(outFile, "%s/%s.gavg", sArgs.dir_out_arg,
+				fileStem.c_str());
 			CSeekWriter::GetGeneAverage(Dat, vecstrGenes, vecGeneAvg);
 			CSeekTools::WriteArray(outFile, vecGeneAvg);
 		}
@@ -442,7 +433,8 @@ int main( int iArgs, char** aszArgs ) {
 			vector<char> vecGenePresence;
 			string fileName = CMeta::Basename(sArgs.dabinput_arg);
 			string fileStem = CMeta::Deextension(fileName);
-			sprintf(outFile, "%s/%s.gpres", sArgs.dir_out_arg, fileStem.c_str());
+			sprintf(outFile, "%s/%s.gpres", sArgs.dir_out_arg,
+				fileStem.c_str());
 			CSeekWriter::GetGenePresence(Dat, vecstrGenes, vecGenePresence);
 			CSeekTools::WriteArray(outFile, vecGenePresence);
 		}

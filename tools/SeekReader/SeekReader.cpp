@@ -53,7 +53,8 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Ignoring line: " << acBuffer << endl;
 			continue; }
 		if( !( i = atoi( vecstrLine[ 0 ].c_str( ) ) ) ) {
-			cerr << "Illegal gene ID: " << vecstrLine[ 0 ] << " for " << vecstrLine[ 1 ] << endl;
+			cerr << "Illegal gene ID: " << vecstrLine[ 0 ] <<
+				" for " << vecstrLine[ 1 ] << endl;
 			return 1; }
 		i--;
 		if( vecstrGenes.size( ) <= i )
@@ -108,9 +109,12 @@ int main( int iArgs, char** aszArgs ) {
 			vc[i] = new CSeekDataset();
 			string strPrepInputDirectory = sArgs.dir_prep_in_arg;
 			string strFileStem = vecstrDatasets[i];
-			//string strFileStem = CMeta::Deextension(CMeta::Basename(vecstrDatasets[i].c_str()));
-			string strAvgPath = strPrepInputDirectory + "/" + strFileStem + ".gavg";
-			string strPresencePath = strPrepInputDirectory + "/" + strFileStem + ".gpres";
+			//string strFileStem = CMeta::Deextension(CMeta::
+			//Basename(vecstrDatasets[i].c_str()));
+			string strAvgPath = strPrepInputDirectory + "/" +
+				strFileStem + ".gavg";
+			string strPresencePath = strPrepInputDirectory + "/" +
+				strFileStem + ".gpres";
 			vc[i]->ReadGeneAverage(strAvgPath);
 			vc[i]->ReadGenePresence(strPresencePath);
 		}

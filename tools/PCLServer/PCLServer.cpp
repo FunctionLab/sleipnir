@@ -169,7 +169,8 @@ void *do_query(void *th_arg){
 	
 	for(i=0; i<vc.size(); i++){
 		CPCL *pp = vc[i];
-		fprintf(stderr, "allocating space %d %d...\n", geneName.size(), pp->GetExperiments());
+		fprintf(stderr, "allocating space %d %d...\n", geneName.size(),
+			pp->GetExperiments());
 		CFullMatrix<float> *ff = new CFullMatrix<float>();
 		ff->Initialize(geneName.size(), pp->GetExperiments() - 2);
 		totNumExperiments += pp->GetExperiments() - 2;
@@ -307,11 +308,13 @@ int main( int iArgs, char** aszArgs ) {
 
 	// loop through all the results and bind to the first we can
 	for(p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+		if ((sockfd = socket(p->ai_family, p->ai_socktype,
+			p->ai_protocol)) == -1) {
 			perror("server: socket");
 			continue;
 		}
-		if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+		if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
+			sizeof(int)) == -1) {
 			perror("setsockopt");
 			exit(1);
 		}
@@ -371,7 +374,8 @@ int main( int iArgs, char** aszArgs ) {
 			perror("accept");
 			continue;
 		}
-		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
+		inet_ntop(their_addr.ss_family, get_in_addr(
+			(struct sockaddr *)&their_addr), s, sizeof s);
 		printf("server, got connection from %s\n", s);
 		for(d=0; d<NUM_THREADS; d++){
 			if(THREAD_OCCUPIED[d]==0) break;

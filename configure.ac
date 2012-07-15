@@ -729,6 +729,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/SeekMiner/Makefile \
 		 tools/SeekPrep/Makefile \
 		 tools/SeekServer/Makefile \
+		 tools/SeekEvaluator/Makefile \
          tools/DBCombiner/Makefile \
 		 tools/DSLConverter/Makefile \
 		 tools/Dab2Dad/Makefile \

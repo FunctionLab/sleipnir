@@ -28,14 +28,14 @@
 
 namespace Sleipnir {
 
-bool CSeekWeighter::LinearCombine(vector<ushort> &rank, const vector<ushort> &cv_query,
-	CSeekDataset &sDataset, const bool bAllocate){
+bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
+	const vector<ushort> &cv_query, CSeekDataset &sDataset,
+	const bool bAllocate){
 	if(cv_query.size()==0){
 		cerr << "cv_query empty" << endl;
 		return true;
 	}
-	ushort i, j;
-	ushort g, q;
+	ushort i, j, g, q;
 	vector<ushort>::const_iterator iter;
 
 	ushort iNumGenes = sDataset.GetNumGenes();
@@ -52,27 +52,22 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank, const vector<ushort> &cv
 	 * should control query size to be <100. */
 	vector<ushort> queryPos;
 	queryPos.resize(q_size);
-	for(i=0; i<q_size; i++){
-		queryPos[i] = mapQ->GetForward(cv_query[i]);
-	}
+	for(i=0; i<q_size; i++) queryPos[i] = mapQ->GetForward(cv_query[i]);
 
 	sort(queryPos.begin(), queryPos.end());
+
 	vector<ushort> offset;
 	offset.push_back(0);
-	for(i=1; i<q_size; i++){
-		offset.push_back(queryPos[i] - queryPos[i-1]);
-	}
+	for(i=1; i<q_size; i++) offset.push_back(queryPos[i] - queryPos[i-1]);
 	offset.resize(offset.size());
-
 
 	vector<ushort>::iterator iter_g;
 	vector<ushort>::const_iterator iterOffset;
 	ushort **pf;
 	ushort *pp;
 	for(iter_g=rank.begin(), pf = &f[0]; iter_g!=rank.end(); iter_g++, pf++){
-		*iter_g = 0;
-		pp = &(*pf)[queryPos[0]];
-		for(iterOffset = offset.begin(); iterOffset!=offset.end(); iterOffset++, pp+=(*iterOffset)){
+		for(*iter_g = 0, pp = &(*pf)[queryPos[0]], iterOffset = offset.begin();
+			iterOffset!=offset.end(); iterOffset++, pp+=(*iterOffset)){
 			(*iter_g) += *pp;
 		}
 		(*iter_g) /= q_size;
@@ -81,8 +76,8 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank, const vector<ushort> &cv
 }
 
 
-bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vector<ushort> *rrank,
-		const bool bAllocate){
+bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
+	vector<ushort> *rrank, const bool bAllocate){
 	ushort iFold = sQuery.GetNumFold();
 	sDataset.InitializeCVWeight(iFold);
 
@@ -97,8 +92,8 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vect
 			cerr << "rank not null" << endl;
 			return false;
 		}
-		rrank = new vector<ushort>();
-		CSeekTools::InitVector(*rrank, sDataset.GetNumGenes());
+		CSeekTools::InitVector(*(rrank = new vector<ushort>()),
+			sDataset.GetNumGenes());
 	}
 
 	vector<ushort> &rank = *rrank;
@@ -142,11 +137,8 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset, vect
 			bool ret = LinearCombine(rank, cv_query, sDataset, false);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(0.95,
 				rank, w, is_query_cross, is_gold, *mapG, false, &ar, TOP);
-			if(!ret){
-				sDataset.SetCVWeight(qi, -1);
-			}else{
-				sDataset.SetCVWeight(qi, w);
-			}
+			if(!ret) sDataset.SetCVWeight(qi, -1);
+			else sDataset.SetCVWeight(qi, w);
 			//printf("Weight: %.5f\n", w);
 		}
 		/* Reset query and gold standard */

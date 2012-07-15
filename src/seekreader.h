@@ -53,12 +53,10 @@ public:
 		ret = fread((char*)m_Data, 1, iSize*sizeof(tType), f);
 		typename vector<tType>::iterator iter;
 		tType *mp;
-		for(iter=vData.begin(), mp=&m_Data[0]; iter!=vData.end(); iter++, mp++){
+		for(iter=vData.begin(), mp=&m_Data[0]; iter!=vData.end();
+			iter++, mp++){
 			*iter = *mp;
 		}
-		/*for(i=0; i<iSize; i++){
-			vData[i] = m_Data[i];
-		}*/
 		free(m_Data);
 		fclose(f);
 		return true;
@@ -87,7 +85,8 @@ public:
 	}
 
 	template<class tType>
-	static bool WriteArrayText(const char *fileName, const vector<tType> &vData){
+	static bool WriteArrayText(const char *fileName,
+		const vector<tType> &vData){
 		ofstream outfile;
 		outfile.open(fileName);
 		ushort i;
@@ -101,7 +100,8 @@ public:
 
 
 	template<class tType>
-	static bool InitVector(vector<tType> &vData, const ushort &iSize, const tType &tValue) {
+	static bool InitVector(vector<tType> &vData, const ushort &iSize,
+		const tType &tValue) {
 		vData.clear();
 		vData.resize(iSize);
 		fill(vData.begin(), vData.end(), tValue);
@@ -116,7 +116,8 @@ public:
 	}
 
 	template<class tType>
-	static tType** Init2DArray(const size_t &iSize1, const size_t &iSize2, const tType &tValue){
+	static tType** Init2DArray(const size_t &iSize1, const size_t &iSize2,
+		const tType &tValue){
 		tType **f = (tType**)malloc(iSize1*sizeof(tType*));
 		f[0] = (tType*)malloc(iSize1*iSize2*sizeof(tType));
 		tType **itF = &f[1];
@@ -140,24 +141,36 @@ public:
 
 	static bool IsNaN(const ushort &);
 
-	static bool CreatePresenceVector(const vector<ushort> &, vector<char> &, const ushort &);
+	static bool CreatePresenceVector(const vector<ushort> &, vector<char> &,
+		const ushort &);
 
 	static bool ReadDatabaselets(const CDatabase &, 
-		const vector< vector<string> > &, vector<char> &, vector<CSeekDataset*> &);
+		const vector< vector<string> > &, vector<char> &,
+		vector<CSeekDataset*> &);
 
-	static bool LoadDatabase(const CDatabase &, const string &, const vector<string> &, 
-	const map<string, string> &, const map<string, ushort> &, 
-	vector<CSeekPlatform> &, vector<CSeekDataset*> &);
+	static bool LoadDatabase(const CDatabase &, const string &,
+		const vector<string> &, const map<string, string> &,
+		const map<string, ushort> &, vector<CSeekPlatform> &,
+		vector<CSeekDataset*> &);
 
-	static bool ReadPlatforms(const string &strPlatformDirectory, vector<CSeekPlatform> &plat,
-			vector<string> &vecstrPlatforms, map<string, ushort> &mapstriPlatforms);
+	static bool ReadPlatforms(const string &strPlatformDirectory,
+		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
+		map<string, ushort> &mapstriPlatforms);
 
-	static bool ReadListOneColumn(const string &strFile, vector<string> &vecstrList, CSeekStrIntMap &mapstriList);
+	static bool ReadListOneColumn(const string &strFile,
+		vector<string> &vecstrList, CSeekStrIntMap &mapstriList);
 
-	static bool ReadListTwoColumns(const string &strFile, vector<string> &list1, vector<string> &list2);
+	static bool ReadListTwoColumns(const string &strFile,
+		vector<string> &list1, vector<string> &list2);
 
-	static bool ReadMultipleQueries(const string &strFile, vector< vector<string> > &qList);
+	static bool ReadMultipleQueries(const string &strFile,
+		vector< vector<string> > &qList);
 
+	static bool ReadMultiGeneOneLine(const string &strFile,
+		vector<string> &list1);
+
+	static bool ReadListOneColumn(const string &strFile,
+		vector<string> &vecstrList);
 
 };
 

@@ -109,7 +109,8 @@ CSeekIntIntMap::CSeekIntIntMap(const vector<char> &cP, const bool bReverse){
 }
 
 
-CSeekIntIntMap::CSeekIntIntMap(const char *cP, const ushort &iSize, const bool bReverse){
+CSeekIntIntMap::CSeekIntIntMap(const char *cP, const ushort &iSize,
+	const bool bReverse){
 	Initialize(iSize);
 	Reset(cP, bReverse);
 }
@@ -265,12 +266,10 @@ vector<string> CSeekStrIntMap::GetAllString() const{
 	vector<string> vecStr;
 	vecStr.clear();
 	vecStr.resize(GetSize());
-	map<string, ushort>::const_iterator	iter;
-	ushort i = 0;
-	for(iter = m_mapstrint.begin(); iter!=m_mapstrint.end(); iter++){
-		vecStr[i] = iter->first;
-		i++;
-	}
+	map<string, ushort>::const_iterator	iter = m_mapstrint.begin();
+	vector<string>::iterator iterV = vecStr.begin();
+	for(; iter!=m_mapstrint.end(); iter++, iterV++)
+		*iterV = iter->first;
 	return vecStr;
 }
 
@@ -278,12 +277,10 @@ vector<ushort> CSeekStrIntMap::GetAllInteger() const{
 	vector<ushort> vecInt;
 	vecInt.clear();
 	vecInt.resize(GetSize());
-	map<ushort, string>::const_iterator	iter;
-	ushort i = 0;
-	for(iter = m_mapintstr.begin(); iter!=m_mapintstr.end(); iter++){
-		vecInt[i] = iter->first;
-		i++;
-	}
+	map<ushort, string>::const_iterator	iter = m_mapintstr.begin();
+	vector<ushort>::iterator iterV = vecInt.begin();
+	for(; iter!=m_mapintstr.end(); iter++, iterV++)
+		*iterV = iter->first;
 	return vecInt;
 }
 }

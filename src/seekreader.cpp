@@ -29,9 +29,7 @@
 namespace Sleipnir {
 
 bool CSeekTools::IsNaN(const ushort &v){
-	if(v==65535){
-		return true;
-	}
+	if(v==65535) return true;
 	return false;
 }
 
@@ -40,12 +38,8 @@ bool CSeekTools::CreatePresenceVector(const vector<ushort> &srcData,
 	ushort i;
 	destData.clear();
 	destData.resize(iSize);
-	for(i=0; i<iSize; i++){
-		destData[i] = 0;
-	}
-	for(i=0; i<srcData.size(); i++){
-		destData[srcData[i]] = 1;
-	}
+	for(i=0; i<iSize; i++) destData[i] = 0;
+	for(i=0; i<srcData.size(); i++) destData[srcData[i]] = 1;
 	return true;
 }
 
@@ -61,70 +55,57 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 
 	for(i=0; i<vecstrAllQuery.size(); i++){
 		for(j=0; j<vecstrAllQuery[i].size(); j++){
-			k = DB.GetGene(vecstrAllQuery[i][j]);
-			if(k==-1) continue;
+			if((k = DB.GetGene(vecstrAllQuery[i][j]))==-1) continue;
 			cAllQuery[k] = 1;
 		}
 	}
 
 	vector<ushort> allQ;
-	for(i=0; i<cAllQuery.size(); i++){
-		if(cAllQuery[i]==1){
-			allQ.push_back(i);
-		}
-	}
+	for(i=0; i<cAllQuery.size(); i++) if(cAllQuery[i]==1) allQ.push_back(i);
 	allQ.resize(allQ.size());
 
 	fprintf(stderr, "Initializing query map\n"); system("date +%s%N 1>&2");
 
 	#pragma omp parallel for \
-	shared(vc, allQ) \
-	private(i) \
-	firstprivate(iDatasets) \
-	schedule(dynamic)
-	for(i=0; i<iDatasets; i++){
-		vc[i]->InitializeQueryBlock(allQ);
-	}
+	shared(vc, allQ) private(i) firstprivate(iDatasets) schedule(dynamic)
+	for(i=0; i<iDatasets; i++) vc[i]->InitializeQueryBlock(allQ);
 
-	fprintf(stderr, "Done initializing query map\n"); system("date +%s%N 1>&2");
+	fprintf(stderr, "Done initializing query map\n");
+	system("date +%s%N 1>&2");
 
-	vector<unsigned char> *Q =
-		new vector<unsigned char>[allQ.size()];
+	vector<unsigned char> *Q = new vector<unsigned char>[allQ.size()];
 
-	fprintf(stderr, "Start reading genes cdatabaselet\n"); system("date +%s%N 1>&2");
+	fprintf(stderr, "Start reading genes cdatabaselet\n");
+	system("date +%s%N 1>&2");
+
 	#pragma omp parallel for \
-	shared(allQ, DB, Q) \
-	private(i) \
-	schedule(dynamic)
-	for(i=0; i<allQ.size(); i++){
-		if(!DB.GetGene(allQ[i], Q[i])){
-			cerr << "Gene does not exist" << endl;
-		}
-	}
-	fprintf(stderr, "Done reading genes cdatabaselet\n"); system("date +%s%N 1>&2");
+	shared(allQ, DB, Q) private(i) schedule(dynamic)
+	for(i=0; i<allQ.size(); i++)
+		if(!DB.GetGene(allQ[i], Q[i])) cerr << "Gene does not exist" << endl;
+
+	fprintf(stderr, "Done reading genes cdatabaselet\n");
+	system("date +%s%N 1>&2");
 
 	size_t m;
 
-	fprintf(stderr, "Start changing to query centric\n"); system("date +%s%N 1>&2");
+	fprintf(stderr, "Start changing to query centric\n");
+	system("date +%s%N 1>&2");
 	for(i=0; i<allQ.size(); i++){
 		m = allQ[i];
 
 		vector<unsigned char> &Qi = Q[i];
+		ushort db;
+		CSeekIntIntMap *qu = NULL;
+		unsigned char **r = NULL;
 
 		#pragma omp parallel for \
-		shared(vc, Qi) \
-		private(j, k) \
-		firstprivate(iDatasets, iGenes, m) \
-		schedule(dynamic)
+		shared(vc, Qi) private(j, k) \
+		firstprivate(iDatasets, iGenes, m, qu, r, db) schedule(dynamic)
 		for(j=0; j<iDatasets; j++){
-			CSeekIntIntMap *qu = vc[j]->GetDBMap();
-			ushort db = qu->GetForward(m);
-			if(CSeekTools::IsNaN(db)) continue;
-
-			unsigned char **r = vc[j]->GetMatrix();
-			for(k=0; k<iGenes; k++){
+			if(CSeekTools::IsNaN(db = (qu = vc[j]->GetDBMap())->GetForward(m)))
+				continue;
+			for(r = vc[j]->GetMatrix(), k=0; k<iGenes; k++)
 				r[db][k] = Qi[k*iDatasets+j];
-			}
 
 			/*vector<unsigned char>::iterator iterQ = Qi.begin() + j;
 			unsigned char *rp = &r[db][0];
@@ -137,7 +118,8 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 		Qi.clear();
 	}
 
-	fprintf(stderr, "Done changing to query centric\n"); system("date +%s%N 1>&2");
+	fprintf(stderr, "Done changing to query centric\n");
+	system("date +%s%N 1>&2");
 
 	delete[] Q;
 
@@ -145,10 +127,11 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 }
 	
 
-bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDirectory,
-	const vector<string> &vecstrDatasets, const map<string, string> &mapstrstrDatasetPlatform, 
-	const map<string, ushort> &mapstriPlatform,
-	vector<CSeekPlatform> &vp, vector<CSeekDataset*> &vc){
+bool CSeekTools::LoadDatabase(const CDatabase &DB,
+	const string &strPrepInputDirectory, const vector<string> &vecstrDatasets,
+	const map<string, string> &mapstrstrDatasetPlatform,
+	const map<string, ushort> &mapstriPlatform, vector<CSeekPlatform> &vp,
+	vector<CSeekDataset*> &vc){
 		
 	size_t iDatasets = DB.GetDatasets();
 	size_t iGenes = DB.GetGenes();
@@ -156,29 +139,29 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB, const string &strPrepInputDir
 	vc.clear();
 	vc.resize(iDatasets);
 
-	fprintf(stderr, "Start reading average and presence files\n"); system("date +%s%N 1>&2");
+	fprintf(stderr, "Start reading average and presence files\n");
+	system("date +%s%N 1>&2");
 	for(i=0; i<iDatasets; i++){
 		vc[i] = new CSeekDataset();
 		string strFileStem = vecstrDatasets[i];
-		string strAvgPath = strPrepInputDirectory + "/" + strFileStem + ".gavg";
-		string strPresencePath = strPrepInputDirectory + "/" + strFileStem + ".gpres";
+		string strAvgPath = strPrepInputDirectory + "/" +
+			strFileStem + ".gavg";
+		string strPresencePath = strPrepInputDirectory + "/" +
+			strFileStem + ".gpres";
 		vc[i]->ReadGeneAverage(strAvgPath);
 		vc[i]->ReadGenePresence(strPresencePath);
-		string strPlatform = mapstrstrDatasetPlatform.find(strFileStem)->second;
+		string strPlatform =
+			mapstrstrDatasetPlatform.find(strFileStem)->second;
 		ushort platform_id = mapstriPlatform.find(strPlatform)->second;
 		vc[i]->SetPlatform(vp[platform_id]);
 	}
-	fprintf(stderr, "Done reading average and presence files\n"); system("date +%s%N 1>&2");
+	fprintf(stderr, "Done reading average and presence files\n");
+	system("date +%s%N 1>&2");
 
 	fprintf(stderr, "Initializing gene map\n"); system("date +%s%N 1>&2");
 	#pragma omp parallel for \
-	shared(vc) \
-	private(i) \
-	firstprivate(iDatasets) \
-	schedule(dynamic)
-	for(i=0; i<iDatasets; i++){
-		vc[i]->InitializeGeneMap();
-	}
+	shared(vc) private(i) firstprivate(iDatasets) schedule(dynamic)
+	for(i=0; i<iDatasets; i++) vc[i]->InitializeGeneMap();
 
 	fprintf(stderr, "Done initializing gene map\n"); system("date +%s%N 1>&2");
 	return true;
@@ -188,9 +171,12 @@ bool CSeekTools::ReadPlatforms(const string &strPlatformDirectory,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
 		map<string, ushort> &mapstriPlatforms){
 
-	string strAvgFile = strPlatformDirectory + "/" + "all_platforms.gplatavg";
-	string strStdevFile = strPlatformDirectory + "/" + "all_platforms.gplatstdev";
-	string strPlatformOrderFile = strPlatformDirectory + "/" + "all_platforms.gplatorder";
+	string strAvgFile = strPlatformDirectory + "/" +
+		"all_platforms.gplatavg";
+	string strStdevFile = strPlatformDirectory + "/" +
+		"all_platforms.gplatstdev";
+	string strPlatformOrderFile = strPlatformDirectory + "/" +
+		"all_platforms.gplatorder";
 
 	CFullMatrix<float> plat_avg;
 	plat_avg.Open(strAvgFile.c_str());
@@ -209,9 +195,7 @@ bool CSeekTools::ReadPlatforms(const string &strPlatformDirectory,
 	i = 0;
 	while(!ifsm.eof()){
 		ifsm.getline(acBuffer, c_iBuffer -1);
-		if(acBuffer[0]==0){
-			break;
-		}
+		if(acBuffer[0]==0) break;
 		acBuffer[c_iBuffer-1] = 0;
 		vecstrPlatforms.push_back(acBuffer);
 		mapstriPlatforms[acBuffer] = i;
@@ -246,9 +230,7 @@ bool CSeekTools::ReadListTwoColumns(const string &strFile,
 
 	while(!ifsm.eof()){
 		ifsm.getline(acBuffer, c_iBuffer -1);
-		if(acBuffer[0]==0){
-			break;
-		}
+		if(acBuffer[0]==0) break;
 		acBuffer[c_iBuffer-1] = 0;
 		vector<string> tok;
 		CMeta::Tokenize(acBuffer, tok);
@@ -261,7 +243,8 @@ bool CSeekTools::ReadListTwoColumns(const string &strFile,
 	return true;
 }
 
-bool CSeekTools::ReadListOneColumn(const string &strFile, vector<string> &vecstrList, CSeekStrIntMap &mapstriList){
+bool CSeekTools::ReadListOneColumn(const string &strFile,
+	vector<string> &vecstrList, CSeekStrIntMap &mapstriList){
 	ifstream ifsm;
 	ifsm.open(strFile.c_str());
 	if(!ifsm.is_open()){
@@ -276,9 +259,7 @@ bool CSeekTools::ReadListOneColumn(const string &strFile, vector<string> &vecstr
 	ushort i = 0;
 	while(!ifsm.eof()){
 		ifsm.getline(acBuffer, c_iBuffer -1);
-		if(acBuffer[0]==0){
-			break;
-		}
+		if(acBuffer[0]==0) break;
 		acBuffer[c_iBuffer-1] = 0;
 		string line = acBuffer;
 		vecstrList.push_back(line);
@@ -290,7 +271,8 @@ bool CSeekTools::ReadListOneColumn(const string &strFile, vector<string> &vecstr
 	return true;
 }
 
-bool CSeekTools::ReadMultipleQueries(const string &strFile, vector< vector<string> > &qList){
+bool CSeekTools::ReadMultipleQueries(const string &strFile,
+	vector< vector<string> > &qList){
 	qList.clear();
 	ifstream ifsm;
 	ifsm.open(strFile.c_str());
@@ -305,9 +287,7 @@ bool CSeekTools::ReadMultipleQueries(const string &strFile, vector< vector<strin
 	ushort i = 0;
 	while(!ifsm.eof()){
 		ifsm.getline(acBuffer, c_iBuffer -1);
-		if(acBuffer[0]==0){
-			break;
-		}
+		if(acBuffer[0]==0) break;
 		acBuffer[c_iBuffer-1] = 0;
 		vector<string> tok;
 		CMeta::Tokenize(acBuffer, tok, " ");
@@ -319,6 +299,55 @@ bool CSeekTools::ReadMultipleQueries(const string &strFile, vector< vector<strin
 	return true;
 }
 
+bool CSeekTools::ReadMultiGeneOneLine(const string &strFile,
+	vector<string> &list){
+	list.clear();
+	ifstream ifsm;
+	ifsm.open(strFile.c_str());
+	if(!ifsm.is_open()){
+		cerr << "Error opening file " << strFile << endl;
+		return false;
+	}
 
+	char acBuffer[1024];
+	ushort c_iBuffer = 1024;
+	ushort i = 0;
+	ifsm.getline(acBuffer, c_iBuffer -1);
+	acBuffer[c_iBuffer-1] = 0;
+	vector<string> tok;
+	CMeta::Tokenize(acBuffer, tok, " ");
+	for(i = 0; i<tok.size(); i++){
+		list.push_back(tok[i]);
+	}
+
+	list.resize(list.size());
+	ifsm.close();
+	return true;
+}
+
+bool CSeekTools::ReadListOneColumn(const string &strFile,
+	vector<string> &vecstrList){
+	ifstream ifsm;
+	ifsm.open(strFile.c_str());
+
+	if(!ifsm.is_open()){
+		cerr << "Error opening file " << strFile << endl;
+		return false;
+	}
+	char acBuffer[1024];
+	ushort c_iBuffer = 1024;
+	vecstrList.clear();
+	ushort i = 0;
+	while(!ifsm.eof()){
+		ifsm.getline(acBuffer, c_iBuffer -1);
+		if(acBuffer[0]==0) break;
+		acBuffer[c_iBuffer-1] = 0;
+		string line = acBuffer;
+		vecstrList.push_back(line);
+	}
+	vecstrList.resize(vecstrList.size());
+	ifsm.close();
+	return true;
+}
 
 }

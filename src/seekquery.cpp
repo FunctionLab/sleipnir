@@ -73,7 +73,8 @@ vector<ushort>& CSeekQuery::GetCVQuery(ushort &i){
 	return crossValGenes[i];
 }
 
-bool CSeekQuery::CreateCVPartitions(const gsl_rng *rnd, const enum PartitionMode &p, const ushort iFold){
+bool CSeekQuery::CreateCVPartitions(const gsl_rng *rnd,
+		const enum PartitionMode &p, const ushort iFold){
 	//must have run initializequery beforehand
 	if(p!=LEAVE_ONE_IN && p!=LEAVE_ONE_OUT && p!=CUSTOM_PARTITION){
 		cerr << "Error, unknown partition mode" << endl;
@@ -90,12 +91,14 @@ bool CSeekQuery::CreateCVPartitions(const gsl_rng *rnd, const enum PartitionMode
 			iFoldx = qSize;
 			fold_size = qSize-1;
 		}else{
-			cerr << "Error, must specify number of folds if CustomPartition mode" << endl;
+			cerr << "Error, must specify number of folds if \
+					CustomPartition mode" << endl;
 			return false;
 		}
 	}else{
 		if(p==LEAVE_ONE_IN || p==LEAVE_ONE_OUT){
-			cerr << "Error, specified number of folds, so this must NOT be LEAVE_ONE_OUT or LEAVE_ONE_IN" << endl;
+			cerr << "Error, specified number of folds, so this must NOT be \
+					LEAVE_ONE_OUT or LEAVE_ONE_IN" << endl;
 			return false;
 		}
 		fold_size = qSize / iFoldx;

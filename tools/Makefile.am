@@ -60,6 +60,7 @@ if WITH_SMILE_TOOLS
       SeekReader \
       SeekMiner \
 	  SeekServer \
+	  SeekEvaluator \
 	  DSLConverter \
 	  Dab2Dad \
 	  Edges2Posteriors \

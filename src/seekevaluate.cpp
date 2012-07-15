@@ -48,9 +48,9 @@ bool CSeekPerformanceMeasure::SortRankVector(
 		TOP = top;
 	}
 
-	vector<ushort>::const_iterator itRank;
-	vector<AResult>::iterator itA;
-	for(itRank=rank.begin(), itA = a.begin(), i = 0; itRank!=rank.end(); itRank++, itA++, i++){
+	vector<ushort>::const_iterator itRank = rank.begin();
+	vector<AResult>::iterator itA = a.begin();
+	for(i = 0; itRank!=rank.end(); itRank++, itA++, i++){
 		itA->i = i;
 		itA->f = *itRank;
 		if(*itRank>0){
@@ -103,7 +103,8 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 		sing = ar;
 	}
 
-	ret = CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing, bAllocate, top);
+	ret = CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing,
+		bAllocate, top);
 
 	if(!ret){
 		rbp = -1;
@@ -116,9 +117,7 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 		aa = &sing->at(i);
 		if(aa->f==0) break;
 		if(mask[aa->i]==1) continue;
-		if(gold[aa->i]==1){
-			x+=pow(rate, jj);
-		}
+		if(gold[aa->i]==1) x+=pow(rate, jj);
 		jj++;
 	}
 	x *= (1.0-rate);

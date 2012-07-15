@@ -64,8 +64,8 @@ struct AResultFloat{
 class CSeekPerformanceMeasure{
 public:
 	static bool SortRankVector(const vector<unsigned short> &rank,
-		const CSeekIntIntMap &mapG, vector<AResult> &a, const bool bAllocate = true,
-		const ushort top = 0);
+		const CSeekIntIntMap &mapG, vector<AResult> &a,
+		const bool bAllocate = true, const ushort top = 0);
 	/* designed specifically for a CSeekDataset */
 	/* mask: the query genes which are not included in RBP calcualtion */
 	static bool RankBiasedPrecision(const float &rate,

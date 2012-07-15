@@ -76,7 +76,8 @@ bool CSeekDataset::InitializeGeneMap(){
 	vector<char>::const_iterator iterGenePresence = genePresence.begin();
 	vector<float>::const_iterator iterGeneAverage = geneAverage.begin();
 
-	for(i=0; iterGenePresence!=genePresence.end(); i++, iterGenePresence++, iterGeneAverage++){
+	for(i=0; iterGenePresence!=genePresence.end(); i++,
+		iterGenePresence++, iterGeneAverage++){
 		if(*iterGenePresence==1 && !CMeta::IsNaN(*iterGeneAverage)){
 			geneMap->Add(i);
 		}
@@ -117,9 +118,7 @@ bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
 
 	queryMap = new CSeekIntIntMap(iNumGenes);
 
-	if(iDBSize==0){
-		return true;
-	}
+	if(iDBSize==0) return true;
 
 	ushort i;
 	vector<ushort>::const_iterator iterQ = query.begin();
@@ -127,11 +126,8 @@ bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
 	vector<AResult> a;
 	a.resize(query.size());
 	vector<AResult>::iterator iterA = a.begin();
-	iQuerySize = 0;
-	for(; iterQ!=query.end(); iterQ++){
-		if(CSeekTools::IsNaN(i = dbMap->GetForward(*iterQ))){
-			continue;
-		}
+	for(iQuerySize = 0; iterQ!=query.end(); iterQ++){
+		if(CSeekTools::IsNaN(i = dbMap->GetForward(*iterQ))) continue;
 		(*iterA).i = *iterQ;
 		(*iterA).f = i;
 		iterA++;
@@ -196,8 +192,9 @@ ushort** CSeekDataset::GetDataMatrix(){
 	return rData;
 }
 
-bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const ushort &iColumns,
-	const bool bSubtractAvg, const bool bSubtractPlatformAvg){
+bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows,
+	const ushort &iColumns,const bool bSubtractAvg,
+	const bool bSubtractPlatformAvg){
 	/* assume platform is already set */
 
 	//hard coded quant file
@@ -226,9 +223,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 	//assume queryIndex is already sorted
 	vector<ushort> offset;
 	offset.push_back(0);
-	for(i=1; i<queryIndex.size(); i++){
+	for(i=1; i<queryIndex.size(); i++)
 		offset.push_back(queryIndex[i] - queryIndex[i-1]);
-	}
 
 	if(bSubtractAvg){
 
@@ -246,20 +242,16 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 			//fprintf(stderr, "\n");
 
 			const vector<ushort> &allRGenes = geneMap->GetAllReverse();
-			for(ii=0; ii<geneMap->GetNumSet(); ii++){
-				i = allRGenes[ii];
-				float a = GetGeneAverage(i);
+			float a = 0;
+			float vv = 0;
+			unsigned char x = 0;
+			ushort iGeneMapSize = geneMap->GetNumSet();
+			for(ii=0; ii<iGeneMapSize; ii++){
 				/* numQueries */
-				for(j=0; j<iNumQueries; j++){
-					/*if(ii<100){
-						fprintf(stderr, "%d %d %d %d\n", i, j, queryIndex[j], r[queryIndex[j]][i]);
-					}*/
-					unsigned char x = r[queryIndex[j]][i];
-					if(x==255){
-						continue;
-					}
-					float vv = (quant[x] - a - platform_avg[j]) / platform_stdev[j];
-
+				for(j=0, i = allRGenes[ii], a=GetGeneAverage(i);
+					j<iNumQueries; j++){
+					if((x = r[queryIndex[j]][i])==255) continue;
+					vv = (quant[x] - a - platform_avg[j]) / platform_stdev[j];
 					vv = max((float) min(vv, (float)3.2), (float)-3.2);
 					rData[i][j]= (ushort) (vv*100.0) + 320;
 				}
@@ -297,16 +289,14 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 
 		}else{
 			for(ii=0; ii<iNumGenes; ii++){
-				i = geneMap->GetReverse(ii);
-				float a = GetGeneAverage(i);
+				float a, vv;
+				unsigned char x;
 				/* numQueries */
-				for(j=0; j<iNumQueries; j++){
-					unsigned char x = r[queryIndex[j]][i];
-					if(x==255){
-						continue;
-					}
-					float vv = quant[x] - a;
-					vv = max((float) min(vv, (float)3.2), (float)-3.2);
+				for(i = geneMap->GetReverse(ii), a = GetGeneAverage(i), j=0;
+					j<iNumQueries; j++){
+					if((x = r[queryIndex[j]][i])==255) continue;
+					vv = max((float) min(quant[x] - a, (float)3.2),
+						(float)-3.2);
 					rData[i][j]= (ushort) (vv*100.0) + 320;
 				}
 			}
@@ -317,9 +307,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows, const 
 
 	/* numGenes */
 	for(ii=0; ii<iNumGenes; ii++){
-		i = geneMap->GetReverse(ii);
 		/* numQueries */
-		for(j=0; j<iNumQueries; j++){
+		for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
 			float vv = quant[r[queryIndex[j]][i]];
 			vv = max((float) min(vv, (float)3.2), (float)-3.2);
 			rData[i][j] = (ushort) (vv*100.0) + 320;
@@ -375,17 +364,13 @@ float CSeekDataset::GetDatasetSumWeight(){
 	ushort i;
 	ushort num = 0;
 	if(sum_weight==-1){
-		sum_weight = 0;
-		for(i=0; i<weight.size(); i++){
+		for(sum_weight=0, i=0; i<weight.size(); i++){
 			if(weight[i]==-1) continue;
 			sum_weight+=weight[i];
 			num++;
 		}
-		if(num>0){
-			sum_weight/=(float)num;
-		}else{
-			sum_weight = -1;
-		}
+		if(num>0) sum_weight/=(float)num;
+		else sum_weight = -1;
 	}
 	return sum_weight;
 }

@@ -51,7 +51,8 @@ public:
 	ushort GetNumFold() const;
 	vector<ushort>& GetQuery();
 	vector<ushort>& GetCVQuery(ushort&);
-	bool CreateCVPartitions(const gsl_rng*, const enum PartitionMode &, const ushort=-1);
+	bool CreateCVPartitions(const gsl_rng*, \
+		const enum PartitionMode &, const ushort=-1);
 
 private:
 	vector<ushort> queryGenes;

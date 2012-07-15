@@ -30,46 +30,33 @@ enum METRIC{
 	RBP, AVGP, PR, PR_ALL, AUC
 };
 
-float RankBiasedPrecision(const float &rate, const vector<AResultFloat> &sortedScore,
-	const vector<char> &gold_std, const float &nanVal){
+float RankBiasedPrecision(const float &rate,
+	const vector<AResultFloat> &sortedScore, const vector<char> &gold_std,
+	const float &nanVal){
 
-	ushort i;
 	vector<AResultFloat>::const_iterator iterScore = sortedScore.begin();
 	float x = 0;
-
+	ushort i;
 	for(i=0; iterScore!=sortedScore.end(); i++, iterScore++){
-		if(iterScore->f == nanVal){
-			continue;
-		}
-		if(gold_std[iterScore->i]==1){
-			x += pow(rate, i);
-		}
+		if(iterScore->f == nanVal) continue;
+		if(gold_std[iterScore->i]==1) x += pow(rate, i);
 	}
-
 	x*=(1.0-rate);
 	return x;
 }
 
-vector<float>* Precision(const vector<AResultFloat> &sortedScore, const vector<char> &gold_std,
-		const float &nanVal){
+vector<float>* Precision(const vector<AResultFloat> &sortedScore,
+	const vector<char> &gold_std, const float &nanVal){
 
-	ushort i;
-	vector<float> *r;
-	r = new vector<float>();
+	ushort i, numPos = 1;
+	vector<float> *r = new vector<float>();
 
 	vector<AResultFloat>::const_iterator iterScore = sortedScore.begin();
-	ushort numPos = 1;
-
 	for(i=0; iterScore!=sortedScore.end(); i++, iterScore++){
-		if(iterScore->f == nanVal){
-			continue;
-		}
-		if(gold_std[iterScore->i]==1){
-			r->push_back((float) numPos / (float) (i + 1));
-			numPos++;
-		}
+		if(iterScore->f == nanVal) continue;
+		if(gold_std[iterScore->i]==1) r->push_back((float)
+			numPos++ / (float) (i + 1));
 	}
-
 	r->resize(r->size());
 	return r;
 }
@@ -77,12 +64,10 @@ vector<float>* Precision(const vector<AResultFloat> &sortedScore, const vector<c
 bool MeanStandardDeviation(const vector<float> &f, float &avg, float &stdev){
 	avg = 0;
 	stdev = 0;
-	avg = std::accumulate(f.begin(), f.end(), 0);\
+	avg = std::accumulate(f.begin(), f.end(), 0);
 	avg /= (float) f.size();
 	vector<float>::const_iterator iterF = f.begin();
-	for(; iterF!=f.end(); iterF++){
-		stdev += (*iterF - avg) * (*iterF - avg);
-	}
+	for(; iterF!=f.end(); iterF++) stdev += (*iterF - avg) * (*iterF - avg);
 	stdev /= (float) f.size();
 	stdev = sqrt(stdev);
 	return true;
@@ -198,16 +183,15 @@ bool MinMaxQuartile(vector<float> &f, float &min, float &max, float &Q1,
 }
 
 bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
-	const vector<AResultFloat> &sortedGenes, const vector<char> &goldstdGenePresence,
-	const float &nan, vector<float> &eval){
+	const vector<AResultFloat> &sortedGenes,
+	const vector<char> &goldstdGenePresence, const float &nan,
+	vector<float> &eval){
 	size_t i;
 	eval.clear();
 	//metric
 	if(met==PR_ALL){
 		vector<float> *vf = Precision(sortedGenes, goldstdGenePresence, nan);
-		for(i=0; i<vf->size(); i++){
-			eval.push_back(vf->at(i));
-		}
+		for(i=0; i<vf->size(); i++) eval.push_back(vf->at(i));
 		return true;
 	}
 	fprintf(stderr, "Invalid option!\n");
@@ -216,17 +200,19 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 
 
 bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
-	const vector<AResultFloat> &sortedGenes, const vector<char> &goldstdGenePresence,
-	const float &nan, float &eval){
+	const vector<AResultFloat> &sortedGenes,
+	const vector<char> &goldstdGenePresence, const float &nan, float &eval){
 	size_t i;
 	//metric
 	if(met==RBP){
 		float rate = sArgs.rbp_p_arg;
-		float rbp = RankBiasedPrecision(rate, sortedGenes, goldstdGenePresence, nan);
+		float rbp = RankBiasedPrecision(rate, sortedGenes,
+			goldstdGenePresence, nan);
 		fprintf(stdout, "%.5f\n", rbp);
 	}
 	else if(met==AVGP || met==PR){
-		vector<float> *vf = Precision(sortedGenes, goldstdGenePresence, nan);
+		vector<float> *vf = Precision(sortedGenes, goldstdGenePresence,
+			nan);
 		/*if(met==PR_ALL){
 			for(i=0; i<vf->size()-1; i++){
 				fprintf(stdout, "%.5f ", vf->at(i));
@@ -285,16 +271,9 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 void PrintVector(const vector<float> &f){
 	vector<float>::const_iterator iterF = f.begin();
 	vector<float>::const_iterator end = f.begin() + f.size() - 1;
-
-	for(; iterF!=end; iterF++){
-		fprintf(stderr, "%.5f ", *iterF);
-	}
+	for(; iterF!=end; iterF++) fprintf(stderr, "%.5f ", *iterF);
 	fprintf(stderr, "%.5f\n", *iterF);
 }
-
-
-
-
 
 int main( int iArgs, char** aszArgs ) {
 	static const size_t	c_iBuffer	= 1024;
@@ -327,63 +306,51 @@ int main( int iArgs, char** aszArgs ) {
 			continue;
 		}
 		if( !( i = atoi( vecstrLine[ 0 ].c_str( ) ) ) ) {
-			cerr << "Illegal gene ID: " << vecstrLine[ 0 ] << " for " << vecstrLine[ 1 ] << endl;
+			cerr << "Illegal gene ID: " << vecstrLine[ 0 ] << " for "
+				<< vecstrLine[ 1 ] << endl;
 			return 1;
 		}
 		i--;
-		if( vecstrGenes.size( ) <= i )
-			vecstrGenes.resize( i + 1 );
+		if( vecstrGenes.size( ) <= i ) vecstrGenes.resize( i + 1 );
 		vecstrGenes[ i ] = vecstrLine[ 1 ];
 		mapstriGenes[vecstrGenes[i]] = i;
 	}
-
 	ifsm.close( );
 
-
 	enum QUERY_MODE qmode;
-	if(sArgs.single_flag==1){
-		qmode = SINGLE_QUERY;
-	}else if(sArgs.aggregate_flag==1){
-		qmode = MULTI_QUERY;
-	}
-
+	if(sArgs.single_flag==1) qmode = SINGLE_QUERY;
+	else if(sArgs.aggregate_flag==1) qmode = MULTI_QUERY;
 
 	enum METRIC met;
-
-	if(sArgs.rbp_flag==1){
-		met = RBP;
-	}else if(sArgs.avgp_flag==1){
-		met = AVGP;
-	}else if(sArgs.pr_flag==1){
-		met = PR;
-	}else if(sArgs.pr_all_flag==1){
-		met = PR_ALL;
-	}else if(sArgs.auc_flag==1){
-		met = AUC;
-	}
+	if(sArgs.rbp_flag==1) met = RBP;
+	else if(sArgs.avgp_flag==1) met = AVGP;
+	else if(sArgs.pr_flag==1) met = PR;
+	else if(sArgs.pr_all_flag==1) met = PR_ALL;
+	else if(sArgs.auc_flag==1) met = AUC;
 
 	if(qmode==SINGLE_QUERY){
 		string goldstdFile = sArgs.goldstd_arg;
 		vector<string> goldstdGenes;
 		CSeekTools::ReadMultiGeneOneLine(goldstdFile, goldstdGenes);
 		vector<char> goldstdGenePresence;
-		CSeekTools::InitVector(goldstdGenePresence, vecstrGenes.size(), (char) 0);
-		for(i=0; i<goldstdGenes.size(); i++){
+		CSeekTools::InitVector(goldstdGenePresence,
+			vecstrGenes.size(), (char) 0);
+
+		for(i=0; i<goldstdGenes.size(); i++)
 			goldstdGenePresence[mapstriGenes[goldstdGenes[i]]] = 1;
-		}
 
 		string queryFile = sArgs.query_arg;
 		vector<string> queryGenes;
 		CSeekTools::ReadMultiGeneOneLine(queryFile, queryGenes);
 		vector<ushort> queryGeneID;
-		for(i=0; i<queryGenes.size(); i++){
+		for(i=0; i<queryGenes.size(); i++)
 			queryGeneID.push_back(mapstriGenes[queryGenes[i]]);
-		}
 
 		string genescoreFile = sArgs.gscore_arg;
 		vector<float> geneScores;
 		CSeekTools::ReadArray(genescoreFile.c_str(), geneScores);
-		float maxScore = *std::max_element(geneScores.begin(), geneScores.end());
+		float maxScore = *std::max_element(geneScores.begin(),
+			geneScores.end());
 
 		float nan = sArgs.nan_arg;
 		vector<AResultFloat> sortedGenes;
@@ -393,41 +360,43 @@ int main( int iArgs, char** aszArgs ) {
 			sortedGenes[i].f = geneScores[i];
 		}
 
-		//Query genes themselves have lowest score, to prevent them from being counted in PR
-		for(i=0; i<queryGeneID.size(); i++){
+		//Query genes themselves have lowest score, to prevent
+		//them from being counted in PR
+		for(i=0; i<queryGeneID.size(); i++)
 			sortedGenes[queryGeneID[i]].f = nan;
-		}
 
 		sort(sortedGenes.begin(), sortedGenes.end());
 
 		if(met!=PR_ALL){
 			float eval;
-			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes, goldstdGenePresence, nan, eval);
+			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes,
+				goldstdGenePresence, nan, eval);
 			if(!ret) return 1;
 			fprintf(stderr, "%.5f\n", eval);
 			return 0;
 		}else{
 			vector<float> evalAll;
-			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes, goldstdGenePresence, nan, evalAll);
+			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes,
+				goldstdGenePresence, nan, evalAll);
 			if(!ret) return 1;
 			PrintVector(evalAll);
 			return 0;
 		}
-
 	}
 
 	if(qmode == MULTI_QUERY){
 		string goldstdList = sArgs.goldstd_list_arg;
 		vector<string> vecstrList;
 		CSeekTools::ReadListOneColumn(goldstdList, vecstrList);
-		vector<char> *goldstdGenePresence = new vector<char>[vecstrList.size()];
+		vector<char> *goldstdGenePresence =
+			new vector<char>[vecstrList.size()];
 		for(i=0; i<vecstrList.size(); i++){
 			vector<string> goldstdGenes;
 			CSeekTools::ReadMultiGeneOneLine(vecstrList[i], goldstdGenes);
-			CSeekTools::InitVector(goldstdGenePresence[i], vecstrGenes.size(), (char) 0);
-			for(j=0; j<goldstdGenes.size(); j++){
+			CSeekTools::InitVector(goldstdGenePresence[i],
+				vecstrGenes.size(), (char) 0);
+			for(j=0; j<goldstdGenes.size(); j++)
 				goldstdGenePresence[i][mapstriGenes[goldstdGenes[j]]] = 1;
-			}
 		}
 
 		string queryList = sArgs.query_list_arg;
@@ -437,9 +406,8 @@ int main( int iArgs, char** aszArgs ) {
 		for(i=0; i<vecstrList.size(); i++){
 			vector<string> queryGenes;
 			CSeekTools::ReadMultiGeneOneLine(vecstrList[i], queryGenes);
-			for(j=0; j<queryGenes.size(); j++){
+			for(j=0; j<queryGenes.size(); j++)
 				queryGeneID[i].push_back(mapstriGenes[queryGenes[j]]);
-			}
 		}
 
 		string genescoreList = sArgs.gscore_list_arg;
@@ -447,11 +415,13 @@ int main( int iArgs, char** aszArgs ) {
 		CSeekTools::ReadListOneColumn(genescoreList, vecstrList);
 		vector<float> *geneScores = new vector<float>[vecstrList.size()];
 		float *maxScore = new float[vecstrList.size()];
-		vector<AResultFloat> *sortedGenes = new vector<AResultFloat>[vecstrList.size()];
+		vector<AResultFloat> *sortedGenes =
+			new vector<AResultFloat>[vecstrList.size()];
 		float nan = sArgs.nan_arg;
 		for(i=0; i<vecstrList.size(); i++){
 			CSeekTools::ReadArray(vecstrList[i].c_str(), geneScores[i]);
-			maxScore[i] = *std::max_element(geneScores[i].begin(), geneScores[i].end());
+			maxScore[i] = *std::max_element(geneScores[i].begin(),
+				geneScores[i].end());
 			sortedGenes[i].resize(geneScores[i].size());
 			for(j=0; j<sortedGenes[i].size(); j++){
 				sortedGenes[i][j].i = j;
@@ -463,11 +433,9 @@ int main( int iArgs, char** aszArgs ) {
 			//Gold standard must be the same across all queries for this mode!!
 			//ASSUME THIS IS TRUE
 
-			for(i=0; i<vecstrList.size(); i++){
-				for(j=0; j<queryGeneID[i].size(); j++){
+			for(i=0; i<vecstrList.size(); i++)
+				for(j=0; j<queryGeneID[i].size(); j++)
 					sortedGenes[i][queryGeneID[i][j]].f = maxScore[i];
-				}
-			}
 
 			vector<AResultFloat> *master = NULL;
 			vector<AResultFloat> master_score;
@@ -486,11 +454,8 @@ int main( int iArgs, char** aszArgs ) {
 						}
 						master_score[j].f += sortedGenes[i][j].f;
 					}
-					if(count_nan>0){
-						master_score[j].f = -320;
-					}else{
-						master_score[j].f /= (float)vecstrList.size();
-					}
+					if(count_nan>0) master_score[j].f = -320;
+					else master_score[j].f /= (float)vecstrList.size();
 				}
 
 				sort(master_score.begin(), master_score.end());
@@ -502,39 +467,37 @@ int main( int iArgs, char** aszArgs ) {
 				vector<AResultFloat> master_rank;
 				master_rank.resize(sortedGenes[0].size());
 
-				for(i=0; i<vecstrList.size(); i++){
+				for(i=0; i<vecstrList.size(); i++)
 					sort(sortedGenes[i].begin(), sortedGenes[i].end());
-				}
 
 				for(j=0; j<sortedGenes[0].size(); j++){
 					master_rank[j].i = j;
 					master_rank[j].f = 0;
 				}
 
-				for(i=0; i<vecstrList.size(); i++){
-					for(j=0; j<sortedGenes[i].size(); j++){
-						master_rank[sortedGenes[i][j].i].f += sortedGenes[i].size() - j;
-					}
-				}
+				for(i=0; i<vecstrList.size(); i++)
+					for(j=0; j<sortedGenes[i].size(); j++)
+						master_rank[sortedGenes[i][j].i].f +=
+							sortedGenes[i].size() - j;
 
-				for(j=0; j<sortedGenes[0].size(); j++){
+				for(j=0; j<sortedGenes[0].size(); j++)
 					master_rank[j].f /= (float) vecstrList.size();
-				}
 
 				sort(master_rank.begin(), master_rank.end());
-
 				master = &master_rank;
 			}
 
 			if(met!=PR_ALL){
 				float eval;
-				bool ret = EvaluateOneQuery(sArgs, met, *master, goldstdGenePresence[0], CMeta::GetNaN(), eval);
+				bool ret = EvaluateOneQuery(sArgs, met, *master,
+					goldstdGenePresence[0], CMeta::GetNaN(), eval);
 				if(!ret) return 1;
 				fprintf(stderr, "%.5f\n", eval);
 				return 0;
 			}else{
 				vector<float> evalAll;
-				bool ret = EvaluateOneQuery(sArgs, met, *master, goldstdGenePresence[0], CMeta::GetNaN(), evalAll);
+				bool ret = EvaluateOneQuery(sArgs, met, *master,
+					goldstdGenePresence[0], CMeta::GetNaN(), evalAll);
 				if(!ret) return 1;
 				PrintVector(evalAll);
 				return 0;
@@ -549,19 +512,21 @@ int main( int iArgs, char** aszArgs ) {
 		vecevalAll.resize(vecstrList.size());
 
 		for(i=0; i<vecstrList.size(); i++){
-			for(j=0; j<queryGeneID[i].size(); j++){
+			for(j=0; j<queryGeneID[i].size(); j++)
 				sortedGenes[i][queryGeneID[i][j]].f = nan;
-			}
 			sort(sortedGenes[i].begin(), sortedGenes[i].end());
+
 			if(met!=PR_ALL){
 				float fEval;
-				bool ret = EvaluateOneQuery(sArgs, met, sortedGenes[i], goldstdGenePresence[i], nan, fEval);
+				bool ret = EvaluateOneQuery(sArgs, met, sortedGenes[i],
+					goldstdGenePresence[i], nan, fEval);
 				if(!ret) return 1;
 				eval[i] = fEval;
 
 			}else{
 				vector<float> evalAll;
-				bool ret = EvaluateOneQuery(sArgs, met, sortedGenes[i], goldstdGenePresence[i], nan, evalAll);
+				bool ret = EvaluateOneQuery(sArgs, met, sortedGenes[i],
+					goldstdGenePresence[i], nan, evalAll);
 				if(!ret) return 1;
 				vecevalAll[i] = evalAll;
 			}
@@ -581,15 +546,13 @@ int main( int iArgs, char** aszArgs ) {
 				fprintf(stderr, "%.5f %.5f %.5f\n", Q1, Q2, Q3);
 				return 0;
 			}
-		}
-		else{
+
+		}else{
 			vector< vector<float> > veceval;
 			veceval.resize(vecevalAll[0].size());
-			for(i=0; i<vecevalAll.size(); i++){
-				for(j=0; j<vecevalAll[i].size(); j++){
+			for(i=0; i<vecevalAll.size(); i++)
+				for(j=0; j<vecevalAll[i].size(); j++)
 					veceval[j].push_back(vecevalAll[i][j]);
-				}
-			}
 
 			if(sArgs.agg_avg_flag==1){
 				vector<float> avgAll, stdevAll;
@@ -614,7 +577,6 @@ int main( int iArgs, char** aszArgs ) {
 					Q2All.push_back(Q2);
 					Q3All.push_back(Q3);
 				}
-
 				PrintVector(minAll);
 				PrintVector(maxAll);
 				PrintVector(Q1All);
@@ -622,11 +584,7 @@ int main( int iArgs, char** aszArgs ) {
 				PrintVector(Q3All);
 				return 0;
 			}
-
 		}
-
-
-
 	}
 
 
