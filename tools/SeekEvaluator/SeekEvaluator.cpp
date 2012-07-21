@@ -38,7 +38,7 @@ float RankBiasedPrecision(const float &rate,
 	float x = 0;
 	ushort i;
 	for(i=0; iterScore!=sortedScore.end(); i++, iterScore++){
-		if(iterScore->f == nanVal) continue;
+		//if(iterScore->f == nanVal) continue;
 		if(gold_std[iterScore->i]==1) x += pow(rate, i);
 	}
 	x*=(1.0-rate);
@@ -53,9 +53,11 @@ vector<float>* Precision(const vector<AResultFloat> &sortedScore,
 
 	vector<AResultFloat>::const_iterator iterScore = sortedScore.begin();
 	for(i=0; iterScore!=sortedScore.end(); i++, iterScore++){
-		if(iterScore->f == nanVal) continue;
-		if(gold_std[iterScore->i]==1) r->push_back((float)
-			numPos++ / (float) (i + 1));
+		//if(iterScore->f == nanVal) continue;
+		if(gold_std[iterScore->i]==1){
+			//fprintf(stderr, "%d %d\n", numPos, i);
+			r->push_back((float) numPos++ / (float) (i + 1));
+		}
 	}
 	r->resize(r->size());
 	return r;
@@ -64,7 +66,7 @@ vector<float>* Precision(const vector<AResultFloat> &sortedScore,
 bool MeanStandardDeviation(const vector<float> &f, float &avg, float &stdev){
 	avg = 0;
 	stdev = 0;
-	avg = std::accumulate(f.begin(), f.end(), 0);
+	avg = std::accumulate(f.begin(), f.end(), (float) 0);
 	avg /= (float) f.size();
 	vector<float>::const_iterator iterF = f.begin();
 	for(; iterF!=f.end(); iterF++) stdev += (*iterF - avg) * (*iterF - avg);
@@ -192,6 +194,7 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 	if(met==PR_ALL){
 		vector<float> *vf = Precision(sortedGenes, goldstdGenePresence, nan);
 		for(i=0; i<vf->size(); i++) eval.push_back(vf->at(i));
+		delete vf;
 		return true;
 	}
 	fprintf(stderr, "Invalid option!\n");
@@ -208,7 +211,9 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 		float rate = sArgs.rbp_p_arg;
 		float rbp = RankBiasedPrecision(rate, sortedGenes,
 			goldstdGenePresence, nan);
-		fprintf(stdout, "%.5f\n", rbp);
+		eval = rbp;
+		//fprintf(stdout, "%.5f\n", rbp);
+		return true;
 	}
 	else if(met==AVGP || met==PR){
 		vector<float> *vf = Precision(sortedGenes, goldstdGenePresence,
@@ -231,8 +236,8 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 		int X = -1;
 		if(sArgs.x_int_arg!=-1 && sArgs.x_per_arg==0){
 			X = sArgs.x_int_arg;
-			if(X>=vf->size()){
-				fprintf(stderr, "Error: X is too large (>=%d)\n", vf->size());
+			if(X>vf->size()){
+				fprintf(stderr, "Error: X is too large (>%d)\n", vf->size());
 				delete vf;
 				return false;
 			}
@@ -244,12 +249,13 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 				delete vf;
 				return false;
 			}
-			X = (int) ( per * (float) vf->size() );
-			X = std::min(0, X - 1);
+			X = (int) ( (float) per * (float) vf->size() );
+			//fprintf(stderr, "%.5f %d %d", per, vf->size(), X);
+			X = std::max(1, X);
 		}
 
 		if(met==AVGP){
-			float avg = std::accumulate(vf->begin(), vf->begin()+X, 0);
+			float avg = std::accumulate(vf->begin(), vf->begin()+X, (float) 0);
 			avg /= (float) X;
 			//fprintf(stdout, "%.5f\n", avg);
 			eval = avg;
@@ -260,7 +266,7 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 			//fprintf(stdout, "%.5f\n", vf->at(X-1));
 			eval = vf->at(X-1);
 			delete vf;
-			return 0;
+			return true;
 		}
 	}
 
@@ -302,7 +308,7 @@ int main( int iArgs, char** aszArgs ) {
 		vecstrLine.clear( );
 		CMeta::Tokenize( acBuffer, vecstrLine );
 		if( vecstrLine.size( ) < 2 ) {
-			cerr << "Ignoring line: " << acBuffer << endl;
+			//cerr << "Ignoring line: " << acBuffer << endl;
 			continue;
 		}
 		if( !( i = atoi( vecstrLine[ 0 ].c_str( ) ) ) ) {
@@ -327,6 +333,8 @@ int main( int iArgs, char** aszArgs ) {
 	else if(sArgs.pr_flag==1) met = PR;
 	else if(sArgs.pr_all_flag==1) met = PR_ALL;
 	else if(sArgs.auc_flag==1) met = AUC;
+
+	//fprintf(stderr, "Query mode: %d\n", met);
 
 	if(qmode==SINGLE_QUERY){
 		string goldstdFile = sArgs.goldstd_arg;
@@ -376,6 +384,7 @@ int main( int iArgs, char** aszArgs ) {
 			return 0;
 		}else{
 			vector<float> evalAll;
+			//fprintf(stderr, "Got here");
 			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes,
 				goldstdGenePresence, nan, evalAll);
 			if(!ret) return 1;

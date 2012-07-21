@@ -5,6 +5,8 @@ purpose	"Performs cross-platform microarray query-guided search"
 section "Main"
 option	"db"				x	"Input a set of datasets"
 								string typestr="filename"	yes
+option	"dset"				D	"A set of datasets to search"
+								string typestr="filename"
 option	"input"				i	"Input gene mapping"
 								string	typestr="filename"	yes
 option	"query"				q	"Query gene list"

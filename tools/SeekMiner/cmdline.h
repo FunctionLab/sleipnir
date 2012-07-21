@@ -37,6 +37,9 @@ struct gengetopt_args_info
   char * db_arg;	/**< @brief Input a set of datasets.  */
   char * db_orig;	/**< @brief Input a set of datasets original value given at command line.  */
   const char *db_help; /**< @brief Input a set of datasets help description.  */
+  char * dset_arg;	/**< @brief A set of datasets to search.  */
+  char * dset_orig;	/**< @brief A set of datasets to search original value given at command line.  */
+  const char *dset_help; /**< @brief A set of datasets to search help description.  */
   char * input_arg;	/**< @brief Input gene mapping.  */
   char * input_orig;	/**< @brief Input gene mapping original value given at command line.  */
   const char *input_help; /**< @brief Input gene mapping help description.  */
@@ -61,6 +64,7 @@ struct gengetopt_args_info
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int db_given ;	/**< @brief Whether db was given.  */
+  unsigned int dset_given ;	/**< @brief Whether dset was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
   unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */

@@ -16,7 +16,7 @@ option	"avgp"				a	"Average precision for the top X positives, where X = integer
 option	"pr"				t	"Precision at X-th positive, where X = integer, or % of total positives"
 								flag	off
 option	"pr_all"			c	"Precision at all positive depths (useful for drawing precision-recall curve)"
-								flag	on
+								flag	off
 option	"auc"				u	"AUC"
 								flag	off
 option	"x_int"				x	"Parameter X = integer, for --avgp, --pr"

@@ -31,6 +31,9 @@ namespace Sleipnir {
 CSeekDataset::CSeekDataset(){
 	r = NULL;
 	rData = NULL;
+	dbMap = NULL;
+	geneMap = NULL;
+	queryMap = NULL;
 	geneAverage.clear();
 	geneVariance.clear();
 	genePresence.clear();
@@ -45,6 +48,7 @@ CSeekDataset::~CSeekDataset(){
 	DeleteQueryBlock();
 	if(geneMap!=NULL){
 		delete geneMap;
+		geneMap = NULL;
 	}
 	geneAverage.clear();
 	geneVariance.clear();
@@ -202,8 +206,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows,
 	float w = -5.0;
 	while(w<5.01){
 		quant.push_back(w);
-		//w+=0.04;
-		w+=0.1;
+		w+=0.04;
+		//w+=0.1;
 	}
 	quant.resize(quant.size());
 
@@ -252,6 +256,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD, const ushort &iRows,
 					j<iNumQueries; j++){
 					if((x = r[queryIndex[j]][i])==255) continue;
 					vv = (quant[x] - a - platform_avg[j]) / platform_stdev[j];
+					//vv = quant[x];
 					vv = max((float) min(vv, (float)3.2), (float)-3.2);
 					rData[i][j]= (ushort) (vv*100.0) + 320;
 				}

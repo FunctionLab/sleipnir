@@ -399,7 +399,7 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 	}
 
 	/* adjustable parameter */
-	int BUFFER = 150;
+	int BUFFER = 80;
 
 	if(BUFFER>iGenes){
 		BUFFER = iGenes;
@@ -1029,9 +1029,12 @@ bool CDatabase::Open(string &strDBDirectory,
 	}
 
 	for( i = 0; i < vecstrGenes.size( ); ++i ){
+		string s = m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) );
+		string file = m_vecpDBs[i % m_vecpDBs.size()]->GetFile();
+		//fprintf(stderr, "%s\t%s\t%d\n", s.c_str(), file.c_str(), i);
 		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
 	}
-
+	//fprintf(stderr, "Done\n"); getchar();
 
 	return true;
 }

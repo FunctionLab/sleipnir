@@ -109,6 +109,9 @@ public:
 		strFileName = std;
 	}
 
+	string GetFile() const{
+		return strFileName;
+	}
 
 	unsigned char* GetCharImage(){
 		size_t iImageSize = GetSizeGenes();

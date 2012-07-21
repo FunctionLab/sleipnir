@@ -53,7 +53,7 @@ int main( int iArgs, char** aszArgs ) {
 	if(sArgs.is_nibble_flag==1) useNibble = true;
 
 	CDatabase DB(useNibble);
-	omp_set_num_threads(1);
+	omp_set_num_threads(8);
 
 	if(sArgs.db_arg){
 		string strDBInput = sArgs.db_arg;
@@ -62,10 +62,25 @@ int main( int iArgs, char** aszArgs ) {
 			strDBInput, vecstrDatasets, vecstrDP))
 			return false;
 
-		map<string, string> mapstrstrDatasetPlatform;
-		for(i=0; i<vecstrDatasets.size(); i++)
-			mapstrstrDatasetPlatform[vecstrDatasets[i]] = vecstrDP[i];
+		string strSearchDset = sArgs.dset_arg;
+		vector<string> vecstrSearchDatasets, vecstrSDP;
+		if(!CSeekTools::ReadListTwoColumns(
+			strSearchDset, vecstrSearchDatasets, vecstrSDP))
+			return false;
 
+		map<string, string> mapstrstrDatasetPlatform;
+		map<string, ushort> mapstrintDataset;
+		for(i=0; i<vecstrDatasets.size(); i++){
+			mapstrstrDatasetPlatform[vecstrDatasets[i]] = vecstrDP[i];
+			mapstrintDataset[vecstrDatasets[i]] = i;
+		}
+
+		CSeekIntIntMap dsetMap(vecstrDatasets.size());
+		for(i=0; i<vecstrSearchDatasets.size(); i++){
+			ushort j = mapstrintDataset[vecstrSearchDatasets[i]];
+			dsetMap.Add(j);
+		}
+		
 		string strQueryInput = sArgs.query_arg;
 		vector< vector<string> > vecstrAllQuery;
 		if(!CSeekTools::ReadMultipleQueries(strQueryInput, vecstrAllQuery))
@@ -100,7 +115,7 @@ int main( int iArgs, char** aszArgs ) {
 			vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
 		CSeekTools::ReadDatabaselets(DB, vecstrAllQuery, cAllQuery, vc);
 
-		ushort j, d;
+		ushort j, d, dd;
 		float RATE = 0.95;
 		ushort FOLD = 5;
 		enum PartitionMode PART_M = CUSTOM_PARTITION;
@@ -128,7 +143,11 @@ int main( int iArgs, char** aszArgs ) {
 			vector<char> cQuery;
 			CSeekTools::CreatePresenceVector(queryGenes, cQuery, iGenes);
 
-			for(j=0; j<iDatasets; j++) vc[j]->InitializeQuery(queryGenes);
+			const vector<ushort> &allRDatasets = dsetMap.GetAllReverse();
+			ushort iSearchDatasets = dsetMap.GetNumSet();	
+
+			for(j=0; j<iSearchDatasets; j++) 
+				vc[allRDatasets[j]]->InitializeQuery(queryGenes);
 
 			CSeekQuery query;
 			query.InitializeQuery(queryGenes);
@@ -170,11 +189,12 @@ int main( int iArgs, char** aszArgs ) {
 			system("date +%s%N 1>&2");
 
 			#pragma omp parallel for \
-			shared(weight, query, vc, rData, master_rank_threads, \
+			shared(allRDatasets, weight, query, vc, rData, master_rank_threads, \
 			sum_weight_threads, counts_threads, rank_threads) \
-			private(d, j) firstprivate(iDatasets, iGenes, iQuery) \
+			private(dd, d, j) firstprivate(iSearchDatasets, iGenes, iQuery) \
 			schedule(dynamic)
-			for(d=0; d<iDatasets; d++){
+			for(dd=0; dd<iSearchDatasets; dd++){
+				d = allRDatasets[dd];
 				ushort tid = omp_get_thread_num();
 				if(DEBUG) fprintf(stderr, "Dataset %d, %s\n",
 					d, vecstrDatasets[d].c_str());
@@ -263,7 +283,7 @@ int main( int iArgs, char** aszArgs ) {
 
 			if(DEBUG) fprintf(stderr, "Aggregating genes\n");
 			for(j=0; j<iGenes; j++){
-				if(counts[j]<(int)(0.5*iDatasets))
+				if(counts[j]<(int)(0.5*iSearchDatasets))
 					master_rank[j] = -320;
 				else if(sum_weight[j]==0)
 					master_rank[j] = -320;
@@ -278,7 +298,7 @@ int main( int iArgs, char** aszArgs ) {
 			a.clear();
 			a.resize(iGenes);
 			for(j=0; j<iGenes; j++){
-				fprintf(stderr, "%d %s\n", j, DB.GetGene((size_t) j).c_str());
+				//fprintf(stderr, "%d %s\n", j, DB.GetGene((size_t) j).c_str());
 				a[j].i = j;
 				a[j].f = master_rank[j];
 			}
@@ -289,8 +309,8 @@ int main( int iArgs, char** aszArgs ) {
 			ushort jj, ii;
 			for(ii=0, jj=0; jj<500; ii++){
 				if(cQuery[a[ii].i]==1) continue;
-				fprintf(stderr, "%s %.5f\n",
-					DB.GetGene((size_t)a[ii].i).c_str(), a[ii].f);
+				//fprintf(stderr, "%s %.5f\n",
+				//	DB.GetGene((size_t)a[ii].i).c_str(), a[ii].f);
 				jj++;
 			}
 
