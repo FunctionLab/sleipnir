@@ -31,7 +31,7 @@ const char *gengetopt_args_info_help[] = {
   "  -h, --help                   Print help and exit",
   "  -V, --version                Print version and exit",
   "\nMode:",
-  "  -O, --single                 Evaluate one query's rank list result  \n                                 (default=on)",
+  "  -O, --single                 Evaluate one query's rank list result  \n                                 (default=off)",
   "  -M, --aggregate              Evaluate multiple queries and aggregates results \n                                  (default=off)",
   "\nMetric:",
   "  -r, --rbp                    Rank biased precision (requires parameter p to \n                                 be set)  (default=off)",
@@ -120,7 +120,7 @@ void clear_given (struct gengetopt_args_info *args_info)
 static
 void clear_args (struct gengetopt_args_info *args_info)
 {
-  args_info->single_flag = 1;
+  args_info->single_flag = 0;
   args_info->aggregate_flag = 0;
   args_info->rbp_flag = 0;
   args_info->avgp_flag = 0;

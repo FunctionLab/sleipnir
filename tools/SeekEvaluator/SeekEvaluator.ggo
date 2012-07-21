@@ -4,7 +4,7 @@ purpose	"Evaluate results generated from SeekMiner"
 
 section "Mode"
 option	"single"			O	"Evaluate one query's rank list result"
-								flag	on
+								flag	off
 option	"aggregate"			M	"Evaluate multiple queries and aggregates results"
 								flag	off
 

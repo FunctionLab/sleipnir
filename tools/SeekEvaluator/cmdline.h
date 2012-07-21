@@ -34,7 +34,7 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  int single_flag;	/**< @brief Evaluate one query's rank list result (default=on).  */
+  int single_flag;	/**< @brief Evaluate one query's rank list result (default=off).  */
   const char *single_help; /**< @brief Evaluate one query's rank list result help description.  */
   int aggregate_flag;	/**< @brief Evaluate multiple queries and aggregates results (default=off).  */
   const char *aggregate_help; /**< @brief Evaluate multiple queries and aggregates results help description.  */
