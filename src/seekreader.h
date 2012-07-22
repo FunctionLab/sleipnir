@@ -145,8 +145,7 @@ public:
 		const ushort &);
 
 	static bool ReadDatabaselets(const CDatabase &, 
-		const vector< vector<string> > &, vector<char> &,
-		vector<CSeekDataset*> &);
+		const vector< vector<string> > &, vector<CSeekDataset*> &);
 
 	static bool LoadDatabase(const CDatabase &, const string &,
 		const vector<string> &, const map<string, string> &,
@@ -171,6 +170,8 @@ public:
 
 	static bool ReadListOneColumn(const string &strFile,
 		vector<string> &vecstrList);
+
+	static bool ReadQuantFile(const string &strFile, vector<float> &quant);
 
 };
 

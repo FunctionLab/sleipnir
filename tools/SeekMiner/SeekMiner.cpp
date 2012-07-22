@@ -52,6 +52,15 @@ int main( int iArgs, char** aszArgs ) {
 	bool useNibble = false;
 	if(sArgs.is_nibble_flag==1) useNibble = true;
 
+	if(!sArgs.quant_arg){
+		fprintf(stderr, "Must specify quant file\n");
+		return -1;
+	}
+
+	string strQuantFile = sArgs.quant_arg;
+	vector<float> quant;
+	CSeekTools::ReadQuantFile(strQuantFile, quant);
+
 	CDatabase DB(useNibble);
 	omp_set_num_threads(8);
 
@@ -110,10 +119,9 @@ int main( int iArgs, char** aszArgs ) {
 
 		//printf("Done opening"); getchar();
 		vector<CSeekDataset*> vc;
-		vector<char> cAllQuery;
 		CSeekTools::LoadDatabase(DB, strPrepInputDirectory, 
 			vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
-		CSeekTools::ReadDatabaselets(DB, vecstrAllQuery, cAllQuery, vc);
+		CSeekTools::ReadDatabaselets(DB, vecstrAllQuery, vc);
 
 		ushort j, d, dd;
 		float RATE = 0.95;
@@ -218,7 +226,7 @@ int main( int iArgs, char** aszArgs ) {
 					fprintf(stderr, "\n");
 				}*/
 
-				vc[d]->InitializeDataMatrix(rData[tid], iGenes, iQuery);
+				vc[d]->InitializeDataMatrix(rData[tid], quant, iGenes, iQuery);
 
 				if(DEBUG) fprintf(stderr, "Weighting dataset\n");
 

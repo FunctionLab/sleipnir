@@ -29,7 +29,7 @@ namespace Sleipnir {
 
 bool CSeekWriter::GetGeneAverage(CDataPair &Dat,
 		const vector<string> &vecstrGenes,
-		vector<float> &vecResult){
+		vector<float> &vecResult, bool logit){
 
 	/* assume datapair is already opened */
 	ushort i, j;
@@ -50,7 +50,11 @@ bool CSeekWriter::GetGeneAverage(CDataPair &Dat,
 			ushort t = veciGenes[j];
 			if(CSeekTools::IsNaN(t)) continue;
 			if(CMeta::IsNaN(v[t])) continue;
-			sum+=v[t];
+			if(logit){
+				sum+=log(v[t]) - log((float) (1.0-v[t]));
+			}else{
+				sum+=v[t];
+			}
 			num++;
 		}
 		vecResult[i] = sum / (float) num;

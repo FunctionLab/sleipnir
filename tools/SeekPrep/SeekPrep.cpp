@@ -109,9 +109,10 @@ bool OpenDBFiles(string &DBFile, vector<unsigned char *> &cc, bool &useNibble){
 
 bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 	size_t &m_iGenes, vector<string> &vecstrGenes,
-	map<ushort, ushort> &mapiPlatform, vector<float> &quant,
+	map<ushort, ushort> &mapiPlatform, const vector<float> &quant,
 	vector<CSeekDataset*> &vc, CFullMatrix<float> &platform_avg,
-	CFullMatrix<float> &platform_stdev, vector<string> &vecstrQuery){
+	CFullMatrix<float> &platform_stdev, vector<string> &vecstrQuery,
+	const bool &logit){
 
 	size_t i, j, k;
 
@@ -168,7 +169,13 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 				float v = 0;
 				if(uc==255) v = CMeta::GetNaN();
 				else{
-					v = quant[uc] - vc[k]->GetGeneAverage(j);
+					float vv = -1;
+					if(logit)
+						vv = log(quant[uc]) - log((float)(1.0-quant[uc]));
+					else
+						vv = quant[uc];
+
+					v = vv - vc[k]->GetGeneAverage(j);
 					//v = quant[uc];
 					sum[platform_id] += v;
 					num[platform_id]++;
@@ -241,24 +248,28 @@ int main( int iArgs, char** aszArgs ) {
 		mapstriGenes[vecstrGenes[i]] = i;
 	}
 
-	/* TEMPORARY: quant ====================================*/
-	vector<float> quant;
-	float w = -5.0;
-	while(w<5.01){
-		quant.push_back(w);
-		w+=0.04;
-	}
-	quant.resize(quant.size());
-
 	if( sArgs.input_arg ) ifsm.close( );
 
-	omp_set_num_threads(8);
+
+	omp_set_num_threads(1);
 	int numThreads = omp_get_max_threads();
 
 	/* DB mode */
 	if(sArgs.db_flag==1){
 
+		if(!sArgs.quant_arg){
+			fprintf(stderr, "Must give quant file\n");
+			return -1;
+		}
+
+		vector<float> quant;
+		string strQuantFile = sArgs.quant_arg;
+		CSeekTools::ReadQuantFile(strQuantFile, quant);
+
 		if(sArgs.gplat_flag==1){
+			bool logit = false;
+			if(sArgs.logit_flag==1) logit = true;
+
 			vector<CSeekPlatform> vp;
 			map<string, ushort> mapstriPlatform;
 			map<ushort, string> mapistrPlatform;
@@ -271,9 +282,7 @@ int main( int iArgs, char** aszArgs ) {
 			i = 0;
 			while(!pistm->eof()){
 				pistm->getline(acBuffer, c_iBuffer -1);
-				if(acBuffer[0]==0){
-					break;
-				}
+				if(acBuffer[0]==0) break;
 				acBuffer[c_iBuffer-1] = 0;
 				vecstrLine.clear();
 				CMeta::Tokenize( acBuffer, vecstrLine );
@@ -281,7 +290,7 @@ int main( int iArgs, char** aszArgs ) {
 				vecstrDatasets.push_back(vecstrLine[0]);
 				/* just read the platform information */
 				string pl = vecstrLine[1];
-				map< string, ushort >::const_iterator	iter;
+				map< string, ushort >::const_iterator iter;
 				iter = mapstriPlatform.find(pl);
 				if(iter== mapstriPlatform.end()){
 					ushort s = mapstriPlatform.size();
@@ -317,7 +326,6 @@ int main( int iArgs, char** aszArgs ) {
 			platform_avg.Initialize(numPlatforms, m_iGenes);
 			platform_stdev.Initialize(numPlatforms, m_iGenes);
 
-
 			//printf("Size: %d %d\n", numPlatforms, m_iGenes); getchar();
 
 			for(i=0; i<numPlatforms; i++){
@@ -326,6 +334,11 @@ int main( int iArgs, char** aszArgs ) {
 					platform_stdev.Set(i, j, CMeta::GetNaN());
 				}
 			}
+
+			/*if(iDatasets<numThreads){
+				numThreads = iDatasets;
+				omp_set_num_threads(numThreads);
+			}*/
 
 			string strPrepInputDirectory = sArgs.dir_prep_in_arg;
 			vector<CSeekDataset*> *vc = new vector<CSeekDataset*>[numThreads];
@@ -351,11 +364,9 @@ int main( int iArgs, char** aszArgs ) {
 			vector<string> vecstrQuery;
 
 			#pragma omp parallel for \
-			shared(vc, iDatasets, m_iGenes, vecstrGenes, mapiPlatform, quant, \
-				platform_avg_threads, platform_stdev_threads, vecstrQuery) \
-			private(i) \
-			firstprivate(useNibble) \
-			schedule(dynamic)
+			shared(vc, dblist, iDatasets, m_iGenes, vecstrGenes, mapiPlatform, quant, \
+			platform_avg_threads, platform_stdev_threads, vecstrQuery, logit) \
+			private(i) firstprivate(useNibble) schedule(dynamic)
 			for(i=0; i<dblist.size(); i++){
 				int tid = omp_get_thread_num();
 				string DBFile = dblist[i];
@@ -363,7 +374,7 @@ int main( int iArgs, char** aszArgs ) {
 				OpenDB(DBFile, useNibble, iDatasets, m_iGenes,
 				vecstrGenes, mapiPlatform, quant, vc[tid],
 				platform_avg_threads[tid], platform_stdev_threads[tid],
-				vecstrQuery);
+				vecstrQuery, logit);
 				fprintf(stderr, "finished opening db file %s\n",
 					DBFile.c_str());
 			}
@@ -407,7 +418,11 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 	} else if(sArgs.dab_flag==1){
+
 		if(sArgs.gavg_flag==1){
+			bool logit = false;
+			if(sArgs.logit_flag==1) logit = true;
+
 			CDataPair Dat;
 			char outFile[125];
 			if(!Dat.Open(sArgs.dabinput_arg, false, false)){
@@ -419,7 +434,7 @@ int main( int iArgs, char** aszArgs ) {
 			string fileStem = CMeta::Deextension(fileName);
 			sprintf(outFile, "%s/%s.gavg", sArgs.dir_out_arg,
 				fileStem.c_str());
-			CSeekWriter::GetGeneAverage(Dat, vecstrGenes, vecGeneAvg);
+			CSeekWriter::GetGeneAverage(Dat, vecstrGenes, vecGeneAvg, logit);
 			CSeekTools::WriteArray(outFile, vecGeneAvg);
 		}
 

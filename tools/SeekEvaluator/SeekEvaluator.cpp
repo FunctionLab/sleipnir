@@ -451,39 +451,24 @@ int main( int iArgs, char** aszArgs ) {
 		if(sArgs.agg_ranksum_flag==1 || sArgs.agg_scoresum_flag==1){
 			//Gold standard must be the same across all queries for this mode!!
 			//ASSUME THIS IS TRUE
-
 			for(i=0; i<vecstrList.size(); i++)
 				for(j=0; j<queryGeneID[i].size(); j++)
-					//sortedGenes[i][queryGeneID[i][j]].f = maxScore[i];
 					sortedGenes[i][queryGeneID[i][j]].f = nan;
 
 			if(sArgs.agg_scoresum_flag==1){
 				master_score.resize(sortedGenes[0].size());
-				//vector<int> count_nan;
-				//count_nan.resize(sortedGenes[0].size());
+
 				for(j=0; j<sortedGenes[0].size(); j++){
 					master_score[j].i = j;
 					master_score[j].f = 0.0;
-					//count_nan[j] = 0;
 				}
-				for(j=0; j<sortedGenes[0].size(); j++){
-					for(i=0; i<vecstrList.size(); i++){
-						//if(sortedGenes[i][j].f==nan){
-						//	count_nan[sortedGenes[i][j].i]++;
-						//	continue;
-						//}
+
+				for(j=0; j<sortedGenes[0].size(); j++)
+					for(i=0; i<vecstrList.size(); i++)
 						master_score[sortedGenes[i][j].i].f += sortedGenes[i][j].f;
-						//fprintf(stderr, "A %d %.5f %.5f\n", sortedGenes[i][j].i, 
-						//	sortedGenes[i][j].f, master_score[sortedGenes[i][j].i].f);
-					}
-				}
-				for(j=0; j<sortedGenes[0].size(); j++){
-					//if(count_nan[j]>0)
-					//	master_score[j].f = -320;
-					//else 
+
+				for(j=0; j<sortedGenes[0].size(); j++)
 					master_score[j].f /= (float)vecstrList.size();
-					//fprintf(stderr, "%.5f\n", master_score[j].f);
-				}
 
 				sort(master_score.begin(), master_score.end());
 
@@ -501,23 +486,16 @@ int main( int iArgs, char** aszArgs ) {
 					master_rank[j].f = 0;
 				}
 
-				for(i=0; i<vecstrList.size(); i++){
-					for(j=0; j<sortedGenes[i].size(); j++){
+				for(i=0; i<vecstrList.size(); i++)
+					for(j=0; j<sortedGenes[i].size(); j++)
 						master_rank[sortedGenes[i][j].i].f +=
 							(float) sortedGenes[i].size() - (float) j;
-							
-					}
-				}
 
-				for(j=0; j<sortedGenes[0].size(); j++){
+				for(j=0; j<sortedGenes[0].size(); j++)
 					master_rank[j].f /= (float) vecstrList.size();
-				}
 
 				sort(master_rank.begin(), master_rank.end());
 
-				/*for(j=0; j<sortedGenes[0].size(); j++){
-					fprintf(stderr, "%.5f\n", (sortedGenes[0].size()-master_rank[j].f));
-				}*/
 				master = &master_rank;
 			}
 

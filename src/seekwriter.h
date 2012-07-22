@@ -32,7 +32,7 @@ class CSeekWriter{
 public:
 	static bool GetGeneAverage(CDataPair &Dat,
 			const vector<string> &vecstrGenes,
-			vector<float> &vecResult);
+			vector<float> &vecResult, bool logit=false);
 	static bool GetGenePresence(CDataPair &Dat,
 			const vector<string> &vecstrGenes,
 			vector<char> &vecResult);

@@ -44,13 +44,15 @@ bool CSeekTools::CreatePresenceVector(const vector<ushort> &srcData,
 }
 
 bool CSeekTools::ReadDatabaselets(const CDatabase &DB, 
-	const vector< vector<string> > &vecstrAllQuery, vector<char> &cAllQuery,
+	const vector< vector<string> > &vecstrAllQuery,
 	vector<CSeekDataset*> &vc){
 
 	//requires LoadDatabase to be called beforehand
 	size_t iGenes = DB.GetGenes();
 	size_t iDatasets = DB.GetDatasets();
 	size_t i, j, k;
+	vector<char> cAllQuery;
+
 	CSeekTools::InitVector(cAllQuery, iGenes, (char) 0);
 
 	for(i=0; i<vecstrAllQuery.size(); i++){
@@ -126,6 +128,23 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	return true;
 }
 	
+bool CSeekTools::ReadQuantFile(const string &strFile, vector<float> &quant){
+	ifstream ifsm;
+	ifsm.open(strFile.c_str());
+	char acBuffer[1024];
+	ushort c_iBuffer = 1024;
+	vector<string> vecstrLine;
+
+	ifsm.getline(acBuffer, c_iBuffer -1);
+	CMeta::Tokenize( acBuffer, vecstrLine );
+	quant.clear();
+	ushort i;
+	for(i=0; i<vecstrLine.size(); i++)
+		quant.push_back(atof(vecstrLine[i].c_str()));
+	quant.resize(quant.size());
+	ifsm.close();
+	return true;
+}
 
 bool CSeekTools::LoadDatabase(const CDatabase &DB,
 	const string &strPrepInputDirectory, const vector<string> &vecstrDatasets,

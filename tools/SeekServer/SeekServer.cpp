@@ -102,8 +102,7 @@ void *do_query(void *th_arg){
 	vector< vector<string> > vecstrAllQuery;
 	vecstrAllQuery.push_back(queryName);
 
-	vector<char> cAllQuery;
-	CSeekTools::ReadDatabaselets(DB, vecstrAllQuery, cAllQuery, vc);
+	CSeekTools::ReadDatabaselets(DB, vecstrAllQuery, vc);
 
 	ushort i;
 	ushort j;
