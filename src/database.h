@@ -300,7 +300,9 @@ public:
 		return ( m_vecpDBs.empty( ) ? 0 : m_vecpDBs[ 0 ]->GetDatasets( ) ); }
 
 
-	bool Open(string &, vector<string> &, size_t &, size_t &);
+	bool Open(const string &, const vector<string> &, const size_t &, const size_t &);
+	bool Open(const char *, const vector<string> &, const size_t &, const size_t &);
+
 
 	/*!
 	 * \brief

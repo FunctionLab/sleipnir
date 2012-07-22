@@ -46,16 +46,19 @@ public:
 	~CSeekQuery();
 
 	bool InitializeQuery(const vector<char>&);
-	bool InitializeQuery(const vector<ushort>&);
+	bool InitializeQuery(const vector<ushort>&, const ushort &);
 
 	ushort GetNumFold() const;
 	vector<ushort>& GetQuery();
+	vector<char>& GetQueryPresence();
 	vector<ushort>& GetCVQuery(ushort&);
 	bool CreateCVPartitions(const gsl_rng*, \
 		const enum PartitionMode &, const ushort=-1);
 
 private:
 	vector<ushort> queryGenes;
+	vector<char> queryGenePresence;
+
 	vector<ushort> *crossValGenes;
 	ushort iNumFold;
 	ushort iFoldSize;

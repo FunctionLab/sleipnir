@@ -25,28 +25,10 @@
 #include "stdafx.h"
 
 namespace Sleipnir {
-/*
-class CSeekPresence{
-public:
-	CSeekPresence(size_t);
-	CSeekPresence(char*, size_t);
-	CSeekPresence(CSeekPresence*);
-	~CSeekPresence();
-	void Clear();
-	bool Check(size_t);
-	void Set(size_t);
-	void Clear(size_t);
-	size_t GetSize();
-private:
-	char *p;
-	int iSize;
-};
-*/
 
 class CSeekIntIntMap{
 public:
 	CSeekIntIntMap(const ushort&);
-	//CSeekIntIntMap(const CSeekPresence*, const bool=false);
 	CSeekIntIntMap(const vector<char>&, const bool=false);
 	CSeekIntIntMap(const char*, const ushort &, const bool=false);
 	void Initialize(const ushort&);
@@ -59,7 +41,6 @@ public:
 
 	void Add(const ushort&);
 	void Clear();
-	//void Reset(const CSeekPresence*, const bool=false) const;
 	void Reset(const vector<char>&, const bool=false);
 	void Reset(const char*, const bool=false);
 	ushort GetNumSet() const;

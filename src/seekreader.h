@@ -145,10 +145,14 @@ public:
 		const ushort &);
 
 	static bool ReadDatabaselets(const CDatabase &, 
-		const vector< vector<string> > &, vector<char> &,
-		vector<CSeekDataset*> &);
+		const vector< vector<string> > &, vector<CSeekDataset*> &);
 
 	static bool LoadDatabase(const CDatabase &, const string &,
+		const vector<string> &, const map<string, string> &,
+		const map<string, ushort> &, vector<CSeekPlatform> &,
+		vector<CSeekDataset*> &);
+
+	static bool LoadDatabase(const CDatabase &, const char *,
 		const vector<string> &, const map<string, string> &,
 		const map<string, ushort> &, vector<CSeekPlatform> &,
 		vector<CSeekDataset*> &);
@@ -156,21 +160,38 @@ public:
 	static bool ReadPlatforms(const string &strPlatformDirectory,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
 		map<string, ushort> &mapstriPlatforms);
+	static bool ReadPlatforms(const char *plat_dir,
+			vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
+			map<string, ushort> &mapstriPlatforms);
 
 	static bool ReadListOneColumn(const string &strFile,
 		vector<string> &vecstrList, CSeekStrIntMap &mapstriList);
+	static bool ReadListOneColumn(const char *file,
+			vector<string> &vecstrList, CSeekStrIntMap &mapstriList);
 
 	static bool ReadListTwoColumns(const string &strFile,
+		vector<string> &list1, vector<string> &list2);
+	static bool ReadListTwoColumns(const char *file,
 		vector<string> &list1, vector<string> &list2);
 
 	static bool ReadMultipleQueries(const string &strFile,
 		vector< vector<string> > &qList);
+	static bool ReadMultipleQueries(const char *file,
+			vector< vector<string> > &qList);
 
 	static bool ReadMultiGeneOneLine(const string &strFile,
 		vector<string> &list1);
+	static bool ReadMultiGeneOneLine(const char *file,
+			vector<string> &list1);
 
 	static bool ReadListOneColumn(const string &strFile,
 		vector<string> &vecstrList);
+	static bool ReadListOneColumn(const char *file,
+			vector<string> &vecstrList);
+
+	static bool ReadQuantFile(const string &strFile, vector<float> &quant);
+	static bool ReadQuantFile(const char *file, vector<float> &quant);
+
 
 };
 

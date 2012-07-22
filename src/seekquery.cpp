@@ -29,6 +29,7 @@ namespace Sleipnir {
 CSeekQuery::CSeekQuery(){
 	crossValGenes = NULL;
 	queryGenes.clear();
+	queryGenePresence.clear();
 	iNumFold = 0;
 	iFoldSize = 0;
 }
@@ -36,6 +37,7 @@ CSeekQuery::~CSeekQuery(){
 	if(crossValGenes!=NULL){
 		delete[] crossValGenes;
 	}
+	queryGenePresence.clear();
 	queryGenes.clear();
 	iNumFold = 0;
 	iFoldSize = 0;
@@ -43,19 +45,24 @@ CSeekQuery::~CSeekQuery(){
 
 bool CSeekQuery::InitializeQuery(const vector<char> &query){
 	ushort i;
+	queryGenePresence.resize(query.size());
+
 	for(i=0; i<query.size(); i++){
-		if(query[i]==1){
-			queryGenes.push_back(i);
-		}
+		if(query[i]==1) queryGenes.push_back(i);
+		queryGenes[i] = query[i];
 	}
 	queryGenes.resize(queryGenes.size());
 	return true;
 }
 
-bool CSeekQuery::InitializeQuery(const vector<ushort> &query){
+bool CSeekQuery::InitializeQuery(const vector<ushort> &query,
+	const ushort &iGenes){
 	ushort i;
+	queryGenePresence.resize(iGenes);
+	fill(queryGenePresence.begin(), queryGenePresence.end(), (char) 0);
 	for(i=0; i<query.size(); i++){
 		queryGenes.push_back(query[i]);
+		queryGenePresence[query[i]] = 1;
 	}
 	queryGenes.resize(queryGenes.size());
 	return true;
@@ -63,6 +70,10 @@ bool CSeekQuery::InitializeQuery(const vector<ushort> &query){
 
 ushort CSeekQuery::GetNumFold() const{
 	return iNumFold;
+}
+
+vector<char>& CSeekQuery::GetQueryPresence(){
+	return queryGenePresence;
 }
 
 vector<ushort>& CSeekQuery::GetQuery(){

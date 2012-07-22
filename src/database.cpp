@@ -1002,10 +1002,14 @@ bool CDatabaselet::Set(uint32_t &iGenes, uint32_t &iDatasets, vector<string> &ve
 	return true;
 }
 
+bool CDatabase::Open(const string &strDBDirectory,
+		const vector<string> &vecstrGenes, const size_t &iDatasets, const size_t &iNumDBs){
+	return CDatabase::Open(strDBDirectory.c_str(), vecstrGenes, iDatasets, iNumDBs);
+}
 
 
-bool CDatabase::Open(string &strDBDirectory,
-		vector<string> &vecstrGenes, size_t &iDatasets, size_t &iNumDBs){
+bool CDatabase::Open(const char *db_dir,
+		const vector<string> &vecstrGenes, const size_t &iDatasets, const size_t &iNumDBs){
 	size_t i, j, k;
 	Clear();
 	m_vecpDBs.resize(iNumDBs);
@@ -1014,6 +1018,8 @@ bool CDatabase::Open(string &strDBDirectory,
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
 		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble );
 	}
+
+	string strDBDirectory = db_dir;
 
 	for(i=0; i<iNumDBs; i++){
 		vector<string> vecstrSubset;
