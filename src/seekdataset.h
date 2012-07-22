@@ -42,10 +42,6 @@ public:
 	bool DeleteQuery();
 	bool DeleteQueryBlock();
 
-	/*bool SetQuery(const ushort &, const ushort &, const unsigned char &);
-	bool SetQueryNoMapping(const ushort &, const ushort &, const unsigned char &);
-	bool SetQuery(const ushort &, const vector<unsigned char> &);
-	 */
 	bool InitializeDataMatrix(ushort**, const vector<float> &,
 		const ushort&, const ushort&, const bool=true, const bool=true,
 		const bool=false);

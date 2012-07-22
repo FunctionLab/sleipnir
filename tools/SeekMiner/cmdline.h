@@ -39,12 +39,12 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * db_arg;	/**< @brief Input a set of datasets.  */
-  char * db_orig;	/**< @brief Input a set of datasets original value given at command line.  */
-  const char *db_help; /**< @brief Input a set of datasets help description.  */
-  char * dset_arg;	/**< @brief A set of datasets to search.  */
-  char * dset_orig;	/**< @brief A set of datasets to search original value given at command line.  */
-  const char *dset_help; /**< @brief A set of datasets to search help description.  */
+  char * dset_arg;	/**< @brief Input a set of datasets.  */
+  char * dset_orig;	/**< @brief Input a set of datasets original value given at command line.  */
+  const char *dset_help; /**< @brief Input a set of datasets help description.  */
+  char * search_dset_arg;	/**< @brief A set of datasets to search.  */
+  char * search_dset_orig;	/**< @brief A set of datasets to search original value given at command line.  */
+  const char *search_dset_help; /**< @brief A set of datasets to search help description.  */
   char * input_arg;	/**< @brief Input gene mapping.  */
   char * input_orig;	/**< @brief Input gene mapping original value given at command line.  */
   const char *input_help; /**< @brief Input gene mapping help description.  */
@@ -63,44 +63,56 @@ struct gengetopt_args_info
   char * quant_arg;	/**< @brief quant file (assuming all datasets use the same quantization).  */
   char * quant_orig;	/**< @brief quant file (assuming all datasets use the same quantization) original value given at command line.  */
   const char *quant_help; /**< @brief quant file (assuming all datasets use the same quantization) help description.  */
+  int num_db_arg;	/**< @brief Number of databaselets in database (default='1000').  */
+  char * num_db_orig;	/**< @brief Number of databaselets in database original value given at command line.  */
+  const char *num_db_help; /**< @brief Number of databaselets in database help description.  */
   char * func_db_arg;	/**< @brief Functional network db path.  */
   char * func_db_orig;	/**< @brief Functional network db path original value given at command line.  */
   const char *func_db_help; /**< @brief Functional network db path help description.  */
   int func_n_arg;	/**< @brief Functional network number of databaselets (default='1000').  */
   char * func_n_orig;	/**< @brief Functional network number of databaselets original value given at command line.  */
   const char *func_n_help; /**< @brief Functional network number of databaselets help description.  */
-  char * func_prep_arg;	/**< @brief Functional network prep directory.  */
-  char * func_prep_orig;	/**< @brief Functional network prep directory original value given at command line.  */
-  const char *func_prep_help; /**< @brief Functional network prep directory help description.  */
-  char * func_platform_arg;	/**< @brief Functional network platform directory.  */
-  char * func_platform_orig;	/**< @brief Functional network platform directory original value given at command line.  */
-  const char *func_platform_help; /**< @brief Functional network platform directory help description.  */
+  char * func_prep_arg;	/**< @brief Functional network prep & platform directory.  */
+  char * func_prep_orig;	/**< @brief Functional network prep & platform directory original value given at command line.  */
+  const char *func_prep_help; /**< @brief Functional network prep & platform directory help description.  */
   char * func_quant_arg;	/**< @brief Functional network quant file.  */
   char * func_quant_orig;	/**< @brief Functional network quant file original value given at command line.  */
   const char *func_quant_help; /**< @brief Functional network quant file help description.  */
+  char * func_dset_arg;	/**< @brief Functional network dset-list file (1 dataset).  */
+  char * func_dset_orig;	/**< @brief Functional network dset-list file (1 dataset) original value given at command line.  */
+  const char *func_dset_help; /**< @brief Functional network dset-list file (1 dataset) help description.  */
+  int func_logit_flag;	/**< @brief Functional network, integrate using logit values (default=on).  */
+  const char *func_logit_help; /**< @brief Functional network, integrate using logit values help description.  */
+  int norm_subavg_flag;	/**< @brief Per dataset, normalize z-scores by subtracting average of result gene (default=on).  */
+  const char *norm_subavg_help; /**< @brief Per dataset, normalize z-scores by subtracting average of result gene help description.  */
+  int norm_platsubavg_flag;	/**< @brief Per platform, normalize z-scores by subtracting average of query gene across platform (default=on).  */
+  const char *norm_platsubavg_help; /**< @brief Per platform, normalize z-scores by subtracting average of query gene across platform help description.  */
+  int norm_platstdev_flag;	/**< @brief Per platform, normalize z-scores by dividing stdev of query gene across platform (default=on).  */
+  const char *norm_platstdev_help; /**< @brief Per platform, normalize z-scores by dividing stdev of query gene across platform help description.  */
   int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
   const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
-  int num_db_arg;	/**< @brief Number of databaselets in database (default='1000').  */
-  char * num_db_orig;	/**< @brief Number of databaselets in database original value given at command line.  */
-  const char *num_db_help; /**< @brief Number of databaselets in database help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int db_given ;	/**< @brief Whether db was given.  */
   unsigned int dset_given ;	/**< @brief Whether dset was given.  */
+  unsigned int search_dset_given ;	/**< @brief Whether search_dset was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
   unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */
   unsigned int dir_prep_in_given ;	/**< @brief Whether dir_prep_in was given.  */
   unsigned int dir_platform_given ;	/**< @brief Whether dir_platform was given.  */
   unsigned int quant_given ;	/**< @brief Whether quant was given.  */
+  unsigned int num_db_given ;	/**< @brief Whether num_db was given.  */
   unsigned int func_db_given ;	/**< @brief Whether func_db was given.  */
   unsigned int func_n_given ;	/**< @brief Whether func_n was given.  */
   unsigned int func_prep_given ;	/**< @brief Whether func_prep was given.  */
-  unsigned int func_platform_given ;	/**< @brief Whether func_platform was given.  */
   unsigned int func_quant_given ;	/**< @brief Whether func_quant was given.  */
+  unsigned int func_dset_given ;	/**< @brief Whether func_dset was given.  */
+  unsigned int func_logit_given ;	/**< @brief Whether func_logit was given.  */
+  unsigned int norm_subavg_given ;	/**< @brief Whether norm_subavg was given.  */
+  unsigned int norm_platsubavg_given ;	/**< @brief Whether norm_platsubavg was given.  */
+  unsigned int norm_platstdev_given ;	/**< @brief Whether norm_platstdev was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
-  unsigned int num_db_given ;	/**< @brief Whether num_db was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

@@ -57,8 +57,10 @@ libSleipnir_a_SOURCES	=	\
 	seekreader.cpp			\
 	seekwriter.cpp			\
 	seekplatform.cpp		\
+	seekcentral.cpp		\
 include_HEADERS			=	\
 	seekplatform.h			\
+	seekcentral.h			\
 	seekreader.h			\
 	seekwriter.h			\
 	seekquery.h				\

@@ -129,14 +129,18 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 }
 	
 bool CSeekTools::ReadQuantFile(const string &strFile, vector<float> &quant){
+	return CSeekTools::ReadQuantFile(strFile.c_str(), quant);
+}
+
+bool CSeekTools::ReadQuantFile(const char *file, vector<float> &quant){
 	ifstream ifsm;
-	ifsm.open(strFile.c_str());
+	ifsm.open(file);
 	char acBuffer[1024];
 	ushort c_iBuffer = 1024;
 	vector<string> vecstrLine;
 
 	ifsm.getline(acBuffer, c_iBuffer -1);
-	CMeta::Tokenize( acBuffer, vecstrLine );
+	CMeta::Tokenize( acBuffer, vecstrLine, " ", false);
 	quant.clear();
 	ushort i;
 	for(i=0; i<vecstrLine.size(); i++)
@@ -151,12 +155,22 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 	const map<string, string> &mapstrstrDatasetPlatform,
 	const map<string, ushort> &mapstriPlatform, vector<CSeekPlatform> &vp,
 	vector<CSeekDataset*> &vc){
+	return CSeekTools::LoadDatabase(DB, strPrepInputDirectory.c_str(),
+		vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
+}
+
+bool CSeekTools::LoadDatabase(const CDatabase &DB,
+	const char *prep_dir, const vector<string> &vecstrDatasets,
+	const map<string, string> &mapstrstrDatasetPlatform,
+	const map<string, ushort> &mapstriPlatform, vector<CSeekPlatform> &vp,
+	vector<CSeekDataset*> &vc){
 		
 	size_t iDatasets = DB.GetDatasets();
 	size_t iGenes = DB.GetGenes();
 	size_t i, j, k;
 	vc.clear();
 	vc.resize(iDatasets);
+	string strPrepInputDirectory = prep_dir;
 
 	fprintf(stderr, "Start reading average and presence files\n");
 	system("date +%s%N 1>&2");
@@ -189,7 +203,15 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 bool CSeekTools::ReadPlatforms(const string &strPlatformDirectory,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
 		map<string, ushort> &mapstriPlatforms){
+	return CSeekTools::ReadPlatforms(strPlatformDirectory.c_str(), plat,
+		vecstrPlatforms, mapstriPlatforms);
+}
 
+bool CSeekTools::ReadPlatforms(const char *plat_dir,
+		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
+		map<string, ushort> &mapstriPlatforms){
+
+	string strPlatformDirectory = plat_dir;
 	string strAvgFile = strPlatformDirectory + "/" +
 		"all_platforms.gplatavg";
 	string strStdevFile = strPlatformDirectory + "/" +
@@ -236,10 +258,16 @@ bool CSeekTools::ReadPlatforms(const string &strPlatformDirectory,
 
 bool CSeekTools::ReadListTwoColumns(const string &strFile,
 		vector<string> &vecstrList1, vector<string> &vecstrList2){
+	return CSeekTools::ReadListTwoColumns(strFile.c_str(),
+		vecstrList1, vecstrList2);
+}
+
+bool CSeekTools::ReadListTwoColumns(const char *file,
+		vector<string> &vecstrList1, vector<string> &vecstrList2){
 	ifstream ifsm;
-	ifsm.open(strFile.c_str());
+	ifsm.open(file);
 	if(!ifsm.is_open()){
-		cerr << "Error opening file " << strFile << endl;
+		fprintf(stderr, "Error opening file %s\n", file);
 		return false;
 	}
 	char acBuffer[1024];
@@ -264,10 +292,17 @@ bool CSeekTools::ReadListTwoColumns(const string &strFile,
 
 bool CSeekTools::ReadListOneColumn(const string &strFile,
 	vector<string> &vecstrList, CSeekStrIntMap &mapstriList){
+	return CSeekTools::ReadListOneColumn(strFile.c_str(),
+		vecstrList, mapstriList);
+}
+
+
+bool CSeekTools::ReadListOneColumn(const char *file,
+	vector<string> &vecstrList, CSeekStrIntMap &mapstriList){
 	ifstream ifsm;
-	ifsm.open(strFile.c_str());
+	ifsm.open(file);
 	if(!ifsm.is_open()){
-		cerr << "Error opening file " << strFile << endl;
+		fprintf(stderr, "Error opening file %s\n", file);
 		return false;
 	}
 
@@ -292,11 +327,16 @@ bool CSeekTools::ReadListOneColumn(const string &strFile,
 
 bool CSeekTools::ReadMultipleQueries(const string &strFile,
 	vector< vector<string> > &qList){
+	return CSeekTools::ReadMultipleQueries(strFile.c_str(), qList);
+}
+
+bool CSeekTools::ReadMultipleQueries(const char *file,
+	vector< vector<string> > &qList){
 	qList.clear();
 	ifstream ifsm;
-	ifsm.open(strFile.c_str());
+	ifsm.open(file);
 	if(!ifsm.is_open()){
-		cerr << "Error opening file " << strFile << endl;
+		fprintf(stderr, "Error opening file %s\n", file);
 		return false;
 	}
 
@@ -320,11 +360,16 @@ bool CSeekTools::ReadMultipleQueries(const string &strFile,
 
 bool CSeekTools::ReadMultiGeneOneLine(const string &strFile,
 	vector<string> &list){
+	return CSeekTools::ReadMultiGeneOneLine(strFile.c_str(), list);
+}
+
+bool CSeekTools::ReadMultiGeneOneLine(const char *file,
+	vector<string> &list){
 	list.clear();
 	ifstream ifsm;
-	ifsm.open(strFile.c_str());
+	ifsm.open(file);
 	if(!ifsm.is_open()){
-		cerr << "Error opening file " << strFile << endl;
+		fprintf(stderr, "Error opening file %s\n", file);
 		return false;
 	}
 
@@ -346,11 +391,16 @@ bool CSeekTools::ReadMultiGeneOneLine(const string &strFile,
 
 bool CSeekTools::ReadListOneColumn(const string &strFile,
 	vector<string> &vecstrList){
+	return CSeekTools::ReadListOneColumn(strFile.c_str(), vecstrList);
+}
+
+bool CSeekTools::ReadListOneColumn(const char *file,
+	vector<string> &vecstrList){
 	ifstream ifsm;
-	ifsm.open(strFile.c_str());
+	ifsm.open(file);
 
 	if(!ifsm.is_open()){
-		cerr << "Error opening file " << strFile << endl;
+		fprintf(stderr, "Error opening file %s\n", file);
 		return false;
 	}
 	char acBuffer[1024];

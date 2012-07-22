@@ -43,6 +43,7 @@ using namespace std;
 #include "seekreader.h"
 #include "seekwriter.h"
 #include "seekquery.h"
+#include "seekcentral.h"
 #include "meta.h"
 using namespace Sleipnir;
 

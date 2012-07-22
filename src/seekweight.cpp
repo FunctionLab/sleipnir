@@ -77,7 +77,7 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 
 
 bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
-	vector<ushort> *rrank, const bool bAllocate){
+	const float &rate, vector<ushort> *rrank, const bool bAllocate){
 	ushort iFold = sQuery.GetNumFold();
 	sDataset.InitializeCVWeight(iFold);
 
@@ -135,7 +135,7 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 			/* actual weighting */
 			float w = 0;
 			bool ret = LinearCombine(rank, cv_query, sDataset, false);
-			ret = CSeekPerformanceMeasure::RankBiasedPrecision(0.95,
+			ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
 				rank, w, is_query_cross, is_gold, *mapG, false, &ar, TOP);
 			if(!ret) sDataset.SetCVWeight(qi, -1);
 			else sDataset.SetCVWeight(qi, w);

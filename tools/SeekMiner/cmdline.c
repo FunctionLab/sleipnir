@@ -35,21 +35,28 @@ const char *gengetopt_args_info_help[] = {
   "  -h, --help                    Print help and exit",
   "  -V, --version                 Print version and exit",
   "\nMain:",
-  "  -x, --db=filename             Input a set of datasets",
-  "  -D, --dset=filename           A set of datasets to search",
+  "  -x, --dset=filename           Input a set of datasets",
+  "  -D, --search_dset=filename    A set of datasets to search",
   "  -i, --input=filename          Input gene mapping",
   "  -q, --query=filename          Query gene list",
   "  -d, --dir_in=directory        Database directory",
   "  -p, --dir_prep_in=directory   Prep directory (containing .gavg, .gpres files)",
   "  -P, --dir_platform=directory  Platform directory (containing .gplatavg, \n                                  .gplatstdev, .gplatorder files)",
   "  -Q, --quant=filename          quant file (assuming all datasets use the same \n                                  quantization)",
+  "  -n, --num_db=INT              Number of databaselets in database  \n                                  (default=`1000')",
+  "\nOptional - Functional Network Expansion:",
   "  -w, --func_db=directory       Functional network db path",
   "  -f, --func_n=INT              Functional network number of databaselets  \n                                  (default=`1000')",
-  "  -W, --func_prep=directory     Functional network prep directory",
-  "  -F, --func_platform=directory Functional network platform directory",
+  "  -W, --func_prep=directory     Functional network prep & platform directory",
   "  -R, --func_quant=filename     Functional network quant file",
+  "  -F, --func_dset=filename      Functional network dset-list file (1 dataset)",
+  "  -l, --func_logit              Functional network, integrate using logit \n                                  values  (default=on)",
+  "\nOptional - Parameter tweaking:",
+  "  -m, --norm_subavg             Per dataset, normalize z-scores by subtracting \n                                  average of result gene  (default=on)",
+  "  -M, --norm_platsubavg         Per platform, normalize z-scores by subtracting \n                                  average of query gene across platform  \n                                  (default=on)",
+  "  -r, --norm_platstdev          Per platform, normalize z-scores by dividing \n                                  stdev of query gene across platform  \n                                  (default=on)",
+  "\nMISC:",
   "  -N, --is_nibble               Whether the input DB is nibble type  \n                                  (default=off)",
-  "  -n, --num_db=INT              Number of databaselets in database  \n                                  (default=`1000')",
     0
 };
 
@@ -79,31 +86,35 @@ void clear_given (struct gengetopt_args_info *args_info)
 {
   args_info->help_given = 0 ;
   args_info->version_given = 0 ;
-  args_info->db_given = 0 ;
   args_info->dset_given = 0 ;
+  args_info->search_dset_given = 0 ;
   args_info->input_given = 0 ;
   args_info->query_given = 0 ;
   args_info->dir_in_given = 0 ;
   args_info->dir_prep_in_given = 0 ;
   args_info->dir_platform_given = 0 ;
   args_info->quant_given = 0 ;
+  args_info->num_db_given = 0 ;
   args_info->func_db_given = 0 ;
   args_info->func_n_given = 0 ;
   args_info->func_prep_given = 0 ;
-  args_info->func_platform_given = 0 ;
   args_info->func_quant_given = 0 ;
+  args_info->func_dset_given = 0 ;
+  args_info->func_logit_given = 0 ;
+  args_info->norm_subavg_given = 0 ;
+  args_info->norm_platsubavg_given = 0 ;
+  args_info->norm_platstdev_given = 0 ;
   args_info->is_nibble_given = 0 ;
-  args_info->num_db_given = 0 ;
 }
 
 static
 void clear_args (struct gengetopt_args_info *args_info)
 {
   FIX_UNUSED (args_info);
-  args_info->db_arg = NULL;
-  args_info->db_orig = NULL;
   args_info->dset_arg = NULL;
   args_info->dset_orig = NULL;
+  args_info->search_dset_arg = NULL;
+  args_info->search_dset_orig = NULL;
   args_info->input_arg = NULL;
   args_info->input_orig = NULL;
   args_info->query_arg = NULL;
@@ -116,19 +127,23 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->dir_platform_orig = NULL;
   args_info->quant_arg = NULL;
   args_info->quant_orig = NULL;
+  args_info->num_db_arg = 1000;
+  args_info->num_db_orig = NULL;
   args_info->func_db_arg = NULL;
   args_info->func_db_orig = NULL;
   args_info->func_n_arg = 1000;
   args_info->func_n_orig = NULL;
   args_info->func_prep_arg = NULL;
   args_info->func_prep_orig = NULL;
-  args_info->func_platform_arg = NULL;
-  args_info->func_platform_orig = NULL;
   args_info->func_quant_arg = NULL;
   args_info->func_quant_orig = NULL;
+  args_info->func_dset_arg = NULL;
+  args_info->func_dset_orig = NULL;
+  args_info->func_logit_flag = 1;
+  args_info->norm_subavg_flag = 1;
+  args_info->norm_platsubavg_flag = 1;
+  args_info->norm_platstdev_flag = 1;
   args_info->is_nibble_flag = 0;
-  args_info->num_db_arg = 1000;
-  args_info->num_db_orig = NULL;
   
 }
 
@@ -139,21 +154,25 @@ void init_args_info(struct gengetopt_args_info *args_info)
 
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
-  args_info->db_help = gengetopt_args_info_help[3] ;
-  args_info->dset_help = gengetopt_args_info_help[4] ;
+  args_info->dset_help = gengetopt_args_info_help[3] ;
+  args_info->search_dset_help = gengetopt_args_info_help[4] ;
   args_info->input_help = gengetopt_args_info_help[5] ;
   args_info->query_help = gengetopt_args_info_help[6] ;
   args_info->dir_in_help = gengetopt_args_info_help[7] ;
   args_info->dir_prep_in_help = gengetopt_args_info_help[8] ;
   args_info->dir_platform_help = gengetopt_args_info_help[9] ;
   args_info->quant_help = gengetopt_args_info_help[10] ;
-  args_info->func_db_help = gengetopt_args_info_help[11] ;
-  args_info->func_n_help = gengetopt_args_info_help[12] ;
-  args_info->func_prep_help = gengetopt_args_info_help[13] ;
-  args_info->func_platform_help = gengetopt_args_info_help[14] ;
-  args_info->func_quant_help = gengetopt_args_info_help[15] ;
-  args_info->is_nibble_help = gengetopt_args_info_help[16] ;
-  args_info->num_db_help = gengetopt_args_info_help[17] ;
+  args_info->num_db_help = gengetopt_args_info_help[11] ;
+  args_info->func_db_help = gengetopt_args_info_help[13] ;
+  args_info->func_n_help = gengetopt_args_info_help[14] ;
+  args_info->func_prep_help = gengetopt_args_info_help[15] ;
+  args_info->func_quant_help = gengetopt_args_info_help[16] ;
+  args_info->func_dset_help = gengetopt_args_info_help[17] ;
+  args_info->func_logit_help = gengetopt_args_info_help[18] ;
+  args_info->norm_subavg_help = gengetopt_args_info_help[20] ;
+  args_info->norm_platsubavg_help = gengetopt_args_info_help[21] ;
+  args_info->norm_platstdev_help = gengetopt_args_info_help[22] ;
+  args_info->is_nibble_help = gengetopt_args_info_help[24] ;
   
 }
 
@@ -237,10 +256,10 @@ static void
 cmdline_parser_release (struct gengetopt_args_info *args_info)
 {
   unsigned int i;
-  free_string_field (&(args_info->db_arg));
-  free_string_field (&(args_info->db_orig));
   free_string_field (&(args_info->dset_arg));
   free_string_field (&(args_info->dset_orig));
+  free_string_field (&(args_info->search_dset_arg));
+  free_string_field (&(args_info->search_dset_orig));
   free_string_field (&(args_info->input_arg));
   free_string_field (&(args_info->input_orig));
   free_string_field (&(args_info->query_arg));
@@ -253,16 +272,16 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->dir_platform_orig));
   free_string_field (&(args_info->quant_arg));
   free_string_field (&(args_info->quant_orig));
+  free_string_field (&(args_info->num_db_orig));
   free_string_field (&(args_info->func_db_arg));
   free_string_field (&(args_info->func_db_orig));
   free_string_field (&(args_info->func_n_orig));
   free_string_field (&(args_info->func_prep_arg));
   free_string_field (&(args_info->func_prep_orig));
-  free_string_field (&(args_info->func_platform_arg));
-  free_string_field (&(args_info->func_platform_orig));
   free_string_field (&(args_info->func_quant_arg));
   free_string_field (&(args_info->func_quant_orig));
-  free_string_field (&(args_info->num_db_orig));
+  free_string_field (&(args_info->func_dset_arg));
+  free_string_field (&(args_info->func_dset_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -302,10 +321,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "help", 0, 0 );
   if (args_info->version_given)
     write_into_file(outfile, "version", 0, 0 );
-  if (args_info->db_given)
-    write_into_file(outfile, "db", args_info->db_orig, 0);
   if (args_info->dset_given)
     write_into_file(outfile, "dset", args_info->dset_orig, 0);
+  if (args_info->search_dset_given)
+    write_into_file(outfile, "search_dset", args_info->search_dset_orig, 0);
   if (args_info->input_given)
     write_into_file(outfile, "input", args_info->input_orig, 0);
   if (args_info->query_given)
@@ -318,20 +337,28 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "dir_platform", args_info->dir_platform_orig, 0);
   if (args_info->quant_given)
     write_into_file(outfile, "quant", args_info->quant_orig, 0);
+  if (args_info->num_db_given)
+    write_into_file(outfile, "num_db", args_info->num_db_orig, 0);
   if (args_info->func_db_given)
     write_into_file(outfile, "func_db", args_info->func_db_orig, 0);
   if (args_info->func_n_given)
     write_into_file(outfile, "func_n", args_info->func_n_orig, 0);
   if (args_info->func_prep_given)
     write_into_file(outfile, "func_prep", args_info->func_prep_orig, 0);
-  if (args_info->func_platform_given)
-    write_into_file(outfile, "func_platform", args_info->func_platform_orig, 0);
   if (args_info->func_quant_given)
     write_into_file(outfile, "func_quant", args_info->func_quant_orig, 0);
+  if (args_info->func_dset_given)
+    write_into_file(outfile, "func_dset", args_info->func_dset_orig, 0);
+  if (args_info->func_logit_given)
+    write_into_file(outfile, "func_logit", 0, 0 );
+  if (args_info->norm_subavg_given)
+    write_into_file(outfile, "norm_subavg", 0, 0 );
+  if (args_info->norm_platsubavg_given)
+    write_into_file(outfile, "norm_platsubavg", 0, 0 );
+  if (args_info->norm_platstdev_given)
+    write_into_file(outfile, "norm_platstdev", 0, 0 );
   if (args_info->is_nibble_given)
     write_into_file(outfile, "is_nibble", 0, 0 );
-  if (args_info->num_db_given)
-    write_into_file(outfile, "num_db", args_info->num_db_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -430,9 +457,15 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   FIX_UNUSED (additional_error);
 
   /* checks for required options */
-  if (! args_info->db_given)
+  if (! args_info->dset_given)
     {
-      fprintf (stderr, "%s: '--db' ('-x') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      fprintf (stderr, "%s: '--dset' ('-x') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  if (! args_info->search_dset_given)
+    {
+      fprintf (stderr, "%s: '--search_dset' ('-D') option required%s\n", prog_name, (additional_error ? additional_error : ""));
       error = 1;
     }
   
@@ -640,25 +673,29 @@ cmdline_parser_internal (
       static struct option long_options[] = {
         { "help",	0, NULL, 'h' },
         { "version",	0, NULL, 'V' },
-        { "db",	1, NULL, 'x' },
-        { "dset",	1, NULL, 'D' },
+        { "dset",	1, NULL, 'x' },
+        { "search_dset",	1, NULL, 'D' },
         { "input",	1, NULL, 'i' },
         { "query",	1, NULL, 'q' },
         { "dir_in",	1, NULL, 'd' },
         { "dir_prep_in",	1, NULL, 'p' },
         { "dir_platform",	1, NULL, 'P' },
         { "quant",	1, NULL, 'Q' },
+        { "num_db",	1, NULL, 'n' },
         { "func_db",	1, NULL, 'w' },
         { "func_n",	1, NULL, 'f' },
         { "func_prep",	1, NULL, 'W' },
-        { "func_platform",	1, NULL, 'F' },
         { "func_quant",	1, NULL, 'R' },
+        { "func_dset",	1, NULL, 'F' },
+        { "func_logit",	0, NULL, 'l' },
+        { "norm_subavg",	0, NULL, 'm' },
+        { "norm_platsubavg",	0, NULL, 'M' },
+        { "norm_platstdev",	0, NULL, 'r' },
         { "is_nibble",	0, NULL, 'N' },
-        { "num_db",	1, NULL, 'n' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVx:D:i:q:d:p:P:Q:w:f:W:F:R:Nn:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVx:D:i:q:d:p:P:Q:n:w:f:W:R:F:lmMrN", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -686,11 +723,11 @@ cmdline_parser_internal (
         case 'x':	/* Input a set of datasets.  */
         
         
-          if (update_arg( (void *)&(args_info->db_arg), 
-               &(args_info->db_orig), &(args_info->db_given),
-              &(local_args_info.db_given), optarg, 0, 0, ARG_STRING,
+          if (update_arg( (void *)&(args_info->dset_arg), 
+               &(args_info->dset_orig), &(args_info->dset_given),
+              &(local_args_info.dset_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "db", 'x',
+              "dset", 'x',
               additional_error))
             goto failure;
         
@@ -698,11 +735,11 @@ cmdline_parser_internal (
         case 'D':	/* A set of datasets to search.  */
         
         
-          if (update_arg( (void *)&(args_info->dset_arg), 
-               &(args_info->dset_orig), &(args_info->dset_given),
-              &(local_args_info.dset_given), optarg, 0, 0, ARG_STRING,
+          if (update_arg( (void *)&(args_info->search_dset_arg), 
+               &(args_info->search_dset_orig), &(args_info->search_dset_given),
+              &(local_args_info.search_dset_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "dset", 'D',
+              "search_dset", 'D',
               additional_error))
             goto failure;
         
@@ -779,6 +816,18 @@ cmdline_parser_internal (
             goto failure;
         
           break;
+        case 'n':	/* Number of databaselets in database.  */
+        
+        
+          if (update_arg( (void *)&(args_info->num_db_arg), 
+               &(args_info->num_db_orig), &(args_info->num_db_given),
+              &(local_args_info.num_db_given), optarg, 0, "1000", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "num_db", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'w':	/* Functional network db path.  */
         
         
@@ -803,7 +852,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'W':	/* Functional network prep directory.  */
+        case 'W':	/* Functional network prep & platform directory.  */
         
         
           if (update_arg( (void *)&(args_info->func_prep_arg), 
@@ -811,18 +860,6 @@ cmdline_parser_internal (
               &(local_args_info.func_prep_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "func_prep", 'W',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'F':	/* Functional network platform directory.  */
-        
-        
-          if (update_arg( (void *)&(args_info->func_platform_arg), 
-               &(args_info->func_platform_orig), &(args_info->func_platform_given),
-              &(local_args_info.func_platform_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "func_platform", 'F',
               additional_error))
             goto failure;
         
@@ -839,24 +876,64 @@ cmdline_parser_internal (
             goto failure;
         
           break;
+        case 'F':	/* Functional network dset-list file (1 dataset).  */
+        
+        
+          if (update_arg( (void *)&(args_info->func_dset_arg), 
+               &(args_info->func_dset_orig), &(args_info->func_dset_given),
+              &(local_args_info.func_dset_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "func_dset", 'F',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'l':	/* Functional network, integrate using logit values.  */
+        
+        
+          if (update_arg((void *)&(args_info->func_logit_flag), 0, &(args_info->func_logit_given),
+              &(local_args_info.func_logit_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "func_logit", 'l',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'm':	/* Per dataset, normalize z-scores by subtracting average of result gene.  */
+        
+        
+          if (update_arg((void *)&(args_info->norm_subavg_flag), 0, &(args_info->norm_subavg_given),
+              &(local_args_info.norm_subavg_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "norm_subavg", 'm',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'M':	/* Per platform, normalize z-scores by subtracting average of query gene across platform.  */
+        
+        
+          if (update_arg((void *)&(args_info->norm_platsubavg_flag), 0, &(args_info->norm_platsubavg_given),
+              &(local_args_info.norm_platsubavg_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "norm_platsubavg", 'M',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'r':	/* Per platform, normalize z-scores by dividing stdev of query gene across platform.  */
+        
+        
+          if (update_arg((void *)&(args_info->norm_platstdev_flag), 0, &(args_info->norm_platstdev_given),
+              &(local_args_info.norm_platstdev_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "norm_platstdev", 'r',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'N':	/* Whether the input DB is nibble type.  */
         
         
           if (update_arg((void *)&(args_info->is_nibble_flag), 0, &(args_info->is_nibble_given),
               &(local_args_info.is_nibble_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "is_nibble", 'N',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'n':	/* Number of databaselets in database.  */
-        
-        
-          if (update_arg( (void *)&(args_info->num_db_arg), 
-               &(args_info->num_db_orig), &(args_info->num_db_given),
-              &(local_args_info.num_db_given), optarg, 0, "1000", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "num_db", 'n',
               additional_error))
             goto failure;
         

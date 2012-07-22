@@ -271,6 +271,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 							/ platform_stdev[j];
 						vv = max((float) min(vv, (float)3.2), (float)-3.2);
 						rData[i][j]= (ushort) (vv*100.0) + 320;
+						//fprintf(stderr, "r %.2f\n", quant[x]);
 					}
 				}
 			}

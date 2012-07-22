@@ -135,7 +135,7 @@ void *do_query(void *th_arg){
 
 		//fprintf(stderr, "Start creating CV partitions\n"); system("date +%s%M 1>&2");
 		CSeekQuery query;
-		query.InitializeQuery(queryGenes);
+		query.InitializeQuery(queryGenes, iGenes);
 		query.CreateCVPartitions(rnd, PART_M, FOLD);
 		//fprintf(stderr, "Done creating CV partitions\n"); system("date +%s%M 1>&2");
 

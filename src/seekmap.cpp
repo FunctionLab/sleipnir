@@ -24,56 +24,6 @@
 
 namespace Sleipnir {
 
-/*
- * Presence Data Structure
- */
-/*
-CSeekPresence::CSeekPresence(size_t i){
-	p = (char*)malloc(i);
-	memset(p, 0, i);
-	iSize = i;
-}
-
-CSeekPresence::CSeekPresence(char *cP, size_t i){
-	p = (char*)malloc(i);
-	memcpy(p, cP, i);
-	iSize = i;
-}
-
-CSeekPresence::CSeekPresence(CSeekPresence* cP){
-	p = (char*)malloc(cP->iSize);
-	memcpy(p, cP->p, cP->iSize);
-	iSize = cP->iSize;
-}
-
-CSeekPresence::~CSeekPresence(){
-	free(p);
-	iSize = 0;
-}
-
-bool CSeekPresence::Check(size_t i){
-	if(p[i]==0){
-		return false;
-	}
-	return true;
-}
-
-void CSeekPresence::Set(size_t i){
-	p[i] = 1;
-}
-
-void CSeekPresence::Clear(size_t i){
-	p[i] = 0;
-}
-
-void CSeekPresence::Clear(){
-	memset(p, 0, iSize);
-}
-
-size_t CSeekPresence::GetSize(){
-	return iSize;
-}
-*/
 
 /*
  * IntIntMap Data Structure
@@ -96,12 +46,6 @@ const vector<ushort>& CSeekIntIntMap::GetAllForward() const{
 const vector<ushort>& CSeekIntIntMap::GetAllReverse() const{
 	return m_iR;
 }
-
-/*
-CSeekIntIntMap::CSeekIntIntMap(const CSeekPresence *cP, const bool bReverse){
-	Initialize(cP->GetSize());
-	Reset(cP, bReverse);
-}*/
 
 CSeekIntIntMap::CSeekIntIntMap(const vector<char> &cP, const bool bReverse){
 	Initialize(cP.size());
@@ -155,25 +99,6 @@ ushort CSeekIntIntMap::GetNumSet() const{
 ushort CSeekIntIntMap::GetSize() const{
 	return m_iSize;
 }
-
-/*void CSeekIntIntMap::Reset(CSeekPresence *cP, bool bReverse){
-	int i;
-	if(bReverse==false){
-		int j = 0;
-		for(i=0; i<m_iSize; i++){
-			if(cP->Check(i)==true){
-				Add(i);
-			}
-		}
-	}else{
-		int j = 0;
-		for(i=0; i<m_iSize; i++){
-			if(cP->Check(i)==false){
-				Add(i);
-			}
-		}
-	}
-}*/
 
 void CSeekIntIntMap::Reset(const char *cP, const bool bReverse){
 	ushort i;

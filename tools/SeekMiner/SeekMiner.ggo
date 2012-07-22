@@ -3,10 +3,10 @@ version	"1.0"
 purpose	"Performs cross-platform microarray query-guided search"
 
 section "Main"
-option	"db"				x	"Input a set of datasets"
+option	"dset"				x	"Input a set of datasets"
 								string typestr="filename"	yes
-option	"dset"				D	"A set of datasets to search"
-								string typestr="filename"
+option	"search_dset"		D	"A set of datasets to search"
+								string typestr="filename"	yes
 option	"input"				i	"Input gene mapping"
 								string	typestr="filename"	yes
 option	"query"				q	"Query gene list"
@@ -14,22 +14,38 @@ option	"query"				q	"Query gene list"
 option	"dir_in"			d	"Database directory"
 								string	typestr="directory"	yes
 option	"dir_prep_in"		p	"Prep directory (containing .gavg, .gpres files)"
-								string	typestr="directory"	yes				
+								string	typestr="directory"	yes
 option	"dir_platform"		P	"Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files)"
 								string	typestr="directory"	yes
 option	"quant"				Q	"quant file (assuming all datasets use the same quantization)"
-								string	typestr="filename"	yes
+								string	typestr="filename"	yes								
+option	"num_db"			n	"Number of databaselets in database"
+								int	default="1000"	yes
+
+section "Optional - Functional Network Expansion"
 option	"func_db"			w	"Functional network db path"
 								string	typestr="directory"
 option	"func_n"			f	"Functional network number of databaselets"
 								int default="1000"
-option	"func_prep"			W	"Functional network prep directory"
-								string typestr="directory"
-option	"func_platform"		F	"Functional network platform directory"
+option	"func_prep"			W	"Functional network prep & platform directory"
 								string typestr="directory"
 option	"func_quant"		R	"Functional network quant file"
 								string typestr="filename"
+option	"func_dset"			F	"Functional network dset-list file (1 dataset)"
+								string typestr="filename"
+option	"func_logit"		l	"Functional network, integrate using logit values"
+								flag	on
+
+section "Optional - Parameter tweaking"
+option	"norm_subavg"		m	"Per dataset, normalize z-scores by subtracting average of result gene"
+								flag	on
+option	"norm_platsubavg"	M	"Per platform, normalize z-scores by subtracting average of query gene across platform"
+								flag	on
+option	"norm_platstdev"	r	"Per platform, normalize z-scores by dividing stdev of query gene across platform"
+								flag	on
+								
+section "MISC"								
 option	"is_nibble"			N	"Whether the input DB is nibble type"
 								flag	off
-option	"num_db"			n	"Number of databaselets in database"
-								int	default="1000"	yes
+
+								
