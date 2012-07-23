@@ -103,7 +103,14 @@ void *do_query(void *th_arg){
 	vecstrAllQuery.push_back(queryName);
 
 	CSeekTools::ReadDatabaselets(DB, vecstrAllQuery, vc);
-
+	vector<float> quant;
+	float w = -5.0;
+	while(w<5.01){
+		quant.push_back(w);
+		w+=0.04;
+		//w+=0.1;
+	}
+	quant.resize(quant.size());
 	ushort i;
 	ushort j;
 	ushort d;
@@ -198,11 +205,11 @@ void *do_query(void *th_arg){
 
 			if(DEBUG) fprintf(stderr, "Initializing %d\n", this_q.size());
 
-			vc[d]->InitializeDataMatrix(rData[tid], iGenes, iQuery);
+			vc[d]->InitializeDataMatrix(rData[tid], quant, iGenes, iQuery);
 
 			if(DEBUG) fprintf(stderr, "Weighting dataset\n");
 
-			CSeekWeighter::CVWeighting(query, *vc[d], &rank_threads[tid], false);
+			CSeekWeighter::CVWeighting(query, *vc[d], 0.95, &rank_threads[tid], false);
 			float w = vc[d]->GetDatasetSumWeight();
 
 			if(w==-1){
