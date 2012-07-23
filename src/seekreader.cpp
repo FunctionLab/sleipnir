@@ -65,6 +65,15 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	vector<ushort> allQ;
 	for(i=0; i<cAllQuery.size(); i++) if(cAllQuery[i]==1) allQ.push_back(i);
 	allQ.resize(allQ.size());
+	/*for(i=0; i<allQ.size(); i++){
+		fprintf(stderr, "allQ: %d %d\n", i, allQ[i]);
+	}*/
+
+	for(i=0; i<iDatasets; i++){
+		if(vc[i]->GetDBMap()!=NULL){
+			vc[i]->DeleteQueryBlock();
+		}
+	}
 
 	fprintf(stderr, "Initializing query map\n"); system("date +%s%N 1>&2");
 
@@ -77,7 +86,7 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 
 	vector<unsigned char> *Q = new vector<unsigned char>[allQ.size()];
 
-	fprintf(stderr, "Start reading genes cdatabaselet\n");
+	fprintf(stderr, "Start reading %d gene cdatabaselets\n", allQ.size());
 	system("date +%s%N 1>&2");
 
 	#pragma omp parallel for \
@@ -85,7 +94,7 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	for(i=0; i<allQ.size(); i++)
 		if(!DB.GetGene(allQ[i], Q[i])) cerr << "Gene does not exist" << endl;
 
-	fprintf(stderr, "Done reading genes cdatabaselet\n");
+	fprintf(stderr, "Done reading %d gene cdatabaselets\n", allQ.size());
 	system("date +%s%N 1>&2");
 
 	size_t m;
@@ -104,8 +113,8 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 		shared(vc, Qi) private(j, k) \
 		firstprivate(iDatasets, iGenes, m, qu, r, db) schedule(dynamic)
 		for(j=0; j<iDatasets; j++){
-			if(CSeekTools::IsNaN(db = (qu = vc[j]->GetDBMap())->GetForward(m)))
-				continue;
+			if((qu=vc[j]->GetDBMap())==NULL) continue;
+			if(CSeekTools::IsNaN(db = (qu->GetForward(m)))) continue;
 			for(r = vc[j]->GetMatrix(), k=0; k<iGenes; k++)
 				r[db][k] = Qi[k*iDatasets+j];
 

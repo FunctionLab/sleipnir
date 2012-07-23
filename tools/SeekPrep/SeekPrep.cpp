@@ -83,9 +83,11 @@ bool InitializeDB(size_t &iDatasets, size_t &iGenes,
 		/* expanded */
 		DBL.Get(i, Q);
 		ushort m = mapstrGenes[DBL.GetGene(i)];
+		CSeekIntIntMap *qu = NULL;
+		ushort db;
 		for(j=0; j<iDatasets; j++){
-			ushort db = vc[j]->GetDBMap()->GetForward(m);
-			if(CSeekTools::IsNaN(db)) continue;
+			if((qu=vc[j]->GetDBMap())==NULL) continue;
+			if(CSeekTools::IsNaN(db=qu->GetForward(m))) continue;
 			unsigned char **r = vc[j]->GetMatrix();
 			for(k=0; k<iGenes; k++){
 				unsigned char c = Q[k*iDatasets + j];
@@ -154,6 +156,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 		vecstrQuery.push_back(thisGene);
 		for(k=0; k<iDatasets; k++){
 			CSeekIntIntMap *mapQ = vc[k]->GetDBMap();
+			if(mapQ==NULL) continue;
 			unsigned char **f = vc[k]->GetMatrix();
 			ushort iQ = mapQ->GetForward(geneID);
 			if(CSeekTools::IsNaN(iQ)){

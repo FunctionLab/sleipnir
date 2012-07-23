@@ -43,6 +43,7 @@ CSeekCentral::CSeekCentral(){
 	m_dsetMap = NULL;
 	m_DB = NULL;
 	m_rData = NULL;
+	m_maxNumDB = 50;
 
 	m_master_rank_threads = NULL;
 	m_sum_weight_threads = NULL;
@@ -54,6 +55,7 @@ CSeekCentral::CSeekCentral(){
 	m_sum_weight.clear();
 	m_weight.clear();
 	m_counts.clear();
+	m_mapLoadTime.clear();
 
 	m_final.clear();
 
@@ -78,6 +80,7 @@ CSeekCentral::~CSeekCentral(){
 	m_vp.clear();
 	m_mapstriPlatform.clear();
 	m_vecstrPlatform.clear();
+	m_mapLoadTime.clear();
 	if(m_dsetMap!=NULL){
 		delete m_dsetMap;
 		m_dsetMap = NULL;
@@ -92,13 +95,57 @@ CSeekCentral::~CSeekCentral(){
 	DEBUG = false;
 }
 
+bool CSeekCentral::CalculateRestart(){
+	set<string> ss;
+	m_mapLoadTime.clear();
+	ushort i, prev;
+	prev = 0;
+	for(i=0; i<m_vecstrAllQuery.size(); i++){
+		if(m_vecstrAllQuery[i].size()>m_maxNumDB){
+			fprintf(stderr, "Cannot fit query %d in buffer\n", i);
+			return false;
+		}
+	}
+
+	vector<vector<string> > *vv = NULL;
+	m_mapLoadTime[prev] = vector< vector<string> >();
+	for(i=0; i<m_vecstrAllQuery.size(); i++){
+		ss.insert(m_vecstrAllQuery[i].begin(), m_vecstrAllQuery[i].end());
+		vv = &(m_mapLoadTime[prev]);
+		vv->push_back(m_vecstrAllQuery[i]);
+		if(ss.size()>m_maxNumDB){
+			vv->pop_back();
+			ss.clear();
+			ss.insert(m_vecstrAllQuery[i].begin(), m_vecstrAllQuery[i].end());
+			prev = i;
+			m_mapLoadTime[prev] = vector< vector<string> >();
+			vv = &(m_mapLoadTime[prev]);
+			vv->push_back(m_vecstrAllQuery[i]);
+		}
+	}
+	//check
+	vector<char> vc;
+	ushort tot = 0;
+	CSeekTools::InitVector(vc, m_vecstrAllQuery.size(), (char) 0);
+	map<ushort, vector< vector<string> > >::const_iterator ci =
+		m_mapLoadTime.begin();
+	for(; ci!=m_mapLoadTime.end(); ci++) tot+=(ci->second).size();
+	if(tot!=m_vecstrAllQuery.size()){
+		fprintf(stderr, "ERROR, size do not match\n");
+		return false;
+	}
+	return true;
+}
+
 bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const char *dset, const char *search_dset,
 	const char *query, const char *platform, const char *db,
 	const char *prep, const bool &useNibble, const ushort &num_db,
-	const bool &bSubtractAvg, const bool &bSubtractPlatformAvg,
-	const bool &bDividePlatformStdev, const bool &bLogit){
+	const ushort &buffer, const bool &bSubtractAvg,
+	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
+	const bool &bLogit){
 
+	m_maxNumDB = buffer;
 	m_numThreads = 8;
 	omp_set_num_threads(m_numThreads);
 
@@ -148,12 +195,14 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 
 	CSeekTools::LoadDatabase(*m_DB, prep, m_vecstrDatasets,
 		m_mapstrstrDatasetPlatform, m_mapstriPlatform, m_vp, m_vc);
-	CSeekTools::ReadDatabaselets(*m_DB, m_vecstrAllQuery, m_vc);
+
+	if(!CalculateRestart()) return false;
+	//CSeekTools::ReadDatabaselets(*m_DB, m_vecstrAllQuery, m_vc);
 
 	return true;
 }
 
-bool CSeekCentral::PrepareOneQuery(const vector<string> &vecstrQuery,
+bool CSeekCentral::PrepareQuery(const vector<string> &vecstrQuery,
 	CSeekQuery &query){
 	vector<ushort> queryGenes;
 	ushort j;
@@ -164,7 +213,12 @@ bool CSeekCentral::PrepareOneQuery(const vector<string> &vecstrQuery,
 	}
 	queryGenes.resize(queryGenes.size());
 	query.InitializeQuery(queryGenes, m_iGenes);
+	return true;
+}
 
+bool CSeekCentral::PrepareOneQuery(CSeekQuery &query){
+	vector<ushort> &queryGenes = query.GetQuery();
+	ushort j;
 	const vector<ushort> &allRDatasets = m_dsetMap->GetAllReverse();
 	ushort iSearchDatasets = m_dsetMap->GetNumSet();
 	ushort iQuery = queryGenes.size();
@@ -199,10 +253,9 @@ bool CSeekCentral::PrepareOneQuery(const vector<string> &vecstrQuery,
 }
 
 bool CSeekCentral::PostSearch(){
-	ushort j;
+	ushort j, k;
 	bool DEBUG = false;
 	for(j=0; j<m_numThreads; j++){
-		ushort k;
 		for(k=0; k<m_iGenes; k++){
 			m_master_rank[k] += m_master_rank_threads[j][k];
 			m_counts[k] += m_counts_threads[j][k];
@@ -283,8 +336,13 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 	ushort iSearchDatasets = m_dsetMap->GetNumSet();
 
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
+		if(m_mapLoadTime.find(i)!=m_mapLoadTime.end()){
+			CSeekTools::ReadDatabaselets(*m_DB, m_mapLoadTime[i], m_vc);
+		}
+
 		CSeekQuery query;
-		PrepareOneQuery(m_vecstrAllQuery[i], query);
+		PrepareQuery(m_vecstrAllQuery[i], query);
+		PrepareOneQuery(query);
 		ushort iQuery = query.GetQuery().size();
 
 		if(sm==CV){
@@ -302,17 +360,18 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			if(DEBUG) fprintf(stderr, "Dataset %d, %s\n",
 				d, m_vecstrDatasets[d].c_str());
 
-			CSeekIntIntMap *mapQ = m_vc[d]->GetQueryMap();
 			CSeekIntIntMap *mapG = m_vc[d]->GetGeneMap();
+			CSeekIntIntMap *mapQ = m_vc[d]->GetQueryMap();
+
+			if(mapQ==NULL ||mapQ->GetNumSet()==0){
+				if(DEBUG) fprintf(stderr, "This dataset is skipped\n");
+				continue;
+			}
 
 			vector<ushort> this_q;
 			for(j=0; j<mapQ->GetNumSet(); j++)
 				this_q.push_back(mapQ->GetReverse(j));
 
-			if(mapQ->GetNumSet()==0){
-				if(DEBUG) fprintf(stderr, "This dataset is skipped\n");
-				continue;
-			}
 
 			if(DEBUG) fprintf(stderr, "Initializing %d\n", this_q.size());
 			m_vc[d]->InitializeDataMatrix(m_rData[tid], m_quant, m_iGenes,

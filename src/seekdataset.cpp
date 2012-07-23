@@ -34,9 +34,16 @@ CSeekDataset::CSeekDataset(){
 	dbMap = NULL;
 	geneMap = NULL;
 	queryMap = NULL;
+	platform = NULL;
 	geneAverage.clear();
 	geneVariance.clear();
 	genePresence.clear();
+	query.clear();
+	queryIndex.clear();
+	iQuerySize = 0;
+	iNumGenes = 0;
+	iDBSize = 0;
+	m_bIsNibble = false;
 	m_fDsetAverage = CMeta::GetNaN();
 	m_fDsetStdev = CMeta::GetNaN();
 	weight.clear();
@@ -49,10 +56,13 @@ CSeekDataset::~CSeekDataset(){
 	if(geneMap!=NULL){
 		delete geneMap;
 		geneMap = NULL;
+		iNumGenes = 0;
 	}
 	geneAverage.clear();
 	geneVariance.clear();
 	genePresence.clear();
+	m_fDsetAverage = CMeta::GetNaN();
+	m_fDsetStdev = CMeta::GetNaN();
 	platform = NULL;
 }
 
@@ -91,7 +101,10 @@ bool CSeekDataset::InitializeGeneMap(){
 
 /* requires presence vector */
 bool CSeekDataset::InitializeQueryBlock(const vector<ushort> &queryBlock){
+	DeleteQueryBlock();
+
 	dbMap = new CSeekIntIntMap(iNumGenes);
+
 	vector<ushort>::const_iterator iterQ = queryBlock.begin();
 	for(; iterQ!=queryBlock.end(); iterQ++){
 		if(CSeekTools::IsNaN(geneMap->GetForward(*iterQ))){
@@ -106,7 +119,7 @@ bool CSeekDataset::InitializeQueryBlock(const vector<ushort> &queryBlock){
 
 	if(iDBSize==0){
 		if(DEBUG) cerr << "Dataset will be skipped" << endl;
-		r = NULL;
+		DeleteQueryBlock();
 		return true;
 	}
 
@@ -116,13 +129,13 @@ bool CSeekDataset::InitializeQueryBlock(const vector<ushort> &queryBlock){
 }
 
 bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
+	DeleteQuery();
+
+	if(iDBSize==0 || dbMap==NULL) return true;
+
 	//must require initializequeryBlock be executed first
-	this->queryIndex.clear();
-	this->query.clear();
 
 	queryMap = new CSeekIntIntMap(iNumGenes);
-
-	if(iDBSize==0) return true;
 
 	ushort i;
 	vector<ushort>::const_iterator iterQ = query.begin();
@@ -141,6 +154,7 @@ bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
 	bool DEBUG = false;
 	if(iQuerySize==0){
 		if(DEBUG) cerr << "Dataset will be skipped" << endl;
+		DeleteQuery();
 		return true;
 	}
 
@@ -167,11 +181,14 @@ bool CSeekDataset::DeleteQuery(){
 	iQuerySize = 0;
 	rData = NULL;
 	weight.clear();
+	query.clear();
+	queryIndex.clear();
 	sum_weight = -1;
 	return true;
 }
 
 bool CSeekDataset::DeleteQueryBlock(){
+	DeleteQuery();
 	if(dbMap!=NULL){
 		delete dbMap;
 		dbMap = NULL;

@@ -47,5 +47,7 @@ option	"norm_platstdev"	r	"Per platform, normalize z-scores by dividing stdev of
 section "MISC"								
 option	"is_nibble"			N	"Whether the input DB is nibble type"
 								flag	off
+option	"buffer"			b	"Number of Databaselets to store in memory"
+								int default="20"
 
 								

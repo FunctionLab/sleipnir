@@ -31,6 +31,11 @@ namespace Sleipnir {
 bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 	const vector<ushort> &cv_query, CSeekDataset &sDataset,
 	const bool bAllocate){
+
+	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
+	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
+	if(mapQ==NULL) return true;
+
 	if(cv_query.size()==0){
 		cerr << "cv_query empty" << endl;
 		return true;
@@ -40,8 +45,6 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 
 	ushort iNumGenes = sDataset.GetNumGenes();
 	ushort q_size = cv_query.size();
-	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
-	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
 	ushort **f = sDataset.GetDataMatrix();
 
 	if(bAllocate){
@@ -78,6 +81,11 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 
 bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 	const float &rate, vector<ushort> *rrank, const bool bAllocate){
+
+	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
+	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
+	if(mapQ==NULL) return true;
+
 	ushort iFold = sQuery.GetNumFold();
 	sDataset.InitializeCVWeight(iFold);
 
@@ -102,8 +110,6 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 	vector<AResult> ar;
 	ar.resize(rank.size());
 
-	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
-	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
 	vector<ushort> &allQ = sQuery.GetQuery();
 
 	for(qi=0; qi<iFold; qi++){

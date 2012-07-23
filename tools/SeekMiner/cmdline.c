@@ -57,6 +57,7 @@ const char *gengetopt_args_info_help[] = {
   "  -r, --norm_platstdev          Per platform, normalize z-scores by dividing \n                                  stdev of query gene across platform  \n                                  (default=on)",
   "\nMISC:",
   "  -N, --is_nibble               Whether the input DB is nibble type  \n                                  (default=off)",
+  "  -b, --buffer=INT              Number of Databaselets to store in memory  \n                                  (default=`20')",
     0
 };
 
@@ -105,6 +106,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->norm_platsubavg_given = 0 ;
   args_info->norm_platstdev_given = 0 ;
   args_info->is_nibble_given = 0 ;
+  args_info->buffer_given = 0 ;
 }
 
 static
@@ -144,6 +146,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->norm_platsubavg_flag = 1;
   args_info->norm_platstdev_flag = 1;
   args_info->is_nibble_flag = 0;
+  args_info->buffer_arg = 20;
+  args_info->buffer_orig = NULL;
   
 }
 
@@ -173,6 +177,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->norm_platsubavg_help = gengetopt_args_info_help[21] ;
   args_info->norm_platstdev_help = gengetopt_args_info_help[22] ;
   args_info->is_nibble_help = gengetopt_args_info_help[24] ;
+  args_info->buffer_help = gengetopt_args_info_help[25] ;
   
 }
 
@@ -282,6 +287,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->func_quant_orig));
   free_string_field (&(args_info->func_dset_arg));
   free_string_field (&(args_info->func_dset_orig));
+  free_string_field (&(args_info->buffer_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -359,6 +365,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "norm_platstdev", 0, 0 );
   if (args_info->is_nibble_given)
     write_into_file(outfile, "is_nibble", 0, 0 );
+  if (args_info->buffer_given)
+    write_into_file(outfile, "buffer", args_info->buffer_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -692,10 +700,11 @@ cmdline_parser_internal (
         { "norm_platsubavg",	0, NULL, 'M' },
         { "norm_platstdev",	0, NULL, 'r' },
         { "is_nibble",	0, NULL, 'N' },
+        { "buffer",	1, NULL, 'b' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVx:D:i:q:d:p:P:Q:n:w:f:W:R:F:lmMrN", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVx:D:i:q:d:p:P:Q:n:w:f:W:R:F:lmMrNb:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -934,6 +943,18 @@ cmdline_parser_internal (
           if (update_arg((void *)&(args_info->is_nibble_flag), 0, &(args_info->is_nibble_given),
               &(local_args_info.is_nibble_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "is_nibble", 'N',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'b':	/* Number of Databaselets to store in memory.  */
+        
+        
+          if (update_arg( (void *)&(args_info->buffer_arg), 
+               &(args_info->buffer_orig), &(args_info->buffer_given),
+              &(local_args_info.buffer_given), optarg, 0, "20", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "buffer", 'b',
               additional_error))
             goto failure;
         

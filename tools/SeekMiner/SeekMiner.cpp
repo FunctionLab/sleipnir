@@ -72,13 +72,16 @@ int main( int iArgs, char** aszArgs ) {
 	if(sArgs.is_nibble_flag==1) useNibble = true;
 
 	CSeekCentral csk;
-	csk.Initialize(sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
+
+	if(!csk.Initialize(sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
 		sArgs.search_dset_arg, sArgs.query_arg, sArgs.dir_platform_arg,
 		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, useNibble, sArgs.num_db_arg,
+		sArgs.buffer_arg,
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
-		!!sArgs.norm_platstdev_flag, false);
+		!!sArgs.norm_platstdev_flag, false))
 		//true, true,
 		//true, true);
+			return -1;
 
 	/* Random Number Generator Initializations */
 	const gsl_rng_type *T;

@@ -193,15 +193,16 @@ void *do_query(void *th_arg){
 			CSeekIntIntMap *mapQ = vc[d]->GetQueryMap();
 			CSeekIntIntMap *mapG = vc[d]->GetGeneMap();
 
+			if(mapQ==NULL ||mapQ->GetNumSet()==0){
+				if(DEBUG) fprintf(stderr, "This dataset is skipped\n");
+				continue;
+			}
+
 			vector<ushort> this_q;
 			for(j=0; j<mapQ->GetNumSet(); j++){
 				this_q.push_back(mapQ->GetReverse(j));
 			}
 
-			if(mapQ->GetNumSet()==0){
-				if(DEBUG) fprintf(stderr, "This dataset is skipped\n");
-				continue;
-			}
 
 			if(DEBUG) fprintf(stderr, "Initializing %d\n", this_q.size());
 

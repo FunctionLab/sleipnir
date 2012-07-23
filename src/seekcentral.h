@@ -45,7 +45,7 @@ public:
 		const char *dset, const char *search_dset,
 		const char *query, const char *platform, const char* db,
 		const char *prep, const bool &useNibble, const ushort &num_db,
-		const bool&, const bool&, const bool&, const bool&);
+		const ushort &, const bool&, const bool&, const bool&, const bool&);
 
 
 	bool CVSearch(gsl_rng*, const enum PartitionMode&, const ushort&, const float&);
@@ -54,8 +54,10 @@ public:
 		const ushort* = NULL, const float* = NULL);
 
 	bool Destruct();
+	bool PrepareQuery(const vector<string>&, CSeekQuery&);
+	bool CalculateRestart();
 
-	bool PrepareOneQuery(const vector<string> &, CSeekQuery &);
+	bool PrepareOneQuery(CSeekQuery &);
 	bool PostSearch();
 	bool Sort();
 	bool Write(const ushort &);
@@ -106,6 +108,9 @@ private:
 	size_t m_iDatasets;
 	size_t m_iGenes;
 	ushort m_numThreads;
+
+	ushort m_maxNumDB;
+	map<ushort, vector< vector<string> > > m_mapLoadTime;
 	bool DEBUG;
 
 };

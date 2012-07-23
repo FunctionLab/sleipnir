@@ -91,6 +91,9 @@ struct gengetopt_args_info
   const char *norm_platstdev_help; /**< @brief Per platform, normalize z-scores by dividing stdev of query gene across platform help description.  */
   int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
   const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
+  int buffer_arg;	/**< @brief Number of Databaselets to store in memory (default='20').  */
+  char * buffer_orig;	/**< @brief Number of Databaselets to store in memory original value given at command line.  */
+  const char *buffer_help; /**< @brief Number of Databaselets to store in memory help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -113,6 +116,7 @@ struct gengetopt_args_info
   unsigned int norm_platsubavg_given ;	/**< @brief Whether norm_platsubavg was given.  */
   unsigned int norm_platstdev_given ;	/**< @brief Whether norm_platstdev was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
+  unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
