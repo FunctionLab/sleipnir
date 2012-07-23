@@ -158,6 +158,7 @@ int main( int iArgs, char** aszArgs ) {
 			size_t l = 0;
 			for(j=0; j<iDatasets; j++){
 				CSeekIntIntMap *qu = vc[j]->GetDBMap();
+				if(qu==NULL) continue;
 				unsigned char **r = vc[j]->GetMatrix();
 				ushort query = qu->GetForward(m);
 				if(CSeekTools::IsNaN(query)) continue;
@@ -172,7 +173,9 @@ int main( int iArgs, char** aszArgs ) {
 			printf("Dataset %ld\n", i);
 			unsigned char **r = vc[i]->GetMatrix();
 			CSeekIntIntMap *mapG = vc[i]->GetGeneMap();
-			for(j=0; j<vc[i]->GetDBMap()->GetNumSet(); j++){
+			CSeekIntIntMap *mapDB = vc[i]->GetDBMap();
+			if(mapDB==NULL) continue;
+			for(j=0; j<mapDB->GetNumSet(); j++){
 				if(vecstrDatasets[i]=="GSE19470.GPL5175.pcl"){
 				printf("Row %ld\n", j);
 				for(k=0; k<mapG->GetNumSet(); k++){
