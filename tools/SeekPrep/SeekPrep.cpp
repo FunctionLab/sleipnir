@@ -176,6 +176,10 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 						vv = quant[uc];
 
 					v = vv - vc[k]->GetGeneAverage(j);
+					/*if(isnan(vv) || isinf(vv) || isnan(vc[k]->GetGeneAverage(j)) ||
+						isinf(vc[k]->GetGeneAverage(j))){
+						fprintf(stderr, "%d %.5f %.5f %.5f\n", (int) uc, quant[uc], vv, vc[k]->GetGeneAverage(j));
+					}*/
 					//v = quant[uc];
 					sum[platform_id] += v;
 					num[platform_id]++;
@@ -189,6 +193,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 			mean[k] = sum[k] / (float) num[k];
 			stdev[k] = sq_sum[k] / (float) num[k] - mean[k] * mean[k];
 			stdev[k] = sqrt(stdev[k]);
+			//fprintf(stderr, "%.5f %.5f\n", mean[k], stdev[k]);
 			platform_avg.Set(k, geneID, mean[k]);
 			platform_stdev.Set(k, geneID, stdev[k]);
 		}
@@ -264,7 +269,11 @@ int main( int iArgs, char** aszArgs ) {
 
 		vector<float> quant;
 		string strQuantFile = sArgs.quant_arg;
+		//fprintf(stderr, "%s\n", strQuantFile.c_str());
 		CSeekTools::ReadQuantFile(strQuantFile, quant);
+
+		//fprintf(stderr, "quant %d %.5f\n", 170, quant[170]);
+		//getchar();
 
 		if(sArgs.gplat_flag==1){
 			bool logit = false;

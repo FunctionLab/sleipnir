@@ -135,16 +135,19 @@ bool CSeekTools::ReadQuantFile(const string &strFile, vector<float> &quant){
 bool CSeekTools::ReadQuantFile(const char *file, vector<float> &quant){
 	ifstream ifsm;
 	ifsm.open(file);
-	char acBuffer[1024];
-	ushort c_iBuffer = 1024;
+	char acBuffer[5000];
+	ushort c_iBuffer = 5000;
 	vector<string> vecstrLine;
 
 	ifsm.getline(acBuffer, c_iBuffer -1);
+	//fprintf(stderr, "%s\n", acBuffer);
 	CMeta::Tokenize( acBuffer, vecstrLine, " ", false);
 	quant.clear();
 	ushort i;
-	for(i=0; i<vecstrLine.size(); i++)
+	for(i=0; i<vecstrLine.size(); i++){
 		quant.push_back(atof(vecstrLine[i].c_str()));
+		//fprintf(stderr, "%.5f\n", atof(vecstrLine[i].c_str()));
+	}
 	quant.resize(quant.size());
 	ifsm.close();
 	return true;

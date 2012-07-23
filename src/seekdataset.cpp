@@ -259,6 +259,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						vv = ((log(quant[x]) - log((float) 1.0 - quant[x]))
 							- a - platform_avg[j]) / platform_stdev[j];
 						vv = max((float) min(vv, (float)3.2), (float)-3.2);
+						//fprintf(stderr, "%.5f %.5f %.5f %.5f\n", quant[x], vv, a, platform_avg[j]);
 						rData[i][j]= (ushort) (vv*100.0) + 320;
 					}
 				}
@@ -316,6 +317,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						vv = max((float)-3.2, (float)min((float) 3.2, (float)
 							(log(quant[x]) - log((float)(1.0 - quant[x]))
 							- a)));
+						//fprintf(stderr, "%.5f %.5f %.5f\n", quant[x], vv, a);
 						rData[i][j]= (ushort) (vv*100.0) + 320;
 					}
 				}
@@ -341,17 +343,20 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 	/* numGenes */
 	if(logit){
 		for(ii=0; ii<iNumGenes; ii++){
+			unsigned char x;
 			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
-				float vv = quant[r[queryIndex[j]][i]];
-				vv = log(vv) - log((float) 1.0 - vv);
+				if((x = r[queryIndex[j]][i])==255) continue;
+				float vv = log(quant[x]) - log((float) 1.0 - quant[x]);
 				vv = max((float) min(vv, (float)3.2), (float)-3.2);
 				rData[i][j] = (ushort) (vv*100.0) + 320;
 			}
 		}
 	}else{
 		for(ii=0; ii<iNumGenes; ii++){
+			unsigned char x;
 			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
-				float vv = quant[r[queryIndex[j]][i]];
+				if((x = r[queryIndex[j]][i])==255) continue;
+				float vv = quant[x];
 				vv = max((float) min(vv, (float)3.2), (float)-3.2);
 				rData[i][j] = (ushort) (vv*100.0) + 320;
 			}

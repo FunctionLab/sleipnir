@@ -77,6 +77,8 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, useNibble, sArgs.num_db_arg,
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
 		!!sArgs.norm_platstdev_flag, false);
+		//true, true,
+		//true, true);
 
 	/* Random Number Generator Initializations */
 	const gsl_rng_type *T;
@@ -87,8 +89,9 @@ int main( int iArgs, char** aszArgs ) {
 	float RATE = 0.95;
 	ushort FOLD = 5;
 	enum PartitionMode PART_M = CUSTOM_PARTITION;
-
+	
 	csk.CVSearch(rnd, PART_M, FOLD, RATE);
+	//csk.EqualWeightSearch();
 	csk.Destruct();
 
 #ifdef WIN32
