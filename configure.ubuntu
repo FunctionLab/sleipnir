@@ -1,1 +1,1 @@
-./configure --prefix=/home/qzhu/sleipnir_build --with-svm-perf=/home/qzhu/sleipnir/svmperf --with-smile=/home/qzhu/sleipnir/smile
+./configure --prefix=/home/qzhu/sleipnir_build --with-svm-perf=/home/qzhu/sleipnir/sleipnir/svmperf --with-smile=/home/qzhu/sleipnir/sleipnir/smile

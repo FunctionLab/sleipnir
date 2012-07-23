@@ -110,14 +110,14 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 	vector<AResult> ar;
 	ar.resize(rank.size());
 
-	vector<ushort> &allQ = sQuery.GetQuery();
+	const vector<ushort> &allQ = sQuery.GetQuery();
 
 	for(qi=0; qi<iFold; qi++){
 		vector<ushort> cv_query;
 		ushort num_q = 0;
 		ushort num_v = 0;
 
-		vector<ushort> &vi = sQuery.GetCVQuery(qi);
+		const vector<ushort> &vi = sQuery.GetCVQuery(qi);
 
 		/* Set query and gold standard */
 		for(i=0; i<vi.size(); i++){
@@ -158,6 +158,8 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 		}
 
 	}
+
+	ar.clear();
 
 	if(bAllocate){
 		delete rrank;

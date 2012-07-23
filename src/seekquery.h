@@ -49,9 +49,9 @@ public:
 	bool InitializeQuery(const vector<ushort>&, const ushort &);
 
 	ushort GetNumFold() const;
-	vector<ushort>& GetQuery();
-	vector<char>& GetQueryPresence();
-	vector<ushort>& GetCVQuery(ushort&);
+	const vector<ushort>& GetQuery() const;
+	const vector<char>& GetQueryPresence() const;
+	const vector<ushort>& GetCVQuery(ushort&) const;
 	bool CreateCVPartitions(const gsl_rng*, \
 		const enum PartitionMode &, const ushort=-1);
 

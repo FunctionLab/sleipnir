@@ -122,6 +122,10 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 	}
 	x *= (1.0-rate);
 	rbp = x;
+
+	if(bAllocate){
+		asing.clear();
+	}
 	return true;
 }
 

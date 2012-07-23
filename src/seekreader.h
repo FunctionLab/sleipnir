@@ -98,6 +98,21 @@ public:
 		return true;
 	}
 
+	template<class tType>
+	static bool Write2DArrayText(const char *fileName,
+		const vector<vector<tType> > &vData){
+		ofstream outfile;
+		outfile.open(fileName);
+		ushort i,j;
+		for(j=0; j<vData.size(); j++){
+			for(i=0; i<vData[j].size()-1; i++){
+				outfile << vData[j][i] << " ";
+			}
+			outfile << vData[j][vData[j].size()-1] << endl;
+		}
+		outfile.close();
+		return true;
+	}
 
 	template<class tType>
 	static bool InitVector(vector<tType> &vData, const ushort &iSize,

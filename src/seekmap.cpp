@@ -143,6 +143,8 @@ CSeekStrIntMap::CSeekStrIntMap(){
 }
 
 CSeekStrIntMap::~CSeekStrIntMap(){
+	m_mapstrint.clear();
+	m_mapintstr.clear();
 }
 
 void CSeekStrIntMap::Clear(){

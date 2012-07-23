@@ -72,15 +72,15 @@ ushort CSeekQuery::GetNumFold() const{
 	return iNumFold;
 }
 
-vector<char>& CSeekQuery::GetQueryPresence(){
+const vector<char>& CSeekQuery::GetQueryPresence() const{
 	return queryGenePresence;
 }
 
-vector<ushort>& CSeekQuery::GetQuery(){
+const vector<ushort>& CSeekQuery::GetQuery() const{
 	return queryGenes;
 }
 
-vector<ushort>& CSeekQuery::GetCVQuery(ushort &i){
+const vector<ushort>& CSeekQuery::GetCVQuery(ushort &i) const{
 	return crossValGenes[i];
 }
 

@@ -33,7 +33,7 @@
 namespace Sleipnir {
 
 enum SearchMode{
-	CV=0, EQUAL=1
+	CV=0, EQUAL=1, USE_WEIGHT=2
 };
 
 class CSeekCentral{
@@ -47,22 +47,29 @@ public:
 		const char *prep, const bool &useNibble, const ushort &num_db,
 		const ushort &, const bool&, const bool&, const bool&, const bool&);
 
-
 	bool CVSearch(gsl_rng*, const enum PartitionMode&, const ushort&, const float&);
 	bool EqualWeightSearch();
+	bool WeightSearch(const vector<vector<float> >&);
+
 	bool Common(enum SearchMode&, gsl_rng* = NULL, const enum PartitionMode* = NULL,
-		const ushort* = NULL, const float* = NULL);
+		const ushort* = NULL, const float* = NULL,
+		const vector< vector<float> >* = NULL);
 
 	bool Destruct();
 	bool PrepareQuery(const vector<string>&, CSeekQuery&);
 	bool CalculateRestart();
 
-	bool PrepareOneQuery(CSeekQuery &);
+	bool PrepareOneQuery(CSeekQuery &, vector<float>&);
 	bool PostSearch();
-	bool Sort();
+	bool Sort(vector<AResultFloat> &);
 	bool Write(const ushort &);
-	bool Display(CSeekQuery &);
+	bool Display(CSeekQuery &, vector<AResultFloat>&);
+	const vector< vector<AResultFloat> >& GetAllResult()const;
+	const vector<CSeekQuery>& GetAllQuery() const;
+	ushort GetGene(const string &strGene) const;
+	string GetGene(const ushort &geneID) const;
 
+	const vector<vector<float> > &GetAllWeight() const;
 
 private:
 	vector<string> m_vecstrGenes;
@@ -91,12 +98,15 @@ private:
 	/* Essential search results */
 	vector<float> m_master_rank;
 	vector<float> m_sum_weight;
-	vector<float> m_weight;
 	vector<ushort> m_counts;
-	vector<AResultFloat> m_final;
+
+	/* Holds results for all queries */
+	vector< vector<float> > m_weight;
+	vector< vector<AResultFloat> > m_final;
 
 	/* Query */
 	vector< vector<string> > m_vecstrAllQuery;
+	vector<CSeekQuery> m_Query;
 
 	/* Platform */
 	vector<CSeekPlatform> m_vp;

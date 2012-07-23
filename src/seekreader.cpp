@@ -84,27 +84,19 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	fprintf(stderr, "Done initializing query map\n");
 	system("date +%s%N 1>&2");
 
-	vector<unsigned char> *Q = new vector<unsigned char>[allQ.size()];
-
-	fprintf(stderr, "Start reading %d gene cdatabaselets\n", allQ.size());
+	fprintf(stderr, "Reading %d gene cdatabaselets and doing query centric\n",
+		allQ.size());
 	system("date +%s%N 1>&2");
-
-	#pragma omp parallel for \
-	shared(allQ, DB, Q) private(i) schedule(dynamic)
-	for(i=0; i<allQ.size(); i++)
-		if(!DB.GetGene(allQ[i], Q[i])) cerr << "Gene does not exist" << endl;
-
-	fprintf(stderr, "Done reading %d gene cdatabaselets\n", allQ.size());
-	system("date +%s%N 1>&2");
-
 	size_t m;
 
-	fprintf(stderr, "Start changing to query centric\n");
-	system("date +%s%N 1>&2");
 	for(i=0; i<allQ.size(); i++){
 		m = allQ[i];
+		vector<unsigned char> Qi;
+		if(!DB.GetGene(m, Qi)){
+			cerr << "Gene does not exist" << endl;
+			continue;
+		}
 
-		vector<unsigned char> &Qi = Q[i];
 		ushort db;
 		CSeekIntIntMap *qu = NULL;
 		unsigned char **r = NULL;
@@ -129,10 +121,9 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 		Qi.clear();
 	}
 
-	fprintf(stderr, "Done changing to query centric\n");
+	fprintf(stderr, "Finished reading databaselets and query centric\n");
 	system("date +%s%N 1>&2");
 
-	delete[] Q;
 
 	return true;
 }

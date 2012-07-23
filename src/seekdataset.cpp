@@ -169,7 +169,6 @@ bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
 
 	this->queryIndex.resize(this->queryIndex.size());
 	this->query.resize(this->query.size());
-
 	return true;
 }
 
@@ -194,7 +193,7 @@ bool CSeekDataset::DeleteQueryBlock(){
 		dbMap = NULL;
 	}
 	if(r!=NULL){
-		CSeekTools::Free2DArray(r);
+		CSeekTools::Free2DArray((unsigned char**)r);
 		r = NULL;
 	}
 	iDBSize = 0;

@@ -22,9 +22,6 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-
-
-
 bool InitializeDataset(size_t &iDatasets, vector<string> &vecstrDatasets,
 	string &strPrepInputDirectory, vector<CSeekDataset*> &vc){
 	vc.clear();
