@@ -52,7 +52,7 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.func_dset_arg, sArgs.func_dset_arg, sArgs.query_arg,
 		sArgs.func_prep_arg, sArgs.func_db_arg, sArgs.func_prep_arg,
 		useNibble, sArgs.func_n_arg, sArgs.buffer_arg,
-		true, true, true, true)){
+		"fn", true, true, true, true)){
 		return -1;
 	}
 
@@ -63,14 +63,14 @@ int main( int iArgs, char** aszArgs ) {
 	vector<vector<string> > newQuery;
 	newQuery.resize(vfunc.size());
 	ushort i,j;
-	ushort TOP = 10;
+	ushort TOP = 20;
 	for(i=0; i<vfunc.size(); i++){
 		newQuery[i] = vector<string>();
 		const vector<ushort> &queryGenes = vq[i].GetQuery();
 		for(j=0; j<queryGenes.size(); j++){
 			newQuery[i].push_back(func->GetGene(queryGenes[j]));
 		}
-		for(j=0; j<TOP; j++){
+		for(j=0; j<TOP-queryGenes.size(); j++){
 			newQuery[i].push_back(func->GetGene(vfunc[i][j].i));
 		}
 	}
@@ -86,7 +86,7 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.search_dset_arg, "/tmp/expanded_query.txt",
 		sArgs.dir_platform_arg,
 		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, useNibble, sArgs.num_db_arg,
-		sArgs.buffer_arg,
+		sArgs.buffer_arg, "expanded", 
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
 		!!sArgs.norm_platstdev_flag, false))
 			return -1;
@@ -119,7 +119,7 @@ int main( int iArgs, char** aszArgs ) {
 	if(!csfinal->Initialize(sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
 		sArgs.search_dset_arg, sArgs.query_arg, sArgs.dir_platform_arg,
 		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, useNibble, sArgs.num_db_arg,
-		sArgs.buffer_arg,
+		sArgs.buffer_arg, "results", 
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
 		!!sArgs.norm_platstdev_flag, false))
 		return -1;

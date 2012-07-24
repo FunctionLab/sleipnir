@@ -45,7 +45,8 @@ public:
 		const char *dset, const char *search_dset,
 		const char *query, const char *platform, const char* db,
 		const char *prep, const bool &useNibble, const ushort &num_db,
-		const ushort &, const bool&, const bool&, const bool&, const bool&);
+		const ushort &, const char*,
+		const bool&, const bool&, const bool&, const bool&);
 
 	bool CVSearch(gsl_rng*, const enum PartitionMode&, const ushort&, const float&);
 	bool EqualWeightSearch();
@@ -122,6 +123,8 @@ private:
 	ushort m_maxNumDB;
 	map<ushort, vector< vector<string> > > m_mapLoadTime;
 	bool DEBUG;
+
+	string m_output_dir;
 
 };
 

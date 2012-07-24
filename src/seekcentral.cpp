@@ -68,6 +68,7 @@ CSeekCentral::CSeekCentral(){
 	m_bDividePlatformStdev = false;
 	m_bLogit = false;
 	DEBUG = false;
+	m_output_dir = "";
 }
 
 CSeekCentral::~CSeekCentral(){
@@ -114,7 +115,7 @@ CSeekCentral::~CSeekCentral(){
 	m_iGenes = 0;
 	m_numThreads = 0;
 	m_mapLoadTime.clear();
-
+	m_output_dir = "";
 	DEBUG = false;
 }
 
@@ -166,10 +167,12 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const char *dset, const char *search_dset,
 	const char *query, const char *platform, const char *db,
 	const char *prep, const bool &useNibble, const ushort &num_db,
-	const ushort &buffer, const bool &bSubtractAvg,
+	const ushort &buffer, const char *output_dir,
+	const bool &bSubtractAvg,
 	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
 	const bool &bLogit){
 
+	m_output_dir = output_dir;
 	m_maxNumDB = buffer;
 	m_numThreads = 8;
 	omp_set_num_threads(m_numThreads);
@@ -347,19 +350,19 @@ bool CSeekCentral::Display(CSeekQuery &query, vector<AResultFloat> &final){
 
 bool CSeekCentral::Write(const ushort &i){
 	char acBuffer[1024];
-	sprintf(acBuffer, "results/%d.query", i);
+	sprintf(acBuffer, "%s/%d.query", m_output_dir.c_str(), i);
 	CSeekTools::WriteArrayText(acBuffer, m_vecstrAllQuery[i]);
-	sprintf(acBuffer, "results/%d.dweight", i);
+	sprintf(acBuffer, "%s/%d.dweight", m_output_dir.c_str(), i);
 	CSeekTools::WriteArray(acBuffer, m_weight[i]);
-	sprintf(acBuffer, "results/%d.gscore", i);
+	sprintf(acBuffer, "%s/%d.gscore", m_output_dir.c_str(), i);
 	CSeekTools::WriteArray(acBuffer, m_master_rank);
 	return true;
 }
 
 bool CSeekCentral::Common(enum SearchMode &sm,
-		gsl_rng *rnd, const enum PartitionMode *PART_M,
-		const ushort *FOLD, const float *RATE,
-		const vector< vector<float> > *providedWeight){
+	gsl_rng *rnd, const enum PartitionMode *PART_M,
+	const ushort *FOLD, const float *RATE,
+	const vector< vector<float> > *providedWeight){
 
 	ushort i, j, d, dd;
 	const vector<ushort> &allRDatasets = m_dsetMap->GetAllReverse();
