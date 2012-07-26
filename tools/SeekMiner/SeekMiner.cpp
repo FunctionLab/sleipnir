@@ -46,12 +46,13 @@ int main( int iArgs, char** aszArgs ) {
 	bool useNibble = false;
 	if(sArgs.is_nibble_flag==1) useNibble = true;
 
-	CSeekCentral *func = new CSeekCentral();
+	/*CSeekCentral *func = new CSeekCentral();
 	if(!func->Initialize(sArgs.input_arg, sArgs.func_quant_arg,
 		sArgs.func_dset_arg, sArgs.func_dset_arg, sArgs.query_arg,
 		sArgs.func_prep_arg, sArgs.func_db_arg, sArgs.func_prep_arg,
 		useNibble, sArgs.func_n_arg, sArgs.buffer_arg,
-		"fn", true, true, true, true)){
+		"fn", true, true, true, true,
+		sArgs.score_cutoff_arg, sArgs.per_q_required_arg)){
 		return -1;
 	}
 
@@ -77,7 +78,7 @@ int main( int iArgs, char** aszArgs ) {
 	}
 
 	func->Destruct();
-	delete func;
+	delete func;*/
 
 	/*CSeekTools::Write2DArrayText("/tmp/expanded_query.txt", newQuery);*/
 
@@ -89,7 +90,8 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, useNibble, sArgs.num_db_arg,
 		sArgs.buffer_arg, "normal",
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
-		!!sArgs.norm_platstdev_flag, false))
+		!!sArgs.norm_platstdev_flag, false,
+		sArgs.score_cutoff_arg, sArgs.per_q_required_arg))
 			return -1;
 
 	// Random Number Generator Initializations
@@ -103,7 +105,7 @@ int main( int iArgs, char** aszArgs ) {
 	enum PartitionMode PART_M = CUSTOM_PARTITION;
 
 	csk->CVSearch(rnd, PART_M, FOLD, RATE);
-	const vector<vector<float> > &csk_weight = csk->GetAllWeight();
+	/*const vector<vector<float> > &csk_weight = csk->GetAllWeight();
 
 	vector<vector<float> > csk_weight_copy;
 	csk_weight_copy.resize(csk_weight.size());
@@ -121,11 +123,11 @@ int main( int iArgs, char** aszArgs ) {
 		for(j=0; j<TOP; j++){
 			vcNew[i].push_back(csk->GetGene(vcsk[i][j].i));
 		}
-	}
+	}*/
 	csk->Destruct();
 	delete csk;
 
-	vector< vector<string> > vcIntersect;
+	/*vector< vector<string> > vcIntersect;
 	vcIntersect.resize(vcNew.size());
 	for(i=0; i<vcNew.size(); i++){
 		vcIntersect[i] = vector<string>();
@@ -162,13 +164,14 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, useNibble, sArgs.num_db_arg,
 		sArgs.buffer_arg, "results", 
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
-		!!sArgs.norm_platstdev_flag, false))
+		!!sArgs.norm_platstdev_flag, false,
+		sArgs.score_cutoff_arg, sArgs.per_q_required_arg))
 		return -1;
 
 	//csfinal->WeightSearch(csk_weight_copy);
 	csfinal->CVCustomSearch(vcIntersect, rnd, PART_M, FOLD, RATE);
 	csfinal->Destruct();
-	delete csfinal;
+	delete csfinal;*/
 
 #ifdef WIN32
 	pthread_win32_process_detach_np( );

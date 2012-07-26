@@ -27,7 +27,7 @@ namespace Sleipnir {
 
 bool CSeekPerformanceMeasure::SortRankVector(
 	const vector<unsigned short> &rank,
-	const CSeekIntIntMap &mapG, vector<AResult> &a, const bool bAllocate,
+	const CSeekIntIntMap &mapG, vector<AResult> &a,
 	const ushort top){
 
 	ushort numGenesD = mapG.GetNumSet();
@@ -36,27 +36,18 @@ bool CSeekPerformanceMeasure::SortRankVector(
 	ushort i;
 	bool DEBUG = false;
 
-	if(bAllocate){
-		a.clear();
-		a.resize(rank.size());
-	}
-
 	//a should be the same size as rank
-	if(top==0){
-		TOP = rank.size();
-	}else{
-		TOP = top;
-	}
+	if(top==0) TOP = rank.size();
+	else TOP = top;
 
 	vector<ushort>::const_iterator itRank = rank.begin();
 	vector<AResult>::iterator itA = a.begin();
 	for(i = 0; itRank!=rank.end(); itRank++, itA++, i++){
 		itA->i = i;
 		itA->f = *itRank;
-		if(*itRank>0){
-			numNonZero++;
-		}
+		if(*itRank>0) numNonZero++;
 	}
+
 	if(numNonZero==0){
 		if(DEBUG) cerr << "This dataset is all zero!" << endl;
 		return false;
@@ -78,33 +69,20 @@ bool CSeekPerformanceMeasure::SortRankVector(
 bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 	const vector<unsigned short> &rank, float &rbp,
 	const vector<char> &mask, const vector<char> &gold,
-	const CSeekIntIntMap &mapG,
+	const CSeekIntIntMap &mapG, vector<AResult> *ar,
 	/* optional arguments */
-	const bool bAllocate, vector<AResult> *ar, const ushort top
-	){
+	const ushort top){
 
 	ushort i, ii, j, jj;
 	float x;
-	bool ret;
-
-	vector<AResult> *sing;
-	vector<AResult> asing;
-	AResult *aa;
 
 	ushort TOP = top;
+	if(top==0) TOP = rank.size();
 
-	if(top==0){
-		TOP = rank.size();
-	}
-
-	if(bAllocate==true){
-		sing = &asing;
-	}else{
-		sing = ar;
-	}
-
-	ret = CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing,
-		bAllocate, top);
+	//ar should be same size as rank
+	vector<AResult> *sing = ar;
+	bool ret =
+		CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing, top);
 
 	if(!ret){
 		rbp = -1;
@@ -113,8 +91,10 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 
 	x = 0;
 	jj = 0;
+
+	AResult *aa;
 	for(i=0; i<TOP; i++){
-		aa = &sing->at(i);
+		aa = &(*sing)[i];
 		if(aa->f==0) break;
 		if(mask[aa->i]==1) continue;
 		if(gold[aa->i]==1) x+=pow(rate, jj);
@@ -122,10 +102,6 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 	}
 	x *= (1.0-rate);
 	rbp = x;
-
-	if(bAllocate){
-		asing.clear();
-	}
 	return true;
 }
 

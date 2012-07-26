@@ -170,11 +170,14 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const ushort &buffer, const char *output_dir,
 	const bool &bSubtractAvg,
 	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
-	const bool &bLogit){
+	const bool &bLogit, const float &fCutOff, const float &fPercentRequired){
 
 	m_output_dir = output_dir;
 	m_maxNumDB = buffer;
 	m_numThreads = 8;
+	m_fScoreCutOff = fCutOff;
+	m_fPercentQueryAfterScoreCutOff = fPercentRequired;
+
 	omp_set_num_threads(m_numThreads);
 
 	m_bSubtractGeneAvg = bSubtractAvg;
@@ -373,9 +376,8 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 	m_final.resize(m_vecstrAllQuery.size());
 
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
-		if(m_mapLoadTime.find(i)!=m_mapLoadTime.end()){
+		if(m_mapLoadTime.find(i)!=m_mapLoadTime.end())
 			CSeekTools::ReadDatabaselets(*m_DB, m_mapLoadTime[i], m_vc);
-		}
 
 		//fprintf(stderr, "1 %lu\n", CMeta::GetMemoryUsage());
 
@@ -431,10 +433,12 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 				if(DEBUG) fprintf(stderr, "Weighting dataset\n");
 				if(sm==CV)
 					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
-						&m_rank_threads[tid], false);
+						m_fPercentQueryAfterScoreCutOff,
+						&m_rank_threads[tid]);
 				else
 					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
-						&m_rank_threads[tid], false, &customGoldStd);
+						m_fPercentQueryAfterScoreCutOff,
+						&m_rank_threads[tid], &customGoldStd);
 
 				if( (w = m_vc[d]->GetDatasetSumWeight())==-1){
 					if(DEBUG) fprintf(stderr, "Bad weight\n");
@@ -446,8 +450,10 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 
 			if(DEBUG) fprintf(stderr, "Doing linear combination\n");
 
+			const ushort MIN_REQUIRED = max((ushort) 1, (ushort) (
+				m_fPercentQueryAfterScoreCutOff * this_q.size()));
 			CSeekWeighter::LinearCombine(m_rank_normal_threads[tid], this_q,
-				*m_vc[d], false);
+				*m_vc[d], MIN_REQUIRED);
 
 			if(DEBUG) fprintf(stderr,
 				"Adding contribution of dataset to master ranking: %.5f\n", w);

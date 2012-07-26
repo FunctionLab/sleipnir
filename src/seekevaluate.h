@@ -39,8 +39,7 @@ struct AResult{
 	}
 };
 
-struct Ascending
-{
+struct Ascending{
     bool operator()( const AResult& lx, const AResult& rx ) const {
         return lx.f <= rx.f;
     }
@@ -65,16 +64,14 @@ class CSeekPerformanceMeasure{
 public:
 	static bool SortRankVector(const vector<unsigned short> &rank,
 		const CSeekIntIntMap &mapG, vector<AResult> &a,
-		const bool bAllocate = true, const ushort top = 0);
+		const ushort top = 0);
 	/* designed specifically for a CSeekDataset */
 	/* mask: the query genes which are not included in RBP calcualtion */
 	static bool RankBiasedPrecision(const float &rate,
 		const vector<unsigned short> &rank, float &rbp,
 		const vector<char> &mask, const vector<char> &gold,
-		const CSeekIntIntMap &mapG,
+		const CSeekIntIntMap &mapG, vector<AResult> *sing,
 		/* optional */
-		const bool bAllocate = true,
-		vector<AResult> *sing= NULL,
 		const ushort top = 0);
 };
 

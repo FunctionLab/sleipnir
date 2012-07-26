@@ -34,12 +34,11 @@ class CSeekWeighter{
 public:
 	/*cv_query must be present in sDataset */
 	static bool LinearCombine(vector<ushort> &rank,
-		const vector<ushort> &cv_query,
-		CSeekDataset &sDataset, const bool bAllocate = true);
+		const vector<ushort> &cv_query, CSeekDataset &sDataset,
+		const ushort &);
 	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
-		const float &rate,
-		vector<ushort> *rrank = NULL, const bool bAllocate = true,
-		const CSeekQuery *goldStd = NULL);
+		const float &rate, const float &percent_required,
+		vector<ushort> *rrank, const CSeekQuery *goldStd = NULL);
 };
 
 

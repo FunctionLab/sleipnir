@@ -46,7 +46,8 @@ public:
 		const char *query, const char *platform, const char* db,
 		const char *prep, const bool &useNibble, const ushort &num_db,
 		const ushort &, const char*,
-		const bool&, const bool&, const bool&, const bool&);
+		const bool&, const bool&, const bool&, const bool&,
+		const float&, const float&);
 
 	bool CVSearch(gsl_rng*, const enum PartitionMode&, const ushort&, const float&);
 	bool CVCustomSearch(const vector< vector<string> > &, gsl_rng*,
@@ -128,6 +129,8 @@ private:
 	bool DEBUG;
 
 	string m_output_dir;
+	float m_fScoreCutOff;
+	float m_fPercentQueryAfterScoreCutOff;
 
 };
 

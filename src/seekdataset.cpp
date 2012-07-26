@@ -215,7 +215,8 @@ ushort** CSeekDataset::GetDataMatrix(){
 bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 	const vector<float> &quant, const ushort &iRows,
 	const ushort &iColumns, const bool bSubtractAvg,
-	const bool bSubtractPlatformAvg, const bool logit){
+	const bool bSubtractPlatformAvg, const bool logit,
+	const float cutoff){
 	/* assume platform is already set */
 
 	//hard coded quant file
@@ -239,6 +240,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 
 	//fprintf(stderr, "iNumQueries is %d\n", iNumQueries);
 	//iRows is the gene id, iColumns is the query id
+	//default value for all rData entries is 0
 	memset(&rData[0][0], 0, sizeof(ushort)*iRows*iColumns);
 
 	//assume queryIndex is already sorted
@@ -258,9 +260,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 				ushort jj = this->query[j];
 				platform_avg[j] = platform->GetPlatformAvg(jj);
 				platform_stdev[j] = platform->GetPlatformStdev(jj);
-				//fprintf(stderr, "Q%d ", jj);
 			}
-			//fprintf(stderr, "\n");
 
 			const vector<ushort> &allRGenes = geneMap->GetAllReverse();
 			float a = 0;
@@ -275,8 +275,11 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						vv = ((log(quant[x]) - log((float) 1.0 - quant[x]))
 							- a - platform_avg[j]) / platform_stdev[j];
 						vv = max((float) min(vv, (float)3.2), (float)-3.2);
-						//fprintf(stderr, "%.5f %.5f %.5f %.5f\n", quant[x], vv, a, platform_avg[j]);
-						rData[i][j]= (ushort) (vv*100.0) + 320;
+						//By default, cutoff = -nan (i.e., always true)
+						if(vv>cutoff){
+							rData[i][j]= (ushort) (vv*100.0) + 320;
+							//fprintf(stderr, "%.5f %.5f %.5f %.5f\n", quant[x], vv, a, platform_avg[j]);
+						}
 					}
 				}
 			}else{
@@ -287,8 +290,10 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						vv = (quant[x] - a - platform_avg[j])
 							/ platform_stdev[j];
 						vv = max((float) min(vv, (float)3.2), (float)-3.2);
-						rData[i][j]= (ushort) (vv*100.0) + 320;
-						//fprintf(stderr, "r %.2f\n", quant[x]);
+						if(vv>cutoff){
+							rData[i][j]= (ushort) (vv*100.0) + 320;
+							//fprintf(stderr, "r %.2f\n", quant[x]);
+						}
 					}
 				}
 			}
@@ -334,7 +339,9 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 							(log(quant[x]) - log((float)(1.0 - quant[x]))
 							- a)));
 						//fprintf(stderr, "%.5f %.5f %.5f\n", quant[x], vv, a);
-						rData[i][j]= (ushort) (vv*100.0) + 320;
+						if(vv>cutoff){
+							rData[i][j]= (ushort) (vv*100.0) + 320;
+						}
 					}
 				}
 			}
@@ -347,7 +354,9 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						if((x = r[queryIndex[j]][i])==255) continue;
 						vv = max((float) min((float)(quant[x] - a),
 							(float)3.2), (float)-3.2);
-						rData[i][j]= (ushort) (vv*100.0) + 320;
+						if(vv>cutoff){
+							rData[i][j]= (ushort) (vv*100.0) + 320;
+						}
 					}
 				}
 			}
@@ -364,7 +373,9 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 				if((x = r[queryIndex[j]][i])==255) continue;
 				float vv = log(quant[x]) - log((float) 1.0 - quant[x]);
 				vv = max((float) min(vv, (float)3.2), (float)-3.2);
-				rData[i][j] = (ushort) (vv*100.0) + 320;
+				if(vv>cutoff){
+					rData[i][j] = (ushort) (vv*100.0) + 320;
+				}
 			}
 		}
 	}else{
@@ -374,7 +385,9 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 				if((x = r[queryIndex[j]][i])==255) continue;
 				float vv = quant[x];
 				vv = max((float) min(vv, (float)3.2), (float)-3.2);
-				rData[i][j] = (ushort) (vv*100.0) + 320;
+				if(vv>cutoff){
+					rData[i][j] = (ushort) (vv*100.0) + 320;
+				}
 			}
 		}
 	}
