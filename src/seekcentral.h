@@ -33,7 +33,7 @@
 namespace Sleipnir {
 
 enum SearchMode{
-	CV=0, EQUAL=1, USE_WEIGHT=2
+	CV=0, EQUAL=1, USE_WEIGHT=2, CV_CUSTOM=3
 };
 
 class CSeekCentral{
@@ -49,12 +49,15 @@ public:
 		const bool&, const bool&, const bool&, const bool&);
 
 	bool CVSearch(gsl_rng*, const enum PartitionMode&, const ushort&, const float&);
+	bool CVCustomSearch(const vector< vector<string> > &, gsl_rng*,
+		const enum PartitionMode&, const ushort&, const float&);
 	bool EqualWeightSearch();
 	bool WeightSearch(const vector<vector<float> >&);
 
 	bool Common(enum SearchMode&, gsl_rng* = NULL, const enum PartitionMode* = NULL,
 		const ushort* = NULL, const float* = NULL,
-		const vector< vector<float> >* = NULL);
+		const vector< vector<float> >* = NULL,
+		const vector< vector<string> >* = NULL);
 
 	bool Destruct();
 	bool PrepareQuery(const vector<string>&, CSeekQuery&);

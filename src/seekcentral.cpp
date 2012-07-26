@@ -291,7 +291,6 @@ bool CSeekCentral::PostSearch(){
 			m_sum_weight[k]+=m_sum_weight_threads[j][k];
 		}
 	}
-
 	CSeekTools::Free2DArray(m_master_rank_threads);
 	CSeekTools::Free2DArray(m_counts_threads);
 	CSeekTools::Free2DArray(m_sum_weight_threads);
@@ -362,7 +361,8 @@ bool CSeekCentral::Write(const ushort &i){
 bool CSeekCentral::Common(enum SearchMode &sm,
 	gsl_rng *rnd, const enum PartitionMode *PART_M,
 	const ushort *FOLD, const float *RATE,
-	const vector< vector<float> > *providedWeight){
+	const vector< vector<float> > *providedWeight,
+	const vector< vector<string> > *newGoldStd){
 
 	ushort i, j, d, dd;
 	const vector<ushort> &allRDatasets = m_dsetMap->GetAllReverse();
@@ -387,13 +387,18 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 		PrepareOneQuery(query, weight);
 		ushort iQuery = query.GetQuery().size();
 
-		if(sm==CV)
+		//for CV_CUSTOM
+		CSeekQuery customGoldStd;
+		if(sm==CV_CUSTOM)
+			PrepareQuery((*newGoldStd)[i], customGoldStd);
+
+		if(sm==CV || sm==CV_CUSTOM)
 			query.CreateCVPartitions(rnd, *PART_M, *FOLD);
 
 		//fprintf(stderr, "2 %lu\n", CMeta::GetMemoryUsage());
 
 		#pragma omp parallel for \
-		shared(allRDatasets, query) \
+		shared(allRDatasets, query, customGoldStd) \
 		private(dd, d, j) \
 		firstprivate(iSearchDatasets, iQuery) \
 		schedule(dynamic)
@@ -422,19 +427,22 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			//m_bSubtractPlatformStdev is not used, it's assumed
 
 			float w = -1;
-			if(sm==CV){
+			if(sm==CV || sm==CV_CUSTOM){
 				if(DEBUG) fprintf(stderr, "Weighting dataset\n");
-				CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
-					&m_rank_threads[tid], false);
+				if(sm==CV)
+					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
+						&m_rank_threads[tid], false);
+				else
+					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
+						&m_rank_threads[tid], false, &customGoldStd);
+
 				if( (w = m_vc[d]->GetDatasetSumWeight())==-1){
 					if(DEBUG) fprintf(stderr, "Bad weight\n");
 					continue;
 				}
-			}else if(sm==EQUAL){
-				w = 1.0;
-			}else if(sm==USE_WEIGHT){
-				w = (*providedWeight)[i][d];
 			}
+			else if(sm==EQUAL) w = 1.0;
+			else if(sm==USE_WEIGHT) w = (*providedWeight)[i][d];
 
 			if(DEBUG) fprintf(stderr, "Doing linear combination\n");
 
@@ -461,13 +469,10 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			}
 			weight[d] = w;
 		}
-
+		//omp finishes
 		//fprintf(stderr, "3 %lu\n", CMeta::GetMemoryUsage());
-
 		for(j=0; j<iSearchDatasets; j++)
 			m_vc[allRDatasets[j]]->DeleteQuery();
-
-		//omp finishes
 		PostSearch();
 		Sort(final);
 		//Display(query, final);
@@ -475,8 +480,6 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 
 		fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
 		Write(i);
-
-
 	}
 
 	return true;
@@ -494,11 +497,21 @@ bool CSeekCentral::CVSearch(gsl_rng *rnd, const enum PartitionMode &PART_M,
 	return CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE);
 }
 
+/*	perform CVSearch, except that the weighting is based not on co-expression
+	of query genes, but based on similarity of query genes to some custom gold
+	standard gene-set */
+bool CSeekCentral::CVCustomSearch(const vector< vector<string> > &newGoldStd,
+	gsl_rng *rnd, const enum PartitionMode &PART_M,
+	const ushort &FOLD, const float &RATE){
+	enum SearchMode sm = CV_CUSTOM;
+	return CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE,
+		NULL, &newGoldStd);
+}
+
 bool CSeekCentral::WeightSearch(const vector< vector<float> > &weights){
 	enum SearchMode sm = USE_WEIGHT;
 	return CSeekCentral::Common(sm, NULL, NULL, NULL, NULL, &weights);
 }
-
 
 bool CSeekCentral::Destruct(){
 	ushort j;
@@ -528,7 +541,5 @@ string CSeekCentral::GetGene(const ushort &geneID) const{
 const vector<vector<float> >& CSeekCentral::GetAllWeight() const{
 	return m_weight;
 }
-
-
 }
 

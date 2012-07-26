@@ -80,7 +80,8 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 
 
 bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
-	const float &rate, vector<ushort> *rrank, const bool bAllocate){
+	const float &rate, vector<ushort> *rrank, const bool bAllocate,
+	const CSeekQuery *goldStd){
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
@@ -119,7 +120,7 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 
 		const vector<ushort> &vi = sQuery.GetCVQuery(qi);
 
-		/* Set query and gold standard */
+		/* Set up query and gold standard */
 		for(i=0; i<vi.size(); i++){
 			if(CSeekTools::IsNaN(mapQ->GetForward(vi[i]))) continue;
 			is_query_cross[vi[i]] = 1;
@@ -127,11 +128,24 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 			num_q++;
 		}
 
-		for(i=0; i<allQ.size(); i++){
-			if(CSeekTools::IsNaN(mapQ->GetForward(allQ[i]))) continue;
-			if(is_query_cross[allQ[i]]==1) continue;
-			is_gold[allQ[i]] = 1;
-			num_v++;
+		if(goldStd==NULL){ //if no custom gold standard
+			//Use query itself as gold standard
+			for(i=0; i<allQ.size(); i++){
+				if(CSeekTools::IsNaN(mapQ->GetForward(allQ[i]))) continue;
+				if(is_query_cross[allQ[i]]==1) continue;
+				is_gold[allQ[i]] = 1;
+				num_v++;
+			}
+		}else{
+			const vector<ushort> &allGoldStd = goldStd->GetQuery();
+			//Use custom gene-set as gold standard
+			for(i=0; i<allGoldStd.size(); i++){
+				if(CSeekTools::IsNaN(mapG->GetForward(allGoldStd[i])))
+					continue;
+				if(is_query_cross[allGoldStd[i]]==1) continue;
+				is_gold[allGoldStd[i]] = 1;
+				num_v++;
+			}
 		}
 
 		if(num_q==0 || num_v==0){
@@ -147,14 +161,25 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 			else sDataset.SetCVWeight(qi, w);
 			//printf("Weight: %.5f\n", w);
 		}
+
 		/* Reset query and gold standard */
 		for(i=0; i<vi.size(); i++){
 			if(CSeekTools::IsNaN(mapQ->GetForward(vi[i]))) continue;
 			is_query_cross[vi[i]] = 0;
 		}
-		for(i=0; i<allQ.size(); i++){
-			if(CSeekTools::IsNaN(mapQ->GetForward(allQ[i]))) continue;
-			is_gold[allQ[i]] = 0;
+
+		if(goldStd==NULL){
+			for(i=0; i<allQ.size(); i++){
+				if(CSeekTools::IsNaN(mapQ->GetForward(allQ[i]))) continue;
+				is_gold[allQ[i]]=0;
+			}
+		}else{
+			const vector<ushort> &allGoldStd = goldStd->GetQuery();
+			for(i=0; i<allGoldStd.size(); i++){
+				if(CSeekTools::IsNaN(mapG->GetForward(allGoldStd[i])))
+					continue;
+				is_gold[allGoldStd[i]] = 0;
+			}
 		}
 
 	}

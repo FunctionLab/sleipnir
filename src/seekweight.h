@@ -38,7 +38,8 @@ public:
 		CSeekDataset &sDataset, const bool bAllocate = true);
 	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 		const float &rate,
-		vector<ushort> *rrank = NULL, const bool bAllocate = true);
+		vector<ushort> *rrank = NULL, const bool bAllocate = true,
+		const CSeekQuery *goldStd = NULL);
 };
 
 
