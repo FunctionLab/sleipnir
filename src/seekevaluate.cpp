@@ -28,6 +28,7 @@ namespace Sleipnir {
 bool CSeekPerformanceMeasure::SortRankVector(
 	const vector<unsigned short> &rank,
 	const CSeekIntIntMap &mapG, vector<AResult> &a,
+	//optional argument
 	const ushort top){
 
 	ushort numGenesD = mapG.GetNumSet();

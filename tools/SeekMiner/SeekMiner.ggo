@@ -34,15 +34,15 @@ option	"func_quant"		R	"Functional network quant file"
 option	"func_dset"			F	"Functional network dset-list file (1 dataset)"
 								string typestr="filename"
 option	"func_logit"		l	"Functional network, integrate using logit values"
-								flag	on
+								flag	off
 
 section "Optional - Parameter tweaking"
 option	"norm_subavg"		m	"Per dataset, normalize z-scores by subtracting average of result gene"
-								flag	on
+								flag	off
 option	"norm_platsubavg"	M	"Per platform, normalize z-scores by subtracting average of query gene across platform"
-								flag	on
+								flag	off
 option	"norm_platstdev"	r	"Per platform, normalize z-scores by dividing stdev of query gene across platform"
-								flag	on
+								flag	off
 option	"score_cutoff"		c	"Cutoff on the gene-gene score before adding, default: no cutoff"
 								float default="-9999"
 option	"per_q_required"	C	"Percentage (/100) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff)"

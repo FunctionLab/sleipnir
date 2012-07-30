@@ -425,7 +425,8 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			if(DEBUG) fprintf(stderr, "Initializing %d\n",
 				(int) this_q.size());
 			m_vc[d]->InitializeDataMatrix(m_rData[tid], m_quant, m_iGenes,
-				iQuery, m_bSubtractGeneAvg, m_bSubtractPlatformAvg, m_bLogit);
+				iQuery, m_bSubtractGeneAvg, m_bSubtractPlatformAvg, m_bLogit,
+				m_fScoreCutOff);
 			//m_bSubtractPlatformStdev is not used, it's assumed
 
 			float w = -1;

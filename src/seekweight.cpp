@@ -84,6 +84,7 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 			(*iter_g) = tmpScore / totNonZero;
 		else
 			(*iter_g) = 0;
+		//(*iter_g) = tmpScore / q_size;
 	}
 
 	return true;
