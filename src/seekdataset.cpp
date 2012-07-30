@@ -70,13 +70,16 @@ bool CSeekDataset::ReadGeneAverage(const string &strFileName){
 	return CSeekTools::ReadArray(strFileName.c_str(), geneAverage);
 }
 
+
 bool CSeekDataset::ReadGeneVariance(const string &strFileName){
 	return CSeekTools::ReadArray(strFileName.c_str(), geneVariance);
 }
 
+
 bool CSeekDataset::ReadGenePresence(const string &strFileName){
 	return CSeekTools::ReadArray(strFileName.c_str(), genePresence);
 }
+
 
 bool CSeekDataset::InitializeGeneMap(){
 	if(geneAverage.empty() || genePresence.empty()) {
@@ -99,8 +102,9 @@ bool CSeekDataset::InitializeGeneMap(){
 	return true;
 }
 
-/* requires presence vector */
+
 bool CSeekDataset::InitializeQueryBlock(const vector<ushort> &queryBlock){
+
 	DeleteQueryBlock();
 
 	dbMap = new CSeekIntIntMap(iNumGenes);
@@ -128,6 +132,7 @@ bool CSeekDataset::InitializeQueryBlock(const vector<ushort> &queryBlock){
 	return true;
 }
 
+
 bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
 	DeleteQuery();
 
@@ -143,9 +148,13 @@ bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
 	vector<AResult> a;
 	a.resize(query.size());
 	vector<AResult>::iterator iterA = a.begin();
+
 	for(iQuerySize = 0; iterQ!=query.end(); iterQ++){
+		//if the query does not exist in this data-set, continue
 		if(CSeekTools::IsNaN(i = dbMap->GetForward(*iterQ))) continue;
+		//.i: query genes
 		(*iterA).i = *iterQ;
+		//.f: query gene position in dbMap
 		(*iterA).f = i;
 		iterA++;
 		iQuerySize++;
@@ -162,8 +171,10 @@ bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
 	sort(a.begin(), a.end(), Ascending());
 
 	for(iterA = a.begin(); iterA!=a.end(); iterA++){
+		//add gene to queryMap
 		queryMap->Add((*iterA).i);
 		this->query.push_back((*iterA).i);
+		//add (gene-position in dbMap) to queryIndex
 		this->queryIndex.push_back((*iterA).f);
 	}
 
@@ -171,6 +182,7 @@ bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
 	this->query.resize(this->query.size());
 	return true;
 }
+
 
 bool CSeekDataset::DeleteQuery(){
 	if(queryMap!=NULL){
@@ -185,6 +197,7 @@ bool CSeekDataset::DeleteQuery(){
 	sum_weight = -1;
 	return true;
 }
+
 
 bool CSeekDataset::DeleteQueryBlock(){
 	DeleteQuery();
