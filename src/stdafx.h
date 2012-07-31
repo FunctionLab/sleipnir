@@ -32,6 +32,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cmath>
 #ifdef _MSC_VER
 #include <fcntl.h>
 #include <io.h>

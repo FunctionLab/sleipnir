@@ -33,7 +33,7 @@
 namespace Sleipnir {
 
 enum SearchMode{
-	CV=0, EQUAL=1, USE_WEIGHT=2, CV_CUSTOM=3
+	CV=0, EQUAL=1, USE_WEIGHT=2, CV_CUSTOM=3, ORDER_STATISTICS=4
 };
 
 class CSeekCentral{
@@ -55,6 +55,8 @@ public:
 	bool EqualWeightSearch();
 	bool WeightSearch(const vector<vector<float> >&);
 
+	bool OrderStatistics();
+
 	bool Common(enum SearchMode&, gsl_rng* = NULL, const enum PartitionMode* = NULL,
 		const ushort* = NULL, const float* = NULL,
 		const vector< vector<float> >* = NULL,
@@ -65,7 +67,8 @@ public:
 	bool CalculateRestart();
 
 	bool PrepareOneQuery(CSeekQuery &, vector<float>&);
-	bool PostSearch();
+	bool AggregateThreads();
+	bool FilterResults();
 	bool Sort(vector<AResultFloat> &);
 	bool Write(const ushort &);
 	bool Display(CSeekQuery &, vector<AResultFloat>&);
@@ -131,6 +134,9 @@ private:
 	string m_output_dir;
 	float m_fScoreCutOff;
 	float m_fPercentQueryAfterScoreCutOff;
+
+	/* for order statistics, a datasets-by-genes matrix */
+	ushort **m_rank_d;
 
 };
 

@@ -90,6 +90,89 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 	return true;
 }
 
+bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
+	const ushort &iGenes, ushort **rank_d, const vector<ushort> &counts,
+	vector<float> &master_rank){
+	if(rank_d==NULL){
+		fprintf(stderr, "rank_d is null");
+		return false;
+	}
+
+	gsl_vector_float *gs = gsl_vector_float_calloc(iDatasets);
+	gsl_permutation *perm = gsl_permutation_alloc(iDatasets);
+	gsl_permutation *rk = gsl_permutation_alloc(iDatasets);
+
+	master_rank.clear();
+	master_rank.resize(iGenes);
+	ushort i, j, k, dd, d;
+
+	//Zero out genes that are present in few datasets (<50%)
+	for(k=0; k<iGenes; k++)
+		if(counts[k]<(int)(0.5*iDatasets))
+			for(j=0; j<iDatasets; j++) rank_d[j][k] = 0;
+
+	//Hold the normalized rank
+	float **rank_f =
+		CSeekTools::Init2DArray(iDatasets, iGenes, (float) 1.1);
+
+	const float DEFAULT_NULL = -320;
+
+	for(j=0; j<iDatasets; j++){
+		vector<AResult> this_d;
+		ushort numNonZero = 0;
+		this_d.resize(iGenes);
+		for(k=0; k<iGenes; k++){
+			this_d[k].i = k;
+			this_d[k].f = rank_d[j][k];
+			if(rank_d[j][k]>0) numNonZero++;
+		}
+		if(numNonZero==0){
+			this_d.clear();
+			continue;
+		}
+		sort(this_d.begin(), this_d.end());
+		for(k=0; k<iGenes; k++){
+			if(this_d[k].f==0) break;
+			rank_f[j][this_d[k].i] =
+				(float) (k+1) / (float) numNonZero;
+		}
+		this_d.clear();
+	}
+
+	for(k=0; k<iGenes; k++){
+		master_rank[k] = DEFAULT_NULL;
+		if(counts[k]<(int)(0.5*iDatasets)) continue;
+
+		for(dd=0; dd<iDatasets; dd++)
+			gsl_vector_float_set(gs, dd, rank_f[dd][k]);
+
+		gsl_sort_vector_float_index(perm, gs);
+		gsl_permutation_inverse(rk, perm);
+
+		float max = DEFAULT_NULL;
+		for(dd=0; dd<iDatasets; dd++){
+			if(rank_f[dd][k]==1.1) continue;
+			//get the prob of the gene in dset dd
+			float p = gsl_vector_float_get(gs, dd);
+			//get the rank of dset dd across all dsets
+			unsigned int rrk = rk->data[dd];
+			double gg = gsl_cdf_binomial_Q(rrk+1, p, counts[k]);
+			float tmp = -1.0*log(gg);
+			if(isinf(tmp)) tmp = DEFAULT_NULL;
+			if(tmp>max) max = tmp;
+		}
+		if(max!=DEFAULT_NULL)
+			master_rank[k] = max;
+	}
+
+	CSeekTools::Free2DArray(rank_f);
+	gsl_permutation_free(perm);
+	gsl_permutation_free(rk);
+	gsl_vector_float_free(gs);
+
+	return true;
+}
+
 
 bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 	const float &rate, const float &percent_required,

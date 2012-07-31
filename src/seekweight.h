@@ -39,6 +39,9 @@ public:
 	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 		const float &rate, const float &percent_required,
 		vector<ushort> *rrank, const CSeekQuery *goldStd = NULL);
+	static bool OrderStatisticsRankAggregation(const ushort&, const ushort&,
+		ushort**, const vector<ushort> &, vector<float>&);
+
 };
 
 

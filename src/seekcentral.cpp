@@ -50,6 +50,7 @@ CSeekCentral::CSeekCentral(){
 	m_counts_threads = NULL;
 	m_rank_normal_threads = NULL;
 	m_rank_threads = NULL;
+	m_rank_d = NULL;
 
 	m_master_rank.clear();
 	m_sum_weight.clear();
@@ -69,6 +70,7 @@ CSeekCentral::CSeekCentral(){
 	m_bLogit = false;
 	DEBUG = false;
 	m_output_dir = "";
+
 }
 
 CSeekCentral::~CSeekCentral(){
@@ -284,9 +286,9 @@ bool CSeekCentral::PrepareOneQuery(CSeekQuery &query, vector<float> &weight){
 	return true;
 }
 
-bool CSeekCentral::PostSearch(){
+bool CSeekCentral::AggregateThreads(){
+	//Aggregate into three vectors: m_master_rank, m_counts, m_sum_weight
 	ushort j, k;
-	bool DEBUG = false;
 	for(j=0; j<m_numThreads; j++){
 		for(k=0; k<m_iGenes; k++){
 			m_master_rank[k] += m_master_rank_threads[j][k];
@@ -298,14 +300,17 @@ bool CSeekCentral::PostSearch(){
 	CSeekTools::Free2DArray(m_counts_threads);
 	CSeekTools::Free2DArray(m_sum_weight_threads);
 	for(j=0; j<m_numThreads; j++){
-		CSeekTools::Free2DArray(m_rData[j]);
 		m_rank_normal_threads[j].clear();
 		m_rank_threads[j].clear();
 	}
-	delete[] m_rData;
 	delete[] m_rank_normal_threads;
 	delete[] m_rank_threads;
+	return true;
+}
 
+bool CSeekCentral::FilterResults(){
+	ushort j, k;
+	bool DEBUG = false;
 	if(DEBUG) fprintf(stderr, "Aggregating genes\n");
 	const vector<ushort> &allRDatasets = m_dsetMap->GetAllReverse();
 	ushort iSearchDatasets = m_dsetMap->GetNumSet();
@@ -361,6 +366,7 @@ bool CSeekCentral::Write(const ushort &i){
 	return true;
 }
 
+
 bool CSeekCentral::Common(enum SearchMode &sm,
 	gsl_rng *rnd, const enum PartitionMode *PART_M,
 	const ushort *FOLD, const float *RATE,
@@ -396,6 +402,10 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 
 		if(sm==CV || sm==CV_CUSTOM)
 			query.CreateCVPartitions(rnd, *PART_M, *FOLD);
+
+		if(sm==ORDER_STATISTICS)
+			m_rank_d = CSeekTools::Init2DArray(iSearchDatasets, m_iGenes,
+				(ushort) 0);
 
 		//fprintf(stderr, "2 %lu\n", CMeta::GetMemoryUsage());
 
@@ -446,7 +456,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 					continue;
 				}
 			}
-			else if(sm==EQUAL) w = 1.0;
+			else if(sm==EQUAL || sm==ORDER_STATISTICS) w = 1.0;
 			else if(sm==USE_WEIGHT) w = (*providedWeight)[i][d];
 
 			if(DEBUG) fprintf(stderr, "Doing linear combination\n");
@@ -468,19 +478,41 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			float* Sum_Weight = &m_sum_weight_threads[tid][0];
 			ushort* Counts = &m_counts_threads[tid][0];
 
-			for(; iterR!=endR; iterR++){
-				if(Rank_Normal[*iterR]==0) continue;
-				Master_Rank[*iterR] += (float) Rank_Normal[*iterR] * w;
-				Sum_Weight[*iterR] += w;
-				Counts[*iterR]++;
-			}
+			if(sm==ORDER_STATISTICS)
+				for(; iterR!=endR; iterR++){
+					if(Rank_Normal[*iterR]==0) continue;
+					m_rank_d[dd][*iterR] = Rank_Normal[*iterR];
+					Counts[*iterR]++;
+				}
+			else
+				for(; iterR!=endR; iterR++){
+					if(Rank_Normal[*iterR]==0) continue;
+					Master_Rank[*iterR] += (float) Rank_Normal[*iterR] * w;
+					Sum_Weight[*iterR] += w;
+					Counts[*iterR]++;
+				}
 			weight[d] = w;
 		}
 		//omp finishes
 		//fprintf(stderr, "3 %lu\n", CMeta::GetMemoryUsage());
 		for(j=0; j<iSearchDatasets; j++)
 			m_vc[allRDatasets[j]]->DeleteQuery();
-		PostSearch();
+
+		for(j=0; j<m_numThreads; j++)
+			CSeekTools::Free2DArray(m_rData[j]);
+		delete[] m_rData;
+
+		AggregateThreads();
+
+		if(sm!=ORDER_STATISTICS){
+			FilterResults();
+		}else{
+			CSeekWeighter::OrderStatisticsRankAggregation(iSearchDatasets,
+				m_iGenes, m_rank_d, m_counts, m_master_rank);
+			CSeekTools::Free2DArray(m_rank_d);
+			m_rank_d = NULL;
+		}
+
 		Sort(final);
 		//Display(query, final);
 		//fprintf(stderr, "4 %lu\n", CMeta::GetMemoryUsage());
@@ -518,6 +550,11 @@ bool CSeekCentral::CVCustomSearch(const vector< vector<string> > &newGoldStd,
 bool CSeekCentral::WeightSearch(const vector< vector<float> > &weights){
 	enum SearchMode sm = USE_WEIGHT;
 	return CSeekCentral::Common(sm, NULL, NULL, NULL, NULL, &weights);
+}
+
+bool CSeekCentral::OrderStatistics(){
+	enum SearchMode sm = ORDER_STATISTICS;
+	return CSeekCentral::Common(sm);
 }
 
 bool CSeekCentral::Destruct(){
