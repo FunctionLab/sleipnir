@@ -11,8 +11,6 @@ option	"db"				f	"DB mode, suitable for platform wide gene average and stdev cal
 								flag	off
 
 section "DAB mode"
-option	"sinfo"				s	"Generates sinfo file (dataset z score mean and stdev)"
-								flag	off
 option	"gavg"				a	"Generates gene average file"
 								flag	off
 option	"gpres"				p	"Generates gene presence file"
@@ -25,7 +23,9 @@ option	"pcl_list"			V	"PCL list"
 								string typestr="filename"
 option	"pcl_dir"			F	"PCL directory"
 								string typestr="directory"
-option	"gvar"				v	"Generates gene variance file"
+option	"gexpvarmean"		v	"Generates gene expression variance and mean files (.gexpvar, .gexpmean)"
+								flag	off
+option	"sinfo"				s	"Generates sinfo file (dataset z score mean and stdev)"
 								flag	off
 
 section "DB mode"
