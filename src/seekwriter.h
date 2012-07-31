@@ -22,8 +22,8 @@
 #ifndef SEEKWRITER_H
 #define SEEKWRITER_H
 
+#include "seekbasic.h"
 #include "seekmap.h"
-#include "stdafx.h"
 #include "datapair.h"
 
 namespace Sleipnir {

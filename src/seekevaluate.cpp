@@ -20,9 +20,6 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "seekevaluate.h"
-#include "stdafx.h"
-#include "seekmap.h"
-
 namespace Sleipnir {
 
 bool CSeekPerformanceMeasure::SortRankVector(

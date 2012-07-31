@@ -32,7 +32,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <cmath>
 #ifdef _MSC_VER
 #include <fcntl.h>
 #include <io.h>
@@ -60,6 +59,7 @@
 #define SOCKET				int
 #define strcpy_s(a,b,c)		strcpy(a,c)
 #define strncpy_s(a,b,c,d)	strncpy(a,c,d)
+
 
 inline char* _mktemp_s( char* szTemplate, size_t iSize ) {
 

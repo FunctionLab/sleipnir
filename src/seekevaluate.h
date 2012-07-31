@@ -22,13 +22,13 @@
 #ifndef SEEKEVALUATE_H
 #define SEEKEVALUATE_H
 
-#include "stdafx.h"
+#include "seekbasic.h"
 #include "seekmap.h"
 
 namespace Sleipnir {
 
 struct AResult{
-	ushort i;
+	unsigned short i;
 	unsigned short f;
 	bool operator<(const AResult& val) const{
 		if(f <= val.f){
@@ -48,7 +48,7 @@ struct Ascending{
 
 
 struct AResultFloat{
-	ushort i;
+	unsigned short i;
 	float f;
 	bool operator<(const AResultFloat& val) const{
 		if(f <= val.f){

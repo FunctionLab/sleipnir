@@ -22,8 +22,7 @@
 #ifndef SEEKPLATFORM_H
 #define SEEKPLATFORM_H
 
-#include "stdafx.h"
-
+#include "seekbasic.h"
 namespace Sleipnir {
 
 class CSeekPlatform{

@@ -20,11 +20,8 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 
-#include "stdafx.h"
 #include "seekweight.h"
-#include "seekreader.h"
-#include "seekquery.h"
-#include "seekevaluate.h"
+
 
 namespace Sleipnir {
 

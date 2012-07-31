@@ -22,11 +22,10 @@
 #ifndef SEEKDATASET_H
 #define SEEKDATASET_H
 
+#include "seekbasic.h"
 #include "seekmap.h"
-#include "stdafx.h"
 #include "datapair.h"
 #include "seekplatform.h"
-
 
 namespace Sleipnir {
 

@@ -19,44 +19,27 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#ifndef SEEKQUERY_H
-#define SEEKQUERY_H
+#ifndef SEEKBASIC_H
+#define SEEKBASIC_H
+#include <vector>
+#include <string>
+#include <map>
+#include <math.h>
+#include <iostream>
+#include <algorithm>
+#include <omp.h>
+#include <cmath>
 
-#include "seekbasic.h"
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_cdf.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_vector_float.h>
+#include <gsl/gsl_sort_float.h>
+#include <gsl/gsl_sort_vector_float.h>
+#include <gsl/gsl_permute_vector_float.h>
 
-namespace Sleipnir {
-
-enum PartitionMode{
-	LEAVE_ONE_IN = 0,
-	LEAVE_ONE_OUT = LEAVE_ONE_IN + 1,
-	CUSTOM_PARTITION = LEAVE_ONE_OUT + 1
-};
-
-class CSeekQuery{
-public:
-	CSeekQuery();
-	~CSeekQuery();
-
-	bool InitializeQuery(const vector<char>&);
-	bool InitializeQuery(const vector<ushort>&, const ushort &);
-
-	ushort GetNumFold() const;
-	const vector<ushort>& GetQuery() const;
-	const vector<char>& GetQueryPresence() const;
-	const vector<ushort>& GetCVQuery(ushort&) const;
-	bool CreateCVPartitions(const gsl_rng*, \
-		const enum PartitionMode &, const ushort=-1);
-
-private:
-	vector<ushort> queryGenes;
-	vector<char> queryGenePresence;
-
-	vector<ushort> *crossValGenes;
-	ushort iNumFold;
-	ushort iFoldSize;
-	ushort qSize;
-
-};
-
-}
+using namespace std;
+typedef unsigned short ushort;
 #endif
+
+

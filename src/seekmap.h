@@ -22,7 +22,7 @@
 #ifndef SEEKMAP_H
 #define SEEKMAP_H
 
-#include "stdafx.h"
+#include "seekbasic.h"
 
 namespace Sleipnir {
 

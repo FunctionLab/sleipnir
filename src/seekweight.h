@@ -22,13 +22,12 @@
 #ifndef SEEKWEIGHT_H
 #define SEEKWEIGHT_H
 
-#include "stdafx.h"
+#include "seekbasic.h"
 #include "seekreader.h"
 #include "seekquery.h"
 #include "seekevaluate.h"
 
 namespace Sleipnir {
-
 
 class CSeekWeighter{
 public:

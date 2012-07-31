@@ -22,8 +22,8 @@
 #ifndef SEEKREADER_H
 #define SEEKREADER_H
 
+#include "seekbasic.h"
 #include "seekmap.h"
-#include "stdafx.h"
 #include "datapair.h"
 #include "seekdataset.h"
 #include "seekplatform.h"

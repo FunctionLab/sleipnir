@@ -19,13 +19,7 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#include "stdafx.h"
 #include "seekcentral.h"
-#include "seekevaluate.h"
-#include "database.h"
-#include "datapair.h"
-#include "seekweight.h"
-
 
 namespace Sleipnir {
 

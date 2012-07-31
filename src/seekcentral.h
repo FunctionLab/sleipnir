@@ -22,13 +22,16 @@
 #ifndef SEEKCENTRAL_H
 #define SEEKCENTRAL_H
 
-#include "stdafx.h"
+#include "seekbasic.h"
 #include "seekdataset.h"
 #include "seekplatform.h"
 #include "seekmap.h"
 #include "seekreader.h"
 #include "seekquery.h"
 #include "seekevaluate.h"
+#include "database.h"
+#include "datapair.h"
+#include "seekweight.h"
 
 namespace Sleipnir {
 

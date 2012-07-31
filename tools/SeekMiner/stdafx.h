@@ -45,6 +45,8 @@ using namespace std;
 #include "seekquery.h"
 #include "seekcentral.h"
 #include "meta.h"
+
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H
