@@ -54,6 +54,12 @@ struct gengetopt_args_info
   char * dabinput_arg;	/**< @brief DAB dataset file.  */
   char * dabinput_orig;	/**< @brief DAB dataset file original value given at command line.  */
   const char *dabinput_help; /**< @brief DAB dataset file help description.  */
+  char * pcl_list_arg;	/**< @brief PCL list.  */
+  char * pcl_list_orig;	/**< @brief PCL list original value given at command line.  */
+  const char *pcl_list_help; /**< @brief PCL list help description.  */
+  char * pcl_dir_arg;	/**< @brief PCL directory.  */
+  char * pcl_dir_orig;	/**< @brief PCL directory original value given at command line.  */
+  const char *pcl_dir_help; /**< @brief PCL directory help description.  */
   int gvar_flag;	/**< @brief Generates gene variance file (default=off).  */
   const char *gvar_help; /**< @brief Generates gene variance file help description.  */
   int gplat_flag;	/**< @brief Generates platform wide gene average and stdev file (default=off).  */
@@ -90,6 +96,8 @@ struct gengetopt_args_info
   unsigned int gavg_given ;	/**< @brief Whether gavg was given.  */
   unsigned int gpres_given ;	/**< @brief Whether gpres was given.  */
   unsigned int dabinput_given ;	/**< @brief Whether dabinput was given.  */
+  unsigned int pcl_list_given ;	/**< @brief Whether pcl_list was given.  */
+  unsigned int pcl_dir_given ;	/**< @brief Whether pcl_dir was given.  */
   unsigned int gvar_given ;	/**< @brief Whether gvar was given.  */
   unsigned int gplat_given ;	/**< @brief Whether gplat was given.  */
   unsigned int dblist_given ;	/**< @brief Whether dblist was given.  */

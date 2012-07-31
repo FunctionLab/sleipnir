@@ -120,15 +120,13 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 	InitializeDB(iDatasets, m_iGenes, vecstrGenes, vc, CD);
 
 	vector<string> presGenes;
-	for(i=0; i<CD.GetGenes(); i++){
+	for(i=0; i<CD.GetGenes(); i++)
 		presGenes.push_back(CD.GetGene(i));
-	}
 
 	size_t numPlatforms = platform_avg.GetRows();
 	map<string, size_t> mapstriGenes;
-	for(i=0; i<vecstrGenes.size(); i++){
+	for(i=0; i<vecstrGenes.size(); i++)
 		mapstriGenes[vecstrGenes[i]] = i;
-	}
 
 	fprintf(stderr, "Start calculating platform average\n");
 	for(i=0; i<CD.GetGenes(); i++){
@@ -170,11 +168,8 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 				if(uc==255) v = CMeta::GetNaN();
 				else{
 					float vv = -1;
-					if(logit)
-						vv = log(quant[uc]) - log((float)(1.0-quant[uc]));
-					else
-						vv = quant[uc];
-
+					if(logit) vv = log(quant[uc]) - log((float)(1.0-quant[uc]));
+					else vv = quant[uc];
 					v = vv - vc[k]->GetGeneAverage(j);
 					/*if(isnan(vv) || isinf(vv) || isnan(vc[k]->GetGeneAverage(j)) ||
 						isinf(vc[k]->GetGeneAverage(j))){
@@ -202,7 +197,8 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 	fprintf(stderr, "Finished calculating platform average\n");
 	fprintf(stderr, "Start deleting\n");
 
-	for(i=0; i<iDatasets; i++) vc[i]->DeleteQueryBlock();
+	for(i=0; i<iDatasets; i++)
+		vc[i]->DeleteQueryBlock();
 	fprintf(stderr, "Finished deleting\n");
 	return true;
 }
@@ -255,9 +251,59 @@ int main( int iArgs, char** aszArgs ) {
 
 	if( sArgs.input_arg ) ifsm.close( );
 
-
 	omp_set_num_threads(1);
 	int numThreads = omp_get_max_threads();
+
+	/* PCL mode */
+	if(sArgs.pcl_flag==1){
+
+		//if calculating gene variance per dataset
+		if(sArgs.gvar_flag==1){
+			string pcl_dir = sArgs.pcl_dir_arg;
+			vector<string> pcl_list, col2;
+			CSeekTools::ReadListTwoColumns(sArgs.pcl_list_arg, pcl_list, col2);
+
+			vector<vector<float> > var;
+			var.resize(pcl_list.size());
+
+			for(i=0; i<pcl_list.size(); i++){
+				string pclfile = pcl_dir + "/" + pcl_list[i] + ".db";
+				CPCL pcl;
+				pcl.Open(pclfile.c_str());
+
+				var[i] = vector<float>();
+				CSeekTools::InitVector(var[i], vecstrGenes.size(), (float) CMeta::GetNaN());
+				int totNumExperiments = pcl.GetExperiments() - 2;
+				if(totNumExperiments<=2) continue;
+
+				for(j=0; j<vecstrGenes.size(); j++){
+					ushort g = pcl.GetGene(vecstrGenes[j]);
+					if(CSeekTools::IsNaN(g)) continue; //gene does not exist in the dataset
+					float *val = pcl.Get(g);
+					vector<float> rowVal;
+					for(k=2; k<pcl.GetExperiments(); k++)
+						rowVal.push_back(val[k]);
+
+					float mean = 0;
+					float variance = 0;
+					for(k=0; k<rowVal.size(); k++)
+						mean+=rowVal[k];
+					mean/=rowVal.size();
+					for(k=0; k<rowVal.size(); k++)
+						variance += (rowVal[k] - mean) * (rowVal[k] - mean);
+					variance /= rowVal.size();
+					var[i][j] = variance;
+				}
+			}
+			for(i=0; i<pcl_list.size(); i++){
+				string dirout = sArgs.dir_out_arg;
+				string outfile = dirout + "/" + pcl_list[i] + ".gvar";
+				CSeekTools::WriteArray(outfile.c_str(), var[i]);
+			}
+		}
+
+	}
+
 
 	/* DB mode */
 	if(sArgs.db_flag==1){
@@ -427,8 +473,28 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 	} else if(sArgs.dab_flag==1){
+		if(sArgs.sinfo_flag==1){
+			CDataPair Dat;
+			if(!Dat.Open(sArgs.dabinput_arg, false, false)){
+				cerr << "error opening file" << endl;
+				return 1;
+			}
+			char outFile[125];
+			string fileName = CMeta::Basename(sArgs.dabinput_arg);
+			string fileStem = CMeta::Deextension(fileName);
+			sprintf(outFile, "%s/%s.sinfo", sArgs.dir_out_arg, fileStem.c_str());
+			float mean = 0;
+			float stdev = 0;
+			CSeekWriter::GetDatasetSinfo(Dat, mean, stdev);
+			vector<float> vv;
+			vv.resize(2);
+			vv[0] = mean;
+			vv[1] = stdev;
+			CSeekTools::WriteArray(outFile, vv);
 
-		if(sArgs.gavg_flag==1){
+		}
+
+		else if(sArgs.gavg_flag==1){
 			bool logit = false;
 			if(sArgs.logit_flag==1) logit = true;
 

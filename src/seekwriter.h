@@ -31,12 +31,13 @@ namespace Sleipnir {
 class CSeekWriter{
 public:
 	static bool GetGeneAverage(CDataPair &Dat,
-			const vector<string> &vecstrGenes,
-			vector<float> &vecResult, bool logit=false);
+		const vector<string> &vecstrGenes,
+		vector<float> &vecResult, bool logit=false);
 	static bool GetGenePresence(CDataPair &Dat,
-			const vector<string> &vecstrGenes,
-			vector<char> &vecResult);
-
+		const vector<string> &vecstrGenes,
+		vector<char> &vecResult);
+	static bool GetDatasetSinfo(CDataPair &Dat, float &mean,
+		float &stdev);
 };
 
 }
