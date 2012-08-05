@@ -337,16 +337,6 @@ int main( int iArgs, char** aszArgs ) {
 	//fprintf(stderr, "Query mode: %d\n", qmode);
 
 	if(qmode==SINGLE_QUERY){
-		string goldstdFile = sArgs.goldstd_arg;
-		vector<string> goldstdGenes;
-		CSeekTools::ReadMultiGeneOneLine(goldstdFile, goldstdGenes);
-		vector<char> goldstdGenePresence;
-		CSeekTools::InitVector(goldstdGenePresence,
-			vecstrGenes.size(), (char) 0);
-
-		for(i=0; i<goldstdGenes.size(); i++)
-			goldstdGenePresence[mapstriGenes[goldstdGenes[i]]] = 1;
-
 		string queryFile = sArgs.query_arg;
 		vector<string> queryGenes;
 		CSeekTools::ReadMultiGeneOneLine(queryFile, queryGenes);
@@ -374,6 +364,23 @@ int main( int iArgs, char** aszArgs ) {
 			sortedGenes[queryGeneID[i]].f = nan;
 
 		sort(sortedGenes.begin(), sortedGenes.end());
+
+		if(sArgs.dislay_only_flag==1){
+			for(i=0; i<500; i++)
+				fprintf(stderr, "%d\t%.5f\n", sortedGenes[i].i,
+					sortedGenes[i].f);
+			return 0;
+		}
+
+		string goldstdFile = sArgs.goldstd_arg;
+		vector<string> goldstdGenes;
+		CSeekTools::ReadMultiGeneOneLine(goldstdFile, goldstdGenes);
+		vector<char> goldstdGenePresence;
+		CSeekTools::InitVector(goldstdGenePresence,
+			vecstrGenes.size(), (char) 0);
+
+		for(i=0; i<goldstdGenes.size(); i++)
+			goldstdGenePresence[mapstriGenes[goldstdGenes[i]]] = 1;
 
 		if(met!=PR_ALL){
 			float eval;

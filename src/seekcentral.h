@@ -36,7 +36,8 @@
 namespace Sleipnir {
 
 enum SearchMode{
-	CV=0, EQUAL=1, USE_WEIGHT=2, CV_CUSTOM=3, ORDER_STATISTICS=4
+	CV=0, EQUAL=1, USE_WEIGHT=2, CV_CUSTOM=3, ORDER_STATISTICS=4,
+	SINGLE_GENE_META=5
 };
 
 class CSeekCentral{
@@ -57,6 +58,8 @@ public:
 		const enum PartitionMode&, const ushort&, const float&);
 	bool EqualWeightSearch();
 	bool WeightSearch(const vector<vector<float> >&);
+	bool SingleGeneMetaCorrelation();
+	bool VarianceWeightSearch();
 
 	bool OrderStatistics();
 
@@ -69,9 +72,9 @@ public:
 	bool PrepareQuery(const vector<string>&, CSeekQuery&);
 	bool CalculateRestart();
 
-	bool PrepareOneQuery(CSeekQuery &, vector<float>&);
+	bool PrepareOneQuery(CSeekQuery &, CSeekIntIntMap &, vector<float>&);
 	bool AggregateThreads();
-	bool FilterResults();
+	bool FilterResults(const ushort &);
 	bool Sort(vector<AResultFloat> &);
 	bool Write(const ushort &);
 	bool Display(CSeekQuery &, vector<AResultFloat>&);
@@ -87,9 +90,9 @@ private:
 
 	/* Dataset */
 	vector<string> m_vecstrDatasets;
-	vector<string> m_vecstrSearchDatasets;
 	map<string, string> m_mapstrstrDatasetPlatform;
-	CSeekIntIntMap *m_dsetMap;
+	vector<vector<string> > m_vecstrSearchDatasets;
+	vector<CSeekIntIntMap*> m_searchdsetMap;
 	vector<CSeekDataset*> m_vc;
 	vector<float> m_quant;
 	bool m_bSubtractGeneAvg;

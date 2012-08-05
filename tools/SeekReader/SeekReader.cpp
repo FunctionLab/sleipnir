@@ -39,61 +39,86 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 
-	if( sArgs.input_arg ) {
-		ifsm.open( sArgs.input_arg );
-		pistm = &ifsm; }
-	else
-		pistm = &cin;
-	while( !pistm->eof( ) ) {
-		pistm->getline( acBuffer, c_iBuffer - 1 );
-		acBuffer[ c_iBuffer - 1 ] = 0;
-		vecstrLine.clear( );
-		CMeta::Tokenize( acBuffer, vecstrLine );
-		if( vecstrLine.size( ) < 2 ) {
-			cerr << "Ignoring line: " << acBuffer << endl;
-			continue; }
-		if( !( i = atoi( vecstrLine[ 0 ].c_str( ) ) ) ) {
-			cerr << "Illegal gene ID: " << vecstrLine[ 0 ] <<
-				" for " << vecstrLine[ 1 ] << endl;
-			return 1; }
-		i--;
-		if( vecstrGenes.size( ) <= i )
-			vecstrGenes.resize( i + 1 );
-		vecstrGenes[ i ] = vecstrLine[ 1 ]; }
-	if( sArgs.input_arg )
-		ifsm.close( );
+	vector<string> vecstrGeneID;
+	map<string, ushort> mapstrintGene;
+	if(!CSeekTools::ReadListTwoColumns(sArgs.input_arg, vecstrGeneID, vecstrGenes))
+		return false;
 
-	bool useNibble = false;
-	if(sArgs.is_nibble_flag==1){
-		useNibble = true;
+	for(i=0; i<vecstrGenes.size(); i++)
+		mapstrintGene[vecstrGenes[i]] = i;
+
+	if(sArgs.dataset_flag==1){
+		vector<string> vecstrDP;
+		if(!CSeekTools::ReadListTwoColumns(sArgs.db_arg, vecstrDatasets, vecstrDP))
+			return false;
+		map<string, ushort> mapstrintDataset;
+		map<string, string> mapstrstrDatasetPlatform;
+		ushort i;
+		for(i=0; i<vecstrDatasets.size(); i++){
+			mapstrstrDatasetPlatform[vecstrDatasets[i]] = vecstrDP[i];
+			mapstrintDataset[vecstrDatasets[i]] = i;
+		}
+		fprintf(stderr, "Finished reading dataset\n");
+
+		size_t iDatasets = vecstrDatasets.size();
+		vector<string> vecstrPlatforms;
+		vector<CSeekPlatform> vp;
+		map<string, ushort> mapstriPlatform;
+		CSeekTools::ReadPlatforms(sArgs.platform_dir_arg, vp, vecstrPlatforms,
+			mapstriPlatform);
+		fprintf(stderr, "Finished reading platform\n");
+
+		vector<CSeekDataset*> vc;
+		vc.resize(iDatasets);
+		string strPrepInputDirectory = sArgs.dir_prep_in_arg;
+		for(i=0; i<iDatasets; i++){
+			vc[i] = new CSeekDataset();
+			string strFileStem = vecstrDatasets[i];
+			string strAvgPath = strPrepInputDirectory + "/" +
+				strFileStem + ".gavg";
+			string strPresencePath = strPrepInputDirectory + "/" +
+				strFileStem + ".gpres";
+			vc[i]->ReadGeneAverage(strAvgPath);
+			vc[i]->ReadGenePresence(strPresencePath);
+			string strPlatform =
+				mapstrstrDatasetPlatform.find(strFileStem)->second;
+			ushort platform_id = mapstriPlatform.find(strPlatform)->second;
+			vc[i]->SetPlatform(vp[platform_id]);
+		}
+
+		fprintf(stderr, "Finished reading prep\n");
+
+		for(i=0; i<iDatasets; i++) vc[i]->InitializeGeneMap();
+
+		if(!CSeekTools::ReadMultiGeneOneLine(sArgs.query_arg, vecstrQuery))
+			return false;
+
+		fprintf(stderr, "Finished reading query\n");
+		for(i=0; i<iDatasets; i++){
+			CSeekIntIntMap *si = vc[i]->GetGeneMap();
+			ushort j, present;
+			for(j=0, present=0; j<vecstrQuery.size(); j++){
+				if(mapstrintGene.find(vecstrQuery[j])==mapstrintGene.end())
+					continue;
+				if(CSeekTools::IsNaN(si->GetForward(
+					mapstrintGene[vecstrQuery[j]]))) continue;
+				present++;
+			}
+			fprintf(stderr, "%s\t%d\t%d\n", vecstrDatasets[i].c_str(),
+				present, si->GetNumSet());
+		}
+
+
 	}
-
-	CDatabase DB(useNibble);
-
-	if(sArgs.db_arg){
-		ifsm.open(sArgs.db_arg);
-		while(!pistm->eof()){
-			pistm->getline(acBuffer, c_iBuffer -1);
-			if(acBuffer[0]==0){
-				break;
-			}
-			acBuffer[c_iBuffer-1] = 0;
-			vecstrDatasets.push_back(acBuffer);
-		}
-		vecstrDatasets.resize(vecstrDatasets.size());
-		ifsm.close();
-
-		ifsm.open(sArgs.query_arg);
-		while(!pistm->eof()){
-			pistm->getline(acBuffer, c_iBuffer -1);
-			if(acBuffer[0]==0){
-				break;
-			}
-			acBuffer[c_iBuffer-1] = 0;
-			vecstrQuery.push_back(acBuffer);
-		}
-		vecstrQuery.resize(vecstrQuery.size());
-		ifsm.close();
+	else if(sArgs.databaselet_flag==1){
+		bool useNibble = false;
+		if(sArgs.is_nibble_flag==1) useNibble = true;
+		CDatabase DB(useNibble);
+		vector<string> vecstrDP;
+		if(!CSeekTools::ReadListTwoColumns(sArgs.db_arg, vecstrDatasets, vecstrDP))
+			return false;
+		if(!CSeekTools::ReadMultiGeneOneLine(sArgs.query_arg, vecstrQuery))
+			return false;
 
 		string strInputDirectory = sArgs.dir_in_arg;
 		DB.Open(strInputDirectory);
@@ -109,8 +134,6 @@ int main( int iArgs, char** aszArgs ) {
 			vc[i] = new CSeekDataset();
 			string strPrepInputDirectory = sArgs.dir_prep_in_arg;
 			string strFileStem = vecstrDatasets[i];
-			//string strFileStem = CMeta::Deextension(CMeta::
-			//Basename(vecstrDatasets[i].c_str()));
 			string strAvgPath = strPrepInputDirectory + "/" +
 				strFileStem + ".gavg";
 			string strPresencePath = strPrepInputDirectory + "/" +
@@ -129,11 +152,9 @@ int main( int iArgs, char** aszArgs ) {
 			cQuery[k] = 1;
 		}
 
-		for(k=0; k<iGenes; k++){
-			if(cQuery[k]==1){
+		for(k=0; k<iGenes; k++)
+			if(cQuery[k]==1)
 				allQ.push_back(k);
-			}
-		}
 
 		for(i=0; i<iDatasets; i++){
 			vc[i]->InitializeGeneMap();
@@ -143,17 +164,13 @@ int main( int iArgs, char** aszArgs ) {
 		vector<unsigned char> *Q =
 			new vector<unsigned char>[vecstrQuery.size()];
 
-		for(i=0; i<vecstrQuery.size(); i++){
-			if(!DB.GetGene(vecstrQuery[i], Q[i])){
+		for(i=0; i<vecstrQuery.size(); i++)
+			if(!DB.GetGene(vecstrQuery[i], Q[i]))
 				cerr << "Gene does not exist" << endl;
-			}
-		}
 
 		//printf("Before"); getchar();
 		for(i=0; i<vecstrQuery.size(); i++){
-			if(DB.GetGene(vecstrQuery[i])==-1){
-				continue;
-			}
+			if(DB.GetGene(vecstrQuery[i])==-1) continue;
 			size_t m = DB.GetGene(vecstrQuery[i]);
 			size_t l = 0;
 			for(j=0; j<iDatasets; j++){
@@ -185,17 +202,7 @@ int main( int iArgs, char** aszArgs ) {
 				}
 			}
 		}
-		/*size_t j;
-		for(i=0; i<vecstrQuery.size(); i++){
-			printf("Query: %s\n", vecstrQuery[i].c_str());
-			for(j=0; j<Q[i].size(); j++){
-				printf("%d ", (int) Q[i][j]);
-			}
-			printf("\n");
-			getchar();
-		}*/
 
-		//printf("Done"); getchar();
 
 	}else{
 		cerr << "Must give a db list." << endl;

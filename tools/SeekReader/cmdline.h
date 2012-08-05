@@ -39,6 +39,10 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
+  int databaselet_flag;	/**< @brief Display values from databaselet(s) (default=off).  */
+  const char *databaselet_help; /**< @brief Display values from databaselet(s) help description.  */
+  int dataset_flag;	/**< @brief Check which datasets contain query of interest, based on .gpres file (default=off).  */
+  const char *dataset_help; /**< @brief Check which datasets contain query of interest, based on .gpres file help description.  */
   char * db_arg;	/**< @brief Input a set of datasets.  */
   char * db_orig;	/**< @brief Input a set of datasets original value given at command line.  */
   const char *db_help; /**< @brief Input a set of datasets help description.  */
@@ -56,15 +60,21 @@ struct gengetopt_args_info
   const char *dir_prep_in_help; /**< @brief Prep directory (containing .gavg, .gpres files) help description.  */
   int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
   const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
+  char * platform_dir_arg;	/**< @brief Platform directory.  */
+  char * platform_dir_orig;	/**< @brief Platform directory original value given at command line.  */
+  const char *platform_dir_help; /**< @brief Platform directory help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
+  unsigned int databaselet_given ;	/**< @brief Whether databaselet was given.  */
+  unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
   unsigned int db_given ;	/**< @brief Whether db was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
   unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */
   unsigned int dir_prep_in_given ;	/**< @brief Whether dir_prep_in was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
+  unsigned int platform_dir_given ;	/**< @brief Whether platform_dir was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

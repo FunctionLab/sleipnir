@@ -2,6 +2,12 @@ package	"SeekReader"
 version	"1.0"
 purpose	"Reads db files"
 
+section "Diagnosis"
+option	"databaselet"		D	"Display values from databaselet(s)"
+								flag	off
+option	"dataset"			A	"Check which datasets contain query of interest, based on .gpres file"
+								flag	off
+
 section "Main"
 option	"db"				x	"Input a set of datasets"
 								string typestr="filename"	yes
@@ -15,3 +21,5 @@ option	"dir_prep_in"		p	"Prep directory (containing .gavg, .gpres files)"
 								string	typestr="directory"	yes				
 option	"is_nibble"			N	"Whether the input DB is nibble type"
 								flag	off
+option	"platform_dir"		P	"Platform directory"
+								string typestr="directory"

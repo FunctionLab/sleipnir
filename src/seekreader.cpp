@@ -179,8 +179,11 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 			strFileStem + ".gavg";
 		string strPresencePath = strPrepInputDirectory + "/" +
 			strFileStem + ".gpres";
+		string strVariancePath = strPrepInputDirectory + "/" +
+			strFileStem + ".gexpvar";
 		vc[i]->ReadGeneAverage(strAvgPath);
 		vc[i]->ReadGenePresence(strPresencePath);
+		vc[i]->ReadGeneExpressionVariance(strVariancePath);
 		string strPlatform =
 			mapstrstrDatasetPlatform.find(strFileStem)->second;
 		ushort platform_id = mapstriPlatform.find(strPlatform)->second;

@@ -67,14 +67,12 @@ bool CSeekDataset::ReadGeneAverage(const string &strFileName){
 	return CSeekTools::ReadArray(strFileName.c_str(), geneAverage);
 }
 
+bool CSeekDataset::ReadGenePresence(const string &strFileName){
+	return CSeekTools::ReadArray(strFileName.c_str(), genePresence);
+}
 
 bool CSeekDataset::ReadGeneVariance(const string &strFileName){
 	return CSeekTools::ReadArray(strFileName.c_str(), geneVariance);
-}
-
-
-bool CSeekDataset::ReadGenePresence(const string &strFileName){
-	return CSeekTools::ReadArray(strFileName.c_str(), genePresence);
 }
 
 

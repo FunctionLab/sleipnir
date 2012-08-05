@@ -35,6 +35,7 @@ using namespace std;
 
 #include "bayesnet.h"
 #include "database.h"
+#include "seekbasic.h"
 #include "seekmap.h"
 #include "seekreader.h"
 #include "meta.h"

@@ -25,6 +25,8 @@ option	"x_per"				e	"Parameter X = percentage, for --avgp, --pr"
 								float	default="0"
 option	"rbp_p"				p	"Parameter p, for --rbp"
 								float	default="0.95"
+option	"dislay_only"		F	"Display the genes sorted by score (top 500 is shown, for single mode only)"
+								flag	off
 
 section	"Aggregator (for multi-query evaluation)"
 option	"agg_avg"			A	"Show the average, standard deviation of the metric for all queries"
