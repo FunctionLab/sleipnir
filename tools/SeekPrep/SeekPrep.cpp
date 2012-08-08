@@ -376,10 +376,12 @@ int main( int iArgs, char** aszArgs ) {
 				string pclfile = pcl_dir + "/" + pcl_list[i] + ".bin";
 				CPCL pcl;
 				pcl.Open(pclfile.c_str());
+				//cerr << pclfile << endl;
 
 				var[i] = vector<float>();
 				avg[i] = vector<float>();
 				CSeekTools::InitVector(var[i], vecstrGenes.size(), (float) CMeta::GetNaN());
+				CSeekTools::InitVector(avg[i], vecstrGenes.size(), (float) CMeta::GetNaN());
 				int totNumExperiments = pcl.GetExperiments() - 2;
 				if(totNumExperiments<=2) continue;
 
@@ -403,7 +405,9 @@ int main( int iArgs, char** aszArgs ) {
 					avg[i][j] = mean;
 					//fprintf(stderr, "%.5f %.5f\n", mean, variance);
 				}
+				//fprintf(stderr, "done\n"); 
 			}
+			//fprintf(stderr, "G\n"); 
 			for(i=0; i<pcl_list.size(); i++){
 				string dirout = sArgs.dir_out_arg;
 				string outfile = dirout + "/" + pcl_list[i] + ".gexpvar";

@@ -152,16 +152,17 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 	const string &strPrepInputDirectory, const vector<string> &vecstrDatasets,
 	const map<string, string> &mapstrstrDatasetPlatform,
 	const map<string, ushort> &mapstriPlatform, vector<CSeekPlatform> &vp,
-	vector<CSeekDataset*> &vc){
+	vector<CSeekDataset*> &vc, const bool& bReadVariance){
 	return CSeekTools::LoadDatabase(DB, strPrepInputDirectory.c_str(),
-		vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
+		vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc, 
+		bReadVariance);
 }
 
 bool CSeekTools::LoadDatabase(const CDatabase &DB,
 	const char *prep_dir, const vector<string> &vecstrDatasets,
 	const map<string, string> &mapstrstrDatasetPlatform,
 	const map<string, ushort> &mapstriPlatform, vector<CSeekPlatform> &vp,
-	vector<CSeekDataset*> &vc){
+	vector<CSeekDataset*> &vc, const bool &bReadVariance){
 		
 	size_t iDatasets = DB.GetDatasets();
 	size_t iGenes = DB.GetGenes();
@@ -179,11 +180,13 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 			strFileStem + ".gavg";
 		string strPresencePath = strPrepInputDirectory + "/" +
 			strFileStem + ".gpres";
-		string strVariancePath = strPrepInputDirectory + "/" +
-			strFileStem + ".gexpvar";
 		vc[i]->ReadGeneAverage(strAvgPath);
 		vc[i]->ReadGenePresence(strPresencePath);
-		vc[i]->ReadGeneExpressionVariance(strVariancePath);
+		if(bReadVariance){
+			string strVariancePath = strPrepInputDirectory + "/" +
+				strFileStem + ".gexpvar";
+			vc[i]->ReadGeneVariance(strVariancePath);
+		}
 		string strPlatform =
 			mapstrstrDatasetPlatform.find(strFileStem)->second;
 		ushort platform_id = mapstriPlatform.find(strPlatform)->second;

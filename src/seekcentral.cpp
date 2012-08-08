@@ -230,7 +230,7 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 
 	m_DB->Open(db, m_vecstrGenes, m_iDatasets, num_db);
 	CSeekTools::LoadDatabase(*m_DB, prep, m_vecstrDatasets,
-		m_mapstrstrDatasetPlatform, m_mapstriPlatform, m_vp, m_vc);
+		m_mapstrstrDatasetPlatform, m_mapstriPlatform, m_vp, m_vc, false);
 
 	if(!CalculateRestart()) return false;
 
@@ -588,9 +588,10 @@ bool CSeekCentral::OrderStatistics(){
 	return CSeekCentral::Common(sm);
 }
 
+/* to be implemented */
 bool CSeekCentral::SingleGeneMetaCorrelation(){
 	enum SearchMode sm = SINGLE_GENE_META;
-	return ;
+	return false;
 }
 
 bool CSeekCentral::VarianceWeightSearch(){

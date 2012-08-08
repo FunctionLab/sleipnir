@@ -58,7 +58,7 @@ int main( int iArgs, char** aszArgs ) {
 	ushort i,j;
 	ushort TOP = 1000;
 
-/*	
+/*
 	CSeekCentral *func = new CSeekCentral();
 	if(!func->Initialize(sArgs.input_arg, sArgs.func_quant_arg,
 		sArgs.func_dset_arg, sArgs.func_dset_arg, sArgs.query_arg,
@@ -86,7 +86,7 @@ int main( int iArgs, char** aszArgs ) {
 			origQuery[i].push_back(func->GetGene(queryGenes[j]));
 			newQuery[i].push_back(func->GetGene(queryGenes[j]));
 		}
-		for(j=0; j<10; j++)
+		for(j=0; j<200; j++)
 			newQuery[i].push_back(func->GetGene(vfunc[i][j].i));
 	}
 
