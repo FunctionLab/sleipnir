@@ -27,6 +27,8 @@ option	"rbp_p"				p	"Parameter p, for --rbp"
 								float	default="0.95"
 option	"dislay_only"		F	"Display the genes sorted by score (top 500 is shown, for single mode only)"
 								flag	off
+option	"display_weight"	W	"Display dataset weights (top 100)"
+								flag	off
 
 section	"Aggregator (for multi-query evaluation)"
 option	"agg_avg"			A	"Show the average, standard deviation of the metric for all queries"
@@ -43,6 +45,12 @@ option	"display_all"		E	"Display the metric for all queries"
 section	"Input required by all"
 option	"input"				i	"Gene mapping file"
 								string typestr="filename"	yes
+
+section "Input required by dataset weight display"
+option	"dataset_map"		I	"Dataset mapping file, only required for displaying dataset weights"
+								string typestr="filename"
+option	"weight"			w	"Dataset weight file, (*.dweight)"
+								string typestr="filename"
 
 section "Input required by single-query"
 option	"goldstd"			s	"Gold standard gene set file (one line, space delimited)"

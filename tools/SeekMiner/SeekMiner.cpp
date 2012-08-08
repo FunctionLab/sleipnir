@@ -182,9 +182,12 @@ int main( int iArgs, char** aszArgs ) {
 
 	CSeekCentral *csfinal = new CSeekCentral();
 	if(!csfinal->Initialize(sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
-		sArgs.search_dset_arg, "/tmp/ex_query2.txt", sArgs.dir_platform_arg,
+		sArgs.search_dset_arg, 
+		//"/tmp/ex_query2.txt", 
+		sArgs.query_arg,
+		sArgs.dir_platform_arg,
 		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, useNibble, sArgs.num_db_arg,
-		sArgs.buffer_arg, "results", 
+		sArgs.buffer_arg, "results", sArgs.output_text_flag,  
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
 		!!sArgs.norm_platstdev_flag, false,
 		sArgs.score_cutoff_arg, sArgs.per_q_required_arg))

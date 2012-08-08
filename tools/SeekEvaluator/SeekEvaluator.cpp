@@ -337,6 +337,26 @@ int main( int iArgs, char** aszArgs ) {
 	//fprintf(stderr, "Query mode: %d\n", qmode);
 
 	if(qmode==SINGLE_QUERY){
+		if(sArgs.display_weight_flag==1){
+			vector<float> ww;
+			CSeekTools::ReadArray(sArgs.weight_arg, ww);
+			vector<string> vecstrDatasets, vecstrP;
+			CSeekTools::ReadListTwoColumns(sArgs.dataset_map_arg, 
+				vecstrDatasets, vecstrP);
+			vector<AResultFloat> sortedDatasets;
+			sortedDatasets.resize(ww.size());
+			for(i=0; i<sortedDatasets.size(); i++){
+				sortedDatasets[i].i = i;
+				sortedDatasets[i].f = ww[i];
+			}
+			sort(sortedDatasets.begin(), sortedDatasets.end());
+			for(i=0; i<100; i++){
+				fprintf(stderr, "%.5f\t%s\n", sortedDatasets[i].f, 
+					vecstrDatasets[sortedDatasets[i].i].c_str());
+			}
+			return 0;
+		}
+
 		string queryFile = sArgs.query_arg;
 		vector<string> queryGenes;
 		CSeekTools::ReadMultiGeneOneLine(queryFile, queryGenes);
@@ -367,8 +387,8 @@ int main( int iArgs, char** aszArgs ) {
 
 		if(sArgs.dislay_only_flag==1){
 			for(i=0; i<500; i++)
-				fprintf(stderr, "%d\t%.5f\n", sortedGenes[i].i,
-					sortedGenes[i].f);
+				fprintf(stderr, "%s\t%.5f\n", 
+					vecstrGenes[sortedGenes[i].i].c_str(), sortedGenes[i].f);
 			return 0;
 		}
 

@@ -49,7 +49,7 @@ public:
 		const char *dset, const char *search_dset,
 		const char *query, const char *platform, const char* db,
 		const char *prep, const bool &useNibble, const ushort &num_db,
-		const ushort &, const char*,
+		const ushort &, const char*, const bool&,
 		const bool&, const bool&, const bool&, const bool&,
 		const float&, const float&);
 
@@ -99,6 +99,7 @@ private:
 	bool m_bSubtractPlatformAvg;
 	bool m_bDividePlatformStdev;
 	bool m_bLogit;
+	bool m_bOutputText;
 
 	ushort ***m_rData;
 

@@ -104,8 +104,12 @@ int main( int iArgs, char** aszArgs ) {
 					mapstrintGene[vecstrQuery[j]]))) continue;
 				present++;
 			}
-			fprintf(stderr, "%s\t%d\t%d\n", vecstrDatasets[i].c_str(),
-				present, si->GetNumSet());
+			if(present==vecstrQuery.size()){
+				//fprintf(stderr, "%s\t%s\t%d\t%d\n", 
+				//	vecstrDatasets[i].c_str(), vecstrDP[i].c_str(), 
+				//	present, si->GetNumSet());
+				fprintf(stderr, "%s\n", vecstrDatasets[i].c_str());
+			}
 		}
 
 

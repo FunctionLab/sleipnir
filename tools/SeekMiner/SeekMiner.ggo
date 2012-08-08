@@ -53,5 +53,6 @@ option	"is_nibble"			N	"Whether the input DB is nibble type"
 								flag	off
 option	"buffer"			b	"Number of Databaselets to store in memory"
 								int default="20"
-
+option	"output_text"		O	"Output results (gene list and dataset weights) as text"
+								flag	off
 								

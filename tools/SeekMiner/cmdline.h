@@ -95,6 +95,8 @@ struct gengetopt_args_info
   int buffer_arg;	/**< @brief Number of Databaselets to store in memory (default='20').  */
   char * buffer_orig;	/**< @brief Number of Databaselets to store in memory original value given at command line.  */
   const char *buffer_help; /**< @brief Number of Databaselets to store in memory help description.  */
+  int output_text_flag;	/**< @brief Output results (gene list and dataset weights) as text (default=off).  */
+  const char *output_text_help; /**< @brief Output results (gene list and dataset weights) as text help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -120,6 +122,7 @@ struct gengetopt_args_info
   unsigned int per_q_required_given ;	/**< @brief Whether per_q_required was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
   unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
+  unsigned int output_text_given ;	/**< @brief Whether output_text was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

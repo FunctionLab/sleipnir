@@ -62,6 +62,7 @@ CSeekCentral::CSeekCentral(){
 	m_bSubtractPlatformAvg = false;
 	m_bDividePlatformStdev = false;
 	m_bLogit = false;
+	m_bOutputText = false;
 	DEBUG = false;
 	m_output_dir = "";
 
@@ -165,7 +166,7 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const char *dset, const char *search_dset,
 	const char *query, const char *platform, const char *db,
 	const char *prep, const bool &useNibble, const ushort &num_db,
-	const ushort &buffer, const char *output_dir,
+	const ushort &buffer, const char *output_dir, const bool &to_output_text,
 	const bool &bSubtractAvg,
 	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
 	const bool &bLogit, const float &fCutOff, const float &fPercentRequired){
@@ -179,6 +180,7 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 
 	omp_set_num_threads(m_numThreads);
 
+	m_bOutputText = to_output_text;
 	m_bSubtractGeneAvg = bSubtractAvg;
 	m_bSubtractPlatformAvg = bSubtractPlatformAvg;
 	m_bDividePlatformStdev = bDividePlatformStdev;
@@ -363,8 +365,35 @@ bool CSeekCentral::Write(const ushort &i){
 	CSeekTools::WriteArray(acBuffer, m_weight[i]);
 	sprintf(acBuffer, "%s/%d.gscore", m_output_dir.c_str(), i);
 	CSeekTools::WriteArray(acBuffer, m_master_rank);
+	if(m_bOutputText){
+		vector<vector<string> > vecOutput;
+		vecOutput.resize(2);
+		vecOutput[0] = vector<string>();
+		vecOutput[1] = vector<string>();
+		sprintf(acBuffer, "%s/%d.results.txt", m_output_dir.c_str(), i);
+		vector<AResultFloat> w;
+		w.resize(m_iDatasets);
+		ushort j;
+		for(j=0; j<m_iDatasets; j++){
+			w[j].i = j;
+			w[j].f = m_weight[i][j];
+		}
+		sort(w.begin(), w.end());
+		for(j=0; j<200; j++){
+			if(w[j].f==0) continue;
+			vecOutput[0].push_back(m_vecstrDatasets[w[j].i]);
+		}
+		vector<AResultFloat> wd;
+		Sort(wd);
+		for(j=0; j<2000; j++){
+			if(wd[j].f==-320) continue;
+			vecOutput[1].push_back(m_vecstrGenes[wd[j].i]);
+		}
+		CSeekTools::Write2DArrayText(acBuffer, vecOutput);
+	}
 	return true;
 }
+
 
 
 bool CSeekCentral::Common(enum SearchMode &sm,
