@@ -58,7 +58,7 @@ int main( int iArgs, char** aszArgs ) {
 			mapstrstrDatasetPlatform[vecstrDatasets[i]] = vecstrDP[i];
 			mapstrintDataset[vecstrDatasets[i]] = i;
 		}
-		fprintf(stderr, "Finished reading dataset\n");
+		//fprintf(stderr, "Finished reading dataset\n");
 
 		size_t iDatasets = vecstrDatasets.size();
 		vector<string> vecstrPlatforms;
@@ -66,7 +66,7 @@ int main( int iArgs, char** aszArgs ) {
 		map<string, ushort> mapstriPlatform;
 		CSeekTools::ReadPlatforms(sArgs.platform_dir_arg, vp, vecstrPlatforms,
 			mapstriPlatform);
-		fprintf(stderr, "Finished reading platform\n");
+		//fprintf(stderr, "Finished reading platform\n");
 
 		vector<CSeekDataset*> vc;
 		vc.resize(iDatasets);
@@ -86,31 +86,45 @@ int main( int iArgs, char** aszArgs ) {
 			vc[i]->SetPlatform(vp[platform_id]);
 		}
 
-		fprintf(stderr, "Finished reading prep\n");
+		//fprintf(stderr, "Finished reading prep\n");
 
 		for(i=0; i<iDatasets; i++) vc[i]->InitializeGeneMap();
 
 		if(!CSeekTools::ReadMultiGeneOneLine(sArgs.query_arg, vecstrQuery))
 			return false;
 
-		fprintf(stderr, "Finished reading query\n");
+		//fprintf(stderr, "Finished reading query\n");
+		bool isFirst = true;
+		vector<int> count;
+		ushort j;
+		CSeekTools::InitVector(count, vecstrQuery.size(), (int) 0);
 		for(i=0; i<iDatasets; i++){
 			CSeekIntIntMap *si = vc[i]->GetGeneMap();
-			ushort j, present;
+			ushort present;
 			for(j=0, present=0; j<vecstrQuery.size(); j++){
 				if(mapstrintGene.find(vecstrQuery[j])==mapstrintGene.end())
 					continue;
 				if(CSeekTools::IsNaN(si->GetForward(
 					mapstrintGene[vecstrQuery[j]]))) continue;
+				count[j]++;
 				present++;
 			}
 			if(present==vecstrQuery.size()){
+				if(isFirst){
+					isFirst = false;
+					fprintf(stdout, "%s", vecstrDatasets[i].c_str());
+				}else{
+					fprintf(stdout, " %s", vecstrDatasets[i].c_str());
+				}
 				//fprintf(stderr, "%s\t%s\t%d\t%d\n", 
 				//	vecstrDatasets[i].c_str(), vecstrDP[i].c_str(), 
 				//	present, si->GetNumSet());
-				fprintf(stderr, "%s\n", vecstrDatasets[i].c_str());
 			}
 		}
+
+		for(j=0; j<vecstrQuery.size(); j++)
+			fprintf(stderr, "Gene %s: %d\n", 
+				vecstrQuery[j].c_str(), count[j]);
 
 
 	}

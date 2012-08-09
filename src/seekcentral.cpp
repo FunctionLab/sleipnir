@@ -366,6 +366,9 @@ bool CSeekCentral::Write(const ushort &i){
 	sprintf(acBuffer, "%s/%d.gscore", m_output_dir.c_str(), i);
 	CSeekTools::WriteArray(acBuffer, m_master_rank);
 	if(m_bOutputText){
+		const vector<ushort> &allRDatasets =
+			m_searchdsetMap[i]->GetAllReverse();
+		ushort iSearchDatasets = m_searchdsetMap[i]->GetNumSet();
 		vector<vector<string> > vecOutput;
 		vecOutput.resize(2);
 		vecOutput[0] = vector<string>();
@@ -379,14 +382,14 @@ bool CSeekCentral::Write(const ushort &i){
 			w[j].f = m_weight[i][j];
 		}
 		sort(w.begin(), w.end());
-		for(j=0; j<200; j++){
-			if(w[j].f==0) continue;
+		for(j=0; j<200 && j<iSearchDatasets; j++){
+			if(w[j].f==0) break;
 			vecOutput[0].push_back(m_vecstrDatasets[w[j].i]);
 		}
 		vector<AResultFloat> wd;
 		Sort(wd);
 		for(j=0; j<2000; j++){
-			if(wd[j].f==-320) continue;
+			if(wd[j].f==-320) break;
 			vecOutput[1].push_back(m_vecstrGenes[wd[j].i]);
 		}
 		CSeekTools::Write2DArrayText(acBuffer, vecOutput);

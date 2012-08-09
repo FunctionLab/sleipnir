@@ -337,28 +337,37 @@ bool CSeekTools::ReadMultipleQueries(const string &strFile,
 bool CSeekTools::ReadMultipleQueries(const char *file,
 	vector< vector<string> > &qList){
 	qList.clear();
-	ifstream ifsm;
-	ifsm.open(file);
-	if(!ifsm.is_open()){
+	FILE *infile;
+	if((infile=fopen(file, "r"))==NULL){
 		fprintf(stderr, "Error opening file %s\n", file);
 		return false;
 	}
 
-	char acBuffer[1024];
-	ushort c_iBuffer = 1024;
+	char *acBuffer;
+	int MAX_CHAR_PER_LINE = 1024;
+	int lineLen = MAX_CHAR_PER_LINE;
+	acBuffer = (char*)malloc(lineLen);
+	while(fgets(acBuffer, lineLen, infile)!=NULL){
+		while(strlen(acBuffer)==lineLen-1){
+			int len = strlen(acBuffer);
+			fseek(infile, -len, SEEK_CUR);
+			lineLen+=MAX_CHAR_PER_LINE;
+			acBuffer = (char*)realloc(acBuffer, lineLen);
+			char *ret = fgets(acBuffer, lineLen, infile);
+		}
+	}
+	rewind(infile);
 
-	ushort i = 0;
-	while(!ifsm.eof()){
-		ifsm.getline(acBuffer, c_iBuffer -1);
-		if(acBuffer[0]==0) break;
-		acBuffer[c_iBuffer-1] = 0;
+	while(fgets(acBuffer, lineLen, infile)!=NULL){
+		char *p = strtok(acBuffer, "\n");
 		vector<string> tok;
-		CMeta::Tokenize(acBuffer, tok, " ");
+		CMeta::Tokenize(p, tok, " ");
 		qList.push_back(tok);
-		i++;
 	}
 	qList.resize(qList.size());
-	ifsm.close();
+	free(acBuffer);
+
+	fclose(infile);
 	return true;
 }
 
