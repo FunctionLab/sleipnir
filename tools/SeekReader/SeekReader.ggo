@@ -9,7 +9,9 @@ option	"dataset"			A	"Check which datasets contain query of interest, based on .
 								flag	off
 
 section "Main"
-option	"db"				x	"Input a set of datasets"
+option	"db"				x	"Input dataset-platform definition"
+								string typestr="filename"	yes
+option	"dset_list"			X	"Input a set of datasets"
 								string typestr="filename"	yes
 option	"input"				i	"Input gene mapping"
 								string	typestr="filename"	yes

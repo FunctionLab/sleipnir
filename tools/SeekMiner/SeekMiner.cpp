@@ -187,7 +187,7 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.query_arg,
 		sArgs.dir_platform_arg,
 		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, useNibble, sArgs.num_db_arg,
-		sArgs.buffer_arg, "results", !!sArgs.output_text_flag,  
+		sArgs.buffer_arg, sArgs.output_dir_arg, !!sArgs.output_text_flag,  
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
 		!!sArgs.norm_platstdev_flag, false,
 		sArgs.score_cutoff_arg, sArgs.per_q_required_arg))

@@ -55,4 +55,6 @@ option	"buffer"			b	"Number of Databaselets to store in memory"
 								int default="20"
 option	"output_text"		O	"Output results (gene list and dataset weights) as text"
 								flag	off
+option	"output_dir"		o	"Output directory"
+								string typestr="directory"
 								

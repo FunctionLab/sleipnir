@@ -31,7 +31,7 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
 	istream*			pistm;
-	vector<string>		vecstrLine, vecstrGenes, vecstrDatasets, vecstrQuery;
+	vector<string>		vecstrLine, vecstrGenes, vecstrDatasets, vecstrQuery, vecstrUserDatasets;
 	char				acBuffer[ c_iBuffer ];
 	size_t				i;
 
@@ -48,9 +48,15 @@ int main( int iArgs, char** aszArgs ) {
 		mapstrintGene[vecstrGenes[i]] = i;
 
 	if(sArgs.dataset_flag==1){
-		vector<string> vecstrDP;
+		vector<string> vecstrDP, vecstrUserDP;
+		//dataset-platform mapping (required)
 		if(!CSeekTools::ReadListTwoColumns(sArgs.db_arg, vecstrDatasets, vecstrDP))
 			return false;
+
+		//dataset filter
+		if(!CSeekTools::ReadListTwoColumns(sArgs.dset_list_arg, vecstrUserDatasets, vecstrUserDP))
+			return false;
+
 		map<string, ushort> mapstrintDataset;
 		map<string, string> mapstrstrDatasetPlatform;
 		ushort i;
@@ -58,6 +64,12 @@ int main( int iArgs, char** aszArgs ) {
 			mapstrstrDatasetPlatform[vecstrDatasets[i]] = vecstrDP[i];
 			mapstrintDataset[vecstrDatasets[i]] = i;
 		}
+
+		CSeekIntIntMap *mapUserDatasets = new CSeekIntIntMap(vecstrDatasets.size());
+		for(i=0; i<vecstrUserDatasets.size(); i++){
+			mapUserDatasets->Add(mapstrintDataset[vecstrUserDatasets[i]]);
+		}
+		
 		//fprintf(stderr, "Finished reading dataset\n");
 
 		size_t iDatasets = vecstrDatasets.size();
@@ -98,7 +110,14 @@ int main( int iArgs, char** aszArgs ) {
 		vector<int> count;
 		ushort j;
 		CSeekTools::InitVector(count, vecstrQuery.size(), (int) 0);
-		for(i=0; i<iDatasets; i++){
+
+		//only analyze and report on user datasets
+		const vector<ushort> &allRDatasets = mapUserDatasets->GetAllReverse();
+		ushort iUserDatasets = mapUserDatasets->GetNumSet();
+		ushort dd;
+		for(dd=0; dd<iUserDatasets; dd++){
+			i = allRDatasets[dd];
+			//fprintf(stdout, "%d %d %s\n", i, dd, vecstrDatasets[i].c_str());
 			CSeekIntIntMap *si = vc[i]->GetGeneMap();
 			ushort present;
 			for(j=0, present=0; j<vecstrQuery.size(); j++){
@@ -125,7 +144,7 @@ int main( int iArgs, char** aszArgs ) {
 		for(j=0; j<vecstrQuery.size(); j++)
 			fprintf(stderr, "Gene %s: %d\n", 
 				vecstrQuery[j].c_str(), count[j]);
-
+		
 
 	}
 	else if(sArgs.databaselet_flag==1){

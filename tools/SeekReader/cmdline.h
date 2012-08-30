@@ -38,9 +38,12 @@ struct gengetopt_args_info
   const char *databaselet_help; /**< @brief Display values from databaselet(s) help description.  */
   int dataset_flag;	/**< @brief Check which datasets contain query of interest, based on .gpres file (default=off).  */
   const char *dataset_help; /**< @brief Check which datasets contain query of interest, based on .gpres file help description.  */
-  char * db_arg;	/**< @brief Input a set of datasets.  */
-  char * db_orig;	/**< @brief Input a set of datasets original value given at command line.  */
-  const char *db_help; /**< @brief Input a set of datasets help description.  */
+  char * db_arg;	/**< @brief Input dataset-platform definition.  */
+  char * db_orig;	/**< @brief Input dataset-platform definition original value given at command line.  */
+  const char *db_help; /**< @brief Input dataset-platform definition help description.  */
+  char * dset_list_arg;	/**< @brief Input a set of datasets.  */
+  char * dset_list_orig;	/**< @brief Input a set of datasets original value given at command line.  */
+  const char *dset_list_help; /**< @brief Input a set of datasets help description.  */
   char * input_arg;	/**< @brief Input gene mapping.  */
   char * input_orig;	/**< @brief Input gene mapping original value given at command line.  */
   const char *input_help; /**< @brief Input gene mapping help description.  */
@@ -64,6 +67,7 @@ struct gengetopt_args_info
   unsigned int databaselet_given ;	/**< @brief Whether databaselet was given.  */
   unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
   unsigned int db_given ;	/**< @brief Whether db was given.  */
+  unsigned int dset_list_given ;	/**< @brief Whether dset_list was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
   unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */

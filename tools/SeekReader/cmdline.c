@@ -34,7 +34,8 @@ const char *gengetopt_args_info_help[] = {
   "  -D, --databaselet             Display values from databaselet(s)  \n                                  (default=off)",
   "  -A, --dataset                 Check which datasets contain query of interest, \n                                  based on .gpres file  (default=off)",
   "\nMain:",
-  "  -x, --db=filename             Input a set of datasets",
+  "  -x, --db=filename             Input dataset-platform definition",
+  "  -X, --dset_list=filename      Input a set of datasets",
   "  -i, --input=filename          Input gene mapping",
   "  -q, --query=filename          Query gene list",
   "  -d, --dir_in=directory        Database directory",
@@ -72,6 +73,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->databaselet_given = 0 ;
   args_info->dataset_given = 0 ;
   args_info->db_given = 0 ;
+  args_info->dset_list_given = 0 ;
   args_info->input_given = 0 ;
   args_info->query_given = 0 ;
   args_info->dir_in_given = 0 ;
@@ -87,6 +89,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->dataset_flag = 0;
   args_info->db_arg = NULL;
   args_info->db_orig = NULL;
+  args_info->dset_list_arg = NULL;
+  args_info->dset_list_orig = NULL;
   args_info->input_arg = NULL;
   args_info->input_orig = NULL;
   args_info->query_arg = NULL;
@@ -111,12 +115,13 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->databaselet_help = gengetopt_args_info_help[3] ;
   args_info->dataset_help = gengetopt_args_info_help[4] ;
   args_info->db_help = gengetopt_args_info_help[6] ;
-  args_info->input_help = gengetopt_args_info_help[7] ;
-  args_info->query_help = gengetopt_args_info_help[8] ;
-  args_info->dir_in_help = gengetopt_args_info_help[9] ;
-  args_info->dir_prep_in_help = gengetopt_args_info_help[10] ;
-  args_info->is_nibble_help = gengetopt_args_info_help[11] ;
-  args_info->platform_dir_help = gengetopt_args_info_help[12] ;
+  args_info->dset_list_help = gengetopt_args_info_help[7] ;
+  args_info->input_help = gengetopt_args_info_help[8] ;
+  args_info->query_help = gengetopt_args_info_help[9] ;
+  args_info->dir_in_help = gengetopt_args_info_help[10] ;
+  args_info->dir_prep_in_help = gengetopt_args_info_help[11] ;
+  args_info->is_nibble_help = gengetopt_args_info_help[12] ;
+  args_info->platform_dir_help = gengetopt_args_info_help[13] ;
   
 }
 
@@ -200,6 +205,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   unsigned int i;
   free_string_field (&(args_info->db_arg));
   free_string_field (&(args_info->db_orig));
+  free_string_field (&(args_info->dset_list_arg));
+  free_string_field (&(args_info->dset_list_orig));
   free_string_field (&(args_info->input_arg));
   free_string_field (&(args_info->input_orig));
   free_string_field (&(args_info->query_arg));
@@ -254,6 +261,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "dataset", 0, 0 );
   if (args_info->db_given)
     write_into_file(outfile, "db", args_info->db_orig, 0);
+  if (args_info->dset_list_given)
+    write_into_file(outfile, "dset_list", args_info->dset_list_orig, 0);
   if (args_info->input_given)
     write_into_file(outfile, "input", args_info->input_orig, 0);
   if (args_info->query_given)
@@ -366,6 +375,12 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   if (! args_info->db_given)
     {
       fprintf (stderr, "%s: '--db' ('-x') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  if (! args_info->dset_list_given)
+    {
+      fprintf (stderr, "%s: '--dset_list' ('-X') option required%s\n", prog_name, (additional_error ? additional_error : ""));
       error = 1;
     }
   
@@ -540,6 +555,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "databaselet",	0, NULL, 'D' },
         { "dataset",	0, NULL, 'A' },
         { "db",	1, NULL, 'x' },
+        { "dset_list",	1, NULL, 'X' },
         { "input",	1, NULL, 'i' },
         { "query",	1, NULL, 'q' },
         { "dir_in",	1, NULL, 'd' },
@@ -549,7 +565,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVDAx:i:q:d:p:NP:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVDAx:X:i:q:d:p:NP:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -594,7 +610,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'x':	/* Input a set of datasets.  */
+        case 'x':	/* Input dataset-platform definition.  */
         
         
           if (update_arg( (void *)&(args_info->db_arg), 
@@ -602,6 +618,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.db_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "db", 'x',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'X':	/* Input a set of datasets.  */
+        
+        
+          if (update_arg( (void *)&(args_info->dset_list_arg), 
+               &(args_info->dset_list_orig), &(args_info->dset_list_given),
+              &(local_args_info.dset_list_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "dset_list", 'X',
               additional_error))
             goto failure;
         
