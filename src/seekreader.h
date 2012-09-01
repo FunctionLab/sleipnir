@@ -70,7 +70,7 @@ public:
 			cerr << "File not found" << endl;
 			return false;
 		}
-		ushort i;
+		size_t i;
 		tType *m_Data = (tType*)malloc(vData.size()*sizeof(tType));
 		for(i=0; i<vData.size(); i++){
 			m_Data[i] = vData[i];
@@ -89,7 +89,7 @@ public:
 		const vector<tType> &vData){
 		ofstream outfile;
 		outfile.open(fileName);
-		ushort i;
+		size_t i;
 		for(i=0; i<vData.size()-1; i++){
 			outfile << vData[i] << " ";
 		}
@@ -103,7 +103,7 @@ public:
 		const vector<vector<tType> > &vData){
 		ofstream outfile;
 		outfile.open(fileName);
-		ushort i,j;
+		size_t i,j;
 		for(j=0; j<vData.size(); j++){
 			for(i=0; i<vData[j].size()-1; i++){
 				outfile << vData[j][i] << " ";

@@ -542,7 +542,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			FilterResults(iSearchDatasets);
 		}else{
 			CSeekWeighter::OrderStatisticsRankAggregation(iSearchDatasets,
-				m_iGenes, m_rank_d, m_counts, m_master_rank);
+				m_iGenes, m_rank_d, m_counts, m_master_rank, m_numThreads);
 			CSeekTools::Free2DArray(m_rank_d);
 			m_rank_d = NULL;
 		}

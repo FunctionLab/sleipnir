@@ -87,17 +87,44 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 	return true;
 }
 
+bool CSeekWeighter::OrderStatisticsPreCompute(){
+	ushort cc, dd, kk;
+	vector<float> all;
+	all.resize(1100*600*600);
+
+	ushort i = 0;
+	for(kk=0; kk<22000; kk+=20){
+		float p = (float) (kk + 1) / 22000;
+		for(dd=0; dd<3000; dd+=5){
+			unsigned int rrk = dd + 1;
+			for(cc=0; cc<3000; cc+=5){
+				double gg = gsl_cdf_binomial_Q(dd+1, p, cc+1);
+				all[i] = -1.0*log(gg);
+				i++;
+			}
+		}
+	}
+	//fprintf(stderr, "Done calculating\n"); //getchar();
+
+	CSeekTools::WriteArray("/tmp/order_stats.binomial.bin", all);
+
+	//fprintf(stderr, "Done saving\n"); //getchar();
+}
+
 bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 	const ushort &iGenes, ushort **rank_d, const vector<ushort> &counts,
-	vector<float> &master_rank){
+	vector<float> &master_rank, const ushort &numThreads){
+
+	//vector<float> precompute;
+	//CSeekTools::ReadArray("/tmp/order_stats.binomial.bin", precompute);
+	//fprintf(stderr, "Before\n"); getchar();
+	//OrderStatisticsTest();
+
 	if(rank_d==NULL){
 		fprintf(stderr, "rank_d is null");
 		return false;
 	}
 
-	gsl_vector_float *gs = gsl_vector_float_calloc(iDatasets);
-	gsl_permutation *perm = gsl_permutation_alloc(iDatasets);
-	gsl_permutation *rk = gsl_permutation_alloc(iDatasets);
 
 	master_rank.clear();
 	master_rank.resize(iGenes);
@@ -117,26 +144,57 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 	for(j=0; j<iDatasets; j++){
 		vector<AResult> this_d;
 		ushort numNonZero = 0;
-		this_d.resize(iGenes);
 		for(k=0; k<iGenes; k++){
-			this_d[k].i = k;
-			this_d[k].f = rank_d[j][k];
 			if(rank_d[j][k]>0) numNonZero++;
 		}
 		if(numNonZero==0){
-			this_d.clear();
 			continue;
 		}
-		sort(this_d.begin(), this_d.end());
+		this_d.resize(numNonZero);
+		int kk=0;
 		for(k=0; k<iGenes; k++){
-			if(this_d[k].f==0) break;
+			if(rank_d[j][k]<=0) continue;
+			this_d[kk].i = k;
+			this_d[kk].f = rank_d[j][k];
+			kk++;
+		}
+		sort(this_d.begin(), this_d.end());
+		for(k=0; k<numNonZero; k++){
 			rank_f[j][this_d[k].i] =
 				(float) (k+1) / (float) numNonZero;
 		}
 		this_d.clear();
 	}
 
+	//fprintf(stderr, "Done1\n");
+	vector<gsl_vector_float *> gss;
+	vector<gsl_permutation *> perms;
+	vector<gsl_permutation *> rks;
+
+	gss.resize(numThreads);
+	perms.resize(numThreads);
+	rks.resize(numThreads);
+	for(i=0; i<numThreads; i++){
+		gss[i] = gsl_vector_float_calloc(iDatasets);
+		perms[i] = gsl_permutation_alloc(iDatasets);
+		rks[i] = gsl_permutation_alloc(iDatasets);
+	}
+
+	//gsl_vector_float *gs = gsl_vector_float_calloc(iDatasets);
+	//gsl_permutation *perm = gsl_permutation_alloc(iDatasets);
+	//gsl_permutation *rk = gsl_permutation_alloc(iDatasets);
+	//fprintf(stderr, "Finished allocating\n");
+
+	#pragma omp parallel for \
+	shared(master_rank, counts, rank_f, gss, perms, rks, iGenes, \
+	iDatasets) private(k, dd) firstprivate(DEFAULT_NULL) \
+	schedule(dynamic)
 	for(k=0; k<iGenes; k++){
+		ushort tid = omp_get_thread_num();
+		gsl_vector_float *gs = gss[tid];
+		gsl_permutation *perm = perms[tid];
+		gsl_permutation *rk = rks[tid];
+
 		master_rank[k] = DEFAULT_NULL;
 		if(counts[k]<(int)(0.5*iDatasets)) continue;
 
@@ -147,25 +205,54 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 		gsl_permutation_inverse(rk, perm);
 
 		float max = DEFAULT_NULL;
+		int max_rank = -1;
+		float max_p = -1;
 		for(dd=0; dd<iDatasets; dd++){
-			if(rank_f[dd][k]==1.1) continue;
 			//get the prob of the gene in dset dd
 			float p = gsl_vector_float_get(gs, dd);
+			if(p<0 || p>1.0){
+				continue;
+			//	fprintf(stderr, "D%d %.5f\n", dd, p);
+			}
 			//get the rank of dset dd across all dsets
 			unsigned int rrk = rk->data[dd];
 			double gg = gsl_cdf_binomial_Q(rrk+1, p, counts[k]);
 			float tmp = -1.0*log(gg);
+
+			//load precomputed value==============
+			/*int ind_p = (int) (p / (20.0 / 22000.0));
+			int ind_r = (int) (rrk / 5.0);
+			int ind_c = (int) (counts[k] / 5.0);
+			float tmp = precompute[ind_p*600*600 + ind_r*600 + ind_c];
+			*/
+			//end=================================
+
 			if(isinf(tmp)) tmp = DEFAULT_NULL;
-			if(tmp>max) max = tmp;
+			if(tmp>max){
+				max = tmp;
+				max_rank = rrk;
+				max_p = p;
+			}
 		}
-		if(max!=DEFAULT_NULL)
+		if(max!=DEFAULT_NULL){
 			master_rank[k] = max;
+			//fprintf(stderr, "rank %.5f %.5f\n", max_p, max);
+		}
 	}
 
 	CSeekTools::Free2DArray(rank_f);
-	gsl_permutation_free(perm);
-	gsl_permutation_free(rk);
-	gsl_vector_float_free(gs);
+	for(i=0; i<numThreads; i++){
+		gsl_permutation_free(perms[i]);
+		gsl_permutation_free(rks[i]);
+		gsl_vector_float_free(gss[i]);
+	}
+	perms.clear();
+	rks.clear();
+	gss.clear();
+
+	//gsl_permutation_free(perm);
+	//gsl_permutation_free(rk);
+	//gsl_vector_float_free(gs);
 
 	return true;
 }

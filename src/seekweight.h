@@ -39,7 +39,8 @@ public:
 		const float &rate, const float &percent_required,
 		vector<ushort> *rrank, const CSeekQuery *goldStd = NULL);
 	static bool OrderStatisticsRankAggregation(const ushort&, const ushort&,
-		ushort**, const vector<ushort> &, vector<float>&);
+		ushort**, const vector<ushort> &, vector<float>&, const ushort&);
+	static bool OrderStatisticsPreCompute();
 
 };
 
