@@ -52,12 +52,18 @@ option	"dataset_map"		I	"Dataset mapping file, only required for displaying data
 option	"weight"			w	"Dataset weight file, (*.dweight)"
 								string typestr="filename"
 
+section "Options for all"
+option	"fold_over_random"	f	"Fold-over-random"
+								flag	off
+
 section "Input required by single-query"
 option	"goldstd"			s	"Gold standard gene set file (one line, space delimited)"
 								string typestr="filename"
 option	"gscore"			g	"Gene score file (.gscore)"
 								string typestr="filename"
 option	"query"				q	"Query gene set file (to be excluded from evaluation) (.query)"
+								string typestr="filename"
+option	"exclude"			y	"Exclude genes (.exclude)"
 								string typestr="filename"
 option	"nan"				n	"Define NaN score"
 								float	default="-320"
@@ -68,6 +74,8 @@ option	"goldstd_list"		S	"List of gold standard gene set files"
 option	"gscore_list"		G	"List of gene score files"
 								string typestr="filename"
 option	"query_list"		Q	"List of query gene set files"
+								string typestr="filename"
+option	"exclude_list"		X 	"Exclude gene list"
 								string typestr="filename"
 								
 section "Output"

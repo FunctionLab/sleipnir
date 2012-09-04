@@ -80,6 +80,8 @@ struct gengetopt_args_info
   char * weight_arg;	/**< @brief Dataset weight file, (*.dweight).  */
   char * weight_orig;	/**< @brief Dataset weight file, (*.dweight) original value given at command line.  */
   const char *weight_help; /**< @brief Dataset weight file, (*.dweight) help description.  */
+  int fold_over_random_flag;	/**< @brief Fold-over-random (default=off).  */
+  const char *fold_over_random_help; /**< @brief Fold-over-random help description.  */
   char * goldstd_arg;	/**< @brief Gold standard gene set file (one line, space delimited).  */
   char * goldstd_orig;	/**< @brief Gold standard gene set file (one line, space delimited) original value given at command line.  */
   const char *goldstd_help; /**< @brief Gold standard gene set file (one line, space delimited) help description.  */
@@ -89,6 +91,9 @@ struct gengetopt_args_info
   char * query_arg;	/**< @brief Query gene set file (to be excluded from evaluation) (.query).  */
   char * query_orig;	/**< @brief Query gene set file (to be excluded from evaluation) (.query) original value given at command line.  */
   const char *query_help; /**< @brief Query gene set file (to be excluded from evaluation) (.query) help description.  */
+  char * exclude_arg;	/**< @brief Exclude genes (.exclude).  */
+  char * exclude_orig;	/**< @brief Exclude genes (.exclude) original value given at command line.  */
+  const char *exclude_help; /**< @brief Exclude genes (.exclude) help description.  */
   float nan_arg;	/**< @brief Define NaN score (default='-320').  */
   char * nan_orig;	/**< @brief Define NaN score original value given at command line.  */
   const char *nan_help; /**< @brief Define NaN score help description.  */
@@ -101,6 +106,9 @@ struct gengetopt_args_info
   char * query_list_arg;	/**< @brief List of query gene set files.  */
   char * query_list_orig;	/**< @brief List of query gene set files original value given at command line.  */
   const char *query_list_help; /**< @brief List of query gene set files help description.  */
+  char * exclude_list_arg;	/**< @brief Exclude gene list.  */
+  char * exclude_list_orig;	/**< @brief Exclude gene list original value given at command line.  */
+  const char *exclude_list_help; /**< @brief Exclude gene list help description.  */
   char * dir_out_arg;	/**< @brief Output directory.  */
   char * dir_out_orig;	/**< @brief Output directory original value given at command line.  */
   const char *dir_out_help; /**< @brief Output directory help description.  */
@@ -127,13 +135,16 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int dataset_map_given ;	/**< @brief Whether dataset_map was given.  */
   unsigned int weight_given ;	/**< @brief Whether weight was given.  */
+  unsigned int fold_over_random_given ;	/**< @brief Whether fold_over_random was given.  */
   unsigned int goldstd_given ;	/**< @brief Whether goldstd was given.  */
   unsigned int gscore_given ;	/**< @brief Whether gscore was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
+  unsigned int exclude_given ;	/**< @brief Whether exclude was given.  */
   unsigned int nan_given ;	/**< @brief Whether nan was given.  */
   unsigned int goldstd_list_given ;	/**< @brief Whether goldstd_list was given.  */
   unsigned int gscore_list_given ;	/**< @brief Whether gscore_list was given.  */
   unsigned int query_list_given ;	/**< @brief Whether query_list was given.  */
+  unsigned int exclude_list_given ;	/**< @brief Whether exclude_list was given.  */
   unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
