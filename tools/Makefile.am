@@ -56,6 +56,7 @@ if WITH_SMILE_TOOLS
 	  Counter \
 	  Data2DB \
       DBCombiner \
+	  SeekTest \
       SeekPrep \
       SeekReader \
       SeekMiner \

@@ -1,0 +1,22 @@
+package	"SeekTest"
+version	"1.0"
+purpose	"Statistical test on a gene set for a given dataset"
+
+section "Mode"
+option	"dab"				D	"DAB mode"
+								flag	off
+option	"bin"				A	"PCL Bin mode"
+								flag	off
+
+section "DAB mode"
+option	"gene_set_list"		g	"List of gene-set files"
+								string typestr="filename"	yes
+option	"input"				x	"Gene mapping file"
+								string typestr="filename"	yes
+option	"dabinput"			B	"DAB dataset file"
+								string typestr="filename"
+option 	"gavg_input"		a	"Gene average (.gavg) input file"
+								string typestr="filename"
+option 	"gpres_input"		p	"Gene presence (.gpres) input file"
+								string typestr="filename"
+

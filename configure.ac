@@ -726,6 +726,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Counter/Makefile \
 		 tools/Data2DB/Makefile \
 		 tools/SeekReader/Makefile \
+		 tools/SeekTest/Makefile \
 		 tools/SeekMiner/Makefile \
 		 tools/SeekPrep/Makefile \
 		 tools/SeekServer/Makefile \
