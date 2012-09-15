@@ -218,6 +218,13 @@ bool CGene::AddSynonym( const std::string& strName ) {
 	m_astrSynonyms = astrSynonyms;
 	return true; }
 
+bool CGene::SetWeight(float weight){
+	m_weight = weight;
+	return true;
+};
+
+
+
 const char	CGenomeImpl::c_szDubious[]	= "Dubious";
 const char	CGenomeImpl::c_szORF[]		= "ORF";
 const char*	CGenomeImpl::c_aszRNA[]		= { "ncRNA", "rRNA", "snRNA", "snoRNA", "tRNA",
@@ -540,7 +547,7 @@ bool CGenes::Open( const char* szFile, CGenome& Genome, std::vector<std::string>
  */
 CGenes::CGenes( CGenome& Genome ) : CGenesImpl( Genome ) { }
 
-CGenesImpl::CGenesImpl( CGenome& Genome ) : m_Genome(Genome) { }
+CGenesImpl::CGenesImpl( CGenome& Genome ) : m_Genome(Genome),isWeighted(false) { }
 
 /*!
  * \brief
@@ -600,7 +607,81 @@ bool CGenes::Open( std::istream& istm, bool fCreate ) {
 			continue;
 		m_mapGenes[ pGene->GetName( ) ] = m_vecpGenes.size( );
 		m_vecpGenes.push_back( pGene ); }
+	isWeighted = false;
+	return true; }
 
+/*!
+ * \brief
+ * Construct a new weighted gene set by loading genes from the given text stream, one per line.
+ * 
+ * \param istm
+ * Stream containing gene IDs and corresponding weights to load, one per line.
+ * 
+ * \param fCreate
+ * If true, add unknown genes to the underlying genome; otherwise, unknown gene IDs are ignored.
+ * 
+ * \returns
+ * True if gene set was constructed successfully.
+ * 
+ * Loads a text file of the form:
+ * \code
+ * GENE1 WEIGHT1
+ * GENE2 WEIGHT2
+ * GENE3 WEIGHT3
+ * \endcode
+ * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
+ * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
+ * created from the loaded IDs.  If fCreate is false, unrecognized genes are skipped with a warning.
+ * 
+ * \see
+ * CGenome::AddGene
+ */
+bool CGenes::OpenWeighted( std::istream& istm, bool fCreate ) {
+	static const size_t	c_iBuffer	= 1024;
+	char	szBuf[ c_iBuffer ];
+	CGene*	pGene;
+	size_t	i, iGene;
+	char*	pc;
+	vector<string> vecstrTokens;
+
+	if( istm.rdstate( ) != ios_base::goodbit )
+		return false;
+
+	m_mapGenes.clear( );
+	m_vecpGenes.clear( );
+	while( istm.peek( ) != EOF ) {
+		istm.getline( szBuf, c_iBuffer - 1 );
+		//if( pc = strchr( szBuf, '\t' ) )
+		//	*pc = 0;
+		if( !szBuf[ 0 ] || ( szBuf[ 0 ] == c_cComment ) )
+			continue;
+		szBuf[c_iBuffer - 1] = 0;
+		vecstrTokens.clear();
+		CMeta::Tokenize(szBuf, vecstrTokens);
+		if (vecstrTokens.empty())
+			continue;
+		if (vecstrTokens.size() != 2) {
+			cerr << "Illegal label line (" << vecstrTokens.size() << "): "
+					<< szBuf << endl;
+			continue;
+		}
+
+		if( fCreate )
+			pGene = &m_Genome.AddGene( vecstrTokens[0] );
+		else {
+			if( ( iGene = m_Genome.FindGene( vecstrTokens[0] ) ) == -1 ) {
+				g_CatSleipnir( ).warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, vecstrTokens[0] );
+				continue; }
+			pGene = &m_Genome.GetGene( iGene ); }
+		pGene->SetWeight(atof(vecstrTokens[1].c_str()));
+		for( i = 0; i < m_vecpGenes.size( ); ++i )
+			if( m_vecpGenes[ i ] == pGene )
+				break;
+		if( i != m_vecpGenes.size( ) )
+			continue;
+		m_mapGenes[ pGene->GetName( ) ] = m_vecpGenes.size( );
+		m_vecpGenes.push_back( pGene ); }
+	isWeighted = true;
 	return true; }
 
 /*!
@@ -670,7 +751,7 @@ bool CGenes::Open( const std::vector<std::string>& vecstrGenes, bool fCreate ) {
 		pGene = fCreate ? &m_Genome.AddGene( vecstrGenes[ i ] ) : &m_Genome.GetGene( iGene );
 		m_mapGenes[ vecstrGenes[ i ] ] = m_vecpGenes.size( );
 		m_vecpGenes.push_back( pGene ); }
-
+	isWeighted = false;
 	return true; }
 
 /*!

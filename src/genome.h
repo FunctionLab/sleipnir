@@ -64,6 +64,7 @@ public:
 
 	bool AddSynonym( const std::string& strName );
 	bool AddAnnotation( const IOntology* pOntology, size_t iTerm );
+	bool SetWeight( float weight);
 	bool IsAnnotated( const IOntology* pOntology ) const;
 	bool IsAnnotated( const IOntology* pOntology, size_t iTerm ) const;
 
@@ -192,7 +193,18 @@ public:
 	bool GetRNA( ) const {
 
 		return m_fRNA; }
-
+	/*!
+	 * \brief
+	 * Return weight of the gene.
+	 * 
+	 * \returns
+	 * Gene weight.
+	 * 
+	 * \see
+	 * SetWeight
+	 */
+	const float GetWeight() const {
+		return m_weight; }
 	/*!
 	 * \brief
 	 * Return the number of different ontologies in which this gene is annotated.
@@ -261,6 +273,8 @@ public:
 	size_t GetAnnotation( size_t iOntology, size_t iAnnotation ) const {
 
 		return (*m_apveciAnnotations[ iOntology ])[ iAnnotation ]; }
+
+
 };
 
 /*!
@@ -364,10 +378,12 @@ public:
 
 	bool Open( std::istream& istm, bool fCreate = true );
 	bool Open( const std::vector<std::string>& vecstrGenes, bool fCreate = true );
+	bool OpenWeighted( std::istream& istm, bool fCreate = true );
 	void Filter( const CGenes& GenesExclude );
 	size_t CountAnnotations( const IOntology* pOntology, size_t iTerm, bool fRecursive = true,
 		const CGenes* pBackground = NULL ) const;
 	std::vector<std::string> GetGeneNames( ) const;
+	
 
 	/*!
 	 * \brief
@@ -400,7 +416,37 @@ public:
 
 		ifsm.open( szFile );
 		return ( ifsm.is_open( ) && Open( ifsm, fCreate ) ); }
+	/*!
+	 * \brief
+	 * Construct a new gene set by loading genes from the given text file, one per line.
+	 * 
+	 * \param szFile
+	 * File containing gene IDs to load, one per line.
+	 * 
+	 * \param fCreate
+	 * If true, add unknown genes to the underlying genome; otherwise, unknown gene IDs are ignored.
+	 * 
+	 * \returns
+	 * True if gene set was constructed successfully.
+	 * 
+	 * Loads a text file of the form:
+	 * \code
+	 * GENE1
+	 * GENE2
+	 * GENE3
+	 * \endcode
+	 * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
+	 * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
+	 * created from the loaded IDs.  If fCreate is false, unrecognized genes are skipped with a warning.
+	 * 
+	 * \see
+	 * CGenome::AddGene
+	 */
+	bool OpenWeighted( const char* szFile, bool fCreate = true ) {
+		std::ifstream	ifsm;
 
+		ifsm.open( szFile );
+		return ( ifsm.is_open( ) && OpenWeighted( ifsm, fCreate ) ); }
 	/*!
 	 * \brief
 	 * Return the number of genes in the set.
@@ -428,7 +474,16 @@ public:
 	bool IsGene( const std::string& strGene ) const {
 
 		return ( m_mapGenes.find( strGene ) != m_mapGenes.end( ) ); }
-
+	/*!
+	 * \brief
+	 * Determine whether genes are weighted 
+	 * 
+	 * \returns
+	 * Value at the requested location, or NaN if it does not exist or has been filtered.
+	 * 
+	 */	
+	bool IsWeighted() const {
+		return isWeighted;}
 	/*!
 	 * \brief
 	 * Return the gene set's underlying genome.
@@ -457,6 +512,23 @@ public:
 
 		return *m_vecpGenes[ iGene ]; }
 
+	/*!
+	 * \brief
+	 * Return weight of the gene at the requested index.
+	 * 
+	 * \param iGene
+	 * Gene index to retrieve.
+	 * 
+	 * \returns
+	 * Gene weight at the requested index. NULL if gene requested doesn't exist.
+	 * 
+	 * \remarks
+	 * For efficiency, no bounds checking is performed.  The given index must be smaller than GetGenes.
+	 */
+	const float GetGeneWeight( size_t iGene ) const {
+		if (iGene!=-1)
+			return m_vecpGenes[ iGene ]->GetWeight(); 
+		return 0;}
 	/*!
 	 * \brief
 	 * Return the index of the gene with the given primary identifier, or -1 if none exists.

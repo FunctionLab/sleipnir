@@ -50,6 +50,7 @@ protected:
 	bool					m_fRNA;
 	bool					m_fDubious;
 	std::string				m_strGloss;
+	float					m_weight;
 };
 
 class CGenomeImpl : protected CFileImpl {
@@ -77,8 +78,8 @@ protected:
 	CGenome&			m_Genome;
 	std::vector<CGene*>	m_vecpGenes;
 	TMapStrI			m_mapGenes;
+	bool				isWeighted;
 };
-
 }
 
 #endif // GENOMEI_H

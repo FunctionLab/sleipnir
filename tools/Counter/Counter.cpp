@@ -22,6 +22,8 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+#define WT_MULTPLIER 50
+
 class CRegularize;
 
 static const char	c_acDab[]	= ".dab";
@@ -277,7 +279,7 @@ void* evaluate( void* );
 void* evaluate2( void* );
 void* finalize( void* );
 int main_count( const gengetopt_args_info&, const map<string, size_t>&, const CGenes&, const CGenes&,
-                const CGenes&, const CGenes&, const CGenes& );
+                const CGenes&, const CGenes&, const CGenes&);
 int main_xdsls( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>&,
                 const vector<string>& );
 int main_inference( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
@@ -423,8 +425,9 @@ int main( int iArgs, char** aszArgs ) {
         }
     }
 
+
     if( sArgs.answers_arg )
-        iRet = main_count( sArgs, mapstriZeros, GenesIn, GenesEx, GenesTm, GenesEd, GenesUbik );
+        iRet = main_count( sArgs, mapstriZeros, GenesIn, GenesEx, GenesTm, GenesEd, GenesUbik);
     else if( sArgs.counts_arg )
         iRet = main_xdsls( sArgs, mapstriZeros, mapstriDatasets, vecstrContexts );
     else if( sArgs.networks_arg )
@@ -468,11 +471,17 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 
         vecpGenes[ i ]  = new CGenes( Genome );
         ifsm.open( sArgs.inputs[ i ] );
-        if( !vecpGenes[ i ]->Open( ifsm ) ) {
-            cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-            return 1;
-        }
-    }
+		if(sArgs.geneweights_flag){
+			if( !vecpGenes[ i ]->OpenWeighted( ifsm ) ) {
+				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+				return 1;	}}	
+		else{
+			if( !vecpGenes[ i ]->Open( ifsm ) ) {
+				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+				return 1;	}	
+		}
+	}
+    
     if( !vecpGenes.size( ) ) {
         vecpGenes.insert( vecpGenes.begin( ), new CGenes( Genome ) );
         vecpGenes[ 0 ]->Open( Answers.GetGeneNames( ) );
@@ -625,20 +634,25 @@ return 0;
 
 void* learn( void* pData ) {
     SLearn*		psData;
-    size_t		i, j, iAnswer, iVal, iOne, iTwo;
+    size_t		i, j, k, iAnswer, iVal, iOne, iTwo;
     vector<bool>	vecfGenes, vecfUbik;
     vector<size_t>	veciGenes;
-
+	vector<float>	vecGeneWeights;
     psData = (SLearn*)pData;
+
     if (psData->m_pUbikGenes->GetGenes( )) {
-	vecfUbik.resize( psData->m_pAnswers->GetGenes( ) );
-	for( i = 0; i < vecfUbik.size( ); ++i) {
-	    vecfUbik[ i ] = psData->m_pUbikGenes->IsGene( psData->m_pAnswers->GetGene( i ) );
-	}
+		vecfUbik.resize( psData->m_pAnswers->GetGenes( ) );
+		for( i = 0; i < vecfUbik.size( ); ++i) {
+			vecfUbik[ i ] = psData->m_pUbikGenes->IsGene( psData->m_pAnswers->GetGene( i ) );
+		}
     }
     vecfGenes.resize( psData->m_pAnswers->GetGenes( ) );
-    for( i = 0; i < vecfGenes.size( ); ++i )
-        vecfGenes[ i ] = psData->m_pGenes->IsGene( psData->m_pAnswers->GetGene( i ) );
+	vecGeneWeights.resize( psData->m_pAnswers->GetGenes( ) );
+    for( i = 0; i < vecfGenes.size( ); ++i ){
+		vecfGenes[ i ] = psData->m_pGenes->IsGene( psData->m_pAnswers->GetGene( i ) );}
+	if(psData->m_pGenes->IsWeighted()){
+		for( i = 0; i < vecfGenes.size( ); ++i ){
+			vecGeneWeights[ i ] = psData->m_pGenes->GetGeneWeight(psData->m_pGenes->GetGene( psData->m_pAnswers->GetGene( i ) ));}}
     if( psData->m_pDat ) {
         psData->m_pMatCounts->Initialize( psData->m_pDat->GetValues( ), psData->m_pAnswers->GetValues( ) );
         veciGenes.resize( psData->m_pAnswers->GetGenes( ) );
@@ -647,31 +661,38 @@ void* learn( void* pData ) {
     }
     else
         psData->m_pMatCounts->Initialize( psData->m_pAnswers->GetValues( ), 1 );
-    psData->m_pMatCounts->Clear( );
+	psData->m_pMatCounts->Clear( );
     for( i = 0; i < psData->m_pAnswers->GetGenes( ); ++i ) {
         if( psData->m_pDat )
             iOne = veciGenes[ i ];
         for( j = ( i + 1 ); j < psData->m_pAnswers->GetGenes( ); ++j ) {
-	    iAnswer = psData->m_pAnswers->Quantize( psData->m_pAnswers->Get( i, j ) );
-            if( iAnswer == -1 ) {
-                continue;
-            }
+			iAnswer = psData->m_pAnswers->Quantize( psData->m_pAnswers->Get( i, j ) );
+				if( iAnswer == -1 ) {
+					continue;
+				}
 	    
-	    if ( CMeta::SkipEdge( !!iAnswer, i, j, vecfGenes, vecfUbik, psData->m_bInPos, psData->m_bInNeg, psData->m_bBridgePos, psData->m_bBridgeNeg, psData->m_bOutPos, psData->m_bOutNeg ) ) {
-		continue;
-	    }
+			if ( CMeta::SkipEdge( !!iAnswer, i, j, vecfGenes, vecfUbik, psData->m_bInPos, psData->m_bInNeg, psData->m_bBridgePos, psData->m_bBridgeNeg, psData->m_bOutPos, psData->m_bOutNeg ) ) {
+			continue;
+			}
 
-            if( psData->m_pDat ) {
-                iTwo = veciGenes[ j ];
-                iVal = -1;
-		iVal = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
-		if( iVal == -1 )
-		    continue;
-                psData->m_pMatCounts->Get( iVal, iAnswer )++;
-                psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );
-            }
-            else
-                psData->m_pMatCounts->Get( iAnswer, 0 )++;
+			if( psData->m_pDat ) {
+					iTwo = veciGenes[ j ];
+					iVal = -1;
+					iVal = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
+					if( iVal == -1 )
+						continue;
+					//When contexts are weighted, add counts = WT_MULTPLIER * weight1 * weight 2 
+					if(psData->m_pGenes->IsWeighted()){
+						for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTPLIER); k++){
+							psData->m_pMatCounts->Get( iVal, iAnswer )++;
+							psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );}
+					}	
+					else{
+					psData->m_pMatCounts->Get( iVal, iAnswer )++;
+					psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );}
+			}
+			else{
+				psData->m_pMatCounts->Get( iAnswer, 0 )++;}
         }
     }
 

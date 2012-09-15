@@ -85,6 +85,8 @@ struct gengetopt_args_info
   const char *outpos_help; /**< @brief Use positive edges outside the context help description.  */
   int outneg_flag;	/**< @brief Use negative edges outside the context (default=off).  */
   const char *outneg_help; /**< @brief Use negative edges outside the context help description.  */
+  int geneweights_flag;	/**< @brief Use weighted context file (default=off).  */
+  const char *geneweights_help; /**< @brief Use weighted context file help description.  */
   char * default_arg;	/**< @brief Count file containing defaults for cases with missing data.  */
   char * default_orig;	/**< @brief Count file containing defaults for cases with missing data original value given at command line.  */
   const char *default_help; /**< @brief Count file containing defaults for cases with missing data help description.  */
@@ -145,6 +147,7 @@ struct gengetopt_args_info
   unsigned int bridgeneg_given ;	/**< @brief Whether bridgeneg was given.  */
   unsigned int outpos_given ;	/**< @brief Whether outpos was given.  */
   unsigned int outneg_given ;	/**< @brief Whether outneg was given.  */
+  unsigned int geneweights_given ;	/**< @brief Whether geneweights was given.  */
   unsigned int default_given ;	/**< @brief Whether default was given.  */
   unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
   unsigned int genewise_given ;	/**< @brief Whether genewise was given.  */
