@@ -67,6 +67,7 @@ if WITH_SVM_TOOLS
     SVM_TOOLS_SUBDIRS = \
           Data2Svm \
 	  SVMer \
+	  SVMperfing \
 	  SVMperfer
 endif
 if WITH_VW_TOOLS

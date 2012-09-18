@@ -1,0 +1,44 @@
+package	"SVMperfer"
+version	"1.0"
+purpose	"Wrapper for SVM perf"
+
+section "Main"
+option	"labels"				l	"Labels file"
+										string	typestr="filename"	no
+option	"output"				o	"Output file "
+										string	typestr="filename"  no
+option  "directory"     			d       "input directory (must only contain input files)"
+                                                string  typestr="directory" yes
+option	"model"					m	"Model file"
+										string	typestr="filename"  no
+option  "slack"       			S   "Use slack rescaling (not implemented for ROC loss)"
+										flag off
+
+section "Options"
+option "verbosity"  			v   "Sets the svm_struct verbosity"
+										int default="0" no
+option	"cross_validation"		c	"Number of cross-validation sets ( arg of 1 will turn off cross-validation )"
+										int default="5" no
+option "error_function" 		e   "Sets the loss function for SVM learning: Choice of:
+0\tZero/one loss: 1 if vector of predictions contains error, 0 otherwise.
+1\tF1: 100 minus the F1-score in percent.
+2\tErrorrate: Percentage of errors in prediction vector.
+3\tPrec/Rec Breakeven: 100 minus PRBEP in percent.
+4\tPrec@k: 100 minus precision at k in percent.
+5\tRec@k: 100 minus recall at k in percent.
+10\tROCArea: Percentage of swapped pos/neg pairs (i.e. 100 - ROCArea).\n" 
+										int default="10" no
+
+option "k_value"    			k   "Value of k parameter used for Prec@k and Rec@k in (0,1)"
+										float default="0.5" no
+option "tradeoff"    			t   "SVM tradeoff constant C"
+										float default="1" no
+option "params"   			p   "NOT IMPLEMENTED YET: Parameter file"
+										string  typestr="filename"   no
+option  "nan2neg"       		n   "set missing values(NaN in dab file) from labels file as negative examples"
+										flag off
+option	"mmap"				M	"Memory map binary input"
+										flag	off
+section "Filtering"
+option	"geneq"				q	"Exclude all label edges where both genes come from the given gene list"
+							string	typestr="filename"

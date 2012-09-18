@@ -747,7 +747,7 @@ bool CDatImpl::OpenQdab( std::istream& istm ) {
 	unsigned char bufferB;
 	
 	float nan_val;
-
+	
 	if( !OpenGenes( istm, true, false ) )
 		return false;
 	m_Data.Initialize( GetGenes( ) );

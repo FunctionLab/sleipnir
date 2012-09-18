@@ -464,7 +464,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
         cerr << "Could not open: " << sArgs.reggroups_arg << endl;
         return 1;
     }
-
+    
     vecpGenes.resize( sArgs.inputs_num );
     for( i = 0; i < vecpGenes.size( ); ++i ) {
         ifstream	ifsm;

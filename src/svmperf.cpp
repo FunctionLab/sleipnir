@@ -964,5 +964,166 @@ void CSVMPERF::ClassifyAll(Sleipnir::CPCL& PCL, Sleipnir::CDat& Values,
 	}
 }
 
+
+// populate docs for each label gene pair from a vector of dat file names
+bool CSVMPERF::CreateDoc(vector<string>& vecstrDatasets,
+			 vector<SVMLabelPair*>& vecLabels,
+			 const vector<string>& LabelsGene){
+  
+  size_t i, j, k, iGene, jGene, iDoc, iWord, iWords;
+  float d;
+  vector<size_t> veciGene;  
+  vector<WORD*> vec_pWord;
+  vector<size_t> labelg2dat;  
+  
+  WORD* aWords;
+  DOC* pRet;	
+  //Sleipnir::CDat Dat;
+  
+  iWords = vecstrDatasets.size();
+  
+  vec_pWord.reserve(vecLabels.size());
+  
+  // initialize all the WORDs
+  for(i=0; i < vecLabels.size(); i++){
+    aWords = new WORD[iWords + 1];
+    
+    // set wnum values
+    for (k = 0; k < iWords; ++k) {
+      //   cout<<i<<endl;
+      aWords[k].wnum = k + 1;
+      // asWords[ i ].wnum = 0;
+    }
+    aWords[k].wnum = 0;    
+    vec_pWord[i] = aWords;
+  }
+  
+  // initialize the gene mappings 
+  labelg2dat.resize(LabelsGene.size());
+  
+  // now open up all datasets
+  for(i=0; i < vecstrDatasets.size(); i++){
+    Sleipnir::CDat Dat;
+    if(!Dat.Open(vecstrDatasets[i].c_str())) {
+      cerr << vecstrDatasets[i].c_str() << endl;
+      cerr << "Could not open: " << vecstrDatasets[i] << endl;
+      return false;
+    }
+    
+    cerr << "Open: " << vecstrDatasets[i] << endl;
+    
+    // construct gene name mapping
+    for(k=0; k < LabelsGene.size(); k++){
+      labelg2dat[k] = Dat.GetGene(LabelsGene[k]);
+    }    
+    /////
+    
+    for (j = 0; j < vecLabels.size(); j++) {
+      aWords = vec_pWord[j];
+            
+      if( ((iGene = labelg2dat[vecLabels[j]->iidx]) == -1 ) || 
+	  ((jGene = labelg2dat[vecLabels[j]->jidx]) == -1 )){
+	aWords[i].weight = 0;
+	continue;
+      }      
+      
+      if (!Sleipnir::CMeta::IsNaN(d = Dat.Get(iGene, jGene))) {
+	aWords[i].weight = d;
+      } else
+	aWords[i].weight = 0;            
+    }
+  }
+  
+  // now create a Doc per label
+  for (j = 0; j < vecLabels.size(); j++) {
+    //pRet->fvec->words[0].weight;
+    aWords = vec_pWord[j];
+    pRet = create_example(j, 0, 0, 1, create_svector(aWords, "", 1));
+    vecLabels[j]->pDoc = pRet;
+    delete[] aWords;
+  }
+  
+  return true;
+}
+
+SAMPLE* CSVMPERF::CreateSample(vector<SVMLabelPair*>& SVMLabels) {
+	size_t i, j, iGene, iDoc;
+	vector<DOC*> vec_pDoc;
+	vector<double> vecClass;
+	iDoc = 0;
+	for (i = 0; i < SVMLabels.size(); i++) {
+	  iDoc++;
+	  vec_pDoc.push_back(SVMLabels[i]->pDoc);
+	  vecClass.push_back(SVMLabels[i]->Target);
+	}
+	
+	DOC** ppDoc;
+	ppDoc = new DOC*[vec_pDoc.size()];
+	copy(vec_pDoc.begin(), vec_pDoc.end(), ppDoc);
+	vec_pDoc.clear();
+	PATTERN* pPattern = new PATTERN;
+	pPattern->doc = ppDoc;
+
+	pPattern->totdoc = iDoc;
+	//   cout << "number of document=" << pPattern->totdoc << endl;
+	LABEL* pLabel = new LABEL;
+	double* aClass;
+	aClass = new double[vecClass.size()];
+	copy(vecClass.begin(), vecClass.end(), aClass);
+	vecClass.clear();
+	pLabel->Class = aClass;
+	pLabel->totdoc = iDoc;
+	
+	EXAMPLE* aExample;
+	aExample = new EXAMPLE[1];
+	//cout<<"aExample @"<<aExample<<endl;
+	aExample[0].x = *pPattern;
+	aExample[0].y = *pLabel;
+	SAMPLE* pSample = new SAMPLE;
+	pSample->n = 1;
+	pSample->examples = aExample;
+	/* cout << "examples @" << pSample->examples << endl;
+	 cout<< "ppDoc="<<ppDoc<<endl;
+	 cout << "docs @" << pSample->examples[0].x.doc << endl;
+	 cout<<"done creating sample"<<endl;
+	 cout<<"sample @ "<<pSample<<endl;*/
+	return pSample;
+}
+
+void CSVMPERF::Classify(Sleipnir::CDat &Results,
+				  vector<SVMLabelPair*>& SVMLabels) {
+	size_t i, iGene, iDoc;
+	iDoc = 0;
+	DOC** ppDoc;
+	ppDoc = new DOC*[1];
+	PATTERN pattern;
+	pattern.doc = ppDoc;
+	pattern.totdoc = 1;
+	//cerr << "CLASSIFY classifying " << endl;
+	LABEL label;
+	for (i = 0; i < SVMLabels.size(); i++) {
+	  ppDoc[0] = SVMLabels[i]->pDoc;
+	  label
+	    = classify_struct_example(pattern, &structmodel,
+				      &struct_parm);
+	  
+	  Results.Set(SVMLabels[i]->iidx, SVMLabels[i]->jidx, label.Class[0]);
+	}
+	
+	
+	delete ppDoc;
+}
+
+void CSVMPERF::FreeSample_leave_Doc(SAMPLE s){
+  /* Frees the memory of sample s. */
+  int i;
+  for(i=0;i<s.n;i++) {
+    free(s.examples[i].x.doc);
+    free_label(s.examples[i].y);
+  }
+  free(s.examples);
+}
+
+  
 }
 

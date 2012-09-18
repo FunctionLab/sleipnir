@@ -733,6 +733,7 @@ AC_CONFIG_FILES([Makefile \
                  tools/Data2Svm/Makefile \
 		 tools/SVMer/Makefile \
 		 tools/SVMperfer/Makefile \
+		 tools/SVMperfing/Makefile \
 		 tools/VWer/Makefile \
                  tools/OntoShell/Makefile \
                  tools/BNServer/Makefile])
