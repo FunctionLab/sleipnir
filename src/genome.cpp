@@ -661,9 +661,9 @@ bool CGenes::OpenWeighted( std::istream& istm, bool fCreate ) {
 		if (vecstrTokens.empty())
 			continue;
 		if (vecstrTokens.size() != 2) {
-			cerr << "Illegal label line (" << vecstrTokens.size() << "): "
-					<< szBuf << endl;
-			continue;
+			//cerr << "Illegal label line (" << vecstrTokens.size() << "): "
+				//	<< szBuf << endl;
+			return false;
 		}
 
 		if( fCreate )
@@ -683,6 +683,7 @@ bool CGenes::OpenWeighted( std::istream& istm, bool fCreate ) {
 		m_vecpGenes.push_back( pGene ); }
 	isWeighted = true;
 	return true; }
+
 
 /*!
  * \brief

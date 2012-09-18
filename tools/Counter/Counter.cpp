@@ -22,7 +22,8 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-#define WT_MULTPLIER 50
+
+#define WT_MULTIPLIER 50
 
 class CRegularize;
 
@@ -49,6 +50,8 @@ struct SLearn {
     bool                    m_bBridgeNeg;
     bool                    m_bOutPos;
     bool                    m_bOutNeg;
+	bool					m_isDatWeighted;
+	const CDat*	    m_pwDat;
 };
 
 struct SEvaluate {
@@ -302,9 +305,11 @@ int main( int iArgs, char** aszArgs ) {
         return 1;
     }
     CMeta Meta( sArgs.verbosity_arg );
+	if(sArgs.reggroups_given && sArgs.geneweights_flag){
+		cerr << "Regularization is not supported for weighted contexts." << endl;
+		return 1;}
     if( sArgs.pseudocounts_arg < 0 )
         sArgs.pseudocounts_arg = CMeta::GetNaN( );
-
     if( sArgs.zeros_arg ) {
         ifstream		ifsm;
         vector<string>	vecstrLine;
@@ -426,6 +431,7 @@ int main( int iArgs, char** aszArgs ) {
     }
 
 
+
     if( sArgs.answers_arg )
         iRet = main_count( sArgs, mapstriZeros, GenesIn, GenesEx, GenesTm, GenesEd, GenesUbik);
     else if( sArgs.counts_arg )
@@ -447,6 +453,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
     vector<CCountMatrix*>		vecpMatRoots;
     vector<CGenes*>			vecpGenes;
     CDataPair				Answers, Dat;
+	CDat					wDat;
     CDatFilter				Filter, FilterIn, FilterEx, FilterTm, FilterEd;
     CDatFilter*				pFilter;
     string	    			strFile;
@@ -456,6 +463,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
     CGenome			    	Genome;
     vector<string>			vecstrNames;
     CRegularize			        Regularize;
+	bool					isDatWeighted=false;
     if( !Answers.Open( sArgs.answers_arg, false, !!sArgs.memmap_flag ) ) {
         cerr << "Could not open: " << sArgs.answers_arg << endl;
         return 1;
@@ -473,8 +481,14 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
         ifsm.open( sArgs.inputs[ i ] );
 		if(sArgs.geneweights_flag){
 			if( !vecpGenes[ i ]->OpenWeighted( ifsm ) ) {
-				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-				return 1;	}}	
+				if(!wDat.Open(sArgs.inputs[i], !!sArgs.memmap_flag )){
+					cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+					return 1;	}
+				else{
+					isDatWeighted = true;
+					vecpGenes[ i ]->Open(wDat.GetGeneNames());}
+			}
+		}	
 		else{
 			if( !vecpGenes[ i ]->Open( ifsm ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
@@ -508,6 +522,8 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_bBridgeNeg = sArgs.bridgeneg_flag;
             vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
             vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
+			vecsData[ i ].m_isDatWeighted = false;
+			vecsData[ i ].m_pwDat = NULL;
             if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
                 return 1;
@@ -581,6 +597,8 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_bBridgeNeg = sArgs.bridgeneg_flag;
             vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
             vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
+			vecsData[ i ].m_isDatWeighted = isDatWeighted;
+			vecsData[ i ].m_pwDat = isDatWeighted? &wDat : NULL;
             if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
                 return 1;
@@ -636,7 +654,7 @@ void* learn( void* pData ) {
     SLearn*		psData;
     size_t		i, j, k, iAnswer, iVal, iOne, iTwo;
     vector<bool>	vecfGenes, vecfUbik;
-    vector<size_t>	veciGenes;
+    vector<size_t>	veciGenes, vecfiGenes;
 	vector<float>	vecGeneWeights;
     psData = (SLearn*)pData;
 
@@ -648,8 +666,11 @@ void* learn( void* pData ) {
     }
     vecfGenes.resize( psData->m_pAnswers->GetGenes( ) );
 	vecGeneWeights.resize( psData->m_pAnswers->GetGenes( ) );
+	vecfiGenes.resize(psData->m_pAnswers->GetGenes( ));
     for( i = 0; i < vecfGenes.size( ); ++i ){
 		vecfGenes[ i ] = psData->m_pGenes->IsGene( psData->m_pAnswers->GetGene( i ) );}
+	for( i = 0; i < vecfGenes.size( ); ++i ){
+		vecfiGenes[ i ] = psData->m_pGenes->GetGene( psData->m_pAnswers->GetGene( i ) );}
 	if(psData->m_pGenes->IsWeighted()){
 		for( i = 0; i < vecfGenes.size( ); ++i ){
 			vecGeneWeights[ i ] = psData->m_pGenes->GetGeneWeight(psData->m_pGenes->GetGene( psData->m_pAnswers->GetGene( i ) ));}}
@@ -681,20 +702,33 @@ void* learn( void* pData ) {
 					iVal = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
 					if( iVal == -1 )
 						continue;
-					//When contexts are weighted, add counts = WT_MULTPLIER * weight1 * weight 2 
+					//When contexts are weighted, add counts = WT_MULTIPLIER * weight1 * weight 2 
 					if(psData->m_pGenes->IsWeighted()){
-						for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTPLIER); k++){
+						for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER); k++){
 							psData->m_pMatCounts->Get( iVal, iAnswer )++;
-							psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );}
+							}
 					}	
-					else{
+					else if(psData->m_isDatWeighted){
+						for( k = 0; k <(psData->m_pwDat->Get( vecfiGenes[i],vecfiGenes[j] ) *WT_MULTIPLIER); k++){
+							psData->m_pMatCounts->Get( iVal, iAnswer )++;
+							}
+					}
+					else
 					psData->m_pMatCounts->Get( iVal, iAnswer )++;
-					psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );}
+					//FIXME: Regularization has not support weighted context
+					psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );
 			}
 			else{
 				psData->m_pMatCounts->Get( iAnswer, 0 )++;}
         }
     }
+
+	//Recale counts 
+	if(psData->m_pGenes->IsWeighted()||psData->m_isDatWeighted){
+		for (i=0; i< psData->m_pMatCounts->GetRows();i++)
+			for(j=0; j<psData->m_pMatCounts->GetColumns();j++)
+				psData->m_pMatCounts->Get( i,j ) /= WT_MULTIPLIER;
+	}
 
     return NULL;
 }
