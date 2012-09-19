@@ -205,11 +205,10 @@ int main(int iArgs, char** aszArgs) {
 		  Labels.Set(i, j, -1);
 	  }
 	  
-	  // 
-	  //if( sArgs.geneq_arg ) {
-	    
-	  //}
-	  	  
+	  // remove all edges which both genes belong to the given list
+	  if( sArgs.geneq_arg )
+	    Labels.FilterGenes( sArgs.geneq_arg, CDat::EFilterExEdge );
+	  
 	  for(i = 0; i < Labels.GetGenes(); i++)
 	    for(j = (i+1); j < Labels.GetGenes(); j++)
 	      if (!CMeta::IsNaN(d = Labels.Get(i, j)))  
