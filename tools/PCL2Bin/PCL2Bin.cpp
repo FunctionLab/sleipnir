@@ -44,7 +44,7 @@ int main(int iArgs, char** aszArgs) {
 	CMeta Meta(sArgs.verbosity_arg);
 
 	if (sArgs.input_arg) {
-		if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, !!sArgs.mmap_flag)) {
+	  if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, !!sArgs.mmap_flag, sArgs.rPCL_flag)) {
 			cerr << "Could not open: " << sArgs.input_arg << endl;
 			return 1;
 		}

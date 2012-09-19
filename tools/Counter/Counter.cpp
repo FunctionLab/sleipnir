@@ -715,7 +715,7 @@ void* learn( void* pData ) {
 					}
 					else
 					psData->m_pMatCounts->Get( iVal, iAnswer )++;
-					//FIXME: Regularization has not support weighted context
+					//FIXME: Regularization has not supportted weighted context
 					psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );
 			}
 			else{

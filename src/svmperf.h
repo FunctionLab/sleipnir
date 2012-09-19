@@ -71,6 +71,40 @@ public:
 	}
 };
 
+class SVMLabelPair {
+public:
+	double Target;
+	size_t iidx;
+	size_t jidx;
+	bool hasIndex;
+	DOC* pDoc;
+	
+	SVMLabelPair(double target, size_t i, size_t j) {
+		Target = target;
+		hasIndex = true;
+		iidx = i;
+		jidx = j;
+	}
+
+	SVMLabelPair() {
+		Target = 0;
+		hasIndex = false;
+	}
+	
+	void SetIndex(size_t i, size_t j) {
+		iidx = i;
+		jidx = j;
+		hasIndex = true;
+	}
+	
+	void SetDoc(DOC* inDoc) {
+	  pDoc = inDoc;
+	}
+	DOC* GetDoc() {
+	  return pDoc;
+	}	
+};
+
 class Result {
 public:
 	std::string GeneName;
@@ -296,7 +330,7 @@ public:
 		}
 		cerr << "ALG=" << Alg << endl;
 		svm_learn_struct_joint(sample, &struct_parm, &learn_parm, &kernel_parm,
-				&structmodel, Alg);
+				       &structmodel, Alg);
 		//
 	}
 
@@ -323,6 +357,19 @@ public:
 			string>& CVGenes);
 	bool parms_check();
 	bool initialize();
+	
+	
+	//Pair & Multiple dabs learning
+	static bool CreateDoc(vector<string>& vecstrDatasets,
+				 vector<SVMLabelPair*>& vecLabels,
+				 const vector<string>& LabelsGene);
+	
+	static SAMPLE* CreateSample(vector<SVMLabelPair*>& SVMLabels);	
+	void Classify(Sleipnir::CDat &Results,
+		      vector<SVMLabelPair*>& SVMLabels);
+	
+	// free the sample but don't free the Docs
+	static void FreeSample_leave_Doc(SAMPLE s);
 };
 }
 

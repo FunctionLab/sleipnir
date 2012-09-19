@@ -28,10 +28,12 @@ int main(int iArgs, char** aszArgs) {
 	CGenome Genome;
 	CGenes Genes(Genome);       
 	CPCL PCL;
+	CPCL aPCL;
 	CDat Dat;
-	size_t i, j;
+	size_t i, j, iArg;
 	bool fModified;
 	vector<string> features;
+	vector<string> input_files;
 	
 	if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
 		cmdline_parser_print_help();
@@ -39,16 +41,45 @@ int main(int iArgs, char** aszArgs) {
 	}
 	CMeta Meta(sArgs.verbosity_arg);
 	
-	if( !Dat.Open( sArgs.input_arg, false, 0, false, true)){
-	  cerr << "Could not open: " << sArgs.input_arg << endl;
-	  return 1; }
+	if(sArgs.input_given){
+	  if( !Dat.Open( sArgs.input_arg, false, 0, false, true)){
+	    cerr << "Could not open: " << sArgs.input_arg << endl;
+	    return 1; }
+	  
+	  PCL.Open( Dat.GetGeneNames( ), Dat.GetGeneNames( ), features);
 	
-	PCL.Open( Dat.GetGeneNames( ), Dat.GetGeneNames( ), features);
+	  cerr << "Gene count: " << Dat.GetGenes() << endl;
 	
-	cerr << "Gene count: " << Dat.GetGenes() << endl;
+	  PCL.populate( sArgs.input_arg );
+	}
+	else{
+	  if(sArgs.inputs_num > 0){
+	    input_files.resize( sArgs.inputs_num );
+	    copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, input_files.begin( ) );
+	    
+	    for( iArg = 0; iArg < input_files.size(); ++iArg ) {
+	      
+	      if( !aPCL.Open(input_files[ iArg ].c_str(), sArgs.skip_arg, false, sArgs.rPCL_flag ) ) {
+		cerr << "Could not open: " << input_files[ iArg ] << endl;
+		return 1; }
+	      
+	      cerr << "Open: " << input_files[ iArg ] << endl;
+	      
+	      if(iArg == 0)
+		PCL.Open(aPCL);
+	      else{
+		for( i = 0; i < PCL.GetGenes( ); ++i )
+		  for( j = 0; j < PCL.GetExperiments( ); ++j )
+		    PCL.Set(i,j, aPCL.Get(i,j)+PCL.Get(i,j) );
+	      }
+	    }
+	  }
+	  else{
+	    return 1;
+	  }
+	}
 	
-	PCL.populate( sArgs.input_arg );
-		
+	
 	if (sArgs.output_arg) {	  
 	  PCL.Save(sArgs.output_arg);
 	} else {
