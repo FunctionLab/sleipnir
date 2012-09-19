@@ -68,6 +68,9 @@ struct gengetopt_args_info
   char * exedges_arg;	/**< @brief Exclude edges from the given DAT/DAB.  */
   char * exedges_orig;	/**< @brief Exclude edges from the given DAT/DAB original value given at command line.  */
   const char *exedges_help; /**< @brief Exclude edges from the given DAT/DAB help description.  */
+  char * gexedges_arg;	/**< @brief Exclude all edges which both genes from the given set.  */
+  char * gexedges_orig;	/**< @brief Exclude all edges which both genes from the given set original value given at command line.  */
+  const char *gexedges_help; /**< @brief Exclude all edges which both genes from the given set help description.  */
   double cutoff_arg;	/**< @brief Exclude edges below cutoff.  */
   char * cutoff_orig;	/**< @brief Exclude edges below cutoff original value given at command line.  */
   const char *cutoff_help; /**< @brief Exclude edges below cutoff help description.  */
@@ -134,6 +137,7 @@ struct gengetopt_args_info
   unsigned int genee_given ;	/**< @brief Whether genee was given.  */
   unsigned int edges_given ;	/**< @brief Whether edges was given.  */
   unsigned int exedges_given ;	/**< @brief Whether exedges was given.  */
+  unsigned int gexedges_given ;	/**< @brief Whether gexedges was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int zero_given ;	/**< @brief Whether zero was given.  */
   unsigned int dval_given ;	/**< @brief Whether dval was given.  */

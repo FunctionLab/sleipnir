@@ -33,6 +33,8 @@ option	"edges"			e	"Process only edges from the given DAT/DAB"
 							string	typestr="filename"
 option	"exedges"		x	"Exclude edges from the given DAT/DAB"
 							string	typestr="filename"
+option	"gexedges"		X	"Exclude all edges which both genes from the given set"
+							string	typestr="filename"
 option	"cutoff"		c	"Exclude edges below cutoff"
 							double
 option	"zero"			Z	"Zero missing values"

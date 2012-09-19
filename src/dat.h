@@ -116,8 +116,13 @@ public:
 		 * \brief
 		 * Remove any positive edge including a node outside the given set. 
 		 */
-		EFilterIncludePos	= EFilterHefalmp +1
-		
+		EFilterIncludePos	= EFilterHefalmp +1,		
+		/*!
+		 * \brief
+		 * Remove edges which both gene is in the given set. 
+		 */
+		EFilterExEdge	= EFilterIncludePos +1
+
 	};
 
 	/*!

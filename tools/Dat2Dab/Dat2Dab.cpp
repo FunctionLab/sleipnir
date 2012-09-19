@@ -145,7 +145,9 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude );
 	if( sArgs.genee_arg )
 		Dat.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge );
-
+	if( sArgs.gexedges_arg )
+		Dat.FilterGenes( sArgs.gexedges_arg, CDat::EFilterExEdge );
+	
 	if( sArgs.paircount_flag ) {
 		size_t			iTotal, iCutoff;
 		float			d, dAve, dStd;

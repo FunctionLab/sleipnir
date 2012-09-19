@@ -1478,6 +1478,8 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 			continue; }
 		if( ( eFilter == EFilterEdge ) && vecfGenes[ i ] )
 			continue;
+		if( ( eFilter == EFilterExEdge ) && !vecfGenes[ i ] )
+			continue;
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			switch( eFilter ) {
 				case EFilterInclude:
@@ -1493,8 +1495,11 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 					if( !( vecfGenes[ i ] && vecfGenes[ j ] ) &&
 						( !( vecfGenes[ i ] || vecfGenes[ j ] ) || Get( i, j ) ) )
 						Set( i, j, CMeta::GetNaN( ) );
-					break;
-
+					break;					
+			        case EFilterExEdge:
+				        if( vecfGenes[ j ] )
+					  Set( i, j, CMeta::GetNaN( ) );
+				        break;
 				case EFilterExclude:
 					if( vecfGenes[ j ] )
 						Set( i, j, CMeta::GetNaN( ) );
