@@ -45,8 +45,10 @@ option  "outpos"                u       "Use positive edges outside the context"
                                                         flag    off
 option  "outneg"                U       "Use negative edges outside the context"
                                                         flag    off
-option	"geneweights"           W       "Use weighted context file"
+option	"weights"           W       "Use weighted context file"
                                                         flag    off
+option	"flipneg"           F       "Flip weights(one minus original) for negative standards"
+                                                        flag    on
 
 section "Network Features"
 option	"default"		b	"Count file containing defaults for cases with missing data"

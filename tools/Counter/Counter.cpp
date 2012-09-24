@@ -2,7 +2,7 @@
 * This file is provided under the Creative Commons Attribution 3.0 license.
 *
 * You are free to share, copy, distribute, transmit, or adapt this work
-* PROVIDED THAT you attribute the work to the authors listed below.
+* PROVIDED THAT you attribute the work to the authors listed below.flip
 * For more information, please see the following web page:
 * http://creativecommons.org/licenses/by/3.0/
 *
@@ -51,6 +51,7 @@ struct SLearn {
     bool                    m_bOutPos;
     bool                    m_bOutNeg;
 	bool					m_isDatWeighted;
+	bool					m_bFlipNeg;
 	const CDat*	    m_pwDat;
 };
 
@@ -305,7 +306,7 @@ int main( int iArgs, char** aszArgs ) {
         return 1;
     }
     CMeta Meta( sArgs.verbosity_arg );
-	if(sArgs.reggroups_given && sArgs.geneweights_flag){
+	if(sArgs.reggroups_given && sArgs.weights_flag){
 		cerr << "Regularization is not supported for weighted contexts." << endl;
 		return 1;}
     if( sArgs.pseudocounts_arg < 0 )
@@ -461,6 +462,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
     vector<SLearn>			vecsData;
     map<string, size_t>::const_iterator	iterZero;
     CGenome			    	Genome;
+	vector<CGenome>			Genomes;
     vector<string>			vecstrNames;
     CRegularize			        Regularize;
 	bool					isDatWeighted=false;
@@ -474,12 +476,16 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
     }
 
     vecpGenes.resize( sArgs.inputs_num );
+	Genomes.resize(vecpGenes.size( ));
     for( i = 0; i < vecpGenes.size( ); ++i ) {
         ifstream	ifsm;
 
         vecpGenes[ i ]  = new CGenes( Genome );
         ifsm.open( sArgs.inputs[ i ] );
-		if(sArgs.geneweights_flag){
+
+		if(sArgs.weights_flag){
+			delete vecpGenes[ i ];
+			vecpGenes[ i ] = new CGenes(Genomes[ i ]);
 			if( !vecpGenes[ i ]->OpenWeighted( ifsm ) ) {
 				if(!wDat.Open(sArgs.inputs[i], !!sArgs.memmap_flag )){
 					cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
@@ -523,6 +529,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
             vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
 			vecsData[ i ].m_isDatWeighted = false;
+			vecsData[ i ].m_bFlipNeg =false;
 			vecsData[ i ].m_pwDat = NULL;
             if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
@@ -598,6 +605,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
             vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
 			vecsData[ i ].m_isDatWeighted = isDatWeighted;
+			vecsData[ i ].m_bFlipNeg = !!sArgs.flipneg_flag;
 			vecsData[ i ].m_pwDat = isDatWeighted? &wDat : NULL;
             if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
@@ -704,19 +712,30 @@ void* learn( void* pData ) {
 						continue;
 					//When contexts are weighted, add counts = WT_MULTIPLIER * weight1 * weight 2 
 					if(psData->m_pGenes->IsWeighted()){
-						for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER); k++){
-							psData->m_pMatCounts->Get( iVal, iAnswer )++;
-							}
+						if(iAnswer==1 || !psData->m_bFlipNeg)
+							for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER); k++){
+								psData->m_pMatCounts->Get( iVal, iAnswer )++;
+								}
+						else
+							for( k = 0; k <((1-vecGeneWeights[i]*vecGeneWeights[j])*WT_MULTIPLIER); k++){
+								psData->m_pMatCounts->Get( iVal, iAnswer )++;
+								}
 					}	
 					else if(psData->m_isDatWeighted){
-						for( k = 0; k <(psData->m_pwDat->Get( vecfiGenes[i],vecfiGenes[j] ) *WT_MULTIPLIER); k++){
-							psData->m_pMatCounts->Get( iVal, iAnswer )++;
-							}
+						if(iAnswer==1 || !psData->m_bFlipNeg)
+							for( k = 0; k <(psData->m_pwDat->Get( vecfiGenes[i],vecfiGenes[j] ) *WT_MULTIPLIER); k++){
+								psData->m_pMatCounts->Get( iVal, iAnswer )++;
+								}
+						else
+							for( k = 0; k <((1-psData->m_pwDat->Get( vecfiGenes[i],vecfiGenes[j] )) *WT_MULTIPLIER); k++){
+								psData->m_pMatCounts->Get( iVal, iAnswer )++;
+								}
 					}
-					else
+					else{
 					psData->m_pMatCounts->Get( iVal, iAnswer )++;
 					//FIXME: Regularization has not supportted weighted context
 					psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );
+					}
 			}
 			else{
 				psData->m_pMatCounts->Get( iAnswer, 0 )++;}
