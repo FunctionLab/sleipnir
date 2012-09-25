@@ -174,13 +174,13 @@
  *  </li>
  * </ol>
  * </li>
- * <li>Currently Sleipnir requires SVMPerf, so you must complete the following steps:
+ * <li>Currently Sleipnir requires SVMperf, so you must complete the following steps:
  * <ol>
  *  <li>
- *  Visit http://www.cs.cornell.edu/People/tj/svm_light/svm_perf.html and make sure that you meet the conditions of use (currently: "The program is free for scientific use. Please contact me, if you are planning to use the software for commercial purposes. The software must not be further distributed without prior permission of the author. If you use SVMperf in your scientific work, please cite the appropriate publications (available from the svmperf website)").
+ *  Visit http://www.cs.cornell.edu/People/tj/svm_light/svm_perf.html and make sure that you meet the conditions of use (currently: "The program is free for scientific use. Please contact me, if you are planning to use the software for commercial purposes. The software must not be further distributed without prior permission of the author. If you use SVMperf in your scientific work, please cite the appropriate publications (available from the SVMperf website)").
  *  </li>
  *  <li>
- *  Assuming you meet the conditions, the following steps in a terminal will download, compile, and install SVMPerf as required by Sleipnir.
+ *  Assuming you meet the conditions, the following steps in a terminal will download, compile, and install SVMperf as required by Sleipnir.
  *  \code
  *      cd ~/Downloads
  *      mkdir svmperf
