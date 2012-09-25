@@ -670,7 +670,7 @@ bool CGenes::OpenWeighted( std::istream& istm, bool fCreate ) {
 			pGene = &m_Genome.AddGene( vecstrTokens[0] );
 		else {
 			if( ( iGene = m_Genome.FindGene( vecstrTokens[0] ) ) == -1 ) {
-				//g_CatSleipnir( ).warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, vecstrTokens[0] );
+				g_CatSleipnir( ).warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, vecstrTokens[0].c_str() );
 				continue; }
 			pGene = &m_Genome.GetGene( iGene ); }
 		pGene->SetWeight(atof(vecstrTokens[1].c_str()));
