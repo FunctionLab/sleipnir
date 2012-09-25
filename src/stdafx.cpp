@@ -186,6 +186,7 @@
  *      mkdir svmperf
  *      cd svmperf
  *      wget http://download.joachims.org/svm_perf/current/svm_perf.tar.gz
+ *      tar -xzf svm_perf.tar.gz
  *      rm svm_perf.tar.gz
  *      wget http://libsleipnir.bitbucket.org/SVMperf/Makefile -O Makefile
  *      make
