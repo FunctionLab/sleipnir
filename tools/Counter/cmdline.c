@@ -52,7 +52,8 @@ const char *gengetopt_args_info_help[] = {
   "  -J, --bridgeneg               Use bridging negatives between context and \n                                  non-context genes  (default=on)",
   "  -u, --outpos                  Use positive edges outside the context  \n                                  (default=off)",
   "  -U, --outneg                  Use negative edges outside the context  \n                                  (default=off)",
-  "  -W, --geneweights             Use weighted context file  (default=off)",
+  "  -W, --weights                 Use weighted context file  (default=off)",
+  "  -F, --flipneg                 Flip weights(one minus original) for negative \n                                  standards  (default=on)",
   "\nNetwork Features:",
   "  -b, --default=filename        Count file containing defaults for cases with \n                                  missing data",
   "  -Z, --zeros=filename          Read zeroed node IDs/outputs from the given \n                                  file",
@@ -120,7 +121,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->bridgeneg_given = 0 ;
   args_info->outpos_given = 0 ;
   args_info->outneg_given = 0 ;
-  args_info->geneweights_given = 0 ;
+  args_info->weights_given = 0 ;
+  args_info->flipneg_given = 0 ;
   args_info->default_given = 0 ;
   args_info->zeros_given = 0 ;
   args_info->genewise_given = 0 ;
@@ -174,7 +176,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->bridgeneg_flag = 1;
   args_info->outpos_flag = 0;
   args_info->outneg_flag = 0;
-  args_info->geneweights_flag = 0;
+  args_info->weights_flag = 0;
+  args_info->flipneg_flag = 1;
   args_info->default_arg = NULL;
   args_info->default_orig = NULL;
   args_info->zeros_arg = NULL;
@@ -227,22 +230,23 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->bridgeneg_help = gengetopt_args_info_help[21] ;
   args_info->outpos_help = gengetopt_args_info_help[22] ;
   args_info->outneg_help = gengetopt_args_info_help[23] ;
-  args_info->geneweights_help = gengetopt_args_info_help[24] ;
-  args_info->default_help = gengetopt_args_info_help[26] ;
-  args_info->zeros_help = gengetopt_args_info_help[27] ;
-  args_info->genewise_help = gengetopt_args_info_help[28] ;
-  args_info->pseudocounts_help = gengetopt_args_info_help[30] ;
-  args_info->alphas_help = gengetopt_args_info_help[31] ;
-  args_info->regularize_help = gengetopt_args_info_help[32] ;
-  args_info->reggroups_help = gengetopt_args_info_help[33] ;
-  args_info->temporary_help = gengetopt_args_info_help[35] ;
-  args_info->smile_help = gengetopt_args_info_help[36] ;
-  args_info->xdsl_help = gengetopt_args_info_help[37] ;
-  args_info->memmap_help = gengetopt_args_info_help[38] ;
-  args_info->memmapout_help = gengetopt_args_info_help[39] ;
-  args_info->threads_help = gengetopt_args_info_help[40] ;
-  args_info->verbosity_help = gengetopt_args_info_help[41] ;
-  args_info->logratio_help = gengetopt_args_info_help[42] ;
+  args_info->weights_help = gengetopt_args_info_help[24] ;
+  args_info->flipneg_help = gengetopt_args_info_help[25] ;
+  args_info->default_help = gengetopt_args_info_help[27] ;
+  args_info->zeros_help = gengetopt_args_info_help[28] ;
+  args_info->genewise_help = gengetopt_args_info_help[29] ;
+  args_info->pseudocounts_help = gengetopt_args_info_help[31] ;
+  args_info->alphas_help = gengetopt_args_info_help[32] ;
+  args_info->regularize_help = gengetopt_args_info_help[33] ;
+  args_info->reggroups_help = gengetopt_args_info_help[34] ;
+  args_info->temporary_help = gengetopt_args_info_help[36] ;
+  args_info->smile_help = gengetopt_args_info_help[37] ;
+  args_info->xdsl_help = gengetopt_args_info_help[38] ;
+  args_info->memmap_help = gengetopt_args_info_help[39] ;
+  args_info->memmapout_help = gengetopt_args_info_help[40] ;
+  args_info->threads_help = gengetopt_args_info_help[41] ;
+  args_info->verbosity_help = gengetopt_args_info_help[42] ;
+  args_info->logratio_help = gengetopt_args_info_help[43] ;
   
 }
 
@@ -439,8 +443,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "outpos", 0, 0 );
   if (args_info->outneg_given)
     write_into_file(outfile, "outneg", 0, 0 );
-  if (args_info->geneweights_given)
-    write_into_file(outfile, "geneweights", 0, 0 );
+  if (args_info->weights_given)
+    write_into_file(outfile, "weights", 0, 0 );
+  if (args_info->flipneg_given)
+    write_into_file(outfile, "flipneg", 0, 0 );
   if (args_info->default_given)
     write_into_file(outfile, "default", args_info->default_orig, 0);
   if (args_info->zeros_given)
@@ -780,7 +786,8 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "bridgeneg",	0, NULL, 'J' },
         { "outpos",	0, NULL, 'u' },
         { "outneg",	0, NULL, 'U' },
-        { "geneweights",	0, NULL, 'W' },
+        { "weights",	0, NULL, 'W' },
+        { "flipneg",	0, NULL, 'F' },
         { "default",	1, NULL, 'b' },
         { "zeros",	1, NULL, 'Z' },
         { "genewise",	0, NULL, 'S' },
@@ -799,7 +806,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVw:k:n:o:d:s:e:X:g:G:P:c:C:qQjJuUWb:Z:Sp:a:rR:y:lxmMt:v:L", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVw:k:n:o:d:s:e:X:g:G:P:c:C:qQjJuUWFb:Z:Sp:a:rR:y:lxmMt:v:L", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1052,9 +1059,19 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         case 'W':	/* Use weighted context file.  */
         
         
-          if (update_arg((void *)&(args_info->geneweights_flag), 0, &(args_info->geneweights_given),
-              &(local_args_info.geneweights_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "geneweights", 'W',
+          if (update_arg((void *)&(args_info->weights_flag), 0, &(args_info->weights_given),
+              &(local_args_info.weights_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "weights", 'W',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'F':	/* Flip weights(one minus original) for negative standards.  */
+        
+        
+          if (update_arg((void *)&(args_info->flipneg_flag), 0, &(args_info->flipneg_given),
+              &(local_args_info.flipneg_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "flipneg", 'F',
               additional_error))
             goto failure;
         
