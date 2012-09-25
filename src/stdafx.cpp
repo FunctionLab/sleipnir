@@ -124,7 +124,7 @@
  *	so hard to do.  Only needed if you're running \ref BNServer.
  * 
  * \subsection ssec_building_linux Linux/MacOS
- * 
+ * General instructions are in this section.  If you want to build the latest mercurial checkout on Ubuntu, \ref sssec_building_ubuntu provides detailed instructions.
  * <ol>
  * <li>Obtain any \ref ssec_building_prerequisites you need/want.  These can often be installed using your
  *	favorite Linux package manager.  If you need to compile/install them to a nonstandard location by hand,
@@ -149,6 +149,82 @@
  * </li>
  * </ol>
  * 
+ * 
+ * \subsubsection sssec_building_ubuntu Ubuntu from Mercurial (Current as of Ubuntu 12.04)
+ * 
+ * <ol>
+ * <li>Obtain mercurial, gengetopt, boost, log4cpp, liblog4cpp5-dev, and build-essential packages.  In a terminal, type:
+ * \code
+ * sudo apt-get install mercurial gengetopt libboost-regex-dev libboost-graph-dev liblog4cpp5-dev build-essential
+ * \endcode
+ * </li>
+ * <li>If desired, download and install SMILE:
+ * <ol>
+ *  <li>From http://genie.sis.pitt.edu/downloads.html download the appropriate package (x64 or x86) for gcc version 4 or above (currently 4.4.5).  If you have registered as a SMILE user and meet the appropriate requirements, the following commands should work for _x64 (assumes you have a Downloads directory):
+ *  \code
+ *  cd ~/Downloads
+ *  mkdir smile
+ *  cd smile
+ *  wget http://genie.sis.pitt.edu/download/smile_linux_x64_gcc_4_4_5.tar.gz
+ *  tar -xzf smile_linux_x64_gcc_4_4_5.tar.gz
+ *  rm smile_linux_x64_gcc_4_4_5.tar.gz
+ *  cd ..
+ *  sudo mv smile /usr/local/smile
+ *  \endcode
+ *  </li>
+ * </ol>
+ * </li>
+ * <li>Currently Sleipnir requires SVMPerf, so you must complete the following steps:
+ * <ol>
+ *  <li>
+ *  Visit http://www.cs.cornell.edu/People/tj/svm_light/svm_perf.html and make sure that you meet the conditions of use (currently: "The program is free for scientific use. Please contact me, if you are planning to use the software for commercial purposes. The software must not be further distributed without prior permission of the author. If you use SVMperf in your scientific work, please cite the appropriate publications (available from the svmperf website)").
+ *  </li>
+ *  <li>
+ *  Assuming you meet the conditions, the following steps in a terminal will download, compile, and install SVMPerf as required by Sleipnir.
+ *  \code
+ *      cd ~/Downloads
+ *      mkdir svmperf
+ *      cd svmperf
+ *      wget http://download.joachims.org/svm_perf/current/svm_perf.tar.gz
+ *      rm svm_perf.tar.gz
+ *      wget http://libsleipnir.bitbucket.org/SVMperf/Makefile -O Makefile
+ *      make
+ *      cd ..
+ *      sudo mv svmperf /usr/local
+ *  \endcode
+ *  </li>
+ * </ol>
+ * </li>
+ * <li>
+ * Get Sleipnir (the following assumes you want sleipnir to live in ~/sleipnir, if this is not correct, adjust the paths accordingly)
+ * \code
+ * cd ~
+ * hg clone hg clone https://bitbucket.org/libsleipnir/sleipnir
+ * \endcode
+ * </li>
+ * <li>
+ * Move to the Sleipnir directory and run the autotools scripts:
+ * \code
+ *  cd sleipnir
+ *  ./gen_auto
+ *  ./gen_tools_am
+ * \endcode
+ * </li>
+ * <li>
+ * Configure and build Sleipnir:
+ * \code
+ *  ./configure --with-smile=/usr/local --with-svm-perf=/usr/local/svmperf/
+ *  make
+ * \endcode
+ * </li>
+ * <li>
+ * Assuming that all completed successfully, you can now install sleipnir to /usr/local with:
+ * \code
+ *  sudo make install
+ * \endcode
+ * If you want to install sleipnir to another location, adjust the ./configure step accordingly.
+ * </li>
+ *
  * \subsection ssec_building_windows Windows
  * 
  * This section assumes that you're building Sleipnir on Windows using Visual Studio.  I'm fairly certain

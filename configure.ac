@@ -438,42 +438,42 @@ AC_SUBST(LOG4CPP_LIBS)
 AC_ARG_WITH([smile],
 	[AS_HELP_STRING([--with-smile=PATH], [prefix of SMILE installation])],
 	[
-         if test "x$with_smile" = "xyes"; then
-	   smile_state=check
-         elif test "x$with_smile" != "xno"; then
-           smile_state=try
-	   qualify_path with_smile
-           LOCAL_CHECK_APPEND_PATHS([$with_smile], [. include smile include/smile], [smile.h], [SMILE_INCLUDE_DIR], [smile_state=warn])
-           LOCAL_CHECK_APPEND_PATHS([$with_smile], [. lib], [libsmile.a], [SMILE_LIB_DIR], [smile_state=warn])
-         else
-           smile_state=no
-         fi
-        ],
+        if test "x$with_smile" = "xyes"; then
+            smile_state=check
+        elif test "x$with_smile" != "xno"; then
+            smile_state=try
+	        qualify_path with_smile
+            LOCAL_CHECK_APPEND_PATHS([$with_smile], [. include smile include/smile], [smile.h], [SMILE_INCLUDE_DIR], [smile_state=warn])
+            LOCAL_CHECK_APPEND_PATHS([$with_smile], [. lib smile], [libsmile.a], [SMILE_LIB_DIR], [smile_state=warn])
+        else
+            smile_state=no
+        fi
+    ],
 	[smile_state=check])
-LOCAL_CHECK_LIB([smile], [smile], [RoundProbability(0,0)],
-        [smile_state=ok],                                         dnl found
-        [
-	  SMILE_LIBS="-lsmile"
-# SMILEXML_LIB
+LOCAL_CHECK_LIB([smile], [smile], [DSL_isFinite(1.0)],
+    [smile_state=ok],                                         dnl found
+    [
+	    SMILE_LIBS="-lsmile"
+        #SMILEXML_LIB
 	],                                                       dnl and found installed
-        [
-#    if test -f "$SMILE_LIB_DIR/libsmilexml.a"; then
-#      AC_DEFINE([SMILEXML_LIB], [1])
-#      SMILEXML_LIB="-lsmilexml"
-#    fi
-         SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR -fopenmp"
-#         SMILE_LIBS="-L $SMILE_LIB_DIR $SMILEXML_LIB -lsmile"
-         SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile -fopenmp"
-        ],                                                        dnl and found in specified path
+    [
+#       if test -f "$SMILE_LIB_DIR/libsmilexml.a"; then
+#           AC_DEFINE([SMILEXML_LIB], [1])
+#           SMILEXML_LIB="-lsmilexml"
+#       fi
+        SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR -fopenmp"
+#       SMILE_LIBS="-L $SMILE_LIB_DIR $SMILEXML_LIB -lsmile"
+        SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile -fopenmp"
+    ],                                                        dnl and found in specified path
 	[],                                                       dnl not found
-        [smile_state=no],                                         dnl and not found installed
-        [smile_state=warn],                                       dnl and not found in specified path
-        [],                                                       dnl requested without
+    [smile_state=no],                                         dnl and not found installed
+    [smile_state=warn],                                       dnl and not found in specified path
+    [],                                                       dnl requested without
 	[#include "smile.h"],
-        [],
-        [-L $SMILE_LIB_DIR -I $SMILE_INCLUDE_DIR])
+    [],
+    [-L $SMILE_LIB_DIR -I $SMILE_INCLUDE_DIR])
 if test "x$smile_state" != "xok"; then
-  AC_DEFINE([NO_SMILE], [1])
+    AC_DEFINE([NO_SMILE], [1])
 fi
 #AC_SUBST(SMILE_PREFIX)
 AC_SUBST(SMILE_CFLAGS)
