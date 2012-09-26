@@ -278,8 +278,8 @@
  *	library!  To keep from building the whole giant Boost package, try building it like this (note that the
  *	\c --prefix argument is optional):
  * \code
- * ./configure --with-libraries=graph --prefix=/desired/boost/install/path/
- * make install
+ * ./bootstrap.sh --with-libraries=graph --prefix=/desired/boost/install/path/
+ * ./b2 install
  * \endcode
  * - Pay close attention to the paths given to \c --with on Linux/Mac OS and stored in the Additional
  *	Include/Library Directories properties in Visual Studio.  These must point to the directories where
@@ -868,12 +868,17 @@ MIPS:
  * - First, <a href="mailto:chuttenh@hsph.harvard.edu">let us know</a>!  We'd love to hear how people are using
  *	Sleipnir and what you plan to do with it.  We're happy to answer questions and offer development tips
  *	whenever possible.
+ *
+ * - Join the <a href="https://groups.google.com/forum/?fromgroups#!forum/libsleipnir">Sleipnir Google group</a>.
+ *	This is a great place to ask questions if you are having trouble with sleipnir or want to discuss its development.
  * 
  * - Check out our <a href="http://mercurial.selenic.com/">Mercurial</a> repository at
- *	<tt>https://bitbucket.org/libsleipnir/sleipnir/overview</tt>.  The \c trunk branch always contains the latest development
+ *	<tt>https://bitbucket.org/libsleipnir/sleipnir/overview</tt>.  The \c sleipnir branch always contains the latest development
  *	version of Sleipnir, and official versioned releases appear under \c tags.  If you'd like to submit
  *	patches to us for inclusion in Sleipnir, please try to do so against the current development version
- *	(\c trunk).
+ *	(\c sleipnir).  This repository ties in with our 
+ *	<a href="https://bitbucket.org/libsleipnir/sleipnir/issues?status=new&status=open">ticket system </a>
+ *	which also provides a good way to submit patches.
  * 
  * - Construct a <a href="http://www.gnu.org/software/patch/">patch</a> against the Sleipnir code that
  *	includes your modifications and additions.  Alternatively, if you've built an independent tool that
