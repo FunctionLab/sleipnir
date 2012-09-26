@@ -55,6 +55,12 @@ struct gengetopt_args_info
   char * dir_platform_arg;	/**< @brief Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files).  */
   char * dir_platform_orig;	/**< @brief Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files) original value given at command line.  */
   const char *dir_platform_help; /**< @brief Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files) help description.  */
+  char * dir_sinfo_arg;	/**< @brief Sinfo Directory (containing .sinfo files) (default='NA').  */
+  char * dir_sinfo_orig;	/**< @brief Sinfo Directory (containing .sinfo files) original value given at command line.  */
+  const char *dir_sinfo_help; /**< @brief Sinfo Directory (containing .sinfo files) help description.  */
+  char * dir_gvar_arg;	/**< @brief Gene variance directory (containing .gexpvar files) (default='NA').  */
+  char * dir_gvar_orig;	/**< @brief Gene variance directory (containing .gexpvar files) original value given at command line.  */
+  const char *dir_gvar_help; /**< @brief Gene variance directory (containing .gexpvar files) help description.  */
   char * quant_arg;	/**< @brief quant file (assuming all datasets use the same quantization).  */
   char * quant_orig;	/**< @brief quant file (assuming all datasets use the same quantization) original value given at command line.  */
   const char *quant_help; /**< @brief quant file (assuming all datasets use the same quantization) help description.  */
@@ -78,6 +84,8 @@ struct gengetopt_args_info
   const char *func_dset_help; /**< @brief Functional network dset-list file (1 dataset) help description.  */
   int func_logit_flag;	/**< @brief Functional network, integrate using logit values (default=off).  */
   const char *func_logit_help; /**< @brief Functional network, integrate using logit values help description.  */
+  int correlation_flag;	/**< @brief Use Pearson correlation values, instead of z-score. -m, -M, -r do not apply (default=off).  */
+  const char *correlation_help; /**< @brief Use Pearson correlation values, instead of z-score. -m, -M, -r do not apply help description.  */
   int norm_subavg_flag;	/**< @brief Per dataset, normalize z-scores by subtracting average of result gene (default=off).  */
   const char *norm_subavg_help; /**< @brief Per dataset, normalize z-scores by subtracting average of result gene help description.  */
   int norm_platsubavg_flag;	/**< @brief Per platform, normalize z-scores by subtracting average of query gene across platform (default=off).  */
@@ -87,9 +95,11 @@ struct gengetopt_args_info
   float score_cutoff_arg;	/**< @brief Cutoff on the gene-gene score before adding, default: no cutoff (default='-9999').  */
   char * score_cutoff_orig;	/**< @brief Cutoff on the gene-gene score before adding, default: no cutoff original value given at command line.  */
   const char *score_cutoff_help; /**< @brief Cutoff on the gene-gene score before adding, default: no cutoff help description.  */
-  float per_q_required_arg;	/**< @brief Percentage (/100) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff) (default='1.0').  */
-  char * per_q_required_orig;	/**< @brief Percentage (/100) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff) original value given at command line.  */
-  const char *per_q_required_help; /**< @brief Percentage (/100) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff) help description.  */
+  float per_q_required_arg;	/**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. (default='0.0').  */
+  char * per_q_required_orig;	/**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. original value given at command line.  */
+  const char *per_q_required_help; /**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. help description.  */
+  int square_z_flag;	/**< @brief If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff (default=off).  */
+  const char *square_z_help; /**< @brief If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff help description.  */
   int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
   const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
   int buffer_arg;	/**< @brief Number of Databaselets to store in memory (default='20').  */
@@ -110,6 +120,8 @@ struct gengetopt_args_info
   unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */
   unsigned int dir_prep_in_given ;	/**< @brief Whether dir_prep_in was given.  */
   unsigned int dir_platform_given ;	/**< @brief Whether dir_platform was given.  */
+  unsigned int dir_sinfo_given ;	/**< @brief Whether dir_sinfo was given.  */
+  unsigned int dir_gvar_given ;	/**< @brief Whether dir_gvar was given.  */
   unsigned int quant_given ;	/**< @brief Whether quant was given.  */
   unsigned int num_db_given ;	/**< @brief Whether num_db was given.  */
   unsigned int func_db_given ;	/**< @brief Whether func_db was given.  */
@@ -118,11 +130,13 @@ struct gengetopt_args_info
   unsigned int func_quant_given ;	/**< @brief Whether func_quant was given.  */
   unsigned int func_dset_given ;	/**< @brief Whether func_dset was given.  */
   unsigned int func_logit_given ;	/**< @brief Whether func_logit was given.  */
+  unsigned int correlation_given ;	/**< @brief Whether correlation was given.  */
   unsigned int norm_subavg_given ;	/**< @brief Whether norm_subavg was given.  */
   unsigned int norm_platsubavg_given ;	/**< @brief Whether norm_platsubavg was given.  */
   unsigned int norm_platstdev_given ;	/**< @brief Whether norm_platstdev was given.  */
   unsigned int score_cutoff_given ;	/**< @brief Whether score_cutoff was given.  */
   unsigned int per_q_required_given ;	/**< @brief Whether per_q_required was given.  */
+  unsigned int square_z_given ;	/**< @brief Whether square_z was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
   unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
   unsigned int output_text_given ;	/**< @brief Whether output_text was given.  */

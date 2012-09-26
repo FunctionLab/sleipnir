@@ -62,7 +62,10 @@ CSeekCentral::CSeekCentral(){
 	m_bSubtractPlatformAvg = false;
 	m_bDividePlatformStdev = false;
 	m_bLogit = false;
+	m_bCorrelation = false;
 	m_bOutputText = false;
+	m_bSquareZ = false;
+
 	DEBUG = false;
 	m_output_dir = "";
 
@@ -165,17 +168,21 @@ bool CSeekCentral::CalculateRestart(){
 bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const char *dset, const char *search_dset,
 	const char *query, const char *platform, const char *db,
-	const char *prep, const bool &useNibble, const ushort &num_db,
+	const char *prep, const char *gvar, const char *sinfo,
+	const bool &useNibble, const ushort &num_db,
 	const ushort &buffer, const char *output_dir, const bool &to_output_text,
-	const bool &bSubtractAvg,
+	const bool &bCorrelation, const bool &bSubtractAvg,
 	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
-	const bool &bLogit, const float &fCutOff, const float &fPercentRequired){
+	const bool &bLogit, const float &fCutOff, const float &fPercentRequired, 
+	const bool &bSquareZ){
 
 	m_output_dir = output_dir;
 	m_maxNumDB = buffer;
 	m_numThreads = 8;
 	m_fScoreCutOff = fCutOff;
 	m_fPercentQueryAfterScoreCutOff = fPercentRequired;
+	m_bSquareZ = bSquareZ;
+
 	ushort i, j;
 
 	omp_set_num_threads(m_numThreads);
@@ -185,6 +192,24 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	m_bSubtractPlatformAvg = bSubtractPlatformAvg;
 	m_bDividePlatformStdev = bDividePlatformStdev;
 	m_bLogit = bLogit;
+	m_bCorrelation = bCorrelation;
+
+	string strGvarDirectory = gvar;
+	string strSinfoDirectory = sinfo;
+	if(m_bCorrelation && sinfo=="NA"){
+		fprintf(stderr, "Error: not specifying sinfo!\n");
+		return false;
+	}
+
+	if(m_bCorrelation && (m_bSubtractGeneAvg || m_bSubtractPlatformAvg ||
+		m_bDividePlatformStdev || m_bLogit)){
+		fprintf(stderr, 
+			"Warning: setting subtract_avg, subtract_platform to false\n");
+		m_bSubtractGeneAvg = false;
+		m_bSubtractPlatformAvg = false;
+		m_bDividePlatformStdev = false;
+		m_bLogit = false;
+	}
 
 	//read genes
 	vector<string> vecstrGeneID;
@@ -229,8 +254,8 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	m_iGenes = m_vecstrGenes.size();
 
 	m_DB->Open(db, m_vecstrGenes, m_iDatasets, num_db);
-	CSeekTools::LoadDatabase(*m_DB, prep, m_vecstrDatasets,
-		m_mapstrstrDatasetPlatform, m_mapstriPlatform, m_vp, m_vc, false);
+	CSeekTools::LoadDatabase(*m_DB, prep, gvar, sinfo, m_vecstrDatasets,
+		m_mapstrstrDatasetPlatform, m_mapstriPlatform, m_vp, m_vc);
 
 	if(!CalculateRestart()) return false;
 
@@ -470,7 +495,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 				(int) this_q.size());
 			m_vc[d]->InitializeDataMatrix(m_rData[tid], m_quant, m_iGenes,
 				iQuery, m_bSubtractGeneAvg, m_bSubtractPlatformAvg, m_bLogit,
-				m_fScoreCutOff);
+				m_bCorrelation, m_fScoreCutOff);
 			//m_bSubtractPlatformStdev is not used, it's assumed
 
 			float w = -1;
@@ -478,11 +503,11 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 				if(DEBUG) fprintf(stderr, "Weighting dataset\n");
 				if(sm==CV)
 					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
-						m_fPercentQueryAfterScoreCutOff,
+						m_fPercentQueryAfterScoreCutOff, m_bSquareZ,
 						&m_rank_threads[tid]);
 				else
 					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
-						m_fPercentQueryAfterScoreCutOff,
+						m_fPercentQueryAfterScoreCutOff, m_bSquareZ,
 						&m_rank_threads[tid], &customGoldStd);
 
 				if( (w = m_vc[d]->GetDatasetSumWeight())==-1){
@@ -498,7 +523,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			const ushort MIN_REQUIRED = max((ushort) 1, (ushort) (
 				m_fPercentQueryAfterScoreCutOff * this_q.size()));
 			CSeekWeighter::LinearCombine(m_rank_normal_threads[tid], this_q,
-				*m_vc[d], MIN_REQUIRED);
+				*m_vc[d], MIN_REQUIRED, m_bSquareZ);
 
 			if(DEBUG) fprintf(stderr,
 				"Adding contribution of dataset to master ranking: %.5f\n", w);
@@ -514,13 +539,13 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 
 			if(sm==ORDER_STATISTICS)
 				for(; iterR!=endR; iterR++){
-					if(Rank_Normal[*iterR]==0) continue;
+					//if(Rank_Normal[*iterR]==0) continue;
 					m_rank_d[dd][*iterR] = Rank_Normal[*iterR];
 					Counts[*iterR]++;
 				}
 			else
 				for(; iterR!=endR; iterR++){
-					if(Rank_Normal[*iterR]==0) continue;
+					//if(Rank_Normal[*iterR]==0) continue;
 					Master_Rank[*iterR] += (float) Rank_Normal[*iterR] * w;
 					Sum_Weight[*iterR] += w;
 					Counts[*iterR]++;

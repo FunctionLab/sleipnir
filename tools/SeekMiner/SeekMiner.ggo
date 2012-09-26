@@ -17,6 +17,10 @@ option	"dir_prep_in"		p	"Prep directory (containing .gavg, .gpres files)"
 								string	typestr="directory"	yes
 option	"dir_platform"		P	"Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files)"
 								string	typestr="directory"	yes
+option	"dir_sinfo"			u	"Sinfo Directory (containing .sinfo files)"
+								string	typestr="directory"	default="NA"
+option	"dir_gvar"			U	"Gene variance directory (containing .gexpvar files)"
+								string	typestr="directory"	default="NA"
 option	"quant"				Q	"quant file (assuming all datasets use the same quantization)"
 								string	typestr="filename"	yes								
 option	"num_db"			n	"Number of databaselets in database"
@@ -37,6 +41,8 @@ option	"func_logit"		l	"Functional network, integrate using logit values"
 								flag	off
 
 section "Optional - Parameter tweaking"
+option	"correlation"		T	"Use Pearson correlation values, instead of z-score. -m, -M, -r do not apply"
+								flag	off
 option	"norm_subavg"		m	"Per dataset, normalize z-scores by subtracting average of result gene"
 								flag	off
 option	"norm_platsubavg"	M	"Per platform, normalize z-scores by subtracting average of query gene across platform"
@@ -45,9 +51,11 @@ option	"norm_platstdev"	r	"Per platform, normalize z-scores by dividing stdev of
 								flag	off
 option	"score_cutoff"		c	"Cutoff on the gene-gene score before adding, default: no cutoff"
 								float default="-9999"
-option	"per_q_required"	C	"Percentage (/100) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff)"
-								float default="1.0"
-								
+option	"per_q_required"	C	"Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff."
+								float default="0.0"
+option	"square_z"			e	"If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff"							
+								flag	off
+
 section "MISC"								
 option	"is_nibble"			N	"Whether the input DB is nibble type"
 								flag	off

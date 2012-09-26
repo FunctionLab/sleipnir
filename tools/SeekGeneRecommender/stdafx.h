@@ -19,31 +19,26 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#ifndef SEEKWEIGHT_H
-#define SEEKWEIGHT_H
+#ifndef STDAFX_H
+#define STDAFX_H
 
-#include "seekbasic.h"
+#define __STDC_LIMIT_MACROS
+
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
+#include <omp.h>
+using namespace std;
+
+#include <pthread.h>
+
+#include "bayesnet.h"
+#include "seekmap.h"
 #include "seekreader.h"
-#include "seekquery.h"
 #include "seekevaluate.h"
+#include "seekwriter.h"
+#include "meta.h"
+using namespace Sleipnir;
 
-namespace Sleipnir {
-
-class CSeekWeighter{
-public:
-	/*cv_query must be present in sDataset */
-	static bool LinearCombine(vector<ushort> &rank,
-		const vector<ushort> &cv_query, CSeekDataset &sDataset,
-		const ushort &, const bool &);
-	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
-		const float &rate, const float &percent_required, const bool &bsquareZ,
-		vector<ushort> *rrank, const CSeekQuery *goldStd = NULL);
-	static bool OrderStatisticsRankAggregation(const ushort&, const ushort&,
-		ushort**, const vector<ushort> &, vector<float>&, const ushort&);
-	static bool OrderStatisticsPreCompute();
-
-};
-
-
-}
-#endif
+#endif // STDAFX_H

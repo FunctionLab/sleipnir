@@ -163,14 +163,16 @@ public:
 		const vector< vector<string> > &, vector<CSeekDataset*> &);
 
 	static bool LoadDatabase(const CDatabase &, const string &,
+		const string &, const string &,
 		const vector<string> &, const map<string, string> &,
 		const map<string, ushort> &, vector<CSeekPlatform> &,
-		vector<CSeekDataset*> &, const bool&);
+		vector<CSeekDataset*> &);
 
 	static bool LoadDatabase(const CDatabase &, const char *,
+		const char *, const char *,
 		const vector<string> &, const map<string, string> &,
 		const map<string, ushort> &, vector<CSeekPlatform> &,
-		vector<CSeekDataset*> &, const bool&);
+		vector<CSeekDataset*> &);
 
 	static bool ReadPlatforms(const string &strPlatformDirectory,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,

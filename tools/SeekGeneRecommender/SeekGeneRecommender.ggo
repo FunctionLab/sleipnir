@@ -1,0 +1,24 @@
+package	"SeekGeneRecommender"
+version	"1.0"
+purpose	"Preprocess datasets for Seek"
+
+section "Mode"
+option	"pcl"				e	"PCL mode, suitable for dataset gene variance calculation"
+								flag	off
+
+section "PCL mode"
+option	"pcl_list"			V	"PCL list"
+								string typestr="filename"
+option	"pcl_dir"			F	"PCL directory"
+								string typestr="directory"
+
+section "Input"
+option	"input"				i	"Gene mapping file"
+								string typestr="filename"	yes
+option	"query"				q	"Query file"
+								string typestr="filename"	yes
+
+section "Output"
+option	"dir_out"			D	"Output directory"
+								string typestr="directory"
+

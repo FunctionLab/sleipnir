@@ -29,7 +29,7 @@ namespace Sleipnir {
 //correlate with A in order to count A's query score
 bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 	const vector<ushort> &cv_query, CSeekDataset &sDataset,
-	const ushort &MIN_REQUIRED){
+	const ushort &MIN_REQUIRED, const bool &bSquareZ){
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
@@ -67,21 +67,81 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 	ushort *pp;
 	ushort totNonZero, tmpScore;
 
-	//if the score of a gene to a query (*pp) is 0, it could either mean
-	//the gene is absent, or the gene-to-query correlation is below cutoff
-	for(iter_g=rank.begin(), pf = &f[0]; iter_g!=rank.end(); iter_g++, pf++){
-		for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
-			iterOffset = offset.begin(); iterOffset!=offset.end();
-			iterOffset++, pp+=(*iterOffset)){
-			tmpScore += *pp;
-			if((*pp)>0) ++totNonZero;
+	//special case, no MIN_REQUIRED
+	if(MIN_REQUIRED==1){
+		if(bSquareZ){ //must be used with cutoff (or else we will mix
+					//positive and negative correlations together)
+			for(iter_g=rank.begin(), pf = &f[0]; iter_g!=rank.end(); 
+			iter_g++, pf++){
+				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
+				iterOffset = offset.begin(); iterOffset!=offset.end();
+				iterOffset++, pp+=(*iterOffset)){
+					if((*pp)==0) continue;
+					float sc = (float) ((*pp) - 320) / 100.0; 
+					sc = fabs(sc) + 1.0; //add one adjustment, suitable if cutoff=0
+					tmpScore += (ushort) (sc * sc * 100.0 + 320.0);
+					++totNonZero;
+				}
+				if(totNonZero==0) continue;
+				//(*iter_g) = tmpScore / totNonZero;
+				(*iter_g) = tmpScore / q_size;
+			}		
+		}else{
+			for(iter_g=rank.begin(), pf = &f[0]; iter_g!=rank.end(); 
+			iter_g++, pf++){
+				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
+				iterOffset = offset.begin(); iterOffset!=offset.end();
+				iterOffset++, pp+=(*iterOffset)){
+					if((*pp)==0) continue;
+					tmpScore += *pp;
+					++totNonZero;
+				}
+				if(totNonZero==0) continue;
+				//(*iter_g) = tmpScore / totNonZero;
+				(*iter_g) = tmpScore / q_size;
+			}
 		}
-		//if enough query edges passed the cut off
-		if(totNonZero >= MIN_REQUIRED)
-			(*iter_g) = tmpScore / totNonZero;
-		else
-			(*iter_g) = 0;
-		//(*iter_g) = tmpScore / q_size;
+	}
+	else{ //MIN_REQUIRED ENABLED
+
+		if(bSquareZ){
+			//if the score of a gene to a query (*pp) is 0, it could 
+			//either mean the gene is absent, or the gene-to-query correlation 
+			//is below cutoff
+			for(iter_g=rank.begin(), pf = &f[0]; iter_g!=rank.end(); 
+			iter_g++, pf++){
+				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
+				iterOffset = offset.begin(); iterOffset!=offset.end();
+				iterOffset++, pp+=(*iterOffset)){
+					if((*pp)==0) continue;
+					float sc = (float) ((*pp) - 320) / 100.0;
+					sc = fabs(sc) + 1.0; //add one adjustment, suitable for cutoff=0
+					tmpScore += (ushort) (sc * sc * 100.0 + 320.0);
+					++totNonZero;
+				}
+				//if enough query edges passed the cut off 
+				if(totNonZero >= MIN_REQUIRED)
+					(*iter_g) = tmpScore / totNonZero;
+				else
+					(*iter_g) = 0;
+			}
+		}
+		else{
+			for(iter_g=rank.begin(), pf = &f[0]; iter_g!=rank.end(); 
+			iter_g++, pf++){
+				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
+				iterOffset = offset.begin(); iterOffset!=offset.end();
+				iterOffset++, pp+=(*iterOffset)){
+					if((*pp)==0) continue;
+					tmpScore += *pp;
+					++totNonZero;
+				}
+				if(totNonZero >= MIN_REQUIRED)
+					(*iter_g) = tmpScore / totNonZero;
+				else
+					(*iter_g) = 0;
+			}
+		}
 	}
 
 	return true;
@@ -259,7 +319,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 
 
 bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
-	const float &rate, const float &percent_required,
+	const float &rate, const float &percent_required, const bool &bSquareZ,
 	vector<ushort> *rrank, const CSeekQuery *goldStd){
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
@@ -327,7 +387,7 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 			const ushort MIN_QUERY_REQUIRED =
 				max((ushort) 1, (ushort) (percent_required * cv_query.size()));
 			bool ret = LinearCombine(rank, cv_query, sDataset,
-				MIN_QUERY_REQUIRED);
+				MIN_QUERY_REQUIRED, bSquareZ);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
 				rank, w, is_query_cross, is_gold, *mapG, &ar, TOP);
 			if(!ret) sDataset.SetCVWeight(qi, -1);

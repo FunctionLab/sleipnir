@@ -50,6 +50,8 @@ public:
 	 */
 	~CSeekDataset();
 
+	bool ReadDatasetAverageStdev(const string &);
+
 	/*!
 	 * \brief
 	 * Given the gene-average file-name, read the gene averages in this
@@ -159,7 +161,8 @@ public:
 	 */
 	bool InitializeDataMatrix(ushort**, const vector<float> &,
 		const ushort&, const ushort&, const bool=true, const bool=true,
-		const bool=false, const float cutoff=-1.0*CMeta::GetNaN());
+		const bool=false, const bool=false,
+		const float cutoff=-1.0*CMeta::GetNaN());
 
 	ushort** GetDataMatrix();
 
@@ -173,6 +176,8 @@ public:
 
 	float GetGeneVariance(const ushort&) const;
 	float GetGeneAverage(const ushort&) const;
+	float GetDatasetAverage() const;
+	float GetDatasetStdev() const;
 	ushort GetNumGenes() const;
 	bool InitializeCVWeight(const ushort&);
 	bool SetCVWeight(const ushort&, const float&);

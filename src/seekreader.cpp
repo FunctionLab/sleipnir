@@ -149,27 +149,44 @@ bool CSeekTools::ReadQuantFile(const char *file, vector<float> &quant){
 }
 
 bool CSeekTools::LoadDatabase(const CDatabase &DB,
-	const string &strPrepInputDirectory, const vector<string> &vecstrDatasets,
+	const string &strPrepInputDirectory, 
+	const string &strGvarInputDirectory,
+	const string &strSinfoInputDirectory,
+	const vector<string> &vecstrDatasets,
 	const map<string, string> &mapstrstrDatasetPlatform,
 	const map<string, ushort> &mapstriPlatform, vector<CSeekPlatform> &vp,
-	vector<CSeekDataset*> &vc, const bool& bReadVariance){
+	vector<CSeekDataset*> &vc){
 	return CSeekTools::LoadDatabase(DB, strPrepInputDirectory.c_str(),
-		vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc, 
-		bReadVariance);
+		strGvarInputDirectory.c_str(), strSinfoInputDirectory.c_str(),
+		vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
 }
 
 bool CSeekTools::LoadDatabase(const CDatabase &DB,
-	const char *prep_dir, const vector<string> &vecstrDatasets,
+	const char *prep_dir, const char *gvar_dir, const char *sinfo_dir,
+	const vector<string> &vecstrDatasets,
 	const map<string, string> &mapstrstrDatasetPlatform,
 	const map<string, ushort> &mapstriPlatform, vector<CSeekPlatform> &vp,
-	vector<CSeekDataset*> &vc, const bool &bReadVariance){
+	vector<CSeekDataset*> &vc){
 		
 	size_t iDatasets = DB.GetDatasets();
 	size_t iGenes = DB.GetGenes();
 	size_t i, j, k;
 	vc.clear();
 	vc.resize(iDatasets);
-	string strPrepInputDirectory = prep_dir;
+	string strPrepInputDirectory = prep_dir; //must be non NA
+
+	bool bVariance = false;
+	bool bCorrelation = false;
+
+	string strSinfoInputDirectory = sinfo_dir;
+	string strGvarInputDirectory = gvar_dir;
+
+	if(strSinfoInputDirectory!="NA"){
+		bCorrelation = true;
+	}
+	if(strGvarInputDirectory!="NA"){
+		bVariance = true;
+	}
 
 	fprintf(stderr, "Start reading average and presence files\n");
 	system("date +%s%N 1>&2");
@@ -182,10 +199,15 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 			strFileStem + ".gpres";
 		vc[i]->ReadGeneAverage(strAvgPath);
 		vc[i]->ReadGenePresence(strPresencePath);
-		if(bReadVariance){
-			string strVariancePath = strPrepInputDirectory + "/" +
+		if(bVariance){
+			string strVariancePath = strGvarInputDirectory + "/" +
 				strFileStem + ".gexpvar";
 			vc[i]->ReadGeneVariance(strVariancePath);
+		}
+		if(bCorrelation){
+			string strSinfoPath = strSinfoInputDirectory + "/" + 
+				strFileStem + ".sinfo";
+			vc[i]->ReadDatasetAverageStdev(strSinfoPath);
 		}
 		string strPlatform =
 			mapstrstrDatasetPlatform.find(strFileStem)->second;

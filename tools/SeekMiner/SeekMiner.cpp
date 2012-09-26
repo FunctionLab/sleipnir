@@ -52,7 +52,8 @@ int main( int iArgs, char** aszArgs ) {
 	gsl_rng_env_setup();
 	T = gsl_rng_default;
 	rnd = gsl_rng_alloc(T);
-	float RATE = 0.95;
+	//float RATE = 0.95;
+	float RATE = 0.99;
 	ushort FOLD = 5;
 	enum PartitionMode PART_M = CUSTOM_PARTITION;
 	ushort i,j;
@@ -186,11 +187,15 @@ int main( int iArgs, char** aszArgs ) {
 		//"/tmp/ex_query2.txt", 
 		sArgs.query_arg,
 		sArgs.dir_platform_arg,
-		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, useNibble, sArgs.num_db_arg,
+		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, 
+		sArgs.dir_gvar_arg,
+		sArgs.dir_sinfo_arg,
+		useNibble, sArgs.num_db_arg,
 		sArgs.buffer_arg, sArgs.output_dir_arg, !!sArgs.output_text_flag,  
+		!!sArgs.correlation_flag, 
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
 		!!sArgs.norm_platstdev_flag, false,
-		sArgs.score_cutoff_arg, sArgs.per_q_required_arg))
+		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag))
 		return -1;
 
 	//csfinal->WeightSearch(csk_weight_copy);

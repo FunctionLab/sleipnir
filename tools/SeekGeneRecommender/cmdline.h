@@ -21,7 +21,7 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_PACKAGE
 /** @brief the program name */
-#define CMDLINE_PARSER_PACKAGE "SeekReader"
+#define CMDLINE_PARSER_PACKAGE "SeekGeneRecommender"
 #endif
 
 #ifndef CMDLINE_PARSER_VERSION
@@ -34,69 +34,32 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  int databaselet_flag;	/**< @brief Display values from databaselet(s) (default=off).  */
-  const char *databaselet_help; /**< @brief Display values from databaselet(s) help description.  */
-  int dataset_flag;	/**< @brief Check which datasets contain query of interest, based on .gpres file (default=off).  */
-  const char *dataset_help; /**< @brief Check which datasets contain query of interest, based on .gpres file help description.  */
-  int order_stat_single_gene_query_flag;	/**< @brief Order statistics mode (single-gene query) (default=off).  */
-  const char *order_stat_single_gene_query_help; /**< @brief Order statistics mode (single-gene query) help description.  */
-  char * db_arg;	/**< @brief Input dataset-platform definition.  */
-  char * db_orig;	/**< @brief Input dataset-platform definition original value given at command line.  */
-  const char *db_help; /**< @brief Input dataset-platform definition help description.  */
-  char * dset_list_arg;	/**< @brief Input a set of datasets.  */
-  char * dset_list_orig;	/**< @brief Input a set of datasets original value given at command line.  */
-  const char *dset_list_help; /**< @brief Input a set of datasets help description.  */
-  char * input_arg;	/**< @brief Input gene mapping.  */
-  char * input_orig;	/**< @brief Input gene mapping original value given at command line.  */
-  const char *input_help; /**< @brief Input gene mapping help description.  */
-  char * single_query_arg;	/**< @brief Query gene list.  */
-  char * single_query_orig;	/**< @brief Query gene list original value given at command line.  */
-  const char *single_query_help; /**< @brief Query gene list help description.  */
-  char * dir_in_arg;	/**< @brief Database directory.  */
-  char * dir_in_orig;	/**< @brief Database directory original value given at command line.  */
-  const char *dir_in_help; /**< @brief Database directory help description.  */
-  char * dir_prep_in_arg;	/**< @brief Prep directory (containing .gavg, .gpres files).  */
-  char * dir_prep_in_orig;	/**< @brief Prep directory (containing .gavg, .gpres files) original value given at command line.  */
-  const char *dir_prep_in_help; /**< @brief Prep directory (containing .gavg, .gpres files) help description.  */
-  char * dir_gvar_in_arg;	/**< @brief Prep directory (containing .gexpvar files) (default='NA').  */
-  char * dir_gvar_in_orig;	/**< @brief Prep directory (containing .gexpvar files) original value given at command line.  */
-  const char *dir_gvar_in_help; /**< @brief Prep directory (containing .gexpvar files) help description.  */
-  char * dir_sinfo_in_arg;	/**< @brief Sinfo directory (containing .sinfo files) (default='NA').  */
-  char * dir_sinfo_in_orig;	/**< @brief Sinfo directory (containing .sinfo files) original value given at command line.  */
-  const char *dir_sinfo_in_help; /**< @brief Sinfo directory (containing .sinfo files) help description.  */
-  int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
-  const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
-  char * platform_dir_arg;	/**< @brief Platform directory.  */
-  char * platform_dir_orig;	/**< @brief Platform directory original value given at command line.  */
-  const char *platform_dir_help; /**< @brief Platform directory help description.  */
-  float gvar_cutoff_arg;	/**< @brief Query gene's variance in the dataset cutoff (default='-1').  */
-  char * gvar_cutoff_orig;	/**< @brief Query gene's variance in the dataset cutoff original value given at command line.  */
-  const char *gvar_cutoff_help; /**< @brief Query gene's variance in the dataset cutoff help description.  */
-  char * multi_query_arg;	/**< @brief File containing multiple queries (default='NA').  */
-  char * multi_query_orig;	/**< @brief File containing multiple queries original value given at command line.  */
-  const char *multi_query_help; /**< @brief File containing multiple queries help description.  */
-  char * output_file_arg;	/**< @brief Output file (default='NA').  */
-  char * output_file_orig;	/**< @brief Output file original value given at command line.  */
-  const char *output_file_help; /**< @brief Output file help description.  */
+  int pcl_flag;	/**< @brief PCL mode, suitable for dataset gene variance calculation (default=off).  */
+  const char *pcl_help; /**< @brief PCL mode, suitable for dataset gene variance calculation help description.  */
+  char * pcl_list_arg;	/**< @brief PCL list.  */
+  char * pcl_list_orig;	/**< @brief PCL list original value given at command line.  */
+  const char *pcl_list_help; /**< @brief PCL list help description.  */
+  char * pcl_dir_arg;	/**< @brief PCL directory.  */
+  char * pcl_dir_orig;	/**< @brief PCL directory original value given at command line.  */
+  const char *pcl_dir_help; /**< @brief PCL directory help description.  */
+  char * input_arg;	/**< @brief Gene mapping file.  */
+  char * input_orig;	/**< @brief Gene mapping file original value given at command line.  */
+  const char *input_help; /**< @brief Gene mapping file help description.  */
+  char * query_arg;	/**< @brief Query file.  */
+  char * query_orig;	/**< @brief Query file original value given at command line.  */
+  const char *query_help; /**< @brief Query file help description.  */
+  char * dir_out_arg;	/**< @brief Output directory.  */
+  char * dir_out_orig;	/**< @brief Output directory original value given at command line.  */
+  const char *dir_out_help; /**< @brief Output directory help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int databaselet_given ;	/**< @brief Whether databaselet was given.  */
-  unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
-  unsigned int order_stat_single_gene_query_given ;	/**< @brief Whether order_stat_single_gene_query was given.  */
-  unsigned int db_given ;	/**< @brief Whether db was given.  */
-  unsigned int dset_list_given ;	/**< @brief Whether dset_list was given.  */
+  unsigned int pcl_given ;	/**< @brief Whether pcl was given.  */
+  unsigned int pcl_list_given ;	/**< @brief Whether pcl_list was given.  */
+  unsigned int pcl_dir_given ;	/**< @brief Whether pcl_dir was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
-  unsigned int single_query_given ;	/**< @brief Whether single_query was given.  */
-  unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */
-  unsigned int dir_prep_in_given ;	/**< @brief Whether dir_prep_in was given.  */
-  unsigned int dir_gvar_in_given ;	/**< @brief Whether dir_gvar_in was given.  */
-  unsigned int dir_sinfo_in_given ;	/**< @brief Whether dir_sinfo_in was given.  */
-  unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
-  unsigned int platform_dir_given ;	/**< @brief Whether platform_dir was given.  */
-  unsigned int gvar_cutoff_given ;	/**< @brief Whether gvar_cutoff was given.  */
-  unsigned int multi_query_given ;	/**< @brief Whether multi_query was given.  */
-  unsigned int output_file_given ;	/**< @brief Whether output_file was given.  */
+  unsigned int query_given ;	/**< @brief Whether query was given.  */
+  unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

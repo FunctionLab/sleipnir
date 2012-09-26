@@ -63,6 +63,14 @@ CSeekDataset::~CSeekDataset(){
 	platform = NULL;
 }
 
+bool CSeekDataset::ReadDatasetAverageStdev(const string &strFileName){
+	vector<float> t;
+	CSeekTools::ReadArray(strFileName.c_str(), t);
+	m_fDsetAverage = t[0];
+	m_fDsetStdev = t[1];
+	return true;
+}
+
 bool CSeekDataset::ReadGeneAverage(const string &strFileName){
 	return CSeekTools::ReadArray(strFileName.c_str(), geneAverage);
 }
@@ -224,6 +232,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 	const vector<float> &quant, const ushort &iRows,
 	const ushort &iColumns, const bool bSubtractAvg,
 	const bool bSubtractPlatformAvg, const bool logit,
+	const bool bCorrelation,
 	const float cutoff){
 	/* assume platform is already set */
 
@@ -240,6 +249,13 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 	//Assuming rData is not NULL
 	/* transpose */
 	/* numGenes * numQueries */
+
+	if(bCorrelation && (bSubtractAvg || bSubtractPlatformAvg)){
+		fprintf(stderr, "%s, %s\n", "correlation mode enabled",
+			"please set subtract_avg, subtract_platform to false");
+		return false;
+	}
+
 	ushort i, j;
 	rData = rD;
 	ushort ii;
@@ -287,6 +303,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						if(vv>cutoff){
 							rData[i][j]= (ushort) (vv*100.0) + 320;
 							//fprintf(stderr, "%.5f %.5f %.5f %.5f\n", quant[x], vv, a, platform_avg[j]);
+						}else{
+							rData[i][j] = 0;
 						}
 					}
 				}
@@ -301,6 +319,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						if(vv>cutoff){
 							rData[i][j]= (ushort) (vv*100.0) + 320;
 							//fprintf(stderr, "r %.2f\n", quant[x]);
+						}else{
+							rData[i][j]= 0;
 						}
 					}
 				}
@@ -349,6 +369,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						//fprintf(stderr, "%.5f %.5f %.5f\n", quant[x], vv, a);
 						if(vv>cutoff){
 							rData[i][j]= (ushort) (vv*100.0) + 320;
+						}else{
+							rData[i][j] = 0;
 						}
 					}
 				}
@@ -364,6 +386,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 							(float)3.2), (float)-3.2);
 						if(vv>cutoff){
 							rData[i][j]= (ushort) (vv*100.0) + 320;
+						}else{
+							rData[i][j] = 0;
 						}
 					}
 				}
@@ -383,10 +407,35 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 				vv = max((float) min(vv, (float)3.2), (float)-3.2);
 				if(vv>cutoff){
 					rData[i][j] = (ushort) (vv*100.0) + 320;
+				}else{
+					rData[i][j] = 0;
 				}
 			}
 		}
-	}else{
+	}else if(bCorrelation){
+
+		for(ii=0; ii<iNumGenes; ii++){
+			unsigned char x;
+			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
+				if((x = r[queryIndex[j]][i])==255) continue;
+				float vv = quant[x];
+				vv = vv * m_fDsetStdev + m_fDsetAverage;
+				float e = exp(2.0*vv);
+				vv = (e - 1.0) / (e + 1.0);
+				if(vv>cutoff){
+					vv = vv * 3.0; //scale up by factor of 3 for retaining 
+								   //precision, should put value to range 
+								   //(-3.0 to 3.0)
+					vv = max((float) min(vv, (float)3.2), (float)-3.2);
+					rData[i][j] = (ushort) (vv*100.0) + 320;
+				}else{
+					rData[i][j] = (ushort) 0; 	//default value for 
+												//not meeting cutoff
+				}
+			}
+		}
+
+	}else{ //raw z-scores
 		for(ii=0; ii<iNumGenes; ii++){
 			unsigned char x;
 			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
@@ -395,6 +444,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 				vv = max((float) min(vv, (float)3.2), (float)-3.2);
 				if(vv>cutoff){
 					rData[i][j] = (ushort) (vv*100.0) + 320;
+				}else{
+					rData[i][j] = 0;
 				}
 			}
 		}
@@ -420,6 +471,13 @@ CSeekIntIntMap* CSeekDataset::GetDBMap(){
 	return dbMap;
 }
 
+float CSeekDataset::GetDatasetAverage() const{
+	return m_fDsetAverage;
+}
+
+float CSeekDataset::GetDatasetStdev() const{
+	return m_fDsetStdev;
+}
 
 float CSeekDataset::GetGeneVariance(const ushort &i) const{
 	return geneVariance[i];

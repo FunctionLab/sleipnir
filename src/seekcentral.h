@@ -48,10 +48,11 @@ public:
 	bool Initialize(const char *gene, const char *quant,
 		const char *dset, const char *search_dset,
 		const char *query, const char *platform, const char* db,
-		const char *prep, const bool &useNibble, const ushort &num_db,
-		const ushort &, const char*, const bool&,
+		const char *prep, const char *gvar, const char *sinfo,
+		const bool &useNibble, const ushort &num_db,
+		const ushort &, const char*, const bool&, const bool&,
 		const bool&, const bool&, const bool&, const bool&,
-		const float&, const float&);
+		const float&, const float&, const bool&);
 
 	bool CVSearch(gsl_rng*, const enum PartitionMode&, const ushort&, const float&);
 	bool CVCustomSearch(const vector< vector<string> > &, gsl_rng*,
@@ -98,8 +99,11 @@ private:
 	bool m_bSubtractGeneAvg;
 	bool m_bSubtractPlatformAvg;
 	bool m_bDividePlatformStdev;
+	bool m_bCorrelation;
 	bool m_bLogit;
 	bool m_bOutputText;
+
+	bool m_bSquareZ;
 
 	ushort ***m_rData;
 

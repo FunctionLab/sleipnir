@@ -66,7 +66,8 @@ float** ReadUserGenes(const vector<string> &struserGenes,
 			if(CSeekTools::IsNaN(t)) continue;
 			if(CMeta::IsNaN(v[t])) continue;
 			if(CSeekTools::IsNaN(gmap->GetForward(t))) continue;
-			v[t] = v[t] - vcd->GetGeneAverage(t);
+			//Disable gene average subtraction!
+			//v[t] = v[t] - vcd->GetGeneAverage(t);
 			v2[i][t] = v[t];
 			//fprintf(stderr, "%.2f\n", v2[i][t]);
 		}
@@ -213,7 +214,7 @@ bool CalculateWelch(const float &mean1, const float &stdev1, const int &size1,
 	return true;
 }
 
-bool Do_T_Test(
+vector<string> Do_T_Test(
 	gsl_rng *rnd,
 	float **vall, 
 	const vector<ushort> &veciGenes, //process
@@ -239,6 +240,7 @@ bool Do_T_Test(
 	vi.resize(100);
 	si.resize(100);
 	int size = veciGenes.size();
+	vector<string> outstr;
 
 	for(i=0; i<100; i++){
 		vi[i] = vector<ushort>();
@@ -271,16 +273,24 @@ bool Do_T_Test(
 		}
 	}
 	GetMeanStdev(vf, user_mean, user_stdev);
-	printf("User %.2f %.2f\n", user_mean, user_stdev);
 
+	ostringstream ost;
+	ost.setf(ios::fixed);
+	ost << "User " << setprecision (2) << user_mean << " " << setprecision (2) << user_stdev;
+	outstr.push_back(ost.str());
+	
 	
 	for(i=0; i<100; i++){
 		double pvalt, t;
 		CalculateWelch(rand_mean[i], rand_stdev[i], veciGenes.size(), 
 			user_mean, user_stdev, veciGenes.size(), pvalt, t);
-		printf("%.2f %.2f %.3E\n", (float) user_mean - rand_mean[i], t, pvalt);
+		//printf("%.2f %.2f %.3E\n", (float) user_mean - rand_mean[i], t, pvalt);
+		ostringstream ost2;
+		ost2.setf(ios::fixed);
+		ost2 << setprecision(2) << (float) user_mean - rand_mean[i] << " " << setprecision(2) << t << " " << setprecision(2) << scientific << pvalt;
+		outstr.push_back(ost2.str());
 	}
-	return true;
+	return outstr;
 }
 
 bool Get_Mann_Whitney_U_Statistics(const vector<float> &v1, const vector<float> &v2,
@@ -643,7 +653,9 @@ vector<string> Do_One(const char *file, gsl_rng *rnd,
 
 
 	vector<string> outstr = 
-		Do_Mann_Whitney_U_Test_By_Gene(rnd, vall, struserGenes, veciGenes, vecstrGenes, veciallGenes, gmap);
+	//	Do_Mann_Whitney_U_Test_By_Gene(rnd, vall, struserGenes, veciGenes, vecstrGenes, veciallGenes, gmap);
+	Do_T_Test(rnd, vall, veciGenes, struserGenes, veciallGenes, vecstrGenes, gmap);
+
 
 	for(i=0; i<outstr.size(); i++){
 		ostr.push_back(outstr[i]);
