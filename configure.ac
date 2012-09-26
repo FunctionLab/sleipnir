@@ -542,8 +542,8 @@ AC_ARG_WITH([boost],
            boost_state=try
 	   qualify_path with_boost
            LOCAL_CHECK_APPEND_PATHS([$with_boost], [. .. include], [boost/graph/graphviz.hpp], [BOOST_INCLUDE_DIR], [boost_state=warn])
-           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. lib], [libboost_graph.a], [BOOST_GRAPH_LIB_DIR], [boost_state=warn])
-           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. lib], [libboost_regex.a], [BOOST_REGEX_LIB_DIR], [boost_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. lib stage/lib], [libboost_graph.a], [BOOST_GRAPH_LIB_DIR], [boost_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. lib stage/lib], [libboost_regex.a], [BOOST_REGEX_LIB_DIR], [boost_state=warn])
            if test "x$BOOST_GRAPH_LIB_DIR" != "x$BOOST_REGEX_LIB_DIR"; then
 	     boost_state=warn
  	   else
