@@ -664,6 +664,7 @@ AC_ARG_WITH([tools],
 AM_CONDITIONAL([WITH_TOOLS], [$with_tools])
 AM_CONDITIONAL([WITH_SMILE_TOOLS], [test "x$smile_state" = "xok"])
 AM_CONDITIONAL([WITH_SVM_TOOLS], [test "x$svm_perf_state" = "xok"])
+AM_CONDITIONAL([WITH_SVM_LIBSRC], [test "x$svm_perf_state" = "xok"])
 AM_CONDITIONAL([WITH_VW_TOOLS], [test "x$vowpal_wabbit_state" = "xok"])
 AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_state" = "xok"])
 AM_CONDITIONAL([WITH_BOOST_TOOLS], [test "x$boost_state" = "xok"])
