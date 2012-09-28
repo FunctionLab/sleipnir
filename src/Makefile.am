@@ -4,10 +4,6 @@ AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFL
 
 #LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_PERF_LIBS) $(PTHREAD_LIBS)
 
-if WITH_SVM_LIBSRC
-libSleipnir_SVM_SOURCES = svm.cpp svmperf.cpp
-libSleipnir_SVM_INCLUDES = svm.h svmi.h svmperf.h
-endif
 libSleipnir_a_SOURCES	=	\
 	annotation.cpp			\
 	annotationobo.cpp		\
@@ -50,9 +46,30 @@ libSleipnir_a_SOURCES	=	\
 	server.cpp				\
 	statistics.cpp			\
 	stdafx.cpp				\
-	$(libSleipnir_SVM_SOURCES) \
-	vwb.cpp
+	svm.cpp					\
+	svmperf.cpp					\
+	vwb.cpp					\
+	seekmap.cpp				\
+	seekdataset.cpp			\
+	seekweight.cpp			\
+	seekevaluate.cpp		\
+	seekquery.cpp			\
+	seekreader.cpp			\
+	seekwriter.cpp			\
+	seekplatform.cpp		\
+	seekcentral.cpp		\
 include_HEADERS			=	\
+	seekplatform.h			\
+	seekcentral.h			\
+	seekreader.h			\
+	seekwriter.h			\
+	seekquery.h				\
+	seekevaluate.h			\
+	seekweight.h			\
+	seekreader.h			\
+	seekwriter.h			\
+	seekdataset.h			\
+	seekmap.h				\
 	annotation.h			\
 	annotationi.h			\
 	bayesnetfni.h			\
@@ -119,7 +136,9 @@ include_HEADERS			=	\
 	statistics.h			\
 	statisticsi.h			\
 	stdafx.h				\
-	$(libSleipnir_SVM_INCLUDES)  \
+	svm.h					\
+	svmi.h					\
+	svmperf.h					\
 	trie.h					\
 	triei.h					\
 	typesi.h				\
