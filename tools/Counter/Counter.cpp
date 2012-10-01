@@ -24,6 +24,7 @@
 
 
 #define WT_MULTIPLIER 50
+#define WT_MULTIPLIERf 50.0
 
 class CRegularize;
 
@@ -665,6 +666,7 @@ void* learn( void* pData ) {
     vector<size_t>	veciGenes, vecfiGenes;
 	vector<float>	vecGeneWeights;
     psData = (SLearn*)pData;
+	float			w;
 
     if (psData->m_pUbikGenes->GetGenes( )) {
 		vecfUbik.resize( psData->m_pAnswers->GetGenes( ) );
@@ -713,27 +715,30 @@ void* learn( void* pData ) {
 					//When contexts are weighted, add counts = WT_MULTIPLIER * weight1 * weight 2 
 					if(psData->m_pGenes->IsWeighted()){
 						if(iAnswer==1 || !psData->m_bFlipNeg)
-							for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER); k++){
+							for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER-0.5); k++){
 								psData->m_pMatCounts->Get( iVal, iAnswer )++;
 								}
 						else
-							for( k = 0; k <((1-vecGeneWeights[i]*vecGeneWeights[j])*WT_MULTIPLIER); k++){
+							for( k = 0; k <((1-vecGeneWeights[i]*vecGeneWeights[j])*WT_MULTIPLIER-0.5); k++){
 								psData->m_pMatCounts->Get( iVal, iAnswer )++;
 								}
 					}	
 					else if(psData->m_isDatWeighted){
+						if(CMeta::IsNaN(w = psData->m_pwDat->Get( vecfiGenes[i],vecfiGenes[j] )) || vecfiGenes[i] == -1 ||
+							vecfiGenes[j] == -1)
+							continue;
 						if(iAnswer==1 || !psData->m_bFlipNeg)
-							for( k = 0; k <(psData->m_pwDat->Get( vecfiGenes[i],vecfiGenes[j] ) *WT_MULTIPLIER); k++){
+							for( k = 0; k <(w *WT_MULTIPLIER-0.5); k++){
 								psData->m_pMatCounts->Get( iVal, iAnswer )++;
 								}
 						else
-							for( k = 0; k <((1-psData->m_pwDat->Get( vecfiGenes[i],vecfiGenes[j] )) *WT_MULTIPLIER); k++){
+							for( k = 0; k <((1-w) *WT_MULTIPLIER-0.5); k++){
 								psData->m_pMatCounts->Get( iVal, iAnswer )++;
 								}
 					}
 					else{
 					psData->m_pMatCounts->Get( iVal, iAnswer )++;
-					//FIXME: Regularization has not supportted weighted context
+					//FIXME: Regularization has not been supported for weighted context
 					psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );
 					}
 			}
@@ -746,7 +751,7 @@ void* learn( void* pData ) {
 	if(psData->m_pGenes->IsWeighted()||psData->m_isDatWeighted){
 		for (i=0; i< psData->m_pMatCounts->GetRows();i++)
 			for(j=0; j<psData->m_pMatCounts->GetColumns();j++)
-				psData->m_pMatCounts->Get( i,j ) /= WT_MULTIPLIER;
+				psData->m_pMatCounts->Get( i,j ) = int(psData->m_pMatCounts->Get( i,j )/ WT_MULTIPLIERf + 0.5);
 	}
 
     return NULL;
