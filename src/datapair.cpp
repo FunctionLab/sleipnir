@@ -28,7 +28,8 @@
 namespace Sleipnir {
 
 const char	CPairImpl::c_szQuantExt[]	= ".quant";
-const char   CDataPairImpl::c_acQdab[]   = ".qdab";
+const char  CDataPairImpl::c_acQdab[]   = ".qdab";
+const char  CDataPairImpl::c_acSet[]    = ".set";
 
 bool CPairImpl::Open( const char* szDatafile, std::ifstream& ifsm ) {
 	string		strToken;
@@ -113,24 +114,38 @@ bool CDataPair::Open( const CSlim& Slim ) {
  */
 bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
 	bool fZScore, bool fSeek ) {
-
-
 	g_CatSleipnir( ).notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
-	
 	Reset( fContinuous );
 	m_fQuantized = false;
-	
 	const char* file_ext = NULL;
-	
-	if((file_ext = strstr(szDatafile, c_acQdab)) != NULL){
 
+	if((file_ext = strstr(szDatafile, c_acQdab)) != NULL){
 	  return OpenQdab( szDatafile );
-	}
-	else{
+	} else if ((file_ext = strstr(szDatafile, c_acSet)) != NULL) {
+        return OpenSet( szDatafile);
+	} else{
 	  if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore, false, fSeek ) )
 	    return false;
-	  return ( m_fContinuous ? true : OpenQuants( szDatafile ) ); 	  
+	  return ( m_fContinuous ? true : OpenQuants( szDatafile ) );
 	}
+}
+
+
+/*!
+ * \brief
+ * Open the given set file as a CDat.  The resulting CDat is fully connected (returns 1 if both genes are in the set).
+ *
+ * \param szDatafile
+ * Filename from which CDat is loaded.
+ *
+ * \returns
+ * True if data pair was successfully opened.
+ *
+ * \see
+ * CDat::Open
+ */
+bool CDataPairImpl::OpenSet( const char* szDatafile ){
+    
 }
 
 bool CDataPairImpl::OpenQdab( const char* szDatafile ){

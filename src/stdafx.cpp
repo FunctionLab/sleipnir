@@ -200,7 +200,7 @@
  * Get Sleipnir (the following assumes you want sleipnir to live in ~/sleipnir, if this is not correct, adjust the paths accordingly)
  * \code
  * cd ~
- * hg clone hg clone https://bitbucket.org/libsleipnir/sleipnir
+ * hg clone https://bitbucket.org/libsleipnir/sleipnir
  * \endcode
  * </li>
  * <li>
