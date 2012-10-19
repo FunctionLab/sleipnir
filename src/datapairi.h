@@ -46,7 +46,9 @@ protected:
 	std::vector<float>	m_vecdQuant;
 
 	static const char  c_acQdab[];
+	static const char  c_acSet[];
 	bool OpenQdab( const char* szDatafile );
+	bool OpenSet( const char* szDatafile );
 	void SetQuants( const float* adBinEdges, size_t iBins );
 	std::vector<float> GetQuants();
 };

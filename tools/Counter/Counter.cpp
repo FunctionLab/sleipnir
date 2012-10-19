@@ -30,6 +30,7 @@ class CRegularize;
 
 static const char	c_acDab[]	= ".dab";
 static const char	c_acDat[]	= ".dat";
+static const char	c_acSet[]	= ".set";
 static const char	c_acQDab[]	= ".qdab";
 static const char	c_acQuant[]	= ".quant";
 static const char	c_acTxt[]	= ".txt";
@@ -452,20 +453,20 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
                 const CGenes& GenesIn, const CGenes& GenesEx, const CGenes& GenesTm, const CGenes& GenesEd, const CGenes& GenesUbik ) {
     size_t				i, j, k, m, iTerm, iThread;
     vector<vector<CCountMatrix*>* >	vecpvecpMats;
-    vector<CCountMatrix*>		vecpMatRoots;
-    vector<CGenes*>			vecpGenes;
-    CDataPair				Answers, Dat;
-	CDat					wDat;
-    CDatFilter				Filter, FilterIn, FilterEx, FilterTm, FilterEd;
-    CDatFilter*				pFilter;
-    string	    			strFile;
-    vector<pthread_t>	    		vecpthdThreads;
+    vector<CCountMatrix*>   vecpMatRoots;
+    vector<CGenes*>         vecpGenes;
+    CDataPair               Answers, Dat;
+	CDat                    wDat;
+    CDatFilter              Filter, FilterIn, FilterEx, FilterTm, FilterEd;
+    CDatFilter*             pFilter;
+    string                  strFile;
+    vector<pthread_t>       vecpthdThreads;
     vector<SLearn>			vecsData;
     map<string, size_t>::const_iterator	iterZero;
     CGenome			    	Genome;
 	vector<CGenome>			Genomes;
     vector<string>			vecstrNames;
-    CRegularize			        Regularize;
+    CRegularize		        Regularize;
 	bool					isDatWeighted=false;
     if( !Answers.Open( sArgs.answers_arg, false, !!sArgs.memmap_flag ) ) {
         cerr << "Could not open: " << sArgs.answers_arg << endl;
@@ -495,14 +496,14 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 					isDatWeighted = true;
 					vecpGenes[ i ]->Open(wDat.GetGeneNames());}
 			}
-		}	
+		}
 		else{
 			if( !vecpGenes[ i ]->Open( ifsm ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-				return 1;	}	
+				return 1;	}
 		}
 	}
-    
+
     if( !vecpGenes.size( ) ) {
         vecpGenes.insert( vecpGenes.begin( ), new CGenes( Genome ) );
         vecpGenes[ 0 ]->Open( Answers.GetGeneNames( ) );
@@ -519,7 +520,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_pDat = NULL;
             vecsData[ i ].m_iDat = -1;
             vecsData[ i ].m_pGenes = vecpGenes[ i ];
-	    vecsData[ i ].m_pUbikGenes = &GenesUbik;
+            vecsData[ i ].m_pUbikGenes = &GenesUbik;
             vecsData[ i ].m_pAnswers = &Answers;
             vecsData[ i ].m_iZero = -1;
             vecsData[ i ].m_pRegularize = &Regularize;
@@ -543,7 +544,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
     FOR_EACH_DIRECTORY_FILE((string)sArgs.directory_arg, strFile)
     string					strName;
     vector<CCountMatrix*>*	pvecpMatCounts;
-    
+
     if( CMeta::IsExtension( strFile, c_acDab ) ) {
         i = strFile.rfind( '.' );
         strName = (string) sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDab;
@@ -551,8 +552,11 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
         i = strFile.rfind( '.' );
         strName = (string) sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acQDab;
     } else if( CMeta::IsExtension( strFile, c_acDat ) ) {
-	i = strFile.rfind( '.' );
-	strName = (string) sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDat;
+        i = strFile.rfind( '.' );
+        strName = (string) sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acDat;
+    } else if( CMeta::IsExtension( strFile, c_acSet ) ) {
+        i = strFile.rfind( '.' );
+        strName = (string) sArgs.directory_arg + "/" + strFile.substr( 0, i ) + c_acSet;
     } else {
         continue;
     }

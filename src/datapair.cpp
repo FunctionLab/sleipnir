@@ -28,7 +28,8 @@
 namespace Sleipnir {
 
 const char	CPairImpl::c_szQuantExt[]	= ".quant";
-const char   CDataPairImpl::c_acQdab[]   = ".qdab";
+const char  CDataPairImpl::c_acQdab[]   = ".qdab";
+const char  CDataPairImpl::c_acSet[]    = ".set";
 
 bool CPairImpl::Open( const char* szDatafile, std::ifstream& ifsm ) {
 	string		strToken;
@@ -113,24 +114,94 @@ bool CDataPair::Open( const CSlim& Slim ) {
  */
 bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
 	bool fZScore, bool fSeek ) {
-
-
 	g_CatSleipnir( ).notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
-	
 	Reset( fContinuous );
 	m_fQuantized = false;
-	
 	const char* file_ext = NULL;
-	
-	if((file_ext = strstr(szDatafile, c_acQdab)) != NULL){
 
+	if((file_ext = strstr(szDatafile, c_acQdab)) != NULL){
 	  return OpenQdab( szDatafile );
-	}
-	else{
+	} else if ((file_ext = strstr(szDatafile, c_acSet)) != NULL) {
+        if ( !OpenSet( szDatafile) ) {
+            return false;
+        }
+	  return ( m_fContinuous ? true : OpenQuants( szDatafile ) );
+	} else{
 	  if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore, false, fSeek ) )
 	    return false;
-	  return ( m_fContinuous ? true : OpenQuants( szDatafile ) ); 	  
+	  return ( m_fContinuous ? true : OpenQuants( szDatafile ) );
 	}
+}
+
+
+/*!
+ * \brief
+ * Open the given set file as a CDat.  For quantization purposes, the values are quantized based on whether the values of both genes are greater than the interval.  It is important that the set file not contain any duplicate gene IDs. 
+ *
+ * \param szDatafile
+ * Filename from which CDat is loaded.
+ *
+ * \returns
+ * True if data pair was successfully opened.
+ *
+ * \see
+ * CDat::Open
+ */
+bool CDataPairImpl::OpenSet( const char* szDatafile ){
+    vector<char>    veccBuffer;
+    vector<float>   vecdScore;
+    size_t          i, j;
+    float           *adScores;
+    float           dQuantI, dQuantJ;
+    ifstream        ifsm;
+	static const size_t	c_iBuf	= 8192;
+	char		szBuf[ c_iBuf ];
+
+
+    g_CatSleipnir( ).notice( "CDataPair::OpenSet( %s )", szDatafile );
+
+    //Open Gene Set
+    ifsm.open( szDatafile );
+    veccBuffer.resize( CFile::GetBufferSize( ) );
+
+    while( !(ifsm.eof( ) ) ) {
+        vector<string> vecstrLine;
+
+        ifsm.getline(&veccBuffer[0], veccBuffer.size( ) - 1);
+        CMeta::Tokenize( &veccBuffer[0], vecstrLine);
+        if( vecstrLine.empty( ) )
+            continue;
+        m_vecstrGenes.push_back( vecstrLine[0] );
+        vecdScore.push_back( atof( vecstrLine[1].c_str() ) );
+    }
+
+    ifsm.close();
+
+    //Open Quants
+	if( !CPairImpl::Open( szDatafile, ifsm ) )
+		return false;
+	ifsm.getline( szBuf, c_iBuf - 1 );
+	ifsm.close( );
+	CPairImpl::Open( szBuf, m_vecdQuant );
+
+    //Fill half-matrix, not as nice as set membership tests but easy to plug in to existing class for proof of concept
+    m_Data.Initialize( m_vecstrGenes.size( ) );
+
+    adScores = new float[ GetGenes( ) - 1];
+    for ( i = 0; ( i + 1 ) < GetGenes( ); ++i) {
+        dQuantI = CMeta::Quantize( vecdScore[i], m_vecdQuant );
+        for (j = i + 1; j < GetGenes( ); ++j) {
+            dQuantJ = CMeta::Quantize( vecdScore[j], m_vecdQuant );
+            adScores[j - i - 1] = min(dQuantI, dQuantJ);
+        }
+        CDat::Set( i, adScores );
+    }
+    delete[] adScores;
+
+    //Vals already quantized during loading
+    m_fQuantized = true;
+
+    return true;
 }
 
 bool CDataPairImpl::OpenQdab( const char* szDatafile ){
