@@ -33,7 +33,6 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg );
 
-    cout << sArgs.weights_arg << endl;
 	if( iRet = CPCL::Distance( sArgs.input_arg, sArgs.skip_arg,sArgs.weights_arg, sArgs.distance_arg, !!sArgs.normalize_flag,
 		!!sArgs.zscore_flag, !!sArgs.autocorrelate_flag, sArgs.genes_arg, sArgs.cutoff_given ?
 		(float)sArgs.cutoff_arg : CMeta::GetNaN( ), sArgs.limit_arg, PCL, Dat, IMeasure::EMapCenter,
