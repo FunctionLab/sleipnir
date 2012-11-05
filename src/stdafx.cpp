@@ -893,7 +893,8 @@ MIPS:
  * Fix confusing documentation in \ref Answerer - thanks to Arjun Krishnan! <br>
  * Fix missing \c SIZE_MAX definition on Mac OS X - thanks to Alice Koechlin! <br>
  * Fix bug in \ref Answerer when using predefined positive pairs - thanks to Chris Park! <br>
- * Add Partial Correlation Coefficient normalization to \t CDat and \ref Normalizer - thanks to Arjun Krishnan!
+ * Add Partial Correlation Coefficient normalization to \t CDat and \ref Normalizer - thanks to Arjun Krishnan! <br>
+ * Fix bug in weighted Pearson correlation measure - thanks to Jie Tan
  * 
  * - <a href="sleipnir-2.1.tar.gz">2.1</a>, 12-20-09 <br>
  * Update includes for gcc 4.3 compatibility - thanks to Casey Greene! <br>
