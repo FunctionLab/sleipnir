@@ -87,23 +87,181 @@ ParamStruct ReadParamsFromFile(ifstream& ifsm, string outFile) {
 	return PStruct;
 }
 
+
+// Platt's binary SVM Probablistic Output
+// Assume dec_values and labels have same dimensions and genes
+static void sigmoid_train(CDat& dec_values, 
+			  CDat& labels, 
+			  float& A, float& B){
+	double prior1=0, prior0 = 0;
+	size_t i, j, idx;
+	float d, lab;
+	
+	int max_iter=100;	// Maximal number of iterations
+	double min_step=1e-10;	// Minimal step taken in line search
+	double sigma=1e-12;	// For numerically strict PD of Hessian
+	double eps=1e-5;
+	vector<double> t;
+	double fApB,p,q,h11,h22,h21,g1,g2,det,dA,dB,gd,stepsize;
+	double newA,newB,newf,d1,d2;
+	int iter; 
+	
+	// Negatives are values less than 0
+	for(i = 0; i < dec_values.GetGenes(); i++)
+	  for(j = (i+1); j < dec_values.GetGenes(); j++)
+	    if (!CMeta::IsNaN(d = dec_values.Get(i, j)) && !CMeta::IsNaN(lab = labels.Get(i, j))  ){
+	      if(lab > 0)
+		prior1 += 1;
+	      else if(lab < 0)
+		prior0 += 1;	      
+	    }
+	
+	// initialize size
+	t.resize(prior0+prior1);
+	
+	// Initial Point and Initial Fun Value
+	A=0.0; B=log((prior0+1.0)/(prior1+1.0));
+	double hiTarget=(prior1+1.0)/(prior1+2.0);
+	double loTarget=1/(prior0+2.0);			
+	double fval = 0.0;
+		
+	for(idx = i = 0; idx < dec_values.GetGenes(); idx++)
+	  for(j = (idx+1); j < dec_values.GetGenes(); j++)
+	    if (!CMeta::IsNaN(d = dec_values.Get(idx, j)) && !CMeta::IsNaN(lab = labels.Get(idx, j))  ){
+	      if (lab > 0 ) t[i]=hiTarget;
+	      else t[i]=loTarget;
+	      	      
+	      fApB = d*A+B;
+	      if (fApB>=0)
+		fval += t[i]*fApB + log(1+exp(-fApB));
+	      else
+		fval += (t[i] - 1)*fApB +log(1+exp(fApB));	    
+	      ++i;
+	    }
+	
+	for (iter=0;iter<max_iter;iter++){
+	  // Update Gradient and Hessian (use H' = H + sigma I)
+	  h11=sigma; // numerically ensures strict PD
+	  h22=sigma;
+	  h21=0.0;g1=0.0;g2=0.0;
+	  
+	  for(i = idx = 0; idx < dec_values.GetGenes(); idx++)
+	    for(j = (idx+1); j < dec_values.GetGenes(); j++)
+	      if (!CMeta::IsNaN(d = dec_values.Get(idx, j)) && !CMeta::IsNaN(lab = labels.Get(idx, j))  ){			    	    
+		fApB = d*A+B;		
+		
+		if (fApB >= 0){
+		  p=exp(-fApB)/(1.0+exp(-fApB));
+		  q=1.0/(1.0+exp(-fApB));
+		}
+		else{
+		  p=1.0/(1.0+exp(fApB));
+		  q=exp(fApB)/(1.0+exp(fApB));
+		}
+		d2=p*q;
+		h11+=d*d*d2;
+		h22+=d2;
+		h21+=d*d2;
+		d1=t[i]-p;
+		g1+=d*d1;
+		g2+=d1;
+		
+		++i;
+	      }
+	  
+	  // Stopping Criteria
+	  if (fabs(g1)<eps && fabs(g2)<eps)
+	    break;
+	  
+	  // Finding Newton direction: -inv(H') * g
+	  det=h11*h22-h21*h21;
+	  dA=-(h22*g1 - h21 * g2) / det;
+	  dB=-(-h21*g1+ h11 * g2) / det;
+	  gd=g1*dA+g2*dB;
+	  
+	  stepsize = 1;		// Line Search
+	  while (stepsize >= min_step){
+	    newA = A + stepsize * dA;
+	    newB = B + stepsize * dB;
+	    
+	    // New function value
+	    newf = 0.0;
+	    
+	    for(i = idx = 0; idx < dec_values.GetGenes(); idx++)
+	      for(j = (idx+1); j < dec_values.GetGenes(); j++)
+		if (!CMeta::IsNaN(d = dec_values.Get(idx, j)) && !CMeta::IsNaN(lab = labels.Get(idx, j))  ){			    	    
+		  fApB = d*newA+newB;
+		  
+		  if (fApB >= 0)
+		    newf += t[i]*fApB + log(1+exp(-fApB));
+		  else
+		    newf += (t[i] - 1)*fApB +log(1+exp(fApB));
+		  
+		  ++i;
+		}
+	    
+	    // Check sufficient decrease
+	    if (newf<fval+0.0001*stepsize*gd){
+	      A=newA;B=newB;fval=newf;
+	      break;
+	    }
+	    else
+	      stepsize = stepsize / 2.0;
+	  }
+	  
+	  if (stepsize < min_step){
+	    cerr << "Line search fails in two-class probability estimates: " << stepsize << ',' << min_step << endl;
+	    break;
+	  }
+	}
+	
+	if (iter>=max_iter)
+	  cerr << "Reaching maximal iterations in two-class probability estimates" << endl;	
+}
+
+static void sigmoid_predict(CDat& dec_values, float A, float B){
+  size_t i, j;
+  float d, fApB;
+  
+  for(i = 0; i < dec_values.GetGenes(); i++)
+    for(j = (i+1); j < dec_values.GetGenes(); j++)
+      if (!CMeta::IsNaN(d = dec_values.Get(i, j))){			    	    	
+	fApB = d*A+B;
+	// 1-p used later; avoid catastrophic cancellation
+	if (fApB >= 0)
+	  dec_values.Set(i,j, exp(-fApB)/(1.0+exp(-fApB)));
+	else
+	  dec_values.Set(i,j, 1.0/(1+exp(fApB)));
+      }
+}
+
+
 int main(int iArgs, char** aszArgs) {
 	gengetopt_args_info sArgs;	
 	SVMLight::CSVMPERF SVM;
 	
-	size_t i, j, iGene, jGene;
+	size_t i, j, iGene, jGene, numpos, numneg;
 	ifstream ifsm;
-	float d;
+	float d, sample_rate;
 	int   iRet;
 	map<string, size_t>	mapstriZeros, mapstriDatasets;
-	vector<string>  vecstrDatasets;
+	vector<string> vecstrDatasets;
+	vector<bool> mapTgene;
+	vector<size_t> mapTgene2fold;
+	vector<int> tgeneCount;
+	
 	DIR* dp;
-	struct dirent* ep;
+	struct dirent* ep;	
+	CGenome Genome;
+        CGenes Genes(Genome);
 	
 	if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
 		cmdline_parser_print_help();
 		return 1;
 	}
+	
+	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
+	
 	SVM.SetVerbosity(sArgs.verbosity_arg);
 	SVM.SetLossFunction(sArgs.error_function_arg);
 	if (sArgs.k_value_arg > 1) {
@@ -169,6 +327,19 @@ int main(int iArgs, char** aszArgs) {
 	  }	  
 	}
 	
+	// read target gene list
+	if(sArgs.tgene_given ) {
+	  ifstream ifsm;
+	  ifsm.open(sArgs.tgene_arg);
+	  
+	  if (!Genes.Open(ifsm)) {
+	    cerr << "Could not open: " << sArgs.tgene_arg << endl;
+	    return 1;
+	  }
+	  ifsm.close();
+	}
+	
+	
 	///######################
 	// Chris added
 	vector<SVMLight::SVMLabelPair*> vecLabels;
@@ -199,21 +370,89 @@ int main(int iArgs, char** aszArgs) {
 	  
 	  // set all NaN values to negatives
 	  if( sArgs.nan2neg_given ){
+	    cerr << "Set NaN labels dat as negatives" << endl;
+	    
 	    for(i = 0; i < Labels.GetGenes(); i++)
 	      for(j = (i+1); j < Labels.GetGenes(); j++)
 		if (CMeta::IsNaN(d = Labels.Get(i, j)))  
 		  Labels.Set(i, j, -1);
 	  }
 	  
-	  // remove all edges which both genes belong to the given list
-	  if( sArgs.geneq_arg )
-	    Labels.FilterGenes( sArgs.geneq_arg, CDat::EFilterExEdge );
+	  // Only keep edges that have one gene in this given list
+	  if( sArgs.geneq_arg ){
+	    Labels.FilterGenes( sArgs.geneq_arg, CDat::EFilterExEdge );	    
+	    Labels.FilterGenes( sArgs.geneq_arg, CDat::EFilterEdge );
+	  }
 	  
+	  // if given a target gene file
+	  // Only keep eges that have only one gene in this targe gene list
+	  if( sArgs.tgene_given ){
+	    mapTgene.resize(Labels.GetGenes());
+	    
+	    for(i = 0; i < Labels.GetGenes(); i++){
+	      if(Genes.GetGene(Labels.GetGene(i)) == -1)
+		mapTgene[i] = false;
+	      else
+		mapTgene[i] = true;
+	    }
+	    
+	    // keep track of positive gene counts
+	    tgeneCount.resize(Labels.GetGenes());
+	    
+	    for(i = 0; i < Labels.GetGenes(); i++)
+	      for(j = (i+1); j < Labels.GetGenes(); j++)
+		if (!CMeta::IsNaN(d = Labels.Get(i, j))){
+		  if(mapTgene[i] && mapTgene[j])
+		    Labels.Set(i, j, CMeta::GetNaN());
+		  else if(!mapTgene[i] && !mapTgene[j])
+		    Labels.Set(i, j, CMeta::GetNaN());
+		}
+	  }
+	  
+	  // Set target prior
+	  if(sArgs.prior_given){
+	    numpos = 0;
+	    numneg = 0;
+	    for(i = 0; i < Labels.GetGenes(); i++)
+	      for(j = (i+1); j < Labels.GetGenes(); j++)
+		if (!CMeta::IsNaN(d = Labels.Get(i, j))){
+		  if(d > 0){
+		    ++numpos;}
+		  else if(d < 0){
+		    ++numneg;
+		  }
+		}
+	    if( ((float)numpos / (numpos + numneg)) < sArgs.prior_arg){
+	      
+	      cerr << "Convert prior from orig: " << ((float)numpos / (numpos + numneg)) << " to target: " << sArgs.prior_arg << endl;
+	      
+	      sample_rate = ((float)numpos / (numpos + numneg)) / sArgs.prior_arg;
+	      
+	      // remove neg labels to reach prior
+	      for(i = 0; i < Labels.GetGenes(); i++)
+		for(j = (i+1); j < Labels.GetGenes(); j++)
+		  if (!CMeta::IsNaN(d = Labels.Get(i, j)) && d < 0){
+		    if((float)rand() / RAND_MAX  > sample_rate)
+		      Labels.Set(i, j, CMeta::GetNaN());
+		  }
+	    }
+	  }
+	  
+	  numpos = 0;
 	  for(i = 0; i < Labels.GetGenes(); i++)
 	    for(j = (i+1); j < Labels.GetGenes(); j++)
-	      if (!CMeta::IsNaN(d = Labels.Get(i, j)))  
-		vecLabels.push_back(new SVMLight::SVMLabelPair(d, i, j));
+	      if (!CMeta::IsNaN(d = Labels.Get(i, j))){
+		if (d != 0)  
+		  vecLabels.push_back(new SVMLight::SVMLabelPair(d, i, j));
+		if(d > 0)
+		  ++numpos;
+	      }
 	  
+	  // check to see if you have enough positives to learn from
+	  if(sArgs.mintrain_given && sArgs.mintrain_arg > numpos){
+	    cerr << "Not enough positive examples from: " << sArgs.labels_arg << " numpos: " << numpos << endl;
+	    return 1;
+	  }
 	}
 	
 	SVMLight::SAMPLE* pTrainSample;
@@ -242,18 +481,113 @@ int main(int iArgs, char** aszArgs) {
 	} else if (sArgs.output_given && sArgs.labels_given) {
 		//do learning and classifying with cross validation
 	        if( sArgs.cross_validation_arg > 1){
-		  for (i = 0; i < sArgs.cross_validation_arg; i++) {
-		    pTestVector[i].reserve((size_t) vecLabels.size()
-					   / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
-		    pTrainVector[i].reserve((size_t) vecLabels.size()
-					    / (sArgs.cross_validation_arg)
-					    * (sArgs.cross_validation_arg - 1)
-					    + sArgs.cross_validation_arg);
-		    for (j = 0; j < vecLabels.size(); j++) {
-		      if (j % sArgs.cross_validation_arg == i) {
-			pTestVector[i].push_back(vecLabels[j]);
-		      } else {
-			pTrainVector[i].push_back((vecLabels[j]));
+		  cerr << "setting cross validation holds" << endl;
+		  
+		  mapTgene2fold.resize(mapTgene.size());
+		  
+		  // assign target genes to there cross validation fold
+		  if(sArgs.tgene_given){
+		    for(i = 0; i < mapTgene.size(); i++){
+		      if(!mapTgene[i]){
+			mapTgene2fold[i] = -1; 
+			continue;
+		      }
+		      //cerr << "what's up?" << endl;
+		      mapTgene2fold[i] = rand() % sArgs.cross_validation_arg;
+		    }
+		    
+		    // cross-fold by target gene
+		    for (i = 0; i < sArgs.cross_validation_arg; i++) {
+		      cerr << "cross validation holds setup:" << i << endl;
+		      
+		      // keep track of positive gene counts
+		      if(sArgs.balance_flag){
+			cerr << "Set up balance: " << i << endl;
+			for(j = 0; j < Labels.GetGenes(); j++)
+			  tgeneCount[j] = 0;
+			
+			for(j = 0; j < vecLabels.size(); j++)
+			  if(vecLabels[j]->Target > 0){
+			    ++(tgeneCount[vecLabels[j]->iidx]);
+			    ++(tgeneCount[vecLabels[j]->jidx]);
+			  }
+			
+			if(sArgs.bfactor_given)
+			  for(j = 0; j < vecLabels.size(); j++)
+			    if(tgeneCount[vecLabels[j]->jidx] < 500)
+			      tgeneCount[vecLabels[j]->jidx] = sArgs.bfactor_arg*tgeneCount[vecLabels[j]->jidx];
+		      }
+		      
+		      for (j = 0; j < vecLabels.size(); j++) {
+			//if( j % 1000 == 0)
+			//cerr << "cross validation push labels:" << j << endl;
+			
+			// assume only one gene is a target gene in a edge
+			if(mapTgene[vecLabels[j]->iidx]){
+			  if(vecLabels[j]->Target < 0){
+			    --(tgeneCount[vecLabels[j]->iidx]);
+			  }
+			  
+			  if(mapTgene2fold[vecLabels[j]->iidx] == i)			    
+			    pTestVector[i].push_back(vecLabels[j]);
+			  else{
+			    //cerr << tgeneCount[vecLabels[j]->iidx] << endl;
+			    
+			    if( sArgs.balance_flag && vecLabels[j]->Target < 0 && tgeneCount[vecLabels[j]->iidx] < 0){
+			      continue;
+			    }
+			    pTrainVector[i].push_back(vecLabels[j]); 
+			  }
+			}
+			else if(mapTgene[vecLabels[j]->jidx]){
+			  if(vecLabels[j]->Target < 0)
+			    --(tgeneCount[vecLabels[j]->jidx]);
+			  
+			  if(mapTgene2fold[vecLabels[j]->jidx] == i)
+			    pTestVector[i].push_back(vecLabels[j]);
+			  else{
+			    //cerr << tgeneCount[vecLabels[j]->jidx] << endl;
+			    
+			    if( sArgs.balance_flag && vecLabels[j]->Target < 0 && tgeneCount[vecLabels[j]->jidx] < 0){
+			      continue;
+			    }
+			    pTrainVector[i].push_back(vecLabels[j]); 
+			  }
+			}
+			else{
+			  cerr << "Error: edge exist without a target gene" << endl; return 1;
+			}
+		      }
+		      
+		      cerr << "test,"<< i <<": " << pTestVector[i].size() << endl;
+		      int numpos = 0;
+		      for(j=0; j < pTrainVector[i].size(); j++)
+			if(pTrainVector[i][j]->Target > 0)
+			  ++numpos;
+		      
+		      if( numpos < 1 || (sArgs.mintrain_given && sArgs.mintrain_arg > numpos) ){						
+			cerr << "Not enough positive examples from fold: " << i  << " file: " << sArgs.labels_arg << " numpos: " << numpos << endl;
+			return 1;
+		      }
+		      
+		      cerr << "train,"<< i <<","<<numpos<<": " << pTrainVector[i].size() << endl;
+		      
+		    }
+		  }
+		  else{ //randomly set eges into cross-fold
+		    for (i = 0; i < sArgs.cross_validation_arg; i++) {
+		      pTestVector[i].reserve((size_t) vecLabels.size()
+					     / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
+		      pTrainVector[i].reserve((size_t) vecLabels.size()
+					      / (sArgs.cross_validation_arg)
+					      * (sArgs.cross_validation_arg - 1)
+					      + sArgs.cross_validation_arg);
+		      for (j = 0; j < vecLabels.size(); j++) {
+			if (j % sArgs.cross_validation_arg == i) {
+			  pTestVector[i].push_back(vecLabels[j]);
+			} else {
+			  pTrainVector[i].push_back((vecLabels[j]));
+			}
 		      }
 		    }
 		  }
@@ -310,7 +644,8 @@ int main(int iArgs, char** aszArgs) {
 		  cerr << "CreateDocs!"<< endl;
 		  SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
 						vecLabels,
-						Labels.GetGeneNames());
+						Labels.GetGeneNames(),
+						sArgs.normalize_flag);
 		  
 		  for (i = 0; i < sArgs.cross_validation_arg; i++) {
 		    cerr << "Cross validation: " << i << endl;
@@ -335,15 +670,30 @@ int main(int iArgs, char** aszArgs) {
 		    
 		    // MAIRA, Also, why did you not start at i==0???
 		    
+		    if(sArgs.savemodel_flag){
+		      // i cross validation
+		      // sArgs.output_arg		  
+		      std::stringstream sstm;
+		      sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << ".svm";		      
+		      SVM.WriteModel((char*)(sstm.str().c_str()));
+		    }
+		    
 		    // DEBUG
 		    SVMLight::CSVMPERF::FreeSample_leave_Doc(*pTrainSample);
 		    free(pTrainSample);
 		  }
 		  
 		  //if (sArgs.all_flag) { //add the unlabeled results
-		    // DEBUG, probably don't allow all flag
-		    // orig for classify all genes
+		  // DEBUG, probably don't allow all flag
+		  // orig for classify all genes
 		  //}
+		  
+		  if(sArgs.prob_flag){
+		    cerr << "Converting prediction values to estimated probablity" << endl;
+		    float A, B;
+		    sigmoid_train(Results, Labels, A, B);
+		    sigmoid_predict(Results, A, B);
+		  }
 		  
 		  Results.Save(sArgs.output_arg);
 		  return 0;

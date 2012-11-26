@@ -61,6 +61,12 @@ option	"genelist"		E	"Only list genes"
 							flag	off
 option	"paircount"		P	"Only count pairs above cutoff"
 							flag	off
+option	"ccoeff"		C	"Output clustering coefficient for each gene"
+							flag	off
+option	"hubbiness"		H	"Output the average edge weight for each gene"
+							flag	off
+option	"mar"			J	"Output the maximum adjacency ratio for each gene"
+							flag	off
 
 section "Optional"
 option	"remap"			p	"Gene name remapping file"

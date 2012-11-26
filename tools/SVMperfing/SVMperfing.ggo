@@ -9,7 +9,7 @@ option	"output"				o	"Output file "
 										string	typestr="filename"  no
 option  "directory"     			d       "input directory (must only contain input files)"
                                                 string  typestr="directory" yes
-option	"model"					m	"Model file"
+option	"model"					m	"input Model file"
 										string	typestr="filename"  no
 option  "slack"       			S   "Use slack rescaling (not implemented for ROC loss)"
 										flag off
@@ -39,6 +39,24 @@ option  "nan2neg"       		n   "set missing values(NaN in dab file) from labels f
 										flag off
 option	"mmap"				M	"Memory map binary input"
 										flag	off
-section "Filtering"
-option	"geneq"				q	"Exclude all label edges where both genes come from the given gene list"
+option	"random"		R	"Seed random generator (default -1 uses current time)"
+							int	default="-1" no
+option	"tgene"				T	"Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list"
 							string	typestr="filename"
+option	"balance"			b	"Balance the training gene ratios"
+										flag	off
+option  "bfactor"    			F   "DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1."
+										float  no
+option	"prob"				B	"Output prediction values as estimated probablity (Platt method)"
+										flag	off
+option  "normalize"             	z       "Normalize to the range [0,1]"
+                                                        flag    off
+section "Filtering"
+option	"geneq"				q	"Only keep edges that have one gene in this given list"
+							string	typestr="filename"
+option "prior"    			P   "Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior."
+										float  no
+option	"savemodel"			s	"Save model to file"
+										flag	off
+option "mintrain"	    		E   "Minimum number of total positive examples to allow training, if not met exit"
+										float  no

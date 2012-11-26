@@ -968,7 +968,8 @@ void CSVMPERF::ClassifyAll(Sleipnir::CPCL& PCL, Sleipnir::CDat& Values,
 // populate docs for each label gene pair from a vector of dat file names
 bool CSVMPERF::CreateDoc(vector<string>& vecstrDatasets,
 			 vector<SVMLabelPair*>& vecLabels,
-			 const vector<string>& LabelsGene){
+			 const vector<string>& LabelsGene,
+			 bool normalize_minmax){
   
   size_t i, j, k, iGene, jGene, iDoc, iWord, iWords;
   float d;
@@ -1008,6 +1009,11 @@ bool CSVMPERF::CreateDoc(vector<string>& vecstrDatasets,
       cerr << vecstrDatasets[i].c_str() << endl;
       cerr << "Could not open: " << vecstrDatasets[i] << endl;
       return false;
+    }
+    
+    // normalize dat file, currently on to [0,1] 
+    if( normalize_minmax ){
+      Dat.Normalize( Sleipnir::CDat::ENormalizeMinMax );
     }
     
     cerr << "Open: " << vecstrDatasets[i] << endl;

@@ -34,7 +34,7 @@ const char *gengetopt_args_info_help[] = {
   "  -l, --labels=filename       Labels file",
   "  -o, --output=filename       Output file ",
   "  -d, --directory=directory   input directory (must only contain input files)",
-  "  -m, --model=filename        Model file",
+  "  -m, --model=filename        input Model file",
   "  -S, --slack                 Use slack rescaling (not implemented for ROC \n                                loss)  (default=off)",
   "\nOptions:",
   "  -v, --verbosity=INT         Sets the svm_struct verbosity  (default=`0')",
@@ -45,8 +45,17 @@ const char *gengetopt_args_info_help[] = {
   "  -p, --params=filename       NOT IMPLEMENTED YET: Parameter file",
   "  -n, --nan2neg               set missing values(NaN in dab file) from labels \n                                file as negative examples  (default=off)",
   "  -M, --mmap                  Memory map binary input  (default=off)",
+  "  -R, --random=INT            Seed random generator (default -1 uses current \n                                time)  (default=`-1')",
+  "  -T, --tgene=filename        Target gene list, use this gene list as gene \n                                holdout cross-validation and also filter labels \n                                that only have one gene in given target gene \n                                list",
+  "  -b, --balance               Balance the training gene ratios  (default=off)",
+  "  -F, --bfactor=FLOAT         DEBUG: only for < 500, When balancing neg and pos \n                                counts exmaples for training what factor to \n                                increase. default is 1.",
+  "  -B, --prob                  Output prediction values as estimated probablity \n                                (Platt method)  (default=off)",
+  "  -z, --normalize             Normalize to the range [0,1]  (default=off)",
   "\nFiltering:",
-  "  -q, --geneq=filename        Exclude all label edges where both genes come \n                                from the given gene list",
+  "  -q, --geneq=filename        Only keep edges that have one gene in this given \n                                list",
+  "  -P, --prior=FLOAT           Randomly sub-sample the negative labels to reach \n                                target prior. If cannot reach target prior, set \n                                to closest prior.",
+  "  -s, --savemodel             Save model to file  (default=off)",
+  "  -E, --mintrain=FLOAT        Minimum number of total positive examples to \n                                allow training, if not met exit",
     0
 };
 
@@ -90,7 +99,16 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->params_given = 0 ;
   args_info->nan2neg_given = 0 ;
   args_info->mmap_given = 0 ;
+  args_info->random_given = 0 ;
+  args_info->tgene_given = 0 ;
+  args_info->balance_given = 0 ;
+  args_info->bfactor_given = 0 ;
+  args_info->prob_given = 0 ;
+  args_info->normalize_given = 0 ;
   args_info->geneq_given = 0 ;
+  args_info->prior_given = 0 ;
+  args_info->savemodel_given = 0 ;
+  args_info->mintrain_given = 0 ;
 }
 
 static
@@ -119,8 +137,19 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->params_orig = NULL;
   args_info->nan2neg_flag = 0;
   args_info->mmap_flag = 0;
+  args_info->random_arg = -1;
+  args_info->random_orig = NULL;
+  args_info->tgene_arg = NULL;
+  args_info->tgene_orig = NULL;
+  args_info->balance_flag = 0;
+  args_info->bfactor_orig = NULL;
+  args_info->prob_flag = 0;
+  args_info->normalize_flag = 0;
   args_info->geneq_arg = NULL;
   args_info->geneq_orig = NULL;
+  args_info->prior_orig = NULL;
+  args_info->savemodel_flag = 0;
+  args_info->mintrain_orig = NULL;
   
 }
 
@@ -144,7 +173,16 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->params_help = gengetopt_args_info_help[14] ;
   args_info->nan2neg_help = gengetopt_args_info_help[15] ;
   args_info->mmap_help = gengetopt_args_info_help[16] ;
-  args_info->geneq_help = gengetopt_args_info_help[18] ;
+  args_info->random_help = gengetopt_args_info_help[17] ;
+  args_info->tgene_help = gengetopt_args_info_help[18] ;
+  args_info->balance_help = gengetopt_args_info_help[19] ;
+  args_info->bfactor_help = gengetopt_args_info_help[20] ;
+  args_info->prob_help = gengetopt_args_info_help[21] ;
+  args_info->normalize_help = gengetopt_args_info_help[22] ;
+  args_info->geneq_help = gengetopt_args_info_help[24] ;
+  args_info->prior_help = gengetopt_args_info_help[25] ;
+  args_info->savemodel_help = gengetopt_args_info_help[26] ;
+  args_info->mintrain_help = gengetopt_args_info_help[27] ;
   
 }
 
@@ -241,8 +279,14 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->tradeoff_orig));
   free_string_field (&(args_info->params_arg));
   free_string_field (&(args_info->params_orig));
+  free_string_field (&(args_info->random_orig));
+  free_string_field (&(args_info->tgene_arg));
+  free_string_field (&(args_info->tgene_orig));
+  free_string_field (&(args_info->bfactor_orig));
   free_string_field (&(args_info->geneq_arg));
   free_string_field (&(args_info->geneq_orig));
+  free_string_field (&(args_info->prior_orig));
+  free_string_field (&(args_info->mintrain_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -307,8 +351,26 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "nan2neg", 0, 0 );
   if (args_info->mmap_given)
     write_into_file(outfile, "mmap", 0, 0 );
+  if (args_info->random_given)
+    write_into_file(outfile, "random", args_info->random_orig, 0);
+  if (args_info->tgene_given)
+    write_into_file(outfile, "tgene", args_info->tgene_orig, 0);
+  if (args_info->balance_given)
+    write_into_file(outfile, "balance", 0, 0 );
+  if (args_info->bfactor_given)
+    write_into_file(outfile, "bfactor", args_info->bfactor_orig, 0);
+  if (args_info->prob_given)
+    write_into_file(outfile, "prob", 0, 0 );
+  if (args_info->normalize_given)
+    write_into_file(outfile, "normalize", 0, 0 );
   if (args_info->geneq_given)
     write_into_file(outfile, "geneq", args_info->geneq_orig, 0);
+  if (args_info->prior_given)
+    write_into_file(outfile, "prior", args_info->prior_orig, 0);
+  if (args_info->savemodel_given)
+    write_into_file(outfile, "savemodel", 0, 0 );
+  if (args_info->mintrain_given)
+    write_into_file(outfile, "mintrain", args_info->mintrain_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -587,11 +649,20 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "params",	1, NULL, 'p' },
         { "nan2neg",	0, NULL, 'n' },
         { "mmap",	0, NULL, 'M' },
+        { "random",	1, NULL, 'R' },
+        { "tgene",	1, NULL, 'T' },
+        { "balance",	0, NULL, 'b' },
+        { "bfactor",	1, NULL, 'F' },
+        { "prob",	0, NULL, 'B' },
+        { "normalize",	0, NULL, 'z' },
         { "geneq",	1, NULL, 'q' },
+        { "prior",	1, NULL, 'P' },
+        { "savemodel",	0, NULL, 's' },
+        { "mintrain",	1, NULL, 'E' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVl:o:d:m:Sv:c:e:k:t:p:nMq:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVl:o:d:m:Sv:c:e:k:t:p:nMR:T:bF:Bzq:P:sE:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -652,7 +723,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'm':	/* Model file.  */
+        case 'm':	/* input Model file.  */
         
         
           if (update_arg( (void *)&(args_info->model_arg), 
@@ -773,7 +844,73 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'q':	/* Exclude all label edges where both genes come from the given gene list.  */
+        case 'R':	/* Seed random generator (default -1 uses current time).  */
+        
+        
+          if (update_arg( (void *)&(args_info->random_arg), 
+               &(args_info->random_orig), &(args_info->random_given),
+              &(local_args_info.random_given), optarg, 0, "-1", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "random", 'R',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'T':	/* Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list.  */
+        
+        
+          if (update_arg( (void *)&(args_info->tgene_arg), 
+               &(args_info->tgene_orig), &(args_info->tgene_given),
+              &(local_args_info.tgene_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "tgene", 'T',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'b':	/* Balance the training gene ratios.  */
+        
+        
+          if (update_arg((void *)&(args_info->balance_flag), 0, &(args_info->balance_given),
+              &(local_args_info.balance_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "balance", 'b',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'F':	/* DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1..  */
+        
+        
+          if (update_arg( (void *)&(args_info->bfactor_arg), 
+               &(args_info->bfactor_orig), &(args_info->bfactor_given),
+              &(local_args_info.bfactor_given), optarg, 0, 0, ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "bfactor", 'F',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'B':	/* Output prediction values as estimated probablity (Platt method).  */
+        
+        
+          if (update_arg((void *)&(args_info->prob_flag), 0, &(args_info->prob_given),
+              &(local_args_info.prob_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "prob", 'B',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'z':	/* Normalize to the range [0,1].  */
+        
+        
+          if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
+              &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "normalize", 'z',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'q':	/* Only keep edges that have one gene in this given list.  */
         
         
           if (update_arg( (void *)&(args_info->geneq_arg), 
@@ -781,6 +918,40 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.geneq_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "geneq", 'q',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'P':	/* Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior..  */
+        
+        
+          if (update_arg( (void *)&(args_info->prior_arg), 
+               &(args_info->prior_orig), &(args_info->prior_given),
+              &(local_args_info.prior_given), optarg, 0, 0, ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "prior", 'P',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 's':	/* Save model to file.  */
+        
+        
+          if (update_arg((void *)&(args_info->savemodel_flag), 0, &(args_info->savemodel_given),
+              &(local_args_info.savemodel_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "savemodel", 's',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'E':	/* Minimum number of total positive examples to allow training, if not met exit.  */
+        
+        
+          if (update_arg( (void *)&(args_info->mintrain_arg), 
+               &(args_info->mintrain_orig), &(args_info->mintrain_given),
+              &(local_args_info.mintrain_given), optarg, 0, 0, ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "mintrain", 'E',
               additional_error))
             goto failure;
         

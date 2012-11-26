@@ -103,6 +103,12 @@ struct gengetopt_args_info
   const char *genelist_help; /**< @brief Only list genes help description.  */
   int paircount_flag;	/**< @brief Only count pairs above cutoff (default=off).  */
   const char *paircount_help; /**< @brief Only count pairs above cutoff help description.  */
+  int ccoeff_flag;	/**< @brief Output clustering coefficient for each gene (default=off).  */
+  const char *ccoeff_help; /**< @brief Output clustering coefficient for each gene help description.  */
+  int hubbiness_flag;	/**< @brief Output the average edge weight for each gene (default=off).  */
+  const char *hubbiness_help; /**< @brief Output the average edge weight for each gene help description.  */
+  int mar_flag;	/**< @brief Output the maximum adjacency ratio for each gene (default=off).  */
+  const char *mar_help; /**< @brief Output the maximum adjacency ratio for each gene help description.  */
   char * remap_arg;	/**< @brief Gene name remapping file.  */
   char * remap_orig;	/**< @brief Gene name remapping file original value given at command line.  */
   const char *remap_help; /**< @brief Gene name remapping file help description.  */
@@ -150,6 +156,9 @@ struct gengetopt_args_info
   unsigned int lookups2_given ;	/**< @brief Whether lookups2 was given.  */
   unsigned int genelist_given ;	/**< @brief Whether genelist was given.  */
   unsigned int paircount_given ;	/**< @brief Whether paircount was given.  */
+  unsigned int ccoeff_given ;	/**< @brief Whether ccoeff was given.  */
+  unsigned int hubbiness_given ;	/**< @brief Whether hubbiness was given.  */
+  unsigned int mar_given ;	/**< @brief Whether mar was given.  */
   unsigned int remap_given ;	/**< @brief Whether remap was given.  */
   unsigned int table_given ;	/**< @brief Whether table was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */

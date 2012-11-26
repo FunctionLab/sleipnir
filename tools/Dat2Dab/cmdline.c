@@ -60,6 +60,9 @@ const char *gengetopt_args_info_help[] = {
   "  -T, --lookups2=filename  First lookup gene set",
   "  -E, --genelist           Only list genes  (default=off)",
   "  -P, --paircount          Only count pairs above cutoff  (default=off)",
+  "  -C, --ccoeff             Output clustering coefficient for each gene  \n                             (default=off)",
+  "  -H, --hubbiness          Output the average edge weight for each gene  \n                             (default=off)",
+  "  -J, --mar                Output the maximum adjacency ratio for each gene  \n                             (default=off)",
   "\nOptional:",
   "  -p, --remap=filename     Gene name remapping file",
   "  -b, --table              Produce table formatted output  (default=off)",
@@ -123,6 +126,9 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->lookups2_given = 0 ;
   args_info->genelist_given = 0 ;
   args_info->paircount_given = 0 ;
+  args_info->ccoeff_given = 0 ;
+  args_info->hubbiness_given = 0 ;
+  args_info->mar_given = 0 ;
   args_info->remap_given = 0 ;
   args_info->table_given = 0 ;
   args_info->skip_given = 0 ;
@@ -175,6 +181,9 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->lookups2_orig = NULL;
   args_info->genelist_flag = 0;
   args_info->paircount_flag = 0;
+  args_info->ccoeff_flag = 0;
+  args_info->hubbiness_flag = 0;
+  args_info->mar_flag = 0;
   args_info->remap_arg = NULL;
   args_info->remap_orig = NULL;
   args_info->table_flag = 0;
@@ -222,13 +231,16 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->lookups2_help = gengetopt_args_info_help[29] ;
   args_info->genelist_help = gengetopt_args_info_help[30] ;
   args_info->paircount_help = gengetopt_args_info_help[31] ;
-  args_info->remap_help = gengetopt_args_info_help[33] ;
-  args_info->table_help = gengetopt_args_info_help[34] ;
-  args_info->skip_help = gengetopt_args_info_help[35] ;
-  args_info->memmap_help = gengetopt_args_info_help[36] ;
-  args_info->random_help = gengetopt_args_info_help[37] ;
-  args_info->noise_help = gengetopt_args_info_help[38] ;
-  args_info->verbosity_help = gengetopt_args_info_help[39] ;
+  args_info->ccoeff_help = gengetopt_args_info_help[32] ;
+  args_info->hubbiness_help = gengetopt_args_info_help[33] ;
+  args_info->mar_help = gengetopt_args_info_help[34] ;
+  args_info->remap_help = gengetopt_args_info_help[36] ;
+  args_info->table_help = gengetopt_args_info_help[37] ;
+  args_info->skip_help = gengetopt_args_info_help[38] ;
+  args_info->memmap_help = gengetopt_args_info_help[39] ;
+  args_info->random_help = gengetopt_args_info_help[40] ;
+  args_info->noise_help = gengetopt_args_info_help[41] ;
+  args_info->verbosity_help = gengetopt_args_info_help[42] ;
   
 }
 
@@ -435,6 +447,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "genelist", 0, 0 );
   if (args_info->paircount_given)
     write_into_file(outfile, "paircount", 0, 0 );
+  if (args_info->ccoeff_given)
+    write_into_file(outfile, "ccoeff", 0, 0 );
+  if (args_info->hubbiness_given)
+    write_into_file(outfile, "hubbiness", 0, 0 );
+  if (args_info->mar_given)
+    write_into_file(outfile, "mar", 0, 0 );
   if (args_info->remap_given)
     write_into_file(outfile, "remap", args_info->remap_orig, 0);
   if (args_info->table_given)
@@ -721,6 +739,9 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "lookups2",	1, NULL, 'T' },
         { "genelist",	0, NULL, 'E' },
         { "paircount",	0, NULL, 'P' },
+        { "ccoeff",	0, NULL, 'C' },
+        { "hubbiness",	0, NULL, 'H' },
+        { "mar",	0, NULL, 'J' },
         { "remap",	1, NULL, 'p' },
         { "table",	0, NULL, 'b' },
         { "skip",	1, NULL, 's' },
@@ -731,7 +752,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hi:o:q:fnzrag:G:D:e:x:X:c:ZV:M:du:l:L:t:T:EPp:bs:mR:Nv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hi:o:q:fnzrag:G:D:e:x:X:c:ZV:M:du:l:L:t:T:EPCHJp:bs:mR:Nv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1032,6 +1053,36 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->paircount_flag), 0, &(args_info->paircount_given),
               &(local_args_info.paircount_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "paircount", 'P',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'C':	/* Output clustering coefficient for each gene.  */
+        
+        
+          if (update_arg((void *)&(args_info->ccoeff_flag), 0, &(args_info->ccoeff_given),
+              &(local_args_info.ccoeff_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "ccoeff", 'C',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'H':	/* Output the average edge weight for each gene.  */
+        
+        
+          if (update_arg((void *)&(args_info->hubbiness_flag), 0, &(args_info->hubbiness_given),
+              &(local_args_info.hubbiness_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "hubbiness", 'H',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'J':	/* Output the maximum adjacency ratio for each gene.  */
+        
+        
+          if (update_arg((void *)&(args_info->mar_flag), 0, &(args_info->mar_given),
+              &(local_args_info.mar_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "mar", 'J',
               additional_error))
             goto failure;
         

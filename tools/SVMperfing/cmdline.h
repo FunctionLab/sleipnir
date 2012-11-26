@@ -43,9 +43,9 @@ struct gengetopt_args_info
   char * directory_arg;	/**< @brief input directory (must only contain input files).  */
   char * directory_orig;	/**< @brief input directory (must only contain input files) original value given at command line.  */
   const char *directory_help; /**< @brief input directory (must only contain input files) help description.  */
-  char * model_arg;	/**< @brief Model file.  */
-  char * model_orig;	/**< @brief Model file original value given at command line.  */
-  const char *model_help; /**< @brief Model file help description.  */
+  char * model_arg;	/**< @brief input Model file.  */
+  char * model_orig;	/**< @brief input Model file original value given at command line.  */
+  const char *model_help; /**< @brief input Model file help description.  */
   int slack_flag;	/**< @brief Use slack rescaling (not implemented for ROC loss) (default=off).  */
   const char *slack_help; /**< @brief Use slack rescaling (not implemented for ROC loss) help description.  */
   int verbosity_arg;	/**< @brief Sets the svm_struct verbosity (default='0').  */
@@ -91,9 +91,32 @@ struct gengetopt_args_info
   const char *nan2neg_help; /**< @brief set missing values(NaN in dab file) from labels file as negative examples help description.  */
   int mmap_flag;	/**< @brief Memory map binary input (default=off).  */
   const char *mmap_help; /**< @brief Memory map binary input help description.  */
-  char * geneq_arg;	/**< @brief Exclude all label edges where both genes come from the given gene list.  */
-  char * geneq_orig;	/**< @brief Exclude all label edges where both genes come from the given gene list original value given at command line.  */
-  const char *geneq_help; /**< @brief Exclude all label edges where both genes come from the given gene list help description.  */
+  int random_arg;	/**< @brief Seed random generator (default -1 uses current time) (default='-1').  */
+  char * random_orig;	/**< @brief Seed random generator (default -1 uses current time) original value given at command line.  */
+  const char *random_help; /**< @brief Seed random generator (default -1 uses current time) help description.  */
+  char * tgene_arg;	/**< @brief Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list.  */
+  char * tgene_orig;	/**< @brief Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list original value given at command line.  */
+  const char *tgene_help; /**< @brief Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list help description.  */
+  int balance_flag;	/**< @brief Balance the training gene ratios (default=off).  */
+  const char *balance_help; /**< @brief Balance the training gene ratios help description.  */
+  float bfactor_arg;	/**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1..  */
+  char * bfactor_orig;	/**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1. original value given at command line.  */
+  const char *bfactor_help; /**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1. help description.  */
+  int prob_flag;	/**< @brief Output prediction values as estimated probablity (Platt method) (default=off).  */
+  const char *prob_help; /**< @brief Output prediction values as estimated probablity (Platt method) help description.  */
+  int normalize_flag;	/**< @brief Normalize to the range [0,1] (default=off).  */
+  const char *normalize_help; /**< @brief Normalize to the range [0,1] help description.  */
+  char * geneq_arg;	/**< @brief Only keep edges that have one gene in this given list.  */
+  char * geneq_orig;	/**< @brief Only keep edges that have one gene in this given list original value given at command line.  */
+  const char *geneq_help; /**< @brief Only keep edges that have one gene in this given list help description.  */
+  float prior_arg;	/**< @brief Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior..  */
+  char * prior_orig;	/**< @brief Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior. original value given at command line.  */
+  const char *prior_help; /**< @brief Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior. help description.  */
+  int savemodel_flag;	/**< @brief Save model to file (default=off).  */
+  const char *savemodel_help; /**< @brief Save model to file help description.  */
+  float mintrain_arg;	/**< @brief Minimum number of total positive examples to allow training, if not met exit.  */
+  char * mintrain_orig;	/**< @brief Minimum number of total positive examples to allow training, if not met exit original value given at command line.  */
+  const char *mintrain_help; /**< @brief Minimum number of total positive examples to allow training, if not met exit help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -110,7 +133,16 @@ struct gengetopt_args_info
   unsigned int params_given ;	/**< @brief Whether params was given.  */
   unsigned int nan2neg_given ;	/**< @brief Whether nan2neg was given.  */
   unsigned int mmap_given ;	/**< @brief Whether mmap was given.  */
+  unsigned int random_given ;	/**< @brief Whether random was given.  */
+  unsigned int tgene_given ;	/**< @brief Whether tgene was given.  */
+  unsigned int balance_given ;	/**< @brief Whether balance was given.  */
+  unsigned int bfactor_given ;	/**< @brief Whether bfactor was given.  */
+  unsigned int prob_given ;	/**< @brief Whether prob was given.  */
+  unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int geneq_given ;	/**< @brief Whether geneq was given.  */
+  unsigned int prior_given ;	/**< @brief Whether prior was given.  */
+  unsigned int savemodel_given ;	/**< @brief Whether savemodel was given.  */
+  unsigned int mintrain_given ;	/**< @brief Whether mintrain was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
