@@ -661,16 +661,16 @@ bool CGenes::OpenWeighted( std::istream& istm, bool fCreate ) {
 		if (vecstrTokens.empty())
 			continue;
 		if (vecstrTokens.size() != 2) {
-			cerr << "Illegal label line (" << vecstrTokens.size() << "): "
-					<< szBuf << endl;
-			continue;
+			//cerr << "Illegal label line (" << vecstrTokens.size() << "): "
+				//	<< szBuf << endl;
+			return false;
 		}
 
 		if( fCreate )
 			pGene = &m_Genome.AddGene( vecstrTokens[0] );
 		else {
 			if( ( iGene = m_Genome.FindGene( vecstrTokens[0] ) ) == -1 ) {
-				g_CatSleipnir( ).warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, vecstrTokens[0] );
+				g_CatSleipnir( ).warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, vecstrTokens[0].c_str() );
 				continue; }
 			pGene = &m_Genome.GetGene( iGene ); }
 		pGene->SetWeight(atof(vecstrTokens[1].c_str()));
@@ -683,6 +683,7 @@ bool CGenes::OpenWeighted( std::istream& istm, bool fCreate ) {
 		m_vecpGenes.push_back( pGene ); }
 	isWeighted = true;
 	return true; }
+
 
 /*!
  * \brief

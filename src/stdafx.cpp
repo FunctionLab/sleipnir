@@ -124,7 +124,7 @@
  *	so hard to do.  Only needed if you're running \ref BNServer.
  * 
  * \subsection ssec_building_linux Linux/MacOS
- * 
+ * General instructions are in this section.  If you want to build the latest mercurial checkout on Ubuntu, \ref sssec_building_ubuntu provides detailed instructions.
  * <ol>
  * <li>Obtain any \ref ssec_building_prerequisites you need/want.  These can often be installed using your
  *	favorite Linux package manager.  If you need to compile/install them to a nonstandard location by hand,
@@ -149,6 +149,83 @@
  * </li>
  * </ol>
  * 
+ * 
+ * \subsubsection sssec_building_ubuntu Ubuntu from Mercurial (Current as of Ubuntu 12.04)
+ * 
+ * <ol>
+ * <li>Obtain mercurial, gengetopt, boost, log4cpp, liblog4cpp5-dev, and build-essential packages.  In a terminal, type:
+ * \code
+ * sudo apt-get install mercurial gengetopt libboost-regex-dev libboost-graph-dev liblog4cpp5-dev build-essential
+ * \endcode
+ * </li>
+ * <li>If desired, download and install SMILE:
+ * <ol>
+ *  <li>From http://genie.sis.pitt.edu/downloads.html download the appropriate package (x64 or x86) for gcc version 4 or above (currently 4.4.5).  If you have registered as a SMILE user and meet the appropriate requirements, the following commands should work for _x64 (assumes you have a Downloads directory):
+ *  \code
+ *  cd ~/Downloads
+ *  mkdir smile
+ *  cd smile
+ *  wget http://genie.sis.pitt.edu/download/smile_linux_x64_gcc_4_4_5.tar.gz
+ *  tar -xzf smile_linux_x64_gcc_4_4_5.tar.gz
+ *  rm smile_linux_x64_gcc_4_4_5.tar.gz
+ *  cd ..
+ *  sudo mv smile /usr/local/smile
+ *  \endcode
+ *  </li>
+ * </ol>
+ * </li>
+ * <li>Currently Sleipnir requires SVMperf, so you must complete the following steps:
+ * <ol>
+ *  <li>
+ *  Visit http://www.cs.cornell.edu/People/tj/svm_light/svm_perf.html and make sure that you meet the conditions of use (currently: "The program is free for scientific use. Please contact me, if you are planning to use the software for commercial purposes. The software must not be further distributed without prior permission of the author. If you use SVMperf in your scientific work, please cite the appropriate publications (available from the SVMperf website)").
+ *  </li>
+ *  <li>
+ *  Assuming you meet the conditions, the following steps in a terminal will download, compile, and install SVMperf as required by Sleipnir.
+ *  \code
+ *      cd ~/Downloads
+ *      mkdir svmperf
+ *      cd svmperf
+ *      wget http://download.joachims.org/svm_perf/current/svm_perf.tar.gz
+ *      tar -xzf svm_perf.tar.gz
+ *      rm svm_perf.tar.gz
+ *      wget http://libsleipnir.bitbucket.org/SVMperf/Makefile -O Makefile
+ *      make
+ *      cd ..
+ *      sudo mv svmperf /usr/local
+ *  \endcode
+ *  </li>
+ * </ol>
+ * </li>
+ * <li>
+ * Get Sleipnir (the following assumes you want sleipnir to live in ~/sleipnir, if this is not correct, adjust the paths accordingly)
+ * \code
+ * cd ~
+ * hg clone https://bitbucket.org/libsleipnir/sleipnir
+ * \endcode
+ * </li>
+ * <li>
+ * Move to the Sleipnir directory and run the autotools scripts:
+ * \code
+ *  cd sleipnir
+ *  ./gen_auto
+ *  ./gen_tools_am
+ * \endcode
+ * </li>
+ * <li>
+ * Configure and build Sleipnir:
+ * \code
+ *  ./configure --with-smile=/usr/local --with-svm-perf=/usr/local/svmperf/
+ *  make
+ * \endcode
+ * </li>
+ * <li>
+ * Assuming that all completed successfully, you can now install sleipnir to /usr/local with:
+ * \code
+ *  sudo make install
+ * \endcode
+ * If you want to install sleipnir to another location, adjust the ./configure step accordingly.
+ * </li>
+ *
  * \subsection ssec_building_windows Windows
  * 
  * This section assumes that you're building Sleipnir on Windows using Visual Studio.  I'm fairly certain
@@ -201,8 +278,8 @@
  *	library!  To keep from building the whole giant Boost package, try building it like this (note that the
  *	\c --prefix argument is optional):
  * \code
- * ./configure --with-libraries=graph --prefix=/desired/boost/install/path/
- * make install
+ * ./bootstrap.sh --with-libraries=graph --prefix=/desired/boost/install/path/
+ * ./b2 install
  * \endcode
  * - Pay close attention to the paths given to \c --with on Linux/Mac OS and stored in the Additional
  *	Include/Library Directories properties in Visual Studio.  These must point to the directories where
@@ -791,12 +868,17 @@ MIPS:
  * - First, <a href="mailto:chuttenh@hsph.harvard.edu">let us know</a>!  We'd love to hear how people are using
  *	Sleipnir and what you plan to do with it.  We're happy to answer questions and offer development tips
  *	whenever possible.
+ *
+ * - Join the <a href="https://groups.google.com/forum/?fromgroups#!forum/libsleipnir">Sleipnir Google group</a>.
+ *	This is a great place to ask questions if you are having trouble with sleipnir or want to discuss its development.
  * 
  * - Check out our <a href="http://mercurial.selenic.com/">Mercurial</a> repository at
- *	<tt>https://bitbucket.org/libsleipnir/sleipnir/overview</tt>.  The \c trunk branch always contains the latest development
+ *	<tt>https://bitbucket.org/libsleipnir/sleipnir/overview</tt>.  The \c sleipnir branch always contains the latest development
  *	version of Sleipnir, and official versioned releases appear under \c tags.  If you'd like to submit
  *	patches to us for inclusion in Sleipnir, please try to do so against the current development version
- *	(\c trunk).
+ *	(\c sleipnir).  This repository ties in with our 
+ *	<a href="https://bitbucket.org/libsleipnir/sleipnir/issues?status=new&status=open">ticket system </a>
+ *	which also provides a good way to submit patches.
  * 
  * - Construct a <a href="http://www.gnu.org/software/patch/">patch</a> against the Sleipnir code that
  *	includes your modifications and additions.  Alternatively, if you've built an independent tool that
@@ -811,7 +893,8 @@ MIPS:
  * Fix confusing documentation in \ref Answerer - thanks to Arjun Krishnan! <br>
  * Fix missing \c SIZE_MAX definition on Mac OS X - thanks to Alice Koechlin! <br>
  * Fix bug in \ref Answerer when using predefined positive pairs - thanks to Chris Park! <br>
- * Add Partial Correlation Coefficient normalization to \t CDat and \ref Normalizer - thanks to Arjun Krishnan!
+ * Add Partial Correlation Coefficient normalization to \t CDat and \ref Normalizer - thanks to Arjun Krishnan! <br>
+ * Fix bug in weighted Pearson correlation measure - thanks to Jie Tan
  * 
  * - <a href="sleipnir-2.1.tar.gz">2.1</a>, 12-20-09 <br>
  * Update includes for gcc 4.3 compatibility - thanks to Casey Greene! <br>

@@ -425,7 +425,7 @@ double CMeasurePearson::Pearson(const float* adX, size_t iM, const float* adY,
 			continue;
 		dX = adX[i] - dMX;
 		dY = adY[i] - dMY;
-		dRet += dX * dY * GetWeight(adWX, i) * GetWeight(adWY, i);
+		dRet += dX * dY * sqrt(GetWeight(adWX, i) * GetWeight(adWY, i));
 		dDX += dX * dX * GetWeight(adWX, i);
 		dDY += dY * dY * GetWeight(adWY, i);
 	}

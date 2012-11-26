@@ -84,7 +84,7 @@
  *	<td>If on, normalize input edges to the range [0,1] before processing.</td>
  * </tr><tr>
  *	<td>-z</td>
- *	<td>off</td>
+ *	<td>on</td>
  *	<td>Flag</td>
  *	<td>If on, normalize input edges to z-scores (subtract mean, divide by standard deviation) before
  *		processing.</td>

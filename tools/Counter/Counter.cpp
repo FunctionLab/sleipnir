@@ -2,7 +2,7 @@
 * This file is provided under the Creative Commons Attribution 3.0 license.
 *
 * You are free to share, copy, distribute, transmit, or adapt this work
-* PROVIDED THAT you attribute the work to the authors listed below.
+* PROVIDED THAT you attribute the work to the authors listed below.flip
 * For more information, please see the following web page:
 * http://creativecommons.org/licenses/by/3.0/
 *
@@ -22,7 +22,9 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-#define WT_MULTPLIER 50
+
+#define WT_MULTIPLIER 50
+#define WT_MULTIPLIERf 50.0
 
 class CRegularize;
 
@@ -49,6 +51,9 @@ struct SLearn {
     bool                    m_bBridgeNeg;
     bool                    m_bOutPos;
     bool                    m_bOutNeg;
+	bool					m_isDatWeighted;
+	bool					m_bFlipNeg;
+	const CDat*	    m_pwDat;
 };
 
 struct SEvaluate {
@@ -302,9 +307,11 @@ int main( int iArgs, char** aszArgs ) {
         return 1;
     }
     CMeta Meta( sArgs.verbosity_arg );
+	if(sArgs.reggroups_given && sArgs.weights_flag){
+		cerr << "Regularization is not supported for weighted contexts." << endl;
+		return 1;}
     if( sArgs.pseudocounts_arg < 0 )
         sArgs.pseudocounts_arg = CMeta::GetNaN( );
-
     if( sArgs.zeros_arg ) {
         ifstream		ifsm;
         vector<string>	vecstrLine;
@@ -426,6 +433,7 @@ int main( int iArgs, char** aszArgs ) {
     }
 
 
+
     if( sArgs.answers_arg )
         iRet = main_count( sArgs, mapstriZeros, GenesIn, GenesEx, GenesTm, GenesEd, GenesUbik);
     else if( sArgs.counts_arg )
@@ -447,6 +455,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
     vector<CCountMatrix*>		vecpMatRoots;
     vector<CGenes*>			vecpGenes;
     CDataPair				Answers, Dat;
+	CDat					wDat;
     CDatFilter				Filter, FilterIn, FilterEx, FilterTm, FilterEd;
     CDatFilter*				pFilter;
     string	    			strFile;
@@ -454,8 +463,10 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
     vector<SLearn>			vecsData;
     map<string, size_t>::const_iterator	iterZero;
     CGenome			    	Genome;
+	vector<CGenome>			Genomes;
     vector<string>			vecstrNames;
     CRegularize			        Regularize;
+	bool					isDatWeighted=false;
     if( !Answers.Open( sArgs.answers_arg, false, !!sArgs.memmap_flag ) ) {
         cerr << "Could not open: " << sArgs.answers_arg << endl;
         return 1;
@@ -464,17 +475,27 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
         cerr << "Could not open: " << sArgs.reggroups_arg << endl;
         return 1;
     }
-    
+
     vecpGenes.resize( sArgs.inputs_num );
+	Genomes.resize(vecpGenes.size( ));
     for( i = 0; i < vecpGenes.size( ); ++i ) {
         ifstream	ifsm;
 
         vecpGenes[ i ]  = new CGenes( Genome );
         ifsm.open( sArgs.inputs[ i ] );
-		if(sArgs.geneweights_flag){
+
+		if(sArgs.weights_flag){
+			delete vecpGenes[ i ];
+			vecpGenes[ i ] = new CGenes(Genomes[ i ]);
 			if( !vecpGenes[ i ]->OpenWeighted( ifsm ) ) {
-				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-				return 1;	}}	
+				if(!wDat.Open(sArgs.inputs[i], !!sArgs.memmap_flag )){
+					cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+					return 1;	}
+				else{
+					isDatWeighted = true;
+					vecpGenes[ i ]->Open(wDat.GetGeneNames());}
+			}
+		}	
 		else{
 			if( !vecpGenes[ i ]->Open( ifsm ) ) {
 				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
@@ -508,6 +529,9 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_bBridgeNeg = sArgs.bridgeneg_flag;
             vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
             vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
+			vecsData[ i ].m_isDatWeighted = false;
+			vecsData[ i ].m_bFlipNeg =false;
+			vecsData[ i ].m_pwDat = NULL;
             if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
                 return 1;
@@ -581,6 +605,9 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_bBridgeNeg = sArgs.bridgeneg_flag;
             vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
             vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
+			vecsData[ i ].m_isDatWeighted = isDatWeighted;
+			vecsData[ i ].m_bFlipNeg = !!sArgs.flipneg_flag;
+			vecsData[ i ].m_pwDat = isDatWeighted? &wDat : NULL;
             if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
                 return 1;
@@ -636,9 +663,10 @@ void* learn( void* pData ) {
     SLearn*		psData;
     size_t		i, j, k, iAnswer, iVal, iOne, iTwo;
     vector<bool>	vecfGenes, vecfUbik;
-    vector<size_t>	veciGenes;
+    vector<size_t>	veciGenes, vecfiGenes;
 	vector<float>	vecGeneWeights;
     psData = (SLearn*)pData;
+	float			w;
 
     if (psData->m_pUbikGenes->GetGenes( )) {
 		vecfUbik.resize( psData->m_pAnswers->GetGenes( ) );
@@ -648,8 +676,11 @@ void* learn( void* pData ) {
     }
     vecfGenes.resize( psData->m_pAnswers->GetGenes( ) );
 	vecGeneWeights.resize( psData->m_pAnswers->GetGenes( ) );
+	vecfiGenes.resize(psData->m_pAnswers->GetGenes( ));
     for( i = 0; i < vecfGenes.size( ); ++i ){
 		vecfGenes[ i ] = psData->m_pGenes->IsGene( psData->m_pAnswers->GetGene( i ) );}
+	for( i = 0; i < vecfGenes.size( ); ++i ){
+		vecfiGenes[ i ] = psData->m_pGenes->GetGene( psData->m_pAnswers->GetGene( i ) );}
 	if(psData->m_pGenes->IsWeighted()){
 		for( i = 0; i < vecfGenes.size( ); ++i ){
 			vecGeneWeights[ i ] = psData->m_pGenes->GetGeneWeight(psData->m_pGenes->GetGene( psData->m_pAnswers->GetGene( i ) ));}}
@@ -681,20 +712,47 @@ void* learn( void* pData ) {
 					iVal = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
 					if( iVal == -1 )
 						continue;
-					//When contexts are weighted, add counts = WT_MULTPLIER * weight1 * weight 2 
+					//When contexts are weighted, add counts = WT_MULTIPLIER * weight1 * weight 2 
 					if(psData->m_pGenes->IsWeighted()){
-						for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTPLIER); k++){
-							psData->m_pMatCounts->Get( iVal, iAnswer )++;
-							psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );}
+						if(iAnswer==1 || !psData->m_bFlipNeg)
+							for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER-0.5); k++){
+								psData->m_pMatCounts->Get( iVal, iAnswer )++;
+								}
+						else
+							for( k = 0; k <((1-vecGeneWeights[i]*vecGeneWeights[j])*WT_MULTIPLIER-0.5); k++){
+								psData->m_pMatCounts->Get( iVal, iAnswer )++;
+								}
 					}	
+					else if(psData->m_isDatWeighted){
+						if(CMeta::IsNaN(w = psData->m_pwDat->Get( vecfiGenes[i],vecfiGenes[j] )) || vecfiGenes[i] == -1 ||
+							vecfiGenes[j] == -1)
+							continue;
+						if(iAnswer==1 || !psData->m_bFlipNeg)
+							for( k = 0; k <(w *WT_MULTIPLIER-0.5); k++){
+								psData->m_pMatCounts->Get( iVal, iAnswer )++;
+								}
+						else
+							for( k = 0; k <((1-w) *WT_MULTIPLIER-0.5); k++){
+								psData->m_pMatCounts->Get( iVal, iAnswer )++;
+								}
+					}
 					else{
 					psData->m_pMatCounts->Get( iVal, iAnswer )++;
-					psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );}
+					//FIXME: Regularization has not been supported for weighted context
+					psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );
+					}
 			}
 			else{
 				psData->m_pMatCounts->Get( iAnswer, 0 )++;}
         }
     }
+
+	//Recale counts 
+	if(psData->m_pGenes->IsWeighted()||psData->m_isDatWeighted){
+		for (i=0; i< psData->m_pMatCounts->GetRows();i++)
+			for(j=0; j<psData->m_pMatCounts->GetColumns();j++)
+				psData->m_pMatCounts->Get( i,j ) = int(psData->m_pMatCounts->Get( i,j )/ WT_MULTIPLIERf + 0.5);
+	}
 
     return NULL;
 }

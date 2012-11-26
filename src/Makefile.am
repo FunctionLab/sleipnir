@@ -4,6 +4,10 @@ AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFL
 
 #LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_PERF_LIBS) $(PTHREAD_LIBS)
 
+if WITH_SVM_LIBSRC
+libSleipnir_SVM_SOURCES = svm.cpp svmperf.cpp
+libSleipnir_SVM_INCLUDES = svm.h svmi.h svmperf.h
+endif
 libSleipnir_a_SOURCES	=	\
 	annotation.cpp			\
 	annotationobo.cpp		\
@@ -46,8 +50,7 @@ libSleipnir_a_SOURCES	=	\
 	server.cpp				\
 	statistics.cpp			\
 	stdafx.cpp				\
-	svm.cpp					\
-	svmperf.cpp					\
+	$(libSleipnir_SVM_SOURCES) \
 	vwb.cpp
 include_HEADERS			=	\
 	annotation.h			\
@@ -116,9 +119,7 @@ include_HEADERS			=	\
 	statistics.h			\
 	statisticsi.h			\
 	stdafx.h				\
-	svm.h					\
-	svmi.h					\
-	svmperf.h					\
+	$(libSleipnir_SVM_INCLUDES)  \
 	trie.h					\
 	triei.h					\
 	typesi.h				\

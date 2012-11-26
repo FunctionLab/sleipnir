@@ -418,10 +418,10 @@ public:
 		return ( ifsm.is_open( ) && Open( ifsm, fCreate ) ); }
 	/*!
 	 * \brief
-	 * Construct a new gene set by loading genes from the given text file, one per line.
+	 * Construct a new weighted gene set by loading genes from the given text stream, one per line.
 	 * 
-	 * \param szFile
-	 * File containing gene IDs to load, one per line.
+	 * \param istm
+	 * Stream containing gene IDs and corresponding weights to load, one per line.
 	 * 
 	 * \param fCreate
 	 * If true, add unknown genes to the underlying genome; otherwise, unknown gene IDs are ignored.
@@ -431,9 +431,9 @@ public:
 	 * 
 	 * Loads a text file of the form:
 	 * \code
-	 * GENE1
-	 * GENE2
-	 * GENE3
+	 * GENE1 WEIGHT1
+	 * GENE2 WEIGHT2
+	 * GENE3 WEIGHT3
 	 * \endcode
 	 * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
 	 * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
@@ -484,6 +484,7 @@ public:
 	 */	
 	bool IsWeighted() const {
 		return isWeighted;}
+
 	/*!
 	 * \brief
 	 * Return the gene set's underlying genome.
