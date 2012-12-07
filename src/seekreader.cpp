@@ -23,6 +23,12 @@
 
 namespace Sleipnir {
 
+string CSeekTools::ConvertInt(const int &number){
+	stringstream ss;//create a stringstream
+	ss << number;//add number to the stream
+	return ss.str();//return a string with the contents of the stream
+}
+
 bool CSeekTools::IsNaN(const ushort &v){
 	if(v==65535) return true;
 	return false;
@@ -40,7 +46,9 @@ bool CSeekTools::CreatePresenceVector(const vector<ushort> &srcData,
 
 bool CSeekTools::ReadDatabaselets(const CDatabase &DB, 
 	const vector< vector<string> > &vecstrAllQuery,
-	vector<CSeekDataset*> &vc){
+	vector<CSeekDataset*> &vc, 
+	//network mode (data sent to client)
+	const int &iClient, const bool &bNetwork){
 
 	//requires LoadDatabase to be called beforehand
 	size_t iGenes = DB.GetGenes();
@@ -64,6 +72,7 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 		fprintf(stderr, "allQ: %d %d\n", i, allQ[i]);
 	}*/
 
+	//for now
 	for(i=0; i<iDatasets; i++){
 		if(vc[i]->GetDBMap()!=NULL){
 			vc[i]->DeleteQueryBlock();
@@ -71,17 +80,36 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	}
 
 	fprintf(stderr, "Initializing query map\n"); system("date +%s%N 1>&2");
-
+	if(bNetwork && CSeekNetwork::Send(iClient, "Initializing query map")==-1){
+		fprintf(stderr, "Error sending client message\n");
+		return false;
+	}
+	
+	//fprintf(stderr, "Here\n");	
 	#pragma omp parallel for \
 	shared(vc, allQ) private(i) firstprivate(iDatasets) schedule(dynamic)
-	for(i=0; i<iDatasets; i++) vc[i]->InitializeQueryBlock(allQ);
+	for(i=0; i<iDatasets; i++){
+		vc[i]->InitializeQueryBlock(allQ);
+	}
 
 	fprintf(stderr, "Done initializing query map\n");
 	system("date +%s%N 1>&2");
+	if(bNetwork && CSeekNetwork::Send(iClient, 
+		"Done initializing query map")==-1){
+		fprintf(stderr, "Error sending client message\n");
+		return false;
+	}
 
-	fprintf(stderr, "Reading %d gene cdatabaselets and doing query centric\n",
+	fprintf(stderr, "Reading %lu gene cdatabaselets and doing query centric\n",
 		allQ.size());
 	system("date +%s%N 1>&2");
+	if(bNetwork && CSeekNetwork::Send(iClient, "Reading " + 
+		CSeekTools::ConvertInt(allQ.size()) + 
+		" gene cdatabaselets and doing query centric")==-1){
+		fprintf(stderr, "Error sending client message\n");
+		return false;
+	}
+
 	size_t m;
 
 	for(i=0; i<allQ.size(); i++){
@@ -118,7 +146,11 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 
 	fprintf(stderr, "Finished reading databaselets and query centric\n");
 	system("date +%s%N 1>&2");
-
+	if(bNetwork && CSeekNetwork::Send(iClient, 
+		"Finished reading databaselets and query centric")==-1){
+		fprintf(stderr, "Error sending client message\n");
+		return false;
+	}
 
 	return true;
 }
@@ -159,6 +191,49 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 	return CSeekTools::LoadDatabase(DB, strPrepInputDirectory.c_str(),
 		strGvarInputDirectory.c_str(), strSinfoInputDirectory.c_str(),
 		vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
+}
+
+bool CSeekTools::LoadDatabase(const CDatabase &DB, 
+	vector<CSeekDataset*> &vc, const vector<CSeekDataset*> &vc_src, 
+	vector<CSeekPlatform> &vp, const vector<CSeekPlatform> &vp_src, 
+	const vector<string> &vecstrDatasets,
+	const map<string, string> &mapstrstrDatasetPlatform, 
+	const map<string, ushort> &mapstriPlatform){
+
+	size_t iDatasets = DB.GetDatasets();
+	size_t iGenes = DB.GetGenes();
+	size_t i, j, k;
+
+	vc.clear();
+	vc.resize(iDatasets);
+
+	vp.clear();
+	vp.resize(vp_src.size());
+	for(i=0; i<vp.size(); i++){
+		vp[i].Copy(vp_src[i]);
+	}
+
+	fprintf(stderr, "Start reading average and presence files\n");
+	system("date +%s%N 1>&2");
+	fprintf(stderr, "Done reading average and presence files\n");
+	system("date +%s%N 1>&2");
+
+	fprintf(stderr, "Initializing gene map\n"); system("date +%s%N 1>&2");
+	#pragma omp parallel for \
+	shared(vc, vc_src, vp, vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform) \
+	private(i) firstprivate(iDatasets) schedule(dynamic)
+	for(i=0; i<iDatasets; i++){
+		vc[i] = new CSeekDataset();
+		vc[i]->Copy(vc_src[i]);
+		string strFileStem = vecstrDatasets[i];
+		string strPlatform =
+			mapstrstrDatasetPlatform.find(strFileStem)->second;
+		ushort platform_id = mapstriPlatform.find(strPlatform)->second;
+		vc[i]->SetPlatform(vp[platform_id]);
+	}
+
+	fprintf(stderr, "Done initializing gene map\n"); system("date +%s%N 1>&2");
+	return true;
 }
 
 bool CSeekTools::LoadDatabase(const CDatabase &DB,
@@ -336,7 +411,7 @@ bool CSeekTools::ReadListOneColumn(const char *file,
 	ushort c_iBuffer = 1024;
 	vecstrList.clear();
 
-	ushort i = 0;
+	int i = 0;
 	while(!ifsm.eof()){
 		ifsm.getline(acBuffer, c_iBuffer -1);
 		if(acBuffer[0]==0) break;
@@ -394,12 +469,12 @@ bool CSeekTools::ReadMultipleQueries(const char *file,
 }
 
 bool CSeekTools::ReadMultiGeneOneLine(const string &strFile,
-	vector<string> &list){
-	return CSeekTools::ReadMultiGeneOneLine(strFile.c_str(), list);
+	vector<string> &list, const int lineSize){
+	return CSeekTools::ReadMultiGeneOneLine(strFile.c_str(), list, lineSize);
 }
 
 bool CSeekTools::ReadMultiGeneOneLine(const char *file,
-	vector<string> &list){
+	vector<string> &list, const int lineSize){
 	list.clear();
 	ifstream ifsm;
 	ifsm.open(file);
@@ -408,19 +483,25 @@ bool CSeekTools::ReadMultiGeneOneLine(const char *file,
 		return false;
 	}
 
-	char acBuffer[1024];
-	ushort c_iBuffer = 1024;
-	ushort i = 0;
+	char *acBuffer= (char*)malloc(lineSize);
+	//char acBuffer[1024];
+	int c_iBuffer = lineSize;
+	int i = 0;
+	//string sBuffer;
+	//getline(ifsm, sBuffer);
+
 	ifsm.getline(acBuffer, c_iBuffer -1);
 	acBuffer[c_iBuffer-1] = 0;
 	vector<string> tok;
 	CMeta::Tokenize(acBuffer, tok, " ");
+	//CMeta::Tokenize(sBuffer.c_str(), tok, " ");
 	for(i = 0; i<tok.size(); i++){
 		list.push_back(tok[i]);
 	}
 
 	list.resize(list.size());
 	ifsm.close();
+	free(acBuffer);
 	return true;
 }
 
@@ -441,7 +522,7 @@ bool CSeekTools::ReadListOneColumn(const char *file,
 	char acBuffer[1024];
 	ushort c_iBuffer = 1024;
 	vecstrList.clear();
-	ushort i = 0;
+	int i = 0;
 	while(!ifsm.eof()){
 		ifsm.getline(acBuffer, c_iBuffer -1);
 		if(acBuffer[0]==0) break;

@@ -41,7 +41,9 @@ public:
 	static bool OrderStatisticsRankAggregation(const ushort&, const ushort&,
 		ushort**, const vector<ushort> &, vector<float>&, const ushort&);
 	static bool OrderStatisticsPreCompute();
-
+	static bool OneGeneWeighting(CSeekQuery&, 
+		CSeekDataset&, const float&, const float&, const bool&, 
+		vector<ushort>*, const CSeekQuery*);
 };
 
 

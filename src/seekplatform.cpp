@@ -32,6 +32,19 @@ CSeekPlatform::CSeekPlatform(){
 }
 
 CSeekPlatform::~CSeekPlatform(){
+	m_vecfPlatformAvg.clear();
+	m_vecfPlatformStdev.clear();
+}
+
+void CSeekPlatform::Copy(const CSeekPlatform &pl){
+	m_iNumGenes = pl.m_iNumGenes;
+	m_strPlatformName = pl.m_strPlatformName;
+	m_vecfPlatformAvg.resize(pl.m_vecfPlatformAvg.size());
+	m_vecfPlatformStdev.resize(pl.m_vecfPlatformStdev.size());
+	copy(pl.m_vecfPlatformAvg.begin(), pl.m_vecfPlatformAvg.end(),
+		m_vecfPlatformAvg.begin());
+	copy(pl.m_vecfPlatformStdev.begin(), pl.m_vecfPlatformStdev.end(),
+		m_vecfPlatformStdev.begin());
 }
 
 void CSeekPlatform::InitializePlatform(const ushort &numGenes,

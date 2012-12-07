@@ -58,6 +58,7 @@ libSleipnir_a_SOURCES	=	\
 	seekwriter.cpp			\
 	seekplatform.cpp		\
 	seekcentral.cpp		\
+	seeknetwork.cpp		\
 include_HEADERS			=	\
 	seekplatform.h			\
 	seekcentral.h			\
@@ -70,6 +71,7 @@ include_HEADERS			=	\
 	seekwriter.h			\
 	seekdataset.h			\
 	seekmap.h				\
+	seeknetwork.h			\
 	annotation.h			\
 	annotationi.h			\
 	bayesnetfni.h			\

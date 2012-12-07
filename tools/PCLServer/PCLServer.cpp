@@ -54,7 +54,7 @@ void *get_in_addr(struct sockaddr *sa){
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-#define NUM_THREADS 1
+#define NUM_THREADS 8
 char THREAD_OCCUPIED[NUM_THREADS];
 
 int send_msg(int new_fd, char *c, int size){
@@ -119,6 +119,8 @@ void *do_query(void *th_arg){
 		THREAD_OCCUPIED[tid] = 0;
 		pthread_exit(0);
 	}*/
+	pthread_mutex_lock(&mutexGet);
+
 	size_t i;
 
 	vector<string>::const_iterator iterS = datasetName.begin();
@@ -139,7 +141,7 @@ void *do_query(void *th_arg){
 			loaded[n] = 1;
 			continue;
 		}
-		pthread_mutex_lock(&mutexGet);
+		//pthread_mutex_lock(&mutexGet);
 		n = GetOpenSlot();
 		map<int, string>::const_iterator iterRM = DNAME_RMAP.find(n);
 		if(iterRM!=DNAME_RMAP.end()){
@@ -149,7 +151,7 @@ void *do_query(void *th_arg){
 		DNAME_MAP[*iterS] = n;
 		DNAME_RMAP[n] = *iterS;
 		loaded[n] = 1;
-		pthread_mutex_unlock(&mutexGet);
+		//pthread_mutex_unlock(&mutexGet);
 
 		fprintf(stderr, "acquired %d for dataset %s...\n", n, iterS->c_str());
 		//pcl[n]->Reset();
@@ -259,6 +261,9 @@ void *do_query(void *th_arg){
 	}
 
 	THREAD_OCCUPIED[tid] = 0;
+
+	pthread_mutex_unlock(&mutexGet);
+
 	int ret = 0;
 	close(new_fd);
 	pthread_exit((void*)ret);

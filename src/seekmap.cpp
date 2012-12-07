@@ -31,7 +31,6 @@ void CSeekIntIntMap::Initialize(const ushort &iSize){
 	m_iR.resize(iSize);
 	m_iSize = iSize;
 	Clear();
-	m_iterR = m_iR.begin();
 }
 CSeekIntIntMap::CSeekIntIntMap(const ushort &iSize){
 	Initialize(iSize);
@@ -57,6 +56,15 @@ CSeekIntIntMap::CSeekIntIntMap(const char *cP, const ushort &iSize,
 	Reset(cP, bReverse);
 }
 
+CSeekIntIntMap::CSeekIntIntMap(CSeekIntIntMap *a){
+	m_iNumSet = a->m_iNumSet;
+	m_iSize = a->m_iSize;	
+	m_iF.resize(a->m_iF.size());
+	m_iR.resize(a->m_iR.size());
+	copy(a->m_iF.begin(), a->m_iF.end(), m_iF.begin());
+	copy(a->m_iR.begin(), a->m_iR.end(), m_iR.begin());
+	m_iterR = m_iR.begin() + m_iNumSet;
+}
 
 CSeekIntIntMap::~CSeekIntIntMap(){
 	m_iF.clear();
@@ -88,6 +96,7 @@ void CSeekIntIntMap::Clear(){
 		*iterR = -1;
 	}
 	m_iNumSet = 0;
+	m_iterR = m_iR.begin();
 }
 
 ushort CSeekIntIntMap::GetNumSet() const{

@@ -31,6 +31,7 @@ public:
 	CSeekIntIntMap(const ushort&);
 	CSeekIntIntMap(const vector<char>&, const bool=false);
 	CSeekIntIntMap(const char*, const ushort &, const bool=false);
+	CSeekIntIntMap(CSeekIntIntMap*);
 	void Initialize(const ushort&);
 
 	~CSeekIntIntMap();

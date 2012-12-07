@@ -21,18 +21,12 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sys/wait.h>
-#include <signal.h>
 
 #define BACKLOG 10   // how many pending connections queue will hold
 char *PORT;
 int NUM_DSET_MEMORY = 50;
 CPCL **pcl;
+CSeekCentral *csfinal;
 char *available;
 map<string, int> DNAME_MAP;
 map<int, string> DNAME_RMAP;
@@ -51,331 +45,74 @@ void *get_in_addr(struct sockaddr *sa){
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-#define NUM_THREADS 1
+#define NUM_THREADS 8
 char THREAD_OCCUPIED[NUM_THREADS];
 
-int send_msg(int new_fd, char *c, int size){
-	int r = send(new_fd, c, size, 0);
-	if(r==-1){
-		printf("client exists");
-	}
-	return r;
-}
-
-void cl(char *b, int size){
-	int i = 0;
-	for(i=0; i<size; i++){
-		b[i] = '\0';
-	}
-}
-
 struct thread_data{
-    vector<string> queryName;
-	vector<CSeekDataset*> *vc;
-	vector<string> *vecstrGenes;
-	vector<string> *vecstrDatasets;
-	gsl_rng *rnd;
-	CDatabase *DB;
+	//CSeekCentral *csf;
+	string strQuery;
+	string strOutputDir;
+	string strSearchDatasets;
     int threadid;
     int new_fd;
 };
 
-int cpy(char *d, char *s, int beg, int num){
-    int i;
-    for(i=0; i<num; i++){
-        d[beg+i] = s[i];
-    }
-    return beg+num;
-}
-
 void *do_query(void *th_arg){
 	struct thread_data *my = (struct thread_data *) th_arg;
-	vector<string> queryName = my->queryName;
-	vector<CSeekDataset*> &vc = *(my->vc);
-	vector<string> &vecstrGenes = *(my->vecstrGenes);
-	vector<string> &vecstrDatasets = *(my->vecstrDatasets);
-	gsl_rng *rnd = my->rnd;
-	CDatabase &DB = *(my->DB);
 	int new_fd = my->new_fd;
-	int tid = my->threadid;
+	int threadid = my->threadid;
+	//CSeekCentral *csf = my->csf;
+	string strQuery = my->strQuery;
+	string strOutputDir = my->strOutputDir;
+	string strSearchDatasets = my->strSearchDatasets;
 
-	vector< vector<string> > vecstrAllQuery;
-	vecstrAllQuery.push_back(queryName);
+	CSeekCentral *csu = new CSeekCentral();
+	csu->Initialize(strOutputDir, strQuery, strSearchDatasets, csfinal);
+	csu->EnableNetwork(new_fd, true);
+	bool r = csu->CheckDatasets(true);
+	//if r is false, then one of the query has no datasets 
+	//containing any of the query, exit in this case
+	if(r){
+		const gsl_rng_type *T;
+		gsl_rng *rnd;
+		gsl_rng_env_setup();
+		T = gsl_rng_default;
+		rnd = gsl_rng_alloc(T);
+		gsl_rng_set(rnd, 100);
+		float RATE = 0.99;
+		ushort FOLD = 5;
+		enum PartitionMode PART_M = CUSTOM_PARTITION;
+		ushort i, j;
+		csu->CVSearch(rnd, PART_M, FOLD, RATE);
+		gsl_rng_free(rnd);
 
-	CSeekTools::ReadDatabaselets(DB, vecstrAllQuery, vc);
-	vector<float> quant;
-	float w = -5.0;
-	while(w<5.01){
-		quant.push_back(w);
-		w+=0.04;
-		//w+=0.1;
-	}
-	quant.resize(quant.size());
-	ushort i;
-	ushort j;
-	ushort d;
-	float RATE = 0.95;
-	ushort FOLD = 5;
-	enum PartitionMode PART_M = CUSTOM_PARTITION;
-
-	ushort numThreads = omp_get_max_threads();
-	bool DEBUG = false;
-	size_t iGenes = vecstrGenes.size();
-	size_t iDatasets = vecstrDatasets.size();
-
-	for(i=0; i<vecstrAllQuery.size(); i++){
-
-		vector<ushort> queryGenes;
-		for(j=0; j<vecstrAllQuery[i].size(); j++){
-			size_t m = DB.GetGene(vecstrAllQuery[i][j]);
-			if(m==-1) continue;
-			queryGenes.push_back(m);
-		}
-		queryGenes.resize(queryGenes.size());
-
-		vector<char> cQuery;
-		CSeekTools::CreatePresenceVector(queryGenes, cQuery, iGenes);
-
-		for(j=0; j<iDatasets; j++){
-			vc[j]->InitializeQuery(queryGenes);
-		}
-
-		//fprintf(stderr, "Start creating CV partitions\n"); system("date +%s%M 1>&2");
-		CSeekQuery query;
-		query.InitializeQuery(queryGenes, iGenes);
-		query.CreateCVPartitions(rnd, PART_M, FOLD);
-		//fprintf(stderr, "Done creating CV partitions\n"); system("date +%s%M 1>&2");
-
-		ushort iQuery = query.GetQuery().size();
-		//if(DEBUG) fprintf(stderr, "Query size: %d\n", iQuery);
-
-		ushort ***rData = new ushort**[numThreads];
-		for(j=0; j<numThreads; j++){
-			rData[j] = CSeekTools::Init2DArray(iGenes, iQuery, (ushort)0);
-		}
-
-		vector<float> master_rank;
-		CSeekTools::InitVector(master_rank, iGenes, (float) 0);
-
-		vector<float> sum_weight;
-		CSeekTools::InitVector(sum_weight, iGenes, (float) 0);
-
-		vector<ushort> counts;
-		CSeekTools::InitVector(counts, iGenes, (ushort) 0);
-
-		vector<float> weight;
-		CSeekTools::InitVector(weight, iDatasets, (float) 0);
-
-		float **master_rank_threads = CSeekTools::Init2DArray(numThreads, iGenes, (float) 0);
-		float **sum_weight_threads = CSeekTools::Init2DArray(numThreads, iGenes, (float) 0);
-		ushort **counts_threads = CSeekTools::Init2DArray(numThreads, iGenes, (ushort) 0);
-		vector<ushort> *rank_threads = new vector<ushort>[numThreads];
-		vector<ushort> *rank_normal_threads = new vector<ushort>[numThreads];
-		for(j=0; j<numThreads; j++){
-			rank_threads[j].resize(iGenes);
-			rank_normal_threads[j].resize(iGenes);
-		}
-
-		fprintf(stderr, "Entering search\n");
-		system("date +%s%N 1>&2");
-
-		#pragma omp parallel for \
-		shared(weight, query, vc, rData, master_rank_threads, \
-				sum_weight_threads, counts_threads, rank_threads) \
-		private(d, j) \
-		firstprivate(iDatasets, iGenes, iQuery) \
-		schedule(dynamic)
-
-		for(d=0; d<iDatasets; d++){
-			ushort tid = omp_get_thread_num();
-			if(DEBUG) fprintf(stderr, "Dataset %d, %s\n", d, vecstrDatasets[d].c_str());
-
-			CSeekIntIntMap *mapQ = vc[d]->GetQueryMap();
-			CSeekIntIntMap *mapG = vc[d]->GetGeneMap();
-
-			if(mapQ==NULL ||mapQ->GetNumSet()==0){
-				if(DEBUG) fprintf(stderr, "This dataset is skipped\n");
-				continue;
-			}
-
-			vector<ushort> this_q;
-			for(j=0; j<mapQ->GetNumSet(); j++){
-				this_q.push_back(mapQ->GetReverse(j));
-			}
-
-
-			if(DEBUG) fprintf(stderr, "Initializing %d\n", this_q.size());
-
-			vc[d]->InitializeDataMatrix(rData[tid], quant, iGenes, iQuery);
-
-			if(DEBUG) fprintf(stderr, "Weighting dataset\n");
-
-			CSeekWeighter::CVWeighting(query, *vc[d], 0.95, &rank_threads[tid], false);
-			float w = vc[d]->GetDatasetSumWeight();
-
-			if(w==-1){
-				if(DEBUG) fprintf(stderr, "Bad weight\n");
-				continue;
-			}
-
-			if(DEBUG) fprintf(stderr, "Doing linear combination\n");
-
-			CSeekWeighter::LinearCombine(rank_normal_threads[tid], this_q, *vc[d], false);
-
-			vc[d]->DeleteQuery();
-
-			if(DEBUG) fprintf(stderr, "Adding contribution of dataset to master ranking: %.5f\n", w);
-
-			ushort iGeneSet = mapG->GetNumSet();
-			const vector<ushort> &allRGenes = mapG->GetAllReverse();
-			vector<ushort>::const_iterator iterR = allRGenes.begin();
-			vector<ushort>::const_iterator endR = allRGenes.begin() + iGeneSet;
-
-			vector<ushort> &Rank_Normal = rank_normal_threads[tid];
-			float* Master_Rank = &master_rank_threads[tid][0];
-			float* Sum_Weight = &sum_weight_threads[tid][0];
-			ushort* Counts = &counts_threads[tid][0];
-
-			for(; iterR!=endR; iterR++){
-				if(Rank_Normal[*iterR]==0){
-					continue;
-				}
-				Master_Rank[*iterR] += (float) Rank_Normal[*iterR] * w;
-				Sum_Weight[*iterR] += w;
-				Counts[*iterR]++;
-			}
-
-			weight[d] = w;
-		}
-		//omp finishes
-
-		for(j=0; j<numThreads; j++){
-			ushort k;
-			for(k=0; k<iGenes; k++){
-				master_rank[k] += master_rank_threads[j][k];
-				counts[k] += counts_threads[j][k];
-				sum_weight[k]+=sum_weight_threads[j][k];
-			}
-		}
-
-		CSeekTools::Free2DArray(master_rank_threads);
-		CSeekTools::Free2DArray(counts_threads);
-		CSeekTools::Free2DArray(sum_weight_threads);
-
-		for(j=0; j<numThreads; j++){
-			CSeekTools::Free2DArray(rData[j]);
-		}
-		delete[] rData;
-		delete[] rank_threads;
-		delete[] rank_normal_threads;
-
-		if(DEBUG) fprintf(stderr, "Aggregating genes\n");
-		for(j=0; j<iGenes; j++){
-			if(counts[j]<(int)(0.5*iDatasets)){
-				master_rank[j] = -320;
-			}else if(sum_weight[j]==0){
-				master_rank[j] = -320;
-			}else{
-				master_rank[j] = (master_rank[j] / sum_weight[j] - 320) / 100.0;
-			}
-			if(DEBUG) fprintf(stderr, "Gene %d %.5f\n", j, master_rank[j]);
-		}
-
-		if(DEBUG) fprintf(stderr, "Sorting genes\n");
-		vector<AResultFloat> a;
-		a.clear();
-		a.resize(iGenes);
-		for(j=0; j<iGenes; j++){
-			a[j].i = j;
-			a[j].f = master_rank[j];
-		}
-		if(DEBUG) fprintf(stderr, "Begin Sorting genes\n");
-		sort(a.begin(), a.end());
-
-		if(DEBUG) fprintf(stderr, "Results:\n");
-		ushort jj;
-		ushort ii;
-		for(ii=0, jj=0; jj<500; ii++){
-			if(cQuery[a[ii].i]==1) continue;
-			//fprintf(stderr, "%s %.5f\n", DB.GetGene((size_t)a[ii].i).c_str(), a[ii].f);
-			jj++;
-		}
-
-		if(DEBUG) fprintf(stderr, "Begin sorting dataset weight\n");
-		vector<AResultFloat> af;
-		af.clear();
-		af.resize(iDatasets);
-		for(j=0; j<iDatasets; j++){
-			af[j].i = j;
-			af[j].f = weight[j];
-		}
-		sort(af.begin(), af.end());
-		
-
-		fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
-
-		int *si;
-		float *uf;
-
-		char *ss = (char*)malloc(8);
-		si = (int*)&ss[0]; *si = iDatasets;
-		si++; *si = iGenes;
-		send_msg(new_fd, ss, 8);
-		free(ss);
-
-		char *dw = (char*)malloc(4*iDatasets);
-		uf = (float*)&dw[0];
-		for(j=0; j<iDatasets; j++, uf++){
-			*uf = af[j].f;
-		}
-		send_msg(new_fd, dw, 4*iDatasets);
-
-		si = (int*)&dw[0];
-		for(j=0; j<iDatasets; j++, si++){
-			*si = (int) af[j].i;
-		}
-		send_msg(new_fd, dw, 4*iDatasets);
-		free(dw);
-
-		char *gsc = (char*)malloc(4*iGenes);
-		uf = (float*)&gsc[0];
-		for(j=0; j<iGenes; j++, uf++){
-			*uf = a[j].f;
-		}
-		send_msg(new_fd, gsc, 4*iGenes);
-
-		si = (int*)&gsc[0];
-		for(j=0; j<iGenes; j++, si++){
-			*si = (int) a[j].i;
-		}
-		send_msg(new_fd, gsc, 4*iGenes);
-		free(gsc);
-		
-		
-		/*sprintf(acBuffer, "results/%d.query", i);
-		CSeekTools::WriteArrayText(acBuffer, vecstrAllQuery[i]);
-
-		sprintf(acBuffer, "results/%d.dweight", i);
-		CSeekTools::WriteArray(acBuffer, weight);
-
-		sprintf(acBuffer, "results/%d.gscore", i);
-		CSeekTools::WriteArray(acBuffer, master_rank);
-		*/
 	}
 
-	for(j=0; j<iDatasets; j++){
-		vc[j]->DeleteQueryBlock();
-	}
+	csu->Destruct();
+	delete csu;
 
-	THREAD_OCCUPIED[tid] = 0;
-	int ret = 0;
+	//fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
+
+	/*char *sm = (char*)malloc(12);
+	sprintf(sm, "Done search");
+	sm[11] = '\0';
+	send_msg(new_fd, sm, 12);
+	free(sm);
+	*/
+	//Sending back to client, still need to be completed===============
+	//pthread_mutex_lock(&mutexGet);
+	//THREAD_OCCUPIED[threadid] = 0;
+	//close(new_fd);
+	//pthread_mutex_lock(&mutexGet);
+
+	pthread_mutex_lock(&mutexGet);
 	close(new_fd);
+	THREAD_OCCUPIED[threadid] = 0;
+	pthread_mutex_unlock(&mutexGet);
 
+	int ret = 0;
 	pthread_exit((void*)ret);
-
 }
-
-
 
 int main( int iArgs, char** aszArgs ) {
 	static const size_t	c_iBuffer	= 1024;
@@ -388,77 +125,26 @@ int main( int iArgs, char** aszArgs ) {
 		cmdline_parser_print_help( );
 		return 1; }
 
-	ifstream			ifsm;
-	istream*			pistm;
-	vector<string>		vecstrGenes;
-	char				acBuffer[ c_iBuffer ];
-	ushort				i;
-
-	/* Random Number Generator Initializations */
-	const gsl_rng_type *T;
-	gsl_rng *rnd;
-	gsl_rng_env_setup();
-	T = gsl_rng_default;
-	rnd = gsl_rng_alloc(T);
-
-	//Reading gene mapping
-	if( sArgs.input_arg ) {
-		string strGeneInput = sArgs.input_arg;
-		vector<string> vecstrGeneID;
-		if(!CSeekTools::ReadListTwoColumns(strGeneInput, vecstrGeneID, vecstrGenes)){
-			return false;
-		}
-	}
-
 	bool useNibble = false;
-	if(sArgs.is_nibble_flag==1){
-		useNibble = true;
-	}
+	if(sArgs.is_nibble_flag==1) useNibble = true;
 
-	CDatabase DB(useNibble);
-	omp_set_num_threads(8);
+	// Random Number Generator Initializations
+	ushort i, j;
 
-	if(!sArgs.db_arg){
-		fprintf(stderr, "Error!\n"); 
-		return false;
-	}
-
-	string strDBInput = sArgs.db_arg;
-	vector<string> vecstrDatasets, vecstrDP;
-	if(!CSeekTools::ReadListTwoColumns(strDBInput, vecstrDatasets, vecstrDP)){
-		return false;
-	}
-	map<string, string> mapstrstrDatasetPlatform;
-	for(i=0; i<vecstrDatasets.size(); i++){
-		mapstrstrDatasetPlatform[vecstrDatasets[i]] = vecstrDP[i];
-	}
-
-
-	fprintf(stderr, "Start reading platform\n"); system("date +%s%N 1>&2");
-	string strPlatformDirectory = sArgs.dir_platform_arg;
-	vector<CSeekPlatform> vp;
-	map<string, ushort> mapstriPlatform;
-	vector<string> vecstrPlatforms;
-	CSeekTools::ReadPlatforms(strPlatformDirectory, vp, vecstrPlatforms,
-		mapstriPlatform);
-
-	fprintf(stderr, "Done reading platform\n"); system("date +%s%N 1>&2");
-
-	string strInputDirectory = sArgs.dir_in_arg;
-	string strPrepInputDirectory = sArgs.dir_prep_in_arg;
-	size_t iNumDBs = sArgs.num_db_arg;
-	size_t iDatasets = vecstrDatasets.size();
-	size_t iGenes = vecstrGenes.size();
-
-	fprintf(stderr, "Start reading CDatabase header\n"); system("date +%s%N 1>&2");
-	DB.Open(strInputDirectory, vecstrGenes, iDatasets, iNumDBs);
-	fprintf(stderr, "Done reading CDatabase header\n"); system("date +%s%N 1>&2");
-
-	//printf("Done opening"); getchar();
-	vector<CSeekDataset*> vc;
-	CSeekTools::LoadDatabase(DB, strPrepInputDirectory, 
-		vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
-
+	csfinal = new CSeekCentral();
+	if(!csfinal->Initialize(sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
+		//"/tmp/ex_query2.txt", 
+		sArgs.dir_platform_arg,
+		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, 
+		sArgs.dir_gvar_arg,
+		sArgs.dir_sinfo_arg,
+		useNibble, sArgs.num_db_arg,
+		sArgs.buffer_arg, !!sArgs.output_text_flag,  
+		!!sArgs.correlation_flag, 
+		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
+		!!sArgs.norm_platstdev_flag, false,
+		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag))
+		return -1;
 
 	signal(SIGPIPE, SIG_IGN);
 	//ushort i;
@@ -529,7 +215,6 @@ int main( int iArgs, char** aszArgs ) {
 	printf("server: waiting for connections...\n");
 	struct thread_data thread_arg[NUM_THREADS];
 	pthread_t th[NUM_THREADS];
-	int d = 0;
 
 	pthread_mutex_init(&mutexGet, NULL);
 
@@ -542,51 +227,86 @@ int main( int iArgs, char** aszArgs ) {
 		}
 		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
 		printf("server, got connection from %s\n", s);
+	
+		int d = 0;
+		pthread_mutex_lock(&mutexGet);
 		for(d=0; d<NUM_THREADS; d++){
 			if(THREAD_OCCUPIED[d]==0) break;
 		}
 
 		if(d==NUM_THREADS){
 			close(new_fd); 
+			pthread_mutex_unlock(&mutexGet);
 			continue;
 		}
 
 		THREAD_OCCUPIED[d] = 1;
+		pthread_mutex_unlock(&mutexGet);
 
-		char ar[4];
+		//receiving query from client, still need to be completed
+		//only needs to receive three strings,
+		//queryFile, searchdatasetFile, outputDir
+
+		string strSearchDataset;
+		string strQuery;
+		string strOutputDir;
+
+		if(CSeekNetwork::Receive(new_fd, strSearchDataset)==-1){
+			fprintf(stderr, "Error receiving from client!\n");
+		}
+
+		if(CSeekNetwork::Receive(new_fd, strQuery)==-1){
+			fprintf(stderr, "Error receiving from client!\n");
+		}
+
+		if(CSeekNetwork::Receive(new_fd, strOutputDir)==-1){
+			fprintf(stderr, "Error receiving from client!\n");
+		}
+		/*char ar[4];
 		recv(new_fd, ar, 4, 0);
 		int *cn = (int*) ar; 
 		int strLen = *cn;
-		char *qname = (char*)malloc(strLen);
-		recv(new_fd, qname, strLen, 0);
+		char *dname = (char*)malloc(strLen);
+		recv(new_fd, dname, strLen, 0);
 
-		fprintf(stderr, "%s\n", qname);
+		recv(new_fd, ar, 4, 0);
+		strLen = *cn;
+		char *gname = (char*)malloc(strLen);
+		recv(new_fd, gname, strLen, 0);
 
-		vector<string> queryName;
-		CMeta::Tokenize(qname, queryName);
-	
+		recv(new_fd, ar, 4, 0);
+		strLen = *cn;
+		char *output_dir = (char*)malloc(strLen);
+		recv(new_fd, output_dir, strLen, 0);
+		*/
+		/*string strSearchDataset = dname;
+		string strQuery = gname;
+		string strOutputDir = output_dir;
+		free(output_dir);
+		free(dname);
+		free(gname);*/
+
+		//=========================================================
+
 		thread_arg[d].threadid = d;
 		thread_arg[d].new_fd = new_fd;
-		thread_arg[d].queryName = queryName;
-		thread_arg[d].vc = &vc;
-		thread_arg[d].vecstrGenes = &vecstrGenes;
-		thread_arg[d].vecstrDatasets = &vecstrDatasets;
-		thread_arg[d].rnd = rnd;
-		thread_arg[d].DB = &DB;
-
-		//fprintf(stderr, "Arguments: %d %d %s %s\n", d, new_fd, qname);
-
-		free(qname);
+		thread_arg[d].strQuery = strQuery;
+		thread_arg[d].strOutputDir = strOutputDir;
+		thread_arg[d].strSearchDatasets = strSearchDataset;
+		//thread_arg[d].csfinal = &csfinal;
 
 		int ret;
-		pthread_create(&th[d], NULL, do_query, (void *) &thread_arg[d]);
-		/*pthread_join(th[d], (void **)&ret);
-		if(ret==0){
-			close(new_fd);
-		}*/
+		pthread_create(&th[d], NULL, do_query, (void*) &thread_arg[d]);
+
+		//int ret;
+		//pthread_create(&th[d], NULL, do_query, (void *) &thread_arg[d]);
+		//pthread_join(th[d], (void **)&ret);
+
 	}
 
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32
-	return 0; }
+	return 0; 
+
+}

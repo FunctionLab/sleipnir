@@ -54,6 +54,20 @@ public:
 		const bool&, const bool&, const bool&, const bool&,
 		const float&, const float&, const bool&);
 
+	bool Initialize(const char *gene, const char *quant,
+		const char *dset, const char *platform, const char* db,
+		const char *prep, const char *gvar, const char *sinfo,
+		const bool &useNibble, const ushort &num_db,
+		const ushort &, const bool&, const bool&,
+		const bool&, const bool&, const bool&, const bool&,
+		const float&, const float&, const bool&);
+
+	bool Initialize(string&, string&, string&, CSeekCentral*);
+
+	//network mode
+	bool EnableNetwork(const int&, const bool&);
+	bool CheckDatasets(const bool&);
+
 	bool CVSearch(gsl_rng*, const enum PartitionMode&, const ushort&, const float&);
 	bool CVCustomSearch(const vector< vector<string> > &, gsl_rng*,
 		const enum PartitionMode&, const ushort&, const float&);
@@ -68,6 +82,11 @@ public:
 		const ushort* = NULL, const float* = NULL,
 		const vector< vector<float> >* = NULL,
 		const vector< vector<string> >* = NULL);
+
+	bool CheckWeight(const ushort &i);
+	bool CopyTopGenes(CSeekQuery&, const vector<AResultFloat>&, 
+		const ushort);
+	bool SetQueryScoreNull(const CSeekQuery&);
 
 	bool Destruct();
 	bool PrepareQuery(const vector<string>&, CSeekQuery&);
@@ -91,7 +110,10 @@ private:
 
 	/* Dataset */
 	vector<string> m_vecstrDatasets;
+	vector<string> m_vecstrDP;
 	map<string, string> m_mapstrstrDatasetPlatform;
+	map<string, ushort> m_mapstrintDataset;
+	map<string, ushort> m_mapstrintGene;
 	vector<vector<string> > m_vecstrSearchDatasets;
 	vector<CSeekIntIntMap*> m_searchdsetMap;
 	vector<CSeekDataset*> m_vc;
@@ -103,6 +125,7 @@ private:
 	bool m_bLogit;
 	bool m_bOutputText;
 
+	bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
 	bool m_bSquareZ;
 
 	ushort ***m_rData;
@@ -148,6 +171,12 @@ private:
 
 	/* for order statistics, a datasets-by-genes matrix */
 	ushort **m_rank_d;
+
+	/* for network mode */
+	int m_iClient;
+	bool m_bEnableNetwork;
+	bool m_bNetworkSendData;
+	bool m_bNetworkSendStatus;
 
 };
 
