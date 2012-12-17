@@ -39,7 +39,7 @@ option  "nan2neg"       		n   "set missing values(NaN in dab file) from labels f
 										flag off
 option	"mmap"				M	"Memory map binary input"
 										flag	off
-option	"random"		R	"Seed random generator (default -1 uses current time)"
+option	"random"			R	"Seed random generator (default -1 uses current time)"
 							int	default="-1" no
 option	"tgene"				T	"Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list"
 							string	typestr="filename"
@@ -49,8 +49,11 @@ option  "bfactor"    			F   "DEBUG: only for < 500, When balancing neg and pos c
 										float  no
 option	"prob"				B	"Output prediction values as estimated probablity (Platt method)"
 										flag	off
-option  "normalize"             	z       "Normalize to the range [0,1]"
+option  "normalizeZero"             	z       "Normalize input data to the range [0, 1]"
                                                         flag    off
+option  "normalizeNPone"             	N       "Normalize input data to the range [-1, 1]"
+                                                        flag    off
+
 section "Filtering"
 option	"geneq"				q	"Only keep edges that have one gene in this given list"
 							string	typestr="filename"
@@ -60,3 +63,5 @@ option	"savemodel"			s	"Save model to file"
 										flag	off
 option "mintrain"	    		E   "Minimum number of total positive examples to allow training, if not met exit"
 										float  no
+option	"context"			C	"Context gene list"
+							string	typestr="filename"

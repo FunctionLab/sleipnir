@@ -1343,6 +1343,23 @@ void CDatImpl::NormalizeMinmax( ) {
 			for( j = ( i + 1 ); j < GetGenes( ); ++j )
 				Set( i, j, ( Get( i, j ) - dMin ) / dMax ); }
 
+void CDatImpl::NormalizeMinmaxNPone( ) {
+	float	d, dMin, dMax;
+	size_t	i, j;
+
+	dMax = -( dMin = FLT_MAX );
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+				if( d < dMin )
+					dMin = d;
+				if( d > dMax )
+					dMax = d; }
+	if( dMax -= dMin )
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			  Set( i, j, (  ( Get( i, j ) - dMin ) / dMax ) * 2.0 + -1.0 ); }
+
 void CDatImpl::NormalizePCC( ) {
 	size_t			i, j;
 	vector<float>	vecdAves, vecdStds;

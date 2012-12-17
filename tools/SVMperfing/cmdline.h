@@ -104,8 +104,10 @@ struct gengetopt_args_info
   const char *bfactor_help; /**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1. help description.  */
   int prob_flag;	/**< @brief Output prediction values as estimated probablity (Platt method) (default=off).  */
   const char *prob_help; /**< @brief Output prediction values as estimated probablity (Platt method) help description.  */
-  int normalize_flag;	/**< @brief Normalize to the range [0,1] (default=off).  */
-  const char *normalize_help; /**< @brief Normalize to the range [0,1] help description.  */
+  int normalizeZero_flag;	/**< @brief Normalize input data to the range [0, 1] (default=off).  */
+  const char *normalizeZero_help; /**< @brief Normalize input data to the range [0, 1] help description.  */
+  int normalizeNPone_flag;	/**< @brief Normalize input data to the range [-1, 1] (default=off).  */
+  const char *normalizeNPone_help; /**< @brief Normalize input data to the range [-1, 1] help description.  */
   char * geneq_arg;	/**< @brief Only keep edges that have one gene in this given list.  */
   char * geneq_orig;	/**< @brief Only keep edges that have one gene in this given list original value given at command line.  */
   const char *geneq_help; /**< @brief Only keep edges that have one gene in this given list help description.  */
@@ -117,6 +119,9 @@ struct gengetopt_args_info
   float mintrain_arg;	/**< @brief Minimum number of total positive examples to allow training, if not met exit.  */
   char * mintrain_orig;	/**< @brief Minimum number of total positive examples to allow training, if not met exit original value given at command line.  */
   const char *mintrain_help; /**< @brief Minimum number of total positive examples to allow training, if not met exit help description.  */
+  char * context_arg;	/**< @brief Context gene list.  */
+  char * context_orig;	/**< @brief Context gene list original value given at command line.  */
+  const char *context_help; /**< @brief Context gene list help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -138,11 +143,13 @@ struct gengetopt_args_info
   unsigned int balance_given ;	/**< @brief Whether balance was given.  */
   unsigned int bfactor_given ;	/**< @brief Whether bfactor was given.  */
   unsigned int prob_given ;	/**< @brief Whether prob was given.  */
-  unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int normalizeZero_given ;	/**< @brief Whether normalizeZero was given.  */
+  unsigned int normalizeNPone_given ;	/**< @brief Whether normalizeNPone was given.  */
   unsigned int geneq_given ;	/**< @brief Whether geneq was given.  */
   unsigned int prior_given ;	/**< @brief Whether prior was given.  */
   unsigned int savemodel_given ;	/**< @brief Whether savemodel was given.  */
   unsigned int mintrain_given ;	/**< @brief Whether mintrain was given.  */
+  unsigned int context_given ;	/**< @brief Whether context was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

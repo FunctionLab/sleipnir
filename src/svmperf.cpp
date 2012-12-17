@@ -969,7 +969,7 @@ void CSVMPERF::ClassifyAll(Sleipnir::CPCL& PCL, Sleipnir::CDat& Values,
 bool CSVMPERF::CreateDoc(vector<string>& vecstrDatasets,
 			 vector<SVMLabelPair*>& vecLabels,
 			 const vector<string>& LabelsGene,
-			 bool normalize_minmax){
+			 Sleipnir::CDat::ENormalize eNormalize){
   
   size_t i, j, k, iGene, jGene, iDoc, iWord, iWords;
   float d;
@@ -1011,9 +1011,10 @@ bool CSVMPERF::CreateDoc(vector<string>& vecstrDatasets,
       return false;
     }
     
-    // normalize dat file, currently on to [0,1] 
-    if( normalize_minmax ){
-      Dat.Normalize( Sleipnir::CDat::ENormalizeMinMax );
+    // normalize dat file
+    if( eNormalize != Sleipnir::CDat::ENormalizeNone ){
+      cerr << "Normalize input data" << endl;      
+      Dat.Normalize( eNormalize );
     }
     
     cerr << "Open: " << vecstrDatasets[i] << endl;

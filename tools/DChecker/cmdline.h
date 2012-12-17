@@ -102,6 +102,9 @@ struct gengetopt_args_info
   const char *normalize_help; /**< @brief Normalize scores before processing help description.  */
   int invert_flag;	/**< @brief Invert correlations to distances (default=off).  */
   const char *invert_help; /**< @brief Invert correlations to distances help description.  */
+  float abs_arg;	/**< @brief Convert input to its absolute values (default='0.0').  */
+  char * abs_orig;	/**< @brief Convert input to its absolute values original value given at command line.  */
+  const char *abs_help; /**< @brief Convert input to its absolute values help description.  */
   int sse_flag;	/**< @brief Calculate sum of squared errors (default=off).  */
   const char *sse_help; /**< @brief Calculate sum of squared errors help description.  */
   int memmap_flag;	/**< @brief Memory map input DABs (default=off).  */
@@ -138,6 +141,7 @@ struct gengetopt_args_info
   unsigned int flipneg_given ;	/**< @brief Whether flipneg was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int invert_given ;	/**< @brief Whether invert was given.  */
+  unsigned int abs_given ;	/**< @brief Whether abs was given.  */
   unsigned int sse_given ;	/**< @brief Whether sse was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */

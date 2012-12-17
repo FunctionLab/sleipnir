@@ -50,12 +50,14 @@ const char *gengetopt_args_info_help[] = {
   "  -b, --balance               Balance the training gene ratios  (default=off)",
   "  -F, --bfactor=FLOAT         DEBUG: only for < 500, When balancing neg and pos \n                                counts exmaples for training what factor to \n                                increase. default is 1.",
   "  -B, --prob                  Output prediction values as estimated probablity \n                                (Platt method)  (default=off)",
-  "  -z, --normalize             Normalize to the range [0,1]  (default=off)",
+  "  -z, --normalizeZero         Normalize input data to the range [0, 1]  \n                                (default=off)",
+  "  -N, --normalizeNPone        Normalize input data to the range [-1, 1]  \n                                (default=off)",
   "\nFiltering:",
   "  -q, --geneq=filename        Only keep edges that have one gene in this given \n                                list",
   "  -P, --prior=FLOAT           Randomly sub-sample the negative labels to reach \n                                target prior. If cannot reach target prior, set \n                                to closest prior.",
   "  -s, --savemodel             Save model to file  (default=off)",
   "  -E, --mintrain=FLOAT        Minimum number of total positive examples to \n                                allow training, if not met exit",
+  "  -C, --context=filename      Context gene list",
     0
 };
 
@@ -104,11 +106,13 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->balance_given = 0 ;
   args_info->bfactor_given = 0 ;
   args_info->prob_given = 0 ;
-  args_info->normalize_given = 0 ;
+  args_info->normalizeZero_given = 0 ;
+  args_info->normalizeNPone_given = 0 ;
   args_info->geneq_given = 0 ;
   args_info->prior_given = 0 ;
   args_info->savemodel_given = 0 ;
   args_info->mintrain_given = 0 ;
+  args_info->context_given = 0 ;
 }
 
 static
@@ -144,12 +148,15 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->balance_flag = 0;
   args_info->bfactor_orig = NULL;
   args_info->prob_flag = 0;
-  args_info->normalize_flag = 0;
+  args_info->normalizeZero_flag = 0;
+  args_info->normalizeNPone_flag = 0;
   args_info->geneq_arg = NULL;
   args_info->geneq_orig = NULL;
   args_info->prior_orig = NULL;
   args_info->savemodel_flag = 0;
   args_info->mintrain_orig = NULL;
+  args_info->context_arg = NULL;
+  args_info->context_orig = NULL;
   
 }
 
@@ -178,11 +185,13 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->balance_help = gengetopt_args_info_help[19] ;
   args_info->bfactor_help = gengetopt_args_info_help[20] ;
   args_info->prob_help = gengetopt_args_info_help[21] ;
-  args_info->normalize_help = gengetopt_args_info_help[22] ;
-  args_info->geneq_help = gengetopt_args_info_help[24] ;
-  args_info->prior_help = gengetopt_args_info_help[25] ;
-  args_info->savemodel_help = gengetopt_args_info_help[26] ;
-  args_info->mintrain_help = gengetopt_args_info_help[27] ;
+  args_info->normalizeZero_help = gengetopt_args_info_help[22] ;
+  args_info->normalizeNPone_help = gengetopt_args_info_help[23] ;
+  args_info->geneq_help = gengetopt_args_info_help[25] ;
+  args_info->prior_help = gengetopt_args_info_help[26] ;
+  args_info->savemodel_help = gengetopt_args_info_help[27] ;
+  args_info->mintrain_help = gengetopt_args_info_help[28] ;
+  args_info->context_help = gengetopt_args_info_help[29] ;
   
 }
 
@@ -287,6 +296,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->geneq_orig));
   free_string_field (&(args_info->prior_orig));
   free_string_field (&(args_info->mintrain_orig));
+  free_string_field (&(args_info->context_arg));
+  free_string_field (&(args_info->context_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -361,8 +372,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "bfactor", args_info->bfactor_orig, 0);
   if (args_info->prob_given)
     write_into_file(outfile, "prob", 0, 0 );
-  if (args_info->normalize_given)
-    write_into_file(outfile, "normalize", 0, 0 );
+  if (args_info->normalizeZero_given)
+    write_into_file(outfile, "normalizeZero", 0, 0 );
+  if (args_info->normalizeNPone_given)
+    write_into_file(outfile, "normalizeNPone", 0, 0 );
   if (args_info->geneq_given)
     write_into_file(outfile, "geneq", args_info->geneq_orig, 0);
   if (args_info->prior_given)
@@ -371,6 +384,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "savemodel", 0, 0 );
   if (args_info->mintrain_given)
     write_into_file(outfile, "mintrain", args_info->mintrain_orig, 0);
+  if (args_info->context_given)
+    write_into_file(outfile, "context", args_info->context_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -654,15 +669,17 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "balance",	0, NULL, 'b' },
         { "bfactor",	1, NULL, 'F' },
         { "prob",	0, NULL, 'B' },
-        { "normalize",	0, NULL, 'z' },
+        { "normalizeZero",	0, NULL, 'z' },
+        { "normalizeNPone",	0, NULL, 'N' },
         { "geneq",	1, NULL, 'q' },
         { "prior",	1, NULL, 'P' },
         { "savemodel",	0, NULL, 's' },
         { "mintrain",	1, NULL, 'E' },
+        { "context",	1, NULL, 'C' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVl:o:d:m:Sv:c:e:k:t:p:nMR:T:bF:Bzq:P:sE:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVl:o:d:m:Sv:c:e:k:t:p:nMR:T:bF:BzNq:P:sE:C:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -900,12 +917,22 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'z':	/* Normalize to the range [0,1].  */
+        case 'z':	/* Normalize input data to the range [0, 1].  */
         
         
-          if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
-              &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "normalize", 'z',
+          if (update_arg((void *)&(args_info->normalizeZero_flag), 0, &(args_info->normalizeZero_given),
+              &(local_args_info.normalizeZero_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "normalizeZero", 'z',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'N':	/* Normalize input data to the range [-1, 1].  */
+        
+        
+          if (update_arg((void *)&(args_info->normalizeNPone_flag), 0, &(args_info->normalizeNPone_given),
+              &(local_args_info.normalizeNPone_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "normalizeNPone", 'N',
               additional_error))
             goto failure;
         
@@ -952,6 +979,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.mintrain_given), optarg, 0, 0, ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "mintrain", 'E',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'C':	/* Context gene list.  */
+        
+        
+          if (update_arg( (void *)&(args_info->context_arg), 
+               &(args_info->context_orig), &(args_info->context_given),
+              &(local_args_info.context_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "context", 'C',
               additional_error))
             goto failure;
         

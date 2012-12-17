@@ -247,6 +247,7 @@ int main(int iArgs, char** aszArgs) {
 	map<string, size_t>	mapstriZeros, mapstriDatasets;
 	vector<string> vecstrDatasets;
 	vector<bool> mapTgene;
+	vector<bool> mapCgene;
 	vector<size_t> mapTgene2fold;
 	vector<int> tgeneCount;
 	
@@ -254,6 +255,9 @@ int main(int iArgs, char** aszArgs) {
 	struct dirent* ep;	
 	CGenome Genome;
         CGenes Genes(Genome);
+	
+	CGenome GenomeTwo;
+        CGenes Context(GenomeTwo);
 	
 	if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
 		cmdline_parser_print_help();
@@ -339,7 +343,18 @@ int main(int iArgs, char** aszArgs) {
 	  ifsm.close();
 	}
 	
-	
+	// read context gene list
+	if(sArgs.context_given ) {
+	  ifstream ifsm;
+	  ifsm.open(sArgs.context_arg);
+	  
+	  if (!Context.Open(ifsm)) {
+	    cerr << "Could not open: " << sArgs.context_arg << endl;
+	    return 1;
+	  }
+	  ifsm.close();
+	}
+		
 	///######################
 	// Chris added
 	vector<SVMLight::SVMLabelPair*> vecLabels;
@@ -407,6 +422,18 @@ int main(int iArgs, char** aszArgs) {
 		  else if(!mapTgene[i] && !mapTgene[j])
 		    Labels.Set(i, j, CMeta::GetNaN());
 		}
+	  }
+
+	  //if given a context map the context genes
+	  if( sArgs.context_given ){
+	    mapCgene.resize(Labels.GetGenes());
+	    
+	    for(i = 0; i < Labels.GetGenes(); i++){
+	      if(Context.GetGene(Labels.GetGene(i)) == -1)
+		mapCgene[i] = false;
+	      else
+		mapCgene[i] = true;
+	    }
 	  }
 	  
 	  // Set target prior
@@ -536,6 +563,11 @@ int main(int iArgs, char** aszArgs) {
 			    if( sArgs.balance_flag && vecLabels[j]->Target < 0 && tgeneCount[vecLabels[j]->iidx] < 0){
 			      continue;
 			    }
+			    
+			    // only add if both genes are in context
+			    if( sArgs.context_given  && ( !mapCgene[vecLabels[j]->iidx] || !mapCgene[vecLabels[j]->jidx]))
+			      continue;
+			    
 			    pTrainVector[i].push_back(vecLabels[j]); 
 			  }
 			}
@@ -551,6 +583,11 @@ int main(int iArgs, char** aszArgs) {
 			    if( sArgs.balance_flag && vecLabels[j]->Target < 0 && tgeneCount[vecLabels[j]->jidx] < 0){
 			      continue;
 			    }
+			    
+			    // only add if both genes are in context
+			    if( sArgs.context_given && ( !mapCgene[vecLabels[j]->iidx] || !mapCgene[vecLabels[j]->jidx]))
+			      continue;
+			    
 			    pTrainVector[i].push_back(vecLabels[j]); 
 			  }
 			}
@@ -575,6 +612,11 @@ int main(int iArgs, char** aszArgs) {
 		    }
 		  }
 		  else{ //randomly set eges into cross-fold
+		    if( sArgs.context_given ){
+		      cerr << "context not implemented yet for random edge holdout" << endl;
+		      return 1;
+		    }
+
 		    for (i = 0; i < sArgs.cross_validation_arg; i++) {
 		      pTestVector[i].reserve((size_t) vecLabels.size()
 					     / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
@@ -642,10 +684,21 @@ int main(int iArgs, char** aszArgs) {
 		  // create sample for all labels
 		  // DEBUG need to implement
 		  cerr << "CreateDocs!"<< endl;
-		  SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
-						vecLabels,
-						Labels.GetGeneNames(),
-						sArgs.normalize_flag);
+		  if(sArgs.normalizeZero_flag){
+		    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
+						  vecLabels,
+						  Labels.GetGeneNames(),
+						  Sleipnir::CDat::ENormalizeMinMax);
+		  }else if(sArgs.normalizeNPone_flag){
+		    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
+						  vecLabels,
+						  Labels.GetGeneNames(),
+						  Sleipnir::CDat::ENormalizeMinMaxNPone);
+		  }else{
+		    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
+						  vecLabels,
+						  Labels.GetGeneNames());
+		  }
 		  
 		  for (i = 0; i < sArgs.cross_validation_arg; i++) {
 		    cerr << "Cross validation: " << i << endl;
@@ -674,7 +727,19 @@ int main(int iArgs, char** aszArgs) {
 		      // i cross validation
 		      // sArgs.output_arg		  
 		      std::stringstream sstm;
-		      sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << ".svm";		      
+		      
+		      if(sArgs.context_given){
+			std::string path(sArgs.context_arg);
+			size_t pos = path.find_last_of("/");
+			std::string cname;
+			if(pos != std::string::npos)
+			  cname.assign(path.begin() + pos + 1, path.end());
+			else
+			  cname = path;
+			
+			sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << "." << cname << ".svm";		      
+		      }else
+			sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << ".svm";
 		      SVM.WriteModel((char*)(sstm.str().c_str()));
 		    }
 		    

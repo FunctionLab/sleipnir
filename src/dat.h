@@ -178,9 +178,14 @@ public:
 		ENormalizeMinMax	= ENormalizeNone + 1,
 		/*!
 		 * \brief
+		 * Linearly transform the minimum score to -1 and the maximum to 1.
+		 */
+		ENormalizeMinMaxNPone	= ENormalizeMinMax + 1,
+		/*!
+		 * \brief
 		 * Z-score all edges (subtract mean, divide by standard deviation).
 		 */
-		ENormalizeZScore	= ENormalizeMinMax + 1,
+		ENormalizeZScore	= ENormalizeMinMaxNPone + 1,
 		/*!
 		 * \brief
 		 * Sigmoid transform scores to the range [0, 1].
@@ -268,6 +273,10 @@ public:
 		switch( eNormalize ) {
 			case ENormalizeMinMax:
 				NormalizeMinmax( );
+				break;
+
+			case ENormalizeMinMaxNPone:
+				NormalizeMinmaxNPone( );
 				break;
 
 			case ENormalizeZScore:

@@ -363,7 +363,7 @@ public:
 	static bool CreateDoc(vector<string>& vecstrDatasets,
 			      vector<SVMLabelPair*>& vecLabels,
 			      const vector<string>& LabelsGene,
-			      bool normalize_minmax = false);
+			      Sleipnir::CDat::ENormalize eNormalize = Sleipnir::CDat::ENormalizeNone);
 	
 	static SAMPLE* CreateSample(vector<SVMLabelPair*>& SVMLabels);	
 	void Classify(Sleipnir::CDat &Results,

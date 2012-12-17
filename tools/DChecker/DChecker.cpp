@@ -113,25 +113,36 @@ int main( int iArgs, char** aszArgs ) {
     }
     if( sArgs.normalize_flag )
         Data.Normalize( CDat::ENormalizeMinMax );
+    
 	
-	
-	if(sArgs.weights_arg){
-		ifstream	ifsm;
-		ifsm.open( sArgs.weights_arg );
-			if( !wGenes.OpenWeighted( ifsm ) ) {
-				if(!wDat.Open(sArgs.weights_arg, !!sArgs.memmap_flag )){
-					cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-					return 1;	}
-				else{
-					isDatWeighted = true;
-				}
-			}else{
-				vecGeneWeights.resize(Answers.GetGenes( ));
-				for( i = 0; i < vecGeneWeights.size( ); ++i ){
+    if(sArgs.weights_arg){
+      ifstream	ifsm;
+      ifsm.open( sArgs.weights_arg );
+      if( !wGenes.OpenWeighted( ifsm ) ) {
+	if(!wDat.Open(sArgs.weights_arg, !!sArgs.memmap_flag )){
+	  cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+	  return 1;	}
+	else{
+	  isDatWeighted = true;
+	}
+      }else{
+	vecGeneWeights.resize(Answers.GetGenes( ));
+	for( i = 0; i < vecGeneWeights.size( ); ++i ){
 					vecGeneWeights[ i ] = wGenes.GetGeneWeight(wGenes.GetGene( Answers.GetGene( i ) ));}
-			}
-		}	
-
+      }
+    }	
+    
+    if( sArgs.abs_arg ){
+      float d;
+      for( i = 0; i < Data.GetGenes( ); ++i ){
+	for( j = ( i + 1 ); j < Data.GetGenes( ); ++j ){
+	  if( !CMeta::IsNaN( (d = Data.Get( i, j )) ) ){
+	    Data.Set(i, j, fabs(d - sArgs.abs_arg));
+	  }
+	}
+      }
+    }
+    
     veciGenes.resize( Answers.GetGenes( ) );
     for( i = 0; i < Answers.GetGenes( ); ++i )
         veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
