@@ -47,6 +47,8 @@ struct gengetopt_args_info
   const char *flip_help; /**< @brief Calculate one minus values help description.  */
   int normalize_flag;	/**< @brief Normalize to the range [0,1] (default=off).  */
   const char *normalize_help; /**< @brief Normalize to the range [0,1] help description.  */
+  int normalizeNPone_flag;	/**< @brief Normalize to the range [-1,1] (default=off).  */
+  const char *normalizeNPone_help; /**< @brief Normalize to the range [-1,1] help description.  */
   int zscore_flag;	/**< @brief Convert values to z-scores (default=off).  */
   const char *zscore_help; /**< @brief Convert values to z-scores help description.  */
   int rank_flag;	/**< @brief Rank transform data (default=off).  */
@@ -135,6 +137,7 @@ struct gengetopt_args_info
   unsigned int quant_given ;	/**< @brief Whether quant was given.  */
   unsigned int flip_given ;	/**< @brief Whether flip was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int normalizeNPone_given ;	/**< @brief Whether normalizeNPone was given.  */
   unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int rank_given ;	/**< @brief Whether rank was given.  */
   unsigned int randomize_given ;	/**< @brief Whether randomize was given.  */

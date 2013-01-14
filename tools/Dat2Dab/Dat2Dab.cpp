@@ -125,6 +125,10 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.Rank( );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
 		Dat.Normalize( sArgs.zscore_flag ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
+	
+	if( sArgs.normalizeNPone_flag )
+	  Dat.Normalize( CDat::ENormalizeMinMaxNPone );
+	
 	if( sArgs.zero_flag || sArgs.dmissing_given )
 	  for( i = 0; i < Dat.GetGenes( ); ++i )
 	    for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )

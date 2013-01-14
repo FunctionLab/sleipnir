@@ -49,14 +49,16 @@ option  "bfactor"    			F   "DEBUG: only for < 500, When balancing neg and pos c
 										float  no
 option	"prob"				B	"Output prediction values as estimated probablity (Platt method)"
 										flag	off
+option	"probCross"			D	"Cross-validation setting for output prediction values as estimated probablity (Platt method)"
+										flag	off
 option  "normalizeZero"             	z       "Normalize input data to the range [0, 1]"
                                                         flag    off
 option  "normalizeNPone"             	N       "Normalize input data to the range [-1, 1]"
                                                         flag    off
 
 section "Filtering"
-option	"geneq"				q	"Only keep edges that have one gene in this given list"
-							string	typestr="filename"
+option	"onetgene"			q	"Only keep edges from lables that have one gene in the target gene list"
+							flag off
 option "prior"    			P   "Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior."
 										float  no
 option	"savemodel"			s	"Save model to file"

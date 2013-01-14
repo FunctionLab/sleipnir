@@ -104,13 +104,14 @@ struct gengetopt_args_info
   const char *bfactor_help; /**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1. help description.  */
   int prob_flag;	/**< @brief Output prediction values as estimated probablity (Platt method) (default=off).  */
   const char *prob_help; /**< @brief Output prediction values as estimated probablity (Platt method) help description.  */
+  int probCross_flag;	/**< @brief Cross-validation setting for output prediction values as estimated probablity (Platt method) (default=off).  */
+  const char *probCross_help; /**< @brief Cross-validation setting for output prediction values as estimated probablity (Platt method) help description.  */
   int normalizeZero_flag;	/**< @brief Normalize input data to the range [0, 1] (default=off).  */
   const char *normalizeZero_help; /**< @brief Normalize input data to the range [0, 1] help description.  */
   int normalizeNPone_flag;	/**< @brief Normalize input data to the range [-1, 1] (default=off).  */
   const char *normalizeNPone_help; /**< @brief Normalize input data to the range [-1, 1] help description.  */
-  char * geneq_arg;	/**< @brief Only keep edges that have one gene in this given list.  */
-  char * geneq_orig;	/**< @brief Only keep edges that have one gene in this given list original value given at command line.  */
-  const char *geneq_help; /**< @brief Only keep edges that have one gene in this given list help description.  */
+  int onetgene_flag;	/**< @brief Only keep edges from lables that have one gene in the target gene list (default=off).  */
+  const char *onetgene_help; /**< @brief Only keep edges from lables that have one gene in the target gene list help description.  */
   float prior_arg;	/**< @brief Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior..  */
   char * prior_orig;	/**< @brief Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior. original value given at command line.  */
   const char *prior_help; /**< @brief Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior. help description.  */
@@ -143,9 +144,10 @@ struct gengetopt_args_info
   unsigned int balance_given ;	/**< @brief Whether balance was given.  */
   unsigned int bfactor_given ;	/**< @brief Whether bfactor was given.  */
   unsigned int prob_given ;	/**< @brief Whether prob was given.  */
+  unsigned int probCross_given ;	/**< @brief Whether probCross was given.  */
   unsigned int normalizeZero_given ;	/**< @brief Whether normalizeZero was given.  */
   unsigned int normalizeNPone_given ;	/**< @brief Whether normalizeNPone was given.  */
-  unsigned int geneq_given ;	/**< @brief Whether geneq was given.  */
+  unsigned int onetgene_given ;	/**< @brief Whether onetgene was given.  */
   unsigned int prior_given ;	/**< @brief Whether prior was given.  */
   unsigned int savemodel_given ;	/**< @brief Whether savemodel was given.  */
   unsigned int mintrain_given ;	/**< @brief Whether mintrain was given.  */

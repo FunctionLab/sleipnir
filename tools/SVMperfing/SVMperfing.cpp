@@ -94,7 +94,7 @@ static void sigmoid_train(CDat& dec_values,
 			  CDat& labels, 
 			  float& A, float& B){
 	double prior1=0, prior0 = 0;
-	size_t i, j, idx;
+	size_t i, j, idx, k;
 	float d, lab;
 	
 	int max_iter=100;	// Maximal number of iterations
@@ -394,13 +394,12 @@ int main(int iArgs, char** aszArgs) {
 	  }
 	  
 	  // Only keep edges that have one gene in this given list
-	  if( sArgs.geneq_arg ){
-	    Labels.FilterGenes( sArgs.geneq_arg, CDat::EFilterExEdge );	    
-	    Labels.FilterGenes( sArgs.geneq_arg, CDat::EFilterEdge );
-	  }
+	  // Should delete
+	  //if( sArgs.geneq_arg ){
+	  //  Labels.FilterGenes( sArgs.geneq_arg, CDat::EFilterExEdge );	    
+	  //  Labels.FilterGenes( sArgs.geneq_arg, CDat::EFilterEdge );
+	  //}
 	  
-	  // if given a target gene file
-	  // Only keep eges that have only one gene in this targe gene list
 	  if( sArgs.tgene_given ){
 	    mapTgene.resize(Labels.GetGenes());
 	    
@@ -413,17 +412,23 @@ int main(int iArgs, char** aszArgs) {
 	    
 	    // keep track of positive gene counts
 	    tgeneCount.resize(Labels.GetGenes());
-	    
-	    for(i = 0; i < Labels.GetGenes(); i++)
-	      for(j = (i+1); j < Labels.GetGenes(); j++)
-		if (!CMeta::IsNaN(d = Labels.Get(i, j))){
-		  if(mapTgene[i] && mapTgene[j])
-		    Labels.Set(i, j, CMeta::GetNaN());
-		  else if(!mapTgene[i] && !mapTgene[j])
-		    Labels.Set(i, j, CMeta::GetNaN());
-		}
+	    	    
+	    // if given a target gene file
+	    // Only keep eges that have only one gene in this targe gene list
+	    if( sArgs.onetgene_flag ){
+	      cerr << "Filtering to only include edges with one gene in gene file: " << sArgs.tgene_arg << endl;
+	      
+	      for(i = 0; i < Labels.GetGenes(); i++)
+		for(j = (i+1); j < Labels.GetGenes(); j++)
+		  if (!CMeta::IsNaN(d = Labels.Get(i, j))){
+		    if(mapTgene[i] && mapTgene[j])
+		      Labels.Set(i, j, CMeta::GetNaN());
+		    else if(!mapTgene[i] && !mapTgene[j])
+		      Labels.Set(i, j, CMeta::GetNaN());
+		  }
+	    }
 	  }
-
+	  
 	  //if given a context map the context genes
 	  if( sArgs.context_given ){
 	    mapCgene.resize(Labels.GetGenes());
@@ -449,6 +454,7 @@ int main(int iArgs, char** aszArgs) {
 		    ++numneg;
 		  }
 		}
+	    
 	    if( ((float)numpos / (numpos + numneg)) < sArgs.prior_arg){
 	      
 	      cerr << "Convert prior from orig: " << ((float)numpos / (numpos + numneg)) << " to target: " << sArgs.prior_arg << endl;
@@ -711,6 +717,16 @@ int main(int iArgs, char** aszArgs) {
 		    cerr << "Learned" << endl;
 		    SVM.Classify(Results,
 				 pTestVector[i]);
+		    
+		    /*
+		    if( sArgs.probCross_flag && !sArgs.prob_flag ){
+		      cerr << "Convert to probability for cross fold: " << i << endl;
+		      float A, B;
+		      SVM.sigmoid_train(pTrainVector[i], A, B);
+		      SVM.sigmoid_predict(Results, pTestVector[i], A, B);
+		    }
+		    */
+
 		    //cerr << "Classified " << tmpAllResults.size() << " examples"
 		    //<< endl;
 		    //AllResults.insert(AllResults.end(), tmpAllResults.begin(),
@@ -753,11 +769,40 @@ int main(int iArgs, char** aszArgs) {
 		  // orig for classify all genes
 		  //}
 		  
-		  if(sArgs.prob_flag){
+		  if( sArgs.prob_flag ){
 		    cerr << "Converting prediction values to estimated probablity" << endl;
 		    float A, B;
 		    sigmoid_train(Results, Labels, A, B);
 		    sigmoid_predict(Results, A, B);
+		  }
+		  else if( sArgs.probCross_flag ){
+		    float A, B;
+		    size_t k, ctrain, itrain;
+		    vector<SVMLight::SVMLabelPair*> probTrainVector;
+		    
+		    for (i = 0; i < sArgs.cross_validation_arg; i++) {		      
+		      cerr << "Convert to probability for cross fold: " << i << endl;		      
+		      ctrain = 0;
+		      for (j = 0; j < sArgs.cross_validation_arg; j++) {		      
+			if(i == j)
+			  continue;
+			ctrain += pTrainVector[j].size();
+		      }
+		      
+		      probTrainVector.resize(ctrain);
+		      itrain = 0;
+		      for (j = 0; j < sArgs.cross_validation_arg; j++) {		      
+			if(i == j)
+			  continue;
+			for(k = 0; k < pTrainVector[j].size(); k++){
+			  probTrainVector[itrain] = pTrainVector[j][k];
+			  itrain += 1;
+			}
+		      }
+		      
+		      SVM.sigmoid_train(Results, probTrainVector, A, B);
+		      SVM.sigmoid_predict(Results, pTestVector[i], A, B);
+		    }
 		  }
 		  
 		  Results.Save(sArgs.output_arg);

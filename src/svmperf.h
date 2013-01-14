@@ -100,9 +100,11 @@ public:
 	void SetDoc(DOC* inDoc) {
 	  pDoc = inDoc;
 	}
+	
 	DOC* GetDoc() {
 	  return pDoc;
 	}	
+	
 };
 
 class Result {
@@ -371,6 +373,10 @@ public:
 	
 	// free the sample but don't free the Docs
 	static void FreeSample_leave_Doc(SAMPLE s);
+
+	// functions to convert probablity
+	void sigmoid_train(Sleipnir::CDat& Results, vector<SVMLabelPair*>& SVMLabels, float& A, float& B);
+	void sigmoid_predict(Sleipnir::CDat& Results, vector<SVMLabelPair*>& SVMLabels, float A, float B);
 };
 }
 

@@ -37,6 +37,7 @@ const char *gengetopt_args_info_help[] = {
   "\nPreprocessing:",
   "  -f, --flip               Calculate one minus values  (default=off)",
   "  -n, --normalize          Normalize to the range [0,1]  (default=off)",
+  "  -w, --normalizeNPone     Normalize to the range [-1,1]  (default=off)",
   "  -z, --zscore             Convert values to z-scores  (default=off)",
   "  -r, --rank               Rank transform data  (default=off)",
   "  -a, --randomize          Randomize data  (default=off)",
@@ -105,6 +106,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->quant_given = 0 ;
   args_info->flip_given = 0 ;
   args_info->normalize_given = 0 ;
+  args_info->normalizeNPone_given = 0 ;
   args_info->zscore_given = 0 ;
   args_info->rank_given = 0 ;
   args_info->randomize_given = 0 ;
@@ -149,6 +151,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->quant_orig = NULL;
   args_info->flip_flag = 0;
   args_info->normalize_flag = 0;
+  args_info->normalizeNPone_flag = 0;
   args_info->zscore_flag = 0;
   args_info->rank_flag = 0;
   args_info->randomize_flag = 0;
@@ -210,37 +213,38 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->quant_help = gengetopt_args_info_help[5] ;
   args_info->flip_help = gengetopt_args_info_help[7] ;
   args_info->normalize_help = gengetopt_args_info_help[8] ;
-  args_info->zscore_help = gengetopt_args_info_help[9] ;
-  args_info->rank_help = gengetopt_args_info_help[10] ;
-  args_info->randomize_help = gengetopt_args_info_help[11] ;
-  args_info->genes_help = gengetopt_args_info_help[13] ;
-  args_info->genex_help = gengetopt_args_info_help[14] ;
-  args_info->genee_help = gengetopt_args_info_help[15] ;
-  args_info->edges_help = gengetopt_args_info_help[16] ;
-  args_info->exedges_help = gengetopt_args_info_help[17] ;
-  args_info->gexedges_help = gengetopt_args_info_help[18] ;
-  args_info->cutoff_help = gengetopt_args_info_help[19] ;
-  args_info->zero_help = gengetopt_args_info_help[20] ;
-  args_info->dval_help = gengetopt_args_info_help[21] ;
-  args_info->dmissing_help = gengetopt_args_info_help[22] ;
-  args_info->duplicates_help = gengetopt_args_info_help[23] ;
-  args_info->subsample_help = gengetopt_args_info_help[24] ;
-  args_info->lookup1_help = gengetopt_args_info_help[26] ;
-  args_info->lookup2_help = gengetopt_args_info_help[27] ;
-  args_info->lookups1_help = gengetopt_args_info_help[28] ;
-  args_info->lookups2_help = gengetopt_args_info_help[29] ;
-  args_info->genelist_help = gengetopt_args_info_help[30] ;
-  args_info->paircount_help = gengetopt_args_info_help[31] ;
-  args_info->ccoeff_help = gengetopt_args_info_help[32] ;
-  args_info->hubbiness_help = gengetopt_args_info_help[33] ;
-  args_info->mar_help = gengetopt_args_info_help[34] ;
-  args_info->remap_help = gengetopt_args_info_help[36] ;
-  args_info->table_help = gengetopt_args_info_help[37] ;
-  args_info->skip_help = gengetopt_args_info_help[38] ;
-  args_info->memmap_help = gengetopt_args_info_help[39] ;
-  args_info->random_help = gengetopt_args_info_help[40] ;
-  args_info->noise_help = gengetopt_args_info_help[41] ;
-  args_info->verbosity_help = gengetopt_args_info_help[42] ;
+  args_info->normalizeNPone_help = gengetopt_args_info_help[9] ;
+  args_info->zscore_help = gengetopt_args_info_help[10] ;
+  args_info->rank_help = gengetopt_args_info_help[11] ;
+  args_info->randomize_help = gengetopt_args_info_help[12] ;
+  args_info->genes_help = gengetopt_args_info_help[14] ;
+  args_info->genex_help = gengetopt_args_info_help[15] ;
+  args_info->genee_help = gengetopt_args_info_help[16] ;
+  args_info->edges_help = gengetopt_args_info_help[17] ;
+  args_info->exedges_help = gengetopt_args_info_help[18] ;
+  args_info->gexedges_help = gengetopt_args_info_help[19] ;
+  args_info->cutoff_help = gengetopt_args_info_help[20] ;
+  args_info->zero_help = gengetopt_args_info_help[21] ;
+  args_info->dval_help = gengetopt_args_info_help[22] ;
+  args_info->dmissing_help = gengetopt_args_info_help[23] ;
+  args_info->duplicates_help = gengetopt_args_info_help[24] ;
+  args_info->subsample_help = gengetopt_args_info_help[25] ;
+  args_info->lookup1_help = gengetopt_args_info_help[27] ;
+  args_info->lookup2_help = gengetopt_args_info_help[28] ;
+  args_info->lookups1_help = gengetopt_args_info_help[29] ;
+  args_info->lookups2_help = gengetopt_args_info_help[30] ;
+  args_info->genelist_help = gengetopt_args_info_help[31] ;
+  args_info->paircount_help = gengetopt_args_info_help[32] ;
+  args_info->ccoeff_help = gengetopt_args_info_help[33] ;
+  args_info->hubbiness_help = gengetopt_args_info_help[34] ;
+  args_info->mar_help = gengetopt_args_info_help[35] ;
+  args_info->remap_help = gengetopt_args_info_help[37] ;
+  args_info->table_help = gengetopt_args_info_help[38] ;
+  args_info->skip_help = gengetopt_args_info_help[39] ;
+  args_info->memmap_help = gengetopt_args_info_help[40] ;
+  args_info->random_help = gengetopt_args_info_help[41] ;
+  args_info->noise_help = gengetopt_args_info_help[42] ;
+  args_info->verbosity_help = gengetopt_args_info_help[43] ;
   
 }
 
@@ -405,6 +409,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "flip", 0, 0 );
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
+  if (args_info->normalizeNPone_given)
+    write_into_file(outfile, "normalizeNPone", 0, 0 );
   if (args_info->zscore_given)
     write_into_file(outfile, "zscore", 0, 0 );
   if (args_info->rank_given)
@@ -718,6 +724,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "quant",	1, NULL, 'q' },
         { "flip",	0, NULL, 'f' },
         { "normalize",	0, NULL, 'n' },
+        { "normalizeNPone",	0, NULL, 'w' },
         { "zscore",	0, NULL, 'z' },
         { "rank",	0, NULL, 'r' },
         { "randomize",	0, NULL, 'a' },
@@ -752,7 +759,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hi:o:q:fnzrag:G:D:e:x:X:c:ZV:M:du:l:L:t:T:EPCHJp:bs:mR:Nv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hi:o:q:fnwzrag:G:D:e:x:X:c:ZV:M:du:l:L:t:T:EPCHJp:bs:mR:Nv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -815,6 +822,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
               &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "normalize", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'w':	/* Normalize to the range [-1,1].  */
+        
+        
+          if (update_arg((void *)&(args_info->normalizeNPone_flag), 0, &(args_info->normalizeNPone_given),
+              &(local_args_info.normalizeNPone_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "normalizeNPone", 'w',
               additional_error))
             goto failure;
         

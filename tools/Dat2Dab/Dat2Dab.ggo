@@ -15,6 +15,8 @@ option	"flip"			f	"Calculate one minus values"
 							flag	off
 option	"normalize"		n	"Normalize to the range [0,1]"
 							flag	off
+option	"normalizeNPone"	w	"Normalize to the range [-1,1]"
+							flag	off
 option	"zscore"		z	"Convert values to z-scores"
 							flag	off
 option	"rank"			r	"Rank transform data"
