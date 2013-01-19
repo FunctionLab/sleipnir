@@ -43,7 +43,7 @@ option	"random"			R	"Seed random generator (default -1 uses current time)"
 							int	default="-1" no
 option	"tgene"				T	"Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list"
 							string	typestr="filename"
-option	"balance"			b	"Balance the training gene ratios"
+option	"balance"			b	"DEBUG: check before usage, Balance the training gene ratios"
 										flag	off
 option  "bfactor"    			F   "DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1."
 										float  no
@@ -54,6 +54,8 @@ option	"probCross"			D	"Cross-validation setting for output prediction values as
 option  "normalizeZero"             	z       "Normalize input data to the range [0, 1]"
                                                         flag    off
 option  "normalizeNPone"             	N       "Normalize input data to the range [-1, 1]"
+                                                        flag    off
+option  "edgeholdout"             	X       "For cross-validation perform edge holdout (Default is gene holdout)"
                                                         flag    off
 
 section "Filtering"

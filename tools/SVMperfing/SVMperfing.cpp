@@ -382,7 +382,7 @@ int main(int iArgs, char** aszArgs) {
 	    cerr << "Could not open input labels Dat" << endl;
 	    return 1;
 	  }
-	  
+	  	  
 	  // set all NaN values to negatives
 	  if( sArgs.nan2neg_given ){
 	    cerr << "Set NaN labels dat as negatives" << endl;
@@ -427,6 +427,18 @@ int main(int iArgs, char** aszArgs) {
 		      Labels.Set(i, j, CMeta::GetNaN());
 		  }
 	    }
+	  } // if edgeholdout flag not given, we are doing gene holdout by default. 
+	  // Since target gene list was not given we are using all genes in labels as target genes to cross holdout
+	  else if( !sArgs.edgeholdout_flag ){
+	    mapTgene.resize(Labels.GetGenes());
+	    
+	    // all genes are target genes
+	    for(i = 0; i < Labels.GetGenes(); i++){
+	      mapTgene[i] = true;
+	    }
+	    
+	    // keep track of positive gene counts
+	    tgeneCount.resize(Labels.GetGenes());
 	  }
 	  
 	  //if given a context map the context genes
@@ -470,6 +482,10 @@ int main(int iArgs, char** aszArgs) {
 		  }
 	    }
 	  }
+	  
+	  // Exclude labels without context genes
+	  if(sArgs.context_given )
+	    Labels.FilterGenes( Context, CDat::EFilterInclude );
 	  
 	  numpos = 0;
 	  for(i = 0; i < Labels.GetGenes(); i++)
@@ -519,7 +535,7 @@ int main(int iArgs, char** aszArgs) {
 		  mapTgene2fold.resize(mapTgene.size());
 		  
 		  // assign target genes to there cross validation fold
-		  if(sArgs.tgene_given){
+		  if(sArgs.tgene_given || !sArgs.edgeholdout_flag){
 		    for(i = 0; i < mapTgene.size(); i++){
 		      if(!mapTgene[i]){
 			mapTgene2fold[i] = -1; 

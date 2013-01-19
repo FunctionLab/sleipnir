@@ -47,12 +47,13 @@ const char *gengetopt_args_info_help[] = {
   "  -M, --mmap                  Memory map binary input  (default=off)",
   "  -R, --random=INT            Seed random generator (default -1 uses current \n                                time)  (default=`-1')",
   "  -T, --tgene=filename        Target gene list, use this gene list as gene \n                                holdout cross-validation and also filter labels \n                                that only have one gene in given target gene \n                                list",
-  "  -b, --balance               Balance the training gene ratios  (default=off)",
+  "  -b, --balance               DEBUG: check before usage, Balance the training \n                                gene ratios  (default=off)",
   "  -F, --bfactor=FLOAT         DEBUG: only for < 500, When balancing neg and pos \n                                counts exmaples for training what factor to \n                                increase. default is 1.",
   "  -B, --prob                  Output prediction values as estimated probablity \n                                (Platt method)  (default=off)",
   "  -D, --probCross             Cross-validation setting for output prediction \n                                values as estimated probablity (Platt method)  \n                                (default=off)",
   "  -z, --normalizeZero         Normalize input data to the range [0, 1]  \n                                (default=off)",
   "  -N, --normalizeNPone        Normalize input data to the range [-1, 1]  \n                                (default=off)",
+  "  -X, --edgeholdout           For cross-validation perform edge holdout \n                                (Default is gene holdout)  (default=off)",
   "\nFiltering:",
   "  -q, --onetgene              Only keep edges from lables that have one gene in \n                                the target gene list  (default=off)",
   "  -P, --prior=FLOAT           Randomly sub-sample the negative labels to reach \n                                target prior. If cannot reach target prior, set \n                                to closest prior.",
@@ -110,6 +111,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->probCross_given = 0 ;
   args_info->normalizeZero_given = 0 ;
   args_info->normalizeNPone_given = 0 ;
+  args_info->edgeholdout_given = 0 ;
   args_info->onetgene_given = 0 ;
   args_info->prior_given = 0 ;
   args_info->savemodel_given = 0 ;
@@ -153,6 +155,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->probCross_flag = 0;
   args_info->normalizeZero_flag = 0;
   args_info->normalizeNPone_flag = 0;
+  args_info->edgeholdout_flag = 0;
   args_info->onetgene_flag = 0;
   args_info->prior_orig = NULL;
   args_info->savemodel_flag = 0;
@@ -190,11 +193,12 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->probCross_help = gengetopt_args_info_help[22] ;
   args_info->normalizeZero_help = gengetopt_args_info_help[23] ;
   args_info->normalizeNPone_help = gengetopt_args_info_help[24] ;
-  args_info->onetgene_help = gengetopt_args_info_help[26] ;
-  args_info->prior_help = gengetopt_args_info_help[27] ;
-  args_info->savemodel_help = gengetopt_args_info_help[28] ;
-  args_info->mintrain_help = gengetopt_args_info_help[29] ;
-  args_info->context_help = gengetopt_args_info_help[30] ;
+  args_info->edgeholdout_help = gengetopt_args_info_help[25] ;
+  args_info->onetgene_help = gengetopt_args_info_help[27] ;
+  args_info->prior_help = gengetopt_args_info_help[28] ;
+  args_info->savemodel_help = gengetopt_args_info_help[29] ;
+  args_info->mintrain_help = gengetopt_args_info_help[30] ;
+  args_info->context_help = gengetopt_args_info_help[31] ;
   
 }
 
@@ -379,6 +383,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "normalizeZero", 0, 0 );
   if (args_info->normalizeNPone_given)
     write_into_file(outfile, "normalizeNPone", 0, 0 );
+  if (args_info->edgeholdout_given)
+    write_into_file(outfile, "edgeholdout", 0, 0 );
   if (args_info->onetgene_given)
     write_into_file(outfile, "onetgene", 0, 0 );
   if (args_info->prior_given)
@@ -675,6 +681,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "probCross",	0, NULL, 'D' },
         { "normalizeZero",	0, NULL, 'z' },
         { "normalizeNPone",	0, NULL, 'N' },
+        { "edgeholdout",	0, NULL, 'X' },
         { "onetgene",	0, NULL, 'q' },
         { "prior",	1, NULL, 'P' },
         { "savemodel",	0, NULL, 's' },
@@ -683,7 +690,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVl:o:d:m:Sv:c:e:k:t:p:nMR:T:bF:BDzNqP:sE:C:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVl:o:d:m:Sv:c:e:k:t:p:nMR:T:bF:BDzNXqP:sE:C:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -889,7 +896,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'b':	/* Balance the training gene ratios.  */
+        case 'b':	/* DEBUG: check before usage, Balance the training gene ratios.  */
         
         
           if (update_arg((void *)&(args_info->balance_flag), 0, &(args_info->balance_given),
@@ -947,6 +954,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->normalizeNPone_flag), 0, &(args_info->normalizeNPone_given),
               &(local_args_info.normalizeNPone_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "normalizeNPone", 'N',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'X':	/* For cross-validation perform edge holdout (Default is gene holdout).  */
+        
+        
+          if (update_arg((void *)&(args_info->edgeholdout_flag), 0, &(args_info->edgeholdout_given),
+              &(local_args_info.edgeholdout_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "edgeholdout", 'X',
               additional_error))
             goto failure;
         

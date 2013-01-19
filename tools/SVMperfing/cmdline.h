@@ -97,8 +97,8 @@ struct gengetopt_args_info
   char * tgene_arg;	/**< @brief Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list.  */
   char * tgene_orig;	/**< @brief Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list original value given at command line.  */
   const char *tgene_help; /**< @brief Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list help description.  */
-  int balance_flag;	/**< @brief Balance the training gene ratios (default=off).  */
-  const char *balance_help; /**< @brief Balance the training gene ratios help description.  */
+  int balance_flag;	/**< @brief DEBUG: check before usage, Balance the training gene ratios (default=off).  */
+  const char *balance_help; /**< @brief DEBUG: check before usage, Balance the training gene ratios help description.  */
   float bfactor_arg;	/**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1..  */
   char * bfactor_orig;	/**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1. original value given at command line.  */
   const char *bfactor_help; /**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1. help description.  */
@@ -110,6 +110,8 @@ struct gengetopt_args_info
   const char *normalizeZero_help; /**< @brief Normalize input data to the range [0, 1] help description.  */
   int normalizeNPone_flag;	/**< @brief Normalize input data to the range [-1, 1] (default=off).  */
   const char *normalizeNPone_help; /**< @brief Normalize input data to the range [-1, 1] help description.  */
+  int edgeholdout_flag;	/**< @brief For cross-validation perform edge holdout (Default is gene holdout) (default=off).  */
+  const char *edgeholdout_help; /**< @brief For cross-validation perform edge holdout (Default is gene holdout) help description.  */
   int onetgene_flag;	/**< @brief Only keep edges from lables that have one gene in the target gene list (default=off).  */
   const char *onetgene_help; /**< @brief Only keep edges from lables that have one gene in the target gene list help description.  */
   float prior_arg;	/**< @brief Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior..  */
@@ -147,6 +149,7 @@ struct gengetopt_args_info
   unsigned int probCross_given ;	/**< @brief Whether probCross was given.  */
   unsigned int normalizeZero_given ;	/**< @brief Whether normalizeZero was given.  */
   unsigned int normalizeNPone_given ;	/**< @brief Whether normalizeNPone was given.  */
+  unsigned int edgeholdout_given ;	/**< @brief Whether edgeholdout was given.  */
   unsigned int onetgene_given ;	/**< @brief Whether onetgene was given.  */
   unsigned int prior_given ;	/**< @brief Whether prior was given.  */
   unsigned int savemodel_given ;	/**< @brief Whether savemodel was given.  */
