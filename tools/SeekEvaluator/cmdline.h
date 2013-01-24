@@ -82,6 +82,14 @@ struct gengetopt_args_info
   const char *weight_help; /**< @brief Dataset weight file, (*.dweight) help description.  */
   int fold_over_random_flag;	/**< @brief Fold-over-random (default=off).  */
   const char *fold_over_random_help; /**< @brief Fold-over-random help description.  */
+  int p_value_flag;	/**< @brief Simulated p-value (default=off).  */
+  const char *p_value_help; /**< @brief Simulated p-value help description.  */
+  char * random_dir_arg;	/**< @brief Random directory.  */
+  char * random_dir_orig;	/**< @brief Random directory original value given at command line.  */
+  const char *random_dir_help; /**< @brief Random directory help description.  */
+  int random_num_arg;	/**< @brief Number of random trials (default='100').  */
+  char * random_num_orig;	/**< @brief Number of random trials original value given at command line.  */
+  const char *random_num_help; /**< @brief Number of random trials help description.  */
   char * goldstd_arg;	/**< @brief Gold standard gene set file (one line, space delimited).  */
   char * goldstd_orig;	/**< @brief Gold standard gene set file (one line, space delimited) original value given at command line.  */
   const char *goldstd_help; /**< @brief Gold standard gene set file (one line, space delimited) help description.  */
@@ -136,6 +144,9 @@ struct gengetopt_args_info
   unsigned int dataset_map_given ;	/**< @brief Whether dataset_map was given.  */
   unsigned int weight_given ;	/**< @brief Whether weight was given.  */
   unsigned int fold_over_random_given ;	/**< @brief Whether fold_over_random was given.  */
+  unsigned int p_value_given ;	/**< @brief Whether p_value was given.  */
+  unsigned int random_dir_given ;	/**< @brief Whether random_dir was given.  */
+  unsigned int random_num_given ;	/**< @brief Whether random_num was given.  */
   unsigned int goldstd_given ;	/**< @brief Whether goldstd was given.  */
   unsigned int gscore_given ;	/**< @brief Whether gscore was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */

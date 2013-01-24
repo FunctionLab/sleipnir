@@ -604,7 +604,7 @@ int main( int iArgs, char** aszArgs ) {
 			string fileStem = CMeta::Deextension(fileName);
 			sprintf(outFile, "%s/%s.gavg", sArgs.dir_out_arg,
 				fileStem.c_str());
-			CSeekWriter::GetGeneAverage(Dat, vecstrGenes, vecGeneAvg, logit);
+			CSeekWriter::GetGeneAverage(Dat, vecstrGenes, vecGeneAvg, logit, sArgs.top_avg_percent_arg);
 			CSeekTools::WriteArray(outFile, vecGeneAvg);
 		}
 

@@ -63,6 +63,7 @@ if WITH_SMILE_TOOLS
 	  SeekServer \
 	  SeekEvaluator \
 	  SeekGeneRecommender \
+	  SeekAggregatedDataset \
 	  DSLConverter \
 	  Dab2Dad \
 	  Edges2Posteriors \

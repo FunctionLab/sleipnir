@@ -337,7 +337,7 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 		//Gold standard must be the same across all queries for this mode!!
 		//ASSUME THIS IS TRUE
 		for(i=0; i<listSize; i++){
-			for(j=0; j<sortedGenes[i].size(); j++){
+			for(j=0; j<sortedGenes[0].size(); j++){
 				if(q[i][sortedGenes[i][j].i]==1){
 					sortedGenes[i][j].f = nan;
 				}
@@ -368,10 +368,17 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 		}
 
 		else if(sArgs.agg_ranksum_flag==1){
+			//fprintf(stderr, "Got here 2\n"); 
 			master_rank.resize(sortedGenes[0].size());
 
-			for(i=0; i<listSize; i++)
+			//fprintf(stderr, "Got here 2a\n"); 
+
+			for(i=0; i<listSize; i++){
 				sort(sortedGenes[i].begin(), sortedGenes[i].end());
+				//fprintf(stderr, "Sort %d fine\n", i); 
+			}	
+
+			//fprintf(stderr, "Got here 2b\n"); 
 
 			for(j=0; j<sortedGenes[0].size(); j++){
 				master_rank[j].i = j;
@@ -389,6 +396,8 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 			sort(master_rank.begin(), master_rank.end());
 
 			master = &master_rank;
+
+			//fprintf(stderr, "Got here 3\n"); 
 		}
 
 		if(met!=PR_ALL){
@@ -469,6 +478,14 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 			result[1].push_back(Q1);
 			result[1].push_back(Q2);
 			result[1].push_back(Q3);
+			return 0;
+		}
+		if(sArgs.display_all_flag==1){
+			result.resize(eval.size());
+			for(i=0; i<eval.size(); i++){
+				result[i] = vector<float>();
+				result[i].push_back(eval[i]);
+			}
 			return 0;
 		}
 
@@ -629,6 +646,8 @@ int main( int iArgs, char** aszArgs ) {
 		string genescoreFile = sArgs.gscore_arg;
 		vector<float> geneScores;
 		CSeekTools::ReadArray(genescoreFile.c_str(), geneScores);
+		//float maxScore = *std::max_element(geneScores.begin(),
+		//	geneScores.end());
 
 		float nan = sArgs.nan_arg;
 		vector<AResultFloat> sortedGenes;
@@ -638,6 +657,72 @@ int main( int iArgs, char** aszArgs ) {
 			sortedGenes[i].f = geneScores[i];
 		}
 
+		//Query genes themselves have lowest score, to prevent
+		//them from being counted in PR
+		for(i=0; i<queryGeneID.size(); i++)
+			sortedGenes[queryGeneID[i]].f = nan;
+
+		sort(sortedGenes.begin(), sortedGenes.end());
+
+		if(sArgs.p_value_flag==1){
+			string random_directory = sArgs.random_dir_arg;
+			int num_random = sArgs.random_num_arg;
+			int ii, jj;
+			char ac[256];
+			vector<vector<int> > randomRank;
+			vector<int> geneRank;
+
+			randomRank.resize(sortedGenes.size());
+			geneRank.resize(sortedGenes.size());
+			for(ii=0; ii<sortedGenes.size(); ii++){
+				randomRank[ii].resize(num_random);
+			}
+
+			for(ii=0; ii<num_random; ii++){
+				vector<float> randomScores;
+				sprintf(ac, "%s/%d.gscore", random_directory.c_str(), ii);
+				CSeekTools::ReadArray(ac, randomScores);
+				vector<AResultFloat> sortedRandom;
+				sortedRandom.resize(randomScores.size());
+				for(jj=0; jj<randomScores.size(); jj++){
+					sortedRandom[jj].i = jj;
+					sortedRandom[jj].f = randomScores[jj];
+				}
+				sort(sortedRandom.begin(), sortedRandom.end());
+				for(jj=0; jj<randomScores.size(); jj++){
+					randomRank[sortedRandom[jj].i][ii] = jj;
+				}
+			}
+
+			for(jj=0; jj<geneScores.size(); jj++){
+				sort(randomRank[jj].begin(), randomRank[jj].end());
+				geneRank[sortedGenes[jj].i] = jj;
+			}
+
+			for(jj=0; jj<geneScores.size(); jj++){
+				int gene = sortedGenes[jj].i;
+				int gene_rank = jj;
+				vector<int> &rR = randomRank[gene];
+				int kk = 0;
+				for(kk=0; kk<rR.size(); kk++){
+					if(gene_rank<=rR[kk]){
+						fprintf(stderr, "%d %d / 100\n", gene_rank, kk);
+						break;
+					}else if(kk==rR.size()-1){
+						fprintf(stderr, "%d %d / 100\n", gene_rank, kk);
+					}
+				}
+			}
+
+			return 0;
+		}
+
+		if(sArgs.dislay_only_flag==1){
+			for(i=0; i<15000; i++)
+				fprintf(stderr, "%s\t%.5f\n", 
+					vecstrGenes[sortedGenes[i].i].c_str(), sortedGenes[i].f);
+			return 0;
+		}
 
 		string goldstdFile = sArgs.goldstd_arg;
 		vector<string> goldstdGenes;
@@ -649,47 +734,11 @@ int main( int iArgs, char** aszArgs ) {
 		for(i=0; i<goldstdGenes.size(); i++)
 			goldstdGenePresence[mapstriGenes[goldstdGenes[i]]] = 1;
 
-
-		string exclFile = sArgs.exclude_arg;
-		vector<char> excludeGene;
-		vector<string> ex;
-		CSeekTools::ReadMultiGeneOneLine(exclFile, ex);
-		CSeekTools::InitVector(excludeGene, vecstrGenes.size(), (char) 0);
-		for(j=0; j<ex.size(); j++)
-			excludeGene[mapstriGenes[ex[j]]] = 1;
-
-		vector<char> q;
-		CSeekTools::InitVector(q, sortedGenes.size(), (char) 0);
-		for(j=0; j<queryGeneID.size(); j++)
-			q[queryGeneID[j]] = 1;
-
-		//Query genes themselves have lowest score, to prevent
-		//them from being counted in PR
-		for(j=0; j<sortedGenes.size(); j++){
-			if(q[sortedGenes[j].i]==1){
-				sortedGenes[j].f = nan;
-			}
-			if(excludeGene[sortedGenes[j].i]==1){
-				sortedGenes[j].f = nan;
-			}
-		}
-
-		sort(sortedGenes.begin(), sortedGenes.end());
-
-		if(sArgs.dislay_only_flag==1){
-			for(i=0; i<500; i++)
-				fprintf(stderr, "%s\t%.5f\n", 
-					vecstrGenes[sortedGenes[i].i].c_str(), sortedGenes[i].f);
-			return 0;
-		}
-
 		if(met!=PR_ALL){
 			float eval;
 			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes,
 				goldstdGenePresence, nan, eval);
 			if(!ret) return 1;
-
-
 			fprintf(stderr, "%.5f\n", eval);
 			return 0;
 		}else{
@@ -698,8 +747,6 @@ int main( int iArgs, char** aszArgs ) {
 			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes,
 				goldstdGenePresence, nan, evalAll);
 			if(!ret) return 1;
-
-
 			PrintVector(evalAll);
 			return 0;
 		}
@@ -757,12 +804,20 @@ int main( int iArgs, char** aszArgs ) {
 		float nan = sArgs.nan_arg;
 		for(i=0; i<vecstrList.size(); i++){
 			CSeekTools::ReadArray(vecstrList[i].c_str(), geneScores[i]);
+			//maxScore[i] = *std::max_element(geneScores[i].begin(),
+			//	geneScores[i].end());
 			sortedGenes[i].resize(geneScores[i].size());
 			for(j=0; j<sortedGenes[i].size(); j++){
 				sortedGenes[i][j].i = j;
 				sortedGenes[i][j].f = geneScores[i][j];
+				if(isnan(geneScores[i][j]) || isinf(geneScores[i][j])){
+					sortedGenes[i][j].f = nan;
+				}
+				//fprintf(stderr, "%.5f\n", sortedGenes[i][j].f);
 			}
 		}
+
+		//fprintf(stderr, "Got here"); 
 
 		vector<vector<float> > result;
 		DoAggregate(sArgs, met, sortedGenes, queryGeneID, vecstrList.size(),

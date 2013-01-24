@@ -55,6 +55,12 @@ option	"per_q_required"	C	"Fraction (max 1.0) of query required to correlate wit
 								float default="0.0"
 option	"square_z"			e	"If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff"							
 								flag	off
+option	"rank_biased_precision_p"	s	"Rank biased precision p parameter"
+								float	default="0.99"	
+option	"random"			S	"Generate random ranking score"
+								flag	off
+option	"num_random"		t	"Number of repetitions of generating random rankings"
+								int	default="10"
 
 section "MISC"								
 option	"is_nibble"			N	"Whether the input DB is nibble type"

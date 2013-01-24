@@ -162,7 +162,8 @@ public:
 	bool InitializeDataMatrix(ushort**, const vector<float> &,
 		const ushort&, const ushort&, const bool=true, const bool=true,
 		const bool=false, const bool=false,
-		const float cutoff=-1.0*CMeta::GetNaN());
+		const float cutoff=-1.0*CMeta::GetNaN(), 
+		const bool=false, gsl_rng *rand=NULL);
 
 	ushort** GetDataMatrix();
 

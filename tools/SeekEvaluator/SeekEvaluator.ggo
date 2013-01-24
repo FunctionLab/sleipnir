@@ -55,6 +55,12 @@ option	"weight"			w	"Dataset weight file, (*.dweight)"
 section "Options for all"
 option	"fold_over_random"	f	"Fold-over-random"
 								flag	off
+option	"p_value"			P	"Simulated p-value"
+								flag	off
+option	"random_dir"		R	"Random directory"
+								string typestr="directory"
+option	"random_num"		N	"Number of random trials"
+								int		default="100"
 
 section "Input required by single-query"
 option	"goldstd"			s	"Gold standard gene set file (one line, space delimited)"

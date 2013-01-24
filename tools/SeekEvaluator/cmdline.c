@@ -57,6 +57,9 @@ const char *gengetopt_args_info_help[] = {
   "  -w, --weight=filename        Dataset weight file, (*.dweight)",
   "\nOptions for all:",
   "  -f, --fold_over_random       Fold-over-random  (default=off)",
+  "  -P, --p_value                Simulated p-value  (default=off)",
+  "  -R, --random_dir=directory   Random directory",
+  "  -N, --random_num=INT         Number of random trials  (default=`100')",
   "\nInput required by single-query:",
   "  -s, --goldstd=filename       Gold standard gene set file (one line, space \n                                 delimited)",
   "  -g, --gscore=filename        Gene score file (.gscore)",
@@ -121,6 +124,9 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->dataset_map_given = 0 ;
   args_info->weight_given = 0 ;
   args_info->fold_over_random_given = 0 ;
+  args_info->p_value_given = 0 ;
+  args_info->random_dir_given = 0 ;
+  args_info->random_num_given = 0 ;
   args_info->goldstd_given = 0 ;
   args_info->gscore_given = 0 ;
   args_info->query_given = 0 ;
@@ -163,6 +169,11 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->weight_arg = NULL;
   args_info->weight_orig = NULL;
   args_info->fold_over_random_flag = 0;
+  args_info->p_value_flag = 0;
+  args_info->random_dir_arg = NULL;
+  args_info->random_dir_orig = NULL;
+  args_info->random_num_arg = 100;
+  args_info->random_num_orig = NULL;
   args_info->goldstd_arg = NULL;
   args_info->goldstd_orig = NULL;
   args_info->gscore_arg = NULL;
@@ -214,16 +225,19 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->dataset_map_help = gengetopt_args_info_help[25] ;
   args_info->weight_help = gengetopt_args_info_help[26] ;
   args_info->fold_over_random_help = gengetopt_args_info_help[28] ;
-  args_info->goldstd_help = gengetopt_args_info_help[30] ;
-  args_info->gscore_help = gengetopt_args_info_help[31] ;
-  args_info->query_help = gengetopt_args_info_help[32] ;
-  args_info->exclude_help = gengetopt_args_info_help[33] ;
-  args_info->nan_help = gengetopt_args_info_help[34] ;
-  args_info->goldstd_list_help = gengetopt_args_info_help[36] ;
-  args_info->gscore_list_help = gengetopt_args_info_help[37] ;
-  args_info->query_list_help = gengetopt_args_info_help[38] ;
-  args_info->exclude_list_help = gengetopt_args_info_help[39] ;
-  args_info->dir_out_help = gengetopt_args_info_help[41] ;
+  args_info->p_value_help = gengetopt_args_info_help[29] ;
+  args_info->random_dir_help = gengetopt_args_info_help[30] ;
+  args_info->random_num_help = gengetopt_args_info_help[31] ;
+  args_info->goldstd_help = gengetopt_args_info_help[33] ;
+  args_info->gscore_help = gengetopt_args_info_help[34] ;
+  args_info->query_help = gengetopt_args_info_help[35] ;
+  args_info->exclude_help = gengetopt_args_info_help[36] ;
+  args_info->nan_help = gengetopt_args_info_help[37] ;
+  args_info->goldstd_list_help = gengetopt_args_info_help[39] ;
+  args_info->gscore_list_help = gengetopt_args_info_help[40] ;
+  args_info->query_list_help = gengetopt_args_info_help[41] ;
+  args_info->exclude_list_help = gengetopt_args_info_help[42] ;
+  args_info->dir_out_help = gengetopt_args_info_help[44] ;
   
 }
 
@@ -314,6 +328,9 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->dataset_map_orig));
   free_string_field (&(args_info->weight_arg));
   free_string_field (&(args_info->weight_orig));
+  free_string_field (&(args_info->random_dir_arg));
+  free_string_field (&(args_info->random_dir_orig));
+  free_string_field (&(args_info->random_num_orig));
   free_string_field (&(args_info->goldstd_arg));
   free_string_field (&(args_info->goldstd_orig));
   free_string_field (&(args_info->gscore_arg));
@@ -413,6 +430,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "weight", args_info->weight_orig, 0);
   if (args_info->fold_over_random_given)
     write_into_file(outfile, "fold_over_random", 0, 0 );
+  if (args_info->p_value_given)
+    write_into_file(outfile, "p_value", 0, 0 );
+  if (args_info->random_dir_given)
+    write_into_file(outfile, "random_dir", args_info->random_dir_orig, 0);
+  if (args_info->random_num_given)
+    write_into_file(outfile, "random_num", args_info->random_num_orig, 0);
   if (args_info->goldstd_given)
     write_into_file(outfile, "goldstd", args_info->goldstd_orig, 0);
   if (args_info->gscore_given)
@@ -725,6 +748,9 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "dataset_map",	1, NULL, 'I' },
         { "weight",	1, NULL, 'w' },
         { "fold_over_random",	0, NULL, 'f' },
+        { "p_value",	0, NULL, 'P' },
+        { "random_dir",	1, NULL, 'R' },
+        { "random_num",	1, NULL, 'N' },
         { "goldstd",	1, NULL, 's' },
         { "gscore",	1, NULL, 'g' },
         { "query",	1, NULL, 'q' },
@@ -738,7 +764,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVOMratcux:e:p:FWABCDEi:I:w:fs:g:q:y:n:S:G:Q:X:d:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVOMratcux:e:p:FWABCDEi:I:w:fPR:N:s:g:q:y:n:S:G:Q:X:d:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -981,6 +1007,40 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->fold_over_random_flag), 0, &(args_info->fold_over_random_given),
               &(local_args_info.fold_over_random_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "fold_over_random", 'f',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'P':	/* Simulated p-value.  */
+        
+        
+          if (update_arg((void *)&(args_info->p_value_flag), 0, &(args_info->p_value_given),
+              &(local_args_info.p_value_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "p_value", 'P',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'R':	/* Random directory.  */
+        
+        
+          if (update_arg( (void *)&(args_info->random_dir_arg), 
+               &(args_info->random_dir_orig), &(args_info->random_dir_given),
+              &(local_args_info.random_dir_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "random_dir", 'R',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'N':	/* Number of random trials.  */
+        
+        
+          if (update_arg( (void *)&(args_info->random_num_arg), 
+               &(args_info->random_num_orig), &(args_info->random_num_given),
+              &(local_args_info.random_num_given), optarg, 0, "100", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "random_num", 'N',
               additional_error))
             goto failure;
         

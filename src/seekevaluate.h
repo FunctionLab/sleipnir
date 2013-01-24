@@ -73,6 +73,12 @@ public:
 		const CSeekIntIntMap &mapG, vector<AResult> *sing,
 		/* optional */
 		const ushort top = 0);
+
+	static bool AveragePrecision(
+		const vector<unsigned short> &rank, float &ap,
+		const vector<char> &mask, const vector<char> &gold,
+		const CSeekIntIntMap &mapG, vector<AResult> *ar);
+
 };
 
 

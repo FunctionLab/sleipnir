@@ -57,6 +57,9 @@ const char *gengetopt_args_info_help[] = {
   "  -c, --score_cutoff=FLOAT      Cutoff on the gene-gene score before adding, \n                                  default: no cutoff  (default=`-9999')",
   "  -C, --per_q_required=FLOAT    Fraction (max 1.0) of query required to \n                                  correlate with a gene, in order to count the \n                                  gene's query score. A gene may not correlate \n                                  with a query gene if it is absent, or its \n                                  correlation with query does not pass cut-off \n                                  (specified by --score_cutoff). Use this with \n                                  caution. Be careful if using with \n                                  --score_cutoff.  (default=`0.0')",
   "  -e, --square_z                If using z-score, square-transform z-scores. \n                                  Usually used in conjunction with \n                                  --score-cutoff  (default=off)",
+  "  -s, --rank_biased_precision_p=FLOAT\n                                Rank biased precision p parameter  \n                                  (default=`0.99')",
+  "  -S, --random                  Generate random ranking score  (default=off)",
+  "  -t, --num_random=INT          Number of repetitions of generating random \n                                  rankings  (default=`10')",
   "\nMISC:",
   "  -N, --is_nibble               Whether the input DB is nibble type  \n                                  (default=off)",
   "  -b, --buffer=INT              Number of Databaselets to store in memory  \n                                  (default=`20')",
@@ -116,6 +119,9 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->score_cutoff_given = 0 ;
   args_info->per_q_required_given = 0 ;
   args_info->square_z_given = 0 ;
+  args_info->rank_biased_precision_p_given = 0 ;
+  args_info->random_given = 0 ;
+  args_info->num_random_given = 0 ;
   args_info->is_nibble_given = 0 ;
   args_info->buffer_given = 0 ;
   args_info->output_text_given = 0 ;
@@ -167,6 +173,11 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->per_q_required_arg = 0.0;
   args_info->per_q_required_orig = NULL;
   args_info->square_z_flag = 0;
+  args_info->rank_biased_precision_p_arg = 0.99;
+  args_info->rank_biased_precision_p_orig = NULL;
+  args_info->random_flag = 0;
+  args_info->num_random_arg = 10;
+  args_info->num_random_orig = NULL;
   args_info->is_nibble_flag = 0;
   args_info->buffer_arg = 20;
   args_info->buffer_orig = NULL;
@@ -207,10 +218,13 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->score_cutoff_help = gengetopt_args_info_help[26] ;
   args_info->per_q_required_help = gengetopt_args_info_help[27] ;
   args_info->square_z_help = gengetopt_args_info_help[28] ;
-  args_info->is_nibble_help = gengetopt_args_info_help[30] ;
-  args_info->buffer_help = gengetopt_args_info_help[31] ;
-  args_info->output_text_help = gengetopt_args_info_help[32] ;
-  args_info->output_dir_help = gengetopt_args_info_help[33] ;
+  args_info->rank_biased_precision_p_help = gengetopt_args_info_help[29] ;
+  args_info->random_help = gengetopt_args_info_help[30] ;
+  args_info->num_random_help = gengetopt_args_info_help[31] ;
+  args_info->is_nibble_help = gengetopt_args_info_help[33] ;
+  args_info->buffer_help = gengetopt_args_info_help[34] ;
+  args_info->output_text_help = gengetopt_args_info_help[35] ;
+  args_info->output_dir_help = gengetopt_args_info_help[36] ;
   
 }
 
@@ -324,6 +338,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->func_dset_orig));
   free_string_field (&(args_info->score_cutoff_orig));
   free_string_field (&(args_info->per_q_required_orig));
+  free_string_field (&(args_info->rank_biased_precision_p_orig));
+  free_string_field (&(args_info->num_random_orig));
   free_string_field (&(args_info->buffer_orig));
   free_string_field (&(args_info->output_dir_arg));
   free_string_field (&(args_info->output_dir_orig));
@@ -413,6 +429,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "per_q_required", args_info->per_q_required_orig, 0);
   if (args_info->square_z_given)
     write_into_file(outfile, "square_z", 0, 0 );
+  if (args_info->rank_biased_precision_p_given)
+    write_into_file(outfile, "rank_biased_precision_p", args_info->rank_biased_precision_p_orig, 0);
+  if (args_info->random_given)
+    write_into_file(outfile, "random", 0, 0 );
+  if (args_info->num_random_given)
+    write_into_file(outfile, "num_random", args_info->num_random_orig, 0);
   if (args_info->is_nibble_given)
     write_into_file(outfile, "is_nibble", 0, 0 );
   if (args_info->buffer_given)
@@ -758,6 +780,9 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "score_cutoff",	1, NULL, 'c' },
         { "per_q_required",	1, NULL, 'C' },
         { "square_z",	0, NULL, 'e' },
+        { "rank_biased_precision_p",	1, NULL, 's' },
+        { "random",	0, NULL, 'S' },
+        { "num_random",	1, NULL, 't' },
         { "is_nibble",	0, NULL, 'N' },
         { "buffer",	1, NULL, 'b' },
         { "output_text",	0, NULL, 'O' },
@@ -765,7 +790,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVx:D:i:q:d:p:P:u:U:Q:n:w:f:W:R:F:lTmMrc:C:eNb:Oo:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVx:D:i:q:d:p:P:u:U:Q:n:w:f:W:R:F:lTmMrc:C:es:St:Nb:Oo:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1062,6 +1087,40 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->square_z_flag), 0, &(args_info->square_z_given),
               &(local_args_info.square_z_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "square_z", 'e',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 's':	/* Rank biased precision p parameter.  */
+        
+        
+          if (update_arg( (void *)&(args_info->rank_biased_precision_p_arg), 
+               &(args_info->rank_biased_precision_p_orig), &(args_info->rank_biased_precision_p_given),
+              &(local_args_info.rank_biased_precision_p_given), optarg, 0, "0.99", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "rank_biased_precision_p", 's',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'S':	/* Generate random ranking score.  */
+        
+        
+          if (update_arg((void *)&(args_info->random_flag), 0, &(args_info->random_given),
+              &(local_args_info.random_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "random", 'S',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 't':	/* Number of repetitions of generating random rankings.  */
+        
+        
+          if (update_arg( (void *)&(args_info->num_random_arg), 
+               &(args_info->num_random_orig), &(args_info->num_random_given),
+              &(local_args_info.num_random_given), optarg, 0, "10", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "num_random", 't',
               additional_error))
             goto failure;
         

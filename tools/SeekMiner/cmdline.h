@@ -100,6 +100,14 @@ struct gengetopt_args_info
   const char *per_q_required_help; /**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. help description.  */
   int square_z_flag;	/**< @brief If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff (default=off).  */
   const char *square_z_help; /**< @brief If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff help description.  */
+  float rank_biased_precision_p_arg;	/**< @brief Rank biased precision p parameter (default='0.99').  */
+  char * rank_biased_precision_p_orig;	/**< @brief Rank biased precision p parameter original value given at command line.  */
+  const char *rank_biased_precision_p_help; /**< @brief Rank biased precision p parameter help description.  */
+  int random_flag;	/**< @brief Generate random ranking score (default=off).  */
+  const char *random_help; /**< @brief Generate random ranking score help description.  */
+  int num_random_arg;	/**< @brief Number of repetitions of generating random rankings (default='10').  */
+  char * num_random_orig;	/**< @brief Number of repetitions of generating random rankings original value given at command line.  */
+  const char *num_random_help; /**< @brief Number of repetitions of generating random rankings help description.  */
   int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
   const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
   int buffer_arg;	/**< @brief Number of Databaselets to store in memory (default='20').  */
@@ -137,6 +145,9 @@ struct gengetopt_args_info
   unsigned int score_cutoff_given ;	/**< @brief Whether score_cutoff was given.  */
   unsigned int per_q_required_given ;	/**< @brief Whether per_q_required was given.  */
   unsigned int square_z_given ;	/**< @brief Whether square_z was given.  */
+  unsigned int rank_biased_precision_p_given ;	/**< @brief Whether rank_biased_precision_p was given.  */
+  unsigned int random_given ;	/**< @brief Whether random was given.  */
+  unsigned int num_random_given ;	/**< @brief Whether num_random was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
   unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
   unsigned int output_text_given ;	/**< @brief Whether output_text was given.  */

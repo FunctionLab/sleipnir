@@ -52,7 +52,8 @@ public:
 		const bool &useNibble, const ushort &num_db,
 		const ushort &, const char*, const bool&, const bool&,
 		const bool&, const bool&, const bool&, const bool&,
-		const float&, const float&, const bool&);
+		const float&, const float&, const bool&, const bool&,
+		const int &, gsl_rng *);
 
 	bool CVSearch(gsl_rng*, const enum PartitionMode&, const ushort&, const float&);
 	bool CVCustomSearch(const vector< vector<string> > &, gsl_rng*,
@@ -61,7 +62,6 @@ public:
 	bool WeightSearch(const vector<vector<float> >&);
 	bool SingleGeneMetaCorrelation();
 	bool VarianceWeightSearch();
-
 	bool OrderStatistics();
 
 	bool Common(enum SearchMode&, gsl_rng* = NULL, const enum PartitionMode* = NULL,
@@ -104,6 +104,17 @@ private:
 	bool m_bOutputText;
 
 	bool m_bSquareZ;
+
+	/* whether or not to output random case (ie shuffle rankings per dataset)
+	   iNumRandom: number of repetitions (Oct 26, 2012) */
+	bool m_bRandom;
+	int m_iNumRandom;
+	gsl_rng *m_rand;
+	/* random dataset weight over all repetitions */
+	//vector<vector<float> > m_vecRandWeight; 
+	/* random gene scores over all repetitions */
+	//vector<vector<float> > m_vecRandScore; 
+
 
 	ushort ***m_rData;
 

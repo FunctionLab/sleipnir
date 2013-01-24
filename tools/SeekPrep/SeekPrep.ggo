@@ -17,6 +17,8 @@ option	"gpres"				p	"Generates gene presence file"
 								flag	off
 option	"dabinput"			B	"DAB dataset file"
 								string typestr="filename"
+option	"top_avg_percent"	C	"For gene average, top X percent of the values to take average (0 - 1.0)"
+								float	default="1.0"
 
 section "PCL mode"
 option	"pcl_list"			V	"PCL list"

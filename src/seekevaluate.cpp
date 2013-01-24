@@ -103,5 +103,47 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 	return true;
 }
 
+bool CSeekPerformanceMeasure::AveragePrecision(
+	const vector<unsigned short> &rank, float &ap,
+	const vector<char> &mask, const vector<char> &gold,
+	const CSeekIntIntMap &mapG, vector<AResult> *ar){
+
+	ushort i, ii, j, jj;
+	float x;
+
+	ushort TOP = rank.size();
+
+	//ar should be same size as rank
+	vector<AResult> *sing = ar;
+	bool ret =
+		CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing, TOP);
+
+	if(!ret){
+		ap = -1;
+		return false;
+	}
+
+	jj = 0;
+
+	AResult *aa;
+	int num = 0;
+	float sum = 0;
+	for(i=0; i<TOP; i++){
+		aa = &(*sing)[i];
+		if(aa->f==0) break;
+		if(mask[aa->i]==1) continue;
+		if(gold[aa->i]==1){
+			sum+=(float) (num+1) / (float) (jj+1);
+			num++;
+		}
+		jj++;
+	}
+	if(num==0){
+		ap = 0;
+	}else{
+		ap = sum / num;
+	}
+	return true;
+}
 
 }

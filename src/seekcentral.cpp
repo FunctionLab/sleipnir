@@ -174,7 +174,8 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const bool &bCorrelation, const bool &bSubtractAvg,
 	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
 	const bool &bLogit, const float &fCutOff, const float &fPercentRequired, 
-	const bool &bSquareZ){
+	const bool &bSquareZ, const bool &bRandom, const int &iNumRandom, 
+	gsl_rng *rand){
 
 	m_output_dir = output_dir;
 	m_maxNumDB = buffer;
@@ -182,6 +183,9 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	m_fScoreCutOff = fCutOff;
 	m_fPercentQueryAfterScoreCutOff = fPercentRequired;
 	m_bSquareZ = bSquareZ;
+	m_bRandom = bRandom;
+	m_iNumRandom = iNumRandom;
+	m_rand = rand;
 
 	ushort i, j;
 
@@ -258,6 +262,7 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 		m_mapstrstrDatasetPlatform, m_mapstriPlatform, m_vp, m_vc);
 
 	if(!CalculateRestart()) return false;
+
 
 	return true;
 }
@@ -383,14 +388,18 @@ bool CSeekCentral::Display(CSeekQuery &query, vector<AResultFloat> &final){
 }
 
 bool CSeekCentral::Write(const ushort &i){
+	//assume m_bRandom = false
 	char acBuffer[1024];
 	sprintf(acBuffer, "%s/%d.query", m_output_dir.c_str(), i);
 	CSeekTools::WriteArrayText(acBuffer, m_vecstrAllQuery[i]);
+
 	sprintf(acBuffer, "%s/%d.dweight", m_output_dir.c_str(), i);
 	CSeekTools::WriteArray(acBuffer, m_weight[i]);
+	
 	sprintf(acBuffer, "%s/%d.gscore", m_output_dir.c_str(), i);
 	CSeekTools::WriteArray(acBuffer, m_master_rank);
-	if(m_bOutputText){
+
+	if(!m_bRandom && m_bOutputText){
 		const vector<ushort> &allRDatasets =
 			m_searchdsetMap[i]->GetAllReverse();
 		ushort iSearchDatasets = m_searchdsetMap[i]->GetNumSet();
@@ -422,8 +431,6 @@ bool CSeekCentral::Write(const ushort &i){
 	return true;
 }
 
-
-
 bool CSeekCentral::Common(enum SearchMode &sm,
 	gsl_rng *rnd, const enum PartitionMode *PART_M,
 	const ushort *FOLD, const float *RATE,
@@ -431,14 +438,31 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 	const vector< vector<string> > *newGoldStd){
 
 	ushort i, j, d, dd;
-
+	int k; //keeps track of genes (for random case)
+	ushort l; //keeps track of random repetition (for random case)
+	char acBuffer[1024];
+	
 	m_Query.resize(m_vecstrAllQuery.size());
 	m_weight.resize(m_vecstrAllQuery.size());
 	m_final.resize(m_vecstrAllQuery.size());
+		
+	//random-ranking case =========================
+	vector<vector<float> > vecRandWeight, vecRandScore;
+	vecRandWeight.resize(m_iNumRandom);
+	vecRandScore.resize(m_iNumRandom);
+	for(l=0; l<m_iNumRandom; l++){
+		CSeekTools::InitVector(vecRandWeight[l], m_iDatasets, (float) 0);
+		CSeekTools::InitVector(vecRandScore[l], m_iGenes, (float) 0);
+	}
 
+	l = 0;
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
-		if(m_mapLoadTime.find(i)!=m_mapLoadTime.end())
-			CSeekTools::ReadDatabaselets(*m_DB, m_mapLoadTime[i], m_vc);
+
+		if(m_mapLoadTime.find(i)!=m_mapLoadTime.end()){
+			if(!m_bRandom || l==0){ //l==0: first random repetition
+				CSeekTools::ReadDatabaselets(*m_DB, m_mapLoadTime[i], m_vc);
+			}
+		}
 
 		const vector<ushort> &allRDatasets =
 			m_searchdsetMap[i]->GetAllReverse();
@@ -495,7 +519,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 				(int) this_q.size());
 			m_vc[d]->InitializeDataMatrix(m_rData[tid], m_quant, m_iGenes,
 				iQuery, m_bSubtractGeneAvg, m_bSubtractPlatformAvg, m_bLogit,
-				m_bCorrelation, m_fScoreCutOff);
+				m_bCorrelation, m_fScoreCutOff, m_bRandom, m_rand);
 			//m_bSubtractPlatformStdev is not used, it's assumed
 
 			float w = -1;
@@ -577,22 +601,69 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 		//fprintf(stderr, "4 %lu\n", CMeta::GetMemoryUsage());
 
 		fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
+		//if m_bRandom, write at the very end when all repetitions are done
 		Write(i);
+	
+		//random-ranking case =========================
+		if(m_bRandom){
+			sort(m_master_rank.begin(), m_master_rank.end(), greater<float>());
+			sort(weight.begin(), weight.end(), greater<float>());
+			copy(m_master_rank.begin(), m_master_rank.end(), vecRandScore[l].begin());
+			copy(weight.begin(), weight.end(), vecRandWeight[l].begin());
+			l++;
+
+			if(l==m_iNumRandom){ //last repetition
+				float confidence = 0.10;
+				int n = (int) (confidence * (float) m_iNumRandom); 
+				vector<float> new_weight, new_score;
+				CSeekTools::InitVector(new_weight, m_iDatasets, (float) 0);
+				CSeekTools::InitVector(new_score, m_iGenes, (float) 0);
+				for(k=0; k<m_iGenes; k++){
+					vector<float> all_s;
+					all_s.resize(m_iNumRandom);
+					for(l=0; l<m_iNumRandom; l++)
+						all_s[l] = vecRandScore[l][k];
+					std::nth_element(all_s.begin(), all_s.begin()+n, all_s.end());
+					new_score[k] = all_s[n];
+				}
+				for(k=0; k<m_iGenes; k++){
+					fprintf(stderr, "%d %.5f\n", k, new_score[k]);
+				}
+				getchar();
+
+				for(k=0; k<m_iDatasets; k++){
+					vector<float> all_w;
+					all_w.resize(m_iNumRandom);
+					for(l=0; l<m_iNumRandom; l++)
+						all_w[l] = vecRandWeight[l][k];	
+					std::nth_element(all_w.begin(), all_w.begin()+n, all_w.end());
+					new_weight[k] = all_w[n];
+				}
+				sprintf(acBuffer, "%s/%d.rand.dweight", m_output_dir.c_str(), i);
+				CSeekTools::WriteArray(acBuffer, new_weight);
+				sprintf(acBuffer, "%s/%d.rand.gscore", m_output_dir.c_str(), i);
+				CSeekTools::WriteArray(acBuffer, new_score);				
+				l = 0;
+
+			}else{
+				i--;
+			}
+		}
+
 	}
 
 	return true;
 }
 
-
 bool CSeekCentral::EqualWeightSearch(){
 	enum SearchMode sm = EQUAL;
-	return CSeekCentral::Common(sm);
+	CSeekCentral::Common(sm);
 }
 
 bool CSeekCentral::CVSearch(gsl_rng *rnd, const enum PartitionMode &PART_M,
 	const ushort &FOLD, const float &RATE){
 	enum SearchMode sm = CV;
-	return CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE);
+	CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE);
 }
 
 /*	perform CVSearch, except that the weighting is based not on co-expression
@@ -602,18 +673,18 @@ bool CSeekCentral::CVCustomSearch(const vector< vector<string> > &newGoldStd,
 	gsl_rng *rnd, const enum PartitionMode &PART_M,
 	const ushort &FOLD, const float &RATE){
 	enum SearchMode sm = CV_CUSTOM;
-	return CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE,
+	CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE,
 		NULL, &newGoldStd);
 }
 
 bool CSeekCentral::WeightSearch(const vector< vector<float> > &weights){
 	enum SearchMode sm = USE_WEIGHT;
-	return CSeekCentral::Common(sm, NULL, NULL, NULL, NULL, &weights);
+	CSeekCentral::Common(sm, NULL, NULL, NULL, NULL, &weights);
 }
 
 bool CSeekCentral::OrderStatistics(){
 	enum SearchMode sm = ORDER_STATISTICS;
-	return CSeekCentral::Common(sm);
+	CSeekCentral::Common(sm);
 }
 
 /* to be implemented */

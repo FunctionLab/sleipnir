@@ -19,26 +19,26 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#ifndef SEEKWRITER_H
-#define SEEKWRITER_H
+#ifndef STDAFX_H
+#define STDAFX_H
 
-#include "seekbasic.h"
+#define __STDC_LIMIT_MACROS
+
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
+#include <omp.h>
+using namespace std;
+
+#include <pthread.h>
+
+#include "bayesnet.h"
 #include "seekmap.h"
-#include "datapair.h"
+#include "seekreader.h"
+#include "seekevaluate.h"
+#include "seekwriter.h"
+#include "meta.h"
+using namespace Sleipnir;
 
-namespace Sleipnir {
-
-class CSeekWriter{
-public:
-	static bool GetGeneAverage(CDataPair &Dat,
-		const vector<string> &vecstrGenes,
-		vector<float> &vecResult, bool logit=false, float top_percent=1.0);
-	static bool GetGenePresence(CDataPair &Dat,
-		const vector<string> &vecstrGenes,
-		vector<char> &vecResult);
-	static bool GetDatasetSinfo(CDataPair &Dat, float &mean,
-		float &stdev);
-};
-
-}
-#endif
+#endif // STDAFX_H

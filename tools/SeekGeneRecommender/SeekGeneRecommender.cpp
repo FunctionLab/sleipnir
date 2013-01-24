@@ -31,7 +31,7 @@ bool rank_transform(vector< vector< vector<float> > > &mat,
 	
 	for(i=0; i<numGenes; i++){
 		int tot = 0;
-		if(i%100==0 || i==numGenes-1) 
+		if(i%500==0 || i==numGenes-1) 
 			fprintf(stderr, "Gene %d\n", i);
 		for(d=0; d<numDatasets; d++){
 			CSeekIntIntMap *mapG = dm[d];
@@ -100,10 +100,15 @@ bool weight_experiment(
 	
 	a.clear();
 	a.resize(numExperiments);
-	int numThreads=1;
+	int numThreads=8;
 	omp_set_num_threads(numThreads);
 	
 	int k=0; 
+	/*
+	vector<int> array_i, array_j;
+	vector<float> array_f, array_f2;
+	*/
+
 	vector< vector<int> > array_i, array_j;
 	vector< vector<float> > array_f, array_f2;
 	array_i.resize(numThreads);
@@ -118,7 +123,7 @@ bool weight_experiment(
 		array_f2[j] = vector<float>();
 	}
 	
-	//#pragma omp parallel for \
+	#pragma omp parallel for \
 	shared(numExperiments, mat, q, dm, a, array_i, array_j, array_f, array_f2) \
 	private(d, j, qi) \
 	firstprivate(numDatasets) schedule(dynamic)
@@ -154,6 +159,10 @@ bool weight_experiment(
 			array_f[tid].push_back(significance);
 			array_f2[tid].push_back(mean_query);
 			
+			/*array_i.push_back(d);
+			array_j.push_back(j);
+			array_f.push_back(significance);
+			array_f2.push_back(mean_query);*/
 			/*a[k].i = d;
 			a[k].j = j;
 			a[k].f = sqrt((float)q_size)*mean_query/sqrt(sample_variance + 1.0 /
@@ -162,6 +171,17 @@ bool weight_experiment(
 			k++;*/
 		}
 	}
+
+	/*
+	for(d=0; d<array_i.size(); d++){
+		a[k].i = array_i[d];
+		a[k].j = array_j[d];
+		a[k].f = array_f[d];
+		a[k].f2 = array_f2[d];
+		k++;
+	}
+	*/
+	
 	
 	for(j=0; j<numThreads; j++){
 		for(d=0; d<array_i[j].size(); d++){
@@ -173,9 +193,9 @@ bool weight_experiment(
 		}
 	}
 	
-	int nth=(int) ((float) numExperiments * cut_off_percentage);
-	std::nth_element(a.begin(), a.begin()+nth, a.end(), descend());
-	//sort(a.begin(), a.end(), descend());
+	//int nth=(int) ((float) numExperiments * cut_off_percentage);
+	//std::nth_element(a.begin(), a.begin()+nth, a.end(), descend());
+	sort(a.begin(), a.end(), descend());
 	return true;
 }
 
@@ -186,7 +206,7 @@ bool gene_scoring(
 	float cut_off_percentage, vector<float> &gs){
 
 	int i, ii, d, k;
-	CSeekTools::InitVector(gs, numGenes, (float) -9999);
+	CSeekTools::InitVector(gs, numGenes, (float) -320);
 	vector<int> tot;
 	CSeekTools::InitVector(tot, numGenes, (int) 0);
 	
@@ -202,21 +222,27 @@ bool gene_scoring(
 		}
 	}
 	
-	//int numThreads=8;
-	//omp_set_num_threads(numThreads);
+	int numThreads=8;
+	omp_set_num_threads(numThreads);
 	
 	const vector<ushort> &allGenes = mapG.GetAllReverse();
 	float cutoff = cut_off_percentage;
 	int numExp = numExperiments;	
 
-	//#pragma omp parallel for \
+	if(numExp==0){
+		return true;
+	}
+
+	#pragma omp parallel for \
 	shared(allGenes, absent_g, a, tot, mat, dm, gs) \
 	private(i, ii, k) \
 	firstprivate(cutoff, numExp) schedule(dynamic)	
-	for(ii=0; ii<allGenes.size(); ii++){
+	//fprintf(stderr, "Number of experiments: %d\n", numExp);
+	for(ii=0; ii<mapG.GetNumSet(); ii++){
 		i = allGenes[ii];
 		int num_valid_experiments = 0;
 		float sc = 0;
+		//fprintf(stderr, "Gene %d, %d of %d\n", i, ii, mapG.GetNumSet());
 		for(k=0; k<tot[i]; k++){
 			if(k+1 > (int) (cutoff*(float) numExp)){
 				break;
@@ -228,6 +254,7 @@ bool gene_scoring(
 			sc+=mat[id1][dm[id1]->GetForward(i)][id2] * a[k].f2;
 			num_valid_experiments++;
 		}
+		//fprintf(stderr, "Valid experiments %d\n", num_valid_experiments);
 
 		int valid_cutoff = (int) (cutoff / 2.0 * (float) numExp);
 		if(num_valid_experiments<valid_cutoff){
@@ -369,11 +396,42 @@ int main(int iArgs, char **aszArgs){
 
 			
 			fprintf(stderr, "Query %d end\n", i); //getchar();
+
 			sprintf(acBuffer, "%s/%d.query", output_dir.c_str(), i);
 			CSeekTools::WriteArrayText(acBuffer, vecstrAllQuery[i]);
 			sprintf(acBuffer, "%s/%d.gscore", output_dir.c_str(), i);
 			CSeekTools::WriteArray(acBuffer, gs);
-			
+
+			/*
+			fprintf(stdout, "Query %d\n", i);
+			fprintf(stdout, "Weights:");
+			//fprintf(stderr, "Weights:\n");
+			for(j=0; j<b.size() && j<(int)(0.05*numExperiments); j++){
+				if(j%10==0){
+					fprintf(stdout, "\n");
+				}	
+				fprintf(stdout, "%.2f ", b[j].f);
+				//fprintf(stderr, "%d %.2f\n", j, b[j].f);
+			}
+			fprintf(stdout, "\n");
+			vector<AResultFloat> gsc;
+			gsc.resize(numGenes);
+			//fprintf(stderr, "numexp %d gsc %d gs %d\n", numExperiments, gsc.size(), gs.size());
+			for(j=0; j<numGenes; j++){
+				gsc[j].i = j;
+				gsc[j].f = gs[j];
+				//fprintf(stderr, "Gene %d %.2f\n", j, gsc[j].f);
+			}
+			sort(gsc.begin(), gsc.end());
+        	fprintf(stdout, "Results:\n");
+			int kk=0;
+			for(k=0; k<numGenes && kk<500; k++){
+				if(is_query[gsc[k].i]==1) continue;
+				if(gsc[k].f==-320) continue;
+				fprintf(stdout, "%s %.5f\n", vecstrGenes[gsc[k].i].c_str(), gsc[k].f);
+				kk++;
+			}
+			*/
 			/*
 			fprintf(stderr, "Query %d\n", i);
 			fprintf(stderr, "Weights:");

@@ -118,6 +118,36 @@ int main( int iArgs, char** aszArgs ) {
 
 		for(i=0; i<iDatasets; i++) vc[i]->InitializeGeneMap();
 
+
+		for(i=0; i<vecstrGenes.size(); i++){
+			ushort ii = mapstrintGene[vecstrGenes[i]];
+			fprintf(stderr, "Gene %s ", vecstrGenes[i].c_str());
+			ushort j = 0;
+			vector<float> va;
+			for(j=0; j<iDatasets; j++){
+				CSeekIntIntMap *gm = vc[j]->GetGeneMap();
+				ushort ij = gm->GetForward(ii);
+				if(CSeekTools::IsNaN(ij)){
+					continue;
+				}
+				float a = vc[j]->GetGeneAverage(ii);
+				va.push_back(a);
+				//fprintf(stderr, "%.2f ", a);
+			}
+			sort(va.begin(), va.end());
+			ushort g = 0;
+			for(g=0; g<20; g++){
+				ushort ik = (ushort) ((float)0.05*(float)(g+1)*(float)va.size() - 1.0);
+				fprintf(stderr, "%.2f ", va[ik]);
+			}
+			fprintf(stderr, "\n");
+		}
+
+		fprintf(stderr, "Done\n");
+		return false;
+
+
+
 		vector<vector<string> > vecstrQueries;
 		string multiQuery = sArgs.multi_query_arg;
 

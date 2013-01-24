@@ -42,6 +42,7 @@ my %tools_other_packages = (
 				SeekMiner => ['SMILE'],
 				SeekServer => ['SMILE'],
 				SeekGeneRecommender => ['SMILE'],
+				SeekAggregatedDataset => ['SMILE'],
 				PCLServer => ['SMILE'],
 			    Dab2Dad  => ['SMILE'],
 			    Dab2DB  => ['SMILE'],

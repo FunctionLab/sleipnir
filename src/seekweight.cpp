@@ -338,6 +338,7 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 	vector<ushort> &rank = *rrank;
 
 	ushort TOP = 1000;
+	//ushort TOP = 0; //disable TOP approximation
 	vector<AResult> ar;
 	ar.resize(rank.size());
 
@@ -390,6 +391,8 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 				MIN_QUERY_REQUIRED, bSquareZ);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
 				rank, w, is_query_cross, is_gold, *mapG, &ar, TOP);
+			//ret = CSeekPerformanceMeasure::AveragePrecision(
+			//	rank, w, is_query_cross, is_gold, *mapG, &ar);
 			if(!ret) sDataset.SetCVWeight(qi, -1);
 			else sDataset.SetCVWeight(qi, w);
 			//printf("Weight: %.5f\n", w);

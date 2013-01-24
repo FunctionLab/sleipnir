@@ -52,12 +52,18 @@ int main( int iArgs, char** aszArgs ) {
 	gsl_rng_env_setup();
 	T = gsl_rng_default;
 	rnd = gsl_rng_alloc(T);
+
+	gsl_rng *random_ranking_rnd = gsl_rng_alloc(T);
+
+
 	//float RATE = 0.95;
-	float RATE = 0.99;
+	//float RATE = 0.99;
+	float RATE = sArgs.rank_biased_precision_p_arg;
 	ushort FOLD = 5;
 	enum PartitionMode PART_M = CUSTOM_PARTITION;
 	ushort i,j;
-	ushort TOP = 1000;
+	//ushort TOP = 1000;
+	//ushort TOP = 0;
 
 /*
 	CSeekCentral *func = new CSeekCentral();
@@ -195,7 +201,8 @@ int main( int iArgs, char** aszArgs ) {
 		!!sArgs.correlation_flag, 
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
 		!!sArgs.norm_platstdev_flag, false,
-		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag))
+		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag,
+		!!sArgs.random_flag, sArgs.num_random_arg, random_ranking_rnd))
 		return -1;
 
 	//csfinal->WeightSearch(csk_weight_copy);

@@ -233,7 +233,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 	const ushort &iColumns, const bool bSubtractAvg,
 	const bool bSubtractPlatformAvg, const bool logit,
 	const bool bCorrelation,
-	const float cutoff){
+	const float cutoff, 
+	const bool bRandom, gsl_rng *rand){
 	/* assume platform is already set */
 
 	//hard coded quant file
@@ -450,6 +451,52 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 			}
 		}
 	}
+
+	if(bRandom){
+		vector<vector<ushort> > allRandom;
+		allRandom.resize(iNumQueries);
+		for(i=0; i<iNumQueries; i++){
+			allRandom[i] = vector<ushort>();
+		}
+
+		for(ii=0; ii<iNumGenes; ii++){
+			unsigned char x;
+			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
+				if((x = r[queryIndex[j]][i])==255) continue;
+				allRandom[j].push_back(rData[i][j]);
+			}
+		}
+
+		int max_size = 0;
+		for(i=0; i<iNumQueries; i++){
+			if(allRandom[i].size()>max_size){
+				max_size = allRandom[i].size();
+			}
+		}
+
+		ushort **a = CSeekTools::Init2DArray(iNumQueries, max_size, (ushort)0);
+		vector<int> k;
+		CSeekTools::InitVector(k, iNumQueries, (int) 0);
+
+		for(i=0; i<iNumQueries; i++){
+			for(j=0; j<allRandom[i][j]; j++){
+				a[i][j] = allRandom[i][j];
+			}
+			gsl_ran_shuffle(rand, a[i], allRandom[i].size(), sizeof(ushort));
+		}
+
+		for(ii=0; ii<iNumGenes; ii++){
+			unsigned char x;
+			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
+				if((x = r[queryIndex[j]][i])==255) continue;
+				rData[i][j] = a[j][k[j]];
+				k[j]++;
+			}
+		}
+		
+		CSeekTools::Free2DArray(a);
+	}
+
 
 	return true;
 }

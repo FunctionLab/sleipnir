@@ -26,7 +26,7 @@ namespace Sleipnir {
 
 bool CSeekWriter::GetGeneAverage(CDataPair &Dat,
 	const vector<string> &vecstrGenes,
-	vector<float> &vecResult, bool logit){
+	vector<float> &vecResult, bool logit, float top_percent){
 
 	/* assume datapair is already opened */
 	ushort i, j;
@@ -43,18 +43,32 @@ bool CSeekWriter::GetGeneAverage(CDataPair &Dat,
 		float *v = Dat.GetFullRow(s);
 		float sum = 0;
 		ushort num = 0;
+		vector<float> all;
 		for(j=0; j<vecstrGenes.size(); j++){
 			ushort t = veciGenes[j];
 			if(CSeekTools::IsNaN(t)) continue;
 			if(CMeta::IsNaN(v[t])) continue;
 			if(logit){
-				sum+=log(v[t]) - log((float) (1.0-v[t]));
+				//sum+=log(v[t]) - log((float) (1.0-v[t]));
+				all.push_back(log(v[t]) - log((float) (1.0-v[t])));
 			}else{
-				sum+=v[t];
+				//sum+=v[t];
+				all.push_back(v[t]);
 			}
+			//num++;
+		}
+		sort(all.begin(), all.end());
+		int top_start = (int) (((float)1.0 - top_percent)*(float)all.size());
+
+		if(top_start<0){
+			top_start = 0;
+		}
+		for(j=top_start; j<all.size(); j++){
+			sum+=all[j];
 			num++;
 		}
 		vecResult[i] = sum / (float) num;
+		fprintf(stderr, "%.2f\n", vecResult[i]);
 		free(v);
 	}
 	return true;
