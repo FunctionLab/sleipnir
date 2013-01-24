@@ -9,6 +9,8 @@ option	"aggregate"			M	"Evaluate multiple queries and aggregates results"
 								flag	off
 
 section	"Metric"
+option	"fixed_pr"			z	"Precision at depth X"
+								flag	off
 option	"rbp"				r	"Rank biased precision (requires parameter p to be set)"
 								flag	off
 option	"avgp"				a	"Average precision for the top X positives, where X = integer, or % of total positives"

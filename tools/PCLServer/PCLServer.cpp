@@ -32,7 +32,7 @@
 
 #define BACKLOG 10   // how many pending connections queue will hold
 char *PORT;
-int NUM_DSET_MEMORY = 200;
+int NUM_DSET_MEMORY = 300;
 CPCL **pcl;
 list<int> available;
 char *loaded;
@@ -41,6 +41,10 @@ map<int, int> return_val;
 map<int, string> DNAME_RMAP;
 
 pthread_mutex_t mutexGet;
+
+string strPrepInputDirectory;
+string strSinfoInputDirectory;
+map<string, int> mapstrintGene;
 
 void sigchld_handler(int s){
     while(waitpid(-1, NULL, WNOHANG) > 0);
@@ -75,8 +79,11 @@ void cl(char *b, int size){
 struct thread_data{
     vector<string> datasetName;
     vector<string> geneName;
+	vector<string> queryName;
     int threadid;
     int new_fd;
+	bool outputNormalized;
+	bool outputCoexpression;
 };
 
 int cpy(char *d, char *s, int beg, int num){
@@ -107,11 +114,12 @@ void *do_query(void *th_arg){
 	struct thread_data *my = (struct thread_data *) th_arg;
 	vector<string> datasetName = my->datasetName;
 	vector<string> geneName = my->geneName;
+	vector<string> queryName = my->queryName;
+	bool outputNormalized = my->outputNormalized;
+	bool outputCoexpression = my->outputCoexpression;
 	int new_fd = my->new_fd;
 	int tid = my->threadid;
 
-	char *buf = (char*)malloc(5000);
-	char *bb = (char*)malloc(5000);
 	/*
 	cl(buf, 5000);
 	sprintf(buf, "Begin...\n");
@@ -162,99 +170,181 @@ void *do_query(void *th_arg){
 	}
 
 	size_t j, k;
-	vector<CFullMatrix<float> *> vC;
-	int totNumExperiments = 0;
+	//vector<CFullMatrix<float> *> vC; //gene expression
+	//vector<CFullMatrix<float> *> vQ; //query expression (if enabled) (EXTRA)
+	//int totNumExperiments = 0;
 	int genes = geneName.size();
+	int queries = queryName.size(); //(EXTRA)
 	int datasets = datasetName.size();
 
+	vector<float> vecG, vecQ, vecCoexpression;
+	vector<float> sizeD;
+
+	//Qian added
+	//vector<CSeekDataset *> vd; //(EXTRA)
+	//vd.resize(vc.size()); //(EXTRA)
+	//CFullMatrix<float> *vCoexpression = new CFullMatrix<float>(); //(EXTRA)
+	//vCoexpression->Initialize(genes, datasets); //(EXTRA)
+
 	fprintf(stderr, "Reading data...\n");
-	
+
+	float NaN = -9999;	
+	//for each dataset
 	for(i=0; i<vc.size(); i++){
 		CPCL *pp = vc[i];
+		int ps = pp->GetExperiments() - 2;
+		int gs = pp->GetExperiments();
+		CFullMatrix<float> *fq = NULL;
+		CFullMatrix<float> *ff = NULL;
+		vector<float> vCoexpression;
+		vCoexpression.resize(genes);
+		CSeekDataset *vd = NULL;
+		sizeD.push_back((float) ps);
+
+		if(outputCoexpression){
+			vd = new CSeekDataset();
+			string strFileStem = datasetName[i].substr(0, datasetName[i].find(".bin"));
+			string strAvgPath = strPrepInputDirectory + "/" + strFileStem + ".gavg";
+			string strPresencePath = strPrepInputDirectory + "/" + strFileStem + ".gpres";
+			string strSinfoPath = strSinfoInputDirectory + "/" + strFileStem + ".sinfo";
+			vd->ReadGeneAverage(strAvgPath);
+			vd->ReadGenePresence(strPresencePath);
+			vd->ReadDatasetAverageStdev(strSinfoPath);
+			vd->InitializeGeneMap();
+
+			fq = new CFullMatrix<float>();
+			fq->Initialize(queryName.size(), pp->GetExperiments() - 2);
+			for(k=0; k<queryName.size(); k++){
+				int g = pp->GetGene(queryName[k]);
+				if(g==-1){ //does not contain the gene in the dataset
+					for(j=2; j<gs; j++){
+						fq->Set(k, j-2, NaN);
+						vecQ.push_back(fq->Get(k, j-2));
+					}
+					continue;
+				}
+				float *vv = pp->Get(g);
+				for(j=2; j<gs; j++)
+					fq->Set(k, j-2, vv[j]);
+				//normalize
+				float mean = 0;
+				for(j=2; j<gs; j++)
+					mean+=fq->Get(k, j-2);
+				mean/=(float) (gs - 2);
+				float stdev = 0;
+				for(j=2; j<gs; j++)
+					stdev+=(fq->Get(k, j-2) - mean) * (fq->Get(k, j-2) - mean);
+				stdev/=(float) (gs - 2);
+				stdev = sqrt(stdev);
+				for(j=2; j<gs; j++){
+					float t1 = fq->Get(k, j-2);
+					fq->Set(k, j-2, (t1 - mean) / stdev);
+					vecQ.push_back(fq->Get(k, j-2));
+				}
+			}
+		}
+
 		fprintf(stderr, "allocating space %d %d...\n", geneName.size(),
 			pp->GetExperiments());
-		CFullMatrix<float> *ff = new CFullMatrix<float>();
-		ff->Initialize(geneName.size(), pp->GetExperiments() - 2);
-		totNumExperiments += pp->GetExperiments() - 2;
+		ff = new CFullMatrix<float>();
+		ff->Initialize(genes, ps);
 		fprintf(stderr, "done allocating space.\n");
 
 		for(k=0; k<geneName.size(); k++){
 			int g = pp->GetGene(geneName[k]);
-			int gs = pp->GetExperiments();
-
 			if(g==-1){
 				for(j=2; j<gs; j++){
-					ff->Set(k, j-2, CMeta::GetNaN());
+					ff->Set(k, j-2, NaN);
+					vecG.push_back(ff->Get(k, j-2));
 				}
 				continue;
 			}
 			float *vv = pp->Get(g);
-			for(j=2; j<gs; j++){
+			for(j=2; j<gs; j++)
 				ff->Set(k, j-2, vv[j]);
-			}
-		}
-		vC.push_back(ff);
-	}
 
-	int est = 4 + 2 + 2 + (genes * totNumExperiments + datasets) * 2;
-
-	int BUFFER = 5000;
-
-	char *c8 = (char*)malloc(8);
-	int *p = (int*)c8; *p = est;
-	short *u1 = (short*)&c8[4]; *u1 = (short) datasets;
-	u1++; *u1 = (short) genes;
-	send_msg(new_fd, c8, 8);
-	free(c8);
-	fprintf(stderr, "%d %d %d\n", est, datasets, genes);
-
-	char *cx = (char*)malloc(2*datasets);
-	u1 = (short*) &cx[0];
-	for(i=0; i<vc.size(); i++){
-		CPCL *pp = vc[i];
-		*u1 = (short) pp->GetExperiments()-2;
-		fprintf(stderr, "E%d ", *u1);
-		u1++;
-	}
-	send_msg(new_fd, cx, 2*datasets);
-	free(cx);
-	fprintf(stderr, "\n");
-
-	for(i=0; i<vc.size(); i++){
-		CPCL *pp = vc[i];
-		CFullMatrix<float> *fm = vC[i];
-		int ps = pp->GetExperiments()-2;
-		char *cp = (char*)malloc(2*ps*genes);
-		short *up = (short*) &cp[0];
-		//fprintf(stderr, "Dataset %d\n", i);
-		for(k=0; k<genes; k++){
-			//fprintf(stderr, "Gene %d: ", k);
-			for(j=0; j<ps; j++){
-				short sp = -1;
-				if(CMeta::IsNaN(fm->Get(k, j))){
-					sp = 32767;
-				}else{
-					sp = fm->Get(k, j) * 100;
-					if(sp<-32000){
-						sp = -32000;
-					}else if(sp>32000){
-						sp = 32000;
-					}
+			if(outputNormalized){
+				//normalize
+				float mean = 0;
+				for(j=2; j<gs; j++)
+					mean+=ff->Get(k, j-2);
+				mean/=(float) (gs - 2);
+				float stdev = 0;
+				for(j=2; j<gs; j++)
+					stdev+=(ff->Get(k, j-2) - mean) * (ff->Get(k, j-2) - mean);
+				stdev/=(float) (gs - 2);
+				stdev = sqrt(stdev);
+				for(j=2; j<gs; j++){
+					float t1 = ff->Get(k, j-2);
+					ff->Set(k, j-2, (t1 - mean) / stdev);
 				}
-				*up = sp;
-				//fprintf(stderr, "%d ", *up);
-				up++;
 			}
-			//fprintf(stderr, "\n");
+			for(j=2; j<gs; j++){
+				vecG.push_back(ff->Get(k, j-2));
+			}
 		}
-		send_msg(new_fd, cp, 2*ps*genes);
 
-		free(cp);
-		delete vC[i];
+		if(outputCoexpression){
+			int kk;
+			for(k=0; k<geneName.size(); k++){
+				int g = pp->GetGene(geneName[k]);
+				if(g==-1){
+					vCoexpression[k] = NaN;
+					vecCoexpression.push_back(vCoexpression[k]);
+					continue;
+				}
+				float avgP = 0;
+				int totalQueryPresent = queryName.size();
+				for(kk=0; kk<queryName.size(); kk++){
+					int gg = pp->GetGene(queryName[kk]);
+					if(gg==-1){
+						totalQueryPresent--;
+						continue;
+					}
+					float p = 0;
+					for(j=2; j<gs; j++)
+						p+= ff->Get(k, j-2)*fq->Get(kk, j-2);
+					p/=(float)(gs-2);
+					//fprintf(stderr, "%.2f sinfo: %.2f %.2f\ngene average %d: %.2f\n", p, vd->GetDatasetAverage(), 
+					//	vd->GetDatasetStdev(), g, vd->GetGeneAverage(mapstrintGene[queryName[kk]]));
+					//p = max((float) min(p - vd->GetGeneAverage(g), (float) 3.2), (float)-3.2);
+					//get z-score (dataset wide)
+					p = (p - vd->GetDatasetAverage()) / vd->GetDatasetStdev();
+					//subtract hubbiness
+					p = p - vd->GetGeneAverage(mapstrintGene[queryName[kk]]);
+					avgP+=p;
+				}
+				if(totalQueryPresent==0)
+					avgP = NaN;
+				else
+					avgP/=(float)(totalQueryPresent);
+				
+				vCoexpression[k] = avgP;
+				vecCoexpression.push_back(avgP);
+			}
+		}
+
+		if(outputCoexpression){
+			delete vd;
+			delete fq;
+		}
+		delete ff;
 	}
-	free(buf);
-	free(bb);
-	vC.clear();
+
+	if(outputCoexpression){
+		if(	CSeekNetwork::Send(new_fd, sizeD)!=0 ||
+			CSeekNetwork::Send(new_fd, vecQ)!=0 ||
+			CSeekNetwork::Send(new_fd, vecG)!=0 ||
+			CSeekNetwork::Send(new_fd, vecCoexpression)!=0){
+			fprintf(stderr, "Error sending messages\n");
+		}
+	}
+	else{
+		if( CSeekNetwork::Send(new_fd, sizeD)!=0 ||
+			CSeekNetwork::Send(new_fd, vecG)!=0){
+			fprintf(stderr, "Error sending messages\n");
+		}
+	}
 
 	for(i=0; i<NUM_DSET_MEMORY; i++){
 		loaded[i] = 0;
@@ -290,6 +380,16 @@ int main( int iArgs, char** aszArgs ) {
 	}
 
 	PORT = sArgs.port_arg;
+	
+	strPrepInputDirectory = sArgs.prep_arg;
+	strSinfoInputDirectory = sArgs.sinfo_arg;
+
+	vector<string> vecstrGeneID;
+	vector<string> vecstrGenes;
+	if(!CSeekTools::ReadListTwoColumns(sArgs.gene_arg, vecstrGeneID, vecstrGenes))
+		return false;
+	for(i=0; i<vecstrGenes.size(); i++)
+		mapstrintGene[vecstrGenes[i]] = (int) i;
 
 	int sockfd, new_fd;
 	struct addrinfo hints, *servinfo, *p;
@@ -391,32 +491,65 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 		THREAD_OCCUPIED[d] = 1;
+		string mode;
 
-		char ar[4];
-		recv(new_fd, ar, 4, 0);
-		int *cn = (int*) ar; 
-		int strLen = *cn;
-		char *dname = (char*)malloc(strLen);
-		recv(new_fd, dname, strLen, 0);
+		if(CSeekNetwork::Receive(new_fd, mode)!=0){
+			fprintf(stderr, "Error: receiving message\n");
+			close(new_fd);
+			continue;
+		}
 
-		recv(new_fd, ar, 4, 0);
-		strLen = *cn;
-		char *gname = (char*)malloc(strLen);
-		recv(new_fd, gname, strLen, 0);
+		//mode, 2 digits
+		//1 - output coexpression calculation (with gene hubbiness removed), 
+		//require setting two groups of genes, one for query (1 or many), 
+		//and one other gene (to calculate coexpression on)
+		//2 - output gene-normalized expression instead of original expression
+	
+		bool outputCoexpression = false;
+		bool outputNormalized = false;
+		if(mode[0]=='1') 
+			outputCoexpression = true;
+		if(mode[1]=='1') 
+			outputNormalized = true;
 
-		vector<string> dsetName, geneName;
-		CMeta::Tokenize(dname, dsetName);
-		CMeta::Tokenize(gname, geneName);
+		vector<string> dsetName, geneName, queryName;
+		string qname, gname, dname;
+
+		if(outputCoexpression){
+			if(	CSeekNetwork::Receive(new_fd, qname)!=0 ||
+				CSeekNetwork::Receive(new_fd, gname)!=0 ||
+				CSeekNetwork::Receive(new_fd, dname)!=0 ){
+				fprintf(stderr, "Error: receiving message\n");
+				close(new_fd);
+				continue;
+			}
+			CMeta::Tokenize(dname.c_str(), dsetName);
+			CMeta::Tokenize(gname.c_str(), geneName);
+			CMeta::Tokenize(qname.c_str(), queryName);
+		}
+		else{
+			if(	CSeekNetwork::Receive(new_fd, gname)!=0 ||
+				CSeekNetwork::Receive(new_fd, dname)!=0 ){
+				fprintf(stderr, "Error: receiving message\n");
+				close(new_fd);
+				continue;
+			}
+			CMeta::Tokenize(dname.c_str(), dsetName);
+			CMeta::Tokenize(gname.c_str(), geneName);
+		}
 	
 		thread_arg[d].threadid = d;
 		thread_arg[d].new_fd = new_fd;
 		thread_arg[d].geneName = geneName;
 		thread_arg[d].datasetName = dsetName;
+		thread_arg[d].queryName = queryName;
+		thread_arg[d].outputNormalized = outputNormalized;
+		thread_arg[d].outputCoexpression = outputCoexpression;
 
-		fprintf(stderr, "Arguments: %d %d %s %s\n", d, new_fd, dname, gname);
-
-		free(dname);
-		free(gname);
+		fprintf(stderr, "Arguments: %d %d %s %s\n", d, new_fd, dname.c_str(), gname.c_str());
+		if(outputCoexpression){
+			fprintf(stderr, "Arguments: %s\n", qname.c_str());
+		}
 
 		int ret;
 		pthread_create(&th[d], NULL, do_query, (void *) &thread_arg[d]);
@@ -424,7 +557,6 @@ int main( int iArgs, char** aszArgs ) {
 		if(ret==0){
 			close(new_fd);
 		}*/
-
 	}
 
 
