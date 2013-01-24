@@ -52,8 +52,8 @@ public:
 		const bool &useNibble, const ushort &num_db,
 		const ushort &, const char*, const bool&, const bool&,
 		const bool&, const bool&, const bool&, const bool&,
-		const float&, const float&, const bool&, const bool&,
-		const int &, gsl_rng *);
+		const float&, const float&, const bool&, 
+		const bool&, const int &, gsl_rng *);
 
 	bool Initialize(const char *gene, const char *quant,
 		const char *dset, const char *platform, const char* db,
@@ -61,7 +61,8 @@ public:
 		const bool &useNibble, const ushort &num_db,
 		const ushort &, const bool&, const bool&,
 		const bool&, const bool&, const bool&, const bool&,
-		const float&, const float&, const bool&);
+		const float&, const float&, const bool&, 
+		const bool&, const int &, gsl_rng *);
 
 	bool Initialize(string&, string&, string&, CSeekCentral*);
 
@@ -132,7 +133,7 @@ private:
 	   iNumRandom: number of repetitions (Oct 26, 2012) */
 	bool m_bRandom;
 	int m_iNumRandom;
-	gsl_rng *m_rand;
+	gsl_rng *m_randRandom;
 	/* random dataset weight over all repetitions */
 	//vector<vector<float> > m_vecRandWeight; 
 	/* random gene scores over all repetitions */

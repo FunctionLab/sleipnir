@@ -143,7 +143,8 @@ int main( int iArgs, char** aszArgs ) {
 		!!sArgs.correlation_flag, 
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
 		!!sArgs.norm_platstdev_flag, false,
-		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag))
+		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag, 
+		false, 1, NULL))
 		return -1;
 
 	signal(SIGPIPE, SIG_IGN);

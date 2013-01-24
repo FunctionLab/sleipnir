@@ -231,6 +231,11 @@ bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_
 	m_bLogit = src->m_bLogit;
 	m_bCorrelation = src->m_bCorrelation;
 	m_vecstrGenes.resize(src->m_vecstrGenes.size());
+	
+	m_bRandom = false;
+	m_iNumRandom = 1;
+	m_randRandom = NULL;	
+
 	copy(src->m_vecstrGenes.begin(), src->m_vecstrGenes.end(), m_vecstrGenes.begin());
 
 	m_vecstrDatasets.resize(src->m_vecstrDatasets.size());
@@ -436,17 +441,25 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const bool &bCorrelation, const bool &bSubtractAvg,
 	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
 	const bool &bLogit, const float &fCutOff, const float &fPercentRequired, 
-	const bool &bSquareZ, const bool &bRandom, const int &iNumRandom, 
-	gsl_rng *rand){
+	const bool &bSquareZ, 
+	//three new ones
+	const bool &bRandom, const int &iNumRandom, gsl_rng *rand){
 
 	m_maxNumDB = buffer;
 	m_numThreads = 8; //changed from 8
 	m_fScoreCutOff = fCutOff;
 	m_fPercentQueryAfterScoreCutOff = fPercentRequired;
 	m_bSquareZ = bSquareZ;
+
+	//random retrieval==========================
 	m_bRandom = bRandom;
 	m_iNumRandom = iNumRandom;
-	m_rand = rand;
+	m_randRandom = rand; //random-case only
+	//===
+
+	if(!m_bRandom){
+		m_randRandom = NULL;
+	}
 
 	ushort i, j;
 
@@ -520,12 +533,14 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const bool &bCorrelation, const bool &bSubtractAvg,
 	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
 	const bool &bLogit, const float &fCutOff, const float &fPercentRequired, 
-	const bool &bSquareZ){
+	const bool &bSquareZ,
+	//three new ones
+	const bool &bRandom, const int &iNumRandom, gsl_rng *rand){
 
 	if(!CSeekCentral::Initialize(gene, quant, dset, platform, 
 		db, prep, gvar, sinfo, useNibble, num_db, buffer, to_output_text, 
 		bCorrelation, bSubtractAvg, bSubtractPlatformAvg, bDividePlatformStdev, 
-		bLogit, fCutOff, fPercentRequired, bSquareZ)){
+		bLogit, fCutOff, fPercentRequired, bSquareZ, bRandom, iNumRandom, rand)){
 		return false;
 	}
 
@@ -852,7 +867,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 				(int) this_q.size());
 			m_vc[d]->InitializeDataMatrix(m_rData[tid], m_quant, m_iGenes,
 				iQuery, m_bSubtractGeneAvg, m_bSubtractPlatformAvg, m_bLogit,
-				m_bCorrelation, m_fScoreCutOff, m_bRandom, m_rand);
+				m_bCorrelation, m_fScoreCutOff, m_bRandom, m_randRandom);
 			//m_bSubtractPlatformStdev is not used, it's assumed
 
 			float w = -1;
