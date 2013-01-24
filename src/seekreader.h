@@ -28,6 +28,8 @@
 #include "seekdataset.h"
 #include "seekplatform.h"
 #include "database.h"
+#include <sstream>
+#include "seeknetwork.h"
 
 namespace Sleipnir {
 
@@ -135,7 +137,7 @@ public:
 		const tType &tValue){
 		tType **f = (tType**)malloc(iSize1*sizeof(tType*));
 		f[0] = (tType*)malloc(iSize1*iSize2*sizeof(tType));
-		tType **itF = &f[1];
+		/*tType **itF = &f[1];
 		tType **itLast = &f[0] + iSize1;
 		for(; itF!=itLast; itF++){
 			*itF = *(itF - 1) + iSize2;
@@ -144,6 +146,15 @@ public:
 		tType *itValLast = &f[iSize1-1][iSize2-1] + 1;
 		for(; itVal!=itValLast; itVal++){
 			*itVal = tValue;
+		}*/
+		int i, j;
+		for(i=1; i<iSize1; i++){
+			f[i] = f[i-1] + iSize2;
+		}
+		for(i=0; i<iSize1; i++){
+			for(j=0; j<iSize2; j++){
+				f[i][j] = tValue;
+			}
 		}
 		return f;
 	}
@@ -156,11 +167,15 @@ public:
 
 	static bool IsNaN(const ushort &);
 
+	static string ConvertInt(const int &);
+
 	static bool CreatePresenceVector(const vector<ushort> &, vector<char> &,
 		const ushort &);
 
 	static bool ReadDatabaselets(const CDatabase &, 
-		const vector< vector<string> > &, vector<CSeekDataset*> &);
+		const vector< vector<string> > &, vector<CSeekDataset*> &, 
+		//network mode options
+		const int&, const bool&);
 
 	static bool LoadDatabase(const CDatabase &, const string &,
 		const string &, const string &,
@@ -173,6 +188,11 @@ public:
 		const vector<string> &, const map<string, string> &,
 		const map<string, ushort> &, vector<CSeekPlatform> &,
 		vector<CSeekDataset*> &);
+
+	static bool LoadDatabase(const CDatabase &, vector<CSeekDataset*>&,
+		const vector<CSeekDataset*>&, vector<CSeekPlatform>&, 
+		const vector<CSeekPlatform>&, const vector<string>&, 
+		const map<string,string>&, const map<string,ushort>&);
 
 	static bool ReadPlatforms(const string &strPlatformDirectory,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
@@ -197,9 +217,9 @@ public:
 			vector< vector<string> > &qList);
 
 	static bool ReadMultiGeneOneLine(const string &strFile,
-		vector<string> &list1);
+		vector<string> &list1, const int lineSize = 1024);
 	static bool ReadMultiGeneOneLine(const char *file,
-			vector<string> &list1);
+			vector<string> &list1, const int lineSize = 1024);
 
 	static bool ReadListOneColumn(const string &strFile,
 		vector<string> &vecstrList);

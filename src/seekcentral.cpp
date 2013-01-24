@@ -34,6 +34,9 @@ CSeekCentral::CSeekCentral(){
 	m_vp.clear();
 	m_mapstriPlatform.clear();
 	m_vecstrPlatform.clear();
+	m_vecstrDP.clear();
+	m_mapstrintDataset.clear();
+	m_mapstrintGene.clear();
 	m_searchdsetMap.clear();
 	m_DB = NULL;
 	m_rData = NULL;
@@ -65,10 +68,15 @@ CSeekCentral::CSeekCentral(){
 	m_bCorrelation = false;
 	m_bOutputText = false;
 	m_bSquareZ = false;
+	m_bSharedDB = false;
 
 	DEBUG = false;
 	m_output_dir = "";
 
+	m_iClient = -1;
+	m_bEnableNetwork = false;
+	m_bNetworkSendData = false;
+	m_bNetworkSendStatus = false;
 }
 
 CSeekCentral::~CSeekCentral(){
@@ -76,18 +84,23 @@ CSeekCentral::~CSeekCentral(){
 	m_vecstrDatasets.clear();
 	m_vecstrSearchDatasets.clear();
 	m_mapstrstrDatasetPlatform.clear();
+	m_vecstrDP.clear();
+	m_mapstrintDataset.clear();
+	m_mapstrintGene.clear();
 
-	ushort i;
+	ushort i, j;
 	for(i=0; i<m_vc.size(); i++){
 		if(m_vc[i]==NULL) continue;
 		delete m_vc[i];
 	}
 	m_vc.clear();
+	
 	m_quant.clear();
 
 	for(i=0; i<m_searchdsetMap.size(); i++){
 		if(m_searchdsetMap[i]==NULL) continue;
 		delete m_searchdsetMap[i];
+		m_searchdsetMap[i] = NULL;
 	}
 	m_searchdsetMap.clear();
 
@@ -95,6 +108,34 @@ CSeekCentral::~CSeekCentral(){
 	//m_sum_weight_threads, m_counts_threads
 	//m_rank_normal_threads, and m_rank_threads
 	//should be already freed
+	if(m_master_rank_threads!=NULL){
+		CSeekTools::Free2DArray(m_master_rank_threads);
+		m_master_rank_threads = NULL;		
+	}
+	if(m_sum_weight_threads != NULL){
+		CSeekTools::Free2DArray(m_sum_weight_threads);
+		m_sum_weight_threads = NULL;
+	}
+	if(m_counts_threads !=NULL){
+		CSeekTools::Free2DArray(m_counts_threads);
+		m_counts_threads = NULL;
+	}
+	if(m_rank_normal_threads!=NULL){
+		for(j=0; j<m_numThreads; j++)
+			m_rank_normal_threads[j].clear();
+		delete[] m_rank_normal_threads;
+		m_rank_normal_threads = NULL;
+	}
+	if(m_rank_threads !=NULL){
+		for(j=0; j<m_numThreads; j++)
+			m_rank_threads[j].clear();
+		delete[] m_rank_threads;
+		m_rank_threads = NULL;
+	}
+	if(m_rank_d!=NULL){
+		CSeekTools::Free2DArray(m_rank_d);
+		m_rank_d = NULL;
+	}
 
 	m_master_rank.clear();
 	m_sum_weight.clear();
@@ -106,11 +147,14 @@ CSeekCentral::~CSeekCentral(){
 	m_Query.clear();
 
 	m_vp.clear();
+
 	m_mapstriPlatform.clear();
 	m_vecstrPlatform.clear();
 
 	if(m_DB!=NULL){
-		delete m_DB;
+		if(!m_bSharedDB){
+			delete m_DB;
+		}
 		m_DB = NULL;
 	}
 	m_iDatasets = 0;
@@ -119,6 +163,7 @@ CSeekCentral::~CSeekCentral(){
 	m_mapLoadTime.clear();
 	m_output_dir = "";
 	DEBUG = false;
+	m_bSharedDB = false;
 }
 
 bool CSeekCentral::CalculateRestart(){
@@ -165,21 +210,237 @@ bool CSeekCentral::CalculateRestart(){
 	return true;
 }
 
+//for SeekServer
+//assume DB has been read (with gvar, sinfo information)
+//assume datasets and genes have been read
+bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_dset,
+	CSeekCentral *src){
+
+	//fprintf(stderr, "B0 %lu\n", CMeta::GetMemoryUsage());
+	m_output_dir = output_dir; //LATER, TO BE DELETED
+	m_maxNumDB = src->m_maxNumDB;
+	m_bSharedDB = true;
+	m_numThreads = src->m_numThreads;
+	m_fScoreCutOff = src->m_fScoreCutOff;
+	m_fPercentQueryAfterScoreCutOff = src->m_fPercentQueryAfterScoreCutOff;
+	m_bSquareZ = src->m_bSquareZ;
+	m_bOutputText = src->m_bOutputText;
+	m_bSubtractGeneAvg = src->m_bSubtractGeneAvg;
+	m_bSubtractPlatformAvg = src->m_bSubtractPlatformAvg;
+	m_bDividePlatformStdev = src->m_bDividePlatformStdev;
+	m_bLogit = src->m_bLogit;
+	m_bCorrelation = src->m_bCorrelation;
+	m_vecstrGenes.resize(src->m_vecstrGenes.size());
+	copy(src->m_vecstrGenes.begin(), src->m_vecstrGenes.end(), m_vecstrGenes.begin());
+
+	m_vecstrDatasets.resize(src->m_vecstrDatasets.size());
+	copy(src->m_vecstrDatasets.begin(), src->m_vecstrDatasets.end(), m_vecstrDatasets.begin());
+
+	m_mapstrintDataset.insert(src->m_mapstrintDataset.begin(), 
+		src->m_mapstrintDataset.end());
+
+	m_mapstrintGene.insert(src->m_mapstrintGene.begin(), src->m_mapstrintGene.end());
+
+	m_mapstrstrDatasetPlatform.insert(src->m_mapstrstrDatasetPlatform.begin(),
+		src->m_mapstrstrDatasetPlatform.end());
+	m_mapstriPlatform.insert(src->m_mapstriPlatform.begin(), src->m_mapstriPlatform.end());
+
+	m_vecstrPlatform.resize(src->m_vecstrPlatform.size());
+	copy(src->m_vecstrPlatform.begin(), src->m_vecstrPlatform.end(), m_vecstrPlatform.begin());
+
+	m_vecstrDP.resize(src->m_vecstrDP.size());
+	copy(src->m_vecstrDP.begin(), src->m_vecstrDP.end(), m_vecstrDP.begin());
+
+	m_quant = src->m_quant;
+	ushort i, j;
+	omp_set_num_threads(m_numThreads);
+
+	m_iDatasets = m_vecstrDatasets.size();
+	m_iGenes = m_vecstrGenes.size();
+
+	//fprintf(stderr, "%d %d\n", m_iDatasets, m_iGenes);
+	//fprintf(stderr, "B1 %lu\n", CMeta::GetMemoryUsage());
+
+	//read search datasets
+	vector<string> sd;
+	CMeta::Tokenize(search_dset.c_str(), sd, "|", false);
+	m_vecstrSearchDatasets.resize(sd.size());
+	for(i=0; i<sd.size(); i++){
+		CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
+		//fprintf(stderr, "%s\n", sd[i].c_str());
+	}
+	//read queries
+	vector<string> sq;
+	CMeta::Tokenize(query.c_str(), sq, "|", false);
+	m_vecstrAllQuery.resize(sq.size());
+	for(i=0; i<sq.size(); i++){
+		CMeta::Tokenize(sq[i].c_str(), m_vecstrAllQuery[i], " ", false);
+		//fprintf(stderr, "%s\n", sq[i].c_str());
+	}
+	//fprintf(stderr, "%s\n", output_dir.c_str());
+	m_searchdsetMap.resize(m_vecstrAllQuery.size());
+	for(i=0; i<m_vecstrAllQuery.size(); i++){
+		m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
+		for(j=0; j<m_vecstrSearchDatasets[i].size(); j++)
+			m_searchdsetMap[i]->Add(
+				m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
+	}
+
+	//fprintf(stderr, "B2 %lu\n", CMeta::GetMemoryUsage());
+
+	m_DB = src->m_DB; //shared DB
+
+	CSeekTools::LoadDatabase(*m_DB, m_vc, src->m_vc, m_vp, src->m_vp,
+		m_vecstrDatasets, m_mapstrstrDatasetPlatform, m_mapstriPlatform);
+
+	//fprintf(stderr, "B3 %lu\n", CMeta::GetMemoryUsage());
+
+	if(!CalculateRestart()) return false;
+	return true;
+}
+
+//network mode, meant to be run after Initialize()
+bool CSeekCentral::EnableNetwork(
+	//network parameters
+	const int &iClient, const bool &bNetworkSendData){
+	m_bEnableNetwork = true;
+	m_bNetworkSendStatus = true;
+	m_bNetworkSendData = bNetworkSendData;
+	m_iClient = iClient; //assume client connection is already open
+	return true;
+}
+
+//optional step
+//Checks how many datasets contain the query
+//requires the queries and searchdatasets to be loaded!
+bool CSeekCentral::CheckDatasets(const bool &replace){
+	ushort dd, j;
+	ushort l;
+	stringstream ss; //search dataset (new!)
+	stringstream sq; //query availability
+	stringstream aq; //query (new!)
+
+	for(l=0; l<m_searchdsetMap.size(); l++){
+		ushort iUserDatasets = m_searchdsetMap[l]->GetNumSet();
+		const vector<ushort> &allRDatasets = m_searchdsetMap[l]->GetAllReverse();	
+		vector<int> count;
+		CSeekTools::InitVector(count, m_vecstrAllQuery[l].size(), (int) 0);
+		bool isFirst = true;
+
+		for(dd=0; dd<iUserDatasets; dd++){
+			ushort i = allRDatasets[dd];
+			CSeekIntIntMap *si = m_vc[i]->GetGeneMap();
+			ushort present = 0;
+			for(j=0, present=0; j<m_vecstrAllQuery[l].size(); j++){
+				if(m_mapstrintGene.find(m_vecstrAllQuery[l][j])==
+					m_mapstrintGene.end()) continue;
+				if(CSeekTools::IsNaN(si->GetForward(
+					m_mapstrintGene[m_vecstrAllQuery[l][j]]))) continue;
+				count[j]++;
+				present++;
+			}
+			//datasets that contains all query genes (very stringent)
+			//if(present==m_vecstrAllQuery[l].size()){
+
+			//datasets containing some query genes (relaxed)
+			if(present>0){
+				if(isFirst){
+					isFirst = false;
+					ss << m_vecstrDatasets[i];
+				}else{
+					ss << " " << m_vecstrDatasets[i];
+				}
+			}
+		}
+
+		if(isFirst){
+			string err = "Error: no dataset contains any of the query genes";
+			fprintf(stderr, "%s\n", err.c_str());
+			if(m_bEnableNetwork)
+				CSeekNetwork::Send(m_iClient, err);
+			return false;
+		}
+
+		if(l!=m_searchdsetMap.size()-1){
+			ss << "|";
+		}
+
+		isFirst = true;		
+		for(j=0; j<m_vecstrAllQuery[l].size(); j++){
+			sq << m_vecstrAllQuery[l][j] << ":" << count[j];
+			if(j!=m_vecstrAllQuery[l].size()-1){
+				sq << ";";
+			}
+			if(count[j]==0) continue;
+			if(isFirst){
+				isFirst = false;
+				aq << m_vecstrAllQuery[l][j];
+			}else{
+				aq << " " << m_vecstrAllQuery[l][j];
+			}
+		}
+
+		if(isFirst){
+			string err = "Error: no dataset contains any of the query genes";
+			fprintf(stderr, "%s\n", err.c_str());
+			if(m_bEnableNetwork)
+				CSeekNetwork::Send(m_iClient, err);
+			return false;
+		}
+
+		if(l!=m_searchdsetMap.size()-1){
+			aq << "|";
+			sq << "|";
+		}
+
+	}
+
+	string refinedQuery = aq.str();
+	string refinedSearchDataset = ss.str();
+	string refinedGeneCount = sq.str();
+	if(m_bEnableNetwork){
+		CSeekNetwork::Send(m_iClient, refinedSearchDataset);
+		CSeekNetwork::Send(m_iClient, refinedGeneCount);
+	}
+
+	if(replace){
+		vector<string> qq;
+		ushort i;
+		CMeta::Tokenize(refinedQuery.c_str(), qq, "|", true);
+		m_vecstrAllQuery.resize(qq.size());
+		for(i=0; i<qq.size(); i++){
+			m_vecstrAllQuery[i].clear();
+			CMeta::Tokenize(qq[i].c_str(), m_vecstrAllQuery[i], " ", true);
+		}
+
+		//Change the search datasets
+		vector<string> sd;
+		CMeta::Tokenize(refinedSearchDataset.c_str(), sd, "|", false);
+		m_vecstrSearchDatasets.resize(sd.size());
+		for(i=0; i<sd.size(); i++){
+			m_vecstrSearchDatasets[i].clear();
+			CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
+		}
+
+	}
+
+	return true;	
+}
+
+//load everything except query, search datasets, output directory
 bool CSeekCentral::Initialize(const char *gene, const char *quant,
-	const char *dset, const char *search_dset,
-	const char *query, const char *platform, const char *db,
+	const char *dset, const char *platform, const char *db,
 	const char *prep, const char *gvar, const char *sinfo,
 	const bool &useNibble, const ushort &num_db,
-	const ushort &buffer, const char *output_dir, const bool &to_output_text,
+	const ushort &buffer, const bool &to_output_text,
 	const bool &bCorrelation, const bool &bSubtractAvg,
 	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
 	const bool &bLogit, const float &fCutOff, const float &fPercentRequired, 
 	const bool &bSquareZ, const bool &bRandom, const int &iNumRandom, 
 	gsl_rng *rand){
 
-	m_output_dir = output_dir;
 	m_maxNumDB = buffer;
-	m_numThreads = 8;
+	m_numThreads = 8; //changed from 8
 	m_fScoreCutOff = fCutOff;
 	m_fPercentQueryAfterScoreCutOff = fPercentRequired;
 	m_bSquareZ = bSquareZ;
@@ -220,34 +481,19 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	if(!CSeekTools::ReadListTwoColumns(gene, vecstrGeneID, m_vecstrGenes))
 		return false;
 
+	for(i=0; i<m_vecstrGenes.size(); i++)
+		m_mapstrintGene[m_vecstrGenes[i]] = i;
+
 	CSeekTools::ReadQuantFile(quant, m_quant);
 	m_DB = new CDatabase(useNibble);
 
 	//read datasets
-	vector<string> vecstrDP;
-	if(!CSeekTools::ReadListTwoColumns(dset, m_vecstrDatasets, vecstrDP))
+	if(!CSeekTools::ReadListTwoColumns(dset, m_vecstrDatasets, m_vecstrDP))
 		return false;
 
-	map<string, ushort> mapstrintDataset;
 	for(i=0; i<m_vecstrDatasets.size(); i++){
-		m_mapstrstrDatasetPlatform[m_vecstrDatasets[i]] = vecstrDP[i];
-		mapstrintDataset[m_vecstrDatasets[i]] = i;
-	}
-
-	//read search datasets
-	if(!CSeekTools::ReadMultipleQueries(search_dset, m_vecstrSearchDatasets))
-		return false;
-
-	//read queries
-	if(!CSeekTools::ReadMultipleQueries(query, m_vecstrAllQuery))
-		return false;
-
-	m_searchdsetMap.resize(m_vecstrAllQuery.size());
-	for(i=0; i<m_vecstrAllQuery.size(); i++){
-		m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
-		for(j=0; j<m_vecstrSearchDatasets[i].size(); j++)
-			m_searchdsetMap[i]->Add(
-				mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
+		m_mapstrstrDatasetPlatform[m_vecstrDatasets[i]] = m_vecstrDP[i];
+		m_mapstrintDataset[m_vecstrDatasets[i]] = i;
 	}
 
 	vector<string> vecstrPlatforms;
@@ -260,6 +506,47 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	m_DB->Open(db, m_vecstrGenes, m_iDatasets, num_db);
 	CSeekTools::LoadDatabase(*m_DB, prep, gvar, sinfo, m_vecstrDatasets,
 		m_mapstrstrDatasetPlatform, m_mapstriPlatform, m_vp, m_vc);
+
+	return true;
+}
+
+
+bool CSeekCentral::Initialize(const char *gene, const char *quant,
+	const char *dset, const char *search_dset,
+	const char *query, const char *platform, const char *db,
+	const char *prep, const char *gvar, const char *sinfo,
+	const bool &useNibble, const ushort &num_db,
+	const ushort &buffer, const char *output_dir, const bool &to_output_text,
+	const bool &bCorrelation, const bool &bSubtractAvg,
+	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
+	const bool &bLogit, const float &fCutOff, const float &fPercentRequired, 
+	const bool &bSquareZ){
+
+	if(!CSeekCentral::Initialize(gene, quant, dset, platform, 
+		db, prep, gvar, sinfo, useNibble, num_db, buffer, to_output_text, 
+		bCorrelation, bSubtractAvg, bSubtractPlatformAvg, bDividePlatformStdev, 
+		bLogit, fCutOff, fPercentRequired, bSquareZ)){
+		return false;
+	}
+
+	ushort i, j;
+	omp_set_num_threads(m_numThreads);
+	m_output_dir = output_dir;
+
+	//read search datasets
+	if(!CSeekTools::ReadMultipleQueries(search_dset, m_vecstrSearchDatasets))
+		return false;
+	//read queries
+	if(!CSeekTools::ReadMultipleQueries(query, m_vecstrAllQuery))
+		return false;
+
+	m_searchdsetMap.resize(m_vecstrAllQuery.size());
+	for(i=0; i<m_vecstrAllQuery.size(); i++){
+		m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
+		for(j=0; j<m_vecstrSearchDatasets[i].size(); j++)
+			m_searchdsetMap[i]->Add(
+				m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
+	}
 
 	if(!CalculateRestart()) return false;
 
@@ -285,6 +572,11 @@ bool CSeekCentral::PrepareQuery(const vector<string> &vecstrQuery,
 bool CSeekCentral::PrepareOneQuery(CSeekQuery &query,
 	CSeekIntIntMap &dMap, vector<float> &weight){
 
+	assert(m_master_rank_threads==NULL && m_counts_threads==NULL &&
+		m_sum_weight_threads==NULL);
+	assert(m_rank_normal_threads==NULL && m_rank_threads==NULL);
+	assert(m_rData==NULL);
+
 	ushort j;
 	const vector<ushort> &queryGenes = query.GetQuery();
 	const vector<ushort> &allRDatasets = dMap.GetAllReverse();
@@ -297,30 +589,37 @@ bool CSeekCentral::PrepareOneQuery(CSeekQuery &query,
 	m_rData = new ushort**[m_numThreads];
 	for(j=0; j<m_numThreads; j++)
 		m_rData[j] = CSeekTools::Init2DArray(m_iGenes, iQuery, (ushort)0);
-
+	
 	m_master_rank_threads =
 		CSeekTools::Init2DArray(m_numThreads, m_iGenes, (float)0);
 	m_sum_weight_threads =
 		CSeekTools::Init2DArray(m_numThreads, m_iGenes, (float)0);
 	m_counts_threads =
 		CSeekTools::Init2DArray(m_numThreads, m_iGenes, (ushort)0);
+	
 	m_rank_normal_threads = new vector<ushort>[m_numThreads];
 	m_rank_threads = new vector<ushort>[m_numThreads];
 
 	for(j=0; j<m_numThreads; j++){
 		m_rank_normal_threads[j].resize(m_iGenes);
 		m_rank_threads[j].resize(m_iGenes);
+		//CSeekTools::InitVector(m_rank_normal_threads[j], m_iGenes, (ushort) 255);
+		//CSeekTools::InitVector(m_rank_threads[j], m_iGenes, (ushort) 255);
 	}
-
+	
 	CSeekTools::InitVector(m_master_rank, m_iGenes, (float) 0);
 	CSeekTools::InitVector(m_sum_weight, m_iGenes, (float) 0);
 	CSeekTools::InitVector(m_counts, m_iGenes, (ushort) 0);
 	CSeekTools::InitVector(weight, m_iDatasets, (float)0);
-
+	
 	return true;
 }
 
 bool CSeekCentral::AggregateThreads(){
+	assert(m_master_rank_threads!=NULL && m_counts_threads!=NULL &&
+		m_sum_weight_threads!=NULL);
+	assert(m_rank_normal_threads!=NULL && m_rank_threads!=NULL);
+
 	//Aggregate into three vectors: m_master_rank, m_counts, m_sum_weight
 	ushort j, k;
 	for(j=0; j<m_numThreads; j++){
@@ -330,15 +629,24 @@ bool CSeekCentral::AggregateThreads(){
 			m_sum_weight[k]+=m_sum_weight_threads[j][k];
 		}
 	}
+
 	CSeekTools::Free2DArray(m_master_rank_threads);
 	CSeekTools::Free2DArray(m_counts_threads);
 	CSeekTools::Free2DArray(m_sum_weight_threads);
+	m_master_rank_threads=NULL;
+	m_counts_threads=NULL;
+	m_sum_weight_threads = NULL;
+
 	for(j=0; j<m_numThreads; j++){
 		m_rank_normal_threads[j].clear();
 		m_rank_threads[j].clear();
 	}
+
 	delete[] m_rank_normal_threads;
 	delete[] m_rank_threads;
+	m_rank_normal_threads = NULL;
+	m_rank_threads = NULL;
+
 	return true;
 }
 
@@ -399,6 +707,18 @@ bool CSeekCentral::Write(const ushort &i){
 	sprintf(acBuffer, "%s/%d.gscore", m_output_dir.c_str(), i);
 	CSeekTools::WriteArray(acBuffer, m_master_rank);
 
+	//send data to client
+	if(m_bEnableNetwork){
+		if(CSeekNetwork::Send(m_iClient, m_weight[i])==-1){
+			fprintf(stderr, "Error sending message to client\n");
+			return false;
+		}
+		if(CSeekNetwork::Send(m_iClient, m_master_rank)==-1){
+			fprintf(stderr, "Error sending message to client\n");
+			return false;
+		}
+	}
+
 	if(!m_bRandom && m_bOutputText){
 		const vector<ushort> &allRDatasets =
 			m_searchdsetMap[i]->GetAllReverse();
@@ -456,11 +776,22 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 	}
 
 	l = 0;
+	//oct 20, 2012: whether to redo current query with equal weighting
+	int redoWithEqual = 0; //tri-mode: 0, 1, 2
+	enum SearchMode current_sm;
+	CSeekQuery equalWeightGold;
+
+	//fprintf(stderr, "0 %lu\n", CMeta::GetMemoryUsage());
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
+		if(redoWithEqual>=1) //1 or 2 
+			current_sm = EQUAL;
+		else //0
+			current_sm = sm;
 
 		if(m_mapLoadTime.find(i)!=m_mapLoadTime.end()){
 			if(!m_bRandom || l==0){ //l==0: first random repetition
-				CSeekTools::ReadDatabaselets(*m_DB, m_mapLoadTime[i], m_vc);
+				CSeekTools::ReadDatabaselets(*m_DB, m_mapLoadTime[i], m_vc, 
+				m_iClient, m_bEnableNetwork);
 			}
 		}
 
@@ -478,15 +809,17 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 		PrepareOneQuery(query, *(m_searchdsetMap[i]), weight);
 		ushort iQuery = query.GetQuery().size();
 
+		//fprintf(stderr, "1b %lu\n", CMeta::GetMemoryUsage());
+		
 		//for CV_CUSTOM
 		CSeekQuery customGoldStd;
-		if(sm==CV_CUSTOM)
+		if(current_sm==CV_CUSTOM)
 			PrepareQuery((*newGoldStd)[i], customGoldStd);
 
-		if(sm==CV || sm==CV_CUSTOM)
+		if(current_sm==CV || current_sm==CV_CUSTOM)
 			query.CreateCVPartitions(rnd, *PART_M, *FOLD);
 
-		if(sm==ORDER_STATISTICS)
+		if(current_sm==ORDER_STATISTICS)
 			m_rank_d = CSeekTools::Init2DArray(iSearchDatasets, m_iGenes,
 				(ushort) 0);
 
@@ -523,9 +856,10 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			//m_bSubtractPlatformStdev is not used, it's assumed
 
 			float w = -1;
-			if(sm==CV || sm==CV_CUSTOM){
+			float report_w = -1; //for showing weight of dataset
+			if(current_sm==CV || current_sm==CV_CUSTOM){
 				if(DEBUG) fprintf(stderr, "Weighting dataset\n");
-				if(sm==CV)
+				if(current_sm==CV)
 					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
 						m_fPercentQueryAfterScoreCutOff, m_bSquareZ,
 						&m_rank_threads[tid]);
@@ -539,8 +873,15 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 					continue;
 				}
 			}
-			else if(sm==EQUAL || sm==ORDER_STATISTICS) w = 1.0;
-			else if(sm==USE_WEIGHT) w = (*providedWeight)[i][d];
+			else if(current_sm==EQUAL || current_sm==ORDER_STATISTICS){
+				w = 1.0;
+				//calculate reported weight here!
+				CSeekWeighter::OneGeneWeighting(query, *m_vc[d], *RATE,
+					m_fPercentQueryAfterScoreCutOff, m_bSquareZ,
+					&m_rank_threads[tid], &equalWeightGold);
+				report_w = m_vc[d]->GetDatasetSumWeight();
+			}
+			else if(current_sm==USE_WEIGHT) w = (*providedWeight)[i][d];
 
 			if(DEBUG) fprintf(stderr, "Doing linear combination\n");
 
@@ -561,7 +902,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			float* Sum_Weight = &m_sum_weight_threads[tid][0];
 			ushort* Counts = &m_counts_threads[tid][0];
 
-			if(sm==ORDER_STATISTICS)
+			if(current_sm==ORDER_STATISTICS)
 				for(; iterR!=endR; iterR++){
 					//if(Rank_Normal[*iterR]==0) continue;
 					m_rank_d[dd][*iterR] = Rank_Normal[*iterR];
@@ -574,20 +915,26 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 					Sum_Weight[*iterR] += w;
 					Counts[*iterR]++;
 				}
-			weight[d] = w;
+			if(current_sm==EQUAL && redoWithEqual==2){
+				weight[d] = report_w;
+			}else{
+				weight[d] = w;
+			}
 		}
 		//omp finishes
 		//fprintf(stderr, "3 %lu\n", CMeta::GetMemoryUsage());
 		for(j=0; j<iSearchDatasets; j++)
 			m_vc[allRDatasets[j]]->DeleteQuery();
 
+		assert(m_rData!=NULL);
 		for(j=0; j<m_numThreads; j++)
 			CSeekTools::Free2DArray(m_rData[j]);
 		delete[] m_rData;
+		m_rData = NULL;
 
 		AggregateThreads();
 
-		if(sm!=ORDER_STATISTICS){
+		if(current_sm!=ORDER_STATISTICS){
 			FilterResults(iSearchDatasets);
 		}else{
 			CSeekWeighter::OrderStatisticsRankAggregation(iSearchDatasets,
@@ -596,11 +943,40 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			m_rank_d = NULL;
 		}
 
+		SetQueryScoreNull(query);
 		Sort(final);
 		//Display(query, final);
 		//fprintf(stderr, "4 %lu\n", CMeta::GetMemoryUsage());
 
+		if(redoWithEqual==0 && !CheckWeight(i)){
+			redoWithEqual = 1;
+			fprintf(stderr, "Redo with equal weighting\n"); system("date +%s%N 1>&2");
+			if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, 
+				"Redo with equal weighting")==-1){
+				fprintf(stderr, "Error sending message to client\n");
+			}
+			i--;
+			continue;
+		}else if(redoWithEqual==1){
+			redoWithEqual = 2;
+			fprintf(stderr, "Calculate dataset ordering\n"); system("date +%s%N 1>&2");
+			if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, 
+				"Calculate dataset ordering")==-1){
+				fprintf(stderr, "Error sending message to client\n");
+			}
+			CopyTopGenes(equalWeightGold, final, 100);
+			i--;
+			continue;
+		}else{
+			redoWithEqual = 0;
+		}
+
 		fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
+
+		if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, "Done Search")==-1){
+			fprintf(stderr, "Error sending message to client\n");
+		}
+
 		//if m_bRandom, write at the very end when all repetitions are done
 		Write(i);
 	
@@ -652,7 +1028,46 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 
 	}
 
+	//fprintf(stderr, "4b %lu\n", CMeta::GetMemoryUsage());
+
 	return true;
+}
+
+bool CSeekCentral::CheckWeight(const ushort &i){
+	ushort j = 0;
+	bool valid = false;
+	for(j=0; j<m_iDatasets; j++){
+		if(m_weight[i][j]!=0){
+			valid = true;
+			break;
+		}
+	}
+	return valid;
+}
+
+bool CSeekCentral::CopyTopGenes(CSeekQuery &csq, 
+	const vector<AResultFloat> &src, const ushort top){
+	ushort i, j;
+	vector<ushort> topGenes;
+	for(i=0; i<top; i++){
+		if(src[i].f==-320) continue;
+		topGenes.push_back(src[i].i);
+	}
+	if(topGenes.size()==0){
+		fprintf(stderr, "Error in CopyTopGenes!\n");
+		return false;
+	}
+	csq.InitializeQuery(topGenes, m_iGenes);
+	return true;
+}
+
+bool CSeekCentral::SetQueryScoreNull(const CSeekQuery &csq){
+	ushort j;
+	const vector<ushort> &query = csq.GetQuery();
+	for(j=0; j<query.size(); j++){
+		m_master_rank[query[j]] = -320;
+	}
+	return true;	
 }
 
 bool CSeekCentral::EqualWeightSearch(){
@@ -722,8 +1137,9 @@ bool CSeekCentral::VarianceWeightSearch(){
 
 bool CSeekCentral::Destruct(){
 	ushort j;
-	for(j=0; j<m_iDatasets; j++) m_vc[j]->DeleteQueryBlock();
+	//for(j=0; j<m_iDatasets; j++) m_vc[j]->DeleteQueryBlock();
 	for(j=0; j<m_iDatasets; j++){
+		if(m_vc[j]!=NULL) continue;
 		delete m_vc[j];
 		m_vc[j] = NULL;
 	}

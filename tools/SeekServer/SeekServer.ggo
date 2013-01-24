@@ -3,19 +3,48 @@ version	"1.0"
 purpose	"Performs cross-platform microarray query-guided search in server mode"
 
 section "Main"
-option	"port"				r	"Port"
+option	"port"				t	"Port"
 								string default="9000"
-option	"db"				x	"Input a set of datasets"
+option	"dset"				x	"Input a set of datasets"
 								string typestr="filename"	yes
 option	"input"				i	"Input gene mapping"
 								string	typestr="filename"	yes
 option	"dir_in"			d	"Database directory"
 								string	typestr="directory"	yes
 option	"dir_prep_in"		p	"Prep directory (containing .gavg, .gpres files)"
-								string	typestr="directory"	yes				
+								string	typestr="directory"	yes
 option	"dir_platform"		P	"Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files)"
 								string	typestr="directory"	yes
-option	"is_nibble"			N	"Whether the input DB is nibble type"
-								flag	off
+option	"dir_sinfo"			u	"Sinfo Directory (containing .sinfo files)"
+								string	typestr="directory"	default="NA"
+option	"dir_gvar"			U	"Gene variance directory (containing .gexpvar files)"
+								string	typestr="directory"	default="NA"
+option	"quant"				Q	"quant file (assuming all datasets use the same quantization)"
+								string	typestr="filename"	yes								
 option	"num_db"			n	"Number of databaselets in database"
 								int	default="1000"	yes
+
+section "Optional - Parameter tweaking"
+option	"correlation"		T	"Use Pearson correlation values, instead of z-score. -m, -M, -r do not apply"
+								flag	off
+option	"norm_subavg"		m	"Per dataset, normalize z-scores by subtracting average of result gene"
+								flag	off
+option	"norm_platsubavg"	M	"Per platform, normalize z-scores by subtracting average of query gene across platform"
+								flag	off
+option	"norm_platstdev"	r	"Per platform, normalize z-scores by dividing stdev of query gene across platform"
+								flag	off
+option	"score_cutoff"		c	"Cutoff on the gene-gene score before adding, default: no cutoff"
+								float default="-9999"
+option	"per_q_required"	C	"Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff."
+								float default="0.0"
+option	"square_z"			e	"If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff"							
+								flag	off
+
+section "MISC"								
+option	"is_nibble"			N	"Whether the input DB is nibble type"
+								flag	off
+option	"buffer"			b	"Number of Databaselets to store in memory"
+								int default="20"
+option	"output_text"		O	"Output results (gene list and dataset weights) as text"
+								flag	off
+								

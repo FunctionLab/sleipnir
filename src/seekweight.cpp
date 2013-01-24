@@ -317,6 +317,75 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 	return true;
 }
 
+//for equal weighting, in case user wants to still see
+//ordering of datasets, based on distance from the average ranking
+bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery, 
+	CSeekDataset &sDataset, const float &rate, 
+	const float &percent_required, const bool &bSquareZ,
+	vector<ushort> *rrank, const CSeekQuery *goldStd){
+
+	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
+	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
+	if(mapQ==NULL) return true;
+
+	sDataset.InitializeCVWeight(1);
+
+	ushort i, j, qi, qj;
+
+	vector<char> is_query, is_gold;
+	CSeekTools::InitVector(is_query, sDataset.GetNumGenes(), (char) 0);
+	CSeekTools::InitVector(is_gold, sDataset.GetNumGenes(), (char) 0);
+
+	vector<ushort> &rank = *rrank;
+
+	ushort TOP = 1000;
+	vector<AResult> ar;
+	ar.resize(rank.size());
+
+	const vector<ushort> &allQ = sQuery.GetQuery();
+	vector<ushort> query;
+	ushort num_q = 0;
+	ushort num_v = 0;
+
+	const vector<ushort> &vi = sQuery.GetCVQuery(qi);
+
+	/* Set up query and gold standard */
+	for(i=0; i<allQ.size(); i++){
+		if(CSeekTools::IsNaN(mapQ->GetForward(allQ[i]))) continue;
+		is_query[allQ[i]] = 1;
+		query.push_back(allQ[i]);
+		num_q++;
+	}
+
+	//assume goldStd must not be null
+	assert(goldStd!=NULL);
+	const vector<ushort> &allGoldStd = goldStd->GetQuery();
+	for(i=0; i<allGoldStd.size(); i++){
+		if(CSeekTools::IsNaN(mapG->GetForward(allGoldStd[i])))
+			continue;
+		if(is_query[allGoldStd[i]]==1) continue;
+		is_gold[allGoldStd[i]] = 1;
+		num_v++;
+	}
+
+	if(num_q==0 || num_v==0){
+		sDataset.SetCVWeight(0, -1);
+	}else{
+		/* actual weighting */
+		float w = 0;
+		const ushort MIN_QUERY_REQUIRED =
+			max((ushort) 1, (ushort) (percent_required * query.size()));
+		bool ret = LinearCombine(rank, query, sDataset,
+			MIN_QUERY_REQUIRED, bSquareZ);
+		ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
+			rank, w, is_query, is_gold, *mapG, &ar, TOP);
+		if(!ret) sDataset.SetCVWeight(0, -1);
+		else sDataset.SetCVWeight(0, w);
+	}
+
+	ar.clear();
+	return true;
+}
 
 bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 	const float &rate, const float &percent_required, const bool &bSquareZ,

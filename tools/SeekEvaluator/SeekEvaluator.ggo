@@ -83,6 +83,8 @@ option	"query_list"		Q	"List of query gene set files"
 								string typestr="filename"
 option	"exclude_list"		X 	"Exclude gene list"
 								string typestr="filename"
+option	"include_list"		Y	"List of annotated genes"
+								string typestr="filename"
 								
 section "Output"
 option	"dir_out"			d	"Output directory"

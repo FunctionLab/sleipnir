@@ -36,6 +36,7 @@ using namespace std;
 #include "bayesnet.h"
 #include "database.h"
 #include "seekmap.h"
+#include "seekcentral.h"
 #include "seekweight.h"
 #include "seekdataset.h"
 #include "seekevaluate.h"
@@ -45,6 +46,7 @@ using namespace std;
 #include "seekquery.h"
 #include "meta.h"
 #include "unistd.h"
+#include "seeknetwork.h"
 using namespace Sleipnir;
 
 #endif // STDAFX_H

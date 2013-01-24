@@ -36,11 +36,11 @@ public:
 	float GetPlatformAvg(const ushort &) const;
 	float GetPlatformStdev(const ushort &) const;
 	void ResetPlatform();
+	void Copy(const CSeekPlatform &);
 
 private:
 	vector<float> m_vecfPlatformAvg;
 	vector<float> m_vecfPlatformStdev;
-	ushort m_iPlatformID;
 	string m_strPlatformName;
 	ushort m_iNumGenes;
 };

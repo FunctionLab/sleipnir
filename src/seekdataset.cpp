@@ -63,6 +63,55 @@ CSeekDataset::~CSeekDataset(){
 	platform = NULL;
 }
 
+//Copy CSeekDataset from a given object
+bool CSeekDataset::Copy(CSeekDataset *src){
+	//copies the following data if available: geneAverage, genePresence
+	//geneVariance, dsetAverage, dsetStdev, geneMap, platform
+	
+	if(src->geneAverage.size()>0){
+		//fprintf(stderr, "Great a!\n");
+		geneAverage.resize(src->geneAverage.size());
+		ushort i;
+		for(i=0; i<src->geneAverage.size(); i++){
+			geneAverage[i] = src->geneAverage[i];
+		}
+		//copy(src->geneAverage.begin(), src->geneAverage.end(), 
+		//	geneAverage.begin());
+	}
+	if(src->genePresence.size()>0){
+		//fprintf(stderr, "Great b!\n");
+		genePresence.resize(src->genePresence.size());
+		ushort i;
+		for(i=0; i<src->genePresence.size(); i++){
+			genePresence[i] = src->genePresence[i];
+		}
+		//copy(src->genePresence.begin(), src->genePresence.end(),
+		//	genePresence.begin());
+	}
+	if(src->geneVariance.size()>0){
+		geneVariance.resize(src->geneVariance.size());
+		ushort i;
+		for(i=0; i<src->geneVariance.size(); i++){
+			geneVariance[i] = src->geneVariance[i];
+		}
+		//copy(src->geneVariance.begin(), src->geneVariance.end(),
+		//	geneVariance.begin());
+	}
+	m_fDsetAverage = src->m_fDsetAverage;
+	m_fDsetStdev = src->m_fDsetStdev;
+
+	if(geneMap!=NULL){
+		delete geneMap;
+		iNumGenes = 0;
+	}
+
+	ushort iSize = genePresence.size();
+	iNumGenes = iSize;
+	geneMap = new CSeekIntIntMap(src->geneMap);
+
+	return true;	
+}
+
 bool CSeekDataset::ReadDatasetAverageStdev(const string &strFileName){
 	vector<float> t;
 	CSeekTools::ReadArray(strFileName.c_str(), t);
@@ -130,7 +179,14 @@ bool CSeekDataset::InitializeQueryBlock(const vector<ushort> &queryBlock){
 		return true;
 	}
 
+	//fprintf(stderr, "0x1 %lu %d %d\n", CMeta::GetMemoryUsage(), iDBSize, iNumGenes);
 	r = CSeekTools::Init2DArray(iDBSize, iNumGenes, (unsigned char) 255);
+	//fprintf(stderr, "0x2 %lu\n", CMeta::GetMemoryUsage());
+	//CSeekTools::Free2DArray((unsigned short**)r);
+	//free(r[0]);
+	//free(r);
+	//fprintf(stderr, "0x3 %lu\n", CMeta::GetMemoryUsage());
+
 
 	return true;
 }
@@ -209,12 +265,21 @@ bool CSeekDataset::DeleteQueryBlock(){
 		dbMap = NULL;
 	}
 	if(r!=NULL){
-		CSeekTools::Free2DArray((unsigned char**)r);
+		CSeekTools::Free2DArray(r);
 		r = NULL;
 	}
 	iDBSize = 0;
 	return true;
 }
+
+//test function only
+bool CSeekDataset::DeleteR(){
+	delete dbMap;
+	CSeekTools::Free2DArray(r);
+	iDBSize = 0;
+	return true;
+}
+
 
 const vector<ushort>& CSeekDataset::GetQuery() const{
 	return this->query;

@@ -154,6 +154,7 @@ public:
 	 * Reset all query-block related data.
 	 */
 	bool DeleteQueryBlock();
+	bool DeleteR();
 
 	/*!
 	 * \brief
@@ -164,6 +165,9 @@ public:
 		const bool=false, const bool=false,
 		const float cutoff=-1.0*CMeta::GetNaN(), 
 		const bool=false, gsl_rng *rand=NULL);
+
+	//Copy CSeekDataset object, mainly for SeekServer
+	bool Copy(CSeekDataset *);
 
 	ushort** GetDataMatrix();
 
@@ -186,23 +190,21 @@ public:
 	void SetPlatform(CSeekPlatform &);
 	CSeekPlatform& GetPlatform() const;
 
-
 private:
-	string strName;
 	CSeekPlatform *platform;
 	vector<float> geneAverage;
 	vector<float> geneVariance;
-
 	vector<char> genePresence;
 	CSeekIntIntMap *geneMap;
-	CSeekIntIntMap *dbMap;
-	CSeekIntIntMap *queryMap;
-	vector<ushort> query;
-	vector<ushort> queryIndex;
 
 	/* previously known as sinfo file */
 	float m_fDsetAverage;
 	float m_fDsetStdev;
+
+	CSeekIntIntMap *dbMap;
+	CSeekIntIntMap *queryMap;
+	vector<ushort> query;
+	vector<ushort> queryIndex;
 
 	ushort iQuerySize;
 	ushort iNumGenes;

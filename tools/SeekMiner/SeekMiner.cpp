@@ -208,8 +208,8 @@ int main( int iArgs, char** aszArgs ) {
 	//csfinal->WeightSearch(csk_weight_copy);
 	//csfinal->CVCustomSearch(newQ, rnd, PART_M, FOLD, RATE);
 	//csfinal->EqualWeightSearch();
-	//csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
-	csfinal->OrderStatistics();
+	csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
+	//csfinal->OrderStatistics();
 	csfinal->Destruct();
 	delete csfinal;
 

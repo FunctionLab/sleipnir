@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <omp.h>
 #include <cmath>
+#include <assert.h>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_cdf.h>

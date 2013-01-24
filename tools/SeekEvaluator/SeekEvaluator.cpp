@@ -31,22 +31,57 @@ enum METRIC{
 };
 
 bool GetRandom(gsl_rng *r, const vector<AResultFloat> &geneScore, 
-	vector<AResultFloat> &random){
+	vector<AResultFloat> &random, vector<char> &excludeGene,
+	vector<char> &includeGene, vector<ushort> &queryGeneID, 
+	const float nan){
 
-	random.clear();
-	random.resize(geneScore.size());
-	float *gs = (float*)malloc(geneScore.size()*sizeof(float));
-	
-	ushort i;
+	int i, j;
+	int ss = 0;
+
+	vector<char> q;
+	q.clear();
+	CSeekTools::InitVector(q, geneScore.size(), (char) 0);
+	for(j=0; j<queryGeneID.size(); j++)
+		q[queryGeneID[j]] = 1;
+
 	for(i=0; i<geneScore.size(); i++){
-		gs[i] = geneScore[i].f;
+		if(includeGene[geneScore[i].i]==0){
+		}else if(q[geneScore[i].i]==1){
+		}else if(excludeGene[geneScore[i].i]==1){
+		}else{
+			ss++;
+		}
 	}
 
-	gsl_ran_shuffle(r, gs, geneScore.size(), sizeof(float));
+	float *gs = (float*)malloc(ss*sizeof(float));
+	random.clear();
+	random.resize(geneScore.size());
+	
+	int ii = 0;
+	for(i=0; i<geneScore.size(); i++){
+		if(includeGene[geneScore[i].i]==0){
+		}else if(q[geneScore[i].i]==1){
+		}else if(excludeGene[geneScore[i].i]==1){
+		}else{
+			//gs[ii] = geneScore[i].f;
+			gs[ii] = (float) ii;
+			ii++;
+		}
+	}
 
+	gsl_ran_shuffle(r, gs, ss, sizeof(float));
+
+	ii = 0;
 	for(i=0; i<geneScore.size(); i++){
 		random[i].i = geneScore[i].i;
-		random[i].f = gs[i];
+		random[i].f = nan;
+		if(includeGene[geneScore[i].i]==0){
+		}else if(q[geneScore[i].i]==1){
+		}else if(excludeGene[geneScore[i].i]==1){
+		}else{
+			random[i].f = gs[ii];
+			ii++;
+		}
 	}
 	free(gs);
 	return true;
@@ -312,7 +347,8 @@ void PrintResult(vector< vector<float> > f){
 
 bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met, 
 	vector<AResultFloat> *sortedGenes, vector<ushort> *queryGeneID, 
-	int listSize, vector<char> *goldstdGenePresence, vector<char> *excludeGene, 
+	int listSize, vector<char> *goldstdGenePresence, vector<char> *excludeGene,
+	vector<char> *includeGene, 
 	vector< vector<float> > &result
 
 	){
@@ -431,6 +467,10 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 
 	for(i=0; i<listSize; i++){
 		for(j=0; j<sortedGenes[i].size(); j++){
+			//NEW
+			if(includeGene[i][sortedGenes[i][j].i]==0){
+				sortedGenes[i][j].f = nan;
+			}
 			if(q[i][sortedGenes[i][j].i]==1){
 				sortedGenes[i][j].f = nan;
 			}
@@ -455,6 +495,61 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 			if(!ret) return 1;
 			vecevalAll[i] = evalAll;
 		}
+	}
+
+	if(sArgs.fold_over_random_flag==1){
+		const gsl_rng_type *T;
+		gsl_rng *rnd;
+		gsl_rng_env_setup();
+		T = gsl_rng_default;
+		rnd = gsl_rng_alloc(T);
+
+		vector<AResultFloat> *randomScores = 
+			new vector<AResultFloat>[listSize];
+
+		vector<float> random_eval;
+		vector< vector<float> > random_vecevalAll;
+		random_eval.resize(listSize);
+		random_vecevalAll.resize(listSize);
+
+		//should shuffle only within annotated genes
+		for(i=0; i<listSize; i++){
+			GetRandom(rnd, sortedGenes[i], randomScores[i], excludeGene[i], 
+				includeGene[i], queryGeneID[i], nan);
+			sort(randomScores[i].begin(), randomScores[i].end());
+			if(met!=PR_ALL){
+				float fEval;
+				bool ret = EvaluateOneQuery(sArgs, met, randomScores[i],
+					goldstdGenePresence[i], nan, fEval);
+				if(!ret) return 1;
+				random_eval[i] = fEval;
+				//calculate fold
+				if(random_eval[i]==eval[i]) eval[i] = 1.0;
+				else if(random_eval[i]==0) eval[i] = 1.0;
+				else eval[i] = eval[i] / random_eval[i];
+			}else{
+				vector<float> evalAll;
+				bool ret = EvaluateOneQuery(sArgs, met, randomScores[i],
+					goldstdGenePresence[i], nan, evalAll);
+				if(!ret) return 1;
+				random_vecevalAll[i] = evalAll;
+				int ii=0; 
+				//calculate fold
+				for(ii=0; ii<random_vecevalAll[i].size(); ii++){
+					if(random_vecevalAll[i][ii]==vecevalAll[i][ii])
+						vecevalAll[i][ii] = 1.0;
+					else if(random_vecevalAll[i][ii]==0)
+						vecevalAll[i][ii] = 1.0;
+					else
+						vecevalAll[i][ii] /= random_vecevalAll[i][ii];
+				}
+			}
+			//fprintf(stderr, "Got here!\n");	
+		}
+		//fprintf(stderr, "Got here\n");
+		gsl_rng_free(rnd);
+		delete[] randomScores;		
+		//fprintf(stderr, "Got here 2\n");
 	}
 
 	if(met!=PR_ALL){
@@ -566,11 +661,6 @@ int main( int iArgs, char** aszArgs ) {
 	char				acBuffer[ c_iBuffer ];
 	size_t				i, j;
 
-	const gsl_rng_type *T;
-	gsl_rng *rnd;
-	gsl_rng_env_setup();
-	T = gsl_rng_default;
-	rnd = gsl_rng_alloc(T);
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -795,6 +885,20 @@ int main( int iArgs, char** aszArgs ) {
 				excludeGene[i][mapstriGenes[ex[j]]] = 1;
 		}
 
+		vector<string> include_list;
+		string incl = sArgs.include_list_arg;
+		include_list.clear();
+		CSeekTools::ReadListOneColumn(incl, include_list);
+		vector<char> *includeGene = new vector<char>[vecstrList.size()];
+		for(i=0; i<include_list.size(); i++){
+			vector<string> in;
+			CSeekTools::ReadMultiGeneOneLine(include_list[i], in, 40000);
+			CSeekTools::InitVector(includeGene[i], vecstrGenes.size(), (char) 0);
+			for(j=0; j<in.size(); j++)
+				includeGene[i][mapstriGenes[in[j]]] = 1;
+		}
+
+
 		string genescoreList = sArgs.gscore_list_arg;
 		vecstrList.clear();
 		CSeekTools::ReadListOneColumn(genescoreList, vecstrList);
@@ -821,17 +925,20 @@ int main( int iArgs, char** aszArgs ) {
 
 		vector<vector<float> > result;
 		DoAggregate(sArgs, met, sortedGenes, queryGeneID, vecstrList.size(),
-			goldstdGenePresence, excludeGene, result);
+			goldstdGenePresence, excludeGene, includeGene, result);
 
 
+		/*
 		if(sArgs.fold_over_random_flag==1){
 			vector<AResultFloat> *randomScores = new vector<AResultFloat>[vecstrList.size()];
+			//should shuffle only within annotated genes
 			for(i=0; i<vecstrList.size(); i++){
-				GetRandom(rnd, sortedGenes[i], randomScores[i]);
+				GetRandom(rnd, sortedGenes[i], randomScores[i], excludeGene[i], 
+					includeGene[i], queryGeneID[i], nan);
 			}
 			vector<vector<float> > random_result;
 			DoAggregate(sArgs, met, randomScores, queryGeneID, vecstrList.size(),
-				goldstdGenePresence, excludeGene, random_result);
+				goldstdGenePresence, excludeGene, includeGene, random_result);
 
 			vector<vector<float> > fold;
 			fold.resize(result.size());
@@ -846,13 +953,14 @@ int main( int iArgs, char** aszArgs ) {
 					}else{
 						fold[i][j] = result[i][j]/random_result[i][j];
 					}
+					fprintf(stderr, "%.2f %d %d %.2f %.2f\n", fold[i][j], i, j, result[i][j], random_result[i][j]);
 				}
 			}
 			PrintResult(fold);
-
-		}else{
-			PrintResult(result);	
-		}
+		*/
+		//}else{
+		PrintResult(result);	
+		//}
 
 	}
 
