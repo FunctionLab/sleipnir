@@ -92,6 +92,8 @@ void CDatImpl::Reset( ) {
 		delete m_pMeasure;
 	m_pMeasure = NULL;
 
+	m_ifsm.close();
+
 	CMeta::Unmap( m_abData, m_hndlData, m_iData );
 	m_abData = NULL;
 	m_hndlData = 0;
