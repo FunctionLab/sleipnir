@@ -92,8 +92,6 @@ void CDatImpl::Reset( ) {
 		delete m_pMeasure;
 	m_pMeasure = NULL;
 
-	m_ifsm.close();
-
 	CMeta::Unmap( m_abData, m_hndlData, m_iData );
 	m_abData = NULL;
 	m_hndlData = 0;
@@ -1230,6 +1228,10 @@ bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore, b
 			g_CatSleipnir( ).error( "CDat::Open( %s, %d ) failed memory mapping", szFile, fMemmap );
 			return false; }
 		return OpenHelper( ); }
+
+	if(m_ifsm.is_open()){
+		m_ifsm.close();
+	}
 
 	m_ifsm.open( szFile, ( ( eFormat == EFormatText ) || ( eFormat == EFormatPCL ) ) ? ios_base::in :
 		ios_base::binary );
