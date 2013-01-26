@@ -1229,6 +1229,10 @@ bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore, b
 			return false; }
 		return OpenHelper( ); }
 
+	if(m_ifsm.is_open()){
+		m_ifsm.close();
+	}
+
 	m_ifsm.open( szFile, ( ( eFormat == EFormatText ) || ( eFormat == EFormatPCL ) ) ? ios_base::in :
 		ios_base::binary );
 	if( !m_ifsm.is_open( ) )

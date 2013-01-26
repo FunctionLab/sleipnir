@@ -32,7 +32,6 @@ if WITH_TOOLS
 	  Orthologer \
 	  Overlapper \
 	  PCLPlotter \
-	  PCLServer \
 	  PCL2Bin \
 	  Randomizer \
 	  Seqs2Ngrams \
@@ -56,6 +55,12 @@ if WITH_SMILE_TOOLS
 	  Counter \
 	  Data2DB \
       DBCombiner \
+	  DSLConverter \
+	  Dab2Dad \
+	  Edges2Posteriors \
+	  MEFIT
+if WITH_GSL_TOOLS
+    GSL_TOOLS_SUBDIRS = \
 	  SeekTest \
       SeekPrep \
       SeekReader \
@@ -64,10 +69,9 @@ if WITH_SMILE_TOOLS
 	  SeekEvaluator \
 	  SeekGeneRecommender \
 	  SeekAggregatedDataset \
-	  DSLConverter \
-	  Dab2Dad \
-	  Edges2Posteriors \
-	  MEFIT
+	  PCLServer
+endif
+
 if WITH_BOOST_TOOLS
       BOOST_TOOLS_SUBDIRS = BNServer
 endif

@@ -33,7 +33,6 @@ using namespace std;
 
 #include <pthread.h>
 
-#include "bayesnet.h"
 #include "database.h"
 #include "seekmap.h"
 #include "seekcentral.h"

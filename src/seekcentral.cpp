@@ -841,7 +841,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 		//fprintf(stderr, "2 %lu\n", CMeta::GetMemoryUsage());
 
 		#pragma omp parallel for \
-		shared(allRDatasets, query, customGoldStd) \
+		shared(customGoldStd) \
 		private(dd, d, j) \
 		firstprivate(iSearchDatasets, iQuery) \
 		schedule(dynamic)

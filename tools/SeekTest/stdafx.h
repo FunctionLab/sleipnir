@@ -35,7 +35,6 @@ using namespace std;
 
 #include <pthread.h>
 
-#include "bayesnet.h"
 #include "database.h"
 #include "seekbasic.h"
 #include "seekmap.h"

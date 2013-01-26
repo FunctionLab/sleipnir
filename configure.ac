@@ -36,6 +36,7 @@ AC_CONFIG_SRCDIR([src/stdafx.h])
 m4_pattern_allow([AM_INIT_AUTOMAKE])
 AM_INIT_AUTOMAKE
 
+#SLEIPNIR_HOST_TYPE
 AC_LANG([C++])
 
 # why oh why does this break things?
@@ -428,6 +429,68 @@ fi
 AC_SUBST(LOG4CPP_CFLAGS)
 AC_SUBST(LOG4CPP_LIBS)
 
+dnl QIAN ==============================
+USE_OPENMP=true
+sleipnir_cv_openmp=yes
+AC_ARG_ENABLE(openmp,
+	[AS_HELP_STRING([--disable-openmp],
+	[disable OpenMP SMP multi-threading])],
+	[if test "$enableval" = no; then sleipnir_cv_openmp=no; USE_OPENMP=false; fi], [])
+if $USE_OPENMP; then
+	dnl case "$canonical_host_type" in
+	dnl	*-*-mingw* | *-*-cygwin* | *-*-gnu*)
+		AC_MSG_CHECKING([for support of OpenMP])
+		XCFLAGS="$CFLAGS"
+		CFLAGS="$CFLAGS -fopenmp"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+			#include <omp.h>
+			#include <stdio.h>
+		]], [[
+			  _Pragma("omp parallel")  
+			  printf("Hello, world.\n");
+			  return 0;
+			]])],sleipnir_cv_openmp=yes, sleipnir_cv_openmp=no)
+		dnl AC_MSG_FAILURE([Error has occurred])
+		AC_MSG_RESULT([$sleipnir_cv_openmp])
+			if test "$sleipnir_cv_openmp" = yes; then
+			  AC_DEFINE(HAVE_OPENMP,1,[Define if compiler supports OpenMP])
+			  CXXFLAGS="$CXXFLAGS -fopenmp"
+			  USE_OPENMP=true
+			else
+			  CFLAGS="$XCFLAGS"
+			  USE_OPENMP=false
+			fi
+			dnl SLEIPNIR_CHECK_OPENMP(-fopenmp)
+	dnl	;;
+	dnl	*-*-msdosmsvc)
+	dnl	## FIXME is this the right flag for MSVC?
+	dnl	SLEIPNIR_CHECK_OPENMP(-openmp)
+	dnl	;;
+	dnl	## Add other compilers supporting OpenMP here
+	dnl #esac
+fi
+
+#
+#if $USE_OPENMP; then
+#  AC_MSG_WARN([])
+#  AC_MSG_WARN([You used the EXPERIMENTAL --enable-openmp option.])
+#  warn_msg_printed=true
+#fi
+
+
+
+
+#AC_ARG_WITH([omp],
+#	[AS_HELP_STRING([--with-omp], [Enable OpenMP directives])],
+#	[
+#		if test "x$with_omp" == "xno"; then
+#			omp_state=no
+#		else
+#			omp_state=check
+#		fi
+#	],
+#	[omp_state=check])
+
 
 ## SMILE
 # If the user specifies a path, use it.
@@ -461,9 +524,9 @@ LOCAL_CHECK_LIB([smile], [smile], [RoundProbability(0,0)],
 #      AC_DEFINE([SMILEXML_LIB], [1])
 #      SMILEXML_LIB="-lsmilexml"
 #    fi
-         SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR -fopenmp"
+         SMILE_CFLAGS="-I $SMILE_INCLUDE_DIR"
 #         SMILE_LIBS="-L $SMILE_LIB_DIR $SMILEXML_LIB -lsmile"
-         SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile -fopenmp -lgsl -lgslcblas"
+         SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile"
         ],                                                        dnl and found in specified path
 	[],                                                       dnl not found
         [smile_state=no],                                         dnl and not found installed
@@ -588,6 +651,49 @@ fi
 AC_SUBST(BOOST_CFLAGS)
 AC_SUBST(BOOST_LIBS)
 
+#AC_CHECK_LIB([m],[cos])
+#AC_CHECK_LIB([gslcblas],[cblas_dgemm])
+#AC_CHECK_LIB([gsl],[gsl_blas_dgemm])
+
+## GSL library
+
+AC_ARG_WITH([gsl],
+	[AS_HELP_STRING([--with-gsl=PATH], [prefix of GSL installation or build dir])],
+	[ 
+         if test "x$with_gsl" = "xyes"; then
+	   		gsl_state=check
+         elif test "x$with_gsl" != "xno"; then
+           	gsl_state=try
+	   qualify_path with_gsl
+           LOCAL_CHECK_APPEND_PATHS([$with_gsl], [. include], [gsl/gsl_blas.h], [GSL_INCLUDE_DIR], [gsl_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_gsl], [. lib], [libgsl.a], [GSL_LIB_DIR], [gsl_state=warn])
+         else
+           gsl_state=no
+         fi
+        ],
+	[gsl_state=check])
+LOCAL_CHECK_LIB([gsl], [gsl], [gsl_rng_env_setup()],
+        [gsl_state=ok],                                 dnl found
+        [GSL_LIBS="-lgsl -lgslcblas"],                              dnl and found installed
+        [
+         GSL_CFLAGS="-I $GSL_INCLUDE_DIR"
+         GSL_LIBS="-L $GSL_LIB_DIR -lgsl -lgslcblas"
+        ],                                                        dnl and found in specified path
+	[],                                                       dnl not found
+        [gsl_state=no],                                 dnl and not found installed
+        [gsl_state=warn],                               dnl and not found in specified path
+        [],                                                       dnl requested without
+	[#include <stdio.h>
+	 #include <gsl/gsl_rng.h>],
+        [-lgsl -lgslcblas],
+        [-L $GSL_LIB_DIR -I $GSL_INCLUDE_DIR])
+if test "x$gsl_state" != "xok"; then
+  AC_DEFINE([NO_GSL], [1])
+fi
+AC_SUBST(GSL_CFLAGS)
+AC_SUBST(GSL_LIBS)
+
+
 
 ## Vowpal Wabbit
 # If the user specifies a path, use it.
@@ -667,6 +773,7 @@ AM_CONDITIONAL([WITH_SVM_TOOLS], [test "x$svm_perf_state" = "xok"])
 AM_CONDITIONAL([WITH_VW_TOOLS], [test "x$vowpal_wabbit_state" = "xok"])
 AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_state" = "xok"])
 AM_CONDITIONAL([WITH_BOOST_TOOLS], [test "x$boost_state" = "xok"])
+AM_CONDITIONAL([WITH_GSL_TOOLS], [test "x$gsl_state" = "xok"])
 AM_CONDITIONAL([WITH_GENGETOPT], [test "x$prog_gengetopt_state" = "xok"])
 
 AC_CONFIG_FILES([Makefile \
@@ -770,6 +877,8 @@ echo "  SMILE                   = $smile_info"
 echo "  SVM Perf                = $svm_perf_info"
 echo "  Vowpal Wabbit           = $vowpal_wabbit_info"
 echo "  pthread                 = $pthread_info"
+echo "  gsl                     = $gsl_info"
+echo "  OpenMP                  = $sleipnir_cv_openmp"
 if $with_tools; then
 echo "Used for tools:"
 echo "  boost graph, regex      = $boost_info"
@@ -799,6 +908,26 @@ The path to log4cpp may be incorrect. I looked for Category.hh
 and liblog4cpp.a and did not find both.
 EOF
 
+fi
+
+if test "x$sleipnir_cv_openmp" != "xyes"; then
+	cat << EOF
+** BUILDING WITHOUT OpenMP SUPPORT
+OpenMP is essential for parallization in SEEK toolset.
+SeekServer, SeekGeneRecommender, SeekMiner will run on single thread.
+This is either because you have disabled OpenMP using --disable-openmp, or 
+you have an outdated version of GCC that does not support OpenMP. 
+In the latter case, please obtain the latest GCC compiler from http://gcc.gnu.org/.
+EOF
+fi
+
+if test "x$gsl_state" != "xok"; then
+	cat << EOF
+** BUILDING WITHOUT GSL
+GNU GSL is required for building SEEK toolset.
+SeekServer, SeekGeneRecommender, SeekMiner would not be built.
+GNU GSL is available at http://www.gnu.org/software/gsl/.
+EOF
 fi
 
 if test "x$smile_state" != "xok"; then

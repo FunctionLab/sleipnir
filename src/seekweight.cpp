@@ -246,8 +246,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 	//fprintf(stderr, "Finished allocating\n");
 
 	#pragma omp parallel for \
-	shared(master_rank, counts, rank_f, gss, perms, rks, iGenes, \
-	iDatasets) private(k, dd) \
+	shared(rank_f, gss, perms, rks) private(k, dd) \
 	schedule(dynamic)
 	for(k=0; k<iGenes; k++){
 		ushort tid = omp_get_thread_num();

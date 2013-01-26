@@ -87,7 +87,7 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	
 	//fprintf(stderr, "Here\n");	
 	#pragma omp parallel for \
-	shared(vc, allQ) private(i) firstprivate(iDatasets) schedule(dynamic)
+	shared(allQ) private(i) firstprivate(iDatasets) schedule(dynamic)
 	for(i=0; i<iDatasets; i++){
 		vc[i]->InitializeQueryBlock(allQ);
 	}
@@ -125,7 +125,7 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 		unsigned char **r = NULL;
 
 		#pragma omp parallel for \
-		shared(vc, Qi) private(j, k) \
+		shared(Qi) private(j, k) \
 		firstprivate(iDatasets, iGenes, m, qu, r, db) schedule(dynamic)
 		for(j=0; j<iDatasets; j++){
 			if((qu=vc[j]->GetDBMap())==NULL) continue;
@@ -220,7 +220,6 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 
 	fprintf(stderr, "Initializing gene map\n"); system("date +%s%N 1>&2");
 	#pragma omp parallel for \
-	shared(vc, vc_src, vp, vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform) \
 	private(i) firstprivate(iDatasets) schedule(dynamic)
 	for(i=0; i<iDatasets; i++){
 		vc[i] = new CSeekDataset();
@@ -294,7 +293,7 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 
 	fprintf(stderr, "Initializing gene map\n"); system("date +%s%N 1>&2");
 	#pragma omp parallel for \
-	shared(vc) private(i) firstprivate(iDatasets) schedule(dynamic)
+	private(i) firstprivate(iDatasets) schedule(dynamic)
 	for(i=0; i<iDatasets; i++) vc[i]->InitializeGeneMap();
 
 	fprintf(stderr, "Done initializing gene map\n"); system("date +%s%N 1>&2");
