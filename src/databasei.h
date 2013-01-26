@@ -117,7 +117,7 @@ public:
 		size_t iImageSize = GetSizeGenes();
 		unsigned char *charImage = (unsigned char*)malloc(iImageSize*sizeof(unsigned char));
 
-		/* read databaselet into charImage */
+		// read databaselet into charImage
 		if(m_fstm.is_open()){
 			m_fstm.seekg(m_iHeader, ios_base::beg);
 			m_fstm.read((char*) charImage, iImageSize);
@@ -129,7 +129,7 @@ public:
 
 		return charImage;
 	}
-
+	
 	size_t GetImageSize(){
 		return GetSizeGenes();
 	}
@@ -204,7 +204,7 @@ protected:
 
 		Clear( ); }
 
-	bool Open( const std::vector<std::string>&, const std::vector<std::string>& );
+	bool Open( const std::vector<std::string>&, const std::vector<std::string>&, const map<string, size_t>& );
 	bool Open( const std::string&, size_t, bool = false );
 
 	void Clear( ) {

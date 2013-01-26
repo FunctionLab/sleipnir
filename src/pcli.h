@@ -86,8 +86,8 @@ protected:
 		m_fHeader(fHeader) {
 	}
 	~CPCLImpl();
-
-	bool OpenExperiments(std::istream&, size_t, string&);
+	
+	bool OpenExperiments(std::istream&, size_t, string&, bool rTable=false);
 	bool OpenGene(std::istream&, std::vector<float>&, string&);
 	void Reset();
 	void MedianMultiplesMapped(const std::vector<std::vector<size_t> >&,

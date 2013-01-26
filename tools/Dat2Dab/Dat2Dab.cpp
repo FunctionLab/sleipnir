@@ -31,7 +31,7 @@ int main( int iArgs, char** aszArgs ) {
 	CGenes				Genes( Genome );
 	ifstream			ifsm;
 	CDat				Dat;
-	size_t				i, j;
+	size_t				i, j, k;
 	bool				fModified;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -125,6 +125,10 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.Rank( );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
 		Dat.Normalize( sArgs.zscore_flag ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
+	
+	if( sArgs.normalizeNPone_flag )
+	  Dat.Normalize( CDat::ENormalizeMinMaxNPone );
+	
 	if( sArgs.zero_flag || sArgs.dmissing_given )
 	  for( i = 0; i < Dat.GetGenes( ); ++i )
 	    for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
@@ -145,7 +149,70 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude );
 	if( sArgs.genee_arg )
 		Dat.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge );
+	if( sArgs.gexedges_arg )
+		Dat.FilterGenes( sArgs.gexedges_arg, CDat::EFilterExEdge );
+	
 
+	if( sArgs.ccoeff_flag ) {
+	  float sxy, sxxyy, sgxy;
+	  for( i = 0; i < Dat.GetGenes( ); ++i ){
+	    sxy = 0.0;
+	    sxxyy = 0.0;
+	    sgxy = 0.0;
+	    for( j = 0; j < Dat.GetGenes( ); ++j ){
+	      if( i == j )
+		continue;  
+	      
+	      sxy = sxy + Dat.Get(i, j);
+	      sxxyy = sxxyy + (Dat.Get(i, j)*Dat.Get(i, j));
+	      
+	      for( k = j+1; k < Dat.GetGenes( ); ++k ){
+		if( i == k || j == k)
+		  continue;		
+		sgxy = sgxy + Dat.Get(i, j)*Dat.Get(i, k)*Dat.Get(j, k);
+	      }
+	    }
+	    cout << Dat.GetGene( i ) << '\t' <<  sgxy/( sxy*sxy - sxxyy )  << endl;
+	  }
+	  
+	  return 0;
+	}
+	
+	if( sArgs.mar_flag ){
+	  float sxy, sxxyy;
+	  
+	  for( i = 0; i < Dat.GetGenes( ); ++i ){
+	    sxy = 0;
+	    sxxyy = 0;
+	    
+	    for( j = 0; j < Dat.GetGenes( ); ++j ){
+	      if( i == j )
+		continue;  
+	      
+	      sxxyy = sxxyy + (Dat.Get(i, j)*Dat.Get(i, j));
+	      sxy = sxy + Dat.Get(i, j);
+	    }
+	    cout << Dat.GetGene( i ) << '\t' << sxxyy/sxy << endl;
+	  }	  
+	  return 0;
+	}
+		
+	if( sArgs.hubbiness_flag ) {
+	  float sume;
+	  for( i = 0; i < Dat.GetGenes( ); ++i ){
+	    sume = 0.0;
+	    for( j = 0; j < Dat.GetGenes( ); ++j ){
+	      if( i == j )
+		continue;	      
+	      sume = sume + Dat.Get(i, j);
+	    }
+	    
+	    cout << Dat.GetGene( i ) << '\t' << sume/(Dat.GetGenes( )-1) << endl;
+	  }
+	  
+	  return 0;
+	}
+	
 	if( sArgs.paircount_flag ) {
 		size_t			iTotal, iCutoff;
 		float			d, dAve, dStd;

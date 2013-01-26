@@ -53,12 +53,18 @@ option  "outpos"                u       "Use positive edges outside the context"
                                                         flag    off
 option  "outneg"                U       "Use negative edges outside the context"
                                                         flag    off
+option	"weights"			W	"Weight file"
+							string	typestr="filename"
+option	"flipneg"           F       "Flip weights(one minus original) for negative standards"
+                                                        flag    on
 
 section "Preprocessing"
 option	"normalize"		n	"Normalize scores before processing"
 							flag	off
 option	"invert"		t	"Invert correlations to distances"
 							flag	off
+option	"abs"			A	"Convert input to its absolute values"
+							float	default="0.0"
 
 section "Optional"
 option	"sse"			s	"Calculate sum of squared errors"

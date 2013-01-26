@@ -23,7 +23,7 @@
 #include "statistics.h"
 #include "measure.h"
 #include "dat.h"
-
+#define WT_MULTIPLIER 50
 /*
  * Implementations thanks to:
  * Numerical Recipes in C
@@ -1256,6 +1256,179 @@ double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers
 			else
 				iNeg++;
 			k++; } }
+	dSum -= ( iPos * ( iPos - 1 ) ) / 2;
+
+	return ( dSum / iPos / iNeg ); }
+
+double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,
+	const vector<float>& vecGeneWeights, bool flipneg) {
+	size_t				i, j, k,m, iOne, iTwo, iNeg;
+	uint64_t			iPos;
+	float				d, dAnswer,w;
+	double				dSum;
+	std::vector<size_t>		veciGenes;
+	std::vector<float>		vecdValues, vecdRanks;
+	bool				fAnswer;
+
+	veciGenes.resize( DatAnswers.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = DatData.GetGene( DatAnswers.GetGene( i ) );
+
+	for( i = 0; i < DatAnswers.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 )
+			continue;
+		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
+			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) ||
+				CMeta::IsNaN( d = DatData.Get( iOne, iTwo ) )||
+				CMeta::IsNaN( w = vecGeneWeights[i]*vecGeneWeights[j] ))
+				continue;
+			fAnswer = dAnswer > 0;
+//write sth here
+			if(fAnswer || !flipneg)
+				for( m = 0; m <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER-0.5); m++){
+					vecdValues.push_back( d );}  
+			else
+				for( m = 0; m <((1-vecGeneWeights[i]*vecGeneWeights[j])*WT_MULTIPLIER-0.5); m++){
+					vecdValues.push_back( d );} } }
+	{
+		std::vector<size_t>	veciIndices;
+		size_t				iIndex, iCount;
+
+		veciIndices.resize( vecdValues.size( ) );
+		for( i = 0; i < vecdValues.size( ); ++i )
+			veciIndices[ i ] = i;
+		std::sort( veciIndices.begin( ), veciIndices.end( ), SCompareRank<float>( vecdValues ) );
+		vecdRanks.resize( veciIndices.size( ) );
+		for( i = 0; i < vecdRanks.size( ); ++i ) {
+			iIndex = veciIndices[ i ];
+			if( !i || ( vecdValues[ iIndex ] != vecdValues[ veciIndices[ i - 1 ] ] ) ) {
+				for( iCount = 0,j = i; j < veciIndices.size( ); ++j ) {
+					if( vecdValues[ veciIndices[ j ] ] != vecdValues[ iIndex ] )
+						break;
+					iCount++; }
+				d = i + ( iCount - 1 ) / 2.0f; }
+			vecdRanks[ iIndex ] = d; }
+	}
+
+	for( dSum = 0,iPos = iNeg = i = k = 0; i < DatAnswers.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 )
+			continue;
+		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
+			if( ( ( iTwo = veciGenes[ j ] ) == -1 ) ||
+				CMeta::IsNaN( DatData.Get( iOne, iTwo ) ) ||
+				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) )||
+				CMeta::IsNaN( w = vecGeneWeights[i]*vecGeneWeights[j] ) )
+			    continue;
+			fAnswer = dAnswer > 0;
+
+				if( dAnswer > 0 ) {
+					for( m = 0; m <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER-0.5); m++){
+					iPos++;
+					dSum += vecdRanks[ k ];
+					k++;}}
+				else{
+					if(flipneg)
+						for( m = 0; m <((1-vecGeneWeights[i]*vecGeneWeights[j])*WT_MULTIPLIER-0.5); m++){
+							iNeg++;
+						k++;}
+					else
+						for( m = 0; m <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER-0.5); m++){
+							iNeg++;
+						k++;}
+				}
+		
+		}}
+	dSum -= ( iPos * ( iPos - 1 ) ) / 2;
+
+	return ( dSum / iPos / iNeg ); }
+
+double CStatistics::WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,
+	const CDat& wDat, bool flipneg) {
+	size_t				i, j, k,m, iOne, iTwo, iNeg;
+	uint64_t			iPos;
+	float				d, dAnswer,w;
+	double				dSum;
+	std::vector<size_t>		veciGenes,vecfiGenes;
+	std::vector<float>		vecdValues, vecdRanks, vecdWeights;
+	bool				fAnswer;
+
+
+	veciGenes.resize( DatAnswers.GetGenes( ) );
+	for( i = 0; i < veciGenes.size( ); ++i )
+		veciGenes[ i ] = DatData.GetGene( DatAnswers.GetGene( i ) );
+
+	vecfiGenes.resize( DatAnswers.GetGenes( ) );
+	for( i = 0; i < vecfiGenes.size( ); ++i ){
+		vecfiGenes[ i ] = wDat.GetGene( DatAnswers.GetGene( i ));}
+
+	for( i = 0; i < DatAnswers.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 || vecfiGenes[ i ] == -1 )
+			continue;
+		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
+			if( ( ( iTwo = veciGenes[ j ] ) == -1 ||vecfiGenes[ j ] == -1 ) ||
+				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) ) ||
+				CMeta::IsNaN( d = DatData.Get( iOne, iTwo ) )||
+				CMeta::IsNaN( w = wDat.Get(vecfiGenes[i],vecfiGenes[j]) ))
+				continue;
+			fAnswer = dAnswer > 0;
+			
+			if(fAnswer || !flipneg)
+				for( m = 0; m <(w*WT_MULTIPLIER-0.5); m++){
+					vecdValues.push_back(d);}
+			else
+				for( m = 0; m <((1-w)*WT_MULTIPLIER-0.5); m++){
+					vecdValues.push_back(d);}
+
+			} }
+
+	{
+		std::vector<size_t>	veciIndices;
+		size_t				iIndex, iCount;
+
+		veciIndices.resize( vecdValues.size( ) );
+		for( i = 0; i < vecdValues.size( ); ++i )
+			veciIndices[ i ] = i;
+		std::sort( veciIndices.begin( ), veciIndices.end( ), SCompareRank<float>( vecdValues ) );
+		vecdRanks.resize( veciIndices.size( ) );
+		for( i = 0; i < vecdRanks.size( ); ++i ) {
+			iIndex = veciIndices[ i ];
+			if( !i || ( vecdValues[ iIndex ] != vecdValues[ veciIndices[ i - 1 ] ] ) ) {
+				for( iCount = 0,j = i; j < veciIndices.size( ); ++j ) {
+					if( vecdValues[ veciIndices[ j ] ] != vecdValues[ iIndex ] )
+						break;
+					iCount++; }
+				d = i + ( iCount - 1 ) / 2.0f; }
+			vecdRanks[ iIndex ] = d; }
+	}
+
+	for( dSum = 0,iPos = iNeg = i = k = 0; i < DatAnswers.GetGenes( ); ++i ) {
+		if( ( iOne = veciGenes[ i ] ) == -1 || vecfiGenes[ i ] == -1)
+			continue;
+		for( j = ( i + 1 ); j < DatAnswers.GetGenes( ); ++j ) {
+			if( ( ( iTwo = veciGenes[ j ] ) == -1 || vecfiGenes[ j ] == -1 ) ||
+				CMeta::IsNaN( DatData.Get( iOne, iTwo ) ) ||
+				CMeta::IsNaN( dAnswer = DatAnswers.Get( i, j ) )||
+				CMeta::IsNaN( w = wDat.Get(vecfiGenes[i],vecfiGenes[j]) ) )
+			    continue;
+			fAnswer = dAnswer > 0;
+				if( dAnswer > 0 ) {
+					for( m = 0; m <(wDat.Get(vecfiGenes[i],vecfiGenes[j])*WT_MULTIPLIER-0.5); m++){
+						iPos++;
+						dSum += vecdRanks[ k ]; 
+						k++;}}
+				else{
+					if(flipneg)
+						for( m = 0; m <((1-wDat.Get(vecfiGenes[i],vecfiGenes[j]))*WT_MULTIPLIER-0.5); m++){
+							iNeg++;
+							k++;}
+					else
+						for( m = 0; m <(wDat.Get(vecfiGenes[i],vecfiGenes[j])*WT_MULTIPLIER-0.5); m++){
+							iNeg++;
+							k++;}
+					 }
+		}}
+
 	dSum -= ( iPos * ( iPos - 1 ) ) / 2;
 
 	return ( dSum / iPos / iNeg ); }

@@ -52,6 +52,7 @@ my %tools_other_packages = (
 			    OntoShell => ['READLINE'],
 			    SVMer => ['SVM_PERF'],
 			    SVMperfer => ['SVM_PERF'],
+			    SVMperfing => ['SVM_PERF'],
 			    VWer => ['VOWPAL_WABBIT'],
 			    );
 

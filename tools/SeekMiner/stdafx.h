@@ -33,7 +33,6 @@ using namespace std;
 
 #include <pthread.h>
 
-#include "database.h"
 #include "seekmap.h"
 #include "seekweight.h"
 #include "seekdataset.h"

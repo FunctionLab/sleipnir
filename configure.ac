@@ -501,23 +501,23 @@ fi
 AC_ARG_WITH([smile],
 	[AS_HELP_STRING([--with-smile=PATH], [prefix of SMILE installation])],
 	[
-         if test "x$with_smile" = "xyes"; then
-	   smile_state=check
-         elif test "x$with_smile" != "xno"; then
-           smile_state=try
-	   qualify_path with_smile
-           LOCAL_CHECK_APPEND_PATHS([$with_smile], [. include smile include/smile], [smile.h], [SMILE_INCLUDE_DIR], [smile_state=warn])
-           LOCAL_CHECK_APPEND_PATHS([$with_smile], [. lib], [libsmile.a], [SMILE_LIB_DIR], [smile_state=warn])
-         else
-           smile_state=no
-         fi
-        ],
+        if test "x$with_smile" = "xyes"; then
+            smile_state=check
+        elif test "x$with_smile" != "xno"; then
+            smile_state=try
+	        qualify_path with_smile
+            LOCAL_CHECK_APPEND_PATHS([$with_smile], [. include smile include/smile], [smile.h], [SMILE_INCLUDE_DIR], [smile_state=warn])
+            LOCAL_CHECK_APPEND_PATHS([$with_smile], [. lib smile], [libsmile.a], [SMILE_LIB_DIR], [smile_state=warn])
+        else
+            smile_state=no
+        fi
+    ],
 	[smile_state=check])
-LOCAL_CHECK_LIB([smile], [smile], [RoundProbability(0,0)],
-        [smile_state=ok],                                         dnl found
-        [
-	  SMILE_LIBS="-lsmile"
-# SMILEXML_LIB
+LOCAL_CHECK_LIB([smile], [smile], [DSL_isFinite(1.0)],
+    [smile_state=ok],                                         dnl found
+    [
+	    SMILE_LIBS="-lsmile"
+        #SMILEXML_LIB
 	],                                                       dnl and found installed
         [
 #    if test -f "$SMILE_LIB_DIR/libsmilexml.a"; then
@@ -529,14 +529,14 @@ LOCAL_CHECK_LIB([smile], [smile], [RoundProbability(0,0)],
          SMILE_LIBS="-L $SMILE_LIB_DIR -lsmile"
         ],                                                        dnl and found in specified path
 	[],                                                       dnl not found
-        [smile_state=no],                                         dnl and not found installed
-        [smile_state=warn],                                       dnl and not found in specified path
-        [],                                                       dnl requested without
+    [smile_state=no],                                         dnl and not found installed
+    [smile_state=warn],                                       dnl and not found in specified path
+    [],                                                       dnl requested without
 	[#include "smile.h"],
-        [],
-        [-L $SMILE_LIB_DIR -I $SMILE_INCLUDE_DIR])
+    [],
+    [-L $SMILE_LIB_DIR -I $SMILE_INCLUDE_DIR])
 if test "x$smile_state" != "xok"; then
-  AC_DEFINE([NO_SMILE], [1])
+    AC_DEFINE([NO_SMILE], [1])
 fi
 #AC_SUBST(SMILE_PREFIX)
 AC_SUBST(SMILE_CFLAGS)
@@ -605,8 +605,8 @@ AC_ARG_WITH([boost],
            boost_state=try
 	   qualify_path with_boost
            LOCAL_CHECK_APPEND_PATHS([$with_boost], [. .. include], [boost/graph/graphviz.hpp], [BOOST_INCLUDE_DIR], [boost_state=warn])
-           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. lib], [libboost_graph.a], [BOOST_GRAPH_LIB_DIR], [boost_state=warn])
-           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. lib], [libboost_regex.a], [BOOST_REGEX_LIB_DIR], [boost_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. lib stage/lib], [libboost_graph.a], [BOOST_GRAPH_LIB_DIR], [boost_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_boost], [. lib stage/lib], [libboost_regex.a], [BOOST_REGEX_LIB_DIR], [boost_state=warn])
            if test "x$BOOST_GRAPH_LIB_DIR" != "x$BOOST_REGEX_LIB_DIR"; then
 	     boost_state=warn
  	   else
@@ -770,6 +770,7 @@ AC_ARG_WITH([tools],
 AM_CONDITIONAL([WITH_TOOLS], [$with_tools])
 AM_CONDITIONAL([WITH_SMILE_TOOLS], [test "x$smile_state" = "xok"])
 AM_CONDITIONAL([WITH_SVM_TOOLS], [test "x$svm_perf_state" = "xok"])
+AM_CONDITIONAL([WITH_SVM_LIBSRC], [test "x$svm_perf_state" = "xok"])
 AM_CONDITIONAL([WITH_VW_TOOLS], [test "x$vowpal_wabbit_state" = "xok"])
 AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_state" = "xok"])
 AM_CONDITIONAL([WITH_BOOST_TOOLS], [test "x$boost_state" = "xok"])
@@ -848,6 +849,7 @@ AC_CONFIG_FILES([Makefile \
                  tools/Data2Svm/Makefile \
 		 tools/SVMer/Makefile \
 		 tools/SVMperfer/Makefile \
+		 tools/SVMperfing/Makefile \
 		 tools/VWer/Makefile \
                  tools/OntoShell/Makefile \
                  tools/BNServer/Makefile])

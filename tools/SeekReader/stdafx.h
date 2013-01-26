@@ -33,7 +33,6 @@ using namespace std;
 
 #include <pthread.h>
 
-#include "database.h"
 #include "seekbasic.h"
 #include "seekmap.h"
 #include "seekreader.h"

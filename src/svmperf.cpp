@@ -964,5 +964,339 @@ void CSVMPERF::ClassifyAll(Sleipnir::CPCL& PCL, Sleipnir::CDat& Values,
 	}
 }
 
+
+// populate docs for each label gene pair from a vector of dat file names
+bool CSVMPERF::CreateDoc(vector<string>& vecstrDatasets,
+			 vector<SVMLabelPair*>& vecLabels,
+			 const vector<string>& LabelsGene,
+			 Sleipnir::CDat::ENormalize eNormalize){
+  
+  size_t i, j, k, iGene, jGene, iDoc, iWord, iWords;
+  float d;
+  vector<size_t> veciGene;  
+  vector<WORD*> vec_pWord;
+  vector<size_t> labelg2dat;  
+  
+  WORD* aWords;
+  DOC* pRet;	
+  //Sleipnir::CDat Dat;
+  
+  iWords = vecstrDatasets.size();
+  
+  vec_pWord.reserve(vecLabels.size());
+  
+  // initialize all the WORDs
+  for(i=0; i < vecLabels.size(); i++){
+    aWords = new WORD[iWords + 1];
+    
+    // set wnum values
+    for (k = 0; k < iWords; ++k) {
+      //   cout<<i<<endl;
+      aWords[k].wnum = k + 1;
+      // asWords[ i ].wnum = 0;
+    }
+    aWords[k].wnum = 0;    
+    vec_pWord[i] = aWords;
+  }
+  
+  // initialize the gene mappings 
+  labelg2dat.resize(LabelsGene.size());
+  
+  // now open up all datasets
+  for(i=0; i < vecstrDatasets.size(); i++){
+    Sleipnir::CDat Dat;
+    if(!Dat.Open(vecstrDatasets[i].c_str())) {
+      cerr << vecstrDatasets[i].c_str() << endl;
+      cerr << "Could not open: " << vecstrDatasets[i] << endl;
+      return false;
+    }
+    
+    // normalize dat file
+    if( eNormalize != Sleipnir::CDat::ENormalizeNone ){
+      cerr << "Normalize input data" << endl;      
+      Dat.Normalize( eNormalize );
+    }
+    
+    cerr << "Open: " << vecstrDatasets[i] << endl;
+    
+    // construct gene name mapping
+    for(k=0; k < LabelsGene.size(); k++){
+      labelg2dat[k] = Dat.GetGene(LabelsGene[k]);
+    }    
+    /////
+    
+    for (j = 0; j < vecLabels.size(); j++) {
+      aWords = vec_pWord[j];
+            
+      if( ((iGene = labelg2dat[vecLabels[j]->iidx]) == -1 ) || 
+	  ((jGene = labelg2dat[vecLabels[j]->jidx]) == -1 )){
+	aWords[i].weight = 0;
+	continue;
+      }      
+      
+      if (!Sleipnir::CMeta::IsNaN(d = Dat.Get(iGene, jGene))) {
+	aWords[i].weight = d;
+      } else
+	aWords[i].weight = 0;            
+    }
+  }
+  
+  // now create a Doc per label
+  for (j = 0; j < vecLabels.size(); j++) {
+    //pRet->fvec->words[0].weight;
+    aWords = vec_pWord[j];
+    pRet = create_example(j, 0, 0, 1, create_svector(aWords, "", 1));
+    vecLabels[j]->pDoc = pRet;
+    delete[] aWords;
+  }
+  
+  return true;
+}
+
+SAMPLE* CSVMPERF::CreateSample(vector<SVMLabelPair*>& SVMLabels) {
+	size_t i, j, iGene, iDoc;
+	vector<DOC*> vec_pDoc;
+	vector<double> vecClass;
+	iDoc = 0;
+	for (i = 0; i < SVMLabels.size(); i++) {
+	  iDoc++;
+	  vec_pDoc.push_back(SVMLabels[i]->pDoc);
+	  vecClass.push_back(SVMLabels[i]->Target);
+	}
+	
+	DOC** ppDoc;
+	ppDoc = new DOC*[vec_pDoc.size()];
+	copy(vec_pDoc.begin(), vec_pDoc.end(), ppDoc);
+	vec_pDoc.clear();
+	PATTERN* pPattern = new PATTERN;
+	pPattern->doc = ppDoc;
+
+	pPattern->totdoc = iDoc;
+	//   cout << "number of document=" << pPattern->totdoc << endl;
+	LABEL* pLabel = new LABEL;
+	double* aClass;
+	aClass = new double[vecClass.size()];
+	copy(vecClass.begin(), vecClass.end(), aClass);
+	vecClass.clear();
+	pLabel->Class = aClass;
+	pLabel->totdoc = iDoc;
+	
+	EXAMPLE* aExample;
+	aExample = new EXAMPLE[1];
+	//cout<<"aExample @"<<aExample<<endl;
+	aExample[0].x = *pPattern;
+	aExample[0].y = *pLabel;
+	SAMPLE* pSample = new SAMPLE;
+	pSample->n = 1;
+	pSample->examples = aExample;
+	/* cout << "examples @" << pSample->examples << endl;
+	 cout<< "ppDoc="<<ppDoc<<endl;
+	 cout << "docs @" << pSample->examples[0].x.doc << endl;
+	 cout<<"done creating sample"<<endl;
+	 cout<<"sample @ "<<pSample<<endl;*/
+	return pSample;
+}
+
+void CSVMPERF::Classify(Sleipnir::CDat &Results,
+				  vector<SVMLabelPair*>& SVMLabels) {
+	size_t i, iGene, iDoc;
+	iDoc = 0;
+	DOC** ppDoc;
+	ppDoc = new DOC*[1];
+	PATTERN pattern;
+	pattern.doc = ppDoc;
+	pattern.totdoc = 1;
+	//cerr << "CLASSIFY classifying " << endl;
+	LABEL label;
+	for (i = 0; i < SVMLabels.size(); i++) {
+	  ppDoc[0] = SVMLabels[i]->pDoc;
+	  label
+	    = classify_struct_example(pattern, &structmodel,
+				      &struct_parm);
+	  
+	  Results.Set(SVMLabels[i]->iidx, SVMLabels[i]->jidx, label.Class[0]);
+	}
+	
+	
+	delete ppDoc;
+}
+
+void CSVMPERF::FreeSample_leave_Doc(SAMPLE s){
+  /* Frees the memory of sample s. */
+  int i;
+  for(i=0;i<s.n;i++) {
+    free(s.examples[i].x.doc);
+    free_label(s.examples[i].y);
+  }
+  free(s.examples);
+}
+
+// Platt's binary SVM Probablistic Output
+// Assume dec_values and labels have same dimensions and genes
+void CSVMPERF::sigmoid_train(Sleipnir::CDat& Results,
+			     vector<SVMLabelPair*>& SVMLabels,
+			     float& A, float& B){
+	double prior1=0, prior0 = 0;
+	size_t i, j, idx;
+	float d, lab;
+	
+	int max_iter=100;	// Maximal number of iterations
+	double min_step=1e-10;	// Minimal step taken in line search
+	double sigma=1e-12;	// For numerically strict PD of Hessian
+	double eps=1e-5;
+	vector<double> t;
+	double fApB,p,q,h11,h22,h21,g1,g2,det,dA,dB,gd,stepsize;
+	double newA,newB,newf,d1,d2;
+	int iter; 
+	vector<float> dec_values;
+	
+	// Negatives are values less than 0
+	for(i = 0; i < SVMLabels.size(); i++)
+	  if( SVMLabels[i]->Target > 0 )
+	    prior1 += 1;
+	  else if(SVMLabels[i]->Target < 0 )
+	    prior0 += 1;
+
+	// initialize size
+	t.resize(prior0+prior1);
+	
+	
+	// classify training examples
+	LABEL label;
+	size_t iGene, iDoc;
+	iDoc = 0;
+	DOC** ppDoc;
+	ppDoc = new DOC*[1];
+	PATTERN pattern;
+	pattern.doc = ppDoc;
+	pattern.totdoc = 1;
+	
+	dec_values.resize(t.size());
+	
+	idx = 0;
+	for (i = 0; i < SVMLabels.size(); i++) {
+	  if( SVMLabels[i]->Target == 0 )
+	    continue;
+	  if( Sleipnir::CMeta::IsNaN(d = Results.Get(SVMLabels[i]->iidx, SVMLabels[i]->jidx)))
+	    continue;
+	  
+	  dec_values[idx] = d;
+	  idx++;
+	}
+	
+	// Initial Point and Initial Fun Value
+	A=0.0; B=log((prior0+1.0)/(prior1+1.0));
+	double hiTarget=(prior1+1.0)/(prior1+2.0);
+	double loTarget=1/(prior0+2.0);			
+	double fval = 0.0;
+	
+	idx = 0;
+	for(i = 0; i < SVMLabels.size(); i++){
+	  if ( SVMLabels[i]->Target > 0) t[idx]=hiTarget;
+	  else if( SVMLabels[i]->Target < 0 ) t[idx]=loTarget;
+	  else 
+	    continue;
+	  
+	  fApB = dec_values[idx]*A+B;
+	  if (fApB>=0)
+	    fval += t[idx]*fApB + log(1+exp(-fApB));
+	  else
+	    fval += (t[idx] - 1)*fApB +log(1+exp(fApB));
+	  
+	  idx++;
+	}
+	
+	for (iter=0;iter<max_iter;iter++)
+	{
+		// Update Gradient and Hessian (use H' = H + sigma I)
+		h11=sigma; // numerically ensures strict PD
+		h22=sigma;
+		h21=0.0;g1=0.0;g2=0.0;
+		for (i=0; i < dec_values.size(); i++)
+		{
+			fApB = dec_values[i]*A+B;
+			if (fApB >= 0)
+			{
+				p=exp(-fApB)/(1.0+exp(-fApB));
+				q=1.0/(1.0+exp(-fApB));
+			}
+			else
+			{
+				p=1.0/(1.0+exp(fApB));
+				q=exp(fApB)/(1.0+exp(fApB));
+			}
+			d2=p*q;
+			h11+=dec_values[i]*dec_values[i]*d2;
+			h22+=d2;
+			h21+=dec_values[i]*d2;
+			d1=t[i]-p;
+			g1+=dec_values[i]*d1;
+			g2+=d1;
+		}
+
+		// Stopping Criteria
+		if (fabs(g1)<eps && fabs(g2)<eps)
+			break;
+
+		// Finding Newton direction: -inv(H') * g
+		det=h11*h22-h21*h21;
+		dA=-(h22*g1 - h21 * g2) / det;
+		dB=-(-h21*g1+ h11 * g2) / det;
+		gd=g1*dA+g2*dB;
+
+
+		stepsize = 1;		// Line Search
+		while (stepsize >= min_step)
+		{
+			newA = A + stepsize * dA;
+			newB = B + stepsize * dB;
+
+			// New function value
+			newf = 0.0;
+			for (i=0; i < dec_values.size(); i++)
+			{
+				fApB = dec_values[i]*newA+newB;
+				if (fApB >= 0)
+					newf += t[i]*fApB + log(1+exp(-fApB));
+				else
+					newf += (t[i] - 1)*fApB +log(1+exp(fApB));
+			}
+			// Check sufficient decrease
+			if (newf<fval+0.0001*stepsize*gd)
+			{
+				A=newA;B=newB;fval=newf;
+				break;
+			}
+			else
+				stepsize = stepsize / 2.0;
+		}
+
+		if (stepsize < min_step)
+		{
+		  cerr << "Line search fails in two-class probability estimates\n";
+		  break;
+		}
+	}
+	
+	if (iter>=max_iter)
+	  cerr << "Reaching maximal iterations in two-class probability estimates\n";
+}
+
+void CSVMPERF::sigmoid_predict(Sleipnir::CDat& Results, vector<SVMLabelPair*>& SVMLabels, float A, float B){
+  size_t i;
+  float d, fApB;
+  
+  for(i = 0; i < SVMLabels.size(); i++){
+    if (!Sleipnir::CMeta::IsNaN(d = Results.Get(SVMLabels[i]->iidx, SVMLabels[i]->jidx))){
+	fApB = d*A+B;
+	// 1-p used later; avoid catastrophic cancellation
+	if (fApB >= 0)
+	  Results.Set(SVMLabels[i]->iidx, SVMLabels[i]->jidx, exp(-fApB)/(1.0+exp(-fApB)));
+	else
+	  Results.Set(SVMLabels[i]->iidx, SVMLabels[i]->jidx, 1.0/(1+exp(fApB)));      
+    }    
+  }
+}
+  
 }
 

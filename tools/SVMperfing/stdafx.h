@@ -22,28 +22,16 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
-#define __STDC_LIMIT_MACROS
-
+#include <time.h>
+#include <string.h>
+#include <stdint.h>
 #include <fstream>
-#include <iostream>
-#include <map>
-#include <string>
-#include <omp.h>
 using namespace std;
 
-#include <pthread.h>
-
-#include "seekmap.h"
-#include "seekweight.h"
-#include "seekdataset.h"
-#include "seekevaluate.h"
-#include "seekplatform.h"
-#include "seekreader.h"
-#include "seekwriter.h"
-#include "seekquery.h"
+#include "pclset.h"
+#include "dat.h"
+#include "genome.h"
 #include "meta.h"
-#include "unistd.h"
-
+#include "svmperf.h"
 using namespace Sleipnir;
-
 #endif // STDAFX_H

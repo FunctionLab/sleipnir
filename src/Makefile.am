@@ -4,6 +4,37 @@ AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFL
 
 #LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_PERF_LIBS) $(PTHREAD_LIBS)
 
+if WITH_SVM_TOOLS
+libSleipnir_SVM_SOURCES = svm.cpp svmperf.cpp
+libSleipnir_SVM_INCLUDES = svm.h svmi.h svmperf.h
+endif
+
+if WITH_GSL_TOOLS
+libSleipnir_GSL_SOURCES = \
+	seekmap.cpp				\
+	seekdataset.cpp			\
+	seekweight.cpp			\
+	seekevaluate.cpp		\
+	seekquery.cpp			\
+	seekreader.cpp			\
+	seekwriter.cpp			\
+	seekplatform.cpp		\
+	seekcentral.cpp		\
+	seeknetwork.cpp	
+libSleipnir_GSL_INCLUDES = \
+	seekplatform.h			\
+	seekcentral.h			\
+	seekreader.h			\
+	seekwriter.h			\
+	seekquery.h				\
+	seekevaluate.h			\
+	seekweight.h			\
+	seekreader.h			\
+	seekwriter.h			\
+	seekdataset.h			\
+	seekmap.h				\
+	seeknetwork.h	
+endif
 libSleipnir_a_SOURCES	=	\
 	annotation.cpp			\
 	annotationobo.cpp		\
@@ -46,32 +77,10 @@ libSleipnir_a_SOURCES	=	\
 	server.cpp				\
 	statistics.cpp			\
 	stdafx.cpp				\
-	svm.cpp					\
-	svmperf.cpp					\
-	vwb.cpp					\
-	seekmap.cpp				\
-	seekdataset.cpp			\
-	seekweight.cpp			\
-	seekevaluate.cpp		\
-	seekquery.cpp			\
-	seekreader.cpp			\
-	seekwriter.cpp			\
-	seekplatform.cpp		\
-	seekcentral.cpp		\
-	seeknetwork.cpp		\
+	$(libSleipnir_SVM_SOURCES) \
+	$(libSleipnir_GSL_SOURCES) \
+	vwb.cpp
 include_HEADERS			=	\
-	seekplatform.h			\
-	seekcentral.h			\
-	seekreader.h			\
-	seekwriter.h			\
-	seekquery.h				\
-	seekevaluate.h			\
-	seekweight.h			\
-	seekreader.h			\
-	seekwriter.h			\
-	seekdataset.h			\
-	seekmap.h				\
-	seeknetwork.h			\
 	annotation.h			\
 	annotationi.h			\
 	bayesnetfni.h			\
@@ -138,9 +147,8 @@ include_HEADERS			=	\
 	statistics.h			\
 	statisticsi.h			\
 	stdafx.h				\
-	svm.h					\
-	svmi.h					\
-	svmperf.h					\
+	$(libSleipnir_SVM_INCLUDES)  \
+	$(libSleipnir_GSL_SOURCES) \
 	trie.h					\
 	triei.h					\
 	typesi.h				\

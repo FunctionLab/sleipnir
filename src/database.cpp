@@ -725,7 +725,7 @@ bool CDatabaselet::Open( const std::string& strFile ) {
 ///////////////////////////////////////////////////////////////////////////////
 
 bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::string& strInputDirectory,
-	const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles) {
+	const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles, const map<string, size_t>& mapstriZeros) {
 	vector<string>	vecstrNodes, vecstrSubset;
 	size_t			i, j;
 	char			acNumber[ 16 ];
@@ -743,8 +743,8 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::st
 	if( vecstrNodes.size( ) )
 		vecstrNodes.resize( vecstrNodes.size( ) - 1 );
 	m_vecpDBs.resize( iFiles );
-	int iNumFilesOpen = 1000;
 
+	int iNumFilesOpen = 1000;
 	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
 		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble );
 	}
@@ -778,12 +778,12 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::st
 	for( i = 0; i < vecstrGenes.size( ); ++i )
 		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
 
-	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes );
+	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes, mapstriZeros );
 }
 
 /* Version of Open() that takes a list of datasets as input. Key method */
 bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrDatasets,
-	const std::string& strInputDirectory, const std::string& strOutputDirectory, size_t iFiles){
+	const std::string& strInputDirectory, const std::string& strOutputDirectory, size_t iFiles, const map<string, size_t>& mapstriZeros){
 
 	vector<string>	vecstrNodes, vecstrSubset;
 	size_t			i, j;
@@ -833,18 +833,16 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 	for( i = 0; i < vecstrGenes.size( ); ++i )
 		m_mapstriGenes[ m_vecpDBs[ i % m_vecpDBs.size( ) ]->GetGene( i / m_vecpDBs.size( ) ) ] = i;
 
-	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes ); 
+	return CDatabaseImpl::Open( vecstrGenes, vecstrNodes, mapstriZeros ); 
 }
 
 /* the key Open() method for Data2DB conversion */
 bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
-	const std::vector<std::string>& vecstrFiles ) {
+	const std::vector<std::string>& vecstrFiles, const map<string, size_t>& mapstriZeros ) {
 	size_t			i, j, k, iOne, iTwo, iOutBlock, iOutBase, iOutOffset, iInBlock, iInBase, iInOffset;
 	vector<size_t>	veciGenes;
 	float			d;
-
-	/* define number of threads to concurrently process datasets */
-	omp_set_num_threads(4);
+	map<string, size_t>::const_iterator iterZero;
 
 	veciGenes.resize( vecstrGenes.size( ) );
 	iOutBlock = ( m_iBlockOut == -1 ) ? m_vecpDBs.size( ) : m_iBlockOut;
@@ -896,22 +894,27 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 					vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 256, true );
 				}
 
+				string	strName = CMeta::Filename( CMeta::Deextension( CMeta::Basename( vecstrFiles[ iInBase + iInOffset ].c_str() ) ) );
+				size_t iZero = ( ( iterZero = mapstriZeros.find( strName ) ) == mapstriZeros.end( ) ) ? -1 : iterZero->second;
 				//#pragma omp parallel for \
 				shared(Dat, veciGenes, veciMyGenes, vecData) \
 				private(j, i) \
 				schedule(static)
+
 				for(i=0; i<veciMyGenes.size(); i++){
-					size_t t = veciMyGenes[i];
-					if(t==-1) continue;
-					float *d_array = Dat.GetFullRow(t);
+					size_t iOne = veciMyGenes[i];
 					for(j=0; j<veciGenes.size(); j++){
-						size_t s = veciGenes[j];
-						if(s == -1) continue;
-						if(s == t) continue;
-						if(CMeta::IsNaN(d_array[s])) continue;
-						vecData[iInOffset].Set(i,j,Dat.Quantize(d_array[s])+1);
+						size_t iTwo = veciGenes[j];
+						size_t iVal = -1;
+						if ( iOne != -1 && iTwo != -1 ) {
+						    if( !CMeta::IsNaN( d = Dat.Get( iOne, iTwo ) ) )
+							iVal = Dat.Quantize(d);	
+						    if ( iVal == -1 )
+							iVal = iZero;
+						}
+						if ( iVal != -1 )
+						    vecData[iInOffset].Set(i,j,iVal+1); 
 					}
-					free(d_array);
 				}
 
 
@@ -945,7 +948,6 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 				i += DB.GetGenes( );
 
 				DB.CloseFile();
-
 			}
 		}
 	}

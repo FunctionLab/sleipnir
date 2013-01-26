@@ -53,7 +53,7 @@ struct SSorter {
 double AUCMod( const CDat&, const CDat&, const vector<bool>&, const vector<bool>&, const gengetopt_args_info&, bool, float );
 
 int main( int iArgs, char** aszArgs ) {
-    CDat		    Answers, Data;
+    CDat		    Answers, Data, wDat;
     gengetopt_args_info	    sArgs;
     size_t	    	    i, j, k, m, iOne, iTwo, iGenes, iPositives, iNegatives, iBins, iRand;
     vector<size_t>	    veciGenes, veciRec, veciRecTerm;
@@ -63,13 +63,14 @@ int main( int iArgs, char** aszArgs ) {
     int			    iMax;
     float		    dAnswer, dValue;
     vector<bool>    	    vecfHere, vecfUbik;
-    vector<float>	    vecdScores, vecdSSE, vecdBinValue;
+    vector<float>	    vecdScores, vecdSSE, vecdBinValue,vecGeneWeights;
     vector<size_t>	    veciPositives, veciNegatives, veciGenesTerm;
+	CGenome				Genome;
+	CGenes				wGenes(Genome);
     ofstream		    ofsm;
     ostream*		    postm;
     map<float,size_t>	    mapValues;
-    bool		    fMapAnswers;
-    CGenome		    Genome;
+    bool		    fMapAnswers,isDatWeighted=false;
     CGenes		    GenesTm( Genome ), GenesUbik( Genome );
 
     if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -112,7 +113,36 @@ int main( int iArgs, char** aszArgs ) {
     }
     if( sArgs.normalize_flag )
         Data.Normalize( CDat::ENormalizeMinMax );
-
+    
+	
+    if(sArgs.weights_arg){
+      ifstream	ifsm;
+      ifsm.open( sArgs.weights_arg );
+      if( !wGenes.OpenWeighted( ifsm ) ) {
+	if(!wDat.Open(sArgs.weights_arg, !!sArgs.memmap_flag )){
+	  cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+	  return 1;	}
+	else{
+	  isDatWeighted = true;
+	}
+      }else{
+	vecGeneWeights.resize(Answers.GetGenes( ));
+	for( i = 0; i < vecGeneWeights.size( ); ++i ){
+					vecGeneWeights[ i ] = wGenes.GetGeneWeight(wGenes.GetGene( Answers.GetGene( i ) ));}
+      }
+    }	
+    
+    if( sArgs.abs_arg ){
+      float d;
+      for( i = 0; i < Data.GetGenes( ); ++i ){
+	for( j = ( i + 1 ); j < Data.GetGenes( ); ++j ){
+	  if( !CMeta::IsNaN( (d = Data.Get( i, j )) ) ){
+	    Data.Set(i, j, fabs(d - sArgs.abs_arg));
+	  }
+	}
+      }
+    }
+    
     veciGenes.resize( Answers.GetGenes( ) );
     for( i = 0; i < Answers.GetGenes( ); ++i )
         veciGenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
@@ -365,10 +395,12 @@ int main( int iArgs, char** aszArgs ) {
             else
                 postm = &cout;
 
-            if( !sArgs.sse_flag ) {
+            if( !sArgs.sse_flag  ) { //Weighted context is currently only supported for AUC calculation
                 *postm << "#	P	" << iPositives << endl;
                 *postm << "#	N	" << iNegatives << endl;
             }
+
+			if(!sArgs.weights_arg){
             *postm << "Cut	Genes	" << ( sArgs.sse_flag ? "Pairs	SSE" : "TP	FP	TN	FN	RC	PR	VALUE" ) << endl;
             for( i = 0; i < MatResults.GetRows( ); ++i ) {
                 *postm << ( iBins ? i : ( sArgs.min_arg + ( i * sArgs.delta_arg ) ) ) << '\t' <<
@@ -391,12 +423,33 @@ int main( int iArgs, char** aszArgs ) {
                 *postm << '\t' << vecdBinValue[ i ];
 
                 *postm << endl;
-            }
+			}}
+			else{
+				*postm << "AUC is calculated using weighted context."<<endl;
+				if(sArgs.flipneg_flag)
+					*postm << "Flipneg ON"<<endl;
+				else
+					*postm << "Flipneg OFF"<<endl;
+			}
+			
             if( !sArgs.sse_flag )
-                *postm << "#	AUC	" << ( sArgs.auc_arg ?
-                                           AUCMod( Data, Answers, vecfHere, vecfUbik, sArgs, !!sArgs.invert_flag, sArgs.auc_arg ) :
-                                           CStatistics::WilcoxonRankSum( Data, Answers, vecfHere, vecfUbik, !!sArgs.ctxtpos_flag, !!sArgs.ctxtneg_flag, !!sArgs.bridgepos_flag, !!sArgs.bridgeneg_flag, !!sArgs.outpos_flag, !!sArgs.outneg_flag, !!sArgs.invert_flag ) ) << endl;
+			{
+				if(sArgs.weights_arg){
+					if(isDatWeighted)
+					 *postm << "#	AUC	" <<  CStatistics::WilcoxonRankSum( Data, Answers, wDat,sArgs.flipneg_flag ) << endl;
+					else
+						*postm << "#	AUC	" <<  CStatistics::WilcoxonRankSum( Data, Answers, vecGeneWeights,sArgs.flipneg_flag ) << endl;
+				}
+				else{
+					if( sArgs.auc_arg)
+						  *postm << "#	AUC	" <<  AUCMod( Data, Answers, vecfHere, vecfUbik, sArgs, !!sArgs.invert_flag, sArgs.auc_arg ) << endl;
+					else{
+						*postm << "#	AUC	" <<  CStatistics::WilcoxonRankSum( Data, Answers, vecfHere, vecfUbik, !!sArgs.ctxtpos_flag, !!sArgs.ctxtneg_flag, !!sArgs.bridgepos_flag, !!sArgs.bridgeneg_flag, !!sArgs.outpos_flag, !!sArgs.outneg_flag, !!sArgs.invert_flag )  << endl;
 
+					}
+				}
+			}
+               
             if( sArgs.inputs_num )
                 ofsm.close( );
             else

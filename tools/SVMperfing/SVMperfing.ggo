@@ -1,0 +1,71 @@
+package	"SVMperfer"
+version	"1.0"
+purpose	"Wrapper for SVM perf"
+
+section "Main"
+option	"labels"				l	"Labels file"
+										string	typestr="filename"	no
+option	"output"				o	"Output file "
+										string	typestr="filename"  no
+option  "directory"     			d       "input directory (must only contain input files)"
+                                                string  typestr="directory" yes
+option	"model"					m	"input Model file"
+										string	typestr="filename"  no
+option  "slack"       			S   "Use slack rescaling (not implemented for ROC loss)"
+										flag off
+
+section "Options"
+option "verbosity"  			v   "Sets the svm_struct verbosity"
+										int default="0" no
+option	"cross_validation"		c	"Number of cross-validation sets ( arg of 1 will turn off cross-validation )"
+										int default="5" no
+option "error_function" 		e   "Sets the loss function for SVM learning: Choice of:
+0\tZero/one loss: 1 if vector of predictions contains error, 0 otherwise.
+1\tF1: 100 minus the F1-score in percent.
+2\tErrorrate: Percentage of errors in prediction vector.
+3\tPrec/Rec Breakeven: 100 minus PRBEP in percent.
+4\tPrec@k: 100 minus precision at k in percent.
+5\tRec@k: 100 minus recall at k in percent.
+10\tROCArea: Percentage of swapped pos/neg pairs (i.e. 100 - ROCArea).\n" 
+										int default="10" no
+
+option "k_value"    			k   "Value of k parameter used for Prec@k and Rec@k in (0,1)"
+										float default="0.5" no
+option "tradeoff"    			t   "SVM tradeoff constant C"
+										float default="1" no
+option "params"   			p   "NOT IMPLEMENTED YET: Parameter file"
+										string  typestr="filename"   no
+option  "nan2neg"       		n   "set missing values(NaN in dab file) from labels file as negative examples"
+										flag off
+option	"mmap"				M	"Memory map binary input"
+										flag	off
+option	"random"			R	"Seed random generator (default -1 uses current time)"
+							int	default="-1" no
+option	"tgene"				T	"Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list"
+							string	typestr="filename"
+option	"balance"			b	"DEBUG: check before usage, Balance the training gene ratios"
+										flag	off
+option  "bfactor"    			F   "DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1."
+										float  no
+option	"prob"				B	"Output prediction values as estimated probablity (Platt method)"
+										flag	off
+option	"probCross"			D	"Cross-validation setting for output prediction values as estimated probablity (Platt method)"
+										flag	off
+option  "normalizeZero"             	z       "Normalize input data to the range [0, 1]"
+                                                        flag    off
+option  "normalizeNPone"             	N       "Normalize input data to the range [-1, 1]"
+                                                        flag    off
+option  "edgeholdout"             	X       "For cross-validation perform edge holdout (Default is gene holdout)"
+                                                        flag    off
+
+section "Filtering"
+option	"onetgene"			q	"Only keep edges from lables that have one gene in the target gene list"
+							flag off
+option "prior"    			P   "Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior."
+										float  no
+option	"savemodel"			s	"Save model to file"
+										flag	off
+option "mintrain"	    		E   "Minimum number of total positive examples to allow training, if not met exit"
+										float  no
+option	"context"			C	"Context gene list"
+							string	typestr="filename"

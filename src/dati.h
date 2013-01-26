@@ -73,6 +73,7 @@ protected:
 	void SlimCache( const CSlim&, std::vector<std::vector<size_t> >& ) const;
 	void AveStd( double&, double&, size_t&, size_t = -1 ) const;
 	void NormalizeMinmax( );
+	void NormalizeMinmaxNPone( );
 	void NormalizePCC( );
 	void NormalizeStdev( );
 	void NormalizeSigmoid( );
