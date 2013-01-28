@@ -377,6 +377,14 @@ public:
 	// functions to convert probablity
 	void sigmoid_train(Sleipnir::CDat& Results, vector<SVMLabelPair*>& SVMLabels, float& A, float& B);
 	void sigmoid_predict(Sleipnir::CDat& Results, vector<SVMLabelPair*>& SVMLabels, float A, float B);
+
+	// read in a SVM model file that's only has the w vector written out for linear kernel
+	void ReadModelLinear(char* model_file) {
+	  FreeModel();
+	  structmodel = read_struct_model_w_linear(model_file, &struct_parm);
+	}
+	
+	STRUCTMODEL read_struct_model_w_linear(char *file, STRUCT_LEARN_PARM *sparm);
 };
 }
 

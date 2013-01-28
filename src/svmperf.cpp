@@ -979,7 +979,7 @@ bool CSVMPERF::CreateDoc(vector<string>& vecstrDatasets,
   
   WORD* aWords;
   DOC* pRet;	
-  //Sleipnir::CDat Dat;
+  Sleipnir::CDat Dat;
   
   iWords = vecstrDatasets.size();
   
@@ -1004,7 +1004,6 @@ bool CSVMPERF::CreateDoc(vector<string>& vecstrDatasets,
   
   // now open up all datasets
   for(i=0; i < vecstrDatasets.size(); i++){
-    Sleipnir::CDat Dat;
     if(!Dat.Open(vecstrDatasets[i].c_str())) {
       cerr << vecstrDatasets[i].c_str() << endl;
       cerr << "Could not open: " << vecstrDatasets[i] << endl;
@@ -1116,7 +1115,6 @@ void CSVMPERF::Classify(Sleipnir::CDat &Results,
 	  
 	  Results.Set(SVMLabels[i]->iidx, SVMLabels[i]->jidx, label.Class[0]);
 	}
-	
 	
 	delete ppDoc;
 }
@@ -1296,6 +1294,91 @@ void CSVMPERF::sigmoid_predict(Sleipnir::CDat& Results, vector<SVMLabelPair*>& S
 	  Results.Set(SVMLabels[i]->iidx, SVMLabels[i]->jidx, 1.0/(1+exp(fApB)));      
     }    
   }
+}
+
+STRUCTMODEL CSVMPERF::read_struct_model_w_linear(char *file, STRUCT_LEARN_PARM *sparm){
+  STRUCTMODEL sm;  
+  MODEL *model;
+  
+  model = (MODEL *)my_malloc(sizeof(MODEL));  
+  model->supvec = (DOC **)my_malloc(sizeof(DOC *)*2);
+  model->alpha = (double *)my_malloc(sizeof(double)*2);
+  model->index = NULL; /* index is not copied */
+  model->supvec[0] = NULL;
+  model->alpha[0] = 0.0;
+  model->alpha[1] = 1.0;
+  model->sv_num=2;
+  model->b = 0;       
+  model->totwords = 0;
+  
+  // read W model
+  static const size_t c_iBuffer = 1024;
+  char acBuffer[c_iBuffer];
+  char* nameBuffer;
+  vector<string> vecstrTokens;
+  size_t i, extPlace;
+  string Ext, FileName;
+  size_t index = 0;
+  ifstream ifsm;
+  vector<float> SModel;
+  
+  ifsm.open(file);    
+  while (!ifsm.eof()) {
+    ifsm.getline(acBuffer, c_iBuffer - 1);
+    acBuffer[c_iBuffer - 1] = 0;
+    vecstrTokens.clear();
+    Sleipnir::CMeta::Tokenize(acBuffer, vecstrTokens);
+    if (vecstrTokens.empty())
+      continue;
+    if (vecstrTokens.size() > 1) {
+      cerr << "Illegal model line (" << vecstrTokens.size() << "): "
+	   << acBuffer << endl;
+      continue;
+    }
+    if (acBuffer[0] == '#') {
+      cerr << "skipping " << acBuffer << endl;
+    } else {
+      SModel.push_back(atof(vecstrTokens[0].c_str()));
+    }    
+  }
+  
+  model->totwords = SModel.size();
+  model->lin_weights=(double *)my_malloc(sizeof(double)*(model->totwords+1));
+  model->kernel_parm.kernel_type = LINEAR;
+  
+  for(i = 0; i < (model->totwords+1); i++){    
+    if(i == 0)
+      model->lin_weights[i] = 0;
+    else
+      model->lin_weights[i] = SModel[i-1];    
+  }
+  
+  model->supvec[1] = create_example(-1,0,0,0,
+				    create_svector_n(model->lin_weights,
+						     model->totwords,
+						     NULL,1.0));
+  
+  sm.svm_model=model;
+  
+  sparm->loss_function=ERRORRATE;
+  sparm->bias=0;
+  sparm->bias_featurenum=0;
+  sparm->num_features=sm.svm_model->totwords;
+  sparm->truncate_fvec=(sm.svm_model->kernel_parm.kernel_type==LINEAR);
+  
+  if(sm.svm_model->kernel_parm.kernel_type == CUSTOM) /* double kernel */
+    sparm->preimage_method=9;
+  
+  sm.invL=NULL;
+  sm.expansion=NULL;
+  sm.expansion_size=0;
+  sm.sparse_kernel_type=0;
+  sm.w=sm.svm_model->lin_weights;
+  sm.sizePsi=sm.svm_model->totwords;
+  
+  if((sm.svm_model->kernel_parm.kernel_type!=LINEAR) && sparm->classify_dense)
+    add_dense_vectors_to_model(sm.svm_model);
+  return(sm);  
 }
   
 }

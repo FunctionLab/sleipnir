@@ -46,6 +46,9 @@ struct gengetopt_args_info
   char * model_arg;	/**< @brief input Model file.  */
   char * model_orig;	/**< @brief input Model file original value given at command line.  */
   const char *model_help; /**< @brief input Model file help description.  */
+  char * modelPrefix_arg;	/**< @brief input Model prefix.  */
+  char * modelPrefix_orig;	/**< @brief input Model prefix original value given at command line.  */
+  const char *modelPrefix_help; /**< @brief input Model prefix help description.  */
   int slack_flag;	/**< @brief Use slack rescaling (not implemented for ROC loss) (default=off).  */
   const char *slack_help; /**< @brief Use slack rescaling (not implemented for ROC loss) help description.  */
   int verbosity_arg;	/**< @brief Sets the svm_struct verbosity (default='0').  */
@@ -84,6 +87,9 @@ struct gengetopt_args_info
   float tradeoff_arg;	/**< @brief SVM tradeoff constant C (default='1').  */
   char * tradeoff_orig;	/**< @brief SVM tradeoff constant C original value given at command line.  */
   const char *tradeoff_help; /**< @brief SVM tradeoff constant C help description.  */
+  char * allgenes_arg;	/**< @brief Gene list that list all genes to make predictions.  */
+  char * allgenes_orig;	/**< @brief Gene list that list all genes to make predictions original value given at command line.  */
+  const char *allgenes_help; /**< @brief Gene list that list all genes to make predictions help description.  */
   char * params_arg;	/**< @brief NOT IMPLEMENTED YET: Parameter file.  */
   char * params_orig;	/**< @brief NOT IMPLEMENTED YET: Parameter file original value given at command line.  */
   const char *params_help; /**< @brief NOT IMPLEMENTED YET: Parameter file help description.  */
@@ -112,6 +118,18 @@ struct gengetopt_args_info
   const char *normalizeNPone_help; /**< @brief Normalize input data to the range [-1, 1] help description.  */
   int edgeholdout_flag;	/**< @brief For cross-validation perform edge holdout (Default is gene holdout) (default=off).  */
   const char *edgeholdout_help; /**< @brief For cross-validation perform edge holdout (Default is gene holdout) help description.  */
+  int skipSVM_flag;	/**< @brief If given this flag, skip training SVM models when file already exist. Often used when cluster runs timeout/error and need to re-run jobs. (default=off).  */
+  const char *skipSVM_help; /**< @brief If given this flag, skip training SVM models when file already exist. Often used when cluster runs timeout/error and need to re-run jobs. help description.  */
+  int aggregateMax_flag;	/**< @brief If given this flag, when predicting for all gene pairs with multiple SVM models(bagging) aggregate using the maximum prediction value (Default: average) (default=off).  */
+  const char *aggregateMax_help; /**< @brief If given this flag, when predicting for all gene pairs with multiple SVM models(bagging) aggregate using the maximum prediction value (Default: average) help description.  */
+  int NoCrossPredict_flag;	/**< @brief Don't use the cross-validated prediction values for gene pairs that have labels in the final output. This flag will basically let SVM models make prediction on pairs that were also used for training. (default=off).  */
+  const char *NoCrossPredict_help; /**< @brief Don't use the cross-validated prediction values for gene pairs that have labels in the final output. This flag will basically let SVM models make prediction on pairs that were also used for training. help description.  */
+  char * CrossResult_arg;	/**< @brief Cross-validation prediction results, if given when prediction mode these values are replaced into final prediction values.  */
+  char * CrossResult_orig;	/**< @brief Cross-validation prediction results, if given when prediction mode these values are replaced into final prediction values original value given at command line.  */
+  const char *CrossResult_help; /**< @brief Cross-validation prediction results, if given when prediction mode these values are replaced into final prediction values help description.  */
+  char * SampledLabels_arg;	/**< @brief Save the sampled final training labels to this file.  */
+  char * SampledLabels_orig;	/**< @brief Save the sampled final training labels to this file original value given at command line.  */
+  const char *SampledLabels_help; /**< @brief Save the sampled final training labels to this file help description.  */
   int onetgene_flag;	/**< @brief Only keep edges from lables that have one gene in the target gene list (default=off).  */
   const char *onetgene_help; /**< @brief Only keep edges from lables that have one gene in the target gene list help description.  */
   float prior_arg;	/**< @brief Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior..  */
@@ -132,12 +150,14 @@ struct gengetopt_args_info
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
   unsigned int model_given ;	/**< @brief Whether model was given.  */
+  unsigned int modelPrefix_given ;	/**< @brief Whether modelPrefix was given.  */
   unsigned int slack_given ;	/**< @brief Whether slack was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
   unsigned int cross_validation_given ;	/**< @brief Whether cross_validation was given.  */
   unsigned int error_function_given ;	/**< @brief Whether error_function was given.  */
   unsigned int k_value_given ;	/**< @brief Whether k_value was given.  */
   unsigned int tradeoff_given ;	/**< @brief Whether tradeoff was given.  */
+  unsigned int allgenes_given ;	/**< @brief Whether allgenes was given.  */
   unsigned int params_given ;	/**< @brief Whether params was given.  */
   unsigned int nan2neg_given ;	/**< @brief Whether nan2neg was given.  */
   unsigned int mmap_given ;	/**< @brief Whether mmap was given.  */
@@ -150,6 +170,11 @@ struct gengetopt_args_info
   unsigned int normalizeZero_given ;	/**< @brief Whether normalizeZero was given.  */
   unsigned int normalizeNPone_given ;	/**< @brief Whether normalizeNPone was given.  */
   unsigned int edgeholdout_given ;	/**< @brief Whether edgeholdout was given.  */
+  unsigned int skipSVM_given ;	/**< @brief Whether skipSVM was given.  */
+  unsigned int aggregateMax_given ;	/**< @brief Whether aggregateMax was given.  */
+  unsigned int NoCrossPredict_given ;	/**< @brief Whether NoCrossPredict was given.  */
+  unsigned int CrossResult_given ;	/**< @brief Whether CrossResult was given.  */
+  unsigned int SampledLabels_given ;	/**< @brief Whether SampledLabels was given.  */
   unsigned int onetgene_given ;	/**< @brief Whether onetgene was given.  */
   unsigned int prior_given ;	/**< @brief Whether prior was given.  */
   unsigned int savemodel_given ;	/**< @brief Whether savemodel was given.  */

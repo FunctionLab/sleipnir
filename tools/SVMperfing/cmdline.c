@@ -28,38 +28,45 @@ const char *gengetopt_args_info_usage = "Usage: SVMperfer [OPTIONS]... [FILES]..
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                  Print help and exit",
-  "  -V, --version               Print version and exit",
+  "  -h, --help                    Print help and exit",
+  "  -V, --version                 Print version and exit",
   "\nMain:",
-  "  -l, --labels=filename       Labels file",
-  "  -o, --output=filename       Output file ",
-  "  -d, --directory=directory   input directory (must only contain input files)",
-  "  -m, --model=filename        input Model file",
-  "  -S, --slack                 Use slack rescaling (not implemented for ROC \n                                loss)  (default=off)",
+  "  -l, --labels=filename         Labels file",
+  "  -o, --output=filename         Output file ",
+  "  -d, --directory=directory     input directory (must only contain input files)",
+  "  -m, --model=filename          input Model file",
+  "  -L, --modelPrefix=filename    input Model prefix",
+  "  -S, --slack                   Use slack rescaling (not implemented for ROC \n                                  loss)  (default=off)",
   "\nOptions:",
-  "  -v, --verbosity=INT         Sets the svm_struct verbosity  (default=`0')",
-  "  -c, --cross_validation=INT  Number of cross-validation sets ( arg of 1 will \n                                turn off cross-validation )  (default=`5')",
-  "  -e, --error_function=INT    Sets the loss function for SVM learning: Choice \n                                of:\n\n                                0\tZero/one loss: 1 if vector of predictions \n                                contains error, 0 otherwise.\n\n                                1\tF1: 100 minus the F1-score in percent.\n\n                                2\tErrorrate: Percentage of errors in \n                                prediction vector.\n\n                                3\tPrec/Rec Breakeven: 100 minus PRBEP in \n                                percent.\n\n                                4\tPrec@k: 100 minus precision at k in percent.\n\n                                5\tRec@k: 100 minus recall at k in percent.\n\n                                10\tROCArea: Percentage of swapped pos/neg \n                                pairs (i.e. 100 - ROCArea).\n                                  (default=`10')",
-  "  -k, --k_value=FLOAT         Value of k parameter used for Prec@k and Rec@k in \n                                (0,1)  (default=`0.5')",
-  "  -t, --tradeoff=FLOAT        SVM tradeoff constant C  (default=`1')",
-  "  -p, --params=filename       NOT IMPLEMENTED YET: Parameter file",
-  "  -n, --nan2neg               set missing values(NaN in dab file) from labels \n                                file as negative examples  (default=off)",
-  "  -M, --mmap                  Memory map binary input  (default=off)",
-  "  -R, --random=INT            Seed random generator (default -1 uses current \n                                time)  (default=`-1')",
-  "  -T, --tgene=filename        Target gene list, use this gene list as gene \n                                holdout cross-validation and also filter labels \n                                that only have one gene in given target gene \n                                list",
-  "  -b, --balance               DEBUG: check before usage, Balance the training \n                                gene ratios  (default=off)",
-  "  -F, --bfactor=FLOAT         DEBUG: only for < 500, When balancing neg and pos \n                                counts exmaples for training what factor to \n                                increase. default is 1.",
-  "  -B, --prob                  Output prediction values as estimated probablity \n                                (Platt method)  (default=off)",
-  "  -D, --probCross             Cross-validation setting for output prediction \n                                values as estimated probablity (Platt method)  \n                                (default=off)",
-  "  -z, --normalizeZero         Normalize input data to the range [0, 1]  \n                                (default=off)",
-  "  -N, --normalizeNPone        Normalize input data to the range [-1, 1]  \n                                (default=off)",
-  "  -X, --edgeholdout           For cross-validation perform edge holdout \n                                (Default is gene holdout)  (default=off)",
+  "  -v, --verbosity=INT           Sets the svm_struct verbosity  (default=`0')",
+  "  -c, --cross_validation=INT    Number of cross-validation sets ( arg of 1 will \n                                  turn off cross-validation )  (default=`5')",
+  "  -e, --error_function=INT      Sets the loss function for SVM learning: Choice \n                                  of:\n\n                                  0\tZero/one loss: 1 if vector of predictions \n                                  contains error, 0 otherwise.\n\n                                  1\tF1: 100 minus the F1-score in percent.\n\n                                  2\tErrorrate: Percentage of errors in \n                                  prediction vector.\n\n                                  3\tPrec/Rec Breakeven: 100 minus PRBEP in \n                                  percent.\n\n                                  4\tPrec@k: 100 minus precision at k in \n                                  percent.\n\n                                  5\tRec@k: 100 minus recall at k in percent.\n\n                                  10\tROCArea: Percentage of swapped pos/neg \n                                  pairs (i.e. 100 - ROCArea).\n                                    (default=`10')",
+  "  -k, --k_value=FLOAT           Value of k parameter used for Prec@k and Rec@k \n                                  in (0,1)  (default=`0.5')",
+  "  -t, --tradeoff=FLOAT          SVM tradeoff constant C  (default=`1')",
+  "  -a, --allgenes=filename       Gene list that list all genes to make \n                                  predictions",
+  "  -p, --params=filename         NOT IMPLEMENTED YET: Parameter file",
+  "  -n, --nan2neg                 set missing values(NaN in dab file) from labels \n                                  file as negative examples  (default=off)",
+  "  -M, --mmap                    Memory map binary input  (default=off)",
+  "  -R, --random=INT              Seed random generator (default -1 uses current \n                                  time)  (default=`-1')",
+  "  -T, --tgene=filename          Target gene list, use this gene list as gene \n                                  holdout cross-validation and also filter \n                                  labels that only have one gene in given \n                                  target gene list",
+  "  -b, --balance                 DEBUG: check before usage, Balance the training \n                                  gene ratios  (default=off)",
+  "  -F, --bfactor=FLOAT           DEBUG: only for < 500, When balancing neg and \n                                  pos counts exmaples for training what factor \n                                  to increase. default is 1.",
+  "  -B, --prob                    Output prediction values as estimated \n                                  probablity (Platt method)  (default=off)",
+  "  -D, --probCross               Cross-validation setting for output prediction \n                                  values as estimated probablity (Platt method) \n                                   (default=off)",
+  "  -z, --normalizeZero           Normalize input data to the range [0, 1]  \n                                  (default=off)",
+  "  -N, --normalizeNPone          Normalize input data to the range [-1, 1]  \n                                  (default=off)",
+  "  -X, --edgeholdout             For cross-validation perform edge holdout \n                                  (Default is gene holdout)  (default=off)",
+  "  -Q, --skipSVM                 If given this flag, skip training SVM models \n                                  when file already exist. Often used when \n                                  cluster runs timeout/error and need to re-run \n                                  jobs.  (default=off)",
+  "  -x, --aggregateMax            If given this flag, when predicting for all \n                                  gene pairs with multiple SVM models(bagging) \n                                  aggregate using the maximum prediction value \n                                  (Default: average)  (default=off)",
+  "  -r, --NoCrossPredict          Don't use the cross-validated prediction values \n                                  for gene pairs that have labels in the final \n                                  output. This flag will basically let SVM \n                                  models make prediction on pairs that were \n                                  also used for training.  (default=off)",
+  "  -u, --CrossResult=filename    Cross-validation prediction results, if given \n                                  when prediction mode these values are \n                                  replaced into final prediction values",
+  "  -y, --SampledLabels=filename  Save the sampled final training labels to this \n                                  file",
   "\nFiltering:",
-  "  -q, --onetgene              Only keep edges from lables that have one gene in \n                                the target gene list  (default=off)",
-  "  -P, --prior=FLOAT           Randomly sub-sample the negative labels to reach \n                                target prior. If cannot reach target prior, set \n                                to closest prior.",
-  "  -s, --savemodel             Save model to file  (default=off)",
-  "  -E, --mintrain=FLOAT        Minimum number of total positive examples to \n                                allow training, if not met exit",
-  "  -C, --context=filename      Context gene list",
+  "  -q, --onetgene                Only keep edges from lables that have one gene \n                                  in the target gene list  (default=off)",
+  "  -P, --prior=FLOAT             Randomly sub-sample the negative labels to \n                                  reach target prior. If cannot reach target \n                                  prior, set to closest prior.",
+  "  -s, --savemodel               Save model to file  (default=off)",
+  "  -E, --mintrain=FLOAT          Minimum number of total positive examples to \n                                  allow training, if not met exit",
+  "  -C, --context=filename        Context gene list",
     0
 };
 
@@ -94,12 +101,14 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->output_given = 0 ;
   args_info->directory_given = 0 ;
   args_info->model_given = 0 ;
+  args_info->modelPrefix_given = 0 ;
   args_info->slack_given = 0 ;
   args_info->verbosity_given = 0 ;
   args_info->cross_validation_given = 0 ;
   args_info->error_function_given = 0 ;
   args_info->k_value_given = 0 ;
   args_info->tradeoff_given = 0 ;
+  args_info->allgenes_given = 0 ;
   args_info->params_given = 0 ;
   args_info->nan2neg_given = 0 ;
   args_info->mmap_given = 0 ;
@@ -112,6 +121,11 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->normalizeZero_given = 0 ;
   args_info->normalizeNPone_given = 0 ;
   args_info->edgeholdout_given = 0 ;
+  args_info->skipSVM_given = 0 ;
+  args_info->aggregateMax_given = 0 ;
+  args_info->NoCrossPredict_given = 0 ;
+  args_info->CrossResult_given = 0 ;
+  args_info->SampledLabels_given = 0 ;
   args_info->onetgene_given = 0 ;
   args_info->prior_given = 0 ;
   args_info->savemodel_given = 0 ;
@@ -130,6 +144,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->directory_orig = NULL;
   args_info->model_arg = NULL;
   args_info->model_orig = NULL;
+  args_info->modelPrefix_arg = NULL;
+  args_info->modelPrefix_orig = NULL;
   args_info->slack_flag = 0;
   args_info->verbosity_arg = 0;
   args_info->verbosity_orig = NULL;
@@ -141,6 +157,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->k_value_orig = NULL;
   args_info->tradeoff_arg = 1;
   args_info->tradeoff_orig = NULL;
+  args_info->allgenes_arg = NULL;
+  args_info->allgenes_orig = NULL;
   args_info->params_arg = NULL;
   args_info->params_orig = NULL;
   args_info->nan2neg_flag = 0;
@@ -156,6 +174,13 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->normalizeZero_flag = 0;
   args_info->normalizeNPone_flag = 0;
   args_info->edgeholdout_flag = 0;
+  args_info->skipSVM_flag = 0;
+  args_info->aggregateMax_flag = 0;
+  args_info->NoCrossPredict_flag = 0;
+  args_info->CrossResult_arg = NULL;
+  args_info->CrossResult_orig = NULL;
+  args_info->SampledLabels_arg = NULL;
+  args_info->SampledLabels_orig = NULL;
   args_info->onetgene_flag = 0;
   args_info->prior_orig = NULL;
   args_info->savemodel_flag = 0;
@@ -176,29 +201,36 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->output_help = gengetopt_args_info_help[4] ;
   args_info->directory_help = gengetopt_args_info_help[5] ;
   args_info->model_help = gengetopt_args_info_help[6] ;
-  args_info->slack_help = gengetopt_args_info_help[7] ;
-  args_info->verbosity_help = gengetopt_args_info_help[9] ;
-  args_info->cross_validation_help = gengetopt_args_info_help[10] ;
-  args_info->error_function_help = gengetopt_args_info_help[11] ;
-  args_info->k_value_help = gengetopt_args_info_help[12] ;
-  args_info->tradeoff_help = gengetopt_args_info_help[13] ;
-  args_info->params_help = gengetopt_args_info_help[14] ;
-  args_info->nan2neg_help = gengetopt_args_info_help[15] ;
-  args_info->mmap_help = gengetopt_args_info_help[16] ;
-  args_info->random_help = gengetopt_args_info_help[17] ;
-  args_info->tgene_help = gengetopt_args_info_help[18] ;
-  args_info->balance_help = gengetopt_args_info_help[19] ;
-  args_info->bfactor_help = gengetopt_args_info_help[20] ;
-  args_info->prob_help = gengetopt_args_info_help[21] ;
-  args_info->probCross_help = gengetopt_args_info_help[22] ;
-  args_info->normalizeZero_help = gengetopt_args_info_help[23] ;
-  args_info->normalizeNPone_help = gengetopt_args_info_help[24] ;
-  args_info->edgeholdout_help = gengetopt_args_info_help[25] ;
-  args_info->onetgene_help = gengetopt_args_info_help[27] ;
-  args_info->prior_help = gengetopt_args_info_help[28] ;
-  args_info->savemodel_help = gengetopt_args_info_help[29] ;
-  args_info->mintrain_help = gengetopt_args_info_help[30] ;
-  args_info->context_help = gengetopt_args_info_help[31] ;
+  args_info->modelPrefix_help = gengetopt_args_info_help[7] ;
+  args_info->slack_help = gengetopt_args_info_help[8] ;
+  args_info->verbosity_help = gengetopt_args_info_help[10] ;
+  args_info->cross_validation_help = gengetopt_args_info_help[11] ;
+  args_info->error_function_help = gengetopt_args_info_help[12] ;
+  args_info->k_value_help = gengetopt_args_info_help[13] ;
+  args_info->tradeoff_help = gengetopt_args_info_help[14] ;
+  args_info->allgenes_help = gengetopt_args_info_help[15] ;
+  args_info->params_help = gengetopt_args_info_help[16] ;
+  args_info->nan2neg_help = gengetopt_args_info_help[17] ;
+  args_info->mmap_help = gengetopt_args_info_help[18] ;
+  args_info->random_help = gengetopt_args_info_help[19] ;
+  args_info->tgene_help = gengetopt_args_info_help[20] ;
+  args_info->balance_help = gengetopt_args_info_help[21] ;
+  args_info->bfactor_help = gengetopt_args_info_help[22] ;
+  args_info->prob_help = gengetopt_args_info_help[23] ;
+  args_info->probCross_help = gengetopt_args_info_help[24] ;
+  args_info->normalizeZero_help = gengetopt_args_info_help[25] ;
+  args_info->normalizeNPone_help = gengetopt_args_info_help[26] ;
+  args_info->edgeholdout_help = gengetopt_args_info_help[27] ;
+  args_info->skipSVM_help = gengetopt_args_info_help[28] ;
+  args_info->aggregateMax_help = gengetopt_args_info_help[29] ;
+  args_info->NoCrossPredict_help = gengetopt_args_info_help[30] ;
+  args_info->CrossResult_help = gengetopt_args_info_help[31] ;
+  args_info->SampledLabels_help = gengetopt_args_info_help[32] ;
+  args_info->onetgene_help = gengetopt_args_info_help[34] ;
+  args_info->prior_help = gengetopt_args_info_help[35] ;
+  args_info->savemodel_help = gengetopt_args_info_help[36] ;
+  args_info->mintrain_help = gengetopt_args_info_help[37] ;
+  args_info->context_help = gengetopt_args_info_help[38] ;
   
 }
 
@@ -288,17 +320,25 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->directory_orig));
   free_string_field (&(args_info->model_arg));
   free_string_field (&(args_info->model_orig));
+  free_string_field (&(args_info->modelPrefix_arg));
+  free_string_field (&(args_info->modelPrefix_orig));
   free_string_field (&(args_info->verbosity_orig));
   free_string_field (&(args_info->cross_validation_orig));
   free_string_field (&(args_info->error_function_orig));
   free_string_field (&(args_info->k_value_orig));
   free_string_field (&(args_info->tradeoff_orig));
+  free_string_field (&(args_info->allgenes_arg));
+  free_string_field (&(args_info->allgenes_orig));
   free_string_field (&(args_info->params_arg));
   free_string_field (&(args_info->params_orig));
   free_string_field (&(args_info->random_orig));
   free_string_field (&(args_info->tgene_arg));
   free_string_field (&(args_info->tgene_orig));
   free_string_field (&(args_info->bfactor_orig));
+  free_string_field (&(args_info->CrossResult_arg));
+  free_string_field (&(args_info->CrossResult_orig));
+  free_string_field (&(args_info->SampledLabels_arg));
+  free_string_field (&(args_info->SampledLabels_orig));
   free_string_field (&(args_info->prior_orig));
   free_string_field (&(args_info->mintrain_orig));
   free_string_field (&(args_info->context_arg));
@@ -349,6 +389,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "directory", args_info->directory_orig, 0);
   if (args_info->model_given)
     write_into_file(outfile, "model", args_info->model_orig, 0);
+  if (args_info->modelPrefix_given)
+    write_into_file(outfile, "modelPrefix", args_info->modelPrefix_orig, 0);
   if (args_info->slack_given)
     write_into_file(outfile, "slack", 0, 0 );
   if (args_info->verbosity_given)
@@ -361,6 +403,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "k_value", args_info->k_value_orig, 0);
   if (args_info->tradeoff_given)
     write_into_file(outfile, "tradeoff", args_info->tradeoff_orig, 0);
+  if (args_info->allgenes_given)
+    write_into_file(outfile, "allgenes", args_info->allgenes_orig, 0);
   if (args_info->params_given)
     write_into_file(outfile, "params", args_info->params_orig, 0);
   if (args_info->nan2neg_given)
@@ -385,6 +429,16 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "normalizeNPone", 0, 0 );
   if (args_info->edgeholdout_given)
     write_into_file(outfile, "edgeholdout", 0, 0 );
+  if (args_info->skipSVM_given)
+    write_into_file(outfile, "skipSVM", 0, 0 );
+  if (args_info->aggregateMax_given)
+    write_into_file(outfile, "aggregateMax", 0, 0 );
+  if (args_info->NoCrossPredict_given)
+    write_into_file(outfile, "NoCrossPredict", 0, 0 );
+  if (args_info->CrossResult_given)
+    write_into_file(outfile, "CrossResult", args_info->CrossResult_orig, 0);
+  if (args_info->SampledLabels_given)
+    write_into_file(outfile, "SampledLabels", args_info->SampledLabels_orig, 0);
   if (args_info->onetgene_given)
     write_into_file(outfile, "onetgene", 0, 0 );
   if (args_info->prior_given)
@@ -664,12 +718,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "output",	1, NULL, 'o' },
         { "directory",	1, NULL, 'd' },
         { "model",	1, NULL, 'm' },
+        { "modelPrefix",	1, NULL, 'L' },
         { "slack",	0, NULL, 'S' },
         { "verbosity",	1, NULL, 'v' },
         { "cross_validation",	1, NULL, 'c' },
         { "error_function",	1, NULL, 'e' },
         { "k_value",	1, NULL, 'k' },
         { "tradeoff",	1, NULL, 't' },
+        { "allgenes",	1, NULL, 'a' },
         { "params",	1, NULL, 'p' },
         { "nan2neg",	0, NULL, 'n' },
         { "mmap",	0, NULL, 'M' },
@@ -682,6 +738,11 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "normalizeZero",	0, NULL, 'z' },
         { "normalizeNPone",	0, NULL, 'N' },
         { "edgeholdout",	0, NULL, 'X' },
+        { "skipSVM",	0, NULL, 'Q' },
+        { "aggregateMax",	0, NULL, 'x' },
+        { "NoCrossPredict",	0, NULL, 'r' },
+        { "CrossResult",	1, NULL, 'u' },
+        { "SampledLabels",	1, NULL, 'y' },
         { "onetgene",	0, NULL, 'q' },
         { "prior",	1, NULL, 'P' },
         { "savemodel",	0, NULL, 's' },
@@ -690,7 +751,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVl:o:d:m:Sv:c:e:k:t:p:nMR:T:bF:BDzNXqP:sE:C:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVl:o:d:m:L:Sv:c:e:k:t:a:p:nMR:T:bF:BDzNXQxru:y:qP:sE:C:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -759,6 +820,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.model_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "model", 'm',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'L':	/* input Model prefix.  */
+        
+        
+          if (update_arg( (void *)&(args_info->modelPrefix_arg), 
+               &(args_info->modelPrefix_orig), &(args_info->modelPrefix_given),
+              &(local_args_info.modelPrefix_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "modelPrefix", 'L',
               additional_error))
             goto failure;
         
@@ -836,6 +909,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.tradeoff_given), optarg, 0, "1", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "tradeoff", 't',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'a':	/* Gene list that list all genes to make predictions.  */
+        
+        
+          if (update_arg( (void *)&(args_info->allgenes_arg), 
+               &(args_info->allgenes_orig), &(args_info->allgenes_given),
+              &(local_args_info.allgenes_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "allgenes", 'a',
               additional_error))
             goto failure;
         
@@ -964,6 +1049,60 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->edgeholdout_flag), 0, &(args_info->edgeholdout_given),
               &(local_args_info.edgeholdout_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "edgeholdout", 'X',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'Q':	/* If given this flag, skip training SVM models when file already exist. Often used when cluster runs timeout/error and need to re-run jobs..  */
+        
+        
+          if (update_arg((void *)&(args_info->skipSVM_flag), 0, &(args_info->skipSVM_given),
+              &(local_args_info.skipSVM_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "skipSVM", 'Q',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'x':	/* If given this flag, when predicting for all gene pairs with multiple SVM models(bagging) aggregate using the maximum prediction value (Default: average).  */
+        
+        
+          if (update_arg((void *)&(args_info->aggregateMax_flag), 0, &(args_info->aggregateMax_given),
+              &(local_args_info.aggregateMax_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "aggregateMax", 'x',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'r':	/* Don't use the cross-validated prediction values for gene pairs that have labels in the final output. This flag will basically let SVM models make prediction on pairs that were also used for training..  */
+        
+        
+          if (update_arg((void *)&(args_info->NoCrossPredict_flag), 0, &(args_info->NoCrossPredict_given),
+              &(local_args_info.NoCrossPredict_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "NoCrossPredict", 'r',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'u':	/* Cross-validation prediction results, if given when prediction mode these values are replaced into final prediction values.  */
+        
+        
+          if (update_arg( (void *)&(args_info->CrossResult_arg), 
+               &(args_info->CrossResult_orig), &(args_info->CrossResult_given),
+              &(local_args_info.CrossResult_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "CrossResult", 'u',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'y':	/* Save the sampled final training labels to this file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->SampledLabels_arg), 
+               &(args_info->SampledLabels_orig), &(args_info->SampledLabels_given),
+              &(local_args_info.SampledLabels_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "SampledLabels", 'y',
               additional_error))
             goto failure;
         

@@ -87,6 +87,80 @@ ParamStruct ReadParamsFromFile(ifstream& ifsm, string outFile) {
 	return PStruct;
 }
 
+bool ReadModelFile(ifstream& ifsm, vector<float>& SModel) {
+	static const size_t c_iBuffer = 1024;
+	char acBuffer[c_iBuffer];
+	char* nameBuffer;
+	vector<string> vecstrTokens;
+	size_t extPlace;
+	string Ext, FileName;
+	size_t index = 0;
+	
+	while (!ifsm.eof()) {
+		ifsm.getline(acBuffer, c_iBuffer - 1);
+		acBuffer[c_iBuffer - 1] = 0;
+		vecstrTokens.clear();
+		CMeta::Tokenize(acBuffer, vecstrTokens);
+		if (vecstrTokens.empty())
+			continue;
+		if (vecstrTokens.size() > 1) {
+			cerr << "Illegal model line (" << vecstrTokens.size() << "): "
+					<< acBuffer << endl;
+			continue;
+		}
+		if (acBuffer[0] == '#') {
+			cerr << "skipping " << acBuffer << endl;
+		} else {
+		  SModel.push_back(atof(vecstrTokens[0].c_str()));
+		}
+		
+		
+	}
+	ifsm.close();
+}
+
+// Read in the 
+bool ReadProbParamFile(char* prob_file, float& A, float& B) {
+	static const size_t c_iBuffer = 1024;
+	char acBuffer[c_iBuffer];
+	char* nameBuffer;
+	vector<string> vecstrTokens;
+	size_t i, extPlace;
+	string Ext, FileName;
+	size_t index = 0;
+	ifstream ifsm;
+	
+	ifsm.open( prob_file );
+	i = 0;
+	while (!ifsm.eof()) {
+		ifsm.getline(acBuffer, c_iBuffer - 1);
+		acBuffer[c_iBuffer - 1] = 0;
+		vecstrTokens.clear();
+		CMeta::Tokenize(acBuffer, vecstrTokens);
+		if (vecstrTokens.empty())
+			continue;
+		if (vecstrTokens.size() > 1) {
+			cerr << "Illegal model line (" << vecstrTokens.size() << "): "
+					<< acBuffer << endl;
+			continue;
+		}
+		if (acBuffer[0] == '#') {
+		  cerr << "skipping " << acBuffer << endl;
+		} else {
+		  if( i == 0 )		  
+		    A = atof(vecstrTokens[0].c_str());
+		  else if( i == 1 )
+		    B = atof(vecstrTokens[0].c_str());
+		  else{
+		    cerr << "" << endl;
+		    return false;
+		  }		  
+		  i++;
+		}		
+	}
+	cerr << "Reading Prob file, A: " << A << ", B: " << B << endl;
+	return true;
+}
 
 // Platt's binary SVM Probablistic Output
 // Assume dec_values and labels have same dimensions and genes
@@ -240,9 +314,9 @@ int main(int iArgs, char** aszArgs) {
 	gengetopt_args_info sArgs;	
 	SVMLight::CSVMPERF SVM;
 	
-	size_t i, j, iGene, jGene, numpos, numneg;
+	size_t i, j, iGene, jGene, numpos, numneg, iSVM;
 	ifstream ifsm;
-	float d, sample_rate;
+	float d, sample_rate, dval;
 	int   iRet;
 	map<string, size_t>	mapstriZeros, mapstriDatasets;
 	vector<string> vecstrDatasets;
@@ -258,6 +332,9 @@ int main(int iArgs, char** aszArgs) {
 	
 	CGenome GenomeTwo;
         CGenes Context(GenomeTwo);
+	
+	CGenome GenomeThree;
+        CGenes Allgenes(GenomeThree);
 	
 	if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
 		cmdline_parser_print_help();
@@ -292,22 +369,12 @@ int main(int iArgs, char** aszArgs) {
 		SVM.UseSlackRescaling();
 	else
 		SVM.UseMarginRescaling();
-
+	
 	
 	if (!SVM.parms_check()) {
 		cerr << "Sanity check failed, see above errors" << endl;
 		return 1;
 	}
-
-	//  cout << "there are " << vecLabels.size() << " labels processed" << endl;
-	/*
-	if (sArgs.input_given) {
-		if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, sArgs.mmap_flag)) {
-		cerr << "Could not open input PCL" << endl;
-		return 1;
-		}
-	}
-	*/
 	
 	// read in the list of datasets
 	if(sArgs.directory_arg ) {
@@ -322,8 +389,10 @@ int main(int iArgs, char** aszArgs) {
 	      vecstrDatasets.push_back((string)sArgs.directory_arg + "/" + ep->d_name);	      
 	    }
 	    (void) closedir (dp);	    
-	    
+	    	    
 	    cerr << "Input Dir contrains # datasets: " << vecstrDatasets.size() << '\n';
+	    // sort datasets in alphabetical order
+	    std::sort(vecstrDatasets.begin(), vecstrDatasets.end());
 	  }
 	  else{
 	    cerr << "Couldn't open the directory: " << sArgs.directory_arg << '\n';
@@ -355,29 +424,30 @@ int main(int iArgs, char** aszArgs) {
 	  ifsm.close();
 	}
 		
+	// read all gene list
+	// IF given this flag predict for all gene pairs
+	if(sArgs.allgenes_given ) {
+	  ifstream ifsm;
+	  ifsm.open(sArgs.allgenes_arg);
+	  
+	  if (!Allgenes.Open(ifsm)) {
+	    cerr << "Could not open: " << sArgs.allgenes_arg << endl;
+	    return 1;
+	  }
+	  ifsm.close();
+	}
+	
 	///######################
 	// Chris added
 	vector<SVMLight::SVMLabelPair*> vecLabels;
-	/*********
-	 ** PCL gold standard later
-	 
-	CPCL Labels;
-	if (sArgs.labels_given) {	  
-	  if (!Labels.Open(sArgs.labels_arg, sArgs.skip_arg, sArgs.mmap_flag)) {
-	    cerr << "Could not open input PCL" << endl;
-	    return 1;
-	  }
-	  
-	  for(size_t i = 0; i < PCL.GetGenes(); i++)
-	    for(size_t j = 0; j < PCL.GetExperiments(); j++)
-	      if (!CMeta::IsNaN(d = PCL.Get(i, j)))  
-		vecLabels.push_back(SVMLight::SVMLabelPairPair(d, i, j));
-	  
-	}
-	****/
 	CDat Labels;
 	CDat Results;
-	if (sArgs.labels_given) {	  
+	
+
+	///######################
+	/// Read in labels and apply various modifications based on user flags/args
+	/// 
+	if ( sArgs.labels_given ) {	  
 	  if (!Labels.Open(sArgs.labels_arg, sArgs.mmap_flag)) {
 	    cerr << "Could not open input labels Dat" << endl;
 	    return 1;
@@ -392,13 +462,6 @@ int main(int iArgs, char** aszArgs) {
 		if (CMeta::IsNaN(d = Labels.Get(i, j)))  
 		  Labels.Set(i, j, -1);
 	  }
-	  
-	  // Only keep edges that have one gene in this given list
-	  // Should delete
-	  //if( sArgs.geneq_arg ){
-	  //  Labels.FilterGenes( sArgs.geneq_arg, CDat::EFilterExEdge );	    
-	  //  Labels.FilterGenes( sArgs.geneq_arg, CDat::EFilterEdge );
-	  //}
 	  
 	  if( sArgs.tgene_given ){
 	    mapTgene.resize(Labels.GetGenes());
@@ -487,346 +550,576 @@ int main(int iArgs, char** aszArgs) {
 	  if(sArgs.context_given )
 	    Labels.FilterGenes( Context, CDat::EFilterInclude );
 	  
-	  numpos = 0;
-	  for(i = 0; i < Labels.GetGenes(); i++)
-	    for(j = (i+1); j < Labels.GetGenes(); j++)
-	      if (!CMeta::IsNaN(d = Labels.Get(i, j))){
-		if (d != 0)  
-		  vecLabels.push_back(new SVMLight::SVMLabelPair(d, i, j));
-		if(d > 0)
-		  ++numpos;
-	      }
 	  
-	  // check to see if you have enough positives to learn from
-	  if(sArgs.mintrain_given && sArgs.mintrain_arg > numpos){
-	    cerr << "Not enough positive examples from: " << sArgs.labels_arg << " numpos: " << numpos << endl;
-	    return 1;
+	  // If not given a SVM model/models we are in learning mode, thus construct each SVMLabel object for label
+	  if( !sArgs.model_given && !sArgs.modelPrefix_given ){
+	    numpos = 0;
+	    for(i = 0; i < Labels.GetGenes(); i++)
+	      for(j = (i+1); j < Labels.GetGenes(); j++)
+		if (!CMeta::IsNaN(d = Labels.Get(i, j))){
+		  if (d != 0)  
+		    vecLabels.push_back(new SVMLight::SVMLabelPair(d, i, j));
+		  if(d > 0)
+		    ++numpos;
+		}
+	    
+	    // check to see if you have enough positives to learn from
+	    if(sArgs.mintrain_given && sArgs.mintrain_arg > numpos){
+	      cerr << "Not enough positive examples from: " << sArgs.labels_arg << " numpos: " << numpos << endl;
+	      return 1;
+	    }
 	  }
-	}
+	  
+	  // save sampled labels 
+	  if(sArgs.SampledLabels_given) {
+	    cerr << "Save sampled labels file: " << sArgs.SampledLabels_arg << endl;
+	    Labels.Save(sArgs.SampledLabels_arg);	    
+	  }	  
+	} /// Done with reading labels
 	
 	SVMLight::SAMPLE* pTrainSample;
 	SVMLight::SAMPLE* pAllSample;
 	vector<SVMLight::SVMLabelPair*> pTrainVector[sArgs.cross_validation_arg];
 	vector<SVMLight::SVMLabelPair*> pTestVector[sArgs.cross_validation_arg];
-	//vector<SVMLight::Result> AllResults;
-	//vector<SVMLight::Result> tmpAllResults;
 	
-	if (sArgs.model_given && sArgs.labels_given) { //learn once and write to file
-	  //DEBUG implement
-	  //pTrainSample = CSVMPERF::CreateSample(vecstrDatasets, vecLabels, Labels.GetGeneNames());
-	  //SVM.Learn(*pTrainSample);
-	  //SVM.WriteModel(sArgs.model_arg);
-	} else if (sArgs.model_given && sArgs.output_given) { //read model and classify all
-	  
-	  // DEBUG need to figure out which/where to select all genes to predict
-	  // Also, need to paralize the full predictions
-	  
-	  SVM.ReadModel(sArgs.model_arg);
-	  //AllResults = SVM.Classify(PCL, vecAllLabels);
-	  
-	  // DEBUG output predictions
-	  // sArgs.output_arg
-	  
-	} else if (sArgs.output_given && sArgs.labels_given) {
-		//do learning and classifying with cross validation
-	        if( sArgs.cross_validation_arg > 1){
-		  cerr << "setting cross validation holds" << endl;
+	// ###################################
+	//
+	// Now conduct Learning if given a labels and no SVM models	
+	//
+	if (sArgs.output_given && sArgs.labels_given && !sArgs.modelPrefix_given && !sArgs.model_given) {
+	  //do learning and classifying with cross validation
+	  if( sArgs.cross_validation_arg > 1){
+	    cerr << "setting cross validation holds" << endl;
+	    
+	    mapTgene2fold.resize(mapTgene.size());
+	    
+	    // assign target genes to there cross validation fold
+	    if(sArgs.tgene_given || !sArgs.edgeholdout_flag){
+	      for(i = 0; i < mapTgene.size(); i++){
+		if(!mapTgene[i]){
+		  mapTgene2fold[i] = -1; 
+		  continue;
+		}
+		//cerr << "what's up?" << endl;
+		mapTgene2fold[i] = rand() % sArgs.cross_validation_arg;
+	      }
+	      
+	      // cross-fold by target gene
+	      for (i = 0; i < sArgs.cross_validation_arg; i++) {
+		cerr << "cross validation holds setup:" << i << endl;
+		
+		// keep track of positive gene counts
+		if(sArgs.balance_flag){
+		  cerr << "Set up balance: " << i << endl;
+		  for(j = 0; j < Labels.GetGenes(); j++)
+		    tgeneCount[j] = 0;
 		  
-		  mapTgene2fold.resize(mapTgene.size());
+		  for(j = 0; j < vecLabels.size(); j++)
+		    if(vecLabels[j]->Target > 0){
+		      ++(tgeneCount[vecLabels[j]->iidx]);
+		      ++(tgeneCount[vecLabels[j]->jidx]);
+		    }
 		  
-		  // assign target genes to there cross validation fold
-		  if(sArgs.tgene_given || !sArgs.edgeholdout_flag){
-		    for(i = 0; i < mapTgene.size(); i++){
-		      if(!mapTgene[i]){
-			mapTgene2fold[i] = -1; 
+		  if(sArgs.bfactor_given)
+		    for(j = 0; j < vecLabels.size(); j++)
+		      if(tgeneCount[vecLabels[j]->jidx] < 500)
+			tgeneCount[vecLabels[j]->jidx] = sArgs.bfactor_arg*tgeneCount[vecLabels[j]->jidx];
+		}
+		
+		for (j = 0; j < vecLabels.size(); j++) {
+		  //if( j % 1000 == 0)
+		  //cerr << "cross validation push labels:" << j << endl;
+		  
+		  // assume only one gene is a target gene in a edge
+		  if(mapTgene[vecLabels[j]->iidx]){
+		    if(vecLabels[j]->Target < 0){
+		      --(tgeneCount[vecLabels[j]->iidx]);
+		    }
+		    
+		    if(mapTgene2fold[vecLabels[j]->iidx] == i)			    
+		      pTestVector[i].push_back(vecLabels[j]);
+		    else{
+		      //cerr << tgeneCount[vecLabels[j]->iidx] << endl;
+		      
+		      if( sArgs.balance_flag && vecLabels[j]->Target < 0 && tgeneCount[vecLabels[j]->iidx] < 0){
 			continue;
 		      }
-		      //cerr << "what's up?" << endl;
-		      mapTgene2fold[i] = rand() % sArgs.cross_validation_arg;
+		      
+		      // only add if both genes are in context
+		      if( sArgs.context_given  && ( !mapCgene[vecLabels[j]->iidx] || !mapCgene[vecLabels[j]->jidx]))
+			continue;
+		      
+		      pTrainVector[i].push_back(vecLabels[j]); 
 		    }
+		  }
+		  else if(mapTgene[vecLabels[j]->jidx]){
+		    if(vecLabels[j]->Target < 0)
+		      --(tgeneCount[vecLabels[j]->jidx]);
 		    
-		    // cross-fold by target gene
-		    for (i = 0; i < sArgs.cross_validation_arg; i++) {
-		      cerr << "cross validation holds setup:" << i << endl;
+		    if(mapTgene2fold[vecLabels[j]->jidx] == i)
+		      pTestVector[i].push_back(vecLabels[j]);
+		    else{
+		      //cerr << tgeneCount[vecLabels[j]->jidx] << endl;
 		      
-		      // keep track of positive gene counts
-		      if(sArgs.balance_flag){
-			cerr << "Set up balance: " << i << endl;
-			for(j = 0; j < Labels.GetGenes(); j++)
-			  tgeneCount[j] = 0;
-			
-			for(j = 0; j < vecLabels.size(); j++)
-			  if(vecLabels[j]->Target > 0){
-			    ++(tgeneCount[vecLabels[j]->iidx]);
-			    ++(tgeneCount[vecLabels[j]->jidx]);
-			  }
-			
-			if(sArgs.bfactor_given)
-			  for(j = 0; j < vecLabels.size(); j++)
-			    if(tgeneCount[vecLabels[j]->jidx] < 500)
-			      tgeneCount[vecLabels[j]->jidx] = sArgs.bfactor_arg*tgeneCount[vecLabels[j]->jidx];
+		      if( sArgs.balance_flag && vecLabels[j]->Target < 0 && tgeneCount[vecLabels[j]->jidx] < 0){
+			continue;
 		      }
 		      
-		      for (j = 0; j < vecLabels.size(); j++) {
-			//if( j % 1000 == 0)
-			//cerr << "cross validation push labels:" << j << endl;
-			
-			// assume only one gene is a target gene in a edge
-			if(mapTgene[vecLabels[j]->iidx]){
-			  if(vecLabels[j]->Target < 0){
-			    --(tgeneCount[vecLabels[j]->iidx]);
-			  }
-			  
-			  if(mapTgene2fold[vecLabels[j]->iidx] == i)			    
-			    pTestVector[i].push_back(vecLabels[j]);
-			  else{
-			    //cerr << tgeneCount[vecLabels[j]->iidx] << endl;
-			    
-			    if( sArgs.balance_flag && vecLabels[j]->Target < 0 && tgeneCount[vecLabels[j]->iidx] < 0){
-			      continue;
-			    }
-			    
-			    // only add if both genes are in context
-			    if( sArgs.context_given  && ( !mapCgene[vecLabels[j]->iidx] || !mapCgene[vecLabels[j]->jidx]))
-			      continue;
-			    
-			    pTrainVector[i].push_back(vecLabels[j]); 
-			  }
-			}
-			else if(mapTgene[vecLabels[j]->jidx]){
-			  if(vecLabels[j]->Target < 0)
-			    --(tgeneCount[vecLabels[j]->jidx]);
-			  
-			  if(mapTgene2fold[vecLabels[j]->jidx] == i)
-			    pTestVector[i].push_back(vecLabels[j]);
-			  else{
-			    //cerr << tgeneCount[vecLabels[j]->jidx] << endl;
-			    
-			    if( sArgs.balance_flag && vecLabels[j]->Target < 0 && tgeneCount[vecLabels[j]->jidx] < 0){
-			      continue;
-			    }
-			    
-			    // only add if both genes are in context
-			    if( sArgs.context_given && ( !mapCgene[vecLabels[j]->iidx] || !mapCgene[vecLabels[j]->jidx]))
-			      continue;
-			    
-			    pTrainVector[i].push_back(vecLabels[j]); 
-			  }
-			}
-			else{
-			  cerr << "Error: edge exist without a target gene" << endl; return 1;
-			}
-		      }
+		      // only add if both genes are in context
+		      if( sArgs.context_given && ( !mapCgene[vecLabels[j]->iidx] || !mapCgene[vecLabels[j]->jidx]))
+			continue;
 		      
-		      cerr << "test,"<< i <<": " << pTestVector[i].size() << endl;
-		      int numpos = 0;
-		      for(j=0; j < pTrainVector[i].size(); j++)
-			if(pTrainVector[i][j]->Target > 0)
-			  ++numpos;
-		      
-		      if( numpos < 1 || (sArgs.mintrain_given && sArgs.mintrain_arg > numpos) ){						
-			cerr << "Not enough positive examples from fold: " << i  << " file: " << sArgs.labels_arg << " numpos: " << numpos << endl;
-			return 1;
-		      }
-		      
-		      cerr << "train,"<< i <<","<<numpos<<": " << pTrainVector[i].size() << endl;
-		      
+		      pTrainVector[i].push_back(vecLabels[j]); 
 		    }
 		  }
-		  else{ //randomly set eges into cross-fold
-		    if( sArgs.context_given ){
-		      cerr << "context not implemented yet for random edge holdout" << endl;
-		      return 1;
-		    }
-
-		    for (i = 0; i < sArgs.cross_validation_arg; i++) {
-		      pTestVector[i].reserve((size_t) vecLabels.size()
-					     / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
-		      pTrainVector[i].reserve((size_t) vecLabels.size()
-					      / (sArgs.cross_validation_arg)
-					      * (sArgs.cross_validation_arg - 1)
-					      + sArgs.cross_validation_arg);
-		      for (j = 0; j < vecLabels.size(); j++) {
-			if (j % sArgs.cross_validation_arg == i) {
-			  pTestVector[i].push_back(vecLabels[j]);
-			} else {
-			  pTrainVector[i].push_back((vecLabels[j]));
-			}
-		      }
-		    }
+		  else{
+		    cerr << "Error: edge exist without a target gene" << endl; return 1;
 		  }
 		}
-		else{ // if you have less than 2 fold cross, no cross validation is done, all train genes are used and predicted
-		  
-		  // no holdout so train is the same as test gene set
-		  pTestVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
-		  pTrainVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
-		  
-		  for (j = 0; j < vecLabels.size(); j++) {
-		    pTestVector[0].push_back(vecLabels[j]);		      
-		    pTrainVector[0].push_back(vecLabels[j]);		    
-		  }
-		}
-				
-		// initalize the results
-		Results.Open(Labels.GetGeneNames(), true);
 		
-		//if (sArgs.all_flag) {
-		  // DEBUG, probably don't allow all flag
-		  // orig for classify all genes
-		//}
-		if (sArgs.params_given) { //reading paramters from file
-			ifsm.close();
-			ifsm.clear();
-			ifsm.open(sArgs.params_arg);
-			if (!ifsm.is_open()) {
-				cerr << "Could not open: " << sArgs.params_arg << endl;
-				return 1;
-			}
-			ParamStruct PStruct;
-			string outFile(sArgs.output_arg);
-			PStruct = ReadParamsFromFile(ifsm, outFile);
-
-			size_t iParams;
-			ofstream ofsm;
-			SVMLight::SAMPLE * ppTrainSample[sArgs.cross_validation_arg];
-			
-			//build all the samples since they are being reused
-			/*
-			for (i = 0; i < sArgs.cross_validation_arg; i++)
-			  ppTrainSample[i] = SVMLight::CSVMPERF::CreateSample(vecstrDatasets,
-									      pTrainVector[i]);
-			
-			for (iParams = 0; iParams < PStruct.vecTradeoff.size(); iParams++) {
-			  // DEBUG need to implement			  
-			}
-			*/
-		} else { //run once
-		  
-		  // create sample for all labels
-		  // DEBUG need to implement
-		  cerr << "CreateDocs!"<< endl;
-		  if(sArgs.normalizeZero_flag){
-		    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
-						  vecLabels,
-						  Labels.GetGeneNames(),
-						  Sleipnir::CDat::ENormalizeMinMax);
-		  }else if(sArgs.normalizeNPone_flag){
-		    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
-						  vecLabels,
-						  Labels.GetGeneNames(),
-						  Sleipnir::CDat::ENormalizeMinMaxNPone);
-		  }else{
-		    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
-						  vecLabels,
-						  Labels.GetGeneNames());
-		  }
-		  
-		  for (i = 0; i < sArgs.cross_validation_arg; i++) {
-		    cerr << "Cross validation: " << i << endl;
-		    
-		    // DEBUG need to implement
-		    pTrainSample = SVMLight::CSVMPERF::CreateSample(pTrainVector[i]);
-		    cerr << "Cross Validation Trial " << i << endl;		    
-		    
-		    SVM.Learn(*pTrainSample);
-		    cerr << "Learned" << endl;
-		    SVM.Classify(Results,
-				 pTestVector[i]);
-		    
-		    /*
-		    if( sArgs.probCross_flag && !sArgs.prob_flag ){
-		      cerr << "Convert to probability for cross fold: " << i << endl;
-		      float A, B;
-		      SVM.sigmoid_train(pTrainVector[i], A, B);
-		      SVM.sigmoid_predict(Results, pTestVector[i], A, B);
-		    }
-		    */
-
-		    //cerr << "Classified " << tmpAllResults.size() << " examples"
-		    //<< endl;
-		    //AllResults.insert(AllResults.end(), tmpAllResults.begin(),
-		    //				      tmpAllResults.end());
-		    //tmpAllResults.resize(0);
-		    ///if (sArgs.all_flag) {
-		      // DEBUG, probably don't allow all flag
-		      // orig for classify all genes				  
-		    //}
-		    
-		    // MAIRA, Also, why did you not start at i==0???
-		    
-		    if(sArgs.savemodel_flag){
-		      // i cross validation
-		      // sArgs.output_arg		  
-		      std::stringstream sstm;
-		      
-		      if(sArgs.context_given){
-			std::string path(sArgs.context_arg);
-			size_t pos = path.find_last_of("/");
-			std::string cname;
-			if(pos != std::string::npos)
-			  cname.assign(path.begin() + pos + 1, path.end());
-			else
-			  cname = path;
-			
-			sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << "." << cname << ".svm";		      
-		      }else
-			sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << ".svm";
-		      SVM.WriteModel((char*)(sstm.str().c_str()));
-		    }
-		    
-		    // DEBUG
-		    SVMLight::CSVMPERF::FreeSample_leave_Doc(*pTrainSample);
-		    free(pTrainSample);
-		  }
-		  
-		  //if (sArgs.all_flag) { //add the unlabeled results
-		  // DEBUG, probably don't allow all flag
-		  // orig for classify all genes
-		  //}
-		  
-		  if( sArgs.prob_flag ){
-		    cerr << "Converting prediction values to estimated probablity" << endl;
-		    float A, B;
-		    sigmoid_train(Results, Labels, A, B);
-		    sigmoid_predict(Results, A, B);
-		  }
-		  else if( sArgs.probCross_flag ){
-		    float A, B;
-		    size_t k, ctrain, itrain;
-		    vector<SVMLight::SVMLabelPair*> probTrainVector;
-		    
-		    for (i = 0; i < sArgs.cross_validation_arg; i++) {		      
-		      cerr << "Convert to probability for cross fold: " << i << endl;		      
-		      ctrain = 0;
-		      for (j = 0; j < sArgs.cross_validation_arg; j++) {		      
-			if(i == j)
-			  continue;
-			ctrain += pTrainVector[j].size();
-		      }
-		      
-		      probTrainVector.resize(ctrain);
-		      itrain = 0;
-		      for (j = 0; j < sArgs.cross_validation_arg; j++) {		      
-			if(i == j)
-			  continue;
-			for(k = 0; k < pTrainVector[j].size(); k++){
-			  probTrainVector[itrain] = pTrainVector[j][k];
-			  itrain += 1;
-			}
-		      }
-		      
-		      SVM.sigmoid_train(Results, probTrainVector, A, B);
-		      SVM.sigmoid_predict(Results, pTestVector[i], A, B);
-		    }
-		  }
-		  
-		  Results.Save(sArgs.output_arg);
-		  return 0;
+		cerr << "test,"<< i <<": " << pTestVector[i].size() << endl;
+		int numpos = 0;
+		for(j=0; j < pTrainVector[i].size(); j++)
+		  if(pTrainVector[i][j]->Target > 0)
+		    ++numpos;
+		
+		if( numpos < 1 || (sArgs.mintrain_given && sArgs.mintrain_arg > numpos) ){						
+		  cerr << "Not enough positive examples from fold: " << i  << " file: " << sArgs.labels_arg << " numpos: " << numpos << endl;
+		  return 1;
 		}
-	} else {
-		cerr << "More options are needed" << endl;
+		
+		cerr << "train,"<< i <<","<<numpos<<": " << pTrainVector[i].size() << endl;
+		
+	      }
+	    }
+	    else{ //randomly set eges into cross-fold
+	      if( sArgs.context_given ){
+		cerr << "context not implemented yet for random edge holdout" << endl;
+		return 1;
+	      }
+	      
+	      for (i = 0; i < sArgs.cross_validation_arg; i++) {
+		pTestVector[i].reserve((size_t) vecLabels.size()
+				       / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
+		pTrainVector[i].reserve((size_t) vecLabels.size()
+					/ (sArgs.cross_validation_arg)
+					* (sArgs.cross_validation_arg - 1)
+					+ sArgs.cross_validation_arg);
+		for (j = 0; j < vecLabels.size(); j++) {
+		  if (j % sArgs.cross_validation_arg == i) {
+		    pTestVector[i].push_back(vecLabels[j]);
+		  } else {
+		    pTrainVector[i].push_back((vecLabels[j]));
+		  }
+		}
+	      }
+	    }
+	  }
+	  else{ // if you have less than 2 fold cross, no cross validation is done, all train genes are used and predicted
+	    
+	    // no holdout so train is the same as test gene set
+	    pTestVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
+	    pTrainVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
+	    
+	    for (j = 0; j < vecLabels.size(); j++) {
+	      pTestVector[0].push_back(vecLabels[j]);		      
+	      pTrainVector[0].push_back(vecLabels[j]);		    
+	    }
+	  }
+	  
+	  // initalize the results
+	  Results.Open(Labels.GetGeneNames(), true);
+	  
+	  /////
+	  // Create feature vectors for all Label pairs using input datasets
+	  //
+	  cerr << "CreateDocs!"<< endl;
+	  if(sArgs.normalizeZero_flag){
+	    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
+					  vecLabels,
+					  Labels.GetGeneNames(),
+					  Sleipnir::CDat::ENormalizeMinMax);
+	  }else if(sArgs.normalizeNPone_flag){
+	    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
+					  vecLabels,
+					  Labels.GetGeneNames(),
+					  Sleipnir::CDat::ENormalizeMinMaxNPone);
+	  }else{
+	    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
+					  vecLabels,
+					  Labels.GetGeneNames());
+	  }
+	  
+	  ////
+	  // Start learning for each cross validation fold
+	  for (i = 0; i < sArgs.cross_validation_arg; i++) {
+	    std::stringstream sstm;
+	    if(sArgs.savemodel_flag){
+	      if(sArgs.context_given){
+		std::string path(sArgs.context_arg);
+		size_t pos = path.find_last_of("/");
+		std::string cname;
+		if(pos != std::string::npos)
+		  cname.assign(path.begin() + pos + 1, path.end());
+		else
+		  cname = path;
+		
+		sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << cname << "." << i << ".svm";		      
+	      }else
+		sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << ".svm";
+	    }
+	    
+	    cerr << "Cross validation fold: " << i << endl;	    	    
+	    pTrainSample = SVMLight::CSVMPERF::CreateSample(pTrainVector[i]);
+	    
+	    // Skip learning if SVM model file already exist
+	    if( sArgs.skipSVM_flag && 
+		access((char*)(sstm.str().c_str()), R_OK ) != -1
+		){
+	      //SVM.ReadModel((char*)(sstm.str().c_str()));
+	      SVM.ReadModelLinear((char*)(sstm.str().c_str()));
+	      cerr << "Using existing trained SVM model: " << sstm.str() << endl;
+	    }else{
+	      SVM.Learn(*pTrainSample);
+	      cerr << "SVM model Learned" << endl;
+	    }
+	    
+	    SVM.Classify(Results,
+			 pTestVector[i]);
+	    
+	    cerr << "SVM model classified holdout" << endl;
+	    
+	    if( sArgs.savemodel_flag ){
+	      SVM.WriteModel((char*)(sstm.str().c_str()));
+	    }
+	    
+	    // DEBUG
+	    SVMLight::CSVMPERF::FreeSample_leave_Doc(*pTrainSample);
+	    free(pTrainSample);
+	  }
+	  
+	  if( sArgs.prob_flag ){
+	    cerr << "Converting prediction values to estimated probablity" << endl;
+	    float A, B;
+	    sigmoid_train(Results, Labels, A, B);
+	    sigmoid_predict(Results, A, B);
+	  }
+	  else if( sArgs.probCross_flag ){
+	    float A, B;
+	    size_t k, ctrain, itrain;
+	    vector<SVMLight::SVMLabelPair*> probTrainVector;
+	    
+	    for (i = 0; i < sArgs.cross_validation_arg; i++) {		      
+	      cerr << "Convert to probability for cross fold: " << i << endl;		      
+	      ctrain = 0;
+	      for (j = 0; j < sArgs.cross_validation_arg; j++) {		      
+		if(i == j)
+		  continue;
+		ctrain += pTrainVector[j].size();
+	      }
+	      
+	      probTrainVector.resize(ctrain);
+	      itrain = 0;
+	      for (j = 0; j < sArgs.cross_validation_arg; j++) {		      
+		if(i == j)
+		  continue;
+		for(k = 0; k < pTrainVector[j].size(); k++){
+		  probTrainVector[itrain] = pTrainVector[j][k];
+		  itrain += 1;
+		}
+	      }
+	      
+	      SVM.sigmoid_train(Results, probTrainVector, A, B);
+	      SVM.sigmoid_predict(Results, pTestVector[i], A, B);
+	      
+	      // save A,B perameters
+	      std::stringstream pstm;
+	      ofstream ofsm;		      
+	      if(sArgs.context_given){
+		std::string path(sArgs.context_arg);
+		size_t pos = path.find_last_of("/");
+		std::string cname;
+		if(pos != std::string::npos)
+		  cname.assign(path.begin() + pos + 1, path.end());
+		else
+		  cname = path;
+		
+		pstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << cname  << "." << i << ".svm.prob";		      
+	      }else
+		pstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << ".svm.prob";
+	      
+	      // open prob param file
+	      ofsm.open(pstm.str().c_str());
+	      ofsm << A << endl;
+	      ofsm << B << endl;
+	      ofsm.close();
+	    }
+	  }
+	  
+	  // only save cross-validated results when not predicting all genes
+	  if( !sArgs.allgenes_given )
+	    Results.Save(sArgs.output_arg);
 	}
-
+	
+	///##############
+	// If given all genes arg, this puts in prediction mode for all gene pairs from the gene list
+	//
+	if ( sArgs.allgenes_given && sArgs.output_given) { //read model and classify all	  
+	  size_t iData;
+	  vector<vector<float> > vecSModel;
+	  vecSModel.resize(sArgs.cross_validation_arg);
+	  ifstream mifsm;
+	  vector<CDat* > vecResults;
+	  vector<size_t> veciGene;
+	  
+	  cerr << "Predicting for all genes given." << endl;
+	  
+	  // open SVM models for prefix file
+	  if(sArgs.modelPrefix_given){
+	    for(i = 0; i < sArgs.cross_validation_arg; i++){
+	      std::stringstream sstm;
+	      
+	      sstm << sArgs.modelPrefix_arg << "." << i << ".svm";	      
+	      if( access((char*)(sstm.str().c_str()), R_OK) == -1 ){
+		cerr << "ERROR: SVM model file cannot be opned: " << sstm.str() << endl;
+		return 1;
+	      }
+	      
+	      mifsm.open((char*)(sstm.str().c_str()));	      		      
+	      ReadModelFile(mifsm, vecSModel[i]);
+	    }
+	  }else if( sArgs.model_given ){ // open SVM model from file
+	    //vector<float> SModel;
+	    vecSModel.resize(1);
+	    
+	    if( access(sArgs.model_arg, R_OK) == -1 ){
+	      cerr << "ERROR: SVM model file cannot be opned: " << sArgs.model_arg << endl;
+	      return 1;
+	    }
+	    
+	    mifsm.open(sArgs.model_arg);
+	    ReadModelFile(mifsm, vecSModel[0]);
+	    
+	    // DEBUG check if this is ok
+	    sArgs.cross_validation_arg = 1;
+	  }else{ 
+	    // open SVM model file from which was just trained
+	    for(i = 0; i < sArgs.cross_validation_arg; i++){
+	      std::stringstream sstm;
+	      
+	      if(sArgs.context_given){
+		std::string path(sArgs.context_arg);
+		size_t pos = path.find_last_of("/");
+		std::string cname;
+		if(pos != std::string::npos)
+		  cname.assign(path.begin() + pos + 1, path.end());
+		else
+		  cname = path;
+		
+		sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << cname << "." << i << ".svm";		      
+	      }else
+		sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << ".svm";
+	      
+	      
+	      if( access((char*)(sstm.str().c_str()), R_OK) == -1 ){
+		cerr << "ERROR: SVM model file cannot be opned: " << sstm.str() << endl;
+		return 1;
+	      }
+	      
+	      mifsm.open((char*)(sstm.str().c_str()));	      
+	      ReadModelFile(mifsm, vecSModel[i]);
+	    }
+	  }
+	  
+	  // Initialize output for input all gene list
+	  vecResults.resize(sArgs.cross_validation_arg);
+	  for(i = 0; i < sArgs.cross_validation_arg; i++){
+	    vecResults[ i ] = new CDat();
+	    vecResults[ i ]->Open(Allgenes.GetGeneNames( ), true);
+	  }
+	  
+	  	  
+	  // Now iterate over all datasets to make predictions for all gene pairs
+	  CDat wDat;		    
+	  for(iData = 0; iData < vecstrDatasets.size(); iData++){	    
+	    if(!wDat.Open(vecstrDatasets[iData].c_str(), sArgs.mmap_flag)) {
+	      cerr << vecstrDatasets[iData].c_str() << endl;
+	      cerr << "Could not open: " << vecstrDatasets[iData] << endl;
+	      return 1;
+	    }
+	    
+	    cerr << "Open: " << vecstrDatasets[iData] << endl;
+	    
+	    // normalize data file
+	    if(sArgs.normalizeZero_flag){
+	      cerr << "Normalize input data" << endl;
+	      wDat.Normalize( Sleipnir::CDat::ENormalizeMinMax );
+	    }else if(sArgs.normalizeNPone_flag){
+	      cerr << "Normalize input data" << endl;
+	      wDat.Normalize( Sleipnir::CDat::ENormalizeMinMaxNPone );
+	    }
+	    
+	    // map result gene list to dataset gene list
+	    veciGene.resize( vecResults[ 0 ]->GetGenes() );	    
+	    for(i = 0; i < vecResults[ 0 ]->GetGenes(); i++){
+	      veciGene[ i ] = wDat.GetGene( vecResults[ 0 ]->GetGene( i ) );
+	    }
+	    
+	    // compute prediction component for this dataset/SVM model
+	    for(i = 0; i < vecResults[ 0 ]->GetGenes(); i++){
+	      iGene = veciGene[i];
+	      
+	      for(j = i+1; j < vecResults[ 0 ]->GetGenes(); j++){
+		jGene = veciGene[j];
+		
+		// if no value, set feature to 0
+		if( iGene == -1 || jGene == -1 || CMeta::IsNaN(d = wDat.Get(iGene, jGene) ) )
+		  d = 0;
+		
+		// iterate each SVM model
+		for(iSVM = 0; iSVM < sArgs.cross_validation_arg; iSVM++){
+		  if( CMeta::IsNaN(dval = vecResults[ iSVM ]->Get(i, j)) )
+		    vecResults[ iSVM ]->Set(i, j, (d * vecSModel[iSVM][iData])  );
+		  else
+		    vecResults[ iSVM ]->Set(i, j, (dval + (d * vecSModel[iSVM][iData])) );
+		  
+		}
+		
+	      }
+	    }	    	    
+	  }
+	  
+	  
+	  // convert the SVM predictions for each model to Probablity if required
+	  if( sArgs.prob_flag || sArgs.probCross_flag ){
+	    // iterate over each SVM model and its output and convert to probablity
+	    float A;
+	    float B;
+	    
+	    cerr << "convert prediction dabs to probablity" << endl;
+	    
+	    for(iSVM = 0; iSVM < sArgs.cross_validation_arg; iSVM++){
+	      // Read A,B perameters
+	      std::stringstream pstm;
+	      if(sArgs.modelPrefix_given){
+		pstm << sArgs.modelPrefix_arg  << "." << iSVM << ".svm.prob";
+	      }else if( sArgs.model_given ){ // open SVM model from file
+		
+		// DEBUG, this might need to looked at!!!
+		pstm << sArgs.model_arg << ".prob";
+		
+	      }else{ // open SVM model file from which was just trained		  
+		if(sArgs.context_given){
+		  std::string path(sArgs.context_arg);
+		  size_t pos = path.find_last_of("/");
+		  std::string cname;
+		  if(pos != std::string::npos)
+		    cname.assign(path.begin() + pos + 1, path.end());
+		  else
+		    cname = path;
+		  
+		  pstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << cname  << "." << iSVM << ".svm.prob";		      
+		}else
+		  pstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << iSVM << ".svm.prob";
+	      }
+	      
+	      // read in parameter file
+	      if(!ReadProbParamFile((char*)(pstm.str().c_str()), A, B)){
+		cerr << "Failed to read Probablity parameter file: " << pstm.str() << endl;
+		return 1;
+	      }
+	      
+	      cerr << pstm.str() << ", A: " << A << ",B: " << B << endl;
+	  
+	      // debug
+	      //cerr << "known:" << vecResults[ iSVM ]->Get(x,y) << endl;
+	      
+	      // now convert the SVM model prediction values to probablity based on param A,B
+	      sigmoid_predict( *(vecResults[ iSVM ]), A, B);
+	      
+	      //cerr << "known PROB:" << vecResults[ iSVM ]->Get(x,y) << endl;
+	    }
+	  }
+	  
+	  // filter results
+	  if( sArgs.tgene_given ){
+	    for(iSVM = 0; iSVM < sArgs.cross_validation_arg; iSVM++){
+	      vecResults[ iSVM ]->FilterGenes( sArgs.tgene_arg, CDat::EFilterEdge );
+	    }
+	  }
+	  
+	  // Exclude pairs without context genes
+	  if(sArgs.context_given ){
+	    for(iSVM = 0; iSVM < sArgs.cross_validation_arg; iSVM++){
+	      vecResults[ iSVM ]->FilterGenes( Context, CDat::EFilterInclude );
+	    }
+	  }
+	  
+	  // Take average of prediction value from each model
+	  // The final results will be stored/overwritten into the first dab (i.e. vecResults[ 0 ])
+	  for(i = 0; i < vecResults[ 0 ]->GetGenes(); i ++)
+	    for(j = i+1; j < vecResults[ 0 ]->GetGenes(); j++){
+	      if (CMeta::IsNaN(dval = vecResults[ 0 ]->Get(i, j)))
+		continue;
+	      
+	      // start from the second
+	      // Assume all SVM model prediction dabs have identical NaN locations
+	      if(sArgs.aggregateMax_flag){ // take the maximum prediction value
+		float maxval = dval;
+		for(iSVM = 1; iSVM < sArgs.cross_validation_arg; iSVM++)
+		  if( vecResults[ iSVM ]->Get(i, j) > dval )
+		    dval = vecResults[ iSVM ]->Get(i, j);
+		
+		vecResults[ 0 ]->Set(i, j, dval);
+	      }else{ // Average over prediction values
+		for(iSVM = 1; iSVM < sArgs.cross_validation_arg; iSVM++)
+		  dval += vecResults[ iSVM ]->Get(i, j);	      
+		
+		vecResults[ 0 ]->Set(i, j, (dval / sArgs.cross_validation_arg) );
+	      }
+	    }
+	  
+	  // Replace gene-pair prediction values with labels from the cross-validation result
+	  // This basically replaces the prediction value with one prediction value with which this label was heldout
+	  // Only do this if cross-validation was conducted or given a replacement dab
+	  if( (!sArgs.NoCrossPredict_flag && sArgs.output_given && sArgs.labels_given && !sArgs.modelPrefix_given && !sArgs.model_given) || 
+	      sArgs.CrossResult_given ){
+	    
+	    if( sArgs.CrossResult_given ){	      
+	      if(!Results.Open(sArgs.CrossResult_arg, sArgs.mmap_flag)) {
+		cerr << "Could not open: " << sArgs.CrossResult_arg << endl;
+		return 1;
+	      }
+	    }
+	    
+	    cerr << "Label pairs set to cross-validation values" << endl;
+	    
+	    // map result gene list to dataset gene list
+	    veciGene.resize( vecResults[ 0 ]->GetGenes() );	    
+	    for(i = 0; i < vecResults[ 0 ]->GetGenes(); i++){
+	      veciGene[ i ] = Results.GetGene( vecResults[ 0 ]->GetGene( i ) );
+	    }
+	    
+	    // compute prediction component for this dataset/SVM model
+	    for(i = 0; i < vecResults[ 0 ]->GetGenes(); i++){
+	      if( (iGene = veciGene[i]) == -1 )
+		continue;
+	      
+	      for(j = i+1; j < vecResults[ 0 ]->GetGenes(); j++){
+		if( (jGene = veciGene[j]) == -1 )
+		  continue;
+		
+		if( CMeta::IsNaN(d = Results.Get(iGene, jGene) ) )
+		  continue;
+		
+		vecResults[ 0 ]->Set(i, j, d);
+	      }
+	    }
+	  }
+	  
+	  // now save the averged prediction values
+	  vecResults[ 0 ]->Save(sArgs.output_arg);
+	}
+	
 }
 
