@@ -195,7 +195,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 	CMeasureDistanceCorrelation DCor;
 	CMeasureSignedDistanceCorrelation SDCor;
 	if (szFile) {
-        g_CatSleipnir().error("Opening PCL for distance");
+        g_CatSleipnir().debug("Opening PCL for distance");
         if (!PCL.Open(szFile, iSkip, false, false)) {
 			g_CatSleipnir().error(
 					"CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL",
@@ -410,7 +410,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 	CMeasureDistanceCorrelation DCor;
 	CMeasureSignedDistanceCorrelation SDCor;
 	if (szFile) {
-        g_CatSleipnir().error("Opening PCL for distance");
+        g_CatSleipnir().debug("Opening PCL for distance");
         if (!PCL.Open(szFile, iSkip, false, false)) {
 			g_CatSleipnir().error(
 					"CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL",
