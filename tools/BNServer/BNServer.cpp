@@ -165,6 +165,7 @@ int main( int iArgs, char** aszArgs ) {
 				vecBNs[ i ].SetID( strContext ); } }
 	}
 // Open global p-value parameters
+	if( sArgs.global_given )
 	{
 		CPCL	PCLParams( false );
 
@@ -187,6 +188,7 @@ int main( int iArgs, char** aszArgs ) {
 			vecBNs[ i ].Save( ofsm );
 		ofsm.close( ); }
 // Open context<->gene mapping
+	if( sArgs.contexts_given )
 	{
 		CPCL	PCLContextGenes( false );
 
@@ -210,6 +212,7 @@ int main( int iArgs, char** aszArgs ) {
 		copy( setiContexts.begin( ), setiContexts.end( ), veciContexts.begin( ) );
 	}
 // Open disease<->gene mapping
+	if( sArgs.diseases_given )
 	{
 		CPCL		PCLDiseaseGenes( false );
 
