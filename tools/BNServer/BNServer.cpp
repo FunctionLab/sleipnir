@@ -405,7 +405,7 @@ size_t CBNServer::ProcessInference( const vector<unsigned char>& vecbMessage, si
 
 size_t CBNServer::ProcessInferenceOTF( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
 	size_t		i, j, iStart;
-	uint32_t	iGene, iContext, iDataCount, iBinsCount, iData, iGenes, iChunk, iSize;
+	uint32_t	iGene, iContext, iDataCount, iBinsCount, iData, iGenes, iChunk, iSize, iGeneOffset;
 	float	bineffect;
 	vector<vector<float> > binEffects;
 	vector<float> fVals;
@@ -421,7 +421,7 @@ size_t CBNServer::ProcessInferenceOTF( const vector<unsigned char>& vecbMessage,
 
 	// Load bin effects from message
 	for ( i = 0, iOffset += sizeof(iDataCount); i < iDataCount && iOffset < vecbMessage.size(); i++ ) {
-	    cerr << "ID: " << i << endl;
+	    //cerr << "ID: " << i << endl;
 	    iData = *(uint32_t*)&vecbMessage[ iOffset ];
 	    iOffset += sizeof(iData);
 
@@ -441,26 +441,28 @@ size_t CBNServer::ProcessInferenceOTF( const vector<unsigned char>& vecbMessage,
 	    }
 	}
 
-	// Load gene id
-	iGene = *(uint32_t*)&vecbMessage[ iOffset ];
-	cerr << "Gene id: " << iGene << endl;
-	iOffset += sizeof(iGene);
-	
-	// Infer posteriors
-	iGenes = GetDatabase().GetGenes();
-	GetDatabase().Get( iGene, vecbData );
-	InitializeGenes( );
 
+	iGenes = GetDatabase().GetGenes();
 	iChunk = ( GetDatabase().GetDatasets() + 1 ) / 2;
 
-	for ( i = 0, iOffset = iChunk; i < iGenes; i++, iOffset += iChunk ) {
-	    m_adGenes[i] = Evaluate( binEffects, vecbData, iOffset); 
-	}
+	// Load gene id
+	for ( ; iOffset < vecbMessage.size() ; iOffset += sizeof(uint32_t) ) {
+	    iGene = *(uint32_t*)&vecbMessage[ iOffset ];
+	    cerr << "Gene id: " << iGene << endl;
+	
+	    // Infer posteriors
+	    GetDatabase().Get( iGene, vecbData );
+	    InitializeGenes( );
 
-	// Send results back
-	iSize = (uint32_t)( GetGenes( ) * sizeof(*m_adGenes) );
-	send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
-	send( m_iSocket, (char*)m_adGenes, iSize, 0 ); 
+	    for ( i = 0, iGeneOffset = iChunk; i < iGenes; i++, iGeneOffset += iChunk ) {
+		m_adGenes[i] = Evaluate( binEffects, vecbData, iGeneOffset ); 
+	    }
+
+	    // Send results back
+	    iSize = (uint32_t)( GetGenes( ) * sizeof(*m_adGenes) );
+	    send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+	    send( m_iSocket, (char*)m_adGenes, iSize, 0 ); 
+	}
 
 	return ( iOffset - iStart ); }
 
