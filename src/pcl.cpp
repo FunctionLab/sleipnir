@@ -166,7 +166,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 		const char* szSimilarityMeasure, bool fNormalize, bool fZScore,
 		bool fAutocorrelate, const char* szGeneFile, float dCutoff,
 		size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap,
-		bool fFrequencyWeight, float dAlpha) {
+		bool fFrequencyWeight, float dAlpha, int nThreads=1) {
 	size_t i, j, iOne, iTwo;
 	float d;
 	ifstream ifsm;
@@ -273,6 +273,8 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 		for (i = 0; i < Dat.GetGenes(); ++i)
 			for (j = (i + 1); j < Dat.GetGenes(); ++j)
 				Dat.Set(i, j, CMeta::GetNaN());
+		int origNThreads = omp_get_num_threads();
+		omp_set_num_threads(nThreads);
 		for (i = 0; i < GenesIn.GetGenes(); ++i) {
 			if (!(i % 100))
 				g_CatSleipnir().info(
@@ -290,7 +292,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 							PCL.GetExperiments(), PCL.Get(iTwo),
 							PCL.GetExperiments(), eMap, adWeights, adWeights));
 		}
-
+		omp_set_num_threads(origNThreads);
 		if (fNormalize || fZScore)
 			Dat.Normalize(fZScore ? CDat::ENormalizeZScore
 					: CDat::ENormalizeMinMax);
@@ -379,7 +381,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 		const char* szSimilarityMeasure, bool fNormalize, bool fZScore,
 		bool fAutocorrelate, const char* szGeneFile, float dCutoff,
 		size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap,
-		bool fFrequencyWeight, float dAlpha) {
+		bool fFrequencyWeight, float dAlpha, int nThreads) {
 	size_t i, j, iOne, iTwo;
 	float d;
 	ifstream ifsm;
@@ -521,6 +523,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 			if ((iOne = veciGenes[i]) == -1)
 				continue;
 			adOne = PCL.Get(iOne);
+			#pragma omp parallel for num_threads(nThreads)
 			for (j = (i + 1); j < GenesIn.GetGenes(); ++j)
 				if ((iTwo = veciGenes[j]) != -1)
 					Dat.Set(i, j, (float) pMeasure->Measure(adOne,
