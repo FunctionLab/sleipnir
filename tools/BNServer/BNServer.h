@@ -182,6 +182,7 @@ private:
 	bool Get( size_t, const std::vector<size_t>&, size_t, float* );
 	bool GetGenes( const std::vector<size_t>&, size_t, float );
 	bool GetWithin( const std::vector<size_t>&, size_t, float*, std::vector<float>* ) const;
+	float Evaluate( const vector<vector<float> >& binEffects, vector<unsigned char>& vecbData, size_t iOffset );
 	// Association processing
 	bool GetAssociationsSet( unsigned char, const std::vector<size_t>&, size_t ) const;
 	bool GetAssociationsDC( unsigned char, unsigned char, size_t, size_t, bool = false ) const;
@@ -201,6 +202,7 @@ private:
 	bool SendGenes( const std::vector<size_t>&, const std::vector<size_t>& ) const;
 	// Message processors
 	size_t ProcessInference( const std::vector<unsigned char>&, size_t );
+	size_t ProcessInferenceOTF( const std::vector<unsigned char>&, size_t );
 	size_t ProcessData( const std::vector<unsigned char>&, size_t );
 	size_t ProcessGraph( const std::vector<unsigned char>&, size_t );
 	size_t ProcessContexts( const std::vector<unsigned char>&, size_t );
