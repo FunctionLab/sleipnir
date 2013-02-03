@@ -449,12 +449,18 @@ size_t CBNServer::ProcessInferenceOTF( const vector<unsigned char>& vecbMessage,
 	for ( ; iOffset < vecbMessage.size() ; iOffset += sizeof(uint32_t) ) {
 	    iGene = *(uint32_t*)&vecbMessage[ iOffset ];
 	    cerr << "Gene id: " << iGene << endl;
+
+	    // Arg -- BNServer genes are 1-indexed
+	    if( !iGene )
+		continue;
+	    iGene--;
 	
 	    // Infer posteriors
+	    vecbData.clear();
 	    GetDatabase().Get( iGene, vecbData );
 	    InitializeGenes( );
 
-	    for ( i = 0, iGeneOffset = iChunk; i < iGenes; i++, iGeneOffset += iChunk ) {
+	    for ( i = 0, iGeneOffset = 0; i <= iGenes; i++, iGeneOffset += iChunk ) {
 		m_adGenes[i] = Evaluate( binEffects, vecbData, iGeneOffset ); 
 	    }
 
@@ -473,7 +479,7 @@ float CBNServer::Evaluate( const vector<vector<float> >& binEffects, vector<unsi
 	float fLogOdds = 0;
 
 
-	for( i = 0; i < binEffects.size( ); ++i ) {
+	for( i = 0; i < GetDatabase().GetDatasets(); ++i ) {
 		if ( binEffects[i].size() == 0 ) // Skip dataset
 		    continue;
 
@@ -484,6 +490,7 @@ float CBNServer::Evaluate( const vector<vector<float> >& binEffects, vector<unsi
 			continue;
 		fLogOdds += binEffects[i][(size_t)c];
 	}
+
 	return fLogOdds;
 
 }
