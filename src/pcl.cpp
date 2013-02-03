@@ -166,7 +166,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 		const char* szSimilarityMeasure, bool fNormalize, bool fZScore,
 		bool fAutocorrelate, const char* szGeneFile, float dCutoff,
 		size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap,
-		bool fFrequencyWeight, float dAlpha, int nThreads=1) {
+		bool fFrequencyWeight, float dAlpha, int nThreads) {
 	size_t i, j, iOne, iTwo;
 	float d;
 	ifstream ifsm;

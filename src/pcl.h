@@ -122,7 +122,7 @@ public:
 			const char* szSimilarityMeasure, bool fNormalize, bool fZScore,
 			bool fAutocorrelate, const char* szGeneFile, float dCutoff,
 			size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap =
-					IMeasure::EMapCenter, bool fFrequencyWeight = false, float dAlpha = 0);
+					IMeasure::EMapCenter, bool fFrequencyWeight = false, float dAlpha = 0, int nThreads = 1);
 
     static int Distance(const char* szFile, size_t iSkip, const char* szWeights,
 			const char* szSimilarityMeasure, bool fNormalize, bool fZScore,
