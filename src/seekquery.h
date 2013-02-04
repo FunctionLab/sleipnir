@@ -37,6 +37,8 @@ public:
 	CSeekQuery();
 	~CSeekQuery();
 
+	bool Reset();
+
 	bool InitializeQuery(const vector<char>&);
 	bool InitializeQuery(const vector<ushort>&, const ushort &);
 

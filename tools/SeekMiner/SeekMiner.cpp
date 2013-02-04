@@ -47,13 +47,17 @@ int main( int iArgs, char** aszArgs ) {
 	if(sArgs.is_nibble_flag==1) useNibble = true;
 
 	// Random Number Generator Initializations
-	const gsl_rng_type *T;
-	gsl_rng *rnd;
 	gsl_rng_env_setup();
-	T = gsl_rng_default;
-	rnd = gsl_rng_alloc(T);
 
-	gsl_rng *random_ranking_rnd = gsl_rng_alloc(T);
+	const gsl_rng_type *T;
+	T = gsl_rng_default;
+
+	gsl_rng *rnd = gsl_rng_alloc(T);
+
+	const gsl_rng_type *T2;
+	T2 = gsl_rng_default;
+
+	gsl_rng *random_ranking_rnd = gsl_rng_alloc(T2);
 
 
 	//float RATE = 0.95;

@@ -53,6 +53,12 @@ struct thread_data{
 	string strQuery;
 	string strOutputDir;
 	string strSearchDatasets;
+
+	float rbp_p;
+	float query_fraction_required;
+	string distanceMeasure; //Correlation, Zscore, or ZscoreHubbinessCorrected
+	string searchMethod; //RBP, EqualWeighting, or OrderStatistics
+
     int threadid;
     int new_fd;
 };
@@ -65,27 +71,51 @@ void *do_query(void *th_arg){
 	string strQuery = my->strQuery;
 	string strOutputDir = my->strOutputDir;
 	string strSearchDatasets = my->strSearchDatasets;
+	string distanceMeasure = my->distanceMeasure;
+	string searchMethod = my->searchMethod;
+	float rbp_p = my->rbp_p;
+	float query_fraction_required = my->query_fraction_required;
 
 	CSeekCentral *csu = new CSeekCentral();
-	csu->Initialize(strOutputDir, strQuery, strSearchDatasets, csfinal);
+	bool bCorrelation = false;
+	bool bSubtractGeneAvg = false;
+	bool bSubtractPlatformAvg = false;
+	bool bDividePlatformStdev = false;
+
+	if(distanceMeasure=="Correlation"){
+		bCorrelation = true;
+	}else if(distanceMeasure=="Zscore"){
+		//do nothing
+	}else if(distanceMeasure=="ZscoreHubbinessCorrected"){
+		bSubtractGeneAvg = true;
+		bSubtractPlatformAvg = true;
+		bDividePlatformStdev = true;
+	}
+
+	csu->Initialize(strOutputDir, strQuery, strSearchDatasets, csfinal, 
+		query_fraction_required, bCorrelation, bSubtractGeneAvg,
+		bSubtractPlatformAvg, bDividePlatformStdev);
 	csu->EnableNetwork(new_fd, true);
 	bool r = csu->CheckDatasets(true);
 	//if r is false, then one of the query has no datasets 
 	//containing any of the query, exit in this case
 	if(r){
-		const gsl_rng_type *T;
-		gsl_rng *rnd;
-		gsl_rng_env_setup();
-		T = gsl_rng_default;
-		rnd = gsl_rng_alloc(T);
-		gsl_rng_set(rnd, 100);
-		float RATE = 0.99;
-		ushort FOLD = 5;
-		enum PartitionMode PART_M = CUSTOM_PARTITION;
-		ushort i, j;
-		csu->CVSearch(rnd, PART_M, FOLD, RATE);
-		gsl_rng_free(rnd);
-
+		if(searchMethod=="EqualWeighting"){
+			csu->EqualWeightSearch();
+		}else if(searchMethod=="OrderStatistics"){
+			csu->OrderStatistics();
+		}else{
+			const gsl_rng_type *T;
+			gsl_rng *rnd;
+			gsl_rng_env_setup();
+			T = gsl_rng_default;
+			rnd = gsl_rng_alloc(T);
+			gsl_rng_set(rnd, 100);
+			ushort FOLD = 5;
+			enum PartitionMode PART_M = CUSTOM_PARTITION;
+			csu->CVSearch(rnd, PART_M, FOLD, rbp_p);
+			gsl_rng_free(rnd);
+		}
 	}
 
 	csu->Destruct();
@@ -252,6 +282,14 @@ int main( int iArgs, char** aszArgs ) {
 		string strQuery;
 		string strOutputDir;
 
+		//search parameters
+		string strSearchParameter; 
+		//format: _ delimited		
+		//[0]: search_method ("RBP", "OrderStatistics", or "EqualWeighting") 
+		//[1]: rbp_p
+		//[2]: minimum fraction of query required
+		//[3]: distance measure ("Correlation", "Zscore", or "ZscoreHubbinessCorrected")
+
 		if(CSeekNetwork::Receive(new_fd, strSearchDataset)==-1){
 			fprintf(stderr, "Error receiving from client!\n");
 		}
@@ -263,29 +301,18 @@ int main( int iArgs, char** aszArgs ) {
 		if(CSeekNetwork::Receive(new_fd, strOutputDir)==-1){
 			fprintf(stderr, "Error receiving from client!\n");
 		}
-		/*char ar[4];
-		recv(new_fd, ar, 4, 0);
-		int *cn = (int*) ar; 
-		int strLen = *cn;
-		char *dname = (char*)malloc(strLen);
-		recv(new_fd, dname, strLen, 0);
 
-		recv(new_fd, ar, 4, 0);
-		strLen = *cn;
-		char *gname = (char*)malloc(strLen);
-		recv(new_fd, gname, strLen, 0);
+		if(CSeekNetwork::Receive(new_fd, strSearchParameter)==-1){
+			fprintf(stderr, "Error receiving from client!\n");
+		}
 
-		recv(new_fd, ar, 4, 0);
-		strLen = *cn;
-		char *output_dir = (char*)malloc(strLen);
-		recv(new_fd, output_dir, strLen, 0);
-		*/
-		/*string strSearchDataset = dname;
-		string strQuery = gname;
-		string strOutputDir = output_dir;
-		free(output_dir);
-		free(dname);
-		free(gname);*/
+		vector<string> searchParameterTokens;
+		CMeta::Tokenize(strSearchParameter.c_str(), searchParameterTokens, "_");
+		thread_arg[d].searchMethod = searchParameterTokens[0];
+		thread_arg[d].rbp_p = atof(searchParameterTokens[1].c_str());
+		thread_arg[d].query_fraction_required = 
+			atof(searchParameterTokens[2].c_str());
+		thread_arg[d].distanceMeasure = searchParameterTokens[3];
 
 		//=========================================================
 
