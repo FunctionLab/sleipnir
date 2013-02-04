@@ -226,19 +226,24 @@ void *do_query(void *th_arg){
 				float *vv = pp->Get(g);
 				for(j=2; j<gs; j++)
 					fq->Set(k, j-2, vv[j]);
-				//normalize
-				float mean = 0;
-				for(j=2; j<gs; j++)
-					mean+=fq->Get(k, j-2);
-				mean/=(float) (gs - 2);
-				float stdev = 0;
-				for(j=2; j<gs; j++)
-					stdev+=(fq->Get(k, j-2) - mean) * (fq->Get(k, j-2) - mean);
-				stdev/=(float) (gs - 2);
-				stdev = sqrt(stdev);
+				if(outputNormalized){
+					//normalize
+					float mean = 0;
+					for(j=2; j<gs; j++)
+						mean+=fq->Get(k, j-2);
+					mean/=(float) (gs - 2);
+					float stdev = 0;
+					for(j=2; j<gs; j++)
+						stdev+=(fq->Get(k, j-2) - mean) * (fq->Get(k, j-2) - mean);
+					stdev/=(float) (gs - 2);
+					stdev = sqrt(stdev);
+					for(j=2; j<gs; j++){
+						float t1 = fq->Get(k, j-2);
+						fq->Set(k, j-2, (t1 - mean) / stdev);
+					}
+				}
+
 				for(j=2; j<gs; j++){
-					float t1 = fq->Get(k, j-2);
-					fq->Set(k, j-2, (t1 - mean) / stdev);
 					vecQ.push_back(fq->Get(k, j-2));
 				}
 			}

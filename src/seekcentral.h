@@ -64,7 +64,8 @@ public:
 		const float&, const float&, const bool&, 
 		const bool&, const int &, gsl_rng *);
 
-	bool Initialize(string&, string&, string&, CSeekCentral*);
+	bool Initialize(string&, string&, string&, CSeekCentral*, 
+		float&, bool&, bool&, bool&, bool&);
 
 	//network mode
 	bool EnableNetwork(const int&, const bool&);

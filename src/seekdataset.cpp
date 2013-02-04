@@ -460,11 +460,10 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 			}
 		}
 
-		return true;
+		//return true;
 	}
-
 	/* numGenes */
-	if(logit){
+	else if(logit){
 		for(ii=0; ii<iNumGenes; ii++){
 			unsigned char x;
 			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
@@ -540,20 +539,22 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 		}
 
 		ushort **a = CSeekTools::Init2DArray(iNumQueries, max_size, (ushort)0);
-		vector<int> k;
-		CSeekTools::InitVector(k, iNumQueries, (int) 0);
 
 		for(i=0; i<iNumQueries; i++){
-			for(j=0; j<allRandom[i][j]; j++){
+			for(j=0; j<allRandom[i].size(); j++){
 				a[i][j] = allRandom[i][j];
 			}
 			gsl_ran_shuffle(rand, a[i], allRandom[i].size(), sizeof(ushort));
 		}
 
+		vector<int> k;
+		CSeekTools::InitVector(k, iNumQueries, (int) 0);
+
 		for(ii=0; ii<iNumGenes; ii++){
 			unsigned char x;
 			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
 				if((x = r[queryIndex[j]][i])==255) continue;
+				//fprintf(stderr, "%d %d\n", rData[i][j], a[j][k[j]]);
 				rData[i][j] = a[j][k[j]];
 				k[j]++;
 			}
