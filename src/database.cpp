@@ -653,6 +653,7 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 bool CDatabaselet::Get( size_t iOne, size_t iTwo, vector<unsigned char>& vecbData ) const {
 	size_t	i;
 
+	cerr << GetSizePair() << endl;
 	i = vecbData.size( );
 	vecbData.resize( i + GetSizePair( ) );
 	pthread_mutex_lock( m_pmutx );

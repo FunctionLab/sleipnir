@@ -202,7 +202,9 @@ private:
 	bool SendGenes( const std::vector<size_t>&, const std::vector<size_t>& ) const;
 	// Message processors
 	size_t ProcessInference( const std::vector<unsigned char>&, size_t );
+	size_t ProcessCPT( const std::vector<unsigned char>&, size_t, vector<vector<float> >& );
 	size_t ProcessInferenceOTF( const std::vector<unsigned char>&, size_t );
+	size_t ProcessEdges( const std::vector<unsigned char>&, size_t );
 	size_t ProcessData( const std::vector<unsigned char>&, size_t );
 	size_t ProcessGraph( const std::vector<unsigned char>&, size_t );
 	size_t ProcessContexts( const std::vector<unsigned char>&, size_t );
