@@ -51,8 +51,7 @@ struct gengetopt_args_info
   char * diseases_arg;	/**< @brief Disease/gene mapping.  */
   char * diseases_orig;	/**< @brief Disease/gene mapping original value given at command line.  */
   const char *diseases_help; /**< @brief Disease/gene mapping help description.  */
-  int is_nibble_arg;	/**< @brief Specify whether the database is nibble type (default='1').  */
-  char * is_nibble_orig;	/**< @brief Specify whether the database is nibble type original value given at command line.  */
+  int is_nibble_flag;	/**< @brief Specify whether the database is nibble type (default=on).  */
   const char *is_nibble_help; /**< @brief Specify whether the database is nibble type help description.  */
   char * networks_arg;	/**< @brief Bayes net directory (default='.').  */
   char * networks_orig;	/**< @brief Bayes net directory original value given at command line.  */
