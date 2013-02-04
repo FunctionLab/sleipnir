@@ -430,6 +430,19 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 			CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
 		}
 
+		for(i=0; i<m_searchdsetMap.size(); i++){
+			delete m_searchdsetMap[i];
+		}
+		m_searchdsetMap.clear();
+
+		m_searchdsetMap.resize(m_vecstrAllQuery.size());
+		for(i=0; i<m_vecstrAllQuery.size(); i++){
+			m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
+			for(j=0; j<m_vecstrSearchDatasets[i].size(); j++)
+				m_searchdsetMap[i]->Add(
+					m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
+		}
+
 	}
 
 	return true;	
@@ -678,11 +691,15 @@ bool CSeekCentral::FilterResults(const ushort &iSearchDatasets){
 			m_master_rank[j] = -320;
 		else if(m_sum_weight[j]==0)
 			m_master_rank[j] = -320;
-		else
+		else{
 			m_master_rank[j] =
 				(m_master_rank[j] / m_sum_weight[j] - 320) / 100.0;
+			if(m_bCorrelation){
+				m_master_rank[j] = m_master_rank[j] / 3.0;
+			}
 			//m_master_rank[j] = m_master_rank[j];
 			//m_master_rank[j] = (m_master_rank[j] / iSearchDatasets - 320) / 100.0;
+		}
 		if(DEBUG) fprintf(stderr, "Gene %d %.5f\n", j, m_master_rank[j]);
 	}
 	return true;
