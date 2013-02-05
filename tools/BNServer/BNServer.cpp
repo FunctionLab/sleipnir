@@ -444,8 +444,8 @@ size_t CBNServer::ProcessInferenceOTF( const vector<unsigned char>& vecbMessage,
 	uint32_t	iGene, iContext, iData, iGenes, iChunk, iSize, iGeneOffset;
 	float	bineffect;
 	vector<vector<float> > binEffects;
-	vector<float> fVals;
 	vector<unsigned char> vecbData;
+	float* fVals;
 
 	cerr << "Inference OTF: " << vecbMessage.size() << endl;
 
@@ -467,16 +467,16 @@ size_t CBNServer::ProcessInferenceOTF( const vector<unsigned char>& vecbMessage,
 	    // Infer posteriors
 	    vecbData.clear();
 	    GetDatabase().Get( iGene, vecbData );
-	    InitializeGenes( );
+	    fVals = new float[iGenes];
 
 	    for ( i = 0, iGeneOffset = 0; i <= iGenes; i++, iGeneOffset += iChunk ) {
-		m_adGenes[i] = Evaluate( binEffects, vecbData, iGeneOffset, i == 1 ); 
+		fVals[i] = Evaluate( binEffects, vecbData, iGeneOffset ); 
 	    }
 
 	    // Send results back
-	    iSize = (uint32_t)( GetGenes( ) * sizeof(*m_adGenes) );
+	    iSize = (uint32_t)( GetGenes( ) * sizeof(*fVals) );
 	    send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
-	    send( m_iSocket, (char*)m_adGenes, iSize, 0 ); 
+	    send( m_iSocket, (char*)fVals, iSize, 0 ); 
 	}
 
 	return ( iOffset - iStart ); }
