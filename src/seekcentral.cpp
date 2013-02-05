@@ -214,7 +214,8 @@ bool CSeekCentral::CalculateRestart(){
 //assume DB has been read (with gvar, sinfo information)
 //assume datasets and genes have been read
 bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_dset,
-	CSeekCentral *src){
+	CSeekCentral *src, float &query_min_required, bool &bCorrelation,
+	bool &bSubtractGeneAvg, bool &bSubtractPlatformAvg, bool &bDividePlatformStdev){
 
 	//fprintf(stderr, "B0 %lu\n", CMeta::GetMemoryUsage());
 	m_output_dir = output_dir; //LATER, TO BE DELETED
@@ -222,16 +223,16 @@ bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_
 	m_bSharedDB = true;
 	m_numThreads = src->m_numThreads;
 	m_fScoreCutOff = src->m_fScoreCutOff;
-	m_fPercentQueryAfterScoreCutOff = src->m_fPercentQueryAfterScoreCutOff;
+	m_fPercentQueryAfterScoreCutOff = query_min_required;
 	m_bSquareZ = src->m_bSquareZ;
 	m_bOutputText = src->m_bOutputText;
-	m_bSubtractGeneAvg = src->m_bSubtractGeneAvg;
-	m_bSubtractPlatformAvg = src->m_bSubtractPlatformAvg;
-	m_bDividePlatformStdev = src->m_bDividePlatformStdev;
+	m_bSubtractGeneAvg = bSubtractGeneAvg;
+	m_bSubtractPlatformAvg = bSubtractPlatformAvg;
+	m_bDividePlatformStdev = bDividePlatformStdev;
 	m_bLogit = src->m_bLogit;
-	m_bCorrelation = src->m_bCorrelation;
+	m_bCorrelation = bCorrelation;
 	m_vecstrGenes.resize(src->m_vecstrGenes.size());
-	
+
 	m_bRandom = false;
 	m_iNumRandom = 1;
 	m_randRandom = NULL;	
@@ -347,8 +348,10 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 			//datasets that contains all query genes (very stringent)
 			//if(present==m_vecstrAllQuery[l].size()){
 
-			//datasets containing some query genes (relaxed)
-			if(present>0){
+			int minRequired = (int) (m_fPercentQueryAfterScoreCutOff * 
+				m_vecstrAllQuery[l].size());
+			//datasets containing some query genes (relaxed) [ 0 ] 
+			if(present>0 && present>=minRequired){
 				if(isFirst){
 					isFirst = false;
 					ss << m_vecstrDatasets[i];
@@ -425,6 +428,19 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 		for(i=0; i<sd.size(); i++){
 			m_vecstrSearchDatasets[i].clear();
 			CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
+		}
+
+		for(i=0; i<m_searchdsetMap.size(); i++){
+			delete m_searchdsetMap[i];
+		}
+		m_searchdsetMap.clear();
+
+		m_searchdsetMap.resize(m_vecstrAllQuery.size());
+		for(i=0; i<m_vecstrAllQuery.size(); i++){
+			m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
+			for(j=0; j<m_vecstrSearchDatasets[i].size(); j++)
+				m_searchdsetMap[i]->Add(
+					m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
 		}
 
 	}
@@ -675,9 +691,15 @@ bool CSeekCentral::FilterResults(const ushort &iSearchDatasets){
 			m_master_rank[j] = -320;
 		else if(m_sum_weight[j]==0)
 			m_master_rank[j] = -320;
-		else
+		else{
 			m_master_rank[j] =
 				(m_master_rank[j] / m_sum_weight[j] - 320) / 100.0;
+			if(m_bCorrelation){
+				m_master_rank[j] = m_master_rank[j] / 3.0;
+			}
+			//m_master_rank[j] = m_master_rank[j];
+			//m_master_rank[j] = (m_master_rank[j] / iSearchDatasets - 320) / 100.0;
+		}
 		if(DEBUG) fprintf(stderr, "Gene %d %.5f\n", j, m_master_rank[j]);
 	}
 	return true;
@@ -790,18 +812,29 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 		CSeekTools::InitVector(vecRandScore[l], m_iGenes, (float) 0);
 	}
 
+	bool simulateWeight = true;
+
 	l = 0;
 	//oct 20, 2012: whether to redo current query with equal weighting
 	int redoWithEqual = 0; //tri-mode: 0, 1, 2
 	enum SearchMode current_sm;
 	CSeekQuery equalWeightGold;
 
+	//backup of scores (Feb 3)
+	vector<float> backupScore;
+	CSeekTools::InitVector(backupScore, m_iGenes, (float) 0);
+
 	//fprintf(stderr, "0 %lu\n", CMeta::GetMemoryUsage());
+	current_sm = sm;
+
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
-		if(redoWithEqual>=1) //1 or 2 
+
+		//simulated weight case ======================
+		/*if(simulateWeight && redoWithEqual>=1) //1 or 2 
 			current_sm = EQUAL;
 		else //0
-			current_sm = sm;
+			current_sm = sm;*/
+		//============================================
 
 		if(m_mapLoadTime.find(i)!=m_mapLoadTime.end()){
 			if(!m_bRandom || l==0){ //l==0: first random repetition
@@ -888,15 +921,23 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 					continue;
 				}
 			}
-			else if(current_sm==EQUAL || current_sm==ORDER_STATISTICS){
+			else if(current_sm==EQUAL && redoWithEqual==0){
 				w = 1.0;
+			}
+			else if(current_sm==USE_WEIGHT){
+				w = (*providedWeight)[i][d];
+			}
+			//simulated weight case ======================
+			else if(current_sm==EQUAL && redoWithEqual==1){
+				w = 1.0;
+				if(DEBUG) fprintf(stderr, "Before doing one gene weighting\n");
 				//calculate reported weight here!
-				CSeekWeighter::OneGeneWeighting(query, *m_vc[d], *RATE,
+				CSeekWeighter::OneGeneWeighting(query, *m_vc[d], 0.95,
 					m_fPercentQueryAfterScoreCutOff, m_bSquareZ,
 					&m_rank_threads[tid], &equalWeightGold);
 				report_w = m_vc[d]->GetDatasetSumWeight();
 			}
-			else if(current_sm==USE_WEIGHT) w = (*providedWeight)[i][d];
+			//============================================
 
 			if(DEBUG) fprintf(stderr, "Doing linear combination\n");
 
@@ -930,9 +971,17 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 					Sum_Weight[*iterR] += w;
 					Counts[*iterR]++;
 				}
-			if(current_sm==EQUAL && redoWithEqual==2){
+
+			//simulated weight case ======================
+			if(current_sm==EQUAL && redoWithEqual==1){
 				weight[d] = report_w;
-			}else{
+			}
+			//============================================
+			else if((current_sm==EQUAL || current_sm==ORDER_STATISTICS) 
+			&& redoWithEqual==0){
+				weight[d] = 0;
+			}
+			else{
 				weight[d] = w;
 			}
 		}
@@ -958,42 +1007,62 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			m_rank_d = NULL;
 		}
 
-		SetQueryScoreNull(query);
-		Sort(final);
 		//Display(query, final);
 		//fprintf(stderr, "4 %lu\n", CMeta::GetMemoryUsage());
+		SetQueryScoreNull(query);
+		Sort(final);
 
-		if(redoWithEqual==0 && !CheckWeight(i)){
-			redoWithEqual = 1;
-			fprintf(stderr, "Redo with equal weighting\n"); system("date +%s%N 1>&2");
-			if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, 
-				"Redo with equal weighting")==-1){
-				fprintf(stderr, "Error sending message to client\n");
-			}
-			i--;
-			continue;
-		}else if(redoWithEqual==1){
-			redoWithEqual = 2;
-			fprintf(stderr, "Calculate dataset ordering\n"); system("date +%s%N 1>&2");
-			if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, 
-				"Calculate dataset ordering")==-1){
-				fprintf(stderr, "Error sending message to client\n");
-			}
-			CopyTopGenes(equalWeightGold, final, 100);
-			i--;
-			continue;
-		}else{
-			redoWithEqual = 0;
+		if(m_bRandom){
+			/*ushort z, cz;
+			for(cz=0, z=0; z<m_iDatasets; z++)
+				if(m_weight[i][z]!=0) 
+					cz++;
+			fprintf(stderr, "Number of weighted dataset: %d\n", cz);
+			*/
 		}
+		else if(simulateWeight){
+			if((current_sm==EQUAL || current_sm==ORDER_STATISTICS) && !CheckWeight(i)){
+				fprintf(stderr, "Calculate dataset ordering\n"); system("date +%s%N 1>&2");
+				if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, 
+					"Calculate dataset ordering")==-1){
+					fprintf(stderr, "Error sending message to client\n");
+				}
+				CopyTopGenes(equalWeightGold, final, 100);
+				redoWithEqual = 1;
+				if(current_sm==ORDER_STATISTICS){
+					current_sm = EQUAL;
+					//backup genes to old
+					copy(m_master_rank.begin(), m_master_rank.end(), backupScore.begin());	
+				}
+				i--;
+				continue;
+			}
+			else if(current_sm==CV && !CheckWeight(i)){
+				fprintf(stderr, "Redo with equal weighting\n"); system("date +%s%N 1>&2");
+				if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, 
+					"Redo with equal weighting")==-1){
+					fprintf(stderr, "Error sending message to client\n");
+				}
+				current_sm = EQUAL;
+				i--;
+				continue;
+			}
+			else if(current_sm==EQUAL && CheckWeight(i)){
+				redoWithEqual = 0;
+				current_sm = sm;
+				//copy genes from old to new
+				if(sm==ORDER_STATISTICS){
+					copy(backupScore.begin(), backupScore.end(), m_master_rank.begin());	
+				}
+			}
+		}
+
 
 		fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
 
 		if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, "Done Search")==-1){
 			fprintf(stderr, "Error sending message to client\n");
 		}
-
-		//if m_bRandom, write at the very end when all repetitions are done
-		Write(i);
 	
 		//random-ranking case =========================
 		if(m_bRandom){
@@ -1004,7 +1073,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			l++;
 
 			if(l==m_iNumRandom){ //last repetition
-				float confidence = 0.10;
+				float confidence = 0.50;
 				int n = (int) (confidence * (float) m_iNumRandom); 
 				vector<float> new_weight, new_score;
 				CSeekTools::InitVector(new_weight, m_iDatasets, (float) 0);
@@ -1017,11 +1086,10 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 					std::nth_element(all_s.begin(), all_s.begin()+n, all_s.end());
 					new_score[k] = all_s[n];
 				}
-				for(k=0; k<m_iGenes; k++){
+				/*for(k=0; k<m_iGenes; k++){
 					fprintf(stderr, "%d %.5f\n", k, new_score[k]);
 				}
-				getchar();
-
+				getchar();*/
 				for(k=0; k<m_iDatasets; k++){
 					vector<float> all_w;
 					all_w.resize(m_iNumRandom);
@@ -1035,12 +1103,15 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 				sprintf(acBuffer, "%s/%d.rand.gscore", m_output_dir.c_str(), i);
 				CSeekTools::WriteArray(acBuffer, new_score);				
 				l = 0;
-
 			}else{
 				i--;
 			}
 		}
 
+		if(!m_bRandom){
+			//if m_bRandom, write at the very end when all repetitions are done
+			Write(i);
+		}
 	}
 
 	//fprintf(stderr, "4b %lu\n", CMeta::GetMemoryUsage());

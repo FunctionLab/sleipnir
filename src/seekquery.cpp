@@ -33,8 +33,13 @@ CSeekQuery::CSeekQuery(){
 	iFoldSize = 0;
 }
 CSeekQuery::~CSeekQuery(){
+	Reset();
+}
+
+bool CSeekQuery::Reset(){
 	if(crossValGenes!=NULL){
 		delete[] crossValGenes;
+		crossValGenes = NULL;
 	}
 	queryGenePresence.clear();
 	queryGenes.clear();
@@ -43,6 +48,7 @@ CSeekQuery::~CSeekQuery(){
 }
 
 bool CSeekQuery::InitializeQuery(const vector<char> &query){
+	Reset();
 	ushort i;
 	queryGenePresence.resize(query.size());
 
@@ -56,6 +62,7 @@ bool CSeekQuery::InitializeQuery(const vector<char> &query){
 
 bool CSeekQuery::InitializeQuery(const vector<ushort> &query,
 	const ushort &iGenes){
+	Reset();
 	ushort i;
 	queryGenePresence.resize(iGenes);
 	fill(queryGenePresence.begin(), queryGenePresence.end(), (char) 0);
