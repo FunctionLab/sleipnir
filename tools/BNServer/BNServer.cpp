@@ -469,7 +469,7 @@ size_t CBNServer::ProcessInferenceOTF( const vector<unsigned char>& vecbMessage,
 	    GetDatabase().Get( iGene, vecbData );
 	    fVals = new float[iGenes];
 
-	    for ( i = 0, iGeneOffset = 0; i <= iGenes; i++, iGeneOffset += iChunk ) {
+	    for ( i = 0, iGeneOffset = 0; i < iGenes; i++, iGeneOffset += iChunk ) {
 		fVals[i] = Evaluate( binEffects, vecbData, iGeneOffset ); 
 	    }
 
@@ -495,7 +495,6 @@ size_t CBNServer::ProcessEdges( const vector<unsigned char>& vecbMessage, size_t
 	iStart = iOffset;
 
 	iOffset = ProcessCPT( vecbMessage, iOffset, binEffects );
-	cerr << binEffects.size() << endl;
 
 	iEdges = *(uint32_t*)&vecbMessage[ iOffset ];
 	fVals = new float[iEdges];
@@ -530,7 +529,6 @@ size_t CBNServer::ProcessEdges( const vector<unsigned char>& vecbMessage, size_t
 		//    cerr << i << "\t" << (size_t)c << endl;
 		fLogOdds += binEffects[i][(size_t)c];
 	    }
-	    cerr << fLogOdds << endl;
 	    fVals[j] = fLogOdds;
 	}
 
