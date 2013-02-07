@@ -13,3 +13,6 @@ option	"map"		m	"Map gene index among the network dabs to combine. (Should be us
 						flag	off
 option	"method"	M	"Combination method"
 						values="max","mean"	default="mean"
+section "Optional"
+option	"weight"	w	"File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight"
+						string	typestr="filename"

@@ -36,6 +36,8 @@ const char *gengetopt_args_info_help[] = {
   "  -d, --directory=directory  input directory (must only contain input files)",
   "  -m, --map                  Map gene index among the network dabs to combine. \n                               (Should be used when the gene intex are not \n                               identical among network dabs)  (default=off)",
   "  -M, --method=STRING        Combination method  (possible values=\"max\", \n                               \"mean\" default=`mean')",
+  "\nOptional:",
+  "  -w, --weight=filename      File with dataset weights, if given each dataset \n                               values if weighted by the dataset weight. Skips \n                               datasets with no-entry or with zero weights. \n                               File format: dataset name<tab>weight",
     0
 };
 
@@ -70,6 +72,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->directory_given = 0 ;
   args_info->map_given = 0 ;
   args_info->method_given = 0 ;
+  args_info->weight_given = 0 ;
 }
 
 static
@@ -84,6 +87,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->map_flag = 0;
   args_info->method_arg = gengetopt_strdup ("mean");
   args_info->method_orig = NULL;
+  args_info->weight_arg = NULL;
+  args_info->weight_orig = NULL;
   
 }
 
@@ -99,6 +104,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->directory_help = gengetopt_args_info_help[5] ;
   args_info->map_help = gengetopt_args_info_help[6] ;
   args_info->method_help = gengetopt_args_info_help[7] ;
+  args_info->weight_help = gengetopt_args_info_help[9] ;
   
 }
 
@@ -187,6 +193,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->directory_orig));
   free_string_field (&(args_info->method_arg));
   free_string_field (&(args_info->method_orig));
+  free_string_field (&(args_info->weight_arg));
+  free_string_field (&(args_info->weight_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -277,6 +285,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "map", 0, 0 );
   if (args_info->method_given)
     write_into_file(outfile, "method", args_info->method_orig, cmdline_parser_method_values);
+  if (args_info->weight_given)
+    write_into_file(outfile, "weight", args_info->weight_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -532,10 +542,11 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "directory",	1, NULL, 'd' },
         { "map",	0, NULL, 'm' },
         { "method",	1, NULL, 'M' },
+        { "weight",	1, NULL, 'w' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVo:v:d:mM:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVo:v:d:mM:w:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -614,6 +625,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.method_given), optarg, cmdline_parser_method_values, "mean", ARG_STRING,
               check_ambiguity, override, 0, 0,
               "method", 'M',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'w':	/* File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight.  */
+        
+        
+          if (update_arg( (void *)&(args_info->weight_arg), 
+               &(args_info->weight_orig), &(args_info->weight_given),
+              &(local_args_info.weight_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "weight", 'w',
               additional_error))
             goto failure;
         

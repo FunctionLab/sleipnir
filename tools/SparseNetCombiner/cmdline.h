@@ -48,6 +48,9 @@ struct gengetopt_args_info
   char * method_arg;	/**< @brief Combination method (default='mean').  */
   char * method_orig;	/**< @brief Combination method original value given at command line.  */
   const char *method_help; /**< @brief Combination method help description.  */
+  char * weight_arg;	/**< @brief File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight.  */
+  char * weight_orig;	/**< @brief File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight original value given at command line.  */
+  const char *weight_help; /**< @brief File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -56,6 +59,7 @@ struct gengetopt_args_info
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
   unsigned int map_given ;	/**< @brief Whether map was given.  */
   unsigned int method_given ;	/**< @brief Whether method was given.  */
+  unsigned int weight_given ;	/**< @brief Whether weight was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

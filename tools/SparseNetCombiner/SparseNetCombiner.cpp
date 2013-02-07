@@ -46,12 +46,15 @@ int main( int iArgs, char** aszArgs ) {
 	float d, dout;
 	DIR* dp;
 	struct dirent* ep;
-	CDat					DatOut, DatTrack;
+	CDat					DatOut, DatTrack, DatCur;
 	vector<size_t>				veciGenesCur;	
 	// store all input file names
 	vector<string> input_files;
 	vector<string>		vecstrInputs, vecstrDatasets; 
 	EMethod		eMethod;
+	ifstream	ifsm;
+	vector<float>	vecWeights;
+	map<string, size_t> mapstriDatasets;
 	
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -67,6 +70,7 @@ int main( int iArgs, char** aszArgs ) {
 	// now collect the data files from directory if given
 	if(sArgs.directory_given){
 	  dp = opendir (sArgs.directory_arg);
+	  i = 0;
 	  if (dp != NULL){
 	    while (ep = readdir (dp)){
 	      if(  strstr(ep->d_name, c_acDab) != NULL ||
@@ -77,12 +81,15 @@ int main( int iArgs, char** aszArgs ) {
 		  continue;
 		if(strstr(ep->d_name, c_acOUT) != NULL)
 		  continue;
-		vecstrInputs.push_back((string)sArgs.directory_arg + "/" + ep->d_name);
+		vecstrInputs.push_back((string)sArgs.directory_arg + "/" + ep->d_name);		
+		vecstrDatasets.push_back(vecstrInputs[i]);		
+		mapstriDatasets[ ep->d_name ] = i;
+		++i;
 	      }
 	    }
 	    (void) closedir (dp);
 	    
-	    inputNums = vecstrInputs.size();
+	    inputNums = vecstrDatasets.size();
 	    
 	    // sort by ASCI 
 	    //std::sort( vecstrInputs.begin(), vecstrInputs.end() );
@@ -95,14 +102,69 @@ int main( int iArgs, char** aszArgs ) {
 	  }
 	}
 	
+	// read dataset weight file
+	if( sArgs.weight_given ) {
+	  static const size_t	c_iBuffer	= 1024;
+	  char					szBuffer[ c_iBuffer ];
+	  string				strFile;
+	  vector<string>			vecstrLine;
+	  map<string, size_t>::const_iterator	iterDataset;
+	  size_t  numDataset;
+	  vecWeights.resize(vecstrInputs.size( ) );
+	  
+	  // set default weight
+	  for(i=0; i < vecWeights.size(); i++){
+	    vecWeights[i] = 0;
+	  }
+	  
+	  ifsm.clear( );
+	  ifsm.open( sArgs.weight_arg );
+	  if( !ifsm.is_open( ) ) {
+            cerr << "Could not open: " << sArgs.weight_arg << endl;
+            return 1;
+	  }
+	  while( !ifsm.eof( ) ) {
+            ifsm.getline( szBuffer, c_iBuffer - 1 );
+            szBuffer[ c_iBuffer - 1 ] = 0;
+            if( !szBuffer[ 0 ] )
+	      continue;
+            vecstrLine.clear( );
+            CMeta::Tokenize( szBuffer, vecstrLine );
+            if( vecstrLine.size( ) != 2 ) {
+	      cerr << "Illegal weight line: " << szBuffer << endl;
+	      return 1;
+            }
+	    
+	    if( ( iterDataset = mapstriDatasets.find( vecstrLine[ 0 ] ) ) == mapstriDatasets.end( ) )
+	      cerr << "Dataset in weights but not database: " << vecstrLine[ 0 ] << endl;
+            else	      
+	      vecWeights[ iterDataset->second ] = (float)atof( vecstrLine[ 1 ].c_str( ) );
+	  }
+	  ifsm.close( );
+	  
+	  // now only keep datasets with non-zero weighting
+	  vecstrDatasets.clear();
+	  numDataset = 0;
+	  for(i = 0; i < vecstrInputs.size(); ++i){
+	    if(vecWeights[i] == 0)
+	      continue;
+	    vecstrDatasets.push_back(vecstrInputs[i]);
+	    vecWeights[numDataset] = vecWeights[i];
+	    numDataset++;
+	  }
+	  vecstrDatasets.resize(numDataset);
+	  vecWeights.resize(numDataset);
+	  
+	  cerr << "Total number of datasets combining with non-zero weights: " << numDataset << endl;
+	}
+	
 	// now iterate dat/dab networks
-	for( i = 0; i < vecstrInputs.size( ); ++i ) {
-	  CDat DatCur;
+	for( i = 0; i < vecstrDatasets.size( ); ++i ) {
 	  
 	  // open first network, we will just add edge weights to this CDat
 	  if( i == 0 ){
-	    if( !DatCur.Open( vecstrInputs[ i ].c_str() ) ) {
-	      cerr << "Couldn't open: " << vecstrInputs[ i ] << endl;
+	    if( !DatCur.Open( vecstrDatasets[ i ].c_str() ) ) {
+	      cerr << "Couldn't open: " << vecstrDatasets[ i ] << endl;
 	      return 1; }
 	    
 	    DatOut.Open( DatCur );	    	    
@@ -114,23 +176,30 @@ int main( int iArgs, char** aszArgs ) {
 		if( CMeta::IsNaN( d = DatCur.Get( j, k)))
 		  continue;
 		
+		if( sArgs.weight_given ){
+		  d *= vecWeights[i];
+		  // store weighted value (numerator)
+		  DatOut.Set( j, k, d);
+		}
+		
 		switch( eMethod ) {
 		case EMethodMax:
 		  DatOut.Set( j, k, d);
 		  break;
 		case EMethodMean:
+		  // keep track of denominator
 		  DatTrack.Set( j, k, 1.0);
 		}
 	      }
 	    
-	    cerr << "opened: " << vecstrInputs[ i ] << endl;
+	    cerr << "opened: " << vecstrDatasets[ i ] << endl;
 	    continue;	 
 	  }
 	  
-	  if( !DatCur.Open( vecstrInputs[ i ].c_str() ) ) {
-	    cerr << "Couldn't open: " << vecstrInputs[ i ] << endl;
+	  if( !DatCur.Open( vecstrDatasets[ i ].c_str() ) ) {
+	    cerr << "Couldn't open: " << vecstrDatasets[ i ] << endl;
 	    return 1; }
-	  cerr << "opened: " << vecstrInputs[ i ] << endl;
+	  cerr << "opened: " << vecstrDatasets[ i ] << endl;
 	  
 	  if( sArgs.map_flag ){
 	    // Get gene index match	  
@@ -140,7 +209,7 @@ int main( int iArgs, char** aszArgs ) {
 	    for( l = 0; l < DatOut.GetGenes(); l++){
 	      veciGenesCur[ l ] = DatCur.GetGene( DatOut.GetGene(l) );
 	      if( veciGenesCur[ l ] == -1 ){
-		cerr << "ERROR: missing gene: " << DatOut.GetGene(l) << ", " << vecstrInputs[ i ] << endl;
+		cerr << "ERROR: missing gene: " << DatOut.GetGene(l) << ", " << vecstrDatasets[ i ] << endl;
 		return 1;
 	      }
 	    }
@@ -160,6 +229,9 @@ int main( int iArgs, char** aszArgs ) {
 		  continue;
 		}
 	      }
+	      
+	      if( sArgs.weight_given )
+		  d *= vecWeights[i];
 	      
 	      switch( eMethod ) {
 	      case EMethodMax:
