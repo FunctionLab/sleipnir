@@ -452,7 +452,17 @@ int main(int iArgs, char** aszArgs) {
 	    cerr << "Could not open input labels Dat" << endl;
 	    return 1;
 	  }
-	  	  
+	  
+	  // random sample labels
+	  if( sArgs.subsample_given ){
+	    cerr << "Sub-sample labels to rate:" << sArgs.subsample_arg << endl;
+	    for( i = 0; i < Labels.GetGenes( ); ++i )
+	      for( j = ( i + 1 ); j < Labels.GetGenes( ); ++j )
+		if( !CMeta::IsNaN( Labels.Get( i, j ) ) &&
+		    ( ( (float)rand( ) / RAND_MAX ) > sArgs.subsample_arg ) )
+		  Labels.Set( i, j, CMeta::GetNaN( ) );	    	    
+	  }	  
+	  
 	  // set all NaN values to negatives
 	  if( sArgs.nan2neg_given ){
 	    cerr << "Set NaN labels dat as negatives" << endl;

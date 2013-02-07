@@ -513,7 +513,8 @@ AC_ARG_WITH([smile],
         fi
     ],
 	[smile_state=check])
-LOCAL_CHECK_LIB([smile], [smile], [DSL_isFinite(1.0)],
+	LOCAL_CHECK_LIB([smile], [smile], [DSL_isFinite(1.0)],
+	
     [smile_state=ok],                                         dnl found
     [
 	    SMILE_LIBS="-lsmile"

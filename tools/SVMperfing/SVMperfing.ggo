@@ -71,6 +71,8 @@ option	"CrossResult"			u	"Cross-validation prediction results, if given when pre
 							string	typestr="filename"
 option	"SampledLabels"			y	"Save the sampled final training labels to this file"
 							string	typestr="filename"
+option  "subsample"    			A	"Sample the labels to the following rate"
+										float  no
 
 section "Filtering"
 option	"onetgene"			q	"Only keep edges from lables that have one gene in the target gene list"

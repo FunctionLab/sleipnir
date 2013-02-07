@@ -8,6 +8,7 @@ if WITH_TOOLS
 	  COALESCE \
 	  Combiner \
 	  NetworkCombiner \
+	  SparseNetCombiner \
 	  DChecker \
 	  Dat2Dab \
 	  Dat2Graph \
@@ -38,6 +39,7 @@ if WITH_TOOLS
 	  SMRF \
 	  SVDer \
 	  Synthesizer \
+	  NetMiner \
 	  Txt2Bin
 if WITH_SMILE_TOOLS
     SMILE_TOOLS_SUBDIRS = \

@@ -130,6 +130,9 @@ struct gengetopt_args_info
   char * SampledLabels_arg;	/**< @brief Save the sampled final training labels to this file.  */
   char * SampledLabels_orig;	/**< @brief Save the sampled final training labels to this file original value given at command line.  */
   const char *SampledLabels_help; /**< @brief Save the sampled final training labels to this file help description.  */
+  float subsample_arg;	/**< @brief Sample the labels to the following rate.  */
+  char * subsample_orig;	/**< @brief Sample the labels to the following rate original value given at command line.  */
+  const char *subsample_help; /**< @brief Sample the labels to the following rate help description.  */
   int onetgene_flag;	/**< @brief Only keep edges from lables that have one gene in the target gene list (default=off).  */
   const char *onetgene_help; /**< @brief Only keep edges from lables that have one gene in the target gene list help description.  */
   float prior_arg;	/**< @brief Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior..  */
@@ -175,6 +178,7 @@ struct gengetopt_args_info
   unsigned int NoCrossPredict_given ;	/**< @brief Whether NoCrossPredict was given.  */
   unsigned int CrossResult_given ;	/**< @brief Whether CrossResult was given.  */
   unsigned int SampledLabels_given ;	/**< @brief Whether SampledLabels was given.  */
+  unsigned int subsample_given ;	/**< @brief Whether subsample was given.  */
   unsigned int onetgene_given ;	/**< @brief Whether onetgene was given.  */
   unsigned int prior_given ;	/**< @brief Whether prior was given.  */
   unsigned int savemodel_given ;	/**< @brief Whether savemodel was given.  */

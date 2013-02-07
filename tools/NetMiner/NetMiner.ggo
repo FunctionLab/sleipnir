@@ -1,0 +1,36 @@
+package	"NetMiner"
+version	"1.0"
+purpose	"Text/binary data file interconversion"
+
+section "Main"
+option	"input"			i	"Input gene PCL file"
+							string	typestr="filename"
+option	"output"		o	"Output DAT/DAB file"
+							string	typestr="filename"
+option	"query"			q	"Input gene query file"
+							string	typestr="filename"
+option	"sim"			S	"Input gene similarity DAT/DAB file"
+							string	typestr="filename"
+option	"tissue"		t	"Input tissue expression PCL file"
+							string	typestr="filename"
+option	"savematrix"		M	"Save the distance and next matrix from shortest path calculation"
+							flag	off
+option	"genepairs"		p	"Input gene pairs to find shortest path"
+							string	typestr="filename"
+
+section "Preprocessing"
+option	"normalize"		n	"Normalize to the range [0,1]"
+							flag	off
+section "Filtering"
+
+section "Lookups"
+
+section "Optional"
+option	"skip"			s	"Columns to skip in input PCL"
+							int	default="0"
+option	"memmap"		m	"Memory map input/output"
+							flag	off
+option	"random"		R	"Seed random generator (default -1 uses current time)"
+							int	default="-1"
+option	"verbosity"		v	"Message verbosity"
+							int	default="5"
