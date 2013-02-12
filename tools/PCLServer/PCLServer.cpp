@@ -84,6 +84,9 @@ struct thread_data{
     int new_fd;
 	bool outputNormalized;
 	bool outputCoexpression;
+	bool outputQueryCoexpression;
+	bool outputExpression;
+	bool outputQueryExpression;
 };
 
 int cpy(char *d, char *s, int beg, int num){
@@ -117,6 +120,9 @@ void *do_query(void *th_arg){
 	vector<string> queryName = my->queryName;
 	bool outputNormalized = my->outputNormalized;
 	bool outputCoexpression = my->outputCoexpression;
+	bool outputQueryCoexpression = my->outputQueryCoexpression;
+	bool outputExpression = my->outputExpression;
+	bool outputQueryExpression = my->outputQueryExpression;
 	int new_fd = my->new_fd;
 	int tid = my->threadid;
 
@@ -177,7 +183,7 @@ void *do_query(void *th_arg){
 	int queries = queryName.size(); //(EXTRA)
 	int datasets = datasetName.size();
 
-	vector<float> vecG, vecQ, vecCoexpression;
+	vector<float> vecG, vecQ, vecCoexpression, vecqCoexpression;
 	vector<float> sizeD;
 
 	//Qian added
@@ -198,10 +204,13 @@ void *do_query(void *th_arg){
 		CFullMatrix<float> *ff = NULL;
 		vector<float> vCoexpression;
 		vCoexpression.resize(genes);
+		vector<float> vqCoexpression;
+		vqCoexpression.resize(queryName.size());
+
 		CSeekDataset *vd = NULL;
 		sizeD.push_back((float) ps);
 
-		if(outputCoexpression){
+		if(outputCoexpression || outputQueryCoexpression){
 			vd = new CSeekDataset();
 			string strFileStem = datasetName[i].substr(0, datasetName[i].find(".bin"));
 			string strAvgPath = strPrepInputDirectory + "/" + strFileStem + ".gavg";
@@ -226,26 +235,31 @@ void *do_query(void *th_arg){
 				float *vv = pp->Get(g);
 				for(j=2; j<gs; j++)
 					fq->Set(k, j-2, vv[j]);
-				if(outputNormalized){
-					//normalize
-					float mean = 0;
+				if(!outputNormalized){
 					for(j=2; j<gs; j++)
-						mean+=fq->Get(k, j-2);
-					mean/=(float) (gs - 2);
-					float stdev = 0;
-					for(j=2; j<gs; j++)
-						stdev+=(fq->Get(k, j-2) - mean) * (fq->Get(k, j-2) - mean);
-					stdev/=(float) (gs - 2);
-					stdev = sqrt(stdev);
-					for(j=2; j<gs; j++){
-						float t1 = fq->Get(k, j-2);
-						fq->Set(k, j-2, (t1 - mean) / stdev);
-					}
+						vecQ.push_back(fq->Get(k, j-2));
+				}
+				
+				//normalize
+				float mean = 0;
+				for(j=2; j<gs; j++)
+					mean+=fq->Get(k, j-2);
+				mean/=(float) (gs - 2);
+				float stdev = 0;
+				for(j=2; j<gs; j++)
+					stdev+=(fq->Get(k, j-2) - mean) * (fq->Get(k, j-2) - mean);
+				stdev/=(float) (gs - 2);
+				stdev = sqrt(stdev);
+				for(j=2; j<gs; j++){
+					float t1 = fq->Get(k, j-2);
+					fq->Set(k, j-2, (t1 - mean) / stdev);
 				}
 
-				for(j=2; j<gs; j++){
-					vecQ.push_back(fq->Get(k, j-2));
+				if(outputNormalized){
+					for(j=2; j<gs; j++)
+						vecQ.push_back(fq->Get(k, j-2));
 				}
+
 			}
 		}
 
@@ -268,24 +282,31 @@ void *do_query(void *th_arg){
 			for(j=2; j<gs; j++)
 				ff->Set(k, j-2, vv[j]);
 
-			if(outputNormalized){
-				//normalize
-				float mean = 0;
-				for(j=2; j<gs; j++)
-					mean+=ff->Get(k, j-2);
-				mean/=(float) (gs - 2);
-				float stdev = 0;
-				for(j=2; j<gs; j++)
-					stdev+=(ff->Get(k, j-2) - mean) * (ff->Get(k, j-2) - mean);
-				stdev/=(float) (gs - 2);
-				stdev = sqrt(stdev);
+			if(!outputNormalized){
 				for(j=2; j<gs; j++){
-					float t1 = ff->Get(k, j-2);
-					ff->Set(k, j-2, (t1 - mean) / stdev);
+					vecG.push_back(ff->Get(k, j-2));
 				}
 			}
+			
+			//normalize	
+			float mean = 0;
+			for(j=2; j<gs; j++)
+				mean+=ff->Get(k, j-2);
+			mean/=(float) (gs - 2);
+			float stdev = 0;
+			for(j=2; j<gs; j++)
+				stdev+=(ff->Get(k, j-2) - mean) * (ff->Get(k, j-2) - mean);
+			stdev/=(float) (gs - 2);
+			stdev = sqrt(stdev);
 			for(j=2; j<gs; j++){
-				vecG.push_back(ff->Get(k, j-2));
+				float t1 = ff->Get(k, j-2);
+				ff->Set(k, j-2, (t1 - mean) / stdev);
+			}
+
+			if(outputNormalized){
+				for(j=2; j<gs; j++){
+					vecG.push_back(ff->Get(k, j-2));
+				}
 			}
 		}
 
@@ -329,24 +350,76 @@ void *do_query(void *th_arg){
 			}
 		}
 
-		if(outputCoexpression){
+		if(outputQueryCoexpression){
+			int kk=0;
+			for(k=0; k<queryName.size(); k++){
+				int g = pp->GetGene(queryName[k]);
+				if(g==-1){
+					vqCoexpression[k] = NaN;
+					vecqCoexpression.push_back(vqCoexpression[k]);
+					continue;
+				}
+				float avgP = 0;
+				int totalQueryPresent = queryName.size() - 1;
+				for(kk=0; kk<queryName.size(); kk++){
+					if(kk==k) continue;
+					int gg = pp->GetGene(queryName[kk]);
+					if(gg==-1){
+						totalQueryPresent--;
+						continue;
+					}
+					float p = 0;
+					for(j=2; j<gs; j++)
+						p+= fq->Get(k, j-2)*fq->Get(kk, j-2);
+					p/=(float)(gs-2);
+					//get z-score (dataset wide)
+					p = (p - vd->GetDatasetAverage()) / vd->GetDatasetStdev();
+					//subtract hubbiness
+					p = p - vd->GetGeneAverage(mapstrintGene[queryName[kk]]);
+					avgP+=p;
+				}
+				if(totalQueryPresent==0)
+					avgP = NaN;
+				else
+					avgP/=(float)(totalQueryPresent);
+				
+				vqCoexpression[k] = avgP;
+				vecqCoexpression.push_back(avgP);
+			}
+		}
+		
+		if(outputCoexpression || outputQueryCoexpression){
 			delete vd;
 			delete fq;
 		}
+
 		delete ff;
 	}
 
-	if(outputCoexpression){
-		if(	CSeekNetwork::Send(new_fd, sizeD)!=0 ||
-			CSeekNetwork::Send(new_fd, vecQ)!=0 ||
-			CSeekNetwork::Send(new_fd, vecG)!=0 ||
-			CSeekNetwork::Send(new_fd, vecCoexpression)!=0){
+	if(CSeekNetwork::Send(new_fd, sizeD)!=0){
+		fprintf(stderr, "Error sending messages\n");
+	}
+
+	if(outputExpression){
+		if(CSeekNetwork::Send(new_fd, vecG)!=0){
 			fprintf(stderr, "Error sending messages\n");
 		}
 	}
-	else{
-		if( CSeekNetwork::Send(new_fd, sizeD)!=0 ||
-			CSeekNetwork::Send(new_fd, vecG)!=0){
+
+	if(outputQueryExpression){
+		if(CSeekNetwork::Send(new_fd, vecQ)!=0){
+			fprintf(stderr, "Error sending messages\n");
+		}
+	}
+
+	if(outputCoexpression){
+		if(CSeekNetwork::Send(new_fd, vecCoexpression)!=0){
+			fprintf(stderr, "Error sending messages\n");
+		}
+	}
+
+	if(outputQueryCoexpression){
+		if(CSeekNetwork::Send(new_fd, vecqCoexpression)!=0){
 			fprintf(stderr, "Error sending messages\n");
 		}
 	}
@@ -504,23 +577,36 @@ int main( int iArgs, char** aszArgs ) {
 			continue;
 		}
 
-		//mode, 2 digits
+		//mode, 5 digits
 		//1 - output coexpression calculation (with gene hubbiness removed), 
 		//require setting two groups of genes, one for query (1 or many), 
 		//and one other gene (to calculate coexpression on)
 		//2 - output gene-normalized expression instead of original expression
-	
+		//3 - output gene expression (can be normalized or unnormalized, depends on 2)
+		//4 - output query expression
+		//5 - output query coexpression (compared to 1, which is gene-to-query 
+		//    coexpression. This is query-to-query coexpression)
+
 		bool outputCoexpression = false;
 		bool outputNormalized = false;
+		bool outputExpression = false;
+		bool outputQueryExpression = false;
+		bool outputQueryCoexpression = false;
 		if(mode[0]=='1') 
 			outputCoexpression = true;
 		if(mode[1]=='1') 
 			outputNormalized = true;
+		if(mode[2]=='1') 
+			outputExpression = true;
+		if(mode[3]=='1') 
+			outputQueryExpression = true;
+		if(mode[4]=='1') 
+			outputQueryCoexpression = true;
 
 		vector<string> dsetName, geneName, queryName;
 		string qname, gname, dname;
 
-		if(outputCoexpression){
+		if(outputCoexpression || outputQueryCoexpression){
 			if(	CSeekNetwork::Receive(new_fd, qname)!=0 ||
 				CSeekNetwork::Receive(new_fd, gname)!=0 ||
 				CSeekNetwork::Receive(new_fd, dname)!=0 ){
@@ -550,6 +636,9 @@ int main( int iArgs, char** aszArgs ) {
 		thread_arg[d].queryName = queryName;
 		thread_arg[d].outputNormalized = outputNormalized;
 		thread_arg[d].outputCoexpression = outputCoexpression;
+		thread_arg[d].outputExpression = outputExpression;
+		thread_arg[d].outputQueryExpression = outputQueryExpression;
+		thread_arg[d].outputQueryCoexpression = outputQueryCoexpression;
 
 		fprintf(stderr, "Arguments: %d %d %s %s\n", d, new_fd, dname.c_str(), gname.c_str());
 		if(outputCoexpression){
