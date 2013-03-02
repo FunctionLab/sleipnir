@@ -809,6 +809,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Matcher/Makefile \
 		 tools/MIer/Makefile \
 		 tools/MIed/Makefile \
+		 tools/NetMiner/Makefile \
 		 tools/Normalizer/Makefile \
 		 tools/Orthologer/Makefile \
 		 tools/Overlapper/Makefile \
@@ -823,6 +824,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/Txt2Bin/Makefile \
                  tools/BNConverter/Makefile \
 		 tools/BNCreator/Makefile \
+		 tools/SparseNetCombiner/Makefile \
 		 tools/SpeciesConnector/Makefile \
 		 tools/BNEvaluator/Makefile \
 		 tools/BNFunc/Makefile \
