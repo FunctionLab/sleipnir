@@ -34,4 +34,9 @@ using namespace std;
 #include "meta.h"
 #include "svmperf.h"
 using namespace Sleipnir;
+
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif // _MSC_VER
+
 #endif // STDAFX_H
