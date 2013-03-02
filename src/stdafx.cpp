@@ -155,7 +155,7 @@
  * <ol>
  * <li>Obtain mercurial, gengetopt, boost, log4cpp, liblog4cpp5-dev, and build-essential packages.  In a terminal, type:
  * \code
- * sudo apt-get install mercurial gengetopt libboost-regex-dev libboost-graph-dev liblog4cpp5-dev build-essential
+ * sudo apt-get install mercurial gengetopt libboost-regex-dev libboost-graph-dev liblog4cpp5-dev build-essential libgsl0-dev
  * \endcode
  * </li>
  * <li>If desired, download and install SMILE:
