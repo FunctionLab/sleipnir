@@ -33,46 +33,46 @@ struct SSorter {
      }
 };
 
-float find_value( size_t iOne, size_t iTwo, const CDat& Dat )
+float find_value( size_t iOne, size_t iTwo, const CDat* pDat )
 {
-
-     return ( ( ( iOne == -1 ) || ( iTwo == -1 ) ) ? CMeta::GetNaN( ) : Dat.Get( iOne, iTwo ) );
+     return ( ( ( iOne == -1 ) || ( iTwo == -1 ) ) ? CMeta::GetNaN( ) : pDat->Get( iOne, iTwo ) );
 }
 
-size_t find_value( float dValue, const CDataPair& Dat, size_t iDefault, bool fRandom )
+size_t find_value( float dValue, const CDataPair *pDat, size_t iDefault, bool fRandom )
 {
-
-     if( Dat.IsContinuous( ) )
+     if( pDat->IsContinuous( ) )
           return 0;
 
-     return ( CMeta::IsNaN( dValue ) ? ( fRandom ? ( rand( ) % Dat.GetValues( ) ) : iDefault ) :
-                   Dat.Quantize( dValue ) );
+     return ( CMeta::IsNaN( dValue ) ? ( fRandom ? ( rand( ) % pDat->GetValues( ) ) : iDefault ) :
+                   pDat->Quantize( dValue ) );
 }
 
-size_t find_value( size_t iOne, size_t iTwo, const CDataPair& Dat, size_t iDefault, bool fRandom )
+size_t find_value( size_t iOne, size_t iTwo, const CDataPair *pDat, size_t iDefault, bool fRandom )
 {
-
-     return find_value( find_value( iOne, iTwo, Dat ), Dat, iDefault, fRandom );
+    float fValue = find_value( iOne, iTwo, pDat );
+    size_t iValue = find_value( fValue, pDat, iDefault, fRandom );
+    return iValue;
 }
 
 int main( int iArgs, char** aszArgs )
 {
-     gengetopt_args_info			sArgs;
-     CDataPair					DatOne, DatTwo;
+    gengetopt_args_info		    sArgs;
+    CDataPair					*DatOne, *DatTwo;
+    vector<CDataPair*>          vpDatsBigmem;
      size_t						i, j, iDatOne, iDatTwo, iGeneOne, iGeneTwo, iCountOne, iCountTwo;
      size_t						iCountJoint, iJoint, iValueOne, iValueTwo;
      vector<size_t>				veciGenesOne, veciGenesTwo, veciOne, veciTwo, veciDefaults, veciSizes;
-     vector<vector<size_t> >		vecveciJoint;
+     vector<vector<size_t> >	vecveciJoint;
      vector<string>				vecstrInputs, vecstrGenes;
      float						dOne, dJoint, dMI, dSubsample, dValueOne, dValueTwo;
-     map<string, size_t>			mapZeros;
+     map<string, size_t>		mapZeros;
      vector<float>				vecdOne, vecdTwo;
      float*						adOne;
      float*						adTwo;
      IMeasure*					pMeasure;
-     CMeasurePearson				Pearson;
+     CMeasurePearson			Pearson;
      CMeasureEuclidean			Euclidean;
-     CMeasureKendallsTau			KendallsTau;
+     CMeasureKendallsTau		KendallsTau;
      CMeasureKolmogorovSmirnov	KolmSmir;
      CMeasureHypergeometric		Hypergeom;
      CMeasureQuickPearson		PearQuick;
@@ -85,10 +85,11 @@ int main( int iArgs, char** aszArgs )
      }
      CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
 
-     CMeasureSigmoid				EuclideanSig( &Euclidean, false, 1.0f / sArgs.inputs_num );
-     IMeasure*					apMeasures[]	= { &Pearson, &EuclideanSig, &KendallsTau,
-               &KolmSmir, &Hypergeom, &PearQuick, &InnerProd, &BinInnerProd, NULL
-                                  };
+     CMeasureSigmoid    EuclideanSig( &Euclidean, false, 1.0f / sArgs.inputs_num );
+     IMeasure*          apMeasures[] = {    &Pearson, &EuclideanSig, &KendallsTau,
+                                            &KolmSmir, &Hypergeom, &PearQuick, &InnerProd,
+                                            &BinInnerProd, NULL
+                        };
 
      vecstrInputs.resize( sArgs.inputs_num );
      copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrInputs.begin( ) );
@@ -118,8 +119,10 @@ int main( int iArgs, char** aszArgs )
      }
      veciSizes.resize( vecstrInputs.size( ) );
      for( i = 0; i < veciSizes.size( ); ++i ) {
-          DatOne.OpenQuants( vecstrInputs[ i ].c_str( ) );
-          veciSizes[ i ] = DatOne.GetValues( );
+        DatOne = new CDataPair;
+        DatOne->OpenQuants( vecstrInputs[ i ].c_str( ) );
+        veciSizes[ i ] = DatOne->GetValues( );
+        delete DatOne;
      }
 
      pMeasure = NULL;
@@ -168,7 +171,18 @@ int main( int iArgs, char** aszArgs )
                cout << '\t' << vecstrInputs[ i ];
           cout << endl;
      }
-     for( iDatOne = ( ( sArgs.only_arg == -1 ) ? 0 : sArgs.only_arg );
+    if( sArgs.bigmem_flag ) {
+        for ( iDatOne = 0; iDatOne < vecstrInputs.size( ); ++iDatOne ) {
+            CDataPair* pDat = new CDataPair;
+            if( !( pDat->Open( vecstrInputs[ iDatOne ].c_str( ), false, !!sArgs.memmap_flag ) ||
+                    pDat->Open( vecstrInputs[ iDatOne ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
+                cerr << "Could not open: " << vecstrInputs[ iDatOne ] << endl;
+                return 1;
+            }
+            vpDatsBigmem.push_back(pDat);
+        }
+    }
+    for( iDatOne = ( ( sArgs.only_arg == -1 ) ? 0 : sArgs.only_arg );
                iDatOne < ( ( sArgs.only_arg == -1 ) ? vecstrInputs.size( ) : ( sArgs.only_arg + 1 ) );
                ++iDatOne ) {
           cerr << "Processing " << iDatOne << '/' << vecstrInputs.size( ) << endl;
@@ -177,16 +191,20 @@ int main( int iArgs, char** aszArgs )
                for( i = 0; i < iDatOne; ++i )
                     cout << '\t';
           }
-
-          if( !( DatOne.Open( vecstrInputs[ iDatOne ].c_str( ), false, !!sArgs.memmap_flag ) ||
-                    DatOne.Open( vecstrInputs[ iDatOne ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
-               cerr << "Could not open: " << vecstrInputs[ iDatOne ] << endl;
-               return 1;
-          }
+        if ( sArgs.bigmem_flag ) {
+            DatOne = vpDatsBigmem[iDatOne];
+        }
+        else {
+            DatOne = new CDataPair;
+            if( !( DatOne->Open( vecstrInputs[ iDatOne ].c_str( ), false, !!sArgs.memmap_flag ) ||
+                    DatOne->Open( vecstrInputs[ iDatOne ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
+                cerr << "Could not open: " << vecstrInputs[ iDatOne ] << endl;
+                return 1;
+            }
+        }
           veciGenesOne.resize( vecstrGenes.size( ) );
           for( i = 0; i < vecstrGenes.size( ); ++i )
-               veciGenesOne[ i ] = DatOne.GetGene( vecstrGenes[ i ] );
-
+               veciGenesOne[ i ] = DatOne->GetGene( vecstrGenes[ i ] );
           if( !pMeasure ) {
                veciOne.resize( veciSizes[ iDatOne ] );
                fill( veciOne.begin( ), veciOne.end( ), 0 );
@@ -224,14 +242,20 @@ int main( int iArgs, char** aszArgs )
                break;
 
           for( iDatTwo = ( iDatOne + 1 ); iDatTwo < vecstrInputs.size( ); ++iDatTwo ) {
-               if( !( DatTwo.Open( vecstrInputs[ iDatTwo ].c_str( ), false, !!sArgs.memmap_flag ) ||
-                         DatTwo.Open( vecstrInputs[ iDatTwo ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
+            if ( sArgs.bigmem_flag ) {
+                DatTwo = vpDatsBigmem[iDatTwo];
+            }
+            else {
+                DatTwo = new CDataPair;
+                if( !( DatTwo->Open( vecstrInputs[ iDatTwo ].c_str( ), false, !!sArgs.memmap_flag ) ||
+                       DatTwo->Open( vecstrInputs[ iDatTwo ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
                     cerr << "Could not open: " << vecstrInputs[ iDatTwo ] << endl;
                     return 1;
-               }
+                }
+            }
                veciGenesTwo.resize( vecstrGenes.size( ) );
                for( i = 0; i < veciGenesTwo.size( ); ++i )
-                    veciGenesTwo[ i ] = DatTwo.GetGene( vecstrGenes[ i ] );
+                    veciGenesTwo[ i ] = DatTwo->GetGene( vecstrGenes[ i ] );
                veciTwo.resize( veciSizes[ iDatTwo ] );
                fill( veciTwo.begin( ), veciTwo.end( ), 0 );
 
@@ -302,10 +326,16 @@ int main( int iArgs, char** aszArgs )
                else
                     cout << vecstrInputs[ iDatOne ] << '\t' << vecstrInputs[ iDatTwo ] << '\t' << dMI <<
                          endl;
-          }
-          if( sArgs.table_flag )
-               cout << endl;
-     }
+            if ( !sArgs.bigmem_flag ) {
+                delete DatTwo;
+            }
+        }
+        if( sArgs.table_flag )
+            cout << endl;
+        if ( !sArgs.bigmem_flag ) {
+            delete DatOne;
+        }
+    }
 
      return 0;
 }
