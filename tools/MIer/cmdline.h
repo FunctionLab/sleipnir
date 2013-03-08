@@ -57,6 +57,9 @@ struct gengetopt_args_info
   int only_arg;	/**< @brief Process only the given input file (default='-1').  */
   char * only_orig;	/**< @brief Process only the given input file original value given at command line.  */
   const char *only_help; /**< @brief Process only the given input file help description.  */
+  int threads_arg;	/**< @brief Number of threads to use, note that enough memory is required to load threads number of datasets concurrently. This doesn't change memory requirements under bigmem. (default='1').  */
+  char * threads_orig;	/**< @brief Number of threads to use, note that enough memory is required to load threads number of datasets concurrently. This doesn't change memory requirements under bigmem. original value given at command line.  */
+  const char *threads_help; /**< @brief Number of threads to use, note that enough memory is required to load threads number of datasets concurrently. This doesn't change memory requirements under bigmem. help description.  */
   int memmap_flag;	/**< @brief Memory map input/output (default=off).  */
   const char *memmap_help; /**< @brief Memory map input/output help description.  */
   int bigmem_flag;	/**< @brief Load complete collection of datasets/networks into memory, faster but requires enough memory to hold all datasets. (default=off).  */
@@ -77,6 +80,7 @@ struct gengetopt_args_info
   unsigned int subsample_given ;	/**< @brief Whether subsample was given.  */
   unsigned int table_given ;	/**< @brief Whether table was given.  */
   unsigned int only_given ;	/**< @brief Whether only was given.  */
+  unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int bigmem_given ;	/**< @brief Whether bigmem was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */

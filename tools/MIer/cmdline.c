@@ -44,6 +44,7 @@ const char *gengetopt_args_info_help[] = {
   "  -s, --subsample=INT    Maximum pairs to subsample  (default=`100000')",
   "  -t, --table            Format output as a 2D table  (default=on)",
   "  -y, --only=INT         Process only the given input file  (default=`-1')",
+  "  -T, --threads=INT      Number of threads to use, note that enough memory is \n                           required to load threads number of datasets \n                           concurrently. This doesn't change memory \n                           requirements under bigmem.  (default=`1')",
   "  -m, --memmap           Memory map input/output  (default=off)",
   "  -M, --bigmem           Load complete collection of datasets/networks into \n                           memory, faster but requires enough memory to hold \n                           all datasets.  (default=off)",
   "  -r, --random=INT       Seed random generator  (default=`0')",
@@ -84,6 +85,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->subsample_given = 0 ;
   args_info->table_given = 0 ;
   args_info->only_given = 0 ;
+  args_info->threads_given = 0 ;
   args_info->memmap_given = 0 ;
   args_info->bigmem_given = 0 ;
   args_info->random_given = 0 ;
@@ -105,6 +107,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->table_flag = 1;
   args_info->only_arg = -1;
   args_info->only_orig = NULL;
+  args_info->threads_arg = 1;
+  args_info->threads_orig = NULL;
   args_info->memmap_flag = 0;
   args_info->bigmem_flag = 0;
   args_info->random_arg = 0;
@@ -128,10 +132,11 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->subsample_help = gengetopt_args_info_help[9] ;
   args_info->table_help = gengetopt_args_info_help[10] ;
   args_info->only_help = gengetopt_args_info_help[11] ;
-  args_info->memmap_help = gengetopt_args_info_help[12] ;
-  args_info->bigmem_help = gengetopt_args_info_help[13] ;
-  args_info->random_help = gengetopt_args_info_help[14] ;
-  args_info->verbosity_help = gengetopt_args_info_help[15] ;
+  args_info->threads_help = gengetopt_args_info_help[12] ;
+  args_info->memmap_help = gengetopt_args_info_help[13] ;
+  args_info->bigmem_help = gengetopt_args_info_help[14] ;
+  args_info->random_help = gengetopt_args_info_help[15] ;
+  args_info->verbosity_help = gengetopt_args_info_help[16] ;
   
 }
 
@@ -221,6 +226,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->zeros_orig));
   free_string_field (&(args_info->subsample_orig));
   free_string_field (&(args_info->only_orig));
+  free_string_field (&(args_info->threads_orig));
   free_string_field (&(args_info->random_orig));
   free_string_field (&(args_info->verbosity_orig));
   
@@ -317,6 +323,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "table", 0, 0 );
   if (args_info->only_given)
     write_into_file(outfile, "only", args_info->only_orig, 0);
+  if (args_info->threads_given)
+    write_into_file(outfile, "threads", args_info->threads_orig, 0);
   if (args_info->memmap_given)
     write_into_file(outfile, "memmap", 0, 0 );
   if (args_info->bigmem_given)
@@ -587,6 +595,7 @@ cmdline_parser_internal (
         { "subsample",	1, NULL, 's' },
         { "table",	0, NULL, 't' },
         { "only",	1, NULL, 'y' },
+        { "threads",	1, NULL, 'T' },
         { "memmap",	0, NULL, 'm' },
         { "bigmem",	0, NULL, 'M' },
         { "random",	1, NULL, 'r' },
@@ -594,7 +603,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVd:zZ:Rs:ty:mMr:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVd:zZ:Rs:ty:T:mMr:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -693,6 +702,18 @@ cmdline_parser_internal (
               &(local_args_info.only_given), optarg, 0, "-1", ARG_INT,
               check_ambiguity, override, 0, 0,
               "only", 'y',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'T':	/* Number of threads to use, note that enough memory is required to load threads number of datasets concurrently. This doesn't change memory requirements under bigmem..  */
+        
+        
+          if (update_arg( (void *)&(args_info->threads_arg), 
+               &(args_info->threads_orig), &(args_info->threads_given),
+              &(local_args_info.threads_given), optarg, 0, "1", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "threads", 'T',
               additional_error))
             goto failure;
         

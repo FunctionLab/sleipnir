@@ -22,6 +22,8 @@ option	"table"		t	"Format output as a 2D table"
 						flag	on
 option	"only"		y	"Process only the given input file"
 						int	default="-1"
+option	"threads"	T	"Number of threads to use, note that enough memory is required to load threads number of datasets concurrently. This doesn't change memory requirements under bigmem."
+						int	default="1"
 option	"memmap"	m	"Memory map input/output"
 						flag	off
 option	"bigmem"	M	"Load complete collection of datasets/networks into memory, faster but requires enough memory to hold all datasets."
