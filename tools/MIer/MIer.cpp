@@ -275,7 +275,6 @@ int main( int iArgs, char** aszArgs )
                     adTwo[ i ] = vecdTwo[ i ];
                 }
                 dMeasure = (float)pMeasure->Measure( adOne, vecdOne.size( ), adTwo, vecdTwo.size( ) );
-                cerr << dMeasure << endl;
                 delete[] adTwo;
                 delete[] adOne;
             } else {//use MI calculation
