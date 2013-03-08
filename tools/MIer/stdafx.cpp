@@ -45,7 +45,9 @@
  * (bit) mutual information scores to exponentially scaled sums of relative shared information.  This can
  * be done using the \c half2relative.rb and \c half2weights.rb scripts included with Sleipnir.  The
  * combination of these two files' outputs creates a weights file appropriate for use with \ref Counter 's
- * alphas parameters.
+ * alphas parameters. Also note that the calculated measure is on quantized values if .quant files exist in
+ * the same directory as .dab files. If no .quant files exist, MIer will write to the error log "could not
+ * open quant file" and will proceed using non-quantized values.
  * 
  * \include MIer/MIer.ggo
  * 
