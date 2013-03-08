@@ -245,7 +245,7 @@ int main( int iArgs, char** aszArgs )
                 size_t iGeneOne = veciGenesOne[ i ];
                 size_t iGeneTwo = veciGenesTwo[ i ];
                 for( size_t j = ( i + 1 ); j < vecstrGenes.size( ); ++j ) {
-                    if( ( (float)rand( ) / RAND_MAX ) < dSubsample )
+                    if( ( (float)rand( ) / RAND_MAX ) > dSubsample )
                         continue;
                     float dValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne );
                     float dValueTwo = find_value( iGeneTwo, veciGenesTwo[ j ], DatTwo );
