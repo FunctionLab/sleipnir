@@ -57,9 +57,7 @@ size_t find_value( size_t iOne, size_t iTwo, const CDataPair *pDat, size_t iDefa
 int main( int iArgs, char** aszArgs )
 {
     gengetopt_args_info		    sArgs;
-    CDataPair					*DatOne;
     vector<CDataPair*>          vpDatsBigmem;
-    size_t						iDatOne, iDatTwo;
     size_t						iCountJoint, iJoint, iValueOne, iValueTwo;
     vector<size_t>				veciGenesOne, veciDefaults, veciSizes;
     vector<string>				vecstrInputs, vecstrGenes;
@@ -115,10 +113,9 @@ int main( int iArgs, char** aszArgs )
     }
     veciSizes.resize( vecstrInputs.size( ) );
     for( size_t i = 0; i < veciSizes.size( ); ++i ) {
-        DatOne = new CDataPair;
-        DatOne->OpenQuants( vecstrInputs[ i ].c_str( ) );
-        veciSizes[ i ] = DatOne->GetValues( );
-        delete DatOne;
+        CDataPair DatSize;
+        DatSize.OpenQuants( vecstrInputs[ i ].c_str( ) );
+        veciSizes[ i ] = DatSize.GetValues( );
     }
 
     pMeasure = NULL;
@@ -162,15 +159,25 @@ int main( int iArgs, char** aszArgs )
     }
 
     dSubsample = ( sArgs.subsample_arg == -1 ) ? 1 : ( 2.0f * sArgs.subsample_arg / vecstrGenes.size( ) / ( vecstrGenes.size( ) - 1 ) );
+    vpDatsBigmem.clear( );
     if( sArgs.bigmem_flag ) {
-        for ( iDatOne = 0; iDatOne < vecstrInputs.size( ); ++iDatOne ) {
+        for ( size_t iDat = 0; iDat < vecstrInputs.size( ); ++iDat ) {
             CDataPair* pDat = new CDataPair;
-            if( !( pDat->Open( vecstrInputs[ iDatOne ].c_str( ), false, !!sArgs.memmap_flag ) ||
-                        pDat->Open( vecstrInputs[ iDatOne ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
-                cerr << "Could not open: " << vecstrInputs[ iDatOne ] << endl;
+            if( !( pDat->Open( vecstrInputs[ iDat ].c_str( ), false, !!sArgs.memmap_flag ) ||
+                        pDat->Open( vecstrInputs[ iDat ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
+                cerr << "Could not open: " << vecstrInputs[ iDat ] << endl;
                 return 1;
             }
             vpDatsBigmem.push_back(pDat);
+        }
+    }
+
+    vector<pair<string,string> > vecpairstrChosen;
+    for( size_t i = 0; i < vecstrGenes.size( ); ++i ) {
+        for( size_t j = ( i + 1 ); j < vecstrGenes.size( ); ++j ) {
+            if( ( (float)rand( ) / RAND_MAX ) < dSubsample ) {
+                vecpairstrChosen.push_back(make_pair(vecstrGenes[i], vecstrGenes[j]));
+            }
         }
     }
 
@@ -178,8 +185,9 @@ int main( int iArgs, char** aszArgs )
     vector<float> vecdMeasures( vecstrInputs.size( ) * ( vecstrInputs.size( ) - 1 ) / 2 + vecstrInputs.size( ), 0);
     size_t iCompletedPairs = 0;
     size_t iNumDatasets = vecstrInputs.size( );
-    for( iDatOne = 0; iDatOne < iNumDatasets; ++iDatOne ) {
+    for( size_t iDatOne = 0; iDatOne < iNumDatasets; ++iDatOne ) {
         cerr << "Processing " << iDatOne + 1 << '/' << iNumDatasets << endl;
+        CDataPair* DatOne;
         if ( sArgs.bigmem_flag ) {
             DatOne = vpDatsBigmem[iDatOne];
         }
@@ -195,9 +203,9 @@ int main( int iArgs, char** aszArgs )
         for( size_t i = 0; i < vecstrGenes.size( ); ++i )
             veciGenesOne[ i ] = DatOne->GetGene( vecstrGenes[ i ] );
         #pragma omp parallel for num_threads(sArgs.threads_arg)
-        for( iDatTwo = iDatOne; iDatTwo < iNumDatasets; ++iDatTwo ) { //Change loop to also include self pair for all measures, simplifies code a great deal
+        for( size_t iDatTwo = iDatOne; iDatTwo < iNumDatasets; ++iDatTwo ) { //Change loop to also include self pair for all measures, simplifies code a great deal
             vector<float>               vecdOne, vecdTwo;
-            CDataPair                   *DatTwo;
+            CDataPair*                  DatTwo;
             vector<vector<size_t> >	    vecveciJoint;
             vector<size_t>              veciGenesTwo, veciOne, veciTwo;
             size_t                      iCountOne, iCountTwo;
@@ -241,27 +249,29 @@ int main( int iArgs, char** aszArgs )
                     fill( vecveciJoint[ i ].begin( ), vecveciJoint[ i ].end( ), 0 );
                 }
             }
-            for( size_t i = iCountTwo = iCountJoint = 0; i < vecstrGenes.size( ); ++i ) {
-                size_t iGeneOne = veciGenesOne[ i ];
-                size_t iGeneTwo = veciGenesTwo[ i ];
-                for( size_t j = ( i + 1 ); j < vecstrGenes.size( ); ++j ) {
-                    if( ( (float)rand( ) / RAND_MAX ) > dSubsample )
-                        continue;
-                    float dValueOne = find_value( iGeneOne, veciGenesOne[ j ], DatOne );
-                    float dValueTwo = find_value( iGeneTwo, veciGenesTwo[ j ], DatTwo );
-                    if( pMeasure ) { //Just get values provided to measure
-                        vecdOne.push_back( dValueOne );
-                        vecdTwo.push_back( dValueTwo );
-                    }
-                    else { //Otherwise get information for MI calculation
-                        if( ( iValueTwo = find_value( dValueTwo, DatTwo, veciDefaults[ iDatTwo ], !!sArgs.randomize_flag ) ) != -1 ) {
-                            iCountTwo++;
-                            veciTwo[ iValueTwo ]++;
-                            if( ( iValueOne = find_value( dValueOne, DatOne, veciDefaults[ iDatOne ], !!sArgs.randomize_flag ) ) != -1 ) {
-                                iCountOne++;
-                                iCountJoint++;
-                                vecveciJoint[ iValueOne ][ iValueTwo ]++;
-                            }
+            iCountOne = 0;
+            iCountTwo = 0;
+            iCountJoint = 0;
+            for( size_t i = 0; i < vecpairstrChosen.size( ); ++i ) {
+                pair<string, string> pairChosen = vecpairstrChosen[i];
+                size_t iGeneOne = DatOne->GetGene( pairChosen.first );
+                size_t jGeneOne = DatOne->GetGene( pairChosen.second );
+                size_t iGeneTwo = DatTwo->GetGene( pairChosen.first );
+                size_t jGeneTwo = DatTwo->GetGene( pairChosen.second );
+                float dValueOne = find_value( iGeneOne, jGeneOne, DatOne );
+                float dValueTwo = find_value( iGeneTwo, jGeneTwo, DatTwo );
+                if( pMeasure ) { //Just get values provided to measure
+                    vecdOne.push_back( dValueOne );
+                    vecdTwo.push_back( dValueTwo );
+                }
+                else { //Otherwise get information for MI calculation
+                    if( ( iValueTwo = find_value( dValueTwo, DatTwo, veciDefaults[ iDatTwo ], !!sArgs.randomize_flag ) ) != -1 ) {
+                        iCountTwo++;
+                        veciTwo[ iValueTwo ]++;
+                        if( ( iValueOne = find_value( dValueOne, DatOne, veciDefaults[ iDatOne ], !!sArgs.randomize_flag ) ) != -1 ) {
+                            iCountOne++;
+                            iCountJoint++;
+                            vecveciJoint[ iValueOne ][ iValueTwo ]++;
                         }
                     }
                 }
@@ -295,7 +305,7 @@ int main( int iArgs, char** aszArgs )
             }
 
             //store for later output
-            vecdMeasures[ iCompletedPairs + iDatTwo ] = dMeasure;
+            vecdMeasures[ iCompletedPairs + iDatTwo - iDatOne ] = dMeasure;
             if ( !sArgs.bigmem_flag ) { //Clean up after ourselves if we're not bigmem
                 if ( iDatOne != iDatTwo ) { //don't delete DatOne
                     delete DatTwo;
@@ -303,32 +313,38 @@ int main( int iArgs, char** aszArgs )
             }
         }
         iCompletedPairs += iNumDatasets - iDatOne;
-        delete DatOne; //DatOne doesn't get used again, be nice and free up some memory
+        if ( !sArgs.bigmem_flag ) {
+            delete DatOne; //Clean up after ourselves
+        }
     }
 
     //Now on to output
     iCompletedPairs = 0;
     if( sArgs.table_flag ) { // Write out table
-        for ( iDatOne = 0; iDatOne < iNumDatasets; ++iDatOne) {
-            cout << '\t' << vecstrInputs[ iDatOne ];
+        for ( size_t iDat = 0; iDat < iNumDatasets; ++iDat ) {
+            cout << '\t' << vecstrInputs[ iDat ];
         }
         cout << endl;
-        for ( iDatOne = 0; iDatOne < iNumDatasets; ++iDatOne) {
+        for ( size_t iDatOne = 0; iDatOne < iNumDatasets; ++iDatOne) {
             cout << vecstrInputs[ iDatOne ];
-            for ( iDatTwo = iDatOne; iDatTwo < iNumDatasets; ++iDatTwo) {
-                cout << '\t' << vecdMeasures[ iCompletedPairs + iDatTwo ];
+            for ( size_t iDatTwo = 0; iDatTwo < iNumDatasets; ++iDatTwo) {
+                if ( iDatTwo < iDatOne ) {
+                    cout << '\t';
+                }
+                else {
+                    cout << '\t' << vecdMeasures[ iCompletedPairs + iDatTwo - iDatOne ];
+                }
             }
             cout << endl;
             iCompletedPairs += iNumDatasets - iDatOne;
         }
     }
     else { // write as pairs
-        for ( iDatOne = 0; iDatOne < iNumDatasets; ++iDatOne) {
-            for ( iDatTwo = iDatOne; iDatTwo < iNumDatasets; ++iDatTwo) {
-                cout << vecstrInputs[ iDatOne ] << '\t' << vecstrInputs[ iDatTwo ] << '\t' << vecdMeasures[ iCompletedPairs + iDatTwo ] << endl;
+        for ( size_t iDatOne = 0; iDatOne < iNumDatasets; ++iDatOne) {
+            for ( size_t iDatTwo = iDatOne; iDatTwo < iNumDatasets; ++iDatTwo) {
+                cout << vecstrInputs[ iDatOne ] << '\t' << vecstrInputs[ iDatTwo ] << '\t' << vecdMeasures[ iCompletedPairs + iDatTwo - iDatOne ] << endl;
             }
             iCompletedPairs += iNumDatasets - iDatOne;
-            cout << iCompletedPairs << endl;
         }
     }
 

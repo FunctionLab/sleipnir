@@ -116,20 +116,23 @@ bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, si
 
 
 	g_CatSleipnir( ).notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
-	
+
 	Reset( fContinuous );
 	m_fQuantized = false;
-	
+
 	const char* file_ext = NULL;
-	
+
 	if((file_ext = strstr(szDatafile, c_acQdab)) != NULL){
 
 	  return OpenQdab( szDatafile );
 	}
 	else{
-	  if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore, false, fSeek ) )
+        if( m_fContinuous ? true : OpenQuants( szDatafile ) ) {
+	        if( CDat::Open( szDatafile, fMemmap, iSkip, fZScore, false, fSeek ) ) {
+	            return true;
+            }
+        }
 	    return false;
-	  return ( m_fContinuous ? true : OpenQuants( szDatafile ) ); 	  
 	}
 }
 
