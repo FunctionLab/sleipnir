@@ -432,10 +432,7 @@ double CMeasurePearson::Pearson(const float* adX, size_t iM, const float* adY,
 	if (!dDX || !dDY)
 		dRet = CMeta::GetNaN();
 	else {
-		if (dDX)
-			dRet /= sqrt(dDX);
-		if (dDY)
-			dRet /= sqrt(dDY);
+			dRet /= ( sqrt(dDX) * sqrt(dDY) );
 	}
 
 	switch (eMap) {

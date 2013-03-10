@@ -524,12 +524,14 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 				continue;
 			adOne = PCL.Get(iOne);
 			#pragma omp parallel for num_threads(nThreads)
-			for (j = (i + 1); j < GenesIn.GetGenes(); ++j)
-				if ((iTwo = veciGenes[j]) != -1)
+			for (j = (i + 1); j < GenesIn.GetGenes(); ++j) {
+				if ((iTwo = veciGenes[j]) != -1) {
 					Dat.Set(i, j, (float) pMeasure->Measure(adOne,
 							PCL.GetExperiments(), PCL.Get(iTwo),
 							PCL.GetExperiments(), eMap, adWeights, adWeights));
-		}
+                }
+            }
+        }
 
 		if (fNormalize || fZScore)
 			Dat.Normalize(fZScore ? CDat::ENormalizeZScore
