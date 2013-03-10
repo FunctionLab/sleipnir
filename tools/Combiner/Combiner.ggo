@@ -33,7 +33,7 @@ option	"normalize"	n	"Normalize inputs before combining"
 						flag	off
 option	"quantiles"	q	"Replace values with quantiles"
 						int	default="0"
-option	"zscore"	z	"Z-score output after combining"
+option	"zscore"	z	"Z-score output after combining (applies to dat combination type)"
 						flag	off
 option	"zero"		Z	"Default missing values to zero"
 						flag	off
