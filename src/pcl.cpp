@@ -509,7 +509,6 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 	if (pMeasure->IsRank())
 		PCL.RankTransform();
 
-	//int iX, iY;
 	if ((iLimit != -1) && (PCL.GetGenes() > iLimit))
 		Dat.Open(PCL, pMeasure->Clone(), true);
 	else {
@@ -534,27 +533,6 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 					Dat.Set(i, j, (float) pMeasure->Measure(adOne,
 							PCL.GetExperiments(), PCL.Get(iTwo),
 							PCL.GetExperiments(), eMap, adWeights, adWeights));
-					/*if(GenesIn.GetGene(iOne).GetName()=="916" &&
-					GenesIn.GetGene(iTwo).GetName()=="5743"){
-						fprintf(stderr, "measure %s\n", pMeasure->GetName());
-						float *x1 = PCL.Get(iOne);
-						float *x2 = PCL.Get(iTwo);
-						if(adWeights==NULL){
-							fprintf(stderr, "adweights is empty\n");
-						}
-						int k;
-						for(k=0; k<PCL.GetExperiments(); k++){
-							fprintf(stderr, "%d %.5f %.5f\n", k, x1[k], x2[k]);
-						}
-						int tt = PCL.GetExperiments();
-						float tX = pMeasure->Measure(PCL.Get(iOne), tt, PCL.Get(iTwo), tt, IMeasure::EMapNone, NULL, NULL);
-						float tY = pMeasure->Measure(PCL.Get(iTwo), tt, PCL.Get(iOne), tt, IMeasure::EMapNone, NULL, NULL);
-						iX = i;
-						iY = j;
-						fprintf(stderr, "Correlation 5743 916 %.5f %.5f\n", tX, tY);
-						//g_CatSleipnir().info(
-						//	"Correlation 9159 5742 %.5f\n", Dat.Get(i,j));
-					}*/
 				}
 			}
 		}
@@ -562,7 +540,6 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 		if (fNormalize || fZScore)
 			Dat.Normalize(fZScore ? CDat::ENormalizeZScore
 					: CDat::ENormalizeMinMax);
-		//fprintf(stderr, "Correlation 5743 916 %.5f\n", Dat.Get(iX,iY));
 
 		if (!CMeta::IsNaN(dCutoff))
 			for (i = 0; i < Dat.GetGenes(); ++i)

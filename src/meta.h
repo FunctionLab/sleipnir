@@ -244,8 +244,6 @@ public:
 		size_t r = min(i, vecQuants.size()-1);
 		return r;
 		 */
-
-
 		
 		size_t mid = vecQuants.size() / 2;
 		int i = mid;

@@ -1298,9 +1298,6 @@ void CDatImpl::AveStd( double& dAverage, double& dStdev, size_t& iN, size_t iApp
 		dAverage /= iN;
 		dStdev = sqrt( ( dStdev / ( iN - ( ( iN > 1 ) ? 1 : 0 ) ) ) - ( dAverage * dAverage ) ); 
 	} 
-	//fprintf(stderr, "Average: %.5f Stdev: %.5f\n", dAverage, dStdev);
-	
-
 
 }
 
