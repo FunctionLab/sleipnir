@@ -113,14 +113,27 @@ bool CSeekQuery::CreateCVPartitions(const gsl_rng *rnd,
 			return false;
 		}
 	}else{
-		if(p==LEAVE_ONE_IN || p==LEAVE_ONE_OUT){
+		if(p==LEAVE_ONE_IN){
+			iFoldx = qSize;
+			fold_size = 1;
+		}else if(p==LEAVE_ONE_OUT){
+			iFoldx = qSize;
+			fold_size = qSize - 1;
+		}else{ //CUSTOM_PART
+		/*if(p==LEAVE_ONE_IN || p==LEAVE_ONE_OUT){
 			cerr << "Error, specified number of folds, so this must NOT be \
 					LEAVE_ONE_OUT or LEAVE_ONE_IN" << endl;
 			return false;
-		}
-		fold_size = qSize / iFoldx;
-		if(qSize % iFoldx > 0){
-			fold_size++;
+		}*/
+			if(qSize <= iFoldx){
+				fold_size = 1;
+				iFoldx = qSize;
+			}else{
+				fold_size = qSize / iFoldx;
+				if(qSize % iFoldx > 0){
+					fold_size++;
+				}
+			}
 		}
 	}
 	iNumFold = iFoldx;

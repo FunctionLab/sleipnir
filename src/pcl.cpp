@@ -167,6 +167,8 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 		bool fAutocorrelate, const char* szGeneFile, float dCutoff,
 		size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap,
 		bool fFrequencyWeight, float dAlpha, int nThreads) {
+
+
 	size_t i, j, iOne, iTwo;
 	float d;
 	ifstream ifsm;
@@ -286,11 +288,13 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 			if ((iOne = veciGenes[i]) == -1)
 				continue;
 			adOne = PCL.Get(iOne);
-			for (j = (i + 1); j < GenesIn.GetGenes(); ++j)
-				if ((iTwo = veciGenes[j]) != -1)
+			for (j = (i + 1); j < GenesIn.GetGenes(); ++j){
+				if ((iTwo = veciGenes[j]) != -1){
 					Dat.Set(i, j, (float) pMeasure->Measure(adOne,
 							PCL.GetExperiments(), PCL.Get(iTwo),
 							PCL.GetExperiments(), eMap, adWeights, adWeights));
+				}
+			}
 		}
 		omp_set_num_threads(origNThreads);
 		if (fNormalize || fZScore)
@@ -505,6 +509,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 	if (pMeasure->IsRank())
 		PCL.RankTransform();
 
+	//int iX, iY;
 	if ((iLimit != -1) && (PCL.GetGenes() > iLimit))
 		Dat.Open(PCL, pMeasure->Clone(), true);
 	else {
@@ -524,18 +529,41 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 				continue;
 			adOne = PCL.Get(iOne);
 			#pragma omp parallel for num_threads(nThreads)
-			for (j = (i + 1); j < GenesIn.GetGenes(); ++j) {
-				if ((iTwo = veciGenes[j]) != -1) {
+			for (j = (i + 1); j < GenesIn.GetGenes(); ++j){
+				if ((iTwo = veciGenes[j]) != -1){
 					Dat.Set(i, j, (float) pMeasure->Measure(adOne,
 							PCL.GetExperiments(), PCL.Get(iTwo),
 							PCL.GetExperiments(), eMap, adWeights, adWeights));
-                }
-            }
-        }
+					/*if(GenesIn.GetGene(iOne).GetName()=="916" &&
+					GenesIn.GetGene(iTwo).GetName()=="5743"){
+						fprintf(stderr, "measure %s\n", pMeasure->GetName());
+						float *x1 = PCL.Get(iOne);
+						float *x2 = PCL.Get(iTwo);
+						if(adWeights==NULL){
+							fprintf(stderr, "adweights is empty\n");
+						}
+						int k;
+						for(k=0; k<PCL.GetExperiments(); k++){
+							fprintf(stderr, "%d %.5f %.5f\n", k, x1[k], x2[k]);
+						}
+						int tt = PCL.GetExperiments();
+						float tX = pMeasure->Measure(PCL.Get(iOne), tt, PCL.Get(iTwo), tt, IMeasure::EMapNone, NULL, NULL);
+						float tY = pMeasure->Measure(PCL.Get(iTwo), tt, PCL.Get(iOne), tt, IMeasure::EMapNone, NULL, NULL);
+						iX = i;
+						iY = j;
+						fprintf(stderr, "Correlation 5743 916 %.5f %.5f\n", tX, tY);
+						//g_CatSleipnir().info(
+						//	"Correlation 9159 5742 %.5f\n", Dat.Get(i,j));
+					}*/
+				}
+			}
+		}
 
 		if (fNormalize || fZScore)
 			Dat.Normalize(fZScore ? CDat::ENormalizeZScore
 					: CDat::ENormalizeMinMax);
+		//fprintf(stderr, "Correlation 5743 916 %.5f\n", Dat.Get(iX,iY));
+
 		if (!CMeta::IsNaN(dCutoff))
 			for (i = 0; i < Dat.GetGenes(); ++i)
 				for (j = (i + 1); j < Dat.GetGenes(); ++j)

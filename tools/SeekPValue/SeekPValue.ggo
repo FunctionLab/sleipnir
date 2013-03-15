@@ -1,0 +1,15 @@
+package	"SeekPValue"
+version	"1.0"
+purpose	"Estimates P-Value of the retrieved genes based on a background of random queries"
+
+section "Main"
+option	"port"				t	"Port"
+								string default="9005"
+option	"random_dir"		R	"Random directory"
+								string typestr="directory"	yes
+option	"random_num"		N	"Number of random trials"
+								int 	default="100"	yes
+option	"input"				i	"Gene mapping file"
+								string typestr="filename" yes
+option	"nan"				n	"Define NaN score"
+								float	default="-320"

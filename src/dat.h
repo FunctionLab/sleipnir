@@ -235,6 +235,10 @@ public:
 		return CDatImpl::GetRowSeek(m_ifsm, i);
 	}
 
+	void AveStd( double& a, double& b, size_t& c){
+		return CDatImpl::AveStd(a, b, c);
+	}
+
 	void Clear( float dValue ) {
 		size_t	i;
 

@@ -46,7 +46,8 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 	ushort q_size = cv_query.size();
 	ushort **f = sDataset.GetDataMatrix();
 
-	rank.resize(iNumGenes);
+	//rank.resize(iNumGenes);
+	CSeekTools::InitVector(rank, iNumGenes, (ushort) 0);
 
 	/* as long as rank[g] does not overflow, due to too many queries, we are fine
 	 * should control query size to be <100. */
@@ -184,7 +185,6 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 		fprintf(stderr, "rank_d is null");
 		return false;
 	}
-
 
 	master_rank.clear();
 	master_rank.resize(iGenes);
@@ -459,6 +459,7 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 				MIN_QUERY_REQUIRED, bSquareZ);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
 				rank, w, is_query_cross, is_gold, *mapG, &ar, TOP);
+			//fprintf(stderr, "Weight %.5f\n", w);
 			//ret = CSeekPerformanceMeasure::AveragePrecision(
 			//	rank, w, is_query_cross, is_gold, *mapG, &ar);
 			if(!ret) sDataset.SetCVWeight(qi, -1);

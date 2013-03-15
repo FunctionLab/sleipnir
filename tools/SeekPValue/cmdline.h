@@ -21,12 +21,12 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_PACKAGE
 /** @brief the program name (used for printing errors) */
-#define CMDLINE_PARSER_PACKAGE "PCLServer"
+#define CMDLINE_PARSER_PACKAGE "SeekPValue"
 #endif
 
 #ifndef CMDLINE_PARSER_PACKAGE_NAME
 /** @brief the complete program name (used for help and version) */
-#define CMDLINE_PARSER_PACKAGE_NAME "PCLServer"
+#define CMDLINE_PARSER_PACKAGE_NAME "SeekPValue"
 #endif
 
 #ifndef CMDLINE_PARSER_VERSION
@@ -39,37 +39,29 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * port_arg;	/**< @brief Port to listen to.  */
-  char * port_orig;	/**< @brief Port to listen to original value given at command line.  */
-  const char *port_help; /**< @brief Port to listen to help description.  */
-  char * input_arg;	/**< @brief Input PCL directory.  */
-  char * input_orig;	/**< @brief Input PCL directory original value given at command line.  */
-  const char *input_help; /**< @brief Input PCL directory help description.  */
-  char * sinfo_arg;	/**< @brief Sinfo directory.  */
-  char * sinfo_orig;	/**< @brief Sinfo directory original value given at command line.  */
-  const char *sinfo_help; /**< @brief Sinfo directory help description.  */
-  char * prep_arg;	/**< @brief Prep directory.  */
-  char * prep_orig;	/**< @brief Prep directory original value given at command line.  */
-  const char *prep_help; /**< @brief Prep directory help description.  */
-  char * gene_arg;	/**< @brief Gene map file.  */
-  char * gene_orig;	/**< @brief Gene map file original value given at command line.  */
-  const char *gene_help; /**< @brief Gene map file help description.  */
-  char * platform_arg;	/**< @brief Platform directory.  */
-  char * platform_orig;	/**< @brief Platform directory original value given at command line.  */
-  const char *platform_help; /**< @brief Platform directory help description.  */
-  char * dset_arg;	/**< @brief Dataset listing.  */
-  char * dset_orig;	/**< @brief Dataset listing original value given at command line.  */
-  const char *dset_help; /**< @brief Dataset listing help description.  */
+  char * port_arg;	/**< @brief Port (default='9005').  */
+  char * port_orig;	/**< @brief Port original value given at command line.  */
+  const char *port_help; /**< @brief Port help description.  */
+  char * random_dir_arg;	/**< @brief Random directory.  */
+  char * random_dir_orig;	/**< @brief Random directory original value given at command line.  */
+  const char *random_dir_help; /**< @brief Random directory help description.  */
+  int random_num_arg;	/**< @brief Number of random trials (default='100').  */
+  char * random_num_orig;	/**< @brief Number of random trials original value given at command line.  */
+  const char *random_num_help; /**< @brief Number of random trials help description.  */
+  char * input_arg;	/**< @brief Gene mapping file.  */
+  char * input_orig;	/**< @brief Gene mapping file original value given at command line.  */
+  const char *input_help; /**< @brief Gene mapping file help description.  */
+  float nan_arg;	/**< @brief Define NaN score (default='-320').  */
+  char * nan_orig;	/**< @brief Define NaN score original value given at command line.  */
+  const char *nan_help; /**< @brief Define NaN score help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int port_given ;	/**< @brief Whether port was given.  */
+  unsigned int random_dir_given ;	/**< @brief Whether random_dir was given.  */
+  unsigned int random_num_given ;	/**< @brief Whether random_num was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
-  unsigned int sinfo_given ;	/**< @brief Whether sinfo was given.  */
-  unsigned int prep_given ;	/**< @brief Whether prep was given.  */
-  unsigned int gene_given ;	/**< @brief Whether gene was given.  */
-  unsigned int platform_given ;	/**< @brief Whether platform was given.  */
-  unsigned int dset_given ;	/**< @brief Whether dset was given.  */
+  unsigned int nan_given ;	/**< @brief Whether nan was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

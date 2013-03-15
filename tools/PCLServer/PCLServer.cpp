@@ -44,7 +44,20 @@ pthread_mutex_t mutexGet;
 
 string strPrepInputDirectory;
 string strSinfoInputDirectory;
+string strDatasetInputDirectory;
+string strPlatformInputDirectory;
 map<string, int> mapstrintGene;
+
+vector<string> vecstrGeneID;
+vector<string> vecstrGenes;
+vector<string> vecstrDatasets;
+vector<string> vecstrDP;
+map<string, ushort> mapstriPlatform;
+map<string, string> mapstrstrDatasetPlatform;
+map<string, ushort> mapstrintDataset;
+vector<string> vecstrPlatforms;
+vector<CSeekPlatform> vp;
+
 
 void sigchld_handler(int s){
     while(waitpid(-1, NULL, WNOHANG) > 0);
@@ -82,6 +95,7 @@ struct thread_data{
 	vector<string> queryName;
     int threadid;
     int new_fd;
+	float rbp_p;
 	bool outputNormalized;
 	bool outputCoexpression;
 	bool outputQueryCoexpression;
@@ -125,6 +139,7 @@ void *do_query(void *th_arg){
 	bool outputQueryExpression = my->outputQueryExpression;
 	int new_fd = my->new_fd;
 	int tid = my->threadid;
+	float RBP_P = my->rbp_p;
 
 	/*
 	cl(buf, 5000);
@@ -169,13 +184,14 @@ void *do_query(void *th_arg){
 
 		fprintf(stderr, "acquired %d for dataset %s...\n", n, iterS->c_str());
 		//pcl[n]->Reset();
-		fprintf(stderr, "dataset reset\n");
+		//string strFileStem = (*iterS).substr(0, (*iterS).find(".bin"));
+		fprintf(stderr, "dataset reset \n");
 		pcl[n]->Open((*iterS).c_str());
+		//pcl[n]->Open(strFileStem.c_str(), 2, false, false);
 		fprintf(stderr, "dataset opened\n");
 		vc.push_back(pcl[n]);
 	}
 
-	size_t j, k;
 	//vector<CFullMatrix<float> *> vC; //gene expression
 	//vector<CFullMatrix<float> *> vQ; //query expression (if enabled) (EXTRA)
 	//int totNumExperiments = 0;
@@ -185,6 +201,13 @@ void *do_query(void *th_arg){
 
 	vector<float> vecG, vecQ, vecCoexpression, vecqCoexpression;
 	vector<float> sizeD;
+	sizeD.resize(vc.size());
+
+	vector< vector<float> > d_vecG, d_vecQ, d_vecCoexpression, d_vecqCoexpression;
+	d_vecG.resize(vc.size());
+	d_vecQ.resize(vc.size());
+	d_vecCoexpression.resize(vc.size());
+	d_vecqCoexpression.resize(vc.size());
 
 	//Qian added
 	//vector<CSeekDataset *> vd; //(EXTRA)
@@ -196,11 +219,29 @@ void *do_query(void *th_arg){
 
 	float NaN = -9999;	
 	//for each dataset
+
+	vector<float> quant;
+	CSeekTools::ReadQuantFile("/home/qzhu/Seek/quant2", quant);
+
+	#pragma omp parallel for \
+	private(i) \
+	firstprivate(genes, queries, datasets, outputCoexpression, outputQueryCoexpression, outputNormalized, outputExpression, \
+	outputQueryExpression, NaN) \
+	shared(pcl, vc, sizeD, datasetName, queryName, geneName, d_vecG, d_vecQ, d_vecCoexpression, d_vecqCoexpression, \
+	mapstrintGene, mapstrstrDatasetPlatform, mapstriPlatform, vp) \
+	schedule(dynamic)
 	for(i=0; i<vc.size(); i++){
 		CPCL *pp = vc[i];
-		int ps = pp->GetExperiments() - 2;
+		size_t j, k;
+		//int ps = pp->GetExperiments() - 2;
+		//int gs = pp->GetExperiments();
+		int ps = pp->GetExperiments();
 		int gs = pp->GetExperiments();
+
 		CFullMatrix<float> *fq = NULL;
+		
+		CFullMatrix<float>* fq_RBP = NULL;
+
 		CFullMatrix<float> *ff = NULL;
 		vector<float> vCoexpression;
 		vCoexpression.resize(genes);
@@ -208,7 +249,14 @@ void *do_query(void *th_arg){
 		vqCoexpression.resize(queryName.size());
 
 		CSeekDataset *vd = NULL;
-		sizeD.push_back((float) ps);
+		CSeekPlatform *pl = NULL;
+		sizeD[i] = (float)ps;
+		d_vecG[i] = vector<float>();	
+		d_vecQ[i] = vector<float>();	
+		d_vecCoexpression[i] = vector<float>();	
+		d_vecqCoexpression[i] = vector<float>();	
+
+		set<string> absent;
 
 		if(outputCoexpression || outputQueryCoexpression){
 			vd = new CSeekDataset();
@@ -221,102 +269,152 @@ void *do_query(void *th_arg){
 			vd->ReadDatasetAverageStdev(strSinfoPath);
 			vd->InitializeGeneMap();
 
+			string strPlatform = mapstrstrDatasetPlatform.find(strFileStem)->second;
+			ushort platform_id = mapstriPlatform.find(strPlatform)->second;
+			vd->SetPlatform(vp[platform_id]);
+			pl = &vd->GetPlatform();
+
 			fq = new CFullMatrix<float>();
-			fq->Initialize(queryName.size(), pp->GetExperiments() - 2);
+			fq->Initialize(queryName.size(), ps);
+
+			//NEW 3/5/2013====================================
+			if(outputQueryCoexpression){
+				const vector<string> gNames = pp->GetGeneNames();
+				fq_RBP = new CFullMatrix<float>();
+				fq_RBP->Initialize(gNames.size(), ps);
+				//fprintf(stderr, "%d %d X1\n", i, gNames.size());
+				//#pragma omp parallel for \
+				shared(pp, fq_RBP) private(k, j) firstprivate(gs) \
+				schedule(dynamic)
+				/*for(k=0; k<gNames.size(); k++){
+					int g = pp->GetGene(gNames[k]);
+					float *vv = pp->Get(g);
+					for(j=0; j<gs; j++)
+						fq_RBP->Set(g, j, vv[j]);
+					float mean = 0;
+					for(j=0; j<gs; j++)
+						mean+=fq_RBP->Get(g, j);
+					mean/=(float) (gs);
+					float stdev = 0;
+					for(j=0; j<gs; j++)
+						stdev+=(fq_RBP->Get(g, j) - mean) * (fq_RBP->Get(g, j) - mean);
+					stdev/=(float) (gs);
+					if(stdev<=0){
+						absent.insert(gNames[k]);
+					}	
+					stdev = sqrt(stdev);
+					if(isnan(stdev) || isinf(stdev)){
+						fprintf(stderr, "Error:, standard deviation is zero\n");
+					}
+					for(j=0; j<gs; j++){
+						float t1 = fq_RBP->Get(g, j);
+						fq_RBP->Set(g, j, (t1 - mean) / stdev);
+						
+					}
+				}*/
+				//fprintf(stderr, "%d X2\n", i);
+			}
+			//====================================================
+
+
+			if(outputQueryExpression){
 			for(k=0; k<queryName.size(); k++){
 				int g = pp->GetGene(queryName[k]);
 				if(g==-1){ //does not contain the gene in the dataset
-					for(j=2; j<gs; j++){
-						fq->Set(k, j-2, NaN);
-						vecQ.push_back(fq->Get(k, j-2));
+					for(j=0; j<gs; j++){
+						fq->Set(k, j, NaN);
+						d_vecQ[i].push_back(fq->Get(k, j));
 					}
 					continue;
 				}
 				float *vv = pp->Get(g);
-				for(j=2; j<gs; j++)
-					fq->Set(k, j-2, vv[j]);
+				for(j=0; j<gs; j++)
+					fq->Set(k, j, vv[j]);
 				if(!outputNormalized){
-					for(j=2; j<gs; j++)
-						vecQ.push_back(fq->Get(k, j-2));
+					for(j=0; j<gs; j++)
+						d_vecQ[i].push_back(fq->Get(k, j));
 				}
 				
 				//normalize
 				float mean = 0;
-				for(j=2; j<gs; j++)
-					mean+=fq->Get(k, j-2);
-				mean/=(float) (gs - 2);
+				for(j=0; j<gs; j++)
+					mean+=fq->Get(k, j);
+				mean/=(float) (gs);
 				float stdev = 0;
-				for(j=2; j<gs; j++)
-					stdev+=(fq->Get(k, j-2) - mean) * (fq->Get(k, j-2) - mean);
-				stdev/=(float) (gs - 2);
+				for(j=0; j<gs; j++)
+					stdev+=(fq->Get(k, j) - mean) * (fq->Get(k, j) - mean);
+				stdev/=(float) (gs);
 				stdev = sqrt(stdev);
-				for(j=2; j<gs; j++){
-					float t1 = fq->Get(k, j-2);
-					fq->Set(k, j-2, (t1 - mean) / stdev);
+				for(j=0; j<gs; j++){
+					float t1 = fq->Get(k, j);
+					fq->Set(k, j, (t1 - mean) / stdev);
 				}
 
 				if(outputNormalized){
-					for(j=2; j<gs; j++)
-						vecQ.push_back(fq->Get(k, j-2));
+					for(j=0; j<gs; j++)
+						d_vecQ[i].push_back(fq->Get(k, j));
 				}
-
+			}
 			}
 		}
 
 		fprintf(stderr, "allocating space %d %d...\n", geneName.size(),
-			pp->GetExperiments());
+			ps);
 		ff = new CFullMatrix<float>();
 		ff->Initialize(genes, ps);
 		fprintf(stderr, "done allocating space.\n");
 
+		if(outputExpression){
 		for(k=0; k<geneName.size(); k++){
 			int g = pp->GetGene(geneName[k]);
 			if(g==-1){
-				for(j=2; j<gs; j++){
-					ff->Set(k, j-2, NaN);
-					vecG.push_back(ff->Get(k, j-2));
+				for(j=0; j<gs; j++){
+					ff->Set(k, j, NaN);
+					d_vecG[i].push_back(ff->Get(k, j));
 				}
 				continue;
 			}
 			float *vv = pp->Get(g);
-			for(j=2; j<gs; j++)
-				ff->Set(k, j-2, vv[j]);
+			for(j=0; j<gs; j++)
+				ff->Set(k, j, vv[j]);
 
 			if(!outputNormalized){
-				for(j=2; j<gs; j++){
-					vecG.push_back(ff->Get(k, j-2));
+				for(j=0; j<gs; j++){
+					d_vecG[i].push_back(ff->Get(k, j));
 				}
 			}
 			
 			//normalize	
 			float mean = 0;
-			for(j=2; j<gs; j++)
-				mean+=ff->Get(k, j-2);
-			mean/=(float) (gs - 2);
+			for(j=0; j<gs; j++)
+				mean+=ff->Get(k, j);
+			mean/=(float) (gs);
 			float stdev = 0;
-			for(j=2; j<gs; j++)
-				stdev+=(ff->Get(k, j-2) - mean) * (ff->Get(k, j-2) - mean);
-			stdev/=(float) (gs - 2);
+			for(j=0; j<gs; j++)
+				stdev+=(ff->Get(k, j) - mean) * (ff->Get(k, j) - mean);
+			stdev/=(float) (gs);
 			stdev = sqrt(stdev);
-			for(j=2; j<gs; j++){
-				float t1 = ff->Get(k, j-2);
-				ff->Set(k, j-2, (t1 - mean) / stdev);
+			for(j=0; j<gs; j++){
+				float t1 = ff->Get(k, j);
+				ff->Set(k, j, (t1 - mean) / stdev);
 			}
 
 			if(outputNormalized){
-				for(j=2; j<gs; j++){
-					vecG.push_back(ff->Get(k, j-2));
+				for(j=0; j<gs; j++){
+					d_vecG[i].push_back(ff->Get(k, j));
 				}
 			}
+		}
 		}
 
 		if(outputCoexpression){
 			int kk;
+			CMeasurePearNorm pn;
 			for(k=0; k<geneName.size(); k++){
 				int g = pp->GetGene(geneName[k]);
 				if(g==-1){
 					vCoexpression[k] = NaN;
-					vecCoexpression.push_back(vCoexpression[k]);
+					d_vecCoexpression[i].push_back(vCoexpression[k]);
 					continue;
 				}
 				float avgP = 0;
@@ -327,17 +425,36 @@ void *do_query(void *th_arg){
 						totalQueryPresent--;
 						continue;
 					}
-					float p = 0;
-					for(j=2; j<gs; j++)
-						p+= ff->Get(k, j-2)*fq->Get(kk, j-2);
-					p/=(float)(gs-2);
-					//fprintf(stderr, "%.2f sinfo: %.2f %.2f\ngene average %d: %.2f\n", p, vd->GetDatasetAverage(), 
-					//	vd->GetDatasetStdev(), g, vd->GetGeneAverage(mapstrintGene[queryName[kk]]));
-					//p = max((float) min(p - vd->GetGeneAverage(g), (float) 3.2), (float)-3.2);
-					//get z-score (dataset wide)
+
+					float *x1 = NULL;
+					float *x2 = NULL;
+					if(g<gg){
+						x1 = pp->Get(g);
+						x2 = pp->Get(gg);
+					}else{
+						x1 = pp->Get(gg);
+						x2 = pp->Get(g);
+					}
+
+					float p = (float) pn.Measure(x1, ps, x2, ps, 
+						IMeasure::EMapCenter, NULL, NULL);	
+
 					p = (p - vd->GetDatasetAverage()) / vd->GetDatasetStdev();
+
+					int gID = mapstrintGene[geneName[k]];
+					int qID = mapstrintGene[queryName[kk]];
+
+					int qb = CMeta::Quantize(p, quant);
+					p = quant[qb];
+
+					//fprintf(stderr, "Correlation %d %d %.5f %.5f %.5f %.5f\n", qID, gID, p, vd->GetGeneAverage(gID), 
+					//	pl->GetPlatformAvg(qID), pl->GetPlatformStdev(qID));
+
 					//subtract hubbiness
-					p = p - vd->GetGeneAverage(mapstrintGene[queryName[kk]]);
+					p = (p - vd->GetGeneAverage(gID) - pl->GetPlatformAvg(qID)) / pl->GetPlatformStdev(qID) ;
+					//p = p - vd->GetGeneAverage(gID);
+					p = max((float) min(p, (float) 3.2), (float)-3.2);
+
 					avgP+=p;
 				}
 				if(totalQueryPresent==0)
@@ -346,13 +463,119 @@ void *do_query(void *th_arg){
 					avgP/=(float)(totalQueryPresent);
 				
 				vCoexpression[k] = avgP;
-				vecCoexpression.push_back(avgP);
+				d_vecCoexpression[i].push_back(avgP);
 			}
 		}
 
 		if(outputQueryCoexpression){
 			int kk=0;
+
+			const vector<string> gNames = pp->GetGeneNames();
+			vector<char> qMap;
+			CSeekTools::InitVector(qMap, vecstrGenes.size(), (char)0);
+
+			int totQuery = 0;
 			for(k=0; k<queryName.size(); k++){
+				int g = pp->GetGene(queryName[k]);
+				if(g==-1) continue;
+				int mg = mapstrintGene[queryName[k]];
+				qMap[mg] = 1;
+				totQuery++;
+			}
+
+			CMeasurePearNorm pn;
+
+			for(k=0; k<queryName.size(); k++){
+				int g = pp->GetGene(queryName[k]);
+				if(g==-1){
+					vqCoexpression[k] = NaN;
+					d_vecqCoexpression[i].push_back(vqCoexpression[k]);
+					continue;
+				}
+				vector<AResult> ar;
+				ar.resize(gNames.size());
+
+				for(kk=0; kk<gNames.size(); kk++){
+					int gg = pp->GetGene(gNames[kk]);
+					ar[kk].i = (ushort) mapstrintGene[gNames[kk]];
+					if(g==gg){
+						ar[kk].f = 0;
+						continue;
+					}
+
+					float *x1 = NULL;
+					float *x2 = NULL;
+					if(g<gg){
+						x1 = pp->Get(g);
+						x2 = pp->Get(gg);
+					}else{
+						x1 = pp->Get(gg);
+						x2 = pp->Get(g);
+					}
+
+					float p = (float) pn.Measure(x1, ps, x2, ps, 
+						IMeasure::EMapCenter, NULL, NULL);	
+
+					float px = p;
+					if(!(p<5.0 && p>-5.0)){
+						ar[kk].f = 0;
+						continue;
+					}
+
+					//get z-score (dataset wide)
+					p = (p - vd->GetDatasetAverage()) / vd->GetDatasetStdev();
+					int gID = mapstrintGene[gNames[kk]];
+					int qID = mapstrintGene[queryName[k]];
+
+					int qb = CMeta::Quantize(p, quant);
+					p = quant[qb];
+
+					//fprintf(stderr, "Correlation %d %d %.5f %.5f %.5f %.5f\n", qID, gID, p, vd->GetGeneAverage(gID), 
+					//	pl->GetPlatformAvg(qID), pl->GetPlatformStdev(qID));
+
+					//subtract hubbiness
+					p = (p - vd->GetGeneAverage(gID) - pl->GetPlatformAvg(qID)) / pl->GetPlatformStdev(qID) ;
+					//p = p - vd->GetGeneAverage(gID);
+					p = max((float) min(p, (float) 3.2), (float)-3.2);
+
+					//fprintf(stderr, "%d error, infinite or nan! %.3f, %.3f, %.3f\n", i, 
+					//	vd->GetDatasetAverage(), vd->GetDatasetStdev(), 
+					//	vd->GetGeneAverage(mapstrintGene[gNames[kk]]));
+					//fprintf(stderr, "Correlation %d %d %.5f\n", qID, gID, p);
+					ar[kk].f = (ushort) (p*100.0 + 320);
+
+				}
+
+				int TOP = 1000;
+				if(ar.size()<TOP){
+					TOP = ar.size();
+				}
+				//fprintf(stderr, "%d H2\n", i);
+				nth_element(ar.begin(), ar.begin()+TOP, ar.end());
+				sort(ar.begin(), ar.begin()+TOP);
+				//fprintf(stderr, "%d H3\n", i);
+
+				float rbp = 0;
+				//ushort jj = 0;
+				for(kk=0; kk<TOP; kk++){
+					if(qMap[ar[kk].i]==0) continue;
+					if(ar[kk].f==0) break;
+					rbp+=pow(RBP_P, kk);
+					fprintf(stderr, "Sorted %d %d %d %.5f\n", i, kk, ar[kk].i, (ar[kk].f-320)/100.0f);
+					//jj++;
+					//fprintf(stderr, "Good %d %d\n", i, kk);
+					//jj++;
+				}
+				rbp *= (1.0 - RBP_P);
+			
+				rbp = rbp / totQuery * 1000;
+				fprintf(stderr, "%d %.3e\n", i, rbp);
+				vqCoexpression[k] = rbp;
+				d_vecqCoexpression[i].push_back(rbp);
+			}
+			
+			
+			/*for(k=0; k<queryName.size(); k++){
 				int g = pp->GetGene(queryName[k]);
 				if(g==-1){
 					vqCoexpression[k] = NaN;
@@ -361,6 +584,7 @@ void *do_query(void *th_arg){
 				}
 				float avgP = 0;
 				int totalQueryPresent = queryName.size() - 1;
+
 				for(kk=0; kk<queryName.size(); kk++){
 					if(kk==k) continue;
 					int gg = pp->GetGene(queryName[kk]);
@@ -368,14 +592,53 @@ void *do_query(void *th_arg){
 						totalQueryPresent--;
 						continue;
 					}
-					float p = 0;
-					for(j=2; j<gs; j++)
-						p+= fq->Get(k, j-2)*fq->Get(kk, j-2);
-					p/=(float)(gs-2);
+
+					float *x1 = NULL;
+					float *x2 = NULL;
+					if(g<gg){
+						x1 = pp->Get(g);
+						x2 = pp->Get(gg);
+					}else{
+						x1 = pp->Get(gg);
+						x2 = pp->Get(g);
+					}
+
+					float p = (float) pn.Measure(x1, ps, x2, ps, 
+						IMeasure::EMapCenter, NULL, NULL);	
+					float px = p;
+
+					if(!(p<5.0 && p>-5.0)){
+						continue;
+					}
+
 					//get z-score (dataset wide)
 					p = (p - vd->GetDatasetAverage()) / vd->GetDatasetStdev();
+					int gID = mapstrintGene[queryName[kk]];
+					int qID = mapstrintGene[queryName[k]];
+
+					int qb = CMeta::Quantize(p, quant);
+					p = quant[qb];
+
+					//fprintf(stderr, "Correlation %d %d %.5f %.5f %.5f %.5f\n", qID, gID, p, vd->GetGeneAverage(gID), 
+					//	pl->GetPlatformAvg(qID), pl->GetPlatformStdev(qID));
+
 					//subtract hubbiness
-					p = p - vd->GetGeneAverage(mapstrintGene[queryName[kk]]);
+					p = (p - vd->GetGeneAverage(gID) - pl->GetPlatformAvg(qID)) / pl->GetPlatformStdev(qID) ;
+					//p = p - vd->GetGeneAverage(gID);
+					p = max((float) min(p, (float) 3.2), (float)-3.2);
+
+					//float p = 0;
+					//for(j=2; j<gs; j++)
+					//	p+= fq->Get(k, j-2)*fq->Get(kk, j-2);
+					//p/=(float)(gs-2);
+					//p = 0.5 * log((1.0+p)/(1.0-p));
+					//p = max((float) min(p, (float) 3.2), (float)-3.2);
+					//get z-score (dataset wide)
+					//p = (p - vd->GetDatasetAverage()) / vd->GetDatasetStdev();
+					//subtract hubbiness
+					//p = p - vd->GetGeneAverage(mapstrintGene[queryName[kk]]);
+					
+
 					avgP+=p;
 				}
 				if(totalQueryPresent==0)
@@ -384,17 +647,32 @@ void *do_query(void *th_arg){
 					avgP/=(float)(totalQueryPresent);
 				
 				vqCoexpression[k] = avgP;
-				vecqCoexpression.push_back(avgP);
-			}
+				d_vecqCoexpression[i].push_back(avgP);
+			}*/
+			
+
+
 		}
 		
 		if(outputCoexpression || outputQueryCoexpression){
 			delete vd;
 			delete fq;
+			if(outputQueryCoexpression)
+				delete fq_RBP;
 		}
 
 		delete ff;
 	}
+
+	for(i=0; i<vc.size(); i++){
+		vecG.insert(vecG.end(), d_vecG[i].begin(), d_vecG[i].end());
+		vecQ.insert(vecQ.end(), d_vecQ[i].begin(), d_vecQ[i].end());
+		vecCoexpression.insert(vecCoexpression.end(), 
+			d_vecCoexpression[i].begin(), d_vecCoexpression[i].end());
+		vecqCoexpression.insert(vecqCoexpression.end(), 
+			d_vecqCoexpression[i].begin(), d_vecqCoexpression[i].end());
+	}
+
 
 	if(CSeekNetwork::Send(new_fd, sizeD)!=0){
 		fprintf(stderr, "Error sending messages\n");
@@ -461,13 +739,27 @@ int main( int iArgs, char** aszArgs ) {
 	
 	strPrepInputDirectory = sArgs.prep_arg;
 	strSinfoInputDirectory = sArgs.sinfo_arg;
+	strPlatformInputDirectory = sArgs.platform_arg;
+	strDatasetInputDirectory = sArgs.dset_arg;
 
-	vector<string> vecstrGeneID;
-	vector<string> vecstrGenes;
 	if(!CSeekTools::ReadListTwoColumns(sArgs.gene_arg, vecstrGeneID, vecstrGenes))
 		return false;
 	for(i=0; i<vecstrGenes.size(); i++)
 		mapstrintGene[vecstrGenes[i]] = (int) i;
+
+	//Read datasets and Read platforms
+	if(!CSeekTools::ReadListTwoColumns(sArgs.dset_arg, vecstrDatasets, vecstrDP))
+		return false;
+
+	for(i=0; i<vecstrDatasets.size(); i++){
+		mapstrstrDatasetPlatform[vecstrDatasets[i]] = vecstrDP[i];
+		mapstrintDataset[vecstrDatasets[i]] = i;
+	}
+
+	CSeekTools::ReadPlatforms(sArgs.platform_arg, vp, vecstrPlatforms,
+		mapstriPlatform);
+	//==================================================
+
 
 	int sockfd, new_fd;
 	struct addrinfo hints, *servinfo, *p;
@@ -605,11 +897,14 @@ int main( int iArgs, char** aszArgs ) {
 
 		vector<string> dsetName, geneName, queryName;
 		string qname, gname, dname;
+		string strrbp; //-1: disabled, 0-0.9999
+		float rbp_p = -1;
 
 		if(outputCoexpression || outputQueryCoexpression){
 			if(	CSeekNetwork::Receive(new_fd, qname)!=0 ||
 				CSeekNetwork::Receive(new_fd, gname)!=0 ||
-				CSeekNetwork::Receive(new_fd, dname)!=0 ){
+				CSeekNetwork::Receive(new_fd, dname)!=0 ||
+				CSeekNetwork::Receive(new_fd, strrbp)!=0){
 				fprintf(stderr, "Error: receiving message\n");
 				close(new_fd);
 				continue;
@@ -617,6 +912,7 @@ int main( int iArgs, char** aszArgs ) {
 			CMeta::Tokenize(dname.c_str(), dsetName);
 			CMeta::Tokenize(gname.c_str(), geneName);
 			CMeta::Tokenize(qname.c_str(), queryName);
+			rbp_p = atof(strrbp.c_str());
 		}
 		else{
 			if(	CSeekNetwork::Receive(new_fd, gname)!=0 ||
@@ -639,6 +935,7 @@ int main( int iArgs, char** aszArgs ) {
 		thread_arg[d].outputExpression = outputExpression;
 		thread_arg[d].outputQueryExpression = outputQueryExpression;
 		thread_arg[d].outputQueryCoexpression = outputQueryCoexpression;
+		thread_arg[d].rbp_p = rbp_p;
 
 		fprintf(stderr, "Arguments: %d %d %s %s\n", d, new_fd, dname.c_str(), gname.c_str());
 		if(outputCoexpression){

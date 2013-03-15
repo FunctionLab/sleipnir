@@ -760,12 +760,15 @@ int main( int iArgs, char** aszArgs ) {
 			int ii, jj;
 			char ac[256];
 			vector<vector<int> > randomRank;
+			vector<vector<float> > randomSc;
 			vector<int> geneRank;
 
 			randomRank.resize(sortedGenes.size());
+			randomSc.resize(sortedGenes.size());
 			geneRank.resize(sortedGenes.size());
 			for(ii=0; ii<sortedGenes.size(); ii++){
 				randomRank[ii].resize(num_random);
+				randomSc[ii].resize(num_random);
 			}
 
 			for(ii=0; ii<num_random; ii++){
@@ -781,25 +784,38 @@ int main( int iArgs, char** aszArgs ) {
 				sort(sortedRandom.begin(), sortedRandom.end());
 				for(jj=0; jj<randomScores.size(); jj++){
 					randomRank[sortedRandom[jj].i][ii] = jj;
+					randomSc[sortedRandom[jj].i][ii] = sortedRandom[jj].f;
 				}
 			}
 
 			for(jj=0; jj<geneScores.size(); jj++){
 				sort(randomRank[jj].begin(), randomRank[jj].end());
+				sort(randomSc[jj].begin(), randomSc[jj].end(), std::greater<float>());
 				geneRank[sortedGenes[jj].i] = jj;
 			}
 
 			for(jj=0; jj<geneScores.size(); jj++){
 				int gene = sortedGenes[jj].i;
 				int gene_rank = jj;
+				float gene_score = sortedGenes[jj].f;
+				if(gene_score<0) 
+					continue;
 				vector<int> &rR = randomRank[gene];
+				vector<float> &rF = randomSc[gene];
 				int kk = 0;
 				for(kk=0; kk<rR.size(); kk++){
-					if(gene_rank<=rR[kk]){
-						fprintf(stderr, "%d %d / 100\n", gene_rank, kk);
+					//if(gene_rank<=rR[kk]){
+					if(gene_score>=rF[kk]){
+						//float f1 = (float) kk / (float) rR.size();
+						fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
+							gene_rank, kk, gene_score, randomSc[gene][kk]);
 						break;
 					}else if(kk==rR.size()-1){
-						fprintf(stderr, "%d %d / 100\n", gene_rank, kk);
+						//float f1 = (float) kk / (float) rR.size();
+						fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
+							gene_rank, kk, gene_score, randomSc[gene][kk]);
+						//fprintf(stderr, "%d %.6f\n", gene_rank, f1);
+						//fprintf(stderr, "%d %d / 100\n", gene_rank, kk);
 					}
 				}
 			}

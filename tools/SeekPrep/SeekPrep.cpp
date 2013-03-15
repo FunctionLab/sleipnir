@@ -267,9 +267,14 @@ int main( int iArgs, char** aszArgs ) {
 
 				char outFile[125];
 				sprintf(outFile, "%s/%s.sinfo", sArgs.dir_out_arg, pcl_list[i].c_str());
+				fprintf(stderr, "H0\n");
 
 				CPCL pcl;
-				pcl.Open(pclfile.c_str());
+				//if(!pcl.Open(pclfile.c_str(), 2, false, false)){
+				if(!pcl.Open(pclfile.c_str())){
+					fprintf(stderr, "Error opening file\n");
+				}
+				/*
 				int totNumExperiments = pcl.GetExperiments() - 2;
 				if(totNumExperiments<=2){
 					vector<float> vv;
@@ -288,8 +293,51 @@ int main( int iArgs, char** aszArgs ) {
 				}
 				map<ushort, float> mean_d;
 				map<ushort, float> stdev_d;
+				
 				vector<float> all_correlations;
 
+				*/
+				CMeasurePearNorm pn;
+				CDat Dat;
+				int numG = pcl.GetGeneNames().size();
+
+				fprintf(stderr, "H1\n");
+
+				vector<int> veciGenes;
+				veciGenes.resize(numG);
+				for (j = 0; j < veciGenes.size(); ++j)
+					veciGenes[j] = j;
+				int iOne, iTwo;
+				fprintf(stderr, "H2\n");
+				Dat.Open(pcl.GetGeneNames());
+
+				for (k = 0; k < Dat.GetGenes(); ++k)
+					for (j = (k + 1); j < Dat.GetGenes(); ++j)
+						Dat.Set(k, j, CMeta::GetNaN());
+				fprintf(stderr, "H3\n");
+				for (k = 0; k < numG; ++k) {
+					if ((iOne = veciGenes[k]) == -1)
+						continue;
+					float *adOne = &pcl.Get(iOne)[2];
+					for (j = (k + 1); j < numG; ++j){
+						if ((iTwo = veciGenes[j]) != -1){
+							float x = (float) pn.Measure(adOne,
+								pcl.GetExperiments()-2, &pcl.Get(iTwo)[2],
+								pcl.GetExperiments()-2);
+							Dat.Set(k, j, x);
+							//fprintf(stderr, "%d %d %.5f\n", k, j, x);
+						}
+					}
+				}
+				fprintf(stderr, "H4\n");
+			
+				double gmean, gstdev;
+				size_t iN;
+
+				Dat.AveStd(gmean, gstdev, iN);
+				fprintf(stderr, "%.5f %.5f\n", (float) gmean, (float) gstdev);
+				
+				/*
 				for(j=0; j<presentIndex.size(); j++){
 					float *val = pcl.Get(presentIndex[j]);
 					vector<float> rowVal;
@@ -330,6 +378,18 @@ int main( int iArgs, char** aszArgs ) {
 						r /= rowVal.size();
 						if(isinf(r) || isnan(r))
 							continue;
+
+						if(fabs(r) >= 0.9999f){
+							r*=0.9999f;
+						}
+						
+						r = 0.5 * log((1.0+r) / (1.0-r));
+
+						if(!(r<=5.0 && r>=-5.0))
+							continue;
+
+
+						fprintf(stderr, "%d %d %.5f\n", j, k, r);
 						all_correlations.push_back(r);
 					}
 				}
@@ -342,7 +402,7 @@ int main( int iArgs, char** aszArgs ) {
 				global_mean /= (double) all_correlations.size();
 				for(iterF = all_correlations.begin(); iterF!=all_correlations.end(); iterF++)
 					global_stdev+=((double) (*iterF) - global_mean) * ((double) (*iterF) - global_mean);
-				global_stdev /= (double) all_correlations.size();
+				global_stdev /= (double) (all_correlations.size() - 1);
 				global_stdev = sqrt(global_stdev);
 				float gstdev = (float) global_stdev;
 				float gmean = (float) global_mean;
@@ -350,12 +410,12 @@ int main( int iArgs, char** aszArgs ) {
 					gstdev = CMeta::GetNaN();
 					gmean = CMeta::GetNaN();
 				}
-
-				//fprintf(stderr, "%.5f %.5f\n", gmean, gstdev);
+				fprintf(stderr, "%.5f %.5f\n", gmean, gstdev);
+				*/
 				vector<float> vv;
 				vv.resize(2);
-				vv[0] = gmean;
-				vv[1] = gstdev;
+				vv[0] = (float) gmean;
+				vv[1] = (float) gstdev;
 				CSeekTools::WriteArray(outFile, vv);
 			}
 

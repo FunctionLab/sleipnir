@@ -31,7 +31,16 @@ struct AResult{
 	unsigned short i;
 	unsigned short f;
 	bool operator<(const AResult& val) const{
-		if(f <= val.f){
+		/*if(f<=val.f){
+			return false;
+		}else{
+			return true;
+		}*/
+		if(f < val.f){
+			return false;
+		}else if(f > val.f){
+			return true;
+		}else if(i < val.i){
 			return false;
 		}else{
 			return true;
@@ -51,7 +60,16 @@ struct AResultFloat{
 	unsigned short i;
 	float f;
 	bool operator<(const AResultFloat& val) const{
-		if(f <= val.f){
+		/*if(f<=val.f){
+			return false;
+		}else{
+			return true;
+		}*/
+		if(f < val.f){
+			return false;
+		}else if(f > val.f){
+			return true;
+		}else if(i < val.i){
 			return false;
 		}else{
 			return true;
@@ -73,6 +91,8 @@ public:
 		const CSeekIntIntMap &mapG, vector<AResult> *sing,
 		/* optional */
 		const ushort top = 0);
+
+	static float RBPRateConvert(const float &RBP, const ushort &num);
 
 	static bool AveragePrecision(
 		const vector<unsigned short> &rank, float &ap,

@@ -41,6 +41,7 @@ my %tools_other_packages = (
 				SeekPrep => ['GSL'],
 				SeekMiner => ['GSL'],
 				SeekServer => ['GSL'],
+				SeekPValue => ['GSL'],
 				SeekGeneRecommender => ['GSL'],
 				SeekAggregatedDataset => ['GSL'],
 				PCLServer => ['GSL'],

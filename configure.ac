@@ -841,6 +841,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/SeekMiner/Makefile \
 		 tools/SeekPrep/Makefile \
 		 tools/SeekServer/Makefile \
+		 tools/SeekPValue/Makefile \
 		 tools/SeekEvaluator/Makefile \
 		 tools/SeekGeneRecommender/Makefile \
 		 tools/SeekAggregatedDataset/Makefile \

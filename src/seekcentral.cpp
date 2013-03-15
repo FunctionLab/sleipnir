@@ -788,6 +788,7 @@ bool CSeekCentral::Write(const ushort &i){
 	return true;
 }
 
+
 bool CSeekCentral::Common(enum SearchMode &sm,
 	gsl_rng *rnd, const enum PartitionMode *PART_M,
 	const ushort *FOLD, const float *RATE,
@@ -887,6 +888,10 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			CSeekIntIntMap *mapG = m_vc[d]->GetGeneMap();
 			CSeekIntIntMap *mapQ = m_vc[d]->GetQueryMap();
 
+			if(mapG->GetNumSet()<10000){
+				continue;
+			}
+
 			if(mapQ==NULL ||mapQ->GetNumSet()==0){
 				if(DEBUG) fprintf(stderr, "This dataset is skipped\n");
 				continue;
@@ -905,6 +910,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 
 			float w = -1;
 			float report_w = -1; //for showing weight of dataset
+
 			if(current_sm==CV || current_sm==CV_CUSTOM){
 				if(DEBUG) fprintf(stderr, "Weighting dataset\n");
 				if(current_sm==CV)
@@ -947,7 +953,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 				*m_vc[d], MIN_REQUIRED, m_bSquareZ);
 
 			if(DEBUG) fprintf(stderr,
-				"Adding contribution of dataset to master ranking: %.5f\n", w);
+				"Adding contribution of dataset %d to master ranking: %.5f\n", d, w);
 
 			ushort iGeneSet = mapG->GetNumSet();
 			const vector<ushort> &allRGenes = mapG->GetAllReverse();
@@ -984,6 +990,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			else{
 				weight[d] = w;
 			}
+
 		}
 		//omp finishes
 		//fprintf(stderr, "3 %lu\n", CMeta::GetMemoryUsage());

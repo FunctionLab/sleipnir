@@ -102,6 +102,62 @@ int CSeekNetwork::Copy(char *d, char *s, int beg, int num){
     return beg+num;
 }
 
+int CSeekNetwork::Receive(int new_fd, vector<float> &f){
+	char *ar = (char*)malloc(4);
+	char *p = &ar[0];
+	int tmp_size = 4;
+	int receive_size = -1;
+	while(1){
+		receive_size = recv(new_fd, p, tmp_size, 0);
+		if(receive_size==tmp_size){
+			break;
+		}
+		else if(receive_size==-1){
+			fprintf(stderr, "client exits\n");
+			break;
+		}
+		tmp_size = tmp_size - receive_size;
+		p+=receive_size;
+	}
+	if(receive_size==-1)
+		return -1;
+
+	int *iP = (int*)ar;
+	int length = *iP;
+	f.resize(length);
+
+	char *cStr = (char*)malloc(length*sizeof(float));
+	tmp_size = length*sizeof(float);
+	receive_size = -1;
+	p = &cStr[0];
+
+	while(1){
+		receive_size = recv(new_fd, p, tmp_size, 0);
+		if(receive_size==tmp_size){
+			break;
+		}
+		else if(receive_size==-1){
+			fprintf(stderr, "client exits\n");
+			break;
+		}
+		tmp_size = tmp_size - receive_size;
+		p+=receive_size;
+	}
+	if(receive_size==-1)
+		return -1;
+
+	int i;
+	float *fp = (float*)cStr;
+	for(i=0; i<length; i++){
+		f[i] = *fp;
+		fp++;
+	}
+	free(ar);
+	free(cStr);
+	return 0;
+}
+
+
 int CSeekNetwork::Receive(int new_fd, string &s){
 	char *ar = (char*)malloc(4);
 	char *p = &ar[0];

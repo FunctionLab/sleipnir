@@ -95,13 +95,38 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 		aa = &(*sing)[i];
 		if(aa->f==0) break;
 		if(mask[aa->i]==1) continue;
-		if(gold[aa->i]==1) x+=pow(rate, jj);
+		if(gold[aa->i]==1){
+			x+=pow(rate, jj);
+			//fprintf(stderr, "Sorted %d %d %.5f\n", jj, aa->i, (aa->f-320)/100.0);
+		}
 		jj++;
 	}
 	x *= (1.0-rate);
 	rbp = x;
+	//fprintf(stderr, "%.3e\n", 0, rbp);
+
 	return true;
 }
+
+float CSeekPerformanceMeasure::RBPRateConvert(const float &RBP, 
+	const ushort &num){
+
+	float x = RBP;
+	if(RBP>=0.989 && RBP<=0.991){
+		if(num>=17600)	x = RBP;
+		else if(num>=15840) x = 0.989;
+		else if(num>=14080) x = 0.988;
+		else if(num>=12320) x = 0.986;
+		else if(num>=10560) x = 0.983;
+		else if(num>=8800) x = 0.98;
+		else if(num>=7040) x = 0.975;
+		else if(num>=5280) x = 0.97;
+		else if(num>=3520) x = 0.955;
+		else if(num>=1760) x = 0.92;
+		else x = 0.90;
+	}
+	return x;
+}			
 
 bool CSeekPerformanceMeasure::AveragePrecision(
 	const vector<unsigned short> &rank, float &ap,

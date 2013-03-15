@@ -112,7 +112,8 @@ void *do_query(void *th_arg){
 			rnd = gsl_rng_alloc(T);
 			gsl_rng_set(rnd, 100);
 			ushort FOLD = 5;
-			enum PartitionMode PART_M = CUSTOM_PARTITION;
+			//enum PartitionMode PART_M = CUSTOM_PARTITION;
+			enum PartitionMode PART_M = LEAVE_ONE_IN;
 			csu->CVSearch(rnd, PART_M, FOLD, rbp_p);
 			gsl_rng_free(rnd);
 		}

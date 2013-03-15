@@ -379,9 +379,11 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 					for(j=0, i = allRGenes[ii], a=GetGeneAverage(i);
 						j<iNumQueries; j++){
 						if((x = r[queryIndex[j]][i])==255) continue;
+						//fprintf(stderr, "Correlation %d %d %.5f %.5f %.5f %.5f\n", queryIndex[j], i, quant[x], a, platform_avg[j], platform_stdev[j]);
 						vv = (quant[x] - a - platform_avg[j])
 							/ platform_stdev[j];
 						vv = max((float) min(vv, (float)3.2), (float)-3.2);
+
 						if(vv>cutoff){
 							rData[i][j]= (ushort) (vv*100.0) + 320;
 							//fprintf(stderr, "r %.2f\n", quant[x]);
@@ -429,9 +431,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 					for(i = geneMap->GetReverse(ii),
 						a = GetGeneAverage(i), j=0; j<iNumQueries; j++){
 						if((x = r[queryIndex[j]][i])==255) continue;
-						vv = max((float)-3.2, (float)min((float) 3.2, (float)
-							(log(quant[x]) - log((float)(1.0 - quant[x]))
-							- a)));
+						vv = log(quant[x]) - log((float)(1.0-quant[x])) - a;
+						vv = max((float)-3.2, (float)min((float) 3.2, (float) vv));
 						//fprintf(stderr, "%.5f %.5f %.5f\n", quant[x], vv, a);
 						if(vv>cutoff){
 							rData[i][j]= (ushort) (vv*100.0) + 320;
@@ -448,8 +449,8 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 					for(i = geneMap->GetReverse(ii),
 						a = GetGeneAverage(i), j=0; j<iNumQueries; j++){
 						if((x = r[queryIndex[j]][i])==255) continue;
-						vv = max((float) min((float)(quant[x] - a),
-							(float)3.2), (float)-3.2);
+						vv = quant[x] - a;
+						vv = max((float) min((float)vv, (float)3.2), (float)-3.2);
 						if(vv>cutoff){
 							rData[i][j]= (ushort) (vv*100.0) + 320;
 						}else{
@@ -614,6 +615,14 @@ bool CSeekDataset::InitializeCVWeight(const ushort &i){
 bool CSeekDataset::SetCVWeight(const ushort &i, const float &f){
 	weight[i] = f;
 	return true;
+}
+
+float CSeekDataset::GetCVWeight(const ushort &i){
+	return weight[i];
+}
+
+const vector<float>& CSeekDataset::GetCVWeight() const{
+	return weight;
 }
 
 float CSeekDataset::GetDatasetSumWeight(){

@@ -236,7 +236,8 @@ public:
 		if( IsNaN( Value ) )
 			return -1;
 
-		/*size_t i;
+		/*
+		size_t i;
 		for( i = 0; i < vecQuants.size( ); ++i )
 			if( Value <= vecQuants[ i ] )
 				break;
@@ -245,6 +246,7 @@ public:
 		 */
 
 
+		
 		size_t mid = vecQuants.size() / 2;
 		int i = mid;
 

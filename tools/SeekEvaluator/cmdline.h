@@ -43,6 +43,8 @@ struct gengetopt_args_info
   const char *single_help; /**< @brief Evaluate one query's rank list result help description.  */
   int aggregate_flag;	/**< @brief Evaluate multiple queries and aggregates results (default=off).  */
   const char *aggregate_help; /**< @brief Evaluate multiple queries and aggregates results help description.  */
+  int fixed_pr_flag;	/**< @brief Precision at depth X (default=off).  */
+  const char *fixed_pr_help; /**< @brief Precision at depth X help description.  */
   int rbp_flag;	/**< @brief Rank biased precision (requires parameter p to be set) (default=off).  */
   const char *rbp_help; /**< @brief Rank biased precision (requires parameter p to be set) help description.  */
   int avgp_flag;	/**< @brief Average precision for the top X positives, where X = integer, or % of total positives (default=off).  */
@@ -133,6 +135,7 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int single_given ;	/**< @brief Whether single was given.  */
   unsigned int aggregate_given ;	/**< @brief Whether aggregate was given.  */
+  unsigned int fixed_pr_given ;	/**< @brief Whether fixed_pr was given.  */
   unsigned int rbp_given ;	/**< @brief Whether rbp was given.  */
   unsigned int avgp_given ;	/**< @brief Whether avgp was given.  */
   unsigned int pr_given ;	/**< @brief Whether pr was given.  */

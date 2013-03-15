@@ -23,6 +23,7 @@ public:
 	static void Clear(char*, int);
 	static int Copy(char*, char*, int, int);
 	static int Receive(int, string&);
+	static int Receive(int, vector<float>&);
 };
 
 }	

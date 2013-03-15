@@ -186,6 +186,8 @@ public:
 	ushort GetNumGenes() const;
 	bool InitializeCVWeight(const ushort&);
 	bool SetCVWeight(const ushort&, const float&);
+	float GetCVWeight(const ushort&);
+	const vector<float>& GetCVWeight() const;
 	float GetDatasetSumWeight();
 	void SetPlatform(CSeekPlatform &);
 	CSeekPlatform& GetPlatform() const;
