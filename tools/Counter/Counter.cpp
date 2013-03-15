@@ -666,11 +666,7 @@ void* learn( void* pData ) {
     vector<size_t>	veciGenes, vecfiGenes;
         vector<float>	vecGeneWeights;
     psData = (SLearn*)pData;
-<<<<<<< local
         float			w;
-=======
-	float			w;
->>>>>>> other
 
     if (psData->m_pUbikGenes->GetGenes( )) {
                 vecfUbik.resize( psData->m_pAnswers->GetGenes( ) );
@@ -706,7 +702,6 @@ void* learn( void* pData ) {
                                         continue;
                                 }
 
-<<<<<<< local
                         if ( CMeta::SkipEdge( !!iAnswer, i, j, vecfGenes, vecfUbik, psData->m_bInPos, psData->m_bInNeg, psData->m_bBridgePos, psData->m_bBridgeNeg, psData->m_bOutPos, psData->m_bOutNeg ) ) {
                         continue;
                         }
@@ -750,64 +745,16 @@ void* learn( void* pData ) {
                         }
                         else{
                                 psData->m_pMatCounts->Get( iAnswer, 0 )++;}
-=======
-			if( psData->m_pDat ) {
-					iTwo = veciGenes[ j ];
-					iVal = -1;
-					iVal = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
-					if( iVal == -1 )
-						continue;
-					//When contexts are weighted, add counts = WT_MULTIPLIER * weight1 * weight 2 
-					if(psData->m_pGenes->IsWeighted()){
-						if(iAnswer==1 || !psData->m_bFlipNeg)
-							for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER-0.5); k++){
-								psData->m_pMatCounts->Get( iVal, iAnswer )++;
-								}
-						else
-							for( k = 0; k <((1-vecGeneWeights[i]*vecGeneWeights[j])*WT_MULTIPLIER-0.5); k++){
-								psData->m_pMatCounts->Get( iVal, iAnswer )++;
-								}
-					}	
-					else if(psData->m_isDatWeighted){
-						if(CMeta::IsNaN(w = psData->m_pwDat->Get( vecfiGenes[i],vecfiGenes[j] )) || vecfiGenes[i] == -1 ||
-							vecfiGenes[j] == -1)
-							continue;
-						if(iAnswer==1 || !psData->m_bFlipNeg)
-							for( k = 0; k <(w *WT_MULTIPLIER-0.5); k++){
-								psData->m_pMatCounts->Get( iVal, iAnswer )++;
-								}
-						else
-							for( k = 0; k <((1-w) *WT_MULTIPLIER-0.5); k++){
-								psData->m_pMatCounts->Get( iVal, iAnswer )++;
-								}
-					}
-					else{
-					psData->m_pMatCounts->Get( iVal, iAnswer )++;
-					//FIXME: Regularization has not been supported for weighted context
-					psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );
-					}
-			}
-			else{
-				psData->m_pMatCounts->Get( iAnswer, 0 )++;}
->>>>>>> other
         }
     }
 
-<<<<<<< local
+
         //Recale counts
         if(psData->m_pGenes->IsWeighted()||psData->m_isDatWeighted){
                 for (i=0; i< psData->m_pMatCounts->GetRows();i++)
                         for(j=0; j<psData->m_pMatCounts->GetColumns();j++)
                                 psData->m_pMatCounts->Get( i,j ) = int(psData->m_pMatCounts->Get( i,j )/ WT_MULTIPLIERf + 0.5);
         }
-=======
-	//Recale counts 
-	if(psData->m_pGenes->IsWeighted()||psData->m_isDatWeighted){
-		for (i=0; i< psData->m_pMatCounts->GetRows();i++)
-			for(j=0; j<psData->m_pMatCounts->GetColumns();j++)
-				psData->m_pMatCounts->Get( i,j ) = int(psData->m_pMatCounts->Get( i,j )/ WT_MULTIPLIERf + 0.5);
-	}
->>>>>>> other
 
     return NULL;
 }
