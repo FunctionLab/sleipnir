@@ -628,8 +628,8 @@ for( i = 0; i < vecpMatRoots.size( ); ++i ) {
     ofstream	ofsm;
 
     ofsm.open( ( (string)sArgs.output_arg + '/' + ( sArgs.inputs ?
-                 CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) + c_acTxt ).c_str( ) );
-    ofsm << ( sArgs.inputs ? CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) <<
+                 CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : sArgs.countname_arg ) + c_acTxt ).c_str( ) );
+    ofsm << ( sArgs.inputs ? CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : sArgs.countname_arg ) <<
          '\t' << vecpvecpMats.size( ) << endl;
     for( j = 0; j < vecpMatRoots[ i ]->GetRows( ); ++j )
         ofsm << ( j ? "\t" : "" ) << vecpMatRoots[ i ]->Get( j, 0 );
