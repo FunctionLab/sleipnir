@@ -949,12 +949,6 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
         vecpGenes[ i ]  = new CGenes( Genome );
         if( sArgs.inputs_num ) {
             ifstream	ifsm;
-
-            ifsm.open( sArgs.inputs[ i ] );
-            if( !vecpGenes[ i ]->Open( ifsm, false ) ) {
-                cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-                return 1;
-            }
         }
         else
             vecpGenes[ i ]->Open( Genome.GetGeneNames( ), false );
@@ -1257,12 +1251,6 @@ int main_inference2( const gengetopt_args_info& sArgs, const map<string, size_t>
         vecpGenes[ i ]  = new CGenes( Genome );
         if( sArgs.inputs_num ) {
             ifstream	ifsm;
-
-            ifsm.open( sArgs.inputs[ i ] );
-            if( !vecpGenes[ i ]->Open( ifsm, false ) ) {
-                cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-                return 1;
-            }
         }
         else
             vecpGenes[ i ]->Open( Genome.GetGeneNames( ), false );
