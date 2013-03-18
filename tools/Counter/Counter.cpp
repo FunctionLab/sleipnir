@@ -628,8 +628,8 @@ for( i = 0; i < vecpMatRoots.size( ); ++i ) {
     ofstream	ofsm;
 
     ofsm.open( ( (string)sArgs.output_arg + '/' + ( sArgs.inputs ?
-                 CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) + c_acTxt ).c_str( ) );
-    ofsm << ( sArgs.inputs ? CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) <<
+                 CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : sArgs.countname_arg ) + c_acTxt ).c_str( ) );
+    ofsm << ( sArgs.inputs ? CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : sArgs.countname_arg ) <<
          '\t' << vecpvecpMats.size( ) << endl;
     for( j = 0; j < vecpMatRoots[ i ]->GetRows( ); ++j )
         ofsm << ( j ? "\t" : "" ) << vecpMatRoots[ i ]->Get( j, 0 );
@@ -951,12 +951,6 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
         vecpGenes[ i ]  = new CGenes( Genome );
         if( sArgs.inputs_num ) {
             ifstream	ifsm;
-
-            ifsm.open( sArgs.inputs[ i ] );
-            if( !vecpGenes[ i ]->Open( ifsm, false ) ) {
-                cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-                return 1;
-            }
         }
         else
             vecpGenes[ i ]->Open( Genome.GetGeneNames( ), false );
@@ -1259,12 +1253,6 @@ int main_inference2( const gengetopt_args_info& sArgs, const map<string, size_t>
         vecpGenes[ i ]  = new CGenes( Genome );
         if( sArgs.inputs_num ) {
             ifstream	ifsm;
-
-            ifsm.open( sArgs.inputs[ i ] );
-            if( !vecpGenes[ i ]->Open( ifsm, false ) ) {
-                cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-                return 1;
-            }
         }
         else
             vecpGenes[ i ]->Open( Genome.GetGeneNames( ), false );
