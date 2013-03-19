@@ -813,7 +813,11 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 		CSeekTools::InitVector(vecRandScore[l], m_iGenes, (float) 0);
 	}
 
+	//NEED TO MAKE THIS A PARAMETER
 	bool simulateWeight = true;
+
+	//output weight component (Mar 19)
+	bool weightComponent = true;
 
 	l = 0;
 	//oct 20, 2012: whether to redo current query with equal weighting
@@ -829,6 +833,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 	current_sm = sm;
 
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
+
 
 		//simulated weight case ======================
 		/*if(simulateWeight && redoWithEqual>=1) //1 or 2 
@@ -871,6 +876,14 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 		if(current_sm==ORDER_STATISTICS)
 			m_rank_d = CSeekTools::Init2DArray(iSearchDatasets, m_iGenes,
 				(ushort) 0);
+
+		//For outputing component weights!
+		vector<float> wc;
+		if(weightComponent && current_sm==CV){
+			wc.resize((int)query.GetNumFold()*(int)m_iDatasets);
+			fill(wc.begin(), wc.end(), (float)0);
+		}
+
 
 		//fprintf(stderr, "2 %lu\n", CMeta::GetMemoryUsage());
 
@@ -925,6 +938,15 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 				if( (w = m_vc[d]->GetDatasetSumWeight())==-1){
 					if(DEBUG) fprintf(stderr, "Bad weight\n");
 					continue;
+				}
+
+				if(weightComponent && current_sm==CV){
+					ushort numFold = query.GetNumFold();
+					float ww;
+					for(j=0; j<numFold; j++){
+						//if((ww=m_vc[d]->GetCVWeight(j))==-1) continue;
+						wc[(int)d*(int)numFold+(int)j] = m_vc[d]->GetCVWeight(j);
+					}
 				}
 			}
 			else if(current_sm==EQUAL && redoWithEqual==0){
@@ -1064,7 +1086,6 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			}
 		}
 
-
 		fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
 
 		if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, "Done Search")==-1){
@@ -1118,6 +1139,41 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 		if(!m_bRandom){
 			//if m_bRandom, write at the very end when all repetitions are done
 			Write(i);
+			if(weightComponent && current_sm==CV){
+				sprintf(acBuffer, "%s/%d.dweight_comp", m_output_dir.c_str(), i);
+				CSeekTools::WriteArray(acBuffer, wc);
+				vector<vector<string> > vecParts;
+				vecParts.resize(query.GetNumFold());
+				ushort kk;
+				string strParts = "";
+				for(j=0; j<query.GetNumFold(); j++){
+					vecParts[j] = vector<string>();
+					const vector<ushort> &vu = query.GetCVQuery(j);
+					string s = "";
+					for(kk=0; kk<vu.size(); kk++){
+						vecParts[j].push_back(m_vecstrGenes[vu[kk]]);
+						s+=m_vecstrGenes[vu[kk]];
+						if(kk!=vu.size()-1)
+							s+=" ";
+					}
+					strParts+=s;
+					if(j!=query.GetNumFold()-1)
+						strParts+="|";
+				}
+				sprintf(acBuffer, "%s/%d.query_cvpart", m_output_dir.c_str(), i);
+				CSeekTools::Write2DArrayText(acBuffer, vecParts);
+				//send data to client
+				if(m_bEnableNetwork){
+					if(CSeekNetwork::Send(m_iClient, wc)==-1){
+						fprintf(stderr, "Error sending message to client\n");
+						return false;
+					}
+					if(CSeekNetwork::Send(m_iClient, strParts)==-1){
+						fprintf(stderr, "Error sending message to client\n");
+						return false;
+					}
+				}
+			}
 		}
 	}
 
