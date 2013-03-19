@@ -56,7 +56,6 @@ size_t find_value( size_t iOne, size_t iTwo, const CDataPair *pDat, size_t iDefa
 
 int main( int iArgs, char** aszArgs )
 {
-    cerr << "barf" << endl;
     gengetopt_args_info		    sArgs;
     vector<CDataPair*>          vpDatsBigmem;
     vector<float*>              vecpadVals;
@@ -75,7 +74,6 @@ int main( int iArgs, char** aszArgs )
     CMeasureInnerProduct		InnerProd;
     CMeasureBinaryInnerProduct	BinInnerProd;
 
-    cerr << "pre-parse" << endl;
     if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
         cmdline_parser_print_help( );
         return 1;
@@ -88,7 +86,6 @@ int main( int iArgs, char** aszArgs )
         &BinInnerProd, NULL
     };
 
-    cerr << "crunch" << endl;
 
     vecstrInputs.resize( sArgs.inputs_num );
     copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, vecstrInputs.begin( ) );
@@ -172,7 +169,6 @@ int main( int iArgs, char** aszArgs )
             }
         }
     }
-    cerr << "here" << endl;
 
     vpDatsBigmem.clear( );
     if( sArgs.bigmem_flag ) {
