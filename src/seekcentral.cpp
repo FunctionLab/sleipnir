@@ -879,8 +879,12 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 
 		//For outputing component weights!
 		vector<float> wc;
-		if(weightComponent && current_sm==CV){
-			wc.resize((int)query.GetNumFold()*(int)m_iDatasets);
+		if(weightComponent){
+			if(current_sm==CV || current_sm==CV_CUSTOM){
+				wc.resize((int)query.GetNumFold()*(int)m_iDatasets);
+			}else{
+				wc.resize((int)query.GetQuery().size()*(int)m_iDatasets);
+			}
 			fill(wc.begin(), wc.end(), (float)0);
 		}
 
@@ -1139,7 +1143,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 		if(!m_bRandom){
 			//if m_bRandom, write at the very end when all repetitions are done
 			Write(i);
-			if(weightComponent && current_sm==CV){
+			if(weightComponent){
 				sprintf(acBuffer, "%s/%d.dweight_comp", m_output_dir.c_str(), i);
 				CSeekTools::WriteArray(acBuffer, wc);
 				vector<vector<string> > vecParts;
