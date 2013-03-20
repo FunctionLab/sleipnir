@@ -170,14 +170,19 @@ int main( int iArgs, char** aszArgs )
         }
     }
 
-    vpDatsBigmem.clear( );
     if( sArgs.bigmem_flag ) {
+        vecpadVals.resize( vecstrInputs.size( ), NULL);
+        vpDatsBigmem.resize( vecstrInputs.size( ), NULL);
+        #pragma omp parallel for num_threads(sArgs.threads_arg)
         for ( size_t iDat = 0; iDat < vecstrInputs.size( ); ++iDat ) {
             CDataPair* pDat = new CDataPair;
-            if( !( pDat->Open( vecstrInputs[ iDat ].c_str( ), false, !!sArgs.memmap_flag ) ||
-                        pDat->Open( vecstrInputs[ iDat ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
-                cerr << "Could not open: " << vecstrInputs[ iDat ] << endl;
-                return 1;
+            #pragma omp critical
+            {
+                if( !( pDat->Open( vecstrInputs[ iDat ].c_str( ), false, !!sArgs.memmap_flag ) ||
+                            pDat->Open( vecstrInputs[ iDat ].c_str( ), true, !!sArgs.memmap_flag ) ) ) {
+                    cerr << "Could not open: " << vecstrInputs[ iDat ] << endl;
+                    exit(1);
+                }
             }
             if ( pMeasure ) {
                 float* adVals = new float[ vecpairstrChosen.size( ) ];
@@ -188,10 +193,10 @@ int main( int iArgs, char** aszArgs )
                     float dValueOne = find_value( iGeneOne, jGeneOne, pDat );
                     adVals[ i ] = dValueOne;
                 }
-                vecpadVals.push_back( adVals );
+                vecpadVals[ iDat ] = adVals;
                 delete pDat;
             } else {
-                vpDatsBigmem.push_back(pDat);
+                vpDatsBigmem[ iDat ] = pDat;
             }
         }
     }
