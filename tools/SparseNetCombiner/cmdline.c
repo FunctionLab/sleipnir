@@ -35,9 +35,13 @@ const char *gengetopt_args_info_help[] = {
   "  -v, --verbosity=INT        Message verbosity  (default=`5')",
   "  -d, --directory=directory  input directory (must only contain input files)",
   "  -m, --map                  Map gene index among the network dabs to combine. \n                               (Should be used when the gene intex are not \n                               identical among network dabs)  (default=off)",
-  "  -M, --method=STRING        Combination method  (possible values=\"max\", \n                               \"mean\" default=`mean')",
+  "  -M, --method=STRING        Combination method  (possible values=\"max\", \n                               \"mean\", \"quant\" default=`mean')",
   "\nOptional:",
+  "  -q, --quantile=FLOAT       If combine method is Quantile, set the returning \n                               quantile (default is median qunatile 0.5)  \n                               (default=`0.5')",
   "  -w, --weight=filename      File with dataset weights, if given each dataset \n                               values if weighted by the dataset weight. Skips \n                               datasets with no-entry or with zero weights. \n                               File format: dataset name<tab>weight",
+  "\nFiltering:",
+  "  -g, --genes=filename       Process only genes from the given set",
+  "  -D, --genee=filename       Process only edges including a gene from the given \n                               set",
     0
 };
 
@@ -45,6 +49,7 @@ typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
   , ARG_INT
+  , ARG_FLOAT
 } cmdline_parser_arg_type;
 
 static
@@ -57,7 +62,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
                         struct cmdline_parser_params *params, const char *additional_error);
 
 
-char *cmdline_parser_method_values[] = {"max", "mean", 0} ;	/* Possible values for method.  */
+char *cmdline_parser_method_values[] = {"max", "mean", "quant", 0} ;	/* Possible values for method.  */
 
 static char *
 gengetopt_strdup (const char *s);
@@ -72,7 +77,10 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->directory_given = 0 ;
   args_info->map_given = 0 ;
   args_info->method_given = 0 ;
+  args_info->quantile_given = 0 ;
   args_info->weight_given = 0 ;
+  args_info->genes_given = 0 ;
+  args_info->genee_given = 0 ;
 }
 
 static
@@ -87,8 +95,14 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->map_flag = 0;
   args_info->method_arg = gengetopt_strdup ("mean");
   args_info->method_orig = NULL;
+  args_info->quantile_arg = 0.5;
+  args_info->quantile_orig = NULL;
   args_info->weight_arg = NULL;
   args_info->weight_orig = NULL;
+  args_info->genes_arg = NULL;
+  args_info->genes_orig = NULL;
+  args_info->genee_arg = NULL;
+  args_info->genee_orig = NULL;
   
 }
 
@@ -104,7 +118,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->directory_help = gengetopt_args_info_help[5] ;
   args_info->map_help = gengetopt_args_info_help[6] ;
   args_info->method_help = gengetopt_args_info_help[7] ;
-  args_info->weight_help = gengetopt_args_info_help[9] ;
+  args_info->quantile_help = gengetopt_args_info_help[9] ;
+  args_info->weight_help = gengetopt_args_info_help[10] ;
+  args_info->genes_help = gengetopt_args_info_help[12] ;
+  args_info->genee_help = gengetopt_args_info_help[13] ;
   
 }
 
@@ -193,8 +210,13 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->directory_orig));
   free_string_field (&(args_info->method_arg));
   free_string_field (&(args_info->method_orig));
+  free_string_field (&(args_info->quantile_orig));
   free_string_field (&(args_info->weight_arg));
   free_string_field (&(args_info->weight_orig));
+  free_string_field (&(args_info->genes_arg));
+  free_string_field (&(args_info->genes_orig));
+  free_string_field (&(args_info->genee_arg));
+  free_string_field (&(args_info->genee_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -285,8 +307,14 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "map", 0, 0 );
   if (args_info->method_given)
     write_into_file(outfile, "method", args_info->method_orig, cmdline_parser_method_values);
+  if (args_info->quantile_given)
+    write_into_file(outfile, "quantile", args_info->quantile_orig, 0);
   if (args_info->weight_given)
     write_into_file(outfile, "weight", args_info->weight_orig, 0);
+  if (args_info->genes_given)
+    write_into_file(outfile, "genes", args_info->genes_orig, 0);
+  if (args_info->genee_given)
+    write_into_file(outfile, "genee", args_info->genee_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -454,6 +482,9 @@ int update_arg(void *field, char **orig_field,
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
+  case ARG_FLOAT:
+    if (val) *((float *)field) = (float)strtod (val, &stop_char);
+    break;
   case ARG_STRING:
     if (val) {
       string_field = (char **)field;
@@ -469,6 +500,7 @@ int update_arg(void *field, char **orig_field,
   /* check numeric conversion */
   switch(arg_type) {
   case ARG_INT:
+  case ARG_FLOAT:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
       return 1; /* failure */
@@ -542,11 +574,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "directory",	1, NULL, 'd' },
         { "map",	0, NULL, 'm' },
         { "method",	1, NULL, 'M' },
+        { "quantile",	1, NULL, 'q' },
         { "weight",	1, NULL, 'w' },
+        { "genes",	1, NULL, 'g' },
+        { "genee",	1, NULL, 'D' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVo:v:d:mM:w:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVo:v:d:mM:q:w:g:D:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -629,6 +664,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'q':	/* If combine method is Quantile, set the returning quantile (default is median qunatile 0.5).  */
+        
+        
+          if (update_arg( (void *)&(args_info->quantile_arg), 
+               &(args_info->quantile_orig), &(args_info->quantile_given),
+              &(local_args_info.quantile_given), optarg, 0, "0.5", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "quantile", 'q',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'w':	/* File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight.  */
         
         
@@ -637,6 +684,30 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.weight_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "weight", 'w',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'g':	/* Process only genes from the given set.  */
+        
+        
+          if (update_arg( (void *)&(args_info->genes_arg), 
+               &(args_info->genes_orig), &(args_info->genes_given),
+              &(local_args_info.genes_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genes", 'g',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'D':	/* Process only edges including a gene from the given set.  */
+        
+        
+          if (update_arg( (void *)&(args_info->genee_arg), 
+               &(args_info->genee_orig), &(args_info->genee_given),
+              &(local_args_info.genee_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genee", 'D',
               additional_error))
             goto failure;
         

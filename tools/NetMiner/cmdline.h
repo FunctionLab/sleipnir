@@ -51,11 +51,15 @@ struct gengetopt_args_info
   const char *tissue_help; /**< @brief Input tissue expression PCL file help description.  */
   int savematrix_flag;	/**< @brief Save the distance and next matrix from shortest path calculation (default=off).  */
   const char *savematrix_help; /**< @brief Save the distance and next matrix from shortest path calculation help description.  */
+  int savedab_flag;	/**< @brief Save the distance and next matrix from shortest path calculation as Dab (default=off).  */
+  const char *savedab_help; /**< @brief Save the distance and next matrix from shortest path calculation as Dab help description.  */
   char * genepairs_arg;	/**< @brief Input gene pairs to find shortest path.  */
   char * genepairs_orig;	/**< @brief Input gene pairs to find shortest path original value given at command line.  */
   const char *genepairs_help; /**< @brief Input gene pairs to find shortest path help description.  */
   int normalize_flag;	/**< @brief Normalize to the range [0,1] (default=off).  */
   const char *normalize_help; /**< @brief Normalize to the range [0,1] help description.  */
+  int NegLog_flag;	/**< @brief Convert to Neg log of the probabilities (default=off).  */
+  const char *NegLog_help; /**< @brief Convert to Neg log of the probabilities help description.  */
   int skip_arg;	/**< @brief Columns to skip in input PCL (default='0').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
@@ -76,8 +80,10 @@ struct gengetopt_args_info
   unsigned int sim_given ;	/**< @brief Whether sim was given.  */
   unsigned int tissue_given ;	/**< @brief Whether tissue was given.  */
   unsigned int savematrix_given ;	/**< @brief Whether savematrix was given.  */
+  unsigned int savedab_given ;	/**< @brief Whether savedab was given.  */
   unsigned int genepairs_given ;	/**< @brief Whether genepairs was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int NegLog_given ;	/**< @brief Whether NegLog was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */

@@ -62,6 +62,7 @@ const char *gengetopt_args_info_help[] = {
   "  -u, --CrossResult=filename    Cross-validation prediction results, if given \n                                  when prediction mode these values are \n                                  replaced into final prediction values",
   "  -y, --SampledLabels=filename  Save the sampled final training labels to this \n                                  file",
   "  -A, --subsample=FLOAT         Sample the labels to the following rate",
+  "  -U, --OutLabels=filename      Save the sampled labels to the file and exit",
   "\nFiltering:",
   "  -q, --onetgene                Only keep edges from lables that have one gene \n                                  in the target gene list  (default=off)",
   "  -P, --prior=FLOAT             Randomly sub-sample the negative labels to \n                                  reach target prior. If cannot reach target \n                                  prior, set to closest prior.",
@@ -128,6 +129,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->CrossResult_given = 0 ;
   args_info->SampledLabels_given = 0 ;
   args_info->subsample_given = 0 ;
+  args_info->OutLabels_given = 0 ;
   args_info->onetgene_given = 0 ;
   args_info->prior_given = 0 ;
   args_info->savemodel_given = 0 ;
@@ -184,6 +186,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->SampledLabels_arg = NULL;
   args_info->SampledLabels_orig = NULL;
   args_info->subsample_orig = NULL;
+  args_info->OutLabels_arg = NULL;
+  args_info->OutLabels_orig = NULL;
   args_info->onetgene_flag = 0;
   args_info->prior_orig = NULL;
   args_info->savemodel_flag = 0;
@@ -230,11 +234,12 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->CrossResult_help = gengetopt_args_info_help[31] ;
   args_info->SampledLabels_help = gengetopt_args_info_help[32] ;
   args_info->subsample_help = gengetopt_args_info_help[33] ;
-  args_info->onetgene_help = gengetopt_args_info_help[35] ;
-  args_info->prior_help = gengetopt_args_info_help[36] ;
-  args_info->savemodel_help = gengetopt_args_info_help[37] ;
-  args_info->mintrain_help = gengetopt_args_info_help[38] ;
-  args_info->context_help = gengetopt_args_info_help[39] ;
+  args_info->OutLabels_help = gengetopt_args_info_help[34] ;
+  args_info->onetgene_help = gengetopt_args_info_help[36] ;
+  args_info->prior_help = gengetopt_args_info_help[37] ;
+  args_info->savemodel_help = gengetopt_args_info_help[38] ;
+  args_info->mintrain_help = gengetopt_args_info_help[39] ;
+  args_info->context_help = gengetopt_args_info_help[40] ;
   
 }
 
@@ -344,6 +349,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->SampledLabels_arg));
   free_string_field (&(args_info->SampledLabels_orig));
   free_string_field (&(args_info->subsample_orig));
+  free_string_field (&(args_info->OutLabels_arg));
+  free_string_field (&(args_info->OutLabels_orig));
   free_string_field (&(args_info->prior_orig));
   free_string_field (&(args_info->mintrain_orig));
   free_string_field (&(args_info->context_arg));
@@ -446,6 +453,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "SampledLabels", args_info->SampledLabels_orig, 0);
   if (args_info->subsample_given)
     write_into_file(outfile, "subsample", args_info->subsample_orig, 0);
+  if (args_info->OutLabels_given)
+    write_into_file(outfile, "OutLabels", args_info->OutLabels_orig, 0);
   if (args_info->onetgene_given)
     write_into_file(outfile, "onetgene", 0, 0 );
   if (args_info->prior_given)
@@ -751,6 +760,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "CrossResult",	1, NULL, 'u' },
         { "SampledLabels",	1, NULL, 'y' },
         { "subsample",	1, NULL, 'A' },
+        { "OutLabels",	1, NULL, 'U' },
         { "onetgene",	0, NULL, 'q' },
         { "prior",	1, NULL, 'P' },
         { "savemodel",	0, NULL, 's' },
@@ -759,7 +769,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVl:o:d:m:L:Sv:c:e:k:t:a:p:nMR:T:bF:BDzNXQxru:y:A:qP:sE:C:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVl:o:d:m:L:Sv:c:e:k:t:a:p:nMR:T:bF:BDzNXQxru:y:A:U:qP:sE:C:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1123,6 +1133,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.subsample_given), optarg, 0, 0, ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "subsample", 'A',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'U':	/* Save the sampled labels to the file and exit.  */
+        
+        
+          if (update_arg( (void *)&(args_info->OutLabels_arg), 
+               &(args_info->OutLabels_orig), &(args_info->OutLabels_given),
+              &(local_args_info.OutLabels_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "OutLabels", 'U',
               additional_error))
             goto failure;
         

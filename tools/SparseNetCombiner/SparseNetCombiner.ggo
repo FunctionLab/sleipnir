@@ -12,7 +12,15 @@ option  "directory"     d       "input directory (must only contain input files)
 option	"map"		m	"Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs)"
 						flag	off
 option	"method"	M	"Combination method"
-						values="max","mean"	default="mean"
+						values="max","mean","quant"	default="mean"
 section "Optional"
+option	"quantile"	q	"If combine method is Quantile, set the returning quantile (default is median qunatile 0.5)"
+						float	default="0.5"
 option	"weight"	w	"File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight"
+						string	typestr="filename"
+
+section "Filtering"
+option	"genes"		g	"Process only genes from the given set"
+						string	typestr="filename"
+option	"genee"		D	"Process only edges including a gene from the given set"
 						string	typestr="filename"

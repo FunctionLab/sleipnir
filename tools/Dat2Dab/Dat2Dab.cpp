@@ -141,6 +141,16 @@ int main( int iArgs, char** aszArgs ) {
 		}
 	      }
 	
+	if( sArgs.NegExp_flag ){
+	  float d;
+	  for( i = 0; i < Dat.GetGenes( ); ++i )
+	    for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ){
+	      if( CMeta::IsNaN( d=Dat.Get( i, j ) ) )
+		continue;
+	      Dat.Set( i, j, exp(-d) );
+	    } 
+	}
+	
 	if( sArgs.flip_flag )
 		Dat.Invert( );
 	if( Genes.GetGenes( ) )

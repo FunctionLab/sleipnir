@@ -21,7 +21,9 @@ option	"zscore"		z	"Convert values to z-scores"
 							flag	off
 option	"rank"			r	"Rank transform data"
 							flag	off
-option	"randomize"			a	"Randomize data"
+option	"randomize"		a	"Randomize data"
+							flag	off
+option	"NegExp"		K	"Transform all values to their negative exponential (converts -log of prob back to prob space)"
 							flag	off
 
 section "Filtering"

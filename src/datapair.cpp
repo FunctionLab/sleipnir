@@ -139,7 +139,7 @@ bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, si
 bool CDataPairImpl::OpenQdab( const char* szDatafile ){
   size_t	iTotal, i, j, num_bins, num_bits, iPos;
   float*	adScores;
-  char tmp;
+  unsigned char tmp;
   float* bounds;
   unsigned char btmpf;
   unsigned char btmpb;
@@ -159,7 +159,7 @@ bool CDataPairImpl::OpenQdab( const char* szDatafile ){
   m_Data.Initialize( GetGenes( ) );
   
   // read the number of bins 
-  istm.read((char*)&tmp, sizeof(char));       
+  istm.read((char*)&tmp, sizeof(char));
   num_bins = (size_t)tmp;
   
   //read the bin boundaries
@@ -171,7 +171,7 @@ bool CDataPairImpl::OpenQdab( const char* szDatafile ){
   
   // number of bits required for each bin representation
   num_bits = (size_t)ceil(log( num_bins ) / log ( 2.0 ));	
-  
+
   // add one more bit for NaN case
   if( pow(2, num_bits) == num_bins )
     ++num_bits;
@@ -386,7 +386,7 @@ void CDataPair::Save( const char* szFile ) const {
 		ofsm.open( szFile, ios_base::binary );		
 		CDat::SaveGenes( ofsm );
 		
-		unsigned char bins = (unsigned char)m_vecdQuant.size();
+		unsigned char bins = (unsigned char)m_vecdQuant.size();		
 		size_t bit_len = (size_t)ceil( log((size_t)bins)/log(2) );
 
 		//reserve largest value for NaN		

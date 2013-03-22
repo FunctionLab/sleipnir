@@ -37,9 +37,11 @@ const char *gengetopt_args_info_help[] = {
   "  -S, --sim=filename        Input gene similarity DAT/DAB file",
   "  -t, --tissue=filename     Input tissue expression PCL file",
   "  -M, --savematrix          Save the distance and next matrix from shortest \n                              path calculation  (default=off)",
+  "  -d, --savedab             Save the distance and next matrix from shortest \n                              path calculation as Dab  (default=off)",
   "  -p, --genepairs=filename  Input gene pairs to find shortest path",
   "\nPreprocessing:",
   "  -n, --normalize           Normalize to the range [0,1]  (default=off)",
+  "  -L, --NegLog              Convert to Neg log of the probabilities  \n                              (default=off)",
   "\nOptional:",
   "  -s, --skip=INT            Columns to skip in input PCL  (default=`0')",
   "  -m, --memmap              Memory map input/output  (default=off)",
@@ -78,8 +80,10 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->sim_given = 0 ;
   args_info->tissue_given = 0 ;
   args_info->savematrix_given = 0 ;
+  args_info->savedab_given = 0 ;
   args_info->genepairs_given = 0 ;
   args_info->normalize_given = 0 ;
+  args_info->NegLog_given = 0 ;
   args_info->skip_given = 0 ;
   args_info->memmap_given = 0 ;
   args_info->random_given = 0 ;
@@ -100,9 +104,11 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->tissue_arg = NULL;
   args_info->tissue_orig = NULL;
   args_info->savematrix_flag = 0;
+  args_info->savedab_flag = 0;
   args_info->genepairs_arg = NULL;
   args_info->genepairs_orig = NULL;
   args_info->normalize_flag = 0;
+  args_info->NegLog_flag = 0;
   args_info->skip_arg = 0;
   args_info->skip_orig = NULL;
   args_info->memmap_flag = 0;
@@ -126,12 +132,14 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->sim_help = gengetopt_args_info_help[6] ;
   args_info->tissue_help = gengetopt_args_info_help[7] ;
   args_info->savematrix_help = gengetopt_args_info_help[8] ;
-  args_info->genepairs_help = gengetopt_args_info_help[9] ;
-  args_info->normalize_help = gengetopt_args_info_help[11] ;
-  args_info->skip_help = gengetopt_args_info_help[13] ;
-  args_info->memmap_help = gengetopt_args_info_help[14] ;
-  args_info->random_help = gengetopt_args_info_help[15] ;
-  args_info->verbosity_help = gengetopt_args_info_help[16] ;
+  args_info->savedab_help = gengetopt_args_info_help[9] ;
+  args_info->genepairs_help = gengetopt_args_info_help[10] ;
+  args_info->normalize_help = gengetopt_args_info_help[12] ;
+  args_info->NegLog_help = gengetopt_args_info_help[13] ;
+  args_info->skip_help = gengetopt_args_info_help[15] ;
+  args_info->memmap_help = gengetopt_args_info_help[16] ;
+  args_info->random_help = gengetopt_args_info_help[17] ;
+  args_info->verbosity_help = gengetopt_args_info_help[18] ;
   
 }
 
@@ -278,10 +286,14 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "tissue", args_info->tissue_orig, 0);
   if (args_info->savematrix_given)
     write_into_file(outfile, "savematrix", 0, 0 );
+  if (args_info->savedab_given)
+    write_into_file(outfile, "savedab", 0, 0 );
   if (args_info->genepairs_given)
     write_into_file(outfile, "genepairs", args_info->genepairs_orig, 0);
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
+  if (args_info->NegLog_given)
+    write_into_file(outfile, "NegLog", 0, 0 );
   if (args_info->skip_given)
     write_into_file(outfile, "skip", args_info->skip_orig, 0);
   if (args_info->memmap_given)
@@ -534,8 +546,10 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "sim",	1, NULL, 'S' },
         { "tissue",	1, NULL, 't' },
         { "savematrix",	0, NULL, 'M' },
+        { "savedab",	0, NULL, 'd' },
         { "genepairs",	1, NULL, 'p' },
         { "normalize",	0, NULL, 'n' },
+        { "NegLog",	0, NULL, 'L' },
         { "skip",	1, NULL, 's' },
         { "memmap",	0, NULL, 'm' },
         { "random",	1, NULL, 'R' },
@@ -543,7 +557,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:o:q:S:t:Mp:ns:mR:v:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:o:q:S:t:Mdp:nLs:mR:v:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -638,6 +652,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'd':	/* Save the distance and next matrix from shortest path calculation as Dab.  */
+        
+        
+          if (update_arg((void *)&(args_info->savedab_flag), 0, &(args_info->savedab_given),
+              &(local_args_info.savedab_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "savedab", 'd',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'p':	/* Input gene pairs to find shortest path.  */
         
         
@@ -656,6 +680,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
               &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "normalize", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'L':	/* Convert to Neg log of the probabilities.  */
+        
+        
+          if (update_arg((void *)&(args_info->NegLog_flag), 0, &(args_info->NegLog_given),
+              &(local_args_info.NegLog_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "NegLog", 'L',
               additional_error))
             goto failure;
         

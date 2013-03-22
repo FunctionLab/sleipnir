@@ -48,9 +48,18 @@ struct gengetopt_args_info
   char * method_arg;	/**< @brief Combination method (default='mean').  */
   char * method_orig;	/**< @brief Combination method original value given at command line.  */
   const char *method_help; /**< @brief Combination method help description.  */
+  float quantile_arg;	/**< @brief If combine method is Quantile, set the returning quantile (default is median qunatile 0.5) (default='0.5').  */
+  char * quantile_orig;	/**< @brief If combine method is Quantile, set the returning quantile (default is median qunatile 0.5) original value given at command line.  */
+  const char *quantile_help; /**< @brief If combine method is Quantile, set the returning quantile (default is median qunatile 0.5) help description.  */
   char * weight_arg;	/**< @brief File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight.  */
   char * weight_orig;	/**< @brief File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight original value given at command line.  */
   const char *weight_help; /**< @brief File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight help description.  */
+  char * genes_arg;	/**< @brief Process only genes from the given set.  */
+  char * genes_orig;	/**< @brief Process only genes from the given set original value given at command line.  */
+  const char *genes_help; /**< @brief Process only genes from the given set help description.  */
+  char * genee_arg;	/**< @brief Process only edges including a gene from the given set.  */
+  char * genee_orig;	/**< @brief Process only edges including a gene from the given set original value given at command line.  */
+  const char *genee_help; /**< @brief Process only edges including a gene from the given set help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -59,7 +68,10 @@ struct gengetopt_args_info
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
   unsigned int map_given ;	/**< @brief Whether map was given.  */
   unsigned int method_given ;	/**< @brief Whether method was given.  */
+  unsigned int quantile_given ;	/**< @brief Whether quantile was given.  */
   unsigned int weight_given ;	/**< @brief Whether weight was given.  */
+  unsigned int genes_given ;	/**< @brief Whether genes was given.  */
+  unsigned int genee_given ;	/**< @brief Whether genee was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
