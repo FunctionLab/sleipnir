@@ -20,8 +20,60 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "stdafx.h"
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <limits>
+
+
+float logit(float x)
+{
+     if(x == 0.0)//min float number
+	return -15;
+	//return -std::numeric_limits<float>::max();
+	//return std::numeric_limits<float>::min();
+     if(x == 1.0)//max float number
+	return 15;
+	//return std::numeric_limits<float>::max();
+
+     return log( x / ( 1 - x ) );
+}
+
+float sigmoid(float x)
+{
+     float exp_value;
+     float return_value;
+
+     /*** Exponential calculation ***/
+     exp_value = exp((double) -x);
+
+     /*** Final sigmoid value ***/
+     return_value = 1 / (1 + exp_value);
+
+     return return_value;
+}
+
+float equal_prior(float x, size_t p, size_t n)
+{
+     float logit_value;
+     float return_value;
+
+     logit_value = logit(x) + log( ((float) p) / n); // - log(n/p) ... subtract prior ... in effect give equal prior to 
+     return_value = sigmoid(logit_value);
+
+     return return_value;
+}
+
 
 int main( int iArgs, char** aszArgs ) {
+
+//	cout << sigmoid(logit(0.999999)) << endl;
+//	cout << sigmoid(logit(0.9)) << endl;
+//	cout << sigmoid(logit(0.1)) << endl;
+//	cout << sigmoid(logit(1)) << endl;
+//	cout << sigmoid(logit(0)) << endl;
+
+
 	gengetopt_args_info	sArgs;
 	int					iRet;
 	size_t				i, j, k, l;
@@ -30,13 +82,28 @@ int main( int iArgs, char** aszArgs ) {
 	struct dirent* ep;
 	CDat					DatOut, DatCur;
 	vector<size_t>				veciGenesCur;	
-	// store all input file names
+
+	// store all input filenames
 	vector<string> input_files;
-	
+	string weight_filename;
+
+	// store prior information
+	vector<size_t> vpos;
+	vector<size_t> vneg;
+
+        // read context weights
+        std::string line;
+        std::vector<std::string> terms;
+        std::map<std::string,double> term2weight;
+        double weight_sum = 0.0;
+
+
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg );
+	
+	//int type = sArgs.type_arg ; // type of combiner
 	
 	// now collect the data files from directory if given
 	if(sArgs.directory_arg){
@@ -57,29 +124,146 @@ int main( int iArgs, char** aszArgs ) {
 	    return 1;
 	  }
 	}
-	else{
-	  input_files.resize( sArgs.inputs_num );
-	  copy( sArgs.inputs, sArgs.inputs + sArgs.inputs_num, input_files.begin( ) );
+
+	if(sArgs.prior_arg){// only subtract prior only if count directory given
+	    std::string term;
+	    std::string count_fn;
+            unsigned found;
+            std::string line;
+	    size_t posnum;
+	    size_t negnum;
+	    for( i = 0 ; i < input_files.size( ) ; i++ ){
+		found = input_files[i].rfind("/");
+		term = input_files[i].substr(found+1);
+		found = term.rfind(".");
+		term = term.replace(found+1,3,"txt");
+		count_fn = std::string(sArgs.prior_arg) + term;
+		ifstream file (count_fn.c_str());
+		if (file.is_open()){
+		    getline (file,line);//dummy line
+		    getline (file,line);
+		}
+//		std::cout <<  << endl;
+		sscanf(line.c_str(),"%d\t%d",&posnum,&negnum);
+//cout << term << endl;
+//cout << posnum << endl;
+//cout << negnum << endl;
+		vpos.push_back( posnum );
+		vneg.push_back( negnum );
+	    }
 	}
+
+
+
+	if(sArgs.weights_arg){ // only if weight file given..
+	weight_filename = sArgs.weights_arg;
+        std::ifstream weight_file(weight_filename.c_str());
+	cout << "Using weight file: " << weight_filename << endl;
+	// read context weights
+        if(weight_file.is_open())
+        {
+          while(weight_file.good())
+          {
+	    std::string term;
+	    double weight;
 	
+	    weight_file >> term >> weight;
+	    //weight = abs(weight);
+	    //cout << term << "\t" << weight << endl;
+	    if(term.length() < 1){
+              continue;
+	    }
+	    if(weight <= 0.1){
+	      continue;
+	    }
+	cout << term << endl;
+	    terms.push_back(term);
+	    term2weight[term] = weight;
+	    weight_sum += weight;
+          }
+          weight_file.close();
+        }
+	
+	cout << "The number of contexts with weight: " << terms.size() << endl;	
+
+	// read only networks/contexts with weights
+	std::vector<string> subset_dab;
+	std::vector<string> subset_terms;
+	for( i = 0; i < input_files.size( ); ++i) {
+	  for( j = 0; j < terms.size( ); ++j) {
+	    unsigned int pos = input_files[i].find(terms[j]);
+	    if(pos < input_files[i].length()){
+		//cout << pos << endl;
+		subset_dab.push_back(input_files[i]);
+		subset_terms.push_back(terms[j]);
+		break;
+	    }
+	    //cout << pos << endl;
+	  }
+	}
+	input_files = subset_dab;
+	terms = subset_terms;
+	}else{
+	  //TODO: temporary hacking based on implementation ... should improve
+          // sort so that input file and term array are corresponding with index
+	  std::sort(input_files.begin(),input_files.end());
+	  for( i = 0; i < input_files.size( ); ++i){
+            terms.push_back(input_files[i]);
+            term2weight[input_files[i]] = 1;
+          }
+
+	  //std::sort(terms.begin(),terms.end());
+	  weight_sum = input_files.size( );
+	}
+
+
 	// now iterate dat/dab networks
 	for( i = 0; i < input_files.size( ); ++i ) {
-	  // open first network, we will just add edge weights to this CDat
-	  if( i == 0 ){
-	    if( !DatCur.Open( input_files[ i ].c_str() ) ) {
-	      cerr << "Couldn't open: " << input_files[ i ] << endl;
-	      return 1; }
-	    
-	    DatOut.Open( DatCur );	    
-	    cerr << "opened: " << input_files[ i ] << endl;
+
+	  // open dat/dab network
+	  if( !DatCur.Open( input_files[ i ].c_str() ) ) {
+	    cerr << "Couldn't open: " << input_files[ i ] << endl;
+	    return 1; }	    
+	  cerr << "opened: " << input_files[ i ] << endl;
+	   
+
+	  if( sArgs.prior_arg ){
+            for( j = 0; j < DatCur.GetGenes( ); ++j)
+              for( k = ( j + 1 ); k < DatCur.GetGenes( ); ++k)
+                  DatCur.Set( j, k, equal_prior( DatCur.Get( j, k ), vpos[ i ], vneg[ i ] ) );
+
+	  }
+
+          if( sArgs.logit_flag ){
+            for( j = 0; j < DatCur.GetGenes( ); ++j)
+              for( k = ( j + 1 ); k < DatCur.GetGenes( ); ++k)
+                  DatCur.Set( j, k, logit( DatCur.Get( j, k ) ) );
+                
+          }else{
+	  }
+            
+	  if( sArgs.znormalize_flag ){
+            DatCur.Normalize( CDat::ENormalizeZScore );
+          }else{
+	  }
+
+ cerr << term2weight[terms[i]] << endl;
+
+
+          // if open first network, we will just add edge weights to this CDat
+          if( i == 0 ){
+            DatOut.Open( DatCur );  
+            for( j = 0; j < DatOut.GetGenes( ); ++j)
+//cerr << "set " << j << endl;
+
+              for( k = ( j + 1 ); k < DatOut.GetGenes( ); ++k){
+//                DatOut.Set( j, k, DatOut.Get( j, k ) );
+		DatOut.Set( j, k, DatOut.Get( j, k ) * term2weight[terms[i]] );
+		}
 	    continue;	 
 	  }
 	  
-	  if( !DatCur.Open( input_files[ i ].c_str() ) ) {
-	    cerr << "Couldn't open: " << input_files[ i ] << endl;
-	    return 1; }
-	  cerr << "opened: " << input_files[ i ] << endl;
-	  
+//cerr << "map flag" << endl;	  
 	  if( sArgs.map_flag ){
 	    // Get gene index match	  
 	    veciGenesCur.clear();
@@ -92,6 +276,8 @@ int main( int iArgs, char** aszArgs ) {
 	      }
 	    }
 	  }
+
+cerr << "add a network" << endl;
 	  
 	  // now add edges to Dat
 	  for( j = 0; j < DatOut.GetGenes( ); ++j )
@@ -100,6 +286,9 @@ int main( int iArgs, char** aszArgs ) {
 	      if( sArgs.map_flag ){
 		// we are assuming a fully connected network
 		if( CMeta::IsNaN( d = DatCur.Get( veciGenesCur[ j ], veciGenesCur[ k ] ) ) ){
+		  cerr << d << endl;
+		  cerr << veciGenesCur[ j ] << endl;
+		  cerr << veciGenesCur[ k ] << endl;
 		  cerr << "ERROR: missing values" << input_files[ i ] << endl;
 		  return 1;
 		}
@@ -110,16 +299,33 @@ int main( int iArgs, char** aszArgs ) {
 		  return 1;
 		}
 	      }
-	      
-	      DatOut.Set( j, k, DatOut.Get( j, k ) + d );
+
+//cerr << d << endl;
+//cerr << terms.size() << endl;
+//for(int q = 0 ; q < terms.size() ; q++)
+//  cerr << terms[q] << endl;
+//cerr << terms[i] << endl;
+//cerr << term2weight[terms[i]] << endl;	      
+
+	      DatOut.Set( j, k, DatOut.Get( j, k ) + d * term2weight[terms[i]]) ; //weight edge based on context weight TODO: right now this implementation depends on the order of terms vector and niput_file vector to be correspondingi
+//                DatOut.Set( j, k, DatOut.Get( j, k ) +  d ) ;//
+
+              
 	    }
 	}
 	
 	// now convert sum to mean
 	for( j = 0; j < DatOut.GetGenes( ); ++j )
-	  for( k = ( j + 1 ); k < DatOut.GetGenes( ); ++k )
-	    DatOut.Set( j, k, DatOut.Get( j, k ) / input_files.size( ) );
-	
+	  for( k = ( j + 1 ); k < DatOut.GetGenes( ); ++k ){
+	    DatOut.Set( j, k, DatOut.Get( j, k ) / weight_sum );
+
+	    if( sArgs.logit_flag ){// transform back to probability values
+              DatOut.Set( j, k, sigmoid( DatOut.Get( j, k ) ) );
+            }
+
+          }
+	//DatOut.Set( j, k, DatOut.Get( j, k ) / input_files.size( ) );
+        
 	DatOut.Save( sArgs.output_arg );
 	return iRet; 
 }
