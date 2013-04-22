@@ -1,6 +1,6 @@
-package	"SVMperfer"
+package	"LibSVMer"
 version	"1.0"
-purpose	"Wrapper for SVM perf"
+purpose	"Wrapper for LibSVM"
 
 section "Main"
 option	"labels"				l	"Labels file"
