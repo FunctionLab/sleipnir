@@ -32,6 +32,6 @@ using namespace std;
 #include "dat.h"
 #include "genome.h"
 #include "meta.h"
-#include "svmperf.h"
+//#include "svmperf.h"
 using namespace Sleipnir;
 #endif // STDAFX_H

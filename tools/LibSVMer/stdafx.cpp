@@ -22,9 +22,9 @@
 #include "stdafx.h"
 
 /*!
- * \page SVMperfer SVMperfer
+ * \page LibSVMer LibSVMer
  * 
- * SVMperfer performs SVM learning using the SVMperf library.  It supports cross validation and
+ * LibSVMer performs SVM learning using the LibSVM library.  It supports cross validation and
  * reading from binary PCL files created by PCL2Bin.
  * 
  * \section sec_usage Usage
@@ -32,7 +32,7 @@
  * \subsection ssec_usage_basic Basic Usage
  * 
  * \code
- * SVMperfer -l <labels_file> -p <params_file> -i <data.bin> -o <output_directory> -a
+ * LibSVMer -l <labels_file> -p <params_file> -i <data.bin> -o <output_directory> -a
  * \endcode
  * 
  * The labels file is of the format (NOTE WELL: IN ALL THE FOLLOWING FORMATS DELIMITERS ARE TABS --
@@ -76,11 +76,11 @@
  * and the third column represents k_value (for precision at k recall, but unused for the AUC error function
  * in the example above.
  * 
- * SVMperfer can also be used to output a model or learn a network, although currently those features are undocumented.
+ * LibSVMer can also be used to output a model or learn a network, although currently those features are undocumented.
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
- * \include SVMperfer/SVMperfer.ggo
+ * \include LibSVMer/LibSVMer.ggo
  * 
  * <table><tr>
  *	<th>Flag</th>
@@ -146,7 +146,7 @@
  *	<td>-t</td>
  *	<td>1</td>
  *	<td>float</td>
- *	<td>SVM tradeoff constant C (note that this differs from the version in SVM light by a constant factor, check SVMPerf docs for details).</td>
+ *	<td>SVM tradeoff constant C (note that this differs from the version in SVM light by a constant factor, check LibSVM docs for details).</td>
  * </tr><tr>
  *	<td>-p</td>
  *	<td>None</td>
