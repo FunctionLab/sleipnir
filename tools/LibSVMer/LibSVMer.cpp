@@ -28,7 +28,8 @@
 #include "cmdline.h"
 #include "statistics.h"
 
-//using namespace SVMLight;
+using namespace LIBSVM;
+
 /*
 vector<SVMLight::SVMLabel> ReadLabels(ifstream & ifsm) {
 
@@ -59,14 +60,16 @@ vector<SVMLight::SVMLabel> ReadLabels(ifstream & ifsm) {
 	}
 	return vecLabels;
 }
-
+*/
+/*
 struct SortResults {
 
 	bool operator()(const SVMLight::Result& rOne, const SVMLight::Result & rTwo) const {
 		return (rOne.Value > rTwo.Value);
 	}
 };
-
+*/
+/*
 size_t PrintResults(vector<SVMLight::Result> vecResults, ofstream & ofsm) {
 	sort(vecResults.begin(), vecResults.end(), SortResults());
 	int LabelVal;

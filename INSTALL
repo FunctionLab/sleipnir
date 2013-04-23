@@ -80,10 +80,10 @@ LibSVM (optional)
 
 When building this from source, the Makefile distributed with it does
 not actually make the library (liblibsvm.a). You will need to make
-this yourself. From within the libsvm source code top level
+this yourself. From the parent directory of the libsvm source code top level
 directory, do:
 
-   % ar rcs liblibsvm.a *.o
+   % ar rcs liblibsvm.a libsvm/*.o
 
 Use --with-libsvm=(dir) to point configure to the source top level
 directory and you should be fine.

@@ -557,7 +557,7 @@ AC_ARG_WITH([libsvm],
          elif test "x$with_libsvm" != "xno"; then
            libsvm_state=try
            qualify_path with_libsvm
-	   LOCAL_CHECK_APPEND_PATHS([$with_libsvm], [. include], [svm.h], [LIBSVM_INCLUDE_DIR], [libsvm_state=warn])
+	   LOCAL_CHECK_APPEND_PATHS([$with_libsvm], [. include], [libsvm/svm.h], [LIBSVM_INCLUDE_DIR], [libsvm_state=warn])
            LOCAL_CHECK_APPEND_PATHS([$with_libsvm], [. lib], [liblibsvm.a], [LIBSVM_LIB_DIR], [libsvm_state=warn])
          else
            libsvm_state=no
@@ -578,7 +578,7 @@ LOCAL_CHECK_LIB([libsvm], [libsvm], [ struct svm_node *x_space ],
         [],                                                       dnl requested without
         [
 	 #include <sys/types.h>
-         #include "svm.h"],
+         #include "libsvm/svm.h"],
         [],
         [-L $LIBSVM_LIB_DIR -I $LIBSVM_INCLUDE_DIR])
 ## LOCAL_CHECK_LIB(1 lib name, 2 local name, 3 function,
