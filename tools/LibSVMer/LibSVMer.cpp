@@ -30,13 +30,13 @@
 
 using namespace LIBSVM;
 
-/*
-vector<SVMLight::SVMLabel> ReadLabels(ifstream & ifsm) {
+
+vector<LIBSVM::SVMLabel> ReadLabels(ifstream & ifsm) {
 
 	static const size_t c_iBuffer = 1024;
 	char acBuffer[c_iBuffer];
 	vector<string> vecstrTokens;
-	vector<SVMLight::SVMLabel> vecLabels;
+	vector<LIBSVM::SVMLabel> vecLabels;
 	size_t numPositives, numNegatives;
 	numPositives = numNegatives = 0;
 	while (!ifsm.eof()) {
@@ -51,7 +51,7 @@ vector<SVMLight::SVMLabel> ReadLabels(ifstream & ifsm) {
 					<< acBuffer << endl;
 			continue;
 		}
-		vecLabels.push_back(SVMLight::SVMLabel(vecstrTokens[0], atof(
+		vecLabels.push_back(LIBSVM::SVMLabel(vecstrTokens[0], atof(
 				vecstrTokens[1].c_str())));
 		if (vecLabels.back().Target > 0)
 			numPositives++;
@@ -60,25 +60,24 @@ vector<SVMLight::SVMLabel> ReadLabels(ifstream & ifsm) {
 	}
 	return vecLabels;
 }
-*/
-/*
+
+
 struct SortResults {
 
-	bool operator()(const SVMLight::Result& rOne, const SVMLight::Result & rTwo) const {
+	bool operator()(const LIBSVM::Result& rOne, const LIBSVM::Result & rTwo) const {
 		return (rOne.Value > rTwo.Value);
 	}
 };
-*/
-/*
-size_t PrintResults(vector<SVMLight::Result> vecResults, ofstream & ofsm) {
+
+
+size_t PrintResults(vector<LIBSVM::Result> vecResults, ofstream & ofsm) {
 	sort(vecResults.begin(), vecResults.end(), SortResults());
 	int LabelVal;
 	for (size_t i = 0; i < vecResults.size(); i++) {
 		ofsm << vecResults[i].GeneName << '\t' << vecResults[i].Target << '\t'
 				<< vecResults[i].Value << endl;
 	}
-}
-;
+};
 
 struct ParamStruct {
 	vector<float> vecK, vecTradeoff;
@@ -136,14 +135,14 @@ ParamStruct ReadParamsFromFile(ifstream& ifsm, string outFile) {
 	}
 	return PStruct;
 }
-*/
+
 int main(int iArgs, char** aszArgs) {
-	cout << "blah" << endl;
-/*
+//	cout << "blah" << endl;
+
 	gengetopt_args_info sArgs;
 
 	CPCL PCL;
-	SVMLight::CSVMPERF SVM;
+	LIBSVM::CLIBSVM SVM;
 
 	size_t i, j, iGene, jGene;
 	ifstream ifsm;
@@ -151,18 +150,11 @@ int main(int iArgs, char** aszArgs) {
 		cmdline_parser_print_help();
 		return 1;
 	}
-	SVM.SetVerbosity(sArgs.verbosity_arg);
-	SVM.SetLossFunction(sArgs.error_function_arg);
-	if (sArgs.k_value_arg > 1) {
-		cerr << "k_value is >1. Setting default 0.5" << endl;
-		SVM.SetPrecisionFraction(0.5);
-	} else if (sArgs.k_value_arg <= 0) {
-		cerr << "k_value is <=0. Setting default 0.5" << endl;
-		SVM.SetPrecisionFraction(0.5);
-	} else {
-		SVM.SetPrecisionFraction(sArgs.k_value_arg);
-	}
 
+        //TODO: update documentation and cmdline .. doesn't use most parameters
+	//SVM.SetVerbosity(sArgs.verbosity_arg); // no verbosity param for libsvm TODO: update documentation
+	//SVM.SetLossFunction(sArgs.error_function_arg); //libsvm only has one loss function TODO: update documentation
+        
 	
 	if (sArgs.cross_validation_arg < 1){
 	  cerr << "cross_valid is <1. Must be set at least 1" << endl;
@@ -173,10 +165,6 @@ int main(int iArgs, char** aszArgs) {
 	}
 	
 	SVM.SetTradeoff(sArgs.tradeoff_arg);
-	if (sArgs.slack_flag)
-		SVM.UseSlackRescaling();
-	else
-		SVM.UseMarginRescaling();
 
 
 	if (!SVM.parms_check()) {
@@ -187,14 +175,18 @@ int main(int iArgs, char** aszArgs) {
 	//  cout << "there are " << vecLabels.size() << " labels processed" << endl;
 	size_t iFile;
 	vector<string> PCLs;
-	if (sArgs.input_given) {
+	if (sArgs.input_given) {//TODO: allow PCL file inputs
+//          cerr << "PCL as input not yet available" << endl;
+
+//          return 1;
+          /*
 		if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, sArgs.mmap_flag)) {
 			cerr << "Could not open input PCL" << endl;
 			return 1;
-		}
+		}*/
 	}
 
-	vector<SVMLight::SVMLabel> vecLabels;
+	vector<LIBSVM::SVMLabel> vecLabels;
 	set<string> setLabeledGenes;
 	if (sArgs.labels_given) {
 		ifsm.clear();
@@ -209,14 +201,14 @@ int main(int iArgs, char** aszArgs) {
 			setLabeledGenes.insert(vecLabels[i].GeneName);
 	}
 
-	SVMLight::SAMPLE* pTrainSample;
-	vector<SVMLight::SVMLabel> pTrainVector[sArgs.cross_validation_arg];
-	vector<SVMLight::SVMLabel> pTestVector[sArgs.cross_validation_arg];
-	vector<SVMLight::Result> AllResults;
-	vector<SVMLight::Result> tmpAllResults;
+	LIBSVM::SAMPLE* pTrainSample;
+	vector<LIBSVM::SVMLabel> pTrainVector[sArgs.cross_validation_arg];
+	vector<LIBSVM::SVMLabel> pTestVector[sArgs.cross_validation_arg];
+	vector<LIBSVM::Result> AllResults;
+	vector<LIBSVM::Result> tmpAllResults;
 
 	if (sArgs.model_given && sArgs.labels_given) { //learn once and write to file
-		pTrainSample = CSVMPERF::CreateSample(PCL, vecLabels);
+		pTrainSample = CLIBSVM::CreateSample(PCL, vecLabels);
 		SVM.Learn(*pTrainSample);
 		SVM.WriteModel(sArgs.model_arg);
 	} else if (sArgs.model_given && sArgs.output_given) { //read model and classify all
@@ -295,17 +287,17 @@ int main(int iArgs, char** aszArgs) {
 
 			size_t iParams;
 			ofstream ofsm;
-			SVMLight::SAMPLE * ppTrainSample[sArgs.cross_validation_arg];
+			LIBSVM::SAMPLE * ppTrainSample[sArgs.cross_validation_arg];
 			
 			//build all the samples since they are being reused
 			for (i = 0; i < sArgs.cross_validation_arg; i++)
-				ppTrainSample[i] = SVMLight::CSVMPERF::CreateSample(PCL,
+				ppTrainSample[i] = LIBSVM::CLIBSVM::CreateSample(PCL,
 						pTrainVector[i]);
 			
 			for (iParams = 0; iParams < PStruct.vecTradeoff.size(); iParams++) {
-				SVM.SetLossFunction(PStruct.vecLoss[iParams]);
+			//	SVM.SetLossFunction(PStruct.vecLoss[iParams]);
 				SVM.SetTradeoff(PStruct.vecTradeoff[iParams]);
-				SVM.SetPrecisionFraction(PStruct.vecK[iParams]);
+			//	SVM.SetPrecisionFraction(PStruct.vecK[iParams]);
 				for (j = 0; j < vec_allUnlabeledResults.size(); j++)
 					vec_allUnlabeledResults[j].Value = 0;
 				for (i = 0; i < sArgs.cross_validation_arg; i++) {
@@ -350,7 +342,7 @@ int main(int iArgs, char** aszArgs) {
 			}
 		} else { //run once
 			for (i = 0; i < sArgs.cross_validation_arg; i++) {
-				pTrainSample = SVMLight::CSVMPERF::CreateSample(PCL,
+				pTrainSample = LIBSVM::CLIBSVM::CreateSample(PCL, //make more efficient
 						pTrainVector[i]);
 
 				cerr << "Cross Validation Trial " << i << endl;
@@ -373,7 +365,7 @@ int main(int iArgs, char** aszArgs) {
 
 				}
 				if (i > 0) {
-					SVMLight::CSVMPERF::FreeSample(*pTrainSample);
+					LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
 				}
 			}
 
@@ -395,6 +387,6 @@ int main(int iArgs, char** aszArgs) {
 	} else {
 		cerr << "More options are needed" << endl;
 	}
-*/
+
 }
 

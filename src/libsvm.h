@@ -181,7 +181,7 @@ public:
   //			vector<SVMLabel> SVMLabels);
 
   //Creates a sample of svm_problems using a single PCL and SVMlabels Looks up genes by name.
-  //static SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
+  static SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
 
   //Same as above except creates bootstrap samples and does not duplicate data
   //static SAMPLE** CreateSampleBootStrap(Sleipnir::CPCL &PCL,
@@ -193,7 +193,7 @@ public:
 			vector<SVMLabel> SMVLabels);
 
   //Classify single genes
-  //vector<Result> Classify(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels);
+  vector<Result> Classify(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels);
   //vector<Result> Classify(Sleipnir::CPCLSet& PCLSet,
   //			vector<SVMLabel> SVMLabels);
   vector<Result> Classify(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels);
@@ -214,6 +214,13 @@ public:
     }else{
       cerr << "invalid parms" << endl;
     }
+  }
+
+  static void FreeSample(sample s){
+    free(s.problems->x);
+    free(s.problems->y);
+    free(s.problems);
+    
   }
 
   //no pairwise learning for libSVM wrapper

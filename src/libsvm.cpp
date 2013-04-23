@@ -79,6 +79,66 @@ bool CLIBSVM::parms_check() {
 	return true;
 }
 
+SAMPLE * CLIBSVM::CreateSample(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) {
+	size_t i, j, k, iGene, iProblem, numFeatures, max_index;
+        float d;
+
+        struct svm_problem prob;
+        struct svm_node *x_space;
+
+        prob.l = 0;//number of labels in PCL
+        numFeatures = PCL.GetFeatures();
+
+//	vector<double> vecClass;
+//	vector<size_t> veciGene;
+	
+        iProblem = 0;
+
+	for (i = 0; i < SVMLabels.size(); i++) {
+		//     cout<< "processing gene " << SVMLabels[i].GeneName << endl;
+                if (!SVMLabels[i].hasIndex){
+                  SVMLabels[i].SetIndex(PCL.GetGene(SVMLabels[i].GeneName));
+                }
+		iGene = SVMLabels[i].index;
+		//   cout << SVMLabels[i].GeneName<<" gene at location "<<iGene << endl;
+		if (iGene != -1) {
+                  prob.l++;
+		}
+	}
+
+ 
+        prob.y = Malloc(double,prob.l);
+        prob.x = Malloc(struct svm_node *, prob.l);
+        x_space = Malloc(struct svm_node, numFeatures * prob.l);
+
+        max_index = numFeatures;
+        j = 0;
+
+        for (i = 0; i < SVMLabels.size(); i++) {
+            iGene = SVMLabels[i].index;
+            if (iGene != -1){
+              prob.x[i] = &x_space[j];
+              prob.y[i] = SVMLabels[i].Target;
+              for(k = 0; k < numFeatures; k++){
+                x_space[j].index = k;
+                if (!Sleipnir::CMeta::IsNaN(d = PCL.Get(iGene, k))) {
+                  x_space[j].value = d;
+                }else{
+                  x_space[j].value = 1; //TODO: make this a flag!!!
+                  //if missing value??? SVMPerf imputes 0 ... what about gene i to gene i ? should impute 1?
+                }
+              }
+              j++;
+            }
+        }
+        SAMPLE* pSample = new SAMPLE;
+        pSample->n = prob.l;
+        pSample->problems = &prob;
+
+	return pSample;
+}
+
+
 
 SAMPLE * CLIBSVM::CreateSample(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels) {
 	size_t i, j, k, iGene, iProblem, numFeatures, max_index;
@@ -142,5 +202,51 @@ SAMPLE * CLIBSVM::CreateSample(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels) 
 	return pSample;
 }
 
+
+vector<Result> CLIBSVM::Classify(Sleipnir::CPCL &PCL,
+        vector<SVMLabel> SVMLabels) {
+    size_t i, j, iGene;
+    double predict_label;
+    double* dec_values;
+    double dec_value;
+    struct svm_node *x;
+
+    SAMPLE* pSample;
+    vector<Result> vecResult;
+
+    pSample = CLIBSVM::CreateSample(PCL, SVMLabels);
+
+    int svm_type = svm_get_svm_type(model);
+    int nr_class = svm_get_nr_class(model);
+    
+    dec_values = Malloc(double, nr_class*(nr_class-1)/2);
+    vecResult.resize(pSample->n);
+
+    j= 0; //pSample index
+    for(i = 0 ; i < SVMLabels.size() ; i++){
+      if(!SVMLabels[i].hasIndex){//assume createSample sequentially added to pSample TODO: currently hacky
+        SVMLabels[i].SetIndex(PCL.GetGene(SVMLabels[i].GeneName));
+      }
+      iGene = SVMLabels[i].index;
+
+      if (iGene != -1 ) {    
+        x = pSample->problems->x[j];
+        predict_label = svm_predict_values(model,x, dec_values);
+        dec_value = dec_values[0]; //assume that positive class is the first class TODO: currently hackly
+        j++;
+        vecResult[j].GeneName = SVMLabels[i].GeneName;
+        vecResult[j].Target = SVMLabels[i].Target;
+        vecResult[j].Value = dec_value;
+
+      }
+    }
+    free(dec_values);
+
+    return vecResult;
 }
 
+    
+//TODO: classify for dab/dat files
+//
+
+}
