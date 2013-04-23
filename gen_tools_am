@@ -16,7 +16,7 @@ my $tools_common_cflags2 = " \$(LOG4CPP_CFLAGS) \$(PTHREAD_CFLAGS)";
 my $tools_common_libs1 = "\$(SLEIPNIR_LIBS)";
 my $tools_common_libs2 = " \$(LOG4CPP_LIBS) \$(PTHREAD_LIBS)";
 
-# packages are: SMILE, SVM_PERF, READLINE, PTHREADS, BOOST, VOWPAL_WABBIT
+# packages are: SMILE, SVM_PERF, READLINE, PTHREADS, BOOST, VOWPAL_WABBIT, LIBSVM
 # ordering is important for linking
 my %tools_other_packages = (
 			    BNConverter => ['SMILE'],
@@ -54,6 +54,7 @@ my %tools_other_packages = (
 			    SVMer => ['SVM_PERF'],
 			    SVMperfer => ['SVM_PERF'],
 			    SVMperfing => ['SVM_PERF'],
+			    LibSVMer => ['LIBSVM'],
 			    VWer => ['VOWPAL_WABBIT'],
 			    );
 

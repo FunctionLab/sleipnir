@@ -55,6 +55,8 @@ struct gengetopt_args_info
   const char *rank_help; /**< @brief Rank transform data help description.  */
   int randomize_flag;	/**< @brief Randomize data (default=off).  */
   const char *randomize_help; /**< @brief Randomize data help description.  */
+  int NegExp_flag;	/**< @brief Transform all values to their negative exponential (converts -log of prob back to prob space) (default=off).  */
+  const char *NegExp_help; /**< @brief Transform all values to their negative exponential (converts -log of prob back to prob space) help description.  */
   char * genes_arg;	/**< @brief Process only genes from the given set.  */
   char * genes_orig;	/**< @brief Process only genes from the given set original value given at command line.  */
   const char *genes_help; /**< @brief Process only genes from the given set help description.  */
@@ -141,6 +143,7 @@ struct gengetopt_args_info
   unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int rank_given ;	/**< @brief Whether rank was given.  */
   unsigned int randomize_given ;	/**< @brief Whether randomize was given.  */
+  unsigned int NegExp_given ;	/**< @brief Whether NegExp was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */
   unsigned int genee_given ;	/**< @brief Whether genee was given.  */

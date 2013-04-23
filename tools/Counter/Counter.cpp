@@ -679,8 +679,14 @@ void* learn( void* pData ) {
         vecfiGenes.resize(psData->m_pAnswers->GetGenes( ));
     for( i = 0; i < vecfGenes.size( ); ++i ){
                 vecfGenes[ i ] = psData->m_pGenes->IsGene( psData->m_pAnswers->GetGene( i ) );}
-        for( i = 0; i < vecfGenes.size( ); ++i ){
+    if(psData->m_isDatWeighted){
+      for( i = 0; i < vecfGenes.size( ); ++i ){
+        vecfiGenes[ i ] = psData->m_pwDat->GetGene( psData->m_pAnswers->GetGene( i ) );}
+    }
+    else{
+    for( i = 0; i < vecfGenes.size( ); ++i ){
                 vecfiGenes[ i ] = psData->m_pGenes->GetGene( psData->m_pAnswers->GetGene( i ) );}
+    }
         if(psData->m_pGenes->IsWeighted()){
                 for( i = 0; i < vecfGenes.size( ); ++i ){
                         vecGeneWeights[ i ] = psData->m_pGenes->GetGeneWeight(psData->m_pGenes->GetGene( psData->m_pAnswers->GetGene( i ) ));}}

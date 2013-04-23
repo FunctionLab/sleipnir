@@ -31,12 +31,55 @@ enum EMethod {
 	EMethodBegin	= 0,
 	EMethodMean		= EMethodBegin,
 	EMethodMax		= EMethodMean + 1,
-	EMethodEnd		= EMethodMax + 1
+	EMethodQuant		= EMethodMax + 1,
+	EMethodEnd		= EMethodQuant + 1
 };
 
 static const char*	c_aszMethods[]	= {
-	"mean", "max", NULL
+  "mean", "max", "quant",NULL
 };
+
+
+float Percentile(vector<float>& vecVals, float quartile) {
+  //size_t iOne, iTwo, iSize;
+  //float d, dFrac;
+  size_t iSize;
+  float value, value2;
+  
+  iSize = vecVals.size();
+  if(iSize == 0)
+    return CMeta::GetNaN();
+  
+  if(iSize == 1)
+    return vecVals[0];
+  
+  std::sort(vecVals.begin(), vecVals.end());
+  
+  float index = quartile * (iSize + 1);
+  float remainder = index - (size_t)index;
+  
+  index = (size_t)index - 1;
+  
+  if(remainder == 0){
+    return vecVals[(size_t)index];    
+  }else{
+    if(remainder > 0.5){
+      value = vecVals[(size_t)index-1];
+      value2 = vecVals[(size_t)index];
+    }else{
+      value = vecVals[(size_t)index];
+      value2 = vecVals[(size_t)index+1];
+    }    
+    float interpolationValue = (value2 - value) * remainder;
+    
+    cerr << value << " " << value2 << " " << remainder  <<endl;    
+    //float interpolationValue = (value - vecVals[((size_t)index-1)]) * remainder;
+    //cerr << interpolationValue << endl;
+    
+    //return (vecVals[(size_t)index] + interpolationValue);
+    return (value + interpolationValue);
+  }
+}
 
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
@@ -55,6 +98,8 @@ int main( int iArgs, char** aszArgs ) {
 	ifstream	ifsm;
 	vector<float>	vecWeights;
 	map<string, size_t> mapstriDatasets;
+	CGenome				Genome;
+	CGenes				Genes( Genome );
 	
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -158,6 +203,65 @@ int main( int iArgs, char** aszArgs ) {
 	  cerr << "Total number of datasets combining with non-zero weights: " << numDataset << endl;
 	}
 	
+	/// IF combine method is Quantile
+	/// Beaware that values are qunatized to allow full read in of the input datsets
+	if( eMethod == EMethodQuant ){
+	  CDatasetCompact Dataset;
+	  vector<float>	vecVals;
+	  size_t val;
+	  
+	  if( !Dataset.Open( vecstrDatasets ) ) {
+	    cerr << "Couldn't open input datasets for quantile combine." << endl;
+	    return 1; }
+	  
+	  // initialized the output dab and pair value vector
+	  DatOut.Open(Dataset.GetGeneNames());
+	  vecVals.resize(Dataset.GetExperiments());
+
+	  // debug
+	  cerr << "num dataset: " << Dataset.GetExperiments() << endl;
+	  
+	  for( i = 0; i < DatOut.GetGenes(); ++i ){
+	    for( j = i+1; j < DatOut.GetGenes(); ++j ){
+	      // iterate over each dataset
+	      vecVals.clear();
+	      for( k = 0; k < Dataset.GetExperiments(); ++k ){
+		// debug
+		//cerr << "Orig val: " << val << endl;
+		
+		if( (val = Dataset.GetDiscrete( i, j, k)) == -1 )
+		  continue;		
+		
+		// debug
+		//cerr << "Got val: " << val << endl;
+		if( sArgs.weight_given ){
+		  val *= vecWeights[k];
+		}
+		
+		vecVals.push_back(val);
+	      }
+	      
+	      if(vecVals.size() < 1)
+		continue;
+	      
+	      // debug
+	      //cerr << "quant val: " << CStatistics::Percentile(vecVals.begin(), vecVals.end(), sArgs.quantile_arg) << endl;
+	      //cerr << "stats: " << vecVals.begin() << " " << vecVals.end() << " " << endl; //(vecVals.end()-vecVals.begin()) << endl;
+	      //cerr << "stats: " << (vecVals.end()-vecVals.begin()) << endl;	     
+	      DatOut.Set(i, j, CStatistics::Percentile(vecVals.begin(), vecVals.end(), sArgs.quantile_arg));
+	      
+	      //DatOut.Set(i, j, Percentile(vecVals, sArgs.quantile_arg));	      
+	      //for(size_t t = 0; t < vecVals.size(); t++ )
+	      //	cerr << vecVals[t] << ' ';
+	      //cerr << endl;
+	    }
+	  }
+	  
+	  DatOut.Save( sArgs.output_arg );
+	  return 0;
+	}
+	
+	
 	// now iterate dat/dab networks
 	for( i = 0; i < vecstrDatasets.size( ); ++i ) {
 	  
@@ -257,6 +361,26 @@ int main( int iArgs, char** aszArgs ) {
 	  for( j = 0; j < DatOut.GetGenes( ); ++j )
 	    for( k = ( j + 1 ); k < DatOut.GetGenes( ); ++k )
 	      DatOut.Set( j, k, DatOut.Get( j, k ) / DatTrack.Get( j, k ) );
+	}
+
+	// Filter dat
+	if( sArgs.genes_given ) {
+	  ifsm.clear( );
+	  ifsm.open( sArgs.genes_arg );
+	  if( !Genes.Open( ifsm ) ) {
+	    cerr << "Could not open: " << sArgs.genes_arg << endl;
+	    return 1; }
+	  ifsm.close( ); 
+	  
+	  DatOut.FilterGenes( Genes, CDat::EFilterInclude );
+	}
+	
+	if( sArgs.genee_given ){
+	  cerr << "Filter only edges with genes in: " << sArgs.genee_arg << endl;
+	  if( ! DatOut.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge ) ){
+	    cerr << "ERROR can't open file: " << sArgs.genee_arg << endl;
+	    return 1;
+	  }
 	}
 	
 	DatOut.Save( sArgs.output_arg );

@@ -734,11 +734,10 @@ float* CDatImpl::GetRowSeek(std::istream& istm, const std::string &strGene) cons
 	return GetRowSeek(istm, ind);
 }
 
-
 bool CDatImpl::OpenQdab( std::istream& istm ) {
   size_t	iTotal, i, j, num_bins, num_bits, iPos;
 	float*	adScores;
-	char tmp;
+	unsigned char tmp;
 	float* bounds;
 	unsigned char btmpf;
 	unsigned char btmpb;

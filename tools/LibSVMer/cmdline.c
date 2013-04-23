@@ -21,24 +21,32 @@
 
 #include "cmdline.h"
 
-const char *gengetopt_args_info_purpose = "Network(Dat/Dab) file combination(mean) tool; Assumes fully connected network \nwith identical gene sets. It's faster than Combiner.";
+const char *gengetopt_args_info_purpose = "Wrapper for LibSVM";
 
-const char *gengetopt_args_info_usage = "Usage: NetworkCombiner [OPTIONS]...";
+const char *gengetopt_args_info_usage = "Usage: LibSVMer [OPTIONS]...";
 
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                 Print help and exit",
-  "  -V, --version              Print version and exit",
+  "  -h, --help                  Print help and exit",
+  "  -V, --version               Print version and exit",
   "\nMain:",
-  "  -o, --output=filename      Output file",
-  "  -v, --verbosity=INT        Message verbosity  (default=`5')",
-  "  -d, --directory=directory  input directory (must only contain input files)",
-  "  -l, --logit                logit transform the probability edge weights  \n                               (default=off)",
-  "  -z, --znormalize           z normalize edge weights (may not be probability \n                               values)  (default=off)",
-  "  -m, --map                  Map gene index among the network dabs to combine. \n                               (Should be used when the gene intex are not \n                               identical among network dabs)  (default=on)",
-  "  -w, --weights=filename     context weight file",
-  "  -p, --prior=filename       count file directory",
+  "  -l, --labels=filename       Labels file",
+  "  -o, --output=filename       Output file ",
+  "  -i, --input=filename        Input PCL file ",
+  "  -m, --model=filename        Model file",
+  "  -a, --all                   Always classify all genes in PCLs  (default=off)",
+  "  -S, --slack                 Use slack rescaling (not implemented for ROC \n                                loss)  (default=off)",
+  "\nOptions:",
+  "  -v, --verbosity=INT         Sets the svm_struct verbosity  (default=`0')",
+  "  -s, --skip=INT              Number of columns to skip in input pcls  \n                                (default=`2')",
+  "  -n, --normalize             Normalize PCLS to 0 mean 1 variance  \n                                (default=off)",
+  "  -c, --cross_validation=INT  Number of cross-validation sets ( arg of 1 will \n                                turn off cross-validation )  (default=`5')",
+  "  -e, --error_function=INT    Sets the loss function for SVM learning: Choice \n                                of:\n\n                                0\tZero/one loss: 1 if vector of predictions \n                                contains error, 0 otherwise.\n\n                                1\tF1: 100 minus the F1-score in percent.\n\n                                2\tErrorrate: Percentage of errors in \n                                prediction vector.\n\n                                3\tPrec/Rec Breakeven: 100 minus PRBEP in \n                                percent.\n\n                                4\tPrec@k: 100 minus precision at k in percent.\n\n                                5\tRec@k: 100 minus recall at k in percent.\n\n                                10\tROCArea: Percentage of swapped pos/neg \n                                pairs (i.e. 100 - ROCArea).\n                                  (default=`10')",
+  "  -k, --k_value=FLOAT         Value of k parameter used for Prec@k and Rec@k in \n                                (0,1)  (default=`0.5')",
+  "  -t, --tradeoff=FLOAT        SVM tradeoff constant C  (default=`1')",
+  "  -p, --params=filename       Parameter file",
+  "  -M, --mmap                  Memory map binary input  (default=off)",
     0
 };
 
@@ -46,6 +54,7 @@ typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
   , ARG_INT
+  , ARG_FLOAT
 } cmdline_parser_arg_type;
 
 static
@@ -68,32 +77,52 @@ void clear_given (struct gengetopt_args_info *args_info)
 {
   args_info->help_given = 0 ;
   args_info->version_given = 0 ;
+  args_info->labels_given = 0 ;
   args_info->output_given = 0 ;
+  args_info->input_given = 0 ;
+  args_info->model_given = 0 ;
+  args_info->all_given = 0 ;
+  args_info->slack_given = 0 ;
   args_info->verbosity_given = 0 ;
-  args_info->directory_given = 0 ;
-  args_info->logit_given = 0 ;
-  args_info->znormalize_given = 0 ;
-  args_info->map_given = 0 ;
-  args_info->weights_given = 0 ;
-  args_info->prior_given = 0 ;
+  args_info->skip_given = 0 ;
+  args_info->normalize_given = 0 ;
+  args_info->cross_validation_given = 0 ;
+  args_info->error_function_given = 0 ;
+  args_info->k_value_given = 0 ;
+  args_info->tradeoff_given = 0 ;
+  args_info->params_given = 0 ;
+  args_info->mmap_given = 0 ;
 }
 
 static
 void clear_args (struct gengetopt_args_info *args_info)
 {
+  args_info->labels_arg = NULL;
+  args_info->labels_orig = NULL;
   args_info->output_arg = NULL;
   args_info->output_orig = NULL;
-  args_info->verbosity_arg = 5;
+  args_info->input_arg = NULL;
+  args_info->input_orig = NULL;
+  args_info->model_arg = NULL;
+  args_info->model_orig = NULL;
+  args_info->all_flag = 0;
+  args_info->slack_flag = 0;
+  args_info->verbosity_arg = 0;
   args_info->verbosity_orig = NULL;
-  args_info->directory_arg = NULL;
-  args_info->directory_orig = NULL;
-  args_info->logit_flag = 0;
-  args_info->znormalize_flag = 0;
-  args_info->map_flag = 1;
-  args_info->weights_arg = NULL;
-  args_info->weights_orig = NULL;
-  args_info->prior_arg = NULL;
-  args_info->prior_orig = NULL;
+  args_info->skip_arg = 2;
+  args_info->skip_orig = NULL;
+  args_info->normalize_flag = 0;
+  args_info->cross_validation_arg = 5;
+  args_info->cross_validation_orig = NULL;
+  args_info->error_function_arg = 10;
+  args_info->error_function_orig = NULL;
+  args_info->k_value_arg = 0.5;
+  args_info->k_value_orig = NULL;
+  args_info->tradeoff_arg = 1;
+  args_info->tradeoff_orig = NULL;
+  args_info->params_arg = NULL;
+  args_info->params_orig = NULL;
+  args_info->mmap_flag = 0;
   
 }
 
@@ -104,14 +133,21 @@ void init_args_info(struct gengetopt_args_info *args_info)
 
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
-  args_info->output_help = gengetopt_args_info_help[3] ;
-  args_info->verbosity_help = gengetopt_args_info_help[4] ;
-  args_info->directory_help = gengetopt_args_info_help[5] ;
-  args_info->logit_help = gengetopt_args_info_help[6] ;
-  args_info->znormalize_help = gengetopt_args_info_help[7] ;
-  args_info->map_help = gengetopt_args_info_help[8] ;
-  args_info->weights_help = gengetopt_args_info_help[9] ;
-  args_info->prior_help = gengetopt_args_info_help[10] ;
+  args_info->labels_help = gengetopt_args_info_help[3] ;
+  args_info->output_help = gengetopt_args_info_help[4] ;
+  args_info->input_help = gengetopt_args_info_help[5] ;
+  args_info->model_help = gengetopt_args_info_help[6] ;
+  args_info->all_help = gengetopt_args_info_help[7] ;
+  args_info->slack_help = gengetopt_args_info_help[8] ;
+  args_info->verbosity_help = gengetopt_args_info_help[10] ;
+  args_info->skip_help = gengetopt_args_info_help[11] ;
+  args_info->normalize_help = gengetopt_args_info_help[12] ;
+  args_info->cross_validation_help = gengetopt_args_info_help[13] ;
+  args_info->error_function_help = gengetopt_args_info_help[14] ;
+  args_info->k_value_help = gengetopt_args_info_help[15] ;
+  args_info->tradeoff_help = gengetopt_args_info_help[16] ;
+  args_info->params_help = gengetopt_args_info_help[17] ;
+  args_info->mmap_help = gengetopt_args_info_help[18] ;
   
 }
 
@@ -190,15 +226,22 @@ static void
 cmdline_parser_release (struct gengetopt_args_info *args_info)
 {
 
+  free_string_field (&(args_info->labels_arg));
+  free_string_field (&(args_info->labels_orig));
   free_string_field (&(args_info->output_arg));
   free_string_field (&(args_info->output_orig));
+  free_string_field (&(args_info->input_arg));
+  free_string_field (&(args_info->input_orig));
+  free_string_field (&(args_info->model_arg));
+  free_string_field (&(args_info->model_orig));
   free_string_field (&(args_info->verbosity_orig));
-  free_string_field (&(args_info->directory_arg));
-  free_string_field (&(args_info->directory_orig));
-  free_string_field (&(args_info->weights_arg));
-  free_string_field (&(args_info->weights_orig));
-  free_string_field (&(args_info->prior_arg));
-  free_string_field (&(args_info->prior_orig));
+  free_string_field (&(args_info->skip_orig));
+  free_string_field (&(args_info->cross_validation_orig));
+  free_string_field (&(args_info->error_function_orig));
+  free_string_field (&(args_info->k_value_orig));
+  free_string_field (&(args_info->tradeoff_orig));
+  free_string_field (&(args_info->params_arg));
+  free_string_field (&(args_info->params_orig));
   
   
 
@@ -232,22 +275,36 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "help", 0, 0 );
   if (args_info->version_given)
     write_into_file(outfile, "version", 0, 0 );
+  if (args_info->labels_given)
+    write_into_file(outfile, "labels", args_info->labels_orig, 0);
   if (args_info->output_given)
     write_into_file(outfile, "output", args_info->output_orig, 0);
+  if (args_info->input_given)
+    write_into_file(outfile, "input", args_info->input_orig, 0);
+  if (args_info->model_given)
+    write_into_file(outfile, "model", args_info->model_orig, 0);
+  if (args_info->all_given)
+    write_into_file(outfile, "all", 0, 0 );
+  if (args_info->slack_given)
+    write_into_file(outfile, "slack", 0, 0 );
   if (args_info->verbosity_given)
     write_into_file(outfile, "verbosity", args_info->verbosity_orig, 0);
-  if (args_info->directory_given)
-    write_into_file(outfile, "directory", args_info->directory_orig, 0);
-  if (args_info->logit_given)
-    write_into_file(outfile, "logit", 0, 0 );
-  if (args_info->znormalize_given)
-    write_into_file(outfile, "znormalize", 0, 0 );
-  if (args_info->map_given)
-    write_into_file(outfile, "map", 0, 0 );
-  if (args_info->weights_given)
-    write_into_file(outfile, "weights", args_info->weights_orig, 0);
-  if (args_info->prior_given)
-    write_into_file(outfile, "prior", args_info->prior_orig, 0);
+  if (args_info->skip_given)
+    write_into_file(outfile, "skip", args_info->skip_orig, 0);
+  if (args_info->normalize_given)
+    write_into_file(outfile, "normalize", 0, 0 );
+  if (args_info->cross_validation_given)
+    write_into_file(outfile, "cross_validation", args_info->cross_validation_orig, 0);
+  if (args_info->error_function_given)
+    write_into_file(outfile, "error_function", args_info->error_function_orig, 0);
+  if (args_info->k_value_given)
+    write_into_file(outfile, "k_value", args_info->k_value_orig, 0);
+  if (args_info->tradeoff_given)
+    write_into_file(outfile, "tradeoff", args_info->tradeoff_orig, 0);
+  if (args_info->params_given)
+    write_into_file(outfile, "params", args_info->params_orig, 0);
+  if (args_info->mmap_given)
+    write_into_file(outfile, "mmap", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -363,21 +420,9 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   int error = 0;
 
   /* checks for required options */
-  if (! args_info->output_given)
+  if (! args_info->input_given)
     {
-      fprintf (stderr, "%s: '--output' ('-o') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error = 1;
-    }
-  
-  if (! args_info->verbosity_given)
-    {
-      fprintf (stderr, "%s: '--verbosity' ('-v') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error = 1;
-    }
-  
-  if (! args_info->directory_given)
-    {
-      fprintf (stderr, "%s: '--directory' ('-d') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      fprintf (stderr, "%s: '--input' ('-i') option required%s\n", prog_name, (additional_error ? additional_error : ""));
       error = 1;
     }
   
@@ -456,6 +501,9 @@ int update_arg(void *field, char **orig_field,
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
+  case ARG_FLOAT:
+    if (val) *((float *)field) = (float)strtod (val, &stop_char);
+    break;
   case ARG_STRING:
     if (val) {
       string_field = (char **)field;
@@ -471,6 +519,7 @@ int update_arg(void *field, char **orig_field,
   /* check numeric conversion */
   switch(arg_type) {
   case ARG_INT:
+  case ARG_FLOAT:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
       return 1; /* failure */
@@ -539,18 +588,25 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
       static struct option long_options[] = {
         { "help",	0, NULL, 'h' },
         { "version",	0, NULL, 'V' },
+        { "labels",	1, NULL, 'l' },
         { "output",	1, NULL, 'o' },
+        { "input",	1, NULL, 'i' },
+        { "model",	1, NULL, 'm' },
+        { "all",	0, NULL, 'a' },
+        { "slack",	0, NULL, 'S' },
         { "verbosity",	1, NULL, 'v' },
-        { "directory",	1, NULL, 'd' },
-        { "logit",	0, NULL, 'l' },
-        { "znormalize",	0, NULL, 'z' },
-        { "map",	0, NULL, 'm' },
-        { "weights",	1, NULL, 'w' },
-        { "prior",	1, NULL, 'p' },
+        { "skip",	1, NULL, 's' },
+        { "normalize",	0, NULL, 'n' },
+        { "cross_validation",	1, NULL, 'c' },
+        { "error_function",	1, NULL, 'e' },
+        { "k_value",	1, NULL, 'k' },
+        { "tradeoff",	1, NULL, 't' },
+        { "params",	1, NULL, 'p' },
+        { "mmap",	0, NULL, 'M' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVo:v:d:lzmw:p:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVl:o:i:m:aSv:s:nc:e:k:t:p:M", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -566,7 +622,19 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           cmdline_parser_free (&local_args_info);
           exit (EXIT_SUCCESS);
 
-        case 'o':	/* Output file.  */
+        case 'l':	/* Labels file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->labels_arg), 
+               &(args_info->labels_orig), &(args_info->labels_given),
+              &(local_args_info.labels_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "labels", 'l',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'o':	/* Output file .  */
         
         
           if (update_arg( (void *)&(args_info->output_arg), 
@@ -578,80 +646,157 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'v':	/* Message verbosity.  */
+        case 'i':	/* Input PCL file .  */
+        
+        
+          if (update_arg( (void *)&(args_info->input_arg), 
+               &(args_info->input_orig), &(args_info->input_given),
+              &(local_args_info.input_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "input", 'i',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'm':	/* Model file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->model_arg), 
+               &(args_info->model_orig), &(args_info->model_given),
+              &(local_args_info.model_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "model", 'm',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'a':	/* Always classify all genes in PCLs.  */
+        
+        
+          if (update_arg((void *)&(args_info->all_flag), 0, &(args_info->all_given),
+              &(local_args_info.all_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "all", 'a',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'S':	/* Use slack rescaling (not implemented for ROC loss).  */
+        
+        
+          if (update_arg((void *)&(args_info->slack_flag), 0, &(args_info->slack_given),
+              &(local_args_info.slack_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "slack", 'S',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'v':	/* Sets the svm_struct verbosity.  */
         
         
           if (update_arg( (void *)&(args_info->verbosity_arg), 
                &(args_info->verbosity_orig), &(args_info->verbosity_given),
-              &(local_args_info.verbosity_given), optarg, 0, "5", ARG_INT,
+              &(local_args_info.verbosity_given), optarg, 0, "0", ARG_INT,
               check_ambiguity, override, 0, 0,
               "verbosity", 'v',
               additional_error))
             goto failure;
         
           break;
-        case 'd':	/* input directory (must only contain input files).  */
+        case 's':	/* Number of columns to skip in input pcls.  */
         
         
-          if (update_arg( (void *)&(args_info->directory_arg), 
-               &(args_info->directory_orig), &(args_info->directory_given),
-              &(local_args_info.directory_given), optarg, 0, 0, ARG_STRING,
+          if (update_arg( (void *)&(args_info->skip_arg), 
+               &(args_info->skip_orig), &(args_info->skip_given),
+              &(local_args_info.skip_given), optarg, 0, "2", ARG_INT,
               check_ambiguity, override, 0, 0,
-              "directory", 'd',
+              "skip", 's',
               additional_error))
             goto failure;
         
           break;
-        case 'l':	/* logit transform the probability edge weights.  */
+        case 'n':	/* Normalize PCLS to 0 mean 1 variance.  */
         
         
-          if (update_arg((void *)&(args_info->logit_flag), 0, &(args_info->logit_given),
-              &(local_args_info.logit_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "logit", 'l',
+          if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
+              &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "normalize", 'n',
               additional_error))
             goto failure;
         
           break;
-        case 'z':	/* z normalize edge weights (may not be probability values).  */
+        case 'c':	/* Number of cross-validation sets ( arg of 1 will turn off cross-validation ).  */
         
         
-          if (update_arg((void *)&(args_info->znormalize_flag), 0, &(args_info->znormalize_given),
-              &(local_args_info.znormalize_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "znormalize", 'z',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'm':	/* Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs).  */
-        
-        
-          if (update_arg((void *)&(args_info->map_flag), 0, &(args_info->map_given),
-              &(local_args_info.map_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "map", 'm',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'w':	/* context weight file.  */
-        
-        
-          if (update_arg( (void *)&(args_info->weights_arg), 
-               &(args_info->weights_orig), &(args_info->weights_given),
-              &(local_args_info.weights_given), optarg, 0, 0, ARG_STRING,
+          if (update_arg( (void *)&(args_info->cross_validation_arg), 
+               &(args_info->cross_validation_orig), &(args_info->cross_validation_given),
+              &(local_args_info.cross_validation_given), optarg, 0, "5", ARG_INT,
               check_ambiguity, override, 0, 0,
-              "weights", 'w',
+              "cross_validation", 'c',
               additional_error))
             goto failure;
         
           break;
-        case 'p':	/* count file directory.  */
+        case 'e':	/* Sets the loss function for SVM learning: Choice of:
+        0\tZero/one loss: 1 if vector of predictions contains error, 0 otherwise.
+        1\tF1: 100 minus the F1-score in percent.
+        2\tErrorrate: Percentage of errors in prediction vector.
+        3\tPrec/Rec Breakeven: 100 minus PRBEP in percent.
+        4\tPrec@k: 100 minus precision at k in percent.
+        5\tRec@k: 100 minus recall at k in percent.
+        10\tROCArea: Percentage of swapped pos/neg pairs (i.e. 100 - ROCArea).\n.  */
         
         
-          if (update_arg( (void *)&(args_info->prior_arg), 
-               &(args_info->prior_orig), &(args_info->prior_given),
-              &(local_args_info.prior_given), optarg, 0, 0, ARG_STRING,
+          if (update_arg( (void *)&(args_info->error_function_arg), 
+               &(args_info->error_function_orig), &(args_info->error_function_given),
+              &(local_args_info.error_function_given), optarg, 0, "10", ARG_INT,
               check_ambiguity, override, 0, 0,
-              "prior", 'p',
+              "error_function", 'e',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'k':	/* Value of k parameter used for Prec@k and Rec@k in (0,1).  */
+        
+        
+          if (update_arg( (void *)&(args_info->k_value_arg), 
+               &(args_info->k_value_orig), &(args_info->k_value_given),
+              &(local_args_info.k_value_given), optarg, 0, "0.5", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "k_value", 'k',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 't':	/* SVM tradeoff constant C.  */
+        
+        
+          if (update_arg( (void *)&(args_info->tradeoff_arg), 
+               &(args_info->tradeoff_orig), &(args_info->tradeoff_given),
+              &(local_args_info.tradeoff_given), optarg, 0, "1", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "tradeoff", 't',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'p':	/* Parameter file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->params_arg), 
+               &(args_info->params_orig), &(args_info->params_given),
+              &(local_args_info.params_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "params", 'p',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'M':	/* Memory map binary input.  */
+        
+        
+          if (update_arg((void *)&(args_info->mmap_flag), 0, &(args_info->mmap_given),
+              &(local_args_info.mmap_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "mmap", 'M',
               additional_error))
             goto failure;
         

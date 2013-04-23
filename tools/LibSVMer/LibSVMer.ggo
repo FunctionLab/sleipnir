@@ -1,0 +1,46 @@
+package	"LibSVMer"
+version	"1.0"
+purpose	"Wrapper for LibSVM"
+
+section "Main"
+option	"labels"				l	"Labels file"
+										string	typestr="filename"	no
+option	"output"				o	"Output file "
+										string	typestr="filename"  no
+option	"input"					i	"Input PCL file "
+										string	typestr="filename"  yes
+option	"model"					m	"Model file"
+										string	typestr="filename"  no
+option  "all"       			a   "Always classify all genes in PCLs"  
+										flag off
+
+option  "slack"       			S   "Use slack rescaling (not implemented for ROC loss)"
+										flag off
+
+section "Options"
+option "verbosity"  			v   "Sets the svm_struct verbosity"
+										int default="0" no
+option "skip"      				s   "Number of columns to skip in input pcls"
+										int default="2" no
+option	"normalize"				n	"Normalize PCLS to 0 mean 1 variance"
+										flag	off
+option	"cross_validation"		c	"Number of cross-validation sets ( arg of 1 will turn off cross-validation )"
+										int default="5" no
+option "error_function" 		e   "Sets the loss function for SVM learning: Choice of:
+0\tZero/one loss: 1 if vector of predictions contains error, 0 otherwise.
+1\tF1: 100 minus the F1-score in percent.
+2\tErrorrate: Percentage of errors in prediction vector.
+3\tPrec/Rec Breakeven: 100 minus PRBEP in percent.
+4\tPrec@k: 100 minus precision at k in percent.
+5\tRec@k: 100 minus recall at k in percent.
+10\tROCArea: Percentage of swapped pos/neg pairs (i.e. 100 - ROCArea).\n" 
+										int default="10" no
+
+option "k_value"    			k   "Value of k parameter used for Prec@k and Rec@k in (0,1)"
+										float default="0.5" no
+option "tradeoff"    			t   "SVM tradeoff constant C"
+										float default="1" no
+option "params"   				p   "Parameter file"
+										string  typestr="filename"   no
+option	"mmap"					M	"Memory map binary input"
+										flag	off

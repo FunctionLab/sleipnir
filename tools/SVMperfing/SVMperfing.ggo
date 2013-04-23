@@ -73,6 +73,8 @@ option	"SampledLabels"			y	"Save the sampled final training labels to this file"
 							string	typestr="filename"
 option  "subsample"    			A	"Sample the labels to the following rate"
 										float  no
+option	"OutLabels"			U	"Save the sampled labels to the file and exit"
+							string	typestr="filename"
 
 section "Filtering"
 option	"onetgene"			q	"Only keep edges from lables that have one gene in the target gene list"

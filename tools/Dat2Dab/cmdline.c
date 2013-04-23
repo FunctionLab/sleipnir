@@ -41,6 +41,7 @@ const char *gengetopt_args_info_help[] = {
   "  -z, --zscore             Convert values to z-scores  (default=off)",
   "  -r, --rank               Rank transform data  (default=off)",
   "  -a, --randomize          Randomize data  (default=off)",
+  "  -K, --NegExp             Transform all values to their negative exponential \n                             (converts -log of prob back to prob space)  \n                             (default=off)",
   "\nFiltering:",
   "  -g, --genes=filename     Process only genes from the given set",
   "  -G, --genex=filename     Exclude all genes from the given set",
@@ -110,6 +111,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->zscore_given = 0 ;
   args_info->rank_given = 0 ;
   args_info->randomize_given = 0 ;
+  args_info->NegExp_given = 0 ;
   args_info->genes_given = 0 ;
   args_info->genex_given = 0 ;
   args_info->genee_given = 0 ;
@@ -155,6 +157,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->zscore_flag = 0;
   args_info->rank_flag = 0;
   args_info->randomize_flag = 0;
+  args_info->NegExp_flag = 0;
   args_info->genes_arg = NULL;
   args_info->genes_orig = NULL;
   args_info->genex_arg = NULL;
@@ -217,34 +220,35 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->zscore_help = gengetopt_args_info_help[10] ;
   args_info->rank_help = gengetopt_args_info_help[11] ;
   args_info->randomize_help = gengetopt_args_info_help[12] ;
-  args_info->genes_help = gengetopt_args_info_help[14] ;
-  args_info->genex_help = gengetopt_args_info_help[15] ;
-  args_info->genee_help = gengetopt_args_info_help[16] ;
-  args_info->edges_help = gengetopt_args_info_help[17] ;
-  args_info->exedges_help = gengetopt_args_info_help[18] ;
-  args_info->gexedges_help = gengetopt_args_info_help[19] ;
-  args_info->cutoff_help = gengetopt_args_info_help[20] ;
-  args_info->zero_help = gengetopt_args_info_help[21] ;
-  args_info->dval_help = gengetopt_args_info_help[22] ;
-  args_info->dmissing_help = gengetopt_args_info_help[23] ;
-  args_info->duplicates_help = gengetopt_args_info_help[24] ;
-  args_info->subsample_help = gengetopt_args_info_help[25] ;
-  args_info->lookup1_help = gengetopt_args_info_help[27] ;
-  args_info->lookup2_help = gengetopt_args_info_help[28] ;
-  args_info->lookups1_help = gengetopt_args_info_help[29] ;
-  args_info->lookups2_help = gengetopt_args_info_help[30] ;
-  args_info->genelist_help = gengetopt_args_info_help[31] ;
-  args_info->paircount_help = gengetopt_args_info_help[32] ;
-  args_info->ccoeff_help = gengetopt_args_info_help[33] ;
-  args_info->hubbiness_help = gengetopt_args_info_help[34] ;
-  args_info->mar_help = gengetopt_args_info_help[35] ;
-  args_info->remap_help = gengetopt_args_info_help[37] ;
-  args_info->table_help = gengetopt_args_info_help[38] ;
-  args_info->skip_help = gengetopt_args_info_help[39] ;
-  args_info->memmap_help = gengetopt_args_info_help[40] ;
-  args_info->random_help = gengetopt_args_info_help[41] ;
-  args_info->noise_help = gengetopt_args_info_help[42] ;
-  args_info->verbosity_help = gengetopt_args_info_help[43] ;
+  args_info->NegExp_help = gengetopt_args_info_help[13] ;
+  args_info->genes_help = gengetopt_args_info_help[15] ;
+  args_info->genex_help = gengetopt_args_info_help[16] ;
+  args_info->genee_help = gengetopt_args_info_help[17] ;
+  args_info->edges_help = gengetopt_args_info_help[18] ;
+  args_info->exedges_help = gengetopt_args_info_help[19] ;
+  args_info->gexedges_help = gengetopt_args_info_help[20] ;
+  args_info->cutoff_help = gengetopt_args_info_help[21] ;
+  args_info->zero_help = gengetopt_args_info_help[22] ;
+  args_info->dval_help = gengetopt_args_info_help[23] ;
+  args_info->dmissing_help = gengetopt_args_info_help[24] ;
+  args_info->duplicates_help = gengetopt_args_info_help[25] ;
+  args_info->subsample_help = gengetopt_args_info_help[26] ;
+  args_info->lookup1_help = gengetopt_args_info_help[28] ;
+  args_info->lookup2_help = gengetopt_args_info_help[29] ;
+  args_info->lookups1_help = gengetopt_args_info_help[30] ;
+  args_info->lookups2_help = gengetopt_args_info_help[31] ;
+  args_info->genelist_help = gengetopt_args_info_help[32] ;
+  args_info->paircount_help = gengetopt_args_info_help[33] ;
+  args_info->ccoeff_help = gengetopt_args_info_help[34] ;
+  args_info->hubbiness_help = gengetopt_args_info_help[35] ;
+  args_info->mar_help = gengetopt_args_info_help[36] ;
+  args_info->remap_help = gengetopt_args_info_help[38] ;
+  args_info->table_help = gengetopt_args_info_help[39] ;
+  args_info->skip_help = gengetopt_args_info_help[40] ;
+  args_info->memmap_help = gengetopt_args_info_help[41] ;
+  args_info->random_help = gengetopt_args_info_help[42] ;
+  args_info->noise_help = gengetopt_args_info_help[43] ;
+  args_info->verbosity_help = gengetopt_args_info_help[44] ;
   
 }
 
@@ -417,6 +421,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "rank", 0, 0 );
   if (args_info->randomize_given)
     write_into_file(outfile, "randomize", 0, 0 );
+  if (args_info->NegExp_given)
+    write_into_file(outfile, "NegExp", 0, 0 );
   if (args_info->genes_given)
     write_into_file(outfile, "genes", args_info->genes_orig, 0);
   if (args_info->genex_given)
@@ -728,6 +734,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "zscore",	0, NULL, 'z' },
         { "rank",	0, NULL, 'r' },
         { "randomize",	0, NULL, 'a' },
+        { "NegExp",	0, NULL, 'K' },
         { "genes",	1, NULL, 'g' },
         { "genex",	1, NULL, 'G' },
         { "genee",	1, NULL, 'D' },
@@ -759,7 +766,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hi:o:q:fnwzrag:G:D:e:x:X:c:ZV:M:du:l:L:t:T:EPCHJp:bs:mR:Nv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hi:o:q:fnwzraKg:G:D:e:x:X:c:ZV:M:du:l:L:t:T:EPCHJp:bs:mR:Nv:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -862,6 +869,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->randomize_flag), 0, &(args_info->randomize_given),
               &(local_args_info.randomize_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "randomize", 'a',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'K':	/* Transform all values to their negative exponential (converts -log of prob back to prob space).  */
+        
+        
+          if (update_arg((void *)&(args_info->NegExp_flag), 0, &(args_info->NegExp_given),
+              &(local_args_info.NegExp_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "NegExp", 'K',
               additional_error))
             goto failure;
         

@@ -556,6 +556,14 @@ int main(int iArgs, char** aszArgs) {
 	    }
 	  }
 	  
+	  // output sample labels for eval/debug purpose
+	  if(sArgs.OutLabels_given){
+	    cerr << "save sampled labels as (1,0)s to: " << sArgs.OutLabels_arg << endl;
+	    Labels.Normalize( CDat::ENormalizeMinMax );
+	    Labels.Save(sArgs.OutLabels_arg);
+	    return 0;
+	  }
+	  
 	  // Exclude labels without context genes
 	  if(sArgs.context_given )
 	    Labels.FilterGenes( Context, CDat::EFilterInclude );
@@ -764,20 +772,20 @@ int main(int iArgs, char** aszArgs) {
 	  // Start learning for each cross validation fold
 	  for (i = 0; i < sArgs.cross_validation_arg; i++) {
 	    std::stringstream sstm;
-	    if(sArgs.savemodel_flag){
-	      if(sArgs.context_given){
-		std::string path(sArgs.context_arg);
-		size_t pos = path.find_last_of("/");
-		std::string cname;
-		if(pos != std::string::npos)
-		  cname.assign(path.begin() + pos + 1, path.end());
-		else
-		  cname = path;
-		
-		sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << cname << "." << i << ".svm";		      
-	      }else
-		sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << ".svm";
-	    }
+	    
+	    // build up the output SVM model file name
+	    if(sArgs.context_given){
+	      std::string path(sArgs.context_arg);
+	      size_t pos = path.find_last_of("/");
+	      std::string cname;
+	      if(pos != std::string::npos)
+		cname.assign(path.begin() + pos + 1, path.end());
+	      else
+		cname = path;
+	      
+	      sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << cname << "." << i << ".svm";		      
+	    }else
+	      sstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << ".svm";
 	    
 	    cerr << "Cross validation fold: " << i << endl;	    	    
 	    pTrainSample = SVMLight::CSVMPERF::CreateSample(pTrainVector[i]);
@@ -811,6 +819,8 @@ int main(int iArgs, char** aszArgs) {
 	  if( sArgs.prob_flag ){
 	    cerr << "Converting prediction values to estimated probablity" << endl;
 	    float A, B;
+	    
+	    // TODO add function to read in prob parameter file if already existing
 	    sigmoid_train(Results, Labels, A, B);
 	    sigmoid_predict(Results, A, B);
 	  }
@@ -821,29 +831,9 @@ int main(int iArgs, char** aszArgs) {
 	    
 	    for (i = 0; i < sArgs.cross_validation_arg; i++) {		      
 	      cerr << "Convert to probability for cross fold: " << i << endl;		      
-	      ctrain = 0;
-	      for (j = 0; j < sArgs.cross_validation_arg; j++) {		      
-		if(i == j)
-		  continue;
-		ctrain += pTrainVector[j].size();
-	      }
 	      
-	      probTrainVector.resize(ctrain);
-	      itrain = 0;
-	      for (j = 0; j < sArgs.cross_validation_arg; j++) {		      
-		if(i == j)
-		  continue;
-		for(k = 0; k < pTrainVector[j].size(); k++){
-		  probTrainVector[itrain] = pTrainVector[j][k];
-		  itrain += 1;
-		}
-	      }
-	      
-	      SVM.sigmoid_train(Results, probTrainVector, A, B);
-	      SVM.sigmoid_predict(Results, pTestVector[i], A, B);
-	      
-	      // save A,B perameters
-	      std::stringstream pstm;
+	      // construct prob file name
+	      std::stringstream pstm;		
 	      ofstream ofsm;		      
 	      if(sArgs.context_given){
 		std::string path(sArgs.context_arg);
@@ -858,11 +848,50 @@ int main(int iArgs, char** aszArgs) {
 	      }else
 		pstm << sArgs.output_arg << "." << sArgs.tradeoff_arg  << "." << i << ".svm.prob";
 	      
+	      
+	      if( sArgs.skipSVM_flag && 
+		  access((char*)(pstm.str().c_str()), R_OK ) != -1
+		  ){
+		
+		// read in parameter file
+		if(!ReadProbParamFile((char*)(pstm.str().c_str()), A, B)){
+		  cerr << "Failed to read Probablity parameter file: " << pstm.str() << endl;
+		  return 1;
+		}
+		cerr << pstm.str() << ": read in values, A: " << A << ", B: " << B << endl;		
+		
+	      }else{		
+		ctrain = 0;
+		for (j = 0; j < sArgs.cross_validation_arg; j++) {		      
+		  if(i == j)
+		    continue;
+		  ctrain += pTrainVector[j].size();
+		}
+		
+		probTrainVector.resize(ctrain);
+		itrain = 0;
+		for (j = 0; j < sArgs.cross_validation_arg; j++) {		      
+		  if(i == j)
+		    continue;
+		  for(k = 0; k < pTrainVector[j].size(); k++){
+		    probTrainVector[itrain] = pTrainVector[j][k];
+		    itrain += 1;
+		  }
+		}
+		
+		// train A,B sigmoid perameters
+		SVM.sigmoid_train(Results, probTrainVector, A, B);		
+	      }
+	      
+	      SVM.sigmoid_predict(Results, pTestVector[i], A, B);
+	      
 	      // open prob param file
-	      ofsm.open(pstm.str().c_str());
-	      ofsm << A << endl;
-	      ofsm << B << endl;
-	      ofsm.close();
+	      if(sArgs.savemodel_flag){
+		ofsm.open(pstm.str().c_str());
+		ofsm << A << endl;
+		ofsm << B << endl;
+		ofsm.close();
+	      }
 	    }
 	  }
 	  
@@ -962,10 +991,10 @@ int main(int iArgs, char** aszArgs) {
 	    
 	    // normalize data file
 	    if(sArgs.normalizeZero_flag){
-	      cerr << "Normalize input data" << endl;
+	      cerr << "Normalize input [0,1] data" << endl;
 	      wDat.Normalize( Sleipnir::CDat::ENormalizeMinMax );
 	    }else if(sArgs.normalizeNPone_flag){
-	      cerr << "Normalize input data" << endl;
+	      cerr << "Normalize input [-1,1] data" << endl;
 	      wDat.Normalize( Sleipnir::CDat::ENormalizeMinMaxNPone );
 	    }
 	    

@@ -223,12 +223,12 @@ int main( int iArgs, char** aszArgs ) {
 	
 	// open query set genes
 	if( sArgs.query_given ) {
-		ifsm.open( sArgs.query_arg );
+	  ifsm.open( sArgs.query_arg );
 		if( !Genes.Open( ifsm ) ) {
 		  cerr << "Could not open: " << sArgs.query_arg << endl;
 		  return 1; }
 		ifsm.close( ); }
-
+	
 	cerr << "Num genes: " << Genes.GetGenes()  << endl;
 	
 	// open similarity
@@ -242,7 +242,7 @@ int main( int iArgs, char** aszArgs ) {
 	    cerr << "Normalize: " << sArgs.sim_arg << endl;
 	  }
 	}
-		
+	
 	// open tissue expression matrix
 	if( sArgs.tissue_given ){
 	  if (!PCL.Open(sArgs.tissue_arg, sArgs.skip_arg)) {
@@ -272,7 +272,7 @@ int main( int iArgs, char** aszArgs ) {
 	vector<size_t> sim2pcl_idx;
 	if( sArgs.tissue_given ){
 	  float profilesum;
-
+	  
 	  qidxs_pcl.resize(Genes.GetGenes());
 	  for(i=0; i < Genes.GetGenes(); i++){
 	    qidxs_pcl[i] = PCL.GetGene( Genes.GetGene(i).GetName() );
@@ -343,45 +343,46 @@ int main( int iArgs, char** aszArgs ) {
 	    return 0;
 	  }
 	}
-
+	
 	if(sArgs.query_given){
-	
-	cerr << "mapped: " << qidxs.size() << endl;
-	
-	geneweights.resize(Sim.GetGenes());
-	for(i=0; i < geneweights.size(); i++){
-	  geneweights[i].score = 0.0;
-	  geneweights[i].idx = i;
-	}
-	
-	for(i=0; i < Sim.GetGenes(); i++){
-	  for(j=0; j < qidxs.size(); j++){
-	    if( i == qidxs[j] || qidxs[j] == -1 )
-	      continue;
-	    if( !CMeta::IsNaN( (d = Sim.Get(i, qidxs[j])))){
-	      if( sArgs.tissue_given )
-		if( sim2pcl_idx[i] != -1 )
-		  geneweights[i].score += (d * genetissue[sim2pcl_idx[i]]);
-		else // currently genes only in Sim matrix and not in PCL removed		  
-		  geneweights[i].score = CMeta::GetNaN( );
-	      else
-		geneweights[i].score += d;
+	  
+	  cerr << "mapped: " << qidxs.size() << endl;
+	  
+	  geneweights.resize(Sim.GetGenes());
+	  for(i=0; i < geneweights.size(); i++){
+	    geneweights[i].score = 0.0;
+	    geneweights[i].idx = i;
+	  }
+	  
+	  for(i=0; i < Sim.GetGenes(); i++){
+	    for(j=0; j < qidxs.size(); j++){
+	      if( i == qidxs[j] || qidxs[j] == -1 )
+		continue;
+	      if( !CMeta::IsNaN( (d = Sim.Get(i, qidxs[j])))){
+		if( sArgs.tissue_given )
+		  if( sim2pcl_idx[i] != -1 )
+		    geneweights[i].score += (d * genetissue[sim2pcl_idx[i]]);
+		  else // currently genes only in Sim matrix and not in PCL removed		  
+		    geneweights[i].score = CMeta::GetNaN( );
+		else
+		  geneweights[i].score += d;
+	      }
 	    }
 	  }
-	}
-	
-	for(i=0; i < Genes.GetGenes(); i++){	
-	  geneweights[qidxs[i]].score = CMeta::GetNaN( );
-	}
-	
-	// sort genes by weight
-	sort(geneweights.begin(), geneweights.end(), SortGeneStruct());
-	
-	for(i=0; i < Sim.GetGenes(); i++){
-	  if( CMeta::IsNaN(geneweights[i].score))
-	    continue;
-	  cout << Sim.GetGene( geneweights[i].idx ) << "\t" << geneweights[i].score << endl;
-	}
+	  
+	  for(i=0; i < Genes.GetGenes(); i++){	
+	    geneweights[qidxs[i]].score = CMeta::GetNaN( );
+	  }
+	  
+	  // sort genes by weight
+	  sort(geneweights.begin(), geneweights.end(), SortGeneStruct());
+	  
+	  for(i=0; i < Sim.GetGenes(); i++){
+	    if( CMeta::IsNaN(geneweights[i].score))
+	      continue;
+	    cout << Sim.GetGene( geneweights[i].idx ) << "\t" << geneweights[i].score << endl;
+	  }
+	  return 0;
 	}
 	//////////////////////////////////////////////
 	
@@ -396,8 +397,22 @@ int main( int iArgs, char** aszArgs ) {
 	    return 1;
 	  }
 	  cerr << "Open: " << sArgs.input_given << endl;
+	  
+	  if( sArgs.NegLog_flag ){
+	    // convert the values to -log(prob)
+	    for(i=0; i < GPCL.GetGenes(); i++){
+	      for(j=0; j < GPCL.GetGenes(); j++){	    
+		if( i == j )
+		  GPCL.Set(i, j, CMeta::GetNaN());
+		
+		if( CMeta::IsNaN( d = GPCL.Get(i,j) ) )
+		  continue;		  
+		
+		GPCL.Set(i, j, -log(d));
+	      }
+	    }
+	  }
 	}
-	
 	
 	GDist.Open(GPCL);
 	cerr << "opend1: " << GDist.GetGenes() << endl;
@@ -419,8 +434,8 @@ int main( int iArgs, char** aszArgs ) {
 	
 	for(k=0; k < GDist.GetGenes(); k++){
 	  
-	  //if( k % 100 == 0 )
-	  cerr << "k: " << k << endl;
+	  if( k % 100 == 0 )
+	    cerr << "k: " << k << endl;
 	  
 	  for(i=0; i < GDist.GetGenes(); i++){
 	    for(j=0; j < GDist.GetGenes(); j++){
@@ -429,10 +444,11 @@ int main( int iArgs, char** aszArgs ) {
 	      // update distance matrix
 	      // (i,k), (k,j)
 	      d = GDist.Get(i, j);
-	      d1 = GDist.Get(i, k);
-	      d2 = GDist.Get(k, j);
 	      
-	      if( (d1 + d2) < d ){
+	      if( CMeta::IsNaN(d1 = GDist.Get(i, k)) || CMeta::IsNaN(d2 = GDist.Get(k, j)) )
+		continue;
+	      
+	      if( CMeta::IsNaN(d) || (d1 + d2) < d ){
 		GDist.Set( i,j, (d1+d2) );
 		
 		// update path matrix
@@ -445,6 +461,8 @@ int main( int iArgs, char** aszArgs ) {
 	cerr << "done" << endl;
 	
 	if(sArgs.savematrix_flag){
+	  std::ofstream ofsm;
+	  
 	  cerr << "Save output" << endl;
 	  std::stringstream sstmDist;
 	  std::stringstream sstmNext;
@@ -454,15 +472,36 @@ int main( int iArgs, char** aszArgs ) {
 	  size_t lastindex = path.find_last_of(".");
 	  std::string rawname = path.substr(0, lastindex); 
 	  
-	  sstmDist << "" << rawname << ".dist.pcl";
-	  sstmNext << "" << rawname << ".next.pcl";
-	  
-	  cerr << "Save distance matrix: " << sstmDist.str() << endl;	  
-	  GDist.Save(sstmDist.str().c_str());
+	  sstmNext << "" << rawname << ".next.bin";
 	  cerr << "Save next matrix: " << sstmNext.str() << endl;	  
-	  GNext.Save(sstmNext.str().c_str());
+	  ofsm.open(sstmNext.str().c_str());
+	  
+	  GNext.SaveBinary(ofsm);
+	  ofsm.close();
+	  
+	  if( !sArgs.savedab_flag ){
+	    sstmDist << "" << rawname << ".dist.bin";
+
+	    ofsm.open(sstmDist.str().c_str());
+	    cerr << "Save distance matrix: " << sstmDist.str() << endl;	  
+	    GDist.SaveBinary(ofsm);
+	    ofsm.close();
+	  }else{
+	    CDat GDistDat;
+	    GDistDat.Open( GDist.GetGeneNames());
+	    
+	    sstmDist << "" << rawname << ".dist.dab";
+	    
+	    // map PCL to dab
+	    for(i=0; i < GDistDat.GetGenes(); i++)
+	      for(j=(i+1); j < GDistDat.GetGenes(); j++){
+		GDistDat.Set(i, j, (GDist.Get(i, j) + GDist.Get(j, i))/2.0 );		
+	      }
+	    
+	    cerr << "Save distance matrix: " << sstmDist.str() << endl;	  
+	    GDistDat.Save(sstmDist.str().c_str());
+	  }
 	}
-	
 	
 	//****************
 	//* find steiner tree

@@ -293,7 +293,7 @@ public:
 	static double Percentile(tType pBegin, tType pEnd, double dPercentile) {
 		size_t iOne, iTwo, iSize;
 		double d, dFrac;
-
+		
 		iSize = pEnd - pBegin;
 		std::sort(pBegin, pEnd);
 		while (iSize && CMeta::IsNaN(pBegin[iSize - 1]))
@@ -304,7 +304,7 @@ public:
 		dFrac = d - (size_t) d;
 		iOne = (size_t) d;
 		iTwo = (size_t) (d + 1);
-
+		
 		return ((iTwo >= iSize) ? pBegin[iOne] : ((pBegin[iOne] * (1
 				- dPercentile)) + (pBegin[iTwo] * dPercentile)));
 	}

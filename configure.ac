@@ -544,6 +544,64 @@ AC_SUBST(SMILE_CFLAGS)
 AC_SUBST(SMILE_LIBS)
 
 
+## LibSVM
+# If the user specifies a path, use it.
+# If the user says not to use it, then don't.
+# Does not check for it.
+# If none, set NO_LIBSVM = 1.
+AC_ARG_WITH([libsvm],
+        [AS_HELP_STRING([--with-libsvm=PATH], [prefix of LibSVM installation])],
+        [
+         if test "x$with_libsvm" = "xyes"; then
+           libsvm_state=check
+         elif test "x$with_libsvm" != "xno"; then
+           libsvm_state=try
+           qualify_path with_libsvm
+	   LOCAL_CHECK_APPEND_PATHS([$with_libsvm], [. include], [libsvm/svm.h], [LIBSVM_INCLUDE_DIR], [libsvm_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_libsvm], [. lib], [liblibsvm.a], [LIBSVM_LIB_DIR], [libsvm_state=warn])
+         else
+           libsvm_state=no
+         fi
+        ],
+        [libsvm_state=check])
+#AC_LANG_PUSH([C])
+LOCAL_CHECK_LIB([libsvm], [libsvm], [ struct svm_node *x_space ],
+        [libsvm_state=ok],                                      dnl found
+        [LIBSVM_LIBS="-llibsvm"],                              dnl and found installed
+        [
+         LIBSVM_CFLAGS="-I $LIBSVM_INCLUDE_DIR"
+         LIBSVM_LIBS="-L $LIBSVM_LIB_DIR -llibsvm"
+        ],                                                        dnl and found in specified path
+        [],                                                       dnl not found
+        [libsvm_state=no],                                      dnl and not found installed
+        [libsvm_state=warn],                                    dnl and not found in specified path
+        [],                                                       dnl requested without
+        [
+	 #include <sys/types.h>
+         #include "libsvm/svm.h"],
+        [],
+        [-L $LIBSVM_LIB_DIR -I $LIBSVM_INCLUDE_DIR])
+## LOCAL_CHECK_LIB(1 lib name, 2 local name, 3 function,
+##   4 action if found, 
+##   5 extra action if found installed, 
+##   6 extra action if found in 'with' path,
+##   7 action if not found, 
+##   8 action if not found installed, 
+##   9 action if not found installed in 'with' path,
+##   10 action if requested without,
+##   11 headers, 12 extra libs
+##   13 extra cflags for testing 'with' path)
+## Set $(local_name)_info to "NO", location, or "found installed".
+
+#AC_LANG_POP
+if test "x$libsvm_state" != "xok"; then
+  AC_DEFINE([NO_LIBSVM], [1])
+fi
+
+AC_SUBST(LIBSVM_CFLAGS)
+AC_SUBST(LIBSVM_LIBS)
+
+
 ## SVM PERF
 # If the user specifies a path, use it.
 # If the user says not to use it, then don't.
@@ -777,6 +835,8 @@ AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_state" = "xok"])
 AM_CONDITIONAL([WITH_BOOST_TOOLS], [test "x$boost_state" = "xok"])
 AM_CONDITIONAL([WITH_GSL_TOOLS], [test "x$gsl_state" = "xok"])
 AM_CONDITIONAL([WITH_GENGETOPT], [test "x$prog_gengetopt_state" = "xok"])
+AM_CONDITIONAL([WITH_LIBSVM_TOOLS], [test "x$libsvm_state" = "xok"])#
+AM_CONDITIONAL([WITH_LIBSVM_LIBSRC], [test "x$libsvm_state" = "xok"])#
 
 AC_CONFIG_FILES([Makefile \
                  src/Makefile \
@@ -854,6 +914,7 @@ AC_CONFIG_FILES([Makefile \
 		 tools/SVMer/Makefile \
 		 tools/SVMperfer/Makefile \
 		 tools/SVMperfing/Makefile \
+		 tools/LibSVMer/Makefile \
 		 tools/VWer/Makefile \
                  tools/OntoShell/Makefile \
                  tools/BNServer/Makefile])
@@ -885,6 +946,7 @@ echo "  Vowpal Wabbit           = $vowpal_wabbit_info"
 echo "  pthread                 = $pthread_info"
 echo "  gsl                     = $gsl_info"
 echo "  OpenMP                  = $sleipnir_cv_openmp"
+echo "  LibSVM                  = $libsvm_info"
 if $with_tools; then
 echo "Used for tools:"
 echo "  boost graph, regex      = $boost_info"
@@ -973,6 +1035,40 @@ find both. NOTE: You may need to make libsvmperf.a. See the README.
 EOF
 
 fi
+
+if test "x$smile_state" = "xwarn"; then
+  cat << EOF
+** WARNING: The path to SMILE may be incorrect.
+I looked for smile.h and libsmile.a and did not find both.
+EOF
+
+fi
+
+##
+if test "x$libsvm_state" != "xok"; then
+  cat << EOF
+
+** BUILDING WITHOUT LIBSVM
+LIBSVM is strongly recommended.
+It is available from http://www.csie.ntu.edu.tw/~cjlin/libsvm/.
+EOF
+
+fi
+
+if test "x$libsvm_state" = "xwarn"; then
+  cat << EOF
+** WARNING: The path to LibSVM may be incorrect.
+I looked for  libsvm.a and did not
+find. NOTE: You may need to make liblibsvm.a. 
+
+ar rcs liblibsvm.a *.o
+
+See the README.
+EOF
+
+fi
+##
+
 
 if $with_tools; then
 
