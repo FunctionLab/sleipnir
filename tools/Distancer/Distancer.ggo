@@ -27,6 +27,8 @@ option	"zscore"		z	"Convert correlations to z-scores"
 							flag	on
 option	"flip"			f	"Calculate one minus values"
 							flag	off
+option	"centering"		c	"Scale distance value to 0-1"
+							flag	on
 
 section "Filtering"
 option	"genes"			g	"Gene inclusion file"

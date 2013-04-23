@@ -65,6 +65,14 @@
  *	<td>Lots!</td>
  *	<td>Similarity measure to be used for scoring.  See Sleipnir::IMeasure.</td>
  * </tr><tr>
+ *  <td>-c</td>
+ *  <td>on</td>
+ *  <td>Flag></td>
+ *  <td>If on, scale the calculated distances to values between 0 and 1: d = ( 1 + d ) / 2. 
+ *      If on, scaling would be performed for the following distance measures: KendallsTau, Pearson, Spearman, 
+ *      PearsonSignificance, QuickPearson. For all other measures, turning this flag on/off has no effect.
+ *      Users SHOULD review this flag if using one of the affected measures. If users want to print raw Pearson/Spearman values, they should turn this flag off!</td>
+ * </tr><tr>
  *	<td>-w</td>
  *	<td>None</td>
  *	<td>PCL text file</td>
