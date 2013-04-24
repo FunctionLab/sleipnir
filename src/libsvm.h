@@ -205,12 +205,44 @@ public:
     //slack_norm = type of regularization
 
     //Take care of the labels here
+    size_t i;
+    size_t numn, nump;
 
+
+    struct svm_problem* prob = sample.problems;
+
+    cout << "alsdjfaslkfjd" << endl;
+
+    numn = nump = 0;
+
+    for(i = 0; i < sample.n; i++){
+      if (((*prob).y)[i] > 0){
+        nump ++;
+      }else{
+        numn ++;
+      }
+    }
+
+cout << "number of positives: " << nump << endl;
+cout << "number of negatives: " << numn << endl;
+cout << "cache size: " << parm.cache_size << endl;
+cout << "kernel_type: " << parm.kernel_type << endl;
+cout << "svm_type: " << parm.svm_type << endl;
+const char* output = svm_check_parameter( prob, &parm ) ;//returns null if no issues..
+printf("%s | ", output);
+cout << "an svm_node index: " << (((*prob).x)[0][0]).index << endl;
+cout << "an svm_node value: " << (((*prob).x)[0][0]).value << endl;
+cout.flush();
+//cout <<      svm_check_parameter(prob,&parm) << endl;
     //no need for rescaling labels because only one loss function for libsvm\
 
     if(parms_check()){
-      model = svm_train(sample.problems,&parm);
+//cout <<      svm_check_parameter(prob,&parm) << endl;
+//      struct svm_problem* prob = sample.problems;        //sample.problem
+//      cout << "here: " << (*prob).l << endl;
+      model = svm_train(prob,&parm);
       cerr << "done learning model" << endl;
+cout << svm_get_svm_type(model) << endl;
     }else{
       cerr << "invalid parms" << endl;
     }

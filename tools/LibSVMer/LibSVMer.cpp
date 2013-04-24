@@ -179,12 +179,15 @@ int main(int iArgs, char** aszArgs) {
 //          cerr << "PCL as input not yet available" << endl;
 
 //          return 1;
-          /*
+          
 		if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, sArgs.mmap_flag)) {
 			cerr << "Could not open input PCL" << endl;
 			return 1;
-		}*/
+		}
 	}
+
+//cout << "here1: " << svm_get_svm_type(SVM.model) << endl;
+cout << SVM.parm.C << endl;
 
 	vector<LIBSVM::SVMLabel> vecLabels;
 	set<string> setLabeledGenes;
@@ -345,10 +348,27 @@ int main(int iArgs, char** aszArgs) {
 				pTrainSample = LIBSVM::CLIBSVM::CreateSample(PCL, //make more efficient
 						pTrainVector[i]);
 
+//cout << "here2: " << svm_get_svm_type(SVM.model) << endl;
+cout << "here3: " << SVM.parm.C << endl;
+
+                                cout << "number of training labels: " << pTrainVector[i].size() << endl;
+                                cout << "number of training samples: " << pTrainSample->n << endl;
+
+//for( std::vector<LIBSVM::SVMLabel>::const_iterator q = pTestVector[i].begin(); q != pTestVector[i].end(); ++q)
+//      std::cout << (*q).GeneName << ' ';
+
+//                                cout << pTrainSample->problems
+//sleep(15);
+//cout << PCL.GetFeatures() << endl;
+//cout << PCL.GetGenes() << endl;
+
+
 				cerr << "Cross Validation Trial " << i << endl;
 
 				SVM.Learn(*pTrainSample);
 				cerr << "Learned" << endl;
+
+
 				tmpAllResults = SVM.Classify(PCL,
 						pTestVector[i]);
 				cerr << "Classified " << tmpAllResults.size() << " examples"
@@ -365,7 +385,7 @@ int main(int iArgs, char** aszArgs) {
 
 				}
 				if (i > 0) {
-					LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
+					//LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
 				}
 			}
 
