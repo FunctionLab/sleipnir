@@ -35,13 +35,12 @@
 
 namespace Sleipnir {
 
-enum SearchMode{
-	CV=0, EQUAL=1, USE_WEIGHT=2, CV_CUSTOM=3, ORDER_STATISTICS=4,
-	SINGLE_GENE_META=5
-};
-
 class CSeekCentral{
 public:
+	enum SearchMode{
+		CV=0, EQUAL=1, USE_WEIGHT=2, CV_CUSTOM=3, ORDER_STATISTICS=4,
+		SINGLE_GENE_META=5
+	};
 	CSeekCentral();
 	~CSeekCentral();
 
@@ -71,16 +70,16 @@ public:
 	bool EnableNetwork(const int&, const bool&);
 	bool CheckDatasets(const bool&);
 
-	bool CVSearch(gsl_rng*, const enum PartitionMode&, const ushort&, const float&);
+	bool CVSearch(gsl_rng*, const CSeekQuery::PartitionMode&, const ushort&, const float&);
 	bool CVCustomSearch(const vector< vector<string> > &, gsl_rng*,
-		const enum PartitionMode&, const ushort&, const float&);
+		const CSeekQuery::PartitionMode&, const ushort&, const float&);
 	bool EqualWeightSearch();
 	bool WeightSearch(const vector<vector<float> >&);
 	bool SingleGeneMetaCorrelation();
 	bool VarianceWeightSearch();
 	bool OrderStatistics();
 
-	bool Common(enum SearchMode&, gsl_rng* = NULL, const enum PartitionMode* = NULL,
+	bool Common(CSeekCentral::SearchMode&, gsl_rng* = NULL, const CSeekQuery::PartitionMode* = NULL,
 		const ushort* = NULL, const float* = NULL,
 		const vector< vector<float> >* = NULL,
 		const vector< vector<string> >* = NULL);

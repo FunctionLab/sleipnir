@@ -77,6 +77,11 @@ struct AResultFloat{
 	}
 };
 
+struct AscendingFloat{
+    bool operator()( const AResultFloat& lx, const AResultFloat& rx ) const {
+        return lx.f < rx.f;
+    }
+};
 
 class CSeekPerformanceMeasure{
 public:
