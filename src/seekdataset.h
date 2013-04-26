@@ -28,122 +28,114 @@
 #include "seekplatform.h"
 
 namespace Sleipnir {
+/*!
+ * \brief A microarray dataset structure
+ *
+ * A \c CSeekDataset encapsulates the following information about the dataset:
+ *
+ * \li The gene-gene correlation matrix
+ * \li Each gene's expression variance
+ * \li Each gene's average correlation
+ * \li The genes in the query that are present in the dataset
+ * \li The genes in the genome that are present in the dataset
+ * \li The platform which the dataset belongs to
+ * \li The weight of the dataset that is assigned by the search algorithm
+ *
+ * This dataset structure is designed to be used by Seek.
+ */
 
 class CSeekDataset{
 public:
 	/*!
 	 * \brief
-	 * Default constructor
-	 *
-	 * Initialize the data-set weight, the gene-centric average, variance,
-	 * and presence vectors, and prepare the data-matrix that will store
-	 * the pairwise gene correlation (for group of genes in the DB)
-	 * in this data-set
+	 * Constructor
 	 */
 	CSeekDataset();
 
 	/*!
 	 * \brief
-	 * Destruct the data-set instance
-	 *
-	 * Reset the data-matrix, and all gene-centric vectors
+	 * Destructor
 	 */
 	~CSeekDataset();
 
+	/*!
+	 * \brief
+	 * Read the \c *.sinfo file
+	 *
+	 * \param strFileName The file name
+	 *
+	 * The \c *.sinfo file contains the mean and the standard deviation
+	 * of the global gene-gene correlation distribution for this dataset.
+	 */
 	bool ReadDatasetAverageStdev(const string &);
 
 	/*!
 	 * \brief
-	 * Given the gene-average file-name, read the gene averages in this
-	 * data-set.
+	 * Read the gene average correlation file \c *.gavg
 	 *
-	 * \param strFileName
-	 * File-name of the gene-average file (.gavg extension)
+	 * \param strFileName The file name
 	 *
-	 * The .gavg format lists the average of a gene (to all other
-	 * genes in this data-set), in float binary format. The gene-averages
-	 * are ordered by the gene-ID.
+	 * The \c *.gavg is an array that stores the average correlation of each
+	 * gene.
 	 */
 	bool ReadGeneAverage(const string &);
 
 	/*!
 	 * \brief
-	 * Given the gene-variance file-name, read the gene variances in this
-	 * data-set
+	 * Read the gene variance file \c *.gvar
 	 *
-	 * \param strFileName
-	 * File-name of the gene-variance file (.gvar extension)
+	 * \param strFileName The file name
 	 *
-	 * The .gvar format lists the variance of a gene (calculated from
-	 * expressions across all conditions in this data-set), in float binary
-	 * format. The gene-variances are ordered by the gene-ID.
+	 * The \c *.gvar file is an array that stores the expression variance of each
+	 * gene.
 	 */
 	bool ReadGeneVariance(const string &);
 
 	/*!
 	 * \brief
-	 * Given the gene-presence file-name, read the gene-presence vector in
-	 * this data-set
+	 * Read the gene presence file \c *.gpres
 	 *
-	 * \param strFileName
-	 * File-name of the gene-presence file (.gpres extension)
+	 * \param strFileName The file name
 	 *
-	 * The .gpres format lists the presence/absence value (0/1) of the
-	 * gene in the data-set (based on what genes are present in the PCL
-	 * file), in char binary format. The gene-presences are ordered by
-	 * gene-ID.
+	 * The \c *.gpres is a 2-value array that contains the presence (1), absence (0)
+	 * status of genes.
 	 */
 	bool ReadGenePresence(const string &);
 
 	/*!
 	 * \brief
-	 * Initialize the gene-map for the data-set
+	 * Initialize the genome presence map
 	 *
-	 * Based on the gene-presence vector already loaded, initialize a
-	 * CSeekIntIntMap instance for the genes in this data-set.
-	 * This map will map the gene-ID to the position of the gene in the
-	 * data-set (forward mapping), and vice-versa (reverse mapping).
-	 * For example, let's suppose gene-ID 10246 appears in position 3
-	 * in the data-set. Then: the forward mapping maps 10246 to 3, and
-	 * reverse mapping maps 3 to 10246. Because the data for only the
-	 * gene-ID's available in the data-set are stored, the map tells us
-	 * how to find a gene-ID in the data-set.
+	 * Indicates which genes of the genome are present in the dataset.
 	 */
 	bool InitializeGeneMap();
 
 	/*!
 	 * \brief
-	 * Initialize a map for a specific query
+	 * Initialize the query presence map
 	 *
-	 * \param query
-	 * Genes in the query
+	 * \param query The query genes
 	 *
-	 * Suppose the query is a strict subset of genes in the queryBlock.
-	 * Create a CSeekIntIntMap based on the overlap between query and
-	 * queryBlock.
+	 * Indicates which query genes are present in the dataset.
 	 */
 	bool InitializeQuery(const vector<ushort> &);
 
 	/*!
 	 * \brief
-	 * Initialize a map for the query-block genes
+	 * Initialize a presence map for a block of queries
 	 *
-	 * \param queryBlock
-	 * Vector of genes in the query-block
+	 * \param queryBlock A vector of queries
 	 *
-	 * Create a CSeekIntIntMap for the query-block genes, given also what
-	 * genes are present in the data-set. If a gene is present in the
-	 * data-set and is also a gene in queryBlock, then add it to the map.
-	 * Assumes presence-vector is loaded InitializeGeneMap() has been called.
+	 * Flattens all the queries into one vector that contains only the unique query genes, then
+	 * constructs a presence map based on this vector.
 	 */
 	bool InitializeQueryBlock(const vector<ushort> &);
 
 	/*!
 	 * \brief
-	 * Delete query
+	 * Delete the query
 	 *
-	 * Reset all query-related data structures, such as data-set weight,
-	 * iQuerySize, queryMap, etc.
+	 * Resets all query-related data, such as dataset weight, query presence map, etc.
 	 */
 	bool DeleteQuery();
 
@@ -151,14 +143,13 @@ public:
 	 * \brief
 	 * Delete query block
 	 *
-	 * Reset all query-block related data.
+	 * Resets all query-block related data.
 	 */
 	bool DeleteQueryBlock();
-	bool DeleteR();
 
 	/*!
 	 * \brief
-	 * Initialize the matrix storing the data
+	 * Initialize the gene-gene correlation matrix
 	 */
 	bool InitializeDataMatrix(ushort**, const vector<float> &,
 		const ushort&, const ushort&, const bool=true, const bool=true,
@@ -166,30 +157,117 @@ public:
 		const float cutoff=-1.0*CMeta::GetNaN(), 
 		const bool=false, gsl_rng *rand=NULL);
 
-	//Copy CSeekDataset object, mainly for SeekServer
+	/*!
+	 * \brief
+	 * Copy constructor
+	 */
 	bool Copy(CSeekDataset *);
 
+	/*!
+	 * \brief
+	 * Get the gene-gene correlation matrix
+	 *
+	 * A two-dimensional array of type \c ushort is returned. Note that the
+	 * correlation has been scaled to a integer range from 0 to 640.
+	 * See CSeekDataset::InitializeDataMatrix.
+	 *
+	 */
 	ushort** GetDataMatrix();
 
+	/*!
+	 * \brief
+	 * Get the gene-gene correlation matrix
+	 *
+	 * A two-dimensional array of type \c unsigned \c char** is returned.
+	 */
 	unsigned char** GetMatrix();
+
+	/*!
+	 * \brief Get the genome presence map
+	 */
 	CSeekIntIntMap* GetGeneMap();
+
+	/*!
+	 * \brief Get the query-block presence map
+	 */
 	CSeekIntIntMap* GetDBMap();
+
+	/*!
+	 * \brief Get the query presence map
+	 */
 	CSeekIntIntMap* GetQueryMap();
 
+	/*!
+	 * \brief Get the query genes
+	 */
 	const vector<ushort>& GetQuery() const;
+
+	/*!
+	 * \brief Get the query gene indices
+	 */
 	const vector<ushort>& GetQueryIndex() const;
 
+	/*!
+	 * \brief Get the gene expression variance vector
+	 */
 	float GetGeneVariance(const ushort&) const;
+	/*!
+	 * \brief Get the gene average correlation vector
+	 */
 	float GetGeneAverage(const ushort&) const;
+	/*!
+	 * \brief Get the mean of the global gene-gene correlation distribution
+	 */
 	float GetDatasetAverage() const;
+	/*!
+	 * \brief Get the standard deviation of the global gene-gene correlation distribution
+	 */
 	float GetDatasetStdev() const;
+	/*!
+	 * \brief Get the genome size
+	 */
 	ushort GetNumGenes() const;
+
+	/*!
+	 * \brief Initialize the weight of the dataset
+	 *
+	 * \param i The number of cross-validations
+	 *
+	 * Initializes the total dataset weight, and the score of the
+	 * individual cross-validation (CV) runs. 
+	 */
 	bool InitializeCVWeight(const ushort&);
+
+	/*!
+	 * \brief Set the score for a particular cross-validation
+	 * \param i The index
+	 * \param f The validation score
+	 */
 	bool SetCVWeight(const ushort&, const float&);
+
+	/*!
+	 * \brief Get the score for a particular cross-validation
+	 * \param i The index
+	 */
 	float GetCVWeight(const ushort&);
+
+	/*!
+	 * \brief Get all the cross-validation scores
+	 */
 	const vector<float>& GetCVWeight() const;
+
+	/*!
+	 * \brief Get the dataset weight
+	 */
 	float GetDatasetSumWeight();
+
+	/*!
+	 * \brief Set the platform
+	 */
 	void SetPlatform(CSeekPlatform &);
+	/*!
+	 * \brief Get the platform
+	 */
 	CSeekPlatform& GetPlatform() const;
 
 private:

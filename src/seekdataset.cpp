@@ -272,15 +272,6 @@ bool CSeekDataset::DeleteQueryBlock(){
 	return true;
 }
 
-//test function only
-bool CSeekDataset::DeleteR(){
-	delete dbMap;
-	CSeekTools::Free2DArray(r);
-	iDBSize = 0;
-	return true;
-}
-
-
 const vector<ushort>& CSeekDataset::GetQuery() const{
 	return this->query;
 }
