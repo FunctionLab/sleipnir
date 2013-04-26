@@ -32,20 +32,23 @@ namespace Sleipnir {
  * This map is used to conveniently get a set of available genes in a dataset, and
  * to quickly check if a given gene is present in the dataset.
  * Normally, a user needs to create two separate arrays for this purpose.
+ *
  * The first array is the presence vector (0 or 1) that is used to track the presence (1) or
  * absence (0) of each gene in a given dataset. But this array cannot be used to efficiently
  * get all available genes in the datasets, because it requires scanning through the entire
  * presence vector.
+ *
  * The second array contains only available genes in the dataset. But it cannot be used to
  * efficiently check whether a gene is present, because again it requires a scan-through.
  *
  * The solution is to use this int-int mapping structure. It encapsulates the two arrays that
  * we want: \a forward and \a reverse. As an example, let us consider a simple scenario with a
  * genome of 5 genes (0, 1, 2, 3, 4), and a dataset \a d contains 3 of 5 genes
- * (let's say 1, 3, 4).
- * We want to use this map structure to capture the presence of genes in \a d.
+ * (let's say 1, 3, 4). We want to use this map structure to capture the presence of genes in \a d.
+ *
  * The \a forward array would contain: [-1, 0, -1, 1, 2], where -1 means the gene is absent,
  * otherwise the value means the \a n-th gene in the array.
+ *
  * The \a reverse array would contain: [1, 3, 4]. (ie., only the available genes).
  *
  * These arrays are automatically updated as genes are added to the map.
@@ -161,8 +164,11 @@ private:
  * \brief A string to integer mapping structure
  *
  * Adds <string, integer> pairs into the map.
+ *
  * Supports two major operations:
+ *
  * \c Get(string): returns the corresponding integer
+ *
  * \c Get(integer): returns the corresponding string
  */
 class CSeekStrIntMap{
