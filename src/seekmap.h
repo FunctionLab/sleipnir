@@ -31,25 +31,32 @@ namespace Sleipnir {
  *
  * This map is used to conveniently get a set of available genes in a dataset, and
  * to quickly check if a given gene is present in the dataset.
- * Normally, a user needs to create two separate arrays for this purpose.
+ * Normally, a user needs to create two separate arrays for this purpose:
  *
- * The first array is the presence vector (0 or 1) that is used to track the presence (1) or
+ * \li The first array is the presence vector (0 or 1) that is used to track the presence (1) or
  * absence (0) of each gene in a given dataset. But this array cannot be used to efficiently
  * get all available genes in the datasets, because it requires scanning through the entire
  * presence vector.
  *
- * The second array contains only available genes in the dataset. But it cannot be used to
+ * \li The second array contains only available genes in the dataset. But it cannot be used to
  * efficiently check whether a gene is present, because again it requires a scan-through.
  *
- * The solution is to use this int-int mapping structure. It encapsulates the two arrays that
- * we want: \a forward and \a reverse. As an example, let us consider a simple scenario with a
- * genome of 5 genes (0, 1, 2, 3, 4), and a dataset \a d contains 3 of 5 genes
- * (let's say 1, 3, 4). We want to use this map structure to capture the presence of genes in \a d.
+ * The solution is to use this int-int mapping structure. 
  *
- * The \a forward array would contain: [-1, 0, -1, 1, 2], where -1 means the gene is absent,
- * otherwise the value means the \a n-th gene in the array.
+ * CSeekIntIntMap encapsulates the two arrays that we want: \a forward and \a reverse. 
  *
- * The \a reverse array would contain: [1, 3, 4]. (ie., only the available genes).
+ * As an example, let us consider a simple scenario where we have a
+ * genome of 5 genes {0, 1, 2, 3, 4}. We want to use CSeekIntIntMap to capture the gene-presence for a
+ * dataset \a d which contains the following genes: {1, 3, 4}.
+ * Then the two arrays would be:
+ * \li The \a forward array: f = [-1, 0, -1, 1, 2], where -1 means that the gene is absent;
+ * a non -1 value, \a n, means that the gene is present, and it is the \a n-th present gene in the array.
+ * <br>
+ * So: the absent genes {0, 2} => f[0] = -1, f[2] = -1. 
+ * <br>
+ * the present genes {1, 3, 4} => f[1] = 0, f[3] = 1, f[4] = 2.
+ *
+ * \li The \a reverse array: r = [1, 3, 4]. (ie., only the available genes).
  *
  * These arrays are automatically updated as genes are added to the map.
  *
@@ -87,11 +94,13 @@ public:
 
 	/*!
 	 * \brief Copy constructor
+	 * \param a A map instance
 	 */
 	CSeekIntIntMap(CSeekIntIntMap*);
 
 	/*!
 	 * \brief Helper function that is used by constructor
+	 * \param iSize The genome size
 	 */
 	void Initialize(const ushort&);
 
@@ -102,33 +111,42 @@ public:
 
 	/*!
 	 * \brief Get an element from the \a forward array
-	 * \param i element index
+	 * \param i Element index
+	 * \return The item at the index
 	 */
 	ushort GetForward(const ushort &) const;
 
 	/*!
 	 * \brief Get an element from the \a reverse array
-	 * \param i element index
+	 * \param i Element index
+	 * \return The item at the index
 	 */
 	ushort GetReverse(const ushort &) const;
 
 	/*!
 	 * \brief Get the entire \a forward array
+	 * \return The \a forward array
 	 */
 	const vector<ushort>& GetAllForward() const;
 
 	/*!
 	 * \brief Get the entire \a reverse array
+	 * \return The \a reverse array
 	 */
 	const vector<ushort>& GetAllReverse() const;
 
 	/*!
 	 * \brief Add an available gene to the map
+	 * \param i The gene ID to be added
+	 * \remark The gene ID is a number between 0 and 21000 (the genome size). 
+	 * It is specified by the gene ID mapping file \c gene_map.txt.
 	 */
 	void Add(const ushort&);
 
 	/*!
 	 * \brief Clear the member arrays in the structure
+	 * 
+	 * This is used by the destructor.
 	 */
 	void Clear();
 
@@ -144,11 +162,13 @@ public:
 
 	/*!
 	 * \brief Get the number of present genes that are currently contained in the map
+	 * \return The number of genes that are present
 	 */
 	ushort GetNumSet() const;
 
 	/*!
 	 * \brief Get the genome size
+	 * \return The genome size
 	 */
 	ushort GetSize() const;
 

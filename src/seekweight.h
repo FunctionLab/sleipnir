@@ -33,11 +33,11 @@ namespace Sleipnir {
  * \brief
  * Provide functions to assign dataset weight using the query gene.
  *
- * For dataset weighting, one way is to use CVWeighting. The CVWeighting
+ * For dataset weighting, one way is to use CSeekWeighter::CVWeighting. The CSeekWeighter::CVWeighting
  * uses a cross-validation (CV) framework, where it partitions the query and performs a search
- * instance on one sub-query, using the remainder of the queries as evaluation of the search instance.
+ * instance on one sub-query, using the remainder of the queries as the evaluation of the search instance.
  *
- * The OrderStatistics aggregation is a rank-based technique described by Adler et al (2009). This combines
+ * The CSeekWeighter::OrderStatisticsRankAggregation is a rank-based technique described by Adler et al (2009). This combines
  * dataset weighting and dataset gene-ranking aggregation all into one step.
  *
  */
@@ -46,10 +46,10 @@ public:
 
 	/*!
 	 * \brief
-	 * Calculates for each gene the average correlation to all of the query genes in a dataset.
+	 * Calculates for each gene the average \a correlation to all of the query genes in a dataset.
 	 *
 	 * \param rank
-	 * A vector that stores correlation of each gene to all of the query genes
+	 * A vector that stores the \a correlation of each gene to all of the query genes
 	 *
 	 * \param cv_query
 	 * A vector that stores the query genes
@@ -62,11 +62,11 @@ public:
 	 * If not enough query genes are present, then the averaging is not performed.
 	 *
 	 * \param bSquareZ
-	 * If true, square the correlation values before adding correlations.
+	 * If true, square the \a correlation values before adding \a correlations.
 	 *
 	 * \remark
-	 * Here, the correlations really refer to z-scored correlations.
-	 * The result is returned in the parameter rank.
+	 * The word \a correlations refer to z-scored, standardized Pearson correlations.
+	 * The result is returned in the parameter \c rank.
 	 *
 	 */
 	/*cv_query must be present in sDataset */
@@ -79,30 +79,30 @@ public:
 	 * Cross-validates query-genes in a dataset
 	 *
 	 * \param sQuery
-	 * The query and its subquery partitions
+	 * The query and its partitions
 	 *
 	 * \param sDataset
 	 * A dataset
 	 *
 	 * \param rate
-	 * RBP parameter p
+	 * RBP parameter \a p
 	 *
 	 * \param percent_required
 	 * Percentage of query genes required to be present in the dataset
 	 *
 	 * \param bSquareZ
-	 * Whether or not to square correlations
+	 * Whether or not to square \a correlations
 	 *
 	 * \param rrank
-	 * Temporary vector storing intermediary correlations
+	 * Temporary vector storing intermediary \a correlations
 	 *
 	 * \param goldStd
-	 * If a gold-standard gene-set is provided, use this to evaluate the retrieval of a sub-query
+	 * If a gold-standard gene-set is provided, use this to evaluate the retrieval of a cross-validation
 	 *
 	 * This performs multiple cross-validation runs to validate
 	 * the query genes in retrieving themselves in a dataset. The sum of the evaluation of all the
-	 * runs then becomes the dataset weight. For evaluation, we use rank-biased precision (RBP).
-	 * The parameter p needs to be provided for RBP; the default value is 0.99.
+	 * runs then becomes the dataset weight. For evaluation, we use <em>rank-biased precision (RBP)</em>.
+	 * The parameter \a p needs to be provided for RBP; the default value is 0.99.
 	 *
 	 */
 	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
@@ -111,7 +111,7 @@ public:
 
 	/*!
 	 * \brief
-	 * Performs OrderStatiticsAggregation, also known as the MEM algorithm
+	 * Performs OrderStatisticsAggregation, also known as the MEM algorithm
 	 * 
 	 * \param iDatasets
 	 * The number of datasets
@@ -120,7 +120,7 @@ public:
 	 * The number of genes
 	 * 
 	 * \param rank_d
-	 * Two-dimensional vectors storing correlations to the query genes. 
+	 * Two-dimensional vectors storing correlation-ranks to the query genes. 
 	 * First dimension: datasets. Second dimension: genes.
 	 * 
 	 * \param counts
@@ -132,13 +132,13 @@ public:
 	 * \param numThreads
 	 * The number of threads to be used (in a parallel setup)
 	 *
-	 * rank_d needs to be prepared as follows: a correlation rank vector is obtained from sorting correlations 
-	 * in a dataset, and then it is normalized by (rank of correlation) / (number of genes). The result is stored
-	 * in rank_d.
+	 * \c rank_d needs to be prepared as follows: a <tt>correlation rank</tt> vector is obtained from sorting Pearson correlations 
+	 * in a dataset, and then it is normalized by <tt>(rank of correlation) / (number of genes)</tt>. The result is stored
+	 * in \c rank_d.
 	 *
-	 * Afterward, for each gene g, the algorithm compares this gene's rank_d distribution across datasets with
+	 * Afterward, for each gene \a g, the algorithm compares this gene's \c rank_d distribution across datasets with
 	 * that derived from a set of datasets with randomly ordered correlation vectors (ie a null distribution). 
-	 * A significance p-value is calculated for this gene, and -log(p) values are stored in master_rank. 
+	 * A significance p-value is calculated for this gene, and \a -log(p) values are stored in master_rank. 
 	 */
 	static bool OrderStatisticsRankAggregation(const ushort&, const ushort&,
 		ushort**, const vector<ushort> &, vector<float>&, const ushort&);
@@ -156,13 +156,13 @@ public:
 	 * The dataset
 	 * 
 	 * \param rate
-	 * RBP parameter p
+	 * RBP parameter \a p
 	 * 
 	 * \param percent_required
 	 * Percentage of query genes required to be present in a dataset (assumed to be 1 in this case)
 	 * 
 	 * \param bSquareZ
-	 * Whether or not to square correlations
+	 * Whether or not to square \a correlations
 	 * 
 	 * \param rrank
 	 * Final gene-score
@@ -170,14 +170,13 @@ public:
 	 * \param goldStd
 	 * Gold-standard gene-set for weighting a dataset
 	 * 
-	 * This function is mainly used for equal weighting. 
-	 * Although equal weight integrates all datasets with equal weight, 
-	 * for the purpose of displaying datasets, the datasets are ranked according to the distance to the
+	 * This function is mainly used for <em>equal weighting</em>. 
+	 * Although <em>equal weighting</em> integrates all datasets with weight = 1, 
+	 * for the purpose of displaying datasets, the datasets need to be ranked according to the distance to the
 	 * average gene-ranking. 
 	 *
-	 * This average ranking is produced by summing gene-rankings from all datasets and divided by the number of datasets.
-	 * The distance to the average is the RBP evaluation of a dataset's gene-ranking using the 
-	 * top 100 genes in the average ranking as gold-standard gene-set.
+	 * This <em>average gene-ranking</em> is produced by summing gene-rankings from all datasets and divided by the number of datasets.
+	 * To score a dataset, we calculate the RBP precision of this dataset in retrieving the top 100 genes of the <em>average ranking</em>.
 	 * 
 	 */
 	static bool OneGeneWeighting(CSeekQuery&, 

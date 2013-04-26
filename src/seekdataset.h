@@ -33,7 +33,7 @@ namespace Sleipnir {
  *
  * A \c CSeekDataset encapsulates the following information about the dataset:
  *
- * \li The gene-gene correlation matrix
+ * \li The gene-gene \a correlation matrix
  * \li Each gene's expression variance
  * \li Each gene's average correlation
  * \li The genes in the query that are present in the dataset
@@ -42,6 +42,16 @@ namespace Sleipnir {
  * \li The weight of the dataset that is assigned by the search algorithm
  *
  * This dataset structure is designed to be used by Seek.
+ * \remarks
+ * The word \a correlation refers to the standardized z-scores of Pearson correlations, which
+ * is derived from a 2-step process:
+ * \f[f(x,y)=\frac{1}{2}ln\frac{1+p(x,y)}{1-p(x,y)}\f]
+ * where \f$p(x,y)\f$ is the Pearson correlation, \f$f(x,y)\f$ is the Fisher's transformed score.
+ * \f[z(x,y)=\frac{f(x,y) - \bar{f}}{\sigma_{f}}\f]
+ * where \f$z(x,y)\f$ is the z-score, \f$\bar{f}\f$ is the mean, and \f$\sigma_{f}\f$ is
+ * the standard deviation.
+ * 
+ * From here on, \a correlation always refers to the above z-score definition.
  */
 
 class CSeekDataset{
@@ -65,17 +75,17 @@ public:
 	 * \param strFileName The file name
 	 *
 	 * The \c *.sinfo file contains the mean and the standard deviation
-	 * of the global gene-gene correlation distribution for this dataset.
+	 * of the global gene-gene Pearson distribution for this dataset.
 	 */
 	bool ReadDatasetAverageStdev(const string &);
 
 	/*!
 	 * \brief
-	 * Read the gene average correlation file \c *.gavg
+	 * Read the gene average \a correlation file \c *.gavg
 	 *
 	 * \param strFileName The file name
 	 *
-	 * The \c *.gavg is an array that stores the average correlation of each
+	 * The \c *.gavg is an array that stores the average \a correlation of each
 	 * gene.
 	 */
 	bool ReadGeneAverage(const string &);
@@ -149,7 +159,27 @@ public:
 
 	/*!
 	 * \brief
-	 * Initialize the gene-gene correlation matrix
+	 * Initialize the gene-gene \a correlation matrix
+	 *
+	 * \param rD A two-dimensional array storing the discretized gene-gene \a correlations
+	 * \param quant The discretization function
+	 * \param iRows The number of rows for the \a correlation matrix
+	 * \param iColumns The number of columns for the \a correlation matrix
+	 * \param bSubtractAvg Whether or not to subtract \a correlation by the dataset average
+	 * \param bSubtractPlatformAvg Whether or not to subtract \a correlation by the platform average
+	 * \param logit Whether or not to apply the logit transform on \a correlations
+	 * \param bCorrelation Whether or not to use Pearson
+	 * \param cutoff Apply a hard cutoff on \a correlations
+	 * \param bRandom Shuffle the \a correlation vector
+	 * \param rand Random generator for the shuffling operation above
+	 * \remarks
+	 * The discretized \a correlation in the matrix \c rD is bounded by 0 to 255 (the limit of
+	 * \c unsigned \c char). The parameter \c quant specifies how a \a correlation is
+	 * discretized. For example, if the \c quant has 5 bins:
+	 * \code 
+	 * [0, 1, 2, 3, 4]
+	 * \endcode
+	 * Then if a \a correlation is 2.5, the discretized value would be 2.
 	 */
 	bool InitializeDataMatrix(ushort**, const vector<float> &,
 		const ushort&, const ushort&, const bool=true, const bool=true,
@@ -160,15 +190,16 @@ public:
 	/*!
 	 * \brief
 	 * Copy constructor
+	 * \param src A given dataset
 	 */
 	bool Copy(CSeekDataset *);
 
 	/*!
 	 * \brief
-	 * Get the gene-gene correlation matrix
+	 * Get the gene-gene \a correlation matrix
 	 *
-	 * A two-dimensional array of type \c ushort is returned. Note that the
-	 * correlation has been scaled to a integer range from 0 to 640.
+	 * \return A two-dimensional array of type \c ushort. Note that the
+	 * \a correlation has been scaled to a integer range from 0 to 640.
 	 * See CSeekDataset::InitializeDataMatrix.
 	 *
 	 */
@@ -176,55 +207,65 @@ public:
 
 	/*!
 	 * \brief
-	 * Get the gene-gene correlation matrix
+	 * Get the gene-gene \a correlation matrix
 	 *
-	 * A two-dimensional array of type \c unsigned \c char** is returned.
+	 * \return A two-dimensional array of type \c unsigned \c char**.
 	 */
 	unsigned char** GetMatrix();
 
 	/*!
 	 * \brief Get the genome presence map
+	 * \return The genome presence map
 	 */
 	CSeekIntIntMap* GetGeneMap();
 
 	/*!
 	 * \brief Get the query-block presence map
+	 * \return The query-block presence map
 	 */
 	CSeekIntIntMap* GetDBMap();
 
 	/*!
 	 * \brief Get the query presence map
+	 * \return The query presence map
 	 */
 	CSeekIntIntMap* GetQueryMap();
 
 	/*!
 	 * \brief Get the query genes
+	 * \return A vector of queries
 	 */
 	const vector<ushort>& GetQuery() const;
 
 	/*!
 	 * \brief Get the query gene indices
+	 * \return A vector of query gene indices
 	 */
 	const vector<ushort>& GetQueryIndex() const;
 
 	/*!
 	 * \brief Get the gene expression variance vector
+	 * \return The variance vector
 	 */
 	float GetGeneVariance(const ushort&) const;
 	/*!
-	 * \brief Get the gene average correlation vector
+	 * \brief Get the gene average \a correlation vector
+	 * \return The average \a correlation vector
 	 */
 	float GetGeneAverage(const ushort&) const;
 	/*!
-	 * \brief Get the mean of the global gene-gene correlation distribution
+	 * \brief Get the mean of the global gene-gene Pearson distribution
+	 * \return The mean Pearson for the dataset
 	 */
 	float GetDatasetAverage() const;
 	/*!
-	 * \brief Get the standard deviation of the global gene-gene correlation distribution
+	 * \brief Get the standard deviation of the global gene-gene Pearson distribution
+	 * \return The standard deviation of the Pearson distribution
 	 */
 	float GetDatasetStdev() const;
 	/*!
 	 * \brief Get the genome size
+	 * \return The genome size
 	 */
 	ushort GetNumGenes() const;
 
@@ -253,20 +294,24 @@ public:
 
 	/*!
 	 * \brief Get all the cross-validation scores
+	 * \return A vector of cross-validation scores
 	 */
 	const vector<float>& GetCVWeight() const;
 
 	/*!
 	 * \brief Get the dataset weight
+	 * \return The dataset weight
 	 */
 	float GetDatasetSumWeight();
 
 	/*!
 	 * \brief Set the platform
+	 * \param cp The platform
 	 */
 	void SetPlatform(CSeekPlatform &);
 	/*!
 	 * \brief Get the platform
+	 * \return The platform of this dataset
 	 */
 	CSeekPlatform& GetPlatform() const;
 

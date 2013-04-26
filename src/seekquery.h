@@ -30,16 +30,16 @@ namespace Sleipnir {
  * \brief
  * A query structure that is used by Seek
  *
- * Includes vectors for storing query genes, and utilities for partitioning query
+ * Includes vectors for storing the query genes, and utilities for partitioning query
  * genes into specified number of groups
  *
  * There are two ways to represent a query.
  *
- * \li A presence char vector, with number of elements = size of genome.
+ * \li A presence \c char vector, with number of elements = size of genome.
  * All elements are 0 except the elements indexed by the query genes, which have
  * a value of 1.
  *
- * \li A ushort vector, with number of elements = size of query.
+ * \li A \c ushort vector, with number of elements = size of query.
  * A compact representation which only stores the query genes' ID. 
  */
 class CSeekQuery{
@@ -55,7 +55,7 @@ public:
      * : create \a N partitions, where each partition is one of the query genes
      *
      * \c LEAVE_ONE_OUT
-     * : create \a N partitions, where each partition is everything but
+     * : create \a N partitions, where each partition is everything
      * excluding one of the query genes
      *
      * \c CUSTOM_PARTITION
@@ -68,9 +68,19 @@ public:
         CUSTOM_PARTITION = LEAVE_ONE_OUT + 1
     };
     
+	/*!
+	 * \brief Constructor
+	 */
 	CSeekQuery();
+
+	/*!
+	 * \brief Destructor
+	 */
 	~CSeekQuery();
 
+	/*!
+	 * \brief The reset function
+	 */
 	bool Reset();
 
     /*!
@@ -78,14 +88,12 @@ public:
      * Initialize with a 0-1 query presence vector
      *
      * \param query
-     * A \c char-vector (0 or 1) that specifies the location of the query genes, 
-     * which have a value of 1
+     * A \c char vector (0 or 1) that specifies the location of the query genes, 
      *
      * \remarks
-     * In preparing the parameter query, we assume that genes have been mapped 
-     * to integers between 0 to 21000, or whatever is pre-defined. Then a char-
-     * vector of 21000 elements is constructed with the elements located at the
-     * the query genes' ID having a value of 1, and the rest of elements being 0.
+     * The parameter \c query: based on the \c gene_map.txt, all genes are mapped 
+     * to integers between 0 to 21000 (or whatever the upper limit is). In the \c char
+	 * vector \c query, \c query[q] = 1 for \c q in \c Q. All other genes: \c query[g] = 0.
      */
 	bool InitializeQuery(const vector<char>&);
     
@@ -107,20 +115,20 @@ public:
 	bool InitializeQuery(const vector<ushort>&, const ushort &);
 
     /*!
-     * \brief
-     * Return the number of query partitions
+     * \brief Get the number of query partitions
+     * \return The number of query partitions
      */
 	ushort GetNumFold() const;
     
     /*!
-     * \brief
-     * Return the query genes as a ushort-vector
+     * \brief Get the query genes as a vector
+     * \return The query genes as a \c ushort vector
      */
 	const vector<ushort>& GetQuery() const;
     
     /*!
-     * \brief
-     * Return the query genes as a presence char-vector (0 or 1)
+     * \brief Get the query presence as a \c char vector
+     * \return The query genes as a presence \c char vector
      */
 	const vector<char>& GetQueryPresence() const;
     
@@ -131,6 +139,7 @@ public:
      * \param i
      * The index of partition to return
      *
+	 * \return The vector of genes in \c i-th partition
      * \remarks
      * No bound checking on \c i.
      */
