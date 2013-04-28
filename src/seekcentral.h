@@ -74,6 +74,8 @@ namespace Sleipnir {
  *
  * \li Order-statistics (CSeekCentral::ORDER_STATISTICS): the algorithm used in MEM.
  * (Adler et al, Genome Biology 2009)
+ *
+ * CSeekCentral can accept multiple queries as the search input.
  */
 class CSeekCentral{
 public:
@@ -213,7 +215,7 @@ public:
     /*!
      * \brief Initialize function
      *
-     * Prepares Seek for a client-server environment
+     * Prepares Seek to be used in a client-server environment
      *
      * \param output_dir The output directory
      * \param query The query file name
@@ -236,15 +238,114 @@ public:
 	bool Initialize(string&, string&, string&, CSeekCentral*, 
 		float&, bool&, bool&, bool&, bool&, const int&);
 
+	/*!
+	 * \brief Run Seek with the cross-validated dataset weighting
+	 *
+	 * \param rnd The random number generator
+	 * \param PART_M Query partition mode
+	 * \param FOLD Number of partitions to generate from the query
+	 * \param RATE The weighting parameter \a p
+	 *
+	 * \remark The random number generator is used for partitioning the query.
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 */
 	bool CVSearch(gsl_rng*, const CSeekQuery::PartitionMode&, const ushort&, const float&);
+
+	/*!
+	 * \brief Run Seek with the custom dataset weighting
+	 *
+	 * \param newGoldStd The gold-standard gene-set that is used for weighting datasets
+	 * \param rnd The random number generator
+	 * \param PART_M Query partition mode
+	 * \param FOLD Number of partitions to generate from the query
+	 * \param RATE The weighting parameter \a p
+	 *
+	 * Same as CVSearch, except that the weighting is not based on the coexpression
+	 * of the query genes, but based on the similarity of the query genes to some custom gold
+	 * standard gene-set.
+	 *
+	 * \remark The random number generator is used for partitioning the query.
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 */
 	bool CVCustomSearch(const vector< vector<string> > &, gsl_rng*,
 		const CSeekQuery::PartitionMode&, const ushort&, const float&);
+
+	/*!
+	 * \brief Run Seek with the equal dataset weighting
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 */
 	bool EqualWeightSearch();
+
+	/*!
+	 * \brief Run Seek with the user-given dataset weights
+	 * \param weights A two-dimensional array that stores the user-given weights
+	 *
+	 * \remark The two-dimensional array \c weights is \a Q by \a D :
+	 * where \a Q is the number of queries, \a D is the number of datasets. \c weights[i][j]
+	 * stores the weight of dataset \a j in query \a i.
+	 *
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 */
 	bool WeightSearch(const vector<vector<float> >&);
+
+	/*!
+	 * \brief Run Seek with the variance weighted search
+	 *
+	 * Same as CSeekCentral::WeightSearch(), except that the user-given weights are the query gene expression variances.
+	 *
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 */
 	bool VarianceWeightSearch();
+
+	/*!
+	 * \brief Run Seek with the order statistics dataset weighting algorithm
+	 *
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 */
 	bool OrderStatistics();
 
-	bool Common(CSeekCentral::SearchMode&, gsl_rng* = NULL, const CSeekQuery::PartitionMode* = NULL,
+	/*!
+	 * \brief Get the final gene-ranking for all the queries
+	 * \return A two-dimensional array that stores the gene-rankings
+	 */
+	const vector< vector<AResultFloat> >& GetAllResult()const;
+
+	/*!
+	 * \brief Get all the queries
+	 * \return A vector of queries.
+	 */
+	const vector<CSeekQuery>& GetAllQuery() const;
+
+	/*!
+	 * \brief Get the dataset weight vector for all the queries
+	 * \return A two-dimensional \c float array that stores the weights
+	 *
+	 * \remark The first dimension is the query. The second dimension is the dataset.
+	 */
+	const vector<vector<float> > &GetAllWeight() const;
+
+	/*!
+	 * \brief Get the gene-map ID for a given \a gene-name
+	 * \param strGene The \a gene-name as a \c string
+	 * \return The gene-map ID
+	 */
+	ushort GetGene(const string &strGene) const;
+
+	/*!
+	 * \brief Get the \a gene-name for a given gene-map ID
+	 * \param geneID The gene-map ID
+	 * \return The \a gene-name as a \c string
+	 */
+	string GetGene(const ushort &geneID) const;
+
+private:
+	//network mode
+	bool EnableNetwork(const int&);
+	bool CheckDatasets(const bool&);
+
+	/* Central search function */
+	bool Common(CSeekCentral::SearchMode&, gsl_rng* = NULL,
+		const CSeekQuery::PartitionMode* = NULL,
 		const ushort* = NULL, const float* = NULL,
 		const vector< vector<float> >* = NULL,
 		const vector< vector<string> >* = NULL);
@@ -253,32 +354,18 @@ public:
 	bool CopyTopGenes(CSeekQuery&, const vector<AResultFloat>&, 
 		const ushort);
 	bool SetQueryScoreNull(const CSeekQuery&);
-
 	bool Destruct();
 	bool PrepareQuery(const vector<string>&, CSeekQuery&);
 	bool CalculateRestart();
-
 	bool PrepareOneQuery(CSeekQuery &, CSeekIntIntMap &, vector<float>&);
 	bool AggregateThreads();
 	bool FilterResults(const ushort &);
 	bool Sort(vector<AResultFloat> &);
 	bool Write(const ushort &);
 	bool Display(CSeekQuery &, vector<AResultFloat>&);
-	const vector< vector<AResultFloat> >& GetAllResult()const;
-	const vector<CSeekQuery>& GetAllQuery() const;
-	ushort GetGene(const string &strGene) const;
-	string GetGene(const ushort &geneID) const;
 
-	const vector<vector<float> > &GetAllWeight() const;
-
-private:
-	//network mode
-	bool EnableNetwork(const int&);
-	bool CheckDatasets(const bool&);
-
+	/* Gene, Dataset, and Platform Mapping*/
 	vector<string> m_vecstrGenes;
-
-	/* Dataset */
 	vector<string> m_vecstrDatasets;
 	vector<string> m_vecstrDP;
 	map<string, string> m_mapstrstrDatasetPlatform;
@@ -286,17 +373,12 @@ private:
 	map<string, ushort> m_mapstrintGene;
 	vector<vector<string> > m_vecstrSearchDatasets;
 	vector<CSeekIntIntMap*> m_searchdsetMap;
-	vector<CSeekDataset*> m_vc;
-	vector<float> m_quant;
-	bool m_bSubtractGeneAvg;
-	bool m_bSubtractPlatformAvg;
-	bool m_bDividePlatformStdev;
-	bool m_bCorrelation;
-	bool m_bLogit;
-	bool m_bOutputText;
 
-	bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
-	bool m_bSquareZ;
+	/* Datasets */
+	vector<CSeekDataset*> m_vc;
+
+	/* Output */
+	bool m_bOutputText;
 
 	/* If true, output random case (ie shuffle rankings per dataset)
 	   iNumRandom: number of repetitions (Oct 26, 2012) */
@@ -308,8 +390,19 @@ private:
 	/* random gene scores over all repetitions */
 	//vector<vector<float> > m_vecRandScore; 
 
-
+	/* Gene-gene correlation matrix for all datasets*/
 	ushort ***m_rData;
+
+	/* Correlation discretization */
+	vector<float> m_quant;
+
+	/* Correlation transformation options */
+	bool m_bSubtractGeneAvg;
+	bool m_bSubtractPlatformAvg;
+	bool m_bDividePlatformStdev;
+	bool m_bCorrelation;
+	bool m_bLogit;
+	bool m_bSquareZ;
 
 	/* multi-threaded programming */
 	float **m_master_rank_threads;
@@ -356,7 +449,7 @@ private:
 	/* for network mode */
 	int m_iClient;
 	bool m_bEnableNetwork;
-
+	bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
 };
 
 }
