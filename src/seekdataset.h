@@ -35,7 +35,7 @@ namespace Sleipnir {
  *
  * \li The gene-gene \a correlation matrix
  * \li Each gene's expression variance
- * \li Each gene's average correlation
+ * \li Each gene's average \a correlation
  * \li The genes in the query that are present in the dataset
  * \li The genes in the genome that are present in the dataset
  * \li The platform which the dataset belongs to

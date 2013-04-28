@@ -75,8 +75,6 @@ CSeekCentral::CSeekCentral(){
 
 	m_iClient = -1;
 	m_bEnableNetwork = false;
-	m_bNetworkSendData = false;
-	m_bNetworkSendStatus = false;
 }
 
 CSeekCentral::~CSeekCentral(){
@@ -213,9 +211,11 @@ bool CSeekCentral::CalculateRestart(){
 //for SeekServer
 //assume DB has been read (with gvar, sinfo information)
 //assume datasets and genes have been read
+//assume m_enableNetwork is on
 bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_dset,
 	CSeekCentral *src, float &query_min_required, bool &bCorrelation,
-	bool &bSubtractGeneAvg, bool &bSubtractPlatformAvg, bool &bDividePlatformStdev){
+	bool &bSubtractGeneAvg, bool &bSubtractPlatformAvg, bool &bDividePlatformStdev,
+	const int& iClient){
 
 	//fprintf(stderr, "B0 %lu\n", CMeta::GetMemoryUsage());
 	m_output_dir = output_dir; //LATER, TO BE DELETED
@@ -301,17 +301,21 @@ bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_
 
 	//fprintf(stderr, "B3 %lu\n", CMeta::GetMemoryUsage());
 
-	if(!CalculateRestart()) return false;
+	if(!CalculateRestart())
+		return false;
+
+	if(!EnableNetwork(iClient))
+		return false;
+
+	if(!CheckDatasets(true)) //replace parameter is true
+		return false;
+
 	return true;
 }
 
 //network mode, meant to be run after Initialize()
-bool CSeekCentral::EnableNetwork(
-	//network parameters
-	const int &iClient, const bool &bNetworkSendData){
+bool CSeekCentral::EnableNetwork(const int &iClient){
 	m_bEnableNetwork = true;
-	m_bNetworkSendStatus = true;
-	m_bNetworkSendData = bNetworkSendData;
 	m_iClient = iClient; //assume client connection is already open
 	return true;
 }
@@ -1253,12 +1257,6 @@ bool CSeekCentral::WeightSearch(const vector< vector<float> > &weights){
 bool CSeekCentral::OrderStatistics(){
 	CSeekCentral::SearchMode sm = ORDER_STATISTICS;
 	CSeekCentral::Common(sm);
-}
-
-/* to be implemented */
-bool CSeekCentral::SingleGeneMetaCorrelation(){
-	CSeekCentral::SearchMode sm = SINGLE_GENE_META;
-	return false;
 }
 
 bool CSeekCentral::VarianceWeightSearch(){
