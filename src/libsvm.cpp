@@ -40,7 +40,6 @@ namespace LIBSVM {
 bool CLIBSVM::initialize() {
 
 	/* set default */
-    //cout << "sadfsajdfsalkdjfalskdjfkalsjdf" << endl;
 
         parm.cache_size = 100;
         parm.C = 0.01;
@@ -81,7 +80,7 @@ bool CLIBSVM::parms_check() {
 }
 
 SAMPLE * CLIBSVM::CreateSample(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) {
-	size_t i, j, k, iGene, iProblem, numFeatures, max_index;
+	size_t i, j, k, iGene, iProblem, numFeatures, numLabels, max_index;
         float d;
 
         struct svm_problem* prob;
@@ -89,37 +88,29 @@ SAMPLE * CLIBSVM::CreateSample(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) 
 
         prob = Malloc(struct svm_problem,1);
 
-        prob->l = 0;//number of labels in PCL
+//        prob->l = 0;//number of labels in PCL
         numFeatures = PCL.GetExperiments();
+        numLabels = 0;
 
         cout << "number of features: " << numFeatures << endl;
-//        return NULL;
-//	vector<double> vecClass;
-//	vector<size_t> veciGene;
 	
         iProblem = 0;
 
 	for (i = 0; i < SVMLabels.size(); i++) {
-//		     cout<< "processing gene " << SVMLabels[i].GeneName << endl;
                 if (!SVMLabels[i].hasIndex){
-//                  cout << "setindex: " << PCL.GetGene(SVMLabels[i].GeneName) << endl;
                   SVMLabels[i].SetIndex(PCL.GetGene(SVMLabels[i].GeneName));
                 }
 		iGene = SVMLabels[i].index;
-//		   cout << SVMLabels[i].GeneName<<" gene at location "<<iGene << endl;
 		if (iGene != -1) {
-//cout << iGene << endl;
-                  (prob->l)++;
+                  numLabels++;
 		}
 	}
-
  
-cout << "number of labels in data: " << prob->l << endl;
-cout << "number of elements: " << (1+numFeatures) * prob->l << endl; 
+        prob->l = numLabels;
+        prob->y = Malloc(double,numLabels);
+        prob->x = Malloc(struct svm_node *, numLabels);
+        x_space = Malloc(struct svm_node, (1+numFeatures) * numLabels);
 
-        prob->y = Malloc(double,prob->l);
-        prob->x = Malloc(struct svm_node *, prob->l);
-        x_space = Malloc(struct svm_node, (1+numFeatures) * prob->l);
 
         max_index = numFeatures;
 
@@ -127,12 +118,10 @@ cout << "number of elements: " << (1+numFeatures) * prob->l << endl;
 
         for (i = 0; i < SVMLabels.size(); i++) {
             iGene = SVMLabels[i].index;
+
             if (iGene != -1){
               (prob->x)[i] = &x_space[j];
               (prob->y)[i] = SVMLabels[i].Target;
-
-//cout << SVMLabels[i].Target << endl;
-//cout << prob.y[i] << endl;
 
               for(k = 0; k < numFeatures; k++){
                 x_space[j].index = k;
@@ -142,44 +131,29 @@ cout << "number of elements: " << (1+numFeatures) * prob->l << endl;
                   x_space[j].value = 1; //TODO: make this a flag!!!
                   //if missing value??? SVMPerf imputes 0 ... what about gene i to gene i ? should impute 1?
                 }
-//cout << k << endl;
-//cout << "index: " << x_space[j].index << endl;
-//cout << "value: " << x_space[j].value << endl;
-//
-//double blah = x_space[j].index + x_space[j].value;
                 j++;
               }         
               x_space[j].index = -1;
-// cout << k << endl;
-//cout << "index: " << x_space[j].index << endl;
-//cout << "value: " << x_space[j].value << endl;
-              
-//              x_space[j].index = -1;       
               j++;
+
             }
         }
-//cout << "here" << endl;
-        SAMPLE* pSample;
-        pSample = Malloc(SAMPLE,1);
 
-        pSample->n = prob->l;
+        SAMPLE* pSample = new SAMPLE;
+//        pSample = Malloc(SAMPLE,1);
+
+        pSample->n = prob->l;//number of labels
         pSample->problems = prob;
-//sleep(15);
-//
-
-//        cout << ((pSample->problems)->x)
+        pSample->numFeatures = numFeatures;
+        
         cout << ((pSample->problems)->y)[0] << endl;
         cout << ((pSample->problems)->y)[1] << endl;
-
-
-//cout << "an svm_node index: " << (((*prob).x)[0][0]).index << endl;
-//cout << "an svm_node value: " << (((*prob).x)[0][0]).value << endl;
-//sleep(15);
+PrintSample(*pSample);
 	return pSample;
 }
 
 
-
+/*
 SAMPLE * CLIBSVM::CreateSample(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels) {
 	size_t i, j, k, iGene, iProblem, numFeatures, max_index;
         float d;
@@ -189,25 +163,13 @@ SAMPLE * CLIBSVM::CreateSample(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels) 
 
         prob->l = 0;//number of labels in Dat
         numFeatures = Dat.GetGenes();
-
-//	vector<double> vecClass;
-//	vector<size_t> veciGene;
-	
         iProblem = 0;
 
 	for (i = 0; i < SVMLabels.size(); i++) {
-		//     cout<< "processing gene " << SVMLabels[i].GeneName << endl;
-		iGene = Dat.GetGene(SVMLabels[i].GeneName);
-		//   cout << SVMLabels[i].GeneName<<" gene at location "<<iGene << endl;
-		if (iGene != -1) {
-                    
-			//       cout << "creating doc" << endl;
-//			iProblem++;
-//			vec_pproblem.push_back(CreateDoc(Dat, iGene, iDoc - 1));
-//			vecClass.push_back(SVMLabels[i].Target);
-
-                  (prob->l)++;
-		}
+          iGene = Dat.GetGene(SVMLabels[i].GeneName);
+          if (iGene != -1) {
+            (prob->l)++;
+          }
 	}
 
  
@@ -242,10 +204,8 @@ SAMPLE * CLIBSVM::CreateSample(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels) 
         pSample->n = prob->l;
         pSample->problems = prob;
 
-
-
 	return pSample;
-}
+}*/
 
 
 vector<Result> CLIBSVM::Classify(Sleipnir::CPCL &PCL,
@@ -284,11 +244,6 @@ cerr << "length of svm labels: " << SVMLabels.size() << endl;
         x = pSample->problems->x[j];
         predict_label = svm_predict_values(model,x, dec_values);
         dec_value = dec_values[0]; //assume that positive class is the first class TODO: currently hackly
-//cerr << "Gene: " << iGene << endl;
-//cerr << dec_value << endl;        
-
-
-cerr << j << endl;
 
         vecResult[j].GeneName = SVMLabels[i].GeneName;
         vecResult[j].Target = SVMLabels[i].Target;
@@ -298,8 +253,7 @@ cerr << j << endl;
 
       }
     }
-
-//    delete dec_values;
+    free(dec_values);
 
     return vecResult;
 }

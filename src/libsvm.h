@@ -44,7 +44,8 @@ extern "C" {
 }
 
 typedef struct sample { /* a sample is a set of examples */
-   int     n;            /* n is the total number of examples */
+   size_t     n;            /* n is the total number of examples */
+   size_t  numFeatures; 
    struct svm_problem *problems;
 } SAMPLE;
  
@@ -115,6 +116,7 @@ public:
   //struct svm_parameter parm;
   struct svm_model* model;
   struct svm_parameter parm;
+  
 
   CLIBSVM() {
     initialize();
@@ -248,12 +250,68 @@ cout << svm_get_svm_type(model) << endl;
     }
   }
 
-  static void FreeSample(sample s){
-    free(s.problems->x);
-    free(s.problems->y);
-    free(s.problems);
-    
+  static void FreeSample(SAMPLE s){
+cerr << "free sample: " << endl;
+PrintSample(s);
+
+    FreeProblem(s.problems, s.numFeatures);
+    //free(&s);    
   }
+
+  static void FreeProblem(svm_problem *prob, size_t numFeatures){
+    //int i = prob->l; //number of examples
+    size_t i, j ;
+    i = j = 0;
+
+//PrintProblem(prob);
+
+    free(prob->y);
+
+    free(prob->x);
+
+//    for(i = 0 ; i < prob->l ; i++){
+//      for(j = 0 ; j < numFeatures ; j ++){
+
+//PrintNode((prob->x)[i][j]);
+
+//        free((prob->x)[i]);
+//      }
+//    }
+
+//    free(prob); ??? why can't i free?
+    return;
+  }
+
+  static void PrintSample(SAMPLE s){
+    PrintProblem(s.problems);
+cerr << "number of labels: " << s.n << endl;
+  }
+
+  static void PrintProblem(svm_problem *prob){
+    size_t i, j ;
+    i = j = 0;
+
+//    free(prob->y);
+
+    for(i = 0 ; i < 3 ; i++){
+cerr << "label: " << (prob->y)[i] << endl;
+      for(j = 0 ; j < 2 ; j ++){
+
+PrintNode((prob->x)[i][j]);
+
+//        free(&((prob->x)[i][j]));
+      }
+    }
+
+//    free(prob);
+    return;
+  }
+
+  static void PrintNode(svm_node node){
+    cerr << "index: " << node.index << endl;
+    cerr << "value: " << node.value << endl;
+  }
+
 
   //no pairwise learning for libSVM wrapper
 

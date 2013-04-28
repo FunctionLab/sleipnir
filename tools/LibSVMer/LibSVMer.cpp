@@ -187,7 +187,7 @@ int main(int iArgs, char** aszArgs) {
 	}
 
 //cout << "here1: " << svm_get_svm_type(SVM.model) << endl;
-cout << SVM.parm.C << endl;
+//cout << SVM.parm.C << endl;
 
 	vector<LIBSVM::SVMLabel> vecLabels;
 	set<string> setLabeledGenes;
@@ -345,15 +345,20 @@ cout << SVM.parm.C << endl;
 			}
 		} else { //run once
 			for (i = 0; i < sArgs.cross_validation_arg; i++) {
-				pTrainSample = LIBSVM::CLIBSVM::CreateSample(PCL, //make more efficient
+				pTrainSample = LIBSVM::CLIBSVM::CreateSample(PCL, //TODO: make more efficient
 						pTrainVector[i]);
+//                                LIBSVM::CLIBSVM::PrintSample(*pTrainSample);
+//				LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
+//                                continue;
 
 //cout << "here2: " << svm_get_svm_type(SVM.model) << endl;
-cout << "here3: " << SVM.parm.C << endl;
+//cout << "here3: " << SVM.parm.C << endl;
 
-                                cout << "number of training labels: " << pTrainVector[i].size() << endl;
-                                cout << "number of training samples: " << pTrainSample->n << endl;
-
+//                                cerr << "number of training labels: " << pTrainVector[i].size() << endl;
+//                                cerr << "number of training samples: " << pTrainSample->n << endl;
+//                                cerr << "number of testing labels: " << pTestVector[i].size() << endl;
+				
+//continue;
 //for( std::vector<LIBSVM::SVMLabel>::const_iterator q = pTestVector[i].begin(); q != pTestVector[i].end(); ++q)
 //      std::cout << (*q).GeneName << ' ';
 
@@ -384,8 +389,10 @@ cout << "here3: " << SVM.parm.C << endl;
 								+= vec_tmpUnlabeledResults[j].Value;
 
 				}
+                                LIBSVM::CLIBSVM::PrintSample(*pTrainSample);
+
 				if (i > 0) {
-					//LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
+					LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
 				}
 			}
 
