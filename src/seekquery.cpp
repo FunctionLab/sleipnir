@@ -91,7 +91,7 @@ const vector<ushort>& CSeekQuery::GetCVQuery(ushort &i) const{
 }
 
 bool CSeekQuery::CreateCVPartitions(const gsl_rng *rnd,
-		const enum PartitionMode &p, const ushort iFold){
+		const CSeekQuery::PartitionMode &p, const ushort iFold){
 	//must have run initializequery beforehand
 	if(p!=LEAVE_ONE_IN && p!=LEAVE_ONE_OUT && p!=CUSTOM_PARTITION){
 		cerr << "Error, unknown partition mode" << endl;

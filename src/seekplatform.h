@@ -25,17 +25,84 @@
 #include "seekbasic.h"
 namespace Sleipnir {
 
+/*!
+ * \brief
+ * A microarray platform that is used by Seek
+ *
+ * Contains the gene \a correlation average and standard deviation for a given platform
+ *
+ * For each gene \a g in each dataset \a d, we calculate the average \a correlation of \a g
+ * to all the genes. Then average it across
+ * all the datasets in the platform.
+ * The result is the platform's gene-\a correlation average, or \c PlatformAvg for short.
+ *
+ * The standard deviation or \c PlatformStdev measures the spread of \a correlation
+ * across all datasets of the given platform.
+ *
+ * The purpose of the platform's average and standard deviation are to reduce potential biases
+ * that might be caused by platform specific \a correlation distributions.
+ * \remarks
+ * The word \a correlation refers to z-score transformed, standardized Pearson correlation.
+ */
 class CSeekPlatform{
 public:
+	/*!
+	 * \brief Constructor
+	 */
 	CSeekPlatform();
+	/*!
+	 * \brief Destructor
+	 */
 	~CSeekPlatform();
 
+	/*!
+	 * \brief Initialize the platform
+	 *
+	 * \param numGenes
+	 * The number of genes covered by the platform
+	 *
+	 * \param strPlatformName
+	 * Assign a name to the platform
+	 */
 	void InitializePlatform(const ushort &, const string &);
+
+	/*!
+	 * \brief Set the platform \a correlation average for a particular gene
+	 * \param i Gene index
+	 * \param val The average \a correlation for the gene
+	 */
 	void SetPlatformAvg(const ushort &, const float &);
+
+	/*!
+	 * \brief Set the platform standard deviation of \a correlation for a given gene
+	 * \param i Gene index
+	 * \param val The standard deviation
+	 */
 	void SetPlatformStdev(const ushort &, const float &);
+
+	/*!
+	 * \brief Get the platform-wide \a correlation average for a given gene
+	 * \param i Gene index
+	 * \return The platform-wide average
+	 */
 	float GetPlatformAvg(const ushort &) const;
+
+	/*!
+	 * \brief Get the platform-wide standard deviation of \a correlation for a given gene
+	 * \param i Gene index
+	 * \return The platform-wide standard deviation
+	 */
 	float GetPlatformStdev(const ushort &) const;
+
+	/*!
+	 * \brief Reset
+	 */
 	void ResetPlatform();
+
+	/*!
+	 * Create a copy from a given platform
+	 * \param pl The given platform
+	 */
 	void Copy(const CSeekPlatform &);
 
 private:

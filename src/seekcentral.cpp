@@ -75,8 +75,6 @@ CSeekCentral::CSeekCentral(){
 
 	m_iClient = -1;
 	m_bEnableNetwork = false;
-	m_bNetworkSendData = false;
-	m_bNetworkSendStatus = false;
 }
 
 CSeekCentral::~CSeekCentral(){
@@ -213,9 +211,11 @@ bool CSeekCentral::CalculateRestart(){
 //for SeekServer
 //assume DB has been read (with gvar, sinfo information)
 //assume datasets and genes have been read
+//assume m_enableNetwork is on
 bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_dset,
 	CSeekCentral *src, float &query_min_required, bool &bCorrelation,
-	bool &bSubtractGeneAvg, bool &bSubtractPlatformAvg, bool &bDividePlatformStdev){
+	bool &bSubtractGeneAvg, bool &bSubtractPlatformAvg, bool &bDividePlatformStdev,
+	const int& iClient){
 
 	//fprintf(stderr, "B0 %lu\n", CMeta::GetMemoryUsage());
 	m_output_dir = output_dir; //LATER, TO BE DELETED
@@ -301,17 +301,21 @@ bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_
 
 	//fprintf(stderr, "B3 %lu\n", CMeta::GetMemoryUsage());
 
-	if(!CalculateRestart()) return false;
+	if(!CalculateRestart())
+		return false;
+
+	if(!EnableNetwork(iClient))
+		return false;
+
+	if(!CheckDatasets(true)) //replace parameter is true
+		return false;
+
 	return true;
 }
 
 //network mode, meant to be run after Initialize()
-bool CSeekCentral::EnableNetwork(
-	//network parameters
-	const int &iClient, const bool &bNetworkSendData){
+bool CSeekCentral::EnableNetwork(const int &iClient){
 	m_bEnableNetwork = true;
-	m_bNetworkSendStatus = true;
-	m_bNetworkSendData = bNetworkSendData;
 	m_iClient = iClient; //assume client connection is already open
 	return true;
 }
@@ -789,8 +793,8 @@ bool CSeekCentral::Write(const ushort &i){
 }
 
 
-bool CSeekCentral::Common(enum SearchMode &sm,
-	gsl_rng *rnd, const enum PartitionMode *PART_M,
+bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
+	gsl_rng *rnd, const CSeekQuery::PartitionMode *PART_M,
 	const ushort *FOLD, const float *RATE,
 	const vector< vector<float> > *providedWeight,
 	const vector< vector<string> > *newGoldStd){
@@ -822,7 +826,7 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 	l = 0;
 	//oct 20, 2012: whether to redo current query with equal weighting
 	int redoWithEqual = 0; //tri-mode: 0, 1, 2
-	enum SearchMode current_sm;
+	CSeekCentral::SearchMode current_sm;
 	CSeekQuery equalWeightGold;
 
 	//backup of scores (Feb 3)
@@ -905,9 +909,9 @@ bool CSeekCentral::Common(enum SearchMode &sm,
 			CSeekIntIntMap *mapG = m_vc[d]->GetGeneMap();
 			CSeekIntIntMap *mapQ = m_vc[d]->GetQueryMap();
 
-			if(mapG->GetNumSet()<10000){
-				continue;
-			}
+			//if(mapG->GetNumSet()<10000){
+			//	continue;
+			//}
 
 			if(mapQ==NULL ||mapQ->GetNumSet()==0){
 				if(DEBUG) fprintf(stderr, "This dataset is skipped\n");
@@ -1224,13 +1228,13 @@ bool CSeekCentral::SetQueryScoreNull(const CSeekQuery &csq){
 }
 
 bool CSeekCentral::EqualWeightSearch(){
-	enum SearchMode sm = EQUAL;
+	CSeekCentral::SearchMode sm = EQUAL;
 	CSeekCentral::Common(sm);
 }
 
-bool CSeekCentral::CVSearch(gsl_rng *rnd, const enum PartitionMode &PART_M,
+bool CSeekCentral::CVSearch(gsl_rng *rnd, const CSeekQuery::PartitionMode &PART_M,
 	const ushort &FOLD, const float &RATE){
-	enum SearchMode sm = CV;
+	CSeekCentral::SearchMode sm = CV;
 	CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE);
 }
 
@@ -1238,27 +1242,21 @@ bool CSeekCentral::CVSearch(gsl_rng *rnd, const enum PartitionMode &PART_M,
 	of query genes, but based on similarity of query genes to some custom gold
 	standard gene-set */
 bool CSeekCentral::CVCustomSearch(const vector< vector<string> > &newGoldStd,
-	gsl_rng *rnd, const enum PartitionMode &PART_M,
+	gsl_rng *rnd, const CSeekQuery::PartitionMode &PART_M,
 	const ushort &FOLD, const float &RATE){
-	enum SearchMode sm = CV_CUSTOM;
+	CSeekCentral::SearchMode sm = CV_CUSTOM;
 	CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE,
 		NULL, &newGoldStd);
 }
 
 bool CSeekCentral::WeightSearch(const vector< vector<float> > &weights){
-	enum SearchMode sm = USE_WEIGHT;
+	CSeekCentral::SearchMode sm = USE_WEIGHT;
 	CSeekCentral::Common(sm, NULL, NULL, NULL, NULL, &weights);
 }
 
 bool CSeekCentral::OrderStatistics(){
-	enum SearchMode sm = ORDER_STATISTICS;
+	CSeekCentral::SearchMode sm = ORDER_STATISTICS;
 	CSeekCentral::Common(sm);
-}
-
-/* to be implemented */
-bool CSeekCentral::SingleGeneMetaCorrelation(){
-	enum SearchMode sm = SINGLE_GENE_META;
-	return false;
 }
 
 bool CSeekCentral::VarianceWeightSearch(){

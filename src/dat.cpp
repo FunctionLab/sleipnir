@@ -648,6 +648,7 @@ bool CDatImpl::OpenBinary( std::istream& istm, bool fSeek ) {
 
 	if( !OpenGenes( istm, true, false ) )
 		return false;
+
 	m_Data.Initialize( GetGenes( ) );
 	adScores = new float[ GetGenes( ) - 1 ];
 	for( i = 0; ( i + 1 ) < GetGenes( ); ++i ) {
