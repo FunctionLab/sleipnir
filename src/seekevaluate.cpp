@@ -108,26 +108,6 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 	return true;
 }
 
-float CSeekPerformanceMeasure::RBPRateConvert(const float &RBP, 
-	const ushort &num){
-
-	float x = RBP;
-	if(RBP>=0.989 && RBP<=0.991){
-		if(num>=17600)	x = RBP;
-		else if(num>=15840) x = 0.989;
-		else if(num>=14080) x = 0.988;
-		else if(num>=12320) x = 0.986;
-		else if(num>=10560) x = 0.983;
-		else if(num>=8800) x = 0.98;
-		else if(num>=7040) x = 0.975;
-		else if(num>=5280) x = 0.97;
-		else if(num>=3520) x = 0.955;
-		else if(num>=1760) x = 0.92;
-		else x = 0.90;
-	}
-	return x;
-}			
-
 bool CSeekPerformanceMeasure::AveragePrecision(
 	const vector<unsigned short> &rank, float &ap,
 	const vector<char> &mask, const vector<char> &gold,

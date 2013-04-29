@@ -36,15 +36,15 @@
 namespace Sleipnir {
 
 /*!
- * \brief The main search algorithm that is used by Seek
+ * \brief A suite of search algorithms that are supported by Seek
  *
- * The Seek search algorithm performs the coexpression search of the user's 
+ * The Seek search algorithms perform the coexpression search of the user's
  * query genes in a large compendium of microarray datasets. 
- * The output of the search algorithm is a ranking of genes based on their
+ * The output of the search algorithms is a ranking of genes based on their
  * gene score, where the gene score represents the overall weighted coexpression
  * to the query genes. 
  *
- * One of the first steps in the algorithm is to weight
+ * One of the first steps in a search is to weight
  * the datasets in such a way to prioritize informative datasets.
  * Then, with the dataset weight generated, the final gene-score is given by:
  * \f[FS(g, Q)=\alpha\sum_{d \in D}{w_d \cdot s_d(g, Q)}\f]
@@ -75,7 +75,8 @@ namespace Sleipnir {
  * \li Order-statistics (CSeekCentral::ORDER_STATISTICS): the algorithm used in MEM.
  * (Adler et al, Genome Biology 2009)
  *
- * CSeekCentral can accept multiple queries as the search input.
+ * CSeekCentral can handle multiple queries at a time, but the search parameters must remain
+ * the same for all queries.
  */
 class CSeekCentral{
 public:
@@ -247,7 +248,7 @@ public:
 	 * \param RATE The weighting parameter \a p
 	 *
 	 * \remark The random number generator is used for partitioning the query.
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
 	 */
 	bool CVSearch(gsl_rng*, const CSeekQuery::PartitionMode&, const ushort&, const float&);
 
@@ -265,14 +266,14 @@ public:
 	 * standard gene-set.
 	 *
 	 * \remark The random number generator is used for partitioning the query.
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
 	 */
 	bool CVCustomSearch(const vector< vector<string> > &, gsl_rng*,
 		const CSeekQuery::PartitionMode&, const ushort&, const float&);
 
 	/*!
 	 * \brief Run Seek with the equal dataset weighting
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
 	 */
 	bool EqualWeightSearch();
 
@@ -284,7 +285,7 @@ public:
 	 * where \a Q is the number of queries, \a D is the number of datasets. \c weights[i][j]
 	 * stores the weight of dataset \a j in query \a i.
 	 *
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
 	 */
 	bool WeightSearch(const vector<vector<float> >&);
 
@@ -293,14 +294,14 @@ public:
 	 *
 	 * Same as CSeekCentral::WeightSearch(), except that the user-given weights are the query gene expression variances.
 	 *
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
 	 */
 	bool VarianceWeightSearch();
 
 	/*!
 	 * \brief Run Seek with the order statistics dataset weighting algorithm
 	 *
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called to prepare for the search instance.
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
 	 */
 	bool OrderStatistics();
 
