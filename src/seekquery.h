@@ -28,7 +28,7 @@ namespace Sleipnir {
     
 /*!
  * \brief
- * A query structure that is used by Seek
+ * Representation of a query gene-set that is used by Seek
  *
  * Includes vectors for storing the query genes, and utilities for partitioning query
  * genes into specified number of groups

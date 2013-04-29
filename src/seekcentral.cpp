@@ -212,6 +212,7 @@ bool CSeekCentral::CalculateRestart(){
 //assume DB has been read (with gvar, sinfo information)
 //assume datasets and genes have been read
 //assume m_enableNetwork is on
+//* CDatabaselet collection is shared between multiple clients (m_bSharedDB)
 bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_dset,
 	CSeekCentral *src, float &query_min_required, bool &bCorrelation,
 	bool &bSubtractGeneAvg, bool &bSubtractPlatformAvg, bool &bDividePlatformStdev,
@@ -1229,13 +1230,13 @@ bool CSeekCentral::SetQueryScoreNull(const CSeekQuery &csq){
 
 bool CSeekCentral::EqualWeightSearch(){
 	CSeekCentral::SearchMode sm = EQUAL;
-	CSeekCentral::Common(sm);
+	return CSeekCentral::Common(sm);
 }
 
 bool CSeekCentral::CVSearch(gsl_rng *rnd, const CSeekQuery::PartitionMode &PART_M,
 	const ushort &FOLD, const float &RATE){
 	CSeekCentral::SearchMode sm = CV;
-	CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE);
+	return CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE);
 }
 
 /*	perform CVSearch, except that the weighting is based not on co-expression
@@ -1245,18 +1246,18 @@ bool CSeekCentral::CVCustomSearch(const vector< vector<string> > &newGoldStd,
 	gsl_rng *rnd, const CSeekQuery::PartitionMode &PART_M,
 	const ushort &FOLD, const float &RATE){
 	CSeekCentral::SearchMode sm = CV_CUSTOM;
-	CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE,
+	return CSeekCentral::Common(sm, rnd, &PART_M, &FOLD, &RATE,
 		NULL, &newGoldStd);
 }
 
 bool CSeekCentral::WeightSearch(const vector< vector<float> > &weights){
 	CSeekCentral::SearchMode sm = USE_WEIGHT;
-	CSeekCentral::Common(sm, NULL, NULL, NULL, NULL, &weights);
+	return CSeekCentral::Common(sm, NULL, NULL, NULL, NULL, &weights);
 }
 
 bool CSeekCentral::OrderStatistics(){
 	CSeekCentral::SearchMode sm = ORDER_STATISTICS;
-	CSeekCentral::Common(sm);
+	return CSeekCentral::Common(sm);
 }
 
 bool CSeekCentral::VarianceWeightSearch(){

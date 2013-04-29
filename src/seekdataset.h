@@ -29,7 +29,7 @@
 
 namespace Sleipnir {
 /*!
- * \brief A microarray dataset structure
+ * \brief Representation of a microarray dataset that is used by Seek
  *
  * A \c CSeekDataset encapsulates the following information about the dataset:
  *
@@ -165,13 +165,13 @@ public:
 	 * \param quant The discretization function
 	 * \param iRows The number of rows for the \a correlation matrix
 	 * \param iColumns The number of columns for the \a correlation matrix
-	 * \param bSubtractAvg Whether or not to subtract \a correlation by the dataset average
-	 * \param bSubtractPlatformAvg Whether or not to subtract \a correlation by the platform average
-	 * \param logit Whether or not to apply the logit transform on \a correlations
-	 * \param bCorrelation Whether or not to use Pearson
+	 * \param bSubtractAvg If true, subtract the \a correlation by the dataset average
+	 * \param bSubtractPlatformAvg If true, subtract the \a correlation by the platform average
+	 * \param logit If true, apply the logit transform on \a correlations
+	 * \param bCorrelation If true, use Pearson
 	 * \param cutoff Apply a hard cutoff on \a correlations
-	 * \param bRandom Shuffle the \a correlation vector
-	 * \param rand Random generator for the shuffling operation above
+	 * \param bRandom If true, shuffle the \a correlation vector
+	 * \param rand The random generator for the shuffling operation above
 	 * \remarks
 	 * The discretized \a correlation in the matrix \c rD is bounded by 0 to 255 (the limit of
 	 * \c unsigned \c char). The parameter \c quant specifies how a \a correlation is

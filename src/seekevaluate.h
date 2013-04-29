@@ -83,11 +83,58 @@ struct AscendingFloat{
     }
 };
 
+/*!
+ * \brief Evaluation metrics for a rank-list
+ *
+ * Provide static utility functions for evaluating a ranking of genes with the user-given gold standard
+ * gene-set. The typical use of such functions is in weighting datasets. Generally speaking, each dataset
+ * is weighted by how well the query genes are able to retrieve each other in the dataset.
+ * In a cross-validation, we use a part of the query genes to try to retrieve the other remaining
+ * query genes. These functions provide a measure of precision for each query retrieval, which eventually
+ * forms the basis of the dataset weight.
+ *
+ */
 class CSeekPerformanceMeasure{
 public:
+	/*!
+	 * \brief Sort a gene ranking by the gene score
+	 *
+	 * \param rank The vector of gene-scores to be sorted. Gene scores are inserted to this vector based
+	 * on their gene IDs, which are a value from 0 to the size of the vector.
+	 * \param mapG The gene presence map
+	 * \param a The output, which is a vector of (gene ID, gene score) pairs that are sorted by score
+	 * \param top If \c X, sort only the top \c X elements. If 0, then sort the entire vector.
+	 *
+	 * The struct \c AResult represents a (gene ID, gene score) pair. This function sorts the vector of
+	 * \c AResult in the descending order of the gene score.
+	 */
 	static bool SortRankVector(const vector<unsigned short> &rank,
 		const CSeekIntIntMap &mapG, vector<AResult> &a,
 		const ushort top = 0);
+
+	/*!
+	 * \brief Calculate the rank-biased precision for a gene ranking
+	 *
+	 * \param rate The parameter \a p in the RBP formula
+	 * \param rbp The calculated RBP score, the output
+	 * \param mask The genes in the ranking to be skipped over (typically the query genes)
+	 * \param gold The gold-standard genes
+	 * \param mapG The gene presence map. Genes that are not present in the dataset are skipped over.
+	 * \param sing The sorted vector of (gene ID, gene score) pairs
+	 * \param rank The gene-score vector
+	 * \param top If \c X, sort only the top \c X elements. If 0, then sort the entire vector.
+	 *
+	 * First calls the CSeekPerformanceMeasure::SortRankVector() with the arguments \c rank and \c top,
+	 * in order to sort the gene-scores. Then with the sorted gene-ranking returned to \c sing, it calculates
+	 * the rank-biased precision.
+	 *
+	 * \remarks The RBP formula is given by:
+	 * \f[RBP=\sum_{g \in U}{(1-p)p^{rank(g)}}\f]
+	 * where \f$U\f$ is the gold standard gene-set, \f$p\f$ is the emphasis on ranks,
+	 * \f$rank(g)\f$ is the position of \f$g\f$ in the ranking
+	 * \f$p\f$ is typically set to 0.95 - 0.99. The recommended value is 0.99.
+	 * For more information, please read (Moffat et al 2008).
+	 */
 	/* designed specifically for a CSeekDataset */
 	/* mask: the query genes which are not included in RBP calcualtion */
 	static bool RankBiasedPrecision(const float &rate,
@@ -97,8 +144,16 @@ public:
 		/* optional */
 		const ushort top = 0);
 
-	static float RBPRateConvert(const float &RBP, const ushort &num);
-
+	/*!
+	 * \brief Calculate the average precision for a gene ranking
+	 *
+	 * \param rank The gene-score vector
+	 * \param ap The calculated average precision
+	 * \param mask The genes in the ranking to be skipped over (typically the query genes)
+	 * \param gold The gold-standard genes
+	 * \param mapG The gene presence map. Genes that are not present in the dataset are skipped over.
+	 * \param ar The sorted vector of (gene ID, gene score) pairs
+	 */
 	static bool AveragePrecision(
 		const vector<unsigned short> &rank, float &ap,
 		const vector<char> &mask, const vector<char> &gold,

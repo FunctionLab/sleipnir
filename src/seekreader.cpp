@@ -34,16 +34,6 @@ bool CSeekTools::IsNaN(const ushort &v){
 	return false;
 }
 
-bool CSeekTools::CreatePresenceVector(const vector<ushort> &srcData,
-	vector<char> &destData, const ushort &iSize){
-	ushort i;
-	destData.clear();
-	destData.resize(iSize);
-	for(i=0; i<iSize; i++) destData[i] = 0;
-	for(i=0; i<srcData.size(); i++) destData[srcData[i]] = 1;
-	return true;
-}
-
 bool CSeekTools::ReadDatabaselets(const CDatabase &DB, 
 	const vector< vector<string> > &vecstrAllQuery,
 	vector<CSeekDataset*> &vc, 
@@ -100,12 +90,12 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 		return false;
 	}
 
-	fprintf(stderr, "Reading %lu gene cdatabaselets and doing query centric\n",
+	fprintf(stderr, "Reading %lu query genes' correlations\n",
 		allQ.size());
 	system("date +%s%N 1>&2");
 	if(bNetwork && CSeekNetwork::Send(iClient, "Reading " + 
 		CSeekTools::ConvertInt(allQ.size()) + 
-		" gene cdatabaselets and doing query centric")==-1){
+		" query genes' correlations")==-1){
 		fprintf(stderr, "Error sending client message\n");
 		return false;
 	}
@@ -144,7 +134,7 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 		Qi.clear();
 	}
 
-	fprintf(stderr, "Finished reading databaselets and query centric\n");
+	fprintf(stderr, "Finished reading query genes' correlations\n");
 	system("date +%s%N 1>&2");
 	if(bNetwork && CSeekNetwork::Send(iClient, 
 		"Finished reading databaselets and query centric")==-1){
@@ -155,15 +145,16 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	return true;
 }
 	
-bool CSeekTools::ReadQuantFile(const string &strFile, vector<float> &quant){
-	return CSeekTools::ReadQuantFile(strFile.c_str(), quant);
+bool CSeekTools::ReadQuantFile(const string &strFile, vector<float> &quant,
+	const int lineSize){
+	return CSeekTools::ReadQuantFile(strFile.c_str(), quant, lineSize);
 }
 
-bool CSeekTools::ReadQuantFile(const char *file, vector<float> &quant){
+bool CSeekTools::ReadQuantFile(const char *file, vector<float> &quant, const int lineSize){
 	ifstream ifsm;
 	ifsm.open(file);
-	char acBuffer[5000];
-	ushort c_iBuffer = 5000;
+	char acBuffer[lineSize];
+	ushort c_iBuffer = lineSize;
 	vector<string> vecstrLine;
 
 	ifsm.getline(acBuffer, c_iBuffer -1);
@@ -302,14 +293,14 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 
 bool CSeekTools::ReadPlatforms(const string &strPlatformDirectory,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
-		map<string, ushort> &mapstriPlatforms){
+		map<string, ushort> &mapstriPlatforms, const int lineSize){
 	return CSeekTools::ReadPlatforms(strPlatformDirectory.c_str(), plat,
-		vecstrPlatforms, mapstriPlatforms);
+		vecstrPlatforms, mapstriPlatforms, lineSize);
 }
 
 bool CSeekTools::ReadPlatforms(const char *plat_dir,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
-		map<string, ushort> &mapstriPlatforms){
+		map<string, ushort> &mapstriPlatforms, const int lineSize){
 
 	string strPlatformDirectory = plat_dir;
 	string strAvgFile = strPlatformDirectory + "/" +
@@ -331,8 +322,8 @@ bool CSeekTools::ReadPlatforms(const char *plat_dir,
 	mapstriPlatforms.clear();
 	ifstream ifsm;
 	ifsm.open(strPlatformOrderFile.c_str());
-	char acBuffer[1024];
-	ushort c_iBuffer = 1024;
+	char acBuffer[lineSize];
+	ushort c_iBuffer = lineSize;
 	i = 0;
 	while(!ifsm.eof()){
 		ifsm.getline(acBuffer, c_iBuffer -1);
@@ -357,21 +348,22 @@ bool CSeekTools::ReadPlatforms(const char *plat_dir,
 }
 
 bool CSeekTools::ReadListTwoColumns(const string &strFile,
-		vector<string> &vecstrList1, vector<string> &vecstrList2){
+		vector<string> &vecstrList1, vector<string> &vecstrList2, const int lineSize){
 	return CSeekTools::ReadListTwoColumns(strFile.c_str(),
-		vecstrList1, vecstrList2);
+		vecstrList1, vecstrList2, lineSize);
 }
 
 bool CSeekTools::ReadListTwoColumns(const char *file,
-		vector<string> &vecstrList1, vector<string> &vecstrList2){
+		vector<string> &vecstrList1, vector<string> &vecstrList2,
+		const int lineSize){
 	ifstream ifsm;
 	ifsm.open(file);
 	if(!ifsm.is_open()){
 		fprintf(stderr, "Error opening file %s\n", file);
 		return false;
 	}
-	char acBuffer[1024];
-	ushort c_iBuffer = 1024;
+	char acBuffer[lineSize];
+	ushort c_iBuffer = lineSize;
 	vecstrList1.clear();
 	vecstrList2.clear();
 
@@ -391,14 +383,14 @@ bool CSeekTools::ReadListTwoColumns(const char *file,
 }
 
 bool CSeekTools::ReadListOneColumn(const string &strFile,
-	vector<string> &vecstrList, CSeekStrIntMap &mapstriList){
+	vector<string> &vecstrList, CSeekStrIntMap &mapstriList, const int lineSize){
 	return CSeekTools::ReadListOneColumn(strFile.c_str(),
-		vecstrList, mapstriList);
+		vecstrList, mapstriList, lineSize);
 }
 
 
 bool CSeekTools::ReadListOneColumn(const char *file,
-	vector<string> &vecstrList, CSeekStrIntMap &mapstriList){
+	vector<string> &vecstrList, CSeekStrIntMap &mapstriList, const int lineSize){
 	ifstream ifsm;
 	ifsm.open(file);
 	if(!ifsm.is_open()){
@@ -406,8 +398,8 @@ bool CSeekTools::ReadListOneColumn(const char *file,
 		return false;
 	}
 
-	char acBuffer[1024];
-	ushort c_iBuffer = 1024;
+	char acBuffer[lineSize];
+	ushort c_iBuffer = lineSize;
 	vecstrList.clear();
 
 	int i = 0;
@@ -426,12 +418,12 @@ bool CSeekTools::ReadListOneColumn(const char *file,
 }
 
 bool CSeekTools::ReadMultipleQueries(const string &strFile,
-	vector< vector<string> > &qList){
-	return CSeekTools::ReadMultipleQueries(strFile.c_str(), qList);
+	vector< vector<string> > &qList, const int lineSize){
+	return CSeekTools::ReadMultipleQueries(strFile.c_str(), qList, lineSize);
 }
 
 bool CSeekTools::ReadMultipleQueries(const char *file,
-	vector< vector<string> > &qList){
+	vector< vector<string> > &qList, const int lineSize){
 	qList.clear();
 	FILE *infile;
 	if((infile=fopen(file, "r"))==NULL){
@@ -440,7 +432,7 @@ bool CSeekTools::ReadMultipleQueries(const char *file,
 	}
 
 	char *acBuffer;
-	int MAX_CHAR_PER_LINE = 1024;
+	int MAX_CHAR_PER_LINE = lineSize;
 	int lineLen = MAX_CHAR_PER_LINE;
 	acBuffer = (char*)malloc(lineLen);
 	while(fgets(acBuffer, lineLen, infile)!=NULL){
@@ -483,17 +475,13 @@ bool CSeekTools::ReadMultiGeneOneLine(const char *file,
 	}
 
 	char *acBuffer= (char*)malloc(lineSize);
-	//char acBuffer[1024];
 	int c_iBuffer = lineSize;
 	int i = 0;
-	//string sBuffer;
-	//getline(ifsm, sBuffer);
 
 	ifsm.getline(acBuffer, c_iBuffer -1);
 	acBuffer[c_iBuffer-1] = 0;
 	vector<string> tok;
 	CMeta::Tokenize(acBuffer, tok, " ");
-	//CMeta::Tokenize(sBuffer.c_str(), tok, " ");
 	for(i = 0; i<tok.size(); i++){
 		list.push_back(tok[i]);
 	}
@@ -505,12 +493,12 @@ bool CSeekTools::ReadMultiGeneOneLine(const char *file,
 }
 
 bool CSeekTools::ReadListOneColumn(const string &strFile,
-	vector<string> &vecstrList){
-	return CSeekTools::ReadListOneColumn(strFile.c_str(), vecstrList);
+	vector<string> &vecstrList, const int lineSize){
+	return CSeekTools::ReadListOneColumn(strFile.c_str(), vecstrList, lineSize);
 }
 
 bool CSeekTools::ReadListOneColumn(const char *file,
-	vector<string> &vecstrList){
+	vector<string> &vecstrList, const int lineSize){
 	ifstream ifsm;
 	ifsm.open(file);
 
@@ -518,8 +506,8 @@ bool CSeekTools::ReadListOneColumn(const char *file,
 		fprintf(stderr, "Error opening file %s\n", file);
 		return false;
 	}
-	char acBuffer[1024];
-	ushort c_iBuffer = 1024;
+	char acBuffer[lineSize];
+	ushort c_iBuffer = lineSize;
 	vecstrList.clear();
 	int i = 0;
 	while(!ifsm.eof()){

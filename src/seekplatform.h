@@ -27,7 +27,7 @@ namespace Sleipnir {
 
 /*!
  * \brief
- * A microarray platform that is used by Seek
+ * Representation of a microarray platform that is used by Seek
  *
  * Contains the gene \a correlation average and standard deviation for a given platform
  *
