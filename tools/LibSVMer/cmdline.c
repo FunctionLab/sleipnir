@@ -28,25 +28,24 @@ const char *gengetopt_args_info_usage = "Usage: LibSVMer [OPTIONS]...";
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                  Print help and exit",
-  "  -V, --version               Print version and exit",
+  "  -h, --help                    Print help and exit",
+  "  -V, --version                 Print version and exit",
   "\nMain:",
-  "  -l, --labels=filename       Labels file",
-  "  -o, --output=filename       Output file ",
-  "  -i, --input=filename        Input PCL file ",
-  "  -m, --model=filename        Model file",
-  "  -a, --all                   Always classify all genes in PCLs  (default=off)",
-  "  -S, --slack                 Use slack rescaling (not implemented for ROC \n                                loss)  (default=off)",
+  "  -l, --labels=filename         Labels file",
+  "  -o, --output=filename         Output file ",
+  "  -i, --input=filename          Input PCL file ",
+  "  -m, --model=filename          Model file",
+  "  -a, --all                     Always classify all genes in PCLs  \n                                  (default=off)",
   "\nOptions:",
-  "  -v, --verbosity=INT         Sets the svm_struct verbosity  (default=`0')",
-  "  -s, --skip=INT              Number of columns to skip in input pcls  \n                                (default=`2')",
-  "  -n, --normalize             Normalize PCLS to 0 mean 1 variance  \n                                (default=off)",
-  "  -c, --cross_validation=INT  Number of cross-validation sets ( arg of 1 will \n                                turn off cross-validation )  (default=`5')",
-  "  -e, --error_function=INT    Sets the loss function for SVM learning: Choice \n                                of:\n\n                                0\tZero/one loss: 1 if vector of predictions \n                                contains error, 0 otherwise.\n\n                                1\tF1: 100 minus the F1-score in percent.\n\n                                2\tErrorrate: Percentage of errors in \n                                prediction vector.\n\n                                3\tPrec/Rec Breakeven: 100 minus PRBEP in \n                                percent.\n\n                                4\tPrec@k: 100 minus precision at k in percent.\n\n                                5\tRec@k: 100 minus recall at k in percent.\n\n                                10\tROCArea: Percentage of swapped pos/neg \n                                pairs (i.e. 100 - ROCArea).\n                                  (default=`10')",
-  "  -k, --k_value=FLOAT         Value of k parameter used for Prec@k and Rec@k in \n                                (0,1)  (default=`0.5')",
-  "  -t, --tradeoff=FLOAT        SVM tradeoff constant C  (default=`1')",
-  "  -p, --params=filename       Parameter file",
-  "  -M, --mmap                  Memory map binary input  (default=off)",
+  "  -s, --skip=INT                Number of columns to skip in input pcls  \n                                  (default=`2')",
+  "  -n, --normalize               Normalize PCLS to 0 mean 1 variance  \n                                  (default=off)",
+  "  -c, --cross_validation=INT    Number of cross-validation sets ( arg of 1 will \n                                  turn off cross-validation )  (default=`5')",
+  "  -v, --svm_type=INT            Sets type of SVM (default 0)\n\n                                  0\tC-SVC\n\n                                  1\tnu-SVC\n\n                                  2\tone-class SVM\n                                    (default=`0')",
+  "  -f, --positive_features_only  select positive features (i.e. genes) note that \n                                  input must be complete matrix  (default=off)",
+  "  -t, --tradeoff=FLOAT          SVM tradeoff constant C of C-SVC  (default=`1')",
+  "  -u, --nu=FLOAT                nu parameter of nu-SVC, one-class SVM  \n                                  (default=`0.5')",
+  "  -p, --params=filename         Parameter file",
+  "  -M, --mmap                    Memory map binary input  (default=off)",
     0
 };
 
@@ -82,14 +81,13 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->input_given = 0 ;
   args_info->model_given = 0 ;
   args_info->all_given = 0 ;
-  args_info->slack_given = 0 ;
-  args_info->verbosity_given = 0 ;
   args_info->skip_given = 0 ;
   args_info->normalize_given = 0 ;
   args_info->cross_validation_given = 0 ;
-  args_info->error_function_given = 0 ;
-  args_info->k_value_given = 0 ;
+  args_info->svm_type_given = 0 ;
+  args_info->positive_features_only_given = 0 ;
   args_info->tradeoff_given = 0 ;
+  args_info->nu_given = 0 ;
   args_info->params_given = 0 ;
   args_info->mmap_given = 0 ;
 }
@@ -106,20 +104,18 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->model_arg = NULL;
   args_info->model_orig = NULL;
   args_info->all_flag = 0;
-  args_info->slack_flag = 0;
-  args_info->verbosity_arg = 0;
-  args_info->verbosity_orig = NULL;
   args_info->skip_arg = 2;
   args_info->skip_orig = NULL;
   args_info->normalize_flag = 0;
   args_info->cross_validation_arg = 5;
   args_info->cross_validation_orig = NULL;
-  args_info->error_function_arg = 10;
-  args_info->error_function_orig = NULL;
-  args_info->k_value_arg = 0.5;
-  args_info->k_value_orig = NULL;
+  args_info->svm_type_arg = 0;
+  args_info->svm_type_orig = NULL;
+  args_info->positive_features_only_flag = 0;
   args_info->tradeoff_arg = 1;
   args_info->tradeoff_orig = NULL;
+  args_info->nu_arg = 0.5;
+  args_info->nu_orig = NULL;
   args_info->params_arg = NULL;
   args_info->params_orig = NULL;
   args_info->mmap_flag = 0;
@@ -138,16 +134,15 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->input_help = gengetopt_args_info_help[5] ;
   args_info->model_help = gengetopt_args_info_help[6] ;
   args_info->all_help = gengetopt_args_info_help[7] ;
-  args_info->slack_help = gengetopt_args_info_help[8] ;
-  args_info->verbosity_help = gengetopt_args_info_help[10] ;
-  args_info->skip_help = gengetopt_args_info_help[11] ;
-  args_info->normalize_help = gengetopt_args_info_help[12] ;
-  args_info->cross_validation_help = gengetopt_args_info_help[13] ;
-  args_info->error_function_help = gengetopt_args_info_help[14] ;
-  args_info->k_value_help = gengetopt_args_info_help[15] ;
-  args_info->tradeoff_help = gengetopt_args_info_help[16] ;
-  args_info->params_help = gengetopt_args_info_help[17] ;
-  args_info->mmap_help = gengetopt_args_info_help[18] ;
+  args_info->skip_help = gengetopt_args_info_help[9] ;
+  args_info->normalize_help = gengetopt_args_info_help[10] ;
+  args_info->cross_validation_help = gengetopt_args_info_help[11] ;
+  args_info->svm_type_help = gengetopt_args_info_help[12] ;
+  args_info->positive_features_only_help = gengetopt_args_info_help[13] ;
+  args_info->tradeoff_help = gengetopt_args_info_help[14] ;
+  args_info->nu_help = gengetopt_args_info_help[15] ;
+  args_info->params_help = gengetopt_args_info_help[16] ;
+  args_info->mmap_help = gengetopt_args_info_help[17] ;
   
 }
 
@@ -234,12 +229,11 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->input_orig));
   free_string_field (&(args_info->model_arg));
   free_string_field (&(args_info->model_orig));
-  free_string_field (&(args_info->verbosity_orig));
   free_string_field (&(args_info->skip_orig));
   free_string_field (&(args_info->cross_validation_orig));
-  free_string_field (&(args_info->error_function_orig));
-  free_string_field (&(args_info->k_value_orig));
+  free_string_field (&(args_info->svm_type_orig));
   free_string_field (&(args_info->tradeoff_orig));
+  free_string_field (&(args_info->nu_orig));
   free_string_field (&(args_info->params_arg));
   free_string_field (&(args_info->params_orig));
   
@@ -285,22 +279,20 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "model", args_info->model_orig, 0);
   if (args_info->all_given)
     write_into_file(outfile, "all", 0, 0 );
-  if (args_info->slack_given)
-    write_into_file(outfile, "slack", 0, 0 );
-  if (args_info->verbosity_given)
-    write_into_file(outfile, "verbosity", args_info->verbosity_orig, 0);
   if (args_info->skip_given)
     write_into_file(outfile, "skip", args_info->skip_orig, 0);
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
   if (args_info->cross_validation_given)
     write_into_file(outfile, "cross_validation", args_info->cross_validation_orig, 0);
-  if (args_info->error_function_given)
-    write_into_file(outfile, "error_function", args_info->error_function_orig, 0);
-  if (args_info->k_value_given)
-    write_into_file(outfile, "k_value", args_info->k_value_orig, 0);
+  if (args_info->svm_type_given)
+    write_into_file(outfile, "svm_type", args_info->svm_type_orig, 0);
+  if (args_info->positive_features_only_given)
+    write_into_file(outfile, "positive_features_only", 0, 0 );
   if (args_info->tradeoff_given)
     write_into_file(outfile, "tradeoff", args_info->tradeoff_orig, 0);
+  if (args_info->nu_given)
+    write_into_file(outfile, "nu", args_info->nu_orig, 0);
   if (args_info->params_given)
     write_into_file(outfile, "params", args_info->params_orig, 0);
   if (args_info->mmap_given)
@@ -593,20 +585,19 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "input",	1, NULL, 'i' },
         { "model",	1, NULL, 'm' },
         { "all",	0, NULL, 'a' },
-        { "slack",	0, NULL, 'S' },
-        { "verbosity",	1, NULL, 'v' },
         { "skip",	1, NULL, 's' },
         { "normalize",	0, NULL, 'n' },
         { "cross_validation",	1, NULL, 'c' },
-        { "error_function",	1, NULL, 'e' },
-        { "k_value",	1, NULL, 'k' },
+        { "svm_type",	1, NULL, 'v' },
+        { "positive_features_only",	0, NULL, 'f' },
         { "tradeoff",	1, NULL, 't' },
+        { "nu",	1, NULL, 'u' },
         { "params",	1, NULL, 'p' },
         { "mmap",	0, NULL, 'M' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVl:o:i:m:aSv:s:nc:e:k:t:p:M", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVl:o:i:m:as:nc:v:ft:u:p:M", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -680,28 +671,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'S':	/* Use slack rescaling (not implemented for ROC loss).  */
-        
-        
-          if (update_arg((void *)&(args_info->slack_flag), 0, &(args_info->slack_given),
-              &(local_args_info.slack_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "slack", 'S',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'v':	/* Sets the svm_struct verbosity.  */
-        
-        
-          if (update_arg( (void *)&(args_info->verbosity_arg), 
-               &(args_info->verbosity_orig), &(args_info->verbosity_given),
-              &(local_args_info.verbosity_given), optarg, 0, "0", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "verbosity", 'v',
-              additional_error))
-            goto failure;
-        
-          break;
         case 's':	/* Number of columns to skip in input pcls.  */
         
         
@@ -736,38 +705,32 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'e':	/* Sets the loss function for SVM learning: Choice of:
-        0\tZero/one loss: 1 if vector of predictions contains error, 0 otherwise.
-        1\tF1: 100 minus the F1-score in percent.
-        2\tErrorrate: Percentage of errors in prediction vector.
-        3\tPrec/Rec Breakeven: 100 minus PRBEP in percent.
-        4\tPrec@k: 100 minus precision at k in percent.
-        5\tRec@k: 100 minus recall at k in percent.
-        10\tROCArea: Percentage of swapped pos/neg pairs (i.e. 100 - ROCArea).\n.  */
+        case 'v':	/* Sets type of SVM (default 0)
+        0\tC-SVC
+        1\tnu-SVC
+        2\tone-class SVM\n.  */
         
         
-          if (update_arg( (void *)&(args_info->error_function_arg), 
-               &(args_info->error_function_orig), &(args_info->error_function_given),
-              &(local_args_info.error_function_given), optarg, 0, "10", ARG_INT,
+          if (update_arg( (void *)&(args_info->svm_type_arg), 
+               &(args_info->svm_type_orig), &(args_info->svm_type_given),
+              &(local_args_info.svm_type_given), optarg, 0, "0", ARG_INT,
               check_ambiguity, override, 0, 0,
-              "error_function", 'e',
+              "svm_type", 'v',
               additional_error))
             goto failure;
         
           break;
-        case 'k':	/* Value of k parameter used for Prec@k and Rec@k in (0,1).  */
+        case 'f':	/* select positive features (i.e. genes) note that input must be complete matrix.  */
         
         
-          if (update_arg( (void *)&(args_info->k_value_arg), 
-               &(args_info->k_value_orig), &(args_info->k_value_given),
-              &(local_args_info.k_value_given), optarg, 0, "0.5", ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "k_value", 'k',
+          if (update_arg((void *)&(args_info->positive_features_only_flag), 0, &(args_info->positive_features_only_given),
+              &(local_args_info.positive_features_only_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "positive_features_only", 'f',
               additional_error))
             goto failure;
         
           break;
-        case 't':	/* SVM tradeoff constant C.  */
+        case 't':	/* SVM tradeoff constant C of C-SVC.  */
         
         
           if (update_arg( (void *)&(args_info->tradeoff_arg), 
@@ -775,6 +738,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.tradeoff_given), optarg, 0, "1", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "tradeoff", 't',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'u':	/* nu parameter of nu-SVC, one-class SVM.  */
+        
+        
+          if (update_arg( (void *)&(args_info->nu_arg), 
+               &(args_info->nu_orig), &(args_info->nu_given),
+              &(local_args_info.nu_given), optarg, 0, "0.5", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "nu", 'u',
               additional_error))
             goto failure;
         

@@ -36,6 +36,7 @@
 
 namespace LIBSVM {
 
+
 extern "C" {
 #define class Class2
 #include <libsvm/svm.h>
@@ -56,6 +57,7 @@ public:
 	double Target;
 	size_t index;
 	bool hasIndex;
+        
 	SVMLabel(std::string name, double target) {
 		GeneName = name;
 		Target = target;
@@ -114,6 +116,7 @@ enum EFilter {
 class CLIBSVM {
 public:
   //struct svm_parameter parm;
+  static bool posFeatOnly;
   struct svm_model* model;
   struct svm_parameter parm;
   
@@ -121,13 +124,16 @@ public:
   CLIBSVM() {
     initialize();
   }
+//  static bool GetPosFeatOnly() {
+//    return posFeatOnly;
+//  }
+//  static void SetPosFeatOnly(bool only){
+//    posFeatOnly = only;
+//  }
 
   void SetSVMType(int type) {
     parm.svm_type = type;
   }
-  //void SetLossFunction(size_t loss_f) {
-    //libsvm has only one loss function
-  //}
 
   void SetTradeoff(double tradeoff) {
     parm.C = tradeoff; //TODO: only applicable for vanilla svm
@@ -141,18 +147,13 @@ public:
     parm.degree = D;
   }
 
-  //void UseCPSP() { // unavailabe for libsvm
-  //}
-  //
-
   void SetRBFGamma(double g) {
     parm.gamma = g;
-    //UseCPSP not available for libsvm
   }
 
-  //void UseSlackRescaling(){  }
-  //void UseMarginRescaling() { }
-  //void SetPrecisionFraction(double frac) { }
+  void SetNu(double nu) {
+    parm.nu = nu;
+  }
 
   void ReadModel(char* model_file) {
     FreeModel();
@@ -184,6 +185,7 @@ public:
 
   //Creates a sample of svm_problems using a single PCL and SVMlabels Looks up genes by name.
   static SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
+  //static SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels, bool posFeatOnly);
 
   //Same as above except creates bootstrap samples and does not duplicate data
   //static SAMPLE** CreateSampleBootStrap(Sleipnir::CPCL &PCL,
@@ -196,9 +198,11 @@ public:
 
   //Classify single genes
   vector<Result> Classify(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels);
+  vector<Result> Classify(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels, bool posFeatOnly);
+  
   //vector<Result> Classify(Sleipnir::CPCLSet& PCLSet,
   //			vector<SVMLabel> SVMLabels);
-  vector<Result> Classify(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels);
+  //vector<Result> Classify(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels);
 
   //MEMBER functions wraps learning
   void Learn(SAMPLE &sample) {
@@ -210,10 +214,7 @@ public:
     size_t i;
     size_t numn, nump;
 
-
     struct svm_problem* prob = sample.problems;
-
-    cout << "alsdjfaslkfjd" << endl;
 
     numn = nump = 0;
 
@@ -225,85 +226,36 @@ public:
       }
     }
 
-cout << "number of positives: " << nump << endl;
-cout << "number of negatives: " << numn << endl;
-cout << "cache size: " << parm.cache_size << endl;
-cout << "kernel_type: " << parm.kernel_type << endl;
-cout << "svm_type: " << parm.svm_type << endl;
-const char* output = svm_check_parameter( prob, &parm ) ;//returns null if no issues..
-printf("%s | ", output);
-cout << "an svm_node index: " << (((*prob).x)[0][0]).index << endl;
-cout << "an svm_node value: " << (((*prob).x)[0][0]).value << endl;
-cout.flush();
-//cout <<      svm_check_parameter(prob,&parm) << endl;
-    //no need for rescaling labels because only one loss function for libsvm\
-
     if(parms_check()){
-//cout <<      svm_check_parameter(prob,&parm) << endl;
-//      struct svm_problem* prob = sample.problems;        //sample.problem
-//      cout << "here: " << (*prob).l << endl;
       model = svm_train(prob,&parm);
-      cerr << "done learning model" << endl;
-cout << svm_get_svm_type(model) << endl;
     }else{
-      cerr << "invalid parms" << endl;
     }
   }
 
   static void FreeSample(SAMPLE s){
-cerr << "free sample: " << endl;
-PrintSample(s);
-
-    FreeProblem(s.problems, s.numFeatures);
-    //free(&s);    
+    FreeProblem(s.problems);
   }
 
-  static void FreeProblem(svm_problem *prob, size_t numFeatures){
-    //int i = prob->l; //number of examples
-    size_t i, j ;
-    i = j = 0;
-
-//PrintProblem(prob);
-
+  static void FreeProblem(svm_problem *prob){
     free(prob->y);
-
     free(prob->x);
-
-//    for(i = 0 ; i < prob->l ; i++){
-//      for(j = 0 ; j < numFeatures ; j ++){
-
-//PrintNode((prob->x)[i][j]);
-
-//        free((prob->x)[i]);
-//      }
-//    }
-
-//    free(prob); ??? why can't i free?
     return;
   }
 
   static void PrintSample(SAMPLE s){
     PrintProblem(s.problems);
-cerr << "number of labels: " << s.n << endl;
   }
 
   static void PrintProblem(svm_problem *prob){
     size_t i, j ;
     i = j = 0;
 
-//    free(prob->y);
-
     for(i = 0 ; i < 3 ; i++){
-cerr << "label: " << (prob->y)[i] << endl;
       for(j = 0 ; j < 2 ; j ++){
-
-PrintNode((prob->x)[i][j]);
-
-//        free(&((prob->x)[i][j]));
+        PrintNode((prob->x)[i][j]);
       }
     }
 
-//    free(prob);
     return;
   }
 
