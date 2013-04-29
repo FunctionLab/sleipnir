@@ -27,7 +27,7 @@
 namespace Sleipnir {
 
 /*!
- * \brief An integer to integer mapping structure
+ * \brief An integer to integer mapping structure that is used to detect the presence of genes in a dataset
  *
  * This map is used to conveniently get a set of available genes in a dataset, and
  * to quickly check if a given gene is present in the dataset.

@@ -84,14 +84,13 @@ struct AscendingFloat{
 };
 
 /*!
- * \brief Evaluation metrics for a rank-list
+ * \brief Evaluation metrics for a rank-list given some judgment gene-set
  *
  * Provide static utility functions for evaluating a ranking of genes with the user-given gold standard
  * gene-set. The typical use of such functions is in weighting datasets. Generally speaking, each dataset
  * is weighted by how well the query genes are able to retrieve each other in the dataset.
- * In a cross-validation, we use a part of the query genes to try to retrieve the other remaining
- * query genes. These functions provide a measure of precision for each query retrieval, which eventually
- * forms the basis of the dataset weight.
+ * It is important to pick an informative measure to evaluate the retrieval of the query genes.
+ * Seek provides the choice of two evaluation metrics: Rank-Biased Precision (RBP) or Average Precision.
  *
  */
 class CSeekPerformanceMeasure{
