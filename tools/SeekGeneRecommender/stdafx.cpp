@@ -22,7 +22,7 @@
 #include "stdafx.h"
 
 /*!
- * \page DBCombiner DBCombiner
+ * \page SeekGeneRecommender SeekGeneRecommender
  * 
  * 
  * \section sec_usage Usage
@@ -30,13 +30,13 @@
  * \subsection ssec_usage_basic Basic Usage
  * 
  * \code
- * DBCombiner -i <genes.txt> -x <db list> -d <input directory> -D <output_dir>
+ * SeekGeneRecommender -i <genes.txt> -x <db list> -d <input directory> -D <output_dir>
  * \endcode
  * 
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
- * \include DBCombiner/DBCombiner.ggo
+ * \include SeekGeneRecommender/SeekGeneRecommender.ggo
  * 
  * <table><tr>
  *	<th>Flag</th>

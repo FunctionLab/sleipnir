@@ -24,6 +24,14 @@
 /*!
  * \page DBCombiner DBCombiner
  * 
+ * Combines a set of DB files generated from different Sleipnir::CDatabase's
+ * into one DB file. 
+ *
+ * Perhaps for space reason, it is sometime not feasible to generate a Sleipnir::CDatabase
+ * covering all datasets on one machine or one partition. Consequently, people
+ * generate separate Sleipnir::CDatabase's on different machines
+ * first, and then join them one DB file at a time with DBCombiner.
+ *
  * 
  * \section sec_usage Usage
  * 
@@ -32,19 +40,17 @@
  * \code
  * DBCombiner -i <genes.txt> -x <db_list.txt> -d <input_dir> -D <output_dir> [-s]
  * \endcode
- * Combines multiple \c .db files listed in the \c db_list.txt into one \c .db file.
- * Perhaps for space reason, it is sometime not feasible to generate the CDatabase 
- * covering all datasets on one machine or one partition. Consequently, people 
- * generate separate CDatabases on different machines
- * first, and then join them one .db file at a time with DBCombiner.
- * Thus DBCombiner accepts CDatabase's that are generated separately. In order for
- * DBCombiner to work, only the \c db files covering the same genes may be
+ *
+ * Combines the DB files listed in the \c db_list.txt into one DB.
+ *
+ * DBCombiner accepts multiple Sleipnir::CDatabase's that are generated separately. In order for
+ * DBCombiner to work, only DB files covering the same genes may be
  * combined. 
- * The resulted \c .db file will cover datasets in the same order as the order of 
- * DB files in \c db_list.txt.
- * The \c -s option performs a splitting after the combining is done. 
- * It splits the combined CDatabaselet to one gene per \c .db file. 
- * This is required for SeekMiner, SeekServer.
+ * The order of DB files in \c db_list.txt is the the order that datasets
+ * will be covered in the combined file.
+ *
+ * The \c -s option further splits the combined Sleipnir::CDatabaselet into one gene per \c DB file.
+ * This \c -s must be enabled for Seek coexpression integrations. (\ref SeekMiner, \ref SeekServer).
  * 
  * Sample lines from the \c genes.txt file:
  * \code
@@ -62,10 +68,12 @@
  * /x/y/database2/00000004.db
  * /x/y/database3/00000004.db
  * \endcode
- * Note that \c database1, \c database2, \c database3 are three CDatabase's 
+ * Note that \c database1, \c database2, \c database3 are three Sleipnir::CDatabase's
  * generated for different datasets.
- * Note how we use the same ID 00000004 to ensure the \c db files cover
+ *
+ * Note how we use the same ID \c 00000004 to ensure that the DB files cover
  * the same genes.
+ *
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
@@ -86,7 +94,7 @@
  *	<td>-d</td>
  *	<td>None</td>
  *	<td>Directory</td>
- *	<td>Input directory containing DB files</td>
+ *	<td>Input directory containing \c *.db files</td>
  * </tr><tr>
  *	<td>-D</td>
  *	<td>None</td>
@@ -96,11 +104,11 @@
  *	<td>-x</td>
  *	<td>None</td>
  *	<td>Text file</td>
- *	<td>Input file containing a list of CDatabaselets to combine</td>
+ *	<td>Input file containing a list of Sleipnir::CDatabaselet's to combine</td>
  * </tr><tr>
  *	<td>-s</td>
  *	<td>None</td>
  *	<td>off</td>
- *	<td>If enabled, split the combined CDatabaselet to one gene per .db file</td>
+ *	<td>If enabled, split the combined Sleipnir::CDatabaselet to one gene per \c DB file</td>
  * </tr></table>
  */

@@ -27,8 +27,8 @@
  * Data2DB converts a collection of DAT/DAB files (Sleipnir::CDat) into a simple flatfile database
  * (Sleipnir::CDatabase).  DAT/DAB files organize data so that values for all gene pairs within a single
  * dataset can be accessed efficiently; database files organize data so that values from all datasets for
- * a single gene or gene pair can be accessed efficiently.  This is critical for real-time Bayesian inference and for Seek coexpression search
- * (e.g. by \ref BNServer, \ref SeekMiner, \ref SeekServer).
+ * a single gene or gene pair can be accessed efficiently.  This is critical for real-time Bayesian inference (e.g., by \ref BNServer) and for Seek coexpression search
+ * (e.g. by \ref SeekMiner, \ref SeekServer).
  * 
  * \section sec_usage Usage
  * 
@@ -49,10 +49,10 @@
  * \endcode
  * Construct a Sleipnir::CDatabase containing the data from DAB files that 
  * are specified in the \c dataset_file_list.txt. The genes are indexed according
- * to \c gene_map.txt. By default, there would be 1000 CDatabaselet's (\c .db) 
- * generated, with each CDatabaselet containing \a N / 1000 genes. Users can control
- * how many \c .db files to be generated (and indirectly how many genes 
- * are contained in each \c .db file) using the \c -f option.
+ * to \c gene_map.txt. By default, there would be 1000 Sleipnir::CDatabaselet's (DB files)
+ * generated, with each containing \a N / 1000 genes. Users can control
+ * the number of generated DB files (and indirectly the number of genes contained in each DB)
+ * using the \c -f option.
  * 
  * 
  * \subsection ssec_usage_detailed Detailed Usage
@@ -99,8 +99,7 @@
  *	<td>-f</td>
  *	<td>1000</td>
  *	<td>Integer</td>
- *	<td>Number of separate database files to store in the output directory; values over 1000 are not
- *		recommended due to filesystem limitations.</td>
+ *	<td>Number of separate database files to store in the output directory</td>
  * </tr><tr>
  *	<td>-b</td>
  *	<td>-1</td>

@@ -22,7 +22,7 @@
 #include "stdafx.h"
 
 /*!
- * \page DBCombiner DBCombiner
+ * \page SeekAggregatedDataset SeekAggregatedDataset
  * 
  * 
  * \section sec_usage Usage
@@ -30,13 +30,13 @@
  * \subsection ssec_usage_basic Basic Usage
  * 
  * \code
- * DBCombiner -i <genes.txt> -x <db list> -d <input directory> -D <output_dir>
+ * SeekAggregatedDataset ...
  * \endcode
  * 
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
- * \include DBCombiner/DBCombiner.ggo
+ * \include SeekAggregatedDataset/SeekAggregatedDataset.ggo
  * 
  * <table><tr>
  *	<th>Flag</th>
@@ -49,20 +49,5 @@
  *	<td>Text file</td>
  *	<td>Tab-delimited text file containing two columns, numerical gene IDs (one-based) and unique gene
  *		names (matching those in the input DAT/DAB files).</td>
- * </tr><tr>
- *	<td>-d</td>
- *	<td>.</td>
- *	<td>Directory</td>
- *	<td>Input directory containing DB files</td>
- * </tr><tr>
- *	<td>-D</td>
- *	<td>.</td>
- *	<td>Directory</td>
- *	<td>Output directory in which database files will be stored.</td>
- * </tr><tr>
- *	<td>-x</td>
- *	<td>.</td>
- *	<td>Text file</td>
- *	<td>Input file containing list of CDatabaselets to combine</td>
  * </tr></table>
  */
