@@ -134,11 +134,9 @@ public:
      * \param buffer The number of query genes to store in the memory
      * \param output_dir The output directory
      * \param to_output_text If true, output the gene-ranking in textual format
-     * \param bCorrelation If true, use the Pearson correlations 
-     * (requires the \c sinfo parameter)
+     * \param dist_measure Distance measure, either CORRELATION or Z_SCORE
      * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
-     * \param bSubtractPlatformAvg If true, subtract the platform gene average
-     * \param bDividePlatformStdev If true, divide by the platform standard deviation (after subtracting the platform average)
+     * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
      * \param bLogit If true, apply the logit transformation on the \a correlations
      * \param fCutOff Cutoff the \a correlation values
      * \param fPercentRequired The fraction of the query genes required to be present in a dataset 
@@ -159,10 +157,15 @@ public:
 		const char *query, const char *platform, const char* db,
 		const char *prep, const char *gvar, const char *sinfo,
 		const bool &useNibble, const ushort &num_db,
-		const ushort &, const char*, const bool&, const bool&,
-		const bool&, const bool&, const bool&, const bool&,
-		const float&, const float&, const bool&, 
-		const bool&, const int &, gsl_rng *);
+		const ushort &buffer, const char* output_dir,
+		const bool &to_output_text, 
+		const enum CSeekDataset::DistanceMeasure dist_measure, 
+		const bool& bSubtractAvg,
+		const bool& bNormPlatform, const bool& bLogit, 
+		const float& fCutOff, const float& fPercentRequired, 
+		const bool& bSquareZ, 
+		const bool& bRandom, const int& iNumRandom, 
+		gsl_rng *rand);
 
     /*!
      * \brief Initialize function
@@ -185,11 +188,9 @@ public:
      * \param num_db The total number of CDatabaselet files
      * \param buffer The number of query genes to store in the memory
      * \param to_output_text If true, output the gene-ranking in the textual format
-     * \param bCorrelation If true, use the Pearson correlations
-     * (requires \c sinfo parameter)
+     * \param dist_measure Distance measure, either CORRELATION or Z_SCORE
      * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
-     * \param bSubtractPlatformAvg If true, subtract the platform gene average
-     * \param bDividePlatformStdev If true, divide by the platform standard deviation (after subtracting the platform average)
+     * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
      * \param bLogit If true, apply the logit transformation on the \a correlations
      * \param fCutOff Cutoff the \a correlations
      * \param fPercentRequired The fraction of the query genes required to be present in a dataset
@@ -208,10 +209,12 @@ public:
 		const char *dset, const char *platform, const char* db,
 		const char *prep, const char *gvar, const char *sinfo,
 		const bool &useNibble, const ushort &num_db,
-		const ushort &, const bool&, const bool&,
-		const bool&, const bool&, const bool&, const bool&,
-		const float&, const float&, const bool&, 
-		const bool&, const int &, gsl_rng *);
+		const ushort &buffer, const bool &to_output_text,
+		const enum CSeekDataset::DistanceMeasure dist_measure,
+		const bool &bSubtractAvg, const bool &bNormPlatform,
+		const bool &bLogit, const float &fCutOff, 
+		const float &fPercentRequired, const bool &bSquareZ, 
+		const bool &bRandom, const int &iNumRandom, gsl_rng *rand);
 
     /*!
      * \brief Initialize function
@@ -223,21 +226,20 @@ public:
      * \param search_dset The file that contains the name of datasets to be used for the search
      * \param src The CSeekCentral instance, where some settings will be copied to here
      * \param query_min_required The minimum number of query genes required to be present in a dataset
-     * \param bCorrelation If true, use the Pearson correlations
-     * (requires \c sinfo parameter)
+     * \param dist_measure Distance measure, either CORRELATION or Z_SCORE.
+     * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
      * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
-     * \param bSubtractPlatformAvg If true, subtract the platform gene average
-     * \param bDividePlatformStdev If true, divide by the platform standard deviation (after subtracting the platform average)
 	 * \param iClient The client's socket connection
      *
      * \remark This function is designed to be used by SeekServer.
-     * \remark The parameters \c bCorrelation, \c bSubtractAvg, \c bSubtractPlatformAvg,
-     * \c bDividePlatformStdev are options to transform the \a correlation values.
+     * \remark The parameters \c bSubtractAvg, \c bNormPlatform
+     * are options to transform the \a correlation values.
      * \remark Assumes that the CDatabaselets have been read, and the \c *.gvar, \c *.sinfo files have been loaded.
      * \remark Assumes that the dataset and gene mapping files have been read.
      */
 	bool Initialize(string&, string&, string&, CSeekCentral*, 
-		float&, bool&, bool&, bool&, bool&, const int&);
+		float&, enum CSeekDataset::DistanceMeasure, 
+		bool&, bool&, const int&);
 
 	/*!
 	 * \brief Run Seek with the cross-validated dataset weighting
@@ -404,9 +406,11 @@ private:
 
 	/* Correlation transformation options */
 	bool m_bSubtractGeneAvg;
-	bool m_bSubtractPlatformAvg;
-	bool m_bDividePlatformStdev;
-	bool m_bCorrelation;
+	bool m_bNormPlatform;
+	//bool m_bSubtractPlatformAvg;
+	//bool m_bDividePlatformStdev;
+	enum CSeekDataset::DistanceMeasure m_eDistMeasure;
+	//bool m_bCorrelation;
 	bool m_bLogit;
 	bool m_bSquareZ;
 

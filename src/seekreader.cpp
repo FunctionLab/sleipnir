@@ -69,7 +69,10 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 		}
 	}
 
-	fprintf(stderr, "Initializing query map\n"); system("date +%s%N 1>&2");
+	int ret; //system call return
+
+	fprintf(stderr, "Initializing query map\n"); 
+	ret = system("date +%s%N 1>&2");
 	if(bNetwork && CSeekNetwork::Send(iClient, "Initializing query map")==-1){
 		fprintf(stderr, "Error sending client message\n");
 		return false;
@@ -83,7 +86,7 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	}
 
 	fprintf(stderr, "Done initializing query map\n");
-	system("date +%s%N 1>&2");
+	ret = system("date +%s%N 1>&2");
 	if(bNetwork && CSeekNetwork::Send(iClient, 
 		"Done initializing query map")==-1){
 		fprintf(stderr, "Error sending client message\n");
@@ -92,7 +95,7 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 
 	fprintf(stderr, "Reading %lu query genes' correlations\n",
 		allQ.size());
-	system("date +%s%N 1>&2");
+	ret = system("date +%s%N 1>&2");
 	if(bNetwork && CSeekNetwork::Send(iClient, "Reading " + 
 		CSeekTools::ConvertInt(allQ.size()) + 
 		" query genes' correlations")==-1){
@@ -135,7 +138,7 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	}
 
 	fprintf(stderr, "Finished reading query genes' correlations\n");
-	system("date +%s%N 1>&2");
+	ret = system("date +%s%N 1>&2");
 	if(bNetwork && CSeekNetwork::Send(iClient, 
 		"Finished reading databaselets and query centric")==-1){
 		fprintf(stderr, "Error sending client message\n");
@@ -203,13 +206,14 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 	for(i=0; i<vp.size(); i++){
 		vp[i].Copy(vp_src[i]);
 	}
+	int ret; //system call returns
 
 	fprintf(stderr, "Start reading average and presence files\n");
-	system("date +%s%N 1>&2");
+	ret = system("date +%s%N 1>&2");
 	fprintf(stderr, "Done reading average and presence files\n");
-	system("date +%s%N 1>&2");
+	ret = system("date +%s%N 1>&2");
 
-	fprintf(stderr, "Initializing gene map\n"); system("date +%s%N 1>&2");
+	fprintf(stderr, "Initializing gene map\n"); ret = system("date +%s%N 1>&2");
 	#pragma omp parallel for \
 	private(i) firstprivate(iDatasets) schedule(dynamic)
 	for(i=0; i<iDatasets; i++){
@@ -222,7 +226,7 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 		vc[i]->SetPlatform(vp[platform_id]);
 	}
 
-	fprintf(stderr, "Done initializing gene map\n"); system("date +%s%N 1>&2");
+	fprintf(stderr, "Done initializing gene map\n"); ret = system("date +%s%N 1>&2");
 	return true;
 }
 
@@ -253,8 +257,10 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 		bVariance = true;
 	}
 
+	int ret; //system call return
+
 	fprintf(stderr, "Start reading average and presence files\n");
-	system("date +%s%N 1>&2");
+	ret = system("date +%s%N 1>&2");
 	for(i=0; i<iDatasets; i++){
 		vc[i] = new CSeekDataset();
 		string strFileStem = vecstrDatasets[i];
@@ -280,14 +286,14 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 		vc[i]->SetPlatform(vp[platform_id]);
 	}
 	fprintf(stderr, "Done reading average and presence files\n");
-	system("date +%s%N 1>&2");
+	ret = system("date +%s%N 1>&2");
 
-	fprintf(stderr, "Initializing gene map\n"); system("date +%s%N 1>&2");
+	fprintf(stderr, "Initializing gene map\n"); ret = system("date +%s%N 1>&2");
 	#pragma omp parallel for \
 	private(i) firstprivate(iDatasets) schedule(dynamic)
 	for(i=0; i<iDatasets; i++) vc[i]->InitializeGeneMap();
 
-	fprintf(stderr, "Done initializing gene map\n"); system("date +%s%N 1>&2");
+	fprintf(stderr, "Done initializing gene map\n"); ret = system("date +%s%N 1>&2");
 	return true;
 }
 

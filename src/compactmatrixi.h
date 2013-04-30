@@ -24,7 +24,7 @@
 
 //may need to enable the following lines for Cygwin compilation
 //#ifndef SIZE_MAX
-//#define SIZE_MAX (4294967295U)
+//#define SIZE_MAX (4294967295U) //assumes 32bit GCC
 //#endif
 
 #include "halfmatrixi.h"

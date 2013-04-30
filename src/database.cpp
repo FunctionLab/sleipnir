@@ -420,7 +420,7 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 	size_t sofar = 0;
 	for(bb=0; bb<numTimes; sofar+=sizes[bb], bb++){
 
-		fprintf(stderr, "Started allocated memory %d\n", bb);
+		fprintf(stderr, "Started allocated memory %lu\n", bb);
 		/* load all Databaselets into memory, for efficiency */
 		unsigned char **charImages =
 			(unsigned char**)malloc(vecDatabaselet.size()*sizeof(unsigned char*));
@@ -467,7 +467,7 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 				/* open a new Databaselet containing only one gene */
 				string thisGene = first->GetGene(sofar + i);
 				size_t iGeneID = mapstrintGenes[thisGene];
-				sprintf(acNumber, "%08u", iGeneID);
+				sprintf(acNumber, "%08lu", iGeneID);
 
 				string path = strOutDirectory + "/" + acNumber + ".db";
 				vector<string> vecstrThisGene;
@@ -550,7 +550,7 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 				DBS.m_fstm.close();
 				free(abImage);
 
-				fprintf(stderr, "Finished writing abImage gene %d (of %d) in %d (of %d)\n", i, 
+				fprintf(stderr, "Finished writing abImage gene %lu (of %lu) in %lu (of %lu)\n", i, 
 					sizes[bb], bb, sizes.size());
 
 			}
@@ -760,7 +760,7 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::st
 		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
 			vecstrSubset.push_back( vecstrGenes[ j ] );
 #pragma warning(disable : 4996)
-		sprintf( acNumber, "%08u", i );
+		sprintf( acNumber, "%08lu", i );
 #pragma warning(default : 4996)
 		strFile = strOutputDirectory + '/' + acNumber + c_acExtension;
 		if( !( i % 100 ) )
@@ -815,7 +815,7 @@ bool CDatabase::Open( const std::vector<std::string>& vecstrGenes, const std::ve
 		vecstrSubset.clear( );
 		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
 			vecstrSubset.push_back( vecstrGenes[ j ] ); //contains index for 1000, 2000, 3000th genes
-		sprintf( acNumber, "%08u", i );
+		sprintf( acNumber, "%08lu", i );
 		strFile = strOutputDirectory + '/' + acNumber + c_acExtension;
 
 		if( !( i % 100 ) )
@@ -891,7 +891,7 @@ bool CDatabaseImpl::Open( const std::vector<std::string>& vecstrGenes,
 				if(m_useNibble){
 					vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 16, true );
 				}else{
-					vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), 256, true );
+					vecData[ iInOffset ].Initialize( veciMyGenes.size( ), veciGenes.size( ), (unsigned char) 256, true );
 				}
 
 				string	strName = CMeta::Filename( CMeta::Deextension( CMeta::Basename( vecstrFiles[ iInBase + iInOffset ].c_str() ) ) );
@@ -1028,7 +1028,7 @@ bool CDatabase::Open(const char *db_dir,
 		vecstrSubset.clear( );
 		for( j = i; j < vecstrGenes.size( ); j += m_vecpDBs.size( ) )
 			vecstrSubset.push_back( vecstrGenes[ j ] ); //contains index for 1000, 2000, 3000th genes
-		sprintf( acNumber, "%08u", i );
+		sprintf( acNumber, "%08lu", i );
 		string strFile = strDBDirectory + '/' + acNumber + c_acExtension;
 		uint32_t iGenes = vecstrGenes.size();
 		uint32_t iDset = iDatasets;

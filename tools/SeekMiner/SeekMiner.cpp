@@ -35,48 +35,34 @@ int main( int iArgs, char** aszArgs ) {
 		return 1;
 	}
 
-	if(!(!!sArgs.CV_flag || !!sArgs.EQUAL_flag ||
-		!!sArgs.ORDER_STAT_flag)){
-		fprintf(stderr, "Please select a dataset weighting method. (-V, -E, or -A)\n");
-		return 1;
-	}
+	string method = sArgs.weighting_method_arg;
+	string cv = sArgs.CV_partition_arg;
+	int cv_fold = sArgs.CV_fold_arg;
+	float rbp_p = sArgs.CV_rbp_p_arg;
+	string dist_measure = sArgs.dist_measure_arg;
 
-	if(!(!!sArgs.z_score_flag || !!sArgs.correlation_flag)){
-		fprintf(stderr, "Please select either Z-scores or Pearson (-z or -T).\n");
-		return 1;
-	}
-
-	if(!!sArgs.correlation_flag){
+	if(dist_measure=="pearson"){
 		string sinfo_dir = sArgs.dir_sinfo_arg;
 		if(sinfo_dir=="NA"){
 			fprintf(stderr, "Pearson selected. Please give the sinfo directory (-u).\n");
 			return 1;
 		}
 		if(!!sArgs.norm_subavg_flag){
-			fprintf(stderr, "Warning: -m flag is ignored.\n");
+			fprintf(stderr, "Warning: -m flag is ignored due to --dist_measure pearson.\n");
 		}
-		if(!!sArgs.norm_platsubavg_flag){
-			fprintf(stderr, "Warning: -M flag is ignored.\n");
+		if(!!sArgs.norm_subavg_plat_flag){
+			fprintf(stderr, "Warning: -M flag is ignored due to --dist_measure pearson.\n");
 		}
-		if(!!sArgs.norm_platstdev_flag){
-			fprintf(stderr, "Warning: -r flag is ignored.\n");
-		}
-	}
-
-	if(!!sArgs.z_score_flag){
-		if(!!sArgs.norm_platsubavg_flag && !(!!sArgs.norm_subavg_flag)){
-			fprintf(stderr, "Please enable -m flag.\n");
-			return 1;
-		}
-		if(!!sArgs.norm_platstdev_flag && !(!!sArgs.norm_subavg_flag &&
-			!!sArgs.norm_platsubavg_flag)){
-			fprintf(stderr, "Please enable both -m and -M flags.\n");
+		
+	}else if(dist_measure=="z_score"){
+		if(!!sArgs.norm_subavg_plat_flag && !(!!sArgs.norm_subavg_flag)){
+			fprintf(stderr, "Please enable -m flag. --norm_subavg_plat requires -m flag.\n");
 			return 1;
 		}
 	}
 
 	if(!sArgs.input_arg || !sArgs.quant_arg ||
-		!sArgs.dset_arg || !sArgs.search_dset_arg ||
+		!sArgs.dset_arg ||
 		!sArgs.query_arg || !sArgs.dir_platform_arg ||
 		!sArgs.dir_in_arg || !sArgs.dir_prep_in_arg){
 		fprintf(stderr, "Arguments missing!\n");
@@ -99,12 +85,17 @@ int main( int iArgs, char** aszArgs ) {
 
 	gsl_rng *random_ranking_rnd = gsl_rng_alloc(T2);
 
+	float RATE = rbp_p;
+	ushort FOLD = (ushort) cv_fold;
+	enum CSeekQuery::PartitionMode PART_M;
+	if(cv=="LOI"){
+		PART_M = CSeekQuery::LEAVE_ONE_IN;
+	}else if(cv=="LOO"){
+		PART_M = CSeekQuery::LEAVE_ONE_OUT;
+	}else if(cv=="XFOLD"){
+		PART_M = CSeekQuery::CUSTOM_PARTITION;
+	}
 
-	//float RATE = 0.95;
-	//float RATE = 0.99;
-	float RATE = sArgs.rank_biased_precision_p_arg;
-	ushort FOLD = 5;
-	enum CSeekQuery::PartitionMode PART_M = CSeekQuery::CUSTOM_PARTITION;
 	ushort i,j;
 	//ushort TOP = 1000;
 	//ushort TOP = 0;
@@ -231,6 +222,18 @@ int main( int iArgs, char** aszArgs ) {
 	//vector<vector<string> > newQ;
 	//CSeekTools::ReadMultipleQueries("/tmp/ex_query2.txt", newQ);
 
+	enum CSeekDataset::DistanceMeasure eDistMeasure;
+	if(dist_measure=="pearson"){
+		eDistMeasure = CSeekDataset::CORRELATION;
+	}else{
+		eDistMeasure = CSeekDataset::Z_SCORE;
+	}
+
+	/*fprintf(stderr, "input: %s quant: %s dset: %s, search_dset: %s\n", sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg, sArgs.search_dset_arg);
+	fprintf(stderr, "query: %s dir_plat: %s dir_in: %s, dir_prep: %s\n", sArgs.query_arg, sArgs.dir_platform_arg, sArgs.dir_in_arg, sArgs.dir_prep_in_arg);
+	fprintf(stderr, "dir_gvar: %s dir_sinfo: %s useNibble: %d, num_db: %s\n", sArgs.dir_gvar_arg, sArgs.dir_sinfo_arg, sArgs.is_nibble_flag, sArgs.num_db_arg);
+	getchar();*/
+
 	CSeekCentral *csfinal = new CSeekCentral();
 	if(!csfinal->Initialize(sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
 		sArgs.search_dset_arg, 
@@ -241,18 +244,26 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.dir_gvar_arg,
 		sArgs.dir_sinfo_arg,
 		useNibble, sArgs.num_db_arg,
-		sArgs.buffer_arg, sArgs.output_dir_arg, !!sArgs.output_text_flag,  
-		!!sArgs.correlation_flag, 
-		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
-		!!sArgs.norm_platstdev_flag, false,
+		sArgs.buffer_arg, sArgs.output_dir_arg, !!sArgs.output_text_flag,
+		eDistMeasure,
+		!!sArgs.norm_subavg_flag, !!sArgs.norm_subavg_plat_flag,
+		false,
 		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag,
 		!!sArgs.random_flag, sArgs.num_random_arg, random_ranking_rnd))
 		return -1;
 
+	if(method=="CV"){
+		csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
+	}else if(method=="EQUAL"){
+		csfinal->EqualWeightSearch();
+	}else if(method=="ORDER_STAT"){
+		csfinal->OrderStatistics();
+	}
+
 	//csfinal->WeightSearch(csk_weight_copy);
 	//csfinal->CVCustomSearch(newQ, rnd, PART_M, FOLD, RATE);
 	//csfinal->EqualWeightSearch();
-	csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
+	//csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
 	//csfinal->OrderStatistics();
 	csfinal->Destruct();
 	delete csfinal;

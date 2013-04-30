@@ -62,10 +62,9 @@ CSeekCentral::CSeekCentral(){
 	m_iGenes = 0;
 	m_numThreads = 0;
 	m_bSubtractGeneAvg = false;
-	m_bSubtractPlatformAvg = false;
-	m_bDividePlatformStdev = false;
+	m_bNormPlatform = false;
 	m_bLogit = false;
-	m_bCorrelation = false;
+	m_eDistMeasure = CSeekDataset::Z_SCORE;
 	m_bOutputText = false;
 	m_bSquareZ = false;
 	m_bSharedDB = false;
@@ -213,9 +212,11 @@ bool CSeekCentral::CalculateRestart(){
 //assume datasets and genes have been read
 //assume m_enableNetwork is on
 //* CDatabaselet collection is shared between multiple clients (m_bSharedDB)
-bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_dset,
-	CSeekCentral *src, float &query_min_required, bool &bCorrelation,
-	bool &bSubtractGeneAvg, bool &bSubtractPlatformAvg, bool &bDividePlatformStdev,
+bool CSeekCentral::Initialize(
+	string &output_dir, string &query, string &search_dset,
+	CSeekCentral *src, float &query_min_required, 
+	enum CSeekDataset::DistanceMeasure eDistMeasure,
+	bool &bSubtractGeneAvg, bool &bNormPlatform,
 	const int& iClient){
 
 	//fprintf(stderr, "B0 %lu\n", CMeta::GetMemoryUsage());
@@ -228,10 +229,9 @@ bool CSeekCentral::Initialize(string &output_dir, string &query, string &search_
 	m_bSquareZ = src->m_bSquareZ;
 	m_bOutputText = src->m_bOutputText;
 	m_bSubtractGeneAvg = bSubtractGeneAvg;
-	m_bSubtractPlatformAvg = bSubtractPlatformAvg;
-	m_bDividePlatformStdev = bDividePlatformStdev;
+	m_bNormPlatform = bNormPlatform;
 	m_bLogit = src->m_bLogit;
-	m_bCorrelation = bCorrelation;
+	m_eDistMeasure = eDistMeasure;
 	m_vecstrGenes.resize(src->m_vecstrGenes.size());
 
 	m_bRandom = false;
@@ -459,8 +459,8 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const char *prep, const char *gvar, const char *sinfo,
 	const bool &useNibble, const ushort &num_db,
 	const ushort &buffer, const bool &to_output_text,
-	const bool &bCorrelation, const bool &bSubtractAvg,
-	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
+	const enum CSeekDataset::DistanceMeasure dist_measure,
+	const bool &bSubtractAvg, const bool &bNormPlatform,
 	const bool &bLogit, const float &fCutOff, const float &fPercentRequired, 
 	const bool &bSquareZ, 
 	//three new ones
@@ -488,25 +488,23 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 
 	m_bOutputText = to_output_text;
 	m_bSubtractGeneAvg = bSubtractAvg;
-	m_bSubtractPlatformAvg = bSubtractPlatformAvg;
-	m_bDividePlatformStdev = bDividePlatformStdev;
+	m_bNormPlatform = bNormPlatform;
 	m_bLogit = bLogit;
-	m_bCorrelation = bCorrelation;
+	m_eDistMeasure = dist_measure;
 
 	string strGvarDirectory = gvar;
 	string strSinfoDirectory = sinfo;
-	if(m_bCorrelation && sinfo=="NA"){
+	if(dist_measure==CSeekDataset::CORRELATION && sinfo=="NA"){
 		fprintf(stderr, "Error: not specifying sinfo!\n");
 		return false;
 	}
 
-	if(m_bCorrelation && (m_bSubtractGeneAvg || m_bSubtractPlatformAvg ||
-		m_bDividePlatformStdev || m_bLogit)){
+	if(dist_measure==CSeekDataset::CORRELATION && 
+		(m_bSubtractGeneAvg || m_bNormPlatform || m_bLogit)){
 		fprintf(stderr, 
-			"Warning: setting subtract_avg, subtract_platform to false\n");
+			"Warning: setting subtract_avg, norm platform to false\n");
 		m_bSubtractGeneAvg = false;
-		m_bSubtractPlatformAvg = false;
-		m_bDividePlatformStdev = false;
+		m_bNormPlatform = false;
 		m_bLogit = false;
 	}
 
@@ -551,8 +549,8 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const char *prep, const char *gvar, const char *sinfo,
 	const bool &useNibble, const ushort &num_db,
 	const ushort &buffer, const char *output_dir, const bool &to_output_text,
-	const bool &bCorrelation, const bool &bSubtractAvg,
-	const bool &bSubtractPlatformAvg, const bool &bDividePlatformStdev,
+	const enum CSeekDataset::DistanceMeasure dist_measure,
+	const bool &bSubtractAvg, const bool &bNormPlatform,
 	const bool &bLogit, const float &fCutOff, const float &fPercentRequired, 
 	const bool &bSquareZ,
 	//three new ones
@@ -560,7 +558,7 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 
 	if(!CSeekCentral::Initialize(gene, quant, dset, platform, 
 		db, prep, gvar, sinfo, useNibble, num_db, buffer, to_output_text, 
-		bCorrelation, bSubtractAvg, bSubtractPlatformAvg, bDividePlatformStdev, 
+		dist_measure, bSubtractAvg, bNormPlatform, 
 		bLogit, fCutOff, fPercentRequired, bSquareZ, bRandom, iNumRandom, rand)){
 		return false;
 	}
@@ -569,12 +567,24 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	omp_set_num_threads(m_numThreads);
 	m_output_dir = output_dir;
 
-	//read search datasets
-	if(!CSeekTools::ReadMultipleQueries(search_dset, m_vecstrSearchDatasets))
-		return false;
 	//read queries
 	if(!CSeekTools::ReadMultipleQueries(query, m_vecstrAllQuery))
 		return false;
+
+	//read search datasets
+	string strSearchDset = search_dset;
+	if(strSearchDset=="NA"){
+		m_vecstrSearchDatasets.resize(m_vecstrAllQuery.size());
+		for(i=0; i<m_vecstrAllQuery.size(); i++){
+			m_vecstrSearchDatasets[i].resize(m_vecstrDatasets.size());
+			for(j=0; j<m_vecstrDatasets.size(); j++){
+				m_vecstrSearchDatasets[i][j] = m_vecstrDatasets[j];
+			}
+		}
+	}else{
+		if(!CSeekTools::ReadMultipleQueries(search_dset, m_vecstrSearchDatasets))
+			return false;
+	}
 
 	m_searchdsetMap.resize(m_vecstrAllQuery.size());
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
@@ -699,7 +709,7 @@ bool CSeekCentral::FilterResults(const ushort &iSearchDatasets){
 		else{
 			m_master_rank[j] =
 				(m_master_rank[j] / m_sum_weight[j] - 320) / 100.0;
-			if(m_bCorrelation){
+			if(m_eDistMeasure==CSeekDataset::CORRELATION){
 				m_master_rank[j] = m_master_rank[j] / 3.0;
 			}
 			//m_master_rank[j] = m_master_rank[j];
@@ -926,9 +936,8 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 			if(DEBUG) fprintf(stderr, "Initializing %d\n",
 				(int) this_q.size());
 			m_vc[d]->InitializeDataMatrix(m_rData[tid], m_quant, m_iGenes,
-				iQuery, m_bSubtractGeneAvg, m_bSubtractPlatformAvg, m_bLogit,
-				m_bCorrelation, m_fScoreCutOff, m_bRandom, m_randRandom);
-			//m_bSubtractPlatformStdev is not used, it's assumed
+				iQuery, m_bSubtractGeneAvg, m_bNormPlatform, m_bLogit,
+				m_eDistMeasure, m_fScoreCutOff, m_bRandom, m_randRandom);
 
 			float w = -1;
 			float report_w = -1; //for showing weight of dataset
@@ -1049,6 +1058,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 		//fprintf(stderr, "4 %lu\n", CMeta::GetMemoryUsage());
 		SetQueryScoreNull(query);
 		Sort(final);
+		int ret; //for system calls
 
 		if(m_bRandom){
 			/*ushort z, cz;
@@ -1060,7 +1070,8 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 		}
 		else if(simulateWeight){
 			if((current_sm==EQUAL || current_sm==ORDER_STATISTICS) && !CheckWeight(i)){
-				fprintf(stderr, "Calculate dataset ordering\n"); system("date +%s%N 1>&2");
+				fprintf(stderr, "Calculate dataset ordering\n"); 
+				ret = system("date +%s%N 1>&2");
 				if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, 
 					"Calculate dataset ordering")==-1){
 					fprintf(stderr, "Error sending message to client\n");
@@ -1076,7 +1087,8 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 				continue;
 			}
 			else if(current_sm==CV && !CheckWeight(i)){
-				fprintf(stderr, "Redo with equal weighting\n"); system("date +%s%N 1>&2");
+				fprintf(stderr, "Redo with equal weighting\n"); 
+				ret = system("date +%s%N 1>&2");
 				if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, 
 					"Redo with equal weighting")==-1){
 					fprintf(stderr, "Error sending message to client\n");
@@ -1095,7 +1107,8 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 			}
 		}
 
-		fprintf(stderr, "Done search\n"); system("date +%s%N 1>&2");
+		fprintf(stderr, "Done search\n"); 
+		ret = system("date +%s%N 1>&2");
 
 		if(m_bEnableNetwork && CSeekNetwork::Send(m_iClient, "Done Search")==-1){
 			fprintf(stderr, "Error sending message to client\n");

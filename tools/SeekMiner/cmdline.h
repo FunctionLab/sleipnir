@@ -42,9 +42,9 @@ struct gengetopt_args_info
   char * dset_arg;	/**< @brief Input a set of datasets.  */
   char * dset_orig;	/**< @brief Input a set of datasets original value given at command line.  */
   const char *dset_help; /**< @brief Input a set of datasets help description.  */
-  char * search_dset_arg;	/**< @brief A set of datasets to search.  */
-  char * search_dset_orig;	/**< @brief A set of datasets to search original value given at command line.  */
-  const char *search_dset_help; /**< @brief A set of datasets to search help description.  */
+  char * search_dset_arg;	/**< @brief A set of datasets to search. If not specified, search all datasets. (default='NA').  */
+  char * search_dset_orig;	/**< @brief A set of datasets to search. If not specified, search all datasets. original value given at command line.  */
+  const char *search_dset_help; /**< @brief A set of datasets to search. If not specified, search all datasets. help description.  */
   char * input_arg;	/**< @brief Input gene mapping.  */
   char * input_orig;	/**< @brief Input gene mapping original value given at command line.  */
   const char *input_help; /**< @brief Input gene mapping help description.  */
@@ -72,12 +72,9 @@ struct gengetopt_args_info
   int num_db_arg;	/**< @brief Number of databaselets in database (default='1000').  */
   char * num_db_orig;	/**< @brief Number of databaselets in database original value given at command line.  */
   const char *num_db_help; /**< @brief Number of databaselets in database help description.  */
-  int CV_flag;	/**< @brief Query-based weighting using cross-validations (default=off).  */
-  const char *CV_help; /**< @brief Query-based weighting using cross-validations help description.  */
-  int EQUAL_flag;	/**< @brief Equal dataset weighting (default=off).  */
-  const char *EQUAL_help; /**< @brief Equal dataset weighting help description.  */
-  int ORDER_STAT_flag;	/**< @brief Order statistics weighting and integration (default=off).  */
-  const char *ORDER_STAT_help; /**< @brief Order statistics weighting and integration help description.  */
+  char * weighting_method_arg;	/**< @brief Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT) (default='CV').  */
+  char * weighting_method_orig;	/**< @brief Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT) original value given at command line.  */
+  const char *weighting_method_help; /**< @brief Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT) help description.  */
   char * func_db_arg;	/**< @brief Functional network db path.  */
   char * func_db_orig;	/**< @brief Functional network db path original value given at command line.  */
   const char *func_db_help; /**< @brief Functional network db path help description.  */
@@ -100,27 +97,30 @@ struct gengetopt_args_info
   int num_random_arg;	/**< @brief Number of repetitions of generating random rankings (default='10').  */
   char * num_random_orig;	/**< @brief Number of repetitions of generating random rankings original value given at command line.  */
   const char *num_random_help; /**< @brief Number of repetitions of generating random rankings help description.  */
-  int z_score_flag;	/**< @brief Per dataset, use z-scores of Pearson correlations (default=off).  */
-  const char *z_score_help; /**< @brief Per dataset, use z-scores of Pearson correlations help description.  */
-  int correlation_flag;	/**< @brief Per dataset, use Pearson correlations instead of z-scores. -m, -M, -r, -z do not apply. The sinfo directory (-u) must be given. (default=off).  */
-  const char *correlation_help; /**< @brief Per dataset, use Pearson correlations instead of z-scores. -m, -M, -r, -z do not apply. The sinfo directory (-u) must be given. help description.  */
-  int norm_subavg_flag;	/**< @brief Per dataset, normalize z-scores by subtracting average of result gene. Requires -z. (default=off).  */
-  const char *norm_subavg_help; /**< @brief Per dataset, normalize z-scores by subtracting average of result gene. Requires -z. help description.  */
-  int norm_platsubavg_flag;	/**< @brief Per platform, normalize z-scores by subtracting average of query gene across platform. Requires -z -m. (default=off).  */
-  const char *norm_platsubavg_help; /**< @brief Per platform, normalize z-scores by subtracting average of query gene across platform. Requires -z -m. help description.  */
-  int norm_platstdev_flag;	/**< @brief Per platform, normalize z-scores by dividing stdev of query gene across platform. Requires -z -m -M. (default=off).  */
-  const char *norm_platstdev_help; /**< @brief Per platform, normalize z-scores by dividing stdev of query gene across platform. Requires -z -m -M. help description.  */
+  char * dist_measure_arg;	/**< @brief Distance measure (default='z_score').  */
+  char * dist_measure_orig;	/**< @brief Distance measure original value given at command line.  */
+  const char *dist_measure_help; /**< @brief Distance measure help description.  */
+  int norm_subavg_flag;	/**< @brief If z_score is selected, subtract each result gene's average z-score in the dataset. (default=off).  */
+  const char *norm_subavg_help; /**< @brief If z_score is selected, subtract each result gene's average z-score in the dataset. help description.  */
+  int norm_subavg_plat_flag;	/**< @brief If z_score is selected, subtract each query gene's average score across platforms and divide by its stdev. Performed after --norm_subavg. (default=off).  */
+  const char *norm_subavg_plat_help; /**< @brief If z_score is selected, subtract each query gene's average score across platforms and divide by its stdev. Performed after --norm_subavg. help description.  */
   float score_cutoff_arg;	/**< @brief Cutoff on the gene-gene score before adding, default: no cutoff (default='-9999').  */
   char * score_cutoff_orig;	/**< @brief Cutoff on the gene-gene score before adding, default: no cutoff original value given at command line.  */
   const char *score_cutoff_help; /**< @brief Cutoff on the gene-gene score before adding, default: no cutoff help description.  */
-  int square_z_flag;	/**< @brief If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff. Requires -z. (default=off).  */
-  const char *square_z_help; /**< @brief If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff. Requires -z. help description.  */
+  int square_z_flag;	/**< @brief If z_score is selected, take the square the z-scores. Usually used in conjunction with --score-cutoff. (default=off).  */
+  const char *square_z_help; /**< @brief If z_score is selected, take the square the z-scores. Usually used in conjunction with --score-cutoff. help description.  */
   float per_q_required_arg;	/**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. (default='0.0').  */
   char * per_q_required_orig;	/**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. original value given at command line.  */
   const char *per_q_required_help; /**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. help description.  */
-  float rank_biased_precision_p_arg;	/**< @brief Rank biased precision (RBP) p parameter if RBP is the weighting method (default='0.99').  */
-  char * rank_biased_precision_p_orig;	/**< @brief Rank biased precision (RBP) p parameter if RBP is the weighting method original value given at command line.  */
-  const char *rank_biased_precision_p_help; /**< @brief Rank biased precision (RBP) p parameter if RBP is the weighting method help description.  */
+  char * CV_partition_arg;	/**< @brief The query partitioning method (for CV weighting): Leave-One-In, Leave-One-Out, X-Fold. (default='LOI').  */
+  char * CV_partition_orig;	/**< @brief The query partitioning method (for CV weighting): Leave-One-In, Leave-One-Out, X-Fold. original value given at command line.  */
+  const char *CV_partition_help; /**< @brief The query partitioning method (for CV weighting): Leave-One-In, Leave-One-Out, X-Fold. help description.  */
+  int CV_fold_arg;	/**< @brief The number of folds (for X-fold partitioning). (default='5').  */
+  char * CV_fold_orig;	/**< @brief The number of folds (for X-fold partitioning). original value given at command line.  */
+  const char *CV_fold_help; /**< @brief The number of folds (for X-fold partitioning). help description.  */
+  float CV_rbp_p_arg;	/**< @brief The parameter p for RBP scoring of each partition for its query gene retrieval (for CV weighting). (default='0.99').  */
+  char * CV_rbp_p_orig;	/**< @brief The parameter p for RBP scoring of each partition for its query gene retrieval (for CV weighting). original value given at command line.  */
+  const char *CV_rbp_p_help; /**< @brief The parameter p for RBP scoring of each partition for its query gene retrieval (for CV weighting). help description.  */
   int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
   const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
   int buffer_arg;	/**< @brief Number of Databaselets to store in memory (default='20').  */
@@ -145,9 +145,7 @@ struct gengetopt_args_info
   unsigned int dir_gvar_given ;	/**< @brief Whether dir_gvar was given.  */
   unsigned int quant_given ;	/**< @brief Whether quant was given.  */
   unsigned int num_db_given ;	/**< @brief Whether num_db was given.  */
-  unsigned int CV_given ;	/**< @brief Whether CV was given.  */
-  unsigned int EQUAL_given ;	/**< @brief Whether EQUAL was given.  */
-  unsigned int ORDER_STAT_given ;	/**< @brief Whether ORDER_STAT was given.  */
+  unsigned int weighting_method_given ;	/**< @brief Whether weighting_method was given.  */
   unsigned int func_db_given ;	/**< @brief Whether func_db was given.  */
   unsigned int func_n_given ;	/**< @brief Whether func_n was given.  */
   unsigned int func_prep_given ;	/**< @brief Whether func_prep was given.  */
@@ -156,15 +154,15 @@ struct gengetopt_args_info
   unsigned int func_logit_given ;	/**< @brief Whether func_logit was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int num_random_given ;	/**< @brief Whether num_random was given.  */
-  unsigned int z_score_given ;	/**< @brief Whether z_score was given.  */
-  unsigned int correlation_given ;	/**< @brief Whether correlation was given.  */
+  unsigned int dist_measure_given ;	/**< @brief Whether dist_measure was given.  */
   unsigned int norm_subavg_given ;	/**< @brief Whether norm_subavg was given.  */
-  unsigned int norm_platsubavg_given ;	/**< @brief Whether norm_platsubavg was given.  */
-  unsigned int norm_platstdev_given ;	/**< @brief Whether norm_platstdev was given.  */
+  unsigned int norm_subavg_plat_given ;	/**< @brief Whether norm_subavg_plat was given.  */
   unsigned int score_cutoff_given ;	/**< @brief Whether score_cutoff was given.  */
   unsigned int square_z_given ;	/**< @brief Whether square_z was given.  */
   unsigned int per_q_required_given ;	/**< @brief Whether per_q_required was given.  */
-  unsigned int rank_biased_precision_p_given ;	/**< @brief Whether rank_biased_precision_p was given.  */
+  unsigned int CV_partition_given ;	/**< @brief Whether CV_partition was given.  */
+  unsigned int CV_fold_given ;	/**< @brief Whether CV_fold was given.  */
+  unsigned int CV_rbp_p_given ;	/**< @brief Whether CV_rbp_p was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
   unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
   unsigned int output_text_given ;	/**< @brief Whether output_text was given.  */
@@ -292,6 +290,10 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  */
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
+
+extern const char *cmdline_parser_weighting_method_values[];  /**< @brief Possible values for weighting_method. */
+extern const char *cmdline_parser_dist_measure_values[];  /**< @brief Possible values for dist_measure. */
+extern const char *cmdline_parser_CV_partition_values[];  /**< @brief Possible values for CV_partition. */
 
 
 #ifdef __cplusplus

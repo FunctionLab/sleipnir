@@ -56,6 +56,16 @@ namespace Sleipnir {
 
 class CSeekDataset{
 public:
+
+	/*!
+	 * \brief
+	 * Distance measure
+	 */
+	enum DistanceMeasure{
+		CORRELATION = 0,
+		Z_SCORE = CORRELATION + 1
+	};
+
 	/*!
 	 * \brief
 	 * Constructor
@@ -166,9 +176,9 @@ public:
 	 * \param iRows The number of rows for the \a correlation matrix
 	 * \param iColumns The number of columns for the \a correlation matrix
 	 * \param bSubtractAvg If true, subtract the \a correlation by the dataset average
-	 * \param bSubtractPlatformAvg If true, subtract the \a correlation by the platform average
+	 * \param bNormPlatform If true, subtract the \a correlation by the platform average and divide by standard deviation
 	 * \param logit If true, apply the logit transform on \a correlations
-	 * \param bCorrelation If true, use Pearson
+	 * \param dist_measure Distance measure: z-score or correlations
 	 * \param cutoff Apply a hard cutoff on \a correlations
 	 * \param bRandom If true, shuffle the \a correlation vector
 	 * \param rand The random generator for the shuffling operation above
@@ -182,8 +192,9 @@ public:
 	 * Then if a \a correlation is 2.5, the discretized value would be 2.
 	 */
 	bool InitializeDataMatrix(ushort**, const vector<float> &,
-		const ushort&, const ushort&, const bool=true, const bool=true,
+		const ushort&, const ushort&, const bool=true, 
 		const bool=false, const bool=false,
+		const enum DistanceMeasure=Z_SCORE,
 		const float cutoff=-1.0*CMeta::GetNaN(), 
 		const bool=false, gsl_rng *rand=NULL);
 

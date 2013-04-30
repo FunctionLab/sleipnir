@@ -287,27 +287,18 @@ ushort** CSeekDataset::GetDataMatrix(){
 bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 	const vector<float> &quant, const ushort &iRows,
 	const ushort &iColumns, const bool bSubtractAvg,
-	const bool bSubtractPlatformAvg, const bool logit,
-	const bool bCorrelation,
+	const bool bNormPlatform, const bool logit,
+	const enum CSeekDataset::DistanceMeasure dist_measure,
 	const float cutoff, 
 	const bool bRandom, gsl_rng *rand){
 	/* assume platform is already set */
-
-	//hard coded quant file
-	/*vector<float> quant;
-	float w = -5.0;
-	while(w<5.01){
-		quant.push_back(w);
-		w+=0.04;
-		//w+=0.1;
-	}
-	quant.resize(quant.size());
-	 */
 	//Assuming rData is not NULL
-	/* transpose */
-	/* numGenes * numQueries */
 
-	if(bCorrelation && (bSubtractAvg || bSubtractPlatformAvg)){
+	bool bCorrelation = false;
+	if(dist_measure==CSeekDataset::CORRELATION)
+		bCorrelation = true;
+
+	if(bCorrelation && (bSubtractAvg || bNormPlatform)){
 		fprintf(stderr, "%s, %s\n", "correlation mode enabled",
 			"please set subtract_avg, subtract_platform to false");
 		return false;
@@ -330,9 +321,9 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 	for(i=1; i<queryIndex.size(); i++)
 		offset.push_back(queryIndex[i] - queryIndex[i-1]);
 
-	if(bSubtractAvg){
+	if(bSubtractAvg){ //z-score (Z) + average z score subtraction (A)
 
-		if(bSubtractPlatformAvg){
+		if(bNormPlatform){ //subtract platform avg / platform stddev
 			float *platform_avg = new float[iColumns];
 			float *platform_stdev = new float[iColumns];
 
@@ -385,37 +376,10 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 				}
 			}
 
-			/*const vector<ushort> &allRGenes = geneMap->GetAllReverse();
-			vector<ushort>::const_iterator iterRGenes = allRGenes.begin();
-			vector<ushort>::const_iterator lastRGenes = allRGenes.begin() + geneMap->GetNumSet();
-
-			for(; iterRGenes != lastRGenes; iterRGenes++){
-				i = *iterRGenes;
-				float a = GetGeneAverage(i);
-
-				// numQueries
-				ushort *rDataP = &rData[i][0];
-				unsigned char *rP = &r[queryIndex[0]][i];
-				float *plAvgP = &platform_avg[0];
-				float *plStdevP = &platform_stdev[0];
-				ushort *end = &rData[i][0] + iNumQueries;
-				vector<ushort>::const_iterator iterOffset = offset.begin();
-				for(; rDataP!=end; plAvgP++, plStdevP++, rDataP++, iterOffset++, rP+=iRows*(*iterOffset)){
-					if(*rP==255){
-						continue;
-					}
-					float vv = (quant[*rP] - a - *plAvgP) / *plStdevP;
-					//fprintf(stderr, "%.3f\n", vv);
-					//Do not remove the (float) cast in front of min
-					vv = max((float) min(vv, (float)3.2), (float)-3.2);
-					*rDataP = (ushort) (vv*100.0) + 320;
-				}
-			}*/
-
 			delete[] platform_avg;
 			delete[] platform_stdev;
 
-		}else{
+		}else{ //do not normalize by platform, just subtract gene avg 
 			if(logit){
 				for(ii=0; ii<iNumGenes; ii++){
 					float a, vv; unsigned char x;
@@ -455,7 +419,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 		//return true;
 	}
 	/* numGenes */
-	else if(logit){
+	else if(logit){ //logit on z-scores
 		for(ii=0; ii<iNumGenes; ii++){
 			unsigned char x;
 			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
@@ -469,7 +433,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 				}
 			}
 		}
-	}else if(bCorrelation){
+	}else if(bCorrelation){ //correlation mode
 
 		for(ii=0; ii<iNumGenes; ii++){
 			unsigned char x;
@@ -492,7 +456,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 			}
 		}
 
-	}else{ //raw z-scores
+	}else{ //just simple z-scores, no subtraction of avg z scores
 		for(ii=0; ii<iNumGenes; ii++){
 			unsigned char x;
 			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
