@@ -30,7 +30,9 @@
  * Perhaps for space reason, it is sometime not feasible to generate a Sleipnir::CDatabase
  * covering all datasets on one machine or one partition. Consequently, people
  * generate separate Sleipnir::CDatabase's on different machines
- * first, and then join them one DB file at a time with DBCombiner.
+ * first, and then join them into one CDatabase instance with the help of DBCombiner.
+ * DBCombiner performs the joining on a per DB-file basis, so users still need to repeat the joining
+ * for all DB files in the database.
  *
  * 
  * \section sec_usage Usage
@@ -43,11 +45,11 @@
  *
  * Combines the DB files listed in the \c db_list.txt into one DB.
  *
- * DBCombiner accepts multiple Sleipnir::CDatabase's that are generated separately. In order for
+ * DBCombiner accepts DB files that are generated from different Sleipnir::CDatabase instances, as long as the same
+ * gene map was used. In order for
  * DBCombiner to work, only DB files covering the same genes may be
- * combined. 
- * The order of DB files in \c db_list.txt is the the order that datasets
- * will be covered in the combined file.
+ * combined. This can be ensured by using only DB files with the same ID in the file name (see some sample lines in \c db_list.txt below).
+ * The final joined DB will have datasets listed in the order defined by \c db_list.txt.
  *
  * The \c -s option further splits the combined Sleipnir::CDatabaselet into one gene per \c DB file.
  * This \c -s must be enabled for Seek coexpression integrations. (\ref SeekMiner, \ref SeekServer).

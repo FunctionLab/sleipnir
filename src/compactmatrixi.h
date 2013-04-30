@@ -22,6 +22,11 @@
 #ifndef COMPACTMATRIXI_H
 #define COMPACTMATRIXI_H
 
+//may need to enable the following lines for Cygwin compilation
+//#ifndef SIZE_MAX
+//#define SIZE_MAX (4294967295U)
+//#endif
+
 #include "halfmatrixi.h"
 
 namespace Sleipnir {

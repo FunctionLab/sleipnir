@@ -26,6 +26,14 @@ option	"quant"				Q	"quant file (assuming all datasets use the same quantization
 option	"num_db"			n	"Number of databaselets in database"
 								int	default="1000"	yes
 
+section "Dataset weighting"
+option	"CV"				V	"Query-based weighting using cross-validations"
+								flag	off
+option	"EQUAL"				E	"Equal dataset weighting"
+								flag	off
+option	"ORDER_STAT"		A	"Order statistics weighting and integration"
+								flag	off
+
 section "Optional - Functional Network Expansion"
 option	"func_db"			w	"Functional network db path"
 								string	typestr="directory"
@@ -40,34 +48,40 @@ option	"func_dset"			F	"Functional network dset-list file (1 dataset)"
 option	"func_logit"		l	"Functional network, integrate using logit values"
 								flag	off
 
-section "Optional - Parameter tweaking"
-option	"correlation"		T	"Use Pearson correlation values, instead of z-score. -m, -M, -r do not apply"
-								flag	off
-option	"norm_subavg"		m	"Per dataset, normalize z-scores by subtracting average of result gene"
-								flag	off
-option	"norm_platsubavg"	M	"Per platform, normalize z-scores by subtracting average of query gene across platform"
-								flag	off
-option	"norm_platstdev"	r	"Per platform, normalize z-scores by dividing stdev of query gene across platform"
-								flag	off
-option	"score_cutoff"		c	"Cutoff on the gene-gene score before adding, default: no cutoff"
-								float default="-9999"
-option	"per_q_required"	C	"Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff."
-								float default="0.0"
-option	"square_z"			e	"If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff"							
-								flag	off
-option	"rank_biased_precision_p"	s	"Rank biased precision p parameter"
-								float	default="0.99"	
+section "Optional - Random simulations"
 option	"random"			S	"Generate random ranking score"
 								flag	off
 option	"num_random"		t	"Number of repetitions of generating random rankings"
 								int	default="10"
+
+section "Optional - Distance matrix transformations"
+option	"z_score"			z	"Per dataset, use z-scores of Pearson correlations"
+								flag	off
+option	"correlation"		T	"Per dataset, use Pearson correlations instead of z-scores. -m, -M, -r, -z do not apply. The sinfo directory (-u) must be given."
+								flag	off
+option	"norm_subavg"		m	"Per dataset, normalize z-scores by subtracting average of result gene. Requires -z."
+								flag	off
+option	"norm_platsubavg"	M	"Per platform, normalize z-scores by subtracting average of query gene across platform. Requires -z -m."
+								flag	off
+option	"norm_platstdev"	r	"Per platform, normalize z-scores by dividing stdev of query gene across platform. Requires -z -m -M."
+								flag	off
+option	"score_cutoff"		c	"Cutoff on the gene-gene score before adding, default: no cutoff"
+								float default="-9999"
+option	"square_z"			e	"If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff. Requires -z."							
+								flag	off
+
+section "Options for Dataset weighting"
+option	"per_q_required"	C	"Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff."
+								float default="0.0"
+option	"rank_biased_precision_p"	s	"Rank biased precision (RBP) p parameter if RBP is the weighting method"
+								float	default="0.99"	
 
 section "MISC"								
 option	"is_nibble"			N	"Whether the input DB is nibble type"
 								flag	off
 option	"buffer"			b	"Number of Databaselets to store in memory"
 								int default="20"
-option	"output_text"		O	"Output results (gene list and dataset weights) as text"
+option	"output_text"		O	"Output results (gene scores and dataset weights) as text"
 								flag	off
 option	"output_dir"		o	"Output directory"
 								string typestr="directory"

@@ -35,6 +35,46 @@ int main( int iArgs, char** aszArgs ) {
 		return 1;
 	}
 
+	if(!(!!sArgs.CV_flag || !!sArgs.EQUAL_flag ||
+		!!sArgs.ORDER_STAT_flag)){
+		fprintf(stderr, "Please select a dataset weighting method. (-V, -E, or -A)\n");
+		return 1;
+	}
+
+	if(!(!!sArgs.z_score_flag || !!sArgs.correlation_flag)){
+		fprintf(stderr, "Please select either Z-scores or Pearson (-z or -T).\n");
+		return 1;
+	}
+
+	if(!!sArgs.correlation_flag){
+		string sinfo_dir = sArgs.dir_sinfo_arg;
+		if(sinfo_dir=="NA"){
+			fprintf(stderr, "Pearson selected. Please give the sinfo directory (-u).\n");
+			return 1;
+		}
+		if(!!sArgs.norm_subavg_flag){
+			fprintf(stderr, "Warning: -m flag is ignored.\n");
+		}
+		if(!!sArgs.norm_platsubavg_flag){
+			fprintf(stderr, "Warning: -M flag is ignored.\n");
+		}
+		if(!!sArgs.norm_platstdev_flag){
+			fprintf(stderr, "Warning: -r flag is ignored.\n");
+		}
+	}
+
+	if(!!sArgs.z_score_flag){
+		if(!!sArgs.norm_platsubavg_flag && !(!!sArgs.norm_subavg_flag)){
+			fprintf(stderr, "Please enable -m flag.\n");
+			return 1;
+		}
+		if(!!sArgs.norm_platstdev_flag && !(!!sArgs.norm_subavg_flag &&
+			!!sArgs.norm_platsubavg_flag)){
+			fprintf(stderr, "Please enable both -m and -M flags.\n");
+			return 1;
+		}
+	}
+
 	if(!sArgs.input_arg || !sArgs.quant_arg ||
 		!sArgs.dset_arg || !sArgs.search_dset_arg ||
 		!sArgs.query_arg || !sArgs.dir_platform_arg ||
@@ -64,7 +104,7 @@ int main( int iArgs, char** aszArgs ) {
 	//float RATE = 0.99;
 	float RATE = sArgs.rank_biased_precision_p_arg;
 	ushort FOLD = 5;
-	enum PartitionMode PART_M = CUSTOM_PARTITION;
+	enum CSeekQuery::PartitionMode PART_M = CSeekQuery::CUSTOM_PARTITION;
 	ushort i,j;
 	//ushort TOP = 1000;
 	//ushort TOP = 0;

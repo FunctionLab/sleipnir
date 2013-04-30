@@ -339,6 +339,12 @@ public:
 	 */
 	string GetGene(const ushort &geneID) const;
 
+	/*!
+	 * \brief Destruct this search instance
+	 * \return True if successful.
+	 */
+	bool Destruct();
+
 private:
 	//network mode
 	bool EnableNetwork(const int&);
@@ -355,7 +361,6 @@ private:
 	bool CopyTopGenes(CSeekQuery&, const vector<AResultFloat>&, 
 		const ushort);
 	bool SetQueryScoreNull(const CSeekQuery&);
-	bool Destruct();
 	bool PrepareQuery(const vector<string>&, CSeekQuery&);
 	bool CalculateRestart();
 	bool PrepareOneQuery(CSeekQuery &, CSeekIntIntMap &, vector<float>&);
