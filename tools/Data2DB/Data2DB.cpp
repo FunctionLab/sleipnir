@@ -98,7 +98,6 @@ int main( int iArgs, char** aszArgs ) {
 	DB.SetBlockOut( sArgs.block_files_arg );
 	DB.SetBlockIn( sArgs.block_datasets_arg );
 
-
 	if(sArgs.network_arg){
 		if(sArgs.dataset_arg){
 			cerr << "Confused. Only network OR dataset list." << endl;
@@ -119,11 +118,14 @@ int main( int iArgs, char** aszArgs ) {
 		ifsm.open(sArgs.dataset_arg);
 		while(!pistm->eof()){
 			pistm->getline(acBuffer, c_iBuffer -1);
-			if(acBuffer[0]==0){
+			if(acBuffer[0]==0)
 				break;
-			}
 			acBuffer[c_iBuffer-1] = 0;
-			vecstrDatasets.push_back(acBuffer);
+            //If line contains multiple columns,
+            //use the first column, which is the dataset column
+            vector<string> tok;
+            CMeta::Tokenize(acBuffer, tok, " \t");
+			vecstrDatasets.push_back(tok[0]);
 		}
 		vecstrDatasets.resize(vecstrDatasets.size());
 		ifsm.close();

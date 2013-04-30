@@ -27,8 +27,8 @@
  * Data2DB converts a collection of DAT/DAB files (Sleipnir::CDat) into a simple flatfile database
  * (Sleipnir::CDatabase).  DAT/DAB files organize data so that values for all gene pairs within a single
  * dataset can be accessed efficiently; database files organize data so that values from all datasets for
- * a single gene or gene pair can be accessed efficiently.  This is critical for real-time Bayesian inference
- * (e.g. by \ref BNServer).
+ * a single gene or gene pair can be accessed efficiently.  This is critical for real-time Bayesian inference and for Seek coexpression search
+ * (e.g. by \ref BNServer, \ref SeekMiner, \ref SeekServer).
  * 
  * \section sec_usage Usage
  * 
@@ -36,12 +36,24 @@
  * 
  * \code
  * Data2DB -n <classifier.xdsl> -i <genes.txt> -d <data_dir> -D <database_dir>
+ *
  * \endcode
- * 
  * Construct a Sleipnir::CDatabase in the directory \c database_dir containing the data from DAT/DAB files
  * in \c data_dir corresponding to nodes in the Bayesian network \c classifier.xdsl and organized using the
  * gene index/name pairs in \c genes.txt (identical in format to \ref Data2Sql).  If many datasets are
  * being processed or the target genome is large, blocking should be used (\c -b and \c -B).
+ *
+ *
+ * \code
+ * Data2DB -x <dataset_file_list.txt> -i <gene_map.txt> -D <database_dir> 
+ * \endcode
+ * Construct a Sleipnir::CDatabase containing the data from DAB files that 
+ * are specified in the \c dataset_file_list.txt. The genes are indexed according
+ * to \c gene_map.txt. By default, there would be 1000 CDatabaselet's (\c .db) 
+ * generated, with each CDatabaselet containing \a N / 1000 genes. Users can control
+ * how many \c .db files to be generated (and indirectly how many genes 
+ * are contained in each \c .db file) using the \c -f option.
+ * 
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
@@ -53,12 +65,20 @@
  *	<th>Type</th>
  *	<th>Description</th>
  * </tr><tr>
+ *  <td>-x</td>
+ *  <td>None</td>
+ *  <td>Dataset file list</td>
+ *  <td>A simple one-column listing of path of DAB files. Dataset order in the
+ *   CDatabase will correspond to the order in this file. Either this option or the
+ *   \c -n option must be specified.</td>
+ * </tr><tr>
  *	<td>-n</td>
  *	<td>None</td>
  *	<td>(X)DSL file</td>
  *	<td>Naive Bayesian classifier for which output database will be optimized.  Dataset order in the output
  *		database will correspond to the Bayes net's node order, and the node IDs will be used to load
- *		input DAT/DABs from \c -d.</td>
+ *		input DAT/DABs from \c -d. Either this option or the -c -x option must be
+ *     specified.</td>
  * </tr><tr>
  *	<td>-i</td>
  *	<td>stdin</td>
@@ -104,5 +124,10 @@
  *	<td>off</td>
  *	<td>Flag</td>
  *	<td>If given, memory map the input files when possible.  DAT and PCL inputs cannot be memmapped.</td>
+ * </tr><tr>
+ *	<td>-N</td>
+ *	<td>off</td>
+ *	<td>Flag</td>
+ *	<td>If enabled, use Nibble (4 bits) to represent each element rather than the default 8 bits (or a byte).</td>
  * </tr></table>
  */
