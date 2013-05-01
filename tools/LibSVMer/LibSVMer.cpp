@@ -369,10 +369,15 @@ cerr << SVM.posFeatOnly << endl;
 
 				}
                                 LIBSVM::CLIBSVM::PrintSample(*pTrainSample);
-
+                                size_t mem = CMeta::GetMemoryUsage();
+                                cerr << "before free: " << mem << endl;
 				if (i > 0) {
 					LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
+                                        //delete pTrainSample;
 				}
+                                mem = CMeta::GetMemoryUsage();
+                                cerr << "after free: " << mem << endl;
+                                cerr << "end of a cv run" << endl;
 			}
 
 			if (sArgs.all_flag) { //add the unlabeled results

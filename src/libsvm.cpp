@@ -86,7 +86,7 @@ bool CLIBSVM::parms_check() {
 }
 
 SAMPLE * CLIBSVM::CreateSample(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) {
-	size_t i, j, k, iGene, iProblem, numFeatures, numLabels, max_index;
+	size_t i, j, k, s, iGene, iProblem, numFeatures, numLabels, max_index;
         float d;
         bool posFeatOnly;
 
@@ -100,7 +100,7 @@ SAMPLE * CLIBSVM::CreateSample(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) 
         numLabels = 0;
         
         posFeatOnly = CLIBSVM::posFeatOnly; 
- cerr << "in create sample: " << posFeatOnly << endl;       
+// cerr << "in create sample: " << posFeatOnly << endl;       
 
 	
         iProblem = 0;
@@ -124,7 +124,9 @@ SAMPLE * CLIBSVM::CreateSample(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) 
           numFeatures = iPosFeats.size();
         }
 
-cerr << "number of features: " << numFeatures << endl;
+cerr << "number of features used: " << numFeatures << endl;
+cerr << "number of labels given: " << SVMLabels.size() << endl;
+cerr << "number of labels in data: " << numLabels << endl;
 
         prob->l = numLabels;
         prob->y = Malloc(double,numLabels);
@@ -134,17 +136,18 @@ cerr << "number of features: " << numFeatures << endl;
         max_index = numFeatures;
 
         j = 0;//element index
-
+        s = 0;//sample index
         for (i = 0; i < SVMLabels.size(); i++) {
             iGene = SVMLabels[i].index;
 
             if (iGene != -1){
-              (prob->x)[i] = &x_space[j];
-              (prob->y)[i] = SVMLabels[i].Target;
+              (prob->x)[s] = &x_space[j];
+              (prob->y)[s] = SVMLabels[i].Target;
 
               for(k = 0; k < numFeatures; k++){
 
                 if(posFeatOnly){
+                  // ignore non-positive features
                   if(find(iPosFeats.begin(),iPosFeats.end(),k) != iPosFeats.end()){
                     continue; 
                   }
@@ -154,13 +157,14 @@ cerr << "number of features: " << numFeatures << endl;
                 if (!Sleipnir::CMeta::IsNaN(d = PCL.Get(iGene, k))) {
                   x_space[j].value = d;
                 }else{
+                  // impute 0 for missing values
                   x_space[j].value = 0;
                 }
                 j++;
               }         
               x_space[j].index = -1;
               j++;
-
+              s++;
             }
         }
 
@@ -169,7 +173,7 @@ cerr << "number of features: " << numFeatures << endl;
         pSample->n = prob->l;//number of labels
         pSample->problems = prob;
         pSample->numFeatures = numFeatures;
-        
+        pSample->x_space = x_space; 
 	return pSample;
 }
 
@@ -215,7 +219,10 @@ vector<Result> CLIBSVM::Classify(Sleipnir::CPCL &PCL,
 
       }
     }
+    FreeSample( *pSample );
+    //delete pSample ;
     free(dec_values);
+    x = NULL;
 
     return vecResult;
 }

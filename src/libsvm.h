@@ -48,6 +48,26 @@ typedef struct sample { /* a sample is a set of examples */
    size_t     n;            /* n is the total number of examples */
    size_t  numFeatures; 
    struct svm_problem *problems;
+   struct svm_node *x_space;
+   sample() {
+     n = 0;
+     numFeatures = 0;
+     problems = NULL;
+     x_space = NULL;
+   }
+   /*
+   ~sample(){
+     int i;
+     //no destructor for problem struct
+     free(problems->y);
+     for(i = 0; i < n ; i ++){
+       cerr << i << endl;
+       delete[] (problems->x)[i];
+
+     }
+     delete[] problems->x;
+     problems = NULL;
+   }*/
 } SAMPLE;
  
 
@@ -123,6 +143,11 @@ public:
 
   CLIBSVM() {
     initialize();
+  }
+
+  ~CLIBSVM() {
+    svm_free_and_destroy_model( &model );
+    model = NULL;
   }
 //  static bool GetPosFeatOnly() {
 //    return posFeatOnly;
@@ -230,14 +255,21 @@ public:
       model = svm_train(prob,&parm);
     }else{
     }
+    prob = NULL;
+
   }
 
   static void FreeSample(SAMPLE s){
     FreeProblem(s.problems);
+    free(s.x_space);
   }
 
   static void FreeProblem(svm_problem *prob){
+    int i ;
     free(prob->y);
+//    for(i = 0 ; i < prob->l ; i ++ )
+//      (prob->x)[i] = NULL;
+    
     free(prob->x);
     return;
   }
