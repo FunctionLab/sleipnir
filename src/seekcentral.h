@@ -137,6 +137,8 @@ public:
      * \param dist_measure Distance measure, either CORRELATION or Z_SCORE
      * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
      * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
+     * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
+     * \param bSimulateWeight If true, use simulated weight as dataset weight
      * \param bLogit If true, apply the logit transformation on the \a correlations
      * \param fCutOff Cutoff the \a correlation values
      * \param fPercentRequired The fraction of the query genes required to be present in a dataset 
@@ -156,16 +158,15 @@ public:
 		const char *dset, const char *search_dset,
 		const char *query, const char *platform, const char* db,
 		const char *prep, const char *gvar, const char *sinfo,
-		const bool &useNibble, const ushort &num_db,
-		const ushort &buffer, const char* output_dir,
-		const bool &to_output_text, 
-		const enum CSeekDataset::DistanceMeasure dist_measure, 
-		const bool& bSubtractAvg,
-		const bool& bNormPlatform, const bool& bLogit, 
-		const float& fCutOff, const float& fPercentRequired, 
-		const bool& bSquareZ, 
-		const bool& bRandom, const int& iNumRandom, 
-		gsl_rng *rand);
+		const ushort num_db, const char* output_dir,
+		const ushort buffer = 20, const bool to_output_text = false,
+		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
+		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
+		const bool bSubtractAvg = true, const bool bNormPlatform = false,
+		const bool bLogit = false, const float fCutOff = -9999,
+		const float fPercentRequired = 0, const bool bSquareZ = false,
+		const bool bRandom = false, const int iNumRandom = 10,
+		gsl_rng *rand = NULL, const bool useNibble = false);
 
     /*!
      * \brief Initialize function
@@ -191,6 +192,8 @@ public:
      * \param dist_measure Distance measure, either CORRELATION or Z_SCORE
      * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
      * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
+     * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
+     * \param bSimulateWeight If true, use simulated weight as dataset weight
      * \param bLogit If true, apply the logit transformation on the \a correlations
      * \param fCutOff Cutoff the \a correlations
      * \param fPercentRequired The fraction of the query genes required to be present in a dataset
@@ -208,13 +211,15 @@ public:
 	bool Initialize(const char *gene, const char *quant,
 		const char *dset, const char *platform, const char* db,
 		const char *prep, const char *gvar, const char *sinfo,
-		const bool &useNibble, const ushort &num_db,
-		const ushort &buffer, const bool &to_output_text,
-		const enum CSeekDataset::DistanceMeasure dist_measure,
-		const bool &bSubtractAvg, const bool &bNormPlatform,
-		const bool &bLogit, const float &fCutOff, 
-		const float &fPercentRequired, const bool &bSquareZ, 
-		const bool &bRandom, const int &iNumRandom, gsl_rng *rand);
+		const ushort num_db,
+		const ushort buffer = 20, const bool to_output_text = false,
+		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
+		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
+		const bool bSubtractAvg = true, const bool bNormPlatform = false,
+		const bool bLogit = false, const float fCutOff = 0,
+		const float fPercentRequired = 0, const bool bSquareZ = false,
+		const bool bRandom = false, const int iNumRandom = 10, gsl_rng *rand = NULL,
+		const bool useNibble = false);
 
     /*!
      * \brief Initialize function
@@ -229,6 +234,8 @@ public:
      * \param dist_measure Distance measure, either CORRELATION or Z_SCORE.
      * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
      * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
+     * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
+     * \param bSimulateWeight If true, use simulated weight as dataset weight
 	 * \param iClient The client's socket connection
      *
      * \remark This function is designed to be used by SeekServer.
@@ -236,10 +243,15 @@ public:
      * are options to transform the \a correlation values.
      * \remark Assumes that the CDatabaselets have been read, and the \c *.gvar, \c *.sinfo files have been loaded.
      * \remark Assumes that the dataset and gene mapping files have been read.
+     * \remark The \c bSimulateWeight option is for equal weighting or order statistics. The simulated weight is
+     * computed from the distance of a dataset's coexpression ranking to the final integrated coexpression ranking.
      */
-	bool Initialize(string&, string&, string&, CSeekCentral*, 
-		float&, enum CSeekDataset::DistanceMeasure, 
-		bool&, bool&, const int&);
+	bool Initialize(const string &output_dir, const string &query,
+		const string &search_dset, CSeekCentral* src, const int iClient,
+		const float query_min_required = 0,
+		const enum CSeekDataset::DistanceMeasure = CSeekDataset::Z_SCORE,
+		const bool bSubtractGeneAvg = true, const bool bNormPlatform = false,
+		const bool bOutputWeightComponent = true, const bool bSimulateWeight = true);
 
 	/*!
 	 * \brief Run Seek with the cross-validated dataset weighting
@@ -261,8 +273,7 @@ public:
 	 * \param rnd The random number generator
 	 * \param PART_M Query partition mode
 	 * \param FOLD Number of partitions to generate from the query
-	 * \param RATE The weighting parameter \a p
-	 *
+	 * \param RATE The weighting parameter \a p	 *
 	 * Same as CVSearch, except that the weighting is not based on the coexpression
 	 * of the query genes, but based on the similarity of the query genes to some custom gold
 	 * standard gene-set.
@@ -448,6 +459,9 @@ private:
 	ushort m_maxNumDB;
 	map<ushort, vector< vector<string> > > m_mapLoadTime;
 	bool DEBUG;
+
+	bool m_bOutputWeightComponent;
+	bool m_bSimulateWeight;
 
 	string m_output_dir;
 	float m_fScoreCutOff;

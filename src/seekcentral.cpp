@@ -65,6 +65,8 @@ CSeekCentral::CSeekCentral(){
 	m_bNormPlatform = false;
 	m_bLogit = false;
 	m_eDistMeasure = CSeekDataset::Z_SCORE;
+	m_bOutputWeightComponent = false;
+	m_bSimulateWeight = false;
 	m_bOutputText = false;
 	m_bSquareZ = false;
 	m_bSharedDB = false;
@@ -213,11 +215,12 @@ bool CSeekCentral::CalculateRestart(){
 //assume m_enableNetwork is on
 //* CDatabaselet collection is shared between multiple clients (m_bSharedDB)
 bool CSeekCentral::Initialize(
-	string &output_dir, string &query, string &search_dset,
-	CSeekCentral *src, float &query_min_required, 
-	enum CSeekDataset::DistanceMeasure eDistMeasure,
-	bool &bSubtractGeneAvg, bool &bNormPlatform,
-	const int& iClient){
+	const string &output_dir, const string &query,
+	const string &search_dset, CSeekCentral *src, const int iClient,
+	const float query_min_required,
+	const enum CSeekDataset::DistanceMeasure eDistMeasure,
+	const bool bSubtractGeneAvg, const bool bNormPlatform,
+	const bool bOutputWeightComponent, const bool bSimulateWeight){
 
 	//fprintf(stderr, "B0 %lu\n", CMeta::GetMemoryUsage());
 	m_output_dir = output_dir; //LATER, TO BE DELETED
@@ -233,6 +236,9 @@ bool CSeekCentral::Initialize(
 	m_bLogit = src->m_bLogit;
 	m_eDistMeasure = eDistMeasure;
 	m_vecstrGenes.resize(src->m_vecstrGenes.size());
+
+	m_bOutputWeightComponent = bOutputWeightComponent;
+	m_bSimulateWeight = bSimulateWeight;
 
 	m_bRandom = false;
 	m_iNumRandom = 1;
@@ -457,14 +463,14 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const char *dset, const char *platform, const char *db,
 	const char *prep, const char *gvar, const char *sinfo,
-	const bool &useNibble, const ushort &num_db,
-	const ushort &buffer, const bool &to_output_text,
+	const ushort num_db,
+	const ushort buffer, const bool to_output_text,
+	const bool bOutputWeightComponent, const bool bSimulateWeight,
 	const enum CSeekDataset::DistanceMeasure dist_measure,
-	const bool &bSubtractAvg, const bool &bNormPlatform,
-	const bool &bLogit, const float &fCutOff, const float &fPercentRequired, 
-	const bool &bSquareZ, 
-	//three new ones
-	const bool &bRandom, const int &iNumRandom, gsl_rng *rand){
+	const bool bSubtractAvg, const bool bNormPlatform,
+	const bool bLogit, const float fCutOff, const float fPercentRequired,
+	const bool bSquareZ, const bool bRandom, const int iNumRandom,
+	gsl_rng *rand, const bool useNibble){
 
 	m_maxNumDB = buffer;
 	m_numThreads = 8; //changed from 8
@@ -472,11 +478,14 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	m_fPercentQueryAfterScoreCutOff = fPercentRequired;
 	m_bSquareZ = bSquareZ;
 
+	m_bOutputWeightComponent = bOutputWeightComponent;
+	m_bSimulateWeight = bSimulateWeight;
+
 	//random retrieval==========================
 	m_bRandom = bRandom;
 	m_iNumRandom = iNumRandom;
 	m_randRandom = rand; //random-case only
-	//===
+	//==========================================
 
 	if(!m_bRandom){
 		m_randRandom = NULL;
@@ -547,19 +556,20 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const char *dset, const char *search_dset,
 	const char *query, const char *platform, const char *db,
 	const char *prep, const char *gvar, const char *sinfo,
-	const bool &useNibble, const ushort &num_db,
-	const ushort &buffer, const char *output_dir, const bool &to_output_text,
+	const ushort num_db, const char *output_dir,
+	const ushort buffer, const bool to_output_text,
+	const bool bOutputWeightComponent, const bool bSimulateWeight,
 	const enum CSeekDataset::DistanceMeasure dist_measure,
-	const bool &bSubtractAvg, const bool &bNormPlatform,
-	const bool &bLogit, const float &fCutOff, const float &fPercentRequired, 
-	const bool &bSquareZ,
-	//three new ones
-	const bool &bRandom, const int &iNumRandom, gsl_rng *rand){
+	const bool bSubtractAvg, const bool bNormPlatform,
+	const bool bLogit, const float fCutOff, const float fPercentRequired,
+	const bool bSquareZ, const bool bRandom, const int iNumRandom,
+	gsl_rng *rand, const bool useNibble){
 
 	if(!CSeekCentral::Initialize(gene, quant, dset, platform, 
-		db, prep, gvar, sinfo, useNibble, num_db, buffer, to_output_text, 
-		dist_measure, bSubtractAvg, bNormPlatform, 
-		bLogit, fCutOff, fPercentRequired, bSquareZ, bRandom, iNumRandom, rand)){
+		db, prep, gvar, sinfo, num_db, buffer, to_output_text,
+		bOutputWeightComponent, bSimulateWeight, dist_measure,
+		bSubtractAvg, bNormPlatform, bLogit, fCutOff, fPercentRequired,
+		bSquareZ, bRandom, iNumRandom, rand, useNibble)){
 		return false;
 	}
 
@@ -829,10 +839,10 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 	}
 
 	//NEED TO MAKE THIS A PARAMETER
-	bool simulateWeight = true;
+	bool simulateWeight = m_bSimulateWeight;
 
 	//output weight component (Mar 19)
-	bool weightComponent = true;
+	bool weightComponent = m_bOutputWeightComponent;
 
 	l = 0;
 	//oct 20, 2012: whether to redo current query with equal weighting

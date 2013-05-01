@@ -163,6 +163,10 @@ public:
 		outfile.open(fileName);
 		size_t i,j;
 		for(j=0; j<vData.size(); j++){
+			if(vData[j].size()==0){
+				outfile << "None" << endl;
+				continue;
+			}
 			for(i=0; i<vData[j].size()-1; i++){
 				outfile << vData[j][i] << " ";
 			}

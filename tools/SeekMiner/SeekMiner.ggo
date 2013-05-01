@@ -80,5 +80,9 @@ option	"buffer"			b	"Number of Databaselets to store in memory"
 option	"output_text"		O	"Output results (gene scores and dataset weights) as text"
 								flag	off
 option	"output_dir"		o	"Output directory"
-								string typestr="directory"
+								string typestr="directory"	yes
+option	"output_w_comp"		Y	"Output dataset weight components (generates .dweight_comp file)"
+								flag	off
+option	"simulate_w"		E	"If equal weighting or order-statistics weighting is selected, output simulated dataset weights"
+								flag	off
 								

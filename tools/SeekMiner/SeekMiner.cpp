@@ -72,6 +72,9 @@ int main( int iArgs, char** aszArgs ) {
 	bool useNibble = false;
 	if(sArgs.is_nibble_flag==1) useNibble = true;
 
+	bool bOutputWeightComponent = !!sArgs.output_w_comp_flag;
+	bool bSimulateWeight = !!sArgs.simulate_w_flag;
+
 	// Random Number Generator Initializations
 	gsl_rng_env_setup();
 
@@ -243,13 +246,15 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, 
 		sArgs.dir_gvar_arg,
 		sArgs.dir_sinfo_arg,
-		useNibble, sArgs.num_db_arg,
-		sArgs.buffer_arg, sArgs.output_dir_arg, !!sArgs.output_text_flag,
+		sArgs.num_db_arg,
+		sArgs.output_dir_arg,
+		sArgs.buffer_arg, !!sArgs.output_text_flag,
+		bOutputWeightComponent, bSimulateWeight,
 		eDistMeasure,
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_subavg_plat_flag,
 		false,
 		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag,
-		!!sArgs.random_flag, sArgs.num_random_arg, random_ranking_rnd))
+		!!sArgs.random_flag, sArgs.num_random_arg, random_ranking_rnd, useNibble))
 		return -1;
 
 	if(method=="CV"){

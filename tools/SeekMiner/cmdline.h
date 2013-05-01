@@ -131,6 +131,10 @@ struct gengetopt_args_info
   char * output_dir_arg;	/**< @brief Output directory.  */
   char * output_dir_orig;	/**< @brief Output directory original value given at command line.  */
   const char *output_dir_help; /**< @brief Output directory help description.  */
+  int output_w_comp_flag;	/**< @brief Output dataset weight components (generates .dweight_comp file) (default=off).  */
+  const char *output_w_comp_help; /**< @brief Output dataset weight components (generates .dweight_comp file) help description.  */
+  int simulate_w_flag;	/**< @brief If equal weighting or order-statistics weighting is selected, output simulated dataset weights (default=off).  */
+  const char *simulate_w_help; /**< @brief If equal weighting or order-statistics weighting is selected, output simulated dataset weights help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -167,6 +171,8 @@ struct gengetopt_args_info
   unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
   unsigned int output_text_given ;	/**< @brief Whether output_text was given.  */
   unsigned int output_dir_given ;	/**< @brief Whether output_dir was given.  */
+  unsigned int output_w_comp_given ;	/**< @brief Whether output_w_comp was given.  */
+  unsigned int simulate_w_given ;	/**< @brief Whether simulate_w was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

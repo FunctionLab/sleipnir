@@ -74,6 +74,8 @@ const char *gengetopt_args_info_help[] = {
   "  -b, --buffer=INT              Number of Databaselets to store in memory  \n                                  (default=`20')",
   "  -O, --output_text             Output results (gene scores and dataset \n                                  weights) as text  (default=off)",
   "  -o, --output_dir=directory    Output directory",
+  "  -Y, --output_w_comp           Output dataset weight components (generates \n                                  .dweight_comp file)  (default=off)",
+  "  -E, --simulate_w              If equal weighting or order-statistics \n                                  weighting is selected, output simulated \n                                  dataset weights  (default=off)",
     0
 };
 
@@ -141,6 +143,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->buffer_given = 0 ;
   args_info->output_text_given = 0 ;
   args_info->output_dir_given = 0 ;
+  args_info->output_w_comp_given = 0 ;
+  args_info->simulate_w_given = 0 ;
 }
 
 static
@@ -206,6 +210,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->output_text_flag = 0;
   args_info->output_dir_arg = NULL;
   args_info->output_dir_orig = NULL;
+  args_info->output_w_comp_flag = 0;
+  args_info->simulate_w_flag = 0;
   
 }
 
@@ -249,6 +255,8 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->buffer_help = gengetopt_args_info_help[39] ;
   args_info->output_text_help = gengetopt_args_info_help[40] ;
   args_info->output_dir_help = gengetopt_args_info_help[41] ;
+  args_info->output_w_comp_help = gengetopt_args_info_help[42] ;
+  args_info->simulate_w_help = gengetopt_args_info_help[43] ;
   
 }
 
@@ -522,6 +530,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "output_text", 0, 0 );
   if (args_info->output_dir_given)
     write_into_file(outfile, "output_dir", args_info->output_dir_orig, 0);
+  if (args_info->output_w_comp_given)
+    write_into_file(outfile, "output_w_comp", 0, 0 );
+  if (args_info->simulate_w_given)
+    write_into_file(outfile, "simulate_w", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -665,6 +677,12 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   if (! args_info->num_db_given)
     {
       fprintf (stderr, "%s: '--num_db' ('-n') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  if (! args_info->output_dir_given)
+    {
+      fprintf (stderr, "%s: '--output_dir' ('-o') option required%s\n", prog_name, (additional_error ? additional_error : ""));
       error = 1;
     }
   
@@ -878,10 +896,12 @@ cmdline_parser_internal (
         { "buffer",	1, NULL, 'b' },
         { "output_text",	0, NULL, 'O' },
         { "output_dir",	1, NULL, 'o' },
+        { "output_w_comp",	0, NULL, 'Y' },
+        { "simulate_w",	0, NULL, 'E' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hx:D:i:q:d:p:P:u:U:Q:n:V:w:f:W:R:F:lSt:z:mMc:eC:I:X:G:Nb:Oo:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hx:D:i:q:d:p:P:u:U:Q:n:V:w:f:W:R:F:lSt:z:mMc:eC:I:X:G:Nb:Oo:YE", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1270,6 +1290,26 @@ cmdline_parser_internal (
               &(local_args_info.output_dir_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "output_dir", 'o',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'Y':	/* Output dataset weight components (generates .dweight_comp file).  */
+        
+        
+          if (update_arg((void *)&(args_info->output_w_comp_flag), 0, &(args_info->output_w_comp_given),
+              &(local_args_info.output_w_comp_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "output_w_comp", 'Y',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'E':	/* If equal weighting or order-statistics weighting is selected, output simulated dataset weights.  */
+        
+        
+          if (update_arg((void *)&(args_info->simulate_w_flag), 0, &(args_info->simulate_w_given),
+              &(local_args_info.simulate_w_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "simulate_w", 'E',
               additional_error))
             goto failure;
         
