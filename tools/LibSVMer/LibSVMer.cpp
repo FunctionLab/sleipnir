@@ -372,8 +372,8 @@ cerr << SVM.posFeatOnly << endl;
                                 size_t mem = CMeta::GetMemoryUsage();
                                 cerr << "before free: " << mem << endl;
 				if (i > 0) {
-					LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
-                                        //delete pTrainSample;
+					//LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
+                                        free(pTrainSample);
 				}
                                 mem = CMeta::GetMemoryUsage();
                                 cerr << "after free: " << mem << endl;
