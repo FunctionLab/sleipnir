@@ -35,14 +35,19 @@
  *
  * \section sec_usage Usage
  * 
- * \subsection ssec_usage_basic Basic Usage
+ * \subsubsection ssec_usage_basic Basic Usage
  * 
  * \code
- * SeekMiner -x <dset_platform_map> -D <search_dset> -i <gene_map> -q <query> -P <platform_dir> -p <prep_dir> -n <num_db> -d <db_dir> -Q <quant> -o <output_dir> -m
+ * SeekMiner -x <dset_platform_map> -i <gene_map> -q <query> -P <platform_dir> -p <prep_dir> -n <num_db>
+ * -d <db_dir> -Q <quant> -o <output_dir> -V <weight_method> -z <distance_measure> -m [-D <search_dset>]
  * \endcode
- * This performs the coexpression mining for a list of queries in the file \c query, and outputs
- * the gene-ranking and the dataset weights in the \c output_dir.
- * The outputs are divided by queries. Starting with the first query (named 0), its final results
+ * This performs coexpression mining for a list of queries in the file \c query,
+ * and outputs the gene-ranking and the dataset weights in the \c output_dir.
+ *
+ * \subsubsection sec_output Output
+ *
+ * The output files are divided according to queries.
+ * Starting with the first query (with a file name 0), its final results
  * will consist of three files: \c 0.query, 0.dweight, 0.gscore.
  * \li The file base name (0) indicates the query index in the list.
  * \li The \c 0.query stores the space-delimited query gene-set in text.
@@ -51,52 +56,44 @@
  * \li The \c 0.gscore stores the gene scores as a binary one-dimensional float vector
  * (see SeekEvaluator for displaying a GSCORE extension file).
  *
- * Users can choose among several dataset weighting schemes:
- * \li Query cross-validated weighting (shortened CV, default), where we iteratively use a subset of the
- * query to construct a search instance to retrieve the remaining query genes. The retrieval precision
- * score becomes the dataset weight.
- * \li Equal weighting (shortened EQ), where all datasets are weighted equally.
- * \li Order statistics integration (shortened ORDER_STAT), which is outlined in Adler et al (2009).
- * This method computes P-value statistics by comparing the rank of correlation across datasets to the
+ * \subsubsection sec_weight Weighting Datasets
+ *
+ * SeekMiner supports the following weighting methods (\c -V):
+ * \li Query cross-validated weighting (\c CV, default), where we iteratively use a subset of the
+ * query to construct a search instance to retrieve the remaining query genes. The sum of the score of the
+ * cross-validations forms the dataset weight.
+ * \li Equal weighting (\c EQUAL), where all datasets are weighted equally.
+ * \li Order statistics integration (\c ORDER_STAT), which is outlined in Adler et al (2009).
+ * This method computes a P-value statistics by comparing the rank of correlation across datasets to the
  * ranks that would have been generated a null distribution (where correlations are randomly scattered
  * and all ranks appear equally likely).
  *
- * Users can also choose the type of transformations to perform on the distance matrix of <b>each dataset</b>.
- * Among these are:
- * \li No transformation: use only Pearson correlations. (\c -T)
- * \li Default z-scores: Fisher's transform followed by standardization. No arguments required.
- * \li On top of the default z-scores, subtracts the average z-score of the result genes. (\c -m).
- * It is highly recommended to turn \c -m on.
+ * \subsubsection sec_distance Distance Measure and Transformations
  *
- * Users may also define the datasets that they wish to use for integrations in a query-specific way, using \c -D  argument.
- * If this argument is absent, all datasets in the compendium will be integrated. If \c -D is used, the structure of \c search_dset should be:
- * \code
- * GSE15913.GPL570.pcl GSE16122.GPL2005.pcl GSE16836.GPL570.pcl ...
- * GSE14933.GPL570.pcl GSE15162.GPL2005.pcl GSE15566.GPL570.pcl ...
- * ...
- * \encode
- * where each line, corresponding to a query, is a space-separated dataset list.
+ * Users can select between Pearson correlations (\c -z \c pearson) or z-scores of Pearson (\c -z \c z_score).
+ * Z-scores is the recommended choice because it normalizes the correlation distribution to a standard normal
+ * distribution that can be compared across datasets. In addition, SeekMiner provides the following
+ * transformations on z-scores:
  *
- * The remainder of arguments are query-independent search setting files and environment files.
- * 
- * 
- * \subsection ssec_usage_detailed Detailed Usage
- * 
- * \include SeekMiner/SeekMiner.ggo
- * 
- * <table><tr>
- *	<th>Flag</th>
- *	<th>Default</th>
- *	<th>Type</th>
- *	<th>Description</th>
- * </tr><tr>
- *	<td>-x</td>
- *	<td>None</td>
- *	<td>Text file</td>
- *	<td>The dataset-platform mapping file. 
+ * \li \c --score_cutoff. Cut-off Z-scores at a specified value.
+ * \li \c --norm_subavg. Subtracts each gene's average z-score to reduce the influence of hubby genes.
+ * \li \c --norm_subavg_plat. Normalizes z-score by subtracting the average across the platform and dividing by its standard deviation.
+ * Deals with potential platform biases.
+ * \li \c --square_z. Squaring the z-score to further boost highly correlated gene-pairs.
+ * It is highly recommended to enable \c --norm_subavg.
+ *
+ * \subsubsection sec_search Search Datasets
+ *
+ * Users may also define the datasets that they wish to use for integrations in a query-specific way, using \c -D argument.
+ * If this argument is absent, all datasets in the compendium will be integrated. If \c -D is used, the search datasets
+ * must be selected from the available datasets defined in \c dset_platform_map.
+ *
+ * \subsubsection sec_files Query-independent search setting files and directories
+ *
+ * \c -x \c dset_platform_map
+ *
  * Tab-delimited text file containing two columns, the dataset name,
- * and the corresponding platform name. For example, below is a few sample lines
- * of what datasets and platforms can be:
+ * and the corresponding platform name. Below is a few sample lines:
  * \code
  * GSE15913.GPL570.pcl  GPL570
  * GSE16122.GPL2005.pcl GPL2005
@@ -105,35 +102,15 @@
  * GSE17351.GPL570.pcl  GPL570
  * GSE17537.GPL570.pcl  GPL570
  * \endcode
- * Note that although the dataset name looks like a file name, it does not 
+ * Note that although the dataset name looks like a file name, it does not
  * need to be a valid file name, as long as it properly and uniquely describes
- * the dataset. Here, the dataset is uniquely identified by a GSE ID and a GPL ID 
- * combination. In addition, the ordering of the datasets in this file is 
- * non-random: it must match the order of the datasets in the CDatabaselet 
- * (\c *.db).
- * Typically, the \c dataset_map.txt file that generated the
- * CDatabaselet collection can be used for this field.
- *	</td>
- * </tr><tr>
- *	<td>-D</td>
- *	<td>None</td>
- *	<td>Directory</td>
- *	<td>The search dataset file. This multi-line file contains the list of 
- * space-separated dataset names to be used for the coexpression search. 
- * Each query can use its own list, so each query requires its own definition in 
- * a separate line. Below are some sample lines:
- * \code
- * GSE12386.GPL7149.pcl GSE20934.GPL10200.pcl GSE17941.GPL9188.pcl GSE13901.GPL7763.pcl GSE10616.GPL5760.pcl ...
- * GSE12386.GPL7149.pcl GSE20934.GPL10200.pcl GSE17941.GPL9188.pcl GSE13901.GPL7763.pcl ...
- * \endcode
- * This specifies the search datasets for two queries. The dataset 
- * must be one of the dataset names from the dataset-platform map file (-x).
- * </td>
- * </tr><tr>
- *	<td>-i</td>
- *	<td>None</td>
- *	<td>Text file</td>
- *	<td>The gene-map file. Maps the genes to an ID between 0 to N where N is
+ * the dataset. Here, the dataset is uniquely identified by a GSE ID and a GPL ID
+ * combination. In addition, the ordering of the datasets in this file must match
+ * the order of the datasets in the CDatabaselet (ie DB files).
+ *
+ * \c -i \c gene_map
+ *
+ * Tab-delimited gene-map file. Maps the genes to an ID between 0 to N where N is
  * the genome size. Example:
  * \code
  * 1    1
@@ -149,14 +126,72 @@
  * 11   100033413
  * 12   100033414
  * \endcode
- * The ordering of the genes in this file must match the order of genes 
- * in the CDatabaselets (\c *.db). Typically, the \c gene_map.txt file 
- * that generated the CDatabaselet collection can be used for this field.
- * </td>
- * </tr><tr>
- *	<td>-x</td>
- *	<td>.</td>
- *	<td>Text file</td>
- *	<td>Input file containing list of CDatabaselets to combine</td>
- * </tr></table>
+ * The ordering of the genes in this file must match the order of genes
+ * in the CDatabaselets (DB files).
+ *
+ * \c -q \c query
+ *
+ * The file can contain multiple queries that are listed one query per line.
+ * The genes in each query are separated by spaces. Example:
+ * \code
+ * 10003 10002 10001
+ * 634 6265
+ * \encode
+ * The names of the genes must be selected from the genes in the \c gene_map.
+ * The maximum length of the query depends on the amount of available memory in the system.
+ * It is recommended to keep each query less than 100 genes.
+ *
+ * \c -D \c search_dset
+ *
+ * This file defines the list of datasets to be used for integration. It can be query-specific.
+ * An example is provided below:
+ * \code
+ * GSE15913.GPL570.pcl GSE16122.GPL2005.pcl GSE16836.GPL570.pcl ...
+ * GSE14933.GPL570.pcl GSE15162.GPL2005.pcl GSE15566.GPL570.pcl ...
+ * ...
+ * \encode
+ * where each line, corresponding to a query, is a space-separated dataset list.
+ * The dataset names must be selected from the file \c dset_platform_map.
+ *
+ * \c -P \c platform_dir
+ *
+ * Directory that contains the following 3 files:
+ * \li \c all_platforms.gplatavg. the platform average z-scores
+ * \li \c all_platforms.gplatstdev. the platform z-score standard deviation
+ * \li \c all_platforms.gplatorder. The order of platforms
+ * These binary files are generated by SeekPrep. The specification of this directory is
+ * necessary for \c --norm_subavg_plat.
+ *
+ * \c -p \c prep_dir
+ *
+ * Directory that contains the gene presence files and the gene average files:
+ * \li Gene presence (GPRES files): indicates the presence/absence of genes in a dataset
+ * \li Gene average (GAVG files): indicates the average z-score of each gene in a dataset
+ * There should be one pair of these files for <b>every</b> dataset that is specified
+ * in \c dset_platform_map. Also generated by SeekPrep.
+ *
+ * \c -d \c db_dir
+ *
+ * Directory that contains the CDatabase (all of the DB files).
+ *
+ * \c -Q \c quant
+ *
+ * The quant file specifies how the z-scores are binned. This is necessary for properly reading
+ * the z-scores, because the z-scores are stored as binned values on disk. This quant file is used
+ * to convert them back to z-scores. Currently, the maximum number of bins supported is 255.
+ * An snapshot of the quant file is below:
+ * \code
+ * -5.00 -4.96 -4.92 -4.88 -4.84 -4.80 -4.76 -4.72 -4.68 -4.64 -4.60 -4.56 -4.52 ...
+ * \endcode
+ * The bin boundaries are separated by spaces.
+ *
+ * \c -o \c output_dir
+ *
+ * Directory that will contain the search results.
+ * 
+ * 
+ * \subsection ssec_usage_detailed Detailed Usage
+ * 
+ * \include SeekMiner/SeekMiner.ggo
+ * 
  */

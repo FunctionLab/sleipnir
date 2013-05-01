@@ -129,16 +129,15 @@ public:
      * average \c *.gavg, and the gene presence \c *.gpres. 
      * \param gvar The gene variance directory, which contains the \c *.gvar files
      * \param sinfo The sinfo directory, which contains the \c *.sinfo files
-     * \param useNibble Default to false
      * \param num_db The total number of CDatabaselet files
      * \param buffer The number of query genes to store in the memory
      * \param output_dir The output directory
      * \param to_output_text If true, output the gene-ranking in textual format
+     * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
+     * \param bSimulateWeight If true, use simulated weight as dataset weight
      * \param dist_measure Distance measure, either CORRELATION or Z_SCORE
      * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
      * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
-     * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
-     * \param bSimulateWeight If true, use simulated weight as dataset weight
      * \param bLogit If true, apply the logit transformation on the \a correlations
      * \param fCutOff Cutoff the \a correlation values
      * \param fPercentRequired The fraction of the query genes required to be present in a dataset 
@@ -147,11 +146,15 @@ public:
      * \param bRandom If true, shuffle the \a correlation vector
      * \param iNumRandom The number of random simulations to perform per query
      * \param rand The random number generator
+     * \param useNibble Default to false
      *
      * \remark The word \a correlation refers to the z-scored, standardized Pearson.
-     * \remark The parameters \c bCorrelation, \c bSubtractAvg, \c bSubtractPlatformAvg, 
-     * \c bDividePlatformStdev, \c bLogit, and \c bSquareZ are options to transform the 
+     * \remark The parameters \c bSubtractAvg, \c bNormPlatform,
+     * \c bLogit, and \c bSquareZ are options to transform the
      * \a correlation values.
+     * \remark The \c bSimulateWeight option is for equal weighting or order statistics where the final gene ranking
+     * is not derived from a weighted integration of datasets. In this case, if the user still wants to see
+     * the contribution of each dataset, the simulated weight is computed from the distance of a dataset's coexpression ranking to the final gene ranking.
      * \remark This function is designed to be used by SeekMiner.
      */
 	bool Initialize(const char *gene, const char *quant,
@@ -163,9 +166,8 @@ public:
 		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
 		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
 		const bool bSubtractAvg = true, const bool bNormPlatform = false,
-		const bool bLogit = false, const float fCutOff = -9999,
-		const float fPercentRequired = 0, const bool bSquareZ = false,
-		const bool bRandom = false, const int iNumRandom = 10,
+		const bool bLogit = false, const float fCutOff = -9999, const float fPercentRequired = 0,
+		const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
 		gsl_rng *rand = NULL, const bool useNibble = false);
 
     /*!
@@ -185,15 +187,14 @@ public:
      * Divided by datasets.
      * \param gvar The gene variance directory, which contains the \c *.gvar files
      * \param sinfo The sinfo directory, which contains the \c *.sinfo files
-     * \param useNibble Default to false
      * \param num_db The total number of CDatabaselet files
      * \param buffer The number of query genes to store in the memory
      * \param to_output_text If true, output the gene-ranking in the textual format
+     * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
+     * \param bSimulateWeight If true, use simulated weight as dataset weight
      * \param dist_measure Distance measure, either CORRELATION or Z_SCORE
      * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
      * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
-     * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
-     * \param bSimulateWeight If true, use simulated weight as dataset weight
      * \param bLogit If true, apply the logit transformation on the \a correlations
      * \param fCutOff Cutoff the \a correlations
      * \param fPercentRequired The fraction of the query genes required to be present in a dataset
@@ -201,11 +202,15 @@ public:
      * \param bRandom If true, shuffle the \a correlation vector
      * \param iNumRandom The number of random simulations to perform per query
      * \param rand The random number generator
+     * \param useNibble Default to false
      *
      * \remark The word \a correlation refers to the z-scored, standardized Pearson.
-     * \remark The parameters \c bCorrelation, \c bSubtractAvg, \c bSubtractPlatformAvg,
-     * \c bDividePlatformStdev, \c bLogit, and \c bSquareZ are options to transform the
+     * \remark The parameters \c bSubtractAvg, \c bNormPlatform,
+     * \c bLogit, and \c bSquareZ are options to transform the
      * \a correlation values.
+     * \remark The \c bSimulateWeight option is for equal weighting or order statistics where the final gene ranking
+     * is not derived from a weighted integration of datasets. In this case, if the user still wants to see
+     * the contribution of each dataset, the simulated weight is computed from the distance of a dataset's coexpression ranking to the final gene ranking.
      * \remark This function is designed to be used by SeekMiner.
      */
 	bool Initialize(const char *gene, const char *quant,
@@ -216,10 +221,9 @@ public:
 		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
 		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
 		const bool bSubtractAvg = true, const bool bNormPlatform = false,
-		const bool bLogit = false, const float fCutOff = 0,
-		const float fPercentRequired = 0, const bool bSquareZ = false,
-		const bool bRandom = false, const int iNumRandom = 10, gsl_rng *rand = NULL,
-		const bool useNibble = false);
+		const bool bLogit = false, const float fCutOff = -9999, const float fPercentRequired = 0,
+		const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
+		gsl_rng *rand = NULL, const bool useNibble = false);
 
     /*!
      * \brief Initialize function
@@ -230,28 +234,23 @@ public:
      * \param query The query file name
      * \param search_dset The file that contains the name of datasets to be used for the search
      * \param src The CSeekCentral instance, where some settings will be copied to here
+     * \param iClient The client's socket connection
      * \param query_min_required The minimum number of query genes required to be present in a dataset
      * \param dist_measure Distance measure, either CORRELATION or Z_SCORE.
-     * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
      * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
-     * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
-     * \param bSimulateWeight If true, use simulated weight as dataset weight
-	 * \param iClient The client's socket connection
+     * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
      *
      * \remark This function is designed to be used by SeekServer.
      * \remark The parameters \c bSubtractAvg, \c bNormPlatform
      * are options to transform the \a correlation values.
      * \remark Assumes that the CDatabaselets have been read, and the \c *.gvar, \c *.sinfo files have been loaded.
      * \remark Assumes that the dataset and gene mapping files have been read.
-     * \remark The \c bSimulateWeight option is for equal weighting or order statistics. The simulated weight is
-     * computed from the distance of a dataset's coexpression ranking to the final integrated coexpression ranking.
      */
 	bool Initialize(const string &output_dir, const string &query,
 		const string &search_dset, CSeekCentral* src, const int iClient,
 		const float query_min_required = 0,
 		const enum CSeekDataset::DistanceMeasure = CSeekDataset::Z_SCORE,
-		const bool bSubtractGeneAvg = true, const bool bNormPlatform = false,
-		const bool bOutputWeightComponent = true, const bool bSimulateWeight = true);
+		const bool bSubtractGeneAvg = true, const bool bNormPlatform = false);
 
 	/*!
 	 * \brief Run Seek with the cross-validated dataset weighting

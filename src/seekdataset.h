@@ -58,12 +58,12 @@ class CSeekDataset{
 public:
 
 	/*!
-	 * \brief
-	 * Distance measure
+	 * \enum DistanceMeasure
+	 * \brief Distance measure (see main section for descriptions)
 	 */
 	enum DistanceMeasure{
-		CORRELATION = 0,
-		Z_SCORE = CORRELATION + 1
+		CORRELATION = 0, /**< Pearson correlations */
+		Z_SCORE = CORRELATION + 1 /**< Z-score of Pearson correlations */
 	};
 
 	/*!

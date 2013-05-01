@@ -77,28 +77,26 @@ void *do_query(void *th_arg){
 	float query_fraction_required = my->query_fraction_required;
 
 	CSeekCentral *csu = new CSeekCentral();
-	bool bCorrelation = false;
+	enum CSeekDataset::DistanceMeasure eDM = CSeekDataset::Z_SCORE;
 	bool bSubtractGeneAvg = false;
-	bool bSubtractPlatformAvg = false;
-	bool bDividePlatformStdev = false;
+	bool bNormPlatform = false;
 
 	if(distanceMeasure=="Correlation"){
-		bCorrelation = true;
+		eDM = CSeekDataset::CORRELATION;
 	}else if(distanceMeasure=="Zscore"){
 		//do nothing
 	}else if(distanceMeasure=="ZscoreHubbinessCorrected"){
 		bSubtractGeneAvg = true;
-		bSubtractPlatformAvg = true;
-		bDividePlatformStdev = true;
+		bNormPlatform = true;
 	}
 
-	csu->Initialize(strOutputDir, strQuery, strSearchDatasets, csfinal, 
-		query_fraction_required, bCorrelation, bSubtractGeneAvg,
-		bSubtractPlatformAvg, bDividePlatformStdev);
-	csu->EnableNetwork(new_fd, true);
-	bool r = csu->CheckDatasets(true);
+	bool r = csu->Initialize(strOutputDir, strQuery, strSearchDatasets, csfinal,
+		new_fd, query_fraction_required, eDM, bSubtractGeneAvg,
+		bNormPlatform);
+
 	//if r is false, then one of the query has no datasets 
-	//containing any of the query, exit in this case
+	//containing any of the query (because of CheckDatasets() in Initialize()),
+	//exit in this case
 	if(r){
 		if(searchMethod=="EqualWeighting"){
 			csu->EqualWeightSearch();
@@ -113,7 +111,7 @@ void *do_query(void *th_arg){
 			gsl_rng_set(rnd, 100);
 			ushort FOLD = 5;
 			//enum PartitionMode PART_M = CUSTOM_PARTITION;
-			enum PartitionMode PART_M = LEAVE_ONE_IN;
+			enum CSeekQuery::PartitionMode PART_M = CSeekQuery::LEAVE_ONE_IN;
 			csu->CVSearch(rnd, PART_M, FOLD, rbp_p);
 			gsl_rng_free(rnd);
 		}
@@ -157,10 +155,20 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 
 	bool useNibble = false;
-	if(sArgs.is_nibble_flag==1) useNibble = true;
+
+	if(sArgs.is_nibble_flag==1){
+		fprintf(stderr, "Nibble integration is not supported! Please use a non-nibble CDatabase.\n");
+		useNibble = true;
+		return 1;
+	}
 
 	// Random Number Generator Initializations
 	ushort i, j;
+	bool bOutputWeightComponent = true;
+	bool bSimulateWeight = true;
+	bool bSubtractAvg = true;
+	bool bNormPlatform = true;
+	bool bLogit = false;
 
 	csfinal = new CSeekCentral();
 	if(!csfinal->Initialize(sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
@@ -169,13 +177,14 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, 
 		sArgs.dir_gvar_arg,
 		sArgs.dir_sinfo_arg,
-		useNibble, sArgs.num_db_arg,
-		sArgs.buffer_arg, !!sArgs.output_text_flag,  
-		!!sArgs.correlation_flag, 
-		!!sArgs.norm_subavg_flag, !!sArgs.norm_platsubavg_flag,
-		!!sArgs.norm_platstdev_flag, false,
-		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag, 
-		false, 1, NULL))
+		sArgs.num_db_arg,
+		sArgs.buffer_arg, !!sArgs.output_text_flag,
+		bOutputWeightComponent, bSimulateWeight,
+		CSeekDataset::Z_SCORE, //to be overwritten by individual search instance's setting
+		bSubtractAvg, bNormPlatform, //to be overwritten by individual search instance's settings
+		bLogit, //always false
+		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag, //default
+		false, 1, NULL, useNibble)) //default
 		return -1;
 
 	signal(SIGPIPE, SIG_IGN);

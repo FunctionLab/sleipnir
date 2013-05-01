@@ -70,7 +70,14 @@ int main( int iArgs, char** aszArgs ) {
 	}
 
 	bool useNibble = false;
-	if(sArgs.is_nibble_flag==1) useNibble = true;
+	if(sArgs.is_nibble_flag==1){
+		fprintf(stderr, "Nibble integration is not supported! Please use a non-nibble CDatabase.\n");
+		useNibble = true;
+		return 1;
+	}
+
+	bool bOutputWeightComponent = !!sArgs.output_w_comp_flag;
+	bool bSimulateWeight = !!sArgs.simulate_w_flag;
 
 	bool bOutputWeightComponent = !!sArgs.output_w_comp_flag;
 	bool bSimulateWeight = !!sArgs.simulate_w_flag;

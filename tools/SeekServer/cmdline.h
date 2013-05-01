@@ -69,14 +69,6 @@ struct gengetopt_args_info
   int num_db_arg;	/**< @brief Number of databaselets in database (default='1000').  */
   char * num_db_orig;	/**< @brief Number of databaselets in database original value given at command line.  */
   const char *num_db_help; /**< @brief Number of databaselets in database help description.  */
-  int correlation_flag;	/**< @brief Use Pearson correlation values, instead of z-score. -m, -M, -r do not apply (default=off).  */
-  const char *correlation_help; /**< @brief Use Pearson correlation values, instead of z-score. -m, -M, -r do not apply help description.  */
-  int norm_subavg_flag;	/**< @brief Per dataset, normalize z-scores by subtracting average of result gene (default=off).  */
-  const char *norm_subavg_help; /**< @brief Per dataset, normalize z-scores by subtracting average of result gene help description.  */
-  int norm_platsubavg_flag;	/**< @brief Per platform, normalize z-scores by subtracting average of query gene across platform (default=off).  */
-  const char *norm_platsubavg_help; /**< @brief Per platform, normalize z-scores by subtracting average of query gene across platform help description.  */
-  int norm_platstdev_flag;	/**< @brief Per platform, normalize z-scores by dividing stdev of query gene across platform (default=off).  */
-  const char *norm_platstdev_help; /**< @brief Per platform, normalize z-scores by dividing stdev of query gene across platform help description.  */
   float score_cutoff_arg;	/**< @brief Cutoff on the gene-gene score before adding, default: no cutoff (default='-9999').  */
   char * score_cutoff_orig;	/**< @brief Cutoff on the gene-gene score before adding, default: no cutoff original value given at command line.  */
   const char *score_cutoff_help; /**< @brief Cutoff on the gene-gene score before adding, default: no cutoff help description.  */
@@ -85,8 +77,8 @@ struct gengetopt_args_info
   const char *per_q_required_help; /**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. help description.  */
   int square_z_flag;	/**< @brief If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff (default=off).  */
   const char *square_z_help; /**< @brief If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff help description.  */
-  int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
-  const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
+  int is_nibble_flag;	/**< @brief If true, the input DB is nibble type (default=off).  */
+  const char *is_nibble_help; /**< @brief If true, the input DB is nibble type help description.  */
   int buffer_arg;	/**< @brief Number of Databaselets to store in memory (default='20').  */
   char * buffer_orig;	/**< @brief Number of Databaselets to store in memory original value given at command line.  */
   const char *buffer_help; /**< @brief Number of Databaselets to store in memory help description.  */
@@ -105,10 +97,6 @@ struct gengetopt_args_info
   unsigned int dir_gvar_given ;	/**< @brief Whether dir_gvar was given.  */
   unsigned int quant_given ;	/**< @brief Whether quant was given.  */
   unsigned int num_db_given ;	/**< @brief Whether num_db was given.  */
-  unsigned int correlation_given ;	/**< @brief Whether correlation was given.  */
-  unsigned int norm_subavg_given ;	/**< @brief Whether norm_subavg was given.  */
-  unsigned int norm_platsubavg_given ;	/**< @brief Whether norm_platsubavg was given.  */
-  unsigned int norm_platstdev_given ;	/**< @brief Whether norm_platstdev was given.  */
   unsigned int score_cutoff_given ;	/**< @brief Whether score_cutoff was given.  */
   unsigned int per_q_required_given ;	/**< @brief Whether per_q_required was given.  */
   unsigned int square_z_given ;	/**< @brief Whether square_z was given.  */

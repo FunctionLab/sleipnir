@@ -219,8 +219,7 @@ bool CSeekCentral::Initialize(
 	const string &search_dset, CSeekCentral *src, const int iClient,
 	const float query_min_required,
 	const enum CSeekDataset::DistanceMeasure eDistMeasure,
-	const bool bSubtractGeneAvg, const bool bNormPlatform,
-	const bool bOutputWeightComponent, const bool bSimulateWeight){
+	const bool bSubtractGeneAvg, const bool bNormPlatform){
 
 	//fprintf(stderr, "B0 %lu\n", CMeta::GetMemoryUsage());
 	m_output_dir = output_dir; //LATER, TO BE DELETED
@@ -237,8 +236,8 @@ bool CSeekCentral::Initialize(
 	m_eDistMeasure = eDistMeasure;
 	m_vecstrGenes.resize(src->m_vecstrGenes.size());
 
-	m_bOutputWeightComponent = bOutputWeightComponent;
-	m_bSimulateWeight = bSimulateWeight;
+	m_bOutputWeightComponent = src->m_bOutputWeightComponent;
+	m_bSimulateWeight = src->m_bSimulateWeight;
 
 	m_bRandom = false;
 	m_iNumRandom = 1;
