@@ -34,6 +34,10 @@ namespace Sleipnir {
  * otherwise the size of the array)
  * \li Byte #9 and onward: \a S times \a N bytes specifying the array content
  *
+ * IMPORTANT:
+ * <b>Outgoing messages are always encoded using bytes in the Little Endian order.</b>
+ *
+ *
  * \section sec_in Incoming messages
  *
  * On the receiving end, CSeekNetwork also supports the receiving of a \c char array (or a \c string) or a \c float array.
@@ -49,10 +53,7 @@ namespace Sleipnir {
  * \li Byte #5 and onward: \a NF times 4 bytes specifying the \c float array.
  *
  * IMPORTANT:
- * <b>
- * Outgoing messages are always encoded using bytes in the Little Endian order.
- *
- * For an incoming message to be properly recognized, the message should also be encoded with bytes in the Little Endian order.
+ * <b>For an incoming message to be properly recognized, the incoming message should also be encoded with bytes in the Little Endian order.
  * </b>
  */
 class CSeekNetwork{

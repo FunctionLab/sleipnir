@@ -23,15 +23,14 @@
 
 /*!
  * \page SeekMiner SeekMiner
- * 
- * SeekMiner returns a gene-ranking based on the coexpressions to the user-specified
- * query genes. It finds relevant datasets by using one of the many dataset weighting
- * algorithms, including the query-coexpression weighting, the order statistics 
- * weighting, etc. Afterward, it performs a weighted integration of coexpressions
- * using the computed dataset weights.
- * The search algorithms employed by Seek are designed to be quick and efficient, and
- * they support the real-time weight calculations for thousands of microarray
- * datasets.
+ *
+ * SeekMiner accepts a set of genes as query in order to perform a weighted compendium 
+ * search for additional genes that are coexpressed with the query genes. 
+ * SeekMiner finds and integrates relevant datasets by using one of the many dataset weighting
+ * algorithms, including the cross-validated query-coexpression weighting, the order statistics 
+ * weighting, etc. 
+ * These search algorithms are designed to be quick and efficient, and enable fast weight computations
+ * for thousands of microarray datasets.
  *
  * \section sec_usage Usage
  * 
@@ -41,20 +40,9 @@
  * SeekMiner -x <dset_platform_map> -i <gene_map> -q <query> -P <platform_dir> -p <prep_dir> -n <num_db>
  * -d <db_dir> -Q <quant> -o <output_dir> -V <weight_method> -z <distance_measure> -m [-D <search_dset>]
  * \endcode
- * This performs coexpression mining for a list of queries in the file \c query,
+ * This performs the coexpression search for a list of queries,
  * and outputs the gene-ranking and the dataset weights in the \c output_dir.
  *
- * \subsubsection sec_output Output
- *
- * The output files are divided according to queries.
- * Starting with the first query (with a file name 0), its final results
- * will consist of three files: \c 0.query, 0.dweight, 0.gscore.
- * \li The file base name (0) indicates the query index in the list.
- * \li The \c 0.query stores the space-delimited query gene-set in text.
- * \li The \c 0.dweight stores the weightings of datasets as a binary one-dimensional float vector
- * (see SeekEvaluator for displaying a DWEIGHT extension file).
- * \li The \c 0.gscore stores the gene scores as a binary one-dimensional float vector
- * (see SeekEvaluator for displaying a GSCORE extension file).
  *
  * \subsubsection sec_weight Weighting Datasets
  *
@@ -65,21 +53,24 @@
  * \li Equal weighting (\c EQUAL), where all datasets are weighted equally.
  * \li Order statistics integration (\c ORDER_STAT), which is outlined in Adler et al (2009).
  * This method computes a P-value statistics by comparing the rank of correlation across datasets to the
- * ranks that would have been generated a null distribution (where correlations are randomly scattered
- * and all ranks appear equally likely).
+ * ranks that would have been generated a null distribution (where correlations are assumed to be
+ * randomly scattered and all ranks are equally likely).
+ * 
+ * The use of \c -V \c CV is highly recommended.
  *
  * \subsubsection sec_distance Distance Measure and Transformations
  *
  * Users can select between Pearson correlations (\c -z \c pearson) or z-scores of Pearson (\c -z \c z_score).
  * Z-scores is the recommended choice because it normalizes the correlation distribution to a standard normal
  * distribution that can be compared across datasets. In addition, SeekMiner provides the following
- * transformations on z-scores to allow further boosting of signals:
+ * transformations on z-scores to further allow boosting of signals:
  *
  * \li \c --score_cutoff. Cuts off z-scores at a specified value. Z-scores that fall below the cut-off are assigned zero.
- * \li \c --norm_subavg. Subtracts each gene's average z-score to prevent highly connected genes from influencing the z-score of a gene pair
+ * \li \c --norm_subavg. Subtracts each gene's average z-score. This prevents highly connected genes from being constantly returned with top ranks in the ranking.
  * \li \c --norm_subavg_plat. Normalizes z-score by subtracting the average across the platform and dividing by its standard deviation.
  * This is designed to handle potential platform biases on the z-scores.
- * \li \c --square_z. Squaring the z-score to further boost highly correlated gene-pairs.
+ * \li \c --square_z. Squaring the z-score. This is another way to boost the highly correlated gene-pairs.
+ * 
  * It is highly recommended to enable \c --norm_subavg.
  *
  * \subsubsection sec_search Search Datasets
@@ -88,6 +79,18 @@
  * If this argument is absent, all datasets in the compendium will be integrated.
  * If \c -D is used, the search datasets must be selected from the available
  * datasets defined in \c dset_platform_map.
+ *
+ * \subsubsection sec_output Output
+ *
+ * The output files are divided according to queries.
+ * Starting with the first query (with a file name 0), its final results
+ * will consist of three files: \c 0.query, \c 0.dweight, \c 0.gscore.
+ * \li The file base name (0) indicates the query index in the list.
+ * \li The \c 0.query stores the space-delimited query gene-set in text.
+ * \li The \c 0.dweight stores the weightings of datasets as a binary one-dimensional float vector
+ * (see \ref SeekEvaluator for displaying a DWEIGHT extension file).
+ * \li The \c 0.gscore stores the gene scores as a binary one-dimensional float vector
+ * (see \ref SeekEvaluator for displaying a GSCORE extension file).
  *
  * \subsubsection sec_files Query-independent search setting files and directories
  *
@@ -162,7 +165,7 @@
  * \li \c all_platforms.gplatstdev. the platform z-score standard deviation
  * \li \c all_platforms.gplatorder. the order of platforms
  *
- * These binary files are generated by SeekPrep. The specification of this directory is
+ * These binary files are generated by \ref SeekPrep. The specification of this directory is
  * necessary for \c --norm_subavg_plat.
  *
  * \c -p \c prep_dir
@@ -172,7 +175,7 @@
  * \li Gene average (GAVG files): indicates the average z-score of each gene in a dataset
  *
  * There should be one pair of these files for <b>every</b> dataset that is specified
- * in \c dset_platform_map. Generated by SeekPrep.
+ * in \c dset_platform_map. Generated by \ref SeekPrep.
  *
  * \c -d \c db_dir
  *
@@ -198,7 +201,7 @@
  *
  * Directory that contains the SINFO files, which list a dataset's average z-score between all pairs of genes
  * and the standard deviation. If this directory is provided, there should be one SINFO file for <b>
- * every</b> dataset in \c dset_platform_map. Generated by SeekPrep.
+ * every</b> dataset in \c dset_platform_map. Generated by \ref SeekPrep.
  *
  * 
  * \subsection ssec_usage_detailed Detailed Usage

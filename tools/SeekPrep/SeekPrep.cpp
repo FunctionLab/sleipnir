@@ -255,204 +255,102 @@ int main( int iArgs, char** aszArgs ) {
 	int numThreads = omp_get_max_threads();
 
 	/* PCL mode */
-	if(sArgs.pcl_flag==1){
+	if(sArgs.pclbin_flag==1){
 
 		if(sArgs.sinfo_flag==1){
-			string pcl_dir = sArgs.pcl_dir_arg;
-			vector<string> pcl_list;
-			CSeekTools::ReadListOneColumn(sArgs.pcl_list_arg, pcl_list);
+			string fileName = CMeta::Basename(sArgs.pclinput_arg);
+			string fileStem = CMeta::Deextension(fileName);
+			char outFile[125];
+			sprintf(outFile, "%s/%s.sinfo", sArgs.dir_out_arg, fileStem.c_str());
 
-			for(i=0; i<pcl_list.size(); i++){
-				string pclfile = pcl_dir + "/" + pcl_list[i] + ".bin";
-
-				char outFile[125];
-				sprintf(outFile, "%s/%s.sinfo", sArgs.dir_out_arg, pcl_list[i].c_str());
-				fprintf(stderr, "H0\n");
-
-				CPCL pcl;
-				//if(!pcl.Open(pclfile.c_str(), 2, false, false)){
-				if(!pcl.Open(pclfile.c_str())){
-					fprintf(stderr, "Error opening file\n");
-				}
-				/*
-				int totNumExperiments = pcl.GetExperiments() - 2;
-				if(totNumExperiments<=2){
-					vector<float> vv;
-					vv.resize(2);
-					vv[0] = CMeta::GetNaN();
-					vv[1] = CMeta::GetNaN();
-					CSeekTools::WriteArray(outFile, vv);
-					continue;
-				}
-
-				vector<ushort> presentIndex;
-				for(j=0; j<vecstrGenes.size(); j++){
-					ushort g = pcl.GetGene(vecstrGenes[j]);
-					if(CSeekTools::IsNaN(g)) continue; //gene does not exist in the dataset
-					presentIndex.push_back(g);
-				}
-				map<ushort, float> mean_d;
-				map<ushort, float> stdev_d;
-				
-				vector<float> all_correlations;
-
-				*/
-				CMeasurePearNorm pn;
-				CDat Dat;
-				int numG = pcl.GetGeneNames().size();
-
-				fprintf(stderr, "H1\n");
-
-				vector<int> veciGenes;
-				veciGenes.resize(numG);
-				for (j = 0; j < veciGenes.size(); ++j)
-					veciGenes[j] = j;
-				int iOne, iTwo;
-				fprintf(stderr, "H2\n");
-				Dat.Open(pcl.GetGeneNames());
-
-				for (k = 0; k < Dat.GetGenes(); ++k)
-					for (j = (k + 1); j < Dat.GetGenes(); ++j)
-						Dat.Set(k, j, CMeta::GetNaN());
-				fprintf(stderr, "H3\n");
-				for (k = 0; k < numG; ++k) {
-					if ((iOne = veciGenes[k]) == -1)
-						continue;
-					float *adOne = &pcl.Get(iOne)[2];
-					for (j = (k + 1); j < numG; ++j){
-						if ((iTwo = veciGenes[j]) != -1){
-							float x = (float) pn.Measure(adOne,
-								pcl.GetExperiments()-2, &pcl.Get(iTwo)[2],
-								pcl.GetExperiments()-2);
-							Dat.Set(k, j, x);
-							//fprintf(stderr, "%d %d %.5f\n", k, j, x);
-						}
-					}
-				}
-				fprintf(stderr, "H4\n");
-			
-				double gmean, gstdev;
-				size_t iN;
-
-				Dat.AveStd(gmean, gstdev, iN);
-				fprintf(stderr, "%.5f %.5f\n", (float) gmean, (float) gstdev);
-				
-				/*
-				for(j=0; j<presentIndex.size(); j++){
-					float *val = pcl.Get(presentIndex[j]);
-					vector<float> rowVal;
-					for(k=2; k<pcl.GetExperiments(); k++)
-						rowVal.push_back(val[k]);
-					float mean = 0;
-					float stdev = 0;
-					for(k=0; k<rowVal.size(); k++)
-						mean+=rowVal[k];
-					mean/=rowVal.size();
-					for(k=0; k<rowVal.size(); k++)
-						stdev += (rowVal[k] - mean) * (rowVal[k] - mean);
-					stdev /= rowVal.size();
-					stdev = sqrt(stdev);
-					mean_d[presentIndex[j]] = mean;
-					stdev_d[presentIndex[j]] = stdev;
-				}
-
-				for(j=0; j<presentIndex.size(); j++){
-					float *val = pcl.Get(presentIndex[j]);
-					vector<float> rowVal;
-					for(k=2; k<pcl.GetExperiments(); k++)
-						rowVal.push_back(val[k]);
-					float mean = mean_d[presentIndex[j]];
-					float stdev = stdev_d[presentIndex[j]];
-
-					for(k=j+1; k<presentIndex.size(); k++){
-						float *val2 = pcl.Get(presentIndex[k]);
-						vector<float> rowVal2;
-						for(l=2; l<pcl.GetExperiments(); l++)
-							rowVal2.push_back(val2[l]);
-						float mean2 = mean_d[presentIndex[k]];
-						float stdev2 = stdev_d[presentIndex[k]];
-						float r = 0;
-						for(l=0; l<rowVal.size(); l++)
-							r+=(rowVal[l] - mean)*(rowVal2[l] - mean2);
-						r /= stdev*stdev2;
-						r /= rowVal.size();
-						if(isinf(r) || isnan(r))
-							continue;
-
-						if(fabs(r) >= 0.9999f){
-							r*=0.9999f;
-						}
-						
-						r = 0.5 * log((1.0+r) / (1.0-r));
-
-						if(!(r<=5.0 && r>=-5.0))
-							continue;
-
-
-						fprintf(stderr, "%d %d %.5f\n", j, k, r);
-						all_correlations.push_back(r);
-					}
-				}
-
-				vector<float>::const_iterator iterF;
-				double global_mean = 0;
-				double global_stdev = 0;
-				for(iterF = all_correlations.begin(); iterF!=all_correlations.end(); iterF++)
-					global_mean+=(double) (*iterF);
-				global_mean /= (double) all_correlations.size();
-				for(iterF = all_correlations.begin(); iterF!=all_correlations.end(); iterF++)
-					global_stdev+=((double) (*iterF) - global_mean) * ((double) (*iterF) - global_mean);
-				global_stdev /= (double) (all_correlations.size() - 1);
-				global_stdev = sqrt(global_stdev);
-				float gstdev = (float) global_stdev;
-				float gmean = (float) global_mean;
-				if(all_correlations.size()==0){
-					gstdev = CMeta::GetNaN();
-					gmean = CMeta::GetNaN();
-				}
-				fprintf(stderr, "%.5f %.5f\n", gmean, gstdev);
-				*/
-				vector<float> vv;
-				vv.resize(2);
-				vv[0] = (float) gmean;
-				vv[1] = (float) gstdev;
-				CSeekTools::WriteArray(outFile, vv);
+			string pclfile = sArgs.pclinput_arg;
+			if(!CMeta::IsExtension(pclfile, ".bin")){
+				fprintf(stderr, "Input file is not bin type!\n");
+				return 1;
 			}
+			
+			CPCL pcl;
+			if(!pcl.Open(pclfile.c_str())){
+				fprintf(stderr, "Error opening file\n");
+			}
+			CMeasurePearNorm pn;
+			CDat Dat;
+			int numG = pcl.GetGeneNames().size();
+
+			vector<int> veciGenes;
+			veciGenes.resize(numG);
+			for (j = 0; j < veciGenes.size(); ++j)
+				veciGenes[j] = j;
+			int iOne, iTwo;
+			Dat.Open(pcl.GetGeneNames());
+
+			for (k = 0; k < Dat.GetGenes(); ++k)
+				for (j = (k + 1); j < Dat.GetGenes(); ++j)
+					Dat.Set(k, j, CMeta::GetNaN());
+			for (k = 0; k < numG; ++k) {
+				if ((iOne = veciGenes[k]) == -1)
+					continue;
+				float *adOne = &pcl.Get(iOne)[0];
+				for (j = (k + 1); j < numG; ++j){
+					if ((iTwo = veciGenes[j]) != -1){
+						float x = (float) pn.Measure(adOne,
+							pcl.GetExperiments(), &pcl.Get(iTwo)[0],
+							pcl.GetExperiments());
+						Dat.Set(k, j, x);
+						//fprintf(stderr, "%d %d %.5f\n", k, j, x);
+					}
+				}
+			}
+			
+			double gmean, gstdev;
+			size_t iN;
+
+			Dat.AveStd(gmean, gstdev, iN);
+			fprintf(stderr, "%.5f %.5f\n", (float) gmean, (float) gstdev);
+			vector<float> vv;
+			vv.resize(2);
+			vv[0] = (float) gmean;
+			vv[1] = (float) gstdev;
+			CSeekTools::WriteArray(outFile, vv);
 
 		}
 
 		//if calculating gene variance per dataset
 		else if(sArgs.gexpvarmean_flag==1){
-			string pcl_dir = sArgs.pcl_dir_arg;
-			vector<string> pcl_list;
-			CSeekTools::ReadListOneColumn(sArgs.pcl_list_arg, pcl_list);
+			string fileName = CMeta::Basename(sArgs.pclinput_arg);
+			string fileStem = CMeta::Deextension(fileName);
+			char outFile[125];
 
-			vector<vector<float> > var;
-			var.resize(pcl_list.size());
-			vector<vector<float> > avg;
-			avg.resize(pcl_list.size());
+			string pclfile = sArgs.pclinput_arg;
+			if(!CMeta::IsExtension(pclfile, ".bin")){
+				fprintf(stderr, "Input file is not bin type!\n");
+				return 1;
+			}
+			
+			CPCL pcl;
+			if(!pcl.Open(pclfile.c_str())){
+				fprintf(stderr, "Error opening file\n");
+				return 1;
+			}
 
-			for(i=0; i<pcl_list.size(); i++){
-				string pclfile = pcl_dir + "/" + pcl_list[i] + ".bin";
-				CPCL pcl;
-				pcl.Open(pclfile.c_str());
-				//cerr << pclfile << endl;
+			vector<float> var;
+			vector<float> avg;
 
-				var[i] = vector<float>();
-				avg[i] = vector<float>();
-				CSeekTools::InitVector(var[i], vecstrGenes.size(), (float) CMeta::GetNaN());
-				CSeekTools::InitVector(avg[i], vecstrGenes.size(), (float) CMeta::GetNaN());
-				int totNumExperiments = pcl.GetExperiments() - 2;
-				if(totNumExperiments<=2) continue;
+			CSeekTools::InitVector(var, vecstrGenes.size(), (float) CMeta::GetNaN());
+			CSeekTools::InitVector(avg, vecstrGenes.size(), (float) CMeta::GetNaN());
 
+			int totNumExperiments = pcl.GetExperiments();
+			if(totNumExperiments<=2){
+				fprintf(stderr, "This dataset is skipped because it contains <=2 columns\n");
+				fprintf(stderr, "An empty vector will be returned\n");
+			}else{
 				for(j=0; j<vecstrGenes.size(); j++){
 					ushort g = pcl.GetGene(vecstrGenes[j]);
 					if(CSeekTools::IsNaN(g)) continue; //gene does not exist in the dataset
 					float *val = pcl.Get(g);
 					vector<float> rowVal;
-					for(k=2; k<pcl.GetExperiments(); k++)
+					for(k=0; k<totNumExperiments; k++)
 						rowVal.push_back(val[k]);
-
 					float mean = 0;
 					float variance = 0;
 					for(k=0; k<rowVal.size(); k++)
@@ -461,20 +359,17 @@ int main( int iArgs, char** aszArgs ) {
 					for(k=0; k<rowVal.size(); k++)
 						variance += (rowVal[k] - mean) * (rowVal[k] - mean);
 					variance /= rowVal.size();
-					var[i][j] = variance;
-					avg[i][j] = mean;
+					var[j] = variance;
+					avg[j] = mean;
 					//fprintf(stderr, "%.5f %.5f\n", mean, variance);
 				}
 				//fprintf(stderr, "done\n"); 
 			}
 			//fprintf(stderr, "G\n"); 
-			for(i=0; i<pcl_list.size(); i++){
-				string dirout = sArgs.dir_out_arg;
-				string outfile = dirout + "/" + pcl_list[i] + ".gexpvar";
-				CSeekTools::WriteArray(outfile.c_str(), var[i]);
-				outfile = dirout + "/" + pcl_list[i] + ".gexpmean";
-				CSeekTools::WriteArray(outfile.c_str(), avg[i]);
-			}
+			sprintf(outFile, "%s/%s.gexpvar", sArgs.dir_out_arg, fileStem.c_str());
+			CSeekTools::WriteArray(outFile, var);
+			sprintf(outFile, "%s/%s.gexpmean", sArgs.dir_out_arg, fileStem.c_str());
+			CSeekTools::WriteArray(outFile, avg);
 		}
 
 	}
@@ -593,7 +488,7 @@ int main( int iArgs, char** aszArgs ) {
 			//printf("Dataset initialized"); getchar();
 			vector<string> vecstrQuery;
 
-			#pragma omp parallel for \
+			//#pragma omp parallel for \
 			shared(vc, dblist, iDatasets, m_iGenes, vecstrGenes, mapiPlatform, quant, \
 			platform_avg_threads, platform_stdev_threads, vecstrQuery, logit) \
 			private(i) firstprivate(useNibble) schedule(dynamic)
@@ -624,14 +519,14 @@ int main( int iArgs, char** aszArgs ) {
 				}
 			}
 
-			for(i=0; i<numPlatforms; i++){
+			//for(i=0; i<numPlatforms; i++){
 				//printf("Platform %s\n", mapistrPlatform[i].c_str());
 				/*for(j=0; j<vecstrQuery.size(); j++){
 					size_t iGene = mapstriGenes[vecstrQuery[j]];
 					printf("Gene %s %.5f %.5f\n", vecstrQuery[j].c_str(), platform_avg.Get(i, iGene),
 						platform_stdev.Get(i,iGene));
 				}*/
-			}
+			//}
 
 			char outFile[125];
 			sprintf(outFile, "%s/all_platforms.gplatavg", sArgs.dir_out_arg);

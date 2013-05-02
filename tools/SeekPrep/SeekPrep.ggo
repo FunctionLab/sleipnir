@@ -5,7 +5,7 @@ purpose	"Preprocess datasets for Seek"
 section "Mode"
 option	"dab"				d	"DAB mode, suitable for dataset wide gene average and stdev calculation"
 								flag	off
-option	"pcl"				e	"PCL mode, suitable for dataset gene variance calculation"
+option	"pclbin"			e	"PCL BIN mode, suitable for dataset gene variance calculation"
 								flag	off
 option	"db"				f	"DB mode, suitable for platform wide gene average and stdev calculation"
 								flag	off
@@ -21,10 +21,8 @@ option	"top_avg_percent"	C	"For gene average, top X percent of the values to tak
 								float	default="1.0"
 
 section "PCL mode"
-option	"pcl_list"			V	"PCL list"
+option	"pclinput"			V	"PCL BIN file"
 								string typestr="filename"
-option	"pcl_dir"			F	"PCL directory"
-								string typestr="directory"
 option	"gexpvarmean"		v	"Generates gene expression variance and mean files (.gexpvar, .gexpmean)"
 								flag	off
 option	"sinfo"				s	"Generates sinfo file (dataset z score mean and stdev)"

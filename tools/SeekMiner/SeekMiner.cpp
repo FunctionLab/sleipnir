@@ -79,9 +79,6 @@ int main( int iArgs, char** aszArgs ) {
 	bool bOutputWeightComponent = !!sArgs.output_w_comp_flag;
 	bool bSimulateWeight = !!sArgs.simulate_w_flag;
 
-	bool bOutputWeightComponent = !!sArgs.output_w_comp_flag;
-	bool bSimulateWeight = !!sArgs.simulate_w_flag;
-
 	// Random Number Generator Initializations
 	gsl_rng_env_setup();
 

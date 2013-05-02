@@ -25,10 +25,8 @@
  * \page SeekServer SeekServer
  * 
  * SeekServer runs the coexpression mining algorithm using a multithreaded TCP/IP interface.
- * When it is running, SeekServer services requests over the network from multiple connected clients
- * for genes that co-express with the client's query genes.
- * A list of genes that are found by the algorithm to be coexpressed with the query genes and a list of datasets
- * where this coexpression with the query is found to be occurring are sent back to the client.
+ * When it is running, SeekServer services multiple connected clients over the network on requests for
+ * genes that co-express with the client's query genes, and for datasets that are related to the query genes.
  * 
  * \section sec_usage Usage
  * 
@@ -43,7 +41,7 @@
  *
  * \subsubsection ssec_cl Client Request Format
  *
- * When a client request comes in, SeekServer looks for the following sequence of 4 strings that are sent by the client:
+ * When a client request comes in, SeekServer looks for the following sequence of 4 strings in the request message:
  *
  * \li \c strSearchDataset. Dataset names, as referred by the \c dset_platform_map, to be used for the search.
  * Delimited by " ".
@@ -53,13 +51,13 @@
  * \li \c strOutputDir. Output directory where intermediate results are generated. Must be a directory that the running user of
  * SeekServer has access to. \c /tmp is recommended.
  *
- * \li \c strSearchParameter. A string of the form "1_2_3_4" where each number denotes the following:
- * 1 - the search method, one of \c RBP, \c OrderStatistics, \c EqualWeighting <br>
- * 2 - rbp parameter p (a float 0.90 - 0.99). Recommended 0.99. <br>
+ * \li \c strSearchParameter. A string of the form "1_2_3_4" where each number denotes the following: <br>
+ * 1 - the search method, one of \c RBP, \c OrderStatistics, \c EqualWeighting. Recommended \c RBP (also known as the CV weighting). <br>
+ * 2 - rbp parameter \a p (a \c float 0.90 - 0.99). Recommended 0.99. <br>
  * 3 - minimum fraction of query required to score each dataset (0 - 1.0). Recommended 0 (no minimum). <br>
- * 4 - distance measure, one of \c Correlation, \c Zscore, \c ZscoreHubbinessCorrected. <br>
+ * 4 - distance measure, one of \c Correlation, \c Zscore, \c ZscoreHubbinessCorrected. Recommended \c ZscoreHubbinessCorrected.<br>
  *
- * See Sleipnir::CSeekNetwork for the specification of the format of an incoming string message.
+ * See Sleipnir::CSeekNetwork for the specification of an incoming string message.
  *
  * Once SeekServer correctly receives the above 4 strings, a search instance using the provided search parameters will
  * be initiated on the server side.
@@ -68,18 +66,18 @@
  * \subsubsection ssec_out Outgoing Message Format
  *
  * Each outgoing message is generated upon finishing searching the client's query. In general, if the search is successful,
- * the client expects two arrays from the SeekServer in sequence: a binary float array of dataset weights, and a binary float array
- * of gene scores. An element at index \a i in the dataset array represents the weight of the dataset with ID = \a i.
- * An element at index \a j in the gene array represents the score of the gene with ID = \a j.
+ * SeekServer will send to the clients these two arrays in sequence:
+ * \li a binary \c float array of <b>dataset weights</b>, indicating how datasets are related to the query.
+ * \li a binary \c float array of <b>gene scores</b>, indicating how genes are coexpressed with the query. 
  *
- * See Sleipnir::CSeekNetwork for the specification of the format of an outgoing float array.
+ * See Sleipnir::CSeekNetwork for the specification of an outgoing float array.
  *
  *
  * \subsubsection ssec_search Query-independent search setting files and directories
  *
  * These include the following: \c dset_platform_map, \c gene_map, \c db_dir, \c prep_dir, \c platform_dir, \c quant,
  * \c sinfo_dir.
- * For a discussion of these files and directories, please refer to the SeekMiner page in section:
+ * For a discussion of these files and directories, please refer to the \ref SeekMiner page in section:
  * Query-independent search setting files and directories.
  *
  *
