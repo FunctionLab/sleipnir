@@ -22,6 +22,8 @@ namespace Sleipnir {
  * client and the Seek server. In order to allow this exchange to occur, all messages
  * must conform to a uniform standard.
  *
+ * \section sec_out Outgoing messages
+ *
  * On the sending end, all outgoing messages must first begin with a message header that specifies the
  * length and the type of the message. Then the body of the message follows.
  *
@@ -31,6 +33,8 @@ namespace Sleipnir {
  * \li Byte #5-8: An \c unsigned \c integer that specifies the total number of elements to be sent (\a N). (1 for a single-value,
  * otherwise the size of the array)
  * \li Byte #9 and onward: \a S times \a N bytes specifying the array content
+ *
+ * \section sec_in Incoming messages
  *
  * On the receiving end, CSeekNetwork also supports the receiving of a \c char array (or a \c string) or a \c float array.
  *

@@ -24,45 +24,67 @@
 /*!
  * \page SeekServer SeekServer
  * 
+ * SeekServer runs the coexpression mining algorithm using a multithreaded TCP/IP interface.
+ * When it is running, SeekServer services requests over the network from multiple connected clients
+ * for genes that co-express with the client's query genes.
+ * A list of genes that are found by the algorithm to be coexpressed with the query genes and a list of datasets
+ * where this coexpression with the query is found to be occurring are sent back to the client.
  * 
  * \section sec_usage Usage
  * 
  * \subsection ssec_usage_basic Basic Usage
  * 
  * \code
- * SeekServer -i <genes.txt> -x <db list> -d <input directory> -D <output_dir>
+ * SeekServer -t <port> -x <dset_platform_map> -i <gene_map> -d <db_dir> -p <prep_dir> -P <platform_dir>
+ * -Q <quant> -n <num_db> -u <sinfo_dir>
  * \endcode
  * 
- * 
+ * This starts an instance of SeekServer on the indicated port and begins accepting client requests.
+ *
+ * \subsubsection ssec_cl Client Request Format
+ *
+ * When a client request comes in, SeekServer looks for the following sequence of 4 strings that are sent by the client:
+ *
+ * \li \c strSearchDataset. Dataset names, as referred by the \c dset_platform_map, to be used for the search.
+ * Delimited by " ".
+ *
+ * \li \c strQuery. Query gene names, as referred by the \c gene_map, separated by " ".
+ *
+ * \li \c strOutputDir. Output directory where intermediate results are generated. Must be a directory that the running user of
+ * SeekServer has access to. \c /tmp is recommended.
+ *
+ * \li \c strSearchParameter. A string of the form "1_2_3_4" where each number denotes the following:
+ * 1 - the search method, one of \c RBP, \c OrderStatistics, \c EqualWeighting <br>
+ * 2 - rbp parameter p (a float 0.90 - 0.99). Recommended 0.99. <br>
+ * 3 - minimum fraction of query required to score each dataset (0 - 1.0). Recommended 0 (no minimum). <br>
+ * 4 - distance measure, one of \c Correlation, \c Zscore, \c ZscoreHubbinessCorrected. <br>
+ *
+ * See Sleipnir::CSeekNetwork for the specification of the format of an incoming string message.
+ *
+ * Once SeekServer correctly receives the above 4 strings, a search instance using the provided search parameters will
+ * be initiated on the server side.
+ *
+ *
+ * \subsubsection ssec_out Outgoing Message Format
+ *
+ * Each outgoing message is generated upon finishing searching the client's query. In general, if the search is successful,
+ * the client expects two arrays from the SeekServer in sequence: a binary float array of dataset weights, and a binary float array
+ * of gene scores. An element at index \a i in the dataset array represents the weight of the dataset with ID = \a i.
+ * An element at index \a j in the gene array represents the score of the gene with ID = \a j.
+ *
+ * See Sleipnir::CSeekNetwork for the specification of the format of an outgoing float array.
+ *
+ *
+ * \subsubsection ssec_search Query-independent search setting files and directories
+ *
+ * These include the following: \c dset_platform_map, \c gene_map, \c db_dir, \c prep_dir, \c platform_dir, \c quant,
+ * \c sinfo_dir.
+ * For a discussion of these files and directories, please refer to the SeekMiner page in section:
+ * Query-independent search setting files and directories.
+ *
+ *
  * \subsection ssec_usage_detailed Detailed Usage
  * 
  * \include SeekServer/SeekServer.ggo
  * 
- * <table><tr>
- *	<th>Flag</th>
- *	<th>Default</th>
- *	<th>Type</th>
- *	<th>Description</th>
- * </tr><tr>
- *	<td>-i</td>
- *	<td>stdin</td>
- *	<td>Text file</td>
- *	<td>Tab-delimited text file containing two columns, numerical gene IDs (one-based) and unique gene
- *		names (matching those in the input DAT/DAB files).</td>
- * </tr><tr>
- *	<td>-d</td>
- *	<td>.</td>
- *	<td>Directory</td>
- *	<td>Input directory containing DB files</td>
- * </tr><tr>
- *	<td>-D</td>
- *	<td>.</td>
- *	<td>Directory</td>
- *	<td>Output directory in which database files will be stored.</td>
- * </tr><tr>
- *	<td>-x</td>
- *	<td>.</td>
- *	<td>Text file</td>
- *	<td>Input file containing list of CDatabaselets to combine</td>
- * </tr></table>
  */
