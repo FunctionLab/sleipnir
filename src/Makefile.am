@@ -1,12 +1,17 @@
 lib_LIBRARIES			= libSleipnir.a
 
-AM_CPPFLAGS = $(GSL_CFLAGS) $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFLAGS) $(VOWPAL_WABBIT_CFLAGS) $(LIBSVM_CFLAGS)
+AM_CPPFLAGS = $(GSL_CFLAGS) $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(SVM_MULTICLASS_CFLAGS) $(PTHREAD_CFLAGS) $(VOWPAL_WABBIT_CFLAGS) $(LIBSVM_CFLAGS)
 
-#LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_PERF_LIBS) $(PTHREAD_LIBS)
+#LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_PERF_LIBS) $(SVM_MULTICLASS_LIBS) $(PTHREAD_LIBS)
 
 if WITH_SVM_TOOLS
 libSleipnir_SVM_SOURCES = svm.cpp svmperf.cpp
 libSleipnir_SVM_INCLUDES = svm.h svmi.h svmperf.h
+endif
+
+if WITH_SVM_MULTICLASS_TOOLS
+libSleipnir_SVM_MULTICLASS_SOURCES = svmstruct.cpp
+libSleipnir_SVM_MULTICLASS_INCLUDES = svmstruct.h
 endif
 
 if WITH_LIBSVM_TOOLS
@@ -25,7 +30,7 @@ libSleipnir_GSL_SOURCES = \
 	seekwriter.cpp			\
 	seekplatform.cpp		\
 	seekcentral.cpp		\
-	seeknetwork.cpp	
+	seeknetwork.cpp
 libSleipnir_GSL_INCLUDES = \
 	seekplatform.h			\
 	seekcentral.h			\
@@ -38,7 +43,7 @@ libSleipnir_GSL_INCLUDES = \
 	seekwriter.h			\
 	seekdataset.h			\
 	seekmap.h				\
-	seeknetwork.h	
+	seeknetwork.h
 endif
 libSleipnir_a_SOURCES	=	\
 	annotation.cpp			\
@@ -85,6 +90,7 @@ libSleipnir_a_SOURCES	=	\
 	$(libSleipnir_SVM_SOURCES) \
 	$(libSleipnir_GSL_SOURCES) \
 	$(libSleipnir_LIBSVM_SOURCES) \
+	$(libSleipnir_SVM_MULTICLASS_SOURCES)\
 	vwb.cpp
 include_HEADERS			=	\
 	annotation.h			\
@@ -156,6 +162,7 @@ include_HEADERS			=	\
 	$(libSleipnir_SVM_INCLUDES)  \
 	$(libSleipnir_GSL_SOURCES) \
 	$(libSleipnir_LIBSVM_INCLUDES) \
+	$(libSleipnir_SVM_MULTICLASS_INCLUDES)\
 	trie.h					\
 	triei.h					\
 	typesi.h				\

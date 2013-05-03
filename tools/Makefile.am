@@ -1,6 +1,6 @@
 if WITH_TOOLS
   TOOLS_SUBDIRS = \
-          Answerer \
+	  Answerer \
 	  Cliquer \
 	  Clinician \
 	  Clusterer \
@@ -43,7 +43,7 @@ if WITH_TOOLS
 	  Txt2Bin
 if WITH_SMILE_TOOLS
     SMILE_TOOLS_SUBDIRS = \
-          BNConverter \
+	  BNConverter \
 	  BNCreator \
 	  SpeciesConnector \
 	  BNEvaluator \
@@ -81,11 +81,16 @@ endif
 endif
 if WITH_SVM_TOOLS
     SVM_TOOLS_SUBDIRS = \
-          Data2Svm \
+	  Data2Svm \
 	  SVMer \
 	  SVMperfing \
 	  SVMperfer
 endif
+if WITH_SVM_MULTICLASS_TOOLS
+    SVM_MULTICLASS_SUBDIRS = \
+		SVMmulticlass
+endif
+
 if WITH_LIBSVM_TOOLS
     LIBSVM_TOOLS_SUBDIRS = \
 	  LibSVMer
@@ -98,4 +103,4 @@ if WITH_READLINE_TOOLS
 endif
 endif
 
-SUBDIRS = $(TOOLS_SUBDIRS) $(SMILE_TOOLS_SUBDIRS) $(BOOST_TOOLS_SUBDIRS) $(SVM_TOOLS_SUBDIRS) $(READLINE_TOOLS_SUBDIRS) $(VW_TOOLS_SUBDIRS) $(GSL_TOOLS_SUBDIRS) $(LIBSVM_TOOLS_SUBDIRS)
+SUBDIRS = $(TOOLS_SUBDIRS) $(SMILE_TOOLS_SUBDIRS) $(BOOST_TOOLS_SUBDIRS) $(SVM_TOOLS_SUBDIRS) $(READLINE_TOOLS_SUBDIRS) $(VW_TOOLS_SUBDIRS) $(GSL_TOOLS_SUBDIRS) $(LIBSVM_TOOLS_SUBDIRS) $(SVM_MULTICLASS_TOOLS_SUBDIRS)
