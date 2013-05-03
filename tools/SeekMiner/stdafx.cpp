@@ -24,13 +24,14 @@
 /*!
  * \page SeekMiner SeekMiner
  *
- * SeekMiner accepts a set of genes as query in order to perform a weighted compendium 
- * search for additional genes that are coexpressed with the query genes. 
- * SeekMiner finds and integrates relevant datasets by using one of the many dataset weighting
- * algorithms, including the cross-validated query-coexpression weighting, the order statistics 
- * weighting, etc. 
- * These search algorithms are designed to be quick and efficient, and enable fast weight computations
- * for thousands of microarray datasets.
+ * SeekMiner returns a gene-ranking based on the coexpressions to the user-specified
+ * query genes. It finds relevant datasets by using one of the many dataset weighting
+ * algorithms, including the query-coexpression weighting, the order statistics 
+ * weighting, etc. Afterward, it performs a weighted integration of coexpressions
+ * using the computed dataset weights.
+ * The search algorithms employed by Seek are designed to be quick and efficient, and
+ * they support the real-time weight calculations for thousands of microarray
+ * datasets.
  *
  * \section sec_usage Usage
  * 
