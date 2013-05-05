@@ -56,6 +56,9 @@ struct gengetopt_args_info
   int cross_validation_arg;	/**< @brief Number of cross-validation sets ( arg of 1 will turn off cross-validation ) (default='5').  */
   char * cross_validation_orig;	/**< @brief Number of cross-validation sets ( arg of 1 will turn off cross-validation ) original value given at command line.  */
   const char *cross_validation_help; /**< @brief Number of cross-validation sets ( arg of 1 will turn off cross-validation ) help description.  */
+  int num_cv_runs_arg;	/**< @brief Number of cross-validation runs (default='1').  */
+  char * num_cv_runs_orig;	/**< @brief Number of cross-validation runs original value given at command line.  */
+  const char *num_cv_runs_help; /**< @brief Number of cross-validation runs help description.  */
   int svm_type_arg;	/**< @brief Sets type of SVM (default 0)
   0\tC-SVC
   1\tnu-SVC
@@ -68,8 +71,8 @@ struct gengetopt_args_info
   0\tC-SVC
   1\tnu-SVC
   2\tone-class SVM\n help description.  */
-  int positive_features_only_flag;	/**< @brief select positive features (i.e. genes) note that input must be complete matrix (default=off).  */
-  const char *positive_features_only_help; /**< @brief select positive features (i.e. genes) note that input must be complete matrix help description.  */
+  int balance_flag;	/**< @brief weight classes such that C_P * n_P = C_N * n_N (default=off).  */
+  const char *balance_help; /**< @brief weight classes such that C_P * n_P = C_N * n_N help description.  */
   float tradeoff_arg;	/**< @brief SVM tradeoff constant C of C-SVC (default='1').  */
   char * tradeoff_orig;	/**< @brief SVM tradeoff constant C of C-SVC original value given at command line.  */
   const char *tradeoff_help; /**< @brief SVM tradeoff constant C of C-SVC help description.  */
@@ -92,8 +95,9 @@ struct gengetopt_args_info
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int cross_validation_given ;	/**< @brief Whether cross_validation was given.  */
+  unsigned int num_cv_runs_given ;	/**< @brief Whether num_cv_runs was given.  */
   unsigned int svm_type_given ;	/**< @brief Whether svm_type was given.  */
-  unsigned int positive_features_only_given ;	/**< @brief Whether positive_features_only was given.  */
+  unsigned int balance_given ;	/**< @brief Whether balance was given.  */
   unsigned int tradeoff_given ;	/**< @brief Whether tradeoff was given.  */
   unsigned int nu_given ;	/**< @brief Whether nu was given.  */
   unsigned int params_given ;	/**< @brief Whether params was given.  */

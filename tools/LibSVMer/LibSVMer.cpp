@@ -145,7 +145,6 @@ int main(int iArgs, char** aszArgs) {
 
 	size_t i, j, iGene, jGene;
 	ifstream ifsm;
-        bool posFeatOnly;
 
 
 	if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
@@ -165,14 +164,19 @@ int main(int iArgs, char** aszArgs) {
 	else if(sArgs.cross_validation_arg < 2){
 	  cerr << "cross_valid is set to 1. No cross validation holdouts will be run." << endl;
 	}
+
+        if (sArgs.num_cv_runs_arg < 1){
+          cerr << "number of cv runs is < 1. Must be set at least 1" << endl;
+          return 1;
+        }
       
         SVM.SetTradeoff(sArgs.tradeoff_arg);
         SVM.SetNu(sArgs.nu_arg);
         SVM.SetSVMType(sArgs.svm_type_arg);
         CLIBSVM temp;
         
-        SVM.posFeatOnly = sArgs.positive_features_only_flag;
-cerr << SVM.posFeatOnly << endl;
+        SVM.SetBalance(sArgs.balance_flag);
+//cerr << SVM.posFeatOnly << endl;
 
 	if (!SVM.parms_check()) {
 		cerr << "Sanity check failed, see above errors" << endl;
@@ -204,8 +208,8 @@ cerr << SVM.posFeatOnly << endl;
 	}
 
 	LIBSVM::SAMPLE* pTrainSample;
-	vector<LIBSVM::SVMLabel> pTrainVector[sArgs.cross_validation_arg];
-	vector<LIBSVM::SVMLabel> pTestVector[sArgs.cross_validation_arg];
+	vector<LIBSVM::SVMLabel> pTrainVector[sArgs.cross_validation_arg * sArgs.num_cv_runs_arg];
+	vector<LIBSVM::SVMLabel> pTestVector[sArgs.cross_validation_arg * sArgs.num_cv_runs_arg];
 	vector<LIBSVM::Result> AllResults;
 	vector<LIBSVM::Result> tmpAllResults;
 
@@ -230,7 +234,7 @@ cerr << SVM.posFeatOnly << endl;
 		}
 	} else if (sArgs.output_given && sArgs.labels_given) {
 		//do learning and classifying with cross validation
-	        if( sArgs.cross_validation_arg > 1){	    
+/*	        if( sArgs.cross_validation_arg > 1){	    
 		  for (i = 0; i < sArgs.cross_validation_arg; i++) {
 		    pTestVector[i].reserve((size_t) vecLabels.size()
 					   / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
@@ -246,7 +250,33 @@ cerr << SVM.posFeatOnly << endl;
 		      }
 		    }
 		  }
-		}
+		}*/
+                if( sArgs.cross_validation_arg > 1 && sArgs.num_cv_runs_arg >= 1 ){
+                  size_t ii, index;
+                  for (ii = 0; ii < sArgs.num_cv_runs_arg; ii++) {
+                    std::random_shuffle(vecLabels.begin(), vecLabels.end());
+
+                  for (i = 0; i < sArgs.cross_validation_arg; i++) {                  
+                    index = sArgs.cross_validation_arg * ii + i;
+//cerr << index << endl;                    
+  		    pTestVector[index].reserve((size_t) vecLabels.size()
+  					   / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
+		    pTrainVector[index].reserve((size_t) vecLabels.size()
+					    / (sArgs.cross_validation_arg)
+					    * (sArgs.cross_validation_arg - 1)
+					    + sArgs.cross_validation_arg);
+		    for (j = 0; j < vecLabels.size(); j++) {
+//cerr << vecLabels[j].GeneName << endl;
+		      if (j % sArgs.cross_validation_arg == i) {
+			pTestVector[index].push_back(vecLabels[j]);
+		      } else {
+			pTrainVector[index].push_back(vecLabels[j]);
+		      }
+		    }
+		  }
+
+                  }
+                }  
 		else{ // if you have less than 2 fold cross, no cross validation is done, all train genes are used and predicted
 		  
 		  // no holdout so train is the same as test gene set
@@ -275,7 +305,8 @@ cerr << SVM.posFeatOnly << endl;
 				}
 			}
 		}
-		if (sArgs.params_given) { //reading paramters from file
+
+		if (sArgs.params_given) { //reading paramters from file //TODO??? figure out how this code works
 			ifsm.close();
 			ifsm.clear();
 			ifsm.open(sArgs.params_arg);
@@ -343,7 +374,7 @@ cerr << SVM.posFeatOnly << endl;
 				AllResults.resize(0);
 			}
 		} else { //run once
-			for (i = 0; i < sArgs.cross_validation_arg; i++) {
+			for (i = 0; i < sArgs.cross_validation_arg * sArgs.num_cv_runs_arg; i++) {
 				pTrainSample = LIBSVM::CLIBSVM::CreateSample(PCL, //TODO: make more efficient
 						pTrainVector[i]);
 
@@ -368,13 +399,17 @@ cerr << SVM.posFeatOnly << endl;
 								+= vec_tmpUnlabeledResults[j].Value;
 
 				}
+cerr << "blah" << endl;
                                 LIBSVM::CLIBSVM::PrintSample(*pTrainSample);
+
                                 size_t mem = CMeta::GetMemoryUsage();
                                 cerr << "before free: " << mem << endl;
+
 				if (i > 0) {
 					//LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
                                         free(pTrainSample);
 				}
+
                                 mem = CMeta::GetMemoryUsage();
                                 cerr << "after free: " << mem << endl;
                                 cerr << "end of a cv run" << endl;

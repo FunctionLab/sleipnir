@@ -48,19 +48,19 @@ typedef struct sample { /* a sample is a set of examples */
    size_t     n;            /* n is the total number of examples */
    size_t  numFeatures; 
    struct svm_problem *problems;
-   struct svm_node *x_space;
+//   struct svm_node *x_space;
    sample() {
      n = 0;
      numFeatures = 0;
      problems = NULL;
-     x_space = NULL;
+//     x_space = NULL;
    }
    
    ~sample(){
      //no destructor for problem struct
      free(problems->y);
      free(problems->x);
-     free(x_space);
+//     free(x_space);
      problems = NULL;
    }
 } SAMPLE;
@@ -131,11 +131,11 @@ enum EFilter {
 class CLIBSVM {
 public:
   //struct svm_parameter parm;
-  static bool posFeatOnly;
   struct svm_model* model;
   struct svm_parameter parm;
+  int balance;
 
-  struct svm_node *x_space;
+  static struct svm_node *x_space;
 
   CLIBSVM() {
     initialize();
@@ -145,12 +145,10 @@ public:
     svm_free_and_destroy_model( &model );
     model = NULL;
   }
-//  static bool GetPosFeatOnly() {
-//    return posFeatOnly;
-//  }
-//  static void SetPosFeatOnly(bool only){
-//    posFeatOnly = only;
-//  }
+
+  void SetBalance(int bal){
+    balance = bal;
+  }
 
   void SetSVMType(int type) {
     parm.svm_type = type;
@@ -191,6 +189,11 @@ public:
   
 
   //static members process data
+  //
+  
+  static void SetXSpace(Sleipnir::CPCL& PCL);
+
+  //
   //single gene predictions
 
   //TODO: add functions to handle PCL files
@@ -203,10 +206,9 @@ public:
   //Creates a sample using a PCLset and SVMlabels Looks up genes by name.
   //static SAMPLE* CreateSample(Sleipnir::CPCLSet &PCLSet,
   //			vector<SVMLabel> SVMLabels);
-
+  
   //Creates a sample of svm_problems using a single PCL and SVMlabels Looks up genes by name.
   static SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
-  //static SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels, bool posFeatOnly);
 
   //Same as above except creates bootstrap samples and does not duplicate data
   //static SAMPLE** CreateSampleBootStrap(Sleipnir::CPCL &PCL,
@@ -219,7 +221,6 @@ public:
 
   //Classify single genes
   vector<Result> Classify(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels);
-  vector<Result> Classify(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels, bool posFeatOnly);
   
   //vector<Result> Classify(Sleipnir::CPCLSet& PCLSet,
   //			vector<SVMLabel> SVMLabels);
@@ -245,6 +246,17 @@ public:
       }else{
         numn ++;
       }
+    }
+
+    if (balance) {
+cerr << "balancing the weights between postivies and negatives. " << endl;
+      parm.nr_weight = 2;
+      parm.weight_label = (int *) realloc(parm.weight_label, sizeof(int)*parm.nr_weight);
+      parm.weight = (double *) realloc(parm.weight, sizeof(double)*parm.nr_weight);
+      parm.weight_label[0] = 1;
+      parm.weight[0] = numn;
+      parm.weight_label[1] = -1;
+      parm.weight[1] = nump;
     }
 
     if(parms_check()){

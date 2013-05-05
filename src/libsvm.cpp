@@ -36,7 +36,7 @@
 namespace LIBSVM {
 
 #include "libsvm.h"
-bool CLIBSVM::posFeatOnly = false;
+struct svm_node* CLIBSVM::x_space = NULL;
 
 bool CLIBSVM::initialize() {
 
@@ -57,6 +57,10 @@ bool CLIBSVM::initialize() {
         parm.gamma = 0;
         parm.degree = 3;
         parm.kernel_type = LINEAR;
+        
+        model = NULL;
+
+        balance = 0;//Off
 
 	return true;
 }
@@ -84,118 +88,58 @@ bool CLIBSVM::parms_check() {
 
 	return true;
 }
-/*
-SAMPLE * CLIBSVM::CreateXSpace(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) {
-	size_t i, j, k, s, iGene, iProblem, numFeatures, numLabels, max_index;
+
+void CLIBSVM::SetXSpace(Sleipnir::CPCL& PCL) {
+	size_t j, k, iGene, numFeatures, numLabels;
+        std::vector<std::string> vecGeneNames;
+        string GeneName;
         float d;
-        bool posFeatOnly;
-
-        struct svm_problem* prob;
-        struct svm_node* x_space;
-        vector<size_t> iPosFeats;
-
-        prob = Malloc(struct svm_problem,1);
 
         numFeatures = PCL.GetExperiments();
-        numLabels = 0;
+        numLabels = PCL.GetGenes();
+        vecGeneNames = PCL.GetGeneNames();
         
-        posFeatOnly = CLIBSVM::posFeatOnly; 
-// cerr << "in create sample: " << posFeatOnly << endl;       
-
-	
-        iProblem = 0;
-
-	for (i = 0; i < SVMLabels.size(); i++) {
-                if (!SVMLabels[i].hasIndex){
-                  SVMLabels[i].SetIndex(PCL.GetGene(SVMLabels[i].GeneName));
-                }
-		iGene = SVMLabels[i].index;
-		if (iGene != -1) {
-                  numLabels++;
-                  if(posFeatOnly){
-                    if(SVMLabels[i].Target > 0){
-                      iPosFeats.push_back(iGene);
-                    }
-                  }
-		}
-	}
-
-        if(posFeatOnly){
-          numFeatures = iPosFeats.size();
-        }
-
 cerr << "number of features used: " << numFeatures << endl;
-cerr << "number of labels given: " << SVMLabels.size() << endl;
 cerr << "number of labels in data: " << numLabels << endl;
+cerr << "number of gene names: " << vecGeneNames.size() << endl;
 
-        prob->l = numLabels;
-        prob->y = Malloc(double,numLabels);
-        prob->x = Malloc(struct svm_node *, numLabels);
         x_space = Malloc(struct svm_node, (1+numFeatures) * numLabels);
 
-        max_index = numFeatures;
-
         j = 0;//element index
-        s = 0;//sample index
-        for (i = 0; i < SVMLabels.size(); i++) {
-            iGene = SVMLabels[i].index;
+        
+        for ( std::vector<std::string>::iterator it = vecGeneNames.begin(); it != vecGeneNames.end(); ++it) {
+          GeneName = *it;
+          iGene = PCL.GetGene(GeneName); 
 
-            if (iGene != -1){
-              (prob->x)[s] = &x_space[j];
-              (prob->y)[s] = SVMLabels[i].Target;
-
-              for(k = 0; k < numFeatures; k++){
-
-                if(posFeatOnly){
-                  // ignore non-positive features
-                  if(find(iPosFeats.begin(),iPosFeats.end(),k) != iPosFeats.end()){
-                    continue; 
-                  }
-                }
-
-                x_space[j].index = k;
-                if (!Sleipnir::CMeta::IsNaN(d = PCL.Get(iGene, k))) {
-                  x_space[j].value = d;
-                }else{
-                  // impute 0 for missing values
-                  x_space[j].value = 0;
-                }
-                j++;
-              }         
-              x_space[j].index = -1;
-              j++;
-              s++;
+          for ( k = 0; k < numFeatures; k++){
+            x_space[j].index = k;
+            if (!Sleipnir::CMeta::IsNaN(d = PCL.Get(iGene, k))) {
+              x_space[j].value = d;
+            }else{
+              // impute 0 for missing values
+              x_space[j].value = 0;
             }
+            j++;
+          }
+
+          x_space[j].index = -1;
+          j++;
         }
 
-        SAMPLE* pSample = new SAMPLE;
 
-        pSample->n = prob->l;//number of labels
-        pSample->problems = prob;
-        pSample->numFeatures = numFeatures;
-        pSample->x_space = x_space; 
-	return pSample;
-
-}*/
+}
 
 SAMPLE * CLIBSVM::CreateSample(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) {
 	size_t i, j, k, s, iGene, iProblem, numFeatures, numLabels, max_index;
         float d;
-        bool posFeatOnly;
 
         struct svm_problem* prob;
-        struct svm_node* x_space;
-        vector<size_t> iPosFeats;
 
         prob = Malloc(struct svm_problem,1);
 
         numFeatures = PCL.GetExperiments();
         numLabels = 0;
         
-        posFeatOnly = CLIBSVM::posFeatOnly; 
-// cerr << "in create sample: " << posFeatOnly << endl;       
-
-	
         iProblem = 0;
 
 	for (i = 0; i < SVMLabels.size(); i++) {
@@ -205,17 +149,8 @@ SAMPLE * CLIBSVM::CreateSample(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) 
 		iGene = SVMLabels[i].index;
 		if (iGene != -1) {
                   numLabels++;
-                  if(posFeatOnly){
-                    if(SVMLabels[i].Target > 0){
-                      iPosFeats.push_back(iGene);
-                    }
-                  }
 		}
 	}
-
-        if(posFeatOnly){
-          numFeatures = iPosFeats.size();
-        }
 
 cerr << "number of features used: " << numFeatures << endl;
 cerr << "number of labels given: " << SVMLabels.size() << endl;
@@ -224,39 +159,20 @@ cerr << "number of labels in data: " << numLabels << endl;
         prob->l = numLabels;
         prob->y = Malloc(double,numLabels);
         prob->x = Malloc(struct svm_node *, numLabels);
-        x_space = Malloc(struct svm_node, (1+numFeatures) * numLabels);
+
+        if(x_space == NULL) {
+          SetXSpace(PCL);
+        }
 
         max_index = numFeatures;
 
-        j = 0;//element index
         s = 0;//sample index
         for (i = 0; i < SVMLabels.size(); i++) {
             iGene = SVMLabels[i].index;
 
             if (iGene != -1){
-              (prob->x)[s] = &x_space[j];
+              (prob->x)[s] = &x_space[iGene*(1+numFeatures)];
               (prob->y)[s] = SVMLabels[i].Target;
-
-              for(k = 0; k < numFeatures; k++){
-
-                if(posFeatOnly){
-                  // ignore non-positive features
-                  if(find(iPosFeats.begin(),iPosFeats.end(),k) != iPosFeats.end()){
-                    continue; 
-                  }
-                }
-
-                x_space[j].index = k;
-                if (!Sleipnir::CMeta::IsNaN(d = PCL.Get(iGene, k))) {
-                  x_space[j].value = d;
-                }else{
-                  // impute 0 for missing values
-                  x_space[j].value = 0;
-                }
-                j++;
-              }         
-              x_space[j].index = -1;
-              j++;
               s++;
             }
         }
@@ -266,7 +182,6 @@ cerr << "number of labels in data: " << numLabels << endl;
         pSample->n = prob->l;//number of labels
         pSample->problems = prob;
         pSample->numFeatures = numFeatures;
-        pSample->x_space = x_space; 
 	return pSample;
 }
 
@@ -302,7 +217,9 @@ vector<Result> CLIBSVM::Classify(Sleipnir::CPCL &PCL,
       if (iGene != -1 ) {    
         x = pSample->problems->x[j];
         predict_label = svm_predict_values(model,x, dec_values);
-        dec_value = dec_values[0]; //assume that positive class is the first class TODO: currently hackly
+        dec_value = dec_values[0]; //assume that positive class is the first class TODO: currently hacklyi
+
+//cerr << dec_value << endl;
 
         vecResult[j].GeneName = SVMLabels[i].GeneName;
         vecResult[j].Target = SVMLabels[i].Target;
@@ -312,6 +229,7 @@ vector<Result> CLIBSVM::Classify(Sleipnir::CPCL &PCL,
 
       }
     }
+
     free(pSample);
     //delete pSample ;
     free(dec_values);

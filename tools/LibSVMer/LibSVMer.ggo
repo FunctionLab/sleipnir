@@ -21,12 +21,14 @@ option	"normalize"				n	"Normalize PCLS to 0 mean 1 variance"
 										flag	off
 option	"cross_validation"		c	"Number of cross-validation sets ( arg of 1 will turn off cross-validation )"
 										int default="5" no
+option  "num_cv_runs"                   r       "Number of cross-validation runs"
+                                                                                int default="1" no
 option "svm_type"                       v       "Sets type of SVM (default 0)
 0\tC-SVC
 1\tnu-SVC
 2\tone-class SVM\n"
                                                                                 int default="0" no
-option "positive_features_only"         f   "select positive features (i.e. genes) note that input must be complete matrix"
+option "balance"         b   "weight classes such that C_P * n_P = C_N * n_N"
                                                                                 flag off
 option "tradeoff"    			t   "SVM tradeoff constant C of C-SVC"
 										float default="1" no
