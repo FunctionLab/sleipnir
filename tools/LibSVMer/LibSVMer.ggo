@@ -23,6 +23,8 @@ option	"cross_validation"		c	"Number of cross-validation sets ( arg of 1 will tu
 										int default="5" no
 option  "num_cv_runs"                   r       "Number of cross-validation runs"
                                                                                 int default="1" no
+option  "negative_subsamples"            g       "Number of subsample runs"
+                                                                                int default="0" no
 option "svm_type"                       v       "Sets type of SVM (default 0)
 0\tC-SVC
 1\tnu-SVC

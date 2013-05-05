@@ -59,6 +59,9 @@ struct gengetopt_args_info
   int num_cv_runs_arg;	/**< @brief Number of cross-validation runs (default='1').  */
   char * num_cv_runs_orig;	/**< @brief Number of cross-validation runs original value given at command line.  */
   const char *num_cv_runs_help; /**< @brief Number of cross-validation runs help description.  */
+  int negative_subsamples_arg;	/**< @brief Number of subsample runs (default='0').  */
+  char * negative_subsamples_orig;	/**< @brief Number of subsample runs original value given at command line.  */
+  const char *negative_subsamples_help; /**< @brief Number of subsample runs help description.  */
   int svm_type_arg;	/**< @brief Sets type of SVM (default 0)
   0\tC-SVC
   1\tnu-SVC
@@ -96,6 +99,7 @@ struct gengetopt_args_info
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int cross_validation_given ;	/**< @brief Whether cross_validation was given.  */
   unsigned int num_cv_runs_given ;	/**< @brief Whether num_cv_runs was given.  */
+  unsigned int negative_subsamples_given ;	/**< @brief Whether negative_subsamples was given.  */
   unsigned int svm_type_given ;	/**< @brief Whether svm_type was given.  */
   unsigned int balance_given ;	/**< @brief Whether balance was given.  */
   unsigned int tradeoff_given ;	/**< @brief Whether tradeoff was given.  */

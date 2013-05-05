@@ -30,6 +30,55 @@
 
 using namespace LIBSVM;
 
+/*
+vector<LIBSVM::SVMLabel>* Subsampling( vector<LIBSVM::SVMLabel>* pTrainVector, size_t num, size_t numSample) {
+  size_t iSample, iSubsample, numPos, index, len;
+  size_t i;
+
+cerr << "subsampling: " << num << endl;
+
+  len = numSample;
+  
+cerr << "number of samples: " << len << endl;
+
+  vector<LIBSVM::SVMLabel>* ppTmpTrain[len * num];
+
+  vector<LIBSVM::SVMLabel> Negatives;
+  vector<LIBSVM::SVMLabel> Positives;
+  
+  for( iSample = 0 ; iSample < len ; iSample ++ ) {
+    numPos = 0;
+    Negatives.empty();
+    Positives.empty();
+    
+    for(vector<LIBSVM::SVMLabel>::iterator it = pTrainVector[iSample].begin() ;
+        it != pTrainVector[iSample].end(); it++){
+      if ( (*it).Target == 1 ) { // if positive
+        numPos ++;
+        Positives.push_back(*it);
+      }else if ( (*it).Target == -1 )
+        Negatives.push_back(*it);
+    }
+
+
+    for( iSubsample = 0 ; iSubsample < num ; iSubsample ++ ) {
+      index = num * iSample + iSubsample;
+      (*ppTmpTrain[ index ]).reserve((size_t) (numPos * 10));
+//pTmpTrain[ index ] = new vector<LIBSVM::SVMLabel>;
+      //copy( Positives.begin( ), Positives.end( ), pTmpTrain[ index ].begin( ) ); doesn't work..
+      for( i = 0 ; i < numPos ; i ++ ) {
+        (*ppTmpTrain)[ index ].push_back(Positives.at( i ) );
+        (*ppTmpTrain)[ index ].push_back(Negatives.at( rand() % Negatives.size() )) ; //with replacement!!
+      }
+
+cerr << "blah" << endl;
+cerr << (*ppTmpTrain[ index ]).size() << endl;
+    }
+  }
+
+  return &ppTmpTrain;
+//  pTmpTest
+}*/
 
 vector<LIBSVM::SVMLabel> ReadLabels(ifstream & ifsm) {
 
@@ -169,6 +218,16 @@ int main(int iArgs, char** aszArgs) {
           cerr << "number of cv runs is < 1. Must be set at least 1" << endl;
           return 1;
         }
+
+        if (sArgs.negative_subsamples_arg < 0){
+          cerr << "number of negative subsample runs is < 0. Must be non-negative" << endl;
+          return 1;
+        }
+
+        if ( (sArgs.negative_subsamples_arg > 0 && sArgs.num_cv_runs_arg > 1) ) {
+          cerr << "negative subsamping for multiple cv runs has yet been implemented." << endl;
+          return 1;
+        }
       
         SVM.SetTradeoff(sArgs.tradeoff_arg);
         SVM.SetNu(sArgs.nu_arg);
@@ -208,8 +267,14 @@ int main(int iArgs, char** aszArgs) {
 	}
 
 	LIBSVM::SAMPLE* pTrainSample;
-	vector<LIBSVM::SVMLabel> pTrainVector[sArgs.cross_validation_arg * sArgs.num_cv_runs_arg];
-	vector<LIBSVM::SVMLabel> pTestVector[sArgs.cross_validation_arg * sArgs.num_cv_runs_arg];
+
+        size_t numSample;
+        if(sArgs.negative_subsamples_arg > 0)
+          numSample = sArgs.cross_validation_arg * sArgs.num_cv_runs_arg * sArgs.negative_subsamples_arg;
+        else
+          numSample = sArgs.cross_validation_arg * sArgs.num_cv_runs_arg;
+	vector<LIBSVM::SVMLabel> pTrainVector[numSample];
+	vector<LIBSVM::SVMLabel> pTestVector[numSample];
 	vector<LIBSVM::Result> AllResults;
 	vector<LIBSVM::Result> tmpAllResults;
 
@@ -233,27 +298,76 @@ int main(int iArgs, char** aszArgs) {
 			cerr << "Could not open output file" << endl;
 		}
 	} else if (sArgs.output_given && sArgs.labels_given) {
+                size_t ii, index;
 		//do learning and classifying with cross validation
-/*	        if( sArgs.cross_validation_arg > 1){	    
-		  for (i = 0; i < sArgs.cross_validation_arg; i++) {
-		    pTestVector[i].reserve((size_t) vecLabels.size()
-					   / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
-		    pTrainVector[i].reserve((size_t) vecLabels.size()
-					    / (sArgs.cross_validation_arg)
-					    * (sArgs.cross_validation_arg - 1)
-					    + sArgs.cross_validation_arg);
-		    for (j = 0; j < vecLabels.size(); j++) {
+//                if( sArgs.cross_validation_arg > 1 && sArgs.bagging )
+                if( sArgs.cross_validation_arg > 1 && sArgs.negative_subsamples_arg > 0){
+cerr << "negative subsampling" << endl;
+        	  vector<LIBSVM::SVMLabel> pTmpTrain[sArgs.cross_validation_arg * sArgs.num_cv_runs_arg];
+        	  vector<LIBSVM::SVMLabel> pTmpTest[sArgs.cross_validation_arg * sArgs.num_cv_runs_arg];
+          
+                  for(i = 0; i < sArgs.cross_validation_arg; i++) {
+                    index = i;
+                      
+                    pTmpTest[index].reserve((size_t) vecLabels.size()
+  			   / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
+                    pTmpTrain[index].reserve((size_t) vecLabels.size()
+			    / (sArgs.cross_validation_arg)
+			    * (sArgs.cross_validation_arg - 1)
+			    + sArgs.cross_validation_arg);
+                    for (j = 0; j < vecLabels.size(); j++) {
+//cerr << vecLabels[j].GeneName << endl;
 		      if (j % sArgs.cross_validation_arg == i) {
-			pTestVector[i].push_back(vecLabels[j]);
+		        pTmpTest[index].push_back(vecLabels[j]);
 		      } else {
-			pTrainVector[i].push_back((vecLabels[j]));
+		        pTmpTrain[index].push_back(vecLabels[j]);
 		      }
 		    }
-		  }
-		}*/
-                if( sArgs.cross_validation_arg > 1 && sArgs.num_cv_runs_arg >= 1 ){
-                  size_t ii, index;
-                  for (ii = 0; ii < sArgs.num_cv_runs_arg; ii++) {
+                  }
+                
+size_t iSample, iSubsample, numPos;
+size_t len, num;
+num = sArgs.negative_subsamples_arg;
+cerr << "subsampling: " << num << endl;
+len = sArgs.cross_validation_arg;
+cerr << "number of samples: " << len << endl;
+
+vector<LIBSVM::SVMLabel> Negatives;
+vector<LIBSVM::SVMLabel> Positives;
+  
+for( iSample = 0 ; iSample < len ; iSample ++ ) {
+    numPos = 0;
+    Negatives.empty();
+    Positives.empty();
+    
+    for(vector<LIBSVM::SVMLabel>::iterator it = pTmpTrain[iSample].begin() ;
+        it != pTmpTrain[iSample].end(); it++){
+      if ( (*it).Target == 1 ) { // if positive
+        numPos ++;
+        Positives.push_back(*it);
+      }else if ( (*it).Target == -1 )
+        Negatives.push_back(*it);
+    }
+
+
+    for( iSubsample = 0 ; iSubsample < num ; iSubsample ++ ) {
+      index = num * iSample + iSubsample;
+//      pTmpTrain[ index ].reserve((size_t) (numPos * 10));
+      for( i = 0 ; i < numPos ; i ++ ) {
+        pTrainVector[ index ].push_back(Positives.at( i ) );
+        pTrainVector[ index ].push_back(Negatives.at( rand() % Negatives.size() )) ; //with replacement!!
+      }
+
+cerr << "blah" << endl;
+cerr << pTrainVector[ index ].size() << endl;
+      pTestVector[ index ] = pTmpTest[ iSample ] ;
+  }
+}
+
+                }
+                else if( sArgs.cross_validation_arg > 1 && sArgs.num_cv_runs_arg >= 1 ){
+//                  size_t ii, index;
+                  for (ii = 0; ii < sArgs.num_cv_runs_arg; ii++) {                    
                     std::random_shuffle(vecLabels.begin(), vecLabels.end());
 
                   for (i = 0; i < sArgs.cross_validation_arg; i++) {                  

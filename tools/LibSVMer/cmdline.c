@@ -28,25 +28,26 @@ const char *gengetopt_args_info_usage = "Usage: LibSVMer [OPTIONS]...";
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                  Print help and exit",
-  "  -V, --version               Print version and exit",
+  "  -h, --help                    Print help and exit",
+  "  -V, --version                 Print version and exit",
   "\nMain:",
-  "  -l, --labels=filename       Labels file",
-  "  -o, --output=filename       Output file ",
-  "  -i, --input=filename        Input PCL file ",
-  "  -m, --model=filename        Model file",
-  "  -a, --all                   Always classify all genes in PCLs  (default=off)",
+  "  -l, --labels=filename         Labels file",
+  "  -o, --output=filename         Output file ",
+  "  -i, --input=filename          Input PCL file ",
+  "  -m, --model=filename          Model file",
+  "  -a, --all                     Always classify all genes in PCLs  \n                                  (default=off)",
   "\nOptions:",
-  "  -s, --skip=INT              Number of columns to skip in input pcls  \n                                (default=`2')",
-  "  -n, --normalize             Normalize PCLS to 0 mean 1 variance  \n                                (default=off)",
-  "  -c, --cross_validation=INT  Number of cross-validation sets ( arg of 1 will \n                                turn off cross-validation )  (default=`5')",
-  "  -r, --num_cv_runs=INT       Number of cross-validation runs  (default=`1')",
-  "  -v, --svm_type=INT          Sets type of SVM (default 0)\n\n                                0\tC-SVC\n\n                                1\tnu-SVC\n\n                                2\tone-class SVM\n                                  (default=`0')",
-  "  -b, --balance               weight classes such that C_P * n_P = C_N * n_N  \n                                (default=off)",
-  "  -t, --tradeoff=FLOAT        SVM tradeoff constant C of C-SVC  (default=`1')",
-  "  -u, --nu=FLOAT              nu parameter of nu-SVC, one-class SVM  \n                                (default=`0.5')",
-  "  -p, --params=filename       Parameter file",
-  "  -M, --mmap                  Memory map binary input  (default=off)",
+  "  -s, --skip=INT                Number of columns to skip in input pcls  \n                                  (default=`2')",
+  "  -n, --normalize               Normalize PCLS to 0 mean 1 variance  \n                                  (default=off)",
+  "  -c, --cross_validation=INT    Number of cross-validation sets ( arg of 1 will \n                                  turn off cross-validation )  (default=`5')",
+  "  -r, --num_cv_runs=INT         Number of cross-validation runs  (default=`1')",
+  "  -g, --negative_subsamples=INT Number of subsample runs  (default=`0')",
+  "  -v, --svm_type=INT            Sets type of SVM (default 0)\n\n                                  0\tC-SVC\n\n                                  1\tnu-SVC\n\n                                  2\tone-class SVM\n                                    (default=`0')",
+  "  -b, --balance                 weight classes such that C_P * n_P = C_N * n_N  \n                                  (default=off)",
+  "  -t, --tradeoff=FLOAT          SVM tradeoff constant C of C-SVC  (default=`1')",
+  "  -u, --nu=FLOAT                nu parameter of nu-SVC, one-class SVM  \n                                  (default=`0.5')",
+  "  -p, --params=filename         Parameter file",
+  "  -M, --mmap                    Memory map binary input  (default=off)",
     0
 };
 
@@ -86,6 +87,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->normalize_given = 0 ;
   args_info->cross_validation_given = 0 ;
   args_info->num_cv_runs_given = 0 ;
+  args_info->negative_subsamples_given = 0 ;
   args_info->svm_type_given = 0 ;
   args_info->balance_given = 0 ;
   args_info->tradeoff_given = 0 ;
@@ -113,6 +115,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->cross_validation_orig = NULL;
   args_info->num_cv_runs_arg = 1;
   args_info->num_cv_runs_orig = NULL;
+  args_info->negative_subsamples_arg = 0;
+  args_info->negative_subsamples_orig = NULL;
   args_info->svm_type_arg = 0;
   args_info->svm_type_orig = NULL;
   args_info->balance_flag = 0;
@@ -142,12 +146,13 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->normalize_help = gengetopt_args_info_help[10] ;
   args_info->cross_validation_help = gengetopt_args_info_help[11] ;
   args_info->num_cv_runs_help = gengetopt_args_info_help[12] ;
-  args_info->svm_type_help = gengetopt_args_info_help[13] ;
-  args_info->balance_help = gengetopt_args_info_help[14] ;
-  args_info->tradeoff_help = gengetopt_args_info_help[15] ;
-  args_info->nu_help = gengetopt_args_info_help[16] ;
-  args_info->params_help = gengetopt_args_info_help[17] ;
-  args_info->mmap_help = gengetopt_args_info_help[18] ;
+  args_info->negative_subsamples_help = gengetopt_args_info_help[13] ;
+  args_info->svm_type_help = gengetopt_args_info_help[14] ;
+  args_info->balance_help = gengetopt_args_info_help[15] ;
+  args_info->tradeoff_help = gengetopt_args_info_help[16] ;
+  args_info->nu_help = gengetopt_args_info_help[17] ;
+  args_info->params_help = gengetopt_args_info_help[18] ;
+  args_info->mmap_help = gengetopt_args_info_help[19] ;
   
 }
 
@@ -237,6 +242,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->skip_orig));
   free_string_field (&(args_info->cross_validation_orig));
   free_string_field (&(args_info->num_cv_runs_orig));
+  free_string_field (&(args_info->negative_subsamples_orig));
   free_string_field (&(args_info->svm_type_orig));
   free_string_field (&(args_info->tradeoff_orig));
   free_string_field (&(args_info->nu_orig));
@@ -293,6 +299,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "cross_validation", args_info->cross_validation_orig, 0);
   if (args_info->num_cv_runs_given)
     write_into_file(outfile, "num_cv_runs", args_info->num_cv_runs_orig, 0);
+  if (args_info->negative_subsamples_given)
+    write_into_file(outfile, "negative_subsamples", args_info->negative_subsamples_orig, 0);
   if (args_info->svm_type_given)
     write_into_file(outfile, "svm_type", args_info->svm_type_orig, 0);
   if (args_info->balance_given)
@@ -597,6 +605,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "normalize",	0, NULL, 'n' },
         { "cross_validation",	1, NULL, 'c' },
         { "num_cv_runs",	1, NULL, 'r' },
+        { "negative_subsamples",	1, NULL, 'g' },
         { "svm_type",	1, NULL, 'v' },
         { "balance",	0, NULL, 'b' },
         { "tradeoff",	1, NULL, 't' },
@@ -606,7 +615,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVl:o:i:m:as:nc:r:v:bt:u:p:M", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVl:o:i:m:as:nc:r:g:v:bt:u:p:M", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -722,6 +731,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.num_cv_runs_given), optarg, 0, "1", ARG_INT,
               check_ambiguity, override, 0, 0,
               "num_cv_runs", 'r',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'g':	/* Number of subsample runs.  */
+        
+        
+          if (update_arg( (void *)&(args_info->negative_subsamples_arg), 
+               &(args_info->negative_subsamples_orig), &(args_info->negative_subsamples_given),
+              &(local_args_info.negative_subsamples_given), optarg, 0, "0", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "negative_subsamples", 'g',
               additional_error))
             goto failure;
         
