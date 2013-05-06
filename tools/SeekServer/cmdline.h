@@ -84,6 +84,9 @@ struct gengetopt_args_info
   const char *buffer_help; /**< @brief Number of Databaselets to store in memory help description.  */
   int output_text_flag;	/**< @brief Output results (gene list and dataset weights) as text (default=off).  */
   const char *output_text_help; /**< @brief Output results (gene list and dataset weights) as text help description.  */
+  char * additional_db_arg;	/**< @brief Utilize a second CDatabase collection. Path to the second CDatabase's setting file. (default='NA').  */
+  char * additional_db_orig;	/**< @brief Utilize a second CDatabase collection. Path to the second CDatabase's setting file. original value given at command line.  */
+  const char *additional_db_help; /**< @brief Utilize a second CDatabase collection. Path to the second CDatabase's setting file. help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -103,6 +106,7 @@ struct gengetopt_args_info
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
   unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
   unsigned int output_text_given ;	/**< @brief Whether output_text was given.  */
+  unsigned int additional_db_given ;	/**< @brief Whether additional_db was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

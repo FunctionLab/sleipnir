@@ -34,15 +34,20 @@ bool CSeekTools::IsNaN(const ushort &v){
 	return false;
 }
 
-bool CSeekTools::ReadDatabaselets(const CDatabase &DB, 
+ushort CSeekTools::GetNaN(){
+	return 65535;
+}
+
+bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
+	const size_t &iGenes, const size_t &iDatasets,
 	const vector< vector<string> > &vecstrAllQuery,
-	vector<CSeekDataset*> &vc, 
+	vector<CSeekDataset*> &vc, const map<string,ushort> &mapstriGenes,
+	const vector<vector<string> > &dbDatasets,
+	const map<string,ushort> &mapstriDatasets,
 	//network mode (data sent to client)
 	const int &iClient, const bool &bNetwork){
 
 	//requires LoadDatabase to be called beforehand
-	size_t iGenes = DB.GetGenes();
-	size_t iDatasets = DB.GetDatasets();
 	size_t i, j, k;
 	vector<char> cAllQuery;
 
@@ -50,7 +55,8 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 
 	for(i=0; i<vecstrAllQuery.size(); i++){
 		for(j=0; j<vecstrAllQuery[i].size(); j++){
-			if((k = DB.GetGene(vecstrAllQuery[i][j]))==-1) continue;
+			if(mapstriGenes.find(vecstrAllQuery[i][j])==mapstriGenes.end()) continue;
+			ushort k = mapstriGenes.find(vecstrAllQuery[i][j])->second;
 			cAllQuery[k] = 1;
 		}
 	}
@@ -58,9 +64,6 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	vector<ushort> allQ;
 	for(i=0; i<cAllQuery.size(); i++) if(cAllQuery[i]==1) allQ.push_back(i);
 	allQ.resize(allQ.size());
-	/*for(i=0; i<allQ.size(); i++){
-		fprintf(stderr, "allQ: %d %d\n", i, allQ[i]);
-	}*/
 
 	//for now
 	for(i=0; i<iDatasets; i++){
@@ -80,7 +83,7 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	
 	//fprintf(stderr, "Here\n");	
 	#pragma omp parallel for \
-	shared(allQ) private(i) firstprivate(iDatasets) schedule(dynamic)
+	shared(allQ) private(i) schedule(dynamic)
 	for(i=0; i<iDatasets; i++){
 		vc[i]->InitializeQueryBlock(allQ);
 	}
@@ -104,37 +107,35 @@ bool CSeekTools::ReadDatabaselets(const CDatabase &DB,
 	}
 
 	size_t m;
+	size_t d;
 
 	for(i=0; i<allQ.size(); i++){
 		m = allQ[i];
-		vector<unsigned char> Qi;
-		if(!DB.GetGene(m, Qi)){
-			cerr << "Gene does not exist" << endl;
-			continue;
+		for(d=0; d<DB.size(); d++){
+			vector<unsigned char> Qi;
+			if(!DB[d]->GetGene(m, Qi)){
+				cerr << "Gene does not exist" << endl;
+				continue;
+			}
+			ushort db;
+			CSeekIntIntMap *qu = NULL;
+			unsigned char **r = NULL;
+			vector<ushort> vecDatasetID;
+			for(j=0; j<dbDatasets[d].size(); j++){
+				ushort qq = mapstriDatasets.find(dbDatasets[d][j])->second;
+				vecDatasetID.push_back(qq);
+			}
+			#pragma omp parallel for \
+			shared(Qi) private(j, k) \
+			firstprivate(m, qu, r, db) schedule(dynamic)
+			for(j=0; j<vecDatasetID.size(); j++){
+				if((qu=vc[vecDatasetID[j]]->GetDBMap())==NULL) continue;
+				if(CSeekTools::IsNaN(db = (qu->GetForward(m)))) continue;
+				for(r = vc[vecDatasetID[j]]->GetMatrix(), k=0; k<iGenes; k++)
+					r[db][k] = Qi[k*vecDatasetID.size()+j];
+			}
+			Qi.clear();
 		}
-
-		ushort db;
-		CSeekIntIntMap *qu = NULL;
-		unsigned char **r = NULL;
-
-		#pragma omp parallel for \
-		shared(Qi) private(j, k) \
-		firstprivate(iDatasets, iGenes, m, qu, r, db) schedule(dynamic)
-		for(j=0; j<iDatasets; j++){
-			if((qu=vc[j]->GetDBMap())==NULL) continue;
-			if(CSeekTools::IsNaN(db = (qu->GetForward(m)))) continue;
-			for(r = vc[j]->GetMatrix(), k=0; k<iGenes; k++)
-				r[db][k] = Qi[k*iDatasets+j];
-
-			/*vector<unsigned char>::iterator iterQ = Qi.begin() + j;
-			unsigned char *rp = &r[db][0];
-			unsigned char *rp_end = &r[db][0] + iGenes;
-			for(; rp!=rp_end; rp++, iterQ+=iDatasets){
-				*rp = *iterQ;
-			}*/
-		}
-
-		Qi.clear();
 	}
 
 	fprintf(stderr, "Finished reading query genes' correlations\n");
@@ -174,28 +175,14 @@ bool CSeekTools::ReadQuantFile(const char *file, vector<float> &quant, const int
 	return true;
 }
 
-bool CSeekTools::LoadDatabase(const CDatabase &DB,
-	const string &strPrepInputDirectory, 
-	const string &strGvarInputDirectory,
-	const string &strSinfoInputDirectory,
-	const vector<string> &vecstrDatasets,
-	const map<string, string> &mapstrstrDatasetPlatform,
-	const map<string, ushort> &mapstriPlatform, vector<CSeekPlatform> &vp,
-	vector<CSeekDataset*> &vc){
-	return CSeekTools::LoadDatabase(DB, strPrepInputDirectory.c_str(),
-		strGvarInputDirectory.c_str(), strSinfoInputDirectory.c_str(),
-		vecstrDatasets, mapstrstrDatasetPlatform, mapstriPlatform, vp, vc);
-}
-
-bool CSeekTools::LoadDatabase(const CDatabase &DB, 
+bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
+	const size_t &iGenes, const size_t &iDatasets,
 	vector<CSeekDataset*> &vc, const vector<CSeekDataset*> &vc_src, 
 	vector<CSeekPlatform> &vp, const vector<CSeekPlatform> &vp_src, 
 	const vector<string> &vecstrDatasets,
 	const map<string, string> &mapstrstrDatasetPlatform, 
 	const map<string, ushort> &mapstriPlatform){
 
-	size_t iDatasets = DB.GetDatasets();
-	size_t iGenes = DB.GetGenes();
 	size_t i, j, k;
 
 	vc.clear();
@@ -215,7 +202,7 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 
 	fprintf(stderr, "Initializing gene map\n"); ret = system("date +%s%N 1>&2");
 	#pragma omp parallel for \
-	private(i) firstprivate(iDatasets) schedule(dynamic)
+	private(i) schedule(dynamic)
 	for(i=0; i<iDatasets; i++){
 		vc[i] = new CSeekDataset();
 		vc[i]->Copy(vc_src[i]);
@@ -230,67 +217,81 @@ bool CSeekTools::LoadDatabase(const CDatabase &DB,
 	return true;
 }
 
-bool CSeekTools::LoadDatabase(const CDatabase &DB,
-	const char *prep_dir, const char *gvar_dir, const char *sinfo_dir,
+bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
+	const size_t &iGenes, const size_t &iDatasets,
+	const vector<CSeekDBSetting*> &DBSetting,
 	const vector<string> &vecstrDatasets,
 	const map<string, string> &mapstrstrDatasetPlatform,
 	const map<string, ushort> &mapstriPlatform, vector<CSeekPlatform> &vp,
-	vector<CSeekDataset*> &vc){
-		
-	size_t iDatasets = DB.GetDatasets();
-	size_t iGenes = DB.GetGenes();
+	vector<CSeekDataset*> &vc, const vector<vector<string> > &dbDataset,
+	const map<string,ushort> &mapstriDataset,
+	const bool bVariance, const bool bCorrelation){
+
 	size_t i, j, k;
 	vc.clear();
 	vc.resize(iDatasets);
-	string strPrepInputDirectory = prep_dir; //must be non NA
 
-	bool bVariance = false;
-	bool bCorrelation = false;
-
-	string strSinfoInputDirectory = sinfo_dir;
-	string strGvarInputDirectory = gvar_dir;
-
-	if(strSinfoInputDirectory!="NA"){
-		bCorrelation = true;
+	if(bCorrelation){
+		for(i=0; i<DB.size(); i++){
+			if(DBSetting[i]->GetValue("sinfo")=="NA"){
+				fprintf(stderr, "sinfo parameter must be given.\n");
+				return false;
+			}
+		}
 	}
-	if(strGvarInputDirectory!="NA"){
-		bVariance = true;
+
+	if(bVariance){
+		for(i=0; i<DB.size(); i++){
+			if(DBSetting[i]->GetValue("gvar")=="NA"){
+				fprintf(stderr, "gene variance parameter must be given.\n");
+				return false;
+			}
+		}
 	}
 
 	int ret; //system call return
 
 	fprintf(stderr, "Start reading average and presence files\n");
 	ret = system("date +%s%N 1>&2");
-	for(i=0; i<iDatasets; i++){
-		vc[i] = new CSeekDataset();
-		string strFileStem = vecstrDatasets[i];
-		string strAvgPath = strPrepInputDirectory + "/" +
-			strFileStem + ".gavg";
-		string strPresencePath = strPrepInputDirectory + "/" +
-			strFileStem + ".gpres";
-		vc[i]->ReadGeneAverage(strAvgPath);
-		vc[i]->ReadGenePresence(strPresencePath);
-		if(bVariance){
-			string strVariancePath = strGvarInputDirectory + "/" +
-				strFileStem + ".gexpvar";
-			vc[i]->ReadGeneVariance(strVariancePath);
+	for(i=0; i<DB.size(); i++){
+		const vector<string> &dset = dbDataset[i];
+		string strPrepInputDirectory = DBSetting[i]->GetValue("prep");
+		string strGvarInputDirectory = DBSetting[i]->GetValue("gvar");
+		string strSinfoInputDirectory = DBSetting[i]->GetValue("sinfo");
+
+		for(j=0; j<dset.size(); j++){
+			ushort d = mapstriDataset.find(dset[j])->second;
+			vc[d] = new CSeekDataset();
+			string strFileStem = dset[j];
+			string strAvgPath = strPrepInputDirectory + "/" +
+				strFileStem + ".gavg";
+			string strPresencePath = strPrepInputDirectory + "/" +
+				strFileStem + ".gpres";
+			vc[d]->ReadGeneAverage(strAvgPath);
+			vc[d]->ReadGenePresence(strPresencePath);
+			if(bVariance){
+				string strVariancePath = strGvarInputDirectory + "/" +
+					strFileStem + ".gexpvar";
+				vc[d]->ReadGeneVariance(strVariancePath);
+			}
+			if(bCorrelation){
+				string strSinfoPath = strSinfoInputDirectory + "/" +
+					strFileStem + ".sinfo";
+				vc[d]->ReadDatasetAverageStdev(strSinfoPath);
+			}
+			string strPlatform =
+				mapstrstrDatasetPlatform.find(strFileStem)->second;
+			ushort platform_id = mapstriPlatform.find(strPlatform)->second;
+			vc[d]->SetPlatform(vp[platform_id]);
 		}
-		if(bCorrelation){
-			string strSinfoPath = strSinfoInputDirectory + "/" + 
-				strFileStem + ".sinfo";
-			vc[i]->ReadDatasetAverageStdev(strSinfoPath);
-		}
-		string strPlatform =
-			mapstrstrDatasetPlatform.find(strFileStem)->second;
-		ushort platform_id = mapstriPlatform.find(strPlatform)->second;
-		vc[i]->SetPlatform(vp[platform_id]);
 	}
+
 	fprintf(stderr, "Done reading average and presence files\n");
 	ret = system("date +%s%N 1>&2");
 
 	fprintf(stderr, "Initializing gene map\n"); ret = system("date +%s%N 1>&2");
 	#pragma omp parallel for \
-	private(i) firstprivate(iDatasets) schedule(dynamic)
+	private(i) schedule(dynamic)
 	for(i=0; i<iDatasets; i++) vc[i]->InitializeGeneMap();
 
 	fprintf(stderr, "Done initializing gene map\n"); ret = system("date +%s%N 1>&2");

@@ -38,7 +38,8 @@ CSeekCentral::CSeekCentral(){
 	m_mapstrintDataset.clear();
 	m_mapstrintGene.clear();
 	m_searchdsetMap.clear();
-	m_DB = NULL;
+	m_vecDB.clear();
+	m_vecDBDataset.clear();
 	m_rData = NULL;
 	m_maxNumDB = 50;
 
@@ -141,6 +142,7 @@ CSeekCentral::~CSeekCentral(){
 	m_counts.clear();
 	m_weight.clear();
 	m_final.clear();
+	m_vecDBDataset.clear();
 
 	m_vecstrAllQuery.clear();
 	m_Query.clear();
@@ -150,12 +152,22 @@ CSeekCentral::~CSeekCentral(){
 	m_mapstriPlatform.clear();
 	m_vecstrPlatform.clear();
 
-	if(m_DB!=NULL){
+	if(m_vecDB.size()!=0){
+		if(!m_bSharedDB){
+			for(i=0; i<m_vecDB.size(); i++)
+				delete m_vecDB[i];
+		}
+		for(i=0; i<m_vecDB.size(); i++)
+			m_vecDB[i] = NULL;
+		m_vecDB.clear();
+	}
+
+	/*if(m_DB!=NULL){
 		if(!m_bSharedDB){
 			delete m_DB;
 		}
 		m_DB = NULL;
-	}
+	}*/
 	m_iDatasets = 0;
 	m_iGenes = 0;
 	m_numThreads = 0;
@@ -221,7 +233,6 @@ bool CSeekCentral::Initialize(
 	const enum CSeekDataset::DistanceMeasure eDistMeasure,
 	const bool bSubtractGeneAvg, const bool bNormPlatform){
 
-	//fprintf(stderr, "B0 %lu\n", CMeta::GetMemoryUsage());
 	m_output_dir = output_dir; //LATER, TO BE DELETED
 	m_maxNumDB = src->m_maxNumDB;
 	m_bSharedDB = true;
@@ -270,16 +281,12 @@ bool CSeekCentral::Initialize(
 	m_iDatasets = m_vecstrDatasets.size();
 	m_iGenes = m_vecstrGenes.size();
 
-	//fprintf(stderr, "%d %d\n", m_iDatasets, m_iGenes);
-	//fprintf(stderr, "B1 %lu\n", CMeta::GetMemoryUsage());
-
 	//read search datasets
 	vector<string> sd;
 	CMeta::Tokenize(search_dset.c_str(), sd, "|", false);
 	m_vecstrSearchDatasets.resize(sd.size());
 	for(i=0; i<sd.size(); i++){
 		CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
-		//fprintf(stderr, "%s\n", sd[i].c_str());
 	}
 	//read queries
 	vector<string> sq;
@@ -287,9 +294,8 @@ bool CSeekCentral::Initialize(
 	m_vecstrAllQuery.resize(sq.size());
 	for(i=0; i<sq.size(); i++){
 		CMeta::Tokenize(sq[i].c_str(), m_vecstrAllQuery[i], " ", false);
-		//fprintf(stderr, "%s\n", sq[i].c_str());
 	}
-	//fprintf(stderr, "%s\n", output_dir.c_str());
+
 	m_searchdsetMap.resize(m_vecstrAllQuery.size());
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
 		m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
@@ -298,14 +304,19 @@ bool CSeekCentral::Initialize(
 				m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
 	}
 
-	//fprintf(stderr, "B2 %lu\n", CMeta::GetMemoryUsage());
+	m_vecDB.resize(src->m_vecDB.size());
+	for(i=0; i<m_vecDB.size(); i++)
+		m_vecDB[i] = src->m_vecDB[i];
+	//m_DB = src->m_DB; //shared DB
 
-	m_DB = src->m_DB; //shared DB
+	m_vecDBDataset.resize(src->m_vecDB.size());
+	for(i=0; i<m_vecDB.size(); i++)
+		copy(src->m_vecDBDataset[i].begin(), src->m_vecDBDataset[i].end(),
+		m_vecDBDataset[i].begin());
 
-	CSeekTools::LoadDatabase(*m_DB, m_vc, src->m_vc, m_vp, src->m_vp,
-		m_vecstrDatasets, m_mapstrstrDatasetPlatform, m_mapstriPlatform);
-
-	//fprintf(stderr, "B3 %lu\n", CMeta::GetMemoryUsage());
+	CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
+		m_vc, src->m_vc, m_vp, src->m_vp, m_vecstrDatasets,
+		m_mapstrstrDatasetPlatform, m_mapstriPlatform);
 
 	if(!CalculateRestart())
 		return false;
@@ -355,6 +366,7 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 				count[j]++;
 				present++;
 			}
+
 			//datasets that contains all query genes (very stringent)
 			//if(present==m_vecstrAllQuery[l].size()){
 
@@ -459,10 +471,7 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 }
 
 //load everything except query, search datasets, output directory
-bool CSeekCentral::Initialize(const char *gene, const char *quant,
-	const char *dset, const char *platform, const char *db,
-	const char *prep, const char *gvar, const char *sinfo,
-	const ushort num_db,
+bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 	const ushort buffer, const bool to_output_text,
 	const bool bOutputWeightComponent, const bool bSimulateWeight,
 	const enum CSeekDataset::DistanceMeasure dist_measure,
@@ -500,63 +509,102 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	m_bLogit = bLogit;
 	m_eDistMeasure = dist_measure;
 
-	string strGvarDirectory = gvar;
-	string strSinfoDirectory = sinfo;
-	if(dist_measure==CSeekDataset::CORRELATION && sinfo=="NA"){
-		fprintf(stderr, "Error: not specifying sinfo!\n");
-		return false;
-	}
+	bool bCorrelation = false;
 
-	if(dist_measure==CSeekDataset::CORRELATION && 
-		(m_bSubtractGeneAvg || m_bNormPlatform || m_bLogit)){
-		fprintf(stderr, 
-			"Warning: setting subtract_avg, norm platform to false\n");
-		m_bSubtractGeneAvg = false;
-		m_bNormPlatform = false;
-		m_bLogit = false;
+	if(dist_measure==CSeekDataset::CORRELATION){
+		bCorrelation = true;
+		if(m_bSubtractGeneAvg || m_bNormPlatform || m_bLogit){
+			fprintf(stderr,
+				"Warning: setting subtract_avg, norm platform to false\n");
+			m_bSubtractGeneAvg = false;
+			m_bNormPlatform = false;
+			m_bLogit = false;
+		}
 	}
 
 	//read genes
 	vector<string> vecstrGeneID;
-	if(!CSeekTools::ReadListTwoColumns(gene, vecstrGeneID, m_vecstrGenes))
+	if(!CSeekTools::ReadListTwoColumns(vecDBSetting[0]->GetValue("gene"),
+		vecstrGeneID, m_vecstrGenes))
 		return false;
-
 	for(i=0; i<m_vecstrGenes.size(); i++)
 		m_mapstrintGene[m_vecstrGenes[i]] = i;
 
-	CSeekTools::ReadQuantFile(quant, m_quant);
-	m_DB = new CDatabase(useNibble);
+	//read quant file
+	CSeekTools::ReadQuantFile(vecDBSetting[0]->GetValue("quant"), m_quant);
 
-	//read datasets
-	if(!CSeekTools::ReadListTwoColumns(dset, m_vecstrDatasets, m_vecstrDP))
-		return false;
+	m_vecstrDatasets.clear();
+	m_vecstrDP.clear();
+	m_mapstriPlatform.clear();
+	m_mapstrstrDatasetPlatform.clear();
+	m_mapstrintDataset.clear();
+	m_vp.clear();
+
+	m_vecDB.resize(vecDBSetting.size());
+	m_vecDBDataset.resize(vecDBSetting.size());
+	for(i=0; i<vecDBSetting.size(); i++)
+		m_vecDB[i] = NULL;
+
+	for(i=0; i<vecDBSetting.size(); i++){
+		if(dist_measure==CSeekDataset::CORRELATION &&
+		vecDBSetting[i]->GetValue("sinfo")=="NA"){
+			fprintf(stderr, "Error: not specifying sinfo!\n");
+			return false;
+		}
+
+		m_vecDB[i] = new CDatabase(useNibble);
+		//read datasets
+		vector<string> vD, vDP;
+		if(!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->GetValue("dset"), vD, vDP))
+			return false;
+
+		for(j=0; j<vD.size(); j++){
+			m_vecstrDatasets.push_back(vD[j]);
+			m_vecDBDataset[i].push_back(vD[j]);
+			m_vecstrDP.push_back(vDP[j]);
+		}
+
+		vector<string> vecstrPlatforms;
+		map<string,ushort> mapstriPlatform;
+		vector<CSeekPlatform> vp;
+		CSeekTools::ReadPlatforms(vecDBSetting[i]->GetValue("platform"), vp,
+			vecstrPlatforms, mapstriPlatform);
+		for(map<string,ushort>::iterator it=mapstriPlatform.begin();
+			it!=mapstriPlatform.end(); it++){
+			m_mapstriPlatform[it->first] = it->second;
+		}
+
+		int cur = m_vp.size();
+		m_vp.resize(cur+vp.size());
+		for(j=0; j<vp.size(); j++)
+			m_vp[cur+j].Copy(vp[j]);
+	}
 
 	for(i=0; i<m_vecstrDatasets.size(); i++){
 		m_mapstrstrDatasetPlatform[m_vecstrDatasets[i]] = m_vecstrDP[i];
 		m_mapstrintDataset[m_vecstrDatasets[i]] = i;
 	}
 
-	vector<string> vecstrPlatforms;
-	CSeekTools::ReadPlatforms(platform, m_vp, vecstrPlatforms,
-		m_mapstriPlatform);
-
 	m_iDatasets = m_vecstrDatasets.size();
 	m_iGenes = m_vecstrGenes.size();
 
-	m_DB->Open(db, m_vecstrGenes, m_iDatasets, num_db);
-	CSeekTools::LoadDatabase(*m_DB, prep, gvar, sinfo, m_vecstrDatasets,
-		m_mapstrstrDatasetPlatform, m_mapstriPlatform, m_vp, m_vc);
+	for(i=0; i<vecDBSetting.size(); i++){
+		m_vecDB[i]->Open(vecDBSetting[i]->GetValue("db"),
+			m_vecstrGenes, m_vecDBDataset[i].size(), vecDBSetting[i]->GetNumDB());
+	}
+
+	CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
+		vecDBSetting, m_vecstrDatasets, m_mapstrstrDatasetPlatform,
+		m_mapstriPlatform, m_vp, m_vc, m_vecDBDataset, m_mapstrintDataset,
+		false, bCorrelation);
 
 	return true;
 }
 
-
-bool CSeekCentral::Initialize(const char *gene, const char *quant,
-	const char *dset, const char *search_dset,
-	const char *query, const char *platform, const char *db,
-	const char *prep, const char *gvar, const char *sinfo,
-	const ushort num_db, const char *output_dir,
-	const ushort buffer, const bool to_output_text,
+bool CSeekCentral::Initialize(
+	const vector<CSeekDBSetting*> &vecDBSetting,
+	const char *search_dset, const char *query,
+	const char *output_dir, const ushort buffer, const bool to_output_text,
 	const bool bOutputWeightComponent, const bool bSimulateWeight,
 	const enum CSeekDataset::DistanceMeasure dist_measure,
 	const bool bSubtractAvg, const bool bNormPlatform,
@@ -564,8 +612,7 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 	const bool bSquareZ, const bool bRandom, const int iNumRandom,
 	gsl_rng *rand, const bool useNibble){
 
-	if(!CSeekCentral::Initialize(gene, quant, dset, platform, 
-		db, prep, gvar, sinfo, num_db, buffer, to_output_text,
+	if(!CSeekCentral::Initialize(vecDBSetting, buffer, to_output_text,
 		bOutputWeightComponent, bSimulateWeight, dist_measure,
 		bSubtractAvg, bNormPlatform, bLogit, fCutOff, fPercentRequired,
 		bSquareZ, bRandom, iNumRandom, rand, useNibble)){
@@ -605,7 +652,6 @@ bool CSeekCentral::Initialize(const char *gene, const char *quant,
 
 	if(!CalculateRestart()) return false;
 
-
 	return true;
 }
 
@@ -614,9 +660,12 @@ bool CSeekCentral::PrepareQuery(const vector<string> &vecstrQuery,
 	vector<ushort> queryGenes;
 	ushort j;
 	for(j=0; j<vecstrQuery.size(); j++){
-		size_t m = m_DB->GetGene(vecstrQuery[j]);
-		if(m==-1) continue;
-		queryGenes.push_back(m);
+		if(m_mapstrintGene.find(vecstrQuery[j])==
+			m_mapstrintGene.end()) continue;
+		//size_t m = m_DB->GetGene(vecstrQuery[j]);
+		//if(m==-1) continue;
+		//queryGenes.push_back(m);
+		queryGenes.push_back(m_mapstrintGene[vecstrQuery[j]]);
 	}
 	queryGenes.resize(queryGenes.size());
 	query.InitializeQuery(queryGenes, m_iGenes);
@@ -749,8 +798,10 @@ bool CSeekCentral::Display(CSeekQuery &query, vector<AResultFloat> &final){
 	const vector<char> &cQuery = query.GetQueryPresence();
 	for(ii=0, jj=0; jj<500; ii++){
 		if(cQuery[final[ii].i]==1) continue;
+		//fprintf(stderr, "%s %.5f\n",
+		//	m_DB->GetGene((size_t)final[ii].i).c_str(), final[ii].f);
 		fprintf(stderr, "%s %.5f\n",
-			m_DB->GetGene((size_t)final[ii].i).c_str(), final[ii].f);
+			m_vecstrGenes[(size_t)final[ii].i].c_str(), final[ii].f);
 		jj++;
 	}
 	return true;
@@ -858,7 +909,6 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
 
-
 		//simulated weight case ======================
 		/*if(simulateWeight && redoWithEqual>=1) //1 or 2 
 			current_sm = EQUAL;
@@ -868,8 +918,9 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 
 		if(m_mapLoadTime.find(i)!=m_mapLoadTime.end()){
 			if(!m_bRandom || l==0){ //l==0: first random repetition
-				CSeekTools::ReadDatabaselets(*m_DB, m_mapLoadTime[i], m_vc, 
-				m_iClient, m_bEnableNetwork);
+				CSeekTools::ReadDatabaselets(m_vecDB, m_iGenes, m_iDatasets,
+					m_mapLoadTime[i], m_vc, m_mapstrintGene, m_vecDBDataset,
+					m_mapstrintDataset, m_iClient, m_bEnableNetwork);
 			}
 		}
 
@@ -1329,10 +1380,12 @@ const vector<CSeekQuery>& CSeekCentral::GetAllQuery() const{
 }
 
 ushort CSeekCentral::GetGene(const string &strGene) const{
-	return (ushort) m_DB->GetGene(strGene);
+	if(m_mapstrintGene.find(strGene)==m_mapstrintGene.end())
+		return CSeekTools::GetNaN();
+	return m_mapstrintGene.find(strGene)->second;
 }
 string CSeekCentral::GetGene(const ushort &geneID) const{
-	return m_DB->GetGene((size_t) geneID);
+	return m_vecstrGenes[(size_t) geneID];
 }
 
 const vector<vector<float> >& CSeekCentral::GetAllWeight() const{

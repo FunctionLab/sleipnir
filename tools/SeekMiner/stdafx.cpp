@@ -24,14 +24,23 @@
 /*!
  * \page SeekMiner SeekMiner
  *
- * SeekMiner returns a gene-ranking based on the coexpressions to the user-specified
- * query genes. It finds relevant datasets by using one of the many dataset weighting
- * algorithms, including the query-coexpression weighting, the order statistics 
- * weighting, etc. Afterward, it performs a weighted integration of coexpressions
- * using the computed dataset weights.
- * The search algorithms employed by Seek are designed to be quick and efficient, and
- * they support the real-time weight calculations for thousands of microarray
- * datasets.
+ * SeekMiner is the main program for integrating coexpressions among thousands of
+ * microarray datasets. Users supply the program with a set of genes as input (or query) and the program
+ * returns other similar genes with a coexpression to the input genes.
+ *
+ * The main challenge in performing the user's query is finding the right datasets.
+ * As not all microarrays are relevant to exploring the query's coexpression,
+ * SeekMiner particularly favors those datasets where the query genes are highly
+ * correlated among each other. As we would expect, the query gene coregulation would suggest that
+ * the biological process involving these genes is highly active. So datasets that pass this criteria would
+ * be very informative to the search process.
+ *
+ * In addition to the default coregulation based weighting, SeekMiner supports other methods
+ * of scoring datasets, such as rank-based methods (order statistics) and equal-weighting.
+ *
+ * Users can easily compare between methods, adjust parameters in the search algorithms, specify
+ * the datasets to be integrated, and test a number of different queries with varying length,
+ * in order to achieve their desired results.
  *
  * \section sec_usage Usage
  * 
@@ -49,8 +58,8 @@
  *
  * SeekMiner supports the following weighting methods (\c -V):
  * \li Query cross-validated weighting (\c CV, default), where we iteratively use a subset of the
- * query to construct a search instance to retrieve the remaining query genes. The sum of the score of the
- * cross-validations forms the dataset weight.
+ * query to construct a search instance to retrieve the remaining query genes. This is a form of measuring
+ * the coregulation of query genes using a cross-validation setup.
  * \li Equal weighting (\c EQUAL), where all datasets are weighted equally.
  * \li Order statistics integration (\c ORDER_STAT), which is outlined in Adler et al (2009).
  * This method computes a P-value statistics by comparing the rank of correlation across datasets to the

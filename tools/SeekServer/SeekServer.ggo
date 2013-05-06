@@ -39,4 +39,5 @@ option	"buffer"			b	"Number of Databaselets to store in memory"
 								int default="20"
 option	"output_text"		O	"Output results (gene list and dataset weights) as text"
 								flag	off
-								
+option	"additional_db"		B	"Utilize a second CDatabase collection. Path to the second CDatabase's setting file."
+								string default="NA"	
