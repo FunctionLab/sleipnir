@@ -68,7 +68,7 @@ bool CSeekWriter::GetGeneAverage(CDataPair &Dat,
 			num++;
 		}
 		vecResult[i] = sum / (float) num;
-		fprintf(stderr, "%.2f\n", vecResult[i]);
+		//fprintf(stderr, "%.2f\n", vecResult[i]);
 		free(v);
 	}
 	return true;

@@ -25,11 +25,10 @@
  * \page SeekServer SeekServer
  * 
  * SeekServer runs the coexpression mining algorithm using a multithreaded TCP/IP interface.
- * When it is running, SeekServer services requests over the network from multiple connected clients
- * for genes that co-express with the client's query genes.
- * SeekServer sends two lists to the client upon finishing the query search: 1) 
- * a list of genes that are found by the algorithm to be coexpressed with the query genes, and 2) a list of datasets
- * where this coexpression with the query is found to be occurring.
+ * When it is running, SeekServer services requests from multiple clients over the network. The requests that can be
+ * handled by SeekServer are, for example:
+ * \li retrieve a list of genes that are found to be coexpressed with the query genes
+ * \li retrieve a list of datasets where this coexpression with the query is found to be occurring.
  *
  * \section sec_usage Usage
  * 

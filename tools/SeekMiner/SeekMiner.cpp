@@ -29,6 +29,7 @@ int main( int iArgs, char** aszArgs ) {
 	pthread_win32_process_attach_np( );
 #endif // WIN32
 	gengetopt_args_info	sArgs;
+	const int lineSize = 1024;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -242,15 +243,84 @@ int main( int iArgs, char** aszArgs ) {
 	getchar();*/
 
 	CSeekCentral *csfinal = new CSeekCentral();
-	if(!csfinal->Initialize(sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
+	CSeekDBSetting *dbSetting = new CSeekDBSetting(sArgs.dir_gvar_arg,
+		sArgs.dir_sinfo_arg, sArgs.dir_platform_arg, sArgs.dir_prep_in_arg,
+		sArgs.dir_in_arg, sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
+		sArgs.num_db_arg);
+	vector<CSeekDBSetting*> cc;
+	cc.push_back(dbSetting);
+
+	string add_db = sArgs.additional_db_arg;
+	if(add_db!="NA"){
+		ifstream ifsm;
+		ifsm.open(add_db.c_str());
+		if(!ifsm.is_open()){
+			fprintf(stderr, "Error opening file %s\n", add_db.c_str());
+			return false;
+		}
+		char acBuffer[lineSize];
+		ushort c_iBuffer = lineSize;
+		map<string,string> parameters;
+		i=0;
+		while(!ifsm.eof()){
+			ifsm.getline(acBuffer, c_iBuffer-1);
+			if(acBuffer[0]==0) break;
+			acBuffer[c_iBuffer-1]=0;
+			vector<string> tok;
+			CMeta::Tokenize(acBuffer, tok); //separator tab
+			parameters[tok[0]] = tok[1];
+		}
+		ifsm.close();
+
+		string sinfo_dir = "NA";
+		string gvar_dir = "NA";
+		string platform_dir = "NA";
+		string prep_dir = "NA";
+		string db_dir = "NA";
+		string dset_map_file = "NA";
+		string gene_map_file = "NA";
+		string quant_file = "NA";
+		int num_db = -1;
+
+		if(eDistMeasure==CSeekDataset::CORRELATION){
+			if(parameters.find("SINFO_DIR")==parameters.end() ||
+				parameters.find("SINFO_DIR")->second=="NA"){
+				fprintf(stderr, "Please specify an sinfo directory for the extra db\n");
+				return false;
+			}
+			sinfo_dir = parameters.find("SINFO_DIR")->second;
+		}
+		if(parameters.find("GVAR_DIR")!=parameters.end())
+			gvar_dir = parameters.find("GVAR_DIR")->second;
+		if(parameters.find("PREP_DIR")==parameters.end() ||
+			parameters.find("PLATFORM_DIR")==parameters.end() ||
+			parameters.find("DB_DIR")==parameters.end() ||
+			parameters.find("DSET_MAP_FILE")==parameters.end() ||
+			parameters.find("GENE_MAP_FILE")==parameters.end() ||
+			parameters.find("QUANT_FILE")==parameters.end() ||
+			parameters.find("NUMBER_OF_DB")==parameters.end()){
+			fprintf(stderr, "Some arguments are missing. Please make sure the following are provided:\n");
+			fprintf(stderr, "PREP_DIR, DB_DIR, DSET_MAP_FILE, GENE_MAP_FILE, QUANT_FILE, NUMBER_OF_DB\n");
+		}
+
+		platform_dir = parameters.find("PLATFORM_DIR")->second;
+		db_dir = parameters.find("DB_DIR")->second;
+		prep_dir = parameters.find("PREP_DIR")->second;
+		dset_map_file = parameters.find("DSET_MAP_FILE")->second;
+		gene_map_file = parameters.find("GENE_MAP_FILE")->second;
+		quant_file = parameters.find("QUANT_FILE")->second;
+		num_db = atoi(parameters.find("NUMBER_OF_DB")->second.c_str());
+
+		CSeekDBSetting *dbSetting2 = new CSeekDBSetting(gvar_dir, sinfo_dir,
+			platform_dir, prep_dir, db_dir, gene_map_file, quant_file, dset_map_file,
+			num_db);
+		cc.push_back(dbSetting2);
+	}
+
+	if(!csfinal->Initialize(cc,
 		sArgs.search_dset_arg, 
 		//"/tmp/ex_query2.txt", 
 		sArgs.query_arg,
-		sArgs.dir_platform_arg,
-		sArgs.dir_in_arg, sArgs.dir_prep_in_arg, 
-		sArgs.dir_gvar_arg,
-		sArgs.dir_sinfo_arg,
-		sArgs.num_db_arg,
 		sArgs.output_dir_arg,
 		sArgs.buffer_arg, !!sArgs.output_text_flag,
 		bOutputWeightComponent, bSimulateWeight,
@@ -276,6 +346,13 @@ int main( int iArgs, char** aszArgs ) {
 	//csfinal->OrderStatistics();
 	csfinal->Destruct();
 	delete csfinal;
+	delete dbSetting;
+
+	if(add_db!="NA"){
+		delete cc[1];
+	}
+
+	cc.clear();
 
 #ifdef WIN32
 	pthread_win32_process_detach_np( );

@@ -28,6 +28,82 @@
 #include "seekplatform.h"
 
 namespace Sleipnir {
+
+class CSeekDBSetting{
+public:
+	CSeekDBSetting(const string &gvar,
+		const string &sinfo, const string &plat,
+		const string &prep, const string &db,
+		const string &gene, const string &quant,
+		const string &dset, const ushort &numDB){
+		m_gvarDirectory = gvar;
+		m_sinfoDirectory = sinfo;
+		m_platformDirectory = plat;
+		m_prepDirectory = prep;
+		m_dbDirectory = db;
+		m_geneMapFile = gene;
+		m_quantFile = quant;
+		m_dsetFile = dset;
+		m_numDB = numDB;
+	}
+	CSeekDBSetting(const char *gvar,
+		const char* sinfo, const char* plat,
+		const char* prep, const char* db,
+		const char* gene, const char* quant,
+		const char* dset, const ushort &numDB){
+		m_gvarDirectory = gvar;
+		m_sinfoDirectory = sinfo;
+		m_platformDirectory = plat;
+		m_prepDirectory = prep;
+		m_dbDirectory = db;
+		m_geneMapFile = gene;
+		m_quantFile = quant;
+		m_dsetFile = dset;
+		m_numDB = numDB;
+	}
+
+	~CSeekDBSetting(){
+	}
+
+	string GetValue(const string &str){
+		if(str=="gene")
+			return m_geneMapFile;
+		else if(str=="dset")
+			return m_dsetFile;
+		else if(str=="quant")
+			return m_quantFile;
+		else if(str=="gvar")
+			return m_gvarDirectory;
+		else if(str=="sinfo")
+			return m_sinfoDirectory;
+		else if(str=="db")
+			return m_dbDirectory;
+		else if(str=="prep")
+			return m_prepDirectory;
+		else if(str=="platform")
+			return m_platformDirectory;
+		else
+			return "NULL";
+	}
+
+	ushort GetNumDB(){
+		return m_numDB;
+	}
+
+private:
+	string m_gvarDirectory;
+	string m_sinfoDirectory;
+	string m_platformDirectory;
+	string m_prepDirectory;
+	string m_dbDirectory;
+	string m_geneMapFile;
+	string m_quantFile;
+	string m_dsetFile;
+	ushort m_numDB;
+};
+
+
+
 /*!
  * \brief Representation of a microarray dataset that is used by Seek
  *
@@ -353,7 +429,6 @@ private:
 
 	float sum_weight;
 	bool m_bIsNibble;
-
 };
 
 

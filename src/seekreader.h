@@ -265,6 +265,11 @@ public:
 	static bool IsNaN(const ushort &);
 
 	/*!
+	 * \brief Return the NaN value as a ushort
+	 */
+	static ushort GetNaN();
+
+	/*!
 	 * \brief Converts an integer to a string
 	 * \param number The given integer number
 	 * \return The string
@@ -296,8 +301,12 @@ public:
 	 * \remarks
 	 * Assumes that the CSeekTools::LoadDatabase() has been called.
 	 */
-	static bool ReadDatabaselets(const CDatabase &, 
-		const vector< vector<string> > &, vector<CSeekDataset*> &, 
+	static bool ReadDatabaselets(const vector<CDatabase*>&,
+		const size_t&, const size_t&,
+		const vector<vector<string> >&,
+		vector<CSeekDataset*>&,
+		const map<string,ushort> &,
+		const vector<vector<string> > &, const map<string,ushort> &,
 		//network mode options
 		const int&, const bool&);
 
@@ -322,23 +331,15 @@ public:
 	 * \param vc The vector of CSeekDataset, the output
 	 *
 	 */
-	static bool LoadDatabase(const CDatabase &, const string &,
-		const string &, const string &,
-		const vector<string> &, const map<string, string> &,
-		const map<string, ushort> &, vector<CSeekPlatform> &,
-		vector<CSeekDataset*> &);
-
-	/*!
-	 * \brief Read the search setting files and load the CDatabase
-	 *
-	 * Same as the previous CSeekTools::LoadDatabase() definition, except that this function
-	 * accepts string arguments as \c const \c char \c *.
-	 */
-	static bool LoadDatabase(const CDatabase &, const char *,
-		const char *, const char *,
-		const vector<string> &, const map<string, string> &,
-		const map<string, ushort> &, vector<CSeekPlatform> &,
-		vector<CSeekDataset*> &);
+	static bool LoadDatabase(const vector<CDatabase*>&,
+		const size_t&, const size_t&,
+		const vector<CSeekDBSetting*>&,
+		const vector<string>&,
+		const map<string,string>&,
+		const map<string,ushort>&, vector<CSeekPlatform>&,
+		vector<CSeekDataset*>&, const vector<vector<string> >&,
+		const map<string,ushort>&,
+		const bool=false, const bool=false);
 
 	/*!
 	 * \brief Load a CDatabase by copying from an existing instance
@@ -355,7 +356,9 @@ public:
 	 * \param mapstrstrDatasetPlatform The dataset-platform mapping
 	 * \param mapstriPlatform Platform name-platform ID mapping
 	 */
-	static bool LoadDatabase(const CDatabase &, vector<CSeekDataset*>&,
+	static bool LoadDatabase(
+		const vector<CDatabase*>&, const size_t&, const size_t&,
+		vector<CSeekDataset*>&,
 		const vector<CSeekDataset*>&, vector<CSeekPlatform>&, 
 		const vector<CSeekPlatform>&, const vector<string>&, 
 		const map<string,string>&, const map<string,ushort>&);

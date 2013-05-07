@@ -41,12 +41,12 @@ namespace Sleipnir {
  * The Seek search algorithms perform the coexpression search of the user's
  * query genes in a large compendium of microarray datasets. 
  * The output of the search algorithms is a ranking of genes based on their
- * gene score, where the gene score represents the overall weighted coexpression
+ * gene score, which is determined by the overall weighted coexpression
  * to the query genes. 
  *
  * One of the first steps in a search is to weight
  * the datasets in such a way to prioritize informative datasets.
- * Then, with the dataset weight generated, the final gene-score is given by:
+ * Then, with the weights generated, the final gene-score is given by:
  * \f[FS(g, Q)=\alpha\sum_{d \in D}{w_d \cdot s_d(g, Q)}\f]
  * where \f$w_d\f$ is the weight of the dataset, \f$s_d(g, Q)\f$ is the score
  * of \f$g\f$ to the query in the dataset, \f$\alpha\f$ is the normalization 
@@ -157,11 +157,10 @@ public:
      * the contribution of each dataset, the simulated weight is computed from the distance of a dataset's coexpression ranking to the final gene ranking.
      * \remark This function is designed to be used by SeekMiner.
      */
-	bool Initialize(const char *gene, const char *quant,
-		const char *dset, const char *search_dset,
-		const char *query, const char *platform, const char* db,
-		const char *prep, const char *gvar, const char *sinfo,
-		const ushort num_db, const char* output_dir,
+	bool Initialize(
+		const vector<CSeekDBSetting*> &vecDBSetting,
+		const char *search_dset, const char *query,
+		const char* output_dir,
 		const ushort buffer = 20, const bool to_output_text = false,
 		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
 		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
@@ -213,10 +212,8 @@ public:
      * the contribution of each dataset, the simulated weight is computed from the distance of a dataset's coexpression ranking to the final gene ranking.
      * \remark This function is designed to be used by SeekMiner.
      */
-	bool Initialize(const char *gene, const char *quant,
-		const char *dset, const char *platform, const char* db,
-		const char *prep, const char *gvar, const char *sinfo,
-		const ushort num_db,
+	bool Initialize(
+		const vector<CSeekDBSetting*> &vecDBSetting,
 		const ushort buffer = 20, const bool to_output_text = false,
 		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
 		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
@@ -408,7 +405,8 @@ private:
 	/* random gene scores over all repetitions */
 	//vector<vector<float> > m_vecRandScore; 
 
-	/* Gene-gene correlation matrix for all datasets*/
+	/* Gene-gene correlation matrix for all datasets
+	 Organized per thread */
 	ushort ***m_rData;
 
 	/* Correlation discretization */
@@ -417,10 +415,7 @@ private:
 	/* Correlation transformation options */
 	bool m_bSubtractGeneAvg;
 	bool m_bNormPlatform;
-	//bool m_bSubtractPlatformAvg;
-	//bool m_bDividePlatformStdev;
 	enum CSeekDataset::DistanceMeasure m_eDistMeasure;
-	//bool m_bCorrelation;
 	bool m_bLogit;
 	bool m_bSquareZ;
 
@@ -449,7 +444,9 @@ private:
 	map<string, ushort> m_mapstriPlatform;
 	vector<string> m_vecstrPlatform;
 
-	CDatabase *m_DB;
+	//CDatabase reference
+	vector<CDatabase*> m_vecDB;
+	vector<vector<string> > m_vecDBDataset; //A list of dsets in each CDatabase
 
 	size_t m_iDatasets;
 	size_t m_iGenes;
@@ -474,6 +471,10 @@ private:
 	bool m_bEnableNetwork;
 	bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
 };
+
+
+
+
 
 }
 #endif

@@ -75,8 +75,6 @@ bool CSeekDataset::Copy(CSeekDataset *src){
 		for(i=0; i<src->geneAverage.size(); i++){
 			geneAverage[i] = src->geneAverage[i];
 		}
-		//copy(src->geneAverage.begin(), src->geneAverage.end(), 
-		//	geneAverage.begin());
 	}
 	if(src->genePresence.size()>0){
 		//fprintf(stderr, "Great b!\n");
@@ -85,8 +83,6 @@ bool CSeekDataset::Copy(CSeekDataset *src){
 		for(i=0; i<src->genePresence.size(); i++){
 			genePresence[i] = src->genePresence[i];
 		}
-		//copy(src->genePresence.begin(), src->genePresence.end(),
-		//	genePresence.begin());
 	}
 	if(src->geneVariance.size()>0){
 		geneVariance.resize(src->geneVariance.size());
@@ -602,8 +598,5 @@ void CSeekDataset::SetPlatform(CSeekPlatform &cp){
 CSeekPlatform& CSeekDataset::GetPlatform() const{
 	return *platform;
 }
-
-
-
 
 }

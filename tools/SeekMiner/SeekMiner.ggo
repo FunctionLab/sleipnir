@@ -85,4 +85,5 @@ option	"output_w_comp"		Y	"Output dataset weight components (generates .dweight_
 								flag	off
 option	"simulate_w"		E	"If equal weighting or order-statistics weighting is selected, output simulated dataset weights"
 								flag	off
-								
+option	"additional_db"		B	"Utilize a second CDatabase collection. Path to the second CDatabase's setting file."
+								string default="NA"	

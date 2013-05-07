@@ -135,6 +135,9 @@ struct gengetopt_args_info
   const char *output_w_comp_help; /**< @brief Output dataset weight components (generates .dweight_comp file) help description.  */
   int simulate_w_flag;	/**< @brief If equal weighting or order-statistics weighting is selected, output simulated dataset weights (default=off).  */
   const char *simulate_w_help; /**< @brief If equal weighting or order-statistics weighting is selected, output simulated dataset weights help description.  */
+  char * additional_db_arg;	/**< @brief Utilize a second CDatabase collection. Path to the second CDatabase's setting file. (default='NA').  */
+  char * additional_db_orig;	/**< @brief Utilize a second CDatabase collection. Path to the second CDatabase's setting file. original value given at command line.  */
+  const char *additional_db_help; /**< @brief Utilize a second CDatabase collection. Path to the second CDatabase's setting file. help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -173,6 +176,7 @@ struct gengetopt_args_info
   unsigned int output_dir_given ;	/**< @brief Whether output_dir was given.  */
   unsigned int output_w_comp_given ;	/**< @brief Whether output_w_comp was given.  */
   unsigned int simulate_w_given ;	/**< @brief Whether simulate_w was given.  */
+  unsigned int additional_db_given ;	/**< @brief Whether additional_db was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
