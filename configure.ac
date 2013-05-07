@@ -699,6 +699,54 @@ AC_SUBST(SVM_MULTICLASS_LIBS)
 #  #include "svm/svm_struct_api_types.h"],
 
 
+## SVM HIERARCHY
+# If the user specifies a path, use it.
+# If the user says not to use it, then don't.
+# If the user doesn't specify anything, check for it.
+# While checking, look for a source distribution in extlib/.
+# If none, set NO_SVM_HIERARCHY=1.
+AC_ARG_WITH([svm_hierarchy],
+  [AS_HELP_STRING([--with-svm-hierarchy=PATH], [prefix of SVM Hierarchy installation])],
+  [
+         if test "x$with_svm_hierarchy" = "xyes"; then
+     svm_hierarchy_state=check
+         elif test "x$with_svm_hierarchy" != "xno"; then
+           svm_hierarchy_state=try
+     qualify_path with_svm_hierarchy
+           LOCAL_CHECK_APPEND_PATHS([$with_svm_hierarchy], [. include], [svm_hierarchy/svm_struct_api.h], [SVM_HIERARCHY_INCLUDE_DIR], [svm_hierarchy_state=warn])
+           LOCAL_CHECK_APPEND_PATHS([$with_svm_hierarchy], [. lib], [svm_hierarchy/libsvmhierarchy.a], [SVM_HIERARCHY_LIB_DIR], [svm_hierarchy_state=warn])
+         else
+           svm_hierarchy_state=no
+         fi
+        ],
+  [svm_hierarchy_state=check])
+AC_LANG_PUSH([C])
+LOCAL_CHECK_LIB([svmhierarchy], [svm_hierarchy], [optimize_svm],
+        [svm_hierarchy_state=ok],                                      dnl found
+        [SVM_HIERARCHY_LIBS="-lsvmhierarchy"],                              dnl and found installed
+        [
+         SVM_HIERARCHY_CFLAGS="-I $SVM_HIERARCHY_INCLUDE_DIR"
+         SVM_HIERARCHY_LIBS="-L $SVM_HIERARCHY_LIB_DIR/svm_hierarchy -lsvmhierarchy"
+        ],                                                        dnl and found in specified path
+  [],                                                       dnl not found
+        [svm_hierarchy_state=no],                                      dnl and not found installed
+        [svm_hierarchy_state=warn],                                    dnl and not found in specified path
+        [],                                                       dnl requested without
+  [#include <sys/types.h>
+   #include "svm_light/svm_common.h",
+   #include "svm_light/svm_learn.h"],
+        [],
+        [-L $SVM_HIERARCHY_LIB_DIR/svm_hierarchy -I $SVM_HIERARCHY_INCLUDE_DIR/svm_hierarchy])
+AC_LANG_POP
+if test "x$svm_hierarchy_state" != "xok"; then
+  AC_DEFINE([NO_SVM_HIERARCHY], [1])
+fi
+#AC_SUBST(SVM_HIERARCHY_PREFIX)
+AC_SUBST(SVM_HIERARCHY_CFLAGS)
+AC_SUBST(SVM_HIERARCHY_LIBS)
+#  #include "svm/svm_struct_api.h"
+#  #include "svm/svm_struct_api_types.h"],
+
 
 ## BOOST
 # If the user specifies a path, use it.
@@ -879,6 +927,7 @@ AM_CONDITIONAL([WITH_TOOLS], [$with_tools])
 AM_CONDITIONAL([WITH_SMILE_TOOLS], [test "x$smile_state" = "xok"])
 AM_CONDITIONAL([WITH_SVM_TOOLS], [test "x$svm_perf_state" = "xok"])
 AM_CONDITIONAL([WITH_SVM_MULTICLASS_TOOLS], [test "x$svm_multiclass_state" = "xok"])
+AM_CONDITIONAL([WITH_SVM_HIERARCHY_TOOLS], [test "x$svm_hierarchy_state" = "xok"])
 AM_CONDITIONAL([WITH_SVM_LIBSRC], [test "x$svm_perf_state" = "xok"])
 AM_CONDITIONAL([WITH_VW_TOOLS], [test "x$vowpal_wabbit_state" = "xok"])
 AM_CONDITIONAL([WITH_READLINE_TOOLS], [test "x$readline_state" = "xok"])
@@ -963,7 +1012,8 @@ AC_CONFIG_FILES([Makefile \
                  tools/Data2Svm/Makefile \
                  tools/SVMer/Makefile \
                  tools/SVMperfer/Makefile \
-                tools/SVMmulticlass/Makefile \
+                 tools/SVMmulticlass/Makefile \
+                 tools/SVMhierarchy/Makefile \
                  tools/SVMperfing/Makefile \
                  tools/LibSVMer/Makefile \
                  tools/VWer/Makefile \
@@ -993,7 +1043,8 @@ fi
 echo "  log4cpp                 = $log4cpp_info"
 echo "  SMILE                   = $smile_info"
 echo "  SVM Perf                = $svm_perf_info"
-echo "  SVM Multiclass                = $svm_multiclass_info"
+echo "  SVM Multiclass          = $svm_multiclass_info"
+echo "  SVM Hierarchy          = $svm_hierarchy_info"
 echo "  Vowpal Wabbit           = $vowpal_wabbit_info"
 echo "  pthread                 = $pthread_info"
 echo "  gsl                     = $gsl_info"
@@ -1108,6 +1159,27 @@ find both. NOTE: You may need to make libsvmmulticlass.a. See the README.
 EOF
 
 fi
+
+
+if test "x$svm_hierarchy_state" != "xok"; then
+  cat << EOF
+
+** BUILDING WITHOUT SVM HIERARCHY
+SVM Hierarchy is strongly recommended.
+It is available from http://svmlight.joachims.org/.
+EOF
+
+fi
+
+if test "x$svm_hierarchy_state" = "xwarn"; then
+  cat << EOF
+** WARNING: The path to SVM Hierarchy may be incorrect.
+I looked for svm_struct_api.h and libsvmhierarchy.a and did not
+find both. NOTE: You may need to make libsvmhierarchy.a. See the README.
+EOF
+
+fi
+
 
 
 if test "x$smile_state" = "xwarn"; then

@@ -54,6 +54,7 @@ my %tools_other_packages = (
                             SVMer => ['SVM_PERF'],
                             SVMperfer => ['SVM_PERF'],
                             SVMmulticlass => ['SVM_MULTICLASS'],
+                            SVMhierarchy => ['SVM_HIERARCHY'],
                             SVMperfing => ['SVM_PERF'],
                             LibSVMer => ['LIBSVM'],
                             VWer => ['VOWPAL_WABBIT'],

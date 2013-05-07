@@ -26,14 +26,9 @@
 #include "pclset.h"
 #include "meta.h"
 #include "dat.h"
-
-#include <stdio.h>
-
-/* removed to support cygwin */
-//#include <execinfo.h>
-
-namespace SVMArc {
-	extern "C" {
+#ifndef NO_SVM_STRUCT
+#define SVMSTRUCT_H
+extern "C" {
 
 #define class Class
 
@@ -44,14 +39,25 @@ namespace SVMArc {
 #include <svm_multiclass/svm_struct_api.h>
 #include <svm_multiclass/svm_struct/svm_struct_learn.h>
 #undef class
-		//#include "svm_struct_api.h"
+	//#include "svm_struct_api.h"
 
-	}
+}
+#endif
 
+#include <stdio.h>
+using namespace Sleipnir;
+using namespace std;
+
+/* removed to support cygwin */
+//#include <execinfo.h>
+
+namespace SVMArc {
 	class SVMLabel {
 	public:
 		string GeneName;
-		size_t Target;
+		size_t Target; //Save single integer label; used for single label classification (0-1, or multiclass)
+		vector<char> TargetM; //Save multiple labels; used for hierarchical multi-label classification;
+
 		size_t index;
 		bool hasIndex;
 		SVMLabel(std::string name, size_t target) {
@@ -61,6 +67,12 @@ namespace SVMArc {
 			index = -1;
 		}
 
+		SVMLabel(std::string name, vector<char> cl) {
+			GeneName = name;
+			TargetM = cl;
+			hasIndex = false;
+			index = -1;
+		}
 		SVMLabel() {
 			GeneName = "";
 			Target = 0;
@@ -74,8 +86,10 @@ namespace SVMArc {
 	class Result {
 	public:
 		std::string GeneName;
-		int Target;
-		int Value;
+		int Target; //for single label prediction
+		int Value; //for single label prediction
+		vector<char> TargetM;//for multi label prediction
+		vector<char> ValueM; //for multi label prediction
 		vector<double> Scores;
 		int num_class;
 		int CVround;
@@ -83,7 +97,7 @@ namespace SVMArc {
 		Result() {
 			GeneName = "";
 			Target = 0;
-			Value = Sleipnir::CMeta::GetNaN();
+			Value = -1;
 		}
 
 		Result(std::string name, int cv = -1) {
@@ -104,18 +118,93 @@ namespace SVMArc {
 			}
 			return ss.str();
 		}
+		string toStringMC() {
+			stringstream ss;
+			ss << GeneName << '\t' << Target << '\t' << Value << '\t';
+			for(size_t j=1;j<=num_class;j++)
+				ss << Scores[j]<<'\t';
+			return ss.str();
+		}
+		string toStringTREE(map<int, string>* ponto_map_rev, int returnindex) {
+			stringstream ss;
+			int mark=1;
+			ss << GeneName << '\t';
+			for(size_t j=0;j<=num_class;j++){
+				if(TargetM[j])
+					if(mark){
+						if(returnindex)
+							ss<<j;
+						else
+							ss <<(*ponto_map_rev)[j];
+						mark = 0;
+					}
+					else
+						ss <<','<<(*ponto_map_rev)[j];
+			}
+			if(mark==1)
+				ss<<"??"<<'\t';
+			else
+				ss<<'\t';
 
+			mark=1;
+			for(size_t j=0;j<=num_class;j++){
+				if(ValueM[j])
+					if(mark){
+						if(returnindex)
+							ss<<j;
+						else
+							ss <<(*ponto_map_rev)[j];
+						mark = 0;
+					}
+					else
+						ss <<','<<(*ponto_map_rev)[j];
+			}
+			if(mark)
+				ss<<"??";
+			ss <<'\t';
+			for(size_t j=1;j<=num_class;j++)
+				ss << Scores[j]<<'\t';
+			return ss.str();
+		}
 	};
 
 	enum EFilter {
 		EFilterInclude = 0, EFilterExclude = EFilterInclude + 1,
 	};
 
+	class CSVMSTRUCT{
+		/* This base class is solely intended to serve as a common template for different SVM Struct implementations
+		A few required functions are not defined here because their parameter type or return type has to differ 
+		among different implementations, but I listed them in comments. */
+	public:
+		virtual vector<Result> Classify(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) = 0;
+		virtual void SetTradeoff(double tradeoff)=0;
+		virtual void SetLossFunction(size_t loss_f)=0;
+		virtual void SetLearningAlgorithm(int alg)=0;
+		virtual void UseSlackRescaling()=0;
+		virtual void UseMarginRescaling()=0;
+		virtual void ReadModel(char* model_file)=0;
+		virtual void WriteModel(char* model_file)=0;
+		virtual vector<SVMLabel> ReadLabels(ifstream & ifsm)=0;
+		virtual void SetVerbosity(size_t V)=0;
+		virtual bool parms_check() = 0;
+		virtual bool initialize() = 0;
+
+		/*The following functions should also be implemented
+		SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
+		static void FreeSample(sample s)
+		void Learn(SAMPLE &sample)
+		*/
+	};
+
+
+
+
 	//this class encapsulates the model and parameters and has no associated data
 
 
 	//class for SVMStruct
-	class CSVMSTRUCTMC {
+	class CSVMSTRUCTMC : CSVMSTRUCT{
 
 	public:
 		LEARN_PARM learn_parm;
@@ -220,8 +309,11 @@ namespace SVMArc {
 		static DOC* CreateDoc(Sleipnir::CPCL &PCL, size_t iGene, size_t iDoc);
 
 
+		//read in labels
+		vector<SVMLabel> ReadLabels(ifstream & ifsm);
+
 		//Creates a sample using a single PCL and SVMlabels Looks up genes by name.
-		static SAMPLE
+		SAMPLE
 			* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
 
 		//Classify single genes
@@ -254,6 +346,25 @@ namespace SVMArc {
 			//
 		}
 
+		struct SortResults {
+
+			bool operator()(const Result& rOne, const Result & rTwo) const {
+				return (rOne.Value < rTwo.Value);
+			}
+		};
+
+		size_t PrintResults(vector<Result> vecResults, ofstream & ofsm) {
+			sort(vecResults.begin(), vecResults.end(), SortResults());
+			int LabelVal;
+			for (size_t i = 0; i < vecResults.size(); i++) {
+				ofsm << vecResults[i].GeneName << '\t' << vecResults[i].Target << '\t'
+					<< vecResults[i].Value<<'\t';
+				for(size_t j=1;j<=vecResults[i].num_class;j++)
+					ofsm << vecResults[i].Scores[j]<<'\t';
+				ofsm<< endl;
+
+			}
+		};
 
 		bool parms_check();
 		bool initialize();

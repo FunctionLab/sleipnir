@@ -32,55 +32,8 @@
 using namespace SVMArc;
 //#include "../../extlib/svm_light/svm_light/kernel.h"
 
-vector<SVMArc::SVMLabel> ReadLabels(ifstream & ifsm) {
 
-	static const size_t c_iBuffer = 1024;
-	char acBuffer[c_iBuffer];
-	vector<string> vecstrTokens;
-	vector<SVMArc::SVMLabel> vecLabels;
-	size_t numPositives, numNegatives;
-	numPositives = numNegatives = 0;
-	while (!ifsm.eof()) {
-		ifsm.getline(acBuffer, c_iBuffer - 1);
-		acBuffer[c_iBuffer - 1] = 0;
-		vecstrTokens.clear();
-		CMeta::Tokenize(acBuffer, vecstrTokens);
-		if (vecstrTokens.empty())
-			continue;
-		if (vecstrTokens.size() != 2) {
-			cerr << "Illegal label line (" << vecstrTokens.size() << "): "
-				<< acBuffer << endl;
-			continue;
-		}
-		vecLabels.push_back(SVMArc::SVMLabel(vecstrTokens[0], atoi(
-			vecstrTokens[1].c_str())));
-		if (vecLabels.back().Target > 0)
-			numPositives++;
-		else
-			numNegatives++;
-	}
-	return vecLabels;
-}
 
-struct SortResults {
-
-	bool operator()(const SVMArc::Result& rOne, const SVMArc::Result & rTwo) const {
-		return (rOne.Value < rTwo.Value);
-	}
-};
-
-size_t PrintResults(vector<SVMArc::Result> vecResults, ofstream & ofsm) {
-	sort(vecResults.begin(), vecResults.end(), SortResults());
-	int LabelVal;
-	for (size_t i = 0; i < vecResults.size(); i++) {
-		ofsm << vecResults[i].GeneName << '\t' << vecResults[i].Target << '\t'
-			<< vecResults[i].Value<<'\t';
-		for(size_t j=1;j<=vecResults[i].num_class;j++)
-			ofsm << vecResults[i].Scores[j]<<'\t';
-		ofsm<< endl;
-
-	}
-};
 
 
 int main(int iArgs, char** aszArgs) {
@@ -141,7 +94,7 @@ int main(int iArgs, char** aszArgs) {
 		ifsm.clear();
 		ifsm.open(sArgs.labels_arg);
 		if (ifsm.is_open())
-			vecLabels = ReadLabels(ifsm);
+			vecLabels = SVM.ReadLabels(ifsm);
 		else {
 			cerr << "Could not read label file" << endl;
 			return 1;
@@ -152,14 +105,14 @@ int main(int iArgs, char** aszArgs) {
 
 
 	//Training
-	SVMArc::SAMPLE* pTrainSample;
+	SAMPLE* pTrainSample;
 	vector<SVMArc::SVMLabel> pTrainVector[sArgs.cross_validation_arg];
 	vector<SVMArc::SVMLabel> pTestVector[sArgs.cross_validation_arg];
 	vector<SVMArc::Result> AllResults;
 	vector<SVMArc::Result> tmpAllResults;
 
 	if (sArgs.model_given && sArgs.labels_given) { //learn once and write to file
-		pTrainSample = CSVMSTRUCTMC::CreateSample(PCL, vecLabels);
+		pTrainSample = SVM.CreateSample(PCL, vecLabels);
 		SVM.Learn(*pTrainSample);
 		SVM.WriteModel(sArgs.model_arg);
 	} else if (sArgs.model_given && sArgs.output_given) { //read model and classify all
@@ -173,7 +126,7 @@ int main(int iArgs, char** aszArgs) {
 		ofstream ofsm;
 		ofsm.open(sArgs.output_arg);
 		if (ofsm.is_open())
-			PrintResults(AllResults, ofsm);
+			SVM.PrintResults(AllResults, ofsm);
 		else {
 			cerr << "Could not open output file" << endl;
 		}
@@ -228,7 +181,7 @@ int main(int iArgs, char** aszArgs) {
 		}
 		//run once
 		for (i = 0; i < sArgs.cross_validation_arg; i++) {
-			pTrainSample = SVMArc::CSVMSTRUCTMC::CreateSample(PCL,
+			pTrainSample = SVM.CreateSample(PCL,
 				pTrainVector[i]);
 
 			cerr << "Cross Validation Trial " << i << endl;
@@ -285,7 +238,7 @@ int main(int iArgs, char** aszArgs) {
 		ofstream ofsm;
 		ofsm.clear();
 		ofsm.open(sArgs.output_arg);
-		PrintResults(AllResults, ofsm);
+		SVM.PrintResults(AllResults, ofsm);
 		return 0;
 
 	} else {

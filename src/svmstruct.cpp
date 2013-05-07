@@ -247,7 +247,35 @@ namespace SVMArc {
 	}
 
 
+	vector<SVMLabel> CSVMSTRUCTMC::ReadLabels(ifstream & ifsm) {
 
+		static const size_t c_iBuffer = 1024;
+		char acBuffer[c_iBuffer];
+		vector<string> vecstrTokens;
+		vector<SVMLabel> vecLabels;
+		size_t numPositives, numNegatives;
+		numPositives = numNegatives = 0;
+		while (!ifsm.eof()) {
+			ifsm.getline(acBuffer, c_iBuffer - 1);
+			acBuffer[c_iBuffer - 1] = 0;
+			vecstrTokens.clear();
+			CMeta::Tokenize(acBuffer, vecstrTokens);
+			if (vecstrTokens.empty())
+				continue;
+			if (vecstrTokens.size() != 2) {
+				cerr << "Illegal label line (" << vecstrTokens.size() << "): "
+					<< acBuffer << endl;
+				continue;
+			}
+			vecLabels.push_back(SVMArc::SVMLabel(vecstrTokens[0], atoi(
+				vecstrTokens[1].c_str())));
+			if (vecLabels.back().Target > 0)
+				numPositives++;
+			else
+				numNegatives++;
+		}
+		return vecLabels;
+	}
 
 
 	SAMPLE* CSVMSTRUCTMC::CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels) {
@@ -343,7 +371,7 @@ namespace SVMArc {
 					SVMLabels[i].SetIndex(PCL.GetGene(SVMLabels[i].GeneName));
 				}
 				iGene = SVMLabels[i].index;
-				   //cout << "CLASS gene=" << iGene << endl;
+				//cout << "CLASS gene=" << iGene << endl;
 				if (iGene != -1) {
 					iDoc++;
 
@@ -361,7 +389,7 @@ namespace SVMArc {
 					vecResult[iDoc - 1].num_class=struct_parm.num_classes;
 					//vecResult[iDoc - 1].Scores.reserve(label.num_classes);
 					for (k = 1; k <= struct_parm.num_classes; k++)
-								vecResult[iDoc - 1].Scores.push_back(label.scores[k]);
+						vecResult[iDoc - 1].Scores.push_back(label.scores[k]);
 					//cerr<<"CLASSIFY Called FreeDoc"<<endl;
 					FreeDoc(pattern.doc);
 					//cerr<<"CLASSIFY End FreeDoc"<<endl;
