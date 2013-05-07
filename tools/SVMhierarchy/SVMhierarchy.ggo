@@ -1,0 +1,47 @@
+package	"SVMhierarchy"
+version	"1.0"
+purpose	"Hierarchical Multilabel SVM powered by SVM-struct"
+
+section "Main"
+option	"labels"				l	"Labels file"
+										string	typestr="filename"	no
+option	"output"				o	"Output file "
+										string	typestr="filename"  no
+option	"input"					i	"Input PCL file "
+										string	typestr="filename"  yes
+option	"model"					m	"Model file"
+										string	typestr="filename"  no
+option	"ontoparam"				h	"Ontology file"
+										string	typestr="filename"  no
+option  "all"       			a   "Always classify all genes in PCLs"  
+										flag off
+option  "slack"       			S   "Use slack rescaling (NOT implemented for Hierarchical Multilabel SVM)"
+										flag off
+
+section "Options"
+option "verbosity"  			v   "Sets the svm_struct verbosity"
+										int default="0" no
+option "skip"      				s   "Number of columns to skip in input pcls"
+										int default="2" no
+option	"normalize"				n	"Normalize PCLS to 0 mean 1 variance"
+										flag	off
+option	"cross_validation"		c	"Number of cross-validation sets ( arg of 1 will turn off cross-validation )"
+										int default="5" no
+option "loss_function" 		e   "Sets the loss function for SVM learning: Choice of:
+0\tHamming distance loss: total number of differences in label vector.
+1\tHamming distance loss (modified): total number of differences in label vector; over-annotation not counted as difference. 
+2\tLikelihood distance loss. 
+3\tLikelihood distance loss (modified). 
+\n" 
+										int default="0" no
+option "tradeoff"    			t   "SVM tradeoff constant C"
+										float default="1" no
+option "learning_algorithm" 		w   "Choice of structural learning algorithm (default 4):
+0\tn-slack algorithm 
+1\tn-slack algorithm with shrinking heuristic
+2\t1-slack algorithm (primal) 
+3\t1-slack algorithm (dual)
+4\t1-slack algorithm (dual) with constraint cache\n" 
+										int default="3" no
+option	"mmap"					M	"Memory map binary input"
+										flag	off
