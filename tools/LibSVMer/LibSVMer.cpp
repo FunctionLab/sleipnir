@@ -558,7 +558,7 @@ cerr << "blah" << endl;
 			if (sArgs.all_flag) { //add the unlabeled results
 				for (j = 0; j < vec_allUnlabeledResults.size(); j++)
 					vec_allUnlabeledResults[j].Value
-							/= sArgs.cross_validation_arg;
+							/= (sArgs.cross_validation_arg * sArgs.num_cv_runs_arg);
 				AllResults.insert(AllResults.end(),
 						vec_allUnlabeledResults.begin(),
 						vec_allUnlabeledResults.end());
