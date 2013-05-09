@@ -157,7 +157,7 @@ namespace SVMArc {
 
 		//read labels
 		vector<SVMLabel> ReadLabels(ifstream & ifsm);
-
+		void InitializeLikAfterReadLabels();
 		//Creates a sample using a single PCL and SVMlabels Looks up genes by name.
 		SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
 

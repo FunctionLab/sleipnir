@@ -112,6 +112,7 @@ int main(int iArgs, char** aszArgs) {
 	}
 	cerr << "Read labels from file" << endl;
 
+	SVM.InitializeLikAfterReadLabels();
 
 	//Training
 	SAMPLE* pTrainSample;
@@ -199,11 +200,12 @@ int main(int iArgs, char** aszArgs) {
 
 			if(i == (sArgs.cross_validation_arg-1)){
 				if (sArgs.all_flag || sArgs.model_given ) {
-					pTrainSample = SVM.CreateSample(PCL, vecLabels);
-					cerr << "Train with All Labeled Data " <<  endl;
-					SVM.Learn(*pTrainSample);
-					cerr << "Learned" << endl;
-
+					if(sArgs.cross_validation_arg!=1){
+						pTrainSample = SVM.CreateSample(PCL, vecLabels);
+						cerr << "Train with All Labeled Data " <<  endl;
+						SVM.Learn(*pTrainSample);
+						cerr << "Learned" << endl;
+					}
 					if (sArgs.model_given ){  //learn once and write to file
 						SVM.WriteModel(sArgs.model_arg);
 						cerr <<" Model Writen to file "<<sArgs.model_arg<<endl;
