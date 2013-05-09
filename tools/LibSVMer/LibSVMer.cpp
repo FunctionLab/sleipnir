@@ -195,6 +195,8 @@ int main(int iArgs, char** aszArgs) {
 	size_t i, j, iGene, jGene;
 	ifstream ifsm;
 
+        bool added;
+        added = false;
 
 	if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
 		cmdline_parser_print_help();
@@ -502,8 +504,24 @@ cerr << pTrainVector[ index ].size() << endl;
 						pTestVector[i]);
 				cerr << "Classified " << tmpAllResults.size() << " examples"
 						<< endl;
-				AllResults.insert(AllResults.end(), tmpAllResults.begin(),
-						tmpAllResults.end());
+                                for(std::vector<LIBSVM::Result>::iterator it = tmpAllResults.begin() ; it != tmpAllResults.end() ; it ++){
+                                  added = false;
+                                  for(std::vector<LIBSVM::Result>::iterator ita = AllResults.begin() ; ita != AllResults.end() ; ita ++){
+                                    if ( (*it).GeneName.compare((*ita).GeneName) == 0 ){
+                                      (*ita).Value += (*it).Value;
+                                      added = true;
+                                      break;
+                                    }
+
+                                  }
+
+                                  if(!added)
+                                    AllResults.push_back((*it));
+
+//				AllResults.insert(AllResults.end(), tmpAllResults.begin(),
+//						tmpAllResults.end());
+//
+                                }
 				tmpAllResults.resize(0);
 				if (sArgs.all_flag) {
 					vec_tmpUnlabeledResults = SVM.Classify(
@@ -529,6 +547,14 @@ cerr << "blah" << endl;
                                 cerr << "end of a cv run" << endl;
 			}
 
+                        for(std::vector<LIBSVM::Result>::iterator it = AllResults.begin();
+                            it != AllResults.end(); ++ it){
+                          (*it).Value /= sArgs.num_cv_runs_arg;
+
+                        }
+
+
+
 			if (sArgs.all_flag) { //add the unlabeled results
 				for (j = 0; j < vec_allUnlabeledResults.size(); j++)
 					vec_allUnlabeledResults[j].Value
@@ -537,6 +563,9 @@ cerr << "blah" << endl;
 						vec_allUnlabeledResults.begin(),
 						vec_allUnlabeledResults.end());
 			}
+
+//                        tmpAllResults.clear();
+                        
 
 			ofstream ofsm;
 			ofsm.clear();
