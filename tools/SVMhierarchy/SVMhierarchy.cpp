@@ -211,8 +211,9 @@ int main(int iArgs, char** aszArgs) {
 						cerr << "Train with All Labeled Data " <<  endl;
 						SVM.Learn(*pTrainSample);
 						cerr << "Learned" << endl;
-                                                SVMArc::CSVMSTRUCTTREE::FreeSample(*pTrainSample);
-
+						if (i > -1) {
+							SVMArc::CSVMSTRUCTTREE::FreeSample(*pTrainSample);
+						}
 					}
 					if (sArgs.model_given ){  //learn once and write to file
 						SVM.WriteModel(sArgs.model_arg);
