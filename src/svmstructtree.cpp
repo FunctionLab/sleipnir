@@ -56,6 +56,8 @@ namespace SVMArc {
 	
 	void CSVMSTRUCTTREE::SetVerbosity(size_t V) {
 		struct_verbosity = (long) V;
+		//if( struct_verbosity>1)
+		//	struct_verbosity=1;
 	}
 
 	bool CSVMSTRUCTTREE::initialize() {
@@ -239,8 +241,8 @@ namespace SVMArc {
 		ifsm.clear();
 		ifsm.open(treefile);
 		if (!ifsm.is_open())
-			cerr << "Could not read label file" << endl;
-		cerr << "Onto File opened" << endl;
+			cerr << "Could not read Onto file" << endl;
+
 		static const size_t c_iBuffer = 65532; //change this if not enough
 		char acBuffer[c_iBuffer];
 		vector<string> vecstrTokens;
@@ -303,6 +305,7 @@ namespace SVMArc {
 			nodes[i]->children = newchildren;
 			//fill in ontology struct parameters
 			nodes[i]->index=i; //index
+			nodes[i]->inputlabelCount = 0;
 			if(nodes[i]->n_children==0) //isLeafnode
 				nodes[i]->isLeafnode=1;
 			else
@@ -357,7 +360,7 @@ namespace SVMArc {
 
 
 	vector<SVMLabel> CSVMSTRUCTTREE::ReadLabels(ifstream & ifsm) {
-		static const size_t c_iBuffer = 1024;
+		static const size_t c_iBuffer = 65532;
 		char acBuffer[c_iBuffer];
 		vector<string> vecstrTokens;
 		vector<char> multilabels;
@@ -366,6 +369,8 @@ namespace SVMArc {
 
 		if(struct_parm.num_classes==0)
 			cerr<< "Ontology must be read before reading labels!"<<endl;
+		else
+			cerr<<struct_parm.num_classes<< " Classes Read!"<<endl;
 		multilabels.resize(struct_parm.num_classes);
 		map<string,int>::iterator it;
 		while (!ifsm.eof()) {
@@ -385,13 +390,12 @@ namespace SVMArc {
 				multilabels[i]=0;
 			for(int i=1; i < vecstrTokens.size();i++){
 				it =  onto_map.find(vecstrTokens[i]);
-				if(it == onto_map.end()){
+				if(it == onto_map.end())
 					cerr<< "Unknown term: "<<vecstrTokens[1]<<endl;
-				}
 				else{
-					multilabels[onto_map[vecstrTokens[i]]]=1;
+					multilabels[onto_map[vecstrTokens[i]]]=1; // no label propagation currently, labels should be already propagated
+					struct_parm.treeStruct.nodes[ onto_map[vecstrTokens[i]] ]->inputlabelCount++;
 				}
-
 			}
 			vecLabels.push_back(SVMArc::SVMLabel(vecstrTokens[0], multilabels));
 
@@ -399,6 +403,14 @@ namespace SVMArc {
 		return vecLabels;
 	}
 
+	void CSVMSTRUCTTREE::InitializeLikAfterReadLabels() {
+		struct_parm.condLikelihood = (double*)my_malloc(sizeof(double)*struct_parm.num_classes);
+		struct_parm.condLikelihood[0] = 0; // now the first term in ontofile has to be the 'head node', change this to make code more robust
+		for(int i=1; i<struct_parm.num_classes;i++){
+			struct_parm.condLikelihood[i] = log(struct_parm.treeStruct.nodes[i]->parent->inputlabelCount) 
+				- log(struct_parm.treeStruct.nodes[i]->inputlabelCount);
+		}
+	}
 	SAMPLE* CSVMSTRUCTTREE::CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels) {
 		size_t i, j, iGene, iDoc;
 		int     n;       /* number of examples */

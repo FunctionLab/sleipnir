@@ -46,6 +46,7 @@ const char *gengetopt_args_info_help[] = {
   "  -e, --loss_function=INT       Sets the loss function for SVM learning: Choice \n                                  of:\n\n                                  0\tHamming distance loss: total number of \n                                  differences in label vector.\n\n                                  1\tHamming distance loss (modified): total \n                                  number of differences in label vector; \n                                  over-annotation not counted as difference. \n\n                                  2\tLikelihood distance loss. \n\n                                  3\tLikelihood distance loss (modified). \n\n                                  \n                                    (default=`0')",
   "  -t, --tradeoff=FLOAT          SVM tradeoff constant C  (default=`1')",
   "  -w, --learning_algorithm=INT  Choice of structural learning algorithm \n                                  (default 4):\n\n                                  0\tn-slack algorithm \n\n                                  1\tn-slack algorithm with shrinking heuristic\n\n                                  2\t1-slack algorithm (primal) \n\n                                  3\t1-slack algorithm (dual)\n\n                                  4\t1-slack algorithm (dual) with constraint \n                                  cache\n                                    (default=`3')",
+  "  -p, --threads=INT             number of threads (only apply to algorithm 3 \n                                  currently)  (default=`4')",
   "  -M, --mmap                    Memory map binary input  (default=off)",
     0
 };
@@ -91,6 +92,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->loss_function_given = 0 ;
   args_info->tradeoff_given = 0 ;
   args_info->learning_algorithm_given = 0 ;
+  args_info->threads_given = 0 ;
   args_info->mmap_given = 0 ;
 }
 
@@ -122,6 +124,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->tradeoff_orig = NULL;
   args_info->learning_algorithm_arg = 3;
   args_info->learning_algorithm_orig = NULL;
+  args_info->threads_arg = 4;
+  args_info->threads_orig = NULL;
   args_info->mmap_flag = 0;
   
 }
@@ -147,7 +151,8 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->loss_function_help = gengetopt_args_info_help[15] ;
   args_info->tradeoff_help = gengetopt_args_info_help[16] ;
   args_info->learning_algorithm_help = gengetopt_args_info_help[17] ;
-  args_info->mmap_help = gengetopt_args_info_help[18] ;
+  args_info->threads_help = gengetopt_args_info_help[18] ;
+  args_info->mmap_help = gengetopt_args_info_help[19] ;
   
 }
 
@@ -245,6 +250,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->loss_function_orig));
   free_string_field (&(args_info->tradeoff_orig));
   free_string_field (&(args_info->learning_algorithm_orig));
+  free_string_field (&(args_info->threads_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -311,6 +317,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "tradeoff", args_info->tradeoff_orig, 0);
   if (args_info->learning_algorithm_given)
     write_into_file(outfile, "learning_algorithm", args_info->learning_algorithm_orig, 0);
+  if (args_info->threads_given)
+    write_into_file(outfile, "threads", args_info->threads_orig, 0);
   if (args_info->mmap_given)
     write_into_file(outfile, "mmap", 0, 0 );
   
@@ -592,11 +600,12 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "loss_function",	1, NULL, 'e' },
         { "tradeoff",	1, NULL, 't' },
         { "learning_algorithm",	1, NULL, 'w' },
+        { "threads",	1, NULL, 'p' },
         { "mmap",	0, NULL, 'M' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "Vl:o:i:m:h:aSv:s:nc:e:t:w:M", long_options, &option_index);
+      c = getopt_long (argc, argv, "Vl:o:i:m:h:aSv:s:nc:e:t:w:p:M", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -784,6 +793,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.learning_algorithm_given), optarg, 0, "3", ARG_INT,
               check_ambiguity, override, 0, 0,
               "learning_algorithm", 'w',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'p':	/* number of threads (only apply to algorithm 3 currently).  */
+        
+        
+          if (update_arg( (void *)&(args_info->threads_arg), 
+               &(args_info->threads_orig), &(args_info->threads_given),
+              &(local_args_info.threads_given), optarg, 0, "4", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "threads", 'p',
               additional_error))
             goto failure;
         

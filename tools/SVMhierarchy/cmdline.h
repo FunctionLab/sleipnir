@@ -103,6 +103,9 @@ struct gengetopt_args_info
   2\t1-slack algorithm (primal) 
   3\t1-slack algorithm (dual)
   4\t1-slack algorithm (dual) with constraint cache\n help description.  */
+  int threads_arg;	/**< @brief number of threads (only apply to algorithm 3 currently) (default='4').  */
+  char * threads_orig;	/**< @brief number of threads (only apply to algorithm 3 currently) original value given at command line.  */
+  const char *threads_help; /**< @brief number of threads (only apply to algorithm 3 currently) help description.  */
   int mmap_flag;	/**< @brief Memory map binary input (default=off).  */
   const char *mmap_help; /**< @brief Memory map binary input help description.  */
   
@@ -122,6 +125,7 @@ struct gengetopt_args_info
   unsigned int loss_function_given ;	/**< @brief Whether loss_function was given.  */
   unsigned int tradeoff_given ;	/**< @brief Whether tradeoff was given.  */
   unsigned int learning_algorithm_given ;	/**< @brief Whether learning_algorithm was given.  */
+  unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int mmap_given ;	/**< @brief Whether mmap was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */

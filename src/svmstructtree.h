@@ -102,7 +102,9 @@ namespace SVMArc {
 			struct_parm.loss_type = MARGIN_RESCALING;
 		}
 
-
+		void SetNThreads(int n) {
+			struct_parm.n_threads=n;
+		}
 
 		void ReadModel(char* model_file) {
 			FreeModel();
@@ -157,7 +159,7 @@ namespace SVMArc {
 
 		//read labels
 		vector<SVMLabel> ReadLabels(ifstream & ifsm);
-
+		void InitializeLikAfterReadLabels();
 		//Creates a sample using a single PCL and SVMlabels Looks up genes by name.
 		SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
 
