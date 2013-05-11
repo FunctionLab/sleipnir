@@ -56,6 +56,8 @@ namespace SVMArc {
 	
 	void CSVMSTRUCTTREE::SetVerbosity(size_t V) {
 		struct_verbosity = (long) V;
+		//if( struct_verbosity>1)
+		//	struct_verbosity=1;
 	}
 
 	bool CSVMSTRUCTTREE::initialize() {
@@ -403,7 +405,7 @@ namespace SVMArc {
 
 	void CSVMSTRUCTTREE::InitializeLikAfterReadLabels() {
 		struct_parm.condLikelihood = (double*)my_malloc(sizeof(double)*struct_parm.num_classes);
-		struct_parm.condLikelihood[0] = 0;
+		struct_parm.condLikelihood[0] = 0; // now the first term in ontofile has to be the 'head node', change this to make code more robust
 		for(int i=1; i<struct_parm.num_classes;i++){
 			struct_parm.condLikelihood[i] = log(struct_parm.treeStruct.nodes[i]->parent->inputlabelCount) 
 				- log(struct_parm.treeStruct.nodes[i]->inputlabelCount);

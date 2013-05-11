@@ -102,7 +102,9 @@ namespace SVMArc {
 			struct_parm.loss_type = MARGIN_RESCALING;
 		}
 
-
+		void SetNThreads(int n) {
+			struct_parm.n_threads=n;
+		}
 
 		void ReadModel(char* model_file) {
 			FreeModel();

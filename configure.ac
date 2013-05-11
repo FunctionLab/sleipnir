@@ -1145,8 +1145,7 @@ if test "x$svm_multiclass_state" != "xok"; then
   cat << EOF
 
 ** BUILDING WITHOUT SVM MULTICLASS
-SVM Multiclass is strongly recommended.
-It is available from http://svmlight.joachims.org/.
+SVM Multiclass is available from http://svmlight.joachims.org/.
 EOF
 
 fi
@@ -1165,8 +1164,7 @@ if test "x$svm_hierarchy_state" != "xok"; then
   cat << EOF
 
 ** BUILDING WITHOUT SVM HIERARCHY
-SVM Hierarchy is strongly recommended.
-It is available from http://svmlight.joachims.org/.
+
 EOF
 
 fi

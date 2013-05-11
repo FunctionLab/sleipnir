@@ -57,7 +57,7 @@ int main(int iArgs, char** aszArgs) {
 	SVM.SetLearningAlgorithm(sArgs.learning_algorithm_arg);
 	SVM.SetVerbosity(sArgs.verbosity_arg);
 	SVM.SetLossFunction(sArgs.loss_function_arg);
-
+	SVM.SetNThreads(sArgs.threads_arg);
 	cerr << "SetLossFunction: " <<sArgs.loss_function_arg<< endl;
 
 	if (sArgs.cross_validation_arg < 1){
@@ -193,8 +193,14 @@ int main(int iArgs, char** aszArgs) {
 			cerr << "Cross Validation Trial " << i << endl;
 			SVM.Learn(*pTrainSample);
 			cerr << "Learned" << endl;
+			if (i > -1) {
+				SVMArc::CSVMSTRUCTTREE::FreeSample(*pTrainSample);
+			}
 			tmpAllResults = SVM.Classify(PCL,	pTestVector[i]);
 			cerr << "Classified " << tmpAllResults.size() << " examples"<< endl;
+
+
+
 			AllResults.insert(AllResults.end(), tmpAllResults.begin(), tmpAllResults.end());
 			tmpAllResults.resize(0);
 
@@ -205,6 +211,8 @@ int main(int iArgs, char** aszArgs) {
 						cerr << "Train with All Labeled Data " <<  endl;
 						SVM.Learn(*pTrainSample);
 						cerr << "Learned" << endl;
+                                                SVMArc::CSVMSTRUCTTREE::FreeSample(*pTrainSample);
+
 					}
 					if (sArgs.model_given ){  //learn once and write to file
 						SVM.WriteModel(sArgs.model_arg);
@@ -219,10 +227,6 @@ int main(int iArgs, char** aszArgs) {
 			}
 
 
-
-			if (i > 0) {
-				SVMArc::CSVMSTRUCTTREE::FreeSample(*pTrainSample);
-			}
 
 
 

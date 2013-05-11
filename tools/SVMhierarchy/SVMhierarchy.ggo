@@ -43,5 +43,7 @@ option "learning_algorithm" 		w   "Choice of structural learning algorithm (defa
 3\t1-slack algorithm (dual)
 4\t1-slack algorithm (dual) with constraint cache\n" 
 										int default="3" no
+option	"threads"		p	"number of threads (only apply to algorithm 3 currently)"
+										int default="4" no
 option	"mmap"					M	"Memory map binary input"
 										flag	off
