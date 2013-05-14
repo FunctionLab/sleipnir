@@ -310,8 +310,6 @@ namespace SVMArc {
 				nodes[i]->isLeafnode=1;
 			else
 				nodes[i]->isLeafnode=0;
-			nodes[i]->next = NULL;
-			nodes[i]->subleavescount = nodes[i]->n_children; 
 			nodes[i]->weight = 1;
 		}
 

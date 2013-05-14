@@ -105,7 +105,7 @@ int main(int iArgs, char** aszArgs) {
 			vecLabels = SVM.ReadLabels(ifsm);
 		else {
 			cerr << "Could not read label file" << endl;
-			return 1;
+			exit(1);
 		}
 		for (i = 0; i < vecLabels.size(); i++)
 			setLabeledGenes.insert(vecLabels[i].GeneName);
