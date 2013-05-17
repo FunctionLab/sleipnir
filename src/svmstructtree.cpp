@@ -243,7 +243,7 @@ namespace SVMArc {
 		if (!ifsm.is_open())
 			cerr << "Could not read Onto file" << endl;
 
-		static const size_t c_iBuffer = 65532; //change this if not enough
+		static const size_t c_iBuffer = 1024; //change this if not enough
 		char acBuffer[c_iBuffer];
 		vector<string> vecstrTokens;
 		map<string,int>::iterator it;
@@ -273,6 +273,7 @@ namespace SVMArc {
 				onto_map[vecstrTokens[0]]=currentindex;
 				onto_map_rev[currentindex]=vecstrTokens[0];
 				newnode= (ONTONODE *)my_malloc(sizeof(ONTONODE));
+				cerr << "Read new Onto Term: "<< vecstrTokens[0]<<endl;
 				nodes.push_back(newnode);
 				tempnodes.push_back(newtempnode);
 				//shall I add node name to tree structure?
@@ -282,6 +283,7 @@ namespace SVMArc {
 				if(it == onto_map.end()) {
 					currentindex = onto_map.size();
 					onto_map[vecstrTokens[i]]=currentindex;
+					cerr << "Read new Onto Term: "<< vecstrTokens[i]<<endl;
 					onto_map_rev[currentindex]=vecstrTokens[i];
 					newnode= (ONTONODE *)my_malloc(sizeof(ONTONODE));
 					nodes.push_back(newnode);
@@ -363,7 +365,7 @@ namespace SVMArc {
 		vector<string> vecstrTokens;
 		vector<char> multilabels;
 		vector<SVMLabel> vecLabels;
-
+		ONTONODE *pnode;
 
 		if(struct_parm.num_classes==0)
 			cerr<< "Ontology must be read before reading labels!"<<endl;
@@ -384,19 +386,33 @@ namespace SVMArc {
 				continue;
 			}
 
-			for (int i=1; i<multilabels.size();i++)
+			for (int i=0; i<multilabels.size();i++)
 				multilabels[i]=0;
 			for(int i=1; i < vecstrTokens.size();i++){
 				it =  onto_map.find(vecstrTokens[i]);
 				if(it == onto_map.end())
-					cerr<< "Unknown term: "<<vecstrTokens[1]<<endl;
+					cerr<< "Unknown term: "<<vecstrTokens[i]<<endl;
 				else{
-					multilabels[onto_map[vecstrTokens[i]]]=1; // no label propagation currently, labels should be already propagated
+					multilabels[onto_map[vecstrTokens[i]]]=1; 
 					struct_parm.treeStruct.nodes[ onto_map[vecstrTokens[i]] ]->inputlabelCount++;
+					if(struct_verbosity>=3)	
+						cout<<vecstrTokens[0]<<'\t'<<vecstrTokens[i];
+					//label propagation; add print propagation process
+					pnode=struct_parm.treeStruct.nodes[onto_map[vecstrTokens[i]]]->parent;		
+					while(pnode){
+						multilabels[pnode->index]=1;
+						struct_parm.treeStruct.nodes[pnode->index]->inputlabelCount++;
+						if(struct_verbosity>=3)	
+							cout<<'\t'<<onto_map_rev[pnode->index];
+						pnode = struct_parm.treeStruct.nodes[pnode->index]->parent;
+					}
+					if(struct_verbosity>=3)
+						cout<<endl;
+					//end label propagation
+					
 				}
 			}
 			vecLabels.push_back(SVMArc::SVMLabel(vecstrTokens[0], multilabels));
-
 		}
 		return vecLabels;
 	}
@@ -510,7 +526,7 @@ namespace SVMArc {
 
 					vecResult[iDoc - 1].num_class=struct_parm.num_classes;
 					vecResult[iDoc - 1].Scores.reserve(struct_parm.num_classes);
-					for (k = 0; k <= struct_parm.num_classes; k++)
+					for (k = 0; k < struct_parm.num_classes; k++)
 						vecResult[iDoc - 1].Scores.push_back(label.scores[k]);
 					FreeDoc(pattern.doc);
 				}

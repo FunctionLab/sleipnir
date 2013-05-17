@@ -169,7 +169,7 @@ namespace SVMArc {
 		//MEMBER functions wraps learning
 		void Learn(SAMPLE &sample) {
 			//cerr << "SLACK NORM =" << struct_parm.slack_norm << endl;
-			cerr << "Algorithm " << Alg << "selected."<<endl;
+			cerr << "Algorithm " << Alg << " selected."<<endl;
 
 			if(Alg == 0)
 				svm_learn_struct(sample,&struct_parm,&learn_parm,&kernel_parm,&structmodel,NSLACK_ALG);

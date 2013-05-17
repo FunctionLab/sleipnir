@@ -82,20 +82,7 @@ int main(int iArgs, char** aszArgs) {
 		return 1;
 	}
 
-
-	//  cout << "there are " << vecLabels.size() << " labels processed" << endl;
-	size_t iFile;
-	vector<string> PCLs;
-	if (sArgs.input_given) {
-		if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, sArgs.mmap_flag)) {
-			cerr << "Could not open input PCL" << endl;
-			return 1;
-		}
-	}
-
-
-
-	//Read labels from file
+		//Read labels from file
 	vector<SVMArc::SVMLabel> vecLabels;
 	set<string> setLabeledGenes;
 	if (sArgs.labels_given) {
@@ -113,6 +100,21 @@ int main(int iArgs, char** aszArgs) {
 	cerr << "Read labels from file" << endl;
 
 	SVM.InitializeLikAfterReadLabels();
+
+
+	//  cout << "there are " << vecLabels.size() << " labels processed" << endl;
+	size_t iFile;
+	vector<string> PCLs;
+	if (sArgs.input_given) {
+		if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, sArgs.mmap_flag)) {
+			cerr << "Could not open input PCL" << endl;
+			return 1;
+		}
+	}
+
+
+
+
 
 	//Training
 	SAMPLE* pTrainSample;

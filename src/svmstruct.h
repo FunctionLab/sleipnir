@@ -129,7 +129,7 @@ namespace SVMArc {
 			stringstream ss;
 			int mark=1;
 			ss << GeneName << '\t';
-			for(size_t j=0;j<=num_class;j++){
+			for(size_t j=0;j<num_class;j++){
 				if(TargetM[j])
 					if(mark){
 						if(returnindex)
@@ -147,7 +147,7 @@ namespace SVMArc {
 				ss<<'\t';
 
 			mark=1;
-			for(size_t j=0;j<=num_class;j++){
+			for(size_t j=0;j<num_class;j++){
 				if(ValueM[j])
 					if(mark){
 						if(returnindex)
@@ -162,7 +162,7 @@ namespace SVMArc {
 			if(mark)
 				ss<<"??";
 			ss <<'\t';
-			for(size_t j=1;j<=num_class;j++)
+			for(size_t j=0;j<num_class;j++)
 				ss << Scores[j]<<'\t';
 			return ss.str();
 		}
