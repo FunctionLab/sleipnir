@@ -386,8 +386,9 @@ namespace SVMArc {
 				continue;
 			}
 
-			for (int i=0; i<multilabels.size();i++)
+			for (int i=1; i<multilabels.size();i++)
 				multilabels[i]=0;
+			multilabels[0]=1; //root node is always on
 			for(int i=1; i < vecstrTokens.size();i++){
 				it =  onto_map.find(vecstrTokens[i]);
 				if(it == onto_map.end())

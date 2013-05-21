@@ -82,7 +82,7 @@ int main(int iArgs, char** aszArgs) {
 		return 1;
 	}
 
-		//Read labels from file
+	//Read labels from file
 	vector<SVMArc::SVMLabel> vecLabels;
 	set<string> setLabeledGenes;
 	if (sArgs.labels_given) {
@@ -96,8 +96,9 @@ int main(int iArgs, char** aszArgs) {
 		}
 		for (i = 0; i < vecLabels.size(); i++)
 			setLabeledGenes.insert(vecLabels[i].GeneName);
+		cerr << "Read labels from file" << endl;
 	}
-	cerr << "Read labels from file" << endl;
+
 
 	SVM.InitializeLikAfterReadLabels();
 
@@ -123,20 +124,50 @@ int main(int iArgs, char** aszArgs) {
 	vector<SVMArc::Result> AllResults;
 	vector<SVMArc::Result> tmpAllResults;
 
-	if (sArgs.model_given && sArgs.output_given && (!sArgs.labels_given) ) { //read model and classify all
-		vector<SVMLabel> vecAllLabels;
+	if (sArgs.model_given && sArgs.output_given && (!sArgs.labels_given) ) { 
+		if(!sArgs.test_labels_given){//read model and classify all
+			vector<SVMLabel> vecAllLabels;
 
-		for (size_t i = 0; i < PCL.GetGenes(); i++)
-			vecAllLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
+			for (size_t i = 0; i < PCL.GetGenes(); i++)
+				vecAllLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
 
-		SVM.ReadModel(sArgs.model_arg);
-		AllResults = SVM.Classify(PCL, vecAllLabels);
-		ofstream ofsm;
-		ofsm.open(sArgs.output_arg);
-		if (ofsm.is_open())
+			SVM.ReadModel(sArgs.model_arg);
+			AllResults = SVM.Classify(PCL, vecAllLabels);
+			ofstream ofsm;
+			ofsm.open(sArgs.output_arg);
+			if (ofsm.is_open())
+				SVM.PrintResults(AllResults, ofsm);
+			else {
+				cerr << "Could not open output file" << endl;
+			}
+		}
+		else//read model and classify only test examples
+		{
+			ifsm.clear();
+			ifsm.open(sArgs.test_labels_arg);
+			if (ifsm.is_open())
+				vecLabels = SVM.ReadLabels(ifsm);
+			else {
+				cerr << "Could not read label file" << endl;
+				exit(1);
+			}
+			for (i = 0; i < vecLabels.size(); i++)
+				setLabeledGenes.insert(vecLabels[i].GeneName);
+
+
+			pTestVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
+			for (j = 0; j < vecLabels.size(); j++) {
+				pTestVector[0].push_back(vecLabels[j]);		      
+			}
+			tmpAllResults = SVM.Classify(PCL,	pTestVector[0]);
+			cerr << "Classified " << tmpAllResults.size() << " examples"<< endl;
+			AllResults.insert(AllResults.end(), tmpAllResults.begin(), tmpAllResults.end());
+			tmpAllResults.resize(0);
+			ofstream ofsm;
+			ofsm.clear();
+			ofsm.open(sArgs.output_arg);
 			SVM.PrintResults(AllResults, ofsm);
-		else {
-			cerr << "Could not open output file" << endl;
+			return 0;
 		}
 	} else if (sArgs.output_given && sArgs.labels_given) {
 		//do learning and classifying with cross validation
