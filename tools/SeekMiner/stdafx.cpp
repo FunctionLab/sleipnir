@@ -31,7 +31,8 @@
  * The main challenge in performing the user's query is finding the right datasets.
  * As not all microarrays are relevant to exploring the query's coexpression,
  * SeekMiner particularly favors those datasets where the query genes are highly
- * correlated among each other. As we would expect, the query gene coregulation would suggest that
+ * correlated among each other. The intuition is based on the observation that the coregulation
+ * between the query genes would suggest that they participate in the same biological process,
  * the biological process involving these genes is highly active. So datasets that pass this criteria would
  * be very informative to the search process.
  *

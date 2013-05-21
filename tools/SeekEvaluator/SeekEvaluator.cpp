@@ -273,8 +273,7 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 		return true;
 	}
 	else if(met==AVGP || met==PR){
-		vector<float> *vf = Precision(sortedGenes, goldstdGenePresence,
-			nan);
+		vector<float> *vf = Precision(sortedGenes, goldstdGenePresence, nan);
 		/*if(met==PR_ALL){
 			for(i=0; i<vf->size()-1; i++){
 				fprintf(stdout, "%.5f ", vf->at(i));

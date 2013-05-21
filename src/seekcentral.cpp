@@ -245,7 +245,6 @@ bool CSeekCentral::Initialize(
 	m_bNormPlatform = bNormPlatform;
 	m_bLogit = src->m_bLogit;
 	m_eDistMeasure = eDistMeasure;
-	m_vecstrGenes.resize(src->m_vecstrGenes.size());
 
 	m_bOutputWeightComponent = src->m_bOutputWeightComponent;
 	m_bSimulateWeight = src->m_bSimulateWeight;
@@ -254,6 +253,7 @@ bool CSeekCentral::Initialize(
 	m_iNumRandom = 1;
 	m_randRandom = NULL;	
 
+	m_vecstrGenes.resize(src->m_vecstrGenes.size());
 	copy(src->m_vecstrGenes.begin(), src->m_vecstrGenes.end(), m_vecstrGenes.begin());
 
 	m_vecstrDatasets.resize(src->m_vecstrDatasets.size());
@@ -310,9 +310,11 @@ bool CSeekCentral::Initialize(
 	//m_DB = src->m_DB; //shared DB
 
 	m_vecDBDataset.resize(src->m_vecDB.size());
-	for(i=0; i<m_vecDB.size(); i++)
+	for(i=0; i<m_vecDB.size(); i++){
+		m_vecDBDataset[i].resize(src->m_vecDBDataset[i].size());
 		copy(src->m_vecDBDataset[i].begin(), src->m_vecDBDataset[i].end(),
 		m_vecDBDataset[i].begin());
+	}
 
 	CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
 		m_vc, src->m_vc, m_vp, src->m_vp, m_vecstrDatasets,
@@ -638,16 +640,23 @@ bool CSeekCentral::Initialize(
 			}
 		}
 	}else{
-		if(!CSeekTools::ReadMultipleQueries(search_dset, m_vecstrSearchDatasets))
+		if(!CSeekTools::ReadMultipleQueries(search_dset, m_vecstrSearchDatasets)){
+			fprintf(stderr, "Error reading search datasets\n");
 			return false;
+		}
+		if(m_vecstrSearchDatasets.size()!=m_vecstrAllQuery.size()){
+			fprintf(stderr, "Search_dset file doesn't have enough lines. Remember 1 line / query!\n");
+			return false;
+		}
 	}
 
 	m_searchdsetMap.resize(m_vecstrAllQuery.size());
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
 		m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
-		for(j=0; j<m_vecstrSearchDatasets[i].size(); j++)
+		for(j=0; j<m_vecstrSearchDatasets[i].size(); j++){
 			m_searchdsetMap[i]->Add(
 				m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
+		}
 	}
 
 	if(!CalculateRestart()) return false;

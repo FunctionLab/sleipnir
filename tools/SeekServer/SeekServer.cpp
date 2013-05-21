@@ -90,6 +90,8 @@ void *do_query(void *th_arg){
 		bNormPlatform = true;
 	}
 
+	//fprintf(stderr, "%s\n%s\n%s\n%.2f\n", strOutputDir.c_str(), strQuery.c_str(), strSearchDatasets.c_str(), query_fraction_required);
+
 	bool r = csu->Initialize(strOutputDir, strQuery, strSearchDatasets, csfinal,
 		new_fd, query_fraction_required, eDM, bSubtractGeneAvg,
 		bNormPlatform);
@@ -251,7 +253,9 @@ int main( int iArgs, char** aszArgs ) {
 		CSeekDataset::Z_SCORE, //to be overwritten by individual search instance's setting
 		bSubtractAvg, bNormPlatform, //to be overwritten by individual search instance's settings
 		bLogit, //always false
-		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag, //default
+		sArgs.score_cutoff_arg, 
+		0.0, //min query fraction (to be overwrriten)
+		!!sArgs.square_z_flag, //default
 		false, 1, NULL, useNibble)) //default
 		return -1;
 

@@ -47,7 +47,6 @@ const char *gengetopt_args_info_help[] = {
   "  -n, --num_db=INT              Number of databaselets in database  \n                                  (default=`1000')",
   "\nOptional - Parameter tweaking:",
   "  -c, --score_cutoff=FLOAT      Cutoff on the gene-gene score before adding, \n                                  default: no cutoff  (default=`-9999')",
-  "  -C, --per_q_required=FLOAT    Fraction (max 1.0) of query required to \n                                  correlate with a gene, in order to count the \n                                  gene's query score. A gene may not correlate \n                                  with a query gene if it is absent, or its \n                                  correlation with query does not pass cut-off \n                                  (specified by --score_cutoff). Use this with \n                                  caution. Be careful if using with \n                                  --score_cutoff.  (default=`0.0')",
   "  -e, --square_z                If using z-score, square-transform z-scores. \n                                  Usually used in conjunction with \n                                  --score-cutoff  (default=off)",
   "\nMISC:",
   "  -N, --is_nibble               If true, the input DB is nibble type  \n                                  (default=off)",
@@ -95,7 +94,6 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->quant_given = 0 ;
   args_info->num_db_given = 0 ;
   args_info->score_cutoff_given = 0 ;
-  args_info->per_q_required_given = 0 ;
   args_info->square_z_given = 0 ;
   args_info->is_nibble_given = 0 ;
   args_info->buffer_given = 0 ;
@@ -129,8 +127,6 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->num_db_orig = NULL;
   args_info->score_cutoff_arg = -9999;
   args_info->score_cutoff_orig = NULL;
-  args_info->per_q_required_arg = 0.0;
-  args_info->per_q_required_orig = NULL;
   args_info->square_z_flag = 0;
   args_info->is_nibble_flag = 0;
   args_info->buffer_arg = 20;
@@ -159,12 +155,11 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->quant_help = gengetopt_args_info_help[11] ;
   args_info->num_db_help = gengetopt_args_info_help[12] ;
   args_info->score_cutoff_help = gengetopt_args_info_help[14] ;
-  args_info->per_q_required_help = gengetopt_args_info_help[15] ;
-  args_info->square_z_help = gengetopt_args_info_help[16] ;
-  args_info->is_nibble_help = gengetopt_args_info_help[18] ;
-  args_info->buffer_help = gengetopt_args_info_help[19] ;
-  args_info->output_text_help = gengetopt_args_info_help[20] ;
-  args_info->additional_db_help = gengetopt_args_info_help[21] ;
+  args_info->square_z_help = gengetopt_args_info_help[15] ;
+  args_info->is_nibble_help = gengetopt_args_info_help[17] ;
+  args_info->buffer_help = gengetopt_args_info_help[18] ;
+  args_info->output_text_help = gengetopt_args_info_help[19] ;
+  args_info->additional_db_help = gengetopt_args_info_help[20] ;
   
 }
 
@@ -268,7 +263,6 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->quant_orig));
   free_string_field (&(args_info->num_db_orig));
   free_string_field (&(args_info->score_cutoff_orig));
-  free_string_field (&(args_info->per_q_required_orig));
   free_string_field (&(args_info->buffer_orig));
   free_string_field (&(args_info->additional_db_arg));
   free_string_field (&(args_info->additional_db_orig));
@@ -333,8 +327,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "num_db", args_info->num_db_orig, 0);
   if (args_info->score_cutoff_given)
     write_into_file(outfile, "score_cutoff", args_info->score_cutoff_orig, 0);
-  if (args_info->per_q_required_given)
-    write_into_file(outfile, "per_q_required", args_info->per_q_required_orig, 0);
   if (args_info->square_z_given)
     write_into_file(outfile, "square_z", 0, 0 );
   if (args_info->is_nibble_given)
@@ -674,7 +666,6 @@ cmdline_parser_internal (
         { "quant",	1, NULL, 'Q' },
         { "num_db",	1, NULL, 'n' },
         { "score_cutoff",	1, NULL, 'c' },
-        { "per_q_required",	1, NULL, 'C' },
         { "square_z",	0, NULL, 'e' },
         { "is_nibble",	0, NULL, 'N' },
         { "buffer",	1, NULL, 'b' },
@@ -683,7 +674,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVt:x:i:d:p:P:u:U:Q:n:c:C:eNb:OB:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVt:x:i:d:p:P:u:U:Q:n:c:eNb:OB:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -836,18 +827,6 @@ cmdline_parser_internal (
               &(local_args_info.score_cutoff_given), optarg, 0, "-9999", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "score_cutoff", 'c',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'C':	/* Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff..  */
-        
-        
-          if (update_arg( (void *)&(args_info->per_q_required_arg), 
-               &(args_info->per_q_required_orig), &(args_info->per_q_required_given),
-              &(local_args_info.per_q_required_given), optarg, 0, "0.0", ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "per_q_required", 'C',
               additional_error))
             goto failure;
         

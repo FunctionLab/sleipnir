@@ -72,9 +72,6 @@ struct gengetopt_args_info
   float score_cutoff_arg;	/**< @brief Cutoff on the gene-gene score before adding, default: no cutoff (default='-9999').  */
   char * score_cutoff_orig;	/**< @brief Cutoff on the gene-gene score before adding, default: no cutoff original value given at command line.  */
   const char *score_cutoff_help; /**< @brief Cutoff on the gene-gene score before adding, default: no cutoff help description.  */
-  float per_q_required_arg;	/**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. (default='0.0').  */
-  char * per_q_required_orig;	/**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. original value given at command line.  */
-  const char *per_q_required_help; /**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. help description.  */
   int square_z_flag;	/**< @brief If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff (default=off).  */
   const char *square_z_help; /**< @brief If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff help description.  */
   int is_nibble_flag;	/**< @brief If true, the input DB is nibble type (default=off).  */
@@ -101,7 +98,6 @@ struct gengetopt_args_info
   unsigned int quant_given ;	/**< @brief Whether quant was given.  */
   unsigned int num_db_given ;	/**< @brief Whether num_db was given.  */
   unsigned int score_cutoff_given ;	/**< @brief Whether score_cutoff was given.  */
-  unsigned int per_q_required_given ;	/**< @brief Whether per_q_required was given.  */
   unsigned int square_z_given ;	/**< @brief Whether square_z was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
   unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */

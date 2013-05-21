@@ -27,8 +27,6 @@ option	"num_db"			n	"Number of databaselets in database"
 section "Optional - Parameter tweaking"
 option	"score_cutoff"		c	"Cutoff on the gene-gene score before adding, default: no cutoff"
 								float default="-9999"
-option	"per_q_required"	C	"Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff."
-								float default="0.0"
 option	"square_z"			e	"If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff"							
 								flag	off
 

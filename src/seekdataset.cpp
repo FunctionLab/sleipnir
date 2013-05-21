@@ -335,7 +335,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 			float vv = 0;
 			unsigned char x = 0;
 			ushort iGeneMapSize = geneMap->GetNumSet();
-			if(logit){
+			if(logit){ //NOT checked
 				for(ii=0; ii<iGeneMapSize; ii++){
 					for(j=0, i = allRGenes[ii], a=GetGeneAverage(i);
 						j<iNumQueries; j++){
@@ -352,16 +352,14 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						}
 					}
 				}
-			}else{
+			}else{ //if just normal score
 				for(ii=0; ii<iGeneMapSize; ii++){
 					for(j=0, i = allRGenes[ii], a=GetGeneAverage(i);
 						j<iNumQueries; j++){
 						if((x = r[queryIndex[j]][i])==255) continue;
-						//fprintf(stderr, "Correlation %d %d %.5f %.5f %.5f %.5f\n", queryIndex[j], i, quant[x], a, platform_avg[j], platform_stdev[j]);
 						vv = (quant[x] - a - platform_avg[j])
 							/ platform_stdev[j];
 						vv = max((float) min(vv, (float)3.2), (float)-3.2);
-
 						if(vv>cutoff){
 							rData[i][j]= (ushort) (vv*100.0) + 320;
 							//fprintf(stderr, "r %.2f\n", quant[x]);
@@ -430,6 +428,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 			}
 		}
 	}else if(bCorrelation){ //correlation mode
+		//assumed to be from -1 to +1
 
 		for(ii=0; ii<iNumGenes; ii++){
 			unsigned char x;
@@ -458,6 +457,10 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 			for(i = geneMap->GetReverse(ii), j=0; j<iNumQueries; j++){
 				if((x = r[queryIndex[j]][i])==255) continue;
 				float vv = quant[x];
+
+				//for functional network=================================
+				//vv = vv * 6.0 - 3.0; //transform values from 0-1 to values from -3 to +3
+
 				vv = max((float) min(vv, (float)3.2), (float)-3.2);
 				if(vv>cutoff){
 					rData[i][j] = (ushort) (vv*100.0) + 320;
