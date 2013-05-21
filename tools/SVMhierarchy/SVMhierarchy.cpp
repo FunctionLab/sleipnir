@@ -97,21 +97,24 @@ int main(int iArgs, char** aszArgs) {
 		for (i = 0; i < vecLabels.size(); i++)
 			setLabeledGenes.insert(vecLabels[i].GeneName);
 		cerr << "Read labels from file" << endl;
+		SVM.InitializeLikAfterReadLabels();
 	}
 
 
-	SVM.InitializeLikAfterReadLabels();
+	
 
 
 	//  cout << "there are " << vecLabels.size() << " labels processed" << endl;
 	size_t iFile;
 	vector<string> PCLs;
 	if (sArgs.input_given) {
+		cerr << "Loading PCL file" << endl;
 		if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, sArgs.mmap_flag)) {
 			cerr << "Could not open input PCL" << endl;
 			return 1;
 		}
 	}
+	cerr << "PCL file Loaded" << endl;
 
 
 
@@ -132,6 +135,8 @@ int main(int iArgs, char** aszArgs) {
 				vecAllLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
 
 			SVM.ReadModel(sArgs.model_arg);
+			cerr << "Model Loaded" << endl;
+
 			AllResults = SVM.Classify(PCL, vecAllLabels);
 			ofstream ofsm;
 			ofsm.open(sArgs.output_arg);
@@ -147,18 +152,23 @@ int main(int iArgs, char** aszArgs) {
 			ifsm.open(sArgs.test_labels_arg);
 			if (ifsm.is_open())
 				vecLabels = SVM.ReadLabels(ifsm);
+
 			else {
 				cerr << "Could not read label file" << endl;
 				exit(1);
 			}
 			for (i = 0; i < vecLabels.size(); i++)
 				setLabeledGenes.insert(vecLabels[i].GeneName);
-
+			cerr << "Loading Model" << endl;
+			SVM.ReadModel(sArgs.model_arg);
+			cerr << "Model Loaded" << endl;
 
 			pTestVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
 			for (j = 0; j < vecLabels.size(); j++) {
 				pTestVector[0].push_back(vecLabels[j]);		      
 			}
+
+
 			tmpAllResults = SVM.Classify(PCL,	pTestVector[0]);
 			cerr << "Classified " << tmpAllResults.size() << " examples"<< endl;
 			AllResults.insert(AllResults.end(), tmpAllResults.begin(), tmpAllResults.end());

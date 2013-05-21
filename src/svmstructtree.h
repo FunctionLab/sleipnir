@@ -44,7 +44,7 @@ extern "C" {
 #include <svm_hierarchy/svm_struct/svm_struct_learn.h>
 #undef class
 
-	}
+}
 #endif
 
 #include "svmstruct.h"
@@ -64,7 +64,7 @@ namespace SVMArc {
 	};
 
 	//class for SVMStruct
-	class CSVMSTRUCTTREE : CSVMSTRUCT {
+	class CSVMSTRUCTTREE : CSVMSTRUCTBASE {
 
 	public:
 		LEARN_PARM learn_parm;
@@ -74,7 +74,7 @@ namespace SVMArc {
 		map<string,int> onto_map;
 		map<int, string> onto_map_rev;
 
-		
+
 		int Alg;
 		CSVMSTRUCTTREE() {
 			initialize();
@@ -107,8 +107,13 @@ namespace SVMArc {
 		}
 
 		void ReadModel(char* model_file) {
-			FreeModel();
+
 			structmodel = read_struct_model(model_file, &struct_parm);
+			if(structmodel.svm_model->kernel_parm.kernel_type == LINEAR) { /* linear kernel */
+				/* compute weight vector */
+				add_weight_vector_to_linear_model(structmodel.svm_model);
+				structmodel.w=structmodel.svm_model->lin_weights;
+			}
 		}
 
 		void WriteModel(char* model_file) {
@@ -119,7 +124,7 @@ namespace SVMArc {
 			//		ofsm << structmodel.w[i+1] << endl;
 			//	}
 			//} else {
-				write_struct_model(model_file, &structmodel, &struct_parm);
+			write_struct_model(model_file, &structmodel, &struct_parm);
 			/*}*/
 		}
 

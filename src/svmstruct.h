@@ -172,7 +172,7 @@ namespace SVMArc {
 		EFilterInclude = 0, EFilterExclude = EFilterInclude + 1,
 	};
 
-	class CSVMSTRUCT{
+	class CSVMSTRUCTBASE{
 		/* This base class is solely intended to serve as a common template for different SVM Struct implementations
 		A few required functions are not defined here because their parameter type or return type has to differ 
 		among different implementations, but I listed them in comments. */
@@ -204,7 +204,7 @@ namespace SVMArc {
 
 
 	//class for SVMStruct
-	class CSVMSTRUCTMC : CSVMSTRUCT{
+	class CSVMSTRUCTMC : CSVMSTRUCTBASE{
 
 	public:
 		LEARN_PARM learn_parm;
@@ -257,8 +257,12 @@ namespace SVMArc {
 
 
 		void ReadModel(char* model_file) {
-			FreeModel();
 			structmodel = read_struct_model(model_file, &struct_parm);
+			if(structmodel.svm_model->kernel_parm.kernel_type == LINEAR) { /* linear kernel */
+				/* compute weight vector */
+				add_weight_vector_to_linear_model(structmodel.svm_model);
+				structmodel.w=structmodel.svm_model->lin_weights;
+			}
 		}
 
 		void WriteModel(char* model_file) {
