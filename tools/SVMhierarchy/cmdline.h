@@ -46,6 +46,9 @@ struct gengetopt_args_info
   char * model_arg;	/**< @brief Model file.  */
   char * model_orig;	/**< @brief Model file original value given at command line.  */
   const char *model_help; /**< @brief Model file help description.  */
+  char * test_labels_arg;	/**< @brief Test Labels file.  */
+  char * test_labels_orig;	/**< @brief Test Labels file original value given at command line.  */
+  const char *test_labels_help; /**< @brief Test Labels file help description.  */
   char * ontoparam_arg;	/**< @brief Ontology file.  */
   char * ontoparam_orig;	/**< @brief Ontology file original value given at command line.  */
   const char *ontoparam_help; /**< @brief Ontology file help description.  */
@@ -85,19 +88,19 @@ struct gengetopt_args_info
   float tradeoff_arg;	/**< @brief SVM tradeoff constant C (default='1').  */
   char * tradeoff_orig;	/**< @brief SVM tradeoff constant C original value given at command line.  */
   const char *tradeoff_help; /**< @brief SVM tradeoff constant C help description.  */
-  int learning_algorithm_arg;	/**< @brief Choice of structural learning algorithm (default 4):
+  int learning_algorithm_arg;	/**< @brief Choice of structural learning algorithm:
   0\tn-slack algorithm 
   1\tn-slack algorithm with shrinking heuristic
   2\t1-slack algorithm (primal) 
   3\t1-slack algorithm (dual)
   4\t1-slack algorithm (dual) with constraint cache\n (default='3').  */
-  char * learning_algorithm_orig;	/**< @brief Choice of structural learning algorithm (default 4):
+  char * learning_algorithm_orig;	/**< @brief Choice of structural learning algorithm:
   0\tn-slack algorithm 
   1\tn-slack algorithm with shrinking heuristic
   2\t1-slack algorithm (primal) 
   3\t1-slack algorithm (dual)
   4\t1-slack algorithm (dual) with constraint cache\n original value given at command line.  */
-  const char *learning_algorithm_help; /**< @brief Choice of structural learning algorithm (default 4):
+  const char *learning_algorithm_help; /**< @brief Choice of structural learning algorithm:
   0\tn-slack algorithm 
   1\tn-slack algorithm with shrinking heuristic
   2\t1-slack algorithm (primal) 
@@ -115,6 +118,7 @@ struct gengetopt_args_info
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int model_given ;	/**< @brief Whether model was given.  */
+  unsigned int test_labels_given ;	/**< @brief Whether test_labels was given.  */
   unsigned int ontoparam_given ;	/**< @brief Whether ontoparam was given.  */
   unsigned int all_given ;	/**< @brief Whether all was given.  */
   unsigned int slack_given ;	/**< @brief Whether slack was given.  */

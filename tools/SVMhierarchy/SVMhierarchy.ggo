@@ -38,7 +38,8 @@ option "loss_function" 		e   "Sets the loss function for SVM learning: Choice of
 										int default="0" no
 option "tradeoff"    			t   "SVM tradeoff constant C"
 										float default="1" no
-option "learning_algorithm" 		w   "Choice of structural learning algorithm (default 4):
+option "learning_algorithm" 		w   "Choice of structural learning algorithm:
+
 0\tn-slack algorithm 
 1\tn-slack algorithm with shrinking heuristic
 2\t1-slack algorithm (primal) 
