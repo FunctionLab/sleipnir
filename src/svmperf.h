@@ -198,12 +198,12 @@ public:
 	}
 
 	void ReadModel(char* model_file) {
-		FreeModel();
+		//FreeModel();
 		structmodel = read_struct_model(model_file, &struct_parm);
 	}
 
-	void WriteModel(char* model_file) {
-		if (kernel_parm.kernel_type == LINEAR) {
+	void WriteModel(char* model_file, int simple_model_flag) {
+		if (kernel_parm.kernel_type == LINEAR && simple_model_flag) {
 			ofstream ofsm;
 			ofsm.open(model_file);
 			for (size_t i = 0; i < structmodel.sizePsi; i++) {

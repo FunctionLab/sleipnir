@@ -76,6 +76,7 @@ bool CSVMPERF::initialize() {
 	struct_parm.newconstretrain = 100;
 	struct_parm.ccache_size = 5;
 	struct_parm.batch_size = 100;
+	struct_parm.bias_featurenum = 0;
 
 	//Learn_parms
 	//strcpy (learn_parm.predfile, "trans_predictions");

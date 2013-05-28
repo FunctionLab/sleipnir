@@ -214,7 +214,7 @@ int main(int iArgs, char** aszArgs) {
 	if (sArgs.model_given && sArgs.labels_given) { //learn once and write to file
 		pTrainSample = CSVMPERF::CreateSample(PCL, vecLabels);
 		SVM.Learn(*pTrainSample);
-		SVM.WriteModel(sArgs.model_arg);
+		SVM.WriteModel(sArgs.model_arg, sArgs.simple_model_flag);
 	} else if (sArgs.model_given && sArgs.output_given) { //read model and classify all
 		vector<SVMLabel> vecAllLabels;
 

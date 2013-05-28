@@ -11,6 +11,8 @@ option	"input"					i	"Input PCL file "
 										string	typestr="filename"  yes
 option	"model"					m	"Model file"
 										string	typestr="filename"  no
+option	"test_labels"			T	"Test Labels file"
+										string	typestr="filename"	no
 option  "all"       			a   "Always classify all genes in PCLs"  
 										flag off
 
@@ -40,6 +42,8 @@ option "k_value"    			k   "Value of k parameter used for Prec@k and Rec@k in (0
 										float default="0.5" no
 option "tradeoff"    			t   "SVM tradeoff constant C"
 										float default="1" no
+option "simple_model"			A   "Write model files with only linear weights"
+										flag	on
 option "params"   				p   "Parameter file"
 										string  typestr="filename"   no
 option	"mmap"					M	"Memory map binary input"
