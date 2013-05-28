@@ -214,21 +214,55 @@ int main(int iArgs, char** aszArgs) {
 	if (sArgs.model_given && sArgs.labels_given) { //learn once and write to file
 		pTrainSample = CSVMPERF::CreateSample(PCL, vecLabels);
 		SVM.Learn(*pTrainSample);
-		SVM.WriteModel(sArgs.model_arg, sArgs.simple_model_flag);
+		SVM.WriteModel(sArgs.model_arg,sArgs.simple_model_flag);
 	} else if (sArgs.model_given && sArgs.output_given) { //read model and classify all
-		vector<SVMLabel> vecAllLabels;
 
-		for (size_t i = 0; i < PCL.GetGenes(); i++)
-			vecAllLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
+		if(sArgs.test_labels_given){
+						ifsm.clear();
+			ifsm.open(sArgs.test_labels_arg);
+			if (ifsm.is_open())
+				vecLabels = ReadLabels(ifsm);
 
-		SVM.ReadModel(sArgs.model_arg);
-		AllResults = SVM.Classify(PCL, vecAllLabels);
-		ofstream ofsm;
-		ofsm.open(sArgs.output_arg);
-		if (ofsm.is_open())
+			else {
+				cerr << "Could not read label file" << endl;
+				exit(1);
+			}
+			for (i = 0; i < vecLabels.size(); i++)
+				setLabeledGenes.insert(vecLabels[i].GeneName);
+			cerr << "Loading Model" << endl;
+			SVM.ReadModel(sArgs.model_arg);
+			cerr << "Model Loaded" << endl;
+
+			pTestVector[0].reserve((size_t) vecLabels.size()+1 );
+			for (j = 0; j < vecLabels.size(); j++) {
+				pTestVector[0].push_back(vecLabels[j]);		      
+			}
+
+
+			tmpAllResults = SVM.Classify(PCL,	pTestVector[0]);
+			cerr << "Classified " << tmpAllResults.size() << " examples"<< endl;
+			AllResults.insert(AllResults.end(), tmpAllResults.begin(), tmpAllResults.end());
+			tmpAllResults.resize(0);
+			ofstream ofsm;
+			ofsm.clear();
+			ofsm.open(sArgs.output_arg);
 			PrintResults(AllResults, ofsm);
-		else {
-			cerr << "Could not open output file" << endl;
+			return 0;
+		}else{
+			vector<SVMLabel> vecAllLabels;
+
+			for (size_t i = 0; i < PCL.GetGenes(); i++)
+				vecAllLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
+
+			SVM.ReadModel(sArgs.model_arg);
+			AllResults = SVM.Classify(PCL, vecAllLabels);
+			ofstream ofsm;
+			ofsm.open(sArgs.output_arg);
+			if (ofsm.is_open())
+				PrintResults(AllResults, ofsm);
+			else {
+				cerr << "Could not open output file" << endl;
+			}
 		}
 	} else if (sArgs.output_given && sArgs.labels_given) {
 		//do learning and classifying with cross validation
