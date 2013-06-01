@@ -989,9 +989,9 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 			CSeekIntIntMap *mapG = m_vc[d]->GetGeneMap();
 			CSeekIntIntMap *mapQ = m_vc[d]->GetQueryMap();
 
-			//if(mapG->GetNumSet()<10000){
-			//	continue;
-			//}
+			if(mapG->GetNumSet()<10000){
+				continue;
+			}
 
 			if(mapQ==NULL ||mapQ->GetNumSet()==0){
 				if(DEBUG) fprintf(stderr, "This dataset is skipped\n");

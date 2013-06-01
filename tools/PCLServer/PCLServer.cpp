@@ -42,16 +42,20 @@ map<int, string> DNAME_RMAP;
 
 pthread_mutex_t mutexGet;
 
-string strPrepInputDirectory;
+vector<CSeekDBSetting*> cc;
+
+/*string strPrepInputDirectory;
 string strSinfoInputDirectory;
 string strDatasetInputDirectory;
-string strPlatformInputDirectory;
+string strPlatformInputDirectory;*/
 map<string, int> mapstrintGene;
 
 vector<string> vecstrGeneID;
 vector<string> vecstrGenes;
 vector<string> vecstrDatasets;
 vector<string> vecstrDP;
+
+map<string, int> mapstrintDatasetDB;
 map<string, ushort> mapstriPlatform;
 map<string, string> mapstrstrDatasetPlatform;
 map<string, ushort> mapstrintDataset;
@@ -221,7 +225,10 @@ void *do_query(void *th_arg){
 	//for each dataset
 
 	vector<float> quant;
-	CSeekTools::ReadQuantFile("/home/qzhu/Seek/quant2", quant);
+
+	//QUANT file must be consistent
+	CSeekTools::ReadQuantFile(cc[0]->GetValue("quant"), quant);
+	//CSeekTools::ReadQuantFile("/home/qzhu/Seek/quant2", quant);
 
 	#pragma omp parallel for \
 	private(i) \
@@ -261,9 +268,13 @@ void *do_query(void *th_arg){
 		if(outputCoexpression || outputQueryCoexpression){
 			vd = new CSeekDataset();
 			string strFileStem = datasetName[i].substr(0, datasetName[i].find(".bin"));
-			string strAvgPath = strPrepInputDirectory + "/" + strFileStem + ".gavg";
-			string strPresencePath = strPrepInputDirectory + "/" + strFileStem + ".gpres";
-			string strSinfoPath = strSinfoInputDirectory + "/" + strFileStem + ".sinfo";
+
+			int dbID = mapstrintDatasetDB[strFileStem];
+	
+			string strAvgPath = cc[dbID]->GetValue("prep") + "/" + strFileStem + ".gavg"; //avg and prep path share same directory
+			string strPresencePath = cc[dbID]->GetValue("prep") + "/" + strFileStem + ".gpres";
+			string strSinfoPath = cc[dbID]->GetValue("sinfo") + "/" + strFileStem + ".sinfo";
+
 			vd->ReadGeneAverage(strAvgPath);
 			vd->ReadGenePresence(strPresencePath);
 			vd->ReadDatasetAverageStdev(strSinfoPath);
@@ -730,34 +741,123 @@ int main( int iArgs, char** aszArgs ) {
 	}
 
 	signal(SIGPIPE, SIG_IGN);
-	size_t i;
+	size_t i, j;
 	for(i=0; i<NUM_THREADS; i++){
 		THREAD_OCCUPIED[i] = 0;
 	}
 
 	PORT = sArgs.port_arg;
-	
-	strPrepInputDirectory = sArgs.prep_arg;
-	strSinfoInputDirectory = sArgs.sinfo_arg;
-	strPlatformInputDirectory = sArgs.platform_arg;
-	strDatasetInputDirectory = sArgs.dset_arg;
 
+	CSeekDBSetting *dbSetting = new CSeekDBSetting(
+		"NA", //default gvar arg, argument not needed for PCLServer
+		sArgs.sinfo_arg, sArgs.platform_arg, sArgs.prep_arg,
+		".",  //default DB arg, argument not needed for PCLServer
+		sArgs.gene_arg, sArgs.quant_arg, sArgs.dset_arg,
+		21702 //default num_db arg, argument not needed for PCLServer
+	);
+
+	//vector<CSeekDBSetting*> cc;
+	cc.push_back(dbSetting);
+
+	string add_db = sArgs.additional_db_arg;
+	if(add_db!="NA"){
+		ifstream ifsm;
+		ifsm.open(add_db.c_str());
+		const int lineSize =1024;
+		if(!ifsm.is_open()){
+			fprintf(stderr, "Error opening file %s\n", add_db.c_str());
+			return false;
+		}
+		char acBuffer[lineSize];
+		ushort c_iBuffer = lineSize;
+		map<string,string> parameters;
+		i=0;
+		while(!ifsm.eof()){
+			ifsm.getline(acBuffer, c_iBuffer-1);
+			if(acBuffer[0]==0) break;
+			acBuffer[c_iBuffer-1]=0;
+			vector<string> tok;
+			CMeta::Tokenize(acBuffer, tok); //separator tab
+			parameters[tok[0]] = tok[1];
+		}
+		ifsm.close();
+
+		string sinfo_dir = "NA";
+		string gvar_dir = "NA";
+		string platform_dir = "NA";
+		string prep_dir = "NA";
+		string db_dir = "NA";
+		string dset_map_file = "NA";
+		string gene_map_file = "NA";
+		string quant_file = "NA";
+		int num_db = -1;
+
+		if(parameters.find("SINFO_DIR")->second=="NA"){
+			fprintf(stderr, "Please specify an sinfo directory for the extra db\n");
+			return false;
+		}
+		sinfo_dir = parameters.find("SINFO_DIR")->second;
+		if(parameters.find("GVAR_DIR")!=parameters.end())
+			gvar_dir = parameters.find("GVAR_DIR")->second;
+		if(parameters.find("PREP_DIR")==parameters.end() ||
+			parameters.find("PLATFORM_DIR")==parameters.end() ||
+			parameters.find("DB_DIR")==parameters.end() ||
+			parameters.find("DSET_MAP_FILE")==parameters.end() ||
+			parameters.find("GENE_MAP_FILE")==parameters.end() ||
+			parameters.find("QUANT_FILE")==parameters.end() ||
+			parameters.find("NUMBER_OF_DB")==parameters.end()){
+			fprintf(stderr, "Some arguments are missing. Please make sure the following are provided:\n");
+			fprintf(stderr, "PREP_DIR, DB_DIR, DSET_MAP_FILE, GENE_MAP_FILE, QUANT_FILE, NUMBER_OF_DB\n");
+			return false;
+		}
+
+		platform_dir = parameters.find("PLATFORM_DIR")->second;
+		db_dir = parameters.find("DB_DIR")->second;
+		prep_dir = parameters.find("PREP_DIR")->second;
+		dset_map_file = parameters.find("DSET_MAP_FILE")->second;
+		gene_map_file = parameters.find("GENE_MAP_FILE")->second;
+		quant_file = parameters.find("QUANT_FILE")->second;
+		num_db = atoi(parameters.find("NUMBER_OF_DB")->second.c_str());
+
+		CSeekDBSetting *dbSetting2 = new CSeekDBSetting(gvar_dir, sinfo_dir,
+			platform_dir, prep_dir, db_dir, gene_map_file, quant_file, dset_map_file,
+			num_db);
+		cc.push_back(dbSetting2);
+	}
+	
 	if(!CSeekTools::ReadListTwoColumns(sArgs.gene_arg, vecstrGeneID, vecstrGenes))
 		return false;
 	for(i=0; i<vecstrGenes.size(); i++)
 		mapstrintGene[vecstrGenes[i]] = (int) i;
 
-	//Read datasets and Read platforms
-	if(!CSeekTools::ReadListTwoColumns(sArgs.dset_arg, vecstrDatasets, vecstrDP))
-		return false;
+	for(i=0; i<cc.size(); i++){
+		vector<string> vD, vDP;
+		if(!CSeekTools::ReadListTwoColumns(cc[i]->GetValue("dset"), vD, vDP))
+			return false;
+		for(j=0; j<vD.size(); j++){
+			vecstrDatasets.push_back(vD[j]);
+			vecstrDP.push_back(vDP[j]);
+			mapstrintDatasetDB[vD[j]] = (int) i;			
+		}
+		vector<string> vP;
+		map<string,ushort> mP;
+		vector<CSeekPlatform> vpx;
+		CSeekTools::ReadPlatforms(cc[i]->GetValue("platform"), vpx, vP, mP);
+		for(map<string,ushort>::iterator it=mP.begin();
+			it!=mP.end(); it++){
+			mapstriPlatform[it->first] = it->second;
+		}
+		int cur=vp.size();
+		vp.resize(cur+vpx.size());
+		for(j=0; j<vpx.size(); j++)
+			vp[cur+j].Copy(vpx[j]);
+	}	
 
 	for(i=0; i<vecstrDatasets.size(); i++){
 		mapstrstrDatasetPlatform[vecstrDatasets[i]] = vecstrDP[i];
 		mapstrintDataset[vecstrDatasets[i]] = i;
 	}
 
-	CSeekTools::ReadPlatforms(sArgs.platform_arg, vp, vecstrPlatforms,
-		mapstriPlatform);
 	//==================================================
 
 
