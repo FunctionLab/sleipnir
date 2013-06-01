@@ -32,16 +32,19 @@ const char *gengetopt_args_info_usage = "Usage: PCLServer [OPTIONS]... [FILES]..
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                Print help and exit",
-  "  -V, --version             Print version and exit",
+  "  -h, --help                  Print help and exit",
+  "  -V, --version               Print version and exit",
   "\nMain:",
-  "  -p, --port=9000           Port to listen to",
-  "  -i, --input=directory     Input PCL directory",
-  "  -s, --sinfo=directory     Sinfo directory",
-  "  -q, --prep=directory      Prep directory",
-  "  -g, --gene=file           Gene map file",
-  "  -P, --platform=directory  Platform directory",
-  "  -x, --dset=file           Dataset listing",
+  "  -p, --port=9000             Port to listen to",
+  "  -i, --input=directory       Input PCL directory",
+  "  -s, --sinfo=directory       Sinfo directory",
+  "  -q, --prep=directory        Prep directory",
+  "  -g, --gene=file             Gene map file",
+  "  -P, --platform=directory    Platform directory",
+  "  -x, --dset=file             Dataset listing",
+  "  -Q, --quant=filename        quant file (assuming all datasets use the same \n                                quantization)",
+  "\nMISC:",
+  "  -B, --additional_db=STRING  Utilize a second CDatabase collection. Path to \n                                the second CDatabase's setting file.  \n                                (default=`NA')",
     0
 };
 
@@ -58,6 +61,8 @@ static int
 cmdline_parser_internal (int argc, char **argv, struct gengetopt_args_info *args_info,
                         struct cmdline_parser_params *params, const char *additional_error);
 
+static int
+cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error);
 
 static char *
 gengetopt_strdup (const char *s);
@@ -74,6 +79,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->gene_given = 0 ;
   args_info->platform_given = 0 ;
   args_info->dset_given = 0 ;
+  args_info->quant_given = 0 ;
+  args_info->additional_db_given = 0 ;
 }
 
 static
@@ -94,6 +101,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->platform_orig = NULL;
   args_info->dset_arg = NULL;
   args_info->dset_orig = NULL;
+  args_info->quant_arg = NULL;
+  args_info->quant_orig = NULL;
+  args_info->additional_db_arg = gengetopt_strdup ("NA");
+  args_info->additional_db_orig = NULL;
   
 }
 
@@ -111,6 +122,8 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->gene_help = gengetopt_args_info_help[7] ;
   args_info->platform_help = gengetopt_args_info_help[8] ;
   args_info->dset_help = gengetopt_args_info_help[9] ;
+  args_info->quant_help = gengetopt_args_info_help[10] ;
+  args_info->additional_db_help = gengetopt_args_info_help[12] ;
   
 }
 
@@ -208,6 +221,10 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->platform_orig));
   free_string_field (&(args_info->dset_arg));
   free_string_field (&(args_info->dset_orig));
+  free_string_field (&(args_info->quant_arg));
+  free_string_field (&(args_info->quant_orig));
+  free_string_field (&(args_info->additional_db_arg));
+  free_string_field (&(args_info->additional_db_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -261,6 +278,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "platform", args_info->platform_orig, 0);
   if (args_info->dset_given)
     write_into_file(outfile, "dset", args_info->dset_orig, 0);
+  if (args_info->quant_given)
+    write_into_file(outfile, "quant", args_info->quant_orig, 0);
+  if (args_info->additional_db_given)
+    write_into_file(outfile, "additional_db", args_info->additional_db_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -344,9 +365,67 @@ cmdline_parser2 (int argc, char **argv, struct gengetopt_args_info *args_info, i
 int
 cmdline_parser_required (struct gengetopt_args_info *args_info, const char *prog_name)
 {
-  FIX_UNUSED (args_info);
-  FIX_UNUSED (prog_name);
-  return EXIT_SUCCESS;
+  int result = EXIT_SUCCESS;
+
+  if (cmdline_parser_required2(args_info, prog_name, 0) > 0)
+    result = EXIT_FAILURE;
+
+  return result;
+}
+
+int
+cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error)
+{
+  int error = 0;
+  FIX_UNUSED (additional_error);
+
+  /* checks for required options */
+  if (! args_info->input_given)
+    {
+      fprintf (stderr, "%s: '--input' ('-i') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  if (! args_info->sinfo_given)
+    {
+      fprintf (stderr, "%s: '--sinfo' ('-s') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  if (! args_info->prep_given)
+    {
+      fprintf (stderr, "%s: '--prep' ('-q') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  if (! args_info->gene_given)
+    {
+      fprintf (stderr, "%s: '--gene' ('-g') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  if (! args_info->platform_given)
+    {
+      fprintf (stderr, "%s: '--platform' ('-P') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  if (! args_info->dset_given)
+    {
+      fprintf (stderr, "%s: '--dset' ('-x') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  if (! args_info->quant_given)
+    {
+      fprintf (stderr, "%s: '--quant' ('-Q') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      error = 1;
+    }
+  
+  
+  /* checks for dependences among options */
+
+  return error;
 }
 
 
@@ -494,10 +573,12 @@ cmdline_parser_internal (
         { "gene",	1, NULL, 'g' },
         { "platform",	1, NULL, 'P' },
         { "dset",	1, NULL, 'x' },
+        { "quant",	1, NULL, 'Q' },
+        { "additional_db",	1, NULL, 'B' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVp:i:s:q:g:P:x:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVp:i:s:q:g:P:x:Q:B:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -606,6 +687,30 @@ cmdline_parser_internal (
             goto failure;
         
           break;
+        case 'Q':	/* quant file (assuming all datasets use the same quantization).  */
+        
+        
+          if (update_arg( (void *)&(args_info->quant_arg), 
+               &(args_info->quant_orig), &(args_info->quant_given),
+              &(local_args_info.quant_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "quant", 'Q',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'B':	/* Utilize a second CDatabase collection. Path to the second CDatabase's setting file..  */
+        
+        
+          if (update_arg( (void *)&(args_info->additional_db_arg), 
+               &(args_info->additional_db_orig), &(args_info->additional_db_given),
+              &(local_args_info.additional_db_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "additional_db", 'B',
+              additional_error))
+            goto failure;
+        
+          break;
 
         case 0:	/* Long option with no short option */
         case '?':	/* Invalid option.  */
@@ -620,6 +725,10 @@ cmdline_parser_internal (
 
 
 
+  if (check_required)
+    {
+      error += cmdline_parser_required2 (args_info, argv[0], additional_error);
+    }
 
   cmdline_parser_release (&local_args_info);
 

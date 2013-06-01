@@ -60,6 +60,12 @@ struct gengetopt_args_info
   char * dset_arg;	/**< @brief Dataset listing.  */
   char * dset_orig;	/**< @brief Dataset listing original value given at command line.  */
   const char *dset_help; /**< @brief Dataset listing help description.  */
+  char * quant_arg;	/**< @brief quant file (assuming all datasets use the same quantization).  */
+  char * quant_orig;	/**< @brief quant file (assuming all datasets use the same quantization) original value given at command line.  */
+  const char *quant_help; /**< @brief quant file (assuming all datasets use the same quantization) help description.  */
+  char * additional_db_arg;	/**< @brief Utilize a second CDatabase collection. Path to the second CDatabase's setting file. (default='NA').  */
+  char * additional_db_orig;	/**< @brief Utilize a second CDatabase collection. Path to the second CDatabase's setting file. original value given at command line.  */
+  const char *additional_db_help; /**< @brief Utilize a second CDatabase collection. Path to the second CDatabase's setting file. help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -70,6 +76,8 @@ struct gengetopt_args_info
   unsigned int gene_given ;	/**< @brief Whether gene was given.  */
   unsigned int platform_given ;	/**< @brief Whether platform was given.  */
   unsigned int dset_given ;	/**< @brief Whether dset was given.  */
+  unsigned int quant_given ;	/**< @brief Whether quant was given.  */
+  unsigned int additional_db_given ;	/**< @brief Whether additional_db was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
