@@ -169,8 +169,8 @@ int main( int iArgs, char** aszArgs ) {
 	ushort i, j;
 	bool bOutputWeightComponent = true;
 	bool bSimulateWeight = true;
-	bool bSubtractAvg = true;
-	bool bNormPlatform = true;
+	bool bSubtractAvg = false;
+	bool bNormPlatform = false;
 	bool bLogit = false;
 
 	csfinal = new CSeekCentral();
@@ -250,7 +250,7 @@ int main( int iArgs, char** aszArgs ) {
 		//"/tmp/ex_query2.txt", 
 		sArgs.buffer_arg, !!sArgs.output_text_flag,
 		bOutputWeightComponent, bSimulateWeight,
-		CSeekDataset::Z_SCORE, //to be overwritten by individual search instance's setting
+		CSeekDataset::CORRELATION, //to be overwritten by individual search instance's setting
 		bSubtractAvg, bNormPlatform, //to be overwritten by individual search instance's settings
 		bLogit, //always false
 		sArgs.score_cutoff_arg, 
