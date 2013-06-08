@@ -36,180 +36,162 @@
 namespace LIBSVM {
 
 #include "libsvm.h"
+  struct svm_node* CLIBSVM::x_space = NULL;
 
-bool CLIBSVM::initialize() {
+  bool CLIBSVM::initialize() {
 
-	/* set default */
+    /* set default */
 
-        parm.cache_size = 100;
-        parm.C = 0.01;
-	parm.eps = 1e-3;
-        parm.svm_type = C_SVC;
-        parm.p = 0.1;
-        parm.shrinking = 1;
-        parm.nr_weight = 0;
-        parm.weight_label = NULL;
-        parm.weight = NULL;
-        parm.probability = 0;
-        parm.nu = 0.5;
-        parm.coef0 = 0;
-        parm.gamma = 0;
-        parm.degree = 3;
-        parm.kernel_type = LINEAR;
+    parm.cache_size = 100;
+    parm.C = 0.01;
+    parm.eps = 1e-3;
+    parm.svm_type = C_SVC;
+    parm.p = 0.1;
+    parm.shrinking = 1;
+    parm.nr_weight = 0;
+    parm.weight_label = NULL;
+    parm.weight = NULL;
+    parm.probability = 0;
+    parm.nu = 0.5;
+    parm.coef0 = 0;
+    parm.gamma = 0;
+    parm.degree = 3;
+    parm.kernel_type = LINEAR;
 
-	return true;
-}
+    model = NULL;
 
-bool CLIBSVM::parms_check() {
-	if (parm.C < 0) {
-		fprintf(
-				stderr,
-				"\nTrade-off between training error and margin is not set (C<0)!\nC value will be set to default value. Clight = Cpef * 100 / n \n");
-		fprintf(stderr, "be less than 1.0 !!!\n\n");
-		return false;
-	}
-	if (parm.eps <= 0) {
-		fprintf(stderr,
-				"\nThe epsilon parameter must be greater than zero!\n\n");
-		return false;
-	}
+    balance = 0;//Off
 
-        //TODO: add more parameter checks 
+    return true;
+  }
 
-	return true;
-}
+  bool CLIBSVM::parms_check() {
+    if (parm.C < 0) {
+      fprintf(
+          stderr,
+          "\nTrade-off between training error and margin is not set (C<0)!\nC value will be set to default value. Clight = Cpef * 100 / n \n");
+      fprintf(stderr, "be less than 1.0 !!!\n\n");
+      return false;
+    }
+    if (parm.eps <= 0) {
+      fprintf(stderr,
+          "\nThe epsilon parameter must be greater than zero!\n\n");
+      return false;
+    }
 
-SAMPLE * CLIBSVM::CreateSample(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) {
-	size_t i, j, k, iGene, iProblem, numFeatures, numLabels, max_index;
-        float d;
+    if (parm.nu < 0 | parm.nu > 1) {
+      fprintf(stderr, "nu parameter must be between 0 and 1");
+      return false;
+    }
 
-        struct svm_problem* prob;
-        struct svm_node* x_space;
+    //TODO: add more parameter checks 
 
-        prob = Malloc(struct svm_problem,1);
+    return true;
+  }
 
-//        prob->l = 0;//number of labels in PCL
-        numFeatures = PCL.GetExperiments();
-        numLabels = 0;
+  void CLIBSVM::SetXSpace(Sleipnir::CPCL& PCL) {
+    size_t j, k, iGene, numFeatures, numLabels;
+    std::vector<std::string> vecGeneNames;
+    string GeneName;
+    float d;
 
-        cout << "number of features: " << numFeatures << endl;
-	
-        iProblem = 0;
+    numFeatures = PCL.GetExperiments();
+    numLabels = PCL.GetGenes();
+    vecGeneNames = PCL.GetGeneNames();
 
-	for (i = 0; i < SVMLabels.size(); i++) {
-                if (!SVMLabels[i].hasIndex){
-                  SVMLabels[i].SetIndex(PCL.GetGene(SVMLabels[i].GeneName));
-                }
-		iGene = SVMLabels[i].index;
-		if (iGene != -1) {
-                  numLabels++;
-		}
-	}
- 
-        prob->l = numLabels;
-        prob->y = Malloc(double,numLabels);
-        prob->x = Malloc(struct svm_node *, numLabels);
-        x_space = Malloc(struct svm_node, (1+numFeatures) * numLabels);
+    cerr << "total data" << endl;
+    cerr << "number of features (columns) used: " << numFeatures << endl;
+    cerr << "number of labels in data: " << numLabels << endl;
+    cerr << "number of gene (rows) names: " << vecGeneNames.size() << endl;
 
+    x_space = Malloc(struct svm_node, (1+numFeatures) * numLabels);
 
-        max_index = numFeatures;
+    j = 0;//element index
 
-        j = 0;//element index
+    for ( std::vector<std::string>::iterator it = vecGeneNames.begin(); it != vecGeneNames.end(); ++it) {
+      GeneName = *it;
+      iGene = PCL.GetGene(GeneName); 
 
-        for (i = 0; i < SVMLabels.size(); i++) {
-            iGene = SVMLabels[i].index;
-
-            if (iGene != -1){
-              (prob->x)[i] = &x_space[j];
-              (prob->y)[i] = SVMLabels[i].Target;
-
-              for(k = 0; k < numFeatures; k++){
-                x_space[j].index = k;
-                if (!Sleipnir::CMeta::IsNaN(d = PCL.Get(iGene, k))) {
-                  x_space[j].value = d;
-                }else{
-                  x_space[j].value = 1; //TODO: make this a flag!!!
-                  //if missing value??? SVMPerf imputes 0 ... what about gene i to gene i ? should impute 1?
-                }
-                j++;
-              }         
-              x_space[j].index = -1;
-              j++;
-
-            }
+      for ( k = 0; k < numFeatures; k++){
+        x_space[j].index = k;
+        if (!Sleipnir::CMeta::IsNaN(d = PCL.Get(iGene, k))) {
+          x_space[j].value = d;
+        }else{
+          // impute 0 for missing values
+          x_space[j].value = 0;
         }
+        j++;
+      }
 
-        SAMPLE* pSample = new SAMPLE;
-//        pSample = Malloc(SAMPLE,1);
-
-        pSample->n = prob->l;//number of labels
-        pSample->problems = prob;
-        pSample->numFeatures = numFeatures;
-        
-        cout << ((pSample->problems)->y)[0] << endl;
-        cout << ((pSample->problems)->y)[1] << endl;
-PrintSample(*pSample);
-	return pSample;
-}
+      x_space[j].index = -1;
+      j++;
+    }
 
 
-/*
-SAMPLE * CLIBSVM::CreateSample(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels) {
-	size_t i, j, k, iGene, iProblem, numFeatures, max_index;
-        float d;
+  }
 
-        struct svm_problem* prob;
-        struct svm_node *x_space;
+  SAMPLE * CLIBSVM::CreateSample(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels) {
+    size_t i, j, k, s, iGene, iProblem, numFeatures, numLabels, max_index;
+    float d;
 
-        prob->l = 0;//number of labels in Dat
-        numFeatures = Dat.GetGenes();
-        iProblem = 0;
+    struct svm_problem* prob;
 
-	for (i = 0; i < SVMLabels.size(); i++) {
-          iGene = Dat.GetGene(SVMLabels[i].GeneName);
-          if (iGene != -1) {
-            (prob->l)++;
-          }
-	}
+    prob = Malloc(struct svm_problem,1);
 
- 
-        prob->y = Malloc(double,prob->l);
-        prob->x = Malloc(struct svm_node *, prob->l);
-        x_space = Malloc(struct svm_node, numFeatures * (prob->l));
+    numFeatures = PCL.GetExperiments();
+    numLabels = 0;
 
-        max_index = numFeatures;
-        j = 0;
+    iProblem = 0;
 
-        for (i = 0; i < SVMLabels.size(); i++) {
-            iGene = Dat.GetGene(SVMLabels[i].GeneName);
-            if (iGene != -1){
-              (prob->x)[i] = &x_space[j];
-              (prob->y)[i] = SVMLabels[i].Target;
-              for(k = 0; k < numFeatures; k++){
-                x_space[j].index = k;
-                if (!Sleipnir::CMeta::IsNaN(d = Dat.Get(iGene, k))) {
-                  x_space[j].value = d;
-                }else{
-                  x_space[j].value = 1; //TODO: make this a flag!!!
-                  //if missing value??? SVMPerf imputes 0 ... what about gene i to gene i ? should impute 1?
-                }
-              }
-              j++;
-            }
-        }
+    for (i = 0; i < SVMLabels.size(); i++) {
+      if (!SVMLabels[i].hasIndex){
+        SVMLabels[i].SetIndex(PCL.GetGene(SVMLabels[i].GeneName));
+      }
+      iGene = SVMLabels[i].index;
+      if (iGene != -1) {
+        numLabels++;
+      }
+    }
 
-        SAMPLE* pSample;
-        pSample = Malloc(SAMPLE,1);
-        
-        pSample->n = prob->l;
-        pSample->problems = prob;
+    cerr << "sampled data" << endl;
+    cerr << "number of features used: " << numFeatures << endl;
+    cerr << "number of labels given: " << SVMLabels.size() << endl;
+    cerr << "number of labels in data: " << numLabels << endl;
 
-	return pSample;
-}*/
+    prob->l = numLabels;
+    prob->y = Malloc(double,numLabels);
+    prob->x = Malloc(struct svm_node *, numLabels);
 
+    if(x_space == NULL) {
+      SetXSpace(PCL);
+    }
 
-vector<Result> CLIBSVM::Classify(Sleipnir::CPCL &PCL,
-        vector<SVMLabel> SVMLabels) {
+    max_index = numFeatures;
+
+    s = 0;//sample index
+    for (i = 0; i < SVMLabels.size(); i++) {
+      iGene = SVMLabels[i].index;
+
+      if (iGene != -1){
+        (prob->x)[s] = &x_space[iGene*(1+numFeatures)];
+        (prob->y)[s] = SVMLabels[i].Target;
+        s++;
+      }
+    }
+
+    SAMPLE* pSample = new SAMPLE;
+
+    pSample->n = prob->l;//number of labels
+    pSample->problems = prob;
+    pSample->numFeatures = numFeatures;
+    return pSample;
+  }
+
+  //TODO: create sample for dab/dat files
+  //
+
+  vector<Result> CLIBSVM::Classify(Sleipnir::CPCL &PCL,
+      vector<SVMLabel> SVMLabels) {
     size_t i, j, iGene;
     double predict_label;
     double* dec_values;
@@ -224,14 +206,8 @@ vector<Result> CLIBSVM::Classify(Sleipnir::CPCL &PCL,
     int svm_type = svm_get_svm_type(model);
     int nr_class = svm_get_nr_class(model);
 
-cerr << nr_class << endl;
-cerr << pSample->n << endl;;
-
     dec_values = Malloc(double, nr_class*(nr_class-1)/2);
     vecResult.resize(pSample->n);
-
-cerr << "number of samples: " << vecResult.size() << endl;
-cerr << "length of svm labels: " << SVMLabels.size() << endl;
 
     j= 0; //pSample index
     for(i = 0 ; i < SVMLabels.size() ; i++){
@@ -243,23 +219,25 @@ cerr << "length of svm labels: " << SVMLabels.size() << endl;
       if (iGene != -1 ) {    
         x = pSample->problems->x[j];
         predict_label = svm_predict_values(model,x, dec_values);
-        dec_value = dec_values[0]; //assume that positive class is the first class TODO: currently hackly
+        dec_value = dec_values[0]; //assume that positive class is the first class TODO: currently hacklyi
 
         vecResult[j].GeneName = SVMLabels[i].GeneName;
         vecResult[j].Target = SVMLabels[i].Target;
         vecResult[j].Value = dec_value;
-        
+
         j++;
 
       }
     }
+
+    free(pSample);
+    //delete pSample ;
     free(dec_values);
-
     return vecResult;
-}
+  }
 
-    
-//TODO: classify for dab/dat files
-//
+
+  //TODO: classify for dab/dat files
+  //
 
 }

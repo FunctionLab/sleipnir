@@ -30,390 +30,318 @@
 
 using namespace LIBSVM;
 
-
 vector<LIBSVM::SVMLabel> ReadLabels(ifstream & ifsm) {
 
-	static const size_t c_iBuffer = 1024;
-	char acBuffer[c_iBuffer];
-	vector<string> vecstrTokens;
-	vector<LIBSVM::SVMLabel> vecLabels;
-	size_t numPositives, numNegatives;
-	numPositives = numNegatives = 0;
-	while (!ifsm.eof()) {
-		ifsm.getline(acBuffer, c_iBuffer - 1);
-		acBuffer[c_iBuffer - 1] = 0;
-		vecstrTokens.clear();
-		CMeta::Tokenize(acBuffer, vecstrTokens);
-		if (vecstrTokens.empty())
-			continue;
-		if (vecstrTokens.size() != 2) {
-			cerr << "Illegal label line (" << vecstrTokens.size() << "): "
-					<< acBuffer << endl;
-			continue;
-		}
-		vecLabels.push_back(LIBSVM::SVMLabel(vecstrTokens[0], atof(
-				vecstrTokens[1].c_str())));
-		if (vecLabels.back().Target > 0)
-			numPositives++;
-		else
-			numNegatives++;
-	}
-	return vecLabels;
+  static const size_t c_iBuffer = 1024;
+  char acBuffer[c_iBuffer];
+  vector<string> vecstrTokens;
+  vector<LIBSVM::SVMLabel> vecLabels;
+  size_t numPositives, numNegatives;
+  numPositives = numNegatives = 0;
+  while (!ifsm.eof()) {
+    ifsm.getline(acBuffer, c_iBuffer - 1);
+    acBuffer[c_iBuffer - 1] = 0;
+    vecstrTokens.clear();
+    CMeta::Tokenize(acBuffer, vecstrTokens);
+    if (vecstrTokens.empty())
+      continue;
+    if (vecstrTokens.size() != 2) {
+      cerr << "Illegal label line (" << vecstrTokens.size() << "): "
+        << acBuffer << endl;
+      continue;
+    }
+    vecLabels.push_back(LIBSVM::SVMLabel(vecstrTokens[0], atof(
+            vecstrTokens[1].c_str())));
+    if (vecLabels.back().Target > 0)
+      numPositives++;
+    else
+      numNegatives++;
+  }
+  return vecLabels;
 }
 
 
 struct SortResults {
 
-	bool operator()(const LIBSVM::Result& rOne, const LIBSVM::Result & rTwo) const {
-		return (rOne.Value > rTwo.Value);
-	}
+  bool operator()(const LIBSVM::Result& rOne, const LIBSVM::Result & rTwo) const {
+    return (rOne.Value > rTwo.Value);
+  }
 };
 
 
 size_t PrintResults(vector<LIBSVM::Result> vecResults, ofstream & ofsm) {
-	sort(vecResults.begin(), vecResults.end(), SortResults());
-	int LabelVal;
-	for (size_t i = 0; i < vecResults.size(); i++) {
-		ofsm << vecResults[i].GeneName << '\t' << vecResults[i].Target << '\t'
-				<< vecResults[i].Value << endl;
-	}
+  sort(vecResults.begin(), vecResults.end(), SortResults());
+  int LabelVal;
+  for (size_t i = 0; i < vecResults.size(); i++) {
+    ofsm << vecResults[i].GeneName << '\t' << vecResults[i].Target << '\t'
+      << vecResults[i].Value << endl;
+  }
 };
 
 struct ParamStruct {
-	vector<float> vecK, vecTradeoff;
-	vector<size_t> vecLoss;
-	vector<char*> vecNames;
+  vector<float> vecK, vecTradeoff;
+  vector<size_t> vecLoss;
+  vector<char*> vecNames;
 };
 
-ParamStruct ReadParamsFromFile(ifstream& ifsm, string outFile) {
-	static const size_t c_iBuffer = 1024;
-	char acBuffer[c_iBuffer];
-	char* nameBuffer;
-	vector<string> vecstrTokens;
-	size_t extPlace;
-	string Ext, FileName;
-	if ((extPlace = outFile.find_first_of(".")) != string::npos) {
-		FileName = outFile.substr(0, extPlace);
-		Ext = outFile.substr(extPlace, outFile.size());
-	} else {
-		FileName = outFile;
-		Ext = "";
-	}
-	ParamStruct PStruct;
-	size_t index = 0;
-	while (!ifsm.eof()) {
-		ifsm.getline(acBuffer, c_iBuffer - 1);
-		acBuffer[c_iBuffer - 1] = 0;
-		vecstrTokens.clear();
-		CMeta::Tokenize(acBuffer, vecstrTokens);
-		if (vecstrTokens.empty())
-			continue;
-		if (vecstrTokens.size() != 3) {
-			cerr << "Illegal params line (" << vecstrTokens.size() << "): "
-					<< acBuffer << endl;
-			continue;
-		}
-		if (acBuffer[0] == '#') {
-			cerr << "skipping " << acBuffer << endl;
-		} else {
-			PStruct.vecLoss.push_back(atoi(vecstrTokens[0].c_str()));
-			PStruct.vecTradeoff.push_back(atof(vecstrTokens[1].c_str()));
-			PStruct.vecK.push_back(atof(vecstrTokens[2].c_str()));
-			PStruct.vecNames.push_back(new char[c_iBuffer]);
-			if (PStruct.vecLoss[index] == 4 || PStruct.vecLoss[index] == 5)
-				sprintf(PStruct.vecNames[index], "%s_l%d_c%4.6f_k%4.3f%s",
-						FileName.c_str(), PStruct.vecLoss[index],
-						PStruct.vecTradeoff[index], PStruct.vecK[index],
-						Ext.c_str());
-			else
-				sprintf(PStruct.vecNames[index], "%s_l%d_c%4.6f%s",
-						FileName.c_str(), PStruct.vecLoss[index],
-						PStruct.vecTradeoff[index], Ext.c_str());
-			index++;
-		}
-
-	}
-	return PStruct;
-}
-
 int main(int iArgs, char** aszArgs) {
-//	cout << "blah" << endl;
 
-	gengetopt_args_info sArgs;
+  gengetopt_args_info sArgs;
 
-	CPCL PCL;
-	LIBSVM::CLIBSVM SVM;
+  CPCL PCL;//data
+  LIBSVM::CLIBSVM SVM;//model
 
-	size_t i, j, iGene, jGene;
-	ifstream ifsm;
-	if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
-		cmdline_parser_print_help();
-		return 1;
-	}
+  size_t i, j, iGene, jGene;
+  ifstream ifsm;
 
-        //TODO: update documentation and cmdline .. doesn't use most parameters
-	//SVM.SetVerbosity(sArgs.verbosity_arg); // no verbosity param for libsvm TODO: update documentation
-	//SVM.SetLossFunction(sArgs.error_function_arg); //libsvm only has one loss function TODO: update documentation
-        
-	
-	if (sArgs.cross_validation_arg < 1){
-	  cerr << "cross_valid is <1. Must be set at least 1" << endl;
-	  return 1;
-	}
-	else if(sArgs.cross_validation_arg < 2){
-	  cerr << "cross_valid is set to 1. No cross validation holdouts will be run." << endl;
-	}
-	
-	SVM.SetTradeoff(sArgs.tradeoff_arg);
+  if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
+    cmdline_parser_print_help();
+    return 1;
+  }
 
+  //Set model parameters
 
-	if (!SVM.parms_check()) {
-		cerr << "Sanity check failed, see above errors" << endl;
-		return 1;
-	}
+  if (sArgs.cross_validation_arg < 1){
+    cerr << "cross_valid is <1. Must be set at least 1" << endl;
+    return 1;
+  }
+  else if(sArgs.cross_validation_arg < 2){
+    cerr << "cross_valid is set to 1. No cross validation holdouts will be run." << endl;
+    if(sArgs.num_cv_runs_arg > 1){
+      cerr << "number of cv runs is > 1.  When no cv holdouts, must be set to 1." << endl;
+      return 1;
+    }
+  }
 
-	//  cout << "there are " << vecLabels.size() << " labels processed" << endl;
-	size_t iFile;
-	vector<string> PCLs;
-	if (sArgs.input_given) {//TODO: allow PCL file inputs
-//          cerr << "PCL as input not yet available" << endl;
-
-//          return 1;
-          
-		if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, sArgs.mmap_flag)) {
-			cerr << "Could not open input PCL" << endl;
-			return 1;
-		}
-	}
-
-//cout << "here1: " << svm_get_svm_type(SVM.model) << endl;
-//cout << SVM.parm.C << endl;
-
-	vector<LIBSVM::SVMLabel> vecLabels;
-	set<string> setLabeledGenes;
-	if (sArgs.labels_given) {
-		ifsm.clear();
-		ifsm.open(sArgs.labels_arg);
-		if (ifsm.is_open())
-			vecLabels = ReadLabels(ifsm);
-		else {
-			cerr << "Could not read label file" << endl;
-			return 1;
-		}
-		for (i = 0; i < vecLabels.size(); i++)
-			setLabeledGenes.insert(vecLabels[i].GeneName);
-	}
-
-	LIBSVM::SAMPLE* pTrainSample;
-	vector<LIBSVM::SVMLabel> pTrainVector[sArgs.cross_validation_arg];
-	vector<LIBSVM::SVMLabel> pTestVector[sArgs.cross_validation_arg];
-	vector<LIBSVM::Result> AllResults;
-	vector<LIBSVM::Result> tmpAllResults;
-
-	if (sArgs.model_given && sArgs.labels_given) { //learn once and write to file
-		pTrainSample = CLIBSVM::CreateSample(PCL, vecLabels);
-		SVM.Learn(*pTrainSample);
-		SVM.WriteModel(sArgs.model_arg);
-	} else if (sArgs.model_given && sArgs.output_given) { //read model and classify all
-		vector<SVMLabel> vecAllLabels;
-
-		for (size_t i = 0; i < PCL.GetGenes(); i++)
-			vecAllLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
-
-		SVM.ReadModel(sArgs.model_arg);
-		AllResults = SVM.Classify(PCL, vecAllLabels);
-		ofstream ofsm;
-		ofsm.open(sArgs.output_arg);
-		if (ofsm.is_open())
-			PrintResults(AllResults, ofsm);
-		else {
-			cerr << "Could not open output file" << endl;
-		}
-	} else if (sArgs.output_given && sArgs.labels_given) {
-		//do learning and classifying with cross validation
-	        if( sArgs.cross_validation_arg > 1){	    
-		  for (i = 0; i < sArgs.cross_validation_arg; i++) {
-		    pTestVector[i].reserve((size_t) vecLabels.size()
-					   / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
-		    pTrainVector[i].reserve((size_t) vecLabels.size()
-					    / (sArgs.cross_validation_arg)
-					    * (sArgs.cross_validation_arg - 1)
-					    + sArgs.cross_validation_arg);
-		    for (j = 0; j < vecLabels.size(); j++) {
-		      if (j % sArgs.cross_validation_arg == i) {
-			pTestVector[i].push_back(vecLabels[j]);
-		      } else {
-			pTrainVector[i].push_back((vecLabels[j]));
-		      }
-		    }
-		  }
-		}
-		else{ // if you have less than 2 fold cross, no cross validation is done, all train genes are used and predicted
-		  
-		  // no holdout so train is the same as test gene set
-		  pTestVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
-		  pTrainVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
-		  
-		  for (j = 0; j < vecLabels.size(); j++) {
-		    pTestVector[0].push_back(vecLabels[j]);		      
-		    pTrainVector[0].push_back(vecLabels[j]);		    
-		  }
-		}
-		
-		
-		vector<SVMLabel> vec_allUnlabeledLabels;
-		vector<Result> vec_allUnlabeledResults;
-		vector<Result> vec_tmpUnlabeledResults;
-		if (sArgs.all_flag) {
-			vec_allUnlabeledLabels.reserve(PCL.GetGenes());
-			vec_allUnlabeledResults.reserve(PCL.GetGenes());
-			for (i = 0; i < PCL.GetGenes(); i++) {
-				if (setLabeledGenes.find(PCL.GetGene(i))
-						== setLabeledGenes.end()) {
-					vec_allUnlabeledLabels.push_back(
-							SVMLabel(PCL.GetGene(i), 0));
-					vec_allUnlabeledResults.push_back(Result(PCL.GetGene(i)));
-				}
-			}
-		}
-		if (sArgs.params_given) { //reading paramters from file
-			ifsm.close();
-			ifsm.clear();
-			ifsm.open(sArgs.params_arg);
-			if (!ifsm.is_open()) {
-				cerr << "Could not open: " << sArgs.params_arg << endl;
-				return 1;
-			}
-			ParamStruct PStruct;
-			string outFile(sArgs.output_arg);
-			PStruct = ReadParamsFromFile(ifsm, outFile);
-
-			size_t iParams;
-			ofstream ofsm;
-			LIBSVM::SAMPLE * ppTrainSample[sArgs.cross_validation_arg];
-			
-			//build all the samples since they are being reused
-			for (i = 0; i < sArgs.cross_validation_arg; i++)
-				ppTrainSample[i] = LIBSVM::CLIBSVM::CreateSample(PCL,
-						pTrainVector[i]);
-			
-			for (iParams = 0; iParams < PStruct.vecTradeoff.size(); iParams++) {
-			//	SVM.SetLossFunction(PStruct.vecLoss[iParams]);
-				SVM.SetTradeoff(PStruct.vecTradeoff[iParams]);
-			//	SVM.SetPrecisionFraction(PStruct.vecK[iParams]);
-				for (j = 0; j < vec_allUnlabeledResults.size(); j++)
-					vec_allUnlabeledResults[j].Value = 0;
-				for (i = 0; i < sArgs.cross_validation_arg; i++) {
-					cerr << "Cross Validation Trial " << i << endl;
-					SVM.Learn(*ppTrainSample[i]);
-					
-					cerr << "Learned" << endl;					
-					
-					tmpAllResults = SVM.Classify(PCL, pTestVector[i]);
-					cerr << "Classified " << tmpAllResults.size()
-							<< " examples" << endl;
-					AllResults.insert(AllResults.end(), tmpAllResults.begin(),
-							tmpAllResults.end());
-					tmpAllResults.resize(0);
-					if (sArgs.all_flag && vec_allUnlabeledLabels.size() > 0) {
-						vec_tmpUnlabeledResults = SVM.Classify(PCL,
-								vec_allUnlabeledLabels);
-						for (j = 0; j < vec_tmpUnlabeledResults.size(); j++)
-							vec_allUnlabeledResults[j].Value
-									+= vec_tmpUnlabeledResults[j].Value;
-					}
-
-				}
+  if (sArgs.num_cv_runs_arg < 1){
+    cerr << "number of cv runs is < 1. Must be set at least 1" << endl;
+    return 1;
+  }
 
 
-				ofsm.open(PStruct.vecNames[iParams]);
-				if (sArgs.all_flag) { //add the unlabeled results
-					for (j = 0; j < vec_tmpUnlabeledResults.size(); j++)
-						vec_allUnlabeledResults[j].Value
-								/= sArgs.cross_validation_arg;
-					AllResults.insert(AllResults.end(),
-							vec_allUnlabeledResults.begin(),
-							vec_allUnlabeledResults.end());
-				}
 
-				PrintResults(AllResults, ofsm);
-				ofsm.close();
-				ofsm.clear();
-				if (i > 0 || iParams > 0)
-					SVM.FreeModel();
-				AllResults.resize(0);
-			}
-		} else { //run once
-			for (i = 0; i < sArgs.cross_validation_arg; i++) {
-				pTrainSample = LIBSVM::CLIBSVM::CreateSample(PCL, //TODO: make more efficient
-						pTrainVector[i]);
-//                                LIBSVM::CLIBSVM::PrintSample(*pTrainSample);
-//				LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
-//                                continue;
+  SVM.SetTradeoff(sArgs.tradeoff_arg);
+  SVM.SetNu(sArgs.nu_arg);
+  SVM.SetSVMType(sArgs.svm_type_arg);
+  SVM.SetBalance(sArgs.balance_flag);
 
-//cout << "here2: " << svm_get_svm_type(SVM.model) << endl;
-//cout << "here3: " << SVM.parm.C << endl;
+  if (!SVM.parms_check()) {
+    cerr << "Sanity check failed, see above errors" << endl;
+    return 1;
+  }
 
-//                                cerr << "number of training labels: " << pTrainVector[i].size() << endl;
-//                                cerr << "number of training samples: " << pTrainSample->n << endl;
-//                                cerr << "number of testing labels: " << pTestVector[i].size() << endl;
-				
-//continue;
-//for( std::vector<LIBSVM::SVMLabel>::const_iterator q = pTestVector[i].begin(); q != pTestVector[i].end(); ++q)
-//      std::cout << (*q).GeneName << ' ';
+  //TODO: allow multiple PCL files
+  //size_t iFile; //TODO
+  // vector<string> PCLs; //TODO
 
-//                                cout << pTrainSample->problems
-//sleep(15);
-//cout << PCL.GetFeatures() << endl;
-//cout << PCL.GetGenes() << endl;
+  //check data file
+  if (sArgs.input_given) {
+    if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, sArgs.mmap_flag)) {
+      cerr << "Could not open input PCL" << endl;
+      return 1;
+    }
+  }
 
+  //read label files
+  vector<LIBSVM::SVMLabel> vecLabels;
+  set<string> setLabeledGenes;
+  if (sArgs.labels_given) {
+    ifsm.clear();
+    ifsm.open(sArgs.labels_arg);
+    if (ifsm.is_open())
+      vecLabels = ReadLabels(ifsm);
+    else {
+      cerr << "Could not read label file" << endl;
+      return 1;
+    }
+    for (i = 0; i < vecLabels.size(); i++)
+      setLabeledGenes.insert(vecLabels[i].GeneName);
+  }
+  
+  if (sArgs.model_given && sArgs.labels_given) { //learn once and write to file
+    //TODO
+    cerr << "not yet implemented: learn once and write to file" << endl;
+    /*
+    pTrainSample = CLIBSVM::CreateSample(PCL, vecLabels);
+    SVM.Learn(*pTrainSample);
+    SVM.WriteModel(sArgs.model_arg);
+    */
 
-				cerr << "Cross Validation Trial " << i << endl;
+  } else if (sArgs.model_given && sArgs.output_given) { //read model and classify all
+    //TODO
+    cerr << "not yet implemetned: read model and classify all" << endl;
+    /*
+    vector<SVMLabel> vecAllLabels;
+    for (size_t i = 0; i < PCL.GetGenes(); i++)
+      vecAllLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
 
-				SVM.Learn(*pTrainSample);
-				cerr << "Learned" << endl;
+    SVM.ReadModel(sArgs.model_arg);
+    AllResults = SVM.Classify(PCL, vecAllLabels);
+    ofstream ofsm;
+    ofsm.open(sArgs.output_arg);
+    if (ofsm.is_open())
+      PrintResults(AllResults, ofsm);
+    else {
+      cerr << "Could not open output file" << endl;
+    }
+    */
 
+  } else if (sArgs.output_given && sArgs.labels_given) {
+ 
+    LIBSVM::SAMPLE* pTrainSample;//sampled data
+    size_t numSample;//number of sampling
 
-				tmpAllResults = SVM.Classify(PCL,
-						pTestVector[i]);
-				cerr << "Classified " << tmpAllResults.size() << " examples"
-						<< endl;
-				AllResults.insert(AllResults.end(), tmpAllResults.begin(),
-						tmpAllResults.end());
-				tmpAllResults.resize(0);
-				if (sArgs.all_flag) {
-					vec_tmpUnlabeledResults = SVM.Classify(
-							PCL, vec_allUnlabeledLabels);
-					for (j = 0; j < vec_tmpUnlabeledResults.size(); j++)
-						vec_allUnlabeledResults[j].Value
-								+= vec_tmpUnlabeledResults[j].Value;
+    numSample = sArgs.cross_validation_arg * sArgs.num_cv_runs_arg;
+  
+    vector<LIBSVM::SVMLabel> pTrainVector[numSample];
+    vector<LIBSVM::SVMLabel> pTestVector[numSample];
+    vector<LIBSVM::Result> AllResults;
+    vector<LIBSVM::Result> testResults;
 
-				}
-                                LIBSVM::CLIBSVM::PrintSample(*pTrainSample);
+    //set train and test label vectors
+    //
+    if( sArgs.cross_validation_arg > 1 && sArgs.num_cv_runs_arg >= 1 ){
+      //do learning and classifying with cross validation
+      //
+      size_t ii, index;
 
-				if (i > 0) {
-					LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
-				}
-			}
+      for (ii = 0; ii < sArgs.num_cv_runs_arg; ii++) {
+        if(ii > 0)
+          std::random_shuffle(vecLabels.begin(), vecLabels.end());
 
-			if (sArgs.all_flag) { //add the unlabeled results
-				for (j = 0; j < vec_allUnlabeledResults.size(); j++)
-					vec_allUnlabeledResults[j].Value
-							/= sArgs.cross_validation_arg;
-				AllResults.insert(AllResults.end(),
-						vec_allUnlabeledResults.begin(),
-						vec_allUnlabeledResults.end());
-			}
+        for (i = 0; i < sArgs.cross_validation_arg; i++) {                  
+          index = sArgs.cross_validation_arg * ii + i;
+          pTestVector[index].reserve((size_t) vecLabels.size()
+              / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
+          pTrainVector[index].reserve((size_t) vecLabels.size()
+              / (sArgs.cross_validation_arg)
+              * (sArgs.cross_validation_arg - 1)
+              + sArgs.cross_validation_arg);
+          for (j = 0; j < vecLabels.size(); j++) {
+            if (j % sArgs.cross_validation_arg == i) {
+              pTestVector[index].push_back(vecLabels[j]);
+            } else {
+              pTrainVector[index].push_back(vecLabels[j]);
+            }
+          }
+        }
 
-			ofstream ofsm;
-			ofsm.clear();
-			ofsm.open(sArgs.output_arg);
-			PrintResults(AllResults, ofsm);
-			return 0;
-		}
-	} else {
-		cerr << "More options are needed" << endl;
-	}
+      }
+    }  
+    else{ 
+      // if you have less than 2 fold cross, no cross validation is done, 
+      // all train genes are used and predicted
+      //
+      cerr << "no holdout so train is the same as test" << endl;
+      pTestVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
+      pTrainVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
+
+      for (j = 0; j < vecLabels.size(); j++) {
+        pTestVector[0].push_back(vecLabels[j]);		      
+        pTrainVector[0].push_back(vecLabels[j]);		    
+      }
+    }
+
+    //if want to make predictions for genes (row) with no label information
+    //
+    vector<SVMLabel> vec_allUnlabeledLabels;
+    vector<Result> vec_allUnlabeledResults;
+    vector<Result> tmpUnlabeledResults;
+    if (sArgs.all_flag) {
+      vec_allUnlabeledLabels.reserve(PCL.GetGenes());
+      vec_allUnlabeledResults.reserve(PCL.GetGenes());
+      for (i = 0; i < PCL.GetGenes(); i++) {
+        if (setLabeledGenes.find(PCL.GetGene(i))
+            == setLabeledGenes.end()) { // if gene with no label information
+
+          vec_allUnlabeledLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
+          vec_allUnlabeledResults.push_back(Result(PCL.GetGene(i)));
+        }
+      }
+    }
+
+    bool added;//flag for merging testResults and AllResults
+
+    //for each sample
+    for (i = 0; i < numSample; i++) {
+      pTrainSample = LIBSVM::CLIBSVM::CreateSample(PCL, pTrainVector[i]);
+      cerr << "Trial " << i << endl;
+
+      SVM.Learn(*pTrainSample);
+      cerr << "Learned" << endl;
+
+      testResults = SVM.Classify(PCL, pTestVector[i]);
+      cerr << "Classified " << testResults.size() << " test examples" << endl;
+
+      // merge testResults and AllResults
+      // TODO: make more efficent
+      for(std::vector<LIBSVM::Result>::iterator it = testResults.begin() ; 
+          it != testResults.end() ; it ++){
+
+        added = false;
+        for(std::vector<LIBSVM::Result>::iterator ita = AllResults.begin() ; 
+            ita != AllResults.end() ; ita ++){
+
+          if ( (*it).GeneName.compare((*ita).GeneName) == 0 ){
+
+            (*ita).Value += (*it).Value;
+            added = true;
+            break;
+          }
+
+        }
+
+        if(!added)
+          AllResults.push_back((*it));
+
+      }
+      testResults.clear();
+
+      // classify genes with no label information
+      if (sArgs.all_flag) {
+        tmpUnlabeledResults = SVM.Classify(
+            PCL, vec_allUnlabeledLabels);//make predictions
+        for (j = 0; j < tmpUnlabeledResults.size(); j++)
+          vec_allUnlabeledResults[j].Value
+            += tmpUnlabeledResults[j].Value;
+      }
+
+      if (i > 0) {
+        //LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
+        free(pTrainSample);
+      }
+
+      //mem = CMeta::GetMemoryUsage();
+      
+      cerr << "end of trail" << endl;
+
+    }
+
+    // average results (svm outputs) from multiple cv runs
+    for(std::vector<LIBSVM::Result>::iterator it = AllResults.begin();
+        it != AllResults.end(); ++ it){
+      (*it).Value /= sArgs.num_cv_runs_arg;
+
+    }
+
+    if (sArgs.all_flag) { //add the unlabeled results
+      for (j = 0; j < vec_allUnlabeledResults.size(); j++)
+        vec_allUnlabeledResults[j].Value
+          /= (sArgs.cross_validation_arg * sArgs.num_cv_runs_arg);
+      AllResults.insert(AllResults.end(),
+          vec_allUnlabeledResults.begin(),
+          vec_allUnlabeledResults.end());
+    }
+
+    ofstream ofsm;
+    ofsm.clear();
+    ofsm.open(sArgs.output_arg);
+    PrintResults(AllResults, ofsm);
+    return 0;
+
+  } else {
+    cerr << "More options are needed" << endl;
+  }
 
 }
 
