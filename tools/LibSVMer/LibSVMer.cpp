@@ -94,14 +94,10 @@ int main(int iArgs, char** aszArgs) {
   size_t i, j, iGene, jGene;
   ifstream ifsm;
 
-  bool added;
-  added = false;
-
   if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
     cmdline_parser_print_help();
     return 1;
   }
-
 
   //Set model parameters
 
@@ -111,12 +107,18 @@ int main(int iArgs, char** aszArgs) {
   }
   else if(sArgs.cross_validation_arg < 2){
     cerr << "cross_valid is set to 1. No cross validation holdouts will be run." << endl;
+    if(sArgs.num_cv_runs_arg > 1){
+      cerr << "number of cv runs is > 1.  When no cv holdouts, must be set to 1." << endl;
+      return 1;
+    }
   }
 
   if (sArgs.num_cv_runs_arg < 1){
     cerr << "number of cv runs is < 1. Must be set at least 1" << endl;
     return 1;
   }
+
+
 
   SVM.SetTradeoff(sArgs.tradeoff_arg);
   SVM.SetNu(sArgs.nu_arg);
@@ -155,18 +157,10 @@ int main(int iArgs, char** aszArgs) {
     for (i = 0; i < vecLabels.size(); i++)
       setLabeledGenes.insert(vecLabels[i].GeneName);
   }
-
-  LIBSVM::SAMPLE* pTrainSample;
-
-  size_t numSample;
-  numSample = sArgs.cross_validation_arg * sArgs.num_cv_runs_arg;
-  vector<LIBSVM::SVMLabel> pTrainVector[numSample];
-  vector<LIBSVM::SVMLabel> pTestVector[numSample];
-  vector<LIBSVM::Result> AllResults;
-  vector<LIBSVM::Result> tmpAllResults;
-
+  
   if (sArgs.model_given && sArgs.labels_given) { //learn once and write to file
     //TODO
+    cerr << "not yet implemented: learn once and write to file" << endl;
     /*
     pTrainSample = CLIBSVM::CreateSample(PCL, vecLabels);
     SVM.Learn(*pTrainSample);
@@ -174,7 +168,8 @@ int main(int iArgs, char** aszArgs) {
     */
 
   } else if (sArgs.model_given && sArgs.output_given) { //read model and classify all
-    //TODO: test
+    //TODO
+    cerr << "not yet implemetned: read model and classify all" << endl;
     /*
     vector<SVMLabel> vecAllLabels;
     for (size_t i = 0; i < PCL.GetGenes(); i++)
@@ -192,11 +187,27 @@ int main(int iArgs, char** aszArgs) {
     */
 
   } else if (sArgs.output_given && sArgs.labels_given) {
-    size_t ii, index;
-    //do learning and classifying with cross validation
+ 
+    LIBSVM::SAMPLE* pTrainSample;//sampled data
+    size_t numSample;//number of sampling
+
+    numSample = sArgs.cross_validation_arg * sArgs.num_cv_runs_arg;
+  
+    vector<LIBSVM::SVMLabel> pTrainVector[numSample];
+    vector<LIBSVM::SVMLabel> pTestVector[numSample];
+    vector<LIBSVM::Result> AllResults;
+    vector<LIBSVM::Result> testResults;
+
+    //set train and test label vectors
+    //
     if( sArgs.cross_validation_arg > 1 && sArgs.num_cv_runs_arg >= 1 ){
-      for (ii = 0; ii < sArgs.num_cv_runs_arg; ii++) {                    
-        std::random_shuffle(vecLabels.begin(), vecLabels.end());
+      //do learning and classifying with cross validation
+      //
+      size_t ii, index;
+
+      for (ii = 0; ii < sArgs.num_cv_runs_arg; ii++) {
+        if(ii > 0)
+          std::random_shuffle(vecLabels.begin(), vecLabels.end());
 
         for (i = 0; i < sArgs.cross_validation_arg; i++) {                  
           index = sArgs.cross_validation_arg * ii + i;
@@ -217,9 +228,11 @@ int main(int iArgs, char** aszArgs) {
 
       }
     }  
-    else{ // if you have less than 2 fold cross, no cross validation is done, all train genes are used and predicted
-
-      // no holdout so train is the same as test gene set
+    else{ 
+      // if you have less than 2 fold cross, no cross validation is done, 
+      // all train genes are used and predicted
+      //
+      cerr << "no holdout so train is the same as test" << endl;
       pTestVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
       pTrainVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
 
@@ -229,40 +242,48 @@ int main(int iArgs, char** aszArgs) {
       }
     }
 
-
+    //if want to make predictions for genes (row) with no label information
+    //
     vector<SVMLabel> vec_allUnlabeledLabels;
     vector<Result> vec_allUnlabeledResults;
-    vector<Result> vec_tmpUnlabeledResults;
+    vector<Result> tmpUnlabeledResults;
     if (sArgs.all_flag) {
       vec_allUnlabeledLabels.reserve(PCL.GetGenes());
       vec_allUnlabeledResults.reserve(PCL.GetGenes());
       for (i = 0; i < PCL.GetGenes(); i++) {
         if (setLabeledGenes.find(PCL.GetGene(i))
-            == setLabeledGenes.end()) {
-          vec_allUnlabeledLabels.push_back(
-              SVMLabel(PCL.GetGene(i), 0));
+            == setLabeledGenes.end()) { // if gene with no label information
+
+          vec_allUnlabeledLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
           vec_allUnlabeledResults.push_back(Result(PCL.GetGene(i)));
         }
       }
     }
 
+    bool added;//flag for merging testResults and AllResults
 
-    for (i = 0; i < sArgs.cross_validation_arg * sArgs.num_cv_runs_arg; i++) {
-      pTrainSample = LIBSVM::CLIBSVM::CreateSample(PCL, //TODO: make more efficient
-          pTrainVector[i]);
-
-      cerr << "Cross Validation Trial " << i << endl;
+    //for each sample
+    for (i = 0; i < numSample; i++) {
+      pTrainSample = LIBSVM::CLIBSVM::CreateSample(PCL, pTrainVector[i]);
+      cerr << "Trial " << i << endl;
 
       SVM.Learn(*pTrainSample);
       cerr << "Learned" << endl;
 
+      testResults = SVM.Classify(PCL, pTestVector[i]);
+      cerr << "Classified " << testResults.size() << " test examples" << endl;
 
-      tmpAllResults = SVM.Classify(PCL, pTestVector[i]);
-      cerr << "Classified " << tmpAllResults.size() << " examples" << endl;
-      for(std::vector<LIBSVM::Result>::iterator it = tmpAllResults.begin() ; it != tmpAllResults.end() ; it ++){
+      // merge testResults and AllResults
+      // TODO: make more efficent
+      for(std::vector<LIBSVM::Result>::iterator it = testResults.begin() ; 
+          it != testResults.end() ; it ++){
+
         added = false;
-        for(std::vector<LIBSVM::Result>::iterator ita = AllResults.begin() ; ita != AllResults.end() ; ita ++){
+        for(std::vector<LIBSVM::Result>::iterator ita = AllResults.begin() ; 
+            ita != AllResults.end() ; ita ++){
+
           if ( (*it).GeneName.compare((*ita).GeneName) == 0 ){
+
             (*ita).Value += (*it).Value;
             added = true;
             break;
@@ -274,37 +295,34 @@ int main(int iArgs, char** aszArgs) {
           AllResults.push_back((*it));
 
       }
-      tmpAllResults.resize(0);
+      testResults.clear();
+
+      // classify genes with no label information
       if (sArgs.all_flag) {
-        vec_tmpUnlabeledResults = SVM.Classify(
-            PCL, vec_allUnlabeledLabels);
-        for (j = 0; j < vec_tmpUnlabeledResults.size(); j++)
+        tmpUnlabeledResults = SVM.Classify(
+            PCL, vec_allUnlabeledLabels);//make predictions
+        for (j = 0; j < tmpUnlabeledResults.size(); j++)
           vec_allUnlabeledResults[j].Value
-            += vec_tmpUnlabeledResults[j].Value;
-
+            += tmpUnlabeledResults[j].Value;
       }
-      LIBSVM::CLIBSVM::PrintSample(*pTrainSample);
-
-      size_t mem = CMeta::GetMemoryUsage();
-      cerr << "before free: " << mem << endl;
 
       if (i > 0) {
         //LIBSVM::CLIBSVM::FreeSample(*pTrainSample);
         free(pTrainSample);
       }
 
-      mem = CMeta::GetMemoryUsage();
-      cerr << "after free: " << mem << endl;
-      cerr << "end of a cv run" << endl;
+      //mem = CMeta::GetMemoryUsage();
+      
+      cerr << "end of trail" << endl;
+
     }
 
+    // average results (svm outputs) from multiple cv runs
     for(std::vector<LIBSVM::Result>::iterator it = AllResults.begin();
         it != AllResults.end(); ++ it){
       (*it).Value /= sArgs.num_cv_runs_arg;
 
     }
-
-
 
     if (sArgs.all_flag) { //add the unlabeled results
       for (j = 0; j < vec_allUnlabeledResults.size(); j++)
