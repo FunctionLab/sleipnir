@@ -59,9 +59,6 @@ struct gengetopt_args_info
   int num_cv_runs_arg;	/**< @brief Number of cross-validation runs (default='1').  */
   char * num_cv_runs_orig;	/**< @brief Number of cross-validation runs original value given at command line.  */
   const char *num_cv_runs_help; /**< @brief Number of cross-validation runs help description.  */
-  int negative_subsamples_arg;	/**< @brief Number of subsample runs (default='0').  */
-  char * negative_subsamples_orig;	/**< @brief Number of subsample runs original value given at command line.  */
-  const char *negative_subsamples_help; /**< @brief Number of subsample runs help description.  */
   int svm_type_arg;	/**< @brief Sets type of SVM (default 0)
   0\tC-SVC
   1\tnu-SVC
@@ -82,9 +79,6 @@ struct gengetopt_args_info
   float nu_arg;	/**< @brief nu parameter of nu-SVC, one-class SVM (default='0.5').  */
   char * nu_orig;	/**< @brief nu parameter of nu-SVC, one-class SVM original value given at command line.  */
   const char *nu_help; /**< @brief nu parameter of nu-SVC, one-class SVM help description.  */
-  char * params_arg;	/**< @brief Parameter file.  */
-  char * params_orig;	/**< @brief Parameter file original value given at command line.  */
-  const char *params_help; /**< @brief Parameter file help description.  */
   int mmap_flag;	/**< @brief Memory map binary input (default=off).  */
   const char *mmap_help; /**< @brief Memory map binary input help description.  */
   
@@ -99,12 +93,10 @@ struct gengetopt_args_info
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int cross_validation_given ;	/**< @brief Whether cross_validation was given.  */
   unsigned int num_cv_runs_given ;	/**< @brief Whether num_cv_runs was given.  */
-  unsigned int negative_subsamples_given ;	/**< @brief Whether negative_subsamples was given.  */
   unsigned int svm_type_given ;	/**< @brief Whether svm_type was given.  */
   unsigned int balance_given ;	/**< @brief Whether balance was given.  */
   unsigned int tradeoff_given ;	/**< @brief Whether tradeoff was given.  */
   unsigned int nu_given ;	/**< @brief Whether nu was given.  */
-  unsigned int params_given ;	/**< @brief Whether params was given.  */
   unsigned int mmap_given ;	/**< @brief Whether mmap was given.  */
 
 } ;
