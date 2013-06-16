@@ -48,11 +48,6 @@ struct gengetopt_args_info
   const char *model_help; /**< @brief Model file help description.  */
   int all_flag;	/**< @brief Always classify all genes in PCLs (default=off).  */
   const char *all_help; /**< @brief Always classify all genes in PCLs help description.  */
-  int slack_flag;	/**< @brief Use slack rescaling (not implemented for ROC loss) (default=off).  */
-  const char *slack_help; /**< @brief Use slack rescaling (not implemented for ROC loss) help description.  */
-  int verbosity_arg;	/**< @brief Sets the svm_struct verbosity (default='0').  */
-  char * verbosity_orig;	/**< @brief Sets the svm_struct verbosity original value given at command line.  */
-  const char *verbosity_help; /**< @brief Sets the svm_struct verbosity help description.  */
   int skip_arg;	/**< @brief Number of columns to skip in input pcls (default='2').  */
   char * skip_orig;	/**< @brief Number of columns to skip in input pcls original value given at command line.  */
   const char *skip_help; /**< @brief Number of columns to skip in input pcls help description.  */
@@ -61,39 +56,29 @@ struct gengetopt_args_info
   int cross_validation_arg;	/**< @brief Number of cross-validation sets ( arg of 1 will turn off cross-validation ) (default='5').  */
   char * cross_validation_orig;	/**< @brief Number of cross-validation sets ( arg of 1 will turn off cross-validation ) original value given at command line.  */
   const char *cross_validation_help; /**< @brief Number of cross-validation sets ( arg of 1 will turn off cross-validation ) help description.  */
-  int error_function_arg;	/**< @brief Sets the loss function for SVM learning: Choice of:
-  0\tZero/one loss: 1 if vector of predictions contains error, 0 otherwise.
-  1\tF1: 100 minus the F1-score in percent.
-  2\tErrorrate: Percentage of errors in prediction vector.
-  3\tPrec/Rec Breakeven: 100 minus PRBEP in percent.
-  4\tPrec@k: 100 minus precision at k in percent.
-  5\tRec@k: 100 minus recall at k in percent.
-  10\tROCArea: Percentage of swapped pos/neg pairs (i.e. 100 - ROCArea).\n (default='10').  */
-  char * error_function_orig;	/**< @brief Sets the loss function for SVM learning: Choice of:
-  0\tZero/one loss: 1 if vector of predictions contains error, 0 otherwise.
-  1\tF1: 100 minus the F1-score in percent.
-  2\tErrorrate: Percentage of errors in prediction vector.
-  3\tPrec/Rec Breakeven: 100 minus PRBEP in percent.
-  4\tPrec@k: 100 minus precision at k in percent.
-  5\tRec@k: 100 minus recall at k in percent.
-  10\tROCArea: Percentage of swapped pos/neg pairs (i.e. 100 - ROCArea).\n original value given at command line.  */
-  const char *error_function_help; /**< @brief Sets the loss function for SVM learning: Choice of:
-  0\tZero/one loss: 1 if vector of predictions contains error, 0 otherwise.
-  1\tF1: 100 minus the F1-score in percent.
-  2\tErrorrate: Percentage of errors in prediction vector.
-  3\tPrec/Rec Breakeven: 100 minus PRBEP in percent.
-  4\tPrec@k: 100 minus precision at k in percent.
-  5\tRec@k: 100 minus recall at k in percent.
-  10\tROCArea: Percentage of swapped pos/neg pairs (i.e. 100 - ROCArea).\n help description.  */
-  float k_value_arg;	/**< @brief Value of k parameter used for Prec@k and Rec@k in (0,1) (default='0.5').  */
-  char * k_value_orig;	/**< @brief Value of k parameter used for Prec@k and Rec@k in (0,1) original value given at command line.  */
-  const char *k_value_help; /**< @brief Value of k parameter used for Prec@k and Rec@k in (0,1) help description.  */
-  float tradeoff_arg;	/**< @brief SVM tradeoff constant C (default='1').  */
-  char * tradeoff_orig;	/**< @brief SVM tradeoff constant C original value given at command line.  */
-  const char *tradeoff_help; /**< @brief SVM tradeoff constant C help description.  */
-  char * params_arg;	/**< @brief Parameter file.  */
-  char * params_orig;	/**< @brief Parameter file original value given at command line.  */
-  const char *params_help; /**< @brief Parameter file help description.  */
+  int num_cv_runs_arg;	/**< @brief Number of cross-validation runs (default='1').  */
+  char * num_cv_runs_orig;	/**< @brief Number of cross-validation runs original value given at command line.  */
+  const char *num_cv_runs_help; /**< @brief Number of cross-validation runs help description.  */
+  int svm_type_arg;	/**< @brief Sets type of SVM (default 0)
+  0\tC-SVC
+  1\tnu-SVC
+  2\tone-class SVM\n (default='0').  */
+  char * svm_type_orig;	/**< @brief Sets type of SVM (default 0)
+  0\tC-SVC
+  1\tnu-SVC
+  2\tone-class SVM\n original value given at command line.  */
+  const char *svm_type_help; /**< @brief Sets type of SVM (default 0)
+  0\tC-SVC
+  1\tnu-SVC
+  2\tone-class SVM\n help description.  */
+  int balance_flag;	/**< @brief weight classes such that C_P * n_P = C_N * n_N (default=off).  */
+  const char *balance_help; /**< @brief weight classes such that C_P * n_P = C_N * n_N help description.  */
+  float tradeoff_arg;	/**< @brief SVM tradeoff constant C of C-SVC (default='1').  */
+  char * tradeoff_orig;	/**< @brief SVM tradeoff constant C of C-SVC original value given at command line.  */
+  const char *tradeoff_help; /**< @brief SVM tradeoff constant C of C-SVC help description.  */
+  float nu_arg;	/**< @brief nu parameter of nu-SVC, one-class SVM (default='0.5').  */
+  char * nu_orig;	/**< @brief nu parameter of nu-SVC, one-class SVM original value given at command line.  */
+  const char *nu_help; /**< @brief nu parameter of nu-SVC, one-class SVM help description.  */
   int mmap_flag;	/**< @brief Memory map binary input (default=off).  */
   const char *mmap_help; /**< @brief Memory map binary input help description.  */
   
@@ -104,15 +89,14 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int model_given ;	/**< @brief Whether model was given.  */
   unsigned int all_given ;	/**< @brief Whether all was given.  */
-  unsigned int slack_given ;	/**< @brief Whether slack was given.  */
-  unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int cross_validation_given ;	/**< @brief Whether cross_validation was given.  */
-  unsigned int error_function_given ;	/**< @brief Whether error_function was given.  */
-  unsigned int k_value_given ;	/**< @brief Whether k_value was given.  */
+  unsigned int num_cv_runs_given ;	/**< @brief Whether num_cv_runs was given.  */
+  unsigned int svm_type_given ;	/**< @brief Whether svm_type was given.  */
+  unsigned int balance_given ;	/**< @brief Whether balance was given.  */
   unsigned int tradeoff_given ;	/**< @brief Whether tradeoff was given.  */
-  unsigned int params_given ;	/**< @brief Whether params was given.  */
+  unsigned int nu_given ;	/**< @brief Whether nu was given.  */
   unsigned int mmap_given ;	/**< @brief Whether mmap was given.  */
 
 } ;
