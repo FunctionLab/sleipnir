@@ -34,6 +34,7 @@ const char *gengetopt_args_info_help[] = {
   "  -l, --labels=filename         Labels file",
   "  -o, --output=filename         Output file ",
   "  -i, --input=filename          Input PCL file ",
+  "  -d, --dab_input=filename      Input Dat/Dab file ",
   "  -m, --model=filename          Model file",
   "  -T, --test_labels=filename    Test Labels file",
   "  -h, --ontoparam=filename      Ontology file",
@@ -44,9 +45,10 @@ const char *gengetopt_args_info_help[] = {
   "  -s, --skip=INT                Number of columns to skip in input pcls  \n                                  (default=`2')",
   "  -n, --normalize               Normalize PCLS to 0 mean 1 variance  \n                                  (default=off)",
   "  -c, --cross_validation=INT    Number of cross-validation sets ( arg of 1 will \n                                  turn off cross-validation )  (default=`5')",
-  "  -e, --loss_function=INT       Sets the loss function for SVM learning: Choice \n                                  of:\n                                  0\tHamming distance loss: total number of \n                                  differences in label vector.\n                                  1\tHamming distance loss (modified): total \n                                  number of differences in label vector; \n                                  over-annotation not counted as difference. \n                                  2\tLikelihood distance loss. \n                                  3\tLikelihood distance loss (modified). \n                                  \n                                    (default=`0')",
+  "  -e, --loss_function=INT       Sets the loss function for SVM learning: Choice \n                                  of:\n\n                                  0\tHamming distance loss: total number of \n                                  differences in label vector.\n\n                                  1\tHamming distance loss (modified): total \n                                  number of differences in label vector; \n                                  over-annotation not counted as difference. \n\n                                  2\tLikelihood distance loss. \n\n                                  3\tLikelihood distance loss (modified). \n\n                                  \n                                    (default=`0')",
   "  -t, --tradeoff=FLOAT          SVM tradeoff constant C  (default=`1')",
-  "  -w, --learning_algorithm=INT  Choice of structural learning algorithm:\n                                  0\tn-slack algorithm \n                                  1\tn-slack algorithm with shrinking heuristic\n                                  2\t1-slack algorithm (primal) \n                                  3\t1-slack algorithm (dual)\n                                  4\t1-slack algorithm (dual) with constraint \n                                  cache\n                                    (default=`3')",
+  "  -E, --epsilon=FLOAT           allow that tolerance for termination criterion  \n                                  (default=`0.1')",
+  "  -w, --learning_algorithm=INT  Choice of structural learning algorithm \n                                  (default 4):\n\n                                  0\tn-slack algorithm \n\n                                  1\tn-slack algorithm with shrinking heuristic\n\n                                  2\t1-slack algorithm (primal) \n\n                                  3\t1-slack algorithm (dual)\n\n                                  4\t1-slack algorithm (dual) with constraint \n                                  cache\n                                    (default=`3')",
   "  -p, --threads=INT             number of threads (only apply to algorithm 3 \n                                  currently)  (default=`4')",
   "  -M, --mmap                    Memory map binary input  (default=off)",
     0
@@ -82,6 +84,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->labels_given = 0 ;
   args_info->output_given = 0 ;
   args_info->input_given = 0 ;
+  args_info->dab_input_given = 0 ;
   args_info->model_given = 0 ;
   args_info->test_labels_given = 0 ;
   args_info->ontoparam_given = 0 ;
@@ -93,6 +96,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->cross_validation_given = 0 ;
   args_info->loss_function_given = 0 ;
   args_info->tradeoff_given = 0 ;
+  args_info->epsilon_given = 0 ;
   args_info->learning_algorithm_given = 0 ;
   args_info->threads_given = 0 ;
   args_info->mmap_given = 0 ;
@@ -107,6 +111,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->output_orig = NULL;
   args_info->input_arg = NULL;
   args_info->input_orig = NULL;
+  args_info->dab_input_arg = NULL;
+  args_info->dab_input_orig = NULL;
   args_info->model_arg = NULL;
   args_info->model_orig = NULL;
   args_info->test_labels_arg = NULL;
@@ -126,6 +132,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->loss_function_orig = NULL;
   args_info->tradeoff_arg = 1;
   args_info->tradeoff_orig = NULL;
+  args_info->epsilon_arg = 0.1;
+  args_info->epsilon_orig = NULL;
   args_info->learning_algorithm_arg = 3;
   args_info->learning_algorithm_orig = NULL;
   args_info->threads_arg = 4;
@@ -144,20 +152,22 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->labels_help = gengetopt_args_info_help[3] ;
   args_info->output_help = gengetopt_args_info_help[4] ;
   args_info->input_help = gengetopt_args_info_help[5] ;
-  args_info->model_help = gengetopt_args_info_help[6] ;
-  args_info->test_labels_help = gengetopt_args_info_help[7] ;
-  args_info->ontoparam_help = gengetopt_args_info_help[8] ;
-  args_info->all_help = gengetopt_args_info_help[9] ;
-  args_info->slack_help = gengetopt_args_info_help[10] ;
-  args_info->verbosity_help = gengetopt_args_info_help[12] ;
-  args_info->skip_help = gengetopt_args_info_help[13] ;
-  args_info->normalize_help = gengetopt_args_info_help[14] ;
-  args_info->cross_validation_help = gengetopt_args_info_help[15] ;
-  args_info->loss_function_help = gengetopt_args_info_help[16] ;
-  args_info->tradeoff_help = gengetopt_args_info_help[17] ;
-  args_info->learning_algorithm_help = gengetopt_args_info_help[18] ;
-  args_info->threads_help = gengetopt_args_info_help[19] ;
-  args_info->mmap_help = gengetopt_args_info_help[20] ;
+  args_info->dab_input_help = gengetopt_args_info_help[6] ;
+  args_info->model_help = gengetopt_args_info_help[7] ;
+  args_info->test_labels_help = gengetopt_args_info_help[8] ;
+  args_info->ontoparam_help = gengetopt_args_info_help[9] ;
+  args_info->all_help = gengetopt_args_info_help[10] ;
+  args_info->slack_help = gengetopt_args_info_help[11] ;
+  args_info->verbosity_help = gengetopt_args_info_help[13] ;
+  args_info->skip_help = gengetopt_args_info_help[14] ;
+  args_info->normalize_help = gengetopt_args_info_help[15] ;
+  args_info->cross_validation_help = gengetopt_args_info_help[16] ;
+  args_info->loss_function_help = gengetopt_args_info_help[17] ;
+  args_info->tradeoff_help = gengetopt_args_info_help[18] ;
+  args_info->epsilon_help = gengetopt_args_info_help[19] ;
+  args_info->learning_algorithm_help = gengetopt_args_info_help[20] ;
+  args_info->threads_help = gengetopt_args_info_help[21] ;
+  args_info->mmap_help = gengetopt_args_info_help[22] ;
   
 }
 
@@ -245,6 +255,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->output_orig));
   free_string_field (&(args_info->input_arg));
   free_string_field (&(args_info->input_orig));
+  free_string_field (&(args_info->dab_input_arg));
+  free_string_field (&(args_info->dab_input_orig));
   free_string_field (&(args_info->model_arg));
   free_string_field (&(args_info->model_orig));
   free_string_field (&(args_info->test_labels_arg));
@@ -256,6 +268,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->cross_validation_orig));
   free_string_field (&(args_info->loss_function_orig));
   free_string_field (&(args_info->tradeoff_orig));
+  free_string_field (&(args_info->epsilon_orig));
   free_string_field (&(args_info->learning_algorithm_orig));
   free_string_field (&(args_info->threads_orig));
   
@@ -302,6 +315,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "output", args_info->output_orig, 0);
   if (args_info->input_given)
     write_into_file(outfile, "input", args_info->input_orig, 0);
+  if (args_info->dab_input_given)
+    write_into_file(outfile, "dab_input", args_info->dab_input_orig, 0);
   if (args_info->model_given)
     write_into_file(outfile, "model", args_info->model_orig, 0);
   if (args_info->test_labels_given)
@@ -324,6 +339,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "loss_function", args_info->loss_function_orig, 0);
   if (args_info->tradeoff_given)
     write_into_file(outfile, "tradeoff", args_info->tradeoff_orig, 0);
+  if (args_info->epsilon_given)
+    write_into_file(outfile, "epsilon", args_info->epsilon_orig, 0);
   if (args_info->learning_algorithm_given)
     write_into_file(outfile, "learning_algorithm", args_info->learning_algorithm_orig, 0);
   if (args_info->threads_given)
@@ -598,6 +615,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "labels",	1, NULL, 'l' },
         { "output",	1, NULL, 'o' },
         { "input",	1, NULL, 'i' },
+        { "dab_input",	1, NULL, 'd' },
         { "model",	1, NULL, 'm' },
         { "test_labels",	1, NULL, 'T' },
         { "ontoparam",	1, NULL, 'h' },
@@ -609,13 +627,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "cross_validation",	1, NULL, 'c' },
         { "loss_function",	1, NULL, 'e' },
         { "tradeoff",	1, NULL, 't' },
+        { "epsilon",	1, NULL, 'E' },
         { "learning_algorithm",	1, NULL, 'w' },
         { "threads",	1, NULL, 'p' },
         { "mmap",	0, NULL, 'M' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "Vl:o:i:m:T:h:aSv:s:nc:e:t:w:p:M", long_options, &option_index);
+      c = getopt_long (argc, argv, "Vl:o:i:d:m:T:h:aSv:s:nc:e:t:E:w:p:M", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -667,6 +686,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.input_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "input", 'i',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'd':	/* Input Dat/Dab file .  */
+        
+        
+          if (update_arg( (void *)&(args_info->dab_input_arg), 
+               &(args_info->dab_input_orig), &(args_info->dab_input_given),
+              &(local_args_info.dab_input_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "dab_input", 'd',
               additional_error))
             goto failure;
         
@@ -802,7 +833,19 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'w':	/* Choice of structural learning algorithm:
+        case 'E':	/* allow that tolerance for termination criterion.  */
+        
+        
+          if (update_arg( (void *)&(args_info->epsilon_arg), 
+               &(args_info->epsilon_orig), &(args_info->epsilon_given),
+              &(local_args_info.epsilon_given), optarg, 0, "0.1", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "epsilon", 'E',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'w':	/* Choice of structural learning algorithm (default 4):
         0\tn-slack algorithm 
         1\tn-slack algorithm with shrinking heuristic
         2\t1-slack algorithm (primal) 
