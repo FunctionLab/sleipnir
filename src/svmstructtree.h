@@ -92,7 +92,9 @@ namespace SVMArc {
 			Alg = alg;
 		}
 
-
+		void SetEpsilon(float eps) {
+			struct_parm.epsilon = eps;
+		}
 
 		void UseSlackRescaling() {
 			struct_parm.loss_type = SLACK_RESCALING;
@@ -161,12 +163,16 @@ namespace SVMArc {
 		void ReadOntology(const char* treefile);
 		//creates a Doc for a given gene index in a single microarray
 		static DOC* CreateDoc(Sleipnir::CPCL &PCL, size_t iGene, size_t iDoc);
-
+		//static DOC* CreateDoc(Sleipnir::CDat& Dat, size_t iGene, size_t iDoc);
 		//read labels
 		vector<SVMLabel> ReadLabels(ifstream & ifsm);
+		void vecsetZero (ONTONODE* node, vector<char>* ybar0,char zero);
+		void preprocessLabel(vector<char>* multilabels);
+
 		void InitializeLikAfterReadLabels();
 		//Creates a sample using a single PCL and SVMlabels Looks up genes by name.
 		SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
+		//SAMPLE* CreateSample(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels);
 
 		//Classify single genes
 		vector<Result> Classify(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels);
@@ -223,6 +229,9 @@ namespace SVMArc {
 		STRUCTMODEL read_struct_model_w_linear(char *file, STRUCT_LEARN_PARM *sparm);
 	};
 
+
+				
+			
 
 };
 

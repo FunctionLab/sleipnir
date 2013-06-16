@@ -130,7 +130,7 @@ namespace SVMArc {
 			int mark=1;
 			ss << GeneName << '\t';
 			for(size_t j=0;j<num_class;j++){
-				if(TargetM[j])
+				if(TargetM[j]==1)
 					if(mark){
 						if(returnindex)
 							ss<<j;
@@ -148,7 +148,7 @@ namespace SVMArc {
 
 			mark=1;
 			for(size_t j=0;j<num_class;j++){
-				if(ValueM[j])
+				if(ValueM[j]==1)
 					if(mark){
 						if(returnindex)
 							ss<<j;

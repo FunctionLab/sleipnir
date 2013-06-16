@@ -53,7 +53,7 @@ namespace SVMArc {
 	//	void set_struct_verbosity(long verb);
 
 	//}
-	
+
 	void CSVMSTRUCTTREE::SetVerbosity(size_t V) {
 		struct_verbosity = (long) V;
 		//if( struct_verbosity>1)
@@ -240,9 +240,10 @@ namespace SVMArc {
 		ifstream ifsm;
 		ifsm.clear();
 		ifsm.open(treefile);
-		if (!ifsm.is_open())
+		if (!ifsm.is_open()){
 			cerr << "Could not read Onto file" << endl;
-
+			exit(1);
+		}
 		static const size_t c_iBuffer = 1024; //change this if not enough
 		char acBuffer[c_iBuffer];
 		vector<string> vecstrTokens;
@@ -357,6 +358,40 @@ namespace SVMArc {
 		return pRet;
 	}
 
+	
+//DOC* CSVMSTRUCTTREE::CreateDoc(Sleipnir::CDat& Dat, size_t iGene, size_t iDoc) {
+//	WORD* aWords;
+//	size_t i, j, iWord, iWords;
+//	float d;
+//	DOC* pRet;
+//	pRet->fvec->words[0].weight;
+//	//get number of features
+//	iWords = Dat.GetGenes();
+//	//      cout << "CD:iwords=" << iWords << endl;
+//	aWords = new WORD[iWords + 1];
+//	//number the words
+//	for (i = 0; i < iWords; ++i) {
+//		//   cout<<i<<endl;
+//		aWords[i].wnum = i + 1;
+//		// asWords[ i ].wnum = 0;
+//	}
+//	aWords[i].wnum = 0;
+//	//get the values;
+//	iWord = 0;
+//	for (i = 0; i < Dat.GetGenes(); i++) {
+//		if (!Sleipnir::CMeta::IsNaN(d = Dat.Get(iGene, i))) {
+//			//   if (i==0 && j==0)
+//			//       cout<<"First value is "<<d<<endl;
+//			aWords[iWord].weight = d;
+//		} else
+//			aWords[iWord].weight = 0;
+//		iWord++;
+//	}
+//	pRet = create_example(iDoc, 0, 0, 1, create_svector(aWords, "", 1));
+//	delete[] aWords;
+//	// cout<<"done creating DOC"<<endl;
+//	return pRet;
+//}
 
 
 	vector<SVMLabel> CSVMSTRUCTTREE::ReadLabels(ifstream & ifsm) {
@@ -391,8 +426,10 @@ namespace SVMArc {
 			multilabels[0]=1; //root node is always on
 			for(int i=1; i < vecstrTokens.size();i++){
 				it =  onto_map.find(vecstrTokens[i]);
-				if(it == onto_map.end())
-					cerr<< "Unknown term: "<<vecstrTokens[i]<<endl;
+				if(it == onto_map.end()){
+					if(struct_verbosity>=2)
+						cerr<< "Unknown term: "<<vecstrTokens[i]<<endl;
+				}
 				else{
 					multilabels[onto_map[vecstrTokens[i]]]=1; 
 					struct_parm.treeStruct.nodes[ onto_map[vecstrTokens[i]] ]->inputlabelCount++;
@@ -400,7 +437,7 @@ namespace SVMArc {
 						cout<<vecstrTokens[0]<<'\t'<<vecstrTokens[i];
 					//label propagation; add print propagation process
 					pnode=struct_parm.treeStruct.nodes[onto_map[vecstrTokens[i]]]->parent;		
-					while(pnode){
+					while(pnode && multilabels[pnode->index]!=1){
 						multilabels[pnode->index]=1;
 						struct_parm.treeStruct.nodes[pnode->index]->inputlabelCount++;
 						if(struct_verbosity>=3)	
@@ -410,20 +447,61 @@ namespace SVMArc {
 					if(struct_verbosity>=3)
 						cout<<endl;
 					//end label propagation
-					
+
 				}
 			}
+			preprocessLabel(&multilabels);
 			vecLabels.push_back(SVMArc::SVMLabel(vecstrTokens[0], multilabels));
 		}
 		return vecLabels;
+	}
+
+	void CSVMSTRUCTTREE::preprocessLabel(vector<char>* multilabels){
+		int i,iclass,flag_childrenannotated;
+		for ( iclass=0; iclass < multilabels->size();iclass++){
+			if((*multilabels)[iclass]==1){
+				flag_childrenannotated = 0;
+				for( i=0; i<struct_parm.treeStruct.nodes[iclass]->n_children; i++){
+					if((*multilabels)[struct_parm.treeStruct.nodes[iclass]->children[i]->index]==1){
+						flag_childrenannotated=1;
+						break;
+					}
+				}
+				if(flag_childrenannotated==0){
+					vecsetZero(struct_parm.treeStruct.nodes[iclass],multilabels,2);
+					(*multilabels)[iclass]=1;	
+				}
+			}
+		}
+
+
+	}
+
+	void CSVMSTRUCTTREE::vecsetZero (ONTONODE* node, vector<char>* ybar0,char zero) {
+		//printf("setZero\n");
+
+		int i;
+		if((*ybar0)[node->index]!=zero){
+			(*ybar0)[node->index] = zero;
+			for(i=0; i < node->n_children; i++)
+				if((*ybar0)[node->children[i]->index]!=zero)
+					vecsetZero(node->children[i], ybar0,zero);
+		}
 	}
 
 	void CSVMSTRUCTTREE::InitializeLikAfterReadLabels() {
 		struct_parm.condLikelihood = (double*)my_malloc(sizeof(double)*struct_parm.num_classes);
 		struct_parm.condLikelihood[0] = 0; // now the first term in ontofile has to be the 'head node', change this to make code more robust
 		for(int i=1; i<struct_parm.num_classes;i++){
-			struct_parm.condLikelihood[i] = log(struct_parm.treeStruct.nodes[i]->parent->inputlabelCount) 
-				- log(struct_parm.treeStruct.nodes[i]->inputlabelCount);
+			if(struct_parm.treeStruct.nodes[i]->inputlabelCount>0){
+				struct_parm.treeStruct.nodes[i]->posBalanceWeight =  (struct_parm.treeStruct.nodes[0]->inputlabelCount/2)/ struct_parm.treeStruct.nodes[i]->inputlabelCount;
+				struct_parm.treeStruct.nodes[i]->negBalanceWeight =  (struct_parm.treeStruct.nodes[0]->inputlabelCount/2)/ (struct_parm.treeStruct.nodes[0]->inputlabelCount-struct_parm.treeStruct.nodes[i]->inputlabelCount);
+			}else{
+				struct_parm.treeStruct.nodes[i]->posBalanceWeight = 0;
+				struct_parm.treeStruct.nodes[i]->negBalanceWeight = 0;
+			}
+			struct_parm.condLikelihood[i] = log(struct_parm.treeStruct.nodes[i]->parent->inputlabelCount + 1) 
+				- log(struct_parm.treeStruct.nodes[i]->inputlabelCount + 1);
 		}
 	}
 	SAMPLE* CSVMSTRUCTTREE::CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels) {
@@ -493,6 +571,60 @@ namespace SVMArc {
 		return pSample;
 		//cerr<<"DONE CreateSample"<<endl;
 	}
+
+//
+//	SAMPLE* CSVMSTRUCTTREE::CreateSample(Sleipnir::CDat& Dat, vector<SVMLabel> SVMLabels) {
+//	size_t i, j, iGene, iDoc;
+//	vector<DOC*> vec_pDoc;
+//	vector<double> vecClass;
+//	vector<size_t> veciGene;
+//	iDoc = 0;
+//	float numPositives, numNegatives;
+//	numPositives = numNegatives = 0;
+//	for (i = 0; i < SVMLabels.size(); i++) {
+//		//     cout<< "processing gene " << SVMLabels[i].GeneName << endl;
+//		iGene = Dat.GetGene(SVMLabels[i].GeneName);
+//		//   cout << SVMLabels[i].GeneName<<" gene at location "<<iGene << endl;
+//		if (iGene != -1) {
+//			//       cout << "creating doc" << endl;
+//			iDoc++;
+//			vec_pDoc.push_back(CreateDoc(Dat, iGene, iDoc - 1));
+//			vecClass.push_back(SVMLabels[i].Target);
+//		}
+//	}
+//
+//	DOC** ppDoc;
+//	ppDoc = new DOC*[vec_pDoc.size()];
+//	copy(vec_pDoc.begin(), vec_pDoc.end(), ppDoc);
+//	vec_pDoc.clear();
+//	PATTERN* pPattern = new PATTERN;
+//	pPattern->doc = ppDoc;
+//
+//	pPattern->totdoc = iDoc;
+//	//   cout << "number of document=" << pPattern->totdoc << endl;
+//	LABEL* pLabel = new LABEL;
+//	double* aClass;
+//	aClass = new double[vecClass.size()];
+//	copy(vecClass.begin(), vecClass.end(), aClass);
+//	vecClass.clear();
+//	pLabel->Class = aClass;
+//	pLabel->totdoc = iDoc;
+//
+//	EXAMPLE* aExample;
+//	aExample = new EXAMPLE[1];
+//	//cout<<"aExample @"<<aExample<<endl;
+//	aExample[0].x = *pPattern;
+//	aExample[0].y = *pLabel;
+//	SAMPLE* pSample = new SAMPLE;
+//	pSample->n = 1;
+//	pSample->examples = aExample;
+//	/* cout << "examples @" << pSample->examples << endl;
+//	 cout<< "ppDoc="<<ppDoc<<endl;
+//	 cout << "docs @" << pSample->examples[0].x.doc << endl;
+//	 cout<<"done creating sample"<<endl;
+//	 cout<<"sample @ "<<pSample<<endl;*/
+//	return pSample;
+//}
 
 	//Single gene classification
 

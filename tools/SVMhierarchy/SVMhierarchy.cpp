@@ -42,6 +42,7 @@ int main(int iArgs, char** aszArgs) {
 	gengetopt_args_info sArgs;
 
 	CPCL PCL;
+	CDat DAT;
 	SVMArc::CSVMSTRUCTTREE SVM;
 
 	size_t i, j, k , iGene, jGene;
@@ -69,7 +70,7 @@ int main(int iArgs, char** aszArgs) {
 	}
 
 	SVM.SetTradeoff(sArgs.tradeoff_arg);
-
+	SVM.SetEpsilon(sArgs.epsilon_arg);
 	if (sArgs.slack_flag)
 		SVM.UseSlackRescaling();
 	else
@@ -107,15 +108,24 @@ int main(int iArgs, char** aszArgs) {
 	//  cout << "there are " << vecLabels.size() << " labels processed" << endl;
 	size_t iFile;
 	vector<string> PCLs;
+
 	if (sArgs.input_given) {
 		cerr << "Loading PCL file" << endl;
 		if (!PCL.Open(sArgs.input_arg, sArgs.skip_arg, sArgs.mmap_flag)) {
 			cerr << "Could not open input PCL" << endl;
-			return 1;
+			exit(1);
 		}
+		cerr << "PCL file Loaded" << endl;
 	}
-	cerr << "PCL file Loaded" << endl;
-
+	//else if (sArgs.dab_input_given){
+	//			cerr << "Loading DAT/DAB file" << endl;
+	//	if (!DAT.Open(sArgs.input_arg, !!sArgs.mmap_flag)) {
+	//		cerr << "Could not open input DAT/DAB file" << endl;
+	//		exit(1);
+	//	}
+	//}
+	//
+	//
 
 
 
@@ -144,6 +154,7 @@ int main(int iArgs, char** aszArgs) {
 				SVM.PrintResults(AllResults, ofsm);
 			else {
 				cerr << "Could not open output file" << endl;
+				
 			}
 		}
 		else//read model and classify only test examples
@@ -163,7 +174,7 @@ int main(int iArgs, char** aszArgs) {
 			SVM.ReadModel(sArgs.model_arg);
 			cerr << "Model Loaded" << endl;
 
-			pTestVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
+			pTestVector[0].reserve((size_t) vecLabels.size()+1 );
 			for (j = 0; j < vecLabels.size(); j++) {
 				pTestVector[0].push_back(vecLabels[j]);		      
 			}
