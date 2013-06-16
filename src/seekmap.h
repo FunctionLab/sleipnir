@@ -67,7 +67,7 @@ public:
 	 * \brief Constructor
 	 * \param iSize The number of genes in the gene-database
 	 */
-	CSeekIntIntMap(const ushort&);
+	CSeekIntIntMap(const utype&);
 
 	/*!
 	 * \brief Constructor
@@ -90,7 +90,7 @@ public:
 	 * If \c bReverse is true, then this map captures only the absent genes in the dataset.
 	 * By default, \c bReverse is false.
 	 */
-	CSeekIntIntMap(const char*, const ushort &, const bool=false);
+	CSeekIntIntMap(const char*, const utype &, const bool=false);
 
 	/*!
 	 * \brief Copy constructor
@@ -102,7 +102,7 @@ public:
 	 * \brief Helper function that is used by constructor
 	 * \param iSize The genome size
 	 */
-	void Initialize(const ushort&);
+	void Initialize(const utype&);
 
 	/*!
 	 * \brief Destructor
@@ -114,26 +114,26 @@ public:
 	 * \param i Element index
 	 * \return The item at the index
 	 */
-	ushort GetForward(const ushort &) const;
+	utype GetForward(const utype &) const;
 
 	/*!
 	 * \brief Get an element from the \a reverse array
 	 * \param i Element index
 	 * \return The item at the index
 	 */
-	ushort GetReverse(const ushort &) const;
+	utype GetReverse(const utype &) const;
 
 	/*!
 	 * \brief Get the entire \a forward array
 	 * \return The \a forward array
 	 */
-	const vector<ushort>& GetAllForward() const;
+	const vector<utype>& GetAllForward() const;
 
 	/*!
 	 * \brief Get the entire \a reverse array
 	 * \return The \a reverse array
 	 */
-	const vector<ushort>& GetAllReverse() const;
+	const vector<utype>& GetAllReverse() const;
 
 	/*!
 	 * \brief Add an available gene to the map
@@ -141,7 +141,7 @@ public:
 	 * \remark The gene ID is a number between 0 and 21000 (the genome size). 
 	 * It is specified by the gene ID mapping file \c gene_map.txt.
 	 */
-	void Add(const ushort&);
+	void Add(const utype&);
 
 	/*!
 	 * \brief Clear the member arrays in the structure
@@ -164,20 +164,20 @@ public:
 	 * \brief Get the number of present genes that are currently contained in the map
 	 * \return The number of genes that are present
 	 */
-	ushort GetNumSet() const;
+	utype GetNumSet() const;
 
 	/*!
 	 * \brief Get the genome size
 	 * \return The genome size
 	 */
-	ushort GetSize() const;
+	utype GetSize() const;
 
 private:
-	vector<ushort> m_iF;
-	vector<ushort> m_iR;
-	vector<ushort>::iterator m_iterR;
-	ushort m_iSize;
-	ushort m_iNumSet;
+	vector<utype> m_iF;
+	vector<utype> m_iR;
+	vector<utype>::iterator m_iterR;
+	utype m_iSize;
+	utype m_iNumSet;
 };
 
 /*!
@@ -208,9 +208,9 @@ public:
 	/*!
 	 * \brief Add a pair to the map
 	 * \param s The string
-	 * \param i The integer in unsigned short (ushort)
+	 * \param i The integer in utype
 	 */
-	void Set(const string&, const ushort&);
+	void Set(const string&, const utype&);
 	/*!
 	 * \brief Add all the pairs at once
 	 * \param s A vector of string
@@ -221,23 +221,23 @@ public:
 	/*!
 	 * \brief Get the corresponding integer for the given string
 	 */
-	ushort Get(const string&) const;
+	utype Get(const string&) const;
 	/*!
 	 * \brief Get the entire map with key=string, value=integer
 	 */
-	map<string, ushort>& GetMapForward();
+	map<string, utype>& GetMapForward();
 	/*!
 	 * \brief Get the entire map with key=integer, value=string
 	 */
-	map<ushort, string>& GetMapReverse();
+	map<utype, string>& GetMapReverse();
 	/*!
 	 * \brief Get the genome size
 	 */
-	ushort GetSize() const;
+	utype GetSize() const;
 	/*!
 	 * \brief Get the corresponding string for the given integer
 	 */
-	string Get(const ushort &) const;
+	string Get(const utype &) const;
 	/*!
 	 * \brief Retrieve all the strings in the map as a vector
 	 */
@@ -245,10 +245,10 @@ public:
 	/*!
 	 * \brief Retrieve all the integers in the map as a vector
 	 */
-	vector<ushort> GetAllInteger() const;
+	vector<utype> GetAllInteger() const;
 private:
-	map<string, ushort> m_mapstrint;
-	map<ushort, string> m_mapintstr;
+	map<string, utype> m_mapstrint;
+	map<utype, string> m_mapintstr;
 };
 
 }

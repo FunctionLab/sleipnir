@@ -47,7 +47,7 @@ void CSeekPlatform::Copy(const CSeekPlatform &pl){
 		m_vecfPlatformStdev.begin());
 }
 
-void CSeekPlatform::InitializePlatform(const ushort &numGenes,
+void CSeekPlatform::InitializePlatform(const utype &numGenes,
 		const string &strPlatformName){
 	m_iNumGenes = numGenes;
 	CSeekTools::InitVector(m_vecfPlatformAvg, numGenes, (float) 0);
@@ -55,19 +55,19 @@ void CSeekPlatform::InitializePlatform(const ushort &numGenes,
 	m_strPlatformName = strPlatformName;
 }
 
-void CSeekPlatform::SetPlatformAvg(const ushort &i, const float &val){
+void CSeekPlatform::SetPlatformAvg(const utype &i, const float &val){
 	m_vecfPlatformAvg[i] = val;
 }
 	
-void CSeekPlatform::SetPlatformStdev(const ushort &i, const float &val){
+void CSeekPlatform::SetPlatformStdev(const utype &i, const float &val){
 	m_vecfPlatformStdev[i] = val;
 }
 	
-float CSeekPlatform::GetPlatformAvg(const ushort &i) const{
+float CSeekPlatform::GetPlatformAvg(const utype &i) const{
 	return m_vecfPlatformAvg[i];
 }
 
-float CSeekPlatform::GetPlatformStdev(const ushort &i) const{
+float CSeekPlatform::GetPlatformStdev(const utype &i) const{
 	return m_vecfPlatformStdev[i];
 }
 

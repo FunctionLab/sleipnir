@@ -39,7 +39,7 @@ namespace Sleipnir {
  * All elements are 0 except the elements indexed by the query genes, which have
  * a value of 1.
  *
- * \li A \c ushort vector, with number of elements = size of query.
+ * \li A \c utype vector, with number of elements = size of query.
  * A compact representation which only stores the query genes' ID. 
  */
 class CSeekQuery{
@@ -102,7 +102,7 @@ public:
      * Initialize with a vector of query genes' ID
      *
      * \param query
-     * A \c ushort-vector that stores the query genes' ID
+     * A \c utype-vector that stores the query genes' ID
      *
      * \param iGenes
      * The number of genes in the genome
@@ -112,19 +112,19 @@ public:
      * valid \c query parameter is <201, 242, 42>, 
      * and \c iGenes is 21000 (if there are 21000 genes).
      */
-	bool InitializeQuery(const vector<ushort>&, const ushort &);
+	bool InitializeQuery(const vector<utype>&, const utype &);
 
     /*!
      * \brief Get the number of query partitions
      * \return The number of query partitions
      */
-	ushort GetNumFold() const;
+	utype GetNumFold() const;
     
     /*!
      * \brief Get the query genes as a vector
-     * \return The query genes as a \c ushort vector
+     * \return The query genes as a \c utype vector
      */
-	const vector<ushort>& GetQuery() const;
+	const vector<utype>& GetQuery() const;
     
     /*!
      * \brief Get the query presence as a \c char vector
@@ -143,7 +143,7 @@ public:
      * \remarks
      * No bound checking on \c i.
      */
-	const vector<ushort>& GetCVQuery(ushort&) const;
+	const vector<utype>& GetCVQuery(utype&) const;
     
     /*!
      * \brief
@@ -165,16 +165,16 @@ public:
      *
      */
 	bool CreateCVPartitions(const gsl_rng*, \
-		const enum PartitionMode &, const ushort=-1);
+		const enum PartitionMode &, const utype=-1);
 
 private:
-	vector<ushort> queryGenes;
+	vector<utype> queryGenes;
 	vector<char> queryGenePresence;
 
-	vector<ushort> *crossValGenes;
-	ushort iNumFold;
-	ushort iFoldSize;
-	ushort qSize;
+	vector<utype> *crossValGenes;
+	utype iNumFold;
+	utype iFoldSize;
+	utype qSize;
 
 };
 

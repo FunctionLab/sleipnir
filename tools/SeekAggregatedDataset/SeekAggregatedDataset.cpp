@@ -24,8 +24,8 @@ struct descend{
 bool calculate_correlation(
 	vector<vector<vector<float> > > &mat,
 	vector<CSeekIntIntMap*> &dm,
-	ushort g1, 
-	ushort g2, 
+	utype g1, 
+	utype g2, 
 	float &r){
 
 	int numDatasets = mat.size();
@@ -57,8 +57,8 @@ bool calculate_correlation(
 
 	for(d=0; d<numDatasets; d++){
 		if(count_common[d]==2){
-			ushort n1 = dm[d]->GetForward(g1);
-			ushort n2 = dm[d]->GetForward(g2);
+			utype n1 = dm[d]->GetForward(g1);
+			utype n2 = dm[d]->GetForward(g2);
 			int numExp = mat[d][n1].size();
 			for(i=0; i<numExp; i++){
 				v1.push_back(mat[d][n1][i]);
@@ -112,7 +112,7 @@ int main(int iArgs, char **aszArgs){
 	ifstream ifsm;
 	istream *pistm;
 	vector<string> vecstrLine, vecstrGenes, vecstrDBs, vecstrQuery;
-	ushort i, qi, j, k, l;
+	utype i, qi, j, k, l;
 	
 	if(cmdline_parser(iArgs, aszArgs, &sArgs)){
 		cmdline_parser_print_help();
@@ -125,7 +125,8 @@ int main(int iArgs, char **aszArgs){
 	}else{
 		pistm = &cin;
 	}
-	
+
+	fprintf(stderr, "Reading gene list\n");	
 	map<string, size_t> mapstriGenes;
 	while( !pistm->eof( ) ) {
 		pistm->getline( acBuffer, c_iBuffer - 1 );
@@ -150,22 +151,25 @@ int main(int iArgs, char **aszArgs){
 			
 	//char acBuffer[1024];
 
+	fprintf(stderr, "Finished reading gene map\n");
 	if(sArgs.pcl_flag==1){
 		string pcl_dir = sArgs.pcl_dir_arg;
 		string output_dir = sArgs.dir_out_arg;
+		fprintf(stderr, "Arrived here\n");
 		vector<string> pcl_list;
 		vector< vector<string> > vecstrAllQuery;
 		int numGenes = vecstrGenes.size();
-		
+	
+		fprintf(stderr, "Reading query\n");	
 		if(!CSeekTools::ReadMultipleQueries(sArgs.query_arg, vecstrAllQuery))
 			return -1;
 		
+		fprintf(stderr, "Reading pcl list\n");	
 		CSeekTools::ReadListOneColumn(sArgs.pcl_list_arg, pcl_list);
-		vector< vector< vector<float> > > mat;
+		vector< vector< vector<float> > > mat; //only needed for cor-calc
 		vector<CSeekIntIntMap*> dm;
 		dm.resize(pcl_list.size());
-		mat.resize(pcl_list.size());
-		
+		mat.resize(pcl_list.size()); //only needed for cor-calc
 		for(i=0; i<pcl_list.size(); i++){
 			fprintf(stderr, "Reading %d: %s\n", i, pcl_list[i].c_str());
 			dm[i] = new CSeekIntIntMap(vecstrGenes.size());
@@ -174,26 +178,27 @@ int main(int iArgs, char **aszArgs){
 
 			CPCL pcl;
 			pcl.Open(pclfile.c_str());
-			int totNumExperiments = pcl.GetExperiments() - 2;
+			int totNumExperiments = pcl.GetExperiments();
 			
-			vector<ushort> presentIndex;
+			vector<utype> presentIndex;
 			vector<string> presentGeneNames;
 			for(j=0; j<vecstrGenes.size(); j++){
-				ushort g = pcl.GetGene(vecstrGenes[j]);
+				utype g = pcl.GetGene(vecstrGenes[j]);
 				if(CSeekTools::IsNaN(g)) continue; //gene does not exist in the dataset
 				presentIndex.push_back(g);
 				presentGeneNames.push_back(vecstrGenes[j]);
 				dm[i]->Add(j);
 			}
 			
+			//only needed for correlation calc
 			mat[i].resize(presentIndex.size());
 			for(j=0; j<presentIndex.size(); j++)
 				mat[i][j].resize(totNumExperiments);
 			
 			for(j=0; j<presentIndex.size(); j++){
 				float *val = pcl.Get(presentIndex[j]);
-				for(k=2; k<pcl.GetExperiments(); k++){
-					mat[i][j][k-2] = val[k];	
+				for(k=0; k<pcl.GetExperiments(); k++){
+					mat[i][j][k] = val[k];	
 					if(isinf(val[k])||isnan(val[k])){
 						fprintf(stderr, "loading error: %d of %d\n", k, pcl.GetExperiments());
 					}
@@ -232,12 +237,12 @@ int main(int iArgs, char **aszArgs){
 		
 		//Do pair per machine, Step 2============================
 /*
-		vector<ushort> pairs;
+		vector<utype> pairs;
 		CSeekTools::ReadArray("/tmp/pairs_to_do", pairs);
 
 		int numP = pairs.size()/2;
 		int pi=0;
-		const vector<ushort> &allGenes = geneMap->GetAllReverse();
+		const vector<utype> &allGenes = geneMap->GetAllReverse();
 		vector<float> cor;
 		cor.resize(numP);
 
@@ -246,8 +251,8 @@ int main(int iArgs, char **aszArgs){
 		private(pi) \
 		firstprivate(numP) schedule(dynamic)
 		for(pi=0; pi<numP; pi++){
-			ushort g1 = allGenes[pairs[pi*2]];
-			ushort g2 = allGenes[pairs[pi*2+1]];
+			utype g1 = allGenes[pairs[pi*2]];
+			utype g2 = allGenes[pairs[pi*2+1]];
 			if(g1==g2){
 				cor[pi] = -320;
 				continue;
@@ -274,10 +279,10 @@ int main(int iArgs, char **aszArgs){
 	/*
 		int max_i = 49;
 		char file[256];
-		const vector<ushort> &allGenes = geneMap->GetAllReverse();
+		const vector<utype> &allGenes = geneMap->GetAllReverse();
 
 		for(i=0; i<=max_i; i++){
-			vector<ushort> pairs;
+			vector<utype> pairs;
 			vector<float> cor;
 
 			sprintf(file, "/memex/qzhu/p1/pairs_to_do.%d", i);
@@ -313,7 +318,7 @@ int main(int iArgs, char **aszArgs){
 
 		/*
 		//generate pairs per machine, Step 1================================
-		vector<ushort> pairs;
+		vector<utype> pairs;
 		int numP = numActualGenes*(numActualGenes-1);
 		pairs.resize(numP);
 		int ki = 0;
@@ -334,7 +339,7 @@ int main(int iArgs, char **aszArgs){
 		int num_pairs_per_file = (numP / 2) / 49;
 		
 		ki = 0;
-		vector<ushort> pp;
+		vector<utype> pp;
 		pp.resize(num_pairs_per_file*2);
 		char destfile[256];
 		int kj = 0;
@@ -369,7 +374,7 @@ int main(int iArgs, char **aszArgs){
 		//Load aggregated dataset, Step 4=====================================
 
 		vector<float> correlation1D;
-		CSeekTools::ReadArray("/memex/qzhu/p3/sept25/aggregated_dataset_correlation", correlation1D);
+		CSeekTools::ReadArray("/home/qzhu/Seek/aggregated_dataset_correlation", correlation1D);
 		int pi = 0;
 		for(i=0; i<numActualGenes; i++){
 			for(j=0; j<numActualGenes; j++){
@@ -383,10 +388,10 @@ int main(int iArgs, char **aszArgs){
 
 
 		/*
-		const vector<ushort> &allGenes = geneMap->GetAllReverse();
+		const vector<utype> &allGenes = geneMap->GetAllReverse();
 		//start correlation calculations
 		for(i=0; i<numActualGenes; i++){
-			ushort g1 = allGenes[i];
+			utype g1 = allGenes[i];
 			fprintf(stderr, "Gene %d of %d: %d\n", i, numActualGenes, numActualGenes - (i+1));
 
 			#pragma omp parallel for \
@@ -394,8 +399,8 @@ int main(int iArgs, char **aszArgs){
 			private(j) \
 			firstprivate(numActualGenes, g1, i) schedule(dynamic)
 			for(j=i+1; j<numActualGenes; j++){
-				ushort tid = omp_get_thread_num();
-				ushort g2 = allGenes[j];
+				utype tid = omp_get_thread_num();
+				utype g2 = allGenes[j];
 				if(g1==g2){
 					correlations[i][j] = -320; //Null value
 					correlations[j][i] = -320;
@@ -426,10 +431,10 @@ int main(int iArgs, char **aszArgs){
 
 		//Evaluation Last step==================================================
 		
-		const vector<ushort> &allGenes = geneMap->GetAllReverse();		
+		const vector<utype> &allGenes = geneMap->GetAllReverse();		
 
 		for(i=0; i<vecstrAllQuery.size(); i++){
-			vector<ushort> q;
+			vector<utype> q;
 			vector<char> is_query;
 
 			fprintf(stderr, "Query %d begin\n", i); //getchar();	
@@ -449,9 +454,9 @@ int main(int iArgs, char **aszArgs){
 			for(qi=0; qi<q.size(); qi++){
 				if(CSeekTools::IsNaN(geneMap->GetForward(q[qi]))) continue;
 				tot_present_q++;
-				ushort qg = geneMap->GetForward(q[qi]);
+				utype qg = geneMap->GetForward(q[qi]);
 				for(j=0; j<numActualGenes; j++){
-					ushort gi = allGenes[j];
+					utype gi = allGenes[j];
 					if(correlations[qg][j]==-320){
 						continue;
 					}
@@ -466,7 +471,7 @@ int main(int iArgs, char **aszArgs){
 
 			int total_non_zero = 0;
 			for(j=0; j<numActualGenes; j++){
-				ushort gi = allGenes[j];
+				utype gi = allGenes[j];
 				if(gene_count[gi]!=tot_present_q){
 					gene_score[gi] = -320;
 					continue;

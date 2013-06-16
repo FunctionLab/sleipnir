@@ -40,7 +40,7 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 
 	vector<string> vecstrGeneID;
-	map<string, ushort> mapstrintGene;
+	map<string, utype> mapstrintGene;
 	if(!CSeekTools::ReadListTwoColumns(sArgs.input_arg, vecstrGeneID, vecstrGenes))
 		return false;
 
@@ -57,9 +57,9 @@ int main( int iArgs, char** aszArgs ) {
 		if(!CSeekTools::ReadListTwoColumns(sArgs.dset_list_arg, vecstrUserDatasets, vecstrUserDP))
 			return false;
 
-		map<string, ushort> mapstrintDataset;
+		map<string, utype> mapstrintDataset;
 		map<string, string> mapstrstrDatasetPlatform;
-		ushort i;
+		utype i;
 		for(i=0; i<vecstrDatasets.size(); i++){
 			mapstrstrDatasetPlatform[vecstrDatasets[i]] = vecstrDP[i];
 			mapstrintDataset[vecstrDatasets[i]] = i;
@@ -75,7 +75,7 @@ int main( int iArgs, char** aszArgs ) {
 		size_t iDatasets = vecstrDatasets.size();
 		vector<string> vecstrPlatforms;
 		vector<CSeekPlatform> vp;
-		map<string, ushort> mapstriPlatform;
+		map<string, utype> mapstriPlatform;
 		CSeekTools::ReadPlatforms(sArgs.platform_dir_arg, vp, vecstrPlatforms,
 			mapstriPlatform);
 		//fprintf(stderr, "Finished reading platform\n");
@@ -109,7 +109,7 @@ int main( int iArgs, char** aszArgs ) {
 			vc[i]->ReadGenePresence(strPresencePath);
 			string strPlatform =
 				mapstrstrDatasetPlatform.find(strFileStem)->second;
-			ushort platform_id = mapstriPlatform.find(strPlatform)->second;
+			utype platform_id = mapstriPlatform.find(strPlatform)->second;
 			vc[i]->SetPlatform(vp[platform_id]);
 		}
 
@@ -120,13 +120,13 @@ int main( int iArgs, char** aszArgs ) {
 
 
 		for(i=0; i<vecstrGenes.size(); i++){
-			ushort ii = mapstrintGene[vecstrGenes[i]];
+			utype ii = mapstrintGene[vecstrGenes[i]];
 			fprintf(stderr, "Gene %s ", vecstrGenes[i].c_str());
-			ushort j = 0;
+			utype j = 0;
 			vector<float> va;
 			for(j=0; j<iDatasets; j++){
 				CSeekIntIntMap *gm = vc[j]->GetGeneMap();
-				ushort ij = gm->GetForward(ii);
+				utype ij = gm->GetForward(ii);
 				if(CSeekTools::IsNaN(ij)){
 					continue;
 				}
@@ -135,9 +135,9 @@ int main( int iArgs, char** aszArgs ) {
 				//fprintf(stderr, "%.2f ", a);
 			}
 			sort(va.begin(), va.end());
-			ushort g = 0;
+			utype g = 0;
 			for(g=0; g<20; g++){
-				ushort ik = (ushort) ((float)0.05*(float)(g+1)*(float)va.size() - 1.0);
+				utype ik = (utype) ((float)0.05*(float)(g+1)*(float)va.size() - 1.0);
 				fprintf(stderr, "%.2f ", va[ik]);
 			}
 			fprintf(stderr, "\n");
@@ -171,7 +171,7 @@ int main( int iArgs, char** aszArgs ) {
 			out = fopen(output_file.c_str(), "w");
 		}
 
-		ushort ii=0;
+		utype ii=0;
 		float cutoff = sArgs.gvar_cutoff_arg;
 		bool toCutoff = false;
 		if(cutoff<0){
@@ -198,13 +198,13 @@ int main( int iArgs, char** aszArgs ) {
 		//fprintf(stderr, "Finished reading query\n");
 		bool isFirst = true;
 		vector<int> count;
-		ushort j;
+		utype j;
 		CSeekTools::InitVector(count, vecstrQuery.size(), (int) 0);
 
 		//only analyze and report on user datasets
-		const vector<ushort> &allRDatasets = mapUserDatasets->GetAllReverse();
-		ushort iUserDatasets = mapUserDatasets->GetNumSet();
-		ushort dd;
+		const vector<utype> &allRDatasets = mapUserDatasets->GetAllReverse();
+		utype iUserDatasets = mapUserDatasets->GetNumSet();
+		utype dd;
 		for(dd=0; dd<iUserDatasets; dd++){
 			i = allRDatasets[dd];
 			//fprintf(stdout, "%d %d %s\n", i, dd, vecstrDatasets[i].c_str());
@@ -233,7 +233,7 @@ int main( int iArgs, char** aszArgs ) {
 				}
 
 			}else{
-				ushort present = 0;
+				utype present = 0;
 				for(j=0, present=0; j<vecstrQuery.size(); j++){
 					if(mapstrintGene.find(vecstrQuery[j])==mapstrintGene.end())
 						continue;
@@ -314,7 +314,7 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 		vector<char> cQuery;
-		vector<ushort> allQ;
+		vector<utype> allQ;
 		CSeekTools::InitVector(cQuery, iGenes, (char) 0);
 
 		for(i=0; i<vecstrQuery.size(); i++){
@@ -348,7 +348,7 @@ int main( int iArgs, char** aszArgs ) {
 				CSeekIntIntMap *qu = vc[j]->GetDBMap();
 				if(qu==NULL) continue;
 				unsigned char **r = vc[j]->GetMatrix();
-				ushort query = qu->GetForward(m);
+				utype query = qu->GetForward(m);
 				if(CSeekTools::IsNaN(query)) continue;
 			    for(k=0; k<iGenes; k++){
 			    	unsigned char c = Q[i][k*iDatasets + j];

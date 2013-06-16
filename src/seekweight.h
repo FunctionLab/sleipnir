@@ -58,7 +58,7 @@ public:
 	 * A dataset
 	 *
 	 * \param MIN_REQUIRED
-	 * A ushort that specifies how many query genes are required to be present in a dataset.
+	 * A utype that specifies how many query genes are required to be present in a dataset.
 	 * If not enough query genes are present, then the averaging is not performed.
 	 *
 	 * \param bSquareZ
@@ -70,9 +70,9 @@ public:
 	 *
 	 */
 	/*cv_query must be present in sDataset */
-	static bool LinearCombine(vector<ushort> &rank,
-		const vector<ushort> &cv_query, CSeekDataset &sDataset,
-		const ushort &, const bool &);
+	static bool LinearCombine(vector<utype> &rank,
+		const vector<utype> &cv_query, CSeekDataset &sDataset,
+		const utype &, const bool &);
 
 	/*!
 	 * \brief
@@ -114,7 +114,7 @@ public:
 	 */
 	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 		const float &rate, const float &percent_required, const bool &bsquareZ,
-		vector<ushort> *rrank, const CSeekQuery *goldStd = NULL);
+		vector<utype> *rrank, const CSeekQuery *goldStd = NULL);
 
 	/*!
 	 * \brief
@@ -147,8 +147,8 @@ public:
 	 * that derived from a set of datasets with randomly ordered correlation vectors (ie a null distribution). 
 	 * A significance p-value is calculated for this gene, and \a -log(p) values are stored in master_rank. 
 	 */
-	static bool OrderStatisticsRankAggregation(const ushort&, const ushort&,
-		ushort**, const vector<ushort> &, vector<float>&, const ushort&);
+	static bool OrderStatisticsRankAggregation(const utype&, const utype&,
+		utype**, const vector<utype> &, vector<float>&, const utype&);
 	static bool OrderStatisticsPreCompute();
 
 
@@ -188,7 +188,7 @@ public:
 	 */
 	static bool OneGeneWeighting(CSeekQuery&, 
 		CSeekDataset&, const float&, const float&, const bool&, 
-		vector<ushort>*, const CSeekQuery*);
+		vector<utype>*, const CSeekQuery*);
 };
 
 

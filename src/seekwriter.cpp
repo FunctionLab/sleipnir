@@ -29,8 +29,8 @@ bool CSeekWriter::GetGeneAverage(CDataPair &Dat,
 	vector<float> &vecResult, bool logit, float top_percent){
 
 	/* assume datapair is already opened */
-	ushort i, j;
-	vector<ushort> veciGenes;
+	utype i, j;
+	vector<utype> veciGenes;
 	veciGenes.clear();
 	veciGenes.resize(vecstrGenes.size());
 	for( i = 0; i < vecstrGenes.size( ); ++i )
@@ -38,14 +38,14 @@ bool CSeekWriter::GetGeneAverage(CDataPair &Dat,
 
 	CSeekTools::InitVector(vecResult, vecstrGenes.size(), CMeta::GetNaN());
 	for(i=0; i<vecstrGenes.size(); i++){
-		ushort s = veciGenes[i];
+		utype s = veciGenes[i];
 		if(CSeekTools::IsNaN(s)) continue;
 		float *v = Dat.GetFullRow(s);
 		float sum = 0;
-		ushort num = 0;
+		utype num = 0;
 		vector<float> all;
 		for(j=0; j<vecstrGenes.size(); j++){
-			ushort t = veciGenes[j];
+			utype t = veciGenes[j];
 			if(CSeekTools::IsNaN(t)) continue;
 			if(CMeta::IsNaN(v[t])) continue;
 			if(logit){
@@ -78,8 +78,8 @@ bool CSeekWriter::GetGenePresence(CDataPair &Dat,
 	const vector<string> &vecstrGenes,
 	vector<char> &vecResult){
 	/* assume datapair is already opened */
-	ushort i, j;
-	vector<ushort> veciGenes;
+	utype i, j;
+	vector<utype> veciGenes;
 	veciGenes.clear();
 	veciGenes.resize(vecstrGenes.size());
 	for( i = 0; i < vecstrGenes.size( ); ++i )
@@ -96,17 +96,17 @@ bool CSeekWriter::GetGenePresence(CDataPair &Dat,
 
 bool CSeekWriter::GetDatasetSinfo(CDataPair &Dat,
 	float &mean, float &stdev){
-	ushort i, j;
+	utype i, j;
 	mean = CMeta::GetNaN();
 	stdev = CMeta::GetNaN();
 
-	ushort iGenes = Dat.GetGenes();
+	utype iGenes = Dat.GetGenes();
 
 	unsigned int num = 0;
 	float sum = 0;
 
 	for(i=0; i<iGenes; i++){
-		ushort s = i;
+		utype s = i;
 		float *v = Dat.GetFullRow(s);
 		for(j=0; j<iGenes; j++){
 			if(CMeta::IsNaN(v[j])) continue;
@@ -120,7 +120,7 @@ bool CSeekWriter::GetDatasetSinfo(CDataPair &Dat,
 	mean = sum / (float) num;
 	float diff = 0;
 	for(i=0; i<iGenes; i++){
-		ushort s = i;
+		utype s = i;
 		float *v = Dat.GetFullRow(s);
 		for(j=0; j<iGenes; j++){
 			if(CMeta::IsNaN(v[j])) continue;

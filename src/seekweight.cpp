@@ -27,9 +27,9 @@ namespace Sleipnir {
 
 //MIN_REQUIRED is for a given gene A, the minimum query genes required that
 //correlate with A in order to count A's query score
-bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
-	const vector<ushort> &cv_query, CSeekDataset &sDataset,
-	const ushort &MIN_REQUIRED, const bool &bSquareZ){
+bool CSeekWeighter::LinearCombine(vector<utype> &rank,
+	const vector<utype> &cv_query, CSeekDataset &sDataset,
+	const utype &MIN_REQUIRED, const bool &bSquareZ){
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
@@ -39,34 +39,34 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 		cerr << "cv_query empty" << endl;
 		return true;
 	}
-	ushort i, j, g, q;
-	vector<ushort>::const_iterator iter;
+	utype i, j, g, q;
+	vector<utype>::const_iterator iter;
 
-	ushort iNumGenes = sDataset.GetNumGenes();
-	ushort q_size = cv_query.size();
-	ushort **f = sDataset.GetDataMatrix();
+	utype iNumGenes = sDataset.GetNumGenes();
+	utype q_size = cv_query.size();
+	utype **f = sDataset.GetDataMatrix();
 
 	//rank.resize(iNumGenes);
-	CSeekTools::InitVector(rank, iNumGenes, (ushort) 0);
+	CSeekTools::InitVector(rank, iNumGenes, (utype) 0);
 
 	/* as long as rank[g] does not overflow, due to too many queries, we are fine
 	 * should control query size to be <100. */
-	vector<ushort> queryPos;
+	vector<utype> queryPos;
 	queryPos.resize(q_size);
 	for(i=0; i<q_size; i++) queryPos[i] = mapQ->GetForward(cv_query[i]);
 
 	sort(queryPos.begin(), queryPos.end());
 
-	vector<ushort> offset;
+	vector<utype> offset;
 	offset.push_back(0);
 	for(i=1; i<q_size; i++) offset.push_back(queryPos[i] - queryPos[i-1]);
 	offset.resize(offset.size());
 
-	vector<ushort>::iterator iter_g;
-	vector<ushort>::const_iterator iterOffset;
-	ushort **pf;
-	ushort *pp;
-	ushort totNonZero, tmpScore;
+	vector<utype>::iterator iter_g;
+	vector<utype>::const_iterator iterOffset;
+	utype **pf;
+	utype *pp;
+	utype totNonZero, tmpScore;
 
 	//special case, no MIN_REQUIRED
 	if(MIN_REQUIRED==1){
@@ -80,7 +80,7 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 					if((*pp)==0) continue;
 					float sc = (float) ((*pp) - 320) / 100.0; 
 					sc = fabs(sc) + 1.0; //add one adjustment, suitable if cutoff=0
-					tmpScore += (ushort) (sc * sc * 100.0 + 320.0);
+					tmpScore += (utype) (sc * sc * 100.0 + 320.0);
 					++totNonZero;
 				}
 				if(totNonZero==0) continue;
@@ -117,7 +117,7 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 					if((*pp)==0) continue;
 					float sc = (float) ((*pp) - 320) / 100.0;
 					sc = fabs(sc) + 1.0; //add one adjustment, suitable for cutoff=0
-					tmpScore += (ushort) (sc * sc * 100.0 + 320.0);
+					tmpScore += (utype) (sc * sc * 100.0 + 320.0);
 					++totNonZero;
 				}
 				//if enough query edges passed the cut off 
@@ -149,11 +149,11 @@ bool CSeekWeighter::LinearCombine(vector<ushort> &rank,
 }
 
 bool CSeekWeighter::OrderStatisticsPreCompute(){
-	ushort cc, dd, kk;
+	utype cc, dd, kk;
 	vector<float> all;
 	all.resize(1100*600*600);
 
-	ushort i = 0;
+	utype i = 0;
 	for(kk=0; kk<22000; kk+=20){
 		float p = (float) (kk + 1) / 22000;
 		for(dd=0; dd<3000; dd+=5){
@@ -172,9 +172,9 @@ bool CSeekWeighter::OrderStatisticsPreCompute(){
 	//fprintf(stderr, "Done saving\n"); //getchar();
 }
 
-bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
-	const ushort &iGenes, ushort **rank_d, const vector<ushort> &counts,
-	vector<float> &master_rank, const ushort &numThreads){
+bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
+	const utype &iGenes, utype **rank_d, const vector<utype> &counts,
+	vector<float> &master_rank, const utype &numThreads){
 
 	//vector<float> precompute;
 	//CSeekTools::ReadArray("/tmp/order_stats.binomial.bin", precompute);
@@ -188,7 +188,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 
 	master_rank.clear();
 	master_rank.resize(iGenes);
-	ushort i, j, k, dd, d;
+	utype i, j, k, dd, d;
 
 	//Zero out genes that are present in few datasets (<50%)
 	for(k=0; k<iGenes; k++)
@@ -203,7 +203,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 
 	for(j=0; j<iDatasets; j++){
 		vector<AResult> this_d;
-		ushort numNonZero = 0;
+		utype numNonZero = 0;
 		for(k=0; k<iGenes; k++){
 			if(rank_d[j][k]>0) numNonZero++;
 		}
@@ -249,7 +249,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 	shared(rank_f, gss, perms, rks) private(k, dd) \
 	schedule(dynamic)
 	for(k=0; k<iGenes; k++){
-		ushort tid = omp_get_thread_num();
+		utype tid = omp_get_thread_num();
 		gsl_vector_float *gs = gss[tid];
 		gsl_permutation *perm = perms[tid];
 		gsl_permutation *rk = rks[tid];
@@ -321,7 +321,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const ushort &iDatasets,
 bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery, 
 	CSeekDataset &sDataset, const float &rate, 
 	const float &percent_required, const bool &bSquareZ,
-	vector<ushort> *rrank, const CSeekQuery *goldStd){
+	vector<utype> *rrank, const CSeekQuery *goldStd){
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
@@ -329,24 +329,25 @@ bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery,
 
 	sDataset.InitializeCVWeight(1);
 
-	ushort i, j, qi, qj;
+	utype i, j, qi, qj;
 
 	vector<char> is_query, is_gold;
 	CSeekTools::InitVector(is_query, sDataset.GetNumGenes(), (char) 0);
 	CSeekTools::InitVector(is_gold, sDataset.GetNumGenes(), (char) 0);
 
-	vector<ushort> &rank = *rrank;
+	vector<utype> &rank = *rrank;
 
-	ushort TOP = 1000;
+	utype TOP = 1000;
+	//utype TOP = 0;
 	vector<AResult> ar;
 	ar.resize(rank.size());
 
-	const vector<ushort> &allQ = sQuery.GetQuery();
-	vector<ushort> query;
-	ushort num_q = 0;
-	ushort num_v = 0;
+	const vector<utype> &allQ = sQuery.GetQuery();
+	vector<utype> query;
+	utype num_q = 0;
+	utype num_v = 0;
 
-	const vector<ushort> &vi = sQuery.GetCVQuery(qi);
+	const vector<utype> &vi = sQuery.GetCVQuery(qi);
 
 	/* Set up query and gold standard */
 	for(i=0; i<allQ.size(); i++){
@@ -358,7 +359,7 @@ bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery,
 
 	//assume goldStd must not be null
 	assert(goldStd!=NULL);
-	const vector<ushort> &allGoldStd = goldStd->GetQuery();
+	const vector<utype> &allGoldStd = goldStd->GetQuery();
 	for(i=0; i<allGoldStd.size(); i++){
 		if(CSeekTools::IsNaN(mapG->GetForward(allGoldStd[i])))
 			continue;
@@ -372,8 +373,8 @@ bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery,
 	}else{
 		/* actual weighting */
 		float w = 0;
-		const ushort MIN_QUERY_REQUIRED =
-			max((ushort) 1, (ushort) (percent_required * query.size()));
+		const utype MIN_QUERY_REQUIRED =
+			max((utype) 1, (utype) (percent_required * query.size()));
 		bool ret = LinearCombine(rank, query, sDataset,
 			MIN_QUERY_REQUIRED, bSquareZ);
 		ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
@@ -388,36 +389,36 @@ bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery,
 
 bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 	const float &rate, const float &percent_required, const bool &bSquareZ,
-	vector<ushort> *rrank, const CSeekQuery *goldStd){
+	vector<utype> *rrank, const CSeekQuery *goldStd){
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
 	if(mapQ==NULL) return true;
 
-	ushort iFold = sQuery.GetNumFold();
+	utype iFold = sQuery.GetNumFold();
 	sDataset.InitializeCVWeight(iFold);
 
-	ushort i, j, qi, qj;
+	utype i, j, qi, qj;
 
 	vector<char> is_query_cross, is_gold;
 	CSeekTools::InitVector(is_query_cross, sDataset.GetNumGenes(), (char) 0);
 	CSeekTools::InitVector(is_gold, sDataset.GetNumGenes(), (char) 0);
 
-	vector<ushort> &rank = *rrank;
+	vector<utype> &rank = *rrank;
 
-	ushort TOP = 1000;
-	//ushort TOP = 0; //disable TOP approximation
+	utype TOP = 1000;
+	//utype TOP = 0; //disable TOP approximation
 	vector<AResult> ar;
 	ar.resize(rank.size());
 
-	const vector<ushort> &allQ = sQuery.GetQuery();
+	const vector<utype> &allQ = sQuery.GetQuery();
 
 	for(qi=0; qi<iFold; qi++){
-		vector<ushort> cv_query;
-		ushort num_q = 0;
-		ushort num_v = 0;
+		vector<utype> cv_query;
+		utype num_q = 0;
+		utype num_v = 0;
 
-		const vector<ushort> &vi = sQuery.GetCVQuery(qi);
+		const vector<utype> &vi = sQuery.GetCVQuery(qi);
 
 		/* Set up query and gold standard */
 		for(i=0; i<vi.size(); i++){
@@ -436,7 +437,7 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 				num_v++;
 			}
 		}else{
-			const vector<ushort> &allGoldStd = goldStd->GetQuery();
+			const vector<utype> &allGoldStd = goldStd->GetQuery();
 			//Use custom gene-set as gold standard
 			for(i=0; i<allGoldStd.size(); i++){
 				if(CSeekTools::IsNaN(mapG->GetForward(allGoldStd[i])))
@@ -453,8 +454,8 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 		}else{
 			/* actual weighting */
 			float w = 0;
-			const ushort MIN_QUERY_REQUIRED =
-				max((ushort) 1, (ushort) (percent_required * cv_query.size()));
+			const utype MIN_QUERY_REQUIRED =
+				max((utype) 1, (utype) (percent_required * cv_query.size()));
 			bool ret = LinearCombine(rank, cv_query, sDataset,
 				MIN_QUERY_REQUIRED, bSquareZ);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
@@ -479,7 +480,7 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 				is_gold[allQ[i]]=0;
 			}
 		}else{
-			const vector<ushort> &allGoldStd = goldStd->GetQuery();
+			const vector<utype> &allGoldStd = goldStd->GetQuery();
 			for(i=0; i<allGoldStd.size(); i++){
 				if(CSeekTools::IsNaN(mapG->GetForward(allGoldStd[i])))
 					continue;

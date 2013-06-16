@@ -28,8 +28,8 @@
 namespace Sleipnir {
 
 struct AResult{
-	unsigned short i;
-	unsigned short f;
+	utype i;
+	utype f;
 	bool operator<(const AResult& val) const{
 		/*if(f<=val.f){
 			return false;
@@ -57,7 +57,7 @@ struct Ascending{
 
 
 struct AResultFloat{
-	unsigned short i;
+	utype i;
 	float f;
 	bool operator<(const AResultFloat& val) const{
 		/*if(f<=val.f){
@@ -107,9 +107,9 @@ public:
 	 * The struct \c AResult represents a (gene ID, gene score) pair. This function sorts the vector of
 	 * \c AResult in the descending order of the gene score.
 	 */
-	static bool SortRankVector(const vector<unsigned short> &rank,
+	static bool SortRankVector(const vector<utype> &rank,
 		const CSeekIntIntMap &mapG, vector<AResult> &a,
-		const ushort top = 0);
+		const utype top = 0);
 
 	/*!
 	 * \brief Calculate the rank-biased precision for a gene ranking
@@ -137,11 +137,11 @@ public:
 	/* designed specifically for a CSeekDataset */
 	/* mask: the query genes which are not included in RBP calcualtion */
 	static bool RankBiasedPrecision(const float &rate,
-		const vector<unsigned short> &rank, float &rbp,
+		const vector<utype> &rank, float &rbp,
 		const vector<char> &mask, const vector<char> &gold,
 		const CSeekIntIntMap &mapG, vector<AResult> *sing,
 		/* optional */
-		const ushort top = 0);
+		const utype top = 0);
 
 	/*!
 	 * \brief Calculate the average precision for a gene ranking
@@ -154,7 +154,7 @@ public:
 	 * \param ar The sorted vector of (gene ID, gene score) pairs
 	 */
 	static bool AveragePrecision(
-		const vector<unsigned short> &rank, float &ap,
+		const vector<utype> &rank, float &ap,
 		const vector<char> &mask, const vector<char> &gold,
 		const CSeekIntIntMap &mapG, vector<AResult> *ar);
 

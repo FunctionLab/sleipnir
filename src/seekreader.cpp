@@ -29,21 +29,21 @@ string CSeekTools::ConvertInt(const int &number){
 	return ss.str();//return a string with the contents of the stream
 }
 
-bool CSeekTools::IsNaN(const ushort &v){
-	if(v==65535) return true;
+bool CSeekTools::IsNaN(const utype &v){
+	if(v==MAX_UTYPE) return true;
 	return false;
 }
 
-ushort CSeekTools::GetNaN(){
-	return 65535;
+utype CSeekTools::GetNaN(){
+	return MAX_UTYPE;
 }
 
 bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
 	const size_t &iGenes, const size_t &iDatasets,
 	const vector< vector<string> > &vecstrAllQuery,
-	vector<CSeekDataset*> &vc, const map<string,ushort> &mapstriGenes,
+	vector<CSeekDataset*> &vc, const map<string,utype> &mapstriGenes,
 	const vector<vector<string> > &dbDatasets,
-	const map<string,ushort> &mapstriDatasets,
+	const map<string,utype> &mapstriDatasets,
 	//network mode (data sent to client)
 	const int &iClient, const bool &bNetwork){
 
@@ -56,12 +56,12 @@ bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
 	for(i=0; i<vecstrAllQuery.size(); i++){
 		for(j=0; j<vecstrAllQuery[i].size(); j++){
 			if(mapstriGenes.find(vecstrAllQuery[i][j])==mapstriGenes.end()) continue;
-			ushort k = mapstriGenes.find(vecstrAllQuery[i][j])->second;
+			utype k = mapstriGenes.find(vecstrAllQuery[i][j])->second;
 			cAllQuery[k] = 1;
 		}
 	}
 
-	vector<ushort> allQ;
+	vector<utype> allQ;
 	for(i=0; i<cAllQuery.size(); i++) if(cAllQuery[i]==1) allQ.push_back(i);
 	allQ.resize(allQ.size());
 
@@ -117,12 +117,12 @@ bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
 				cerr << "Gene does not exist" << endl;
 				continue;
 			}
-			ushort db;
+			utype db;
 			CSeekIntIntMap *qu = NULL;
 			unsigned char **r = NULL;
-			vector<ushort> vecDatasetID;
+			vector<utype> vecDatasetID;
 			for(j=0; j<dbDatasets[d].size(); j++){
-				ushort qq = mapstriDatasets.find(dbDatasets[d][j])->second;
+				utype qq = mapstriDatasets.find(dbDatasets[d][j])->second;
 				vecDatasetID.push_back(qq);
 			}
 			#pragma omp parallel for \
@@ -158,14 +158,14 @@ bool CSeekTools::ReadQuantFile(const char *file, vector<float> &quant, const int
 	ifstream ifsm;
 	ifsm.open(file);
 	char acBuffer[lineSize];
-	ushort c_iBuffer = lineSize;
+	utype c_iBuffer = lineSize;
 	vector<string> vecstrLine;
 
 	ifsm.getline(acBuffer, c_iBuffer -1);
 	//fprintf(stderr, "%s\n", acBuffer);
 	CMeta::Tokenize( acBuffer, vecstrLine, " ", false);
 	quant.clear();
-	ushort i;
+	utype i;
 	for(i=0; i<vecstrLine.size(); i++){
 		quant.push_back(atof(vecstrLine[i].c_str()));
 		//fprintf(stderr, "%.5f\n", atof(vecstrLine[i].c_str()));
@@ -181,7 +181,7 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 	vector<CSeekPlatform> &vp, const vector<CSeekPlatform> &vp_src, 
 	const vector<string> &vecstrDatasets,
 	const map<string, string> &mapstrstrDatasetPlatform, 
-	const map<string, ushort> &mapstriPlatform){
+	const map<string, utype> &mapstriPlatform){
 
 	size_t i, j, k;
 
@@ -209,7 +209,7 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 		string strFileStem = vecstrDatasets[i];
 		string strPlatform =
 			mapstrstrDatasetPlatform.find(strFileStem)->second;
-		ushort platform_id = mapstriPlatform.find(strPlatform)->second;
+		utype platform_id = mapstriPlatform.find(strPlatform)->second;
 		vc[i]->SetPlatform(vp[platform_id]);
 	}
 
@@ -222,9 +222,9 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 	const vector<CSeekDBSetting*> &DBSetting,
 	const vector<string> &vecstrDatasets,
 	const map<string, string> &mapstrstrDatasetPlatform,
-	const map<string, ushort> &mapstriPlatform, vector<CSeekPlatform> &vp,
+	const map<string, utype> &mapstriPlatform, vector<CSeekPlatform> &vp,
 	vector<CSeekDataset*> &vc, const vector<vector<string> > &dbDataset,
-	const map<string,ushort> &mapstriDataset,
+	const map<string,utype> &mapstriDataset,
 	const bool bVariance, const bool bCorrelation){
 
 	size_t i, j, k;
@@ -260,7 +260,7 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 		string strSinfoInputDirectory = DBSetting[i]->GetValue("sinfo");
 
 		for(j=0; j<dset.size(); j++){
-			ushort d = mapstriDataset.find(dset[j])->second;
+			utype d = mapstriDataset.find(dset[j])->second;
 			vc[d] = new CSeekDataset();
 			string strFileStem = dset[j];
 			string strAvgPath = strPrepInputDirectory + "/" +
@@ -281,7 +281,7 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 			}
 			string strPlatform =
 				mapstrstrDatasetPlatform.find(strFileStem)->second;
-			ushort platform_id = mapstriPlatform.find(strPlatform)->second;
+			utype platform_id = mapstriPlatform.find(strPlatform)->second;
 			vc[d]->SetPlatform(vp[platform_id]);
 		}
 	}
@@ -300,14 +300,14 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 
 bool CSeekTools::ReadPlatforms(const string &strPlatformDirectory,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
-		map<string, ushort> &mapstriPlatforms, const int lineSize){
+		map<string, utype> &mapstriPlatforms, const int lineSize){
 	return CSeekTools::ReadPlatforms(strPlatformDirectory.c_str(), plat,
 		vecstrPlatforms, mapstriPlatforms, lineSize);
 }
 
 bool CSeekTools::ReadPlatforms(const char *plat_dir,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
-		map<string, ushort> &mapstriPlatforms, const int lineSize){
+		map<string, utype> &mapstriPlatforms, const int lineSize){
 
 	string strPlatformDirectory = plat_dir;
 	string strAvgFile = strPlatformDirectory + "/" +
@@ -323,14 +323,14 @@ bool CSeekTools::ReadPlatforms(const char *plat_dir,
 	plat_stdev.Open(strStdevFile.c_str());
 	plat.clear();
 	plat.resize(plat_avg.GetRows());
-	ushort i, j;
+	utype i, j;
 
 	vecstrPlatforms.clear();
 	mapstriPlatforms.clear();
 	ifstream ifsm;
 	ifsm.open(strPlatformOrderFile.c_str());
 	char acBuffer[lineSize];
-	ushort c_iBuffer = lineSize;
+	utype c_iBuffer = lineSize;
 	i = 0;
 	while(!ifsm.eof()){
 		ifsm.getline(acBuffer, c_iBuffer -1);
@@ -370,7 +370,7 @@ bool CSeekTools::ReadListTwoColumns(const char *file,
 		return false;
 	}
 	char acBuffer[lineSize];
-	ushort c_iBuffer = lineSize;
+	utype c_iBuffer = lineSize;
 	vecstrList1.clear();
 	vecstrList2.clear();
 
@@ -406,7 +406,7 @@ bool CSeekTools::ReadListOneColumn(const char *file,
 	}
 
 	char acBuffer[lineSize];
-	ushort c_iBuffer = lineSize;
+	utype c_iBuffer = lineSize;
 	vecstrList.clear();
 
 	int i = 0;
@@ -514,7 +514,7 @@ bool CSeekTools::ReadListOneColumn(const char *file,
 		return false;
 	}
 	char acBuffer[lineSize];
-	ushort c_iBuffer = lineSize;
+	utype c_iBuffer = lineSize;
 	vecstrList.clear();
 	int i = 0;
 	while(!ifsm.eof()){

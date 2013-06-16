@@ -23,22 +23,22 @@
 namespace Sleipnir {
 
 bool CSeekPerformanceMeasure::SortRankVector(
-	const vector<unsigned short> &rank,
+	const vector<utype> &rank,
 	const CSeekIntIntMap &mapG, vector<AResult> &a,
 	//optional argument
-	const ushort top){
+	const utype top){
 
-	ushort numGenesD = mapG.GetNumSet();
-	ushort TOP = 0;
-	ushort numNonZero = 0;
-	ushort i;
+	utype numGenesD = mapG.GetNumSet();
+	utype TOP = 0;
+	utype numNonZero = 0;
+	utype i;
 	bool DEBUG = false;
 
 	//a should be the same size as rank
 	if(top==0) TOP = rank.size();
 	else TOP = top;
 
-	vector<ushort>::const_iterator itRank = rank.begin();
+	vector<utype>::const_iterator itRank = rank.begin();
 	vector<AResult>::iterator itA = a.begin();
 	for(i = 0; itRank!=rank.end(); itRank++, itA++, i++){
 		itA->i = i;
@@ -65,16 +65,16 @@ bool CSeekPerformanceMeasure::SortRankVector(
 /* designed specifically for a CSeekDataset */
 /* mask: the query genes which are not included in RBP calcualtion */
 bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
-	const vector<unsigned short> &rank, float &rbp,
+	const vector<utype> &rank, float &rbp,
 	const vector<char> &mask, const vector<char> &gold,
 	const CSeekIntIntMap &mapG, vector<AResult> *ar,
 	/* optional arguments */
-	const ushort top){
+	const utype top){
 
-	ushort i, ii, j, jj;
+	utype i, ii, j, jj;
 	float x;
 
-	ushort TOP = top;
+	utype TOP = top;
 	if(top==0) TOP = rank.size();
 
 	//ar should be same size as rank
@@ -109,14 +109,14 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 }
 
 bool CSeekPerformanceMeasure::AveragePrecision(
-	const vector<unsigned short> &rank, float &ap,
+	const vector<utype> &rank, float &ap,
 	const vector<char> &mask, const vector<char> &gold,
 	const CSeekIntIntMap &mapG, vector<AResult> *ar){
 
-	ushort i, ii, j, jj;
+	utype i, ii, j, jj;
 	float x;
 
-	ushort TOP = rank.size();
+	utype TOP = rank.size();
 
 	//ar should be same size as rank
 	vector<AResult> *sing = ar;

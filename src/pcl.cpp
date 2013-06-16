@@ -305,6 +305,46 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 				for (j = (i + 1); j < Dat.GetGenes(); ++j)
 					if (!CMeta::IsNaN(d = Dat.Get(i, j)) && (d < dCutoff))
 						Dat.Set(i, j, CMeta::GetNaN());
+
+		if(pMeasure->GetName()=="pearson" || pMeasure->GetName()=="pearnorm"){
+			vector<unsigned long> bins;
+			bins.resize(55);
+			float upper = 0;
+			float lower = 0;
+			if(pMeasure->GetName()=="pearson"){
+				upper = 1.0;
+				lower = -1.0;
+			}else if(pMeasure->GetName()=="pearnorm"){
+				upper = 5.0;
+				lower = -5.0;
+			}
+			float bin_size = (upper - lower) / 50;
+			for(i=0; i<55; i++)
+				bins[i] = 0;
+			for(i=0; i<Dat.GetGenes(); i++){
+				for(j=i+1; j<Dat.GetGenes(); j++){
+					d = Dat.Get(i,j);
+					if(CMeta::IsNaN(d)) continue;
+					int b = (int) ((d - lower) / bin_size);
+					if(b<0){
+						bins[0]++;
+						continue;
+					}
+					if(b>=55){
+						bins[54]++;
+						continue;
+					}
+					bins[b]++;
+				}
+			}
+			g_CatSleipnir().info(
+			"Distribution of distances: bin size: %.5f, number of bins: %d, min bin value: %.5f, max bin value: %.5f",
+			bin_size, 55, lower, upper);
+			for(i=0; i<55; i++){
+				g_CatSleipnir().info("%lu\t%lu", i, bins[i]);
+			}
+		}
+
 	}
 
 	return 0;
@@ -546,8 +586,46 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 				for (j = (i + 1); j < Dat.GetGenes(); ++j)
 					if (!CMeta::IsNaN(d = Dat.Get(i, j)) && (d < dCutoff))
 						Dat.Set(i, j, CMeta::GetNaN());
-	}
 
+		if(pMeasure->GetName()=="pearson" || pMeasure->GetName()=="pearnorm"){
+			vector<unsigned long> bins;
+			bins.resize(55);
+			float upper = 0;
+			float lower = 0;
+			if(pMeasure->GetName()=="pearson"){
+				upper = 1.0;
+				lower = -1.0;
+			}else if(pMeasure->GetName()=="pearnorm"){
+				upper = 5.0;
+				lower = -5.0;
+			}
+			float bin_size = (upper - lower) / 50;
+			for(i=0; i<55; i++)
+				bins[i] = 0;
+			for(i=0; i<Dat.GetGenes(); i++){
+				for(j=i+1; j<Dat.GetGenes(); j++){
+					d = Dat.Get(i,j);
+					if(CMeta::IsNaN(d)) continue;
+					int b = (int) ((d - lower) / bin_size);
+					if(b<0){
+						bins[0]++;
+						continue;
+					}
+					if(b>=55){
+						bins[54]++;
+						continue;
+					}
+					bins[b]++;
+				}
+			}
+			g_CatSleipnir().info(
+			"Distribution of distances: bin size: %.5f, number of bins: %d, min bin value: %.5f, max bin value: %.5f",
+			bin_size, 55, lower, upper);
+			for(i=0; i<55; i++){
+				g_CatSleipnir().info("%lu\t%lu", i, bins[i]);
+			}
+		}
+	}
 	return 0;
 }
 

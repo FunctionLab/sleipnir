@@ -161,7 +161,7 @@ public:
 		const vector<CSeekDBSetting*> &vecDBSetting,
 		const char *search_dset, const char *query,
 		const char* output_dir,
-		const ushort buffer = 20, const bool to_output_text = false,
+		const utype buffer = 20, const bool to_output_text = false,
 		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
 		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
 		const bool bSubtractAvg = true, const bool bNormPlatform = false,
@@ -214,7 +214,7 @@ public:
      */
 	bool Initialize(
 		const vector<CSeekDBSetting*> &vecDBSetting,
-		const ushort buffer = 20, const bool to_output_text = false,
+		const utype buffer = 20, const bool to_output_text = false,
 		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
 		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
 		const bool bSubtractAvg = true, const bool bNormPlatform = false,
@@ -260,7 +260,7 @@ public:
 	 * \remark The random number generator is used for partitioning the query.
 	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
 	 */
-	bool CVSearch(gsl_rng*, const CSeekQuery::PartitionMode&, const ushort&, const float&);
+	bool CVSearch(gsl_rng*, const CSeekQuery::PartitionMode&, const utype&, const float&);
 
 	/*!
 	 * \brief Run Seek with the custom dataset weighting
@@ -278,7 +278,7 @@ public:
 	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
 	 */
 	bool CVCustomSearch(const vector< vector<string> > &, gsl_rng*,
-		const CSeekQuery::PartitionMode&, const ushort&, const float&);
+		const CSeekQuery::PartitionMode&, const utype&, const float&);
 
 	/*!
 	 * \brief Run Seek with the equal dataset weighting
@@ -339,14 +339,14 @@ public:
 	 * \param strGene The \a gene-name as a \c string
 	 * \return The gene-map ID
 	 */
-	ushort GetGene(const string &strGene) const;
+	utype GetGene(const string &strGene) const;
 
 	/*!
 	 * \brief Get the \a gene-name for a given gene-map ID
 	 * \param geneID The gene-map ID
 	 * \return The \a gene-name as a \c string
 	 */
-	string GetGene(const ushort &geneID) const;
+	string GetGene(const utype &geneID) const;
 
 	/*!
 	 * \brief Destruct this search instance
@@ -362,21 +362,21 @@ private:
 	/* Central search function */
 	bool Common(CSeekCentral::SearchMode&, gsl_rng* = NULL,
 		const CSeekQuery::PartitionMode* = NULL,
-		const ushort* = NULL, const float* = NULL,
+		const utype* = NULL, const float* = NULL,
 		const vector< vector<float> >* = NULL,
 		const vector< vector<string> >* = NULL);
 
-	bool CheckWeight(const ushort &i);
+	bool CheckWeight(const utype &i);
 	bool CopyTopGenes(CSeekQuery&, const vector<AResultFloat>&, 
-		const ushort);
+		const utype);
 	bool SetQueryScoreNull(const CSeekQuery&);
 	bool PrepareQuery(const vector<string>&, CSeekQuery&);
 	bool CalculateRestart();
 	bool PrepareOneQuery(CSeekQuery &, CSeekIntIntMap &, vector<float>&);
 	bool AggregateThreads();
-	bool FilterResults(const ushort &);
+	bool FilterResults(const utype &);
 	bool Sort(vector<AResultFloat> &);
-	bool Write(const ushort &);
+	bool Write(const utype &);
 	bool Display(CSeekQuery &, vector<AResultFloat>&);
 
 	/* Gene, Dataset, and Platform Mapping*/
@@ -384,8 +384,8 @@ private:
 	vector<string> m_vecstrDatasets;
 	vector<string> m_vecstrDP;
 	map<string, string> m_mapstrstrDatasetPlatform;
-	map<string, ushort> m_mapstrintDataset;
-	map<string, ushort> m_mapstrintGene;
+	map<string, utype> m_mapstrintDataset;
+	map<string, utype> m_mapstrintGene;
 	vector<vector<string> > m_vecstrSearchDatasets;
 	vector<CSeekIntIntMap*> m_searchdsetMap;
 
@@ -407,7 +407,7 @@ private:
 
 	/* Gene-gene correlation matrix for all datasets
 	 Organized per thread */
-	ushort ***m_rData;
+	utype ***m_rData;
 
 	/* Correlation discretization */
 	vector<float> m_quant;
@@ -422,14 +422,14 @@ private:
 	/* multi-threaded programming */
 	float **m_master_rank_threads;
 	float **m_sum_weight_threads;
-	ushort **m_counts_threads;
-	vector<ushort> *m_rank_normal_threads;
-	vector<ushort> *m_rank_threads;
+	utype **m_counts_threads;
+	vector<utype> *m_rank_normal_threads;
+	vector<utype> *m_rank_threads;
 
 	/* Essential search results */
 	vector<float> m_master_rank;
 	vector<float> m_sum_weight;
-	vector<ushort> m_counts;
+	vector<utype> m_counts;
 
 	/* Holds results for all queries */
 	vector< vector<float> > m_weight;
@@ -441,7 +441,7 @@ private:
 
 	/* Platform */
 	vector<CSeekPlatform> m_vp;
-	map<string, ushort> m_mapstriPlatform;
+	map<string, utype> m_mapstriPlatform;
 	vector<string> m_vecstrPlatform;
 
 	//CDatabase reference
@@ -450,10 +450,10 @@ private:
 
 	size_t m_iDatasets;
 	size_t m_iGenes;
-	ushort m_numThreads;
+	utype m_numThreads;
 
-	ushort m_maxNumDB;
-	map<ushort, vector< vector<string> > > m_mapLoadTime;
+	utype m_maxNumDB;
+	map<utype, vector< vector<string> > > m_mapLoadTime;
 	bool DEBUG;
 
 	bool m_bOutputWeightComponent;
@@ -464,7 +464,7 @@ private:
 	float m_fPercentQueryAfterScoreCutOff;
 
 	/* for order statistics, a datasets-by-genes matrix */
-	ushort **m_rank_d;
+	utype **m_rank_d;
 
 	/* for network mode */
 	int m_iClient;

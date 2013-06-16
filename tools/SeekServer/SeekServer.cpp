@@ -88,6 +88,7 @@ void *do_query(void *th_arg){
 	}else if(distanceMeasure=="ZscoreHubbinessCorrected"){
 		bSubtractGeneAvg = true;
 		bNormPlatform = true;
+		//bNormPlatform = false;
 	}
 
 	//fprintf(stderr, "%s\n%s\n%s\n%.2f\n", strOutputDir.c_str(), strQuery.c_str(), strSearchDatasets.c_str(), query_fraction_required);
@@ -111,7 +112,7 @@ void *do_query(void *th_arg){
 			T = gsl_rng_default;
 			rnd = gsl_rng_alloc(T);
 			gsl_rng_set(rnd, 100);
-			ushort FOLD = 5;
+			utype FOLD = 5;
 			//enum PartitionMode PART_M = CUSTOM_PARTITION;
 			enum CSeekQuery::PartitionMode PART_M = CSeekQuery::LEAVE_ONE_IN;
 			csu->CVSearch(rnd, PART_M, FOLD, rbp_p);
@@ -166,7 +167,7 @@ int main( int iArgs, char** aszArgs ) {
 	}
 
 	// Random Number Generator Initializations
-	ushort i, j;
+	utype i, j;
 	bool bOutputWeightComponent = true;
 	bool bSimulateWeight = true;
 	bool bSubtractAvg = false;
@@ -190,7 +191,7 @@ int main( int iArgs, char** aszArgs ) {
 			return false;
 		}
 		char acBuffer[lineSize];
-		ushort c_iBuffer = lineSize;
+		utype c_iBuffer = lineSize;
 		map<string,string> parameters;
 		i=0;
 		while(!ifsm.eof()){
@@ -260,7 +261,7 @@ int main( int iArgs, char** aszArgs ) {
 		return -1;
 
 	signal(SIGPIPE, SIG_IGN);
-	//ushort i;
+	//utype i;
 	for(i=0; i<NUM_THREADS; i++){
 		THREAD_OCCUPIED[i] = 0;
 	}

@@ -35,7 +35,7 @@ public:
 		const string &sinfo, const string &plat,
 		const string &prep, const string &db,
 		const string &gene, const string &quant,
-		const string &dset, const ushort &numDB){
+		const string &dset, const utype &numDB){
 		m_gvarDirectory = gvar;
 		m_sinfoDirectory = sinfo;
 		m_platformDirectory = plat;
@@ -50,7 +50,7 @@ public:
 		const char* sinfo, const char* plat,
 		const char* prep, const char* db,
 		const char* gene, const char* quant,
-		const char* dset, const ushort &numDB){
+		const char* dset, const utype &numDB){
 		m_gvarDirectory = gvar;
 		m_sinfoDirectory = sinfo;
 		m_platformDirectory = plat;
@@ -86,7 +86,7 @@ public:
 			return "NULL";
 	}
 
-	ushort GetNumDB(){
+	utype GetNumDB(){
 		return m_numDB;
 	}
 
@@ -99,7 +99,7 @@ private:
 	string m_geneMapFile;
 	string m_quantFile;
 	string m_dsetFile;
-	ushort m_numDB;
+	utype m_numDB;
 };
 
 
@@ -214,7 +214,7 @@ public:
 	 *
 	 * Indicates which query genes are present in the dataset.
 	 */
-	bool InitializeQuery(const vector<ushort> &);
+	bool InitializeQuery(const vector<utype> &);
 
 	/*!
 	 * \brief
@@ -225,7 +225,7 @@ public:
 	 * Flattens all the queries into one vector that contains only the unique query genes, then
 	 * constructs a presence map based on this vector.
 	 */
-	bool InitializeQueryBlock(const vector<ushort> &);
+	bool InitializeQueryBlock(const vector<utype> &);
 
 	/*!
 	 * \brief
@@ -267,8 +267,8 @@ public:
 	 * \endcode
 	 * Then if a \a correlation is 2.5, the discretized value would be 2.
 	 */
-	bool InitializeDataMatrix(ushort**, const vector<float> &,
-		const ushort&, const ushort&, const bool=true, 
+	bool InitializeDataMatrix(utype**, const vector<float> &,
+		const utype&, const utype&, const bool=true, 
 		const bool=false, const bool=false,
 		const enum DistanceMeasure=Z_SCORE,
 		const float cutoff=-1.0*CMeta::GetNaN(), 
@@ -285,12 +285,12 @@ public:
 	 * \brief
 	 * Get the gene-gene \a correlation matrix
 	 *
-	 * \return A two-dimensional array of type \c ushort. Note that the
+	 * \return A two-dimensional array of type \c utype. Note that the
 	 * \a correlation has been scaled to a integer range from 0 to 640.
 	 * See CSeekDataset::InitializeDataMatrix.
 	 *
 	 */
-	ushort** GetDataMatrix();
+	utype** GetDataMatrix();
 
 	/*!
 	 * \brief
@@ -322,24 +322,24 @@ public:
 	 * \brief Get the query genes
 	 * \return A vector of queries
 	 */
-	const vector<ushort>& GetQuery() const;
+	const vector<utype>& GetQuery() const;
 
 	/*!
 	 * \brief Get the query gene indices
 	 * \return A vector of query gene indices
 	 */
-	const vector<ushort>& GetQueryIndex() const;
+	const vector<utype>& GetQueryIndex() const;
 
 	/*!
 	 * \brief Get the gene expression variance vector
 	 * \return The variance vector
 	 */
-	float GetGeneVariance(const ushort&) const;
+	float GetGeneVariance(const utype&) const;
 	/*!
 	 * \brief Get the gene average \a correlation vector
 	 * \return The average \a correlation vector
 	 */
-	float GetGeneAverage(const ushort&) const;
+	float GetGeneAverage(const utype&) const;
 	/*!
 	 * \brief Get the mean of the global gene-gene Pearson distribution
 	 * \return The mean Pearson for the dataset
@@ -354,7 +354,7 @@ public:
 	 * \brief Get the genome size
 	 * \return The genome size
 	 */
-	ushort GetNumGenes() const;
+	utype GetNumGenes() const;
 
 	/*!
 	 * \brief Initialize the weight of the dataset
@@ -364,20 +364,20 @@ public:
 	 * Initializes the total dataset weight, and the score of the
 	 * individual cross-validation (CV) runs. 
 	 */
-	bool InitializeCVWeight(const ushort&);
+	bool InitializeCVWeight(const utype&);
 
 	/*!
 	 * \brief Set the score for a particular cross-validation
 	 * \param i The index
 	 * \param f The validation score
 	 */
-	bool SetCVWeight(const ushort&, const float&);
+	bool SetCVWeight(const utype&, const float&);
 
 	/*!
 	 * \brief Get the score for a particular cross-validation
 	 * \param i The index
 	 */
-	float GetCVWeight(const ushort&);
+	float GetCVWeight(const utype&);
 
 	/*!
 	 * \brief Get all the cross-validation scores
@@ -415,16 +415,16 @@ private:
 
 	CSeekIntIntMap *dbMap;
 	CSeekIntIntMap *queryMap;
-	vector<ushort> query;
-	vector<ushort> queryIndex;
+	vector<utype> query;
+	vector<utype> queryIndex;
 
-	ushort iQuerySize;
-	ushort iNumGenes;
-	ushort iDBSize;
+	utype iQuerySize;
+	utype iNumGenes;
+	utype iDBSize;
 
 	vector<float> weight;
 
-	ushort **rData;
+	utype **rData;
 	unsigned char **r;
 
 	float sum_weight;

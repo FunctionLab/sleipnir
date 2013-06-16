@@ -32,7 +32,7 @@ enum METRIC{
 
 bool GetRandom(gsl_rng *r, const vector<AResultFloat> &geneScore, 
 	vector<AResultFloat> &random, vector<char> &excludeGene,
-	vector<char> &includeGene, vector<ushort> &queryGeneID, 
+	vector<char> &includeGene, vector<utype> &queryGeneID, 
 	const float nan){
 
 	int i, j;
@@ -93,7 +93,7 @@ float RankBiasedPrecision(const float &rate,
 
 	vector<AResultFloat>::const_iterator iterScore = sortedScore.begin();
 	float x = 0;
-	ushort i;
+	utype i;
 	for(i=0; iterScore!=sortedScore.end(); i++, iterScore++){
 		//if(iterScore->f == nanVal) continue;
 		if(gold_std[iterScore->i]==1) x += pow(rate, i);
@@ -105,7 +105,7 @@ float RankBiasedPrecision(const float &rate,
 vector<float>* Precision(const vector<AResultFloat> &sortedScore,
 	const vector<char> &gold_std, const float &nanVal){
 
-	ushort i, numPos = 1;
+	utype i, numPos = 1;
 	vector<float> *r = new vector<float>();
 
 	vector<AResultFloat>::const_iterator iterScore = sortedScore.begin();
@@ -345,7 +345,7 @@ void PrintResult(vector< vector<float> > f){
 }
 
 bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met, 
-	vector<AResultFloat> *sortedGenes, vector<ushort> *queryGeneID, 
+	vector<AResultFloat> *sortedGenes, vector<utype> *queryGeneID, 
 	int listSize, vector<char> *goldstdGenePresence, vector<char> *excludeGene,
 	vector<char> *includeGene, 
 	vector< vector<float> > &result
@@ -356,7 +356,7 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 	vector<AResultFloat> *master = NULL;
 	vector<AResultFloat> master_score;
 	vector<AResultFloat> master_rank;
-	ushort i, j;
+	utype i, j;
 	float nan = sArgs.nan_arg;
 	result.clear();
 
@@ -718,8 +718,8 @@ int main( int iArgs, char** aszArgs ) {
 				sortedDatasets[i].f = ww[i];
 			}
 			sort(sortedDatasets.begin(), sortedDatasets.end());
-			for(i=0; i<100; i++){
-				fprintf(stderr, "%.5f\t%s\n", sortedDatasets[i].f, 
+			for(i=0; i<sortedDatasets.size(); i++){
+				fprintf(stderr, "%.2e\t%s\n", sortedDatasets[i].f, 
 					vecstrDatasets[sortedDatasets[i].i].c_str());
 			}
 			return 0;
@@ -728,7 +728,7 @@ int main( int iArgs, char** aszArgs ) {
 		string queryFile = sArgs.query_arg;
 		vector<string> queryGenes;
 		CSeekTools::ReadMultiGeneOneLine(queryFile, queryGenes);
-		vector<ushort> queryGeneID;
+		vector<utype> queryGeneID;
 		for(i=0; i<queryGenes.size(); i++)
 			queryGeneID.push_back(mapstriGenes[queryGenes[i]]);
 
@@ -877,7 +877,7 @@ int main( int iArgs, char** aszArgs ) {
 		string queryList = sArgs.query_list_arg;
 		vecstrList.clear();
 		CSeekTools::ReadListOneColumn(queryList, vecstrList);
-		vector<ushort> *queryGeneID = new vector<ushort>[vecstrList.size()];
+		vector<utype> *queryGeneID = new vector<utype>[vecstrList.size()];
 		for(i=0; i<vecstrList.size(); i++){
 			vector<string> queryGenes;
 			CSeekTools::ReadMultiGeneOneLine(vecstrList[i], queryGenes);

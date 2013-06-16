@@ -74,7 +74,7 @@ public:
 		//do not change type
 		size_t iSize;
 
-		ushort ret;
+		utype ret;
 		ret = fread((char*) (&iSize), 1, sizeof(iSize), f);
 		vData.clear();
 		vData.resize(iSize);
@@ -187,7 +187,7 @@ public:
 	 * to the given value.
 	 */
 	template<class tType>
-	static bool InitVector(vector<tType> &vData, const ushort &iSize,
+	static bool InitVector(vector<tType> &vData, const utype &iSize,
 		const tType &tValue) {
 		vData.clear();
 		vData.resize(iSize);
@@ -204,7 +204,7 @@ public:
 	 * Resizes the source vector to the given size.
 	 */
 	template<class tType>
-	static bool InitVector(vector<tType> &vData, const ushort &iSize) {
+	static bool InitVector(vector<tType> &vData, const utype &iSize) {
 		vData.clear();
 		vData.resize(iSize);
 		return true;
@@ -258,16 +258,16 @@ public:
 	}
 
 	/*!
-	 * \brief Checks if a \c ushort value is invalid
+	 * \brief Checks if a \c utype value is invalid
 	 * \param v The value to be checked
-	 * A \c ushort value is invalid if it is maximum (65535).
+	 * A \c utype value is invalid if it is maximum (65535).
 	 */
-	static bool IsNaN(const ushort &);
+	static bool IsNaN(const utype &);
 
 	/*!
-	 * \brief Return the NaN value as a ushort
+	 * \brief Return the NaN value as a utype
 	 */
-	static ushort GetNaN();
+	static utype GetNaN();
 
 	/*!
 	 * \brief Converts an integer to a string
@@ -305,8 +305,8 @@ public:
 		const size_t&, const size_t&,
 		const vector<vector<string> >&,
 		vector<CSeekDataset*>&,
-		const map<string,ushort> &,
-		const vector<vector<string> > &, const map<string,ushort> &,
+		const map<string,utype> &,
+		const vector<vector<string> > &, const map<string,utype> &,
 		//network mode options
 		const int&, const bool&);
 
@@ -336,9 +336,9 @@ public:
 		const vector<CSeekDBSetting*>&,
 		const vector<string>&,
 		const map<string,string>&,
-		const map<string,ushort>&, vector<CSeekPlatform>&,
+		const map<string,utype>&, vector<CSeekPlatform>&,
 		vector<CSeekDataset*>&, const vector<vector<string> >&,
-		const map<string,ushort>&,
+		const map<string,utype>&,
 		const bool=false, const bool=false);
 
 	/*!
@@ -361,7 +361,7 @@ public:
 		vector<CSeekDataset*>&,
 		const vector<CSeekDataset*>&, vector<CSeekPlatform>&, 
 		const vector<CSeekPlatform>&, const vector<string>&, 
-		const map<string,string>&, const map<string,ushort>&);
+		const map<string,string>&, const map<string,utype>&);
 
 	/*!
 	 * \brief Read the platforms
@@ -378,7 +378,7 @@ public:
 	 */
 	static bool ReadPlatforms(const string &strPlatformDirectory,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
-		map<string, ushort> &mapstriPlatforms, const int lineSize = 1024);
+		map<string, utype> &mapstriPlatforms, const int lineSize = 1024);
 
 	/*!
 	 * \brief Read the platforms
@@ -388,7 +388,7 @@ public:
 	 */
 	static bool ReadPlatforms(const char *plat_dir,
 		vector<CSeekPlatform> &plat, vector<string> &vecstrPlatforms,
-		map<string, ushort> &mapstriPlatforms, const int lineSize = 1024);
+		map<string, utype> &mapstriPlatforms, const int lineSize = 1024);
 
 	/*!
 	 * \brief Read a table with one column

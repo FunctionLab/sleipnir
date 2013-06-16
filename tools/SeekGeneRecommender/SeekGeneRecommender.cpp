@@ -77,7 +77,7 @@ bool rank_transform(vector< vector< vector<float> > > &mat,
 bool weight_experiment(
 	vector<vector<vector<float> > > &mat, vector<CSeekIntIntMap*> &dm, 
 	int &numExperiments, float cut_off_percentage,
-	vector<ushort> &q, vector<bresult> &a){
+	vector<utype> &q, vector<bresult> &a){
 
 	int d, dd, j, qi;
 	numExperiments = 0;
@@ -128,7 +128,7 @@ bool weight_experiment(
 	private(d, j, qi) \
 	firstprivate(numDatasets) schedule(dynamic)
 	for(d=0; d<numDatasets; d++){
-		ushort tid = omp_get_thread_num();
+		utype tid = omp_get_thread_num();
 		for(j=0; j<mat[d][0].size(); j++){
 			float mean_query = 0;
 			float sample_variance = 0;
@@ -225,7 +225,7 @@ bool gene_scoring(
 	int numThreads=8;
 	omp_set_num_threads(numThreads);
 	
-	const vector<ushort> &allGenes = mapG.GetAllReverse();
+	const vector<utype> &allGenes = mapG.GetAllReverse();
 	float cutoff = cut_off_percentage;
 	int numExp = numExperiments;	
 
@@ -274,7 +274,7 @@ int main(int iArgs, char **aszArgs){
 	ifstream ifsm;
 	istream *pistm;
 	vector<string> vecstrLine, vecstrGenes, vecstrDBs, vecstrQuery;
-	ushort i, qi, j, k, l;
+	utype i, qi, j, k, l;
 	
 	if(cmdline_parser(iArgs, aszArgs, &sArgs)){
 		cmdline_parser_print_help();
@@ -338,10 +338,10 @@ int main(int iArgs, char **aszArgs){
 			pcl.Open(pclfile.c_str());
 			int totNumExperiments = pcl.GetExperiments() - 2;
 			
-			vector<ushort> presentIndex;
+			vector<utype> presentIndex;
 			vector<string> presentGeneNames;
 			for(j=0; j<vecstrGenes.size(); j++){
-				ushort g = pcl.GetGene(vecstrGenes[j]);
+				utype g = pcl.GetGene(vecstrGenes[j]);
 				if(CSeekTools::IsNaN(g)) continue; //gene does not exist in the dataset
 				presentIndex.push_back(g);
 				presentGeneNames.push_back(vecstrGenes[j]);
@@ -366,7 +366,7 @@ int main(int iArgs, char **aszArgs){
 		fprintf(stderr, "Finished transforming...\n"); //getchar();
 		
 		for(i=0; i<vecstrAllQuery.size(); i++){
-			vector<ushort> q;
+			vector<utype> q;
 			vector<char> is_query;
 
 			fprintf(stderr, "Query %d begin\n", i); //getchar();	

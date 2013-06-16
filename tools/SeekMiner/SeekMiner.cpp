@@ -94,7 +94,7 @@ int main( int iArgs, char** aszArgs ) {
 	gsl_rng *random_ranking_rnd = gsl_rng_alloc(T2);
 
 	float RATE = rbp_p;
-	ushort FOLD = (ushort) cv_fold;
+	utype FOLD = (utype) cv_fold;
 	enum CSeekQuery::PartitionMode PART_M;
 	if(cv=="LOI"){
 		PART_M = CSeekQuery::LEAVE_ONE_IN;
@@ -104,9 +104,9 @@ int main( int iArgs, char** aszArgs ) {
 		PART_M = CSeekQuery::CUSTOM_PARTITION;
 	}
 
-	ushort i,j;
-	//ushort TOP = 1000;
-	//ushort TOP = 0;
+	utype i,j;
+	//utype TOP = 1000;
+	//utype TOP = 0;
 
 /*
 	CSeekCentral *func = new CSeekCentral();
@@ -131,7 +131,7 @@ int main( int iArgs, char** aszArgs ) {
 	for(i=0; i<vfunc.size(); i++){
 		newQuery[i] = vector<string>();
 		origQuery[i] = vector<string>();
-		const vector<ushort> &queryGenes = vq[i].GetQuery();
+		const vector<utype> &queryGenes = vq[i].GetQuery();
 		for(j=0; j<queryGenes.size(); j++){
 			origQuery[i].push_back(func->GetGene(queryGenes[j]));
 			newQuery[i].push_back(func->GetGene(queryGenes[j]));
@@ -259,7 +259,7 @@ int main( int iArgs, char** aszArgs ) {
 			return false;
 		}
 		char acBuffer[lineSize];
-		ushort c_iBuffer = lineSize;
+		utype c_iBuffer = lineSize;
 		map<string,string> parameters;
 		i=0;
 		while(!ifsm.eof()){

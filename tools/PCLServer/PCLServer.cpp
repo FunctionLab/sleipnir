@@ -33,6 +33,8 @@
 #define BACKLOG 10   // how many pending connections queue will hold
 char *PORT;
 int NUM_DSET_MEMORY = 300;
+string pcl_input_dir;
+
 CPCL **pcl;
 list<int> available;
 char *loaded;
@@ -56,9 +58,9 @@ vector<string> vecstrDatasets;
 vector<string> vecstrDP;
 
 map<string, int> mapstrintDatasetDB;
-map<string, ushort> mapstriPlatform;
+map<string, utype> mapstriPlatform;
 map<string, string> mapstrstrDatasetPlatform;
-map<string, ushort> mapstrintDataset;
+map<string, utype> mapstrintDataset;
 vector<string> vecstrPlatforms;
 vector<CSeekPlatform> vp;
 
@@ -190,7 +192,8 @@ void *do_query(void *th_arg){
 		//pcl[n]->Reset();
 		//string strFileStem = (*iterS).substr(0, (*iterS).find(".bin"));
 		fprintf(stderr, "dataset reset \n");
-		pcl[n]->Open((*iterS).c_str());
+		string pcl_path = pcl_input_dir + "/" + *iterS;
+		pcl[n]->Open(pcl_path.c_str());
 		//pcl[n]->Open(strFileStem.c_str(), 2, false, false);
 		fprintf(stderr, "dataset opened\n");
 		vc.push_back(pcl[n]);
@@ -275,13 +278,14 @@ void *do_query(void *th_arg){
 			string strPresencePath = cc[dbID]->GetValue("prep") + "/" + strFileStem + ".gpres";
 			string strSinfoPath = cc[dbID]->GetValue("sinfo") + "/" + strFileStem + ".sinfo";
 
+
 			vd->ReadGeneAverage(strAvgPath);
 			vd->ReadGenePresence(strPresencePath);
 			vd->ReadDatasetAverageStdev(strSinfoPath);
 			vd->InitializeGeneMap();
 
 			string strPlatform = mapstrstrDatasetPlatform.find(strFileStem)->second;
-			ushort platform_id = mapstriPlatform.find(strPlatform)->second;
+			utype platform_id = mapstriPlatform.find(strPlatform)->second;
 			vd->SetPlatform(vp[platform_id]);
 			pl = &vd->GetPlatform();
 
@@ -508,7 +512,7 @@ void *do_query(void *th_arg){
 
 				for(kk=0; kk<gNames.size(); kk++){
 					int gg = pp->GetGene(gNames[kk]);
-					ar[kk].i = (ushort) mapstrintGene[gNames[kk]];
+					ar[kk].i = (utype) mapstrintGene[gNames[kk]];
 					if(g==gg){
 						ar[kk].f = 0;
 						continue;
@@ -553,7 +557,7 @@ void *do_query(void *th_arg){
 					//	vd->GetDatasetAverage(), vd->GetDatasetStdev(), 
 					//	vd->GetGeneAverage(mapstrintGene[gNames[kk]]));
 					//fprintf(stderr, "Correlation %d %d %.5f\n", qID, gID, p);
-					ar[kk].f = (ushort) (p*100.0 + 320);
+					ar[kk].f = (utype) (p*100.0 + 320);
 
 				}
 
@@ -567,7 +571,7 @@ void *do_query(void *th_arg){
 				//fprintf(stderr, "%d H3\n", i);
 
 				float rbp = 0;
-				//ushort jj = 0;
+				//utype jj = 0;
 				for(kk=0; kk<TOP; kk++){
 					if(qMap[ar[kk].i]==0) continue;
 					if(ar[kk].f==0) break;
@@ -759,6 +763,8 @@ int main( int iArgs, char** aszArgs ) {
 	//vector<CSeekDBSetting*> cc;
 	cc.push_back(dbSetting);
 
+	pcl_input_dir = sArgs.input_arg;
+
 	string add_db = sArgs.additional_db_arg;
 	if(add_db!="NA"){
 		ifstream ifsm;
@@ -769,7 +775,7 @@ int main( int iArgs, char** aszArgs ) {
 			return false;
 		}
 		char acBuffer[lineSize];
-		ushort c_iBuffer = lineSize;
+		utype c_iBuffer = lineSize;
 		map<string,string> parameters;
 		i=0;
 		while(!ifsm.eof()){
@@ -840,14 +846,14 @@ int main( int iArgs, char** aszArgs ) {
 			mapstrintDatasetDB[vD[j]] = (int) i;			
 		}
 		vector<string> vP;
-		map<string,ushort> mP;
+		map<string,utype> mP;
 		vector<CSeekPlatform> vpx;
 		CSeekTools::ReadPlatforms(cc[i]->GetValue("platform"), vpx, vP, mP);
-		for(map<string,ushort>::iterator it=mP.begin();
-			it!=mP.end(); it++){
-			mapstriPlatform[it->first] = it->second;
-		}
 		int cur=vp.size();
+		for(map<string,utype>::iterator it=mP.begin();
+			it!=mP.end(); it++){
+			mapstriPlatform[it->first] = it->second+cur;
+		}
 		vp.resize(cur+vpx.size());
 		for(j=0; j<vpx.size(); j++)
 			vp[cur+j].Copy(vpx[j]);

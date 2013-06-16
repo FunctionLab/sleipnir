@@ -71,7 +71,7 @@ bool CSeekDataset::Copy(CSeekDataset *src){
 	if(src->geneAverage.size()>0){
 		//fprintf(stderr, "Great a!\n");
 		geneAverage.resize(src->geneAverage.size());
-		ushort i;
+		utype i;
 		for(i=0; i<src->geneAverage.size(); i++){
 			geneAverage[i] = src->geneAverage[i];
 		}
@@ -79,14 +79,14 @@ bool CSeekDataset::Copy(CSeekDataset *src){
 	if(src->genePresence.size()>0){
 		//fprintf(stderr, "Great b!\n");
 		genePresence.resize(src->genePresence.size());
-		ushort i;
+		utype i;
 		for(i=0; i<src->genePresence.size(); i++){
 			genePresence[i] = src->genePresence[i];
 		}
 	}
 	if(src->geneVariance.size()>0){
 		geneVariance.resize(src->geneVariance.size());
-		ushort i;
+		utype i;
 		for(i=0; i<src->geneVariance.size(); i++){
 			geneVariance[i] = src->geneVariance[i];
 		}
@@ -101,7 +101,7 @@ bool CSeekDataset::Copy(CSeekDataset *src){
 		iNumGenes = 0;
 	}
 
-	ushort iSize = genePresence.size();
+	utype iSize = genePresence.size();
 	iNumGenes = iSize;
 	geneMap = new CSeekIntIntMap(src->geneMap);
 
@@ -134,8 +134,8 @@ bool CSeekDataset::InitializeGeneMap(){
 		cerr << "Gene average or gene presence unread" << endl;
 		return false;
 	}
-	ushort i;
-	ushort iSize = genePresence.size();
+	utype i;
+	utype iSize = genePresence.size();
 	iNumGenes = iSize;
 	geneMap = new CSeekIntIntMap(iSize);
 	vector<char>::const_iterator iterGenePresence = genePresence.begin();
@@ -151,13 +151,13 @@ bool CSeekDataset::InitializeGeneMap(){
 }
 
 
-bool CSeekDataset::InitializeQueryBlock(const vector<ushort> &queryBlock){
+bool CSeekDataset::InitializeQueryBlock(const vector<utype> &queryBlock){
 
 	DeleteQueryBlock();
 
 	dbMap = new CSeekIntIntMap(iNumGenes);
 
-	vector<ushort>::const_iterator iterQ = queryBlock.begin();
+	vector<utype>::const_iterator iterQ = queryBlock.begin();
 	for(; iterQ!=queryBlock.end(); iterQ++){
 		if(CSeekTools::IsNaN(geneMap->GetForward(*iterQ))){
 			//this query gene is not present in the dataset
@@ -178,7 +178,6 @@ bool CSeekDataset::InitializeQueryBlock(const vector<ushort> &queryBlock){
 	//fprintf(stderr, "0x1 %lu %d %d\n", CMeta::GetMemoryUsage(), iDBSize, iNumGenes);
 	r = CSeekTools::Init2DArray(iDBSize, iNumGenes, (unsigned char) 255);
 	//fprintf(stderr, "0x2 %lu\n", CMeta::GetMemoryUsage());
-	//CSeekTools::Free2DArray((unsigned short**)r);
 	//free(r[0]);
 	//free(r);
 	//fprintf(stderr, "0x3 %lu\n", CMeta::GetMemoryUsage());
@@ -188,7 +187,7 @@ bool CSeekDataset::InitializeQueryBlock(const vector<ushort> &queryBlock){
 }
 
 
-bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
+bool CSeekDataset::InitializeQuery(const vector<utype> &query){
 	DeleteQuery();
 
 	if(iDBSize==0 || dbMap==NULL) return true;
@@ -197,8 +196,8 @@ bool CSeekDataset::InitializeQuery(const vector<ushort> &query){
 
 	queryMap = new CSeekIntIntMap(iNumGenes);
 
-	ushort i;
-	vector<ushort>::const_iterator iterQ = query.begin();
+	utype i;
+	vector<utype>::const_iterator iterQ = query.begin();
 
 	vector<AResult> a;
 	a.resize(query.size());
@@ -268,21 +267,21 @@ bool CSeekDataset::DeleteQueryBlock(){
 	return true;
 }
 
-const vector<ushort>& CSeekDataset::GetQuery() const{
+const vector<utype>& CSeekDataset::GetQuery() const{
 	return this->query;
 }
 
-const vector<ushort>& CSeekDataset::GetQueryIndex() const{
+const vector<utype>& CSeekDataset::GetQueryIndex() const{
 	return this->queryIndex;
 }
 
-ushort** CSeekDataset::GetDataMatrix(){
+utype** CSeekDataset::GetDataMatrix(){
 	return rData;
 }
 
-bool CSeekDataset::InitializeDataMatrix(ushort **rD,
-	const vector<float> &quant, const ushort &iRows,
-	const ushort &iColumns, const bool bSubtractAvg,
+bool CSeekDataset::InitializeDataMatrix(utype **rD,
+	const vector<float> &quant, const utype &iRows,
+	const utype &iColumns, const bool bSubtractAvg,
 	const bool bNormPlatform, const bool logit,
 	const enum CSeekDataset::DistanceMeasure dist_measure,
 	const float cutoff, 
@@ -300,19 +299,19 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 		return false;
 	}
 
-	ushort i, j;
+	utype i, j;
 	rData = rD;
-	ushort ii;
-	ushort iNumGenes = geneMap->GetNumSet();
-	ushort iNumQueries = iQuerySize;
+	utype ii;
+	utype iNumGenes = geneMap->GetNumSet();
+	utype iNumQueries = iQuerySize;
 
 	//fprintf(stderr, "iNumQueries is %d\n", iNumQueries);
 	//iRows is the gene id, iColumns is the query id
 	//default value for all rData entries is 0
-	memset(&rData[0][0], 0, sizeof(ushort)*iRows*iColumns);
+	memset(&rData[0][0], 0, sizeof(utype)*iRows*iColumns);
 
 	//assume queryIndex is already sorted
-	vector<ushort> offset;
+	vector<utype> offset;
 	offset.push_back(0);
 	for(i=1; i<queryIndex.size(); i++)
 		offset.push_back(queryIndex[i] - queryIndex[i-1]);
@@ -325,16 +324,16 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 
 			//GetColumns() is numQuery
 			for(j=0; j<iNumQueries; j++){
-				ushort jj = this->query[j];
+				utype jj = this->query[j];
 				platform_avg[j] = platform->GetPlatformAvg(jj);
 				platform_stdev[j] = platform->GetPlatformStdev(jj);
 			}
 
-			const vector<ushort> &allRGenes = geneMap->GetAllReverse();
+			const vector<utype> &allRGenes = geneMap->GetAllReverse();
 			float a = 0;
 			float vv = 0;
 			unsigned char x = 0;
-			ushort iGeneMapSize = geneMap->GetNumSet();
+			utype iGeneMapSize = geneMap->GetNumSet();
 			if(logit){ //NOT checked
 				for(ii=0; ii<iGeneMapSize; ii++){
 					for(j=0, i = allRGenes[ii], a=GetGeneAverage(i);
@@ -345,7 +344,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						vv = max((float) min(vv, (float)3.2), (float)-3.2);
 						//By default, cutoff = -nan (i.e., always true)
 						if(vv>cutoff){
-							rData[i][j]= (ushort) (vv*100.0) + 320;
+							rData[i][j]= (utype) (vv*100.0) + 320;
 							//fprintf(stderr, "%.5f %.5f %.5f %.5f\n", quant[x], vv, a, platform_avg[j]);
 						}else{
 							rData[i][j] = 0;
@@ -361,7 +360,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 							/ platform_stdev[j];
 						vv = max((float) min(vv, (float)3.2), (float)-3.2);
 						if(vv>cutoff){
-							rData[i][j]= (ushort) (vv*100.0) + 320;
+							rData[i][j]= (utype) (vv*100.0) + 320;
 							//fprintf(stderr, "r %.2f\n", quant[x]);
 						}else{
 							rData[i][j]= 0;
@@ -384,7 +383,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						vv = max((float)-3.2, (float)min((float) 3.2, (float) vv));
 						//fprintf(stderr, "%.5f %.5f %.5f\n", quant[x], vv, a);
 						if(vv>cutoff){
-							rData[i][j]= (ushort) (vv*100.0) + 320;
+							rData[i][j]= (utype) (vv*100.0) + 320;
 						}else{
 							rData[i][j] = 0;
 						}
@@ -401,7 +400,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 						vv = quant[x] - a;
 						vv = max((float) min((float)vv, (float)3.2), (float)-3.2);
 						if(vv>cutoff){
-							rData[i][j]= (ushort) (vv*100.0) + 320;
+							rData[i][j]= (utype) (vv*100.0) + 320;
 						}else{
 							rData[i][j] = 0;
 						}
@@ -421,7 +420,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 				float vv = log(quant[x]) - log((float) 1.0 - quant[x]);
 				vv = max((float) min(vv, (float)3.2), (float)-3.2);
 				if(vv>cutoff){
-					rData[i][j] = (ushort) (vv*100.0) + 320;
+					rData[i][j] = (utype) (vv*100.0) + 320;
 				}else{
 					rData[i][j] = 0;
 				}
@@ -443,9 +442,9 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 								   //precision, should put value to range 
 								   //(-3.0 to 3.0)
 					vv = max((float) min(vv, (float)3.2), (float)-3.2);
-					rData[i][j] = (ushort) (vv*100.0) + 320;
+					rData[i][j] = (utype) (vv*100.0) + 320;
 				}else{
-					rData[i][j] = (ushort) 0; 	//default value for 
+					rData[i][j] = (utype) 0; 	//default value for 
 												//not meeting cutoff
 				}
 			}
@@ -463,7 +462,7 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 
 				vv = max((float) min(vv, (float)3.2), (float)-3.2);
 				if(vv>cutoff){
-					rData[i][j] = (ushort) (vv*100.0) + 320;
+					rData[i][j] = (utype) (vv*100.0) + 320;
 				}else{
 					rData[i][j] = 0;
 				}
@@ -472,10 +471,10 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 	}
 
 	if(bRandom){
-		vector<vector<ushort> > allRandom;
+		vector<vector<utype> > allRandom;
 		allRandom.resize(iNumQueries);
 		for(i=0; i<iNumQueries; i++){
-			allRandom[i] = vector<ushort>();
+			allRandom[i] = vector<utype>();
 		}
 
 		for(ii=0; ii<iNumGenes; ii++){
@@ -493,13 +492,13 @@ bool CSeekDataset::InitializeDataMatrix(ushort **rD,
 			}
 		}
 
-		ushort **a = CSeekTools::Init2DArray(iNumQueries, max_size, (ushort)0);
+		utype **a = CSeekTools::Init2DArray(iNumQueries, max_size, (utype)0);
 
 		for(i=0; i<iNumQueries; i++){
 			for(j=0; j<allRandom[i].size(); j++){
 				a[i][j] = allRandom[i][j];
 			}
-			gsl_ran_shuffle(rand, a[i], allRandom[i].size(), sizeof(ushort));
+			gsl_ran_shuffle(rand, a[i], allRandom[i].size(), sizeof(utype));
 		}
 
 		vector<int> k;
@@ -547,31 +546,31 @@ float CSeekDataset::GetDatasetStdev() const{
 	return m_fDsetStdev;
 }
 
-float CSeekDataset::GetGeneVariance(const ushort &i) const{
+float CSeekDataset::GetGeneVariance(const utype &i) const{
 	return geneVariance[i];
 }
 
-float CSeekDataset::GetGeneAverage(const ushort &i) const{
+float CSeekDataset::GetGeneAverage(const utype &i) const{
 	return geneAverage[i];
 }
 
-ushort CSeekDataset::GetNumGenes() const{
+utype CSeekDataset::GetNumGenes() const{
 	return iNumGenes;
 }
 
-bool CSeekDataset::InitializeCVWeight(const ushort &i){
+bool CSeekDataset::InitializeCVWeight(const utype &i){
 	weight.clear();
 	weight.resize(i);
 	sum_weight = -1;
 	return true;
 }
 
-bool CSeekDataset::SetCVWeight(const ushort &i, const float &f){
+bool CSeekDataset::SetCVWeight(const utype &i, const float &f){
 	weight[i] = f;
 	return true;
 }
 
-float CSeekDataset::GetCVWeight(const ushort &i){
+float CSeekDataset::GetCVWeight(const utype &i){
 	return weight[i];
 }
 
@@ -580,8 +579,8 @@ const vector<float>& CSeekDataset::GetCVWeight() const{
 }
 
 float CSeekDataset::GetDatasetSumWeight(){
-	ushort i;
-	ushort num = 0;
+	utype i;
+	utype num = 0;
 	if(sum_weight==-1){
 		for(sum_weight=0, i=0; i<weight.size(); i++){
 			if(weight[i]==-1) continue;

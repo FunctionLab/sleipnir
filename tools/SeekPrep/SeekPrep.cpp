@@ -46,7 +46,7 @@ bool InitializeDataset(size_t &iDatasets, vector<string> &vecstrDatasets,
 bool InitializeDB(size_t &iDatasets, size_t &iGenes,
 	vector<string> &vecstrGenes, vector<CSeekDataset*> &vc, CDatabaselet &DBL){
 
-	ushort i,j,k;
+	utype i,j,k;
 	vector<char> cQuery;
 	CSeekTools::InitVector(cQuery, iGenes, (char) 0);
 	vector<string> allQuery;
@@ -57,31 +57,31 @@ bool InitializeDB(size_t &iDatasets, size_t &iGenes,
 
 	/* Databaselet mapping */
 	map<string, size_t> dbmap;
-	vector<ushort> veciQuery;
+	vector<utype> veciQuery;
 	for(i=0; i<DBL.GetGenes(); i++){
 		string strQuery = DBL.GetGene(i);
 		dbmap[strQuery] = i;
 		allQuery.push_back(strQuery);
 		/* global mapping */
 		cQuery[mapstrGenes[strQuery]] = 1;
-		veciQuery.push_back((ushort) mapstrGenes[strQuery]);
+		veciQuery.push_back((utype) mapstrGenes[strQuery]);
 	}
 
-	fprintf(stderr, "Start initializing query map...\n");
+	//fprintf(stderr, "Start initializing query map...\n");
 	for(i=0; i<iDatasets; i++){
 		vc[i]->InitializeQueryBlock(veciQuery);
 	}
 
-	fprintf(stderr, "Finished initializing map\n");
+	//fprintf(stderr, "Finished initializing map\n");
 
-	fprintf(stderr, "Start making gene-centric...\n");
+	//fprintf(stderr, "Start making gene-centric...\n");
 	for(i=0; i<DBL.GetGenes(); i++){
 		vector<unsigned char> Q;
 		/* expanded */
 		DBL.Get(i, Q);
-		ushort m = mapstrGenes[DBL.GetGene(i)];
+		utype m = mapstrGenes[DBL.GetGene(i)];
 		CSeekIntIntMap *qu = NULL;
-		ushort db;
+		utype db;
 		for(j=0; j<iDatasets; j++){
 			if((qu=vc[j]->GetDBMap())==NULL) continue;
 			if(CSeekTools::IsNaN(db=qu->GetForward(m))) continue;
@@ -93,7 +93,7 @@ bool InitializeDB(size_t &iDatasets, size_t &iGenes,
 		}
 	}
 
-	fprintf(stderr, "Finished making gene-centric\n");
+	//fprintf(stderr, "Finished making gene-centric\n");
 
 	return true;
 }
@@ -108,7 +108,7 @@ bool OpenDBFiles(string &DBFile, vector<unsigned char *> &cc, bool &useNibble){
 
 bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 	size_t &m_iGenes, vector<string> &vecstrGenes,
-	map<ushort, ushort> &mapiPlatform, const vector<float> &quant,
+	map<utype, utype> &mapiPlatform, const vector<float> &quant,
 	vector<CSeekDataset*> &vc, CFullMatrix<float> &platform_avg,
 	CFullMatrix<float> &platform_stdev, vector<string> &vecstrQuery,
 	const bool &logit){
@@ -128,7 +128,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 	for(i=0; i<vecstrGenes.size(); i++)
 		mapstriGenes[vecstrGenes[i]] = i;
 
-	fprintf(stderr, "Start calculating platform average\n");
+	//fprintf(stderr, "Start calculating platform average\n");
 	for(i=0; i<CD.GetGenes(); i++){
 		vector<float> sum, sq_sum, mean, stdev;
 		vector<int> num;
@@ -153,12 +153,12 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 			CSeekIntIntMap *mapQ = vc[k]->GetDBMap();
 			if(mapQ==NULL) continue;
 			unsigned char **f = vc[k]->GetMatrix();
-			ushort iQ = mapQ->GetForward(geneID);
+			utype iQ = mapQ->GetForward(geneID);
 			if(CSeekTools::IsNaN(iQ)){
 				continue;
 			}
-			ushort platform_id = mapiPlatform[k];
-			if(platform_id>=(ushort) numPlatforms){
+			utype platform_id = mapiPlatform[k];
+			if(platform_id>=(utype) numPlatforms){
 				printf("Error, platforms are equal %d %d",
 					(int) platform_id, (int) numPlatforms); getchar();
 			}
@@ -188,18 +188,18 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 			mean[k] = sum[k] / (float) num[k];
 			stdev[k] = sq_sum[k] / (float) num[k] - mean[k] * mean[k];
 			stdev[k] = sqrt(stdev[k]);
-			//fprintf(stderr, "%.5f %.5f\n", mean[k], stdev[k]);
+			fprintf(stderr, "%.5f %.5f\n", mean[k], stdev[k]);
 			platform_avg.Set(k, geneID, mean[k]);
 			platform_stdev.Set(k, geneID, stdev[k]);
 		}
 	}
 
-	fprintf(stderr, "Finished calculating platform average\n");
-	fprintf(stderr, "Start deleting\n");
+	//fprintf(stderr, "Finished calculating platform average\n");
+	//fprintf(stderr, "Start deleting\n");
 
 	for(i=0; i<iDatasets; i++)
 		vc[i]->DeleteQueryBlock();
-	fprintf(stderr, "Finished deleting\n");
+	//fprintf(stderr, "Finished deleting\n");
 	return true;
 }
 
@@ -214,7 +214,7 @@ int main( int iArgs, char** aszArgs ) {
 	istream*			pistm;
 	vector<string>		vecstrLine, vecstrGenes, vecstrDBs, vecstrQuery;
 	char				acBuffer[ c_iBuffer ];
-	ushort				i, j, k, l;
+	utype				i, j, k, l;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -345,7 +345,7 @@ int main( int iArgs, char** aszArgs ) {
 				fprintf(stderr, "An empty vector will be returned\n");
 			}else{
 				for(j=0; j<vecstrGenes.size(); j++){
-					ushort g = pcl.GetGene(vecstrGenes[j]);
+					utype g = pcl.GetGene(vecstrGenes[j]);
 					if(CSeekTools::IsNaN(g)) continue; //gene does not exist in the dataset
 					float *val = pcl.Get(g);
 					vector<float> rowVal;
@@ -396,9 +396,9 @@ int main( int iArgs, char** aszArgs ) {
 			if(sArgs.logit_flag==1) logit = true;
 
 			vector<CSeekPlatform> vp;
-			map<string, ushort> mapstriPlatform;
-			map<ushort, string> mapistrPlatform;
-			map<ushort, ushort> mapiPlatform;
+			map<string, utype> mapstriPlatform;
+			map<utype, string> mapistrPlatform;
+			map<utype, utype> mapiPlatform;
 			vector<string> vecstrPlatforms;
 
 			vector<string> vecstrDatasets;
@@ -415,15 +415,15 @@ int main( int iArgs, char** aszArgs ) {
 				vecstrDatasets.push_back(vecstrLine[0]);
 				/* just read the platform information */
 				string pl = vecstrLine[1];
-				map< string, ushort >::const_iterator iter;
+				map< string, utype >::const_iterator iter;
 				iter = mapstriPlatform.find(pl);
 				if(iter== mapstriPlatform.end()){
-					ushort s = mapstriPlatform.size();
+					utype s = mapstriPlatform.size();
 					mapstriPlatform[pl] = s;
 					mapistrPlatform[s] = pl;
 					vecstrPlatforms.push_back(pl);
 				}
-				ushort platform_id = mapstriPlatform[pl];
+				utype platform_id = mapstriPlatform[pl];
 				mapiPlatform[i] = platform_id;
 				i++;
 			}
@@ -560,6 +560,12 @@ int main( int iArgs, char** aszArgs ) {
 			sprintf(outFile, "%s/%s.gavg", sArgs.dir_out_arg,
 				fileStem.c_str());
 			CSeekWriter::GetGeneAverage(Dat, vecstrGenes, vecGeneAvg, logit, sArgs.top_avg_percent_arg);
+
+			//DEBUGGING
+			for(i=0; i<vecGeneAvg.size(); i++){
+				fprintf(stderr, "%s\t%.3f\n", vecstrGenes[i].c_str(), vecGeneAvg[i]);
+			}
+
 			CSeekTools::WriteArray(outFile, vecGeneAvg);
 		}
 
@@ -576,6 +582,12 @@ int main( int iArgs, char** aszArgs ) {
 			sprintf(outFile, "%s/%s.gpres", sArgs.dir_out_arg,
 				fileStem.c_str());
 			CSeekWriter::GetGenePresence(Dat, vecstrGenes, vecGenePresence);
+
+			//DEBUGGING
+			for(i=0; i<vecGenePresence.size(); i++){
+				fprintf(stderr, "%s\t%d\n", vecstrGenes[i].c_str(), vecGenePresence[i]);
+			}
+
 			CSeekTools::WriteArray(outFile, vecGenePresence);
 		}
 

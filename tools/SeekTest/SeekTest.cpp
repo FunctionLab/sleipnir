@@ -24,8 +24,8 @@
 #include <iomanip>
 
 float** LoadGenes(const vector<string> struserGenes, 
-	const vector<ushort> &veciGenes, const vector<string> &vecstrGenes, 
-	const vector<ushort> &veciallGenes, CSeekIntIntMap *gmap, 
+	const vector<utype> &veciGenes, const vector<string> &vecstrGenes, 
+	const vector<utype> &veciallGenes, CSeekIntIntMap *gmap, 
 	CSeekDataset *vcd, float **vall){
 
 	float** v2 = CSeekTools::Init2DArray(struserGenes.size(), 
@@ -33,11 +33,11 @@ float** LoadGenes(const vector<string> struserGenes,
 	size_t i, j;
 
 	for(i=0; i<struserGenes.size(); i++){
-		ushort s = veciGenes[i]; //s is user gene ID
+		utype s = veciGenes[i]; //s is user gene ID
 		if(CSeekTools::IsNaN(s)) continue;
 
 		for(j=0; j<vecstrGenes.size(); j++){
-			ushort t = veciallGenes[j];
+			utype t = veciallGenes[j];
 			if(CSeekTools::IsNaN(t)) continue;
 			if(CMeta::IsNaN(vall[s][t])) continue;
 			if(CSeekTools::IsNaN(gmap->GetForward(t))) continue;
@@ -48,8 +48,8 @@ float** LoadGenes(const vector<string> struserGenes,
 }
 
 float** ReadUserGenes(const vector<string> &struserGenes, 
-	const vector<ushort> &veciGenes, const vector<string> &vecstrGenes, 
-	const vector<ushort> &veciallGenes, CSeekIntIntMap *gmap, 
+	const vector<utype> &veciGenes, const vector<string> &vecstrGenes, 
+	const vector<utype> &veciallGenes, CSeekIntIntMap *gmap, 
 	CSeekDataset *vcd, CDataPair &Dat){
 
 	float** v2 = CSeekTools::Init2DArray(struserGenes.size(), 
@@ -57,12 +57,12 @@ float** ReadUserGenes(const vector<string> &struserGenes,
 	size_t i, j;
 
 	for(i=0; i<struserGenes.size(); i++){
-		ushort s = veciGenes[i]; //s is user gene ID
+		utype s = veciGenes[i]; //s is user gene ID
 		if(CSeekTools::IsNaN(s)) continue;
 		float *v = Dat.GetFullRow(s);
 
 		for(j=0; j<vecstrGenes.size(); j++){
-			ushort t = veciallGenes[j];
+			utype t = veciallGenes[j];
 			if(CSeekTools::IsNaN(t)) continue;
 			if(CMeta::IsNaN(v[t])) continue;
 			if(CSeekTools::IsNaN(gmap->GetForward(t))) continue;
@@ -77,7 +77,7 @@ float** ReadUserGenes(const vector<string> &struserGenes,
 }
 
 float** ReadAllGenes(const vector<string> &vecstrGenes, 
-	const vector<ushort> &veciallGenes, CSeekIntIntMap *gmap, 
+	const vector<utype> &veciallGenes, CSeekIntIntMap *gmap, 
 	CSeekDataset *vcd, CDataPair &Dat){
 
 	float** v2 = CSeekTools::Init2DArray(vecstrGenes.size(), 
@@ -85,7 +85,7 @@ float** ReadAllGenes(const vector<string> &vecstrGenes,
 	size_t i, j;
 	size_t ss = Dat.GetGenes();
 
-	map<string, ushort> mapstrintGenes;
+	map<string, utype> mapstrintGenes;
 	for(i=0; i<vecstrGenes.size(); i++)
 		mapstrintGenes[vecstrGenes[i]] = i;
 
@@ -99,15 +99,15 @@ float** ReadAllGenes(const vector<string> &vecstrGenes,
 	firstprivate(ss) \
 	schedule(dynamic)
 	for(i=0; i<ss; i++){
-		ushort tid = omp_get_thread_num();
+		utype tid = omp_get_thread_num();
 		string s = Dat.GetGene(i);
-		ushort ii = mapstrintGenes[s];
+		utype ii = mapstrintGenes[s];
 		if(CSeekTools::IsNaN(gmap->GetForward(ii))) continue;
 		float *v = Dat.GetFullRow(i);
 
 		for(j=0; j<ss; j++){
 			string t = Dat.GetGene(j);
-			ushort jj = mapstrintGenes[t];
+			utype jj = mapstrintGenes[t];
 			if(CSeekTools::IsNaN(gmap->GetForward(jj))) continue;
 			v[j] = v[j] - vcd->GetGeneAverage(jj);
 			v2[ii][jj] = v[j];
@@ -124,19 +124,19 @@ float** ReadAllGenes(const vector<string> &vecstrGenes,
 }
 
 bool GetRandomGenes(gsl_rng *r, int size, vector<string> &struserGenes, 
-	vector<ushort> &veciGenes, const vector<string> &vecstrGenes,
-	const vector<ushort> &veciallGenes, CSeekIntIntMap *gmap){
+	vector<utype> &veciGenes, const vector<string> &vecstrGenes,
+	const vector<utype> &veciallGenes, CSeekIntIntMap *gmap){
 
 	struserGenes.clear();
 	veciGenes.clear();
 	struserGenes.resize(size);
 	veciGenes.resize(size);
 
-	ushort i;
+	utype i;
 	int totSize = 0;
 
 	for(i=0; i<veciallGenes.size(); i++){
-		ushort t = veciallGenes[i];
+		utype t = veciallGenes[i];
 		if(CSeekTools::IsNaN(t)) continue;
 		if(CSeekTools::IsNaN(gmap->GetForward(t))) continue;
 		totSize++;
@@ -144,10 +144,10 @@ bool GetRandomGenes(gsl_rng *r, int size, vector<string> &struserGenes,
 
 	int *gsample = (int*)malloc(size*sizeof(int));		
 	int *gs = (int*)malloc(totSize*sizeof(int));
-	ushort ti = 0;
+	utype ti = 0;
 
 	for(i=0; i<veciallGenes.size(); i++){
-		ushort t = veciallGenes[i];
+		utype t = veciallGenes[i];
 		if(CSeekTools::IsNaN(t)) continue;
 		if(CSeekTools::IsNaN(gmap->GetForward(t))) continue;
 		gs[ti] = i;
@@ -217,10 +217,10 @@ bool CalculateWelch(const float &mean1, const float &stdev1, const int &size1,
 vector<string> Do_T_Test(
 	gsl_rng *rnd,
 	float **vall, 
-	const vector<ushort> &veciGenes, //process
+	const vector<utype> &veciGenes, //process
 	const vector<string> &vecstrProcess, //process
 
-	const vector<ushort> &veciallGenes, //background
+	const vector<utype> &veciallGenes, //background
 	const vector<string> &vecstrGenes, //background
 	CSeekIntIntMap *gmap
 ){
@@ -235,7 +235,7 @@ vector<string> Do_T_Test(
 
 	size_t i, j, k;
 
-	vector< vector<ushort> > vi;
+	vector< vector<utype> > vi;
 	vector< vector<string> > si;
 	vi.resize(100);
 	si.resize(100);
@@ -243,7 +243,7 @@ vector<string> Do_T_Test(
 	vector<string> outstr;
 
 	for(i=0; i<100; i++){
-		vi[i] = vector<ushort>();
+		vi[i] = vector<utype>();
 		si[i] = vector<string>();
 		GetRandomGenes(r, size, si[i], vi[i], vecstrGenes, veciallGenes, gmap);
 	}
@@ -338,10 +338,10 @@ bool Get_Mann_Whitney_U_Statistics(const vector<float> &v1, const vector<float> 
 vector<string> Do_Mann_Whitney_U_Test(
 	gsl_rng *rnd,
 	float **vall, 
-	const vector<ushort> &veciGenes, //process
+	const vector<utype> &veciGenes, //process
 	const vector<string> &vecstrProcess, //process
 
-	const vector<ushort> &veciallGenes, //background
+	const vector<utype> &veciallGenes, //background
 	const vector<string> &vecstrGenes, //background
 	CSeekIntIntMap *gmap
 ){
@@ -358,14 +358,14 @@ vector<string> Do_Mann_Whitney_U_Test(
 
 	size_t i, j, k;
 
-	vector< vector<ushort> > vi;
+	vector< vector<utype> > vi;
 	vector< vector<string> > si;
 	vi.resize(100);
 	si.resize(100);
 	int size = veciGenes.size();
 
 	for(i=0; i<100; i++){
-		vi[i] = vector<ushort>();
+		vi[i] = vector<utype>();
 		si[i] = vector<string>();
 		GetRandomGenes(r, size, si[i], vi[i], vecstrGenes, veciallGenes, gmap);
 	}
@@ -454,9 +454,9 @@ vector<string> Do_Mann_Whitney_U_Test(
 
 vector<string> Do_Mann_Whitney_U_Test_By_Gene(gsl_rng *rnd, float **vall,
 	const vector<string> &vecstrProcess,
-	const vector<ushort> &veciProcess,
+	const vector<utype> &veciProcess,
 	const vector<string> &vecstrGenes,
-	const vector<ushort> &veciallGenes,
+	const vector<utype> &veciallGenes,
 	CSeekIntIntMap *gmap
 ){
 	unsigned int seed = gsl_rng_get(rnd);
@@ -475,7 +475,7 @@ vector<string> Do_Mann_Whitney_U_Test_By_Gene(gsl_rng *rnd, float **vall,
 	gsl_rng_set(r, seed);
 
 	for(i=0; i<trials; i++){
-		vector<ushort> veciRandom;
+		vector<utype> veciRandom;
 		vector<string> vecstrRandom;
 		GetRandomGenes(r, size, vecstrRandom, veciRandom, vecstrGenes, veciallGenes, gmap);
 
@@ -483,7 +483,7 @@ vector<string> Do_Mann_Whitney_U_Test_By_Gene(gsl_rng *rnd, float **vall,
 
 		//Process
 		for(j=0; j<size; j++){
-			ushort thisGene = veciProcess[j];
+			utype thisGene = veciProcess[j];
 			vector<float> vProcess;
 			for(k=0; k<size; k++){
 				float x = vall[thisGene][veciProcess[k]];
@@ -506,7 +506,7 @@ vector<string> Do_Mann_Whitney_U_Test_By_Gene(gsl_rng *rnd, float **vall,
 			auc.resize(perGeneTrials);
 
 			for(jj=0; jj<perGeneTrials; jj++){
-				vector<ushort> veciRandomGene;
+				vector<utype> veciRandomGene;
 				vector<string> vecstrRandomGene;
 				GetRandomGenes(r, size, vecstrRandomGene, veciRandomGene, vecstrGenes, veciallGenes, gmap);
 
@@ -540,7 +540,7 @@ vector<string> Do_Mann_Whitney_U_Test_By_Gene(gsl_rng *rnd, float **vall,
 		//fprintf(stdout, "Random\n");
 		//If process genes were just randomly selected geneset
 		for(j=0; j<size; j++){
-			ushort thisGene = veciRandom[j];
+			utype thisGene = veciRandom[j];
 			vector<float> vRan;
 			for(k=0; k<size; k++){
 				float x = vall[thisGene][veciRandom[k]];
@@ -562,7 +562,7 @@ vector<string> Do_Mann_Whitney_U_Test_By_Gene(gsl_rng *rnd, float **vall,
 			auc.resize(perGeneTrials);
 
 			for(jj=0; jj<perGeneTrials; jj++){
-				vector<ushort> veciRandomGene;
+				vector<utype> veciRandomGene;
 				vector<string> vecstrRandomGene;
 				GetRandomGenes(r, size, vecstrRandomGene, veciRandomGene, vecstrGenes, veciallGenes, gmap);
 				vector<float> vRandom;
@@ -598,7 +598,7 @@ vector<string> Do_Mann_Whitney_U_Test_By_Gene(gsl_rng *rnd, float **vall,
 
 vector<string> Do_One(const char *file, gsl_rng *rnd, 
 	CSeekDataset *vcd, float **vall,
-	map<string, ushort> &mapstrintGene, vector<string> &vecstrGenes){
+	map<string, utype> &mapstrintGene, vector<string> &vecstrGenes){
 
 
 	size_t i, j, k;
@@ -609,7 +609,7 @@ vector<string> Do_One(const char *file, gsl_rng *rnd,
 	if(!CSeekTools::ReadListOneColumn(file, vecstrUserGenes, mapTmp))
 		return ostr;
 
-	vector<ushort> userGenes;
+	vector<utype> userGenes;
 	for(i=0; i<vecstrUserGenes.size(); i++){
 		userGenes.push_back(mapstrintGene[vecstrUserGenes[i]]);
 	}
@@ -631,7 +631,7 @@ vector<string> Do_One(const char *file, gsl_rng *rnd,
 		return ostr;
 	}
 
-	vector<ushort> veciGenes;
+	vector<utype> veciGenes;
 	veciGenes.clear(); //only user gene set
 	veciGenes.resize(struserGenes.size());
 	for( i = 0; i < struserGenes.size( ); ++i ){
@@ -639,7 +639,7 @@ vector<string> Do_One(const char *file, gsl_rng *rnd,
 		veciGenes[i] = mapstrintGene[struserGenes[i]];
 	}
 
-	vector<ushort> veciallGenes;
+	vector<utype> veciallGenes;
 	veciallGenes.clear(); //all genes
 	veciallGenes.resize(vecstrGenes.size());
 	for( i = 0; i < vecstrGenes.size( ); ++i ){
@@ -710,13 +710,13 @@ int main( int iArgs, char** aszArgs ) {
 
 
 	omp_set_num_threads(8);
-	/*ushort ii;
+	/*utype ii;
 	omp_set_num_threads(8);
 	#pragma omp parellel for \
 	private(i) \
 	schedule(static, 1)
 	for(ii=0; ii<100; ii++){
-		ushort tid = omp_get_thread_num();
+		utype tid = omp_get_thread_num();
 		fprintf(stderr, "Hello World %d\n", tid);
 	}*/
 
@@ -731,7 +731,7 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 
 	vector<string> vecstrGeneID;
-	map<string, ushort> mapstrintGene;
+	map<string, utype> mapstrintGene;
 	if(!CSeekTools::ReadListTwoColumns(sArgs.input_arg, vecstrGeneID, vecstrGenes))
 		return 1;
 	for(i=0; i<vecstrGenes.size(); i++)
@@ -760,7 +760,7 @@ int main( int iArgs, char** aszArgs ) {
 		//getchar();
 	
 		CSeekIntIntMap *gmap = vcd->GetGeneMap();
-		vector<ushort> veciallGenes;
+		vector<utype> veciallGenes;
 		veciallGenes.clear(); //all genes
 		veciallGenes.resize(vecstrGenes.size());
 		for( i = 0; i < vecstrGenes.size( ); ++i ){
