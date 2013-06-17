@@ -356,9 +356,11 @@ bool CSeekWriter::NormalizeDAB(CDataPair &Dat,
 	for(i=0; i<vecstrGenes.size(); i++){
 		utype s = veciGenes[i];
 		if(CSeekTools::IsNaN(s)) continue;
+		float *v = Dat.GetFullRow(s);
+
 		for(j=0; j<vecstrGenes.size(); j++){
 			utype t = veciGenes[j];
-			float d = Dat.Get(s, t);
+			float d = v[t];
 			if(CSeekTools::IsNaN(t)) continue;
 			if(CMeta::IsNaN(d)) continue;
 			if(cutoff){
@@ -412,6 +414,7 @@ bool CSeekWriter::NormalizeDAB(CDataPair &Dat,
 				}
 			}
 		}
+		free(v);
 	}
 
 	return true;
