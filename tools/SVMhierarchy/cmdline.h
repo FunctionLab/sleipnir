@@ -43,6 +43,9 @@ struct gengetopt_args_info
   char * input_arg;	/**< @brief Input PCL file .  */
   char * input_orig;	/**< @brief Input PCL file  original value given at command line.  */
   const char *input_help; /**< @brief Input PCL file  help description.  */
+  char * dab_input_arg;	/**< @brief Input Dat/Dab file .  */
+  char * dab_input_orig;	/**< @brief Input Dat/Dab file  original value given at command line.  */
+  const char *dab_input_help; /**< @brief Input Dat/Dab file  help description.  */
   char * model_arg;	/**< @brief Model file.  */
   char * model_orig;	/**< @brief Model file original value given at command line.  */
   const char *model_help; /**< @brief Model file help description.  */
@@ -88,19 +91,22 @@ struct gengetopt_args_info
   float tradeoff_arg;	/**< @brief SVM tradeoff constant C (default='1').  */
   char * tradeoff_orig;	/**< @brief SVM tradeoff constant C original value given at command line.  */
   const char *tradeoff_help; /**< @brief SVM tradeoff constant C help description.  */
-  int learning_algorithm_arg;	/**< @brief Choice of structural learning algorithm:
+  float epsilon_arg;	/**< @brief allow that tolerance for termination criterion (default='0.1').  */
+  char * epsilon_orig;	/**< @brief allow that tolerance for termination criterion original value given at command line.  */
+  const char *epsilon_help; /**< @brief allow that tolerance for termination criterion help description.  */
+  int learning_algorithm_arg;	/**< @brief Choice of structural learning algorithm (default 4):
   0\tn-slack algorithm 
   1\tn-slack algorithm with shrinking heuristic
   2\t1-slack algorithm (primal) 
   3\t1-slack algorithm (dual)
   4\t1-slack algorithm (dual) with constraint cache\n (default='3').  */
-  char * learning_algorithm_orig;	/**< @brief Choice of structural learning algorithm:
+  char * learning_algorithm_orig;	/**< @brief Choice of structural learning algorithm (default 4):
   0\tn-slack algorithm 
   1\tn-slack algorithm with shrinking heuristic
   2\t1-slack algorithm (primal) 
   3\t1-slack algorithm (dual)
   4\t1-slack algorithm (dual) with constraint cache\n original value given at command line.  */
-  const char *learning_algorithm_help; /**< @brief Choice of structural learning algorithm:
+  const char *learning_algorithm_help; /**< @brief Choice of structural learning algorithm (default 4):
   0\tn-slack algorithm 
   1\tn-slack algorithm with shrinking heuristic
   2\t1-slack algorithm (primal) 
@@ -117,6 +123,7 @@ struct gengetopt_args_info
   unsigned int labels_given ;	/**< @brief Whether labels was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
+  unsigned int dab_input_given ;	/**< @brief Whether dab_input was given.  */
   unsigned int model_given ;	/**< @brief Whether model was given.  */
   unsigned int test_labels_given ;	/**< @brief Whether test_labels was given.  */
   unsigned int ontoparam_given ;	/**< @brief Whether ontoparam was given.  */
@@ -128,6 +135,7 @@ struct gengetopt_args_info
   unsigned int cross_validation_given ;	/**< @brief Whether cross_validation was given.  */
   unsigned int loss_function_given ;	/**< @brief Whether loss_function was given.  */
   unsigned int tradeoff_given ;	/**< @brief Whether tradeoff was given.  */
+  unsigned int epsilon_given ;	/**< @brief Whether epsilon was given.  */
   unsigned int learning_algorithm_given ;	/**< @brief Whether learning_algorithm was given.  */
   unsigned int threads_given ;	/**< @brief Whether threads was given.  */
   unsigned int mmap_given ;	/**< @brief Whether mmap was given.  */

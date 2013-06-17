@@ -202,7 +202,7 @@ public:
 		structmodel = read_struct_model(model_file, &struct_parm);
 	}
 
-	void WriteModel(char* model_file, int simple_model_flag) {
+	void WriteModel(char* model_file, int simple_model_flag = 1) {
 		if (kernel_parm.kernel_type == LINEAR && simple_model_flag) {
 			ofstream ofsm;
 			ofsm.open(model_file);
