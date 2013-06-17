@@ -32,25 +32,23 @@ namespace Sleipnir {
 class CSeekWriter{
 public:
 	static bool ReadSparseMatrix(const char *fileName, 
-		vector<vector<float> > &mat, 
+		vector<map<utype,float> > &mat, 
 		CSeekIntIntMap &m, const int maxRank, const float rbp_p,
 		const vector<string> &vecstrGenes);
 
-	static bool ProductNorm(const vector<vector<float> > &mat1,
-		const vector<vector<float> > &mat2, const CSeekIntIntMap &m1, 
-		const CSeekIntIntMap &m2, vector<vector<float> > &re);
+	static bool ProductNorm(const vector<map<utype,float> > &mat1,
+		const vector<map<utype,float> > &mat2, const CSeekIntIntMap &m1, 
+		const CSeekIntIntMap &m2, vector<map<utype,float> > &re);
 
-	static bool WriteSparseMatrix(vector<vector<unsigned short> > &umat,
+	static bool WriteSparseMatrix(CDataPair &Dat,
+		vector<map<utype,unsigned short> > &umat,
 		int maxRank, const vector<string> &vecstrGenes, const char *fileName);
 
-	static bool GetSparseRankMatrix(CDat &Dat,
-		vector<vector<unsigned short> > &umat, const unsigned short nullValue,
+	static bool GetSparseRankMatrix(CDataPair &Dat,
+		vector<map<utype,unsigned short> > &umat,
 		int maxRank, const vector<string> &vecstrGenes);
 
-	static bool RankNormalizeDAB(CDat &Dat,
-		const vector<string> &vecstrGenes, int max_rank, float rbp_p);
-
-	static bool NormalizeDAB(CDat &Dat,
+	static bool NormalizeDAB(CDataPair &Dat,
 		const vector<string> &vecstrGenes,
 		bool cutoff, bool expTransform, bool divideNorm, bool subtractNorm);
 

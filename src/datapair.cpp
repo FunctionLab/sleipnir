@@ -253,8 +253,10 @@ bool CDataPair::OpenQuants( const char* szDatafile ) {
 	char		szBuf[ c_iBuf ];
 	ifstream	ifsm;
 
-	if( !CPairImpl::Open( szDatafile, ifsm ) )
+	if( !CPairImpl::Open( szDatafile, ifsm ) ){
+		fprintf(stderr, "Quant file does not exist or error opening it.\n");
 		return false;
+	}
 	ifsm.getline( szBuf, c_iBuf - 1 );
 	ifsm.close( );
 	return CPairImpl::Open( szBuf, m_vecdQuant ); }

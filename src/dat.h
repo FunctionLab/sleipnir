@@ -235,6 +235,10 @@ public:
 		return CDatImpl::GetRowSeek(m_ifsm, i);
 	}
 
+	size_t GetGeneIndex(const string &strGene) const {
+		return CDatImpl::GetGeneIndex(strGene);
+	}
+
 	void AveStd( double& a, double& b, size_t& c){
 		return CDatImpl::AveStd(a, b, c);
 	}

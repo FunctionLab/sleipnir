@@ -43,7 +43,7 @@ using namespace std;
 //typedef unsigned short ushort;
 typedef unsigned int utype;
 //#define MAX_UTYPE 65535
-const utype MAX_UTYPE = 4294967295;
+const utype MAX_UTYPE = -1;
 #endif
 
 
