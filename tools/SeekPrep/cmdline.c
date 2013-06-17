@@ -43,6 +43,7 @@ const char *gengetopt_args_info_help[] = {
   "  -p, --gpres                  Generates gene presence file  (default=off)",
   "  -B, --dabinput=filename      DAB dataset file",
   "  -C, --top_avg_percent=FLOAT  For gene average, top X percent of the values to \n                                 take average (0 - 1.0)  (default=`1.0')",
+  "  -n, --norm                   Normalize matrix  (default=off)",
   "\nPCL mode:",
   "  -V, --pclinput=filename      PCL BIN file",
   "  -v, --gexpvarmean            Generates gene expression variance and mean \n                                 files (.gexpvar, .gexpmean)  (default=off)",
@@ -96,6 +97,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->gpres_given = 0 ;
   args_info->dabinput_given = 0 ;
   args_info->top_avg_percent_given = 0 ;
+  args_info->norm_given = 0 ;
   args_info->pclinput_given = 0 ;
   args_info->gexpvarmean_given = 0 ;
   args_info->sinfo_given = 0 ;
@@ -123,6 +125,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->dabinput_orig = NULL;
   args_info->top_avg_percent_arg = 1.0;
   args_info->top_avg_percent_orig = NULL;
+  args_info->norm_flag = 0;
   args_info->pclinput_arg = NULL;
   args_info->pclinput_orig = NULL;
   args_info->gexpvarmean_flag = 0;
@@ -159,18 +162,19 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->gpres_help = gengetopt_args_info_help[8] ;
   args_info->dabinput_help = gengetopt_args_info_help[9] ;
   args_info->top_avg_percent_help = gengetopt_args_info_help[10] ;
-  args_info->pclinput_help = gengetopt_args_info_help[12] ;
-  args_info->gexpvarmean_help = gengetopt_args_info_help[13] ;
-  args_info->sinfo_help = gengetopt_args_info_help[14] ;
-  args_info->gplat_help = gengetopt_args_info_help[16] ;
-  args_info->dblist_help = gengetopt_args_info_help[17] ;
-  args_info->dir_prep_in_help = gengetopt_args_info_help[18] ;
-  args_info->dset_help = gengetopt_args_info_help[19] ;
-  args_info->useNibble_help = gengetopt_args_info_help[20] ;
-  args_info->quant_help = gengetopt_args_info_help[21] ;
-  args_info->logit_help = gengetopt_args_info_help[23] ;
-  args_info->input_help = gengetopt_args_info_help[25] ;
-  args_info->dir_out_help = gengetopt_args_info_help[27] ;
+  args_info->norm_help = gengetopt_args_info_help[11] ;
+  args_info->pclinput_help = gengetopt_args_info_help[13] ;
+  args_info->gexpvarmean_help = gengetopt_args_info_help[14] ;
+  args_info->sinfo_help = gengetopt_args_info_help[15] ;
+  args_info->gplat_help = gengetopt_args_info_help[17] ;
+  args_info->dblist_help = gengetopt_args_info_help[18] ;
+  args_info->dir_prep_in_help = gengetopt_args_info_help[19] ;
+  args_info->dset_help = gengetopt_args_info_help[20] ;
+  args_info->useNibble_help = gengetopt_args_info_help[21] ;
+  args_info->quant_help = gengetopt_args_info_help[22] ;
+  args_info->logit_help = gengetopt_args_info_help[24] ;
+  args_info->input_help = gengetopt_args_info_help[26] ;
+  args_info->dir_out_help = gengetopt_args_info_help[28] ;
   
 }
 
@@ -324,6 +328,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "dabinput", args_info->dabinput_orig, 0);
   if (args_info->top_avg_percent_given)
     write_into_file(outfile, "top_avg_percent", args_info->top_avg_percent_orig, 0);
+  if (args_info->norm_given)
+    write_into_file(outfile, "norm", 0, 0 );
   if (args_info->pclinput_given)
     write_into_file(outfile, "pclinput", args_info->pclinput_orig, 0);
   if (args_info->gexpvarmean_given)
@@ -627,6 +633,7 @@ cmdline_parser_internal (
         { "gpres",	0, NULL, 'p' },
         { "dabinput",	1, NULL, 'B' },
         { "top_avg_percent",	1, NULL, 'C' },
+        { "norm",	0, NULL, 'n' },
         { "pclinput",	1, NULL, 'V' },
         { "gexpvarmean",	0, NULL, 'v' },
         { "sinfo",	0, NULL, 's' },
@@ -642,7 +649,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hdefapB:C:V:vsPb:I:A:NQ:li:D:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hdefapB:C:nV:vsPb:I:A:NQ:li:D:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -723,6 +730,16 @@ cmdline_parser_internal (
               &(local_args_info.top_avg_percent_given), optarg, 0, "1.0", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "top_avg_percent", 'C',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'n':	/* Normalize matrix.  */
+        
+        
+          if (update_arg((void *)&(args_info->norm_flag), 0, &(args_info->norm_given),
+              &(local_args_info.norm_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "norm", 'n',
               additional_error))
             goto failure;
         

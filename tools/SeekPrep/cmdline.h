@@ -55,6 +55,8 @@ struct gengetopt_args_info
   float top_avg_percent_arg;	/**< @brief For gene average, top X percent of the values to take average (0 - 1.0) (default='1.0').  */
   char * top_avg_percent_orig;	/**< @brief For gene average, top X percent of the values to take average (0 - 1.0) original value given at command line.  */
   const char *top_avg_percent_help; /**< @brief For gene average, top X percent of the values to take average (0 - 1.0) help description.  */
+  int norm_flag;	/**< @brief Normalize matrix (default=off).  */
+  const char *norm_help; /**< @brief Normalize matrix help description.  */
   char * pclinput_arg;	/**< @brief PCL BIN file.  */
   char * pclinput_orig;	/**< @brief PCL BIN file original value given at command line.  */
   const char *pclinput_help; /**< @brief PCL BIN file help description.  */
@@ -96,6 +98,7 @@ struct gengetopt_args_info
   unsigned int gpres_given ;	/**< @brief Whether gpres was given.  */
   unsigned int dabinput_given ;	/**< @brief Whether dabinput was given.  */
   unsigned int top_avg_percent_given ;	/**< @brief Whether top_avg_percent was given.  */
+  unsigned int norm_given ;	/**< @brief Whether norm was given.  */
   unsigned int pclinput_given ;	/**< @brief Whether pclinput was given.  */
   unsigned int gexpvarmean_given ;	/**< @brief Whether gexpvarmean was given.  */
   unsigned int sinfo_given ;	/**< @brief Whether sinfo was given.  */

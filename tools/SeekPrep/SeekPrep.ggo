@@ -19,6 +19,8 @@ option	"dabinput"			B	"DAB dataset file"
 								string typestr="filename"
 option	"top_avg_percent"	C	"For gene average, top X percent of the values to take average (0 - 1.0)"
 								float	default="1.0"
+option	"norm"				n	"Normalize matrix"
+								flag	off
 
 section "PCL mode"
 option	"pclinput"			V	"PCL BIN file"

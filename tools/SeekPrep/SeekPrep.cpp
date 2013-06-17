@@ -543,6 +543,36 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 	} else if(sArgs.dab_flag==1){
+		
+		if(sArgs.norm_flag==1){
+			CDat Dat;
+			char outFile[1024];
+			if(!Dat.Open(sArgs.dabinput_arg, false, 2, false, false, false)){
+				cerr << "error opening file" << endl;
+				return 1;
+			}
+			string fileName = CMeta::Basename(sArgs.dabinput_arg);
+			string fileStem = CMeta::Deextension(fileName);
+			sprintf(outFile, "%s/%s.2.dab", sArgs.dir_out_arg,
+				fileStem.c_str());
+			int max_rank = 1000;
+			float rbp_p = 0.99;
+			//cutoff, expTransform, divideNorm, subtractNorm
+			//CSeekWriter::NormalizeDAB(Dat, vecstrGenes, true, false, true, false);
+			//CSeekWriter::RankNormalizeDAB(Dat, vecstrGenes, max_rank, rbp_p);
+			//Dat.Save(outFile);
+			vector<vector<unsigned short> > umat;
+			CSeekWriter::GetSparseRankMatrix(Dat, umat, 65535, max_rank, 
+				vecstrGenes);
+			CSeekWriter::WriteSparseMatrix(umat, max_rank, vecstrGenes, 
+				outFile);
+			/*fprintf(stderr, "Begin\n");
+			vector<unsigned short> l;
+			vector<vector<float> > mat;
+			CSeekWriter::ReadSparseMatrixAsArray(l, outFile);
+			fprintf(stderr, "Begin 2\n");
+			CSeekWriter::ReadSparseMatrix(l, mat, 0.99, vecstrGenes);*/
+		}
 
 		if(sArgs.gavg_flag==1){
 			bool logit = false;
