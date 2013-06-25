@@ -1100,6 +1100,10 @@ bool CDat::Open( const std::vector<std::string>& vecstrGenes, bool fClear, const
 	m_vecstrGenes.resize( vecstrGenes.size( ) );
 	copy( vecstrGenes.begin( ), vecstrGenes.end( ), m_vecstrGenes.begin( ) );
 
+	m_mapstrGenes.clear();
+	for( i = 0; i < vecstrGenes.size(); ++i )
+		m_mapstrGenes[vecstrGenes[i]] = i; 
+
 	if( szFile ) {
 		iSize = sizeof(uint32_t);
 		for( i = 0; i < GetGenes( ); ++i )
@@ -1160,6 +1164,9 @@ bool CDat::Open( const std::vector<std::string>& vecstrGenes, const CDistanceMat
 	m_vecstrGenes.reserve( vecstrGenes.size( ) );
 	for( i = 0; i < vecstrGenes.size( ); ++i )
 		m_vecstrGenes.push_back( vecstrGenes[ i ] );
+
+	for( i = 0; i < vecstrGenes.size(); ++i )
+		m_mapstrGenes[vecstrGenes[i]] = i; 
 
 	m_Data.Initialize( MatScores );
 

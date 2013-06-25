@@ -9,6 +9,26 @@ option	"pclbin"			e	"PCL BIN mode, suitable for dataset gene variance calculatio
 								flag	off
 option	"db"				f	"DB mode, suitable for platform wide gene average and stdev calculation"
 								flag	off
+option	"dabset"			g	"DAB set mode, sums a set of sparse rank-normalized DAB files, with weights or no weights"
+								flag 	off
+option	"combined_dab"		h	"Combined DAB mode, divides a summed DAB file by total pair counts or dataset weights, generates a new normalized DAB file"
+								flag 	off
+
+section "DAB set mode (also see Misc options)"
+option	"dab_dir"			G	"Directory containing the DAB files"
+								string typestr="directory" default="NA"
+option	"dablist"			L	"List of DAB files"
+								string typestr="filename" default="NA"
+option	"out_dab"			O	"Output DAB file basename (ie without extension)"
+								string typestr="filename" default="NA"
+option	"dataset_w"			W	"Dataset weights"
+								string typestr="filename" default="NA"
+
+section "Combined DAB mode"
+option	"dab_dir2"			H	"Directory containing the summed DAB file"
+								string typestr="directory" default="NA"
+option	"dab_basename"		J	"Summed DAB basename (ie without extension)"
+								string typestr="filename" default="NA"
 
 section "DAB mode"
 option	"gavg"				a	"Generates gene average file"
@@ -19,7 +39,7 @@ option	"dabinput"			B	"DAB dataset file"
 								string typestr="filename"
 option	"top_avg_percent"	C	"For gene average, top X percent of the values to take average (0 - 1.0)"
 								float	default="1.0"
-option	"norm"				n	"Normalize matrix"
+option	"norm"				n	"Rank-normalize matrix, also weight rank by RBP (see -M, -R additional options)"
 								flag	off
 
 section "PCL mode"
@@ -47,6 +67,12 @@ option	"quant"				Q	"Quant file"
 section "Misc"
 option	"logit"				l	"For --gavg and --gplat, whether to take logit of the value first (useful if edge value is probability)"
 								flag	off
+option	"max_rank"			M	"Maximum rank value (for DAB --norm, and DAB set mode)"
+								int default="-1"
+option	"rbp_p"				R	"RBP p parameter (for DAB --norm, and DAB set mode)"
+								float default="-1"
+option	"default_type"		T	"Default gene index type (choose unsigned short for genes, or unsigned int (32-bit) for transcripts) (required for DAB --norm, and DAB set mode) (0 - unsigned int, 1 - unsigned short)"
+								int default="-1"
 
 section "Input"
 option	"input"				i	"Gene mapping file"

@@ -44,6 +44,7 @@ my %tools_other_packages = (
                                 SeekPValue => ['GSL'],
                                 SeekGeneRecommender => ['GSL'],
                                 SeekAggregatedDataset => ['GSL'],
+                                SeekIterative => ['GSL'],
                                 PCLServer => ['GSL'],
                             Dab2Dad  => ['SMILE'],
                             Dab2DB  => ['SMILE'],

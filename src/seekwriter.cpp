@@ -24,6 +24,7 @@
 
 namespace Sleipnir {
 
+//mat a symmetric matrix
 bool CSeekWriter::ReadSparseMatrix(const char *fileName,
 	vector<map<utype,float> > &mat, CSeekIntIntMap &m, 
 	const int maxRank, const float rbp_p,
@@ -45,6 +46,7 @@ bool CSeekWriter::ReadSparseMatrix(const char *fileName,
 	for(i=0; i<vecstrGenes.size(); i++)
 		mat[i] = map<utype,float>();
 
+	//m need to be initialized to size vecstrGenes.size() first!
 	ret = fread((char*) (&numPresent), 1, sizeof(numPresent), f);
 	for(j=0; j<numPresent; j++){
 		utype val;
@@ -112,11 +114,62 @@ bool CSeekWriter::ReadSparseMatrix(const char *fileName,
 			j = it->first;
 			if(vecSqrtSum[i]==0 || vecSqrtSum[j]==0) continue;
 			it->second = it->second / vecSqrtSum[i] / vecSqrtSum[j];
+			//symmetric matrix
+			mat[j][i] = it->second;
 		}
 	}
 	return true;
 }
 
+//add this matrix with weight w
+bool CSeekWriter::SumSparseMatrix(CSparseFlatMatrix<float> &mat1,
+	CSparseFlatHalfMatrix<float> &res, const CSeekIntIntMap &mi, const float w){
+	utype i, j, ii, jj;
+	//suppose res is already initialized
+	const vector<utype> &allR = mi.GetAllReverse();
+	for(ii=0; ii<mi.GetNumSet(); ii++){
+		i = allR[ii];
+		vector<CPair<float> >::iterator row_it;
+		vector<CPair<float> > create;
+		for(row_it = mat1.RowBegin(i); row_it!=mat1.RowEnd(i); row_it++){
+			utype j = row_it->i;
+			float rv = row_it->v;
+			if(j<=i) continue; //only add if j is greater than i
+			CPair<float> *pp = res.GetElement(i,j);
+			if(pp==NULL){		
+				CPair<float> cp;
+				cp.i = j;
+				cp.v = rv;
+				create.push_back(cp);
+				continue;
+			}
+			pp->v += rv * w;
+		}
+		for(jj=0; jj<create.size(); jj++)
+			res.Add(i, create[jj].i, create[jj].v * w);
+		if(create.size()>0)
+			res.SortRow(i);
+	}
+	return true;
+}
+
+bool CSeekWriter::SumSparseMatrix(CSparseFlatMatrix<float> &mat1,
+	CHalfMatrix<float> &res, const CSeekIntIntMap &mi, const float w){
+	utype i, ii;
+	//suppose res is already initialized
+	const vector<utype> &allR = mi.GetAllReverse();
+	for(ii=0; ii<mi.GetNumSet(); ii++){
+		i = allR[ii];
+		vector<CPair<float> >::iterator row_it;
+		for(row_it = mat1.RowBegin(i); row_it!=mat1.RowEnd(i); row_it++){
+			utype j = row_it->i;
+			float rv = row_it->v;
+			if(j<=i) continue; //only add if j is greater than i
+			res.Set(i, j, res.Get(i, j) + rv * w);
+		}
+	}
+	return true;
+}
 //Calculate the similarity of two distance matrices
 //by simply taking product of two matrix for corresponding entries
 bool CSeekWriter::ProductNorm(const vector<map<utype,float> > &mat1,
@@ -175,129 +228,6 @@ bool CSeekWriter::ProductNorm(const vector<map<utype,float> > &mat1,
 			it->second = it->second / vecSqrtSum[i] / vecSqrtSum[j];
 		}
 	}
-	return true;
-}
-
-bool CSeekWriter::WriteSparseMatrix(CDataPair &Dat,
-	vector< map<utype,unsigned short> > &umat, 
-	int maxRank, const vector<string> &vecstrGenes, const char *fileName){
-
-	FILE *f = fopen(fileName, "wb");
-	if(f==NULL){
-		cerr << "File not found!" << endl;
-		return false;
-	}
-	utype numGenes = 0;
-	utype i, j;
-
-	vector<utype> veciGenes;
-	veciGenes.clear();
-	veciGenes.resize(vecstrGenes.size());
-	for( i = 0; i < vecstrGenes.size( ); ++i )
-		veciGenes[ i ] = Dat.GetGeneIndex( vecstrGenes[i] );
-
-	CSeekIntIntMap mm(vecstrGenes.size());
-	for(i=0; i<vecstrGenes.size(); i++)
-		if(!CSeekTools::IsNaN(veciGenes[i]))
-			mm.Add(i);
-
-	utype numPresent = mm.GetNumSet();
-	//1 utype
-	fwrite((char*) (&numPresent), 1, sizeof(numPresent), f);
-	const vector<utype> &allR = mm.GetAllReverse();
-	//numPresent utype
-	for(i=0; i<numPresent; i++)
-		fwrite((char*) (&allR[i]), 1, sizeof(allR[i]), f);
-
-	for(i=0; i<vecstrGenes.size(); i++){
-		if(umat[i].size()==0) continue;
-		numGenes++;
-	}
-
-	//1 utype
-	fwrite((char*) (&numGenes), 1, sizeof(numGenes), f);
-
-	for(i=0; i<vecstrGenes.size(); i++){
-		unsigned short numEntries = umat[i].size(); //should be 1000
-		if(numEntries==0) 
-			continue;
-		//1 utype
-		fwrite((char*) (&i), 1, sizeof(i), f);
-		//1 unsigned short
-		fwrite((char*) (&numEntries), 1, sizeof(numEntries), f);
-		map<utype,unsigned short>::iterator it;
-		for(it=umat[i].begin(); it!=umat[i].end(); it++){
-			utype first = it->first;
-			unsigned short second = it->second;
-			//1 utype
-			fwrite((char*) (&first), 1, sizeof(first), f);
-			//1 unsigned short
-			fwrite((char*) (&second), 1, sizeof(second), f);
-		}
-	}
-	fclose(f);
-	return true;
-}
-
-bool CSeekWriter::GetSparseRankMatrix(CDataPair &Dat,
-	vector< map<utype,unsigned short> > &umat, 
-	int maxRank, //1000
-	const vector<string> &vecstrGenes){
-
-	utype i, j;
-	vector<utype> veciGenes;
-	veciGenes.clear();
-	veciGenes.resize(vecstrGenes.size());
-	for( i = 0; i < vecstrGenes.size( ); ++i )
-		veciGenes[ i ] = Dat.GetGeneIndex( vecstrGenes[i] );
-	umat.resize(vecstrGenes.size());
-	for(i=0; i<vecstrGenes.size(); i++){
-		umat[i] = map<utype, unsigned short>();
-	}
-
-	fprintf(stderr, "Start reading DAB...\n");
-	for(i=0; i<vecstrGenes.size(); i++){
-		utype s = veciGenes[i];
-		if(CSeekTools::IsNaN(s)) continue;
-		if(i%1000==0)
-			fprintf(stderr, "Start reading gene %d...\n", i);
-
-		//float *v = Dat.GetRowSeek(s);
-		float *v = Dat.GetFullRow(s);
-		vector<AResultFloat> vv;
-		vv.resize(vecstrGenes.size());
-
-		for(j=0; j<vecstrGenes.size(); j++){
-			utype t = veciGenes[j];
-			vv[j].i = j;
-			vv[j].f = -9999;
-			if(CSeekTools::IsNaN(t)) continue;
-			float d = v[t];
-			if(CMeta::IsNaN(d)) continue;
-			vv[j].f = d;
-		}
-
-		nth_element(vv.begin(), vv.begin()+maxRank, vv.end());
-		sort(vv.begin(), vv.begin()+maxRank);
-
-		for(j=0; j<vecstrGenes.size(); j++){
-			if(j<maxRank){
-				utype first = i;
-				utype second = vv[j].i;
-				if(i >= vv[j].i){
-					first = vv[j].i;
-					second = i;
-				}
-				map<utype,unsigned short>::iterator it;
-				if((it=umat[first].find(second))==umat[first].end())
-					umat[first][second] = (unsigned short) j;
-				else
-					umat[first][second] = std::min(it->second, (unsigned short) j);
-			}
-		}
-		free(v);
-	}
-	fprintf(stderr, "Finished reading DAB\n");
 	return true;
 }
 
