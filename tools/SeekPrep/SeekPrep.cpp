@@ -22,6 +22,119 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+enum ExportMode{ DISTANCE_MATRIX, COUNT_MATRIX, WEIGHTSUM_MATRIX, GENE_PRESENCE_VECTOR };
+
+//tType can only be unsigned short or utype
+template<class tType>
+bool CalculateMatrix(ExportMode e, const vector<string> &dab_list, 
+	const string &dab_dir, const string &outdir, const string &outdab, 
+	const vector<string> &vecstrGenes, const vector<float> &w, const float rbp_p,
+	const int MAX_RANK){ //w=weight of dsets
+
+	size_t i, j, k;
+
+	if(e==GENE_PRESENCE_VECTOR){
+		vector<utype> gpres;
+		CSeekTools::InitVector(gpres, vecstrGenes.size(), (utype) 0);
+		for(i=0; i<dab_list.size(); i++){
+			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), dab_list[i].c_str());
+			CSeekIntIntMap d1(vecstrGenes.size());
+			string dabfile = dab_dir + "/" + dab_list[i];
+			CSeekWriter::ReadSeekSparseMatrixHeader<tType>(dabfile.c_str(), d1);
+			const vector<utype> &allR = d1.GetAllReverse();
+			for(j=0; j<d1.GetNumSet(); j++){
+				utype gi = allR[j];
+				gpres[gi]++;
+			}
+		}
+		string ofile = outdir+"/"+outdab+".gene_count";
+		CSeekTools::WriteArray(ofile.c_str(), gpres);
+
+	}else if(e==DISTANCE_MATRIX){
+		CHalfMatrix<float> res;
+		res.Initialize(vecstrGenes.size());
+		for(i=0; i<vecstrGenes.size(); i++)
+			for(j=i+1; j<vecstrGenes.size(); j++)
+				res.Set(i, j, 0);
+	
+		for(i=0; i<dab_list.size(); i++){
+			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), dab_list[i].c_str());
+			CSeekIntIntMap d1(vecstrGenes.size());
+			string dabfile = dab_dir + "/" + dab_list[i];
+			CSparseFlatMatrix<float> sm (0);
+			CSeekWriter::ReadSeekSparseMatrix<tType>(dabfile.c_str(), sm, d1, MAX_RANK, rbp_p, vecstrGenes);
+			fprintf(stderr, "Summing...\n");
+			CSeekWriter::SumSparseMatrix(sm, res, d1, w[i]);
+			fprintf(stderr, "Finished Summing...\n");
+		}
+		ofstream ofsm;
+		string ofile = outdir + "/" + outdab + ".half";
+		ofsm.open(ofile.c_str(), ios_base::binary);
+		res.Save(ofsm, true);
+		ofsm.close();
+
+	}else if(e==COUNT_MATRIX){
+		CHalfMatrix<unsigned short> res;
+		res.Initialize(vecstrGenes.size());
+		for(i=0; i<vecstrGenes.size(); i++)
+			for(j=i+1; j<vecstrGenes.size(); j++)
+				res.Set(i, j, 0);
+
+		for(i=0; i<dab_list.size(); i++){
+			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), dab_list[i].c_str());
+			CSeekIntIntMap d1(vecstrGenes.size());
+			string dabfile = dab_dir + "/" + dab_list[i];
+			CSeekWriter::ReadSeekSparseMatrixHeader<tType>(dabfile.c_str(), d1);
+			const vector<utype> &allR = d1.GetAllReverse();
+			for(j=0; j<d1.GetNumSet(); j++){
+				utype gi = allR[j];
+				for(k=j+1; k<d1.GetNumSet(); k++){
+					utype gj = allR[k];
+					res.Set(gi, gj, res.Get(gi, gj)+1);
+				}
+			}
+		}
+		ofstream ofsm;
+		string ofile = outdir + "/" + outdab + ".pair_count";
+		ofsm.open(ofile.c_str(), ios_base::binary);
+		res.Save(ofsm, true);
+		ofsm.close();
+
+	}else if(e==WEIGHTSUM_MATRIX){
+		CHalfMatrix<float> res;
+		res.Initialize(vecstrGenes.size());
+		for(i=0; i<vecstrGenes.size(); i++)
+			for(j=i+1; j<vecstrGenes.size(); j++)
+				res.Set(i, j, 0);
+
+		for(i=0; i<dab_list.size(); i++){
+			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), dab_list[i].c_str());
+			CSeekIntIntMap d1(vecstrGenes.size());
+			string dabfile = dab_dir + "/" + dab_list[i];
+			CSeekWriter::ReadSeekSparseMatrixHeader<tType>(dabfile.c_str(), d1);
+			const vector<utype> &allR = d1.GetAllReverse();
+			for(j=0; j<d1.GetNumSet(); j++){
+				utype gi = allR[j];
+				for(k=j+1; k<d1.GetNumSet(); k++){
+					utype gj = allR[k];
+					res.Set(gi, gj, res.Get(gi, gj) + w[i]);
+				}
+			}
+		}
+		ofstream ofsm;
+		string ofile = outdir + "/" + outdab + ".pair_weightsum";
+		ofsm.open(ofile.c_str(), ios_base::binary);
+		res.Save(ofsm, true);
+		ofsm.close();
+	}
+	else{
+		fprintf(stderr, "Unrecognized mode!\n");
+		return false;
+	}
+	return true;
+}	
+
+
 bool InitializeDataset(size_t &iDatasets, vector<string> &vecstrDatasets,
 	string &strPrepInputDirectory, vector<CSeekDataset*> &vc){
 	vc.clear();
@@ -234,7 +347,7 @@ int main( int iArgs, char** aszArgs ) {
 		vecstrLine.clear( );
 		CMeta::Tokenize( acBuffer, vecstrLine );
 		if( vecstrLine.size( ) < 2 ) {
-			cerr << "Ignoring line: " << acBuffer << endl;
+			//cerr << "Ignoring line: " << acBuffer << endl;
 			continue;
 		}
 		if( !( i = atoi( vecstrLine[ 0 ].c_str( ) ) ) ) {
@@ -253,6 +366,24 @@ int main( int iArgs, char** aszArgs ) {
 
 	omp_set_num_threads(1);
 	int numThreads = omp_get_max_threads();
+
+	if((sArgs.dab_flag==1 && sArgs.norm_flag==1) ||
+		sArgs.dabset_flag==1){
+		if(sArgs.default_type_arg!=0 && sArgs.default_type_arg!=1){
+			fprintf(stderr, "Error, invalid default_type argument!\n");
+			return -1;
+		}
+
+		if(sArgs.max_rank_arg==-1){
+			fprintf(stderr, "Error, please supply the max rank flag.\n");
+			return -1;
+		}
+
+		if(sArgs.rbp_p_arg==-1){
+			fprintf(stderr, "Error, please supply the rbp_p flag.\n");
+			return -1;
+		}
+	}
 
 	/* PCL mode */
 	if(sArgs.pclbin_flag==1){
@@ -364,6 +495,13 @@ int main( int iArgs, char** aszArgs ) {
 					//fprintf(stderr, "%.5f %.5f\n", mean, variance);
 				}
 				//fprintf(stderr, "done\n"); 
+			}
+			//DEBUG
+			fprintf(stderr, "UCSC genes\tVariance\tAverage\n");
+			for(j=0; j<vecstrGenes.size(); j++){
+				utype g = pcl.GetGene(vecstrGenes[j]);
+				if(CSeekTools::IsNaN(g)) continue;
+				fprintf(stderr, "%s\t%0.4f\t%.4f\n", vecstrGenes[j].c_str(), var[j], avg[j]);
 			}
 			//fprintf(stderr, "G\n"); 
 			sprintf(outFile, "%s/%s.gexpvar", sArgs.dir_out_arg, fileStem.c_str());
@@ -545,6 +683,8 @@ int main( int iArgs, char** aszArgs ) {
 	} else if(sArgs.dab_flag==1){
 		
 		if(sArgs.norm_flag==1){
+
+
 			CDataPair Dat;
 			char outFile[1024];
 			fprintf(stderr, "Opening file...\n");
@@ -558,15 +698,25 @@ int main( int iArgs, char** aszArgs ) {
 			string fileStem = CMeta::Deextension(fileName);
 			sprintf(outFile, "%s/%s.2.dab", sArgs.dir_out_arg,
 				fileStem.c_str());
-			int max_rank = 3000;
-			float rbp_p = 0.99;
+			int max_rank = sArgs.max_rank_arg;
+			float rbp_p = sArgs.rbp_p_arg;
+			fprintf(stderr, "Using rbp_p: %.3f, max_rank: %d\n", rbp_p, max_rank);
 			//cutoff, expTransform, divideNorm, subtractNorm
 			//CSeekWriter::NormalizeDAB(Dat, vecstrGenes, true, false, true, false);
 			//CSeekWriter::RankNormalizeDAB(Dat, vecstrGenes, max_rank, rbp_p);
 			//Dat.Save(outFile);
-			vector<map<utype,unsigned short> > umat;
-			CSeekWriter::GetSparseRankMatrix(Dat, umat, max_rank, vecstrGenes);
-			CSeekWriter::WriteSparseMatrix(Dat, umat, max_rank, vecstrGenes, outFile);
+			if(sArgs.default_type_arg==0){
+				vector<map<utype,unsigned short> > umat;
+				CSeekWriter::GetSparseRankMatrix<utype>(Dat, umat, max_rank, vecstrGenes);
+				CSeekWriter::WriteSparseMatrix<utype>(Dat, umat, max_rank, vecstrGenes, outFile);
+			}else if(sArgs.default_type_arg==1){
+				vector<map<unsigned short,unsigned short> > umat;
+				CSeekWriter::GetSparseRankMatrix<unsigned short>(Dat, umat, max_rank, vecstrGenes);
+				CSeekWriter::WriteSparseMatrix<unsigned short>(Dat, umat, max_rank, vecstrGenes, outFile);
+			}else{
+				fprintf(stderr, "Invalid default type!\n");
+				return -1;
+			}
 			/*fprintf(stderr, "Begin\n");
 			vector<unsigned short> l;
 			vector<vector<float> > mat;
@@ -623,6 +773,173 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 	}
+
+	if(sArgs.dabset_flag==1){
+		vector<string> dab_list;
+		int numGenes = vecstrGenes.size();
+		string dab_dir = sArgs.dab_dir_arg;
+		string outdir = sArgs.dir_out_arg;
+		string outdab = sArgs.out_dab_arg;
+		if(dab_dir=="NA" || outdab=="NA"){
+			fprintf(stderr, "Required args: dab_dir, out_dab");
+			return -1;
+		}
+		string dw = sArgs.dataset_w_arg;
+			
+		CSeekTools::ReadListOneColumn(sArgs.dablist_arg, dab_list);
+
+		vector<float> dweight;
+		if(dw=="NA"){
+			CSeekTools::InitVector(dweight, dab_list.size(), (float) 1.0);
+		}else{
+			CSeekTools::ReadArray(dw.c_str(), dweight);
+			if(dweight.size()!=dab_list.size()){
+				fprintf(stderr, "Incorrect Size!\n");
+				return -1;
+			}
+		}
+
+		float rbp_p = sArgs.rbp_p_arg;
+		int max_rank = sArgs.max_rank_arg;
+		fprintf(stderr, "Using rbp_p: %.3f, max_rank: %d\n", rbp_p, max_rank);
+
+		if(sArgs.default_type_arg==0){
+			CalculateMatrix<utype>(GENE_PRESENCE_VECTOR, dab_list, dab_dir, outdir, 
+				outdab, vecstrGenes, dweight, rbp_p, max_rank);	
+			CalculateMatrix<utype>(COUNT_MATRIX, dab_list, dab_dir, outdir, outdab,
+				vecstrGenes, dweight, rbp_p, max_rank);	
+			//CalculateMatrix<utype>(WEIGHTSUM_MATRIX, dab_list, dab_dir, outdir, outdab,
+				//vecstrGenes, dweight, rbp_p, max_rank);	
+			CalculateMatrix<utype>(DISTANCE_MATRIX, dab_list, dab_dir, outdir, outdab,
+				vecstrGenes, dweight, rbp_p, max_rank);	
+		}else if(sArgs.default_type_arg==1){
+			CalculateMatrix<unsigned short>(GENE_PRESENCE_VECTOR, dab_list, dab_dir, outdir, 
+				outdab, vecstrGenes, dweight, rbp_p, max_rank);	
+			CalculateMatrix<unsigned short>(COUNT_MATRIX, dab_list, dab_dir, outdir, outdab,
+				vecstrGenes, dweight, rbp_p, max_rank);	
+			//CalculateMatrix<unsigned short>(WEIGHTSUM_MATRIX, dab_list, dab_dir, outdir, outdab,
+				//vecstrGenes, dweight, rbp_p, max_rank);	
+			CalculateMatrix<unsigned short>(DISTANCE_MATRIX, dab_list, dab_dir, outdir, outdab,
+				vecstrGenes, dweight, rbp_p, max_rank);	
+		}else{
+			fprintf(stderr, "Invalid default type!\n");
+			return -1;
+		}
+
+	}
+
+	if(sArgs.combined_dab_flag==1){
+		utype numGenes = vecstrGenes.size();
+		string dab_base = sArgs.dab_basename_arg;
+		string dab_dir = sArgs.dab_dir2_arg;
+		string outdir = sArgs.dir_out_arg;
+
+		if(dab_base=="NA" || dab_dir=="NA"){
+			fprintf(stderr, "Required args: dab_dir2, dab_basename");
+			return -1;
+		}
+
+		string file1 = dab_dir + "/" + dab_base + ".half";
+		string file2 = dab_dir + "/" + dab_base + ".pair_count";
+		string file3 = dab_dir + "/" + dab_base + ".gene_count";
+		string file4 = dab_dir + "/" + dab_base + ".pair_weightsum"; //optional
+
+		vector<utype> gene_count;
+		CSeekTools::ReadArray(file3.c_str(), gene_count);
+
+		//normalize by counts
+		float max_count = (float) *max_element(gene_count.begin(), gene_count.end());
+		float min_count_required = max_count * 0.50;
+		CSeekIntIntMap d1(vecstrGenes.size());
+		vector<string> validGenes;
+		int numValidGenes=0;
+		for(i=0; i<vecstrGenes.size(); i++){
+			if(gene_count[i]<min_count_required) continue;
+			numValidGenes++;
+			validGenes.push_back(vecstrGenes[i]);
+			d1.Add(i);
+		}
+
+		fprintf(stderr, "%.2f %.2f %d\n", max_count, min_count_required, 
+		numValidGenes);
+
+		uint32_t dim;
+		ifstream istm1, istm2, istm3;
+		istm1.open(file1.c_str(), ios_base::binary);
+		istm1.read((char*)(&dim), sizeof(dim));
+		istm2.open(file2.c_str(), ios_base::binary);
+		istm2.read((char*)(&dim), sizeof(dim));
+		istm3.open(file4.c_str(), ios_base::binary); //test if file3 exists
+		bool enableWeight = false;
+		if(!istm3.fail()){
+			istm3.read((char*)(&dim), sizeof(dim)); //read dimension if exists
+			enableWeight = true;
+		}
+
+		/*CHalfMatrix<float> res;
+		res.Initialize(dim);
+		if(dim!=numGenes){
+			fprintf(stderr, "Error in number of dimensions\n");
+			return -1;
+		}*/
+
+		fprintf(stderr, "Begin Reading\n");
+		if(enableWeight){
+			fprintf(stderr, "Enable weight: True\n");
+		}else{
+			fprintf(stderr, "Enable weight: False\n");
+		}
+		CDat CD;
+		CD.Open(validGenes);
+		for(i=0; i<validGenes.size(); i++)
+			for(j=i+1; j<validGenes.size(); j++)
+				CD.Set(i,j,CMeta::GetNaN());
+
+		float *adScores = new float[dim-1];
+		unsigned short *uCounts = new unsigned short[dim-1];
+		float *fSum = new float[dim-1];
+
+		for(i=0; (i+1)<dim; i++){
+			if(i%2000==0){
+				fprintf(stderr, "Finished %d\n", i);
+			}
+			istm1.read((char*)adScores, sizeof(*adScores) * (dim-i-1));
+			istm2.read((char*)uCounts, sizeof(*uCounts) * (dim-i-1));
+			if(enableWeight)
+				istm3.read((char*)fSum, sizeof(*fSum) * (dim-i-1));
+
+			utype gi = d1.GetForward(i);
+			if(CSeekTools::IsNaN(gi))
+				continue;
+			for(j=0; j<dim-i-1; j++){
+				//reverse of HalfIndex function from halfmatrixi.h
+				//to get the original coordinate for j:
+				//original j = new j + 1 + i
+				utype gj = d1.GetForward(j+i+1);
+				if(CSeekTools::IsNaN(gj))
+					continue;
+				if((float) uCounts[j]<min_count_required)
+					continue;
+				if(enableWeight)
+					adScores[j] /= fSum[j];
+				else
+					adScores[j] /= (float) uCounts[j];
+				CD.Set(gi, gj, adScores[j]);
+			}
+			//res.Set(i, adScores);
+		}
+		delete[] adScores;
+		delete[] uCounts;
+		delete[] fSum;
+		istm1.close();
+		istm2.close();
+		if(enableWeight)
+			istm3.close();
+		string file_out = outdir + "/" + dab_base + ".dab";
+		CD.Save(file_out.c_str());
+
+	}
+
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32

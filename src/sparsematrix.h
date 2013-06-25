@@ -28,6 +28,327 @@
 
 namespace Sleipnir {
 
+template <typename tType>
+struct CPair {
+	utype i;
+	tType v;
+};
+
+template <typename tType>
+struct CAscendingKey{
+	bool operator()(const CPair<tType>& lx, const CPair<tType>& rx) const{
+		if(lx.i < rx.i) return true;
+		if(lx.i > rx.i) return false;
+		if(lx.v < rx.v) return true;
+		return false;
+	}
+};
+
+template <typename tType>
+struct CAscendingValue{
+	bool operator()(const CPair<tType> &lx, const CPair<tType> &rx) const{
+		if(lx.v < rx.v) return true;
+		if(lx.v > rx.v) return false;
+		if(lx.i < rx.i) return true;
+		return false;
+	}
+};
+
+template <typename tType>
+struct CDescendingKey{
+	bool operator()(const CPair<tType>& lx, const CPair<tType>& rx) const{
+		if(lx.i < rx.i) return false;
+		if(lx.i > rx.i) return true;
+		if(lx.v < rx.v) return false;
+		return true;
+	}
+};
+
+template <typename tType>
+struct CDescendingValue{
+	bool operator()(const CPair<tType> &lx, const CPair<tType> &rx) const{
+		if(lx.v < rx.v) return false;
+		if(lx.v > rx.v) return true;
+		if(lx.i < rx.i) return false;
+		return true;
+	}
+};
+
+
+//A full matrix
+template<class tType>
+class CSparseFlatMatrix : protected CSparseMatrixImpl<tType> {
+public:
+	CSparseFlatMatrix(const tType& Default): CSparseMatrixImpl<tType>(Default){}
+	~CSparseFlatMatrix(){
+		Reset();
+	}
+	void Initialize(size_t iR){
+		Reset();
+		CSparseMatrixImpl<tType>::m_iR = iR;
+		m_vecData.resize(iR);
+		m_currentIndex.resize(iR);
+		m_bSorted.resize(iR);
+	}
+	//num is initial capacity
+	void InitializeRow(size_t rowID, size_t num){
+		m_vecData[rowID] = vector<CPair<tType> >();
+		m_vecData[rowID].reserve(num);
+		m_currentIndex[rowID] = 0;
+		m_bSorted[rowID] = false;
+	}
+	void Reset() {
+		size_t i;
+		for(i=0; i<CSparseMatrixImpl<tType>::m_iR; i++)
+			m_vecData[i].clear();
+		m_vecData.clear();
+		CSparseMatrixImpl<tType>::m_iR = 0; 
+	}
+	const tType& GetDefault() const {
+		return CSparseMatrixImpl<tType>::GetDefault();
+	}
+	size_t GetRows() const {
+		return CSparseMatrixImpl<tType>::GetRows(); 
+	}
+	//does not check if [iY][iX] already exists
+	//nor if the row m_vecData[iY] is already full
+	void Add(size_t iY, size_t iX, tType v){
+		CPair<tType> cp;
+		cp.i = (utype) iX;
+		cp.v = v;
+		m_vecData[iY].push_back(cp);
+		m_bSorted[iY] = false;
+		m_currentIndex[iY]++;
+	}
+	const vector<CPair<tType> >& GetRow(size_t iY) const{
+		return m_vecData[iY];
+	}
+	typename vector<CPair<tType> >::iterator RowBegin(size_t iY){
+		return m_vecData[iY].begin();
+	}
+	typename vector<CPair<tType> >::iterator RowEnd(size_t iY){
+		return m_vecData[iY].end();
+	}
+	void Shrink(){
+		size_t i;
+		for(i=0; i<m_vecData.size(); i++)
+			m_vecData[i].resize(m_currentIndex[i]);
+	}
+	void Organize(){
+		size_t i;
+		for(i=0; i<m_vecData.size(); i++){
+			sort(m_vecData[i].begin(), m_vecData[i].end(), CAscendingKey<tType>());	
+			m_bSorted[i] = true;
+		}
+	}
+	bool Check(size_t iY, size_t iX){
+		if(!m_bSorted[iY])
+			SortRow(iY);
+		size_t ind = GetIndex(iY, iX);
+		if(ind!=(size_t) -1) 
+			return true;
+		return false;
+	}
+	//assume element at this coordinate exists
+	tType Get(size_t iY, size_t iX) const {
+		if(!m_bSorted[iY])
+			SortRow(iY);
+		size_t ind = GetIndex(iY, iX);
+		return m_vecData[iY][ind].v;
+	}
+	//assume element at this coordinate exists
+	void Set(size_t iY, size_t iX, tType v) {
+		if(!m_bSorted[iY])
+			SortRow(iY);
+		size_t ind = GetIndex(iY, iX);
+		m_vecData[iY][ind].v = v;
+	}
+	void Increment(size_t iY, size_t iX, tType v){
+		if(!m_bSorted[iY])
+			SortRow(iY);
+		size_t ind = GetIndex(iY, iX);
+		m_vecData[iY][ind].v += v;
+	}
+
+private:
+	vector<vector<CPair<tType> > > m_vecData;
+	//parent class contains m_iR and m_Default
+	vector<bool> m_bSorted;
+	vector<size_t> m_currentIndex;
+
+	void SortRow(size_t iY){
+		sort(m_vecData[iY].begin(), m_vecData[iY].end(), CAscendingKey<tType>());
+		m_bSorted[iY] = true;
+	}
+	size_t GetIndex(size_t iY, size_t iX) {
+		//suppose m_bSorted[iY] is true
+		return BinarySearch(m_vecData[iY], iX);
+	}
+	size_t BinarySearch(vector<CPair<tType> > &A, size_t iX){
+		int iMax = A.size()-1;
+		int iMin = 0;
+		while(iMax>=iMin){
+			int iMid = (iMin + iMax) / 2;
+			if(A[iMid].i < iX)
+				iMin = iMid + 1;
+			else if(A[iMid].i > iX)
+				iMax = iMid - 1;
+			else
+				return (size_t) iMid;
+		}
+		//fprintf(stderr, "Element %d is not found!\n", iX);
+		return (size_t) -1;
+	}
+};
+
+//A half-matrix
+template<class tType>
+class CSparseFlatHalfMatrix : protected CSparseMatrixImpl<tType> {
+public:
+	CSparseFlatHalfMatrix(const tType& Default): CSparseMatrixImpl<tType>(Default){}
+	~CSparseFlatHalfMatrix(){
+		Reset();
+	}
+	void Copy(const CSparseFlatMatrix<tType> &cf){ //a full matrix (symmetric)
+		CSparseMatrixImpl<tType>::m_Default = cf.GetDefault();
+		Initialize(cf.GetRows());
+		size_t i,j;
+		for(i=0; i<CSparseMatrixImpl<tType>::m_iR; i++){
+			const vector<CPair<tType> > &allR = cf.GetRow(i);
+			InitializeRow(i, allR.size());
+			for(j=0; j<allR.size(); j++)
+				if(allR[j].i > i)
+					Add(i, allR[j].i, allR[j].v);
+		}
+		Organize();
+	}
+	void Initialize(size_t iR){
+		Reset();
+		CSparseMatrixImpl<tType>::m_iR = iR;
+		m_vecData.resize(iR);
+		m_currentIndex.resize(iR);
+		m_bSorted.resize(iR);
+	}
+	//num is initial capacity
+	void InitializeRow(size_t rowID, size_t num){
+		m_vecData[rowID] = vector<CPair<tType> >();
+		m_vecData[rowID].reserve(num);
+		m_currentIndex[rowID] = 0;
+		m_bSorted[rowID] = false;
+	}
+	void Reset() {
+		size_t i;
+		for(i=0; i<CSparseMatrixImpl<tType>::m_iR; i++)
+			m_vecData[i].clear();
+		m_vecData.clear();
+		CSparseMatrixImpl<tType>::m_iR = 0; 
+	}
+	const tType& GetDefault() const {
+		return CSparseMatrixImpl<tType>::GetDefault();
+	}
+	size_t GetRows() const {
+		return CSparseMatrixImpl<tType>::GetRows(); 
+	}
+	//does not check if [iY][iX] already exists
+	//nor if the row m_vecData[iY] is already full
+	void Add(size_t iY, size_t iX, tType v){
+		AdjustCoord(iY, iX);
+		CPair<tType> cp;
+		cp.i = (utype) iX;
+		cp.v = v;
+		m_vecData[iY].push_back(cp);
+		m_bSorted[iY] = false;
+		m_currentIndex[iY]++;
+	}
+	const vector<CPair<tType> >& GetRow(size_t iY) const{
+		return m_vecData[iY];
+	}
+	typename vector<CPair<tType> >::iterator RowBegin(size_t iY){
+		return m_vecData[iY].begin();
+	}
+	typename vector<CPair<tType> >::iterator RowEnd(size_t iY){
+		return m_vecData[iY].end();
+	}
+	void Shrink(){
+		size_t i;
+		for(i=0; i<m_vecData.size(); i++)
+			m_vecData[i].resize(m_currentIndex[i]);
+	}
+	void SortRow(size_t iY){
+		sort(m_vecData[iY].begin(), m_vecData[iY].end(), CAscendingKey<tType>());
+		m_bSorted[iY] = true;
+	}
+	void Organize(){
+		size_t i;
+		for(i=0; i<m_vecData.size(); i++)
+			SortRow(i);
+	}
+	void AdjustCoord(size_t &iY, size_t &iX){
+		if(iY>=iX){ //second must be the greater
+			size_t tmp = iY;
+			iY = iX;
+			iX = tmp;
+		}
+	}
+	bool Check(size_t iY, size_t iX){
+		AdjustCoord(iY, iX);
+		if(!m_bSorted[iY]) SortRow(iY);
+		size_t ind = GetIndex(iY, iX);
+		if(ind!=(size_t) -1) return true;
+		return false;
+	}
+	CPair<tType>* GetElement(size_t iY, size_t iX){
+		AdjustCoord(iY, iX);
+		if(!m_bSorted[iY]) SortRow(iY);
+		size_t ind = GetIndex(iY, iX);
+		if(ind==(size_t)-1) return NULL;
+		return &m_vecData[iY][ind];
+	}
+	//assume element at this coordinate exists
+	tType Get(size_t iY, size_t iX) const {
+		AdjustCoord(iY, iX);
+		if(!m_bSorted[iY]) SortRow(iY);
+		size_t ind = GetIndex(iY, iX);
+		return m_vecData[iY][ind].v;
+	}
+	//assume element at this coordinate exists
+	void Set(size_t iY, size_t iX, tType v) {
+		AdjustCoord(iY, iX);
+		if(!m_bSorted[iY]) SortRow(iY);
+		size_t ind = GetIndex(iY, iX);
+		m_vecData[iY][ind].v = v;
+	}
+	void Increment(size_t iY, size_t iX, tType v){
+		AdjustCoord(iY, iX);
+		if(!m_bSorted[iY]) SortRow(iY);
+		size_t ind = GetIndex(iY, iX);
+		m_vecData[iY][ind].v += v;
+	}
+
+private:
+	//parent class contains m_iR and m_Default
+	vector<vector<CPair<tType> > > m_vecData;
+	vector<bool> m_bSorted;
+	vector<size_t> m_currentIndex;
+
+	size_t GetIndex(size_t iY, size_t iX) {
+		return BinarySearch(m_vecData[iY], iX); //suppose m_bSorted[iY] = true
+	}
+	size_t BinarySearch(vector<CPair<tType> > &A, size_t iX){
+		int iMax = A.size()-1;
+		int iMin = 0;
+		while(iMax>=iMin){
+			int iMid = (iMin + iMax) / 2;
+			if(A[iMid].i < iX)
+				iMin = iMid + 1;
+			else if(A[iMid].i > iX)
+				iMax = iMid - 1;
+			else
+				return (size_t) iMid;
+		}
+		return (size_t) -1;
+	}
+};
 /*!
  * \brief
  * An asymmetric two-dimensional sparse matrix using maps for each row.

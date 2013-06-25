@@ -72,6 +72,7 @@ if WITH_GSL_TOOLS
 	  SeekGeneRecommender \
 	  SeekAggregatedDataset \
       SeekPValue \
+      SeekIterative \
 	  PCLServer
 endif
 

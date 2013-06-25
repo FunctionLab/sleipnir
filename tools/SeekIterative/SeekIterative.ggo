@@ -1,0 +1,44 @@
+package	"SeekIterative"
+version	"1.0"
+purpose	"Search based on iterative algorithm"
+
+section "Mode"
+option	"dab"				d	"Sparse Dab mode"
+								flag off
+option	"combined"			e	"Combined-dab mode"
+								flag off
+option	"test"				f	"Test mode"
+								flag off
+option	"testcount"			g	"Test count mode"
+								flag off
+option	"testcombined"		h	"Test count mode"
+								flag off
+
+section "Combined-DAB mode"
+option	"dab_basename"		b	"Combined-dab basename, also shared with Test Mode"
+								string typestr="filename"
+
+section "Sparse DAB mode"
+option	"dab_list"			V	"DAB list"
+								string typestr="filename"
+option	"num_iter"			I	"Number of iterations"
+								int	default="0"
+option	"default_type"		T	"Default gene index type (choose unsigned short for genes, or unsigned int (32-bit) for transcripts) (required for DAB mode) (0 - unsigned int, 1 - unsigned short)"
+								int default="-1"
+option	"rbp_p"				R	"RBP p parameter (must be specified) (p<1.0) (recommended > 0.95)"
+								float default="-1"
+option	"max_rank"			M	"Maximum rank number in the sparse DAB matrix (must be specified)"
+								int default="-1"
+
+section "Input"
+option	"input"				i	"Gene mapping file"
+								string typestr="filename"	yes
+option	"query"				q	"Query file"
+								string typestr="filename"	yes
+option	"dab_dir"			F	"DAB directory"
+								string typestr="directory"	yes
+
+section "Output"
+option	"dir_out"			D	"Output directory"
+								string typestr="directory"
+
