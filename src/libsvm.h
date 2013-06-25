@@ -39,7 +39,7 @@ namespace LIBSVM {
 
   extern "C" {
 #define class Class2
-#include <svm.h>
+#include <libsvm/svm.h>
 #undef class
 
   }

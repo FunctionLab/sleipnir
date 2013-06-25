@@ -18,6 +18,7 @@ history
 src/libSleipnir.a
 doc/html
 doc/latex
+bin/*
 
 extlib
 
