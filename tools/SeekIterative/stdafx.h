@@ -32,7 +32,7 @@
 using namespace std;
 
 #include <pthread.h>
-
+#include "genome.h"
 #include "seekmap.h"
 #include "seekreader.h"
 #include "seekevaluate.h"

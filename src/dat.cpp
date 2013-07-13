@@ -1763,7 +1763,9 @@ void CDat::SaveDOT( std::ostream& ostm, float dCutoff, const CGenome* pGenome, b
 				d = 1.0f / ( 1 + exp( ( dAve - d ) / dStd ) );
 				ostm << vecstrNames[ i ] << " -- " << vecstrNames[ j ] << " [weight = " << d <<
 					", color = \"" << ( fHashes ? "#" : "" ) << CColor::Interpolate( d,
-					CColor::c_Green, CColor::c_Black, CColor::c_Red ).ToRGB( ) << "\"];" << endl; }
+					//CColor::c_Green, CColor::c_Black, CColor::c_Red ).ToRGB( ) 
+					CColor::c_Orange, CColor::c_DarkGreen, CColor::c_Blue ).ToRGB( ) 
+					<< "\"];" << endl; }
 
 	ostm << "}" << endl; }
 

@@ -143,8 +143,9 @@ public:
 
 	//compatibility
 	template<class tType>
-	static bool WriteSparseMatrix(CDataPair &Dat, vector<map<tType,unsigned short> > &umat,
-	int maxRank, const vector<string> &vecstrGenes, const char *fileName){
+	static bool WriteSparseMatrix(CDataPair &Dat, 
+	vector<map<tType,unsigned short> > &umat, 
+	const vector<string> &vecstrGenes, const char *fileName){
 
 		FILE *f = fopen(fileName, "wb");
 		if(f==NULL){
@@ -206,8 +207,9 @@ public:
 
 	//compatiblity
 	template<class tType>
-	static bool GetSparseRankMatrix(CDataPair &Dat, vector<map<tType,unsigned short> > &umat, 
-	int maxRank, const vector<string> &vecstrGenes){
+	static bool GetSparseRankMatrix(CDataPair &Dat, 
+	vector<map<tType,unsigned short> > &umat, int maxRank, 
+	const vector<string> &vecstrGenes){
 	
 		size_t i, j;
 		vector<tType> veciGenes;
@@ -259,6 +261,92 @@ public:
 		return true;
 	}
 
+	//To be used after NormalizeDAB
+	template<class tType>
+	static bool ConvertToSparseMatrix(CDataPair &Dat,
+	vector<map<tType,unsigned short> > &umat,
+	const vector<string> &vecstrGenes, const float cutoff_val){
+
+		size_t i, j;
+		vector<tType> veciGenes;
+		veciGenes.resize(vecstrGenes.size());
+		for( i = 0; i < vecstrGenes.size( ); ++i )
+			veciGenes[ i ] = (tType) Dat.GetGeneIndex( vecstrGenes[i] );
+		umat.resize(vecstrGenes.size());
+		for(i=0; i<vecstrGenes.size(); i++)
+			umat[i] = map<tType, unsigned short>();
+
+		tType s,t;
+		for(i=0; i<vecstrGenes.size(); i++){
+			if((s=veciGenes[i])==(tType)-1) continue;
+			if(i%1000==0) fprintf(stderr, "Start reading gene %d...\n", i);
+
+			for(j=i+1; j<vecstrGenes.size(); j++){
+				if((t=veciGenes[j])==(tType)-1) continue;
+				float r = Dat.Get(s,t);
+				if(CMeta::IsNaN(r)) continue;
+				if(r > cutoff_val)
+					umat[i][j] = (unsigned short) (r * 100.0);
+			}
+		}
+		fprintf(stderr, "Finished reading DAB\n");
+		return true;
+	}
+
+	//to be used for sparse matrix created from cutting-off z-scores
+	template<class tType>
+	static bool ReadSeekSparseMatrix(const char *fileName,
+	CSparseFlatMatrix<float> &mat, CSeekIntIntMap &m, 
+	const vector<string> &vecstrGenes, const int initialCapacity, 
+	const float exponent){
+	
+		if(exponent<1.0){
+			fprintf(stderr, "Exponent must be >=1.0\n");
+			return false;
+		}
+	
+		FILE *f = fopen(fileName, "rb");
+		if(f==NULL){
+			cerr << "File not found" << endl;
+			return false;
+		}
+
+		size_t i, j;
+		tType numGenes, numPresent, val;
+		int ret;
+
+		mat.Initialize(vecstrGenes.size());
+		ret = fread((char*) (&numPresent), 1, sizeof(numPresent), f);
+		for(j=0; j<numPresent; j++){
+			ret = fread((char*)(&val), 1, sizeof(val), f); //val = gene ID
+			m.Add((utype) val);
+			mat.InitializeRow(val, initialCapacity); //initial capacity
+		}
+		ret = fread((char*) (&numGenes), 1, sizeof(numGenes), f);
+
+		for(i=0; i<numGenes; i++){
+			tType id, id2;  //gene ID
+			unsigned short numEntries, val; //z-scores * 100.0
+			ret = fread((char*)(&id), 1, sizeof(id), f);
+			ret = fread((char*)(&numEntries), 1, sizeof(numEntries), f);
+			for(j=0; j<numEntries; j++){
+				ret = fread((char*)(&id2),1,sizeof(id2),f);
+				ret = fread((char*)(&val),1,sizeof(val),f);
+				tType first = id;
+				tType second = id2;
+				float fval = (float) val / 100.0;
+				if(exponent>1.0)
+					fval = pow(fval, exponent);
+				mat.Add(first, second, fval);
+				mat.Add(second, first, fval);
+			}
+		}
+		fclose(f);
+
+		mat.Organize();
+		return true;
+	}
+
 	//===============================================================
 	//not currently used
 	static bool ReadSparseMatrix(const char *fileName, 
@@ -278,9 +366,9 @@ public:
 	static bool SumSparseMatrix(CSparseFlatMatrix<float> &mat1,
 		CHalfMatrix<float> &res, const CSeekIntIntMap &mi, const float w);
 
-	static bool NormalizeDAB(CDataPair &Dat,
-		const vector<string> &vecstrGenes,
-		bool cutoff, bool expTransform, bool divideNorm, bool subtractNorm);
+	static bool NormalizeDAB(CDataPair &Dat, const vector<string> &vecstrGenes,
+		//bool cutoff, float cutoff_val, 
+		bool expTransform, bool divideNorm, bool subtractNorm);
 
 	static bool GetGeneAverage(CDataPair &Dat,
 		const vector<string> &vecstrGenes,

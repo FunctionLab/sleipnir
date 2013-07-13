@@ -13,9 +13,17 @@ option	"testcount"			g	"Test count mode"
 								flag off
 option	"testcombined"		h	"Test count mode"
 								flag off
+option	"visualize"			v	"Visualization mode"
+								flag off
 
-section "Combined-DAB mode"
+section "Combined-DAB / Visualization mode"
 option	"dab_basename"		b	"Combined-dab basename, also shared with Test Mode"
+								string typestr="filename"
+
+section "Visualization mode"
+option	"cutoff"			c	"Cutoff value"
+								float default="0.0001"
+option	"genome"			G	"Genome mapping file"
 								string typestr="filename"
 
 section "Sparse DAB mode"

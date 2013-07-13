@@ -44,9 +44,17 @@ struct gengetopt_args_info
   const char *testcount_help; /**< @brief Test count mode help description.  */
   int testcombined_flag;	/**< @brief Test count mode (default=off).  */
   const char *testcombined_help; /**< @brief Test count mode help description.  */
+  int visualize_flag;	/**< @brief Visualization mode (default=off).  */
+  const char *visualize_help; /**< @brief Visualization mode help description.  */
   char * dab_basename_arg;	/**< @brief Combined-dab basename, also shared with Test Mode.  */
   char * dab_basename_orig;	/**< @brief Combined-dab basename, also shared with Test Mode original value given at command line.  */
   const char *dab_basename_help; /**< @brief Combined-dab basename, also shared with Test Mode help description.  */
+  float cutoff_arg;	/**< @brief Cutoff value (default='0.0001').  */
+  char * cutoff_orig;	/**< @brief Cutoff value original value given at command line.  */
+  const char *cutoff_help; /**< @brief Cutoff value help description.  */
+  char * genome_arg;	/**< @brief Genome mapping file.  */
+  char * genome_orig;	/**< @brief Genome mapping file original value given at command line.  */
+  const char *genome_help; /**< @brief Genome mapping file help description.  */
   char * dab_list_arg;	/**< @brief DAB list.  */
   char * dab_list_orig;	/**< @brief DAB list original value given at command line.  */
   const char *dab_list_help; /**< @brief DAB list help description.  */
@@ -82,7 +90,10 @@ struct gengetopt_args_info
   unsigned int test_given ;	/**< @brief Whether test was given.  */
   unsigned int testcount_given ;	/**< @brief Whether testcount was given.  */
   unsigned int testcombined_given ;	/**< @brief Whether testcombined was given.  */
+  unsigned int visualize_given ;	/**< @brief Whether visualize was given.  */
   unsigned int dab_basename_given ;	/**< @brief Whether dab_basename was given.  */
+  unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
+  unsigned int genome_given ;	/**< @brief Whether genome was given.  */
   unsigned int dab_list_given ;	/**< @brief Whether dab_list was given.  */
   unsigned int num_iter_given ;	/**< @brief Whether num_iter was given.  */
   unsigned int default_type_given ;	/**< @brief Whether default_type was given.  */

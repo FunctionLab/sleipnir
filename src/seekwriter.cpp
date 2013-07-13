@@ -231,122 +231,150 @@ bool CSeekWriter::ProductNorm(const vector<map<utype,float> > &mat1,
 	return true;
 }
 
-bool CSeekWriter::NormalizeDAB(CDataPair &Dat,
-	const vector<string> &vecstrGenes,
-	bool cutoff, bool expTransform, bool divideNorm, bool subtractNorm){
 
-	utype i, j;
-	vector<utype> veciGenes;
+bool CSeekWriter::NormalizeDAB(CDataPair &Dat,
+const vector<string> &vecstrGenes, 
+//bool cutoff, float cutoff_val,
+bool expTransform, bool divideNorm, bool subtractNorm){
+	//default cutoff_val is 0
+
+	size_t i, j;
+	vector<unsigned int> veciGenes;
 	veciGenes.clear();
 	veciGenes.resize(vecstrGenes.size());
-	for( i = 0; i < vecstrGenes.size( ); ++i )
-		veciGenes[ i ] = Dat.GetGene( vecstrGenes[i] );
+	for(i=0; i<vecstrGenes.size(); i++)
+		veciGenes[i] = (unsigned int) Dat.GetGeneIndex(vecstrGenes[i]);
 
 	vector<float> vecSum;
 	vector<int> vecNum;
 	CSeekTools::InitVector(vecSum, vecstrGenes.size(), CMeta::GetNaN());
 	CSeekTools::InitVector(vecNum, vecstrGenes.size(), (int)-9999);
 
+	unsigned int s,t;
 	for(i=0; i<vecstrGenes.size(); i++){
-		utype s = veciGenes[i];
-		if(CSeekTools::IsNaN(s)) continue;
-		float sum = 0;
-		int num = 0;
-		vector<float> all;
-		for(j=0; j<vecstrGenes.size(); j++){
-			utype t = veciGenes[j];
-			float d = Dat.Get(s,t);
-			if(CSeekTools::IsNaN(t)) continue;
-			if(CMeta::IsNaN(d)) continue;
-			if(cutoff){
-				if(d>0){
+		if((s=veciGenes[i])==(unsigned int)-1) continue;
+		vecSum[i] = 0;
+		vecNum[i] = 0;
+	}
+
+	if(divideNorm && subtractNorm){
+		fprintf(stderr, "Error: both divideNorm and subtractNorm are true\n");
+		return false;
+	}else if(!divideNorm && !subtractNorm){
+		fprintf(stderr, "Error: both divideNorm and subtractNorm are false\n");
+		return false;
+	}
+
+	float d = -1;
+	float r = -1;
+	for(i=0; i<vecstrGenes.size(); i++){
+		if((s=veciGenes[i])==(unsigned int)-1) continue;
+		for(j=i+1; j<vecstrGenes.size(); j++){
+			if((t=veciGenes[j])==(unsigned int)-1) continue;
+			if(CMeta::IsNaN(d = Dat.Get(s,t))) continue;
+			/*if(cutoff){
+				if(d>cutoff_val){
 					if(expTransform)
-						all.push_back(expf(-1.0*d*d/2.0));
+						r = expf(-1.0*d*d/2.0);
 					else
-						all.push_back(d);
+						r = d;
+					vecSum[i] += r;
+					vecSum[j] += r;
+					vecNum[i]++;
+					vecNum[j]++;
 				}
 			}
-			else{
+			else{*/
 				//fprintf(stderr, "Warning: Negative Z-Scores");
 				if(expTransform)
-					all.push_back(expf(-1.0*d*d/2.0));
+					r = expf(-1.0*d*d/2.0);
 				else
-					all.push_back(d);
-			}	
+					r = d;
+				vecSum[i] += r;
+				vecSum[j] += r;
+				vecNum[i]++;
+				vecNum[j]++;
+			//}	
 		}
-
-		for(j=0; j<all.size(); j++){
-			sum+=all[j];
-			num++;
-		}
-		vecSum[i] = sum;
-		vecNum[i] = num;
 	}
 
 	for(i=0; i<vecstrGenes.size(); i++){
-		utype s = veciGenes[i];
-		if(CSeekTools::IsNaN(s)) continue;
-		float *v = Dat.GetFullRow(s);
-
-		for(j=0; j<vecstrGenes.size(); j++){
-			utype t = veciGenes[j];
-			float d = v[t];
-			if(CSeekTools::IsNaN(t)) continue;
-			if(CMeta::IsNaN(d)) continue;
-			if(cutoff){
-				if(d>0){
+		if((s=veciGenes[i])==(unsigned int)-1) continue;
+		for(j=i+1; j<vecstrGenes.size(); j++){
+			if((t=veciGenes[j])==(unsigned int)-1) continue;
+			if(CMeta::IsNaN(d = Dat.Get(s,t))) continue;
+			/*if(cutoff){
+				if(d>cutoff_val){
 					if(expTransform){
-						if(divideNorm){
-							float r = expf(-1.0*d*d/2.0) / sqrtf(vecSum[i]) / sqrtf(vecSum[j]);
-							Dat.Set(s, t, r);
-						}else if(subtractNorm){
-							float r = expf(-1.0*d*d/2.0) - vecSum[i] / vecNum[i] - vecSum[j] / vecNum[j];
-							Dat.Set(s, t, r);
-						}
+						if(divideNorm)
+							r=expf(-1.0*d*d/2.0)/sqrtf(vecSum[i])/sqrtf(vecSum[j]);
+						else if(subtractNorm)
+							r=expf(-1.0*d*d/2.0)-vecSum[i]/vecNum[i]-vecSum[j]/vecNum[j];
 					}else{
-						if(divideNorm){
-							float r = d / sqrtf(vecSum[i]) / sqrtf(vecSum[j]);
-							Dat.Set(s, t, r);
-						}else if(subtractNorm){
-							float r = d - vecSum[i] / vecNum[i] - vecSum[j] / vecNum[j];
-							Dat.Set(s, t, r);
-						}
+						if(divideNorm)
+							r=d/sqrtf(vecSum[i])/sqrtf(vecSum[j]);
+						else if(subtractNorm)
+							r=d-vecSum[i]/vecNum[i]-vecSum[j]/vecNum[j];
 					}
 				}else{
-					Dat.Set(s, t, 0);
+					r=0; //default value
 				}
+				Dat.Set(s, t, r);
 			}
-			else{
+			else{*/
 				if(expTransform){
-					if(divideNorm){
-						float r = expf(-1.0*d*d/2.0) / sqrtf(vecSum[i]) / sqrtf(vecSum[j]);
-						Dat.Set(s, t, r);
-					}else if(subtractNorm){
-						float r = expf(-1.0*d*d/2.0) - vecSum[i] / vecNum[i] - vecSum[j] / vecNum[j];
-						Dat.Set(s, t, r);
-					}
+					if(divideNorm)
+						r=expf(-1.0*d*d/2.0)/sqrtf(vecSum[i])/sqrtf(vecSum[j]);
+					else if(subtractNorm)
+						r=expf(-1.0*d*d/2.0)-vecSum[i]/vecNum[i]-vecSum[j]/vecNum[j];
 				}else{
 					if(divideNorm){
-						float r = 0;
 						//DANGEROUS
 						if(vecSum[i]<=0){
-							fprintf(stderr, "Warning, Dangerous, divide sqrt(z), where z could be negative\n");
-							r = 0;
-						}else{
-							r = d / sqrtf(vecSum[i]) / sqrtf(vecSum[j]);
-						}
-						Dat.Set(s, t, r);
+							fprintf(stderr, "Warning, divide sqrt(z), when z<=0\n");
+							r=0; //default value
+						}else
+							r=d/sqrtf(vecSum[i])/sqrtf(vecSum[j]);
 					}else if(subtractNorm){
-						float r = d - vecSum[i] / vecNum[i] - vecSum[j] / vecNum[j];
-						Dat.Set(s, t, r);
+						r=d-vecSum[i]/vecNum[i]-vecSum[j]/vecNum[j];
 					}
-
 				}
-			}
+				Dat.Set(s, t, r);
+			//}
 		}
-		free(v);
 	}
 
+	//Plot a distribution
+	/*vector<unsigned long> bins;
+	bins.resize(55);
+	float upper = 5.0; //assume z scores
+	float lower = -5.0;
+	float bin_size = (upper - lower) / 50;
+	for(i=0; i<55; i++)
+		bins[i] = 0;
+	for(i=0; i<Dat.GetGenes(); i++){
+		for(j=i+1; j<Dat.GetGenes(); j++){
+			d = Dat.Get(i,j);
+			if(CMeta::IsNaN(d)) continue;
+			int b = (int) ((d - lower) / bin_size);
+			if(b<0){
+				bins[0]++;
+				continue;
+			}
+			if(b>=55){
+				bins[54]++;
+				continue;
+			}
+			bins[b]++;
+		}
+	}
+	fprintf(stderr, 
+	"Distances: bin size: %.5f, num of bins: %d, min bin val: %.5f, max bin val: %.5f\n",
+	bin_size, 55, lower, upper);
+	for(i=0; i<55; i++){
+		fprintf(stderr, "%lu\t%lu\n", i, bins[i]);
+	}
+	*/
 	return true;
 }
 

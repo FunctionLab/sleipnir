@@ -63,6 +63,12 @@ public:
 	 */
 	static const CColor	c_Yellow;
 
+	static const CColor	c_Blue;
+
+	static const CColor	c_DarkGreen;
+
+	static const CColor	c_Orange;
+
 	static CColor Interpolate( float dValue, const CColor& ColorMinimum, const CColor& ColorMedium,
 		const CColor& ColorMaximum );
 

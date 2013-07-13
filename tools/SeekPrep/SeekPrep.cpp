@@ -22,14 +22,26 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-enum ExportMode{ DISTANCE_MATRIX, COUNT_MATRIX, WEIGHTSUM_MATRIX, GENE_PRESENCE_VECTOR };
+enum ExportMode{ 
+	DISTANCE_MATRIX, COUNT_MATRIX, WEIGHTSUM_MATRIX, GENE_PRESENCE_VECTOR 
+};
+
+enum NormMode{
+	RANK_NORM, Z_NORM
+};
 
 //tType can only be unsigned short or utype
+//norm_mode = 0 (rank norm), 1 (subtract_z norm)
 template<class tType>
-bool CalculateMatrix(ExportMode e, const vector<string> &dab_list, 
+bool CalculateMatrix(const NormMode norm_mode, 
+	const ExportMode e, const vector<string> &dab_list, 
 	const string &dab_dir, const string &outdir, const string &outdab, 
 	const vector<string> &vecstrGenes, const vector<float> &w, const float rbp_p,
-	const int MAX_RANK){ //w=weight of dsets
+	const int MAX_RANK, const float exp){ //w=weight of dsets 
+	//rbp_p, MAX_RANK for rank-based normalize
+	//exp for value-based or subtract_z normalize
+	const int RANK_NORM = 0;
+	const int Z_NORM = 1;
 
 	size_t i, j, k;
 
@@ -37,7 +49,8 @@ bool CalculateMatrix(ExportMode e, const vector<string> &dab_list,
 		vector<utype> gpres;
 		CSeekTools::InitVector(gpres, vecstrGenes.size(), (utype) 0);
 		for(i=0; i<dab_list.size(); i++){
-			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), dab_list[i].c_str());
+			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), 
+				dab_list[i].c_str());
 			CSeekIntIntMap d1(vecstrGenes.size());
 			string dabfile = dab_dir + "/" + dab_list[i];
 			CSeekWriter::ReadSeekSparseMatrixHeader<tType>(dabfile.c_str(), d1);
@@ -58,11 +71,18 @@ bool CalculateMatrix(ExportMode e, const vector<string> &dab_list,
 				res.Set(i, j, 0);
 	
 		for(i=0; i<dab_list.size(); i++){
-			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), dab_list[i].c_str());
+			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), 
+				dab_list[i].c_str());
 			CSeekIntIntMap d1(vecstrGenes.size());
 			string dabfile = dab_dir + "/" + dab_list[i];
 			CSparseFlatMatrix<float> sm (0);
-			CSeekWriter::ReadSeekSparseMatrix<tType>(dabfile.c_str(), sm, d1, MAX_RANK, rbp_p, vecstrGenes);
+			if(norm_mode==RANK_NORM){
+				CSeekWriter::ReadSeekSparseMatrix<tType>(dabfile.c_str(), sm, d1, 
+					MAX_RANK, rbp_p, vecstrGenes);
+			}else if(norm_mode==Z_NORM){
+				CSeekWriter::ReadSeekSparseMatrix<tType>(dabfile.c_str(), sm, d1,
+					vecstrGenes, (int) (0.10*vecstrGenes.size()), exp);
+			}
 			fprintf(stderr, "Summing...\n");
 			CSeekWriter::SumSparseMatrix(sm, res, d1, w[i]);
 			fprintf(stderr, "Finished Summing...\n");
@@ -81,7 +101,8 @@ bool CalculateMatrix(ExportMode e, const vector<string> &dab_list,
 				res.Set(i, j, 0);
 
 		for(i=0; i<dab_list.size(); i++){
-			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), dab_list[i].c_str());
+			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), 
+				dab_list[i].c_str());
 			CSeekIntIntMap d1(vecstrGenes.size());
 			string dabfile = dab_dir + "/" + dab_list[i];
 			CSeekWriter::ReadSeekSparseMatrixHeader<tType>(dabfile.c_str(), d1);
@@ -108,7 +129,8 @@ bool CalculateMatrix(ExportMode e, const vector<string> &dab_list,
 				res.Set(i, j, 0);
 
 		for(i=0; i<dab_list.size(); i++){
-			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), dab_list[i].c_str());
+			fprintf(stderr, "Reading %d of %d: %s\n", i, dab_list.size(), 
+				dab_list[i].c_str());
 			CSeekIntIntMap d1(vecstrGenes.size());
 			string dabfile = dab_dir + "/" + dab_list[i];
 			CSeekWriter::ReadSeekSparseMatrixHeader<tType>(dabfile.c_str(), d1);
@@ -286,7 +308,8 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 					v = vv - vc[k]->GetGeneAverage(j);
 					/*if(isnan(vv) || isinf(vv) || isnan(vc[k]->GetGeneAverage(j)) ||
 						isinf(vc[k]->GetGeneAverage(j))){
-						fprintf(stderr, "%d %.5f %.5f %.5f\n", (int) uc, quant[uc], vv, vc[k]->GetGeneAverage(j));
+						fprintf(stderr, "%d %.5f %.5f %.5f\n", (int) uc, quant[uc], 
+						vv, vc[k]->GetGeneAverage(j));
 					}*/
 					//v = quant[uc];
 					sum[platform_id] += v;
@@ -371,16 +394,6 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.dabset_flag==1){
 		if(sArgs.default_type_arg!=0 && sArgs.default_type_arg!=1){
 			fprintf(stderr, "Error, invalid default_type argument!\n");
-			return -1;
-		}
-
-		if(sArgs.max_rank_arg==-1){
-			fprintf(stderr, "Error, please supply the max rank flag.\n");
-			return -1;
-		}
-
-		if(sArgs.rbp_p_arg==-1){
-			fprintf(stderr, "Error, please supply the rbp_p flag.\n");
 			return -1;
 		}
 	}
@@ -472,7 +485,7 @@ int main( int iArgs, char** aszArgs ) {
 
 			int totNumExperiments = pcl.GetExperiments();
 			if(totNumExperiments<=2){
-				fprintf(stderr, "This dataset is skipped because it contains <=2 columns\n");
+				fprintf(stderr, "This dataset is skipped because it has <=2 columns\n");
 				fprintf(stderr, "An empty vector will be returned\n");
 			}else{
 				for(j=0; j<vecstrGenes.size(); j++){
@@ -501,12 +514,15 @@ int main( int iArgs, char** aszArgs ) {
 			for(j=0; j<vecstrGenes.size(); j++){
 				utype g = pcl.GetGene(vecstrGenes[j]);
 				if(CSeekTools::IsNaN(g)) continue;
-				fprintf(stderr, "%s\t%0.4f\t%.4f\n", vecstrGenes[j].c_str(), var[j], avg[j]);
+				fprintf(stderr, "%s\t%0.4f\t%.4f\n", vecstrGenes[j].c_str(), 
+					var[j], avg[j]);
 			}
 			//fprintf(stderr, "G\n"); 
-			sprintf(outFile, "%s/%s.gexpvar", sArgs.dir_out_arg, fileStem.c_str());
+			sprintf(outFile, "%s/%s.gexpvar", sArgs.dir_out_arg, 
+				fileStem.c_str());
 			CSeekTools::WriteArray(outFile, var);
-			sprintf(outFile, "%s/%s.gexpmean", sArgs.dir_out_arg, fileStem.c_str());
+			sprintf(outFile, "%s/%s.gexpmean", sArgs.dir_out_arg, 
+				fileStem.c_str());
 			CSeekTools::WriteArray(outFile, avg);
 		}
 
@@ -661,8 +677,8 @@ int main( int iArgs, char** aszArgs ) {
 				//printf("Platform %s\n", mapistrPlatform[i].c_str());
 				/*for(j=0; j<vecstrQuery.size(); j++){
 					size_t iGene = mapstriGenes[vecstrQuery[j]];
-					printf("Gene %s %.5f %.5f\n", vecstrQuery[j].c_str(), platform_avg.Get(i, iGene),
-						platform_stdev.Get(i,iGene));
+					printf("Gene %s %.5f %.5f\n", vecstrQuery[j].c_str(), 
+						platform_avg.Get(i, iGene), platform_stdev.Get(i,iGene));
 				}*/
 			//}
 
@@ -682,8 +698,16 @@ int main( int iArgs, char** aszArgs ) {
 
 	} else if(sArgs.dab_flag==1){
 		
-		if(sArgs.norm_flag==1){
-
+		string norm_mode = sArgs.norm_mode_arg;
+		if(sArgs.norm_flag==1 && norm_mode=="rank"){
+			if(sArgs.default_type_arg==-1){
+				fprintf(stderr, "Please supply parameter --default_type\n");
+				return 1;
+			}
+			if(sArgs.max_rank_arg==-1){
+				fprintf(stderr, "Please supply parameter --max_rank\n");
+				return 1;
+			}
 
 			CDataPair Dat;
 			char outFile[1024];
@@ -699,20 +723,23 @@ int main( int iArgs, char** aszArgs ) {
 			sprintf(outFile, "%s/%s.2.dab", sArgs.dir_out_arg,
 				fileStem.c_str());
 			int max_rank = sArgs.max_rank_arg;
-			float rbp_p = sArgs.rbp_p_arg;
-			fprintf(stderr, "Using rbp_p: %.3f, max_rank: %d\n", rbp_p, max_rank);
+			fprintf(stderr, "Using max_rank: %d\n", max_rank);
 			//cutoff, expTransform, divideNorm, subtractNorm
 			//CSeekWriter::NormalizeDAB(Dat, vecstrGenes, true, false, true, false);
 			//CSeekWriter::RankNormalizeDAB(Dat, vecstrGenes, max_rank, rbp_p);
 			//Dat.Save(outFile);
 			if(sArgs.default_type_arg==0){
 				vector<map<utype,unsigned short> > umat;
-				CSeekWriter::GetSparseRankMatrix<utype>(Dat, umat, max_rank, vecstrGenes);
-				CSeekWriter::WriteSparseMatrix<utype>(Dat, umat, max_rank, vecstrGenes, outFile);
+				CSeekWriter::GetSparseRankMatrix<utype>(Dat, umat, max_rank, 
+					vecstrGenes);
+				CSeekWriter::WriteSparseMatrix<utype>(Dat, umat, 
+					vecstrGenes, outFile);
 			}else if(sArgs.default_type_arg==1){
 				vector<map<unsigned short,unsigned short> > umat;
-				CSeekWriter::GetSparseRankMatrix<unsigned short>(Dat, umat, max_rank, vecstrGenes);
-				CSeekWriter::WriteSparseMatrix<unsigned short>(Dat, umat, max_rank, vecstrGenes, outFile);
+				CSeekWriter::GetSparseRankMatrix<unsigned short>(Dat, umat, max_rank, 
+					vecstrGenes);
+				CSeekWriter::WriteSparseMatrix<unsigned short>(Dat, umat, 
+					vecstrGenes, outFile);
 			}else{
 				fprintf(stderr, "Invalid default type!\n");
 				return -1;
@@ -723,6 +750,56 @@ int main( int iArgs, char** aszArgs ) {
 			CSeekWriter::ReadSparseMatrixAsArray(l, outFile);
 			fprintf(stderr, "Begin 2\n");
 			CSeekWriter::ReadSparseMatrix(l, mat, 0.99, vecstrGenes);*/
+		}
+
+		if(sArgs.view_flag==1){
+			fprintf(stderr, "Operation not implemented yet!\n");
+			return 1;
+		}
+
+		if(sArgs.norm_flag==1 && norm_mode=="subtract_z"){
+			if(sArgs.cutoff_value_arg==-1.0){
+				fprintf(stderr, "Please supply parameter --cutoff_value\n");
+				return 1;
+			}
+			if(sArgs.default_type_arg==-1){
+				fprintf(stderr, "Please supply parameter --default_type\n");
+				return 1;
+			}
+
+			CDataPair Dat;
+			char outFile[125];
+			if(!Dat.Open(sArgs.dabinput_arg, false, false)){
+				cerr << "error opening file" << endl;
+				return 1;
+			}
+			fprintf(stderr, "Finished opening file\n");
+			string fileName = CMeta::Basename(sArgs.dabinput_arg);
+			string fileStem = CMeta::Deextension(fileName);
+			sprintf(outFile, "%s/%s.2.dab", sArgs.dir_out_arg, fileStem.c_str());
+			//expTransform, divideNorm, subtractNorm
+			CSeekWriter::NormalizeDAB(Dat, vecstrGenes, false, false, true);
+			float cutoff = sArgs.cutoff_value_arg;
+			if(sArgs.default_type_arg==0){
+				//unsigned int
+				vector<map<utype,unsigned short> > umat;
+				CSeekWriter::ConvertToSparseMatrix<utype>(Dat, umat, vecstrGenes, 
+				cutoff);
+				CSeekWriter::WriteSparseMatrix<utype>(Dat, umat, vecstrGenes, 
+				outFile);
+			}else if(sArgs.default_type_arg==1){
+				//unsigned short
+				vector<map<unsigned short,unsigned short> > umat;
+				CSeekWriter::ConvertToSparseMatrix<unsigned short>(Dat, umat, vecstrGenes, 
+				cutoff);
+				CSeekWriter::WriteSparseMatrix<unsigned short>(Dat, umat, vecstrGenes, 
+				outFile);
+			}
+			else{
+				fprintf(stderr, "Error, unsupported type --default_type_arg\n");
+				return 1;
+			}
+				
 		}
 
 		if(sArgs.gavg_flag==1){
@@ -740,7 +817,8 @@ int main( int iArgs, char** aszArgs ) {
 			string fileStem = CMeta::Deextension(fileName);
 			sprintf(outFile, "%s/%s.gavg", sArgs.dir_out_arg,
 				fileStem.c_str());
-			CSeekWriter::GetGeneAverage(Dat, vecstrGenes, vecGeneAvg, logit, sArgs.top_avg_percent_arg);
+			CSeekWriter::GetGeneAverage(Dat, vecstrGenes, vecGeneAvg, logit, 
+				sArgs.top_avg_percent_arg);
 
 			//DEBUGGING
 			for(i=0; i<vecGeneAvg.size(); i++){
@@ -775,6 +853,26 @@ int main( int iArgs, char** aszArgs ) {
 	}
 
 	if(sArgs.dabset_flag==1){
+		NormMode n;
+		string norm_mode = sArgs.norm_mode_arg;
+		if(norm_mode=="NA"){
+			fprintf(stderr, "Error, please supply --norm_mode\n");
+			return 1;
+		}
+		if(norm_mode=="subtract_z"){
+			n = Z_NORM;
+			if(sArgs.exp_arg==-1){
+				fprintf(stderr, "Error, please supply --exp\n");
+				return 1;
+			}
+		}else if(norm_mode=="rank"){
+			n = RANK_NORM;
+			if(sArgs.rbp_p_arg==-1 || sArgs.max_rank_arg==-1){
+				fprintf(stderr, "Error, Need both --rbp_p and --max_rank\n");
+				return 1;
+			}
+		}
+
 		vector<string> dab_list;
 		int numGenes = vecstrGenes.size();
 		string dab_dir = sArgs.dab_dir_arg;
@@ -801,26 +899,27 @@ int main( int iArgs, char** aszArgs ) {
 
 		float rbp_p = sArgs.rbp_p_arg;
 		int max_rank = sArgs.max_rank_arg;
-		fprintf(stderr, "Using rbp_p: %.3f, max_rank: %d\n", rbp_p, max_rank);
+		float exp = sArgs.exp_arg;
+		fprintf(stderr, "Using rbp_p: %.3f, max_rank: %d, exp: %.3f\n", rbp_p, max_rank, exp);
 
 		if(sArgs.default_type_arg==0){
-			CalculateMatrix<utype>(GENE_PRESENCE_VECTOR, dab_list, dab_dir, outdir, 
-				outdab, vecstrGenes, dweight, rbp_p, max_rank);	
-			CalculateMatrix<utype>(COUNT_MATRIX, dab_list, dab_dir, outdir, outdab,
-				vecstrGenes, dweight, rbp_p, max_rank);	
-			//CalculateMatrix<utype>(WEIGHTSUM_MATRIX, dab_list, dab_dir, outdir, outdab,
-				//vecstrGenes, dweight, rbp_p, max_rank);	
-			CalculateMatrix<utype>(DISTANCE_MATRIX, dab_list, dab_dir, outdir, outdab,
-				vecstrGenes, dweight, rbp_p, max_rank);	
+			CalculateMatrix<utype>(n, GENE_PRESENCE_VECTOR, dab_list, dab_dir, outdir, 
+				outdab, vecstrGenes, dweight, rbp_p, max_rank, exp);	
+			CalculateMatrix<utype>(n, COUNT_MATRIX, dab_list, dab_dir, outdir, outdab,
+				vecstrGenes, dweight, rbp_p, max_rank, exp);	
+			//CalculateMatrix<utype>(n, WEIGHTSUM_MATRIX, dab_list, dab_dir, outdir, outdab,
+				//vecstrGenes, dweight, rbp_p, max_rank, exp);	
+			CalculateMatrix<utype>(n, DISTANCE_MATRIX, dab_list, dab_dir, outdir, outdab,
+				vecstrGenes, dweight, rbp_p, max_rank, exp);	
 		}else if(sArgs.default_type_arg==1){
-			CalculateMatrix<unsigned short>(GENE_PRESENCE_VECTOR, dab_list, dab_dir, outdir, 
-				outdab, vecstrGenes, dweight, rbp_p, max_rank);	
-			CalculateMatrix<unsigned short>(COUNT_MATRIX, dab_list, dab_dir, outdir, outdab,
-				vecstrGenes, dweight, rbp_p, max_rank);	
-			//CalculateMatrix<unsigned short>(WEIGHTSUM_MATRIX, dab_list, dab_dir, outdir, outdab,
+			CalculateMatrix<unsigned short>(n, GENE_PRESENCE_VECTOR, dab_list, dab_dir, outdir, 
+				outdab, vecstrGenes, dweight, rbp_p, max_rank, exp);	
+			CalculateMatrix<unsigned short>(n, COUNT_MATRIX, dab_list, dab_dir, outdir, outdab,
+				vecstrGenes, dweight, rbp_p, max_rank, exp);	
+			//CalculateMatrix<unsigned short>(n, WEIGHTSUM_MATRIX, dab_list, dab_dir, outdir, outdab,
 				//vecstrGenes, dweight, rbp_p, max_rank);	
-			CalculateMatrix<unsigned short>(DISTANCE_MATRIX, dab_list, dab_dir, outdir, outdab,
-				vecstrGenes, dweight, rbp_p, max_rank);	
+			CalculateMatrix<unsigned short>(n, DISTANCE_MATRIX, dab_list, dab_dir, outdir, outdab,
+				vecstrGenes, dweight, rbp_p, max_rank, exp);	
 		}else{
 			fprintf(stderr, "Invalid default type!\n");
 			return -1;

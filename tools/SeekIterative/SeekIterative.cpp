@@ -308,9 +308,96 @@ int main(int iArgs, char **aszArgs){
 			qu[i].push_back(mapstriGenes[vecstrAllQuery[i][j]]);
 	}
 
+	if(sArgs.visualize_flag==1){
+		string dab_base = sArgs.dab_basename_arg;
+		string file1 = dab_dir + "/" + dab_base + ".dab";
+		float cutoff_par = sArgs.cutoff_arg;
+		string genome = sArgs.genome_arg;
+		vector<string> s1, s2;
+		CSeekTools::ReadListTwoColumns(genome.c_str(), s1, s2);
+
+		CGenome g;
+		g.Open(s1);
+		for(i=0; i<s2.size(); i++){
+			CGene &g1 = g.GetGene(g.FindGene(s1[i]));
+			g.AddSynonym(g1, s2[i]);
+		}
+
+		CDat CD;
+		CD.Open(file1.c_str(), false, 2, false, false, false);
+
+		CSeekIntIntMap d1(CD.GetGenes());
+		vector<utype> indexConvReverse;
+		CSeekTools::InitVector(indexConvReverse, vecstrGenes.size(), (utype) -1);	
+		for(i=0; i<CD.GetGenes(); i++){
+			map<string,size_t>::iterator it = mapstriGenes.find(CD.GetGene(i));
+			if(it==mapstriGenes.end()) continue;
+			indexConvReverse[i] = it->second;
+			d1.Add(i);
+		}
+
+		//Visualize
+		for(j=0; j<vecstrAllQuery.size(); j++){
+			vector<string> vec_s;
+			vector<utype> vec_g;
+			for(k=0; k<vecstrAllQuery[j].size(); k++){
+				size_t ind = CD.GetGeneIndex(vecstrAllQuery[j][k]);
+				if(ind==(size_t)-1) continue;
+				vec_g.push_back(CD.GetGeneIndex(vecstrAllQuery[j][k]));
+				vec_s.push_back(vecstrAllQuery[j][k]);
+			}
+			CDat V;
+			V.Open(vec_s);
+			for(k=0; k<vec_s.size(); k++){
+				for(l=k+1; l<vec_s.size(); l++){
+					V.Set(k, l, CD.Get(vec_g[k], vec_g[l]));
+				}
+			}
+			fprintf(stderr, "Query %d\n", j);
+
+			/*float init = 0.00001;
+			float step = 0.00001;
+			float upper = 0.001;
+			*/
+			float init = 0.05;
+			float step = 0.05;
+			float upper = 3;
+
+			float cutoff = init;
+			while(cutoff<upper){
+				int count = 0;
+				for(k=0; k<vec_s.size(); k++){
+					for(l=k+1; l<vec_s.size(); l++){
+						if(!CMeta::IsNaN(V.Get(k,l)) && V.Get(k,l)>=cutoff){
+							count++;
+						}
+					}
+				}
+				fprintf(stderr, "%.5f\t%d\n", cutoff, count);
+				cutoff+=step;
+			}
+
+			sprintf(acBuffer, "%s/%d.dot", output_dir.c_str(), j);			
+			ofstream ot(acBuffer);
+			V.SaveDOT(ot, cutoff_par, &g, false, true, NULL, NULL);
+		}
+
+	}
+
 	if(sArgs.combined_flag==1){
 		string dab_base = sArgs.dab_basename_arg;
 		string file1 = dab_dir + "/" + dab_base + ".dab";
+		float cutoff_par = sArgs.cutoff_arg;
+		string genome = sArgs.genome_arg;
+		vector<string> s1, s2;
+		CSeekTools::ReadListTwoColumns(genome.c_str(), s1, s2);
+
+		CGenome g;
+		g.Open(s1);
+		for(i=0; i<s2.size(); i++){
+			CGene &g1 = g.GetGene(g.FindGene(s1[i]));
+			g.AddSynonym(g1, s2[i]);
+		}
 
 		vector<vector<float> > q_weight;
 		q_weight.resize(vecstrAllQuery.size());
@@ -375,7 +462,7 @@ int main(int iArgs, char **aszArgs){
 			sort(ar.begin(), ar.end());
 			vector<utype> vec_g;
 			vector<string> vec_s;
-			int FIRST = 100;
+			int FIRST = 200;
 			for(k=0; k<FIRST; k++){
 				if(ar[k].f==-320) break;
 				vec_g.push_back(CD.GetGeneIndex(vecstrGenes[ar[k].i]));
@@ -390,9 +477,25 @@ int main(int iArgs, char **aszArgs){
 				}
 			}
 
+			fprintf(stderr, "Query %d\n", j);
+			float cutoff = 0.00001;
+			while(cutoff<0.001){
+				int count = 0;
+				for(k=0; k<vec_s.size(); k++){
+					for(l=k+1; l<vec_s.size(); l++){
+						if(!CMeta::IsNaN(V.Get(k,l)) && V.Get(k,l)>=cutoff){
+							count++;
+						}
+					}
+				}
+				fprintf(stderr, "%.5f\t%d\n", cutoff, count);
+				cutoff+=0.00001;
+			}
+
 			sprintf(acBuffer, "%s/%d.dot", output_dir.c_str(), j);			
 			ofstream ot(acBuffer);
-			V.SaveDOT(ot, 0.0001, NULL, true, false, NULL, NULL);
+			V.SaveDOT(ot, cutoff_par, &g, false, true, NULL, NULL);
+			//V.SaveDOT(ot, 0.0001, NULL, true, false, NULL, NULL);
 		}
 		
 

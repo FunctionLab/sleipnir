@@ -40,10 +40,16 @@ struct gengetopt_args_info
   const char *pclbin_help; /**< @brief PCL BIN mode, suitable for dataset gene variance calculation help description.  */
   int db_flag;	/**< @brief DB mode, suitable for platform wide gene average and stdev calculation (default=off).  */
   const char *db_help; /**< @brief DB mode, suitable for platform wide gene average and stdev calculation help description.  */
-  int dabset_flag;	/**< @brief DAB set mode, sums a set of sparse rank-normalized DAB files, with weights or no weights (default=off).  */
-  const char *dabset_help; /**< @brief DAB set mode, sums a set of sparse rank-normalized DAB files, with weights or no weights help description.  */
+  int dabset_flag;	/**< @brief DAB set mode, sums a set of sparse rank-normalized (or subtract-z-normalized) DAB files, with weights or no weights (default=off).  */
+  const char *dabset_help; /**< @brief DAB set mode, sums a set of sparse rank-normalized (or subtract-z-normalized) DAB files, with weights or no weights help description.  */
   int combined_dab_flag;	/**< @brief Combined DAB mode, divides a summed DAB file by total pair counts or dataset weights, generates a new normalized DAB file (default=off).  */
   const char *combined_dab_help; /**< @brief Combined DAB mode, divides a summed DAB file by total pair counts or dataset weights, generates a new normalized DAB file help description.  */
+  char * dab_dir2_arg;	/**< @brief Directory containing the summed DAB file (default='NA').  */
+  char * dab_dir2_orig;	/**< @brief Directory containing the summed DAB file original value given at command line.  */
+  const char *dab_dir2_help; /**< @brief Directory containing the summed DAB file help description.  */
+  char * dab_basename_arg;	/**< @brief Summed DAB basename (ie without extension) (default='NA').  */
+  char * dab_basename_orig;	/**< @brief Summed DAB basename (ie without extension) original value given at command line.  */
+  const char *dab_basename_help; /**< @brief Summed DAB basename (ie without extension) help description.  */
   char * dab_dir_arg;	/**< @brief Directory containing the DAB files (default='NA').  */
   char * dab_dir_orig;	/**< @brief Directory containing the DAB files original value given at command line.  */
   const char *dab_dir_help; /**< @brief Directory containing the DAB files help description.  */
@@ -53,15 +59,9 @@ struct gengetopt_args_info
   char * out_dab_arg;	/**< @brief Output DAB file basename (ie without extension) (default='NA').  */
   char * out_dab_orig;	/**< @brief Output DAB file basename (ie without extension) original value given at command line.  */
   const char *out_dab_help; /**< @brief Output DAB file basename (ie without extension) help description.  */
-  char * dataset_w_arg;	/**< @brief Dataset weights (default='NA').  */
-  char * dataset_w_orig;	/**< @brief Dataset weights original value given at command line.  */
-  const char *dataset_w_help; /**< @brief Dataset weights help description.  */
-  char * dab_dir2_arg;	/**< @brief Directory containing the summed DAB file (default='NA').  */
-  char * dab_dir2_orig;	/**< @brief Directory containing the summed DAB file original value given at command line.  */
-  const char *dab_dir2_help; /**< @brief Directory containing the summed DAB file help description.  */
-  char * dab_basename_arg;	/**< @brief Summed DAB basename (ie without extension) (default='NA').  */
-  char * dab_basename_orig;	/**< @brief Summed DAB basename (ie without extension) original value given at command line.  */
-  const char *dab_basename_help; /**< @brief Summed DAB basename (ie without extension) help description.  */
+  char * dataset_w_arg;	/**< @brief Dataset weights (optional) (default='NA').  */
+  char * dataset_w_orig;	/**< @brief Dataset weights (optional) original value given at command line.  */
+  const char *dataset_w_help; /**< @brief Dataset weights (optional) help description.  */
   int gavg_flag;	/**< @brief Generates gene average file (default=off).  */
   const char *gavg_help; /**< @brief Generates gene average file help description.  */
   int gpres_flag;	/**< @brief Generates gene presence file (default=off).  */
@@ -72,8 +72,10 @@ struct gengetopt_args_info
   float top_avg_percent_arg;	/**< @brief For gene average, top X percent of the values to take average (0 - 1.0) (default='1.0').  */
   char * top_avg_percent_orig;	/**< @brief For gene average, top X percent of the values to take average (0 - 1.0) original value given at command line.  */
   const char *top_avg_percent_help; /**< @brief For gene average, top X percent of the values to take average (0 - 1.0) help description.  */
-  int norm_flag;	/**< @brief Rank-normalize matrix, also weight rank by RBP (see -M, -R additional options) (default=off).  */
-  const char *norm_help; /**< @brief Rank-normalize matrix, also weight rank by RBP (see -M, -R additional options) help description.  */
+  int norm_flag;	/**< @brief Normalize matrix then sparsify it (needs --norm_mode) (default=off).  */
+  const char *norm_help; /**< @brief Normalize matrix then sparsify it (needs --norm_mode) help description.  */
+  int view_flag;	/**< @brief View distribution of values in the matrix (default=off).  */
+  const char *view_help; /**< @brief View distribution of values in the matrix help description.  */
   char * pclinput_arg;	/**< @brief PCL BIN file.  */
   char * pclinput_orig;	/**< @brief PCL BIN file original value given at command line.  */
   const char *pclinput_help; /**< @brief PCL BIN file help description.  */
@@ -97,17 +99,26 @@ struct gengetopt_args_info
   char * quant_arg;	/**< @brief Quant file.  */
   char * quant_orig;	/**< @brief Quant file original value given at command line.  */
   const char *quant_help; /**< @brief Quant file help description.  */
+  int default_type_arg;	/**< @brief Default gene index type (choose unsigned short for genes, or unsigned int (32-bit) for transcripts) (required for DAB set mode and if --norm is enabled in DAB mode) (0 - unsigned int, 1 - unsigned short) (default='-1').  */
+  char * default_type_orig;	/**< @brief Default gene index type (choose unsigned short for genes, or unsigned int (32-bit) for transcripts) (required for DAB set mode and if --norm is enabled in DAB mode) (0 - unsigned int, 1 - unsigned short) original value given at command line.  */
+  const char *default_type_help; /**< @brief Default gene index type (choose unsigned short for genes, or unsigned int (32-bit) for transcripts) (required for DAB set mode and if --norm is enabled in DAB mode) (0 - unsigned int, 1 - unsigned short) help description.  */
+  char * norm_mode_arg;	/**< @brief Normalization method: rank - rank-normalize matrix, subtract_z - subtract-z-normalize matrix (required for DAB set mode and if --norm is enabled) (default='NA').  */
+  char * norm_mode_orig;	/**< @brief Normalization method: rank - rank-normalize matrix, subtract_z - subtract-z-normalize matrix (required for DAB set mode and if --norm is enabled) original value given at command line.  */
+  const char *norm_mode_help; /**< @brief Normalization method: rank - rank-normalize matrix, subtract_z - subtract-z-normalize matrix (required for DAB set mode and if --norm is enabled) help description.  */
   int logit_flag;	/**< @brief For --gavg and --gplat, whether to take logit of the value first (useful if edge value is probability) (default=off).  */
   const char *logit_help; /**< @brief For --gavg and --gplat, whether to take logit of the value first (useful if edge value is probability) help description.  */
-  int max_rank_arg;	/**< @brief Maximum rank value (for DAB --norm, and DAB set mode) (default='-1').  */
-  char * max_rank_orig;	/**< @brief Maximum rank value (for DAB --norm, and DAB set mode) original value given at command line.  */
-  const char *max_rank_help; /**< @brief Maximum rank value (for DAB --norm, and DAB set mode) help description.  */
-  float rbp_p_arg;	/**< @brief RBP p parameter (for DAB --norm, and DAB set mode) (default='-1').  */
-  char * rbp_p_orig;	/**< @brief RBP p parameter (for DAB --norm, and DAB set mode) original value given at command line.  */
-  const char *rbp_p_help; /**< @brief RBP p parameter (for DAB --norm, and DAB set mode) help description.  */
-  int default_type_arg;	/**< @brief Default gene index type (choose unsigned short for genes, or unsigned int (32-bit) for transcripts) (required for DAB --norm, and DAB set mode) (0 - unsigned int, 1 - unsigned short) (default='-1').  */
-  char * default_type_orig;	/**< @brief Default gene index type (choose unsigned short for genes, or unsigned int (32-bit) for transcripts) (required for DAB --norm, and DAB set mode) (0 - unsigned int, 1 - unsigned short) original value given at command line.  */
-  const char *default_type_help; /**< @brief Default gene index type (choose unsigned short for genes, or unsigned int (32-bit) for transcripts) (required for DAB --norm, and DAB set mode) (0 - unsigned int, 1 - unsigned short) help description.  */
+  int max_rank_arg;	/**< @brief Maximum rank value (for --norm_mode=rank) (default='-1').  */
+  char * max_rank_orig;	/**< @brief Maximum rank value (for --norm_mode=rank) original value given at command line.  */
+  const char *max_rank_help; /**< @brief Maximum rank value (for --norm_mode=rank) help description.  */
+  float rbp_p_arg;	/**< @brief RBP p parameter (for --norm_mode=rank) (default='-1').  */
+  char * rbp_p_orig;	/**< @brief RBP p parameter (for --norm_mode=rank) original value given at command line.  */
+  const char *rbp_p_help; /**< @brief RBP p parameter (for --norm_mode=rank) help description.  */
+  float cutoff_value_arg;	/**< @brief The cutoff value (for --norm_mode=subtract_z) (default='-1.0').  */
+  char * cutoff_value_orig;	/**< @brief The cutoff value (for --norm_mode=subtract_z) original value given at command line.  */
+  const char *cutoff_value_help; /**< @brief The cutoff value (for --norm_mode=subtract_z) help description.  */
+  float exp_arg;	/**< @brief Raise the z-score to the power of this value (for --norm_mode=subtract_z) (default='-1.0').  */
+  char * exp_orig;	/**< @brief Raise the z-score to the power of this value (for --norm_mode=subtract_z) original value given at command line.  */
+  const char *exp_help; /**< @brief Raise the z-score to the power of this value (for --norm_mode=subtract_z) help description.  */
   char * input_arg;	/**< @brief Gene mapping file.  */
   char * input_orig;	/**< @brief Gene mapping file original value given at command line.  */
   const char *input_help; /**< @brief Gene mapping file help description.  */
@@ -122,17 +133,18 @@ struct gengetopt_args_info
   unsigned int db_given ;	/**< @brief Whether db was given.  */
   unsigned int dabset_given ;	/**< @brief Whether dabset was given.  */
   unsigned int combined_dab_given ;	/**< @brief Whether combined_dab was given.  */
+  unsigned int dab_dir2_given ;	/**< @brief Whether dab_dir2 was given.  */
+  unsigned int dab_basename_given ;	/**< @brief Whether dab_basename was given.  */
   unsigned int dab_dir_given ;	/**< @brief Whether dab_dir was given.  */
   unsigned int dablist_given ;	/**< @brief Whether dablist was given.  */
   unsigned int out_dab_given ;	/**< @brief Whether out_dab was given.  */
   unsigned int dataset_w_given ;	/**< @brief Whether dataset_w was given.  */
-  unsigned int dab_dir2_given ;	/**< @brief Whether dab_dir2 was given.  */
-  unsigned int dab_basename_given ;	/**< @brief Whether dab_basename was given.  */
   unsigned int gavg_given ;	/**< @brief Whether gavg was given.  */
   unsigned int gpres_given ;	/**< @brief Whether gpres was given.  */
   unsigned int dabinput_given ;	/**< @brief Whether dabinput was given.  */
   unsigned int top_avg_percent_given ;	/**< @brief Whether top_avg_percent was given.  */
   unsigned int norm_given ;	/**< @brief Whether norm was given.  */
+  unsigned int view_given ;	/**< @brief Whether view was given.  */
   unsigned int pclinput_given ;	/**< @brief Whether pclinput was given.  */
   unsigned int gexpvarmean_given ;	/**< @brief Whether gexpvarmean was given.  */
   unsigned int sinfo_given ;	/**< @brief Whether sinfo was given.  */
@@ -142,10 +154,13 @@ struct gengetopt_args_info
   unsigned int dset_given ;	/**< @brief Whether dset was given.  */
   unsigned int useNibble_given ;	/**< @brief Whether useNibble was given.  */
   unsigned int quant_given ;	/**< @brief Whether quant was given.  */
+  unsigned int default_type_given ;	/**< @brief Whether default_type was given.  */
+  unsigned int norm_mode_given ;	/**< @brief Whether norm_mode was given.  */
   unsigned int logit_given ;	/**< @brief Whether logit was given.  */
   unsigned int max_rank_given ;	/**< @brief Whether max_rank was given.  */
   unsigned int rbp_p_given ;	/**< @brief Whether rbp_p was given.  */
-  unsigned int default_type_given ;	/**< @brief Whether default_type was given.  */
+  unsigned int cutoff_value_given ;	/**< @brief Whether cutoff_value was given.  */
+  unsigned int exp_given ;	/**< @brief Whether exp was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
 
@@ -271,6 +286,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  */
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
+
+extern char *cmdline_parser_norm_mode_values[] ;	/**< @brief Possible values for norm_mode.  */
 
 
 #ifdef __cplusplus

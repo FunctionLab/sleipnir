@@ -36,8 +36,12 @@ const char *gengetopt_args_info_help[] = {
   "  -f, --test                   Test mode  (default=off)",
   "  -g, --testcount              Test count mode  (default=off)",
   "  -h, --testcombined           Test count mode  (default=off)",
-  "\nCombined-DAB mode:",
+  "  -v, --visualize              Visualization mode  (default=off)",
+  "\nCombined-DAB / Visualization mode:",
   "  -b, --dab_basename=filename  Combined-dab basename, also shared with Test \n                                 Mode",
+  "\nVisualization mode:",
+  "  -c, --cutoff=FLOAT           Cutoff value  (default=`0.0001')",
+  "  -G, --genome=filename        Genome mapping file",
   "\nSparse DAB mode:",
   "  -V, --dab_list=filename      DAB list",
   "  -I, --num_iter=INT           Number of iterations  (default=`0')",
@@ -85,7 +89,10 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->test_given = 0 ;
   args_info->testcount_given = 0 ;
   args_info->testcombined_given = 0 ;
+  args_info->visualize_given = 0 ;
   args_info->dab_basename_given = 0 ;
+  args_info->cutoff_given = 0 ;
+  args_info->genome_given = 0 ;
   args_info->dab_list_given = 0 ;
   args_info->num_iter_given = 0 ;
   args_info->default_type_given = 0 ;
@@ -105,8 +112,13 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->test_flag = 0;
   args_info->testcount_flag = 0;
   args_info->testcombined_flag = 0;
+  args_info->visualize_flag = 0;
   args_info->dab_basename_arg = NULL;
   args_info->dab_basename_orig = NULL;
+  args_info->cutoff_arg = 0.0001;
+  args_info->cutoff_orig = NULL;
+  args_info->genome_arg = NULL;
+  args_info->genome_orig = NULL;
   args_info->dab_list_arg = NULL;
   args_info->dab_list_orig = NULL;
   args_info->num_iter_arg = 0;
@@ -140,16 +152,19 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->test_help = gengetopt_args_info_help[5] ;
   args_info->testcount_help = gengetopt_args_info_help[6] ;
   args_info->testcombined_help = gengetopt_args_info_help[7] ;
-  args_info->dab_basename_help = gengetopt_args_info_help[9] ;
-  args_info->dab_list_help = gengetopt_args_info_help[11] ;
-  args_info->num_iter_help = gengetopt_args_info_help[12] ;
-  args_info->default_type_help = gengetopt_args_info_help[13] ;
-  args_info->rbp_p_help = gengetopt_args_info_help[14] ;
-  args_info->max_rank_help = gengetopt_args_info_help[15] ;
-  args_info->input_help = gengetopt_args_info_help[17] ;
-  args_info->query_help = gengetopt_args_info_help[18] ;
-  args_info->dab_dir_help = gengetopt_args_info_help[19] ;
-  args_info->dir_out_help = gengetopt_args_info_help[21] ;
+  args_info->visualize_help = gengetopt_args_info_help[8] ;
+  args_info->dab_basename_help = gengetopt_args_info_help[10] ;
+  args_info->cutoff_help = gengetopt_args_info_help[12] ;
+  args_info->genome_help = gengetopt_args_info_help[13] ;
+  args_info->dab_list_help = gengetopt_args_info_help[15] ;
+  args_info->num_iter_help = gengetopt_args_info_help[16] ;
+  args_info->default_type_help = gengetopt_args_info_help[17] ;
+  args_info->rbp_p_help = gengetopt_args_info_help[18] ;
+  args_info->max_rank_help = gengetopt_args_info_help[19] ;
+  args_info->input_help = gengetopt_args_info_help[21] ;
+  args_info->query_help = gengetopt_args_info_help[22] ;
+  args_info->dab_dir_help = gengetopt_args_info_help[23] ;
+  args_info->dir_out_help = gengetopt_args_info_help[25] ;
   
 }
 
@@ -233,6 +248,9 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   unsigned int i;
   free_string_field (&(args_info->dab_basename_arg));
   free_string_field (&(args_info->dab_basename_orig));
+  free_string_field (&(args_info->cutoff_orig));
+  free_string_field (&(args_info->genome_arg));
+  free_string_field (&(args_info->genome_orig));
   free_string_field (&(args_info->dab_list_arg));
   free_string_field (&(args_info->dab_list_orig));
   free_string_field (&(args_info->num_iter_orig));
@@ -295,8 +313,14 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "testcount", 0, 0 );
   if (args_info->testcombined_given)
     write_into_file(outfile, "testcombined", 0, 0 );
+  if (args_info->visualize_given)
+    write_into_file(outfile, "visualize", 0, 0 );
   if (args_info->dab_basename_given)
     write_into_file(outfile, "dab_basename", args_info->dab_basename_orig, 0);
+  if (args_info->cutoff_given)
+    write_into_file(outfile, "cutoff", args_info->cutoff_orig, 0);
+  if (args_info->genome_given)
+    write_into_file(outfile, "genome", args_info->genome_orig, 0);
   if (args_info->dab_list_given)
     write_into_file(outfile, "dab_list", args_info->dab_list_orig, 0);
   if (args_info->num_iter_given)
@@ -597,7 +621,10 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "test",	0, NULL, 'f' },
         { "testcount",	0, NULL, 'g' },
         { "testcombined",	0, NULL, 'h' },
+        { "visualize",	0, NULL, 'v' },
         { "dab_basename",	1, NULL, 'b' },
+        { "cutoff",	1, NULL, 'c' },
+        { "genome",	1, NULL, 'G' },
         { "dab_list",	1, NULL, 'V' },
         { "num_iter",	1, NULL, 'I' },
         { "default_type",	1, NULL, 'T' },
@@ -610,7 +637,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "defghb:V:I:T:R:M:i:q:F:D:", long_options, &option_index);
+      c = getopt_long (argc, argv, "defghvb:c:G:V:I:T:R:M:i:q:F:D:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -666,6 +693,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'v':	/* Visualization mode.  */
+        
+        
+          if (update_arg((void *)&(args_info->visualize_flag), 0, &(args_info->visualize_given),
+              &(local_args_info.visualize_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "visualize", 'v',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'b':	/* Combined-dab basename, also shared with Test Mode.  */
         
         
@@ -674,6 +711,30 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.dab_basename_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "dab_basename", 'b',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'c':	/* Cutoff value.  */
+        
+        
+          if (update_arg( (void *)&(args_info->cutoff_arg), 
+               &(args_info->cutoff_orig), &(args_info->cutoff_given),
+              &(local_args_info.cutoff_given), optarg, 0, "0.0001", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "cutoff", 'c',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'G':	/* Genome mapping file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->genome_arg), 
+               &(args_info->genome_orig), &(args_info->genome_given),
+              &(local_args_info.genome_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genome", 'G',
               additional_error))
             goto failure;
         
