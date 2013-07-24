@@ -49,6 +49,13 @@ struct gengetopt_args_info
   char * dab_basename_arg;	/**< @brief Combined-dab basename, also shared with Test Mode.  */
   char * dab_basename_orig;	/**< @brief Combined-dab basename, also shared with Test Mode original value given at command line.  */
   const char *dab_basename_help; /**< @brief Combined-dab basename, also shared with Test Mode help description.  */
+  int top_genes_arg;	/**< @brief Top genes to visualize (for combined-dab) (default='100').  */
+  char * top_genes_orig;	/**< @brief Top genes to visualize (for combined-dab) original value given at command line.  */
+  const char *top_genes_help; /**< @brief Top genes to visualize (for combined-dab) help description.  */
+  int generate_dot_flag;	/**< @brief Generate a dot file (for combined-dab) (default=off).  */
+  const char *generate_dot_help; /**< @brief Generate a dot file (for combined-dab) help description.  */
+  int print_distr_flag;	/**< @brief Print distribution of edge values (default=off).  */
+  const char *print_distr_help; /**< @brief Print distribution of edge values help description.  */
   float cutoff_arg;	/**< @brief Cutoff value (default='0.0001').  */
   char * cutoff_orig;	/**< @brief Cutoff value original value given at command line.  */
   const char *cutoff_help; /**< @brief Cutoff value help description.  */
@@ -70,6 +77,9 @@ struct gengetopt_args_info
   int max_rank_arg;	/**< @brief Maximum rank number in the sparse DAB matrix (must be specified) (default='-1').  */
   char * max_rank_orig;	/**< @brief Maximum rank number in the sparse DAB matrix (must be specified) original value given at command line.  */
   const char *max_rank_help; /**< @brief Maximum rank number in the sparse DAB matrix (must be specified) help description.  */
+  char * dset_cutoff_file_arg;	/**< @brief Dataset score cutoff file (default='NA').  */
+  char * dset_cutoff_file_orig;	/**< @brief Dataset score cutoff file original value given at command line.  */
+  const char *dset_cutoff_file_help; /**< @brief Dataset score cutoff file help description.  */
   char * input_arg;	/**< @brief Gene mapping file.  */
   char * input_orig;	/**< @brief Gene mapping file original value given at command line.  */
   const char *input_help; /**< @brief Gene mapping file help description.  */
@@ -79,6 +89,9 @@ struct gengetopt_args_info
   char * dab_dir_arg;	/**< @brief DAB directory.  */
   char * dab_dir_orig;	/**< @brief DAB directory original value given at command line.  */
   const char *dab_dir_help; /**< @brief DAB directory help description.  */
+  char * not_query_arg;	/**< @brief NOT Query file (optional, for combined-DAB) (default='NA').  */
+  char * not_query_orig;	/**< @brief NOT Query file (optional, for combined-DAB) original value given at command line.  */
+  const char *not_query_help; /**< @brief NOT Query file (optional, for combined-DAB) help description.  */
   char * dir_out_arg;	/**< @brief Output directory.  */
   char * dir_out_orig;	/**< @brief Output directory original value given at command line.  */
   const char *dir_out_help; /**< @brief Output directory help description.  */
@@ -92,6 +105,9 @@ struct gengetopt_args_info
   unsigned int testcombined_given ;	/**< @brief Whether testcombined was given.  */
   unsigned int visualize_given ;	/**< @brief Whether visualize was given.  */
   unsigned int dab_basename_given ;	/**< @brief Whether dab_basename was given.  */
+  unsigned int top_genes_given ;	/**< @brief Whether top_genes was given.  */
+  unsigned int generate_dot_given ;	/**< @brief Whether generate_dot was given.  */
+  unsigned int print_distr_given ;	/**< @brief Whether print_distr was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int genome_given ;	/**< @brief Whether genome was given.  */
   unsigned int dab_list_given ;	/**< @brief Whether dab_list was given.  */
@@ -99,9 +115,11 @@ struct gengetopt_args_info
   unsigned int default_type_given ;	/**< @brief Whether default_type was given.  */
   unsigned int rbp_p_given ;	/**< @brief Whether rbp_p was given.  */
   unsigned int max_rank_given ;	/**< @brief Whether max_rank was given.  */
+  unsigned int dset_cutoff_file_given ;	/**< @brief Whether dset_cutoff_file was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
   unsigned int dab_dir_given ;	/**< @brief Whether dab_dir was given.  */
+  unsigned int not_query_given ;	/**< @brief Whether not_query was given.  */
   unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */

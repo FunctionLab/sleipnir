@@ -462,6 +462,10 @@ public:
 	static bool ReadMultipleQueries(const string &strFile,
 		vector< vector<string> > &qList, const int lineSize = 1024);
 
+
+	static bool ReadMultipleNotQueries(const char *file,
+		vector<vector<vector<string> > > &qList, const int lineSize = 1024);
+
 	/*!
 	 * \brief Read a list of queries
 	 *

@@ -68,7 +68,9 @@ bool search_one_dab(vector<float> &gene_score,
 	CDat &mat, const size_t numGenes,
 	CSeekIntIntMap &d1,
 	vector<utype> &indexConvReverse,
-	vector<float> &q_weight){ 
+	vector<float> &q_weight, 
+	vector<vector<float> > &nq_weight
+){ 
 	//q_weight is query presence - 1.0 if gene at the index i is a query gene
 
 	vector<float> gene_count;
@@ -107,13 +109,45 @@ bool search_one_dab(vector<float> &gene_score,
 		gene_score[gi] /= gene_count[gi];
 	}
 
+	utype ind;
+	for(ind=0; ind<nq_weight.size(); ind++){
+		vector<float> ngene_count, ngene_score;
+		CSeekTools::InitVector(ngene_score, numGenes, (float)CMeta::GetNaN());
+		CSeekTools::InitVector(ngene_count, numGenes, (float)0);
+
+		for(kk=0; kk<d1.GetNumSet(); kk++)
+			ngene_score[(utype)indexConvReverse[(utype)allGenes[kk]]] = 0;
+
+		for(qqi=0; qqi<d1.GetNumSet(); qqi++){
+			utype qi = allGenes[qqi];
+			utype qq = indexConvReverse[qi];
+			if(nq_weight[ind][qq]==0) //not a NOT query gene
+				continue;
+			//now a NOT query gene
+			float *vc = mat.GetFullRow(qi);
+			for(kk=0; kk<d1.GetNumSet(); kk++){
+				utype k = allGenes[kk];
+				utype gi = indexConvReverse[k];
+				float fl = vc[k];
+				ngene_score[gi] += fl;
+				ngene_count[gi] += 1.0;
+			}
+			delete[] vc;
+		}
+		for(kk=0; kk<d1.GetNumSet(); kk++){
+			utype gi = indexConvReverse[(utype)allGenes[kk]];
+			ngene_score[gi] /= ngene_count[gi];
+			gene_score[gi] -= ngene_score[gi]; //subtract the correlation to NOT genes
+		}
+	}
+
 	return true;
 }
 
 bool get_score(vector<float> &gene_score, 
-	//vector<vector<float> > &mat, 
 	CSparseFlatMatrix<float> &mat,
 	CSeekIntIntMap *geneMap, vector<float> &q_weight){
+
 	vector<float> gene_count;
 	int numGenes = geneMap->GetSize();
 	CSeekTools::InitVector(gene_score, numGenes, (float)CMeta::GetNaN());
@@ -130,6 +164,7 @@ bool get_score(vector<float> &gene_score,
 		utype qq = allGenes[qi];
 		if(q_weight[qq]==0) 
 			continue;
+			
 		const vector<CPair<float> > &vc = mat.GetRow(qq);
 		for(kk=0; kk<vc.size(); kk++){
 			float fl = vc[kk].v;
@@ -158,6 +193,9 @@ bool get_score(vector<float> &gene_score,
 	for(k=0; k<geneMap->GetNumSet(); k++){
 		utype gi = allGenes[k];
 		gene_score[gi] /= gene_count[gi];
+		if(gene_count[gi]==0){
+			gene_score[gi] = 0;
+		}
 	}
 	return true;
 }
@@ -188,18 +226,32 @@ bool get_score(vector<float> &gene_score,
 	return true;
 }*/
 
+bool weight_fast(vector<char> &is_query, vector<float> &d1,
+CSeekIntIntMap *geneMap, float &w){
+	utype i;
+	w = 0;
+	const vector<utype> &allGenes = geneMap->GetAllReverse();
+	for(i=0; i<geneMap->GetNumSet(); i++){
+		utype gi = allGenes[i];
+		if(is_query[gi]==1){
+			//if(CMeta::IsNaN(d1[gi])) continue;
+			w += d1[gi];
+		}
+	}
+	return true;	
+}
+
 bool weight(vector<char> &is_query, vector<float> &d1,
 	CSeekIntIntMap *geneMap, float rbp_p, float &w){
 	vector<AResultFloat> ar;
 	ar.resize(geneMap->GetSize());
 	utype i;
-	for(i=0; i<ar.size(); i++)
-		ar[i].i = i;
 	
 	const vector<utype> &allGenes = geneMap->GetAllReverse();
 	for(i=0; i<geneMap->GetNumSet(); i++){
 		utype gi = allGenes[i];
-		ar[gi].f = d1[gi];
+		ar[i].i = gi;
+		ar[i].f = d1[gi];
 	}
 	
 	int MAX = 5000;
@@ -214,10 +266,9 @@ bool weight(vector<char> &is_query, vector<float> &d1,
 	return true;
 }
 
-bool cv_weight(vector<utype> &query, 
-	//vector<vector<float> > &mat,
-	CSparseFlatMatrix<float> &mat,
+bool cv_weight(vector<utype> &query, CSparseFlatMatrix<float> &mat,
 	CSeekIntIntMap *geneMap, float rbp_p, float &tot_w){
+
 	//leave one in cross-validation
 	utype i, j;
 	int numGenes = geneMap->GetSize();
@@ -230,7 +281,6 @@ bool cv_weight(vector<utype> &query,
 		CSeekTools::InitVector(q_weight, numGenes, (float) 0);
 		q_weight[query[i]] = 1.0;
 		float w = 0;
-		
 		for(j=0; j<query.size(); j++){
 			if(i==j) continue;
 			is_query[query[j]] = 1;
@@ -238,11 +288,11 @@ bool cv_weight(vector<utype> &query,
 		vector<float> gene_score;
 		get_score(gene_score, mat, geneMap, q_weight);
 		gene_score[query[i]] = 0;
-		weight(is_query, gene_score, geneMap, rbp_p, w);
+		//weight(is_query, gene_score, geneMap, rbp_p, w);
+		weight_fast(is_query, gene_score, geneMap, w);
 		tot_w += w;
 	}
-	tot_w /= query.size();
-	
+	tot_w /= query.size();	
 	return true;	
 }
 
@@ -295,7 +345,6 @@ int main(int iArgs, char **aszArgs){
 	string output_dir = sArgs.dir_out_arg;
 	int numGenes = vecstrGenes.size();
 	vector< vector<string> > vecstrAllQuery;
-		
 	fprintf(stderr, "Reading queries\n");
 	if(!CSeekTools::ReadMultipleQueries(sArgs.query_arg, vecstrAllQuery))
 		return -1;
@@ -306,6 +355,16 @@ int main(int iArgs, char **aszArgs){
 		qu[i] = vector<utype>();
 		for(j=0; j<vecstrAllQuery[i].size(); j++)
 			qu[i].push_back(mapstriGenes[vecstrAllQuery[i][j]]);
+	}
+
+	vector<vector<vector<string> > > vecstrAllNotQuery;
+	vecstrAllNotQuery.resize(vecstrAllQuery.size());
+	string not_query = sArgs.not_query_arg;
+	if(not_query!="NA"){
+		fprintf(stderr, "Reading NOT queries\n");
+		if(!CSeekTools::ReadMultipleNotQueries(sArgs.not_query_arg, 
+		vecstrAllNotQuery))
+			return -1;
 	}
 
 	if(sArgs.visualize_flag==1){
@@ -355,26 +414,33 @@ int main(int iArgs, char **aszArgs){
 			}
 			fprintf(stderr, "Query %d\n", j);
 
-			/*float init = 0.00001;
-			float step = 0.00001;
-			float upper = 0.001;
-			*/
-			float init = 0.05;
-			float step = 0.05;
-			float upper = 3;
-
-			float cutoff = init;
-			while(cutoff<upper){
-				int count = 0;
+			if(sArgs.print_distr_flag==1){
+				float min = 9999;
+				float max = -1;
 				for(k=0; k<vec_s.size(); k++){
 					for(l=k+1; l<vec_s.size(); l++){
-						if(!CMeta::IsNaN(V.Get(k,l)) && V.Get(k,l)>=cutoff){
-							count++;
-						}
+						float v = CD.Get(vec_g[k], vec_g[l]);
+						if(CMeta::IsNaN(v)) continue;
+						if(v>max) max = v;
+						if(v<min) min = v;
 					}
 				}
-				fprintf(stderr, "%.5f\t%d\n", cutoff, count);
-				cutoff+=step;
+				float init = min;
+				float step = (max - min)/100.0;
+				float upper = max;
+				float cutoff = init;
+				while(cutoff<upper){
+					int count = 0;
+					for(k=0; k<vec_s.size(); k++){
+						for(l=k+1; l<vec_s.size(); l++){
+							if(!CMeta::IsNaN(V.Get(k,l)) && V.Get(k,l)>=cutoff){
+								count++;
+							}
+						}
+					}
+					fprintf(stderr, "%.5f\t%d\n", cutoff, count);
+					cutoff+=step;
+				}
 			}
 
 			sprintf(acBuffer, "%s/%d.dot", output_dir.c_str(), j);			
@@ -400,6 +466,8 @@ int main(int iArgs, char **aszArgs){
 		}
 
 		vector<vector<float> > q_weight;
+		vector<vector<vector<float> > > nq_weight;
+
 		q_weight.resize(vecstrAllQuery.size());
 		for(i=0; i<vecstrAllQuery.size(); i++){
 			CSeekTools::InitVector(q_weight[i], numGenes, (float) 0);
@@ -407,8 +475,22 @@ int main(int iArgs, char **aszArgs){
 				q_weight[i][mapstriGenes[vecstrAllQuery[i][j]]] = 1;
 		}
 
+		nq_weight.resize(vecstrAllNotQuery.size());
+		if(not_query!="NA"){
+			for(i=0; i<vecstrAllNotQuery.size(); i++){
+				nq_weight[i].resize(vecstrAllNotQuery[i].size());
+				for(j=0; j<vecstrAllNotQuery[i].size(); j++){
+					CSeekTools::InitVector(nq_weight[i][j], numGenes, (float) 0);
+					for(k=0; k<vecstrAllNotQuery[i][j].size(); k++)
+						nq_weight[i][j][mapstriGenes[vecstrAllNotQuery[i][j][k]]] = 1;
+				}
+			}
+		}
+
+		fprintf(stderr, "Start reading dab\n");
 		CDat CD;
 		CD.Open(file1.c_str(), false, 2, false, false, false);
+		fprintf(stderr, "Finished reading dab\n");
 
 		CSeekIntIntMap d1(CD.GetGenes());
 		vector<utype> indexConvReverse;
@@ -430,13 +512,14 @@ int main(int iArgs, char **aszArgs){
 		for(j=0; j<vecstrAllQuery.size(); j++){
 			vector<float> tmp_score;
 			search_one_dab(tmp_score, CD, vecstrGenes.size(), d1, indexConvReverse,
-			q_weight[j]);
+			q_weight[j], nq_weight[j]);
 			for(kk=0; kk<d1.GetNumSet(); kk++){
 				utype k = allGenes[kk];
 				utype gi = indexConvReverse[k];
 				final_score[j][gi] = tmp_score[gi];
 			}
 		}
+		fprintf(stderr, "Writing output\n");
 
 		for(j=0; j<vecstrAllQuery.size(); j++){
 			for(k=0; k<final_score[j].size(); k++){
@@ -451,8 +534,10 @@ int main(int iArgs, char **aszArgs){
 			CSeekTools::WriteArray(acBuffer, final_score[j]);
 		}
 
+		fprintf(stderr, "Finished with search\n");
 		//Visualize
 		for(j=0; j<vecstrAllQuery.size(); j++){
+			//fprintf(stderr, "Query %d\n", j);
 			vector<AResultFloat> ar;
 			ar.resize(final_score[j].size());
 			for(k=0; k<final_score[j].size(); k++){
@@ -462,43 +547,71 @@ int main(int iArgs, char **aszArgs){
 			sort(ar.begin(), ar.end());
 			vector<utype> vec_g;
 			vector<string> vec_s;
-			int FIRST = 200;
+			vector<float> node_w;
+			int FIRST = sArgs.top_genes_arg;
 			for(k=0; k<FIRST; k++){
 				if(ar[k].f==-320) break;
 				vec_g.push_back(CD.GetGeneIndex(vecstrGenes[ar[k].i]));
 				vec_s.push_back(vecstrGenes[ar[k].i]);
+				node_w.push_back(0);
 			}
-			if(vec_g.size()!=FIRST) continue;
+			//if(vec_g.size()!=FIRST) continue;
+			for(k=0; k<vecstrAllQuery[j].size(); k++){
+				size_t ind = CD.GetGeneIndex(vecstrAllQuery[j][k]);
+				if(ind==(size_t)-1) continue;
+				vec_g.push_back(ind);
+				vec_s.push_back(vecstrAllQuery[j][k]);
+				node_w.push_back(1.0);
+			}
+
 			CDat V;
 			V.Open(vec_s);
 			for(k=0; k<vec_s.size(); k++){
 				for(l=k+1; l<vec_s.size(); l++){
-					V.Set(k, l, CD.Get(vec_g[k], vec_g[l]));
+					float v = CD.Get(vec_g[k], vec_g[l]);
+					V.Set(k, l, v);
 				}
 			}
 
-			fprintf(stderr, "Query %d\n", j);
-			float cutoff = 0.00001;
-			while(cutoff<0.001){
-				int count = 0;
+			if(sArgs.print_distr_flag==1){
+				float min = 9999;
+				float max = -1;
 				for(k=0; k<vec_s.size(); k++){
 					for(l=k+1; l<vec_s.size(); l++){
-						if(!CMeta::IsNaN(V.Get(k,l)) && V.Get(k,l)>=cutoff){
-							count++;
-						}
+						float v = CD.Get(vec_g[k], vec_g[l]);
+						if(CMeta::IsNaN(v)) continue;
+						if(v>max) max = v;
+						if(v<min) min = v;
 					}
 				}
-				fprintf(stderr, "%.5f\t%d\n", cutoff, count);
-				cutoff+=0.00001;
+
+				float init = min;
+				float step = (max - min)/100.0;
+				float upper = max;
+
+				float cutoff = init;
+				while(cutoff<upper){
+					int count = 0;
+					for(k=0; k<vec_s.size(); k++){
+						for(l=k+1; l<vec_s.size(); l++){
+							if(!CMeta::IsNaN(V.Get(k,l)) && V.Get(k,l)>=cutoff){
+								count++;
+							}
+						}
+					}
+					fprintf(stderr, "%.5f\t%d\n", cutoff, count);
+					cutoff+=step;
+				}
 			}
 
-			sprintf(acBuffer, "%s/%d.dot", output_dir.c_str(), j);			
-			ofstream ot(acBuffer);
-			V.SaveDOT(ot, cutoff_par, &g, false, true, NULL, NULL);
-			//V.SaveDOT(ot, 0.0001, NULL, true, false, NULL, NULL);
+			if(sArgs.generate_dot_flag==1){
+				sprintf(acBuffer, "%s/%d.dot", output_dir.c_str(), j);			
+				ofstream ot(acBuffer);
+				V.SaveDOT(ot, cutoff_par, &g, false, true, &node_w, NULL);
+				//V.SaveDOT(ot, 0.0001, NULL, true, false, NULL, NULL);
+			}
 		}
 		
-
 	}
 
 	if(sArgs.test_flag==1){
@@ -672,9 +785,17 @@ int main(int iArgs, char **aszArgs){
 			return -1;
 		}
 
+		vector<float> score_cutoff;
+		bool bDatasetCutoff = false;
+		string dset_cutoff_file = sArgs.dset_cutoff_file_arg;
+		if(dset_cutoff_file!="NA"){
+			CSeekTools::ReadArray(dset_cutoff_file.c_str(), score_cutoff);
+			bDatasetCutoff = true;
+			fprintf(stderr, "Filtered mode is on!\n");
+		}
+
 		float rbp_p = sArgs.rbp_p_arg;
 		int max_rank = sArgs.max_rank_arg;
-
 		int num_iter = sArgs.num_iter_arg;
 		vector<string> dab_list;
 		CSeekTools::ReadListOneColumn(sArgs.dab_list_arg, dab_list);
@@ -690,61 +811,46 @@ int main(int iArgs, char **aszArgs){
 				q_weight[i][mapstriGenes[vecstrAllQuery[i][j]]] = 1;
 		}
 		
-		
 		fprintf(stderr, "Reading sparse DAB\n");
 		vector<vector<float> > final_score, count;
+		vector<vector<float> > dweight;
 		vector<vector<int> > freq;
 		final_score.resize(vecstrAllQuery.size());
 		count.resize(vecstrAllQuery.size());
 		freq.resize(vecstrAllQuery.size());
+		dweight.resize(vecstrAllQuery.size());
 		for(j=0; j<vecstrAllQuery.size(); j++){
 			CSeekTools::InitVector(final_score[j], vecstrGenes.size(), (float)CMeta::GetNaN());
 			CSeekTools::InitVector(count[j], vecstrGenes.size(), (float) 0);
 			CSeekTools::InitVector(freq[j], vecstrGenes.size(), (int) 0);
+			CSeekTools::InitVector(dweight[j], dab_list.size(), (float) 0);
 		}
 	
-		//CSparseFlatHalfMatrix<float> res(0);
-		/*CHalfMatrix<float> res;
-		res.Initialize(vecstrGenes.size());
-		for(i=0; i<vecstrGenes.size(); i++)
-			for(j=i+1; j<vecstrGenes.size(); j++)
-				res.Set(i, j, 0);
-		*/
 		for(i=0; i<dab_list.size(); i++){
 			fprintf(stderr, "Reading %d: %s\n", i, dab_list[i].c_str());
-			//vector<vector<float> > sm;
-			//vector<map<utype,float> > sm;
 			CSeekIntIntMap d1(vecstrGenes.size());
 			string dabfile = dab_dir + "/" + dab_list[i];
-			//CDat Dat;
-			//Dat.Open(dabfile.c_str(), false, 2, false, false, false);
-			//CSeekWriter::NormalizeDAB(Dat, vecstrGenes, false, false, false, true);
-			//transfer(Dat, sm, &d1, vecstrGenes);
-			
 			CSparseFlatMatrix<float> sm (0);
-			//CSeekWriter::ReadSparseMatrix(dabfile.c_str(), sm, d1, 3000, 0.997, vecstrGenes);
 
 			if(sArgs.default_type_arg==0) //utype
 				CSeekWriter::ReadSeekSparseMatrix<utype>(dabfile.c_str(), sm, d1, max_rank, rbp_p, vecstrGenes);
 			else
 				CSeekWriter::ReadSeekSparseMatrix<unsigned short>(dabfile.c_str(), sm, d1, max_rank, rbp_p, vecstrGenes);
-			/*if(i==0){
-				fprintf(stderr, "Summing...\n");
-				res.Copy(sm);
-				fprintf(stderr, "Finished Summing...\n");
-			}else{*/
-			//	fprintf(stderr, "Summing...\n");
-			//	CSeekWriter::SumSparseMatrix(sm, res, d1, 1.0);
-			//	fprintf(stderr, "Finished Summing...\n");
-			/*}
-			*/
-			//fprintf(stderr, "Finished!\n");	
 			
 			const vector<utype> &allGenes = d1.GetAllReverse();			
 			for(j=0; j<vecstrAllQuery.size(); j++){
 				float dw = 1.0;
-				//cv_weight(qu[j], sm, &d1, 0.99, dw);
+				cv_weight(qu[j], sm, &d1, 0.99, dw);
+				if(bDatasetCutoff){
+					if(score_cutoff[i]>dw){
+						dw = 0;
+					}
+					//fprintf(stderr, "%.3e %.3e\n", score_cutoff[i], dw);
+				}
 				//fprintf(stderr, "%.3e\n", dw);
+				dweight[j][i] = dw;
+				//if(dw==0) 
+				//	continue;
 				vector<float> tmp_score;
 				get_score(tmp_score, sm, &d1, q_weight[j]);
 				for(k=0; k<d1.GetNumSet(); k++){
@@ -781,6 +887,8 @@ int main(int iArgs, char **aszArgs){
 			CSeekTools::WriteArrayText(acBuffer, vecstrAllQuery[j]);
 			sprintf(acBuffer, "%s/%d.gscore", output_dir.c_str(), j);
 			CSeekTools::WriteArray(acBuffer, final_score[j]);
+			sprintf(acBuffer, "%s/%d.dweight", output_dir.c_str(), j);
+			CSeekTools::WriteArray(acBuffer, dweight[j]);
 		}
 	
 		//MODE 2

@@ -28,32 +28,37 @@ const char *gengetopt_args_info_usage = "Usage: SeekIterative [OPTIONS]... [FILE
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "      --help                   Print help and exit",
-  "      --version                Print version and exit",
+  "      --help                    Print help and exit",
+  "      --version                 Print version and exit",
   "\nMode:",
-  "  -d, --dab                    Sparse Dab mode  (default=off)",
-  "  -e, --combined               Combined-dab mode  (default=off)",
-  "  -f, --test                   Test mode  (default=off)",
-  "  -g, --testcount              Test count mode  (default=off)",
-  "  -h, --testcombined           Test count mode  (default=off)",
-  "  -v, --visualize              Visualization mode  (default=off)",
+  "  -d, --dab                     Sparse Dab mode  (default=off)",
+  "  -e, --combined                Combined-dab mode  (default=off)",
+  "  -f, --test                    Test mode  (default=off)",
+  "  -g, --testcount               Test count mode  (default=off)",
+  "  -h, --testcombined            Test count mode  (default=off)",
+  "  -v, --visualize               Visualization mode  (default=off)",
   "\nCombined-DAB / Visualization mode:",
-  "  -b, --dab_basename=filename  Combined-dab basename, also shared with Test \n                                 Mode",
+  "  -b, --dab_basename=filename   Combined-dab basename, also shared with Test \n                                  Mode",
+  "  -t, --top_genes=INT           Top genes to visualize (for combined-dab)  \n                                  (default=`100')",
+  "  -E, --generate_dot            Generate a dot file (for combined-dab)  \n                                  (default=off)",
+  "  -P, --print_distr             Print distribution of edge values  \n                                  (default=off)",
   "\nVisualization mode:",
-  "  -c, --cutoff=FLOAT           Cutoff value  (default=`0.0001')",
-  "  -G, --genome=filename        Genome mapping file",
+  "  -c, --cutoff=FLOAT            Cutoff value  (default=`0.0001')",
+  "  -G, --genome=filename         Genome mapping file",
   "\nSparse DAB mode:",
-  "  -V, --dab_list=filename      DAB list",
-  "  -I, --num_iter=INT           Number of iterations  (default=`0')",
-  "  -T, --default_type=INT       Default gene index type (choose unsigned short \n                                 for genes, or unsigned int (32-bit) for \n                                 transcripts) (required for DAB mode) (0 - \n                                 unsigned int, 1 - unsigned short)  \n                                 (default=`-1')",
-  "  -R, --rbp_p=FLOAT            RBP p parameter (must be specified) (p<1.0) \n                                 (recommended > 0.95)  (default=`-1')",
-  "  -M, --max_rank=INT           Maximum rank number in the sparse DAB matrix \n                                 (must be specified)  (default=`-1')",
+  "  -V, --dab_list=filename       DAB list",
+  "  -I, --num_iter=INT            Number of iterations  (default=`0')",
+  "  -T, --default_type=INT        Default gene index type (choose unsigned short \n                                  for genes, or unsigned int (32-bit) for \n                                  transcripts) (required for DAB mode) (0 - \n                                  unsigned int, 1 - unsigned short)  \n                                  (default=`-1')",
+  "  -R, --rbp_p=FLOAT             RBP p parameter (must be specified) (p<1.0) \n                                  (recommended > 0.95)  (default=`-1')",
+  "  -M, --max_rank=INT            Maximum rank number in the sparse DAB matrix \n                                  (must be specified)  (default=`-1')",
+  "  -H, --dset_cutoff_file=filename\n                                Dataset score cutoff file  (default=`NA')",
   "\nInput:",
-  "  -i, --input=filename         Gene mapping file",
-  "  -q, --query=filename         Query file",
-  "  -F, --dab_dir=directory      DAB directory",
+  "  -i, --input=filename          Gene mapping file",
+  "  -q, --query=filename          Query file",
+  "  -F, --dab_dir=directory       DAB directory",
+  "  -Q, --not_query=filename      NOT Query file (optional, for combined-DAB)  \n                                  (default=`NA')",
   "\nOutput:",
-  "  -D, --dir_out=directory      Output directory",
+  "  -D, --dir_out=directory       Output directory",
     0
 };
 
@@ -91,6 +96,9 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->testcombined_given = 0 ;
   args_info->visualize_given = 0 ;
   args_info->dab_basename_given = 0 ;
+  args_info->top_genes_given = 0 ;
+  args_info->generate_dot_given = 0 ;
+  args_info->print_distr_given = 0 ;
   args_info->cutoff_given = 0 ;
   args_info->genome_given = 0 ;
   args_info->dab_list_given = 0 ;
@@ -98,9 +106,11 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->default_type_given = 0 ;
   args_info->rbp_p_given = 0 ;
   args_info->max_rank_given = 0 ;
+  args_info->dset_cutoff_file_given = 0 ;
   args_info->input_given = 0 ;
   args_info->query_given = 0 ;
   args_info->dab_dir_given = 0 ;
+  args_info->not_query_given = 0 ;
   args_info->dir_out_given = 0 ;
 }
 
@@ -115,6 +125,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->visualize_flag = 0;
   args_info->dab_basename_arg = NULL;
   args_info->dab_basename_orig = NULL;
+  args_info->top_genes_arg = 100;
+  args_info->top_genes_orig = NULL;
+  args_info->generate_dot_flag = 0;
+  args_info->print_distr_flag = 0;
   args_info->cutoff_arg = 0.0001;
   args_info->cutoff_orig = NULL;
   args_info->genome_arg = NULL;
@@ -129,12 +143,16 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->rbp_p_orig = NULL;
   args_info->max_rank_arg = -1;
   args_info->max_rank_orig = NULL;
+  args_info->dset_cutoff_file_arg = gengetopt_strdup ("NA");
+  args_info->dset_cutoff_file_orig = NULL;
   args_info->input_arg = NULL;
   args_info->input_orig = NULL;
   args_info->query_arg = NULL;
   args_info->query_orig = NULL;
   args_info->dab_dir_arg = NULL;
   args_info->dab_dir_orig = NULL;
+  args_info->not_query_arg = gengetopt_strdup ("NA");
+  args_info->not_query_orig = NULL;
   args_info->dir_out_arg = NULL;
   args_info->dir_out_orig = NULL;
   
@@ -154,17 +172,22 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->testcombined_help = gengetopt_args_info_help[7] ;
   args_info->visualize_help = gengetopt_args_info_help[8] ;
   args_info->dab_basename_help = gengetopt_args_info_help[10] ;
-  args_info->cutoff_help = gengetopt_args_info_help[12] ;
-  args_info->genome_help = gengetopt_args_info_help[13] ;
-  args_info->dab_list_help = gengetopt_args_info_help[15] ;
-  args_info->num_iter_help = gengetopt_args_info_help[16] ;
-  args_info->default_type_help = gengetopt_args_info_help[17] ;
-  args_info->rbp_p_help = gengetopt_args_info_help[18] ;
-  args_info->max_rank_help = gengetopt_args_info_help[19] ;
-  args_info->input_help = gengetopt_args_info_help[21] ;
-  args_info->query_help = gengetopt_args_info_help[22] ;
-  args_info->dab_dir_help = gengetopt_args_info_help[23] ;
-  args_info->dir_out_help = gengetopt_args_info_help[25] ;
+  args_info->top_genes_help = gengetopt_args_info_help[11] ;
+  args_info->generate_dot_help = gengetopt_args_info_help[12] ;
+  args_info->print_distr_help = gengetopt_args_info_help[13] ;
+  args_info->cutoff_help = gengetopt_args_info_help[15] ;
+  args_info->genome_help = gengetopt_args_info_help[16] ;
+  args_info->dab_list_help = gengetopt_args_info_help[18] ;
+  args_info->num_iter_help = gengetopt_args_info_help[19] ;
+  args_info->default_type_help = gengetopt_args_info_help[20] ;
+  args_info->rbp_p_help = gengetopt_args_info_help[21] ;
+  args_info->max_rank_help = gengetopt_args_info_help[22] ;
+  args_info->dset_cutoff_file_help = gengetopt_args_info_help[23] ;
+  args_info->input_help = gengetopt_args_info_help[25] ;
+  args_info->query_help = gengetopt_args_info_help[26] ;
+  args_info->dab_dir_help = gengetopt_args_info_help[27] ;
+  args_info->not_query_help = gengetopt_args_info_help[28] ;
+  args_info->dir_out_help = gengetopt_args_info_help[30] ;
   
 }
 
@@ -248,6 +271,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   unsigned int i;
   free_string_field (&(args_info->dab_basename_arg));
   free_string_field (&(args_info->dab_basename_orig));
+  free_string_field (&(args_info->top_genes_orig));
   free_string_field (&(args_info->cutoff_orig));
   free_string_field (&(args_info->genome_arg));
   free_string_field (&(args_info->genome_orig));
@@ -257,12 +281,16 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->default_type_orig));
   free_string_field (&(args_info->rbp_p_orig));
   free_string_field (&(args_info->max_rank_orig));
+  free_string_field (&(args_info->dset_cutoff_file_arg));
+  free_string_field (&(args_info->dset_cutoff_file_orig));
   free_string_field (&(args_info->input_arg));
   free_string_field (&(args_info->input_orig));
   free_string_field (&(args_info->query_arg));
   free_string_field (&(args_info->query_orig));
   free_string_field (&(args_info->dab_dir_arg));
   free_string_field (&(args_info->dab_dir_orig));
+  free_string_field (&(args_info->not_query_arg));
+  free_string_field (&(args_info->not_query_orig));
   free_string_field (&(args_info->dir_out_arg));
   free_string_field (&(args_info->dir_out_orig));
   
@@ -317,6 +345,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "visualize", 0, 0 );
   if (args_info->dab_basename_given)
     write_into_file(outfile, "dab_basename", args_info->dab_basename_orig, 0);
+  if (args_info->top_genes_given)
+    write_into_file(outfile, "top_genes", args_info->top_genes_orig, 0);
+  if (args_info->generate_dot_given)
+    write_into_file(outfile, "generate_dot", 0, 0 );
+  if (args_info->print_distr_given)
+    write_into_file(outfile, "print_distr", 0, 0 );
   if (args_info->cutoff_given)
     write_into_file(outfile, "cutoff", args_info->cutoff_orig, 0);
   if (args_info->genome_given)
@@ -331,12 +365,16 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "rbp_p", args_info->rbp_p_orig, 0);
   if (args_info->max_rank_given)
     write_into_file(outfile, "max_rank", args_info->max_rank_orig, 0);
+  if (args_info->dset_cutoff_file_given)
+    write_into_file(outfile, "dset_cutoff_file", args_info->dset_cutoff_file_orig, 0);
   if (args_info->input_given)
     write_into_file(outfile, "input", args_info->input_orig, 0);
   if (args_info->query_given)
     write_into_file(outfile, "query", args_info->query_orig, 0);
   if (args_info->dab_dir_given)
     write_into_file(outfile, "dab_dir", args_info->dab_dir_orig, 0);
+  if (args_info->not_query_given)
+    write_into_file(outfile, "not_query", args_info->not_query_orig, 0);
   if (args_info->dir_out_given)
     write_into_file(outfile, "dir_out", args_info->dir_out_orig, 0);
   
@@ -623,6 +661,9 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "testcombined",	0, NULL, 'h' },
         { "visualize",	0, NULL, 'v' },
         { "dab_basename",	1, NULL, 'b' },
+        { "top_genes",	1, NULL, 't' },
+        { "generate_dot",	0, NULL, 'E' },
+        { "print_distr",	0, NULL, 'P' },
         { "cutoff",	1, NULL, 'c' },
         { "genome",	1, NULL, 'G' },
         { "dab_list",	1, NULL, 'V' },
@@ -630,14 +671,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "default_type",	1, NULL, 'T' },
         { "rbp_p",	1, NULL, 'R' },
         { "max_rank",	1, NULL, 'M' },
+        { "dset_cutoff_file",	1, NULL, 'H' },
         { "input",	1, NULL, 'i' },
         { "query",	1, NULL, 'q' },
         { "dab_dir",	1, NULL, 'F' },
+        { "not_query",	1, NULL, 'Q' },
         { "dir_out",	1, NULL, 'D' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "defghvb:c:G:V:I:T:R:M:i:q:F:D:", long_options, &option_index);
+      c = getopt_long (argc, argv, "defghvb:t:EPc:G:V:I:T:R:M:H:i:q:F:Q:D:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -711,6 +754,38 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.dab_basename_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "dab_basename", 'b',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 't':	/* Top genes to visualize (for combined-dab).  */
+        
+        
+          if (update_arg( (void *)&(args_info->top_genes_arg), 
+               &(args_info->top_genes_orig), &(args_info->top_genes_given),
+              &(local_args_info.top_genes_given), optarg, 0, "100", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "top_genes", 't',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'E':	/* Generate a dot file (for combined-dab).  */
+        
+        
+          if (update_arg((void *)&(args_info->generate_dot_flag), 0, &(args_info->generate_dot_given),
+              &(local_args_info.generate_dot_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "generate_dot", 'E',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'P':	/* Print distribution of edge values.  */
+        
+        
+          if (update_arg((void *)&(args_info->print_distr_flag), 0, &(args_info->print_distr_given),
+              &(local_args_info.print_distr_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "print_distr", 'P',
               additional_error))
             goto failure;
         
@@ -799,6 +874,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'H':	/* Dataset score cutoff file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->dset_cutoff_file_arg), 
+               &(args_info->dset_cutoff_file_orig), &(args_info->dset_cutoff_file_given),
+              &(local_args_info.dset_cutoff_file_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "dset_cutoff_file", 'H',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'i':	/* Gene mapping file.  */
         
         
@@ -831,6 +918,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.dab_dir_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "dab_dir", 'F',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'Q':	/* NOT Query file (optional, for combined-DAB).  */
+        
+        
+          if (update_arg( (void *)&(args_info->not_query_arg), 
+               &(args_info->not_query_orig), &(args_info->not_query_given),
+              &(local_args_info.not_query_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "not_query", 'Q',
               additional_error))
             goto failure;
         

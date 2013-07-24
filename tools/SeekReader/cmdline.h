@@ -38,6 +38,23 @@ struct gengetopt_args_info
   const char *databaselet_help; /**< @brief Display values from databaselet(s) help description.  */
   int dataset_flag;	/**< @brief Check which datasets contain query of interest, based on .gpres file (default=off).  */
   const char *dataset_help; /**< @brief Check which datasets contain query of interest, based on .gpres file help description.  */
+  int weight_flag;	/**< @brief Test dataset weights (default=off).  */
+  const char *weight_help; /**< @brief Test dataset weights help description.  */
+  char * dweight_dir_arg;	/**< @brief Dataset weight directory (default='NA').  */
+  char * dweight_dir_orig;	/**< @brief Dataset weight directory original value given at command line.  */
+  const char *dweight_dir_help; /**< @brief Dataset weight directory help description.  */
+  int dweight_num_arg;	/**< @brief Number of .dweight files (default='1000').  */
+  char * dweight_num_orig;	/**< @brief Number of .dweight files original value given at command line.  */
+  const char *dweight_num_help; /**< @brief Number of .dweight files help description.  */
+  char * dweight_map_arg;	/**< @brief Dataset mapping file (default='NA').  */
+  char * dweight_map_orig;	/**< @brief Dataset mapping file original value given at command line.  */
+  const char *dweight_map_help; /**< @brief Dataset mapping file help description.  */
+  char * dweight_test_dir_arg;	/**< @brief Test dataset weight directory (default='NA').  */
+  char * dweight_test_dir_orig;	/**< @brief Test dataset weight directory original value given at command line.  */
+  const char *dweight_test_dir_help; /**< @brief Test dataset weight directory help description.  */
+  int dweight_test_num_arg;	/**< @brief Test number of .dweight files (default='1000').  */
+  char * dweight_test_num_orig;	/**< @brief Test number of .dweight files original value given at command line.  */
+  const char *dweight_test_num_help; /**< @brief Test number of .dweight files help description.  */
   int order_stat_single_gene_query_flag;	/**< @brief Order statistics mode (single-gene query) (default=off).  */
   const char *order_stat_single_gene_query_help; /**< @brief Order statistics mode (single-gene query) help description.  */
   char * db_arg;	/**< @brief Input dataset-platform definition.  */
@@ -83,6 +100,12 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int databaselet_given ;	/**< @brief Whether databaselet was given.  */
   unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
+  unsigned int weight_given ;	/**< @brief Whether weight was given.  */
+  unsigned int dweight_dir_given ;	/**< @brief Whether dweight_dir was given.  */
+  unsigned int dweight_num_given ;	/**< @brief Whether dweight_num was given.  */
+  unsigned int dweight_map_given ;	/**< @brief Whether dweight_map was given.  */
+  unsigned int dweight_test_dir_given ;	/**< @brief Whether dweight_test_dir was given.  */
+  unsigned int dweight_test_num_given ;	/**< @brief Whether dweight_test_num was given.  */
   unsigned int order_stat_single_gene_query_given ;	/**< @brief Whether order_stat_single_gene_query was given.  */
   unsigned int db_given ;	/**< @brief Whether db was given.  */
   unsigned int dset_list_given ;	/**< @brief Whether dset_list was given.  */

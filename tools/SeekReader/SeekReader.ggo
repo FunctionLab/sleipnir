@@ -7,23 +7,36 @@ option	"databaselet"		D	"Display values from databaselet(s)"
 								flag	off
 option	"dataset"			A	"Check which datasets contain query of interest, based on .gpres file"
 								flag	off
+option	"weight"			W	"Test dataset weights"
+								flag	off
 
+section "Weight"
+option	"dweight_dir"		E	"Dataset weight directory"
+								string typestr="directory" default="NA"
+option	"dweight_num"		n	"Number of .dweight files"
+								int	default="1000"
+option	"dweight_map"		M	"Dataset mapping file"
+								string typestr="filename" default="NA"
+option	"dweight_test_dir"	F	"Test dataset weight directory"
+								string typestr="directory" default="NA"
+option	"dweight_test_num"	G	"Test number of .dweight files"
+								int	default="1000"
 
 section "Main"
 option	"order_stat_single_gene_query"		O	"Order statistics mode (single-gene query)"
 								flag	off
 option	"db"				x	"Input dataset-platform definition"
-								string	typestr="filename"	yes
+								string	typestr="filename"
 option	"dset_list"			X	"Input a set of datasets"
-								string	typestr="filename"	yes
+								string	typestr="filename"
 option	"input"				i	"Input gene mapping"
-								string	typestr="filename"	yes
+								string	typestr="filename"
 option	"single_query"		q	"Query gene list"
 								string	typestr="filename"
 option	"dir_in"			d	"Database directory"
-								string	typestr="directory"	yes
+								string	typestr="directory"
 option	"dir_prep_in"		p	"Prep directory (containing .gavg, .gpres files)"
-								string	typestr="directory"	yes				
+								string	typestr="directory"				
 option	"dir_gvar_in"		r	"Prep directory (containing .gexpvar files)"
 								string	typestr="directory"	default="NA"	
 option	"dir_sinfo_in"		s	"Sinfo directory (containing .sinfo files)"

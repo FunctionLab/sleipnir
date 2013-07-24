@@ -19,6 +19,12 @@ option	"visualize"			v	"Visualization mode"
 section "Combined-DAB / Visualization mode"
 option	"dab_basename"		b	"Combined-dab basename, also shared with Test Mode"
 								string typestr="filename"
+option	"top_genes"			t	"Top genes to visualize (for combined-dab)"
+								int default="100"
+option	"generate_dot"		E	"Generate a dot file (for combined-dab)"
+								flag off
+option	"print_distr"		P	"Print distribution of edge values"
+								flag off
 
 section "Visualization mode"
 option	"cutoff"			c	"Cutoff value"
@@ -37,6 +43,8 @@ option	"rbp_p"				R	"RBP p parameter (must be specified) (p<1.0) (recommended > 
 								float default="-1"
 option	"max_rank"			M	"Maximum rank number in the sparse DAB matrix (must be specified)"
 								int default="-1"
+option	"dset_cutoff_file"	H	"Dataset score cutoff file"
+								string typestr="filename" default="NA"
 
 section "Input"
 option	"input"				i	"Gene mapping file"
@@ -45,6 +53,8 @@ option	"query"				q	"Query file"
 								string typestr="filename"	yes
 option	"dab_dir"			F	"DAB directory"
 								string typestr="directory"	yes
+option	"not_query"			Q	"NOT Query file (optional, for combined-DAB)"
+								string typestr="filename" default="NA"
 
 section "Output"
 option	"dir_out"			D	"Output directory"

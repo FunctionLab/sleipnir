@@ -97,6 +97,7 @@ public:
 				ret = fread((char*)(&val),1,sizeof(val),f);
 				tType first = id;
 				tType second = id2;
+				//mat looks like a full matrix
 				mat.Add(first, second, rbp_score[val]);
 				mat.Add(second, first, rbp_score[val]);
 			}
@@ -136,6 +137,117 @@ public:
 				rv = row_it->v;
 				if(vecSqrtSum[i]==0 || vecSqrtSum[j]==0) continue;
 				row_it->v = rv / vecSqrtSum[i] / vecSqrtSum[j];
+			}
+		}
+		return true;
+	}
+
+	//compatibility
+	template<class tType>
+	static bool RemoveDominant(CSparseFlatMatrix<float> &mat, 
+	CSeekIntIntMap &m, const vector<string> &vecstrGenes){
+	
+		size_t i, j;
+		vector<vector<float> > tmp_mat, tmp2;
+		tmp_mat.resize(vecstrGenes.size());
+		tmp2.resize(vecstrGenes.size());
+		for(i=0; i<vecstrGenes.size(); i++){
+			tmp_mat[i].resize(vecstrGenes.size());
+			tmp2[i].resize(vecstrGenes.size());
+			for(j=0; j<vecstrGenes.size(); j++){
+				tmp_mat[i][j] = 0;
+				tmp2[i][j] = 0;
+			}
+		}
+
+		size_t ii, jj;
+		const vector<utype> &allRGenes = m.GetAllReverse();
+		for(ii=0; ii<m.GetNumSet(); ii++){
+			i = (size_t) allRGenes[ii];
+			vector<CPair<float> >::iterator row_it;
+			for(row_it=mat.RowBegin(i); row_it!=mat.RowEnd(i); row_it++){
+				j = (size_t) row_it->i;
+				tmp_mat[i][j] = row_it->v;
+			}
+		}
+
+		int TOP = 100;
+		fprintf(stderr, "Started removing dominant...\n");
+		for(ii=0; ii<m.GetNumSet(); ii++){
+			i = (size_t) allRGenes[ii];
+			vector<CPair<float> > vp;
+			vp.resize(m.GetNumSet());
+			for(jj=0; jj<m.GetNumSet(); jj++){
+				j = (size_t) allRGenes[jj];
+				vp[jj].i = (utype) j;
+				vp[jj].v = tmp_mat[i][j];
+			}
+			nth_element(vp.begin(), vp.begin()+TOP, vp.end(), CDescendingValue<float>());
+			sort(vp.begin(), vp.begin()+TOP, CDescendingValue<float>());
+
+			//top 100
+			size_t k, l;
+			size_t max_ind = 0;
+			float max_val = -1;
+			for(k=0; k<TOP; k++){
+				size_t this_g = vp[k].i;
+				float v = 0;
+				for(l=0; l<TOP; l++){
+					size_t other_g = vp[l].i;
+					if(this_g==other_g) continue;
+					v+=tmp_mat[this_g][other_g];
+				}
+				if(v>max_val){
+					max_val = v;
+					max_ind = k;
+				}
+			}
+			for(jj=0; jj<m.GetNumSet(); jj++){
+				j = (size_t) allRGenes[jj];
+				tmp2[i][j] = tmp_mat[i][j] - tmp_mat[j][max_ind];
+				if(tmp2[i][j]<0)	
+					tmp2[i][j] = 0;
+			}
+		}
+
+		fprintf(stderr, "Started re-normalizing matrix...\n");
+
+		for(ii=0; ii<m.GetNumSet(); ii++){
+			i = (size_t) allRGenes[ii];
+			for(jj=ii+1; jj<m.GetNumSet(); jj++){
+				j = (size_t) allRGenes[jj];
+				float m = max(tmp2[i][j], tmp2[j][i]);
+				tmp2[i][j] = m;
+				tmp2[j][i] = m;
+			}
+		}
+
+		vector<float> vecSum;
+		CSeekTools::InitVector(vecSum, vecstrGenes.size(), (float) 0);
+		for(ii=0; ii<m.GetNumSet(); ii++){
+			i = (size_t) allRGenes[ii];
+			for(jj=0; jj<m.GetNumSet(); jj++){
+				j = (size_t) allRGenes[jj];
+				vecSum[i] += tmp2[i][j];
+			}
+		}
+
+		vector<float> vecSqrtSum;
+		CSeekTools::InitVector(vecSqrtSum, vecstrGenes.size(), (float) 0);
+		for(ii=0; ii<m.GetNumSet(); ii++){
+			i = (size_t) allRGenes[ii];
+			if(vecSum[i]==0) continue;
+			vecSqrtSum[i] = sqrtf(vecSum[i]);
+		}
+
+		for(ii=0; ii<m.GetNumSet(); ii++){
+			i = (size_t) allRGenes[ii];
+			vector<CPair<float> >::iterator row_it;
+			for(row_it=mat.RowBegin(i); row_it!=mat.RowEnd(i); row_it++){
+				j = (size_t) row_it->i;
+				if(vecSqrtSum[i]==0 || vecSqrtSum[j]==0) continue;
+				row_it->v = tmp2[i][j] / vecSqrtSum[i] / vecSqrtSum[j];
+				//fprintf(stderr, "%d %d %.3e\n", i, j, row_it->v);
 			}
 		}
 		return true;

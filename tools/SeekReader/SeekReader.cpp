@@ -47,7 +47,84 @@ int main( int iArgs, char** aszArgs ) {
 	for(i=0; i<vecstrGenes.size(); i++)
 		mapstrintGene[vecstrGenes[i]] = i;
 
+	if(sArgs.weight_flag==1){
+		vector<string> vecstrDataset;
+		if(!CSeekTools::ReadListOneColumn(sArgs.dweight_map_arg, vecstrDataset))
+			return false;
+
+		vector<vector<float> > vec_score;
+		vector<vector<float> > orig_score;
+		utype i, j;
+		int num_query = sArgs.dweight_num_arg; //random query
+		orig_score.resize(num_query);
+
+		vec_score.resize(vecstrDataset.size());
+		for(j=0; j<vec_score.size(); j++)
+			vec_score[j].resize(num_query);
+
+		char x[256];
+		for(i=0; i<num_query; i++){ //i is query id
+			vector<float> v;
+			sprintf(x, "%s/%d.dweight", sArgs.dweight_dir_arg, i);
+			CSeekTools::ReadArray(x, v);
+			orig_score[i] = v;
+			for(j=0; j<vec_score.size(); j++) //j is dataset id
+				vec_score[j][i] = v[j];
+		}
+
+		vector<float> score_cutoff;
+		score_cutoff.resize(vec_score.size());
+		for(j=0; j<vec_score.size(); j++){
+			sort(vec_score[j].begin(), vec_score[j].end());
+			score_cutoff[j] = vec_score[j][899];
+			//fprintf(stderr, "Dataset %d: %.4e\n", j, vec_score[j][899]);
+		}
+
+		sprintf(x, "/tmp/dataset.cutoff");
+		CSeekTools::WriteArray(x, score_cutoff);
+
+		vector<int> numGoodDataset;
+		CSeekTools::InitVector(numGoodDataset, num_query, (int) 0);
+		for(i=0; i<num_query; i++) //i is query id
+			for(j=0; j<vecstrDataset.size(); j++)
+				if(orig_score[i][j]>vec_score[j][899])
+					numGoodDataset[i]++;
+
+		sort(numGoodDataset.begin(), numGoodDataset.end());
+		fprintf(stderr, "10 percentile %d\n", numGoodDataset[99]);
+		fprintf(stderr, "90 percentile %d\n", numGoodDataset[899]);
+
+		int test_num_query = sArgs.dweight_test_num_arg;
+		for(i=0; i<test_num_query; i++){ //i is query id
+			vector<float> v;
+			sprintf(x, "%s/%d.dweight", sArgs.dweight_test_dir_arg, i);
+			CSeekTools::ReadArray(x, v);
+			int numGood = 0;
+			for(j=0; j<v.size(); j++)
+				if(v[j]>vec_score[j][899])
+					numGood++;
+			fprintf(stderr, "Query %d: ", i);
+			if(numGood > numGoodDataset[899])
+				fprintf(stderr, "Unique (upper)\n");
+			else if(numGood < numGoodDataset[99])
+				fprintf(stderr, "Unique (lower)\n");
+			else
+				fprintf(stderr, "Not unique\n");
+		}
+		fprintf(stderr, "Done!\n");
+	}
+
 	if(sArgs.dataset_flag==1){
+		string db = sArgs.db_arg;
+		string dset_list = sArgs.dset_list_arg;
+		string dir_in = sArgs.dir_in_arg;
+		string dir_prep = sArgs.dir_prep_in_arg;
+		if(db=="NA" || dset_list=="NA" || dir_in=="NA" ||
+		dir_prep=="NA"){
+			fprintf(stderr, "Requires: -x, -X, -d -p\n");
+			return false;
+		}
+
 		vector<string> vecstrDP, vecstrUserDP;
 		//dataset-platform mapping (required)
 		if(!CSeekTools::ReadListTwoColumns(sArgs.db_arg, vecstrDatasets, vecstrDP))
@@ -113,11 +190,9 @@ int main( int iArgs, char** aszArgs ) {
 			vc[i]->SetPlatform(vp[platform_id]);
 		}
 
-			
 		//fprintf(stderr, "Finished reading prep\n");
 
 		for(i=0; i<iDatasets; i++) vc[i]->InitializeGeneMap();
-
 
 		for(i=0; i<vecstrGenes.size(); i++){
 			utype ii = mapstrintGene[vecstrGenes[i]];
@@ -145,8 +220,6 @@ int main( int iArgs, char** aszArgs ) {
 
 		fprintf(stderr, "Done\n");
 		return false;
-
-
 
 		vector<vector<string> > vecstrQueries;
 		string multiQuery = sArgs.multi_query_arg;
@@ -281,6 +354,19 @@ int main( int iArgs, char** aszArgs ) {
 
 	}
 	else if(sArgs.databaselet_flag==1){
+
+		string db = sArgs.db_arg;
+		string dset_list = sArgs.dset_list_arg;
+		string dir_in = sArgs.dir_in_arg;
+		string dir_prep = sArgs.dir_prep_in_arg;
+		string single_query = sArgs.single_query_arg;
+
+		if(db=="NA" || dset_list=="NA" || dir_in=="NA" ||
+		dir_prep=="NA" || single_query=="NA"){
+			fprintf(stderr, "Requires: -x, -X, -d -p -q\n");
+			return false;
+		}
+
 		bool useNibble = false;
 		if(sArgs.is_nibble_flag==1) useNibble = true;
 		CDatabase DB(useNibble);
@@ -373,11 +459,6 @@ int main( int iArgs, char** aszArgs ) {
 				}
 			}
 		}
-
-
-	}else{
-		cerr << "Must give a db list." << endl;
-		return 1;
 
 	}
 

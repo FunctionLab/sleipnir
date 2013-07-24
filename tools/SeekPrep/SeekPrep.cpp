@@ -79,6 +79,9 @@ bool CalculateMatrix(const NormMode norm_mode,
 			if(norm_mode==RANK_NORM){
 				CSeekWriter::ReadSeekSparseMatrix<tType>(dabfile.c_str(), sm, d1, 
 					MAX_RANK, rbp_p, vecstrGenes);
+				//NEW
+				CSeekWriter::RemoveDominant<tType>(sm, d1, vecstrGenes);
+				CSeekWriter::RemoveDominant<tType>(sm, d1, vecstrGenes);
 			}else if(norm_mode==Z_NORM){
 				CSeekWriter::ReadSeekSparseMatrix<tType>(dabfile.c_str(), sm, d1,
 					vecstrGenes, (int) (0.10*vecstrGenes.size()), exp);
@@ -87,6 +90,16 @@ bool CalculateMatrix(const NormMode norm_mode,
 			CSeekWriter::SumSparseMatrix(sm, res, d1, w[i]);
 			fprintf(stderr, "Finished Summing...\n");
 		}
+
+		/*for(i=0; i<vecstrGenes.size(); i++){
+			for(j=i+1; j<vecstrGenes.size(); j++){
+				float v = res.Get(i,j);
+				if(CMeta::IsNaN(v)){
+					fprintf(stderr, "Error, %d %d is nan\n", i,j);
+				}
+			}
+		}*/
+
 		ofstream ofsm;
 		string ofile = outdir + "/" + outdab + ".half";
 		ofsm.open(ofile.c_str(), ios_base::binary);
@@ -744,6 +757,15 @@ int main( int iArgs, char** aszArgs ) {
 				fprintf(stderr, "Invalid default type!\n");
 				return -1;
 			}
+
+			//TEST========================================
+			/*CSeekIntIntMap d1(vecstrGenes.size());
+			CSparseFlatMatrix<float> sm(0);
+			float rbp_p = sArgs.rbp_p_arg;
+			CSeekWriter::ReadSeekSparseMatrix<unsigned short>(outFile, sm, d1, 
+			max_rank, rbp_p, vecstrGenes);*/
+			//============================================
+
 			/*fprintf(stderr, "Begin\n");
 			vector<unsigned short> l;
 			vector<vector<float> > mat;
@@ -924,7 +946,6 @@ int main( int iArgs, char** aszArgs ) {
 			fprintf(stderr, "Invalid default type!\n");
 			return -1;
 		}
-
 	}
 
 	if(sArgs.combined_dab_flag==1){
