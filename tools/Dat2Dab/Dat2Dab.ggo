@@ -13,9 +13,15 @@ option	"quant"			q	"Input Quant file"
 section "Preprocessing"
 option	"flip"			f	"Calculate one minus values"
 							flag	off
+option	"abs"			B	"Calculate absolute values"
+							flag	off
 option	"normalize"		n	"Normalize to the range [0,1]"
 							flag	off
 option	"normalizeNPone"	w	"Normalize to the range [-1,1]"
+							flag	off
+option	"normalizeDeg"		j	"Normalize by incident node degrees"
+							flag	off
+option	"normalizeLoc"		k	"Normalize by local neighborhood"
 							flag	off
 option	"zscore"		z	"Convert values to z-scores"
 							flag	off
