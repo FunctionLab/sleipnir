@@ -1,0 +1,12 @@
+#!/bin/sh
+
+./configure --with-gengetopt=/Genomics/fgrid/function/sleipnir-extlib/gengetopt/ \
+	--with-log4cpp=/Genomics/fgrid/function/sleipnir-extlib/log4cpp/ \
+	--with-smile=/Genomics/fgrid/function/sleipnir-extlib/smile_linux_x64_gcc_4_4_5/ \
+	--with-svm-perf=/Genomics/fgrid/function/sleipnir-extlib/svm_perf/ \
+	--with-boost-includes=/Genomics/fgrid/function/sleipnir-extlib/boost/ \
+    --prefix=/home/arjunk/software/sleipnir/ \
+	LDFLAGS=-static
+	# --with-boost-graph-lib=/usr/lib/libboost_graph.a \
+	#  --with-vowpal-wabbit=../extlib/vowpal_wabbit_v4.1/ \
+# CXXFLAGS=-fno-threadsafe-statics
