@@ -513,8 +513,8 @@ AC_ARG_WITH([smile],
         fi
     ],
         [smile_state=check])
-        LOCAL_CHECK_LIB([smile], [smile], [DSL_isFinite(1.0)],
 
+LOCAL_CHECK_LIB([smile], [smile], [DSL_isFinite(1.0)],
     [smile_state=ok],                                         dnl found
     [
             SMILE_LIBS="-lsmile"
@@ -773,19 +773,29 @@ AC_ARG_WITH([boost],
          fi
         ],
         [boost_state=check])
-LOCAL_CHECK_LIB([boost_graph], [boost], [],
+AC_LANG_PUSH([C++])
+LOCAL_CHECK_LIB([boost_graph], [boost],
+		[using namespace boost; typedef adjacency_list< vecS, vecS, directedS, property< vertex_color_t, default_color_type >, property< edge_weight_t, double > > Graph],
         [boost_state=ok],                                         dnl found
-        [],                                                       dnl and found installed
-        [],                                                       dnl and found in specified path
+        [BOOST_LIBS="-lboost_graph"], 				              dnl and found installed
+        [
+         BOOST_CFLAGS="-I $BOOST_INCLUDE_DIR"
+         BOOST_LIBS="-L $BOOST_LIB_DIR -lboost_graph"
+        ],                                                        dnl and found in specified path
         [],                                                       dnl not found
         [boost_state=no],                                         dnl and not found installed
         [boost_state=warn],                                       dnl and not found in specified path
         [],                                                       dnl requested without
         [#include "boost/graph/graphviz.hpp"],
-        [],
+		[],
         [-L $BOOST_LIB_DIR -I $BOOST_INCLUDE_DIR])
+AC_LANG_POP
+
 if test "x$boost_state" = "xok"; then
-LOCAL_CHECK_LIB([boost_regex], [boost], [],
+boost_state=try
+AC_LANG_PUSH([C++])
+LOCAL_CHECK_LIB([boost_regex], [boost], 
+		[boost::regex e("(\\d{4}[- ]){3}\\d{4}")],
         [boost_state=ok],                                         dnl found
         [BOOST_LIBS="-lboost_graph -lboost_regex"],               dnl and found installed
         [
@@ -796,9 +806,10 @@ LOCAL_CHECK_LIB([boost_regex], [boost], [],
         [boost_state=no],                                         dnl and not found installed
         [boost_state=warn],                                       dnl and not found in specified path
         [],                                                       dnl requested without
-        [#include "boost/graph/graphviz.hpp"],
-        [],
+        [#include "boost/regex.hpp"],
+		[],
         [-L $BOOST_LIB_DIR -I $BOOST_INCLUDE_DIR])
+AC_LANG_POP
 fi
 if test "x$boost_state" != "xok"; then
   AC_DEFINE([NO_BOOST], [1])

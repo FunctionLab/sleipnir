@@ -1,1 +1,1 @@
-./configure --prefix=/memex/qzhu/sleipnir_build --with-log4cpp=/memex/qzhu/usr --with-smile=/memex/qzhu/packages/sleipnir/smile --with-svm-perf=/memex/qzhu/packages/sleipnir/svmperf
+./configure --prefix=/memex/qzhu/sleipnir_build --with-log4cpp=/memex/qzhu/usr --with-smile=/memex/qzhu/packages/sleipnir/smile --with-svm-perf=/memex/qzhu/packages/sleipnir/svmperf --with-boost=/memex/qzhu/usr
