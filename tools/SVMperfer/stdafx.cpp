@@ -25,7 +25,10 @@
  * \page SVMperfer SVMperfer
  * 
  * SVMperfer performs SVM learning using the SVMperf library.  It supports cross validation and
- * reading from binary PCL files created by PCL2Bin.
+ * reading from binary PCL files created by PCL2Bin.  SVMperfer has been used for Network inference and
+ * gene prediction studies.
+ *
+ * NOTE: Delimiters are tabs in all the following formats -- doxygen converts them to spaces automatically.
  * 
  * \section sec_usage Usage
  * 
@@ -33,10 +36,12 @@
  * 
  * \code
  * SVMperfer -l <labels_file> -p <params_file> -i <data.bin> -o <output_directory> -a
+ * SVMperfer -l <labels_file> -c 5 -t 50 -i <PCL/Dat file> -o <output_file> 
  * \endcode
  * 
- * The labels file is of the format (NOTE WELL: IN ALL THE FOLLOWING FORMATS DELIMITERS ARE TABS --
- * doxygen converts them to spaces automatically).
+ * The label file and Test label file is assumed to have a example name (i.e. row name of input file) and
+ * its known label (-1 for negative examples and 1 for positive examples) separated with tabs.  Genes 
+ * are examples in the following example.
  * \code
  * ACTA2	-1
  * ACTN4	1
@@ -49,7 +54,7 @@
  * APOA4	1
  * AQP1	1
  * \endcode
- * where -1 indicates negative and 1 indicates positive.  The examples must be separated with tabs.
+ * 
  * 
  * Output is of the format
  * \code
@@ -60,8 +65,9 @@
  * TPSAB1	0	1.92928
  * CLIC5	1	1.92759
  * \endcode
- * where the first column is the example name, the second column is the gold standard status (matching labels)
- * and the third column is the prediction from the SVM.
+ * where the first column is the example name, the second column is the known label (given in the label 
+ * file) and the third column is the SVM prediction (soft value).  Unlabelled examples are given a label
+ * of 0.  Examples are sorted by their predicted SVM output soft value.
  * 
  * The params_file is of the format
  * \code
@@ -76,7 +82,7 @@
  * and the third column represents k_value (for precision at k recall, but unused for the AUC error function
  * in the example above.
  * 
- * SVMperfer can also be used to output a model or learn a network, although currently those features are undocumented.
+ * 
  * 
  * \subsection ssec_usage_detailed Detailed Usage
  * 
