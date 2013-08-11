@@ -80,8 +80,8 @@ bool CalculateMatrix(const NormMode norm_mode,
 				CSeekWriter::ReadSeekSparseMatrix<tType>(dabfile.c_str(), sm, d1, 
 					MAX_RANK, rbp_p, vecstrGenes);
 				//NEW
-				CSeekWriter::RemoveDominant<tType>(sm, d1, vecstrGenes);
-				CSeekWriter::RemoveDominant<tType>(sm, d1, vecstrGenes);
+				//CSeekWriter::RemoveDominant<tType>(sm, d1, vecstrGenes);
+				//CSeekWriter::RemoveDominant<tType>(sm, d1, vecstrGenes);
 			}else if(norm_mode==Z_NORM){
 				CSeekWriter::ReadSeekSparseMatrix<tType>(dabfile.c_str(), sm, d1,
 					vecstrGenes, (int) (0.10*vecstrGenes.size()), exp);

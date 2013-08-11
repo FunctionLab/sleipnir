@@ -191,7 +191,6 @@ bool CSeekDataset::InitializeQuery(const vector<utype> &query){
 	DeleteQuery();
 
 	if(iDBSize==0 || dbMap==NULL) return true;
-
 	//must require initializequeryBlock be executed first
 
 	queryMap = new CSeekIntIntMap(iNumGenes);

@@ -9,6 +9,8 @@ option	"dataset"			A	"Check which datasets contain query of interest, based on .
 								flag	off
 option	"weight"			W	"Test dataset weights"
 								flag	off
+option	"comp_ranking"		C	"Compare two rankings (*.gscore files)"
+								flag	off
 
 section "Weight"
 option	"dweight_dir"		E	"Dataset weight directory"
@@ -21,6 +23,15 @@ option	"dweight_test_dir"	F	"Test dataset weight directory"
 								string typestr="directory" default="NA"
 option	"dweight_test_num"	G	"Test number of .dweight files"
 								int	default="1000"
+
+section "Compare Rankings"
+option	"gscore_dir1"		H	"Gene score directory 1"
+								string typestr="directory" default="NA"	
+option	"gscore_dir2"		h	"Gene score directory 2"	
+								string typestr="directory" default="NA"	
+option	"gscore_num1"		I	"Number of .gscore files"
+								int default="1000"
+
 
 section "Main"
 option	"order_stat_single_gene_query"		O	"Order statistics mode (single-gene query)"

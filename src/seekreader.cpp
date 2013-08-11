@@ -106,12 +106,11 @@ bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
 		return false;
 	}
 
-	size_t m;
-	size_t d;
+	size_t m, d;
 
 	for(i=0; i<allQ.size(); i++){
 		m = allQ[i];
-		for(d=0; d<DB.size(); d++){
+		for(d=0; d<DB.size(); d++){ //number of CDatabase collections
 			vector<unsigned char> Qi;
 			if(!DB[d]->GetGene(m, Qi)){
 				cerr << "Gene does not exist" << endl;
@@ -187,12 +186,12 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 
 	vc.clear();
 	vc.resize(iDatasets);
-
 	vp.clear();
 	vp.resize(vp_src.size());
-	for(i=0; i<vp.size(); i++){
+
+	for(i=0; i<vp.size(); i++)
 		vp[i].Copy(vp_src[i]);
-	}
+
 	int ret; //system call returns
 
 	fprintf(stderr, "Start reading average and presence files\n");

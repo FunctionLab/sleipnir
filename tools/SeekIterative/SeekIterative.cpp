@@ -147,7 +147,6 @@ bool search_one_dab(vector<float> &gene_score,
 bool get_score(vector<float> &gene_score, 
 	CSparseFlatMatrix<float> &mat,
 	CSeekIntIntMap *geneMap, vector<float> &q_weight){
-
 	vector<float> gene_count;
 	int numGenes = geneMap->GetSize();
 	CSeekTools::InitVector(gene_score, numGenes, (float)CMeta::GetNaN());
@@ -164,7 +163,6 @@ bool get_score(vector<float> &gene_score,
 		utype qq = allGenes[qi];
 		if(q_weight[qq]==0) 
 			continue;
-			
 		const vector<CPair<float> > &vc = mat.GetRow(qq);
 		for(kk=0; kk<vc.size(); kk++){
 			float fl = vc[kk].v;
@@ -268,7 +266,6 @@ bool weight(vector<char> &is_query, vector<float> &d1,
 
 bool cv_weight(vector<utype> &query, CSparseFlatMatrix<float> &mat,
 	CSeekIntIntMap *geneMap, float rbp_p, float &tot_w){
-
 	//leave one in cross-validation
 	utype i, j;
 	int numGenes = geneMap->GetSize();
@@ -292,7 +289,7 @@ bool cv_weight(vector<utype> &query, CSparseFlatMatrix<float> &mat,
 		weight_fast(is_query, gene_score, geneMap, w);
 		tot_w += w;
 	}
-	tot_w /= query.size();	
+	tot_w /= query.size();
 	return true;	
 }
 
@@ -348,6 +345,7 @@ int main(int iArgs, char **aszArgs){
 	fprintf(stderr, "Reading queries\n");
 	if(!CSeekTools::ReadMultipleQueries(sArgs.query_arg, vecstrAllQuery))
 		return -1;
+	fprintf(stderr, "Finished reading queries\n");
 
 	vector<vector<utype> > qu;
 	qu.resize(vecstrAllQuery.size());
@@ -453,17 +451,6 @@ int main(int iArgs, char **aszArgs){
 	if(sArgs.combined_flag==1){
 		string dab_base = sArgs.dab_basename_arg;
 		string file1 = dab_dir + "/" + dab_base + ".dab";
-		float cutoff_par = sArgs.cutoff_arg;
-		string genome = sArgs.genome_arg;
-		vector<string> s1, s2;
-		CSeekTools::ReadListTwoColumns(genome.c_str(), s1, s2);
-
-		CGenome g;
-		g.Open(s1);
-		for(i=0; i<s2.size(); i++){
-			CGene &g1 = g.GetGene(g.FindGene(s1[i]));
-			g.AddSynonym(g1, s2[i]);
-		}
 
 		vector<vector<float> > q_weight;
 		vector<vector<vector<float> > > nq_weight;
@@ -535,6 +522,22 @@ int main(int iArgs, char **aszArgs){
 		}
 
 		fprintf(stderr, "Finished with search\n");
+		if(sArgs.print_distr_flag==0 && sArgs.generate_dot_flag==0){
+			return 0;
+		}
+
+		float cutoff_par = sArgs.cutoff_arg;
+		string genome = sArgs.genome_arg;
+		vector<string> s1, s2;
+		CSeekTools::ReadListTwoColumns(genome.c_str(), s1, s2);
+
+		CGenome g;
+		g.Open(s1);
+		for(i=0; i<s2.size(); i++){
+			CGene &g1 = g.GetGene(g.FindGene(s1[i]));
+			g.AddSynonym(g1, s2[i]);
+		}
+
 		//Visualize
 		for(j=0; j<vecstrAllQuery.size(); j++){
 			//fprintf(stderr, "Query %d\n", j);
@@ -825,7 +828,6 @@ int main(int iArgs, char **aszArgs){
 			CSeekTools::InitVector(freq[j], vecstrGenes.size(), (int) 0);
 			CSeekTools::InitVector(dweight[j], dab_list.size(), (float) 0);
 		}
-	
 		for(i=0; i<dab_list.size(); i++){
 			fprintf(stderr, "Reading %d: %s\n", i, dab_list[i].c_str());
 			CSeekIntIntMap d1(vecstrGenes.size());
@@ -833,18 +835,23 @@ int main(int iArgs, char **aszArgs){
 			CSparseFlatMatrix<float> sm (0);
 
 			if(sArgs.default_type_arg==0) //utype
-				CSeekWriter::ReadSeekSparseMatrix<utype>(dabfile.c_str(), sm, d1, max_rank, rbp_p, vecstrGenes);
+				CSeekWriter::ReadSeekSparseMatrix<utype>(dabfile.c_str(), sm, d1, 
+				max_rank, rbp_p, vecstrGenes);
 			else
-				CSeekWriter::ReadSeekSparseMatrix<unsigned short>(dabfile.c_str(), sm, d1, max_rank, rbp_p, vecstrGenes);
+				CSeekWriter::ReadSeekSparseMatrix<unsigned short>(dabfile.c_str(), 
+				sm, d1, max_rank, rbp_p, vecstrGenes);
 			
-			const vector<utype> &allGenes = d1.GetAllReverse();			
+			const vector<utype> &allGenes = d1.GetAllReverse();
+
+			#pragma omp parallel for \
+			shared(qu, sm, d1, dweight, final_score, count, freq, score_cutoff) \
+			private(j, k) firstprivate(bDatasetCutoff) schedule(dynamic)
 			for(j=0; j<vecstrAllQuery.size(); j++){
 				float dw = 1.0;
-				cv_weight(qu[j], sm, &d1, 0.99, dw);
+				cv_weight(qu[j], sm, &d1, rbp_p, dw);
 				if(bDatasetCutoff){
-					if(score_cutoff[i]>dw){
+					if(score_cutoff[i]>dw)
 						dw = 0;
-					}
 					//fprintf(stderr, "%.3e %.3e\n", score_cutoff[i], dw);
 				}
 				//fprintf(stderr, "%.3e\n", dw);

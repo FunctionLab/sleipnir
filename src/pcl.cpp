@@ -268,6 +268,8 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 	if (pMeasure->IsRank())
 		PCL.RankTransform();
 
+	g_CatSleipnir().info("Number of Experiments: %d", PCL.GetExperiments());
+
 	if ((iLimit != -1) && (PCL.GetGenes() > iLimit))
 		Dat.Open(PCL, pMeasure->Clone(), true);
 	else {
@@ -548,6 +550,8 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 
 	if (pMeasure->IsRank())
 		PCL.RankTransform();
+
+	g_CatSleipnir().info("Number of Experiments: %d", PCL.GetExperiments());
 
 	if ((iLimit != -1) && (PCL.GetGenes() > iLimit))
 		Dat.Open(PCL, pMeasure->Clone(), true);

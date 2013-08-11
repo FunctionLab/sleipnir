@@ -249,9 +249,7 @@ bool CDatabase::GetGene(const size_t &iGene, vector<unsigned char> &vecbData) co
 	return true;
 }
 
-
-
-/* mainly used by SeekMinder */
+/* mainly used by SeekMiner */
 bool CDatabaselet::Get(size_t iOne, vector<unsigned char>& vecbData){
 	size_t iSize;
 	size_t i, j;
@@ -299,13 +297,10 @@ bool CDatabaselet::Get(size_t iOne, vector<unsigned char>& vecbData){
 				vecbData[ j * m_iDatasets + (2 * i) + 1 ] = bValue;
 			}
 		}
-
 	}
 	free(abImage);
 	return true;
 }
-
-
 
 bool CDatabaselet::Get( size_t iOne, size_t iTwo,
 		vector<unsigned char>& vecbData, unsigned char *charImage){
@@ -418,7 +413,9 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 
 	size_t bb = 0;
 	size_t sofar = 0;
+	fprintf(stderr, "Number of times: %d\n", numTimes); 
 	for(bb=0; bb<numTimes; sofar+=sizes[bb], bb++){
+		fprintf(stderr, "bb sizes[bb] sofar: %d %d %d\n", bb, sizes[bb], sofar); 
 
 		fprintf(stderr, "Started allocated memory %lu\n", bb);
 		/* load all Databaselets into memory, for efficiency */
@@ -576,6 +573,9 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 			size_t iGeneOne, iGeneTwo;
 			size_t offset1, offset2, offset3;
 
+			fprintf(stderr, "GetSizeGene() %d\n", DBS.GetSizeGene());
+			fprintf(stderr, "GetSizePair() %d\n", DBS.GetSizePair());
+			fprintf(stderr, "first->m_iGenes %d\n", first->m_iGenes);
 			if(first->m_useNibble==false){
 				for(iGeneOne = 0; iGeneOne < sizes[bb]; ++iGeneOne){
 					offset1 = DBS.GetSizeGene() * iGeneOne;
@@ -586,8 +586,9 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 							vector<unsigned char> vc;
 							CDatabaselet *current = vecDatabaselet[iDatum];
 							//size_t offset_c = current->GetSizeGene() * iGeneOne + current->GetSizePair() * iGeneTwo;
-							current->Get( offset1 + offset2, vc, charImages[iDatum]);
+							//current->Get( offset1 + offset2, vc, charImages[iDatum]);
 							//current->Get( iGeneOne, iGeneTwo, vc, charImages[iDatum]);
+							current->Get(current->GetSizeGene() * iGeneOne + current->GetSizePair() * iGeneTwo, vc, charImages[iDatum]);
 							offset3 = offset1 + offset2 + totalSum;
 							for(j=0; j<vc.size(); j++){
 								abImage[offset3 + j] = vc[j];
@@ -609,7 +610,8 @@ bool CDatabaselet::Combine(std::vector<CDatabaselet*>& vecDatabaselet,
 						for( iDatum = 0; iDatum  < vecDatabaselet.size(); iDatum ++ ){
 							vector<unsigned char> vc;
 							CDatabaselet *current = vecDatabaselet[iDatum];
-							current->Get( offset1 + offset2, vc, charImages[iDatum]);
+							current->Get(current->GetSizeGene()*iGeneOne + current->GetSizePair()*iGeneTwo, vc, charImages[iDatum]);
+							//current->Get( offset1 + offset2, vc, charImages[iDatum]);
 							//current->Get( iGeneOne, iGeneTwo, vc, charImages[iDatum]);
 							offset3 = totalSum;
 							for(j=0; j<vc.size(); j++){
@@ -1004,22 +1006,22 @@ bool CDatabaselet::Set(uint32_t &iGenes, uint32_t &iDatasets, vector<string> &ve
 	return true;
 }
 
+//For SeekMiner
 bool CDatabase::Open(const string &strDBDirectory,
 		const vector<string> &vecstrGenes, const size_t &iDatasets, const size_t &iNumDBs){
 	return CDatabase::Open(strDBDirectory.c_str(), vecstrGenes, iDatasets, iNumDBs);
 }
 
-
-bool CDatabase::Open(const char *db_dir,
-		const vector<string> &vecstrGenes, const size_t &iDatasets, const size_t &iNumDBs){
+//For SeekMiner
+bool CDatabase::Open(const char *db_dir, const vector<string> &vecstrGenes, 
+	const size_t &iDatasets, const size_t &iNumDBs){
 	size_t i, j, k;
 	Clear();
 	m_vecpDBs.resize(iNumDBs);
 	char acNumber[ 16 ];
 
-	for( i = 0; i < m_vecpDBs.size( ); ++i ) {
+	for( i = 0; i < m_vecpDBs.size( ); ++i )
 		m_vecpDBs[ i ] = new CDatabaselet( m_useNibble );
-	}
 
 	string strDBDirectory = db_dir;
 

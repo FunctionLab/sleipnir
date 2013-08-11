@@ -97,7 +97,7 @@ public:
 				ret = fread((char*)(&val),1,sizeof(val),f);
 				tType first = id;
 				tType second = id2;
-				//mat looks like a full matrix
+				//mat is a full matrix
 				mat.Add(first, second, rbp_score[val]);
 				mat.Add(second, first, rbp_score[val]);
 			}
@@ -129,6 +129,9 @@ public:
 
 		fprintf(stderr, "Begin normalization using row sum\n");
 		float rv;
+		#pragma omp parallel for \
+		shared(m, mat, allRGenes, vecSqrtSum) \
+		private(ii, i, j, rv) schedule(dynamic)
 		for(ii=0; ii<m.GetNumSet(); ii++){
 			i = (size_t) allRGenes[ii];
 			vector<CPair<float> >::iterator row_it;

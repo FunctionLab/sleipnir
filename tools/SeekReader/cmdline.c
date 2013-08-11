@@ -28,18 +28,23 @@ const char *gengetopt_args_info_usage = "Usage: SeekReader [OPTIONS]... [FILES].
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                    Print help and exit",
+  "      --help                    Print help and exit",
   "  -V, --version                 Print version and exit",
   "\nDiagnosis:",
   "  -D, --databaselet             Display values from databaselet(s)  \n                                  (default=off)",
   "  -A, --dataset                 Check which datasets contain query of interest, \n                                  based on .gpres file  (default=off)",
   "  -W, --weight                  Test dataset weights  (default=off)",
+  "  -C, --comp_ranking            Compare two rankings (*.gscore files)  \n                                  (default=off)",
   "\nWeight:",
   "  -E, --dweight_dir=directory   Dataset weight directory  (default=`NA')",
   "  -n, --dweight_num=INT         Number of .dweight files  (default=`1000')",
   "  -M, --dweight_map=filename    Dataset mapping file  (default=`NA')",
   "  -F, --dweight_test_dir=directory\n                                Test dataset weight directory  (default=`NA')",
   "  -G, --dweight_test_num=INT    Test number of .dweight files  (default=`1000')",
+  "\nCompare Rankings:",
+  "  -H, --gscore_dir1=directory   Gene score directory 1  (default=`NA')",
+  "  -h, --gscore_dir2=directory   Gene score directory 2  (default=`NA')",
+  "  -I, --gscore_num1=INT         Number of .gscore files  (default=`1000')",
   "\nMain:",
   "  -O, --order_stat_single_gene_query\n                                Order statistics mode (single-gene query)  \n                                  (default=off)",
   "  -x, --db=filename             Input dataset-platform definition",
@@ -86,11 +91,15 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->databaselet_given = 0 ;
   args_info->dataset_given = 0 ;
   args_info->weight_given = 0 ;
+  args_info->comp_ranking_given = 0 ;
   args_info->dweight_dir_given = 0 ;
   args_info->dweight_num_given = 0 ;
   args_info->dweight_map_given = 0 ;
   args_info->dweight_test_dir_given = 0 ;
   args_info->dweight_test_num_given = 0 ;
+  args_info->gscore_dir1_given = 0 ;
+  args_info->gscore_dir2_given = 0 ;
+  args_info->gscore_num1_given = 0 ;
   args_info->order_stat_single_gene_query_given = 0 ;
   args_info->db_given = 0 ;
   args_info->dset_list_given = 0 ;
@@ -113,6 +122,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->databaselet_flag = 0;
   args_info->dataset_flag = 0;
   args_info->weight_flag = 0;
+  args_info->comp_ranking_flag = 0;
   args_info->dweight_dir_arg = gengetopt_strdup ("NA");
   args_info->dweight_dir_orig = NULL;
   args_info->dweight_num_arg = 1000;
@@ -123,6 +133,12 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->dweight_test_dir_orig = NULL;
   args_info->dweight_test_num_arg = 1000;
   args_info->dweight_test_num_orig = NULL;
+  args_info->gscore_dir1_arg = gengetopt_strdup ("NA");
+  args_info->gscore_dir1_orig = NULL;
+  args_info->gscore_dir2_arg = gengetopt_strdup ("NA");
+  args_info->gscore_dir2_orig = NULL;
+  args_info->gscore_num1_arg = 1000;
+  args_info->gscore_num1_orig = NULL;
   args_info->order_stat_single_gene_query_flag = 0;
   args_info->db_arg = NULL;
   args_info->db_orig = NULL;
@@ -162,25 +178,29 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->databaselet_help = gengetopt_args_info_help[3] ;
   args_info->dataset_help = gengetopt_args_info_help[4] ;
   args_info->weight_help = gengetopt_args_info_help[5] ;
-  args_info->dweight_dir_help = gengetopt_args_info_help[7] ;
-  args_info->dweight_num_help = gengetopt_args_info_help[8] ;
-  args_info->dweight_map_help = gengetopt_args_info_help[9] ;
-  args_info->dweight_test_dir_help = gengetopt_args_info_help[10] ;
-  args_info->dweight_test_num_help = gengetopt_args_info_help[11] ;
-  args_info->order_stat_single_gene_query_help = gengetopt_args_info_help[13] ;
-  args_info->db_help = gengetopt_args_info_help[14] ;
-  args_info->dset_list_help = gengetopt_args_info_help[15] ;
-  args_info->input_help = gengetopt_args_info_help[16] ;
-  args_info->single_query_help = gengetopt_args_info_help[17] ;
-  args_info->dir_in_help = gengetopt_args_info_help[18] ;
-  args_info->dir_prep_in_help = gengetopt_args_info_help[19] ;
-  args_info->dir_gvar_in_help = gengetopt_args_info_help[20] ;
-  args_info->dir_sinfo_in_help = gengetopt_args_info_help[21] ;
-  args_info->is_nibble_help = gengetopt_args_info_help[22] ;
-  args_info->platform_dir_help = gengetopt_args_info_help[23] ;
-  args_info->gvar_cutoff_help = gengetopt_args_info_help[24] ;
-  args_info->multi_query_help = gengetopt_args_info_help[25] ;
-  args_info->output_file_help = gengetopt_args_info_help[26] ;
+  args_info->comp_ranking_help = gengetopt_args_info_help[6] ;
+  args_info->dweight_dir_help = gengetopt_args_info_help[8] ;
+  args_info->dweight_num_help = gengetopt_args_info_help[9] ;
+  args_info->dweight_map_help = gengetopt_args_info_help[10] ;
+  args_info->dweight_test_dir_help = gengetopt_args_info_help[11] ;
+  args_info->dweight_test_num_help = gengetopt_args_info_help[12] ;
+  args_info->gscore_dir1_help = gengetopt_args_info_help[14] ;
+  args_info->gscore_dir2_help = gengetopt_args_info_help[15] ;
+  args_info->gscore_num1_help = gengetopt_args_info_help[16] ;
+  args_info->order_stat_single_gene_query_help = gengetopt_args_info_help[18] ;
+  args_info->db_help = gengetopt_args_info_help[19] ;
+  args_info->dset_list_help = gengetopt_args_info_help[20] ;
+  args_info->input_help = gengetopt_args_info_help[21] ;
+  args_info->single_query_help = gengetopt_args_info_help[22] ;
+  args_info->dir_in_help = gengetopt_args_info_help[23] ;
+  args_info->dir_prep_in_help = gengetopt_args_info_help[24] ;
+  args_info->dir_gvar_in_help = gengetopt_args_info_help[25] ;
+  args_info->dir_sinfo_in_help = gengetopt_args_info_help[26] ;
+  args_info->is_nibble_help = gengetopt_args_info_help[27] ;
+  args_info->platform_dir_help = gengetopt_args_info_help[28] ;
+  args_info->gvar_cutoff_help = gengetopt_args_info_help[29] ;
+  args_info->multi_query_help = gengetopt_args_info_help[30] ;
+  args_info->output_file_help = gengetopt_args_info_help[31] ;
   
 }
 
@@ -270,6 +290,11 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->dweight_test_dir_arg));
   free_string_field (&(args_info->dweight_test_dir_orig));
   free_string_field (&(args_info->dweight_test_num_orig));
+  free_string_field (&(args_info->gscore_dir1_arg));
+  free_string_field (&(args_info->gscore_dir1_orig));
+  free_string_field (&(args_info->gscore_dir2_arg));
+  free_string_field (&(args_info->gscore_dir2_orig));
+  free_string_field (&(args_info->gscore_num1_orig));
   free_string_field (&(args_info->db_arg));
   free_string_field (&(args_info->db_orig));
   free_string_field (&(args_info->dset_list_arg));
@@ -337,6 +362,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "dataset", 0, 0 );
   if (args_info->weight_given)
     write_into_file(outfile, "weight", 0, 0 );
+  if (args_info->comp_ranking_given)
+    write_into_file(outfile, "comp_ranking", 0, 0 );
   if (args_info->dweight_dir_given)
     write_into_file(outfile, "dweight_dir", args_info->dweight_dir_orig, 0);
   if (args_info->dweight_num_given)
@@ -347,6 +374,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "dweight_test_dir", args_info->dweight_test_dir_orig, 0);
   if (args_info->dweight_test_num_given)
     write_into_file(outfile, "dweight_test_num", args_info->dweight_test_num_orig, 0);
+  if (args_info->gscore_dir1_given)
+    write_into_file(outfile, "gscore_dir1", args_info->gscore_dir1_orig, 0);
+  if (args_info->gscore_dir2_given)
+    write_into_file(outfile, "gscore_dir2", args_info->gscore_dir2_orig, 0);
+  if (args_info->gscore_num1_given)
+    write_into_file(outfile, "gscore_num1", args_info->gscore_num1_orig, 0);
   if (args_info->order_stat_single_gene_query_given)
     write_into_file(outfile, "order_stat_single_gene_query", 0, 0 );
   if (args_info->db_given)
@@ -615,16 +648,20 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
       int option_index = 0;
 
       static struct option long_options[] = {
-        { "help",	0, NULL, 'h' },
+        { "help",	0, NULL, 0 },
         { "version",	0, NULL, 'V' },
         { "databaselet",	0, NULL, 'D' },
         { "dataset",	0, NULL, 'A' },
         { "weight",	0, NULL, 'W' },
+        { "comp_ranking",	0, NULL, 'C' },
         { "dweight_dir",	1, NULL, 'E' },
         { "dweight_num",	1, NULL, 'n' },
         { "dweight_map",	1, NULL, 'M' },
         { "dweight_test_dir",	1, NULL, 'F' },
         { "dweight_test_num",	1, NULL, 'G' },
+        { "gscore_dir1",	1, NULL, 'H' },
+        { "gscore_dir2",	1, NULL, 'h' },
+        { "gscore_num1",	1, NULL, 'I' },
         { "order_stat_single_gene_query",	0, NULL, 'O' },
         { "db",	1, NULL, 'x' },
         { "dset_list",	1, NULL, 'X' },
@@ -642,17 +679,12 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVDAWE:n:M:F:G:Ox:X:i:q:d:p:r:s:NP:v:Q:o:", long_options, &option_index);
+      c = getopt_long (argc, argv, "VDAWCE:n:M:F:G:H:h:I:Ox:X:i:q:d:p:r:s:NP:v:Q:o:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
       switch (c)
         {
-        case 'h':	/* Print help and exit.  */
-          cmdline_parser_print_help ();
-          cmdline_parser_free (&local_args_info);
-          exit (EXIT_SUCCESS);
-
         case 'V':	/* Print version and exit.  */
         
         
@@ -693,6 +725,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->weight_flag), 0, &(args_info->weight_given),
               &(local_args_info.weight_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "weight", 'W',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'C':	/* Compare two rankings (*.gscore files).  */
+        
+        
+          if (update_arg((void *)&(args_info->comp_ranking_flag), 0, &(args_info->comp_ranking_given),
+              &(local_args_info.comp_ranking_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "comp_ranking", 'C',
               additional_error))
             goto failure;
         
@@ -753,6 +795,42 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.dweight_test_num_given), optarg, 0, "1000", ARG_INT,
               check_ambiguity, override, 0, 0,
               "dweight_test_num", 'G',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'H':	/* Gene score directory 1.  */
+        
+        
+          if (update_arg( (void *)&(args_info->gscore_dir1_arg), 
+               &(args_info->gscore_dir1_orig), &(args_info->gscore_dir1_given),
+              &(local_args_info.gscore_dir1_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "gscore_dir1", 'H',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'h':	/* Gene score directory 2.  */
+        
+        
+          if (update_arg( (void *)&(args_info->gscore_dir2_arg), 
+               &(args_info->gscore_dir2_orig), &(args_info->gscore_dir2_given),
+              &(local_args_info.gscore_dir2_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "gscore_dir2", 'h',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'I':	/* Number of .gscore files.  */
+        
+        
+          if (update_arg( (void *)&(args_info->gscore_num1_arg), 
+               &(args_info->gscore_num1_orig), &(args_info->gscore_num1_given),
+              &(local_args_info.gscore_num1_given), optarg, 0, "1000", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "gscore_num1", 'I',
               additional_error))
             goto failure;
         
@@ -923,6 +1001,12 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           break;
 
         case 0:	/* Long option with no short option */
+          if (strcmp (long_options[option_index].name, "help") == 0) {
+            cmdline_parser_print_help ();
+            cmdline_parser_free (&local_args_info);
+            exit (EXIT_SUCCESS);
+          }
+
         case '?':	/* Invalid option.  */
           /* `getopt_long' already printed an error message.  */
           goto failure;
