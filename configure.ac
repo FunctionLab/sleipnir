@@ -773,6 +773,7 @@ AC_ARG_WITH([boost],
          fi
         ],
         [boost_state=check])
+prev_boost_state=$boost_state
 AC_LANG_PUSH([C++])
 LOCAL_CHECK_LIB([boost_graph], [boost],
 		[using namespace boost; typedef adjacency_list< vecS, vecS, directedS, property< vertex_color_t, default_color_type >, property< edge_weight_t, double > > Graph],
@@ -792,7 +793,7 @@ LOCAL_CHECK_LIB([boost_graph], [boost],
 AC_LANG_POP
 
 if test "x$boost_state" = "xok"; then
-boost_state=try
+boost_state=$prev_boost_state
 AC_LANG_PUSH([C++])
 LOCAL_CHECK_LIB([boost_regex], [boost], 
 		[boost::regex e("(\\d{4}[- ]){3}\\d{4}")],
