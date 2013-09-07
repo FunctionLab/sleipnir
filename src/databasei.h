@@ -50,6 +50,9 @@ public:
 
 	bool OpenNoOverwrite();
 
+	//directly write bytes to disk
+	bool Write(char* data, const size_t& iSize, const size_t offset = 0);
+
 	bool OpenWrite( unsigned char, size_t, ENibbles, unsigned char* );
 
 	/* Get pair by referring to memory cache (ie charImage) of the db file */
