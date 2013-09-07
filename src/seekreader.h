@@ -67,7 +67,7 @@ public:
 	static bool ReadArray(const char *fileName, vector<tType> &vData){
 		FILE *f = fopen(fileName, "rb");
 		if(f==NULL){
-			cerr << "File not found" << endl;
+			fprintf(stderr, "File not found %s\n", fileName);
 			return false;
 		}
 
@@ -107,7 +107,7 @@ public:
 	static bool WriteArray(const char *fileName, const vector<tType> &vData){
 		FILE *f = fopen(fileName, "wb");
 		if(f==NULL){
-			cerr << "File not found" << endl;
+			fprintf(stderr, "File not found %s\n", fileName);
 			return false;
 		}
 		size_t i;

@@ -206,6 +206,7 @@ bool CSeekCentral::CalculateRestart(){
 		}
 	}
 	ss.clear();
+
 	//check
 	vector<char> vc;
 	utype tot = 0;
@@ -320,15 +321,26 @@ bool CSeekCentral::Initialize(
 		m_vc, src->m_vc, m_vp, src->m_vp, m_vecstrDatasets,
 		m_mapstrstrDatasetPlatform, m_mapstriPlatform);
 
-	if(!CalculateRestart())
+	if(!CalculateRestart()){
+		fprintf(stderr, "Error occurred during CalculateRestart()\n");
 		return false;
+	}
 
-	if(!EnableNetwork(iClient))
+	fprintf(stderr, "Finished CalculateRestart()\n");
+
+	if(!EnableNetwork(iClient)){
+		fprintf(stderr, "Error occurred during EnableNetwork()\n");
 		return false;
+	}
 
-	if(!CheckDatasets(true)) //replace parameter is true
+	fprintf(stderr, "Finished EnableNetworks()\n");
+
+	if(!CheckDatasets(true)){ //replace parameter is true
+		fprintf(stderr, "Error occurred during CheckDatasets()\n");
 		return false;
+	}
 
+	fprintf(stderr, "Finished CheckDatasets()\n");
 	return true;
 }
 
@@ -355,6 +367,7 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 		vector<int> count;
 		CSeekTools::InitVector(count, m_vecstrAllQuery[l].size(), (int) 0);
 		bool isFirst = true;
+		//fprintf(stderr, "iUserDatasets %d\n", iUserDatasets);
 
 		for(dd=0; dd<iUserDatasets; dd++){
 			utype i = allRDatasets[dd];
@@ -397,6 +410,7 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 			ss << "|";
 		}
 
+		//fprintf(stderr, "ss %s\n", ss.str().c_str());
 		isFirst = true;		
 		for(j=0; j<m_vecstrAllQuery[l].size(); j++){
 			sq << m_vecstrAllQuery[l][j] << ":" << count[j];
@@ -425,6 +439,8 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 			sq << "|";
 		}
 
+		//fprintf(stderr, "sq %s\n", sq.str().c_str());
+		//fprintf(stderr, "aq %s\n", aq.str().c_str());
 	}
 
 	string refinedQuery = aq.str();
@@ -454,10 +470,14 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 			CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
 		}
 
+		//fprintf(stderr, "replace datasets %d %d\n", sd.size(), m_vecstrSearchDatasets[0].size());
+		//fprintf(stderr, "searchdsetMap size %d\n", m_searchdsetMap.size());
+
 		for(i=0; i<m_searchdsetMap.size(); i++){
 			delete m_searchdsetMap[i];
 		}
 		m_searchdsetMap.clear();
+		//fprintf(stderr, "cleared searchdsetMap\n");
 
 		m_searchdsetMap.resize(m_vecstrAllQuery.size());
 		for(i=0; i<m_vecstrAllQuery.size(); i++){
@@ -660,7 +680,11 @@ bool CSeekCentral::Initialize(
 		}
 	}
 
-	if(!CalculateRestart()) return false;
+	if(!CalculateRestart()){
+		fprintf(stderr, "Error occurred during CalculateRestart()\n");
+		return false;
+	}
+	fprintf(stderr, "Finished CalculateRestart()\n");
 
 	return true;
 }

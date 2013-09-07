@@ -694,14 +694,15 @@ int main( int iArgs, char** aszArgs ) {
 				}
 			}
 
-			//for(i=0; i<numPlatforms; i++){
-				//printf("Platform %s\n", mapistrPlatform[i].c_str());
-				/*for(j=0; j<vecstrQuery.size(); j++){
+			/*
+			for(i=0; i<numPlatforms; i++){
+				printf("Platform %s\n", mapistrPlatform[i].c_str());
+				for(j=0; j<vecstrQuery.size(); j++){
 					size_t iGene = mapstriGenes[vecstrQuery[j]];
 					printf("Gene %s %.5f %.5f\n", vecstrQuery[j].c_str(), 
 						platform_avg.Get(i, iGene), platform_stdev.Get(i,iGene));
-				}*/
-			//}
+				}
+			}*/
 
 			char outFile[125];
 			sprintf(outFile, "%s/all_platforms.gplatavg", sArgs.dir_out_arg);
