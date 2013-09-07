@@ -68,46 +68,68 @@ int main( int iArgs, char** aszArgs ) {
 		useNibble = true;
 	}
 
-	CDatabase DB(useNibble);
-
-	bool fSplit = false;
-	if(sArgs.split_flag==1){
-		fSplit = true;
-	}
-
-	if(sArgs.db_arg){
-		ifsm.open(sArgs.db_arg);
-		while(!pistm->eof()){
-			pistm->getline(acBuffer, c_iBuffer -1);
-			if(acBuffer[0]==0){
-				break;
-			}
+	if(sArgs.reorganize_flag==1){
+		vector<string> vecstrDataset;
+		ifstream ifsm2;
+		ifsm2.open(sArgs.dataset_arg);
+		while(!ifsm2.eof()){
+			ifsm2.getline(acBuffer, c_iBuffer-1);
+			if(acBuffer[0]==0) break;
 			acBuffer[c_iBuffer-1] = 0;
-			vecstrDBs.push_back(acBuffer);
+			vector<string> vecstrLine;
+			CMeta::Tokenize(acBuffer, vecstrLine);
+			vecstrDataset.push_back(vecstrLine[0]);
 		}
-		vecstrDBs.resize(vecstrDBs.size());
-		ifsm.close();
+		ifsm2.close();
 
-		//printf("Reading DBS"); getchar();
-		vector<CDatabaselet*> DBS;
-		DBS.resize(vecstrDBs.size());
-		for(i=0; i<vecstrDBs.size(); i++){
-	    	DBS[i] = new CDatabaselet(useNibble);
-	    	DBS[i]->Open(vecstrDBs[i]);
-	    }
-		//printf("Finished reading DBS"); getchar();
-
-	    CDatabaselet::Combine(DBS, sArgs.dir_out_arg, vecstrGenes, fSplit);
-	    for(i=0; i<vecstrDBs.size(); i++){
-	    	free(DBS[i]);
-	    }
-
-	}else{
-		cerr << "Must give a db list." << endl;
-		return 1;
-
+		CDatabase db(false);
+		db.Open(sArgs.db_dir_arg, vecstrGenes, vecstrDataset.size(), 
+			sArgs.src_db_num_arg);
+		db.Reorganize(sArgs.dest_db_dir_arg, sArgs.dest_db_num_arg);
+		return 0;
 	}
 
+	if(sArgs.combine_flag==1){
+		CDatabase DB(useNibble);
+
+		bool fSplit = false;
+		if(sArgs.split_flag==1){
+			fSplit = true;
+		}
+
+		if(sArgs.db_arg){
+			ifsm.open(sArgs.db_arg);
+			while(!pistm->eof()){
+				pistm->getline(acBuffer, c_iBuffer -1);
+				if(acBuffer[0]==0){
+					break;
+				}
+				acBuffer[c_iBuffer-1] = 0;
+				vecstrDBs.push_back(acBuffer);
+			}
+			vecstrDBs.resize(vecstrDBs.size());
+			ifsm.close();
+
+			//printf("Reading DBS"); getchar();
+			vector<CDatabaselet*> DBS;
+			DBS.resize(vecstrDBs.size());
+			for(i=0; i<vecstrDBs.size(); i++){
+				DBS[i] = new CDatabaselet(useNibble);
+				DBS[i]->Open(vecstrDBs[i]);
+			}
+			//printf("Finished reading DBS"); getchar();
+
+			CDatabaselet::Combine(DBS, sArgs.dir_out_arg, vecstrGenes, fSplit);
+			for(i=0; i<vecstrDBs.size(); i++){
+				free(DBS[i]);
+			}
+
+		}else{
+			cerr << "Must give a db list." << endl;
+			return 1;
+
+		}
+	}
 #ifdef WIN32
 	pthread_win32_process_detach_np( );
 #endif // WIN32

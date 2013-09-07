@@ -107,6 +107,11 @@ bool CDatabaselet::Open( const std::string& strFile, const std::vector<std::stri
 
 }
 
+bool CDatabaselet::Write(char* Qt, const size_t &iSize, const size_t offset){
+	m_fstm.seekg(m_iHeader + offset, ios_base::beg);
+	m_fstm.write(Qt, iSize);
+}
+
 /* simply opens the file without overwriting */
 bool CDatabaselet::OpenNoOverwrite() {
 	m_fstm.clear( );
@@ -344,7 +349,6 @@ bool CDatabaselet::Get(size_t offset, vector<unsigned char>& vecbData, unsigned 
 
 	return true;
 }
-
 
 /*	static function, combine multiple databaselets (that share the same genes, ie m_vecStrGenes),
 	and output result to a single file, or output one-gene per file (if databaselet contains multiple genes)
@@ -1003,6 +1007,56 @@ bool CDatabaselet::Set(uint32_t &iGenes, uint32_t &iDatasets, vector<string> &ve
 		m_iHeader += m_vecstrGenes[ i ].size( ) + 1;
 	}
 
+	return true;
+}
+
+//Create a copy of current CDatabase collection that has X number of CDatabaselets 
+bool CDatabase::Reorganize(const char *dest_db_dir, const size_t &num_db){
+	int dest_db = num_db;
+	size_t i, j, l;
+	const char c_acExtension[] = ".db";
+	char acNumber[16];
+
+	vector<string> vecstrG;
+	vecstrG.resize(m_mapstriGenes.size());
+
+	for(map<string,size_t>::iterator iter=m_mapstriGenes.begin();
+		iter!=m_mapstriGenes.end(); iter++){
+		string first = iter->first;
+		size_t second = iter->second;
+		vecstrG[second] = first;
+	}
+
+	for(i=0; i<dest_db; i++){
+		vector<string> vecstrSubset;
+		for(j=i; j<vecstrG.size(); j+=dest_db)
+			vecstrSubset.push_back(vecstrG[j]);
+		//size of this db
+		size_t iSize = GetGenes() * GetDatasets() * vecstrSubset.size();
+
+		unsigned char *Qt = (unsigned char*)malloc(iSize);
+		int tot = 0;
+		for(j=0; j<vecstrSubset.size(); j++){
+			size_t k = m_mapstriGenes.find(vecstrSubset[j])->second;
+			vector<unsigned char> Qi;
+			if(!GetGene(k, Qi)){
+				cerr << "Gene error" << endl;
+				continue;
+			}
+			for(l=0; l<Qi.size(); l++)
+				Qt[tot+l] = Qi[l];
+			tot+=Qi.size();
+		}
+		sprintf(acNumber, "%08lu", i);
+		string dest_dir = dest_db_dir;
+		string strFile = dest_dir + "/" + acNumber + c_acExtension;
+
+		CDatabaselet DBS(false);
+		DBS.Open(strFile.c_str(), vecstrSubset, vecstrG.size(), 
+			GetDatasets());
+		DBS.Write((char*) Qt, iSize, 0);
+		free(Qt);
+	}
 	return true;
 }
 

@@ -34,27 +34,53 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * db_arg;	/**< @brief Input a set of databaselet filenames (including path).  */
-  char * db_orig;	/**< @brief Input a set of databaselet filenames (including path) original value given at command line.  */
-  const char *db_help; /**< @brief Input a set of databaselet filenames (including path) help description.  */
+  int combine_flag;	/**< @brief Combine a set of DB's, each coming from a different dataset subset (default=off).  */
+  const char *combine_help; /**< @brief Combine a set of DB's, each coming from a different dataset subset help description.  */
+  int reorganize_flag;	/**< @brief Reorganize a set of DB's, such as from 21000 DB files to 1000 DB files, ie expanding/shrinking the number of genes a DB contains (default=off).  */
+  const char *reorganize_help; /**< @brief Reorganize a set of DB's, such as from 21000 DB files to 1000 DB files, ie expanding/shrinking the number of genes a DB contains help description.  */
   char * input_arg;	/**< @brief Input gene mapping.  */
   char * input_orig;	/**< @brief Input gene mapping original value given at command line.  */
   const char *input_help; /**< @brief Input gene mapping help description.  */
-  char * dir_out_arg;	/**< @brief Database directory (default='.').  */
-  char * dir_out_orig;	/**< @brief Database directory original value given at command line.  */
-  const char *dir_out_help; /**< @brief Database directory help description.  */
+  char * db_arg;	/**< @brief Input a set of databaselet filenames (including path).  */
+  char * db_orig;	/**< @brief Input a set of databaselet filenames (including path) original value given at command line.  */
+  const char *db_help; /**< @brief Input a set of databaselet filenames (including path) help description.  */
+  char * dir_out_arg;	/**< @brief Output database directory (default='.').  */
+  char * dir_out_orig;	/**< @brief Output database directory original value given at command line.  */
+  const char *dir_out_help; /**< @brief Output database directory help description.  */
   int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
   const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
   int split_flag;	/**< @brief Split to one-gene per file (default=off).  */
   const char *split_help; /**< @brief Split to one-gene per file help description.  */
+  char * dataset_arg;	/**< @brief Dataset-platform mapping file.  */
+  char * dataset_orig;	/**< @brief Dataset-platform mapping file original value given at command line.  */
+  const char *dataset_help; /**< @brief Dataset-platform mapping file help description.  */
+  char * db_dir_arg;	/**< @brief Source DB collection directory.  */
+  char * db_dir_orig;	/**< @brief Source DB collection directory original value given at command line.  */
+  const char *db_dir_help; /**< @brief Source DB collection directory help description.  */
+  int src_db_num_arg;	/**< @brief Source DB number of files.  */
+  char * src_db_num_orig;	/**< @brief Source DB number of files original value given at command line.  */
+  const char *src_db_num_help; /**< @brief Source DB number of files help description.  */
+  int dest_db_num_arg;	/**< @brief Destination DB number of files.  */
+  char * dest_db_num_orig;	/**< @brief Destination DB number of files original value given at command line.  */
+  const char *dest_db_num_help; /**< @brief Destination DB number of files help description.  */
+  char * dest_db_dir_arg;	/**< @brief Destination DB directory.  */
+  char * dest_db_dir_orig;	/**< @brief Destination DB directory original value given at command line.  */
+  const char *dest_db_dir_help; /**< @brief Destination DB directory help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int db_given ;	/**< @brief Whether db was given.  */
+  unsigned int combine_given ;	/**< @brief Whether combine was given.  */
+  unsigned int reorganize_given ;	/**< @brief Whether reorganize was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
+  unsigned int db_given ;	/**< @brief Whether db was given.  */
   unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
   unsigned int split_given ;	/**< @brief Whether split was given.  */
+  unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
+  unsigned int db_dir_given ;	/**< @brief Whether db_dir was given.  */
+  unsigned int src_db_num_given ;	/**< @brief Whether src_db_num was given.  */
+  unsigned int dest_db_num_given ;	/**< @brief Whether dest_db_num was given.  */
+  unsigned int dest_db_dir_given ;	/**< @brief Whether dest_db_dir was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

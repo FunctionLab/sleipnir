@@ -134,6 +134,9 @@ public:
 	CDatabase(bool isNibble) : CDatabaseImpl(isNibble){
 	}
 
+	bool Reorganize(const char*, const size_t&);
+
+
 	bool GetGene(const string &, vector<unsigned char>&) const;
 	bool GetGene(const size_t &, vector<unsigned char>&) const;
 

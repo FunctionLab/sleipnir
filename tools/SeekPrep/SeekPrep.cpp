@@ -444,6 +444,14 @@ int main( int iArgs, char** aszArgs ) {
 			for (k = 0; k < Dat.GetGenes(); ++k)
 				for (j = (k + 1); j < Dat.GetGenes(); ++j)
 					Dat.Set(k, j, CMeta::GetNaN());
+
+			omp_set_num_threads(8);
+
+			#pragma omp parallel for \
+			shared(pcl, Dat, veciGenes, pn) \
+			private(k,iOne,j,iTwo) \
+			firstprivate(numG) \
+			schedule(dynamic)
 			for (k = 0; k < numG; ++k) {
 				if ((iOne = veciGenes[k]) == -1)
 					continue;
@@ -843,9 +851,9 @@ int main( int iArgs, char** aszArgs ) {
 				sArgs.top_avg_percent_arg);
 
 			//DEBUGGING
-			for(i=0; i<vecGeneAvg.size(); i++){
-				fprintf(stderr, "%s\t%.3f\n", vecstrGenes[i].c_str(), vecGeneAvg[i]);
-			}
+			//for(i=0; i<vecGeneAvg.size(); i++){
+			//	fprintf(stderr, "%s\t%.3f\n", vecstrGenes[i].c_str(), vecGeneAvg[i]);
+			//}
 
 			CSeekTools::WriteArray(outFile, vecGeneAvg);
 		}
@@ -865,9 +873,9 @@ int main( int iArgs, char** aszArgs ) {
 			CSeekWriter::GetGenePresence(Dat, vecstrGenes, vecGenePresence);
 
 			//DEBUGGING
-			for(i=0; i<vecGenePresence.size(); i++){
-				fprintf(stderr, "%s\t%d\n", vecstrGenes[i].c_str(), vecGenePresence[i]);
-			}
+			//for(i=0; i<vecGenePresence.size(); i++){
+			//	fprintf(stderr, "%s\t%d\n", vecstrGenes[i].c_str(), vecGenePresence[i]);
+			//}
 
 			CSeekTools::WriteArray(outFile, vecGenePresence);
 		}
