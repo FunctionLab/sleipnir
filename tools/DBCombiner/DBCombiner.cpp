@@ -82,6 +82,10 @@ int main( int iArgs, char** aszArgs ) {
 		}
 		ifsm2.close();
 
+		if(useNibble){
+			fprintf(stderr, "The use of nibble flag is not supported for --reorganize mode\n");
+			return 1;
+		}
 		CDatabase db(false);
 		db.Open(sArgs.db_dir_arg, vecstrGenes, vecstrDataset.size(), 
 			sArgs.src_db_num_arg);
