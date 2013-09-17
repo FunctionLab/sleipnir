@@ -1740,7 +1740,10 @@ void CDat::SaveDOT( std::ostream& ostm, float dCutoff, const CGenome* pGenome, b
 				ostm << ", setlinewidth(" << (*pvecdBorders)[ i ] << ")";
 			ostm << "\"";
 			ostm << ", fillcolor = \"" << ( fHashes ? "#" : "" ) << ( pvecdColors ? CColor::Interpolate(
-				(*pvecdColors)[ i ], CColor::c_Cyan, CColor::c_White, CColor::c_Yellow ).ToRGB( ) :
+				(*pvecdColors)[ i ], 
+				CColor::c_Cyan, CColor::c_White, CColor::c_Yellow 
+				//CColor::c_White, CColor::c_Cyan, CColor::c_Yellow 
+				).ToRGB( ) :
 				"FFFFFF" ) << "\"";
 			if( fLabel )
 				ostm << ", label=\"" << strName << "\"";

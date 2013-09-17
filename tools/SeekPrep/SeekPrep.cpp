@@ -186,6 +186,16 @@ bool InitializeDataset(size_t &iDatasets, vector<string> &vecstrDatasets,
 		vc[i]->ReadGeneAverage(strAvgPath);
 		vc[i]->ReadGenePresence(strPresencePath);
 		vc[i]->InitializeGeneMap();
+
+		//DEBUGGING==============
+		/*
+		fprintf(stderr, "==Dataset %d==\n", i);
+		CSeekIntIntMap *mapG = vc[i]->GetGeneMap();
+		const vector<utype> &allR = mapG->GetAllReverse();
+		for(j=0; j<mapG->GetNumSet(); j++){
+			utype ja = mapG->GetReverse(j);
+			fprintf(stderr, "%d\t%.3f\n", ja, vc[i]->GetGeneAverage(ja));
+		}*/			
 	}
 	return true;
 }
@@ -261,7 +271,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 	CFullMatrix<float> &platform_stdev, vector<string> &vecstrQuery,
 	const bool &logit){
 
-	size_t i, j, k;
+	size_t i, j, jj, k;
 
 	CDatabaselet CD(useNibble);
 	CD.Open(DBFile);
@@ -299,6 +309,8 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 		vecstrQuery.push_back(thisGene);
 		for(k=0; k<iDatasets; k++){
 			CSeekIntIntMap *mapQ = vc[k]->GetDBMap();
+			CSeekIntIntMap *mapG = vc[k]->GetGeneMap();
+			const vector<utype> &allR = mapG->GetAllReverse();
 			if(mapQ==NULL) continue;
 			unsigned char **f = vc[k]->GetMatrix();
 			utype iQ = mapQ->GetForward(geneID);
@@ -310,7 +322,9 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 				printf("Error, platforms are equal %d %d",
 					(int) platform_id, (int) numPlatforms); getchar();
 			}
-			for(j=0; j<m_iGenes; j++){
+
+			for(jj=0; jj<mapG->GetNumSet(); jj++){
+				j = mapG->GetReverse(jj);
 				unsigned char uc = f[iQ][j];
 				float v = 0;
 				if(uc==255) v = CMeta::GetNaN();
@@ -319,11 +333,12 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 					if(logit) vv = log(quant[uc]) - log((float)(1.0-quant[uc]));
 					else vv = quant[uc];
 					v = vv - vc[k]->GetGeneAverage(j);
-					/*if(isnan(vv) || isinf(vv) || isnan(vc[k]->GetGeneAverage(j)) ||
+					//fprintf(stderr, "%.5f\t%.5f\n", vv, v);
+					if(isnan(vv) || isinf(vv) || isnan(vc[k]->GetGeneAverage(j)) ||
 						isinf(vc[k]->GetGeneAverage(j))){
-						fprintf(stderr, "%d %.5f %.5f %.5f\n", (int) uc, quant[uc], 
-						vv, vc[k]->GetGeneAverage(j));
-					}*/
+						fprintf(stderr, "%d D%d %.5f %.5f %d\n", (int) j, (int) k, 
+						vv, vc[k]->GetGeneAverage(j), mapG->GetForward(j));
+					}
 					//v = quant[uc];
 					sum[platform_id] += v;
 					num[platform_id]++;
@@ -337,7 +352,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 			mean[k] = sum[k] / (float) num[k];
 			stdev[k] = sq_sum[k] / (float) num[k] - mean[k] * mean[k];
 			stdev[k] = sqrt(stdev[k]);
-			fprintf(stderr, "%.5f %.5f\n", mean[k], stdev[k]);
+			fprintf(stderr, "%d %.5f %.5f\n", geneID, mean[k], stdev[k]);
 			platform_avg.Set(k, geneID, mean[k]);
 			platform_stdev.Set(k, geneID, stdev[k]);
 		}
@@ -632,6 +647,8 @@ int main( int iArgs, char** aszArgs ) {
 				for(j=0; j<m_iGenes; j++){
 					platform_avg.Set(i, j, CMeta::GetNaN());
 					platform_stdev.Set(i, j, CMeta::GetNaN());
+					//platform_avg.Set(i, j, (float) 0);
+					//platform_stdev.Set(i, j, (float) 1.0);
 				}
 			}
 
@@ -656,6 +673,8 @@ int main( int iArgs, char** aszArgs ) {
 					for(k=0; k<m_iGenes; k++){
 						platform_avg_threads[i].Set(j, k, CMeta::GetNaN());
 						platform_stdev_threads[i].Set(j, k, CMeta::GetNaN());
+						//platform_avg_threads[i].Set(j, k, (float) 0);
+						//platform_stdev_threads[i].Set(j, k, (float) 1.0);
 					}
 				}
 			}

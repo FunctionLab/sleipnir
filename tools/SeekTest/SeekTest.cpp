@@ -23,6 +23,7 @@
 #include "cmdline.h"
 #include <iomanip>
 
+
 float** LoadGenes(const vector<string> struserGenes, 
 	const vector<utype> &veciGenes, const vector<string> &vecstrGenes, 
 	const vector<utype> &veciallGenes, CSeekIntIntMap *gmap, 
@@ -214,6 +215,12 @@ bool CalculateWelch(const float &mean1, const float &stdev1, const int &size1,
 	return true;
 }
 
+vector<string> Do_Pair_Proportion(){
+
+
+}
+
+
 vector<string> Do_T_Test(
 	gsl_rng *rnd,
 	float **vall, 
@@ -278,7 +285,6 @@ vector<string> Do_T_Test(
 	ost.setf(ios::fixed);
 	ost << "User " << setprecision (2) << user_mean << " " << setprecision (2) << user_stdev;
 	outstr.push_back(ost.str());
-	
 	
 	for(i=0; i<100; i++){
 		double pvalt, t;
@@ -445,7 +451,7 @@ vector<string> Do_Mann_Whitney_U_Test(
 	for(i=0; i<100; i++){
 		ostringstream ost;
 		ost.setf(ios::fixed);
-		ost << s1[i] << " " << U1[i] << setprecision (2) << z[i] << " " << setprecision (2) << auc[i];
+		ost << s1[i] << " " << U1[i] << " " << setprecision (2) << z[i] << " " << setprecision (2) << auc[i];
 		outstr.push_back(ost.str());
 	}
 
@@ -596,10 +602,8 @@ vector<string> Do_Mann_Whitney_U_Test_By_Gene(gsl_rng *rnd, float **vall,
 	return outstr;
 }
 
-vector<string> Do_One(const char *file, gsl_rng *rnd, 
-	CSeekDataset *vcd, float **vall,
+vector<string> Do_One(const char *file, gsl_rng *rnd, CSeekDataset *vcd, float **vall,
 	map<string, utype> &mapstrintGene, vector<string> &vecstrGenes){
-
 
 	size_t i, j, k;
 	vector<string> ostr;
@@ -647,14 +651,13 @@ vector<string> Do_One(const char *file, gsl_rng *rnd,
 		veciallGenes[i] = mapstrintGene[vecstrGenes[i]];
 	}
 
-
 	//float** v2 = LoadGenes(struserGenes, veciGenes, vecstrGenes, 
 	//	veciallGenes, gmap, vcd, vall);
-
 
 	vector<string> outstr = 
 	//	Do_Mann_Whitney_U_Test_By_Gene(rnd, vall, struserGenes, veciGenes, vecstrGenes, veciallGenes, gmap);
 	Do_T_Test(rnd, vall, veciGenes, struserGenes, veciallGenes, vecstrGenes, gmap);
+	//Do_Mann_Whitney_U_Test(rnd, vall, veciGenes, struserGenes, veciallGenes, vecstrGenes, gmap);
 
 
 	for(i=0; i<outstr.size(); i++){
@@ -662,9 +665,7 @@ vector<string> Do_One(const char *file, gsl_rng *rnd,
 	}
 	
 	//Do_T_Test(vall, veciGenes, struserGenes, veciallGenes, vecstrGenes, gmap);
-
 	//ostr = Do_Mann_Whitney_U_Test(vall, veciGenes, struserGenes, veciallGenes, vecstrGenes, gmap);
-
 
 	/*
 	int *a1 = (int*)malloc(2*sizeof(int));
@@ -690,17 +691,12 @@ vector<string> Do_One(const char *file, gsl_rng *rnd,
 	//for(i=0; i<100; i++){
 	//	CSeekTools::Free2DArray(randomGenes[i]);
 	//}
-
 	return ostr;
-
 }
 
 
 int main( int iArgs, char** aszArgs ) {
 	static const size_t	c_iBuffer	= 1024;
-//#ifdef WIN32
-//	pthread_win32_process_attach_np( );
-//#endif // WIN32
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
 	istream*			pistm;
@@ -720,6 +716,7 @@ int main( int iArgs, char** aszArgs ) {
 		fprintf(stderr, "Hello World %d\n", tid);
 	}*/
 
+
 	const gsl_rng_type *T;
 	gsl_rng *rnd;
 	gsl_rng_env_setup();
@@ -737,6 +734,141 @@ int main( int iArgs, char** aszArgs ) {
 	for(i=0; i<vecstrGenes.size(); i++)
 		mapstrintGene[vecstrGenes[i]] = i;
 
+	if(sArgs.db_flag==1){
+		vector<float> quant;
+		CSeekTools::ReadQuantFile(sArgs.quant_arg, quant);
+
+		vector<string> vecstrDataset, vDP;
+
+		if(!CSeekTools::ReadListTwoColumns(sArgs.dataset_list_arg, 
+		vecstrDataset, vDP))
+			return false;
+
+		CDatabase *DB = new CDatabase(false);
+		DB->Open(sArgs.db_dir_arg, vecstrGenes, vecstrDataset.size(), sArgs.db_num_arg);
+
+		string strPrepInputDirectory = sArgs.prep_arg;
+		string strSinfoInputDirectory = sArgs.sinfo_arg;
+		vector<CSeekDataset*> vc;
+		vc.resize(vecstrDataset.size());
+		size_t i, j, k;
+		for(i=0; i<vecstrDataset.size(); i++){
+			vc[i] = new CSeekDataset();
+			string strFileStem = vecstrDataset[i];
+			string strAvgPath = strPrepInputDirectory+"/"+
+				strFileStem + ".gavg";
+			string strPresencePath = strPrepInputDirectory+"/"+
+				strFileStem + ".gpres";
+			string strSinfoPath = strSinfoInputDirectory+"/"+
+				strFileStem + ".sinfo";
+			vc[i]->ReadGeneAverage(strAvgPath);
+			vc[i]->ReadGenePresence(strPresencePath);
+			vc[i]->ReadDatasetAverageStdev(strSinfoPath);
+			vc[i]->InitializeGeneMap();
+		}
+	
+		size_t iGenes = vecstrGenes.size();
+		size_t iDatasets = vecstrDataset.size();
+		
+		vector<string> vecstrQuery;
+		CSeekTools::ReadMultiGeneOneLine(sArgs.query_arg, vecstrQuery);
+		//Need to load the query
+
+		vector<char> cQuery;
+		CSeekTools::InitVector(cQuery, iGenes, (char)0);
+		for(i=0; i<vecstrQuery.size(); i++){
+			if(mapstrintGene.find(vecstrQuery[i])==mapstrintGene.end()) continue;
+			utype k = mapstrintGene.find(vecstrQuery[i])->second;
+			cQuery[k] = 1;
+		}
+		vector<utype> allQ;
+		for(i=0; i<cQuery.size(); i++)
+			if(cQuery[i]==1)
+				allQ.push_back(i);
+		allQ.resize(allQ.size());
+
+		for(i=0; i<iDatasets; i++)
+			if(vc[i]->GetDBMap()!=NULL)
+				vc[i]->DeleteQueryBlock();
+	
+		for(i=0; i<iDatasets; i++)
+			vc[i]->InitializeQueryBlock(allQ);
+
+		size_t m, d;
+		for(i=0; i<allQ.size(); i++){
+			m = allQ[i];
+			vector<unsigned char> Qi;
+			if(!DB->GetGene(m, Qi)){
+				cerr << "Gene does not exist" << endl;
+				continue;
+			}
+			utype db;
+			CSeekIntIntMap *qu = NULL;
+			unsigned char **r = NULL;
+			for(j=0; j<vecstrDataset.size(); j++){
+				if((qu=vc[j]->GetDBMap())==NULL)
+					continue;
+				if(CSeekTools::IsNaN(db=(qu->GetForward(m)))) 
+					continue;
+				for(r = vc[j]->GetMatrix(), k=0; k<iGenes; k++)
+					r[db][k] = Qi[k*vecstrDataset.size()+j];
+			}
+			Qi.clear();
+		}
+
+		map<float,vector<int> > countPairs;
+		float point = 0.0;
+		while(point<=5.0){
+			countPairs[point] = vector<int>();
+			CSeekTools::InitVector(countPairs[point], iDatasets, (int)0);
+			point+=0.25;
+		}
+
+		for(k=0; k<iDatasets; k++){
+			CSeekIntIntMap *mapQ = vc[k]->GetDBMap();
+			CSeekIntIntMap *mapG = vc[k]->GetGeneMap();
+			if(mapQ==NULL) continue;
+			unsigned char **f = vc[k]->GetMatrix();
+
+			size_t qi, qj;
+			for(qi=0; qi<allQ.size(); qi++){
+				utype gene_qi = allQ[qi];
+				utype iQ = mapQ->GetForward(gene_qi);
+				if(CSeekTools::IsNaN(iQ)) continue;
+				for(qj=qi+1; qj<allQ.size(); qj++){
+					utype gene_qj = allQ[qj];
+					utype jQ = mapG->GetForward(gene_qj);
+					if(CSeekTools::IsNaN(jQ)) continue;
+					unsigned char uc = f[iQ][gene_qj];
+					if(uc==255) continue;
+					float vv = quant[uc];
+					point = 0.0;
+					while(point<=5.0){
+						if(vv>point)
+							countPairs[point][k]++;
+						point+=0.25;
+					}
+				}
+			}
+		}
+		
+		for(i=0; i<iDatasets; i++)
+			vc[i]->DeleteQueryBlock();
+
+		point = 0.0;			
+		while(point<=5.0){
+			sort(countPairs[point].begin(), countPairs[point].end(), greater<int>());
+			float tmp = 0;
+			for(i=0; i<10; i++){
+				tmp+=(float)countPairs[point][i];
+			}
+			tmp/=10.0;
+			fprintf(stderr, "%.2f\t%.1f pairs\n", point, tmp);
+			point+=0.25;
+		}
+
+	}
+		
 	CSeekStrIntMap mapTmp;
 	vector<string> vecstrList;
 	if(!CSeekTools::ReadListOneColumn(sArgs.gene_set_list_arg, vecstrList, mapTmp))
@@ -749,8 +881,8 @@ int main( int iArgs, char** aszArgs ) {
 		string strPres = sArgs.gpres_input_arg;
 		vcd->ReadGeneAverage(strAvg);
 		vcd->ReadGenePresence(strPres);
-
 		vcd->InitializeGeneMap();
+
 		CDataPair Dat;
 		if(!Dat.Open(sArgs.dabinput_arg, false, false)){
 			cerr << "Error opening dab file" << endl;

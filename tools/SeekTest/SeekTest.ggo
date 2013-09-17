@@ -7,12 +7,30 @@ option	"dab"				D	"DAB mode"
 								flag	off
 option	"bin"				A	"PCL Bin mode"
 								flag	off
+option	"db"				d	"DB mode"
+								flag 	off
+
+section "DB mode"
+option	"db_dir"			E	"DB directory"
+								string typestr="directory"
+option	"db_num"			b	"Number of files in DB directory"
+								int default="1000"
+option	"prep"				P	"Prep directory (containing .gavg and .gpres files)"
+								string typestr="filename"
+option	"sinfo"				s	"Sinfo directory (containing .sinfo files)"
+								string typestr="filename"
+option	"dataset_list"		C	"Dataset list"
+								string typestr="filename"
+option	"query"				Q	"List of genes separated by spaces in one line"
+								string typestr="filename"
+option	"quant"				q	"Quant file"
+								string typestr="filename"
 
 section "DAB mode"
 option	"gene_set_list"		g	"List of gene-set files"
-								string typestr="filename"	yes
+								string typestr="filename"
 option	"input"				x	"Gene mapping file"
-								string typestr="filename"	yes
+								string typestr="filename"
 option	"dabinput"			B	"DAB dataset file"
 								string typestr="filename"
 option 	"gavg_input"		a	"Gene average (.gavg) input file"
