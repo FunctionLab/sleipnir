@@ -27,8 +27,8 @@ option	"num_db"			n	"Number of databaselets in database"
 								int	default="1000"	yes
 
 section "Dataset weighting"
-option	"weighting_method"	V	"Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT)"
-								values="CV","EQUAL","ORDER_STAT" default="CV"
+option	"weighting_method"	V	"Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER)"
+								values="CV","EQUAL","ORDER_STAT","VAR","USER" default="CV"
 
 section "Optional - Functional Network Expansion"
 option	"func_db"			w	"Functional network db path"
@@ -43,6 +43,10 @@ option	"func_dset"			F	"Functional network dset-list file (1 dataset)"
 								string typestr="filename"
 option	"func_logit"		l	"Functional network, integrate using logit values"
 								flag	off
+
+section "Optional - User-given Weighting"
+option	"user_weight_list"	J	"List of pre-computed dataset weight files (.dweight)"
+								string typestr="filename"
 
 section "Optional - Random simulations"
 option	"random"			S	"Generate random ranking score"
@@ -65,6 +69,8 @@ option	"square_z"			e	"If z_score is selected, take the square the z-scores. Usu
 section "Options for Dataset weighting"
 option	"per_q_required"	C	"Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff."
 								float default="0.0"
+
+section "Options for CV-based dataset weighting"
 option	"CV_partition"		I	"The query partitioning method (for CV weighting): Leave-One-In, Leave-One-Out, X-Fold."
 								values="LOI","LOO","XFOLD" default="LOI"
 option	"CV_fold"			X	"The number of folds (for X-fold partitioning)."

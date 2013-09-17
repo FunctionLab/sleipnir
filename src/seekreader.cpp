@@ -140,7 +140,7 @@ bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
 	fprintf(stderr, "Finished reading query genes' correlations\n");
 	ret = system("date +%s%N 1>&2");
 	if(bNetwork && CSeekNetwork::Send(iClient, 
-		"Finished reading databaselets and query centric")==-1){
+		"Finished reading query genes' correlations")==-1){
 		fprintf(stderr, "Error sending client message\n");
 		return false;
 	}

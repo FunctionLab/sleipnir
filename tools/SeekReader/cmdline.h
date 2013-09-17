@@ -40,6 +40,8 @@ struct gengetopt_args_info
   const char *dataset_help; /**< @brief Check which datasets contain query of interest, based on .gpres file help description.  */
   int weight_flag;	/**< @brief Test dataset weights (default=off).  */
   const char *weight_help; /**< @brief Test dataset weights help description.  */
+  int weight2_flag;	/**< @brief Test dataset weights 2 (default=off).  */
+  const char *weight2_help; /**< @brief Test dataset weights 2 help description.  */
   int comp_ranking_flag;	/**< @brief Compare two rankings (*.gscore files) (default=off).  */
   const char *comp_ranking_help; /**< @brief Compare two rankings (*.gscore files) help description.  */
   char * dweight_dir_arg;	/**< @brief Dataset weight directory (default='NA').  */
@@ -112,6 +114,7 @@ struct gengetopt_args_info
   unsigned int databaselet_given ;	/**< @brief Whether databaselet was given.  */
   unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
   unsigned int weight_given ;	/**< @brief Whether weight was given.  */
+  unsigned int weight2_given ;	/**< @brief Whether weight2 was given.  */
   unsigned int comp_ranking_given ;	/**< @brief Whether comp_ranking was given.  */
   unsigned int dweight_dir_given ;	/**< @brief Whether dweight_dir was given.  */
   unsigned int dweight_num_given ;	/**< @brief Whether dweight_num was given.  */

@@ -357,8 +357,35 @@ int main( int iArgs, char** aszArgs ) {
 		csfinal->EqualWeightSearch();
 	}else if(method=="ORDER_STAT"){
 		csfinal->OrderStatistics();
+	}else if(method=="USER"){
+		string uw = sArgs.user_weight_list_arg;
+		vector<string> uww;
+		if(!CSeekTools::ReadListOneColumn(uw.c_str(), uww)){
+			fprintf(stderr, "Error reading user weight list\n");
+			return -1;
+		}
+		vector<vector<float> > fw;
+		fw.resize(uww.size());
+		for(i=0; i<uww.size(); i++){
+			if(!CSeekTools::ReadArray(uww[i].c_str(), fw[i])){
+				return -1;
+			}
+		}
+		csfinal->WeightSearch(fw);
+	}else if(method=="VAR"){
+		for(i=0; i<cc.size(); i++){
+			CSeekDBSetting* pc = cc[i];
+			if(pc->GetValue("gvar")=="NULL"){
+				fprintf(stderr, "Must specify gvar directory!\n");
+				return -1;
+			}
+		}
+		if(bSimulateWeight){
+			fprintf(stderr, "simulate weight option is not supported for variance-based weighting\n");
+			return -1;
+		}
+		csfinal->VarianceWeightSearch();
 	}
-
 	//csfinal->WeightSearch(csk_weight_copy);
 	//csfinal->CVCustomSearch(newQ, rnd, PART_M, FOLD, RATE);
 	//csfinal->EqualWeightSearch();

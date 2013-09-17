@@ -47,6 +47,52 @@ int main( int iArgs, char** aszArgs ) {
 	for(i=0; i<vecstrGenes.size(); i++)
 		mapstrintGene[vecstrGenes[i]] = i;
 
+	if(sArgs.weight2_flag==1){
+		vector<string> vecstrDataset;
+		if(!CSeekTools::ReadListOneColumn(sArgs.dweight_map_arg, vecstrDataset))
+			return false;
+
+		vector<vector<float> > vec_score;
+		vector<vector<float> > orig_score;
+		utype i, j;
+		int num_query = sArgs.dweight_num_arg; //random query
+		orig_score.resize(num_query);
+
+		vec_score.resize(vecstrDataset.size());
+		for(j=0; j<vec_score.size(); j++)
+			vec_score[j].resize(num_query);
+
+		char x[256];
+		for(i=0; i<num_query; i++){ //i is query id
+			vector<float> v;
+			sprintf(x, "%s/%d.dweight", sArgs.dweight_dir_arg, i);
+			CSeekTools::ReadArray(x, v);
+			orig_score[i] = v;
+			for(j=0; j<vec_score.size(); j++) //j is dataset id
+				vec_score[j][i] = v[j];
+		}
+
+		for(j=0; j<vec_score.size(); j++)
+			sort(vec_score[j].begin(), vec_score[j].end());
+
+		int test_num_query = sArgs.dweight_test_num_arg;
+		for(i=0; i<test_num_query; i++){ //i is query id
+			fprintf(stderr, "Query %d\n", i);
+			vector<float> v;
+			sprintf(x, "%s/%d.dweight", sArgs.dweight_test_dir_arg, i);
+			CSeekTools::ReadArray(x, v);
+			for(j=0; j<v.size(); j++){
+				utype k = 0;
+				for(k=0; k<num_query; k++){
+					if(v[j]<vec_score[j][k])
+						break;
+				}
+				fprintf(stderr, "%s\t%.3e\t%d\n", vecstrDataset[j].c_str(), v[j], k);
+			}
+		}
+		fprintf(stderr, "Done!\n");
+	}
+
 	if(sArgs.weight_flag==1){
 		vector<string> vecstrDataset;
 		if(!CSeekTools::ReadListOneColumn(sArgs.dweight_map_arg, vecstrDataset))
@@ -116,19 +162,6 @@ int main( int iArgs, char** aszArgs ) {
 
 	if(sArgs.comp_ranking_flag==1){
 		utype i, j;
-
-		//Extra 1: Conversion for the first parameter=========================
-		vector<string> vecID, vecEntrez;
-		if(!CSeekTools::ReadListTwoColumns("/tmp/entrez_gene_map.txt", vecID, vecEntrez))
-			return false;
-		vector<string> vecE, vecS;
-		map<string,string> mapEntrezGeneSymbol;
-		if(!CSeekTools::ReadListTwoColumns("/tmp/gene_entrez_symbol.txt", vecE, vecS))
-			return false;
-		for(i=0; i<vecE.size(); i++)
-			mapEntrezGeneSymbol[vecE[i]] = vecS[i];
-		//====================================================================
-
 		int num_query = sArgs.gscore_num1_arg; //random query
 		char x[256];
 		for(i=0; i<num_query; i++){ //i is query id
@@ -138,37 +171,14 @@ int main( int iArgs, char** aszArgs ) {
 			sprintf(x, "%s/%d.gscore", sArgs.gscore_dir2_arg, i);
 			CSeekTools::ReadArray(x, v2);
 			vector<CPair<float> > cp1, cp2;
-
-			//Extra 1======================================================
-			for(j=0; j<v1.size(); j++){
-				CPair<float> cp;
-				map<string,string>::iterator it = mapEntrezGeneSymbol.find(vecEntrez[j]);
-				if(it==mapEntrezGeneSymbol.end()) continue;
-				map<string,utype>::iterator it2 = mapstrintGene.find(it->second);
-				if(it2==mapstrintGene.end()) continue;
-				cp.i = it2->second;
-				cp.v = v1[j];
-				cp1.push_back(cp);
-			}
-			for(j=0; j<v2.size(); j++){
-				CPair<float> cp;
-				cp.i = (utype) j;
-				cp.v = v2[j];
-				cp2.push_back(cp);
-			}
-			//=============================================================
-
-			//Previously==================
-			/*cp1.resize(v1.size());
+			cp1.resize(v1.size());
 			cp2.resize(v2.size());
 			for(j=0; j<v1.size(); j++){
 				cp1[j].i = (utype) j;
 				cp1[j].v = v1[j];
 				cp2[j].i = (utype) j;
 				cp2[j].v = v2[j];
-			}*/
-			//============================
-
+			}
 			sort(cp1.begin(), cp1.end(), CDescendingValue<float>());
 			sort(cp2.begin(), cp2.end(), CDescendingValue<float>());
 			vector<char> presence;
@@ -186,7 +196,6 @@ int main( int iArgs, char** aszArgs ) {
 			fprintf(stderr, "Query %d %d\n", i, count);
 		}
 	}
-
 	if(sArgs.dataset_flag==1){
 		string db = sArgs.db_arg;
 		string dset_list = sArgs.dset_list_arg;
@@ -197,6 +206,7 @@ int main( int iArgs, char** aszArgs ) {
 			fprintf(stderr, "Requires: -x, -X, -d -p\n");
 			return false;
 		}
+
 		vector<string> vecstrDP, vecstrUserDP;
 		//dataset-platform mapping (required)
 		if(!CSeekTools::ReadListTwoColumns(sArgs.db_arg, vecstrDatasets, vecstrDP))

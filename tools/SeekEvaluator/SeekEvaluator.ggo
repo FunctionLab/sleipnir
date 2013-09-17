@@ -7,6 +7,8 @@ option	"single"			O	"Evaluate one query's rank list result"
 								flag	off
 option	"aggregate"			M	"Evaluate multiple queries and aggregates results"
 								flag	off
+option	"multi_weight"		T	"Evaluate multiple queries' dataset weight files"
+								flag	off
 
 section	"Metric"
 option	"fixed_pr"			z	"Precision at depth X"
@@ -48,10 +50,14 @@ section	"Input required by all"
 option	"input"				i	"Gene mapping file"
 								string typestr="filename"	yes
 
-section "Input required by dataset weight display"
+section "Input required by dataset weight display (single .dweight file)"
 option	"dataset_map"		I	"Dataset mapping file, only required for displaying dataset weights"
 								string typestr="filename"
 option	"weight"			w	"Dataset weight file, (*.dweight)"
+								string typestr="filename"
+
+section "Input required by multi-query dataset weight display"
+option	"dweight_list"		Z	"List of dweight files"
 								string typestr="filename"
 
 section "Options for all"
@@ -87,7 +93,8 @@ option	"exclude_list"		X 	"Exclude gene list"
 								string typestr="filename"
 option	"include_list"		Y	"List of annotated genes"
 								string typestr="filename"
-								
+
+
 section "Output"
 option	"dir_out"			d	"Output directory"
 								string typestr="directory"	yes

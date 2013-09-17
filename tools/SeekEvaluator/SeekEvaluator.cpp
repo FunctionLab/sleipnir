@@ -23,7 +23,7 @@
 #include "cmdline.h"
 
 enum QUERY_MODE{
-	SINGLE_QUERY, MULTI_QUERY
+	SINGLE_QUERY, MULTI_QUERY, MULTI_DWEIGHT
 };
 
 enum METRIC{
@@ -658,7 +658,7 @@ int main( int iArgs, char** aszArgs ) {
 	istream*			pistm;
 	vector<string>		vecstrLine, vecstrGenes, vecstrDBs, vecstrQuery;
 	char				acBuffer[ c_iBuffer ];
-	size_t				i, j;
+	size_t				i, j, k;
 
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -694,6 +694,7 @@ int main( int iArgs, char** aszArgs ) {
 	enum QUERY_MODE qmode;
 	if(sArgs.single_flag==1) qmode = SINGLE_QUERY;
 	else if(sArgs.aggregate_flag==1) qmode = MULTI_QUERY;
+	else if(sArgs.multi_weight_flag==1) qmode = MULTI_DWEIGHT;
 
 	enum METRIC met;
 	if(sArgs.rbp_flag==1) met = RBP;
@@ -976,6 +977,50 @@ int main( int iArgs, char** aszArgs ) {
 		//}else{
 		PrintResult(result);	
 		//}
+
+	}
+
+	if(qmode == MULTI_DWEIGHT){
+		string dweightList = sArgs.dweight_list_arg;
+		vector<string> vecstrList;
+		CSeekTools::ReadListOneColumn(dweightList, vecstrList);
+		int numDataset = 0;
+
+		for(j=0; j<vecstrList.size(); j++){
+			vector<float> ww;
+			CSeekTools::ReadArray(vecstrList[j].c_str(), ww);
+			vector<AResultFloat> sortedDatasets;
+			sortedDatasets.resize(ww.size());
+			numDataset = ww.size();
+			for(i=0; i<sortedDatasets.size(); i++){
+				sortedDatasets[i].i = i;
+				sortedDatasets[i].f = ww[i];
+			}
+			sort(sortedDatasets.begin(), sortedDatasets.end());
+			/*for(i=0; i<sortedDatasets.size(); i++){
+				fprintf(stderr, "%.2e\t%s\n", sortedDatasets[i].f, 
+					vecstrDatasets[sortedDatasets[i].i].c_str());
+			}*/
+			vector<int> depth;
+			depth.push_back((int) ((float)numDataset * 0.005));	
+			depth.push_back((int) ((float)numDataset * 0.01));	
+			depth.push_back((int) ((float)numDataset * 0.05));	
+			depth.push_back((int) ((float)numDataset * 0.10));	
+			depth.push_back((int) ((float)numDataset * 0.20));	
+			depth.push_back((int) ((float)numDataset * 0.50));	
+			vector<float> avg;
+			for(i=0; i<depth.size(); i++){
+				float a = 0;
+				for(k=0; k<depth[i]; k++)
+					a+=sortedDatasets[k].f;
+				a /= (float) depth[i];
+				avg.push_back(a);
+			}
+			for(i=0; i<depth.size(); i++){
+				fprintf(stderr, "%.3e\t", avg[i]);
+			}
+			fprintf(stderr, "\n");
+		}
 
 	}
 

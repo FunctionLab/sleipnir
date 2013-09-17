@@ -9,6 +9,8 @@ option	"dataset"			A	"Check which datasets contain query of interest, based on .
 								flag	off
 option	"weight"			W	"Test dataset weights"
 								flag	off
+option	"weight2"			U	"Test dataset weights 2"
+								flag	off
 option	"comp_ranking"		C	"Compare two rankings (*.gscore files)"
 								flag	off
 

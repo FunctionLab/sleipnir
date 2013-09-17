@@ -942,7 +942,6 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 	current_sm = sm;
 
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
-
 		//simulated weight case ======================
 		/*if(simulateWeight && redoWithEqual>=1) //1 or 2 
 			current_sm = EQUAL;
@@ -996,14 +995,12 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 			}
 			fill(wc.begin(), wc.end(), (float)0);
 		}
-
-
 		//fprintf(stderr, "2 %lu\n", CMeta::GetMemoryUsage());
 
 		#pragma omp parallel for \
 		shared(customGoldStd) \
 		private(dd, d, j) \
-		firstprivate(iSearchDatasets, iQuery) \
+		firstprivate(i, iSearchDatasets, iQuery) \
 		schedule(dynamic)
 		for(dd=0; dd<iSearchDatasets; dd++){
 			d = allRDatasets[dd];
