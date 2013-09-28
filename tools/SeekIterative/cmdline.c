@@ -35,6 +35,7 @@ const char *gengetopt_args_info_help[] = {
   "      --help                    Print help and exit",
   "      --version                 Print version and exit",
   "\nMode:",
+  "  -j, --tdab                    Traditional DAB mode  (default=off)",
   "  -d, --dab                     Sparse Dab mode  (default=off)",
   "  -e, --combined                Combined-dab mode  (default=off)",
   "  -f, --test                    Test mode  (default=off)",
@@ -49,6 +50,9 @@ const char *gengetopt_args_info_help[] = {
   "\nVisualization mode:",
   "  -c, --cutoff=FLOAT            Cutoff value  (default=`0.0001')",
   "  -G, --genome=filename         Genome mapping file",
+  "\nTraditional DAB mode:",
+  "  -J, --tdab_list=filename      DAB list",
+  "  -S, --tsearch_mode=STRING     Search mode: equal weighted (eq) or CV LOI \n                                  (cv_loi) (Applicable if DAB list contains \n                                  more than 1 dataset  (possible values=\"eq\", \n                                  \"cv_loi\", \"NA\" default=`NA')",
   "\nSparse DAB mode:",
   "  -V, --dab_list=filename       DAB list",
   "  -I, --num_iter=INT            Number of iterations  (default=`0')",
@@ -56,6 +60,8 @@ const char *gengetopt_args_info_help[] = {
   "  -R, --rbp_p=FLOAT             RBP p parameter (must be specified) (p<1.0) \n                                  (recommended > 0.95)  (default=`-1')",
   "  -M, --max_rank=INT            Maximum rank number in the sparse DAB matrix \n                                  (must be specified)  (default=`-1')",
   "  -H, --dset_cutoff_file=filename\n                                Dataset score cutoff file  (default=`NA')",
+  "  -n, --norm_mode=STRING        Normalization method: rank - rank-normalize \n                                  matrix, subtract_z - subtract-z-normalize \n                                  matrix  (possible values=\"rank\", \n                                  \"subtract_z\", \"NA\" default=`NA')",
+  "  -N, --exp=FLOAT               Raise the z-score to the power of this value \n                                  (for --norm_mode=subtract_z)  \n                                  (default=`-1.0')",
   "\nInput:",
   "  -i, --input=filename          Gene mapping file",
   "  -q, --query=filename          Query file",
@@ -85,6 +91,9 @@ cmdline_parser_internal (int argc, char **argv, struct gengetopt_args_info *args
 static int
 cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error);
 
+const char *cmdline_parser_tsearch_mode_values[] = {"eq", "cv_loi", "NA", 0}; /*< Possible values for tsearch_mode. */
+const char *cmdline_parser_norm_mode_values[] = {"rank", "subtract_z", "NA", 0}; /*< Possible values for norm_mode. */
+
 static char *
 gengetopt_strdup (const char *s);
 
@@ -93,6 +102,7 @@ void clear_given (struct gengetopt_args_info *args_info)
 {
   args_info->help_given = 0 ;
   args_info->version_given = 0 ;
+  args_info->tdab_given = 0 ;
   args_info->dab_given = 0 ;
   args_info->combined_given = 0 ;
   args_info->test_given = 0 ;
@@ -105,12 +115,16 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->print_distr_given = 0 ;
   args_info->cutoff_given = 0 ;
   args_info->genome_given = 0 ;
+  args_info->tdab_list_given = 0 ;
+  args_info->tsearch_mode_given = 0 ;
   args_info->dab_list_given = 0 ;
   args_info->num_iter_given = 0 ;
   args_info->default_type_given = 0 ;
   args_info->rbp_p_given = 0 ;
   args_info->max_rank_given = 0 ;
   args_info->dset_cutoff_file_given = 0 ;
+  args_info->norm_mode_given = 0 ;
+  args_info->exp_given = 0 ;
   args_info->input_given = 0 ;
   args_info->query_given = 0 ;
   args_info->dab_dir_given = 0 ;
@@ -122,6 +136,7 @@ static
 void clear_args (struct gengetopt_args_info *args_info)
 {
   FIX_UNUSED (args_info);
+  args_info->tdab_flag = 0;
   args_info->dab_flag = 0;
   args_info->combined_flag = 0;
   args_info->test_flag = 0;
@@ -138,6 +153,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->cutoff_orig = NULL;
   args_info->genome_arg = NULL;
   args_info->genome_orig = NULL;
+  args_info->tdab_list_arg = NULL;
+  args_info->tdab_list_orig = NULL;
+  args_info->tsearch_mode_arg = gengetopt_strdup ("NA");
+  args_info->tsearch_mode_orig = NULL;
   args_info->dab_list_arg = NULL;
   args_info->dab_list_orig = NULL;
   args_info->num_iter_arg = 0;
@@ -150,6 +169,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->max_rank_orig = NULL;
   args_info->dset_cutoff_file_arg = gengetopt_strdup ("NA");
   args_info->dset_cutoff_file_orig = NULL;
+  args_info->norm_mode_arg = gengetopt_strdup ("NA");
+  args_info->norm_mode_orig = NULL;
+  args_info->exp_arg = -1.0;
+  args_info->exp_orig = NULL;
   args_info->input_arg = NULL;
   args_info->input_orig = NULL;
   args_info->query_arg = NULL;
@@ -170,29 +193,34 @@ void init_args_info(struct gengetopt_args_info *args_info)
 
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
-  args_info->dab_help = gengetopt_args_info_help[3] ;
-  args_info->combined_help = gengetopt_args_info_help[4] ;
-  args_info->test_help = gengetopt_args_info_help[5] ;
-  args_info->testcount_help = gengetopt_args_info_help[6] ;
-  args_info->testcombined_help = gengetopt_args_info_help[7] ;
-  args_info->visualize_help = gengetopt_args_info_help[8] ;
-  args_info->dab_basename_help = gengetopt_args_info_help[10] ;
-  args_info->top_genes_help = gengetopt_args_info_help[11] ;
-  args_info->generate_dot_help = gengetopt_args_info_help[12] ;
-  args_info->print_distr_help = gengetopt_args_info_help[13] ;
-  args_info->cutoff_help = gengetopt_args_info_help[15] ;
-  args_info->genome_help = gengetopt_args_info_help[16] ;
-  args_info->dab_list_help = gengetopt_args_info_help[18] ;
-  args_info->num_iter_help = gengetopt_args_info_help[19] ;
-  args_info->default_type_help = gengetopt_args_info_help[20] ;
-  args_info->rbp_p_help = gengetopt_args_info_help[21] ;
-  args_info->max_rank_help = gengetopt_args_info_help[22] ;
-  args_info->dset_cutoff_file_help = gengetopt_args_info_help[23] ;
-  args_info->input_help = gengetopt_args_info_help[25] ;
-  args_info->query_help = gengetopt_args_info_help[26] ;
-  args_info->dab_dir_help = gengetopt_args_info_help[27] ;
-  args_info->not_query_help = gengetopt_args_info_help[28] ;
-  args_info->dir_out_help = gengetopt_args_info_help[30] ;
+  args_info->tdab_help = gengetopt_args_info_help[3] ;
+  args_info->dab_help = gengetopt_args_info_help[4] ;
+  args_info->combined_help = gengetopt_args_info_help[5] ;
+  args_info->test_help = gengetopt_args_info_help[6] ;
+  args_info->testcount_help = gengetopt_args_info_help[7] ;
+  args_info->testcombined_help = gengetopt_args_info_help[8] ;
+  args_info->visualize_help = gengetopt_args_info_help[9] ;
+  args_info->dab_basename_help = gengetopt_args_info_help[11] ;
+  args_info->top_genes_help = gengetopt_args_info_help[12] ;
+  args_info->generate_dot_help = gengetopt_args_info_help[13] ;
+  args_info->print_distr_help = gengetopt_args_info_help[14] ;
+  args_info->cutoff_help = gengetopt_args_info_help[16] ;
+  args_info->genome_help = gengetopt_args_info_help[17] ;
+  args_info->tdab_list_help = gengetopt_args_info_help[19] ;
+  args_info->tsearch_mode_help = gengetopt_args_info_help[20] ;
+  args_info->dab_list_help = gengetopt_args_info_help[22] ;
+  args_info->num_iter_help = gengetopt_args_info_help[23] ;
+  args_info->default_type_help = gengetopt_args_info_help[24] ;
+  args_info->rbp_p_help = gengetopt_args_info_help[25] ;
+  args_info->max_rank_help = gengetopt_args_info_help[26] ;
+  args_info->dset_cutoff_file_help = gengetopt_args_info_help[27] ;
+  args_info->norm_mode_help = gengetopt_args_info_help[28] ;
+  args_info->exp_help = gengetopt_args_info_help[29] ;
+  args_info->input_help = gengetopt_args_info_help[31] ;
+  args_info->query_help = gengetopt_args_info_help[32] ;
+  args_info->dab_dir_help = gengetopt_args_info_help[33] ;
+  args_info->not_query_help = gengetopt_args_info_help[34] ;
+  args_info->dir_out_help = gengetopt_args_info_help[36] ;
   
 }
 
@@ -282,6 +310,10 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->cutoff_orig));
   free_string_field (&(args_info->genome_arg));
   free_string_field (&(args_info->genome_orig));
+  free_string_field (&(args_info->tdab_list_arg));
+  free_string_field (&(args_info->tdab_list_orig));
+  free_string_field (&(args_info->tsearch_mode_arg));
+  free_string_field (&(args_info->tsearch_mode_orig));
   free_string_field (&(args_info->dab_list_arg));
   free_string_field (&(args_info->dab_list_orig));
   free_string_field (&(args_info->num_iter_orig));
@@ -290,6 +322,9 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->max_rank_orig));
   free_string_field (&(args_info->dset_cutoff_file_arg));
   free_string_field (&(args_info->dset_cutoff_file_orig));
+  free_string_field (&(args_info->norm_mode_arg));
+  free_string_field (&(args_info->norm_mode_orig));
+  free_string_field (&(args_info->exp_orig));
   free_string_field (&(args_info->input_arg));
   free_string_field (&(args_info->input_orig));
   free_string_field (&(args_info->query_arg));
@@ -311,13 +346,54 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   clear_given (args_info);
 }
 
+/**
+ * @param val the value to check
+ * @param values the possible values
+ * @return the index of the matched value:
+ * -1 if no value matched,
+ * -2 if more than one value has matched
+ */
+static int
+check_possible_values(const char *val, const char *values[])
+{
+  int i, found, last;
+  size_t len;
+
+  if (!val)   /* otherwise strlen() crashes below */
+    return -1; /* -1 means no argument for the option */
+
+  found = last = 0;
+
+  for (i = 0, len = strlen(val); values[i]; ++i)
+    {
+      if (strncmp(val, values[i], len) == 0)
+        {
+          ++found;
+          last = i;
+          if (strlen(values[i]) == len)
+            return i; /* exact macth no need to check more */
+        }
+    }
+
+  if (found == 1) /* one match: OK */
+    return last;
+
+  return (found ? -2 : -1); /* return many values or none matched */
+}
+
 
 static void
 write_into_file(FILE *outfile, const char *opt, const char *arg, const char *values[])
 {
-  FIX_UNUSED (values);
+  int found = -1;
   if (arg) {
-    fprintf(outfile, "%s=\"%s\"\n", opt, arg);
+    if (values) {
+      found = check_possible_values(arg, values);      
+    }
+    if (found >= 0)
+      fprintf(outfile, "%s=\"%s\" # %s\n", opt, arg, values[found]);
+    else
+      fprintf(outfile, "%s=\"%s\"\n", opt, arg);
   } else {
     fprintf(outfile, "%s\n", opt);
   }
@@ -339,6 +415,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "help", 0, 0 );
   if (args_info->version_given)
     write_into_file(outfile, "version", 0, 0 );
+  if (args_info->tdab_given)
+    write_into_file(outfile, "tdab", 0, 0 );
   if (args_info->dab_given)
     write_into_file(outfile, "dab", 0, 0 );
   if (args_info->combined_given)
@@ -363,6 +441,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "cutoff", args_info->cutoff_orig, 0);
   if (args_info->genome_given)
     write_into_file(outfile, "genome", args_info->genome_orig, 0);
+  if (args_info->tdab_list_given)
+    write_into_file(outfile, "tdab_list", args_info->tdab_list_orig, 0);
+  if (args_info->tsearch_mode_given)
+    write_into_file(outfile, "tsearch_mode", args_info->tsearch_mode_orig, cmdline_parser_tsearch_mode_values);
   if (args_info->dab_list_given)
     write_into_file(outfile, "dab_list", args_info->dab_list_orig, 0);
   if (args_info->num_iter_given)
@@ -375,6 +457,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "max_rank", args_info->max_rank_orig, 0);
   if (args_info->dset_cutoff_file_given)
     write_into_file(outfile, "dset_cutoff_file", args_info->dset_cutoff_file_orig, 0);
+  if (args_info->norm_mode_given)
+    write_into_file(outfile, "norm_mode", args_info->norm_mode_orig, cmdline_parser_norm_mode_values);
+  if (args_info->exp_given)
+    write_into_file(outfile, "exp", args_info->exp_orig, 0);
   if (args_info->input_given)
     write_into_file(outfile, "input", args_info->input_orig, 0);
   if (args_info->query_given)
@@ -561,7 +647,18 @@ int update_arg(void *field, char **orig_field,
       return 1; /* failure */
     }
 
-  FIX_UNUSED (default_value);
+  if (possible_values && (found = check_possible_values((value ? value : default_value), possible_values)) < 0)
+    {
+      if (short_opt != '-')
+        fprintf (stderr, "%s: %s argument, \"%s\", for option `--%s' (`-%c')%s\n", 
+          package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt, short_opt,
+          (additional_error ? additional_error : ""));
+      else
+        fprintf (stderr, "%s: %s argument, \"%s\", for option `--%s'%s\n", 
+          package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt,
+          (additional_error ? additional_error : ""));
+      return 1; /* failure */
+    }
     
   if (field_given && *field_given && ! override)
     return 0;
@@ -667,6 +764,7 @@ cmdline_parser_internal (
       static struct option long_options[] = {
         { "help",	0, NULL, 0 },
         { "version",	0, NULL, 0 },
+        { "tdab",	0, NULL, 'j' },
         { "dab",	0, NULL, 'd' },
         { "combined",	0, NULL, 'e' },
         { "test",	0, NULL, 'f' },
@@ -679,12 +777,16 @@ cmdline_parser_internal (
         { "print_distr",	0, NULL, 'P' },
         { "cutoff",	1, NULL, 'c' },
         { "genome",	1, NULL, 'G' },
+        { "tdab_list",	1, NULL, 'J' },
+        { "tsearch_mode",	1, NULL, 'S' },
         { "dab_list",	1, NULL, 'V' },
         { "num_iter",	1, NULL, 'I' },
         { "default_type",	1, NULL, 'T' },
         { "rbp_p",	1, NULL, 'R' },
         { "max_rank",	1, NULL, 'M' },
         { "dset_cutoff_file",	1, NULL, 'H' },
+        { "norm_mode",	1, NULL, 'n' },
+        { "exp",	1, NULL, 'N' },
         { "input",	1, NULL, 'i' },
         { "query",	1, NULL, 'q' },
         { "dab_dir",	1, NULL, 'F' },
@@ -693,12 +795,22 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "defghvb:t:EPc:G:V:I:T:R:M:H:i:q:F:Q:D:", long_options, &option_index);
+      c = getopt_long (argc, argv, "jdefghvb:t:EPc:G:J:S:V:I:T:R:M:H:n:N:i:q:F:Q:D:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
       switch (c)
         {
+        case 'j':	/* Traditional DAB mode.  */
+        
+        
+          if (update_arg((void *)&(args_info->tdab_flag), 0, &(args_info->tdab_given),
+              &(local_args_info.tdab_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "tdab", 'j',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'd':	/* Sparse Dab mode.  */
         
         
@@ -827,6 +939,30 @@ cmdline_parser_internal (
             goto failure;
         
           break;
+        case 'J':	/* DAB list.  */
+        
+        
+          if (update_arg( (void *)&(args_info->tdab_list_arg), 
+               &(args_info->tdab_list_orig), &(args_info->tdab_list_given),
+              &(local_args_info.tdab_list_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "tdab_list", 'J',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'S':	/* Search mode: equal weighted (eq) or CV LOI (cv_loi) (Applicable if DAB list contains more than 1 dataset.  */
+        
+        
+          if (update_arg( (void *)&(args_info->tsearch_mode_arg), 
+               &(args_info->tsearch_mode_orig), &(args_info->tsearch_mode_given),
+              &(local_args_info.tsearch_mode_given), optarg, cmdline_parser_tsearch_mode_values, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "tsearch_mode", 'S',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'V':	/* DAB list.  */
         
         
@@ -895,6 +1031,30 @@ cmdline_parser_internal (
               &(local_args_info.dset_cutoff_file_given), optarg, 0, "NA", ARG_STRING,
               check_ambiguity, override, 0, 0,
               "dset_cutoff_file", 'H',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'n':	/* Normalization method: rank - rank-normalize matrix, subtract_z - subtract-z-normalize matrix.  */
+        
+        
+          if (update_arg( (void *)&(args_info->norm_mode_arg), 
+               &(args_info->norm_mode_orig), &(args_info->norm_mode_given),
+              &(local_args_info.norm_mode_given), optarg, cmdline_parser_norm_mode_values, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "norm_mode", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'N':	/* Raise the z-score to the power of this value (for --norm_mode=subtract_z).  */
+        
+        
+          if (update_arg( (void *)&(args_info->exp_arg), 
+               &(args_info->exp_orig), &(args_info->exp_given),
+              &(local_args_info.exp_given), optarg, 0, "-1.0", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "exp", 'N',
               additional_error))
             goto failure;
         

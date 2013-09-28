@@ -32,7 +32,7 @@ const char *gengetopt_args_info_usage = "Usage: SeekTest [OPTIONS]... [FILES]...
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                    Print help and exit",
+  "      --help                    Print help and exit",
   "  -V, --version                 Print version and exit",
   "\nMode:",
   "  -D, --dab                     DAB mode  (default=off)",
@@ -46,6 +46,8 @@ const char *gengetopt_args_info_help[] = {
   "  -C, --dataset_list=filename   Dataset list",
   "  -Q, --query=filename          List of genes separated by spaces in one line",
   "  -q, --quant=filename          Quant file",
+  "  -c, --count_pair              Count number of z-scores exceeding a threshold  \n                                  (default=off)",
+  "  -h, --histogram               Get distribution of z-scores of given genes  \n                                  (default=off)",
   "\nDAB mode:",
   "  -g, --gene_set_list=filename  List of gene-set files",
   "  -x, --input=filename          Gene mapping file",
@@ -89,6 +91,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->dataset_list_given = 0 ;
   args_info->query_given = 0 ;
   args_info->quant_given = 0 ;
+  args_info->count_pair_given = 0 ;
+  args_info->histogram_given = 0 ;
   args_info->gene_set_list_given = 0 ;
   args_info->input_given = 0 ;
   args_info->dabinput_given = 0 ;
@@ -117,6 +121,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->query_orig = NULL;
   args_info->quant_arg = NULL;
   args_info->quant_orig = NULL;
+  args_info->count_pair_flag = 0;
+  args_info->histogram_flag = 0;
   args_info->gene_set_list_arg = NULL;
   args_info->gene_set_list_orig = NULL;
   args_info->input_arg = NULL;
@@ -147,11 +153,13 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->dataset_list_help = gengetopt_args_info_help[11] ;
   args_info->query_help = gengetopt_args_info_help[12] ;
   args_info->quant_help = gengetopt_args_info_help[13] ;
-  args_info->gene_set_list_help = gengetopt_args_info_help[15] ;
-  args_info->input_help = gengetopt_args_info_help[16] ;
-  args_info->dabinput_help = gengetopt_args_info_help[17] ;
-  args_info->gavg_input_help = gengetopt_args_info_help[18] ;
-  args_info->gpres_input_help = gengetopt_args_info_help[19] ;
+  args_info->count_pair_help = gengetopt_args_info_help[14] ;
+  args_info->histogram_help = gengetopt_args_info_help[15] ;
+  args_info->gene_set_list_help = gengetopt_args_info_help[17] ;
+  args_info->input_help = gengetopt_args_info_help[18] ;
+  args_info->dabinput_help = gengetopt_args_info_help[19] ;
+  args_info->gavg_input_help = gengetopt_args_info_help[20] ;
+  args_info->gpres_input_help = gengetopt_args_info_help[21] ;
   
 }
 
@@ -317,6 +325,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "query", args_info->query_orig, 0);
   if (args_info->quant_given)
     write_into_file(outfile, "quant", args_info->quant_orig, 0);
+  if (args_info->count_pair_given)
+    write_into_file(outfile, "count_pair", 0, 0 );
+  if (args_info->histogram_given)
+    write_into_file(outfile, "histogram", 0, 0 );
   if (args_info->gene_set_list_given)
     write_into_file(outfile, "gene_set_list", args_info->gene_set_list_orig, 0);
   if (args_info->input_given)
@@ -569,7 +581,7 @@ cmdline_parser_internal (
       int option_index = 0;
 
       static struct option long_options[] = {
-        { "help",	0, NULL, 'h' },
+        { "help",	0, NULL, 0 },
         { "version",	0, NULL, 'V' },
         { "dab",	0, NULL, 'D' },
         { "bin",	0, NULL, 'A' },
@@ -581,6 +593,8 @@ cmdline_parser_internal (
         { "dataset_list",	1, NULL, 'C' },
         { "query",	1, NULL, 'Q' },
         { "quant",	1, NULL, 'q' },
+        { "count_pair",	0, NULL, 'c' },
+        { "histogram",	0, NULL, 'h' },
         { "gene_set_list",	1, NULL, 'g' },
         { "input",	1, NULL, 'x' },
         { "dabinput",	1, NULL, 'B' },
@@ -589,17 +603,12 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVDAdE:b:P:s:C:Q:q:g:x:B:a:p:", long_options, &option_index);
+      c = getopt_long (argc, argv, "VDAdE:b:P:s:C:Q:q:chg:x:B:a:p:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
       switch (c)
         {
-        case 'h':	/* Print help and exit.  */
-          cmdline_parser_print_help ();
-          cmdline_parser_free (&local_args_info);
-          exit (EXIT_SUCCESS);
-
         case 'V':	/* Print version and exit.  */
         
         
@@ -728,6 +737,26 @@ cmdline_parser_internal (
             goto failure;
         
           break;
+        case 'c':	/* Count number of z-scores exceeding a threshold.  */
+        
+        
+          if (update_arg((void *)&(args_info->count_pair_flag), 0, &(args_info->count_pair_given),
+              &(local_args_info.count_pair_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "count_pair", 'c',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'h':	/* Get distribution of z-scores of given genes.  */
+        
+        
+          if (update_arg((void *)&(args_info->histogram_flag), 0, &(args_info->histogram_given),
+              &(local_args_info.histogram_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "histogram", 'h',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'g':	/* List of gene-set files.  */
         
         
@@ -790,6 +819,12 @@ cmdline_parser_internal (
           break;
 
         case 0:	/* Long option with no short option */
+          if (strcmp (long_options[option_index].name, "help") == 0) {
+            cmdline_parser_print_help ();
+            cmdline_parser_free (&local_args_info);
+            exit (EXIT_SUCCESS);
+          }
+
         case '?':	/* Invalid option.  */
           /* `getopt_long' already printed an error message.  */
           goto failure;

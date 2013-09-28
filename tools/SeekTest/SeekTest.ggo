@@ -25,6 +25,10 @@ option	"query"				Q	"List of genes separated by spaces in one line"
 								string typestr="filename"
 option	"quant"				q	"Quant file"
 								string typestr="filename"
+option	"count_pair"		c	"Count number of z-scores exceeding a threshold"
+								flag	off
+option	"histogram"			h	"Get distribution of z-scores of given genes"
+								flag	off
 
 section "DAB mode"
 option	"gene_set_list"		g	"List of gene-set files"

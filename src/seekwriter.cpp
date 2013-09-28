@@ -231,6 +231,127 @@ bool CSeekWriter::ProductNorm(const vector<map<utype,float> > &mat1,
 	return true;
 }
 
+bool CSeekWriter::TopologicalOverlap(CDataPair &Dat,
+const vector<string> &vecstrGenes){
+	size_t i, j;
+	vector<unsigned int> veciGenes;
+	veciGenes.resize(vecstrGenes.size());
+	for(i=0; i<vecstrGenes.size(); i++)
+		veciGenes[i] = (unsigned int) Dat.GetGeneIndex(vecstrGenes[i]);
+
+	unsigned int s,t;
+	float d;
+	CSeekIntIntMap m(vecstrGenes.size());
+	for(i=0; i<vecstrGenes.size(); i++){
+		if((s=veciGenes[i])==(unsigned int)-1) continue;
+		m.Add(i);
+	}
+
+	size_t trueSize = m.GetNumSet();
+	float* fs = new float[trueSize*trueSize];
+	const vector<utype> &allRGenes = m.GetAllReverse();
+
+	for(i=0; i<m.GetNumSet(); i++){	
+		s = veciGenes[allRGenes[i]];
+		for(j=i+1; j<m.GetNumSet(); j++){
+			t = veciGenes[allRGenes[j]];
+			if(CMeta::IsNaN(d = Dat.Get(s,t))){
+				fs[i*trueSize + j] = 0;
+				fs[j*trueSize + i] = 0;
+				fprintf(stderr, "Warning i, j is NaN, set to 0!\n", i, j);
+			}else{
+				fs[i*trueSize + j] = d;
+				fs[j*trueSize + i] = d;
+			}
+		}
+		fs[i*trueSize+i] = 0;
+	}
+
+	//first step: transform z-scores back to correlation 
+	//(exp(z*2) = (1+r)/(1-r) -> exp(2z) - exp(2z)*r = 1+r -> exp(2z) - 1 = exp(2z)*r + r = (exp(2z) + 1)*r->
+	//(exp(2z) - 1) / (exp(2z) + 1) = r
+	//second step: transform by abs, then take it to the exponent 9
+	for(i=0; i<m.GetNumSet(); i++){	
+		for(j=i+1; j<m.GetNumSet(); j++){
+			if((d = fs[i*trueSize+j])==0) continue;
+			d = (expf(2.0*d) - 1.0) / (expf(2.0*d) + 1.0);
+			d = pow(abs(d), 9);
+			fs[i*trueSize+j] = d;
+			fs[j*trueSize+i] = d;
+			//fprintf(stderr, "%.3e\n", d);
+		}
+	}
+
+	fprintf(stderr, "Finished step 1: tranform z-score back to pearson\n");
+	vector<float> vecSum;
+	CSeekTools::InitVector(vecSum, trueSize, CMeta::GetNaN());
+	for(i=0; i<m.GetNumSet(); i++){	
+		vecSum[i] = 0;
+	}
+
+	for(i=0; i<m.GetNumSet(); i++){	
+		for(j=i+1; j<m.GetNumSet(); j++){
+			vecSum[i] += fs[i*trueSize+j];
+			vecSum[j] += fs[i*trueSize+j];
+		}
+	}
+
+	//temporary storage matrix
+	CHalfMatrix<float> res;
+	res.Initialize(trueSize);
+	for(i=0; i<m.GetNumSet(); i++){	
+		for(j=i+1; j<m.GetNumSet(); j++){
+			res.Set(i, j, 0);
+		}
+	}
+
+	size_t k;
+	unsigned int u;
+	//size_t ii = 0;
+	#pragma omp parallel for \
+	shared(m, fs, vecSum, res) \
+	firstprivate(trueSize) \
+	private(i, j, d) schedule(dynamic)
+	for(i=0; i<m.GetNumSet(); i++){	
+		for(j=i+1; j<m.GetNumSet(); j++){
+			double tsum = 0;
+			float *pi = &fs[i];
+			float *pj = &fs[j];
+			for(k=0; k<m.GetNumSet(); k++){
+				tsum += (double) (*pi) * (double) (*pj);
+				pi++;
+				pj++; 
+			}
+			tsum -= (double)fs[i*trueSize + i] * (double)fs[j*trueSize + i];
+			tsum -= (double)fs[i*trueSize + j] * (double)fs[j*trueSize + j];
+			double tmin = 0;
+			if(vecSum[i] < vecSum[j])
+				tmin = (double) vecSum[i];
+			else
+				tmin = (double) vecSum[j];
+			double to = (tsum + (double) d) / (tmin + 1.0 - (double) d);
+			res.Set(i, j, (float) to); //temporary matrix to store the results
+			//fprintf(stderr, "%.3e\n", to);	
+		}
+		if(i%100==0){
+			fprintf(stderr, "Doing topological overlap calculation, current %d\n", i);
+		}
+	}
+
+	fprintf(stderr, "Finished step 2: topological overlap calculation\n");
+
+	for(i=0; i<m.GetNumSet(); i++){	
+		s = veciGenes[allRGenes[i]];
+		for(j=i+1; j<m.GetNumSet(); j++){
+			t = veciGenes[allRGenes[j]];
+			Dat.Set(s, t, res.Get(i, j));
+		}
+		Dat.Set(s, s, 1.0);
+	}
+	delete[] fs;
+
+}
+
 
 bool CSeekWriter::NormalizeDAB(CDataPair &Dat,
 const vector<string> &vecstrGenes, 
@@ -336,7 +457,7 @@ bool expTransform, bool divideNorm, bool subtractNorm){
 						}else
 							r=d/sqrtf(vecSum[i])/sqrtf(vecSum[j]);
 					}else if(subtractNorm){
-						r=d-vecSum[i]/vecNum[i]-vecSum[j]/vecNum[j];
+						r=d-0.5*(vecSum[i]/vecNum[i]+vecSum[j]/vecNum[j]);
 					}
 				}
 				Dat.Set(s, t, r);

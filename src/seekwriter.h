@@ -493,6 +493,9 @@ public:
 		vector<char> &vecResult);
 	static bool GetDatasetSinfo(CDataPair &Dat, float &mean,
 		float &stdev);
+
+	static bool TopologicalOverlap(CDataPair &Dat,
+		const vector<string> &vecstrGenes);
 };
 
 }

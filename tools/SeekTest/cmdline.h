@@ -66,6 +66,10 @@ struct gengetopt_args_info
   char * quant_arg;	/**< @brief Quant file.  */
   char * quant_orig;	/**< @brief Quant file original value given at command line.  */
   const char *quant_help; /**< @brief Quant file help description.  */
+  int count_pair_flag;	/**< @brief Count number of z-scores exceeding a threshold (default=off).  */
+  const char *count_pair_help; /**< @brief Count number of z-scores exceeding a threshold help description.  */
+  int histogram_flag;	/**< @brief Get distribution of z-scores of given genes (default=off).  */
+  const char *histogram_help; /**< @brief Get distribution of z-scores of given genes help description.  */
   char * gene_set_list_arg;	/**< @brief List of gene-set files.  */
   char * gene_set_list_orig;	/**< @brief List of gene-set files original value given at command line.  */
   const char *gene_set_list_help; /**< @brief List of gene-set files help description.  */
@@ -94,6 +98,8 @@ struct gengetopt_args_info
   unsigned int dataset_list_given ;	/**< @brief Whether dataset_list was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
   unsigned int quant_given ;	/**< @brief Whether quant was given.  */
+  unsigned int count_pair_given ;	/**< @brief Whether count_pair was given.  */
+  unsigned int histogram_given ;	/**< @brief Whether histogram was given.  */
   unsigned int gene_set_list_given ;	/**< @brief Whether gene_set_list was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int dabinput_given ;	/**< @brief Whether dabinput was given.  */

@@ -13,6 +13,22 @@ option	"weight2"			U	"Test dataset weights 2"
 								flag	off
 option	"comp_ranking"		C	"Compare two rankings (*.gscore files)"
 								flag	off
+option	"convert_aracne"	J	"Convert Aracne output (.txt) to DAB file"
+								flag	off
+option	"limit_hub"			Y	"Limit genes in the DAB to those that are hubby"
+								flag	off
+
+section "Limit Hub"
+option	"dabinput"			y	"DAB input file"
+								string typestr="filename" default="NA"
+option	"hub_dab_output"	Z	"DAB output file"
+								string typestr="filename" default="NA"
+
+section	"Convert Aracne"
+option	"aracne_file"		K	"Aracne .txt output file"
+								string typestr="filename" default="NA"
+option	"output_dab_file"	L	"DAB file"
+								string typestr="filename" default="NA"
 
 section "Weight"
 option	"dweight_dir"		E	"Dataset weight directory"

@@ -51,9 +51,7 @@ int main( int iArgs, char** aszArgs ) {
 		vector<string> vecstrDataset;
 		if(!CSeekTools::ReadListOneColumn(sArgs.dweight_map_arg, vecstrDataset))
 			return false;
-
-		vector<vector<float> > vec_score;
-		vector<vector<float> > orig_score;
+		vector<vector<float> > vec_score, orig_score;
 		utype i, j;
 		int num_query = sArgs.dweight_num_arg; //random query
 		orig_score.resize(num_query);
@@ -91,6 +89,91 @@ int main( int iArgs, char** aszArgs ) {
 			}
 		}
 		fprintf(stderr, "Done!\n");
+		return 0;
+	}
+
+	if(sArgs.convert_aracne_flag==1){
+		int lineLen = 1024;
+		char *acBuffer = (char*)malloc(lineLen);
+		FILE *infile;
+		if((infile=fopen(sArgs.aracne_file_arg, "r"))==NULL){
+			fprintf(stderr, "Error no such file %s\n", sArgs.aracne_file_arg);
+			return 1;
+		}
+		while(fgets(acBuffer, lineLen, infile)!=NULL){
+			while(strlen(acBuffer)==lineLen-1){
+				int len = strlen(acBuffer);
+				fseek(infile, -len, SEEK_CUR);
+				lineLen+=1024;
+				acBuffer = (char*)realloc(acBuffer, lineLen);
+				char *ret = fgets(acBuffer, lineLen, infile);
+			}
+		}
+		fclose(infile);
+		fprintf(stderr, "Max line length: %d\n", lineLen);
+		free(acBuffer);
+
+		acBuffer = (char*)malloc(lineLen);
+		ifstream ia;
+		ia.open(sArgs.aracne_file_arg);
+		if(!ia.is_open()){
+			fprintf(stderr, "Error opening file %s\n", sArgs.aracne_file_arg);
+			return 1;
+		}
+		set<string> allGenes;
+		size_t ci=0;
+		while(!ia.eof()){
+			ia.getline(acBuffer, lineLen-1);
+			if(acBuffer[0]==0) break;
+			acBuffer[lineLen-1] = 0;
+			if(acBuffer[0]=='>') continue;
+			vector<string> tok;
+			CMeta::Tokenize(acBuffer, tok);
+			allGenes.insert(tok[0]);
+			size_t si;
+			for(si=1; si<tok.size(); si+=2){
+				allGenes.insert(tok[si]);
+			}
+			if(ci%100==0){
+				fprintf(stderr, "Gene Number %d\n", ci);
+			}
+			ci++;
+		}
+		ia.close();
+
+		vector<string> vecGenes;
+		copy(allGenes.begin(), allGenes.end(), back_inserter(vecGenes));
+		map<string,size_t> mapiGenes;
+		for(i=0; i<vecGenes.size(); i++)
+			mapiGenes[vecGenes[i]] = i;
+
+		CDat Dat;
+		Dat.Open(vecGenes);
+		ci = 0;
+		ia.open(sArgs.aracne_file_arg);
+		while(!ia.eof()){
+			ia.getline(acBuffer, lineLen-1);
+			if(acBuffer[0]==0) break;
+			acBuffer[lineLen-1] = 0;
+			if(acBuffer[0]=='>') continue;
+			vector<string> tok;
+			CMeta::Tokenize(acBuffer, tok);
+			size_t tG = mapiGenes[tok[0]];
+			size_t si;
+			for(si=1; si<tok.size(); si+=2){
+				size_t oG = mapiGenes[tok[si]];
+				float fG = atof(tok[si+1].c_str());
+				Dat.Set(tG, oG, fG);
+			}
+			if(ci%100==0){
+				fprintf(stderr, "Gene Number %d\n", ci);
+			}
+			ci++;
+		}
+		ia.close();
+		free(acBuffer);
+		Dat.Save(sArgs.output_dab_file_arg);
+		return 0;
 	}
 
 	if(sArgs.weight_flag==1){
@@ -158,6 +241,69 @@ int main( int iArgs, char** aszArgs ) {
 				fprintf(stderr, "Not unique\n");
 		}
 		fprintf(stderr, "Done!\n");
+		return 0;
+	}
+
+	if(sArgs.limit_hub_flag==1){
+		float per = 0.30;
+		CDataPair Dat;
+		char outFile[1024];
+		fprintf(stderr, "Opening file...\n");
+		if(!Dat.Open(sArgs.dabinput_arg, false, false, 2, false, false)){
+			cerr << "error opening file" << endl;
+			return 1;
+		}
+		vector<unsigned int> veciGenes;
+		veciGenes.resize(vecstrGenes.size());
+		for(i=0; i<vecstrGenes.size(); i++)
+			veciGenes[i] = (unsigned int) Dat.GetGeneIndex(vecstrGenes[i]);
+
+		unsigned int s, t, j, ss, tt;
+		float d;
+		CSeekIntIntMap m(vecstrGenes.size());
+		for(i=0; i<vecstrGenes.size(); i++){
+			if((s=veciGenes[i])==(unsigned int)-1) continue;
+			m.Add(i);
+		}
+		vector<float> vecSum;
+		CSeekTools::InitVector(vecSum, vecstrGenes.size(),(float) 0);
+		const vector<utype> &allRGenes = m.GetAllReverse();
+		for(i=0; i<m.GetNumSet(); i++){	
+			s = veciGenes[allRGenes[i]];
+			for(j=i+1; j<m.GetNumSet(); j++){
+				t = veciGenes[allRGenes[j]];
+				if(CMeta::IsNaN(d = Dat.Get(s,t))) continue;
+				vecSum[allRGenes[i]]+=d;
+				vecSum[allRGenes[j]]+=d;
+			}
+		}
+		vector<float> backupSum;
+		for(i=0; i<vecSum.size(); i++)
+			backupSum.push_back(vecSum[i]);
+		sort(vecSum.begin(), vecSum.end(), greater<float>());
+		int index = (int) (per * (float) m.GetNumSet());
+		float percentile = vecSum[index];
+		vector<string> limitedGenes;
+		for(i=0; i<backupSum.size(); i++){
+			if(backupSum[i] >= percentile){
+				limitedGenes.push_back(vecstrGenes[i]);
+			}
+		}
+		fprintf(stderr, "%d / %d genes to be written!\n", limitedGenes.size(), m.GetNumSet());
+		CDat NewDat;
+		NewDat.Open(limitedGenes);
+		for(i=0; i<limitedGenes.size(); i++){	
+			s = (unsigned int) Dat.GetGeneIndex(limitedGenes[i]);
+			ss = NewDat.GetGeneIndex(limitedGenes[i]);
+			for(j=i+1; j<limitedGenes.size(); j++){
+				t = (unsigned int) Dat.GetGeneIndex(limitedGenes[j]);
+				tt = NewDat.GetGeneIndex(limitedGenes[j]);
+				d = Dat.Get(s, t);
+				NewDat.Set(ss, tt, d);
+			}
+		}
+		NewDat.Save(sArgs.hub_dab_output_arg);
+		return 0;
 	}
 
 	if(sArgs.comp_ranking_flag==1){
@@ -195,7 +341,9 @@ int main( int iArgs, char** aszArgs ) {
 			}
 			fprintf(stderr, "Query %d %d\n", i, count);
 		}
+		return 0;
 	}
+
 	if(sArgs.dataset_flag==1){
 		string db = sArgs.db_arg;
 		string dset_list = sArgs.dset_list_arg;
@@ -433,10 +581,10 @@ int main( int iArgs, char** aszArgs ) {
 		if(toOutput){
 			fclose(out);
 		}		
-
+		return 0;
 	}
-	else if(sArgs.databaselet_flag==1){
 
+	if(sArgs.databaselet_flag==1){
 		string db = sArgs.db_arg;
 		string dset_list = sArgs.dset_list_arg;
 		string dir_in = sArgs.dir_in_arg;

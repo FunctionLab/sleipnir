@@ -49,6 +49,22 @@ struct gengetopt_args_info
   const char *weight2_help; /**< @brief Test dataset weights 2 help description.  */
   int comp_ranking_flag;	/**< @brief Compare two rankings (*.gscore files) (default=off).  */
   const char *comp_ranking_help; /**< @brief Compare two rankings (*.gscore files) help description.  */
+  int convert_aracne_flag;	/**< @brief Convert Aracne output (.txt) to DAB file (default=off).  */
+  const char *convert_aracne_help; /**< @brief Convert Aracne output (.txt) to DAB file help description.  */
+  int limit_hub_flag;	/**< @brief Limit genes in the DAB to those that are hubby (default=off).  */
+  const char *limit_hub_help; /**< @brief Limit genes in the DAB to those that are hubby help description.  */
+  char * dabinput_arg;	/**< @brief DAB input file (default='NA').  */
+  char * dabinput_orig;	/**< @brief DAB input file original value given at command line.  */
+  const char *dabinput_help; /**< @brief DAB input file help description.  */
+  char * hub_dab_output_arg;	/**< @brief DAB output file (default='NA').  */
+  char * hub_dab_output_orig;	/**< @brief DAB output file original value given at command line.  */
+  const char *hub_dab_output_help; /**< @brief DAB output file help description.  */
+  char * aracne_file_arg;	/**< @brief Aracne .txt output file (default='NA').  */
+  char * aracne_file_orig;	/**< @brief Aracne .txt output file original value given at command line.  */
+  const char *aracne_file_help; /**< @brief Aracne .txt output file help description.  */
+  char * output_dab_file_arg;	/**< @brief DAB file (default='NA').  */
+  char * output_dab_file_orig;	/**< @brief DAB file original value given at command line.  */
+  const char *output_dab_file_help; /**< @brief DAB file help description.  */
   char * dweight_dir_arg;	/**< @brief Dataset weight directory (default='NA').  */
   char * dweight_dir_orig;	/**< @brief Dataset weight directory original value given at command line.  */
   const char *dweight_dir_help; /**< @brief Dataset weight directory help description.  */
@@ -121,6 +137,12 @@ struct gengetopt_args_info
   unsigned int weight_given ;	/**< @brief Whether weight was given.  */
   unsigned int weight2_given ;	/**< @brief Whether weight2 was given.  */
   unsigned int comp_ranking_given ;	/**< @brief Whether comp_ranking was given.  */
+  unsigned int convert_aracne_given ;	/**< @brief Whether convert_aracne was given.  */
+  unsigned int limit_hub_given ;	/**< @brief Whether limit_hub was given.  */
+  unsigned int dabinput_given ;	/**< @brief Whether dabinput was given.  */
+  unsigned int hub_dab_output_given ;	/**< @brief Whether hub_dab_output was given.  */
+  unsigned int aracne_file_given ;	/**< @brief Whether aracne_file was given.  */
+  unsigned int output_dab_file_given ;	/**< @brief Whether output_dab_file was given.  */
   unsigned int dweight_dir_given ;	/**< @brief Whether dweight_dir was given.  */
   unsigned int dweight_num_given ;	/**< @brief Whether dweight_num was given.  */
   unsigned int dweight_map_given ;	/**< @brief Whether dweight_map was given.  */

@@ -803,7 +803,33 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 		if(sArgs.view_flag==1){
-			fprintf(stderr, "Operation not implemented yet!\n");
+			//fprintf(stderr, "Operation not implemented yet!\n");
+			CDataPair Dat;
+			char outFile[125];
+			if(!Dat.Open(sArgs.dabinput_arg, false, false)){
+				cerr << "error opening file" << endl;
+				return 1;
+			}
+			vector<unsigned int> veciGenes;
+			veciGenes.resize(vecstrGenes.size());
+			for(i=0; i<vecstrGenes.size(); i++)
+				veciGenes[i] = (unsigned int) Dat.GetGeneIndex(vecstrGenes[i]);
+
+			unsigned int s,t;
+			vector<float> d;
+			for(i=0; i<vecstrGenes.size(); i++){
+				if((s=veciGenes[i])==(unsigned int)-1) continue;
+				for(j=0; j<vecstrGenes.size(); j++){
+					if((t=veciGenes[j])==(unsigned int) -1) continue;
+					d.push_back(Dat.Get(s, t));
+				}
+			}
+			sort(d.begin(), d.end());
+			float ff[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+			for(i=0; i<9; i++){
+				size_t ind = (size_t) ((float) d.size() * ff[i]);
+				fprintf(stderr, "%.3f %.3e\n", ff[i], d[ind]);
+			}
 			return 1;
 		}
 
@@ -848,8 +874,23 @@ int main( int iArgs, char** aszArgs ) {
 			else{
 				fprintf(stderr, "Error, unsupported type --default_type_arg\n");
 				return 1;
+			}		
+		}
+
+		if(sArgs.norm_flag==1 && norm_mode=="topological_overlap"){
+			omp_set_num_threads(8);
+			CDataPair Dat;
+			char outFile[125];
+			if(!Dat.Open(sArgs.dabinput_arg, false, false)){
+				cerr << "error opening file" << endl;
+				return 1;
 			}
-				
+			fprintf(stderr, "Finished opening file\n");
+			string fileName = CMeta::Basename(sArgs.dabinput_arg);
+			string fileStem = CMeta::Deextension(fileName);
+			sprintf(outFile, "%s/%s.dab", sArgs.dir_out_arg, fileStem.c_str());
+			CSeekWriter::TopologicalOverlap(Dat, vecstrGenes);
+			Dat.Save(outFile);
 		}
 
 		if(sArgs.gavg_flag==1){

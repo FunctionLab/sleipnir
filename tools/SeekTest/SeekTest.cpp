@@ -816,55 +816,92 @@ int main( int iArgs, char** aszArgs ) {
 			Qi.clear();
 		}
 
-		map<float,vector<int> > countPairs;
-		float point = 0.0;
-		while(point<=5.0){
-			countPairs[point] = vector<int>();
-			CSeekTools::InitVector(countPairs[point], iDatasets, (int)0);
-			point+=0.25;
-		}
-
-		for(k=0; k<iDatasets; k++){
-			CSeekIntIntMap *mapQ = vc[k]->GetDBMap();
-			CSeekIntIntMap *mapG = vc[k]->GetGeneMap();
-			if(mapQ==NULL) continue;
-			unsigned char **f = vc[k]->GetMatrix();
-
-			size_t qi, qj;
-			for(qi=0; qi<allQ.size(); qi++){
-				utype gene_qi = allQ[qi];
-				utype iQ = mapQ->GetForward(gene_qi);
-				if(CSeekTools::IsNaN(iQ)) continue;
-				for(qj=qi+1; qj<allQ.size(); qj++){
-					utype gene_qj = allQ[qj];
-					utype jQ = mapG->GetForward(gene_qj);
-					if(CSeekTools::IsNaN(jQ)) continue;
-					unsigned char uc = f[iQ][gene_qj];
-					if(uc==255) continue;
-					float vv = quant[uc];
-					point = 0.0;
-					while(point<=5.0){
-						if(vv>point)
-							countPairs[point][k]++;
-						point+=0.25;
+		if(!!sArgs.count_pair_flag){
+			map<float,vector<int> > countPairs;
+			float point = 0.0;
+			while(point<=5.0){
+				countPairs[point] = vector<int>();
+				CSeekTools::InitVector(countPairs[point], iDatasets, (int)0);
+				point+=0.25;
+			}
+			for(k=0; k<iDatasets; k++){
+				CSeekIntIntMap *mapQ = vc[k]->GetDBMap();
+				CSeekIntIntMap *mapG = vc[k]->GetGeneMap();
+				if(mapQ==NULL) continue;
+				unsigned char **f = vc[k]->GetMatrix();
+				size_t qi, qj;
+				for(qi=0; qi<allQ.size(); qi++){
+					utype gene_qi = allQ[qi];
+					utype iQ = mapQ->GetForward(gene_qi);
+					if(CSeekTools::IsNaN(iQ)) continue;
+					for(qj=qi+1; qj<allQ.size(); qj++){
+						utype gene_qj = allQ[qj];
+						utype jQ = mapG->GetForward(gene_qj);
+						if(CSeekTools::IsNaN(jQ)) continue;
+						unsigned char uc = f[iQ][gene_qj];
+						if(uc==255) continue;
+						float vv = quant[uc];
+						point = 0.0;
+						while(point<=5.0){
+							if(vv>point)
+								countPairs[point][k]++;
+							point+=0.25;
+						}
 					}
 				}
 			}
-		}
-		
-		for(i=0; i<iDatasets; i++)
-			vc[i]->DeleteQueryBlock();
-
-		point = 0.0;			
-		while(point<=5.0){
-			sort(countPairs[point].begin(), countPairs[point].end(), greater<int>());
-			float tmp = 0;
-			for(i=0; i<10; i++){
-				tmp+=(float)countPairs[point][i];
+			for(i=0; i<iDatasets; i++)
+				vc[i]->DeleteQueryBlock();
+			point = 0.0;			
+			while(point<=5.0){
+				sort(countPairs[point].begin(), countPairs[point].end(), greater<int>());
+				float tmp = 0;
+				for(i=0; i<10; i++)
+					tmp+=(float)countPairs[point][i];
+				tmp/=10.0;
+				fprintf(stderr, "%.2f\t%.1f pairs\n", point, tmp);
+				point+=0.25;
 			}
-			tmp/=10.0;
-			fprintf(stderr, "%.2f\t%.1f pairs\n", point, tmp);
-			point+=0.25;
+		}
+
+		if(!!sArgs.histogram_flag){
+			srand(unsigned(time(0)));
+			vector<int> dID;
+			for(k=0; k<iDatasets; k++)
+				dID.push_back(k);
+			random_shuffle(dID.begin(), dID.end());
+			utype kk;
+			for(kk=0; kk<100; kk++){
+				k = dID[kk];
+				CSeekIntIntMap *mapQ = vc[k]->GetDBMap();
+				CSeekIntIntMap *mapG = vc[k]->GetGeneMap();
+				if(mapQ==NULL) continue;
+				unsigned char **f = vc[k]->GetMatrix();
+				size_t qi, ii;
+				for(qi=0; qi<allQ.size(); qi++){
+					utype gene_qi = allQ[qi];
+					utype iQ = mapQ->GetForward(gene_qi);
+					if(CSeekTools::IsNaN(iQ)) continue;
+					vector<float> z_score;
+					const vector<utype> &allRGenes = mapG->GetAllReverse();
+					for(ii=0; ii<mapG->GetNumSet(); ii++){
+						size_t ij = allRGenes[ii];
+						float a = vc[k]->GetGeneAverage(ij);
+						unsigned char x = f[iQ][ij];
+						if(x==255) continue;
+						//float xnew = quant[x] - a;
+						float xnew = quant[x];
+						z_score.push_back(xnew);
+					}
+					sort(z_score.begin(), z_score.end());
+					float pts[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+					fprintf(stderr, "Query %s\tDataset %d\t", vecstrGenes[gene_qi].c_str(), k);
+					for(ii=0; ii<9; ii++)
+						fprintf(stderr, "%.2f\t", z_score[(int)(pts[ii]*z_score.size())]);
+					fprintf(stderr, "\n");
+				}
+			}
+			return 0;
 		}
 
 	}

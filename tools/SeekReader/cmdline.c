@@ -40,6 +40,14 @@ const char *gengetopt_args_info_help[] = {
   "  -W, --weight                  Test dataset weights  (default=off)",
   "  -U, --weight2                 Test dataset weights 2  (default=off)",
   "  -C, --comp_ranking            Compare two rankings (*.gscore files)  \n                                  (default=off)",
+  "  -J, --convert_aracne          Convert Aracne output (.txt) to DAB file  \n                                  (default=off)",
+  "  -Y, --limit_hub               Limit genes in the DAB to those that are hubby  \n                                  (default=off)",
+  "\nLimit Hub:",
+  "  -y, --dabinput=filename       DAB input file  (default=`NA')",
+  "  -Z, --hub_dab_output=filename DAB output file  (default=`NA')",
+  "\nConvert Aracne:",
+  "  -K, --aracne_file=filename    Aracne .txt output file  (default=`NA')",
+  "  -L, --output_dab_file=filename\n                                DAB file  (default=`NA')",
   "\nWeight:",
   "  -E, --dweight_dir=directory   Dataset weight directory  (default=`NA')",
   "  -n, --dweight_num=INT         Number of .dweight files  (default=`1000')",
@@ -98,6 +106,12 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->weight_given = 0 ;
   args_info->weight2_given = 0 ;
   args_info->comp_ranking_given = 0 ;
+  args_info->convert_aracne_given = 0 ;
+  args_info->limit_hub_given = 0 ;
+  args_info->dabinput_given = 0 ;
+  args_info->hub_dab_output_given = 0 ;
+  args_info->aracne_file_given = 0 ;
+  args_info->output_dab_file_given = 0 ;
   args_info->dweight_dir_given = 0 ;
   args_info->dweight_num_given = 0 ;
   args_info->dweight_map_given = 0 ;
@@ -131,6 +145,16 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->weight_flag = 0;
   args_info->weight2_flag = 0;
   args_info->comp_ranking_flag = 0;
+  args_info->convert_aracne_flag = 0;
+  args_info->limit_hub_flag = 0;
+  args_info->dabinput_arg = gengetopt_strdup ("NA");
+  args_info->dabinput_orig = NULL;
+  args_info->hub_dab_output_arg = gengetopt_strdup ("NA");
+  args_info->hub_dab_output_orig = NULL;
+  args_info->aracne_file_arg = gengetopt_strdup ("NA");
+  args_info->aracne_file_orig = NULL;
+  args_info->output_dab_file_arg = gengetopt_strdup ("NA");
+  args_info->output_dab_file_orig = NULL;
   args_info->dweight_dir_arg = gengetopt_strdup ("NA");
   args_info->dweight_dir_orig = NULL;
   args_info->dweight_num_arg = 1000;
@@ -188,28 +212,34 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->weight_help = gengetopt_args_info_help[5] ;
   args_info->weight2_help = gengetopt_args_info_help[6] ;
   args_info->comp_ranking_help = gengetopt_args_info_help[7] ;
-  args_info->dweight_dir_help = gengetopt_args_info_help[9] ;
-  args_info->dweight_num_help = gengetopt_args_info_help[10] ;
-  args_info->dweight_map_help = gengetopt_args_info_help[11] ;
-  args_info->dweight_test_dir_help = gengetopt_args_info_help[12] ;
-  args_info->dweight_test_num_help = gengetopt_args_info_help[13] ;
-  args_info->gscore_dir1_help = gengetopt_args_info_help[15] ;
-  args_info->gscore_dir2_help = gengetopt_args_info_help[16] ;
-  args_info->gscore_num1_help = gengetopt_args_info_help[17] ;
-  args_info->order_stat_single_gene_query_help = gengetopt_args_info_help[19] ;
-  args_info->db_help = gengetopt_args_info_help[20] ;
-  args_info->dset_list_help = gengetopt_args_info_help[21] ;
-  args_info->input_help = gengetopt_args_info_help[22] ;
-  args_info->single_query_help = gengetopt_args_info_help[23] ;
-  args_info->dir_in_help = gengetopt_args_info_help[24] ;
-  args_info->dir_prep_in_help = gengetopt_args_info_help[25] ;
-  args_info->dir_gvar_in_help = gengetopt_args_info_help[26] ;
-  args_info->dir_sinfo_in_help = gengetopt_args_info_help[27] ;
-  args_info->is_nibble_help = gengetopt_args_info_help[28] ;
-  args_info->platform_dir_help = gengetopt_args_info_help[29] ;
-  args_info->gvar_cutoff_help = gengetopt_args_info_help[30] ;
-  args_info->multi_query_help = gengetopt_args_info_help[31] ;
-  args_info->output_file_help = gengetopt_args_info_help[32] ;
+  args_info->convert_aracne_help = gengetopt_args_info_help[8] ;
+  args_info->limit_hub_help = gengetopt_args_info_help[9] ;
+  args_info->dabinput_help = gengetopt_args_info_help[11] ;
+  args_info->hub_dab_output_help = gengetopt_args_info_help[12] ;
+  args_info->aracne_file_help = gengetopt_args_info_help[14] ;
+  args_info->output_dab_file_help = gengetopt_args_info_help[15] ;
+  args_info->dweight_dir_help = gengetopt_args_info_help[17] ;
+  args_info->dweight_num_help = gengetopt_args_info_help[18] ;
+  args_info->dweight_map_help = gengetopt_args_info_help[19] ;
+  args_info->dweight_test_dir_help = gengetopt_args_info_help[20] ;
+  args_info->dweight_test_num_help = gengetopt_args_info_help[21] ;
+  args_info->gscore_dir1_help = gengetopt_args_info_help[23] ;
+  args_info->gscore_dir2_help = gengetopt_args_info_help[24] ;
+  args_info->gscore_num1_help = gengetopt_args_info_help[25] ;
+  args_info->order_stat_single_gene_query_help = gengetopt_args_info_help[27] ;
+  args_info->db_help = gengetopt_args_info_help[28] ;
+  args_info->dset_list_help = gengetopt_args_info_help[29] ;
+  args_info->input_help = gengetopt_args_info_help[30] ;
+  args_info->single_query_help = gengetopt_args_info_help[31] ;
+  args_info->dir_in_help = gengetopt_args_info_help[32] ;
+  args_info->dir_prep_in_help = gengetopt_args_info_help[33] ;
+  args_info->dir_gvar_in_help = gengetopt_args_info_help[34] ;
+  args_info->dir_sinfo_in_help = gengetopt_args_info_help[35] ;
+  args_info->is_nibble_help = gengetopt_args_info_help[36] ;
+  args_info->platform_dir_help = gengetopt_args_info_help[37] ;
+  args_info->gvar_cutoff_help = gengetopt_args_info_help[38] ;
+  args_info->multi_query_help = gengetopt_args_info_help[39] ;
+  args_info->output_file_help = gengetopt_args_info_help[40] ;
   
 }
 
@@ -293,6 +323,14 @@ static void
 cmdline_parser_release (struct gengetopt_args_info *args_info)
 {
   unsigned int i;
+  free_string_field (&(args_info->dabinput_arg));
+  free_string_field (&(args_info->dabinput_orig));
+  free_string_field (&(args_info->hub_dab_output_arg));
+  free_string_field (&(args_info->hub_dab_output_orig));
+  free_string_field (&(args_info->aracne_file_arg));
+  free_string_field (&(args_info->aracne_file_orig));
+  free_string_field (&(args_info->output_dab_file_arg));
+  free_string_field (&(args_info->output_dab_file_orig));
   free_string_field (&(args_info->dweight_dir_arg));
   free_string_field (&(args_info->dweight_dir_orig));
   free_string_field (&(args_info->dweight_num_orig));
@@ -378,6 +416,18 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "weight2", 0, 0 );
   if (args_info->comp_ranking_given)
     write_into_file(outfile, "comp_ranking", 0, 0 );
+  if (args_info->convert_aracne_given)
+    write_into_file(outfile, "convert_aracne", 0, 0 );
+  if (args_info->limit_hub_given)
+    write_into_file(outfile, "limit_hub", 0, 0 );
+  if (args_info->dabinput_given)
+    write_into_file(outfile, "dabinput", args_info->dabinput_orig, 0);
+  if (args_info->hub_dab_output_given)
+    write_into_file(outfile, "hub_dab_output", args_info->hub_dab_output_orig, 0);
+  if (args_info->aracne_file_given)
+    write_into_file(outfile, "aracne_file", args_info->aracne_file_orig, 0);
+  if (args_info->output_dab_file_given)
+    write_into_file(outfile, "output_dab_file", args_info->output_dab_file_orig, 0);
   if (args_info->dweight_dir_given)
     write_into_file(outfile, "dweight_dir", args_info->dweight_dir_orig, 0);
   if (args_info->dweight_num_given)
@@ -675,6 +725,12 @@ cmdline_parser_internal (
         { "weight",	0, NULL, 'W' },
         { "weight2",	0, NULL, 'U' },
         { "comp_ranking",	0, NULL, 'C' },
+        { "convert_aracne",	0, NULL, 'J' },
+        { "limit_hub",	0, NULL, 'Y' },
+        { "dabinput",	1, NULL, 'y' },
+        { "hub_dab_output",	1, NULL, 'Z' },
+        { "aracne_file",	1, NULL, 'K' },
+        { "output_dab_file",	1, NULL, 'L' },
         { "dweight_dir",	1, NULL, 'E' },
         { "dweight_num",	1, NULL, 'n' },
         { "dweight_map",	1, NULL, 'M' },
@@ -700,7 +756,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "VDAWUCE:n:M:F:G:H:h:I:Ox:X:i:q:d:p:r:s:NP:v:Q:o:", long_options, &option_index);
+      c = getopt_long (argc, argv, "VDAWUCJYy:Z:K:L:E:n:M:F:G:H:h:I:Ox:X:i:q:d:p:r:s:NP:v:Q:o:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -766,6 +822,74 @@ cmdline_parser_internal (
           if (update_arg((void *)&(args_info->comp_ranking_flag), 0, &(args_info->comp_ranking_given),
               &(local_args_info.comp_ranking_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "comp_ranking", 'C',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'J':	/* Convert Aracne output (.txt) to DAB file.  */
+        
+        
+          if (update_arg((void *)&(args_info->convert_aracne_flag), 0, &(args_info->convert_aracne_given),
+              &(local_args_info.convert_aracne_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "convert_aracne", 'J',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'Y':	/* Limit genes in the DAB to those that are hubby.  */
+        
+        
+          if (update_arg((void *)&(args_info->limit_hub_flag), 0, &(args_info->limit_hub_given),
+              &(local_args_info.limit_hub_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "limit_hub", 'Y',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'y':	/* DAB input file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->dabinput_arg), 
+               &(args_info->dabinput_orig), &(args_info->dabinput_given),
+              &(local_args_info.dabinput_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "dabinput", 'y',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'Z':	/* DAB output file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->hub_dab_output_arg), 
+               &(args_info->hub_dab_output_orig), &(args_info->hub_dab_output_given),
+              &(local_args_info.hub_dab_output_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "hub_dab_output", 'Z',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'K':	/* Aracne .txt output file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->aracne_file_arg), 
+               &(args_info->aracne_file_orig), &(args_info->aracne_file_given),
+              &(local_args_info.aracne_file_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "aracne_file", 'K',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'L':	/* DAB file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->output_dab_file_arg), 
+               &(args_info->output_dab_file_orig), &(args_info->output_dab_file_given),
+              &(local_args_info.output_dab_file_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "output_dab_file", 'L',
               additional_error))
             goto failure;
         

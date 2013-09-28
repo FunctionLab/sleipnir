@@ -39,6 +39,8 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
+  int tdab_flag;	/**< @brief Traditional DAB mode (default=off).  */
+  const char *tdab_help; /**< @brief Traditional DAB mode help description.  */
   int dab_flag;	/**< @brief Sparse Dab mode (default=off).  */
   const char *dab_help; /**< @brief Sparse Dab mode help description.  */
   int combined_flag;	/**< @brief Combined-dab mode (default=off).  */
@@ -67,6 +69,12 @@ struct gengetopt_args_info
   char * genome_arg;	/**< @brief Genome mapping file.  */
   char * genome_orig;	/**< @brief Genome mapping file original value given at command line.  */
   const char *genome_help; /**< @brief Genome mapping file help description.  */
+  char * tdab_list_arg;	/**< @brief DAB list.  */
+  char * tdab_list_orig;	/**< @brief DAB list original value given at command line.  */
+  const char *tdab_list_help; /**< @brief DAB list help description.  */
+  char * tsearch_mode_arg;	/**< @brief Search mode: equal weighted (eq) or CV LOI (cv_loi) (Applicable if DAB list contains more than 1 dataset (default='NA').  */
+  char * tsearch_mode_orig;	/**< @brief Search mode: equal weighted (eq) or CV LOI (cv_loi) (Applicable if DAB list contains more than 1 dataset original value given at command line.  */
+  const char *tsearch_mode_help; /**< @brief Search mode: equal weighted (eq) or CV LOI (cv_loi) (Applicable if DAB list contains more than 1 dataset help description.  */
   char * dab_list_arg;	/**< @brief DAB list.  */
   char * dab_list_orig;	/**< @brief DAB list original value given at command line.  */
   const char *dab_list_help; /**< @brief DAB list help description.  */
@@ -85,6 +93,12 @@ struct gengetopt_args_info
   char * dset_cutoff_file_arg;	/**< @brief Dataset score cutoff file (default='NA').  */
   char * dset_cutoff_file_orig;	/**< @brief Dataset score cutoff file original value given at command line.  */
   const char *dset_cutoff_file_help; /**< @brief Dataset score cutoff file help description.  */
+  char * norm_mode_arg;	/**< @brief Normalization method: rank - rank-normalize matrix, subtract_z - subtract-z-normalize matrix (default='NA').  */
+  char * norm_mode_orig;	/**< @brief Normalization method: rank - rank-normalize matrix, subtract_z - subtract-z-normalize matrix original value given at command line.  */
+  const char *norm_mode_help; /**< @brief Normalization method: rank - rank-normalize matrix, subtract_z - subtract-z-normalize matrix help description.  */
+  float exp_arg;	/**< @brief Raise the z-score to the power of this value (for --norm_mode=subtract_z) (default='-1.0').  */
+  char * exp_orig;	/**< @brief Raise the z-score to the power of this value (for --norm_mode=subtract_z) original value given at command line.  */
+  const char *exp_help; /**< @brief Raise the z-score to the power of this value (for --norm_mode=subtract_z) help description.  */
   char * input_arg;	/**< @brief Gene mapping file.  */
   char * input_orig;	/**< @brief Gene mapping file original value given at command line.  */
   const char *input_help; /**< @brief Gene mapping file help description.  */
@@ -103,6 +117,7 @@ struct gengetopt_args_info
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
+  unsigned int tdab_given ;	/**< @brief Whether tdab was given.  */
   unsigned int dab_given ;	/**< @brief Whether dab was given.  */
   unsigned int combined_given ;	/**< @brief Whether combined was given.  */
   unsigned int test_given ;	/**< @brief Whether test was given.  */
@@ -115,12 +130,16 @@ struct gengetopt_args_info
   unsigned int print_distr_given ;	/**< @brief Whether print_distr was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int genome_given ;	/**< @brief Whether genome was given.  */
+  unsigned int tdab_list_given ;	/**< @brief Whether tdab_list was given.  */
+  unsigned int tsearch_mode_given ;	/**< @brief Whether tsearch_mode was given.  */
   unsigned int dab_list_given ;	/**< @brief Whether dab_list was given.  */
   unsigned int num_iter_given ;	/**< @brief Whether num_iter was given.  */
   unsigned int default_type_given ;	/**< @brief Whether default_type was given.  */
   unsigned int rbp_p_given ;	/**< @brief Whether rbp_p was given.  */
   unsigned int max_rank_given ;	/**< @brief Whether max_rank was given.  */
   unsigned int dset_cutoff_file_given ;	/**< @brief Whether dset_cutoff_file was given.  */
+  unsigned int norm_mode_given ;	/**< @brief Whether norm_mode was given.  */
+  unsigned int exp_given ;	/**< @brief Whether exp was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
   unsigned int dab_dir_given ;	/**< @brief Whether dab_dir was given.  */
@@ -249,6 +268,9 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  */
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
+
+extern const char *cmdline_parser_tsearch_mode_values[];  /**< @brief Possible values for tsearch_mode. */
+extern const char *cmdline_parser_norm_mode_values[];  /**< @brief Possible values for norm_mode. */
 
 
 #ifdef __cplusplus

@@ -3,6 +3,8 @@ version	"1.0"
 purpose	"Search based on iterative algorithm"
 
 section "Mode"
+option	"tdab"				j	"Traditional DAB mode"
+								flag off
 option	"dab"				d	"Sparse Dab mode"
 								flag off
 option	"combined"			e	"Combined-dab mode"
@@ -32,6 +34,12 @@ option	"cutoff"			c	"Cutoff value"
 option	"genome"			G	"Genome mapping file"
 								string typestr="filename"
 
+section "Traditional DAB mode"
+option	"tdab_list"			J	"DAB list"
+								string typestr="filename"
+option	"tsearch_mode"		S	"Search mode: equal weighted (eq) or CV LOI (cv_loi) (Applicable if DAB list contains more than 1 dataset"
+								values="eq","cv_loi","NA" default="NA"
+
 section "Sparse DAB mode"
 option	"dab_list"			V	"DAB list"
 								string typestr="filename"
@@ -45,6 +53,10 @@ option	"max_rank"			M	"Maximum rank number in the sparse DAB matrix (must be spe
 								int default="-1"
 option	"dset_cutoff_file"	H	"Dataset score cutoff file"
 								string typestr="filename" default="NA"
+option	"norm_mode"			n	"Normalization method: rank - rank-normalize matrix, subtract_z - subtract-z-normalize matrix"
+								values="rank","subtract_z","NA" default="NA"
+option	"exp"				N	"Raise the z-score to the power of this value (for --norm_mode=subtract_z)"
+								float	default="-1.0"
 
 section "Input"
 option	"input"				i	"Gene mapping file"
