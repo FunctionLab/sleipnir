@@ -285,9 +285,8 @@ const vector<string> &vecstrGenes){
 	fprintf(stderr, "Finished step 1: tranform z-score back to pearson\n");
 	vector<float> vecSum;
 	CSeekTools::InitVector(vecSum, trueSize, CMeta::GetNaN());
-	for(i=0; i<m.GetNumSet(); i++){	
+	for(i=0; i<m.GetNumSet(); i++)
 		vecSum[i] = 0;
-	}
 
 	for(i=0; i<m.GetNumSet(); i++){	
 		for(j=i+1; j<m.GetNumSet(); j++){
@@ -314,22 +313,20 @@ const vector<string> &vecstrGenes){
 	private(i, j, d) schedule(dynamic)
 	for(i=0; i<m.GetNumSet(); i++){	
 		for(j=i+1; j<m.GetNumSet(); j++){
-			double tsum = 0;
-			float *pi = &fs[i];
-			float *pj = &fs[j];
+			float tsum = 0;
+			float *pi = &fs[i*trueSize];
+			float *pj = &fs[j*trueSize];
 			for(k=0; k<m.GetNumSet(); k++){
-				tsum += (double) (*pi) * (double) (*pj);
-				pi++;
-				pj++; 
+				tsum += pi[k] * pj[k];
 			}
-			tsum -= (double)fs[i*trueSize + i] * (double)fs[j*trueSize + i];
-			tsum -= (double)fs[i*trueSize + j] * (double)fs[j*trueSize + j];
-			double tmin = 0;
+			tsum -= pi[i] * pj[i];
+			tsum -= pi[j] * pj[j];
+			float tmin = 0;
 			if(vecSum[i] < vecSum[j])
-				tmin = (double) vecSum[i];
+				tmin = vecSum[i];
 			else
-				tmin = (double) vecSum[j];
-			double to = (tsum + (double) d) / (tmin + 1.0 - (double) d);
+				tmin = vecSum[j];
+			float to = (tsum + d) / (tmin + 1.0 - d);
 			res.Set(i, j, (float) to); //temporary matrix to store the results
 			//fprintf(stderr, "%.3e\n", to);	
 		}

@@ -273,8 +273,8 @@ int main( int iArgs, char** aszArgs ) {
 			for(j=i+1; j<m.GetNumSet(); j++){
 				t = veciGenes[allRGenes[j]];
 				if(CMeta::IsNaN(d = Dat.Get(s,t))) continue;
-				vecSum[allRGenes[i]]+=d;
-				vecSum[allRGenes[j]]+=d;
+				vecSum[allRGenes[i]]+=pow(abs(d), 9);
+				vecSum[allRGenes[j]]+=pow(abs(d), 9);
 			}
 		}
 		vector<float> backupSum;
@@ -285,7 +285,7 @@ int main( int iArgs, char** aszArgs ) {
 		float percentile = vecSum[index];
 		vector<string> limitedGenes;
 		for(i=0; i<backupSum.size(); i++){
-			if(backupSum[i] >= percentile){
+			if(backupSum[i] > percentile){
 				limitedGenes.push_back(vecstrGenes[i]);
 			}
 		}
