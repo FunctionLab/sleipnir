@@ -81,7 +81,6 @@ bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
 		return false;
 	}
 	
-	//fprintf(stderr, "Here\n");	
 	#pragma omp parallel for \
 	shared(allQ) private(i) schedule(dynamic)
 	for(i=0; i<iDatasets; i++){

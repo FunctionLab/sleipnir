@@ -97,7 +97,8 @@ libSleipnir_a_SOURCES	=	\
 	$(libSleipnir_LIBSVM_SOURCES) \
 	$(libSleipnir_SVM_MULTICLASS_SOURCES)\
 	$(libSleipnir_SVM_HIERARCHY_SOURCES)\
-	vwb.cpp
+	vwb.cpp					\
+	strassen.cpp
 include_HEADERS			=	\
 	annotation.h			\
 	annotationi.h			\
@@ -165,6 +166,7 @@ include_HEADERS			=	\
 	statistics.h			\
 	statisticsi.h			\
 	stdafx.h				\
+	strassen.h				\
 	$(libSleipnir_SVM_INCLUDES)  \
 	$(libSleipnir_GSL_SOURCES) \
 	$(libSleipnir_LIBSVM_INCLUDES) \

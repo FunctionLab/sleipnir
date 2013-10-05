@@ -28,6 +28,7 @@
 #include "sparsematrix.h"
 #include "datapair.h"
 #include "seekreader.h"
+#include "strassen.h"
 
 namespace Sleipnir {
 

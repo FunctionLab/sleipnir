@@ -248,7 +248,10 @@ const vector<string> &vecstrGenes){
 	}
 
 	size_t trueSize = m.GetNumSet();
-	float* fs = new float[trueSize*trueSize];
+	vector<float> inner(trueSize);
+	vector<vector<float> > fs(trueSize, inner);
+	
+	//float* fs = new float[trueSize*trueSize];
 	const vector<utype> &allRGenes = m.GetAllReverse();
 
 	for(i=0; i<m.GetNumSet(); i++){	
@@ -256,15 +259,15 @@ const vector<string> &vecstrGenes){
 		for(j=i+1; j<m.GetNumSet(); j++){
 			t = veciGenes[allRGenes[j]];
 			if(CMeta::IsNaN(d = Dat.Get(s,t))){
-				fs[i*trueSize + j] = 0;
-				fs[j*trueSize + i] = 0;
+				fs[i][j] = 0;
+				fs[j][i] = 0;
 				fprintf(stderr, "Warning i, j is NaN, set to 0!\n", i, j);
 			}else{
-				fs[i*trueSize + j] = d;
-				fs[j*trueSize + i] = d;
+				fs[i][j] = d;
+				fs[j][i] = d;
 			}
 		}
-		fs[i*trueSize+i] = 0;
+		fs[i][i] = 0;
 	}
 
 	//first step: transform z-scores back to correlation 
@@ -273,11 +276,11 @@ const vector<string> &vecstrGenes){
 	//second step: transform by abs, then take it to the exponent 9
 	for(i=0; i<m.GetNumSet(); i++){	
 		for(j=i+1; j<m.GetNumSet(); j++){
-			if((d = fs[i*trueSize+j])==0) continue;
+			if((d = fs[i][j])==0) continue;
 			d = (expf(2.0*d) - 1.0) / (expf(2.0*d) + 1.0);
 			d = pow(abs(d), 9);
-			fs[i*trueSize+j] = d;
-			fs[j*trueSize+i] = d;
+			fs[i][j] = d;
+			fs[j][i] = d;
 			//fprintf(stderr, "%.3e\n", d);
 		}
 	}
@@ -290,10 +293,21 @@ const vector<string> &vecstrGenes){
 
 	for(i=0; i<m.GetNumSet(); i++){	
 		for(j=i+1; j<m.GetNumSet(); j++){
-			vecSum[i] += fs[i*trueSize+j];
-			vecSum[j] += fs[i*trueSize+j];
+			vecSum[i] += fs[i][j];
+			vecSum[j] += fs[i][j];
 		}
 	}
+
+	//duplicate of fs
+	vector<vector<float> > fs2(trueSize, inner);
+	for(i=0; i<m.GetNumSet(); i++){	
+		for(j=i+1; j<m.GetNumSet(); j++){
+			fs2[i][j] = fs[i][j];
+			fs2[j][i] = fs[i][j];
+		}
+		fs2[i][i] = 0;
+	}
+
 
 	//temporary storage matrix
 	CHalfMatrix<float> res;
@@ -304,23 +318,25 @@ const vector<string> &vecstrGenes){
 		}
 	}
 
+	//result of multiplication
+	fprintf(stderr, "Begin!\n");
+	vector<vector<float> > fs_result(trueSize, inner);
+	CStrassen::strassen(fs, fs2, fs_result, trueSize);
+	fprintf(stderr, "Done!\n");
+
 	size_t k;
 	unsigned int u;
 	//size_t ii = 0;
-	#pragma omp parallel for \
-	shared(m, fs, vecSum, res) \
-	firstprivate(trueSize) \
-	private(i, j, d) schedule(dynamic)
 	for(i=0; i<m.GetNumSet(); i++){	
 		for(j=i+1; j<m.GetNumSet(); j++){
-			float tsum = 0;
-			float *pi = &fs[i*trueSize];
+			float tsum = fs_result[i][j];
+			/*float *pi = &fs[i*trueSize];
 			float *pj = &fs[j*trueSize];
 			for(k=0; k<m.GetNumSet(); k++){
 				tsum += pi[k] * pj[k];
-			}
-			tsum -= pi[i] * pj[i];
-			tsum -= pi[j] * pj[j];
+			}*/
+			tsum -= fs[i][i] * fs[j][i];
+			tsum -= fs[i][j] * fs[j][j];
 			float tmin = 0;
 			if(vecSum[i] < vecSum[j])
 				tmin = vecSum[i];
@@ -345,7 +361,6 @@ const vector<string> &vecstrGenes){
 		}
 		Dat.Set(s, s, 1.0);
 	}
-	delete[] fs;
 
 }
 
