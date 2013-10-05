@@ -45,6 +45,7 @@ CSeekCentral::CSeekCentral(){
 
 	m_master_rank_threads = NULL;
 	m_sum_weight_threads = NULL;
+	m_sum_sq_weight_threads = NULL; //sum squared weight
 	m_counts_threads = NULL;
 	m_rank_normal_threads = NULL;
 	m_rank_threads = NULL;
@@ -52,6 +53,7 @@ CSeekCentral::CSeekCentral(){
 
 	m_master_rank.clear();
 	m_sum_weight.clear();
+	m_sum_sq_weight.clear();
 	m_weight.clear();
 	m_counts.clear();
 	m_mapLoadTime.clear();
@@ -116,6 +118,10 @@ CSeekCentral::~CSeekCentral(){
 		CSeekTools::Free2DArray(m_sum_weight_threads);
 		m_sum_weight_threads = NULL;
 	}
+	if(m_sum_sq_weight_threads != NULL){
+		CSeekTools::Free2DArray(m_sum_sq_weight_threads);
+		m_sum_sq_weight_threads = NULL;
+	}
 	if(m_counts_threads !=NULL){
 		CSeekTools::Free2DArray(m_counts_threads);
 		m_counts_threads = NULL;
@@ -139,6 +145,7 @@ CSeekCentral::~CSeekCentral(){
 
 	m_master_rank.clear();
 	m_sum_weight.clear();
+	m_sum_sq_weight.clear();
 	m_counts.clear();
 	m_weight.clear();
 	m_final.clear();
@@ -326,21 +333,21 @@ bool CSeekCentral::Initialize(
 		return false;
 	}
 
-	fprintf(stderr, "Finished CalculateRestart()\n");
+	//fprintf(stderr, "Finished CalculateRestart()\n");
 
 	if(!EnableNetwork(iClient)){
 		fprintf(stderr, "Error occurred during EnableNetwork()\n");
 		return false;
 	}
 
-	fprintf(stderr, "Finished EnableNetworks()\n");
+	//fprintf(stderr, "Finished EnableNetworks()\n");
 
 	if(!CheckDatasets(true)){ //replace parameter is true
 		fprintf(stderr, "Error occurred during CheckDatasets()\n");
 		return false;
 	}
 
-	fprintf(stderr, "Finished CheckDatasets()\n");
+	//fprintf(stderr, "Finished CheckDatasets()\n");
 	return true;
 }
 
@@ -684,7 +691,7 @@ bool CSeekCentral::Initialize(
 		fprintf(stderr, "Error occurred during CalculateRestart()\n");
 		return false;
 	}
-	fprintf(stderr, "Finished CalculateRestart()\n");
+	//fprintf(stderr, "Finished CalculateRestart()\n");
 
 	return true;
 }
@@ -711,7 +718,7 @@ bool CSeekCentral::PrepareOneQuery(CSeekQuery &query,
 	CSeekIntIntMap &dMap, vector<float> &weight){
 
 	assert(m_master_rank_threads==NULL && m_counts_threads==NULL &&
-		m_sum_weight_threads==NULL);
+		m_sum_weight_threads==NULL && m_sum_sq_weight_threads==NULL);
 	assert(m_rank_normal_threads==NULL && m_rank_threads==NULL);
 	assert(m_rData==NULL);
 
@@ -732,6 +739,8 @@ bool CSeekCentral::PrepareOneQuery(CSeekQuery &query,
 		CSeekTools::Init2DArray(m_numThreads, m_iGenes, (float)0);
 	m_sum_weight_threads =
 		CSeekTools::Init2DArray(m_numThreads, m_iGenes, (float)0);
+	m_sum_sq_weight_threads =
+		CSeekTools::Init2DArray(m_numThreads, m_iGenes, (float)0);
 	m_counts_threads =
 		CSeekTools::Init2DArray(m_numThreads, m_iGenes, (utype)0);
 	
@@ -747,6 +756,7 @@ bool CSeekCentral::PrepareOneQuery(CSeekQuery &query,
 	
 	CSeekTools::InitVector(m_master_rank, m_iGenes, (float) 0);
 	CSeekTools::InitVector(m_sum_weight, m_iGenes, (float) 0);
+	CSeekTools::InitVector(m_sum_sq_weight, m_iGenes, (float) 0);
 	CSeekTools::InitVector(m_counts, m_iGenes, (utype) 0);
 	CSeekTools::InitVector(weight, m_iDatasets, (float)0);
 	
@@ -755,25 +765,28 @@ bool CSeekCentral::PrepareOneQuery(CSeekQuery &query,
 
 bool CSeekCentral::AggregateThreads(){
 	assert(m_master_rank_threads!=NULL && m_counts_threads!=NULL &&
-		m_sum_weight_threads!=NULL);
+		m_sum_sq_weight_threads!=NULL && m_sum_weight_threads!=NULL);
 	assert(m_rank_normal_threads!=NULL && m_rank_threads!=NULL);
 
-	//Aggregate into three vectors: m_master_rank, m_counts, m_sum_weight
+	//Aggregate into three vectors: m_master_rank, m_counts, m_sum_weight, m_sum_sq_weight
 	utype j, k;
 	for(j=0; j<m_numThreads; j++){
 		for(k=0; k<m_iGenes; k++){
 			m_master_rank[k] += m_master_rank_threads[j][k];
 			m_counts[k] += m_counts_threads[j][k];
 			m_sum_weight[k]+=m_sum_weight_threads[j][k];
+			m_sum_sq_weight[k]+=m_sum_sq_weight_threads[j][k];
 		}
 	}
 
 	CSeekTools::Free2DArray(m_master_rank_threads);
 	CSeekTools::Free2DArray(m_counts_threads);
 	CSeekTools::Free2DArray(m_sum_weight_threads);
+	CSeekTools::Free2DArray(m_sum_sq_weight_threads);
 	m_master_rank_threads=NULL;
 	m_counts_threads=NULL;
 	m_sum_weight_threads = NULL;
+	m_sum_sq_weight_threads = NULL;
 
 	for(j=0; j<m_numThreads; j++){
 		m_rank_normal_threads[j].clear();
@@ -800,7 +813,9 @@ bool CSeekCentral::FilterResults(const utype &iSearchDatasets){
 			m_master_rank[j] = -320;
 		else{
 			m_master_rank[j] =
-				(m_master_rank[j] / m_sum_weight[j] - 320) / 100.0;
+				//(m_master_rank[j] / m_sum_weight[j] - 320) / 100.0;
+				(m_master_rank[j] - 320 * m_sum_weight[j]) / 100.0 / m_sum_weight[j];
+				//(m_master_rank[j] - 320 * m_sum_weight[j]) / 100.0 / sqrt(m_sum_sq_weight[j]);
 			if(m_eDistMeasure==CSeekDataset::CORRELATION){
 				m_master_rank[j] = m_master_rank[j] / 3.0;
 			}
@@ -1058,6 +1073,11 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 					}
 				}
 			}
+			else if(current_sm==AVERAGE_Z){
+				CSeekWeighter::AverageWeighting(query, *m_vc[d],
+					m_fPercentQueryAfterScoreCutOff, m_bSquareZ, w);
+				if(w==-1) continue;
+			}
 			else if(current_sm==EQUAL && redoWithEqual==0){
 				w = 1.0;
 			}
@@ -1093,6 +1113,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 			vector<utype> &Rank_Normal = m_rank_normal_threads[tid];
 			float* Master_Rank = &m_master_rank_threads[tid][0];
 			float* Sum_Weight = &m_sum_weight_threads[tid][0];
+			float* Sum_Sq_Weight = &m_sum_sq_weight_threads[tid][0];
 			utype* Counts = &m_counts_threads[tid][0];
 
 			if(current_sm==ORDER_STATISTICS)
@@ -1106,6 +1127,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 					//if(Rank_Normal[*iterR]==0) continue;
 					Master_Rank[*iterR] += (float) Rank_Normal[*iterR] * w;
 					Sum_Weight[*iterR] += w;
+					Sum_Sq_Weight[*iterR] += w * w;
 					Counts[*iterR]++;
 				}
 
@@ -1362,6 +1384,11 @@ bool CSeekCentral::WeightSearch(const vector< vector<float> > &weights){
 bool CSeekCentral::OrderStatistics(){
 	CSeekCentral::SearchMode sm = ORDER_STATISTICS;
 	return CSeekCentral::Common(sm);
+}
+
+bool CSeekCentral::AverageWeightSearch(){
+	CSeekCentral::SearchMode sm = AVERAGE_Z;
+	return CSeekCentral::Common(sm, NULL, NULL, NULL, NULL);
 }
 
 bool CSeekCentral::VarianceWeightSearch(){

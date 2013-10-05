@@ -189,6 +189,9 @@ public:
 	static bool OneGeneWeighting(CSeekQuery&, 
 		CSeekDataset&, const float&, const float&, const bool&, 
 		vector<utype>*, const CSeekQuery*);
+
+	static bool AverageWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
+		const float &percent_required, const bool &bSquareZ, float &w);
 };
 
 

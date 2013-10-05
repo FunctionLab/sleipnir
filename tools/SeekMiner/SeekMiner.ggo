@@ -27,8 +27,8 @@ option	"num_db"			n	"Number of databaselets in database"
 								int	default="1000"	yes
 
 section "Dataset weighting"
-option	"weighting_method"	V	"Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER)"
-								values="CV","EQUAL","ORDER_STAT","VAR","USER" default="CV"
+option	"weighting_method"	V	"Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z)"
+								values="CV","EQUAL","ORDER_STAT","VAR","USER","AVERAGE_Z" default="CV"
 
 section "Optional - Functional Network Expansion"
 option	"func_db"			w	"Functional network db path"

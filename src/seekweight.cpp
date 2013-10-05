@@ -387,6 +387,68 @@ bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery,
 	return true;
 }
 
+bool CSeekWeighter::AverageWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
+	const float &percent_required, const bool &bSquareZ, float &w){
+
+	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
+	if(mapQ==NULL) return true;
+
+	utype i, j, qi, qj;
+
+	const vector<utype> &allQ = sQuery.GetQuery();
+	vector<utype> presentQ;
+	utype num_q = 0;
+	for(qi=0; qi<allQ.size(); qi++){
+		if(CSeekTools::IsNaN(mapQ->GetForward(allQ[qi]))) continue;
+		num_q++;
+		presentQ.push_back(allQ[qi]);
+	}
+
+	w = 0;
+	const utype MIN_QUERY_REQUIRED =
+		max((utype) 2, (utype) (percent_required * allQ.size()));
+
+	if(num_q<MIN_QUERY_REQUIRED){
+		w = -1;
+		return true;
+	}
+
+	utype **f = sDataset.GetDataMatrix();
+	/* as long as rank[g] does not overflow, due to too many queries, we are fine
+	 * should control query size to be <100. */
+	vector<utype> queryPos;
+	queryPos.resize(num_q);
+	for(i=0; i<num_q; i++)
+		queryPos[i] = mapQ->GetForward(presentQ[i]);
+
+	int pairs = 0;
+	if(bSquareZ){
+		for(qi=0; qi<presentQ.size(); qi++){
+			for(qj=0; qj<presentQ.size(); qj++){
+				if(qi==qj) continue;
+				float t = (float) f[presentQ[qj]][queryPos[qi]];
+				t = (t-320)/100.0;
+				t = t * t;
+				w += t;
+				pairs++;
+			}
+		}
+		w /= (float) pairs;
+
+	}else{
+		for(qi=0; qi<presentQ.size(); qi++){
+			for(qj=0; qj<presentQ.size(); qj++){
+				if(qi==qj) continue;
+				w += (float) f[presentQ[qj]][queryPos[qi]];
+				pairs++;
+			}
+		}
+		w /= (float) pairs;
+		w /= (float) 640;
+	}
+	return true;
+}
+
 bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 	const float &rate, const float &percent_required, const bool &bSquareZ,
 	vector<utype> *rrank, const CSeekQuery *goldStd){

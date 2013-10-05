@@ -92,7 +92,8 @@ public:
         CV_CUSTOM=3, /**< Cross-validated weighting, 
                       but instead of using the query genes to cross-validate, use the user 
                       supplied gene-sets to validate each query partition */
-        ORDER_STATISTICS=4 /**< MEM algorithm */
+        ORDER_STATISTICS=4, /**< MEM algorithm */
+        AVERAGE_Z=5 /**< Average z-scores between query, SPELL algorithm */
 	};
     
     /*!
@@ -308,6 +309,13 @@ public:
 	bool VarianceWeightSearch();
 
 	/*!
+	 * \brief Run Seek with the SPELL search
+	 *
+	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
+	 */
+	bool AverageWeightSearch();
+
+	/*!
 	 * \brief Run Seek with the order statistics dataset weighting algorithm
 	 *
 	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
@@ -422,6 +430,7 @@ private:
 	/* multi-threaded programming */
 	float **m_master_rank_threads;
 	float **m_sum_weight_threads;
+	float **m_sum_sq_weight_threads;
 	utype **m_counts_threads;
 	vector<utype> *m_rank_normal_threads;
 	vector<utype> *m_rank_threads;
@@ -429,6 +438,7 @@ private:
 	/* Essential search results */
 	vector<float> m_master_rank;
 	vector<float> m_sum_weight;
+	vector<float> m_sum_sq_weight;
 	vector<utype> m_counts;
 
 	/* Holds results for all queries */

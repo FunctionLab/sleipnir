@@ -385,6 +385,8 @@ int main( int iArgs, char** aszArgs ) {
 			return -1;
 		}
 		csfinal->VarianceWeightSearch();
+	}else if(method=="AVERAGE_Z"){
+		csfinal->AverageWeightSearch();
 	}
 	//csfinal->WeightSearch(csk_weight_copy);
 	//csfinal->CVCustomSearch(newQ, rnd, PART_M, FOLD, RATE);
