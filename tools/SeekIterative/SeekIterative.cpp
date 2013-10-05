@@ -279,7 +279,7 @@ CSeekIntIntMap *geneMap, float &w){
 bool weight(vector<char> &is_query, vector<float> &d1,
 CSeekIntIntMap *geneMap, float rbp_p, float &w){
 	vector<AResultFloat> ar;
-	ar.resize(geneMap->GetSize());
+	ar.resize(geneMap->GetNumSet());
 	utype i;
 	const vector<utype> &allGenes = geneMap->GetAllReverse();
 	for(i=0; i<geneMap->GetNumSet(); i++){
@@ -287,7 +287,7 @@ CSeekIntIntMap *geneMap, float rbp_p, float &w){
 		ar[i].i = gi;
 		ar[i].f = d1[gi];
 	}
-	int MAX = 5000;
+	int MAX = 1000;
 	nth_element(ar.begin(), ar.begin()+MAX, ar.end());
 	sort(ar.begin(), ar.begin()+MAX);
 	w = 0;
@@ -322,7 +322,8 @@ bool cv_weight_LOO(vector<utype> &query, CSparseFlatMatrix<float> &mat,
 			if(i==j) continue;
 			gene_score[query[j]] = 0;
 		}
-		weight_fast(is_query, gene_score, geneMap, w);
+		//weight_fast(is_query, gene_score, geneMap, w);
+		weight(is_query, gene_score, geneMap, rbp_p, w);
 		tot_w += w;
 	}
 	tot_w /= query.size();
@@ -350,8 +351,9 @@ bool cv_weight(vector<utype> &query, CSparseFlatMatrix<float> &mat,
 		vector<float> gene_score;
 		get_score(gene_score, mat, geneMap, q_weight);
 		gene_score[query[i]] = 0;
-		//weight(is_query, gene_score, geneMap, rbp_p, w);
-		weight_fast(is_query, gene_score, geneMap, w);
+		weight(is_query, gene_score, geneMap, rbp_p, w);
+		//fprintf(stderr, "Q%d %.3f\n", i, w);
+		//weight_fast(is_query, gene_score, geneMap, w);
 		tot_w += w;
 	}
 	tot_w /= query.size();
@@ -875,7 +877,7 @@ int main(int iArgs, char **aszArgs){
 		CSeekTools::ReadListOneColumn(sArgs.tdab_list_arg, dab_list);
 
 		fprintf(stderr, "Finished reading dablist\n");
-		//reading query
+		//preparing query
 		vector<vector<float> > q_weight;
 		q_weight.resize(vecstrAllQuery.size());
 		for(i=0; i<vecstrAllQuery.size(); i++){
@@ -883,6 +885,21 @@ int main(int iArgs, char **aszArgs){
 			for(j=0; j<vecstrAllQuery[i].size(); j++)
 				q_weight[i][mapstriGenes[vecstrAllQuery[i][j]]] = 1;
 		}
+
+		//preparing query2
+		vector<vector<unsigned int> > qq;
+		qq.resize(vecstrAllQuery.size());
+		for(i=0; i<vecstrAllQuery.size(); i++){
+			qq[i] = vector<unsigned int>();
+			for(j=0; j<vecstrAllQuery[i].size(); j++)
+				qq[i].push_back(mapstriGenes[vecstrAllQuery[i][j]]);
+		}
+
+		//selected datasets for each query
+		vector<vector<char> > selectedDataset;
+		selectedDataset.resize(vecstrAllQuery.size());
+		for(i=0; i<vecstrAllQuery.size(); i++)
+			CSeekTools::InitVector(selectedDataset[i], dab_list.size(), (char)0);
 		
 		fprintf(stderr, "Reading DAB\n");
 		vector<vector<float> > final_score, count, dweight;
@@ -897,6 +914,10 @@ int main(int iArgs, char **aszArgs){
 			CSeekTools::InitVector(freq[j], vecstrGenes.size(), (int) 0);
 			CSeekTools::InitVector(dweight[j], dab_list.size(), (float) 0);
 		}
+
+		float threshold_g = sArgs.threshold_g_arg;
+		float threshold_q = sArgs.threshold_q_arg;
+		bool DEBUG = !!sArgs.debug_flag;
 
 		size_t l;
 		for(l=0; l<dab_list.size(); l++){
@@ -941,7 +962,27 @@ int main(int iArgs, char **aszArgs){
 			}
 
 			fprintf(stderr, "Finished copying matrix\n");
+
 			for(j=0; j<vecstrAllQuery.size(); j++){
+				int numPresent = 0;
+				for(k=0; k<qq[j].size(); k++){
+					if(m.GetForward(qq[j][k])==(unsigned int)-1) continue;
+					numPresent++;
+				}
+				if(search_mode=="eq" && numPresent==0){
+					continue;
+				}else if(search_mode=="cv_loi" && numPresent<=1){
+					continue;
+				}
+				int numThreshold = (int) (threshold_q * qq[j].size());
+				if(numPresent>numThreshold)
+					selectedDataset[j][l] = 1;
+			}
+
+			for(j=0; j<vecstrAllQuery.size(); j++){
+				//not enough query genes present
+				if(selectedDataset[j][l]==0) continue;
+
 				float dw = 1.0;
 				if(search_mode=="eq"){
 					dw = 1.0;
@@ -960,9 +1001,28 @@ int main(int iArgs, char **aszArgs){
 					freq[j][gi]++;
 				}	
 			}
+
 		}
-		int minRequired = (int) ((float) dab_list.size() * 0.50);
+
 		for(j=0; j<vecstrAllQuery.size(); j++){
+
+			int countSelected = 0;
+			for(k=0; k<selectedDataset[j].size(); k++)
+				countSelected+=selectedDataset[j][k];
+
+			//int minRequired = (int) ((float) dab_list.size() * 0.50);
+			int minRequired = (int) ((float) countSelected * threshold_g);
+
+			if(DEBUG){
+				int nG = 0;
+				for(k=0; k<final_score[j].size(); k++){
+					if(freq[j][k]>=minRequired){
+						nG++;
+					}
+				}
+				fprintf(stderr, "Query %d numSelectedDataset %d numGenesIntegrated %d\n", j, countSelected, nG);
+			}
+
 			for(k=0; k<final_score[j].size(); k++){
 				if(freq[j][k]<minRequired){
 					final_score[j][k] = -320;
@@ -987,6 +1047,16 @@ int main(int iArgs, char **aszArgs){
 
 	//DAB mode (sparse DAB: .2.dab)
 	if(sArgs.dab_flag==1){
+		float threshold_g = sArgs.threshold_g_arg;
+		float threshold_q = sArgs.threshold_q_arg;
+		bool DEBUG = !!sArgs.debug_flag;
+
+		string search_mode = sArgs.tsearch_mode_arg;
+		if(search_mode=="NA"){
+			fprintf(stderr, "Please specify a search mode!\n");
+			return 1;
+		}
+
 		string norm_mode = sArgs.norm_mode_arg;
 		if(sArgs.default_type_arg!=0 && sArgs.default_type_arg!=1){
 			fprintf(stderr, "Error, invalid type!\n");
@@ -1013,6 +1083,10 @@ int main(int iArgs, char **aszArgs){
 				fprintf(stderr, "Invalid exponent!\n");
 				return -1;
 			}
+			if(sArgs.rbp_p_arg==-1){
+				fprintf(stderr, "Error, please supply the rbp_p flag.\n");
+				return -1;
+			}
 		}
 
 		vector<float> score_cutoff;
@@ -1031,14 +1105,30 @@ int main(int iArgs, char **aszArgs){
 		CSeekTools::ReadListOneColumn(sArgs.dab_list_arg, dab_list);
 		vector<CSeekIntIntMap*> dm;
 		dm.resize(dab_list.size());
+
+		//selected datasets for each query
+		vector<vector<char> > selectedDataset;
+		selectedDataset.resize(vecstrAllQuery.size());
+		for(i=0; i<vecstrAllQuery.size(); i++)
+			CSeekTools::InitVector(selectedDataset[i], dab_list.size(), (char)0);
 		
 		//MODE 1 - Normal search:
+		//preparing query
 		vector<vector<float> > q_weight;
 		q_weight.resize(vecstrAllQuery.size());
 		for(i=0; i<vecstrAllQuery.size(); i++){
 			CSeekTools::InitVector(q_weight[i], numGenes, (float) 0);
 			for(j=0; j<vecstrAllQuery[i].size(); j++)
 				q_weight[i][mapstriGenes[vecstrAllQuery[i][j]]] = 1;
+		}
+
+		//preparing query2
+		vector<vector<unsigned int> > qq;
+		qq.resize(vecstrAllQuery.size());
+		for(i=0; i<vecstrAllQuery.size(); i++){
+			qq[i] = vector<unsigned int>();
+			for(j=0; j<vecstrAllQuery[i].size(); j++)
+				qq[i].push_back(mapstriGenes[vecstrAllQuery[i][j]]);
 		}
 		
 		fprintf(stderr, "Reading sparse DAB\n");
@@ -1055,12 +1145,10 @@ int main(int iArgs, char **aszArgs){
 			CSeekTools::InitVector(freq[j], vecstrGenes.size(), (int) 0);
 			CSeekTools::InitVector(dweight[j], dab_list.size(), (float) 0);
 		}
-		if(bDatasetCutoff){
-			fprintf(stderr, "Dataset cutoff is on!\n");
-		}else{
-			fprintf(stderr, "Dataset cutoff is off!\n");
-		}
 
+		if(bDatasetCutoff)	fprintf(stderr, "Dataset cutoff is on!\n");
+		else	fprintf(stderr, "Dataset cutoff is off!\n");
+		
 
 		for(i=0; i<dab_list.size(); i++){
 			fprintf(stderr, "Reading %d: %s\n", i, dab_list[i].c_str());
@@ -1085,13 +1173,37 @@ int main(int iArgs, char **aszArgs){
 			}
 			const vector<utype> &allGenes = d1.GetAllReverse();
 
+			for(j=0; j<vecstrAllQuery.size(); j++){
+				int numPresent = 0;
+				for(k=0; k<qq[j].size(); k++){
+					if(d1.GetForward(qq[j][k])==(unsigned int)-1) continue;
+					numPresent++;
+				}
+				if(search_mode=="eq" && numPresent==0){
+					continue;
+				}else if(search_mode=="cv_loi" && numPresent<=1){
+					continue;
+				}
+				int numThreshold = (int) (threshold_q * qq[j].size());
+				if(numPresent>numThreshold)
+					selectedDataset[j][i] = 1;
+			}
+
 			#pragma omp parallel for \
 			shared(qu, sm, d1, dweight, final_score, count, freq, score_cutoff) \
-			private(j, k) firstprivate(bDatasetCutoff) schedule(dynamic)
+			private(j, k) firstprivate(bDatasetCutoff, i) schedule(dynamic)
 			for(j=0; j<vecstrAllQuery.size(); j++){
+				//not enough query genes present
+				if(selectedDataset[j][i]==0) continue;
+
 				float dw = 1.0;
-				//cv_weight_LOO(qu[j], sm, &d1, rbp_p, dw);
-				cv_weight(qu[j], sm, &d1, rbp_p, dw);
+				if(search_mode=="eq"){
+					dw = 1.0;
+				}else{
+					//cv_weight_LOO(qu[j], sm, &d1, rbp_p, dw);
+					cv_weight(qu[j], sm, &d1, rbp_p, dw);
+				}
+
 				if(bDatasetCutoff){
 					if(score_cutoff[i]>dw)
 						dw = 0;
@@ -1110,7 +1222,7 @@ int main(int iArgs, char **aszArgs){
 					final_score[j][gi] += tmp_score[gi] * dw;
 					count[j][gi]+=dw;
 					freq[j][gi]++;
-				}	
+				}
 			}
 		}
 
@@ -1120,8 +1232,23 @@ int main(int iArgs, char **aszArgs){
 		res.Save(ofsm, true);
 		*/
 		
-		int minRequired = (int) ((float) dab_list.size() * 0.50);
 		for(j=0; j<vecstrAllQuery.size(); j++){
+			int countSelected = 0;
+			for(k=0; k<selectedDataset[j].size(); k++)
+				countSelected+=selectedDataset[j][k];
+
+			int minRequired = (int) ((float) countSelected * threshold_g);
+
+			if(DEBUG){
+				int nG = 0;
+				for(k=0; k<final_score[j].size(); k++){
+					if(freq[j][k]>=minRequired){
+						nG++;
+					}
+				}
+				fprintf(stderr, "Query %d numSelectedDataset %d numGenesIntegrated %d\n", j, countSelected, nG);
+			}
+
 			for(k=0; k<final_score[j].size(); k++){
 				if(freq[j][k]<minRequired){
 					final_score[j][k] = -320;
@@ -1133,6 +1260,7 @@ int main(int iArgs, char **aszArgs){
 				}
 				final_score[j][k] /= count[j][k];
 			}
+
 			sprintf(acBuffer, "%s/%d.query", output_dir.c_str(), j);
 			CSeekTools::WriteArrayText(acBuffer, vecstrAllQuery[j]);
 			sprintf(acBuffer, "%s/%d.gscore", output_dir.c_str(), j);
