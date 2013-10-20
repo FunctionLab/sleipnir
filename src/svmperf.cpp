@@ -621,7 +621,7 @@ vector<Result> CSVMPERF::Classify(Sleipnir::CPCL &PCL,
 		}
 	}
 
-	delete ppDoc;
+	delete[] ppDoc;
 	return vecResult;
 }
 
