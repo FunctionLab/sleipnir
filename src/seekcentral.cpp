@@ -237,9 +237,11 @@ bool CSeekCentral::CalculateRestart(){
 bool CSeekCentral::Initialize(
 	const string &output_dir, const string &query,
 	const string &search_dset, CSeekCentral *src, const int iClient,
-	const float query_min_required,
+	const float query_min_required, const float genome_min_required,
 	const enum CSeekDataset::DistanceMeasure eDistMeasure,
 	const bool bSubtractGeneAvg, const bool bNormPlatform){
+
+	fprintf(stderr, "Request received from client\n");
 
 	m_output_dir = output_dir; //LATER, TO BE DELETED
 	m_maxNumDB = src->m_maxNumDB;
@@ -247,6 +249,7 @@ bool CSeekCentral::Initialize(
 	m_numThreads = src->m_numThreads;
 	m_fScoreCutOff = src->m_fScoreCutOff;
 	m_fPercentQueryAfterScoreCutOff = query_min_required;
+	m_fPercentGenomeRequired = genome_min_required;
 	m_bSquareZ = src->m_bSquareZ;
 	m_bOutputText = src->m_bOutputText;
 	m_bSubtractGeneAvg = bSubtractGeneAvg;
@@ -364,9 +367,22 @@ bool CSeekCentral::EnableNetwork(const int &iClient){
 bool CSeekCentral::CheckDatasets(const bool &replace){
 	utype dd, j;
 	utype l;
+
+	//estimate string length
+	/*size_t total_length = 0;
+	utype ii;
+	for(ii=0; ii<m_vecstrDatasets.size(); ii++)
+		total_length+=m_vecstrDatasets[ii].length()+1;
+	total_length*=m_searchdsetMap.size();
+	char *ss = new char[total_length]; //search dataset
+	char *pointer_ss = &ss[0];
+	*/
+
 	stringstream ss; //search dataset (new!)
 	stringstream sq; //query availability
 	stringstream aq; //query (new!)
+
+	int maxGCoverage = GetMaxGenomeCoverage();
 
 	for(l=0; l<m_searchdsetMap.size(); l++){
 		utype iUserDatasets = m_searchdsetMap[l]->GetNumSet();
@@ -392,14 +408,30 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 			//datasets that contains all query genes (very stringent)
 			//if(present==m_vecstrAllQuery[l].size()){
 
-			int minRequired = (int) (m_fPercentQueryAfterScoreCutOff * 
+			int minRequired = 0;
+			if(m_vecstrAllQuery[l].size()>=5){
+				minRequired = (int) (m_fPercentQueryAfterScoreCutOff * 
 				m_vecstrAllQuery[l].size());
+			}else if(m_vecstrAllQuery[l].size()<=2){
+				minRequired = m_vecstrAllQuery[l].size();
+			}else{
+				minRequired = 2;
+			}
+			
+			int minGRequired = (int)(m_fPercentGenomeRequired*
+			(float) maxGCoverage);
+
 			//datasets containing some query genes (relaxed) [ 0 ] 
-			if(present>0 && present>=minRequired){
+			if(present>0 && present>=minRequired && 
+			si->GetNumSet()>=minGRequired){
 				if(isFirst){
 					isFirst = false;
+					//strcpy(pointer_ss, m_vecstrDatasets[i].c_str()); 
+					//pointer_ss+=m_vecstrDatasets[i].length();
 					ss << m_vecstrDatasets[i];
 				}else{
+					//strcpy(pointer_ss, (" " + m_vecstrDatasets[i]).c_str()); 
+					//pointer_ss+=m_vecstrDatasets[i].length()+1;
 					ss << " " << m_vecstrDatasets[i];
 				}
 			}
@@ -415,6 +447,8 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 
 		if(l!=m_searchdsetMap.size()-1){
 			ss << "|";
+			//strcpy(pointer_ss, "|\0");
+			//pointer_ss+=1;
 		}
 
 		//fprintf(stderr, "ss %s\n", ss.str().c_str());
@@ -452,6 +486,9 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 
 	string refinedQuery = aq.str();
 	string refinedSearchDataset = ss.str();
+	//string refinedSearchDataset = ss;
+	//delete[] ss;
+
 	string refinedGeneCount = sq.str();
 	if(m_bEnableNetwork){
 		CSeekNetwork::Send(m_iClient, refinedSearchDataset);
@@ -505,14 +542,17 @@ bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 	const bool bOutputWeightComponent, const bool bSimulateWeight,
 	const enum CSeekDataset::DistanceMeasure dist_measure,
 	const bool bSubtractAvg, const bool bNormPlatform,
-	const bool bLogit, const float fCutOff, const float fPercentRequired,
+	const bool bLogit, const float fCutOff, const float fPercentQueryRequired,
+	const float fPercentGenomeRequired,
 	const bool bSquareZ, const bool bRandom, const int iNumRandom,
-	gsl_rng *rand, const bool useNibble){
+	gsl_rng *rand, const bool useNibble, const int numThreads){
 
 	m_maxNumDB = buffer;
-	m_numThreads = 8; //changed from 8
+	m_numThreads = numThreads; //changed from 8
+
 	m_fScoreCutOff = fCutOff;
-	m_fPercentQueryAfterScoreCutOff = fPercentRequired;
+	m_fPercentQueryAfterScoreCutOff = fPercentQueryRequired;
+	m_fPercentGenomeRequired = fPercentGenomeRequired; 
 	m_bSquareZ = bSquareZ;
 
 	m_bOutputWeightComponent = bOutputWeightComponent;
@@ -638,14 +678,16 @@ bool CSeekCentral::Initialize(
 	const bool bOutputWeightComponent, const bool bSimulateWeight,
 	const enum CSeekDataset::DistanceMeasure dist_measure,
 	const bool bSubtractAvg, const bool bNormPlatform,
-	const bool bLogit, const float fCutOff, const float fPercentRequired,
+	const bool bLogit, const float fCutOff, 
+	const float fPercentQueryRequired, const float fPercentGenomeRequired,
 	const bool bSquareZ, const bool bRandom, const int iNumRandom,
-	gsl_rng *rand, const bool useNibble){
+	gsl_rng *rand, const bool useNibble, const int numThreads){
 
 	if(!CSeekCentral::Initialize(vecDBSetting, buffer, to_output_text,
 		bOutputWeightComponent, bSimulateWeight, dist_measure,
-		bSubtractAvg, bNormPlatform, bLogit, fCutOff, fPercentRequired,
-		bSquareZ, bRandom, iNumRandom, rand, useNibble)){
+		bSubtractAvg, bNormPlatform, bLogit, fCutOff, 
+		fPercentQueryRequired, fPercentGenomeRequired,
+		bSquareZ, bRandom, iNumRandom, rand, useNibble, numThreads)){
 		return false;
 	}
 
@@ -912,6 +954,18 @@ bool CSeekCentral::Write(const utype &i){
 	return true;
 }
 
+int CSeekCentral::GetMaxGenomeCoverage(){
+	utype d;
+	int max = 0;
+	for(d=0; d<m_vecstrDatasets.size(); d++){
+		CSeekIntIntMap *mapG = m_vc[d]->GetGeneMap();
+		if(mapG->GetNumSet()>max){
+			max = mapG->GetNumSet();
+		}
+	}
+	return max;
+}
+
 
 bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 	gsl_rng *rnd, const CSeekQuery::PartitionMode *PART_M,
@@ -955,6 +1009,11 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 
 	//fprintf(stderr, "0 %lu\n", CMeta::GetMemoryUsage());
 	current_sm = sm;
+
+	int maxGCoverage = GetMaxGenomeCoverage();
+
+	//fprintf(stderr, "Min gene required %.2f %d %d\n", m_fPercentGenomeRequired,
+	//	maxGCoverage, (int)(m_fPercentGenomeRequired*(float) maxGCoverage));
 
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
 		//simulated weight case ======================
@@ -1026,9 +1085,11 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 			CSeekIntIntMap *mapG = m_vc[d]->GetGeneMap();
 			CSeekIntIntMap *mapQ = m_vc[d]->GetQueryMap();
 
-			//if(mapG->GetNumSet()<10000){
-			//	continue;
-			//}
+			//if dataset contains less than required number of genes, skip
+			if(mapG->GetNumSet()<(int)(m_fPercentGenomeRequired*
+			(float) maxGCoverage)){ //10000
+				continue;
+			}
 
 			if(mapQ==NULL ||mapQ->GetNumSet()==0){
 				if(DEBUG) fprintf(stderr, "This dataset is skipped\n");

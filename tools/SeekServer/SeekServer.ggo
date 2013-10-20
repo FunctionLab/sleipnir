@@ -23,6 +23,8 @@ option	"quant"				Q	"quant file (assuming all datasets use the same quantization
 								string	typestr="filename"	yes								
 option	"num_db"			n	"Number of databaselets in database"
 								int	default="1000"	yes
+option	"num_threads"		T	"Number of threads"
+								int default="8"
 
 section "Optional - Parameter tweaking"
 option	"score_cutoff"		c	"Cutoff on the gene-gene score before adding, default: no cutoff"

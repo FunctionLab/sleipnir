@@ -56,6 +56,7 @@ struct thread_data{
 
 	float rbp_p;
 	float query_fraction_required;
+	float genome_fraction_required;
 	string distanceMeasure; //Correlation, Zscore, or ZscoreHubbinessCorrected
 	string searchMethod; //RBP, EqualWeighting, or OrderStatistics
 
@@ -75,6 +76,7 @@ void *do_query(void *th_arg){
 	string searchMethod = my->searchMethod;
 	float rbp_p = my->rbp_p;
 	float query_fraction_required = my->query_fraction_required;
+	float genome_fraction_required = my->genome_fraction_required;
 
 	CSeekCentral *csu = new CSeekCentral();
 	enum CSeekDataset::DistanceMeasure eDM = CSeekDataset::Z_SCORE;
@@ -94,7 +96,7 @@ void *do_query(void *th_arg){
 	//fprintf(stderr, "%s\n%s\n%s\n%.2f\n", strOutputDir.c_str(), strQuery.c_str(), strSearchDatasets.c_str(), query_fraction_required);
 
 	bool r = csu->Initialize(strOutputDir, strQuery, strSearchDatasets, csfinal,
-		new_fd, query_fraction_required, eDM, bSubtractGeneAvg,
+		new_fd, query_fraction_required, genome_fraction_required, eDM, bSubtractGeneAvg,
 		bNormPlatform);
 
 	//if r is false, then one of the query has no datasets 
@@ -275,8 +277,9 @@ int main( int iArgs, char** aszArgs ) {
 		bLogit, //always false
 		sArgs.score_cutoff_arg, 
 		0.0, //min query fraction (to be overwrriten)
+		0.0, //min genome fraction (to be overwrriten)
 		!!sArgs.square_z_flag, //default
-		false, 1, NULL, useNibble)) //default
+		false, 1, NULL, useNibble, sArgs.num_threads_arg)) //default
 	{
 		fprintf(stderr, "Error occurred!\n");
 		return -1;
@@ -393,7 +396,8 @@ int main( int iArgs, char** aszArgs ) {
 		//[0]: search_method ("RBP", "OrderStatistics", or "EqualWeighting") 
 		//[1]: rbp_p
 		//[2]: minimum fraction of query required
-		//[3]: distance measure ("Correlation", "Zscore", or "ZscoreHubbinessCorrected")
+		//[3]: minimum fraction of genome required
+		//[4]: distance measure ("Correlation", "Zscore", or "ZscoreHubbinessCorrected")
 
 		if(CSeekNetwork::Receive(new_fd, strSearchDataset)==-1){
 			fprintf(stderr, "Error receiving from client!\n");
@@ -412,12 +416,15 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 		vector<string> searchParameterTokens;
+		fprintf(stderr, "%s\n", strSearchParameter.c_str());
 		CMeta::Tokenize(strSearchParameter.c_str(), searchParameterTokens, "_");
 		thread_arg[d].searchMethod = searchParameterTokens[0];
 		thread_arg[d].rbp_p = atof(searchParameterTokens[1].c_str());
 		thread_arg[d].query_fraction_required = 
 			atof(searchParameterTokens[2].c_str());
-		thread_arg[d].distanceMeasure = searchParameterTokens[3];
+		thread_arg[d].genome_fraction_required = 
+			atof(searchParameterTokens[3].c_str());
+		thread_arg[d].distanceMeasure = searchParameterTokens[4];
 
 		//=========================================================
 

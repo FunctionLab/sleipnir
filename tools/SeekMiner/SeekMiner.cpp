@@ -230,6 +230,7 @@ int main( int iArgs, char** aszArgs ) {
 	//vector<vector<string> > newQ;
 	//CSeekTools::ReadMultipleQueries("/tmp/ex_query2.txt", newQ);
 
+
 	enum CSeekDataset::DistanceMeasure eDistMeasure;
 	if(dist_measure=="pearson"){
 		eDistMeasure = CSeekDataset::CORRELATION;
@@ -347,8 +348,11 @@ int main( int iArgs, char** aszArgs ) {
 		eDistMeasure,
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_subavg_plat_flag,
 		false,
-		sArgs.score_cutoff_arg, sArgs.per_q_required_arg, !!sArgs.square_z_flag,
-		!!sArgs.random_flag, sArgs.num_random_arg, random_ranking_rnd, useNibble))
+		sArgs.score_cutoff_arg, 
+		sArgs.per_q_required_arg, sArgs.per_g_required_arg,
+		!!sArgs.square_z_flag,
+		!!sArgs.random_flag, sArgs.num_random_arg, random_ranking_rnd, useNibble, 
+		sArgs.num_threads_arg))
 		return -1;
 
 	if(method=="CV"){

@@ -25,6 +25,10 @@ option	"quant"				Q	"quant file (assuming all datasets use the same quantization
 								string	typestr="filename"	yes								
 option	"num_db"			n	"Number of databaselets in database"
 								int	default="1000"	yes
+option	"num_threads"		T	"Number of threads"
+								int default="8"
+option	"per_g_required"	H	"Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting the minimum required genes are skipped."
+								float default="0.0"
 
 section "Dataset weighting"
 option	"weighting_method"	V	"Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z)"

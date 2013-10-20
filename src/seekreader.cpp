@@ -75,11 +75,11 @@ bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
 	int ret; //system call return
 
 	fprintf(stderr, "Initializing query map\n"); 
-	ret = system("date +%s%N 1>&2");
-	if(bNetwork && CSeekNetwork::Send(iClient, "Initializing query map")==-1){
+	//ret = system("date +%s%N 1>&2");
+	/*if(bNetwork && CSeekNetwork::Send(iClient, "Initializing query map")==-1){
 		fprintf(stderr, "Error sending client message\n");
 		return false;
-	}
+	}*/
 	
 	#pragma omp parallel for \
 	shared(allQ) private(i) schedule(dynamic)
@@ -88,12 +88,12 @@ bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
 	}
 
 	fprintf(stderr, "Done initializing query map\n");
-	ret = system("date +%s%N 1>&2");
-	if(bNetwork && CSeekNetwork::Send(iClient, 
+	//ret = system("date +%s%N 1>&2");
+	/*if(bNetwork && CSeekNetwork::Send(iClient, 
 		"Done initializing query map")==-1){
 		fprintf(stderr, "Error sending client message\n");
 		return false;
-	}
+	}*/
 
 	fprintf(stderr, "Reading %lu query genes' correlations\n",
 		allQ.size());
@@ -193,12 +193,13 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 
 	int ret; //system call returns
 
-	fprintf(stderr, "Start reading average and presence files\n");
-	ret = system("date +%s%N 1>&2");
-	fprintf(stderr, "Done reading average and presence files\n");
-	ret = system("date +%s%N 1>&2");
+	//fprintf(stderr, "Start reading average and presence files (quick)\n");
+	//ret = system("date +%s%N 1>&2");
+	//fprintf(stderr, "Done reading average and presence files (quick)\n");
+	//ret = system("date +%s%N 1>&2");
 
-	fprintf(stderr, "Initializing gene map\n"); ret = system("date +%s%N 1>&2");
+	fprintf(stderr, "Initializing gene map\n");
+	//ret = system("date +%s%N 1>&2");
 	#pragma omp parallel for \
 	private(i) schedule(dynamic)
 	for(i=0; i<iDatasets; i++){
@@ -211,7 +212,8 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 		vc[i]->SetPlatform(vp[platform_id]);
 	}
 
-	fprintf(stderr, "Done initializing gene map\n"); ret = system("date +%s%N 1>&2");
+	fprintf(stderr, "Done initializing gene map\n"); 
+	//ret = system("date +%s%N 1>&2");
 	return true;
 }
 

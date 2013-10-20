@@ -166,9 +166,10 @@ public:
 		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
 		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
 		const bool bSubtractAvg = true, const bool bNormPlatform = false,
-		const bool bLogit = false, const float fCutOff = -9999, const float fPercentRequired = 0,
+		const bool bLogit = false, const float fCutOff = -9999, 
+		const float fPercentQueryRequired = 0, const float fPercentGenomeRequired = 0,
 		const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
-		gsl_rng *rand = NULL, const bool useNibble = false);
+		gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
 
     /*!
      * \brief Initialize function
@@ -219,9 +220,10 @@ public:
 		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
 		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
 		const bool bSubtractAvg = true, const bool bNormPlatform = false,
-		const bool bLogit = false, const float fCutOff = -9999, const float fPercentRequired = 0,
+		const bool bLogit = false, const float fCutOff = -9999, 
+		const float fPercentQueryRequired = 0, const float fPercentGenomeRequired = 0,
 		const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
-		gsl_rng *rand = NULL, const bool useNibble = false);
+		gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
 
     /*!
      * \brief Initialize function
@@ -246,7 +248,7 @@ public:
      */
 	bool Initialize(const string &output_dir, const string &query,
 		const string &search_dset, CSeekCentral* src, const int iClient,
-		const float query_min_required = 0,
+		const float query_min_required = 0, const float genome_min_required = 0,
 		const enum CSeekDataset::DistanceMeasure = CSeekDataset::Z_SCORE,
 		const bool bSubtractGeneAvg = true, const bool bNormPlatform = false);
 
@@ -362,6 +364,12 @@ public:
 	 */
 	bool Destruct();
 
+	/*!
+	 * \brief Get the maximum genome coverage among the 
+	 * datasets in the compendium.
+	 */
+	int GetMaxGenomeCoverage();
+
 private:
 	//network mode
 	bool EnableNetwork(const int&);
@@ -472,6 +480,7 @@ private:
 	string m_output_dir;
 	float m_fScoreCutOff;
 	float m_fPercentQueryAfterScoreCutOff;
+	float m_fPercentGenomeRequired;
 
 	/* for order statistics, a datasets-by-genes matrix */
 	utype **m_rank_d;
