@@ -368,16 +368,6 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 	utype dd, j;
 	utype l;
 
-	//estimate string length
-	/*size_t total_length = 0;
-	utype ii;
-	for(ii=0; ii<m_vecstrDatasets.size(); ii++)
-		total_length+=m_vecstrDatasets[ii].length()+1;
-	total_length*=m_searchdsetMap.size();
-	char *ss = new char[total_length]; //search dataset
-	char *pointer_ss = &ss[0];
-	*/
-
 	stringstream ss; //search dataset (new!)
 	stringstream sq; //query availability
 	stringstream aq; //query (new!)
@@ -426,12 +416,8 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 			si->GetNumSet()>=minGRequired){
 				if(isFirst){
 					isFirst = false;
-					//strcpy(pointer_ss, m_vecstrDatasets[i].c_str()); 
-					//pointer_ss+=m_vecstrDatasets[i].length();
 					ss << m_vecstrDatasets[i];
 				}else{
-					//strcpy(pointer_ss, (" " + m_vecstrDatasets[i]).c_str()); 
-					//pointer_ss+=m_vecstrDatasets[i].length()+1;
 					ss << " " << m_vecstrDatasets[i];
 				}
 			}
@@ -447,8 +433,6 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 
 		if(l!=m_searchdsetMap.size()-1){
 			ss << "|";
-			//strcpy(pointer_ss, "|\0");
-			//pointer_ss+=1;
 		}
 
 		//fprintf(stderr, "ss %s\n", ss.str().c_str());
@@ -486,9 +470,6 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 
 	string refinedQuery = aq.str();
 	string refinedSearchDataset = ss.str();
-	//string refinedSearchDataset = ss;
-	//delete[] ss;
-
 	string refinedGeneCount = sq.str();
 	if(m_bEnableNetwork){
 		CSeekNetwork::Send(m_iClient, refinedSearchDataset);

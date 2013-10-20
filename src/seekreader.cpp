@@ -193,11 +193,6 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 
 	int ret; //system call returns
 
-	//fprintf(stderr, "Start reading average and presence files (quick)\n");
-	//ret = system("date +%s%N 1>&2");
-	//fprintf(stderr, "Done reading average and presence files (quick)\n");
-	//ret = system("date +%s%N 1>&2");
-
 	fprintf(stderr, "Initializing gene map\n");
 	//ret = system("date +%s%N 1>&2");
 	#pragma omp parallel for \
