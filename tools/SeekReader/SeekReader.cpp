@@ -244,6 +244,109 @@ int main( int iArgs, char** aszArgs ) {
 		return 0;
 	}
 
+
+	if(sArgs.convert_dab_flag==1){
+		string dab_file_name = sArgs.dab_file_arg;
+		if(dab_file_name.find(".2.dab")!=string::npos){
+			CSeekIntIntMap d1(vecstrGenes.size());
+			CSparseFlatMatrix<float> sm (0);
+			CSeekWriter::ReadSeekSparseMatrix<unsigned short>(sArgs.dab_file_arg,
+				sm, d1, 1000, 0.99, vecstrGenes);	
+			utype ii = 0;
+			const vector<utype> &allRGenes = d1.GetAllReverse();
+			FILE *pFile;
+			pFile = fopen(sArgs.output_matrix_arg, "w");
+			fprintf(pFile, "Genes\t");
+			for(i=0; i<d1.GetNumSet(); i++){	
+				string g = vecstrGenes[allRGenes[i]];
+				fprintf(pFile, "%s", g.c_str());
+				if(i<d1.GetNumSet()-1)
+					fprintf(pFile, "\t");
+			}
+			fprintf(pFile, "\n");
+		
+			unsigned int j, t;	
+			for(i=0; i<d1.GetNumSet(); i++){	
+				string g = vecstrGenes[allRGenes[i]];
+				fprintf(pFile, "%s\t", g.c_str());
+				vector<float> vf;
+				vf.resize(vecstrGenes.size());
+				for(j=0; j<vecstrGenes.size(); j++)
+					vf[j] = 0;
+				utype ii = allRGenes[i];
+				vector<CPair<float> >::iterator row_it;
+				float rv;
+				for(row_it = sm.RowBegin(ii); row_it!=sm.RowEnd(ii); row_it++){
+					j = (size_t) row_it->i;
+					rv = row_it->v;
+					vf[j] = rv;
+				}
+			
+				for(j=0; j<d1.GetNumSet(); j++){
+					t = allRGenes[j];
+					fprintf(pFile, "%.3e", vf[t]);
+					if(j<d1.GetNumSet()-1)
+						fprintf(pFile, "\t");
+				}
+				fprintf(pFile, "\n");
+			}
+			fclose(pFile);
+			return 0;
+		}
+
+		CDataPair Dat;
+		fprintf(stderr, "Opening file...\n");
+		if(!Dat.Open(sArgs.dab_file_arg, false, false, 2, false, false)){
+			cerr << "error opening file" << endl;
+			return 1;
+		}
+
+		vector<unsigned int> veciGenes;
+		veciGenes.resize(vecstrGenes.size());
+		for(i=0; i<vecstrGenes.size(); i++)
+			veciGenes[i] = (unsigned int) Dat.GetGeneIndex(vecstrGenes[i]);
+
+		unsigned int s, t, j, ss, tt;
+		float d;
+		CSeekIntIntMap m(vecstrGenes.size());
+		for(i=0; i<vecstrGenes.size(); i++){
+			if((s=veciGenes[i])==(unsigned int)-1) continue;
+			m.Add(i);
+		}
+
+		const vector<utype> &allRGenes = m.GetAllReverse();
+		FILE *pFile;
+		pFile = fopen(sArgs.output_matrix_arg, "w");
+		fprintf(pFile, "Genes\t");
+		for(i=0; i<m.GetNumSet(); i++){	
+			string g = vecstrGenes[allRGenes[i]];
+			fprintf(pFile, "%s", g.c_str());
+			if(i<m.GetNumSet()-1){
+				fprintf(pFile, "\t");
+			}
+		}
+		fprintf(pFile, "\n");
+			
+		for(i=0; i<m.GetNumSet(); i++){	
+			s = veciGenes[allRGenes[i]];
+			string g = vecstrGenes[allRGenes[i]];
+			fprintf(pFile, "%s\t", g.c_str());
+			for(j=0; j<m.GetNumSet(); j++){
+				t = veciGenes[allRGenes[j]];
+				if(CMeta::IsNaN(d = Dat.Get(s,t)))
+					d = 0;
+				fprintf(pFile, "%.3e", d);
+				if(j<m.GetNumSet()-1){
+					fprintf(pFile, "\t");
+				}
+			}
+			fprintf(pFile, "\n");
+		}
+		fclose(pFile);
+		return 0;
+	}
+
+
 	if(sArgs.limit_hub_flag==1){
 		float per = 0.30;
 		CDataPair Dat;

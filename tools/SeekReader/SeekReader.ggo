@@ -15,6 +15,8 @@ option	"comp_ranking"		C	"Compare two rankings (*.gscore files)"
 								flag	off
 option	"convert_aracne"	J	"Convert Aracne output (.txt) to DAB file"
 								flag	off
+option	"convert_dab"		k	"Convert DAB to matrix"
+								flag	off
 option	"limit_hub"			Y	"Limit genes in the DAB to those that are hubby"
 								flag	off
 
@@ -28,6 +30,12 @@ section	"Convert Aracne"
 option	"aracne_file"		K	"Aracne .txt output file"
 								string typestr="filename" default="NA"
 option	"output_dab_file"	L	"DAB file"
+								string typestr="filename" default="NA"
+
+section "Convert DAB to matrix"
+option	"dab_file"			f	"DAB file"
+								string typestr="filename" default="NA"
+option	"output_matrix"		m	"Output matrix filename"
 								string typestr="filename" default="NA"
 
 section "Weight"

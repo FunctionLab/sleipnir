@@ -36,6 +36,7 @@ using namespace std;
 #include "seekbasic.h"
 #include "seekmap.h"
 #include "seekreader.h"
+#include "seekwriter.h"
 #include "sparsematrix.h"
 #include "meta.h"
 using namespace Sleipnir;
