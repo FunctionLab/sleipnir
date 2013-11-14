@@ -49,7 +49,7 @@ vector< pair< string, string > > ReadLabelList(ifstream & ifsm, string output_pr
     if (vecstrTokens.empty())
       continue;
     if (vecstrTokens.size() != 2) {
-      cerr << "Illegal inout line (" << vecstrTokens.size() << "): "
+      cerr << "Illegal input line (" << vecstrTokens.size() << "): "
         << acBuffer << endl;
       continue;
     }
@@ -100,8 +100,7 @@ vector<SVMLight::SVMLabel> ReadLabels(ifstream & ifsm) {
       numNegatives++;
   }
 
-  cout << numPositives << endl;
-  cout << numNegatives << endl;
+
 
   return vecLabels;
 }

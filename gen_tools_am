@@ -54,6 +54,7 @@ my %tools_other_packages = (
                             OntoShell => ['READLINE'],
                             SVMer => ['SVM_PERF'],
                             SVMperfer => ['SVM_PERF'],
+                            SVMfe => ['SVM_PERF'],
                             SVMmulticlass => ['SVM_MULTICLASS'],
                             SVMhierarchy => ['SVM_HIERARCHY'],
                             SVMperfing => ['SVM_PERF'],

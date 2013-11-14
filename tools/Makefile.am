@@ -85,7 +85,8 @@ if WITH_SVM_TOOLS
 	  Data2Svm \
 	  SVMer \
 	  SVMperfing \
-	  SVMperfer
+	  SVMperfer \
+	SVMfe
 endif
 if WITH_SVM_MULTICLASS_TOOLS
     SVM_MULTICLASS_SUBDIRS = \

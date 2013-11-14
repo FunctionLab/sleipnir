@@ -214,6 +214,21 @@ public:
 		}
 	}
 
+
+    size_t ReplaceModel(vector<WORD>& vecW) {
+
+            if (structmodel.svm_model->totwords == vecW.size()) {
+                    for (size_t i; i < vecW.size(); i++) {
+                            structmodel.svm_model->lin_weights[i] = vecW[i].weight;
+                    }
+                    return 0;
+            } else {
+                    cerr << "Could not replace model: Size mismatch" << endl;
+                    return 1;
+            }
+    }
+
+
 	void WriteWeights(ostream& osm) {
 		osm << structmodel.w[0];
 		for (size_t i = 1; i < structmodel.sizePsi + 1; i++)

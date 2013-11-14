@@ -1025,6 +1025,7 @@ AC_CONFIG_FILES([Makefile \
                  tools/Data2Svm/Makefile \
                  tools/SVMer/Makefile \
                  tools/SVMperfer/Makefile \
+                 tools/SVMfe/Makefile \
                  tools/SVMmulticlass/Makefile \
                  tools/SVMhierarchy/Makefile \
                  tools/SVMperfing/Makefile \
