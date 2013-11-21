@@ -371,13 +371,13 @@ public:
 
 	void GetGeneNames( std::vector<std::string>& vecstrGenes ) const {
 
-		return COntologyImpl::GetGeneNames( vecstrGenes ); }
+		 COntologyImpl::GetGeneNames( vecstrGenes ); }
 
 	void TermFinder( const CGenes& Genes, std::vector<STermFound>& vecsTerms, bool fBonferroni = true,
 		bool fRecursive = true, bool fGenome = false, float dPValue = 1,
 		const CGenes* pBackground = NULL ) const {
 
-		return COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
+		 COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
 			pBackground ); }
 
 	size_t GetNode( const std::string& strID ) const {

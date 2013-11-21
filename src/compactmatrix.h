@@ -111,7 +111,7 @@ public:
 	void Initialize( size_t iSize, unsigned char cValues, bool fClear ) {
 
 		m_iSize = (uint32_t)iSize;
-		return CCompactMatrixBase::Initialize( cValues, fClear ); }
+		CCompactMatrixBase::Initialize( cValues, fClear ); }
 
 	/*!
 	 * \brief
