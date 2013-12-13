@@ -177,6 +177,8 @@ struct gengetopt_args_info
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
   unsigned int logratio_given ;	/**< @brief Whether logratio was given.  */
 
+  char **inputs ; /**< @brief unamed options (options without names) */
+  unsigned inputs_num ; /**< @brief unamed options number */
   int Mode_group_counter; /**< @brief Counter for group Mode */
 } ;
 
