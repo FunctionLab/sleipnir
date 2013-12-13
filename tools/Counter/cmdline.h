@@ -46,11 +46,11 @@ struct gengetopt_args_info
   char * output_arg;	/**< @brief Output count directory, Bayes nets, or inferences.  */
   char * output_orig;	/**< @brief Output count directory, Bayes nets, or inferences original value given at command line.  */
   const char *output_help; /**< @brief Output count directory, Bayes nets, or inferences help description.  */
+  char * countname_arg;	/**< @brief For learning stage, what should the countname be called if no contexts are used (default: global). (default='global').  */
+  char * countname_orig;	/**< @brief For learning stage, what should the countname be called if no contexts are used (default: global). original value given at command line.  */
+  const char *countname_help; /**< @brief For learning stage, what should the countname be called if no contexts are used (default: global). help description.  */
   char * directory_arg;	/**< @brief Data directory (default='.').  */
   char * directory_orig;	/**< @brief Data directory original value given at command line.  */
-  char * countname_arg;/**< @brief For learning stage, what should the countname be called if no contexts are used (default: global). (default='global').  */
-  char * countname_orig;/**< @brief For learning stage, what should the countname be called if no contexts are used (default: global). original value given at command line.  */
-  const char *countname_help; /**< @brief For learning stage, what should the countname be called if no contexts are used (default: global). help description.  */
   const char *directory_help; /**< @brief Data directory help description.  */
   char * datasets_arg;	/**< @brief Dataset ID text file.  */
   char * datasets_orig;	/**< @brief Dataset ID text file original value given at command line.  */
@@ -141,7 +141,7 @@ struct gengetopt_args_info
   unsigned int counts_given ;	/**< @brief Whether counts was given.  */
   unsigned int networks_given ;	/**< @brief Whether networks was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
-  unsigned int countname_given ;/**< @brief Whether countname was given.  */
+  unsigned int countname_given ;	/**< @brief Whether countname was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
   unsigned int datasets_given ;	/**< @brief Whether datasets was given.  */
   unsigned int genome_given ;	/**< @brief Whether genome was given.  */
@@ -177,8 +177,6 @@ struct gengetopt_args_info
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
   unsigned int logratio_given ;	/**< @brief Whether logratio was given.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
   int Mode_group_counter; /**< @brief Counter for group Mode */
 } ;
 

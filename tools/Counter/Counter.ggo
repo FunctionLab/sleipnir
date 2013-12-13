@@ -13,6 +13,8 @@ groupoption	"networks"	n	"Bayes nets (-n triggers inference mode)"
 section "Main"
 option	"output"		o	"Output count directory, Bayes nets, or inferences"
 							string	typestr="filename or directory"	yes
+option  "countname"             O       "For learning stage, what should the countname be called if no contexts are used (default: global)."
+                                                        string  typestr="filename"      default="global"
 option	"directory"		d	"Data directory"
 							string	typestr="directory"	default="."
 option	"datasets"		s	"Dataset ID text file"
