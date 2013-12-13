@@ -36,6 +36,7 @@ const char *gengetopt_args_info_help[] = {
   "  -n, --networks=filename       Bayes nets (-n triggers inference mode)",
   "\nMain:",
   "  -o, --output=filename or directory\n                                Output count directory, Bayes nets, or \n                                  inferences",
+  "  -O, --countname=filename      For learning stage, what should the countname \n                                  be called if no contexts are used (default: \n                                  global).  (default=`global')",
   "  -d, --directory=directory     Data directory  (default=`.')",
   "  -s, --datasets=filename       Dataset ID text file",
   "  -e, --genome=filename         Gene ID text file",
@@ -108,6 +109,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->counts_given = 0 ;
   args_info->networks_given = 0 ;
   args_info->output_given = 0 ;
+  args_info->countname_given = 0 ;
   args_info->directory_given = 0 ;
   args_info->datasets_given = 0 ;
   args_info->genome_given = 0 ;
@@ -156,6 +158,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->networks_orig = NULL;
   args_info->output_arg = NULL;
   args_info->output_orig = NULL;
+  args_info->countname_arg = gengetopt_strdup ("global");
+  args_info->countname_orig = NULL;
   args_info->directory_arg = gengetopt_strdup (".");
   args_info->directory_orig = NULL;
   args_info->datasets_arg = NULL;
@@ -221,40 +225,41 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->counts_help = gengetopt_args_info_help[4] ;
   args_info->networks_help = gengetopt_args_info_help[5] ;
   args_info->output_help = gengetopt_args_info_help[7] ;
-  args_info->directory_help = gengetopt_args_info_help[8] ;
-  args_info->datasets_help = gengetopt_args_info_help[9] ;
-  args_info->genome_help = gengetopt_args_info_help[10] ;
-  args_info->contexts_help = gengetopt_args_info_help[11] ;
-  args_info->genes_help = gengetopt_args_info_help[13] ;
-  args_info->genex_help = gengetopt_args_info_help[14] ;
-  args_info->ubiqg_help = gengetopt_args_info_help[15] ;
-  args_info->genet_help = gengetopt_args_info_help[16] ;
-  args_info->genee_help = gengetopt_args_info_help[17] ;
-  args_info->ctxtpos_help = gengetopt_args_info_help[18] ;
-  args_info->ctxtneg_help = gengetopt_args_info_help[19] ;
-  args_info->bridgepos_help = gengetopt_args_info_help[20] ;
-  args_info->bridgeneg_help = gengetopt_args_info_help[21] ;
-  args_info->outpos_help = gengetopt_args_info_help[22] ;
-  args_info->outneg_help = gengetopt_args_info_help[23] ;
-  args_info->weights_help = gengetopt_args_info_help[24] ;
-  args_info->dweightpos_help = gengetopt_args_info_help[25] ;
-  args_info->flipneg_help = gengetopt_args_info_help[26] ;
-  args_info->noweightneg_help = gengetopt_args_info_help[27] ;
-  args_info->default_help = gengetopt_args_info_help[29] ;
-  args_info->zeros_help = gengetopt_args_info_help[30] ;
-  args_info->genewise_help = gengetopt_args_info_help[31] ;
-  args_info->pseudocounts_help = gengetopt_args_info_help[33] ;
-  args_info->alphas_help = gengetopt_args_info_help[34] ;
-  args_info->regularize_help = gengetopt_args_info_help[35] ;
-  args_info->reggroups_help = gengetopt_args_info_help[36] ;
-  args_info->temporary_help = gengetopt_args_info_help[38] ;
-  args_info->smile_help = gengetopt_args_info_help[39] ;
-  args_info->xdsl_help = gengetopt_args_info_help[40] ;
-  args_info->memmap_help = gengetopt_args_info_help[41] ;
-  args_info->memmapout_help = gengetopt_args_info_help[42] ;
-  args_info->threads_help = gengetopt_args_info_help[43] ;
-  args_info->verbosity_help = gengetopt_args_info_help[44] ;
-  args_info->logratio_help = gengetopt_args_info_help[45] ;
+  args_info->countname_help = gengetopt_args_info_help[8] ;
+  args_info->directory_help = gengetopt_args_info_help[9] ;
+  args_info->datasets_help = gengetopt_args_info_help[10] ;
+  args_info->genome_help = gengetopt_args_info_help[11] ;
+  args_info->contexts_help = gengetopt_args_info_help[12] ;
+  args_info->genes_help = gengetopt_args_info_help[14] ;
+  args_info->genex_help = gengetopt_args_info_help[15] ;
+  args_info->ubiqg_help = gengetopt_args_info_help[16] ;
+  args_info->genet_help = gengetopt_args_info_help[17] ;
+  args_info->genee_help = gengetopt_args_info_help[18] ;
+  args_info->ctxtpos_help = gengetopt_args_info_help[19] ;
+  args_info->ctxtneg_help = gengetopt_args_info_help[20] ;
+  args_info->bridgepos_help = gengetopt_args_info_help[21] ;
+  args_info->bridgeneg_help = gengetopt_args_info_help[22] ;
+  args_info->outpos_help = gengetopt_args_info_help[23] ;
+  args_info->outneg_help = gengetopt_args_info_help[24] ;
+  args_info->weights_help = gengetopt_args_info_help[25] ;
+  args_info->dweightpos_help = gengetopt_args_info_help[26] ;
+  args_info->flipneg_help = gengetopt_args_info_help[27] ;
+  args_info->noweightneg_help = gengetopt_args_info_help[28] ;
+  args_info->default_help = gengetopt_args_info_help[30] ;
+  args_info->zeros_help = gengetopt_args_info_help[31] ;
+  args_info->genewise_help = gengetopt_args_info_help[32] ;
+  args_info->pseudocounts_help = gengetopt_args_info_help[34] ;
+  args_info->alphas_help = gengetopt_args_info_help[35] ;
+  args_info->regularize_help = gengetopt_args_info_help[36] ;
+  args_info->reggroups_help = gengetopt_args_info_help[37] ;
+  args_info->temporary_help = gengetopt_args_info_help[39] ;
+  args_info->smile_help = gengetopt_args_info_help[40] ;
+  args_info->xdsl_help = gengetopt_args_info_help[41] ;
+  args_info->memmap_help = gengetopt_args_info_help[42] ;
+  args_info->memmapout_help = gengetopt_args_info_help[43] ;
+  args_info->threads_help = gengetopt_args_info_help[44] ;
+  args_info->verbosity_help = gengetopt_args_info_help[45] ;
+  args_info->logratio_help = gengetopt_args_info_help[46] ;
   
 }
 
@@ -344,6 +349,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->networks_orig));
   free_string_field (&(args_info->output_arg));
   free_string_field (&(args_info->output_orig));
+  free_string_field (&(args_info->countname_arg));
+  free_string_field (&(args_info->countname_orig));
   free_string_field (&(args_info->directory_arg));
   free_string_field (&(args_info->directory_orig));
   free_string_field (&(args_info->datasets_arg));
@@ -421,6 +428,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "networks", args_info->networks_orig, 0);
   if (args_info->output_given)
     write_into_file(outfile, "output", args_info->output_orig, 0);
+  if (args_info->countname_given)
+    write_into_file(outfile, "countname", args_info->countname_orig, 0);
   if (args_info->directory_given)
     write_into_file(outfile, "directory", args_info->directory_orig, 0);
   if (args_info->datasets_given)
@@ -783,6 +792,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "counts",	1, NULL, 'k' },
         { "networks",	1, NULL, 'n' },
         { "output",	1, NULL, 'o' },
+        { "countname",1, NULL, 'O' },
         { "directory",	1, NULL, 'd' },
         { "datasets",	1, NULL, 's' },
         { "genome",	1, NULL, 'e' },
@@ -820,7 +830,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVw:k:n:o:d:s:e:X:g:G:P:c:C:qQjJuUWDFNb:Z:Sp:a:rR:y:lxmMt:v:L", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVw:k:n:o:O:d:s:e:X:g:G:P:c:C:qQjJuUWDFNb:Z:Sp:a:rR:y:lxmMt:v:L", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -901,6 +911,15 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               additional_error))
             goto failure;
         
+          break;
+        case 'O':/* For learning stage, what should the countname be called if no contexts are used (default: global)..  */            
+          if (update_arg( (void *)&(args_info->countname_arg), 
+               &(args_info->countname_orig), &(args_info->countname_given),
+              &(local_args_info.countname_given), optarg, 0, "global", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "countname", 'O',
+              additional_error))
+            goto failure;       
           break;
         case 'd':	/* Data directory.  */
         
