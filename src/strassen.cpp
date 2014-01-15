@@ -1,4 +1,6 @@
+#include "stdafx.h"
 #include "strassen.h"
+
 
 namespace Sleipnir {
 
