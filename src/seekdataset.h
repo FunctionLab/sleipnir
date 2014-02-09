@@ -62,6 +62,18 @@ public:
 		m_numDB = numDB;
 	}
 
+	CSeekDBSetting(CSeekDBSetting const *g){
+		m_gvarDirectory = g->m_gvarDirectory;
+		m_sinfoDirectory = g->m_sinfoDirectory;
+		m_platformDirectory = g->m_platformDirectory;
+		m_prepDirectory = g->m_prepDirectory;
+		m_dbDirectory = g->m_dbDirectory;
+		m_geneMapFile = g->m_geneMapFile;
+		m_quantFile = g->m_quantFile;
+		m_dsetFile = g->m_dsetFile;
+		m_numDB = g->m_numDB;
+	}
+
 	~CSeekDBSetting(){
 	}
 

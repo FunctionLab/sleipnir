@@ -488,7 +488,10 @@ private:
 	/* for network mode */
 	int m_iClient;
 	bool m_bEnableNetwork;
-	bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
+	//bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
+
+	vector<CSeekDBSetting*> m_vecDBSetting; //DBSetting
+	bool m_useNibble;
 };
 
 

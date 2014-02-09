@@ -100,7 +100,7 @@ vector< vector<float> > &C, int tam) {
 }
  
 unsigned int CStrassen::nextPowerOfTwo(int n) {
-	return pow(2, int(ceil(log2(n))));
+	return (unsigned int)pow(2, int(ceil(log2(n))));
 }
  
 void CStrassen::strassen(vector< vector<float> > &A,

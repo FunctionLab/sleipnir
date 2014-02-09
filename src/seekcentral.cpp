@@ -72,7 +72,10 @@ CSeekCentral::CSeekCentral(){
 	m_bSimulateWeight = false;
 	m_bOutputText = false;
 	m_bSquareZ = false;
-	m_bSharedDB = false;
+	//m_bSharedDB = false;
+
+	m_vecDBSetting.clear();
+	m_useNibble = false;
 
 	DEBUG = false;
 	m_output_dir = "";
@@ -160,12 +163,14 @@ CSeekCentral::~CSeekCentral(){
 	m_vecstrPlatform.clear();
 
 	if(m_vecDB.size()!=0){
-		if(!m_bSharedDB){
-			for(i=0; i<m_vecDB.size(); i++)
-				delete m_vecDB[i];
-		}
-		for(i=0; i<m_vecDB.size(); i++)
+		//if(!m_bSharedDB){
+		for(i=0; i<m_vecDB.size(); i++){
+			delete m_vecDB[i];
 			m_vecDB[i] = NULL;
+		}
+		//}
+		//for(i=0; i<m_vecDB.size(); i++)
+		//	m_vecDB[i] = NULL;
 		m_vecDB.clear();
 	}
 
@@ -181,7 +186,14 @@ CSeekCentral::~CSeekCentral(){
 	m_mapLoadTime.clear();
 	m_output_dir = "";
 	DEBUG = false;
-	m_bSharedDB = false;
+	//m_bSharedDB = false;
+
+	for(i=0; i<m_vecDBSetting.size(); i++)
+		if(m_vecDBSetting[i]!= NULL)
+			delete m_vecDBSetting[i];
+
+	m_vecDBSetting.clear();
+	m_useNibble = false;
 }
 
 bool CSeekCentral::CalculateRestart(){
@@ -245,7 +257,7 @@ bool CSeekCentral::Initialize(
 
 	m_output_dir = output_dir; //LATER, TO BE DELETED
 	m_maxNumDB = src->m_maxNumDB;
-	m_bSharedDB = true;
+	//m_bSharedDB = true;
 	m_numThreads = src->m_numThreads;
 	m_fScoreCutOff = src->m_fScoreCutOff;
 	m_fPercentQueryAfterScoreCutOff = query_min_required;
@@ -315,16 +327,27 @@ bool CSeekCentral::Initialize(
 				m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
 	}
 
-	m_vecDB.resize(src->m_vecDB.size());
-	for(i=0; i<m_vecDB.size(); i++)
-		m_vecDB[i] = src->m_vecDB[i];
-	//m_DB = src->m_DB; //shared DB
-
 	m_vecDBDataset.resize(src->m_vecDB.size());
-	for(i=0; i<m_vecDB.size(); i++){
+	for(i=0; i<src->m_vecDB.size(); i++){
 		m_vecDBDataset[i].resize(src->m_vecDBDataset[i].size());
 		copy(src->m_vecDBDataset[i].begin(), src->m_vecDBDataset[i].end(),
 		m_vecDBDataset[i].begin());
+	}
+
+	m_vecDBSetting.resize(src->m_vecDBSetting.size());
+	for(i=0; i<m_vecDBSetting.size(); i++)
+		m_vecDBSetting[i] = new CSeekDBSetting(src->m_vecDBSetting[i]);
+	m_useNibble = src->m_useNibble;
+
+	m_vecDB.resize(src->m_vecDB.size());
+	//commented out Jan 8, 2014	
+	//for(i=0; i<m_vecDB.size(); i++)
+	//	m_vecDB[i] = src->m_vecDB[i];
+	for(i=0; i<m_vecDB.size(); i++){
+		m_vecDB[i] = NULL;
+		m_vecDB[i] = new CDatabase(m_useNibble);
+		m_vecDB[i]->Open(m_vecDBSetting[i]->GetValue("db"),
+			m_vecstrGenes, m_vecDBDataset[i].size(), m_vecDBSetting[i]->GetNumDB());
 	}
 
 	CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
@@ -594,6 +617,12 @@ bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 	m_vecDBDataset.resize(vecDBSetting.size());
 	for(i=0; i<vecDBSetting.size(); i++)
 		m_vecDB[i] = NULL;
+
+	m_vecDBSetting.resize(vecDBSetting.size());
+	for(i=0; i<m_vecDBSetting.size(); i++)
+		m_vecDBSetting[i] = new CSeekDBSetting(vecDBSetting[i]);
+
+	m_useNibble = useNibble;
 
 	for(i=0; i<vecDBSetting.size(); i++){
 		if(dist_measure==CSeekDataset::CORRELATION &&

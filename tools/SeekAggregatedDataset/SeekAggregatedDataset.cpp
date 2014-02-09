@@ -125,8 +125,7 @@ int main(int iArgs, char **aszArgs){
 	}else{
 		pistm = &cin;
 	}
-
-	fprintf(stderr, "Reading gene list\n");	
+	
 	map<string, size_t> mapstriGenes;
 	while( !pistm->eof( ) ) {
 		pistm->getline( acBuffer, c_iBuffer - 1 );
@@ -151,25 +150,18 @@ int main(int iArgs, char **aszArgs){
 			
 	//char acBuffer[1024];
 
-	fprintf(stderr, "Finished reading gene map\n");
 	if(sArgs.pcl_flag==1){
 		string pcl_dir = sArgs.pcl_dir_arg;
 		string output_dir = sArgs.dir_out_arg;
-		fprintf(stderr, "Arrived here\n");
 		vector<string> pcl_list;
-		vector< vector<string> > vecstrAllQuery;
 		int numGenes = vecstrGenes.size();
-	
-		fprintf(stderr, "Reading query\n");	
-		if(!CSeekTools::ReadMultipleQueries(sArgs.query_arg, vecstrAllQuery))
-			return -1;
-		
-		fprintf(stderr, "Reading pcl list\n");	
+			
 		CSeekTools::ReadListOneColumn(sArgs.pcl_list_arg, pcl_list);
-		vector< vector< vector<float> > > mat; //only needed for cor-calc
+		vector< vector< vector<float> > > mat;
 		vector<CSeekIntIntMap*> dm;
 		dm.resize(pcl_list.size());
-		mat.resize(pcl_list.size()); //only needed for cor-calc
+		mat.resize(pcl_list.size());
+		
 		for(i=0; i<pcl_list.size(); i++){
 			fprintf(stderr, "Reading %d: %s\n", i, pcl_list[i].c_str());
 			dm[i] = new CSeekIntIntMap(vecstrGenes.size());
@@ -179,6 +171,8 @@ int main(int iArgs, char **aszArgs){
 			CPCL pcl;
 			pcl.Open(pclfile.c_str());
 			int totNumExperiments = pcl.GetExperiments();
+
+			//fprintf(stderr, "Done %d\n", totNumExperiments);		
 			
 			vector<utype> presentIndex;
 			vector<string> presentGeneNames;
@@ -189,21 +183,27 @@ int main(int iArgs, char **aszArgs){
 				presentGeneNames.push_back(vecstrGenes[j]);
 				dm[i]->Add(j);
 			}
-			
-			//only needed for correlation calc
+
+			//fprintf(stderr, "Done 1 %d\n", presentGeneNames.size());
+	
 			mat[i].resize(presentIndex.size());
 			for(j=0; j<presentIndex.size(); j++)
 				mat[i][j].resize(totNumExperiments);
-			
+		
+			bool containsLoadingError = false;
 			for(j=0; j<presentIndex.size(); j++){
 				float *val = pcl.Get(presentIndex[j]);
 				for(k=0; k<pcl.GetExperiments(); k++){
 					mat[i][j][k] = val[k];	
 					if(isinf(val[k])||isnan(val[k])){
-						fprintf(stderr, "loading error: %d of %d\n", k, pcl.GetExperiments());
+						//fprintf(stderr, "loading error: %d of %d\n", k, pcl.GetExperiments());
+						containsLoadingError = true;
 					}
 				}
 			}
+			if(containsLoadingError)
+				fprintf(stderr, "Loading error!\n");
+			//fprintf(stderr, "Done 2\n");		
 
 		}
 	
@@ -234,164 +234,218 @@ int main(int iArgs, char **aszArgs){
 
 		int numActualGenes = geneMap->GetNumSet();
 
+		fprintf(stderr, "Number of actual genes %d\n", numActualGenes);
+
+
+		//generate pairs per machine, Step 1================================
+		if(sArgs.step_num_arg==1){
+			vector<utype> pairs;
+			int numP = numActualGenes*(numActualGenes-1);
+			pairs.resize(numP);
+			int ki = 0;
+			for(i=0; i<numActualGenes; i++){
+				for(j=i+1; j<numActualGenes; j++){
+					pairs[ki] = i; 
+					ki++;
+					pairs[ki] = j;
+					ki++;
+				}
+			}
+
+			if(ki!=numP){
+				fprintf(stderr, "Cannot continue!\n");
+				return -1;
+			}
+
+			int num_batches = sArgs.num_batch_arg;
+			int num_pairs_per_file = (numP / 2) / num_batches;
+	
+			ki = 0;
+			vector<utype> pp;
+			pp.resize(num_pairs_per_file*2);
+			char destfile[256];
+			int kj = 0;
+			int ii = 0;
+
+			fprintf(stderr, "Numpairs per file: %d\n", num_pairs_per_file);
+			for(ii=0; ii<numP/2; ii++){
+				string pairs_dir = sArgs.pairs_dir_arg;
+
+				if(ii%num_pairs_per_file==0 && ii>0){ //happen at the end of a cycle
+					sprintf(destfile, "%s/pairs_to_do.%d", pairs_dir.c_str(), ki);
+					CSeekTools::WriteArray(destfile, pp);
+					pp.clear();
+					pp.resize(num_pairs_per_file*2);
+					ki++;
+					kj = 0;
+				}
+				pp[kj] = pairs[ii*2];
+				pp[kj+1] = pairs[ii*2+1];
+				kj+=2;
+				if(ii==numP/2-1){
+					sprintf(destfile, "%s/pairs_to_do.%d", pairs_dir.c_str(), ki);
+					pp.resize(kj);
+					CSeekTools::WriteArray(destfile, pp);
+				}
+			}
+		
+			fprintf(stderr, "Finished\n");	
+			//getchar();
+			return 0;
+		}
+	
+		//=====================================================================
 		
 		//Do pair per machine, Step 2============================
-/*
-		vector<utype> pairs;
-		CSeekTools::ReadArray("/tmp/pairs_to_do", pairs);
-
-		int numP = pairs.size()/2;
-		int pi=0;
-		const vector<utype> &allGenes = geneMap->GetAllReverse();
-		vector<float> cor;
-		cor.resize(numP);
-
-		#pragma omp parallel for \
-		shared(allGenes, cor, mat, dm, pairs) \
-		private(pi) \
-		firstprivate(numP) schedule(dynamic)
-		for(pi=0; pi<numP; pi++){
-			utype g1 = allGenes[pairs[pi*2]];
-			utype g2 = allGenes[pairs[pi*2+1]];
-			if(g1==g2){
-				cor[pi] = -320;
-				continue;
-			}
-			calculate_correlation(mat, dm, g1, g2, cor[pi]);
-			if(pi%1000==0){
-				fprintf(stderr, "  %d of %d\n", pi, numP);
-			}
-		}
-
-		CSeekTools::WriteArray("/tmp/results_pairs", cor);		
-*/		
-		//=============================================================	
-		
-		
-	
-		vector< vector<float> > correlations;
-		correlations.resize(numActualGenes);
-		for(i=0; i<numActualGenes; i++){
-			correlations[i].resize(numActualGenes);
-		}
-
-		//combining pairs, Step 3=================================
-	/*
-		int max_i = 49;
-		char file[256];
-		const vector<utype> &allGenes = geneMap->GetAllReverse();
-
-		for(i=0; i<=max_i; i++){
+		if(sArgs.step_num_arg==2){
+			
 			vector<utype> pairs;
-			vector<float> cor;
-
-			sprintf(file, "/memex/qzhu/p1/pairs_to_do.%d", i);
-			CSeekTools::ReadArray(file, pairs);
-			sprintf(file, "/memex/qzhu/p1/oct6/pairs_to_do.%d_results", i);
-			CSeekTools::ReadArray(file, cor);
+			char pair_dir[256];
+			sprintf(pair_dir, "%s/pairs_to_do.%d", sArgs.pairs_dir_arg, sArgs.batch_num_arg);
+			CSeekTools::ReadArray(pair_dir, pairs);
 
 			int numP = pairs.size()/2;
 			int pi=0;
+			const vector<utype> &allGenes = geneMap->GetAllReverse();
+			vector<float> cor;
+			cor.resize(numP);
+		
+			omp_set_num_threads(4);
 
+			#pragma omp parallel for \
+			shared(allGenes, cor, mat, dm, pairs) \
+			private(pi) \
+			firstprivate(numP) schedule(dynamic)
 			for(pi=0; pi<numP; pi++){
-				correlations[pairs[pi*2]][pairs[pi*2+1]] = cor[pi];
-				correlations[pairs[pi*2+1]][pairs[pi*2]] = cor[pi];
+				utype g1 = allGenes[pairs[pi*2]];
+				utype g2 = allGenes[pairs[pi*2+1]];
+				if(g1==g2){
+					cor[pi] = -320;
+					continue;
+				}
+				calculate_correlation(mat, dm, g1, g2, cor[pi]);
+				if(pi%1000==0){
+					fprintf(stderr, "  %d of %d\n", pi, numP);
+				}
+				//fprintf(stderr, "%.5f\n", cor[pi]);
 			}
+
+			sprintf(pair_dir, "%s/results_pairs.%d", sArgs.pairs_dir_arg, sArgs.batch_num_arg);
+			CSeekTools::WriteArray(pair_dir, cor);		
+			return 0;
 		}
 
-		vector<float> correlation1D;
-		correlation1D.resize(numActualGenes*numActualGenes);
-		int kk=0;
-		for(i=0; i<numActualGenes; i++){
-			for(j=0; j<numActualGenes; j++){
-				correlation1D[kk] = correlations[i][j];
-				kk++;
-			}
-		}
-		CSeekTools::WriteArray("/memex/qzhu/p1/aggregated_dataset_correlation", correlation1D);
-
-		fprintf(stderr, "Finished creating file\n");
-		getchar();
-*/
-		//============================================================
-
-
-		/*
-		//generate pairs per machine, Step 1================================
-		vector<utype> pairs;
-		int numP = numActualGenes*(numActualGenes-1);
-		pairs.resize(numP);
-		int ki = 0;
-		for(i=0; i<numActualGenes; i++){
-			for(j=i+1; j<numActualGenes; j++){
-				pairs[ki] = i; 
-				ki++;
-				pairs[ki] = j;
-				ki++;
-			}
-		}
-
-		if(ki!=numP){
-			fprintf(stderr, "Cannot continue!\n");
-			return -1;
-		}
-
-		int num_pairs_per_file = (numP / 2) / 49;
+		//=============================================================	
 		
-		ki = 0;
-		vector<utype> pp;
-		pp.resize(num_pairs_per_file*2);
-		char destfile[256];
-		int kj = 0;
-		int ii = 0;
-
-		fprintf(stderr, "Numpairs per file: %d\n", num_pairs_per_file);
-		for(ii=0; ii<numP/2; ii++){
-			if(ii%num_pairs_per_file==0 && ii>0){
-				sprintf(destfile, "/memex/qzhu/p1/pairs_to_do.%d", ki);
-				CSeekTools::WriteArray(destfile, pp);
-				pp.clear();
-				pp.resize(num_pairs_per_file*2);
-				ki++;
-				kj = 0;
-			}
-			pp[kj] = pairs[ii*2];
-			pp[kj+1] = pairs[ii*2+1];
-			kj+=2;
-			if(ii==numP/2-1){
-				sprintf(destfile, "/memex/qzhu/p1/pairs_to_do.%d", ki);
-				pp.resize(kj);
-				CSeekTools::WriteArray(destfile, pp);
-			}
-		}
+		
+		
 		
 
-		fprintf(stderr, "Finished\n");	
-		getchar();
-		//=====================================================================
-		*/
+		//combining pairs, Step 3=================================
 
-		//Load aggregated dataset, Step 4=====================================
-
-		vector<float> correlation1D;
-		CSeekTools::ReadArray("/home/qzhu/Seek/aggregated_dataset_correlation", correlation1D);
-		int pi = 0;
-		for(i=0; i<numActualGenes; i++){
-			for(j=0; j<numActualGenes; j++){
-				correlations[i][j] = correlation1D[pi];
-				pi++;
+		if(sArgs.step_num_arg==3){
+			vector< vector<float> > correlations;
+			correlations.resize(numActualGenes);
+			for(i=0; i<numActualGenes; i++){
+				correlations[i].resize(numActualGenes);
 			}
-		}
-		correlation1D.clear();
+	
+			int max_i = sArgs.num_batch_arg;
+			char file[256];
+			const vector<utype> &allGenes = geneMap->GetAllReverse();
 
+			for(i=0; i<=max_i; i++){
+				vector<utype> pairs;
+				vector<float> cor;
+
+				sprintf(file, "%s/pairs_to_do.%d", sArgs.pairs_dir_arg, i);
+				CSeekTools::ReadArray(file, pairs);
+				sprintf(file, "%s/results_pairs.%d", sArgs.pairs_dir_arg, i);
+				CSeekTools::ReadArray(file, cor);
+
+				int numP = pairs.size()/2;
+				int pi=0;
+
+				for(pi=0; pi<numP; pi++){
+					correlations[pairs[pi*2]][pairs[pi*2+1]] = cor[pi];
+					correlations[pairs[pi*2+1]][pairs[pi*2]] = cor[pi];
+				}
+			}
+
+			/*vector<float> correlation1D;
+			correlation1D.resize(numActualGenes*numActualGenes);
+			int kk=0;
+			for(i=0; i<numActualGenes; i++){
+				for(j=0; j<numActualGenes; j++){
+					correlation1D[kk] = correlations[i][j];
+					kk++;
+				}
+			}
+			CSeekTools::WriteArray(output_dir + "/aggregated_dataset_correlation", correlation1D);
+			fprintf(stderr, "Finished creating file\n");
+			*/
+			//=============================================
+			//Load aggregated dataset, Step 4=====================================
+			/*	
+			vector<float> correlation1D;
+			CSeekTools::ReadArray("/r04/qzhu/Seek/aggregated_dataset_correlation", correlation1D);
+			int pi = 0;
+			for(i=0; i<numActualGenes; i++){
+				for(j=0; j<numActualGenes; j++){
+					correlations[i][j] = correlation1D[pi];
+					pi++;
+				}
+			}
+
+			int ss = sqrt(correlation1D.size());
+
+			fprintf(stderr, "Dimensions of matrix %d\n", ss);
+
+			correlation1D.clear();
+			*/
+
+			//CONVERT TO DAB
+			//START
+			//const vector<utype> &allGenes = geneMap->GetAllReverse();		
+			vector<string> vecstrActualGenes;
+			for(j=0; j<numActualGenes; j++){
+				utype gi = allGenes[j];
+				string str_gi = vecstrGenes[gi];
+				vecstrActualGenes.push_back(str_gi);
+			}
+
+			CDat CD;
+			CD.Open(vecstrActualGenes);
+			for(i=0; i<numActualGenes; i++){
+				for(j=i+1; j<numActualGenes; j++){
+					CD.Set(i, j, CMeta::GetNaN());
+				}
+			}
+
+			for(j=0; j<numActualGenes; j++){
+				utype gi = allGenes[j];
+				string str_gi = vecstrGenes[gi];
+				for(k=0; k<numActualGenes; k++){
+					utype gj = allGenes[k];
+					string str_gj = vecstrGenes[gj];
+					float cor = correlations[j][k];
+					if(cor==-320) continue;
+					CD.Set(j, k, cor);
+				}
+			}
+			string file_out = sArgs.dir_out_arg;
+			file_out = file_out +  "/" + "aggregated_dataset_correlation.dab";
+			CD.Save(file_out.c_str()); 
+			return 0;
+		}
 		//======================================================================
 
 
 		/*
-		const vector<utype> &allGenes = geneMap->GetAllReverse();
+		const vector<ushort> &allGenes = geneMap->GetAllReverse();
 		//start correlation calculations
 		for(i=0; i<numActualGenes; i++){
-			utype g1 = allGenes[i];
+			ushort g1 = allGenes[i];
 			fprintf(stderr, "Gene %d of %d: %d\n", i, numActualGenes, numActualGenes - (i+1));
 
 			#pragma omp parallel for \
@@ -399,8 +453,8 @@ int main(int iArgs, char **aszArgs){
 			private(j) \
 			firstprivate(numActualGenes, g1, i) schedule(dynamic)
 			for(j=i+1; j<numActualGenes; j++){
-				utype tid = omp_get_thread_num();
-				utype g2 = allGenes[j];
+				ushort tid = omp_get_thread_num();
+				ushort g2 = allGenes[j];
 				if(g1==g2){
 					correlations[i][j] = -320; //Null value
 					correlations[j][i] = -320;
@@ -429,8 +483,15 @@ int main(int iArgs, char **aszArgs){
 		CSeekTools::WriteArray("/memex/qzhu/p1/aggregated_dataset_correlation", correlation1D);
 		*/
 
-		//Evaluation Last step==================================================
+
 		
+
+		//Evaluation Last step==================================================
+		//START
+		/*	
+		vector< vector<string> > vecstrAllQuery;
+		if(!CSeekTools::ReadMultipleQueries(sArgs.query_arg, vecstrAllQuery))
+			return -1;
 		const vector<utype> &allGenes = geneMap->GetAllReverse();		
 
 		for(i=0; i<vecstrAllQuery.size(); i++){
@@ -507,10 +568,10 @@ int main(int iArgs, char **aszArgs){
 			
 			//gs.clear();
 			//b.clear();		
-
         }
-	
-		
+		//END
+		//==============================================================
+		*/
 	}
 	
 	

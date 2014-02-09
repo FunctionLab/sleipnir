@@ -19,6 +19,16 @@ option	"convert_dab"		k	"Convert DAB to matrix"
 								flag	off
 option	"limit_hub"			Y	"Limit genes in the DAB to those that are hubby"
 								flag	off
+option	"combine_pcl"		B	"Combine PCL bin files"
+								flag	off
+
+section	"Combine PCL"
+option	"pcl_list"			u	"File containing a list of pcl bin files (including path)"
+								string typestr="filename" default="NA"
+option	"binarize"			b	"Binarize the output matrix"
+								flag	off
+option	"output_pcl"		V	"Output file"
+								string typestr="filename" default="NA"
 
 section "Limit Hub"
 option	"dabinput"			y	"DAB input file"

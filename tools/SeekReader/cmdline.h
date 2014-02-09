@@ -50,6 +50,16 @@ struct gengetopt_args_info
   const char *convert_dab_help; /**< @brief Convert DAB to matrix help description.  */
   int limit_hub_flag;	/**< @brief Limit genes in the DAB to those that are hubby (default=off).  */
   const char *limit_hub_help; /**< @brief Limit genes in the DAB to those that are hubby help description.  */
+  int combine_pcl_flag;	/**< @brief Combine PCL bin files (default=off).  */
+  const char *combine_pcl_help; /**< @brief Combine PCL bin files help description.  */
+  char * pcl_list_arg;	/**< @brief File containing a list of pcl bin files (including path) (default='NA').  */
+  char * pcl_list_orig;	/**< @brief File containing a list of pcl bin files (including path) original value given at command line.  */
+  const char *pcl_list_help; /**< @brief File containing a list of pcl bin files (including path) help description.  */
+  int binarize_flag;	/**< @brief Binarize the output matrix (default=off).  */
+  const char *binarize_help; /**< @brief Binarize the output matrix help description.  */
+  char * output_pcl_arg;	/**< @brief Output file (default='NA').  */
+  char * output_pcl_orig;	/**< @brief Output file original value given at command line.  */
+  const char *output_pcl_help; /**< @brief Output file help description.  */
   char * dabinput_arg;	/**< @brief DAB input file (default='NA').  */
   char * dabinput_orig;	/**< @brief DAB input file original value given at command line.  */
   const char *dabinput_help; /**< @brief DAB input file help description.  */
@@ -143,6 +153,10 @@ struct gengetopt_args_info
   unsigned int convert_aracne_given ;	/**< @brief Whether convert_aracne was given.  */
   unsigned int convert_dab_given ;	/**< @brief Whether convert_dab was given.  */
   unsigned int limit_hub_given ;	/**< @brief Whether limit_hub was given.  */
+  unsigned int combine_pcl_given ;	/**< @brief Whether combine_pcl was given.  */
+  unsigned int pcl_list_given ;	/**< @brief Whether pcl_list was given.  */
+  unsigned int binarize_given ;	/**< @brief Whether binarize was given.  */
+  unsigned int output_pcl_given ;	/**< @brief Whether output_pcl was given.  */
   unsigned int dabinput_given ;	/**< @brief Whether dabinput was given.  */
   unsigned int hub_dab_output_given ;	/**< @brief Whether hub_dab_output was given.  */
   unsigned int aracne_file_given ;	/**< @brief Whether aracne_file was given.  */

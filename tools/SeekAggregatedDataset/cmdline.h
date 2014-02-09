@@ -42,23 +42,39 @@ struct gengetopt_args_info
   char * pcl_dir_arg;	/**< @brief PCL directory.  */
   char * pcl_dir_orig;	/**< @brief PCL directory original value given at command line.  */
   const char *pcl_dir_help; /**< @brief PCL directory help description.  */
+  int step_num_arg;	/**< @brief Step Number (4 steps) (1: separate pairs to batches, 2: calculate Pearson for pairs in each batch (need a batch number), 3: merge Pearson from all batches and output a DAB) (default='0').  */
+  char * step_num_orig;	/**< @brief Step Number (4 steps) (1: separate pairs to batches, 2: calculate Pearson for pairs in each batch (need a batch number), 3: merge Pearson from all batches and output a DAB) original value given at command line.  */
+  const char *step_num_help; /**< @brief Step Number (4 steps) (1: separate pairs to batches, 2: calculate Pearson for pairs in each batch (need a batch number), 3: merge Pearson from all batches and output a DAB) help description.  */
   char * input_arg;	/**< @brief Gene mapping file.  */
   char * input_orig;	/**< @brief Gene mapping file original value given at command line.  */
   const char *input_help; /**< @brief Gene mapping file help description.  */
   char * query_arg;	/**< @brief Query file.  */
   char * query_orig;	/**< @brief Query file original value given at command line.  */
   const char *query_help; /**< @brief Query file help description.  */
-  char * dir_out_arg;	/**< @brief Output directory.  */
-  char * dir_out_orig;	/**< @brief Output directory original value given at command line.  */
-  const char *dir_out_help; /**< @brief Output directory help description.  */
+  int num_batch_arg;	/**< @brief Number of batches to split pairs to (for step 1) (default='10').  */
+  char * num_batch_orig;	/**< @brief Number of batches to split pairs to (for step 1) original value given at command line.  */
+  const char *num_batch_help; /**< @brief Number of batches to split pairs to (for step 1) help description.  */
+  char * pairs_dir_arg;	/**< @brief Pairs directory (for steps 1, 2). Pearson for the pairs will also be stored here..  */
+  char * pairs_dir_orig;	/**< @brief Pairs directory (for steps 1, 2). Pearson for the pairs will also be stored here. original value given at command line.  */
+  const char *pairs_dir_help; /**< @brief Pairs directory (for steps 1, 2). Pearson for the pairs will also be stored here. help description.  */
+  int batch_num_arg;	/**< @brief Batch number (for step 2) (default='0').  */
+  char * batch_num_orig;	/**< @brief Batch number (for step 2) original value given at command line.  */
+  const char *batch_num_help; /**< @brief Batch number (for step 2) help description.  */
+  char * dir_out_arg;	/**< @brief DAB output directory (for step 3).  */
+  char * dir_out_orig;	/**< @brief DAB output directory (for step 3) original value given at command line.  */
+  const char *dir_out_help; /**< @brief DAB output directory (for step 3) help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int pcl_given ;	/**< @brief Whether pcl was given.  */
   unsigned int pcl_list_given ;	/**< @brief Whether pcl_list was given.  */
   unsigned int pcl_dir_given ;	/**< @brief Whether pcl_dir was given.  */
+  unsigned int step_num_given ;	/**< @brief Whether step_num was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
+  unsigned int num_batch_given ;	/**< @brief Whether num_batch was given.  */
+  unsigned int pairs_dir_given ;	/**< @brief Whether pairs_dir was given.  */
+  unsigned int batch_num_given ;	/**< @brief Whether batch_num was given.  */
   unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
