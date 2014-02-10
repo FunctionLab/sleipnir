@@ -114,6 +114,7 @@ public:
 	 */
 	static bool CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 		const float &rate, const float &percent_required, const bool &bsquareZ,
+		const bool bNegativeCor,
 		vector<utype> *rrank, const CSeekQuery *goldStd = NULL);
 
 	/*!
@@ -148,7 +149,7 @@ public:
 	 * A significance p-value is calculated for this gene, and \a -log(p) values are stored in master_rank. 
 	 */
 	static bool OrderStatisticsRankAggregation(const utype&, const utype&,
-		utype**, const vector<utype> &, vector<float>&, const utype&);
+		utype**, const vector<utype> &, vector<float>&, const utype&, const bool);
 	static bool OrderStatisticsPreCompute();
 
 
@@ -188,10 +189,10 @@ public:
 	 */
 	static bool OneGeneWeighting(CSeekQuery&, 
 		CSeekDataset&, const float&, const float&, const bool&, 
-		vector<utype>*, const CSeekQuery*);
+		vector<utype>*, const CSeekQuery*, const bool);
 
 	static bool AverageWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
-		const float &percent_required, const bool &bSquareZ, float &w);
+		const float &percent_required, const bool &bSquareZ, float &w, const bool);
 };
 
 

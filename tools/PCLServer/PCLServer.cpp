@@ -32,7 +32,7 @@
 
 #define BACKLOG 10   // how many pending connections queue will hold
 char *PORT;
-int NUM_DSET_MEMORY = 2000;
+int NUM_DSET_MEMORY = 100;
 string pcl_input_dir;
 
 CPCL **pcl;

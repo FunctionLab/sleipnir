@@ -174,7 +174,12 @@ bool CSeekWeighter::OrderStatisticsPreCompute(){
 
 bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 	const utype &iGenes, utype **rank_d, const vector<utype> &counts,
-	vector<float> &master_rank, const utype &numThreads){
+	vector<float> &master_rank, const utype &numThreads, const bool bNegativeCor){
+
+	float DEFAULT_NA = -320;
+	if(bNegativeCor){
+		DEFAULT_NA = 320;
+	}
 
 	//vector<float> precompute;
 	//CSeekTools::ReadArray("/tmp/order_stats.binomial.bin", precompute);
@@ -199,8 +204,6 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 	float **rank_f =
 		CSeekTools::Init2DArray(iDatasets, iGenes, (float) 1.1);
 
-	const float DEFAULT_NULL = -320;
-
 	for(j=0; j<iDatasets; j++){
 		vector<AResult> this_d;
 		utype numNonZero = 0;
@@ -218,7 +221,11 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 			this_d[kk].f = rank_d[j][k];
 			kk++;
 		}
-		sort(this_d.begin(), this_d.end());
+		if(bNegativeCor){
+			sort(this_d.begin(), this_d.end(), Ascending());
+		}else{
+			sort(this_d.begin(), this_d.end());
+		}
 		for(k=0; k<numNonZero; k++){
 			rank_f[j][this_d[k].i] =
 				(float) (k+1) / (float) numNonZero;
@@ -254,7 +261,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 		gsl_permutation *perm = perms[tid];
 		gsl_permutation *rk = rks[tid];
 
-		master_rank[k] = DEFAULT_NULL;
+		master_rank[k] = DEFAULT_NA;
 		if(counts[k]<(int)(0.5*iDatasets)) continue;
 
 		for(dd=0; dd<iDatasets; dd++)
@@ -263,7 +270,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 		gsl_sort_vector_float_index(perm, gs);
 		gsl_permutation_inverse(rk, perm);
 
-		float max = DEFAULT_NULL;
+		float max = DEFAULT_NA;
 		int max_rank = -1;
 		float max_p = -1;
 		for(dd=0; dd<iDatasets; dd++){
@@ -286,14 +293,14 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 			*/
 			//end=================================
 
-			if(isinf(tmp)) tmp = DEFAULT_NULL;
+			if(isinf(tmp)) tmp = DEFAULT_NA;
 			if(tmp>max){
 				max = tmp;
 				max_rank = rrk;
 				max_p = p;
 			}
 		}
-		if(max!=DEFAULT_NULL){
+		if(max!=DEFAULT_NA){
 			master_rank[k] = max;
 			//fprintf(stderr, "rank %.5f %.5f\n", max_p, max);
 		}
@@ -321,7 +328,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery, 
 	CSeekDataset &sDataset, const float &rate, 
 	const float &percent_required, const bool &bSquareZ,
-	vector<utype> *rrank, const CSeekQuery *goldStd){
+	vector<utype> *rrank, const CSeekQuery *goldStd, const bool bNegativeCor){
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
@@ -378,7 +385,7 @@ bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery,
 		bool ret = LinearCombine(rank, query, sDataset,
 			MIN_QUERY_REQUIRED, bSquareZ);
 		ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
-			rank, w, is_query, is_gold, *mapG, &ar, TOP);
+			rank, w, is_query, is_gold, *mapG, &ar, bNegativeCor, TOP);
 		if(!ret) sDataset.SetCVWeight(0, -1);
 		else sDataset.SetCVWeight(0, w);
 	}
@@ -388,7 +395,8 @@ bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery,
 }
 
 bool CSeekWeighter::AverageWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
-	const float &percent_required, const bool &bSquareZ, float &w){
+	const float &percent_required, const bool &bSquareZ, float &w, 
+	const bool bNegativeCor){
 
 	CSeekIntIntMap *mapQ = sDataset.GetQueryMap();
 	if(mapQ==NULL) return true;
@@ -446,11 +454,17 @@ bool CSeekWeighter::AverageWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 		w /= (float) pairs;
 		w /= (float) 640;
 	}
+
+	if(bNegativeCor){
+		w = w * -1.0;
+	}
+
 	return true;
 }
 
 bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 	const float &rate, const float &percent_required, const bool &bSquareZ,
+	const bool bNegativeCor,
 	vector<utype> *rrank, const CSeekQuery *goldStd){
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
@@ -521,7 +535,7 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 			bool ret = LinearCombine(rank, cv_query, sDataset,
 				MIN_QUERY_REQUIRED, bSquareZ);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
-				rank, w, is_query_cross, is_gold, *mapG, &ar, TOP);
+				rank, w, is_query_cross, is_gold, *mapG, &ar, bNegativeCor, TOP);
 			//fprintf(stderr, "Weight %.5f\n", w);
 			//ret = CSeekPerformanceMeasure::AveragePrecision(
 			//	rank, w, is_query_cross, is_gold, *mapG, &ar);

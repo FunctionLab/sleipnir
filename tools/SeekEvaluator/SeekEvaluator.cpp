@@ -358,7 +358,15 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 	vector<AResultFloat> master_rank;
 	utype i, j;
 	float nan = sArgs.nan_arg;
+	if(sArgs.neg_cor_flag==1 && nan==-320){
+		nan = 320;
+	}
 	result.clear();
+
+	bool bNegativeCor = false;
+	if(sArgs.neg_cor_flag==1){
+		bNegativeCor = true;
+	}
 
 	vector<char> *q = new vector<char>[listSize];
 	for(i=0; i<listSize; i++){
@@ -397,7 +405,11 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 			for(j=0; j<sortedGenes[0].size(); j++)
 				master_score[j].f /= (float)listSize;
 
-			sort(master_score.begin(), master_score.end());
+			if(bNegativeCor){
+				sort(master_score.begin(), master_score.end(), AscendingFloat());
+			}else{		
+				sort(master_score.begin(), master_score.end());
+			}
 
 			master = &master_score;
 		}
@@ -428,7 +440,11 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 			for(j=0; j<sortedGenes[0].size(); j++)
 				master_rank[j].f /= (float) listSize;
 
-			sort(master_rank.begin(), master_rank.end());
+			if(bNegativeCor){
+				sort(master_score.begin(), master_score.end(), AscendingFloat());
+			}else{		
+				sort(master_score.begin(), master_score.end());
+			}
 
 			master = &master_rank;
 
@@ -477,9 +493,11 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 				sortedGenes[i][j].f = nan;
 			}
 		}
-
-		sort(sortedGenes[i].begin(), sortedGenes[i].end());
-
+		if(bNegativeCor){
+			sort(sortedGenes[i].begin(), sortedGenes[i].end(), AscendingFloat());
+		}else{
+			sort(sortedGenes[i].begin(), sortedGenes[i].end());
+		}
 		if(met!=PR_ALL){
 			float fEval;
 			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes[i],
@@ -515,7 +533,11 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 		for(i=0; i<listSize; i++){
 			GetRandom(rnd, sortedGenes[i], randomScores[i], excludeGene[i], 
 				includeGene[i], queryGeneID[i], nan);
-			sort(randomScores[i].begin(), randomScores[i].end());
+			if(bNegativeCor){
+				sort(randomScores[i].begin(), randomScores[i].end(), AscendingFloat());
+			}else{
+				sort(randomScores[i].begin(), randomScores[i].end());
+			}
 			if(met!=PR_ALL){
 				float fEval;
 				bool ret = EvaluateOneQuery(sArgs, met, randomScores[i],
@@ -740,6 +762,14 @@ int main( int iArgs, char** aszArgs ) {
 		//	geneScores.end());
 
 		float nan = sArgs.nan_arg;
+		if(sArgs.neg_cor_flag==1 && nan==-320){
+			nan = 320;
+		}
+		bool bNegativeCor = false;
+		if(sArgs.neg_cor_flag==1){
+			bNegativeCor = true;
+		}
+
 		vector<AResultFloat> sortedGenes;
 		sortedGenes.resize(geneScores.size());
 		for(i=0; i<sortedGenes.size(); i++){
@@ -752,9 +782,15 @@ int main( int iArgs, char** aszArgs ) {
 		for(i=0; i<queryGeneID.size(); i++)
 			sortedGenes[queryGeneID[i]].f = nan;
 
-		sort(sortedGenes.begin(), sortedGenes.end());
-
+		if(bNegativeCor){
+			sort(sortedGenes.begin(), sortedGenes.end(), AscendingFloat());
+		}else{
+			sort(sortedGenes.begin(), sortedGenes.end());
+		}
 		if(sArgs.p_value_flag==1){
+			if(bNegativeCor){
+				fprintf(stderr, "WARNING: Negative correlation enabled! Ensure null distributions also use negative correlations!\n");
+			}
 			string random_directory = sArgs.random_dir_arg;
 			int num_random = sArgs.random_num_arg;
 			int ii, jj;
@@ -781,7 +817,11 @@ int main( int iArgs, char** aszArgs ) {
 					sortedRandom[jj].i = jj;
 					sortedRandom[jj].f = randomScores[jj];
 				}
-				sort(sortedRandom.begin(), sortedRandom.end());
+				if(bNegativeCor){
+					sort(sortedRandom.begin(), sortedRandom.end(), AscendingFloat());
+				}else{
+					sort(sortedRandom.begin(), sortedRandom.end());
+				}
 				for(jj=0; jj<randomScores.size(); jj++){
 					randomRank[sortedRandom[jj].i][ii] = jj;
 					randomSc[sortedRandom[jj].i][ii] = sortedRandom[jj].f;
@@ -790,7 +830,11 @@ int main( int iArgs, char** aszArgs ) {
 
 			for(jj=0; jj<geneScores.size(); jj++){
 				sort(randomRank[jj].begin(), randomRank[jj].end());
-				sort(randomSc[jj].begin(), randomSc[jj].end(), std::greater<float>());
+				if(bNegativeCor){
+					sort(randomSc[jj].begin(), randomSc[jj].end(), std::less<float>());
+				}else{
+					sort(randomSc[jj].begin(), randomSc[jj].end(), std::greater<float>());
+				}
 				geneRank[sortedGenes[jj].i] = jj;
 			}
 

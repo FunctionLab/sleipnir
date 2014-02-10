@@ -169,6 +169,7 @@ public:
 		const bool bLogit = false, const float fCutOff = -9999, 
 		const float fPercentQueryRequired = 0, const float fPercentGenomeRequired = 0,
 		const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
+		const bool bNegativeCor = false,
 		gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
 
     /*!
@@ -223,6 +224,7 @@ public:
 		const bool bLogit = false, const float fCutOff = -9999, 
 		const float fPercentQueryRequired = 0, const float fPercentGenomeRequired = 0,
 		const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
+		const bool bNegativeCor = false,
 		gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
 
     /*!
@@ -250,7 +252,8 @@ public:
 		const string &search_dset, CSeekCentral* src, const int iClient,
 		const float query_min_required = 0, const float genome_min_required = 0,
 		const enum CSeekDataset::DistanceMeasure = CSeekDataset::Z_SCORE,
-		const bool bSubtractGeneAvg = true, const bool bNormPlatform = false);
+		const bool bSubtractGeneAvg = true, const bool bNormPlatform = false,
+		const bool bNegativeCor = false);
 
 	/*!
 	 * \brief Run Seek with the cross-validated dataset weighting
@@ -489,9 +492,12 @@ private:
 	int m_iClient;
 	bool m_bEnableNetwork;
 	//bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
+	bool m_bNegativeCor;
 
 	vector<CSeekDBSetting*> m_vecDBSetting; //DBSetting
 	bool m_useNibble;
+
+	float m_DEFAULT_NA;
 };
 
 

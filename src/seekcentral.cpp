@@ -73,6 +73,8 @@ CSeekCentral::CSeekCentral(){
 	m_bOutputText = false;
 	m_bSquareZ = false;
 	//m_bSharedDB = false;
+	m_bNegativeCor = false;
+	m_DEFAULT_NA = -320;
 
 	m_vecDBSetting.clear();
 	m_useNibble = false;
@@ -194,6 +196,7 @@ CSeekCentral::~CSeekCentral(){
 
 	m_vecDBSetting.clear();
 	m_useNibble = false;
+	m_bNegativeCor = false;
 }
 
 bool CSeekCentral::CalculateRestart(){
@@ -251,7 +254,8 @@ bool CSeekCentral::Initialize(
 	const string &search_dset, CSeekCentral *src, const int iClient,
 	const float query_min_required, const float genome_min_required,
 	const enum CSeekDataset::DistanceMeasure eDistMeasure,
-	const bool bSubtractGeneAvg, const bool bNormPlatform){
+	const bool bSubtractGeneAvg, const bool bNormPlatform, 
+	const bool bNegativeCor){
 
 	fprintf(stderr, "Request received from client\n");
 
@@ -268,6 +272,13 @@ bool CSeekCentral::Initialize(
 	m_bNormPlatform = bNormPlatform;
 	m_bLogit = src->m_bLogit;
 	m_eDistMeasure = eDistMeasure;
+
+	m_bNegativeCor = bNegativeCor;
+	if(m_bNegativeCor){
+		m_DEFAULT_NA = 320;
+	}else{
+		m_DEFAULT_NA = -320;
+	}
 
 	m_bOutputWeightComponent = src->m_bOutputWeightComponent;
 	m_bSimulateWeight = src->m_bSimulateWeight;
@@ -549,6 +560,7 @@ bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 	const bool bLogit, const float fCutOff, const float fPercentQueryRequired,
 	const float fPercentGenomeRequired,
 	const bool bSquareZ, const bool bRandom, const int iNumRandom,
+	const bool bNegativeCor,
 	gsl_rng *rand, const bool useNibble, const int numThreads){
 
 	m_maxNumDB = buffer;
@@ -558,6 +570,13 @@ bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 	m_fPercentQueryAfterScoreCutOff = fPercentQueryRequired;
 	m_fPercentGenomeRequired = fPercentGenomeRequired; 
 	m_bSquareZ = bSquareZ;
+
+	m_bNegativeCor = bNegativeCor;
+	if(m_bNegativeCor){
+		m_DEFAULT_NA = 320;
+	}else{
+		m_DEFAULT_NA = -320;
+	}
 
 	m_bOutputWeightComponent = bOutputWeightComponent;
 	m_bSimulateWeight = bSimulateWeight;
@@ -691,13 +710,15 @@ bool CSeekCentral::Initialize(
 	const bool bLogit, const float fCutOff, 
 	const float fPercentQueryRequired, const float fPercentGenomeRequired,
 	const bool bSquareZ, const bool bRandom, const int iNumRandom,
+	const bool bNegativeCor,
 	gsl_rng *rand, const bool useNibble, const int numThreads){
 
 	if(!CSeekCentral::Initialize(vecDBSetting, buffer, to_output_text,
 		bOutputWeightComponent, bSimulateWeight, dist_measure,
 		bSubtractAvg, bNormPlatform, bLogit, fCutOff, 
 		fPercentQueryRequired, fPercentGenomeRequired,
-		bSquareZ, bRandom, iNumRandom, rand, useNibble, numThreads)){
+		bSquareZ, bRandom, iNumRandom, bNegativeCor,
+		rand, useNibble, numThreads)){
 		return false;
 	}
 
@@ -860,19 +881,15 @@ bool CSeekCentral::FilterResults(const utype &iSearchDatasets){
 
 	for(j=0; j<m_iGenes; j++){
 		if(m_counts[j]<(int)(0.5*iSearchDatasets))
-			m_master_rank[j] = -320;
+			m_master_rank[j] = m_DEFAULT_NA;
 		else if(m_sum_weight[j]==0)
-			m_master_rank[j] = -320;
+			m_master_rank[j] = m_DEFAULT_NA;
 		else{
 			m_master_rank[j] =
-				//(m_master_rank[j] / m_sum_weight[j] - 320) / 100.0;
 				(m_master_rank[j] - 320 * m_sum_weight[j]) / 100.0 / m_sum_weight[j];
-				//(m_master_rank[j] - 320 * m_sum_weight[j]) / 100.0 / sqrt(m_sum_sq_weight[j]);
 			if(m_eDistMeasure==CSeekDataset::CORRELATION){
 				m_master_rank[j] = m_master_rank[j] / 3.0;
 			}
-			//m_master_rank[j] = m_master_rank[j];
-			//m_master_rank[j] = (m_master_rank[j] / iSearchDatasets - 320) / 100.0;
 		}
 		if(DEBUG) fprintf(stderr, "Gene %d %.5f\n", j, m_master_rank[j]);
 	}
@@ -956,7 +973,7 @@ bool CSeekCentral::Write(const utype &i){
 		vector<AResultFloat> wd;
 		Sort(wd);
 		for(j=0; j<2000; j++){
-			if(wd[j].f==-320) break;
+			if(wd[j].f==m_DEFAULT_NA) break;
 			vecOutput[1].push_back(m_vecstrGenes[wd[j].i]);
 		}
 		CSeekTools::Write2DArrayText(acBuffer, vecOutput);
@@ -1124,11 +1141,11 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 				if(current_sm==CV)
 					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
 						m_fPercentQueryAfterScoreCutOff, m_bSquareZ,
-						&m_rank_threads[tid]);
+						m_bNegativeCor, &m_rank_threads[tid]);
 				else
 					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
 						m_fPercentQueryAfterScoreCutOff, m_bSquareZ,
-						&m_rank_threads[tid], &customGoldStd);
+						m_bNegativeCor, &m_rank_threads[tid], &customGoldStd);
 
 				if( (w = m_vc[d]->GetDatasetSumWeight())==-1){
 					if(DEBUG) fprintf(stderr, "Bad weight\n");
@@ -1146,7 +1163,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 			}
 			else if(current_sm==AVERAGE_Z){
 				CSeekWeighter::AverageWeighting(query, *m_vc[d],
-					m_fPercentQueryAfterScoreCutOff, m_bSquareZ, w);
+					m_fPercentQueryAfterScoreCutOff, m_bSquareZ, w, m_bNegativeCor);
 				if(w==-1) continue;
 			}
 			else if(current_sm==EQUAL && redoWithEqual==0){
@@ -1162,7 +1179,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 				//calculate reported weight here!
 				CSeekWeighter::OneGeneWeighting(query, *m_vc[d], 0.95,
 					m_fPercentQueryAfterScoreCutOff, m_bSquareZ,
-					&m_rank_threads[tid], &equalWeightGold);
+					&m_rank_threads[tid], &equalWeightGold, m_bNegativeCor);
 				report_w = m_vc[d]->GetDatasetSumWeight();
 			}
 			//============================================
@@ -1233,7 +1250,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 			FilterResults(iSearchDatasets);
 		}else{
 			CSeekWeighter::OrderStatisticsRankAggregation(iSearchDatasets,
-				m_iGenes, m_rank_d, m_counts, m_master_rank, m_numThreads);
+				m_iGenes, m_rank_d, m_counts, m_master_rank, m_numThreads, m_bNegativeCor);
 			CSeekTools::Free2DArray(m_rank_d);
 			m_rank_d = NULL;
 		}
@@ -1405,7 +1422,7 @@ bool CSeekCentral::CopyTopGenes(CSeekQuery &csq,
 	utype i, j;
 	vector<utype> topGenes;
 	for(i=0; i<top; i++){
-		if(src[i].f==-320) continue;
+		if(src[i].f==m_DEFAULT_NA) continue;
 		topGenes.push_back(src[i].i);
 	}
 	if(topGenes.size()==0){
@@ -1420,7 +1437,7 @@ bool CSeekCentral::SetQueryScoreNull(const CSeekQuery &csq){
 	utype j;
 	const vector<utype> &query = csq.GetQuery();
 	for(j=0; j<query.size(); j++){
-		m_master_rank[query[j]] = -320;
+		m_master_rank[query[j]] = m_DEFAULT_NA;
 	}
 	return true;	
 }
