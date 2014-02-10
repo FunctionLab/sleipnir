@@ -403,13 +403,14 @@ int main( int iArgs, char** aszArgs ) {
 		string strOutputDir;
 
 		//search parameters
-		string strSearchParameter; 
+		string strSearchParameter;
 		//format: _ delimited		
 		//[0]: search_method ("RBP", "OrderStatistics", or "EqualWeighting") 
 		//[1]: rbp_p
 		//[2]: minimum fraction of query required
 		//[3]: minimum fraction of genome required
 		//[4]: distance measure ("Correlation", "Zscore", or "ZscoreHubbinessCorrected")
+		//[5]: correlation sign ("positive", "negative")
 
 		if(CSeekNetwork::Receive(new_fd, strSearchDataset)==-1){
 			fprintf(stderr, "Error receiving from client!\n");
@@ -437,7 +438,7 @@ int main( int iArgs, char** aszArgs ) {
 		thread_arg[d].genome_fraction_required = 
 			atof(searchParameterTokens[3].c_str());
 		thread_arg[d].distanceMeasure = searchParameterTokens[4];
-
+		thread_arg[d].correlationSign = searchParameterTokens[5];
 		//=========================================================
 
 		thread_arg[d].threadid = d;
