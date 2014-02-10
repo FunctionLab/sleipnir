@@ -29,6 +29,7 @@ namespace Sleipnir {
 //correlate with A in order to count A's query score
 bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 	const vector<utype> &cv_query, CSeekDataset &sDataset,
+	const bool bNegativeCor,
 	const utype &MIN_REQUIRED, const bool &bSquareZ){
 
 	CSeekIntIntMap *mapG = sDataset.GetGeneMap();
@@ -46,8 +47,12 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 	utype q_size = cv_query.size();
 	utype **f = sDataset.GetDataMatrix();
 
-	//rank.resize(iNumGenes);
-	CSeekTools::InitVector(rank, iNumGenes, (utype) 0);
+	utype DEFAULT_NA = 0;
+	if(bNegativeCor){
+		DEFAULT_NA = 640;
+	}
+
+	CSeekTools::InitVector(rank, iNumGenes, (utype) DEFAULT_NA);
 
 	/* as long as rank[g] does not overflow, due to too many queries, we are fine
 	 * should control query size to be <100. */
@@ -124,7 +129,7 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 				if(totNonZero >= MIN_REQUIRED)
 					(*iter_g) = tmpScore / totNonZero;
 				else
-					(*iter_g) = 0;
+					(*iter_g) = DEFAULT_NA;
 			}
 		}
 		else{
@@ -140,7 +145,7 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 				if(totNonZero >= MIN_REQUIRED)
 					(*iter_g) = tmpScore / totNonZero;
 				else
-					(*iter_g) = 0;
+					(*iter_g) = DEFAULT_NA;
 			}
 		}
 	}
@@ -176,10 +181,10 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 	const utype &iGenes, utype **rank_d, const vector<utype> &counts,
 	vector<float> &master_rank, const utype &numThreads, const bool bNegativeCor){
 
-	float DEFAULT_NA = -320;
-	if(bNegativeCor){
-		DEFAULT_NA = 320;
-	}
+	//bNegativeCor: 
+	//do integration normally (ie based on positive correlations)
+	//then reverse the final ranking to get negative correlated gene ranking
+	float DEFAULT_NA = -320; //CAUTION!!
 
 	//vector<float> precompute;
 	//CSeekTools::ReadArray("/tmp/order_stats.binomial.bin", precompute);
@@ -221,11 +226,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 			this_d[kk].f = rank_d[j][k];
 			kk++;
 		}
-		if(bNegativeCor){
-			sort(this_d.begin(), this_d.end(), Ascending());
-		}else{
-			sort(this_d.begin(), this_d.end());
-		}
+		sort(this_d.begin(), this_d.end());
 		for(k=0; k<numNonZero; k++){
 			rank_f[j][this_d[k].i] =
 				(float) (k+1) / (float) numNonZero;
@@ -316,6 +317,18 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 	rks.clear();
 	gss.clear();
 
+
+	//REVERSE FINAL RANKING IF SORTING BY NEGATIVE CORRELATIONS
+	if(bNegativeCor){
+		DEFAULT_NA = 320;
+		float max = -320;
+		for(k=0; k<iGenes; k++){
+			if(master_rank[k]==max){
+				master_rank[k] = DEFAULT_NA;
+			}
+		}
+	}
+
 	//gsl_permutation_free(perm);
 	//gsl_permutation_free(rk);
 	//gsl_vector_float_free(gs);
@@ -383,7 +396,7 @@ bool CSeekWeighter::OneGeneWeighting(CSeekQuery &sQuery,
 		const utype MIN_QUERY_REQUIRED =
 			max((utype) 1, (utype) (percent_required * query.size()));
 		bool ret = LinearCombine(rank, query, sDataset,
-			MIN_QUERY_REQUIRED, bSquareZ);
+			bNegativeCor, MIN_QUERY_REQUIRED, bSquareZ);
 		ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
 			rank, w, is_query, is_gold, *mapG, &ar, bNegativeCor, TOP);
 		if(!ret) sDataset.SetCVWeight(0, -1);
@@ -532,7 +545,7 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 			float w = 0;
 			const utype MIN_QUERY_REQUIRED =
 				max((utype) 1, (utype) (percent_required * cv_query.size()));
-			bool ret = LinearCombine(rank, cv_query, sDataset,
+			bool ret = LinearCombine(rank, cv_query, sDataset, bNegativeCor,
 				MIN_QUERY_REQUIRED, bSquareZ);
 			ret = CSeekPerformanceMeasure::RankBiasedPrecision(rate,
 				rank, w, is_query_cross, is_gold, *mapG, &ar, bNegativeCor, TOP);

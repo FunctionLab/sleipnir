@@ -72,7 +72,7 @@ CSeekCentral::CSeekCentral(){
 	m_bSimulateWeight = false;
 	m_bOutputText = false;
 	m_bSquareZ = false;
-	//m_bSharedDB = false;
+
 	m_bNegativeCor = false;
 	m_DEFAULT_NA = -320;
 
@@ -165,30 +165,19 @@ CSeekCentral::~CSeekCentral(){
 	m_vecstrPlatform.clear();
 
 	if(m_vecDB.size()!=0){
-		//if(!m_bSharedDB){
 		for(i=0; i<m_vecDB.size(); i++){
 			delete m_vecDB[i];
 			m_vecDB[i] = NULL;
 		}
-		//}
-		//for(i=0; i<m_vecDB.size(); i++)
-		//	m_vecDB[i] = NULL;
 		m_vecDB.clear();
 	}
 
-	/*if(m_DB!=NULL){
-		if(!m_bSharedDB){
-			delete m_DB;
-		}
-		m_DB = NULL;
-	}*/
 	m_iDatasets = 0;
 	m_iGenes = 0;
 	m_numThreads = 0;
 	m_mapLoadTime.clear();
 	m_output_dir = "";
 	DEBUG = false;
-	//m_bSharedDB = false;
 
 	for(i=0; i<m_vecDBSetting.size(); i++)
 		if(m_vecDBSetting[i]!= NULL)
@@ -273,6 +262,7 @@ bool CSeekCentral::Initialize(
 	m_bLogit = src->m_bLogit;
 	m_eDistMeasure = eDistMeasure;
 
+	//if negative correlation, then need to use a different null value
 	m_bNegativeCor = bNegativeCor;
 	if(m_bNegativeCor){
 		m_DEFAULT_NA = 320;
@@ -906,7 +896,11 @@ bool CSeekCentral::Sort(vector<AResultFloat> &final){
 		final[j].f = m_master_rank[j];
 	}
 	if(DEBUG) fprintf(stderr, "Begin Sorting genes\n");
-	sort(final.begin(), final.end());
+	if(m_bNegativeCor){
+		sort(final.begin(), final.end(), AscendingFloat());
+	}else{
+		sort(final.begin(), final.end());
+	}
 	return true;
 }
 
@@ -1141,11 +1135,11 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 				if(current_sm==CV)
 					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
 						m_fPercentQueryAfterScoreCutOff, m_bSquareZ,
-						m_bNegativeCor, &m_rank_threads[tid]);
+						false, &m_rank_threads[tid]); //weighting always based on positive co-expression
 				else
 					CSeekWeighter::CVWeighting(query, *m_vc[d], *RATE,
 						m_fPercentQueryAfterScoreCutOff, m_bSquareZ,
-						m_bNegativeCor, &m_rank_threads[tid], &customGoldStd);
+						false, &m_rank_threads[tid], &customGoldStd); //weighting based on positive correlation
 
 				if( (w = m_vc[d]->GetDatasetSumWeight())==-1){
 					if(DEBUG) fprintf(stderr, "Bad weight\n");
@@ -1163,7 +1157,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 			}
 			else if(current_sm==AVERAGE_Z){
 				CSeekWeighter::AverageWeighting(query, *m_vc[d],
-					m_fPercentQueryAfterScoreCutOff, m_bSquareZ, w, m_bNegativeCor);
+					m_fPercentQueryAfterScoreCutOff, m_bSquareZ, w, false); //weighting based on positive correlation
 				if(w==-1) continue;
 			}
 			else if(current_sm==EQUAL && redoWithEqual==0){
@@ -1189,7 +1183,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 			const utype MIN_REQUIRED = max((utype) 1, (utype) (
 				m_fPercentQueryAfterScoreCutOff * this_q.size()));
 			CSeekWeighter::LinearCombine(m_rank_normal_threads[tid], this_q,
-				*m_vc[d], MIN_REQUIRED, m_bSquareZ);
+				*m_vc[d], m_bNegativeCor, MIN_REQUIRED, m_bSquareZ);
 
 			if(DEBUG) fprintf(stderr,
 				"Adding contribution of dataset %d to master ranking: %.5f\n", d, w);
@@ -1317,6 +1311,11 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 	
 		//random-ranking case =========================
 		if(m_bRandom){
+			if(m_bNegativeCor){
+				fprintf(stderr, "Error! Random-ranking case does not support Negative Correlations!\n");
+				continue;
+			}
+
 			sort(m_master_rank.begin(), m_master_rank.end(), greater<float>());
 			sort(weight.begin(), weight.end(), greater<float>());
 			copy(m_master_rank.begin(), m_master_rank.end(), vecRandScore[l].begin());

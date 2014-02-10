@@ -72,7 +72,7 @@ public:
 	/*cv_query must be present in sDataset */
 	static bool LinearCombine(vector<utype> &rank,
 		const vector<utype> &cv_query, CSeekDataset &sDataset,
-		const utype &, const bool &);
+		const bool, const utype &, const bool &);
 
 	/*!
 	 * \brief
