@@ -576,8 +576,8 @@ size_t CBNServer::ProcessEdges( const vector<unsigned char>& vecbMessage, size_t
 
 
 size_t CBNServer::ProcessLearning( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
-	size_t		i, j, k, iStart, iAnswer, iVal, iCount, iDatasets;
-	uint32_t	iGene, iGenes, iChunk, iSize, iGeneOffset, iGeneOne, iGeneTwo;
+	size_t		i, j, k, iStart, iAnswer, iVal, iCount;
+	uint32_t	iGene, iGenes, iChunk, iSize, iGeneOffset, iGeneOne, iGeneTwo, iDatasets;
 	unsigned char	c;
 	float	logratio;
 	vector<unsigned char> vecbData;
@@ -598,15 +598,15 @@ size_t CBNServer::ProcessLearning( const vector<unsigned char>& vecbMessage, siz
 	vecpMatRatios.resize(iDatasets);
 	for ( i = 0; i < GetDatabase().GetDatasets(); i++ ) {
 	    vecpMatCounts[i] = new CCountMatrix();
-	    vecpMatCounts[i]->Initialize( GetBins()[i], 2 );
+	    vecpMatCounts[i]->Initialize( 7, 2 );
 	    vecpMatCounts[i]->Clear();
 
 	    vecpMatProbs[i] = new CFullMatrix<float>();
-	    vecpMatProbs[i]->Initialize( GetBins()[i], 2 );
+	    vecpMatProbs[i]->Initialize( 7, 2 );
 	    vecpMatProbs[i]->Clear();
 
 	    vecpMatRatios[i] = new CFullMatrix<float>();
-	    vecpMatRatios[i]->Initialize( 1, GetBins()[i] );
+	    vecpMatRatios[i]->Initialize( 1, 7 );
 	    vecpMatRatios[i]->Clear();
 	}
 
