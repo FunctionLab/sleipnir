@@ -598,15 +598,15 @@ size_t CBNServer::ProcessLearning( const vector<unsigned char>& vecbMessage, siz
 	vecpMatRatios.resize(iDatasets);
 	for ( i = 0; i < GetDatabase().GetDatasets(); i++ ) {
 	    vecpMatCounts[i] = new CCountMatrix();
-	    vecpMatCounts[i]->Initialize( 7, 2 );
+	    vecpMatCounts[i]->Initialize( GetBins()[i], 2 );
 	    vecpMatCounts[i]->Clear();
 
 	    vecpMatProbs[i] = new CFullMatrix<float>();
-	    vecpMatProbs[i]->Initialize( 7, 2 );
+	    vecpMatProbs[i]->Initialize( GetBins()[i], 2 );
 	    vecpMatProbs[i]->Clear();
 
 	    vecpMatRatios[i] = new CFullMatrix<float>();
-	    vecpMatRatios[i]->Initialize( 1, 7 );
+	    vecpMatRatios[i]->Initialize( 1, GetBins()[i] );
 	    vecpMatRatios[i]->Clear();
 	}
 
