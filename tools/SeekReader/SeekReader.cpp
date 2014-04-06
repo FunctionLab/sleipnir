@@ -68,6 +68,94 @@ int main( int iArgs, char** aszArgs ) {
 	for(i=0; i<vecstrGenes.size(); i++)
 		mapstrintGene[vecstrGenes[i]] = i;
 
+	if(sArgs.add_gscore_flag==1){
+		vector<string> vecstrGScore;
+		if(!CSeekTools::ReadListOneColumn(sArgs.gscore_list_arg, vecstrGScore))
+			return false;
+		string gscoreDir = sArgs.gscore_dir_arg;
+		vector<float> totalScore;
+		totalScore.resize(vecstrGeneID.size());
+		for(int j=0; j<totalScore.size(); j++){
+			totalScore[j] = 0;
+		}
+		for(int j=0; j<vecstrGScore.size(); j++){
+			string path = gscoreDir + "/" + vecstrGScore[j];
+			vector<float> v1;
+			CSeekTools::ReadArray(path.c_str(), v1);
+			for(int k=0; k<v1.size(); k++){
+				if(v1[k]<-320){
+					totalScore[k] = -320;
+				}else{
+					totalScore[k]+=v1[k];
+				}
+			}
+		}
+		for(int j=0; j<totalScore.size(); j++){
+			if(totalScore[j]==-320){
+				continue;
+			}
+			totalScore[j]/=(float)totalScore.size();
+		}
+		CSeekTools::WriteArray(sArgs.gscore_output2_arg, totalScore);
+		return 0;
+	}
+
+
+	if(sArgs.increase_gscore_flag==1){
+		vector<float> v1;
+		CSeekTools::ReadArray(sArgs.gscore_file_arg, v1);
+
+		vector<float> v2;
+		CSeekTools::ReadArray(sArgs.gscore_file_2_arg, v2);
+
+		int num_genes_1 = 0;
+		int num_genes_2 = 0;
+		for(int j=0; j<v1.size(); j++){
+			if(v1[j]<-320) continue;
+			num_genes_1++;
+		}
+		for(int j=0; j<v2.size(); j++){
+			if(v2[j]<-320) continue;
+			num_genes_2++;
+		}
+
+		vector<CPair<float> > cp1, cp2;
+		cp1.resize(v1.size());
+		cp2.resize(v2.size());
+		for(int j=0; j<v1.size(); j++){
+			cp1[j].i = (utype) j;
+			cp1[j].v = v1[j];
+			cp2[j].i = (utype) j;
+			cp2[j].v = v2[j];
+		}
+		sort(cp1.begin(), cp1.end(), CDescendingValue<float>());
+		sort(cp2.begin(), cp2.end(), CDescendingValue<float>());
+
+		for(int j=0; j<v1.size(); j++){
+			if(cp1[j].v<-320){
+			}else{
+				v1[cp1[j].i] = (float) (num_genes_1 - j) / num_genes_1;
+			}
+			if(cp2[j].v<-320){
+			}else{
+				v2[cp2[j].i] = (float) (num_genes_2 - j) / num_genes_2;
+			}
+		}
+
+		vector<float> sum_v;
+		sum_v.resize(v1.size());
+		for(int j=0; j<v1.size(); j++){
+			if(v1[j]<-320 || v2[j]<-320){
+				sum_v[j] = -320;
+			}else{
+				sum_v[j] = v1[j] + v2[j];
+			}
+		}
+
+		CSeekTools::WriteArray(sArgs.gscore_output_arg, sum_v);
+		return 0;
+	}
+
 	if(sArgs.weight2_flag==1){
 		vector<string> vecstrDataset;
 		if(!CSeekTools::ReadListOneColumn(sArgs.dweight_map_arg, vecstrDataset))

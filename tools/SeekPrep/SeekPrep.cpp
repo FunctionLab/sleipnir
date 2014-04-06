@@ -352,7 +352,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 			mean[k] = sum[k] / (float) num[k];
 			stdev[k] = sq_sum[k] / (float) num[k] - mean[k] * mean[k];
 			stdev[k] = sqrt(stdev[k]);
-			fprintf(stderr, "%d %.5f %.5f\n", geneID, mean[k], stdev[k]);
+			fprintf(stderr, "%s G%d P%d %.5f %.5f\n", thisGene.c_str(), geneID, k, mean[k], stdev[k]);
 			platform_avg.Set(k, geneID, mean[k]);
 			platform_stdev.Set(k, geneID, stdev[k]);
 		}

@@ -45,6 +45,8 @@ option	"agg_scoresum"		D	"Sum up the scores of genes in all query rankings to pr
 								flag	off
 option	"display_all"		E	"Display the metric for all queries"
 								flag	off
+option	"display_gene_pr"	l	"Display positive genes at all recall points (requires --pr_all and --display_all)"
+								flag	off
 
 section	"Input required by all"
 option	"input"				i	"Gene mapping file"
@@ -84,6 +86,8 @@ option	"gscore"			g	"Gene score file (.gscore)"
 option	"query"				q	"Query gene set file (to be excluded from evaluation) (.query)"
 								string typestr="filename"
 option	"exclude"			y	"Exclude genes (.exclude)"
+								string typestr="filename"
+option	"include"			U	"Include genes (.include) (ie annotated genes)"
 								string typestr="filename"
 								
 section	"Input required by multi-query"

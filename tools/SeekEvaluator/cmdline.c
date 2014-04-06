@@ -56,6 +56,7 @@ const char *gengetopt_args_info_help[] = {
   "  -C, --agg_ranksum            Sum up the ranks of genes in all query rankings \n                                 to produce a master list sorted by summed \n                                 rank, and perform metric on this list  \n                                 (default=off)",
   "  -D, --agg_scoresum           Sum up the scores of genes in all query rankings \n                                 to produce a master list sorted by summed \n                                 score, and perform metric on this list  \n                                 (default=off)",
   "  -E, --display_all            Display the metric for all queries  \n                                 (default=off)",
+  "  -l, --display_gene_pr        Display positive genes at all recall points \n                                 (requires --pr_all and --display_all)  \n                                 (default=off)",
   "\nInput required by all:",
   "  -i, --input=filename         Gene mapping file",
   "\nInput required by dataset weight display (single .dweight file):",
@@ -76,6 +77,7 @@ const char *gengetopt_args_info_help[] = {
   "  -g, --gscore=filename        Gene score file (.gscore)",
   "  -q, --query=filename         Query gene set file (to be excluded from \n                                 evaluation) (.query)",
   "  -y, --exclude=filename       Exclude genes (.exclude)",
+  "  -U, --include=filename       Include genes (.include) (ie annotated genes)",
   "\nInput required by multi-query:",
   "  -S, --goldstd_list=filename  List of gold standard gene set files",
   "  -G, --gscore_list=filename   List of gene score files",
@@ -133,6 +135,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->agg_ranksum_given = 0 ;
   args_info->agg_scoresum_given = 0 ;
   args_info->display_all_given = 0 ;
+  args_info->display_gene_pr_given = 0 ;
   args_info->input_given = 0 ;
   args_info->dataset_map_given = 0 ;
   args_info->weight_given = 0 ;
@@ -147,6 +150,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->gscore_given = 0 ;
   args_info->query_given = 0 ;
   args_info->exclude_given = 0 ;
+  args_info->include_given = 0 ;
   args_info->goldstd_list_given = 0 ;
   args_info->gscore_list_given = 0 ;
   args_info->query_list_given = 0 ;
@@ -181,6 +185,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->agg_ranksum_flag = 0;
   args_info->agg_scoresum_flag = 0;
   args_info->display_all_flag = 0;
+  args_info->display_gene_pr_flag = 0;
   args_info->input_arg = NULL;
   args_info->input_orig = NULL;
   args_info->dataset_map_arg = NULL;
@@ -206,6 +211,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->query_orig = NULL;
   args_info->exclude_arg = NULL;
   args_info->exclude_orig = NULL;
+  args_info->include_arg = NULL;
+  args_info->include_orig = NULL;
   args_info->goldstd_list_arg = NULL;
   args_info->goldstd_list_orig = NULL;
   args_info->gscore_list_arg = NULL;
@@ -247,26 +254,28 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->agg_ranksum_help = gengetopt_args_info_help[21] ;
   args_info->agg_scoresum_help = gengetopt_args_info_help[22] ;
   args_info->display_all_help = gengetopt_args_info_help[23] ;
-  args_info->input_help = gengetopt_args_info_help[25] ;
-  args_info->dataset_map_help = gengetopt_args_info_help[27] ;
-  args_info->weight_help = gengetopt_args_info_help[28] ;
-  args_info->dweight_list_help = gengetopt_args_info_help[30] ;
-  args_info->fold_over_random_help = gengetopt_args_info_help[32] ;
-  args_info->p_value_help = gengetopt_args_info_help[33] ;
-  args_info->random_dir_help = gengetopt_args_info_help[34] ;
-  args_info->random_num_help = gengetopt_args_info_help[35] ;
-  args_info->nan_help = gengetopt_args_info_help[37] ;
-  args_info->neg_cor_help = gengetopt_args_info_help[38] ;
-  args_info->goldstd_help = gengetopt_args_info_help[40] ;
-  args_info->gscore_help = gengetopt_args_info_help[41] ;
-  args_info->query_help = gengetopt_args_info_help[42] ;
-  args_info->exclude_help = gengetopt_args_info_help[43] ;
-  args_info->goldstd_list_help = gengetopt_args_info_help[45] ;
-  args_info->gscore_list_help = gengetopt_args_info_help[46] ;
-  args_info->query_list_help = gengetopt_args_info_help[47] ;
-  args_info->exclude_list_help = gengetopt_args_info_help[48] ;
-  args_info->include_list_help = gengetopt_args_info_help[49] ;
-  args_info->dir_out_help = gengetopt_args_info_help[51] ;
+  args_info->display_gene_pr_help = gengetopt_args_info_help[24] ;
+  args_info->input_help = gengetopt_args_info_help[26] ;
+  args_info->dataset_map_help = gengetopt_args_info_help[28] ;
+  args_info->weight_help = gengetopt_args_info_help[29] ;
+  args_info->dweight_list_help = gengetopt_args_info_help[31] ;
+  args_info->fold_over_random_help = gengetopt_args_info_help[33] ;
+  args_info->p_value_help = gengetopt_args_info_help[34] ;
+  args_info->random_dir_help = gengetopt_args_info_help[35] ;
+  args_info->random_num_help = gengetopt_args_info_help[36] ;
+  args_info->nan_help = gengetopt_args_info_help[38] ;
+  args_info->neg_cor_help = gengetopt_args_info_help[39] ;
+  args_info->goldstd_help = gengetopt_args_info_help[41] ;
+  args_info->gscore_help = gengetopt_args_info_help[42] ;
+  args_info->query_help = gengetopt_args_info_help[43] ;
+  args_info->exclude_help = gengetopt_args_info_help[44] ;
+  args_info->include_help = gengetopt_args_info_help[45] ;
+  args_info->goldstd_list_help = gengetopt_args_info_help[47] ;
+  args_info->gscore_list_help = gengetopt_args_info_help[48] ;
+  args_info->query_list_help = gengetopt_args_info_help[49] ;
+  args_info->exclude_list_help = gengetopt_args_info_help[50] ;
+  args_info->include_list_help = gengetopt_args_info_help[51] ;
+  args_info->dir_out_help = gengetopt_args_info_help[53] ;
   
 }
 
@@ -373,6 +382,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->query_orig));
   free_string_field (&(args_info->exclude_arg));
   free_string_field (&(args_info->exclude_orig));
+  free_string_field (&(args_info->include_arg));
+  free_string_field (&(args_info->include_orig));
   free_string_field (&(args_info->goldstd_list_arg));
   free_string_field (&(args_info->goldstd_list_orig));
   free_string_field (&(args_info->gscore_list_arg));
@@ -462,6 +473,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "agg_scoresum", 0, 0 );
   if (args_info->display_all_given)
     write_into_file(outfile, "display_all", 0, 0 );
+  if (args_info->display_gene_pr_given)
+    write_into_file(outfile, "display_gene_pr", 0, 0 );
   if (args_info->input_given)
     write_into_file(outfile, "input", args_info->input_orig, 0);
   if (args_info->dataset_map_given)
@@ -490,6 +503,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "query", args_info->query_orig, 0);
   if (args_info->exclude_given)
     write_into_file(outfile, "exclude", args_info->exclude_orig, 0);
+  if (args_info->include_given)
+    write_into_file(outfile, "include", args_info->include_orig, 0);
   if (args_info->goldstd_list_given)
     write_into_file(outfile, "goldstd_list", args_info->goldstd_list_orig, 0);
   if (args_info->gscore_list_given)
@@ -797,6 +812,7 @@ cmdline_parser_internal (
         { "agg_ranksum",	0, NULL, 'C' },
         { "agg_scoresum",	0, NULL, 'D' },
         { "display_all",	0, NULL, 'E' },
+        { "display_gene_pr",	0, NULL, 'l' },
         { "input",	1, NULL, 'i' },
         { "dataset_map",	1, NULL, 'I' },
         { "weight",	1, NULL, 'w' },
@@ -811,6 +827,7 @@ cmdline_parser_internal (
         { "gscore",	1, NULL, 'g' },
         { "query",	1, NULL, 'q' },
         { "exclude",	1, NULL, 'y' },
+        { "include",	1, NULL, 'U' },
         { "goldstd_list",	1, NULL, 'S' },
         { "gscore_list",	1, NULL, 'G' },
         { "query_list",	1, NULL, 'Q' },
@@ -820,7 +837,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVOMTzratcux:e:p:FWABCDEi:I:w:Z:fPR:N:n:Ks:g:q:y:S:G:Q:X:Y:d:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVOMTzratcux:e:p:FWABCDEli:I:w:Z:fPR:N:n:Ks:g:q:y:U:S:G:Q:X:Y:d:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1041,6 +1058,16 @@ cmdline_parser_internal (
             goto failure;
         
           break;
+        case 'l':	/* Display positive genes at all recall points (requires --pr_all and --display_all).  */
+        
+        
+          if (update_arg((void *)&(args_info->display_gene_pr_flag), 0, &(args_info->display_gene_pr_given),
+              &(local_args_info.display_gene_pr_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "display_gene_pr", 'l',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'i':	/* Gene mapping file.  */
         
         
@@ -1199,6 +1226,18 @@ cmdline_parser_internal (
               &(local_args_info.exclude_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "exclude", 'y',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'U':	/* Include genes (.include) (ie annotated genes).  */
+        
+        
+          if (update_arg( (void *)&(args_info->include_arg), 
+               &(args_info->include_orig), &(args_info->include_given),
+              &(local_args_info.include_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "include", 'U',
               additional_error))
             goto failure;
         

@@ -241,6 +241,21 @@ bool MinMaxQuartile(vector<float> &f, float &min, float &max, float &Q1,
 	return true;
 }
 
+bool GetPositiveGenesOneQuery(const vector<AResultFloat> &sortedScore,
+	const vector<char> &goldstdGenePresence, const vector<string> &vecstrGenes,
+	vector<string> &positive){
+	size_t i, numPos = 1;
+	positive.clear();
+	vector<AResultFloat>::const_iterator iterScore = sortedScore.begin();
+	for(i=0; iterScore!=sortedScore.end(); i++, iterScore++){
+		if(goldstdGenePresence[iterScore->i]==1){
+			positive.push_back(vecstrGenes[iterScore->i]);
+		}
+	}
+	positive.resize(positive.size());
+	return true;
+}
+
 bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 	const vector<AResultFloat> &sortedGenes,
 	const vector<char> &goldstdGenePresence, const float &nan,
@@ -346,8 +361,8 @@ void PrintResult(vector< vector<float> > f){
 
 bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met, 
 	vector<AResultFloat> *sortedGenes, vector<utype> *queryGeneID, 
-	int listSize, vector<char> *goldstdGenePresence, vector<char> *excludeGene,
-	vector<char> *includeGene, 
+	int listSize, vector<char> *goldstdGenePresence, vector<string> &vecstrGenes,
+	vector<char> *excludeGene, vector<char> *includeGene, 
 	vector< vector<float> > &result
 
 	){
@@ -381,6 +396,9 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 		//ASSUME THIS IS TRUE
 		for(i=0; i<listSize; i++){
 			for(j=0; j<sortedGenes[0].size(); j++){
+				if(includeGene[i][sortedGenes[i][j].i]==0){
+					sortedGenes[i][j].f = nan;
+				}
 				if(q[i][sortedGenes[i][j].i]==1){
 					sortedGenes[i][j].f = nan;
 				}
@@ -498,6 +516,27 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 		}else{
 			sort(sortedGenes[i].begin(), sortedGenes[i].end());
 		}
+	}
+
+	if(sArgs.display_gene_pr_flag==1 && sArgs.display_all_flag==1 && met==PR_ALL){
+		for(i=0; i<listSize; i++){
+			vector<string> strAll;
+			bool ret = GetPositiveGenesOneQuery(sortedGenes[i],
+				goldstdGenePresence[i], vecstrGenes, strAll);
+			if(!ret) return 1;
+			for(j=0; j<strAll.size(); j++){
+				fprintf(stderr, "%s", strAll[j].c_str());
+				if(j==strAll.size()-1){
+					fprintf(stderr, "\n");
+				}else{
+					fprintf(stderr, " ");
+				}
+			}
+		}
+		return 0;
+	}
+
+	for(i=0; i<listSize; i++){
 		if(met!=PR_ALL){
 			float fEval;
 			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes[i],
@@ -507,10 +546,12 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 
 		}else{
 			vector<float> evalAll;
+			//fprintf(stderr, "Start evaluating query %d...\n", i);
 			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes[i],
 				goldstdGenePresence[i], nan, evalAll);
 			if(!ret) return 1;
 			vecevalAll[i] = evalAll;
+			//fprintf(stderr, "Finished evaluating query\n");
 		}
 	}
 
@@ -573,7 +614,7 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 		//fprintf(stderr, "Got here 2\n");
 	}
 
-	if(met!=PR_ALL){
+	if(met!=PR_ALL){ //display a single-point precision measurement
 		if(sArgs.agg_avg_flag==1){
 			float avg, stdev;
 			MeanStandardDeviation(eval, avg, stdev);
@@ -605,7 +646,28 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 			return 0;
 		}
 
-	}else{
+	}else{ //display all precision measurements for a query
+		if(sArgs.display_all_flag==1){
+			result.resize(vecevalAll.size());
+			for(i=0; i<vecevalAll.size(); i++){
+				result[i] = vector<float>();
+				for(j=0; j<vecevalAll[i].size(); j++){
+					result[i].push_back(vecevalAll[i][j]);
+				}
+			}
+			return 0;
+		}
+
+		//else requires each query's gold standard gene-set to be the same size 
+		//(in order for aggregate to work correctly)
+		int s1 = vecevalAll[0].size();
+		for(i=0; i<vecevalAll.size(); i++){
+			if(s1!=vecevalAll[i].size()){
+				fprintf(stderr, "Error: gold standard gene-set size is different between queries\n");
+				return 1;
+			}
+		}
+
 		vector< vector<float> > veceval;
 		veceval.resize(vecevalAll[0].size());
 		for(i=0; i<vecevalAll.size(); i++)
@@ -867,10 +929,30 @@ int main( int iArgs, char** aszArgs ) {
 			return 0;
 		}
 
+		string excludeFile = sArgs.exclude_arg;
+		vector<string> excludeGenes;
+		vector<char> exGene;
+		CSeekTools::ReadMultiGeneOneLine(excludeFile, excludeGenes);
+		CSeekTools::InitVector(exGene, vecstrGenes.size(), (char) 0);
+		for(i=0; i<excludeGenes.size(); i++)
+			exGene[mapstriGenes[excludeGenes[i]]] = 1;
+
+		string includeFile = sArgs.include_arg;
+		vector<string> includeGenes;
+		vector<char> inGene;
+		CSeekTools::ReadMultiGeneOneLine(includeFile, includeGenes);
+		CSeekTools::InitVector(inGene, vecstrGenes.size(), (char) 0);
+		for(i=0; i<includeGenes.size(); i++)
+			inGene[mapstriGenes[includeGenes[i]]] = 1;
+		
 		if(sArgs.dislay_only_flag==1){
-			for(i=0; i<15000; i++)
+			int LIMIT = sortedGenes.size() * 0.8;
+			for(i=0; i<LIMIT; i++){
+				if(exGene[sortedGenes[i].i]==1) continue;
+				if(inGene[sortedGenes[i].i]==0) continue;
 				fprintf(stderr, "%s\t%.5f\n", 
 					vecstrGenes[sortedGenes[i].i].c_str(), sortedGenes[i].f);
+			}
 			return 0;
 		}
 
@@ -881,8 +963,11 @@ int main( int iArgs, char** aszArgs ) {
 		CSeekTools::InitVector(goldstdGenePresence,
 			vecstrGenes.size(), (char) 0);
 
-		for(i=0; i<goldstdGenes.size(); i++)
-			goldstdGenePresence[mapstriGenes[goldstdGenes[i]]] = 1;
+		for(i=0; i<goldstdGenes.size(); i++){
+			int si = mapstriGenes[goldstdGenes[i]];
+			if(exGene[si]==1 || inGene[si]==0) continue;
+			goldstdGenePresence[si] = 1;
+		}
 
 		if(met!=PR_ALL){
 			float eval;
@@ -903,22 +988,8 @@ int main( int iArgs, char** aszArgs ) {
 	}
 
 	if(qmode == MULTI_QUERY){
-		string goldstdList = sArgs.goldstd_list_arg;
+
 		vector<string> vecstrList;
-		CSeekTools::ReadListOneColumn(goldstdList, vecstrList);
-		vector<char> *goldstdGenePresence =
-			new vector<char>[vecstrList.size()];
-		for(i=0; i<vecstrList.size(); i++){
-			vector<string> goldstdGenes;
-			CSeekTools::ReadMultiGeneOneLine(vecstrList[i], goldstdGenes);
-			CSeekTools::InitVector(goldstdGenePresence[i],
-				vecstrGenes.size(), (char) 0);
-			for(j=0; j<goldstdGenes.size(); j++)
-				goldstdGenePresence[i][mapstriGenes[goldstdGenes[j]]] = 1;
-		}
-
-		//fprintf(stderr, "Finished reading gold standard list\n");
-
 		string queryList = sArgs.query_list_arg;
 		vecstrList.clear();
 		CSeekTools::ReadListOneColumn(queryList, vecstrList);
@@ -958,6 +1029,35 @@ int main( int iArgs, char** aszArgs ) {
 				includeGene[i][mapstriGenes[in[j]]] = 1;
 		}
 
+		string goldstdList = sArgs.goldstd_list_arg;
+		vecstrList.clear();
+		CSeekTools::ReadListOneColumn(goldstdList, vecstrList);
+		vector<char> *goldstdGenePresence =
+			new vector<char>[vecstrList.size()];
+		bool errorOccurred = false;
+		for(i=0; i<vecstrList.size(); i++){
+			vector<string> goldstdGenes;
+			CSeekTools::ReadMultiGeneOneLine(vecstrList[i], goldstdGenes);
+			CSeekTools::InitVector(goldstdGenePresence[i],
+				vecstrGenes.size(), (char) 0);
+			int numGoldstd = 0;
+			for(j=0; j<goldstdGenes.size(); j++){
+				int si = mapstriGenes[goldstdGenes[j]];
+				if(includeGene[i][si]==0 || excludeGene[i][si]==1) continue;
+				goldstdGenePresence[i][si] = 1;
+				numGoldstd++;
+			}
+			if(numGoldstd==0){
+				fprintf(stderr, "Error: for query %d, there are no gold standard genes\n", (int) i);
+				errorOccurred = true;
+			}
+		}
+		if(errorOccurred){
+			return -1;
+		}
+
+
+		//fprintf(stderr, "Finished reading gold standard list\n");
 
 		string genescoreList = sArgs.gscore_list_arg;
 		vecstrList.clear();
@@ -985,7 +1085,7 @@ int main( int iArgs, char** aszArgs ) {
 
 		vector<vector<float> > result;
 		DoAggregate(sArgs, met, sortedGenes, queryGeneID, vecstrList.size(),
-			goldstdGenePresence, excludeGene, includeGene, result);
+			goldstdGenePresence, vecstrGenes, excludeGene, includeGene, result);
 
 
 		/*

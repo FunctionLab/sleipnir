@@ -80,6 +80,8 @@ struct gengetopt_args_info
   const char *agg_scoresum_help; /**< @brief Sum up the scores of genes in all query rankings to produce a master list sorted by summed score, and perform metric on this list help description.  */
   int display_all_flag;	/**< @brief Display the metric for all queries (default=off).  */
   const char *display_all_help; /**< @brief Display the metric for all queries help description.  */
+  int display_gene_pr_flag;	/**< @brief Display positive genes at all recall points (requires --pr_all and --display_all) (default=off).  */
+  const char *display_gene_pr_help; /**< @brief Display positive genes at all recall points (requires --pr_all and --display_all) help description.  */
   char * input_arg;	/**< @brief Gene mapping file.  */
   char * input_orig;	/**< @brief Gene mapping file original value given at command line.  */
   const char *input_help; /**< @brief Gene mapping file help description.  */
@@ -119,6 +121,9 @@ struct gengetopt_args_info
   char * exclude_arg;	/**< @brief Exclude genes (.exclude).  */
   char * exclude_orig;	/**< @brief Exclude genes (.exclude) original value given at command line.  */
   const char *exclude_help; /**< @brief Exclude genes (.exclude) help description.  */
+  char * include_arg;	/**< @brief Include genes (.include) (ie annotated genes).  */
+  char * include_orig;	/**< @brief Include genes (.include) (ie annotated genes) original value given at command line.  */
+  const char *include_help; /**< @brief Include genes (.include) (ie annotated genes) help description.  */
   char * goldstd_list_arg;	/**< @brief List of gold standard gene set files.  */
   char * goldstd_list_orig;	/**< @brief List of gold standard gene set files original value given at command line.  */
   const char *goldstd_list_help; /**< @brief List of gold standard gene set files help description.  */
@@ -159,6 +164,7 @@ struct gengetopt_args_info
   unsigned int agg_ranksum_given ;	/**< @brief Whether agg_ranksum was given.  */
   unsigned int agg_scoresum_given ;	/**< @brief Whether agg_scoresum was given.  */
   unsigned int display_all_given ;	/**< @brief Whether display_all was given.  */
+  unsigned int display_gene_pr_given ;	/**< @brief Whether display_gene_pr was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int dataset_map_given ;	/**< @brief Whether dataset_map was given.  */
   unsigned int weight_given ;	/**< @brief Whether weight was given.  */
@@ -173,6 +179,7 @@ struct gengetopt_args_info
   unsigned int gscore_given ;	/**< @brief Whether gscore was given.  */
   unsigned int query_given ;	/**< @brief Whether query was given.  */
   unsigned int exclude_given ;	/**< @brief Whether exclude was given.  */
+  unsigned int include_given ;	/**< @brief Whether include was given.  */
   unsigned int goldstd_list_given ;	/**< @brief Whether goldstd_list was given.  */
   unsigned int gscore_list_given ;	/**< @brief Whether gscore_list was given.  */
   unsigned int query_list_given ;	/**< @brief Whether query_list was given.  */

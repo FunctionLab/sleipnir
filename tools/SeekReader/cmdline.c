@@ -33,7 +33,7 @@ const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
   "      --help                    Print help and exit",
-  "  -V, --version                 Print version and exit",
+  "      --version                 Print version and exit",
   "\nDiagnosis:",
   "  -D, --databaselet             Display values from databaselet(s)  \n                                  (default=off)",
   "  -A, --dataset                 Check which datasets contain query of interest, \n                                  based on .gpres file  (default=off)",
@@ -43,6 +43,21 @@ const char *gengetopt_args_info_help[] = {
   "  -J, --convert_aracne          Convert Aracne output (.txt) to DAB file  \n                                  (default=off)",
   "  -k, --convert_dab             Convert DAB to matrix  (default=off)",
   "  -Y, --limit_hub               Limit genes in the DAB to those that are hubby  \n                                  (default=off)",
+  "  -B, --combine_pcl             Combine PCL bin files  (default=off)",
+  "  -R, --increase_gscore         Increase the gene scores  (default=off)",
+  "  -g, --add_gscore              Add the gene scores  (default=off)",
+  "\nIncrease the gene scores of given queries:",
+  "  -S, --gscore_file=filename    Gene score file (input)  (default=`NA')",
+  "  -T, --gscore_file_2=filename  Gene score file (input 2)  (default=`NA')",
+  "  -t, --gscore_output=filename  Gene score output file  (default=`NA')",
+  "\nAdd the gene score for a bunch of files:",
+  "  -a, --gscore_list=filename    Gene score list  (default=`NA')",
+  "  -c, --gscore_dir=directory    Gene score directory  (default=`NA')",
+  "  -e, --gscore_output2=filename Gene score output file  (default=`NA')",
+  "\nCombine PCL:",
+  "  -u, --pcl_list=filename       File containing a list of pcl bin files \n                                  (including path)  (default=`NA')",
+  "  -b, --binarize                Binarize the output matrix  (default=off)",
+  "  -V, --output_pcl=filename     Output file  (default=`NA')",
   "\nLimit Hub:",
   "  -y, --dabinput=filename       DAB input file  (default=`NA')",
   "  -Z, --hub_dab_output=filename DAB output file  (default=`NA')",
@@ -113,6 +128,18 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->convert_aracne_given = 0 ;
   args_info->convert_dab_given = 0 ;
   args_info->limit_hub_given = 0 ;
+  args_info->combine_pcl_given = 0 ;
+  args_info->increase_gscore_given = 0 ;
+  args_info->add_gscore_given = 0 ;
+  args_info->gscore_file_given = 0 ;
+  args_info->gscore_file_2_given = 0 ;
+  args_info->gscore_output_given = 0 ;
+  args_info->gscore_list_given = 0 ;
+  args_info->gscore_dir_given = 0 ;
+  args_info->gscore_output2_given = 0 ;
+  args_info->pcl_list_given = 0 ;
+  args_info->binarize_given = 0 ;
+  args_info->output_pcl_given = 0 ;
   args_info->dabinput_given = 0 ;
   args_info->hub_dab_output_given = 0 ;
   args_info->aracne_file_given = 0 ;
@@ -155,6 +182,26 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->convert_aracne_flag = 0;
   args_info->convert_dab_flag = 0;
   args_info->limit_hub_flag = 0;
+  args_info->combine_pcl_flag = 0;
+  args_info->increase_gscore_flag = 0;
+  args_info->add_gscore_flag = 0;
+  args_info->gscore_file_arg = gengetopt_strdup ("NA");
+  args_info->gscore_file_orig = NULL;
+  args_info->gscore_file_2_arg = gengetopt_strdup ("NA");
+  args_info->gscore_file_2_orig = NULL;
+  args_info->gscore_output_arg = gengetopt_strdup ("NA");
+  args_info->gscore_output_orig = NULL;
+  args_info->gscore_list_arg = gengetopt_strdup ("NA");
+  args_info->gscore_list_orig = NULL;
+  args_info->gscore_dir_arg = gengetopt_strdup ("NA");
+  args_info->gscore_dir_orig = NULL;
+  args_info->gscore_output2_arg = gengetopt_strdup ("NA");
+  args_info->gscore_output2_orig = NULL;
+  args_info->pcl_list_arg = gengetopt_strdup ("NA");
+  args_info->pcl_list_orig = NULL;
+  args_info->binarize_flag = 0;
+  args_info->output_pcl_arg = gengetopt_strdup ("NA");
+  args_info->output_pcl_orig = NULL;
   args_info->dabinput_arg = gengetopt_strdup ("NA");
   args_info->dabinput_orig = NULL;
   args_info->hub_dab_output_arg = gengetopt_strdup ("NA");
@@ -227,34 +274,46 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->convert_aracne_help = gengetopt_args_info_help[8] ;
   args_info->convert_dab_help = gengetopt_args_info_help[9] ;
   args_info->limit_hub_help = gengetopt_args_info_help[10] ;
-  args_info->dabinput_help = gengetopt_args_info_help[12] ;
-  args_info->hub_dab_output_help = gengetopt_args_info_help[13] ;
-  args_info->aracne_file_help = gengetopt_args_info_help[15] ;
-  args_info->output_dab_file_help = gengetopt_args_info_help[16] ;
-  args_info->dab_file_help = gengetopt_args_info_help[18] ;
-  args_info->output_matrix_help = gengetopt_args_info_help[19] ;
-  args_info->dweight_dir_help = gengetopt_args_info_help[21] ;
-  args_info->dweight_num_help = gengetopt_args_info_help[22] ;
-  args_info->dweight_map_help = gengetopt_args_info_help[23] ;
-  args_info->dweight_test_dir_help = gengetopt_args_info_help[24] ;
-  args_info->dweight_test_num_help = gengetopt_args_info_help[25] ;
-  args_info->gscore_dir1_help = gengetopt_args_info_help[27] ;
-  args_info->gscore_dir2_help = gengetopt_args_info_help[28] ;
-  args_info->gscore_num1_help = gengetopt_args_info_help[29] ;
-  args_info->order_stat_single_gene_query_help = gengetopt_args_info_help[31] ;
-  args_info->db_help = gengetopt_args_info_help[32] ;
-  args_info->dset_list_help = gengetopt_args_info_help[33] ;
-  args_info->input_help = gengetopt_args_info_help[34] ;
-  args_info->single_query_help = gengetopt_args_info_help[35] ;
-  args_info->dir_in_help = gengetopt_args_info_help[36] ;
-  args_info->dir_prep_in_help = gengetopt_args_info_help[37] ;
-  args_info->dir_gvar_in_help = gengetopt_args_info_help[38] ;
-  args_info->dir_sinfo_in_help = gengetopt_args_info_help[39] ;
-  args_info->is_nibble_help = gengetopt_args_info_help[40] ;
-  args_info->platform_dir_help = gengetopt_args_info_help[41] ;
-  args_info->gvar_cutoff_help = gengetopt_args_info_help[42] ;
-  args_info->multi_query_help = gengetopt_args_info_help[43] ;
-  args_info->output_file_help = gengetopt_args_info_help[44] ;
+  args_info->combine_pcl_help = gengetopt_args_info_help[11] ;
+  args_info->increase_gscore_help = gengetopt_args_info_help[12] ;
+  args_info->add_gscore_help = gengetopt_args_info_help[13] ;
+  args_info->gscore_file_help = gengetopt_args_info_help[15] ;
+  args_info->gscore_file_2_help = gengetopt_args_info_help[16] ;
+  args_info->gscore_output_help = gengetopt_args_info_help[17] ;
+  args_info->gscore_list_help = gengetopt_args_info_help[19] ;
+  args_info->gscore_dir_help = gengetopt_args_info_help[20] ;
+  args_info->gscore_output2_help = gengetopt_args_info_help[21] ;
+  args_info->pcl_list_help = gengetopt_args_info_help[23] ;
+  args_info->binarize_help = gengetopt_args_info_help[24] ;
+  args_info->output_pcl_help = gengetopt_args_info_help[25] ;
+  args_info->dabinput_help = gengetopt_args_info_help[27] ;
+  args_info->hub_dab_output_help = gengetopt_args_info_help[28] ;
+  args_info->aracne_file_help = gengetopt_args_info_help[30] ;
+  args_info->output_dab_file_help = gengetopt_args_info_help[31] ;
+  args_info->dab_file_help = gengetopt_args_info_help[33] ;
+  args_info->output_matrix_help = gengetopt_args_info_help[34] ;
+  args_info->dweight_dir_help = gengetopt_args_info_help[36] ;
+  args_info->dweight_num_help = gengetopt_args_info_help[37] ;
+  args_info->dweight_map_help = gengetopt_args_info_help[38] ;
+  args_info->dweight_test_dir_help = gengetopt_args_info_help[39] ;
+  args_info->dweight_test_num_help = gengetopt_args_info_help[40] ;
+  args_info->gscore_dir1_help = gengetopt_args_info_help[42] ;
+  args_info->gscore_dir2_help = gengetopt_args_info_help[43] ;
+  args_info->gscore_num1_help = gengetopt_args_info_help[44] ;
+  args_info->order_stat_single_gene_query_help = gengetopt_args_info_help[46] ;
+  args_info->db_help = gengetopt_args_info_help[47] ;
+  args_info->dset_list_help = gengetopt_args_info_help[48] ;
+  args_info->input_help = gengetopt_args_info_help[49] ;
+  args_info->single_query_help = gengetopt_args_info_help[50] ;
+  args_info->dir_in_help = gengetopt_args_info_help[51] ;
+  args_info->dir_prep_in_help = gengetopt_args_info_help[52] ;
+  args_info->dir_gvar_in_help = gengetopt_args_info_help[53] ;
+  args_info->dir_sinfo_in_help = gengetopt_args_info_help[54] ;
+  args_info->is_nibble_help = gengetopt_args_info_help[55] ;
+  args_info->platform_dir_help = gengetopt_args_info_help[56] ;
+  args_info->gvar_cutoff_help = gengetopt_args_info_help[57] ;
+  args_info->multi_query_help = gengetopt_args_info_help[58] ;
+  args_info->output_file_help = gengetopt_args_info_help[59] ;
   
 }
 
@@ -338,6 +397,22 @@ static void
 cmdline_parser_release (struct gengetopt_args_info *args_info)
 {
   unsigned int i;
+  free_string_field (&(args_info->gscore_file_arg));
+  free_string_field (&(args_info->gscore_file_orig));
+  free_string_field (&(args_info->gscore_file_2_arg));
+  free_string_field (&(args_info->gscore_file_2_orig));
+  free_string_field (&(args_info->gscore_output_arg));
+  free_string_field (&(args_info->gscore_output_orig));
+  free_string_field (&(args_info->gscore_list_arg));
+  free_string_field (&(args_info->gscore_list_orig));
+  free_string_field (&(args_info->gscore_dir_arg));
+  free_string_field (&(args_info->gscore_dir_orig));
+  free_string_field (&(args_info->gscore_output2_arg));
+  free_string_field (&(args_info->gscore_output2_orig));
+  free_string_field (&(args_info->pcl_list_arg));
+  free_string_field (&(args_info->pcl_list_orig));
+  free_string_field (&(args_info->output_pcl_arg));
+  free_string_field (&(args_info->output_pcl_orig));
   free_string_field (&(args_info->dabinput_arg));
   free_string_field (&(args_info->dabinput_orig));
   free_string_field (&(args_info->hub_dab_output_arg));
@@ -441,6 +516,30 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "convert_dab", 0, 0 );
   if (args_info->limit_hub_given)
     write_into_file(outfile, "limit_hub", 0, 0 );
+  if (args_info->combine_pcl_given)
+    write_into_file(outfile, "combine_pcl", 0, 0 );
+  if (args_info->increase_gscore_given)
+    write_into_file(outfile, "increase_gscore", 0, 0 );
+  if (args_info->add_gscore_given)
+    write_into_file(outfile, "add_gscore", 0, 0 );
+  if (args_info->gscore_file_given)
+    write_into_file(outfile, "gscore_file", args_info->gscore_file_orig, 0);
+  if (args_info->gscore_file_2_given)
+    write_into_file(outfile, "gscore_file_2", args_info->gscore_file_2_orig, 0);
+  if (args_info->gscore_output_given)
+    write_into_file(outfile, "gscore_output", args_info->gscore_output_orig, 0);
+  if (args_info->gscore_list_given)
+    write_into_file(outfile, "gscore_list", args_info->gscore_list_orig, 0);
+  if (args_info->gscore_dir_given)
+    write_into_file(outfile, "gscore_dir", args_info->gscore_dir_orig, 0);
+  if (args_info->gscore_output2_given)
+    write_into_file(outfile, "gscore_output2", args_info->gscore_output2_orig, 0);
+  if (args_info->pcl_list_given)
+    write_into_file(outfile, "pcl_list", args_info->pcl_list_orig, 0);
+  if (args_info->binarize_given)
+    write_into_file(outfile, "binarize", 0, 0 );
+  if (args_info->output_pcl_given)
+    write_into_file(outfile, "output_pcl", args_info->output_pcl_orig, 0);
   if (args_info->dabinput_given)
     write_into_file(outfile, "dabinput", args_info->dabinput_orig, 0);
   if (args_info->hub_dab_output_given)
@@ -744,7 +843,7 @@ cmdline_parser_internal (
 
       static struct option long_options[] = {
         { "help",	0, NULL, 0 },
-        { "version",	0, NULL, 'V' },
+        { "version",	0, NULL, 0 },
         { "databaselet",	0, NULL, 'D' },
         { "dataset",	0, NULL, 'A' },
         { "weight",	0, NULL, 'W' },
@@ -753,6 +852,18 @@ cmdline_parser_internal (
         { "convert_aracne",	0, NULL, 'J' },
         { "convert_dab",	0, NULL, 'k' },
         { "limit_hub",	0, NULL, 'Y' },
+        { "combine_pcl",	0, NULL, 'B' },
+        { "increase_gscore",	0, NULL, 'R' },
+        { "add_gscore",	0, NULL, 'g' },
+        { "gscore_file",	1, NULL, 'S' },
+        { "gscore_file_2",	1, NULL, 'T' },
+        { "gscore_output",	1, NULL, 't' },
+        { "gscore_list",	1, NULL, 'a' },
+        { "gscore_dir",	1, NULL, 'c' },
+        { "gscore_output2",	1, NULL, 'e' },
+        { "pcl_list",	1, NULL, 'u' },
+        { "binarize",	0, NULL, 'b' },
+        { "output_pcl",	1, NULL, 'V' },
         { "dabinput",	1, NULL, 'y' },
         { "hub_dab_output",	1, NULL, 'Z' },
         { "aracne_file",	1, NULL, 'K' },
@@ -784,26 +895,12 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "VDAWUCJkYy:Z:K:L:f:m:E:n:M:F:G:H:h:I:Ox:X:i:q:d:p:r:s:NP:v:Q:o:", long_options, &option_index);
+      c = getopt_long (argc, argv, "DAWUCJkYBRgS:T:t:a:c:e:u:bV:y:Z:K:L:f:m:E:n:M:F:G:H:h:I:Ox:X:i:q:d:p:r:s:NP:v:Q:o:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
       switch (c)
         {
-        case 'V':	/* Print version and exit.  */
-        
-        
-          if (update_arg( 0 , 
-               0 , &(args_info->version_given),
-              &(local_args_info.version_given), optarg, 0, 0, ARG_NO,
-              check_ambiguity, override, 0, 0,
-              "version", 'V',
-              additional_error))
-            goto failure;
-          cmdline_parser_free (&local_args_info);
-          return 0;
-        
-          break;
         case 'D':	/* Display values from databaselet(s).  */
         
         
@@ -880,6 +977,142 @@ cmdline_parser_internal (
           if (update_arg((void *)&(args_info->limit_hub_flag), 0, &(args_info->limit_hub_given),
               &(local_args_info.limit_hub_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "limit_hub", 'Y',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'B':	/* Combine PCL bin files.  */
+        
+        
+          if (update_arg((void *)&(args_info->combine_pcl_flag), 0, &(args_info->combine_pcl_given),
+              &(local_args_info.combine_pcl_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "combine_pcl", 'B',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'R':	/* Increase the gene scores.  */
+        
+        
+          if (update_arg((void *)&(args_info->increase_gscore_flag), 0, &(args_info->increase_gscore_given),
+              &(local_args_info.increase_gscore_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "increase_gscore", 'R',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'g':	/* Add the gene scores.  */
+        
+        
+          if (update_arg((void *)&(args_info->add_gscore_flag), 0, &(args_info->add_gscore_given),
+              &(local_args_info.add_gscore_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "add_gscore", 'g',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'S':	/* Gene score file (input).  */
+        
+        
+          if (update_arg( (void *)&(args_info->gscore_file_arg), 
+               &(args_info->gscore_file_orig), &(args_info->gscore_file_given),
+              &(local_args_info.gscore_file_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "gscore_file", 'S',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'T':	/* Gene score file (input 2).  */
+        
+        
+          if (update_arg( (void *)&(args_info->gscore_file_2_arg), 
+               &(args_info->gscore_file_2_orig), &(args_info->gscore_file_2_given),
+              &(local_args_info.gscore_file_2_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "gscore_file_2", 'T',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 't':	/* Gene score output file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->gscore_output_arg), 
+               &(args_info->gscore_output_orig), &(args_info->gscore_output_given),
+              &(local_args_info.gscore_output_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "gscore_output", 't',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'a':	/* Gene score list.  */
+        
+        
+          if (update_arg( (void *)&(args_info->gscore_list_arg), 
+               &(args_info->gscore_list_orig), &(args_info->gscore_list_given),
+              &(local_args_info.gscore_list_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "gscore_list", 'a',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'c':	/* Gene score directory.  */
+        
+        
+          if (update_arg( (void *)&(args_info->gscore_dir_arg), 
+               &(args_info->gscore_dir_orig), &(args_info->gscore_dir_given),
+              &(local_args_info.gscore_dir_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "gscore_dir", 'c',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'e':	/* Gene score output file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->gscore_output2_arg), 
+               &(args_info->gscore_output2_orig), &(args_info->gscore_output2_given),
+              &(local_args_info.gscore_output2_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "gscore_output2", 'e',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'u':	/* File containing a list of pcl bin files (including path).  */
+        
+        
+          if (update_arg( (void *)&(args_info->pcl_list_arg), 
+               &(args_info->pcl_list_orig), &(args_info->pcl_list_given),
+              &(local_args_info.pcl_list_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "pcl_list", 'u',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'b':	/* Binarize the output matrix.  */
+        
+        
+          if (update_arg((void *)&(args_info->binarize_flag), 0, &(args_info->binarize_given),
+              &(local_args_info.binarize_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "binarize", 'b',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'V':	/* Output file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->output_pcl_arg), 
+               &(args_info->output_pcl_orig), &(args_info->output_pcl_given),
+              &(local_args_info.output_pcl_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "output_pcl", 'V',
               additional_error))
             goto failure;
         
@@ -1224,6 +1457,24 @@ cmdline_parser_internal (
             exit (EXIT_SUCCESS);
           }
 
+          /* Print version and exit.  */
+          if (strcmp (long_options[option_index].name, "version") == 0)
+          {
+          
+          
+            if (update_arg( 0 , 
+                 0 , &(args_info->version_given),
+                &(local_args_info.version_given), optarg, 0, 0, ARG_NO,
+                check_ambiguity, override, 0, 0,
+                "version", 'V',
+                additional_error))
+              goto failure;
+            cmdline_parser_free (&local_args_info);
+            return 0;
+          
+          }
+          
+          break;
         case '?':	/* Invalid option.  */
           /* `getopt_long' already printed an error message.  */
           goto failure;

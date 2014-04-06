@@ -57,6 +57,28 @@ struct gengetopt_args_info
   const char *limit_hub_help; /**< @brief Limit genes in the DAB to those that are hubby help description.  */
   int combine_pcl_flag;	/**< @brief Combine PCL bin files (default=off).  */
   const char *combine_pcl_help; /**< @brief Combine PCL bin files help description.  */
+  int increase_gscore_flag;	/**< @brief Increase the gene scores (default=off).  */
+  const char *increase_gscore_help; /**< @brief Increase the gene scores help description.  */
+  int add_gscore_flag;	/**< @brief Add the gene scores (default=off).  */
+  const char *add_gscore_help; /**< @brief Add the gene scores help description.  */
+  char * gscore_file_arg;	/**< @brief Gene score file (input) (default='NA').  */
+  char * gscore_file_orig;	/**< @brief Gene score file (input) original value given at command line.  */
+  const char *gscore_file_help; /**< @brief Gene score file (input) help description.  */
+  char * gscore_file_2_arg;	/**< @brief Gene score file (input 2) (default='NA').  */
+  char * gscore_file_2_orig;	/**< @brief Gene score file (input 2) original value given at command line.  */
+  const char *gscore_file_2_help; /**< @brief Gene score file (input 2) help description.  */
+  char * gscore_output_arg;	/**< @brief Gene score output file (default='NA').  */
+  char * gscore_output_orig;	/**< @brief Gene score output file original value given at command line.  */
+  const char *gscore_output_help; /**< @brief Gene score output file help description.  */
+  char * gscore_list_arg;	/**< @brief Gene score list (default='NA').  */
+  char * gscore_list_orig;	/**< @brief Gene score list original value given at command line.  */
+  const char *gscore_list_help; /**< @brief Gene score list help description.  */
+  char * gscore_dir_arg;	/**< @brief Gene score directory (default='NA').  */
+  char * gscore_dir_orig;	/**< @brief Gene score directory original value given at command line.  */
+  const char *gscore_dir_help; /**< @brief Gene score directory help description.  */
+  char * gscore_output2_arg;	/**< @brief Gene score output file (default='NA').  */
+  char * gscore_output2_orig;	/**< @brief Gene score output file original value given at command line.  */
+  const char *gscore_output2_help; /**< @brief Gene score output file help description.  */
   char * pcl_list_arg;	/**< @brief File containing a list of pcl bin files (including path) (default='NA').  */
   char * pcl_list_orig;	/**< @brief File containing a list of pcl bin files (including path) original value given at command line.  */
   const char *pcl_list_help; /**< @brief File containing a list of pcl bin files (including path) help description.  */
@@ -159,6 +181,14 @@ struct gengetopt_args_info
   unsigned int convert_dab_given ;	/**< @brief Whether convert_dab was given.  */
   unsigned int limit_hub_given ;	/**< @brief Whether limit_hub was given.  */
   unsigned int combine_pcl_given ;	/**< @brief Whether combine_pcl was given.  */
+  unsigned int increase_gscore_given ;	/**< @brief Whether increase_gscore was given.  */
+  unsigned int add_gscore_given ;	/**< @brief Whether add_gscore was given.  */
+  unsigned int gscore_file_given ;	/**< @brief Whether gscore_file was given.  */
+  unsigned int gscore_file_2_given ;	/**< @brief Whether gscore_file_2 was given.  */
+  unsigned int gscore_output_given ;	/**< @brief Whether gscore_output was given.  */
+  unsigned int gscore_list_given ;	/**< @brief Whether gscore_list was given.  */
+  unsigned int gscore_dir_given ;	/**< @brief Whether gscore_dir was given.  */
+  unsigned int gscore_output2_given ;	/**< @brief Whether gscore_output2 was given.  */
   unsigned int pcl_list_given ;	/**< @brief Whether pcl_list was given.  */
   unsigned int binarize_given ;	/**< @brief Whether binarize was given.  */
   unsigned int output_pcl_given ;	/**< @brief Whether output_pcl was given.  */
