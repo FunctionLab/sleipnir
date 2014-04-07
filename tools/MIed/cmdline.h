@@ -60,9 +60,9 @@ struct gengetopt_args_info
   char * zeros_arg;	/**< @brief Read zeroed node IDs/outputs from the given file.  */
   char * zeros_orig;	/**< @brief Read zeroed node IDs/outputs from the given file original value given at command line.  */
   const char *zeros_help; /**< @brief Read zeroed node IDs/outputs from the given file help description.  */
-  char * edges_arg;	/**< @brief Process only edges from the given DAT/DAB, should be used with Beta values.  */
-  char * edges_orig;	/**< @brief Process only edges from the given DAT/DAB, should be used with Beta values original value given at command line.  */
-  const char *edges_help; /**< @brief Process only edges from the given DAT/DAB, should be used with Beta values help description.  */
+  char * edges_arg;	/**< @brief Process only edges from the given DAT/DAB.  */
+  char * edges_orig;	/**< @brief Process only edges from the given DAT/DAB original value given at command line.  */
+  const char *edges_help; /**< @brief Process only edges from the given DAT/DAB help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */

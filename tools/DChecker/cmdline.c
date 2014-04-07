@@ -58,6 +58,8 @@ const char *gengetopt_args_info_help[] = {
   "  -U, --outneg               Use negative edges outside the context  \n                               (default=off)",
   "  -W, --weights=filename     Weight file",
   "  -F, --flipneg              Flip weights(one minus original) for negative \n                               standards  (default=on)",
+  "  -S, --singlegene           Randomly subsample the standards so that a gene \n                               occurs at most once in positive and also in \n                               negative standards  (default=off)",
+  "  -E, --genec=filename       Gene file to split positives into new positive \n                               examples and negative examples. All positive \n                               pairs with both genes in the gene list are only \n                               consided as positives. All positive pairs with \n                               both genes not in the gene list are considered \n                               as negatives. (all original negatives are \n                               ignored).",
   "\nPreprocessing:",
   "  -n, --normalize            Normalize scores before processing  (default=off)",
   "  -t, --invert               Invert correlations to distances  (default=off)",
@@ -66,6 +68,7 @@ const char *gengetopt_args_info_help[] = {
   "  -s, --sse                  Calculate sum of squared errors  (default=off)",
   "  -p, --memmap               Memory map input DABs  (default=off)",
   "  -v, --verbosity=INT        Message verbosity  (default=`5')",
+  "  -r, --random=INT           Seed random generator (default -1 uses current \n                               time)  (default=`-1')",
     0
 };
 
@@ -121,12 +124,15 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->outneg_given = 0 ;
   args_info->weights_given = 0 ;
   args_info->flipneg_given = 0 ;
+  args_info->singlegene_given = 0 ;
+  args_info->genec_given = 0 ;
   args_info->normalize_given = 0 ;
   args_info->invert_given = 0 ;
   args_info->abs_given = 0 ;
   args_info->sse_given = 0 ;
   args_info->memmap_given = 0 ;
   args_info->verbosity_given = 0 ;
+  args_info->random_given = 0 ;
 }
 
 static
@@ -172,6 +178,9 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->weights_arg = NULL;
   args_info->weights_orig = NULL;
   args_info->flipneg_flag = 1;
+  args_info->singlegene_flag = 0;
+  args_info->genec_arg = NULL;
+  args_info->genec_orig = NULL;
   args_info->normalize_flag = 0;
   args_info->invert_flag = 0;
   args_info->abs_arg = 0.0;
@@ -180,6 +189,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->memmap_flag = 0;
   args_info->verbosity_arg = 5;
   args_info->verbosity_orig = NULL;
+  args_info->random_arg = -1;
+  args_info->random_orig = NULL;
   
 }
 
@@ -214,12 +225,15 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->outneg_help = gengetopt_args_info_help[27] ;
   args_info->weights_help = gengetopt_args_info_help[28] ;
   args_info->flipneg_help = gengetopt_args_info_help[29] ;
-  args_info->normalize_help = gengetopt_args_info_help[31] ;
-  args_info->invert_help = gengetopt_args_info_help[32] ;
-  args_info->abs_help = gengetopt_args_info_help[33] ;
-  args_info->sse_help = gengetopt_args_info_help[35] ;
-  args_info->memmap_help = gengetopt_args_info_help[36] ;
-  args_info->verbosity_help = gengetopt_args_info_help[37] ;
+  args_info->singlegene_help = gengetopt_args_info_help[30] ;
+  args_info->genec_help = gengetopt_args_info_help[31] ;
+  args_info->normalize_help = gengetopt_args_info_help[33] ;
+  args_info->invert_help = gengetopt_args_info_help[34] ;
+  args_info->abs_help = gengetopt_args_info_help[35] ;
+  args_info->sse_help = gengetopt_args_info_help[37] ;
+  args_info->memmap_help = gengetopt_args_info_help[38] ;
+  args_info->verbosity_help = gengetopt_args_info_help[39] ;
+  args_info->random_help = gengetopt_args_info_help[40] ;
   
 }
 
@@ -327,8 +341,11 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->genep_orig));
   free_string_field (&(args_info->weights_arg));
   free_string_field (&(args_info->weights_orig));
+  free_string_field (&(args_info->genec_arg));
+  free_string_field (&(args_info->genec_orig));
   free_string_field (&(args_info->abs_orig));
   free_string_field (&(args_info->verbosity_orig));
+  free_string_field (&(args_info->random_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -415,6 +432,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "weights", args_info->weights_orig, 0);
   if (args_info->flipneg_given)
     write_into_file(outfile, "flipneg", 0, 0 );
+  if (args_info->singlegene_given)
+    write_into_file(outfile, "singlegene", 0, 0 );
+  if (args_info->genec_given)
+    write_into_file(outfile, "genec", args_info->genec_orig, 0);
   if (args_info->normalize_given)
     write_into_file(outfile, "normalize", 0, 0 );
   if (args_info->invert_given)
@@ -427,6 +448,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "memmap", 0, 0 );
   if (args_info->verbosity_given)
     write_into_file(outfile, "verbosity", args_info->verbosity_orig, 0);
+  if (args_info->random_given)
+    write_into_file(outfile, "random", args_info->random_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -726,16 +749,19 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "outneg",	0, NULL, 'U' },
         { "weights",	1, NULL, 'W' },
         { "flipneg",	0, NULL, 'F' },
+        { "singlegene",	0, NULL, 'S' },
+        { "genec",	1, NULL, 'E' },
         { "normalize",	0, NULL, 'n' },
         { "invert",	0, NULL, 't' },
         { "abs",	1, NULL, 'A' },
         { "sse",	0, NULL, 's' },
         { "memmap",	0, NULL, 'p' },
         { "verbosity",	1, NULL, 'v' },
+        { "random",	1, NULL, 'r' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVi:w:d:a:R:b:fm:M:e:g:G:P:c:C:l:qQjJuUW:FntA:spv:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVi:w:d:a:R:b:fm:M:e:g:G:P:c:C:l:qQjJuUW:FSE:ntA:spv:r:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1032,6 +1058,28 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'S':	/* Randomly subsample the standards so that a gene occurs at most once in positive and also in negative standards.  */
+        
+        
+          if (update_arg((void *)&(args_info->singlegene_flag), 0, &(args_info->singlegene_given),
+              &(local_args_info.singlegene_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "singlegene", 'S',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'E':	/* Gene file to split positives into new positive examples and negative examples. All positive pairs with both genes in the gene list are only consided as positives. All positive pairs with both genes not in the gene list are considered as negatives. (all original negatives are ignored)..  */
+        
+        
+          if (update_arg( (void *)&(args_info->genec_arg), 
+               &(args_info->genec_orig), &(args_info->genec_given),
+              &(local_args_info.genec_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genec", 'E',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'n':	/* Normalize scores before processing.  */
         
         
@@ -1092,6 +1140,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.verbosity_given), optarg, 0, "5", ARG_INT,
               check_ambiguity, override, 0, 0,
               "verbosity", 'v',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'r':	/* Seed random generator (default -1 uses current time).  */
+        
+        
+          if (update_arg( (void *)&(args_info->random_arg), 
+               &(args_info->random_orig), &(args_info->random_given),
+              &(local_args_info.random_given), optarg, 0, "-1", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "random", 'r',
               additional_error))
             goto failure;
         

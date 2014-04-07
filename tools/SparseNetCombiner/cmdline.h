@@ -45,15 +45,19 @@ struct gengetopt_args_info
   const char *directory_help; /**< @brief input directory (must only contain input files) help description.  */
   int map_flag;	/**< @brief Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs) (default=off).  */
   const char *map_help; /**< @brief Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs) help description.  */
-  char * method_arg;	/**< @brief Combination method (default='mean').  */
-  char * method_orig;	/**< @brief Combination method original value given at command line.  */
-  const char *method_help; /**< @brief Combination method help description.  */
+  char * method_arg;	/**< @brief Combination method, (selectmean computes the mea of the upper quartile values) (default='mean').  */
+  char * method_orig;	/**< @brief Combination method, (selectmean computes the mea of the upper quartile values) original value given at command line.  */
+  const char *method_help; /**< @brief Combination method, (selectmean computes the mea of the upper quartile values) help description.  */
   float quantile_arg;	/**< @brief If combine method is Quantile, set the returning quantile (default is median qunatile 0.5) (default='0.5').  */
   char * quantile_orig;	/**< @brief If combine method is Quantile, set the returning quantile (default is median qunatile 0.5) original value given at command line.  */
   const char *quantile_help; /**< @brief If combine method is Quantile, set the returning quantile (default is median qunatile 0.5) help description.  */
   char * weight_arg;	/**< @brief File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight.  */
   char * weight_orig;	/**< @brief File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight original value given at command line.  */
   const char *weight_help; /**< @brief File with dataset weights, if given each dataset values if weighted by the dataset weight. Skips datasets with no-entry or with zero weights. File format: dataset name<tab>weight help description.  */
+  int zscore_flag;	/**< @brief Convert values to z-scores before combine (default=off).  */
+  const char *zscore_help; /**< @brief Convert values to z-scores before combine help description.  */
+  int rank_flag;	/**< @brief Rank transform data before combine (default=off).  */
+  const char *rank_help; /**< @brief Rank transform data before combine help description.  */
   char * genes_arg;	/**< @brief Process only genes from the given set.  */
   char * genes_orig;	/**< @brief Process only genes from the given set original value given at command line.  */
   const char *genes_help; /**< @brief Process only genes from the given set help description.  */
@@ -70,6 +74,8 @@ struct gengetopt_args_info
   unsigned int method_given ;	/**< @brief Whether method was given.  */
   unsigned int quantile_given ;	/**< @brief Whether quantile was given.  */
   unsigned int weight_given ;	/**< @brief Whether weight was given.  */
+  unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
+  unsigned int rank_given ;	/**< @brief Whether rank was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int genee_given ;	/**< @brief Whether genee was given.  */
 

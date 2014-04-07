@@ -29,7 +29,7 @@ const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
   "  -h, --help                    Print help and exit",
-  "  -V, --version                 Print version and exit",
+  "      --version                 Print version and exit",
   "\nMain:",
   "  -l, --labels=filename         Labels file",
   "  -o, --output=filename         Output file ",
@@ -49,12 +49,11 @@ const char *gengetopt_args_info_help[] = {
   "  -M, --mmap                    Memory map binary input  (default=off)",
   "  -R, --random=INT              Seed random generator (default -1 uses current \n                                  time)  (default=`-1')",
   "  -T, --tgene=filename          Target gene list, use this gene list as gene \n                                  holdout cross-validation and also filter \n                                  labels that only have one gene in given \n                                  target gene list",
-  "  -b, --balance                 DEBUG: check before usage, Balance the training \n                                  gene ratios  (default=off)",
-  "  -F, --bfactor=FLOAT           DEBUG: only for < 500, When balancing neg and \n                                  pos counts exmaples for training what factor \n                                  to increase. default is 1.",
   "  -B, --prob                    Output prediction values as estimated \n                                  probablity (Platt method)  (default=off)",
   "  -D, --probCross               Cross-validation setting for output prediction \n                                  values as estimated probablity (Platt method) \n                                   (default=off)",
   "  -z, --normalizeZero           Normalize input data to the range [0, 1]  \n                                  (default=off)",
   "  -N, --normalizeNPone          Normalize input data to the range [-1, 1]  \n                                  (default=off)",
+  "  -Z, --zscore                  Normalize input data to convert values to \n                                  z-scores  (default=off)",
   "  -X, --edgeholdout             For cross-validation perform edge holdout \n                                  (Default is gene holdout)  (default=off)",
   "  -Q, --skipSVM                 If given this flag, skip training SVM models \n                                  when file already exist. Often used when \n                                  cluster runs timeout/error and need to re-run \n                                  jobs.  (default=off)",
   "  -x, --aggregateMax            If given this flag, when predicting for all \n                                  gene pairs with multiple SVM models(bagging) \n                                  aggregate using the maximum prediction value \n                                  (Default: average)  (default=off)",
@@ -63,12 +62,17 @@ const char *gengetopt_args_info_help[] = {
   "  -y, --SampledLabels=filename  Save the sampled final training labels to this \n                                  file",
   "  -A, --subsample=FLOAT         Sample the labels to the following rate",
   "  -U, --OutLabels=filename      Save the sampled labels to the file and exit",
+  "  -H, --GenesHoldoutFold=filename\n                                Input the gene holdout fold",
+  "  -f, --touchContext            If given context gene list, context is defined \n                                  by all edges touch the context. (default is \n                                  both genes in edge need to be in context)  \n                                  (default=off)",
+  "  -w, --onlyPos                 When given the context file, only filter for \n                                  positive examples and leave negative examples \n                                  as originally given.  (default=off)",
   "\nFiltering:",
+  "  -g, --genes=filename          Process only genes from the given set from \n                                  labels",
   "  -q, --onetgene                Only keep edges from lables that have one gene \n                                  in the target gene list  (default=off)",
   "  -P, --prior=FLOAT             Randomly sub-sample the negative labels to \n                                  reach target prior. If cannot reach target \n                                  prior, set to closest prior.",
   "  -s, --savemodel               Save model to file  (default=off)",
   "  -E, --mintrain=FLOAT          Minimum number of total positive examples to \n                                  allow training, if not met exit",
   "  -C, --context=filename        Context gene list",
+  "  -V, --allContextPred          When given context genes list, allow prediction \n                                  too all genes  (default=off)",
     0
 };
 
@@ -116,12 +120,11 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->mmap_given = 0 ;
   args_info->random_given = 0 ;
   args_info->tgene_given = 0 ;
-  args_info->balance_given = 0 ;
-  args_info->bfactor_given = 0 ;
   args_info->prob_given = 0 ;
   args_info->probCross_given = 0 ;
   args_info->normalizeZero_given = 0 ;
   args_info->normalizeNPone_given = 0 ;
+  args_info->zscore_given = 0 ;
   args_info->edgeholdout_given = 0 ;
   args_info->skipSVM_given = 0 ;
   args_info->aggregateMax_given = 0 ;
@@ -130,11 +133,16 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->SampledLabels_given = 0 ;
   args_info->subsample_given = 0 ;
   args_info->OutLabels_given = 0 ;
+  args_info->GenesHoldoutFold_given = 0 ;
+  args_info->touchContext_given = 0 ;
+  args_info->onlyPos_given = 0 ;
+  args_info->genes_given = 0 ;
   args_info->onetgene_given = 0 ;
   args_info->prior_given = 0 ;
   args_info->savemodel_given = 0 ;
   args_info->mintrain_given = 0 ;
   args_info->context_given = 0 ;
+  args_info->allContextPred_given = 0 ;
 }
 
 static
@@ -171,12 +179,11 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->random_orig = NULL;
   args_info->tgene_arg = NULL;
   args_info->tgene_orig = NULL;
-  args_info->balance_flag = 0;
-  args_info->bfactor_orig = NULL;
   args_info->prob_flag = 0;
   args_info->probCross_flag = 0;
   args_info->normalizeZero_flag = 0;
   args_info->normalizeNPone_flag = 0;
+  args_info->zscore_flag = 0;
   args_info->edgeholdout_flag = 0;
   args_info->skipSVM_flag = 0;
   args_info->aggregateMax_flag = 0;
@@ -188,12 +195,19 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->subsample_orig = NULL;
   args_info->OutLabels_arg = NULL;
   args_info->OutLabels_orig = NULL;
+  args_info->GenesHoldoutFold_arg = NULL;
+  args_info->GenesHoldoutFold_orig = NULL;
+  args_info->touchContext_flag = 0;
+  args_info->onlyPos_flag = 0;
+  args_info->genes_arg = NULL;
+  args_info->genes_orig = NULL;
   args_info->onetgene_flag = 0;
   args_info->prior_orig = NULL;
   args_info->savemodel_flag = 0;
   args_info->mintrain_orig = NULL;
   args_info->context_arg = NULL;
   args_info->context_orig = NULL;
+  args_info->allContextPred_flag = 0;
   
 }
 
@@ -221,25 +235,29 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->mmap_help = gengetopt_args_info_help[18] ;
   args_info->random_help = gengetopt_args_info_help[19] ;
   args_info->tgene_help = gengetopt_args_info_help[20] ;
-  args_info->balance_help = gengetopt_args_info_help[21] ;
-  args_info->bfactor_help = gengetopt_args_info_help[22] ;
-  args_info->prob_help = gengetopt_args_info_help[23] ;
-  args_info->probCross_help = gengetopt_args_info_help[24] ;
-  args_info->normalizeZero_help = gengetopt_args_info_help[25] ;
-  args_info->normalizeNPone_help = gengetopt_args_info_help[26] ;
-  args_info->edgeholdout_help = gengetopt_args_info_help[27] ;
-  args_info->skipSVM_help = gengetopt_args_info_help[28] ;
-  args_info->aggregateMax_help = gengetopt_args_info_help[29] ;
-  args_info->NoCrossPredict_help = gengetopt_args_info_help[30] ;
-  args_info->CrossResult_help = gengetopt_args_info_help[31] ;
-  args_info->SampledLabels_help = gengetopt_args_info_help[32] ;
-  args_info->subsample_help = gengetopt_args_info_help[33] ;
-  args_info->OutLabels_help = gengetopt_args_info_help[34] ;
-  args_info->onetgene_help = gengetopt_args_info_help[36] ;
-  args_info->prior_help = gengetopt_args_info_help[37] ;
-  args_info->savemodel_help = gengetopt_args_info_help[38] ;
-  args_info->mintrain_help = gengetopt_args_info_help[39] ;
-  args_info->context_help = gengetopt_args_info_help[40] ;
+  args_info->prob_help = gengetopt_args_info_help[21] ;
+  args_info->probCross_help = gengetopt_args_info_help[22] ;
+  args_info->normalizeZero_help = gengetopt_args_info_help[23] ;
+  args_info->normalizeNPone_help = gengetopt_args_info_help[24] ;
+  args_info->zscore_help = gengetopt_args_info_help[25] ;
+  args_info->edgeholdout_help = gengetopt_args_info_help[26] ;
+  args_info->skipSVM_help = gengetopt_args_info_help[27] ;
+  args_info->aggregateMax_help = gengetopt_args_info_help[28] ;
+  args_info->NoCrossPredict_help = gengetopt_args_info_help[29] ;
+  args_info->CrossResult_help = gengetopt_args_info_help[30] ;
+  args_info->SampledLabels_help = gengetopt_args_info_help[31] ;
+  args_info->subsample_help = gengetopt_args_info_help[32] ;
+  args_info->OutLabels_help = gengetopt_args_info_help[33] ;
+  args_info->GenesHoldoutFold_help = gengetopt_args_info_help[34] ;
+  args_info->touchContext_help = gengetopt_args_info_help[35] ;
+  args_info->onlyPos_help = gengetopt_args_info_help[36] ;
+  args_info->genes_help = gengetopt_args_info_help[38] ;
+  args_info->onetgene_help = gengetopt_args_info_help[39] ;
+  args_info->prior_help = gengetopt_args_info_help[40] ;
+  args_info->savemodel_help = gengetopt_args_info_help[41] ;
+  args_info->mintrain_help = gengetopt_args_info_help[42] ;
+  args_info->context_help = gengetopt_args_info_help[43] ;
+  args_info->allContextPred_help = gengetopt_args_info_help[44] ;
   
 }
 
@@ -343,7 +361,6 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->random_orig));
   free_string_field (&(args_info->tgene_arg));
   free_string_field (&(args_info->tgene_orig));
-  free_string_field (&(args_info->bfactor_orig));
   free_string_field (&(args_info->CrossResult_arg));
   free_string_field (&(args_info->CrossResult_orig));
   free_string_field (&(args_info->SampledLabels_arg));
@@ -351,6 +368,10 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->subsample_orig));
   free_string_field (&(args_info->OutLabels_arg));
   free_string_field (&(args_info->OutLabels_orig));
+  free_string_field (&(args_info->GenesHoldoutFold_arg));
+  free_string_field (&(args_info->GenesHoldoutFold_orig));
+  free_string_field (&(args_info->genes_arg));
+  free_string_field (&(args_info->genes_orig));
   free_string_field (&(args_info->prior_orig));
   free_string_field (&(args_info->mintrain_orig));
   free_string_field (&(args_info->context_arg));
@@ -427,10 +448,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "random", args_info->random_orig, 0);
   if (args_info->tgene_given)
     write_into_file(outfile, "tgene", args_info->tgene_orig, 0);
-  if (args_info->balance_given)
-    write_into_file(outfile, "balance", 0, 0 );
-  if (args_info->bfactor_given)
-    write_into_file(outfile, "bfactor", args_info->bfactor_orig, 0);
   if (args_info->prob_given)
     write_into_file(outfile, "prob", 0, 0 );
   if (args_info->probCross_given)
@@ -439,6 +456,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "normalizeZero", 0, 0 );
   if (args_info->normalizeNPone_given)
     write_into_file(outfile, "normalizeNPone", 0, 0 );
+  if (args_info->zscore_given)
+    write_into_file(outfile, "zscore", 0, 0 );
   if (args_info->edgeholdout_given)
     write_into_file(outfile, "edgeholdout", 0, 0 );
   if (args_info->skipSVM_given)
@@ -455,6 +474,14 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "subsample", args_info->subsample_orig, 0);
   if (args_info->OutLabels_given)
     write_into_file(outfile, "OutLabels", args_info->OutLabels_orig, 0);
+  if (args_info->GenesHoldoutFold_given)
+    write_into_file(outfile, "GenesHoldoutFold", args_info->GenesHoldoutFold_orig, 0);
+  if (args_info->touchContext_given)
+    write_into_file(outfile, "touchContext", 0, 0 );
+  if (args_info->onlyPos_given)
+    write_into_file(outfile, "onlyPos", 0, 0 );
+  if (args_info->genes_given)
+    write_into_file(outfile, "genes", args_info->genes_orig, 0);
   if (args_info->onetgene_given)
     write_into_file(outfile, "onetgene", 0, 0 );
   if (args_info->prior_given)
@@ -465,6 +492,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "mintrain", args_info->mintrain_orig, 0);
   if (args_info->context_given)
     write_into_file(outfile, "context", args_info->context_orig, 0);
+  if (args_info->allContextPred_given)
+    write_into_file(outfile, "allContextPred", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -729,7 +758,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
 
       static struct option long_options[] = {
         { "help",	0, NULL, 'h' },
-        { "version",	0, NULL, 'V' },
+        { "version",	0, NULL, 0 },
         { "labels",	1, NULL, 'l' },
         { "output",	1, NULL, 'o' },
         { "directory",	1, NULL, 'd' },
@@ -747,12 +776,11 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "mmap",	0, NULL, 'M' },
         { "random",	1, NULL, 'R' },
         { "tgene",	1, NULL, 'T' },
-        { "balance",	0, NULL, 'b' },
-        { "bfactor",	1, NULL, 'F' },
         { "prob",	0, NULL, 'B' },
         { "probCross",	0, NULL, 'D' },
         { "normalizeZero",	0, NULL, 'z' },
         { "normalizeNPone",	0, NULL, 'N' },
+        { "zscore",	0, NULL, 'Z' },
         { "edgeholdout",	0, NULL, 'X' },
         { "skipSVM",	0, NULL, 'Q' },
         { "aggregateMax",	0, NULL, 'x' },
@@ -761,15 +789,20 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "SampledLabels",	1, NULL, 'y' },
         { "subsample",	1, NULL, 'A' },
         { "OutLabels",	1, NULL, 'U' },
+        { "GenesHoldoutFold",	1, NULL, 'H' },
+        { "touchContext",	0, NULL, 'f' },
+        { "onlyPos",	0, NULL, 'w' },
+        { "genes",	1, NULL, 'g' },
         { "onetgene",	0, NULL, 'q' },
         { "prior",	1, NULL, 'P' },
         { "savemodel",	0, NULL, 's' },
         { "mintrain",	1, NULL, 'E' },
         { "context",	1, NULL, 'C' },
+        { "allContextPred",	0, NULL, 'V' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVl:o:d:m:L:Sv:c:e:k:t:a:p:nMR:T:bF:BDzNXQxru:y:A:U:qP:sE:C:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hl:o:d:m:L:Sv:c:e:k:t:a:p:nMR:T:BDzNZXQxru:y:A:U:H:fwg:qP:sE:C:V", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -780,20 +813,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           cmdline_parser_free (&local_args_info);
           exit (EXIT_SUCCESS);
 
-        case 'V':	/* Print version and exit.  */
-        
-        
-          if (update_arg( 0 , 
-               0 , &(args_info->version_given),
-              &(local_args_info.version_given), optarg, 0, 0, ARG_NO,
-              check_ambiguity, override, 0, 0,
-              "version", 'V',
-              additional_error))
-            goto failure;
-          cmdline_parser_free (&local_args_info);
-          return 0;
-        
-          break;
         case 'l':	/* Labels file.  */
         
         
@@ -999,28 +1018,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'b':	/* DEBUG: check before usage, Balance the training gene ratios.  */
-        
-        
-          if (update_arg((void *)&(args_info->balance_flag), 0, &(args_info->balance_given),
-              &(local_args_info.balance_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "balance", 'b',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'F':	/* DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1..  */
-        
-        
-          if (update_arg( (void *)&(args_info->bfactor_arg), 
-               &(args_info->bfactor_orig), &(args_info->bfactor_given),
-              &(local_args_info.bfactor_given), optarg, 0, 0, ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "bfactor", 'F',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'B':	/* Output prediction values as estimated probablity (Platt method).  */
         
         
@@ -1057,6 +1054,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->normalizeNPone_flag), 0, &(args_info->normalizeNPone_given),
               &(local_args_info.normalizeNPone_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "normalizeNPone", 'N',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'Z':	/* Normalize input data to convert values to z-scores.  */
+        
+        
+          if (update_arg((void *)&(args_info->zscore_flag), 0, &(args_info->zscore_given),
+              &(local_args_info.zscore_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "zscore", 'Z',
               additional_error))
             goto failure;
         
@@ -1149,6 +1156,50 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'H':	/* Input the gene holdout fold.  */
+        
+        
+          if (update_arg( (void *)&(args_info->GenesHoldoutFold_arg), 
+               &(args_info->GenesHoldoutFold_orig), &(args_info->GenesHoldoutFold_given),
+              &(local_args_info.GenesHoldoutFold_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "GenesHoldoutFold", 'H',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'f':	/* If given context gene list, context is defined by all edges touch the context. (default is both genes in edge need to be in context).  */
+        
+        
+          if (update_arg((void *)&(args_info->touchContext_flag), 0, &(args_info->touchContext_given),
+              &(local_args_info.touchContext_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "touchContext", 'f',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'w':	/* When given the context file, only filter for positive examples and leave negative examples as originally given..  */
+        
+        
+          if (update_arg((void *)&(args_info->onlyPos_flag), 0, &(args_info->onlyPos_given),
+              &(local_args_info.onlyPos_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "onlyPos", 'w',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'g':	/* Process only genes from the given set from labels.  */
+        
+        
+          if (update_arg( (void *)&(args_info->genes_arg), 
+               &(args_info->genes_orig), &(args_info->genes_given),
+              &(local_args_info.genes_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "genes", 'g',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'q':	/* Only keep edges from lables that have one gene in the target gene list.  */
         
         
@@ -1205,8 +1256,36 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
+        case 'V':	/* When given context genes list, allow prediction too all genes.  */
+        
+        
+          if (update_arg((void *)&(args_info->allContextPred_flag), 0, &(args_info->allContextPred_given),
+              &(local_args_info.allContextPred_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "allContextPred", 'V',
+              additional_error))
+            goto failure;
+        
+          break;
 
         case 0:	/* Long option with no short option */
+          /* Print version and exit.  */
+          if (strcmp (long_options[option_index].name, "version") == 0)
+          {
+          
+          
+            if (update_arg( 0 , 
+                 0 , &(args_info->version_given),
+                &(local_args_info.version_given), optarg, 0, 0, ARG_NO,
+                check_ambiguity, override, 0, 0,
+                "version", 'V',
+                additional_error))
+              goto failure;
+            cmdline_parser_free (&local_args_info);
+            return 0;
+          
+          }
+          
+          break;
         case '?':	/* Invalid option.  */
           /* `getopt_long' already printed an error message.  */
           goto failure;

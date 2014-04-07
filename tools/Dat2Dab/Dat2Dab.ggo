@@ -77,6 +77,8 @@ option	"hubbiness"		H	"Output the average edge weight for each gene"
 							flag	off
 option	"mar"			J	"Output the maximum adjacency ratio for each gene"
 							flag	off
+option	"summary"		S	"Output the summary of values (mean, stand dev.)"
+							flag	off
 
 section "Optional"
 option	"remap"			p	"Gene name remapping file"

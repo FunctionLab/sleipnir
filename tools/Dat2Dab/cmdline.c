@@ -68,6 +68,7 @@ const char *gengetopt_args_info_help[] = {
   "  -C, --ccoeff             Output clustering coefficient for each gene  \n                             (default=off)",
   "  -H, --hubbiness          Output the average edge weight for each gene  \n                             (default=off)",
   "  -J, --mar                Output the maximum adjacency ratio for each gene  \n                             (default=off)",
+  "  -S, --summary            Output the summary of values (mean, stand dev.)  \n                             (default=off)",
   "\nOptional:",
   "  -p, --remap=filename     Gene name remapping file",
   "  -b, --table              Produce table formatted output  (default=off)",
@@ -139,6 +140,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->ccoeff_given = 0 ;
   args_info->hubbiness_given = 0 ;
   args_info->mar_given = 0 ;
+  args_info->summary_given = 0 ;
   args_info->remap_given = 0 ;
   args_info->table_given = 0 ;
   args_info->skip_given = 0 ;
@@ -199,6 +201,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->ccoeff_flag = 0;
   args_info->hubbiness_flag = 0;
   args_info->mar_flag = 0;
+  args_info->summary_flag = 0;
   args_info->remap_arg = NULL;
   args_info->remap_orig = NULL;
   args_info->table_flag = 0;
@@ -261,7 +264,6 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->random_help = gengetopt_args_info_help[45] ;
   args_info->noise_help = gengetopt_args_info_help[46] ;
   args_info->verbosity_help = gengetopt_args_info_help[47] ;
-  
 }
 
 void
@@ -483,6 +485,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "hubbiness", 0, 0 );
   if (args_info->mar_given)
     write_into_file(outfile, "mar", 0, 0 );
+  if (args_info->summary_given)
+    write_into_file(outfile, "summary", 0, 0 );
   if (args_info->remap_given)
     write_into_file(outfile, "remap", args_info->remap_orig, 0);
   if (args_info->table_given)
@@ -777,6 +781,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "ccoeff",	0, NULL, 'C' },
         { "hubbiness",	0, NULL, 'H' },
         { "mar",	0, NULL, 'J' },
+        { "summary",	0, NULL, 'S' },
         { "remap",	1, NULL, 'p' },
         { "table",	0, NULL, 'b' },
         { "skip",	1, NULL, 's' },
@@ -1168,6 +1173,16 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->mar_flag), 0, &(args_info->mar_given),
               &(local_args_info.mar_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "mar", 'J',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'S':	/* Output the summary of values (mean, stand dev.).  */
+        
+        
+          if (update_arg((void *)&(args_info->summary_flag), 0, &(args_info->summary_given),
+              &(local_args_info.summary_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "summary", 'S',
               additional_error))
             goto failure;
         

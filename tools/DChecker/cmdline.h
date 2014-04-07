@@ -98,6 +98,11 @@ struct gengetopt_args_info
   const char *weights_help; /**< @brief Weight file help description.  */
   int flipneg_flag;	/**< @brief Flip weights(one minus original) for negative standards (default=on).  */
   const char *flipneg_help; /**< @brief Flip weights(one minus original) for negative standards help description.  */
+  int singlegene_flag;	/**< @brief Randomly subsample the standards so that a gene occurs at most once in positive and also in negative standards (default=off).  */
+  const char *singlegene_help; /**< @brief Randomly subsample the standards so that a gene occurs at most once in positive and also in negative standards help description.  */
+  char * genec_arg;	/**< @brief Gene file to split positives into new positive examples and negative examples. All positive pairs with both genes in the gene list are only consided as positives. All positive pairs with both genes not in the gene list are considered as negatives. (all original negatives are ignored)..  */
+  char * genec_orig;	/**< @brief Gene file to split positives into new positive examples and negative examples. All positive pairs with both genes in the gene list are only consided as positives. All positive pairs with both genes not in the gene list are considered as negatives. (all original negatives are ignored). original value given at command line.  */
+  const char *genec_help; /**< @brief Gene file to split positives into new positive examples and negative examples. All positive pairs with both genes in the gene list are only consided as positives. All positive pairs with both genes not in the gene list are considered as negatives. (all original negatives are ignored). help description.  */
   int normalize_flag;	/**< @brief Normalize scores before processing (default=off).  */
   const char *normalize_help; /**< @brief Normalize scores before processing help description.  */
   int invert_flag;	/**< @brief Invert correlations to distances (default=off).  */
@@ -112,6 +117,9 @@ struct gengetopt_args_info
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
+  int random_arg;	/**< @brief Seed random generator (default -1 uses current time) (default='-1').  */
+  char * random_orig;	/**< @brief Seed random generator (default -1 uses current time) original value given at command line.  */
+  const char *random_help; /**< @brief Seed random generator (default -1 uses current time) help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -139,12 +147,15 @@ struct gengetopt_args_info
   unsigned int outneg_given ;	/**< @brief Whether outneg was given.  */
   unsigned int weights_given ;	/**< @brief Whether weights was given.  */
   unsigned int flipneg_given ;	/**< @brief Whether flipneg was given.  */
+  unsigned int singlegene_given ;	/**< @brief Whether singlegene was given.  */
+  unsigned int genec_given ;	/**< @brief Whether genec was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int invert_given ;	/**< @brief Whether invert was given.  */
   unsigned int abs_given ;	/**< @brief Whether abs was given.  */
   unsigned int sse_given ;	/**< @brief Whether sse was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+  unsigned int random_given ;	/**< @brief Whether random was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
