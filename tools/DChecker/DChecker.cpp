@@ -77,8 +77,8 @@ int main( int iArgs, char** aszArgs ) {
         cmdline_parser_print_help( );
         return 1;
     }
-    CMeta Meta( sArgs.verbosity_arg );
-
+    CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
+    
     fMapAnswers = !!sArgs.memmap_flag && !( sArgs.genes_arg || sArgs.genet_arg || sArgs.genex_arg || sArgs.genee_arg );
     if( !Answers.Open( sArgs.answers_arg, fMapAnswers ) ) {
         cerr << "Couldn't open: " << sArgs.answers_arg << endl;
@@ -107,12 +107,158 @@ int main( int iArgs, char** aszArgs ) {
         cerr << "Couldn't open: " << sArgs.genex_arg << endl;
         return 1;
     }
+
+    if( sArgs.genec_given ) {
+      CGenome		tGenome;
+      CGenes		Genes( tGenome );
+      CGenome		uGenome;
+      CGenes		Genesubiq( uGenome );
+      vector<bool>    	    vecfctxt;
+      vector<bool>    	    vecfubiq;
+      float d;
+      
+      if( !Genes.Open( sArgs.genec_arg ) ) {
+	cerr << "Couldn't open: " << sArgs.genec_arg << endl;
+	return 1;
+      }
+      
+      vecfctxt.resize( Answers.GetGenes( ) );
+      for( i = 0; i < vecfctxt.size( ); ++i ) {
+	vecfctxt[ i ] = Genes.IsGene( Answers.GetGene( i ) );
+      }
+            
+      if( sArgs.ubiqg_given ) {
+	if( !Genesubiq.Open( sArgs.ubiqg_arg ) ) {
+	  cerr << "Could not open: " << sArgs.ubiqg_arg << endl;
+	  return 1;
+	}
+	vecfubiq.resize( Answers.GetGenes( ) );
+	for( i = 0; i < vecfubiq.size( ); ++i ) {
+	  vecfubiq[ i ] = Genesubiq.IsGene( Answers.GetGene( i ) );
+	}
+      }
+      
+
+      for( i = 0; i < Answers.GetGenes( ); ++i ) {
+	for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+	  
+	  if( CMeta::IsNaN( d = Answers.Get( i, j) ))
+	    continue;
+	  
+	  // remove all original negatives
+	  if( d < 1 ){
+	    Answers.Set( i, j, CMeta::GetNaN());
+	    continue;
+	  }
+	  
+	  if( !vecfctxt[ i ] && !vecfctxt[ j ] )
+	    Answers.Set( i, j, 0);
+	  else if( vecfctxt[ i ] && vecfctxt[ j ] )
+	    continue;
+	  else if( sArgs.ubiqg_given && 
+		   ((vecfubiq[ i ] && !vecfctxt[ j ]) || 
+		    (vecfubiq[ j ] && !vecfctxt[ i ]))  )
+	    Answers.Set( i, j, 0);
+	  else
+	    Answers.Set( i, j, CMeta::GetNaN());
+	}
+      }      
+    }
+    
     if( !Data.Open( sArgs.input_arg, !!sArgs.memmap_flag ) ) {
         cerr << "Couldn't open: " << sArgs.input_arg << endl;
         return 1;
     }
+        
+    if( sArgs.singlegene_flag ){
+      float d;
+      vector<size_t>	    veciPos, veciNeg, veciIndex, veciDgenes;
+      size_t pj, nj, x, y, iOne, iTwo;
+      CDat		    sAnswers;
+
+      veciDgenes.resize( Answers.GetGenes( ) );
+      for( i = 0; i < Answers.GetGenes( ); ++i )
+        veciDgenes[ i ] = Data.GetGene( Answers.GetGene( i ) );
+      
+      //copy over
+      for( i = 0; i < Answers.GetGenes( ); ++i ) {
+	iOne = veciDgenes[ i ];	
+	for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+	  iTwo = veciDgenes[ j ];	  
+	  if( iOne == -1 || iTwo == -1 || CMeta::IsNaN( d = Data.Get( iOne, iTwo ) ))
+	    Answers.Set( i, j, CMeta::GetNaN() );
+	}
+      }
+      
+      sAnswers.Open( Answers );
+      for( i = 0; i < Answers.GetGenes( ); ++i ) {
+	for( j = ( i + 1 ); j < Answers.GetGenes( ); ++j ) {
+	  Answers.Set( i, j, CMeta::GetNaN() );
+	}
+      }
+      
+      veciIndex.resize(sAnswers.GetGenes( ));
+      for( i = 0; i < sAnswers.GetGenes( ); ++i ) {
+	veciIndex[ i ] = i;
+      }
+      std::random_shuffle ( veciIndex.begin(), veciIndex.end() );
+      
+      for( x = 0; x < sAnswers.GetGenes( ); ++x ) {
+	i = veciIndex[x];
+	
+	veciPos.clear();
+	veciNeg.clear();
+	
+	for( j = 0; j < sAnswers.GetGenes( ); ++j ) {
+	  if( i == j || CMeta::IsNaN( d = sAnswers.Get( i, j ) )  )
+	    continue;	  
+	  
+	  if( d == 0 ){
+	    veciNeg.push_back(j);	    
+	  }else if( d == 1 ){
+	    veciPos.push_back(j);	    
+	  }
+	}
+	
+	pj = -1;
+	nj = -1;
+	if( veciPos.size() > 0 )
+	  pj = veciPos[ rand( ) % veciPos.size() ];	
+	if( veciNeg.size() > 0 )
+	  nj = veciNeg[ rand( ) % veciNeg.size() ];
+	
+	if( pj != -1 )
+	  Answers.Set( i, pj, 1);
+	if( nj != -1 )
+	  Answers.Set( i, nj, 0);
+	
+	// remove gene rows that have already been sampled
+	for( j = 0; j < sAnswers.GetGenes( ); ++j ) {
+	  if(  i != j  && j != pj && j != nj )
+	    sAnswers.Set( i, j, CMeta::GetNaN() );
+	}
+	
+	if( pj != -1 ){
+	  for(j = 0; j < sAnswers.GetGenes( ); ++j ) {
+	    if( j == pj || CMeta::IsNaN( d = sAnswers.Get( j, pj) )  )
+	      continue;	  	  	  
+	    if( d == 1 )
+	      sAnswers.Set( j, pj, CMeta::GetNaN() );	  
+	  }
+	}
+	if( nj != -1 ){
+	  for(j = 0; j < sAnswers.GetGenes( ); ++j ) {
+	    if( j == nj || CMeta::IsNaN( d = sAnswers.Get( j, nj) )  )
+	      continue;	  	  	  
+	    if( d == 0 )
+	      sAnswers.Set( j, nj, CMeta::GetNaN() );	  
+	  }
+	}
+      }      
+    }    
+        
     if( sArgs.normalize_flag )
-        Data.Normalize( CDat::ENormalizeMinMax );
+      Data.Normalize( CDat::ENormalizeMinMax );
     
 	
     if(sArgs.weights_arg){

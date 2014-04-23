@@ -22,6 +22,27 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+float get_mean(vector<float> &f){
+	int i;
+	float sum = 0;
+	for(i=0; i<f.size(); i++){
+		sum+=f[i];
+	}
+	return sum/(float)(f.size());
+}
+
+float get_stdev(vector<float> &f, float mean){
+	int i;
+	float sum_dev = 0;
+	float diff = 0;
+	for(i=0; i<f.size(); i++){
+		diff = f[i] - mean;
+		sum_dev+= diff * diff;
+	}
+	float dev = sqrt(sum_dev / (float) f.size());
+	return dev;
+}
+
 
 int main( int iArgs, char** aszArgs ) {
 	static const size_t	c_iBuffer	= 1024;
@@ -46,6 +67,94 @@ int main( int iArgs, char** aszArgs ) {
 
 	for(i=0; i<vecstrGenes.size(); i++)
 		mapstrintGene[vecstrGenes[i]] = i;
+
+	if(sArgs.add_gscore_flag==1){
+		vector<string> vecstrGScore;
+		if(!CSeekTools::ReadListOneColumn(sArgs.gscore_list_arg, vecstrGScore))
+			return false;
+		string gscoreDir = sArgs.gscore_dir_arg;
+		vector<float> totalScore;
+		totalScore.resize(vecstrGeneID.size());
+		for(int j=0; j<totalScore.size(); j++){
+			totalScore[j] = 0;
+		}
+		for(int j=0; j<vecstrGScore.size(); j++){
+			string path = gscoreDir + "/" + vecstrGScore[j];
+			vector<float> v1;
+			CSeekTools::ReadArray(path.c_str(), v1);
+			for(int k=0; k<v1.size(); k++){
+				if(v1[k]<-320){
+					totalScore[k] = -320;
+				}else{
+					totalScore[k]+=v1[k];
+				}
+			}
+		}
+		for(int j=0; j<totalScore.size(); j++){
+			if(totalScore[j]==-320){
+				continue;
+			}
+			totalScore[j]/=(float)totalScore.size();
+		}
+		CSeekTools::WriteArray(sArgs.gscore_output2_arg, totalScore);
+		return 0;
+	}
+
+
+	if(sArgs.increase_gscore_flag==1){
+		vector<float> v1;
+		CSeekTools::ReadArray(sArgs.gscore_file_arg, v1);
+
+		vector<float> v2;
+		CSeekTools::ReadArray(sArgs.gscore_file_2_arg, v2);
+
+		int num_genes_1 = 0;
+		int num_genes_2 = 0;
+		for(int j=0; j<v1.size(); j++){
+			if(v1[j]<-320) continue;
+			num_genes_1++;
+		}
+		for(int j=0; j<v2.size(); j++){
+			if(v2[j]<-320) continue;
+			num_genes_2++;
+		}
+
+		vector<CPair<float> > cp1, cp2;
+		cp1.resize(v1.size());
+		cp2.resize(v2.size());
+		for(int j=0; j<v1.size(); j++){
+			cp1[j].i = (utype) j;
+			cp1[j].v = v1[j];
+			cp2[j].i = (utype) j;
+			cp2[j].v = v2[j];
+		}
+		sort(cp1.begin(), cp1.end(), CDescendingValue<float>());
+		sort(cp2.begin(), cp2.end(), CDescendingValue<float>());
+
+		for(int j=0; j<v1.size(); j++){
+			if(cp1[j].v<-320){
+			}else{
+				v1[cp1[j].i] = (float) (num_genes_1 - j) / num_genes_1;
+			}
+			if(cp2[j].v<-320){
+			}else{
+				v2[cp2[j].i] = (float) (num_genes_2 - j) / num_genes_2;
+			}
+		}
+
+		vector<float> sum_v;
+		sum_v.resize(v1.size());
+		for(int j=0; j<v1.size(); j++){
+			if(v1[j]<-320 || v2[j]<-320){
+				sum_v[j] = -320;
+			}else{
+				sum_v[j] = v1[j] + v2[j];
+			}
+		}
+
+		CSeekTools::WriteArray(sArgs.gscore_output_arg, sum_v);
+		return 0;
+	}
 
 	if(sArgs.weight2_flag==1){
 		vector<string> vecstrDataset;
@@ -90,6 +199,248 @@ int main( int iArgs, char** aszArgs ) {
 		}
 		fprintf(stderr, "Done!\n");
 		return 0;
+	}
+
+	if(sArgs.combine_pcl_flag==1){
+		vector<string> vecstrPCL;
+		if(!CSeekTools::ReadListOneColumn(sArgs.pcl_list_arg, vecstrPCL))
+			return false;
+		vector<CPCL*> vc;
+		vc.resize(vecstrPCL.size());
+		utype i, j, k;
+
+		float **new_m;
+		int totExperiments = 0;
+		int totDatasets = vecstrPCL.size();
+		vector<int> geneFreq;
+		CSeekTools::InitVector(geneFreq, vecstrGenes.size(), (int) 0);
+		
+		for(i=0; i<vecstrPCL.size(); i++){
+			fprintf(stderr, "Reading %s...\n", vecstrPCL[i].c_str());	 
+			vc[i] = new CPCL();
+			CPCL *cp = vc[i];
+			cp->Open(vecstrPCL[i].c_str());
+			totExperiments+=cp->GetExperiments();
+			for(j=0; j<vecstrGenes.size(); j++){
+				int g = cp->GetGene(vecstrGenes[j]);
+				if(g==-1) continue;
+				geneFreq[j]++;
+			}
+		}
+
+		vector<string> pr; //all present genes
+		int totGenes = 0;
+		for(j=0; j<vecstrGenes.size(); j++){
+			if(geneFreq[j]==totDatasets){
+				totGenes++;
+				pr.push_back(vecstrGenes[j]);
+			}
+		}
+
+		//option 1 (Normalize within dataset)
+		vector<vector<vector<float> > > mm;
+		mm.resize(vc.size());	
+		for(i=0; i<vecstrPCL.size(); i++){
+			CPCL *cp = vc[i];
+			mm[i].resize(totGenes);
+
+			float **new_m = new float*[totGenes];
+			for(j=0; j<totGenes; j++)
+				new_m[j] = new float[cp->GetExperiments()];
+
+			vector<float> exp_avg;
+			vector<float> exp_stdev;
+			CSeekTools::InitVector(exp_avg, cp->GetExperiments(), (float)0);
+			CSeekTools::InitVector(exp_stdev, cp->GetExperiments(), (float)0);
+
+			for(j=0; j<pr.size(); j++){
+				int g = cp->GetGene(pr[j]);
+				float *vv = cp->Get(g);
+				for(k=0; k<cp->GetExperiments(); k++){
+					new_m[j][k] = vv[k];
+				}
+			}
+
+			set<int> badExperiments;
+			for(k=0; k<cp->GetExperiments(); k++){
+				vector<float> vf;
+				for(j=0; j<pr.size(); j++){
+					vf.push_back(new_m[j][k]);
+				}
+				exp_avg[k] = get_mean(vf);
+				exp_stdev[k] = get_stdev(vf, exp_avg[k]);
+				if(isinf(exp_avg[k]) || isnan(exp_avg[k])){
+					badExperiments.insert(k);
+					continue;
+				}
+			}
+
+			for(j=0; j<totGenes; j++){
+				vector<float> gv;
+				for(k=0; k<cp->GetExperiments(); k++){
+					if(badExperiments.find(k)==badExperiments.end()){
+						gv.push_back(new_m[j][k]);
+					}
+				}
+				float mean = get_mean(gv);
+				float stdev = get_stdev(gv, mean);
+				mm[i][j] = vector<float>();
+				for(k=0; k<cp->GetExperiments(); k++){
+					if(badExperiments.find(k)==badExperiments.end()){
+						mm[i][j].push_back((new_m[j][k] - mean) / stdev);
+					}
+				}	
+			}
+			for(j=0; j<totGenes; j++)
+				delete new_m[j];
+			delete new_m;
+		}
+
+		for(j=0; j<totGenes; j++){
+			vector<float> vv;
+			for(i=0; i<vecstrPCL.size(); i++){
+				for(k=0; k<mm[i][j].size(); k++){
+					vv.push_back(mm[i][j][k]);
+				}
+			}
+			for(i=0; i<vv.size(); i++){
+				int vi = 0;
+				if(vv[i]>=1.0)
+					vi = 1;
+				fprintf(stdout, "%d", vi);
+				if(i==vv.size()-1){
+					fprintf(stdout, "\n");
+				}else{
+					fprintf(stdout, "\t");
+				}
+			}
+		}
+		
+		//fprintf(stderr, "Number of datasets: %d. Number of genes with full coverage: %d.\n", 
+		//totDatasets, totGenes);
+
+		/*
+		new_m = new float*[totGenes];
+		for(i=0; i<totGenes; i++){
+			new_m[i] = new float[totExperiments];
+		}
+
+		int kk = 0;
+		for(i=0; i<vecstrPCL.size(); i++){
+			CPCL *cp = vc[i];
+			for(j=0; j<pr.size(); j++){
+				int g = cp->GetGene(pr[j]);
+				float *vv = cp->Get(g);
+				for(k=0; k<cp->GetExperiments(); k++){
+					new_m[j][kk+k] = vv[k];
+				}
+			}
+			kk+=cp->GetExperiments();
+		}
+
+		vector<float> allV;
+		allV.resize(totGenes);
+		set<int> badExperiments;
+		vector<float> averages;
+		averages.resize(totExperiments);
+		float mean_of_mean = 0;
+
+		for(i=0; i<totExperiments; i++){
+			for(j=0; j<totGenes; j++){
+				allV[j] = new_m[j][i];
+			}
+			float mean = get_mean(allV);
+			float stdev = get_stdev(allV, mean);
+			if(isinf(mean) || isnan(mean)){
+				badExperiments.insert(i);
+				continue;
+			}
+			averages[i] = mean;
+			mean_of_mean += mean;
+			//fprintf(stderr, "%d\t%.2f\t%.2f\n", i, mean, stdev);
+		}
+
+		mean_of_mean /= (float) (totExperiments - badExperiments.size());
+		//fprintf(stderr, "Mean of mean %.2f\n", mean_of_mean);
+
+		//adjustment by mean
+		vector<int> goodExperiments;
+		for(i=0; i<totExperiments; i++){
+			if(badExperiments.find(i)==badExperiments.end()){
+				float adj = averages[i] - mean_of_mean;
+				for(j=0; j<totGenes; j++){
+					new_m[j][i] -= adj;
+				}
+				goodExperiments.push_back(i);
+			}
+		}
+		fprintf(stderr, "Number of experiments: %d\n", goodExperiments.size());
+		*/
+
+		//Option 2 (normalize across all datasets)
+		/*
+		vector<float> mean_gene;
+		vector<float> stdev_gene;
+		CSeekTools::InitVector(mean_gene, pr.size(), (float) 0); //present genes
+		CSeekTools::InitVector(stdev_gene, pr.size(), (float) 0); //present genes
+		//calculate mean
+		for(i=0; i<goodExperiments.size(); i++){
+			int ii = goodExperiments[i];
+			for(j=0; j<totGenes; j++){
+				mean_gene[j] += new_m[j][ii];
+			}
+		}
+		//calculate mean and standard deviation
+		for(j=0; j<totGenes; j++)
+			mean_gene[j] /= (float) goodExperiments.size();
+		for(i=0; i<goodExperiments.size(); i++){
+			int ii = goodExperiments[i];
+			for(j=0; j<totGenes; j++){
+				float diff = new_m[j][ii] - mean_gene[j];
+				stdev_gene[j] += diff * diff;
+			}
+		}
+		for(j=0; j<totGenes; j++)
+			stdev_gene[j] = sqrt(stdev_gene[j] / (float) goodExperiments.size());
+		for(j=0; j<totGenes; j++){
+			for(i=0; i<goodExperiments.size(); i++){
+				float v = (new_m[j][goodExperiments[i]] - mean_gene[j]) / stdev_gene[j];
+				int vi = 0;
+				if(v>=1.0)
+					vi = 1;
+				fprintf(stdout, "%d", vi);
+				if(i==goodExperiments.size()-1){
+					fprintf(stdout, "\n");
+				}else{
+					fprintf(stdout, "\t");
+				}
+			}
+		}
+		*/
+
+		//original values
+		/*
+		for(j=0; j<totGenes; j++){
+			for(i=0; i<goodExperiments.size(); i++){
+				fprintf(stdout, "%d", (int) new_m[j][goodExperiments[i]]);
+				if(i==goodExperiments.size()-1){
+					fprintf(stdout, "\n");
+				}else{
+					fprintf(stdout, "\t");
+				}
+			}
+		}
+
+		for(i=0; i<totGenes; i++){
+			delete new_m[i];
+		}
+		delete new_m;
+		*/
+		for(i=0; i<vecstrPCL.size(); i++)
+			delete vc[i];
+		vc.clear();
+
+		return false;
 	}
 
 	if(sArgs.convert_aracne_flag==1){

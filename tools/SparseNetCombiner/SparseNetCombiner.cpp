@@ -32,11 +32,13 @@ enum EMethod {
 	EMethodMean		= EMethodBegin,
 	EMethodMax		= EMethodMean + 1,
 	EMethodQuant		= EMethodMax + 1,
-	EMethodEnd		= EMethodQuant + 1
+	EMethodMedian		= EMethodQuant + 1,
+	EMethodSelectMean	= EMethodMedian + 1,
+	EMethodEnd		= EMethodSelectMean + 1
 };
 
 static const char*	c_aszMethods[]	= {
-  "mean", "max", "quant",NULL
+  "mean", "max", "quant", "median", "selectmean", NULL
 };
 
 
@@ -79,6 +81,90 @@ float Percentile(vector<float>& vecVals, float quartile) {
     //return (vecVals[(size_t)index] + interpolationValue);
     return (value + interpolationValue);
   }
+}
+
+float Median(vector<float>& vecVals) {
+  size_t iSize, idx;
+  
+  iSize = vecVals.size();
+  if(iSize == 0)
+    return CMeta::GetNaN();
+  
+  if(iSize == 1)
+    return vecVals[0];
+  
+  std::sort(vecVals.begin(), vecVals.end());
+  
+  idx = vecVals.size() / 2;
+  if( vecVals.size() % 2 != 0 )
+    return vecVals[idx];
+  else
+    return ((vecVals[(idx-1)] + vecVals[idx]) * 0.5);
+}
+
+float SelectMean(vector<float>& vecVals) {
+  size_t iSize, idx, i, j;
+  float sum;
+  
+  iSize = vecVals.size();
+  if(iSize == 0)
+    return CMeta::GetNaN();
+  
+  if(iSize == 1)
+    return vecVals[0];
+  
+  std::sort(vecVals.begin(), vecVals.end());
+
+  // return the mean of the top quartile    
+  idx = (vecVals.size() / 4) * 3;
+  
+  j = 0;
+  sum = 0.0;
+  for(i = idx; i < iSize; ++i){
+    ++j;
+    sum += vecVals[i];
+  }
+  
+  return sum / j;
+  
+  
+  // DEBUG
+  if( 1 == 2 ){
+  idx = vecVals.size() / 2;
+  
+  j = 0;
+  sum = 0.0;
+  for(i = idx; i < iSize; ++i){
+    ++j;
+    sum += vecVals[i];
+  }
+  
+  return sum / j;
+  }
+  
+  // DEBUG
+  if( 1 == 2 ){
+    
+  idx = (vecVals.size() / 10);
+  idx = iSize - idx;
+  
+  j = 0;
+  sum = 0.0;
+  for(i = idx; i < iSize; ++i){
+    ++j;
+    sum += vecVals[i];
+  }
+  
+  return sum / j;
+  }
+  
+  // DEBUG
+  if( 1 == 2 ){
+    
+  idx = (vecVals.size() / 4) * 3;
+  return vecVals[idx];
+  }
+
 }
 
 int main( int iArgs, char** aszArgs ) {
@@ -203,6 +289,63 @@ int main( int iArgs, char** aszArgs ) {
 	  cerr << "Total number of datasets combining with non-zero weights: " << numDataset << endl;
 	}
 	
+	if( eMethod == EMethodMedian or eMethod == EMethodSelectMean){
+	  vector<float>	vecVals;
+	  float val;
+	  vector<CDat*> vecData;
+	  
+	  vecData.resize( vecstrDatasets.size( ) );
+	  // now iterate dat/dab networks
+	  for( i = 0; i < vecstrDatasets.size( ); ++i ) {
+	    vecData[ i ] = new CDat( );
+	    if( !vecData[ i ]->Open( vecstrDatasets[ i ].c_str() ) ) {
+	      cerr << "Couldn't open: " << vecstrDatasets[ i ] << endl;
+	      return 1; }
+	    
+	    if( sArgs.rank_flag )
+	      vecData[ i ]->Rank( );
+	    if( sArgs.zscore_flag )
+	      vecData[ i ]->Normalize( CDat::ENormalizeZScore );	    
+	    
+	    cerr << "open: " << vecstrDatasets[ i ] << endl;
+	  }
+	  
+	  // initialized the output dab and pair value vector
+	  DatOut.Open(vecData[ 0 ]->GetGeneNames());
+	  vecVals.resize(vecstrDatasets.size( ));
+	  
+	  // debug
+	  cerr << "num dataset: " << vecstrDatasets.size( ) << endl;
+	  
+	  for( i = 0; i < DatOut.GetGenes(); ++i ){
+	    for( j = i+1; j < DatOut.GetGenes(); ++j ){
+	      // iterate over each dataset
+	      vecVals.clear();
+	      for( k = 0; k < vecstrDatasets.size( ); ++k ){		
+		if( CMeta::IsNaN(val =  vecData[ k ]->Get( i, j)))
+		  continue;		
+		
+		if( sArgs.weight_given ){
+		  val *= vecWeights[k];
+		}		
+		vecVals.push_back(val);
+	      }
+	      
+	      if(vecVals.size() < 1)
+		continue;
+	      
+	      if( eMethod == EMethodMedian)
+		// find median
+		DatOut.Set(i, j, Median(vecVals));
+	      else if( eMethod == EMethodSelectMean )
+		DatOut.Set(i, j, SelectMean(vecVals));
+	    }
+	  }
+	  
+	  DatOut.Save( sArgs.output_arg );
+	  return 0;	  
+	}
+	
 	/// IF combine method is Quantile
 	/// Beaware that values are qunatized to allow full read in of the input datsets
 	if( eMethod == EMethodQuant ){
@@ -254,7 +397,7 @@ int main( int iArgs, char** aszArgs ) {
 	      //for(size_t t = 0; t < vecVals.size(); t++ )
 	      //	cerr << vecVals[t] << ' ';
 	      //cerr << endl;
-	    }
+	    }	
 	  }
 	  
 	  DatOut.Save( sArgs.output_arg );
@@ -270,6 +413,11 @@ int main( int iArgs, char** aszArgs ) {
 	    if( !DatCur.Open( vecstrDatasets[ i ].c_str() ) ) {
 	      cerr << "Couldn't open: " << vecstrDatasets[ i ] << endl;
 	      return 1; }
+	    	    
+	    if( sArgs.rank_flag )
+	      DatCur.Rank( );
+	    if( sArgs.zscore_flag )
+	      DatCur.Normalize( CDat::ENormalizeZScore );
 	    
 	    DatOut.Open( DatCur );	    	    
 	    DatTrack.Open( DatCur );
@@ -277,6 +425,8 @@ int main( int iArgs, char** aszArgs ) {
 	    // this Dat is used to track various values (count, max)
 	    for( j = 0; j < DatTrack.GetGenes( ); ++j )
 	      for( k = ( j + 1 ); k < DatTrack.GetGenes( ); ++k ){
+		if(eMethod == EMethodMean)
+		  DatTrack.Set( j, k, 0.0);		
 		if( CMeta::IsNaN( d = DatCur.Get( j, k)))
 		  continue;
 		
@@ -304,6 +454,11 @@ int main( int iArgs, char** aszArgs ) {
 	    cerr << "Couldn't open: " << vecstrDatasets[ i ] << endl;
 	    return 1; }
 	  cerr << "opened: " << vecstrDatasets[ i ] << endl;
+	  
+	  if( sArgs.rank_flag )
+	    DatCur.Rank( );
+	  if( sArgs.zscore_flag )
+	    DatCur.Normalize( CDat::ENormalizeZScore );
 	  
 	  if( sArgs.map_flag ){
 	    // Get gene index match	  
@@ -359,10 +514,13 @@ int main( int iArgs, char** aszArgs ) {
 	case EMethodMean:
 	  // now convert sum to mean
 	  for( j = 0; j < DatOut.GetGenes( ); ++j )
-	    for( k = ( j + 1 ); k < DatOut.GetGenes( ); ++k )
-	      DatOut.Set( j, k, DatOut.Get( j, k ) / DatTrack.Get( j, k ) );
+	    for( k = ( j + 1 ); k < DatOut.GetGenes( ); ++k ){
+	      if( CMeta::IsNaN( d = DatOut.Get(  j, k ) ) )
+		continue;
+	      DatOut.Set( j, k, d / DatTrack.Get( j, k ) );
+	    }
 	}
-
+	
 	// Filter dat
 	if( sArgs.genes_given ) {
 	  ifsm.clear( );

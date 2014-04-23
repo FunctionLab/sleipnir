@@ -11,14 +11,22 @@ option	"pcl_list"			V	"PCL list"
 								string typestr="filename"
 option	"pcl_dir"			F	"PCL directory"
 								string typestr="directory"
+option	"step_num"			S	"Step Number (4 steps) (1: separate pairs to batches, 2: calculate Pearson for pairs in each batch (need a batch number), 3: merge Pearson from all batches and output a DAB)"
+								int default="0"
 
 section "Input"
 option	"input"				i	"Gene mapping file"
 								string typestr="filename"	yes
 option	"query"				q	"Query file"
 								string typestr="filename"	yes
+option	"num_batch"			b	"Number of batches to split pairs to (for step 1)"
+								int default="10"
+option	"pairs_dir"			p	"Pairs directory (for steps 1, 2). Pearson for the pairs will also be stored here."
+								string typestr="filename"	yes
+option	"batch_num"			r	"Batch number (for step 2)"
+								int default="0" 
 
 section "Output"
-option	"dir_out"			D	"Output directory"
+option	"dir_out"			D	"DAB output directory (for step 3)"
 								string typestr="directory"
 

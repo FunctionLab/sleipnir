@@ -32,7 +32,7 @@
 
 #define BACKLOG 10   // how many pending connections queue will hold
 char *PORT;
-int NUM_DSET_MEMORY = 2000;
+int NUM_DSET_MEMORY = 100;
 string pcl_input_dir;
 
 CPCL **pcl;
@@ -190,9 +190,9 @@ void *do_query(void *th_arg){
 
 		fprintf(stderr, "acquired %d for dataset %s...\n", n, iterS->c_str());
 		//pcl[n]->Reset();
-		//string strFileStem = (*iterS).substr(0, (*iterS).find(".bin"));
+		//string strFileStem = (*iterS).substr(0, (*iterS).find(".bin")); //for human-SEEK
 		fprintf(stderr, "dataset reset \n");
-		string pcl_path = pcl_input_dir + "/" + *iterS;
+		string pcl_path = pcl_input_dir + "/" + *iterS + ".bin"; //for model-organism-SEEK
 		pcl[n]->Open(pcl_path.c_str());
 		//pcl[n]->Open(strFileStem.c_str(), 2, false, false);
 		fprintf(stderr, "dataset opened\n");
@@ -270,7 +270,8 @@ void *do_query(void *th_arg){
 
 		if(outputCoexpression || outputQueryCoexpression){
 			vd = new CSeekDataset();
-			string strFileStem = datasetName[i].substr(0, datasetName[i].find(".bin"));
+			//string strFileStem = datasetName[i].substr(0, datasetName[i].find(".bin")); //for human-SEEK
+			string strFileStem = datasetName[i]; //for model-organism-SEEK
 
 			int dbID = mapstrintDatasetDB[strFileStem];
 	

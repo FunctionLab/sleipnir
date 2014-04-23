@@ -10,7 +10,7 @@ option	"output"				o	"Output file "
 option	"input"					i	"Input PCL file "
 										string	typestr="filename"  yes
 option	"dab_input"				d	"Input Dat/Dab file "
-										string	typestr="filename"  yes
+										string	typestr="filename"  no
 option	"model"					m	"Model file"
 										string	typestr="filename"  no
 option	"test_labels"			T	"Test Labels file"

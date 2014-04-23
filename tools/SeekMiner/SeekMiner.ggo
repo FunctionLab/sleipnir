@@ -29,10 +29,12 @@ option	"num_threads"		T	"Number of threads"
 								int default="8"
 option	"per_g_required"	H	"Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting the minimum required genes are skipped."
 								float default="0.0"
+option	"neg_cor"			k	"Rank genes and datasets by negative correlations"
+								flag	off
 
 section "Dataset weighting"
-option	"weighting_method"	V	"Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z)"
-								values="CV","EQUAL","ORDER_STAT","VAR","USER","AVERAGE_Z" default="CV"
+option	"weighting_method"	V	"Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z), user cross-validated weighting (CV_CUSTOM)"
+								values="CV","EQUAL","ORDER_STAT","VAR","USER","AVERAGE_Z","CV_CUSTOM" default="CV"
 
 section "Optional - Functional Network Expansion"
 option	"func_db"			w	"Functional network db path"
@@ -47,6 +49,10 @@ option	"func_dset"			F	"Functional network dset-list file (1 dataset)"
 								string typestr="filename"
 option	"func_logit"		l	"Functional network, integrate using logit values"
 								flag	off
+
+section "Dataset weighting: User Cross-validated Weighting (CV_CUSTOM)"
+option	"user_gene_list"	K	"List of user's gene-sets to which queries will be judged upon (text, 1 line per query)"
+								string typestr="filename"
 
 section "Optional - User-given Weighting"
 option	"user_weight_list"	J	"List of pre-computed dataset weight files (.dweight)"

@@ -440,7 +440,29 @@ int main( int iArgs, char** aszArgs ) {
 			}			
 		} 
 	}
-
+	
+	if( sArgs.summary_flag ) {
+	  double sum, sq_sum, cTotal, mean, variance, d;
+	  
+	  sum = 0.0;
+	  sq_sum = 0.0;
+	  cTotal = 0.0;
+	  
+	  for( i = 0; i < Dat.GetGenes( ); ++i )
+	    for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+	      if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
+		sum += d;
+		sq_sum += (d*d);
+		cTotal += 1;
+	      }
+	  
+	  mean = sum / cTotal;	  	  
+	  variance = ( (sq_sum)  -   cTotal *(mean * mean) ) / ( cTotal - 1 );
+	  cout << mean << endl;
+	  cout << sqrt(variance) << endl;
+	  return 0;
+	}
+		
 	if( sArgs.lookups1_arg ) {
 		CGenes			GenesLk1( Genome );
 		vector<size_t>	veciGenesOne;

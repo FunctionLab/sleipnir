@@ -25,6 +25,7 @@ namespace Sleipnir {
 bool CSeekPerformanceMeasure::SortRankVector(
 	const vector<utype> &rank,
 	const CSeekIntIntMap &mapG, vector<AResult> &a,
+	const bool bNegativeCor,
 	//optional argument
 	const utype top){
 
@@ -52,11 +53,21 @@ bool CSeekPerformanceMeasure::SortRankVector(
 	}
 
 	//printf("Top is %d", TOP); getchar();
-	if(TOP==rank.size()){
-		sort(a.begin(), a.end());
+	if(bNegativeCor){
+		if(TOP==rank.size()){
+			sort(a.begin(), a.end(), Ascending());
+		}else{
+			nth_element(a.begin(), a.begin()+TOP, a.end(), Ascending());
+			sort(a.begin(), a.begin()+TOP, Ascending());
+		}
+
 	}else{
-		nth_element(a.begin(), a.begin()+TOP, a.end());
-		sort(a.begin(), a.begin()+TOP);
+		if(TOP==rank.size()){
+			sort(a.begin(), a.end());
+		}else{
+			nth_element(a.begin(), a.begin()+TOP, a.end());
+			sort(a.begin(), a.begin()+TOP);
+		}
 	}
 
 	return true;
@@ -68,6 +79,7 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 	const vector<utype> &rank, float &rbp,
 	const vector<char> &mask, const vector<char> &gold,
 	const CSeekIntIntMap &mapG, vector<AResult> *ar,
+	const bool bNegativeCor,
 	/* optional arguments */
 	const utype top){
 
@@ -80,7 +92,7 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 	//ar should be same size as rank
 	vector<AResult> *sing = ar;
 	bool ret =
-		CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing, top);
+		CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing, bNegativeCor, top);
 
 	if(!ret){
 		rbp = -1;
@@ -111,7 +123,7 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 bool CSeekPerformanceMeasure::AveragePrecision(
 	const vector<utype> &rank, float &ap,
 	const vector<char> &mask, const vector<char> &gold,
-	const CSeekIntIntMap &mapG, vector<AResult> *ar){
+	const CSeekIntIntMap &mapG, vector<AResult> *ar, const bool bNegativeCor){
 
 	utype i, ii, j, jj;
 	float x;
@@ -121,7 +133,7 @@ bool CSeekPerformanceMeasure::AveragePrecision(
 	//ar should be same size as rank
 	vector<AResult> *sing = ar;
 	bool ret =
-		CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing, TOP);
+		CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing, bNegativeCor, TOP);
 
 	if(!ret){
 		ap = -1;

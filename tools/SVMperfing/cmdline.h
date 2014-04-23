@@ -103,11 +103,6 @@ struct gengetopt_args_info
   char * tgene_arg;	/**< @brief Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list.  */
   char * tgene_orig;	/**< @brief Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list original value given at command line.  */
   const char *tgene_help; /**< @brief Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list help description.  */
-  int balance_flag;	/**< @brief DEBUG: check before usage, Balance the training gene ratios (default=off).  */
-  const char *balance_help; /**< @brief DEBUG: check before usage, Balance the training gene ratios help description.  */
-  float bfactor_arg;	/**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1..  */
-  char * bfactor_orig;	/**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1. original value given at command line.  */
-  const char *bfactor_help; /**< @brief DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1. help description.  */
   int prob_flag;	/**< @brief Output prediction values as estimated probablity (Platt method) (default=off).  */
   const char *prob_help; /**< @brief Output prediction values as estimated probablity (Platt method) help description.  */
   int probCross_flag;	/**< @brief Cross-validation setting for output prediction values as estimated probablity (Platt method) (default=off).  */
@@ -116,6 +111,8 @@ struct gengetopt_args_info
   const char *normalizeZero_help; /**< @brief Normalize input data to the range [0, 1] help description.  */
   int normalizeNPone_flag;	/**< @brief Normalize input data to the range [-1, 1] (default=off).  */
   const char *normalizeNPone_help; /**< @brief Normalize input data to the range [-1, 1] help description.  */
+  int zscore_flag;	/**< @brief Normalize input data to convert values to z-scores (default=off).  */
+  const char *zscore_help; /**< @brief Normalize input data to convert values to z-scores help description.  */
   int edgeholdout_flag;	/**< @brief For cross-validation perform edge holdout (Default is gene holdout) (default=off).  */
   const char *edgeholdout_help; /**< @brief For cross-validation perform edge holdout (Default is gene holdout) help description.  */
   int skipSVM_flag;	/**< @brief If given this flag, skip training SVM models when file already exist. Often used when cluster runs timeout/error and need to re-run jobs. (default=off).  */
@@ -136,6 +133,16 @@ struct gengetopt_args_info
   char * OutLabels_arg;	/**< @brief Save the sampled labels to the file and exit.  */
   char * OutLabels_orig;	/**< @brief Save the sampled labels to the file and exit original value given at command line.  */
   const char *OutLabels_help; /**< @brief Save the sampled labels to the file and exit help description.  */
+  char * GenesHoldoutFold_arg;	/**< @brief Input the gene holdout fold.  */
+  char * GenesHoldoutFold_orig;	/**< @brief Input the gene holdout fold original value given at command line.  */
+  const char *GenesHoldoutFold_help; /**< @brief Input the gene holdout fold help description.  */
+  int touchContext_flag;	/**< @brief If given context gene list, context is defined by all edges touch the context. (default is both genes in edge need to be in context) (default=off).  */
+  const char *touchContext_help; /**< @brief If given context gene list, context is defined by all edges touch the context. (default is both genes in edge need to be in context) help description.  */
+  int onlyPos_flag;	/**< @brief When given the context file, only filter for positive examples and leave negative examples as originally given. (default=off).  */
+  const char *onlyPos_help; /**< @brief When given the context file, only filter for positive examples and leave negative examples as originally given. help description.  */
+  char * genes_arg;	/**< @brief Process only genes from the given set from labels.  */
+  char * genes_orig;	/**< @brief Process only genes from the given set from labels original value given at command line.  */
+  const char *genes_help; /**< @brief Process only genes from the given set from labels help description.  */
   int onetgene_flag;	/**< @brief Only keep edges from lables that have one gene in the target gene list (default=off).  */
   const char *onetgene_help; /**< @brief Only keep edges from lables that have one gene in the target gene list help description.  */
   float prior_arg;	/**< @brief Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior..  */
@@ -149,6 +156,8 @@ struct gengetopt_args_info
   char * context_arg;	/**< @brief Context gene list.  */
   char * context_orig;	/**< @brief Context gene list original value given at command line.  */
   const char *context_help; /**< @brief Context gene list help description.  */
+  int allContextPred_flag;	/**< @brief When given context genes list, allow prediction too all genes (default=off).  */
+  const char *allContextPred_help; /**< @brief When given context genes list, allow prediction too all genes help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -169,12 +178,11 @@ struct gengetopt_args_info
   unsigned int mmap_given ;	/**< @brief Whether mmap was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
   unsigned int tgene_given ;	/**< @brief Whether tgene was given.  */
-  unsigned int balance_given ;	/**< @brief Whether balance was given.  */
-  unsigned int bfactor_given ;	/**< @brief Whether bfactor was given.  */
   unsigned int prob_given ;	/**< @brief Whether prob was given.  */
   unsigned int probCross_given ;	/**< @brief Whether probCross was given.  */
   unsigned int normalizeZero_given ;	/**< @brief Whether normalizeZero was given.  */
   unsigned int normalizeNPone_given ;	/**< @brief Whether normalizeNPone was given.  */
+  unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int edgeholdout_given ;	/**< @brief Whether edgeholdout was given.  */
   unsigned int skipSVM_given ;	/**< @brief Whether skipSVM was given.  */
   unsigned int aggregateMax_given ;	/**< @brief Whether aggregateMax was given.  */
@@ -183,11 +191,16 @@ struct gengetopt_args_info
   unsigned int SampledLabels_given ;	/**< @brief Whether SampledLabels was given.  */
   unsigned int subsample_given ;	/**< @brief Whether subsample was given.  */
   unsigned int OutLabels_given ;	/**< @brief Whether OutLabels was given.  */
+  unsigned int GenesHoldoutFold_given ;	/**< @brief Whether GenesHoldoutFold was given.  */
+  unsigned int touchContext_given ;	/**< @brief Whether touchContext was given.  */
+  unsigned int onlyPos_given ;	/**< @brief Whether onlyPos was given.  */
+  unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int onetgene_given ;	/**< @brief Whether onetgene was given.  */
   unsigned int prior_given ;	/**< @brief Whether prior was given.  */
   unsigned int savemodel_given ;	/**< @brief Whether savemodel was given.  */
   unsigned int mintrain_given ;	/**< @brief Whether mintrain was given.  */
   unsigned int context_given ;	/**< @brief Whether context was given.  */
+  unsigned int allContextPred_given ;	/**< @brief Whether allContextPred was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

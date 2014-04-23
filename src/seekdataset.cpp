@@ -283,7 +283,7 @@ bool CSeekDataset::InitializeDataMatrix(utype **rD,
 	const utype &iColumns, const bool bSubtractAvg,
 	const bool bNormPlatform, const bool logit,
 	const enum CSeekDataset::DistanceMeasure dist_measure,
-	const float cutoff, 
+	const float cutoff,
 	const bool bRandom, gsl_rng *rand){
 	/* assume platform is already set */
 	//Assuming rData is not NULL

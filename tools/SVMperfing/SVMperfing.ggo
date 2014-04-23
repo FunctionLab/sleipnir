@@ -47,10 +47,6 @@ option	"random"			R	"Seed random generator (default -1 uses current time)"
 							int	default="-1" no
 option	"tgene"				T	"Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list"
 							string	typestr="filename"
-option	"balance"			b	"DEBUG: check before usage, Balance the training gene ratios"
-										flag	off
-option  "bfactor"    			F   "DEBUG: only for < 500, When balancing neg and pos counts exmaples for training what factor to increase. default is 1."
-										float  no
 option	"prob"				B	"Output prediction values as estimated probablity (Platt method)"
 										flag	off
 option	"probCross"			D	"Cross-validation setting for output prediction values as estimated probablity (Platt method)"
@@ -59,6 +55,8 @@ option  "normalizeZero"             	z       "Normalize input data to the range 
                                                         flag    off
 option  "normalizeNPone"             	N       "Normalize input data to the range [-1, 1]"
                                                         flag    off
+option	"zscore"			Z	"Normalize input data to convert values to z-scores"
+							flag	off
 option  "edgeholdout"             	X       "For cross-validation perform edge holdout (Default is gene holdout)"
                                                         flag    off
 option  "skipSVM"	             	Q       "If given this flag, skip training SVM models when file already exist. Often used when cluster runs timeout/error and need to re-run jobs."
@@ -75,15 +73,25 @@ option  "subsample"    			A	"Sample the labels to the following rate"
 										float  no
 option	"OutLabels"			U	"Save the sampled labels to the file and exit"
 							string	typestr="filename"
+option	"GenesHoldoutFold"		H	"Input the gene holdout fold"
+							string	typestr="filename"
+option	"touchContext"			f	"If given context gene list, context is defined by all edges touch the context. (default is both genes in edge need to be in context)"
+							flag	off
+option	"onlyPos"			w	"When given the context file, only filter for positive examples and leave negative examples as originally given."
+							flag	off
 
 section "Filtering"
+option	"genes"				g	"Process only genes from the given set from labels"
+							string	typestr="filename"
 option	"onetgene"			q	"Only keep edges from lables that have one gene in the target gene list"
 							flag off
-option "prior"    			P   "Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior."
+option "prior"    			P   	"Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior."
 										float  no
 option	"savemodel"			s	"Save model to file"
 										flag	off
-option "mintrain"	    		E   "Minimum number of total positive examples to allow training, if not met exit"
+option "mintrain"	    		E   	"Minimum number of total positive examples to allow training, if not met exit"
 										float  no
 option	"context"			C	"Context gene list"
 							string	typestr="filename"
+option	"allContextPred"		V	"When given context genes list, allow prediction too all genes"
+										flag	off

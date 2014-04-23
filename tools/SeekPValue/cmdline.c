@@ -32,14 +32,19 @@ const char *gengetopt_args_info_usage = "Usage: SeekPValue [OPTIONS]... [FILES].
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                  Print help and exit",
-  "  -V, --version               Print version and exit",
+  "  -h, --help                    Print help and exit",
+  "  -V, --version                 Print version and exit",
   "\nMain:",
-  "  -t, --port=STRING           Port  (default=`9005')",
-  "  -R, --random_dir=directory  Random directory",
-  "  -N, --random_num=INT        Number of random trials  (default=`100')",
-  "  -i, --input=filename        Gene mapping file",
-  "  -n, --nan=FLOAT             Define NaN score  (default=`-320')",
+  "  -m, --mode=STRING             Mode (datasets or genes)  (possible \n                                  values=\"datasets\", \"genes\" \n                                  default=`genes')",
+  "  -t, --port=STRING             Port  (default=`9005')",
+  "\nDataset mode:",
+  "  -d, --dset_platform=filename  Dataset platform file",
+  "  -p, --param_dir=directory     Parameter directory",
+  "\nGene mode:",
+  "  -R, --random_dir=directory    Random directory",
+  "  -N, --random_num=INT          Number of random trials  (default=`100')",
+  "  -i, --input=filename          Gene mapping file",
+  "  -n, --nan=FLOAT               Define NaN score  (default=`-320')",
     0
 };
 
@@ -58,8 +63,8 @@ static int
 cmdline_parser_internal (int argc, char **argv, struct gengetopt_args_info *args_info,
                         struct cmdline_parser_params *params, const char *additional_error);
 
-static int
-cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error);
+
+const char *cmdline_parser_mode_values[] = {"datasets", "genes", 0}; /*< Possible values for mode. */
 
 static char *
 gengetopt_strdup (const char *s);
@@ -69,7 +74,10 @@ void clear_given (struct gengetopt_args_info *args_info)
 {
   args_info->help_given = 0 ;
   args_info->version_given = 0 ;
+  args_info->mode_given = 0 ;
   args_info->port_given = 0 ;
+  args_info->dset_platform_given = 0 ;
+  args_info->param_dir_given = 0 ;
   args_info->random_dir_given = 0 ;
   args_info->random_num_given = 0 ;
   args_info->input_given = 0 ;
@@ -80,8 +88,14 @@ static
 void clear_args (struct gengetopt_args_info *args_info)
 {
   FIX_UNUSED (args_info);
+  args_info->mode_arg = gengetopt_strdup ("genes");
+  args_info->mode_orig = NULL;
   args_info->port_arg = gengetopt_strdup ("9005");
   args_info->port_orig = NULL;
+  args_info->dset_platform_arg = NULL;
+  args_info->dset_platform_orig = NULL;
+  args_info->param_dir_arg = NULL;
+  args_info->param_dir_orig = NULL;
   args_info->random_dir_arg = NULL;
   args_info->random_dir_orig = NULL;
   args_info->random_num_arg = 100;
@@ -100,11 +114,14 @@ void init_args_info(struct gengetopt_args_info *args_info)
 
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
-  args_info->port_help = gengetopt_args_info_help[3] ;
-  args_info->random_dir_help = gengetopt_args_info_help[4] ;
-  args_info->random_num_help = gengetopt_args_info_help[5] ;
-  args_info->input_help = gengetopt_args_info_help[6] ;
-  args_info->nan_help = gengetopt_args_info_help[7] ;
+  args_info->mode_help = gengetopt_args_info_help[3] ;
+  args_info->port_help = gengetopt_args_info_help[4] ;
+  args_info->dset_platform_help = gengetopt_args_info_help[6] ;
+  args_info->param_dir_help = gengetopt_args_info_help[7] ;
+  args_info->random_dir_help = gengetopt_args_info_help[9] ;
+  args_info->random_num_help = gengetopt_args_info_help[10] ;
+  args_info->input_help = gengetopt_args_info_help[11] ;
+  args_info->nan_help = gengetopt_args_info_help[12] ;
   
 }
 
@@ -188,8 +205,14 @@ static void
 cmdline_parser_release (struct gengetopt_args_info *args_info)
 {
   unsigned int i;
+  free_string_field (&(args_info->mode_arg));
+  free_string_field (&(args_info->mode_orig));
   free_string_field (&(args_info->port_arg));
   free_string_field (&(args_info->port_orig));
+  free_string_field (&(args_info->dset_platform_arg));
+  free_string_field (&(args_info->dset_platform_orig));
+  free_string_field (&(args_info->param_dir_arg));
+  free_string_field (&(args_info->param_dir_orig));
   free_string_field (&(args_info->random_dir_arg));
   free_string_field (&(args_info->random_dir_orig));
   free_string_field (&(args_info->random_num_orig));
@@ -207,13 +230,54 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   clear_given (args_info);
 }
 
+/**
+ * @param val the value to check
+ * @param values the possible values
+ * @return the index of the matched value:
+ * -1 if no value matched,
+ * -2 if more than one value has matched
+ */
+static int
+check_possible_values(const char *val, const char *values[])
+{
+  int i, found, last;
+  size_t len;
+
+  if (!val)   /* otherwise strlen() crashes below */
+    return -1; /* -1 means no argument for the option */
+
+  found = last = 0;
+
+  for (i = 0, len = strlen(val); values[i]; ++i)
+    {
+      if (strncmp(val, values[i], len) == 0)
+        {
+          ++found;
+          last = i;
+          if (strlen(values[i]) == len)
+            return i; /* exact macth no need to check more */
+        }
+    }
+
+  if (found == 1) /* one match: OK */
+    return last;
+
+  return (found ? -2 : -1); /* return many values or none matched */
+}
+
 
 static void
 write_into_file(FILE *outfile, const char *opt, const char *arg, const char *values[])
 {
-  FIX_UNUSED (values);
+  int found = -1;
   if (arg) {
-    fprintf(outfile, "%s=\"%s\"\n", opt, arg);
+    if (values) {
+      found = check_possible_values(arg, values);      
+    }
+    if (found >= 0)
+      fprintf(outfile, "%s=\"%s\" # %s\n", opt, arg, values[found]);
+    else
+      fprintf(outfile, "%s=\"%s\"\n", opt, arg);
   } else {
     fprintf(outfile, "%s\n", opt);
   }
@@ -235,8 +299,14 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "help", 0, 0 );
   if (args_info->version_given)
     write_into_file(outfile, "version", 0, 0 );
+  if (args_info->mode_given)
+    write_into_file(outfile, "mode", args_info->mode_orig, cmdline_parser_mode_values);
   if (args_info->port_given)
     write_into_file(outfile, "port", args_info->port_orig, 0);
+  if (args_info->dset_platform_given)
+    write_into_file(outfile, "dset_platform", args_info->dset_platform_orig, 0);
+  if (args_info->param_dir_given)
+    write_into_file(outfile, "param_dir", args_info->param_dir_orig, 0);
   if (args_info->random_dir_given)
     write_into_file(outfile, "random_dir", args_info->random_dir_orig, 0);
   if (args_info->random_num_given)
@@ -328,43 +398,9 @@ cmdline_parser2 (int argc, char **argv, struct gengetopt_args_info *args_info, i
 int
 cmdline_parser_required (struct gengetopt_args_info *args_info, const char *prog_name)
 {
-  int result = EXIT_SUCCESS;
-
-  if (cmdline_parser_required2(args_info, prog_name, 0) > 0)
-    result = EXIT_FAILURE;
-
-  return result;
-}
-
-int
-cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error)
-{
-  int error = 0;
-  FIX_UNUSED (additional_error);
-
-  /* checks for required options */
-  if (! args_info->random_dir_given)
-    {
-      fprintf (stderr, "%s: '--random_dir' ('-R') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error = 1;
-    }
-  
-  if (! args_info->random_num_given)
-    {
-      fprintf (stderr, "%s: '--random_num' ('-N') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error = 1;
-    }
-  
-  if (! args_info->input_given)
-    {
-      fprintf (stderr, "%s: '--input' ('-i') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error = 1;
-    }
-  
-  
-  /* checks for dependences among options */
-
-  return error;
+  FIX_UNUSED (args_info);
+  FIX_UNUSED (prog_name);
+  return EXIT_SUCCESS;
 }
 
 
@@ -421,7 +457,18 @@ int update_arg(void *field, char **orig_field,
       return 1; /* failure */
     }
 
-  FIX_UNUSED (default_value);
+  if (possible_values && (found = check_possible_values((value ? value : default_value), possible_values)) < 0)
+    {
+      if (short_opt != '-')
+        fprintf (stderr, "%s: %s argument, \"%s\", for option `--%s' (`-%c')%s\n", 
+          package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt, short_opt,
+          (additional_error ? additional_error : ""));
+      else
+        fprintf (stderr, "%s: %s argument, \"%s\", for option `--%s'%s\n", 
+          package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt,
+          (additional_error ? additional_error : ""));
+      return 1; /* failure */
+    }
     
   if (field_given && *field_given && ! override)
     return 0;
@@ -523,7 +570,10 @@ cmdline_parser_internal (
       static struct option long_options[] = {
         { "help",	0, NULL, 'h' },
         { "version",	0, NULL, 'V' },
+        { "mode",	1, NULL, 'm' },
         { "port",	1, NULL, 't' },
+        { "dset_platform",	1, NULL, 'd' },
+        { "param_dir",	1, NULL, 'p' },
         { "random_dir",	1, NULL, 'R' },
         { "random_num",	1, NULL, 'N' },
         { "input",	1, NULL, 'i' },
@@ -531,7 +581,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVt:R:N:i:n:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVm:t:d:p:R:N:i:n:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -556,6 +606,18 @@ cmdline_parser_internal (
           return 0;
         
           break;
+        case 'm':	/* Mode (datasets or genes).  */
+        
+        
+          if (update_arg( (void *)&(args_info->mode_arg), 
+               &(args_info->mode_orig), &(args_info->mode_given),
+              &(local_args_info.mode_given), optarg, cmdline_parser_mode_values, "genes", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "mode", 'm',
+              additional_error))
+            goto failure;
+        
+          break;
         case 't':	/* Port.  */
         
         
@@ -564,6 +626,30 @@ cmdline_parser_internal (
               &(local_args_info.port_given), optarg, 0, "9005", ARG_STRING,
               check_ambiguity, override, 0, 0,
               "port", 't',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'd':	/* Dataset platform file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->dset_platform_arg), 
+               &(args_info->dset_platform_orig), &(args_info->dset_platform_given),
+              &(local_args_info.dset_platform_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "dset_platform", 'd',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'p':	/* Parameter directory.  */
+        
+        
+          if (update_arg( (void *)&(args_info->param_dir_arg), 
+               &(args_info->param_dir_orig), &(args_info->param_dir_given),
+              &(local_args_info.param_dir_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "param_dir", 'p',
               additional_error))
             goto failure;
         
@@ -630,10 +716,6 @@ cmdline_parser_internal (
 
 
 
-  if (check_required)
-    {
-      error += cmdline_parser_required2 (args_info, argv[0], additional_error);
-    }
 
   cmdline_parser_release (&local_args_info);
 

@@ -60,6 +60,8 @@ struct thread_data{
 	string distanceMeasure; //Correlation, Zscore, or ZscoreHubbinessCorrected
 	string searchMethod; //RBP, EqualWeighting, or OrderStatistics
 
+	string correlationSign; //positive, negative
+
     int threadid;
     int new_fd;
 };
@@ -74,6 +76,9 @@ void *do_query(void *th_arg){
 	string strSearchDatasets = my->strSearchDatasets;
 	string distanceMeasure = my->distanceMeasure;
 	string searchMethod = my->searchMethod;
+	//if "negative", then rank datasets and genes by most negative correlations
+	string correlationSign = my->correlationSign;
+
 	float rbp_p = my->rbp_p;
 	float query_fraction_required = my->query_fraction_required;
 	float genome_fraction_required = my->genome_fraction_required;
@@ -82,6 +87,13 @@ void *do_query(void *th_arg){
 	enum CSeekDataset::DistanceMeasure eDM = CSeekDataset::Z_SCORE;
 	bool bSubtractGeneAvg = false;
 	bool bNormPlatform = false;
+
+	bool bNegativeCor = false;
+	if(correlationSign=="positive"){
+		bNegativeCor = false;
+	}else{
+		bNegativeCor = true;
+	}
 
 	if(distanceMeasure=="Correlation"){
 		eDM = CSeekDataset::CORRELATION;
@@ -97,7 +109,7 @@ void *do_query(void *th_arg){
 
 	bool r = csu->Initialize(strOutputDir, strQuery, strSearchDatasets, csfinal,
 		new_fd, query_fraction_required, genome_fraction_required, eDM, bSubtractGeneAvg,
-		bNormPlatform);
+		bNormPlatform, bNegativeCor);
 
 	//if r is false, then one of the query has no datasets 
 	//containing any of the query (because of CheckDatasets() in Initialize()),
@@ -279,7 +291,7 @@ int main( int iArgs, char** aszArgs ) {
 		0.0, //min query fraction (to be overwrriten)
 		0.0, //min genome fraction (to be overwrriten)
 		!!sArgs.square_z_flag, //default
-		false, 1, NULL, useNibble, sArgs.num_threads_arg)) //default
+		false, 1, false, NULL, useNibble, sArgs.num_threads_arg)) //default
 	{
 		fprintf(stderr, "Error occurred!\n");
 		return -1;
@@ -391,13 +403,14 @@ int main( int iArgs, char** aszArgs ) {
 		string strOutputDir;
 
 		//search parameters
-		string strSearchParameter; 
+		string strSearchParameter;
 		//format: _ delimited		
 		//[0]: search_method ("RBP", "OrderStatistics", or "EqualWeighting") 
 		//[1]: rbp_p
 		//[2]: minimum fraction of query required
 		//[3]: minimum fraction of genome required
 		//[4]: distance measure ("Correlation", "Zscore", or "ZscoreHubbinessCorrected")
+		//[5]: correlation sign ("positive", "negative")
 
 		if(CSeekNetwork::Receive(new_fd, strSearchDataset)==-1){
 			fprintf(stderr, "Error receiving from client!\n");
@@ -425,7 +438,7 @@ int main( int iArgs, char** aszArgs ) {
 		thread_arg[d].genome_fraction_required = 
 			atof(searchParameterTokens[3].c_str());
 		thread_arg[d].distanceMeasure = searchParameterTokens[4];
-
+		thread_arg[d].correlationSign = searchParameterTokens[5];
 		//=========================================================
 
 		thread_arg[d].threadid = d;

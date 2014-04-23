@@ -117,6 +117,35 @@ bool ReadModelFile(ifstream& ifsm, vector<float>& SModel) {
 		
 	}
 	ifsm.close();
+	return true;
+}
+
+bool ReadGenesHoldoutFoldFile(ifstream& ifsm, map<string, size_t>& mapGene2Fold) {
+	static const size_t c_iBuffer = 1024;
+	char acBuffer[c_iBuffer];
+	char* nameBuffer;
+	vector<string> vecstrTokens;
+	
+	while (!ifsm.eof()) {
+		ifsm.getline(acBuffer, c_iBuffer - 1);
+		acBuffer[c_iBuffer - 1] = 0;
+		vecstrTokens.clear();
+		CMeta::Tokenize(acBuffer, vecstrTokens);
+		if (vecstrTokens.empty())
+			continue;
+		if (vecstrTokens.size() != 2) {
+			cerr << "Illegal line (" << vecstrTokens.size() << "): "
+					<< acBuffer << endl;
+			continue;
+		}
+		
+		if (acBuffer[0] == '#') {
+		  cerr << "skipping " << acBuffer << endl;
+		} else {		  		  
+		  mapGene2Fold[ vecstrTokens[0] ] = atoi( vecstrTokens[1].c_str() );
+		}
+	}
+	return true;
 }
 
 // Read in the 
@@ -325,6 +354,8 @@ int main(int iArgs, char** aszArgs) {
 	vector<size_t> mapTgene2fold;
 	vector<int> tgeneCount;
 	
+	map<string, size_t> mapGene2Fold;
+
 	DIR* dp;
 	struct dirent* ep;	
 	CGenome Genome;
@@ -335,6 +366,9 @@ int main(int iArgs, char** aszArgs) {
 	
 	CGenome GenomeThree;
         CGenes Allgenes(GenomeThree);
+	
+	CGenome GenomeFour;
+        CGenes labelgenes(GenomeFour);
 	
 	if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
 		cmdline_parser_print_help();
@@ -400,6 +434,14 @@ int main(int iArgs, char** aszArgs) {
 	  }	  
 	}
 	
+	// read in the gene list
+	if( sArgs.genes_arg ) {
+	  ifsm.open( sArgs.genes_arg );
+	  if( !labelgenes.Open( ifsm ) ) {
+	    cerr << "Could not open: " << sArgs.genes_arg << endl;
+	    return 1; }
+	  ifsm.close( ); }
+	
 	// read target gene list
 	if(sArgs.tgene_given ) {
 	  ifstream ifsm;
@@ -411,7 +453,7 @@ int main(int iArgs, char** aszArgs) {
 	  }
 	  ifsm.close();
 	}
-	
+
 	// read context gene list
 	if(sArgs.context_given ) {
 	  ifstream ifsm;
@@ -423,7 +465,7 @@ int main(int iArgs, char** aszArgs) {
 	  }
 	  ifsm.close();
 	}
-		
+
 	// read all gene list
 	// IF given this flag predict for all gene pairs
 	if(sArgs.allgenes_given ) {
@@ -435,6 +477,19 @@ int main(int iArgs, char** aszArgs) {
 	    return 1;
 	  }
 	  ifsm.close();
+	}
+
+	// read the gene holdout fold
+	if( sArgs.GenesHoldoutFold_given ){
+	  ifstream ifsm;
+	  ifsm.open( sArgs.GenesHoldoutFold_arg );
+	  
+	  if (!ReadGenesHoldoutFoldFile(ifsm, mapGene2Fold) ) {
+	    cerr << "Could not open: " << sArgs.GenesHoldoutFold_arg << endl;
+	    return 1;
+	  }
+	  
+	  ifsm.close();	  	  
 	}
 	
 	///######################
@@ -452,7 +507,10 @@ int main(int iArgs, char** aszArgs) {
 	    cerr << "Could not open input labels Dat" << endl;
 	    return 1;
 	  }
-	  
+
+	  if( labelgenes.GetGenes( ) )
+	    Labels.FilterGenes( labelgenes, CDat::EFilterInclude );
+	  	  
 	  // random sample labels
 	  if( sArgs.subsample_given ){
 	    cerr << "Sub-sample labels to rate:" << sArgs.subsample_arg << endl;
@@ -485,7 +543,7 @@ int main(int iArgs, char** aszArgs) {
 	    
 	    // keep track of positive gene counts
 	    tgeneCount.resize(Labels.GetGenes());
-	    	    
+	    
 	    // if given a target gene file
 	    // Only keep eges that have only one gene in this targe gene list
 	    if( sArgs.onetgene_flag ){
@@ -525,7 +583,7 @@ int main(int iArgs, char** aszArgs) {
 		mapCgene[i] = true;
 	    }
 	  }
-	  
+
 	  // Set target prior
 	  if(sArgs.prior_given){
 	    numpos = 0;
@@ -539,7 +597,7 @@ int main(int iArgs, char** aszArgs) {
 		    ++numneg;
 		  }
 		}
-	    
+
 	    if( ((float)numpos / (numpos + numneg)) < sArgs.prior_arg){
 	      
 	      cerr << "Convert prior from orig: " << ((float)numpos / (numpos + numneg)) << " to target: " << sArgs.prior_arg << endl;
@@ -565,9 +623,13 @@ int main(int iArgs, char** aszArgs) {
 	  }
 	  
 	  // Exclude labels without context genes
-	  if(sArgs.context_given )
-	    Labels.FilterGenes( Context, CDat::EFilterInclude );
-	  
+	  if(sArgs.context_given && !sArgs.allContextPred_flag){
+	    if( sArgs.touchContext_flag ){
+	      Labels.FilterGenes( sArgs.context_arg, CDat::EFilterEdge );
+	    }else{
+	      Labels.FilterGenes( Context, CDat::EFilterInclude );
+	    }
+	  }
 	  
 	  // If not given a SVM model/models we are in learning mode, thus construct each SVMLabel object for label
 	  if( !sArgs.model_given && !sArgs.modelPrefix_given ){
@@ -618,88 +680,89 @@ int main(int iArgs, char** aszArgs) {
 		  mapTgene2fold[i] = -1; 
 		  continue;
 		}
-		//cerr << "what's up?" << endl;
-		mapTgene2fold[i] = rand() % sArgs.cross_validation_arg;
+		
+		if( sArgs.GenesHoldoutFold_given ){
+		  // Does not check if this gene has been assigned a random fold
+		  mapTgene2fold[i] = mapGene2Fold[ Labels.GetGene(i) ];
+		}else{
+		  mapTgene2fold[i] = rand() % sArgs.cross_validation_arg;
+		}
+		
 	      }
 	      
 	      // cross-fold by target gene
 	      for (i = 0; i < sArgs.cross_validation_arg; i++) {
 		cerr << "cross validation holds setup:" << i << endl;
 		
-		// keep track of positive gene counts
-		if(sArgs.balance_flag){
-		  cerr << "Set up balance: " << i << endl;
-		  for(j = 0; j < Labels.GetGenes(); j++)
-		    tgeneCount[j] = 0;
-		  
-		  for(j = 0; j < vecLabels.size(); j++)
-		    if(vecLabels[j]->Target > 0){
-		      ++(tgeneCount[vecLabels[j]->iidx]);
-		      ++(tgeneCount[vecLabels[j]->jidx]);
-		    }
-		  
-		  if(sArgs.bfactor_given)
-		    for(j = 0; j < vecLabels.size(); j++)
-		      if(tgeneCount[vecLabels[j]->jidx] < 500)
-			tgeneCount[vecLabels[j]->jidx] = sArgs.bfactor_arg*tgeneCount[vecLabels[j]->jidx];
-		}
-		
 		for (j = 0; j < vecLabels.size(); j++) {
 		  //if( j % 1000 == 0)
 		  //cerr << "cross validation push labels:" << j << endl;
 		  
-		  // assume only one gene is a target gene in a edge
-		  if(mapTgene[vecLabels[j]->iidx]){
-		    if(vecLabels[j]->Target < 0){
-		      --(tgeneCount[vecLabels[j]->iidx]);
-		    }
+		  if(mapTgene[vecLabels[j]->iidx] || mapTgene[vecLabels[j]->jidx]){
 		    
-		    if(mapTgene2fold[vecLabels[j]->iidx] == i)			    
-		      pTestVector[i].push_back(vecLabels[j]);
-		    else{
-		      //cerr << tgeneCount[vecLabels[j]->iidx] << endl;
+		    if(mapTgene2fold[vecLabels[j]->iidx] == i || mapTgene2fold[vecLabels[j]->jidx] == i){
 		      
-		      if( sArgs.balance_flag && vecLabels[j]->Target < 0 && tgeneCount[vecLabels[j]->iidx] < 0){
-			continue;
+		      // only add if both genes are in context
+		      if( sArgs.context_given  && 
+			  !sArgs.allContextPred_flag  &&
+			  !sArgs.touchContext_flag &&
+			  ( !mapCgene[vecLabels[j]->iidx] || !mapCgene[vecLabels[j]->jidx])){
+
+			if( !( sArgs.onlyPos_flag && vecLabels[j]->Target < 0 ) )
+			  continue;
+		      }
+		      
+		      if( sArgs.context_given  && 
+			  !sArgs.allContextPred_flag  &&
+			  sArgs.touchContext_flag &&
+			  ( !mapCgene[vecLabels[j]->iidx] && !mapCgene[vecLabels[j]->jidx])){
+			
+			if( !( sArgs.onlyPos_flag && vecLabels[j]->Target < 0 ) )
+			  continue;			
+		      }
+
+		      pTestVector[i].push_back(vecLabels[j]);
+		    }else{		      		      
+
+		      // only add if both genes are in context
+		      if( sArgs.context_given  && 
+			  !sArgs.touchContext_flag &&
+			  ( !mapCgene[vecLabels[j]->iidx] || !mapCgene[vecLabels[j]->jidx])){
+
+			if( !( sArgs.onlyPos_flag && vecLabels[j]->Target < 0 ) )
+			  continue;
+
 		      }
 		      
 		      // only add if both genes are in context
-		      if( sArgs.context_given  && ( !mapCgene[vecLabels[j]->iidx] || !mapCgene[vecLabels[j]->jidx]))
-			continue;
-		      
-		      pTrainVector[i].push_back(vecLabels[j]); 
-		    }
-		  }
-		  else if(mapTgene[vecLabels[j]->jidx]){
-		    if(vecLabels[j]->Target < 0)
-		      --(tgeneCount[vecLabels[j]->jidx]);
-		    
-		    if(mapTgene2fold[vecLabels[j]->jidx] == i)
-		      pTestVector[i].push_back(vecLabels[j]);
-		    else{
-		      //cerr << tgeneCount[vecLabels[j]->jidx] << endl;
-		      
-		      if( sArgs.balance_flag && vecLabels[j]->Target < 0 && tgeneCount[vecLabels[j]->jidx] < 0){
-			continue;
+		      if( sArgs.context_given  && 
+			  sArgs.touchContext_flag &&
+			  ( !mapCgene[vecLabels[j]->iidx] && !mapCgene[vecLabels[j]->jidx])){
+			
+			if( !( sArgs.onlyPos_flag && vecLabels[j]->Target < 0 ) )
+			  continue;
 		      }
 		      
-		      // only add if both genes are in context
-		      if( sArgs.context_given && ( !mapCgene[vecLabels[j]->iidx] || !mapCgene[vecLabels[j]->jidx]))
-			continue;
-		      
 		      pTrainVector[i].push_back(vecLabels[j]); 
-		    }
+		    }	
+		    /*else if(mapTgene2fold[vecLabels[j]->iidx] != i && mapTgene2fold[vecLabels[j]->jidx] != i){		      		      
+		      pTrainVector[i].push_back(vecLabels[j]); 
+		      }*/    
+		  }else{
+		    cerr << "Error: edge exist without a target gene" << endl; 
+		    return 1;
 		  }
-		  else{
-		    cerr << "Error: edge exist without a target gene" << endl; return 1;
-		  }
-		}
+		}		
 		
 		cerr << "test,"<< i <<": " << pTestVector[i].size() << endl;
 		int numpos = 0;
+		int numpos_test = 0;
 		for(j=0; j < pTrainVector[i].size(); j++)
 		  if(pTrainVector[i][j]->Target > 0)
 		    ++numpos;
+		for(j=0; j < pTestVector[i].size(); j++)
+		  if(pTestVector[i][j]->Target > 0)
+		    ++numpos_test;
 		
 		if( numpos < 1 || (sArgs.mintrain_given && sArgs.mintrain_arg > numpos) ){						
 		  cerr << "Not enough positive examples from fold: " << i  << " file: " << sArgs.labels_arg << " numpos: " << numpos << endl;
@@ -707,14 +770,17 @@ int main(int iArgs, char** aszArgs) {
 		}
 		
 		cerr << "train,"<< i <<","<<numpos<<": " << pTrainVector[i].size() << endl;
-		
+		cerr << "test,"<< i <<","<<numpos_test<<": " <<  pTestVector[i].size() << endl;
 	      }
 	    }
 	    else{ //randomly set eges into cross-fold
-	      if( sArgs.context_given ){
+	      cerr << "Edge holdout" << endl;
+	      /*
+		if( sArgs.context_given ){
 		cerr << "context not implemented yet for random edge holdout" << endl;
 		return 1;
-	      }
+		}
+	      */
 	      
 	      for (i = 0; i < sArgs.cross_validation_arg; i++) {
 		pTestVector[i].reserve((size_t) vecLabels.size()
@@ -726,11 +792,29 @@ int main(int iArgs, char** aszArgs) {
 		for (j = 0; j < vecLabels.size(); j++) {
 		  if (j % sArgs.cross_validation_arg == i) {
 		    pTestVector[i].push_back(vecLabels[j]);
-		  } else {
-		    pTrainVector[i].push_back((vecLabels[j]));
+		  }else{
+		    if( sArgs.context_given ){
+		      if( mapCgene[vecLabels[j]->iidx] && mapCgene[vecLabels[j]->jidx] )
+			pTrainVector[i].push_back((vecLabels[j]));
+		    }else{
+		      pTrainVector[i].push_back((vecLabels[j]));
+		    }
 		  }
 		}
-	      }
+	      	
+		// print out number of examples
+		int numpos = 0;
+		int numpos_test = 0;
+		for(j=0; j < pTrainVector[i].size(); j++)
+		  if(pTrainVector[i][j]->Target > 0)
+		    ++numpos;
+		for(j=0; j < pTestVector[i].size(); j++)
+		  if(pTestVector[i][j]->Target > 0)
+		    ++numpos_test;		
+		cerr << "train: "<< i <<" , "<<numpos<<": " << pTrainVector[i].size() << endl;
+		cerr << "test: "<< i <<" , "<<numpos_test<<": " <<  pTestVector[i].size() << endl;
+		
+	      }      	      
 	    }
 	  }
 	  else{ // if you have less than 2 fold cross, no cross validation is done, all train genes are used and predicted
@@ -762,6 +846,11 @@ int main(int iArgs, char** aszArgs) {
 					  vecLabels,
 					  Labels.GetGeneNames(),
 					  Sleipnir::CDat::ENormalizeMinMaxNPone);
+	  }else if(sArgs.zscore_flag){
+	    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
+					  vecLabels,
+					  Labels.GetGeneNames(),
+					  Sleipnir::CDat::ENormalizeZScore);
 	  }else{
 	    SVMLight::CSVMPERF::CreateDoc(vecstrDatasets,
 					  vecLabels,
@@ -996,6 +1085,9 @@ int main(int iArgs, char** aszArgs) {
 	    }else if(sArgs.normalizeNPone_flag){
 	      cerr << "Normalize input [-1,1] data" << endl;
 	      wDat.Normalize( Sleipnir::CDat::ENormalizeMinMaxNPone );
+	    }else if(sArgs.zscore_flag){
+	      cerr << "Normalize input data to zscore" << endl;
+	      wDat.Normalize( Sleipnir::CDat::ENormalizeZScore );
 	    }
 	    
 	    // map result gene list to dataset gene list
@@ -1088,9 +1180,13 @@ int main(int iArgs, char** aszArgs) {
 	  }
 	  
 	  // Exclude pairs without context genes
-	  if(sArgs.context_given ){
+	  if(sArgs.context_given && !sArgs.allContextPred_flag){
 	    for(iSVM = 0; iSVM < sArgs.cross_validation_arg; iSVM++){
-	      vecResults[ iSVM ]->FilterGenes( Context, CDat::EFilterInclude );
+	      if( sArgs.touchContext_flag ){
+		vecResults[ iSVM ]->FilterGenes( sArgs.context_arg, CDat::EFilterEdge );
+	      }else{
+		vecResults[ iSVM ]->FilterGenes( Context, CDat::EFilterInclude );
+	      }
 	    }
 	  }
 	  

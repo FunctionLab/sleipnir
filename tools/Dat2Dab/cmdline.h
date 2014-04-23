@@ -119,6 +119,8 @@ struct gengetopt_args_info
   const char *hubbiness_help; /**< @brief Output the average edge weight for each gene help description.  */
   int mar_flag;	/**< @brief Output the maximum adjacency ratio for each gene (default=off).  */
   const char *mar_help; /**< @brief Output the maximum adjacency ratio for each gene help description.  */
+  int summary_flag;	/**< @brief Output the summary of values (mean, stand dev.) (default=off).  */
+  const char *summary_help; /**< @brief Output the summary of values (mean, stand dev.) help description.  */
   char * remap_arg;	/**< @brief Gene name remapping file.  */
   char * remap_orig;	/**< @brief Gene name remapping file original value given at command line.  */
   const char *remap_help; /**< @brief Gene name remapping file help description.  */
@@ -174,6 +176,7 @@ struct gengetopt_args_info
   unsigned int ccoeff_given ;	/**< @brief Whether ccoeff was given.  */
   unsigned int hubbiness_given ;	/**< @brief Whether hubbiness was given.  */
   unsigned int mar_given ;	/**< @brief Whether mar was given.  */
+  unsigned int summary_given ;	/**< @brief Whether summary was given.  */
   unsigned int remap_given ;	/**< @brief Whether remap was given.  */
   unsigned int table_given ;	/**< @brief Whether table was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */

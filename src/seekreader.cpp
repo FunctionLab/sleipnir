@@ -100,7 +100,9 @@ bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
 	ret = system("date +%s%N 1>&2");
 	if(bNetwork && CSeekNetwork::Send(iClient, "Reading " + 
 		CSeekTools::ConvertInt(allQ.size()) + 
-		" query genes' correlations")==-1){
+		" query genes' correlations (estimated time " + 
+		CSeekTools::ConvertInt(allQ.size() * 2) + 
+		"s; stay on this page)")==-1){
 		fprintf(stderr, "Error sending client message\n");
 		return false;
 	}
@@ -139,7 +141,9 @@ bool CSeekTools::ReadDatabaselets(const vector<CDatabase*> &DB,
 	fprintf(stderr, "Finished reading query genes' correlations\n");
 	ret = system("date +%s%N 1>&2");
 	if(bNetwork && CSeekNetwork::Send(iClient, 
-		"Finished reading query genes' correlations")==-1){
+		"Finished reading. Now doing search (estimated time " +
+		CSeekTools::ConvertInt(allQ.size()) + 
+		"s; stay on this page)")==-1){
 		fprintf(stderr, "Error sending client message\n");
 		return false;
 	}

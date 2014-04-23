@@ -50,7 +50,16 @@ struct AResult{
 
 struct Ascending{
     bool operator()( const AResult& lx, const AResult& rx ) const {
-        return lx.f < rx.f;
+		if(lx.f < rx.f){
+			return true;
+		}else if(lx.f > rx.f){
+			return false;
+		}else if(lx.i < rx.i){
+			return true;
+		}else{
+			return false;
+		}
+        //return lx.f < rx.f;
     }
 };
 
@@ -79,7 +88,16 @@ struct AResultFloat{
 
 struct AscendingFloat{
     bool operator()( const AResultFloat& lx, const AResultFloat& rx ) const {
-        return lx.f < rx.f;
+		if(lx.f < rx.f){
+			return true;
+		}else if(lx.f > rx.f){
+			return false;
+		}else if(lx.i < rx.i){
+			return true;
+		}else{
+			return false;
+		}
+        //return lx.f < rx.f;
     }
 };
 
@@ -109,6 +127,7 @@ public:
 	 */
 	static bool SortRankVector(const vector<utype> &rank,
 		const CSeekIntIntMap &mapG, vector<AResult> &a,
+		const bool bNegativeCor,
 		const utype top = 0);
 
 	/*!
@@ -140,6 +159,7 @@ public:
 		const vector<utype> &rank, float &rbp,
 		const vector<char> &mask, const vector<char> &gold,
 		const CSeekIntIntMap &mapG, vector<AResult> *sing,
+		const bool bNegativeCor,
 		/* optional */
 		const utype top = 0);
 
@@ -156,7 +176,7 @@ public:
 	static bool AveragePrecision(
 		const vector<utype> &rank, float &ap,
 		const vector<char> &mask, const vector<char> &gold,
-		const CSeekIntIntMap &mapG, vector<AResult> *ar);
+		const CSeekIntIntMap &mapG, vector<AResult> *ar, const bool bNegativeCor);
 
 };
 

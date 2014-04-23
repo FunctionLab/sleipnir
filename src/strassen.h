@@ -1,7 +1,7 @@
 #ifndef STRASSEN_H
 #define STRASSEN_H
 
-#include "seekbasic.h"
+//#include "seekbasic.h"
 #include <sstream>
 #include <fstream>
 

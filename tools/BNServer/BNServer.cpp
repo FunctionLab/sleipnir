@@ -24,6 +24,8 @@
 #include "BNServer.h"
 #include "dot.h"
 
+typedef CFullMatrix<size_t> CCountMatrix;
+
 static const char				c_szXDSL[]						= ".xdsl";
 static const char				c_szDSL[]						= ".dsl";
 static const char				c_szDOT[]						= ".dot";
@@ -37,7 +39,7 @@ const CBNServer::TPFNProcessor	CBNServer::c_apfnProcessors[]	=
 	{&CBNServer::ProcessInference, &CBNServer::ProcessData, &CBNServer::ProcessGraph,
 	&CBNServer::ProcessContexts, &CBNServer::ProcessTermFinder, &CBNServer::ProcessDiseases,
 	&CBNServer::ProcessGenes, &CBNServer::ProcessAssociation, &CBNServer::ProcessAssociations,
-	&CBNServer::ProcessInferenceOTF, &CBNServer::ProcessEdges};
+	&CBNServer::ProcessInferenceOTF, &CBNServer::ProcessEdges, &CBNServer::ProcessLearning};
 
 struct SPixie {
 	size_t	m_iNode;
@@ -51,11 +53,13 @@ struct SPixie {
 };
 
 int main( int iArgs, char** aszArgs ) {
+	static const size_t	c_iBuffer	= 1024;
+	char				acBuffer[ c_iBuffer ];
 	gengetopt_args_info			sArgs;
 	CServer						Server;
 	CBayesNetSmile				BNSmile;
 	ifstream					ifsm, ifsmGenes;
-	vector<string>				vecstrLine;
+	vector<string>				vecstrLine, vecstrDatasets;
 	size_t						i, j, k;
 	uint32_t					iSize;
 	ofstream					ofsm;
@@ -72,12 +76,13 @@ int main( int iArgs, char** aszArgs ) {
 	CDataMatrix					MatBackgrounds, MatParameters, MatWithinC, MatWithinD;
 	CDataMatrix					MatBetweenCC, MatBetweenDD, MatBetweenDC;
 	vector<vector<size_t> >		vecveciDiseases, vecveciContexts;
-	vector<size_t>				veciDiseases, veciContexts;
+	vector<size_t>				veciDiseases, veciContexts, veciBins;
 	CGenome						Genome;
 	const IOntology*			apOntologies[]	= {&GOBP, &GOMF, &GOCC, &KEGG, NULL };
 
 	iRet = cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 );
 	CDatabase Database(sArgs.is_nibble_flag);
+	CDatabase Answers(sArgs.is_nibble_flag);
 
 	if( sArgs.config_arg )
 		iRet = cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) && iRet;
@@ -116,6 +121,25 @@ int main( int iArgs, char** aszArgs ) {
 	if( !Database.Open( sArgs.database_arg ) ) {
 		cerr << "Could not open: " << sArgs.database_arg << endl;
 		return 1; }
+
+
+	if(sArgs.datasets_arg){
+		ifsm.clear( );
+		ifsm.open(sArgs.datasets_arg);
+		while(!ifsm.eof()){
+			ifsm.getline(acBuffer, c_iBuffer -1);
+			if(acBuffer[0]==0)
+				break;
+			acBuffer[c_iBuffer-1] = 0;
+
+            		vector<string> tok;
+            		CMeta::Tokenize(acBuffer, tok, " \t");
+			vecstrDatasets.push_back(tok[0]);
+			veciBins.push_back(atoi(tok[1].c_str()));
+		}
+		ifsm.close();
+	}
+
 // Open Bayes networks
 	if( sArgs.minimal_in_flag ) {
 		cerr << "Loading minimal Bayesian classifiers..." << endl;
@@ -238,6 +262,14 @@ int main( int iArgs, char** aszArgs ) {
 		veciDiseases.resize( setiContexts.size( ) );
 		copy( setiContexts.begin( ), setiContexts.end( ), veciDiseases.begin( ) );
 	}
+// Open global gold standard
+	if( sArgs.global_standard_given ) {
+	   if( !Answers.Open( sArgs.global_standard_arg) ) {
+		cerr << "Could not open: " << sArgs.global_standard_arg << endl;
+		return 1; }
+	}
+
+
 // Open gene backgrounds
 	cerr << "Loading gene backgrounds..." << endl;
 	if( sArgs.backgrounds_arg && !MatBackgrounds.Open( sArgs.backgrounds_arg ) ) {
@@ -285,6 +317,7 @@ int main( int iArgs, char** aszArgs ) {
 		apOntologies,
 		BNDefault,
 		Database,
+		Answers,
 		Genome,
 		sArgs.limit_arg,
 		MatBackgrounds,
@@ -298,6 +331,7 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.graphviz_arg,
 		vecBNs,
 		vecdPriors,
+		veciBins,
 		veciContexts,
 		veciDiseases,
 		vecveciContexts,
@@ -536,6 +570,134 @@ size_t CBNServer::ProcessEdges( const vector<unsigned char>& vecbMessage, size_t
 	iSize = (uint32_t)( iEdges * sizeof(float) );
 	send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
 	send( m_iSocket, (char*)fVals, iSize, 0 ); 
+
+	return ( iOffset - iStart );
+}
+
+
+size_t CBNServer::ProcessLearning( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+	size_t		i, j, k, iStart, iAnswer, iVal, iCount;
+	uint32_t	iGene, iGenes, iChunk, iSize, iGeneOffset, iGeneOne, iGeneTwo, iDatasets;
+	unsigned char	c;
+	float	logratio;
+	vector<unsigned char> vecbData;
+	vector<size_t> veciGenes;
+	vector<bool> vecfGenes, vecfUbik;
+	vector<CCountMatrix*> vecpMatCounts; 
+	CCountMatrix matRoot;
+	vector<CFullMatrix<float>*> vecpMatProbs, vecpMatRatios;
+
+	iStart = iOffset;
+	iDatasets = GetDatabase().GetDatasets();
+
+	// Initialize matrices
+	matRoot.Initialize( 2, 1 );
+	matRoot.Clear();
+	vecpMatCounts.resize(iDatasets);
+	vecpMatProbs.resize(iDatasets);
+	vecpMatRatios.resize(iDatasets);
+	for ( i = 0; i < GetDatabase().GetDatasets(); i++ ) {
+	    vecpMatCounts[i] = new CCountMatrix();
+	    vecpMatCounts[i]->Initialize( GetBins()[i], 2 );
+	    vecpMatCounts[i]->Clear();
+
+	    vecpMatProbs[i] = new CFullMatrix<float>();
+	    vecpMatProbs[i]->Initialize( GetBins()[i], 2 );
+	    vecpMatProbs[i]->Clear();
+
+	    vecpMatRatios[i] = new CFullMatrix<float>();
+	    vecpMatRatios[i]->Initialize( 1, GetBins()[i] );
+	    vecpMatRatios[i]->Clear();
+	}
+
+	// Load context gene membership
+	vecfGenes.resize(GetAnswers().GetGenes());
+
+	// Load gene id pairs
+	for ( j = 0; iOffset < vecbMessage.size(); j++, iOffset += sizeof(iGene) ) {
+	    iGene = *(uint32_t*)&vecbMessage[ iOffset ];
+	    veciGenes.push_back(iGene-1);
+	    vecfGenes[iGene-1] = true;
+	}
+
+	for ( i = 0; i < veciGenes.size(); i++ ) {
+	    iGeneOne = veciGenes[i];
+
+	    for ( j = 0; j < GetAnswers().GetGenes(); j++ ) {
+		iGeneTwo = j;
+		
+		if ( vecfGenes[iGeneTwo] && iGeneTwo < iGeneOne )
+		    continue;
+
+		vecbData.clear();
+		GetAnswers().Get(iGeneOne, iGeneTwo, vecbData);
+
+		iAnswer = vecbData[0];
+		if ( ( iAnswer &= 0xF ) == 0xF )  
+		    continue; // Missing value
+
+		if ( CMeta::SkipEdge( iAnswer, iGeneOne, iGeneTwo, vecfGenes, vecfUbik, true, true, false, true, false, false) )
+		    continue;
+
+		matRoot.Get( iAnswer, 0 )++;
+
+		vecbData.clear();
+		GetDatabase().Get(iGeneOne, iGeneTwo, vecbData);
+		for( k = 0; k < GetDatabase().GetDatasets(); ++k ) {
+		    c = vecbData[ ( k / 2 ) ];
+		    if( k % 2 )
+		        c >>= 4;
+		    if( ( c &= 0xF ) == 0xF ) // Skip missing data
+		        continue;
+		    vecpMatCounts[k]->Get( (size_t)c, iAnswer )++;
+		}
+	    }
+	}
+
+	// Convert counts to probabilities
+	uint32_t iTotal, iBinTotal = 0;
+	for ( i = 0; i < vecpMatCounts.size(); i++ ) {
+	    for ( j = 0; j < vecpMatCounts[i]->GetColumns(); j++ ) {
+		iTotal = 0;
+		for( iVal = 0; iVal < vecpMatCounts[i]->GetRows(); ++iVal ) {
+		   iTotal += vecpMatCounts[i]->Get( iVal, j ); 
+		}	
+		for( iVal = 0; iVal < vecpMatCounts[i]->GetRows(); ++iVal ) {
+		    iCount = vecpMatCounts[i]->Get( iVal, j );
+		    vecpMatProbs[i]->Set( iVal, j, ((float)(iCount+1))/(iTotal+vecpMatCounts[i]->GetRows())); 
+		}	
+	    } 
+	    for( iVal = 0; iVal < vecpMatProbs[i]->GetRows(); ++iVal ) {
+	    	logratio = log( vecpMatProbs[i]->Get( iVal, 0 ) / vecpMatProbs[i]->Get( iVal, 1 ) );
+	    	vecpMatRatios[i]->Set( 0, iVal, logratio ); 
+	    }	
+	    iBinTotal += vecpMatCounts[i]->GetRows();
+	}
+/*
+	for ( i = 0; i < 5; i++ ) {
+	    cerr << "d: " << i << endl;
+	    for ( j = 0; j < vecpMatProbs[i]->GetColumns(); j++ ) {
+		for( iVal = 0; iVal < vecpMatProbs[i]->GetRows(); ++iVal ) {
+		    cerr << ( iVal ? "\t" : "" ) << vecpMatProbs[i]->Get( iVal, j );
+		}	
+		cerr << endl;
+	    } 
+	    for( iVal = 0; iVal < vecpMatRatios[i]->GetColumns(); ++iVal ) {
+	        cerr << ( iVal ? "\t" : "" ) << vecpMatRatios[i]->Get( 0, iVal );
+	    }	
+	    cerr << endl;
+	}
+*/
+	// Send results back
+	iSize = (uint32_t)( (iBinTotal + 1 + iDatasets) * sizeof(float) ); // [# datasets][[# bin in d0][bin0]*]*
+	send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+
+	send( m_iSocket, (char*)&iDatasets, sizeof(iDatasets), 0 );
+	for ( i = 0; i < iDatasets; i++ ) {
+	    iTotal =  vecpMatRatios[i]->GetColumns();
+	    send( m_iSocket, (char*)&iTotal, sizeof(iTotal), 0 );
+	    send( m_iSocket, (char*)(vecpMatRatios[i]->Get(0)), sizeof(float)*iTotal, 0);
+	}
 
 	return ( iOffset - iStart );
 }

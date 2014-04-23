@@ -19,6 +19,36 @@ option	"convert_dab"		k	"Convert DAB to matrix"
 								flag	off
 option	"limit_hub"			Y	"Limit genes in the DAB to those that are hubby"
 								flag	off
+option	"combine_pcl"		B	"Combine PCL bin files"
+								flag	off
+option	"increase_gscore"	R	"Increase the gene scores"
+								flag	off
+option	"add_gscore"		g	"Add the gene scores"
+								flag	off
+
+section	"Increase the gene scores of given queries"
+option	"gscore_file"		S	"Gene score file (input)"
+								string typestr="filename" default="NA"
+option	"gscore_file_2"		T	"Gene score file (input 2)"
+								string typestr="filename" default="NA"
+option	"gscore_output"		t	"Gene score output file"
+								string typestr="filename" default="NA"
+
+section "Add the gene score for a bunch of files"
+option	"gscore_list"		a	"Gene score list"
+								string typestr="filename" default="NA"
+option	"gscore_dir"		c	"Gene score directory"
+								string typestr="directory" default="NA"
+option	"gscore_output2"	e	"Gene score output file"
+								string typestr="filename" default="NA"
+
+section	"Combine PCL"
+option	"pcl_list"			u	"File containing a list of pcl bin files (including path)"
+								string typestr="filename" default="NA"
+option	"binarize"			b	"Binarize the output matrix"
+								flag	off
+option	"output_pcl"		V	"Output file"
+								string typestr="filename" default="NA"
 
 section "Limit Hub"
 option	"dabinput"			y	"DAB input file"

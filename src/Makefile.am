@@ -48,8 +48,7 @@ libSleipnir_GSL_INCLUDES = \
 	seekwriter.h			\
 	seekdataset.h			\
 	seekmap.h				\
-	seeknetwork.h			\
-	strassen.cpp
+	seeknetwork.h			
 endif
 libSleipnir_a_SOURCES	=	\
 	annotation.cpp			\
@@ -98,7 +97,8 @@ libSleipnir_a_SOURCES	=	\
 	$(libSleipnir_LIBSVM_SOURCES) \
 	$(libSleipnir_SVM_MULTICLASS_SOURCES)\
 	$(libSleipnir_SVM_HIERARCHY_SOURCES)\
-	vwb.cpp					
+	vwb.cpp					\
+	strassen.cpp
 
 include_HEADERS			=	\
 	annotation.h			\

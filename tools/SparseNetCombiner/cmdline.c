@@ -35,10 +35,12 @@ const char *gengetopt_args_info_help[] = {
   "  -v, --verbosity=INT        Message verbosity  (default=`5')",
   "  -d, --directory=directory  input directory (must only contain input files)",
   "  -m, --map                  Map gene index among the network dabs to combine. \n                               (Should be used when the gene intex are not \n                               identical among network dabs)  (default=off)",
-  "  -M, --method=STRING        Combination method  (possible values=\"max\", \n                               \"mean\", \"quant\" default=`mean')",
+  "  -M, --method=STRING        Combination method, (selectmean computes the mea \n                               of the upper quartile values)  (possible \n                               values=\"max\", \"mean\", \"median\", \"quant\", \n                               \"selectmean\" default=`mean')",
   "\nOptional:",
   "  -q, --quantile=FLOAT       If combine method is Quantile, set the returning \n                               quantile (default is median qunatile 0.5)  \n                               (default=`0.5')",
   "  -w, --weight=filename      File with dataset weights, if given each dataset \n                               values if weighted by the dataset weight. Skips \n                               datasets with no-entry or with zero weights. \n                               File format: dataset name<tab>weight",
+  "  -z, --zscore               Convert values to z-scores before combine  \n                               (default=off)",
+  "  -r, --rank                 Rank transform data before combine  (default=off)",
   "\nFiltering:",
   "  -g, --genes=filename       Process only genes from the given set",
   "  -D, --genee=filename       Process only edges including a gene from the given \n                               set",
@@ -62,7 +64,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
                         struct cmdline_parser_params *params, const char *additional_error);
 
 
-char *cmdline_parser_method_values[] = {"max", "mean", "quant", 0} ;	/* Possible values for method.  */
+char *cmdline_parser_method_values[] = {"max", "mean", "median", "quant", "selectmean", 0} ;	/* Possible values for method.  */
 
 static char *
 gengetopt_strdup (const char *s);
@@ -79,6 +81,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->method_given = 0 ;
   args_info->quantile_given = 0 ;
   args_info->weight_given = 0 ;
+  args_info->zscore_given = 0 ;
+  args_info->rank_given = 0 ;
   args_info->genes_given = 0 ;
   args_info->genee_given = 0 ;
 }
@@ -99,6 +103,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->quantile_orig = NULL;
   args_info->weight_arg = NULL;
   args_info->weight_orig = NULL;
+  args_info->zscore_flag = 0;
+  args_info->rank_flag = 0;
   args_info->genes_arg = NULL;
   args_info->genes_orig = NULL;
   args_info->genee_arg = NULL;
@@ -120,8 +126,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->method_help = gengetopt_args_info_help[7] ;
   args_info->quantile_help = gengetopt_args_info_help[9] ;
   args_info->weight_help = gengetopt_args_info_help[10] ;
-  args_info->genes_help = gengetopt_args_info_help[12] ;
-  args_info->genee_help = gengetopt_args_info_help[13] ;
+  args_info->zscore_help = gengetopt_args_info_help[11] ;
+  args_info->rank_help = gengetopt_args_info_help[12] ;
+  args_info->genes_help = gengetopt_args_info_help[14] ;
+  args_info->genee_help = gengetopt_args_info_help[15] ;
   
 }
 
@@ -311,6 +319,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "quantile", args_info->quantile_orig, 0);
   if (args_info->weight_given)
     write_into_file(outfile, "weight", args_info->weight_orig, 0);
+  if (args_info->zscore_given)
+    write_into_file(outfile, "zscore", 0, 0 );
+  if (args_info->rank_given)
+    write_into_file(outfile, "rank", 0, 0 );
   if (args_info->genes_given)
     write_into_file(outfile, "genes", args_info->genes_orig, 0);
   if (args_info->genee_given)
@@ -576,12 +588,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "method",	1, NULL, 'M' },
         { "quantile",	1, NULL, 'q' },
         { "weight",	1, NULL, 'w' },
+        { "zscore",	0, NULL, 'z' },
+        { "rank",	0, NULL, 'r' },
         { "genes",	1, NULL, 'g' },
         { "genee",	1, NULL, 'D' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVo:v:d:mM:q:w:g:D:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVo:v:d:mM:q:w:zrg:D:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -652,7 +666,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'M':	/* Combination method.  */
+        case 'M':	/* Combination method, (selectmean computes the mea of the upper quartile values).  */
         
         
           if (update_arg( (void *)&(args_info->method_arg), 
@@ -684,6 +698,26 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.weight_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "weight", 'w',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'z':	/* Convert values to z-scores before combine.  */
+        
+        
+          if (update_arg((void *)&(args_info->zscore_flag), 0, &(args_info->zscore_given),
+              &(local_args_info.zscore_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "zscore", 'z',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'r':	/* Rank transform data before combine.  */
+        
+        
+          if (update_arg((void *)&(args_info->rank_flag), 0, &(args_info->rank_given),
+              &(local_args_info.rank_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "rank", 'r',
               additional_error))
             goto failure;
         

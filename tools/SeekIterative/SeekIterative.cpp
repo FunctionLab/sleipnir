@@ -882,8 +882,12 @@ int main(int iArgs, char **aszArgs){
 		q_weight.resize(vecstrAllQuery.size());
 		for(i=0; i<vecstrAllQuery.size(); i++){
 			CSeekTools::InitVector(q_weight[i], numGenes, (float) 0);
-			for(j=0; j<vecstrAllQuery[i].size(); j++)
-				q_weight[i][mapstriGenes[vecstrAllQuery[i][j]]] = 1;
+			for(j=0; j<vecstrAllQuery[i].size(); j++){
+				map<string, size_t>::iterator it = mapstriGenes.find(vecstrAllQuery[i][j]);
+				if(it!=mapstriGenes.end()){
+					q_weight[i][it->second] = 1;
+				}
+			}
 		}
 
 		//preparing query2
@@ -891,8 +895,12 @@ int main(int iArgs, char **aszArgs){
 		qq.resize(vecstrAllQuery.size());
 		for(i=0; i<vecstrAllQuery.size(); i++){
 			qq[i] = vector<unsigned int>();
-			for(j=0; j<vecstrAllQuery[i].size(); j++)
-				qq[i].push_back(mapstriGenes[vecstrAllQuery[i][j]]);
+			for(j=0; j<vecstrAllQuery[i].size(); j++){
+				map<string, size_t>::iterator it = mapstriGenes.find(vecstrAllQuery[i][j]);
+				if(it!=mapstriGenes.end()){
+					qq[i].push_back(it->second);
+				}
+			}
 		}
 
 		//selected datasets for each query

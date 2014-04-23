@@ -45,6 +45,8 @@ option	"agg_scoresum"		D	"Sum up the scores of genes in all query rankings to pr
 								flag	off
 option	"display_all"		E	"Display the metric for all queries"
 								flag	off
+option	"display_gene_pr"	l	"Display positive genes at all recall points (requires --pr_all and --display_all)"
+								flag	off
 
 section	"Input required by all"
 option	"input"				i	"Gene mapping file"
@@ -70,6 +72,12 @@ option	"random_dir"		R	"Random directory"
 option	"random_num"		N	"Number of random trials"
 								int		default="100"
 
+section "Options for NaN score"
+option	"nan"				n	"Define NaN score (320 if negative correlation is enabled)"
+								float	default="-320"
+option	"neg_cor"			K	"Negative correlations"
+								flag	off
+
 section "Input required by single-query"
 option	"goldstd"			s	"Gold standard gene set file (one line, space delimited)"
 								string typestr="filename"
@@ -79,8 +87,8 @@ option	"query"				q	"Query gene set file (to be excluded from evaluation) (.quer
 								string typestr="filename"
 option	"exclude"			y	"Exclude genes (.exclude)"
 								string typestr="filename"
-option	"nan"				n	"Define NaN score"
-								float	default="-320"
+option	"include"			U	"Include genes (.include) (ie annotated genes)"
+								string typestr="filename"
 								
 section	"Input required by multi-query"
 option	"goldstd_list"		S	"List of gold standard gene set files"
@@ -93,7 +101,6 @@ option	"exclude_list"		X 	"Exclude gene list"
 								string typestr="filename"
 option	"include_list"		Y	"List of annotated genes"
 								string typestr="filename"
-
 
 section "Output"
 option	"dir_out"			d	"Output directory"

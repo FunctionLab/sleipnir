@@ -351,7 +351,8 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.score_cutoff_arg, 
 		sArgs.per_q_required_arg, sArgs.per_g_required_arg,
 		!!sArgs.square_z_flag,
-		!!sArgs.random_flag, sArgs.num_random_arg, random_ranking_rnd, useNibble, 
+		!!sArgs.random_flag, sArgs.num_random_arg, !!sArgs.neg_cor_flag,
+		random_ranking_rnd, useNibble, 
 		sArgs.num_threads_arg))
 		return -1;
 
@@ -391,6 +392,14 @@ int main( int iArgs, char** aszArgs ) {
 		csfinal->VarianceWeightSearch();
 	}else if(method=="AVERAGE_Z"){
 		csfinal->AverageWeightSearch();
+	}else if(method=="CV_CUSTOM"){
+		string uw = sArgs.user_gene_list_arg;
+		vector<vector<string> > user_gene_list;
+		if(!CSeekTools::ReadMultipleQueries(uw, user_gene_list, 2048)){
+			fprintf(stderr, "Error reading user gene lists!\n");
+			return -1;
+		}	
+		csfinal->CVCustomSearch(user_gene_list, rnd, PART_M, FOLD, RATE);
 	}
 	//csfinal->WeightSearch(csk_weight_copy);
 	//csfinal->CVCustomSearch(newQ, rnd, PART_M, FOLD, RATE);
