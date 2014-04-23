@@ -188,6 +188,10 @@ int main(int iArgs, char** aszArgs) {
 			cerr << "Could not open input PCL" << endl;
 			return 1;
 		}
+        if (sArgs.normalize_flag)
+                PCL.Normalize(CPCL::ENormalizeRow);
+
+
 	}
 
 	vector<SVMLight::SVMLabel> vecLabels;
