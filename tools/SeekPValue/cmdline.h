@@ -39,9 +39,18 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
+  char * mode_arg;	/**< @brief Mode (datasets or genes) (default='genes').  */
+  char * mode_orig;	/**< @brief Mode (datasets or genes) original value given at command line.  */
+  const char *mode_help; /**< @brief Mode (datasets or genes) help description.  */
   char * port_arg;	/**< @brief Port (default='9005').  */
   char * port_orig;	/**< @brief Port original value given at command line.  */
   const char *port_help; /**< @brief Port help description.  */
+  char * dset_platform_arg;	/**< @brief Dataset platform file.  */
+  char * dset_platform_orig;	/**< @brief Dataset platform file original value given at command line.  */
+  const char *dset_platform_help; /**< @brief Dataset platform file help description.  */
+  char * param_dir_arg;	/**< @brief Parameter directory.  */
+  char * param_dir_orig;	/**< @brief Parameter directory original value given at command line.  */
+  const char *param_dir_help; /**< @brief Parameter directory help description.  */
   char * random_dir_arg;	/**< @brief Random directory.  */
   char * random_dir_orig;	/**< @brief Random directory original value given at command line.  */
   const char *random_dir_help; /**< @brief Random directory help description.  */
@@ -57,7 +66,10 @@ struct gengetopt_args_info
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
+  unsigned int mode_given ;	/**< @brief Whether mode was given.  */
   unsigned int port_given ;	/**< @brief Whether port was given.  */
+  unsigned int dset_platform_given ;	/**< @brief Whether dset_platform was given.  */
+  unsigned int param_dir_given ;	/**< @brief Whether param_dir was given.  */
   unsigned int random_dir_given ;	/**< @brief Whether random_dir was given.  */
   unsigned int random_num_given ;	/**< @brief Whether random_num was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
@@ -185,6 +197,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  */
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
+
+extern const char *cmdline_parser_mode_values[];  /**< @brief Possible values for mode. */
 
 
 #ifdef __cplusplus

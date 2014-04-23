@@ -3,13 +3,23 @@ version	"1.0"
 purpose	"Estimates P-Value of the retrieved genes based on a background of random queries"
 
 section "Main"
+option	"mode"				m	"Mode (datasets or genes)"
+								values="datasets","genes" default="genes"
 option	"port"				t	"Port"
 								string default="9005"
+
+section "Dataset mode"
+option	"dset_platform"		d	"Dataset platform file"
+								string typestr="filename"
+option	"param_dir"			p	"Parameter directory"
+								string typestr="directory"
+
+section "Gene mode"
 option	"random_dir"		R	"Random directory"
-								string typestr="directory"	yes
+								string typestr="directory"
 option	"random_num"		N	"Number of random trials"
-								int 	default="100"	yes
+								int 	default="100"
 option	"input"				i	"Gene mapping file"
-								string typestr="filename" yes
+								string typestr="filename"
 option	"nan"				n	"Define NaN score"
 								float	default="-320"
