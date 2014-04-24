@@ -187,6 +187,12 @@ int main( int iArgs, char** aszArgs ) {
 	bool bSubtractAvg = false;
 	bool bNormPlatform = false;
 	bool bLogit = false;
+	bool bVariance = false;
+
+	string strGvar = sArgs.dir_gvar_arg;
+	if(strGvar!="NA"){
+		bVariance = true;
+	}
 
 	csfinal = new CSeekCentral();
 	CSeekDBSetting *dbSetting = new CSeekDBSetting(sArgs.dir_gvar_arg,
@@ -285,6 +291,7 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.buffer_arg, !!sArgs.output_text_flag,
 		bOutputWeightComponent, bSimulateWeight,
 		CSeekDataset::CORRELATION, //to be overwritten by individual search instance's setting
+		bVariance, //decide whether or not to load gvar
 		bSubtractAvg, bNormPlatform, //to be overwritten by individual search instance's settings
 		bLogit, //always false
 		sArgs.score_cutoff_arg, 

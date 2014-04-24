@@ -545,7 +545,7 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 	const utype buffer, const bool to_output_text,
 	const bool bOutputWeightComponent, const bool bSimulateWeight,
-	const enum CSeekDataset::DistanceMeasure dist_measure,
+	const enum CSeekDataset::DistanceMeasure dist_measure, const bool bVariance, 
 	const bool bSubtractAvg, const bool bNormPlatform,
 	const bool bLogit, const float fCutOff, const float fPercentQueryRequired,
 	const float fPercentGenomeRequired,
@@ -685,7 +685,7 @@ bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 	CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
 		vecDBSetting, m_vecstrDatasets, m_mapstrstrDatasetPlatform,
 		m_mapstriPlatform, m_vp, m_vc, m_vecDBDataset, m_mapstrintDataset,
-		false, bCorrelation);
+		bVariance, bCorrelation);
 
 	return true;
 }
@@ -695,7 +695,7 @@ bool CSeekCentral::Initialize(
 	const char *search_dset, const char *query,
 	const char *output_dir, const utype buffer, const bool to_output_text,
 	const bool bOutputWeightComponent, const bool bSimulateWeight,
-	const enum CSeekDataset::DistanceMeasure dist_measure,
+	const enum CSeekDataset::DistanceMeasure dist_measure, const bool bVariance,
 	const bool bSubtractAvg, const bool bNormPlatform,
 	const bool bLogit, const float fCutOff, 
 	const float fPercentQueryRequired, const float fPercentGenomeRequired,
@@ -704,7 +704,7 @@ bool CSeekCentral::Initialize(
 	gsl_rng *rand, const bool useNibble, const int numThreads){
 
 	if(!CSeekCentral::Initialize(vecDBSetting, buffer, to_output_text,
-		bOutputWeightComponent, bSimulateWeight, dist_measure,
+		bOutputWeightComponent, bSimulateWeight, dist_measure, bVariance,
 		bSubtractAvg, bNormPlatform, bLogit, fCutOff, 
 		fPercentQueryRequired, fPercentGenomeRequired,
 		bSquareZ, bRandom, iNumRandom, bNegativeCor,

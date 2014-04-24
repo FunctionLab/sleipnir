@@ -338,6 +338,11 @@ int main( int iArgs, char** aszArgs ) {
 		}
 	}
 
+	bool bVariance = false;
+	if(method=="VAR"){
+		bVariance = true;
+	}
+
 	if(!csfinal->Initialize(cc,
 		sArgs.search_dset_arg, 
 		//"/tmp/ex_query2.txt", 
@@ -345,7 +350,7 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.output_dir_arg,
 		sArgs.buffer_arg, !!sArgs.output_text_flag,
 		bOutputWeightComponent, bSimulateWeight,
-		eDistMeasure,
+		eDistMeasure, bVariance,
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_subavg_plat_flag,
 		false,
 		sArgs.score_cutoff_arg, 
