@@ -107,7 +107,7 @@ public:
 		size_t	i, j;
 
 		if( iOffset < 0 )
-			return Add( strTwo, strOne, -iOffset );
+			 Add( strTwo, strOne, -iOffset );
 		i = CPSTImpl::Add( strOne, 0, m_sRoot );
 		j = CPSTImpl::Add( strTwo, iOffset, m_sRoot );
 		if( ( i = max( i, j ) ) > m_iDepth )

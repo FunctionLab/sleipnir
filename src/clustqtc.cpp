@@ -153,7 +153,7 @@ void CClustQTC::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure,
 	CDistanceMatrix	Dist;
 
 	InitializeDistances( MatData, pMeasure, Dist, pMatWeights );
-	return Cluster( Dist, dMinDiameter, dMaxDiameter, dDeltaDiameter, iSize, MatResults ); }
+	 Cluster( Dist, dMinDiameter, dMaxDiameter, dDeltaDiameter, iSize, MatResults ); }
 
 /*!
  * \brief

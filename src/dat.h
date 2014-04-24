@@ -240,7 +240,7 @@ public:
 	}
 
 	void AveStd( double& a, double& b, size_t& c){
-		return CDatImpl::AveStd(a, b, c);
+		 CDatImpl::AveStd(a, b, c);
 	}
 
 	void Clear( float dValue ) {
