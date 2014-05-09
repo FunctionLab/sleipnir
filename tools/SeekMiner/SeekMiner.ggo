@@ -9,46 +9,32 @@ option	"search_dset"		D	"A set of datasets to search. If not specified, search a
 								string typestr="filename" default="NA"
 option	"input"				i	"Input gene mapping"
 								string	typestr="filename"	yes
-option	"query"				q	"Query gene list"
+option	"query"				q	"A list of queries (each line is a query, and contains the names of the query genes delimited by spaces)"
 								string typestr="filename"	yes
-option	"dir_in"			d	"Database directory"
+option	"dir_in"			d	"Database directory (containing .db files)"
 								string	typestr="directory"	yes
 option	"dir_prep_in"		p	"Prep directory (containing .gavg, .gpres files)"
 								string	typestr="directory"	yes
 option	"dir_platform"		P	"Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files)"
 								string	typestr="directory"	yes
-option	"dir_sinfo"			u	"Sinfo Directory (containing .sinfo files)"
+option	"dir_sinfo"			u	"Sinfo directory (containing .sinfo files)"
 								string	typestr="directory"	default="NA"
 option	"dir_gvar"			U	"Gene variance directory (containing .gexpvar files)"
 								string	typestr="directory"	default="NA"
-option	"quant"				Q	"quant file (assuming all datasets use the same quantization)"
+option	"quant"				Q	"Quant file (assuming all datasets use the same quantization)"
 								string	typestr="filename"	yes								
 option	"num_db"			n	"Number of databaselets in database"
-								int	default="1000"	yes
+								int	default="1000"
 option	"num_threads"		T	"Number of threads"
 								int default="8"
-option	"per_g_required"	H	"Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting the minimum required genes are skipped."
-								float default="0.0"
+option	"per_g_required"	H	"Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting this requirement are skipped."
+								float default="0"
 option	"neg_cor"			k	"Rank genes and datasets by negative correlations"
 								flag	off
 
 section "Dataset weighting"
 option	"weighting_method"	V	"Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z), user cross-validated weighting (CV_CUSTOM)"
 								values="CV","EQUAL","ORDER_STAT","VAR","USER","AVERAGE_Z","CV_CUSTOM" default="CV"
-
-section "Optional - Functional Network Expansion"
-option	"func_db"			w	"Functional network db path"
-								string	typestr="directory"
-option	"func_n"			f	"Functional network number of databaselets"
-								int default="1000"
-option	"func_prep"			W	"Functional network prep & platform directory"
-								string typestr="directory"
-option	"func_quant"		R	"Functional network quant file"
-								string typestr="filename"
-option	"func_dset"			F	"Functional network dset-list file (1 dataset)"
-								string typestr="filename"
-option	"func_logit"		l	"Functional network, integrate using logit values"
-								flag	off
 
 section "Dataset weighting: User Cross-validated Weighting (CV_CUSTOM)"
 option	"user_gene_list"	K	"List of user's gene-sets to which queries will be judged upon (text, 1 line per query)"
@@ -67,18 +53,18 @@ option	"num_random"		t	"Number of repetitions of generating random rankings"
 section "Optional - Distance matrix transformations"
 option	"dist_measure"		z	"Distance measure"
 								values="pearson","z_score" default="z_score"
-option	"norm_subavg"		m	"If z_score is selected, subtract each result gene's average z-score in the dataset."
+option	"norm_subavg"		m	"If z_score is selected, subtract each gene's average z-score in the dataset."
 								flag	off
 option	"norm_subavg_plat"	M	"If z_score is selected, subtract each query gene's average score across platforms and divide by its stdev. Performed after --norm_subavg."
 								flag	off
-option	"score_cutoff"		c	"Cutoff on the gene-gene score before adding, default: no cutoff"
+option	"score_cutoff"		c	"Cutoff on the gene-gene distance score before adding, default: no cutoff"
 								float default="-9999"
-option	"square_z"			e	"If z_score is selected, take the square the z-scores. Usually used in conjunction with --score-cutoff."							
+option	"square_z"			e	"If z_score is selected, square the z-scores. Usually used in conjunction with --score-cutoff=1.0."							
 								flag	off
 
 section "Options for Dataset weighting"
-option	"per_q_required"	C	"Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff."
-								float default="0.0"
+option	"per_q_required"	C	"Fraction (max 1.0) of query genes required to be present in a dataset, if --score_cutoff is NOT specified. Datasets not meeting this requirement are skipped. However, if --score_cutoff is specified, this is the fraction of query genes required to pass the correlation cutoff, indicated by --score_cutoff (shortened SC) (note: Advanced usage!). In this case, in scoring a gene g, we first calculate the number of query genes (QS) to which g's correlation exceeds SC. Then if the fraction (QS) / (number of query genes) < per_q_required, do not score this gene in dataset's coexpressed gene-list. Use this with caution if --score_cutoff is specified."
+								float default="0"
 
 section "Options for CV-based dataset weighting"
 option	"CV_partition"		I	"The query partitioning method (for CV weighting): Leave-One-In, Leave-One-Out, X-Fold."
@@ -89,10 +75,10 @@ option	"CV_rbp_p"			G	"The parameter p for RBP scoring of each partition for its
 								float	default="0.99"	
 
 section "MISC"								
-option	"is_nibble"			N	"Whether the input DB is nibble type"
+option	"is_nibble"			N	"The input CDatabase collection is nibble type"
 								flag	off
-option	"buffer"			b	"Number of Databaselets to store in memory"
-								int default="20"
+option	"buffer"			b	"Number of query genes to load in memory (recommended: 50-100)"
+								int default="50"
 option	"output_text"		O	"Output results (gene scores and dataset weights) as text"
 								flag	off
 option	"output_dir"		o	"Output directory"

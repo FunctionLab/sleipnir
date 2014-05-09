@@ -32,7 +32,8 @@ int main( int iArgs, char** aszArgs ) {
 	const int lineSize = 1024;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
-		cmdline_parser_print_help( );
+		//cmdline_parser_print_help( );
+		fprintf(stderr, "Use -h to get help.\n");
 		return 1;
 	}
 
@@ -341,6 +342,16 @@ int main( int iArgs, char** aszArgs ) {
 	bool bVariance = false;
 	if(method=="VAR"){
 		bVariance = true;
+	}
+
+	if(sArgs.per_q_required_arg>=1.00001 || sArgs.per_q_required_arg<=-0.00001){
+		fprintf(stderr, "Error, per_q_required needs to be <=1.0 and >=0.0\n");
+		return -1;
+	}
+
+	if(sArgs.per_g_required_arg>=1.00001 || sArgs.per_g_required_arg<=-0.00001){
+		fprintf(stderr, "Error, per_g_required needs to be <=1.0 and >=0.0\n");
+		return -1;
 	}
 
 	if(!csfinal->Initialize(cc,

@@ -38,26 +38,19 @@ const char *gengetopt_args_info_help[] = {
   "  -x, --dset=filename           Input a set of datasets",
   "  -D, --search_dset=filename    A set of datasets to search. If not specified, \n                                  search all datasets.  (default=`NA')",
   "  -i, --input=filename          Input gene mapping",
-  "  -q, --query=filename          Query gene list",
-  "  -d, --dir_in=directory        Database directory",
+  "  -q, --query=filename          A list of queries (each line is a query, and \n                                  contains the names of the query genes \n                                  delimited by spaces)",
+  "  -d, --dir_in=directory        Database directory (containing .db files)",
   "  -p, --dir_prep_in=directory   Prep directory (containing .gavg, .gpres files)",
   "  -P, --dir_platform=directory  Platform directory (containing .gplatavg, \n                                  .gplatstdev, .gplatorder files)",
-  "  -u, --dir_sinfo=directory     Sinfo Directory (containing .sinfo files)  \n                                  (default=`NA')",
+  "  -u, --dir_sinfo=directory     Sinfo directory (containing .sinfo files)  \n                                  (default=`NA')",
   "  -U, --dir_gvar=directory      Gene variance directory (containing .gexpvar \n                                  files)  (default=`NA')",
-  "  -Q, --quant=filename          quant file (assuming all datasets use the same \n                                  quantization)",
+  "  -Q, --quant=filename          Quant file (assuming all datasets use the same \n                                  quantization)",
   "  -n, --num_db=INT              Number of databaselets in database  \n                                  (default=`1000')",
   "  -T, --num_threads=INT         Number of threads  (default=`8')",
-  "  -H, --per_g_required=FLOAT    Fraction (max 1.0) of genome required to be \n                                  present in a dataset. Datasets not meeting \n                                  the minimum required genes are skipped.  \n                                  (default=`0.0')",
+  "  -H, --per_g_required=FLOAT    Fraction (max 1.0) of genome required to be \n                                  present in a dataset. Datasets not meeting \n                                  this requirement are skipped.  (default=`0')",
   "  -k, --neg_cor                 Rank genes and datasets by negative \n                                  correlations  (default=off)",
   "\nDataset weighting:",
   "  -V, --weighting_method=STRING Weighting method: query cross-validated \n                                  weighting (CV), equal weighting (EQUAL), \n                                  order statistics weighting (ORDER_STAT), \n                                  variance weighting (VAR), user-given \n                                  weighting (USER), SPELL weighting \n                                  (AVERAGE_Z), user cross-validated weighting \n                                  (CV_CUSTOM)  (possible values=\"CV\", \n                                  \"EQUAL\", \"ORDER_STAT\", \"VAR\", \"USER\", \n                                  \"AVERAGE_Z\", \"CV_CUSTOM\" default=`CV')",
-  "\nOptional - Functional Network Expansion:",
-  "  -w, --func_db=directory       Functional network db path",
-  "  -f, --func_n=INT              Functional network number of databaselets  \n                                  (default=`1000')",
-  "  -W, --func_prep=directory     Functional network prep & platform directory",
-  "  -R, --func_quant=filename     Functional network quant file",
-  "  -F, --func_dset=filename      Functional network dset-list file (1 dataset)",
-  "  -l, --func_logit              Functional network, integrate using logit \n                                  values  (default=off)",
   "\nDataset weighting: User Cross-validated Weighting (CV_CUSTOM):",
   "  -K, --user_gene_list=filename List of user's gene-sets to which queries will \n                                  be judged upon (text, 1 line per query)",
   "\nOptional - User-given Weighting:",
@@ -67,19 +60,19 @@ const char *gengetopt_args_info_help[] = {
   "  -t, --num_random=INT          Number of repetitions of generating random \n                                  rankings  (default=`10')",
   "\nOptional - Distance matrix transformations:",
   "  -z, --dist_measure=STRING     Distance measure  (possible values=\"pearson\", \n                                  \"z_score\" default=`z_score')",
-  "  -m, --norm_subavg             If z_score is selected, subtract each result \n                                  gene's average z-score in the dataset.  \n                                  (default=off)",
+  "  -m, --norm_subavg             If z_score is selected, subtract each gene's \n                                  average z-score in the dataset.  \n                                  (default=off)",
   "  -M, --norm_subavg_plat        If z_score is selected, subtract each query \n                                  gene's average score across platforms and \n                                  divide by its stdev. Performed after \n                                  --norm_subavg.  (default=off)",
-  "  -c, --score_cutoff=FLOAT      Cutoff on the gene-gene score before adding, \n                                  default: no cutoff  (default=`-9999')",
-  "  -e, --square_z                If z_score is selected, take the square the \n                                  z-scores. Usually used in conjunction with \n                                  --score-cutoff.  (default=off)",
+  "  -c, --score_cutoff=FLOAT      Cutoff on the gene-gene distance score before \n                                  adding, default: no cutoff  (default=`-9999')",
+  "  -e, --square_z                If z_score is selected, square the z-scores. \n                                  Usually used in conjunction with \n                                  --score-cutoff=1.0.  (default=off)",
   "\nOptions for Dataset weighting:",
-  "  -C, --per_q_required=FLOAT    Fraction (max 1.0) of query required to \n                                  correlate with a gene, in order to count the \n                                  gene's query score. A gene may not correlate \n                                  with a query gene if it is absent, or its \n                                  correlation with query does not pass cut-off \n                                  (specified by --score_cutoff). Use this with \n                                  caution. Be careful if using with \n                                  --score_cutoff.  (default=`0.0')",
+  "  -C, --per_q_required=FLOAT    Fraction (max 1.0) of query genes required to \n                                  be present in a dataset, if --score_cutoff is \n                                  NOT specified. Datasets not meeting this \n                                  requirement are skipped. However, if \n                                  --score_cutoff is specified, this is the \n                                  fraction of query genes required to pass the \n                                  correlation cutoff, indicated by \n                                  --score_cutoff (shortened SC) (note: Advanced \n                                  usage!). In this case, in scoring a gene g, \n                                  we first calculate the number of query genes \n                                  (QS) to which g's correlation exceeds SC. \n                                  Then if the fraction (QS) / (number of query \n                                  genes) < per_q_required, do not score this \n                                  gene in dataset's coexpressed gene-list. Use \n                                  this with caution if --score_cutoff is \n                                  specified.  (default=`0')",
   "\nOptions for CV-based dataset weighting:",
   "  -I, --CV_partition=STRING     The query partitioning method (for CV \n                                  weighting): Leave-One-In, Leave-One-Out, \n                                  X-Fold.  (possible values=\"LOI\", \"LOO\", \n                                  \"XFOLD\" default=`LOI')",
   "  -X, --CV_fold=INT             The number of folds (for X-fold partitioning).  \n                                  (default=`5')",
   "  -G, --CV_rbp_p=FLOAT          The parameter p for RBP scoring of each \n                                  partition for its query gene retrieval (for \n                                  CV weighting).  (default=`0.99')",
   "\nMISC:",
-  "  -N, --is_nibble               Whether the input DB is nibble type  \n                                  (default=off)",
-  "  -b, --buffer=INT              Number of Databaselets to store in memory  \n                                  (default=`20')",
+  "  -N, --is_nibble               The input CDatabase collection is nibble type  \n                                  (default=off)",
+  "  -b, --buffer=INT              Number of query genes to load in memory \n                                  (recommended: 50-100)  (default=`50')",
   "  -O, --output_text             Output results (gene scores and dataset \n                                  weights) as text  (default=off)",
   "  -o, --output_dir=directory    Output directory",
   "  -Y, --output_w_comp           Output dataset weight components (generates \n                                  .dweight_comp file)  (default=off)",
@@ -134,12 +127,6 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->per_g_required_given = 0 ;
   args_info->neg_cor_given = 0 ;
   args_info->weighting_method_given = 0 ;
-  args_info->func_db_given = 0 ;
-  args_info->func_n_given = 0 ;
-  args_info->func_prep_given = 0 ;
-  args_info->func_quant_given = 0 ;
-  args_info->func_dset_given = 0 ;
-  args_info->func_logit_given = 0 ;
   args_info->user_gene_list_given = 0 ;
   args_info->user_weight_list_given = 0 ;
   args_info->random_given = 0 ;
@@ -190,22 +177,11 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->num_db_orig = NULL;
   args_info->num_threads_arg = 8;
   args_info->num_threads_orig = NULL;
-  args_info->per_g_required_arg = 0.0;
+  args_info->per_g_required_arg = 0;
   args_info->per_g_required_orig = NULL;
   args_info->neg_cor_flag = 0;
   args_info->weighting_method_arg = gengetopt_strdup ("CV");
   args_info->weighting_method_orig = NULL;
-  args_info->func_db_arg = NULL;
-  args_info->func_db_orig = NULL;
-  args_info->func_n_arg = 1000;
-  args_info->func_n_orig = NULL;
-  args_info->func_prep_arg = NULL;
-  args_info->func_prep_orig = NULL;
-  args_info->func_quant_arg = NULL;
-  args_info->func_quant_orig = NULL;
-  args_info->func_dset_arg = NULL;
-  args_info->func_dset_orig = NULL;
-  args_info->func_logit_flag = 0;
   args_info->user_gene_list_arg = NULL;
   args_info->user_gene_list_orig = NULL;
   args_info->user_weight_list_arg = NULL;
@@ -220,7 +196,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->score_cutoff_arg = -9999;
   args_info->score_cutoff_orig = NULL;
   args_info->square_z_flag = 0;
-  args_info->per_q_required_arg = 0.0;
+  args_info->per_q_required_arg = 0;
   args_info->per_q_required_orig = NULL;
   args_info->CV_partition_arg = gengetopt_strdup ("LOI");
   args_info->CV_partition_orig = NULL;
@@ -229,7 +205,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->CV_rbp_p_arg = 0.99;
   args_info->CV_rbp_p_orig = NULL;
   args_info->is_nibble_flag = 0;
-  args_info->buffer_arg = 20;
+  args_info->buffer_arg = 50;
   args_info->buffer_orig = NULL;
   args_info->output_text_flag = 0;
   args_info->output_dir_arg = NULL;
@@ -263,32 +239,26 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->per_g_required_help = gengetopt_args_info_help[15] ;
   args_info->neg_cor_help = gengetopt_args_info_help[16] ;
   args_info->weighting_method_help = gengetopt_args_info_help[18] ;
-  args_info->func_db_help = gengetopt_args_info_help[20] ;
-  args_info->func_n_help = gengetopt_args_info_help[21] ;
-  args_info->func_prep_help = gengetopt_args_info_help[22] ;
-  args_info->func_quant_help = gengetopt_args_info_help[23] ;
-  args_info->func_dset_help = gengetopt_args_info_help[24] ;
-  args_info->func_logit_help = gengetopt_args_info_help[25] ;
-  args_info->user_gene_list_help = gengetopt_args_info_help[27] ;
-  args_info->user_weight_list_help = gengetopt_args_info_help[29] ;
-  args_info->random_help = gengetopt_args_info_help[31] ;
-  args_info->num_random_help = gengetopt_args_info_help[32] ;
-  args_info->dist_measure_help = gengetopt_args_info_help[34] ;
-  args_info->norm_subavg_help = gengetopt_args_info_help[35] ;
-  args_info->norm_subavg_plat_help = gengetopt_args_info_help[36] ;
-  args_info->score_cutoff_help = gengetopt_args_info_help[37] ;
-  args_info->square_z_help = gengetopt_args_info_help[38] ;
-  args_info->per_q_required_help = gengetopt_args_info_help[40] ;
-  args_info->CV_partition_help = gengetopt_args_info_help[42] ;
-  args_info->CV_fold_help = gengetopt_args_info_help[43] ;
-  args_info->CV_rbp_p_help = gengetopt_args_info_help[44] ;
-  args_info->is_nibble_help = gengetopt_args_info_help[46] ;
-  args_info->buffer_help = gengetopt_args_info_help[47] ;
-  args_info->output_text_help = gengetopt_args_info_help[48] ;
-  args_info->output_dir_help = gengetopt_args_info_help[49] ;
-  args_info->output_w_comp_help = gengetopt_args_info_help[50] ;
-  args_info->simulate_w_help = gengetopt_args_info_help[51] ;
-  args_info->additional_db_help = gengetopt_args_info_help[52] ;
+  args_info->user_gene_list_help = gengetopt_args_info_help[20] ;
+  args_info->user_weight_list_help = gengetopt_args_info_help[22] ;
+  args_info->random_help = gengetopt_args_info_help[24] ;
+  args_info->num_random_help = gengetopt_args_info_help[25] ;
+  args_info->dist_measure_help = gengetopt_args_info_help[27] ;
+  args_info->norm_subavg_help = gengetopt_args_info_help[28] ;
+  args_info->norm_subavg_plat_help = gengetopt_args_info_help[29] ;
+  args_info->score_cutoff_help = gengetopt_args_info_help[30] ;
+  args_info->square_z_help = gengetopt_args_info_help[31] ;
+  args_info->per_q_required_help = gengetopt_args_info_help[33] ;
+  args_info->CV_partition_help = gengetopt_args_info_help[35] ;
+  args_info->CV_fold_help = gengetopt_args_info_help[36] ;
+  args_info->CV_rbp_p_help = gengetopt_args_info_help[37] ;
+  args_info->is_nibble_help = gengetopt_args_info_help[39] ;
+  args_info->buffer_help = gengetopt_args_info_help[40] ;
+  args_info->output_text_help = gengetopt_args_info_help[41] ;
+  args_info->output_dir_help = gengetopt_args_info_help[42] ;
+  args_info->output_w_comp_help = gengetopt_args_info_help[43] ;
+  args_info->simulate_w_help = gengetopt_args_info_help[44] ;
+  args_info->additional_db_help = gengetopt_args_info_help[45] ;
   
 }
 
@@ -397,15 +367,6 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->per_g_required_orig));
   free_string_field (&(args_info->weighting_method_arg));
   free_string_field (&(args_info->weighting_method_orig));
-  free_string_field (&(args_info->func_db_arg));
-  free_string_field (&(args_info->func_db_orig));
-  free_string_field (&(args_info->func_n_orig));
-  free_string_field (&(args_info->func_prep_arg));
-  free_string_field (&(args_info->func_prep_orig));
-  free_string_field (&(args_info->func_quant_arg));
-  free_string_field (&(args_info->func_quant_orig));
-  free_string_field (&(args_info->func_dset_arg));
-  free_string_field (&(args_info->func_dset_orig));
   free_string_field (&(args_info->user_gene_list_arg));
   free_string_field (&(args_info->user_gene_list_orig));
   free_string_field (&(args_info->user_weight_list_arg));
@@ -534,18 +495,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "neg_cor", 0, 0 );
   if (args_info->weighting_method_given)
     write_into_file(outfile, "weighting_method", args_info->weighting_method_orig, cmdline_parser_weighting_method_values);
-  if (args_info->func_db_given)
-    write_into_file(outfile, "func_db", args_info->func_db_orig, 0);
-  if (args_info->func_n_given)
-    write_into_file(outfile, "func_n", args_info->func_n_orig, 0);
-  if (args_info->func_prep_given)
-    write_into_file(outfile, "func_prep", args_info->func_prep_orig, 0);
-  if (args_info->func_quant_given)
-    write_into_file(outfile, "func_quant", args_info->func_quant_orig, 0);
-  if (args_info->func_dset_given)
-    write_into_file(outfile, "func_dset", args_info->func_dset_orig, 0);
-  if (args_info->func_logit_given)
-    write_into_file(outfile, "func_logit", 0, 0 );
   if (args_info->user_gene_list_given)
     write_into_file(outfile, "user_gene_list", args_info->user_gene_list_orig, 0);
   if (args_info->user_weight_list_given)
@@ -723,12 +672,6 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   if (! args_info->quant_given)
     {
       fprintf (stderr, "%s: '--quant' ('-Q') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error = 1;
-    }
-  
-  if (! args_info->num_db_given)
-    {
-      fprintf (stderr, "%s: '--num_db' ('-n') option required%s\n", prog_name, (additional_error ? additional_error : ""));
       error = 1;
     }
   
@@ -930,12 +873,6 @@ cmdline_parser_internal (
         { "per_g_required",	1, NULL, 'H' },
         { "neg_cor",	0, NULL, 'k' },
         { "weighting_method",	1, NULL, 'V' },
-        { "func_db",	1, NULL, 'w' },
-        { "func_n",	1, NULL, 'f' },
-        { "func_prep",	1, NULL, 'W' },
-        { "func_quant",	1, NULL, 'R' },
-        { "func_dset",	1, NULL, 'F' },
-        { "func_logit",	0, NULL, 'l' },
         { "user_gene_list",	1, NULL, 'K' },
         { "user_weight_list",	1, NULL, 'J' },
         { "random",	0, NULL, 'S' },
@@ -959,7 +896,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hx:D:i:q:d:p:P:u:U:Q:n:T:H:kV:w:f:W:R:F:lK:J:St:z:mMc:eC:I:X:G:Nb:Oo:YEB:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hx:D:i:q:d:p:P:u:U:Q:n:T:H:kV:K:J:St:z:mMc:eC:I:X:G:Nb:Oo:YEB:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1006,7 +943,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'q':	/* Query gene list.  */
+        case 'q':	/* A list of queries (each line is a query, and contains the names of the query genes delimited by spaces).  */
         
         
           if (update_arg( (void *)&(args_info->query_arg), 
@@ -1018,7 +955,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'd':	/* Database directory.  */
+        case 'd':	/* Database directory (containing .db files).  */
         
         
           if (update_arg( (void *)&(args_info->dir_in_arg), 
@@ -1054,7 +991,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'u':	/* Sinfo Directory (containing .sinfo files).  */
+        case 'u':	/* Sinfo directory (containing .sinfo files).  */
         
         
           if (update_arg( (void *)&(args_info->dir_sinfo_arg), 
@@ -1078,7 +1015,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'Q':	/* quant file (assuming all datasets use the same quantization).  */
+        case 'Q':	/* Quant file (assuming all datasets use the same quantization).  */
         
         
           if (update_arg( (void *)&(args_info->quant_arg), 
@@ -1114,12 +1051,12 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'H':	/* Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting the minimum required genes are skipped..  */
+        case 'H':	/* Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting this requirement are skipped..  */
         
         
           if (update_arg( (void *)&(args_info->per_g_required_arg), 
                &(args_info->per_g_required_orig), &(args_info->per_g_required_given),
-              &(local_args_info.per_g_required_given), optarg, 0, "0.0", ARG_FLOAT,
+              &(local_args_info.per_g_required_given), optarg, 0, "0", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "per_g_required", 'H',
               additional_error))
@@ -1144,76 +1081,6 @@ cmdline_parser_internal (
               &(local_args_info.weighting_method_given), optarg, cmdline_parser_weighting_method_values, "CV", ARG_STRING,
               check_ambiguity, override, 0, 0,
               "weighting_method", 'V',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'w':	/* Functional network db path.  */
-        
-        
-          if (update_arg( (void *)&(args_info->func_db_arg), 
-               &(args_info->func_db_orig), &(args_info->func_db_given),
-              &(local_args_info.func_db_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "func_db", 'w',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'f':	/* Functional network number of databaselets.  */
-        
-        
-          if (update_arg( (void *)&(args_info->func_n_arg), 
-               &(args_info->func_n_orig), &(args_info->func_n_given),
-              &(local_args_info.func_n_given), optarg, 0, "1000", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "func_n", 'f',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'W':	/* Functional network prep & platform directory.  */
-        
-        
-          if (update_arg( (void *)&(args_info->func_prep_arg), 
-               &(args_info->func_prep_orig), &(args_info->func_prep_given),
-              &(local_args_info.func_prep_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "func_prep", 'W',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'R':	/* Functional network quant file.  */
-        
-        
-          if (update_arg( (void *)&(args_info->func_quant_arg), 
-               &(args_info->func_quant_orig), &(args_info->func_quant_given),
-              &(local_args_info.func_quant_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "func_quant", 'R',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'F':	/* Functional network dset-list file (1 dataset).  */
-        
-        
-          if (update_arg( (void *)&(args_info->func_dset_arg), 
-               &(args_info->func_dset_orig), &(args_info->func_dset_given),
-              &(local_args_info.func_dset_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "func_dset", 'F',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'l':	/* Functional network, integrate using logit values.  */
-        
-        
-          if (update_arg((void *)&(args_info->func_logit_flag), 0, &(args_info->func_logit_given),
-              &(local_args_info.func_logit_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "func_logit", 'l',
               additional_error))
             goto failure;
         
@@ -1276,7 +1143,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'm':	/* If z_score is selected, subtract each result gene's average z-score in the dataset..  */
+        case 'm':	/* If z_score is selected, subtract each gene's average z-score in the dataset..  */
         
         
           if (update_arg((void *)&(args_info->norm_subavg_flag), 0, &(args_info->norm_subavg_given),
@@ -1296,7 +1163,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'c':	/* Cutoff on the gene-gene score before adding, default: no cutoff.  */
+        case 'c':	/* Cutoff on the gene-gene distance score before adding, default: no cutoff.  */
         
         
           if (update_arg( (void *)&(args_info->score_cutoff_arg), 
@@ -1308,7 +1175,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'e':	/* If z_score is selected, take the square the z-scores. Usually used in conjunction with --score-cutoff..  */
+        case 'e':	/* If z_score is selected, square the z-scores. Usually used in conjunction with --score-cutoff=1.0..  */
         
         
           if (update_arg((void *)&(args_info->square_z_flag), 0, &(args_info->square_z_given),
@@ -1318,12 +1185,12 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'C':	/* Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff..  */
+        case 'C':	/* Fraction (max 1.0) of query genes required to be present in a dataset, if --score_cutoff is NOT specified. Datasets not meeting this requirement are skipped. However, if --score_cutoff is specified, this is the fraction of query genes required to pass the correlation cutoff, indicated by --score_cutoff (shortened SC) (note: Advanced usage!). In this case, in scoring a gene g, we first calculate the number of query genes (QS) to which g's correlation exceeds SC. Then if the fraction (QS) / (number of query genes) < per_q_required, do not score this gene in dataset's coexpressed gene-list. Use this with caution if --score_cutoff is specified..  */
         
         
           if (update_arg( (void *)&(args_info->per_q_required_arg), 
                &(args_info->per_q_required_orig), &(args_info->per_q_required_given),
-              &(local_args_info.per_q_required_given), optarg, 0, "0.0", ARG_FLOAT,
+              &(local_args_info.per_q_required_given), optarg, 0, "0", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "per_q_required", 'C',
               additional_error))
@@ -1366,7 +1233,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'N':	/* Whether the input DB is nibble type.  */
+        case 'N':	/* The input CDatabase collection is nibble type.  */
         
         
           if (update_arg((void *)&(args_info->is_nibble_flag), 0, &(args_info->is_nibble_given),
@@ -1376,12 +1243,12 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'b':	/* Number of Databaselets to store in memory.  */
+        case 'b':	/* Number of query genes to load in memory (recommended: 50-100).  */
         
         
           if (update_arg( (void *)&(args_info->buffer_arg), 
                &(args_info->buffer_orig), &(args_info->buffer_given),
-              &(local_args_info.buffer_given), optarg, 0, "20", ARG_INT,
+              &(local_args_info.buffer_given), optarg, 0, "50", ARG_INT,
               check_ambiguity, override, 0, 0,
               "buffer", 'b',
               additional_error))

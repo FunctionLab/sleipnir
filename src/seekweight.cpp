@@ -54,8 +54,6 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 
 	CSeekTools::InitVector(rank, iNumGenes, (utype) DEFAULT_NA);
 
-	/* as long as rank[g] does not overflow, due to too many queries, we are fine
-	 * should control query size to be <100. */
 	vector<utype> queryPos;
 	queryPos.resize(q_size);
 	for(i=0; i<q_size; i++) queryPos[i] = mapQ->GetForward(cv_query[i]);

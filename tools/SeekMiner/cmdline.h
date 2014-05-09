@@ -48,58 +48,41 @@ struct gengetopt_args_info
   char * input_arg;	/**< @brief Input gene mapping.  */
   char * input_orig;	/**< @brief Input gene mapping original value given at command line.  */
   const char *input_help; /**< @brief Input gene mapping help description.  */
-  char * query_arg;	/**< @brief Query gene list.  */
-  char * query_orig;	/**< @brief Query gene list original value given at command line.  */
-  const char *query_help; /**< @brief Query gene list help description.  */
-  char * dir_in_arg;	/**< @brief Database directory.  */
-  char * dir_in_orig;	/**< @brief Database directory original value given at command line.  */
-  const char *dir_in_help; /**< @brief Database directory help description.  */
+  char * query_arg;	/**< @brief A list of queries (each line is a query, and contains the names of the query genes delimited by spaces).  */
+  char * query_orig;	/**< @brief A list of queries (each line is a query, and contains the names of the query genes delimited by spaces) original value given at command line.  */
+  const char *query_help; /**< @brief A list of queries (each line is a query, and contains the names of the query genes delimited by spaces) help description.  */
+  char * dir_in_arg;	/**< @brief Database directory (containing .db files).  */
+  char * dir_in_orig;	/**< @brief Database directory (containing .db files) original value given at command line.  */
+  const char *dir_in_help; /**< @brief Database directory (containing .db files) help description.  */
   char * dir_prep_in_arg;	/**< @brief Prep directory (containing .gavg, .gpres files).  */
   char * dir_prep_in_orig;	/**< @brief Prep directory (containing .gavg, .gpres files) original value given at command line.  */
   const char *dir_prep_in_help; /**< @brief Prep directory (containing .gavg, .gpres files) help description.  */
   char * dir_platform_arg;	/**< @brief Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files).  */
   char * dir_platform_orig;	/**< @brief Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files) original value given at command line.  */
   const char *dir_platform_help; /**< @brief Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files) help description.  */
-  char * dir_sinfo_arg;	/**< @brief Sinfo Directory (containing .sinfo files) (default='NA').  */
-  char * dir_sinfo_orig;	/**< @brief Sinfo Directory (containing .sinfo files) original value given at command line.  */
-  const char *dir_sinfo_help; /**< @brief Sinfo Directory (containing .sinfo files) help description.  */
+  char * dir_sinfo_arg;	/**< @brief Sinfo directory (containing .sinfo files) (default='NA').  */
+  char * dir_sinfo_orig;	/**< @brief Sinfo directory (containing .sinfo files) original value given at command line.  */
+  const char *dir_sinfo_help; /**< @brief Sinfo directory (containing .sinfo files) help description.  */
   char * dir_gvar_arg;	/**< @brief Gene variance directory (containing .gexpvar files) (default='NA').  */
   char * dir_gvar_orig;	/**< @brief Gene variance directory (containing .gexpvar files) original value given at command line.  */
   const char *dir_gvar_help; /**< @brief Gene variance directory (containing .gexpvar files) help description.  */
-  char * quant_arg;	/**< @brief quant file (assuming all datasets use the same quantization).  */
-  char * quant_orig;	/**< @brief quant file (assuming all datasets use the same quantization) original value given at command line.  */
-  const char *quant_help; /**< @brief quant file (assuming all datasets use the same quantization) help description.  */
+  char * quant_arg;	/**< @brief Quant file (assuming all datasets use the same quantization).  */
+  char * quant_orig;	/**< @brief Quant file (assuming all datasets use the same quantization) original value given at command line.  */
+  const char *quant_help; /**< @brief Quant file (assuming all datasets use the same quantization) help description.  */
   int num_db_arg;	/**< @brief Number of databaselets in database (default='1000').  */
   char * num_db_orig;	/**< @brief Number of databaselets in database original value given at command line.  */
   const char *num_db_help; /**< @brief Number of databaselets in database help description.  */
   int num_threads_arg;	/**< @brief Number of threads (default='8').  */
   char * num_threads_orig;	/**< @brief Number of threads original value given at command line.  */
   const char *num_threads_help; /**< @brief Number of threads help description.  */
-  float per_g_required_arg;	/**< @brief Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting the minimum required genes are skipped. (default='0.0').  */
-  char * per_g_required_orig;	/**< @brief Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting the minimum required genes are skipped. original value given at command line.  */
-  const char *per_g_required_help; /**< @brief Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting the minimum required genes are skipped. help description.  */
+  float per_g_required_arg;	/**< @brief Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting this requirement are skipped. (default='0').  */
+  char * per_g_required_orig;	/**< @brief Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting this requirement are skipped. original value given at command line.  */
+  const char *per_g_required_help; /**< @brief Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting this requirement are skipped. help description.  */
   int neg_cor_flag;	/**< @brief Rank genes and datasets by negative correlations (default=off).  */
   const char *neg_cor_help; /**< @brief Rank genes and datasets by negative correlations help description.  */
   char * weighting_method_arg;	/**< @brief Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z), user cross-validated weighting (CV_CUSTOM) (default='CV').  */
   char * weighting_method_orig;	/**< @brief Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z), user cross-validated weighting (CV_CUSTOM) original value given at command line.  */
   const char *weighting_method_help; /**< @brief Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z), user cross-validated weighting (CV_CUSTOM) help description.  */
-  char * func_db_arg;	/**< @brief Functional network db path.  */
-  char * func_db_orig;	/**< @brief Functional network db path original value given at command line.  */
-  const char *func_db_help; /**< @brief Functional network db path help description.  */
-  int func_n_arg;	/**< @brief Functional network number of databaselets (default='1000').  */
-  char * func_n_orig;	/**< @brief Functional network number of databaselets original value given at command line.  */
-  const char *func_n_help; /**< @brief Functional network number of databaselets help description.  */
-  char * func_prep_arg;	/**< @brief Functional network prep & platform directory.  */
-  char * func_prep_orig;	/**< @brief Functional network prep & platform directory original value given at command line.  */
-  const char *func_prep_help; /**< @brief Functional network prep & platform directory help description.  */
-  char * func_quant_arg;	/**< @brief Functional network quant file.  */
-  char * func_quant_orig;	/**< @brief Functional network quant file original value given at command line.  */
-  const char *func_quant_help; /**< @brief Functional network quant file help description.  */
-  char * func_dset_arg;	/**< @brief Functional network dset-list file (1 dataset).  */
-  char * func_dset_orig;	/**< @brief Functional network dset-list file (1 dataset) original value given at command line.  */
-  const char *func_dset_help; /**< @brief Functional network dset-list file (1 dataset) help description.  */
-  int func_logit_flag;	/**< @brief Functional network, integrate using logit values (default=off).  */
-  const char *func_logit_help; /**< @brief Functional network, integrate using logit values help description.  */
   char * user_gene_list_arg;	/**< @brief List of user's gene-sets to which queries will be judged upon (text, 1 line per query).  */
   char * user_gene_list_orig;	/**< @brief List of user's gene-sets to which queries will be judged upon (text, 1 line per query) original value given at command line.  */
   const char *user_gene_list_help; /**< @brief List of user's gene-sets to which queries will be judged upon (text, 1 line per query) help description.  */
@@ -114,18 +97,18 @@ struct gengetopt_args_info
   char * dist_measure_arg;	/**< @brief Distance measure (default='z_score').  */
   char * dist_measure_orig;	/**< @brief Distance measure original value given at command line.  */
   const char *dist_measure_help; /**< @brief Distance measure help description.  */
-  int norm_subavg_flag;	/**< @brief If z_score is selected, subtract each result gene's average z-score in the dataset. (default=off).  */
-  const char *norm_subavg_help; /**< @brief If z_score is selected, subtract each result gene's average z-score in the dataset. help description.  */
+  int norm_subavg_flag;	/**< @brief If z_score is selected, subtract each gene's average z-score in the dataset. (default=off).  */
+  const char *norm_subavg_help; /**< @brief If z_score is selected, subtract each gene's average z-score in the dataset. help description.  */
   int norm_subavg_plat_flag;	/**< @brief If z_score is selected, subtract each query gene's average score across platforms and divide by its stdev. Performed after --norm_subavg. (default=off).  */
   const char *norm_subavg_plat_help; /**< @brief If z_score is selected, subtract each query gene's average score across platforms and divide by its stdev. Performed after --norm_subavg. help description.  */
-  float score_cutoff_arg;	/**< @brief Cutoff on the gene-gene score before adding, default: no cutoff (default='-9999').  */
-  char * score_cutoff_orig;	/**< @brief Cutoff on the gene-gene score before adding, default: no cutoff original value given at command line.  */
-  const char *score_cutoff_help; /**< @brief Cutoff on the gene-gene score before adding, default: no cutoff help description.  */
-  int square_z_flag;	/**< @brief If z_score is selected, take the square the z-scores. Usually used in conjunction with --score-cutoff. (default=off).  */
-  const char *square_z_help; /**< @brief If z_score is selected, take the square the z-scores. Usually used in conjunction with --score-cutoff. help description.  */
-  float per_q_required_arg;	/**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. (default='0.0').  */
-  char * per_q_required_orig;	/**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. original value given at command line.  */
-  const char *per_q_required_help; /**< @brief Fraction (max 1.0) of query required to correlate with a gene, in order to count the gene's query score. A gene may not correlate with a query gene if it is absent, or its correlation with query does not pass cut-off (specified by --score_cutoff). Use this with caution. Be careful if using with --score_cutoff. help description.  */
+  float score_cutoff_arg;	/**< @brief Cutoff on the gene-gene distance score before adding, default: no cutoff (default='-9999').  */
+  char * score_cutoff_orig;	/**< @brief Cutoff on the gene-gene distance score before adding, default: no cutoff original value given at command line.  */
+  const char *score_cutoff_help; /**< @brief Cutoff on the gene-gene distance score before adding, default: no cutoff help description.  */
+  int square_z_flag;	/**< @brief If z_score is selected, square the z-scores. Usually used in conjunction with --score-cutoff=1.0. (default=off).  */
+  const char *square_z_help; /**< @brief If z_score is selected, square the z-scores. Usually used in conjunction with --score-cutoff=1.0. help description.  */
+  float per_q_required_arg;	/**< @brief Fraction (max 1.0) of query genes required to be present in a dataset, if --score_cutoff is NOT specified. Datasets not meeting this requirement are skipped. However, if --score_cutoff is specified, this is the fraction of query genes required to pass the correlation cutoff, indicated by --score_cutoff (shortened SC) (note: Advanced usage!). In this case, in scoring a gene g, we first calculate the number of query genes (QS) to which g's correlation exceeds SC. Then if the fraction (QS) / (number of query genes) < per_q_required, do not score this gene in dataset's coexpressed gene-list. Use this with caution if --score_cutoff is specified. (default='0').  */
+  char * per_q_required_orig;	/**< @brief Fraction (max 1.0) of query genes required to be present in a dataset, if --score_cutoff is NOT specified. Datasets not meeting this requirement are skipped. However, if --score_cutoff is specified, this is the fraction of query genes required to pass the correlation cutoff, indicated by --score_cutoff (shortened SC) (note: Advanced usage!). In this case, in scoring a gene g, we first calculate the number of query genes (QS) to which g's correlation exceeds SC. Then if the fraction (QS) / (number of query genes) < per_q_required, do not score this gene in dataset's coexpressed gene-list. Use this with caution if --score_cutoff is specified. original value given at command line.  */
+  const char *per_q_required_help; /**< @brief Fraction (max 1.0) of query genes required to be present in a dataset, if --score_cutoff is NOT specified. Datasets not meeting this requirement are skipped. However, if --score_cutoff is specified, this is the fraction of query genes required to pass the correlation cutoff, indicated by --score_cutoff (shortened SC) (note: Advanced usage!). In this case, in scoring a gene g, we first calculate the number of query genes (QS) to which g's correlation exceeds SC. Then if the fraction (QS) / (number of query genes) < per_q_required, do not score this gene in dataset's coexpressed gene-list. Use this with caution if --score_cutoff is specified. help description.  */
   char * CV_partition_arg;	/**< @brief The query partitioning method (for CV weighting): Leave-One-In, Leave-One-Out, X-Fold. (default='LOI').  */
   char * CV_partition_orig;	/**< @brief The query partitioning method (for CV weighting): Leave-One-In, Leave-One-Out, X-Fold. original value given at command line.  */
   const char *CV_partition_help; /**< @brief The query partitioning method (for CV weighting): Leave-One-In, Leave-One-Out, X-Fold. help description.  */
@@ -135,11 +118,11 @@ struct gengetopt_args_info
   float CV_rbp_p_arg;	/**< @brief The parameter p for RBP scoring of each partition for its query gene retrieval (for CV weighting). (default='0.99').  */
   char * CV_rbp_p_orig;	/**< @brief The parameter p for RBP scoring of each partition for its query gene retrieval (for CV weighting). original value given at command line.  */
   const char *CV_rbp_p_help; /**< @brief The parameter p for RBP scoring of each partition for its query gene retrieval (for CV weighting). help description.  */
-  int is_nibble_flag;	/**< @brief Whether the input DB is nibble type (default=off).  */
-  const char *is_nibble_help; /**< @brief Whether the input DB is nibble type help description.  */
-  int buffer_arg;	/**< @brief Number of Databaselets to store in memory (default='20').  */
-  char * buffer_orig;	/**< @brief Number of Databaselets to store in memory original value given at command line.  */
-  const char *buffer_help; /**< @brief Number of Databaselets to store in memory help description.  */
+  int is_nibble_flag;	/**< @brief The input CDatabase collection is nibble type (default=off).  */
+  const char *is_nibble_help; /**< @brief The input CDatabase collection is nibble type help description.  */
+  int buffer_arg;	/**< @brief Number of query genes to load in memory (recommended: 50-100) (default='50').  */
+  char * buffer_orig;	/**< @brief Number of query genes to load in memory (recommended: 50-100) original value given at command line.  */
+  const char *buffer_help; /**< @brief Number of query genes to load in memory (recommended: 50-100) help description.  */
   int output_text_flag;	/**< @brief Output results (gene scores and dataset weights) as text (default=off).  */
   const char *output_text_help; /**< @brief Output results (gene scores and dataset weights) as text help description.  */
   char * output_dir_arg;	/**< @brief Output directory.  */
@@ -170,12 +153,6 @@ struct gengetopt_args_info
   unsigned int per_g_required_given ;	/**< @brief Whether per_g_required was given.  */
   unsigned int neg_cor_given ;	/**< @brief Whether neg_cor was given.  */
   unsigned int weighting_method_given ;	/**< @brief Whether weighting_method was given.  */
-  unsigned int func_db_given ;	/**< @brief Whether func_db was given.  */
-  unsigned int func_n_given ;	/**< @brief Whether func_n was given.  */
-  unsigned int func_prep_given ;	/**< @brief Whether func_prep was given.  */
-  unsigned int func_quant_given ;	/**< @brief Whether func_quant was given.  */
-  unsigned int func_dset_given ;	/**< @brief Whether func_dset was given.  */
-  unsigned int func_logit_given ;	/**< @brief Whether func_logit was given.  */
   unsigned int user_gene_list_given ;	/**< @brief Whether user_gene_list was given.  */
   unsigned int user_weight_list_given ;	/**< @brief Whether user_weight_list was given.  */
   unsigned int random_given ;	/**< @brief Whether random was given.  */
