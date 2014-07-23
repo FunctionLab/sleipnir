@@ -22,47 +22,6 @@
 #include "stdafx.h"
 
 /*!
- * \page NetworkRanker NetworkRanker
- * 
- * NetworkRanker can replace the DAT mode of \ref Combiner.  It is faster, but achieves this by making some
- * important assumptions.  NetworkRanker uses the mean method of combining and assumes that all gene pairs 
- * be present in all DABs being combined. Therfore, NetworkRanker should only be used if these assumptions 
- * are met.
- * 
- * \section sec_usage Usage
- * 
- * \subsection ssec_usage_basic Basic Usage
- * 
- * Create a new DAB file from a directory of existing DAB files by calculating the mean for each gene pair
- * across all of the existing DAB files.
- * 
- * \code
- * NetworkRanker -d <directory of dabs> -o <combined.dab>
- * \endcode
- * 
- * \subsection ssec_usage_detailed Detailed Usage
- * 
- * \include NetworkRanker/NetworkRanker.ggo
- * 
- * <table><tr>
- *	<th>Flag</th>
- *	<th>Default</th>
- *	<th>Type</th>
- *	<th>Description</th>
- * </tr><tr>
- * 	<td>-d</td>
- * 	<td>None</td>
- * 	<td>DAT/DAB Directory</td>
- * 	<td>Input directory (must only contain input files as DAT/DAB).</td>
- * </tr><tr>
- *	<td>-m</td>
- *	<td>on</td>
- *	<td>Flag</td>
- *	<td>Map gene index among the network dabs to combine (should be used when the gene indices are not identical among network dabs).</td>
- * </tr><tr>
- *	<td>-o</td>
- *	<td>None</td>
- *	<td>DAB file</td>
- *	<td>Output file for combined network.</td>
- * </tr></table>
+ * \page DataServer DataServer 
+ * Server for dataset search project.
  */
