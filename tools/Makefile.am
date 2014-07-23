@@ -16,6 +16,7 @@ if WITH_TOOLS
 	  Data2Features \
 	  Data2Sql \
 	  DataDumper \
+	  DataServer \
 	  Distancer \
 	  Explainer \
 	  Filterer \
@@ -29,6 +30,7 @@ if WITH_TOOLS
 	  Matcher \
 	  MIer \
 	  MIed \
+	  NetworkRanker \
 	  Normalizer \
 	  Orthologer \
 	  Overlapper \

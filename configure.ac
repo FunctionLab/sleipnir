@@ -967,6 +967,7 @@ AC_CONFIG_FILES([Makefile \
                  tools/Data2Features/Makefile \
                  tools/Data2Sql/Makefile \
                  tools/DataDumper/Makefile \
+                 tools/DataServer/Makefile \
                  tools/Distancer/Makefile \
                  tools/Explainer/Makefile \
                  tools/Filterer/Makefile \
@@ -981,6 +982,7 @@ AC_CONFIG_FILES([Makefile \
                  tools/MIer/Makefile \
                  tools/MIed/Makefile \
                  tools/NetMiner/Makefile \
+                 tools/NetworkRanker/Makefile \
                  tools/Normalizer/Makefile \
                  tools/Orthologer/Makefile \
                  tools/Overlapper/Makefile \
