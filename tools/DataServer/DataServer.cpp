@@ -21,10 +21,11 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
+#include "measure.h"
 #include "DataServer.h"
 
 const CDataServer::TPFNProcessor	CDataServer::c_apfnProcessors[]	=
-	{&CDataServer::ProcessDatasetSearch};
+	{&CDataServer::ProcessDatasetSearch, &CDataServer::ProcessDatasetMeasure};
 
 struct SData {
     vector<size_t>* m_veciGenes; 
@@ -92,6 +93,8 @@ int main( int iArgs, char** aszArgs ) {
         ifsm.close();
     }  
 
+	cerr << "Quant file: " << sArgs.quant_arg << endl;
+
     // Map PCL genes to CDatabase genes
     veciPCLGeneIdx.resize( Database.GetGenes() );
     for ( i = 0; i < veciPCLGeneIdx.size(); i++ ) {
@@ -104,7 +107,7 @@ int main( int iArgs, char** aszArgs ) {
     } 
 
 
-	SDataServerData	sData( Database, vecstrDatasets, VarPCL, veciPCLGeneIdx, veciPCLDataIdx, sArgs.threads_arg );
+	SDataServerData	sData( Database, vecstrDatasets, VarPCL, veciPCLGeneIdx, veciPCLDataIdx, sArgs.quant_arg, sArgs.threads_arg );
 	CDataServer	DataServer( 0, "", sData );
 
     cerr << "Maximum number of threads: " << sArgs.threads_arg << endl;
@@ -387,6 +390,7 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
         pthread_create( &vecpthdThreads[ i ], NULL, GetScoresThread, &vecsData[ i ] ); 
     }
     for( i = 0; i < vecpthdThreads.size(); i++ ) {
+	cerr << "Wait: " << i << endl;
         pthread_join( vecpthdThreads[ i ], NULL );
     }
 
@@ -509,3 +513,41 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
 
 
 
+size_t CDataServer::ProcessDatasetMeasure( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+	size_t iStart, iRet;
+	uint32_t iLen, iSize;
+	CPCL PCL;
+	CDataPair Dat;
+	string pclstr, dabstr;
+
+	IMeasure::EMap eM = IMeasure::EMapNone;
+
+	if( ( iOffset + sizeof(iLen) ) > vecbMessage.size( ) )
+		return -1;
+	iStart = iOffset;
+	iLen = *(uint32_t*)&vecbMessage[ iOffset ];
+	pclstr = string((char *)&vecbMessage[ iOffset + sizeof(iLen) ], (size_t)iLen);
+
+    cerr << "Processing Measure" << endl;
+    cerr << "Filename: " << pclstr << endl;
+	iOffset += sizeof(iLen) + (size_t)iLen;
+
+	iRet = CPCL::Distance( pclstr.c_str(), 0, NULL, "pearnorm", false, true, false, NULL, 
+		CMeta::GetNaN(), -1, PCL, Dat, eM, false, 0, GetMaxThreads());
+
+	if ( iRet < 0 )
+		return -1;
+
+	dabstr = CMeta::Deextension( pclstr ) + ".qdab";
+	cerr << "Saving: " << dabstr << endl; 
+
+	Dat.OpenQuants( GetQuantFile().c_str() );
+	Dat.Quantize();
+	Dat.Save( dabstr.c_str() ); 
+
+    iSize = (uint32_t)( dabstr.length() ); 
+    send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+    send( m_iSocket, dabstr.c_str(), dabstr.length(), 0 );
+
+	return (iOffset - iStart );
+}

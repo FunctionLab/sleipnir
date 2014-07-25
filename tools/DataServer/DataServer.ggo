@@ -11,6 +11,8 @@ option  "dataname"  D   "Name of input dataset"
                         string
 option  "variances" v   "PCL File of gene variances"
                         string typestr="filename"
+option	"quant"		q	"Quant file for saving dabs"
+						string typestr="filename"
 
 section "Server"
 option	"port"			p	"Server port"

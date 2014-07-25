@@ -1,5 +1,6 @@
 import socket
 import struct
+import os
 
 import logging
 logger = logging.getLogger(__name__)
@@ -10,7 +11,7 @@ import numpy
 
 class DataServer:
 
-    SEARCH, QUERY = range(2)
+    SEARCH, MEASURE = range(2)
 
 
     def __init__(self, gidx, didx, ip = '127.0.0.1', port = 1234):
@@ -28,7 +29,31 @@ class DataServer:
         s.shutdown(socket.SHUT_WR)
         s.close()
 
-    def search(self, cut, exp, genes = []):
+    def measure(self, file_name):
+        s = self.open_socket()
+        size = 1 + 4 + len(file_name)
+        size = struct.pack('<i', size)
+        s.send(size)
+
+        opcode = struct.pack('<b', self.MEASURE)
+        s.send(opcode)
+
+        filesize = struct.pack('<i', len(file_name))
+        s.send(filesize)
+
+        name = struct.pack('<'+str(len(file_name))+'s', file_name)
+        s.send(name)
+        s.shutdown(socket.SHUT_WR)
+
+        result = s.recv(4)
+        res_len = struct.unpack('<i', result)[0]
+
+        dabfile = s.recv(res_len)
+
+        print dabfile
+        return dabfile
+
+    def search(self, cut, exp, didx, genes = []):
         s = self.open_socket()
 
         size = 1 + 4 + 4 + 4 # opcode + dataset id + cut + exp
@@ -40,7 +65,7 @@ class DataServer:
         opcode = struct.pack('<b', self.SEARCH)
         s.send(opcode)
 
-        did = struct.pack('<i', 537)
+        did = struct.pack('<i', didx)
         s.send(did)
 
         params = struct.pack('<ff', cut, exp)
@@ -109,7 +134,12 @@ if __name__ == '__main__':
             query_names.add(l.strip())
 
     ds  = DataServer(gidx, didx, options.ip, options.port)
-    genes,dsets = ds.search(.5, 8, list(query))
+    ds.measure(os.path.dirname(os.path.abspath(sys.argv[0])) + '/pcls/' + didx[options.did][1] + '.pcl')
 
-    for ((idx,name),score) in zip(gidx,genes)[0:10]:
-        print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)
+    #genes,dsets = ds.search(.5, 8, options.did, list(query))
+
+    #for ((idx,name),score) in zip(gidx,genes)[0:10]:
+    #    print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)
+
+    #for ((idx,name),score) in zip(didx,dsets)[0:10]:
+    #    print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)

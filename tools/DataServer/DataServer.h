@@ -29,6 +29,7 @@ struct SDataServerData {
 	const CPCL& m_VarPCL;
 	const vector<size_t> m_veciPCLGeneIdx;
 	const vector<size_t> m_veciPCLDataIdx;
+	const string m_strQuant;
 	const int m_iThreads;
 
 	SDataServerData( const CDatabase& Database,
@@ -36,12 +37,14 @@ struct SDataServerData {
 					const CPCL& VarPCL,
 					vector<size_t>& veciPCLGeneIdx,
 					vector<size_t>& veciPCLDataIdx,
+					const string strQuant,
 					int iThreads ) :
 					m_Database(Database),
 					m_vecstrDatasets(vecstrDatasets),
 					m_VarPCL(VarPCL),
 					m_veciPCLGeneIdx(veciPCLGeneIdx),
 					m_veciPCLDataIdx(veciPCLDataIdx),
+					m_strQuant(strQuant),
 					m_iThreads(iThreads)
 					 { }
 };
@@ -76,9 +79,9 @@ public:
 private:
 
 	size_t ProcessDatasetSearch( const vector<unsigned char>& , size_t );
+	size_t ProcessDatasetMeasure( const vector<unsigned char>& , size_t );
 
-//	void GetScores( const vector<size_t>&, const vector<float>&, vector<float>&, vector<float>& );
-//	void* GetScoresThread( void* pData );
+	string GetQuantFile() const { return m_sData.m_strQuant; }
 
 	const CPCL& GetVarPCL( ) const {
 		return m_sData.m_VarPCL; }
