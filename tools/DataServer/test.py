@@ -134,12 +134,12 @@ if __name__ == '__main__':
             query_names.add(l.strip())
 
     ds  = DataServer(gidx, didx, options.ip, options.port)
-    ds.measure(os.path.dirname(os.path.abspath(sys.argv[0])) + '/pcls/' + didx[options.did][1] + '.pcl')
+    #ds.measure(os.path.dirname(os.path.abspath(sys.argv[0])) + '/pcls/' + didx[options.did][1] + '.pcl')
 
-    #genes,dsets = ds.search(.5, 8, options.did, list(query))
+    genes,dsets = ds.search(.5, 8, options.did, list(query))
 
-    #for ((idx,name),score) in zip(gidx,genes)[0:10]:
-    #    print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)
+    for ((idx,name),score) in zip(gidx,genes)[0:10]:
+        print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)
 
-    #for ((idx,name),score) in zip(didx,dsets)[0:10]:
-    #    print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)
+    for ((idx,name),score) in zip(didx,dsets)[0:10]:
+        print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)

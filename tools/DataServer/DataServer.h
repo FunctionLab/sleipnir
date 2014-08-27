@@ -74,7 +74,7 @@ public:
 	void GetScores( const vector<size_t>&, const vector<float>&,
 	    vector<float>&, vector<float>&, CFullMatrix<float>*, CFullMatrix<float>* );
 
-	void GetDataWeights( size_t, CFullMatrix<float>&, float, float, vector<float>&, int );
+	void GetDataWeights( size_t, CFullMatrix<float>&, float, float, vector<float>& );
 
 private:
 

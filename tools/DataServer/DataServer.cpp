@@ -27,30 +27,6 @@
 const CDataServer::TPFNProcessor	CDataServer::c_apfnProcessors[]	=
 	{&CDataServer::ProcessDatasetSearch, &CDataServer::ProcessDatasetMeasure};
 
-struct SData {
-    vector<size_t>* m_veciGenes; 
-    vector<float>* m_vecfDataWeights;
-    vector<float>* m_vecfScores; 
-    vector<float>* m_vecfTotal;
-    CDataServer* m_Server;
-    //CPCL* m_QueryCorScores;
-    //CPCL* m_QueryCorTotal;
-    CFullMatrix<float>* m_QueryCorScores;
-    CFullMatrix<float>* m_QueryCorTotal;
-    
-};
-
-struct SWeight {
-    size_t m_iData;
-    //CPCL* m_CorPCL;
-    CFullMatrix<float>* m_CorMat;
-    float m_cutoff;
-    float m_base;
-    vector<float>* m_vecfDataWeights;
-    CDataServer* m_Server;
-    size_t m_iThread;
-};
-
 int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info			sArgs;
     static const size_t c_iBuffer = 1024;
@@ -169,21 +145,9 @@ bool CDataServer::ProcessMessage( const vector<unsigned char>& vecbMessage ) {
 
 	return true; }
 
-
-void* GetScoresThread( void* pData ) {
-    SData* data = (SData*)pData;
-
-    data->m_Server->GetScores( *(data->m_veciGenes), *(data->m_vecfDataWeights), 
-        *(data->m_vecfScores), *(data->m_vecfTotal), data->m_QueryCorScores, data->m_QueryCorTotal );
-
-    return NULL; 
-}
-
-
-
 void CDataServer::GetScores( const vector<size_t>& veciGenes, const vector<float>& vecfDataWeights,
-        vector<float>& vecfScores, vector<float>& vecfTotal, 
-        CFullMatrix<float>* AllScores = NULL, CFullMatrix<float>* AllCounts = NULL ) {
+    vector<float>& vecfScores, vector<float>& vecfTotal, 
+    CFullMatrix<float>* AllScores = NULL, CFullMatrix<float>* AllCounts = NULL ) {
 
     size_t iGene, iTargetPCL, iDataPCL, iGenePCL, q, i, j, iOffset;
     vector<unsigned char> vecbData;
@@ -210,11 +174,12 @@ void CDataServer::GetScores( const vector<size_t>& veciGenes, const vector<float
             continue;
         }
         cerr << q << ": " << GetDatabase().GetGene( iGene ) << endl;
- 
+
         vecbData.clear();
         GetDatabase().Get( iGene, vecbData ); 
 
         // Iterate over all genes
+	#pragma omp parallel for private(j, iOffset, iDataPCL, v, t)
         for ( i = 0; i < GetDatabase().GetGenes(); i++ ) {
             iOffset = i * GetDatabase().GetDatasets();
             
@@ -244,6 +209,7 @@ void CDataServer::GetScores( const vector<size_t>& veciGenes, const vector<float
                     t = GetVarPCL().Get( iGenePCL, iDataPCL ) * vecfDataWeights[ j ];
                     if ( CMeta::IsNaN( t ) ) continue;
                     v *= t;
+
                     vecfScores[i] += v;
                     vecfTotal[i] += t; 
                 }
@@ -251,29 +217,18 @@ void CDataServer::GetScores( const vector<size_t>& veciGenes, const vector<float
         } 
     }
 }
-	
-void* GetDataWeightsThread( void* pData ) {
-    SWeight* data = (SWeight*)pData;
-
-    data->m_Server->GetDataWeights( data->m_iData, *(data->m_CorMat), 
-        data->m_cutoff, data->m_base, *(data->m_vecfDataWeights), data->m_iThread );
-
-    return NULL; 
-}
-
 
 void CDataServer::GetDataWeights( size_t iData, CFullMatrix<float>& CorMat, float cutoff, float s, 
-        vector<float>& vecfDataWeights, int iThread = -1 ) {
-    size_t i, j, iDataPCL;
+    vector<float>& vecfDataWeights ) {
+    size_t i, j;
     float d1, d2, w1, w2, fSim;
     CMeasurePearson Pearson;
     vector<float> adOne, adTwo, adW1, adW2;
 
-    cerr << "Calculating correlations for thread: " << iThread << endl;
+    cerr << "Calculating correlations: " << endl;
 
+    #pragma omp parallel for private(adOne, adTwo, adW1, adW2, i, d1, d2, w1, w2, fSim)
     for( j = 0; j < GetDatabase().GetDatasets(); j++ ) {
-        if ( iThread >= 0 && j % GetMaxThreads() != iThread )
-            continue;
 
         adOne.clear();
         adTwo.clear();
@@ -311,49 +266,52 @@ void CDataServer::GetDataWeights( size_t iData, CFullMatrix<float>& CorMat, floa
 
 
 size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
-	size_t		iStart, i, j, t;
-	uint32_t	iGene, iDataset, iSize;
+    size_t		iStart, i, j, t;
+    uint32_t	iGene, iDataset, iSize;
     float   iCut, iExp;
+    string strDat;
     vector<string> vecstrFeatures;
     vector<size_t> veciGenes;
     vector<float> vecfDataWeights, vecfScores, vecfTotal;
-    vector<pthread_t> vecpthdThreads;
-    vector<SData> vecsData;
-    vector<SWeight> vecsWeight;
     CFullMatrix<float> QueryCorScores, QueryCorTotal;
 
     size_t iThreads = 1; 
 
-	if( ( iOffset + sizeof(iDataset) ) > vecbMessage.size( ) )
-		return -1;
-	iStart = iOffset;
-	iDataset = *(uint32_t*)&vecbMessage[ iOffset ];
+    if( ( iOffset + sizeof(iDataset) ) > vecbMessage.size( ) )
+	return -1;
+    iStart = iOffset;
+    iDataset = *(uint32_t*)&vecbMessage[ iOffset ];
 
     cerr << "Processing Search" << endl;
     cerr << "Dataset: " << GetDatasetNames()[iDataset] << endl; 
     
     iOffset += sizeof(iDataset);
-	if( iOffset + sizeof(iCut) > vecbMessage.size( ) )
-		return -1;
+    if( iOffset + sizeof(iCut) > vecbMessage.size( ) )
+	return -1;
     iCut = *(float*)&vecbMessage[ iOffset ];
 
     iOffset += sizeof(iCut);
-	if( iOffset + sizeof(iExp) > vecbMessage.size( ) )
-		return -1;
+    if( iOffset + sizeof(iExp) > vecbMessage.size( ) )
+	return -1;
     iExp = *(float*)&vecbMessage[ iOffset ];
 
     cerr << "Parameters: " << iCut << ", " << iExp << endl;
 
     for( iOffset += sizeof(iExp); ( iOffset + sizeof(iGene) ) <= vecbMessage.size();
         iOffset += sizeof(iGene) ) {
-        iGene = *(uint32_t*)&vecbMessage[ iOffset ];
+	iGene = *(uint32_t*)&vecbMessage[ iOffset ];
+	cerr << iGene << endl;
         veciGenes.push_back(iGene); 
     }
+
+	//if ( iOffset <= vecbMessage.size() ) {
+	//	iSize = *(uint32_t*)&vecbMessage[ iOffset ];
+	//	strDat = string((char *)&vecbMessage[ iOffset + sizeof(iLen) ], (size_t)iLen);
+	//}
 
     iThreads = std::min( (int)veciGenes.size(), GetMaxThreads() );    
 
     cerr << "Setting threads to: " << iThreads << endl;
-
 
     // ------------------------------------------------------------------------/
     // Get correlations to query genes
@@ -367,146 +325,59 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
     QueryCorScores.Clear();
     QueryCorTotal.Clear();
 
-    vecsData.resize( iThreads/2 );
-    vecpthdThreads.resize( iThreads/2 );
-    for( i = 0; i < vecsData.size(); i++ ) {
-        vecsData[ i ].m_vecfDataWeights = &vecfDataWeights;         
-        vecsData[ i ].m_vecfScores = new vector<float>(); 
-        vecsData[ i ].m_vecfTotal = new vector<float>(); 
-        vecsData[ i ].m_veciGenes = new vector<size_t>(); 
-        vecsData[ i ].m_Server = (CDataServer*)this;
-        vecsData[ i ].m_QueryCorScores = new CFullMatrix<float>(); 
-        vecsData[ i ].m_QueryCorTotal = new CFullMatrix<float>();
-
-        vecsData[ i ].m_QueryCorScores->Initialize( GetDatabase().GetGenes(), GetDatabase().GetDatasets() );
-        vecsData[ i ].m_QueryCorTotal->Initialize( GetDatabase().GetGenes(), GetDatabase().GetDatasets() );
-
-        for( iGene = 0; iGene < veciGenes.size(); iGene++ ) {
-            if ( iGene % (iThreads/2) == i ) {
-                vecsData[ i ].m_veciGenes->push_back( veciGenes[ iGene ] );
-            }
-        }
-        cerr << "Creating " << i << endl;
-        pthread_create( &vecpthdThreads[ i ], NULL, GetScoresThread, &vecsData[ i ] ); 
-    }
-    for( i = 0; i < vecpthdThreads.size(); i++ ) {
-	cerr << "Wait: " << i << endl;
-        pthread_join( vecpthdThreads[ i ], NULL );
-    }
-
-    // Collect results
-    for ( t = 0; t < vecsData.size(); t++ ) {
-        for ( i = 0; i < GetDatabase().GetGenes(); i++ ) {
-            for ( j = 0; j < GetDatabase().GetDatasets(); j++ ) {
-                QueryCorScores.Set( i, j, 
-                    QueryCorScores.Get( i, j ) + vecsData[ t ].m_QueryCorScores->Get( i, j ) ); 
-                QueryCorTotal.Set( i, j, 
-                    QueryCorTotal.Get( i, j ) + vecsData[ t ].m_QueryCorTotal->Get( i, j ) ); 
-            }
-        }
-    }
+    GetScores( veciGenes, vecfDataWeights, vecfScores, vecfTotal, 
+		&QueryCorScores, &QueryCorTotal );
 
     // Calculate average
+    // #pragma omp parallel for private(j)
     for ( i = 0; i < GetDatabase().GetGenes(); i++ ) {
         for ( j = 0; j < GetDatabase().GetDatasets(); j++ ) {
             QueryCorScores.Set( i, j, 
                 QueryCorScores.Get( i, j ) / QueryCorTotal.Get( i, j ) ); 
+	    //if ( j == 0 ) {
+		//cerr << "i : " << i << ", " << QueryCorScores.Get(i , j) << endl;
+	    //}
         }
-    }
-
-    for ( t = 0; t < vecsData.size(); t++ ) {
-        delete vecsData[ t ].m_vecfScores;
-        delete vecsData[ t ].m_vecfTotal;
-        delete vecsData[ t ].m_veciGenes;
-        delete vecsData[ t ].m_QueryCorScores;
-        delete vecsData[ t ].m_QueryCorTotal;
     }
 
     // ------------------------------------------------------------------------/
     // Calculate correlations
-    // GetDataWeights( GetVarPCL().GetExperiment( GetDatasetNames()[ iDataset ] ), 
-    //    QueryCorScores, iCut, iExp, vecfDataWeights );
-
-    vecfDataWeights.resize( GetDatabase().GetDatasets() );
-    fill( vecfDataWeights.begin(), vecfDataWeights.end(), 0 );
-
-    vecsWeight.resize( iThreads );
-    vecpthdThreads.resize( iThreads );
-    for( i = 0; i < vecsWeight.size(); i++ ) {
-
-        vecsWeight[ i ].m_iData = iDataset;
-        vecsWeight[ i ].m_CorMat = &QueryCorScores;
-        vecsWeight[ i ].m_cutoff = iCut;
-        vecsWeight[ i ].m_base = iExp;
-        vecsWeight[ i ].m_vecfDataWeights = &vecfDataWeights;
-        vecsWeight[ i ].m_Server = this;
-        vecsWeight[ i ].m_iThread = i;
-
-        cerr << "Creating " << i << endl;
-        pthread_create( &vecpthdThreads[ i ], NULL, GetDataWeightsThread, &vecsWeight[ i ] ); 
-    }
-
-    for( i = 0; i < vecpthdThreads.size(); i++ ) {
-        pthread_join( vecpthdThreads[ i ], NULL );
-    }
-
+    
+    GetDataWeights( iDataset, QueryCorScores, iCut, iExp, vecfDataWeights );
 
     // ------------------------------------------------------------------------/
     // Calculated weighted correlations
-    vecsData.resize( iThreads );
-    vecpthdThreads.resize( iThreads );
-    for( i = 0; i < vecsData.size(); i++ ) {
-        vecsData[ i ].m_vecfDataWeights = &vecfDataWeights;         
-        vecsData[ i ].m_vecfScores = new vector<float>(); 
-        vecsData[ i ].m_vecfTotal = new vector<float>(); 
-        vecsData[ i ].m_veciGenes = new vector<size_t>(); 
-        vecsData[ i ].m_Server = (CDataServer*)this;
-        vecsData[ i ].m_QueryCorScores = NULL;
-        vecsData[ i ].m_QueryCorTotal = NULL;
 
-        for( iGene = 0; iGene < veciGenes.size(); iGene++ ) {
-            if ( iGene % iThreads == i ) {
-                vecsData[ i ].m_veciGenes->push_back( veciGenes[ iGene ] );
-            }
-        }
-        cerr << "Creating " << i << endl;
-        pthread_create( &vecpthdThreads[ i ], NULL, GetScoresThread, &vecsData[ i ] ); 
-    }
-
-    for( i = 0; i < vecpthdThreads.size(); i++ ) {
-        pthread_join( vecpthdThreads[ i ], NULL );
-    }
-
-    vecfScores.resize( GetDatabase().GetGenes() );
-    fill( vecfScores.begin(), vecfScores.end(), 0 );
-    vecfTotal.resize( GetDatabase().GetGenes() );
-    fill( vecfTotal.begin(), vecfTotal.end(), 0 );
-
-    // Collect results
-    for ( i = 0; i < vecsData.size(); i++ ) {
-        for ( iGene = 0; iGene < GetDatabase().GetGenes(); iGene++ ) {
-            vecfScores[ iGene ] += vecsData[ i ].m_vecfScores->at( iGene );
-            vecfTotal[ iGene ] += vecsData[ i ].m_vecfTotal->at( iGene );
-        }
-    }
+    GetScores( veciGenes, vecfDataWeights, vecfScores, vecfTotal );
 
     // Calculate average
     for ( i = 0; i < vecfScores.size(); i++ ) {
         vecfScores[i] /= vecfTotal[i];
     }
 
-    // Clean up
-    for ( t = 0; t < vecsData.size(); t++ ) {
-        delete vecsData[ t ].m_vecfScores;
-        delete vecsData[ t ].m_vecfTotal;
-        delete vecsData[ t ].m_veciGenes;
-    }
-
     // Send scores
-    iSize = (uint32_t)( sizeof(float) * ( GetDatabase().GetGenes() + GetDatabase().GetDatasets() ) ); 
+    iSize = sizeof(iGene) + sizeof(iDataset);
+    iSize += (uint32_t)( sizeof(float) * ( GetDatabase().GetGenes() + GetDatabase().GetDatasets() ) ); 
+    iSize += sizeof(float) * QueryCorScores.GetRows() * QueryCorScores.GetColumns();
     send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+
+    iGene = (uint32_t)(GetDatabase().GetGenes());
+    send( m_iSocket, (char*)&iGene, sizeof(iGene), 0 );
+
+    iDataset = (uint32_t)(GetDatabase().GetDatasets());
+    send( m_iSocket, (char*)&iDataset, sizeof(iDataset), 0 );
+
     send( m_iSocket, (char*)&vecfScores[0], sizeof(float)*vecfScores.size(), 0 );
     send( m_iSocket, (char*)&vecfDataWeights[0], sizeof(float)*vecfDataWeights.size(), 0 );
+    
+    for ( i = 0; i < QueryCorScores.GetRows(); i++ ) {
+        for ( j = 0; j < QueryCorScores.GetColumns(); j++ ) {
+            float d = QueryCorScores.Get( i, j ); 
+	    send( m_iSocket, (char*)&d, sizeof(float), 0 );
+        }
+    }
+
+
     return ( iOffset - iStart );
 }
 
@@ -514,40 +385,40 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
 
 
 size_t CDataServer::ProcessDatasetMeasure( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
-	size_t iStart, iRet;
-	uint32_t iLen, iSize;
-	CPCL PCL;
-	CDataPair Dat;
-	string pclstr, dabstr;
+    size_t iStart, iRet;
+    uint32_t iLen, iSize;
+    CPCL PCL;
+    CDataPair Dat;
+    string pclstr, dabstr;
 
-	IMeasure::EMap eM = IMeasure::EMapNone;
+    IMeasure::EMap eM = IMeasure::EMapNone;
 
-	if( ( iOffset + sizeof(iLen) ) > vecbMessage.size( ) )
-		return -1;
-	iStart = iOffset;
-	iLen = *(uint32_t*)&vecbMessage[ iOffset ];
-	pclstr = string((char *)&vecbMessage[ iOffset + sizeof(iLen) ], (size_t)iLen);
+    if( ( iOffset + sizeof(iLen) ) > vecbMessage.size( ) )
+	    return -1;
+    iStart = iOffset;
+    iLen = *(uint32_t*)&vecbMessage[ iOffset ];
+    pclstr = string((char *)&vecbMessage[ iOffset + sizeof(iLen) ], (size_t)iLen);
 
     cerr << "Processing Measure" << endl;
     cerr << "Filename: " << pclstr << endl;
-	iOffset += sizeof(iLen) + (size_t)iLen;
+    iOffset += sizeof(iLen) + (size_t)iLen;
 
-	iRet = CPCL::Distance( pclstr.c_str(), 0, NULL, "pearnorm", false, true, false, NULL, 
-		CMeta::GetNaN(), -1, PCL, Dat, eM, false, 0, GetMaxThreads());
+    iRet = CPCL::Distance( pclstr.c_str(), 0, NULL, "pearnorm", false, true, false, NULL, 
+	CMeta::GetNaN(), -1, PCL, Dat, eM, false, 0, GetMaxThreads());
 
-	if ( iRet < 0 )
-		return -1;
+    if ( iRet < 0 )
+	return -1;
 
-	dabstr = CMeta::Deextension( pclstr ) + ".qdab";
-	cerr << "Saving: " << dabstr << endl; 
+    dabstr = CMeta::Deextension( pclstr ) + ".qdab";
+    cerr << "Saving: " << dabstr << endl; 
 
-	Dat.OpenQuants( GetQuantFile().c_str() );
-	Dat.Quantize();
-	Dat.Save( dabstr.c_str() ); 
+    Dat.OpenQuants( GetQuantFile().c_str() );
+    Dat.Quantize();
+    Dat.Save( dabstr.c_str() ); 
 
     iSize = (uint32_t)( dabstr.length() ); 
     send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
     send( m_iSocket, dabstr.c_str(), dabstr.length(), 0 );
 
-	return (iOffset - iStart );
+    return (iOffset - iStart );
 }
