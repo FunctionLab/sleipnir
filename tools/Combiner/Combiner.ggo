@@ -40,7 +40,7 @@ option	"zero"		Z	"Default missing values to zero"
 
 section "Optional"
 option	"skip"		k	"Columns to skip in input PCLs"
-						int	default="2"
+						int	default="0"
 option	"memmap"	p	"Memory map input files"
 						flag	off
 option	"verbosity"	v	"Message verbosity"

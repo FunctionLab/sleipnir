@@ -105,11 +105,10 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 	set<string>::const_iterator	iterGenes;
 	ifstream					ifsm;
 	ofstream					ofsm;
+	float d;
 
 	for( iArg = 0; iArg < input_files.size(); ++iArg ) {
-		ifsm.clear( );
-		ifsm.open( input_files[ iArg ].c_str() );
-		if( !PCL.Open( ifsm, sArgs.skip_arg ) ) {
+	  if( !PCL.Open(input_files[ iArg ].c_str(), sArgs.skip_arg, !!sArgs.memmap_flag)){
 			cerr << "Could not open: " << input_files[ iArg ] << endl;
 			return 1; }
 		if( !iArg )
@@ -130,13 +129,21 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 		ifsm.clear( );
 		ifsm.open( input_files[ iArg ].c_str() );
 		PCL.Open( ifsm, sArgs.skip_arg );
-		for( i = 0; i < PCLNew.GetGenes( ); ++i )
+	 if (sArgs.normalize_flag)
+                PCL.Normalize(CPCL::ENormalizeRow);
+
+	for( i = 0; i < PCLNew.GetGenes( ); ++i )
 			if( ( iGene = PCL.GetGene( vecstrGenes[ i ] ) ) != -1 ) {
 				if( !iArg )
 					for( j = 1; j < PCLNew.GetFeatures( ); ++j )
 						PCLNew.SetFeature( i, j, PCL.GetFeature( iGene, j ) );
 				for( j = 0; j < PCL.GetExperiments( ); ++j )
-					PCLNew.Set( i, iExp + j, PCL.Get( iGene, j ) ); }
+				  PCLNew.Set( i, iExp + j, PCL.Get( iGene, j )); }
+			else if (sArgs.zero_flag){
+			  for( j = 0; j < PCL.GetExperiments( ); ++j )
+				  PCLNew.Set( i, iExp + j, 0.0f); 
+			}
+
 		iExp += PCL.GetExperiments( );
 		ifsm.close( ); }
 
