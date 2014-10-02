@@ -30,6 +30,11 @@ option	"gnorm"		g	"Correct by the degree of gene of interest"
 						flag	off
 option	"nnorm"		G	"Correct by the degree of neighbor gene"
 						flag	off
+option	"pval"		p	"Correct by p-value"
+						flag	off
+option	"zscore"	z	"Correct by z-score"
+						flag	off
+
 section "Weight"
 option	"log_weight"		l	"Weight by log of ratio"
 						flag	off
