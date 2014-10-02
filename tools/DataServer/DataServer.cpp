@@ -146,7 +146,7 @@ bool CDataServer::ProcessMessage( const vector<unsigned char>& vecbMessage ) {
 	return true; }
 
 void CDataServer::GetScores( const vector<size_t>& veciGenes, const vector<float>& vecfDataWeights,
-    vector<float>& vecfScores, vector<float>& vecfTotal, 
+    vector<float>& vecfScores, vector<float>& vecfTotal, vector<size_t>& veciCounts, 
     CFullMatrix<float>* AllScores = NULL, CFullMatrix<float>* AllCounts = NULL ) {
 
     size_t iGene, iTargetPCL, iDataPCL, iGenePCL, q, i, j, iOffset;
@@ -158,6 +158,8 @@ void CDataServer::GetScores( const vector<size_t>& veciGenes, const vector<float
     fill( vecfScores.begin(), vecfScores.end(), 0 );
     vecfTotal.resize( GetDatabase().GetGenes() );
     fill( vecfTotal.begin(), vecfTotal.end(), 0 );
+    veciCounts.resize( GetDatabase().GetGenes() );
+    fill( veciCounts.begin(), veciCounts.end(), 0 );
 
     if ( AllScores ) {
         AllScores->Clear();
@@ -179,7 +181,7 @@ void CDataServer::GetScores( const vector<size_t>& veciGenes, const vector<float
         GetDatabase().Get( iGene, vecbData ); 
 
         // Iterate over all genes
-	#pragma omp parallel for private(j, iOffset, iDataPCL, v, t)
+	    #pragma omp parallel for private(j, iOffset, iDataPCL, v, t)
         for ( i = 0; i < GetDatabase().GetGenes(); i++ ) {
             iOffset = i * GetDatabase().GetDatasets();
             
@@ -199,7 +201,7 @@ void CDataServer::GetScores( const vector<size_t>& veciGenes, const vector<float
                 // Store all scores
                 if ( AllScores && AllCounts ) {
                     t = GetVarPCL().Get( iGenePCL, iDataPCL );
-                    if ( CMeta::IsNaN( t ) ) continue;
+                    if ( CMeta::IsNaN( t ) || !t ) continue;
 
                     AllScores->Set( i, j, AllScores->Get( i, j ) + ( v * t ) );
                     AllCounts->Set( i, j, AllCounts->Get( i, j ) + t );
@@ -207,11 +209,12 @@ void CDataServer::GetScores( const vector<size_t>& veciGenes, const vector<float
                 // Summarize scores
                 else {
                     t = GetVarPCL().Get( iGenePCL, iDataPCL ) * vecfDataWeights[ j ];
-                    if ( CMeta::IsNaN( t ) ) continue;
+                    if ( CMeta::IsNaN( t ) || !t ) continue;
                     v *= t;
 
                     vecfScores[i] += v;
                     vecfTotal[i] += t; 
+                    veciCounts[i] += 1;
                 }
             }
         } 
@@ -271,9 +274,10 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
     float   iCut, iExp;
     string strDat;
     vector<string> vecstrFeatures;
-    vector<size_t> veciGenes;
+    vector<size_t> veciGenes, veciCounts;
     vector<float> vecfDataWeights, vecfScores, vecfTotal;
     CFullMatrix<float> QueryCorScores, QueryCorTotal;
+    vector<uint32_t> veciDatasets;
 
     size_t iThreads = 1; 
 
@@ -299,8 +303,7 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
 
     for( iOffset += sizeof(iExp); ( iOffset + sizeof(iGene) ) <= vecbMessage.size();
         iOffset += sizeof(iGene) ) {
-	iGene = *(uint32_t*)&vecbMessage[ iOffset ];
-	cerr << iGene << endl;
+	    iGene = *(uint32_t*)&vecbMessage[ iOffset ];
         veciGenes.push_back(iGene); 
     }
 
@@ -325,7 +328,7 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
     QueryCorScores.Clear();
     QueryCorTotal.Clear();
 
-    GetScores( veciGenes, vecfDataWeights, vecfScores, vecfTotal, 
+    GetScores( veciGenes, vecfDataWeights, vecfScores, vecfTotal, veciCounts, 
 		&QueryCorScores, &QueryCorTotal );
 
     // Calculate average
@@ -334,9 +337,6 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
         for ( j = 0; j < GetDatabase().GetDatasets(); j++ ) {
             QueryCorScores.Set( i, j, 
                 QueryCorScores.Get( i, j ) / QueryCorTotal.Get( i, j ) ); 
-	    //if ( j == 0 ) {
-		//cerr << "i : " << i << ", " << QueryCorScores.Get(i , j) << endl;
-	    //}
         }
     }
 
@@ -348,13 +348,58 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
     // ------------------------------------------------------------------------/
     // Calculated weighted correlations
 
-    GetScores( veciGenes, vecfDataWeights, vecfScores, vecfTotal );
+    GetScores( veciGenes, vecfDataWeights, vecfScores, vecfTotal, veciCounts );
 
     // Calculate average
     for ( i = 0; i < vecfScores.size(); i++ ) {
-        vecfScores[i] /= vecfTotal[i];
+	    vecfScores[i] /= vecfTotal[i];
+        //if ( i < 1000 ) 
+		    //cerr << GetDatabase().GetGene(i) << ", " << veciCounts[i]/veciGenes.size() << ", " << vecfScores[i] << endl;
     }
 
+    for ( i = 0; i < vecfDataWeights.size(); i++ ) {
+        if ( vecfDataWeights[ i ] )
+            veciDatasets.push_back( i );
+    }
+
+
+    // Send scores
+    iSize = sizeof(iGene) + sizeof(iDataset);
+    iSize += (uint32_t)( sizeof(float) * ( GetDatabase().GetGenes() + 2*veciDatasets.size() ) ); 
+    iSize += sizeof(float) * QueryCorScores.GetRows() * veciDatasets.size(); 
+    send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+
+    // Send number of genes
+    iGene = (uint32_t)(GetDatabase().GetGenes());
+    send( m_iSocket, (char*)&iGene, sizeof(iGene), 0 );
+
+    // Send number of datasets
+    iDataset = (uint32_t)(veciDatasets.size());
+    send( m_iSocket, (char*)&iDataset, sizeof(iDataset), 0 );
+
+    // Send dataset ids
+    send( m_iSocket, (char*)&veciDatasets[0], sizeof(uint32_t)*veciDatasets.size(), 0 );
+    //for ( i = 0; i < veciDatasets.size(); i++ ) {
+	//cerr << veciDatasets[i] << endl;
+        //send( m_iSocket, (char*)&veciDatasets[ i ], sizeof(uint32_t), 0 );
+    //}
+
+    // Send dataset scores
+    for ( i = 0; i < veciDatasets.size(); i++ ) {
+        send( m_iSocket, (char*)&vecfDataWeights[ veciDatasets[ i ] ], sizeof(float), 0 );
+    }
+    
+    // Send gene scores
+    send( m_iSocket, (char*)&vecfScores[0], sizeof(float)*vecfScores.size(), 0 );
+
+    // Send score matrix
+    for ( i = 0; i < QueryCorScores.GetRows(); i++ ) {
+        for ( j = 0; j < veciDatasets.size(); j++ ) {
+	        send( m_iSocket, (char*)&QueryCorScores.Get( i, veciDatasets[ j ] ), sizeof(float), 0 );
+        }
+    }
+
+/*
     // Send scores
     iSize = sizeof(iGene) + sizeof(iDataset);
     iSize += (uint32_t)( sizeof(float) * ( GetDatabase().GetGenes() + GetDatabase().GetDatasets() ) ); 
@@ -371,13 +416,9 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
     send( m_iSocket, (char*)&vecfDataWeights[0], sizeof(float)*vecfDataWeights.size(), 0 );
     
     for ( i = 0; i < QueryCorScores.GetRows(); i++ ) {
-        for ( j = 0; j < QueryCorScores.GetColumns(); j++ ) {
-            float d = QueryCorScores.Get( i, j ); 
-	    send( m_iSocket, (char*)&d, sizeof(float), 0 );
-        }
+	    send( m_iSocket, (char*)QueryCorScores.Get( i ), sizeof(float)*QueryCorScores.GetColumns(), 0 );
     }
-
-
+*/
     return ( iOffset - iStart );
 }
 

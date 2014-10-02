@@ -45,6 +45,8 @@ const char *gengetopt_args_info_help[] = {
   "  -e, --enorm                Correct by the degrees of both genes incident to \n                               an edge  (default=off)",
   "  -g, --gnorm                Correct by the degree of gene of interest  \n                               (default=off)",
   "  -G, --nnorm                Correct by the degree of neighbor gene  \n                               (default=off)",
+  "  -p, --pval                 Correct by p-value  (default=off)",
+  "  -z, --zscore               Correct by z-score  (default=off)",
   "\nWeight:",
   "  -l, --log_weight           Weight by log of ratio  (default=off)",
   "  -w, --weight               Weight edges by chosen metric  (default=off)",
@@ -111,6 +113,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->enorm_given = 0 ;
   args_info->gnorm_given = 0 ;
   args_info->nnorm_given = 0 ;
+  args_info->pval_given = 0 ;
+  args_info->zscore_given = 0 ;
   args_info->log_weight_given = 0 ;
   args_info->weight_given = 0 ;
 }
@@ -137,6 +141,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->enorm_flag = 0;
   args_info->gnorm_flag = 0;
   args_info->nnorm_flag = 0;
+  args_info->pval_flag = 0;
+  args_info->zscore_flag = 0;
   args_info->log_weight_flag = 0;
   args_info->weight_flag = 0;
   
@@ -161,8 +167,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->enorm_help = gengetopt_args_info_help[14] ;
   args_info->gnorm_help = gengetopt_args_info_help[15] ;
   args_info->nnorm_help = gengetopt_args_info_help[16] ;
-  args_info->log_weight_help = gengetopt_args_info_help[18] ;
-  args_info->weight_help = gengetopt_args_info_help[19] ;
+  args_info->pval_help = gengetopt_args_info_help[17] ;
+  args_info->zscore_help = gengetopt_args_info_help[18] ;
+  args_info->log_weight_help = gengetopt_args_info_help[20] ;
+  args_info->weight_help = gengetopt_args_info_help[21] ;
   
 }
 
@@ -310,6 +318,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "gnorm", 0, 0 );
   if (args_info->nnorm_given)
     write_into_file(outfile, "nnorm", 0, 0 );
+  if (args_info->pval_given)
+    write_into_file(outfile, "pval", 0, 0 );
+  if (args_info->zscore_given)
+    write_into_file(outfile, "zscore", 0, 0 );
   if (args_info->log_weight_given)
     write_into_file(outfile, "log_weight", 0, 0 );
   if (args_info->weight_given)
@@ -564,12 +576,14 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "enorm",	0, NULL, 'e' },
         { "gnorm",	0, NULL, 'g' },
         { "nnorm",	0, NULL, 'G' },
+        { "pval",	0, NULL, 'p' },
+        { "zscore",	0, NULL, 'z' },
         { "log_weight",	0, NULL, 'l' },
         { "weight",	0, NULL, 'w' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVo:v:d:a:s:xn:br:egGlw", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVo:v:d:a:s:xn:br:egGpzlw", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -724,6 +738,26 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->nnorm_flag), 0, &(args_info->nnorm_given),
               &(local_args_info.nnorm_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "nnorm", 'G',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'p':	/* Correct by p-value.  */
+        
+        
+          if (update_arg((void *)&(args_info->pval_flag), 0, &(args_info->pval_given),
+              &(local_args_info.pval_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "pval", 'p',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'z':	/* Correct by z-score.  */
+        
+        
+          if (update_arg((void *)&(args_info->zscore_flag), 0, &(args_info->zscore_given),
+              &(local_args_info.zscore_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "zscore", 'z',
               additional_error))
             goto failure;
         

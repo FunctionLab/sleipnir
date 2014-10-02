@@ -65,6 +65,10 @@ struct gengetopt_args_info
   const char *gnorm_help; /**< @brief Correct by the degree of gene of interest help description.  */
   int nnorm_flag;	/**< @brief Correct by the degree of neighbor gene (default=off).  */
   const char *nnorm_help; /**< @brief Correct by the degree of neighbor gene help description.  */
+  int pval_flag;	/**< @brief Correct by p-value (default=off).  */
+  const char *pval_help; /**< @brief Correct by p-value help description.  */
+  int zscore_flag;	/**< @brief Correct by z-score (default=off).  */
+  const char *zscore_help; /**< @brief Correct by z-score help description.  */
   int log_weight_flag;	/**< @brief Weight by log of ratio (default=off).  */
   const char *log_weight_help; /**< @brief Weight by log of ratio help description.  */
   int weight_flag;	/**< @brief Weight edges by chosen metric (default=off).  */
@@ -84,6 +88,8 @@ struct gengetopt_args_info
   unsigned int enorm_given ;	/**< @brief Whether enorm was given.  */
   unsigned int gnorm_given ;	/**< @brief Whether gnorm was given.  */
   unsigned int nnorm_given ;	/**< @brief Whether nnorm was given.  */
+  unsigned int pval_given ;	/**< @brief Whether pval was given.  */
+  unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int log_weight_given ;	/**< @brief Whether log_weight was given.  */
   unsigned int weight_given ;	/**< @brief Whether weight was given.  */
 
