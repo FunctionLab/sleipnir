@@ -72,7 +72,7 @@ public:
 		return m_sData.m_vecstrDatasets; }
 
 	void GetScores( const vector<size_t>&, const vector<float>&,
-	    vector<float>&, vector<float>&, CFullMatrix<float>*, CFullMatrix<float>* );
+	    vector<float>&, vector<float>&, vector<size_t>&, CFullMatrix<float>*, CFullMatrix<float>* );
 
 	void GetDataWeights( size_t, CFullMatrix<float>&, float, float, vector<float>& );
 
