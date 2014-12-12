@@ -94,6 +94,9 @@ struct gengetopt_args_info
   const char *dweightpos_help; /**< @brief Use weights to divide positive counts into correponding proportion of positives and negatives help description.  */
   int flipneg_flag;	/**< @brief Flip weights(one minus original) for negative standards (default=on).  */
   const char *flipneg_help; /**< @brief Flip weights(one minus original) for negative standards help description.  */
+  float multiplier_arg;	/**< @brief Multiplier used for weighting (default='1').  */
+  char * multiplier_orig;	/**< @brief Multiplier used for weighting original value given at command line.  */
+  const char *multiplier_help; /**< @brief Multiplier used for weighting help description.  */
   int noweightneg_flag;	/**< @brief Use weight one for all negative standards (default=off).  */
   const char *noweightneg_help; /**< @brief Use weight one for all negative standards help description.  */
   char * default_arg;	/**< @brief Count file containing defaults for cases with missing data.  */
@@ -160,6 +163,7 @@ struct gengetopt_args_info
   unsigned int weights_given ;	/**< @brief Whether weights was given.  */
   unsigned int dweightpos_given ;	/**< @brief Whether dweightpos was given.  */
   unsigned int flipneg_given ;	/**< @brief Whether flipneg was given.  */
+  unsigned int multiplier_given ;	/**< @brief Whether multiplier was given.  */
   unsigned int noweightneg_given ;	/**< @brief Whether noweightneg was given.  */
   unsigned int default_given ;	/**< @brief Whether default was given.  */
   unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */

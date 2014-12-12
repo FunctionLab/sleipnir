@@ -47,11 +47,12 @@ enum EMethod {
 	EMethodDiff		= EMethodMin + 1,
 	EMethodMeta		= EMethodDiff + 1,
 	EMethodQMeta	= EMethodMeta + 1,
-	EMethodEnd		= EMethodQMeta + 1
+	EMethodProd		= EMethodQMeta + 1,
+	EMethodEnd		= EMethodProd + 1
 };
 
 static const char*	c_aszMethods[]	= {
-	"mean", "sum", "gmean", "hmean", "max", "min", "diff", "meta", "qmeta", NULL
+	"mean", "sum", "gmean", "hmean", "max", "min", "diff", "meta", "qmeta","prod",  NULL
 };
 
 int main( int iArgs, char** aszArgs ) {
@@ -333,6 +334,11 @@ void callback_combine( SCallbackVars& sCallback ) {
 				sCallback.m_pDatOut->Set( sCallback.m_iOne, sCallback.m_iTwo, sCallback.m_dValue );
 			break;
 
+		case EMethodProd:
+			sCallback.m_pDatOut->Get( sCallback.m_iOne, sCallback.m_iTwo ) *= pow( sCallback.m_dValue, sCallback.m_dWeight );
+			sCallback.m_pMatCounts->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallback.m_dWeight;
+			break;
+		
 		default:
 			sCallback.m_pDatOut->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallback.m_dWeight * sCallback.m_dValue *
 				( ( sCallback.m_iDataset && ( sCallback.m_eMethod == EMethodDiff ) ) ? -1 : 1 );
@@ -512,6 +518,10 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 		case EMethodGMean:
 			d = 1;
 			break;
+		
+		case EMethodProd:
+			d = 1;
+			break;
 
 		default:
 			d = 0; }
@@ -568,7 +578,13 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 
 				case EMethodMin:
 					if( DatOut.Get( i, j ) == FLT_MAX )
-						DatOut.Set( i, j, CMeta::GetNaN( ) ); }
+						DatOut.Set( i, j, CMeta::GetNaN( ) ); 
+					break;
+
+				case EMethodProd:
+					DatOut.Set( i, j, ( d = MatCounts.Get( i, j ) ) ?
+						(float) (double)DatOut.Get( i, j ) : CMeta::GetNaN( ) );
+			    }
 
 	if( sArgs.zscore_flag )
 		DatOut.Normalize( CDat::ENormalizeZScore );

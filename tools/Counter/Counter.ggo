@@ -53,6 +53,8 @@ option	"dweightpos"           D       "Use weights to divide positive counts int
 	                                                    flag    off
 option	"flipneg"           F       "Flip weights(one minus original) for negative standards"
                                                         flag    on
+option	"multiplier"		f	"Multiplier used for weighting"
+							float	default="1"
 option	"noweightneg"           N       "Use weight one for all negative standards"
                                                         flag    off
 

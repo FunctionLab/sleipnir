@@ -1,6 +1,6 @@
 #!/bin/sh
 
-./configure --with-gengetopt=/usr/bin/gengetopt\
+./configure --prefix=/Genomics/ogtr03/vyao/sleipnir-build/ --with-gengetopt=/Genomics/fgrid/function/sleipnir-extlib/gengetopt/src/gengetopt\
 	--with-log4cpp=/usr/include/log4cpp/ \
 	--with-smile=/Genomics/fgrid/function/sleipnir-extlib/smile_linux_x64_gcc_4_4_5/ \
 	--with-svm-perf=/Genomics/fgrid/function/sleipnir-extlib/svm_perf/ \

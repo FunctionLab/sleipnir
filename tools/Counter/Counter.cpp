@@ -51,11 +51,12 @@ struct SLearn {
     bool                    m_bBridgeNeg;
     bool                    m_bOutPos;
     bool                    m_bOutNeg;
-	bool					m_isDatWeighted;
-	bool					m_bFlipNeg;
-	bool					m_bdWeightPos;
-	bool					m_bNoWeightNeg;
-	const CDat*	    m_pwDat;
+    bool		    m_isDatWeighted;
+    bool		    m_bFlipNeg;
+    bool		    m_bdWeightPos;
+    bool		    m_bNoWeightNeg;
+    float		    m_multiplier;
+    const CDat*	    m_pwDat;
 };
 
 struct SEvaluate {
@@ -531,11 +532,12 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_bBridgeNeg = sArgs.bridgeneg_flag;
             vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
             vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
-			vecsData[ i ].m_isDatWeighted = false;
-			vecsData[ i ].m_bFlipNeg =false;
-			vecsData[ i ].m_bdWeightPos = false;
-			vecsData[ i ].m_bNoWeightNeg = sArgs.noweightneg_flag;
-			vecsData[ i ].m_pwDat = NULL;
+	    vecsData[ i ].m_isDatWeighted = false;
+	    vecsData[ i ].m_bFlipNeg =false;
+	    vecsData[ i ].m_bdWeightPos = false;
+	    vecsData[ i ].m_bNoWeightNeg = sArgs.noweightneg_flag;
+	    vecsData[ i ].m_pwDat = NULL;
+	    vecsData[ i ].m_multiplier = sArgs.multiplier_arg;		
             if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
                 return 1;
@@ -614,6 +616,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
 			vecsData[ i ].m_bdWeightPos = !!sArgs.dweightpos_flag;
 			vecsData[ i ].m_bNoWeightNeg = !!sArgs.noweightneg_flag;
 			vecsData[ i ].m_pwDat = isDatWeighted? &wDat : NULL;
+	    vecsData[ i ].m_multiplier = sArgs.multiplier_arg;  
             if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
                 return 1;
@@ -721,20 +724,20 @@ void* learn( void* pData ) {
 					//When contexts are weighted, add counts = WT_MULTIPLIER * weight1 * weight 2 
 					if(psData->m_pGenes->IsWeighted()){ //use gene weights
 						if(iAnswer==1 || (!psData->m_bFlipNeg && !psData->m_bNoWeightNeg)){
-							for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*WT_MULTIPLIER-0.5); k++){
+							for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*psData->m_multiplier-0.5); k++){
 								psData->m_pMatCounts->Get( iVal, iAnswer )++;
 								}
 							if(iAnswer==1 && psData->m_bdWeightPos)
-								for( k = 0; k <( (1-vecGeneWeights[i]*vecGeneWeights[j])*WT_MULTIPLIER-0.5); k++){
+								for( k = 0; k <( (1-vecGeneWeights[i]*vecGeneWeights[j])*psData->m_multiplier-0.5); k++){
 								psData->m_pMatCounts->Get( iVal, 0 )++;
 								}
 						}
 						else{
 							if(psData->m_bNoWeightNeg)
-								for( k = 0; k <(WT_MULTIPLIER-0.5); k++)
+								for( k = 0; k <(psData->m_multiplier-0.5); k++)
 									psData->m_pMatCounts->Get( iVal, iAnswer )++;
 							else
-								for( k = 0; k <((1-vecGeneWeights[i]*vecGeneWeights[j])*WT_MULTIPLIER-0.5); k++){
+								for( k = 0; k <((1-vecGeneWeights[i]*vecGeneWeights[j])*psData->m_multiplier-0.5); k++){
 									psData->m_pMatCounts->Get( iVal, iAnswer )++;
 									}
 						}
@@ -744,20 +747,20 @@ void* learn( void* pData ) {
 							vecfiGenes[j] == -1)
 							continue;
 						if(iAnswer==1 || (!psData->m_bFlipNeg && !psData->m_bNoWeightNeg)){
-							for( k = 0; k <(w *WT_MULTIPLIER-0.5); k++){
+							for( k = 0; k <(w *psData->m_multiplier-0.5); k++){
 								psData->m_pMatCounts->Get( iVal, iAnswer )++;
 								}
 							if(iAnswer==1 && psData->m_bdWeightPos)
-								for( k = 0; k <( (1-w)*WT_MULTIPLIER-0.5); k++){
+								for( k = 0; k <( (1-w)*psData->m_multiplier-0.5); k++){
 								psData->m_pMatCounts->Get( iVal, 0 )++;
 								}
 						}
 						else{
 							if(psData->m_bNoWeightNeg)
-								for( k = 0; k <(WT_MULTIPLIER-0.5); k++)
+								for( k = 0; k <(psData->m_multiplier-0.5); k++)
 									psData->m_pMatCounts->Get( iVal, iAnswer )++;
 							else
-								for( k = 0; k <((1-w) *WT_MULTIPLIER-0.5); k++){
+								for( k = 0; k <((1-w) *psData->m_multiplier-0.5); k++){
 									psData->m_pMatCounts->Get( iVal, iAnswer )++;
 									}
 						}
@@ -778,7 +781,7 @@ void* learn( void* pData ) {
 	if(psData->m_pGenes->IsWeighted()||psData->m_isDatWeighted){
 		for (i=0; i< psData->m_pMatCounts->GetRows();i++)
 			for(j=0; j<psData->m_pMatCounts->GetColumns();j++)
-				psData->m_pMatCounts->Get( i,j ) = int(psData->m_pMatCounts->Get( i,j )/ WT_MULTIPLIERf + 0.5);
+				psData->m_pMatCounts->Get( i,j ) = int(psData->m_pMatCounts->Get( i,j )/ psData->m_multiplier + 0.5);
 	}
 
     return NULL;

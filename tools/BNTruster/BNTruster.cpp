@@ -24,9 +24,10 @@
 static int MainPosteriors( const gengetopt_args_info& );
 static int MainSums( const gengetopt_args_info& );
 static int MainRatios( const gengetopt_args_info& );
+static int MainWRatios( const gengetopt_args_info& );
 
-static const TPFnTruster	c_apfnTrusters[]	= { MainPosteriors, MainSums, MainRatios, NULL };
-static const char*			c_aszTrusters[]		= { "posteriors", "sums", "ratios", NULL };
+static const TPFnTruster	c_apfnTrusters[]	= { MainPosteriors, MainSums, MainRatios, MainWRatios, NULL };
+static const char*			c_aszTrusters[]		= { "posteriors", "sums", "ratios", "wratios", NULL };
 
 int main( int iArgs, char** aszArgs ) {
 #ifdef WIN32
@@ -249,3 +250,61 @@ int MainRatios( const gengetopt_args_info& sArgs ) {
 		cout << endl; }
 
 	return 0; }
+
+int MainWRatios( const gengetopt_args_info& sArgs ) {
+	size_t	iDSL;
+
+	for( iDSL = 0; iDSL < sArgs.inputs_num; ++iDSL ) {
+		CBayesNetSmile	BNSmile;
+		size_t			iNode;
+		unsigned char	bValue;
+		float			logSum;
+		vector<string>	vecstrNodes;
+		vector<unsigned char> vecbDatum;
+		//vector<float>	vecdOut;
+
+		if( !BNSmile.Open( sArgs.inputs[ iDSL ] ) ) {
+			cerr << "Couldn't open: " << sArgs.inputs[ iDSL ] << endl;
+			return 1; }
+		BNSmile.GetNodes( vecstrNodes );
+		if( !iDSL ) {
+			for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode )
+				cout << '\t' << vecstrNodes[ iNode ];
+			cout << endl; }
+
+		cout << sArgs.inputs[ iDSL ];
+		
+		vecbDatum.resize(vecstrNodes.size());
+		fill(vecbDatum.begin(), vecbDatum.end(), 0);
+		//vecdOut.clear();
+		//BNSmile.Evaluate(vecbDatum, vecdOut, false, 0, true);
+		for( iNode = 1; iNode < vecstrNodes.size( ); ++iNode ) {
+			size_t		i;
+			CDataMatrix	MatCPT;
+			float		dMin, dMax;
+			vector<float>	vecdProbs;
+
+			vecbDatum[ iNode - 1 ] = 0;
+			vecdProbs.clear();
+			BNSmile.Evaluate(vecbDatum, vecdProbs, false, iNode, true);
+			float dSum;
+			for (dSum = 0, i=0; i < vecdProbs.size(); i++) {
+				dSum += vecdProbs[i];
+			}
+			vecdProbs.push_back(1-dSum);
+			logSum = 0;
+
+			BNSmile.GetCPT( iNode, MatCPT );
+			for( bValue = 0; bValue < MatCPT.GetRows( ); ++bValue ) {
+				float pd;
+
+				dMin = MatCPT.Get( bValue, 0 );
+				dMax = MatCPT.Get( bValue, 1 );
+				if( dMin > dMax )
+					swap( dMin, dMax );
+				logSum += vecdProbs[bValue] * log(dMax / dMin); }
+			cout << '\t' << logSum; }
+		cout << endl; }
+
+	return 0; }
+
