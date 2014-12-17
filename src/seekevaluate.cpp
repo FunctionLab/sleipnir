@@ -108,7 +108,7 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 		if(aa->f==0) break;
 		if(mask[aa->i]==1) continue;
 		if(gold[aa->i]==1){
-			x+=pow(rate, jj);
+			x+=pow(rate, (float)jj);
 			//fprintf(stderr, "Sorted %d %d %.5f\n", jj, aa->i, (aa->f-320)/100.0);
 		}
 		jj++;

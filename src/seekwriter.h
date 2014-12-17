@@ -86,7 +86,7 @@ public:
 		vector<float> rbp_score;
 		rbp_score.resize(maxRank);
 		for(i=0; i<maxRank; i++)
-			rbp_score[i] = (1.0 - rbp_p) * pow(rbp_p, i);
+			rbp_score[i] = (1.0 - rbp_p) * pow(rbp_p, (float)i);
 
 		for(i=0; i<numGenes; i++){
 			tType id, id2;  //gene ID

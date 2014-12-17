@@ -671,7 +671,7 @@ bool CBayesNetMinimalImpl::Counts2Probs( const std::vector<std::string>& vecstrC
 	veciCounts.resize( vecstrCounts.size( ) );
 	for( iTotal = i = 0; i < veciCounts.size( ); ++i ) {
 		veciCounts[ i ] = atol( vecstrCounts[ i ].c_str( ) );
-		iTotal += veciCounts[ i ]; }
+		iTotal += veciCounts[ i ] + 1; }
 
 	vecdProbs.resize( veciCounts.size( ) );
 	if( ( iTotal < c_iMinimum ) && pBNDefault ) {

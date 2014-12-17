@@ -350,16 +350,19 @@ size_t CDataServer::ProcessDatasetSearch( const vector<unsigned char>& vecbMessa
 
     GetScores( veciGenes, vecfDataWeights, vecfScores, vecfTotal, veciCounts );
 
-    // Calculate average
-    for ( i = 0; i < vecfScores.size(); i++ ) {
-	    vecfScores[i] /= vecfTotal[i];
-        //if ( i < 1000 ) 
-		    //cerr << GetDatabase().GetGene(i) << ", " << veciCounts[i]/veciGenes.size() << ", " << vecfScores[i] << endl;
-    }
-
     for ( i = 0; i < vecfDataWeights.size(); i++ ) {
         if ( vecfDataWeights[ i ] )
             veciDatasets.push_back( i );
+    }
+
+    // Calculate average
+    for ( i = 0; i < vecfScores.size(); i++ ) {
+	vecfScores[i] /= vecfTotal[i];
+        if ( GetDatabase().GetGene(i) == "1066" || i < 5000 )
+	    cerr << GetDatabase().GetGene(i) << ", " << float(veciCounts[i])/veciGenes.size() << ", " << float(veciCounts[i])/veciGenes.size()/float(veciDatasets.size()) << ", " << vecfScores[i] << endl;
+	if ( float(veciCounts[i])/veciGenes.size()/veciDatasets.size() < .5 ) {
+	    vecfScores[i] = 0;
+	}
     }
 
 
