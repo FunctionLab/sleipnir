@@ -200,7 +200,7 @@ int main( int iArgs, char** aszArgs ) {
 				// Use zeros flag if edge is missing and both genes exist in dataset
 				iValue = DatCur.Quantize( iOne, iTwo, BNSmileList[0].GetDefault( i + num_to_skip ) );
 				
-				if( iValue != (unsigned char)-1 ){
+				if( iValue != (unsigned char)-1 && iValue != -1 ){
 				  // iterate through network xdsl files and average the posteriors
 				  SumPosterior = 0;
 				  for( l = 0; l < BNSmileList.size( ); ++l ) {
