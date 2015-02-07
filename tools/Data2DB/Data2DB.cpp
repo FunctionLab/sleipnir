@@ -33,7 +33,9 @@ int main( int iArgs, char** aszArgs ) {
 	istream*			pistm;
 	vector<string>		vecstrLine, vecstrGenes, vecstrDatasets;
 	char				acBuffer[ c_iBuffer ];
+#ifndef NO_SMILE
 	CBayesNetSmile		BNSmile;
+#endif
 	size_t				i;
 	map<string, size_t>	mapstriZeros;
 
@@ -103,7 +105,12 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Confused. Only network OR dataset list." << endl;
 			return 1;
 		}
+#ifdef NO_SMILE
+		cerr << "network option is disabled because SMILE was not used in building Data2DB."<< endl;
+		return 1;
+#endif
 
+#ifndef NO_SMILE
 		if( !BNSmile.Open( sArgs.network_arg ) ) {
 			cerr << "Could not open: " << sArgs.network_arg << endl;
 			return 1; }
@@ -112,7 +119,7 @@ int main( int iArgs, char** aszArgs ) {
 			cerr << "Could not open data" << endl;
 			return 1;
 		}
-
+#endif
 	}else if(sArgs.dataset_arg){
 
 		ifsm.open(sArgs.dataset_arg);
