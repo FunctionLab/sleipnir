@@ -199,7 +199,11 @@ bool get_score(vector<float> &gene_score,
 }
 
 bool get_score(vector<float> &gene_score, CFullMatrix<float> &mat,
-CSeekIntIntMap *geneMap, vector<float> &q_weight){
+CSeekIntIntMap *geneMap, vector<float> &q_weight, vector<float> &geneAverage){
+	bool enableGeneAverage = true;
+	if(geneAverage.size()==0)
+		enableGeneAverage = false;
+
 	vector<float> gene_count;
 	int numGenes = geneMap->GetSize();
 	CSeekTools::InitVector(gene_score, numGenes, (float)CMeta::GetNaN());
@@ -218,6 +222,16 @@ CSeekIntIntMap *geneMap, vector<float> &q_weight){
 		for(kk=0; kk<geneMap->GetNumSet(); kk++){
 			utype gi = allGenes[kk];
 			float fl = mat.Get(qq, gi);
+			fl = max(min(fl, 3.20f), -3.20f);
+
+			if(enableGeneAverage){
+				float fl_avg = geneAverage[gi];
+				if(fl_avg==CMeta::GetNaN()){
+					fprintf(stderr, "Warning: average value for %d NaN\n", gi);
+				}
+				fl = fl - fl_avg;
+			}
+
 			gene_score[gi] += fl * q_weight[qq];
 		}
 		for(kk=0; kk<geneMap->GetNumSet(); kk++){
@@ -362,7 +376,7 @@ bool cv_weight(vector<utype> &query, CSparseFlatMatrix<float> &mat,
 
 //accepts fullmatrix, leave one in cross-validation
 bool cv_weight(vector<utype> &query, CFullMatrix<float> &mat,
-CSeekIntIntMap *geneMap, float rbp_p, float &tot_w){
+CSeekIntIntMap *geneMap, float rbp_p, float &tot_w, vector<float> &geneAverage){
 	utype i, j;
 	int numGenes = geneMap->GetSize();
 	tot_w = 0;
@@ -378,13 +392,47 @@ CSeekIntIntMap *geneMap, float rbp_p, float &tot_w){
 			is_query[query[j]] = 1;
 		}
 		vector<float> gene_score;
-		get_score(gene_score, mat, geneMap, q_weight);
+		get_score(gene_score, mat, geneMap, q_weight, geneAverage);
 		gene_score[query[i]] = 0;
 		weight(is_query, gene_score, geneMap, rbp_p, w);
 		tot_w += w;
 	}
 	tot_w /= query.size();
 	return true;	
+}
+
+bool spell_weight(vector<utype> &query, CFullMatrix<float> &mat,
+CSeekIntIntMap *geneMap, float &tot_w){
+	utype i, j;
+	int numGenes = geneMap->GetSize();
+	tot_w = 0;
+	int count = 0;
+	for(i=0; i<query.size(); i++){
+		utype ui = geneMap->GetForward(query[i]);
+		if(ui==(utype)-1){
+			continue;
+		}
+		float w = 0;
+		for(j=0; j<query.size(); j++){
+			if(i==j) continue;
+			utype uj = geneMap->GetForward(query[j]);
+			if(uj==(utype)-1){
+				continue;
+			}
+			w = mat.Get(ui, uj);
+			if(w<0){
+				w = 0;
+			}
+			if(isnan(w) || isinf(w)){
+				fprintf(stderr, "Warning: nan or inf detected for Mat(%d, %d)\n", ui, uj);
+				continue;
+			}
+			tot_w += w;
+			count++;
+		}
+	}
+	tot_w /= (float) count;
+	return true;
 }
 
 int main(int iArgs, char **aszArgs){
@@ -934,6 +982,25 @@ int main(int iArgs, char **aszArgs){
 			string dabfile = dab_dir + "/" + dab_list[l];
 			Dat.Open(dabfile.c_str(), false, 2, false, false, false);
 
+			vector<float> geneAverage;
+			size_t dab_found = dab_list[l].find(".dab");
+			string gavg_dir = sArgs.gavg_dir_arg;
+			if(gavg_dir=="NA"){
+				fprintf(stderr, "INFO: Gene average is disabled.\n");
+			}else{
+				if(dab_found!=string::npos){
+					string gavgfile = gavg_dir + "/" + dab_list[l].substr(0, dab_found) + ".gavg";
+					if(!CSeekTools::ReadArray(gavgfile.c_str(), geneAverage)){
+						fprintf(stderr, "Error encountered.\n");
+						return 1;
+					}
+				}else{
+					fprintf(stderr, "Error: file name must contain .dab suffix\n");
+					return 1;
+				}
+			}
+
+
 			fprintf(stderr, "Finished reading DAB\n");
 			vector<unsigned int> veciGenes;
 			veciGenes.resize(vecstrGenes.size());
@@ -981,8 +1048,16 @@ int main(int iArgs, char **aszArgs){
 					continue;
 				}else if(search_mode=="cv_loi" && numPresent<=1){
 					continue;
+				}else if(search_mode=="spell" && numPresent<=1){
+					continue;
 				}
+				int minRequired = 1;
+				if(search_mode=="cv_loi") 
+					minRequired = 2;
+				else if(search_mode=="spell")
+					minRequired = 2;
 				int numThreshold = (int) (threshold_q * qq[j].size());
+				numThreshold = max(minRequired, numThreshold);
 				if(numPresent>numThreshold)
 					selectedDataset[j][l] = 1;
 			}
@@ -994,12 +1069,18 @@ int main(int iArgs, char **aszArgs){
 				float dw = 1.0;
 				if(search_mode=="eq"){
 					dw = 1.0;
-				}else{ //cv_loi, rbp_p = 0.99
-					cv_weight(qu[j], sm, &m, 0.99, dw);
+				//}else{ //cv_loi, rbp_p = 0.99
+				//	cv_weight(qu[j], sm, &m, 0.99, dw);
+				//}
+				}else if(search_mode=="cv_loi"){ //cv_loi, rbp_p = 0.99
+					//fprintf(stderr, "Weighting query %d\n", (int) j);
+					cv_weight(qu[j], sm, &m, 0.99, dw, geneAverage); //returns weight to dw
+				}else if(search_mode=="spell"){
+					spell_weight(qu[j], sm, &m, dw);
 				}
 				dweight[j][l] = dw;
 				vector<float> tmp_score;
-				get_score(tmp_score, sm, &m, q_weight[j]);
+				get_score(tmp_score, sm, &m, q_weight[j], geneAverage);
 				for(k=0; k<m.GetNumSet(); k++){
 					utype gi = allRGenes[k];
 					if(CMeta::IsNaN(final_score[j][gi]))
@@ -1062,6 +1143,9 @@ int main(int iArgs, char **aszArgs){
 		string search_mode = sArgs.tsearch_mode_arg;
 		if(search_mode=="NA"){
 			fprintf(stderr, "Please specify a search mode!\n");
+			return 1;
+		}else if(search_mode=="spell"){
+			fprintf(stderr, "Note that spell is not supported for this mode!\n");
 			return 1;
 		}
 
@@ -1191,6 +1275,8 @@ int main(int iArgs, char **aszArgs){
 					continue;
 				}else if(search_mode=="cv_loi" && numPresent<=1){
 					continue;
+				}else if(search_mode=="spell" && numPresent<=1){
+					continue;
 				}
 				int numThreshold = (int) (threshold_q * qq[j].size());
 				if(numPresent>numThreshold)
@@ -1207,9 +1293,11 @@ int main(int iArgs, char **aszArgs){
 				float dw = 1.0;
 				if(search_mode=="eq"){
 					dw = 1.0;
-				}else{
+				}else if(search_mode=="cv_loi"){
 					//cv_weight_LOO(qu[j], sm, &d1, rbp_p, dw);
 					cv_weight(qu[j], sm, &d1, rbp_p, dw);
+				}else if(search_mode=="spell"){
+					//spell_weight(qu[j], sm, &d1);
 				}
 
 				if(bDatasetCutoff){

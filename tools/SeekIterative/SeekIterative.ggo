@@ -37,6 +37,8 @@ option	"genome"			G	"Genome mapping file"
 section "Traditional DAB mode (see also: -Z, -Y, -S)"
 option	"tdab_list"			J	"DAB list"
 								string typestr="filename"
+option	"gavg_dir"			a	"Gene average directory (.gavg files)"
+								string typestr="directory" default="NA"
 
 section "Sparse DAB mode (see also: -Z, -Y, -S)"
 option	"dab_list"			V	"DAB list"
@@ -69,8 +71,8 @@ option	"threshold_q"		Z	"Fraction of query genes need to be present in a dataset
 								float default="0"
 option	"threshold_g"		Y	"Fraction of datasets that must contain a gene to put it in ranking (important if individual datasets have very different gene coverage, and for datasets with small gene-size)"
 								float default="0.50"
-option	"tsearch_mode"		S	"Search mode: equal weighted (eq) or CV LOI (cv_loi) (Applicable if DAB list contains more than 1 dataset). (Required for --tdab and --dab modes)"
-								values="eq","cv_loi","NA" default="NA"
+option	"tsearch_mode"		S	"Search mode: equal weighted (eq) or CV LOI (cv_loi) or SPELL (spell) (Applicable if DAB list contains more than 1 dataset). (Required for --tdab and --dab modes)"
+								values="eq","cv_loi","spell","NA" default="NA"
 option	"debug"				x	"Debug mode"
 								flag off
 
