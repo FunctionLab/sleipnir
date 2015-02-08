@@ -35,8 +35,10 @@ int main( int iArgs, char** aszArgs ) {
 
 	IMeasure::EMap eM = IMeasure::EMapCenter;
 	
-	if(!!sArgs.centering_flag == false)
+	if(!!sArgs.centering_flag == false){
 		eM = IMeasure::EMapNone;
+		fprintf(stderr, "INFO: centering is off\n");
+	}
 		
 
 	if( iRet = CPCL::Distance( sArgs.input_arg, sArgs.skip_arg,sArgs.weights_arg, sArgs.distance_arg, !!sArgs.normalize_flag,

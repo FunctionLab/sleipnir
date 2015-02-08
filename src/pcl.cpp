@@ -196,6 +196,8 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 	CMeasureDice Dice( dAlpha );
 	CMeasureDistanceCorrelation DCor;
 	CMeasureSignedDistanceCorrelation SDCor;
+	CMeasureBicor Bicor;
+
 	if (szFile) {
         g_CatSleipnir().debug("Opening PCL for distance");
         if (!PCL.Open(szFile, iSkip, false, false)) {
@@ -220,7 +222,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 			EuclideanSig(&Euclidean, false, 1.0f / PCL.GetExperiments());
 	IMeasure* apMeasures[] = { &Pearson, &EuclideanSig, &KendallsTau,
 			&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick,
-			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, NULL };
+			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, &Bicor, NULL };
 
 	pMeasure = NULL;
 	for (i = 0; apMeasures[i]; ++i)
@@ -268,6 +270,11 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 	if (pMeasure->IsRank())
 		PCL.RankTransform();
 
+	if (pMeasure->GetName()=="bicor"){
+		PCL.BicorTransform();
+	}
+
+
 	g_CatSleipnir().info("Number of Experiments: %d", PCL.GetExperiments());
 
 	if ((iLimit != -1) && (PCL.GetGenes() > iLimit))
@@ -299,21 +306,22 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 			}
 		}
 		omp_set_num_threads(origNThreads);
-		if (fNormalize || fZScore)
+		if (fNormalize || fZScore){
 			Dat.Normalize(fZScore ? CDat::ENormalizeZScore
 					: CDat::ENormalizeMinMax);
+		}
 		if (!CMeta::IsNaN(dCutoff))
 			for (i = 0; i < Dat.GetGenes(); ++i)
 				for (j = (i + 1); j < Dat.GetGenes(); ++j)
 					if (!CMeta::IsNaN(d = Dat.Get(i, j)) && (d < dCutoff))
 						Dat.Set(i, j, CMeta::GetNaN());
 
-		if(pMeasure->GetName()=="pearson" || pMeasure->GetName()=="pearnorm"){
+		if(pMeasure->GetName()=="pearson" || pMeasure->GetName()=="pearnorm" || pMeasure->GetName()=="spearman" || pMeasure->GetName()=="bicor"){
 			vector<unsigned long> bins;
 			bins.resize(55);
 			float upper = 0;
 			float lower = 0;
-			if(pMeasure->GetName()=="pearson"){
+			if(pMeasure->GetName()=="pearson" || pMeasure->GetName()=="bicor" || pMeasure->GetName()=="spearman"){
 				upper = 1.0;
 				lower = -1.0;
 			}else if(pMeasure->GetName()=="pearnorm"){
@@ -457,6 +465,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 	CMeasureDice Dice( dAlpha );
 	CMeasureDistanceCorrelation DCor;
 	CMeasureSignedDistanceCorrelation SDCor;
+	CMeasureBicor Bicor;
 	if (szFile) {
         g_CatSleipnir().debug("Opening PCL for distance");
         if (!PCL.Open(szFile, iSkip, false, false)) {
@@ -481,7 +490,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 			EuclideanSig(&Euclidean, false, 1.0f / PCL.GetExperiments());
 	IMeasure* apMeasures[] = { &Pearson, &EuclideanSig, &KendallsTau,
 			&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick,
-			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, NULL };
+			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, &Bicor, NULL };
 
 	pMeasure = NULL;
 	for (i = 0; apMeasures[i]; ++i)
@@ -551,6 +560,10 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 	if (pMeasure->IsRank())
 		PCL.RankTransform();
 
+	if (pMeasure->GetName()=="bicor"){
+		PCL.BicorTransform();
+	}
+
 	g_CatSleipnir().info("Number of Experiments: %d", PCL.GetExperiments());
 
 	if ((iLimit != -1) && (PCL.GetGenes() > iLimit))
@@ -596,7 +609,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 			bins.resize(55);
 			float upper = 0;
 			float lower = 0;
-			if(pMeasure->GetName()=="pearson"){
+			if(pMeasure->GetName()=="pearson" || pMeasure->GetName()=="bicor" || pMeasure->GetName()=="spearman"){
 				upper = 1.0;
 				lower = -1.0;
 			}else if(pMeasure->GetName()=="pearnorm"){
@@ -1398,6 +1411,60 @@ void CPCL::RankTransform() {
 			}
 	}
 }
+
+
+void CPCL::BicorTransform() {
+	size_t i, j, k;
+	vector<float> median;
+	vector<float> mad;
+
+	median.resize(GetGenes());
+	mad.resize(GetGenes());
+
+	for (i = 0; i < GetGenes(); ++i) {
+		vector<float> val;
+		for (j = 0; j < GetExperiments(); ++j) {
+			if (CMeta::IsNaN(Get(i, j)))
+				continue;
+			val.push_back(Get(i, j));
+		}
+		sort(val.begin(), val.end());
+
+		if(val.size()%2==0){
+			median[i] = (val[val.size()/2] + val[val.size()/2 - 1]) / 2.0;
+		}else{
+			median[i] = val[val.size()/2];
+		}
+
+		val.clear();
+		for (j = 0; j < GetExperiments(); ++j) {
+			if (CMeta::IsNaN(Get(i, j)))
+				continue;
+			val.push_back(fabs(Get(i, j) - median[i]));
+		}
+		sort(val.begin(), val.end());
+
+		if(val.size()%2==0){
+			mad[i] = (val[val.size()/2] + val[val.size()/2 - 1]) / 2.0;
+		}else{
+			mad[i] = val[val.size()/2];
+		}
+
+		val.clear();
+	
+		for (j = 0; j < GetExperiments(); ++j) {
+			if (CMeta::IsNaN(Get(i, j)))
+				continue;
+			float u = (Get(i,j) - median[i]) / (9.0 * mad[i]);
+			float w = 0;
+			if((1.0 - fabs(u)) > 0){
+				w = (1.0 - u * u) * (1.0 - u * u);
+			}
+			Set(i, j, (Get(i, j) - median[i]) * w);
+		}
+	}
+}
+
 
 /*!
  * \brief

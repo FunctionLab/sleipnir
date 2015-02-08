@@ -69,6 +69,7 @@ const char *gengetopt_args_info_help[] = {
   "  -P, --p_value                Simulated p-value  (default=off)",
   "  -R, --random_dir=directory   Random directory",
   "  -N, --random_num=INT         Number of random trials  (default=`100')",
+  "  -b, --log_average            Use log-average instead of average  \n                                 (default=off)",
   "\nOptions for NaN score:",
   "  -n, --nan=FLOAT              Define NaN score (320 if negative correlation is \n                                 enabled)  (default=`-320')",
   "  -K, --neg_cor                Negative correlations  (default=off)",
@@ -144,6 +145,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->p_value_given = 0 ;
   args_info->random_dir_given = 0 ;
   args_info->random_num_given = 0 ;
+  args_info->log_average_given = 0 ;
   args_info->nan_given = 0 ;
   args_info->neg_cor_given = 0 ;
   args_info->goldstd_given = 0 ;
@@ -200,6 +202,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->random_dir_orig = NULL;
   args_info->random_num_arg = 100;
   args_info->random_num_orig = NULL;
+  args_info->log_average_flag = 0;
   args_info->nan_arg = -320;
   args_info->nan_orig = NULL;
   args_info->neg_cor_flag = 0;
@@ -263,19 +266,20 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->p_value_help = gengetopt_args_info_help[34] ;
   args_info->random_dir_help = gengetopt_args_info_help[35] ;
   args_info->random_num_help = gengetopt_args_info_help[36] ;
-  args_info->nan_help = gengetopt_args_info_help[38] ;
-  args_info->neg_cor_help = gengetopt_args_info_help[39] ;
-  args_info->goldstd_help = gengetopt_args_info_help[41] ;
-  args_info->gscore_help = gengetopt_args_info_help[42] ;
-  args_info->query_help = gengetopt_args_info_help[43] ;
-  args_info->exclude_help = gengetopt_args_info_help[44] ;
-  args_info->include_help = gengetopt_args_info_help[45] ;
-  args_info->goldstd_list_help = gengetopt_args_info_help[47] ;
-  args_info->gscore_list_help = gengetopt_args_info_help[48] ;
-  args_info->query_list_help = gengetopt_args_info_help[49] ;
-  args_info->exclude_list_help = gengetopt_args_info_help[50] ;
-  args_info->include_list_help = gengetopt_args_info_help[51] ;
-  args_info->dir_out_help = gengetopt_args_info_help[53] ;
+  args_info->log_average_help = gengetopt_args_info_help[37] ;
+  args_info->nan_help = gengetopt_args_info_help[39] ;
+  args_info->neg_cor_help = gengetopt_args_info_help[40] ;
+  args_info->goldstd_help = gengetopt_args_info_help[42] ;
+  args_info->gscore_help = gengetopt_args_info_help[43] ;
+  args_info->query_help = gengetopt_args_info_help[44] ;
+  args_info->exclude_help = gengetopt_args_info_help[45] ;
+  args_info->include_help = gengetopt_args_info_help[46] ;
+  args_info->goldstd_list_help = gengetopt_args_info_help[48] ;
+  args_info->gscore_list_help = gengetopt_args_info_help[49] ;
+  args_info->query_list_help = gengetopt_args_info_help[50] ;
+  args_info->exclude_list_help = gengetopt_args_info_help[51] ;
+  args_info->include_list_help = gengetopt_args_info_help[52] ;
+  args_info->dir_out_help = gengetopt_args_info_help[54] ;
   
 }
 
@@ -491,6 +495,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "random_dir", args_info->random_dir_orig, 0);
   if (args_info->random_num_given)
     write_into_file(outfile, "random_num", args_info->random_num_orig, 0);
+  if (args_info->log_average_given)
+    write_into_file(outfile, "log_average", 0, 0 );
   if (args_info->nan_given)
     write_into_file(outfile, "nan", args_info->nan_orig, 0);
   if (args_info->neg_cor_given)
@@ -821,6 +827,7 @@ cmdline_parser_internal (
         { "p_value",	0, NULL, 'P' },
         { "random_dir",	1, NULL, 'R' },
         { "random_num",	1, NULL, 'N' },
+        { "log_average",	0, NULL, 'b' },
         { "nan",	1, NULL, 'n' },
         { "neg_cor",	0, NULL, 'K' },
         { "goldstd",	1, NULL, 's' },
@@ -837,7 +844,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVOMTzratcux:e:p:FWABCDEli:I:w:Z:fPR:N:n:Ks:g:q:y:U:S:G:Q:X:Y:d:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVOMTzratcux:e:p:FWABCDEli:I:w:Z:fPR:N:bn:Ks:g:q:y:U:S:G:Q:X:Y:d:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1156,6 +1163,16 @@ cmdline_parser_internal (
               &(local_args_info.random_num_given), optarg, 0, "100", ARG_INT,
               check_ambiguity, override, 0, 0,
               "random_num", 'N',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'b':	/* Use log-average instead of average.  */
+        
+        
+          if (update_arg((void *)&(args_info->log_average_flag), 0, &(args_info->log_average_given),
+              &(local_args_info.log_average_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "log_average", 'b',
               additional_error))
             goto failure;
         

@@ -792,6 +792,44 @@ double CMeasurePearNorm::Measure(const float* adX, size_t iM,
 	return dP;
 }
 
+
+double CMeasureBicor::Measure(const float* adX, size_t iM,
+		const float* adY,size_t iN, EMap eMap, const float* adWX, const float* adWY) const {
+
+	static const size_t c_iCache = 1024;
+	static size_t l_aiX[c_iCache];
+	static size_t l_aiY[c_iCache];
+	size_t* aiX;
+	size_t* aiY;
+	size_t i, j, iSum;
+	double dRet, d, dSum;
+
+	if (iM != iN)
+		return CMeta::GetNaN();
+
+	float xy = 0;
+	float xx = 0;
+	float yy = 0;
+	for (i = 0; i < iN; ++i) {
+		if (CMeta::IsNaN(adX[i]) || CMeta::IsNaN(adY[i]))
+			continue;
+		xy += adX[i] * adY[i];
+		xx += adX[i] * adX[i];
+		yy += adY[i] * adY[i];
+	}
+
+	float bicor = xy / (sqrt(xx) * sqrt(yy));
+	//fprintf(stderr, "%.2f %.2f %.2f %.2f\n", bicor, xy, xx, yy);
+	/*static const float c_dBound = 0.9999f;
+	double dP = bicor;
+
+	if (fabs(dP) >= c_dBound)
+		dP *= c_dBound;
+	dP = CStatistics::FisherTransform(dP);
+	return dP;*/
+	return bicor;
+}
+
 double CMeasureHypergeometric::Measure(const float* adX, size_t iM,
 		const float* adY, size_t iN, EMap eMap, const float* adWX,
 		const float* adWY) const {

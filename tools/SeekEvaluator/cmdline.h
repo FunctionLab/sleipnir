@@ -104,6 +104,8 @@ struct gengetopt_args_info
   int random_num_arg;	/**< @brief Number of random trials (default='100').  */
   char * random_num_orig;	/**< @brief Number of random trials original value given at command line.  */
   const char *random_num_help; /**< @brief Number of random trials help description.  */
+  int log_average_flag;	/**< @brief Use log-average instead of average (default=off).  */
+  const char *log_average_help; /**< @brief Use log-average instead of average help description.  */
   float nan_arg;	/**< @brief Define NaN score (320 if negative correlation is enabled) (default='-320').  */
   char * nan_orig;	/**< @brief Define NaN score (320 if negative correlation is enabled) original value given at command line.  */
   const char *nan_help; /**< @brief Define NaN score (320 if negative correlation is enabled) help description.  */
@@ -173,6 +175,7 @@ struct gengetopt_args_info
   unsigned int p_value_given ;	/**< @brief Whether p_value was given.  */
   unsigned int random_dir_given ;	/**< @brief Whether random_dir was given.  */
   unsigned int random_num_given ;	/**< @brief Whether random_num was given.  */
+  unsigned int log_average_given ;	/**< @brief Whether log_average was given.  */
   unsigned int nan_given ;	/**< @brief Whether nan was given.  */
   unsigned int neg_cor_given ;	/**< @brief Whether neg_cor was given.  */
   unsigned int goldstd_given ;	/**< @brief Whether goldstd was given.  */

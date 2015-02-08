@@ -71,6 +71,8 @@ option	"random_dir"		R	"Random directory"
 								string typestr="directory"
 option	"random_num"		N	"Number of random trials"
 								int		default="100"
+option	"log_average"		b	"Use log-average instead of average"
+								flag	off
 
 section "Options for NaN score"
 option	"nan"				n	"Define NaN score (320 if negative correlation is enabled)"

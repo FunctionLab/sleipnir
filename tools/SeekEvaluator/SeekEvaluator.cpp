@@ -87,6 +87,35 @@ bool GetRandom(gsl_rng *r, const vector<AResultFloat> &geneScore,
 	return true;
 }
 
+//for fold calculation
+bool GetNumValidGenes(const vector<AResultFloat> &geneScore,
+const vector<char> &excludeGene, const vector<char> &includeGene,
+const vector<utype> &queryGeneID, const vector<char> &goldstdGenePresence,
+int &numValidGenes, int &numValidGoldGenes){
+	numValidGenes = 0;
+	numValidGoldGenes = 0;
+
+	vector<char> q;
+	CSeekTools::InitVector(q, geneScore.size(), (char) 0);
+	size_t i, j;
+
+	for(j=0; j<queryGeneID.size(); j++)
+		q[queryGeneID[j]] = 1;
+
+	for(i=0; i<geneScore.size(); i++){
+		if(includeGene[geneScore[i].i]==0){
+		}else if(q[geneScore[i].i]==1){
+		}else if(excludeGene[geneScore[i].i]==1){
+		}else{
+			numValidGenes++;
+			if(goldstdGenePresence[geneScore[i].i]==1){
+				numValidGoldGenes++;
+			}
+		}
+	}
+	return true;
+}
+
 float RankBiasedPrecision(const float &rate,
 	const vector<AResultFloat> &sortedScore, const vector<char> &gold_std,
 	const float &nanVal){
@@ -321,6 +350,13 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 				return false;
 			}
 			X = (int) ( (float) per * (float) vf->size() );
+			//fixed bug (when 0.10 recall is requested,
+			//will go to the first rank position r 
+			//when r/size>=0.10)
+			float tX = (float) X / per;
+			if(tX < (float) vf->size()){
+				X++;
+			}
 			//fprintf(stderr, "%.5f %d %d", per, vf->size(), X);
 			X = std::max(1, X);
 		}
@@ -345,17 +381,27 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
 	return false;
 }
 
-void PrintVector(const vector<float> &f){
+void PrintVector(const vector<float> &f, bool logAverage){
 	vector<float>::const_iterator iterF = f.begin();
 	vector<float>::const_iterator end = f.begin() + f.size() - 1;
-	for(; iterF!=end; iterF++) fprintf(stderr, "%.5f ", *iterF);
-	fprintf(stderr, "%.5f\n", *iterF);
+	for(; iterF!=end; iterF++){
+		if(logAverage){
+			fprintf(stderr, "%.5f ", exp(*iterF));
+		}else{
+			fprintf(stderr, "%.5f ", *iterF);
+		}
+	}
+	if(logAverage){
+		fprintf(stderr, "%.5f\n", exp(*iterF));
+	}else{
+		fprintf(stderr, "%.5f\n", *iterF);
+	}
 }
 
-void PrintResult(vector< vector<float> > f){
+void PrintResult(vector< vector<float> > f, bool logAverage){
 	int i;
 	for(i=0; i<f.size(); i++){
-		PrintVector(f[i]);
+		PrintVector(f[i], logAverage);
 	}
 }
 
@@ -364,7 +410,6 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 	int listSize, vector<char> *goldstdGenePresence, vector<string> &vecstrGenes,
 	vector<char> *excludeGene, vector<char> *includeGene, 
 	vector< vector<float> > &result
-
 	){
 
 	//fprintf(stderr, "Finished reading gene score list\n");
@@ -555,6 +600,11 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 		}
 	}
 
+	bool logAverage = false;
+	if(sArgs.log_average_flag==1){
+		logAverage = true;
+	}
+
 	if(sArgs.fold_over_random_flag==1){
 		const gsl_rng_type *T;
 		gsl_rng *rnd;
@@ -579,16 +629,38 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 			}else{
 				sort(randomScores[i].begin(), randomScores[i].end());
 			}
+
+			//accurate fold calculation
+			//added 9/1/2014===============================
+			int numValidGenes, numValidGoldGenes;
+			GetNumValidGenes(sortedGenes[i], excludeGene[i], includeGene[i], 
+				queryGeneID[i], goldstdGenePresence[i], numValidGenes, numValidGoldGenes);
+
+
+
 			if(met!=PR_ALL){
 				float fEval;
 				bool ret = EvaluateOneQuery(sArgs, met, randomScores[i],
 					goldstdGenePresence[i], nan, fEval);
 				if(!ret) return 1;
 				random_eval[i] = fEval;
-				//calculate fold
+				//calculate fold (old way, rely on random numbers)
+				/*
 				if(random_eval[i]==eval[i]) eval[i] = 1.0;
 				else if(random_eval[i]==0) eval[i] = 1.0;
 				else eval[i] = eval[i] / random_eval[i];
+				*/
+
+				//calculate fold (new way, rely on prior, is exact)
+				if(numValidGoldGenes==0 || numValidGenes==0){
+					eval[i] = 1.0;
+				}else{
+					eval[i] = eval[i] / ((float) numValidGoldGenes / (float) numValidGenes);
+				}
+
+				//plan to take geometric mean (first take log)
+				if(logAverage) eval[i] = log(eval[i]);
+
 			}else{
 				vector<float> evalAll;
 				bool ret = EvaluateOneQuery(sArgs, met, randomScores[i],
@@ -596,15 +668,28 @@ bool DoAggregate(const gengetopt_args_info &sArgs, const enum METRIC &met,
 				if(!ret) return 1;
 				random_vecevalAll[i] = evalAll;
 				int ii=0; 
-				//calculate fold
+				
 				for(ii=0; ii<random_vecevalAll[i].size(); ii++){
-					if(random_vecevalAll[i][ii]==vecevalAll[i][ii])
+					//calculate fold (old way, rely on random numbers)
+					/*if(random_vecevalAll[i][ii]==vecevalAll[i][ii])
 						vecevalAll[i][ii] = 1.0;
 					else if(random_vecevalAll[i][ii]==0)
 						vecevalAll[i][ii] = 1.0;
 					else
 						vecevalAll[i][ii] /= random_vecevalAll[i][ii];
+					*/
+					//calculate fold (new way, rely on prior, is exact)
+					if(numValidGoldGenes==0 || numValidGenes==0){
+						vecevalAll[i][ii] = 1.0;
+					}else{
+						vecevalAll[i][ii] /= ((float) numValidGoldGenes / (float) numValidGenes);
+					}
+					
+					//plan to take geometric mean (first take log)
+					if(logAverage) vecevalAll[i][ii] = log(vecevalAll[i][ii]);
 				}
+
+
 			}
 			//fprintf(stderr, "Got here!\n");	
 		}
@@ -788,6 +873,15 @@ int main( int iArgs, char** aszArgs ) {
 	else if(sArgs.auc_flag==1) met = AUC;
 
 	//fprintf(stderr, "Query mode: %d\n", qmode);
+	bool isFold = false;
+	if(sArgs.fold_over_random_flag==1)
+		isFold = true;
+
+	bool logAverage = false;
+	if(sArgs.log_average_flag==1){
+		logAverage = true;
+	}
+
 
 	if(qmode==SINGLE_QUERY){
 		if(sArgs.display_weight_flag==1){
@@ -934,16 +1028,22 @@ int main( int iArgs, char** aszArgs ) {
 		vector<char> exGene;
 		CSeekTools::ReadMultiGeneOneLine(excludeFile, excludeGenes);
 		CSeekTools::InitVector(exGene, vecstrGenes.size(), (char) 0);
-		for(i=0; i<excludeGenes.size(); i++)
+		int numExclude = 0;
+		for(i=0; i<excludeGenes.size(); i++){
 			exGene[mapstriGenes[excludeGenes[i]]] = 1;
+			numExclude++;
+		}
 
 		string includeFile = sArgs.include_arg;
 		vector<string> includeGenes;
 		vector<char> inGene;
-		CSeekTools::ReadMultiGeneOneLine(includeFile, includeGenes);
+		CSeekTools::ReadMultiGeneOneLine(includeFile, includeGenes, 500000);
 		CSeekTools::InitVector(inGene, vecstrGenes.size(), (char) 0);
-		for(i=0; i<includeGenes.size(); i++)
+		int numInclude=0;
+		for(i=0; i<includeGenes.size(); i++){
 			inGene[mapstriGenes[includeGenes[i]]] = 1;
+			numInclude++;
+		}
 		
 		if(sArgs.dislay_only_flag==1){
 			int LIMIT = sortedGenes.size() * 0.8;
@@ -969,6 +1069,101 @@ int main( int iArgs, char** aszArgs ) {
 			goldstdGenePresence[si] = 1;
 		}
 
+		if(isFold){
+			const gsl_rng_type *T;
+			gsl_rng *rnd;
+			gsl_rng_env_setup();
+			T = gsl_rng_default;
+			rnd = gsl_rng_alloc(T);
+			vector<AResultFloat> randomScores;
+
+			float random_eval;
+			vector<float> random_eval_multiple;
+
+			GetRandom(rnd, sortedGenes, randomScores, exGene, 
+				inGene, queryGeneID, nan);
+			if(bNegativeCor){
+				sort(randomScores.begin(), randomScores.end(), AscendingFloat());
+			}else{
+				sort(randomScores.begin(), randomScores.end());
+			}
+
+			//accurate fold calculation
+			int numValidGenes, numValidGoldGenes;
+			GetNumValidGenes(sortedGenes, exGene, inGene, 
+				queryGeneID, goldstdGenePresence, numValidGenes, numValidGoldGenes);
+
+			if(met!=PR_ALL){
+				float fEval;
+				bool ret = EvaluateOneQuery(sArgs, met, randomScores,
+					goldstdGenePresence, nan, fEval);
+				if(!ret) return 1;
+				random_eval = fEval;
+				float eval;
+				ret = EvaluateOneQuery(sArgs, met, sortedGenes,
+					goldstdGenePresence, nan, eval);
+				if(!ret) return 1;
+
+				//accurate fold calculation
+				if(numValidGoldGenes==0 || numValidGenes==0){
+					eval = 1.0;
+				}else{
+					eval = eval / ((float) numValidGoldGenes / (float) numValidGenes);
+				}
+
+				//plan to take geometric mean (first take log)
+				if(logAverage){
+					eval = log(eval);
+				}
+
+				//calculate fold (old way) phasing out...
+				/*
+				if(random_eval==eval) eval = 1.0;
+				else if(random_eval==0) eval = 1.0;
+				else eval = eval / random_eval;
+				fprintf(stderr, "%.5f\n", eval);
+				*/
+				gsl_rng_free(rnd);
+				return 0;
+			}
+			//is PR_ALL
+			vector<float> rand_evalAll;
+			bool ret = EvaluateOneQuery(sArgs, met, randomScores,
+				goldstdGenePresence, nan, rand_evalAll);
+			if(!ret) return 1;
+			random_eval_multiple = rand_evalAll;
+			vector<float> evalAll;
+			ret = EvaluateOneQuery(sArgs, met, sortedGenes,
+				goldstdGenePresence, nan, evalAll);
+			if(!ret) return 1;
+			int ii=0; 
+			//calculate fold
+			for(ii=0; ii<random_eval_multiple.size(); ii++){
+				//fold calculation (old way, rely on random number estimation)
+				/*if(random_eval_multiple[ii]==evalAll[ii])
+					evalAll[ii] = 1.0;
+				else if(random_eval_multiple[ii]==0)
+					evalAll[ii] = 1.0;
+				else
+					evalAll[ii] /= random_eval_multiple[ii];*/
+
+				//new fold calculation (exact, based on prior)
+				if(numValidGoldGenes==0 || numValidGenes==0){
+					evalAll[ii] = 1.0;
+				}else{
+					evalAll[ii] /= ((float) numValidGoldGenes / (float) numValidGenes);
+				}		
+				//plan to take geometric mean (first take log)
+				if(logAverage){
+					evalAll[ii] = log(evalAll[ii]);
+				}
+			}
+			PrintVector(evalAll, logAverage);
+			gsl_rng_free(rnd);
+			return 0;
+		}
+
+		//it is not fold over random mode
 		if(met!=PR_ALL){
 			float eval;
 			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes,
@@ -982,7 +1177,10 @@ int main( int iArgs, char** aszArgs ) {
 			bool ret = EvaluateOneQuery(sArgs, met, sortedGenes,
 				goldstdGenePresence, nan, evalAll);
 			if(!ret) return 1;
-			PrintVector(evalAll);
+			if(evalAll.size()==0){
+				fprintf(stderr, "Empty!\n");
+			}
+			PrintVector(evalAll, logAverage);
 			return 0;
 		}
 	}
@@ -1023,7 +1221,7 @@ int main( int iArgs, char** aszArgs ) {
 		vector<char> *includeGene = new vector<char>[vecstrList.size()];
 		for(i=0; i<include_list.size(); i++){
 			vector<string> in;
-			CSeekTools::ReadMultiGeneOneLine(include_list[i], in, 40000);
+			CSeekTools::ReadMultiGeneOneLine(include_list[i], in, 400000);
 			CSeekTools::InitVector(includeGene[i], vecstrGenes.size(), (char) 0);
 			for(j=0; j<in.size(); j++)
 				includeGene[i][mapstriGenes[in[j]]] = 1;
@@ -1082,6 +1280,7 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 		//fprintf(stderr, "Got here"); 
+		//fprintf(stderr, "Finished reading gene scores\n"); 
 
 		vector<vector<float> > result;
 		DoAggregate(sArgs, met, sortedGenes, queryGeneID, vecstrList.size(),
@@ -1119,7 +1318,7 @@ int main( int iArgs, char** aszArgs ) {
 			PrintResult(fold);
 		*/
 		//}else{
-		PrintResult(result);	
+		PrintResult(result, logAverage);	
 		//}
 
 	}
@@ -1130,6 +1329,31 @@ int main( int iArgs, char** aszArgs ) {
 		CSeekTools::ReadListOneColumn(dweightList, vecstrList);
 		int numDataset = 0;
 
+		vector<vector<int> > dsetScore;
+		for(j=0; j<vecstrList.size(); j++){
+			vector<float> ww;
+			CSeekTools::ReadArray(vecstrList[j].c_str(), ww);
+			if(j==0){
+				dsetScore.resize(ww.size());
+			}
+			vector<AResultFloat> sortedDatasets;
+			sortedDatasets.resize(ww.size());
+			for(i=0; i<sortedDatasets.size(); i++){
+				sortedDatasets[i].i = i;
+				sortedDatasets[i].f = ww[i];
+			}
+			sort(sortedDatasets.begin(), sortedDatasets.end());
+			for(i=0; i<sortedDatasets.size(); i++){
+				dsetScore[sortedDatasets[i].i].push_back(i);
+			}
+		}
+
+		int per95 = (int) (vecstrList.size() * 0.95);
+		for(i=0; i<dsetScore.size(); i++){
+			sort(dsetScore[i].begin(), dsetScore[i].end(), greater<int>());
+			fprintf(stderr, "Dataset %d %d\n", i, dsetScore[i][per95]);
+		}
+		/*
 		for(j=0; j<vecstrList.size(); j++){
 			vector<float> ww;
 			CSeekTools::ReadArray(vecstrList[j].c_str(), ww);
@@ -1141,10 +1365,10 @@ int main( int iArgs, char** aszArgs ) {
 				sortedDatasets[i].f = ww[i];
 			}
 			sort(sortedDatasets.begin(), sortedDatasets.end());
-			/*for(i=0; i<sortedDatasets.size(); i++){
-				fprintf(stderr, "%.2e\t%s\n", sortedDatasets[i].f, 
-					vecstrDatasets[sortedDatasets[i].i].c_str());
-			}*/
+			//for(i=0; i<sortedDatasets.size(); i++){
+			//	fprintf(stderr, "%.2e\t%s\n", sortedDatasets[i].f, 
+			//		vecstrDatasets[sortedDatasets[i].i].c_str());
+			//}
 			vector<int> depth;
 			depth.push_back((int) ((float)numDataset * 0.005));	
 			depth.push_back((int) ((float)numDataset * 0.01));	
@@ -1165,6 +1389,7 @@ int main( int iArgs, char** aszArgs ) {
 			}
 			fprintf(stderr, "\n");
 		}
+		*/
 
 	}
 

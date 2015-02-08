@@ -8,7 +8,7 @@ option	"input"			i	"Input PCL file"
 option	"output"		o	"Output DAT/DAB file"
 							string	typestr="filename"
 option	"distance"		d	"Similarity measure"
-							values="pearson","euclidean","kendalls","kolm-smir","spearman",
+							values="pearson","euclidean","kendalls","kolm-smir","spearman","bicor",
 							"pearnorm","hypergeom","innerprod","bininnerprod","quickpear",
 							"mutinfo","relauc","pearsig","dice","dcor","sdcor"	default="pearnorm"
 

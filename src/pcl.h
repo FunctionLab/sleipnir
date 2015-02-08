@@ -183,6 +183,7 @@ public:
 	void SaveHeader(std::ostream& ostm, bool fCDT = false) const;
 	bool SortGenes(const std::vector<size_t>& veciOrder);
 	void RankTransform();
+	void BicorTransform();
 	bool AddGenes(const std::vector<std::string>& vecstrGenes);
 	void Normalize(ENormalize eNormalize = ENormalizeRow);
 	void Impute(size_t iNeighbors, float dMinimumPresent,
