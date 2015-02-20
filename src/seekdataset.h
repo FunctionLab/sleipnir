@@ -45,7 +45,8 @@ public:
 		const string &sinfo, const string &plat,
 		const string &prep, const string &db,
 		const string &gene, const string &quant,
-		const string &dset, const utype &numDB){
+		const string &dset, const string &dset_size,
+		const utype &numDB){
 		m_gvarDirectory = gvar;
 		m_sinfoDirectory = sinfo;
 		m_platformDirectory = plat;
@@ -55,12 +56,14 @@ public:
 		m_quantFile = quant;
 		m_dsetFile = dset;
 		m_numDB = numDB;
+		m_dsetSizeFile = dset_size;
 	}
 	CSeekDBSetting(const char *gvar,
 		const char* sinfo, const char* plat,
 		const char* prep, const char* db,
 		const char* gene, const char* quant,
-		const char* dset, const utype &numDB){
+		const char* dset, const char* dset_size,
+		const utype &numDB){
 		m_gvarDirectory = gvar;
 		m_sinfoDirectory = sinfo;
 		m_platformDirectory = plat;
@@ -70,6 +73,7 @@ public:
 		m_quantFile = quant;
 		m_dsetFile = dset;
 		m_numDB = numDB;
+		m_dsetSizeFile = dset_size;
 	}
 
 	CSeekDBSetting(CSeekDBSetting const *g){
@@ -82,6 +86,7 @@ public:
 		m_quantFile = g->m_quantFile;
 		m_dsetFile = g->m_dsetFile;
 		m_numDB = g->m_numDB;
+		m_dsetSizeFile = g->m_dsetSizeFile;
 	}
 
 	~CSeekDBSetting(){
@@ -104,6 +109,8 @@ public:
 			return m_prepDirectory;
 		else if(str=="platform")
 			return m_platformDirectory;
+		else if(str=="dset_size")
+			return m_dsetSizeFile;
 		else
 			return "NULL";
 	}
@@ -121,6 +128,7 @@ private:
 	string m_geneMapFile;
 	string m_quantFile;
 	string m_dsetFile;
+	string m_dsetSizeFile;
 	utype m_numDB;
 };
 

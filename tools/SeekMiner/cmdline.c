@@ -49,6 +49,7 @@ const char *gengetopt_args_info_help[] = {
   "  -T, --num_threads=INT         Number of threads  (default=`8')",
   "  -H, --per_g_required=FLOAT    Fraction (max 1.0) of genome required to be \n                                  present in a dataset. Datasets not meeting \n                                  this requirement are skipped.  (default=`0')",
   "  -k, --neg_cor                 Rank genes and datasets by negative \n                                  correlations  (default=off)",
+  "  -L, --check_dset_size         Check the number of samples per dataset (if on, \n                                  needs --dset_size_file)  (default=off)",
   "\nDataset weighting:",
   "  -V, --weighting_method=STRING Weighting method: query cross-validated \n                                  weighting (CV), equal weighting (EQUAL), \n                                  order statistics weighting (ORDER_STAT), \n                                  variance weighting (VAR), user-given \n                                  weighting (USER), SPELL weighting \n                                  (AVERAGE_Z), user cross-validated weighting \n                                  (CV_CUSTOM)  (possible values=\"CV\", \n                                  \"EQUAL\", \"ORDER_STAT\", \"VAR\", \"USER\", \n                                  \"AVERAGE_Z\", \"CV_CUSTOM\" default=`CV')",
   "\nDataset weighting: User Cross-validated Weighting (CV_CUSTOM):",
@@ -70,6 +71,8 @@ const char *gengetopt_args_info_help[] = {
   "  -I, --CV_partition=STRING     The query partitioning method (for CV \n                                  weighting): Leave-One-In, Leave-One-Out, \n                                  X-Fold.  (possible values=\"LOI\", \"LOO\", \n                                  \"XFOLD\" default=`LOI')",
   "  -X, --CV_fold=INT             The number of folds (for X-fold partitioning).  \n                                  (default=`5')",
   "  -G, --CV_rbp_p=FLOAT          The parameter p for RBP scoring of each \n                                  partition for its query gene retrieval (for \n                                  CV weighting).  (default=`0.99')",
+  "\nChecking dataset size:",
+  "  -R, --dset_size_file=filename Dataset size file (required if \n                                  --check_dset_size)  (default=`NA')",
   "\nMISC:",
   "  -N, --is_nibble               The input CDatabase collection is nibble type  \n                                  (default=off)",
   "  -b, --buffer=INT              Number of query genes to load in memory \n                                  (recommended: 50-100)  (default=`50')",
@@ -126,6 +129,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->num_threads_given = 0 ;
   args_info->per_g_required_given = 0 ;
   args_info->neg_cor_given = 0 ;
+  args_info->check_dset_size_given = 0 ;
   args_info->weighting_method_given = 0 ;
   args_info->user_gene_list_given = 0 ;
   args_info->user_weight_list_given = 0 ;
@@ -140,6 +144,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->CV_partition_given = 0 ;
   args_info->CV_fold_given = 0 ;
   args_info->CV_rbp_p_given = 0 ;
+  args_info->dset_size_file_given = 0 ;
   args_info->is_nibble_given = 0 ;
   args_info->buffer_given = 0 ;
   args_info->output_text_given = 0 ;
@@ -180,6 +185,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->per_g_required_arg = 0;
   args_info->per_g_required_orig = NULL;
   args_info->neg_cor_flag = 0;
+  args_info->check_dset_size_flag = 0;
   args_info->weighting_method_arg = gengetopt_strdup ("CV");
   args_info->weighting_method_orig = NULL;
   args_info->user_gene_list_arg = NULL;
@@ -204,6 +210,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->CV_fold_orig = NULL;
   args_info->CV_rbp_p_arg = 0.99;
   args_info->CV_rbp_p_orig = NULL;
+  args_info->dset_size_file_arg = gengetopt_strdup ("NA");
+  args_info->dset_size_file_orig = NULL;
   args_info->is_nibble_flag = 0;
   args_info->buffer_arg = 50;
   args_info->buffer_orig = NULL;
@@ -238,27 +246,29 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->num_threads_help = gengetopt_args_info_help[14] ;
   args_info->per_g_required_help = gengetopt_args_info_help[15] ;
   args_info->neg_cor_help = gengetopt_args_info_help[16] ;
-  args_info->weighting_method_help = gengetopt_args_info_help[18] ;
-  args_info->user_gene_list_help = gengetopt_args_info_help[20] ;
-  args_info->user_weight_list_help = gengetopt_args_info_help[22] ;
-  args_info->random_help = gengetopt_args_info_help[24] ;
-  args_info->num_random_help = gengetopt_args_info_help[25] ;
-  args_info->dist_measure_help = gengetopt_args_info_help[27] ;
-  args_info->norm_subavg_help = gengetopt_args_info_help[28] ;
-  args_info->norm_subavg_plat_help = gengetopt_args_info_help[29] ;
-  args_info->score_cutoff_help = gengetopt_args_info_help[30] ;
-  args_info->square_z_help = gengetopt_args_info_help[31] ;
-  args_info->per_q_required_help = gengetopt_args_info_help[33] ;
-  args_info->CV_partition_help = gengetopt_args_info_help[35] ;
-  args_info->CV_fold_help = gengetopt_args_info_help[36] ;
-  args_info->CV_rbp_p_help = gengetopt_args_info_help[37] ;
-  args_info->is_nibble_help = gengetopt_args_info_help[39] ;
-  args_info->buffer_help = gengetopt_args_info_help[40] ;
-  args_info->output_text_help = gengetopt_args_info_help[41] ;
-  args_info->output_dir_help = gengetopt_args_info_help[42] ;
-  args_info->output_w_comp_help = gengetopt_args_info_help[43] ;
-  args_info->simulate_w_help = gengetopt_args_info_help[44] ;
-  args_info->additional_db_help = gengetopt_args_info_help[45] ;
+  args_info->check_dset_size_help = gengetopt_args_info_help[17] ;
+  args_info->weighting_method_help = gengetopt_args_info_help[19] ;
+  args_info->user_gene_list_help = gengetopt_args_info_help[21] ;
+  args_info->user_weight_list_help = gengetopt_args_info_help[23] ;
+  args_info->random_help = gengetopt_args_info_help[25] ;
+  args_info->num_random_help = gengetopt_args_info_help[26] ;
+  args_info->dist_measure_help = gengetopt_args_info_help[28] ;
+  args_info->norm_subavg_help = gengetopt_args_info_help[29] ;
+  args_info->norm_subavg_plat_help = gengetopt_args_info_help[30] ;
+  args_info->score_cutoff_help = gengetopt_args_info_help[31] ;
+  args_info->square_z_help = gengetopt_args_info_help[32] ;
+  args_info->per_q_required_help = gengetopt_args_info_help[34] ;
+  args_info->CV_partition_help = gengetopt_args_info_help[36] ;
+  args_info->CV_fold_help = gengetopt_args_info_help[37] ;
+  args_info->CV_rbp_p_help = gengetopt_args_info_help[38] ;
+  args_info->dset_size_file_help = gengetopt_args_info_help[40] ;
+  args_info->is_nibble_help = gengetopt_args_info_help[42] ;
+  args_info->buffer_help = gengetopt_args_info_help[43] ;
+  args_info->output_text_help = gengetopt_args_info_help[44] ;
+  args_info->output_dir_help = gengetopt_args_info_help[45] ;
+  args_info->output_w_comp_help = gengetopt_args_info_help[46] ;
+  args_info->simulate_w_help = gengetopt_args_info_help[47] ;
+  args_info->additional_db_help = gengetopt_args_info_help[48] ;
   
 }
 
@@ -380,6 +390,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->CV_partition_orig));
   free_string_field (&(args_info->CV_fold_orig));
   free_string_field (&(args_info->CV_rbp_p_orig));
+  free_string_field (&(args_info->dset_size_file_arg));
+  free_string_field (&(args_info->dset_size_file_orig));
   free_string_field (&(args_info->buffer_orig));
   free_string_field (&(args_info->output_dir_arg));
   free_string_field (&(args_info->output_dir_orig));
@@ -493,6 +505,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "per_g_required", args_info->per_g_required_orig, 0);
   if (args_info->neg_cor_given)
     write_into_file(outfile, "neg_cor", 0, 0 );
+  if (args_info->check_dset_size_given)
+    write_into_file(outfile, "check_dset_size", 0, 0 );
   if (args_info->weighting_method_given)
     write_into_file(outfile, "weighting_method", args_info->weighting_method_orig, cmdline_parser_weighting_method_values);
   if (args_info->user_gene_list_given)
@@ -521,6 +535,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "CV_fold", args_info->CV_fold_orig, 0);
   if (args_info->CV_rbp_p_given)
     write_into_file(outfile, "CV_rbp_p", args_info->CV_rbp_p_orig, 0);
+  if (args_info->dset_size_file_given)
+    write_into_file(outfile, "dset_size_file", args_info->dset_size_file_orig, 0);
   if (args_info->is_nibble_given)
     write_into_file(outfile, "is_nibble", 0, 0 );
   if (args_info->buffer_given)
@@ -872,6 +888,7 @@ cmdline_parser_internal (
         { "num_threads",	1, NULL, 'T' },
         { "per_g_required",	1, NULL, 'H' },
         { "neg_cor",	0, NULL, 'k' },
+        { "check_dset_size",	0, NULL, 'L' },
         { "weighting_method",	1, NULL, 'V' },
         { "user_gene_list",	1, NULL, 'K' },
         { "user_weight_list",	1, NULL, 'J' },
@@ -886,6 +903,7 @@ cmdline_parser_internal (
         { "CV_partition",	1, NULL, 'I' },
         { "CV_fold",	1, NULL, 'X' },
         { "CV_rbp_p",	1, NULL, 'G' },
+        { "dset_size_file",	1, NULL, 'R' },
         { "is_nibble",	0, NULL, 'N' },
         { "buffer",	1, NULL, 'b' },
         { "output_text",	0, NULL, 'O' },
@@ -896,7 +914,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hx:D:i:q:d:p:P:u:U:Q:n:T:H:kV:K:J:St:z:mMc:eC:I:X:G:Nb:Oo:YEB:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hx:D:i:q:d:p:P:u:U:Q:n:T:H:kLV:K:J:St:z:mMc:eC:I:X:G:R:Nb:Oo:YEB:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -1073,6 +1091,16 @@ cmdline_parser_internal (
             goto failure;
         
           break;
+        case 'L':	/* Check the number of samples per dataset (if on, needs --dset_size_file).  */
+        
+        
+          if (update_arg((void *)&(args_info->check_dset_size_flag), 0, &(args_info->check_dset_size_given),
+              &(local_args_info.check_dset_size_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "check_dset_size", 'L',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'V':	/* Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z), user cross-validated weighting (CV_CUSTOM).  */
         
         
@@ -1229,6 +1257,18 @@ cmdline_parser_internal (
               &(local_args_info.CV_rbp_p_given), optarg, 0, "0.99", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "CV_rbp_p", 'G',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'R':	/* Dataset size file (required if --check_dset_size).  */
+        
+        
+          if (update_arg( (void *)&(args_info->dset_size_file_arg), 
+               &(args_info->dset_size_file_orig), &(args_info->dset_size_file_given),
+              &(local_args_info.dset_size_file_given), optarg, 0, "NA", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "dset_size_file", 'R',
               additional_error))
             goto failure;
         

@@ -80,6 +80,8 @@ struct gengetopt_args_info
   const char *per_g_required_help; /**< @brief Fraction (max 1.0) of genome required to be present in a dataset. Datasets not meeting this requirement are skipped. help description.  */
   int neg_cor_flag;	/**< @brief Rank genes and datasets by negative correlations (default=off).  */
   const char *neg_cor_help; /**< @brief Rank genes and datasets by negative correlations help description.  */
+  int check_dset_size_flag;	/**< @brief Check the number of samples per dataset (if on, needs --dset_size_file) (default=off).  */
+  const char *check_dset_size_help; /**< @brief Check the number of samples per dataset (if on, needs --dset_size_file) help description.  */
   char * weighting_method_arg;	/**< @brief Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z), user cross-validated weighting (CV_CUSTOM) (default='CV').  */
   char * weighting_method_orig;	/**< @brief Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z), user cross-validated weighting (CV_CUSTOM) original value given at command line.  */
   const char *weighting_method_help; /**< @brief Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z), user cross-validated weighting (CV_CUSTOM) help description.  */
@@ -118,6 +120,9 @@ struct gengetopt_args_info
   float CV_rbp_p_arg;	/**< @brief The parameter p for RBP scoring of each partition for its query gene retrieval (for CV weighting). (default='0.99').  */
   char * CV_rbp_p_orig;	/**< @brief The parameter p for RBP scoring of each partition for its query gene retrieval (for CV weighting). original value given at command line.  */
   const char *CV_rbp_p_help; /**< @brief The parameter p for RBP scoring of each partition for its query gene retrieval (for CV weighting). help description.  */
+  char * dset_size_file_arg;	/**< @brief Dataset size file (required if --check_dset_size) (default='NA').  */
+  char * dset_size_file_orig;	/**< @brief Dataset size file (required if --check_dset_size) original value given at command line.  */
+  const char *dset_size_file_help; /**< @brief Dataset size file (required if --check_dset_size) help description.  */
   int is_nibble_flag;	/**< @brief The input CDatabase collection is nibble type (default=off).  */
   const char *is_nibble_help; /**< @brief The input CDatabase collection is nibble type help description.  */
   int buffer_arg;	/**< @brief Number of query genes to load in memory (recommended: 50-100) (default='50').  */
@@ -152,6 +157,7 @@ struct gengetopt_args_info
   unsigned int num_threads_given ;	/**< @brief Whether num_threads was given.  */
   unsigned int per_g_required_given ;	/**< @brief Whether per_g_required was given.  */
   unsigned int neg_cor_given ;	/**< @brief Whether neg_cor was given.  */
+  unsigned int check_dset_size_given ;	/**< @brief Whether check_dset_size was given.  */
   unsigned int weighting_method_given ;	/**< @brief Whether weighting_method was given.  */
   unsigned int user_gene_list_given ;	/**< @brief Whether user_gene_list was given.  */
   unsigned int user_weight_list_given ;	/**< @brief Whether user_weight_list was given.  */
@@ -166,6 +172,7 @@ struct gengetopt_args_info
   unsigned int CV_partition_given ;	/**< @brief Whether CV_partition was given.  */
   unsigned int CV_fold_given ;	/**< @brief Whether CV_fold was given.  */
   unsigned int CV_rbp_p_given ;	/**< @brief Whether CV_rbp_p was given.  */
+  unsigned int dset_size_file_given ;	/**< @brief Whether dset_size_file was given.  */
   unsigned int is_nibble_given ;	/**< @brief Whether is_nibble was given.  */
   unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
   unsigned int output_text_given ;	/**< @brief Whether output_text was given.  */

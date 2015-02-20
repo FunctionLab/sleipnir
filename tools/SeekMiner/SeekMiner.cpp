@@ -73,6 +73,14 @@ int main( int iArgs, char** aszArgs ) {
 		}
 	}
 
+	if(sArgs.check_dset_size_flag==1){
+		string dsize_file = sArgs.dset_size_file_arg;
+		if(dsize_file=="NA"){
+			fprintf(stderr, "Dataset size file is missing\n");
+			return 1;
+		}
+	}
+
 	if(!sArgs.input_arg || !sArgs.quant_arg ||
 		!sArgs.dset_arg ||
 		!sArgs.query_arg || !sArgs.dir_platform_arg ||
@@ -258,7 +266,7 @@ int main( int iArgs, char** aszArgs ) {
 	CSeekDBSetting *dbSetting = new CSeekDBSetting(sArgs.dir_gvar_arg,
 		sArgs.dir_sinfo_arg, sArgs.dir_platform_arg, sArgs.dir_prep_in_arg,
 		sArgs.dir_in_arg, sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
-		sArgs.num_db_arg);
+		sArgs.dset_size_file_arg, sArgs.num_db_arg);
 	vector<CSeekDBSetting*> cc;
 	cc.push_back(dbSetting);
 
@@ -311,6 +319,7 @@ int main( int iArgs, char** aszArgs ) {
 		string dset_map_file = "NA";
 		string gene_map_file = "NA";
 		string quant_file = "NA";
+		string dset_size_file = "NA";
 		int num_db = -1;
 
 		if(eDistMeasure==CSeekDataset::CORRELATION){
@@ -323,6 +332,19 @@ int main( int iArgs, char** aszArgs ) {
 		}
 		if(parameters[i].find("GVAR_DIR")!=parameters[i].end())
 			gvar_dir = parameters[i].find("GVAR_DIR")->second;
+
+		if(sArgs.check_dset_size_flag==1){
+			if(parameters[i].find("DSET_SIZE_FILE")==parameters[i].end() ||
+				parameters[i].find("DSET_SIZE_FILE")->second=="NA"){
+				fprintf(stderr, "Please specify the dataset size file for the extra db\n");
+				return false;
+			}
+		}
+
+		if(parameters[i].find("DSET_SIZE_FILE")!=parameters[i].end() &&
+			parameters[i].find("DSET_SIZE_FILE")->second!="NA")
+			dset_size_file = parameters[i].find("DSET_SIZE_FILE")->second;
+		
 		if(parameters[i].find("PREP_DIR")==parameters[i].end() ||
 			parameters[i].find("PLATFORM_DIR")==parameters[i].end() ||
 			parameters[i].find("DB_DIR")==parameters[i].end() ||
@@ -344,7 +366,7 @@ int main( int iArgs, char** aszArgs ) {
 
 		CSeekDBSetting *dbSetting2 = new CSeekDBSetting(gvar_dir, sinfo_dir,
 			platform_dir, prep_dir, db_dir, gene_map_file, quant_file, dset_map_file,
-			num_db);
+			dset_size_file, num_db);
 		cc.push_back(dbSetting2);
 		}
 	}
@@ -374,6 +396,7 @@ int main( int iArgs, char** aszArgs ) {
 		eDistMeasure, bVariance,
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_subavg_plat_flag,
 		false,
+		!!sArgs.check_dset_size_flag,
 		sArgs.score_cutoff_arg, 
 		sArgs.per_q_required_arg, sArgs.per_g_required_arg,
 		!!sArgs.square_z_flag,

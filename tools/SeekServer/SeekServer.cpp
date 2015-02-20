@@ -54,6 +54,7 @@ struct thread_data{
 	string strOutputDir;
 	string strSearchDatasets;
 
+	bool check_dset_size; //check dataset size
 	float rbp_p;
 	float query_fraction_required;
 	float genome_fraction_required;
@@ -79,6 +80,7 @@ void *do_query(void *th_arg){
 	//if "negative", then rank datasets and genes by most negative correlations
 	string correlationSign = my->correlationSign;
 
+	bool bCheckDsetSize = my->check_dset_size;
 	float rbp_p = my->rbp_p;
 	float query_fraction_required = my->query_fraction_required;
 	float genome_fraction_required = my->genome_fraction_required;
@@ -109,7 +111,7 @@ void *do_query(void *th_arg){
 
 	bool r = csu->Initialize(strOutputDir, strQuery, strSearchDatasets, csfinal,
 		new_fd, query_fraction_required, genome_fraction_required, eDM, bSubtractGeneAvg,
-		bNormPlatform, bNegativeCor);
+		bNormPlatform, bNegativeCor, bCheckDsetSize);
 
 	//if r is false, then one of the query has no datasets 
 	//containing any of the query (because of CheckDatasets() in Initialize()),
@@ -194,10 +196,17 @@ int main( int iArgs, char** aszArgs ) {
 		bVariance = true;
 	}
 
+	string dsize_file = sArgs.dset_size_file_arg;
+	if(dsize_file=="NA"){
+		fprintf(stderr, "Dataset size file is missing\n");
+		return 1;
+	}
+
 	csfinal = new CSeekCentral();
 	CSeekDBSetting *dbSetting = new CSeekDBSetting(sArgs.dir_gvar_arg,
 		sArgs.dir_sinfo_arg, sArgs.dir_platform_arg, sArgs.dir_prep_in_arg,
 		sArgs.dir_in_arg, sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
+		sArgs.dset_size_file_arg,
 		sArgs.num_db_arg);
 	vector<CSeekDBSetting*> cc;
 	cc.push_back(dbSetting);
@@ -250,6 +259,7 @@ int main( int iArgs, char** aszArgs ) {
 		string dset_map_file = "NA";
 		string gene_map_file = "NA";
 		string quant_file = "NA";
+		string dset_size_file = "NA";
 		int num_db = -1;
 
 		if(parameters[i].find("SINFO_DIR")->second=="NA"){
@@ -257,6 +267,14 @@ int main( int iArgs, char** aszArgs ) {
 			return false;
 		}
 		sinfo_dir = parameters[i].find("SINFO_DIR")->second;
+
+		if(parameters[i].find("DSET_SIZE_FILE")==parameters[i].end() ||
+			parameters[i].find("DSET_SIZE_FILE")->second=="NA"){
+			fprintf(stderr, "Please specify the dataset size file for the extra db\n");
+			return false;
+		}
+		dset_size_file = parameters[i].find("DSET_SIZE_FILE")->second;
+
 		if(parameters[i].find("GVAR_DIR")!=parameters[i].end())
 			gvar_dir = parameters[i].find("GVAR_DIR")->second;
 		if(parameters[i].find("PREP_DIR")==parameters[i].end() ||
@@ -281,7 +299,7 @@ int main( int iArgs, char** aszArgs ) {
 
 		CSeekDBSetting *dbSetting2 = new CSeekDBSetting(gvar_dir, sinfo_dir,
 			platform_dir, prep_dir, db_dir, gene_map_file, quant_file, dset_map_file,
-			num_db);
+			dset_size_file, num_db);
 		cc.push_back(dbSetting2);
 		}
 	}
@@ -298,7 +316,10 @@ int main( int iArgs, char** aszArgs ) {
 		0.0, //min query fraction (to be overwrriten)
 		0.0, //min genome fraction (to be overwrriten)
 		!!sArgs.square_z_flag, //default
-		false, 1, false, NULL, useNibble, sArgs.num_threads_arg)) //default
+		false, 1, 
+		false, //negative cor (to be overwritten)
+		true, //check dataset size (to be overwritten)
+		NULL, useNibble, sArgs.num_threads_arg)) //default
 	{
 		fprintf(stderr, "Error occurred!\n");
 		return -1;
@@ -446,6 +467,11 @@ int main( int iArgs, char** aszArgs ) {
 			atof(searchParameterTokens[3].c_str());
 		thread_arg[d].distanceMeasure = searchParameterTokens[4];
 		thread_arg[d].correlationSign = searchParameterTokens[5];
+		if(searchParameterTokens[6]=="true"){ //true or false
+			thread_arg[d].check_dset_size = true; 
+		}else{
+			thread_arg[d].check_dset_size = false;
+		}
 		//=========================================================
 
 		thread_arg[d].threadid = d;

@@ -180,7 +180,7 @@ public:
 		const bool bLogit = false, const float fCutOff = -9999, 
 		const float fPercentQueryRequired = 0, const float fPercentGenomeRequired = 0,
 		const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
-		const bool bNegativeCor = false,
+		const bool bNegativeCor = false, const bool bCheckDsetSize = false,
 		gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
 
     /*!
@@ -236,7 +236,7 @@ public:
 		const bool bLogit = false, const float fCutOff = -9999, 
 		const float fPercentQueryRequired = 0, const float fPercentGenomeRequired = 0,
 		const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
-		const bool bNegativeCor = false,
+		const bool bNegativeCor = false, const bool bCheckDsetSize = false,
 		gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
 
     /*!
@@ -265,7 +265,7 @@ public:
 		const float query_min_required = 0, const float genome_min_required = 0,
 		const enum CSeekDataset::DistanceMeasure = CSeekDataset::Z_SCORE,
 		const bool bSubtractGeneAvg = true, const bool bNormPlatform = false,
-		const bool bNegativeCor = false);
+		const bool bNegativeCor = false, const bool bCheckDsetSize = false);
 
 	/*!
 	 * \brief Run Seek with the cross-validated dataset weighting
@@ -510,6 +510,11 @@ private:
 	bool m_useNibble;
 
 	float m_DEFAULT_NA;
+
+	/* for specifying dataset size */
+	bool m_bCheckDsetSize;
+	int m_iNumSampleRequired;
+	map<string, utype> m_mapstrintDatasetSize;
 };
 
 

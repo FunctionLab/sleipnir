@@ -31,6 +31,8 @@ option	"per_g_required"	H	"Fraction (max 1.0) of genome required to be present i
 								float default="0"
 option	"neg_cor"			k	"Rank genes and datasets by negative correlations"
 								flag	off
+option	"check_dset_size"	L	"Check the number of samples per dataset (if on, needs --dset_size_file)"
+								flag	off
 
 section "Dataset weighting"
 option	"weighting_method"	V	"Weighting method: query cross-validated weighting (CV), equal weighting (EQUAL), order statistics weighting (ORDER_STAT), variance weighting (VAR), user-given weighting (USER), SPELL weighting (AVERAGE_Z), user cross-validated weighting (CV_CUSTOM)"
@@ -73,6 +75,10 @@ option	"CV_fold"			X	"The number of folds (for X-fold partitioning)."
 								int	default="5"
 option	"CV_rbp_p"			G	"The parameter p for RBP scoring of each partition for its query gene retrieval (for CV weighting)."
 								float	default="0.99"	
+
+section "Checking dataset size"
+option	"dset_size_file"	R	"Dataset size file (required if --check_dset_size)"
+								string	typestr="filename" default="NA"
 
 section "MISC"								
 option	"is_nibble"			N	"The input CDatabase collection is nibble type"

@@ -20,7 +20,8 @@ option	"dir_sinfo"			u	"Sinfo Directory (containing .sinfo files)"
 option	"dir_gvar"			U	"Gene variance directory (containing .gexpvar files)"
 								string	typestr="directory"	default="NA"
 option	"quant"				Q	"quant file (assuming all datasets use the same quantization)"
-								string	typestr="filename"	yes								
+								string	typestr="filename"	yes					option	"dset_size_file"	R	"Dataset size file"
+								string	typestr="filename"	yes
 option	"num_db"			n	"Number of databaselets in database"
 								int	default="1000"	yes
 option	"num_threads"		T	"Number of threads"

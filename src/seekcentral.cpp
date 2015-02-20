@@ -94,6 +94,10 @@ CSeekCentral::CSeekCentral(){
 
 	m_iClient = -1;
 	m_bEnableNetwork = false;
+
+	m_bCheckDsetSize = false;
+	m_iNumSampleRequired = 10; //if checking for dataset size
+	m_mapstrintDatasetSize.clear();
 }
 
 CSeekCentral::~CSeekCentral(){
@@ -196,6 +200,10 @@ CSeekCentral::~CSeekCentral(){
 	m_vecDBSetting.clear();
 	m_useNibble = false;
 	m_bNegativeCor = false;
+
+	m_bCheckDsetSize = false;
+	m_iNumSampleRequired = 0;
+	m_mapstrintDatasetSize.clear();
 }
 
 bool CSeekCentral::CalculateRestart(){
@@ -253,8 +261,8 @@ bool CSeekCentral::Initialize(
 	const string &search_dset, CSeekCentral *src, const int iClient,
 	const float query_min_required, const float genome_min_required,
 	const enum CSeekDataset::DistanceMeasure eDistMeasure,
-	const bool bSubtractGeneAvg, const bool bNormPlatform, 
-	const bool bNegativeCor){
+	const bool bSubtractGeneAvg, const bool bNormPlatform,
+	const bool bNegativeCor, const bool bCheckDsetSize){
 
 	fprintf(stderr, "Request received from client\n");
 
@@ -271,6 +279,8 @@ bool CSeekCentral::Initialize(
 	m_bNormPlatform = bNormPlatform;
 	m_bLogit = src->m_bLogit;
 	m_eDistMeasure = eDistMeasure;
+	m_bCheckDsetSize = bCheckDsetSize;
+	m_iNumSampleRequired = src->m_iNumSampleRequired;
 
 	//if negative correlation, then need to use a different null value
 	m_bNegativeCor = bNegativeCor;
@@ -307,6 +317,9 @@ bool CSeekCentral::Initialize(
 
 	m_vecstrDP.resize(src->m_vecstrDP.size());
 	copy(src->m_vecstrDP.begin(), src->m_vecstrDP.end(), m_vecstrDP.begin());
+
+	m_mapstrintDatasetSize.insert(src->m_mapstrintDatasetSize.begin(),
+		src->m_mapstrintDatasetSize.end());
 
 	m_quant = src->m_quant;
 	utype i, j;
@@ -560,7 +573,7 @@ bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 	const bool bLogit, const float fCutOff, const float fPercentQueryRequired,
 	const float fPercentGenomeRequired,
 	const bool bSquareZ, const bool bRandom, const int iNumRandom,
-	const bool bNegativeCor,
+	const bool bNegativeCor, const bool bCheckDatasetSize,
 	gsl_rng *rand, const bool useNibble, const int numThreads){
 
 	m_maxNumDB = buffer;
@@ -577,6 +590,8 @@ bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 	}else{
 		m_DEFAULT_NA = -320;
 	}
+
+	m_bCheckDsetSize = bCheckDatasetSize;
 
 	m_bOutputWeightComponent = bOutputWeightComponent;
 	m_bSimulateWeight = bSimulateWeight;
@@ -662,6 +677,26 @@ bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 			m_vecstrDP.push_back(vDP[j]);
 		}
 
+		if(vecDBSetting[i]->GetValue("dset_size")!="NA"){
+			vector<string> col1, col2;
+			if(!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->GetValue("dset_size"), col1, col2))
+				return false;
+			set<string> currentD(vD.begin(), vD.end());
+			for(i=0; i<col1.size(); i++){
+				if(currentD.find(col1[i])==currentD.end()){
+					fprintf(stderr, "Specified dataset name %s does not match with dataset platform file\n", col1[i].c_str());
+					return false;
+				}
+				m_mapstrintDatasetSize[col1[i]] = (utype) atoi(col2[i].c_str());
+			}
+			for(i=0; i<vD.size(); i++){
+				if(m_mapstrintDatasetSize.find(vD[i])==m_mapstrintDatasetSize.end()){
+					fprintf(stderr, "There is no dataset size entry for %s\n", vD[i].c_str());
+					return false;
+				}
+			}
+		}
+
 		vector<string> vecstrPlatforms;
 		map<string,utype> mapstriPlatform;
 		vector<CSeekPlatform> vp;
@@ -710,14 +745,14 @@ bool CSeekCentral::Initialize(
 	const bool bLogit, const float fCutOff, 
 	const float fPercentQueryRequired, const float fPercentGenomeRequired,
 	const bool bSquareZ, const bool bRandom, const int iNumRandom,
-	const bool bNegativeCor,
+	const bool bNegativeCor, const bool bCheckDsetSize,
 	gsl_rng *rand, const bool useNibble, const int numThreads){
 
 	if(!CSeekCentral::Initialize(vecDBSetting, buffer, to_output_text,
 		bOutputWeightComponent, bSimulateWeight, dist_measure, bVariance,
 		bSubtractAvg, bNormPlatform, bLogit, fCutOff, 
 		fPercentQueryRequired, fPercentGenomeRequired,
-		bSquareZ, bRandom, iNumRandom, bNegativeCor,
+		bSquareZ, bRandom, iNumRandom, bNegativeCor, bCheckDsetSize,
 		rand, useNibble, numThreads)){
 		return false;
 	}
@@ -732,24 +767,45 @@ bool CSeekCentral::Initialize(
 
 	//read search datasets
 	string strSearchDset = search_dset;
+	m_vecstrSearchDatasets.resize(m_vecstrAllQuery.size());
+	//preparing...
+	for(i=0; i<m_vecstrAllQuery.size(); i++)
+		m_vecstrSearchDatasets[i] = vector<string>();
+
 	if(strSearchDset=="NA"){
-		m_vecstrSearchDatasets.resize(m_vecstrAllQuery.size());
 		for(i=0; i<m_vecstrAllQuery.size(); i++){
-			m_vecstrSearchDatasets[i].resize(m_vecstrDatasets.size());
 			for(j=0; j<m_vecstrDatasets.size(); j++){
-				m_vecstrSearchDatasets[i][j] = m_vecstrDatasets[j];
+				if(m_bCheckDsetSize && m_mapstrintDatasetSize[m_vecstrDatasets[j]] < 
+					m_iNumSampleRequired){
+					continue;
+				}
+				m_vecstrSearchDatasets[i].push_back(m_vecstrDatasets[j]);
 			}
 		}
 	}else{
-		if(!CSeekTools::ReadMultipleQueries(search_dset, m_vecstrSearchDatasets)){
+		vector<vector<string> > vecsearchDset;
+		if(!CSeekTools::ReadMultipleQueries(search_dset, vecsearchDset)){
 			fprintf(stderr, "Error reading search datasets\n");
 			return false;
 		}
-		if(m_vecstrSearchDatasets.size()!=m_vecstrAllQuery.size()){
+		if(vecsearchDset.size()!=m_vecstrAllQuery.size()){
 			fprintf(stderr, "Search_dset file doesn't have enough lines. Remember 1 line / query!\n");
 			return false;
 		}
+		for(i=0; i<m_vecstrAllQuery.size(); i++){
+			for(j=0; j<vecsearchDset.size(); j++){
+				if(m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[i][j]] < 
+					m_iNumSampleRequired){
+					continue;
+				}
+				m_vecstrSearchDatasets[i].push_back(vecsearchDset[i][j]);
+			}
+		}
 	}
+
+	//free up unnecessary space
+	for(i=0; i<m_vecstrAllQuery.size(); i++)
+		m_vecstrSearchDatasets[i].resize(m_vecstrSearchDatasets[i].size());
 
 	m_searchdsetMap.resize(m_vecstrAllQuery.size());
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
