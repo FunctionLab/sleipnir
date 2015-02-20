@@ -318,7 +318,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 		}
 	}
 
-	CSeekTools::Free2DArray(rank_f, iDatasets);
+	CSeekTools::Free2DArray(rank_f);
 	for(i=0; i<numThreads; i++){
 		gsl_permutation_free(perms[i]);
 		gsl_permutation_free(rks[i]);

@@ -272,7 +272,7 @@ bool CSeekDataset::DeleteQueryBlock(){
 	}
 	if(r!=NULL){
 		//fprintf(stderr, "iDBSize is %d\n", iDBSize);
-		CSeekTools::Free2DArray(r, iDBSize);
+		CSeekTools::Free2DArray(r);
 		r = NULL;
 	}
 	iDBSize = 0;
@@ -526,7 +526,7 @@ bool CSeekDataset::InitializeDataMatrix(utype **rD,
 			}
 		}
 		
-		CSeekTools::Free2DArray(a, iNumQueries);
+		CSeekTools::Free2DArray(a);
 	}
 
 

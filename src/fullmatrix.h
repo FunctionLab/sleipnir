@@ -65,15 +65,9 @@ public:
 		size_t	i;
 
 		if( m_aaData && m_fMemory ) {
-			//fprintf(stderr, "Being deleted...\n");
-			//fprintf(stderr, "m_aaData %d, m_fMemory %d, GetRows: %d\n", m_aaData, m_fMemory, GetRows());
-			//fprintf(stderr, "before: %ld ", CMeta::GetMemoryUsage());
 			for( i = 0; i < GetRows( ); ++i )
 				delete[] m_aaData[ i ];
 			delete[] m_aaData; 
-			//fprintf(stderr, "afterward: %ld\n", CMeta::GetMemoryUsage());
-		}else{
-			//fprintf(stderr, "m_aaData %d, m_fMemory %d\n", m_aaData, m_fMemory);
 		}
 
 		m_iR = m_iC = 0;
@@ -226,7 +220,6 @@ public:
 			m_fMemory = false; //reference a given memory
 		}else{
 			m_fMemory = true; //create a new memory
-		//if( m_fMemory = !( m_aaData = aaData ) ) {
 			m_aaData = new tType*[ GetRows( ) ];
 			for( i = 0; i < GetRows( ); ++i )
 				m_aaData[ i ] = new tType[ GetColumns( ) ]; 

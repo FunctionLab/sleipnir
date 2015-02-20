@@ -110,7 +110,6 @@ CSeekCentral::~CSeekCentral(){
 	m_mapstrintGene.clear();
 
 	utype i, j;
-
 	
 	for(i=0; i<m_vc.size(); i++){
 		if(m_vc[i]==NULL) continue;
@@ -118,7 +117,6 @@ CSeekCentral::~CSeekCentral(){
 		m_vc[i] = NULL;
 	}
 	m_vc.clear();
-	
 
 	m_quant.clear();
 
@@ -134,16 +132,20 @@ CSeekCentral::~CSeekCentral(){
 	//m_rank_normal_threads, and m_rank_threads
 	//should be already freed
 	if(m_master_rank_threads!=NULL){
-		CSeekTools::Free2DArray(m_master_rank_threads, m_numThreads);
+		CSeekTools::Free2DArray(m_master_rank_threads);
+		m_master_rank_threads = NULL;
 	}
 	if(m_sum_weight_threads != NULL){
-		CSeekTools::Free2DArray(m_sum_weight_threads, m_numThreads);
+		CSeekTools::Free2DArray(m_sum_weight_threads);
+		m_sum_weight_threads = NULL;
 	}
 	if(m_sum_sq_weight_threads != NULL){
-		CSeekTools::Free2DArray(m_sum_sq_weight_threads, m_numThreads);
+		CSeekTools::Free2DArray(m_sum_sq_weight_threads);
+		m_sum_sq_weight_threads = NULL;
 	}
 	if(m_counts_threads !=NULL){
-		CSeekTools::Free2DArray(m_counts_threads, m_numThreads);
+		CSeekTools::Free2DArray(m_counts_threads);
+		m_counts_threads = NULL;
 	}
 	if(m_rank_normal_threads!=NULL){
 		for(j=0; j<m_numThreads; j++)
@@ -351,7 +353,6 @@ bool CSeekCentral::Initialize(
 			m_vecstrSearchDatasets[i].push_back(vecsearchDset[j]);
 		}
 		m_vecstrSearchDatasets[i].resize(m_vecstrSearchDatasets[i].size());
-		//CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
 	}
 	//read queries
 	vector<string> sq;
@@ -567,7 +568,6 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 				m_vecstrSearchDatasets[i].push_back(vecsearchDset[j]);
 			}
 			m_vecstrSearchDatasets[i].resize(m_vecstrSearchDatasets[i].size());
-			//CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
 		}
 
 		//fprintf(stderr, "replace datasets %d %d\n", sd.size(), m_vecstrSearchDatasets[0].size());
@@ -942,10 +942,10 @@ bool CSeekCentral::AggregateThreads(){
 		}
 	}
 
-	CSeekTools::Free2DArray(m_master_rank_threads, m_numThreads);
-	CSeekTools::Free2DArray(m_counts_threads, m_numThreads);
-	CSeekTools::Free2DArray(m_sum_weight_threads, m_numThreads);
-	CSeekTools::Free2DArray(m_sum_sq_weight_threads, m_numThreads);
+	CSeekTools::Free2DArray(m_master_rank_threads);
+	CSeekTools::Free2DArray(m_counts_threads);
+	CSeekTools::Free2DArray(m_sum_weight_threads);
+	CSeekTools::Free2DArray(m_sum_sq_weight_threads);
 	m_master_rank_threads=NULL;
 	m_counts_threads=NULL;
 	m_sum_weight_threads = NULL;
@@ -1336,7 +1336,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 
 		assert(m_rData!=NULL);
 		for(j=0; j<m_numThreads; j++)
-			CSeekTools::Free2DArray(m_rData[j], m_iGenes);
+			CSeekTools::Free2DArray(m_rData[j]);
 		delete[] m_rData;
 		m_rData = NULL;
 
@@ -1347,7 +1347,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 		}else{
 			CSeekWeighter::OrderStatisticsRankAggregation(iSearchDatasets,
 				m_iGenes, m_rank_d, m_counts, m_master_rank, m_numThreads, m_bNegativeCor);
-			CSeekTools::Free2DArray(m_rank_d, iSearchDatasets);
+			CSeekTools::Free2DArray(m_rank_d);
 			m_rank_d = NULL;
 		}
 

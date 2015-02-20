@@ -35,14 +35,6 @@ char *PORT;
 int NUM_DSET_MEMORY = 100;
 string pcl_input_dir;
 
-struct QPCL{
-	vector<vector<float> > mat;
-	vector<string> genes;
-	vector<string> experiments;
-	int rows;
-	int cols;
-};
-
 //CPCL **pcl;
 list<int> available;
 char *loaded;
@@ -71,7 +63,6 @@ map<string, string> mapstrstrDatasetPlatform;
 map<string, utype> mapstrintDataset;
 vector<string> vecstrPlatforms;
 vector<CSeekPlatform> vp;
-
 
 void sigchld_handler(int s){
     while(waitpid(-1, NULL, WNOHANG) > 0);
@@ -172,8 +163,6 @@ void *do_query(void *th_arg){
 	size_t i;
 
 	vector<string>::const_iterator iterS = datasetName.begin();
-	//vector<CPCL*> vc;
-	//vector<CPCL> vc;
 	vector<int> occupied;
 
 	fprintf(stderr, "before allocation...\n");
@@ -182,8 +171,6 @@ void *do_query(void *th_arg){
 		vc[i] = new CPCL();
 		fprintf(stderr, "%p\n", vc[i]);
 	}
-
-
 
 	fprintf(stderr, "start processing...\n");
 
@@ -199,16 +186,7 @@ void *do_query(void *th_arg){
 		if(iterM!=DNAME_MAP.end()){
 			n = iterM->second;
 			fprintf(stderr, "found %d for dataset %s...\n", n, iterS->c_str());
-			//vc[ind] = CPCL();
-			//fprintf(stderr, "Allocating in found is called\n");
-			//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
-			//getchar();
 			vc[ind]->Open(*pcl[n]);
-			//fprintf(stderr, "Allocating in found is finished\n");
-			//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
-			//getchar();
-			//vc.push_back(pcl[n]);
-			//occupied.push_back(n);
 			loaded[n] = 1;
 			continue;
 		}
@@ -231,30 +209,15 @@ void *do_query(void *th_arg){
 		string pcl_path = pcl_input_dir + "/" + *iterS + ".bin"; //for model-organism-SEEK
 
 		if(pcl[n]!=NULL){
-			//fprintf(stderr, "Deleting in PCL[n] is called\n");
-			//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
-			//getchar();
 			delete pcl[n];
-			//fprintf(stderr, "Deleting in PCL[n] is finished\n");
-			//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
-			//getchar();
 		}
 		pcl[n] = new CPCL();
 		pcl[n]->Open(pcl_path.c_str());
 
-		//vc[ind] = CPCL();
-		//vc[ind].Open(*pcl[n]);
-		//vc[ind]->Open(*pcl[n]);
 		fprintf(stderr, "Allocating in created is called\n");
 		fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
-		//getchar();
 		vc[ind]->Open(*pcl[n]);
-		//fprintf(stderr, "Allocating in created is finished\n");
-		//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
-		//getchar();
 		fprintf(stderr, "dataset opened\n");
-		//vc.push_back(pcl[n]);
-		//occupied.push_back(n);
 	}
 	for(i=0; i<NUM_DSET_MEMORY; i++){
 		loaded[i] = 0;
@@ -263,9 +226,6 @@ void *do_query(void *th_arg){
 
 	pthread_mutex_unlock(&mutexGet); //QZ disabled 1/31
 
-	//vector<CFullMatrix<float> *> vC; //gene expression
-	//vector<CFullMatrix<float> *> vQ; //query expression (if enabled) (EXTRA)
-	//int totNumExperiments = 0;
 	int genes = geneName.size();
 	int queries = queryName.size(); //(EXTRA)
 	int datasets = datasetName.size();
@@ -308,8 +268,6 @@ void *do_query(void *th_arg){
 	for(i=0; i<datasets; i++){
 		CPCL *pp = vc[i];
 		size_t j, k;
-		//int ps = pp->GetExperiments() - 2;
-		//int gs = pp->GetExperiments();
 		int ps = pp->GetExperiments();
 		int gs = pp->GetExperiments();
 
@@ -760,15 +718,13 @@ void *do_query(void *th_arg){
 	}
 
 	for(i=0; i<datasets; i++){
-		//if(vc[i]!=NULL){
-			fprintf(stderr, "Deleting in vc[i] is called\n");
-			fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
-			//getchar();
-			delete vc[i];
-			fprintf(stderr, "Deleting in vc[i] is finished\n");
-			fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
-			//getchar();
-		//}
+		fprintf(stderr, "Deleting in vc[i] is called\n");
+		fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+		//getchar();
+		delete vc[i];
+		fprintf(stderr, "Deleting in vc[i] is finished\n");
+		fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+		//getchar();
 	}
 
 	delete[] vc;
@@ -1166,10 +1122,6 @@ int main( int iArgs, char** aszArgs ) {
 		pthread_create(&th[d], &attr[d], do_query, (void *) &thread_arg[d]);
 		pthread_detach(th[d]);
 		pthread_attr_destroy(&attr[d]);
-		/*pthread_join(th[d], (void **)&ret);
-		if(ret==0){
-			close(new_fd);
-		}*/
 	}
 
 

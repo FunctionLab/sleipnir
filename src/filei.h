@@ -47,8 +47,6 @@ protected:
 		tmp[iLength] = '\0';
 		str = string(tmp);
 		delete[] tmp;
-		//str.resize( iLength );
-		//istm.read( &str[ 0 ], iLength ); 
 	}
 };
 

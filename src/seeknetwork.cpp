@@ -46,50 +46,40 @@ namespace Sleipnir {
 
 int CSeekNetwork::Send(int new_fd, const string &str){
 	char *s = new char[2*sizeof(unsigned int)];
-	//char *s = (char*)malloc(2*sizeof(unsigned int));
 	unsigned int *p = (unsigned int*) s;
 	*p = sizeof(char); p++;
 	*p = str.length()+1;
 	if(CSeekNetwork::Send(new_fd, s, 2*sizeof(unsigned int))==-1){
 		fprintf(stderr, "Bad 1\n");
 		delete[] s;
-		//free(s);
 		return -1;
 	}
 	delete[] s;
-	//free(s);
 	
 	char *c = new char[str.length()+1];
-	//char *c = (char*)malloc(str.length()+1);
 	strcpy(c, str.c_str());
 	if(CSeekNetwork::Send(new_fd, c, str.length()+1)==-1){
 		fprintf(stderr, "Bad 2\n");
 		delete[] c;
-		//free(c);
 		return -1;
 	}
 	delete[] c;
-	//free(c);
 	return 0;
 }
 
 int CSeekNetwork::Send(int new_fd, const vector<float> &f){
 	char *s = new char[2*sizeof(unsigned int)];
-	//char *s = (char*)malloc(2*sizeof(unsigned int));
 	unsigned int *p = (unsigned int*) s;
 	*p = sizeof(float); p++;
 	*p = f.size();
 	if(CSeekNetwork::Send(new_fd, s, 2*sizeof(unsigned int))==-1){
 		fprintf(stderr, "Bad 1\n");
 		delete[] s;
-		//free(s);
 		return -1;
 	}
 	delete[] s;
-	//free(s);
 	
 	char *c = new char[sizeof(float)*f.size()];
-	//char *c = (char*)malloc(sizeof(float)*f.size());
 	float *fp = (float*)c;
 	int i;
 	for(i=0; i<f.size(); i++){
@@ -99,11 +89,9 @@ int CSeekNetwork::Send(int new_fd, const vector<float> &f){
 	if(CSeekNetwork::Send(new_fd, c, sizeof(float)*f.size())==-1){
 		fprintf(stderr, "Bad 2\n");
 		delete[] c;
-		//free(c);
 		return -1;
 	}
 	delete[] c;
-	//free(c);
 	return 0;
 }
 
@@ -114,7 +102,6 @@ int CSeekNetwork::Send(int new_fd, char *c, int size){
 	int r  = -1;
 	while(1){
 		char *p = new char[tmp_size];
-		//char *p = (char*)malloc(tmp_size);
 		Copy(p, c, beg, tmp_size);
 		r = send(new_fd, p, tmp_size, 0);
 		if(r==-1){
@@ -127,7 +114,6 @@ int CSeekNetwork::Send(int new_fd, char *c, int size){
 		tmp_size = size - tmp_size;
 		beg = beg + r;
 		delete[] p;
-		//free(p);
 	}
 
 	return r;
@@ -150,7 +136,6 @@ int CSeekNetwork::Copy(char *d, char *s, int beg, int num){
 
 int CSeekNetwork::Receive(int new_fd, vector<float> &f){
 	char *ar = new char[4];
-	//char *ar = (char*)malloc(4);
 	char *p = &ar[0];
 	int tmp_size = 4;
 	int receive_size = -1;
@@ -174,7 +159,6 @@ int CSeekNetwork::Receive(int new_fd, vector<float> &f){
 	f.resize(length);
 
 	char *cStr = new char[length*sizeof(float)];
-	//char *cStr = (char*)malloc(length*sizeof(float));
 	tmp_size = length*sizeof(float);
 	receive_size = -1;
 	p = &cStr[0];
@@ -202,15 +186,12 @@ int CSeekNetwork::Receive(int new_fd, vector<float> &f){
 	}
 	delete[] ar;
 	delete[] cStr;
-	//free(ar);
-	//free(cStr);
 	return 0;
 }
 
 
 int CSeekNetwork::Receive(int new_fd, string &s){
 	char *ar = new char[4];
-	//char *ar = (char*)malloc(4);
 	char *p = &ar[0];
 	int tmp_size = 4;
 	int receive_size = -1;
@@ -233,7 +214,6 @@ int CSeekNetwork::Receive(int new_fd, string &s){
 	int *iP = (int*)ar;
 	int length = *iP;
 	char *cStr = new char[length];
-	//char *cStr = (char*)malloc(length);
 	tmp_size = length;
 	receive_size = -1;
 	p = &cStr[0];
@@ -257,8 +237,6 @@ int CSeekNetwork::Receive(int new_fd, string &s){
 	s = cStr; //copy result into string
 	delete[] ar;
 	delete[] cStr;
-	//free(ar);
-	//free(cStr);
 	return 0;
 }
 

@@ -773,7 +773,6 @@ double CMeasureSpearman::Measure(const float* adX, size_t iM, const float* adY,
 		dRet = fabs(dRet);
 		break;
 	}
-
     
     static const float c_dBound = 0.9999f;
     double dP = dRet;
@@ -783,11 +782,9 @@ double CMeasureSpearman::Measure(const float* adX, size_t iM, const float* adY,
     dP = CStatistics::FisherTransform(dP);
     if (m_dAverage != HUGE_VAL){
         dP = (dP - m_dAverage) / m_dStdDev;
-        fprintf(stderr, "Doing SpearmanNorm within measure.cpp\n");
+        fprintf(stderr, "Doing SpearmanNorm within measure.cpp\n"); //by default
     }
     return dP;
-    
-
 
 	//return dRet;
 }
