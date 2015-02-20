@@ -56,7 +56,7 @@ protected:
 	static void DabGene( std::istream&, char* );
 
 	CDatImpl( ) : m_pMeasure(NULL), m_pPCL(NULL), m_abData(NULL), m_iData(0), m_aadData(NULL), m_hndlData(0) { }
-	~CDatImpl( );
+	virtual ~CDatImpl( );
 
 	void Reset( );
 	bool OpenPCL( std::istream&, size_t, bool );

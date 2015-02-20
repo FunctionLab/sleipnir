@@ -653,7 +653,14 @@ CPCLImpl::~CPCLImpl() {
 
 void CPCLImpl::Reset() {
 
+	//fprintf(stderr, "Reset in PCL is called\n");
+	//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+	//getchar();
 	m_Data.Reset();
+	//fprintf(stderr, "Reset in PCL is finished\n");
+	//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+	//getchar();
+
 	m_vecstrGenes.clear();
 	m_vecstrExperiments.clear();
 	m_vecstrFeatures.clear();
@@ -712,7 +719,9 @@ bool CPCL::Open(const char* szFile, size_t iSkip, bool Memmap, bool rTable) {
 	}
 	else if (isBinary) {
 		ifsm.open(szFile, ios::binary);
-		return OpenBinary(ifsm);
+		bool ret = OpenBinary(ifsm);
+		ifsm.close();
+		return ret;
 	} else if (isDAB) {
 		CDat dat;
 		if (!dat.Open(szFile,false, 0, false, false)) {
@@ -1184,6 +1193,20 @@ void CPCL::SaveBinary(std::ostream& ostm) const {
 		ostm.write((const char*) Get(i), GetExperiments() * sizeof(*Get(i)));
 }
 
+string CPCL::QOpenString(std::istream& istm){
+	uint32_t	iLength;
+	istm.read( (char*)&iLength, sizeof(iLength) );
+	//str.resize( iLength );
+	char *tmp = new char[iLength+1];
+	istm.read( tmp, iLength ); 
+	tmp[iLength] = '\0';
+	string str(tmp);
+	//str.assign(tmp, 0, iLength);
+	delete[] tmp;
+	return str;
+}
+
+
 /*!
  * \brief
  * Load a PCL from the given binary stream.
@@ -1205,18 +1228,26 @@ bool CPCL::OpenBinary(std::istream& istm) {
 	Reset();
 	istm.read((char*) &iTmp, sizeof(iTmp));
 	m_vecstrFeatures.resize(iTmp);
-	for (i = 0; i < m_vecstrFeatures.size(); ++i)
-		OpenString(istm, m_vecstrFeatures[i]);
+	for (i = 0; i < m_vecstrFeatures.size(); ++i){
+		m_vecstrFeatures[i] = QOpenString(istm);
+		//OpenString(istm, m_vecstrFeatures[i]);
+		//QOpenString(istm, m_vecstrFeatures[i]);
+	}
 
 	istm.read((char*) &iTmp, sizeof(iTmp));
 	m_vecstrExperiments.resize(iTmp);
-	for (i = 0; i < m_vecstrExperiments.size(); ++i)
-		OpenString(istm, m_vecstrExperiments[i]);
+	for (i = 0; i < m_vecstrExperiments.size(); ++i){
+		m_vecstrExperiments[i] = QOpenString(istm);
+		//OpenString(istm, m_vecstrExperiments[i]);
+		//QOpenString(istm, m_vecstrExperiments[i]);
+	}
 
 	istm.read((char*) &iTmp, sizeof(iTmp));
 	m_vecstrGenes.resize(iTmp);
 	for (i = 0; i < m_vecstrGenes.size(); ++i) {
-		OpenString(istm, m_vecstrGenes[i]);
+		m_vecstrGenes[i] = QOpenString(istm);
+		//OpenString(istm, m_vecstrGenes[i]);
+		//QOpenString(istm, m_vecstrGenes[i]);
 		m_mapstriGenes[m_vecstrGenes[i]] = i;
 	}
 
@@ -1224,6 +1255,7 @@ bool CPCL::OpenBinary(std::istream& istm) {
 	for (i = 0; i < m_Data.GetRows(); ++i)
 		istm.read((char*) m_Data.Get(i), GetExperiments() * sizeof(*m_Data.Get(
 				i)));
+
 
 	return true;
 }

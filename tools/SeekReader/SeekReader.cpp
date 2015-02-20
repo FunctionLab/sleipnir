@@ -68,6 +68,17 @@ int main( int iArgs, char** aszArgs ) {
 	for(i=0; i<vecstrGenes.size(); i++)
 		mapstrintGene[vecstrGenes[i]] = i;
 
+	fprintf(stderr, "Finished reading gene map\n");
+
+    if(sArgs.read_bin_vec_flag==1){
+        vector<float> vv;
+        CSeekTools::ReadArray(sArgs.input_vec_arg, vv);
+        for(i=0; i<vv.size(); i++){
+            fprintf(stderr, "%.5f\n", vv[i]);
+        }
+        return 0;
+    }
+
 	if(sArgs.add_gscore_flag==1){
 		vector<string> vecstrGScore;
 		if(!CSeekTools::ReadListOneColumn(sArgs.gscore_list_arg, vecstrGScore))
@@ -239,7 +250,10 @@ int main( int iArgs, char** aszArgs ) {
 
 		//option 1 (Normalize within dataset)
 		vector<vector<vector<float> > > mm;
+		vector<vector<int> > good_experiment_id;
+		
 		mm.resize(vc.size());	
+		good_experiment_id.resize(vc.size());
 		for(i=0; i<vecstrPCL.size(); i++){
 			CPCL *cp = vc[i];
 			mm[i].resize(totGenes);
@@ -261,6 +275,7 @@ int main( int iArgs, char** aszArgs ) {
 				}
 			}
 
+			/*
 			set<int> badExperiments;
 			for(k=0; k<cp->GetExperiments(); k++){
 				vector<float> vf;
@@ -269,32 +284,79 @@ int main( int iArgs, char** aszArgs ) {
 				}
 				exp_avg[k] = get_mean(vf);
 				exp_stdev[k] = get_stdev(vf, exp_avg[k]);
-				if(isinf(exp_avg[k]) || isnan(exp_avg[k])){
-					badExperiments.insert(k);
-					continue;
-				}
-			}
+				//float fl = (new_m[j][k] - exp_avg[k]) / exp_stdev[k];
+				//if(isinf(exp_avg[k]) || isnan(exp_avg[k])){
+				//	badExperiments.insert(k);
+				//	continue;
+				//}
+				//if(isinf(exp_stdev[k]) || isnan(exp_stdev[k])){
+				//	badExperiments.insert(k);
+				//	continue;
+				//}
+			}*/
+			
+
+			good_experiment_id[i] = vector<int>();
+			for(k=0; k<cp->GetExperiments(); k++){
+				//if(badExperiments.find(k)==badExperiments.end()){
+					good_experiment_id[i].push_back(k);
+				//}
+			}	
 
 			for(j=0; j<totGenes; j++){
 				vector<float> gv;
 				for(k=0; k<cp->GetExperiments(); k++){
-					if(badExperiments.find(k)==badExperiments.end()){
+					//if(badExperiments.find(k)==badExperiments.end()){
 						gv.push_back(new_m[j][k]);
-					}
+					//}
 				}
 				float mean = get_mean(gv);
 				float stdev = get_stdev(gv, mean);
 				mm[i][j] = vector<float>();
+				
 				for(k=0; k<cp->GetExperiments(); k++){
-					if(badExperiments.find(k)==badExperiments.end()){
-						mm[i][j].push_back((new_m[j][k] - mean) / stdev);
-					}
+					//if(badExperiments.find(k)==badExperiments.end()){
+						//z-scoring
+						//float fl = new_m[j][k];
+						float fl = (new_m[j][k] - mean) / stdev; //row normalization
+						if(isnan(fl) || isinf(fl)){
+							fprintf(stderr, "A %.2f\t%.2f\t%.2f\t%.2f\tD%d\tG%d\tE%d/%d\n", fl, mean, 
+							stdev, new_m[j][k], i, j, k, cp->GetExperiments());
+						}
+						mm[i][j].push_back(fl);
+						//original expression values
+						//mm[i][j].push_back(new_m[j][k]);
+					//}
 				}	
 			}
+
+			//Column normalization
+			for(k=0; k<cp->GetExperiments(); k++){
+				vector<float> cv;
+				//do not use badExperiments
+				for(j=0; j<totGenes; j++){
+					cv.push_back(mm[i][j][k]);
+				}
+				float mean = get_mean(cv);
+				float stdev = get_stdev(cv, mean);
+				//column normalization
+				for(j=0; j<totGenes; j++){
+					float fl = (mm[i][j][k] - mean) / stdev;
+					if(isnan(fl) || isinf(fl)){
+						fprintf(stderr, "B %.2f\t%.2f\t%.2f\t%.2f\tD%d\tG%d\tE%d/%d\n", fl, mean, 
+						stdev, mm[i][j][k], i, j, k, cp->GetExperiments());
+					}
+					mm[i][j][k] = fl;
+				}
+			}
+
 			for(j=0; j<totGenes; j++)
 				delete new_m[j];
 			delete new_m;
 		}
+
+		FILE *pFile;
+		pFile = fopen(sArgs.output_pcl_arg, "w");
 
 		for(j=0; j<totGenes; j++){
 			vector<float> vv;
@@ -304,18 +366,41 @@ int main( int iArgs, char** aszArgs ) {
 				}
 			}
 			for(i=0; i<vv.size(); i++){
-				int vi = 0;
-				if(vv[i]>=1.0)
-					vi = 1;
-				fprintf(stdout, "%d", vi);
+				//int vi = 0;
+				//binarization
+				//if(vv[i]>=1.0 || vv[i] <= -1.0)
+				//	vi = 1;
+
+				//show integer z-scores
+				//int vi = (int) vv[i];
+				//fprintf(pFile, "%d", vi);
+
+				//show original values (float)
+				float vi = vv[i];
+				fprintf(pFile, "%.2f", vi);
+
 				if(i==vv.size()-1){
-					fprintf(stdout, "\n");
+					fprintf(pFile, "\n");
 				}else{
-					fprintf(stdout, "\t");
+					fprintf(pFile, "\t");
 				}
 			}
 		}
-		
+		fclose(pFile);
+
+		string mms = sArgs.output_pcl_arg;
+		mms += "_map";
+		pFile = fopen(mms.c_str(), "w");
+		for(i=0; i<vecstrPCL.size(); i++){
+			for(k=0; k<good_experiment_id[i].size(); k++){
+				fprintf(pFile, "Dataset %d\tExperiment %d\n", i, good_experiment_id[i][k]);
+			}
+		}
+		for(j=0; j<totGenes; j++){
+			fprintf(pFile, "Gene %s\n", pr[j].c_str());
+		}
+		fclose(pFile);
+
 		//fprintf(stderr, "Number of datasets: %d. Number of genes with full coverage: %d.\n", 
 		//totDatasets, totGenes);
 
@@ -659,10 +744,40 @@ int main( int iArgs, char** aszArgs ) {
 
 		unsigned int s, t, j, ss, tt;
 		float d;
-		CSeekIntIntMap m(vecstrGenes.size());
+		CSeekIntIntMap m1(vecstrGenes.size());
 		for(i=0; i<vecstrGenes.size(); i++){
 			if((s=veciGenes[i])==(unsigned int)-1) continue;
-			m.Add(i);
+			m1.Add(i);
+		}
+
+		set<utype> badIndex;
+		const vector<utype> &allRGenes1 = m1.GetAllReverse();
+		for(i=0; i<m1.GetNumSet(); i++){	
+			s = veciGenes[allRGenes1[i]];
+			int countNaN = 0;
+			for(j=0; j<m1.GetNumSet(); j++){
+				t = veciGenes[allRGenes1[j]];
+				if(s==t) continue;
+				if(CMeta::IsNaN(d = Dat.Get(s,t))){
+					countNaN++;
+				}
+			}
+			if(countNaN==m1.GetNumSet()-1){
+				badIndex.insert(allRGenes1[i]);
+			}
+		}
+
+		//fprintf(stderr, "Bad indices: %d\n", badIndex.size());
+		//getchar();
+
+		CSeekIntIntMap m(vecstrGenes.size());
+		for(i=0; i<m1.GetNumSet(); i++){	
+			utype s = allRGenes1[i];
+			if(badIndex.find(s)==badIndex.end()){
+				m.Add(s);
+			}else{
+				fprintf(stderr, "Gene %s is deleted\n", vecstrGenes[s].c_str());
+			}
 		}
 
 		const vector<utype> &allRGenes = m.GetAllReverse();
@@ -1035,6 +1150,30 @@ int main( int iArgs, char** aszArgs ) {
 		if(toOutput){
 			fclose(out);
 		}		
+		return 0;
+	}
+
+	if(sArgs.dataset2_flag==1){
+		//string dset_list = sArgs.dset_list_arg;
+		vector<string> vecstrDP;
+		if(!CSeekTools::ReadListTwoColumns(sArgs.db_arg, vecstrDatasets, vecstrDP))
+			return false;
+		size_t iDatasets = vecstrDatasets.size();
+		string strSinfoInputDirectory = sArgs.dir_sinfo_in_arg;
+		if(strSinfoInputDirectory=="NA"){
+			fprintf(stderr, "Error: requires sinfo input directory\n");
+			return 1;
+		}
+		for(i=0; i<iDatasets; i++){
+			CSeekDataset *vc = new CSeekDataset();
+			string strFileStem = vecstrDatasets[i];
+			string strSinfoPath = strSinfoInputDirectory + "/" + 
+				strFileStem + ".sinfo";
+			vc->ReadDatasetAverageStdev(strSinfoPath);
+			fprintf(stderr, "%s\n", strFileStem.c_str());
+			fprintf(stderr, "%.2f\t%.2f\n", vc->GetDatasetAverage(), vc->GetDatasetStdev());
+			delete vc;
+		}
 		return 0;
 	}
 

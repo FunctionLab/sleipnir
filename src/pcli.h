@@ -85,7 +85,7 @@ protected:
 	CPCLImpl(bool fHeader) :
 		m_fHeader(fHeader) {
 	}
-	~CPCLImpl();
+	virtual ~CPCLImpl();
 	
 	bool OpenExperiments(std::istream&, size_t, string&, bool rTable=false);
 	bool OpenGene(std::istream&, std::vector<float>&, string&);

@@ -7,6 +7,8 @@ option	"databaselet"		D	"Display values from databaselet(s)"
 								flag	off
 option	"dataset"			A	"Check which datasets contain query of interest, based on .gpres file"
 								flag	off
+option	"dataset2"			l	"Read datasets' sinfo files, requires -s, -x"
+								flag	off
 option	"weight"			W	"Test dataset weights"
 								flag	off
 option	"weight2"			U	"Test dataset weights 2"
@@ -25,6 +27,12 @@ option	"increase_gscore"	R	"Increase the gene scores"
 								flag	off
 option	"add_gscore"		g	"Add the gene scores"
 								flag	off
+option	"read_bin_vec"		j	"Display float vector"
+								flag    off
+
+section "Read a binary vector of float elements"
+option	"input_vec"			z	"Input file"
+								string typestr="filename" default="NA"
 
 section	"Increase the gene scores of given queries"
 option	"gscore_file"		S	"Gene score file (input)"

@@ -35,7 +35,7 @@ class CCompactMatrixBase {
 protected:
 	CCompactMatrixBase( ) : m_cBits(0), m_aiData(NULL), m_fMemory(true) { }
 
-	~CCompactMatrixBase( ) {
+	virtual ~CCompactMatrixBase( ) {
 
 		if( m_fMemory && m_aiData )
 			delete[] m_aiData; }

@@ -233,8 +233,23 @@ public:
 	template<class tType>
 	static tType** Init2DArray(const size_t &iSize1, const size_t &iSize2,
 		const tType &tValue){
-		tType **f = (tType**)malloc(iSize1*sizeof(tType*));
-		f[0] = (tType*)malloc(iSize1*iSize2*sizeof(tType));
+		
+		tType **f = new tType*[iSize1];
+		size_t newSize = iSize1 * iSize2;
+		f[0] = new tType[newSize];
+		size_t i, j;
+		for(i=1; i<iSize1; i++){
+			f[i] = &f[0][i * iSize2];
+		}	
+		for(i=0; i<iSize1; i++){
+			for(j=0; j<iSize2; j++){
+				f[i][j] = tValue;
+			}
+		}
+
+		//tType **f = (tType**)malloc(iSize1*sizeof(tType*));
+		//f[0] = (tType*)malloc(iSize1*iSize2*sizeof(tType));
+		//old code=====================
 		/*tType **itF = &f[1];
 		tType **itLast = &f[0] + iSize1;
 		for(; itF!=itLast; itF++){
@@ -245,7 +260,9 @@ public:
 		for(; itVal!=itValLast; itVal++){
 			*itVal = tValue;
 		}*/
-		int i, j;
+		//=============================
+		
+		/*int i, j;
 		for(i=1; i<iSize1; i++){
 			f[i] = f[i-1] + iSize2;
 		}
@@ -253,7 +270,7 @@ public:
 			for(j=0; j<iSize2; j++){
 				f[i][j] = tValue;
 			}
-		}
+		}*/
 		return f;
 	}
 
@@ -262,9 +279,18 @@ public:
 	 * \param f The two-dimensional array
 	 */
 	template<class tType>
-	static void Free2DArray(tType** f){
-		free(f[0]);
-		free(f);
+	static void Free2DArray(tType** f, const size_t &iRows){
+		/*size_t i;
+		for(i=0; i<iRows; i++){
+			delete[] f[i];
+		}
+		delete[] f;*/
+		//free(f[0]);
+		//free(f);
+		delete[] f[0];
+		f[0] = NULL;
+		delete[] f;
+		f = NULL;
 	}
 
 	/*!

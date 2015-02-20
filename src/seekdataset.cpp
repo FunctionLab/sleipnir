@@ -36,7 +36,7 @@
 namespace Sleipnir {
 
 CSeekDataset::CSeekDataset(){
-	r = NULL;
+	r = NULL; //if declared, will be iDBSize * iNumGenes
 	rData = NULL;
 	dbMap = NULL;
 	geneMap = NULL;
@@ -58,6 +58,7 @@ CSeekDataset::CSeekDataset(){
 }
 
 CSeekDataset::~CSeekDataset(){
+	//fprintf(stderr, "Destructor called!\n");
 	DeleteQuery();
 	DeleteQueryBlock();
 	if(geneMap!=NULL){
@@ -108,6 +109,7 @@ bool CSeekDataset::Copy(CSeekDataset *src){
 
 	if(geneMap!=NULL){
 		delete geneMap;
+		geneMap = NULL;
 		iNumGenes = 0;
 	}
 
@@ -269,7 +271,8 @@ bool CSeekDataset::DeleteQueryBlock(){
 		dbMap = NULL;
 	}
 	if(r!=NULL){
-		CSeekTools::Free2DArray(r);
+		//fprintf(stderr, "iDBSize is %d\n", iDBSize);
+		CSeekTools::Free2DArray(r, iDBSize);
 		r = NULL;
 	}
 	iDBSize = 0;
@@ -523,7 +526,7 @@ bool CSeekDataset::InitializeDataMatrix(utype **rD,
 			}
 		}
 		
-		CSeekTools::Free2DArray(a);
+		CSeekTools::Free2DArray(a, iNumQueries);
 	}
 
 

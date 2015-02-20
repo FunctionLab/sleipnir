@@ -152,7 +152,7 @@ int main(int iArgs, char **aszArgs){
 
 	if(sArgs.pcl_flag==1){
 		string pcl_dir = sArgs.pcl_dir_arg;
-		string output_dir = sArgs.dir_out_arg;
+		//string output_dir = sArgs.dir_out_arg;
 		vector<string> pcl_list;
 		int numGenes = vecstrGenes.size();
 			
@@ -324,7 +324,7 @@ int main(int iArgs, char **aszArgs){
 					continue;
 				}
 				calculate_correlation(mat, dm, g1, g2, cor[pi]);
-				if(pi%1000==0){
+				if(pi%10000==0){
 					fprintf(stderr, "  %d of %d\n", pi, numP);
 				}
 				//fprintf(stderr, "%.5f\n", cor[pi]);

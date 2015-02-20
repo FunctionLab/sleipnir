@@ -130,6 +130,8 @@ public:
 			size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap =
 					IMeasure::EMapCenter, bool fFrequencyWeight = false, float dAlpha = 0, int nThreads = 1);
 
+	string QOpenString(std::istream& istm);
+
 	/*!
 	 * \brief
 	 * Return the default number of skip columns between the gene IDs and experimental values.

@@ -110,12 +110,16 @@ CSeekCentral::~CSeekCentral(){
 	m_mapstrintGene.clear();
 
 	utype i, j;
+
+	
 	for(i=0; i<m_vc.size(); i++){
 		if(m_vc[i]==NULL) continue;
 		delete m_vc[i];
+		m_vc[i] = NULL;
 	}
 	m_vc.clear();
 	
+
 	m_quant.clear();
 
 	for(i=0; i<m_searchdsetMap.size(); i++){
@@ -130,20 +134,16 @@ CSeekCentral::~CSeekCentral(){
 	//m_rank_normal_threads, and m_rank_threads
 	//should be already freed
 	if(m_master_rank_threads!=NULL){
-		CSeekTools::Free2DArray(m_master_rank_threads);
-		m_master_rank_threads = NULL;		
+		CSeekTools::Free2DArray(m_master_rank_threads, m_numThreads);
 	}
 	if(m_sum_weight_threads != NULL){
-		CSeekTools::Free2DArray(m_sum_weight_threads);
-		m_sum_weight_threads = NULL;
+		CSeekTools::Free2DArray(m_sum_weight_threads, m_numThreads);
 	}
 	if(m_sum_sq_weight_threads != NULL){
-		CSeekTools::Free2DArray(m_sum_sq_weight_threads);
-		m_sum_sq_weight_threads = NULL;
+		CSeekTools::Free2DArray(m_sum_sq_weight_threads, m_numThreads);
 	}
 	if(m_counts_threads !=NULL){
-		CSeekTools::Free2DArray(m_counts_threads);
-		m_counts_threads = NULL;
+		CSeekTools::Free2DArray(m_counts_threads, m_numThreads);
 	}
 	if(m_rank_normal_threads!=NULL){
 		for(j=0; j<m_numThreads; j++)
@@ -157,10 +157,14 @@ CSeekCentral::~CSeekCentral(){
 		delete[] m_rank_threads;
 		m_rank_threads = NULL;
 	}
+	
+	//m_rank_d is for Order Statistics aggregation only! Should be null already.
+	/*
 	if(m_rank_d!=NULL){
 		CSeekTools::Free2DArray(m_rank_d);
 		m_rank_d = NULL;
-	}
+	}*/
+	//note that m_rData already deleted after search
 
 	m_master_rank.clear();
 	m_sum_weight.clear();
@@ -193,9 +197,12 @@ CSeekCentral::~CSeekCentral(){
 	m_output_dir = "";
 	DEBUG = false;
 
-	for(i=0; i<m_vecDBSetting.size(); i++)
-		if(m_vecDBSetting[i]!= NULL)
+	for(i=0; i<m_vecDBSetting.size(); i++){
+		if(m_vecDBSetting[i]!= NULL){
 			delete m_vecDBSetting[i];
+			m_vecDBSetting[i] = NULL;
+		}
+	}
 
 	m_vecDBSetting.clear();
 	m_useNibble = false;
@@ -333,7 +340,18 @@ bool CSeekCentral::Initialize(
 	CMeta::Tokenize(search_dset.c_str(), sd, "|", false);
 	m_vecstrSearchDatasets.resize(sd.size());
 	for(i=0; i<sd.size(); i++){
-		CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
+		m_vecstrSearchDatasets[i] = vector<string>();
+		vector<string> vecsearchDset;
+		CMeta::Tokenize(sd[i].c_str(), vecsearchDset, " ", false);
+		for(j=0; j<vecsearchDset.size(); j++){
+			if(m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[j]] < 
+				m_iNumSampleRequired){
+				continue;
+			}
+			m_vecstrSearchDatasets[i].push_back(vecsearchDset[j]);
+		}
+		m_vecstrSearchDatasets[i].resize(m_vecstrSearchDatasets[i].size());
+		//CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
 	}
 	//read queries
 	vector<string> sq;
@@ -538,8 +556,18 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 		CMeta::Tokenize(refinedSearchDataset.c_str(), sd, "|", false);
 		m_vecstrSearchDatasets.resize(sd.size());
 		for(i=0; i<sd.size(); i++){
-			m_vecstrSearchDatasets[i].clear();
-			CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
+			m_vecstrSearchDatasets[i] = vector<string>();
+			vector<string> vecsearchDset;
+			CMeta::Tokenize(sd[i].c_str(), vecsearchDset, " ", false);
+			for(j=0; j<vecsearchDset.size(); j++){
+				if(m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[j]] < 
+					m_iNumSampleRequired){
+					continue;
+				}
+				m_vecstrSearchDatasets[i].push_back(vecsearchDset[j]);
+			}
+			m_vecstrSearchDatasets[i].resize(m_vecstrSearchDatasets[i].size());
+			//CMeta::Tokenize(sd[i].c_str(), m_vecstrSearchDatasets[i], " ", false);
 		}
 
 		//fprintf(stderr, "replace datasets %d %d\n", sd.size(), m_vecstrSearchDatasets[0].size());
@@ -547,6 +575,7 @@ bool CSeekCentral::CheckDatasets(const bool &replace){
 
 		for(i=0; i<m_searchdsetMap.size(); i++){
 			delete m_searchdsetMap[i];
+			m_searchdsetMap[i] = NULL;
 		}
 		m_searchdsetMap.clear();
 		//fprintf(stderr, "cleared searchdsetMap\n");
@@ -682,16 +711,16 @@ bool CSeekCentral::Initialize(const vector<CSeekDBSetting*> &vecDBSetting,
 			if(!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->GetValue("dset_size"), col1, col2))
 				return false;
 			set<string> currentD(vD.begin(), vD.end());
-			for(i=0; i<col1.size(); i++){
-				if(currentD.find(col1[i])==currentD.end()){
-					fprintf(stderr, "Specified dataset name %s does not match with dataset platform file\n", col1[i].c_str());
+			for(j=0; j<col1.size(); j++){
+				if(currentD.find(col1[j])==currentD.end()){
+					fprintf(stderr, "Specified dataset name %s does not match with dataset platform file\n", col1[j].c_str());
 					return false;
 				}
-				m_mapstrintDatasetSize[col1[i]] = (utype) atoi(col2[i].c_str());
+				m_mapstrintDatasetSize[col1[j]] = (utype) atoi(col2[j].c_str());
 			}
-			for(i=0; i<vD.size(); i++){
-				if(m_mapstrintDatasetSize.find(vD[i])==m_mapstrintDatasetSize.end()){
-					fprintf(stderr, "There is no dataset size entry for %s\n", vD[i].c_str());
+			for(j=0; j<vD.size(); j++){
+				if(m_mapstrintDatasetSize.find(vD[j])==m_mapstrintDatasetSize.end()){
+					fprintf(stderr, "There is no dataset size entry for %s\n", vD[j].c_str());
 					return false;
 				}
 			}
@@ -761,10 +790,12 @@ bool CSeekCentral::Initialize(
 	omp_set_num_threads(m_numThreads);
 	m_output_dir = output_dir;
 
+	//fprintf(stderr, "Reading query...\n");
 	//read queries
 	if(!CSeekTools::ReadMultipleQueries(query, m_vecstrAllQuery))
 		return false;
 
+	//fprintf(stderr, "Reading search dataset...\n");
 	//read search datasets
 	string strSearchDset = search_dset;
 	m_vecstrSearchDatasets.resize(m_vecstrAllQuery.size());
@@ -807,6 +838,7 @@ bool CSeekCentral::Initialize(
 	for(i=0; i<m_vecstrAllQuery.size(); i++)
 		m_vecstrSearchDatasets[i].resize(m_vecstrSearchDatasets[i].size());
 
+	//fprintf(stderr, "Making search dset map...\n");
 	m_searchdsetMap.resize(m_vecstrAllQuery.size());
 	for(i=0; i<m_vecstrAllQuery.size(); i++){
 		m_searchdsetMap[i] = new CSeekIntIntMap(m_vecstrDatasets.size());
@@ -815,6 +847,8 @@ bool CSeekCentral::Initialize(
 				m_mapstrintDataset[m_vecstrSearchDatasets[i][j]]);
 		}
 	}
+
+	//fprintf(stderr, "Calculate restart...\n");
 
 	if(!CalculateRestart()){
 		fprintf(stderr, "Error occurred during CalculateRestart()\n");
@@ -908,10 +942,10 @@ bool CSeekCentral::AggregateThreads(){
 		}
 	}
 
-	CSeekTools::Free2DArray(m_master_rank_threads);
-	CSeekTools::Free2DArray(m_counts_threads);
-	CSeekTools::Free2DArray(m_sum_weight_threads);
-	CSeekTools::Free2DArray(m_sum_sq_weight_threads);
+	CSeekTools::Free2DArray(m_master_rank_threads, m_numThreads);
+	CSeekTools::Free2DArray(m_counts_threads, m_numThreads);
+	CSeekTools::Free2DArray(m_sum_weight_threads, m_numThreads);
+	CSeekTools::Free2DArray(m_sum_sq_weight_threads, m_numThreads);
 	m_master_rank_threads=NULL;
 	m_counts_threads=NULL;
 	m_sum_weight_threads = NULL;
@@ -1302,7 +1336,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 
 		assert(m_rData!=NULL);
 		for(j=0; j<m_numThreads; j++)
-			CSeekTools::Free2DArray(m_rData[j]);
+			CSeekTools::Free2DArray(m_rData[j], m_iGenes);
 		delete[] m_rData;
 		m_rData = NULL;
 
@@ -1313,7 +1347,7 @@ bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
 		}else{
 			CSeekWeighter::OrderStatisticsRankAggregation(iSearchDatasets,
 				m_iGenes, m_rank_d, m_counts, m_master_rank, m_numThreads, m_bNegativeCor);
-			CSeekTools::Free2DArray(m_rank_d);
+			CSeekTools::Free2DArray(m_rank_d, iSearchDatasets);
 			m_rank_d = NULL;
 		}
 

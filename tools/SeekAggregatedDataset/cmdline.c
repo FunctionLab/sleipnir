@@ -38,7 +38,7 @@ const char *gengetopt_args_info_help[] = {
   "  -S, --step_num=INT        Step Number (4 steps) (1: separate pairs to \n                              batches, 2: calculate Pearson for pairs in each \n                              batch (need a batch number), 3: merge Pearson \n                              from all batches and output a DAB)  (default=`0')",
   "\nInput:",
   "  -i, --input=filename      Gene mapping file",
-  "  -q, --query=filename      Query file",
+  "  -q, --query=filename      Query file (optional)",
   "  -b, --num_batch=INT       Number of batches to split pairs to (for step 1)  \n                              (default=`10')",
   "  -p, --pairs_dir=filename  Pairs directory (for steps 1, 2). Pearson for the \n                              pairs will also be stored here.",
   "  -r, --batch_num=INT       Batch number (for step 2)  (default=`0')",
@@ -384,12 +384,6 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
       error = 1;
     }
   
-  if (! args_info->query_given)
-    {
-      fprintf (stderr, "%s: '--query' ('-q') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error = 1;
-    }
-  
   if (! args_info->pairs_dir_given)
     {
       fprintf (stderr, "%s: '--pairs_dir' ('-p') option required%s\n", prog_name, (additional_error ? additional_error : ""));
@@ -636,7 +630,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             goto failure;
         
           break;
-        case 'q':	/* Query file.  */
+        case 'q':	/* Query file (optional).  */
         
         
           if (update_arg( (void *)&(args_info->query_arg), 

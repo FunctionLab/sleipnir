@@ -17,8 +17,8 @@ option	"step_num"			S	"Step Number (4 steps) (1: separate pairs to batches, 2: c
 section "Input"
 option	"input"				i	"Gene mapping file"
 								string typestr="filename"	yes
-option	"query"				q	"Query file"
-								string typestr="filename"	yes
+option	"query"				q	"Query file (optional)"
+								string typestr="filename"
 option	"num_batch"			b	"Number of batches to split pairs to (for step 1)"
 								int default="10"
 option	"pairs_dir"			p	"Pairs directory (for steps 1, 2). Pearson for the pairs will also be stored here."

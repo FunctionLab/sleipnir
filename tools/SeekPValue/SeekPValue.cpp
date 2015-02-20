@@ -114,6 +114,16 @@ void *do_query(void *th_arg){
 			int pi = mapstrintDataset[dset[i]];
 			float sc = log(dset_score[i]);
 			int qsize = dset_qsize[i];
+			if(dsetScore[pi].size()==0){
+				//This dataset is a dummy, null dataset (because it is bad or low quality
+				pval.push_back(0.99);
+				continue;
+			}
+			if(qsize-2 >= dsetScore[pi].size()){
+				//Don't have modeling for this query size, most likely because query size > 100
+				pval.push_back(0.99);
+				continue;
+			}
 			struct parameter &par = dsetScore[pi][qsize-2];
 			vector<double> &quantile = par.quantile;
 			//fprintf(stderr, "threshold %.2e, scale %.2e, shape %.2e, qsize %d\n", par.threshold, par.scale, par.shape, qsize);
@@ -121,8 +131,36 @@ void *do_query(void *th_arg){
 			if((double) sc <= par.threshold){
 				double min_diff = 9999;
 				int min_diff_index = -1;
-				for(k=0; k<quantile.size(); k++){
-					double diff = fabs(quantile[k] - (double) sc);
+				/*float p_val = 0.05;
+				for(k=quantile.size()-1; k>=0; k--){
+					if( (double) sc > quantile[k] ){ 
+						break;
+					}else{
+						p_val+=0.05;
+					}
+				}
+				if(p_val >= 0.99){
+					p_val = 0.99;
+				}*/
+				int cut_index = 0;
+				for(k=0; k<=quantile.size(); k++){
+					if(quantile[k]>=par.threshold){
+						cut_index = k;
+						break;
+					}
+				}
+
+				for(k=0; k<=cut_index; k++){
+					double diff = -1;
+					if(k==cut_index){
+						diff = fabs(par.threshold - (double) sc);
+						if(diff < min_diff){
+							min_diff = diff;
+							min_diff_index = k;
+						}
+						continue;
+					}
+					diff = fabs(quantile[k] - (double) sc);
 					if(diff < min_diff){
 						min_diff = diff;
 						min_diff_index = k;
@@ -132,16 +170,25 @@ void *do_query(void *th_arg){
 				if(min_diff_index==-1){
 					//fprintf(stderr, "Error, negative one!\n");
 				}
-				float pv = 1.0 - (0.05 + (float)min_diff_index*0.05);
+				float pv = 1.0 - (0.05 + (float)min_diff_index * 0.01);
 				pval.push_back(pv);
+				//pval.push_back(p_val);
 				//fprintf(stderr, "original %.2e pval %.2e\n", sc, pv);
 				continue;
 			}
+
+			double limit = -1.0 * par.scale / par.shape;
+			limit = floor(limit * 100.0) / 100.0;
+
 			double diff = (double) sc - par.threshold;
 			double cdf = 0;
+
 			if(par.shape==0){
 				cdf = 1.0 - exp(-1.0 * diff / par.scale);
 			}else{
+				if(par.shape<0 && diff>=limit){ //check that difference is within range
+					diff = limit; //if difference is bigger than it can accept, assume limit
+				}
 				cdf = 1.0 - pow(1.0 + par.shape * diff / par.scale, -1.0 / par.shape);
 			}
 			double pv = par.portion * (1.0 - cdf);
@@ -262,7 +309,7 @@ bool ReadParameter(string param_file, vector<struct parameter> &v){
 		fprintf(stderr, "Error opening file %s\n", param_file.c_str());
 		return false;
 	}
-	const int lineSize = 1024;
+	const int lineSize = 6084;
 	char acBuffer[lineSize];
 	utype c_iBuffer = lineSize;
 	v.clear();
@@ -280,7 +327,8 @@ bool ReadParameter(string param_file, vector<struct parameter> &v){
 		par.scale = atof(tok[5].c_str());
 		par.shape = atof(tok[6].c_str());
 		par.quantile = vector<double>();
-		for(int k=8; k<tok.size(); k++){
+		//for(int k=8; k<tok.size(); k++){
+		for(int k=7; k<tok.size(); k++){
 			par.quantile.push_back(atof(tok[k].c_str()));
 			//fprintf(stderr, "This value is %d %.2f\n", k, atof(tok[k].c_str()));
 		}
@@ -375,7 +423,9 @@ int main( int iArgs, char** aszArgs ) {
 		for(i=0; i<vecstrDataset.size(); i++){
 			string param_file = param_dir + "/" + vecstrDataset[i] + ".param";
 			dsetScore[i] = vector<struct parameter>();
-			ReadParameter(param_file, dsetScore[i]);
+			if(!ReadParameter(param_file, dsetScore[i])){
+				fprintf(stderr, "Making this dataset null... (will always return insignificant)\n");
+			}
 		}
 	}
 

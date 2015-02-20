@@ -48,9 +48,9 @@ struct gengetopt_args_info
   char * input_arg;	/**< @brief Gene mapping file.  */
   char * input_orig;	/**< @brief Gene mapping file original value given at command line.  */
   const char *input_help; /**< @brief Gene mapping file help description.  */
-  char * query_arg;	/**< @brief Query file.  */
-  char * query_orig;	/**< @brief Query file original value given at command line.  */
-  const char *query_help; /**< @brief Query file help description.  */
+  char * query_arg;	/**< @brief Query file (optional).  */
+  char * query_orig;	/**< @brief Query file (optional) original value given at command line.  */
+  const char *query_help; /**< @brief Query file (optional) help description.  */
   int num_batch_arg;	/**< @brief Number of batches to split pairs to (for step 1) (default='10').  */
   char * num_batch_orig;	/**< @brief Number of batches to split pairs to (for step 1) original value given at command line.  */
   const char *num_batch_help; /**< @brief Number of batches to split pairs to (for step 1) help description.  */

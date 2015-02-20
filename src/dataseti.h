@@ -88,7 +88,7 @@ protected:
 class CDatasetImpl : protected CDataImpl {
 protected:
 	CDatasetImpl( );
-	~CDatasetImpl( );
+	virtual ~CDatasetImpl( );
 
 	void Reset( );
 	bool Open( const CDataPair&, size_t );
@@ -147,7 +147,7 @@ protected:
 class CDatasetCompactImpl : protected CDataImpl {
 protected:
 	CDatasetCompactImpl( );
-	~CDatasetCompactImpl( );
+	virtual ~CDatasetCompactImpl( );
 
 	bool Open( const CDataPair&, size_t );
 	bool Open( const char*, const IBayesNet*, const CGenes* = NULL, const CGenes* = NULL );

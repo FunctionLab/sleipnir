@@ -88,7 +88,8 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 			iter_g++, pf++){
 				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
 				iterOffset = offset.begin(); iterOffset!=offset.end();
-				iterOffset++, pp+=(*iterOffset)){
+				iterOffset++){
+					pp+=(*iterOffset);
 					if((*pp)==0) continue;
 					float sc = (float) ((*pp) - 320) / 100.0; 
 					sc = fabs(sc) + 1.0; //add one adjustment, suitable if cutoff=0
@@ -104,7 +105,8 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 			iter_g++, pf++){
 				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
 				iterOffset = offset.begin(); iterOffset!=offset.end();
-				iterOffset++, pp+=(*iterOffset)){
+				iterOffset++){
+					pp+=(*iterOffset);
 					if((*pp)==0) continue;
 					tmpScore += *pp;
 					++totNonZero;
@@ -125,7 +127,8 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 			iter_g++, pf++){
 				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
 				iterOffset = offset.begin(); iterOffset!=offset.end();
-				iterOffset++, pp+=(*iterOffset)){
+				iterOffset++){
+					pp+=(*iterOffset);
 					if((*pp)==0) continue;
 					float sc = (float) ((*pp) - 320) / 100.0;
 					sc = fabs(sc) + 1.0; //add one adjustment, suitable for cutoff=0
@@ -144,7 +147,8 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 			iter_g++, pf++){
 				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
 				iterOffset = offset.begin(); iterOffset!=offset.end();
-				iterOffset++, pp+=(*iterOffset)){
+				iterOffset++){
+					pp+=(*iterOffset);
 					if((*pp)==0) continue;
 					tmpScore += *pp;
 					++totNonZero;
@@ -314,7 +318,7 @@ bool CSeekWeighter::OrderStatisticsRankAggregation(const utype &iDatasets,
 		}
 	}
 
-	CSeekTools::Free2DArray(rank_f);
+	CSeekTools::Free2DArray(rank_f, iDatasets);
 	for(i=0; i<numThreads; i++){
 		gsl_permutation_free(perms[i]);
 		gsl_permutation_free(rks[i]);

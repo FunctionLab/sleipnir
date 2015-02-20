@@ -300,7 +300,7 @@ bool CSeekTools::LoadDatabase(const vector<CDatabase*> &DB,
 
 	fprintf(stderr, "Initializing gene map\n"); ret = system("date +%s%N 1>&2");
 	#pragma omp parallel for \
-	private(i) schedule(dynamic)
+	shared(vc, iDatasets) private(i) schedule(dynamic)
 	for(i=0; i<iDatasets; i++) vc[i]->InitializeGeneMap();
 
 	fprintf(stderr, "Done initializing gene map\n"); ret = system("date +%s%N 1>&2");

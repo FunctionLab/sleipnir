@@ -203,7 +203,7 @@ protected:
 		m_useNibble = useNibble;
 	}
 
-	~CDatabaseImpl( ) {
+	virtual ~CDatabaseImpl( ) {
 
 		Clear( ); }
 

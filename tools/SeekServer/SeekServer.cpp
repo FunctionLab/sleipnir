@@ -159,6 +159,7 @@ void *do_query(void *th_arg){
 	pthread_mutex_unlock(&mutexGet);
 
 	int ret = 0;
+
 	pthread_exit((void*)ret);
 }
 
@@ -394,6 +395,7 @@ int main( int iArgs, char** aszArgs ) {
 	printf("server: waiting for connections...\n");
 	struct thread_data thread_arg[NUM_THREADS];
 	pthread_t th[NUM_THREADS];
+	pthread_attr_t attr[NUM_THREADS];
 
 	pthread_mutex_init(&mutexGet, NULL);
 
@@ -421,6 +423,9 @@ int main( int iArgs, char** aszArgs ) {
 
 		THREAD_OCCUPIED[d] = 1;
 		pthread_mutex_unlock(&mutexGet);
+
+		pthread_attr_init(&attr[d]);
+		pthread_attr_setdetachstate(&attr[d], PTHREAD_CREATE_DETACHED);
 
 		//receiving query from client, still need to be completed
 		//only needs to receive three strings,
@@ -482,7 +487,10 @@ int main( int iArgs, char** aszArgs ) {
 		//thread_arg[d].csfinal = &csfinal;
 
 		int ret;
-		pthread_create(&th[d], NULL, do_query, (void*) &thread_arg[d]);
+		pthread_create(&th[d], &attr[d], do_query, (void*) &thread_arg[d]);
+
+		pthread_detach(th[d]);
+		pthread_attr_destroy(&attr[d]);
 
 		//int ret;
 		//pthread_create(&th[d], NULL, do_query, (void *) &thread_arg[d]);

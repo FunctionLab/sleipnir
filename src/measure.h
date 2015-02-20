@@ -539,7 +539,7 @@ public:
 	 * much more efficient to pre-transform all input vectors and construct a Spearman measure with
 	 * fTransformed set to true.  This avoids repeatedly re-ranking each vector.
 	 */
-	CMeasureSpearman( bool fTransformed ) : CMeasureSpearmanImpl( fTransformed ) { }
+	CMeasureSpearman( bool fTransformed ) : CMeasureSpearmanImpl( fTransformed, HUGE_VAL, HUGE_VAL ) { }
 
 	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
 		const float* adWX = NULL, const float* adWY = NULL ) const;

@@ -53,8 +53,10 @@ protected:
 
 class CMeasureSpearmanImpl {
 protected:
-	CMeasureSpearmanImpl( bool fTransformed ) : m_fTransformed(fTransformed) { }
-
+	CMeasureSpearmanImpl( bool fTransformed, double dAve, double dStd) : m_fTransformed(fTransformed), 
+		m_dAverage(dAve), m_dStdDev(dStd) { }
+	double m_dAverage;
+	double m_dStdDev;
 	bool	m_fTransformed;
 };
 

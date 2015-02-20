@@ -30,12 +30,20 @@
 #include <signal.h>
 #include <list>
 
-#define BACKLOG 10   // how many pending connections queue will hold
+#define BACKLOG 20   // how many pending connections queue will hold
 char *PORT;
 int NUM_DSET_MEMORY = 100;
 string pcl_input_dir;
 
-CPCL **pcl;
+struct QPCL{
+	vector<vector<float> > mat;
+	vector<string> genes;
+	vector<string> experiments;
+	int rows;
+	int cols;
+};
+
+//CPCL **pcl;
 list<int> available;
 char *loaded;
 map<string, int> DNAME_MAP;
@@ -77,7 +85,7 @@ void *get_in_addr(struct sockaddr *sa){
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-#define NUM_THREADS 8
+#define NUM_THREADS 16
 char THREAD_OCCUPIED[NUM_THREADS];
 
 int send_msg(int new_fd, char *c, int size){
@@ -107,6 +115,8 @@ struct thread_data{
 	bool outputQueryCoexpression;
 	bool outputExpression;
 	bool outputQueryExpression;
+	CPCL** pcl;
+	CPCL** vc;
 };
 
 int cpy(char *d, char *s, int beg, int num){
@@ -146,6 +156,8 @@ void *do_query(void *th_arg){
 	int new_fd = my->new_fd;
 	int tid = my->threadid;
 	float RBP_P = my->rbp_p;
+	CPCL** pcl = my->pcl;
+	CPCL** vc = my->vc;
 
 	/*
 	cl(buf, 5000);
@@ -154,29 +166,53 @@ void *do_query(void *th_arg){
 		THREAD_OCCUPIED[tid] = 0;
 		pthread_exit(0);
 	}*/
-	pthread_mutex_lock(&mutexGet);
+
+	//pthread_mutex_lock(&mutexGet);
 
 	size_t i;
 
 	vector<string>::const_iterator iterS = datasetName.begin();
-	vector<CPCL*> vc;
+	//vector<CPCL*> vc;
+	//vector<CPCL> vc;
+	vector<int> occupied;
+
+	fprintf(stderr, "before allocation...\n");
+	vc = new CPCL*[datasetName.size()];
+	for(i=0; i<datasetName.size(); i++){
+		vc[i] = new CPCL();
+		fprintf(stderr, "%p\n", vc[i]);
+	}
+
+
+
+	fprintf(stderr, "start processing...\n");
+
+	pthread_mutex_lock(&mutexGet); //QZ disabled 1/31/2015
 
 	for(i=0; i<NUM_DSET_MEMORY; i++){
 		loaded[i] = 0;
-	}
-
-	fprintf(stderr, "start processing...\n");
-	for(; iterS!=datasetName.end(); iterS++){
+	}	
+	int ind = -1;
+	for(ind = 0; iterS!=datasetName.end(); iterS++, ind++){
 		int n = -1;
 		map<string, int>::const_iterator iterM = DNAME_MAP.find(*iterS);
 		if(iterM!=DNAME_MAP.end()){
 			n = iterM->second;
 			fprintf(stderr, "found %d for dataset %s...\n", n, iterS->c_str());
-			vc.push_back(pcl[n]);
+			//vc[ind] = CPCL();
+			//fprintf(stderr, "Allocating in found is called\n");
+			//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+			//getchar();
+			vc[ind]->Open(*pcl[n]);
+			//fprintf(stderr, "Allocating in found is finished\n");
+			//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+			//getchar();
+			//vc.push_back(pcl[n]);
+			//occupied.push_back(n);
 			loaded[n] = 1;
 			continue;
 		}
-		//pthread_mutex_lock(&mutexGet);
+
 		n = GetOpenSlot();
 		map<int, string>::const_iterator iterRM = DNAME_RMAP.find(n);
 		if(iterRM!=DNAME_RMAP.end()){
@@ -186,18 +222,46 @@ void *do_query(void *th_arg){
 		DNAME_MAP[*iterS] = n;
 		DNAME_RMAP[n] = *iterS;
 		loaded[n] = 1;
-		//pthread_mutex_unlock(&mutexGet);
 
 		fprintf(stderr, "acquired %d for dataset %s...\n", n, iterS->c_str());
 		//pcl[n]->Reset();
-		//string strFileStem = (*iterS).substr(0, (*iterS).find(".bin")); //for human-SEEK
+
 		fprintf(stderr, "dataset reset \n");
+		//string pcl_path = pcl_input_dir + "/" + *iterS; //for human-SEEK
 		string pcl_path = pcl_input_dir + "/" + *iterS + ".bin"; //for model-organism-SEEK
+
+		if(pcl[n]!=NULL){
+			//fprintf(stderr, "Deleting in PCL[n] is called\n");
+			//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+			//getchar();
+			delete pcl[n];
+			//fprintf(stderr, "Deleting in PCL[n] is finished\n");
+			//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+			//getchar();
+		}
+		pcl[n] = new CPCL();
 		pcl[n]->Open(pcl_path.c_str());
-		//pcl[n]->Open(strFileStem.c_str(), 2, false, false);
+
+		//vc[ind] = CPCL();
+		//vc[ind].Open(*pcl[n]);
+		//vc[ind]->Open(*pcl[n]);
+		fprintf(stderr, "Allocating in created is called\n");
+		fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+		//getchar();
+		vc[ind]->Open(*pcl[n]);
+		//fprintf(stderr, "Allocating in created is finished\n");
+		//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+		//getchar();
 		fprintf(stderr, "dataset opened\n");
-		vc.push_back(pcl[n]);
+		//vc.push_back(pcl[n]);
+		//occupied.push_back(n);
 	}
+	for(i=0; i<NUM_DSET_MEMORY; i++){
+		loaded[i] = 0;
+	}	
+
+
+	pthread_mutex_unlock(&mutexGet); //QZ disabled 1/31
 
 	//vector<CFullMatrix<float> *> vC; //gene expression
 	//vector<CFullMatrix<float> *> vQ; //query expression (if enabled) (EXTRA)
@@ -208,13 +272,14 @@ void *do_query(void *th_arg){
 
 	vector<float> vecG, vecQ, vecCoexpression, vecqCoexpression;
 	vector<float> sizeD;
-	sizeD.resize(vc.size());
+
+	sizeD.resize(datasets);
 
 	vector< vector<float> > d_vecG, d_vecQ, d_vecCoexpression, d_vecqCoexpression;
-	d_vecG.resize(vc.size());
-	d_vecQ.resize(vc.size());
-	d_vecCoexpression.resize(vc.size());
-	d_vecqCoexpression.resize(vc.size());
+	d_vecG.resize(datasets);
+	d_vecQ.resize(datasets);
+	d_vecCoexpression.resize(datasets);
+	d_vecqCoexpression.resize(datasets);
 
 	//Qian added
 	//vector<CSeekDataset *> vd; //(EXTRA)
@@ -240,7 +305,7 @@ void *do_query(void *th_arg){
 	shared(pcl, vc, sizeD, datasetName, queryName, geneName, d_vecG, d_vecQ, d_vecCoexpression, d_vecqCoexpression, \
 	mapstrintGene, mapstrstrDatasetPlatform, mapstriPlatform, vp) \
 	schedule(dynamic)
-	for(i=0; i<vc.size(); i++){
+	for(i=0; i<datasets; i++){
 		CPCL *pp = vc[i];
 		size_t j, k;
 		//int ps = pp->GetExperiments() - 2;
@@ -680,7 +745,7 @@ void *do_query(void *th_arg){
 		delete ff;
 	}
 
-	for(i=0; i<vc.size(); i++){
+	for(i=0; i<datasets; i++){
 		vecG.insert(vecG.end(), d_vecG[i].begin(), d_vecG[i].end());
 		vecQ.insert(vecQ.end(), d_vecQ[i].begin(), d_vecQ[i].end());
 		vecCoexpression.insert(vecCoexpression.end(), 
@@ -689,6 +754,24 @@ void *do_query(void *th_arg){
 			d_vecqCoexpression[i].begin(), d_vecqCoexpression[i].end());
 	}
 
+	fprintf(stderr, "before deletion...\n");
+	for(i=0; i<datasets; i++){
+		fprintf(stderr, "%p\n", vc[i]);
+	}
+
+	for(i=0; i<datasets; i++){
+		//if(vc[i]!=NULL){
+			fprintf(stderr, "Deleting in vc[i] is called\n");
+			fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+			//getchar();
+			delete vc[i];
+			fprintf(stderr, "Deleting in vc[i] is finished\n");
+			fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+			//getchar();
+		//}
+	}
+
+	delete[] vc;
 
 	if(CSeekNetwork::Send(new_fd, sizeD)!=0){
 		fprintf(stderr, "Error sending messages\n");
@@ -718,12 +801,12 @@ void *do_query(void *th_arg){
 		}
 	}
 
-	for(i=0; i<NUM_DSET_MEMORY; i++){
+	/*for(i=0; i<NUM_DSET_MEMORY; i++){
 		loaded[i] = 0;
-	}
+	}*/
 
+	pthread_mutex_lock(&mutexGet);
 	THREAD_OCCUPIED[tid] = 0;
-
 	pthread_mutex_unlock(&mutexGet);
 
 	int ret = 0;
@@ -950,13 +1033,16 @@ int main( int iArgs, char** aszArgs ) {
 	printf("server: waiting for connections...\n");
 	struct thread_data thread_arg[NUM_THREADS];
 	pthread_t th[NUM_THREADS];
+	pthread_attr_t attr[NUM_THREADS];
 	int d = 0;
 
 	pthread_mutex_init(&mutexGet, NULL);
 
 	fprintf(stderr, "Start init.\n");
 
-	pcl = new CPCL*[NUM_DSET_MEMORY];
+	CPCL** pcl = new CPCL*[NUM_DSET_MEMORY];
+
+	CPCL*** vcx = new CPCL**[NUM_THREADS];
 
 	loaded = new char[NUM_DSET_MEMORY];
 
@@ -978,6 +1064,8 @@ int main( int iArgs, char** aszArgs ) {
 		inet_ntop(their_addr.ss_family, get_in_addr(
 			(struct sockaddr *)&their_addr), s, sizeof s);
 		printf("server, got connection from %s\n", s);
+	
+		pthread_mutex_lock(&mutexGet);
 		for(d=0; d<NUM_THREADS; d++){
 			if(THREAD_OCCUPIED[d]==0) break;
 		}
@@ -985,8 +1073,12 @@ int main( int iArgs, char** aszArgs ) {
 			close(new_fd);
 			continue;
 		}
-
 		THREAD_OCCUPIED[d] = 1;
+		pthread_mutex_unlock(&mutexGet);
+
+		pthread_attr_init(&attr[d]);
+		pthread_attr_setdetachstate(&attr[d], PTHREAD_CREATE_DETACHED);
+
 		string mode;
 
 		if(CSeekNetwork::Receive(new_fd, mode)!=0){
@@ -1062,6 +1154,8 @@ int main( int iArgs, char** aszArgs ) {
 		thread_arg[d].outputQueryExpression = outputQueryExpression;
 		thread_arg[d].outputQueryCoexpression = outputQueryCoexpression;
 		thread_arg[d].rbp_p = rbp_p;
+		thread_arg[d].pcl = pcl;
+		thread_arg[d].vc = vcx[d];
 
 		fprintf(stderr, "Arguments: %d %d %s %s\n", d, new_fd, dname.c_str(), gname.c_str());
 		if(outputCoexpression){
@@ -1069,7 +1163,9 @@ int main( int iArgs, char** aszArgs ) {
 		}
 
 		int ret;
-		pthread_create(&th[d], NULL, do_query, (void *) &thread_arg[d]);
+		pthread_create(&th[d], &attr[d], do_query, (void *) &thread_arg[d]);
+		pthread_detach(th[d]);
+		pthread_attr_destroy(&attr[d]);
 		/*pthread_join(th[d], (void **)&ret);
 		if(ret==0){
 			close(new_fd);

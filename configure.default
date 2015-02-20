@@ -1,1 +1,2 @@
-./configure --prefix=/r03/qzhu/sleipnir_build --with-smile=/r03/qzhu/smile --with-svm-perf=/r03/qzhu/svmperf --with-log4cpp=/r03/qzhu/usr --with-gengetopt=/r03/qzhu/usr --with-gsl=/Genomics/fgrid/function/sleipnir-extlib/gsl-lib
+cur=/Genomics/Users/qzhu
+./configure --prefix=$cur/sleipnir_build --with-smile=/r03/qzhu/smile --with-svm-perf=/r03/qzhu/svmperf --with-log4cpp=$cur/usr4.9 --with-gengetopt=$cur/usr4.9 --with-gsl=$cur/usr4.9

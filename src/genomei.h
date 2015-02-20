@@ -36,7 +36,7 @@ class IOntology;
 class CGeneImpl {
 protected:
 	CGeneImpl( const std::string& );
-	~CGeneImpl( );
+	virtual ~CGeneImpl( );
 
 	CGeneImpl& operator=( const CGeneImpl& );
 	void IncrementOntologies( const IOntology* );
@@ -61,7 +61,7 @@ protected:
 	static const char	c_szORF[];
 	static const char*	c_aszRNA[];
 
-	~CGenomeImpl( );
+	virtual ~CGenomeImpl( );
 
 	std::vector<CGene*>	m_vecpGenes;
 	TMapStrI			m_mapGenes;

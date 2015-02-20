@@ -774,7 +774,22 @@ double CMeasureSpearman::Measure(const float* adX, size_t iM, const float* adY,
 		break;
 	}
 
-	return dRet;
+    
+    static const float c_dBound = 0.9999f;
+    double dP = dRet;
+
+    if (fabs(dP) >= c_dBound)
+        dP *= c_dBound;
+    dP = CStatistics::FisherTransform(dP);
+    if (m_dAverage != HUGE_VAL){
+        dP = (dP - m_dAverage) / m_dStdDev;
+        fprintf(stderr, "Doing SpearmanNorm within measure.cpp\n");
+    }
+    return dP;
+    
+
+
+	//return dRet;
 }
 
 double CMeasurePearNorm::Measure(const float* adX, size_t iM,
