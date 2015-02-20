@@ -796,7 +796,7 @@ int main( int iArgs, char** aszArgs ) {
 		"NA", //default gvar arg, argument not needed for PCLServer
 		sArgs.sinfo_arg, sArgs.platform_arg, sArgs.prep_arg,
 		".",  //default DB arg, argument not needed for PCLServer
-		sArgs.gene_arg, sArgs.quant_arg, sArgs.dset_arg,
+		sArgs.gene_arg, sArgs.quant_arg, sArgs.dset_arg, "NA", 
 		21702 //default num_db arg, argument not needed for PCLServer
 	);
 
@@ -884,7 +884,7 @@ int main( int iArgs, char** aszArgs ) {
 		num_db = atoi(parameters[i].find("NUMBER_OF_DB")->second.c_str());
 
 		CSeekDBSetting *dbSetting2 = new CSeekDBSetting(gvar_dir, sinfo_dir,
-			platform_dir, prep_dir, db_dir, gene_map_file, quant_file, dset_map_file,
+			platform_dir, prep_dir, db_dir, gene_map_file, quant_file, dset_map_file, "NA", 
 			num_db);
 		cc.push_back(dbSetting2);
 		}

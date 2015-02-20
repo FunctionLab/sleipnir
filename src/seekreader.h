@@ -279,7 +279,7 @@ public:
 	 * \param f The two-dimensional array
 	 */
 	template<class tType>
-	static void Free2DArray(tType** f, const size_t &iRows){
+	static void Free2DArray(tType** f){
 		/*size_t i;
 		for(i=0; i<iRows; i++){
 			delete[] f[i];
@@ -288,7 +288,7 @@ public:
 		//free(f[0]);
 		//free(f);
 		delete[] f[0];
-		f[0] = NULL;
+		//f[0] = NULL;
 		delete[] f;
 		f = NULL;
 	}
