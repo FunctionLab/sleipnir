@@ -42,6 +42,7 @@ class CBayesNetPNL;
 class CBayesNetSmile;
 class CPCLPair;
 
+
 class CBayesNetImpl {
 protected:
 	static const size_t	c_iMinimum	= 25;

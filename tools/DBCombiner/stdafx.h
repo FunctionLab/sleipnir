@@ -30,10 +30,11 @@
 #include <string>
 #include <omp.h>
 using namespace std;
-
+#include <algorithm>
 #include <pthread.h>
 
-#include "bayesnet.h"
+//#include "bayesnet.h"
+#include "stdlib.h"
 #include "database.h"
 #include "meta.h"
 using namespace Sleipnir;
