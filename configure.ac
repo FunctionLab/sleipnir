@@ -1284,14 +1284,13 @@ EOF
 #  cat << EOF
 #
 #** A WARNING ABOUT BOOST
-#Boost installs header files under a version-dependent directory,
-#for example in /usr/local/include/boost/boost-1_34_1/boost/. I have
-#no reliable way of determining the Boost version, so you may run into
-#a problem with missing Boost includes. If this is the case,
-#simply use --with-boost-includes and --with-boost-graph-libs to direct
-#me to their actual locations, for example:
-#  --with-boost-includes=/usr/local/include/boost/boost-1_34_1
-#  --with-boost-graph-libs=/usr/local/lib/libboost_graph-mt-gcc34_1_34_1.dylib
+#We recommend that you install the full BOOST library. This can be done
+#by a package install in Ubuntu. Or if the user installs it in a custom location
+#then the location needs to be specified using the --with-boost flag.
+#This location should point to where the lib and include directories 
+#are located (for example: /usr/local). At this time, other flags 
+#--with-boost-includes, --with-boost-libs have not been tested so we suggest 
+#all users to use the --with-boost flag.
 #EOF
 #
 #  fi
