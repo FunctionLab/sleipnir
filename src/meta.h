@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "metai.h"
-
+#include "stdio.h"
 #ifdef _MSC_VER
 #include <windows.h>
 #include <winsock.h>
