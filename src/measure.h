@@ -841,6 +841,38 @@ private:
 	float	m_dAlpha;
 };
 
+/*!
+ * \brief
+ * Calculates the cosine similarity between two vectors.
+ *
+ * Calculates cosine similarity between two vectors; if weights are given,  each pairwise
+ * product is also multiplied by the appropriate elements' weights.  Centering is performed as per EMap.
+ *
+ * derived from Pearson
+ */
+class CMeasureCosine : public IMeasure {
+public:
+	static double Cosine( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap,
+		const float* adWX = NULL, const float* adWY = NULL, size_t* piCount = NULL );
+
+	const char* GetName( ) const {
+
+		return "cosine"; }
+
+	bool IsRank( ) const {
+
+		return false; }
+
+	IMeasure* Clone( ) const {
+
+		return new CMeasureCosine( ); }
+
+	double Measure( const float* adX, size_t iM, const float* adY, size_t iN, EMap eMap, const float* adWX,
+		const float* adWY ) const {
+
+		return CMeasureCosine::Cosine( adX, iM, adY, iN, eMap, adWX, adWY ); }
+};
+
 }
 
 #endif // MEASURE_H
