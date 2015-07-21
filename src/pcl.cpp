@@ -196,8 +196,10 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 	CMeasureDice Dice( dAlpha );
 	CMeasureDistanceCorrelation DCor;
 	CMeasureSignedDistanceCorrelation SDCor;
+	CMeasureCosine Cosine;
 	if (szFile) {
         g_CatSleipnir().debug("Opening PCL for distance");
+	g_CatSleipnir().debug("Method: %s ", szSimilarityMeasure);
         if (!PCL.Open(szFile, iSkip, false, false)) {
 			g_CatSleipnir().error(
 					"CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL",
@@ -220,7 +222,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 			EuclideanSig(&Euclidean, false, 1.0f / PCL.GetExperiments());
 	IMeasure* apMeasures[] = { &Pearson, &EuclideanSig, &KendallsTau,
 			&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick,
-			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, NULL };
+			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, &Cosine,NULL };
 
 	pMeasure = NULL;
 	for (i = 0; apMeasures[i]; ++i)
@@ -457,6 +459,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 	CMeasureDice Dice( dAlpha );
 	CMeasureDistanceCorrelation DCor;
 	CMeasureSignedDistanceCorrelation SDCor;
+	CMeasureCosine Cosine;
 	if (szFile) {
         g_CatSleipnir().debug("Opening PCL for distance");
         if (!PCL.Open(szFile, iSkip, false, false)) {
@@ -481,7 +484,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
 			EuclideanSig(&Euclidean, false, 1.0f / PCL.GetExperiments());
 	IMeasure* apMeasures[] = { &Pearson, &EuclideanSig, &KendallsTau,
 			&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick,
-			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, NULL };
+			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, &Cosine, NULL };
 
 	pMeasure = NULL;
 	for (i = 0; apMeasures[i]; ++i)

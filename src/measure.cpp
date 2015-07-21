@@ -981,6 +981,83 @@ double CMeasureDice::Measure( const float* adX, size_t iM, const float* adY,
 	return ( dX ? ( dDot / dX ) : CMeta::GetNaN( ) ); }
 
 
+/*!
+ * \brief
+ * Calculates the cosine similarity between the vectors.
+ * 
+ * \param adX
+ * First array of values.
+ * 
+ * \param iN
+ * Length of first array.
+ * 
+ * \param adY
+ * Second array of values.
+ * 
+ * \param iM
+ * Length of second array.
+ * 
+ * \param eMap
+ * Way in which returned value should be centered.
+ * 
+ * \param adWX
+ * If non-null, weights of elements in the first array.
+ * 
+ * \param adWY
+ * If non-null, weights of elements in the second array.
+ * 
+ * \param piCount
+ * If non-null, outputs the number of non-NaN elements used for the calculation.
+ * 
+ * \returns
+ * Cosine similarity calculated between the two input vectors and, optionally, weights.
+ * 
+ * Calculates cosine similarity between two vectors; if weights are given, the means and each pairwise
+ * product are also multiplied by the appropriate elements' weights.  Centering is performed as per EMap.
+ * derived from Pearson code (basically pearson w/o mean centering)
+ */
+double CMeasureCosine::Cosine(const float* adX, size_t iM, const float* adY,
+		size_t iN, EMap eMap, const float* adWX, const float* adWY,
+		size_t* piCount) {
+	double dMX, dMY, dRet, dDX, dDY, dX, dY;
+	size_t i, iCount;
+
+	if (piCount)
+		*piCount = 0;
+	if (iM != iN)
+		return CMeta::GetNaN();
+
+	dRet = dDX = dDY = 0;
+	for (iCount = i = 0; i < iN; ++i) {
+		if (CMeta::IsNaN(adX[i]) || CMeta::IsNaN(adY[i]))
+			continue;
+		iCount++;
+		dX = adX[i];
+		dY = adY[i];
+		dRet += adX[i] * adY[i] * sqrt(GetWeight(adWX, i) * GetWeight(adWY, i));
+		dDX += adX[i] * adX[i] * GetWeight(adWX, i);
+		dDY += adY[i] * adY[i] * GetWeight(adWY, i);
+	}
+	if (!dDX || !dDY)
+		dRet = CMeta::GetNaN();
+	else {
+		dRet /= ( sqrt(dDX) * sqrt(dDY) );
+	}
+
+	switch (eMap) {
+	case EMapCenter:
+		dRet = (1 + dRet) / 2;
+		break;
+
+	case EMapAbs:
+		dRet = fabs(dRet);
+		break;
+	}
+	if (piCount)
+		*piCount = iCount;
+
+	return dRet;
+}
 
 
 
