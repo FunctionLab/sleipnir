@@ -88,8 +88,7 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 			iter_g++, pf++){
 				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
 				iterOffset = offset.begin(); iterOffset!=offset.end();
-				iterOffset++){
-					pp+=(*iterOffset);
+				iterOffset++, pp+=(*iterOffset)){
 					if((*pp)==0) continue;
 					float sc = (float) ((*pp) - 320) / 100.0; 
 					sc = fabs(sc) + 1.0; //add one adjustment, suitable if cutoff=0
@@ -105,8 +104,7 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 			iter_g++, pf++){
 				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
 				iterOffset = offset.begin(); iterOffset!=offset.end();
-				iterOffset++){
-					pp+=(*iterOffset);
+				iterOffset++, pp+=(*iterOffset)){
 					if((*pp)==0) continue;
 					tmpScore += *pp;
 					++totNonZero;
@@ -127,8 +125,7 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 			iter_g++, pf++){
 				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
 				iterOffset = offset.begin(); iterOffset!=offset.end();
-				iterOffset++){
-					pp+=(*iterOffset);
+				iterOffset++, pp+=(*iterOffset)){
 					if((*pp)==0) continue;
 					float sc = (float) ((*pp) - 320) / 100.0;
 					sc = fabs(sc) + 1.0; //add one adjustment, suitable for cutoff=0
@@ -147,8 +144,7 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 			iter_g++, pf++){
 				for(totNonZero=0, tmpScore = 0, pp = &(*pf)[queryPos[0]],
 				iterOffset = offset.begin(); iterOffset!=offset.end();
-				iterOffset++){
-					pp+=(*iterOffset);
+				iterOffset++, pp+=(*iterOffset)){
 					if((*pp)==0) continue;
 					tmpScore += *pp;
 					++totNonZero;

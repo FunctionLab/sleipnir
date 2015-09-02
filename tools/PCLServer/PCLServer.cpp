@@ -35,7 +35,14 @@ char *PORT;
 int NUM_DSET_MEMORY = 100;
 string pcl_input_dir;
 
-//CPCL **pcl;
+struct QPCL{
+	vector<vector<float> > mat;
+	vector<string> genes;
+	vector<string> experiments;
+	int rows;
+	int cols;
+};
+
 list<int> available;
 char *loaded;
 map<string, int> DNAME_MAP;
@@ -46,10 +53,6 @@ pthread_mutex_t mutexGet;
 
 vector<CSeekDBSetting*> cc;
 
-/*string strPrepInputDirectory;
-string strSinfoInputDirectory;
-string strDatasetInputDirectory;
-string strPlatformInputDirectory;*/
 map<string, int> mapstrintGene;
 
 vector<string> vecstrGeneID;
@@ -63,6 +66,7 @@ map<string, string> mapstrstrDatasetPlatform;
 map<string, utype> mapstrintDataset;
 vector<string> vecstrPlatforms;
 vector<CSeekPlatform> vp;
+
 
 void sigchld_handler(int s){
     while(waitpid(-1, NULL, WNOHANG) > 0);
@@ -163,9 +167,11 @@ void *do_query(void *th_arg){
 	size_t i;
 
 	vector<string>::const_iterator iterS = datasetName.begin();
+	//vector<CPCL*> vc;
+	//vector<CPCL> vc;
 	vector<int> occupied;
 
-	fprintf(stderr, "before allocation...\n");
+	//fprintf(stderr, "before allocation...\n");
 	vc = new CPCL*[datasetName.size()];
 	for(i=0; i<datasetName.size(); i++){
 		vc[i] = new CPCL();
@@ -205,8 +211,8 @@ void *do_query(void *th_arg){
 		//pcl[n]->Reset();
 
 		fprintf(stderr, "dataset reset \n");
-		//string pcl_path = pcl_input_dir + "/" + *iterS; //for human-SEEK
-		string pcl_path = pcl_input_dir + "/" + *iterS + ".bin"; //for model-organism-SEEK
+		string pcl_path = pcl_input_dir + "/" + *iterS; //for human-SEEK
+		//string pcl_path = pcl_input_dir + "/" + *iterS + ".bin"; //for model-organism-SEEK
 
 		if(pcl[n]!=NULL){
 			delete pcl[n];
@@ -214,8 +220,8 @@ void *do_query(void *th_arg){
 		pcl[n] = new CPCL();
 		pcl[n]->Open(pcl_path.c_str());
 
-		fprintf(stderr, "Allocating in created is called\n");
-		fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+		//fprintf(stderr, "Allocating in created is called\n");
+		//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
 		vc[ind]->Open(*pcl[n]);
 		fprintf(stderr, "dataset opened\n");
 	}
@@ -226,6 +232,9 @@ void *do_query(void *th_arg){
 
 	pthread_mutex_unlock(&mutexGet); //QZ disabled 1/31
 
+	//vector<CFullMatrix<float> *> vC; //gene expression
+	//vector<CFullMatrix<float> *> vQ; //query expression (if enabled) (EXTRA)
+	//int totNumExperiments = 0;
 	int genes = geneName.size();
 	int queries = queryName.size(); //(EXTRA)
 	int datasets = datasetName.size();
@@ -293,8 +302,8 @@ void *do_query(void *th_arg){
 
 		if(outputCoexpression || outputQueryCoexpression){
 			vd = new CSeekDataset();
-			//string strFileStem = datasetName[i].substr(0, datasetName[i].find(".bin")); //for human-SEEK
-			string strFileStem = datasetName[i]; //for model-organism-SEEK
+			string strFileStem = datasetName[i].substr(0, datasetName[i].find(".bin")); //for human-SEEK
+			//string strFileStem = datasetName[i]; //for model-organism-SEEK
 
 			int dbID = mapstrintDatasetDB[strFileStem];
 	
@@ -718,13 +727,15 @@ void *do_query(void *th_arg){
 	}
 
 	for(i=0; i<datasets; i++){
-		fprintf(stderr, "Deleting in vc[i] is called\n");
-		fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
-		//getchar();
-		delete vc[i];
-		fprintf(stderr, "Deleting in vc[i] is finished\n");
-		fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
-		//getchar();
+		//if(vc[i]!=NULL){
+			//fprintf(stderr, "Deleting in vc[i] is called\n");
+			//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+			//getchar();
+			delete vc[i];
+			//fprintf(stderr, "Deleting in vc[i] is finished\n");
+			//fprintf(stderr, "%ld\n", CMeta::GetMemoryUsage());
+			//getchar();
+		//}
 	}
 
 	delete[] vc;
@@ -796,7 +807,7 @@ int main( int iArgs, char** aszArgs ) {
 		"NA", //default gvar arg, argument not needed for PCLServer
 		sArgs.sinfo_arg, sArgs.platform_arg, sArgs.prep_arg,
 		".",  //default DB arg, argument not needed for PCLServer
-		sArgs.gene_arg, sArgs.quant_arg, sArgs.dset_arg, "NA", 
+		sArgs.gene_arg, sArgs.quant_arg, sArgs.dset_arg, "NA",
 		21702 //default num_db arg, argument not needed for PCLServer
 	);
 
@@ -884,8 +895,8 @@ int main( int iArgs, char** aszArgs ) {
 		num_db = atoi(parameters[i].find("NUMBER_OF_DB")->second.c_str());
 
 		CSeekDBSetting *dbSetting2 = new CSeekDBSetting(gvar_dir, sinfo_dir,
-			platform_dir, prep_dir, db_dir, gene_map_file, quant_file, dset_map_file, "NA", 
-			num_db);
+			platform_dir, prep_dir, db_dir, gene_map_file, quant_file, dset_map_file, 
+			"NA", num_db);
 		cc.push_back(dbSetting2);
 		}
 	}
@@ -1122,6 +1133,10 @@ int main( int iArgs, char** aszArgs ) {
 		pthread_create(&th[d], &attr[d], do_query, (void *) &thread_arg[d]);
 		pthread_detach(th[d]);
 		pthread_attr_destroy(&attr[d]);
+		/*pthread_join(th[d], (void **)&ret);
+		if(ret==0){
+			close(new_fd);
+		}*/
 	}
 
 

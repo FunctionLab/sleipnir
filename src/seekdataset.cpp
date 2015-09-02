@@ -271,7 +271,6 @@ bool CSeekDataset::DeleteQueryBlock(){
 		dbMap = NULL;
 	}
 	if(r!=NULL){
-		//fprintf(stderr, "iDBSize is %d\n", iDBSize);
 		CSeekTools::Free2DArray(r);
 		r = NULL;
 	}

@@ -455,28 +455,19 @@ int main( int iArgs, char** aszArgs ) {
 	//csfinal->EqualWeightSearch();
 	//csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
 	//csfinal->OrderStatistics();
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
 	fprintf(stderr, "Destructing...\n");
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
 	csfinal->Destruct();
 	fprintf(stderr, "Deleting...\n");
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
 	delete csfinal;
 
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
-
 	fprintf(stderr, "Deleting DBSetting...\n");
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
 	//if(add_db!="NA"){
 		for(i=0; i<cc.size(); i++){
 			delete cc[i];
 		}
 	//}
 	fprintf(stderr, "Finished deleting DBSetting...\n");
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
-
 	cc.clear();
-
 	gsl_rng_free(rnd);
 	gsl_rng_free(random_ranking_rnd);
 

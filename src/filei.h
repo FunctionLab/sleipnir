@@ -40,7 +40,6 @@ protected:
 
 	static void OpenString( std::istream& istm, std::string& str ) {
 		uint32_t	iLength;
-
 		istm.read( (char*)&iLength, sizeof(iLength) );
 		char *tmp = new char[iLength+1];
 		istm.read( tmp, iLength ); 
