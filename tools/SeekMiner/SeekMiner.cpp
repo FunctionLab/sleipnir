@@ -395,12 +395,12 @@ int main( int iArgs, char** aszArgs ) {
 		bOutputWeightComponent, bSimulateWeight,
 		eDistMeasure, bVariance,
 		!!sArgs.norm_subavg_flag, !!sArgs.norm_subavg_plat_flag,
-		false,
-		!!sArgs.check_dset_size_flag,
+		false, 
 		sArgs.score_cutoff_arg, 
 		sArgs.per_q_required_arg, sArgs.per_g_required_arg,
 		!!sArgs.square_z_flag,
 		!!sArgs.random_flag, sArgs.num_random_arg, !!sArgs.neg_cor_flag,
+		!!sArgs.check_dset_size_flag,
 		random_ranking_rnd, useNibble, 
 		sArgs.num_threads_arg))
 		return -1;

@@ -112,6 +112,7 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 				if(totNonZero==0) continue;
 				//(*iter_g) = tmpScore / totNonZero;
 				(*iter_g) = tmpScore / q_size;
+				//fprintf(stderr, "D %d\n", tmpScore);
 			}
 		}
 	}
@@ -149,6 +150,7 @@ bool CSeekWeighter::LinearCombine(vector<utype> &rank,
 					tmpScore += *pp;
 					++totNonZero;
 				}
+				//fprintf(stderr, "H minR %d %d\n", (int) MIN_REQUIRED, tmpScore);
 				if(totNonZero >= MIN_REQUIRED)
 					(*iter_g) = tmpScore / totNonZero;
 				else
@@ -543,10 +545,10 @@ bool CSeekWeighter::CVWeighting(CSeekQuery &sQuery, CSeekDataset &sDataset,
 				num_v++;
 			}
 		}
+		//fprintf(stderr, "num_q %d or num_v %d\n", num_q, num_v);
 
 		if(num_q==0 || num_v==0){
 			sDataset.SetCVWeight(qi, -1);
-			//printf("num_q %d or num_v %d\n", num_q, num_v);
 		}else{
 			/* actual weighting */
 			float w = 0;

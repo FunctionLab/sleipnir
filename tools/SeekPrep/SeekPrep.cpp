@@ -944,9 +944,9 @@ int main( int iArgs, char** aszArgs ) {
 			CSeekWriter::GetGenePresence(Dat, vecstrGenes, vecGenePresence);
 
 			//DEBUGGING
-			//for(i=0; i<vecGenePresence.size(); i++){
-			//	fprintf(stderr, "%s\t%d\n", vecstrGenes[i].c_str(), vecGenePresence[i]);
-			//}
+			/*for(i=0; i<vecGenePresence.size(); i++){
+				fprintf(stderr, "%s\t%d\n", vecstrGenes[i].c_str(), vecGenePresence[i]);
+			}*/
 
 			CSeekTools::WriteArray(outFile, vecGenePresence);
 		}

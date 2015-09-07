@@ -121,11 +121,14 @@ bool CSeekPerformanceMeasure::RankBiasedPrecision(const float &rate,
 			x+=pow(rate, (float)jj);
 			//fprintf(stderr, "Sorted %d %d %.5f\n", jj, aa->i, (aa->f-320)/100.0);
 		}
+		/*if(i<100){
+			fprintf(stderr, "Sorted %d %d %hu\n", jj, aa->i, aa->f);
+		}*/
 		jj++;
 	}
 	x *= (1.0-rate);
 	rbp = x;
-	//fprintf(stderr, "%.3e\n", 0, rbp);
+	//fprintf(stderr, "rate %.2f rbp %.3e\n", 0, rate, rbp);
 
 	return true;
 }

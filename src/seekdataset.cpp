@@ -477,6 +477,8 @@ bool CSeekDataset::InitializeDataMatrix(utype **rD,
 				}else{
 					rData[i][j] = 0;
 				}
+
+				//fprintf(stderr, "r %d\n", (int) rData[i][j]);
 			}
 		}
 	}

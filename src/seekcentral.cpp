@@ -90,6 +90,7 @@ CSeekCentral::CSeekCentral(){
 	m_useNibble = false;
 
 	DEBUG = false;
+	//DEBUG = true;
 	m_output_dir = "";
 
 	m_iClient = -1;
@@ -968,7 +969,7 @@ bool CSeekCentral::FilterResults(const utype &iSearchDatasets){
 	for(j=0; j<m_iGenes; j++){
 		//TO DO: make K=(int)(0.5*iSearchDatasets) a customizable parameter
 		//TO DO: perhaps it is better to use K=(int)(0.5*(max of m_counts[]))??
-		if(m_counts[j]<(int)(0.5*iSearchDatasets))
+		if(m_counts[j]<max(1, (int)(0.5*iSearchDatasets)))
 			m_master_rank[j] = m_DEFAULT_NA;
 		else if(m_sum_weight[j]==0)
 			m_master_rank[j] = m_DEFAULT_NA;
