@@ -38,6 +38,9 @@ const char *gengetopt_args_info_help[] = {
   "  -s, --genesets=filename    PCL file of genesets",
   "  -x, --gene                 Calculate gene by geneset scores  (default=off)",
   "  -n, --geneset_idx=INT      Index of geneset when outputting by genes  \n                               (default=`0')",
+  "  -B, --barcode=filename     PCL file of gene expression (barcode) values",
+  "  -C, --exp_cut=FLOAT        Cutoff for gene expression  (default=`.5')",
+  "  -L, --no_exp=FLOAT         Default value for non-expressed gene  \n                               (default=`0')",
   "\nCompendium correction:",
   "  -b, --backg                Divide by background network compendium score  \n                               (default=on)",
   "  -r, --refnet=filename      Use reference network for background correction",
@@ -57,6 +60,7 @@ typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
   , ARG_INT
+  , ARG_FLOAT
 } cmdline_parser_arg_type;
 
 static
@@ -108,6 +112,9 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->genesets_given = 0 ;
   args_info->gene_given = 0 ;
   args_info->geneset_idx_given = 0 ;
+  args_info->barcode_given = 0 ;
+  args_info->exp_cut_given = 0 ;
+  args_info->no_exp_given = 0 ;
   args_info->backg_given = 0 ;
   args_info->refnet_given = 0 ;
   args_info->enorm_given = 0 ;
@@ -135,6 +142,12 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->gene_flag = 0;
   args_info->geneset_idx_arg = 0;
   args_info->geneset_idx_orig = NULL;
+  args_info->barcode_arg = NULL;
+  args_info->barcode_orig = NULL;
+  args_info->exp_cut_arg = .5;
+  args_info->exp_cut_orig = NULL;
+  args_info->no_exp_arg = 0;
+  args_info->no_exp_orig = NULL;
   args_info->backg_flag = 1;
   args_info->refnet_arg = NULL;
   args_info->refnet_orig = NULL;
@@ -162,15 +175,18 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->genesets_help = gengetopt_args_info_help[7] ;
   args_info->gene_help = gengetopt_args_info_help[8] ;
   args_info->geneset_idx_help = gengetopt_args_info_help[9] ;
-  args_info->backg_help = gengetopt_args_info_help[11] ;
-  args_info->refnet_help = gengetopt_args_info_help[12] ;
-  args_info->enorm_help = gengetopt_args_info_help[14] ;
-  args_info->gnorm_help = gengetopt_args_info_help[15] ;
-  args_info->nnorm_help = gengetopt_args_info_help[16] ;
-  args_info->pval_help = gengetopt_args_info_help[17] ;
-  args_info->zscore_help = gengetopt_args_info_help[18] ;
-  args_info->log_weight_help = gengetopt_args_info_help[20] ;
-  args_info->weight_help = gengetopt_args_info_help[21] ;
+  args_info->barcode_help = gengetopt_args_info_help[10] ;
+  args_info->exp_cut_help = gengetopt_args_info_help[11] ;
+  args_info->no_exp_help = gengetopt_args_info_help[12] ;
+  args_info->backg_help = gengetopt_args_info_help[14] ;
+  args_info->refnet_help = gengetopt_args_info_help[15] ;
+  args_info->enorm_help = gengetopt_args_info_help[17] ;
+  args_info->gnorm_help = gengetopt_args_info_help[18] ;
+  args_info->nnorm_help = gengetopt_args_info_help[19] ;
+  args_info->pval_help = gengetopt_args_info_help[20] ;
+  args_info->zscore_help = gengetopt_args_info_help[21] ;
+  args_info->log_weight_help = gengetopt_args_info_help[23] ;
+  args_info->weight_help = gengetopt_args_info_help[24] ;
   
 }
 
@@ -259,6 +275,10 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->genesets_arg));
   free_string_field (&(args_info->genesets_orig));
   free_string_field (&(args_info->geneset_idx_orig));
+  free_string_field (&(args_info->barcode_arg));
+  free_string_field (&(args_info->barcode_orig));
+  free_string_field (&(args_info->exp_cut_orig));
+  free_string_field (&(args_info->no_exp_orig));
   free_string_field (&(args_info->refnet_arg));
   free_string_field (&(args_info->refnet_orig));
   
@@ -308,6 +328,12 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "gene", 0, 0 );
   if (args_info->geneset_idx_given)
     write_into_file(outfile, "geneset_idx", args_info->geneset_idx_orig, 0);
+  if (args_info->barcode_given)
+    write_into_file(outfile, "barcode", args_info->barcode_orig, 0);
+  if (args_info->exp_cut_given)
+    write_into_file(outfile, "exp_cut", args_info->exp_cut_orig, 0);
+  if (args_info->no_exp_given)
+    write_into_file(outfile, "no_exp", args_info->no_exp_orig, 0);
   if (args_info->backg_given)
     write_into_file(outfile, "backg", 0, 0 );
   if (args_info->refnet_given)
@@ -481,6 +507,9 @@ int update_arg(void *field, char **orig_field,
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
+  case ARG_FLOAT:
+    if (val) *((float *)field) = (float)strtod (val, &stop_char);
+    break;
   case ARG_STRING:
     if (val) {
       string_field = (char **)field;
@@ -496,6 +525,7 @@ int update_arg(void *field, char **orig_field,
   /* check numeric conversion */
   switch(arg_type) {
   case ARG_INT:
+  case ARG_FLOAT:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
       return 1; /* failure */
@@ -571,6 +601,9 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "genesets",	1, NULL, 's' },
         { "gene",	0, NULL, 'x' },
         { "geneset_idx",	1, NULL, 'n' },
+        { "barcode",	1, NULL, 'B' },
+        { "exp_cut",	1, NULL, 'C' },
+        { "no_exp",	1, NULL, 'L' },
         { "backg",	0, NULL, 'b' },
         { "refnet",	1, NULL, 'r' },
         { "enorm",	0, NULL, 'e' },
@@ -583,7 +616,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVo:v:d:a:s:xn:br:egGpzlw", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVo:v:d:a:s:xn:B:C:L:br:egGpzlw", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -686,6 +719,42 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.geneset_idx_given), optarg, 0, "0", ARG_INT,
               check_ambiguity, override, 0, 0,
               "geneset_idx", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'B':	/* PCL file of gene expression (barcode) values.  */
+        
+        
+          if (update_arg( (void *)&(args_info->barcode_arg), 
+               &(args_info->barcode_orig), &(args_info->barcode_given),
+              &(local_args_info.barcode_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "barcode", 'B',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'C':	/* Cutoff for gene expression.  */
+        
+        
+          if (update_arg( (void *)&(args_info->exp_cut_arg), 
+               &(args_info->exp_cut_orig), &(args_info->exp_cut_given),
+              &(local_args_info.exp_cut_given), optarg, 0, ".5", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "exp_cut", 'C',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'L':	/* Default value for non-expressed gene.  */
+        
+        
+          if (update_arg( (void *)&(args_info->no_exp_arg), 
+               &(args_info->no_exp_orig), &(args_info->no_exp_given),
+              &(local_args_info.no_exp_given), optarg, 0, "0", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "no_exp", 'L',
               additional_error))
             goto failure;
         

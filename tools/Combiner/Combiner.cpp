@@ -129,7 +129,7 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 		cerr << "Processing " << input_files[ iArg ] << "..." << endl;
 		ifsm.clear( );
 		ifsm.open( input_files[ iArg ].c_str() );
-		PCL.Open( ifsm, sArgs.skip_arg );
+		PCL.Open( input_files[ iArg ].c_str(), sArgs.skip_arg, !!sArgs.memmap_flag );
 	 if (sArgs.normalize_flag)
                 PCL.Normalize(CPCL::ENormalizeRow);
 

@@ -54,6 +54,15 @@ struct gengetopt_args_info
   int geneset_idx_arg;	/**< @brief Index of geneset when outputting by genes (default='0').  */
   char * geneset_idx_orig;	/**< @brief Index of geneset when outputting by genes original value given at command line.  */
   const char *geneset_idx_help; /**< @brief Index of geneset when outputting by genes help description.  */
+  char * barcode_arg;	/**< @brief PCL file of gene expression (barcode) values.  */
+  char * barcode_orig;	/**< @brief PCL file of gene expression (barcode) values original value given at command line.  */
+  const char *barcode_help; /**< @brief PCL file of gene expression (barcode) values help description.  */
+  float exp_cut_arg;	/**< @brief Cutoff for gene expression (default='.5').  */
+  char * exp_cut_orig;	/**< @brief Cutoff for gene expression original value given at command line.  */
+  const char *exp_cut_help; /**< @brief Cutoff for gene expression help description.  */
+  float no_exp_arg;	/**< @brief Default value for non-expressed gene (default='0').  */
+  char * no_exp_orig;	/**< @brief Default value for non-expressed gene original value given at command line.  */
+  const char *no_exp_help; /**< @brief Default value for non-expressed gene help description.  */
   int backg_flag;	/**< @brief Divide by background network compendium score (default=on).  */
   const char *backg_help; /**< @brief Divide by background network compendium score help description.  */
   char * refnet_arg;	/**< @brief Use reference network for background correction.  */
@@ -83,6 +92,9 @@ struct gengetopt_args_info
   unsigned int genesets_given ;	/**< @brief Whether genesets was given.  */
   unsigned int gene_given ;	/**< @brief Whether gene was given.  */
   unsigned int geneset_idx_given ;	/**< @brief Whether geneset_idx was given.  */
+  unsigned int barcode_given ;	/**< @brief Whether barcode was given.  */
+  unsigned int exp_cut_given ;	/**< @brief Whether exp_cut was given.  */
+  unsigned int no_exp_given ;	/**< @brief Whether no_exp was given.  */
   unsigned int backg_given ;	/**< @brief Whether backg was given.  */
   unsigned int refnet_given ;	/**< @brief Whether refnet was given.  */
   unsigned int enorm_given ;	/**< @brief Whether enorm was given.  */

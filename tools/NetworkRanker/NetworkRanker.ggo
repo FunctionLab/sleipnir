@@ -17,6 +17,12 @@ option  "gene" x   "Calculate gene by geneset scores"
 						flag    off	
 option  "geneset_idx" n   "Index of geneset when outputting by genes"
 						int default="0"	
+option "barcode"    B	"PCL file of gene expression (barcode) values"
+						string	typestr="filename"
+option	"exp_cut"   C	"Cutoff for gene expression"
+						float	default=".5"
+option	"no_exp"   L	"Default value for non-expressed gene"
+						float	default="0"
 
 section "Compendium correction"
 option "backg"     b   "Divide by background network compendium score"

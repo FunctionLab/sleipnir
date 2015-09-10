@@ -92,7 +92,11 @@ float score_correction( float d, size_t iNet, size_t iGene1, size_t iGene2, size
     vector<float>& RefGeneDeg, CFullMatrix<float>& MatSum, 
     CDat& DatRef, CDat& DatSum, 
     CDat& DatStd, CDat& DatMean,
+    CPCL& GeneExpPCL, const size_t pclNet, const size_t pclGene1, const size_t pclGene2, float cutoff, float expVal, 
     bool gnorm, bool nnorm, bool enorm, bool backg, bool refnet, bool zscore ) {
+
+
+   float dRaw = d;
 
     // Correct for background in network (i) 
     if ( gnorm ) {
@@ -105,9 +109,12 @@ float score_correction( float d, size_t iNet, size_t iGene1, size_t iGene2, size
 	d /= sqrt ( GeneDeg.Get( iGene1, iNet ) * GeneDeg.Get( iGene2, iNet ) );
     }
     else if ( zscore ) {
-	float cMean = ( GeneDeg.Get( iGene1, iNet ) + GeneDeg.Get( iGene2, iNet ) ) / ( 2 * ( GeneDeg.GetRows() -1 ) );
-	float cStd = sqrt( pow( GeneStd.Get( iGene1, iNet ), 2 ) + pow( GeneStd.Get( iGene2, iNet ), 2 ) );
-	d = ( d - cMean ); 
+	//float cMean = ( GeneDeg.Get( iGene1, iNet ) + GeneDeg.Get( iGene2, iNet ) ) / ( 2 * ( GeneDeg.GetRows() -1 ) );
+	//float cStd = sqrt( pow( GeneStd.Get( iGene1, iNet ), 2 ) + pow( GeneStd.Get( iGene2, iNet ), 2 ) );
+	//d = ( d - cMean ) / cStd; 
+	float cMean1 = GeneDeg.Get( iGene1, iNet ) / ( GeneDeg.GetRows() - 1 );
+	float cMean2 = GeneDeg.Get( iGene2, iNet ) / ( GeneDeg.GetRows() - 1 );
+	d = ( ( d - cMean1 ) / GeneStd.Get( iGene1, iNet ) + ( d - cMean2 ) / GeneStd.Get( iGene2, iNet ) ) / 1.4142;
     }
 
 
@@ -138,8 +145,8 @@ float score_correction( float d, size_t iNet, size_t iGene1, size_t iGene2, size
 	    if ( d ) d /= fDiv;
 	}
 	else if ( zscore ) {
-	    float dback = ( d - DatMean.Get( iGene1, iGene2 ) ) / DatStd.Get( iGene1, iGene2 );
-	    d = d * ( d - DatMean.Get( iGene1, iGene2 ) ); 
+	    float zMeanBack = ( dRaw - DatMean.Get( iGene1, iGene2 ) ) / DatStd.Get( iGene1, iGene2 );
+	    d = ( d + zMeanBack ) / 1.4142;
 	}
 	else {
 	    fDiv = ( DatSum.Get( iGene1, iGene2 ) / iNetTotal );
@@ -147,6 +154,25 @@ float score_correction( float d, size_t iNet, size_t iGene1, size_t iGene2, size
 	}
     }
 
+
+    //if ( GeneExpPCL.GetExperiments() && GeneExpPCL.GetGenes() ) {
+	//size_t iNet = GeneExpPCL.GetGene( netName );	
+	//size_t iGene1 = GeneExpPCL.GetExperiment( strGene1 );
+	//size_t iGene2 = GeneExpPCL.GetExperiment( strGene2 );
+	if ( pclNet != -1 && pclGene1 != -1 && pclGene2 != -1 ) {
+	    float exp1 = GeneExpPCL.Get( pclNet, pclGene1 );
+	    float exp2 = GeneExpPCL.Get( pclNet, pclGene2 );
+	    if ( !CMeta::IsNaN( exp1 ) && !CMeta::IsNaN( exp2 ) && exp1 < cutoff && exp2 < cutoff ) {
+		if ( expVal == -1 )
+		    expVal = CMeta::GetNaN();
+		d = expVal; 
+	    }
+
+	    //cout << pclNet << ", " << pclGene1 << ", " << pclGene2 << endl;
+	}
+    //}
+
+ 
     return d;
 }
 
@@ -166,7 +192,7 @@ int main( int iArgs, char** aszArgs ) {
     vector<vector<size_t> >				veciIdxBins;
     vector<vector<vector<size_t> > >			veciBinsIdx;
 
-    CPCL PCL, AnnotPCL, GenesetsPCL;
+    CPCL PCL, AnnotPCL, GenesetsPCL, GeneExpPCL;
     std::vector<string> input_files;
     std::string dab_dir;
     CFullMatrix<float> GeneDeg = CFullMatrix<float>();
@@ -174,6 +200,7 @@ int main( int iArgs, char** aszArgs ) {
     vector<float> RefGeneDeg = vector<float>();
     CFullMatrix<float> MatSum = CFullMatrix<float>();
     vector<string> features;
+    vector<float> ExpPCLGenes = vector<float>();
 
     if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
         cmdline_parser_print_help( );
@@ -223,9 +250,14 @@ int main( int iArgs, char** aszArgs ) {
         }
     }
 
+    if ( sArgs.barcode_arg ) {
+	GeneExpPCL.Open( sArgs.barcode_arg, 0 );
+    }
+
     if ( sArgs.annot_arg ) {
         AnnotPCL.Open( sArgs.annot_arg, 0 );
     }
+
     else if ( sArgs.enorm_flag || sArgs.gnorm_flag || sArgs.nnorm_flag || sArgs.pval_flag || sArgs.zscore_flag ) {
 	if ( sArgs.pval_flag ) {
 	    veciIdxBins.resize(input_files.size());
@@ -356,6 +388,11 @@ int main( int iArgs, char** aszArgs ) {
         }	    
         cerr <<  input_files[ i ] << endl;
         if ( i == 0 ) {
+	    ExpPCLGenes.resize( DatCur.GetGenes() ); 
+	    for ( size_t x = 0; x < ExpPCLGenes.size(); x++ ) {
+		ExpPCLGenes[ x ] = GeneExpPCL.GetExperiment( DatCur.GetGene( x ) );
+	    }
+
             if ( sArgs.genesets_arg ) {
                 PCL.Open( GenesetsPCL.GetExperimentNames(), input_files, features );
             }
@@ -363,10 +400,16 @@ int main( int iArgs, char** aszArgs ) {
                 PCL.Open( DatCur.GetGeneNames(), input_files, features );
         }
 
+
         string netName = CMeta::Basename( input_files[ i ].c_str() );
         netName = CMeta::Deextension( netName );
 
         cerr << netName << endl;
+
+	size_t iNetExp = -1;
+	if ( GeneExpPCL.GetGenes() ) {
+	    iNetExp = GeneExpPCL.GetGene( netName ); 
+	}
 
         if ( sArgs.annot_arg && !i ) {
             veciAnnotIdx.resize( DatCur.GetGenes() );
@@ -434,12 +477,17 @@ int main( int iArgs, char** aszArgs ) {
 
 		    iGenesetSize ++;
 
+		    //cout << iNetExp << ", " << ExpPCLGenes[ j ] << ", " << ExpPCLGenes[ k ] << endl;
+
                     d = DatCur.Get( j, k );
 		    d = score_correction( d, i, j, k, input_files.size(), 
 			GeneDeg, GeneStd, RefGeneDeg, MatSum, DatRef, DatSum,
 			DatMean, DatStd,
+			GeneExpPCL, iNetExp, ExpPCLGenes[ j ], ExpPCLGenes[ k ], sArgs.exp_cut_arg, sArgs.no_exp_arg, 
 			sArgs.gnorm_flag, sArgs.nnorm_flag, sArgs.enorm_flag, 
 			sArgs.backg_flag, sArgs.refnet_arg, sArgs.zscore_flag );
+
+		    if ( CMeta::IsNaN( d ) ) { continue; }
 
                     if ( sArgs.genesets_arg ) {
                         fSetScore += d;
@@ -494,6 +542,7 @@ int main( int iArgs, char** aszArgs ) {
 			    d = score_correction( d, i, ivecRand[j], ivecRand[k], input_files.size(), 
 				GeneDeg, GeneStd, RefGeneDeg, MatSum, DatRef, DatSum,
 				DatMean, DatStd,
+				GeneExpPCL, iNetExp, ExpPCLGenes[ j ], ExpPCLGenes[ k ], sArgs.exp_cut_arg, sArgs.no_exp_arg, 
 				sArgs.gnorm_flag, sArgs.nnorm_flag, sArgs.enorm_flag, 
 				sArgs.backg_flag, sArgs.refnet_arg, sArgs.zscore_flag );
 			    
@@ -511,14 +560,14 @@ int main( int iArgs, char** aszArgs ) {
 		    vecfRandVals.push_back( fSetScoreRand );
 		}
 
-		if ( sArgs.zscore_flag ) {
-		    float std = sqrt( CStatistics::Variance( vecfRandVals ) );
-		    float mean = CStatistics::Average( vecfRandVals );
-		    fSetScore = (fSetScore - mean) / std;
-		}
-		else {
+		//if ( sArgs.zscore_flag ) {
+		//    float std = sqrt( CStatistics::Variance( vecfRandVals ) );
+		//    float mean = CStatistics::Average( vecfRandVals );
+		//    fSetScore = (fSetScore - mean) / std;
+		//}
+		//else {
 		    fSetScore = fRelRank;
-		}
+		//}
 	    }
 
             if ( sArgs.genesets_arg )
