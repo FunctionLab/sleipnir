@@ -21,7 +21,7 @@ option	"normalizeNPone"	w	"Normalize to the range [-1,1]"
 							flag	off
 option	"normalizeDeg"		j	"Normalize by incident node degrees"
 							flag	off
-option	"normalizeLoc"		k	"Normalize by local neighborhood"
+option	"normalizeLoc"		Y	"Normalize by local neighborhood"
 							flag	off
 option	"zscore"		z	"Convert values to z-scores"
 							flag	off
@@ -29,7 +29,13 @@ option	"rank"			r	"Rank transform data"
 							flag	off
 option	"randomize"		a	"Randomize data"
 							flag	off
-option	"NegExp"		K	"Transform all values to their negative exponential (converts -log of prob back to prob space)"
+option	"NegExp"		y	"Transform all values to their negative exponential (converts -log of prob back to prob space)"
+							flag	off
+option	"prior"			k	"Prior of functional network (for rescaling -K)"
+							double	
+option	"newprior"		K	"New prior of functional network (use with -k)"
+							double
+option	"logratio"		A	"Convert functional network to log likelihood ratio (use with -k)"
 							flag	off
 
 section "Filtering"

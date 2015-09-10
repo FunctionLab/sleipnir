@@ -1,10 +1,13 @@
 #!/bin/sh
 
-./configure --prefix=/Genomics/ogtr03/vyao/sleipnir-build/ --with-gengetopt=/Genomics/fgrid/function/sleipnir-extlib/gengetopt/src/gengetopt\
+./configure --with-gengetopt=/Genomics/fgrid/function/sleipnir-extlib/gengetopt/src/gengetopt\
 	--with-log4cpp=/usr/include/log4cpp/ \
 	--with-smile=/Genomics/fgrid/function/sleipnir-extlib/smile_linux_x64_gcc_4_4_5/ \
 	--with-svm-perf=/Genomics/fgrid/function/sleipnir-extlib/svm_perf/ \
-	--with-boost-includes=/usr/include/boost/\
-	--with-boost-graph-lib=/usr/lib/libboost_graph.a \
+	--with-boost=/Genomics/fgrid/function/sleipnir-extlib/usr/ \
 	LDFLAGS=-static
+#	--with-boost=/usr/include/boost/ \
+#	--with-boost-includes=/usr/include/boost/ \
+#	--with-boost-graph-lib=/usr/lib/boost141/libboost_graph.so
+
 # CXXFLAGS=-fno-threadsafe-statics

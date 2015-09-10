@@ -120,6 +120,35 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.Set( i, j, d + CStatistics::SampleNormalStandard() );		  
 	      }	
 	}      
+	// Rescale prior
+	if( sArgs.prior_given && sArgs.newprior_given ){
+	    float r = sArgs.newprior_arg / sArgs.prior_arg;
+	    float rdiff = (1-sArgs.newprior_arg)/(1-sArgs.prior_arg);
+	    float d;
+	    for( i = 0; i < Dat.GetGenes( ); ++i ) {
+		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+		    if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ){
+			d = (d * r) / (d * r + (1-d) * rdiff);
+			Dat.Set( i, j, d );  
+		    }
+		}	
+	    }
+	}      
+	// Convert posterior to log-likelihood ratio
+	if( sArgs.prior_given && sArgs.logratio_flag ) {
+	    float logprior = log(sArgs.prior_arg/(1-sArgs.prior_arg));
+	    float d;
+	    for( i = 0; i < Dat.GetGenes( ); ++i ) {
+		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+		    if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ){
+			d = log(d/(1-d)) - logprior;
+			Dat.Set( i, j, d );  
+		    }
+		}	
+	    }
+
+	}
+
 	if( sArgs.randomize_flag )
 		Dat.Randomize( );
 	if( sArgs.rank_flag )

@@ -1047,8 +1047,8 @@ void CPCL::SaveHeader(std::ostream& ostm, bool fCDT) const {
 /*	if (fCDT)
 		ostm << c_szGID << '\t'; */
 	ostm << m_vecstrFeatures[0]; //Gene name
-//	for (i = 1; i < m_vecstrFeatures.size(); ++i)
-//		ostm << '\t' << m_vecstrFeatures[i];
+	for (i = 1; i < m_vecstrFeatures.size(); ++i)
+		ostm << '\t' << m_vecstrFeatures[i];
 	for (i = 0; i < m_vecstrExperiments.size(); ++i)
 		ostm << '\t' << m_vecstrExperiments[i];
 	ostm << endl;
