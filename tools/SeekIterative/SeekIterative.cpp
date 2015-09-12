@@ -401,6 +401,106 @@ CSeekIntIntMap *geneMap, float rbp_p, float &tot_w, vector<float> &geneAverage){
 	return true;	
 }
 
+bool WriteResultComponent(int countSelected, vector<string> query, vector<float> fs, vector<float> count, 
+vector<int> freq, string output_dir, size_t j){
+	char acBuffer[1024];
+	vector<int> vecCountSelected;
+	vecCountSelected.push_back(countSelected);
+	sprintf(acBuffer, "%s/%d.query", output_dir.c_str(), j);
+	CSeekTools::WriteArrayText(acBuffer, query);
+	sprintf(acBuffer, "%s/%d.gscore_comp", output_dir.c_str(), j);
+	CSeekTools::WriteArray(acBuffer, fs);
+	sprintf(acBuffer, "%s/%d.count_comp", output_dir.c_str(), j);
+	CSeekTools::WriteArray(acBuffer, count);
+	sprintf(acBuffer, "%s/%d.freq_comp", output_dir.c_str(), j);
+	CSeekTools::WriteArray(acBuffer, freq);
+	sprintf(acBuffer, "%s/%d.count_selected", output_dir.c_str(), j);
+	CSeekTools::WriteArrayText(acBuffer, vecCountSelected);
+	return true;
+}
+
+bool WriteResult(int countSelected, vector<string> query, vector<float> final_score, vector<float> count, 
+vector<int> freq, vector<float> dweight, string output_dir, size_t j, float threshold_g, bool DEBUG){
+	char acBuffer[1024];
+	size_t k;
+	int minRequired = (int) ((float) countSelected * threshold_g);
+	if(DEBUG){
+		int nG = 0;
+		for(k=0; k<final_score.size(); k++){
+			if(freq[k]>=minRequired){
+				nG++;
+			}
+		}
+		fprintf(stderr, "Query %d numSelectedDataset %d numGenesIntegrated %d\n", j, countSelected, nG);
+	}
+
+	for(k=0; k<final_score.size(); k++){
+		if(freq[k]<minRequired){
+			final_score[k] = -320;
+			continue;
+		}
+		if(CMeta::IsNaN(final_score[k])){
+			final_score[k] = -320;
+			continue;
+		}
+		final_score[k] /= count[k];
+	}
+	sprintf(acBuffer, "%s/%d.query", output_dir.c_str(), j);
+	CSeekTools::WriteArrayText(acBuffer, query);
+	sprintf(acBuffer, "%s/%d.gscore", output_dir.c_str(), j);
+	CSeekTools::WriteArray(acBuffer, final_score);
+	sprintf(acBuffer, "%s/%d.dweight", output_dir.c_str(), j);
+	CSeekTools::WriteArray(acBuffer, dweight);
+	return true;
+}
+
+bool MergeComponent(vector<string> merge_list, string output_dir, float threshold_g){
+	size_t j, k;
+	char acBuffer[1024];
+	for(j=0; j<merge_list.size(); j++){
+		vector<float> fs; //final score
+		vector<float> ct; //count
+		vector<int> fq; //freq
+		vector<int> ct_selected; //count_selected
+		vector<string> aQuery;
+
+		int last_index = merge_list[j].find_last_of(".");
+		string base = merge_list[j].substr(0, last_index);
+
+		sprintf(acBuffer, "%s.query", base.c_str());
+		CSeekTools::ReadMultiGeneOneLine(acBuffer, aQuery, 1024);
+		sprintf(acBuffer, "%s.gscore_comp", base.c_str());
+		CSeekTools::ReadArray(acBuffer, fs);
+		sprintf(acBuffer, "%s.count_comp", base.c_str());
+		CSeekTools::ReadArray(acBuffer, ct);
+		sprintf(acBuffer, "%s.freq_comp", base.c_str());
+		CSeekTools::ReadArray(acBuffer, fq);
+		sprintf(acBuffer, "%s.count_selected", base.c_str());
+		CSeekTools::ReadArray(acBuffer, ct_selected);
+
+		int count_selected = ct_selected[0];
+		int minRequired = (int) ((float) count_selected * threshold_g);
+		minRequired = max(1, minRequired);
+
+		for(k=0; k<fs.size(); k++){
+			if(fq[k]<minRequired){
+				fs[k] = -320;
+				continue;
+			}
+			if(CMeta::IsNaN(fs[k])){
+				fs[k] = -320;
+				continue;
+			}
+			fs[k] /= ct[k];
+		}
+		sprintf(acBuffer, "%s/%d.query", output_dir.c_str(), j);
+		CSeekTools::WriteArrayText(acBuffer, aQuery);
+		sprintf(acBuffer, "%s/%d.gscore", output_dir.c_str(), j);
+		CSeekTools::WriteArray(acBuffer, fs);
+	}
+	return true;
+}
+
 bool spell_weight(vector<utype> &query, CFullMatrix<float> &mat,
 CSeekIntIntMap *geneMap, float &tot_w){
 	utype i, j;
@@ -916,13 +1016,26 @@ int main(int iArgs, char **aszArgs){
 
 	//Traditional DAB mode (.dab file)
 	if(sArgs.tdab_flag==1){
+		float threshold_g = sArgs.threshold_g_arg;
+		float threshold_q = sArgs.threshold_q_arg;
+		bool DEBUG = !!sArgs.debug_flag;
+
 		string search_mode = sArgs.tsearch_mode_arg;
 		if(search_mode=="NA"){
 			fprintf(stderr, "Please specify a search mode!\n");
 			return 1;
 		}
+
+		bool mergeComponent = !!sArgs.merge_component_flag;
+		if(mergeComponent){
+			vector<string> merge_list;
+			CSeekTools::ReadListOneColumn(sArgs.merge_gscore_list_arg, merge_list);
+			MergeComponent(merge_list, output_dir, threshold_g);
+			return 0;
+		}
+
 		vector<string> dab_list;
-		CSeekTools::ReadListOneColumn(sArgs.tdab_list_arg, dab_list);
+		CSeekTools::ReadListOneColumn(sArgs.dab_list_arg, dab_list);
 
 		fprintf(stderr, "Finished reading dablist\n");
 		//preparing query
@@ -971,9 +1084,6 @@ int main(int iArgs, char **aszArgs){
 			CSeekTools::InitVector(dweight[j], dab_list.size(), (float) 0);
 		}
 
-		float threshold_g = sArgs.threshold_g_arg;
-		float threshold_q = sArgs.threshold_q_arg;
-		bool DEBUG = !!sArgs.debug_flag;
 
 		size_t l;
 		for(l=0; l<dab_list.size(); l++){
@@ -1090,45 +1200,26 @@ int main(int iArgs, char **aszArgs){
 					freq[j][gi]++;
 				}	
 			}
+		}
 
+		bool outputComponent = !!sArgs.output_component_flag;
+		if(outputComponent){
+			for(j=0; j<vecstrAllQuery.size(); j++){
+				int countSelected = 0;
+				for(k=0; k<selectedDataset[j].size(); k++) //k is dataset iterator
+					countSelected+=selectedDataset[j][k];
+				WriteResultComponent(countSelected, vecstrAllQuery[j], final_score[j], 
+					count[j], freq[j], output_dir, j);
+			}
+			return 0;
 		}
 
 		for(j=0; j<vecstrAllQuery.size(); j++){
-
 			int countSelected = 0;
 			for(k=0; k<selectedDataset[j].size(); k++)
 				countSelected+=selectedDataset[j][k];
-
-			//int minRequired = (int) ((float) dab_list.size() * 0.50);
-			int minRequired = (int) ((float) countSelected * threshold_g);
-
-			if(DEBUG){
-				int nG = 0;
-				for(k=0; k<final_score[j].size(); k++){
-					if(freq[j][k]>=minRequired){
-						nG++;
-					}
-				}
-				fprintf(stderr, "Query %d numSelectedDataset %d numGenesIntegrated %d\n", j, countSelected, nG);
-			}
-
-			for(k=0; k<final_score[j].size(); k++){
-				if(freq[j][k]<minRequired){
-					final_score[j][k] = -320;
-					continue;
-				}
-				if(CMeta::IsNaN(final_score[j][k])){
-					final_score[j][k] = -320;
-					continue;
-				}
-				final_score[j][k] /= count[j][k];
-			}
-			sprintf(acBuffer, "%s/%d.query", output_dir.c_str(), j);
-			CSeekTools::WriteArrayText(acBuffer, vecstrAllQuery[j]);
-			sprintf(acBuffer, "%s/%d.gscore", output_dir.c_str(), j);
-			CSeekTools::WriteArray(acBuffer, final_score[j]);
-			sprintf(acBuffer, "%s/%d.dweight", output_dir.c_str(), j);
-			CSeekTools::WriteArray(acBuffer, dweight[j]);
+			WriteResult(countSelected, vecstrAllQuery[j], final_score[j], count[j], freq[j],
+				dweight[j], output_dir, j, threshold_g, DEBUG);
 		}
 		return 0;
 	}
@@ -1139,6 +1230,14 @@ int main(int iArgs, char **aszArgs){
 		float threshold_g = sArgs.threshold_g_arg;
 		float threshold_q = sArgs.threshold_q_arg;
 		bool DEBUG = !!sArgs.debug_flag;
+
+		bool mergeComponent = !!sArgs.merge_component_flag;
+		if(mergeComponent){
+			vector<string> merge_list;
+			CSeekTools::ReadListOneColumn(sArgs.merge_gscore_list_arg, merge_list);
+			MergeComponent(merge_list, output_dir, threshold_g);
+			return 0;
+		}
 
 		string search_mode = sArgs.tsearch_mode_arg;
 		if(search_mode=="NA"){
@@ -1238,8 +1337,10 @@ int main(int iArgs, char **aszArgs){
 			CSeekTools::InitVector(dweight[j], dab_list.size(), (float) 0);
 		}
 
-		if(bDatasetCutoff)	fprintf(stderr, "Dataset cutoff is on!\n");
-		else	fprintf(stderr, "Dataset cutoff is off!\n");
+		if(bDatasetCutoff)
+			fprintf(stderr, "Dataset cutoff is on!\n");
+		else
+			fprintf(stderr, "Dataset cutoff is off!\n");
 		
 
 		for(i=0; i<dab_list.size(); i++){
@@ -1327,42 +1428,24 @@ int main(int iArgs, char **aszArgs){
 		ofsm.open("/memex/qzhu/p4/concatenate_tumor_network.half", ios_base::binary);
 		res.Save(ofsm, true);
 		*/
+		bool outputComponent = !!sArgs.output_component_flag;
+		if(outputComponent){
+			for(j=0; j<vecstrAllQuery.size(); j++){
+				int countSelected = 0;
+				for(k=0; k<selectedDataset[j].size(); k++) //k is dataset iterator
+					countSelected+=selectedDataset[j][k];
+				WriteResultComponent(countSelected, vecstrAllQuery[j], final_score[j], 
+					count[j], freq[j], output_dir, j);
+			}
+			return 0;
+		}
 		
 		for(j=0; j<vecstrAllQuery.size(); j++){
 			int countSelected = 0;
 			for(k=0; k<selectedDataset[j].size(); k++)
 				countSelected+=selectedDataset[j][k];
-
-			int minRequired = (int) ((float) countSelected * threshold_g);
-
-			if(DEBUG){
-				int nG = 0;
-				for(k=0; k<final_score[j].size(); k++){
-					if(freq[j][k]>=minRequired){
-						nG++;
-					}
-				}
-				fprintf(stderr, "Query %d numSelectedDataset %d numGenesIntegrated %d\n", j, countSelected, nG);
-			}
-
-			for(k=0; k<final_score[j].size(); k++){
-				if(freq[j][k]<minRequired){
-					final_score[j][k] = -320;
-					continue;
-				}
-				if(CMeta::IsNaN(final_score[j][k])){
-					final_score[j][k] = -320;
-					continue;
-				}
-				final_score[j][k] /= count[j][k];
-			}
-
-			sprintf(acBuffer, "%s/%d.query", output_dir.c_str(), j);
-			CSeekTools::WriteArrayText(acBuffer, vecstrAllQuery[j]);
-			sprintf(acBuffer, "%s/%d.gscore", output_dir.c_str(), j);
-			CSeekTools::WriteArray(acBuffer, final_score[j]);
-			sprintf(acBuffer, "%s/%d.dweight", output_dir.c_str(), j);
-			CSeekTools::WriteArray(acBuffer, dweight[j]);
+			WriteResult(countSelected, vecstrAllQuery[j], final_score[j], count[j], freq[j], 
+				dweight[j], output_dir, j, threshold_g, DEBUG);
 		}
 	
 		//MODE 2

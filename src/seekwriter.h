@@ -105,12 +105,12 @@ public:
 			ret = fread((char*)(&numEntries), 1, sizeof(numEntries), f);
 			for(j=0; j<numEntries; j++){
 				ret = fread((char*)(&id2),1,sizeof(id2),f);
-				ret = fread((char*)(&val),1,sizeof(val),f);
+				ret = fread((char*)(&val),1,sizeof(val),f); //rank, starting at 1
 				tType first = id;
 				tType second = id2;
 				//mat is a full matrix
-				mat.Add(first, second, rbp_score[val]);
-				mat.Add(second, first, rbp_score[val]);
+				mat.Add(first, second, rbp_score[val-1]); //rank-1, since rbp_score is index by rank-1
+				mat.Add(second, first, rbp_score[val-1]);
 			}
 		}
 		fclose(f);
@@ -357,7 +357,7 @@ public:
 			vv.resize(vecstrGenes.size());
 
 			for(j=0; j<vecstrGenes.size(); j++){
-				vv[j].i = (utype) j;
+				vv[j].i = (utype) (j + 1); //minimum rank is 1
 				vv[j].f = -9999;
 				if((t=veciGenes[j])==(tType)-1) continue;
 				if(CMeta::IsNaN(v[t])) continue;
@@ -375,10 +375,12 @@ public:
 						second = (tType) i;
 					}
 					typename map<tType,unsigned short>::iterator it;
-					if((it=umat[first].find(second))==umat[first].end())
+					if((it=umat[first].find(second))==umat[first].end()){
 						umat[first][second] = (unsigned short) j;
-					else
+					}else{
 						umat[first][second] = std::min(it->second, (unsigned short) j);
+						//umat[first][second] = (unsigned short) sqrtf((float) it->second * (float) j);
+					}
 				}
 			}
 			delete[] v;

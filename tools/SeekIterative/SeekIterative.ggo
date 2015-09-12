@@ -34,15 +34,11 @@ option	"cutoff"			c	"Cutoff value"
 option	"genome"			G	"Genome mapping file"
 								string typestr="filename"
 
-section "Traditional DAB mode (see also: -Z, -Y, -S)"
-option	"tdab_list"			J	"DAB list"
-								string typestr="filename"
+section "Traditional DAB mode (see also: -Z, -Y. requires -S, -V, -F)"
 option	"gavg_dir"			a	"Gene average directory (.gavg files)"
 								string typestr="directory" default="NA"
 
-section "Sparse DAB mode (see also: -Z, -Y, -S)"
-option	"dab_list"			V	"DAB list"
-								string typestr="filename"
+section "Sparse DAB mode (see also: -Z, -Y. requires -S, -V, -F)"
 option	"num_iter"			I	"Number of iterations"
 								int	default="0"
 option	"default_type"		T	"Default gene index type (choose unsigned short for genes, or unsigned int (32-bit) for transcripts) (required for DAB mode) (0 - unsigned int, 1 - unsigned short)"
@@ -65,6 +61,10 @@ option	"query"				q	"Query file"
 								string typestr="filename"	yes
 option	"dab_dir"			F	"DAB directory"
 								string typestr="directory"	yes
+option	"dab_list"			V	"DAB/TDAB list"
+								string typestr="filename"
+
+section "Options"
 option	"not_query"			Q	"NOT Query file (optional, for combined-DAB)"
 								string typestr="filename" default="NA"
 option	"threshold_q"		Z	"Fraction of query genes need to be present in a dataset"
@@ -75,6 +75,14 @@ option	"tsearch_mode"		S	"Search mode: equal weighted (eq) or CV LOI (cv_loi) or
 								values="eq","cv_loi","spell","NA" default="NA"
 option	"debug"				x	"Debug mode"
 								flag off
+
+section "Handling search results"
+option	"output_component"	o	"Output the search results in components, to be used for merging later. Good for handling results in distributed search. Writes results in *.gscore_comp files. Available for --tdab, --dab modes."
+								flag off
+option	"merge_component"	O	"Merge component, bypass search, just merge component outputs. Good for merging results in distributed search. Requires --merge_gscore_list. Available for --tdab, --dab modes."
+								flag off
+option	"merge_gscore_list"	r	"Merge gscore list. A list of filenames *.gscore_comp with path"
+								string typestr="filename" default="NA"
 
 section "Output"
 option	"dir_out"			D	"Output directory"

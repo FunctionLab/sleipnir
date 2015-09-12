@@ -75,7 +75,8 @@ if WITH_GSL_TOOLS
 	  SeekAggregatedDataset \
       SeekPValue \
       SeekIterative \
-	  PCLServer
+	  PCLServer \
+      MutualRanker
 endif
 
 if WITH_BOOST_TOOLS

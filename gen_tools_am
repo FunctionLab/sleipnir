@@ -46,6 +46,7 @@ my %tools_other_packages = (
                                 SeekAggregatedDataset => ['GSL'],
                                 SeekIterative => ['GSL'],
                                 PCLServer => ['GSL'],
+                                MutualRanker => ['GSL'],
                             Dab2Dad  => ['SMILE'],
                             Dab2DB  => ['SMILE'],
                             Data2Svm => ['SVM_PERF'],

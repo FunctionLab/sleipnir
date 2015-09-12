@@ -1019,6 +1019,7 @@ AC_CONFIG_FILES([Makefile \
                  tools/SeekGeneRecommender/Makefile \
                  tools/SeekAggregatedDataset/Makefile \
                  tools/SeekIterative/Makefile \
+                 tools/MutualRanker/Makefile \
          tools/DBCombiner/Makefile \
                  tools/DSLConverter/Makefile \
                  tools/Dab2Dad/Makefile \
