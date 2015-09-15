@@ -63,6 +63,14 @@ struct gengetopt_args_info
   const char *randomize_help; /**< @brief Randomize data help description.  */
   int NegExp_flag;	/**< @brief Transform all values to their negative exponential (converts -log of prob back to prob space) (default=off).  */
   const char *NegExp_help; /**< @brief Transform all values to their negative exponential (converts -log of prob back to prob space) help description.  */
+  double prior_arg;	/**< @brief Prior of functional network (for rescaling -K).  */
+  char * prior_orig;	/**< @brief Prior of functional network (for rescaling -K) original value given at command line.  */
+  const char *prior_help; /**< @brief Prior of functional network (for rescaling -K) help description.  */
+  double newprior_arg;	/**< @brief New prior of functional network (use with -k).  */
+  char * newprior_orig;	/**< @brief New prior of functional network (use with -k) original value given at command line.  */
+  const char *newprior_help; /**< @brief New prior of functional network (use with -k) help description.  */
+  int logratio_flag;	/**< @brief Convert functional network to log likelihood ratio (use with -k) (default=off).  */
+  const char *logratio_help; /**< @brief Convert functional network to log likelihood ratio (use with -k) help description.  */
   char * genes_arg;	/**< @brief Process only genes from the given set.  */
   char * genes_orig;	/**< @brief Process only genes from the given set original value given at command line.  */
   const char *genes_help; /**< @brief Process only genes from the given set help description.  */
@@ -155,6 +163,9 @@ struct gengetopt_args_info
   unsigned int rank_given ;	/**< @brief Whether rank was given.  */
   unsigned int randomize_given ;	/**< @brief Whether randomize was given.  */
   unsigned int NegExp_given ;	/**< @brief Whether NegExp was given.  */
+  unsigned int prior_given ;	/**< @brief Whether prior was given.  */
+  unsigned int newprior_given ;	/**< @brief Whether newprior was given.  */
+  unsigned int logratio_given ;	/**< @brief Whether logratio was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */
   unsigned int genee_given ;	/**< @brief Whether genee was given.  */
