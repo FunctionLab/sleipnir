@@ -160,12 +160,11 @@
  * </li>
  * <li>If desired, download and install SMILE:
  * <ol>
- *  <li>From http://genie.sis.pitt.edu/downloads.html download the appropriate package (x64 or x86) for gcc version 4 or above (currently 4.4.5).  If you have registered as a SMILE user and meet the appropriate requirements, the following commands should work for _x64 (assumes you have a Downloads directory):
+ *  <li>From http://download.bayesfusion.com/files.html?category=Academia#SMILE download the appropriate package (x64 or x86) for gcc version 4 or above (currently 4.4.5).  If you have registered as a SMILE user and meet the appropriate requirements, the following commands should work for _x64 (assumes you have a Downloads directory):
  *  \code
  *  cd ~/Downloads
  *  mkdir smile
  *  cd smile
- *  wget http://genie.sis.pitt.edu/download/smile_linux_x64_gcc_4_4_5.tar.gz
  *  tar -xzf smile_linux_x64_gcc_4_4_5.tar.gz
  *  rm smile_linux_x64_gcc_4_4_5.tar.gz
  *  cd ..
