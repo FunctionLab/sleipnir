@@ -74,12 +74,16 @@ public:
 	void GetScores( const vector<size_t>&, const vector<float>&,
 	    vector<float>&, vector<float>&, vector<size_t>&, CFullMatrix<float>*, CFullMatrix<float>* );
 
+	void GetScores( const vector<size_t>&, const vector<size_t>&,
+	    CFullMatrix<float>&, CFullMatrix<float>& );
+
 	void GetDataWeights( size_t, CFullMatrix<float>&, float, float, vector<float>& );
 
 private:
 
 	size_t ProcessDatasetSearch( const vector<unsigned char>& , size_t );
 	size_t ProcessDatasetMeasure( const vector<unsigned char>& , size_t );
+	size_t ProcessDatasetRetrieve( const vector<unsigned char>& , size_t );
 
 	string GetQuantFile() const { return m_sData.m_strQuant; }
 

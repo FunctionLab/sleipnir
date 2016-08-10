@@ -35,7 +35,7 @@
 #define SOCKET		int
 #endif // _MSC_VER
 
-#include <pthread.h>
+#include <omp.h>
 
 using namespace std;
 
