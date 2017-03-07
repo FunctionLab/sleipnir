@@ -398,8 +398,8 @@ int main( int iArgs, char** aszArgs ) {
 		dAve /= iCutoff;
 		dStd = sqrt( ( dStd / iCutoff ) - ( dAve * dAve ) );
 		for( i = 0; i < vecdSquares.size( ); ++i ) {
-			d = vecdTotals[ i ] / iCutoff;
-			vecdSquares[ i ] = sqrt( ( vecdSquares[ i ] / iCutoff ) - ( d * d ) ); }
+			d = vecdTotals[ i ] / veciCounts[ i ];
+			vecdSquares[ i ] = sqrt( ( vecdSquares[ i ] / veciCounts[ i ] ) - ( d * d ) ); }
 
 		cout << iTotal << endl;
 		if( sArgs.cutoff_given )
