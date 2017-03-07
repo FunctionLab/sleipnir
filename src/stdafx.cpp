@@ -103,8 +103,8 @@
  *	status messages.  It is available as source or binary packages for Linux/Mac OS and can be built with
  *	Visual Studio for Windows.  Sleipnir will run without it, but more status information will be displayed
  *	than usual (since log4cpp filters by priority).
- * - <a href="http://genie.sis.pitt.edu/">SMILE</a> is a graphical models library by the Decision Systems
- *	Library at the University of Pittsburgh.  Sleipnir uses it to do most of its Bayesian analysis, so
+ * - <a href="http://www.bayesfusion.com/#!products/c1ixv">SMILE</a> is a graphical models library by 
+ *	BayesFusion, LLC.  Sleipnir uses it to do most of its Bayesian analysis, so
  *	no Bayes nets will be available without it!  It is distributed by the DSL as binaries built for a wide
  *	variety of platforms; if you don't see yours listed, send them an email, and they can probably help.
  * - <a href="http://svmlight.joachims.org/">SVM Perf</a> is a support vector machine library used for
@@ -160,12 +160,12 @@
  * </li>
  * <li>If desired, download and install SMILE:
  * <ol>
- *  <li>From http://genie.sis.pitt.edu/downloads.html download the appropriate package (x64 or x86) for gcc version 4 or above (currently 4.4.5).  If you have registered as a SMILE user and meet the appropriate requirements, the following commands should work for _x64 (assumes you have a Downloads directory):
+ *  <li>From http://download.bayesfusion.com/files.html?category=Academia#SMILE download the appropriate package (x64 or x86) for gcc version 4 or above (currently 4.4.5) into your ~/Downloads directory. Please note that a login (through Google, Facebook, or Linkedin) is required to download this software. If you have registered as a SMILE user and meet the appropriate requirements, the following commands should work for _x64 (assuming you have downloaded the package to ~/Downloads):
  *  \code
  *  cd ~/Downloads
  *  mkdir smile
+ *  mv smile_linux_x64_gcc_4_4_5.tar.gz smile
  *  cd smile
- *  wget http://genie.sis.pitt.edu/download/smile_linux_x64_gcc_4_4_5.tar.gz
  *  tar -xzf smile_linux_x64_gcc_4_4_5.tar.gz
  *  rm smile_linux_x64_gcc_4_4_5.tar.gz
  *  cd ..
@@ -262,7 +262,7 @@
  *	Windows or Mac OS, when in doubt, link dynamically (e.g. in Visual Studio, using the DLL runtime
  *	libraries).  Mac OS is not consistently able to link statically, and the SMILE library will only link
  *	statically in release (not debug) mode on Windows.
- * - Choosing the correct version of <a href="http://genie.sis.pitt.edu/">SMILE</a> can be confusing; be
+ * - Choosing the correct version of <a href="http://download.bayesfusion.com/files.html?category=Academia#SMILE">SMILE</a> can be confusing; be
  *	sure you have a recent version that matches your build environment.  On Windows, this will be a version
  *	of Visual Studio (6.0 through 9.0, also known as 2008) or of gcc for cygwin.  On Linux/Mac OS, this will
  *	be a version of gcc, which you can obtain with the \c --version flag.

@@ -11,7 +11,7 @@ import numpy
 
 class DataServer:
 
-    SEARCH, MEASURE = range(2)
+    SEARCH, MEASURE, RETRIEVE = range(3)
 
 
     def __init__(self, gidx, didx, ip = '127.0.0.1', port = 1234):
@@ -93,6 +93,43 @@ class DataServer:
         s.close()
         return (genes,dsets)
 
+    def retrieve(self, didx = [], genes = []):
+        s = self.open_socket()
+
+        size = 1 + 4 + 4 # opcode + dataset id + total
+        size += 4*len(genes)
+
+        size = struct.pack('<i', size)
+        s.send(size)
+
+        opcode = struct.pack('<b', self.RETRIEVE)
+        s.send(opcode)
+
+        total = struct.pack('<i', len(didx))
+        s.send(total)
+
+        did = struct.pack('<'+'i'*len(didx), *didx)
+        s.send(did)
+
+        gene = struct.pack('<'+'i'*len(genes), *genes)
+        s.send(gene)
+        s.shutdown(socket.SHUT_WR)
+
+        scores = []
+        result = s.recv(4)
+        res_len = struct.unpack('<i', result)[0]
+
+        # Get all bytes until finished
+        result = s.recv(res_len)
+
+        while len(result) < res_len:
+            result += s.recv(res_len)
+
+        gtotal, dtotal = struct.unpack('<ii', result[0:8])
+        scores = struct.unpack('<'+'f'*gtotal*dtotal, result[8:])
+
+        s.close()
+        return
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -125,21 +162,22 @@ if __name__ == '__main__':
         didx.append((int(idx)-1, ds))
     dsf.close()
 
-    qf = open(options.query_file)
-    query = set()
-    query_names = set()
-    for l in qf:
-        if l.strip() in gidx_dict:
-            query.add(gidx_dict[l.strip()])
-            query_names.add(l.strip())
+    #qf = open(options.query_file)
+    #query = set()
+    #query_names = set()
+    #for l in qf:
+    #    if l.strip() in gidx_dict:
+    #        query.add(gidx_dict[l.strip()])
+    #        query_names.add(l.strip())
 
     ds  = DataServer(gidx, didx, options.ip, options.port)
+    ds.retrieve(range(0,50), [1,2,3,4,5])
     #ds.measure(os.path.dirname(os.path.abspath(sys.argv[0])) + '/pcls/' + didx[options.did][1] + '.pcl')
 
-    genes,dsets = ds.search(.5, 8, options.did, list(query))
+    #genes,dsets = ds.search(.5, 8, options.did, list(query))
 
-    for ((idx,name),score) in zip(gidx,genes)[0:10]:
-        print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)
+    #for ((idx,name),score) in zip(gidx,genes)[0:10]:
+    #    print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)
 
-    for ((idx,name),score) in zip(didx,dsets)[0:10]:
-        print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)
+    #for ((idx,name),score) in zip(didx,dsets)[0:10]:
+    #    print name + '\t' + ('1' if name in query_names else '-1') + '\t' + str(score)

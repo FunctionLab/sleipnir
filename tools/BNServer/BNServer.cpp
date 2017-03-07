@@ -39,7 +39,8 @@ const CBNServer::TPFNProcessor	CBNServer::c_apfnProcessors[]	=
 	{&CBNServer::ProcessInference, &CBNServer::ProcessData, &CBNServer::ProcessGraph,
 	&CBNServer::ProcessContexts, &CBNServer::ProcessTermFinder, &CBNServer::ProcessDiseases,
 	&CBNServer::ProcessGenes, &CBNServer::ProcessAssociation, &CBNServer::ProcessAssociations,
-	&CBNServer::ProcessInferenceOTF, &CBNServer::ProcessEdges, &CBNServer::ProcessLearning};
+	&CBNServer::ProcessInferenceOTF, &CBNServer::ProcessEdges, &CBNServer::ProcessMultiInferenceEdge,
+	&CBNServer::ProcessMultiInferenceGene, &CBNServer::ProcessLearning };
 
 struct SPixie {
 	size_t	m_iNode;
@@ -511,10 +512,139 @@ size_t CBNServer::ProcessInferenceOTF( const vector<unsigned char>& vecbMessage,
 	    iSize = (uint32_t)( GetGenes( ) * sizeof(*fVals) );
 	    send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
 	    send( m_iSocket, (char*)fVals, iSize, 0 ); 
+
+	    delete[] fVals;
 	}
 
 	return ( iOffset - iStart ); }
 
+
+size_t CBNServer::ProcessMultiInferenceGene( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+
+	size_t		i, j, k, iStart;
+	uint32_t	iNets, iGene, iData, iGenes, iChunk, iSize, iGeneOffset;
+	float	bineffect;
+	vector<vector<float> > binEffects;
+	vector<vector<vector<float> > > networks;
+	vector<unsigned char> vecbData;
+	vector<size_t> vecGenes;
+	unsigned char c;
+	float fLogOdds = 0;
+
+	vector<float*> fNetVals;
+
+	iChunk = ( GetDatabase().GetDatasets() + 1 ) / 2;
+
+	cerr << iOffset << endl;
+
+	iStart = iOffset;
+	iGenes = *(uint32_t*)&vecbMessage[ iOffset ];
+	iOffset += sizeof(iGenes);
+
+	vecGenes.resize(iGenes);
+
+	for ( i = 0; i < iGenes; i++, iOffset += sizeof(uint32_t) ) {
+	    iGene = *(uint32_t*)&vecbMessage[ iOffset ];
+	    cerr << "Gene id: " << iGene << endl;
+	    vecGenes[i] = iGene - 1;
+	}
+
+	iNets = *(uint32_t*)&vecbMessage[ iOffset ];
+	iOffset += sizeof(iNets);
+	networks.resize(iNets);
+
+	cerr << "Multi Inference Gene: " << vecbMessage.size() << endl;
+
+	for ( i = 0; i < iNets; i ++ ) { 
+	    iOffset = ProcessCPT( vecbMessage, iOffset, networks[i] );
+	}
+
+	for ( k = 0; k < iGenes; k++ ) {
+	    cerr << "Evaluating " << vecGenes[k] << endl;
+	    vecbData.clear();
+	    GetDatabase().Get( vecGenes[k], vecbData );
+
+	    fNetVals.clear();
+	    fNetVals.resize(iNets);
+
+	    #pragma omp parallel for private(j, i, iGeneOffset)
+	    for ( j = 0; j < iNets; j ++ ) { 
+		fNetVals[j] = new float[GetDatabase().GetGenes()];
+		for ( i = 0, iGeneOffset = 0; i < GetDatabase().GetGenes(); i++, iGeneOffset += iChunk ) {
+		    fNetVals[j][i] = Evaluate( networks[j], vecbData, iGeneOffset ); 
+		}
+	    }
+
+	    cerr << "Sending" << endl;
+	    for ( j = 0; j < iNets; j ++ ) { 
+		// Send results back
+		iSize = (uint32_t)( GetGenes() * sizeof(float) );
+		send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+		send( m_iSocket, (char*)fNetVals[j], iSize, 0 ); 
+
+		delete[] fNetVals[j];
+	    }
+	}
+
+	return ( iOffset - iStart ); }
+
+
+size_t CBNServer::ProcessMultiInferenceEdge( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+
+	size_t		i, j, iStart;
+	uint32_t	iNets, iGeneOne, iGeneTwo, iSize;
+	//vector<vector<float> > binEffects;
+	vector<unsigned char> vecbData;
+	vector<vector<vector<float> > > networks;
+	unsigned char c;
+	float fLogOdds = 0;
+	float* fVals;
+
+	iStart = iOffset;
+	iGeneOne = *(uint32_t*)&vecbMessage[ iOffset ];
+	iOffset += sizeof(iGeneOne);
+	iGeneTwo = *(uint32_t*)&vecbMessage[ iOffset ];
+	iOffset += sizeof(iGeneTwo);
+
+	iGeneOne -= 1;
+	iGeneTwo -= 1;
+	if ( iGeneOne < 0 or iGeneTwo < 0 )
+	    return ( iOffset = iStart );
+
+	iNets = *(uint32_t*)&vecbMessage[ iOffset ];
+	iOffset += sizeof(iNets);
+	fVals = new float[iNets];
+	networks.resize(iNets);
+
+	cerr << "Multi Inference Edge: " << iGeneOne << ", " << iGeneTwo << ", " << iNets << endl;
+	GetDatabase().Get(iGeneOne, iGeneTwo, vecbData);
+
+	for ( j = 0; j < iNets; j ++ ) { 
+	    iOffset = ProcessCPT( vecbMessage, iOffset, networks[j] );
+	}
+
+	for ( j = 0; j < iNets; j++ ) {
+	    for( i = 0, fLogOdds = 0; i < GetDatabase().GetDatasets(); ++i ) {
+		if ( networks[j][i].size() == 0 ) // Skip dataset - no bins
+		    continue;
+		c = vecbData[ ( i / 2 ) ];
+		if( i % 2 )
+		    c >>= 4;
+		if( ( c &= 0xF ) == 0xF ) // Skip missing data
+		    continue;
+		fLogOdds += networks[j][i][(size_t)c];
+	    }
+	    fVals[j] = fLogOdds;
+	}
+	
+	// Send results back
+	iSize = (uint32_t)( iNets * sizeof(float) );
+	send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+	send( m_iSocket, (char*)fVals, iSize, 0 ); 
+
+	delete[] fVals;
+
+	return ( iOffset - iStart ); }
 
 size_t CBNServer::ProcessEdges( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
 	size_t		i, j, iStart;
@@ -570,6 +700,8 @@ size_t CBNServer::ProcessEdges( const vector<unsigned char>& vecbMessage, size_t
 	iSize = (uint32_t)( iEdges * sizeof(float) );
 	send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
 	send( m_iSocket, (char*)fVals, iSize, 0 ); 
+
+	delete[] fVals;
 
 	return ( iOffset - iStart );
 }

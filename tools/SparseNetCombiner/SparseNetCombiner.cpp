@@ -83,7 +83,7 @@ float Percentile(vector<float>& vecVals, float quartile) {
   }
 }
 
-float Median(vector<float>& vecVals) {
+float Median(vector<float>& vecVals, float quartile) {
   size_t iSize, idx;
   
   iSize = vecVals.size();
@@ -94,12 +94,18 @@ float Median(vector<float>& vecVals) {
     return vecVals[0];
   
   std::sort(vecVals.begin(), vecVals.end());
-  
-  idx = vecVals.size() / 2;
-  if( vecVals.size() % 2 != 0 )
+ 
+  if(quartile == 0.5){ 
+    idx = vecVals.size() / 2;
+    if( vecVals.size() % 2 != 0 )
+      return vecVals[idx];
+    else
+      return ((vecVals[(idx-1)] + vecVals[idx]) * 0.5);
+  }else{
+    idx = round(vecVals.size() * quartile);
     return vecVals[idx];
-  else
-    return ((vecVals[(idx-1)] + vecVals[idx]) * 0.5);
+  }
+
 }
 
 float SelectMean(vector<float>& vecVals) {
@@ -335,8 +341,8 @@ int main( int iArgs, char** aszArgs ) {
 		continue;
 	      
 	      if( eMethod == EMethodMedian)
-		// find median
-		DatOut.Set(i, j, Median(vecVals));
+		// find median or quantile
+		DatOut.Set(i, j, Median(vecVals, sArgs.quantile_arg));
 	      else if( eMethod == EMethodSelectMean )
 		DatOut.Set(i, j, SelectMean(vecVals));
 	    }

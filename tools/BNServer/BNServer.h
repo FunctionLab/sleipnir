@@ -210,6 +210,8 @@ private:
 	size_t ProcessInference( const std::vector<unsigned char>&, size_t );
 	size_t ProcessCPT( const std::vector<unsigned char>&, size_t, vector<vector<float> >& );
 	size_t ProcessInferenceOTF( const std::vector<unsigned char>&, size_t );
+	size_t ProcessMultiInferenceEdge( const std::vector<unsigned char>&, size_t );
+	size_t ProcessMultiInferenceGene( const std::vector<unsigned char>&, size_t );
 	size_t ProcessLearning( const std::vector<unsigned char>&, size_t );
 	size_t ProcessEdges( const std::vector<unsigned char>&, size_t );
 	size_t ProcessData( const std::vector<unsigned char>&, size_t );
