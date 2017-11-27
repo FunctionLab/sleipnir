@@ -7,7 +7,6 @@ if WITH_TOOLS
 	  Clusters2Dab \
 	  COALESCE \
 	  Combiner \
-	  CorTest \
 	  NetworkCombiner \
 	  SparseNetCombiner \
 	  DChecker \
