@@ -959,10 +959,12 @@ AC_CONFIG_FILES([Makefile \
                  tools/Clusters2Dab/Makefile \
                  tools/COALESCE/Makefile \
                  tools/Combiner/Makefile \
+                 tools/CorTest/Makefile \
                  tools/NetworkCombiner/Makefile \
                  tools/DChecker/Makefile \
                  tools/Dat2Dab/Makefile \
                  tools/Dat2Graph/Makefile \
+                 tools/Dat2PCL/Makefile \
                  tools/Data2Bnt/Makefile \
                  tools/Data2Features/Makefile \
                  tools/Data2Sql/Makefile \
