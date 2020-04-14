@@ -24,180 +24,216 @@
 
 namespace Sleipnir {
 
-class CBayesNetMinimal;
+    class CBayesNetMinimal;
 
 #ifndef NO_SMILE
 
-class CBayesNetFNNode {
-protected:
-	friend class CBayesNetFN;
-	friend class CBayesNetFNImpl;
+    class CBayesNetFNNode {
+    protected:
+        friend class CBayesNetFN;
 
-	static const char	c_szType[];
+        friend class CBayesNetFNImpl;
 
-	static CBayesNetFNNode* Open( DSL_node* );
+        static const char c_szType[];
 
-	const std::string& GetName( ) const;
-	unsigned char GetParameters( ) const;
-	void Reverse( );
-	bool Save( DSL_node* ) const;
-	bool Learn( const std::vector<size_t>& );
+        static CBayesNetFNNode *Open(DSL_node *);
 
-	virtual const char* GetType( ) const = 0;
-	virtual void Randomize( ) = 0;
-	virtual CBayesNetFNNode* New( DSL_node* ) const = 0;
-	virtual bool Learn( const IDataset*, size_t, size_t ) = 0;
-	virtual bool Evaluate( float, std::vector<float>& ) const = 0;
+        const std::string &GetName() const;
 
-	virtual bool IsContinuous( ) const {
+        unsigned char GetParameters() const;
 
-		return true; }
+        void Reverse();
 
-	std::string			m_strName;
-	const char*			m_szType;
-	CFullMatrix<float>	m_Params;
-};
+        bool Save(DSL_node *) const;
 
-class CBayesNetFNNodeDiscrete : protected CBayesNetFNNode {
-protected:
-	friend class CBayesNetFNNode;
+        bool Learn(const std::vector <size_t> &);
 
-	void Randomize( );
-	bool Learn( const IDataset*, size_t, size_t );
-	bool Evaluate( float, std::vector<float>& ) const;
+        virtual const char *GetType() const = 0;
 
-	CBayesNetFNNode* New( DSL_node* pNode ) const {
+        virtual void Randomize() = 0;
 
-		return new CBayesNetFNNodeDiscrete( ); }
+        virtual CBayesNetFNNode *New(DSL_node *) const = 0;
 
-	const char* GetType( ) const {
+        virtual bool Learn(const IDataset *, size_t, size_t) = 0;
 
-		return "discrete"; }
+        virtual bool Evaluate(float, std::vector<float> &) const = 0;
 
-	bool IsContinuous( ) const {
+        virtual bool IsContinuous() const {
 
-		return false; }
-};
+            return true;
+        }
 
-class CBayesNetFNNodeGaussian : protected CBayesNetFNNode {
-protected:
-	friend class CBayesNetFNNode;
+        std::string m_strName;
+        const char *m_szType;
+        CFullMatrix<float> m_Params;
 
-	static const size_t	c_iMu		= 0;
-	static const size_t	c_iSigma	= 1;
+        virtual ~CBayesNetFNNode() = default;
+    };
 
-	void Randomize( );
-	bool Learn( const IDataset*, size_t, size_t );
-	bool Evaluate( float, std::vector<float>& ) const;
+    class CBayesNetFNNodeDiscrete : protected CBayesNetFNNode {
+    protected:
+        friend class CBayesNetFNNode;
 
-	CBayesNetFNNode* New( DSL_node* pNode ) const {
+        void Randomize();
 
-		return new CBayesNetFNNodeGaussian( ); }
+        bool Learn(const IDataset *, size_t, size_t);
 
-	const char* GetType( ) const {
+        bool Evaluate(float, std::vector<float> &) const;
 
-		return "gaussian"; }
-};
+        CBayesNetFNNode *New(DSL_node *pNode) const {
 
-class CBayesNetFNNodeBeta : protected CBayesNetFNNode {
-protected:
-	friend class CBayesNetFNNode;
+            return new CBayesNetFNNodeDiscrete();
+        }
 
-	static const size_t	c_iMin		= 0;
-	static const size_t	c_iMax		= 1;
-	static const size_t	c_iAlpha	= 2;
-	static const size_t	c_iBeta		= 3;
+        const char *GetType() const {
 
-	void Randomize( );
-	bool Learn( const IDataset*, size_t, size_t );
-	bool Evaluate( float, std::vector<float>& ) const;
+            return "discrete";
+        }
 
-	CBayesNetFNNode* New( DSL_node* pNode ) const {
+        bool IsContinuous() const {
 
-		return new CBayesNetFNNodeBeta( ); }
+            return false;
+        }
+    };
 
-	const char* GetType( ) const {
+    class CBayesNetFNNodeGaussian : protected CBayesNetFNNode {
+    protected:
+        friend class CBayesNetFNNode;
 
-		return "beta"; }
-};
+        static const size_t c_iMu = 0;
+        static const size_t c_iSigma = 1;
 
-class CBayesNetFNNodeExponential : protected CBayesNetFNNode {
-protected:
-	friend class CBayesNetFNNode;
+        void Randomize();
 
-	static const size_t	c_iMin	= 0;
-	static const size_t	c_iBeta	= 1;
+        bool Learn(const IDataset *, size_t, size_t);
 
-	void Randomize( );
-	bool Learn( const IDataset*, size_t, size_t );
-	bool Evaluate( float, std::vector<float>& ) const;
+        bool Evaluate(float, std::vector<float> &) const;
 
-	CBayesNetFNNode* New( DSL_node* pNode ) const {
+        CBayesNetFNNode *New(DSL_node *pNode) const {
 
-		return new CBayesNetFNNodeExponential( ); }
+            return new CBayesNetFNNodeGaussian();
+        }
 
-	const char* GetType( ) const {
+        const char *GetType() const {
 
-		return "exponential"; }
-};
+            return "gaussian";
+        }
+    };
 
-class CBayesNetFNNodeMOG : protected CBayesNetFNNode {
-protected:
-	friend class CBayesNetFNNode;
+    class CBayesNetFNNodeBeta : protected CBayesNetFNNode {
+    protected:
+        friend class CBayesNetFNNode;
 
-	static const size_t	c_iMu		= 0;
-	static const size_t	c_iSigma	= 1;
+        static const size_t c_iMin = 0;
+        static const size_t c_iMax = 1;
+        static const size_t c_iAlpha = 2;
+        static const size_t c_iBeta = 3;
 
-	void Randomize( );
-	bool Learn( const IDataset*, size_t, size_t );
-	bool Evaluate( float, std::vector<float>& ) const;
+        void Randomize();
 
-	CBayesNetFNNode* New( DSL_node* pNode ) const {
+        bool Learn(const IDataset *, size_t, size_t);
 
-		return new CBayesNetFNNodeMOG( ); }
+        bool Evaluate(float, std::vector<float> &) const;
 
-	const char* GetType( ) const {
+        CBayesNetFNNode *New(DSL_node *pNode) const {
 
-		return "mog"; }
-};
+            return new CBayesNetFNNodeBeta();
+        }
 
-class CBayesNetFNImpl : protected CBayesNetImpl {
-protected:
-	CBayesNetFNImpl( );
-	~CBayesNetFNImpl( );
+        const char *GetType() const {
 
-	void Reset( );
-	bool Evaluate( const IDataset*, CDat*, std::vector<std::vector<float> >*, bool ) const;
-	bool Evaluate( const IDataset*, size_t, size_t, bool, std::vector<float>& ) const;
+            return "beta";
+        }
+    };
 
-	size_t				m_iNodes;
-	CBayesNetFNNode**	m_apNodes;
-	bool				m_fSmileNet;
-	DSL_network			m_SmileNet;
-};
+    class CBayesNetFNNodeExponential : protected CBayesNetFNNode {
+    protected:
+        friend class CBayesNetFNNode;
+
+        static const size_t c_iMin = 0;
+        static const size_t c_iBeta = 1;
+
+        void Randomize();
+
+        bool Learn(const IDataset *, size_t, size_t);
+
+        bool Evaluate(float, std::vector<float> &) const;
+
+        CBayesNetFNNode *New(DSL_node *pNode) const {
+
+            return new CBayesNetFNNodeExponential();
+        }
+
+        const char *GetType() const {
+
+            return "exponential";
+        }
+    };
+
+    class CBayesNetFNNodeMOG : protected CBayesNetFNNode {
+    protected:
+        friend class CBayesNetFNNode;
+
+        static const size_t c_iMu = 0;
+        static const size_t c_iSigma = 1;
+
+        void Randomize();
+
+        bool Learn(const IDataset *, size_t, size_t);
+
+        bool Evaluate(float, std::vector<float> &) const;
+
+        CBayesNetFNNode *New(DSL_node *pNode) const {
+
+            return new CBayesNetFNNodeMOG();
+        }
+
+        const char *GetType() const {
+
+            return "mog";
+        }
+    };
+
+    class CBayesNetFNImpl : protected CBayesNetImpl {
+    protected:
+        CBayesNetFNImpl();
+
+        ~CBayesNetFNImpl();
+
+        void Reset();
+
+        bool Evaluate(const IDataset *, CDat *, std::vector <std::vector<float>> *, bool) const;
+
+        bool Evaluate(const IDataset *, size_t, size_t, bool, std::vector<float> &) const;
+
+        size_t m_iNodes;
+        CBayesNetFNNode **m_apNodes;
+        bool m_fSmileNet;
+        DSL_network m_SmileNet;
+    };
 
 #endif // NO_SMILE
 
-class CBayesNetMinimalNode {
-public:
-	CBayesNetMinimalNode( ) : m_bDefault(0xFF) { }
+    class CBayesNetMinimalNode {
+    public:
+        CBayesNetMinimalNode() : m_bDefault(0xFF) {}
 
-	unsigned char	m_bDefault;
-	CDataMatrix		m_MatCPT;
-};
+        unsigned char m_bDefault;
+        CDataMatrix m_MatCPT;
+    };
 
-class CBayesNetMinimalImpl : protected CBayesNetImpl, protected CFile {
-protected:
-	static bool Counts2Probs( const std::vector<std::string>&, std::vector<float>&, float dAlpha = 1,
-		float = HUGE_VAL, const CBayesNetMinimal* = NULL, size_t = 0, size_t = 0 );
+    class CBayesNetMinimalImpl : protected CBayesNetImpl, protected CFile {
+    protected:
+        static bool Counts2Probs(const std::vector <std::string> &, std::vector<float> &, float dAlpha = 1,
+                                 float = HUGE_VAL, const CBayesNetMinimal * = NULL, size_t = 0, size_t = 0);
 
-	CBayesNetMinimalImpl( ) : CBayesNetImpl( true ), m_adNY(NULL) { }
+        CBayesNetMinimalImpl() : CBayesNetImpl(true), m_adNY(NULL) {}
 
-	std::string							m_strID;
-	long double*						m_adNY;
-	CDataMatrix							m_MatRoot;
-	std::vector<CBayesNetMinimalNode>	m_vecNodes;
-};
+        std::string m_strID;
+        long double *m_adNY;
+        CDataMatrix m_MatRoot;
+        std::vector <CBayesNetMinimalNode> m_vecNodes;
+    };
 
 }
 

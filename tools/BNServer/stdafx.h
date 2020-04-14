@@ -29,25 +29,32 @@
 #include <iomanip>
 #include <queue>
 #include <sstream>
+
 using namespace std;
 
 #ifdef _MSC_VER
 #include <io.h>
 #include <winsock2.h>
 #else // _MSC_VER
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#define SOCKET		int
+#include <omp.h>
 
-inline bool _mktemp_s( char* szTemplate ) {
+#define SOCKET        int
 
-	return !mktemp( szTemplate ); }
+inline bool _mktemp_s(char *szTemplate) {
+
+    return !mktemp(szTemplate);
+}
+
 #endif // _MSC_VER
 
 #include <pthread.h>
 
 #include <boost/graph/graphviz.hpp>
+
 #undef INTMAX_C
 #undef UINTMAX_C
 
@@ -60,6 +67,7 @@ inline bool _mktemp_s( char* szTemplate ) {
 #include "server.h"
 #include "serverclient.h"
 #include "statistics.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

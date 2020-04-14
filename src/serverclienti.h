@@ -24,24 +24,25 @@
 
 namespace Sleipnir {
 
-class CServer;
+    class CServer;
 
-class CServerClientImpl {
-protected:
-	static void* StartRoutine( void* );
+    class CServerClientImpl {
+    protected:
+        static void *StartRoutine(void *);
 
-	CServerClientImpl( );
-	~CServerClientImpl( );
+        CServerClientImpl();
 
-	virtual void ProcessMessage( ) = 0;
+        ~CServerClientImpl();
 
-	SOCKET		m_iSocket;
-	CServer*	m_pParent;
-	bool		m_fOpen;
+        virtual void ProcessMessage() = 0;
 
-private:
-	void ReadMessage( );
-};
+        SOCKET m_iSocket;
+        CServer *m_pParent;
+        bool m_fOpen;
+
+    private:
+        void ReadMessage();
+    };
 
 }
 

@@ -35,64 +35,64 @@ namespace Sleipnir {
  * \see
  * IOntology
  */
-struct STermFound {
-	/*!
-	 * \brief
-	 * ID of the ontology term for this enrichment.
-	 */
-	size_t	m_iID;
-	/*!
-	 * \brief
-	 * Hypergeometric p-value of this enrichment.
-	 */
-	double	m_dP;
-	/*!
-	 * \brief
-	 * The number of genes in Q intersect T.
-	 */
-	size_t	m_iHitsTerm;
-	/*!
-	 * \brief
-	 * The number of genes in T.
-	 */
-	size_t	m_iSizeTerm;
-	/*!
-	 * \brief
-	 * The number of genes in Q.
-	 */
-	size_t	m_iHitsTotal;
-	/*!
-	 * \brief
-	 * The total number of genes in the background set (genome).
-	 */
-	size_t	m_iSizeTotal;
+    struct STermFound {
+        /*!
+         * \brief
+         * ID of the ontology term for this enrichment.
+         */
+        size_t m_iID;
+        /*!
+         * \brief
+         * Hypergeometric p-value of this enrichment.
+         */
+        double m_dP;
+        /*!
+         * \brief
+         * The number of genes in Q intersect T.
+         */
+        size_t m_iHitsTerm;
+        /*!
+         * \brief
+         * The number of genes in T.
+         */
+        size_t m_iSizeTerm;
+        /*!
+         * \brief
+         * The number of genes in Q.
+         */
+        size_t m_iHitsTotal;
+        /*!
+         * \brief
+         * The total number of genes in the background set (genome).
+         */
+        size_t m_iSizeTotal;
 
-	/*!
-	 * \brief
-	 * Construct a new structure with the given parameter values.
-	 * 
-	 * \param iID
-	 * ID of the ontology term for this enrichment.
-	 * 
-	 * \param dP
-	 * Hypergeometric p-value of this enrichment.
-	 * 
-	 * \param iHitsTerm
-	 * The number of genes in Q intersect T.
-	 * 
-	 * \param iSizeTerm
-	 * The number of genes in T.
-	 * 
-	 * \param iHitsTotal
-	 * The number of genes in Q.
-	 * 
-	 * \param iSizeTotal
-	 * The total number of genes in the background set (genome).
-	 */
-	STermFound( size_t iID, double dP, size_t iHitsTerm, size_t iSizeTerm, size_t iHitsTotal, size_t iSizeTotal ) :
-		m_iID(iID), m_dP(dP), m_iHitsTerm(iHitsTerm), m_iSizeTerm(iSizeTerm), m_iHitsTotal(iHitsTotal),
-		m_iSizeTotal(iSizeTotal) { }
-};
+        /*!
+         * \brief
+         * Construct a new structure with the given parameter values.
+         *
+         * \param iID
+         * ID of the ontology term for this enrichment.
+         *
+         * \param dP
+         * Hypergeometric p-value of this enrichment.
+         *
+         * \param iHitsTerm
+         * The number of genes in Q intersect T.
+         *
+         * \param iSizeTerm
+         * The number of genes in T.
+         *
+         * \param iHitsTotal
+         * The number of genes in Q.
+         *
+         * \param iSizeTotal
+         * The total number of genes in the background set (genome).
+         */
+        STermFound(size_t iID, double dP, size_t iHitsTerm, size_t iSizeTerm, size_t iHitsTotal, size_t iSizeTotal) :
+                m_iID(iID), m_dP(dP), m_iHitsTerm(iHitsTerm), m_iSizeTerm(iSizeTerm), m_iHitsTotal(iHitsTotal),
+                m_iSizeTotal(iSizeTotal) {}
+    };
 
 }
 
@@ -114,246 +114,261 @@ namespace Sleipnir {
  * \see
  * COntologyKEGG | COntologyOBO | COntologyMIPS | COntologyMIPSPhenotypes | CSlim
  */
-class IOntology {
-public:
-	/*!
-	 * \brief
-	 * Returns string identifier of the encapsulated ontology.
-	 * 
-	 * \returns
-	 * String identifier of the ontology.
-	 */
-	virtual const std::string& GetID( ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the number of nodes (terms) in the ontology.
-	 * 
-	 * \returns
-	 * Number of nodes (terms) in the ontology.
-	 */
-	virtual size_t GetNodes( ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the ontology-specific ID string of the requested term.
-	 * 
-	 * \param iTerm
-	 * Index of ontology term.
-	 * 
-	 * \returns
-	 * Ontology-specific ID of the requested term (e.g. "GO:0007093").
-	 */
-	virtual const std::string& GetID( size_t iTerm ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the ontology-specific description of the requested term.
-	 * 
-	 * \param iTerm
-	 * Index of ontology term.
-	 * 
-	 * \returns
-	 * Ontology-specific description of the requested term (e.g. "mitotic cell cycle").
-	 */
-	virtual const std::string& GetGloss( size_t iTerm ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the number of parents of the requested term.
-	 * 
-	 * \param iTerm
-	 * Index of ontology term.
-	 * 
-	 * \returns
-	 * Number of parents of the requested term.
-	 */
-	virtual size_t GetParents( size_t iTerm ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the ontology term index of the requested parent of the requested term.
-	 * 
-	 * \param iTerm
-	 * Index of ontology term.
-	 * 
-	 * \param iParent
-	 * Parent to retrieve.
-	 * 
-	 * \returns
-	 * Ontology term index of the requested parent.
-	 * 
-	 * \remarks
-	 * Requested parent must be less than IOntology::GetParents.
-	 */
-	virtual size_t GetParent( size_t iTerm, size_t iParent ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the number of children of the requested term.
-	 * 
-	 * \param iTerm
-	 * Index of ontology term.
-	 * 
-	 * \returns
-	 * Number of children of the requested term.
-	 */
-	virtual size_t GetChildren( size_t iTerm ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the ontology term index of the requested child of the requested term.
-	 * 
-	 * \param iTerm
-	 * Index of ontology term.
-	 * 
-	 * \param iChild
-	 * Child to retrieve.
-	 * 
-	 * \returns
-	 * Ontology term index of the requested child.
-	 * 
-	 * \remarks
-	 * Requested child must be less than IOntology::GetChildren.
-	 */
-	virtual size_t GetChild( size_t iTerm, size_t iChild ) const = 0;
-	/*!
-	 * \brief
-	 * Retrieves the parent term IDs of the requested term.
-	 * 
-	 * \param iTerm
-	 * Index of ontology term.
-	 * 
-	 * \param setiParents
-	 * Output set of parent term IDs.
-	 * 
-	 * \returns
-	 * True on success, false otherwise.
-	 * 
-	 * \remarks
-	 * Operates recursively, returning all nodes between iTerm and the ontology root.
-	 * 
-	 * \see
-	 * GetParents | GetParent
-	 */
-	virtual bool GetParents( size_t iTerm, std::set<size_t>& setiParents ) const = 0;
-	/*!
-	 * \brief
-	 * Retrieves the descendant term IDs of the requested term.
-	 * 
-	 * \param iTerm
-	 * Index of ontology term.
-	 * 
-	 * \param setiChildren
-	 * Output set of descendant term IDs.
-	 * 
-	 * \returns
-	 * True on success, false otherwise.
-	 * 
-	 * \remarks
-	 * Operates recursively, returning all nodes between iTerm and the ontology leaves.
-	 * 
-	 * \see
-	 * GetChildren | GetChild
-	 */
-	virtual bool GetChildren( size_t iTerm, std::set<size_t>& setiChildren ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the number of genes annotated to or (optionally) below this term.
-	 * 
-	 * \param iTerm
-	 * Ontology term index.
-	 * 
-	 * \param fRecursive
-	 * If true, include gene annotations to descendant terms.
-	 * 
-	 * \returns
-	 * Number of genes annotated to or below this term.
-	 */
-	virtual size_t GetGenes( size_t iTerm, bool fRecursive = false ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the requested gene annotated to or below the given term.
-	 * 
-	 * \param iTerm
-	 * Ontology term index from which to retrieve gene.
-	 * 
-	 * \param iGene
-	 * Index of gene within the requested term.
-	 * 
-	 * \returns
-	 * Gene annotation at the requested index.
-	 * 
-	 * \remarks
-	 * If iGene is less than the number of genes annotated directly to the term, a direct annotation is
-	 * returned.  Otherwise, descendant terms are searched and the requested gene index is retrieved from
-	 * this set.  iGene must be less than the value of IOntology::GetGenes.
-	 */
-	virtual const CGene& GetGene( size_t iTerm, size_t iGene ) const = 0;
-	/*!
-	 * \brief
-	 * Indicates whether the given gene is annotated to or (optionally) below the given term.
-	 * 
-	 * \param iTerm
-	 * Ontology term index.
-	 * 
-	 * \param Gene
-	 * Gene for which annotation is tested.
-	 * 
-	 * \param fRecursive
-	 * If true, include annotations to descendants of the given term.
-	 * 
-	 * \returns
-	 * True if the given gene is annotated to or (optionally) below the given term.
-	 */
-	virtual bool IsAnnotated( size_t iTerm, const CGene& Gene, bool fRecursive = true ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the ontology term index corresponding to the given ontology-specific ID string.
-	 * 
-	 * \param strID
-	 * Ontology term ID to retrieve (e.g. "GO:0007093").
-	 * 
-	 * \returns
-	 * The index of the requested term, -1 if not found.
-	 */
-	virtual size_t GetNode( const std::string& strID ) const = 0;
-	/*!
-	 * \brief
-	 * Obtain the primary gene names for all genes in the ontology.
-	 * 
-	 * \param vecstrGenes
-	 * Outputs primary gene names for all genes in the ontology.
-	 */
-	virtual void GetGeneNames( std::vector<std::string>& vecstrGenes ) const = 0;
-	/*!
-	 * \brief
-	 * Uses the hypergeometric distribution to find functional enrichments of the given gene set.
-	 * 
-	 * \param Genes
-	 * Gene set to test for functional enrichments.
-	 * 
-	 * \param vecsTerms
-	 * Output statistics for the given genes over all terms in the ontology.
-	 * 
-	 * \param fBonferroni
-	 * If true, p-values are Bonferroni corrected.
-	 * 
-	 * \param fRecursive
-	 * If true, annotations to descendants are used when calculating term overlaps.
-	 * 
-	 * \param fGenome
-	 * If true, use all genes in the genome as background; otherwise, use only genes with at least one
-	 * annotation in the ontology.
-	 * 
-	 * \param dPValue
-	 * Only terms significant below this p-value will be recorded.
-	 * 
-	 * \param pBackground
-	 * If non-null, use the given gene set as the background.
-	 * 
-	 * TermFinder uses the GO::TermFinder technique of Boyle, Sherlock, et al to calculate ontology
-	 * terms (i.e. functions) enriched in the given gene set.  This involves significance testing the
-	 * overlap of the given gene set with annotations to every ontology term using the hypergeometric
-	 * test.
-	 */
-	virtual void TermFinder( const CGenes& Genes, std::vector<STermFound>& vecsTerms, bool fBonferroni = true,
-		bool fRecursive = true, bool fGenome = false, float dPValue = 1,
-		const CGenes* pBackground = NULL ) const = 0;
-};
+    class IOntology {
+    public:
+        /*!
+         * \brief
+         * Returns string identifier of the encapsulated ontology.
+         *
+         * \returns
+         * String identifier of the ontology.
+         */
+        virtual const std::string &GetID() const = 0;
+
+        /*!
+         * \brief
+         * Returns the number of nodes (terms) in the ontology.
+         *
+         * \returns
+         * Number of nodes (terms) in the ontology.
+         */
+        virtual size_t GetNodes() const = 0;
+
+        /*!
+         * \brief
+         * Returns the ontology-specific ID string of the requested term.
+         *
+         * \param iTerm
+         * Index of ontology term.
+         *
+         * \returns
+         * Ontology-specific ID of the requested term (e.g. "GO:0007093").
+         */
+        virtual const std::string &GetID(size_t iTerm) const = 0;
+
+        /*!
+         * \brief
+         * Returns the ontology-specific description of the requested term.
+         *
+         * \param iTerm
+         * Index of ontology term.
+         *
+         * \returns
+         * Ontology-specific description of the requested term (e.g. "mitotic cell cycle").
+         */
+        virtual const std::string &GetGloss(size_t iTerm) const = 0;
+
+        /*!
+         * \brief
+         * Returns the number of parents of the requested term.
+         *
+         * \param iTerm
+         * Index of ontology term.
+         *
+         * \returns
+         * Number of parents of the requested term.
+         */
+        virtual size_t GetParents(size_t iTerm) const = 0;
+
+        /*!
+         * \brief
+         * Returns the ontology term index of the requested parent of the requested term.
+         *
+         * \param iTerm
+         * Index of ontology term.
+         *
+         * \param iParent
+         * Parent to retrieve.
+         *
+         * \returns
+         * Ontology term index of the requested parent.
+         *
+         * \remarks
+         * Requested parent must be less than IOntology::GetParents.
+         */
+        virtual size_t GetParent(size_t iTerm, size_t iParent) const = 0;
+
+        /*!
+         * \brief
+         * Returns the number of children of the requested term.
+         *
+         * \param iTerm
+         * Index of ontology term.
+         *
+         * \returns
+         * Number of children of the requested term.
+         */
+        virtual size_t GetChildren(size_t iTerm) const = 0;
+
+        /*!
+         * \brief
+         * Returns the ontology term index of the requested child of the requested term.
+         *
+         * \param iTerm
+         * Index of ontology term.
+         *
+         * \param iChild
+         * Child to retrieve.
+         *
+         * \returns
+         * Ontology term index of the requested child.
+         *
+         * \remarks
+         * Requested child must be less than IOntology::GetChildren.
+         */
+        virtual size_t GetChild(size_t iTerm, size_t iChild) const = 0;
+
+        /*!
+         * \brief
+         * Retrieves the parent term IDs of the requested term.
+         *
+         * \param iTerm
+         * Index of ontology term.
+         *
+         * \param setiParents
+         * Output set of parent term IDs.
+         *
+         * \returns
+         * True on success, false otherwise.
+         *
+         * \remarks
+         * Operates recursively, returning all nodes between iTerm and the ontology root.
+         *
+         * \see
+         * GetParents | GetParent
+         */
+        virtual bool GetParents(size_t iTerm, std::set <size_t> &setiParents) const = 0;
+
+        /*!
+         * \brief
+         * Retrieves the descendant term IDs of the requested term.
+         *
+         * \param iTerm
+         * Index of ontology term.
+         *
+         * \param setiChildren
+         * Output set of descendant term IDs.
+         *
+         * \returns
+         * True on success, false otherwise.
+         *
+         * \remarks
+         * Operates recursively, returning all nodes between iTerm and the ontology leaves.
+         *
+         * \see
+         * GetChildren | GetChild
+         */
+        virtual bool GetChildren(size_t iTerm, std::set <size_t> &setiChildren) const = 0;
+
+        /*!
+         * \brief
+         * Returns the number of genes annotated to or (optionally) below this term.
+         *
+         * \param iTerm
+         * Ontology term index.
+         *
+         * \param fRecursive
+         * If true, include gene annotations to descendant terms.
+         *
+         * \returns
+         * Number of genes annotated to or below this term.
+         */
+        virtual size_t GetGenes(size_t iTerm, bool fRecursive = false) const = 0;
+
+        /*!
+         * \brief
+         * Returns the requested gene annotated to or below the given term.
+         *
+         * \param iTerm
+         * Ontology term index from which to retrieve gene.
+         *
+         * \param iGene
+         * Index of gene within the requested term.
+         *
+         * \returns
+         * Gene annotation at the requested index.
+         *
+         * \remarks
+         * If iGene is less than the number of genes annotated directly to the term, a direct annotation is
+         * returned.  Otherwise, descendant terms are searched and the requested gene index is retrieved from
+         * this set.  iGene must be less than the value of IOntology::GetGenes.
+         */
+        virtual const CGene &GetGene(size_t iTerm, size_t iGene) const = 0;
+
+        /*!
+         * \brief
+         * Indicates whether the given gene is annotated to or (optionally) below the given term.
+         *
+         * \param iTerm
+         * Ontology term index.
+         *
+         * \param Gene
+         * Gene for which annotation is tested.
+         *
+         * \param fRecursive
+         * If true, include annotations to descendants of the given term.
+         *
+         * \returns
+         * True if the given gene is annotated to or (optionally) below the given term.
+         */
+        virtual bool IsAnnotated(size_t iTerm, const CGene &Gene, bool fRecursive = true) const = 0;
+
+        /*!
+         * \brief
+         * Returns the ontology term index corresponding to the given ontology-specific ID string.
+         *
+         * \param strID
+         * Ontology term ID to retrieve (e.g. "GO:0007093").
+         *
+         * \returns
+         * The index of the requested term, -1 if not found.
+         */
+        virtual size_t GetNode(const std::string &strID) const = 0;
+
+        /*!
+         * \brief
+         * Obtain the primary gene names for all genes in the ontology.
+         *
+         * \param vecstrGenes
+         * Outputs primary gene names for all genes in the ontology.
+         */
+        virtual void GetGeneNames(std::vector <std::string> &vecstrGenes) const = 0;
+
+        /*!
+         * \brief
+         * Uses the hypergeometric distribution to find functional enrichments of the given gene set.
+         *
+         * \param Genes
+         * Gene set to test for functional enrichments.
+         *
+         * \param vecsTerms
+         * Output statistics for the given genes over all terms in the ontology.
+         *
+         * \param fBonferroni
+         * If true, p-values are Bonferroni corrected.
+         *
+         * \param fRecursive
+         * If true, annotations to descendants are used when calculating term overlaps.
+         *
+         * \param fGenome
+         * If true, use all genes in the genome as background; otherwise, use only genes with at least one
+         * annotation in the ontology.
+         *
+         * \param dPValue
+         * Only terms significant below this p-value will be recorded.
+         *
+         * \param pBackground
+         * If non-null, use the given gene set as the background.
+         *
+         * TermFinder uses the GO::TermFinder technique of Boyle, Sherlock, et al to calculate ontology
+         * terms (i.e. functions) enriched in the given gene set.  This involves significance testing the
+         * overlap of the given gene set with annotations to every ontology term using the hypergeometric
+         * test.
+         */
+        virtual void TermFinder(const CGenes &Genes, std::vector <STermFound> &vecsTerms, bool fBonferroni = true,
+                                bool fRecursive = true, bool fGenome = false, float dPValue = 1,
+                                const CGenes *pBackground = NULL) const = 0;
+    };
 
 // TODO: These should really be templated instead of duplicated like this...
 
@@ -364,78 +379,95 @@ public:
  * COntologyKEGG parses the "ko" file from the Kyoto Encyclopedia of Genes and Genomes to extract
  * organism-independent function annotations from KEGG.
  */
-class COntologyKEGG : COntologyKEGGImpl, public IOntology {
-public:
-	COntologyKEGG( );
-	bool Open( std::istream& istm, CGenome& Genome, const std::string& strOrganism, bool fSynonyms = false );
+    class COntologyKEGG : COntologyKEGGImpl, public IOntology {
+    public:
+        COntologyKEGG();
 
-	void GetGeneNames( std::vector<std::string>& vecstrGenes ) const {
+        bool Open(std::istream &istm, CGenome &Genome, const std::string &strOrganism, bool fSynonyms = false);
 
-		return COntologyImpl::GetGeneNames( vecstrGenes ); }
+        void GetGeneNames(std::vector <std::string> &vecstrGenes) const {
 
-	void TermFinder( const CGenes& Genes, std::vector<STermFound>& vecsTerms, bool fBonferroni = true,
-		bool fRecursive = true, bool fGenome = false, float dPValue = 1,
-		const CGenes* pBackground = NULL ) const {
+            COntologyImpl::GetGeneNames(vecstrGenes);
+        }
 
-		return COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
-			pBackground ); }
+        void TermFinder(const CGenes &Genes, std::vector <STermFound> &vecsTerms, bool fBonferroni = true,
+                        bool fRecursive = true, bool fGenome = false, float dPValue = 1,
+                        const CGenes *pBackground = NULL) const {
 
-	size_t GetNode( const std::string& strID ) const {
+            COntologyImpl::TermFinder(Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
+                                      pBackground);
+        }
 
-		return COntologyImpl::GetNode( strID ); }
+        size_t GetNode(const std::string &strID) const {
 
-	bool IsAnnotated( size_t iTerm, const CGene& Gene, bool fRecursive ) const {
+            return COntologyImpl::GetNode(strID);
+        }
 
-		return COntologyImpl::IsAnnotated( iTerm, Gene, fRecursive ); }
+        bool IsAnnotated(size_t iTerm, const CGene &Gene, bool fRecursive) const {
 
-	size_t GetNodes( ) const {
+            return COntologyImpl::IsAnnotated(iTerm, Gene, fRecursive);
+        }
 
-		return COntologyImpl::GetNodes( ); }
+        size_t GetNodes() const {
 
-	const std::string& GetID( ) const {
+            return COntologyImpl::GetNodes();
+        }
 
-		return COntologyImpl::GetID( ); }
+        const std::string &GetID() const {
 
-	const std::string& GetID( size_t iTerm ) const {
+            return COntologyImpl::GetID();
+        }
 
-		return COntologyImpl::GetID( iTerm ); }
+        const std::string &GetID(size_t iTerm) const {
 
-	const std::string& GetGloss( size_t iTerm ) const {
+            return COntologyImpl::GetID(iTerm);
+        }
 
-		return COntologyImpl::GetGloss( iTerm ); }
+        const std::string &GetGloss(size_t iTerm) const {
 
-	size_t GetParents( size_t iTerm ) const {
+            return COntologyImpl::GetGloss(iTerm);
+        }
 
-		return COntologyImpl::GetParents( iTerm ); }
+        size_t GetParents(size_t iTerm) const {
 
-	size_t GetParent( size_t iTerm, size_t iParent ) const {
+            return COntologyImpl::GetParents(iTerm);
+        }
 
-		return COntologyImpl::GetParent( iTerm, iParent ); }
+        size_t GetParent(size_t iTerm, size_t iParent) const {
 
-	size_t GetChildren( size_t iTerm ) const {
+            return COntologyImpl::GetParent(iTerm, iParent);
+        }
 
-		return COntologyImpl::GetChildren( iTerm ); }
+        size_t GetChildren(size_t iTerm) const {
 
-	size_t GetChild( size_t iTerm, size_t iChild ) const {
+            return COntologyImpl::GetChildren(iTerm);
+        }
 
-		return COntologyImpl::GetChild( iTerm, iChild ); }
+        size_t GetChild(size_t iTerm, size_t iChild) const {
 
-	size_t GetGenes( size_t iTerm, bool fRecursive ) const {
+            return COntologyImpl::GetChild(iTerm, iChild);
+        }
 
-		return COntologyImpl::GetGenes( iTerm, fRecursive ); }
+        size_t GetGenes(size_t iTerm, bool fRecursive) const {
 
-	const CGene& GetGene( size_t iTerm, size_t iGene ) const {
+            return COntologyImpl::GetGenes(iTerm, fRecursive);
+        }
 
-		return COntologyImpl::GetGene( iTerm, iGene ); }
+        const CGene &GetGene(size_t iTerm, size_t iGene) const {
 
-	bool GetParents( size_t iTerm, std::set<size_t>& setiParents ) const {
+            return COntologyImpl::GetGene(iTerm, iGene);
+        }
 
-		return COntologyImpl::GetParents( iTerm, setiParents ); }
+        bool GetParents(size_t iTerm, std::set <size_t> &setiParents) const {
 
-	bool GetChildren( size_t iTerm, std::set<size_t>& setiChildren ) const {
+            return COntologyImpl::GetParents(iTerm, setiParents);
+        }
 
-		return COntologyImpl::GetChildren( iTerm, setiChildren ); }
-};
+        bool GetChildren(size_t iTerm, std::set <size_t> &setiChildren) const {
+
+            return COntologyImpl::GetChildren(iTerm, setiChildren);
+        }
+    };
 
 /*!
  * \brief
@@ -444,99 +476,116 @@ public:
  * COntologyOBO parses OBO and annotation files to obtain the structure and annotations
  * for OBO ontologies.
  */
-class COntologyOBO : COntologyOBOImpl, public IOntology {
-public:
-	/*!
-	 * \brief
-	 * Common Gene Ontology aspects/namespaces: biological process.
-	 */
-	static const char	c_szBiologicalProcess[];
-	/*!
-	 * \brief
-	 * Common Gene Ontology aspects/namespaces: cellular component.
-	 */
-	static const char	c_szCellularComponent[];
-	/*!
-	 * \brief
-	 * Common Gene Ontology aspects/namespaces: molecular function.
-	 */
-	static const char	c_szMolecularFunction[];
+    class COntologyOBO : COntologyOBOImpl, public IOntology {
+    public:
+        /*!
+         * \brief
+         * Common Gene Ontology aspects/namespaces: biological process.
+         */
+        static const char c_szBiologicalProcess[];
+        /*!
+         * \brief
+         * Common Gene Ontology aspects/namespaces: cellular component.
+         */
+        static const char c_szCellularComponent[];
+        /*!
+         * \brief
+         * Common Gene Ontology aspects/namespaces: molecular function.
+         */
+        static const char c_szMolecularFunction[];
 
-	static bool Open( std::istream& istmOntology, std::istream& istmAnnotations, CGenome& Genome,
-			COntologyOBO& OntoBP, COntologyOBO& OntoMF, COntologyOBO& OntoCC, bool fDatabaseIDs = false,
-		bool fSynonyms = false );
+        static bool Open(std::istream &istmOntology, std::istream &istmAnnotations, CGenome &Genome,
+                         COntologyOBO &OntoBP, COntologyOBO &OntoMF, COntologyOBO &OntoCC, bool fDatabaseIDs = false,
+                         bool fSynonyms = false);
 
-	COntologyOBO( );
-	bool Open( std::istream& istmOntology, std::istream& istmAnnotations, CGenome& Genome,
-		const char* szNamespace, bool fDatabaseIDs = false, bool fSynonyms = false );
+        COntologyOBO();
 
-	void GetGeneNames( std::vector<std::string>& vecstrGenes ) const {
+        bool Open(std::istream &istmOntology, std::istream &istmAnnotations, CGenome &Genome,
+                  const char *szNamespace, bool fDatabaseIDs = false, bool fSynonyms = false);
 
-		return COntologyImpl::GetGeneNames( vecstrGenes ); }
+        void GetGeneNames(std::vector <std::string> &vecstrGenes) const {
 
-	void TermFinder( const CGenes& Genes, std::vector<STermFound>& vecsTerms, bool fBonferroni = true,
-		bool fRecursive = true, bool fGenome = false, float dPValue = 1,
-		const CGenes* pBackground = NULL ) const {
+            COntologyImpl::GetGeneNames(vecstrGenes);
+        }
 
-		return COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
-			pBackground ); }
+        void TermFinder(const CGenes &Genes, std::vector <STermFound> &vecsTerms, bool fBonferroni = true,
+                        bool fRecursive = true, bool fGenome = false, float dPValue = 1,
+                        const CGenes *pBackground = NULL) const {
 
-	size_t GetNode( const std::string& strID ) const {
+            COntologyImpl::TermFinder(Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
+                                      pBackground);
+        }
 
-		return COntologyImpl::GetNode( strID ); }
+        size_t GetNode(const std::string &strID) const {
 
-	bool IsAnnotated( size_t iTerm, const CGene& Gene, bool fRecursive ) const {
+            return COntologyImpl::GetNode(strID);
+        }
 
-		return COntologyImpl::IsAnnotated( iTerm, Gene, fRecursive ); }
+        bool IsAnnotated(size_t iTerm, const CGene &Gene, bool fRecursive) const {
 
-	size_t GetNodes( ) const {
+            return COntologyImpl::IsAnnotated(iTerm, Gene, fRecursive);
+        }
 
-		return COntologyImpl::GetNodes( ); }
+        size_t GetNodes() const {
 
-	const std::string& GetID( ) const {
+            return COntologyImpl::GetNodes();
+        }
 
-		return COntologyImpl::GetID( ); }
+        const std::string &GetID() const {
 
-	const std::string& GetID( size_t iTerm ) const {
+            return COntologyImpl::GetID();
+        }
 
-		return COntologyImpl::GetID( iTerm ); }
+        const std::string &GetID(size_t iTerm) const {
 
-	const std::string& GetGloss( size_t iTerm ) const {
+            return COntologyImpl::GetID(iTerm);
+        }
 
-		return COntologyImpl::GetGloss( iTerm ); }
+        const std::string &GetGloss(size_t iTerm) const {
 
-	size_t GetParents( size_t iTerm ) const {
+            return COntologyImpl::GetGloss(iTerm);
+        }
 
-		return COntologyImpl::GetParents( iTerm ); }
+        size_t GetParents(size_t iTerm) const {
 
-	size_t GetParent( size_t iTerm, size_t iParent ) const {
+            return COntologyImpl::GetParents(iTerm);
+        }
 
-		return COntologyImpl::GetParent( iTerm, iParent ); }
+        size_t GetParent(size_t iTerm, size_t iParent) const {
 
-	size_t GetChildren( size_t iTerm ) const {
+            return COntologyImpl::GetParent(iTerm, iParent);
+        }
 
-		return COntologyImpl::GetChildren( iTerm ); }
+        size_t GetChildren(size_t iTerm) const {
 
-	size_t GetChild( size_t iTerm, size_t iChild ) const {
+            return COntologyImpl::GetChildren(iTerm);
+        }
 
-		return COntologyImpl::GetChild( iTerm, iChild ); }
+        size_t GetChild(size_t iTerm, size_t iChild) const {
 
-	size_t GetGenes( size_t iTerm, bool fRecursive ) const {
+            return COntologyImpl::GetChild(iTerm, iChild);
+        }
 
-		return COntologyImpl::GetGenes( iTerm, fRecursive ); }
+        size_t GetGenes(size_t iTerm, bool fRecursive) const {
 
-	const CGene& GetGene( size_t iTerm, size_t iGene ) const {
+            return COntologyImpl::GetGenes(iTerm, fRecursive);
+        }
 
-		return COntologyImpl::GetGene( iTerm, iGene ); }
+        const CGene &GetGene(size_t iTerm, size_t iGene) const {
 
-	bool GetParents( size_t iTerm, std::set<size_t>& setiParents ) const {
+            return COntologyImpl::GetGene(iTerm, iGene);
+        }
 
-		return COntologyImpl::GetParents( iTerm, setiParents ); }
+        bool GetParents(size_t iTerm, std::set <size_t> &setiParents) const {
 
-	bool GetChildren( size_t iTerm, std::set<size_t>& setiChildren ) const {
+            return COntologyImpl::GetParents(iTerm, setiParents);
+        }
 
-		return COntologyImpl::GetChildren( iTerm, setiChildren ); }
-};
+        bool GetChildren(size_t iTerm, std::set <size_t> &setiChildren) const {
+
+            return COntologyImpl::GetChildren(iTerm, setiChildren);
+        }
+    };
 
 /*!
  * \brief
@@ -545,78 +594,95 @@ public:
  * COntologyMIPS parses the "funcat" structure and annotation files from the Munich Information center for
  * Protein Sequences.
  */
-class COntologyMIPS : protected COntologyMIPSImpl, public IOntology {
-public:
-	COntologyMIPS( );
-	bool Open( std::istream& istmOntology, std::istream& istmAnnotations, CGenome& Genome );
+    class COntologyMIPS : protected COntologyMIPSImpl, public IOntology {
+    public:
+        COntologyMIPS();
 
-	void GetGeneNames( std::vector<std::string>& vecstrGenes ) const {
+        bool Open(std::istream &istmOntology, std::istream &istmAnnotations, CGenome &Genome);
 
-		return COntologyImpl::GetGeneNames( vecstrGenes ); }
+        void GetGeneNames(std::vector <std::string> &vecstrGenes) const {
 
-	void TermFinder( const CGenes& Genes, std::vector<STermFound>& vecsTerms, bool fBonferroni = true,
-		bool fRecursive = true, bool fGenome = false, float dPValue = 1,
-		const CGenes* pBackground = NULL ) const {
+            return COntologyImpl::GetGeneNames(vecstrGenes);
+        }
 
-		return COntologyImpl::TermFinder( Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
-			pBackground ); }
+        void TermFinder(const CGenes &Genes, std::vector <STermFound> &vecsTerms, bool fBonferroni = true,
+                        bool fRecursive = true, bool fGenome = false, float dPValue = 1,
+                        const CGenes *pBackground = NULL) const {
 
-	size_t GetNode( const std::string& strID ) const {
+            COntologyImpl::TermFinder(Genes, vecsTerms, fBonferroni, fRecursive, fGenome, dPValue,
+                                      pBackground);
+        }
 
-		return COntologyImpl::GetNode( strID ); }
+        size_t GetNode(const std::string &strID) const {
 
-	bool IsAnnotated( size_t iTerm, const CGene& Gene, bool fRecursive ) const {
+            return COntologyImpl::GetNode(strID);
+        }
 
-		return COntologyImpl::IsAnnotated( iTerm, Gene, fRecursive ); }
+        bool IsAnnotated(size_t iTerm, const CGene &Gene, bool fRecursive) const {
 
-	size_t GetNodes( ) const {
+            return COntologyImpl::IsAnnotated(iTerm, Gene, fRecursive);
+        }
 
-		return COntologyImpl::GetNodes( ); }
+        size_t GetNodes() const {
 
-	const std::string& GetID( ) const {
+            return COntologyImpl::GetNodes();
+        }
 
-		return COntologyImpl::GetID( ); }
+        const std::string &GetID() const {
 
-	const std::string& GetID( size_t iTerm ) const {
+            return COntologyImpl::GetID();
+        }
 
-		return COntologyImpl::GetID( iTerm ); }
+        const std::string &GetID(size_t iTerm) const {
 
-	const std::string& GetGloss( size_t iTerm ) const {
+            return COntologyImpl::GetID(iTerm);
+        }
 
-		return COntologyImpl::GetGloss( iTerm ); }
+        const std::string &GetGloss(size_t iTerm) const {
 
-	size_t GetParents( size_t iTerm ) const {
+            return COntologyImpl::GetGloss(iTerm);
+        }
 
-		return COntologyImpl::GetParents( iTerm ); }
+        size_t GetParents(size_t iTerm) const {
 
-	size_t GetParent( size_t iTerm, size_t iParent ) const {
+            return COntologyImpl::GetParents(iTerm);
+        }
 
-		return COntologyImpl::GetParent( iTerm, iParent ); }
+        size_t GetParent(size_t iTerm, size_t iParent) const {
 
-	size_t GetChildren( size_t iTerm ) const {
+            return COntologyImpl::GetParent(iTerm, iParent);
+        }
 
-		return COntologyImpl::GetChildren( iTerm ); }
+        size_t GetChildren(size_t iTerm) const {
 
-	size_t GetChild( size_t iTerm, size_t iChild ) const {
+            return COntologyImpl::GetChildren(iTerm);
+        }
 
-		return COntologyImpl::GetChild( iTerm, iChild ); }
+        size_t GetChild(size_t iTerm, size_t iChild) const {
 
-	size_t GetGenes( size_t iTerm, bool fRecursive ) const {
+            return COntologyImpl::GetChild(iTerm, iChild);
+        }
 
-		return COntologyImpl::GetGenes( iTerm, fRecursive ); }
+        size_t GetGenes(size_t iTerm, bool fRecursive) const {
 
-	const CGene& GetGene( size_t iTerm, size_t iGene ) const {
+            return COntologyImpl::GetGenes(iTerm, fRecursive);
+        }
 
-		return COntologyImpl::GetGene( iTerm, iGene ); }
+        const CGene &GetGene(size_t iTerm, size_t iGene) const {
 
-	bool GetParents( size_t iTerm, std::set<size_t>& setiParents ) const {
+            return COntologyImpl::GetGene(iTerm, iGene);
+        }
 
-		return COntologyImpl::GetParents( iTerm, setiParents ); }
+        bool GetParents(size_t iTerm, std::set <size_t> &setiParents) const {
 
-	bool GetChildren( size_t iTerm, std::set<size_t>& setiChildren ) const {
+            return COntologyImpl::GetParents(iTerm, setiParents);
+        }
 
-		return COntologyImpl::GetChildren( iTerm, setiChildren ); }
-};
+        bool GetChildren(size_t iTerm, std::set <size_t> &setiChildren) const {
+
+            return COntologyImpl::GetChildren(iTerm, setiChildren);
+        }
+    };
 
 /*!
  * \brief
@@ -625,17 +691,17 @@ public:
  * COntologyMIPS parses the "phencat" structure and annotation files from the Munich Information center for
  * Protein Sequences.
  */
-class COntologyMIPSPhenotypes : public COntologyMIPS {
-public:
-	COntologyMIPSPhenotypes( );
+    class COntologyMIPSPhenotypes : public COntologyMIPS {
+    public:
+        COntologyMIPSPhenotypes();
 
-protected:
-	/*!
-	 * \brief
-	 * String identifier for the MIPS Phenotype ontology.
-	 */
-	static const char	c_szMIPSPhen[];
-};
+    protected:
+        /*!
+         * \brief
+         * String identifier for the MIPS Phenotype ontology.
+         */
+        static const char c_szMIPSPhen[];
+    };
 
 /*!
  * \brief
@@ -648,120 +714,127 @@ protected:
  * \see
  * CDat::Open | CDataPair::Open
  */
-class CSlim : CSlimImpl {
-public:
-	bool Open( std::istream& istmSlim, const IOntology* pOntology );
-	void GetGeneNames( std::vector<std::string>& vecstrGenes ) const;
+    class CSlim : CSlimImpl {
+    public:
+        bool Open(std::istream &istmSlim, const IOntology *pOntology);
 
-	/*!
-	 * \brief
-	 * Returns the gene at the requested index below the requested slim term.
-	 * 
-	 * \param iSlim
-	 * Index of the slim term for which a gene are retrieved.
-	 * 
-	 * \param iGene
-	 * Index of the gene to retrieve.
-	 * 
-	 * \returns
-	 * Gene annotated at the requested index below the requested slim term.
-	 * 
-	 * \remarks
-	 * iSlim must be less than CSlim::GetSlims; iGene must be less than CSlim::GetGenes.  All genes annotated
-	 * recursively to descendants of the slim terms are considered.
-	 * 
-	 * \see
-	 * IOntology::GetGenes
-	 */
-	const CGene& GetGene( size_t iSlim, size_t iGene ) const {
+        void GetGeneNames(std::vector <std::string> &vecstrGenes) const;
 
-		return *m_vecvecpGenes[ iSlim ][ iGene ]; }
+        /*!
+         * \brief
+         * Returns the gene at the requested index below the requested slim term.
+         *
+         * \param iSlim
+         * Index of the slim term for which a gene are retrieved.
+         *
+         * \param iGene
+         * Index of the gene to retrieve.
+         *
+         * \returns
+         * Gene annotated at the requested index below the requested slim term.
+         *
+         * \remarks
+         * iSlim must be less than CSlim::GetSlims; iGene must be less than CSlim::GetGenes.  All genes annotated
+         * recursively to descendants of the slim terms are considered.
+         *
+         * \see
+         * IOntology::GetGenes
+         */
+        const CGene &GetGene(size_t iSlim, size_t iGene) const {
 
-	/*!
-	 * \brief
-	 * Returns the number of ontology terms in this slim.
-	 * 
-	 * \returns
-	 * Number of ontology terms in this slim.
-	 */
-	size_t GetSlims( ) const {
+            return *m_vecvecpGenes[iSlim][iGene];
+        }
 
-		return m_vecstrSlims.size( ); }
+        /*!
+         * \brief
+         * Returns the number of ontology terms in this slim.
+         *
+         * \returns
+         * Number of ontology terms in this slim.
+         */
+        size_t GetSlims() const {
 
-	/*!
-	 * \brief
-	 * Returns the number of genes annotated below the given slim term.
-	 * 
-	 * \param iSlim
-	 * Index of the slim term for which genes are retrieved.
-	 * 
-	 * \returns
-	 * Number of genes annotated below the given slim term.
-	 * 
-	 * \remarks
-	 * iSlim must be less than CSlim::GetSlims.
-	 */
-	size_t GetGenes( size_t iSlim ) const {
+            return m_vecstrSlims.size();
+        }
 
-		return m_vecvecpGenes[ iSlim ].size( ); }
+        /*!
+         * \brief
+         * Returns the number of genes annotated below the given slim term.
+         *
+         * \param iSlim
+         * Index of the slim term for which genes are retrieved.
+         *
+         * \returns
+         * Number of genes annotated below the given slim term.
+         *
+         * \remarks
+         * iSlim must be less than CSlim::GetSlims.
+         */
+        size_t GetGenes(size_t iSlim) const {
 
-	/*!
-	 * \brief
-	 * Returns the string ID of the ontology term at the given slim index.
-	 * 
-	 * \param iSlim
-	 * Index of the slim term to identify.
-	 * 
-	 * \returns
-	 * String ID of the requested slim index.
-	 * 
-	 * \remarks
-	 * iSlim must be less than CSlim::GetSlims.
-	 */
-	const std::string& GetSlim( size_t iSlim ) const {
+            return m_vecvecpGenes[iSlim].size();
+        }
 
-		return m_vecstrSlims[ iSlim ]; }
+        /*!
+         * \brief
+         * Returns the string ID of the ontology term at the given slim index.
+         *
+         * \param iSlim
+         * Index of the slim term to identify.
+         *
+         * \returns
+         * String ID of the requested slim index.
+         *
+         * \remarks
+         * iSlim must be less than CSlim::GetSlims.
+         */
+        const std::string &GetSlim(size_t iSlim) const {
 
-	/*!
-	 * \brief
-	 * Returns the number of ontology terms in the requested slim.
-	 * 
-	 * \param iSlim
-	 * ID of slim.
-	 * 
-	 * \returns
-	 * Number of ontology terms in the requested slim.
-	 * 
-	 * \see
-	 * GetNode
-	 */
-	size_t GetNodes( size_t iSlim ) const {
+            return m_vecstrSlims[iSlim];
+        }
 
-		return m_vecveciTerms[ iSlim ].size( ); }
+        /*!
+         * \brief
+         * Returns the number of ontology terms in the requested slim.
+         *
+         * \param iSlim
+         * ID of slim.
+         *
+         * \returns
+         * Number of ontology terms in the requested slim.
+         *
+         * \see
+         * GetNode
+         */
+        size_t GetNodes(size_t iSlim) const {
 
-	/*!
-	 * \brief
-	 * Returns the ontology term ID at the requested index in the requested slim.
-	 * 
-	 * \param iSlim
-	 * ID of slim.
-	 * 
-	 * \param iTerm
-	 * Index of ontology term to be returned.
-	 * 
-	 * \returns
-	 * Ontology term at the requested index within the given slim.
-	 * 
-	 * \remarks
-	 * No bounds checking is performed; iSlim must be less than GetSlims, and iTerm must be less than GetNodes.
-	 * 
-	 * \see
-	 * GetNodes
-	 */
-	size_t GetNode( size_t iSlim, size_t iTerm ) const {
+            return m_vecveciTerms[iSlim].size();
+        }
 
-		return m_vecveciTerms[ iSlim ][ iTerm ]; }
-};
+        /*!
+         * \brief
+         * Returns the ontology term ID at the requested index in the requested slim.
+         *
+         * \param iSlim
+         * ID of slim.
+         *
+         * \param iTerm
+         * Index of ontology term to be returned.
+         *
+         * \returns
+         * Ontology term at the requested index within the given slim.
+         *
+         * \remarks
+         * No bounds checking is performed; iSlim must be less than GetSlims, and iTerm must be less than GetNodes.
+         *
+         * \see
+         * GetNodes
+         */
+        size_t GetNode(size_t iSlim, size_t iTerm) const {
+
+            return m_vecveciTerms[iSlim][iTerm];
+        }
+    };
 
 }
 

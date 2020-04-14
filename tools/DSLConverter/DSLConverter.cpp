@@ -22,18 +22,21 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-int main( int iArgs, char** aszArgs ) {
-	gengetopt_args_info	sArgs;
-	CBayesNetSmile		BNSmile;
+int main(int iArgs, char **aszArgs) {
+    gengetopt_args_info sArgs;
+    CBayesNetSmile BNSmile;
 
-	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
-		cmdline_parser_print_help( );
-		return 1; }
-	CMeta Meta( sArgs.verbosity_arg );
+    if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
+        cmdline_parser_print_help();
+        return 1;
+    }
+    CMeta Meta(sArgs.verbosity_arg);
 
-	if( !BNSmile.Open( sArgs.input_arg ) ) {
-		cerr << "Couldn't open: " << sArgs.input_arg << endl;
-		return 1; }
-	BNSmile.Save( sArgs.output_arg );
+    if (!BNSmile.Open(sArgs.input_arg)) {
+        cerr << "Couldn't open: " << sArgs.input_arg << endl;
+        return 1;
+    }
+    BNSmile.Save(sArgs.output_arg);
 
-	return 0; }
+    return 0;
+}

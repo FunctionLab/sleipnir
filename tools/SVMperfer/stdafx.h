@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <fstream>
+
 using namespace std;
 
 #include "pclset.h"
@@ -33,5 +34,6 @@ using namespace std;
 #include "genome.h"
 #include "meta.h"
 #include "svmperf.h"
+
 using namespace Sleipnir;
 #endif // STDAFX_H

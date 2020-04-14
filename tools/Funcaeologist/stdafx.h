@@ -24,6 +24,7 @@
 
 #include <fstream>
 #include <queue>
+
 using namespace std;
 
 #include <pthread.h>
@@ -33,6 +34,7 @@ using namespace std;
 #include "meta.h"
 #include "pcl.h"
 #include "statistics.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

@@ -13,6 +13,8 @@ groupoption	"networks"	n	"Bayes nets (-n triggers inference mode)"
 section "Main"
 option	"output"		o	"Output count directory, Bayes nets, or inferences"
 							string	typestr="filename or directory"	yes
+option  "countname"             O       "For learning stage, what should the countname be called if no contexts are used (default: global)."
+                                                        string  typestr="filename"      default="global"
 option	"directory"		d	"Data directory"
 							string	typestr="directory"	default="."
 option	"datasets"		s	"Dataset ID text file"
@@ -44,6 +46,16 @@ option  "bridgeneg"             J       "Use bridging negatives between context 
 option  "outpos"                u       "Use positive edges outside the context"
                                                         flag    off
 option  "outneg"                U       "Use negative edges outside the context"
+                                                        flag    off
+option	"weights"           W       "Use weighted context file"
+                                                        flag    off
+option	"dweightpos"           D       "Use weights to divide positive counts into correponding proportion of positives and negatives"
+	                                                    flag    off
+option	"flipneg"           F       "Flip weights(one minus original) for negative standards"
+                                                        flag    on
+option	"multiplier"		f	"Multiplier used for weighting"
+							float	default="1"
+option	"noweightneg"           N       "Use weight one for all negative standards"
                                                         flag    off
 
 section "Network Features"
@@ -79,3 +91,5 @@ option	"threads"		t	"Maximum number of threads to spawn"
 							int	default="-1"
 option	"verbosity"		v	"Message verbosity"
 							int	default="5"
+option	"logratio"		L	"Output log ratios (instead of posteriors)"
+							flag	off

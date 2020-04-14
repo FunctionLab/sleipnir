@@ -23,6 +23,7 @@
 #define STDAFX_H
 
 #include <fstream>
+
 using namespace std;
 
 #include <pthread.h>
@@ -31,12 +32,15 @@ using namespace std;
 #include "dataset.h"
 #include "genome.h"
 #include "meta.h"
+
 using namespace Sleipnir;
 
 #ifndef _MSC_VER
-#include <dirent.h>
 
-#define _unlink	unlink
+#include <dirent.h>
+#include <unistd.h>
+
+#define _unlink    unlink
 #endif // _MSC_VER
 
 #endif // STDAFX_H

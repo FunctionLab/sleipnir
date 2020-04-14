@@ -28,8 +28,8 @@
 
 namespace Sleipnir {
 
-class CVW : CVWImpl {
-};
+    class CVW : CVWImpl {
+    };
 
 }
 

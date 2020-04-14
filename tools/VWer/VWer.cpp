@@ -22,12 +22,14 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-int main( int iArgs, char** aszArgs ) {
-	gengetopt_args_info	sArgs;
+int main(int iArgs, char **aszArgs) {
+    gengetopt_args_info sArgs;
 
-	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
-		cmdline_parser_print_help( );
-		return 1; }
-	CMeta Meta( sArgs.verbosity_arg, sArgs.random_arg );
+    if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
+        cmdline_parser_print_help();
+        return 1;
+    }
+    CMeta Meta(sArgs.verbosity_arg, sArgs.random_arg);
 
-	return 0; }
+    return 0;
+}

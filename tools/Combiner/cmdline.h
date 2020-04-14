@@ -30,94 +30,92 @@ extern "C" {
 #endif
 
 /** @brief Where the command line options are stored */
-struct gengetopt_args_info
-{
-  const char *help_help; /**< @brief Print help and exit help description.  */
-  const char *version_help; /**< @brief Print version and exit help description.  */
-  char * type_arg;	/**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). (default='pcl').  */
-  char * type_orig;	/**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). original value given at command line.  */
-  const char *type_help; /**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). help description.  */
-  char * method_arg;	/**< @brief Combination method (default='mean').  */
-  char * method_orig;	/**< @brief Combination method original value given at command line.  */
-  const char *method_help; /**< @brief Combination method help description.  */
-  char * output_arg;	/**< @brief Output file.  */
-  char * output_orig;	/**< @brief Output file original value given at command line.  */
-  const char *output_help; /**< @brief Output file help description.  */
-  char * weights_arg;	/**< @brief Weights file.  */
-  char * weights_orig;	/**< @brief Weights file original value given at command line.  */
-  const char *weights_help; /**< @brief Weights file help description.  */
-  float jaccard_arg;	/**< @brief Minimum Jaccard index for module equivalence (default='0.5').  */
-  char * jaccard_orig;	/**< @brief Minimum Jaccard index for module equivalence original value given at command line.  */
-  const char *jaccard_help; /**< @brief Minimum Jaccard index for module equivalence help description.  */
-  double intersection_arg;	/**< @brief Minimum intersection fraction for module inheritance (default='0.666').  */
-  char * intersection_orig;	/**< @brief Minimum intersection fraction for module inheritance original value given at command line.  */
-  const char *intersection_help; /**< @brief Minimum intersection fraction for module inheritance help description.  */
-  char * genes_arg;	/**< @brief Process only genes from the given set.  */
-  char * genes_orig;	/**< @brief Process only genes from the given set original value given at command line.  */
-  const char *genes_help; /**< @brief Process only genes from the given set help description.  */
-  char * terms_arg;	/**< @brief Produce DAT/DABs averaging within the provided terms.  */
-  char * terms_orig;	/**< @brief Produce DAT/DABs averaging within the provided terms original value given at command line.  */
-  const char *terms_help; /**< @brief Produce DAT/DABs averaging within the provided terms help description.  */
-  int reweight_flag;	/**< @brief Treat weights as absolute (default=off).  */
-  const char *reweight_help; /**< @brief Treat weights as absolute help description.  */
-  int subset_arg;	/**< @brief Subset size (none if zero) (default='0').  */
-  char * subset_orig;	/**< @brief Subset size (none if zero) original value given at command line.  */
-  const char *subset_help; /**< @brief Subset size (none if zero) help description.  */
-  int normalize_flag;	/**< @brief Normalize inputs before combining (default=off).  */
-  const char *normalize_help; /**< @brief Normalize inputs before combining help description.  */
-  int quantiles_arg;	/**< @brief Replace values with quantiles (default='0').  */
-  char * quantiles_orig;	/**< @brief Replace values with quantiles original value given at command line.  */
-  const char *quantiles_help; /**< @brief Replace values with quantiles help description.  */
-  int zscore_flag;	/**< @brief Z-score output after combining (default=off).  */
-  const char *zscore_help; /**< @brief Z-score output after combining help description.  */
-  int zero_flag;	/**< @brief Default missing values to zero (default=off).  */
-  const char *zero_help; /**< @brief Default missing values to zero help description.  */
-  int skip_arg;	/**< @brief Columns to skip in input PCLs (default='2').  */
-  char * skip_orig;	/**< @brief Columns to skip in input PCLs original value given at command line.  */
-  const char *skip_help; /**< @brief Columns to skip in input PCLs help description.  */
-  int memmap_flag;	/**< @brief Memory map input files (default=off).  */
-  const char *memmap_help; /**< @brief Memory map input files help description.  */
-  int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
-  char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
-  const char *verbosity_help; /**< @brief Message verbosity help description.  */
-  char * directory_arg;	/**< @brief input directory (must only contain input files).  */
-  char * directory_orig;	/**< @brief input directory (must only contain input files) original value given at command line.  */
-  const char *directory_help; /**< @brief input directory (must only contain input files) help description.  */
-  
-  unsigned int help_given ;	/**< @brief Whether help was given.  */
-  unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int type_given ;	/**< @brief Whether type was given.  */
-  unsigned int method_given ;	/**< @brief Whether method was given.  */
-  unsigned int output_given ;	/**< @brief Whether output was given.  */
-  unsigned int weights_given ;	/**< @brief Whether weights was given.  */
-  unsigned int jaccard_given ;	/**< @brief Whether jaccard was given.  */
-  unsigned int intersection_given ;	/**< @brief Whether intersection was given.  */
-  unsigned int genes_given ;	/**< @brief Whether genes was given.  */
-  unsigned int terms_given ;	/**< @brief Whether terms was given.  */
-  unsigned int reweight_given ;	/**< @brief Whether reweight was given.  */
-  unsigned int subset_given ;	/**< @brief Whether subset was given.  */
-  unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
-  unsigned int quantiles_given ;	/**< @brief Whether quantiles was given.  */
-  unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
-  unsigned int zero_given ;	/**< @brief Whether zero was given.  */
-  unsigned int skip_given ;	/**< @brief Whether skip was given.  */
-  unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
-  unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
-  unsigned int directory_given ;	/**< @brief Whether directory was given.  */
+struct gengetopt_args_info {
+    const char *help_help; /**< @brief Print help and exit help description.  */
+    const char *version_help; /**< @brief Print version and exit help description.  */
+    char *type_arg;    /**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). (default='pcl').  */
+    char *type_orig;    /**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). original value given at command line.  */
+    const char *type_help; /**< @brief Type of combination to perform: pcl combines PCLs into a PCL, dat combines DAT/DABs into a DAT/DAB, and dad concatenates DAT/DABs into a DAD (This is equivalent to Dab2Dad). help description.  */
+    char *method_arg;    /**< @brief Combination method (default='mean').  */
+    char *method_orig;    /**< @brief Combination method original value given at command line.  */
+    const char *method_help; /**< @brief Combination method help description.  */
+    char *output_arg;    /**< @brief Output file.  */
+    char *output_orig;    /**< @brief Output file original value given at command line.  */
+    const char *output_help; /**< @brief Output file help description.  */
+    char *weights_arg;    /**< @brief Weights file.  */
+    char *weights_orig;    /**< @brief Weights file original value given at command line.  */
+    const char *weights_help; /**< @brief Weights file help description.  */
+    float jaccard_arg;    /**< @brief Minimum Jaccard index for module equivalence (default='0.5').  */
+    char *jaccard_orig;    /**< @brief Minimum Jaccard index for module equivalence original value given at command line.  */
+    const char *jaccard_help; /**< @brief Minimum Jaccard index for module equivalence help description.  */
+    double intersection_arg;    /**< @brief Minimum intersection fraction for module inheritance (default='0.666').  */
+    char *intersection_orig;    /**< @brief Minimum intersection fraction for module inheritance original value given at command line.  */
+    const char *intersection_help; /**< @brief Minimum intersection fraction for module inheritance help description.  */
+    char *genes_arg;    /**< @brief Process only genes from the given set.  */
+    char *genes_orig;    /**< @brief Process only genes from the given set original value given at command line.  */
+    const char *genes_help; /**< @brief Process only genes from the given set help description.  */
+    char *terms_arg;    /**< @brief Produce DAT/DABs averaging within the provided terms.  */
+    char *terms_orig;    /**< @brief Produce DAT/DABs averaging within the provided terms original value given at command line.  */
+    const char *terms_help; /**< @brief Produce DAT/DABs averaging within the provided terms help description.  */
+    int reweight_flag;    /**< @brief Treat weights as absolute (default=off).  */
+    const char *reweight_help; /**< @brief Treat weights as absolute help description.  */
+    int subset_arg;    /**< @brief Subset size (none if zero) (default='0').  */
+    char *subset_orig;    /**< @brief Subset size (none if zero) original value given at command line.  */
+    const char *subset_help; /**< @brief Subset size (none if zero) help description.  */
+    int normalize_flag;    /**< @brief Normalize inputs before combining (default=off).  */
+    const char *normalize_help; /**< @brief Normalize inputs before combining help description.  */
+    int quantiles_arg;    /**< @brief Replace values with quantiles (default='0').  */
+    char *quantiles_orig;    /**< @brief Replace values with quantiles original value given at command line.  */
+    const char *quantiles_help; /**< @brief Replace values with quantiles help description.  */
+    int zscore_flag;    /**< @brief Z-score output after combining (applies to dat combination type) (default=off).  */
+    const char *zscore_help; /**< @brief Z-score output after combining (applies to dat combination type) help description.  */
+    int zero_flag;    /**< @brief Default missing values to zero (default=off).  */
+    const char *zero_help; /**< @brief Default missing values to zero help description.  */
+    int skip_arg;    /**< @brief Columns to skip in input PCLs (default='0').  */
+    char *skip_orig;    /**< @brief Columns to skip in input PCLs original value given at command line.  */
+    const char *skip_help; /**< @brief Columns to skip in input PCLs help description.  */
+    int memmap_flag;    /**< @brief Memory map input files (default=off).  */
+    const char *memmap_help; /**< @brief Memory map input files help description.  */
+    int verbosity_arg;    /**< @brief Message verbosity (default='5').  */
+    char *verbosity_orig;    /**< @brief Message verbosity original value given at command line.  */
+    const char *verbosity_help; /**< @brief Message verbosity help description.  */
+    char *directory_arg;    /**< @brief input directory (must only contain input files).  */
+    char *directory_orig;    /**< @brief input directory (must only contain input files) original value given at command line.  */
+    const char *directory_help; /**< @brief input directory (must only contain input files) help description.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
-} ;
+    unsigned int help_given;    /**< @brief Whether help was given.  */
+    unsigned int version_given;    /**< @brief Whether version was given.  */
+    unsigned int type_given;    /**< @brief Whether type was given.  */
+    unsigned int method_given;    /**< @brief Whether method was given.  */
+    unsigned int output_given;    /**< @brief Whether output was given.  */
+    unsigned int weights_given;    /**< @brief Whether weights was given.  */
+    unsigned int jaccard_given;    /**< @brief Whether jaccard was given.  */
+    unsigned int intersection_given;    /**< @brief Whether intersection was given.  */
+    unsigned int genes_given;    /**< @brief Whether genes was given.  */
+    unsigned int terms_given;    /**< @brief Whether terms was given.  */
+    unsigned int reweight_given;    /**< @brief Whether reweight was given.  */
+    unsigned int subset_given;    /**< @brief Whether subset was given.  */
+    unsigned int normalize_given;    /**< @brief Whether normalize was given.  */
+    unsigned int quantiles_given;    /**< @brief Whether quantiles was given.  */
+    unsigned int zscore_given;    /**< @brief Whether zscore was given.  */
+    unsigned int zero_given;    /**< @brief Whether zero was given.  */
+    unsigned int skip_given;    /**< @brief Whether skip was given.  */
+    unsigned int memmap_given;    /**< @brief Whether memmap was given.  */
+    unsigned int verbosity_given;    /**< @brief Whether verbosity was given.  */
+    unsigned int directory_given;    /**< @brief Whether directory was given.  */
+
+    char **inputs; /**< @brief unamed options (options without names) */
+    unsigned inputs_num; /**< @brief unamed options number */
+};
 
 /** @brief The additional parameters to pass to parser functions */
-struct cmdline_parser_params
-{
-  int override; /**< @brief whether to override possibly already present options (default 0) */
-  int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
-  int check_required; /**< @brief whether to check that all required options were provided (default 1) */
-  int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
-  int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
-} ;
+struct cmdline_parser_params {
+    int override; /**< @brief whether to override possibly already present options (default 0) */
+    int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
+    int check_required; /**< @brief whether to check that all required options were provided (default 1) */
+    int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
+    int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
+};
 
 /** @brief the purpose string of the program */
 extern const char *gengetopt_args_info_purpose;
@@ -133,8 +131,8 @@ extern const char *gengetopt_args_info_help[];
  * @param args_info the structure where option information will be stored
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info);
+int cmdline_parser(int argc, char *const *argv,
+                   struct gengetopt_args_info *args_info);
 
 /**
  * The command line parser (version with additional parameters - deprecated)
@@ -147,9 +145,9 @@ int cmdline_parser (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  * @deprecated use cmdline_parser_ext() instead
  */
-int cmdline_parser2 (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  int override, int initialize, int check_required);
+int cmdline_parser2(int argc, char *const *argv,
+                    struct gengetopt_args_info *args_info,
+                    int override, int initialize, int check_required);
 
 /**
  * The command line parser (version with additional parameters)
@@ -159,9 +157,9 @@ int cmdline_parser2 (int argc, char * const *argv,
  * @param params additional parameters for the parser
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser_ext (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  struct cmdline_parser_params *params);
+int cmdline_parser_ext(int argc, char *const *argv,
+                       struct gengetopt_args_info *args_info,
+                       struct cmdline_parser_params *params);
 
 /**
  * Save the contents of the option struct into an already open FILE stream.
@@ -170,7 +168,7 @@ int cmdline_parser_ext (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_dump(FILE *outfile,
-  struct gengetopt_args_info *args_info);
+                        struct gengetopt_args_info *args_info);
 
 /**
  * Save the contents of the option struct into a (text) file.
@@ -180,12 +178,13 @@ int cmdline_parser_dump(FILE *outfile,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_file_save(const char *filename,
-  struct gengetopt_args_info *args_info);
+                             struct gengetopt_args_info *args_info);
 
 /**
  * Print the help
  */
 void cmdline_parser_print_help(void);
+
 /**
  * Print the version
  */
@@ -210,13 +209,14 @@ struct cmdline_parser_params *cmdline_parser_params_create(void);
  * (also set default values for options that have a default)
  * @param args_info the structure to initialize
  */
-void cmdline_parser_init (struct gengetopt_args_info *args_info);
+void cmdline_parser_init(struct gengetopt_args_info *args_info);
+
 /**
  * Deallocates the string fields of the gengetopt_args_info structure
  * (but does not deallocate the structure itself)
  * @param args_info the structure to deallocate
  */
-void cmdline_parser_free (struct gengetopt_args_info *args_info);
+void cmdline_parser_free(struct gengetopt_args_info *args_info);
 
 /**
  * Checks that all the required options were specified
@@ -225,11 +225,11 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  *   possible errors
  * @return
  */
-int cmdline_parser_required (struct gengetopt_args_info *args_info,
-  const char *prog_name);
+int cmdline_parser_required(struct gengetopt_args_info *args_info,
+                            const char *prog_name);
 
-extern char *cmdline_parser_type_values[] ;	/**< @brief Possible values for type.  */
-extern char *cmdline_parser_method_values[] ;	/**< @brief Possible values for method.  */
+extern char *cmdline_parser_type_values[];    /**< @brief Possible values for type.  */
+extern char *cmdline_parser_method_values[];    /**< @brief Possible values for method.  */
 
 
 #ifdef __cplusplus

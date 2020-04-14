@@ -1,0 +1,110 @@
+package	"SeekEvaluator"
+version	"1.0"
+purpose	"Evaluate results generated from SeekMiner"
+
+section "Mode"
+option	"single"			O	"Evaluate one query's rank list result"
+								flag	off
+option	"aggregate"			M	"Evaluate multiple queries and aggregates results"
+								flag	off
+option	"multi_weight"		T	"Evaluate multiple queries' dataset weight files"
+								flag	off
+
+section	"Metric"
+option	"fixed_pr"			z	"Precision at depth X"
+								flag	off
+option	"rbp"				r	"Rank biased precision (requires parameter p to be set)"
+								flag	off
+option	"avgp"				a	"Average precision for the top X positives, where X = integer, or % of total positives"
+								flag	off
+option	"pr"				t	"Precision at X-th positive, where X = integer, or % of total positives"
+								flag	off
+option	"pr_all"			c	"Precision at all positive depths (useful for drawing precision-recall curve)"
+								flag	off
+option	"auc"				u	"AUC"
+								flag	off
+option	"x_int"				x	"Parameter X = integer, for --avgp, --pr"
+								int	default="-1"
+option	"x_per"				e	"Parameter X = percentage, for --avgp, --pr"
+								float	default="0"
+option	"rbp_p"				p	"Parameter p, for --rbp"
+								float	default="0.95"
+option	"dislay_only"		F	"Display the genes sorted by score (top 500 is shown, for single mode only)"
+								flag	off
+option	"display_weight"	W	"Display dataset weights (top 100)"
+								flag	off
+
+section	"Aggregator (for multi-query evaluation)"
+option	"agg_avg"			A	"Show the average, standard deviation of the metric for all queries"
+								flag	off
+option	"agg_quartile"		B	"Show the min, max, as well as the 1st, 2nd, 3rd quartile of the metric for all queries"
+								flag	off
+option	"agg_ranksum"		C	"Sum up the ranks of genes in all query rankings to produce a master list sorted by summed rank, and perform metric on this list"
+								flag	off
+option	"agg_scoresum"		D	"Sum up the scores of genes in all query rankings to produce a master list sorted by summed score, and perform metric on this list"
+								flag	off
+option	"display_all"		E	"Display the metric for all queries"
+								flag	off
+option	"display_gene_pr"	l	"Display positive genes at all recall points (requires --pr_all and --display_all)"
+								flag	off
+
+section	"Input required by all"
+option	"input"				i	"Gene mapping file"
+								string typestr="filename"	yes
+
+section "Input required by dataset weight display (single .dweight file)"
+option	"dataset_map"		I	"Dataset mapping file, only required for displaying dataset weights"
+								string typestr="filename"
+option	"weight"			w	"Dataset weight file, (*.dweight)"
+								string typestr="filename"
+
+section "Input required by multi-query dataset weight display"
+option	"dweight_list"		Z	"List of dweight files"
+								string typestr="filename"
+
+section "Options for all"
+option	"fold_over_random"	f	"Fold-over-random"
+								flag	off
+option	"p_value"			P	"Simulated p-value"
+								flag	off
+option	"random_dir"		R	"Random directory"
+								string typestr="directory"
+option	"random_num"		N	"Number of random trials"
+								int		default="100"
+option	"log_average"		b	"Use log-average instead of average"
+								flag	off
+
+section "Options for NaN score"
+option	"nan"				n	"Define NaN score (320 if negative correlation is enabled)"
+								float	default="-320"
+option	"neg_cor"			K	"Negative correlations"
+								flag	off
+
+section "Input required by single-query"
+option	"goldstd"			s	"Gold standard gene set file (one line, space delimited)"
+								string typestr="filename"
+option	"gscore"			g	"Gene score file (.gscore)"
+								string typestr="filename"
+option	"query"				q	"Query gene set file (to be excluded from evaluation) (.query)"
+								string typestr="filename"
+option	"exclude"			y	"Exclude genes (.exclude)"
+								string typestr="filename"
+option	"include"			U	"Include genes (.include) (ie annotated genes)"
+								string typestr="filename"
+								
+section	"Input required by multi-query"
+option	"goldstd_list"		S	"List of gold standard gene set files"
+								string typestr="filename"
+option	"gscore_list"		G	"List of gene score files"
+								string typestr="filename"
+option	"query_list"		Q	"List of query gene set files"
+								string typestr="filename"
+option	"exclude_list"		X 	"Exclude gene list"
+								string typestr="filename"
+option	"include_list"		Y	"List of annotated genes"
+								string typestr="filename"
+
+section "Output"
+option	"dir_out"			d	"Output directory"
+								string typestr="directory"	yes
+

@@ -30,15 +30,16 @@
 
 namespace Sleipnir {
 
-class CClustKMeansImpl {
-protected:
-	static void Randomize( CDataMatrix&, size_t, const CDataMatrix& );
+    class CClustKMeansImpl {
+    protected:
+        static void Randomize(CDataMatrix &, size_t, const CDataMatrix &);
 
-	static float GetClean( size_t iOne, size_t iTwo, float dMin, float dMax, const CDistanceMatrix& Mat ) {
-		float	dRet;
+        static float GetClean(size_t iOne, size_t iTwo, float dMin, float dMax, const CDistanceMatrix &Mat) {
+            float dRet;
 
-		return ( ( iOne == iTwo ) ? dMax : ( CMeta::IsNaN( dRet = Mat.Get( iOne, iTwo ) ) ? dMin : dRet ) ); }
-};
+            return ((iOne == iTwo) ? dMax : (CMeta::IsNaN(dRet = Mat.Get(iOne, iTwo)) ? dMin : dRet));
+        }
+    };
 
 }
 

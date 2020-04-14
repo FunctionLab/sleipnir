@@ -26,12 +26,15 @@
 
 namespace Sleipnir {
 
-const CColor	CColor::c_Black		= CColor( 0x00, 0x00, 0x00 );
-const CColor	CColor::c_Cyan		= CColor( 0x00, 0xFF, 0xFF );
-const CColor	CColor::c_Green		= CColor( 0x00, 0xFF, 0x00 );
-const CColor	CColor::c_Red		= CColor( 0xFF, 0x00, 0x00 );
-const CColor	CColor::c_White		= CColor( 0xFF, 0xFF, 0xFF );
-const CColor	CColor::c_Yellow	= CColor( 0xFF, 0xFF, 0x00 );
+    const CColor    CColor::c_Black = CColor(0x00, 0x00, 0x00);
+    const CColor    CColor::c_Cyan = CColor(0x00, 0xFF, 0xFF);
+    const CColor    CColor::c_Green = CColor(0x00, 0xFF, 0x00);
+    const CColor    CColor::c_Red = CColor(0xFF, 0x00, 0x00);
+    const CColor    CColor::c_White = CColor(0xFF, 0xFF, 0xFF);
+    const CColor    CColor::c_Yellow = CColor(0xFF, 0xFF, 0x00);
+    const CColor    CColor::c_Blue = CColor(0x00, 0x00, 0xFF);
+    const CColor    CColor::c_DarkGreen = CColor(0x00, 0x64, 0x00);
+    const CColor    CColor::c_Orange = CColor(0xFF, 0xA5, 0x00);
 
 /*!
  * \brief
@@ -57,24 +60,26 @@ const CColor	CColor::c_Yellow	= CColor( 0xFF, 0xFF, 0x00 );
  * colors are mixed; between 0.5 and 1, the midpoint and maximum colors are mixed.  Given 1, the maximum
  * color is returned.
  */
-CColor CColor::Interpolate( float dValue, const CColor& ColorMinimum, const CColor& ColorMedium,
-	const CColor& ColorMaximum ) {
-	float			dOther;
-	const CColor*	pOther;
+    CColor CColor::Interpolate(float dValue, const CColor &ColorMinimum, const CColor &ColorMedium,
+                               const CColor &ColorMaximum) {
+        float dOther;
+        const CColor *pOther;
 
-	if( dValue < 0 )
-		dValue = 0;
-	else if( dValue > 1 )
-		dValue = 1;
-	dOther = 2 * dValue;
-	if( dValue < 0.5 ) {
-		pOther = &ColorMinimum;
-		dOther = 1 - dOther; }
-	else {
-		pOther = &ColorMaximum;
-		dOther -= 1; }
+        if (dValue < 0)
+            dValue = 0;
+        else if (dValue > 1)
+            dValue = 1;
+        dOther = 2 * dValue;
+        if (dValue < 0.5) {
+            pOther = &ColorMinimum;
+            dOther = 1 - dOther;
+        } else {
+            pOther = &ColorMaximum;
+            dOther -= 1;
+        }
 
-	return ( ( ColorMedium * ( 1 - dOther ) ) + ( *pOther * dOther ) ); }
+        return ((ColorMedium * (1 - dOther)) + (*pOther * dOther));
+    }
 
 /*!
  * \brief
@@ -83,11 +88,12 @@ CColor CColor::Interpolate( float dValue, const CColor& ColorMinimum, const CCol
  * \param abRGB
  * Array of three bytes representing red, green, and blue values between 0 and 255.
  */
-CColor::CColor( const unsigned char* abRGB ) {
-	size_t	i;
+    CColor::CColor(const unsigned char *abRGB) {
+        size_t i;
 
-	for( i = 0; i < c_iChannels; ++i )
-		m_abRGB[ i ] = abRGB[ i ]; }
+        for (i = 0; i < c_iChannels; ++i)
+            m_abRGB[i] = abRGB[i];
+    }
 
 /*!
  * \brief
@@ -102,11 +108,12 @@ CColor::CColor( const unsigned char* abRGB ) {
  * \param bBlue
  * Blue value between 0 and 255.
  */
-CColor::CColor( unsigned char bRed, unsigned char bGreen, unsigned char bBlue ) {
+    CColor::CColor(unsigned char bRed, unsigned char bGreen, unsigned char bBlue) {
 
-	m_abRGB[ 0 ] = bRed;
-	m_abRGB[ 1 ] = bGreen;
-	m_abRGB[ 2 ] = bBlue; }
+        m_abRGB[0] = bRed;
+        m_abRGB[1] = bGreen;
+        m_abRGB[2] = bBlue;
+    }
 
 /*!
  * \brief
@@ -118,17 +125,19 @@ CColor::CColor( unsigned char bRed, unsigned char bGreen, unsigned char bBlue ) 
  * \returns
  * New color blending the current and given colors.
  */
-CColor CColor::operator+( const CColor& Color ) const {
-	size_t			ai[ c_iChannels ];
-	unsigned char	ac[ c_iChannels ];
-	size_t			i;
+    CColor CColor::operator+(const CColor &Color) const {
+        size_t ai[c_iChannels];
+        unsigned char ac[c_iChannels];
+        size_t i;
 
-	for( i = 0; i < c_iChannels; ++i ) {
-		if( ( ai[ i ] = m_abRGB[ i ] + Color.m_abRGB[ i ] ) > UCHAR_MAX )
-			ai[ i ] = UCHAR_MAX;
-		ac[ i ] = ai[ i ]; }
+        for (i = 0; i < c_iChannels; ++i) {
+            if ((ai[i] = m_abRGB[i] + Color.m_abRGB[i]) > UCHAR_MAX)
+                ai[i] = UCHAR_MAX;
+            ac[i] = ai[i];
+        }
 
-	return CColor( ac ); }
+        return CColor(ac);
+    }
 
 /*!
  * \brief
@@ -140,17 +149,19 @@ CColor CColor::operator+( const CColor& Color ) const {
  * \returns
  * New color scaling the current color by the requested amount.
  */
-CColor CColor::operator*( float dValue ) const {
-	size_t			ai[ c_iChannels ];
-	size_t			i;
-	unsigned char	ac[ c_iChannels ];
+    CColor CColor::operator*(float dValue) const {
+        size_t ai[c_iChannels];
+        size_t i;
+        unsigned char ac[c_iChannels];
 
-	for( i = 0; i < c_iChannels; ++i ) {
-		if( ( ai[ i ] = CMath::Round( m_abRGB[ i ] * dValue ) ) > UCHAR_MAX )
-			ai[ i ] = UCHAR_MAX;
-		ac[ i ] = ai[ i ]; }
+        for (i = 0; i < c_iChannels; ++i) {
+            if ((ai[i] = CMath::Round(m_abRGB[i] * dValue)) > UCHAR_MAX)
+                ai[i] = UCHAR_MAX;
+            ac[i] = ai[i];
+        }
 
-	return CColor( ac ); }
+        return CColor(ac);
+    }
 
 /*!
  * \brief
@@ -162,13 +173,14 @@ CColor CColor::operator*( float dValue ) const {
  * \returns
  * Reference to the current color with values copied from the given color.
  */
-CColor& CColor::operator=( const CColor& Color ) {
-	size_t	i;
+    CColor &CColor::operator=(const CColor &Color) {
+        size_t i;
 
-	for( i = 0; i < c_iChannels; ++i )
-		m_abRGB[ i ] = Color.m_abRGB[ i ];
+        for (i = 0; i < c_iChannels; ++i)
+            m_abRGB[i] = Color.m_abRGB[i];
 
-	return *this; }
+        return *this;
+    }
 
 /*!
  * \brief
@@ -180,43 +192,47 @@ CColor& CColor::operator=( const CColor& Color ) {
  * \remarks
  * String does not include an initial # mark.
  */
-string CColor::ToRGB( ) const {
-	char	ac[ 7 ];
+    string CColor::ToRGB() const {
+        char ac[7];
 
-	sprintf_s( ac, ARRAYSIZE(ac), "%02x%02x%02x", m_abRGB[ 0 ], m_abRGB[ 1 ], m_abRGB[ 2 ] );
+        sprintf_s(ac, ARRAYSIZE(ac), "%02x%02x%02x", m_abRGB[0], m_abRGB[1], m_abRGB[2]);
 
-	return ac; }
+        return ac;
+    }
 
-void CColorImpl::ToHSV( float& dHue, float& dSat, float& dVal ) const {
-	float	dMin, dMax, dDelta;
-	float	adRGB[ c_iChannels ];
-	size_t	i;
+    void CColorImpl::ToHSV(float &dHue, float &dSat, float &dVal) const {
+        float dMin, dMax, dDelta;
+        float adRGB[c_iChannels];
+        size_t i;
 
-	for( i = 0; i < c_iChannels; ++i )
-		adRGB[ i ] = (float)m_abRGB[ i ] / UCHAR_MAX;
-	dMin = dMax = adRGB[ 0 ];
-	for( i = 1; i < c_iChannels; ++i ) {
-		if( adRGB[ i ] < dMin )
-			dMin = adRGB[ i ];
-		if( adRGB[ i ] > dMax )
-			dMax = adRGB[ i ]; }
+        for (i = 0; i < c_iChannels; ++i)
+            adRGB[i] = (float) m_abRGB[i] / UCHAR_MAX;
+        dMin = dMax = adRGB[0];
+        for (i = 1; i < c_iChannels; ++i) {
+            if (adRGB[i] < dMin)
+                dMin = adRGB[i];
+            if (adRGB[i] > dMax)
+                dMax = adRGB[i];
+        }
 
-	if( !( dVal = dMax ) ) {
-		dSat = 0;
-		dHue = -1;
-		return; }		
-	dDelta = dMax - dMin;
-	dSat = dDelta / dMax;
+        if (!(dVal = dMax)) {
+            dSat = 0;
+            dHue = -1;
+            return;
+        }
+        dDelta = dMax - dMin;
+        dSat = dDelta / dMax;
 
-	if( adRGB[ 0 ] == dMax )
-		dHue = ( adRGB[ 1 ] - adRGB[ 2 ] ) / dDelta;
-	else if( adRGB[ 1 ] == dMax )
-		dHue = 2 + ( ( adRGB[ 2 ] - adRGB[ 0 ] ) / dDelta );
-	else
-		dHue = 4 + ( ( adRGB[ 0 ] - adRGB[ 1 ] ) / dDelta );
-	if( ( dHue *= 60 ) < 0 )
-		dHue += 360;
-	dHue /= 360; }
+        if (adRGB[0] == dMax)
+            dHue = (adRGB[1] - adRGB[2]) / dDelta;
+        else if (adRGB[1] == dMax)
+            dHue = 2 + ((adRGB[2] - adRGB[0]) / dDelta);
+        else
+            dHue = 4 + ((adRGB[0] - adRGB[1]) / dDelta);
+        if ((dHue *= 60) < 0)
+            dHue += 360;
+        dHue /= 360;
+    }
 
 /*!
  * \brief
@@ -230,11 +246,12 @@ void CColorImpl::ToHSV( float& dHue, float& dSat, float& dVal ) const {
  * is performed heuristically by testing whether the color's value is low or its hue is extreme in HSV
  * space.
  */
-bool CColor::IsDark( ) const {
-	float	dHue, dSat, dVal;
+    bool CColor::IsDark() const {
+        float dHue, dSat, dVal;
 
-	ToHSV( dHue, dSat, dVal );
-	
-	return ( ( dVal < 0.5 ) || ( dHue < 0.05 ) || ( dHue > 0.666 ) ); }
+        ToHSV(dHue, dSat, dVal);
+
+        return ((dVal < 0.5) || (dHue < 0.05) || (dHue > 0.666));
+    }
 
 }

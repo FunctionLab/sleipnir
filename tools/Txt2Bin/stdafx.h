@@ -28,17 +28,19 @@
 #include <fstream>
 #include <string>
 #include <vector>
+
 using namespace std;
 
 #ifndef _MSC_VER
-#define ios_base	ios
+#define ios_base    ios
 #endif // _MSC_VER
 
 #include "dataset.h"
 #include "genome.h"
 #include "meta.h"
+
 using namespace Sleipnir;
 
-const unsigned int	c_iLineLength	= 1024;
+const unsigned int c_iLineLength = 1024;
 
 #endif // STDAFX_H

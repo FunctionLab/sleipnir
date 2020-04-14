@@ -13,13 +13,29 @@ option	"quant"			q	"Input Quant file"
 section "Preprocessing"
 option	"flip"			f	"Calculate one minus values"
 							flag	off
+option	"abs"			B	"Calculate absolute values"
+							flag	off
 option	"normalize"		n	"Normalize to the range [0,1]"
+							flag	off
+option	"normalizeNPone"	w	"Normalize to the range [-1,1]"
+							flag	off
+option	"normalizeDeg"		j	"Normalize by incident node degrees"
+							flag	off
+option	"normalizeLoc"		Y	"Normalize by local neighborhood"
 							flag	off
 option	"zscore"		z	"Convert values to z-scores"
 							flag	off
 option	"rank"			r	"Rank transform data"
 							flag	off
-option	"randomize"			a	"Randomize data"
+option	"randomize"		a	"Randomize data"
+							flag	off
+option	"NegExp"		y	"Transform all values to their negative exponential (converts -log of prob back to prob space)"
+							flag	off
+option	"prior"			k	"Prior of functional network (for rescaling -K)"
+							double	
+option	"newprior"		K	"New prior of functional network (use with -k)"
+							double
+option	"logratio"		A	"Convert functional network to log likelihood ratio (use with -k)"
 							flag	off
 
 section "Filtering"
@@ -32,6 +48,8 @@ option	"genee"			D	"Process only edges including a gene from the given set"
 option	"edges"			e	"Process only edges from the given DAT/DAB"
 							string	typestr="filename"
 option	"exedges"		x	"Exclude edges from the given DAT/DAB"
+							string	typestr="filename"
+option	"gexedges"		X	"Exclude all edges which both genes from the given set"
 							string	typestr="filename"
 option	"cutoff"		c	"Exclude edges below cutoff"
 							double
@@ -58,6 +76,14 @@ option	"lookups2"		T	"First lookup gene set"
 option	"genelist"		E	"Only list genes"
 							flag	off
 option	"paircount"		P	"Only count pairs above cutoff"
+							flag	off
+option	"ccoeff"		C	"Output clustering coefficient for each gene"
+							flag	off
+option	"hubbiness"		H	"Output the average edge weight for each gene"
+							flag	off
+option	"mar"			J	"Output the maximum adjacency ratio for each gene"
+							flag	off
+option	"summary"		S	"Output the summary of values (mean, stand dev.)"
 							flag	off
 
 section "Optional"

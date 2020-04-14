@@ -4,7 +4,7 @@ purpose	"Bayes net dataset functional activity evaluation"
 
 section "Optional"
 option	"type"		t	"Trust calculation type"
-						values="posteriors","sums","ratios"	default="posteriors"
+						values="posteriors","sums","ratios","wratios"	default="posteriors"
 option	"bins"		b	"Output individual bins"
 						flag	off
 option	"threads"	d	"Number of simultaneous threads to use"

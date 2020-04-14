@@ -23,26 +23,28 @@
 #define HALFMATRIXI_H
 
 #undef int64_t
+
 #include <stdint.h>
 
 namespace Sleipnir {
 
-class CHalfMatrixBase {
-protected:
-	CHalfMatrixBase( ) : m_iSize(0) { }
+    class CHalfMatrixBase {
+    protected:
+        CHalfMatrixBase() : m_iSize(0) {}
 
-	static void HalfIndex( size_t& iX, size_t& iY ) {
-		size_t	i;
+        static void HalfIndex(size_t &iX, size_t &iY) {
+            size_t i;
 
-		if( iX > iY ) {
-			i = iX;
-			iX = iY;
-			iY = i - iY - 1; }
-		else
-			iY -= iX + 1; }
+            if (iX > iY) {
+                i = iX;
+                iX = iY;
+                iY = i - iY - 1;
+            } else
+                iY -= iX + 1;
+        }
 
-	size_t	m_iSize;
-};
+        size_t m_iSize;
+    };
 
 }
 

@@ -23,11 +23,12 @@
 #define SERVERCLIENT_H
 
 #undef int64_t
+
 #include <stdint.h>
 
 namespace Sleipnir {
 
-class CServer;
+    class CServer;
 
 /*!
  * \brief
@@ -81,58 +82,60 @@ class CServer;
  * the server will call IServerClient::Destroy to clean up that object.  The original server client object
  * (ESC in the example above) is only used to create additional new instances.
  */
-class IServerClient {
-public:
-	/*!
-	 * \brief
-	 * Requests a clone of the current server client object to handle an incoming connection on the given
-	 * socket.
-	 * 
-	 * \param iSocket
-	 * Socket to be used for communication with the incoming request.
-	 * 
-	 * \param iHost
-	 * Host byte-ordered encoding of the incoming client's IP address.
-	 * 
-	 * \param iPort
-	 * Host byte-ordered encoding of the incoming client's IP port.
-	 * 
-	 * \returns
-	 * A clone of the current object configured to handle the given incoming connection request.
-	 * 
-	 * CServer calls NewInstance whenever an incoming connection request is detected.  The returned new
-	 * server client object should be configured to store iSocket and, optionally, the host and port
-	 * information so as to communicate with the new client during ProcessMessage.
-	 * 
-	 * \remarks
-	 * iHost and iPort are ntoh decoded versions of sin_addr.s_addr and sin_port, respectively.
-	 */
-	virtual IServerClient* NewInstance( SOCKET iSocket, uint32_t iHost, uint16_t iPort ) = 0;
-	/*!
-	 * \brief
-	 * Called when a new message has been received from the client and should be processed by the server.
-	 * 
-	 * \param vecbMessage
-	 * Contents of the message sent by the clients (without the preceding byte size indicator).
-	 * 
-	 * \returns
-	 * True if the message was handled and the server should continue the connection, false to close the
-	 * connection.
-	 * 
-	 * \remarks
-	 * Sleipnir puts no constraints on the contents of messages passed to and from network servers - the bytes
-	 * in vecbMessage can be ASCII text or any other arbitrary data.
-	 */
-	virtual bool ProcessMessage( const std::vector<unsigned char>& vecbMessage ) = 0;
-	/*!
-	 * \brief
-	 * Indicates that the server client object should delete itself.
-	 * 
-	 * \remarks
-	 * Provided so that delete doesn't need to be called directly on an opaque interface.
-	 */
-	virtual void Destroy( ) = 0;
-};
+    class IServerClient {
+    public:
+        /*!
+         * \brief
+         * Requests a clone of the current server client object to handle an incoming connection on the given
+         * socket.
+         *
+         * \param iSocket
+         * Socket to be used for communication with the incoming request.
+         *
+         * \param iHost
+         * Host byte-ordered encoding of the incoming client's IP address.
+         *
+         * \param iPort
+         * Host byte-ordered encoding of the incoming client's IP port.
+         *
+         * \returns
+         * A clone of the current object configured to handle the given incoming connection request.
+         *
+         * CServer calls NewInstance whenever an incoming connection request is detected.  The returned new
+         * server client object should be configured to store iSocket and, optionally, the host and port
+         * information so as to communicate with the new client during ProcessMessage.
+         *
+         * \remarks
+         * iHost and iPort are ntoh decoded versions of sin_addr.s_addr and sin_port, respectively.
+         */
+        virtual IServerClient *NewInstance(SOCKET iSocket, uint32_t iHost, uint16_t iPort) = 0;
+
+        /*!
+         * \brief
+         * Called when a new message has been received from the client and should be processed by the server.
+         *
+         * \param vecbMessage
+         * Contents of the message sent by the clients (without the preceding byte size indicator).
+         *
+         * \returns
+         * True if the message was handled and the server should continue the connection, false to close the
+         * connection.
+         *
+         * \remarks
+         * Sleipnir puts no constraints on the contents of messages passed to and from network servers - the bytes
+         * in vecbMessage can be ASCII text or any other arbitrary data.
+         */
+        virtual bool ProcessMessage(const std::vector<unsigned char> &vecbMessage) = 0;
+
+        /*!
+         * \brief
+         * Indicates that the server client object should delete itself.
+         *
+         * \remarks
+         * Provided so that delete doesn't need to be called directly on an opaque interface.
+         */
+        virtual void Destroy() = 0;
+    };
 
 }
 

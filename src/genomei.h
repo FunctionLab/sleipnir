@@ -29,56 +29,61 @@
 
 namespace Sleipnir {
 
-class CGene;
-class CGenome;
-class IOntology;
+    class CGene;
 
-class CGeneImpl {
-protected:
-	CGeneImpl( const std::string& );
-	~CGeneImpl( );
+    class CGenome;
 
-	CGeneImpl& operator=( const CGeneImpl& );
-	void IncrementOntologies( const IOntology* );
+    class IOntology;
 
-	std::string				m_strName;
-	size_t					m_iOntologies;
-	const IOntology**		m_apOntologies;
-	std::vector<size_t>**	m_apveciAnnotations;
-	size_t					m_iSynonyms;
-	std::string*			m_astrSynonyms;
-	bool					m_fRNA;
-	bool					m_fDubious;
-	std::string				m_strGloss;
-};
+    class CGeneImpl {
+    protected:
+        CGeneImpl(const std::string &);
 
-class CGenomeImpl : protected CFileImpl {
-protected:
-	typedef std::map<std::string,size_t>	TMapStrI;
+        virtual ~CGeneImpl();
 
-	static const char	c_szDubious[];
-	static const char	c_szORF[];
-	static const char*	c_aszRNA[];
+        CGeneImpl &operator=(const CGeneImpl &);
 
-	~CGenomeImpl( );
+        void IncrementOntologies(const IOntology *);
 
-	std::vector<CGene*>	m_vecpGenes;
-	TMapStrI			m_mapGenes;
-};
+        std::string m_strName;
+        size_t m_iOntologies;
+        const IOntology **m_apOntologies;
+        std::vector <size_t> **m_apveciAnnotations;
+        size_t m_iSynonyms;
+        std::string *m_astrSynonyms;
+        bool m_fRNA;
+        bool m_fDubious;
+        std::string m_strGloss;
+        float m_weight;
+    };
 
-class CGenesImpl {
-protected:
-	static const char	c_cComment	= '#';
+    class CGenomeImpl : protected CFileImpl {
+    protected:
+        typedef std::map <std::string, size_t> TMapStrI;
 
-	typedef std::map<std::string,size_t>	TMapStrI;
+        static const char c_szDubious[];
+        static const char c_szORF[];
+        static const char *c_aszRNA[];
 
-	CGenesImpl( CGenome& );
+        virtual ~CGenomeImpl();
 
-	CGenome&			m_Genome;
-	std::vector<CGene*>	m_vecpGenes;
-	TMapStrI			m_mapGenes;
-};
+        std::vector<CGene *> m_vecpGenes;
+        TMapStrI m_mapGenes;
+    };
 
+    class CGenesImpl {
+    protected:
+        static const char c_cComment = '#';
+
+        typedef std::map <std::string, size_t> TMapStrI;
+
+        CGenesImpl(CGenome &);
+
+        CGenome &m_Genome;
+        std::vector<CGene *> m_vecpGenes;
+        TMapStrI m_mapGenes;
+        bool isWeighted;
+    };
 }
 
 #endif // GENOMEI_H

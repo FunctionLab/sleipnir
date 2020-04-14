@@ -1,0 +1,48 @@
+package	"NetworkRanker"
+version	"1.0"
+purpose	"Ranks networks for each gene based on a network connectivity score of the gene"
+
+section "Main"
+option	"output"	o	"Output file"
+						string	typestr="filename"
+option	"verbosity"	v	"Message verbosity"
+						int	default="5"
+option  "directory"     d       "input directory (must only contain input files)"
+                                                string  typestr="directory"
+option  "annot" a   "matrix of gene to network annotations"
+                        string typestr="filename"
+option  "genesets" s   "PCL file of genesets"
+                        string typestr="filename"
+option  "gene" x   "Calculate gene by geneset scores"
+						flag    off	
+option  "geneset_idx" n   "Index of geneset when outputting by genes"
+						int default="0"	
+option "barcode"    B	"PCL file of gene expression (barcode) values"
+						string	typestr="filename"
+option	"exp_cut"   C	"Cutoff for gene expression"
+						float	default=".5"
+option	"no_exp"   L	"Default value for non-expressed gene"
+						float	default="0"
+
+section "Compendium correction"
+option "backg"     b   "Divide by background network compendium score"
+						flag    on	
+option "refnet" r   "Use reference network for background correction"
+						string	typestr="filename"
+section "Network correction"
+option	"enorm"		e	"Correct by the degrees of both genes incident to an edge"
+						flag	off
+option	"gnorm"		g	"Correct by the degree of gene of interest"
+						flag	off
+option	"nnorm"		G	"Correct by the degree of neighbor gene"
+						flag	off
+option	"pval"		p	"Correct by p-value"
+						flag	off
+option	"zscore"	z	"Correct by z-score"
+						flag	off
+
+section "Weight"
+option	"log_weight"		l	"Weight by log of ratio"
+						flag	off
+option	"weight"		w	"Weight edges by chosen metric"
+						flag	off

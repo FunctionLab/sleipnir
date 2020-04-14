@@ -24,10 +24,12 @@
 
 #include <fstream>
 #include <iostream>
+
 using namespace std;
 
 #include "fullmatrix.h"
 #include "meta.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

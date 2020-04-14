@@ -1,0 +1,82 @@
+package	"SeekIterative"
+version	"1.0"
+purpose	"Search based on iterative algorithm"
+
+section "Mode"
+option	"tdab"				j	"Traditional DAB mode"
+								flag off
+option	"dab"				d	"Sparse Dab mode"
+								flag off
+option	"combined"			e	"Combined-dab mode"
+								flag off
+option	"test"				f	"Test mode"
+								flag off
+option	"testcount"			g	"Test count mode"
+								flag off
+option	"testcombined"		h	"Test count mode"
+								flag off
+option	"visualize"			v	"Visualization mode"
+								flag off
+
+section "Combined-DAB / Visualization mode"
+option	"dab_basename"		b	"Combined-dab basename, also shared with Test Mode"
+								string typestr="filename"
+option	"top_genes"			t	"Top genes to visualize (for combined-dab)"
+								int default="100"
+option	"generate_dot"		E	"Generate a dot file (for combined-dab)"
+								flag off
+option	"print_distr"		P	"Print distribution of edge values"
+								flag off
+
+section "Visualization mode"
+option	"cutoff"			c	"Cutoff value"
+								float default="0.0001"
+option	"genome"			G	"Genome mapping file"
+								string typestr="filename"
+
+section "Traditional DAB mode (see also: -Z, -Y, -S)"
+option	"tdab_list"			J	"DAB list"
+								string typestr="filename"
+option	"gavg_dir"			a	"Gene average directory (.gavg files)"
+								string typestr="directory" default="NA"
+
+section "Sparse DAB mode (see also: -Z, -Y, -S)"
+option	"dab_list"			V	"DAB list"
+								string typestr="filename"
+option	"num_iter"			I	"Number of iterations"
+								int	default="0"
+option	"default_type"		T	"Default gene index type (choose unsigned short for genes, or unsigned int (32-bit) for transcripts) (required for DAB mode) (0 - unsigned int, 1 - unsigned short)"
+								int default="-1"
+option	"rbp_p"				R	"RBP p parameter (must be specified) (p<1.0) (recommended > 0.95)"
+								float default="-1"
+option	"max_rank"			M	"Maximum rank number in the sparse DAB matrix (must be specified)"
+								int default="-1"
+option	"dset_cutoff_file"	H	"Dataset score cutoff file"
+								string typestr="filename" default="NA"
+option	"norm_mode"			n	"Normalization method: rank - rank-normalize matrix, subtract_z - subtract-z-normalize matrix"
+								values="rank","subtract_z","NA" default="NA"
+option	"exp"				N	"Raise the z-score to the power of this value (for --norm_mode=subtract_z)"
+								float	default="-1.0"
+
+section "Input"
+option	"input"				i	"Gene mapping file"
+								string typestr="filename"	yes
+option	"query"				q	"Query file"
+								string typestr="filename"	yes
+option	"dab_dir"			F	"DAB directory"
+								string typestr="directory"	yes
+option	"not_query"			Q	"NOT Query file (optional, for combined-DAB)"
+								string typestr="filename" default="NA"
+option	"threshold_q"		Z	"Fraction of query genes need to be present in a dataset"
+								float default="0"
+option	"threshold_g"		Y	"Fraction of datasets that must contain a gene to put it in ranking (important if individual datasets have very different gene coverage, and for datasets with small gene-size)"
+								float default="0.50"
+option	"tsearch_mode"		S	"Search mode: equal weighted (eq) or CV LOI (cv_loi) or SPELL (spell) (Applicable if DAB list contains more than 1 dataset). (Required for --tdab and --dab modes)"
+								values="eq","cv_loi","spell","NA" default="NA"
+option	"debug"				x	"Debug mode"
+								flag off
+
+section "Output"
+option	"dir_out"			D	"Output directory"
+								string typestr="directory"
+

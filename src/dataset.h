@@ -22,13 +22,13 @@
 #ifndef DATASET_H
 #define DATASET_H
 
-#include <assert.h>
+#include <cassert>
 
 #include "dataseti.h"
 
 namespace Sleipnir {
 
-class IBayesNet;
+    class IBayesNet;
 
 /*!
  * \brief
@@ -61,229 +61,240 @@ class IBayesNet;
  * \see
  * CDat | CPCLSet | CSVM | IBayesNet
  */
-class IDataset {
-public:
-	/*!
-	 * \brief
-	 * Returns true if the requested experimental node is hidden (does not correspond to a data file).
-	 * 
-	 * \param iNode
-	 * Experimental node to investigate.
-	 * 
-	 * \returns
-	 * True if the requested experimental node is hidden.
-	 * 
-	 * Since a dataset can be constructed either directly on a collection of data files or by tying a model
-	 * such as a Bayes net to data files, IDataset can determine which model nodes are hidden by testing
-	 * whether a data file exists for them.  If no such file exists, the node is hidden and, for example,
-	 * can be treated specially during Bayesian learning.
-	 * 
-	 * \remarks
-	 * Datasets constructed directly from data files will never have hidden nodes.
-	 */
-	virtual bool IsHidden( size_t iNode ) const = 0;
-	/*!
-	 * \brief
-	 * Return the discretized value at the requested position.
-	 * 
-	 * \param iY
-	 * Data row.
-	 * 
-	 * \param iX
-	 * Data column.
-	 * 
-	 * \param iNode
-	 * Experimental node from which to retrieve the requested pair's value.
-	 * 
-	 * \returns
-	 * Discretized value from the requested position and data file using that file's quantization information;
-	 * -1 if the value is missing.
-	 * 
-	 * \remarks
-	 * Equivalent to using CDataPair::Quantize and GetContinuous or CDataPair::Get on the encapsulated data
-	 * file with the appropriate indices.  Behavior not defined when no discretization information is
-	 * available for the requested data node.
-	 */
-	virtual size_t GetDiscrete( size_t iY, size_t iX, size_t iNode ) const = 0;
-	/*!
-	 * \brief
-	 * Return the continuous value at the requested position.
-	 * 
-	 * \param iY
-	 * Data row.
-	 * 
-	 * \param iX
-	 * Data column.
-	 * 
-	 * \param iNode
-	 * Experimental node from which to retrieve the requested pair's value.
-	 * 
-	 * \returns
-	 * Continuous value from the requested position and data file; not-a-number (NaN) if the value is missing.
-	 * 
-	 * \remarks
-	 * Equivalent to using CDataPair::Get on the encapsulated data file with the appropriate indices.
-	 * Behavior not defined when the corresponding data node is inherently discrete.
-	 * 
-	 * \see
-	 * GetDiscrete
-	 */
-	virtual float GetContinuous( size_t iY, size_t iX, size_t iNode ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the gene name at the requested index.
-	 * 
-	 * \param iGene
-	 * Index of gene name to return.
-	 * 
-	 * \returns
-	 * Gene name at the requested index.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.
-	 * 
-	 * \see
-	 * GetGenes
-	 */
-	virtual const std::string& GetGene( size_t iGene ) const = 0;
-	/*!
-	 * \brief
-	 * Returns the number of genes in the dataset.
-	 * 
-	 * \returns
-	 * Number of genes in the dataset.
-	 * 
-	 * \remarks
-	 * Equal to the union of all genes in encapsulated data files.
-	 * 
-	 * \see
-	 * GetGene
-	 */
-	virtual size_t GetGenes( ) const = 0;
-	/*!
-	 * \brief
-	 * Returns true if some data file can be accessed at the requested position.
-	 * 
-	 * \param iY
-	 * Data row.
-	 * 
-	 * \param iX
-	 * Data column.
-	 * 
-	 * \returns
-	 * True if a data file can be accessed at the requested position.
-	 * 
-	 * A dataset position is a usable example if at least one data file can be accessed at that position;
-	 * that is, if some data file provides a non-missing value for that gene pair.  Implementations that
-	 * filter pairs in some manner can also prevent particular positions from being usable examples.
-	 */
-	virtual bool IsExample( size_t iY, size_t iX ) const = 0;
-	/*!
-	 * \brief
-	 * Return a vector of all gene names in the dataset.
-	 * 
-	 * \returns
-	 * Vector of gene names in the dataset.
-	 * 
-	 * \see
-	 * GetGenes | GetGene
-	 */
-	virtual const std::vector<std::string>& GetGeneNames( ) const = 0;
-	/*!
-	 * \brief
-	 * Return the number of experimental nodes in the dataset.
-	 * 
-	 * \returns
-	 * Number of experimental nodes in the dataset.
-	 * 
-	 * \remarks
-	 * For most datasets (those not containing hidden nodes), this will be equal to the number of encapsulated
-	 * data files.
-	 */
-	virtual size_t GetExperiments( ) const = 0;
-	/*!
-	 * \brief
-	 * Return the index of the given gene name, or -1 if it is not included in the dataset.
-	 * 
-	 * \param strGene
-	 * Gene name to retrieve.
-	 * 
-	 * \returns
-	 * Index of the requested gene name, or -1 if it is not in the dataset.
-	 * 
-	 * \see
-	 * GetGeneNames
-	 */
-	virtual size_t GetGene( const std::string& strGene ) const = 0;
-	/*!
-	 * \brief
-	 * Return the number of discrete values in the requested experimental node; -1 if the node is hidden
-	 * or continuous.
-	 * 
-	 * \param iNode
-	 * Experimental node for which bin number should be returned.
-	 * 
-	 * \returns
-	 * Number of discrete values taken by the given experimental node; -1 if the node is hidden or continuous.
-	 * 
-	 * \see
-	 * GetDiscrete
-	 */
-	virtual size_t GetBins( size_t iNode ) const = 0;
-	/*!
-	 * \brief
-	 * Remove all data for the given dataset position.
-	 * 
-	 * \param iY
-	 * Data row.
-	 * 
-	 * \param iX
-	 * Data column.
-	 * 
-	 * Unloads or masks data from all encapsulated files for the requested gene pair.
-	 * 
-	 * \remarks
-	 * For efficiency, bounds checking is not performed; the given row and column should both be less than
-	 * GetGenes.  Not supported by all implementations.
-	 */
-	virtual void Remove( size_t iY, size_t iX ) = 0;
-	/*!
-	 * \brief
-	 * Remove values from the dataset based on the given gene set and filter type.
-	 * 
-	 * \param Genes
-	 * Gene set used to filter the dataset.
-	 * 
-	 * \param eFilter
-	 * Way in which to use the given genes to remove values.
-	 * 
-	 * Remove values and genes (by removing all incident edges) from the dataset based on one of several
-	 * algorithms.  For details, see CDat::EFilter.
-	 * 
-	 * \remarks
-	 * Generally implemented using Remove, so may not be supported by all implementations and may either
-	 * mask or unload the filtered data.
-	 * 
-	 * \see
-	 * CDat::FilterGenes
-	 */
-	virtual void FilterGenes( const CGenes& Genes, CDat::EFilter eFilter ) = 0;
+    class IDataset {
+    public:
+        /*!
+         * \brief
+         * Returns true if the requested experimental node is hidden (does not correspond to a data file).
+         *
+         * \param iNode
+         * Experimental node to investigate.
+         *
+         * \returns
+         * True if the requested experimental node is hidden.
+         *
+         * Since a dataset can be constructed either directly on a collection of data files or by tying a model
+         * such as a Bayes net to data files, IDataset can determine which model nodes are hidden by testing
+         * whether a data file exists for them.  If no such file exists, the node is hidden and, for example,
+         * can be treated specially during Bayesian learning.
+         *
+         * \remarks
+         * Datasets constructed directly from data files will never have hidden nodes.
+         */
+        virtual bool IsHidden(size_t iNode) const = 0;
 
-	/*!
-	 * \brief
-	 * Save a dataset to the given stream in binary or tabular (human readable) form.
-	 * 
-	 * \param ostm
-	 * Stream into which dataset is saved.
-	 * 
-	 * \param fBinary
-	 * If true, save the dataset as a binary file; if false, save it as a text-based tab-delimited file.
-	 * 
-	 * \remarks
-	 * If fBinary is true, output stream must be binary.
-	 */
-	virtual void Save( std::ostream& ostm, bool fBinary ) const = 0;
-};
+        /*!
+         * \brief
+         * Return the discretized value at the requested position.
+         *
+         * \param iY
+         * Data row.
+         *
+         * \param iX
+         * Data column.
+         *
+         * \param iNode
+         * Experimental node from which to retrieve the requested pair's value.
+         *
+         * \returns
+         * Discretized value from the requested position and data file using that file's quantization information;
+         * -1 if the value is missing.
+         *
+         * \remarks
+         * Equivalent to using CDataPair::Quantize and GetContinuous or CDataPair::Get on the encapsulated data
+         * file with the appropriate indices.  Behavior not defined when no discretization information is
+         * available for the requested data node.
+         */
+        virtual size_t GetDiscrete(size_t iY, size_t iX, size_t iNode) const = 0;
+
+        /*!
+         * \brief
+         * Return the continuous value at the requested position.
+         *
+         * \param iY
+         * Data row.
+         *
+         * \param iX
+         * Data column.
+         *
+         * \param iNode
+         * Experimental node from which to retrieve the requested pair's value.
+         *
+         * \returns
+         * Continuous value from the requested position and data file; not-a-number (NaN) if the value is missing.
+         *
+         * \remarks
+         * Equivalent to using CDataPair::Get on the encapsulated data file with the appropriate indices.
+         * Behavior not defined when the corresponding data node is inherently discrete.
+         *
+         * \see
+         * GetDiscrete
+         */
+        virtual float GetContinuous(size_t iY, size_t iX, size_t iNode) const = 0;
+
+        /*!
+         * \brief
+         * Returns the gene name at the requested index.
+         *
+         * \param iGene
+         * Index of gene name to return.
+         *
+         * \returns
+         * Gene name at the requested index.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.
+         *
+         * \see
+         * GetGenes
+         */
+        virtual const std::string &GetGene(size_t iGene) const = 0;
+
+        /*!
+         * \brief
+         * Returns the number of genes in the dataset.
+         *
+         * \returns
+         * Number of genes in the dataset.
+         *
+         * \remarks
+         * Equal to the union of all genes in encapsulated data files.
+         *
+         * \see
+         * GetGene
+         */
+        virtual size_t GetGenes() const = 0;
+
+        /*!
+         * \brief
+         * Returns true if some data file can be accessed at the requested position.
+         *
+         * \param iY
+         * Data row.
+         *
+         * \param iX
+         * Data column.
+         *
+         * \returns
+         * True if a data file can be accessed at the requested position.
+         *
+         * A dataset position is a usable example if at least one data file can be accessed at that position;
+         * that is, if some data file provides a non-missing value for that gene pair.  Implementations that
+         * filter pairs in some manner can also prevent particular positions from being usable examples.
+         */
+        virtual bool IsExample(size_t iY, size_t iX) const = 0;
+
+        /*!
+         * \brief
+         * Return a vector of all gene names in the dataset.
+         *
+         * \returns
+         * Vector of gene names in the dataset.
+         *
+         * \see
+         * GetGenes | GetGene
+         */
+        virtual const std::vector <std::string> &GetGeneNames() const = 0;
+
+        /*!
+         * \brief
+         * Return the number of experimental nodes in the dataset.
+         *
+         * \returns
+         * Number of experimental nodes in the dataset.
+         *
+         * \remarks
+         * For most datasets (those not containing hidden nodes), this will be equal to the number of encapsulated
+         * data files.
+         */
+        virtual size_t GetExperiments() const = 0;
+
+        /*!
+         * \brief
+         * Return the index of the given gene name, or -1 if it is not included in the dataset.
+         *
+         * \param strGene
+         * Gene name to retrieve.
+         *
+         * \returns
+         * Index of the requested gene name, or -1 if it is not in the dataset.
+         *
+         * \see
+         * GetGeneNames
+         */
+        virtual size_t GetGene(const std::string &strGene) const = 0;
+
+        /*!
+         * \brief
+         * Return the number of discrete values in the requested experimental node; -1 if the node is hidden
+         * or continuous.
+         *
+         * \param iNode
+         * Experimental node for which bin number should be returned.
+         *
+         * \returns
+         * Number of discrete values taken by the given experimental node; -1 if the node is hidden or continuous.
+         *
+         * \see
+         * GetDiscrete
+         */
+        virtual size_t GetBins(size_t iNode) const = 0;
+
+        /*!
+         * \brief
+         * Remove all data for the given dataset position.
+         *
+         * \param iY
+         * Data row.
+         *
+         * \param iX
+         * Data column.
+         *
+         * Unloads or masks data from all encapsulated files for the requested gene pair.
+         *
+         * \remarks
+         * For efficiency, bounds checking is not performed; the given row and column should both be less than
+         * GetGenes.  Not supported by all implementations.
+         */
+        virtual void Remove(size_t iY, size_t iX) = 0;
+
+        /*!
+         * \brief
+         * Remove values from the dataset based on the given gene set and filter type.
+         *
+         * \param Genes
+         * Gene set used to filter the dataset.
+         *
+         * \param eFilter
+         * Way in which to use the given genes to remove values.
+         *
+         * Remove values and genes (by removing all incident edges) from the dataset based on one of several
+         * algorithms.  For details, see CDat::EFilter.
+         *
+         * \remarks
+         * Generally implemented using Remove, so may not be supported by all implementations and may either
+         * mask or unload the filtered data.
+         *
+         * \see
+         * CDat::FilterGenes
+         */
+        virtual void FilterGenes(const CGenes &Genes, CDat::EFilter eFilter) = 0;
+
+        /*!
+         * \brief
+         * Save a dataset to the given stream in binary or tabular (human readable) form.
+         *
+         * \param ostm
+         * Stream into which dataset is saved.
+         *
+         * \param fBinary
+         * If true, save the dataset as a binary file; if false, save it as a text-based tab-delimited file.
+         *
+         * \remarks
+         * If fBinary is true, output stream must be binary.
+         */
+        virtual void Save(std::ostream &ostm, bool fBinary) const = 0;
+    };
 
 /*!
  * \brief
@@ -293,138 +304,155 @@ public:
  * For any purpose not requiring continuous values, CDatasetCompact is more appropriate.  CDistanceMatrix
  * objects are used to store continuous data, CCompactMatrix objects for discrete data.
  */
-class CDataset : CDatasetImpl, public IDataset {
-public:
-	bool Open( const char* szAnswerFile, const std::vector<std::string>& vecstrDataFiles );
-	bool Open( const std::vector<std::string>& vecstrDataFiles );
-	bool Open( const char* szAnswerFile, const char* szDataDirectory, const IBayesNet* pBayesNet );
+    class CDataset : CDatasetImpl, public IDataset {
+    public:
+        bool Open(const char *szAnswerFile, const std::vector <std::string> &vecstrDataFiles);
 
-	/*!
-	 * \brief
-	 * Construct a dataset corresponding to the given Bayes net using the provided answer file and data
-	 * files from the given directory.
-	 * 
-	 * \param Answers
-	 * Pre-loaded answer file which will become the first node of the dataset.
-	 * 
-	 * \param szDataDirectory
-	 * Directory from which data files are loaded.
-	 * 
-	 * \param pBayesNet
-	 * Bayes net whose nodes will correspond to files in the dataset.
-	 * 
-	 * \returns
-	 * True if dataset was constructed successfully.
-	 * 
-	 * Creates a dataset with nodes corresponding to the given Bayes net structure; the given answer file
-	 * is always inserted as the first (0th) data file, and thus corresponds to the first node in the Bayes
-	 * net (generally the class node predicting functional relationships).  Data is loaded continuously or
-	 * discretely as indicated by the Bayes net, and nodes for which a corresponding data file (i.e. one
-	 * with the same name followed by an appropriate CDat extension) cannot be located are marked as hidden.
-	 * 
-	 * \remarks
-	 * Each data file is loaded more or less as-is; continuous data files will be loaded directly into
-	 * memory, and discrete files are pre-discretized and stored in compact matrices.
-	 */
-	bool Open( const CDataPair& Answers, const char* szDataDirectory, const IBayesNet* pBayesNet ) {
+        bool Open(const std::vector <std::string> &vecstrDataFiles);
 
-		return CDatasetImpl::Open( &Answers, szDataDirectory, pBayesNet ); }
+        bool Open(const char *szAnswerFile, const char *szDataDirectory, const IBayesNet *pBayesNet);
 
-	/*!
-	 * \brief
-	 * Construct a dataset corresponding to the given Bayes net using files from the given directory.
-	 * 
-	 * \param szDataDirectory
-	 * Directory from which data files are loaded.
-	 * 
-	 * \param pBayesNet
-	 * Bayes net whose nodes will correspond to files in the dataset.
-	 * 
-	 * \returns
-	 * True if dataset was constructed successfully.
-	 * 
-	 * Creates a dataset (without an answer file) with nodes corresponding to the given Bayes net structure.
-	 * Data is loaded continuously or discretely as indicated by the Bayes net, and nodes for which a
-	 * corresponding data file (i.e. one with the same name followed by an appropriate CDat extension)
-	 * cannot be located are marked as hidden.
-	 * 
-	 * \remarks
-	 * Each data file is loaded more or less as-is; continuous data files will be loaded directly into
-	 * memory, and discrete files are pre-discretized and stored in compact matrices.
-	 */
-	bool Open( const char* szDataDirectory, const IBayesNet* pBayesNet ) {
+        /*!
+         * \brief
+         * Construct a dataset corresponding to the given Bayes net using the provided answer file and data
+         * files from the given directory.
+         *
+         * \param Answers
+         * Pre-loaded answer file which will become the first node of the dataset.
+         *
+         * \param szDataDirectory
+         * Directory from which data files are loaded.
+         *
+         * \param pBayesNet
+         * Bayes net whose nodes will correspond to files in the dataset.
+         *
+         * \returns
+         * True if dataset was constructed successfully.
+         *
+         * Creates a dataset with nodes corresponding to the given Bayes net structure; the given answer file
+         * is always inserted as the first (0th) data file, and thus corresponds to the first node in the Bayes
+         * net (generally the class node predicting functional relationships).  Data is loaded continuously or
+         * discretely as indicated by the Bayes net, and nodes for which a corresponding data file (i.e. one
+         * with the same name followed by an appropriate CDat extension) cannot be located are marked as hidden.
+         *
+         * \remarks
+         * Each data file is loaded more or less as-is; continuous data files will be loaded directly into
+         * memory, and discrete files are pre-discretized and stored in compact matrices.
+         */
+        bool Open(const CDataPair &Answers, const char *szDataDirectory, const IBayesNet *pBayesNet) {
 
-		return CDatasetImpl::Open( NULL, szDataDirectory, pBayesNet ); }
+            return CDatasetImpl::Open(&Answers, szDataDirectory, pBayesNet);
+        }
 
-	/*!
-	 * \brief
-	 * Open only the merged gene list from the given data files.
-	 * 
-	 * \param vecstrDataFiles
-	 * Vector of file paths to load.
-	 * 
-	 * \returns
-	 * True if gene lists were loaded successfully.
-	 * 
-	 * Provides a way to rapidly list the set of all genes present in a given collection of data files
-	 * while avoiding the overhead of loading the data itself.
-	 * 
-	 * \remarks
-	 * Attempting to access data in the dataset without also opening the files themselves won't do anything
-	 * good.
-	 * 
-	 * \see
-	 * CDat::OpenGenes
-	 */
-	bool OpenGenes( const std::vector<std::string>& vecstrDataFiles ) {
+        /*!
+         * \brief
+         * Construct a dataset corresponding to the given Bayes net using files from the given directory.
+         *
+         * \param szDataDirectory
+         * Directory from which data files are loaded.
+         *
+         * \param pBayesNet
+         * Bayes net whose nodes will correspond to files in the dataset.
+         *
+         * \returns
+         * True if dataset was constructed successfully.
+         *
+         * Creates a dataset (without an answer file) with nodes corresponding to the given Bayes net structure.
+         * Data is loaded continuously or discretely as indicated by the Bayes net, and nodes for which a
+         * corresponding data file (i.e. one with the same name followed by an appropriate CDat extension)
+         * cannot be located are marked as hidden.
+         *
+         * \remarks
+         * Each data file is loaded more or less as-is; continuous data files will be loaded directly into
+         * memory, and discrete files are pre-discretized and stored in compact matrices.
+         */
+        bool Open(const char *szDataDirectory, const IBayesNet *pBayesNet) {
 
-		return CDataImpl::OpenGenes( vecstrDataFiles ); }
+            return CDatasetImpl::Open(NULL, szDataDirectory, pBayesNet);
+        }
 
-	size_t GetDiscrete( size_t iY, size_t iX, size_t iNode ) const;
-	bool IsExample( size_t iY, size_t iX ) const;
-	void Remove( size_t iY, size_t iX );
+        /*!
+         * \brief
+         * Open only the merged gene list from the given data files.
+         *
+         * \param vecstrDataFiles
+         * Vector of file paths to load.
+         *
+         * \returns
+         * True if gene lists were loaded successfully.
+         *
+         * Provides a way to rapidly list the set of all genes present in a given collection of data files
+         * while avoiding the overhead of loading the data itself.
+         *
+         * \remarks
+         * Attempting to access data in the dataset without also opening the files themselves won't do anything
+         * good.
+         *
+         * \see
+         * CDat::OpenGenes
+         */
+        bool OpenGenes(const std::vector <std::string> &vecstrDataFiles) {
 
-	float GetContinuous( size_t iY, size_t iX, size_t iNode ) const {
+            return CDataImpl::OpenGenes(vecstrDataFiles);
+        }
 
-		return CDatasetImpl::GetContinuous( iY, iX, iNode ); }
+        size_t GetDiscrete(size_t iY, size_t iX, size_t iNode) const;
 
-	void FilterGenes( const CGenes& Genes, CDat::EFilter eFilter ) {
+        bool IsExample(size_t iY, size_t iX) const;
 
-		CDataImpl::FilterGenes( this, Genes, eFilter ); }
+        void Remove(size_t iY, size_t iX);
 
-	const std::vector<std::string>& GetGeneNames( ) const {
+        float GetContinuous(size_t iY, size_t iX, size_t iNode) const {
 
-		return CDataImpl::GetGeneNames( ); }
+            return CDatasetImpl::GetContinuous(iY, iX, iNode);
+        }
 
-	bool IsHidden( size_t iNode ) const {
+        void FilterGenes(const CGenes &Genes, CDat::EFilter eFilter) {
 
-		return CDataImpl::IsHidden( iNode ); }
+            CDataImpl::FilterGenes(this, Genes, eFilter);
+        }
 
-	const std::string& GetGene( size_t iGene ) const {
+        const std::vector <std::string> &GetGeneNames() const {
 
-		return CDataImpl::GetGene( iGene ); }
+            return CDataImpl::GetGeneNames();
+        }
 
-	size_t GetGenes( ) const {
+        bool IsHidden(size_t iNode) const {
 
-		return CDataImpl::GetGenes( ); }
+            return CDataImpl::IsHidden(iNode);
+        }
 
-	size_t GetExperiments( ) const {
+        const std::string &GetGene(size_t iGene) const {
 
-		return CDataImpl::GetExperiments( ); }
+            return CDataImpl::GetGene(iGene);
+        }
 
-	size_t GetGene( const std::string& strGene ) const {
+        size_t GetGenes() const {
 
-		return CDataImpl::GetGene( strGene ); }
+            return CDataImpl::GetGenes();
+        }
 
-	size_t GetBins( size_t iNode ) const {
+        size_t GetExperiments() const {
 
-		return CDataImpl::GetBins( iNode ); }
+            return CDataImpl::GetExperiments();
+        }
 
-	void Save( std::ostream& ostm, bool fBinary ) const {
+        size_t GetGene(const std::string &strGene) const {
 
-		fBinary ? SaveBinary( ostm ) : SaveText( ostm ); }
-	
-};
+            return CDataImpl::GetGene(strGene);
+        }
+
+        size_t GetBins(size_t iNode) const {
+
+            return CDataImpl::GetBins(iNode);
+        }
+
+        void Save(std::ostream &ostm, bool fBinary) const {
+
+            fBinary ? SaveBinary(ostm) : SaveText(ostm);
+        }
+
+    };
 
 /*!
  * \brief
@@ -451,162 +479,186 @@ public:
  * \see
  * CDat
  */
-class CDatasetCompact : protected CDatasetCompactImpl, public IDataset {
-public:
-	bool Open( const CDataPair& Answers, const char* szDataDirectory, const IBayesNet* pBayesNet,
-		bool fEverything = false );
-	bool Open( const CDataPair& Answers, const char* szDataDirectory, const IBayesNet* pBayesNet,
-		const CGenes& GenesInclude, const CGenes& GenesExclude, bool fEverything = false );
-	bool Open( const std::vector<std::string>& vecstrDataFiles, bool fMemmap = false );
-	bool Open( std::istream& istm );
-	bool Open( const CGenes& GenesInclude, const CGenes& GenesExclude, const CDataPair& Answers,
-		const std::vector<std::string>& vecstrPCLs, size_t iSkip, const IMeasure* pMeasure,
-		const std::vector<float>& vecdBinEdges );
-	bool Open( const CDataPair& Answers, const std::vector<std::string>& vecstrDataFiles,
-		bool fEverything = false, bool fMemmap = false, size_t iSkip = 2, bool fZScore = false );
-	bool FilterGenes( const char* szGenes, CDat::EFilter eFilter );
-	void FilterAnswers( );
-	void Randomize( );
+    class CDatasetCompact : protected CDatasetCompactImpl, public IDataset {
+    public:
+        bool Open(const CDataPair &Answers, const char *szDataDirectory, const IBayesNet *pBayesNet,
+                  bool fEverything = false);
 
-	/*!
-	 * \brief
-	 * Construct a dataset corresponding to the given Bayes net using files from the given directory.
-	 * 
-	 * \param szDataDirectory
-	 * Directory from which data files are loaded.
-	 * 
-	 * \param pBayesNet
-	 * Bayes net whose nodes will correspond to files in the dataset.
-	 * 
-	 * \returns
-	 * True if dataset was constructed successfully.
-	 * 
-	 * Creates a dataset (without an answer file) with nodes corresponding to the given Bayes net structure.
-	 * Nodes for which a corresponding data file (i.e. one with the same name followed by an appropriate
-	 * CDat extension) cannot be located are marked as hidden.
-	 * 
-	 * \remarks
-	 * Missing QUANT files or requests for continuous data from the Bayes net will result in an error.
-	 */
-	bool Open( const char* szDataDirectory, const IBayesNet* pBayesNet ) {
+        bool Open(const CDataPair &Answers, const char *szDataDirectory, const IBayesNet *pBayesNet,
+                  const CGenes &GenesInclude, const CGenes &GenesExclude, bool fEverything = false);
 
-		return CDatasetCompactImpl::Open( szDataDirectory, pBayesNet ); }
+        bool Open(const std::vector <std::string> &vecstrDataFiles, bool fMemmap = false);
 
-	/*!
-	 * \brief
-	 * Construct a dataset corresponding to the given Bayes net using files from the given directory.
-	 * 
-	 * \param szDataDirectory
-	 * Directory from which data files are loaded.
-	 * 
-	 * \param pBayesNet
-	 * Bayes net whose nodes will correspond to files in the dataset.
-	 * 
-	 * \param GenesInclude
-	 * Data is filtered using FilterGenes with CDat::EFilterInclude and the given gene set (unless empty).
-	 * 
-	 * \param GenesExclude
-	 * Data is filtered using FilterGenes with CDat::EFilterExclude and the given gene set (unless empty).
-	 * 
-	 * \returns
-	 * True if dataset was constructed successfully.
-	 * 
-	 * Creates a dataset (without an answer file) with nodes corresponding to the given Bayes net structure.
-	 * Nodes for which a corresponding data file (i.e. one with the same name followed by an appropriate
-	 * CDat extension) cannot be located are marked as hidden.
-	 * 
-	 * \remarks
-	 * Missing QUANT files or requests for continuous data from the Bayes net will result in an error.
-	 */
-	bool Open( const char* szDataDirectory, const IBayesNet* pBayesNet, const CGenes& GenesInclude,
-		const CGenes& GenesExclude ) {
+        bool Open(std::istream &istm);
 
-		if( !CDatasetCompactImpl::Open( szDataDirectory, pBayesNet, &GenesInclude, &GenesExclude ) )
-			return false;
-		CDataImpl::FilterGenes( this, GenesInclude, CDat::EFilterInclude );
-		CDataImpl::FilterGenes( this, GenesExclude, CDat::EFilterExclude );
+        bool Open(const CGenes &GenesInclude, const CGenes &GenesExclude, const CDataPair &Answers,
+                  const std::vector <std::string> &vecstrPCLs, size_t iSkip, const IMeasure *pMeasure,
+                  const std::vector<float> &vecdBinEdges);
 
-		return true; }
+        bool Open(const CDataPair &Answers, const std::vector <std::string> &vecstrDataFiles,
+                  bool fEverything = false, bool fMemmap = false, size_t iSkip = 2, bool fZScore = false);
 
-	/*!
-	 * \brief
-	 * Open only the merged gene list from the given data files.
-	 * 
-	 * \param vecstrDataFiles
-	 * Vector of file paths to load.
-	 * 
-	 * \returns
-	 * True if gene lists were loaded successfully.
-	 * 
-	 * Provides a way to rapidly list the set of all genes present in a given collection of data files
-	 * while avoiding the overhead of loading the data itself.
-	 * 
-	 * \remarks
-	 * Attempting to access data in the dataset without also opening the files themselves won't do anything
-	 * good.
-	 * 
-	 * \see
-	 * CDat::OpenGenes
-	 */
-	bool OpenGenes( const std::vector<std::string>& vecstrDataFiles ) {
+        bool FilterGenes(const char *szGenes, CDat::EFilter eFilter);
 
-		return CDataImpl::OpenGenes( vecstrDataFiles ); }
+        void FilterAnswers();
 
-	void Save( std::ostream& ostm, bool fBinary ) const {
+        void Randomize();
 
-		fBinary ? SaveBinary( ostm ) : SaveText( ostm ); }
+        /*!
+         * \brief
+         * Construct a dataset corresponding to the given Bayes net using files from the given directory.
+         *
+         * \param szDataDirectory
+         * Directory from which data files are loaded.
+         *
+         * \param pBayesNet
+         * Bayes net whose nodes will correspond to files in the dataset.
+         *
+         * \returns
+         * True if dataset was constructed successfully.
+         *
+         * Creates a dataset (without an answer file) with nodes corresponding to the given Bayes net structure.
+         * Nodes for which a corresponding data file (i.e. one with the same name followed by an appropriate
+         * CDat extension) cannot be located are marked as hidden.
+         *
+         * \remarks
+         * Missing QUANT files or requests for continuous data from the Bayes net will result in an error.
+         */
+        bool Open(const char *szDataDirectory, const IBayesNet *pBayesNet) {
 
-	float GetContinuous( size_t iY, size_t iX, size_t iNode ) const {
-		UNUSED_PARAMETER(iY);
-		UNUSED_PARAMETER(iX);
-		UNUSED_PARAMETER(iNode);
+            return CDatasetCompactImpl::Open(szDataDirectory, pBayesNet);
+        }
 
-		return CMeta::GetNaN( ); }
+        /*!
+         * \brief
+         * Construct a dataset corresponding to the given Bayes net using files from the given directory.
+         *
+         * \param szDataDirectory
+         * Directory from which data files are loaded.
+         *
+         * \param pBayesNet
+         * Bayes net whose nodes will correspond to files in the dataset.
+         *
+         * \param GenesInclude
+         * Data is filtered using FilterGenes with CDat::EFilterInclude and the given gene set (unless empty).
+         *
+         * \param GenesExclude
+         * Data is filtered using FilterGenes with CDat::EFilterExclude and the given gene set (unless empty).
+         *
+         * \returns
+         * True if dataset was constructed successfully.
+         *
+         * Creates a dataset (without an answer file) with nodes corresponding to the given Bayes net structure.
+         * Nodes for which a corresponding data file (i.e. one with the same name followed by an appropriate
+         * CDat extension) cannot be located are marked as hidden.
+         *
+         * \remarks
+         * Missing QUANT files or requests for continuous data from the Bayes net will result in an error.
+         */
+        bool Open(const char *szDataDirectory, const IBayesNet *pBayesNet, const CGenes &GenesInclude,
+                  const CGenes &GenesExclude) {
 
-	const std::string& GetGene( size_t iGene ) const {
+            if (!CDatasetCompactImpl::Open(szDataDirectory, pBayesNet, &GenesInclude, &GenesExclude))
+                return false;
+            CDataImpl::FilterGenes(this, GenesInclude, CDat::EFilterInclude);
+            CDataImpl::FilterGenes(this, GenesExclude, CDat::EFilterExclude);
 
-		return CDataImpl::GetGene( iGene ); }
+            return true;
+        }
 
-	size_t GetGenes( ) const {
+        /*!
+         * \brief
+         * Open only the merged gene list from the given data files.
+         *
+         * \param vecstrDataFiles
+         * Vector of file paths to load.
+         *
+         * \returns
+         * True if gene lists were loaded successfully.
+         *
+         * Provides a way to rapidly list the set of all genes present in a given collection of data files
+         * while avoiding the overhead of loading the data itself.
+         *
+         * \remarks
+         * Attempting to access data in the dataset without also opening the files themselves won't do anything
+         * good.
+         *
+         * \see
+         * CDat::OpenGenes
+         */
+        bool OpenGenes(const std::vector <std::string> &vecstrDataFiles) {
 
-		return CDataImpl::GetGenes( ); }
+            return CDataImpl::OpenGenes(vecstrDataFiles);
+        }
 
-	bool IsExample( size_t iY, size_t iX ) const {
+        void Save(std::ostream &ostm, bool fBinary) const {
 
-		return CDatasetCompactImpl::IsExample( iY, iX ); }
+            fBinary ? SaveBinary(ostm) : SaveText(ostm);
+        }
 
-	void FilterGenes( const CGenes& Genes, CDat::EFilter eFilter ) {
+        float GetContinuous(size_t iY, size_t iX, size_t iNode) const {
+            UNUSED_PARAMETER(iY);
+            UNUSED_PARAMETER(iX);
+            UNUSED_PARAMETER(iNode);
 
-		CDataImpl::FilterGenes( this, Genes, eFilter ); }
+            return CMeta::GetNaN();
+        }
 
-	bool IsHidden( size_t iNode ) const {
+        const std::string &GetGene(size_t iGene) const {
 
-		return CDataImpl::IsHidden( iNode ); }
+            return CDataImpl::GetGene(iGene);
+        }
 
-	size_t GetDiscrete( size_t iY, size_t iX, size_t iNode ) const {
+        size_t GetGenes() const {
 
-		return CDatasetCompactImpl::GetDiscrete( iY, iX, iNode ); }
+            return CDataImpl::GetGenes();
+        }
 
-	const std::vector<std::string>& GetGeneNames( ) const {
+        bool IsExample(size_t iY, size_t iX) const {
 
-		return CDataImpl::GetGeneNames( ); }
+            return CDatasetCompactImpl::IsExample(iY, iX);
+        }
 
-	size_t GetExperiments( ) const {
+        void FilterGenes(const CGenes &Genes, CDat::EFilter eFilter) {
 
-		return CDataImpl::GetExperiments( ); }
+            CDataImpl::FilterGenes(this, Genes, eFilter);
+        }
 
-	size_t GetGene( const std::string& strGene ) const {
+        bool IsHidden(size_t iNode) const {
 
-		return CDataImpl::GetGene( strGene ); }
+            return CDataImpl::IsHidden(iNode);
+        }
 
-	size_t GetBins( size_t iNode ) const {
+        size_t GetDiscrete(size_t iY, size_t iX, size_t iNode) const {
 
-		return CDataImpl::GetBins( iNode ); }
+            return CDatasetCompactImpl::GetDiscrete(iY, iX, iNode);
+        }
 
-	void Remove( size_t iY, size_t iX ) {
+        const std::vector <std::string> &GetGeneNames() const {
 
-		CDatasetCompactImpl::Remove( iY, iX ); }
-};
+            return CDataImpl::GetGeneNames();
+        }
+
+        size_t GetExperiments() const {
+
+            return CDataImpl::GetExperiments();
+        }
+
+        size_t GetGene(const std::string &strGene) const {
+
+            return CDataImpl::GetGene(strGene);
+        }
+
+        size_t GetBins(size_t iNode) const {
+
+            return CDataImpl::GetBins(iNode);
+        }
+
+        void Remove(size_t iY, size_t iX) {
+
+            CDatasetCompactImpl::Remove(iY, iX);
+        }
+    };
 
 /*!
  * \brief
@@ -621,27 +673,30 @@ public:
  * \see
  * CDataMask
  */
-class CDatasetCompactMap : public CDatasetCompact {
-public:
-	CDatasetCompactMap( );
-	~CDatasetCompactMap( );
+    class CDatasetCompactMap : public CDatasetCompact {
+    public:
+        CDatasetCompactMap();
 
-	bool Open( const char* szFile );
+        ~CDatasetCompactMap();
 
-	void Remove( size_t iY, size_t iX ) {
+        bool Open(const char *szFile);
 
-		m_Mask.Set( iY, iX, false ); }
+        void Remove(size_t iY, size_t iX) {
 
-	bool IsExample( size_t iY, size_t iX ) const {
+            m_Mask.Set(iY, iX, false);
+        }
 
-		return m_Mask.Get( iY, iX ); }
+        bool IsExample(size_t iY, size_t iX) const {
 
-private:
-	unsigned char*	m_pbData;
-	CBinaryMatrix	m_Mask;
-	size_t			m_iData;
-	HANDLE			m_hndlMap;
-};
+            return m_Mask.Get(iY, iX);
+        }
+
+    private:
+        unsigned char *m_pbData;
+        CBinaryMatrix m_Mask;
+        size_t m_iData;
+        HANDLE m_hndlMap;
+    };
 
 /*!
  * \brief
@@ -655,64 +710,79 @@ private:
  * \see
  * CDatasetCompactMap
  */
-class CDataMask : CDataMaskImpl, public IDataset {
-public:
-	void Attach( const IDataset* pDataset );
-	void AttachRandom( const IDataset* pDataset, float dFraction );
-	void AttachComplement( const CDataMask& DataMask );
+    class CDataMask : CDataMaskImpl, public IDataset {
+    public:
+        void Attach(const IDataset *pDataset);
 
-	bool IsExample( size_t iY, size_t iX ) const {
+        void AttachRandom(const IDataset *pDataset, float dFraction);
 
-		return m_Mask.Get( iY, iX ); }
+        void AttachComplement(const CDataMask &DataMask);
 
-	void Remove( size_t iY, size_t iX ) {
+        bool IsExample(size_t iY, size_t iX) const {
 
-		m_Mask.Set( iY, iX, false ); }
+            return m_Mask.Get(iY, iX);
+        }
 
-	const std::vector<std::string>& GetGeneNames( ) const {
+        void Remove(size_t iY, size_t iX) {
 
-		return CDataOverlayImpl::GetGeneNames( ); }
+            m_Mask.Set(iY, iX, false);
+        }
 
-	size_t GetExperiments( ) const {
+        const std::vector <std::string> &GetGeneNames() const {
 
-		return CDataOverlayImpl::GetExperiments( ); }
+            return CDataOverlayImpl::GetGeneNames();
+        }
 
-	size_t GetGene( const std::string& strGene ) const {
+        size_t GetExperiments() const {
 
-		return CDataOverlayImpl::GetGene( strGene ); }
+            return CDataOverlayImpl::GetExperiments();
+        }
 
-	size_t GetBins( size_t iNode ) const {
+        size_t GetGene(const std::string &strGene) const {
 
-		return CDataOverlayImpl::GetBins( iNode ); }
+            return CDataOverlayImpl::GetGene(strGene);
+        }
 
-	size_t GetGenes( ) const {
+        size_t GetBins(size_t iNode) const {
 
-		return CDataOverlayImpl::GetGenes( ); }
+            return CDataOverlayImpl::GetBins(iNode);
+        }
 
-	bool IsHidden( size_t iNode ) const {
+        size_t GetGenes() const {
 
-		return CDataOverlayImpl::IsHidden( iNode ); }
+            return CDataOverlayImpl::GetGenes();
+        }
 
-	size_t GetDiscrete( size_t iY, size_t iX, size_t iNode ) const {
+        bool IsHidden(size_t iNode) const {
 
-		return CDataOverlayImpl::GetDiscrete( iY, iX, iNode ); }
+            return CDataOverlayImpl::IsHidden(iNode);
+        }
 
-	float GetContinuous( size_t iY, size_t iX, size_t iNode ) const {
+        size_t GetDiscrete(size_t iY, size_t iX, size_t iNode) const {
 
-		return CDataOverlayImpl::GetContinuous( iY, iX, iNode ); }
+            return CDataOverlayImpl::GetDiscrete(iY, iX, iNode);
+        }
 
-	const std::string& GetGene( size_t iGene ) const {
+        float GetContinuous(size_t iY, size_t iX, size_t iNode) const {
 
-		return CDataOverlayImpl::GetGene( iGene ); }
+            return CDataOverlayImpl::GetContinuous(iY, iX, iNode);
+        }
 
-	void FilterGenes( const CGenes& Genes, CDat::EFilter eFilter ) {
+        const std::string &GetGene(size_t iGene) const {
 
-		CDataImpl::FilterGenes( this, Genes, eFilter ); }
+            return CDataOverlayImpl::GetGene(iGene);
+        }
 
-	void Save( std::ostream& ostm, bool fBinary ) const {
+        void FilterGenes(const CGenes &Genes, CDat::EFilter eFilter) {
 
-		CDataOverlayImpl::Save( ostm, fBinary ); }
-};
+            CDataImpl::FilterGenes(this, Genes, eFilter);
+        }
+
+        void Save(std::ostream &ostm, bool fBinary) const {
+
+            CDataOverlayImpl::Save(ostm, fBinary);
+        }
+    };
 
 /*!
  * \brief
@@ -731,62 +801,74 @@ public:
  * \see
  * CDat::FilterGenes | CDataMask
  */
-class CDataFilter : CDataFilterImpl, public IDataset {
-public:
-	void Attach( const IDataset* pDataset, const CGenes& Genes, CDat::EFilter eFilter,
-		const CDat* pAnswers = NULL );
+    class CDataFilter : CDataFilterImpl, public IDataset {
+    public:
+        void Attach(const IDataset *pDataset, const CGenes &Genes, CDat::EFilter eFilter,
+                    const CDat *pAnswers = NULL);
 
-	bool IsExample( size_t iY, size_t iX ) const;
+        bool IsExample(size_t iY, size_t iX) const;
 
-	void Remove( size_t iY, size_t iX ) {
+        void Remove(size_t iY, size_t iX) {
 
-		assert( !"Unimplemented" ); }
+            assert(!"Unimplemented");
+        }
 
-	const std::vector<std::string>& GetGeneNames( ) const {
+        const std::vector <std::string> &GetGeneNames() const {
 
-		return CDataOverlayImpl::GetGeneNames( ); }
+            return CDataOverlayImpl::GetGeneNames();
+        }
 
-	size_t GetExperiments( ) const {
+        size_t GetExperiments() const {
 
-		return CDataOverlayImpl::GetExperiments( ); }
+            return CDataOverlayImpl::GetExperiments();
+        }
 
-	size_t GetGene( const std::string& strGene ) const {
+        size_t GetGene(const std::string &strGene) const {
 
-		return CDataOverlayImpl::GetGene( strGene ); }
+            return CDataOverlayImpl::GetGene(strGene);
+        }
 
-	size_t GetBins( size_t iNode ) const {
+        size_t GetBins(size_t iNode) const {
 
-		return CDataOverlayImpl::GetBins( iNode ); }
+            return CDataOverlayImpl::GetBins(iNode);
+        }
 
-	size_t GetGenes( ) const {
+        size_t GetGenes() const {
 
-		return CDataOverlayImpl::GetGenes( ); }
+            return CDataOverlayImpl::GetGenes();
+        }
 
-	bool IsHidden( size_t iNode ) const {
+        bool IsHidden(size_t iNode) const {
 
-		return CDataOverlayImpl::IsHidden( iNode ); }
+            return CDataOverlayImpl::IsHidden(iNode);
+        }
 
-	size_t GetDiscrete( size_t iY, size_t iX, size_t iNode ) const {
+        size_t GetDiscrete(size_t iY, size_t iX, size_t iNode) const {
 
-		return ( IsExample( iY, iX ) ? CDataOverlayImpl::GetDiscrete( iY, iX, iNode ) : -1 ); }
+            return (IsExample(iY, iX) ? CDataOverlayImpl::GetDiscrete(iY, iX, iNode) : -1);
+        }
 
-	float GetContinuous( size_t iY, size_t iX, size_t iNode ) const {
+        float GetContinuous(size_t iY, size_t iX, size_t iNode) const {
 
-		return ( IsExample( iY, iX ) ? CDataOverlayImpl::GetContinuous( iY, iX, iNode ) :
-			CMeta::GetNaN( ) ); }
+            return (IsExample(iY, iX) ? CDataOverlayImpl::GetContinuous(iY, iX, iNode) :
+                    CMeta::GetNaN());
+        }
 
-	const std::string& GetGene( size_t iGene ) const {
+        const std::string &GetGene(size_t iGene) const {
 
-		return CDataOverlayImpl::GetGene( iGene ); }
+            return CDataOverlayImpl::GetGene(iGene);
+        }
 
-	void FilterGenes( const CGenes& Genes, CDat::EFilter eFilter ) {
+        void FilterGenes(const CGenes &Genes, CDat::EFilter eFilter) {
 
-		CDataImpl::FilterGenes( this, Genes, eFilter ); }
+            CDataImpl::FilterGenes(this, Genes, eFilter);
+        }
 
-	void Save( std::ostream& ostm, bool fBinary ) const {
+        void Save(std::ostream &ostm, bool fBinary) const {
 
-		CDataOverlayImpl::Save( ostm, fBinary ); }
-};
+            CDataOverlayImpl::Save(ostm, fBinary);
+        }
+    };
 
 /*!
  * \brief
@@ -808,65 +890,79 @@ public:
  * }
  * \endcode
  */
-class CDataSubset : CDataSubsetImpl, public IDataset {
-public:
-	bool Initialize( const char* szDataDirectory, const IBayesNet* pBayesNet, size_t iGeneSize );
-	bool Initialize( const std::vector<std::string>& vecstrDataFiles, size_t iGeneSize );
-	bool Open( size_t iGeneOffset );
+    class CDataSubset : CDataSubsetImpl, public IDataset {
+    public:
+        bool Initialize(const char *szDataDirectory, const IBayesNet *pBayesNet, size_t iGeneSize);
 
-	bool IsHidden( size_t iNode ) const {
+        bool Initialize(const std::vector <std::string> &vecstrDataFiles, size_t iGeneSize);
 
-		return CDataImpl::IsHidden( iNode ); }
+        bool Open(size_t iGeneOffset);
 
-	size_t GetDiscrete( size_t iY, size_t iX, size_t iNode ) const {
-		size_t	iMap;
+        bool IsHidden(size_t iNode) const {
 
-		return ( ( ( iMap = m_veciMapping[ iNode ] ) == -1 ) ? -1 :
-			m_Examples.Get( iY - m_iOffset, iX ).GetDiscrete( iMap ) ); }
+            return CDataImpl::IsHidden(iNode);
+        }
 
-	float GetContinuous( size_t iY, size_t iX, size_t iNode ) const {
-		size_t	iMap;
+        size_t GetDiscrete(size_t iY, size_t iX, size_t iNode) const {
+            size_t iMap;
 
-		return ( ( ( iMap = m_veciMapping[ iNode ] ) == -1 ) ? CMeta::GetNaN( ) :
-			m_Examples.Get( iY - m_iOffset, iX ).GetContinuous( iMap ) ); }
+            return (((iMap = m_veciMapping[iNode]) == -1) ? -1 :
+                    m_Examples.Get(iY - m_iOffset, iX).GetDiscrete(iMap));
+        }
 
-	const std::string& GetGene( size_t iGene ) const {
+        float GetContinuous(size_t iY, size_t iX, size_t iNode) const {
+            size_t iMap;
 
-		return CDataImpl::GetGene( iGene ); }
+            return (((iMap = m_veciMapping[iNode]) == -1) ? CMeta::GetNaN() :
+                    m_Examples.Get(iY - m_iOffset, iX).GetContinuous(iMap));
+        }
 
-	size_t GetGenes( ) const {
+        const std::string &GetGene(size_t iGene) const {
 
-		return CDataImpl::GetGenes( ); }
+            return CDataImpl::GetGene(iGene);
+        }
 
-	bool IsExample( size_t iY, size_t iX ) const {
+        size_t GetGenes() const {
 
-		return ( ( ( iY < m_iOffset ) || ( ( iY - m_iOffset ) >= m_iSize ) ) ? false :
-			m_Examples.Get( iY - m_iOffset, iX ).IsSet( ) ); }
+            return CDataImpl::GetGenes();
+        }
 
-	const std::vector<std::string>& GetGeneNames( ) const {
+        bool IsExample(size_t iY, size_t iX) const {
 
-		return CDataImpl::GetGeneNames( ); }
+            return (((iY < m_iOffset) || ((iY - m_iOffset) >= m_iSize)) ? false :
+                    m_Examples.Get(iY - m_iOffset, iX).IsSet());
+        }
 
-	size_t GetExperiments( ) const {
+        const std::vector <std::string> &GetGeneNames() const {
 
-		return CDataImpl::GetExperiments( ); }
+            return CDataImpl::GetGeneNames();
+        }
 
-	size_t GetGene( const std::string& strGene ) const {
+        size_t GetExperiments() const {
 
-		return CDataImpl::GetGene( strGene ); }
+            return CDataImpl::GetExperiments();
+        }
 
-	size_t GetBins( size_t iNode ) const {
+        size_t GetGene(const std::string &strGene) const {
 
-		return CDataImpl::GetBins( iNode ); }
+            return CDataImpl::GetGene(strGene);
+        }
 
-	void Remove( size_t iY, size_t iX ) {
+        size_t GetBins(size_t iNode) const {
 
-		m_Examples.Get( iY - m_iOffset, iX ).Reset( ); }
+            return CDataImpl::GetBins(iNode);
+        }
 
-	void FilterGenes( const CGenes& Genes, CDat::EFilter eFilter ) {
+        void Remove(size_t iY, size_t iX) {
 
-		CDataImpl::FilterGenes( this, Genes, eFilter ); }
-};
+            m_Examples.Get(iY - m_iOffset, iX).Reset();
+        }
+
+        void FilterGenes(const CGenes &Genes, CDat::EFilter eFilter) {
+
+            CDataImpl::FilterGenes(this, Genes, eFilter);
+        }
+    };
 
 }
 

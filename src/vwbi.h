@@ -24,7 +24,7 @@
 
 #ifndef NO_VOWPAL_WABBIT
 
-#define go_params	gd_thread_params
+#define go_params    gd_thread_params
 #ifdef _MSC_VER
 #include <io.h>
 #include <pthread.h>
@@ -40,13 +40,15 @@ typedef size_t	ssize_t;
 
 #undef int64_t
 #pragma warning(disable : 4996 4244 4305 4267)
+
 #include <vw.h>
+
 #pragma warning(default : 4996 4244 4305 4267)
 
 namespace Sleipnir {
 
-class CVWImpl {
-};
+    class CVWImpl {
+    };
 
 }
 

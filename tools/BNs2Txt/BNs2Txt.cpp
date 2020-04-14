@@ -22,56 +22,62 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-static const char	c_acXDSL[]	= ".xdsl";
-static const char	c_acDSL[]	= ".dsl";
+static const char c_acXDSL[] = ".xdsl";
+static const char c_acDSL[] = ".dsl";
 
-int main( int iArgs, char** aszArgs ) {
-	gengetopt_args_info			sArgs;
-	CBayesNetMinimal			BNDefault;
-	vector<CBayesNetMinimal>	vecBNs;
-	ifstream					ifsm;
-	uint32_t					iSize;
-	size_t						i;
-	CBayesNetSmile				BNSmile;
-	CPCL						PCLDatasets( false );
-	string						strDir, strFile;
-	vector<string>				vecstrGenes;
+int main(int iArgs, char **aszArgs) {
+    gengetopt_args_info sArgs;
+    CBayesNetMinimal BNDefault;
+    vector <CBayesNetMinimal> vecBNs;
+    ifstream ifsm;
+    uint32_t iSize;
+    size_t i;
+    CBayesNetSmile BNSmile;
+    CPCL PCLDatasets(false);
+    string strDir, strFile;
+    vector <string> vecstrGenes;
 
-	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
-		cmdline_parser_print_help( );
-		return 1; }
-	CMeta Meta( sArgs.verbosity_arg );
+    if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
+        cmdline_parser_print_help();
+        return 1;
+    }
+    CMeta Meta(sArgs.verbosity_arg);
 
-	if( !PCLDatasets.Open( sArgs.datasets_arg, 1 ) ) {
-		cerr << "Could not open: " << ( sArgs.datasets_arg ? sArgs.datasets_arg : "stdin" ) << endl;
-		return 1; }
-	vecstrGenes.resize( PCLDatasets.GetGenes( ) );
-	for( i = 0; i < vecstrGenes.size( ); ++i )
-		vecstrGenes[ i ] = PCLDatasets.GetFeature( i, 1 );
+    if (!PCLDatasets.Open(sArgs.datasets_arg, 1)) {
+        cerr << "Could not open: " << (sArgs.datasets_arg ? sArgs.datasets_arg : "stdin") << endl;
+        return 1;
+    }
+    vecstrGenes.resize(PCLDatasets.GetGenes());
+    for (i = 0; i < vecstrGenes.size(); ++i)
+        vecstrGenes[i] = PCLDatasets.GetFeature(i, 1);
 
-	ifsm.open( sArgs.input_arg, ios_base::binary );
-	if( !BNDefault.Open( ifsm ) ) {
-		cerr << "Could not read: " << sArgs.input_arg << endl;
-		return 1; }
-	ifsm.read( (char*)&iSize, sizeof(iSize) );
-	vecBNs.resize( iSize );
-	for( i = 0; i < vecBNs.size( ); ++i )
-		if( !vecBNs[ i ].Open( ifsm ) ) {
-			cerr << "Could not read: " << sArgs.input_arg << " (" << i << ")" << endl;
-			return 1; }
-	ifsm.close( );
+    ifsm.open(sArgs.input_arg, ios_base::binary);
+    if (!BNDefault.Open(ifsm)) {
+        cerr << "Could not read: " << sArgs.input_arg << endl;
+        return 1;
+    }
+    ifsm.read((char *) &iSize, sizeof(iSize));
+    vecBNs.resize(iSize);
+    for (i = 0; i < vecBNs.size(); ++i)
+        if (!vecBNs[i].Open(ifsm)) {
+            cerr << "Could not read: " << sArgs.input_arg << " (" << i << ")" << endl;
+            return 1;
+        }
+    ifsm.close();
 
-	strDir = (string)sArgs.output_arg + '/';
-	if( !BNSmile.Open( BNDefault, vecstrGenes ) )
-		return 1;
-	strFile = strDir + BNDefault.GetID( ) + ( sArgs.xdsl_flag ? c_acXDSL : c_acDSL );
-	cerr << "Saving: " << strFile << endl;
-	BNSmile.Save( strFile.c_str( ) );
-	for( i = 0; i < vecBNs.size( ); ++i ) {
-		if( !BNSmile.Open( vecBNs[ i ], vecstrGenes ) )
-			return 1;
-		strFile = strDir + vecBNs[ i ].GetID( ) + ( sArgs.xdsl_flag ? c_acXDSL : c_acDSL );
-		cerr << "Saving: " << strFile << endl;
-		BNSmile.Save( strFile.c_str( ) ); }
+    strDir = (string) sArgs.output_arg + '/';
+    if (!BNSmile.Open(BNDefault, vecstrGenes))
+        return 1;
+    strFile = strDir + BNDefault.GetID() + (sArgs.xdsl_flag ? c_acXDSL : c_acDSL);
+    cerr << "Saving: " << strFile << endl;
+    BNSmile.Save(strFile.c_str());
+    for (i = 0; i < vecBNs.size(); ++i) {
+        if (!BNSmile.Open(vecBNs[i], vecstrGenes))
+            return 1;
+        strFile = strDir + vecBNs[i].GetID() + (sArgs.xdsl_flag ? c_acXDSL : c_acDSL);
+        cerr << "Saving: " << strFile << endl;
+        BNSmile.Save(strFile.c_str());
+    }
 
-	return 0; }
+    return 0;
+}

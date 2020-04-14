@@ -30,137 +30,176 @@
 
 namespace Sleipnir {
 
-class CCompactMatrix;
-class CDataPair;
-class IBayesNet;
-class IDataset;
+    class CCompactMatrix;
 
-class CDataImpl {
-	friend class CDataFilter;
-	friend class CDataMask;
-protected:
-	static const char	c_cSeparator	= '/';
-	static const char	c_szDat[];
-	static const char	c_szDab[];
+    class CDataPair;
 
-	static void FilterGenes( IDataset*, const CGenes&, CDat::EFilter );
+    class IBayesNet;
 
-	size_t OpenMax( const char*, const std::vector<std::string>&, bool,
-		std::vector<std::string>&, std::set<std::string>* = NULL );
-	bool OpenGenes( std::istream&, bool, bool, std::set<std::string>& ) const;
-	bool OpenGenes( const std::vector<std::string>& );
+    class IDataset;
 
-	size_t GetGene( const std::string& ) const;
-	bool OpenBinary( std::istream& );
-	const unsigned char* OpenBinary( const unsigned char* );
-	void SaveBinary( std::ostream& ) const;
+    class CDataImpl {
+        friend class CDataFilter;
 
-	bool IsHidden( size_t iNode ) const {
+        friend class CDataMask;
 
-		return ( m_veciMapping[ iNode ] == -1 ); }
+    protected:
+        static const char c_cSeparator = '/';
+        static const char c_szDat[];
+        static const char c_szDab[];
 
-	const std::string& GetGene( size_t iGene ) const {
+        static void FilterGenes(IDataset *, const CGenes &, CDat::EFilter);
 
-		return m_vecstrGenes[ iGene ]; }
+        size_t OpenMax(const char *, const std::vector <std::string> &, bool,
+                       std::vector <std::string> &, std::set <std::string> * = NULL);
 
-	size_t GetGenes( ) const {
+        bool OpenGenes(std::istream &, bool, bool, std::set <std::string> &) const;
 
-		return m_vecstrGenes.size( ); }
+        bool OpenGenes(const std::vector <std::string> &);
 
-	const std::vector<std::string>& GetGeneNames( ) const {
+        size_t GetGene(const std::string &) const;
 
-		return m_vecstrGenes; }
+        bool OpenBinary(std::istream &);
 
-	size_t GetExperiments( ) const {
+        const unsigned char *OpenBinary(const unsigned char *);
 
-		return m_veciMapping.size( ); }
+        void SaveBinary(std::ostream &) const;
 
-	unsigned char GetBins( size_t iExp ) const {
+        bool IsHidden(size_t iNode) const {
 
-		return m_veccQuants[ iExp ]; }
+            return (m_veciMapping[iNode] == -1);
+        }
 
-	bool						m_fContinuous;
-	std::vector<size_t>			m_veciMapping;
-	std::vector<std::string>	m_vecstrGenes;
-	std::vector<unsigned char>	m_veccQuants;
-};
+        const std::string &GetGene(size_t iGene) const {
 
-class CDatasetImpl : protected CDataImpl {
-protected:
-	CDatasetImpl( );
-	~CDatasetImpl( );
+            return m_vecstrGenes[iGene];
+        }
 
-	void Reset( );
-	bool Open( const CDataPair&, size_t );
-	bool Open( const CDataPair*, const char*, const IBayesNet* );
-	void SaveText( std::ostream& ) const;
-	void SaveBinary( std::ostream& ) const;
-	float GetContinuous( size_t, size_t, size_t ) const;
+        size_t GetGenes() const {
 
-	void**	m_apData;
-};
+            return m_vecstrGenes.size();
+        }
 
-class CDataOverlayImpl {
-protected:
-	CDataOverlayImpl( ) : m_pDataset(NULL) { }
+        const std::vector <std::string> &GetGeneNames() const {
 
-	const std::vector<std::string>& GetGeneNames( ) const;
-	size_t GetExperiments( ) const;
-	size_t GetGene( const std::string& ) const;
-	size_t GetBins( size_t ) const;
-	size_t GetGenes( ) const;
-	bool IsHidden( size_t ) const;
-	size_t GetDiscrete( size_t, size_t, size_t ) const;
-	float GetContinuous( size_t, size_t, size_t ) const;
-	const std::string& GetGene( size_t ) const;
-	void Save( std::ostream&, bool ) const;
+            return m_vecstrGenes;
+        }
 
-	const IDataset*	m_pDataset;
-};
+        size_t GetExperiments() const {
 
-class CDataMaskImpl : protected CDataOverlayImpl {
-protected:
-	CBinaryMatrix	m_Mask;
-};
+            return m_veciMapping.size();
+        }
 
-class CDataFilterImpl : protected CDataOverlayImpl {
-protected:
-	CDataFilterImpl( ) : m_pGenes(NULL), m_pAnswers(NULL) { }
+        unsigned char GetBins(size_t iExp) const {
 
-	const CGenes*		m_pGenes;
-	CDat::EFilter		m_eFilter;
-	std::vector<bool>	m_vecfGenes;
-	const CDat*			m_pAnswers;
-	std::vector<size_t>	m_veciAnswers;
-};
+            return m_veccQuants[iExp];
+        }
 
-class CDataSubsetImpl : protected CDataImpl {
-protected:
-	bool Open( const CDataPair&, size_t );
+        bool m_fContinuous;
+        std::vector <size_t> m_veciMapping;
+        std::vector <std::string> m_vecstrGenes;
+        std::vector<unsigned char> m_veccQuants;
+    };
 
-	size_t						m_iSize;
-	size_t						m_iOffset;
-	std::vector<std::string>	m_vecstrData;
-	CFullMatrix<CExampleImpl>	m_Examples;
-};
+    class CDatasetImpl : protected CDataImpl {
+    protected:
+        CDatasetImpl();
 
-class CDatasetCompactImpl : protected CDataImpl {
-protected:
-	CDatasetCompactImpl( );
-	~CDatasetCompactImpl( );
+        virtual ~CDatasetImpl();
 
-	bool Open( const CDataPair&, size_t );
-	bool Open( const char*, const IBayesNet*, const CGenes* = NULL, const CGenes* = NULL );
-	bool Open( const unsigned char* );
-	virtual void Remove( size_t, size_t );
-	size_t GetDiscrete( size_t, size_t, size_t ) const;
-	void SaveText( std::ostream& ) const;
-	void SaveBinary( std::ostream& ) const;
-	virtual bool IsExample( size_t, size_t ) const;
+        void Reset();
 
-	uint32_t		m_iData;
-	CCompactMatrix*	m_aData;
-};
+        bool Open(const CDataPair &, size_t);
+
+        bool Open(const CDataPair *, const char *, const IBayesNet *);
+
+        void SaveText(std::ostream &) const;
+
+        void SaveBinary(std::ostream &) const;
+
+        float GetContinuous(size_t, size_t, size_t) const;
+
+        void **m_apData;
+    };
+
+    class CDataOverlayImpl {
+    protected:
+        CDataOverlayImpl() : m_pDataset(NULL) {}
+
+        const std::vector <std::string> &GetGeneNames() const;
+
+        size_t GetExperiments() const;
+
+        size_t GetGene(const std::string &) const;
+
+        size_t GetBins(size_t) const;
+
+        size_t GetGenes() const;
+
+        bool IsHidden(size_t) const;
+
+        size_t GetDiscrete(size_t, size_t, size_t) const;
+
+        float GetContinuous(size_t, size_t, size_t) const;
+
+        const std::string &GetGene(size_t) const;
+
+        void Save(std::ostream &, bool) const;
+
+        const IDataset *m_pDataset;
+    };
+
+    class CDataMaskImpl : protected CDataOverlayImpl {
+    protected:
+        CBinaryMatrix m_Mask;
+    };
+
+    class CDataFilterImpl : protected CDataOverlayImpl {
+    protected:
+        CDataFilterImpl() : m_pGenes(NULL), m_pAnswers(NULL) {}
+
+        const CGenes *m_pGenes;
+        CDat::EFilter m_eFilter;
+        std::vector<bool> m_vecfGenes;
+        const CDat *m_pAnswers;
+        std::vector <size_t> m_veciAnswers;
+    };
+
+    class CDataSubsetImpl : protected CDataImpl {
+    protected:
+        bool Open(const CDataPair &, size_t);
+
+        size_t m_iSize;
+        size_t m_iOffset;
+        std::vector <std::string> m_vecstrData;
+        CFullMatrix<CExampleImpl> m_Examples;
+    };
+
+    class CDatasetCompactImpl : protected CDataImpl {
+    protected:
+        CDatasetCompactImpl();
+
+        virtual ~CDatasetCompactImpl();
+
+        bool Open(const CDataPair &, size_t);
+
+        bool Open(const char *, const IBayesNet *, const CGenes * = NULL, const CGenes * = NULL);
+
+        bool Open(const unsigned char *);
+
+        virtual void Remove(size_t, size_t);
+
+        size_t GetDiscrete(size_t, size_t, size_t) const;
+
+        void SaveText(std::ostream &) const;
+
+        void SaveBinary(std::ostream &) const;
+
+        virtual bool IsExample(size_t, size_t) const;
+
+        uint32_t m_iData;
+        CCompactMatrix *m_aData;
+    };
 
 }
 

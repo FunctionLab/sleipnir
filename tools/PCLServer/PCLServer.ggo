@@ -1,0 +1,25 @@
+package	"PCLServer"
+version	"1.0"
+purpose	"PCLServer that serves pcl data to client"
+
+section "Main"
+option	"port"				p	"Port to listen to"
+								string typestr="9000"
+option	"input"				i	"Input PCL directory"
+								string	typestr="directory"	yes
+option	"sinfo"				s	"Sinfo directory"
+								string	typestr="directory"	yes
+option	"prep"				q	"Prep directory"
+								string	typestr="directory"	yes
+option	"gene"				g	"Gene map file"
+								string	typestr="file"	yes
+option	"platform"			P	"Platform directory"
+								string	typestr="directory"	yes
+option	"dset"				x	"Dataset listing"
+								string	typestr="file"	yes
+option	"quant"				Q	"quant file (assuming all datasets use the same quantization)"
+								string	typestr="filename"	yes
+						
+section "MISC"								
+option	"additional_db"		B	"Utilize a second CDatabase collection. Path to the second CDatabase's setting file."
+								string default="NA"	

@@ -27,43 +27,48 @@
 
 namespace Sleipnir {
 
-const char	CPairImpl::c_szQuantExt[]	= ".quant";
-const char   CDataPairImpl::c_acQdab[]   = ".qdab";
+    const char    CPairImpl::c_szQuantExt[] = ".quant";
+    const char   CDataPairImpl::c_acQdab[] = ".qdab";
 
-bool CPairImpl::Open( const char* szDatafile, std::ifstream& ifsm ) {
-	string		strToken;
-	const char*	pc;
+    bool CPairImpl::Open(const char *szDatafile, std::ifstream &ifsm) {
+        string strToken;
+        const char *pc;
 
-	strToken = szDatafile;
-	strToken += c_szQuantExt;
-	ifsm.open( strToken.c_str( ) );
-	if( !ifsm.is_open( ) ) {
-		if( !( pc = strrchr( szDatafile, '.' ) ) ) {
-			g_CatSleipnir( ).error( "CPairImpl::Open( %s ) could not replace extension for quant file",
-				szDatafile );
-			return false; }
-		strToken = szDatafile;
-		strToken.resize( pc - szDatafile );
-		strToken += c_szQuantExt;
-		ifsm.clear( );
-		ifsm.open( strToken.c_str( ) );
-		if( !ifsm.is_open( ) ) {
-			g_CatSleipnir( ).error( "CPairImpl::Open( %s ) could not open quant file: %s", szDatafile,
-				strToken.c_str( ) );
-			return false; } }
+        strToken = szDatafile;
+        strToken += c_szQuantExt;
+        ifsm.open(strToken.c_str());
+        if (!ifsm.is_open()) {
+            if (!(pc = strrchr(szDatafile, '.'))) {
+                g_CatSleipnir().error("CPairImpl::Open( %s ) could not replace extension for quant file",
+                                      szDatafile);
+                return false;
+            }
+            strToken = szDatafile;
+            strToken.resize(pc - szDatafile);
+            strToken += c_szQuantExt;
+            ifsm.clear();
+            ifsm.open(strToken.c_str());
+            if (!ifsm.is_open()) {
+                g_CatSleipnir().error("CPairImpl::Open( %s ) could not open quant file: %s", szDatafile,
+                                      strToken.c_str());
+                return false;
+            }
+        }
 
-	return true; }
+        return true;
+    }
 
-bool CPairImpl::Open( const char* szLine, vector<float>& vecdQuant ) {
-	vector<string>	vecstrQuant;
-	size_t			i;
+    bool CPairImpl::Open(const char *szLine, vector<float> &vecdQuant) {
+        vector <string> vecstrQuant;
+        size_t i;
 
-	CMeta::Tokenize( szLine, vecstrQuant, CMeta::c_szWS, true );
-	vecdQuant.resize( vecstrQuant.size( ) );
-	for( i = 0; i < vecdQuant.size( ); ++i )
-		vecdQuant[ i ] = (float)atof( vecstrQuant[ i ].c_str( ) );
+        CMeta::Tokenize(szLine, vecstrQuant, CMeta::c_szWS, true);
+        vecdQuant.resize(vecstrQuant.size());
+        for (i = 0; i < vecdQuant.size(); ++i)
+            vecdQuant[i] = (float) atof(vecstrQuant[i].c_str());
 
-	return true; }
+        return true;
+    }
 
 /*!
  * \brief
@@ -81,10 +86,11 @@ bool CPairImpl::Open( const char* szLine, vector<float>& vecdQuant ) {
  * \see
  * CDat::Open
  */
-bool CDataPair::Open( const CSlim& Slim ) {
-	m_fQuantized = false;
-	Reset( false );
-	return CDat::Open( Slim ); }
+    bool CDataPair::Open(const CSlim &Slim) {
+        m_fQuantized = false;
+        Reset(false);
+        return CDat::Open(Slim);
+    }
 
 /*!
  * \brief
@@ -111,125 +117,130 @@ bool CDataPair::Open( const CSlim& Slim ) {
  * \see
  * CDat::Open
  */
-bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
-	bool fZScore ) {
+    bool CDataPair::Open(const char *szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
+                         bool fZScore, bool fSeek) {
 
 
-	g_CatSleipnir( ).notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
-	
-	Reset( fContinuous );
-	m_fQuantized = false;
-	
-	const char* file_ext = NULL;
-	
-	if((file_ext = strstr(szDatafile, c_acQdab)) != NULL){
+        g_CatSleipnir().notice("CDataPair::Open( %s, %d )", szDatafile, fContinuous);
 
-	  return OpenQdab( szDatafile );
-	}
-	else{
-	  if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore ) )
-	    return false;
-	  return ( m_fContinuous ? true : OpenQuants( szDatafile ) ); 	  
-	}
-}
+        Reset(fContinuous);
+        m_fQuantized = false;
 
-bool CDataPairImpl::OpenQdab( const char* szDatafile ){
-  size_t	iTotal, i, j, num_bins, num_bits, iPos;
-  float*	adScores;
-  char tmp;
-  float* bounds;
-  unsigned char btmpf;
-  unsigned char btmpb;
-  
-  unsigned char bufferA;
-  unsigned char bufferB;
-  ifstream        istm;
-  
-  float nan_val;
+        const char *file_ext = NULL;
 
-  g_CatSleipnir( ).notice( "CDataPair::OpenQdab( %s )", szDatafile );
+        if ((file_ext = strstr(szDatafile, c_acQdab)) != NULL) {
 
-  istm.open( szDatafile, ios_base::binary );
-  
-  if( !CDat::OpenGenes( istm, true, false ) )
-    return false;
-  m_Data.Initialize( GetGenes( ) );
-  
-  // read the number of bins 
-  istm.read((char*)&tmp, sizeof(char));       
-  num_bins = (size_t)tmp;
-  
-  //read the bin boundaries
-  bounds = new float[num_bins];
-  istm.read((char*)bounds, sizeof(float) * num_bins);
-  
-  // set quant values
-  SetQuants( bounds, num_bins );
-  
-  // number of bits required for each bin representation
-  num_bits = (size_t)ceil(log( num_bins ) / log ( 2.0 ));	
-  
-  // add one more bit for NaN case
-  if( pow(2, num_bits) == num_bins )
-    ++num_bits;
-  
-  // set nan value
-  nan_val = pow(2, num_bits) -1;
-  
-  // read the data	
-  adScores = new float[ GetGenes( ) - 1 ];
-  
-  istm.read( (char*)&bufferA, sizeof(bufferA));
-  istm.read( (char*)&bufferB, sizeof(bufferB));
-  
-  for( iTotal = i = 0; ( i + 1 ) < GetGenes( ); ++i ) {
-    for(j = 0; j < ( GetGenes( ) - i - 1 ); ++j){
-      iPos = (iTotal * num_bits) % 8;
-      
-      // check bit data overflow??
-      if( iPos + num_bits > 8){
-	btmpb = (bufferA << iPos);
-	btmpf = (bufferB >> (16 - num_bits - iPos)) << (8-num_bits);
-	adScores[j] = (float)((btmpb | btmpf) >> (8 - num_bits));
-	++iTotal;
-	bufferA = bufferB;
-	istm.read( (char*)&bufferB, sizeof(bufferB));
-      }
-      else{
-	adScores[j] = (((bufferA << iPos) & 0xFF) >> (8 - num_bits));
-	++iTotal;
-	if( iPos + num_bits == 8 ) {
-		bufferA = bufferB;
-		istm.read( (char*)&bufferB, sizeof(bufferB));
+            return OpenQdab(szDatafile);
+        } else {
+            if (m_fContinuous ? true : OpenQuants(szDatafile)) {
+                if (CDat::Open(szDatafile, fMemmap, iSkip, fZScore, false, fSeek)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    bool CDataPairImpl::OpenQdab(const char *szDatafile) {
+        size_t iTotal, i, j, num_bins, num_bits, iPos;
+        float *adScores;
+        unsigned char tmp;
+        float *bounds;
+        unsigned char btmpf;
+        unsigned char btmpb;
+
+        unsigned char bufferA;
+        unsigned char bufferB;
+        ifstream istm;
+
+        float nan_val;
+
+        g_CatSleipnir().notice("CDataPair::OpenQdab( %s )", szDatafile);
+
+        istm.open(szDatafile, ios_base::binary);
+
+        if (!CDat::OpenGenes(istm, true, false))
+            return false;
+        m_Data.Initialize(GetGenes());
+
+        // read the number of bins
+        istm.read((char *) &tmp, sizeof(char));
+        num_bins = (size_t) tmp;
+
+        //read the bin boundaries
+        bounds = new float[num_bins];
+        istm.read((char *) bounds, sizeof(float) * num_bins);
+
+        // set quant values
+        SetQuants(bounds, num_bins);
+
+        // number of bits required for each bin representation
+        num_bits = (size_t) ceil(log(num_bins) / log(2.0));
+
+        // add one more bit for NaN case
+        if (pow(2, num_bits) == num_bins)
+            ++num_bits;
+
+        // set nan value
+        nan_val = pow(2, num_bits) - 1;
+
+        // read the data
+        adScores = new float[GetGenes() - 1];
+
+        istm.read((char *) &bufferA, sizeof(bufferA));
+        istm.read((char *) &bufferB, sizeof(bufferB));
+
+        for (iTotal = i = 0; (i + 1) < GetGenes(); ++i) {
+            for (j = 0; j < (GetGenes() - i - 1); ++j) {
+                iPos = (iTotal * num_bits) % 8;
+
+                // check bit data overflow??
+                if (iPos + num_bits > 8) {
+                    btmpb = (bufferA << iPos);
+                    btmpf = (bufferB >> (16 - num_bits - iPos)) << (8 - num_bits);
+                    adScores[j] = (float) ((btmpb | btmpf) >> (8 - num_bits));
+                    ++iTotal;
+                    bufferA = bufferB;
+                    istm.read((char *) &bufferB, sizeof(bufferB));
+                } else {
+                    adScores[j] = (((bufferA << iPos) & 0xFF) >> (8 - num_bits));
+                    ++iTotal;
+                    if (iPos + num_bits == 8) {
+                        bufferA = bufferB;
+                        istm.read((char *) &bufferB, sizeof(bufferB));
+                    }
+
+                }
+
+                // check if value added was promised 2^#bits -1 (NaN value)
+                if (adScores[j] == nan_val)
+                    adScores[j] = CMeta::GetNaN();
+
+            }
+
+            CDat::Set(i, adScores);
         }
 
-      }
-      
-      // check if value added was promised 2^#bits -1 (NaN value)
-      if(adScores[j] == nan_val)
-	adScores[j] =  CMeta::GetNaN( );
-      
-    }    
-    
-    CDat::Set( i, adScores ); 
-  }
-  
-  istm.close();
-  
-  delete[] adScores;
-  delete[] bounds;
+        istm.close();
 
-  m_fQuantized = true;
+        delete[] adScores;
+        delete[] bounds;
 
-  return true; 
-}
-  
-  
-bool CDataPair::Open( const CDat& dat ) {
-	m_fContinuous = true;	
-	Reset( true );
-	if( !CDat::Open( dat ) ) return false;
-}
+        m_fQuantized = true;
+
+        return true;
+    }
+
+
+    bool CDataPair::Open(const CDat &dat) {
+        m_fContinuous = true;
+        Reset(true);
+        if (!CDat::Open(dat)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
 /*!
  * \brief
@@ -245,16 +256,19 @@ bool CDataPair::Open( const CDat& dat ) {
  * Get calls to the underlying CDat will behave inconsistently unless data is loaded through some other means;
  * this method will only load the data pair's bin edges (which allows Quantize calls to be made).
  */
-bool CDataPair::OpenQuants( const char* szDatafile ) {
-	static const size_t	c_iBuf	= 8192;
-	char		szBuf[ c_iBuf ];
-	ifstream	ifsm;
+    bool CDataPair::OpenQuants(const char *szDatafile) {
+        static const size_t c_iBuf = 8192;
+        char szBuf[c_iBuf];
+        ifstream ifsm;
 
-	if( !CPairImpl::Open( szDatafile, ifsm ) )
-		return false;
-	ifsm.getline( szBuf, c_iBuf - 1 );
-	ifsm.close( );
-	return CPairImpl::Open( szBuf, m_vecdQuant ); }
+        if (!CPairImpl::Open(szDatafile, ifsm)) {
+            fprintf(stderr, "Quant file does not exist or error opening it.\n");
+            return false;
+        }
+        ifsm.getline(szBuf, c_iBuf - 1);
+        ifsm.close();
+        return CPairImpl::Open(szBuf, m_vecdQuant);
+    }
 
 /*!
  * \brief
@@ -274,31 +288,68 @@ bool CDataPair::OpenQuants( const char* szDatafile ) {
  * \see
  * SetQuants | CMeta::Quantize
  */
-size_t CDataPair::Quantize( float dValue ) const {
-	if ( m_fQuantized ) 
-		return (size_t)dValue;
-	else
-		return CMeta::Quantize( dValue, m_vecdQuant ); }
+    size_t CDataPair::Quantize(float dValue) const {
+        if (m_fQuantized)
+            return (size_t) dValue;
+        else
+            return CMeta::Quantize(dValue, m_vecdQuant);
+    }
 
 
-void CDataPair::Quantize() {
-	if ( m_fQuantized )
-		return;
-	for( size_t i = 0; i < GetGenes( ); ++i ) {
-                for( size_t j = ( i + 1 ); j < GetGenes( ); ++j ) {
-			float d = Get( i, j );
-			if( CMeta::IsNaN( d ) ) continue;
+    void CDataPair::Quantize() {
+        if (m_fQuantized)
+            return;
+        for (size_t i = 0; i < GetGenes(); ++i) {
+            for (size_t j = (i + 1); j < GetGenes(); ++j) {
+                float d = Get(i, j);
+                if (CMeta::IsNaN(d)) continue;
 
-			Set( i, j, Quantize( d ) );
-		}
-	}
-	m_fQuantized = true;
-}
+                Set(i, j, Quantize(d));
+            }
+        }
+        m_fQuantized = true;
+    }
 
-void CDataPairImpl::Reset( bool fContinuous ) {
 
-	m_vecdQuant.clear( );
-	m_fContinuous = fContinuous; }
+/*!
+ * \brief
+ * Return the discretized form of the given value using the data pair's current bin edges, or
+ * return the provided missing data value.
+ *
+ * \param dValue
+ * Continuous value to be discretized.
+ * 
+ * \returns
+ * Discretized version of the given value, less than GetValues; -1 if the given value is not finite, or
+ * if either gene does not exist in dataset
+ * 
+ * Discretizes a given continuous value using the data pair's bin edges.  Standard usage is:
+ * \code
+ * DP.Quantize( DP.Get( i, j, 0 ) );
+ * \endcode
+ * 
+ * \see
+ * SetQuants | CMeta::Quantize
+ */
+
+
+    size_t CDataPair::Quantize(size_t iY, size_t iX, size_t iZero) const {
+        float d;
+        if (iY == -1 || iX == -1) {
+            return -1;
+        } else if (CMeta::IsNaN((d = Get(iY, iX)))) {
+            return iZero;
+        } else {
+            return Quantize(d);
+        }
+    }
+
+
+    void CDataPairImpl::Reset(bool fContinuous) {
+
+        m_vecdQuant.clear();
+        m_fContinuous = fContinuous;
+    }
 
 /*!
  * \brief
@@ -313,11 +364,12 @@ void CDataPairImpl::Reset( bool fContinuous ) {
  * \see
  * GetValues | Quantize
  */
-void CDataPairImpl::SetQuants( const float* adBinEdges, size_t iBins ) {
+    void CDataPairImpl::SetQuants(const float *adBinEdges, size_t iBins) {
 
-	Reset( false );
-	m_vecdQuant.resize( iBins );
-	copy( adBinEdges, adBinEdges + iBins, m_vecdQuant.begin( ) ); }
+        Reset(false);
+        m_vecdQuant.resize(iBins);
+        copy(adBinEdges, adBinEdges + iBins, m_vecdQuant.begin());
+    }
 
 
 /*!
@@ -330,76 +382,75 @@ void CDataPairImpl::SetQuants( const float* adBinEdges, size_t iBins ) {
  * \see
  * GetValues | Quantize
  */
-void CDataPair::SetQuants( const vector<float>& vecdBinEdges ) {
+    void CDataPair::SetQuants(const vector<float> &vecdBinEdges) {
 
-	Reset( false );
-	m_vecdQuant.resize( vecdBinEdges.size( ) );
-	copy( vecdBinEdges.begin( ), vecdBinEdges.end( ), m_vecdQuant.begin( ) ); }
+        Reset(false);
+        m_vecdQuant.resize(vecdBinEdges.size());
+        copy(vecdBinEdges.begin(), vecdBinEdges.end(), m_vecdQuant.begin());
+    }
 
-void CDataPair::Save( const char* szFile ) const {
+    void CDataPair::Save(const char *szFile) const {
 
-	if( !strcmp( szFile + strlen( szFile ) - strlen( "qdab" ), "qdab" ) ) {
-		g_CatSleipnir().info( "CDataPair::Save( ) qdab file: %s", szFile );	
-		ofstream ofsm;
-		ofsm.open( szFile, ios_base::binary );		
-		CDat::SaveGenes( ofsm );
-		
-		unsigned char bins = (unsigned char)m_vecdQuant.size();
-		size_t bit_len = (size_t)ceil( log((size_t)bins)/log(2) );
+        if (!strcmp(szFile + strlen(szFile) - strlen("qdab"), "qdab")) {
+            g_CatSleipnir().info("CDataPair::Save( ) qdab file: %s", szFile);
+            ofstream ofsm;
+            ofsm.open(szFile, ios_base::binary);
+            CDat::SaveGenes(ofsm);
 
-		//reserve largest value for NaN		
-		if( (size_t)pow(2, bit_len) == (size_t)bins )
-			bit_len++;
+            unsigned char bins = (unsigned char) m_vecdQuant.size();
+            size_t bit_len = (size_t) ceil(log((size_t) bins) / log(2));
 
-		//NaN = 2^N - 1
-		size_t nan_val = (size_t)pow(2, bit_len) -1;
+            //reserve largest value for NaN
+            if ((size_t) pow(2, bit_len) == (size_t) bins)
+                bit_len++;
 
-		//write out total bins, bin boundaries
-		ofsm.write( (char*)&bins, sizeof(bins) );
-		for( size_t i =0; i < m_vecdQuant.size(); i++ ) {
-			float b = m_vecdQuant[i];
-			ofsm.write( (char*)&b, sizeof(b) );
-		}
-	
-		size_t offset = 0, byte_count = 0;
-		unsigned char cur_byte = 0;
+            //NaN = 2^N - 1
+            size_t nan_val = (size_t) pow(2, bit_len) - 1;
 
-                for( size_t i = 0; i < GetGenes( ); ++i ) {
-                        for( size_t j = ( i + 1 ); j < GetGenes( ); ++j ) {
-                                unsigned char d = (unsigned char)Get( i, j );
-				if( CMeta::IsNaN( Get(i,j) ) ) {
-					d = nan_val;
-				}
-				//check if fits in one byte
-				if( offset + bit_len <= 8 ) { 
-					cur_byte = cur_byte | (d << (8-bit_len-offset));
-					offset = offset + bit_len;
-					if( offset == 8 ) {
-						ofsm.write((char*)&cur_byte, 1);
-						cur_byte = offset = 0;
-						byte_count++;
-					}
-				}
-				else {
-					//spans byte boundary; offset+bit_len > 8
-					cur_byte = cur_byte | (d >> (offset+bit_len-8));
-					ofsm.write((char*)&cur_byte, 1);
-					cur_byte = d << (16-offset-bit_len);
-					offset = offset+bit_len-8;
-					byte_count++;
-				}	
-			}
-		}
-		size_t bytes_req = (size_t)ceil((GetGenes()*(GetGenes()-1)/2.0) * bit_len / 8.0);
-		if( byte_count < bytes_req ) {
-			ofsm.write((char*)&cur_byte, 1);
-		}	
-		//g_CatSleipnir().info( "CDataPair::Save( ) byte count: %s", byte_count );
-	}
-	else {
-        	CDat::Save( szFile );
-	}
-}
+            //write out total bins, bin boundaries
+            ofsm.write((char *) &bins, sizeof(bins));
+            for (size_t i = 0; i < m_vecdQuant.size(); i++) {
+                float b = m_vecdQuant[i];
+                ofsm.write((char *) &b, sizeof(b));
+            }
+
+            size_t offset = 0, byte_count = 0;
+            unsigned char cur_byte = 0;
+
+            for (size_t i = 0; i < GetGenes(); ++i) {
+                for (size_t j = (i + 1); j < GetGenes(); ++j) {
+                    unsigned char d = (unsigned char) Get(i, j);
+                    if (CMeta::IsNaN(Get(i, j))) {
+                        d = nan_val;
+                    }
+                    //check if fits in one byte
+                    if (offset + bit_len <= 8) {
+                        cur_byte = cur_byte | (d << (8 - bit_len - offset));
+                        offset = offset + bit_len;
+                        if (offset == 8) {
+                            ofsm.write((char *) &cur_byte, 1);
+                            cur_byte = offset = 0;
+                            byte_count++;
+                        }
+                    } else {
+                        //spans byte boundary; offset+bit_len > 8
+                        cur_byte = cur_byte | (d >> (offset + bit_len - 8));
+                        ofsm.write((char *) &cur_byte, 1);
+                        cur_byte = d << (16 - offset - bit_len);
+                        offset = offset + bit_len - 8;
+                        byte_count++;
+                    }
+                }
+            }
+            size_t bytes_req = (size_t) ceil((GetGenes() * (GetGenes() - 1) / 2.0) * bit_len / 8.0);
+            if (byte_count < bytes_req) {
+                ofsm.write((char *) &cur_byte, 1);
+            }
+            //g_CatSleipnir().info( "CDataPair::Save( ) byte count: %s", byte_count );
+        } else {
+            CDat::Save(szFile);
+        }
+    }
 
 /*!
  * \brief
@@ -417,30 +468,33 @@ void CDataPair::Save( const char* szFile ) const {
  * \see
  * CPCL::Open
  */
-bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
-	static const size_t	c_iBuf	= 8192;
-	char		szBuf[ c_iBuf ];
-	ifstream	ifsm;
-	size_t		i;
+    bool CPCLPair::Open(const char *szDatafile, size_t iSkip) {
+        static const size_t c_iBuf = 8192;
+        char szBuf[c_iBuf];
+        ifstream ifsm;
+        size_t i;
 
-	g_CatSleipnir( ).notice( "CPCLPair::Open( %s )", szDatafile );
-	
-	if( !CPCL::Open( szDatafile, iSkip ) )
-		return false;
-	
-	if( !CPairImpl::Open( szDatafile, ifsm ) )
-		return false;
+        g_CatSleipnir().notice("CPCLPair::Open( %s )", szDatafile);
 
-	m_vecvecdQuants.resize( GetExperiments( ) );
-	for( i = 0; i < m_vecvecdQuants.size( ); ++i ) {
-		if( ifsm.eof( ) ) {
-			g_CatSleipnir( ).error( "CPCLPair::Open( %s, %d ) invalid quant file", szDatafile, iSkip );
-			return false; }
-		ifsm.getline( szBuf, c_iBuf - 1 );
-		if( !CPairImpl::Open( szBuf, m_vecvecdQuants[ i ] ) )
-			return false; }
+        if (!CPCL::Open(szDatafile, iSkip))
+            return false;
 
-	return true; }
+        if (!CPairImpl::Open(szDatafile, ifsm))
+            return false;
+
+        m_vecvecdQuants.resize(GetExperiments());
+        for (i = 0; i < m_vecvecdQuants.size(); ++i) {
+            if (ifsm.eof()) {
+                g_CatSleipnir().error("CPCLPair::Open( %s, %d ) invalid quant file", szDatafile, iSkip);
+                return false;
+            }
+            ifsm.getline(szBuf, c_iBuf - 1);
+            if (!CPairImpl::Open(szBuf, m_vecvecdQuants[i]))
+                return false;
+        }
+
+        return true;
+    }
 
 /*!
  * \brief
@@ -458,57 +512,62 @@ bool CPCLPair::Open( const char* szDatafile, size_t iSkip ) {
  * \see
  * CDataPair::Quantize
  */
-size_t CPCLPair::Quantize( float dValue, size_t iExperiment ) const {
+    size_t CPCLPair::Quantize(float dValue, size_t iExperiment) const {
 
-	return CMeta::Quantize( dValue, m_vecvecdQuants[ iExperiment ] ); }
-
-void CPCLPair::Quantize() {
-  for( size_t i = 0; i < GetGenes( ); ++i ) {
-    for( size_t j = 0; j < GetExperiments( ); ++j ) {
-      float d = Get( i, j );
-      if( CMeta::IsNaN( d ) ) continue;      
-      Set( i, j, Quantize( d, j ) );
+        return CMeta::Quantize(dValue, m_vecvecdQuants[iExperiment]);
     }
-  }
-}
 
-bool CDatFilterImpl::Attach( const CDataPair* pDat, const CDatFilter* pFilter, const CGenes* pGenes,
-	CDat::EFilter eFilter, const CDat* pAnswers ) {
-	size_t	i;
+    void CPCLPair::Quantize() {
+        for (size_t i = 0; i < GetGenes(); ++i) {
+            for (size_t j = 0; j < GetExperiments(); ++j) {
+                float d = Get(i, j);
+                if (CMeta::IsNaN(d)) continue;
+                Set(i, j, Quantize(d, j));
+            }
+        }
+    }
 
-	if( !( ( eFilter == CDat::EFilterInclude ) || ( eFilter == CDat::EFilterExclude ) ||
-		( eFilter == CDat::EFilterTerm ) || ( eFilter == CDat::EFilterEdge ) ) )
-		return false;
+    bool CDatFilterImpl::Attach(const CDataPair *pDat, const CDatFilter *pFilter, const CGenes *pGenes,
+                                CDat::EFilter eFilter, const CDat *pAnswers) {
+        size_t i;
 
-	m_pFilter = pFilter;
-	m_pDat = pDat;
-	m_pAnswers = pAnswers;
-	m_eFilter = eFilter;
-	if( m_pAnswers ) {
-		m_veciAnswers.resize( GetGenes( ) );
-		for( i = 0; i < m_veciAnswers.size( ); ++i )
-			m_veciAnswers[ i ] = m_pAnswers->GetGene( GetGene( i ) ); }
-	else {
-		m_veciAnswers.clear( );
-		if( m_eFilter == CDat::EFilterTerm )
-			m_eFilter = CDat::EFilterEdge; }
+        if (!((eFilter == CDat::EFilterInclude) || (eFilter == CDat::EFilterExclude) ||
+              (eFilter == CDat::EFilterTerm) || (eFilter == CDat::EFilterEdge)))
+            return false;
 
-	if( pGenes ) {
-		m_vecfGenes.resize( GetGenes( ) );
-		for( i = 0; i < m_vecfGenes.size( ); ++i )
-			m_vecfGenes[ i ] = pGenes->IsGene( GetGene( i ) ); }
-	else
-		m_vecfGenes.clear( );
+        m_pFilter = pFilter;
+        m_pDat = pDat;
+        m_pAnswers = pAnswers;
+        m_eFilter = eFilter;
+        if (m_pAnswers) {
+            m_veciAnswers.resize(GetGenes());
+            for (i = 0; i < m_veciAnswers.size(); ++i)
+                m_veciAnswers[i] = m_pAnswers->GetGene(GetGene(i));
+        } else {
+            m_veciAnswers.clear();
+            if (m_eFilter == CDat::EFilterTerm)
+                m_eFilter = CDat::EFilterEdge;
+        }
 
-	return true; }
+        if (pGenes) {
+            m_vecfGenes.resize(GetGenes());
+            for (i = 0; i < m_vecfGenes.size(); ++i)
+                m_vecfGenes[i] = pGenes->IsGene(GetGene(i));
+        } else
+            m_vecfGenes.clear();
 
-size_t CDatFilterImpl::GetGenes( ) const {
+        return true;
+    }
 
-	return ( m_pFilter ? m_pFilter->GetGenes( ) : ( m_pDat ? m_pDat->GetGenes( ) : -1 ) ); }
+    size_t CDatFilterImpl::GetGenes() const {
 
-string CDatFilterImpl::GetGene( size_t iGene ) const {
+        return (m_pFilter ? m_pFilter->GetGenes() : (m_pDat ? m_pDat->GetGenes() : -1));
+    }
 
-	return ( m_pFilter ? m_pFilter->GetGene( iGene ) : ( m_pDat ? m_pDat->GetGene( iGene ) : "" ) ); }
+    string CDatFilterImpl::GetGene(size_t iGene) const {
+
+        return (m_pFilter ? m_pFilter->GetGene(iGene) : (m_pDat ? m_pDat->GetGene(iGene) : ""));
+    }
 
 /*!
  * \brief
@@ -535,10 +594,11 @@ string CDatFilterImpl::GetGene( size_t iGene ) const {
  * destroyed until after the filter.  If a filter types requiring an answer file is given without an
  * accompanying answer file, the filter won't crash, but results might be a little odd.
  */
-bool CDatFilter::Attach( const CDataPair& Dat, const CGenes& Genes, CDat::EFilter eFilter,
-	const CDat* pAnswers ) {
+    bool CDatFilter::Attach(const CDataPair &Dat, const CGenes &Genes, CDat::EFilter eFilter,
+                            const CDat *pAnswers) {
 
-	return CDatFilterImpl::Attach( &Dat, NULL, &Genes, eFilter, pAnswers ); }
+        return CDatFilterImpl::Attach(&Dat, NULL, &Genes, eFilter, pAnswers);
+    }
 
 /*!
  * \brief
@@ -564,9 +624,10 @@ bool CDatFilter::Attach( const CDataPair& Dat, const CGenes& Genes, CDat::EFilte
  * CDat class is so fundamental, and CDat::Get calls occur so frequently, that a virtual function call can
  * actually have a noticeable impact on performance.
  */
-bool CDatFilter::Attach( const CDatFilter& Dat, const CGenes& Genes, CDat::EFilter eFilter,
-	const CDat* pAnswers ) {
+    bool CDatFilter::Attach(const CDatFilter &Dat, const CGenes &Genes, CDat::EFilter eFilter,
+                            const CDat *pAnswers) {
 
-	return CDatFilterImpl::Attach( NULL, &Dat, &Genes, eFilter, pAnswers ); }
+        return CDatFilterImpl::Attach(NULL, &Dat, &Genes, eFilter, pAnswers);
+    }
 
 }

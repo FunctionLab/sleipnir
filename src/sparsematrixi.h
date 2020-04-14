@@ -26,22 +26,24 @@
 
 namespace Sleipnir {
 
-template<class tType>
-class CSparseMatrixImpl {
-protected:
-	CSparseMatrixImpl( const tType& Default ) : m_iR(0), m_Default(Default) { }
+    template<class tType>
+    class CSparseMatrixImpl {
+    protected:
+        CSparseMatrixImpl(const tType &Default) : m_iR(0), m_Default(Default) {}
 
-	size_t GetRows( ) const {
+        size_t GetRows() const {
 
-		return m_iR; }
+            return m_iR;
+        }
 
-	const tType& GetDefault( ) const {
+        const tType &GetDefault() const {
 
-		return m_Default; }
+            return m_Default;
+        }
 
-	size_t	m_iR;
-	tType	m_Default;
-};
+        size_t m_iR;
+        tType m_Default;
+    };
 
 }
 

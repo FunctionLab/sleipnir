@@ -24,49 +24,53 @@
 
 namespace Sleipnir {
 
-class CServer;
-class IServerClient;
+    class CServer;
 
-class CServerImpl {
-protected:
-	typedef std::map<IServerClient*, pthread_t>	TMapThreads;
-	typedef std::vector<IServerClient*>			TVecClients;
+    class IServerClient;
 
-	static const char*	c_szPort;
-	static const char*	c_szTimeout;
-	static CServer*		s_pServer;
+    class CServerImpl {
+    protected:
+        typedef std::map<IServerClient *, pthread_t> TMapThreads;
+        typedef std::vector<IServerClient *> TVecClients;
+
+        static const char *c_szPort;
+        static const char *c_szTimeout;
+        static CServer *s_pServer;
 
 #ifndef _MSC_VER
-	static void Alarm( int );
+
+        static void Alarm(int);
+
 #endif // _MSC_VER
 
-	void Listen( );
+        void Listen();
 
-	int				m_iPort;
-	int				m_iTimeout;
-	SOCKET			m_iSocket;
-	bool			m_fStop;
-	IServerClient*	m_pClient;
-};
+        int m_iPort;
+        int m_iTimeout;
+        SOCKET m_iSocket;
+        bool m_fStop;
+        IServerClient *m_pClient;
+    };
 
-class CServerClientImpl {
-public:
-	static void* StartRoutine( void* );
+    class CServerClientImpl {
+    public:
+        static void *StartRoutine(void *);
 
-	CServerClientImpl( SOCKET, IServerClient* );
+        CServerClientImpl(SOCKET, IServerClient *);
 
-private:
-	static const size_t	c_iBuffer	= 131072;
+    private:
+        static const size_t c_iBuffer = 131072;
 
-	~CServerClientImpl( );
+        ~CServerClientImpl();
 
-	void StartRoutine( );
-	void ReadMessage( );
+        void StartRoutine();
 
-	SOCKET						m_iSocket;
-	IServerClient*				m_pClient;
-	std::vector<unsigned char>	m_vecbMessage;
-};
+        void ReadMessage();
+
+        SOCKET m_iSocket;
+        IServerClient *m_pClient;
+        std::vector<unsigned char> m_vecbMessage;
+    };
 
 }
 

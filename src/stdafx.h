@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
+
 #ifdef _MSC_VER
 #include <fcntl.h>
 #include <io.h>
@@ -38,49 +40,60 @@
 
 #define socklen_t	int
 #else // _MSC_VER
+
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+
 #define __STDC_LIMIT_MACROS
+
 #include <netinet/in.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <omp.h>
 
-#define _isnan				isnan
-#define _lseek				lseek
-#define _read				read
-#define _write				write
-#define closesocket			close
-#define SOCKET				int
-#define strcpy_s(a,b,c)		strcpy(a,c)
-#define strncpy_s(a,b,c,d)	strncpy(a,c,d)
+#define _isnan                isnan
+#define _lseek                lseek
+#define _read                read
+#define _write                write
+#define closesocket            close
+#define SOCKET                int
+#define strcpy_s(a, b, c)        strcpy(a,c)
+#define strncpy_s(a, b, c, d)    strncpy(a,c,d)
 
-inline char* _mktemp_s( char* szTemplate, size_t iSize ) {
 
-	return mktemp( szTemplate ); }
+inline char *_mktemp_s(char *szTemplate, size_t iSize) {
 
-inline size_t GetTickCount( ) {
-	struct timeval	sTime;
+    return mktemp(szTemplate);
+}
 
-	gettimeofday( &sTime, NULL );
-	return ( ( sTime.tv_sec * 1000000 ) + sTime.tv_usec ); }
+inline size_t GetTickCount() {
+    struct timeval sTime;
 
-inline int sprintf_s( char* szDest, size_t iSize, const char* szFormat,
-	... ) {
-	va_list	valArgs;
+    gettimeofday(&sTime, NULL);
+    return ((sTime.tv_sec * 1000000) + sTime.tv_usec);
+}
 
-	va_start( valArgs, szFormat );
-	return vsprintf( szDest, szFormat, valArgs ); }
+inline int sprintf_s(char *szDest, size_t iSize, const char *szFormat,
+                     ...) {
+    va_list valArgs;
 
-inline size_t max( size_t iOne, size_t iTwo ) {
+    va_start(valArgs, szFormat);
+    return vsprintf(szDest, szFormat, valArgs);
+}
 
-	return ( ( iOne > iTwo ) ? iOne : iTwo ); }
+inline size_t max(size_t iOne, size_t iTwo) {
+
+    return ((iOne > iTwo) ? iOne : iTwo);
+}
+
 #endif // _MSC_VER
 
 #pragma warning (disable: 4267)
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -89,11 +102,14 @@ inline size_t max( size_t iOne, size_t iTwo ) {
 #include <set>
 #include <sstream>
 #include <vector>
+
 using namespace std;
 
 #ifndef USE_LOG4CPP_STUB
-#include <log4cpp/Category.hh>
+
+#include "log4cpp/Category.hh"
 #include <log4cpp/OstreamAppender.hh>
+
 using namespace log4cpp;
 #endif // USE_LOG4CPP_STUB
 
@@ -101,109 +117,111 @@ using namespace log4cpp;
 #include <windows.h>
 #include <psapi.h>
 #else // _MSC_VER
-#define ios_base	ios
-#define UINT		unsigned int
+#define ios_base    ios
+#define UINT        unsigned int
 #endif // _MSC_VER
 
-namespace pnl { }
+namespace pnl {}
 using namespace pnl;
 
 namespace Sleipnir {
 
 #ifdef USE_LOG4CPP_STUB
 
-struct Priority {
-	enum PriorityLevel {
-		EMERG	= 0, 
-		FATAL	= 0,
-		ALERT	= 1,
-		CRIT	= 2,
-		ERROR	= 3, 
-		WARN	= 4,
-		NOTICE	= 5,
-		INFO	= 6,
-		DEBUG	= 7,
-		NOTSET	= 8
-	};
+    struct Priority {
+        enum PriorityLevel {
+            EMERG	= 0,
+            FATAL	= 0,
+            ALERT	= 1,
+            CRIT	= 2,
+            ERROR	= 3,
+            WARN	= 4,
+            NOTICE	= 5,
+            INFO	= 6,
+            DEBUG	= 7,
+            NOTSET	= 8
+        };
 
-	const static char* c_aszPriorityLevels[];
-};
+        const static char* c_aszPriorityLevels[];
+    };
 
-struct Category {
+    struct Category {
 
-	static void shutdown( ) { }
+        static void shutdown( ) { }
 
-	static void log4cpp( const char* szTag, const char* szFormat, va_list& valArgs ) {
+        static void log4cpp( const char* szTag, const char* szFormat, va_list& valArgs ) {
 
-		fprintf( stderr, "%d ", time( NULL ) );
-		fprintf( stderr, szTag );
-		fprintf( stderr, " : " );
-		vfprintf( stderr, szFormat, valArgs );
-		fprintf( stderr, "\n" ); }
+            fprintf( stderr, "%d ", time( NULL ) );
+            fprintf( stderr, szTag );
+            fprintf( stderr, " : " );
+            vfprintf( stderr, szFormat, valArgs );
+            fprintf( stderr, "\n" ); }
 
-	void error( const char* szFormat, ... ) const {
-		va_list	valArgs;
+        void error( const char* szFormat, ... ) const {
+            va_list	valArgs;
 
-		va_start( valArgs, szFormat );
-		log4cpp( "ERROR", szFormat, valArgs ); }
+            va_start( valArgs, szFormat );
+            log4cpp( "ERROR", szFormat, valArgs ); }
 
-	void info( const char* szFormat, ... ) const {
-		va_list	valArgs;
+        void info( const char* szFormat, ... ) const {
+            va_list	valArgs;
 
-		va_start( valArgs, szFormat );
-		log4cpp( "INFO", szFormat, valArgs ); }
+            va_start( valArgs, szFormat );
+            log4cpp( "INFO", szFormat, valArgs ); }
 
-	void notice( const char* szFormat, ... ) const {
-		va_list	valArgs;
+        void notice( const char* szFormat, ... ) const {
+            va_list	valArgs;
 
-		va_start( valArgs, szFormat );
-		log4cpp( "NOTICE", szFormat, valArgs ); }
+            va_start( valArgs, szFormat );
+            log4cpp( "NOTICE", szFormat, valArgs ); }
 
-	void warn( const char* szFormat, ... ) const {
-		va_list	valArgs;
+        void warn( const char* szFormat, ... ) const {
+            va_list	valArgs;
 
-		va_start( valArgs, szFormat );
-		log4cpp( "WARN", szFormat, valArgs ); }
+            va_start( valArgs, szFormat );
+            log4cpp( "WARN", szFormat, valArgs ); }
 
-	void debug( const char* szFormat, ... ) const {
-		va_list	valArgs;
+        void debug( const char* szFormat, ... ) const {
+            va_list	valArgs;
 
-		va_start( valArgs, szFormat );
-		log4cpp( "DEBUG", szFormat, valArgs ); }
+            va_start( valArgs, szFormat );
+            log4cpp( "DEBUG", szFormat, valArgs ); }
 
-	void log( Priority::PriorityLevel ePriority, const char* szFormat, ... ) const {
-		va_list	valArgs;
+        void log( Priority::PriorityLevel ePriority, const char* szFormat, ... ) const {
+            va_list	valArgs;
 
-		va_start( valArgs, szFormat );
-		log4cpp( Priority::c_aszPriorityLevels[ ePriority ], szFormat, valArgs ); }
+            va_start( valArgs, szFormat );
+            log4cpp( Priority::c_aszPriorityLevels[ ePriority ], szFormat, valArgs ); }
 
-	bool isDebugEnabled( ) const {
+        bool isDebugEnabled( ) const {
 
-		return true; }
+            return true; }
 
-	bool isInfoEnabled( ) const {
+        bool isInfoEnabled( ) const {
 
-		return true; }
+            return true; }
 
-	bool isNoticeEnabled( ) const {
+        bool isNoticeEnabled( ) const {
 
-		return true; }
-};
+            return true; }
+    };
 
 #endif // USE_LOG4CPP_STUB
 
 #ifdef USE_LOG4CPP_STUB
-inline Category& g_CatSleipnir( ) {
-	static Category	s_CatSleipnir;
+    inline Category& g_CatSleipnir( ) {
+        static Category	s_CatSleipnir;
 
-	return s_CatSleipnir; }
+        return s_CatSleipnir; }
 #else // USE_LOG4CPP_STUB
-extern const char	c_szSleipnir[];
+    extern const char c_szSleipnir[];
 
-inline Category& g_CatSleipnir( ) {
-	static Category&	s_CatSleipnir	= Category::getInstance( c_szSleipnir );
+    inline Category &g_CatSleipnir() {
+        static Category &s_CatSleipnir = Category::getInstance(c_szSleipnir);
 
-	return s_CatSleipnir; }
+        return s_CatSleipnir;
+    }
+
 #endif // USE_LOG4CPP_STUB
 
 }

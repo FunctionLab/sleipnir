@@ -8,9 +8,9 @@ option	"input"			i	"Input PCL file"
 option	"output"		o	"Output DAT/DAB file"
 							string	typestr="filename"
 option	"distance"		d	"Similarity measure"
-							values="pearson","euclidean","kendalls","kolm-smir","spearman",
+							values="pearson","euclidean","kendalls","kolm-smir","spearman","bicor",
 							"pearnorm","hypergeom","innerprod","bininnerprod","quickpear",
-							"mutinfo","relauc","pearsig","dice"	default="pearnorm"
+							"mutinfo","relauc","pearsig","dice","dcor","sdcor","cosine"	default="pearnorm"
 
 section "Miscellaneous"
 option	"weights"		w	"Input weights file"
@@ -27,6 +27,8 @@ option	"zscore"		z	"Convert correlations to z-scores"
 							flag	on
 option	"flip"			f	"Calculate one minus values"
 							flag	off
+option	"centering"		c	"Scale distance value to 0-1"
+							flag	on
 
 section "Filtering"
 option	"genes"			g	"Gene inclusion file"
@@ -43,3 +45,5 @@ option	"limit"			l	"Gene count limit for caching"
 							int	default="-1"
 option	"verbosity"		v	"Message verbosity"
 							int	default="5"
+option	"threads"		t	"Number of threads to use"
+							int	default="1"

@@ -65,12 +65,14 @@ namespace Sleipnir {
  * \see
  * CClustKMeans::Cluster
  */
-uint16_t CClustQTC::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure,
-	float dDiameter, size_t iSize, vector<uint16_t>& vecsClusters, const CDataMatrix* pMatWeights ) {
-	CDistanceMatrix	Dist;
+    uint16_t CClustQTC::Cluster(const CDataMatrix &MatData, const IMeasure *pMeasure,
+                                float dDiameter, size_t iSize, vector <uint16_t> &vecsClusters,
+                                const CDataMatrix *pMatWeights) {
+        CDistanceMatrix Dist;
 
-	InitializeDistances( MatData, pMeasure, Dist, pMatWeights );
-	return QualityThresholdAll( MatData.GetRows( ), dDiameter, iSize, Dist, vecsClusters ); }
+        InitializeDistances(MatData, pMeasure, Dist, pMatWeights);
+        return QualityThresholdAll(MatData.GetRows(), dDiameter, iSize, Dist, vecsClusters);
+    }
 
 /*!
  * \brief
@@ -102,11 +104,12 @@ uint16_t CClustQTC::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasur
  * \see
  * CClustKMeans::Cluster
  */
-uint16_t CClustQTC::Cluster( const CDistanceMatrix& MatSimilarities, float dDiameter, size_t iSize,
-	vector<uint16_t>& vecsClusters ) {
+    uint16_t CClustQTC::Cluster(const CDistanceMatrix &MatSimilarities, float dDiameter, size_t iSize,
+                                vector <uint16_t> &vecsClusters) {
 
-	return QualityThresholdAll( MatSimilarities.GetSize( ), dDiameter, iSize, MatSimilarities,
-		vecsClusters ); }
+        return QualityThresholdAll(MatSimilarities.GetSize(), dDiameter, iSize, MatSimilarities,
+                                   vecsClusters);
+    }
 
 /*!
  * \brief
@@ -147,13 +150,15 @@ uint16_t CClustQTC::Cluster( const CDistanceMatrix& MatSimilarities, float dDiam
  * \remarks
  * MatResults must be pre-initialized to the same size as MatData.
  */
-void CClustQTC::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure,
-	float dMinDiameter, float dMaxDiameter, float dDeltaDiameter, size_t iSize, CDistanceMatrix& MatResults,
-	const CDataMatrix* pMatWeights ) {
-	CDistanceMatrix	Dist;
+    void CClustQTC::Cluster(const CDataMatrix &MatData, const IMeasure *pMeasure,
+                            float dMinDiameter, float dMaxDiameter, float dDeltaDiameter, size_t iSize,
+                            CDistanceMatrix &MatResults,
+                            const CDataMatrix *pMatWeights) {
+        CDistanceMatrix Dist;
 
-	InitializeDistances( MatData, pMeasure, Dist, pMatWeights );
-	return Cluster( Dist, dMinDiameter, dMaxDiameter, dDeltaDiameter, iSize, MatResults ); }
+        InitializeDistances(MatData, pMeasure, Dist, pMatWeights);
+        Cluster(Dist, dMinDiameter, dMaxDiameter, dDeltaDiameter, iSize, MatResults);
+    }
 
 /*!
  * \brief
@@ -187,166 +192,189 @@ void CClustQTC::Cluster( const CDataMatrix& MatData, const IMeasure* pMeasure,
  * \remarks
  * MatResults must be pre-initialized to the same size as MatSimilarities.
  */
-void CClustQTC::Cluster( const CDistanceMatrix& MatSimilarities, float dMinDiameter, float dMaxDiameter,
-	float dDeltaDiameter, size_t iSize, CDistanceMatrix& MatResults ) {
-	float				dDiameter;
-	vector<uint16_t>	vecsClusters;
-	uint16_t			sClusters;
-	size_t				i, j;
+    void CClustQTC::Cluster(const CDistanceMatrix &MatSimilarities, float dMinDiameter, float dMaxDiameter,
+                            float dDeltaDiameter, size_t iSize, CDistanceMatrix &MatResults) {
+        float dDiameter;
+        vector <uint16_t> vecsClusters;
+        uint16_t sClusters;
+        size_t i, j;
 
-	for( dDiameter = dMinDiameter; dDiameter <= dMaxDiameter; dDiameter += dDeltaDiameter ) {
-		g_CatSleipnir( ).notice( "CClustQTC::Cluster( %g, %g, %g, %d ) processing diameter %g", dMinDiameter,
-			dMaxDiameter, dDeltaDiameter, iSize, dDiameter );
-		sClusters = QualityThresholdAll( MatSimilarities.GetSize( ), dDiameter, iSize, MatSimilarities,
-			vecsClusters );
-		for( i = 0; i < vecsClusters.size( ); ++i ) {
-			if( ( vecsClusters[ i ] + 1 ) == sClusters )
-				continue;
-			for( j = ( i + 1 ); j < vecsClusters.size( ); ++j )
-				if( ( vecsClusters[ j ] == vecsClusters[ i ] ) && CMeta::IsNaN( MatResults.Get( i, j ) ) )
-					MatResults.Set( i, j, 1 - dDiameter ); } } }
+        for (dDiameter = dMinDiameter; dDiameter <= dMaxDiameter; dDiameter += dDeltaDiameter) {
+            g_CatSleipnir().notice("CClustQTC::Cluster( %g, %g, %g, %d ) processing diameter %g", dMinDiameter,
+                                   dMaxDiameter, dDeltaDiameter, iSize, dDiameter);
+            sClusters = QualityThresholdAll(MatSimilarities.GetSize(), dDiameter, iSize, MatSimilarities,
+                                            vecsClusters);
+            for (i = 0; i < vecsClusters.size(); ++i) {
+                if ((vecsClusters[i] + 1) == sClusters)
+                    continue;
+                for (j = (i + 1); j < vecsClusters.size(); ++j)
+                    if ((vecsClusters[j] == vecsClusters[i]) && CMeta::IsNaN(MatResults.Get(i, j)))
+                        MatResults.Set(i, j, 1 - dDiameter);
+            }
+        }
+    }
 
-uint16_t CClustQTCImpl::QualityThresholdAll( size_t iGenes, float dDiameter, size_t iSize,
-	const CDistanceMatrix& Dist, vector<uint16_t>& vecsClusters ) {
-	size_t				i, iAssigned;
-	uint16_t			sCluster;
-	vector<uint16_t>	vecsCur;
-	vector<bool>		vecfAssigned;
+    uint16_t CClustQTCImpl::QualityThresholdAll(size_t iGenes, float dDiameter, size_t iSize,
+                                                const CDistanceMatrix &Dist, vector <uint16_t> &vecsClusters) {
+        size_t i, iAssigned;
+        uint16_t sCluster;
+        vector <uint16_t> vecsCur;
+        vector<bool> vecfAssigned;
 
-	vecfAssigned.resize( iGenes );
-	for( i = 0; i < vecfAssigned.size( ); ++i )
-		vecfAssigned[ i ] = false;
+        vecfAssigned.resize(iGenes);
+        for (i = 0; i < vecfAssigned.size(); ++i)
+            vecfAssigned[i] = false;
 
-	vecsClusters.resize( iGenes );
-	for( iAssigned = sCluster = 0; ; ++sCluster ) {
-		g_CatSleipnir( ).notice( "CClustQTCImpl::QualityThresholdAll( ) cluster %d, assigned %d/%d genes",
-			sCluster + 1, iAssigned, iGenes );
-		QualityThresholdLargest( iGenes, dDiameter, Dist, vecfAssigned, vecsCur );
-		for( i = 0; i < vecsCur.size( ); ++i )
-			vecsClusters[ vecsCur[ i ] ] = sCluster;
+        vecsClusters.resize(iGenes);
+        for (iAssigned = sCluster = 0;; ++sCluster) {
+            g_CatSleipnir().notice("CClustQTCImpl::QualityThresholdAll( ) cluster %d, assigned %d/%d genes",
+                                   sCluster + 1, iAssigned, iGenes);
+            QualityThresholdLargest(iGenes, dDiameter, Dist, vecfAssigned, vecsCur);
+            for (i = 0; i < vecsCur.size(); ++i)
+                vecsClusters[vecsCur[i]] = sCluster;
 
-		if( vecsCur.size( ) < iSize ) {
-			for( i = 0; i < vecfAssigned.size( ); ++i )
-				if( !vecfAssigned[ i ] )
-					vecsClusters[ i ] = sCluster;
-			break; }
+            if (vecsCur.size() < iSize) {
+                for (i = 0; i < vecfAssigned.size(); ++i)
+                    if (!vecfAssigned[i])
+                        vecsClusters[i] = sCluster;
+                break;
+            }
 
-		if( ( iAssigned += vecsCur.size( ) ) >= iGenes ) {
-			sCluster++;
-			break; }
-		for( i = 0; i < vecsCur.size( ); ++i )
-			vecfAssigned[ vecsCur[ i ] ] = true; }
+            if ((iAssigned += vecsCur.size()) >= iGenes) {
+                sCluster++;
+                break;
+            }
+            for (i = 0; i < vecsCur.size(); ++i)
+                vecfAssigned[vecsCur[i]] = true;
+        }
 
-	return ( sCluster + 1 ); }
+        return (sCluster + 1);
+    }
 
-void CClustQTCImpl::QualityThresholdLargest( size_t iGenes, float dDiameter, const CDistanceMatrix& Dist,
-	const vector<bool>& vecfAssigned,
-	vector<uint16_t>& vecsCluster ) {
-	vector<bool>		vecfClone;
-	size_t				iGene;
-	vector<uint16_t>	vecsCur;
-	vector<float>		vecdDiameter;
+    void CClustQTCImpl::QualityThresholdLargest(size_t iGenes, float dDiameter, const CDistanceMatrix &Dist,
+                                                const vector<bool> &vecfAssigned,
+                                                vector <uint16_t> &vecsCluster) {
+        vector<bool> vecfClone;
+        size_t iGene;
+        vector <uint16_t> vecsCur;
+        vector<float> vecdDiameter;
 
-	vecsCluster.clear( );
-	vecfClone.resize( vecfAssigned.size( ) );
-	for( iGene = 0; iGene < vecfAssigned.size( ); ++iGene ) {
-		if( !( iGene % 1000 ) )
-			g_CatSleipnir( ).notice( "CClustQTCImpl::QualityThresholdLargest( %g ) processing gene %d/%d",
-				dDiameter, iGene, vecfAssigned.size( ) );
-		if( vecfAssigned[ iGene ] )
-			continue;
-		copy( vecfAssigned.begin( ), vecfAssigned.end( ), vecfClone.begin( ) );
-		vecfClone[ iGene ] = true;
-		QualityThresholdGene( iGene, iGenes, dDiameter, Dist, vecfClone, vecdDiameter, vecsCur );
-		if( vecsCur.size( ) > vecsCluster.size( ) ) {
-			vecsCluster.resize( vecsCur.size( ) );
-			copy( vecsCur.begin( ), vecsCur.end( ), vecsCluster.begin( ) ); } } }
+        vecsCluster.clear();
+        vecfClone.resize(vecfAssigned.size());
+        for (iGene = 0; iGene < vecfAssigned.size(); ++iGene) {
+            if (!(iGene % 1000))
+                g_CatSleipnir().notice("CClustQTCImpl::QualityThresholdLargest( %g ) processing gene %d/%d",
+                                       dDiameter, iGene, vecfAssigned.size());
+            if (vecfAssigned[iGene])
+                continue;
+            copy(vecfAssigned.begin(), vecfAssigned.end(), vecfClone.begin());
+            vecfClone[iGene] = true;
+            QualityThresholdGene(iGene, iGenes, dDiameter, Dist, vecfClone, vecdDiameter, vecsCur);
+            if (vecsCur.size() > vecsCluster.size()) {
+                vecsCluster.resize(vecsCur.size());
+                copy(vecsCur.begin(), vecsCur.end(), vecsCluster.begin());
+            }
+        }
+    }
 
-void CClustQTCImpl::QualityThresholdGene( size_t iGene, size_t iGenes, float dDiameter,
-	const CDistanceMatrix& Dist, vector<bool>& vecfAssigned, vector<float>& vecdDiameter,
-	vector<uint16_t>& vecsCluster ) {
-	size_t	iAdded, iLocal, iBest;
-	float	dBest;
+    void CClustQTCImpl::QualityThresholdGene(size_t iGene, size_t iGenes, float dDiameter,
+                                             const CDistanceMatrix &Dist, vector<bool> &vecfAssigned,
+                                             vector<float> &vecdDiameter,
+                                             vector <uint16_t> &vecsCluster) {
+        size_t iAdded, iLocal, iBest;
+        float dBest;
 
-	vecsCluster.resize( 1 );
-	vecsCluster[ 0 ] = iAdded = iGene;
-	vecdDiameter.resize( iGenes );
-	for( iLocal = 0; iLocal < vecfAssigned.size( ); ++iLocal )
-		if( !vecfAssigned[ iLocal ] )
-			vecdDiameter[ iLocal ] = -(float)HUGE_VAL;
+        vecsCluster.resize(1);
+        vecsCluster[0] = iAdded = iGene;
+        vecdDiameter.resize(iGenes);
+        for (iLocal = 0; iLocal < vecfAssigned.size(); ++iLocal)
+            if (!vecfAssigned[iLocal])
+                vecdDiameter[iLocal] = -(float) HUGE_VAL;
 
-	while( true ) {
-		iBest = -1;
-		dBest = (float)HUGE_VAL;
+        while (true) {
+            iBest = -1;
+            dBest = (float) HUGE_VAL;
 
-		for( iLocal = 0; iLocal < vecfAssigned.size( ); ++iLocal ) {
-			if( vecfAssigned[ iLocal ] )
-				continue;
-			vecdDiameter[ iLocal ] = max( vecdDiameter[ iLocal ], Dist.Get( iLocal, iAdded ) );
-			if( vecdDiameter[ iLocal ] > dDiameter ) {
-				vecfAssigned[ iLocal ] = true;
-				continue; }
-			if( vecdDiameter[ iLocal ] < dBest ) {
-				dBest = vecdDiameter[ iLocal ];
-				iBest = iLocal; } }
+            for (iLocal = 0; iLocal < vecfAssigned.size(); ++iLocal) {
+                if (vecfAssigned[iLocal])
+                    continue;
+                vecdDiameter[iLocal] = max(vecdDiameter[iLocal], Dist.Get(iLocal, iAdded));
+                if (vecdDiameter[iLocal] > dDiameter) {
+                    vecfAssigned[iLocal] = true;
+                    continue;
+                }
+                if (vecdDiameter[iLocal] < dBest) {
+                    dBest = vecdDiameter[iLocal];
+                    iBest = iLocal;
+                }
+            }
 
-		if( iBest == -1 )
-			break;
-		vecfAssigned[ iAdded = iBest ] = true;
-		vecsCluster.push_back( iAdded ); } }
+            if (iBest == -1)
+                break;
+            vecfAssigned[iAdded = iBest] = true;
+            vecsCluster.push_back(iAdded);
+        }
+    }
 
-void CClustQTCImpl::InitializeDistances( const CDataMatrix& Data, const IMeasure* pMeasure,
-	CDistanceMatrix& Dist, const CDataMatrix* pWeights ) {
-	size_t	i, j;
-	float*	adA;
-	float*	adB;
-	float*	adWA;
-	float*	adWB;
+    void CClustQTCImpl::InitializeDistances(const CDataMatrix &Data, const IMeasure *pMeasure,
+                                            CDistanceMatrix &Dist, const CDataMatrix *pWeights) {
+        size_t i, j;
+        float *adA;
+        float *adB;
+        float *adWA;
+        float *adWB;
 
-	Dist.Initialize( Data.GetRows( ) );
-	adA = new float[ Data.GetColumns( ) - 1 ];
-	adB = new float[ Data.GetColumns( ) - 1 ];
-	if( pWeights ) {
-		adWA = new float[ Data.GetColumns( ) - 1 ];
-		adWB = new float[ Data.GetColumns( ) - 1 ]; }
-	else
-		adWA = adWB = NULL;
-	for( i = 0; i < Data.GetRows( ); ++i ) {
-		if( !( i % 10 ) )
-			g_CatSleipnir( ).notice( "CClustQTCImpl::InitializeDistances( %d ) initializing %d/%d genes",
-				i, Data.GetRows( ) );
-		for( j = ( i + 1 ); j < Data.GetRows( ); ++j )
-			Dist.Set( i, j, (float)GetJackDistance( Data.Get( i ), Data.Get( j ),
-				Data.GetColumns( ), adA, adB, pMeasure, pWeights ? pWeights->Get( i ) : NULL,
-				pWeights ? pWeights->Get( j ) : NULL, adWA, adWB ) ); }
-	if( pWeights ) {
-		delete[] adWA;
-		delete[] adWB; }
-	delete[] adA;
-	delete[] adB; }
+        Dist.Initialize(Data.GetRows());
+        adA = new float[Data.GetColumns() - 1];
+        adB = new float[Data.GetColumns() - 1];
+        if (pWeights) {
+            adWA = new float[Data.GetColumns() - 1];
+            adWB = new float[Data.GetColumns() - 1];
+        } else
+            adWA = adWB = NULL;
+        for (i = 0; i < Data.GetRows(); ++i) {
+            if (!(i % 10))
+                g_CatSleipnir().notice("CClustQTCImpl::InitializeDistances( %d ) initializing %d/%d genes",
+                                       i, Data.GetRows());
+            for (j = (i + 1); j < Data.GetRows(); ++j)
+                Dist.Set(i, j, (float) GetJackDistance(Data.Get(i), Data.Get(j),
+                                                       Data.GetColumns(), adA, adB, pMeasure,
+                                                       pWeights ? pWeights->Get(i) : NULL,
+                                                       pWeights ? pWeights->Get(j) : NULL, adWA, adWB));
+        }
+        if (pWeights) {
+            delete[] adWA;
+            delete[] adWB;
+        }
+        delete[] adA;
+        delete[] adB;
+    }
 
-double CClustQTCImpl::GetJackDistance( const float* adX, const float* adY, size_t iN, float* adA, float* adB,
-	const IMeasure* pMeasure, const float* adWX, const float* adWY,
-	float* adWA, float* adWB ) {
-	size_t	i;
-	double	dRet, dCur;
+    double CClustQTCImpl::GetJackDistance(const float *adX, const float *adY, size_t iN, float *adA, float *adB,
+                                          const IMeasure *pMeasure, const float *adWX, const float *adWY,
+                                          float *adWA, float *adWB) {
+        size_t i;
+        double dRet, dCur;
 
-	dRet = pMeasure->Measure( adX, iN, adY, iN, IMeasure::EMapCenter, adWX, adWY );
-	dRet = 1 - dRet;
-	for( i = 0; i < iN; ++i ) {
-		memcpy( adA, adX, i * sizeof(*adX) );
-		memcpy( adA + i, adX + i + 1, ( iN - 1 - i ) * sizeof(*adX) );
-		memcpy( adB, adY, i * sizeof(*adY) );
-		memcpy( adB + i, adY + i + 1, ( iN - 1 - i ) * sizeof(*adY) );
-		if( adWX && adWY && adWA && adWB ) {
-			memcpy( adWA, adWX, i * sizeof(*adWX) );
-			memcpy( adWA + i, adWX + i + 1, ( iN - 1 - i ) * sizeof(*adWX) );
-			memcpy( adWB, adWY, i * sizeof(*adWY) );
-			memcpy( adWB + i, adWY + i + 1, ( iN - 1 - i ) * sizeof(*adWY) ); }
-		dCur = pMeasure->Measure( adA, iN - 1, adB, iN - 1, IMeasure::EMapCenter, adWA, adWB );
-		if( ( dCur = ( 1 - dCur ) ) > dRet )
-			dRet = dCur; }
+        dRet = pMeasure->Measure(adX, iN, adY, iN, IMeasure::EMapCenter, adWX, adWY);
+        dRet = 1 - dRet;
+        for (i = 0; i < iN; ++i) {
+            memcpy(adA, adX, i * sizeof(*adX));
+            memcpy(adA + i, adX + i + 1, (iN - 1 - i) * sizeof(*adX));
+            memcpy(adB, adY, i * sizeof(*adY));
+            memcpy(adB + i, adY + i + 1, (iN - 1 - i) * sizeof(*adY));
+            if (adWX && adWY && adWA && adWB) {
+                memcpy(adWA, adWX, i * sizeof(*adWX));
+                memcpy(adWA + i, adWX + i + 1, (iN - 1 - i) * sizeof(*adWX));
+                memcpy(adWB, adWY, i * sizeof(*adWY));
+                memcpy(adWB + i, adWY + i + 1, (iN - 1 - i) * sizeof(*adWY));
+            }
+            dCur = pMeasure->Measure(adA, iN - 1, adB, iN - 1, IMeasure::EMapCenter, adWA, adWB);
+            if ((dCur = (1 - dCur)) > dRet)
+                dRet = dCur;
+        }
 
-	return dRet; }
+        return dRet;
+    }
 
 }

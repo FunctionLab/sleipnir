@@ -58,22 +58,24 @@ namespace Sleipnir {
  * the server will call IServerClient::Destroy to clean up that object.  The original server client object
  * (ESC in the example above) is only used to create additional new instances.
  */
-class CServer : CServerImpl {
-public:
-	bool Initialize( size_t iPort, size_t iTimeout, IServerClient* pServerClient );
-	bool Start( );
+    class CServer : CServerImpl {
+    public:
+        bool Initialize(size_t iPort, size_t iTimeout, IServerClient *pServerClient);
 
-	/*!
-	 * \brief
-	 * Signals that the server should stop listening for incoming connections.
-	 * 
-	 * \remarks
-	 * Results in an exit from Start at the next timeout interval.
-	 */
-	void Stop( ) {
+        bool Start();
 
-		m_fStop = true; }
-};
+        /*!
+         * \brief
+         * Signals that the server should stop listening for incoming connections.
+         *
+         * \remarks
+         * Results in an exit from Start at the next timeout interval.
+         */
+        void Stop() {
+
+            m_fStop = true;
+        }
+    };
 
 }
 

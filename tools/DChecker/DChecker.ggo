@@ -53,12 +53,22 @@ option  "outpos"                u       "Use positive edges outside the context"
                                                         flag    off
 option  "outneg"                U       "Use negative edges outside the context"
                                                         flag    off
+option	"weights"			W	"Weight file"
+							string	typestr="filename"
+option	"flipneg"           F       "Flip weights(one minus original) for negative standards"
+                                                        flag    on
+option	"singlegene"  	        S       "Randomly subsample the standards so that a gene occurs at most once in positive and also in negative standards"
+                                                        flag    off
+option	"genec"			E	"Gene file to split positives into new positive examples and negative examples. All positive pairs with both genes in the gene list are only consided as positives. All positive pairs with both genes not in the gene list are considered as negatives. (all original negatives are ignored)."
+							string	typestr="filename"
 
 section "Preprocessing"
 option	"normalize"		n	"Normalize scores before processing"
 							flag	off
 option	"invert"		t	"Invert correlations to distances"
 							flag	off
+option	"abs"			A	"Convert input to its absolute values"
+							float	default="0.0"
 
 section "Optional"
 option	"sse"			s	"Calculate sum of squared errors"
@@ -67,3 +77,5 @@ option	"memmap"		p	"Memory map input DABs"
 							flag	off
 option	"verbosity"		v	"Message verbosity"
 							int	default="5"
+option	"random"		r	"Seed random generator (default -1 uses current time)"
+							int	default="-1" no

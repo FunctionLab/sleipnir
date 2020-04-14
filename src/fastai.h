@@ -38,72 +38,76 @@ namespace Sleipnir {
  * \brief
  * Base data associated with one entry in a FASTA/WIG file.
  */
-struct SFASTABase {
-	/*!
-	 * \brief
-	 * Type of the FASTA/WIG entry.
-	 */
-	std::string	m_strType;
-};
+    struct SFASTABase {
+        /*!
+         * \brief
+         * Type of the FASTA/WIG entry.
+         */
+        std::string m_strType;
+    };
 
 
 /*!
  * \brief
  * Data associated with one sequence entry in a FASTA file.
  */
-struct SFASTASequence : SFASTABase {
-	/*!
-	 * \brief
-	 * True if the first subtype in the sequence is an intron; false otherwise.
-	 */
-	bool						m_fIntronFirst;
-	/*!
-	 * \brief
-	 * Zero or more sequences of alternating subtypes within one entry in a FASTA file.
-	 */
-	std::vector<std::string>	m_vecstrSequences;
-};
+    struct SFASTASequence : SFASTABase {
+        /*!
+         * \brief
+         * True if the first subtype in the sequence is an intron; false otherwise.
+         */
+        bool m_fIntronFirst;
+        /*!
+         * \brief
+         * Zero or more sequences of alternating subtypes within one entry in a FASTA file.
+         */
+        std::vector <std::string> m_vecstrSequences;
+    };
 
 /*!
  * \brief
  * Data associated with one value entry in a WIG file.
  */
-struct SFASTAWiggle : SFASTABase {
-	/*!
-	 * \brief
-	 * Zero or more values associated with one entry in a WIG file.
-	 */
-	std::vector<float>	m_vecdValues;
-};
+    struct SFASTAWiggle : SFASTABase {
+        /*!
+         * \brief
+         * Zero or more values associated with one entry in a WIG file.
+         */
+        std::vector<float> m_vecdValues;
+    };
 
-class CFASTAImpl : public CFile {
-protected:
-	static const char	c_acComment[];
-	static const char	c_acHeader[];
+    class CFASTAImpl : public CFile {
+    protected:
+        static const char c_acComment[];
+        static const char c_acHeader[];
 
-	typedef std::map<std::string, size_t>		TMapStrI;
-	typedef std::map<std::string, std::string>	TMapStrStr;
+        typedef std::map <std::string, size_t> TMapStrI;
+        typedef std::map <std::string, std::string> TMapStrStr;
 
-	CFASTAImpl( );
-	virtual ~CFASTAImpl( );
+        CFASTAImpl();
 
-	bool Get( size_t, std::vector<SFASTASequence>*, std::vector<SFASTAWiggle>* ) const;
-	bool Get( size_t, std::vector<SFASTASequence>&, size_t, const std::string&, SFASTASequence& ) const;
-	bool Get( size_t, std::vector<SFASTAWiggle>&, size_t, SFASTAWiggle& ) const;
+        virtual ~CFASTAImpl();
 
-	const std::string& GetGene( size_t iGene ) const {
+        bool Get(size_t, std::vector <SFASTASequence> *, std::vector <SFASTAWiggle> *) const;
 
-		return m_vecstrGenes[ iGene ]; }
+        bool Get(size_t, std::vector <SFASTASequence> &, size_t, const std::string &, SFASTASequence &) const;
 
-	mutable std::ifstream		m_ifsm;
-	TMapStrI					m_mapstriGenes;
-	std::vector<std::string>	m_vecstrGenes;
-	std::vector<TMapStrStr>		m_vecmapstrstrHeaders;
-	std::vector<TMapStrI>		m_vecmapstriSequences;
-	char*						m_szBuffer;
-	std::set<std::string>		m_setstrTypes;
-	mutable pthread_mutex_t		m_mutx;
-};
+        bool Get(size_t, std::vector <SFASTAWiggle> &, size_t, SFASTAWiggle &) const;
+
+        const std::string &GetGene(size_t iGene) const {
+
+            return m_vecstrGenes[iGene];
+        }
+
+        mutable std::ifstream m_ifsm;
+        TMapStrI m_mapstriGenes;
+        std::vector <std::string> m_vecstrGenes;
+        std::vector <TMapStrStr> m_vecmapstrstrHeaders;
+        std::vector <TMapStrI> m_vecmapstriSequences;
+        char *m_szBuffer;
+        std::set <std::string> m_setstrTypes;
+        mutable pthread_mutex_t m_mutx;
+    };
 
 }
 

@@ -36,42 +36,50 @@ namespace Sleipnir {
  * \see
  * GetName
  */
-CGene::CGene( const std::string& strID ) : CGeneImpl(strID) { }
+    CGene::CGene(const std::string &strID) : CGeneImpl(strID) {}
 
-CGeneImpl::CGeneImpl( const std::string& strName ) : m_strName(strName),
-	m_iOntologies(0), m_apOntologies(NULL), m_apveciAnnotations(NULL),
-	m_iSynonyms(0), m_astrSynonyms(NULL), m_fRNA(false), m_fDubious(false) { }
+    CGeneImpl::CGeneImpl(const std::string &strName) : m_strName(strName),
+                                                       m_iOntologies(0), m_apOntologies(NULL),
+                                                       m_apveciAnnotations(NULL),
+                                                       m_iSynonyms(0), m_astrSynonyms(NULL), m_fRNA(false),
+                                                       m_fDubious(false) {}
 
-CGeneImpl::~CGeneImpl( ) {
-	size_t	i;
+    CGeneImpl::~CGeneImpl() {
+        size_t i;
 
-	if( m_iOntologies ) {
-		delete[] m_apOntologies;
-		for( i = 0; i < m_iOntologies; ++i )
-			delete m_apveciAnnotations[ i ];
-		delete[] m_apveciAnnotations; }
-	if( m_iSynonyms )
-		delete[] m_astrSynonyms; }
+        if (m_iOntologies) {
+            delete[] m_apOntologies;
+            for (i = 0; i < m_iOntologies; ++i)
+                delete m_apveciAnnotations[i];
+            delete[] m_apveciAnnotations;
+        }
+        if (m_iSynonyms)
+            delete[] m_astrSynonyms;
+    }
 
-CGeneImpl& CGeneImpl::operator=( const CGeneImpl& Gene ) {
-	size_t	i, j;
+    CGeneImpl &CGeneImpl::operator=(const CGeneImpl &Gene) {
+        size_t i, j;
 
-	m_strName = Gene.m_strName;
-	if( m_iSynonyms = Gene.m_iSynonyms ) {
-		m_astrSynonyms = new string[ m_iSynonyms ];
-		for( i = 0; i < m_iSynonyms; ++i )
-			m_astrSynonyms[ i ] = Gene.m_astrSynonyms[ i ]; }
-	if( m_iOntologies = Gene.m_iOntologies ) {
-		m_apOntologies = new IOntology const*[ m_iOntologies ];
-		m_apveciAnnotations = new vector<size_t>*[ m_iOntologies ];
-		for( i = 0; i < m_iOntologies; ++i ) {
-			m_apOntologies[ i ] = Gene.m_apOntologies[ i ];
-			m_apveciAnnotations[ i ] = new vector<size_t>( );
-			m_apveciAnnotations[ i ]->resize( Gene.m_apveciAnnotations[ i ]->size( ) );
-			for( j = 0; j < m_apveciAnnotations[ i ]->size( ); ++j )
-				(*m_apveciAnnotations[ i ])[ j ] = (*Gene.m_apveciAnnotations[ i ])[ j ]; } }
+        m_strName = Gene.m_strName;
+        if ((m_iSynonyms = Gene.m_iSynonyms)) {
+            m_astrSynonyms = new string[m_iSynonyms];
+            for (i = 0; i < m_iSynonyms; ++i)
+                m_astrSynonyms[i] = Gene.m_astrSynonyms[i];
+        }
+        if ((m_iOntologies = Gene.m_iOntologies)) {
+            m_apOntologies = new IOntology const *[m_iOntologies];
+            m_apveciAnnotations = new vector <size_t> *[m_iOntologies];
+            for (i = 0; i < m_iOntologies; ++i) {
+                m_apOntologies[i] = Gene.m_apOntologies[i];
+                m_apveciAnnotations[i] = new vector<size_t>();
+                m_apveciAnnotations[i]->resize(Gene.m_apveciAnnotations[i]->size());
+                for (j = 0; j < m_apveciAnnotations[i]->size(); ++j)
+                    (*m_apveciAnnotations[i])[j] = (*Gene.m_apveciAnnotations[i])[j];
+            }
+        }
 
-	return *this; }
+        return *this;
+    }
 
 /*!
  * \brief
@@ -97,39 +105,43 @@ CGeneImpl& CGeneImpl::operator=( const CGeneImpl& Gene ) {
  * \see
  * IsAnnotated
  */
-bool CGene::AddAnnotation( const IOntology* pOntology, size_t iTerm ) {
-	size_t	i, iOnto;
+    bool CGene::AddAnnotation(const IOntology *pOntology, size_t iTerm) {
+        size_t i, iOnto;
 
-	for( iOnto = 0; iOnto < m_iOntologies; ++iOnto )
-		if( m_apOntologies[ iOnto ] == pOntology )
-			break;
-	if( iOnto >= m_iOntologies )
-		IncrementOntologies( pOntology );
+        for (iOnto = 0; iOnto < m_iOntologies; ++iOnto)
+            if (m_apOntologies[iOnto] == pOntology)
+                break;
+        if (iOnto >= m_iOntologies)
+            IncrementOntologies(pOntology);
 
-	for( i = 0; i < m_apveciAnnotations[ iOnto ]->size( ); ++i )
-		if( (*m_apveciAnnotations[ iOnto ])[ i ] == iTerm )
-			return false;
-	m_apveciAnnotations[ iOnto ]->push_back( iTerm );
-	return true; }
+        for (i = 0; i < m_apveciAnnotations[iOnto]->size(); ++i)
+            if ((*m_apveciAnnotations[iOnto])[i] == iTerm)
+                return false;
+        m_apveciAnnotations[iOnto]->push_back(iTerm);
+        return true;
+    }
 
-void CGeneImpl::IncrementOntologies( const IOntology* pOntology ) {
-	const IOntology**	apOntologies;
-	vector<size_t>**	apveciAnnotations;
+    void CGeneImpl::IncrementOntologies(const IOntology *pOntology) {
+        const IOntology **apOntologies;
+        vector <size_t> **apveciAnnotations;
 
-	apOntologies = new IOntology const*[ m_iOntologies + 1 ];
-	if( m_apOntologies ) {
-		memcpy( apOntologies, m_apOntologies, m_iOntologies * sizeof(*m_apOntologies) );
-		delete[] m_apOntologies; }
-	apOntologies[ m_iOntologies ] = pOntology;
-	m_apOntologies = apOntologies;
+        apOntologies = new IOntology const *[m_iOntologies + 1];
+        if (m_apOntologies) {
+            memcpy(apOntologies, m_apOntologies, m_iOntologies * sizeof(*m_apOntologies));
+            delete[] m_apOntologies;
+        }
+        apOntologies[m_iOntologies] = pOntology;
+        m_apOntologies = apOntologies;
 
-	apveciAnnotations = new vector<size_t>*[ m_iOntologies + 1 ];
-	if( m_apveciAnnotations ) {
-		memcpy( apveciAnnotations, m_apveciAnnotations, m_iOntologies *
-			sizeof(*m_apveciAnnotations) );
-		delete[] m_apveciAnnotations; }
-	apveciAnnotations[ m_iOntologies++ ] = new vector<size_t>;
-	m_apveciAnnotations = apveciAnnotations; }
+        apveciAnnotations = new vector <size_t> *[m_iOntologies + 1];
+        if (m_apveciAnnotations) {
+            memcpy(apveciAnnotations, m_apveciAnnotations, m_iOntologies *
+                                                           sizeof(*m_apveciAnnotations));
+            delete[] m_apveciAnnotations;
+        }
+        apveciAnnotations[m_iOntologies++] = new vector<size_t>;
+        m_apveciAnnotations = apveciAnnotations;
+    }
 
 /*!
  * \brief
@@ -141,14 +153,15 @@ void CGeneImpl::IncrementOntologies( const IOntology* pOntology ) {
  * \returns
  * True if gene is annotated within the given ontology.
  */
-bool CGene::IsAnnotated( const IOntology* pOntology ) const {
-	size_t	i;
+    bool CGene::IsAnnotated(const IOntology *pOntology) const {
+        size_t i;
 
-	for( i = 0; i < m_iOntologies; ++i )
-		if( pOntology == m_apOntologies[ i ] )
-			return true;
+        for (i = 0; i < m_iOntologies; ++i)
+            if (pOntology == m_apOntologies[i])
+                return true;
 
-	return false; }
+        return false;
+    }
 
 /*!
  * \brief
@@ -167,17 +180,19 @@ bool CGene::IsAnnotated( const IOntology* pOntology ) const {
  * Does not examine the ontology or term descendants directly, so will only return true if the gene
  * has been directly annotated to the given term using AddAnnotation.
  */
-bool CGene::IsAnnotated( const IOntology* pOntology, size_t iTerm ) const {
-	size_t	i, j;
+    bool CGene::IsAnnotated(const IOntology *pOntology, size_t iTerm) const {
+        size_t i, j;
 
-	for( i = 0; i < m_iOntologies; ++i )
-		if( pOntology == m_apOntologies[ i ] ) {
-			for( j = 0; j < m_apveciAnnotations[ i ]->size( ); ++j )
-				if( iTerm == (*m_apveciAnnotations[ i ])[ j ] )
-					return true;
-			break; }
+        for (i = 0; i < m_iOntologies; ++i)
+            if (pOntology == m_apOntologies[i]) {
+                for (j = 0; j < m_apveciAnnotations[i]->size(); ++j)
+                    if (iTerm == (*m_apveciAnnotations[i])[j])
+                        return true;
+                break;
+            }
 
-	return false; }
+        return false;
+    }
 
 /*!
  * \brief
@@ -195,39 +210,47 @@ bool CGene::IsAnnotated( const IOntology* pOntology, size_t iTerm ) const {
  * \see
  * GetSynonym
  */
-bool CGene::AddSynonym( const std::string& strName ) {
-	size_t	i;
-	string*	astrSynonyms;
+    bool CGene::AddSynonym(const std::string &strName) {
+        size_t i;
+        string *astrSynonyms;
 
-	if( !strName.length( ) )
-		g_CatSleipnir( ).warn( "CGene::AddSynonym( %s ) adding null synonym to %s",
-			strName.c_str( ), m_strName.c_str( ) );
-	if( strName == m_strName )
-		return false;
-	for( i = 0; i < m_iSynonyms; ++i )
-		if( strName == m_astrSynonyms[ i ] )
-			return false;
+        if (!strName.length())
+            g_CatSleipnir().warn("CGene::AddSynonym( %s ) adding null synonym to %s",
+                                 strName.c_str(), m_strName.c_str());
+        if (strName == m_strName)
+            return false;
+        for (i = 0; i < m_iSynonyms; ++i)
+            if (strName == m_astrSynonyms[i])
+                return false;
 
-	astrSynonyms = new string[ ++m_iSynonyms ];
-	for( i = 0; ( i + 1 ) < m_iSynonyms; ++i )
-		astrSynonyms[ i ] = m_astrSynonyms[ i ];
-	astrSynonyms[ i ] = strName;
+        astrSynonyms = new string[++m_iSynonyms];
+        for (i = 0; (i + 1) < m_iSynonyms; ++i)
+            astrSynonyms[i] = m_astrSynonyms[i];
+        astrSynonyms[i] = strName;
 
-	if( m_astrSynonyms )
-		delete[] m_astrSynonyms;
-	m_astrSynonyms = astrSynonyms;
-	return true; }
+        if (m_astrSynonyms)
+            delete[] m_astrSynonyms;
+        m_astrSynonyms = astrSynonyms;
+        return true;
+    }
 
-const char	CGenomeImpl::c_szDubious[]	= "Dubious";
-const char	CGenomeImpl::c_szORF[]		= "ORF";
-const char*	CGenomeImpl::c_aszRNA[]		= { "ncRNA", "rRNA", "snRNA", "snoRNA", "tRNA",
-	NULL };
+    bool CGene::SetWeight(float weight) {
+        m_weight = weight;
+        return true;
+    };
 
-CGenomeImpl::~CGenomeImpl( ) {
-	size_t	i;
 
-	for( i = 0; i < m_vecpGenes.size( ); ++i )
-		delete m_vecpGenes[ i ]; }
+    const char    CGenomeImpl::c_szDubious[] = "Dubious";
+    const char    CGenomeImpl::c_szORF[] = "ORF";
+    const char *CGenomeImpl::c_aszRNA[] = {"ncRNA", "rRNA", "snRNA", "snoRNA", "tRNA",
+                                           NULL};
+
+    CGenomeImpl::~CGenomeImpl() {
+        size_t i;
+
+        for (i = 0; i < m_vecpGenes.size(); ++i)
+            delete m_vecpGenes[i];
+    }
 
 /*!
  * \brief
@@ -242,28 +265,29 @@ CGenomeImpl::~CGenomeImpl( ) {
  * Loads a (presumably yeast) genome from a file formatted as per the SGD features file (SGD_features.tab).
  * This includes gene IDs, synonyms, glosses, and RNA and dubious tags.
  */
-bool CGenome::Open( std::istream& istmFeatures ) {
-	static const size_t	c_iBuf	= 4096;
-	char			szBuf[ c_iBuf ];
-	vector<string>	vecstrLine, vecstrNames;
-	size_t			i;
+    bool CGenome::Open(std::istream &istmFeatures) {
+        static const size_t c_iBuf = 4096;
+        char szBuf[c_iBuf];
+        vector <string> vecstrLine, vecstrNames;
+        size_t i;
 
-	while( istmFeatures.peek( ) != EOF ) {
-		istmFeatures.getline( szBuf, c_iBuf - 1 );
-		vecstrLine.clear( );
-		CMeta::Tokenize( szBuf, vecstrLine );
-		if( vecstrLine.size( ) < 16 )
-			return false;
+        while (istmFeatures.peek() != EOF) {
+            istmFeatures.getline(szBuf, c_iBuf - 1);
+            vecstrLine.clear();
+            CMeta::Tokenize(szBuf, vecstrLine);
+            if (vecstrLine.size() < 16)
+                return false;
 
-		if( vecstrLine[ 1 ] != c_szORF ) {
-			for( i = 0; c_aszRNA[ i ]; ++i )
-				if( vecstrLine[ 1 ] == c_aszRNA[ i ] )
-					break;
-			if( !c_aszRNA[ i ] )
-				continue; }
+            if (vecstrLine[1] != c_szORF) {
+                for (i = 0; c_aszRNA[i]; ++i)
+                    if (vecstrLine[1] == c_aszRNA[i])
+                        break;
+                if (!c_aszRNA[i])
+                    continue;
+            }
 
-		{
-			CGene&	Gene	= AddGene( vecstrLine[ 3 ] );
+            {
+                CGene &Gene = AddGene(vecstrLine[3]);
 
 //	1	Type		ORF, CDS, RNA, etc.
 //	2	Qualifier	Dubious, Verified, etc.
@@ -271,19 +295,22 @@ bool CGenome::Open( std::istream& istmFeatures ) {
 //	4	Name
 //	5	Aliases
 //	15	DESC
-			Gene.SetRNA( vecstrLine[ 1 ] != c_szORF );
-			Gene.SetDubious( vecstrLine[ 2 ] == c_szDubious );
-			if( vecstrLine[ 4 ].length( ) )
-				AddSynonym( Gene, vecstrLine[ 4 ] );
-			if( vecstrLine[ 5 ].length( ) ) {
-				vecstrNames.clear( );
-				CMeta::Tokenize( vecstrLine[ 5 ].c_str( ), vecstrNames, "|" );
-				for( i = 0; i < vecstrNames.size( ); ++i )
-					AddSynonym( Gene, vecstrNames[ i ] ); }
-			Gene.SetGloss( vecstrLine[ 15 ] );
-		} }
+                Gene.SetRNA(vecstrLine[1] != c_szORF);
+                Gene.SetDubious(vecstrLine[2] == c_szDubious);
+                if (vecstrLine[4].length())
+                    AddSynonym(Gene, vecstrLine[4]);
+                if (vecstrLine[5].length()) {
+                    vecstrNames.clear();
+                    CMeta::Tokenize(vecstrLine[5].c_str(), vecstrNames, "|");
+                    for (i = 0; i < vecstrNames.size(); ++i)
+                        AddSynonym(Gene, vecstrNames[i]);
+                }
+                Gene.SetGloss(vecstrLine[15]);
+            }
+        }
 
-	return true; }
+        return true;
+    }
 
 /*!
  * \brief
@@ -299,44 +326,49 @@ bool CGenome::Open( std::istream& istmFeatures ) {
  * Genes in the new genome will have no information beyond the provided primary IDs, which should (as
  * usual) be unique.
  */
-bool CGenome::Open( const std::vector<std::string>& vecstrGenes ) {
-	size_t	i;
+    bool CGenome::Open(const std::vector <std::string> &vecstrGenes) {
+        size_t i;
 
-	for( i = 0; i < vecstrGenes.size( ); ++i )
-		AddGene( vecstrGenes[ i ] );
+        for (i = 0; i < vecstrGenes.size(); ++i)
+            AddGene(vecstrGenes[i]);
 
-	return true; }
+        return true;
+    }
 
-bool CGenome::Open( const char* szFile, std::vector<CGenes*>& vecpGenes ) {
-	ifstream	ifsm;
+    bool CGenome::Open(const char *szFile, std::vector<CGenes *> &vecpGenes) {
+        ifstream ifsm;
 
-	if( !szFile )
-		return Open( cin, vecpGenes );
+        if (!szFile)
+            return Open(cin, vecpGenes);
 
-	ifsm.open( szFile );
-	return ( ifsm.is_open( ) ? Open( ifsm, vecpGenes ) : false ); }
+        ifsm.open(szFile);
+        return (ifsm.is_open() ? Open(ifsm, vecpGenes) : false);
+    }
 
-bool CGenome::Open( std::istream& istmGenes, std::vector<CGenes*>& vecpGenes ) {
-	char			szLine[ c_iBufferSize ];
-	string			strLine;
-	vector<string>	vecstrLine;
-	CGenes*			pGenes;
+    bool CGenome::Open(std::istream &istmGenes, std::vector<CGenes *> &vecpGenes) {
+        char szLine[c_iBufferSize];
+        string strLine;
+        vector <string> vecstrLine;
+        CGenes *pGenes;
 
-	while( istmGenes.peek( ) != EOF ) {
-		istmGenes.getline( szLine, c_iBufferSize - 1 );
-		szLine[ c_iBufferSize - 1 ] = 0;
-		if( !( strLine = CMeta::Trim( szLine ) ).length( ) )
-			continue;
-		vecstrLine.clear( );
-		CMeta::Tokenize( strLine.c_str( ), vecstrLine );
-		pGenes = new CGenes( *this );
-		if( !pGenes->Open( vecstrLine ) ) {
-			delete pGenes;
-			g_CatSleipnir( ).error( "CGenome::Open( ) could not open line: %s", szLine );
-			return false; }
-		vecpGenes.push_back( pGenes ); }
+        while (istmGenes.peek() != EOF) {
+            istmGenes.getline(szLine, c_iBufferSize - 1);
+            szLine[c_iBufferSize - 1] = 0;
+            if (!(strLine = CMeta::Trim(szLine)).length())
+                continue;
+            vecstrLine.clear();
+            CMeta::Tokenize(strLine.c_str(), vecstrLine);
+            pGenes = new CGenes(*this);
+            if (!pGenes->Open(vecstrLine)) {
+                delete pGenes;
+                g_CatSleipnir().error("CGenome::Open( ) could not open line: %s", szLine);
+                return false;
+            }
+            vecpGenes.push_back(pGenes);
+        }
 
-	return true; }
+        return true;
+    }
 
 /*!
  * \brief
@@ -358,17 +390,18 @@ bool CGenome::Open( std::istream& istmGenes, std::vector<CGenes*>& vecpGenes ) {
  * \see
  * FindGene
  */
-CGene& CGenome::AddGene( const std::string& strID ) {
-	TMapStrI::const_iterator	iterGene;
-	CGene*						pGene;
+    CGene &CGenome::AddGene(const std::string &strID) {
+        TMapStrI::const_iterator iterGene;
+        CGene *pGene;
 
-	if( ( iterGene = m_mapGenes.find( strID ) ) != m_mapGenes.end( ) )
-		return GetGene( iterGene->second );
+        if ((iterGene = m_mapGenes.find(strID)) != m_mapGenes.end())
+            return GetGene(iterGene->second);
 
-	pGene = new CGene( strID );
-	m_vecpGenes.push_back( pGene );
-	m_mapGenes[ strID ] = m_vecpGenes.size( ) - 1;
-	return *pGene; }
+        pGene = new CGene(strID);
+        m_vecpGenes.push_back(pGene);
+        m_mapGenes[strID] = m_vecpGenes.size() - 1;
+        return *pGene;
+    }
 
 /*!
  * \brief
@@ -391,18 +424,19 @@ CGene& CGenome::AddGene( const std::string& strID ) {
  * \see
  * AddGene
  */
-size_t CGenome::FindGene( const std::string& strGene ) const {
-	size_t	i, j, iRet;
+    size_t CGenome::FindGene(const std::string &strGene) const {
+        size_t i, j, iRet;
 
-	if( ( iRet = GetGene( strGene ) ) != -1 )
-		return iRet;
+        if ((iRet = GetGene(strGene)) != -1)
+            return iRet;
 
-	for( i = 0; i < GetGenes( ); ++i )
-		for( j = 0; j < GetGene( i ).GetSynonyms( ); ++j )
-			if( strGene == GetGene( i ).GetSynonym( j ) )
-				return i;
+        for (i = 0; i < GetGenes(); ++i)
+            for (j = 0; j < GetGene(i).GetSynonyms(); ++j)
+                if (strGene == GetGene(i).GetSynonym(j))
+                    return i;
 
-	return -1; }
+        return -1;
+    }
 
 /*!
  * \brief
@@ -411,15 +445,16 @@ size_t CGenome::FindGene( const std::string& strGene ) const {
  * \returns
  * Vector of all primary gene IDs in the genome.
  */
-vector<string> CGenome::GetGeneNames( ) const {
-	vector<string>	vecstrRet;
-	size_t			i;
+    vector <string> CGenome::GetGeneNames() const {
+        vector <string> vecstrRet;
+        size_t i;
 
-	vecstrRet.resize( m_vecpGenes.size( ) );
-	for( i = 0; i < vecstrRet.size( ); ++i )
-		vecstrRet[ i ] = m_vecpGenes[ i ]->GetName( );
+        vecstrRet.resize(m_vecpGenes.size());
+        for (i = 0; i < vecstrRet.size(); ++i)
+            vecstrRet[i] = m_vecpGenes[i]->GetName();
 
-	return vecstrRet; }
+        return vecstrRet;
+    }
 
 /*!
  * \brief
@@ -434,16 +469,18 @@ vector<string> CGenome::GetGeneNames( ) const {
  * \see
  * CGene::GetOntology
  */
-size_t CGenome::CountGenes( const IOntology* pOntology ) const {
-	size_t	i, j, iRet;
+    size_t CGenome::CountGenes(const IOntology *pOntology) const {
+        size_t i, j, iRet;
 
-	for( iRet = i = 0; i < m_vecpGenes.size( ); ++i )
-		for( j = 0; j < m_vecpGenes[ i ]->GetOntologies( ); ++j )
-			if( pOntology == m_vecpGenes[ i ]->GetOntology( j ) ) {
-				iRet++;
-				break; }
+        for (iRet = i = 0; i < m_vecpGenes.size(); ++i)
+            for (j = 0; j < m_vecpGenes[i]->GetOntologies(); ++j)
+                if (pOntology == m_vecpGenes[i]->GetOntology(j)) {
+                    iRet++;
+                    break;
+                }
 
-	return iRet; }
+        return iRet;
+    }
 
 /*!
  * \brief
@@ -464,13 +501,15 @@ size_t CGenome::CountGenes( const IOntology* pOntology ) const {
  * \see
  * CGene::AddSynonym
  */
-bool CGenome::AddSynonym( CGene& Gene, const std::string& strName ) {
+    bool CGenome::AddSynonym(CGene &Gene, const std::string &strName) {
 
-	if( ( strName != Gene.GetName( ) ) && ( Gene.AddSynonym( strName ) ) ) {
-		m_mapGenes[ strName ] = m_mapGenes[ Gene.GetName( ) ];
-		return true; }
+        if ((strName != Gene.GetName()) && (Gene.AddSynonym(strName))) {
+            m_mapGenes[strName] = m_mapGenes[Gene.GetName()];
+            return true;
+        }
 
-	return false; }
+        return false;
+    }
 
 /*!
  * \brief
@@ -497,39 +536,43 @@ bool CGenome::AddSynonym( CGene& Gene, const std::string& strName ) {
  * \see
  * Open
  */
-bool CGenes::Open( const char* szFile, CGenome& Genome, std::vector<std::string>& vecstrNames, std::vector<CGenes*>& vecpGenes ) {
-	ifstream		ifsm;
-	vector<char>	veccBuffer;
-	istream*		pistm;
-	bool			fRet;
+    bool CGenes::Open(const char *szFile, CGenome &Genome, std::vector <std::string> &vecstrNames,
+                      std::vector<CGenes *> &vecpGenes) {
+        ifstream ifsm;
+        vector<char> veccBuffer;
+        istream *pistm;
+        bool fRet;
 
-	if( szFile ) {
-		ifsm.open( szFile );
-		pistm = &ifsm; }
-	else
-		pistm = &cin;
-	if( !ifsm.is_open( ) ) {
-		g_CatSleipnir( ).error( "CGenes::Open( %s ) could not open file", szFile ? szFile : "stdin" );
-		return false; }
+        if (szFile) {
+            ifsm.open(szFile);
+            pistm = &ifsm;
+        } else
+            pistm = &cin;
+        if (!ifsm.is_open()) {
+            g_CatSleipnir().error("CGenes::Open( %s ) could not open file", szFile ? szFile : "stdin");
+            return false;
+        }
 
-	veccBuffer.resize( CFile::GetBufferSize( ) );
-	fRet = false;
-	while( !pistm->eof( ) ) {
-		vector<string>	vecstrLine;
+        veccBuffer.resize(CFile::GetBufferSize());
+        fRet = false;
+        while (!pistm->eof()) {
+            vector <string> vecstrLine;
 
-		pistm->getline( &veccBuffer[0], veccBuffer.size( ) - 1 );
-		CMeta::Tokenize( &veccBuffer[0], vecstrLine );
-		if( vecstrLine.empty( ) )
-			continue;
-		vecstrNames.push_back( vecstrLine[0] );
-		vecstrLine.erase( vecstrLine.begin( ) );
-		vecpGenes.push_back( new CGenes( Genome ) );
-		if( !( fRet = vecpGenes.back( )->Open( vecstrLine ) ) )
-			break; }
-	if( szFile )
-		ifsm.close( );
+            pistm->getline(&veccBuffer[0], veccBuffer.size() - 1);
+            CMeta::Tokenize(&veccBuffer[0], vecstrLine);
+            if (vecstrLine.empty())
+                continue;
+            vecstrNames.push_back(vecstrLine[0]);
+            vecstrLine.erase(vecstrLine.begin());
+            vecpGenes.push_back(new CGenes(Genome));
+            if (!(fRet = vecpGenes.back()->Open(vecstrLine)))
+                break;
+        }
+        if (szFile)
+            ifsm.close();
 
-	return fRet; }
+        return fRet;
+    }
 
 /*!
  * \brief
@@ -538,9 +581,9 @@ bool CGenes::Open( const char* szFile, CGenome& Genome, std::vector<std::string>
  * \param Genome
  * Genome containing all genes which might become members of this gene set.
  */
-CGenes::CGenes( CGenome& Genome ) : CGenesImpl( Genome ) { }
+    CGenes::CGenes(CGenome &Genome) : CGenesImpl(Genome) {}
 
-CGenesImpl::CGenesImpl( CGenome& Genome ) : m_Genome(Genome) { }
+    CGenesImpl::CGenesImpl(CGenome &Genome) : m_Genome(Genome), isWeighted(false) {}
 
 /*!
  * \brief
@@ -568,40 +611,123 @@ CGenesImpl::CGenesImpl( CGenome& Genome ) : m_Genome(Genome) { }
  * \see
  * CGenome::AddGene
  */
-bool CGenes::Open( std::istream& istm, bool fCreate ) {
-	static const size_t	c_iBuffer	= 1024;
-	char	szBuf[ c_iBuffer ];
-	CGene*	pGene;
-	size_t	i, iGene;
-	char*	pc;
+    bool CGenes::Open(std::istream &istm, bool fCreate) {
+        static const size_t c_iBuffer = 1024;
+        char szBuf[c_iBuffer];
+        CGene *pGene;
+        size_t i, iGene;
+        char *pc;
 
-	if( istm.rdstate( ) != ios_base::goodbit )
-		return false;
+        if (istm.rdstate() != ios_base::goodbit)
+            return false;
 
-	m_mapGenes.clear( );
-	m_vecpGenes.clear( );
-	while( istm.peek( ) != EOF ) {
-		istm.getline( szBuf, c_iBuffer - 1 );
-		if( pc = strchr( szBuf, '\t' ) )
-			*pc = 0;
-		if( !szBuf[ 0 ] || ( szBuf[ 0 ] == c_cComment ) )
-			continue;
-		if( fCreate )
-			pGene = &m_Genome.AddGene( szBuf );
-		else {
-			if( ( iGene = m_Genome.FindGene( szBuf ) ) == -1 ) {
-				g_CatSleipnir( ).warn( "CGenes::Open( %d ) unknown gene: %s", fCreate, szBuf );
-				continue; }
-			pGene = &m_Genome.GetGene( iGene ); }
-		for( i = 0; i < m_vecpGenes.size( ); ++i )
-			if( m_vecpGenes[ i ] == pGene )
-				break;
-		if( i != m_vecpGenes.size( ) )
-			continue;
-		m_mapGenes[ pGene->GetName( ) ] = m_vecpGenes.size( );
-		m_vecpGenes.push_back( pGene ); }
+        m_mapGenes.clear();
+        m_vecpGenes.clear();
+        while (istm.peek() != EOF) {
+            istm.getline(szBuf, c_iBuffer - 1);
+            if ((pc = strchr(szBuf, '\t')))
+                *pc = 0;
+            if (!szBuf[0] || (szBuf[0] == c_cComment))
+                continue;
+            if (fCreate)
+                pGene = &m_Genome.AddGene(szBuf);
+            else {
+                if ((iGene = m_Genome.FindGene(szBuf)) == -1) {
+                    g_CatSleipnir().warn("CGenes::Open( %d ) unknown gene: %s", fCreate, szBuf);
+                    continue;
+                }
+                pGene = &m_Genome.GetGene(iGene);
+            }
+            for (i = 0; i < m_vecpGenes.size(); ++i)
+                if (m_vecpGenes[i] == pGene)
+                    break;
+            if (i != m_vecpGenes.size())
+                continue;
+            m_mapGenes[pGene->GetName()] = m_vecpGenes.size();
+            m_vecpGenes.push_back(pGene);
+        }
+        isWeighted = false;
+        return true;
+    }
 
-	return true; }
+/*!
+ * \brief
+ * Construct a new weighted gene set by loading genes from the given text stream, one per line.
+ * 
+ * \param istm
+ * Stream containing gene IDs and corresponding weights to load, one per line.
+ * 
+ * \param fCreate
+ * If true, add unknown genes to the underlying genome; otherwise, unknown gene IDs are ignored.
+ * 
+ * \returns
+ * True if gene set was constructed successfully.
+ * 
+ * Loads a text file of the form:
+ * \code
+ * GENE1 WEIGHT1
+ * GENE2 WEIGHT2
+ * GENE3 WEIGHT3
+ * \endcode
+ * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
+ * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
+ * created from the loaded IDs.  If fCreate is false, unrecognized genes are skipped with a warning.
+ * 
+ * \see
+ * CGenome::AddGene
+ */
+    bool CGenes::OpenWeighted(std::istream &istm, bool fCreate) {
+        static const size_t c_iBuffer = 1024;
+        char szBuf[c_iBuffer];
+        CGene *pGene;
+        size_t i, iGene;
+        char *pc;
+        vector <string> vecstrTokens;
+
+        if (istm.rdstate() != ios_base::goodbit)
+            return false;
+
+        m_mapGenes.clear();
+        m_vecpGenes.clear();
+        while (istm.peek() != EOF) {
+            istm.getline(szBuf, c_iBuffer - 1);
+            //if( pc = strchr( szBuf, '\t' ) )
+            //	*pc = 0;
+            if (!szBuf[0] || (szBuf[0] == c_cComment))
+                continue;
+            szBuf[c_iBuffer - 1] = 0;
+            vecstrTokens.clear();
+            CMeta::Tokenize(szBuf, vecstrTokens);
+            if (vecstrTokens.empty())
+                continue;
+            if (vecstrTokens.size() != 2) {
+                //cerr << "Illegal label line (" << vecstrTokens.size() << "): "
+                //	<< szBuf << endl;
+                return false;
+            }
+
+            if (fCreate)
+                pGene = &m_Genome.AddGene(vecstrTokens[0]);
+            else {
+                if ((iGene = m_Genome.FindGene(vecstrTokens[0])) == -1) {
+                    g_CatSleipnir().warn("CGenes::Open( %d ) unknown gene: %s", fCreate, vecstrTokens[0].c_str());
+                    continue;
+                }
+                pGene = &m_Genome.GetGene(iGene);
+            }
+            pGene->SetWeight(atof(vecstrTokens[1].c_str()));
+            for (i = 0; i < m_vecpGenes.size(); ++i)
+                if (m_vecpGenes[i] == pGene)
+                    break;
+            if (i != m_vecpGenes.size())
+                continue;
+            m_mapGenes[pGene->GetName()] = m_vecpGenes.size();
+            m_vecpGenes.push_back(pGene);
+        }
+        isWeighted = true;
+        return true;
+    }
+
 
 /*!
  * \brief
@@ -626,16 +752,17 @@ bool CGenes::Open( std::istream& istm, bool fCreate ) {
  * \see
  * IOntology::IsAnnotated
  */
-size_t CGenes::CountAnnotations( const IOntology* pOntology, size_t iTerm, bool fRecursive,
-	const CGenes* pBackground ) const {
-	size_t	i, iRet;
+    size_t CGenes::CountAnnotations(const IOntology *pOntology, size_t iTerm, bool fRecursive,
+                                    const CGenes *pBackground) const {
+        size_t i, iRet;
 
-	for( iRet = i = 0; i < m_vecpGenes.size( ); ++i )
-		if( ( !pBackground || pBackground->IsGene( m_vecpGenes[ i ]->GetName( ) ) ) &&
-			pOntology->IsAnnotated( iTerm, *m_vecpGenes[ i ], fRecursive ) )
-			iRet++;
+        for (iRet = i = 0; i < m_vecpGenes.size(); ++i)
+            if ((!pBackground || pBackground->IsGene(m_vecpGenes[i]->GetName())) &&
+                pOntology->IsAnnotated(iTerm, *m_vecpGenes[i], fRecursive))
+                iRet++;
 
-	return iRet; }
+        return iRet;
+    }
 
 /*!
  * \brief
@@ -657,21 +784,23 @@ size_t CGenes::CountAnnotations( const IOntology* pOntology, size_t iTerm, bool 
  * \see
  * CGenome::AddGene
  */
-bool CGenes::Open( const std::vector<std::string>& vecstrGenes, bool fCreate ) {
-	size_t	i, iGene;
-	CGene*	pGene;
+    bool CGenes::Open(const std::vector <std::string> &vecstrGenes, bool fCreate) {
+        size_t i, iGene;
+        CGene *pGene;
 
-	m_mapGenes.clear( );
-	m_vecpGenes.clear( );
-	for( i = 0; i < vecstrGenes.size( ); ++i ) {
-		if( !fCreate && ( ( iGene = m_Genome.FindGene( vecstrGenes[ i ] ) ) == -1 ) )
-			continue;
+        m_mapGenes.clear();
+        m_vecpGenes.clear();
+        for (i = 0; i < vecstrGenes.size(); ++i) {
+            if (!fCreate && ((iGene = m_Genome.FindGene(vecstrGenes[i])) == -1))
+                continue;
 
-		pGene = fCreate ? &m_Genome.AddGene( vecstrGenes[ i ] ) : &m_Genome.GetGene( iGene );
-		m_mapGenes[ vecstrGenes[ i ] ] = m_vecpGenes.size( );
-		m_vecpGenes.push_back( pGene ); }
-
-	return true; }
+            pGene = fCreate ? &m_Genome.AddGene(vecstrGenes[i]) : &m_Genome.GetGene(iGene);
+            m_mapGenes[vecstrGenes[i]] = m_vecpGenes.size();
+            m_vecpGenes.push_back(pGene);
+        }
+        isWeighted = false;
+        return true;
+    }
 
 /*!
  * \brief
@@ -684,18 +813,20 @@ bool CGenes::Open( const std::vector<std::string>& vecstrGenes, bool fCreate ) {
  * Comparisons are performed using pointers to CGene objects, so both gene sets should use the same
  * underlying CGenome for proper behavior.
  */
-void CGenes::Filter( const CGenes& GenesExclude ) {
-	size_t	i, j, iSize;
+    void CGenes::Filter(const CGenes &GenesExclude) {
+        size_t i, j, iSize;
 
-	iSize = m_vecpGenes.size( );
-	for( i = 0; i < GenesExclude.GetGenes( ); ++i )
-		for( j = 0; j < iSize; ++j )
-			if( m_vecpGenes[ j ] == &GenesExclude.GetGene( i ) ) {
-				m_mapGenes.erase( m_vecpGenes[ j ]->GetName( ) );
-				m_vecpGenes[ j ] = m_vecpGenes[ m_vecpGenes.size( ) - 1 ];
-				iSize--;
-				break; }
-	m_vecpGenes.resize( iSize ); }
+        iSize = m_vecpGenes.size();
+        for (i = 0; i < GenesExclude.GetGenes(); ++i)
+            for (j = 0; j < iSize; ++j)
+                if (m_vecpGenes[j] == &GenesExclude.GetGene(i)) {
+                    m_mapGenes.erase(m_vecpGenes[j]->GetName());
+                    m_vecpGenes[j] = m_vecpGenes[m_vecpGenes.size() - 1];
+                    iSize--;
+                    break;
+                }
+        m_vecpGenes.resize(iSize);
+    }
 
 /*!
  * \brief
@@ -704,14 +835,15 @@ void CGenes::Filter( const CGenes& GenesExclude ) {
  * \returns
  * Vector of primary identifiers of all genes in the set.
  */
-vector<string> CGenes::GetGeneNames( ) const {
-	vector<string>	vecstrRet;
-	size_t			i;
+    vector <string> CGenes::GetGeneNames() const {
+        vector <string> vecstrRet;
+        size_t i;
 
-	vecstrRet.resize( m_vecpGenes.size( ) );
-	for( i = 0; i < vecstrRet.size( ); ++i )
-		vecstrRet[ i ] = m_vecpGenes[ i ]->GetName( );
+        vecstrRet.resize(m_vecpGenes.size());
+        for (i = 0; i < vecstrRet.size(); ++i)
+            vecstrRet[i] = m_vecpGenes[i]->GetName();
 
-	return vecstrRet; }
+        return vecstrRet;
+    }
 
 }

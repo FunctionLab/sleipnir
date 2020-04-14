@@ -26,7 +26,7 @@
 
 namespace Sleipnir {
 
-class CSlim;
+    class CSlim;
 
 /*!
  * \brief
@@ -52,110 +52,133 @@ class CSlim;
  * \see
  * CMeta::Quantize
  */
-class CDataPair : public CDataPairImpl {
-public:
-	bool Open( const char* szDatafile, bool fContinuous, bool fMemmap = false, size_t iSkip = 2,
-		bool fZScore = false );
-	bool Open( const CSlim& Slim );
-	bool Open( const CDat& dat );
-	bool OpenQuants( const char* szDatafile );
-	void SetQuants( const float* adBinEdges, size_t iBins ){
-	  SetQuants(adBinEdges, iBins );
-	}
-	void SetQuants( const std::vector<float>& vecdBinEdges );
-	size_t Quantize( float dValue ) const;
-	void Quantize( );
-	void Save( const char* szFile ) const;
-	
-	
-	/*!
-	 * \brief
-	 * Returns the number of discrete values taken by this data pair.
-	 * 
-	 * \returns
-	 * Number of discrete values taken by this data pair.
-	 * 
-	 * \remarks
-	 * Equivalent to number of bins in the data pair and number of bin edges in the QUANT file.
-	 * 
-	 * \see
-	 * SetQuants | Quantize
-	 */
-	unsigned char GetValues( ) const {
+    class CDataPair : public CDataPairImpl {
+    public:
+        bool Open(const char *szDatafile, bool fContinuous, bool fMemmap = false, size_t iSkip = 2,
+                  bool fZScore = false, bool fSeek = false);
 
-		return (unsigned char)m_vecdQuant.size( ); }
+        bool Open(const CSlim &Slim);
 
-	/*!
-	 * \brief
-	 * Returns true if the data pair has no associated discretization information.
-	 * 
-	 * \returns
-	 * True if the data pair has no associated discretization information.
-	 * 
-	 * \remarks
-	 * Generally only useful with continuous Bayes nets, which themselves aren't that useful.
-	 */
-	bool IsContinuous( ) const {
+        bool Open(const CDat &dat);
 
-		return m_fContinuous; }
+        bool OpenQuants(const char *szDatafile);
 
-	/*!
-	 * \brief
-	 * Construct a data pair from the given known gene relationships and gene sets and with no discretization
-	 * information.
-	 * 
-	 * \param DatKnown
-	 * Known pairwise scores, either positive or negative as indicated.
-	 * 
-	 * \param vecpOther
-	 * Gene sets, either positive or nonnegative as indicated (possibly empty).
-	 * 
-	 * \param Genome
-	 * Genome containing all genes of interest.
-	 * 
-	 * \param fKnownNegatives
-	 * If true, DatKnown contains known negative gene pairs (0 scores); if false, it contains known related
-	 * gene pairs (1 scores).  In the former case, positives are generated from pairs coannotated to the
-	 * given gene sets; in the latter, negatives are generated from pairs not coannotated to the given gene
-	 * sets.
-	 * 
-	 * \returns
-	 * True if data pair was generated successfully.
-	 * 
-	 * \remarks
-	 * Quantize will behave inconsistently if the data pair is not assigned bin edges through some other means.
-	 * 
-	 * \see
-	 * CDat::Open
-	 */
-	bool Open( const CDat& DatKnown, const std::vector<CGenes*>& vecpOther, const CGenome& Genome,
-		bool fKnownNegatives ) {
+        void SetQuants(const float *adBinEdges, size_t iBins) {
+            SetQuants(adBinEdges, iBins);
+        }
 
-		return CDat::Open( DatKnown, vecpOther, Genome, fKnownNegatives ); }
+        void SetQuants(const std::vector<float> &vecdBinEdges);
 
-	/*!
-	 * \brief
-	 * Construct a new data pair with the given gene names and values and with no discretization information.
-	 * 
-	 * \param vecstrGenes
-	 * Gene names and size to associate with the data pair.
-	 * 
-	 * \param MatScores
-	 * Values to associate with the data pair.
-	 * 
-	 * \returns
-	 * True if data pair was generated successfully.
-	 * 
-	 * \remarks
-	 * Quantize will behave inconsistently if the data pair is not assigned bin edges through some other means.
-	 * 
-	 * \see
-	 * CDat::Open
-	 */
-	bool Open( const std::vector<std::string>& vecstrGenes, const CDistanceMatrix& MatScores ) {
+        std::vector<float> GetQuants() {
+            std::vector<float> v;
+            size_t i;
+            for (i = 0; i < m_vecdQuant.size(); i++) {
+                v.push_back(m_vecdQuant[i]);
+            }
+            return v;
+        }
 
-		return CDat::Open( vecstrGenes, MatScores ); }
-};
+        size_t Quantize(float dValue) const;
+
+        void Quantize();
+
+        size_t Quantize(size_t iY, size_t iX, size_t iZero) const;
+
+        void Save(const char *szFile) const;
+
+
+        /*!
+         * \brief
+         * Returns the number of discrete values taken by this data pair.
+         *
+         * \returns
+         * Number of discrete values taken by this data pair.
+         *
+         * \remarks
+         * Equivalent to number of bins in the data pair and number of bin edges in the QUANT file.
+         *
+         * \see
+         * SetQuants | Quantize
+         */
+        unsigned char GetValues() const {
+
+            return (unsigned char) m_vecdQuant.size();
+        }
+
+        /*!
+         * \brief
+         * Returns true if the data pair has no associated discretization information.
+         *
+         * \returns
+         * True if the data pair has no associated discretization information.
+         *
+         * \remarks
+         * Generally only useful with continuous Bayes nets, which themselves aren't that useful.
+         */
+        bool IsContinuous() const {
+
+            return m_fContinuous;
+        }
+
+        /*!
+         * \brief
+         * Construct a data pair from the given known gene relationships and gene sets and with no discretization
+         * information.
+         *
+         * \param DatKnown
+         * Known pairwise scores, either positive or negative as indicated.
+         *
+         * \param vecpOther
+         * Gene sets, either positive or nonnegative as indicated (possibly empty).
+         *
+         * \param Genome
+         * Genome containing all genes of interest.
+         *
+         * \param fKnownNegatives
+         * If true, DatKnown contains known negative gene pairs (0 scores); if false, it contains known related
+         * gene pairs (1 scores).  In the former case, positives are generated from pairs coannotated to the
+         * given gene sets; in the latter, negatives are generated from pairs not coannotated to the given gene
+         * sets.
+         *
+         * \returns
+         * True if data pair was generated successfully.
+         *
+         * \remarks
+         * Quantize will behave inconsistently if the data pair is not assigned bin edges through some other means.
+         *
+         * \see
+         * CDat::Open
+         */
+        bool Open(const CDat &DatKnown, const std::vector<CGenes *> &vecpOther, const CGenome &Genome,
+                  bool fKnownNegatives) {
+
+            return CDat::Open(DatKnown, vecpOther, Genome, fKnownNegatives);
+        }
+
+        /*!
+         * \brief
+         * Construct a new data pair with the given gene names and values and with no discretization information.
+         *
+         * \param vecstrGenes
+         * Gene names and size to associate with the data pair.
+         *
+         * \param MatScores
+         * Values to associate with the data pair.
+         *
+         * \returns
+         * True if data pair was generated successfully.
+         *
+         * \remarks
+         * Quantize will behave inconsistently if the data pair is not assigned bin edges through some other means.
+         *
+         * \see
+         * CDat::Open
+         */
+        bool Open(const std::vector <std::string> &vecstrGenes, const CDistanceMatrix &MatScores) {
+
+            return CDat::Open(vecstrGenes, MatScores);
+        }
+    };
 
 /*!
  * \brief
@@ -178,32 +201,34 @@ public:
  * \see
  * IBayesNet::Evaluate
  */
-class CPCLPair : public CPCLPairImpl {
-public:
-	bool Open( const char* szDatafile, size_t iSkip );
-	size_t Quantize( float dValue, size_t iExperiment ) const;
-	void Quantize( );
+    class CPCLPair : public CPCLPairImpl {
+    public:
+        bool Open(const char *szDatafile, size_t iSkip);
+
+        size_t Quantize(float dValue, size_t iExperiment) const;
+
+        void Quantize();
+
+        /*!
+         * \brief
+         * Returns the number of discrete values taken by this PCL pair.
+         *
+         * \returns
+         * Number of discrete values taken by this PCL pair.
+         *
+         * \remarks
+         * Equivalent to number of bins in the PCL pair and number of bin edges in the QUANT file.
+         *
+         * \see
+         * SetQuants | Quantize
+         */
+        unsigned char GetValues(size_t iExperiment) const {
+
+            return (unsigned char) m_vecvecdQuants[iExperiment].size();
+        }
 
 
-	/*!
-	 * \brief
-	 * Returns the number of discrete values taken by this PCL pair.
-	 * 
-	 * \returns
-	 * Number of discrete values taken by this PCL pair.
-	 * 
-	 * \remarks
-	 * Equivalent to number of bins in the PCL pair and number of bin edges in the QUANT file.
-	 * 
-	 * \see
-	 * SetQuants | Quantize
-	 */
-	unsigned char GetValues( size_t iExperiment ) const {
-	  
-	  return (unsigned char)m_vecvecdQuants[ iExperiment ].size( ); }
-	
-
-};
+    };
 
 /*!
  * \brief
@@ -222,151 +247,175 @@ public:
  * \see
  * CDat::FilterGenes | CDataFilter
  */
-class CDatFilter : public CDatFilterImpl {
-public:
+    class CDatFilter : public CDatFilterImpl {
+    public:
 
-	bool Attach( const CDataPair& Dat, const CGenes& Genes, CDat::EFilter eFilter,
-		const CDat* pAnswers = NULL );
-	bool Attach( const CDatFilter& Dat, const CGenes& Genes, CDat::EFilter eFilter,
-		const CDat* pAnswers = NULL );
+        bool Attach(const CDataPair &Dat, const CGenes &Genes, CDat::EFilter eFilter,
+                    const CDat *pAnswers = NULL);
 
-	/*!
-	 * \brief
-	 * Associates the data filter with the given CDat.
-	 * 
-	 * \param Dat
-	 * CDat to be associated with the overlaying mask.
-	 * 
-	 * \returns
-	 * True if filter was attached successfully.
-	 * 
-	 * \remarks
-	 * This creates an empty, pass-through mask, which can be useful when stacking multiple overlayed filters.
-	 */
-	bool Attach( const CDataPair& Dat ) {
+        bool Attach(const CDatFilter &Dat, const CGenes &Genes, CDat::EFilter eFilter,
+                    const CDat *pAnswers = NULL);
 
-		return CDatFilterImpl::Attach( &Dat, NULL, NULL, CDat::EFilterInclude, NULL ); }
+        /*!
+         * \brief
+         * Associates the data filter with the given CDat.
+         *
+         * \param Dat
+         * CDat to be associated with the overlaying mask.
+         *
+         * \returns
+         * True if filter was attached successfully.
+         *
+         * \remarks
+         * This creates an empty, pass-through mask, which can be useful when stacking multiple overlayed filters.
+         */
+        bool Attach(const CDataPair &Dat) {
 
-	/*!
-	 * \brief
-	 * Returns the number of values taken by the underlying CDataPair.
-	 * 
-	 * \returns
-	 * Number of different values taken by the underlying CDataPair.
-	 * 
-	 * \see
-	 * CDataPair::GetValues
-	 */
-	size_t GetValues( ) const {
+            return CDatFilterImpl::Attach(&Dat, NULL, NULL, CDat::EFilterInclude, NULL);
+        }
 
-		return ( m_pFilter ? m_pFilter->GetValues( ) : ( m_pDat ? m_pDat->GetValues( ) : -1 ) ); }
+        /*!
+         * \brief
+         * Returns the number of values taken by the underlying CDataPair.
+         *
+         * \returns
+         * Number of different values taken by the underlying CDataPair.
+         *
+         * \see
+         * CDataPair::GetValues
+         */
+        size_t GetValues() const {
 
-	/*!
-	 * \brief
-	 * Returns the index of the requested gene name, or -1 if it does not exist.
-	 * 
-	 * \param strGene
-	 * Gene name whose index is returned.
-	 * 
-	 * \returns
-	 * Index of the requested gene name, or -1 if it does not exist.
-	 * 
-	 * \see
-	 * CDataPair::GetGene
-	 */
-	size_t GetGene( const std::string& strGene ) const {
+            return (m_pFilter ? m_pFilter->GetValues() : (m_pDat ? m_pDat->GetValues() : -1));
+        }
 
-		return ( m_pFilter ? m_pFilter->GetGene( strGene ) : ( m_pDat ? m_pDat->GetGene( strGene ) : -1 ) ); }
+        /*!
+         * \brief
+         * Returns the index of the requested gene name, or -1 if it does not exist.
+         *
+         * \param strGene
+         * Gene name whose index is returned.
+         *
+         * \returns
+         * Index of the requested gene name, or -1 if it does not exist.
+         *
+         * \see
+         * CDataPair::GetGene
+         */
+        size_t GetGene(const std::string &strGene) const {
 
-	/*!
-	 * \brief
-	 * Returns the gene name at the requested index.
-	 * 
-	 * \param iGene
-	 * Index of gene name to be returned.
-	 * 
-	 * \returns
-	 * Gene name at requested index.
-	 * 
-	 * \see
-	 * CDataPair::GetGene
-	 */
-	std::string GetGene( size_t iGene ) const {
+            return (m_pFilter ? m_pFilter->GetGene(strGene) : (m_pDat ? m_pDat->GetGene(strGene) : -1));
+        }
 
-		return CDatFilterImpl::GetGene( iGene ); }
+        /*!
+         * \brief
+         * Returns the gene name at the requested index.
+         *
+         * \param iGene
+         * Index of gene name to be returned.
+         *
+         * \returns
+         * Gene name at requested index.
+         *
+         * \see
+         * CDataPair::GetGene
+         */
+        std::string GetGene(size_t iGene) const {
 
-	/*!
-	 * \brief
-	 * Discretizes the given value using the quantization bins of the underlying CDataPair.
-	 * 
-	 * \param dValue
-	 * Continuous value to be discretized.
-	 * 
-	 * \returns
-	 * Bin number of the given value using the underlying CDataPair quantization.
-	 * 
-	 * \see
-	 * CDataPair::Quantize
-	 */
-	size_t Quantize( float dValue ) const {
+            return CDatFilterImpl::GetGene(iGene);
+        }
 
-		return ( m_pFilter ? m_pFilter->Quantize( dValue ) : ( m_pDat ? m_pDat->Quantize( dValue ) : -1 ) ); }
+        /*!
+         * \brief
+         * Discretizes the given value using the quantization bins of the underlying CDataPair.
+         *
+         * \param dValue
+         * Continuous value to be discretized.
+         *
+         * \returns
+         * Bin number of the given value using the underlying CDataPair quantization.
+         *
+         * \see
+         * CDataPair::Quantize
+         */
+        size_t Quantize(float dValue) const {
 
-	/*!
-	 * \brief
-	 * Returns the (potentially filtered) value at the requested indices.
-	 * 
-	 * \param iY
-	 * Row of value to retrieve.
-	 * 
-	 * \param iX
-	 * Column of value to retrieve.
-	 * 
-	 * \returns
-	 * Value at the requested location, or NaN if it does not exist or has been filtered.
-	 * 
-	 * \see
-	 * CDataPair::Get
-	 */
-	float& Get( size_t iY, size_t iX ) const {
-		static float	c_dNaN	= CMeta::GetNaN( );
+            return (m_pFilter ? m_pFilter->Quantize(dValue) : (m_pDat ? m_pDat->Quantize(dValue) : -1));
+        }
 
-		if( !( m_pDat || m_pFilter ) )
-			return c_dNaN;
-		if( m_vecfGenes.empty( ) )
-			return ( m_pFilter ? m_pFilter->Get( iY, iX ) : ( m_pDat ? m_pDat->Get( iY, iX ) : c_dNaN ) );
 
-		switch( m_eFilter ) {
-			case CDat::EFilterInclude:
-				if( !( m_vecfGenes[ iX ] && m_vecfGenes[ iY ] ) )
-					return c_dNaN;
-				break;
+        size_t Quantize(size_t iY, size_t iX, size_t iZero) const {
+            float d;
+            if (iY == -1 || iX == -1) {
+                return -1;
+            } else if (CMeta::IsNaN((d = Get(iY, iX)))) {
+                return iZero;
+            } else {
+                return Quantize(d);
+            }
+        }
 
-			case CDat::EFilterExclude:
-				if( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] )
-					return c_dNaN;
-				break;
 
-			case CDat::EFilterEdge:
-				if( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) )
-					return c_dNaN;
-				break;
+        /*!
+         * \brief
+         * Returns the (potentially filtered) value at the requested indices.
+         *
+         * \param iY
+         * Row of value to retrieve.
+         *
+         * \param iX
+         * Column of value to retrieve.
+         *
+         * \returns
+         * Value at the requested location, or NaN if it does not exist or has been filtered.
+         *
+         * \see
+         * CDataPair::Get
+         */
+        float &Get(size_t iY, size_t iX) const {
+            static float c_dNaN = CMeta::GetNaN();
 
-			case CDat::EFilterTerm:
-				float	d;
-				size_t	iOne, iTwo;
+            if (!(m_pDat || m_pFilter))
+                return c_dNaN;
+            if (m_vecfGenes.empty())
+                return (m_pFilter ? m_pFilter->Get(iY, iX) : (m_pDat ? m_pDat->Get(iY, iX) : c_dNaN));
 
-				if( !m_pAnswers )
-					return c_dNaN;
-				d = ( ( ( iOne = m_veciAnswers[ iX ] ) != -1 ) && ( ( iTwo = m_veciAnswers[ iY ] ) != -1 ) ) ?
-					m_pAnswers->Get( iTwo, iOne ) : CMeta::GetNaN( );
-				if( !( m_vecfGenes[ iX ] || m_vecfGenes[ iY ] ) ||
-					( ( m_vecfGenes[ iX ] != m_vecfGenes[ iY ] ) && !CMeta::IsNaN( d ) && ( d > 0 ) ) )
-					return c_dNaN;
-				break; }
+            switch (m_eFilter) {
+                case CDat::EFilterInclude:
+                    if (!(m_vecfGenes[iX] && m_vecfGenes[iY]))
+                        return c_dNaN;
+                    break;
 
-		return ( m_pFilter ? m_pFilter->Get( iY, iX ) : m_pDat->Get( iY, iX ) ); }
-};
+                case CDat::EFilterExclude:
+                    if (m_vecfGenes[iX] || m_vecfGenes[iY])
+                        return c_dNaN;
+                    break;
+
+                case CDat::EFilterEdge:
+                    if (!(m_vecfGenes[iX] || m_vecfGenes[iY]))
+                        return c_dNaN;
+                    break;
+
+                case CDat::EFilterTerm:
+                    float d;
+                    size_t iOne, iTwo;
+
+                    if (!m_pAnswers)
+                        return c_dNaN;
+                    d = (((iOne = m_veciAnswers[iX]) != -1) && ((iTwo = m_veciAnswers[iY]) != -1)) ?
+                        m_pAnswers->Get(iTwo, iOne) : CMeta::GetNaN();
+                    if (!(m_vecfGenes[iX] || m_vecfGenes[iY]) ||
+                        ((m_vecfGenes[iX] != m_vecfGenes[iY]) && !CMeta::IsNaN(d) && (d > 0)))
+                        return c_dNaN;
+                    break;
+
+                default:
+                    break;
+            }
+
+            return (m_pFilter ? m_pFilter->Get(iY, iX) : m_pDat->Get(iY, iX));
+        }
+    };
 
 }
 

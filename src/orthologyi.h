@@ -28,24 +28,25 @@
 
 namespace Sleipnir {
 
-class CGene;
-class CGenome;
+    class CGene;
 
-class COrthologyImpl : protected CFile {
-protected:
-	static const char	c_cOrgSep	= '|';
+    class CGenome;
 
-	typedef std::map<CGene*,size_t>	TMapGeneI;
+    class COrthologyImpl : protected CFile {
+    protected:
+        static const char c_cOrgSep = '|';
 
-	~COrthologyImpl( );
+        typedef std::map<CGene *, size_t> TMapGeneI;
 
-	void Reset( );
+        ~COrthologyImpl();
 
-	std::vector<std::string>			m_vecstrOrganisms;
-	std::vector<CGenome*>				m_vecpGenomes;
-	TMapGeneI							m_mapGenes;
-	std::vector<std::vector<CGene*> >	m_vecvecpGenes;
-};
+        void Reset();
+
+        std::vector <std::string> m_vecstrOrganisms;
+        std::vector<CGenome *> m_vecpGenomes;
+        TMapGeneI m_mapGenes;
+        std::vector <std::vector<CGene *>> m_vecvecpGenes;
+    };
 
 }
 

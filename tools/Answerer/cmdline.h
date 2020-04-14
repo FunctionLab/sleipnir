@@ -30,83 +30,81 @@ extern "C" {
 #endif
 
 /** @brief Where the command line options are stored */
-struct gengetopt_args_info
-{
-  const char *help_help; /**< @brief Print help and exit help description.  */
-  const char *version_help; /**< @brief Print version and exit help description.  */
-  char * output_arg;	/**< @brief Output DAB file.  */
-  char * output_orig;	/**< @brief Output DAB file original value given at command line.  */
-  const char *output_help; /**< @brief Output DAB file help description.  */
-  char * positives_arg;	/**< @brief Directory containing related gene lists.  */
-  char * positives_orig;	/**< @brief Directory containing related gene lists original value given at command line.  */
-  const char *positives_help; /**< @brief Directory containing related gene lists help description.  */
-  char * input_arg;	/**< @brief Pre-existing positive DAT file.  */
-  char * input_orig;	/**< @brief Pre-existing positive DAT file original value given at command line.  */
-  const char *input_help; /**< @brief Pre-existing positive DAT file help description.  */
-  char * negatives_arg;	/**< @brief Directory containing minimally related gene lists.  */
-  char * negatives_orig;	/**< @brief Directory containing minimally related gene lists original value given at command line.  */
-  const char *negatives_help; /**< @brief Directory containing minimally related gene lists help description.  */
-  double interactions_arg;	/**< @brief Expected interactions per gene.  */
-  char * interactions_orig;	/**< @brief Expected interactions per gene original value given at command line.  */
-  const char *interactions_help; /**< @brief Expected interactions per gene help description.  */
-  double prior_arg;	/**< @brief Target prior for the answer file. This prior is only a target, may turn out to be lower..  */
-  char * prior_orig;	/**< @brief Target prior for the answer file. This prior is only a target, may turn out to be lower. original value given at command line.  */
-  const char *prior_help; /**< @brief Target prior for the answer file. This prior is only a target, may turn out to be lower. help description.  */
-  int incident_flag;	/**< @brief Require negative pairs to include an annotated gene (default=off).  */
-  const char *incident_help; /**< @brief Require negative pairs to include an annotated gene help description.  */
-  char * exclude_arg;	/**< @brief DAT/DAB file of gene pairs to exclude from the standard.  */
-  char * exclude_orig;	/**< @brief DAT/DAB file of gene pairs to exclude from the standard original value given at command line.  */
-  const char *exclude_help; /**< @brief DAT/DAB file of gene pairs to exclude from the standard help description.  */
-  double scramble_arg;	/**< @brief Fraction of gene pairs to set randomly (default='0').  */
-  char * scramble_orig;	/**< @brief Fraction of gene pairs to set randomly original value given at command line.  */
-  const char *scramble_help; /**< @brief Fraction of gene pairs to set randomly help description.  */
-  double overlap_arg;	/**< @brief P-value cutoff for negative term overlap (default='0').  */
-  char * overlap_orig;	/**< @brief P-value cutoff for negative term overlap original value given at command line.  */
-  const char *overlap_help; /**< @brief P-value cutoff for negative term overlap help description.  */
-  char * genome_arg;	/**< @brief List of all genes to be considered.  */
-  char * genome_orig;	/**< @brief List of all genes to be considered original value given at command line.  */
-  const char *genome_help; /**< @brief List of all genes to be considered help description.  */
-  double test_arg;	/**< @brief Fraction of genes to randomly select for testing (default='0').  */
-  char * test_orig;	/**< @brief Fraction of genes to randomly select for testing original value given at command line.  */
-  const char *test_help; /**< @brief Fraction of genes to randomly select for testing help description.  */
-  int random_arg;	/**< @brief Seed random generator (default='0').  */
-  char * random_orig;	/**< @brief Seed random generator original value given at command line.  */
-  const char *random_help; /**< @brief Seed random generator help description.  */
-  int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
-  char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
-  const char *verbosity_help; /**< @brief Message verbosity help description.  */
-  
-  unsigned int help_given ;	/**< @brief Whether help was given.  */
-  unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int output_given ;	/**< @brief Whether output was given.  */
-  unsigned int positives_given ;	/**< @brief Whether positives was given.  */
-  unsigned int input_given ;	/**< @brief Whether input was given.  */
-  unsigned int negatives_given ;	/**< @brief Whether negatives was given.  */
-  unsigned int interactions_given ;	/**< @brief Whether interactions was given.  */
-  unsigned int prior_given ;	/**< @brief Whether prior was given.  */
-  unsigned int incident_given ;	/**< @brief Whether incident was given.  */
-  unsigned int exclude_given ;	/**< @brief Whether exclude was given.  */
-  unsigned int scramble_given ;	/**< @brief Whether scramble was given.  */
-  unsigned int overlap_given ;	/**< @brief Whether overlap was given.  */
-  unsigned int genome_given ;	/**< @brief Whether genome was given.  */
-  unsigned int test_given ;	/**< @brief Whether test was given.  */
-  unsigned int random_given ;	/**< @brief Whether random was given.  */
-  unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+struct gengetopt_args_info {
+    const char *help_help; /**< @brief Print help and exit help description.  */
+    const char *version_help; /**< @brief Print version and exit help description.  */
+    char *output_arg;    /**< @brief Output DAB file.  */
+    char *output_orig;    /**< @brief Output DAB file original value given at command line.  */
+    const char *output_help; /**< @brief Output DAB file help description.  */
+    char *positives_arg;    /**< @brief Directory containing related gene lists.  */
+    char *positives_orig;    /**< @brief Directory containing related gene lists original value given at command line.  */
+    const char *positives_help; /**< @brief Directory containing related gene lists help description.  */
+    char *input_arg;    /**< @brief Pre-existing positive DAT file.  */
+    char *input_orig;    /**< @brief Pre-existing positive DAT file original value given at command line.  */
+    const char *input_help; /**< @brief Pre-existing positive DAT file help description.  */
+    char *negatives_arg;    /**< @brief Directory containing minimally related gene lists.  */
+    char *negatives_orig;    /**< @brief Directory containing minimally related gene lists original value given at command line.  */
+    const char *negatives_help; /**< @brief Directory containing minimally related gene lists help description.  */
+    double interactions_arg;    /**< @brief Expected interactions per gene.  */
+    char *interactions_orig;    /**< @brief Expected interactions per gene original value given at command line.  */
+    const char *interactions_help; /**< @brief Expected interactions per gene help description.  */
+    double prior_arg;    /**< @brief Target prior for the answer file. This prior is only a target, may turn out to be lower..  */
+    char *prior_orig;    /**< @brief Target prior for the answer file. This prior is only a target, may turn out to be lower. original value given at command line.  */
+    const char *prior_help; /**< @brief Target prior for the answer file. This prior is only a target, may turn out to be lower. help description.  */
+    int incident_flag;    /**< @brief Require negative pairs to include an annotated gene (default=off).  */
+    const char *incident_help; /**< @brief Require negative pairs to include an annotated gene help description.  */
+    char *exclude_arg;    /**< @brief DAT/DAB file of gene pairs to exclude from the standard.  */
+    char *exclude_orig;    /**< @brief DAT/DAB file of gene pairs to exclude from the standard original value given at command line.  */
+    const char *exclude_help; /**< @brief DAT/DAB file of gene pairs to exclude from the standard help description.  */
+    double scramble_arg;    /**< @brief Fraction of gene pairs to set randomly (default='0').  */
+    char *scramble_orig;    /**< @brief Fraction of gene pairs to set randomly original value given at command line.  */
+    const char *scramble_help; /**< @brief Fraction of gene pairs to set randomly help description.  */
+    double overlap_arg;    /**< @brief P-value cutoff for negative term overlap (default='0').  */
+    char *overlap_orig;    /**< @brief P-value cutoff for negative term overlap original value given at command line.  */
+    const char *overlap_help; /**< @brief P-value cutoff for negative term overlap help description.  */
+    char *genome_arg;    /**< @brief List of all genes to be considered.  */
+    char *genome_orig;    /**< @brief List of all genes to be considered original value given at command line.  */
+    const char *genome_help; /**< @brief List of all genes to be considered help description.  */
+    double test_arg;    /**< @brief Fraction of genes to randomly select for testing (default='0').  */
+    char *test_orig;    /**< @brief Fraction of genes to randomly select for testing original value given at command line.  */
+    const char *test_help; /**< @brief Fraction of genes to randomly select for testing help description.  */
+    int random_arg;    /**< @brief Seed random generator (default='0').  */
+    char *random_orig;    /**< @brief Seed random generator original value given at command line.  */
+    const char *random_help; /**< @brief Seed random generator help description.  */
+    int verbosity_arg;    /**< @brief Message verbosity (default='5').  */
+    char *verbosity_orig;    /**< @brief Message verbosity original value given at command line.  */
+    const char *verbosity_help; /**< @brief Message verbosity help description.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
-  int Positives_group_counter; /**< @brief Counter for group Positives */
-} ;
+    unsigned int help_given;    /**< @brief Whether help was given.  */
+    unsigned int version_given;    /**< @brief Whether version was given.  */
+    unsigned int output_given;    /**< @brief Whether output was given.  */
+    unsigned int positives_given;    /**< @brief Whether positives was given.  */
+    unsigned int input_given;    /**< @brief Whether input was given.  */
+    unsigned int negatives_given;    /**< @brief Whether negatives was given.  */
+    unsigned int interactions_given;    /**< @brief Whether interactions was given.  */
+    unsigned int prior_given;    /**< @brief Whether prior was given.  */
+    unsigned int incident_given;    /**< @brief Whether incident was given.  */
+    unsigned int exclude_given;    /**< @brief Whether exclude was given.  */
+    unsigned int scramble_given;    /**< @brief Whether scramble was given.  */
+    unsigned int overlap_given;    /**< @brief Whether overlap was given.  */
+    unsigned int genome_given;    /**< @brief Whether genome was given.  */
+    unsigned int test_given;    /**< @brief Whether test was given.  */
+    unsigned int random_given;    /**< @brief Whether random was given.  */
+    unsigned int verbosity_given;    /**< @brief Whether verbosity was given.  */
+
+    char **inputs; /**< @brief unamed options (options without names) */
+    unsigned inputs_num; /**< @brief unamed options number */
+    int Positives_group_counter; /**< @brief Counter for group Positives */
+};
 
 /** @brief The additional parameters to pass to parser functions */
-struct cmdline_parser_params
-{
-  int override; /**< @brief whether to override possibly already present options (default 0) */
-  int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
-  int check_required; /**< @brief whether to check that all required options were provided (default 1) */
-  int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
-  int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
-} ;
+struct cmdline_parser_params {
+    int override; /**< @brief whether to override possibly already present options (default 0) */
+    int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
+    int check_required; /**< @brief whether to check that all required options were provided (default 1) */
+    int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
+    int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
+};
 
 /** @brief the purpose string of the program */
 extern const char *gengetopt_args_info_purpose;
@@ -122,8 +120,8 @@ extern const char *gengetopt_args_info_help[];
  * @param args_info the structure where option information will be stored
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info);
+int cmdline_parser(int argc, char *const *argv,
+                   struct gengetopt_args_info *args_info);
 
 /**
  * The command line parser (version with additional parameters - deprecated)
@@ -136,9 +134,9 @@ int cmdline_parser (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  * @deprecated use cmdline_parser_ext() instead
  */
-int cmdline_parser2 (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  int override, int initialize, int check_required);
+int cmdline_parser2(int argc, char *const *argv,
+                    struct gengetopt_args_info *args_info,
+                    int override, int initialize, int check_required);
 
 /**
  * The command line parser (version with additional parameters)
@@ -148,9 +146,9 @@ int cmdline_parser2 (int argc, char * const *argv,
  * @param params additional parameters for the parser
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser_ext (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  struct cmdline_parser_params *params);
+int cmdline_parser_ext(int argc, char *const *argv,
+                       struct gengetopt_args_info *args_info,
+                       struct cmdline_parser_params *params);
 
 /**
  * Save the contents of the option struct into an already open FILE stream.
@@ -159,7 +157,7 @@ int cmdline_parser_ext (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_dump(FILE *outfile,
-  struct gengetopt_args_info *args_info);
+                        struct gengetopt_args_info *args_info);
 
 /**
  * Save the contents of the option struct into a (text) file.
@@ -169,12 +167,13 @@ int cmdline_parser_dump(FILE *outfile,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_file_save(const char *filename,
-  struct gengetopt_args_info *args_info);
+                             struct gengetopt_args_info *args_info);
 
 /**
  * Print the help
  */
 void cmdline_parser_print_help(void);
+
 /**
  * Print the version
  */
@@ -199,13 +198,14 @@ struct cmdline_parser_params *cmdline_parser_params_create(void);
  * (also set default values for options that have a default)
  * @param args_info the structure to initialize
  */
-void cmdline_parser_init (struct gengetopt_args_info *args_info);
+void cmdline_parser_init(struct gengetopt_args_info *args_info);
+
 /**
  * Deallocates the string fields of the gengetopt_args_info structure
  * (but does not deallocate the structure itself)
  * @param args_info the structure to deallocate
  */
-void cmdline_parser_free (struct gengetopt_args_info *args_info);
+void cmdline_parser_free(struct gengetopt_args_info *args_info);
 
 /**
  * Checks that all the required options were specified
@@ -214,8 +214,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  *   possible errors
  * @return
  */
-int cmdline_parser_required (struct gengetopt_args_info *args_info,
-  const char *prog_name);
+int cmdline_parser_required(struct gengetopt_args_info *args_info,
+                            const char *prog_name);
 
 
 #ifdef __cplusplus

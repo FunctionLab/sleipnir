@@ -17,6 +17,8 @@ option	"context"		e	"Context ID to process"
 							int	yes
 option	"genes"			g	"Gene ID to name mapping"
 							string	typestr="filename"
+option	"is_nibble"		N	"Define whether the database is nibble type."
+							int	default="1"
 
 section "Bayes nets"
 option	"networks"		n	"Bayes net directory"

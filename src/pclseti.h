@@ -28,23 +28,24 @@
 
 namespace Sleipnir {
 
-class CPCL;
+    class CPCL;
 
-class CPCLSetImpl {
-protected:
-	typedef std::map<string,size_t>	TMapStrI;
+    class CPCLSetImpl {
+    protected:
+        typedef std::map <string, size_t> TMapStrI;
 
-	CPCLSetImpl( );
-	~CPCLSetImpl( );
+        CPCLSetImpl();
 
-	void Reset( );
+        virtual ~CPCLSetImpl();
 
-	CPCL*					m_aPCLs;
-	size_t					m_iPCLs;
-	TMapStrI				m_mapGenes;
-	std::vector<string>		m_vecstrGenes;
-	CFullMatrix<size_t>		m_Genes;
-};
+        void Reset();
+
+        CPCL *m_aPCLs;
+        size_t m_iPCLs;
+        TMapStrI m_mapGenes;
+        std::vector <string> m_vecstrGenes;
+        CFullMatrix<size_t> m_Genes;
+    };
 
 }
 
