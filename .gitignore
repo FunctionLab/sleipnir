@@ -1,0 +1,13 @@
+.ccls
+.ccls-cache/**
+.DS_STORE
+cmake-build-debug/**
+.deps
+*.Po
+*.cache
+*.in
+*.log
+*.o
+Makefile
+Makefile.*
+
