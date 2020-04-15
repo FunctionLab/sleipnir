@@ -12,3 +12,5 @@ Sleipnir web site or built using Doxygen.
 For installation instructions, see the file named INSTALL.
 
 The file README.developer has notes for Sleipnir developers.
+
+Sleipnir also includes the code to compile SEEK (the human coexpression search engine). See the link http://seek.princeton.edu/installation.jsp for information on its installation.

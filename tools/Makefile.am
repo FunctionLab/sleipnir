@@ -1,6 +1,6 @@
 if WITH_TOOLS
   TOOLS_SUBDIRS = \
-          Answerer \
+	  Answerer \
 	  Cliquer \
 	  Clinician \
 	  Clusterer \
@@ -8,13 +8,16 @@ if WITH_TOOLS
 	  COALESCE \
 	  Combiner \
 	  NetworkCombiner \
+	  SparseNetCombiner \
 	  DChecker \
 	  Dat2Dab \
 	  Dat2Graph \
+	  Dat2PCL \
 	  Data2Bnt \
 	  Data2Features \
 	  Data2Sql \
 	  DataDumper \
+	  DataServer \
 	  Distancer \
 	  Explainer \
 	  Filterer \
@@ -28,6 +31,7 @@ if WITH_TOOLS
 	  Matcher \
 	  MIer \
 	  MIed \
+	  NetworkRanker \
 	  Normalizer \
 	  Orthologer \
 	  Overlapper \
@@ -38,10 +42,11 @@ if WITH_TOOLS
 	  SMRF \
 	  SVDer \
 	  Synthesizer \
+	  NetMiner \
 	  Txt2Bin
 if WITH_SMILE_TOOLS
     SMILE_TOOLS_SUBDIRS = \
-          BNConverter \
+	  BNConverter \
 	  BNCreator \
 	  SpeciesConnector \
 	  BNEvaluator \
@@ -54,19 +59,51 @@ if WITH_SMILE_TOOLS
 	  Contexter \
 	  Counter \
 	  Data2DB \
+      DBCombiner \
 	  DSLConverter \
 	  Dab2Dad \
 	  Edges2Posteriors \
 	  MEFIT
+if WITH_GSL_TOOLS
+    GSL_TOOLS_SUBDIRS = \
+	  SeekTest \
+      SeekPrep \
+      SeekReader \
+      SeekMiner \
+	  SeekServer \
+	  SeekEvaluator \
+	  SeekGeneRecommender \
+	  SeekAggregatedDataset \
+      SeekPValue \
+      SeekIterative \
+	  PCLServer
+endif
+
 if WITH_BOOST_TOOLS
       BOOST_TOOLS_SUBDIRS = BNServer
 endif
 endif
 if WITH_SVM_TOOLS
     SVM_TOOLS_SUBDIRS = \
-          Data2Svm \
+	  Data2Svm \
 	  SVMer \
-	  SVMperfer
+	  SVMperfing \
+	  SVMperfer \
+	SVMfe
+endif
+if WITH_SVM_MULTICLASS_TOOLS
+    SVM_MULTICLASS_SUBDIRS = \
+		SVMmulticlass
+endif
+
+if WITH_SVM_HIERARCHY_TOOLS
+    SVM_HIERARCHY_SUBDIRS = \
+		SVMhierarchy
+endif
+
+if WITH_LIBSVM_TOOLS
+    LIBSVM_TOOLS_SUBDIRS = \
+	  LibSVMer
 endif
 if WITH_VW_TOOLS
     VW_TOOLS_SUBDIRS = VWer
@@ -76,4 +113,4 @@ if WITH_READLINE_TOOLS
 endif
 endif
 
-SUBDIRS = $(TOOLS_SUBDIRS) $(SMILE_TOOLS_SUBDIRS) $(BOOST_TOOLS_SUBDIRS) $(SVM_TOOLS_SUBDIRS) $(READLINE_TOOLS_SUBDIRS) $(VW_TOOLS_SUBDIRS)
+SUBDIRS = $(TOOLS_SUBDIRS) $(SMILE_TOOLS_SUBDIRS) $(BOOST_TOOLS_SUBDIRS) $(SVM_TOOLS_SUBDIRS) $(READLINE_TOOLS_SUBDIRS) $(VW_TOOLS_SUBDIRS) $(GSL_TOOLS_SUBDIRS) $(LIBSVM_TOOLS_SUBDIRS) $(SVM_MULTICLASS_TOOLS_SUBDIRS) $(SVM_HIERARCHY_TOOLS_SUBDIRS)
