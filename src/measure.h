@@ -49,97 +49,100 @@ namespace Sleipnir {
  * management take a constructor argument indicating whether they are responsible for freeing memory
  * references.
  */
-class IMeasure {
-public:
-	/*!
-	 * \brief
-	 * Indicates how the result of a measure should be centered.
-	 */
-	enum EMap {
-		/*!
-		 * \brief
-		 * Perform no centering and return the original measure result.
-		 */
-		EMapNone	= 0,
-		/*!
-		 * \brief
-		 * Center the measure result by scaling to the range [0, 1].
-		 */
-		EMapCenter	= EMapNone + 1,
-		/*!
-		 * \brief
-		 * Return the absolute value of the original measure result.
-		 */
-		EMapAbs		= EMapCenter + 1
-	};
+    class IMeasure {
+    public:
+        /*!
+         * \brief
+         * Indicates how the result of a measure should be centered.
+         */
+        enum EMap {
+            /*!
+             * \brief
+             * Perform no centering and return the original measure result.
+             */
+                    EMapNone = 0,
+            /*!
+             * \brief
+             * Center the measure result by scaling to the range [0, 1].
+             */
+                    EMapCenter = EMapNone + 1,
+            /*!
+             * \brief
+             * Return the absolute value of the original measure result.
+             */
+                    EMapAbs = EMapCenter + 1
+        };
 
-	virtual ~IMeasure( ) { };
+        virtual ~IMeasure() {};
 
-	/*!
-	 * \brief
-	 * Return the human-readable unique identifier of the measure type.
-	 *
-	 * \returns
-	 * The string identifier of the measure type.
-	 */
-	virtual const char* GetName( ) const = 0;
-	/*!
-	 * \brief
-	 * Return true if the measure requires rank-based integer inputs.
-	 *
-	 * \returns
-	 * True if the measure requires rank-based input vectors.
-	 *
-	 * \remarks
-	 * The input vectors for rank measures should contain only floating point values with no fractional
-	 * part; behavior is undefined if they don't.
-	 */
-	virtual bool IsRank( ) const = 0;
-	/*!
-	 * \brief
-	 * Create a copy of the current measure object.
-	 *
-	 * \returns
-	 * Copy of the current measure object.
-	 *
-	 * \remarks
-	 * Caller is, of course, responsible for destroying the created object.
-	 */
-	virtual IMeasure* Clone( ) const = 0;
-	/*!
-	 * \brief
-	 * Calculate the measure between two given vectors with optional element weights.
-	 *
-	 * \param adX
-	 * First array of values.
-	 *
-	 * \param iN
-	 * Length of first array.
-	 *
-	 * \param adY
-	 * Second array of values.
-	 *
-	 * \param iM
-	 * Length of second array.
-	 *
-	 * \param eMap
-	 * Way in which returned value should be centered (implementation-specific).
-	 *
-	 * \param adWX
-	 * If non-null, weights of elements in the first array.
-	 *
-	 * \param adWY
-	 * If non-null, weights of elements in the second array.
-	 *
-	 * \returns
-	 * Measure calculated between the two input vectors and, optionally, weights.
-	 *
-	 * \remarks
-	 * Pretty much every implementation will puke if given bad input; bounds checking etc. is minimal.
-	 */
-	virtual double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const = 0;
-};
+        /*!
+         * \brief
+         * Return the human-readable unique identifier of the measure type.
+         *
+         * \returns
+         * The string identifier of the measure type.
+         */
+        virtual const char *GetName() const = 0;
+
+        /*!
+         * \brief
+         * Return true if the measure requires rank-based integer inputs.
+         *
+         * \returns
+         * True if the measure requires rank-based input vectors.
+         *
+         * \remarks
+         * The input vectors for rank measures should contain only floating point values with no fractional
+         * part; behavior is undefined if they don't.
+         */
+        virtual bool IsRank() const = 0;
+
+        /*!
+         * \brief
+         * Create a copy of the current measure object.
+         *
+         * \returns
+         * Copy of the current measure object.
+         *
+         * \remarks
+         * Caller is, of course, responsible for destroying the created object.
+         */
+        virtual IMeasure *Clone() const = 0;
+
+        /*!
+         * \brief
+         * Calculate the measure between two given vectors with optional element weights.
+         *
+         * \param adX
+         * First array of values.
+         *
+         * \param iN
+         * Length of first array.
+         *
+         * \param adY
+         * Second array of values.
+         *
+         * \param iM
+         * Length of second array.
+         *
+         * \param eMap
+         * Way in which returned value should be centered (implementation-specific).
+         *
+         * \param adWX
+         * If non-null, weights of elements in the first array.
+         *
+         * \param adWY
+         * If non-null, weights of elements in the second array.
+         *
+         * \returns
+         * Measure calculated between the two input vectors and, optionally, weights.
+         *
+         * \remarks
+         * Pretty much every implementation will puke if given bad input; bounds checking etc. is minimal.
+         */
+        virtual double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                               const float *adWX = NULL, const float *adWY = NULL) const = 0;
+    };
 
 }
 
@@ -159,47 +162,51 @@ namespace Sleipnir {
  * \see
  * CMeasureNegate | CMeasureInvert
  */
-class CMeasureSigmoid : CMeasureSigmoidImpl, public IMeasure {
-public:
-	/*!
-	 * \brief
-	 * Construct a new sigmoid measure wrapping the given underlying measure with the specified multiplier.
-	 *
-	 * \param pMeasure
-	 * Measure whose result should be sigmoid transformed.
-	 *
-	 * \param fMemory
-	 * If true, the new sigmoid measure is responsible for releasing the underlying measure's memory.
-	 *
-	 * \param dMultiplier
-	 * Multiplier used when calculating the sigmoid function.
-	 *
-	 * \remarks
-	 * If fMemory is true, the sigmoid measure will delete pMeasure when it is destroyed; otherwise, it will
-	 * only hold a reference.
-	 */
-	CMeasureSigmoid( const IMeasure* pMeasure, bool fMemory, float dMultiplier ) :
-		CMeasureSigmoidImpl( pMeasure, fMemory, dMultiplier ) { }
+    class CMeasureSigmoid : CMeasureSigmoidImpl, public IMeasure {
+    public:
+        /*!
+         * \brief
+         * Construct a new sigmoid measure wrapping the given underlying measure with the specified multiplier.
+         *
+         * \param pMeasure
+         * Measure whose result should be sigmoid transformed.
+         *
+         * \param fMemory
+         * If true, the new sigmoid measure is responsible for releasing the underlying measure's memory.
+         *
+         * \param dMultiplier
+         * Multiplier used when calculating the sigmoid function.
+         *
+         * \remarks
+         * If fMemory is true, the sigmoid measure will delete pMeasure when it is destroyed; otherwise, it will
+         * only hold a reference.
+         */
+        CMeasureSigmoid(const IMeasure *pMeasure, bool fMemory, float dMultiplier) :
+                CMeasureSigmoidImpl(pMeasure, fMemory, dMultiplier) {}
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return m_pMeasure->GetName( ); }
+            return m_pMeasure->GetName();
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return m_pMeasure->IsRank( ); }
+            return m_pMeasure->IsRank();
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureSigmoid( m_pMeasure->Clone( ), true, m_dMult ); }
+            return new CMeasureSigmoid(m_pMeasure->Clone(), true, m_dMult);
+        }
 
-	double Measure( const float* adX, size_t iM, const float* adY, size_t iN, EMap eMap, const float* adWX,
-		const float* adWY ) const {
-		double	dRet;
+        double Measure(const float *adX, size_t iM, const float *adY, size_t iN, EMap eMap, const float *adWX,
+                       const float *adWY) const {
+            double dRet;
 
-		dRet = m_pMeasure->Measure( adX, iM, adY, iN, eMap, adWX, adWY );
-		return ( 2 * ( 1 - ( 1 / ( 1 + exp( -dRet * m_dMult ) ) ) ) ); }
-};
+            dRet = m_pMeasure->Measure(adX, iM, adY, iN, eMap, adWX, adWY);
+            return (2 * (1 - (1 / (1 + exp(-dRet * m_dMult)))));
+        }
+    };
 
 /*!
  * \brief
@@ -208,41 +215,45 @@ public:
  * \see
  * CMeasureSigmoid | CMeasureInvert
  */
-class CMeasureNegate : CMeasureImpl, public IMeasure {
-public:
-	/*!
-	 * \brief
-	 * Construct a new negation measure wrapping the given underlying measure.
-	 *
-	 * \param pMeasure
-	 * Measure whose result should be negated.
-	 *
-	 * \param fMemory
-	 * If true, the new negation measure is responsible for releasing the underlying measure's memory.
-	 *
-	 * \remarks
-	 * If fMemory is true, the negation measure will delete pMeasure when it is destroyed; otherwise, it will
-	 * only hold a reference.
-	 */
-	CMeasureNegate( const IMeasure* pMeasure, bool fMemory ) : CMeasureImpl( pMeasure, fMemory ) { }
+    class CMeasureNegate : CMeasureImpl, public IMeasure {
+    public:
+        /*!
+         * \brief
+         * Construct a new negation measure wrapping the given underlying measure.
+         *
+         * \param pMeasure
+         * Measure whose result should be negated.
+         *
+         * \param fMemory
+         * If true, the new negation measure is responsible for releasing the underlying measure's memory.
+         *
+         * \remarks
+         * If fMemory is true, the negation measure will delete pMeasure when it is destroyed; otherwise, it will
+         * only hold a reference.
+         */
+        CMeasureNegate(const IMeasure *pMeasure, bool fMemory) : CMeasureImpl(pMeasure, fMemory) {}
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return m_pMeasure->GetName( ); }
+            return m_pMeasure->GetName();
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return m_pMeasure->IsRank( ); }
+            return m_pMeasure->IsRank();
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureNegate( m_pMeasure->Clone( ), true ); }
+            return new CMeasureNegate(m_pMeasure->Clone(), true);
+        }
 
-	double Measure( const float* adX, size_t iM, const float* adY, size_t iN, EMap eMap, const float* adWX,
-		const float* adWY ) const {
+        double Measure(const float *adX, size_t iM, const float *adY, size_t iN, EMap eMap, const float *adWX,
+                       const float *adWY) const {
 
-		return -m_pMeasure->Measure( adX, iM, adY, iN, eMap, adWX, adWY ); }
-};
+            return -m_pMeasure->Measure(adX, iM, adY, iN, eMap, adWX, adWY);
+        }
+    };
 
 /*!
  * \brief
@@ -251,43 +262,47 @@ public:
  * \see
  * CMeasureSigmoid | CMeasureNegate
  */
-class CMeasureInvert : CMeasureImpl, public IMeasure {
-public:
-	/*!
-	 * \brief
-	 * Construct a new inversion measure wrapping the given underlying measure.
-	 *
-	 * \param pMeasure
-	 * Measure whose result should be inverted.
-	 *
-	 * \param fMemory
-	 * If true, the new inversion measure is responsible for releasing the underlying measure's memory.
-	 *
-	 * \remarks
-	 * If fMemory is true, the inversion measure will delete pMeasure when it is destroyed; otherwise, it will
-	 * only hold a reference.
-	 */
-	CMeasureInvert( const IMeasure* pMeasure, bool fMemory ) : CMeasureImpl( pMeasure, fMemory ) { }
+    class CMeasureInvert : CMeasureImpl, public IMeasure {
+    public:
+        /*!
+         * \brief
+         * Construct a new inversion measure wrapping the given underlying measure.
+         *
+         * \param pMeasure
+         * Measure whose result should be inverted.
+         *
+         * \param fMemory
+         * If true, the new inversion measure is responsible for releasing the underlying measure's memory.
+         *
+         * \remarks
+         * If fMemory is true, the inversion measure will delete pMeasure when it is destroyed; otherwise, it will
+         * only hold a reference.
+         */
+        CMeasureInvert(const IMeasure *pMeasure, bool fMemory) : CMeasureImpl(pMeasure, fMemory) {}
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return m_pMeasure->GetName( ); }
+            return m_pMeasure->GetName();
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return m_pMeasure->IsRank( ); }
+            return m_pMeasure->IsRank();
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureInvert( m_pMeasure->Clone( ), true ); }
+            return new CMeasureInvert(m_pMeasure->Clone(), true);
+        }
 
-	double Measure( const float* adX, size_t iM, const float* adY, size_t iN, EMap eMap, const float* adWX,
-		const float* adWY ) const {
-		double	d;
+        double Measure(const float *adX, size_t iM, const float *adY, size_t iN, EMap eMap, const float *adWX,
+                       const float *adWY) const {
+            double d;
 
-		d = m_pMeasure->Measure( adX, iM, adY, iN, eMap, adWX, adWY );
-		return ( d ? ( 1 / d ) : DBL_MAX ); }
-};
+            d = m_pMeasure->Measure(adX, iM, adY, iN, eMap, adWX, adWY);
+            return (d ? (1 / d) : DBL_MAX);
+        }
+    };
 
 /*!
  * \brief
@@ -304,39 +319,42 @@ public:
  * \endcode
  * This is useful for dealing with periodic signals in data (e.g. cell cycle microarrays).
  */
-class CMeasureAutocorrelate : CMeasureImpl, public IMeasure {
-public:
-	/*!
-	 * \brief
-	 * Construct a new autocorrelation measure wrapping the given underlying measure.
-	 *
-	 * \param pMeasure
-	 * Measure whose result should be autocorrelated.
-	 *
-	 * \param fMemory
-	 * If true, the new autocorrelation measure is responsible for releasing the underlying measure's memory.
-	 *
-	 * \remarks
-	 * If fMemory is true, the autocorrelation measure will delete pMeasure when it is destroyed; otherwise,
-	 * it will only hold a reference.
-	 */
-	CMeasureAutocorrelate( const IMeasure* pMeasure, bool fMemory ) : CMeasureImpl( pMeasure, fMemory ) { }
+    class CMeasureAutocorrelate : CMeasureImpl, public IMeasure {
+    public:
+        /*!
+         * \brief
+         * Construct a new autocorrelation measure wrapping the given underlying measure.
+         *
+         * \param pMeasure
+         * Measure whose result should be autocorrelated.
+         *
+         * \param fMemory
+         * If true, the new autocorrelation measure is responsible for releasing the underlying measure's memory.
+         *
+         * \remarks
+         * If fMemory is true, the autocorrelation measure will delete pMeasure when it is destroyed; otherwise,
+         * it will only hold a reference.
+         */
+        CMeasureAutocorrelate(const IMeasure *pMeasure, bool fMemory) : CMeasureImpl(pMeasure, fMemory) {}
 
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return m_pMeasure->GetName( ); }
+            return m_pMeasure->GetName();
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return m_pMeasure->IsRank( ); }
+            return m_pMeasure->IsRank();
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureAutocorrelate( m_pMeasure->Clone( ), true ); }
-};
+            return new CMeasureAutocorrelate(m_pMeasure->Clone(), true);
+        }
+    };
 
 /*!
  * \brief
@@ -345,42 +363,48 @@ public:
  * Calculates Euclidean distance between two vectors; if weights are given, each pairwise product is also
  * multiplied by the appropriate elements' weights.  Centering is ignored.
  */
-class CMeasureEuclidean : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureEuclidean : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "euclidean"; }
+            return "euclidean";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureEuclidean( ); }
-};
+            return new CMeasureEuclidean();
+        }
+    };
 
 
-class CMeasureEuclideanScaled : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureEuclideanScaled : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "euclid_scaled"; }
+            return "euclid_scaled";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureEuclidean( ); }
-};
+            return new CMeasureEuclidean();
+        }
+    };
 
 
 /*!
@@ -393,28 +417,32 @@ public:
  * \see
  * CMeasureQuickPearson | CMeasurePearNorm
  */
-class CMeasurePearson : public IMeasure {
-public:
-	static double Pearson( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap,
-		const float* adWX = NULL, const float* adWY = NULL, size_t* piCount = NULL );
+    class CMeasurePearson : public IMeasure {
+    public:
+        static double Pearson(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap,
+                              const float *adWX = NULL, const float *adWY = NULL, size_t *piCount = NULL);
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "pearson"; }
+            return "pearson";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasurePearson( ); }
+            return new CMeasurePearson();
+        }
 
-	double Measure( const float* adX, size_t iM, const float* adY, size_t iN, EMap eMap, const float* adWX,
-		const float* adWY ) const {
+        double Measure(const float *adX, size_t iM, const float *adY, size_t iN, EMap eMap, const float *adWX,
+                       const float *adWY) const {
 
-		return CMeasurePearson::Pearson( adX, iM, adY, iN, eMap, adWX, adWY ); }
-};
+            return CMeasurePearson::Pearson(adX, iM, adY, iN, eMap, adWX, adWY);
+        }
+    };
 
 /*!
  * \brief
@@ -426,23 +454,26 @@ public:
  * \see
  * CMeasurePearson
  */
-class CMeasureQuickPearson : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureQuickPearson : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "quickpear"; }
+            return "quickpear";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureQuickPearson( ); }
-};
+            return new CMeasureQuickPearson();
+        }
+    };
 
 /*!
  * \brief
@@ -451,24 +482,27 @@ public:
  * \remarks
  * See paper Lin Song, Peter Langfelder, Steve Horvath, BMC Bioinformatics, 2012
  */
-class CMeasureBicor : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureBicor : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "bicor"; }
+            return "bicor";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureBicor( ); }
+            return new CMeasureBicor();
+        }
 
-};
+    };
 
 /*!
  * \brief
@@ -479,83 +513,92 @@ public:
  * Low p-value indicates low similarity, since the vectors are probably different; the KS-test thus operates
  * as a reasonable similarity measure.
  */
-class CMeasureKolmogorovSmirnov : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureKolmogorovSmirnov : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "kolm-smir"; }
+            return "kolm-smir";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureKolmogorovSmirnov( ); }
-};
+            return new CMeasureKolmogorovSmirnov();
+        }
+    };
 
 /*!
  * \brief
  * Calculates the Kendall's Tau correlation between two vectors (centering as per EMap, weights used in
  * pairwise products).
  */
-class CMeasureKendallsTau : CMeasureKendallsTauImpl, public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureKendallsTau : CMeasureKendallsTauImpl, public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "kendalls"; }
+            return "kendalls";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return true; }
+            return true;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureKendallsTau( ); }
-};
+            return new CMeasureKendallsTau();
+        }
+    };
 
 /*!
  * \brief
  * Calculates Spearman's rank correlation between two vectors (centering as per EMap, weights ignored).
  */
-class CMeasureSpearman : CMeasureSpearmanImpl, public IMeasure {
-public:
-	/*!
-	 * \brief
-	 * Construct a new Spearman correlation measure with the indicated ranking behavior.
-	 *
-	 * \param fTransformed
-	 * If true, all inputs are assumed to be pre-rank transformed; otherwise, rank-transforming is performed
-	 * for each Measure call.
-	 *
-	 * \remarks
-	 * If you're going to measure all pairwise combinations of some set (e.g. turn a PCL into a CDat), it is
-	 * much more efficient to pre-transform all input vectors and construct a Spearman measure with
-	 * fTransformed set to true.  This avoids repeatedly re-ranking each vector.
-	 */
-	CMeasureSpearman( bool fTransformed ) : CMeasureSpearmanImpl( fTransformed, HUGE_VAL, HUGE_VAL ) { }
+    class CMeasureSpearman : CMeasureSpearmanImpl, public IMeasure {
+    public:
+        /*!
+         * \brief
+         * Construct a new Spearman correlation measure with the indicated ranking behavior.
+         *
+         * \param fTransformed
+         * If true, all inputs are assumed to be pre-rank transformed; otherwise, rank-transforming is performed
+         * for each Measure call.
+         *
+         * \remarks
+         * If you're going to measure all pairwise combinations of some set (e.g. turn a PCL into a CDat), it is
+         * much more efficient to pre-transform all input vectors and construct a Spearman measure with
+         * fTransformed set to true.  This avoids repeatedly re-ranking each vector.
+         */
+        CMeasureSpearman(bool fTransformed) : CMeasureSpearmanImpl(fTransformed, HUGE_VAL, HUGE_VAL) {}
 
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "spearman"; }
+            return "spearman";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return true; }
+            return true;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureSpearman( m_fTransformed ); }
-};
+            return new CMeasureSpearman(m_fTransformed);
+        }
+    };
 
 /*!
  * \brief
@@ -573,46 +616,49 @@ public:
  * \see
  * CMeasurePearson
  */
-class CMeasurePearNorm : CMeasurePearNormImpl, public IMeasure {
-public:
-	/*!
-	 * \brief
-	 * Construct a measure which will calculate Fisher's z-transformed Pearson correlations with no z-scoring.
-	 */
-	CMeasurePearNorm( ) : CMeasurePearNormImpl( HUGE_VAL, HUGE_VAL ) { }
+    class CMeasurePearNorm : CMeasurePearNormImpl, public IMeasure {
+    public:
+        /*!
+         * \brief
+         * Construct a measure which will calculate Fisher's z-transformed Pearson correlations with no z-scoring.
+         */
+        CMeasurePearNorm() : CMeasurePearNormImpl(HUGE_VAL, HUGE_VAL) {}
 
-	/*!
-	 * \brief
-	 * Construct a measure which will calculate z-scored Fisher's z-transformed Pearson correlations.
-	 *
-	 * \param dAverage
-	 * Average used in z-scoring.
-	 *
-	 * \param dStdev
-	 * Standard deviation used in z-scoring.
-	 *
-	 * After z-transformation, the z-score is calculated as:
-	 * \code
-	 * (dP - dAverage) / dStdev
-	 * \endcode
-	 */
-	CMeasurePearNorm( double dAverage, double dStdev ) : CMeasurePearNormImpl( dAverage, dStdev ) { }
+        /*!
+         * \brief
+         * Construct a measure which will calculate z-scored Fisher's z-transformed Pearson correlations.
+         *
+         * \param dAverage
+         * Average used in z-scoring.
+         *
+         * \param dStdev
+         * Standard deviation used in z-scoring.
+         *
+         * After z-transformation, the z-score is calculated as:
+         * \code
+         * (dP - dAverage) / dStdev
+         * \endcode
+         */
+        CMeasurePearNorm(double dAverage, double dStdev) : CMeasurePearNormImpl(dAverage, dStdev) {}
 
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "pearnorm"; }
+            return "pearnorm";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasurePearNorm( m_dAverage, m_dStdDev ); }
-};
+            return new CMeasurePearNorm(m_dAverage, m_dStdDev);
+        }
+    };
 
 /*!
  * \brief
@@ -623,68 +669,77 @@ public:
  * nonzero entries, the number of nonzero entries in each vector, and the number of positions in which
  * both vectors are nonzero.
  */
-class CMeasureHypergeometric : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureHypergeometric : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "hypergeom"; }
+            return "hypergeom";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureHypergeometric( ); }
-};
+            return new CMeasureHypergeometric();
+        }
+    };
 
 /*!
  * \brief
  * Calculates the inner product of two vectors (centering ignored, weights used in pairwise products).
  */
-class CMeasureInnerProduct : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureInnerProduct : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "innerprod"; }
+            return "innerprod";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureInnerProduct( ); }
-};
+            return new CMeasureInnerProduct();
+        }
+    };
 
 /*!
  * \brief
  * Calculates the number of positions in which both vectors have nonzero elements (centering and weights
  * ignored).
  */
-class CMeasureBinaryInnerProduct : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureBinaryInnerProduct : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "bininnerprod"; }
+            return "bininnerprod";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureBinaryInnerProduct( ); }
-};
+            return new CMeasureBinaryInnerProduct();
+        }
+    };
 
 /*!
  * \brief
@@ -694,23 +749,26 @@ public:
  * Results will be pretty meaningless if the vectors contain non-integral values or are particularly
  * short.
  */
-class CMeasureMutualInformation : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureMutualInformation : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "mutinfo"; }
+            return "mutinfo";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureMutualInformation( ); }
-};
+            return new CMeasureMutualInformation();
+        }
+    };
 
 /*!
  * \brief
@@ -723,23 +781,26 @@ public:
  * This is useful for detecting whether two vectors vary in approximately the same way (as per Pearson
  * correlation) and at approximately the same values (as per Euclidean distance).
  */
-class CMeasureRelativeAUC : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureRelativeAUC : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "relauc"; }
+            return "relauc";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureRelativeAUC( ); }
-};
+            return new CMeasureRelativeAUC();
+        }
+    };
 
 /*!
  * \brief
@@ -749,45 +810,51 @@ public:
  * \see
  * CMeasurePearson
  */
-class CMeasurePearsonSignificance : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasurePearsonSignificance : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "pearsig"; }
+            return "pearsig";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasurePearsonSignificance( ); }
-};
+            return new CMeasurePearsonSignificance();
+        }
+    };
 
 /*!
  * \brief
  * Calculates the continuous of distance correlation coefficient between two vectors, unweighted only!
  */
-class CMeasureDistanceCorrelation : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureDistanceCorrelation : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "dcor"; }
+            return "dcor";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureDistanceCorrelation( ); }
-};
+            return new CMeasureDistanceCorrelation();
+        }
+    };
 
 
 /*!
@@ -795,51 +862,57 @@ public:
  * Calculates the continuous of distance correlation coefficient between two vectors, unweighted only!
  * Original version of distance correlation is unsigned. This signed version takes the sign from pearson correlation.
  */
-class CMeasureSignedDistanceCorrelation : public IMeasure {
-public:
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapNone,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+    class CMeasureSignedDistanceCorrelation : public IMeasure {
+    public:
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapNone,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "sdcor"; }
+            return "sdcor";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureSignedDistanceCorrelation( ); }
-};
+            return new CMeasureSignedDistanceCorrelation();
+        }
+    };
 
 /*!
  * \brief
  * Calculates the continuous of Dice coefficient between two vectors, dot(x, y) /
  * ( dot(x, y) + a*||x-y|| + (1-a)*||y-x|| ).
  */
-class CMeasureDice : public IMeasure {
-public:
-	CMeasureDice( float dAlpha = 0.5 ) : m_dAlpha(dAlpha) { }
+    class CMeasureDice : public IMeasure {
+    public:
+        CMeasureDice(float dAlpha = 0.5) : m_dAlpha(dAlpha) {}
 
-	double Measure( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap = EMapCenter,
-		const float* adWX = NULL, const float* adWY = NULL ) const;
+        double Measure(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap = EMapCenter,
+                       const float *adWX = NULL, const float *adWY = NULL) const;
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "dice"; }
+            return "dice";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureDice( ); }
+            return new CMeasureDice();
+        }
 
-private:
-	float	m_dAlpha;
-};
+    private:
+        float m_dAlpha;
+    };
 
 /*!
  * \brief
@@ -850,28 +923,32 @@ private:
  *
  * derived from Pearson
  */
-class CMeasureCosine : public IMeasure {
-public:
-	static double Cosine( const float* adX, size_t iN, const float* adY, size_t iM, EMap eMap,
-		const float* adWX = NULL, const float* adWY = NULL, size_t* piCount = NULL );
+    class CMeasureCosine : public IMeasure {
+    public:
+        static double Cosine(const float *adX, size_t iN, const float *adY, size_t iM, EMap eMap,
+                             const float *adWX = NULL, const float *adWY = NULL, size_t *piCount = NULL);
 
-	const char* GetName( ) const {
+        const char *GetName() const {
 
-		return "cosine"; }
+            return "cosine";
+        }
 
-	bool IsRank( ) const {
+        bool IsRank() const {
 
-		return false; }
+            return false;
+        }
 
-	IMeasure* Clone( ) const {
+        IMeasure *Clone() const {
 
-		return new CMeasureCosine( ); }
+            return new CMeasureCosine();
+        }
 
-	double Measure( const float* adX, size_t iM, const float* adY, size_t iN, EMap eMap, const float* adWX,
-		const float* adWY ) const {
+        double Measure(const float *adX, size_t iM, const float *adY, size_t iN, EMap eMap, const float *adWX,
+                       const float *adWY) const {
 
-		return CMeasureCosine::Cosine( adX, iM, adY, iN, eMap, adWX, adWY ); }
-};
+            return CMeasureCosine::Cosine(adX, iM, adY, iN, eMap, adWX, adWY);
+        }
+    };
 
 }
 

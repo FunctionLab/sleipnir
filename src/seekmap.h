@@ -71,124 +71,124 @@ namespace Sleipnir {
  * These arrays are automatically updated as genes are added to the map.
  *
  */
-class CSeekIntIntMap{
-public:
-	/*!
-	 * \brief Constructor
-	 * \param iSize The number of genes in the gene-database
-	 */
-	CSeekIntIntMap(const utype&);
+    class CSeekIntIntMap {
+    public:
+        /*!
+         * \brief Constructor
+         * \param iSize The number of genes in the gene-database
+         */
+        CSeekIntIntMap(const utype &);
 
-	/*!
-	 * \brief Constructor
-	 * \param cP The gene presence vector (char type)
-	 * \param bReverse When creating the map, whether or not to follow the reverse logic.
-	 * (eg 1 means absent, 0 means present)
-	 * \remark
-	 * If \c bReverse is true, then this map captures only the absent genes in the dataset.
-	 * By default, \c bReverse is false.
-	 */
-	CSeekIntIntMap(const vector<char>&, const bool=false);
+        /*!
+         * \brief Constructor
+         * \param cP The gene presence vector (char type)
+         * \param bReverse When creating the map, whether or not to follow the reverse logic.
+         * (eg 1 means absent, 0 means present)
+         * \remark
+         * If \c bReverse is true, then this map captures only the absent genes in the dataset.
+         * By default, \c bReverse is false.
+         */
+        CSeekIntIntMap(const vector<char> &, const bool= false);
 
-	/*!
-	 * \brief Constructor
-	 * \param cP The gene presence array (char* type)
-	 * \param iSize The size of the gene-presence array
-	 * \param bReverse When creating the map, whether or not to follow the reverse logic.
-	 * (eg 1 means absent, 0 means present)
-	 * \remark
-	 * If \c bReverse is true, then this map captures only the absent genes in the dataset.
-	 * By default, \c bReverse is false.
-	 */
-	CSeekIntIntMap(const char*, const utype &, const bool=false);
+        /*!
+         * \brief Constructor
+         * \param cP The gene presence array (char* type)
+         * \param iSize The size of the gene-presence array
+         * \param bReverse When creating the map, whether or not to follow the reverse logic.
+         * (eg 1 means absent, 0 means present)
+         * \remark
+         * If \c bReverse is true, then this map captures only the absent genes in the dataset.
+         * By default, \c bReverse is false.
+         */
+        CSeekIntIntMap(const char *, const utype &, const bool= false);
 
-	/*!
-	 * \brief Copy constructor
-	 * \param a A map instance
-	 */
-	CSeekIntIntMap(CSeekIntIntMap*);
+        /*!
+         * \brief Copy constructor
+         * \param a A map instance
+         */
+        CSeekIntIntMap(CSeekIntIntMap *);
 
-	/*!
-	 * \brief Helper function that is used by constructor
-	 * \param iSize The genome size
-	 */
-	void Initialize(const utype&);
+        /*!
+         * \brief Helper function that is used by constructor
+         * \param iSize The genome size
+         */
+        void Initialize(const utype &);
 
-	/*!
-	 * \brief Destructor
-	 */
-	~CSeekIntIntMap();
+        /*!
+         * \brief Destructor
+         */
+        ~CSeekIntIntMap();
 
-	/*!
-	 * \brief Get an element from the \a forward array
-	 * \param i Element index
-	 * \return The item at the index
-	 */
-	utype GetForward(const utype &) const;
+        /*!
+         * \brief Get an element from the \a forward array
+         * \param i Element index
+         * \return The item at the index
+         */
+        utype GetForward(const utype &) const;
 
-	/*!
-	 * \brief Get an element from the \a reverse array
-	 * \param i Element index
-	 * \return The item at the index
-	 */
-	utype GetReverse(const utype &) const;
+        /*!
+         * \brief Get an element from the \a reverse array
+         * \param i Element index
+         * \return The item at the index
+         */
+        utype GetReverse(const utype &) const;
 
-	/*!
-	 * \brief Get the entire \a forward array
-	 * \return The \a forward array
-	 */
-	const vector<utype>& GetAllForward() const;
+        /*!
+         * \brief Get the entire \a forward array
+         * \return The \a forward array
+         */
+        const vector <utype> &GetAllForward() const;
 
-	/*!
-	 * \brief Get the entire \a reverse array
-	 * \return The \a reverse array
-	 */
-	const vector<utype>& GetAllReverse() const;
+        /*!
+         * \brief Get the entire \a reverse array
+         * \return The \a reverse array
+         */
+        const vector <utype> &GetAllReverse() const;
 
-	/*!
-	 * \brief Add an available gene to the map
-	 * \param i The gene ID to be added
-	 * \remark The gene ID is a number between 0 and 21000 (the genome size). 
-	 * It is specified by the gene ID mapping file \c gene_map.txt.
-	 */
-	void Add(const utype&);
+        /*!
+         * \brief Add an available gene to the map
+         * \param i The gene ID to be added
+         * \remark The gene ID is a number between 0 and 21000 (the genome size).
+         * It is specified by the gene ID mapping file \c gene_map.txt.
+         */
+        void Add(const utype &);
 
-	/*!
-	 * \brief Clear the member arrays in the structure
-	 * 
-	 * This is used by the destructor.
-	 */
-	void Clear();
+        /*!
+         * \brief Clear the member arrays in the structure
+         *
+         * This is used by the destructor.
+         */
+        void Clear();
 
-	/*!
-	 * \brief Reset function
-	 */
-	void Reset(const vector<char>&, const bool=false);
+        /*!
+         * \brief Reset function
+         */
+        void Reset(const vector<char> &, const bool= false);
 
-	/*!
-	 * \brief Reset function
-	 */
-	void Reset(const char*, const bool=false);
+        /*!
+         * \brief Reset function
+         */
+        void Reset(const char *, const bool= false);
 
-	/*!
-	 * \brief Get the number of present genes that are currently contained in the map
-	 * \return The number of genes that are present
-	 */
-	utype GetNumSet() const;
+        /*!
+         * \brief Get the number of present genes that are currently contained in the map
+         * \return The number of genes that are present
+         */
+        utype GetNumSet() const;
 
-	/*!
-	 * \brief Get the genome size
-	 * \return The genome size
-	 */
-	utype GetSize() const;
+        /*!
+         * \brief Get the genome size
+         * \return The genome size
+         */
+        utype GetSize() const;
 
-private:
-	vector<utype> m_iF;
-	vector<utype> m_iR;
-	vector<utype>::iterator m_iterR;
-	utype m_iSize;
-	utype m_iNumSet;
-};
+    private:
+        vector <utype> m_iF;
+        vector <utype> m_iR;
+        vector<utype>::iterator m_iterR;
+        utype m_iSize;
+        utype m_iNumSet;
+    };
 
 /*!
  * \brief A string to integer mapping structure
@@ -201,65 +201,77 @@ private:
  *
  * \c Get(integer): returns the corresponding string
  */
-class CSeekStrIntMap{
-public:
-	/*!
-	 * \brief Constructor
-	 */
-	CSeekStrIntMap();
-	/*!
-	 * \brief Destructor
-	 */
-	~CSeekStrIntMap();
-	/*!
-	 * \brief Clear function
-	 */
-	void Clear();
-	/*!
-	 * \brief Add a pair to the map
-	 * \param s The string
-	 * \param i The integer in utype
-	 */
-	void Set(const string&, const utype&);
-	/*!
-	 * \brief Add all the pairs at once
-	 * \param s A vector of string
-	 * \remarks The corresponding integers are the indices of the strings
-	 * in the vector \c s.
-	 */
-	void SetAll(const vector<string>&);
-	/*!
-	 * \brief Get the corresponding integer for the given string
-	 */
-	utype Get(const string&) const;
-	/*!
-	 * \brief Get the entire map with key=string, value=integer
-	 */
-	map<string, utype>& GetMapForward();
-	/*!
-	 * \brief Get the entire map with key=integer, value=string
-	 */
-	map<utype, string>& GetMapReverse();
-	/*!
-	 * \brief Get the genome size
-	 */
-	utype GetSize() const;
-	/*!
-	 * \brief Get the corresponding string for the given integer
-	 */
-	string Get(const utype &) const;
-	/*!
-	 * \brief Retrieve all the strings in the map as a vector
-	 */
-	vector<string> GetAllString() const;
-	/*!
-	 * \brief Retrieve all the integers in the map as a vector
-	 */
-	vector<utype> GetAllInteger() const;
-private:
-	map<string, utype> m_mapstrint;
-	map<utype, string> m_mapintstr;
-};
+    class CSeekStrIntMap {
+    public:
+        /*!
+         * \brief Constructor
+         */
+        CSeekStrIntMap();
+
+        /*!
+         * \brief Destructor
+         */
+        ~CSeekStrIntMap();
+
+        /*!
+         * \brief Clear function
+         */
+        void Clear();
+
+        /*!
+         * \brief Add a pair to the map
+         * \param s The string
+         * \param i The integer in utype
+         */
+        void Set(const string &, const utype &);
+
+        /*!
+         * \brief Add all the pairs at once
+         * \param s A vector of string
+         * \remarks The corresponding integers are the indices of the strings
+         * in the vector \c s.
+         */
+        void SetAll(const vector <string> &);
+
+        /*!
+         * \brief Get the corresponding integer for the given string
+         */
+        utype Get(const string &) const;
+
+        /*!
+         * \brief Get the entire map with key=string, value=integer
+         */
+        map <string, utype> &GetMapForward();
+
+        /*!
+         * \brief Get the entire map with key=integer, value=string
+         */
+        map <utype, string> &GetMapReverse();
+
+        /*!
+         * \brief Get the genome size
+         */
+        utype GetSize() const;
+
+        /*!
+         * \brief Get the corresponding string for the given integer
+         */
+        string Get(const utype &) const;
+
+        /*!
+         * \brief Retrieve all the strings in the map as a vector
+         */
+        vector <string> GetAllString() const;
+
+        /*!
+         * \brief Retrieve all the integers in the map as a vector
+         */
+        vector <utype> GetAllInteger() const;
+
+    private:
+        map <string, utype> m_mapstrint;
+        map <utype, string> m_mapintstr;
+    };
 
 }
 #endif

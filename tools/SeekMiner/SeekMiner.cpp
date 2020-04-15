@@ -33,99 +33,99 @@
 #include "cmdline.h"
 
 
-int main( int iArgs, char** aszArgs ) {
-	static const size_t	c_iBuffer	= 1024;
+int main(int iArgs, char **aszArgs) {
+    static const size_t c_iBuffer = 1024;
 #ifdef WIN32
-	pthread_win32_process_attach_np( );
+    pthread_win32_process_attach_np( );
 #endif // WIN32
-	gengetopt_args_info	sArgs;
-	const int lineSize = 1024;
+    gengetopt_args_info sArgs;
+    const int lineSize = 1024;
 
-	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
-		//cmdline_parser_print_help( );
-		fprintf(stderr, "Use -h to get help.\n");
-		return 1;
-	}
+    if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
+        //cmdline_parser_print_help( );
+        fprintf(stderr, "Use -h to get help.\n");
+        return 1;
+    }
 
-	string method = sArgs.weighting_method_arg;
-	string cv = sArgs.CV_partition_arg;
-	int cv_fold = sArgs.CV_fold_arg;
-	float rbp_p = sArgs.CV_rbp_p_arg;
-	string dist_measure = sArgs.dist_measure_arg;
+    string method = sArgs.weighting_method_arg;
+    string cv = sArgs.CV_partition_arg;
+    int cv_fold = sArgs.CV_fold_arg;
+    float rbp_p = sArgs.CV_rbp_p_arg;
+    string dist_measure = sArgs.dist_measure_arg;
 
-	if(dist_measure=="pearson"){
-		string sinfo_dir = sArgs.dir_sinfo_arg;
-		if(sinfo_dir=="NA"){
-			fprintf(stderr, "Pearson selected. Please give the sinfo directory (-u).\n");
-			return 1;
-		}
-		if(!!sArgs.norm_subavg_flag){
-			fprintf(stderr, "Warning: -m flag is ignored due to --dist_measure pearson.\n");
-		}
-		if(!!sArgs.norm_subavg_plat_flag){
-			fprintf(stderr, "Warning: -M flag is ignored due to --dist_measure pearson.\n");
-		}
-		
-	}else if(dist_measure=="z_score"){
-		if(!!sArgs.norm_subavg_plat_flag && !(!!sArgs.norm_subavg_flag)){
-			fprintf(stderr, "Please enable -m flag. --norm_subavg_plat requires -m flag.\n");
-			return 1;
-		}
-	}
+    if (dist_measure == "pearson") {
+        string sinfo_dir = sArgs.dir_sinfo_arg;
+        if (sinfo_dir == "NA") {
+            fprintf(stderr, "Pearson selected. Please give the sinfo directory (-u).\n");
+            return 1;
+        }
+        if (!!sArgs.norm_subavg_flag) {
+            fprintf(stderr, "Warning: -m flag is ignored due to --dist_measure pearson.\n");
+        }
+        if (!!sArgs.norm_subavg_plat_flag) {
+            fprintf(stderr, "Warning: -M flag is ignored due to --dist_measure pearson.\n");
+        }
 
-	if(sArgs.check_dset_size_flag==1){
-		string dsize_file = sArgs.dset_size_file_arg;
-		if(dsize_file=="NA"){
-			fprintf(stderr, "Dataset size file is missing\n");
-			return 1;
-		}
-	}
+    } else if (dist_measure == "z_score") {
+        if (!!sArgs.norm_subavg_plat_flag && !(!!sArgs.norm_subavg_flag)) {
+            fprintf(stderr, "Please enable -m flag. --norm_subavg_plat requires -m flag.\n");
+            return 1;
+        }
+    }
 
-	if(!sArgs.input_arg || !sArgs.quant_arg ||
-		!sArgs.dset_arg ||
-		!sArgs.query_arg || !sArgs.dir_platform_arg ||
-		!sArgs.dir_in_arg || !sArgs.dir_prep_in_arg){
-		fprintf(stderr, "Arguments missing!\n");
-		return 1;
-	}
+    if (sArgs.check_dset_size_flag == 1) {
+        string dsize_file = sArgs.dset_size_file_arg;
+        if (dsize_file == "NA") {
+            fprintf(stderr, "Dataset size file is missing\n");
+            return 1;
+        }
+    }
 
-	bool useNibble = false;
-	if(sArgs.is_nibble_flag==1){
-		fprintf(stderr, "Nibble integration is not supported! Please use a non-nibble CDatabase.\n");
-		useNibble = true;
-		return 1;
-	}
+    if (!sArgs.input_arg || !sArgs.quant_arg ||
+        !sArgs.dset_arg ||
+        !sArgs.query_arg || !sArgs.dir_platform_arg ||
+        !sArgs.dir_in_arg || !sArgs.dir_prep_in_arg) {
+        fprintf(stderr, "Arguments missing!\n");
+        return 1;
+    }
 
-	bool bOutputWeightComponent = !!sArgs.output_w_comp_flag;
-	bool bSimulateWeight = !!sArgs.simulate_w_flag;
+    bool useNibble = false;
+    if (sArgs.is_nibble_flag == 1) {
+        fprintf(stderr, "Nibble integration is not supported! Please use a non-nibble CDatabase.\n");
+        useNibble = true;
+        return 1;
+    }
 
-	// Random Number Generator Initializations
-	gsl_rng_env_setup();
+    bool bOutputWeightComponent = !!sArgs.output_w_comp_flag;
+    bool bSimulateWeight = !!sArgs.simulate_w_flag;
 
-	const gsl_rng_type *T;
-	T = gsl_rng_default;
+    // Random Number Generator Initializations
+    gsl_rng_env_setup();
 
-	gsl_rng *rnd = gsl_rng_alloc(T);
+    const gsl_rng_type *T;
+    T = gsl_rng_default;
 
-	const gsl_rng_type *T2;
-	T2 = gsl_rng_default;
+    gsl_rng *rnd = gsl_rng_alloc(T);
 
-	gsl_rng *random_ranking_rnd = gsl_rng_alloc(T2);
+    const gsl_rng_type *T2;
+    T2 = gsl_rng_default;
 
-	float RATE = rbp_p;
-	utype FOLD = (utype) cv_fold;
-	enum CSeekQuery::PartitionMode PART_M;
-	if(cv=="LOI"){
-		PART_M = CSeekQuery::LEAVE_ONE_IN;
-	}else if(cv=="LOO"){
-		PART_M = CSeekQuery::LEAVE_ONE_OUT;
-	}else if(cv=="XFOLD"){
-		PART_M = CSeekQuery::CUSTOM_PARTITION;
-	}
+    gsl_rng *random_ranking_rnd = gsl_rng_alloc(T2);
 
-	utype i,j;
-	//utype TOP = 1000;
-	//utype TOP = 0;
+    float RATE = rbp_p;
+    utype FOLD = (utype) cv_fold;
+    enum CSeekQuery::PartitionMode PART_M;
+    if (cv == "LOI") {
+        PART_M = CSeekQuery::LEAVE_ONE_IN;
+    } else if (cv == "LOO") {
+        PART_M = CSeekQuery::LEAVE_ONE_OUT;
+    } else if (cv == "XFOLD") {
+        PART_M = CSeekQuery::CUSTOM_PARTITION;
+    }
+
+    utype i, j;
+    //utype TOP = 1000;
+    //utype TOP = 0;
 
 /*
 	CSeekCentral *func = new CSeekCentral();
@@ -246,242 +246,243 @@ int main( int iArgs, char** aszArgs ) {
 	CSeekTools::Write2DArrayText("/tmp/ex_query.txt", vcIntersect);
 */
 
-	//vector<vector<string> > newQ;
-	//CSeekTools::ReadMultipleQueries("/tmp/ex_query2.txt", newQ);
+    //vector<vector<string> > newQ;
+    //CSeekTools::ReadMultipleQueries("/tmp/ex_query2.txt", newQ);
 
 
-	enum CSeekDataset::DistanceMeasure eDistMeasure;
-	if(dist_measure=="pearson"){
-		eDistMeasure = CSeekDataset::CORRELATION;
-	}else{
-		eDistMeasure = CSeekDataset::Z_SCORE;
-	}
+    enum CSeekDataset::DistanceMeasure eDistMeasure;
+    if (dist_measure == "pearson") {
+        eDistMeasure = CSeekDataset::CORRELATION;
+    } else {
+        eDistMeasure = CSeekDataset::Z_SCORE;
+    }
 
-	/*fprintf(stderr, "input: %s quant: %s dset: %s, search_dset: %s\n", sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg, sArgs.search_dset_arg);
-	fprintf(stderr, "query: %s dir_plat: %s dir_in: %s, dir_prep: %s\n", sArgs.query_arg, sArgs.dir_platform_arg, sArgs.dir_in_arg, sArgs.dir_prep_in_arg);
-	fprintf(stderr, "dir_gvar: %s dir_sinfo: %s useNibble: %d, num_db: %s\n", sArgs.dir_gvar_arg, sArgs.dir_sinfo_arg, sArgs.is_nibble_flag, sArgs.num_db_arg);
-	getchar();*/
+    /*fprintf(stderr, "input: %s quant: %s dset: %s, search_dset: %s\n", sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg, sArgs.search_dset_arg);
+    fprintf(stderr, "query: %s dir_plat: %s dir_in: %s, dir_prep: %s\n", sArgs.query_arg, sArgs.dir_platform_arg, sArgs.dir_in_arg, sArgs.dir_prep_in_arg);
+    fprintf(stderr, "dir_gvar: %s dir_sinfo: %s useNibble: %d, num_db: %s\n", sArgs.dir_gvar_arg, sArgs.dir_sinfo_arg, sArgs.is_nibble_flag, sArgs.num_db_arg);
+    getchar();*/
 
-	CSeekCentral *csfinal = new CSeekCentral();
-	CSeekDBSetting *dbSetting = new CSeekDBSetting(sArgs.dir_gvar_arg,
-		sArgs.dir_sinfo_arg, sArgs.dir_platform_arg, sArgs.dir_prep_in_arg,
-		sArgs.dir_in_arg, sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
-		sArgs.dset_size_file_arg, sArgs.num_db_arg);
-	vector<CSeekDBSetting*> cc;
-	cc.push_back(dbSetting);
+    CSeekCentral *csfinal = new CSeekCentral();
+    CSeekDBSetting *dbSetting = new CSeekDBSetting(sArgs.dir_gvar_arg,
+                                                   sArgs.dir_sinfo_arg, sArgs.dir_platform_arg, sArgs.dir_prep_in_arg,
+                                                   sArgs.dir_in_arg, sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
+                                                   sArgs.dset_size_file_arg, sArgs.num_db_arg);
+    vector < CSeekDBSetting * > cc;
+    cc.push_back(dbSetting);
 
-	string add_db = sArgs.additional_db_arg;
-	if(add_db!="NA"){
-		ifstream ifsm;
-		ifsm.open(add_db.c_str());
-		if(!ifsm.is_open()){
-			fprintf(stderr, "Error opening file %s\n", add_db.c_str());
-			return false;
-		}
-		char acBuffer[lineSize];
-		utype c_iBuffer = lineSize;
-		vector<map<string,string> > parameters; //an array of CDatabase's
-		while(!ifsm.eof()){
-			ifsm.getline(acBuffer, c_iBuffer-1);
-			if(acBuffer[0]==0) break;
-			acBuffer[c_iBuffer-1]=0;
-			string strB = acBuffer;
-			if(strB=="START"){
-				map<string,string> p;
-				while(!ifsm.eof()){
-					ifsm.getline(acBuffer, c_iBuffer-1);
-					if(acBuffer[0]==0){
-						fprintf(stderr, "Invalid line (empty)\n");
-						return 1;
-					}
-					strB = acBuffer;
-					if(strB=="END") break;
-					vector<string> tok;
-					CMeta::Tokenize(acBuffer, tok); //separator is tab
-					p[tok[0]] = tok[1];
-				}
-				parameters.push_back(p);
-			}
-		}
-		ifsm.close();
-		if(parameters.size()==0){
-			fprintf(stderr, "Error, extra_db setting file must begin with START and end with END lines\n");
-			return 1;
-		}
+    string add_db = sArgs.additional_db_arg;
+    if (add_db != "NA") {
+        ifstream ifsm;
+        ifsm.open(add_db.c_str());
+        if (!ifsm.is_open()) {
+            fprintf(stderr, "Error opening file %s\n", add_db.c_str());
+            return false;
+        }
+        char acBuffer[lineSize];
+        utype c_iBuffer = lineSize;
+        vector <map<string, string>> parameters; //an array of CDatabase's
+        while (!ifsm.eof()) {
+            ifsm.getline(acBuffer, c_iBuffer - 1);
+            if (acBuffer[0] == 0) break;
+            acBuffer[c_iBuffer - 1] = 0;
+            string strB = acBuffer;
+            if (strB == "START") {
+                map <string, string> p;
+                while (!ifsm.eof()) {
+                    ifsm.getline(acBuffer, c_iBuffer - 1);
+                    if (acBuffer[0] == 0) {
+                        fprintf(stderr, "Invalid line (empty)\n");
+                        return 1;
+                    }
+                    strB = acBuffer;
+                    if (strB == "END") break;
+                    vector <string> tok;
+                    CMeta::Tokenize(acBuffer, tok); //separator is tab
+                    p[tok[0]] = tok[1];
+                }
+                parameters.push_back(p);
+            }
+        }
+        ifsm.close();
+        if (parameters.size() == 0) {
+            fprintf(stderr, "Error, extra_db setting file must begin with START and end with END lines\n");
+            return 1;
+        }
 
-		//i=0;
-		for(i=0; i<parameters.size(); i++){
-		string sinfo_dir = "NA";
-		string gvar_dir = "NA";
-		string platform_dir = "NA";
-		string prep_dir = "NA";
-		string db_dir = "NA";
-		string dset_map_file = "NA";
-		string gene_map_file = "NA";
-		string quant_file = "NA";
-		string dset_size_file = "NA";
-		int num_db = -1;
+        //i=0;
+        for (i = 0; i < parameters.size(); i++) {
+            string sinfo_dir = "NA";
+            string gvar_dir = "NA";
+            string platform_dir = "NA";
+            string prep_dir = "NA";
+            string db_dir = "NA";
+            string dset_map_file = "NA";
+            string gene_map_file = "NA";
+            string quant_file = "NA";
+            string dset_size_file = "NA";
+            int num_db = -1;
 
-		if(eDistMeasure==CSeekDataset::CORRELATION){
-			if(parameters[i].find("SINFO_DIR")==parameters[i].end() ||
-				parameters[i].find("SINFO_DIR")->second=="NA"){
-				fprintf(stderr, "Please specify an sinfo directory for the extra db\n");
-				return false;
-			}
-			sinfo_dir = parameters[i].find("SINFO_DIR")->second;
-		}
-		if(parameters[i].find("GVAR_DIR")!=parameters[i].end())
-			gvar_dir = parameters[i].find("GVAR_DIR")->second;
+            if (eDistMeasure == CSeekDataset::CORRELATION) {
+                if (parameters[i].find("SINFO_DIR") == parameters[i].end() ||
+                    parameters[i].find("SINFO_DIR")->second == "NA") {
+                    fprintf(stderr, "Please specify an sinfo directory for the extra db\n");
+                    return false;
+                }
+                sinfo_dir = parameters[i].find("SINFO_DIR")->second;
+            }
+            if (parameters[i].find("GVAR_DIR") != parameters[i].end())
+                gvar_dir = parameters[i].find("GVAR_DIR")->second;
 
-		if(sArgs.check_dset_size_flag==1){
-			if(parameters[i].find("DSET_SIZE_FILE")==parameters[i].end() ||
-				parameters[i].find("DSET_SIZE_FILE")->second=="NA"){
-				fprintf(stderr, "Please specify the dataset size file for the extra db\n");
-				return false;
-			}
-		}
+            if (sArgs.check_dset_size_flag == 1) {
+                if (parameters[i].find("DSET_SIZE_FILE") == parameters[i].end() ||
+                    parameters[i].find("DSET_SIZE_FILE")->second == "NA") {
+                    fprintf(stderr, "Please specify the dataset size file for the extra db\n");
+                    return false;
+                }
+            }
 
-		if(parameters[i].find("DSET_SIZE_FILE")!=parameters[i].end() &&
-			parameters[i].find("DSET_SIZE_FILE")->second!="NA")
-			dset_size_file = parameters[i].find("DSET_SIZE_FILE")->second;
-		
-		if(parameters[i].find("PREP_DIR")==parameters[i].end() ||
-			parameters[i].find("PLATFORM_DIR")==parameters[i].end() ||
-			parameters[i].find("DB_DIR")==parameters[i].end() ||
-			parameters[i].find("DSET_MAP_FILE")==parameters[i].end() ||
-			parameters[i].find("GENE_MAP_FILE")==parameters[i].end() ||
-			parameters[i].find("QUANT_FILE")==parameters[i].end() ||
-			parameters[i].find("NUMBER_OF_DB")==parameters[i].end()){
-			fprintf(stderr, "Some arguments are missing. Please make sure the following are provided:\n");
-			fprintf(stderr, "PREP_DIR, DB_DIR, DSET_MAP_FILE, GENE_MAP_FILE, QUANT_FILE, NUMBER_OF_DB\n");
-		}
+            if (parameters[i].find("DSET_SIZE_FILE") != parameters[i].end() &&
+                parameters[i].find("DSET_SIZE_FILE")->second != "NA")
+                dset_size_file = parameters[i].find("DSET_SIZE_FILE")->second;
 
-		platform_dir = parameters[i].find("PLATFORM_DIR")->second;
-		db_dir = parameters[i].find("DB_DIR")->second;
-		prep_dir = parameters[i].find("PREP_DIR")->second;
-		dset_map_file = parameters[i].find("DSET_MAP_FILE")->second;
-		gene_map_file = parameters[i].find("GENE_MAP_FILE")->second;
-		quant_file = parameters[i].find("QUANT_FILE")->second;
-		num_db = atoi(parameters[i].find("NUMBER_OF_DB")->second.c_str());
+            if (parameters[i].find("PREP_DIR") == parameters[i].end() ||
+                parameters[i].find("PLATFORM_DIR") == parameters[i].end() ||
+                parameters[i].find("DB_DIR") == parameters[i].end() ||
+                parameters[i].find("DSET_MAP_FILE") == parameters[i].end() ||
+                parameters[i].find("GENE_MAP_FILE") == parameters[i].end() ||
+                parameters[i].find("QUANT_FILE") == parameters[i].end() ||
+                parameters[i].find("NUMBER_OF_DB") == parameters[i].end()) {
+                fprintf(stderr, "Some arguments are missing. Please make sure the following are provided:\n");
+                fprintf(stderr, "PREP_DIR, DB_DIR, DSET_MAP_FILE, GENE_MAP_FILE, QUANT_FILE, NUMBER_OF_DB\n");
+            }
 
-		CSeekDBSetting *dbSetting2 = new CSeekDBSetting(gvar_dir, sinfo_dir,
-			platform_dir, prep_dir, db_dir, gene_map_file, quant_file, dset_map_file,
-			dset_size_file, num_db);
-		cc.push_back(dbSetting2);
-		}
-	}
+            platform_dir = parameters[i].find("PLATFORM_DIR")->second;
+            db_dir = parameters[i].find("DB_DIR")->second;
+            prep_dir = parameters[i].find("PREP_DIR")->second;
+            dset_map_file = parameters[i].find("DSET_MAP_FILE")->second;
+            gene_map_file = parameters[i].find("GENE_MAP_FILE")->second;
+            quant_file = parameters[i].find("QUANT_FILE")->second;
+            num_db = atoi(parameters[i].find("NUMBER_OF_DB")->second.c_str());
 
-	bool bVariance = false;
-	if(method=="VAR"){
-		bVariance = true;
-	}
+            CSeekDBSetting *dbSetting2 = new CSeekDBSetting(gvar_dir, sinfo_dir,
+                                                            platform_dir, prep_dir, db_dir, gene_map_file, quant_file,
+                                                            dset_map_file,
+                                                            dset_size_file, num_db);
+            cc.push_back(dbSetting2);
+        }
+    }
 
-	if(sArgs.per_q_required_arg>=1.00001 || sArgs.per_q_required_arg<=-0.00001){
-		fprintf(stderr, "Error, per_q_required needs to be <=1.0 and >=0.0\n");
-		return -1;
-	}
+    bool bVariance = false;
+    if (method == "VAR") {
+        bVariance = true;
+    }
 
-	if(sArgs.per_g_required_arg>=1.00001 || sArgs.per_g_required_arg<=-0.00001){
-		fprintf(stderr, "Error, per_g_required needs to be <=1.0 and >=0.0\n");
-		return -1;
-	}
+    if (sArgs.per_q_required_arg >= 1.00001 || sArgs.per_q_required_arg <= -0.00001) {
+        fprintf(stderr, "Error, per_q_required needs to be <=1.0 and >=0.0\n");
+        return -1;
+    }
 
-	if(!csfinal->Initialize(cc,
-		sArgs.search_dset_arg, 
-		//"/tmp/ex_query2.txt", 
-		sArgs.query_arg,
-		sArgs.output_dir_arg,
-		sArgs.buffer_arg, !!sArgs.output_text_flag,
-		bOutputWeightComponent, bSimulateWeight,
-		eDistMeasure, bVariance,
-		!!sArgs.norm_subavg_flag, !!sArgs.norm_subavg_plat_flag,
-		false,
-		!!sArgs.check_dset_size_flag,
-		sArgs.score_cutoff_arg, 
-		sArgs.per_q_required_arg, sArgs.per_g_required_arg,
-		!!sArgs.square_z_flag,
-		!!sArgs.random_flag, sArgs.num_random_arg, !!sArgs.neg_cor_flag,
-		random_ranking_rnd, useNibble, 
-		sArgs.num_threads_arg))
-		return -1;
+    if (sArgs.per_g_required_arg >= 1.00001 || sArgs.per_g_required_arg <= -0.00001) {
+        fprintf(stderr, "Error, per_g_required needs to be <=1.0 and >=0.0\n");
+        return -1;
+    }
 
-	if(method=="CV"){
-		csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
-	}else if(method=="EQUAL"){
-		csfinal->EqualWeightSearch();
-	}else if(method=="ORDER_STAT"){
-		csfinal->OrderStatistics();
-	}else if(method=="USER"){
-		string uw = sArgs.user_weight_list_arg;
-		vector<string> uww;
-		if(!CSeekTools::ReadListOneColumn(uw.c_str(), uww)){
-			fprintf(stderr, "Error reading user weight list\n");
-			return -1;
-		}
-		vector<vector<float> > fw;
-		fw.resize(uww.size());
-		for(i=0; i<uww.size(); i++){
-			if(!CSeekTools::ReadArray(uww[i].c_str(), fw[i])){
-				return -1;
-			}
-		}
-		csfinal->WeightSearch(fw);
-	}else if(method=="VAR"){
-		for(i=0; i<cc.size(); i++){
-			CSeekDBSetting* pc = cc[i];
-			if(pc->GetValue("gvar")=="NULL"){
-				fprintf(stderr, "Must specify gvar directory!\n");
-				return -1;
-			}
-		}
-		if(bSimulateWeight){
-			fprintf(stderr, "simulate weight option is not supported for variance-based weighting\n");
-			return -1;
-		}
-		csfinal->VarianceWeightSearch();
-	}else if(method=="AVERAGE_Z"){
-		csfinal->AverageWeightSearch();
-	}else if(method=="CV_CUSTOM"){
-		string uw = sArgs.user_gene_list_arg;
-		vector<vector<string> > user_gene_list;
-		if(!CSeekTools::ReadMultipleQueries(uw, user_gene_list, 2048)){
-			fprintf(stderr, "Error reading user gene lists!\n");
-			return -1;
-		}	
-		csfinal->CVCustomSearch(user_gene_list, rnd, PART_M, FOLD, RATE);
-	}
-	//csfinal->WeightSearch(csk_weight_copy);
-	//csfinal->CVCustomSearch(newQ, rnd, PART_M, FOLD, RATE);
-	//csfinal->EqualWeightSearch();
-	//csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
-	//csfinal->OrderStatistics();
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
-	fprintf(stderr, "Destructing...\n");
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
-	csfinal->Destruct();
-	fprintf(stderr, "Deleting...\n");
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
-	delete csfinal;
+    if (!csfinal->Initialize(cc,
+                             sArgs.search_dset_arg,
+            //"/tmp/ex_query2.txt",
+                             sArgs.query_arg,
+                             sArgs.output_dir_arg,
+                             sArgs.buffer_arg, !!sArgs.output_text_flag,
+                             bOutputWeightComponent, bSimulateWeight,
+                             eDistMeasure, bVariance,
+                             !!sArgs.norm_subavg_flag, !!sArgs.norm_subavg_plat_flag,
+                             false,
+                             !!sArgs.check_dset_size_flag,
+                             sArgs.score_cutoff_arg,
+                             sArgs.per_q_required_arg, sArgs.per_g_required_arg,
+                             !!sArgs.square_z_flag,
+                             !!sArgs.random_flag, sArgs.num_random_arg, !!sArgs.neg_cor_flag,
+                             random_ranking_rnd, useNibble,
+                             sArgs.num_threads_arg))
+        return -1;
 
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    if (method == "CV") {
+        csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
+    } else if (method == "EQUAL") {
+        csfinal->EqualWeightSearch();
+    } else if (method == "ORDER_STAT") {
+        csfinal->OrderStatistics();
+    } else if (method == "USER") {
+        string uw = sArgs.user_weight_list_arg;
+        vector <string> uww;
+        if (!CSeekTools::ReadListOneColumn(uw.c_str(), uww)) {
+            fprintf(stderr, "Error reading user weight list\n");
+            return -1;
+        }
+        vector <vector<float>> fw;
+        fw.resize(uww.size());
+        for (i = 0; i < uww.size(); i++) {
+            if (!CSeekTools::ReadArray(uww[i].c_str(), fw[i])) {
+                return -1;
+            }
+        }
+        csfinal->WeightSearch(fw);
+    } else if (method == "VAR") {
+        for (i = 0; i < cc.size(); i++) {
+            CSeekDBSetting *pc = cc[i];
+            if (pc->GetValue("gvar") == "NULL") {
+                fprintf(stderr, "Must specify gvar directory!\n");
+                return -1;
+            }
+        }
+        if (bSimulateWeight) {
+            fprintf(stderr, "simulate weight option is not supported for variance-based weighting\n");
+            return -1;
+        }
+        csfinal->VarianceWeightSearch();
+    } else if (method == "AVERAGE_Z") {
+        csfinal->AverageWeightSearch();
+    } else if (method == "CV_CUSTOM") {
+        string uw = sArgs.user_gene_list_arg;
+        vector <vector<string>> user_gene_list;
+        if (!CSeekTools::ReadMultipleQueries(uw, user_gene_list, 2048)) {
+            fprintf(stderr, "Error reading user gene lists!\n");
+            return -1;
+        }
+        csfinal->CVCustomSearch(user_gene_list, rnd, PART_M, FOLD, RATE);
+    }
+    //csfinal->WeightSearch(csk_weight_copy);
+    //csfinal->CVCustomSearch(newQ, rnd, PART_M, FOLD, RATE);
+    //csfinal->EqualWeightSearch();
+    //csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
+    //csfinal->OrderStatistics();
+    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    fprintf(stderr, "Destructing...\n");
+    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    csfinal->Destruct();
+    fprintf(stderr, "Deleting...\n");
+    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    delete csfinal;
 
-	fprintf(stderr, "Deleting DBSetting...\n");
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
-	//if(add_db!="NA"){
-		for(i=0; i<cc.size(); i++){
-			delete cc[i];
-		}
-	//}
-	fprintf(stderr, "Finished deleting DBSetting...\n");
-	fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
 
-	cc.clear();
+    fprintf(stderr, "Deleting DBSetting...\n");
+    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
+    //if(add_db!="NA"){
+    for (i = 0; i < cc.size(); i++) {
+        delete cc[i];
+    }
+    //}
+    fprintf(stderr, "Finished deleting DBSetting...\n");
+    fprintf(stderr, "%lu\n", CMeta::GetMemoryUsage());
 
-	gsl_rng_free(rnd);
-	gsl_rng_free(random_ranking_rnd);
+    cc.clear();
+
+    gsl_rng_free(rnd);
+    gsl_rng_free(random_ranking_rnd);
 
 #ifdef WIN32
-	pthread_win32_process_detach_np( );
+    pthread_win32_process_detach_np( );
 #endif // WIN32
-	return 0; 
+    return 0;
 }

@@ -23,6 +23,7 @@
 #define STDAFX_H
 
 #include <iostream>
+
 using namespace std;
 
 #include <pthread.h>
@@ -34,6 +35,7 @@ using namespace std;
 #include "meta.h"
 #include "pcl.h"
 #include "pst.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

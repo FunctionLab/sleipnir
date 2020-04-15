@@ -29,7 +29,7 @@
 
 namespace Sleipnir {
 
-class CGenes;
+    class CGenes;
 
 /*!
  * \brief
@@ -58,224 +58,244 @@ class CGenes;
  * \see
  * CGenes
  */
-class CGene : CGeneImpl {
-public:
-	CGene( const std::string& strID );
+    class CGene : CGeneImpl {
+    public:
+        CGene(const std::string &strID);
 
-	bool AddSynonym( const std::string& strName );
-	bool AddAnnotation( const IOntology* pOntology, size_t iTerm );
-	bool SetWeight( float weight);
-	bool IsAnnotated( const IOntology* pOntology ) const;
-	bool IsAnnotated( const IOntology* pOntology, size_t iTerm ) const;
+        bool AddSynonym(const std::string &strName);
 
-	/*!
-	 * \brief
-	 * Return the gene's primary identifier.
-	 * 
-	 * \returns
-	 * Gene's primary identifier.
-	 */
-	const std::string& GetName( ) const {
+        bool AddAnnotation(const IOntology *pOntology, size_t iTerm);
 
-		return m_strName; }
+        bool SetWeight(float weight);
 
-	/*!
-	 * \brief
-	 * Return the number of synonyms of the current gene.
-	 * 
-	 * \returns
-	 * Current gene's number of synonyms.
-	 * 
-	 * \see
-	 * GetSynonym
-	 */
-	size_t GetSynonyms( ) const {
+        bool IsAnnotated(const IOntology *pOntology) const;
 
-		return m_iSynonyms; }
+        bool IsAnnotated(const IOntology *pOntology, size_t iTerm) const;
 
-	/*!
-	 * \brief
-	 * Return the requested synonym of the current gene.
-	 * 
-	 * \param iSynonym
-	 * Synonym to retrieve.
-	 * 
-	 * \returns
-	 * Requested synonym.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given index must be smaller than GetSynonyms.
-	 */
-	const std::string& GetSynonym( size_t iSynonym ) const {
+        /*!
+         * \brief
+         * Return the gene's primary identifier.
+         *
+         * \returns
+         * Gene's primary identifier.
+         */
+        const std::string &GetName() const {
 
-		return m_astrSynonyms[ iSynonym ]; }
+            return m_strName;
+        }
 
-	/*!
-	 * \brief
-	 * Sets the human-readable text description of the gene.
-	 * 
-	 * \param strGloss
-	 * Text description of the gene.
-	 * 
-	 * \see
-	 * GetGloss
-	 */
-	void SetGloss( const std::string& strGloss ) {
+        /*!
+         * \brief
+         * Return the number of synonyms of the current gene.
+         *
+         * \returns
+         * Current gene's number of synonyms.
+         *
+         * \see
+         * GetSynonym
+         */
+        size_t GetSynonyms() const {
 
-		m_strGloss = strGloss; }
+            return m_iSynonyms;
+        }
 
-	/*!
-	 * \brief
-	 * Return the human-readable text description of the gene.
-	 * 
-	 * \returns
-	 * Human-readable text description of the gene.
-	 * 
-	 * \see
-	 * SetGloss
-	 */
-	const std::string& GetGloss( ) const {
+        /*!
+         * \brief
+         * Return the requested synonym of the current gene.
+         *
+         * \param iSynonym
+         * Synonym to retrieve.
+         *
+         * \returns
+         * Requested synonym.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given index must be smaller than GetSynonyms.
+         */
+        const std::string &GetSynonym(size_t iSynonym) const {
 
-		return m_strGloss; }
+            return m_astrSynonyms[iSynonym];
+        }
 
-	/*!
-	 * \brief
-	 * Sets whether the gene encodes a dubious reading frame.
-	 * 
-	 * \param fDubious
-	 * Value to store for dubious reading frame status.
-	 * 
-	 * \see
-	 * GetDubious
-	 */
-	void SetDubious( bool fDubious ) {
+        /*!
+         * \brief
+         * Sets the human-readable text description of the gene.
+         *
+         * \param strGloss
+         * Text description of the gene.
+         *
+         * \see
+         * GetGloss
+         */
+        void SetGloss(const std::string &strGloss) {
 
-		m_fDubious = fDubious; }
+            m_strGloss = strGloss;
+        }
 
-	/*!
-	 * \brief
-	 * Return whether the gene encodes a dubious reading frame.
-	 * 
-	 * \returns
-	 * Dubious reading frame status.
-	 * 
-	 * \see
-	 * SetDubious
-	 */
-	bool GetDubious( ) const {
+        /*!
+         * \brief
+         * Return the human-readable text description of the gene.
+         *
+         * \returns
+         * Human-readable text description of the gene.
+         *
+         * \see
+         * SetGloss
+         */
+        const std::string &GetGloss() const {
 
-		return m_fDubious; }
+            return m_strGloss;
+        }
 
-	/*!
-	 * \brief
-	 * Sets whether the gene encodes an RNA gene.
-	 * 
-	 * \param fRNA
-	 * Value to store for RNA gene status.
-	 * 
-	 * \see
-	 * GetRNA
-	 */
-	void SetRNA( bool fRNA ) {
+        /*!
+         * \brief
+         * Sets whether the gene encodes a dubious reading frame.
+         *
+         * \param fDubious
+         * Value to store for dubious reading frame status.
+         *
+         * \see
+         * GetDubious
+         */
+        void SetDubious(bool fDubious) {
 
-		m_fRNA = fRNA; }
+            m_fDubious = fDubious;
+        }
 
-	/*!
-	 * \brief
-	 * Return whether the gene encodes an RNA gene.
-	 * 
-	 * \returns
-	 * RNA gene status.
-	 * 
-	 * \see
-	 * SetRNA
-	 */
-	bool GetRNA( ) const {
+        /*!
+         * \brief
+         * Return whether the gene encodes a dubious reading frame.
+         *
+         * \returns
+         * Dubious reading frame status.
+         *
+         * \see
+         * SetDubious
+         */
+        bool GetDubious() const {
 
-		return m_fRNA; }
-	/*!
-	 * \brief
-	 * Return weight of the gene.
-	 * 
-	 * \returns
-	 * Gene weight.
-	 * 
-	 * \see
-	 * SetWeight
-	 */
-	const float GetWeight() const {
-		return m_weight; }
-	/*!
-	 * \brief
-	 * Return the number of different ontologies in which this gene is annotated.
-	 * 
-	 * \returns
-	 * Number of ontologies in which this gene is annotated.
-	 * 
-	 * \see
-	 * GetOntology
-	 */
-	size_t GetOntologies( ) const {
+            return m_fDubious;
+        }
 
-		return m_iOntologies; }
+        /*!
+         * \brief
+         * Sets whether the gene encodes an RNA gene.
+         *
+         * \param fRNA
+         * Value to store for RNA gene status.
+         *
+         * \see
+         * GetRNA
+         */
+        void SetRNA(bool fRNA) {
 
-	/*!
-	 * \brief
-	 * Return the ontology at the requested index.
-	 * 
-	 * \param iOntology
-	 * Index of ontology to return.
-	 * 
-	 * \returns
-	 * Ontology at requested index.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given index must be smaller than GetOntologies.
-	 */
-	const IOntology* GetOntology( size_t iOntology ) const {
+            m_fRNA = fRNA;
+        }
 
-		return m_apOntologies[ iOntology ]; }
+        /*!
+         * \brief
+         * Return whether the gene encodes an RNA gene.
+         *
+         * \returns
+         * RNA gene status.
+         *
+         * \see
+         * SetRNA
+         */
+        bool GetRNA() const {
 
-	/*!
-	 * \brief
-	 * Return the number of annotations of this gene within the requested ontology.
-	 * 
-	 * \param iOntology
-	 * Ontology whose annotations should be counted.
-	 * 
-	 * \returns
-	 * Number of annotations of this gene within the requested ontology.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given index must be smaller than GetOntologies.
-	 */
-	size_t GetAnnotations( size_t iOntology ) const {
+            return m_fRNA;
+        }
 
-		return m_apveciAnnotations[ iOntology ]->size( ); }
+        /*!
+         * \brief
+         * Return weight of the gene.
+         *
+         * \returns
+         * Gene weight.
+         *
+         * \see
+         * SetWeight
+         */
+        const float GetWeight() const {
+            return m_weight;
+        }
 
-	/*!
-	 * \brief
-	 * Return the ontology term index of the requested annotation.
-	 * 
-	 * \param iOntology
-	 * Ontology index of requested annotation.
-	 * 
-	 * \param iAnnotation
-	 * Requested annotation index.
-	 * 
-	 * \returns
-	 * Ontology term of the requested annotation.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given indices must be smaller than GetOntologies
-	 * and GetAnnotations.
-	 */
-	size_t GetAnnotation( size_t iOntology, size_t iAnnotation ) const {
+        /*!
+         * \brief
+         * Return the number of different ontologies in which this gene is annotated.
+         *
+         * \returns
+         * Number of ontologies in which this gene is annotated.
+         *
+         * \see
+         * GetOntology
+         */
+        size_t GetOntologies() const {
 
-		return (*m_apveciAnnotations[ iOntology ])[ iAnnotation ]; }
+            return m_iOntologies;
+        }
+
+        /*!
+         * \brief
+         * Return the ontology at the requested index.
+         *
+         * \param iOntology
+         * Index of ontology to return.
+         *
+         * \returns
+         * Ontology at requested index.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given index must be smaller than GetOntologies.
+         */
+        const IOntology *GetOntology(size_t iOntology) const {
+
+            return m_apOntologies[iOntology];
+        }
+
+        /*!
+         * \brief
+         * Return the number of annotations of this gene within the requested ontology.
+         *
+         * \param iOntology
+         * Ontology whose annotations should be counted.
+         *
+         * \returns
+         * Number of annotations of this gene within the requested ontology.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given index must be smaller than GetOntologies.
+         */
+        size_t GetAnnotations(size_t iOntology) const {
+
+            return m_apveciAnnotations[iOntology]->size();
+        }
+
+        /*!
+         * \brief
+         * Return the ontology term index of the requested annotation.
+         *
+         * \param iOntology
+         * Ontology index of requested annotation.
+         *
+         * \param iAnnotation
+         * Requested annotation index.
+         *
+         * \returns
+         * Ontology term of the requested annotation.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given indices must be smaller than GetOntologies
+         * and GetAnnotations.
+         */
+        size_t GetAnnotation(size_t iOntology, size_t iAnnotation) const {
+
+            return (*m_apveciAnnotations[iOntology])[iAnnotation];
+        }
 
 
-};
+    };
 
 /*!
  * \brief
@@ -299,66 +319,77 @@ public:
  * \see
  * CGene | CGenes
  */
-class CGenome : CGenomeImpl {
-public:
-	bool Open( std::istream& istmFeatures );
-	bool Open( const std::vector<std::string>& vecstrGenes );
-	bool Open( const char* szFile, std::vector<CGenes*>& vecpGenes );
-	bool Open( std::istream& istmGenes, std::vector<CGenes*>& vecpGenes );
-	CGene& AddGene( const std::string& strID );
-	size_t FindGene( const std::string& strGene ) const;
-	std::vector<std::string> GetGeneNames( ) const;
-	size_t CountGenes( const IOntology* pOntology ) const;
-	bool AddSynonym( CGene& Gene, const std::string& strName );
+    class CGenome : CGenomeImpl {
+    public:
+        bool Open(std::istream &istmFeatures);
 
-	/*!
-	 * \brief
-	 * Return the gene at the requested index within the genome.
-	 * 
-	 * \param iGene
-	 * Index of gene to retrieve.
-	 * 
-	 * \returns
-	 * Gene at the requested index.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given value must be smaller than GetGenes.
-	 */
-	CGene& GetGene( size_t iGene ) const {
+        bool Open(const std::vector <std::string> &vecstrGenes);
 
-		return *m_vecpGenes[ iGene ]; }
+        bool Open(const char *szFile, std::vector<CGenes *> &vecpGenes);
 
-	/*!
-	 * \brief
-	 * Return the index of the gene with the given name, or -1 if one cannot be found.
-	 * 
-	 * \param strGene
-	 * Name of gene whose index should be retrieved.
-	 * 
-	 * \returns
-	 * Index of gene with the given name; -1 if one cannot be found.
-	 * 
-	 * \remarks
-	 * This is sensitive to the same name mapping issues discussed in AddSynonym.  For maximum safety,
-	 * refer to genes only by their unique primary identifiers.
-	 */
-	size_t GetGene( const std::string& strGene ) const {
-		TMapStrI::const_iterator	iterGene;
+        bool Open(std::istream &istmGenes, std::vector<CGenes *> &vecpGenes);
 
-		return ( ( ( iterGene = m_mapGenes.find( strGene ) ) == m_mapGenes.end( ) ) ? -1 :
-			iterGene->second ); }
+        CGene &AddGene(const std::string &strID);
 
-	/*!
-	 * \brief
-	 * Return the number of genes in the genome.
-	 * 
-	 * \returns
-	 * Number of genes in the genome.
-	 */
-	size_t GetGenes( ) const {
+        size_t FindGene(const std::string &strGene) const;
 
-		return m_vecpGenes.size( ); }
-};
+        std::vector <std::string> GetGeneNames() const;
+
+        size_t CountGenes(const IOntology *pOntology) const;
+
+        bool AddSynonym(CGene &Gene, const std::string &strName);
+
+        /*!
+         * \brief
+         * Return the gene at the requested index within the genome.
+         *
+         * \param iGene
+         * Index of gene to retrieve.
+         *
+         * \returns
+         * Gene at the requested index.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given value must be smaller than GetGenes.
+         */
+        CGene &GetGene(size_t iGene) const {
+
+            return *m_vecpGenes[iGene];
+        }
+
+        /*!
+         * \brief
+         * Return the index of the gene with the given name, or -1 if one cannot be found.
+         *
+         * \param strGene
+         * Name of gene whose index should be retrieved.
+         *
+         * \returns
+         * Index of gene with the given name; -1 if one cannot be found.
+         *
+         * \remarks
+         * This is sensitive to the same name mapping issues discussed in AddSynonym.  For maximum safety,
+         * refer to genes only by their unique primary identifiers.
+         */
+        size_t GetGene(const std::string &strGene) const {
+            TMapStrI::const_iterator iterGene;
+
+            return (((iterGene = m_mapGenes.find(strGene)) == m_mapGenes.end()) ? -1 :
+                    iterGene->second);
+        }
+
+        /*!
+         * \brief
+         * Return the number of genes in the genome.
+         *
+         * \returns
+         * Number of genes in the genome.
+         */
+        size_t GetGenes() const {
+
+            return m_vecpGenes.size();
+        }
+    };
 
 /*!
  * \brief
@@ -370,207 +401,227 @@ public:
  * base CGenome and are thus performed by pointer comparisons for efficiency; in other words, don't
  * expect two different CGene objects with the same primary ID to behave correctly.
  */
-class CGenes : CGenesImpl {
-public:
-	static bool Open( const char* szFile, CGenome& Genome, std::vector<std::string>& vecstrNames, std::vector<CGenes*>& vecpGenes );
+    class CGenes : CGenesImpl {
+    public:
+        static bool Open(const char *szFile, CGenome &Genome, std::vector <std::string> &vecstrNames,
+                         std::vector<CGenes *> &vecpGenes);
 
-	CGenes( CGenome& Genome );
+        CGenes(CGenome &Genome);
 
-	bool Open( std::istream& istm, bool fCreate = true );
-	bool Open( const std::vector<std::string>& vecstrGenes, bool fCreate = true );
-	bool OpenWeighted( std::istream& istm, bool fCreate = true );
-	void Filter( const CGenes& GenesExclude );
-	size_t CountAnnotations( const IOntology* pOntology, size_t iTerm, bool fRecursive = true,
-		const CGenes* pBackground = NULL ) const;
-	std::vector<std::string> GetGeneNames( ) const;
-	
+        bool Open(std::istream &istm, bool fCreate = true);
 
-	/*!
-	 * \brief
-	 * Construct a new gene set by loading genes from the given text file, one per line.
-	 * 
-	 * \param szFile
-	 * File containing gene IDs to load, one per line.
-	 * 
-	 * \param fCreate
-	 * If true, add unknown genes to the underlying genome; otherwise, unknown gene IDs are ignored.
-	 * 
-	 * \returns
-	 * True if gene set was constructed successfully.
-	 * 
-	 * Loads a text file of the form:
-	 * \code
-	 * GENE1
-	 * GENE2
-	 * GENE3
-	 * \endcode
-	 * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
-	 * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
-	 * created from the loaded IDs.  If fCreate is false, unrecognized genes are skipped with a warning.
-	 * 
-	 * \see
-	 * CGenome::AddGene
-	 */
-	bool Open( const char* szFile, bool fCreate = true ) {
-		std::ifstream	ifsm;
+        bool Open(const std::vector <std::string> &vecstrGenes, bool fCreate = true);
 
-		ifsm.open( szFile );
-		return ( ifsm.is_open( ) && Open( ifsm, fCreate ) ); }
-	/*!
-	 * \brief
-	 * Construct a new weighted gene set by loading genes from the given text stream, one per line.
-	 * 
-	 * \param istm
-	 * Stream containing gene IDs and corresponding weights to load, one per line.
-	 * 
-	 * \param fCreate
-	 * If true, add unknown genes to the underlying genome; otherwise, unknown gene IDs are ignored.
-	 * 
-	 * \returns
-	 * True if gene set was constructed successfully.
-	 * 
-	 * Loads a text file of the form:
-	 * \code
-	 * GENE1 WEIGHT1
-	 * GENE2 WEIGHT2
-	 * GENE3 WEIGHT3
-	 * \endcode
-	 * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
-	 * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
-	 * created from the loaded IDs.  If fCreate is false, unrecognized genes are skipped with a warning.
-	 * 
-	 * \see
-	 * CGenome::AddGene
-	 */
-	bool OpenWeighted( const char* szFile, bool fCreate = true ) {
-		std::ifstream	ifsm;
+        bool OpenWeighted(std::istream &istm, bool fCreate = true);
 
-		ifsm.open( szFile );
-		return ( ifsm.is_open( ) && OpenWeighted( ifsm, fCreate ) ); }
-	/*!
-	 * \brief
-	 * Return the number of genes in the set.
-	 * 
-	 * \returns
-	 * Number of genes in the set.
-	 */
-	size_t GetGenes( ) const {
+        void Filter(const CGenes &GenesExclude);
 
-		return m_vecpGenes.size( ); }
+        size_t CountAnnotations(const IOntology *pOntology, size_t iTerm, bool fRecursive = true,
+                                const CGenes *pBackground = NULL) const;
 
-	/*!
-	 * \brief
-	 * Return true if the given name is a primary identifier of a gene in the set.
-	 * 
-	 * \param strGene
-	 * Primary gene identifier for which the set is searched.
-	 * 
-	 * \returns
-	 * True if the set contains a gene with the given primary identifier.
-	 * 
-	 * \see
-	 * GetGene
-	 */
-	bool IsGene( const std::string& strGene ) const {
+        std::vector <std::string> GetGeneNames() const;
 
-		return ( m_mapGenes.find( strGene ) != m_mapGenes.end( ) ); }
-	/*!
-	 * \brief
-	 * Determine whether genes are weighted 
-	 * 
-	 * \returns
-	 * Value at the requested location, or NaN if it does not exist or has been filtered.
-	 * 
-	 */	
-	bool IsWeighted() const {
-		return isWeighted;}
 
-	/*!
-	 * \brief
-	 * Return the gene set's underlying genome.
-	 * 
-	 * \returns
-	 * Gene set's underlying genome.
-	 */
-	CGenome& GetGenome( ) const {
+        /*!
+         * \brief
+         * Construct a new gene set by loading genes from the given text file, one per line.
+         *
+         * \param szFile
+         * File containing gene IDs to load, one per line.
+         *
+         * \param fCreate
+         * If true, add unknown genes to the underlying genome; otherwise, unknown gene IDs are ignored.
+         *
+         * \returns
+         * True if gene set was constructed successfully.
+         *
+         * Loads a text file of the form:
+         * \code
+         * GENE1
+         * GENE2
+         * GENE3
+         * \endcode
+         * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
+         * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
+         * created from the loaded IDs.  If fCreate is false, unrecognized genes are skipped with a warning.
+         *
+         * \see
+         * CGenome::AddGene
+         */
+        bool Open(const char *szFile, bool fCreate = true) {
+            std::ifstream ifsm;
 
-		return m_Genome; }
+            ifsm.open(szFile);
+            return (ifsm.is_open() && Open(ifsm, fCreate));
+        }
 
-	/*!
-	 * \brief
-	 * Return the gene at the requested index.
-	 * 
-	 * \param iGene
-	 * Gene index to retrieve.
-	 * 
-	 * \returns
-	 * Gene at the requested index.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given index must be smaller than GetGenes.
-	 */
-	const CGene& GetGene( size_t iGene ) const {
+        /*!
+         * \brief
+         * Construct a new weighted gene set by loading genes from the given text stream, one per line.
+         *
+         * \param istm
+         * Stream containing gene IDs and corresponding weights to load, one per line.
+         *
+         * \param fCreate
+         * If true, add unknown genes to the underlying genome; otherwise, unknown gene IDs are ignored.
+         *
+         * \returns
+         * True if gene set was constructed successfully.
+         *
+         * Loads a text file of the form:
+         * \code
+         * GENE1 WEIGHT1
+         * GENE2 WEIGHT2
+         * GENE3 WEIGHT3
+         * \endcode
+         * containing one primary gene identifier per line.  If these gene identifiers are found in the gene set's
+         * underlying genome, CGene objects are loaded from there.  Otherwise, if fCreate is true, new genes are
+         * created from the loaded IDs.  If fCreate is false, unrecognized genes are skipped with a warning.
+         *
+         * \see
+         * CGenome::AddGene
+         */
+        bool OpenWeighted(const char *szFile, bool fCreate = true) {
+            std::ifstream ifsm;
 
-		return *m_vecpGenes[ iGene ]; }
+            ifsm.open(szFile);
+            return (ifsm.is_open() && OpenWeighted(ifsm, fCreate));
+        }
 
-	/*!
-	 * \brief
-	 * Return weight of the gene at the requested index.
-	 * 
-	 * \param iGene
-	 * Gene index to retrieve.
-	 * 
-	 * \returns
-	 * Gene weight at the requested index. NULL if gene requested doesn't exist.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given index must be smaller than GetGenes.
-	 */
-	const float GetGeneWeight( size_t iGene ) const {
-		if (iGene!=-1)
-			return m_vecpGenes[ iGene ]->GetWeight(); 
-		return 0;}
-	/*!
-	 * \brief
-	 * Return the index of the gene with the given primary identifier, or -1 if none exists.
-	 * 
-	 * \param strGene
-	 * Primary gene identifier for which the set is searched.
-	 * 
-	 * \returns
-	 * Index of the gene with the given primary identifier; -1 if none exists.
-	 * 
-	 * \see
-	 * IsGene
-	 */
-	size_t GetGene( const std::string& strGene ) const {
-		TMapStrI::const_iterator	iterGene;
+        /*!
+         * \brief
+         * Return the number of genes in the set.
+         *
+         * \returns
+         * Number of genes in the set.
+         */
+        size_t GetGenes() const {
 
-		return ( ( ( iterGene = m_mapGenes.find( strGene ) ) == m_mapGenes.end( ) ) ? -1 :
-			iterGene->second ); }
+            return m_vecpGenes.size();
+        }
 
-	/*!
-	 * \brief
-	 * Adds a new gene with the given ID to the gene set.
-	 * 
-	 * \param strGene
-	 * Gene ID to be added.
-	 * 
-	 * \returns
-	 * True if gene was added, false if it was already included.
-	 * 
-	 * \see
-	 * Open | GetGene
-	 */
-	bool AddGene( const std::string& strGene ) {
+        /*!
+         * \brief
+         * Return true if the given name is a primary identifier of a gene in the set.
+         *
+         * \param strGene
+         * Primary gene identifier for which the set is searched.
+         *
+         * \returns
+         * True if the set contains a gene with the given primary identifier.
+         *
+         * \see
+         * GetGene
+         */
+        bool IsGene(const std::string &strGene) const {
 
-		if( GetGene( strGene ) != -1 )
-			return false;
+            return (m_mapGenes.find(strGene) != m_mapGenes.end());
+        }
 
-		m_mapGenes[ strGene ] = m_vecpGenes.size( );
-		m_vecpGenes.push_back( &m_Genome.AddGene( strGene ) );
-		return true; }
-};
+        /*!
+         * \brief
+         * Determine whether genes are weighted
+         *
+         * \returns
+         * Value at the requested location, or NaN if it does not exist or has been filtered.
+         *
+         */
+        bool IsWeighted() const {
+            return isWeighted;
+        }
+
+        /*!
+         * \brief
+         * Return the gene set's underlying genome.
+         *
+         * \returns
+         * Gene set's underlying genome.
+         */
+        CGenome &GetGenome() const {
+
+            return m_Genome;
+        }
+
+        /*!
+         * \brief
+         * Return the gene at the requested index.
+         *
+         * \param iGene
+         * Gene index to retrieve.
+         *
+         * \returns
+         * Gene at the requested index.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given index must be smaller than GetGenes.
+         */
+        const CGene &GetGene(size_t iGene) const {
+
+            return *m_vecpGenes[iGene];
+        }
+
+        /*!
+         * \brief
+         * Return weight of the gene at the requested index.
+         *
+         * \param iGene
+         * Gene index to retrieve.
+         *
+         * \returns
+         * Gene weight at the requested index. NULL if gene requested doesn't exist.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given index must be smaller than GetGenes.
+         */
+        const float GetGeneWeight(size_t iGene) const {
+            if (iGene != -1)
+                return m_vecpGenes[iGene]->GetWeight();
+            return 0;
+        }
+
+        /*!
+         * \brief
+         * Return the index of the gene with the given primary identifier, or -1 if none exists.
+         *
+         * \param strGene
+         * Primary gene identifier for which the set is searched.
+         *
+         * \returns
+         * Index of the gene with the given primary identifier; -1 if none exists.
+         *
+         * \see
+         * IsGene
+         */
+        size_t GetGene(const std::string &strGene) const {
+            TMapStrI::const_iterator iterGene;
+
+            return (((iterGene = m_mapGenes.find(strGene)) == m_mapGenes.end()) ? -1 :
+                    iterGene->second);
+        }
+
+        /*!
+         * \brief
+         * Adds a new gene with the given ID to the gene set.
+         *
+         * \param strGene
+         * Gene ID to be added.
+         *
+         * \returns
+         * True if gene was added, false if it was already included.
+         *
+         * \see
+         * Open | GetGene
+         */
+        bool AddGene(const std::string &strGene) {
+
+            if (GetGene(strGene) != -1)
+                return false;
+
+            m_mapGenes[strGene] = m_vecpGenes.size();
+            m_vecpGenes.push_back(&m_Genome.AddGene(strGene));
+            return true;
+        }
+    };
 
 }
 

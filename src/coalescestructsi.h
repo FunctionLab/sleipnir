@@ -25,10 +25,11 @@
 #ifdef _MSC_VER
 #include <hash_map>
 #else // _MSC_VER
-#include <ext/hash_map>
 
-#define hash_value	hash<const char*>( )
-#define stdext		__gnu_cxx
+#include <unordered_map>
+
+#define hash_value    hash<const char*>( )
+#define stdext        __gnu_cxx
 #endif // _MSC_VER
 
 #include "coalescebasei.h"
@@ -37,137 +38,163 @@
 
 namespace Sleipnir {
 
-class CCoalesceMotifLibrary;
-class CFASTA;
-class CHierarchy;
-class CPCL;
+    class CCoalesceMotifLibrary;
 
-struct SCoalesceModifiers {
+    class CFASTA;
 
-	void Initialize( const CPCL& );
+    class CHierarchy;
 
-	bool Add( const CFASTA* pWiggle ) {
+    class CPCL;
 
-		if( !pWiggle )
-			return false;
-		m_vecpWiggles.push_back( pWiggle );
-		return true; }
+    struct SCoalesceModifiers {
 
-	std::vector<const CFASTA*>			m_vecpWiggles;
-	std::vector<std::vector<size_t> >	m_vecveciPCL2Wiggles;
-};
+        void Initialize(const CPCL &);
 
-struct SCoalesceModifierCache {
-	SCoalesceModifierCache( const SCoalesceModifiers& Modifiers ) : m_Modifiers(Modifiers) { }
+        bool Add(const CFASTA *pWiggle) {
 
-	void Get( size_t );
-	void InitializeWeight( size_t, size_t );
-	void AddWeight( size_t, size_t, size_t );
-	void SetType( const std::string& );
+            if (!pWiggle)
+                return false;
+            m_vecpWiggles.push_back(pWiggle);
+            return true;
+        }
 
-	float GetWeight( size_t iK ) const {
-		size_t	i, iWiggles;
+        std::vector<const CFASTA *> m_vecpWiggles;
+        std::vector <std::vector<size_t>> m_vecveciPCL2Wiggles;
+    };
 
-		for( iWiggles = i = 0; i < m_veciWiggleTypes.size( ); ++i )
-			if( m_veciWiggleTypes[ i ] != -1 )
-				iWiggles++;
+    struct SCoalesceModifierCache {
+        SCoalesceModifierCache(const SCoalesceModifiers &Modifiers) : m_Modifiers(Modifiers) {}
 
-		return ( iWiggles ? ( m_dWeight / iWiggles ) : iK ); }
+        void Get(size_t);
 
-	const SCoalesceModifiers&				m_Modifiers;
-	std::vector<std::vector<SFASTAWiggle> >	m_vecvecsWiggles;
-	std::vector<size_t>						m_veciWiggleTypes;
-	float									m_dWeight;
-};
+        void InitializeWeight(size_t, size_t);
 
-struct SMotifMatch {
-	enum EType {
-		ETypePValue,
-		ETypeRMSE,
-		ETypeJensenShannon
-	};
+        void AddWeight(size_t, size_t, size_t);
 
-	SMotifMatch( ) { }
+        void SetType(const std::string &);
 
-	SMotifMatch( uint32_t iMotif, const std::string& strType,
-		CCoalesceSequencerBase::ESubsequence eSubsequence, float dZ, float dAverage ) : m_iMotif(iMotif),
-		m_strType(strType), m_eSubsequence(eSubsequence), m_dZ(dZ), m_dAverage(dAverage) { }
+        float GetWeight(size_t iK) const {
+            size_t i, iWiggles;
 
-	bool Open( std::istream&, CCoalesceMotifLibrary& );
-	uint32_t Open( const CHierarchy&, const std::vector<SMotifMatch>&, CCoalesceMotifLibrary&, size_t& );
-	uint32_t Open( const SMotifMatch&, const SMotifMatch&, CCoalesceMotifLibrary& );
-	std::string Save( const CCoalesceMotifLibrary*, bool = false, float = 0, float = 0, float = 0,
-		bool = false ) const;
-	bool Label( const CCoalesceMotifLibrary&, EType, float, float, float );
+            for (iWiggles = i = 0; i < m_veciWiggleTypes.size(); ++i)
+                if (m_veciWiggleTypes[i] != -1)
+                    iWiggles++;
 
-	bool operator==( const SMotifMatch& sMotif ) const {
+            return (iWiggles ? (m_dWeight / iWiggles) : iK);
+        }
 
-		return ( ( m_iMotif == sMotif.m_iMotif ) && ( m_strType == sMotif.m_strType ) &&
-			( m_eSubsequence == sMotif.m_eSubsequence ) ); }
+        const SCoalesceModifiers &m_Modifiers;
+        std::vector <std::vector<SFASTAWiggle>> m_vecvecsWiggles;
+        std::vector <size_t> m_veciWiggleTypes;
+        float m_dWeight;
+    };
 
-	bool operator!=( const SMotifMatch& sMotif ) const {
+    struct SMotifMatch {
+        enum EType {
+            ETypePValue,
+            ETypeRMSE,
+            ETypeJensenShannon
+        };
 
-		return !( *this == sMotif ); }
+        SMotifMatch() {}
 
-	bool operator<( const SMotifMatch& sMotif ) const {
+        SMotifMatch(uint32_t iMotif, const std::string &strType,
+                    CCoalesceSequencerBase::ESubsequence eSubsequence, float dZ, float dAverage) : m_iMotif(iMotif),
+                                                                                                   m_strType(strType),
+                                                                                                   m_eSubsequence(
+                                                                                                           eSubsequence),
+                                                                                                   m_dZ(dZ), m_dAverage(
+                        dAverage) {}
 
-		if( m_iMotif == sMotif.m_iMotif ) {
-			if( m_strType == sMotif.m_strType )
-				return ( m_eSubsequence < sMotif.m_eSubsequence );
-			return ( m_strType < sMotif.m_strType ); }
+        bool Open(std::istream &, CCoalesceMotifLibrary &);
 
-		return ( m_iMotif < sMotif.m_iMotif ); }
+        uint32_t Open(const CHierarchy &, const std::vector <SMotifMatch> &, CCoalesceMotifLibrary &, size_t &);
 
-	size_t GetHash( ) const {
-		size_t	iMotif, iType, iSubsequence;
+        uint32_t Open(const SMotifMatch &, const SMotifMatch &, CCoalesceMotifLibrary &);
 
-		iMotif = m_iMotif * ( (size_t)-1 / 20000 );
-		iType = stdext::hash_value( m_strType.c_str( ) ) * ( (size_t)-1 / 5 );
-		iSubsequence = m_eSubsequence * ( (size_t)-1 / CCoalesceSequencerBase::ESubsequenceEnd );
+        std::string Save(const CCoalesceMotifLibrary *, bool = false, float = 0, float = 0, float = 0,
+                         bool = false) const;
 
-		return ( iMotif ^ iType ^ iSubsequence ); }
+        bool Label(const CCoalesceMotifLibrary &, EType, float, float, float);
 
-	uint32_t									m_iMotif;
-	std::string									m_strType;
-	CCoalesceSequencerBase::ESubsequence		m_eSubsequence;
-	float										m_dZ;
-	float										m_dAverage;
-	std::vector<std::pair<std::string, float> >	m_vecprstrdKnown;
-};
+        bool operator==(const SMotifMatch &sMotif) const {
 
-struct SCoalesceDataset {
-	template<class tType>
-	SCoalesceDataset( const tType& Conditions ) {
+            return ((m_iMotif == sMotif.m_iMotif) && (m_strType == sMotif.m_strType) &&
+                    (m_eSubsequence == sMotif.m_eSubsequence));
+        }
 
-		m_veciConditions.resize( Conditions.size( ) );
-		std::copy( Conditions.begin( ), Conditions.end( ), m_veciConditions.begin( ) ); }
+        bool operator!=(const SMotifMatch &sMotif) const {
 
-	SCoalesceDataset( size_t iCondition ) {
+            return !(*this == sMotif);
+        }
 
-		m_veciConditions.resize( 1 );
-		m_veciConditions[ 0 ] = iCondition; }
+        bool operator<(const SMotifMatch &sMotif) const {
 
-	bool CalculateCovariance( const CPCL& );
+            if (m_iMotif == sMotif.m_iMotif) {
+                if (m_strType == sMotif.m_strType)
+                    return (m_eSubsequence < sMotif.m_eSubsequence);
+                return (m_strType < sMotif.m_strType);
+            }
 
-	bool IsCondition( size_t iCondition ) const {
+            return (m_iMotif < sMotif.m_iMotif);
+        }
 
-		return ( std::find( m_veciConditions.begin( ), m_veciConditions.end( ), iCondition ) !=
-			m_veciConditions.end( ) ); }
+        size_t GetHash() const {
+            size_t iMotif, iType, iSubsequence;
 
-	size_t GetConditions( ) const {
+            iMotif = m_iMotif * ((size_t) - 1 / 20000);
+            iType = hash_value(m_strType.c_str()) * ((size_t) - 1 / 5);
+            iSubsequence = m_eSubsequence * ((size_t) - 1 / CCoalesceSequencerBase::ESubsequenceEnd);
 
-		return m_veciConditions.size( ); }
+            return (iMotif ^ iType ^ iSubsequence);
+        }
 
-	size_t GetCondition( size_t iCondition ) const {
+        uint32_t m_iMotif;
+        std::string m_strType;
+        CCoalesceSequencerBase::ESubsequence m_eSubsequence;
+        float m_dZ;
+        float m_dAverage;
+        std::vector <std::pair<std::string, float>> m_vecprstrdKnown;
+    };
 
-		return m_veciConditions[ iCondition ]; }
+    struct SCoalesceDataset {
+        template<class tType>
+        SCoalesceDataset(const tType &Conditions) {
 
-	std::vector<size_t>	m_veciConditions;
-	CDataMatrix			m_MatSigmaChol;
-	CDataMatrix			m_MatSigmaInv;
-	double				m_dSigmaDetSqrt;
-	std::vector<float>	m_vecdStdevs;
-};
+            m_veciConditions.resize(Conditions.size());
+            std::copy(Conditions.begin(), Conditions.end(), m_veciConditions.begin());
+        }
+
+        SCoalesceDataset(size_t iCondition) {
+
+            m_veciConditions.resize(1);
+            m_veciConditions[0] = iCondition;
+        }
+
+        bool CalculateCovariance(const CPCL &);
+
+        bool IsCondition(size_t iCondition) const {
+
+            return (std::find(m_veciConditions.begin(), m_veciConditions.end(), iCondition) !=
+                    m_veciConditions.end());
+        }
+
+        size_t GetConditions() const {
+
+            return m_veciConditions.size();
+        }
+
+        size_t GetCondition(size_t iCondition) const {
+
+            return m_veciConditions[iCondition];
+        }
+
+        std::vector <size_t> m_veciConditions;
+        CDataMatrix m_MatSigmaChol;
+        CDataMatrix m_MatSigmaInv;
+        double m_dSigmaDetSqrt;
+        std::vector<float> m_vecdStdevs;
+    };
 
 }
 

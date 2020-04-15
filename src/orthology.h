@@ -61,129 +61,137 @@ namespace Sleipnir {
  * CGenome objects, one per organism of interest.  The organism ID strings used in the orthology are
  * retained and mapped to the underlying genomes.
  */
-class COrthology : COrthologyImpl {
-public:
-	bool Open( std::istream& istm );
-	void Save( std::ostream& ostm ) const;
+    class COrthology : COrthologyImpl {
+    public:
+        bool Open(std::istream &istm);
 
-	/*!
-	 * \brief
-	 * Return the number of clusters in the orthology.
-	 * 
-	 * \returns
-	 * Number of clusters in the orthology.
-	 * 
-	 * \see
-	 * GetCluster
-	 */
-	size_t GetClusters( ) const {
+        void Save(std::ostream &ostm) const;
 
-		return m_vecvecpGenes.size( ); }
+        /*!
+         * \brief
+         * Return the number of clusters in the orthology.
+         *
+         * \returns
+         * Number of clusters in the orthology.
+         *
+         * \see
+         * GetCluster
+         */
+        size_t GetClusters() const {
 
-	/*!
-	 * \brief
-	 * Return the number of genes in the requested cluster.
-	 * 
-	 * \param iCluster
-	 * Cluster from which genes should be returned.
-	 * 
-	 * \returns
-	 * Number of genes in the given cluster.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given value must be smaller than GetClusters.
-	 */
-	size_t GetGenes( size_t iCluster ) const {
+            return m_vecvecpGenes.size();
+        }
 
-		return m_vecvecpGenes[ iCluster ].size( ); }
+        /*!
+         * \brief
+         * Return the number of genes in the requested cluster.
+         *
+         * \param iCluster
+         * Cluster from which genes should be returned.
+         *
+         * \returns
+         * Number of genes in the given cluster.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given value must be smaller than GetClusters.
+         */
+        size_t GetGenes(size_t iCluster) const {
 
-	/*!
-	 * \brief
-	 * Return the gene at the given index within the given cluster.
-	 * 
-	 * \param iCluster
-	 * Cluster from which gene should be returned.
-	 * 
-	 * \param iGene
-	 * Index of gene to retrieve from cluster.
-	 * 
-	 * \returns
-	 * Gene at the given index within the given clusterl.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given values must be smaller than GetClusters
-	 * and GetGenes.
-	 */
-	CGene& GetGene( size_t iCluster, size_t iGene ) const {
+            return m_vecvecpGenes[iCluster].size();
+        }
 
-		return *m_vecvecpGenes[ iCluster ][ iGene ]; }
+        /*!
+         * \brief
+         * Return the gene at the given index within the given cluster.
+         *
+         * \param iCluster
+         * Cluster from which gene should be returned.
+         *
+         * \param iGene
+         * Index of gene to retrieve from cluster.
+         *
+         * \returns
+         * Gene at the given index within the given clusterl.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given values must be smaller than GetClusters
+         * and GetGenes.
+         */
+        CGene &GetGene(size_t iCluster, size_t iGene) const {
 
-	/*!
-	 * \brief
-	 * Return the number of genomes (organisms) in the orthology.
-	 * 
-	 * \returns
-	 * Number of genomes in the orthology.
-	 */
-	size_t GetGenomes( ) const {
+            return *m_vecvecpGenes[iCluster][iGene];
+        }
 
-		return m_vecpGenomes.size( ); }
+        /*!
+         * \brief
+         * Return the number of genomes (organisms) in the orthology.
+         *
+         * \returns
+         * Number of genomes in the orthology.
+         */
+        size_t GetGenomes() const {
 
-	/*!
-	 * \brief
-	 * Return the genome at the requested organism index.
-	 * 
-	 * \param iOrganism
-	 * Index of genome to return.
-	 * 
-	 * \returns
-	 * Genome at the requested index.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given value must be smaller than GetGenomes.
-	 */
-	CGenome* GetGenome( size_t iOrganism ) const {
+            return m_vecpGenomes.size();
+        }
 
-		return m_vecpGenomes[ iOrganism ]; }
+        /*!
+         * \brief
+         * Return the genome at the requested organism index.
+         *
+         * \param iOrganism
+         * Index of genome to return.
+         *
+         * \returns
+         * Genome at the requested index.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given value must be smaller than GetGenomes.
+         */
+        CGenome *GetGenome(size_t iOrganism) const {
 
-	/*!
-	 * \brief
-	 * Return the human-readable string identifier of the requested organism index.
-	 * 
-	 * \param iOrganism
-	 * Index of organism ID to return.
-	 * 
-	 * \returns
-	 * Organism ID at the requested index.
-	 * 
-	 * \remarks
-	 * For efficiency, no bounds checking is performed.  The given value must be smaller than GetGenomes.
-	 */
-	const std::string& GetOrganism( size_t iOrganism ) const {
+            return m_vecpGenomes[iOrganism];
+        }
 
-		return m_vecstrOrganisms[ iOrganism ]; }
+        /*!
+         * \brief
+         * Return the human-readable string identifier of the requested organism index.
+         *
+         * \param iOrganism
+         * Index of organism ID to return.
+         *
+         * \returns
+         * Organism ID at the requested index.
+         *
+         * \remarks
+         * For efficiency, no bounds checking is performed.  The given value must be smaller than GetGenomes.
+         */
+        const std::string &GetOrganism(size_t iOrganism) const {
 
-	/*!
-	 * \brief
-	 * Return the index of the organism whose genome contains the given gene, or -1 if none exists.
-	 * 
-	 * \param Gene
-	 * Gene whose organism index should be retrieved.
-	 * 
-	 * \returns
-	 * Organism index associated with the given gene; -1 if none exists.
-	 * 
-	 * \remarks
-	 * Gene comparison is done by pointer, so a different gene with the same primary identifier will
-	 * not match.  Gene/genome associations are maintained in a map by the orthology, so this
-	 * lookup is fast.
-	 */
-	size_t GetOrganism( const CGene& Gene ) const {
-		TMapGeneI::const_iterator	iterGenome;
+            return m_vecstrOrganisms[iOrganism];
+        }
 
-		return ( ( ( iterGenome = m_mapGenes.find( (CGene*)&Gene ) ) == m_mapGenes.end( ) ) ? -1 :
-			iterGenome->second ); }
-};
+        /*!
+         * \brief
+         * Return the index of the organism whose genome contains the given gene, or -1 if none exists.
+         *
+         * \param Gene
+         * Gene whose organism index should be retrieved.
+         *
+         * \returns
+         * Organism index associated with the given gene; -1 if none exists.
+         *
+         * \remarks
+         * Gene comparison is done by pointer, so a different gene with the same primary identifier will
+         * not match.  Gene/genome associations are maintained in a map by the orthology, so this
+         * lookup is fast.
+         */
+        size_t GetOrganism(const CGene &Gene) const {
+            TMapGeneI::const_iterator iterGenome;
+
+            return (((iterGenome = m_mapGenes.find((CGene *) &Gene)) == m_mapGenes.end()) ? -1 :
+                    iterGenome->second);
+        }
+    };
 
 }
 

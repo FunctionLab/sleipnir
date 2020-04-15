@@ -23,6 +23,7 @@
 #define STDAFX_H
 
 #include <fstream>
+
 using namespace std;
 
 #include "dataset.h"
@@ -30,10 +31,11 @@ using namespace std;
 #include "meta.h"
 #include "pcl.h"
 #include "statistics.h"
+
 using namespace Sleipnir;
 
 #include "cmdline.h"
 
-typedef int (*TPFnCombiner)( const gengetopt_args_info& );
+typedef int (*TPFnCombiner)(const gengetopt_args_info &);
 
 #endif // STDAFX_H

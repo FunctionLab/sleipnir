@@ -29,6 +29,7 @@
 #include <map>
 #include <string>
 #include <omp.h>
+
 using namespace std;
 
 #include <pthread.h>
@@ -39,6 +40,7 @@ using namespace std;
 #include "seekwriter.h"
 #include "sparsematrix.h"
 #include "meta.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

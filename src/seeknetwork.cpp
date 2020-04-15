@@ -44,201 +44,199 @@ namespace Sleipnir {
 //byte #9-:
 // actual data
 
-int CSeekNetwork::Send(int new_fd, const string &str){
-	char *s = new char[2*sizeof(unsigned int)];
-	unsigned int *p = (unsigned int*) s;
-	*p = sizeof(char); p++;
-	*p = str.length()+1;
-	if(CSeekNetwork::Send(new_fd, s, 2*sizeof(unsigned int))==-1){
-		fprintf(stderr, "Bad 1\n");
-		delete[] s;
-		return -1;
-	}
-	delete[] s;
-	
-	char *c = new char[str.length()+1];
-	strcpy(c, str.c_str());
-	if(CSeekNetwork::Send(new_fd, c, str.length()+1)==-1){
-		fprintf(stderr, "Bad 2\n");
-		delete[] c;
-		return -1;
-	}
-	delete[] c;
-	return 0;
-}
+    int CSeekNetwork::Send(int new_fd, const string &str) {
+        char *s = new char[2 * sizeof(unsigned int)];
+        unsigned int *p = (unsigned int *) s;
+        *p = sizeof(char);
+        p++;
+        *p = str.length() + 1;
+        if (CSeekNetwork::Send(new_fd, s, 2 * sizeof(unsigned int)) == -1) {
+            fprintf(stderr, "Bad 1\n");
+            delete[] s;
+            return -1;
+        }
+        delete[] s;
 
-int CSeekNetwork::Send(int new_fd, const vector<float> &f){
-	char *s = new char[2*sizeof(unsigned int)];
-	unsigned int *p = (unsigned int*) s;
-	*p = sizeof(float); p++;
-	*p = f.size();
-	if(CSeekNetwork::Send(new_fd, s, 2*sizeof(unsigned int))==-1){
-		fprintf(stderr, "Bad 1\n");
-		delete[] s;
-		return -1;
-	}
-	delete[] s;
-	
-	char *c = new char[sizeof(float)*f.size()];
-	float *fp = (float*)c;
-	int i;
-	for(i=0; i<f.size(); i++){
-		*fp = f[i];
-		fp++;
-	}
-	if(CSeekNetwork::Send(new_fd, c, sizeof(float)*f.size())==-1){
-		fprintf(stderr, "Bad 2\n");
-		delete[] c;
-		return -1;
-	}
-	delete[] c;
-	return 0;
-}
-
-int CSeekNetwork::Send(int new_fd, char *c, int size){
-	int tmp_size = size;
-	int beg = 0;
-
-	int r  = -1;
-	while(1){
-		char *p = new char[tmp_size];
-		Copy(p, c, beg, tmp_size);
-		r = send(new_fd, p, tmp_size, 0);
-		if(r==-1){
-			fprintf(stderr, "client exits");
-			break;
-		}
-		if(r==tmp_size){
-			break;
-		}
-		tmp_size = size - tmp_size;
-		beg = beg + r;
-		delete[] p;
-	}
-
-	return r;
-}
-
-void CSeekNetwork::Clear(char *b, int size){
-	int i = 0;
-	for(i=0; i<size; i++){
-		b[i] = '\0';
-	}
-}
-
-int CSeekNetwork::Copy(char *d, char *s, int beg, int num){
-    int i;
-    for(i=0; i<num; i++){
-        d[beg+i] = s[i];
+        char *c = new char[str.length() + 1];
+        strcpy(c, str.c_str());
+        if (CSeekNetwork::Send(new_fd, c, str.length() + 1) == -1) {
+            fprintf(stderr, "Bad 2\n");
+            delete[] c;
+            return -1;
+        }
+        delete[] c;
+        return 0;
     }
-    return beg+num;
-}
 
-int CSeekNetwork::Receive(int new_fd, vector<float> &f){
-	char *ar = new char[4];
-	char *p = &ar[0];
-	int tmp_size = 4;
-	int receive_size = -1;
-	while(1){
-		receive_size = recv(new_fd, p, tmp_size, 0);
-		if(receive_size==tmp_size){
-			break;
-		}
-		else if(receive_size==-1){
-			fprintf(stderr, "client exits\n");
-			break;
-		}
-		tmp_size = tmp_size - receive_size;
-		p+=receive_size;
-	}
-	if(receive_size==-1)
-		return -1;
+    int CSeekNetwork::Send(int new_fd, const vector<float> &f) {
+        char *s = new char[2 * sizeof(unsigned int)];
+        unsigned int *p = (unsigned int *) s;
+        *p = sizeof(float);
+        p++;
+        *p = f.size();
+        if (CSeekNetwork::Send(new_fd, s, 2 * sizeof(unsigned int)) == -1) {
+            fprintf(stderr, "Bad 1\n");
+            delete[] s;
+            return -1;
+        }
+        delete[] s;
 
-	int *iP = (int*)ar;
-	int length = *iP;
-	f.resize(length);
+        char *c = new char[sizeof(float) * f.size()];
+        float *fp = (float *) c;
+        int i;
+        for (i = 0; i < f.size(); i++) {
+            *fp = f[i];
+            fp++;
+        }
+        if (CSeekNetwork::Send(new_fd, c, sizeof(float) * f.size()) == -1) {
+            fprintf(stderr, "Bad 2\n");
+            delete[] c;
+            return -1;
+        }
+        delete[] c;
+        return 0;
+    }
 
-	char *cStr = new char[length*sizeof(float)];
-	tmp_size = length*sizeof(float);
-	receive_size = -1;
-	p = &cStr[0];
+    int CSeekNetwork::Send(int new_fd, char *c, int size) {
+        int tmp_size = size;
+        int beg = 0;
 
-	while(1){
-		receive_size = recv(new_fd, p, tmp_size, 0);
-		if(receive_size==tmp_size){
-			break;
-		}
-		else if(receive_size==-1){
-			fprintf(stderr, "client exits\n");
-			break;
-		}
-		tmp_size = tmp_size - receive_size;
-		p+=receive_size;
-	}
-	if(receive_size==-1)
-		return -1;
+        int r = -1;
+        while (1) {
+            char *p = new char[tmp_size];
+            Copy(p, c, beg, tmp_size);
+            r = send(new_fd, p, tmp_size, 0);
+            if (r == -1) {
+                fprintf(stderr, "client exits");
+                break;
+            }
+            if (r == tmp_size) {
+                break;
+            }
+            tmp_size = size - tmp_size;
+            beg = beg + r;
+            delete[] p;
+        }
 
-	int i;
-	float *fp = (float*)cStr;
-	for(i=0; i<length; i++){
-		f[i] = *fp;
-		fp++;
-	}
-	delete[] ar;
-	delete[] cStr;
-	return 0;
-}
+        return r;
+    }
+
+    void CSeekNetwork::Clear(char *b, int size) {
+        int i = 0;
+        for (i = 0; i < size; i++) {
+            b[i] = '\0';
+        }
+    }
+
+    int CSeekNetwork::Copy(char *d, char *s, int beg, int num) {
+        int i;
+        for (i = 0; i < num; i++) {
+            d[beg + i] = s[i];
+        }
+        return beg + num;
+    }
+
+    int CSeekNetwork::Receive(int new_fd, vector<float> &f) {
+        char *ar = new char[4];
+        char *p = &ar[0];
+        int tmp_size = 4;
+        int receive_size = -1;
+        while (1) {
+            receive_size = recv(new_fd, p, tmp_size, 0);
+            if (receive_size == tmp_size) {
+                break;
+            } else if (receive_size == -1) {
+                fprintf(stderr, "client exits\n");
+                break;
+            }
+            tmp_size = tmp_size - receive_size;
+            p += receive_size;
+        }
+        if (receive_size == -1)
+            return -1;
+
+        int *iP = (int *) ar;
+        int length = *iP;
+        f.resize(length);
+
+        char *cStr = new char[length * sizeof(float)];
+        tmp_size = length * sizeof(float);
+        receive_size = -1;
+        p = &cStr[0];
+
+        while (1) {
+            receive_size = recv(new_fd, p, tmp_size, 0);
+            if (receive_size == tmp_size) {
+                break;
+            } else if (receive_size == -1) {
+                fprintf(stderr, "client exits\n");
+                break;
+            }
+            tmp_size = tmp_size - receive_size;
+            p += receive_size;
+        }
+        if (receive_size == -1)
+            return -1;
+
+        int i;
+        float *fp = (float *) cStr;
+        for (i = 0; i < length; i++) {
+            f[i] = *fp;
+            fp++;
+        }
+        delete[] ar;
+        delete[] cStr;
+        return 0;
+    }
 
 
-int CSeekNetwork::Receive(int new_fd, string &s){
-	char *ar = new char[4];
-	char *p = &ar[0];
-	int tmp_size = 4;
-	int receive_size = -1;
-	while(1){
-		receive_size = recv(new_fd, p, tmp_size, 0);
-		if(receive_size==tmp_size){
-			break;
-		}
-		else if(receive_size==-1){
-			fprintf(stderr, "client exits\n");
-			break;
-		}
-		tmp_size = tmp_size - receive_size;
-		p+=receive_size;
-	}
+    int CSeekNetwork::Receive(int new_fd, string &s) {
+        char *ar = new char[4];
+        char *p = &ar[0];
+        int tmp_size = 4;
+        int receive_size = -1;
+        while (1) {
+            receive_size = recv(new_fd, p, tmp_size, 0);
+            if (receive_size == tmp_size) {
+                break;
+            } else if (receive_size == -1) {
+                fprintf(stderr, "client exits\n");
+                break;
+            }
+            tmp_size = tmp_size - receive_size;
+            p += receive_size;
+        }
 
-	if(receive_size==-1){
-		return -1;
-	}
-	int *iP = (int*)ar;
-	int length = *iP;
-	char *cStr = new char[length];
-	tmp_size = length;
-	receive_size = -1;
-	p = &cStr[0];
-	
-	while(1){
-		receive_size = recv(new_fd, p, tmp_size, 0);
-		if(receive_size==tmp_size){
-			break;
-		}
-		else if(receive_size==-1){
-			fprintf(stderr, "client exits\n");
-			break;
-		}
-		tmp_size = tmp_size - receive_size;
-		p+=receive_size;
-	}
-	if(receive_size==-1){
-		return -1;
-	}
+        if (receive_size == -1) {
+            return -1;
+        }
+        int *iP = (int *) ar;
+        int length = *iP;
+        char *cStr = new char[length];
+        tmp_size = length;
+        receive_size = -1;
+        p = &cStr[0];
 
-	s = cStr; //copy result into string
-	delete[] ar;
-	delete[] cStr;
-	return 0;
-}
+        while (1) {
+            receive_size = recv(new_fd, p, tmp_size, 0);
+            if (receive_size == tmp_size) {
+                break;
+            } else if (receive_size == -1) {
+                fprintf(stderr, "client exits\n");
+                break;
+            }
+            tmp_size = tmp_size - receive_size;
+            p += receive_size;
+        }
+        if (receive_size == -1) {
+            return -1;
+        }
+
+        s = cStr; //copy result into string
+        delete[] ar;
+        delete[] cStr;
+        return 0;
+    }
 
 }
 

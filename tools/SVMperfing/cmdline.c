@@ -28,579 +28,554 @@ const char *gengetopt_args_info_usage = "Usage: SVMperfer [OPTIONS]... [FILES]..
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                    Print help and exit",
-  "      --version                 Print version and exit",
-  "\nMain:",
-  "  -l, --labels=filename         Labels file",
-  "  -o, --output=filename         Output file ",
-  "  -d, --directory=directory     input directory (must only contain input files)",
-  "  -m, --model=filename          input Model file",
-  "  -L, --modelPrefix=filename    input Model prefix",
-  "  -S, --slack                   Use slack rescaling (not implemented for ROC \n                                  loss)  (default=off)",
-  "\nOptions:",
-  "  -v, --verbosity=INT           Sets the svm_struct verbosity  (default=`0')",
-  "  -c, --cross_validation=INT    Number of cross-validation sets ( arg of 1 will \n                                  turn off cross-validation )  (default=`5')",
-  "  -e, --error_function=INT      Sets the loss function for SVM learning: Choice \n                                  of:\n\n                                  0\tZero/one loss: 1 if vector of predictions \n                                  contains error, 0 otherwise.\n\n                                  1\tF1: 100 minus the F1-score in percent.\n\n                                  2\tErrorrate: Percentage of errors in \n                                  prediction vector.\n\n                                  3\tPrec/Rec Breakeven: 100 minus PRBEP in \n                                  percent.\n\n                                  4\tPrec@k: 100 minus precision at k in \n                                  percent.\n\n                                  5\tRec@k: 100 minus recall at k in percent.\n\n                                  10\tROCArea: Percentage of swapped pos/neg \n                                  pairs (i.e. 100 - ROCArea).\n                                    (default=`10')",
-  "  -k, --k_value=FLOAT           Value of k parameter used for Prec@k and Rec@k \n                                  in (0,1)  (default=`0.5')",
-  "  -t, --tradeoff=FLOAT          SVM tradeoff constant C  (default=`1')",
-  "  -a, --allgenes=filename       Gene list that list all genes to make \n                                  predictions",
-  "  -p, --params=filename         NOT IMPLEMENTED YET: Parameter file",
-  "  -n, --nan2neg                 set missing values(NaN in dab file) from labels \n                                  file as negative examples  (default=off)",
-  "  -M, --mmap                    Memory map binary input  (default=off)",
-  "  -R, --random=INT              Seed random generator (default -1 uses current \n                                  time)  (default=`-1')",
-  "  -T, --tgene=filename          Target gene list, use this gene list as gene \n                                  holdout cross-validation and also filter \n                                  labels that only have one gene in given \n                                  target gene list",
-  "  -B, --prob                    Output prediction values as estimated \n                                  probablity (Platt method)  (default=off)",
-  "  -D, --probCross               Cross-validation setting for output prediction \n                                  values as estimated probablity (Platt method) \n                                   (default=off)",
-  "  -z, --normalizeZero           Normalize input data to the range [0, 1]  \n                                  (default=off)",
-  "  -N, --normalizeNPone          Normalize input data to the range [-1, 1]  \n                                  (default=off)",
-  "  -Z, --zscore                  Normalize input data to convert values to \n                                  z-scores  (default=off)",
-  "  -X, --edgeholdout             For cross-validation perform edge holdout \n                                  (Default is gene holdout)  (default=off)",
-  "  -Q, --skipSVM                 If given this flag, skip training SVM models \n                                  when file already exist. Often used when \n                                  cluster runs timeout/error and need to re-run \n                                  jobs.  (default=off)",
-  "  -x, --aggregateMax            If given this flag, when predicting for all \n                                  gene pairs with multiple SVM models(bagging) \n                                  aggregate using the maximum prediction value \n                                  (Default: average)  (default=off)",
-  "  -r, --NoCrossPredict          Don't use the cross-validated prediction values \n                                  for gene pairs that have labels in the final \n                                  output. This flag will basically let SVM \n                                  models make prediction on pairs that were \n                                  also used for training.  (default=off)",
-  "  -u, --CrossResult=filename    Cross-validation prediction results, if given \n                                  when prediction mode these values are \n                                  replaced into final prediction values",
-  "  -y, --SampledLabels=filename  Save the sampled final training labels to this \n                                  file",
-  "  -A, --subsample=FLOAT         Sample the labels to the following rate",
-  "  -U, --OutLabels=filename      Save the sampled labels to the file and exit",
-  "  -H, --GenesHoldoutFold=filename\n                                Input the gene holdout fold",
-  "  -f, --touchContext            If given context gene list, context is defined \n                                  by all edges touch the context. (default is \n                                  both genes in edge need to be in context)  \n                                  (default=off)",
-  "  -w, --onlyPos                 When given the context file, only filter for \n                                  positive examples and leave negative examples \n                                  as originally given.  (default=off)",
-  "\nFiltering:",
-  "  -g, --genes=filename          Process only genes from the given set from \n                                  labels",
-  "  -q, --onetgene                Only keep edges from lables that have one gene \n                                  in the target gene list  (default=off)",
-  "  -P, --prior=FLOAT             Randomly sub-sample the negative labels to \n                                  reach target prior. If cannot reach target \n                                  prior, set to closest prior.",
-  "  -s, --savemodel               Save model to file  (default=off)",
-  "  -E, --mintrain=FLOAT          Minimum number of total positive examples to \n                                  allow training, if not met exit",
-  "  -C, --context=filename        Context gene list",
-  "  -V, --allContextPred          When given context genes list, allow prediction \n                                  too all genes  (default=off)",
-    0
+        "  -h, --help                    Print help and exit",
+        "      --version                 Print version and exit",
+        "\nMain:",
+        "  -l, --labels=filename         Labels file",
+        "  -o, --output=filename         Output file ",
+        "  -d, --directory=directory     input directory (must only contain input files)",
+        "  -m, --model=filename          input Model file",
+        "  -L, --modelPrefix=filename    input Model prefix",
+        "  -S, --slack                   Use slack rescaling (not implemented for ROC \n                                  loss)  (default=off)",
+        "\nOptions:",
+        "  -v, --verbosity=INT           Sets the svm_struct verbosity  (default=`0')",
+        "  -c, --cross_validation=INT    Number of cross-validation sets ( arg of 1 will \n                                  turn off cross-validation )  (default=`5')",
+        "  -e, --error_function=INT      Sets the loss function for SVM learning: Choice \n                                  of:\n\n                                  0\tZero/one loss: 1 if vector of predictions \n                                  contains error, 0 otherwise.\n\n                                  1\tF1: 100 minus the F1-score in percent.\n\n                                  2\tErrorrate: Percentage of errors in \n                                  prediction vector.\n\n                                  3\tPrec/Rec Breakeven: 100 minus PRBEP in \n                                  percent.\n\n                                  4\tPrec@k: 100 minus precision at k in \n                                  percent.\n\n                                  5\tRec@k: 100 minus recall at k in percent.\n\n                                  10\tROCArea: Percentage of swapped pos/neg \n                                  pairs (i.e. 100 - ROCArea).\n                                    (default=`10')",
+        "  -k, --k_value=FLOAT           Value of k parameter used for Prec@k and Rec@k \n                                  in (0,1)  (default=`0.5')",
+        "  -t, --tradeoff=FLOAT          SVM tradeoff constant C  (default=`1')",
+        "  -a, --allgenes=filename       Gene list that list all genes to make \n                                  predictions",
+        "  -p, --params=filename         NOT IMPLEMENTED YET: Parameter file",
+        "  -n, --nan2neg                 set missing values(NaN in dab file) from labels \n                                  file as negative examples  (default=off)",
+        "  -M, --mmap                    Memory map binary input  (default=off)",
+        "  -R, --random=INT              Seed random generator (default -1 uses current \n                                  time)  (default=`-1')",
+        "  -T, --tgene=filename          Target gene list, use this gene list as gene \n                                  holdout cross-validation and also filter \n                                  labels that only have one gene in given \n                                  target gene list",
+        "  -B, --prob                    Output prediction values as estimated \n                                  probablity (Platt method)  (default=off)",
+        "  -D, --probCross               Cross-validation setting for output prediction \n                                  values as estimated probablity (Platt method) \n                                   (default=off)",
+        "  -z, --normalizeZero           Normalize input data to the range [0, 1]  \n                                  (default=off)",
+        "  -N, --normalizeNPone          Normalize input data to the range [-1, 1]  \n                                  (default=off)",
+        "  -Z, --zscore                  Normalize input data to convert values to \n                                  z-scores  (default=off)",
+        "  -X, --edgeholdout             For cross-validation perform edge holdout \n                                  (Default is gene holdout)  (default=off)",
+        "  -Q, --skipSVM                 If given this flag, skip training SVM models \n                                  when file already exist. Often used when \n                                  cluster runs timeout/error and need to re-run \n                                  jobs.  (default=off)",
+        "  -x, --aggregateMax            If given this flag, when predicting for all \n                                  gene pairs with multiple SVM models(bagging) \n                                  aggregate using the maximum prediction value \n                                  (Default: average)  (default=off)",
+        "  -r, --NoCrossPredict          Don't use the cross-validated prediction values \n                                  for gene pairs that have labels in the final \n                                  output. This flag will basically let SVM \n                                  models make prediction on pairs that were \n                                  also used for training.  (default=off)",
+        "  -u, --CrossResult=filename    Cross-validation prediction results, if given \n                                  when prediction mode these values are \n                                  replaced into final prediction values",
+        "  -y, --SampledLabels=filename  Save the sampled final training labels to this \n                                  file",
+        "  -A, --subsample=FLOAT         Sample the labels to the following rate",
+        "  -U, --OutLabels=filename      Save the sampled labels to the file and exit",
+        "  -H, --GenesHoldoutFold=filename\n                                Input the gene holdout fold",
+        "  -f, --touchContext            If given context gene list, context is defined \n                                  by all edges touch the context. (default is \n                                  both genes in edge need to be in context)  \n                                  (default=off)",
+        "  -w, --onlyPos                 When given the context file, only filter for \n                                  positive examples and leave negative examples \n                                  as originally given.  (default=off)",
+        "\nFiltering:",
+        "  -g, --genes=filename          Process only genes from the given set from \n                                  labels",
+        "  -q, --onetgene                Only keep edges from lables that have one gene \n                                  in the target gene list  (default=off)",
+        "  -P, --prior=FLOAT             Randomly sub-sample the negative labels to \n                                  reach target prior. If cannot reach target \n                                  prior, set to closest prior.",
+        "  -s, --savemodel               Save model to file  (default=off)",
+        "  -E, --mintrain=FLOAT          Minimum number of total positive examples to \n                                  allow training, if not met exit",
+        "  -C, --context=filename        Context gene list",
+        "  -V, --allContextPred          When given context genes list, allow prediction \n                                  too all genes  (default=off)",
+        0
 };
 
-typedef enum {ARG_NO
-  , ARG_FLAG
-  , ARG_STRING
-  , ARG_INT
-  , ARG_FLOAT
+typedef enum {
+    ARG_NO, ARG_FLAG, ARG_STRING, ARG_INT, ARG_FLOAT
 } cmdline_parser_arg_type;
 
 static
-void clear_given (struct gengetopt_args_info *args_info);
+void clear_given(struct gengetopt_args_info *args_info);
+
 static
-void clear_args (struct gengetopt_args_info *args_info);
+void clear_args(struct gengetopt_args_info *args_info);
 
 static int
-cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_info *args_info,
+cmdline_parser_internal(int argc, char *const *argv, struct gengetopt_args_info *args_info,
                         struct cmdline_parser_params *params, const char *additional_error);
 
 static int
-cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error);
+cmdline_parser_required2(struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error);
 
 static char *
-gengetopt_strdup (const char *s);
+gengetopt_strdup(const char *s);
 
 static
-void clear_given (struct gengetopt_args_info *args_info)
-{
-  args_info->help_given = 0 ;
-  args_info->version_given = 0 ;
-  args_info->labels_given = 0 ;
-  args_info->output_given = 0 ;
-  args_info->directory_given = 0 ;
-  args_info->model_given = 0 ;
-  args_info->modelPrefix_given = 0 ;
-  args_info->slack_given = 0 ;
-  args_info->verbosity_given = 0 ;
-  args_info->cross_validation_given = 0 ;
-  args_info->error_function_given = 0 ;
-  args_info->k_value_given = 0 ;
-  args_info->tradeoff_given = 0 ;
-  args_info->allgenes_given = 0 ;
-  args_info->params_given = 0 ;
-  args_info->nan2neg_given = 0 ;
-  args_info->mmap_given = 0 ;
-  args_info->random_given = 0 ;
-  args_info->tgene_given = 0 ;
-  args_info->prob_given = 0 ;
-  args_info->probCross_given = 0 ;
-  args_info->normalizeZero_given = 0 ;
-  args_info->normalizeNPone_given = 0 ;
-  args_info->zscore_given = 0 ;
-  args_info->edgeholdout_given = 0 ;
-  args_info->skipSVM_given = 0 ;
-  args_info->aggregateMax_given = 0 ;
-  args_info->NoCrossPredict_given = 0 ;
-  args_info->CrossResult_given = 0 ;
-  args_info->SampledLabels_given = 0 ;
-  args_info->subsample_given = 0 ;
-  args_info->OutLabels_given = 0 ;
-  args_info->GenesHoldoutFold_given = 0 ;
-  args_info->touchContext_given = 0 ;
-  args_info->onlyPos_given = 0 ;
-  args_info->genes_given = 0 ;
-  args_info->onetgene_given = 0 ;
-  args_info->prior_given = 0 ;
-  args_info->savemodel_given = 0 ;
-  args_info->mintrain_given = 0 ;
-  args_info->context_given = 0 ;
-  args_info->allContextPred_given = 0 ;
+void clear_given(struct gengetopt_args_info *args_info) {
+    args_info->help_given = 0;
+    args_info->version_given = 0;
+    args_info->labels_given = 0;
+    args_info->output_given = 0;
+    args_info->directory_given = 0;
+    args_info->model_given = 0;
+    args_info->modelPrefix_given = 0;
+    args_info->slack_given = 0;
+    args_info->verbosity_given = 0;
+    args_info->cross_validation_given = 0;
+    args_info->error_function_given = 0;
+    args_info->k_value_given = 0;
+    args_info->tradeoff_given = 0;
+    args_info->allgenes_given = 0;
+    args_info->params_given = 0;
+    args_info->nan2neg_given = 0;
+    args_info->mmap_given = 0;
+    args_info->random_given = 0;
+    args_info->tgene_given = 0;
+    args_info->prob_given = 0;
+    args_info->probCross_given = 0;
+    args_info->normalizeZero_given = 0;
+    args_info->normalizeNPone_given = 0;
+    args_info->zscore_given = 0;
+    args_info->edgeholdout_given = 0;
+    args_info->skipSVM_given = 0;
+    args_info->aggregateMax_given = 0;
+    args_info->NoCrossPredict_given = 0;
+    args_info->CrossResult_given = 0;
+    args_info->SampledLabels_given = 0;
+    args_info->subsample_given = 0;
+    args_info->OutLabels_given = 0;
+    args_info->GenesHoldoutFold_given = 0;
+    args_info->touchContext_given = 0;
+    args_info->onlyPos_given = 0;
+    args_info->genes_given = 0;
+    args_info->onetgene_given = 0;
+    args_info->prior_given = 0;
+    args_info->savemodel_given = 0;
+    args_info->mintrain_given = 0;
+    args_info->context_given = 0;
+    args_info->allContextPred_given = 0;
 }
 
 static
-void clear_args (struct gengetopt_args_info *args_info)
-{
-  args_info->labels_arg = NULL;
-  args_info->labels_orig = NULL;
-  args_info->output_arg = NULL;
-  args_info->output_orig = NULL;
-  args_info->directory_arg = NULL;
-  args_info->directory_orig = NULL;
-  args_info->model_arg = NULL;
-  args_info->model_orig = NULL;
-  args_info->modelPrefix_arg = NULL;
-  args_info->modelPrefix_orig = NULL;
-  args_info->slack_flag = 0;
-  args_info->verbosity_arg = 0;
-  args_info->verbosity_orig = NULL;
-  args_info->cross_validation_arg = 5;
-  args_info->cross_validation_orig = NULL;
-  args_info->error_function_arg = 10;
-  args_info->error_function_orig = NULL;
-  args_info->k_value_arg = 0.5;
-  args_info->k_value_orig = NULL;
-  args_info->tradeoff_arg = 1;
-  args_info->tradeoff_orig = NULL;
-  args_info->allgenes_arg = NULL;
-  args_info->allgenes_orig = NULL;
-  args_info->params_arg = NULL;
-  args_info->params_orig = NULL;
-  args_info->nan2neg_flag = 0;
-  args_info->mmap_flag = 0;
-  args_info->random_arg = -1;
-  args_info->random_orig = NULL;
-  args_info->tgene_arg = NULL;
-  args_info->tgene_orig = NULL;
-  args_info->prob_flag = 0;
-  args_info->probCross_flag = 0;
-  args_info->normalizeZero_flag = 0;
-  args_info->normalizeNPone_flag = 0;
-  args_info->zscore_flag = 0;
-  args_info->edgeholdout_flag = 0;
-  args_info->skipSVM_flag = 0;
-  args_info->aggregateMax_flag = 0;
-  args_info->NoCrossPredict_flag = 0;
-  args_info->CrossResult_arg = NULL;
-  args_info->CrossResult_orig = NULL;
-  args_info->SampledLabels_arg = NULL;
-  args_info->SampledLabels_orig = NULL;
-  args_info->subsample_orig = NULL;
-  args_info->OutLabels_arg = NULL;
-  args_info->OutLabels_orig = NULL;
-  args_info->GenesHoldoutFold_arg = NULL;
-  args_info->GenesHoldoutFold_orig = NULL;
-  args_info->touchContext_flag = 0;
-  args_info->onlyPos_flag = 0;
-  args_info->genes_arg = NULL;
-  args_info->genes_orig = NULL;
-  args_info->onetgene_flag = 0;
-  args_info->prior_orig = NULL;
-  args_info->savemodel_flag = 0;
-  args_info->mintrain_orig = NULL;
-  args_info->context_arg = NULL;
-  args_info->context_orig = NULL;
-  args_info->allContextPred_flag = 0;
-  
+void clear_args(struct gengetopt_args_info *args_info) {
+    args_info->labels_arg = NULL;
+    args_info->labels_orig = NULL;
+    args_info->output_arg = NULL;
+    args_info->output_orig = NULL;
+    args_info->directory_arg = NULL;
+    args_info->directory_orig = NULL;
+    args_info->model_arg = NULL;
+    args_info->model_orig = NULL;
+    args_info->modelPrefix_arg = NULL;
+    args_info->modelPrefix_orig = NULL;
+    args_info->slack_flag = 0;
+    args_info->verbosity_arg = 0;
+    args_info->verbosity_orig = NULL;
+    args_info->cross_validation_arg = 5;
+    args_info->cross_validation_orig = NULL;
+    args_info->error_function_arg = 10;
+    args_info->error_function_orig = NULL;
+    args_info->k_value_arg = 0.5;
+    args_info->k_value_orig = NULL;
+    args_info->tradeoff_arg = 1;
+    args_info->tradeoff_orig = NULL;
+    args_info->allgenes_arg = NULL;
+    args_info->allgenes_orig = NULL;
+    args_info->params_arg = NULL;
+    args_info->params_orig = NULL;
+    args_info->nan2neg_flag = 0;
+    args_info->mmap_flag = 0;
+    args_info->random_arg = -1;
+    args_info->random_orig = NULL;
+    args_info->tgene_arg = NULL;
+    args_info->tgene_orig = NULL;
+    args_info->prob_flag = 0;
+    args_info->probCross_flag = 0;
+    args_info->normalizeZero_flag = 0;
+    args_info->normalizeNPone_flag = 0;
+    args_info->zscore_flag = 0;
+    args_info->edgeholdout_flag = 0;
+    args_info->skipSVM_flag = 0;
+    args_info->aggregateMax_flag = 0;
+    args_info->NoCrossPredict_flag = 0;
+    args_info->CrossResult_arg = NULL;
+    args_info->CrossResult_orig = NULL;
+    args_info->SampledLabels_arg = NULL;
+    args_info->SampledLabels_orig = NULL;
+    args_info->subsample_orig = NULL;
+    args_info->OutLabels_arg = NULL;
+    args_info->OutLabels_orig = NULL;
+    args_info->GenesHoldoutFold_arg = NULL;
+    args_info->GenesHoldoutFold_orig = NULL;
+    args_info->touchContext_flag = 0;
+    args_info->onlyPos_flag = 0;
+    args_info->genes_arg = NULL;
+    args_info->genes_orig = NULL;
+    args_info->onetgene_flag = 0;
+    args_info->prior_orig = NULL;
+    args_info->savemodel_flag = 0;
+    args_info->mintrain_orig = NULL;
+    args_info->context_arg = NULL;
+    args_info->context_orig = NULL;
+    args_info->allContextPred_flag = 0;
+
 }
 
 static
-void init_args_info(struct gengetopt_args_info *args_info)
-{
+void init_args_info(struct gengetopt_args_info *args_info) {
 
 
-  args_info->help_help = gengetopt_args_info_help[0] ;
-  args_info->version_help = gengetopt_args_info_help[1] ;
-  args_info->labels_help = gengetopt_args_info_help[3] ;
-  args_info->output_help = gengetopt_args_info_help[4] ;
-  args_info->directory_help = gengetopt_args_info_help[5] ;
-  args_info->model_help = gengetopt_args_info_help[6] ;
-  args_info->modelPrefix_help = gengetopt_args_info_help[7] ;
-  args_info->slack_help = gengetopt_args_info_help[8] ;
-  args_info->verbosity_help = gengetopt_args_info_help[10] ;
-  args_info->cross_validation_help = gengetopt_args_info_help[11] ;
-  args_info->error_function_help = gengetopt_args_info_help[12] ;
-  args_info->k_value_help = gengetopt_args_info_help[13] ;
-  args_info->tradeoff_help = gengetopt_args_info_help[14] ;
-  args_info->allgenes_help = gengetopt_args_info_help[15] ;
-  args_info->params_help = gengetopt_args_info_help[16] ;
-  args_info->nan2neg_help = gengetopt_args_info_help[17] ;
-  args_info->mmap_help = gengetopt_args_info_help[18] ;
-  args_info->random_help = gengetopt_args_info_help[19] ;
-  args_info->tgene_help = gengetopt_args_info_help[20] ;
-  args_info->prob_help = gengetopt_args_info_help[21] ;
-  args_info->probCross_help = gengetopt_args_info_help[22] ;
-  args_info->normalizeZero_help = gengetopt_args_info_help[23] ;
-  args_info->normalizeNPone_help = gengetopt_args_info_help[24] ;
-  args_info->zscore_help = gengetopt_args_info_help[25] ;
-  args_info->edgeholdout_help = gengetopt_args_info_help[26] ;
-  args_info->skipSVM_help = gengetopt_args_info_help[27] ;
-  args_info->aggregateMax_help = gengetopt_args_info_help[28] ;
-  args_info->NoCrossPredict_help = gengetopt_args_info_help[29] ;
-  args_info->CrossResult_help = gengetopt_args_info_help[30] ;
-  args_info->SampledLabels_help = gengetopt_args_info_help[31] ;
-  args_info->subsample_help = gengetopt_args_info_help[32] ;
-  args_info->OutLabels_help = gengetopt_args_info_help[33] ;
-  args_info->GenesHoldoutFold_help = gengetopt_args_info_help[34] ;
-  args_info->touchContext_help = gengetopt_args_info_help[35] ;
-  args_info->onlyPos_help = gengetopt_args_info_help[36] ;
-  args_info->genes_help = gengetopt_args_info_help[38] ;
-  args_info->onetgene_help = gengetopt_args_info_help[39] ;
-  args_info->prior_help = gengetopt_args_info_help[40] ;
-  args_info->savemodel_help = gengetopt_args_info_help[41] ;
-  args_info->mintrain_help = gengetopt_args_info_help[42] ;
-  args_info->context_help = gengetopt_args_info_help[43] ;
-  args_info->allContextPred_help = gengetopt_args_info_help[44] ;
-  
+    args_info->help_help = gengetopt_args_info_help[0];
+    args_info->version_help = gengetopt_args_info_help[1];
+    args_info->labels_help = gengetopt_args_info_help[3];
+    args_info->output_help = gengetopt_args_info_help[4];
+    args_info->directory_help = gengetopt_args_info_help[5];
+    args_info->model_help = gengetopt_args_info_help[6];
+    args_info->modelPrefix_help = gengetopt_args_info_help[7];
+    args_info->slack_help = gengetopt_args_info_help[8];
+    args_info->verbosity_help = gengetopt_args_info_help[10];
+    args_info->cross_validation_help = gengetopt_args_info_help[11];
+    args_info->error_function_help = gengetopt_args_info_help[12];
+    args_info->k_value_help = gengetopt_args_info_help[13];
+    args_info->tradeoff_help = gengetopt_args_info_help[14];
+    args_info->allgenes_help = gengetopt_args_info_help[15];
+    args_info->params_help = gengetopt_args_info_help[16];
+    args_info->nan2neg_help = gengetopt_args_info_help[17];
+    args_info->mmap_help = gengetopt_args_info_help[18];
+    args_info->random_help = gengetopt_args_info_help[19];
+    args_info->tgene_help = gengetopt_args_info_help[20];
+    args_info->prob_help = gengetopt_args_info_help[21];
+    args_info->probCross_help = gengetopt_args_info_help[22];
+    args_info->normalizeZero_help = gengetopt_args_info_help[23];
+    args_info->normalizeNPone_help = gengetopt_args_info_help[24];
+    args_info->zscore_help = gengetopt_args_info_help[25];
+    args_info->edgeholdout_help = gengetopt_args_info_help[26];
+    args_info->skipSVM_help = gengetopt_args_info_help[27];
+    args_info->aggregateMax_help = gengetopt_args_info_help[28];
+    args_info->NoCrossPredict_help = gengetopt_args_info_help[29];
+    args_info->CrossResult_help = gengetopt_args_info_help[30];
+    args_info->SampledLabels_help = gengetopt_args_info_help[31];
+    args_info->subsample_help = gengetopt_args_info_help[32];
+    args_info->OutLabels_help = gengetopt_args_info_help[33];
+    args_info->GenesHoldoutFold_help = gengetopt_args_info_help[34];
+    args_info->touchContext_help = gengetopt_args_info_help[35];
+    args_info->onlyPos_help = gengetopt_args_info_help[36];
+    args_info->genes_help = gengetopt_args_info_help[38];
+    args_info->onetgene_help = gengetopt_args_info_help[39];
+    args_info->prior_help = gengetopt_args_info_help[40];
+    args_info->savemodel_help = gengetopt_args_info_help[41];
+    args_info->mintrain_help = gengetopt_args_info_help[42];
+    args_info->context_help = gengetopt_args_info_help[43];
+    args_info->allContextPred_help = gengetopt_args_info_help[44];
+
 }
 
 void
-cmdline_parser_print_version (void)
-{
-  printf ("%s %s\n", CMDLINE_PARSER_PACKAGE, CMDLINE_PARSER_VERSION);
+cmdline_parser_print_version(void) {
+    printf("%s %s\n", CMDLINE_PARSER_PACKAGE, CMDLINE_PARSER_VERSION);
 }
 
 static void print_help_common(void) {
-  cmdline_parser_print_version ();
+    cmdline_parser_print_version();
 
-  if (strlen(gengetopt_args_info_purpose) > 0)
-    printf("\n%s\n", gengetopt_args_info_purpose);
+    if (strlen(gengetopt_args_info_purpose) > 0)
+        printf("\n%s\n", gengetopt_args_info_purpose);
 
-  if (strlen(gengetopt_args_info_usage) > 0)
-    printf("\n%s\n", gengetopt_args_info_usage);
+    if (strlen(gengetopt_args_info_usage) > 0)
+        printf("\n%s\n", gengetopt_args_info_usage);
 
-  printf("\n");
+    printf("\n");
 
-  if (strlen(gengetopt_args_info_description) > 0)
-    printf("%s\n", gengetopt_args_info_description);
+    if (strlen(gengetopt_args_info_description) > 0)
+        printf("%s\n", gengetopt_args_info_description);
 }
 
 void
-cmdline_parser_print_help (void)
-{
-  int i = 0;
-  print_help_common();
-  while (gengetopt_args_info_help[i])
-    printf("%s\n", gengetopt_args_info_help[i++]);
+cmdline_parser_print_help(void) {
+    int i = 0;
+    print_help_common();
+    while (gengetopt_args_info_help[i])
+        printf("%s\n", gengetopt_args_info_help[i++]);
 }
 
 void
-cmdline_parser_init (struct gengetopt_args_info *args_info)
-{
-  clear_given (args_info);
-  clear_args (args_info);
-  init_args_info (args_info);
+cmdline_parser_init(struct gengetopt_args_info *args_info) {
+    clear_given(args_info);
+    clear_args(args_info);
+    init_args_info(args_info);
 
-  args_info->inputs = NULL;
-  args_info->inputs_num = 0;
+    args_info->inputs = NULL;
+    args_info->inputs_num = 0;
 }
 
 void
-cmdline_parser_params_init(struct cmdline_parser_params *params)
-{
-  if (params)
-    { 
-      params->override = 0;
-      params->initialize = 1;
-      params->check_required = 1;
-      params->check_ambiguity = 0;
-      params->print_errors = 1;
+cmdline_parser_params_init(struct cmdline_parser_params *params) {
+    if (params) {
+        params->override = 0;
+        params->initialize = 1;
+        params->check_required = 1;
+        params->check_ambiguity = 0;
+        params->print_errors = 1;
     }
 }
 
 struct cmdline_parser_params *
-cmdline_parser_params_create(void)
-{
-  struct cmdline_parser_params *params = 
-    (struct cmdline_parser_params *)malloc(sizeof(struct cmdline_parser_params));
-  cmdline_parser_params_init(params);  
-  return params;
+cmdline_parser_params_create(void) {
+    struct cmdline_parser_params *params =
+            (struct cmdline_parser_params *) malloc(sizeof(struct cmdline_parser_params));
+    cmdline_parser_params_init(params);
+    return params;
 }
 
 static void
-free_string_field (char **s)
-{
-  if (*s)
-    {
-      free (*s);
-      *s = 0;
+free_string_field(char **s) {
+    if (*s) {
+        free(*s);
+        *s = 0;
     }
 }
 
 
 static void
-cmdline_parser_release (struct gengetopt_args_info *args_info)
-{
-  unsigned int i;
-  free_string_field (&(args_info->labels_arg));
-  free_string_field (&(args_info->labels_orig));
-  free_string_field (&(args_info->output_arg));
-  free_string_field (&(args_info->output_orig));
-  free_string_field (&(args_info->directory_arg));
-  free_string_field (&(args_info->directory_orig));
-  free_string_field (&(args_info->model_arg));
-  free_string_field (&(args_info->model_orig));
-  free_string_field (&(args_info->modelPrefix_arg));
-  free_string_field (&(args_info->modelPrefix_orig));
-  free_string_field (&(args_info->verbosity_orig));
-  free_string_field (&(args_info->cross_validation_orig));
-  free_string_field (&(args_info->error_function_orig));
-  free_string_field (&(args_info->k_value_orig));
-  free_string_field (&(args_info->tradeoff_orig));
-  free_string_field (&(args_info->allgenes_arg));
-  free_string_field (&(args_info->allgenes_orig));
-  free_string_field (&(args_info->params_arg));
-  free_string_field (&(args_info->params_orig));
-  free_string_field (&(args_info->random_orig));
-  free_string_field (&(args_info->tgene_arg));
-  free_string_field (&(args_info->tgene_orig));
-  free_string_field (&(args_info->CrossResult_arg));
-  free_string_field (&(args_info->CrossResult_orig));
-  free_string_field (&(args_info->SampledLabels_arg));
-  free_string_field (&(args_info->SampledLabels_orig));
-  free_string_field (&(args_info->subsample_orig));
-  free_string_field (&(args_info->OutLabels_arg));
-  free_string_field (&(args_info->OutLabels_orig));
-  free_string_field (&(args_info->GenesHoldoutFold_arg));
-  free_string_field (&(args_info->GenesHoldoutFold_orig));
-  free_string_field (&(args_info->genes_arg));
-  free_string_field (&(args_info->genes_orig));
-  free_string_field (&(args_info->prior_orig));
-  free_string_field (&(args_info->mintrain_orig));
-  free_string_field (&(args_info->context_arg));
-  free_string_field (&(args_info->context_orig));
-  
-  
-  for (i = 0; i < args_info->inputs_num; ++i)
-    free (args_info->inputs [i]);
+cmdline_parser_release(struct gengetopt_args_info *args_info) {
+    unsigned int i;
+    free_string_field(&(args_info->labels_arg));
+    free_string_field(&(args_info->labels_orig));
+    free_string_field(&(args_info->output_arg));
+    free_string_field(&(args_info->output_orig));
+    free_string_field(&(args_info->directory_arg));
+    free_string_field(&(args_info->directory_orig));
+    free_string_field(&(args_info->model_arg));
+    free_string_field(&(args_info->model_orig));
+    free_string_field(&(args_info->modelPrefix_arg));
+    free_string_field(&(args_info->modelPrefix_orig));
+    free_string_field(&(args_info->verbosity_orig));
+    free_string_field(&(args_info->cross_validation_orig));
+    free_string_field(&(args_info->error_function_orig));
+    free_string_field(&(args_info->k_value_orig));
+    free_string_field(&(args_info->tradeoff_orig));
+    free_string_field(&(args_info->allgenes_arg));
+    free_string_field(&(args_info->allgenes_orig));
+    free_string_field(&(args_info->params_arg));
+    free_string_field(&(args_info->params_orig));
+    free_string_field(&(args_info->random_orig));
+    free_string_field(&(args_info->tgene_arg));
+    free_string_field(&(args_info->tgene_orig));
+    free_string_field(&(args_info->CrossResult_arg));
+    free_string_field(&(args_info->CrossResult_orig));
+    free_string_field(&(args_info->SampledLabels_arg));
+    free_string_field(&(args_info->SampledLabels_orig));
+    free_string_field(&(args_info->subsample_orig));
+    free_string_field(&(args_info->OutLabels_arg));
+    free_string_field(&(args_info->OutLabels_orig));
+    free_string_field(&(args_info->GenesHoldoutFold_arg));
+    free_string_field(&(args_info->GenesHoldoutFold_orig));
+    free_string_field(&(args_info->genes_arg));
+    free_string_field(&(args_info->genes_orig));
+    free_string_field(&(args_info->prior_orig));
+    free_string_field(&(args_info->mintrain_orig));
+    free_string_field(&(args_info->context_arg));
+    free_string_field(&(args_info->context_orig));
 
-  if (args_info->inputs_num)
-    free (args_info->inputs);
 
-  clear_given (args_info);
+    for (i = 0; i < args_info->inputs_num; ++i)
+        free(args_info->inputs[i]);
+
+    if (args_info->inputs_num)
+        free(args_info->inputs);
+
+    clear_given(args_info);
 }
 
 
 static void
-write_into_file(FILE *outfile, const char *opt, const char *arg, char *values[])
-{
-  if (arg) {
-    fprintf(outfile, "%s=\"%s\"\n", opt, arg);
-  } else {
-    fprintf(outfile, "%s\n", opt);
-  }
+write_into_file(FILE *outfile, const char *opt, const char *arg, char *values[]) {
+    if (arg) {
+        fprintf(outfile, "%s=\"%s\"\n", opt, arg);
+    } else {
+        fprintf(outfile, "%s\n", opt);
+    }
 }
 
 
 int
-cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
-{
-  int i = 0;
+cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info) {
+    int i = 0;
 
-  if (!outfile)
-    {
-      fprintf (stderr, "%s: cannot dump options to stream\n", CMDLINE_PARSER_PACKAGE);
-      return EXIT_FAILURE;
+    if (!outfile) {
+        fprintf(stderr, "%s: cannot dump options to stream\n", CMDLINE_PARSER_PACKAGE);
+        return EXIT_FAILURE;
     }
 
-  if (args_info->help_given)
-    write_into_file(outfile, "help", 0, 0 );
-  if (args_info->version_given)
-    write_into_file(outfile, "version", 0, 0 );
-  if (args_info->labels_given)
-    write_into_file(outfile, "labels", args_info->labels_orig, 0);
-  if (args_info->output_given)
-    write_into_file(outfile, "output", args_info->output_orig, 0);
-  if (args_info->directory_given)
-    write_into_file(outfile, "directory", args_info->directory_orig, 0);
-  if (args_info->model_given)
-    write_into_file(outfile, "model", args_info->model_orig, 0);
-  if (args_info->modelPrefix_given)
-    write_into_file(outfile, "modelPrefix", args_info->modelPrefix_orig, 0);
-  if (args_info->slack_given)
-    write_into_file(outfile, "slack", 0, 0 );
-  if (args_info->verbosity_given)
-    write_into_file(outfile, "verbosity", args_info->verbosity_orig, 0);
-  if (args_info->cross_validation_given)
-    write_into_file(outfile, "cross_validation", args_info->cross_validation_orig, 0);
-  if (args_info->error_function_given)
-    write_into_file(outfile, "error_function", args_info->error_function_orig, 0);
-  if (args_info->k_value_given)
-    write_into_file(outfile, "k_value", args_info->k_value_orig, 0);
-  if (args_info->tradeoff_given)
-    write_into_file(outfile, "tradeoff", args_info->tradeoff_orig, 0);
-  if (args_info->allgenes_given)
-    write_into_file(outfile, "allgenes", args_info->allgenes_orig, 0);
-  if (args_info->params_given)
-    write_into_file(outfile, "params", args_info->params_orig, 0);
-  if (args_info->nan2neg_given)
-    write_into_file(outfile, "nan2neg", 0, 0 );
-  if (args_info->mmap_given)
-    write_into_file(outfile, "mmap", 0, 0 );
-  if (args_info->random_given)
-    write_into_file(outfile, "random", args_info->random_orig, 0);
-  if (args_info->tgene_given)
-    write_into_file(outfile, "tgene", args_info->tgene_orig, 0);
-  if (args_info->prob_given)
-    write_into_file(outfile, "prob", 0, 0 );
-  if (args_info->probCross_given)
-    write_into_file(outfile, "probCross", 0, 0 );
-  if (args_info->normalizeZero_given)
-    write_into_file(outfile, "normalizeZero", 0, 0 );
-  if (args_info->normalizeNPone_given)
-    write_into_file(outfile, "normalizeNPone", 0, 0 );
-  if (args_info->zscore_given)
-    write_into_file(outfile, "zscore", 0, 0 );
-  if (args_info->edgeholdout_given)
-    write_into_file(outfile, "edgeholdout", 0, 0 );
-  if (args_info->skipSVM_given)
-    write_into_file(outfile, "skipSVM", 0, 0 );
-  if (args_info->aggregateMax_given)
-    write_into_file(outfile, "aggregateMax", 0, 0 );
-  if (args_info->NoCrossPredict_given)
-    write_into_file(outfile, "NoCrossPredict", 0, 0 );
-  if (args_info->CrossResult_given)
-    write_into_file(outfile, "CrossResult", args_info->CrossResult_orig, 0);
-  if (args_info->SampledLabels_given)
-    write_into_file(outfile, "SampledLabels", args_info->SampledLabels_orig, 0);
-  if (args_info->subsample_given)
-    write_into_file(outfile, "subsample", args_info->subsample_orig, 0);
-  if (args_info->OutLabels_given)
-    write_into_file(outfile, "OutLabels", args_info->OutLabels_orig, 0);
-  if (args_info->GenesHoldoutFold_given)
-    write_into_file(outfile, "GenesHoldoutFold", args_info->GenesHoldoutFold_orig, 0);
-  if (args_info->touchContext_given)
-    write_into_file(outfile, "touchContext", 0, 0 );
-  if (args_info->onlyPos_given)
-    write_into_file(outfile, "onlyPos", 0, 0 );
-  if (args_info->genes_given)
-    write_into_file(outfile, "genes", args_info->genes_orig, 0);
-  if (args_info->onetgene_given)
-    write_into_file(outfile, "onetgene", 0, 0 );
-  if (args_info->prior_given)
-    write_into_file(outfile, "prior", args_info->prior_orig, 0);
-  if (args_info->savemodel_given)
-    write_into_file(outfile, "savemodel", 0, 0 );
-  if (args_info->mintrain_given)
-    write_into_file(outfile, "mintrain", args_info->mintrain_orig, 0);
-  if (args_info->context_given)
-    write_into_file(outfile, "context", args_info->context_orig, 0);
-  if (args_info->allContextPred_given)
-    write_into_file(outfile, "allContextPred", 0, 0 );
-  
+    if (args_info->help_given)
+        write_into_file(outfile, "help", 0, 0);
+    if (args_info->version_given)
+        write_into_file(outfile, "version", 0, 0);
+    if (args_info->labels_given)
+        write_into_file(outfile, "labels", args_info->labels_orig, 0);
+    if (args_info->output_given)
+        write_into_file(outfile, "output", args_info->output_orig, 0);
+    if (args_info->directory_given)
+        write_into_file(outfile, "directory", args_info->directory_orig, 0);
+    if (args_info->model_given)
+        write_into_file(outfile, "model", args_info->model_orig, 0);
+    if (args_info->modelPrefix_given)
+        write_into_file(outfile, "modelPrefix", args_info->modelPrefix_orig, 0);
+    if (args_info->slack_given)
+        write_into_file(outfile, "slack", 0, 0);
+    if (args_info->verbosity_given)
+        write_into_file(outfile, "verbosity", args_info->verbosity_orig, 0);
+    if (args_info->cross_validation_given)
+        write_into_file(outfile, "cross_validation", args_info->cross_validation_orig, 0);
+    if (args_info->error_function_given)
+        write_into_file(outfile, "error_function", args_info->error_function_orig, 0);
+    if (args_info->k_value_given)
+        write_into_file(outfile, "k_value", args_info->k_value_orig, 0);
+    if (args_info->tradeoff_given)
+        write_into_file(outfile, "tradeoff", args_info->tradeoff_orig, 0);
+    if (args_info->allgenes_given)
+        write_into_file(outfile, "allgenes", args_info->allgenes_orig, 0);
+    if (args_info->params_given)
+        write_into_file(outfile, "params", args_info->params_orig, 0);
+    if (args_info->nan2neg_given)
+        write_into_file(outfile, "nan2neg", 0, 0);
+    if (args_info->mmap_given)
+        write_into_file(outfile, "mmap", 0, 0);
+    if (args_info->random_given)
+        write_into_file(outfile, "random", args_info->random_orig, 0);
+    if (args_info->tgene_given)
+        write_into_file(outfile, "tgene", args_info->tgene_orig, 0);
+    if (args_info->prob_given)
+        write_into_file(outfile, "prob", 0, 0);
+    if (args_info->probCross_given)
+        write_into_file(outfile, "probCross", 0, 0);
+    if (args_info->normalizeZero_given)
+        write_into_file(outfile, "normalizeZero", 0, 0);
+    if (args_info->normalizeNPone_given)
+        write_into_file(outfile, "normalizeNPone", 0, 0);
+    if (args_info->zscore_given)
+        write_into_file(outfile, "zscore", 0, 0);
+    if (args_info->edgeholdout_given)
+        write_into_file(outfile, "edgeholdout", 0, 0);
+    if (args_info->skipSVM_given)
+        write_into_file(outfile, "skipSVM", 0, 0);
+    if (args_info->aggregateMax_given)
+        write_into_file(outfile, "aggregateMax", 0, 0);
+    if (args_info->NoCrossPredict_given)
+        write_into_file(outfile, "NoCrossPredict", 0, 0);
+    if (args_info->CrossResult_given)
+        write_into_file(outfile, "CrossResult", args_info->CrossResult_orig, 0);
+    if (args_info->SampledLabels_given)
+        write_into_file(outfile, "SampledLabels", args_info->SampledLabels_orig, 0);
+    if (args_info->subsample_given)
+        write_into_file(outfile, "subsample", args_info->subsample_orig, 0);
+    if (args_info->OutLabels_given)
+        write_into_file(outfile, "OutLabels", args_info->OutLabels_orig, 0);
+    if (args_info->GenesHoldoutFold_given)
+        write_into_file(outfile, "GenesHoldoutFold", args_info->GenesHoldoutFold_orig, 0);
+    if (args_info->touchContext_given)
+        write_into_file(outfile, "touchContext", 0, 0);
+    if (args_info->onlyPos_given)
+        write_into_file(outfile, "onlyPos", 0, 0);
+    if (args_info->genes_given)
+        write_into_file(outfile, "genes", args_info->genes_orig, 0);
+    if (args_info->onetgene_given)
+        write_into_file(outfile, "onetgene", 0, 0);
+    if (args_info->prior_given)
+        write_into_file(outfile, "prior", args_info->prior_orig, 0);
+    if (args_info->savemodel_given)
+        write_into_file(outfile, "savemodel", 0, 0);
+    if (args_info->mintrain_given)
+        write_into_file(outfile, "mintrain", args_info->mintrain_orig, 0);
+    if (args_info->context_given)
+        write_into_file(outfile, "context", args_info->context_orig, 0);
+    if (args_info->allContextPred_given)
+        write_into_file(outfile, "allContextPred", 0, 0);
 
-  i = EXIT_SUCCESS;
-  return i;
+
+    i = EXIT_SUCCESS;
+    return i;
 }
 
 int
-cmdline_parser_file_save(const char *filename, struct gengetopt_args_info *args_info)
-{
-  FILE *outfile;
-  int i = 0;
+cmdline_parser_file_save(const char *filename, struct gengetopt_args_info *args_info) {
+    FILE *outfile;
+    int i = 0;
 
-  outfile = fopen(filename, "w");
+    outfile = fopen(filename, "w");
 
-  if (!outfile)
-    {
-      fprintf (stderr, "%s: cannot open file for writing: %s\n", CMDLINE_PARSER_PACKAGE, filename);
-      return EXIT_FAILURE;
+    if (!outfile) {
+        fprintf(stderr, "%s: cannot open file for writing: %s\n", CMDLINE_PARSER_PACKAGE, filename);
+        return EXIT_FAILURE;
     }
 
-  i = cmdline_parser_dump(outfile, args_info);
-  fclose (outfile);
+    i = cmdline_parser_dump(outfile, args_info);
+    fclose(outfile);
 
-  return i;
+    return i;
 }
 
 void
-cmdline_parser_free (struct gengetopt_args_info *args_info)
-{
-  cmdline_parser_release (args_info);
+cmdline_parser_free(struct gengetopt_args_info *args_info) {
+    cmdline_parser_release(args_info);
 }
 
 /** @brief replacement of strdup, which is not standard */
 char *
-gengetopt_strdup (const char *s)
-{
-  char *result = NULL;
-  if (!s)
+gengetopt_strdup(const char *s) {
+    char *result = NULL;
+    if (!s)
+        return result;
+
+    result = (char *) malloc(strlen(s) + 1);
+    if (result == (char *) 0)
+        return (char *) 0;
+    strcpy(result, s);
     return result;
-
-  result = (char*)malloc(strlen(s) + 1);
-  if (result == (char*)0)
-    return (char*)0;
-  strcpy(result, s);
-  return result;
 }
 
 int
-cmdline_parser (int argc, char * const *argv, struct gengetopt_args_info *args_info)
-{
-  return cmdline_parser2 (argc, argv, args_info, 0, 1, 1);
+cmdline_parser(int argc, char *const *argv, struct gengetopt_args_info *args_info) {
+    return cmdline_parser2(argc, argv, args_info, 0, 1, 1);
 }
 
 int
-cmdline_parser_ext (int argc, char * const *argv, struct gengetopt_args_info *args_info,
-                   struct cmdline_parser_params *params)
-{
-  int result;
-  result = cmdline_parser_internal (argc, argv, args_info, params, NULL);
+cmdline_parser_ext(int argc, char *const *argv, struct gengetopt_args_info *args_info,
+                   struct cmdline_parser_params *params) {
+    int result;
+    result = cmdline_parser_internal(argc, argv, args_info, params, NULL);
 
-  return result;
+    return result;
 }
 
 int
-cmdline_parser2 (int argc, char * const *argv, struct gengetopt_args_info *args_info, int override, int initialize, int check_required)
-{
-  int result;
-  struct cmdline_parser_params params;
-  
-  params.override = override;
-  params.initialize = initialize;
-  params.check_required = check_required;
-  params.check_ambiguity = 0;
-  params.print_errors = 1;
+cmdline_parser2(int argc, char *const *argv, struct gengetopt_args_info *args_info, int override, int initialize,
+                int check_required) {
+    int result;
+    struct cmdline_parser_params params;
 
-  result = cmdline_parser_internal (argc, argv, args_info, &params, NULL);
+    params.override = override;
+    params.initialize = initialize;
+    params.check_required = check_required;
+    params.check_ambiguity = 0;
+    params.print_errors = 1;
 
-  return result;
+    result = cmdline_parser_internal(argc, argv, args_info, &params, NULL);
+
+    return result;
 }
 
 int
-cmdline_parser_required (struct gengetopt_args_info *args_info, const char *prog_name)
-{
-  int result = EXIT_SUCCESS;
+cmdline_parser_required(struct gengetopt_args_info *args_info, const char *prog_name) {
+    int result = EXIT_SUCCESS;
 
-  if (cmdline_parser_required2(args_info, prog_name, NULL) > 0)
-    result = EXIT_FAILURE;
+    if (cmdline_parser_required2(args_info, prog_name, NULL) > 0)
+        result = EXIT_FAILURE;
 
-  return result;
+    return result;
 }
 
 int
-cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error)
-{
-  int error = 0;
+cmdline_parser_required2(struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error) {
+    int error = 0;
 
-  /* checks for required options */
-  if (! args_info->directory_given)
-    {
-      fprintf (stderr, "%s: '--directory' ('-d') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error = 1;
+    /* checks for required options */
+    if (!args_info->directory_given) {
+        fprintf(stderr, "%s: '--directory' ('-d') option required%s\n", prog_name,
+                (additional_error ? additional_error : ""));
+        error = 1;
     }
-  
-  
-  /* checks for dependences among options */
 
-  return error;
+
+    /* checks for dependences among options */
+
+    return error;
 }
 
 
@@ -626,288 +601,283 @@ static char *package_name = 0;
  */
 static
 int update_arg(void *field, char **orig_field,
-               unsigned int *field_given, unsigned int *prev_given, 
+               unsigned int *field_given, unsigned int *prev_given,
                char *value, char *possible_values[], const char *default_value,
                cmdline_parser_arg_type arg_type,
                int check_ambiguity, int override,
                int no_free, int multiple_option,
                const char *long_opt, char short_opt,
-               const char *additional_error)
-{
-  char *stop_char = 0;
-  const char *val = value;
-  int found;
-  char **string_field;
+               const char *additional_error) {
+    char *stop_char = 0;
+    const char *val = value;
+    int found;
+    char **string_field;
 
-  stop_char = 0;
-  found = 0;
+    stop_char = 0;
+    found = 0;
 
-  if (!multiple_option && prev_given && (*prev_given || (check_ambiguity && *field_given)))
-    {
-      if (short_opt != '-')
-        fprintf (stderr, "%s: `--%s' (`-%c') option given more than once%s\n", 
-               package_name, long_opt, short_opt,
-               (additional_error ? additional_error : ""));
-      else
-        fprintf (stderr, "%s: `--%s' option given more than once%s\n", 
-               package_name, long_opt,
-               (additional_error ? additional_error : ""));
-      return 1; /* failure */
+    if (!multiple_option && prev_given && (*prev_given || (check_ambiguity && *field_given))) {
+        if (short_opt != '-')
+            fprintf(stderr, "%s: `--%s' (`-%c') option given more than once%s\n",
+                    package_name, long_opt, short_opt,
+                    (additional_error ? additional_error : ""));
+        else
+            fprintf(stderr, "%s: `--%s' option given more than once%s\n",
+                    package_name, long_opt,
+                    (additional_error ? additional_error : ""));
+        return 1; /* failure */
     }
 
-    
-  if (field_given && *field_given && ! override)
-    return 0;
-  if (prev_given)
-    (*prev_given)++;
-  if (field_given)
-    (*field_given)++;
-  if (possible_values)
-    val = possible_values[found];
 
-  switch(arg_type) {
-  case ARG_FLAG:
-    *((int *)field) = !*((int *)field);
-    break;
-  case ARG_INT:
-    if (val) *((int *)field) = strtol (val, &stop_char, 0);
-    break;
-  case ARG_FLOAT:
-    if (val) *((float *)field) = (float)strtod (val, &stop_char);
-    break;
-  case ARG_STRING:
-    if (val) {
-      string_field = (char **)field;
-      if (!no_free && *string_field)
-        free (*string_field); /* free previous string */
-      *string_field = gengetopt_strdup (val);
-    }
-    break;
-  default:
-    break;
-  };
+    if (field_given && *field_given && !override)
+        return 0;
+    if (prev_given)
+        (*prev_given)++;
+    if (field_given)
+        (*field_given)++;
+    if (possible_values)
+        val = possible_values[found];
 
-  /* check numeric conversion */
-  switch(arg_type) {
-  case ARG_INT:
-  case ARG_FLOAT:
-    if (val && !(stop_char && *stop_char == '\0')) {
-      fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
-      return 1; /* failure */
-    }
-    break;
-  default:
-    ;
-  };
+    switch (arg_type) {
+        case ARG_FLAG:
+            *((int *) field) = !*((int *) field);
+            break;
+        case ARG_INT:
+            if (val) *((int *) field) = strtol(val, &stop_char, 0);
+            break;
+        case ARG_FLOAT:
+            if (val) *((float *) field) = (float) strtod(val, &stop_char);
+            break;
+        case ARG_STRING:
+            if (val) {
+                string_field = (char **) field;
+                if (!no_free && *string_field)
+                    free(*string_field); /* free previous string */
+                *string_field = gengetopt_strdup(val);
+            }
+            break;
+        default:
+            break;
+    };
 
-  /* store the original value */
-  switch(arg_type) {
-  case ARG_NO:
-  case ARG_FLAG:
-    break;
-  default:
-    if (value && orig_field) {
-      if (no_free) {
-        *orig_field = value;
-      } else {
-        if (*orig_field)
-          free (*orig_field); /* free previous string */
-        *orig_field = gengetopt_strdup (value);
-      }
-    }
-  };
+    /* check numeric conversion */
+    switch (arg_type) {
+        case ARG_INT:
+        case ARG_FLOAT:
+            if (val && !(stop_char && *stop_char == '\0')) {
+                fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
+                return 1; /* failure */
+            }
+            break;
+        default:;
+    };
 
-  return 0; /* OK */
+    /* store the original value */
+    switch (arg_type) {
+        case ARG_NO:
+        case ARG_FLAG:
+            break;
+        default:
+            if (value && orig_field) {
+                if (no_free) {
+                    *orig_field = value;
+                } else {
+                    if (*orig_field)
+                        free(*orig_field); /* free previous string */
+                    *orig_field = gengetopt_strdup(value);
+                }
+            }
+    };
+
+    return 0; /* OK */
 }
 
 
 int
-cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_info *args_info,
-                        struct cmdline_parser_params *params, const char *additional_error)
-{
-  int c;	/* Character of the parsed option.  */
+cmdline_parser_internal(int argc, char *const *argv, struct gengetopt_args_info *args_info,
+                        struct cmdline_parser_params *params, const char *additional_error) {
+    int c;    /* Character of the parsed option.  */
 
-  int error = 0;
-  struct gengetopt_args_info local_args_info;
-  
-  int override;
-  int initialize;
-  int check_required;
-  int check_ambiguity;
-  
-  package_name = argv[0];
-  
-  override = params->override;
-  initialize = params->initialize;
-  check_required = params->check_required;
-  check_ambiguity = params->check_ambiguity;
+    int error = 0;
+    struct gengetopt_args_info local_args_info;
 
-  if (initialize)
-    cmdline_parser_init (args_info);
+    int override;
+    int initialize;
+    int check_required;
+    int check_ambiguity;
 
-  cmdline_parser_init (&local_args_info);
+    package_name = argv[0];
 
-  optarg = 0;
-  optind = 0;
-  opterr = params->print_errors;
-  optopt = '?';
+    override = params->override;
+    initialize = params->initialize;
+    check_required = params->check_required;
+    check_ambiguity = params->check_ambiguity;
 
-  while (1)
-    {
-      int option_index = 0;
+    if (initialize)
+        cmdline_parser_init(args_info);
 
-      static struct option long_options[] = {
-        { "help",	0, NULL, 'h' },
-        { "version",	0, NULL, 0 },
-        { "labels",	1, NULL, 'l' },
-        { "output",	1, NULL, 'o' },
-        { "directory",	1, NULL, 'd' },
-        { "model",	1, NULL, 'm' },
-        { "modelPrefix",	1, NULL, 'L' },
-        { "slack",	0, NULL, 'S' },
-        { "verbosity",	1, NULL, 'v' },
-        { "cross_validation",	1, NULL, 'c' },
-        { "error_function",	1, NULL, 'e' },
-        { "k_value",	1, NULL, 'k' },
-        { "tradeoff",	1, NULL, 't' },
-        { "allgenes",	1, NULL, 'a' },
-        { "params",	1, NULL, 'p' },
-        { "nan2neg",	0, NULL, 'n' },
-        { "mmap",	0, NULL, 'M' },
-        { "random",	1, NULL, 'R' },
-        { "tgene",	1, NULL, 'T' },
-        { "prob",	0, NULL, 'B' },
-        { "probCross",	0, NULL, 'D' },
-        { "normalizeZero",	0, NULL, 'z' },
-        { "normalizeNPone",	0, NULL, 'N' },
-        { "zscore",	0, NULL, 'Z' },
-        { "edgeholdout",	0, NULL, 'X' },
-        { "skipSVM",	0, NULL, 'Q' },
-        { "aggregateMax",	0, NULL, 'x' },
-        { "NoCrossPredict",	0, NULL, 'r' },
-        { "CrossResult",	1, NULL, 'u' },
-        { "SampledLabels",	1, NULL, 'y' },
-        { "subsample",	1, NULL, 'A' },
-        { "OutLabels",	1, NULL, 'U' },
-        { "GenesHoldoutFold",	1, NULL, 'H' },
-        { "touchContext",	0, NULL, 'f' },
-        { "onlyPos",	0, NULL, 'w' },
-        { "genes",	1, NULL, 'g' },
-        { "onetgene",	0, NULL, 'q' },
-        { "prior",	1, NULL, 'P' },
-        { "savemodel",	0, NULL, 's' },
-        { "mintrain",	1, NULL, 'E' },
-        { "context",	1, NULL, 'C' },
-        { "allContextPred",	0, NULL, 'V' },
-        { NULL,	0, NULL, 0 }
-      };
+    cmdline_parser_init(&local_args_info);
 
-      c = getopt_long (argc, argv, "hl:o:d:m:L:Sv:c:e:k:t:a:p:nMR:T:BDzNZXQxru:y:A:U:H:fwg:qP:sE:C:V", long_options, &option_index);
+    optarg = 0;
+    optind = 0;
+    opterr = params->print_errors;
+    optopt = '?';
 
-      if (c == -1) break;	/* Exit from `while (1)' loop.  */
+    while (1) {
+        int option_index = 0;
 
-      switch (c)
-        {
-        case 'h':	/* Print help and exit.  */
-          cmdline_parser_print_help ();
-          cmdline_parser_free (&local_args_info);
-          exit (EXIT_SUCCESS);
+        static struct option long_options[] = {
+                {"help",             0, NULL, 'h'},
+                {"version",          0, NULL, 0},
+                {"labels",           1, NULL, 'l'},
+                {"output",           1, NULL, 'o'},
+                {"directory",        1, NULL, 'd'},
+                {"model",            1, NULL, 'm'},
+                {"modelPrefix",      1, NULL, 'L'},
+                {"slack",            0, NULL, 'S'},
+                {"verbosity",        1, NULL, 'v'},
+                {"cross_validation", 1, NULL, 'c'},
+                {"error_function",   1, NULL, 'e'},
+                {"k_value",          1, NULL, 'k'},
+                {"tradeoff",         1, NULL, 't'},
+                {"allgenes",         1, NULL, 'a'},
+                {"params",           1, NULL, 'p'},
+                {"nan2neg",          0, NULL, 'n'},
+                {"mmap",             0, NULL, 'M'},
+                {"random",           1, NULL, 'R'},
+                {"tgene",            1, NULL, 'T'},
+                {"prob",             0, NULL, 'B'},
+                {"probCross",        0, NULL, 'D'},
+                {"normalizeZero",    0, NULL, 'z'},
+                {"normalizeNPone",   0, NULL, 'N'},
+                {"zscore",           0, NULL, 'Z'},
+                {"edgeholdout",      0, NULL, 'X'},
+                {"skipSVM",          0, NULL, 'Q'},
+                {"aggregateMax",     0, NULL, 'x'},
+                {"NoCrossPredict",   0, NULL, 'r'},
+                {"CrossResult",      1, NULL, 'u'},
+                {"SampledLabels",    1, NULL, 'y'},
+                {"subsample",        1, NULL, 'A'},
+                {"OutLabels",        1, NULL, 'U'},
+                {"GenesHoldoutFold", 1, NULL, 'H'},
+                {"touchContext",     0, NULL, 'f'},
+                {"onlyPos",          0, NULL, 'w'},
+                {"genes",            1, NULL, 'g'},
+                {"onetgene",         0, NULL, 'q'},
+                {"prior",            1, NULL, 'P'},
+                {"savemodel",        0, NULL, 's'},
+                {"mintrain",         1, NULL, 'E'},
+                {"context",          1, NULL, 'C'},
+                {"allContextPred",   0, NULL, 'V'},
+                {NULL,               0, NULL, 0}
+        };
 
-        case 'l':	/* Labels file.  */
-        
-        
-          if (update_arg( (void *)&(args_info->labels_arg), 
-               &(args_info->labels_orig), &(args_info->labels_given),
-              &(local_args_info.labels_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "labels", 'l',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'o':	/* Output file .  */
-        
-        
-          if (update_arg( (void *)&(args_info->output_arg), 
-               &(args_info->output_orig), &(args_info->output_given),
-              &(local_args_info.output_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "output", 'o',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'd':	/* input directory (must only contain input files).  */
-        
-        
-          if (update_arg( (void *)&(args_info->directory_arg), 
-               &(args_info->directory_orig), &(args_info->directory_given),
-              &(local_args_info.directory_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "directory", 'd',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'm':	/* input Model file.  */
-        
-        
-          if (update_arg( (void *)&(args_info->model_arg), 
-               &(args_info->model_orig), &(args_info->model_given),
-              &(local_args_info.model_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "model", 'm',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'L':	/* input Model prefix.  */
-        
-        
-          if (update_arg( (void *)&(args_info->modelPrefix_arg), 
-               &(args_info->modelPrefix_orig), &(args_info->modelPrefix_given),
-              &(local_args_info.modelPrefix_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "modelPrefix", 'L',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'S':	/* Use slack rescaling (not implemented for ROC loss).  */
-        
-        
-          if (update_arg((void *)&(args_info->slack_flag), 0, &(args_info->slack_given),
-              &(local_args_info.slack_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "slack", 'S',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'v':	/* Sets the svm_struct verbosity.  */
-        
-        
-          if (update_arg( (void *)&(args_info->verbosity_arg), 
-               &(args_info->verbosity_orig), &(args_info->verbosity_given),
-              &(local_args_info.verbosity_given), optarg, 0, "0", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "verbosity", 'v',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'c':	/* Number of cross-validation sets ( arg of 1 will turn off cross-validation ).  */
-        
-        
-          if (update_arg( (void *)&(args_info->cross_validation_arg), 
-               &(args_info->cross_validation_orig), &(args_info->cross_validation_given),
-              &(local_args_info.cross_validation_given), optarg, 0, "5", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "cross_validation", 'c',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'e':	/* Sets the loss function for SVM learning: Choice of:
+        c = getopt_long(argc, argv, "hl:o:d:m:L:Sv:c:e:k:t:a:p:nMR:T:BDzNZXQxru:y:A:U:H:fwg:qP:sE:C:V", long_options,
+                        &option_index);
+
+        if (c == -1) break;    /* Exit from `while (1)' loop.  */
+
+        switch (c) {
+            case 'h':    /* Print help and exit.  */
+                cmdline_parser_print_help();
+                cmdline_parser_free(&local_args_info);
+                exit(EXIT_SUCCESS);
+
+            case 'l':    /* Labels file.  */
+
+
+                if (update_arg((void *) &(args_info->labels_arg),
+                               &(args_info->labels_orig), &(args_info->labels_given),
+                               &(local_args_info.labels_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "labels", 'l',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'o':    /* Output file .  */
+
+
+                if (update_arg((void *) &(args_info->output_arg),
+                               &(args_info->output_orig), &(args_info->output_given),
+                               &(local_args_info.output_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "output", 'o',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'd':    /* input directory (must only contain input files).  */
+
+
+                if (update_arg((void *) &(args_info->directory_arg),
+                               &(args_info->directory_orig), &(args_info->directory_given),
+                               &(local_args_info.directory_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "directory", 'd',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'm':    /* input Model file.  */
+
+
+                if (update_arg((void *) &(args_info->model_arg),
+                               &(args_info->model_orig), &(args_info->model_given),
+                               &(local_args_info.model_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "model", 'm',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'L':    /* input Model prefix.  */
+
+
+                if (update_arg((void *) &(args_info->modelPrefix_arg),
+                               &(args_info->modelPrefix_orig), &(args_info->modelPrefix_given),
+                               &(local_args_info.modelPrefix_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "modelPrefix", 'L',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'S':    /* Use slack rescaling (not implemented for ROC loss).  */
+
+
+                if (update_arg((void *) &(args_info->slack_flag), 0, &(args_info->slack_given),
+                               &(local_args_info.slack_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "slack", 'S',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'v':    /* Sets the svm_struct verbosity.  */
+
+
+                if (update_arg((void *) &(args_info->verbosity_arg),
+                               &(args_info->verbosity_orig), &(args_info->verbosity_given),
+                               &(local_args_info.verbosity_given), optarg, 0, "0", ARG_INT,
+                               check_ambiguity, override, 0, 0,
+                               "verbosity", 'v',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'c':    /* Number of cross-validation sets ( arg of 1 will turn off cross-validation ).  */
+
+
+                if (update_arg((void *) &(args_info->cross_validation_arg),
+                               &(args_info->cross_validation_orig), &(args_info->cross_validation_given),
+                               &(local_args_info.cross_validation_given), optarg, 0, "5", ARG_INT,
+                               check_ambiguity, override, 0, 0,
+                               "cross_validation", 'c',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'e':    /* Sets the loss function for SVM learning: Choice of:
         0\tZero/one loss: 1 if vector of predictions contains error, 0 otherwise.
         1\tF1: 100 minus the F1-score in percent.
         2\tErrorrate: Percentage of errors in prediction vector.
@@ -915,427 +885,425 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         4\tPrec@k: 100 minus precision at k in percent.
         5\tRec@k: 100 minus recall at k in percent.
         10\tROCArea: Percentage of swapped pos/neg pairs (i.e. 100 - ROCArea).\n.  */
-        
-        
-          if (update_arg( (void *)&(args_info->error_function_arg), 
-               &(args_info->error_function_orig), &(args_info->error_function_given),
-              &(local_args_info.error_function_given), optarg, 0, "10", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "error_function", 'e',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'k':	/* Value of k parameter used for Prec@k and Rec@k in (0,1).  */
-        
-        
-          if (update_arg( (void *)&(args_info->k_value_arg), 
-               &(args_info->k_value_orig), &(args_info->k_value_given),
-              &(local_args_info.k_value_given), optarg, 0, "0.5", ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "k_value", 'k',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 't':	/* SVM tradeoff constant C.  */
-        
-        
-          if (update_arg( (void *)&(args_info->tradeoff_arg), 
-               &(args_info->tradeoff_orig), &(args_info->tradeoff_given),
-              &(local_args_info.tradeoff_given), optarg, 0, "1", ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "tradeoff", 't',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'a':	/* Gene list that list all genes to make predictions.  */
-        
-        
-          if (update_arg( (void *)&(args_info->allgenes_arg), 
-               &(args_info->allgenes_orig), &(args_info->allgenes_given),
-              &(local_args_info.allgenes_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "allgenes", 'a',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'p':	/* NOT IMPLEMENTED YET: Parameter file.  */
-        
-        
-          if (update_arg( (void *)&(args_info->params_arg), 
-               &(args_info->params_orig), &(args_info->params_given),
-              &(local_args_info.params_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "params", 'p',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'n':	/* set missing values(NaN in dab file) from labels file as negative examples.  */
-        
-        
-          if (update_arg((void *)&(args_info->nan2neg_flag), 0, &(args_info->nan2neg_given),
-              &(local_args_info.nan2neg_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "nan2neg", 'n',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'M':	/* Memory map binary input.  */
-        
-        
-          if (update_arg((void *)&(args_info->mmap_flag), 0, &(args_info->mmap_given),
-              &(local_args_info.mmap_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "mmap", 'M',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'R':	/* Seed random generator (default -1 uses current time).  */
-        
-        
-          if (update_arg( (void *)&(args_info->random_arg), 
-               &(args_info->random_orig), &(args_info->random_given),
-              &(local_args_info.random_given), optarg, 0, "-1", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "random", 'R',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'T':	/* Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list.  */
-        
-        
-          if (update_arg( (void *)&(args_info->tgene_arg), 
-               &(args_info->tgene_orig), &(args_info->tgene_given),
-              &(local_args_info.tgene_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "tgene", 'T',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'B':	/* Output prediction values as estimated probablity (Platt method).  */
-        
-        
-          if (update_arg((void *)&(args_info->prob_flag), 0, &(args_info->prob_given),
-              &(local_args_info.prob_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "prob", 'B',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'D':	/* Cross-validation setting for output prediction values as estimated probablity (Platt method).  */
-        
-        
-          if (update_arg((void *)&(args_info->probCross_flag), 0, &(args_info->probCross_given),
-              &(local_args_info.probCross_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "probCross", 'D',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'z':	/* Normalize input data to the range [0, 1].  */
-        
-        
-          if (update_arg((void *)&(args_info->normalizeZero_flag), 0, &(args_info->normalizeZero_given),
-              &(local_args_info.normalizeZero_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "normalizeZero", 'z',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'N':	/* Normalize input data to the range [-1, 1].  */
-        
-        
-          if (update_arg((void *)&(args_info->normalizeNPone_flag), 0, &(args_info->normalizeNPone_given),
-              &(local_args_info.normalizeNPone_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "normalizeNPone", 'N',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'Z':	/* Normalize input data to convert values to z-scores.  */
-        
-        
-          if (update_arg((void *)&(args_info->zscore_flag), 0, &(args_info->zscore_given),
-              &(local_args_info.zscore_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "zscore", 'Z',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'X':	/* For cross-validation perform edge holdout (Default is gene holdout).  */
-        
-        
-          if (update_arg((void *)&(args_info->edgeholdout_flag), 0, &(args_info->edgeholdout_given),
-              &(local_args_info.edgeholdout_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "edgeholdout", 'X',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'Q':	/* If given this flag, skip training SVM models when file already exist. Often used when cluster runs timeout/error and need to re-run jobs..  */
-        
-        
-          if (update_arg((void *)&(args_info->skipSVM_flag), 0, &(args_info->skipSVM_given),
-              &(local_args_info.skipSVM_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "skipSVM", 'Q',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'x':	/* If given this flag, when predicting for all gene pairs with multiple SVM models(bagging) aggregate using the maximum prediction value (Default: average).  */
-        
-        
-          if (update_arg((void *)&(args_info->aggregateMax_flag), 0, &(args_info->aggregateMax_given),
-              &(local_args_info.aggregateMax_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "aggregateMax", 'x',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'r':	/* Don't use the cross-validated prediction values for gene pairs that have labels in the final output. This flag will basically let SVM models make prediction on pairs that were also used for training..  */
-        
-        
-          if (update_arg((void *)&(args_info->NoCrossPredict_flag), 0, &(args_info->NoCrossPredict_given),
-              &(local_args_info.NoCrossPredict_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "NoCrossPredict", 'r',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'u':	/* Cross-validation prediction results, if given when prediction mode these values are replaced into final prediction values.  */
-        
-        
-          if (update_arg( (void *)&(args_info->CrossResult_arg), 
-               &(args_info->CrossResult_orig), &(args_info->CrossResult_given),
-              &(local_args_info.CrossResult_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "CrossResult", 'u',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'y':	/* Save the sampled final training labels to this file.  */
-        
-        
-          if (update_arg( (void *)&(args_info->SampledLabels_arg), 
-               &(args_info->SampledLabels_orig), &(args_info->SampledLabels_given),
-              &(local_args_info.SampledLabels_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "SampledLabels", 'y',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'A':	/* Sample the labels to the following rate.  */
-        
-        
-          if (update_arg( (void *)&(args_info->subsample_arg), 
-               &(args_info->subsample_orig), &(args_info->subsample_given),
-              &(local_args_info.subsample_given), optarg, 0, 0, ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "subsample", 'A',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'U':	/* Save the sampled labels to the file and exit.  */
-        
-        
-          if (update_arg( (void *)&(args_info->OutLabels_arg), 
-               &(args_info->OutLabels_orig), &(args_info->OutLabels_given),
-              &(local_args_info.OutLabels_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "OutLabels", 'U',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'H':	/* Input the gene holdout fold.  */
-        
-        
-          if (update_arg( (void *)&(args_info->GenesHoldoutFold_arg), 
-               &(args_info->GenesHoldoutFold_orig), &(args_info->GenesHoldoutFold_given),
-              &(local_args_info.GenesHoldoutFold_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "GenesHoldoutFold", 'H',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'f':	/* If given context gene list, context is defined by all edges touch the context. (default is both genes in edge need to be in context).  */
-        
-        
-          if (update_arg((void *)&(args_info->touchContext_flag), 0, &(args_info->touchContext_given),
-              &(local_args_info.touchContext_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "touchContext", 'f',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'w':	/* When given the context file, only filter for positive examples and leave negative examples as originally given..  */
-        
-        
-          if (update_arg((void *)&(args_info->onlyPos_flag), 0, &(args_info->onlyPos_given),
-              &(local_args_info.onlyPos_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "onlyPos", 'w',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'g':	/* Process only genes from the given set from labels.  */
-        
-        
-          if (update_arg( (void *)&(args_info->genes_arg), 
-               &(args_info->genes_orig), &(args_info->genes_given),
-              &(local_args_info.genes_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "genes", 'g',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'q':	/* Only keep edges from lables that have one gene in the target gene list.  */
-        
-        
-          if (update_arg((void *)&(args_info->onetgene_flag), 0, &(args_info->onetgene_given),
-              &(local_args_info.onetgene_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "onetgene", 'q',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'P':	/* Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior..  */
-        
-        
-          if (update_arg( (void *)&(args_info->prior_arg), 
-               &(args_info->prior_orig), &(args_info->prior_given),
-              &(local_args_info.prior_given), optarg, 0, 0, ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "prior", 'P',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 's':	/* Save model to file.  */
-        
-        
-          if (update_arg((void *)&(args_info->savemodel_flag), 0, &(args_info->savemodel_given),
-              &(local_args_info.savemodel_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "savemodel", 's',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'E':	/* Minimum number of total positive examples to allow training, if not met exit.  */
-        
-        
-          if (update_arg( (void *)&(args_info->mintrain_arg), 
-               &(args_info->mintrain_orig), &(args_info->mintrain_given),
-              &(local_args_info.mintrain_given), optarg, 0, 0, ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "mintrain", 'E',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'C':	/* Context gene list.  */
-        
-        
-          if (update_arg( (void *)&(args_info->context_arg), 
-               &(args_info->context_orig), &(args_info->context_given),
-              &(local_args_info.context_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "context", 'C',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'V':	/* When given context genes list, allow prediction too all genes.  */
-        
-        
-          if (update_arg((void *)&(args_info->allContextPred_flag), 0, &(args_info->allContextPred_given),
-              &(local_args_info.allContextPred_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "allContextPred", 'V',
-              additional_error))
-            goto failure;
-        
-          break;
 
-        case 0:	/* Long option with no short option */
-          /* Print version and exit.  */
-          if (strcmp (long_options[option_index].name, "version") == 0)
-          {
-          
-          
-            if (update_arg( 0 , 
-                 0 , &(args_info->version_given),
-                &(local_args_info.version_given), optarg, 0, 0, ARG_NO,
-                check_ambiguity, override, 0, 0,
-                "version", 'V',
-                additional_error))
-              goto failure;
-            cmdline_parser_free (&local_args_info);
-            return 0;
-          
-          }
-          
-          break;
-        case '?':	/* Invalid option.  */
-          /* `getopt_long' already printed an error message.  */
-          goto failure;
 
-        default:	/* bug: option not considered.  */
-          fprintf (stderr, "%s: option unknown: %c%s\n", CMDLINE_PARSER_PACKAGE, c, (additional_error ? additional_error : ""));
-          abort ();
+                if (update_arg((void *) &(args_info->error_function_arg),
+                               &(args_info->error_function_orig), &(args_info->error_function_given),
+                               &(local_args_info.error_function_given), optarg, 0, "10", ARG_INT,
+                               check_ambiguity, override, 0, 0,
+                               "error_function", 'e',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'k':    /* Value of k parameter used for Prec@k and Rec@k in (0,1).  */
+
+
+                if (update_arg((void *) &(args_info->k_value_arg),
+                               &(args_info->k_value_orig), &(args_info->k_value_given),
+                               &(local_args_info.k_value_given), optarg, 0, "0.5", ARG_FLOAT,
+                               check_ambiguity, override, 0, 0,
+                               "k_value", 'k',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 't':    /* SVM tradeoff constant C.  */
+
+
+                if (update_arg((void *) &(args_info->tradeoff_arg),
+                               &(args_info->tradeoff_orig), &(args_info->tradeoff_given),
+                               &(local_args_info.tradeoff_given), optarg, 0, "1", ARG_FLOAT,
+                               check_ambiguity, override, 0, 0,
+                               "tradeoff", 't',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'a':    /* Gene list that list all genes to make predictions.  */
+
+
+                if (update_arg((void *) &(args_info->allgenes_arg),
+                               &(args_info->allgenes_orig), &(args_info->allgenes_given),
+                               &(local_args_info.allgenes_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "allgenes", 'a',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'p':    /* NOT IMPLEMENTED YET: Parameter file.  */
+
+
+                if (update_arg((void *) &(args_info->params_arg),
+                               &(args_info->params_orig), &(args_info->params_given),
+                               &(local_args_info.params_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "params", 'p',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'n':    /* set missing values(NaN in dab file) from labels file as negative examples.  */
+
+
+                if (update_arg((void *) &(args_info->nan2neg_flag), 0, &(args_info->nan2neg_given),
+                               &(local_args_info.nan2neg_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "nan2neg", 'n',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'M':    /* Memory map binary input.  */
+
+
+                if (update_arg((void *) &(args_info->mmap_flag), 0, &(args_info->mmap_given),
+                               &(local_args_info.mmap_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "mmap", 'M',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'R':    /* Seed random generator (default -1 uses current time).  */
+
+
+                if (update_arg((void *) &(args_info->random_arg),
+                               &(args_info->random_orig), &(args_info->random_given),
+                               &(local_args_info.random_given), optarg, 0, "-1", ARG_INT,
+                               check_ambiguity, override, 0, 0,
+                               "random", 'R',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'T':    /* Target gene list, use this gene list as gene holdout cross-validation and also filter labels that only have one gene in given target gene list.  */
+
+
+                if (update_arg((void *) &(args_info->tgene_arg),
+                               &(args_info->tgene_orig), &(args_info->tgene_given),
+                               &(local_args_info.tgene_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "tgene", 'T',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'B':    /* Output prediction values as estimated probablity (Platt method).  */
+
+
+                if (update_arg((void *) &(args_info->prob_flag), 0, &(args_info->prob_given),
+                               &(local_args_info.prob_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "prob", 'B',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'D':    /* Cross-validation setting for output prediction values as estimated probablity (Platt method).  */
+
+
+                if (update_arg((void *) &(args_info->probCross_flag), 0, &(args_info->probCross_given),
+                               &(local_args_info.probCross_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "probCross", 'D',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'z':    /* Normalize input data to the range [0, 1].  */
+
+
+                if (update_arg((void *) &(args_info->normalizeZero_flag), 0, &(args_info->normalizeZero_given),
+                               &(local_args_info.normalizeZero_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "normalizeZero", 'z',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'N':    /* Normalize input data to the range [-1, 1].  */
+
+
+                if (update_arg((void *) &(args_info->normalizeNPone_flag), 0, &(args_info->normalizeNPone_given),
+                               &(local_args_info.normalizeNPone_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "normalizeNPone", 'N',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'Z':    /* Normalize input data to convert values to z-scores.  */
+
+
+                if (update_arg((void *) &(args_info->zscore_flag), 0, &(args_info->zscore_given),
+                               &(local_args_info.zscore_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "zscore", 'Z',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'X':    /* For cross-validation perform edge holdout (Default is gene holdout).  */
+
+
+                if (update_arg((void *) &(args_info->edgeholdout_flag), 0, &(args_info->edgeholdout_given),
+                               &(local_args_info.edgeholdout_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "edgeholdout", 'X',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'Q':    /* If given this flag, skip training SVM models when file already exist. Often used when cluster runs timeout/error and need to re-run jobs..  */
+
+
+                if (update_arg((void *) &(args_info->skipSVM_flag), 0, &(args_info->skipSVM_given),
+                               &(local_args_info.skipSVM_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "skipSVM", 'Q',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'x':    /* If given this flag, when predicting for all gene pairs with multiple SVM models(bagging) aggregate using the maximum prediction value (Default: average).  */
+
+
+                if (update_arg((void *) &(args_info->aggregateMax_flag), 0, &(args_info->aggregateMax_given),
+                               &(local_args_info.aggregateMax_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "aggregateMax", 'x',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'r':    /* Don't use the cross-validated prediction values for gene pairs that have labels in the final output. This flag will basically let SVM models make prediction on pairs that were also used for training..  */
+
+
+                if (update_arg((void *) &(args_info->NoCrossPredict_flag), 0, &(args_info->NoCrossPredict_given),
+                               &(local_args_info.NoCrossPredict_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "NoCrossPredict", 'r',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'u':    /* Cross-validation prediction results, if given when prediction mode these values are replaced into final prediction values.  */
+
+
+                if (update_arg((void *) &(args_info->CrossResult_arg),
+                               &(args_info->CrossResult_orig), &(args_info->CrossResult_given),
+                               &(local_args_info.CrossResult_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "CrossResult", 'u',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'y':    /* Save the sampled final training labels to this file.  */
+
+
+                if (update_arg((void *) &(args_info->SampledLabels_arg),
+                               &(args_info->SampledLabels_orig), &(args_info->SampledLabels_given),
+                               &(local_args_info.SampledLabels_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "SampledLabels", 'y',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'A':    /* Sample the labels to the following rate.  */
+
+
+                if (update_arg((void *) &(args_info->subsample_arg),
+                               &(args_info->subsample_orig), &(args_info->subsample_given),
+                               &(local_args_info.subsample_given), optarg, 0, 0, ARG_FLOAT,
+                               check_ambiguity, override, 0, 0,
+                               "subsample", 'A',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'U':    /* Save the sampled labels to the file and exit.  */
+
+
+                if (update_arg((void *) &(args_info->OutLabels_arg),
+                               &(args_info->OutLabels_orig), &(args_info->OutLabels_given),
+                               &(local_args_info.OutLabels_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "OutLabels", 'U',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'H':    /* Input the gene holdout fold.  */
+
+
+                if (update_arg((void *) &(args_info->GenesHoldoutFold_arg),
+                               &(args_info->GenesHoldoutFold_orig), &(args_info->GenesHoldoutFold_given),
+                               &(local_args_info.GenesHoldoutFold_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "GenesHoldoutFold", 'H',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'f':    /* If given context gene list, context is defined by all edges touch the context. (default is both genes in edge need to be in context).  */
+
+
+                if (update_arg((void *) &(args_info->touchContext_flag), 0, &(args_info->touchContext_given),
+                               &(local_args_info.touchContext_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "touchContext", 'f',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'w':    /* When given the context file, only filter for positive examples and leave negative examples as originally given..  */
+
+
+                if (update_arg((void *) &(args_info->onlyPos_flag), 0, &(args_info->onlyPos_given),
+                               &(local_args_info.onlyPos_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "onlyPos", 'w',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'g':    /* Process only genes from the given set from labels.  */
+
+
+                if (update_arg((void *) &(args_info->genes_arg),
+                               &(args_info->genes_orig), &(args_info->genes_given),
+                               &(local_args_info.genes_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "genes", 'g',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'q':    /* Only keep edges from lables that have one gene in the target gene list.  */
+
+
+                if (update_arg((void *) &(args_info->onetgene_flag), 0, &(args_info->onetgene_given),
+                               &(local_args_info.onetgene_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "onetgene", 'q',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'P':    /* Randomly sub-sample the negative labels to reach target prior. If cannot reach target prior, set to closest prior..  */
+
+
+                if (update_arg((void *) &(args_info->prior_arg),
+                               &(args_info->prior_orig), &(args_info->prior_given),
+                               &(local_args_info.prior_given), optarg, 0, 0, ARG_FLOAT,
+                               check_ambiguity, override, 0, 0,
+                               "prior", 'P',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 's':    /* Save model to file.  */
+
+
+                if (update_arg((void *) &(args_info->savemodel_flag), 0, &(args_info->savemodel_given),
+                               &(local_args_info.savemodel_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "savemodel", 's',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'E':    /* Minimum number of total positive examples to allow training, if not met exit.  */
+
+
+                if (update_arg((void *) &(args_info->mintrain_arg),
+                               &(args_info->mintrain_orig), &(args_info->mintrain_given),
+                               &(local_args_info.mintrain_given), optarg, 0, 0, ARG_FLOAT,
+                               check_ambiguity, override, 0, 0,
+                               "mintrain", 'E',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'C':    /* Context gene list.  */
+
+
+                if (update_arg((void *) &(args_info->context_arg),
+                               &(args_info->context_orig), &(args_info->context_given),
+                               &(local_args_info.context_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "context", 'C',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'V':    /* When given context genes list, allow prediction too all genes.  */
+
+
+                if (update_arg((void *) &(args_info->allContextPred_flag), 0, &(args_info->allContextPred_given),
+                               &(local_args_info.allContextPred_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "allContextPred", 'V',
+                               additional_error))
+                    goto failure;
+
+                break;
+
+            case 0:    /* Long option with no short option */
+                /* Print version and exit.  */
+                if (strcmp(long_options[option_index].name, "version") == 0) {
+
+
+                    if (update_arg(0,
+                                   0, &(args_info->version_given),
+                                   &(local_args_info.version_given), optarg, 0, 0, ARG_NO,
+                                   check_ambiguity, override, 0, 0,
+                                   "version", 'V',
+                                   additional_error))
+                        goto failure;
+                    cmdline_parser_free(&local_args_info);
+                    return 0;
+
+                }
+
+                break;
+            case '?':    /* Invalid option.  */
+                /* `getopt_long' already printed an error message.  */
+                goto failure;
+
+            default:    /* bug: option not considered.  */
+                fprintf(stderr, "%s: option unknown: %c%s\n", CMDLINE_PARSER_PACKAGE, c,
+                        (additional_error ? additional_error : ""));
+                abort();
         } /* switch */
     } /* while */
 
 
 
-  if (check_required)
-    {
-      error += cmdline_parser_required2 (args_info, argv[0], additional_error);
+    if (check_required) {
+        error += cmdline_parser_required2(args_info, argv[0], additional_error);
     }
 
-  cmdline_parser_release (&local_args_info);
+    cmdline_parser_release(&local_args_info);
 
-  if ( error )
+    if (error)
+        return (EXIT_FAILURE);
+
+    if (optind < argc) {
+        int i = 0;
+        int found_prog_name = 0;
+        /* whether program name, i.e., argv[0], is in the remaining args
+           (this may happen with some implementations of getopt,
+            but surely not with the one included by gengetopt) */
+
+        i = optind;
+        while (i < argc)
+            if (argv[i++] == argv[0]) {
+                found_prog_name = 1;
+                break;
+            }
+        i = 0;
+
+        args_info->inputs_num = argc - optind - found_prog_name;
+        args_info->inputs =
+                (char **) (malloc((args_info->inputs_num) * sizeof(char *)));
+        while (optind < argc)
+            if (argv[optind++] != argv[0])
+                args_info->inputs[i++] = gengetopt_strdup(argv[optind - 1]);
+    }
+
+    return 0;
+
+    failure:
+
+    cmdline_parser_release(&local_args_info);
     return (EXIT_FAILURE);
-
-  if (optind < argc)
-    {
-      int i = 0 ;
-      int found_prog_name = 0;
-      /* whether program name, i.e., argv[0], is in the remaining args
-         (this may happen with some implementations of getopt,
-          but surely not with the one included by gengetopt) */
-
-      i = optind;
-      while (i < argc)
-        if (argv[i++] == argv[0]) {
-          found_prog_name = 1;
-          break;
-        }
-      i = 0;
-
-      args_info->inputs_num = argc - optind - found_prog_name;
-      args_info->inputs =
-        (char **)(malloc ((args_info->inputs_num)*sizeof(char *))) ;
-      while (optind < argc)
-        if (argv[optind++] != argv[0])
-          args_info->inputs[ i++ ] = gengetopt_strdup (argv[optind-1]) ;
-    }
-
-  return 0;
-
-failure:
-  
-  cmdline_parser_release (&local_args_info);
-  return (EXIT_FAILURE);
 }

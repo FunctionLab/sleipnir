@@ -26,91 +26,100 @@
 
 namespace Sleipnir {
 
-class CMeasureImpl {
-protected:
-	friend class CMeasureKendallsTau;
-	friend class CMeasureKolmogorovSmirnov;
-	friend class CMeasureSpearman;
+    class CMeasureImpl {
+    protected:
+        friend class CMeasureKendallsTau;
 
-	static double MeasureTrim( const IMeasure*, const float*, size_t, const float*, size_t, const IMeasure::EMap,
-		const float*, const float*, bool );
-	static bool IsNaN( const float*, size_t );
+        friend class CMeasureKolmogorovSmirnov;
 
-	CMeasureImpl( const IMeasure*, bool );
-	virtual ~CMeasureImpl( );
+        friend class CMeasureSpearman;
 
-	IMeasure*	m_pMeasure;
-	bool		m_fMemory;
-};
+        static double MeasureTrim(const IMeasure *, const float *, size_t, const float *, size_t, const IMeasure::EMap,
+                                  const float *, const float *, bool);
 
-class CMeasureSigmoidImpl : protected CMeasureImpl {
-protected:
-	CMeasureSigmoidImpl( const IMeasure* pMeasure, bool fMemory, float dMult ) :
-		m_dMult(dMult), CMeasureImpl( pMeasure, fMemory ) { }
+        static bool IsNaN(const float *, size_t);
 
-	float	m_dMult;
-};
+        CMeasureImpl(const IMeasure *, bool);
 
-class CMeasureSpearmanImpl {
-protected:
-	CMeasureSpearmanImpl( bool fTransformed, double dAve, double dStd) : m_fTransformed(fTransformed), 
-		m_dAverage(dAve), m_dStdDev(dStd) { }
-	double m_dAverage;
-	double m_dStdDev;
-	bool	m_fTransformed;
-};
+        virtual ~CMeasureImpl();
 
-class CMeasureKendallsTauImpl {
-protected:
-	struct SKendallsFirst {
-		const float*	m_adX;
-		const float*	m_adY;
+        IMeasure *m_pMeasure;
+        bool m_fMemory;
+    };
 
-		SKendallsFirst( const float* adX, const float* adY ) : m_adX(adX), m_adY(adY) { }
+    class CMeasureSigmoidImpl : protected CMeasureImpl {
+    protected:
+        CMeasureSigmoidImpl(const IMeasure *pMeasure, bool fMemory, float dMult) :
+                m_dMult(dMult), CMeasureImpl(pMeasure, fMemory) {}
 
-		bool operator( )( size_t iX, size_t iY ) const {
-			float	dX, dY;
+        float m_dMult;
+    };
 
-			dX = m_adX[ iX ];
-			dY = m_adX[ iY ];
-			if( dX > dY )
-				return true;
-			if( dX < dY )
-				return false;
+    class CMeasureSpearmanImpl {
+    protected:
+        CMeasureSpearmanImpl(bool fTransformed, double dAve, double dStd) : m_fTransformed(fTransformed),
+                                                                            m_dAverage(dAve), m_dStdDev(dStd) {}
 
-			dX = m_adY[ iX ];
-			dY = m_adY[ iY ];
-			return ( dX > dY ); }
-	};
+        double m_dAverage;
+        double m_dStdDev;
+        bool m_fTransformed;
+    };
 
-	struct SKendallsSecond {
-		const float*	m_adX;
-		const float*	m_adY;
+    class CMeasureKendallsTauImpl {
+    protected:
+        struct SKendallsFirst {
+            const float *m_adX;
+            const float *m_adY;
 
-		SKendallsSecond( const float* adX, const float* adY ) : m_adX(adX), m_adY(adY) { }
+            SKendallsFirst(const float *adX, const float *adY) : m_adX(adX), m_adY(adY) {}
 
-		char operator( )( size_t iX, size_t iY ) const {
-			float	dX, dY;
+            bool operator( )(size_t iX, size_t iY) const {
+                float dX, dY;
 
-			dX = m_adY[ iX ];
-			dY = m_adY[ iY ];
-			return ( ( dX > dY ) ? -1 : ( ( dX < dY ) ? 1 : 0 ) ); }
-	};
+                dX = m_adX[iX];
+                dY = m_adX[iY];
+                if (dX > dY)
+                    return true;
+                if (dX < dY)
+                    return false;
 
-	static double MeasureWeighted( const float*, const float*, size_t, const float*,
-		const float* );
-	static double MeasureUnweighted( const float*, const float*, size_t );
-	static size_t CountExchanges( size_t*, size_t, size_t*, const SKendallsSecond&,
-		size_t = 0 );
-};
+                dX = m_adY[iX];
+                dY = m_adY[iY];
+                return (dX > dY);
+            }
+        };
 
-class CMeasurePearNormImpl {
-protected:
-	CMeasurePearNormImpl( double dAve, double dStd ) : m_dAverage(dAve), m_dStdDev(dStd) { }
+        struct SKendallsSecond {
+            const float *m_adX;
+            const float *m_adY;
 
-	double	m_dAverage;
-	double	m_dStdDev;
-};
+            SKendallsSecond(const float *adX, const float *adY) : m_adX(adX), m_adY(adY) {}
+
+            char operator( )(size_t iX, size_t iY) const {
+                float dX, dY;
+
+                dX = m_adY[iX];
+                dY = m_adY[iY];
+                return ((dX > dY) ? -1 : ((dX < dY) ? 1 : 0));
+            }
+        };
+
+        static double MeasureWeighted(const float *, const float *, size_t, const float *,
+                                      const float *);
+
+        static double MeasureUnweighted(const float *, const float *, size_t);
+
+        static size_t CountExchanges(size_t *, size_t, size_t *, const SKendallsSecond &,
+                                     size_t = 0);
+    };
+
+    class CMeasurePearNormImpl {
+    protected:
+        CMeasurePearNormImpl(double dAve, double dStd) : m_dAverage(dAve), m_dStdDev(dStd) {}
+
+        double m_dAverage;
+        double m_dStdDev;
+    };
 
 }
 

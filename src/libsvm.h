@@ -23,6 +23,7 @@
 #ifndef NO_LIBSVM
 #ifndef LIBSVMI_H
 #define LIBSVMI_H
+
 #include "pclset.h"
 #include "meta.h"
 #include "dat.h"
@@ -37,247 +38,250 @@
 namespace LIBSVM {
 
 
-  extern "C" {
+    extern "C" {
 #define class Class2
+
 #include <libsvm/svm.h>
+
 #undef class
 
-  }
-
-  typedef struct sample { /* a sample is a set of examples */
-    size_t     n;            /* n is the total number of examples */
-    size_t  numFeatures; 
-    struct svm_problem *problems;
-    sample() {
-      n = 0;
-      numFeatures = 0;
-      problems = NULL;
     }
 
-    ~sample(){
-      //no destructor for problem struct
-      free(problems->y);
-      free(problems->x);
-      problems = NULL;
-    }
-  } SAMPLE;
+    typedef struct sample { /* a sample is a set of examples */
+        size_t n;            /* n is the total number of examples */
+        size_t numFeatures;
+        struct svm_problem *problems;
 
-
-  class SVMLabel {
-    public:
-      string GeneName;
-      double Target;
-      size_t index;
-      bool hasIndex;
-
-      SVMLabel(std::string name, double target) {
-        GeneName = name;
-        Target = target;
-        hasIndex = false;
-        index = -1;
-      }
-
-      SVMLabel() {
-        GeneName = "";
-        Target = 0;
-      }
-      void SetIndex(size_t i) {
-        index = i;
-        hasIndex = true;
-      }
-  };
-
-  class Result {
-    public:
-      std::string GeneName;
-      double Target;
-      double Value;
-      int CVround;
-      int Rank;
-      Result() {
-        GeneName = "";
-        Target = 0;
-        Value = Sleipnir::CMeta::GetNaN();
-      }
-
-      Result(std::string name, int cv = -1) {
-        GeneName = name;
-        Target = 0;
-        Value = 0;
-        CVround = cv;
-        Rank = -1;
-      }
-      string toString() {
-        stringstream ss;
-        ss << GeneName << '\t' << Target << '\t' << Value << '\t' << "CV"
-          << CVround;
-        if (Rank != -1) {
-          ss << '\t' << Rank;
-        }
-        return ss.str();
-      }
-
-  };
-
-  enum EFilter {
-    EFilterInclude = 0, EFilterExclude = EFilterInclude + 1,
-  };
-
-  //this class encapsulates the model and parameters and has no associated data
-
-  class CLIBSVM {
-    public:
-      struct svm_model* model;
-      struct svm_parameter parm;
-      int balance;
-
-      static struct svm_node *x_space;
-
-      CLIBSVM() {
-        initialize();
-      }
-
-      ~CLIBSVM() {
-        svm_free_and_destroy_model( &model );
-        model = NULL;
-      }
-
-      void SetBalance(int bal){
-        balance = bal;
-      }
-
-      void SetSVMType(int type) {
-        parm.svm_type = type;
-      }
-
-      void SetTradeoff(double tradeoff) {
-        parm.C = tradeoff; //TODO: only applicable for vanilla svm
-      }
-
-      void SetKernel(int K) {
-        parm.kernel_type = K;
-      }
-
-      void SetPolyD(int D) {
-        parm.degree = D;
-      }
-
-      void SetRBFGamma(double g) {
-        parm.gamma = g;
-      }
-
-      void SetNu(double nu) {
-        parm.nu = nu;
-      }
-
-      void ReadModel(char* model_file) {
-        FreeModel();
-        model = svm_load_model(model_file); 
-      }
-
-      void FreeModel() {
-        svm_free_and_destroy_model(&model);
-      }
-
-      void WriteModel(char* model_file) {
-        svm_save_model(model_file, model);
-      }
-
-
-      //static members process data
-      //
-
-      static void SetXSpace(Sleipnir::CPCL& PCL);
-
-      //single gene predictions
-
-      //TODO: add functions to handle PCL files
-
-      //Creates a sample of svm_problems using a single PCL and SVMlabels Looks up genes by name.
-      static SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
-
-      //TODO: Same as above except creates bootstrap samples and does not duplicate data
-
-      //Creates a sample using a Dat and SVMlabels. Looks up genes by name
-      static SAMPLE* CreateSample(Sleipnir::CDat& CDat,
-          vector<SVMLabel> SMVLabels);
-
-      //Classify single genes
-      vector<Result> Classify(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels);
-
-
-      //MEMBER functions wraps learning
-      void Learn(SAMPLE &sample) {
-        //only L2 for LibSVM
-        //cerr << "SLACK NORM =" << struct_parm.slack_norm << endl;
-        //slack_norm = type of regularization
-
-        //Take care of the labels here
-        size_t i;
-        size_t numn, nump;
-
-        struct svm_problem* prob = sample.problems;
-
-        numn = nump = 0;
-
-        for(i = 0; i < sample.n; i++){
-          if (((*prob).y)[i] > 0){
-            nump ++;
-          }else{
-            numn ++;
-          }
+        sample() {
+            n = 0;
+            numFeatures = 0;
+            problems = nullptr;
         }
 
-        if (balance) {
-          cerr << "balancing the weights between postivies and negatives. " << endl;
-          parm.nr_weight = 2;
-          parm.weight_label = (int *) realloc(parm.weight_label, sizeof(int)*parm.nr_weight);
-          parm.weight = (double *) realloc(parm.weight, sizeof(double)*parm.nr_weight);
-          parm.weight_label[0] = 1;
-          parm.weight[0] = numn;
-          parm.weight_label[1] = -1;
-          parm.weight[1] = nump;
+        ~sample() {
+            //no destructor for problem struct
+            free(problems->y);
+            free(problems->x);
+            problems = nullptr;
         }
-
-        if(parms_check()){
-          model = svm_train(prob,&parm);
-        }else{
-        }
-        prob = NULL;
-
-      }
-
-      static void PrintSample(SAMPLE s){
-        PrintProblem(s.problems);
-      }
-
-      static void PrintProblem(svm_problem *prob){
-        size_t i, j ;
-        i = j = 0;
-
-        for(i = 0 ; i < 3 ; i++){
-          for(j = 0 ; j < 2 ; j ++){
-            PrintNode((prob->x)[i][j]);
-          }
-        }
-
-        return;
-      }
-
-      static void PrintNode(svm_node node){
-        cerr << "index: " << node.index << endl;
-        cerr << "value: " << node.value << endl;
-      }
+    } SAMPLE;
 
 
-      //no pairwise learning for libSVM wrapper
+    class SVMLabel{
+            public:
+            string GeneName;
+            double Target;
+            size_t index{};
+            bool hasIndex{};
 
-      bool parms_check();
-      bool initialize();
+            SVMLabel(std::string name, double target) {
+                GeneName = name;
+                Target = target;
+                hasIndex = false;
+                index = -1;
+            }
 
-      //TODO: functions to convert probablity
+            SVMLabel() {
+                GeneName = "";
+                Target = 0;
+            }
+            void SetIndex(size_t i) {
+                index = i;
+                hasIndex = true;
+            }
+    };
 
-  };
+    class Result{
+            public:
+            std::string GeneName;
+            double Target;
+            double Value;
+            int CVround;
+            int Rank;
+            Result() {
+                CVround = -1;
+                Rank = -1;
+                GeneName = "";
+                Target = 0;
+                Value = Sleipnir::CMeta::GetNaN();
+            }
+
+            explicit Result(std::string name, int cv = -1) {
+                GeneName = name;
+                Target = 0;
+                Value = 0;
+                CVround = cv;
+                Rank = -1;
+            }
+            string toString() {
+                stringstream ss;
+                ss << GeneName << '\t' << Target << '\t' << Value << '\t' << "CV"
+                   << CVround;
+                if (Rank != -1) {
+                    ss << '\t' << Rank;
+                }
+                return ss.str();
+            }
+
+    };
+
+    enum EFilter {
+        EFilterInclude = 0, EFilterExclude = EFilterInclude + 1,
+    };
+
+    //this class encapsulates the model and parameters and has no associated data
+
+    class CLIBSVM{
+            public:
+            struct svm_model* model{};
+            struct svm_parameter parm{};
+            int balance{};
+
+            static struct svm_node *x_space;
+
+            CLIBSVM() {
+                initialize();
+            }
+
+            ~CLIBSVM() {
+                svm_free_and_destroy_model(&model);
+                model = nullptr;
+            }
+
+            void SetBalance(int bal){
+                balance = bal;
+            }
+
+            void SetSVMType(int type) {
+                parm.svm_type = type;
+            }
+
+            void SetTradeoff(double tradeoff) {
+                parm.C = tradeoff; //TODO: only applicable for vanilla svm
+            }
+
+            void SetKernel(int K) {
+                parm.kernel_type = K;
+            }
+
+            void SetPolyD(int D) {
+                parm.degree = D;
+            }
+
+            void SetRBFGamma(double g) {
+                parm.gamma = g;
+            }
+
+            void SetNu(double nu) {
+                parm.nu = nu;
+            }
+
+            void ReadModel(char* model_file) {
+                FreeModel();
+                model = svm_load_model(model_file);
+            }
+
+            void FreeModel() {
+                svm_free_and_destroy_model(&model);
+            }
+
+            void WriteModel(char* model_file) {
+                svm_save_model(model_file, model);
+            }
+
+
+            //static members process data
+            //
+
+            static void SetXSpace(Sleipnir::CPCL& PCL);
+
+            //single gene predictions
+
+            //TODO: add functions to handle PCL files
+
+            //Creates a sample of svm_problems using a single PCL and SVMlabels Looks up genes by name.
+            static SAMPLE* CreateSample(Sleipnir::CPCL &PCL, vector<SVMLabel> SVMLabels);
+
+            //TODO: Same as above except creates bootstrap samples and does not duplicate data
+
+            //Creates a sample using a Dat and SVMlabels. Looks up genes by name
+            static SAMPLE* CreateSample(Sleipnir::CDat& CDat,
+            vector<SVMLabel> SMVLabels);
+
+            //Classify single genes
+            vector<Result> Classify(Sleipnir::CPCL& PCL, vector<SVMLabel> SVMLabels);
+
+
+            //MEMBER functions wraps learning
+            void Learn(SAMPLE &sample) {
+                //only L2 for LibSVM
+                //cerr << "SLACK NORM =" << struct_parm.slack_norm << endl;
+                //slack_norm = type of regularization
+
+                //Take care of the labels here
+                size_t i;
+                size_t numn, nump;
+
+                struct svm_problem *prob = sample.problems;
+
+                numn = nump = 0;
+
+                for (i = 0; i < sample.n; i++) {
+                    if (((*prob).y)[i] > 0) {
+                        nump++;
+                    } else {
+                        numn++;
+                    }
+                }
+
+                if (balance) {
+                    cerr << "balancing the weights between postivies and negatives. " << endl;
+                    parm.nr_weight = 2;
+                    parm.weight_label = (int *) realloc(parm.weight_label, sizeof(int) * parm.nr_weight);
+                    parm.weight = (double *) realloc(parm.weight, sizeof(double) * parm.nr_weight);
+                    parm.weight_label[0] = 1;
+                    parm.weight[0] = numn;
+                    parm.weight_label[1] = -1;
+                    parm.weight[1] = nump;
+                }
+
+                if (parms_check()) {
+                    model = svm_train(prob, &parm);
+                } else {
+                }
+                prob = nullptr;
+
+            }
+
+            static void PrintSample(const SAMPLE& s){
+                PrintProblem(s.problems);
+            }
+
+            static void PrintProblem(svm_problem *prob){
+                size_t i, j;
+                i = j = 0;
+
+                for (i = 0; i < 3; i++) {
+                    for (j = 0; j < 2; j++) {
+                        PrintNode((prob->x)[i][j]);
+                    }
+                }
+            }
+
+            static void PrintNode(svm_node node){
+                cerr << "index: " << node.index << endl;
+                cerr << "value: " << node.value << endl;
+            }
+
+
+            //no pairwise learning for libSVM wrapper
+
+            bool parms_check();
+            bool initialize();
+
+            //TODO: functions to convert probablity
+
+    };
 }
 
 #endif // NO_SVM_LIBSVM

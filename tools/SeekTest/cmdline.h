@@ -35,90 +35,88 @@ extern "C" {
 #endif
 
 /** @brief Where the command line options are stored */
-struct gengetopt_args_info
-{
-  const char *help_help; /**< @brief Print help and exit help description.  */
-  const char *version_help; /**< @brief Print version and exit help description.  */
-  int dab_flag;	/**< @brief DAB mode (default=off).  */
-  const char *dab_help; /**< @brief DAB mode help description.  */
-  int bin_flag;	/**< @brief PCL Bin mode (default=off).  */
-  const char *bin_help; /**< @brief PCL Bin mode help description.  */
-  int db_flag;	/**< @brief DB mode (default=off).  */
-  const char *db_help; /**< @brief DB mode help description.  */
-  char * db_dir_arg;	/**< @brief DB directory.  */
-  char * db_dir_orig;	/**< @brief DB directory original value given at command line.  */
-  const char *db_dir_help; /**< @brief DB directory help description.  */
-  int db_num_arg;	/**< @brief Number of files in DB directory (default='1000').  */
-  char * db_num_orig;	/**< @brief Number of files in DB directory original value given at command line.  */
-  const char *db_num_help; /**< @brief Number of files in DB directory help description.  */
-  char * prep_arg;	/**< @brief Prep directory (containing .gavg and .gpres files).  */
-  char * prep_orig;	/**< @brief Prep directory (containing .gavg and .gpres files) original value given at command line.  */
-  const char *prep_help; /**< @brief Prep directory (containing .gavg and .gpres files) help description.  */
-  char * sinfo_arg;	/**< @brief Sinfo directory (containing .sinfo files).  */
-  char * sinfo_orig;	/**< @brief Sinfo directory (containing .sinfo files) original value given at command line.  */
-  const char *sinfo_help; /**< @brief Sinfo directory (containing .sinfo files) help description.  */
-  char * dataset_list_arg;	/**< @brief Dataset list.  */
-  char * dataset_list_orig;	/**< @brief Dataset list original value given at command line.  */
-  const char *dataset_list_help; /**< @brief Dataset list help description.  */
-  char * query_arg;	/**< @brief List of genes separated by spaces in one line.  */
-  char * query_orig;	/**< @brief List of genes separated by spaces in one line original value given at command line.  */
-  const char *query_help; /**< @brief List of genes separated by spaces in one line help description.  */
-  char * quant_arg;	/**< @brief Quant file.  */
-  char * quant_orig;	/**< @brief Quant file original value given at command line.  */
-  const char *quant_help; /**< @brief Quant file help description.  */
-  int count_pair_flag;	/**< @brief Count number of z-scores exceeding a threshold (default=off).  */
-  const char *count_pair_help; /**< @brief Count number of z-scores exceeding a threshold help description.  */
-  int histogram_flag;	/**< @brief Get distribution of z-scores of given genes (default=off).  */
-  const char *histogram_help; /**< @brief Get distribution of z-scores of given genes help description.  */
-  char * gene_set_list_arg;	/**< @brief List of gene-set files.  */
-  char * gene_set_list_orig;	/**< @brief List of gene-set files original value given at command line.  */
-  const char *gene_set_list_help; /**< @brief List of gene-set files help description.  */
-  char * input_arg;	/**< @brief Gene mapping file.  */
-  char * input_orig;	/**< @brief Gene mapping file original value given at command line.  */
-  const char *input_help; /**< @brief Gene mapping file help description.  */
-  char * dabinput_arg;	/**< @brief DAB dataset file.  */
-  char * dabinput_orig;	/**< @brief DAB dataset file original value given at command line.  */
-  const char *dabinput_help; /**< @brief DAB dataset file help description.  */
-  char * gavg_input_arg;	/**< @brief Gene average (.gavg) input file.  */
-  char * gavg_input_orig;	/**< @brief Gene average (.gavg) input file original value given at command line.  */
-  const char *gavg_input_help; /**< @brief Gene average (.gavg) input file help description.  */
-  char * gpres_input_arg;	/**< @brief Gene presence (.gpres) input file.  */
-  char * gpres_input_orig;	/**< @brief Gene presence (.gpres) input file original value given at command line.  */
-  const char *gpres_input_help; /**< @brief Gene presence (.gpres) input file help description.  */
-  
-  unsigned int help_given ;	/**< @brief Whether help was given.  */
-  unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int dab_given ;	/**< @brief Whether dab was given.  */
-  unsigned int bin_given ;	/**< @brief Whether bin was given.  */
-  unsigned int db_given ;	/**< @brief Whether db was given.  */
-  unsigned int db_dir_given ;	/**< @brief Whether db_dir was given.  */
-  unsigned int db_num_given ;	/**< @brief Whether db_num was given.  */
-  unsigned int prep_given ;	/**< @brief Whether prep was given.  */
-  unsigned int sinfo_given ;	/**< @brief Whether sinfo was given.  */
-  unsigned int dataset_list_given ;	/**< @brief Whether dataset_list was given.  */
-  unsigned int query_given ;	/**< @brief Whether query was given.  */
-  unsigned int quant_given ;	/**< @brief Whether quant was given.  */
-  unsigned int count_pair_given ;	/**< @brief Whether count_pair was given.  */
-  unsigned int histogram_given ;	/**< @brief Whether histogram was given.  */
-  unsigned int gene_set_list_given ;	/**< @brief Whether gene_set_list was given.  */
-  unsigned int input_given ;	/**< @brief Whether input was given.  */
-  unsigned int dabinput_given ;	/**< @brief Whether dabinput was given.  */
-  unsigned int gavg_input_given ;	/**< @brief Whether gavg_input was given.  */
-  unsigned int gpres_input_given ;	/**< @brief Whether gpres_input was given.  */
+struct gengetopt_args_info {
+    const char *help_help; /**< @brief Print help and exit help description.  */
+    const char *version_help; /**< @brief Print version and exit help description.  */
+    int dab_flag;    /**< @brief DAB mode (default=off).  */
+    const char *dab_help; /**< @brief DAB mode help description.  */
+    int bin_flag;    /**< @brief PCL Bin mode (default=off).  */
+    const char *bin_help; /**< @brief PCL Bin mode help description.  */
+    int db_flag;    /**< @brief DB mode (default=off).  */
+    const char *db_help; /**< @brief DB mode help description.  */
+    char *db_dir_arg;    /**< @brief DB directory.  */
+    char *db_dir_orig;    /**< @brief DB directory original value given at command line.  */
+    const char *db_dir_help; /**< @brief DB directory help description.  */
+    int db_num_arg;    /**< @brief Number of files in DB directory (default='1000').  */
+    char *db_num_orig;    /**< @brief Number of files in DB directory original value given at command line.  */
+    const char *db_num_help; /**< @brief Number of files in DB directory help description.  */
+    char *prep_arg;    /**< @brief Prep directory (containing .gavg and .gpres files).  */
+    char *prep_orig;    /**< @brief Prep directory (containing .gavg and .gpres files) original value given at command line.  */
+    const char *prep_help; /**< @brief Prep directory (containing .gavg and .gpres files) help description.  */
+    char *sinfo_arg;    /**< @brief Sinfo directory (containing .sinfo files).  */
+    char *sinfo_orig;    /**< @brief Sinfo directory (containing .sinfo files) original value given at command line.  */
+    const char *sinfo_help; /**< @brief Sinfo directory (containing .sinfo files) help description.  */
+    char *dataset_list_arg;    /**< @brief Dataset list.  */
+    char *dataset_list_orig;    /**< @brief Dataset list original value given at command line.  */
+    const char *dataset_list_help; /**< @brief Dataset list help description.  */
+    char *query_arg;    /**< @brief List of genes separated by spaces in one line.  */
+    char *query_orig;    /**< @brief List of genes separated by spaces in one line original value given at command line.  */
+    const char *query_help; /**< @brief List of genes separated by spaces in one line help description.  */
+    char *quant_arg;    /**< @brief Quant file.  */
+    char *quant_orig;    /**< @brief Quant file original value given at command line.  */
+    const char *quant_help; /**< @brief Quant file help description.  */
+    int count_pair_flag;    /**< @brief Count number of z-scores exceeding a threshold (default=off).  */
+    const char *count_pair_help; /**< @brief Count number of z-scores exceeding a threshold help description.  */
+    int histogram_flag;    /**< @brief Get distribution of z-scores of given genes (default=off).  */
+    const char *histogram_help; /**< @brief Get distribution of z-scores of given genes help description.  */
+    char *gene_set_list_arg;    /**< @brief List of gene-set files.  */
+    char *gene_set_list_orig;    /**< @brief List of gene-set files original value given at command line.  */
+    const char *gene_set_list_help; /**< @brief List of gene-set files help description.  */
+    char *input_arg;    /**< @brief Gene mapping file.  */
+    char *input_orig;    /**< @brief Gene mapping file original value given at command line.  */
+    const char *input_help; /**< @brief Gene mapping file help description.  */
+    char *dabinput_arg;    /**< @brief DAB dataset file.  */
+    char *dabinput_orig;    /**< @brief DAB dataset file original value given at command line.  */
+    const char *dabinput_help; /**< @brief DAB dataset file help description.  */
+    char *gavg_input_arg;    /**< @brief Gene average (.gavg) input file.  */
+    char *gavg_input_orig;    /**< @brief Gene average (.gavg) input file original value given at command line.  */
+    const char *gavg_input_help; /**< @brief Gene average (.gavg) input file help description.  */
+    char *gpres_input_arg;    /**< @brief Gene presence (.gpres) input file.  */
+    char *gpres_input_orig;    /**< @brief Gene presence (.gpres) input file original value given at command line.  */
+    const char *gpres_input_help; /**< @brief Gene presence (.gpres) input file help description.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
-} ;
+    unsigned int help_given;    /**< @brief Whether help was given.  */
+    unsigned int version_given;    /**< @brief Whether version was given.  */
+    unsigned int dab_given;    /**< @brief Whether dab was given.  */
+    unsigned int bin_given;    /**< @brief Whether bin was given.  */
+    unsigned int db_given;    /**< @brief Whether db was given.  */
+    unsigned int db_dir_given;    /**< @brief Whether db_dir was given.  */
+    unsigned int db_num_given;    /**< @brief Whether db_num was given.  */
+    unsigned int prep_given;    /**< @brief Whether prep was given.  */
+    unsigned int sinfo_given;    /**< @brief Whether sinfo was given.  */
+    unsigned int dataset_list_given;    /**< @brief Whether dataset_list was given.  */
+    unsigned int query_given;    /**< @brief Whether query was given.  */
+    unsigned int quant_given;    /**< @brief Whether quant was given.  */
+    unsigned int count_pair_given;    /**< @brief Whether count_pair was given.  */
+    unsigned int histogram_given;    /**< @brief Whether histogram was given.  */
+    unsigned int gene_set_list_given;    /**< @brief Whether gene_set_list was given.  */
+    unsigned int input_given;    /**< @brief Whether input was given.  */
+    unsigned int dabinput_given;    /**< @brief Whether dabinput was given.  */
+    unsigned int gavg_input_given;    /**< @brief Whether gavg_input was given.  */
+    unsigned int gpres_input_given;    /**< @brief Whether gpres_input was given.  */
+
+    char **inputs; /**< @brief unamed options (options without names) */
+    unsigned inputs_num; /**< @brief unamed options number */
+};
 
 /** @brief The additional parameters to pass to parser functions */
-struct cmdline_parser_params
-{
-  int override; /**< @brief whether to override possibly already present options (default 0) */
-  int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
-  int check_required; /**< @brief whether to check that all required options were provided (default 1) */
-  int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
-  int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
-} ;
+struct cmdline_parser_params {
+    int override; /**< @brief whether to override possibly already present options (default 0) */
+    int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
+    int check_required; /**< @brief whether to check that all required options were provided (default 1) */
+    int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
+    int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
+};
 
 /** @brief the purpose string of the program */
 extern const char *gengetopt_args_info_purpose;
@@ -134,8 +132,8 @@ extern const char *gengetopt_args_info_help[];
  * @param args_info the structure where option information will be stored
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser (int argc, char **argv,
-  struct gengetopt_args_info *args_info);
+int cmdline_parser(int argc, char **argv,
+                   struct gengetopt_args_info *args_info);
 
 /**
  * The command line parser (version with additional parameters - deprecated)
@@ -148,9 +146,9 @@ int cmdline_parser (int argc, char **argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  * @deprecated use cmdline_parser_ext() instead
  */
-int cmdline_parser2 (int argc, char **argv,
-  struct gengetopt_args_info *args_info,
-  int override, int initialize, int check_required);
+int cmdline_parser2(int argc, char **argv,
+                    struct gengetopt_args_info *args_info,
+                    int override, int initialize, int check_required);
 
 /**
  * The command line parser (version with additional parameters)
@@ -160,9 +158,9 @@ int cmdline_parser2 (int argc, char **argv,
  * @param params additional parameters for the parser
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser_ext (int argc, char **argv,
-  struct gengetopt_args_info *args_info,
-  struct cmdline_parser_params *params);
+int cmdline_parser_ext(int argc, char **argv,
+                       struct gengetopt_args_info *args_info,
+                       struct cmdline_parser_params *params);
 
 /**
  * Save the contents of the option struct into an already open FILE stream.
@@ -171,7 +169,7 @@ int cmdline_parser_ext (int argc, char **argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_dump(FILE *outfile,
-  struct gengetopt_args_info *args_info);
+                        struct gengetopt_args_info *args_info);
 
 /**
  * Save the contents of the option struct into a (text) file.
@@ -181,12 +179,13 @@ int cmdline_parser_dump(FILE *outfile,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_file_save(const char *filename,
-  struct gengetopt_args_info *args_info);
+                             struct gengetopt_args_info *args_info);
 
 /**
  * Print the help
  */
 void cmdline_parser_print_help(void);
+
 /**
  * Print the version
  */
@@ -211,13 +210,14 @@ struct cmdline_parser_params *cmdline_parser_params_create(void);
  * (also set default values for options that have a default)
  * @param args_info the structure to initialize
  */
-void cmdline_parser_init (struct gengetopt_args_info *args_info);
+void cmdline_parser_init(struct gengetopt_args_info *args_info);
+
 /**
  * Deallocates the string fields of the gengetopt_args_info structure
  * (but does not deallocate the structure itself)
  * @param args_info the structure to deallocate
  */
-void cmdline_parser_free (struct gengetopt_args_info *args_info);
+void cmdline_parser_free(struct gengetopt_args_info *args_info);
 
 /**
  * Checks that all the required options were specified
@@ -226,8 +226,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  *   possible errors
  * @return
  */
-int cmdline_parser_required (struct gengetopt_args_info *args_info,
-  const char *prog_name);
+int cmdline_parser_required(struct gengetopt_args_info *args_info,
+                            const char *prog_name);
 
 
 #ifdef __cplusplus

@@ -29,10 +29,11 @@
 #include <io.h>
 #include <winsock2.h>
 #else // _MSC_VER
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#define SOCKET		int
+#define SOCKET        int
 #endif // _MSC_VER
 
 #include <omp.h>
@@ -45,12 +46,13 @@ using namespace std;
 #include "meta.h"
 #include "pcl.h"
 #include "statistics.h"
+
 using namespace Sleipnir;
 
 #include "cmdline.h"
 #include "server.h"
 #include "serverclient.h"
 
-typedef int (*TPFnCombiner)( const gengetopt_args_info& );
+typedef int (*TPFnCombiner)(const gengetopt_args_info &);
 
 #endif // STDAFX_H

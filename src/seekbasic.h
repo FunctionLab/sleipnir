@@ -31,6 +31,7 @@
 *****************************************************************************/
 #ifndef SEEKBASIC_H
 #define SEEKBASIC_H
+
 #include <vector>
 #include <string>
 #include <map>

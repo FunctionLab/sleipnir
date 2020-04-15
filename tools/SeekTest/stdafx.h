@@ -31,6 +31,7 @@
 #include <omp.h>
 #include <numeric>
 #include <algorithm>
+
 using namespace std;
 
 #include <pthread.h>
@@ -41,6 +42,7 @@ using namespace std;
 #include "seekreader.h"
 #include "seekevaluate.h"
 #include "meta.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

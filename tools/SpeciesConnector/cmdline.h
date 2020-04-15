@@ -30,86 +30,84 @@ extern "C" {
 #endif
 
 /** @brief Where the command line options are stored */
-struct gengetopt_args_info
-{
-  const char *help_help; /**< @brief Print help and exit help description.  */
-  const char *version_help; /**< @brief Print version and exit help description.  */
-  char * ddirectory_arg;	/**< @brief Data directory (default='.').  */
-  char * ddirectory_orig;	/**< @brief Data directory original value given at command line.  */
-  const char *ddirectory_help; /**< @brief Data directory help description.  */
-  char * adirectory_arg;	/**< @brief Answer directory (default='.').  */
-  char * adirectory_orig;	/**< @brief Answer directory original value given at command line.  */
-  const char *adirectory_help; /**< @brief Answer directory help description.  */
-  char * odirectory_arg;	/**< @brief Output directory (default='.').  */
-  char * odirectory_orig;	/**< @brief Output directory original value given at command line.  */
-  const char *odirectory_help; /**< @brief Output directory help description.  */
-  char * jdirectory_arg;	/**< @brief Learned joint directory (default='.').  */
-  char * jdirectory_orig;	/**< @brief Learned joint directory original value given at command line.  */
-  const char *jdirectory_help; /**< @brief Learned joint directory help description.  */
-  char * l1directory_arg;	/**< @brief Likelihood wrt 1 directory (default='.').  */
-  char * l1directory_orig;	/**< @brief Likelihood wrt 1 directory original value given at command line.  */
-  const char *l1directory_help; /**< @brief Likelihood wrt 1 directory help description.  */
-  char * l0directory_arg;	/**< @brief Likelihood wrt 0 directory (default='.').  */
-  char * l0directory_orig;	/**< @brief Likelihood wrt 0 directory original value given at command line.  */
-  const char *l0directory_help; /**< @brief Likelihood wrt 0 directory help description.  */
-  int learn_flag;	/**< @brief Learn flag (default=off).  */
-  const char *learn_help; /**< @brief Learn flag help description.  */
-  char * zeros_arg;	/**< @brief Read zeroed node IDs/outputs from the given file.  */
-  char * zeros_orig;	/**< @brief Read zeroed node IDs/outputs from the given file original value given at command line.  */
-  const char *zeros_help; /**< @brief Read zeroed node IDs/outputs from the given file help description.  */
-  int memmap_flag;	/**< @brief Memory map input/output (default=off).  */
-  const char *memmap_help; /**< @brief Memory map input/output help description.  */
-  int random_arg;	/**< @brief Seed random generator (default='0').  */
-  char * random_orig;	/**< @brief Seed random generator original value given at command line.  */
-  const char *random_help; /**< @brief Seed random generator help description.  */
-  int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
-  char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
-  const char *verbosity_help; /**< @brief Message verbosity help description.  */
-  char * genex_arg;	/**< @brief Gene exclusion file.  */
-  char * genex_orig;	/**< @brief Gene exclusion file original value given at command line.  */
-  const char *genex_help; /**< @brief Gene exclusion file help description.  */
-  int genelist_flag;	/**< @brief Print gene list on the screen (default=off).  */
-  const char *genelist_help; /**< @brief Print gene list on the screen help description.  */
-  int uniformjoint_flag;	/**< @brief Uniform joint distribution (default=off).  */
-  const char *uniformjoint_help; /**< @brief Uniform joint distribution help description.  */
-  float threshold_arg;	/**< @brief Threshold for joint (default='0.5').  */
-  char * threshold_orig;	/**< @brief Threshold for joint original value given at command line.  */
-  const char *threshold_help; /**< @brief Threshold for joint help description.  */
-  int holdout_flag;	/**< @brief Holdout target dataset (default=off).  */
-  const char *holdout_help; /**< @brief Holdout target dataset help description.  */
-  
-  unsigned int help_given ;	/**< @brief Whether help was given.  */
-  unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int ddirectory_given ;	/**< @brief Whether ddirectory was given.  */
-  unsigned int adirectory_given ;	/**< @brief Whether adirectory was given.  */
-  unsigned int odirectory_given ;	/**< @brief Whether odirectory was given.  */
-  unsigned int jdirectory_given ;	/**< @brief Whether jdirectory was given.  */
-  unsigned int l1directory_given ;	/**< @brief Whether l1directory was given.  */
-  unsigned int l0directory_given ;	/**< @brief Whether l0directory was given.  */
-  unsigned int learn_given ;	/**< @brief Whether learn was given.  */
-  unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
-  unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
-  unsigned int random_given ;	/**< @brief Whether random was given.  */
-  unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
-  unsigned int genex_given ;	/**< @brief Whether genex was given.  */
-  unsigned int genelist_given ;	/**< @brief Whether genelist was given.  */
-  unsigned int uniformjoint_given ;	/**< @brief Whether uniformjoint was given.  */
-  unsigned int threshold_given ;	/**< @brief Whether threshold was given.  */
-  unsigned int holdout_given ;	/**< @brief Whether holdout was given.  */
+struct gengetopt_args_info {
+    const char *help_help; /**< @brief Print help and exit help description.  */
+    const char *version_help; /**< @brief Print version and exit help description.  */
+    char *ddirectory_arg;    /**< @brief Data directory (default='.').  */
+    char *ddirectory_orig;    /**< @brief Data directory original value given at command line.  */
+    const char *ddirectory_help; /**< @brief Data directory help description.  */
+    char *adirectory_arg;    /**< @brief Answer directory (default='.').  */
+    char *adirectory_orig;    /**< @brief Answer directory original value given at command line.  */
+    const char *adirectory_help; /**< @brief Answer directory help description.  */
+    char *odirectory_arg;    /**< @brief Output directory (default='.').  */
+    char *odirectory_orig;    /**< @brief Output directory original value given at command line.  */
+    const char *odirectory_help; /**< @brief Output directory help description.  */
+    char *jdirectory_arg;    /**< @brief Learned joint directory (default='.').  */
+    char *jdirectory_orig;    /**< @brief Learned joint directory original value given at command line.  */
+    const char *jdirectory_help; /**< @brief Learned joint directory help description.  */
+    char *l1directory_arg;    /**< @brief Likelihood wrt 1 directory (default='.').  */
+    char *l1directory_orig;    /**< @brief Likelihood wrt 1 directory original value given at command line.  */
+    const char *l1directory_help; /**< @brief Likelihood wrt 1 directory help description.  */
+    char *l0directory_arg;    /**< @brief Likelihood wrt 0 directory (default='.').  */
+    char *l0directory_orig;    /**< @brief Likelihood wrt 0 directory original value given at command line.  */
+    const char *l0directory_help; /**< @brief Likelihood wrt 0 directory help description.  */
+    int learn_flag;    /**< @brief Learn flag (default=off).  */
+    const char *learn_help; /**< @brief Learn flag help description.  */
+    char *zeros_arg;    /**< @brief Read zeroed node IDs/outputs from the given file.  */
+    char *zeros_orig;    /**< @brief Read zeroed node IDs/outputs from the given file original value given at command line.  */
+    const char *zeros_help; /**< @brief Read zeroed node IDs/outputs from the given file help description.  */
+    int memmap_flag;    /**< @brief Memory map input/output (default=off).  */
+    const char *memmap_help; /**< @brief Memory map input/output help description.  */
+    int random_arg;    /**< @brief Seed random generator (default='0').  */
+    char *random_orig;    /**< @brief Seed random generator original value given at command line.  */
+    const char *random_help; /**< @brief Seed random generator help description.  */
+    int verbosity_arg;    /**< @brief Message verbosity (default='5').  */
+    char *verbosity_orig;    /**< @brief Message verbosity original value given at command line.  */
+    const char *verbosity_help; /**< @brief Message verbosity help description.  */
+    char *genex_arg;    /**< @brief Gene exclusion file.  */
+    char *genex_orig;    /**< @brief Gene exclusion file original value given at command line.  */
+    const char *genex_help; /**< @brief Gene exclusion file help description.  */
+    int genelist_flag;    /**< @brief Print gene list on the screen (default=off).  */
+    const char *genelist_help; /**< @brief Print gene list on the screen help description.  */
+    int uniformjoint_flag;    /**< @brief Uniform joint distribution (default=off).  */
+    const char *uniformjoint_help; /**< @brief Uniform joint distribution help description.  */
+    float threshold_arg;    /**< @brief Threshold for joint (default='0.5').  */
+    char *threshold_orig;    /**< @brief Threshold for joint original value given at command line.  */
+    const char *threshold_help; /**< @brief Threshold for joint help description.  */
+    int holdout_flag;    /**< @brief Holdout target dataset (default=off).  */
+    const char *holdout_help; /**< @brief Holdout target dataset help description.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
-} ;
+    unsigned int help_given;    /**< @brief Whether help was given.  */
+    unsigned int version_given;    /**< @brief Whether version was given.  */
+    unsigned int ddirectory_given;    /**< @brief Whether ddirectory was given.  */
+    unsigned int adirectory_given;    /**< @brief Whether adirectory was given.  */
+    unsigned int odirectory_given;    /**< @brief Whether odirectory was given.  */
+    unsigned int jdirectory_given;    /**< @brief Whether jdirectory was given.  */
+    unsigned int l1directory_given;    /**< @brief Whether l1directory was given.  */
+    unsigned int l0directory_given;    /**< @brief Whether l0directory was given.  */
+    unsigned int learn_given;    /**< @brief Whether learn was given.  */
+    unsigned int zeros_given;    /**< @brief Whether zeros was given.  */
+    unsigned int memmap_given;    /**< @brief Whether memmap was given.  */
+    unsigned int random_given;    /**< @brief Whether random was given.  */
+    unsigned int verbosity_given;    /**< @brief Whether verbosity was given.  */
+    unsigned int genex_given;    /**< @brief Whether genex was given.  */
+    unsigned int genelist_given;    /**< @brief Whether genelist was given.  */
+    unsigned int uniformjoint_given;    /**< @brief Whether uniformjoint was given.  */
+    unsigned int threshold_given;    /**< @brief Whether threshold was given.  */
+    unsigned int holdout_given;    /**< @brief Whether holdout was given.  */
+
+    char **inputs; /**< @brief unamed options (options without names) */
+    unsigned inputs_num; /**< @brief unamed options number */
+};
 
 /** @brief The additional parameters to pass to parser functions */
-struct cmdline_parser_params
-{
-  int override; /**< @brief whether to override possibly already present options (default 0) */
-  int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
-  int check_required; /**< @brief whether to check that all required options were provided (default 1) */
-  int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
-  int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
-} ;
+struct cmdline_parser_params {
+    int override; /**< @brief whether to override possibly already present options (default 0) */
+    int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
+    int check_required; /**< @brief whether to check that all required options were provided (default 1) */
+    int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
+    int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
+};
 
 /** @brief the purpose string of the program */
 extern const char *gengetopt_args_info_purpose;
@@ -125,8 +123,8 @@ extern const char *gengetopt_args_info_help[];
  * @param args_info the structure where option information will be stored
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info);
+int cmdline_parser(int argc, char *const *argv,
+                   struct gengetopt_args_info *args_info);
 
 /**
  * The command line parser (version with additional parameters - deprecated)
@@ -139,9 +137,9 @@ int cmdline_parser (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  * @deprecated use cmdline_parser_ext() instead
  */
-int cmdline_parser2 (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  int override, int initialize, int check_required);
+int cmdline_parser2(int argc, char *const *argv,
+                    struct gengetopt_args_info *args_info,
+                    int override, int initialize, int check_required);
 
 /**
  * The command line parser (version with additional parameters)
@@ -151,9 +149,9 @@ int cmdline_parser2 (int argc, char * const *argv,
  * @param params additional parameters for the parser
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser_ext (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  struct cmdline_parser_params *params);
+int cmdline_parser_ext(int argc, char *const *argv,
+                       struct gengetopt_args_info *args_info,
+                       struct cmdline_parser_params *params);
 
 /**
  * Save the contents of the option struct into an already open FILE stream.
@@ -162,7 +160,7 @@ int cmdline_parser_ext (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_dump(FILE *outfile,
-  struct gengetopt_args_info *args_info);
+                        struct gengetopt_args_info *args_info);
 
 /**
  * Save the contents of the option struct into a (text) file.
@@ -172,12 +170,13 @@ int cmdline_parser_dump(FILE *outfile,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_file_save(const char *filename,
-  struct gengetopt_args_info *args_info);
+                             struct gengetopt_args_info *args_info);
 
 /**
  * Print the help
  */
 void cmdline_parser_print_help(void);
+
 /**
  * Print the version
  */
@@ -202,13 +201,14 @@ struct cmdline_parser_params *cmdline_parser_params_create(void);
  * (also set default values for options that have a default)
  * @param args_info the structure to initialize
  */
-void cmdline_parser_init (struct gengetopt_args_info *args_info);
+void cmdline_parser_init(struct gengetopt_args_info *args_info);
+
 /**
  * Deallocates the string fields of the gengetopt_args_info structure
  * (but does not deallocate the structure itself)
  * @param args_info the structure to deallocate
  */
-void cmdline_parser_free (struct gengetopt_args_info *args_info);
+void cmdline_parser_free(struct gengetopt_args_info *args_info);
 
 /**
  * Checks that all the required options were specified
@@ -217,8 +217,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  *   possible errors
  * @return
  */
-int cmdline_parser_required (struct gengetopt_args_info *args_info,
-  const char *prog_name);
+int cmdline_parser_required(struct gengetopt_args_info *args_info,
+                            const char *prog_name);
 
 
 #ifdef __cplusplus

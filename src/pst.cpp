@@ -25,11 +25,12 @@
 
 namespace Sleipnir {
 
-struct SSortRCs {
-	bool operator()( const string& strOne, const string& strTwo ) const {
+    struct SSortRCs {
+        bool operator()(const string &strOne, const string &strTwo) const {
 
-		return ( strOne.length( ) > strTwo.length( ) ); }
-};
+            return (strOne.length() > strTwo.length());
+        }
+    };
 
 /*!
  * \brief
@@ -52,26 +53,28 @@ struct SSortRCs {
  * resolves most reverse complement PSTs.  However, it should only be used for tasks like generating approximate
  * PWMs from PSTs, since it can seriously diverge from the original PST in the worst cases.
  */
-void CPST::RemoveRCs( float dPenaltyGap, float dPenaltyMismatch, CPST& PSTOut ) const {
-	size_t			i;
-	string			str;
-	vector<string>	vecstrAdd;
-	float			dOne, dTwo;
-	int				iOne, iTwo;
+    void CPST::RemoveRCs(float dPenaltyGap, float dPenaltyMismatch, CPST &PSTOut) const {
+        size_t i;
+        string str;
+        vector <string> vecstrAdd;
+        float dOne, dTwo;
+        int iOne, iTwo;
 
-	CPSTImpl::RemoveRCs( m_sRoot, 1.0f / m_iArity, str, vecstrAdd );
-	if( vecstrAdd.empty( ) )
-		return;
+        CPSTImpl::RemoveRCs(m_sRoot, 1.0f / m_iArity, str, vecstrAdd);
+        if (vecstrAdd.empty())
+            return;
 
-	sort( vecstrAdd.begin( ), vecstrAdd.end( ), SSortRCs( ) );
-	PSTOut.Add( vecstrAdd[ 0 ], 0 );
-	for( i = 1; i < vecstrAdd.size( ); ++i ) {
-		dOne = PSTOut.Align( vecstrAdd[ i ], dPenaltyGap, dPenaltyMismatch, FLT_MAX, iOne );
-		dTwo = PSTOut.Align( str = CCoalesceMotifLibrary::GetReverseComplement( vecstrAdd[ i ] ),
-			dPenaltyGap, dPenaltyMismatch, FLT_MAX, iTwo );
-		if( dTwo < dOne )
-			PSTOut.Add( str, iTwo );
-		else
-			PSTOut.Add( vecstrAdd[ i ], iOne ); } }
+        sort(vecstrAdd.begin(), vecstrAdd.end(), SSortRCs());
+        PSTOut.Add(vecstrAdd[0], 0);
+        for (i = 1; i < vecstrAdd.size(); ++i) {
+            dOne = PSTOut.Align(vecstrAdd[i], dPenaltyGap, dPenaltyMismatch, FLT_MAX, iOne);
+            dTwo = PSTOut.Align(str = CCoalesceMotifLibrary::GetReverseComplement(vecstrAdd[i]),
+                                dPenaltyGap, dPenaltyMismatch, FLT_MAX, iTwo);
+            if (dTwo < dOne)
+                PSTOut.Add(str, iTwo);
+            else
+                PSTOut.Add(vecstrAdd[i], iOne);
+        }
+    }
 
 }

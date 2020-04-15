@@ -24,6 +24,7 @@
 
 #include <fstream>
 #include <iostream>
+
 using namespace std;
 
 #include "dat.h"
@@ -32,6 +33,7 @@ using namespace std;
 #include "measure.h"
 #include "pcl.h"
 #include "statistics.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

@@ -29,6 +29,7 @@
 #include <map>
 #include <string>
 #include <omp.h>
+
 using namespace std;
 
 #include <pthread.h>
@@ -45,6 +46,7 @@ using namespace std;
 #include "meta.h"
 #include "unistd.h"
 #include "seeknetwork.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

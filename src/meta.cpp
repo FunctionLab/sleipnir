@@ -24,31 +24,32 @@
 
 namespace Sleipnir {
 
-const char	CMeta::c_szWS[]		= " \t\r\n";
+    const char    CMeta::c_szWS[] = " \t\r\n";
 
-CMeta::CMeta( int iVerbosity, size_t iRandomSeed ) {
+    CMeta::CMeta(int iVerbosity, size_t iRandomSeed) {
 #ifndef USE_LOG4CPP_STUB
-	OstreamAppender*	pAppOstm	= new OstreamAppender( "cerr", &cerr );
+        OstreamAppender *pAppOstm = new OstreamAppender("cerr", &cerr);
 #endif // USE_LOG4CPP_STUB
 
-	srand( ( iRandomSeed == -1 ) ?
-#ifdef _MSC_VER
-		GetTickCount( )
-#else
-		time( NULL )
-#endif // _MSC_VER
-		: iRandomSeed );
+        srand((iRandomSeed == -1) ?
+              #ifdef _MSC_VER
+              GetTickCount( )
+              #else
+              time(nullptr)
+              #endif // _MSC_VER
+                                  : iRandomSeed);
 #ifndef USE_LOG4CPP_STUB
-	pAppOstm->setLayout( new BasicLayout( ) );
-	g_CatSleipnir( ).setAdditivity( false );
-	g_CatSleipnir( ).setAppender( pAppOstm );
-	g_CatSleipnir( ).setPriority( iVerbosity * Priority::ALERT );
+        pAppOstm->setLayout(new BasicLayout());
+        g_CatSleipnir().setAdditivity(false);
+        g_CatSleipnir().setAppender(pAppOstm);
+        g_CatSleipnir().setPriority(iVerbosity * Priority::ALERT);
 #endif // USE_LOG4CPP_STUB
-}
+    }
 
-CMeta::~CMeta( ) {
+    CMeta::~CMeta() {
 
-	Category::shutdown( ); }
+        Category::shutdown();
+    }
 
 /*!
  * \brief
@@ -67,15 +68,16 @@ CMeta::~CMeta( ) {
  * alphanumeric identifier; given a string, non-alphanumeric characters are replaced with a configurable
  * character, usually underscore.
  */
-string CMeta::Filename( const std::string& strString, char cReplacement ) {
-	size_t	i;
-	string	strRet;
-	char	c;
+    string CMeta::Filename(const std::string &strString, char cReplacement) {
+        size_t i;
+        string strRet;
+        char c;
 
-	for( i = 0; i < strString.length( ); ++i )
-		strRet += isalnum( c = strString[ i ] ) ? c : cReplacement;
+        for (i = 0; i < strString.length(); ++i)
+            strRet += isalnum(c = strString[i]) ? c : cReplacement;
 
-	return strRet; }
+        return strRet;
+    }
 
 /*!
  * \brief
@@ -93,29 +95,32 @@ string CMeta::Filename( const std::string& strString, char cReplacement ) {
  * \param fNoEmpties
  * If true, discard empty strings between delimiters; otherwise, include them in the output.
  */
-void CMeta::Tokenize( const char* szString, std::vector<std::string>& vecstrTokens, const char* szSeparators,
-	bool fNoEmpties ) {
-	const char*	pc;
-	string		strCur;
-	bool		fPush;
+    void CMeta::Tokenize(const char *szString, std::vector <std::string> &vecstrTokens, const char *szSeparators,
+                         bool fNoEmpties) {
+        const char *pc;
+        string strCur;
+        bool fPush;
 
-	if( !( pc = szString ) )
-		return;
+        if (!(pc = szString))
+            return;
 
-	fPush = false;
-	while( true ) {
-		strCur.clear( );
-		if( fNoEmpties )
-			for( ; *pc && strchr( szSeparators, *pc ); ++pc );
-		if( !*pc ) {
-			if( !fNoEmpties && fPush )
-				vecstrTokens.push_back( strCur );
-			return; }
-		for( ; *pc && !strchr( szSeparators, *pc ); ++pc )
-			strCur += *pc;
-		if( fPush = !!*pc )
-			pc++;
-		vecstrTokens.push_back( strCur ); } }
+        fPush = false;
+        while (true) {
+            strCur.clear();
+            if (fNoEmpties)
+                for (; *pc && strchr(szSeparators, *pc); ++pc);
+            if (!*pc) {
+                if (!fNoEmpties && fPush)
+                    vecstrTokens.push_back(strCur);
+                return;
+            }
+            for (; *pc && !strchr(szSeparators, *pc); ++pc)
+                strCur += *pc;
+            if ((fPush = *pc != 0))
+                pc++;
+            vecstrTokens.push_back(strCur);
+        }
+    }
 
 /*!
  * \brief
@@ -131,17 +136,18 @@ void CMeta::Tokenize( const char* szString, std::vector<std::string>& vecstrToke
  * Actually looks for the last / or \ character in the string and returns everything to the right of that.
  * Of course this won't always work, but it tends to do an awfully good job.
  */
-string CMeta::Basename( const char* szPath ) {
-	const char*	pchOne;
-	const char*	pchTwo;
+    string CMeta::Basename(const char *szPath) {
+        const char *pchOne;
+        const char *pchTwo;
 
-	if( pchOne = strrchr( szPath, '\\' ) )
-		pchOne++;
-	if( pchTwo = strrchr( szPath, '/' ) )
-		pchTwo++;
+        if ((pchOne = strrchr(szPath, '\\')))
+            pchOne++;
+        if ((pchTwo = strrchr(szPath, '/')))
+            pchTwo++;
 
-	return ( pchOne ? ( pchTwo ? max( pchOne, pchTwo ) : pchOne ) :
-		( pchTwo ? pchTwo : szPath ) ); }
+        return (pchOne ? (pchTwo ? max(pchOne, pchTwo) : pchOne) :
+                (pchTwo ? pchTwo : szPath));
+    }
 
 /*!
  * \brief
@@ -153,20 +159,21 @@ string CMeta::Basename( const char* szPath ) {
  * \returns
  * String with whitespace removed.
  */
-string CMeta::Trim( const char* szString ) {
-	size_t	iBeg, iEnd, iLen;
+    string CMeta::Trim(const char *szString) {
+        size_t iBeg, iEnd, iLen;
 
-	if( !szString || !( iLen = strlen( szString ) ) )
-		return "";
+        if (!szString || !(iLen = strlen(szString)))
+            return "";
 
-	for( iBeg = 0; szString[ iBeg ]; ++iBeg )
-		if( !isspace( szString[ iBeg ] ) )
-			break;
-	for( iEnd = 0; szString[ iLen - iEnd - 1 ]; ++iEnd )
-		if( !isspace( szString[ iLen - iEnd - 1 ] ) )
-			break;
+        for (iBeg = 0; szString[iBeg]; ++iBeg)
+            if (!isspace(szString[iBeg]))
+                break;
+        for (iEnd = 0; szString[iLen - iEnd - 1]; ++iEnd)
+            if (!isspace(szString[iLen - iEnd - 1]))
+                break;
 
-	return string( szString + iBeg, iLen - iBeg - iEnd ); }
+        return string(szString + iBeg, iLen - iBeg - iEnd);
+    }
 
 /*!
  * \brief
@@ -196,42 +203,44 @@ string CMeta::Trim( const char* szString ) {
  * \see
  * MapWrite
  */
-bool CMeta::MapRead( unsigned char*& pbData, HANDLE& hndlMap, size_t& iSize, const char* szFile ) {
+    bool CMeta::MapRead(unsigned char *&pbData, HANDLE &hndlMap, size_t &iSize, const char *szFile) {
 
-	Unmap( pbData, hndlMap, iSize );
+        Unmap(pbData, hndlMap, iSize);
 #ifdef _MSC_VER
-	HANDLE	hndlFile;
+        HANDLE	hndlFile;
 
-	if( !( hndlFile = CreateFile( szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
-		FILE_ATTRIBUTE_READONLY, NULL ) ) )
-		return false;
-	if( !( hndlMap = CreateFileMapping( hndlFile, NULL, PAGE_READONLY, 0,
-		(DWORD)( iSize = GetFileSize( hndlFile, NULL ) ), szFile ) ) ) {
-		CloseHandle( hndlFile );
-		return false; }
-	CloseHandle( hndlFile );
+        if( !( hndlFile = CreateFile( szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+            FILE_ATTRIBUTE_READONLY, NULL ) ) )
+            return false;
+        if( !( hndlMap = CreateFileMapping( hndlFile, NULL, PAGE_READONLY, 0,
+            (DWORD)( iSize = GetFileSize( hndlFile, NULL ) ), szFile ) ) ) {
+            CloseHandle( hndlFile );
+            return false; }
+        CloseHandle( hndlFile );
 
-	if( !( pbData = (unsigned char*)MapViewOfFile( hndlMap, FILE_MAP_READ, 0, 0, 0 ) ) ) {
-		CloseHandle( hndlMap );
-		return false; }
+        if( !( pbData = (unsigned char*)MapViewOfFile( hndlMap, FILE_MAP_READ, 0, 0, 0 ) ) ) {
+            CloseHandle( hndlMap );
+            return false; }
 #else // _MSC_VER
-	int			iFile;
-	struct stat	sStat;
+        int iFile;
+        struct stat sStat;
 
-	if( !( iFile = open( szFile, O_RDONLY ) ) )
-		return false;
-	fstat( iFile, &sStat );
-	iSize = sStat.st_size;
+        if (!(iFile = open(szFile, O_RDONLY)))
+            return false;
+        fstat(iFile, &sStat);
+        iSize = sStat.st_size;
 
-	if( ( pbData = (unsigned char*)mmap( NULL, iSize, PROT_READ, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
-		g_CatSleipnir( ).error( "CMeta::MapRead( %s ) %s", szFile, strerror( errno ) );
-		pbData = NULL;
-		close( iFile );
-		return false; }
-	close( iFile );
+        if ((pbData = (unsigned char *) mmap(NULL, iSize, PROT_READ, MAP_SHARED, iFile, 0)) == MAP_FAILED) {
+            g_CatSleipnir().error("CMeta::MapRead( %s ) %s", szFile, strerror(errno));
+            pbData = NULL;
+            close(iFile);
+            return false;
+        }
+        close(iFile);
 #endif // _MSC_VER
 
-	return true; }
+        return true;
+    }
 
 /*!
  * \brief
@@ -264,40 +273,43 @@ bool CMeta::MapRead( unsigned char*& pbData, HANDLE& hndlMap, size_t& iSize, con
  * \see
  * MapRead
  */
-bool CMeta::MapWrite( unsigned char*& pbData, HANDLE& hndlMap, size_t iSize, const char* szFile ) {
+    bool CMeta::MapWrite(unsigned char *&pbData, HANDLE &hndlMap, size_t iSize, const char *szFile) {
 
-	Unmap( pbData, hndlMap, iSize );
+        Unmap(pbData, hndlMap, iSize);
 #ifdef _MSC_VER
-	HANDLE	hndlFile;
+        HANDLE	hndlFile;
 
-	if( !( hndlFile = CreateFile( szFile, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, NULL ) ) )
-		return false;
-	if( !( hndlMap = CreateFileMapping( hndlFile, NULL, PAGE_READWRITE, 0, (DWORD)iSize, NULL ) ) ) {
-		CloseHandle( hndlFile );
-		return false; }
-	CloseHandle( hndlFile );
+        if( !( hndlFile = CreateFile( szFile, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL, NULL ) ) )
+            return false;
+        if( !( hndlMap = CreateFileMapping( hndlFile, NULL, PAGE_READWRITE, 0, (DWORD)iSize, NULL ) ) ) {
+            CloseHandle( hndlFile );
+            return false; }
+        CloseHandle( hndlFile );
 
-	if( !( pbData = (unsigned char*)MapViewOfFile( hndlMap, FILE_MAP_WRITE, 0, 0, iSize ) ) ) {
-		CloseHandle( hndlMap );
-		return false; }
+        if( !( pbData = (unsigned char*)MapViewOfFile( hndlMap, FILE_MAP_WRITE, 0, 0, iSize ) ) ) {
+            CloseHandle( hndlMap );
+            return false; }
 #else // _MSC_VER
-	int			iFile;
-	struct stat	sStat;
+        int iFile;
+        struct stat sStat;
 
-	if( !( iFile = open( szFile, O_RDWR | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE | S_IRGRP | S_IWGRP | S_IROTH ) ) )
-		return false;
-	lseek( iFile, iSize - 1, SEEK_SET );
-	write( iFile, &iSize, 1 );
-	if( ( pbData = (unsigned char*)mmap( NULL, iSize, PROT_READ | PROT_WRITE, MAP_SHARED, iFile, 0 ) ) == MAP_FAILED ) {
-		g_CatSleipnir( ).error( "CMeta::MapWrite( %s ) %s", szFile, strerror( errno ) );
-		pbData = NULL;
-		close( iFile );
-		return false; }
-	close( iFile );
+        if (!(iFile = open(szFile, O_RDWR | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE | S_IRGRP | S_IWGRP | S_IROTH)))
+            return false;
+        lseek(iFile, iSize - 1, SEEK_SET);
+        write(iFile, &iSize, 1);
+        if ((pbData = (unsigned char *) mmap(NULL, iSize, PROT_READ | PROT_WRITE, MAP_SHARED, iFile, 0)) ==
+            MAP_FAILED) {
+            g_CatSleipnir().error("CMeta::MapWrite( %s ) %s", szFile, strerror(errno));
+            pbData = NULL;
+            close(iFile);
+            return false;
+        }
+        close(iFile);
 #endif // _MSC_VER
 
-	return true; }
+        return true;
+    }
 
 /*!
  * \brief
@@ -315,18 +327,18 @@ bool CMeta::MapWrite( unsigned char*& pbData, HANDLE& hndlMap, size_t iSize, con
  * \remarks
  * Should be used to close any maps opened with MapRead or MapWrite.
  */
-void CMeta::Unmap( const unsigned char* pbData, HANDLE hndlMap, size_t iSize ) {
+    void CMeta::Unmap(const unsigned char *pbData, HANDLE hndlMap, size_t iSize) {
 
 #ifdef _MSC_VER
-	if( pbData )
-		UnmapViewOfFile( pbData );
-	if( hndlMap )
-		CloseHandle( hndlMap );
+        if( pbData )
+            UnmapViewOfFile( pbData );
+        if( hndlMap )
+            CloseHandle( hndlMap );
 #else // _MSC_VER
-	if( pbData )
-		munmap( (void*)pbData, iSize );
+        if (pbData)
+            munmap((void *) pbData, iSize);
 #endif // _MSC_VER
-}
+    }
 
 /*!
  * \brief
@@ -339,29 +351,29 @@ void CMeta::Unmap( const unsigned char* pbData, HANDLE hndlMap, size_t iSize ) {
  * Disabled by default on Windows because it requires an extra library (psapi.lib); reads /proc/&lt;pid>/statm
  * on Linux and returns the resident set size, which is better than nothing.
  */
-size_t CMeta::GetMemoryUsage( ) {
+    size_t CMeta::GetMemoryUsage() {
 #if defined(_MSC_VER)
 #if 0
-	PROCESS_MEMORY_COUNTERS	sMem;
+        PROCESS_MEMORY_COUNTERS	sMem;
 
-	if( !GetProcessMemoryInfo( GetCurrentProcess( ), &sMem, sizeof(sMem) ) )
-		return -1;
-	return sMem.WorkingSetSize;
+        if( !GetProcessMemoryInfo( GetCurrentProcess( ), &sMem, sizeof(sMem) ) )
+            return -1;
+        return sMem.WorkingSetSize;
 #endif // 0
-	return -1;
+        return -1;
 #else // defined(_MSC_VER)
-	ifstream			ifsm;
-	char				acBuffer[ 1024 ];
-	size_t				iRet;
+        ifstream ifsm;
+        char acBuffer[1024];
+        size_t iRet;
 
-	sprintf( acBuffer, "/proc/%d/statm", getpid( ) );
-	ifsm.open( acBuffer );
-	if( !ifsm.is_open( ) )
-		return -1;
-	ifsm >> iRet;
-	ifsm >> iRet;
-	return ( iRet * 4096 );
+        sprintf(acBuffer, "/proc/%d/statm", getpid());
+        ifsm.open(acBuffer);
+        if (!ifsm.is_open())
+            return -1;
+        ifsm >> iRet;
+        ifsm >> iRet;
+        return (iRet * 4096);
 #endif // defined(_MSC_VER)
-}
+    }
 
 }

@@ -24,90 +24,104 @@
 
 
 struct SDataServerData {
-	const CDatabase& m_Database;
-	const vector<string> m_vecstrDatasets;
-	const CPCL& m_VarPCL;
-	const vector<size_t> m_veciPCLGeneIdx;
-	const vector<size_t> m_veciPCLDataIdx;
-	const string m_strQuant;
-	const int m_iThreads;
+    const CDatabase &m_Database;
+    const vector <string> m_vecstrDatasets;
+    const CPCL &m_VarPCL;
+    const vector <size_t> m_veciPCLGeneIdx;
+    const vector <size_t> m_veciPCLDataIdx;
+    const string m_strQuant;
+    const int m_iThreads;
 
-	SDataServerData( const CDatabase& Database,
-					const vector<string>& vecstrDatasets,
-					const CPCL& VarPCL,
-					vector<size_t>& veciPCLGeneIdx,
-					vector<size_t>& veciPCLDataIdx,
-					const string strQuant,
-					int iThreads ) :
-					m_Database(Database),
-					m_vecstrDatasets(vecstrDatasets),
-					m_VarPCL(VarPCL),
-					m_veciPCLGeneIdx(veciPCLGeneIdx),
-					m_veciPCLDataIdx(veciPCLDataIdx),
-					m_strQuant(strQuant),
-					m_iThreads(iThreads)
-					 { }
+    SDataServerData(const CDatabase &Database,
+                    const vector <string> &vecstrDatasets,
+                    const CPCL &VarPCL,
+                    vector <size_t> &veciPCLGeneIdx,
+                    vector <size_t> &veciPCLDataIdx,
+                    const string strQuant,
+                    int iThreads) :
+            m_Database(Database),
+            m_vecstrDatasets(vecstrDatasets),
+            m_VarPCL(VarPCL),
+            m_veciPCLGeneIdx(veciPCLGeneIdx),
+            m_veciPCLDataIdx(veciPCLDataIdx),
+            m_strQuant(strQuant),
+            m_iThreads(iThreads) {}
 };
 
 class CDataServer : public IServerClient {
 public:
-	CDataServer( SOCKET, const string&, const SDataServerData& );
-	~CDataServer( );
+    CDataServer(SOCKET, const string &, const SDataServerData &);
 
-	IServerClient* NewInstance( SOCKET, uint32_t, uint16_t );
-	void Destroy( );
-	bool ProcessMessage( const std::vector<unsigned char>& );
+    ~CDataServer();
 
-	const CDatabase& GetDatabase( ) const {
-		return m_sData.m_Database; }
+    IServerClient *NewInstance(SOCKET, uint32_t, uint16_t);
 
-	const size_t GetDatasets() const {
-		return GetDatabase().GetDatasets();
-	}
-	const size_t GetGenes() const {
-		return GetDatabase().GetGenes();
-	}
+    void Destroy();
 
-	const vector<string>& GetDatasetNames( ) const {
-		return m_sData.m_vecstrDatasets; }
+    bool ProcessMessage(const std::vector<unsigned char> &);
 
-	void GetScores( const vector<size_t>&, const vector<float>&,
-	    vector<float>&, vector<float>&, vector<size_t>&, CFullMatrix<float>*, CFullMatrix<float>* );
+    const CDatabase &GetDatabase() const {
+        return m_sData.m_Database;
+    }
 
-	void GetScores( const vector<size_t>&, const vector<size_t>&,
-	    CFullMatrix<float>&, CFullMatrix<float>& );
+    const size_t GetDatasets() const {
+        return GetDatabase().GetDatasets();
+    }
 
-	void GetDataWeights( size_t, CFullMatrix<float>&, float, float, vector<float>& );
+    const size_t GetGenes() const {
+        return GetDatabase().GetGenes();
+    }
+
+    const vector <string> &GetDatasetNames() const {
+        return m_sData.m_vecstrDatasets;
+    }
+
+    void GetScores(const vector <size_t> &, const vector<float> &,
+                   vector<float> &, vector<float> &, vector <size_t> &, CFullMatrix<float> *, CFullMatrix<float> *);
+
+    void GetScores(const vector <size_t> &, const vector <size_t> &,
+                   CFullMatrix<float> &, CFullMatrix<float> &);
+
+    void GetDataWeights(size_t, CFullMatrix<float> &, float, float, vector<float> &);
 
 private:
 
-	size_t ProcessDatasetSearch( const vector<unsigned char>& , size_t );
-	size_t ProcessDatasetMeasure( const vector<unsigned char>& , size_t );
-	size_t ProcessDatasetRetrieve( const vector<unsigned char>& , size_t );
+    size_t ProcessDatasetSearch(const vector<unsigned char> &, size_t);
 
-	string GetQuantFile() const { return m_sData.m_strQuant; }
+    size_t ProcessDatasetMeasure(const vector<unsigned char> &, size_t);
 
-	const CPCL& GetVarPCL( ) const {
-		return m_sData.m_VarPCL; }
-	const vector<size_t>& GetPCLGeneIdx( ) const {
-		return m_sData.m_veciPCLGeneIdx; }
-	const vector<size_t>& GetPCLDataIdx( ) const {
-		return m_sData.m_veciPCLDataIdx; }
+    size_t ProcessDatasetRetrieve(const vector<unsigned char> &, size_t);
 
-	const float GetGeneVar( size_t iGene, size_t iData ) {
-		return m_sData.m_VarPCL.Get( m_sData.m_veciPCLGeneIdx[ iGene ],
-		    m_sData.m_veciPCLDataIdx[ iData ] );
-	}
+    string GetQuantFile() const { return m_sData.m_strQuant; }
 
-	const int GetMaxThreads() const {
-		return m_sData.m_iThreads; }
+    const CPCL &GetVarPCL() const {
+        return m_sData.m_VarPCL;
+    }
 
-	typedef size_t (CDataServer::*TPFNProcessor)( const std::vector<unsigned char>&, size_t );
-	static const TPFNProcessor	c_apfnProcessors[];
+    const vector <size_t> &GetPCLGeneIdx() const {
+        return m_sData.m_veciPCLGeneIdx;
+    }
 
-	SOCKET					m_iSocket;
-	const SDataServerData&	m_sData;
-	string					m_strConnection;
+    const vector <size_t> &GetPCLDataIdx() const {
+        return m_sData.m_veciPCLDataIdx;
+    }
+
+    const float GetGeneVar(size_t iGene, size_t iData) {
+        return m_sData.m_VarPCL.Get(m_sData.m_veciPCLGeneIdx[iGene],
+                                    m_sData.m_veciPCLDataIdx[iData]);
+    }
+
+    const int GetMaxThreads() const {
+        return m_sData.m_iThreads;
+    }
+
+    typedef size_t (CDataServer::*TPFNProcessor)(const std::vector<unsigned char> &, size_t);
+
+    static const TPFNProcessor c_apfnProcessors[];
+
+    SOCKET m_iSocket;
+    const SDataServerData &m_sData;
+    string m_strConnection;
 };
 
 #endif // DATASERVER_H

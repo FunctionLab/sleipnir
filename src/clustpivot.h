@@ -28,17 +28,17 @@
 
 namespace Sleipnir {
 
-class CDat;
+    class CDat;
 
 /*!
  * \brief
  * Utility class containing static pivot clustering methods.
  */
-class CClustPivot {
-public:
-	static uint16_t Cluster( const CDistanceMatrix& MatSimilarities, float dCutoff,
-		std::vector<uint16_t>& vecsClusters );
-};
+    class CClustPivot {
+    public:
+        static uint16_t Cluster(const CDistanceMatrix &MatSimilarities, float dCutoff,
+                                std::vector <uint16_t> &vecsClusters);
+    };
 
 }
 

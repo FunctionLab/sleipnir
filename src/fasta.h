@@ -71,157 +71,166 @@ namespace Sleipnir {
  * methods; this incurs a slight runtime penalty, but allows extremely large FASTA files to be accessed
  * efficiently with very low memory usage.
  */
-class CFASTA : CFASTAImpl {
-public:
-	bool Open( const char* szFile, const std::set<std::string>& setstrTypes );
-	void Save( std::ostream& ostm, size_t iWrap = 80 ) const;
+    class CFASTA : CFASTAImpl {
+    public:
+        bool Open(const char *szFile, const std::set <std::string> &setstrTypes);
 
-	/*!
-	 * \brief
-	 * Retrieves all sequences (of any type) associated with the given gene index.
-	 * 
-	 * \param iGene
-	 * Index of gene for which sequences are retrieved.
-	 * 
-	 * \param vecsSequences
-	 * Zero or more output sequences associated with the given gene index.
-	 * 
-	 * \returns
-	 * True if sequences were retrieved successfully; false otherwise.
-	 * 
-	 * \remarks
-	 * Must be called only after a successful Open.  Performs zero or more seeks on disk to load the sequence
-	 * associated with the given gene index over all types in the FASTA file's index.
-	 * 
-	 * \see
-	 * Open
-	 */
-	bool Get( size_t iGene, std::vector<SFASTASequence>& vecsSequences ) const {
+        void Save(std::ostream &ostm, size_t iWrap = 80) const;
 
-		return CFASTAImpl::Get( iGene, &vecsSequences, NULL ); }
+        /*!
+         * \brief
+         * Retrieves all sequences (of any type) associated with the given gene index.
+         *
+         * \param iGene
+         * Index of gene for which sequences are retrieved.
+         *
+         * \param vecsSequences
+         * Zero or more output sequences associated with the given gene index.
+         *
+         * \returns
+         * True if sequences were retrieved successfully; false otherwise.
+         *
+         * \remarks
+         * Must be called only after a successful Open.  Performs zero or more seeks on disk to load the sequence
+         * associated with the given gene index over all types in the FASTA file's index.
+         *
+         * \see
+         * Open
+         */
+        bool Get(size_t iGene, std::vector <SFASTASequence> &vecsSequences) const {
 
-	/*!
-	 * \brief
-	 * Retrieves all values (of any type) associated with the given gene index.
-	 * 
-	 * \param iGene
-	 * Index of gene for which values are retrieved.
-	 * 
-	 * \param vecsValues
-	 * Zero or more output values associated with the given gene index.
-	 * 
-	 * \returns
-	 * True if values were retrieved successfully; false otherwise.
-	 * 
-	 * \remarks
-	 * Must be called only after a successful Open.  Performs zero or more seeks on disk to load the values
-	 * associated with the given gene index over all types in the WIG file's index.
-	 * 
-	 * \see
-	 * Open
-	 */
-	bool Get( size_t iGene, std::vector<SFASTAWiggle>& vecsValues ) const {
+            return CFASTAImpl::Get(iGene, &vecsSequences, NULL);
+        }
 
-		return CFASTAImpl::Get( iGene, NULL, &vecsValues ); }
+        /*!
+         * \brief
+         * Retrieves all values (of any type) associated with the given gene index.
+         *
+         * \param iGene
+         * Index of gene for which values are retrieved.
+         *
+         * \param vecsValues
+         * Zero or more output values associated with the given gene index.
+         *
+         * \returns
+         * True if values were retrieved successfully; false otherwise.
+         *
+         * \remarks
+         * Must be called only after a successful Open.  Performs zero or more seeks on disk to load the values
+         * associated with the given gene index over all types in the WIG file's index.
+         *
+         * \see
+         * Open
+         */
+        bool Get(size_t iGene, std::vector <SFASTAWiggle> &vecsValues) const {
 
-	/*!
-	 * \brief
-	 * Opens a FASTA or WIG file and indexes the file without explicitly loading its contents.
-	 * 
-	 * \param szFile
-	 * Path to FASTA/WIG file to open.
-	 * 
-	 * \returns
-	 * True if file was loaded successfully; false otherwise.
-	 * 
-	 * \remarks
-	 * Supports FASTA and WIG files as described in CFASTA.  No data is loaded on open, but an index is
-	 * created over all genes and types of interest; a file handle is held open, and data is loaded as needed
-	 * by the Get methods.
-	 * 
-	 * \see
-	 * Save
-	 */
-	bool Open( const char* szFile ) {
-		std::set<std::string>	setstrDummy;
+            return CFASTAImpl::Get(iGene, NULL, &vecsValues);
+        }
 
-		return Open( szFile, setstrDummy ); }
+        /*!
+         * \brief
+         * Opens a FASTA or WIG file and indexes the file without explicitly loading its contents.
+         *
+         * \param szFile
+         * Path to FASTA/WIG file to open.
+         *
+         * \returns
+         * True if file was loaded successfully; false otherwise.
+         *
+         * \remarks
+         * Supports FASTA and WIG files as described in CFASTA.  No data is loaded on open, but an index is
+         * created over all genes and types of interest; a file handle is held open, and data is loaded as needed
+         * by the Get methods.
+         *
+         * \see
+         * Save
+         */
+        bool Open(const char *szFile) {
+            std::set <std::string> setstrDummy;
 
-	/*!
-	 * \brief
-	 * Returns the total number of genes associated with this FASTA/WIG.
-	 * 
-	 * \returns
-	 * Number of genes associated with this FASTA/WIG.
-	 */
-	size_t GetGenes( ) const {
+            return Open(szFile, setstrDummy);
+        }
 
-		return m_vecstrGenes.size( ); }
+        /*!
+         * \brief
+         * Returns the total number of genes associated with this FASTA/WIG.
+         *
+         * \returns
+         * Number of genes associated with this FASTA/WIG.
+         */
+        size_t GetGenes() const {
 
-	/*!
-	 * \brief
-	 * Returns the gene ID associated with the given index.
-	 * 
-	 * \param iGene
-	 * Gene index for which ID is returned.
-	 * 
-	 * \returns
-	 * Gene ID associated with the given index.
-	 */
-	const std::string& GetGene( size_t iGene ) const {
+            return m_vecstrGenes.size();
+        }
 
-		return CFASTAImpl::GetGene( iGene ); }
+        /*!
+         * \brief
+         * Returns the gene ID associated with the given index.
+         *
+         * \param iGene
+         * Gene index for which ID is returned.
+         *
+         * \returns
+         * Gene ID associated with the given index.
+         */
+        const std::string &GetGene(size_t iGene) const {
 
-	/*!
-	 * \brief
-	 * Returns the index of the given gene ID.
-	 * 
-	 * \param strGene
-	 * Gene ID for which index is returned.
-	 * 
-	 * \returns
-	 * Index of the given gene ID.
-	 */
-	size_t GetGene( const std::string& strGene ) const {
-		TMapStrI::const_iterator	iterGene;
+            return CFASTAImpl::GetGene(iGene);
+        }
 
-		return ( ( ( iterGene = m_mapstriGenes.find( strGene ) ) == m_mapstriGenes.end( ) ) ? -1 :
-			iterGene->second ); }
+        /*!
+         * \brief
+         * Returns the index of the given gene ID.
+         *
+         * \param strGene
+         * Gene ID for which index is returned.
+         *
+         * \returns
+         * Index of the given gene ID.
+         */
+        size_t GetGene(const std::string &strGene) const {
+            TMapStrI::const_iterator iterGene;
 
-	/*!
-	 * \brief
-	 * Returns the header line associated with the given gene index and sequence type.
-	 * 
-	 * \param iGene
-	 * Gene index for which header is retrieved.
-	 * 
-	 * \param strType
-	 * Sequence type for which header is retrieved.
-	 * 
-	 * \returns
-	 * Header line associated with the given gene/type pair.
-	 * 
-	 * \see
-	 * GetGene
-	 */
-	const std::string GetHeader( size_t iGene, const std::string& strType ) const {
-		const TMapStrStr&			mapstrstrHeaders	= m_vecmapstrstrHeaders[ iGene ];
-		TMapStrStr::const_iterator	iterGene;
+            return (((iterGene = m_mapstriGenes.find(strGene)) == m_mapstriGenes.end()) ? -1 :
+                    iterGene->second);
+        }
 
-		return ( ( ( iterGene = mapstrstrHeaders.find( strType ) ) == mapstrstrHeaders.end( ) ) ? "" :
-			iterGene->second ); }
+        /*!
+         * \brief
+         * Returns the header line associated with the given gene index and sequence type.
+         *
+         * \param iGene
+         * Gene index for which header is retrieved.
+         *
+         * \param strType
+         * Sequence type for which header is retrieved.
+         *
+         * \returns
+         * Header line associated with the given gene/type pair.
+         *
+         * \see
+         * GetGene
+         */
+        const std::string GetHeader(size_t iGene, const std::string &strType) const {
+            const TMapStrStr &mapstrstrHeaders = m_vecmapstrstrHeaders[iGene];
+            TMapStrStr::const_iterator iterGene;
 
-	/*!
-	 * \brief
-	 * Returns the set of sequence types indexed by this FASTA/WIG.
-	 * 
-	 * \returns
-	 * Set of sequence types indexed by this FASTA/WIG.
-	 */
-	const std::set<std::string>& GetTypes( ) const {
+            return (((iterGene = mapstrstrHeaders.find(strType)) == mapstrstrHeaders.end()) ? "" :
+                    iterGene->second);
+        }
 
-		return m_setstrTypes; }
-};
+        /*!
+         * \brief
+         * Returns the set of sequence types indexed by this FASTA/WIG.
+         *
+         * \returns
+         * Set of sequence types indexed by this FASTA/WIG.
+         */
+        const std::set <std::string> &GetTypes() const {
+
+            return m_setstrTypes;
+        }
+    };
 
 }
 

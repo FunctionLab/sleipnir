@@ -23,15 +23,15 @@
 #define METAI_H
 
 #ifndef UNUSED_PARAMETER
-#define UNUSED_PARAMETER(x)	(x)
+#define UNUSED_PARAMETER(x)    ((void)x)
 #endif // UNUSED_PARAMETER
 
 namespace Sleipnir {
 
-class CMetaImpl {
-protected:
-	static const char	c_cPeriod	= '.';
-};
+    class CMetaImpl {
+    protected:
+        static const char c_cPeriod = '.';
+    };
 
 }
 

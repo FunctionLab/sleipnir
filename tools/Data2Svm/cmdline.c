@@ -28,254 +28,240 @@ const char *gengetopt_args_info_usage = "Usage: Data2Svm [OPTIONS]... [FILES]...
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help             Print help and exit",
-  "  -V, --version          Print version and exit",
-  "\nMain:",
-  "  -i, --input=filename   Data set to analyze (PCL)",
-  "  -m, --model=filename   SVM model file",
-  "\nLearning/Evaluation:",
-  "  -g, --genes=filename   List of positive genes",
-  "  -G, --genex=filename   List of test genes",
-  "  -l, --heldout          Evaluate only test genes  (default=off)",
-  "  -z, --random_features  Randomize input features  (default=off)",
-  "  -Z, --random_output    Randomize output values  (default=off)",
-  "\nSVM:",
-  "  -e, --cache=INT        SVM cache size  (default=`40')",
-  "  -k, --kernel=STRING    SVM kernel function  (possible values=\"linear\", \n                           \"poly\", \"rbf\" default=`linear')",
-  "  -C, --tradeoff=FLOAT   Classification tradeoff",
-  "  -M, --gamma=FLOAT      RBF gamma  (default=`1')",
-  "  -d, --degree=INT       Polynomial degree  (default=`3')",
-  "  -a, --alphas=filename  SVM alphas file",
-  "  -t, --iterations=INT   SVM iterations  (default=`100000')",
-  "\nOptional:",
-  "  -n, --normalize        Z-score normalize feature values  (default=off)",
-  "  -s, --skip=INT         Columns to skip in input PCL  (default=`2')",
-  "  -r, --random=INT       Seed random generator  (default=`0')",
-  "  -v, --verbosity=INT    Message verbosity  (default=`5')",
-    0
+        "  -h, --help             Print help and exit",
+        "  -V, --version          Print version and exit",
+        "\nMain:",
+        "  -i, --input=filename   Data set to analyze (PCL)",
+        "  -m, --model=filename   SVM model file",
+        "\nLearning/Evaluation:",
+        "  -g, --genes=filename   List of positive genes",
+        "  -G, --genex=filename   List of test genes",
+        "  -l, --heldout          Evaluate only test genes  (default=off)",
+        "  -z, --random_features  Randomize input features  (default=off)",
+        "  -Z, --random_output    Randomize output values  (default=off)",
+        "\nSVM:",
+        "  -e, --cache=INT        SVM cache size  (default=`40')",
+        "  -k, --kernel=STRING    SVM kernel function  (possible values=\"linear\", \n                           \"poly\", \"rbf\" default=`linear')",
+        "  -C, --tradeoff=FLOAT   Classification tradeoff",
+        "  -M, --gamma=FLOAT      RBF gamma  (default=`1')",
+        "  -d, --degree=INT       Polynomial degree  (default=`3')",
+        "  -a, --alphas=filename  SVM alphas file",
+        "  -t, --iterations=INT   SVM iterations  (default=`100000')",
+        "\nOptional:",
+        "  -n, --normalize        Z-score normalize feature values  (default=off)",
+        "  -s, --skip=INT         Columns to skip in input PCL  (default=`2')",
+        "  -r, --random=INT       Seed random generator  (default=`0')",
+        "  -v, --verbosity=INT    Message verbosity  (default=`5')",
+        0
 };
 
-typedef enum {ARG_NO
-  , ARG_FLAG
-  , ARG_STRING
-  , ARG_INT
-  , ARG_FLOAT
+typedef enum {
+    ARG_NO, ARG_FLAG, ARG_STRING, ARG_INT, ARG_FLOAT
 } cmdline_parser_arg_type;
 
 static
-void clear_given (struct gengetopt_args_info *args_info);
+void clear_given(struct gengetopt_args_info *args_info);
+
 static
-void clear_args (struct gengetopt_args_info *args_info);
+void clear_args(struct gengetopt_args_info *args_info);
 
 static int
-cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_info *args_info,
+cmdline_parser_internal(int argc, char *const *argv, struct gengetopt_args_info *args_info,
                         struct cmdline_parser_params *params, const char *additional_error);
 
 static int
-cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error);
+cmdline_parser_required2(struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error);
 
-char *cmdline_parser_kernel_values[] = {"linear", "poly", "rbf", 0} ;	/* Possible values for kernel.  */
+char *cmdline_parser_kernel_values[] = {"linear", "poly", "rbf", 0};    /* Possible values for kernel.  */
 
 static char *
-gengetopt_strdup (const char *s);
+gengetopt_strdup(const char *s);
 
 static
-void clear_given (struct gengetopt_args_info *args_info)
-{
-  args_info->help_given = 0 ;
-  args_info->version_given = 0 ;
-  args_info->input_given = 0 ;
-  args_info->model_given = 0 ;
-  args_info->genes_given = 0 ;
-  args_info->genex_given = 0 ;
-  args_info->heldout_given = 0 ;
-  args_info->random_features_given = 0 ;
-  args_info->random_output_given = 0 ;
-  args_info->cache_given = 0 ;
-  args_info->kernel_given = 0 ;
-  args_info->tradeoff_given = 0 ;
-  args_info->gamma_given = 0 ;
-  args_info->degree_given = 0 ;
-  args_info->alphas_given = 0 ;
-  args_info->iterations_given = 0 ;
-  args_info->normalize_given = 0 ;
-  args_info->skip_given = 0 ;
-  args_info->random_given = 0 ;
-  args_info->verbosity_given = 0 ;
+void clear_given(struct gengetopt_args_info *args_info) {
+    args_info->help_given = 0;
+    args_info->version_given = 0;
+    args_info->input_given = 0;
+    args_info->model_given = 0;
+    args_info->genes_given = 0;
+    args_info->genex_given = 0;
+    args_info->heldout_given = 0;
+    args_info->random_features_given = 0;
+    args_info->random_output_given = 0;
+    args_info->cache_given = 0;
+    args_info->kernel_given = 0;
+    args_info->tradeoff_given = 0;
+    args_info->gamma_given = 0;
+    args_info->degree_given = 0;
+    args_info->alphas_given = 0;
+    args_info->iterations_given = 0;
+    args_info->normalize_given = 0;
+    args_info->skip_given = 0;
+    args_info->random_given = 0;
+    args_info->verbosity_given = 0;
 }
 
 static
-void clear_args (struct gengetopt_args_info *args_info)
-{
-  args_info->input_arg = NULL;
-  args_info->input_orig = NULL;
-  args_info->model_arg = NULL;
-  args_info->model_orig = NULL;
-  args_info->genes_arg = NULL;
-  args_info->genes_orig = NULL;
-  args_info->genex_arg = NULL;
-  args_info->genex_orig = NULL;
-  args_info->heldout_flag = 0;
-  args_info->random_features_flag = 0;
-  args_info->random_output_flag = 0;
-  args_info->cache_arg = 40;
-  args_info->cache_orig = NULL;
-  args_info->kernel_arg = gengetopt_strdup ("linear");
-  args_info->kernel_orig = NULL;
-  args_info->tradeoff_orig = NULL;
-  args_info->gamma_arg = 1;
-  args_info->gamma_orig = NULL;
-  args_info->degree_arg = 3;
-  args_info->degree_orig = NULL;
-  args_info->alphas_arg = NULL;
-  args_info->alphas_orig = NULL;
-  args_info->iterations_arg = 100000;
-  args_info->iterations_orig = NULL;
-  args_info->normalize_flag = 0;
-  args_info->skip_arg = 2;
-  args_info->skip_orig = NULL;
-  args_info->random_arg = 0;
-  args_info->random_orig = NULL;
-  args_info->verbosity_arg = 5;
-  args_info->verbosity_orig = NULL;
-  
+void clear_args(struct gengetopt_args_info *args_info) {
+    args_info->input_arg = NULL;
+    args_info->input_orig = NULL;
+    args_info->model_arg = NULL;
+    args_info->model_orig = NULL;
+    args_info->genes_arg = NULL;
+    args_info->genes_orig = NULL;
+    args_info->genex_arg = NULL;
+    args_info->genex_orig = NULL;
+    args_info->heldout_flag = 0;
+    args_info->random_features_flag = 0;
+    args_info->random_output_flag = 0;
+    args_info->cache_arg = 40;
+    args_info->cache_orig = NULL;
+    args_info->kernel_arg = gengetopt_strdup("linear");
+    args_info->kernel_orig = NULL;
+    args_info->tradeoff_orig = NULL;
+    args_info->gamma_arg = 1;
+    args_info->gamma_orig = NULL;
+    args_info->degree_arg = 3;
+    args_info->degree_orig = NULL;
+    args_info->alphas_arg = NULL;
+    args_info->alphas_orig = NULL;
+    args_info->iterations_arg = 100000;
+    args_info->iterations_orig = NULL;
+    args_info->normalize_flag = 0;
+    args_info->skip_arg = 2;
+    args_info->skip_orig = NULL;
+    args_info->random_arg = 0;
+    args_info->random_orig = NULL;
+    args_info->verbosity_arg = 5;
+    args_info->verbosity_orig = NULL;
+
 }
 
 static
-void init_args_info(struct gengetopt_args_info *args_info)
-{
+void init_args_info(struct gengetopt_args_info *args_info) {
 
 
-  args_info->help_help = gengetopt_args_info_help[0] ;
-  args_info->version_help = gengetopt_args_info_help[1] ;
-  args_info->input_help = gengetopt_args_info_help[3] ;
-  args_info->model_help = gengetopt_args_info_help[4] ;
-  args_info->genes_help = gengetopt_args_info_help[6] ;
-  args_info->genex_help = gengetopt_args_info_help[7] ;
-  args_info->heldout_help = gengetopt_args_info_help[8] ;
-  args_info->random_features_help = gengetopt_args_info_help[9] ;
-  args_info->random_output_help = gengetopt_args_info_help[10] ;
-  args_info->cache_help = gengetopt_args_info_help[12] ;
-  args_info->kernel_help = gengetopt_args_info_help[13] ;
-  args_info->tradeoff_help = gengetopt_args_info_help[14] ;
-  args_info->gamma_help = gengetopt_args_info_help[15] ;
-  args_info->degree_help = gengetopt_args_info_help[16] ;
-  args_info->alphas_help = gengetopt_args_info_help[17] ;
-  args_info->iterations_help = gengetopt_args_info_help[18] ;
-  args_info->normalize_help = gengetopt_args_info_help[20] ;
-  args_info->skip_help = gengetopt_args_info_help[21] ;
-  args_info->random_help = gengetopt_args_info_help[22] ;
-  args_info->verbosity_help = gengetopt_args_info_help[23] ;
-  
+    args_info->help_help = gengetopt_args_info_help[0];
+    args_info->version_help = gengetopt_args_info_help[1];
+    args_info->input_help = gengetopt_args_info_help[3];
+    args_info->model_help = gengetopt_args_info_help[4];
+    args_info->genes_help = gengetopt_args_info_help[6];
+    args_info->genex_help = gengetopt_args_info_help[7];
+    args_info->heldout_help = gengetopt_args_info_help[8];
+    args_info->random_features_help = gengetopt_args_info_help[9];
+    args_info->random_output_help = gengetopt_args_info_help[10];
+    args_info->cache_help = gengetopt_args_info_help[12];
+    args_info->kernel_help = gengetopt_args_info_help[13];
+    args_info->tradeoff_help = gengetopt_args_info_help[14];
+    args_info->gamma_help = gengetopt_args_info_help[15];
+    args_info->degree_help = gengetopt_args_info_help[16];
+    args_info->alphas_help = gengetopt_args_info_help[17];
+    args_info->iterations_help = gengetopt_args_info_help[18];
+    args_info->normalize_help = gengetopt_args_info_help[20];
+    args_info->skip_help = gengetopt_args_info_help[21];
+    args_info->random_help = gengetopt_args_info_help[22];
+    args_info->verbosity_help = gengetopt_args_info_help[23];
+
 }
 
 void
-cmdline_parser_print_version (void)
-{
-  printf ("%s %s\n", CMDLINE_PARSER_PACKAGE, CMDLINE_PARSER_VERSION);
+cmdline_parser_print_version(void) {
+    printf("%s %s\n", CMDLINE_PARSER_PACKAGE, CMDLINE_PARSER_VERSION);
 }
 
 static void print_help_common(void) {
-  cmdline_parser_print_version ();
+    cmdline_parser_print_version();
 
-  if (strlen(gengetopt_args_info_purpose) > 0)
-    printf("\n%s\n", gengetopt_args_info_purpose);
+    if (strlen(gengetopt_args_info_purpose) > 0)
+        printf("\n%s\n", gengetopt_args_info_purpose);
 
-  if (strlen(gengetopt_args_info_usage) > 0)
-    printf("\n%s\n", gengetopt_args_info_usage);
+    if (strlen(gengetopt_args_info_usage) > 0)
+        printf("\n%s\n", gengetopt_args_info_usage);
 
-  printf("\n");
+    printf("\n");
 
-  if (strlen(gengetopt_args_info_description) > 0)
-    printf("%s\n", gengetopt_args_info_description);
+    if (strlen(gengetopt_args_info_description) > 0)
+        printf("%s\n", gengetopt_args_info_description);
 }
 
 void
-cmdline_parser_print_help (void)
-{
-  int i = 0;
-  print_help_common();
-  while (gengetopt_args_info_help[i])
-    printf("%s\n", gengetopt_args_info_help[i++]);
+cmdline_parser_print_help(void) {
+    int i = 0;
+    print_help_common();
+    while (gengetopt_args_info_help[i])
+        printf("%s\n", gengetopt_args_info_help[i++]);
 }
 
 void
-cmdline_parser_init (struct gengetopt_args_info *args_info)
-{
-  clear_given (args_info);
-  clear_args (args_info);
-  init_args_info (args_info);
+cmdline_parser_init(struct gengetopt_args_info *args_info) {
+    clear_given(args_info);
+    clear_args(args_info);
+    init_args_info(args_info);
 
-  args_info->inputs = NULL;
-  args_info->inputs_num = 0;
+    args_info->inputs = NULL;
+    args_info->inputs_num = 0;
 }
 
 void
-cmdline_parser_params_init(struct cmdline_parser_params *params)
-{
-  if (params)
-    { 
-      params->override = 0;
-      params->initialize = 1;
-      params->check_required = 1;
-      params->check_ambiguity = 0;
-      params->print_errors = 1;
+cmdline_parser_params_init(struct cmdline_parser_params *params) {
+    if (params) {
+        params->override = 0;
+        params->initialize = 1;
+        params->check_required = 1;
+        params->check_ambiguity = 0;
+        params->print_errors = 1;
     }
 }
 
 struct cmdline_parser_params *
-cmdline_parser_params_create(void)
-{
-  struct cmdline_parser_params *params = 
-    (struct cmdline_parser_params *)malloc(sizeof(struct cmdline_parser_params));
-  cmdline_parser_params_init(params);  
-  return params;
+cmdline_parser_params_create(void) {
+    struct cmdline_parser_params *params =
+            (struct cmdline_parser_params *) malloc(sizeof(struct cmdline_parser_params));
+    cmdline_parser_params_init(params);
+    return params;
 }
 
 static void
-free_string_field (char **s)
-{
-  if (*s)
-    {
-      free (*s);
-      *s = 0;
+free_string_field(char **s) {
+    if (*s) {
+        free(*s);
+        *s = 0;
     }
 }
 
 
 static void
-cmdline_parser_release (struct gengetopt_args_info *args_info)
-{
-  unsigned int i;
-  free_string_field (&(args_info->input_arg));
-  free_string_field (&(args_info->input_orig));
-  free_string_field (&(args_info->model_arg));
-  free_string_field (&(args_info->model_orig));
-  free_string_field (&(args_info->genes_arg));
-  free_string_field (&(args_info->genes_orig));
-  free_string_field (&(args_info->genex_arg));
-  free_string_field (&(args_info->genex_orig));
-  free_string_field (&(args_info->cache_orig));
-  free_string_field (&(args_info->kernel_arg));
-  free_string_field (&(args_info->kernel_orig));
-  free_string_field (&(args_info->tradeoff_orig));
-  free_string_field (&(args_info->gamma_orig));
-  free_string_field (&(args_info->degree_orig));
-  free_string_field (&(args_info->alphas_arg));
-  free_string_field (&(args_info->alphas_orig));
-  free_string_field (&(args_info->iterations_orig));
-  free_string_field (&(args_info->skip_orig));
-  free_string_field (&(args_info->random_orig));
-  free_string_field (&(args_info->verbosity_orig));
-  
-  
-  for (i = 0; i < args_info->inputs_num; ++i)
-    free (args_info->inputs [i]);
+cmdline_parser_release(struct gengetopt_args_info *args_info) {
+    unsigned int i;
+    free_string_field(&(args_info->input_arg));
+    free_string_field(&(args_info->input_orig));
+    free_string_field(&(args_info->model_arg));
+    free_string_field(&(args_info->model_orig));
+    free_string_field(&(args_info->genes_arg));
+    free_string_field(&(args_info->genes_orig));
+    free_string_field(&(args_info->genex_arg));
+    free_string_field(&(args_info->genex_orig));
+    free_string_field(&(args_info->cache_orig));
+    free_string_field(&(args_info->kernel_arg));
+    free_string_field(&(args_info->kernel_orig));
+    free_string_field(&(args_info->tradeoff_orig));
+    free_string_field(&(args_info->gamma_orig));
+    free_string_field(&(args_info->degree_orig));
+    free_string_field(&(args_info->alphas_arg));
+    free_string_field(&(args_info->alphas_orig));
+    free_string_field(&(args_info->iterations_orig));
+    free_string_field(&(args_info->skip_orig));
+    free_string_field(&(args_info->random_orig));
+    free_string_field(&(args_info->verbosity_orig));
 
-  if (args_info->inputs_num)
-    free (args_info->inputs);
 
-  clear_given (args_info);
+    for (i = 0; i < args_info->inputs_num; ++i)
+        free(args_info->inputs[i]);
+
+    if (args_info->inputs_num)
+        free(args_info->inputs);
+
+    clear_given(args_info);
 }
 
 /**
@@ -286,210 +272,196 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
  * -2 if more than one value has matched
  */
 static int
-check_possible_values(const char *val, char *values[])
-{
-  int i, found, last;
-  size_t len;
+check_possible_values(const char *val, char *values[]) {
+    int i, found, last;
+    size_t len;
 
-  if (!val)   /* otherwise strlen() crashes below */
-    return -1; /* -1 means no argument for the option */
+    if (!val)   /* otherwise strlen() crashes below */
+        return -1; /* -1 means no argument for the option */
 
-  found = last = 0;
+    found = last = 0;
 
-  for (i = 0, len = strlen(val); values[i]; ++i)
-    {
-      if (strncmp(val, values[i], len) == 0)
-        {
-          ++found;
-          last = i;
-          if (strlen(values[i]) == len)
-            return i; /* exact macth no need to check more */
+    for (i = 0, len = strlen(val); values[i]; ++i) {
+        if (strncmp(val, values[i], len) == 0) {
+            ++found;
+            last = i;
+            if (strlen(values[i]) == len)
+                return i; /* exact macth no need to check more */
         }
     }
 
-  if (found == 1) /* one match: OK */
-    return last;
+    if (found == 1) /* one match: OK */
+        return last;
 
-  return (found ? -2 : -1); /* return many values or none matched */
+    return (found ? -2 : -1); /* return many values or none matched */
 }
 
 
 static void
-write_into_file(FILE *outfile, const char *opt, const char *arg, char *values[])
-{
-  int found = -1;
-  if (arg) {
-    if (values) {
-      found = check_possible_values(arg, values);      
+write_into_file(FILE *outfile, const char *opt, const char *arg, char *values[]) {
+    int found = -1;
+    if (arg) {
+        if (values) {
+            found = check_possible_values(arg, values);
+        }
+        if (found >= 0)
+            fprintf(outfile, "%s=\"%s\" # %s\n", opt, arg, values[found]);
+        else
+            fprintf(outfile, "%s=\"%s\"\n", opt, arg);
+    } else {
+        fprintf(outfile, "%s\n", opt);
     }
-    if (found >= 0)
-      fprintf(outfile, "%s=\"%s\" # %s\n", opt, arg, values[found]);
-    else
-      fprintf(outfile, "%s=\"%s\"\n", opt, arg);
-  } else {
-    fprintf(outfile, "%s\n", opt);
-  }
 }
 
 
 int
-cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
-{
-  int i = 0;
+cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info) {
+    int i = 0;
 
-  if (!outfile)
-    {
-      fprintf (stderr, "%s: cannot dump options to stream\n", CMDLINE_PARSER_PACKAGE);
-      return EXIT_FAILURE;
+    if (!outfile) {
+        fprintf(stderr, "%s: cannot dump options to stream\n", CMDLINE_PARSER_PACKAGE);
+        return EXIT_FAILURE;
     }
 
-  if (args_info->help_given)
-    write_into_file(outfile, "help", 0, 0 );
-  if (args_info->version_given)
-    write_into_file(outfile, "version", 0, 0 );
-  if (args_info->input_given)
-    write_into_file(outfile, "input", args_info->input_orig, 0);
-  if (args_info->model_given)
-    write_into_file(outfile, "model", args_info->model_orig, 0);
-  if (args_info->genes_given)
-    write_into_file(outfile, "genes", args_info->genes_orig, 0);
-  if (args_info->genex_given)
-    write_into_file(outfile, "genex", args_info->genex_orig, 0);
-  if (args_info->heldout_given)
-    write_into_file(outfile, "heldout", 0, 0 );
-  if (args_info->random_features_given)
-    write_into_file(outfile, "random_features", 0, 0 );
-  if (args_info->random_output_given)
-    write_into_file(outfile, "random_output", 0, 0 );
-  if (args_info->cache_given)
-    write_into_file(outfile, "cache", args_info->cache_orig, 0);
-  if (args_info->kernel_given)
-    write_into_file(outfile, "kernel", args_info->kernel_orig, cmdline_parser_kernel_values);
-  if (args_info->tradeoff_given)
-    write_into_file(outfile, "tradeoff", args_info->tradeoff_orig, 0);
-  if (args_info->gamma_given)
-    write_into_file(outfile, "gamma", args_info->gamma_orig, 0);
-  if (args_info->degree_given)
-    write_into_file(outfile, "degree", args_info->degree_orig, 0);
-  if (args_info->alphas_given)
-    write_into_file(outfile, "alphas", args_info->alphas_orig, 0);
-  if (args_info->iterations_given)
-    write_into_file(outfile, "iterations", args_info->iterations_orig, 0);
-  if (args_info->normalize_given)
-    write_into_file(outfile, "normalize", 0, 0 );
-  if (args_info->skip_given)
-    write_into_file(outfile, "skip", args_info->skip_orig, 0);
-  if (args_info->random_given)
-    write_into_file(outfile, "random", args_info->random_orig, 0);
-  if (args_info->verbosity_given)
-    write_into_file(outfile, "verbosity", args_info->verbosity_orig, 0);
-  
+    if (args_info->help_given)
+        write_into_file(outfile, "help", 0, 0);
+    if (args_info->version_given)
+        write_into_file(outfile, "version", 0, 0);
+    if (args_info->input_given)
+        write_into_file(outfile, "input", args_info->input_orig, 0);
+    if (args_info->model_given)
+        write_into_file(outfile, "model", args_info->model_orig, 0);
+    if (args_info->genes_given)
+        write_into_file(outfile, "genes", args_info->genes_orig, 0);
+    if (args_info->genex_given)
+        write_into_file(outfile, "genex", args_info->genex_orig, 0);
+    if (args_info->heldout_given)
+        write_into_file(outfile, "heldout", 0, 0);
+    if (args_info->random_features_given)
+        write_into_file(outfile, "random_features", 0, 0);
+    if (args_info->random_output_given)
+        write_into_file(outfile, "random_output", 0, 0);
+    if (args_info->cache_given)
+        write_into_file(outfile, "cache", args_info->cache_orig, 0);
+    if (args_info->kernel_given)
+        write_into_file(outfile, "kernel", args_info->kernel_orig, cmdline_parser_kernel_values);
+    if (args_info->tradeoff_given)
+        write_into_file(outfile, "tradeoff", args_info->tradeoff_orig, 0);
+    if (args_info->gamma_given)
+        write_into_file(outfile, "gamma", args_info->gamma_orig, 0);
+    if (args_info->degree_given)
+        write_into_file(outfile, "degree", args_info->degree_orig, 0);
+    if (args_info->alphas_given)
+        write_into_file(outfile, "alphas", args_info->alphas_orig, 0);
+    if (args_info->iterations_given)
+        write_into_file(outfile, "iterations", args_info->iterations_orig, 0);
+    if (args_info->normalize_given)
+        write_into_file(outfile, "normalize", 0, 0);
+    if (args_info->skip_given)
+        write_into_file(outfile, "skip", args_info->skip_orig, 0);
+    if (args_info->random_given)
+        write_into_file(outfile, "random", args_info->random_orig, 0);
+    if (args_info->verbosity_given)
+        write_into_file(outfile, "verbosity", args_info->verbosity_orig, 0);
 
-  i = EXIT_SUCCESS;
-  return i;
+
+    i = EXIT_SUCCESS;
+    return i;
 }
 
 int
-cmdline_parser_file_save(const char *filename, struct gengetopt_args_info *args_info)
-{
-  FILE *outfile;
-  int i = 0;
+cmdline_parser_file_save(const char *filename, struct gengetopt_args_info *args_info) {
+    FILE *outfile;
+    int i = 0;
 
-  outfile = fopen(filename, "w");
+    outfile = fopen(filename, "w");
 
-  if (!outfile)
-    {
-      fprintf (stderr, "%s: cannot open file for writing: %s\n", CMDLINE_PARSER_PACKAGE, filename);
-      return EXIT_FAILURE;
+    if (!outfile) {
+        fprintf(stderr, "%s: cannot open file for writing: %s\n", CMDLINE_PARSER_PACKAGE, filename);
+        return EXIT_FAILURE;
     }
 
-  i = cmdline_parser_dump(outfile, args_info);
-  fclose (outfile);
+    i = cmdline_parser_dump(outfile, args_info);
+    fclose(outfile);
 
-  return i;
+    return i;
 }
 
 void
-cmdline_parser_free (struct gengetopt_args_info *args_info)
-{
-  cmdline_parser_release (args_info);
+cmdline_parser_free(struct gengetopt_args_info *args_info) {
+    cmdline_parser_release(args_info);
 }
 
 /** @brief replacement of strdup, which is not standard */
 char *
-gengetopt_strdup (const char *s)
-{
-  char *result = NULL;
-  if (!s)
+gengetopt_strdup(const char *s) {
+    char *result = NULL;
+    if (!s)
+        return result;
+
+    result = (char *) malloc(strlen(s) + 1);
+    if (result == (char *) 0)
+        return (char *) 0;
+    strcpy(result, s);
     return result;
-
-  result = (char*)malloc(strlen(s) + 1);
-  if (result == (char*)0)
-    return (char*)0;
-  strcpy(result, s);
-  return result;
 }
 
 int
-cmdline_parser (int argc, char * const *argv, struct gengetopt_args_info *args_info)
-{
-  return cmdline_parser2 (argc, argv, args_info, 0, 1, 1);
+cmdline_parser(int argc, char *const *argv, struct gengetopt_args_info *args_info) {
+    return cmdline_parser2(argc, argv, args_info, 0, 1, 1);
 }
 
 int
-cmdline_parser_ext (int argc, char * const *argv, struct gengetopt_args_info *args_info,
-                   struct cmdline_parser_params *params)
-{
-  int result;
-  result = cmdline_parser_internal (argc, argv, args_info, params, NULL);
+cmdline_parser_ext(int argc, char *const *argv, struct gengetopt_args_info *args_info,
+                   struct cmdline_parser_params *params) {
+    int result;
+    result = cmdline_parser_internal(argc, argv, args_info, params, NULL);
 
-  return result;
+    return result;
 }
 
 int
-cmdline_parser2 (int argc, char * const *argv, struct gengetopt_args_info *args_info, int override, int initialize, int check_required)
-{
-  int result;
-  struct cmdline_parser_params params;
-  
-  params.override = override;
-  params.initialize = initialize;
-  params.check_required = check_required;
-  params.check_ambiguity = 0;
-  params.print_errors = 1;
+cmdline_parser2(int argc, char *const *argv, struct gengetopt_args_info *args_info, int override, int initialize,
+                int check_required) {
+    int result;
+    struct cmdline_parser_params params;
 
-  result = cmdline_parser_internal (argc, argv, args_info, &params, NULL);
+    params.override = override;
+    params.initialize = initialize;
+    params.check_required = check_required;
+    params.check_ambiguity = 0;
+    params.print_errors = 1;
 
-  return result;
+    result = cmdline_parser_internal(argc, argv, args_info, &params, NULL);
+
+    return result;
 }
 
 int
-cmdline_parser_required (struct gengetopt_args_info *args_info, const char *prog_name)
-{
-  int result = EXIT_SUCCESS;
+cmdline_parser_required(struct gengetopt_args_info *args_info, const char *prog_name) {
+    int result = EXIT_SUCCESS;
 
-  if (cmdline_parser_required2(args_info, prog_name, NULL) > 0)
-    result = EXIT_FAILURE;
+    if (cmdline_parser_required2(args_info, prog_name, NULL) > 0)
+        result = EXIT_FAILURE;
 
-  return result;
+    return result;
 }
 
 int
-cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error)
-{
-  int error = 0;
+cmdline_parser_required2(struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error) {
+    int error = 0;
 
-  /* checks for required options */
-  if (! args_info->input_given)
-    {
-      fprintf (stderr, "%s: '--input' ('-i') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error = 1;
+    /* checks for required options */
+    if (!args_info->input_given) {
+        fprintf(stderr, "%s: '--input' ('-i') option required%s\n", prog_name,
+                (additional_error ? additional_error : ""));
+        error = 1;
     }
-  
-  
-  /* checks for dependences among options */
 
-  return error;
+
+    /* checks for dependences among options */
+
+    return error;
 }
 
 
@@ -515,457 +487,450 @@ static char *package_name = 0;
  */
 static
 int update_arg(void *field, char **orig_field,
-               unsigned int *field_given, unsigned int *prev_given, 
+               unsigned int *field_given, unsigned int *prev_given,
                char *value, char *possible_values[], const char *default_value,
                cmdline_parser_arg_type arg_type,
                int check_ambiguity, int override,
                int no_free, int multiple_option,
                const char *long_opt, char short_opt,
-               const char *additional_error)
-{
-  char *stop_char = 0;
-  const char *val = value;
-  int found;
-  char **string_field;
+               const char *additional_error) {
+    char *stop_char = 0;
+    const char *val = value;
+    int found;
+    char **string_field;
 
-  stop_char = 0;
-  found = 0;
+    stop_char = 0;
+    found = 0;
 
-  if (!multiple_option && prev_given && (*prev_given || (check_ambiguity && *field_given)))
-    {
-      if (short_opt != '-')
-        fprintf (stderr, "%s: `--%s' (`-%c') option given more than once%s\n", 
-               package_name, long_opt, short_opt,
-               (additional_error ? additional_error : ""));
-      else
-        fprintf (stderr, "%s: `--%s' option given more than once%s\n", 
-               package_name, long_opt,
-               (additional_error ? additional_error : ""));
-      return 1; /* failure */
+    if (!multiple_option && prev_given && (*prev_given || (check_ambiguity && *field_given))) {
+        if (short_opt != '-')
+            fprintf(stderr, "%s: `--%s' (`-%c') option given more than once%s\n",
+                    package_name, long_opt, short_opt,
+                    (additional_error ? additional_error : ""));
+        else
+            fprintf(stderr, "%s: `--%s' option given more than once%s\n",
+                    package_name, long_opt,
+                    (additional_error ? additional_error : ""));
+        return 1; /* failure */
     }
 
-  if (possible_values && (found = check_possible_values((value ? value : default_value), possible_values)) < 0)
-    {
-      if (short_opt != '-')
-        fprintf (stderr, "%s: %s argument, \"%s\", for option `--%s' (`-%c')%s\n", 
-          package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt, short_opt,
-          (additional_error ? additional_error : ""));
-      else
-        fprintf (stderr, "%s: %s argument, \"%s\", for option `--%s'%s\n", 
-          package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt,
-          (additional_error ? additional_error : ""));
-      return 1; /* failure */
+    if (possible_values && (found = check_possible_values((value ? value : default_value), possible_values)) < 0) {
+        if (short_opt != '-')
+            fprintf(stderr, "%s: %s argument, \"%s\", for option `--%s' (`-%c')%s\n",
+                    package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt, short_opt,
+                    (additional_error ? additional_error : ""));
+        else
+            fprintf(stderr, "%s: %s argument, \"%s\", for option `--%s'%s\n",
+                    package_name, (found == -2) ? "ambiguous" : "invalid", value, long_opt,
+                    (additional_error ? additional_error : ""));
+        return 1; /* failure */
     }
-    
-  if (field_given && *field_given && ! override)
-    return 0;
-  if (prev_given)
-    (*prev_given)++;
-  if (field_given)
-    (*field_given)++;
-  if (possible_values)
-    val = possible_values[found];
 
-  switch(arg_type) {
-  case ARG_FLAG:
-    *((int *)field) = !*((int *)field);
-    break;
-  case ARG_INT:
-    if (val) *((int *)field) = strtol (val, &stop_char, 0);
-    break;
-  case ARG_FLOAT:
-    if (val) *((float *)field) = (float)strtod (val, &stop_char);
-    break;
-  case ARG_STRING:
-    if (val) {
-      string_field = (char **)field;
-      if (!no_free && *string_field)
-        free (*string_field); /* free previous string */
-      *string_field = gengetopt_strdup (val);
-    }
-    break;
-  default:
-    break;
-  };
+    if (field_given && *field_given && !override)
+        return 0;
+    if (prev_given)
+        (*prev_given)++;
+    if (field_given)
+        (*field_given)++;
+    if (possible_values)
+        val = possible_values[found];
 
-  /* check numeric conversion */
-  switch(arg_type) {
-  case ARG_INT:
-  case ARG_FLOAT:
-    if (val && !(stop_char && *stop_char == '\0')) {
-      fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
-      return 1; /* failure */
-    }
-    break;
-  default:
-    ;
-  };
+    switch (arg_type) {
+        case ARG_FLAG:
+            *((int *) field) = !*((int *) field);
+            break;
+        case ARG_INT:
+            if (val) *((int *) field) = strtol(val, &stop_char, 0);
+            break;
+        case ARG_FLOAT:
+            if (val) *((float *) field) = (float) strtod(val, &stop_char);
+            break;
+        case ARG_STRING:
+            if (val) {
+                string_field = (char **) field;
+                if (!no_free && *string_field)
+                    free(*string_field); /* free previous string */
+                *string_field = gengetopt_strdup(val);
+            }
+            break;
+        default:
+            break;
+    };
 
-  /* store the original value */
-  switch(arg_type) {
-  case ARG_NO:
-  case ARG_FLAG:
-    break;
-  default:
-    if (value && orig_field) {
-      if (no_free) {
-        *orig_field = value;
-      } else {
-        if (*orig_field)
-          free (*orig_field); /* free previous string */
-        *orig_field = gengetopt_strdup (value);
-      }
-    }
-  };
+    /* check numeric conversion */
+    switch (arg_type) {
+        case ARG_INT:
+        case ARG_FLOAT:
+            if (val && !(stop_char && *stop_char == '\0')) {
+                fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
+                return 1; /* failure */
+            }
+            break;
+        default:;
+    };
 
-  return 0; /* OK */
+    /* store the original value */
+    switch (arg_type) {
+        case ARG_NO:
+        case ARG_FLAG:
+            break;
+        default:
+            if (value && orig_field) {
+                if (no_free) {
+                    *orig_field = value;
+                } else {
+                    if (*orig_field)
+                        free(*orig_field); /* free previous string */
+                    *orig_field = gengetopt_strdup(value);
+                }
+            }
+    };
+
+    return 0; /* OK */
 }
 
 
 int
-cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_info *args_info,
-                        struct cmdline_parser_params *params, const char *additional_error)
-{
-  int c;	/* Character of the parsed option.  */
+cmdline_parser_internal(int argc, char *const *argv, struct gengetopt_args_info *args_info,
+                        struct cmdline_parser_params *params, const char *additional_error) {
+    int c;    /* Character of the parsed option.  */
 
-  int error = 0;
-  struct gengetopt_args_info local_args_info;
-  
-  int override;
-  int initialize;
-  int check_required;
-  int check_ambiguity;
-  
-  package_name = argv[0];
-  
-  override = params->override;
-  initialize = params->initialize;
-  check_required = params->check_required;
-  check_ambiguity = params->check_ambiguity;
+    int error = 0;
+    struct gengetopt_args_info local_args_info;
 
-  if (initialize)
-    cmdline_parser_init (args_info);
+    int override;
+    int initialize;
+    int check_required;
+    int check_ambiguity;
 
-  cmdline_parser_init (&local_args_info);
+    package_name = argv[0];
 
-  optarg = 0;
-  optind = 0;
-  opterr = params->print_errors;
-  optopt = '?';
+    override = params->override;
+    initialize = params->initialize;
+    check_required = params->check_required;
+    check_ambiguity = params->check_ambiguity;
 
-  while (1)
-    {
-      int option_index = 0;
+    if (initialize)
+        cmdline_parser_init(args_info);
 
-      static struct option long_options[] = {
-        { "help",	0, NULL, 'h' },
-        { "version",	0, NULL, 'V' },
-        { "input",	1, NULL, 'i' },
-        { "model",	1, NULL, 'm' },
-        { "genes",	1, NULL, 'g' },
-        { "genex",	1, NULL, 'G' },
-        { "heldout",	0, NULL, 'l' },
-        { "random_features",	0, NULL, 'z' },
-        { "random_output",	0, NULL, 'Z' },
-        { "cache",	1, NULL, 'e' },
-        { "kernel",	1, NULL, 'k' },
-        { "tradeoff",	1, NULL, 'C' },
-        { "gamma",	1, NULL, 'M' },
-        { "degree",	1, NULL, 'd' },
-        { "alphas",	1, NULL, 'a' },
-        { "iterations",	1, NULL, 't' },
-        { "normalize",	0, NULL, 'n' },
-        { "skip",	1, NULL, 's' },
-        { "random",	1, NULL, 'r' },
-        { "verbosity",	1, NULL, 'v' },
-        { NULL,	0, NULL, 0 }
-      };
+    cmdline_parser_init(&local_args_info);
 
-      c = getopt_long (argc, argv, "hVi:m:g:G:lzZe:k:C:M:d:a:t:ns:r:v:", long_options, &option_index);
+    optarg = 0;
+    optind = 0;
+    opterr = params->print_errors;
+    optopt = '?';
 
-      if (c == -1) break;	/* Exit from `while (1)' loop.  */
+    while (1) {
+        int option_index = 0;
 
-      switch (c)
-        {
-        case 'h':	/* Print help and exit.  */
-          cmdline_parser_print_help ();
-          cmdline_parser_free (&local_args_info);
-          exit (EXIT_SUCCESS);
+        static struct option long_options[] = {
+                {"help",            0, NULL, 'h'},
+                {"version",         0, NULL, 'V'},
+                {"input",           1, NULL, 'i'},
+                {"model",           1, NULL, 'm'},
+                {"genes",           1, NULL, 'g'},
+                {"genex",           1, NULL, 'G'},
+                {"heldout",         0, NULL, 'l'},
+                {"random_features", 0, NULL, 'z'},
+                {"random_output",   0, NULL, 'Z'},
+                {"cache",           1, NULL, 'e'},
+                {"kernel",          1, NULL, 'k'},
+                {"tradeoff",        1, NULL, 'C'},
+                {"gamma",           1, NULL, 'M'},
+                {"degree",          1, NULL, 'd'},
+                {"alphas",          1, NULL, 'a'},
+                {"iterations",      1, NULL, 't'},
+                {"normalize",       0, NULL, 'n'},
+                {"skip",            1, NULL, 's'},
+                {"random",          1, NULL, 'r'},
+                {"verbosity",       1, NULL, 'v'},
+                {NULL,              0, NULL, 0}
+        };
 
-        case 'V':	/* Print version and exit.  */
-        
-        
-          if (update_arg( 0 , 
-               0 , &(args_info->version_given),
-              &(local_args_info.version_given), optarg, 0, 0, ARG_NO,
-              check_ambiguity, override, 0, 0,
-              "version", 'V',
-              additional_error))
-            goto failure;
-          cmdline_parser_free (&local_args_info);
-          return 0;
-        
-          break;
-        case 'i':	/* Data set to analyze (PCL).  */
-        
-        
-          if (update_arg( (void *)&(args_info->input_arg), 
-               &(args_info->input_orig), &(args_info->input_given),
-              &(local_args_info.input_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "input", 'i',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'm':	/* SVM model file.  */
-        
-        
-          if (update_arg( (void *)&(args_info->model_arg), 
-               &(args_info->model_orig), &(args_info->model_given),
-              &(local_args_info.model_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "model", 'm',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'g':	/* List of positive genes.  */
-        
-        
-          if (update_arg( (void *)&(args_info->genes_arg), 
-               &(args_info->genes_orig), &(args_info->genes_given),
-              &(local_args_info.genes_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "genes", 'g',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'G':	/* List of test genes.  */
-        
-        
-          if (update_arg( (void *)&(args_info->genex_arg), 
-               &(args_info->genex_orig), &(args_info->genex_given),
-              &(local_args_info.genex_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "genex", 'G',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'l':	/* Evaluate only test genes.  */
-        
-        
-          if (update_arg((void *)&(args_info->heldout_flag), 0, &(args_info->heldout_given),
-              &(local_args_info.heldout_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "heldout", 'l',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'z':	/* Randomize input features.  */
-        
-        
-          if (update_arg((void *)&(args_info->random_features_flag), 0, &(args_info->random_features_given),
-              &(local_args_info.random_features_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "random_features", 'z',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'Z':	/* Randomize output values.  */
-        
-        
-          if (update_arg((void *)&(args_info->random_output_flag), 0, &(args_info->random_output_given),
-              &(local_args_info.random_output_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "random_output", 'Z',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'e':	/* SVM cache size.  */
-        
-        
-          if (update_arg( (void *)&(args_info->cache_arg), 
-               &(args_info->cache_orig), &(args_info->cache_given),
-              &(local_args_info.cache_given), optarg, 0, "40", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "cache", 'e',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'k':	/* SVM kernel function.  */
-        
-        
-          if (update_arg( (void *)&(args_info->kernel_arg), 
-               &(args_info->kernel_orig), &(args_info->kernel_given),
-              &(local_args_info.kernel_given), optarg, cmdline_parser_kernel_values, "linear", ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "kernel", 'k',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'C':	/* Classification tradeoff.  */
-        
-        
-          if (update_arg( (void *)&(args_info->tradeoff_arg), 
-               &(args_info->tradeoff_orig), &(args_info->tradeoff_given),
-              &(local_args_info.tradeoff_given), optarg, 0, 0, ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "tradeoff", 'C',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'M':	/* RBF gamma.  */
-        
-        
-          if (update_arg( (void *)&(args_info->gamma_arg), 
-               &(args_info->gamma_orig), &(args_info->gamma_given),
-              &(local_args_info.gamma_given), optarg, 0, "1", ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "gamma", 'M',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'd':	/* Polynomial degree.  */
-        
-        
-          if (update_arg( (void *)&(args_info->degree_arg), 
-               &(args_info->degree_orig), &(args_info->degree_given),
-              &(local_args_info.degree_given), optarg, 0, "3", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "degree", 'd',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'a':	/* SVM alphas file.  */
-        
-        
-          if (update_arg( (void *)&(args_info->alphas_arg), 
-               &(args_info->alphas_orig), &(args_info->alphas_given),
-              &(local_args_info.alphas_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "alphas", 'a',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 't':	/* SVM iterations.  */
-        
-        
-          if (update_arg( (void *)&(args_info->iterations_arg), 
-               &(args_info->iterations_orig), &(args_info->iterations_given),
-              &(local_args_info.iterations_given), optarg, 0, "100000", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "iterations", 't',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'n':	/* Z-score normalize feature values.  */
-        
-        
-          if (update_arg((void *)&(args_info->normalize_flag), 0, &(args_info->normalize_given),
-              &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "normalize", 'n',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 's':	/* Columns to skip in input PCL.  */
-        
-        
-          if (update_arg( (void *)&(args_info->skip_arg), 
-               &(args_info->skip_orig), &(args_info->skip_given),
-              &(local_args_info.skip_given), optarg, 0, "2", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "skip", 's',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'r':	/* Seed random generator.  */
-        
-        
-          if (update_arg( (void *)&(args_info->random_arg), 
-               &(args_info->random_orig), &(args_info->random_given),
-              &(local_args_info.random_given), optarg, 0, "0", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "random", 'r',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'v':	/* Message verbosity.  */
-        
-        
-          if (update_arg( (void *)&(args_info->verbosity_arg), 
-               &(args_info->verbosity_orig), &(args_info->verbosity_given),
-              &(local_args_info.verbosity_given), optarg, 0, "5", ARG_INT,
-              check_ambiguity, override, 0, 0,
-              "verbosity", 'v',
-              additional_error))
-            goto failure;
-        
-          break;
+        c = getopt_long(argc, argv, "hVi:m:g:G:lzZe:k:C:M:d:a:t:ns:r:v:", long_options, &option_index);
 
-        case 0:	/* Long option with no short option */
-        case '?':	/* Invalid option.  */
-          /* `getopt_long' already printed an error message.  */
-          goto failure;
+        if (c == -1) break;    /* Exit from `while (1)' loop.  */
 
-        default:	/* bug: option not considered.  */
-          fprintf (stderr, "%s: option unknown: %c%s\n", CMDLINE_PARSER_PACKAGE, c, (additional_error ? additional_error : ""));
-          abort ();
+        switch (c) {
+            case 'h':    /* Print help and exit.  */
+                cmdline_parser_print_help();
+                cmdline_parser_free(&local_args_info);
+                exit(EXIT_SUCCESS);
+
+            case 'V':    /* Print version and exit.  */
+
+
+                if (update_arg(0,
+                               0, &(args_info->version_given),
+                               &(local_args_info.version_given), optarg, 0, 0, ARG_NO,
+                               check_ambiguity, override, 0, 0,
+                               "version", 'V',
+                               additional_error))
+                    goto failure;
+                cmdline_parser_free(&local_args_info);
+                return 0;
+
+                break;
+            case 'i':    /* Data set to analyze (PCL).  */
+
+
+                if (update_arg((void *) &(args_info->input_arg),
+                               &(args_info->input_orig), &(args_info->input_given),
+                               &(local_args_info.input_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "input", 'i',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'm':    /* SVM model file.  */
+
+
+                if (update_arg((void *) &(args_info->model_arg),
+                               &(args_info->model_orig), &(args_info->model_given),
+                               &(local_args_info.model_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "model", 'm',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'g':    /* List of positive genes.  */
+
+
+                if (update_arg((void *) &(args_info->genes_arg),
+                               &(args_info->genes_orig), &(args_info->genes_given),
+                               &(local_args_info.genes_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "genes", 'g',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'G':    /* List of test genes.  */
+
+
+                if (update_arg((void *) &(args_info->genex_arg),
+                               &(args_info->genex_orig), &(args_info->genex_given),
+                               &(local_args_info.genex_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "genex", 'G',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'l':    /* Evaluate only test genes.  */
+
+
+                if (update_arg((void *) &(args_info->heldout_flag), 0, &(args_info->heldout_given),
+                               &(local_args_info.heldout_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "heldout", 'l',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'z':    /* Randomize input features.  */
+
+
+                if (update_arg((void *) &(args_info->random_features_flag), 0, &(args_info->random_features_given),
+                               &(local_args_info.random_features_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "random_features", 'z',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'Z':    /* Randomize output values.  */
+
+
+                if (update_arg((void *) &(args_info->random_output_flag), 0, &(args_info->random_output_given),
+                               &(local_args_info.random_output_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "random_output", 'Z',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'e':    /* SVM cache size.  */
+
+
+                if (update_arg((void *) &(args_info->cache_arg),
+                               &(args_info->cache_orig), &(args_info->cache_given),
+                               &(local_args_info.cache_given), optarg, 0, "40", ARG_INT,
+                               check_ambiguity, override, 0, 0,
+                               "cache", 'e',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'k':    /* SVM kernel function.  */
+
+
+                if (update_arg((void *) &(args_info->kernel_arg),
+                               &(args_info->kernel_orig), &(args_info->kernel_given),
+                               &(local_args_info.kernel_given), optarg, cmdline_parser_kernel_values, "linear",
+                               ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "kernel", 'k',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'C':    /* Classification tradeoff.  */
+
+
+                if (update_arg((void *) &(args_info->tradeoff_arg),
+                               &(args_info->tradeoff_orig), &(args_info->tradeoff_given),
+                               &(local_args_info.tradeoff_given), optarg, 0, 0, ARG_FLOAT,
+                               check_ambiguity, override, 0, 0,
+                               "tradeoff", 'C',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'M':    /* RBF gamma.  */
+
+
+                if (update_arg((void *) &(args_info->gamma_arg),
+                               &(args_info->gamma_orig), &(args_info->gamma_given),
+                               &(local_args_info.gamma_given), optarg, 0, "1", ARG_FLOAT,
+                               check_ambiguity, override, 0, 0,
+                               "gamma", 'M',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'd':    /* Polynomial degree.  */
+
+
+                if (update_arg((void *) &(args_info->degree_arg),
+                               &(args_info->degree_orig), &(args_info->degree_given),
+                               &(local_args_info.degree_given), optarg, 0, "3", ARG_INT,
+                               check_ambiguity, override, 0, 0,
+                               "degree", 'd',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'a':    /* SVM alphas file.  */
+
+
+                if (update_arg((void *) &(args_info->alphas_arg),
+                               &(args_info->alphas_orig), &(args_info->alphas_given),
+                               &(local_args_info.alphas_given), optarg, 0, 0, ARG_STRING,
+                               check_ambiguity, override, 0, 0,
+                               "alphas", 'a',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 't':    /* SVM iterations.  */
+
+
+                if (update_arg((void *) &(args_info->iterations_arg),
+                               &(args_info->iterations_orig), &(args_info->iterations_given),
+                               &(local_args_info.iterations_given), optarg, 0, "100000", ARG_INT,
+                               check_ambiguity, override, 0, 0,
+                               "iterations", 't',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'n':    /* Z-score normalize feature values.  */
+
+
+                if (update_arg((void *) &(args_info->normalize_flag), 0, &(args_info->normalize_given),
+                               &(local_args_info.normalize_given), optarg, 0, 0, ARG_FLAG,
+                               check_ambiguity, override, 1, 0, "normalize", 'n',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 's':    /* Columns to skip in input PCL.  */
+
+
+                if (update_arg((void *) &(args_info->skip_arg),
+                               &(args_info->skip_orig), &(args_info->skip_given),
+                               &(local_args_info.skip_given), optarg, 0, "2", ARG_INT,
+                               check_ambiguity, override, 0, 0,
+                               "skip", 's',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'r':    /* Seed random generator.  */
+
+
+                if (update_arg((void *) &(args_info->random_arg),
+                               &(args_info->random_orig), &(args_info->random_given),
+                               &(local_args_info.random_given), optarg, 0, "0", ARG_INT,
+                               check_ambiguity, override, 0, 0,
+                               "random", 'r',
+                               additional_error))
+                    goto failure;
+
+                break;
+            case 'v':    /* Message verbosity.  */
+
+
+                if (update_arg((void *) &(args_info->verbosity_arg),
+                               &(args_info->verbosity_orig), &(args_info->verbosity_given),
+                               &(local_args_info.verbosity_given), optarg, 0, "5", ARG_INT,
+                               check_ambiguity, override, 0, 0,
+                               "verbosity", 'v',
+                               additional_error))
+                    goto failure;
+
+                break;
+
+            case 0:    /* Long option with no short option */
+            case '?':    /* Invalid option.  */
+                /* `getopt_long' already printed an error message.  */
+                goto failure;
+
+            default:    /* bug: option not considered.  */
+                fprintf(stderr, "%s: option unknown: %c%s\n", CMDLINE_PARSER_PACKAGE, c,
+                        (additional_error ? additional_error : ""));
+                abort();
         } /* switch */
     } /* while */
 
 
 
-  if (check_required)
-    {
-      error += cmdline_parser_required2 (args_info, argv[0], additional_error);
+    if (check_required) {
+        error += cmdline_parser_required2(args_info, argv[0], additional_error);
     }
 
-  cmdline_parser_release (&local_args_info);
+    cmdline_parser_release(&local_args_info);
 
-  if ( error )
+    if (error)
+        return (EXIT_FAILURE);
+
+    if (optind < argc) {
+        int i = 0;
+        int found_prog_name = 0;
+        /* whether program name, i.e., argv[0], is in the remaining args
+           (this may happen with some implementations of getopt,
+            but surely not with the one included by gengetopt) */
+
+        i = optind;
+        while (i < argc)
+            if (argv[i++] == argv[0]) {
+                found_prog_name = 1;
+                break;
+            }
+        i = 0;
+
+        args_info->inputs_num = argc - optind - found_prog_name;
+        args_info->inputs =
+                (char **) (malloc((args_info->inputs_num) * sizeof(char *)));
+        while (optind < argc)
+            if (argv[optind++] != argv[0])
+                args_info->inputs[i++] = gengetopt_strdup(argv[optind - 1]);
+    }
+
+    return 0;
+
+    failure:
+
+    cmdline_parser_release(&local_args_info);
     return (EXIT_FAILURE);
-
-  if (optind < argc)
-    {
-      int i = 0 ;
-      int found_prog_name = 0;
-      /* whether program name, i.e., argv[0], is in the remaining args
-         (this may happen with some implementations of getopt,
-          but surely not with the one included by gengetopt) */
-
-      i = optind;
-      while (i < argc)
-        if (argv[i++] == argv[0]) {
-          found_prog_name = 1;
-          break;
-        }
-      i = 0;
-
-      args_info->inputs_num = argc - optind - found_prog_name;
-      args_info->inputs =
-        (char **)(malloc ((args_info->inputs_num)*sizeof(char *))) ;
-      while (optind < argc)
-        if (argv[optind++] != argv[0])
-          args_info->inputs[ i++ ] = gengetopt_strdup (argv[optind-1]) ;
-    }
-
-  return 0;
-
-failure:
-  
-  cmdline_parser_release (&local_args_info);
-  return (EXIT_FAILURE);
 }

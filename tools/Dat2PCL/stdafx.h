@@ -23,6 +23,7 @@
 #define STDAFX_H
 
 #include <fstream>
+
 using namespace std;
 
 #include "dat.h"

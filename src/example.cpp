@@ -25,56 +25,63 @@
 
 namespace Sleipnir {
 
-CExampleImpl::CExampleImpl( ) {
+    CExampleImpl::CExampleImpl() {
 
-	m_auData = NULL; }
+        m_auData = nullptr;
+    }
 
-CExampleImpl::~CExampleImpl( ) {
+    CExampleImpl::~CExampleImpl() {
 
-	Reset( ); }
+        Reset();
+    }
 
-void CExampleImpl::Reset( ) {
+    void CExampleImpl::Reset() {
 
-	if( !m_auData )
-		return;
+        if (!m_auData)
+            return;
 
-	delete[] m_auData;
-	m_auData = NULL; }
+        delete[] m_auData;
+        m_auData = nullptr;
+    }
 
-void CExampleImpl::Set( size_t iLoc, float dValue, const CDataPair& Datum, size_t iMax ) {
-	size_t	i;
+    void CExampleImpl::Set(size_t iLoc, float dValue, const CDataPair &Datum, size_t iMax) {
+        size_t i;
 
-	if( !m_auData ) {
-		if( !iMax )
-			return;
-		m_auData = new UDatum[ iMax ];
-		for( i = 0; i < iMax; ++i )
-			m_auData[ i ].m_d = CMeta::GetNaN( ); }
+        if (!m_auData) {
+            if (!iMax)
+                return;
+            m_auData = new UDatum[iMax];
+            for (i = 0; i < iMax; ++i)
+                m_auData[i].m_d = CMeta::GetNaN();
+        }
 
-	if( Datum.IsContinuous( ) || CMeta::IsNaN( dValue ) )
-		m_auData[ iLoc ].m_d = dValue;
-	else
-		m_auData[ iLoc ].m_i = Datum.Quantize( dValue ); }
+        if (Datum.IsContinuous() || CMeta::IsNaN(dValue))
+            m_auData[iLoc].m_d = dValue;
+        else
+            m_auData[iLoc].m_i = Datum.Quantize(dValue);
+    }
 
-bool CExampleImpl::Equals( const CExampleImpl& Example, size_t iSize ) const {
-	size_t	i;
+    bool CExampleImpl::Equals(const CExampleImpl &Example, size_t iSize) const {
+        size_t i;
 
-	for( i = 0; i < iSize; ++i )
-		if( m_auData[ i ].m_i != Example.m_auData[ i ].m_i )
-			return false;
+        for (i = 0; i < iSize; ++i)
+            if (m_auData[i].m_i != Example.m_auData[i].m_i)
+                return false;
 
-	return true; }
+        return true;
+    }
 
-bool CExampleImpl::IsEvidence( size_t iMax ) const {
-	size_t	i;
+    bool CExampleImpl::IsEvidence(size_t iMax) const {
+        size_t i;
 
-	if( !m_auData )
-		return false;
+        if (!m_auData)
+            return false;
 
-	for( i = 1; i < iMax; ++i )
-		if( !CMeta::IsNaN( m_auData[ i ].m_d ) )
-			break;
+        for (i = 1; i < iMax; ++i)
+            if (!CMeta::IsNaN(m_auData[i].m_d))
+                break;
 
-	return ( i < iMax ); }
+        return (i < iMax);
+    }
 
 }

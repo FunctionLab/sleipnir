@@ -25,13 +25,17 @@
 #ifdef _MSC_VER
 #include <direct.h>
 #else
+
 #include<sys/stat.h>
 
 inline int _mkdir(char *str) {
-	return mkdir( str, S_IRWXU );}
+    return mkdir(str, S_IRWXU);
+}
+
 #endif
 
 #include <fstream>
+
 using namespace std;
 
 #include <pthread.h>
@@ -40,6 +44,7 @@ using namespace std;
 #include "dataset.h"
 #include "genome.h"
 #include "meta.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

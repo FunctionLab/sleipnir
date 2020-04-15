@@ -53,43 +53,47 @@ namespace Sleipnir {
  * \see
  * CClustKMeans::Cluster
  */
-uint16_t CClustPivot::Cluster( const CDistanceMatrix& MatSimilarities, float dCutoff,
-	vector<uint16_t>& vecsClusters ) {
-	size_t			i, j, iRand, iTmp, iPivot;
-	uint16_t		sRet;
-	vector<size_t>	veciPerm;
-	float			d;
+    uint16_t CClustPivot::Cluster(const CDistanceMatrix &MatSimilarities, float dCutoff,
+                                  vector <uint16_t> &vecsClusters) {
+        size_t i, j, iRand, iTmp, iPivot;
+        uint16_t sRet;
+        vector <size_t> veciPerm;
+        float d;
 
-	vecsClusters.resize( MatSimilarities.GetSize( ) );
-	veciPerm.resize( MatSimilarities.GetSize( ) );
-	// Pick a random permutation of the genes
-	for( i = 0; i < veciPerm.size( ); ++i )
-		veciPerm[ i ] = i;
-	for( i = 0; i < MatSimilarities.GetSize( ); ++i ) {
-		iRand = rand( ) % ( veciPerm.size( ) - i );
-		iTmp = veciPerm[ i ];
-		veciPerm[ i ] = veciPerm[ i + iRand ];
-		veciPerm[ i + iRand ] = iTmp; }
+        vecsClusters.resize(MatSimilarities.GetSize());
+        veciPerm.resize(MatSimilarities.GetSize());
+        // Pick a random permutation of the genes
+        for (i = 0; i < veciPerm.size(); ++i)
+            veciPerm[i] = i;
+        for (i = 0; i < MatSimilarities.GetSize(); ++i) {
+            iRand = rand() % (veciPerm.size() - i);
+            iTmp = veciPerm[i];
+            veciPerm[i] = veciPerm[i + iRand];
+            veciPerm[i + iRand] = iTmp;
+        }
 
-	// reset the cluster data
-	for( i = 0; i < vecsClusters.size( ); ++i )
-		vecsClusters[ i ] = -1;
+        // reset the cluster data
+        for (i = 0; i < vecsClusters.size(); ++i)
+            vecsClusters[i] = -1;
 
-	for( sRet = i = 0; i < MatSimilarities.GetSize( ); ++i ) {
-		iPivot = veciPerm[ i ];
-		// If gene was already clustered (or excluded), continue
-		if( vecsClusters[ iPivot ] != (uint16_t)-1 )
-			continue;
+        for (sRet = i = 0; i < MatSimilarities.GetSize(); ++i) {
+            iPivot = veciPerm[i];
+            // If gene was already clustered (or excluded), continue
+            if (vecsClusters[iPivot] != (uint16_t) - 1)
+                continue;
 
-		vecsClusters[ iPivot ] = sRet++;
-		for( j = 0; j < MatSimilarities.GetSize( ); ++j ) {
-			// check if already clustered (or thrown away)
-			if( vecsClusters[ j ] != (uint16_t)-1 )
-				continue;
+            vecsClusters[iPivot] = sRet++;
+            for (j = 0; j < MatSimilarities.GetSize(); ++j) {
+                // check if already clustered (or thrown away)
+                if (vecsClusters[j] != (uint16_t) - 1)
+                    continue;
 
-		if( !CMeta::IsNaN( d = MatSimilarities.Get( iPivot, j ) ) && ( d > dCutoff ) )
-			vecsClusters[ j ] = vecsClusters[ iPivot ]; } }
+                if (!CMeta::IsNaN(d = MatSimilarities.Get(iPivot, j)) && (d > dCutoff))
+                    vecsClusters[j] = vecsClusters[iPivot];
+            }
+        }
 
-	return sRet; }
+        return sRet;
+    }
 
 }

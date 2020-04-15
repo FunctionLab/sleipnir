@@ -31,107 +31,112 @@
 
 namespace Sleipnir {
 
-class CCompactMatrixBase {
-protected:
-	CCompactMatrixBase( ) : m_cBits(0), m_aiData(NULL), m_fMemory(true) { }
+    class CCompactMatrixBase {
+    protected:
+        CCompactMatrixBase() : m_cBits(0), m_aiData(NULL), m_fMemory(true) {}
 
-	virtual ~CCompactMatrixBase( ) {
+        virtual ~CCompactMatrixBase() {
 
-		if( m_fMemory && m_aiData )
-			delete[] m_aiData; }
+            if (m_fMemory && m_aiData)
+                delete[] m_aiData;
+        }
 
-	void Initialize( unsigned char, bool );
+        void Initialize(unsigned char, bool);
 
-	unsigned char Get( size_t iX, size_t iY ) const {
-		size_t*			pi;
-		unsigned char	cRet, cShift;
+        unsigned char Get(size_t iX, size_t iY) const {
+            size_t *pi;
+            unsigned char cRet, cShift;
 
-		if( !( m_cBits && m_aiData ) )
-			return 0;
-		pi = GetWord( iX, iY, cShift );
-		// Bits starting at Shift, mask m_cBits long
-		cRet = (unsigned char)( ( *pi >> cShift ) & ( SIZE_MAX >> ( ( 8 * sizeof(*m_aiData) ) - m_cBits ) ) );
-		// If we overflow a boundary...
-		if( ( cShift + m_cBits ) > ( 8 * sizeof(*m_aiData) ) )
-		// Bits starting at 0, mask (m_cBits-Shift) long, shift left by bits we got
-			cRet |= ( *( pi + 1 ) & ( SIZE_MAX >> ( ( 16 * sizeof(*m_aiData) ) - m_cBits -
-				cShift ) ) ) << ( ( 8 * sizeof(*m_aiData) ) - cShift );
+            if (!(m_cBits && m_aiData))
+                return 0;
+            pi = GetWord(iX, iY, cShift);
+            // Bits starting at Shift, mask m_cBits long
+            cRet = (unsigned char) ((*pi >> cShift) & (SIZE_MAX >> ((8 * sizeof(*m_aiData)) - m_cBits)));
+            // If we overflow a boundary...
+            if ((cShift + m_cBits) > (8 * sizeof(*m_aiData)))
+                // Bits starting at 0, mask (m_cBits-Shift) long, shift left by bits we got
+                cRet |= (*(pi + 1) & (SIZE_MAX >> ((16 * sizeof(*m_aiData)) - m_cBits -
+                                                   cShift))) << ((8 * sizeof(*m_aiData)) - cShift);
 
-		return cRet;
-	}
+            return cRet;
+        }
 
-	void Set( size_t iX, size_t iY, unsigned char cValue ) {
-		unsigned char	cShift;
-		size_t			iMask;
-		size_t*			pi;
+        void Set(size_t iX, size_t iY, unsigned char cValue) {
+            unsigned char cShift;
+            size_t iMask;
+            size_t *pi;
 
-		if( !( m_cBits && m_aiData ) )
-			return;
-		pi = GetWord( iX, iY, cShift );
-		iMask = ( SIZE_MAX >> ( ( 8 * sizeof(*m_aiData) ) - m_cBits ) ) << cShift;
-		*pi = ( *pi & ~iMask ) | ( ( (size_t)cValue << cShift ) & iMask );
-		if( ( cShift + m_cBits ) > ( 8 * sizeof(*m_aiData) ) ) {
-			pi++;
-			iMask = SIZE_MAX >> ( ( 16 * sizeof(*m_aiData) ) - m_cBits - cShift );
-			*pi = ( *pi & ~iMask ) |
-				( ( cValue >> ( ( 8 * sizeof(*m_aiData) ) - cShift ) ) & iMask );
-		}
-	}
+            if (!(m_cBits && m_aiData))
+                return;
+            pi = GetWord(iX, iY, cShift);
+            iMask = (SIZE_MAX >> ((8 * sizeof(*m_aiData)) - m_cBits)) << cShift;
+            *pi = (*pi & ~iMask) | (((size_t) cValue << cShift) & iMask);
+            if ((cShift + m_cBits) > (8 * sizeof(*m_aiData))) {
+                pi++;
+                iMask = SIZE_MAX >> ((16 * sizeof(*m_aiData)) - m_cBits - cShift);
+                *pi = (*pi & ~iMask) |
+                      ((cValue >> ((8 * sizeof(*m_aiData)) - cShift)) & iMask);
+            }
+        }
 
-	virtual size_t CountWords( ) const = 0;
-	virtual size_t* GetWord( size_t, size_t, unsigned char& ) const = 0;
+        virtual size_t CountWords() const = 0;
 
-	bool			m_fMemory;
-	unsigned char	m_cBits;
-	size_t*			m_aiData;
-};
+        virtual size_t *GetWord(size_t, size_t, unsigned char &) const = 0;
 
-class CCompactMatrixImpl : protected CHalfMatrixBase, protected CCompactMatrixBase {
-protected:
-	CCompactMatrixImpl( ) : m_iSize(0) { }
+        bool m_fMemory;
+        unsigned char m_cBits;
+        size_t *m_aiData;
+    };
 
-	size_t* GetWord( size_t iX, size_t iY, unsigned char& cShift ) const {
-		size_t	iIndex;
+    class CCompactMatrixImpl : protected CHalfMatrixBase, protected CCompactMatrixBase {
+    protected:
+        CCompactMatrixImpl() : m_iSize(0) {}
 
-		// Closed form for sum(m_iSize - i - 1, i=0..(iX-1)) + iY
-		iIndex = ( iX * ( m_iSize - 1 ) ) - ( iX * ( iX - 1 ) / 2 ) + iY;
-		iIndex *= m_cBits;
-		cShift = (unsigned char)( iIndex % ( 8 * sizeof(*m_aiData) ) );
-		iIndex /= 8 * sizeof(*m_aiData);
+        size_t *GetWord(size_t iX, size_t iY, unsigned char &cShift) const {
+            size_t iIndex;
 
-		return &m_aiData[ iIndex ]; }
+            // Closed form for sum(m_iSize - i - 1, i=0..(iX-1)) + iY
+            iIndex = (iX * (m_iSize - 1)) - (iX * (iX - 1) / 2) + iY;
+            iIndex *= m_cBits;
+            cShift = (unsigned char) (iIndex % (8 * sizeof(*m_aiData)));
+            iIndex /= 8 * sizeof(*m_aiData);
 
-	size_t CountWords( ) const {
-		size_t	iRet;
+            return &m_aiData[iIndex];
+        }
 
-		return ( ( m_cBits && ( iRet = m_iSize * ( m_iSize - 1 ) / 2 ) ) ?
-			( ( ( ( iRet * m_cBits ) - 1 ) / ( 8 * sizeof(*m_aiData) ) ) + 1 ) : 0 ); }
+        size_t CountWords() const {
+            size_t iRet;
 
-	uint32_t	m_iSize;
-};
+            return ((m_cBits && (iRet = m_iSize * (m_iSize - 1) / 2)) ?
+                    ((((iRet * m_cBits) - 1) / (8 * sizeof(*m_aiData))) + 1) : 0);
+        }
 
-class CCompactFullMatrixImpl : protected CCompactMatrixBase {
-protected:
-	CCompactFullMatrixImpl( ) : m_iRows(0), m_iColumns(0) { }
+        uint32_t m_iSize;
+    };
 
-	size_t CountWords( ) const {
-		size_t	iRet;
-		iRet = m_iRows * m_iColumns;
-		return ( ( ( ( iRet * m_cBits ) - 1 ) / ( 8 * sizeof(*m_aiData) ) ) + 1 );
-	}
+    class CCompactFullMatrixImpl : protected CCompactMatrixBase {
+    protected:
+        CCompactFullMatrixImpl() : m_iRows(0), m_iColumns(0) {}
 
-	size_t* GetWord( size_t iY, size_t iX, unsigned char& cShift ) const {
-		size_t	iIndex;
+        size_t CountWords() const {
+            size_t iRet;
+            iRet = m_iRows * m_iColumns;
+            return ((((iRet * m_cBits) - 1) / (8 * sizeof(*m_aiData))) + 1);
+        }
 
-		iIndex = ( ( iY * m_iColumns ) + iX ) * m_cBits;
-		cShift = (unsigned char)( iIndex % ( 8 * sizeof(*m_aiData) ) );
-		iIndex /= 8 * sizeof(*m_aiData);
+        size_t *GetWord(size_t iY, size_t iX, unsigned char &cShift) const {
+            size_t iIndex;
 
-		return &m_aiData[ iIndex ]; }
+            iIndex = ((iY * m_iColumns) + iX) * m_cBits;
+            cShift = (unsigned char) (iIndex % (8 * sizeof(*m_aiData)));
+            iIndex /= 8 * sizeof(*m_aiData);
 
-	uint32_t	m_iRows;
-	uint32_t	m_iColumns;
-};
+            return &m_aiData[iIndex];
+        }
+
+        uint32_t m_iRows;
+        uint32_t m_iColumns;
+    };
 
 }
 

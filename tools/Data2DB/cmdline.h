@@ -30,76 +30,74 @@ extern "C" {
 #endif
 
 /** @brief Where the command line options are stored */
-struct gengetopt_args_info
-{
-  const char *help_help; /**< @brief Print help and exit help description.  */
-  const char *version_help; /**< @brief Print version and exit help description.  */
-  char * dataset_arg;	/**< @brief Input a set of dataset filenames.  */
-  char * dataset_orig;	/**< @brief Input a set of dataset filenames original value given at command line.  */
-  const char *dataset_help; /**< @brief Input a set of dataset filenames help description.  */
-  char * network_arg;	/**< @brief Input (X)DSL Bayes net.  */
-  char * network_orig;	/**< @brief Input (X)DSL Bayes net original value given at command line.  */
-  const char *network_help; /**< @brief Input (X)DSL Bayes net help description.  */
-  char * input_arg;	/**< @brief Input gene mapping.  */
-  char * input_orig;	/**< @brief Input gene mapping original value given at command line.  */
-  const char *input_help; /**< @brief Input gene mapping help description.  */
-  char * dir_in_arg;	/**< @brief Data directory (default='.').  */
-  char * dir_in_orig;	/**< @brief Data directory original value given at command line.  */
-  const char *dir_in_help; /**< @brief Data directory help description.  */
-  char * dir_out_arg;	/**< @brief Database directory (default='.').  */
-  char * dir_out_orig;	/**< @brief Database directory original value given at command line.  */
-  const char *dir_out_help; /**< @brief Database directory help description.  */
-  int files_arg;	/**< @brief Database file count (default='1000').  */
-  char * files_orig;	/**< @brief Database file count original value given at command line.  */
-  const char *files_help; /**< @brief Database file count help description.  */
-  int block_files_arg;	/**< @brief Number of database files per block (default='-1').  */
-  char * block_files_orig;	/**< @brief Number of database files per block original value given at command line.  */
-  const char *block_files_help; /**< @brief Number of database files per block help description.  */
-  int block_datasets_arg;	/**< @brief Number of datasets per block (default='-1').  */
-  char * block_datasets_orig;	/**< @brief Number of datasets per block original value given at command line.  */
-  const char *block_datasets_help; /**< @brief Number of datasets per block help description.  */
-  int use_nibble_flag;	/**< @brief Use nibble for compact storage (default=off).  */
-  const char *use_nibble_help; /**< @brief Use nibble for compact storage help description.  */
-  char * zeros_arg;	/**< @brief Read zeroed node IDs/outputs from the given file.  */
-  char * zeros_orig;	/**< @brief Read zeroed node IDs/outputs from the given file original value given at command line.  */
-  const char *zeros_help; /**< @brief Read zeroed node IDs/outputs from the given file help description.  */
-  int buffer_flag;	/**< @brief Memory buffer disk writes (default=off).  */
-  const char *buffer_help; /**< @brief Memory buffer disk writes help description.  */
-  int memmap_flag;	/**< @brief Memory map input/output (default=off).  */
-  const char *memmap_help; /**< @brief Memory map input/output help description.  */
-  int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
-  char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
-  const char *verbosity_help; /**< @brief Message verbosity help description.  */
-  
-  unsigned int help_given ;	/**< @brief Whether help was given.  */
-  unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
-  unsigned int network_given ;	/**< @brief Whether network was given.  */
-  unsigned int input_given ;	/**< @brief Whether input was given.  */
-  unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */
-  unsigned int dir_out_given ;	/**< @brief Whether dir_out was given.  */
-  unsigned int files_given ;	/**< @brief Whether files was given.  */
-  unsigned int block_files_given ;	/**< @brief Whether block_files was given.  */
-  unsigned int block_datasets_given ;	/**< @brief Whether block_datasets was given.  */
-  unsigned int use_nibble_given ;	/**< @brief Whether use_nibble was given.  */
-  unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
-  unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
-  unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
-  unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+struct gengetopt_args_info {
+    const char *help_help; /**< @brief Print help and exit help description.  */
+    const char *version_help; /**< @brief Print version and exit help description.  */
+    char *dataset_arg;    /**< @brief Input a set of dataset filenames.  */
+    char *dataset_orig;    /**< @brief Input a set of dataset filenames original value given at command line.  */
+    const char *dataset_help; /**< @brief Input a set of dataset filenames help description.  */
+    char *network_arg;    /**< @brief Input (X)DSL Bayes net.  */
+    char *network_orig;    /**< @brief Input (X)DSL Bayes net original value given at command line.  */
+    const char *network_help; /**< @brief Input (X)DSL Bayes net help description.  */
+    char *input_arg;    /**< @brief Input gene mapping.  */
+    char *input_orig;    /**< @brief Input gene mapping original value given at command line.  */
+    const char *input_help; /**< @brief Input gene mapping help description.  */
+    char *dir_in_arg;    /**< @brief Data directory (default='.').  */
+    char *dir_in_orig;    /**< @brief Data directory original value given at command line.  */
+    const char *dir_in_help; /**< @brief Data directory help description.  */
+    char *dir_out_arg;    /**< @brief Database directory (default='.').  */
+    char *dir_out_orig;    /**< @brief Database directory original value given at command line.  */
+    const char *dir_out_help; /**< @brief Database directory help description.  */
+    int files_arg;    /**< @brief Database file count (default='1000').  */
+    char *files_orig;    /**< @brief Database file count original value given at command line.  */
+    const char *files_help; /**< @brief Database file count help description.  */
+    int block_files_arg;    /**< @brief Number of database files per block (default='-1').  */
+    char *block_files_orig;    /**< @brief Number of database files per block original value given at command line.  */
+    const char *block_files_help; /**< @brief Number of database files per block help description.  */
+    int block_datasets_arg;    /**< @brief Number of datasets per block (default='-1').  */
+    char *block_datasets_orig;    /**< @brief Number of datasets per block original value given at command line.  */
+    const char *block_datasets_help; /**< @brief Number of datasets per block help description.  */
+    int use_nibble_flag;    /**< @brief Use nibble for compact storage (default=off).  */
+    const char *use_nibble_help; /**< @brief Use nibble for compact storage help description.  */
+    char *zeros_arg;    /**< @brief Read zeroed node IDs/outputs from the given file.  */
+    char *zeros_orig;    /**< @brief Read zeroed node IDs/outputs from the given file original value given at command line.  */
+    const char *zeros_help; /**< @brief Read zeroed node IDs/outputs from the given file help description.  */
+    int buffer_flag;    /**< @brief Memory buffer disk writes (default=off).  */
+    const char *buffer_help; /**< @brief Memory buffer disk writes help description.  */
+    int memmap_flag;    /**< @brief Memory map input/output (default=off).  */
+    const char *memmap_help; /**< @brief Memory map input/output help description.  */
+    int verbosity_arg;    /**< @brief Message verbosity (default='5').  */
+    char *verbosity_orig;    /**< @brief Message verbosity original value given at command line.  */
+    const char *verbosity_help; /**< @brief Message verbosity help description.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
-} ;
+    unsigned int help_given;    /**< @brief Whether help was given.  */
+    unsigned int version_given;    /**< @brief Whether version was given.  */
+    unsigned int dataset_given;    /**< @brief Whether dataset was given.  */
+    unsigned int network_given;    /**< @brief Whether network was given.  */
+    unsigned int input_given;    /**< @brief Whether input was given.  */
+    unsigned int dir_in_given;    /**< @brief Whether dir_in was given.  */
+    unsigned int dir_out_given;    /**< @brief Whether dir_out was given.  */
+    unsigned int files_given;    /**< @brief Whether files was given.  */
+    unsigned int block_files_given;    /**< @brief Whether block_files was given.  */
+    unsigned int block_datasets_given;    /**< @brief Whether block_datasets was given.  */
+    unsigned int use_nibble_given;    /**< @brief Whether use_nibble was given.  */
+    unsigned int zeros_given;    /**< @brief Whether zeros was given.  */
+    unsigned int buffer_given;    /**< @brief Whether buffer was given.  */
+    unsigned int memmap_given;    /**< @brief Whether memmap was given.  */
+    unsigned int verbosity_given;    /**< @brief Whether verbosity was given.  */
+
+    char **inputs; /**< @brief unamed options (options without names) */
+    unsigned inputs_num; /**< @brief unamed options number */
+};
 
 /** @brief The additional parameters to pass to parser functions */
-struct cmdline_parser_params
-{
-  int override; /**< @brief whether to override possibly already present options (default 0) */
-  int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
-  int check_required; /**< @brief whether to check that all required options were provided (default 1) */
-  int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
-  int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
-} ;
+struct cmdline_parser_params {
+    int override; /**< @brief whether to override possibly already present options (default 0) */
+    int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
+    int check_required; /**< @brief whether to check that all required options were provided (default 1) */
+    int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
+    int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
+};
 
 /** @brief the purpose string of the program */
 extern const char *gengetopt_args_info_purpose;
@@ -115,8 +113,8 @@ extern const char *gengetopt_args_info_help[];
  * @param args_info the structure where option information will be stored
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info);
+int cmdline_parser(int argc, char *const *argv,
+                   struct gengetopt_args_info *args_info);
 
 /**
  * The command line parser (version with additional parameters - deprecated)
@@ -129,9 +127,9 @@ int cmdline_parser (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  * @deprecated use cmdline_parser_ext() instead
  */
-int cmdline_parser2 (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  int override, int initialize, int check_required);
+int cmdline_parser2(int argc, char *const *argv,
+                    struct gengetopt_args_info *args_info,
+                    int override, int initialize, int check_required);
 
 /**
  * The command line parser (version with additional parameters)
@@ -141,9 +139,9 @@ int cmdline_parser2 (int argc, char * const *argv,
  * @param params additional parameters for the parser
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser_ext (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  struct cmdline_parser_params *params);
+int cmdline_parser_ext(int argc, char *const *argv,
+                       struct gengetopt_args_info *args_info,
+                       struct cmdline_parser_params *params);
 
 /**
  * Save the contents of the option struct into an already open FILE stream.
@@ -152,7 +150,7 @@ int cmdline_parser_ext (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_dump(FILE *outfile,
-  struct gengetopt_args_info *args_info);
+                        struct gengetopt_args_info *args_info);
 
 /**
  * Save the contents of the option struct into a (text) file.
@@ -162,12 +160,13 @@ int cmdline_parser_dump(FILE *outfile,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_file_save(const char *filename,
-  struct gengetopt_args_info *args_info);
+                             struct gengetopt_args_info *args_info);
 
 /**
  * Print the help
  */
 void cmdline_parser_print_help(void);
+
 /**
  * Print the version
  */
@@ -192,13 +191,14 @@ struct cmdline_parser_params *cmdline_parser_params_create(void);
  * (also set default values for options that have a default)
  * @param args_info the structure to initialize
  */
-void cmdline_parser_init (struct gengetopt_args_info *args_info);
+void cmdline_parser_init(struct gengetopt_args_info *args_info);
+
 /**
  * Deallocates the string fields of the gengetopt_args_info structure
  * (but does not deallocate the structure itself)
  * @param args_info the structure to deallocate
  */
-void cmdline_parser_free (struct gengetopt_args_info *args_info);
+void cmdline_parser_free(struct gengetopt_args_info *args_info);
 
 /**
  * Checks that all the required options were specified
@@ -207,8 +207,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  *   possible errors
  * @return
  */
-int cmdline_parser_required (struct gengetopt_args_info *args_info,
-  const char *prog_name);
+int cmdline_parser_required(struct gengetopt_args_info *args_info,
+                            const char *prog_name);
 
 
 #ifdef __cplusplus

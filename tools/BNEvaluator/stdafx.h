@@ -25,12 +25,14 @@
 #pragma warning( disable : 4267 )
 
 #include <fstream>
+
 using namespace std;
 
 #include "bayesnet.h"
 #include "genome.h"
 #include "meta.h"
 #include "pcl.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

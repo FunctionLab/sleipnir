@@ -33,278 +33,335 @@
 
 namespace Sleipnir {
 
-class CGene;
-class CGenes;
-class CGenome;
-class IOntology;
+    class CGene;
 
-class COntologyImpl {
-protected:
-	typedef std::map<std::string,size_t>	TMapStrI;
-	typedef std::set<const CGene*>			TSetPGenes;
+    class CGenes;
 
-	struct SNode {
-		SNode( );
+    class CGenome;
 
-		void Reset( );
+    class IOntology;
 
-		std::string		m_strID;
-		std::string		m_strGloss;
-		size_t			m_iParents;
-		size_t*			m_aiParents;
-		size_t			m_iChildren;
-		size_t*			m_aiChildren;
-		size_t			m_iGenes;
-		const CGene**	m_apGenes;
-		size_t			m_iCacheGenes;
-		const CGene**	m_apCacheGenes;
-	};
+    class COntologyImpl {
+    protected:
+        typedef std::map <std::string, size_t> TMapStrI;
+        typedef std::set<const CGene *> TSetPGenes;
 
-	struct SParser {
-		static const size_t	c_iBuffer	= 65536;
+        struct SNode {
+            SNode();
 
-		SParser( std::istream&, CGenome& );
+            void Reset();
 
-		bool GetLine( );
-		bool IsStart( const char* ) const;
+            std::string m_strID;
+            std::string m_strGloss;
+            size_t m_iParents;
+            size_t *m_aiParents;
+            size_t m_iChildren;
+            size_t *m_aiChildren;
+            size_t m_iGenes;
+            const CGene **m_apGenes;
+            size_t m_iCacheGenes;
+            const CGene **m_apCacheGenes;
+        };
 
-		std::istream&	m_istm;
-		CGenome&		m_Genome;
-		char			m_szLine[ c_iBuffer ];
-		std::string		m_strGloss;
-		size_t			m_iLine;
-	};
+        struct SParser {
+            static const size_t c_iBuffer = 65536;
 
-	COntologyImpl( const std::string& strID ) : m_strID(strID), m_iNodes(0), m_aNodes(NULL) { }
+            SParser(std::istream &, CGenome &);
 
-	~COntologyImpl( ) {
+            bool GetLine();
 
-		Reset( ); }
+            bool IsStart(const char *) const;
 
-	size_t GetNode( const std::string& ) const;
-	bool IsAnnotated( size_t, const CGene&, bool ) const;
-	const CGene& GetGene( size_t, size_t ) const;
-	void GetGeneNames( std::vector<std::string>& ) const;
-	void Reset( );
-	void CollectGenes( size_t, TSetPGenes& );
-	void TermFinder( const CGenes&, std::vector<STermFound>&, bool, bool, bool, float, const CGenes* ) const;
+            std::istream &m_istm;
+            CGenome &m_Genome;
+            char m_szLine[c_iBuffer];
+            std::string m_strGloss;
+            size_t m_iLine;
+        };
 
-	size_t GetNodes( ) const {
+        COntologyImpl(const std::string &strID) : m_strID(strID), m_iNodes(0), m_aNodes(NULL) {}
 
-		return m_iNodes; }
+        ~COntologyImpl() {
 
-	size_t GetParents( size_t iNode ) const {
+            Reset();
+        }
 
-		return m_aNodes[ iNode ].m_iParents; }
+        size_t GetNode(const std::string &) const;
 
-	size_t GetParent( size_t iNode, size_t iParent ) const {
+        bool IsAnnotated(size_t, const CGene &, bool) const;
 
-		return m_aNodes[ iNode ].m_aiParents[ iParent ]; }
+        const CGene &GetGene(size_t, size_t) const;
 
-	size_t GetChildren( size_t iNode ) const {
+        void GetGeneNames(std::vector <std::string> &) const;
 
-		return m_aNodes[ iNode ].m_iChildren; }
+        void Reset();
 
-	size_t GetChild( size_t iNode, size_t iChild ) const {
+        void CollectGenes(size_t, TSetPGenes &);
 
-		return m_aNodes[ iNode ].m_aiChildren[ iChild ]; }
+        void TermFinder(const CGenes &, std::vector <STermFound> &, bool, bool, bool, float, const CGenes *) const;
 
-	size_t GetGenes( size_t iNode, bool fKids ) const {
-		size_t	iRet;
+        size_t GetNodes() const {
 
-		iRet = m_aNodes[ iNode ].m_iGenes;
-		if( fKids ) {
-			CollectGenes( iNode );
-			iRet += m_aNodes[ iNode ].m_iCacheGenes; }
+            return m_iNodes;
+        }
 
-		return iRet; }
+        size_t GetParents(size_t iNode) const {
 
-	const std::string& GetID( ) const {
+            return m_aNodes[iNode].m_iParents;
+        }
 
-		return m_strID; }
+        size_t GetParent(size_t iNode, size_t iParent) const {
 
-	const std::string& GetID( size_t iNode ) const {
+            return m_aNodes[iNode].m_aiParents[iParent];
+        }
 
-		return m_aNodes[ iNode ].m_strID; }
+        size_t GetChildren(size_t iNode) const {
 
-	const std::string& GetGloss( size_t iNode ) const {
+            return m_aNodes[iNode].m_iChildren;
+        }
 
-		return m_aNodes[ iNode ].m_strGloss; }
+        size_t GetChild(size_t iNode, size_t iChild) const {
 
-	void CollectGenes( size_t iNode ) const {
-		TSetPGenes	setpGenes;
+            return m_aNodes[iNode].m_aiChildren[iChild];
+        }
 
-		if( m_aNodes[ iNode ].m_iCacheGenes == -1 )
-			((COntologyImpl*)this)->CollectGenes( iNode, setpGenes ); }
+        size_t GetGenes(size_t iNode, bool fKids) const {
+            size_t iRet;
 
-	bool GetChildren( size_t iNode, std::set<size_t>& setiChildren ) const {
-		size_t	i, iChild;
+            iRet = m_aNodes[iNode].m_iGenes;
+            if (fKids) {
+                CollectGenes(iNode);
+                iRet += m_aNodes[iNode].m_iCacheGenes;
+            }
 
-		if( setiChildren.find( iNode ) != setiChildren.end( ) )
-			return true;
+            return iRet;
+        }
 
-		for( i = 0; i < GetChildren( iNode ); ++i ) {
-			if( !GetChildren( iChild = GetChild( iNode, i ), setiChildren ) )
-				return false;
-			setiChildren.insert( iChild ); }
+        const std::string &GetID() const {
 
-		return true; }
+            return m_strID;
+        }
 
-	bool GetParents( size_t iNode, std::set<size_t>& setiParents ) const {
-		size_t	i, iParent;
+        const std::string &GetID(size_t iNode) const {
 
-		if( setiParents.find( iNode ) != setiParents.end( ) )
-			return true;
+            return m_aNodes[iNode].m_strID;
+        }
 
-		for( i = 0; i < GetParents( iNode ); ++i ) {
-			if( !GetParents( iParent = GetParent( iNode, i ), setiParents ) )
-				return false;
-			setiParents.insert( iParent ); }
+        const std::string &GetGloss(size_t iNode) const {
 
-		return true; }
+            return m_aNodes[iNode].m_strGloss;
+        }
 
-	const IOntology*	m_pOntology;
-	std::string			m_strID;
-	size_t				m_iNodes;
-	TMapStrI			m_mapNodes;
-	SNode*				m_aNodes;
-};
+        void CollectGenes(size_t iNode) const {
+            TSetPGenes setpGenes;
 
-class COntologyKEGGImpl : protected COntologyImpl {
-protected:
-	static const char	c_szKEGG[];
-	static const char	c_szEntry[];
-	static const char	c_szName[];
-	static const char	c_szDefinition[];
-	static const char	c_szClass[];
-	static const char	c_szPath[];
-	static const char	c_szReference[];
-	static const char	c_szDisease[];
-	static const char	c_szPathway[];
-	static const char	c_szModule[];
-	static const char	c_szBR[];
-	static const char	c_szDBLinks[];
-	static const char	c_szGenes[];
-	static const char	c_szEnd[];
-	static const size_t	c_iKEGG		= 10000;
+            if (m_aNodes[iNode].m_iCacheGenes == -1)
+                ((COntologyImpl *) this)->CollectGenes(iNode, setpGenes);
+        }
 
-	struct SParserKEGG : SParser {
-		SParserKEGG( std::istream&, CGenome&, const std::string&, bool fSynonyms );
+        bool GetChildren(size_t iNode, std::set <size_t> &setiChildren) const {
+            size_t i, iChild;
 
-		void Reset( );
+            if (setiChildren.find(iNode) != setiChildren.end())
+                return true;
 
-		const std::string&					m_strOrganism;
-		bool								m_fOrganism;
-		bool								m_fPathing;
-		bool								m_fSynonyms;
-		std::vector<CGene*>					m_vecpGenes;
-		std::vector<std::string>			m_vecstrIDs;
-		std::map<std::string,std::string>	m_mapGlosses;
-	};
+            for (i = 0; i < GetChildren(iNode); ++i) {
+                if (!GetChildren(iChild = GetChild(iNode, i), setiChildren))
+                    return false;
+                setiChildren.insert(iChild);
+            }
 
-	COntologyKEGGImpl( );
+            return true;
+        }
 
-	bool Open( SParserKEGG& );
-	bool OpenEntry( SParserKEGG& );
-	bool OpenReferences( SParserKEGG& );
-	bool OpenReference( SParserKEGG& );
-	bool OpenName( SParserKEGG& );
-	bool OpenDisease( SParserKEGG& );
-	bool OpenPathway( SParserKEGG& );
-	bool OpenModule( SParserKEGG& );
-	bool OpenDefinition( SParserKEGG& );
-	bool OpenClass( SParserKEGG& );
-	bool OpenDBLinks( SParserKEGG& );
-	bool OpenGenes( SParserKEGG& );
-	bool OpenOrganism( SParserKEGG& );
-	char* OpenGene( SParserKEGG&, char* );
-	bool OpenEnd( SParserKEGG& );
-	bool OpenGloss( SParserKEGG& );
-};
+        bool GetParents(size_t iNode, std::set <size_t> &setiParents) const {
+            size_t i, iParent;
 
-class COntologyOBOImpl : protected COntologyImpl {
-protected:
-	static const char	c_szAltID[];
-	static const char	c_szOBO[];
-	static const char	c_szHUMAN[];
-	static const char	c_szID[];
-	static const char	c_szIsA[];
-	static const char	c_szIsObsolete[];
-	static const char	c_szName[];
-	static const char	c_szNamespace[];
-	static const char	c_szNOT[];
-	static const char	c_szPartOf[];
-	static const char	c_szRelationship[];
-	static const char	c_szSGD[];
-	static const char	c_szTerm[];
-	
-	struct SParserOBO : SParser {
-		typedef std::set<const CGene*>	TSetPGene;
+            if (setiParents.find(iNode) != setiParents.end())
+                return true;
 
-		SParserOBO( std::istream&, CGenome&, bool = false, bool = false );
+            for (i = 0; i < GetParents(iNode); ++i) {
+                if (!GetParents(iParent = GetParent(iNode, i), setiParents))
+                    return false;
+                setiParents.insert(iParent);
+            }
 
-		void Reset( );
+            return true;
+        }
 
-		const char*					m_szTarget;
-		std::vector<std::vector<std::string> >	m_vecvecstrParents;
-		bool						m_fObsolete;
-		bool						m_fDBIDs;
-		bool						m_fSynonyms;
-		std::string					m_strNamespace;
-		std::vector<std::string>	m_vecstrIDs;
-		std::vector<SNode>			m_vecNodes;
-		std::vector<TSetPGene>		m_vecsetpGenes;
-	};
+        const IOntology *m_pOntology;
+        std::string m_strID;
+        size_t m_iNodes;
+        TMapStrI m_mapNodes;
+        SNode *m_aNodes;
+    };
 
-	COntologyOBOImpl( );
-	
-	bool OpenOntology( SParserOBO& );
-	bool OpenHeader( SParserOBO& );
-	bool OpenBlock( SParserOBO& );
-	bool OpenTerm( SParserOBO& );
-	bool OpenID( SParserOBO& );
-	bool OpenName( SParserOBO& );
-	bool OpenNamespace( SParserOBO& );
-	bool OpenRelationship( SParserOBO& );
-	bool OpenParent( SParserOBO& );
-	bool OpenAltID( SParserOBO& );
-	bool OpenObsolete( SParserOBO& );
-	bool OpenGenes( SParserOBO& );
-	bool OpenGene( SParserOBO& );
-};
+    class COntologyKEGGImpl : protected COntologyImpl {
+    protected:
+        static const char c_szKEGG[];
+        static const char c_szEntry[];
+        static const char c_szName[];
+        static const char c_szDefinition[];
+        static const char c_szClass[];
+        static const char c_szPath[];
+        static const char c_szReference[];
+        static const char c_szDisease[];
+        static const char c_szPathway[];
+        static const char c_szModule[];
+        static const char c_szBR[];
+        static const char c_szDBLinks[];
+        static const char c_szGenes[];
+        static const char c_szEnd[];
+        static const size_t c_iKEGG = 10000;
 
-class COntologyMIPSImpl : protected COntologyImpl {
-protected:
-	static const char	c_szMIPS[];
+        struct SParserKEGG : SParser {
+            SParserKEGG(std::istream &, CGenome &, const std::string &, bool fSynonyms);
 
-	struct SParserMIPS : SParser {
-		SParserMIPS( std::istream&, CGenome& );
+            void Reset();
 
-		std::vector<size_t>						m_veciParents;
-		std::vector<std::string>				m_vecstrIDs;
-		std::vector<std::string>				m_vecstrGlosses;
-		std::stack<size_t>						m_stakiHier;
-		std::vector<std::vector<const CGene*> >	m_vecpGenes;
-	};
+            const std::string &m_strOrganism;
+            bool m_fOrganism;
+            bool m_fPathing{};
+            bool m_fSynonyms;
+            std::vector<CGene *> m_vecpGenes;
+            std::vector <std::string> m_vecstrIDs;
+            std::map <std::string, std::string> m_mapGlosses;
+        };
 
-	COntologyMIPSImpl( );
+        COntologyKEGGImpl();
 
-	bool OpenOntology( SParserMIPS& );
-	bool OpenCategory( SParserMIPS& );
-	size_t OpenID( SParserMIPS& );
-	bool OpenGenes( SParserMIPS& );
-	bool OpenGene( SParserMIPS& );
-};
+        bool Open(SParserKEGG &);
 
-class CSlimImpl : protected CFile {
-protected:
-	void Reset( const IOntology* );
+        static bool OpenEntry(SParserKEGG &);
 
-	std::vector<std::string>				m_vecstrSlims;
-	std::vector<std::vector<size_t> >		m_vecveciTerms;
-	std::vector<std::vector<const CGene*> >	m_vecvecpGenes;
-	const IOntology*						m_pOntology;
-};
+        static bool OpenReferences(SParserKEGG &);
+
+        static bool OpenReference(SParserKEGG &);
+
+        static bool OpenName(SParserKEGG &);
+
+        static bool OpenDisease(SParserKEGG &);
+
+        static bool OpenPathway(SParserKEGG &);
+
+        bool OpenModule(SParserKEGG &);
+
+        bool OpenDefinition(SParserKEGG &);
+
+        bool OpenClass(SParserKEGG &);
+
+        bool OpenDBLinks(SParserKEGG &);
+
+        bool OpenGenes(SParserKEGG &);
+
+        bool OpenOrganism(SParserKEGG &);
+
+        char *OpenGene(SParserKEGG &, char *);
+
+        bool OpenEnd(SParserKEGG &);
+
+        bool OpenGloss(SParserKEGG &);
+    };
+
+    class COntologyOBOImpl : protected COntologyImpl {
+    protected:
+        static const char c_szAltID[];
+        static const char c_szOBO[];
+        static const char c_szHUMAN[];
+        static const char c_szID[];
+        static const char c_szIsA[];
+        static const char c_szIsObsolete[];
+        static const char c_szName[];
+        static const char c_szNamespace[];
+        static const char c_szNOT[];
+        static const char c_szPartOf[];
+        static const char c_szRelationship[];
+        static const char c_szSGD[];
+        static const char c_szTerm[];
+
+        struct SParserOBO : SParser {
+            typedef std::set<const CGene *> TSetPGene;
+
+            SParserOBO(std::istream &, CGenome &, bool = false, bool = false);
+
+            void Reset();
+
+            const char *m_szTarget;
+            std::vector <std::vector<std::string>> m_vecvecstrParents;
+            bool m_fObsolete;
+            bool m_fDBIDs;
+            bool m_fSynonyms;
+            std::string m_strNamespace;
+            std::vector <std::string> m_vecstrIDs;
+            std::vector <SNode> m_vecNodes;
+            std::vector <TSetPGene> m_vecsetpGenes;
+        };
+
+        COntologyOBOImpl();
+
+        bool OpenOntology(SParserOBO &);
+
+        static bool OpenHeader(SParserOBO &);
+
+        bool OpenBlock(SParserOBO &);
+
+        bool OpenTerm(SParserOBO &);
+
+        bool OpenID(SParserOBO &);
+
+        bool OpenName(SParserOBO &);
+
+        bool OpenNamespace(SParserOBO &);
+
+        bool OpenRelationship(SParserOBO &);
+
+        bool OpenParent(SParserOBO &);
+
+        bool OpenAltID(SParserOBO &);
+
+        bool OpenObsolete(SParserOBO &);
+
+        bool OpenGenes(SParserOBO &);
+
+        bool OpenGene(SParserOBO &);
+    };
+
+    class COntologyMIPSImpl : protected COntologyImpl {
+    protected:
+        static const char c_szMIPS[];
+
+        struct SParserMIPS : SParser {
+            SParserMIPS(std::istream &, CGenome &);
+
+            std::vector <size_t> m_veciParents;
+            std::vector <std::string> m_vecstrIDs;
+            std::vector <std::string> m_vecstrGlosses;
+            std::stack <size_t> m_stakiHier;
+            std::vector <std::vector<const CGene *>> m_vecpGenes;
+        };
+
+        COntologyMIPSImpl();
+
+        bool OpenOntology(SParserMIPS &);
+
+        bool OpenCategory(SParserMIPS &);
+
+        size_t OpenID(SParserMIPS &);
+
+        bool OpenGenes(SParserMIPS &);
+
+        bool OpenGene(SParserMIPS &);
+    };
+
+    class CSlimImpl : protected CFile {
+    protected:
+        void Reset(const IOntology *);
+
+        std::vector <std::string> m_vecstrSlims;
+        std::vector <std::vector<size_t>> m_vecveciTerms;
+        std::vector <std::vector<const CGene *>> m_vecvecpGenes;
+        const IOntology *m_pOntology;
+    };
 
 }
 

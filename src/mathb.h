@@ -32,110 +32,117 @@ namespace Sleipnir {
  * \brief
  * Utility class containing static basic math functions.
  */
-class CMath : CMathImpl {
-public:
-	static double LogFact( size_t iN );
+    class CMath : CMathImpl {
+    public:
+        static double LogFact(size_t iN);
 
-	/*!
-	 * \brief
-	 * Calculates the sigmoid function with the given parameters.
-	 * 
-	 * \param dHeight
-	 * Height (multiplier) of sigmoid.
-	 * 
-	 * \param dShift
-	 * Horizontal shift (difference) of sigmoid.
-	 * 
-	 * \param dSlope
-	 * Slope (sharpness) of sigmoid.
-	 * 
-	 * \param dVertical
-	 * Vertical shift (constant addend) of sigmoid.
-	 * 
-	 * \param dX
-	 * Point at which sigmoid should be evaluated.
-	 * 
-	 * \returns
-	 * dVertical + (dHeight / (1 + exp(-dSlope * (dX - dShift))))
-	 */
-	static double Sigmoid( double dHeight, double dShift, double dSlope, double dVertical, double dX ) {
+        /*!
+         * \brief
+         * Calculates the sigmoid function with the given parameters.
+         *
+         * \param dHeight
+         * Height (multiplier) of sigmoid.
+         *
+         * \param dShift
+         * Horizontal shift (difference) of sigmoid.
+         *
+         * \param dSlope
+         * Slope (sharpness) of sigmoid.
+         *
+         * \param dVertical
+         * Vertical shift (constant addend) of sigmoid.
+         *
+         * \param dX
+         * Point at which sigmoid should be evaluated.
+         *
+         * \returns
+         * dVertical + (dHeight / (1 + exp(-dSlope * (dX - dShift))))
+         */
+        static double Sigmoid(double dHeight, double dShift, double dSlope, double dVertical, double dX) {
 
-		return ( dVertical + ( dHeight / ( 1 + exp( -dSlope * ( dX - dShift ) ) ) ) ); }
+            return (dVertical + (dHeight / (1 + exp(-dSlope * (dX - dShift)))));
+        }
 
-	/*!
-	 * \brief
-	 * Return greatest common denominator of A and B.
-	 * 
-	 * \param iA
-	 * First integer.
-	 * 
-	 * \param iB
-	 * Second integer.
-	 * 
-	 * \returns
-	 * Greatest common denominator of A and B.
-	 * 
-	 * \remarks
-	 * Mmm, Euclid's algorithm.
-	 */
-	static size_t GCD( size_t iA, size_t iB ) {
-		size_t	i;
+        /*!
+         * \brief
+         * Return greatest common denominator of A and B.
+         *
+         * \param iA
+         * First integer.
+         *
+         * \param iB
+         * Second integer.
+         *
+         * \returns
+         * Greatest common denominator of A and B.
+         *
+         * \remarks
+         * Mmm, Euclid's algorithm.
+         */
+        static size_t GCD(size_t iA, size_t iB) {
+            size_t i;
 
-		while( iB ) {
-			i = iA;
-			iA = iB;
-			iB = i % iB; }
+            while (iB) {
+                i = iA;
+                iA = iB;
+                iB = i % iB;
+            }
 
-		return iA; }
+            return iA;
+        }
 
-	/*!
-	 * \brief
-	 * Return given value rounded to the nearest unsigned integer.
-	 * 
-	 * \param d
-	 * Floating point value to round.
-	 * 
-	 * \returns
-	 * Given value rounded to the nearest unsigned integer.
-	 * 
-	 * \remarks
-	 * Calculated as the floor of the given value plus 0.5.  It would be peachy if Microsoft would get on
-	 * top of C99 and implement round correctly...
-	 */
-	static size_t Round( double d ) {
+        /*!
+         * \brief
+         * Return given value rounded to the nearest unsigned integer.
+         *
+         * \param d
+         * Floating point value to round.
+         *
+         * \returns
+         * Given value rounded to the nearest unsigned integer.
+         *
+         * \remarks
+         * Calculated as the floor of the given value plus 0.5.  It would be peachy if Microsoft would get on
+         * top of C99 and implement round correctly...
+         */
+        static size_t Round(double d) {
 
-		return (size_t)floor( d + 0.5 ); }
+            return (size_t) floor(d + 0.5);
+        }
 
-	template<class tType, class tIter>
-	static bool LeastSquares( const tIter BeginY, const tIter EndY, const tIter BeginX, const tIter EndX,
-		tType& Alpha, tType& Beta, bool fAlpha = true ) {
-		tIter	CurX, CurY;
-		tType	AveX, AveY, AveXY, AveX2, Tmp;
-		size_t	iN;
+        template<class tType, class tIter>
+        static bool LeastSquares(const tIter BeginY, const tIter EndY, const tIter BeginX, const tIter EndX,
+                                 tType &Alpha, tType &Beta, bool fAlpha = true) {
+            tIter CurX, CurY;
+            tType AveX, AveY, AveXY, AveX2, Tmp;
+            size_t iN;
 
-		AveX = AveY = AveXY = AveX2 = 0;
-		for( iN = 0,CurX = BeginX,CurY = BeginY; ( CurX != EndX ) && ( CurY != EndY ); ++CurX,++CurY,++iN ) {
-			AveX += *CurX;
-			AveY += *CurY;
-			AveXY += *CurX * *CurY;
-			AveX2 += *CurX * *CurX; }
-		if( !iN )
-			return false;
-		if( !fAlpha ) {
-			Beta = AveXY / AveX2;
-			return ( AveX2 != 0 ); }
-		AveX /= iN;
-		AveX2 /= iN;
-		Tmp = AveX * AveX;
-		if( Tmp == AveX2 )
-			return false;
-		AveY /= iN;
-		AveXY /= iN;
+            AveX = AveY = AveXY = AveX2 = 0;
+            for (iN = 0, CurX = BeginX, CurY = BeginY; (CurX != EndX) && (CurY != EndY); ++CurX, ++CurY, ++iN) {
+                AveX += *CurX;
+                AveY += *CurY;
+                AveXY += *CurX * *CurY;
+                AveX2 += *CurX * *CurX;
+            }
+            if (!iN)
+                return false;
+            if (!fAlpha) {
+                Beta = AveXY / AveX2;
+                return (AveX2 != 0);
+            }
+            AveX /= iN;
+            AveX2 /= iN;
+            Tmp = AveX * AveX;
+            if (Tmp == AveX2)
+                return false;
+            AveY /= iN;
+            AveXY /= iN;
 
-		Beta = ( AveXY - ( AveX * AveY ) ) / ( AveX2 - Tmp );
-		Alpha = AveY - ( Beta * AveX );
-		return true; }
-};
+            Beta = (AveXY - (AveX * AveY)) / (AveX2 - Tmp);
+            Alpha = AveY - (Beta * AveX);
+            return true;
+        }
+    };
 
 }
 

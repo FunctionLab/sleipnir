@@ -28,22 +28,25 @@
 
 #include "metai.h"
 #include "stdio.h"
+
 #ifdef _MSC_VER
 #include <windows.h>
 #include <winsock.h>
 #else // _MSC_VER
+
 #include <stdarg.h>
 #include <sys/time.h>
 
-#define _finite	isfinite
+#define _finite    isfinite
 
-typedef size_t	HANDLE;
+typedef size_t HANDLE;
 
-inline int sprintf_s( char* szDest, const char* szFormat, ... ) {
+inline int sprintf_s(char *szDest, const char *szFormat, ...) {
     va_list valArgs;
 
-    va_start( valArgs, szFormat );
-    return vsprintf( szDest, szFormat, valArgs ); }
+    va_start(valArgs, szFormat);
+    return vsprintf(szDest, szFormat, valArgs);
+}
 
 #if !defined(__PIC__) && defined(__GLIBC__) && defined(__GTHREAD_HAS_COND)
 asm(".globl pthread_cond_wait");
@@ -52,10 +55,10 @@ asm(".globl pthread_cond_broadcast");
 #endif // _MSC_VER
 
 #ifndef ARRAYSIZE
-#define ARRAYSIZE(a)	(sizeof(a)/sizeof(*a))
+#define ARRAYSIZE(a)    (sizeof(a)/sizeof(*a))
 #endif // ARRAYSIZE
 #ifndef SIZE_MAX
-#define SIZE_MAX		((size_t)-1)
+#define SIZE_MAX        ((size_t)-1)
 #endif // SIZE_MAX
 
 namespace Sleipnir {
@@ -70,360 +73,375 @@ namespace Sleipnir {
  * for testing).  Most other methods in CMeta are generic utilities for string manipulation and a few
  * operating system abstractions (particularly memory mapping).
  */
-class CMeta : CMetaImpl {
-public:
-	/*!
-	 * \brief
-	 * String constant containing basic whitespace characters: space, tab, newline, return.
-	 */
-	static const char	c_szWS[];
+    class CMeta : CMetaImpl {
+    public:
+        /*!
+         * \brief
+         * String constant containing basic whitespace characters: space, tab, newline, return.
+         */
+        static const char c_szWS[];
 
-	static std::string Filename( const std::string& strString, char cReplacement = '_' );
-	static std::string Basename( const char* szPath );
-	static void Tokenize( const char* szString, std::vector<std::string>& vecstrTokens,
-		const char* szSeparators = "\t", bool fNoEmpties = false );
-	static std::string Trim( const char* szString );
-	static bool MapRead( unsigned char*& pbData, HANDLE& hndlMap, size_t& iSize, const char* szFile );
-	static bool MapWrite( unsigned char*& pbData, HANDLE& hndlMap, size_t iSize, const char* szFile );
-	static void Unmap( const unsigned char* pbData, HANDLE hndlMap, size_t iSize );
-	static size_t GetMemoryUsage( );
+        static std::string Filename(const std::string &strString, char cReplacement = '_');
 
-	/*!
-	 * \brief
-	 * Return true if the given value represents a missing value.
-	 * 
-	 * \param Value
-	 * Value to test.
-	 * 
-	 * \returns
-	 * True if the given value represents a missing value.
-	 * 
-	 * \remarks
-	 * Returns true for either infinite or not-a-number (NaN) values, the latter of which is used as
-	 * a standard missing value marker.  Templated to work with either doubles or floats, although the
-	 * latter are more standard.  Used since == isn't reliable for NaN.
-	 * 
-	 * \see
-	 * GetNaN
-	 */
-	template<class tType>
-	static bool IsNaN( tType Value ) {
+        static std::string Basename(const char *szPath);
+
+        static void Tokenize(const char *szString, std::vector <std::string> &vecstrTokens,
+                             const char *szSeparators = "\t", bool fNoEmpties = false);
+
+        static std::string Trim(const char *szString);
+
+        static bool MapRead(unsigned char *&pbData, HANDLE &hndlMap, size_t &iSize, const char *szFile);
+
+        static bool MapWrite(unsigned char *&pbData, HANDLE &hndlMap, size_t iSize, const char *szFile);
+
+        static void Unmap(const unsigned char *pbData, HANDLE hndlMap, size_t iSize);
+
+        static size_t GetMemoryUsage();
+
+        /*!
+         * \brief
+         * Return true if the given value represents a missing value.
+         *
+         * \param Value
+         * Value to test.
+         *
+         * \returns
+         * True if the given value represents a missing value.
+         *
+         * \remarks
+         * Returns true for either infinite or not-a-number (NaN) values, the latter of which is used as
+         * a standard missing value marker.  Templated to work with either doubles or floats, although the
+         * latter are more standard.  Used since == isn't reliable for NaN.
+         *
+         * \see
+         * GetNaN
+         */
+        template<class tType>
+        static bool IsNaN(tType Value) {
 
 
-		return !_finite( Value ); }
+            return !_finite(Value);
+        }
 
-	/*!
-	 * \brief
-	 * Return a standard missing value marker.
-	 * 
-	 * \returns
-	 * Standard missing value marker.
-	 * 
-	 * \remarks
-	 * Should be used anywhere a missing value is required, e.g. CPCL or CDat.
-	 * 
-	 * \see
-	 * IsNaN
-	 */
-	static float GetNaN( ) {
+        /*!
+         * \brief
+         * Return a standard missing value marker.
+         *
+         * \returns
+         * Standard missing value marker.
+         *
+         * \remarks
+         * Should be used anywhere a missing value is required, e.g. CPCL or CDat.
+         *
+         * \see
+         * IsNaN
+         */
+        static float GetNaN() {
 
-		return (float)HUGE_VAL; }
+            return (float) HUGE_VAL;
+        }
 
-	/*!
-	 * \brief
-	 * Given a filename, remove the file type extension (if any).
-	 * 
-	 * \param strName
-	 * Filename to be de-extensioned.
-	 * 
-	 * \returns
-	 * Filename without the trailing extension.
-	 * 
-	 * \remarks
-	 * Actually removes anything after the last . in the given string.
-	 */
-	static std::string Deextension( const std::string& strName ) {
-		size_t	i;
+        /*!
+         * \brief
+         * Given a filename, remove the file type extension (if any).
+         *
+         * \param strName
+         * Filename to be de-extensioned.
+         *
+         * \returns
+         * Filename without the trailing extension.
+         *
+         * \remarks
+         * Actually removes anything after the last . in the given string.
+         */
+        static std::string Deextension(const std::string &strName) {
+            size_t i;
 
-		return ( ( ( i = strName.rfind( c_cPeriod ) ) == std::string::npos ) ? strName :
-			strName.substr( 0, i ) ); }
+            return (((i = strName.rfind(c_cPeriod)) == std::string::npos) ? strName :
+                    strName.substr(0, i));
+        }
 
-	/*!
-	 * \brief
-	 * Reorder a given item list based on a target ordering.
-	 * 
-	 * \param Items
-	 * Iterator over items to be reordered.
-	 * 
-	 * \param veciOrder
-	 * Indices at which each item should be placed.
-	 * 
-	 * Reorders a list of items based on a list of target indices.  For example, suppose the input list is
-	 * [A, B, C] and the target order is [1, 0, 2].  Then after permutation, the vector of items will
-	 * contain [B, A, C].  The reordering is done without copying more than one element at a time.
-	 */
-	template <class tIterator>
-	static void Permute( tIterator Items, const std::vector<size_t>& veciOrder ) {
-		std::vector<size_t>						veciMap, veciCopy;
-		size_t									i;
-		  typename iterator_traits<tIterator>::value_type	Temp;
+        /*!
+         * \brief
+         * Reorder a given item list based on a target ordering.
+         *
+         * \param Items
+         * Iterator over items to be reordered.
+         *
+         * \param veciOrder
+         * Indices at which each item should be placed.
+         *
+         * Reorders a list of items based on a list of target indices.  For example, suppose the input list is
+         * [A, B, C] and the target order is [1, 0, 2].  Then after permutation, the vector of items will
+         * contain [B, A, C].  The reordering is done without copying more than one element at a time.
+         */
+        template<class tIterator>
+        static void Permute(tIterator Items, const std::vector <size_t> &veciOrder) {
+            std::vector <size_t> veciMap, veciCopy;
+            size_t i;
+            typename iterator_traits<tIterator>::value_type Temp;
 
-		veciCopy.resize( veciOrder.size( ) );
-		veciMap.resize( veciOrder.size( ) );
-		for( i = 0; i < veciOrder.size( ); ++i ) {
-			veciCopy[ i ] = veciOrder[ i ];
-			veciMap[ veciOrder[ i ] ] = i; }
+            veciCopy.resize(veciOrder.size());
+            veciMap.resize(veciOrder.size());
+            for (i = 0; i < veciOrder.size(); ++i) {
+                veciCopy[i] = veciOrder[i];
+                veciMap[veciOrder[i]] = i;
+            }
 
-		for( i = 0; i < veciOrder.size( ); ++i ) {
-			if( veciCopy[ i ] == i )
-				continue;
-			Temp = Items[ i ];
-			Items[ i ] = Items[ veciCopy[ i ] ];
-			Items[ veciCopy[ i ] ] = Temp;
-			veciCopy[ veciMap[ i ] ] = veciCopy[ i ];
-			veciMap[ veciCopy[ i ] ] = veciMap[ i ]; } }
+            for (i = 0; i < veciOrder.size(); ++i) {
+                if (veciCopy[i] == i)
+                    continue;
+                Temp = Items[i];
+                Items[i] = Items[veciCopy[i]];
+                Items[veciCopy[i]] = Temp;
+                veciCopy[veciMap[i]] = veciCopy[i];
+                veciMap[veciCopy[i]] = veciMap[i];
+            }
+        }
 
-	/*!
-	 * \brief
-	 * Reorder a given item list based on a target ordering.
-	 * 
-	 * \param vecItems
-	 * Vector of items to be reordered.
-	 * 
-	 * \param veciOrder
-	 * Indices at which each item should be placed.
-	 * 
-	 * Reorders a list of items based on a list of target indices.  For example, suppose the input list is
-	 * [A, B, C] and the target order is [1, 0, 2].  Then after permutation, the vector of items will
-	 * contain [B, A, C].  The reordering is done without copying more than one element at a time.
-	 * 
-	 * \remarks
-	 * I'm not smart enough to get this to work seamlessly with both arrays and vectors, so this is my
-	 * compromise.  Crazy STL and iterators...
-	 */
-	template <class tType>
-	static void Permute( std::vector<tType>& vecItems, const std::vector<size_t>& veciOrder ) {
+        /*!
+         * \brief
+         * Reorder a given item list based on a target ordering.
+         *
+         * \param vecItems
+         * Vector of items to be reordered.
+         *
+         * \param veciOrder
+         * Indices at which each item should be placed.
+         *
+         * Reorders a list of items based on a list of target indices.  For example, suppose the input list is
+         * [A, B, C] and the target order is [1, 0, 2].  Then after permutation, the vector of items will
+         * contain [B, A, C].  The reordering is done without copying more than one element at a time.
+         *
+         * \remarks
+         * I'm not smart enough to get this to work seamlessly with both arrays and vectors, so this is my
+         * compromise.  Crazy STL and iterators...
+         */
+        template<class tType>
+        static void Permute(std::vector <tType> &vecItems, const std::vector <size_t> &veciOrder) {
 
-		Permute( vecItems.begin( ), veciOrder ); }
+            Permute(vecItems.begin(), veciOrder);
+        }
 
-	/*!
-	 * \brief
-	 * Discretize a given continuous value based on a vector of bin edges.
-	 * 
-	 * \param Value
-	 * Continuous value to be discretized.
-	 * 
-	 * \param vecQuants
-	 * Bin edges used to discretize the given value.
-	 * 
-	 * \returns
-	 * Discretized value based on the given bin edges.
-	 * 
-	 * Given N bin edges, the continuous value will be discretized into the range [0, N-1] depending on
-	 * the first bin edge it is less than or equal to.  Note that this means that the last bin edge will be
-	 * ignored.  Upper bin edges are inclusive, lower bin edges are exclusive.  This means that for bins
-	 * [-0.1, 0.3, 0.6], the given value will be discretized into one of three outputs:
-	 * - 0, corresponding to values less than or equal to -0.1.
-	 * - 1, corresponding to values greater than -0.1 but less than or equal to 0.3.
-	 * - 2, corresponding to values greater than 0.3.
-	 * 
-	 * \see
-	 * CDataPair
-	 */
-	template <class tType>
-	static size_t Quantize( tType Value, const std::vector<tType>& vecQuants ) {
+        /*!
+         * \brief
+         * Discretize a given continuous value based on a vector of bin edges.
+         *
+         * \param Value
+         * Continuous value to be discretized.
+         *
+         * \param vecQuants
+         * Bin edges used to discretize the given value.
+         *
+         * \returns
+         * Discretized value based on the given bin edges.
+         *
+         * Given N bin edges, the continuous value will be discretized into the range [0, N-1] depending on
+         * the first bin edge it is less than or equal to.  Note that this means that the last bin edge will be
+         * ignored.  Upper bin edges are inclusive, lower bin edges are exclusive.  This means that for bins
+         * [-0.1, 0.3, 0.6], the given value will be discretized into one of three outputs:
+         * - 0, corresponding to values less than or equal to -0.1.
+         * - 1, corresponding to values greater than -0.1 but less than or equal to 0.3.
+         * - 2, corresponding to values greater than 0.3.
+         *
+         * \see
+         * CDataPair
+         */
+        template<class tType>
+        static size_t Quantize(tType Value, const std::vector <tType> &vecQuants) {
 
-		if( IsNaN( Value ) )
-			return -1;
+            if (IsNaN(Value))
+                return -1;
 
-		/*
-		size_t i;
-		for( i = 0; i < vecQuants.size( ); ++i )
-			if( Value <= vecQuants[ i ] )
-				break;
-		size_t r = min(i, vecQuants.size()-1);
-		return r;
-		 */
-		
-		size_t mid = vecQuants.size() / 2;
-		int i = mid;
+            /*
+            size_t i;
+            for( i = 0; i < vecQuants.size( ); ++i )
+                if( Value <= vecQuants[ i ] )
+                    break;
+            size_t r = min(i, vecQuants.size()-1);
+            return r;
+             */
 
-		if(Value <= vecQuants[i]){
-			i--;
-			//LEFT direction
-			while(i>=0){
-				if(Value <= vecQuants[i]){
-					i--;
-				}else{
-					i++;
-					break;
-				}
-			}
-			if(i==-1){
-				i = 0;
-			}
-		}else{
-			i++;
-			//RIGHT direction
-			while(i<vecQuants.size()){
-				if(Value > vecQuants[i]){
-					i++;
-				}else{
-					break;
-				}
-			}
-			if(i==vecQuants.size()){
-				i = vecQuants.size() - 1;
-			}
-		}
+            size_t mid = vecQuants.size() / 2;
+            int i = mid;
 
-		size_t ii = i;
+            if (Value <= vecQuants[i]) {
+                i--;
+                //LEFT direction
+                while (i >= 0) {
+                    if (Value <= vecQuants[i]) {
+                        i--;
+                    } else {
+                        i++;
+                        break;
+                    }
+                }
+                if (i == -1) {
+                    i = 0;
+                }
+            } else {
+                i++;
+                //RIGHT direction
+                while (i < vecQuants.size()) {
+                    if (Value > vecQuants[i]) {
+                        i++;
+                    } else {
+                        break;
+                    }
+                }
+                if (i == vecQuants.size()) {
+                    i = vecQuants.size() - 1;
+                }
+            }
 
-		return ii;
-	}
+            size_t ii = i;
 
-	/*!
-	 * \brief
-	 * Calculates the difference in microseconds between two timevals.
-	 * 
-	 * \param sBegin
-	 * Earlier timeval.
-	 * 
-	 * \param sEnd
-	 * Later timeval.
-	 * 
-	 * \returns
-	 * Difference in microseconds between later and earlier timeval.
-	 */
-	static size_t GetMicroseconds( const struct timeval& sBegin, const struct timeval& sEnd ) {
+            return ii;
+        }
 
-		return ( ( sBegin.tv_sec == sEnd.tv_sec ) ? ( sEnd.tv_usec - sBegin.tv_usec ) :
-			( ( 1000000 * ( sEnd.tv_sec - sBegin.tv_sec ) ) + sEnd.tv_usec - sBegin.tv_usec ) ); }
+        /*!
+         * \brief
+         * Calculates the difference in microseconds between two timevals.
+         *
+         * \param sBegin
+         * Earlier timeval.
+         *
+         * \param sEnd
+         * Later timeval.
+         *
+         * \returns
+         * Difference in microseconds between later and earlier timeval.
+         */
+        static size_t GetMicroseconds(const struct timeval &sBegin, const struct timeval &sEnd) {
 
-	/*!
-	 * \brief
-	 * Determines whether or not an item should be skipped (based on potential ubiquitous genes, context genes, and flags).
-	 *
-	 * \param fAnswer
-	 * The answer (pos/neg) as a boolean.
-	 *
-	 * \param i
-	 * The index of the first gene
-	 *
-	 * \param j
-	 * the index of the second gene
-	 *
-	 * \param vecfHere
-	 * A vector representing genes in the context (if any) as bool
-	 *
-	 * \param vecfUbik
-	 * A vector representing ubiquitous genes (as bool)
-	 *
-	 * \param fCtxtPos
-	 * Should within-context positives be used?
-	 *
-	 * \param fCtxtNeg
-	 * Should within-context negatives be used?
-	 *
-	 * \param fBridgePos
-	 * Should bridging positives be used?
-	 *
-	 * \param fBridgeNeg
-	 * Should bridging negatives be used?
-	 *
-	 * \param fOutPos
-	 * Should outside positives be used?
-	 *
-	 * \param fOutNeg
-	 * Should outside negatives be used?
-	 *
-	 * \returns
-	 * True if this edge should be used given these parameters.
-	 */
-	static bool SkipEdge( bool fAnswer, size_t i, size_t j, const std::vector<bool>& vecfHere, const std::vector<bool>& vecfUbik, bool fCtxtPos, bool fCtxtNeg, bool fBridgePos, bool fBridgeNeg, bool fOutPos, bool fOutNeg ) {
-	    if ( vecfHere.size( ) ) {
-		bool fIn = vecfHere[ i ] && vecfHere[ j ];
-                if( fIn ) {
-	            if ( fAnswer && !fCtxtPos ) {
-	                return true;
-		    }
-		    else if ( !fAnswer && !fCtxtNeg ) {
+            return ((sBegin.tv_sec == sEnd.tv_sec) ? (sEnd.tv_usec - sBegin.tv_usec) :
+                    ((1000000 * (sEnd.tv_sec - sBegin.tv_sec)) + sEnd.tv_usec - sBegin.tv_usec));
+        }
+
+        /*!
+         * \brief
+         * Determines whether or not an item should be skipped (based on potential ubiquitous genes, context genes, and flags).
+         *
+         * \param fAnswer
+         * The answer (pos/neg) as a boolean.
+         *
+         * \param i
+         * The index of the first gene
+         *
+         * \param j
+         * the index of the second gene
+         *
+         * \param vecfHere
+         * A vector representing genes in the context (if any) as bool
+         *
+         * \param vecfUbik
+         * A vector representing ubiquitous genes (as bool)
+         *
+         * \param fCtxtPos
+         * Should within-context positives be used?
+         *
+         * \param fCtxtNeg
+         * Should within-context negatives be used?
+         *
+         * \param fBridgePos
+         * Should bridging positives be used?
+         *
+         * \param fBridgeNeg
+         * Should bridging negatives be used?
+         *
+         * \param fOutPos
+         * Should outside positives be used?
+         *
+         * \param fOutNeg
+         * Should outside negatives be used?
+         *
+         * \returns
+         * True if this edge should be used given these parameters.
+         */
+        static bool
+        SkipEdge(bool fAnswer, size_t i, size_t j, const std::vector<bool> &vecfHere, const std::vector<bool> &vecfUbik,
+                 bool fCtxtPos, bool fCtxtNeg, bool fBridgePos, bool fBridgeNeg, bool fOutPos, bool fOutNeg) {
+            if (vecfHere.size()) {
+                bool fIn = vecfHere[i] && vecfHere[j];
+                if (fIn) {
+                    if (fAnswer && !fCtxtPos) {
                         return true;
-	            }
-	        }
-		bool fBridge;
-        	if ( vecfUbik.size( ) ) {
-		    fBridge = !fIn && ( ( vecfUbik[ i ] && vecfHere[ j ] ) || ( vecfHere[ i ] && vecfUbik[ j ] ) );
-		}
-	 	else {
-		    fBridge = ( !!vecfHere[ i ] ^ !!vecfHere[ j ] );
-		}
-		if( fBridge ) {
-		    if ( fAnswer && !fBridgePos ) {
-			return true;
-		    }
-		    else if ( !fAnswer && !fBridgeNeg ) {
-			return true;
-		    }
-		}
-		bool fOut = !( fIn || fBridge );
-		if( fOut ) {
-		    if ( fAnswer && !fOutPos) {
-			return true;
-		    }
-		    else if ( !fAnswer && !fOutNeg ) {
-			return true;
-		    }
-		}
-	    }
-	    return false;
-	}
+                    } else if (!fAnswer && !fCtxtNeg) {
+                        return true;
+                    }
+                }
+                bool fBridge;
+                if (vecfUbik.size()) {
+                    fBridge = !fIn && ((vecfUbik[i] && vecfHere[j]) || (vecfHere[i] && vecfUbik[j]));
+                } else {
+                    fBridge = (!!vecfHere[i] ^ !!vecfHere[j]);
+                }
+                if (fBridge) {
+                    if (fAnswer && !fBridgePos) {
+                        return true;
+                    } else if (!fAnswer && !fBridgeNeg) {
+                        return true;
+                    }
+                }
+                bool fOut = !(fIn || fBridge);
+                if (fOut) {
+                    if (fAnswer && !fOutPos) {
+                        return true;
+                    } else if (!fAnswer && !fOutNeg) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
 
-	/*!
-	 * \brief
-	 * Returns true if the given file path ends with the given extension.
-	 * 
-	 * \param strFile
-	 * File path (or name).
-	 * 
-	 * \param strExtension
-	 * Extension to test (including period, if desired).
-	 * 
-	 * \returns
-	 * True if the given file path ends with the given extension.
-	 */
-	static bool IsExtension( const std::string& strFile, const std::string& strExtension ) {
-		size_t	i;
+        /*!
+         * \brief
+         * Returns true if the given file path ends with the given extension.
+         *
+         * \param strFile
+         * File path (or name).
+         *
+         * \param strExtension
+         * Extension to test (including period, if desired).
+         *
+         * \returns
+         * True if the given file path ends with the given extension.
+         */
+        static bool IsExtension(const std::string &strFile, const std::string &strExtension) {
+            size_t i;
 
-		return ( ( strFile.length( ) >= strExtension.length( ) ) &&
-			( ( i = strFile.rfind( strExtension ) ) ==
-			( strFile.length( ) - strExtension.length( ) ) ) ); }
+            return ((strFile.length() >= strExtension.length()) &&
+                    ((i = strFile.rfind(strExtension)) ==
+                     (strFile.length() - strExtension.length())));
+        }
 
-	/*!
-	 * \brief
-	 * Utility constructor that initializes Sleipnir (primarily log4cpp) at construction time and performs
-	 * cleanup when destroyed.
-	 * 
-	 * \param iVerbosity
-	 * If linked with log4cpp, the verbosity level for logging.
-	 * 
-	 * \param iRandomSeed
-	 * Random seed for use with srand; if -1, the current time is used.
-	 * 
-	 * One (and only one) CMeta object should be created in a Sleipnir client's \c main function before
-	 * making any library calls.  The object will be automatically destroyed as \c main exits, guaranteeing
-	 * proper cleanup of Sleipnir (and log4cpp).
-	 * 
-	 * \remarks
-	 * If Sleipnir is configured without log4cpp, iVerbosity will be ignored.
-	 */
-	CMeta( int iVerbosity, size_t iRandomSeed = 0 );
-	/* 
-	 * \brief
-	 * Perform Sleipnir cleanup.
-	 */
-	~CMeta( );
-};
+        /*!
+         * \brief
+         * Utility constructor that initializes Sleipnir (primarily log4cpp) at construction time and performs
+         * cleanup when destroyed.
+         *
+         * \param iVerbosity
+         * If linked with log4cpp, the verbosity level for logging.
+         *
+         * \param iRandomSeed
+         * Random seed for use with srand; if -1, the current time is used.
+         *
+         * One (and only one) CMeta object should be created in a Sleipnir client's \c main function before
+         * making any library calls.  The object will be automatically destroyed as \c main exits, guaranteeing
+         * proper cleanup of Sleipnir (and log4cpp).
+         *
+         * \remarks
+         * If Sleipnir is configured without log4cpp, iVerbosity will be ignored.
+         */
+        CMeta(int iVerbosity, size_t iRandomSeed = 0);
+
+        /*
+         * \brief
+         * Perform Sleipnir cleanup.
+         */
+        ~CMeta();
+    };
 
 }
 

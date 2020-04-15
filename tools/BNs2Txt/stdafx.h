@@ -24,10 +24,12 @@
 
 #include <fstream>
 #include <iostream>
+
 using namespace std;
 
 #include "bayesnet.h"
 #include "meta.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

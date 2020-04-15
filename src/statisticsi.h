@@ -28,84 +28,100 @@
 
 namespace Sleipnir {
 
-class CStatisticsImpl : protected CMath {
-protected:
-	static double Chi2CDF( double, double, double, double );
-	static double IncompleteGamma( double, double );
-	static double Normal01CDF( double );
-	static double GammaLog( double );
-	static double IncompleteBeta( double, double, double );
-	static double IncompleteBetaCF( double, double, double );
-	static double ModifiedBesselI( size_t, double );
-	static bool MatrixLUSubstitute( CDataMatrix&, const std::vector<size_t>&, std::vector<float>& );
+    class CStatisticsImpl : protected CMath {
+    protected:
+        static double Chi2CDF(double, double, double, double);
 
-	static double EpsilonDouble( ) {
-		double	dRet;
+        static double IncompleteGamma(double, double);
 
-		for( dRet = 1; 1 < ( 1 + dRet ); dRet /= 2 );
+        static double Normal01CDF(double);
 
-		return ( 2 * dRet ); }
+        static double GammaLog(double);
 
-	static bool MatrixMultiply( const std::vector<float>& vecdLeft, const CDataMatrix& MatRight,
-		std::vector<float>& vecdOut ) {
-		size_t	i, j;
+        static double IncompleteBeta(double, double, double);
 
-		if( vecdLeft.size( ) != MatRight.GetRows( ) )
-			return false;
+        static double IncompleteBetaCF(double, double, double);
 
-		vecdOut.resize( MatRight.GetColumns( ) );
-		for( i = 0; i < vecdOut.size( ); ++i ) {
-			vecdOut[ i ] = 0;
-			for( j = 0; j < vecdLeft.size( ); ++j )
-				vecdOut[ i ] += vecdLeft[ j ] * MatRight.Get( j, i ); }
+        static double ModifiedBesselI(size_t, double);
 
-		return true; }
+        static bool MatrixLUSubstitute(CDataMatrix &, const std::vector <size_t> &, std::vector<float> &);
 
-	static double MatrixMultiply( const std::vector<float>& vecdLeft, const std::vector<float>& vecdRight ) {
-		size_t	i;
-		double	dRet;
+        static double EpsilonDouble() {
+            double dRet;
 
-		if( vecdLeft.size( ) != vecdRight.size( ) )
-			return CMeta::GetNaN( );
+            for (dRet = 1; 1 < (1 + dRet); dRet /= 2);
 
-		for( dRet = 0,i = 0; i < vecdLeft.size( ); ++i )
-			dRet += vecdLeft[ i ] * vecdRight[ i ];
+            return (2 * dRet);
+        }
 
-		return dRet; }
+        static bool MatrixMultiply(const std::vector<float> &vecdLeft, const CDataMatrix &MatRight,
+                                   std::vector<float> &vecdOut) {
+            size_t i, j;
 
-	template<class tType>
-	static bool SumsSkip( tType Value ) {
+            if (vecdLeft.size() != MatRight.GetRows())
+                return false;
 
-		return false; }
+            vecdOut.resize(MatRight.GetColumns());
+            for (i = 0; i < vecdOut.size(); ++i) {
+                vecdOut[i] = 0;
+                for (j = 0; j < vecdLeft.size(); ++j)
+                    vecdOut[i] += vecdLeft[j] * MatRight.Get(j, i);
+            }
 
-	static bool SumsSkip( float dValue ) {
+            return true;
+        }
 
-		return CMeta::IsNaN( dValue ); }
+        static double MatrixMultiply(const std::vector<float> &vecdLeft, const std::vector<float> &vecdRight) {
+            size_t i;
+            double dRet;
 
-	static bool SumsSkip( double dValue ) {
+            if (vecdLeft.size() != vecdRight.size())
+                return CMeta::GetNaN();
 
-		return CMeta::IsNaN( dValue ); }
+            for (dRet = 0, i = 0; i < vecdLeft.size(); ++i)
+                dRet += vecdLeft[i] * vecdRight[i];
 
-	template<class tType>
-	static void Sums( tType Begin, tType End, double* pdSum, double* pdSumSq, size_t* piN ) {
-		tType	Cur;
+            return dRet;
+        }
 
-		if( pdSum )
-			*pdSum = 0;
-		if( pdSumSq )
-			*pdSumSq = 0;
-		if( piN )
-			*piN = 0;
-		for( Cur = Begin; Cur != End; ++Cur ) {
-			if( SumsSkip( *Cur ) )
-				continue;
-			if( piN )
-				*piN += 1;
-			if( pdSum )
-				*pdSum += *Cur;
-			if( pdSumSq )
-				*pdSumSq += *Cur * *Cur; } }
-};
+        template<class tType>
+        static bool SumsSkip(tType Value) {
+
+            return false;
+        }
+
+        static bool SumsSkip(float dValue) {
+
+            return CMeta::IsNaN(dValue);
+        }
+
+        static bool SumsSkip(double dValue) {
+
+            return CMeta::IsNaN(dValue);
+        }
+
+        template<class tType>
+        static void Sums(tType Begin, tType End, double *pdSum, double *pdSumSq, size_t *piN) {
+            tType Cur;
+
+            if (pdSum)
+                *pdSum = 0;
+            if (pdSumSq)
+                *pdSumSq = 0;
+            if (piN)
+                *piN = 0;
+            for (Cur = Begin; Cur != End; ++Cur) {
+                if (SumsSkip(*Cur))
+                    continue;
+                if (piN)
+                    *piN += 1;
+                if (pdSum)
+                    *pdSum += *Cur;
+                if (pdSumSq)
+                    *pdSumSq += *Cur * *Cur;
+            }
+        }
+    };
 
 }
 

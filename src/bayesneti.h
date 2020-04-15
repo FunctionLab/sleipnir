@@ -23,8 +23,10 @@
 #define BAYESNETI_H
 
 #ifndef NO_SMILE
-#include <smile.h>
+
+#include "smile.h"
 #include <syscoord.h>
+
 #endif // NO_SMILE
 
 #include "dataset.h"
@@ -32,112 +34,147 @@
 
 namespace pnl {
 
-class CBNet;
+    class CBNet;
 
 }
 
 namespace Sleipnir {
 
-class CBayesNetPNL;
-class CBayesNetSmile;
-class CPCLPair;
+    class CBayesNetPNL;
+
+    class CBayesNetSmile;
+
+    class CPCLPair;
 
 
-class CBayesNetImpl {
-protected:
-	static const size_t	c_iMinimum	= 25;
-	static const char	c_cMissing	= '_';
-	static const char	c_cBase		= 'A';
-	static const char	c_szFR[];
-	static const char	c_szZero[];
+    class CBayesNetImpl {
+    protected:
+        static const size_t c_iMinimum = 25;
+        static const char c_cMissing = '_';
+        static const char c_cBase = 'A';
+        static const char c_szFR[];
+        static const char c_szZero[];
 
-	typedef std::vector<std::vector<float> >	TVecVecD;
-	typedef std::map<std::string, size_t>		TMapData;
+        typedef std::vector <std::vector<float>> TVecVecD;
+        typedef std::map <std::string, size_t> TMapData;
 //	typedef CTrie<size_t>						TTrieData;
 
-	CBayesNetImpl( bool );
+        CBayesNetImpl(bool);
 
-	static void EncodeData( const IDataset*, TMapData& );
-	static std::string EncodeDatum( const IDataset*, size_t, size_t );
-	static std::string EncodeDatum( const CPCLPair&, size_t, const std::vector<size_t>& );
-	static void DecodeDatum( const std::string&, std::vector<size_t>& );
-	static bool IsAnswer( const std::string& );
+        static void EncodeData(const IDataset *, TMapData &);
 
-	bool	m_fGroup;
-};
+        static std::string EncodeDatum(const IDataset *, size_t, size_t);
+
+        static std::string EncodeDatum(const CPCLPair &, size_t, const std::vector <size_t> &);
+
+        static void DecodeDatum(const std::string &, std::vector <size_t> &);
+
+        static bool IsAnswer(const std::string &);
+
+        bool m_fGroup;
+    };
 
 #ifndef NO_SMILE
 
-class CBayesNetSmileImpl : protected CBayesNetImpl {
-protected:
-	friend class CBayesNetFN;
+    class CBayesNetSmileImpl : protected CBayesNetImpl {
+    protected:
+        friend class CBayesNetFN;
 
-	static const char	c_szGaussian[];
+        static const char c_szGaussian[];
 
-	static bool IsGaussian( const DSL_network& );
-	static bool IsNaive( const DSL_network& );
-	static float ELRDot( const TVecVecD&, const TVecVecD& );
-	static float ELRAvoidZero( float );
-	static void ELRComputeDirection( float, const TVecVecD&, TVecVecD& );
-	static bool GetCPT( DSL_node*, CDataMatrix& );
+        static bool IsGaussian(const DSL_network &);
 
-	CBayesNetSmileImpl( bool );
+        static bool IsNaive(const DSL_network &);
 
-	bool ConvertGraph( CBayesNetPNL& ) const;
-	bool ConvertCPTs( CBayesNetPNL& ) const;
-	void LearnExpected( DSL_node*, DSL_Dmatrix*, size_t = 1 );
-	bool Evaluate( const IDataset*, CDat*, TVecVecD*, bool ) const;
-	bool FillCPTs( const IDataset*, size_t, size_t, bool, bool );
-	bool FillCPTs( const std::vector<bool>&, const std::string&, bool, bool, bool = false );
-	bool FillCPTs( const std::vector<bool>&, const std::vector<unsigned char>&, bool, bool, bool = false );
-	bool LearnGrouped( const IDataset*, size_t, bool );
-	bool LearnUngrouped( const IDataset*, size_t, bool );
-	bool LearnNaive( const IDataset*, bool );
-	bool LearnELR( const IDataset*, size_t, bool );
-	size_t ELRCountParameters( ) const;
-	void ELRCopyParameters( TVecVecD& );
-	void ELRComputeGradient( const std::vector<bool>&, const TMapData&, bool, TVecVecD& );
-	void ELRUpdateGradient( float, TVecVecD& );
-	void ELRNormalizeDirection( TVecVecD& ) const;
-	float ELRLineSearch( const std::vector<bool>&, const TMapData&, const TVecVecD&, const TVecVecD&, TVecVecD&,
-		float&, float&, bool );
-	float ELREvalFunction( const std::vector<bool>&, const TMapData&, float, const TVecVecD&, const TVecVecD&,
-		TVecVecD&, bool );
-	void ELRBracket( const std::vector<bool>&, const TMapData&, const TVecVecD&, const TVecVecD&, TVecVecD&,
-		float&, float&, float&, float&, float&, float&, bool );
-	float ELRConditionalLikelihood( const std::vector<bool>&, const TMapData&, bool );
-	float ELRBrent( const std::vector<bool>&, const TMapData&, const TVecVecD&, const TVecVecD&, TVecVecD&,
-		float&, float&, float, float, float, float, bool );
+        static float ELRDot(const TVecVecD &, const TVecVecD &);
 
-	bool IsNaive( ) const {
+        static float ELRAvoidZero(float);
 
-		return ( m_fSmileNet ? CBayesNetSmileImpl::IsNaive( m_SmileNet ) : false ); }
+        static void ELRComputeDirection(float, const TVecVecD &, TVecVecD &);
 
-	bool IsContinuous( ) const {
+        static bool GetCPT(DSL_node *, CDataMatrix &);
 
-		return ( m_fSmileNet ? IsGaussian( m_SmileNet ) : false ); }
+        CBayesNetSmileImpl(bool);
 
-	bool					m_fSmileNet;
-	DSL_network				m_SmileNet;
-	const CBayesNetSmile*	m_pDefaults;
-};
+        bool ConvertGraph(CBayesNetPNL &) const;
+
+        bool ConvertCPTs(CBayesNetPNL &) const;
+
+        void LearnExpected(DSL_node *, DSL_Dmatrix *, size_t = 1);
+
+        bool Evaluate(const IDataset *, CDat *, TVecVecD *, bool) const;
+
+        bool FillCPTs(const IDataset *, size_t, size_t, bool, bool);
+
+        bool FillCPTs(const std::vector<bool> &, const std::string &, bool, bool, bool = false);
+
+        bool FillCPTs(const std::vector<bool> &, const std::vector<unsigned char> &, bool, bool, bool = false);
+
+        bool LearnGrouped(const IDataset *, size_t, bool);
+
+        bool LearnUngrouped(const IDataset *, size_t, bool);
+
+        bool LearnNaive(const IDataset *, bool);
+
+        bool LearnELR(const IDataset *, size_t, bool);
+
+        size_t ELRCountParameters() const;
+
+        void ELRCopyParameters(TVecVecD &);
+
+        void ELRComputeGradient(const std::vector<bool> &, const TMapData &, bool, TVecVecD &);
+
+        void ELRUpdateGradient(float, TVecVecD &);
+
+        void ELRNormalizeDirection(TVecVecD &) const;
+
+        float ELRLineSearch(const std::vector<bool> &, const TMapData &, const TVecVecD &, const TVecVecD &, TVecVecD &,
+                            float &, float &, bool);
+
+        float ELREvalFunction(const std::vector<bool> &, const TMapData &, float, const TVecVecD &, const TVecVecD &,
+                              TVecVecD &, bool);
+
+        void ELRBracket(const std::vector<bool> &, const TMapData &, const TVecVecD &, const TVecVecD &, TVecVecD &,
+                        float &, float &, float &, float &, float &, float &, bool);
+
+        float ELRConditionalLikelihood(const std::vector<bool> &, const TMapData &, bool);
+
+        float ELRBrent(const std::vector<bool> &, const TMapData &, const TVecVecD &, const TVecVecD &, TVecVecD &,
+                       float &, float &, float, float, float, float, bool);
+
+        bool IsNaive() const {
+
+            return (m_fSmileNet ? CBayesNetSmileImpl::IsNaive(m_SmileNet) : false);
+        }
+
+        bool IsContinuous() const {
+
+            return (m_fSmileNet ? IsGaussian(m_SmileNet) : false);
+        }
+
+        bool m_fSmileNet;
+        DSL_network m_SmileNet;
+        const CBayesNetSmile *m_pDefaults;
+    };
 
 #endif // NO_SMILE
 
-class CBayesNetPNLImpl : protected CBayesNetImpl {
-protected:
-	friend class CBayesNetSmileImpl;
+    class CBayesNetPNLImpl : protected CBayesNetImpl {
+    protected:
+        friend class CBayesNetSmileImpl;
 
-	static const char	c_szBN[];
+        static const char c_szBN[];
 
-	CBayesNetPNLImpl( bool );
-	~CBayesNetPNLImpl( );
+        CBayesNetPNLImpl(bool);
 
-	bool Evaluate( const IDataset*, CDat*, TVecVecD*, bool ) const;
-	bool IsContinuous( ) const;
+        ~CBayesNetPNLImpl();
 
-	pnl::CBNet*	m_pPNLNet;
-};
+        bool Evaluate(const IDataset *, CDat *, TVecVecD *, bool) const;
+
+        bool IsContinuous() const;
+
+        pnl::CBNet *m_pPNLNet;
+    };
 
 }
 

@@ -24,16 +24,17 @@
 
 namespace Sleipnir {
 
-std::string CFile::OpenToken( std::istream& istm ) {
-	string	strRet;
-	char	c;
+    std::string CFile::OpenToken(std::istream &istm) {
+        string strRet;
+        char c;
 
-	while( isspace( c = istm.get( ) ) && ( c != '\t' ) && ( c != EOF ) );
-	for( ; c && ( c != -1 ) && ( c != '\t' ) && !IsNewline( c ); c = istm.get( ) )
-		strRet += c;
-	if( IsNewline( c ) )
-		istm.unget( );
+        while (isspace(c = istm.get()) && (c != '\t') && (c != EOF));
+        for (; c && (c != -1) && (c != '\t') && !IsNewline(c); c = istm.get())
+            strRet += c;
+        if (IsNewline(c))
+            istm.unget();
 
-	return strRet; }
+        return strRet;
+    }
 
 }

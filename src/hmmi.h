@@ -28,55 +28,61 @@
 
 namespace Sleipnir {
 
-class CHMMImpl {
-protected:
-	size_t GetStates( ) const {
-		size_t	i, iRet;
+    class CHMMImpl {
+    protected:
+        size_t GetStates() const {
+            size_t i, iRet;
 
-		iRet = 1;
-		for( i = 0; i < m_iDegree; ++i )
-			iRet *= GetSymbols( );
+            iRet = 1;
+            for (i = 0; i < m_iDegree; ++i)
+                iRet *= GetSymbols();
 
-		return iRet; }
+            return iRet;
+        }
 
-	size_t GetSymbols( ) const {
+        size_t GetSymbols() const {
 
-		return ( m_strAlphabet.length( ) + 1 ); }
+            return (m_strAlphabet.length() + 1);
+        }
 
-	size_t Encode( const std::string& strData, size_t iCount ) const {
-		size_t	i, iRet;
+        size_t Encode(const std::string &strData, size_t iCount) const {
+            size_t i, iRet;
 
-		iRet = 0;
-		for( i = 0; ( i < iCount ) && ( i < strData.size( ) ); ++i )
-			iRet = ( iRet * GetSymbols( ) ) + Encode( strData[ i ] ) + 1;
+            iRet = 0;
+            for (i = 0; (i < iCount) && (i < strData.size()); ++i)
+                iRet = (iRet * GetSymbols()) + Encode(strData[i]) + 1;
 
-		return iRet; }
+            return iRet;
+        }
 
-	std::string Decode( size_t iState ) const {
-		std::string	strRet;
-		size_t		i, iCur;
+        std::string Decode(size_t iState) const {
+            std::string strRet;
+            size_t i, iCur;
 
-		for( i = 0; i < m_iDegree; ++i ) {
-			iCur = iState % GetSymbols( );
-			strRet = ( iCur ? m_strAlphabet[ iCur - 1 ] : '_' ) + strRet;
-			iState = ( iState - iCur ) / GetSymbols( ); }
+            for (i = 0; i < m_iDegree; ++i) {
+                iCur = iState % GetSymbols();
+                strRet = (iCur ? m_strAlphabet[iCur - 1] : '_') + strRet;
+                iState = (iState - iCur) / GetSymbols();
+            }
 
-		return strRet; }
+            return strRet;
+        }
 
-	size_t Encode( char cDatum ) const {
-		size_t	i;
+        size_t Encode(char cDatum) const {
+            size_t i;
 
-		for( i = 0; i < m_strAlphabet.length( ); ++i )
-			if( cDatum == m_strAlphabet[ i ] )
-				return i;
+            for (i = 0; i < m_strAlphabet.length(); ++i)
+                if (cDatum == m_strAlphabet[i])
+                    return i;
 
 // I can't think of a better way to handle all exception cases...
-		return ( rand( ) % m_strAlphabet.length( ) ); }
+            return (rand() % m_strAlphabet.length());
+        }
 
-	std::string			m_strAlphabet;
-	size_t				m_iDegree;
-	CFullMatrix<size_t>	m_MatTransitions;
-};
+        std::string m_strAlphabet;
+        size_t m_iDegree;
+        CFullMatrix<size_t> m_MatTransitions;
+    };
 
 }
 

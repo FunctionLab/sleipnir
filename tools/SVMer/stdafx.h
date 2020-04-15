@@ -23,6 +23,7 @@
 #define STDAFX_H
 
 #include <fstream>
+
 using namespace std;
 
 #include "dataset.h"
@@ -30,6 +31,7 @@ using namespace std;
 #include "meta.h"
 #include "pclset.h"
 #include "svm.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

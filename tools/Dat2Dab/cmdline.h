@@ -30,185 +30,183 @@ extern "C" {
 #endif
 
 /** @brief Where the command line options are stored */
-struct gengetopt_args_info
-{
-  const char *help_help; /**< @brief Print help and exit help description.  */
-  const char *version_help; /**< @brief Print version and exit help description.  */
-  char * input_arg;	/**< @brief Input DAT/DAB file.  */
-  char * input_orig;	/**< @brief Input DAT/DAB file original value given at command line.  */
-  const char *input_help; /**< @brief Input DAT/DAB file help description.  */
-  char * output_arg;	/**< @brief Output DAT/DAB file.  */
-  char * output_orig;	/**< @brief Output DAT/DAB file original value given at command line.  */
-  const char *output_help; /**< @brief Output DAT/DAB file help description.  */
-  char * quant_arg;	/**< @brief Input Quant file.  */
-  char * quant_orig;	/**< @brief Input Quant file original value given at command line.  */
-  const char *quant_help; /**< @brief Input Quant file help description.  */
-  int flip_flag;	/**< @brief Calculate one minus values (default=off).  */
-  const char *flip_help; /**< @brief Calculate one minus values help description.  */
-  int abs_flag;	/**< @brief Calculate absolute values (default=off).  */
-  const char *abs_help; /**< @brief Calculate absolute values help description.  */
-  int normalize_flag;	/**< @brief Normalize to the range [0,1] (default=off).  */
-  const char *normalize_help; /**< @brief Normalize to the range [0,1] help description.  */
-  int normalizeNPone_flag;	/**< @brief Normalize to the range [-1,1] (default=off).  */
-  const char *normalizeNPone_help; /**< @brief Normalize to the range [-1,1] help description.  */
-  int normalizeDeg_flag;	/**< @brief Normalize by incident node degrees (default=off).  */
-  const char *normalizeDeg_help; /**< @brief Normalize by incident node degrees help description.  */
-  int normalizeLoc_flag;	/**< @brief Normalize by local neighborhood (default=off).  */
-  const char *normalizeLoc_help; /**< @brief Normalize by local neighborhood help description.  */
-  int zscore_flag;	/**< @brief Convert values to z-scores (default=off).  */
-  const char *zscore_help; /**< @brief Convert values to z-scores help description.  */
-  int rank_flag;	/**< @brief Rank transform data (default=off).  */
-  const char *rank_help; /**< @brief Rank transform data help description.  */
-  int randomize_flag;	/**< @brief Randomize data (default=off).  */
-  const char *randomize_help; /**< @brief Randomize data help description.  */
-  int NegExp_flag;	/**< @brief Transform all values to their negative exponential (converts -log of prob back to prob space) (default=off).  */
-  const char *NegExp_help; /**< @brief Transform all values to their negative exponential (converts -log of prob back to prob space) help description.  */
-  double prior_arg;	/**< @brief Prior of functional network (for rescaling -K).  */
-  char * prior_orig;	/**< @brief Prior of functional network (for rescaling -K) original value given at command line.  */
-  const char *prior_help; /**< @brief Prior of functional network (for rescaling -K) help description.  */
-  double newprior_arg;	/**< @brief New prior of functional network (use with -k).  */
-  char * newprior_orig;	/**< @brief New prior of functional network (use with -k) original value given at command line.  */
-  const char *newprior_help; /**< @brief New prior of functional network (use with -k) help description.  */
-  int logratio_flag;	/**< @brief Convert functional network to log likelihood ratio (use with -k) (default=off).  */
-  const char *logratio_help; /**< @brief Convert functional network to log likelihood ratio (use with -k) help description.  */
-  char * genes_arg;	/**< @brief Process only genes from the given set.  */
-  char * genes_orig;	/**< @brief Process only genes from the given set original value given at command line.  */
-  const char *genes_help; /**< @brief Process only genes from the given set help description.  */
-  char * genex_arg;	/**< @brief Exclude all genes from the given set.  */
-  char * genex_orig;	/**< @brief Exclude all genes from the given set original value given at command line.  */
-  const char *genex_help; /**< @brief Exclude all genes from the given set help description.  */
-  char * genee_arg;	/**< @brief Process only edges including a gene from the given set.  */
-  char * genee_orig;	/**< @brief Process only edges including a gene from the given set original value given at command line.  */
-  const char *genee_help; /**< @brief Process only edges including a gene from the given set help description.  */
-  char * edges_arg;	/**< @brief Process only edges from the given DAT/DAB.  */
-  char * edges_orig;	/**< @brief Process only edges from the given DAT/DAB original value given at command line.  */
-  const char *edges_help; /**< @brief Process only edges from the given DAT/DAB help description.  */
-  char * exedges_arg;	/**< @brief Exclude edges from the given DAT/DAB.  */
-  char * exedges_orig;	/**< @brief Exclude edges from the given DAT/DAB original value given at command line.  */
-  const char *exedges_help; /**< @brief Exclude edges from the given DAT/DAB help description.  */
-  char * gexedges_arg;	/**< @brief Exclude all edges which both genes from the given set.  */
-  char * gexedges_orig;	/**< @brief Exclude all edges which both genes from the given set original value given at command line.  */
-  const char *gexedges_help; /**< @brief Exclude all edges which both genes from the given set help description.  */
-  double cutoff_arg;	/**< @brief Exclude edges below cutoff.  */
-  char * cutoff_orig;	/**< @brief Exclude edges below cutoff original value given at command line.  */
-  const char *cutoff_help; /**< @brief Exclude edges below cutoff help description.  */
-  int zero_flag;	/**< @brief Zero missing values (default=off).  */
-  const char *zero_help; /**< @brief Zero missing values help description.  */
-  float dval_arg;	/**< @brief set all non-missing values to a set default value.  */
-  char * dval_orig;	/**< @brief set all non-missing values to a set default value original value given at command line.  */
-  const char *dval_help; /**< @brief set all non-missing values to a set default value help description.  */
-  float dmissing_arg;	/**< @brief set missing values to a set default value.  */
-  char * dmissing_orig;	/**< @brief set missing values to a set default value original value given at command line.  */
-  const char *dmissing_help; /**< @brief set missing values to a set default value help description.  */
-  int duplicates_flag;	/**< @brief Allow dissimilar duplicate values (default=off).  */
-  const char *duplicates_help; /**< @brief Allow dissimilar duplicate values help description.  */
-  float subsample_arg;	/**< @brief Fraction of output to randomly subsample (default='1').  */
-  char * subsample_orig;	/**< @brief Fraction of output to randomly subsample original value given at command line.  */
-  const char *subsample_help; /**< @brief Fraction of output to randomly subsample help description.  */
-  char * lookup1_arg;	/**< @brief First lookup gene.  */
-  char * lookup1_orig;	/**< @brief First lookup gene original value given at command line.  */
-  const char *lookup1_help; /**< @brief First lookup gene help description.  */
-  char * lookup2_arg;	/**< @brief Second lookup gene.  */
-  char * lookup2_orig;	/**< @brief Second lookup gene original value given at command line.  */
-  const char *lookup2_help; /**< @brief Second lookup gene help description.  */
-  char * lookups1_arg;	/**< @brief First lookup gene set.  */
-  char * lookups1_orig;	/**< @brief First lookup gene set original value given at command line.  */
-  const char *lookups1_help; /**< @brief First lookup gene set help description.  */
-  char * lookups2_arg;	/**< @brief First lookup gene set.  */
-  char * lookups2_orig;	/**< @brief First lookup gene set original value given at command line.  */
-  const char *lookups2_help; /**< @brief First lookup gene set help description.  */
-  int genelist_flag;	/**< @brief Only list genes (default=off).  */
-  const char *genelist_help; /**< @brief Only list genes help description.  */
-  int paircount_flag;	/**< @brief Only count pairs above cutoff (default=off).  */
-  const char *paircount_help; /**< @brief Only count pairs above cutoff help description.  */
-  int ccoeff_flag;	/**< @brief Output clustering coefficient for each gene (default=off).  */
-  const char *ccoeff_help; /**< @brief Output clustering coefficient for each gene help description.  */
-  int hubbiness_flag;	/**< @brief Output the average edge weight for each gene (default=off).  */
-  const char *hubbiness_help; /**< @brief Output the average edge weight for each gene help description.  */
-  int mar_flag;	/**< @brief Output the maximum adjacency ratio for each gene (default=off).  */
-  const char *mar_help; /**< @brief Output the maximum adjacency ratio for each gene help description.  */
-  int summary_flag;	/**< @brief Output the summary of values (mean, stand dev.) (default=off).  */
-  const char *summary_help; /**< @brief Output the summary of values (mean, stand dev.) help description.  */
-  char * remap_arg;	/**< @brief Gene name remapping file.  */
-  char * remap_orig;	/**< @brief Gene name remapping file original value given at command line.  */
-  const char *remap_help; /**< @brief Gene name remapping file help description.  */
-  int table_flag;	/**< @brief Produce table formatted output (default=off).  */
-  const char *table_help; /**< @brief Produce table formatted output help description.  */
-  int skip_arg;	/**< @brief Columns to skip in input PCL (default='2').  */
-  char * skip_orig;	/**< @brief Columns to skip in input PCL original value given at command line.  */
-  const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
-  int memmap_flag;	/**< @brief Memory map input/output (default=off).  */
-  const char *memmap_help; /**< @brief Memory map input/output help description.  */
-  int random_arg;	/**< @brief Seed random generator (default -1 uses current time) (default='-1').  */
-  char * random_orig;	/**< @brief Seed random generator (default -1 uses current time) original value given at command line.  */
-  const char *random_help; /**< @brief Seed random generator (default -1 uses current time) help description.  */
-  int noise_flag;	/**< @brief Add noise from standard Normal to all non-missing values (default=off).  */
-  const char *noise_help; /**< @brief Add noise from standard Normal to all non-missing values help description.  */
-  int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
-  char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
-  const char *verbosity_help; /**< @brief Message verbosity help description.  */
-  
-  unsigned int help_given ;	/**< @brief Whether help was given.  */
-  unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int input_given ;	/**< @brief Whether input was given.  */
-  unsigned int output_given ;	/**< @brief Whether output was given.  */
-  unsigned int quant_given ;	/**< @brief Whether quant was given.  */
-  unsigned int flip_given ;	/**< @brief Whether flip was given.  */
-  unsigned int abs_given ;	/**< @brief Whether abs was given.  */
-  unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
-  unsigned int normalizeNPone_given ;	/**< @brief Whether normalizeNPone was given.  */
-  unsigned int normalizeDeg_given ;	/**< @brief Whether normalizeDeg was given.  */
-  unsigned int normalizeLoc_given ;	/**< @brief Whether normalizeLoc was given.  */
-  unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
-  unsigned int rank_given ;	/**< @brief Whether rank was given.  */
-  unsigned int randomize_given ;	/**< @brief Whether randomize was given.  */
-  unsigned int NegExp_given ;	/**< @brief Whether NegExp was given.  */
-  unsigned int prior_given ;	/**< @brief Whether prior was given.  */
-  unsigned int newprior_given ;	/**< @brief Whether newprior was given.  */
-  unsigned int logratio_given ;	/**< @brief Whether logratio was given.  */
-  unsigned int genes_given ;	/**< @brief Whether genes was given.  */
-  unsigned int genex_given ;	/**< @brief Whether genex was given.  */
-  unsigned int genee_given ;	/**< @brief Whether genee was given.  */
-  unsigned int edges_given ;	/**< @brief Whether edges was given.  */
-  unsigned int exedges_given ;	/**< @brief Whether exedges was given.  */
-  unsigned int gexedges_given ;	/**< @brief Whether gexedges was given.  */
-  unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
-  unsigned int zero_given ;	/**< @brief Whether zero was given.  */
-  unsigned int dval_given ;	/**< @brief Whether dval was given.  */
-  unsigned int dmissing_given ;	/**< @brief Whether dmissing was given.  */
-  unsigned int duplicates_given ;	/**< @brief Whether duplicates was given.  */
-  unsigned int subsample_given ;	/**< @brief Whether subsample was given.  */
-  unsigned int lookup1_given ;	/**< @brief Whether lookup1 was given.  */
-  unsigned int lookup2_given ;	/**< @brief Whether lookup2 was given.  */
-  unsigned int lookups1_given ;	/**< @brief Whether lookups1 was given.  */
-  unsigned int lookups2_given ;	/**< @brief Whether lookups2 was given.  */
-  unsigned int genelist_given ;	/**< @brief Whether genelist was given.  */
-  unsigned int paircount_given ;	/**< @brief Whether paircount was given.  */
-  unsigned int ccoeff_given ;	/**< @brief Whether ccoeff was given.  */
-  unsigned int hubbiness_given ;	/**< @brief Whether hubbiness was given.  */
-  unsigned int mar_given ;	/**< @brief Whether mar was given.  */
-  unsigned int summary_given ;	/**< @brief Whether summary was given.  */
-  unsigned int remap_given ;	/**< @brief Whether remap was given.  */
-  unsigned int table_given ;	/**< @brief Whether table was given.  */
-  unsigned int skip_given ;	/**< @brief Whether skip was given.  */
-  unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
-  unsigned int random_given ;	/**< @brief Whether random was given.  */
-  unsigned int noise_given ;	/**< @brief Whether noise was given.  */
-  unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+struct gengetopt_args_info {
+    const char *help_help; /**< @brief Print help and exit help description.  */
+    const char *version_help; /**< @brief Print version and exit help description.  */
+    char *input_arg;    /**< @brief Input DAT/DAB file.  */
+    char *input_orig;    /**< @brief Input DAT/DAB file original value given at command line.  */
+    const char *input_help; /**< @brief Input DAT/DAB file help description.  */
+    char *output_arg;    /**< @brief Output DAT/DAB file.  */
+    char *output_orig;    /**< @brief Output DAT/DAB file original value given at command line.  */
+    const char *output_help; /**< @brief Output DAT/DAB file help description.  */
+    char *quant_arg;    /**< @brief Input Quant file.  */
+    char *quant_orig;    /**< @brief Input Quant file original value given at command line.  */
+    const char *quant_help; /**< @brief Input Quant file help description.  */
+    int flip_flag;    /**< @brief Calculate one minus values (default=off).  */
+    const char *flip_help; /**< @brief Calculate one minus values help description.  */
+    int abs_flag;    /**< @brief Calculate absolute values (default=off).  */
+    const char *abs_help; /**< @brief Calculate absolute values help description.  */
+    int normalize_flag;    /**< @brief Normalize to the range [0,1] (default=off).  */
+    const char *normalize_help; /**< @brief Normalize to the range [0,1] help description.  */
+    int normalizeNPone_flag;    /**< @brief Normalize to the range [-1,1] (default=off).  */
+    const char *normalizeNPone_help; /**< @brief Normalize to the range [-1,1] help description.  */
+    int normalizeDeg_flag;    /**< @brief Normalize by incident node degrees (default=off).  */
+    const char *normalizeDeg_help; /**< @brief Normalize by incident node degrees help description.  */
+    int normalizeLoc_flag;    /**< @brief Normalize by local neighborhood (default=off).  */
+    const char *normalizeLoc_help; /**< @brief Normalize by local neighborhood help description.  */
+    int zscore_flag;    /**< @brief Convert values to z-scores (default=off).  */
+    const char *zscore_help; /**< @brief Convert values to z-scores help description.  */
+    int rank_flag;    /**< @brief Rank transform data (default=off).  */
+    const char *rank_help; /**< @brief Rank transform data help description.  */
+    int randomize_flag;    /**< @brief Randomize data (default=off).  */
+    const char *randomize_help; /**< @brief Randomize data help description.  */
+    int NegExp_flag;    /**< @brief Transform all values to their negative exponential (converts -log of prob back to prob space) (default=off).  */
+    const char *NegExp_help; /**< @brief Transform all values to their negative exponential (converts -log of prob back to prob space) help description.  */
+    double prior_arg;    /**< @brief Prior of functional network (for rescaling -K).  */
+    char *prior_orig;    /**< @brief Prior of functional network (for rescaling -K) original value given at command line.  */
+    const char *prior_help; /**< @brief Prior of functional network (for rescaling -K) help description.  */
+    double newprior_arg;    /**< @brief New prior of functional network (use with -k).  */
+    char *newprior_orig;    /**< @brief New prior of functional network (use with -k) original value given at command line.  */
+    const char *newprior_help; /**< @brief New prior of functional network (use with -k) help description.  */
+    int logratio_flag;    /**< @brief Convert functional network to log likelihood ratio (use with -k) (default=off).  */
+    const char *logratio_help; /**< @brief Convert functional network to log likelihood ratio (use with -k) help description.  */
+    char *genes_arg;    /**< @brief Process only genes from the given set.  */
+    char *genes_orig;    /**< @brief Process only genes from the given set original value given at command line.  */
+    const char *genes_help; /**< @brief Process only genes from the given set help description.  */
+    char *genex_arg;    /**< @brief Exclude all genes from the given set.  */
+    char *genex_orig;    /**< @brief Exclude all genes from the given set original value given at command line.  */
+    const char *genex_help; /**< @brief Exclude all genes from the given set help description.  */
+    char *genee_arg;    /**< @brief Process only edges including a gene from the given set.  */
+    char *genee_orig;    /**< @brief Process only edges including a gene from the given set original value given at command line.  */
+    const char *genee_help; /**< @brief Process only edges including a gene from the given set help description.  */
+    char *edges_arg;    /**< @brief Process only edges from the given DAT/DAB.  */
+    char *edges_orig;    /**< @brief Process only edges from the given DAT/DAB original value given at command line.  */
+    const char *edges_help; /**< @brief Process only edges from the given DAT/DAB help description.  */
+    char *exedges_arg;    /**< @brief Exclude edges from the given DAT/DAB.  */
+    char *exedges_orig;    /**< @brief Exclude edges from the given DAT/DAB original value given at command line.  */
+    const char *exedges_help; /**< @brief Exclude edges from the given DAT/DAB help description.  */
+    char *gexedges_arg;    /**< @brief Exclude all edges which both genes from the given set.  */
+    char *gexedges_orig;    /**< @brief Exclude all edges which both genes from the given set original value given at command line.  */
+    const char *gexedges_help; /**< @brief Exclude all edges which both genes from the given set help description.  */
+    double cutoff_arg;    /**< @brief Exclude edges below cutoff.  */
+    char *cutoff_orig;    /**< @brief Exclude edges below cutoff original value given at command line.  */
+    const char *cutoff_help; /**< @brief Exclude edges below cutoff help description.  */
+    int zero_flag;    /**< @brief Zero missing values (default=off).  */
+    const char *zero_help; /**< @brief Zero missing values help description.  */
+    float dval_arg;    /**< @brief set all non-missing values to a set default value.  */
+    char *dval_orig;    /**< @brief set all non-missing values to a set default value original value given at command line.  */
+    const char *dval_help; /**< @brief set all non-missing values to a set default value help description.  */
+    float dmissing_arg;    /**< @brief set missing values to a set default value.  */
+    char *dmissing_orig;    /**< @brief set missing values to a set default value original value given at command line.  */
+    const char *dmissing_help; /**< @brief set missing values to a set default value help description.  */
+    int duplicates_flag;    /**< @brief Allow dissimilar duplicate values (default=off).  */
+    const char *duplicates_help; /**< @brief Allow dissimilar duplicate values help description.  */
+    float subsample_arg;    /**< @brief Fraction of output to randomly subsample (default='1').  */
+    char *subsample_orig;    /**< @brief Fraction of output to randomly subsample original value given at command line.  */
+    const char *subsample_help; /**< @brief Fraction of output to randomly subsample help description.  */
+    char *lookup1_arg;    /**< @brief First lookup gene.  */
+    char *lookup1_orig;    /**< @brief First lookup gene original value given at command line.  */
+    const char *lookup1_help; /**< @brief First lookup gene help description.  */
+    char *lookup2_arg;    /**< @brief Second lookup gene.  */
+    char *lookup2_orig;    /**< @brief Second lookup gene original value given at command line.  */
+    const char *lookup2_help; /**< @brief Second lookup gene help description.  */
+    char *lookups1_arg;    /**< @brief First lookup gene set.  */
+    char *lookups1_orig;    /**< @brief First lookup gene set original value given at command line.  */
+    const char *lookups1_help; /**< @brief First lookup gene set help description.  */
+    char *lookups2_arg;    /**< @brief First lookup gene set.  */
+    char *lookups2_orig;    /**< @brief First lookup gene set original value given at command line.  */
+    const char *lookups2_help; /**< @brief First lookup gene set help description.  */
+    int genelist_flag;    /**< @brief Only list genes (default=off).  */
+    const char *genelist_help; /**< @brief Only list genes help description.  */
+    int paircount_flag;    /**< @brief Only count pairs above cutoff (default=off).  */
+    const char *paircount_help; /**< @brief Only count pairs above cutoff help description.  */
+    int ccoeff_flag;    /**< @brief Output clustering coefficient for each gene (default=off).  */
+    const char *ccoeff_help; /**< @brief Output clustering coefficient for each gene help description.  */
+    int hubbiness_flag;    /**< @brief Output the average edge weight for each gene (default=off).  */
+    const char *hubbiness_help; /**< @brief Output the average edge weight for each gene help description.  */
+    int mar_flag;    /**< @brief Output the maximum adjacency ratio for each gene (default=off).  */
+    const char *mar_help; /**< @brief Output the maximum adjacency ratio for each gene help description.  */
+    int summary_flag;    /**< @brief Output the summary of values (mean, stand dev.) (default=off).  */
+    const char *summary_help; /**< @brief Output the summary of values (mean, stand dev.) help description.  */
+    char *remap_arg;    /**< @brief Gene name remapping file.  */
+    char *remap_orig;    /**< @brief Gene name remapping file original value given at command line.  */
+    const char *remap_help; /**< @brief Gene name remapping file help description.  */
+    int table_flag;    /**< @brief Produce table formatted output (default=off).  */
+    const char *table_help; /**< @brief Produce table formatted output help description.  */
+    int skip_arg;    /**< @brief Columns to skip in input PCL (default='2').  */
+    char *skip_orig;    /**< @brief Columns to skip in input PCL original value given at command line.  */
+    const char *skip_help; /**< @brief Columns to skip in input PCL help description.  */
+    int memmap_flag;    /**< @brief Memory map input/output (default=off).  */
+    const char *memmap_help; /**< @brief Memory map input/output help description.  */
+    int random_arg;    /**< @brief Seed random generator (default -1 uses current time) (default='-1').  */
+    char *random_orig;    /**< @brief Seed random generator (default -1 uses current time) original value given at command line.  */
+    const char *random_help; /**< @brief Seed random generator (default -1 uses current time) help description.  */
+    int noise_flag;    /**< @brief Add noise from standard Normal to all non-missing values (default=off).  */
+    const char *noise_help; /**< @brief Add noise from standard Normal to all non-missing values help description.  */
+    int verbosity_arg;    /**< @brief Message verbosity (default='5').  */
+    char *verbosity_orig;    /**< @brief Message verbosity original value given at command line.  */
+    const char *verbosity_help; /**< @brief Message verbosity help description.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
-} ;
+    unsigned int help_given;    /**< @brief Whether help was given.  */
+    unsigned int version_given;    /**< @brief Whether version was given.  */
+    unsigned int input_given;    /**< @brief Whether input was given.  */
+    unsigned int output_given;    /**< @brief Whether output was given.  */
+    unsigned int quant_given;    /**< @brief Whether quant was given.  */
+    unsigned int flip_given;    /**< @brief Whether flip was given.  */
+    unsigned int abs_given;    /**< @brief Whether abs was given.  */
+    unsigned int normalize_given;    /**< @brief Whether normalize was given.  */
+    unsigned int normalizeNPone_given;    /**< @brief Whether normalizeNPone was given.  */
+    unsigned int normalizeDeg_given;    /**< @brief Whether normalizeDeg was given.  */
+    unsigned int normalizeLoc_given;    /**< @brief Whether normalizeLoc was given.  */
+    unsigned int zscore_given;    /**< @brief Whether zscore was given.  */
+    unsigned int rank_given;    /**< @brief Whether rank was given.  */
+    unsigned int randomize_given;    /**< @brief Whether randomize was given.  */
+    unsigned int NegExp_given;    /**< @brief Whether NegExp was given.  */
+    unsigned int prior_given;    /**< @brief Whether prior was given.  */
+    unsigned int newprior_given;    /**< @brief Whether newprior was given.  */
+    unsigned int logratio_given;    /**< @brief Whether logratio was given.  */
+    unsigned int genes_given;    /**< @brief Whether genes was given.  */
+    unsigned int genex_given;    /**< @brief Whether genex was given.  */
+    unsigned int genee_given;    /**< @brief Whether genee was given.  */
+    unsigned int edges_given;    /**< @brief Whether edges was given.  */
+    unsigned int exedges_given;    /**< @brief Whether exedges was given.  */
+    unsigned int gexedges_given;    /**< @brief Whether gexedges was given.  */
+    unsigned int cutoff_given;    /**< @brief Whether cutoff was given.  */
+    unsigned int zero_given;    /**< @brief Whether zero was given.  */
+    unsigned int dval_given;    /**< @brief Whether dval was given.  */
+    unsigned int dmissing_given;    /**< @brief Whether dmissing was given.  */
+    unsigned int duplicates_given;    /**< @brief Whether duplicates was given.  */
+    unsigned int subsample_given;    /**< @brief Whether subsample was given.  */
+    unsigned int lookup1_given;    /**< @brief Whether lookup1 was given.  */
+    unsigned int lookup2_given;    /**< @brief Whether lookup2 was given.  */
+    unsigned int lookups1_given;    /**< @brief Whether lookups1 was given.  */
+    unsigned int lookups2_given;    /**< @brief Whether lookups2 was given.  */
+    unsigned int genelist_given;    /**< @brief Whether genelist was given.  */
+    unsigned int paircount_given;    /**< @brief Whether paircount was given.  */
+    unsigned int ccoeff_given;    /**< @brief Whether ccoeff was given.  */
+    unsigned int hubbiness_given;    /**< @brief Whether hubbiness was given.  */
+    unsigned int mar_given;    /**< @brief Whether mar was given.  */
+    unsigned int summary_given;    /**< @brief Whether summary was given.  */
+    unsigned int remap_given;    /**< @brief Whether remap was given.  */
+    unsigned int table_given;    /**< @brief Whether table was given.  */
+    unsigned int skip_given;    /**< @brief Whether skip was given.  */
+    unsigned int memmap_given;    /**< @brief Whether memmap was given.  */
+    unsigned int random_given;    /**< @brief Whether random was given.  */
+    unsigned int noise_given;    /**< @brief Whether noise was given.  */
+    unsigned int verbosity_given;    /**< @brief Whether verbosity was given.  */
+
+    char **inputs; /**< @brief unamed options (options without names) */
+    unsigned inputs_num; /**< @brief unamed options number */
+};
 
 /** @brief The additional parameters to pass to parser functions */
-struct cmdline_parser_params
-{
-  int override; /**< @brief whether to override possibly already present options (default 0) */
-  int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
-  int check_required; /**< @brief whether to check that all required options were provided (default 1) */
-  int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
-  int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
-} ;
+struct cmdline_parser_params {
+    int override; /**< @brief whether to override possibly already present options (default 0) */
+    int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
+    int check_required; /**< @brief whether to check that all required options were provided (default 1) */
+    int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
+    int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
+};
 
 /** @brief the purpose string of the program */
 extern const char *gengetopt_args_info_purpose;
@@ -224,8 +222,8 @@ extern const char *gengetopt_args_info_help[];
  * @param args_info the structure where option information will be stored
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info);
+int cmdline_parser(int argc, char *const *argv,
+                   struct gengetopt_args_info *args_info);
 
 /**
  * The command line parser (version with additional parameters - deprecated)
@@ -238,9 +236,9 @@ int cmdline_parser (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  * @deprecated use cmdline_parser_ext() instead
  */
-int cmdline_parser2 (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  int override, int initialize, int check_required);
+int cmdline_parser2(int argc, char *const *argv,
+                    struct gengetopt_args_info *args_info,
+                    int override, int initialize, int check_required);
 
 /**
  * The command line parser (version with additional parameters)
@@ -250,9 +248,9 @@ int cmdline_parser2 (int argc, char * const *argv,
  * @param params additional parameters for the parser
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser_ext (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  struct cmdline_parser_params *params);
+int cmdline_parser_ext(int argc, char *const *argv,
+                       struct gengetopt_args_info *args_info,
+                       struct cmdline_parser_params *params);
 
 /**
  * Save the contents of the option struct into an already open FILE stream.
@@ -261,7 +259,7 @@ int cmdline_parser_ext (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_dump(FILE *outfile,
-  struct gengetopt_args_info *args_info);
+                        struct gengetopt_args_info *args_info);
 
 /**
  * Save the contents of the option struct into a (text) file.
@@ -271,12 +269,13 @@ int cmdline_parser_dump(FILE *outfile,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_file_save(const char *filename,
-  struct gengetopt_args_info *args_info);
+                             struct gengetopt_args_info *args_info);
 
 /**
  * Print the help
  */
 void cmdline_parser_print_help(void);
+
 /**
  * Print the version
  */
@@ -301,13 +300,14 @@ struct cmdline_parser_params *cmdline_parser_params_create(void);
  * (also set default values for options that have a default)
  * @param args_info the structure to initialize
  */
-void cmdline_parser_init (struct gengetopt_args_info *args_info);
+void cmdline_parser_init(struct gengetopt_args_info *args_info);
+
 /**
  * Deallocates the string fields of the gengetopt_args_info structure
  * (but does not deallocate the structure itself)
  * @param args_info the structure to deallocate
  */
-void cmdline_parser_free (struct gengetopt_args_info *args_info);
+void cmdline_parser_free(struct gengetopt_args_info *args_info);
 
 /**
  * Checks that all the required options were specified
@@ -316,8 +316,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  *   possible errors
  * @return
  */
-int cmdline_parser_required (struct gengetopt_args_info *args_info,
-  const char *prog_name);
+int cmdline_parser_required(struct gengetopt_args_info *args_info,
+                            const char *prog_name);
 
 
 #ifdef __cplusplus

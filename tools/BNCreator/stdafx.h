@@ -32,13 +32,15 @@ using namespace std;
 #include "dataset.h"
 #include "genome.h"
 #include "meta.h"
+
 using namespace Sleipnir;
 
 #ifndef _MSC_VER
+
 #include <dirent.h>
 #include <unistd.h>
 
-#define _unlink	unlink
+#define _unlink    unlink
 #endif // _MSC_VER
 
 #endif // STDAFX_H

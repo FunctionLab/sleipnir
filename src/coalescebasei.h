@@ -28,96 +28,107 @@
 
 namespace Sleipnir {
 
-class CCoalesceSequencerBase {
-public:
-	enum ESubsequence {
-		ESubsequenceBegin	= 0,
-		ESubsequenceTotal	= ESubsequenceBegin,
-		ESubsequenceIntrons	= ESubsequenceTotal + 1,
-		ESubsequenceExons	= ESubsequenceIntrons + 1,
-		ESubsequenceEnd		= ESubsequenceExons + 1
-	};
+    class CCoalesceSequencerBase {
+    public:
+        enum ESubsequence {
+            ESubsequenceBegin = 0,
+            ESubsequenceTotal = ESubsequenceBegin,
+            ESubsequenceIntrons = ESubsequenceTotal + 1,
+            ESubsequenceExons = ESubsequenceIntrons + 1,
+            ESubsequenceEnd = ESubsequenceExons + 1
+        };
 
-	static const char*	c_aszSubsequences[];
+        static const char *c_aszSubsequences[];
 
-	static const char* GetSubsequence( ESubsequence eSubsequence ) {
+        static const char *GetSubsequence(ESubsequence eSubsequence) {
 
-		return c_aszSubsequences[ eSubsequence ]; }
+            return c_aszSubsequences[eSubsequence];
+        }
 
-	static ESubsequence GetSubsequence( const std::string& strSubsequence ) {
-		size_t	i;
+        static ESubsequence GetSubsequence(const std::string &strSubsequence) {
+            size_t i;
 
-		for( i = 0; c_aszSubsequences[ i ]; ++i )
-			if( strSubsequence == c_aszSubsequences[ i ] )
-				return (ESubsequence)i;
+            for (i = 0; c_aszSubsequences[i]; ++i)
+                if (strSubsequence == c_aszSubsequences[i])
+                    return (ESubsequence) i;
 
-		return ESubsequenceEnd; }
+            return ESubsequenceEnd;
+        }
 
-	size_t GetTypes( ) const {
+        size_t GetTypes() const {
 
-		return m_vecstrTypes.size( ); }
+            return m_vecstrTypes.size();
+        }
 
-	const std::string& GetType( size_t iType ) const {
+        const std::string &GetType(size_t iType) const {
 
-		return m_vecstrTypes[ iType ]; }
+            return m_vecstrTypes[iType];
+        }
 
-	size_t GetType( const std::string& strType ) const {
-		TMapStrI::const_iterator	iterType;
+        size_t GetType(const std::string &strType) const {
+            TMapStrI::const_iterator iterType;
 
-		return ( ( ( iterType = m_mapstriTypes.find( strType ) ) == m_mapstriTypes.end( ) ) ? -1 :
-			iterType->second ); }
+            return (((iterType = m_mapstriTypes.find(strType)) == m_mapstriTypes.end()) ? -1 :
+                    iterType->second);
+        }
 
-protected:
-	typedef std::map<std::string, size_t>	TMapStrI;
+    protected:
+        typedef std::map <std::string, size_t> TMapStrI;
 
-	TMapStrI					m_mapstriTypes;
-	std::vector<std::string>	m_vecstrTypes;
-};
+        TMapStrI m_mapstriTypes;
+        std::vector <std::string> m_vecstrTypes;
+    };
 
-template<class tType>
-class CCoalesceSequencer : public CCoalesceSequencerBase {
-public:
-	tType& Get( size_t iType, ESubsequence eSubsequence ) {
+    template<class tType>
+    class CCoalesceSequencer : public CCoalesceSequencerBase {
+    public:
+        tType &Get(size_t iType, ESubsequence eSubsequence) {
 
-		return m_vecvecValues[ iType ][ eSubsequence ]; }
+            return m_vecvecValues[iType][eSubsequence];
+        }
 
-	const tType& Get( size_t iType, ESubsequence eSubsequence ) const {
+        const tType &Get(size_t iType, ESubsequence eSubsequence) const {
 
-		return m_vecvecValues[ iType ][ eSubsequence ]; }
+            return m_vecvecValues[iType][eSubsequence];
+        }
 
-	const tType& Get( const std::string& strType, ESubsequence eSubsequence ) const {
+        const tType &Get(const std::string &strType, ESubsequence eSubsequence) const {
 
-		return Get( GetType( strType ), eSubsequence ); }
+            return Get(GetType(strType), eSubsequence);
+        }
 
-	size_t AddType( const std::string& strType ) {
-		TMapStrI::const_iterator	iterType;
-		size_t						iRet;
+        size_t AddType(const std::string &strType) {
+            TMapStrI::const_iterator iterType;
+            size_t iRet;
 
-		if( ( iterType = m_mapstriTypes.find( strType ) ) != m_mapstriTypes.end( ) )
-			return iterType->second;
+            if ((iterType = m_mapstriTypes.find(strType)) != m_mapstriTypes.end())
+                return iterType->second;
 
-		m_mapstriTypes[ strType ] = iRet = m_vecvecValues.size( );
-		m_vecstrTypes.push_back( strType );
-		m_vecvecValues.push_back( std::vector<tType>( ) );
-		m_vecvecValues.back( ).resize( ESubsequenceEnd );
+            m_mapstriTypes[strType] = iRet = m_vecvecValues.size();
+            m_vecstrTypes.push_back(strType);
+            m_vecvecValues.push_back(std::vector<tType>());
+            m_vecvecValues.back().resize(ESubsequenceEnd);
 
-		return iRet; }
+            return iRet;
+        }
 
-	size_t GetSubsequences( size_t iType ) const {
+        size_t GetSubsequences(size_t iType) const {
 
-		return m_vecvecValues[ iType ].size( ); }
+            return m_vecvecValues[iType].size();
+        }
 
-	void Clear( ) {
-		size_t	i, j;
+        void Clear() {
+            size_t i, j;
 
-		for( i = 0; i < m_vecvecValues.size( ); ++i )
-			for( j = 0; j < m_vecvecValues[ i ].size( ); ++j )
-				m_vecvecValues[ i ][ j ].Clear( ); }
+            for (i = 0; i < m_vecvecValues.size(); ++i)
+                for (j = 0; j < m_vecvecValues[i].size(); ++j)
+                    m_vecvecValues[i][j].Clear();
+        }
 
-protected:
+    protected:
 // Type by subsequence
-	std::vector<std::vector<tType> >	m_vecvecValues;
-};
+        std::vector <std::vector<tType>> m_vecvecValues;
+    };
 
 }
 

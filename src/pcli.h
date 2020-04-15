@@ -32,90 +32,96 @@
 
 namespace Sleipnir {
 
-class CPCLImpl: protected CFile {
-protected:
-	static const size_t c_iSkip = 2;
-	static const char c_szEWEIGHT[];
-	static const char c_szGENE[];
-	static const char c_szGID[];
-	static const char c_szGWEIGHT[];
-	static const char c_szNAME[];
-	static const char c_szOne[];
-	static const char c_szExtension[];
-	static const char c_szBinExtension[];
-	static const char c_szDabExtension[];
-	
-	typedef std::vector<std::string> TVecStr;
-	typedef std::set<size_t> TSetI;
-	typedef std::map<std::string, size_t> TMapStrI;
+    class CPCLImpl : protected CFile {
+    protected:
+        static const size_t c_iSkip = 2;
+        static const char c_szEWEIGHT[];
+        static const char c_szGENE[];
+        static const char c_szGID[];
+        static const char c_szGWEIGHT[];
+        static const char c_szNAME[];
+        static const char c_szOne[];
+        static const char c_szExtension[];
+        static const char c_szBinExtension[];
+        static const char c_szDabExtension[];
 
-	static size_t MedianMultiplesBin(float dValue, float dAve, float dStd,
-			size_t iBins, float dBinSize) {
-		size_t iRet;
-		int i;
+        typedef std::vector <std::string> TVecStr;
+        typedef std::set <size_t> TSetI;
+        typedef std::map <std::string, size_t> TMapStrI;
 
-		i = (int) (0.5 + ((dValue - dAve) / dStd / dBinSize));
-		iRet = iBins / 2;
-		iRet = ((i < 0) && ((size_t) -i > iRet)) ? 0 : min(iBins, i + iRet);
-		// cerr << dValue << '\t' << dAve << '\t' << dStd << '\t' << i << '\t' << iRet << endl;
+        static size_t MedianMultiplesBin(float dValue, float dAve, float dStd,
+                                         size_t iBins, float dBinSize) {
+            size_t iRet;
+            int i;
 
-		return iRet;
-	}
+            i = (int) (0.5 + ((dValue - dAve) / dStd / dBinSize));
+            iRet = iBins / 2;
+            iRet = ((i < 0) && ((size_t) - i > iRet)) ? 0 : min(iBins, i + iRet);
+            // cerr << dValue << '\t' << dAve << '\t' << dStd << '\t' << i << '\t' << iRet << endl;
 
-	static void MedianMultiplesSmooth(float dPower,
-			std::vector<float>& vecdValues) {
-		static const size_t c_iRadius = 40;
-		std::vector<float> vecdTmp;
-		size_t i, j, k;
-		float d, dSum;
+            return iRet;
+        }
 
-		vecdTmp.resize(vecdValues.size());
-		for (dSum = 0, i = 0; i < vecdTmp.size(); ++i)
-			for (j = (max(i, c_iRadius) - c_iRadius); j < min(vecdTmp.size(), i
-					+ c_iRadius); ++j) {
-				k = max(i, j) - min(i, j);
-				vecdTmp[i] += (d = (vecdValues[j]
-						/ (1 + pow((float) k, dPower))));
-				dSum += d;
-			}
-		for (i = 0; i < vecdValues.size(); ++i)
-			vecdValues[i] = vecdTmp[i] / dSum;
-	}
+        static void MedianMultiplesSmooth(float dPower,
+                                          std::vector<float> &vecdValues) {
+            static const size_t c_iRadius = 40;
+            std::vector<float> vecdTmp;
+            size_t i, j, k;
+            float d, dSum;
 
-	CPCLImpl(bool fHeader) :
-		m_fHeader(fHeader) {
-	}
-	virtual ~CPCLImpl();
-	
-	bool OpenExperiments(std::istream&, size_t, string&, bool rTable=false);
-	bool OpenGene(std::istream&, std::vector<float>&, string&);
-	void Reset();
-	void MedianMultiplesMapped(const std::vector<std::vector<size_t> >&,
-			std::vector<float>&);
-	bool OpenHelper();
-	bool OpenMemmap(const unsigned char*);
+            vecdTmp.resize(vecdValues.size());
+            for (dSum = 0, i = 0; i < vecdTmp.size(); ++i)
+                for (j = (max(i, c_iRadius) - c_iRadius); j < min(vecdTmp.size(), i
+                                                                                  + c_iRadius); ++j) {
+                    k = max(i, j) - min(i, j);
+                    vecdTmp[i] += (d = (vecdValues[j]
+                                        / (1 + pow((float) k, dPower))));
+                    dSum += d;
+                }
+            for (i = 0; i < vecdValues.size(); ++i)
+                vecdValues[i] = vecdTmp[i] / dSum;
+        }
 
-	void SetGene(size_t iGene, const std::string& strGene) {
+        CPCLImpl(bool fHeader) :
+                m_fHeader(fHeader) {
+        }
 
-		m_mapstriGenes.erase(m_vecstrGenes[iGene]);
-		m_mapstriGenes[m_vecstrGenes[iGene] = strGene] = iGene;
-	}
+        virtual ~CPCLImpl();
 
-	CDataMatrix m_Data;
-	TVecStr m_vecstrGenes;
-	TVecStr m_vecstrExperiments;
-	TVecStr m_vecstrFeatures;
-	std::vector<TVecStr> m_vecvecstrFeatures;
-	TSetI m_setiGenes;
-	bool m_fHeader;
-	TMapStrI m_mapstriGenes;
+        bool OpenExperiments(std::istream &, size_t, string &, bool rTable = false);
 
-	// Memory mapped back end
-	unsigned char* m_abData;
-	size_t m_iData;
-	HANDLE m_hndlData;
-	float** m_aadData;
-};
+        bool OpenGene(std::istream &, std::vector<float> &, string &);
+
+        void Reset();
+
+        void MedianMultiplesMapped(const std::vector <std::vector<size_t>> &,
+                                   std::vector<float> &);
+
+        bool OpenHelper();
+
+        bool OpenMemmap(const unsigned char *);
+
+        void SetGene(size_t iGene, const std::string &strGene) {
+
+            m_mapstriGenes.erase(m_vecstrGenes[iGene]);
+            m_mapstriGenes[m_vecstrGenes[iGene] = strGene] = iGene;
+        }
+
+        CDataMatrix m_Data;
+        TVecStr m_vecstrGenes;
+        TVecStr m_vecstrExperiments;
+        TVecStr m_vecstrFeatures;
+        std::vector <TVecStr> m_vecvecstrFeatures;
+        TSetI m_setiGenes;
+        bool m_fHeader;
+        TMapStrI m_mapstriGenes;
+
+        // Memory mapped back end
+        unsigned char *m_abData;
+        size_t m_iData;
+        HANDLE m_hndlData;
+        float **m_aadData;
+    };
 
 }
 

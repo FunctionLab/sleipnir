@@ -22,18 +22,21 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-int main( int iArgs, char** aszArgs ) {
-	gengetopt_args_info	sArgs;
-	CDataMatrix			Mat;
+int main(int iArgs, char **aszArgs) {
+    gengetopt_args_info sArgs;
+    CDataMatrix Mat;
 
-	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
-		cmdline_parser_print_help( );
-		return 1; }
-	CMeta Meta( sArgs.verbosity_arg );
+    if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
+        cmdline_parser_print_help();
+        return 1;
+    }
+    CMeta Meta(sArgs.verbosity_arg);
 
-	if( !Mat.Open( sArgs.input_arg ) ) {
-		cerr << "Could not open: " << ( sArgs.input_arg ? sArgs.input_arg : "stdin" ) << endl;
-		return 1; }
-	Mat.Save( sArgs.output_arg );
+    if (!Mat.Open(sArgs.input_arg)) {
+        cerr << "Could not open: " << (sArgs.input_arg ? sArgs.input_arg : "stdin") << endl;
+        return 1;
+    }
+    Mat.Save(sArgs.output_arg);
 
-	return 0; }
+    return 0;
+}

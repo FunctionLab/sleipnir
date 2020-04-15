@@ -29,7 +29,9 @@
 #include <map>
 #include <string>
 #include <omp.h>
+
 using namespace std;
+
 #include <algorithm>
 #include <pthread.h>
 
@@ -37,6 +39,7 @@ using namespace std;
 #include "stdlib.h"
 #include "database.h"
 #include "meta.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

@@ -23,32 +23,34 @@
 #define FILEI_H
 
 #undef int64_t
+
 #include <stdint.h>
 
 namespace Sleipnir {
 
-class CFileImpl {
-protected:
-	static const size_t c_iBufferSize	= 2097152;
+    class CFileImpl {
+    protected:
+        static const size_t c_iBufferSize = 2097152;
 
-	static void SaveString( std::ostream& ostm, const std::string& str ) {
-		uint32_t	iLength;
+        static void SaveString(std::ostream &ostm, const std::string &str) {
+            uint32_t iLength;
 
-		iLength = (uint32_t)str.length( );
-		ostm.write( (const char*)&iLength, sizeof(iLength) );
-		ostm.write( str.c_str( ), iLength ); }
+            iLength = (uint32_t) str.length();
+            ostm.write((const char *) &iLength, sizeof(iLength));
+            ostm.write(str.c_str(), iLength);
+        }
 
-	static void OpenString( std::istream& istm, std::string& str ) {
-		uint32_t	iLength;
+        static void OpenString(std::istream &istm, std::string &str) {
+            uint32_t iLength;
 
-		istm.read( (char*)&iLength, sizeof(iLength) );
-		char *tmp = new char[iLength+1];
-		istm.read( tmp, iLength ); 
-		tmp[iLength] = '\0';
-		str = string(tmp);
-		delete[] tmp;
-	}
-};
+            istm.read((char *) &iLength, sizeof(iLength));
+            char *tmp = new char[iLength + 1];
+            istm.read(tmp, iLength);
+            tmp[iLength] = '\0';
+            str = string(tmp);
+            delete[] tmp;
+        }
+    };
 
 }
 

@@ -87,91 +87,91 @@ namespace Sleipnir {
  * <b>For an incoming message to be properly recognized, the incoming message should also be encoded with bytes in the Little Endian order.
  * </b>
  */
-class CSeekNetwork{
-public:
-	/*!
-	 * \brief Send a string
-	 *
-	 * Encodes an outgoing message and sends it to the client
-	 *
-	 * \param new_fd The client socket
-	 * \param str The string to be sent to the client
-	 *
-	 * \remarks Assumes that the client connection has been established.
-	 */
-	static int Send(int, const string&);
+    class CSeekNetwork {
+    public:
+        /*!
+         * \brief Send a string
+         *
+         * Encodes an outgoing message and sends it to the client
+         *
+         * \param new_fd The client socket
+         * \param str The string to be sent to the client
+         *
+         * \remarks Assumes that the client connection has been established.
+         */
+        static int Send(int, const string &);
 
-	/*!
-	 * \brief Send a float array
-	 *
-	 * Encodes an outgoing message and sends it to the client
-	 *
-	 * \param new_fd The client socket
-	 * \param str The array of floats to be sent to the client
-	 *
-	 * \remarks Assumes that the client connection has been established.
-	 */
-	static int Send(int, const vector<float>&);
+        /*!
+         * \brief Send a float array
+         *
+         * Encodes an outgoing message and sends it to the client
+         *
+         * \param new_fd The client socket
+         * \param str The array of floats to be sent to the client
+         *
+         * \remarks Assumes that the client connection has been established.
+         */
+        static int Send(int, const vector<float> &);
 
-	/*!
-	 * \brief Low-level send function
-	 *
-	 * \param new_fd The client socket
-	 * \param c The message
-	 * \param size The message length
-	 * \return -1 if an error occurs or \c size if the sending is successful
-	 *
-	 * \remarks Assumes that the client connection has been established.
-	 */
-	static int Send(int, char*, int);
+        /*!
+         * \brief Low-level send function
+         *
+         * \param new_fd The client socket
+         * \param c The message
+         * \param size The message length
+         * \return -1 if an error occurs or \c size if the sending is successful
+         *
+         * \remarks Assumes that the client connection has been established.
+         */
+        static int Send(int, char *, int);
 
-	/*!
-	 * \brief Clear a char array
-	 *
-	 * Clears a char array by zeroing all bytes
-	 *
-	 * \param b The char array
-	 * \param size The size of the char array
-	 */
-	static void Clear(char*, int);
+        /*!
+         * \brief Clear a char array
+         *
+         * Clears a char array by zeroing all bytes
+         *
+         * \param b The char array
+         * \param size The size of the char array
+         */
+        static void Clear(char *, int);
 
-	/*!
-	 * \brief Copy a char array
-	 *
-	 * Copies the entire source array (0...N) to the destination array beginning at the index \c beg
-	 *
-	 * \param d The destination
-	 * \param s The source
-	 * \param beg The position on the destination array where the pasting starts
-	 * \param num The size of the source array
-	 * \return \c beg + \c num
-	 */
-	static int Copy(char*, char*, int, int);
+        /*!
+         * \brief Copy a char array
+         *
+         * Copies the entire source array (0...N) to the destination array beginning at the index \c beg
+         *
+         * \param d The destination
+         * \param s The source
+         * \param beg The position on the destination array where the pasting starts
+         * \param num The size of the source array
+         * \return \c beg + \c num
+         */
+        static int Copy(char *, char *, int, int);
 
-	/*!
-	 * \brief Receive a string
-	 *
-	 * Receive a string from the client
-	 *
-	 * \param new_fd The client socket
-	 * \param s The string where the message will be received to
-	 *
-	 * \remarks Assumes that the client connection has been established.
-	 */
-	static int Receive(int, string&);
+        /*!
+         * \brief Receive a string
+         *
+         * Receive a string from the client
+         *
+         * \param new_fd The client socket
+         * \param s The string where the message will be received to
+         *
+         * \remarks Assumes that the client connection has been established.
+         */
+        static int Receive(int, string &);
 
-	/*!
-	 * \brief Receive a float array
-	 *
-	 * Receive a float array from the client
-	 *
-	 * \param new_fd The client socket
-	 * \param f The float array where the message will be received to
-	 *
-	 * \remarks Assumes that the client connection has been established.
-	 */
-	static int Receive(int, vector<float>&);
-};
+        /*!
+         * \brief Receive a float array
+         *
+         * Receive a float array from the client
+         *
+         * \param new_fd The client socket
+         * \param f The float array where the message will be received to
+         *
+         * \remarks Assumes that the client connection has been established.
+         */
+        static int Receive(int, vector<float> &);
+    };
 
-}	
+}
 #endif

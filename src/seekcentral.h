@@ -88,437 +88,446 @@ namespace Sleipnir {
  * CSeekCentral can handle multiple queries at a time, but the search parameters must remain
  * the same for all queries.
  */
-class CSeekCentral{
-public:
-    
-    /*!
-     * \enum SearchMode
-     * \brief Search modes (see section Detailed Descriptions)
-     */
-	enum SearchMode{
-		CV=0, /**< Cross-validated weighting */
-        EQUAL=1, /**< Equal weighting */
-        USE_WEIGHT=2, /**< User-supplied weights */
-        CV_CUSTOM=3, /**< Cross-validated weighting, 
+    class CSeekCentral {
+    public:
+
+        /*!
+         * \enum SearchMode
+         * \brief Search modes (see section Detailed Descriptions)
+         */
+        enum SearchMode {
+            CV = 0, /**< Cross-validated weighting */
+            EQUAL = 1, /**< Equal weighting */
+            USE_WEIGHT = 2, /**< User-supplied weights */
+            CV_CUSTOM = 3, /**< Cross-validated weighting,
                       but instead of using the query genes to cross-validate, use the user 
                       supplied gene-sets to validate each query partition */
-        ORDER_STATISTICS=4, /**< MEM algorithm */
-        AVERAGE_Z=5 /**< Average z-scores between query, SPELL algorithm */
-	};
-    
-    /*!
-     * \brief Constructor
-     */
-	CSeekCentral();
-    
-    /*!
-     * \brief Destructor
-     */
-	~CSeekCentral();
+            ORDER_STATISTICS = 4, /**< MEM algorithm */
+            AVERAGE_Z = 5 /**< Average z-scores between query, SPELL algorithm */
+        };
 
-    /*! 
-     * \brief Initialize function
-     *
-     * Performs the following operations:
-     * \li Read the search parameters
-     * \li Read the gene mapping \c gene_map.txt
-     * \li Read a list of queries
-     * \li Read the dataset mapping and the search datasets 
-     * \li Read the CDatabaselets (ie, the gene-gene \a correlations for the 
-     * query genes)
-     *
-     * \param gene The gene mapping file name, \c gene_map.txt
-     * \param quant The quant file name
-     * \param dset The dataset mapping file name, \c dataset_platform.txt
-     * \param search_dset The file which contains the dataset names to be used for the search
-     * \param query The query file name
-     * \param platform The platform directory, which contains the platform 
-     * \a correlation averages and standard deviations
-     * \param db The CDatabaselet directory, which contains the 
-     * gene-centric compendium-wide \a correlations, \c *.db files
-     * \param prep The Prep directory, which contains the gene \a correlation 
-     * average \c *.gavg, and the gene presence \c *.gpres. 
-     * \param gvar The gene variance directory, which contains the \c *.gvar files
-     * \param sinfo The sinfo directory, which contains the \c *.sinfo files
-     * \param num_db The total number of CDatabaselet files
-     * \param buffer The number of query genes to store in the memory
-     * \param output_dir The output directory
-     * \param to_output_text If true, output the gene-ranking in textual format
-     * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
-     * \param bSimulateWeight If true, use simulated weight as dataset weight
-     * \param dist_measure Distance measure, either CORRELATION or Z_SCORE
-     * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
-     * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
-     * \param bLogit If true, apply the logit transformation on the \a correlations
-     * \param fCutOff Cutoff the \a correlation values
-     * \param fPercentRequired The fraction of the query genes required to be present in a dataset 
-     * in order to consider the dataset for integration
-     * \param bSquareZ If true, square the \a correlations
-     * \param bRandom If true, shuffle the \a correlation vector
-     * \param iNumRandom The number of random simulations to perform per query
-     * \param rand The random number generator
-     * \param useNibble Default to false
-     *
-     * \remark The word \a correlation refers to the z-scored, standardized Pearson.
-     * \remark The parameters \c bSubtractAvg, \c bNormPlatform,
-     * \c bLogit, and \c bSquareZ are options to transform the
-     * \a correlation values.
-     * \remark The \c bSimulateWeight option is for equal weighting or order statistics where the final gene ranking
-     * is not derived from a weighted integration of datasets. In this case, if the user still wants to see
-     * the contribution of each dataset, the simulated weight is computed from the distance of a dataset's coexpression ranking to the final gene ranking.
-     * \remark This function is designed to be used by SeekMiner.
-     */
-	bool Initialize(
-		const vector<CSeekDBSetting*> &vecDBSetting,
-		const char *search_dset, const char *query,
-		const char* output_dir,
-		const utype buffer = 20, const bool to_output_text = false,
-		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
-		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
-		const bool bVariance = false,
-		const bool bSubtractAvg = true, const bool bNormPlatform = false,
-		const bool bLogit = false, const float fCutOff = -9999, 
-		const float fPercentQueryRequired = 0, const float fPercentGenomeRequired = 0,
-		const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
-		const bool bNegativeCor = false, const bool bCheckDsetSize = false,
-		gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
+        /*!
+         * \brief Constructor
+         */
+        CSeekCentral();
 
-    /*!
-     * \brief Initialize function
-     *
-     * Load everything except the query, the search datasets, and the output directory
-     *
-     * \param gene The gene mapping file name, \c gene_map.txt
-     * \param quant The quant file name
-     * \param dset The dataset mapping file name, \c dataset_platform.txt
-     * \param platform The platform directory, which contains the platform
-     * \a correlation average and standard deviation
-     * \param db The CDatabaselet directory, which contains the
-     * gene-centric compendium-wide \a correlations, \c *.db files
-     * \param prep The Prep directory, which contains the gene \a correlation
-     * average \c *.gavg, and the gene presence \c *.gpres.
-     * Divided by datasets.
-     * \param gvar The gene variance directory, which contains the \c *.gvar files
-     * \param sinfo The sinfo directory, which contains the \c *.sinfo files
-     * \param num_db The total number of CDatabaselet files
-     * \param buffer The number of query genes to store in the memory
-     * \param to_output_text If true, output the gene-ranking in the textual format
-     * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
-     * \param bSimulateWeight If true, use simulated weight as dataset weight
-     * \param dist_measure Distance measure, either CORRELATION or Z_SCORE
-     * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
-     * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
-     * \param bLogit If true, apply the logit transformation on the \a correlations
-     * \param fCutOff Cutoff the \a correlations
-     * \param fPercentRequired The fraction of the query genes required to be present in a dataset
-     * \param bSquareZ If true, square the \a correlations
-     * \param bRandom If true, shuffle the \a correlation vector
-     * \param iNumRandom The number of random simulations to perform per query
-     * \param rand The random number generator
-     * \param useNibble Default to false
-     *
-     * \remark The word \a correlation refers to the z-scored, standardized Pearson.
-     * \remark The parameters \c bSubtractAvg, \c bNormPlatform,
-     * \c bLogit, and \c bSquareZ are options to transform the
-     * \a correlation values.
-     * \remark The \c bSimulateWeight option is for equal weighting or order statistics where the final gene ranking
-     * is not derived from a weighted integration of datasets. In this case, if the user still wants to see
-     * the contribution of each dataset, the simulated weight is computed from the distance of a dataset's coexpression ranking to the final gene ranking.
-     * \remark This function is designed to be used by SeekMiner.
-     */
-	bool Initialize(
-		const vector<CSeekDBSetting*> &vecDBSetting,
-		const utype buffer = 20, const bool to_output_text = false,
-		const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
-		const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
-		const bool bVariance = false,
-		const bool bSubtractAvg = true, const bool bNormPlatform = false,
-		const bool bLogit = false, const float fCutOff = -9999, 
-		const float fPercentQueryRequired = 0, const float fPercentGenomeRequired = 0,
-		const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
-		const bool bNegativeCor = false, const bool bCheckDsetSize = false,
-		gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
+        /*!
+         * \brief Destructor
+         */
+        ~CSeekCentral();
 
-    /*!
-     * \brief Initialize function
-     *
-     * Prepares Seek to be used in a client-server environment
-     *
-     * \param output_dir The output directory
-     * \param query The query file name
-     * \param search_dset The file that contains the name of datasets to be used for the search
-     * \param src The CSeekCentral instance, where some settings will be copied to here
-     * \param iClient The client's socket connection
-     * \param query_min_required The minimum number of query genes required to be present in a dataset
-     * \param dist_measure Distance measure, either CORRELATION or Z_SCORE.
-     * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
-     * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
-     *
-     * \remark This function is designed to be used by SeekServer.
-     * \remark The parameters \c bSubtractAvg, \c bNormPlatform
-     * are options to transform the \a correlation values.
-     * \remark Assumes that the CDatabaselets have been read, and the \c *.gvar, \c *.sinfo files have been loaded.
-     * \remark Assumes that the dataset and gene mapping files have been read.
-     */
-	bool Initialize(const string &output_dir, const string &query,
-		const string &search_dset, CSeekCentral* src, const int iClient,
-		const float query_min_required = 0, const float genome_min_required = 0,
-		const enum CSeekDataset::DistanceMeasure = CSeekDataset::Z_SCORE,
-		const bool bSubtractGeneAvg = true, const bool bNormPlatform = false,
-		const bool bNegativeCor = false, const bool bCheckDsetSize = false);
+        /*!
+         * \brief Initialize function
+         *
+         * Performs the following operations:
+         * \li Read the search parameters
+         * \li Read the gene mapping \c gene_map.txt
+         * \li Read a list of queries
+         * \li Read the dataset mapping and the search datasets
+         * \li Read the CDatabaselets (ie, the gene-gene \a correlations for the
+         * query genes)
+         *
+         * \param gene The gene mapping file name, \c gene_map.txt
+         * \param quant The quant file name
+         * \param dset The dataset mapping file name, \c dataset_platform.txt
+         * \param search_dset The file which contains the dataset names to be used for the search
+         * \param query The query file name
+         * \param platform The platform directory, which contains the platform
+         * \a correlation averages and standard deviations
+         * \param db The CDatabaselet directory, which contains the
+         * gene-centric compendium-wide \a correlations, \c *.db files
+         * \param prep The Prep directory, which contains the gene \a correlation
+         * average \c *.gavg, and the gene presence \c *.gpres.
+         * \param gvar The gene variance directory, which contains the \c *.gvar files
+         * \param sinfo The sinfo directory, which contains the \c *.sinfo files
+         * \param num_db The total number of CDatabaselet files
+         * \param buffer The number of query genes to store in the memory
+         * \param output_dir The output directory
+         * \param to_output_text If true, output the gene-ranking in textual format
+         * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
+         * \param bSimulateWeight If true, use simulated weight as dataset weight
+         * \param dist_measure Distance measure, either CORRELATION or Z_SCORE
+         * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
+         * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
+         * \param bLogit If true, apply the logit transformation on the \a correlations
+         * \param fCutOff Cutoff the \a correlation values
+         * \param fPercentRequired The fraction of the query genes required to be present in a dataset
+         * in order to consider the dataset for integration
+         * \param bSquareZ If true, square the \a correlations
+         * \param bRandom If true, shuffle the \a correlation vector
+         * \param iNumRandom The number of random simulations to perform per query
+         * \param rand The random number generator
+         * \param useNibble Default to false
+         *
+         * \remark The word \a correlation refers to the z-scored, standardized Pearson.
+         * \remark The parameters \c bSubtractAvg, \c bNormPlatform,
+         * \c bLogit, and \c bSquareZ are options to transform the
+         * \a correlation values.
+         * \remark The \c bSimulateWeight option is for equal weighting or order statistics where the final gene ranking
+         * is not derived from a weighted integration of datasets. In this case, if the user still wants to see
+         * the contribution of each dataset, the simulated weight is computed from the distance of a dataset's coexpression ranking to the final gene ranking.
+         * \remark This function is designed to be used by SeekMiner.
+         */
+        bool Initialize(
+                const vector<CSeekDBSetting *> &vecDBSetting,
+                const char *search_dset, const char *query,
+                const char *output_dir,
+                const utype buffer = 20, const bool to_output_text = false,
+                const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
+                const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
+                const bool bVariance = false,
+                const bool bSubtractAvg = true, const bool bNormPlatform = false,
+                const bool bLogit = false, const float fCutOff = -9999,
+                const float fPercentQueryRequired = 0, const float fPercentGenomeRequired = 0,
+                const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
+                const bool bNegativeCor = false, const bool bCheckDsetSize = false,
+                gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
 
-	/*!
-	 * \brief Run Seek with the cross-validated dataset weighting
-	 *
-	 * \param rnd The random number generator
-	 * \param PART_M Query partition mode
-	 * \param FOLD Number of partitions to generate from the query
-	 * \param RATE The weighting parameter \a p
-	 *
-	 * \remark The random number generator is used for partitioning the query.
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
-	 */
-	bool CVSearch(gsl_rng*, const CSeekQuery::PartitionMode&, const utype&, const float&);
+        /*!
+         * \brief Initialize function
+         *
+         * Load everything except the query, the search datasets, and the output directory
+         *
+         * \param gene The gene mapping file name, \c gene_map.txt
+         * \param quant The quant file name
+         * \param dset The dataset mapping file name, \c dataset_platform.txt
+         * \param platform The platform directory, which contains the platform
+         * \a correlation average and standard deviation
+         * \param db The CDatabaselet directory, which contains the
+         * gene-centric compendium-wide \a correlations, \c *.db files
+         * \param prep The Prep directory, which contains the gene \a correlation
+         * average \c *.gavg, and the gene presence \c *.gpres.
+         * Divided by datasets.
+         * \param gvar The gene variance directory, which contains the \c *.gvar files
+         * \param sinfo The sinfo directory, which contains the \c *.sinfo files
+         * \param num_db The total number of CDatabaselet files
+         * \param buffer The number of query genes to store in the memory
+         * \param to_output_text If true, output the gene-ranking in the textual format
+         * \param bOutputWeightComponent If true, output the dataset weight components (ie the score of cross-validations)
+         * \param bSimulateWeight If true, use simulated weight as dataset weight
+         * \param dist_measure Distance measure, either CORRELATION or Z_SCORE
+         * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
+         * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
+         * \param bLogit If true, apply the logit transformation on the \a correlations
+         * \param fCutOff Cutoff the \a correlations
+         * \param fPercentRequired The fraction of the query genes required to be present in a dataset
+         * \param bSquareZ If true, square the \a correlations
+         * \param bRandom If true, shuffle the \a correlation vector
+         * \param iNumRandom The number of random simulations to perform per query
+         * \param rand The random number generator
+         * \param useNibble Default to false
+         *
+         * \remark The word \a correlation refers to the z-scored, standardized Pearson.
+         * \remark The parameters \c bSubtractAvg, \c bNormPlatform,
+         * \c bLogit, and \c bSquareZ are options to transform the
+         * \a correlation values.
+         * \remark The \c bSimulateWeight option is for equal weighting or order statistics where the final gene ranking
+         * is not derived from a weighted integration of datasets. In this case, if the user still wants to see
+         * the contribution of each dataset, the simulated weight is computed from the distance of a dataset's coexpression ranking to the final gene ranking.
+         * \remark This function is designed to be used by SeekMiner.
+         */
+        bool Initialize(
+                const vector<CSeekDBSetting *> &vecDBSetting,
+                const utype buffer = 20, const bool to_output_text = false,
+                const bool bOutputWeightComponent = false, const bool bSimulateWeight = false,
+                const enum CSeekDataset::DistanceMeasure dist_measure = CSeekDataset::Z_SCORE,
+                const bool bVariance = false,
+                const bool bSubtractAvg = true, const bool bNormPlatform = false,
+                const bool bLogit = false, const float fCutOff = -9999,
+                const float fPercentQueryRequired = 0, const float fPercentGenomeRequired = 0,
+                const bool bSquareZ = false, const bool bRandom = false, const int iNumRandom = 10,
+                const bool bNegativeCor = false, const bool bCheckDsetSize = false,
+                gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
 
-	/*!
-	 * \brief Run Seek with the custom dataset weighting
-	 *
-	 * \param newGoldStd The gold-standard gene-set that is used for weighting datasets
-	 * \param rnd The random number generator
-	 * \param PART_M Query partition mode
-	 * \param FOLD Number of partitions to generate from the query
-	 * \param RATE The weighting parameter \a p	 *
-	 * Same as CVSearch, except that the weighting is not based on the coexpression
-	 * of the query genes, but based on the similarity of the query genes to some custom gold
-	 * standard gene-set.
-	 *
-	 * \remark The random number generator is used for partitioning the query.
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
-	 */
-	bool CVCustomSearch(const vector< vector<string> > &, gsl_rng*,
-		const CSeekQuery::PartitionMode&, const utype&, const float&);
+        /*!
+         * \brief Initialize function
+         *
+         * Prepares Seek to be used in a client-server environment
+         *
+         * \param output_dir The output directory
+         * \param query The query file name
+         * \param search_dset The file that contains the name of datasets to be used for the search
+         * \param src The CSeekCentral instance, where some settings will be copied to here
+         * \param iClient The client's socket connection
+         * \param query_min_required The minimum number of query genes required to be present in a dataset
+         * \param dist_measure Distance measure, either CORRELATION or Z_SCORE.
+         * \param bSubtractAvg If true, subtract the average z-score on a per-gene basis
+         * \param bNormPlatform If true, subtract the platform gene average, divide by platform gene standard deviation
+         *
+         * \remark This function is designed to be used by SeekServer.
+         * \remark The parameters \c bSubtractAvg, \c bNormPlatform
+         * are options to transform the \a correlation values.
+         * \remark Assumes that the CDatabaselets have been read, and the \c *.gvar, \c *.sinfo files have been loaded.
+         * \remark Assumes that the dataset and gene mapping files have been read.
+         */
+        bool Initialize(const string &output_dir, const string &query,
+                        const string &search_dset, CSeekCentral *src, const int iClient,
+                        const float query_min_required = 0, const float genome_min_required = 0,
+                        const enum CSeekDataset::DistanceMeasure = CSeekDataset::Z_SCORE,
+                        const bool bSubtractGeneAvg = true, const bool bNormPlatform = false,
+                        const bool bNegativeCor = false, const bool bCheckDsetSize = false);
 
-	/*!
-	 * \brief Run Seek with the equal dataset weighting
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
-	 */
-	bool EqualWeightSearch();
+        /*!
+         * \brief Run Seek with the cross-validated dataset weighting
+         *
+         * \param rnd The random number generator
+         * \param PART_M Query partition mode
+         * \param FOLD Number of partitions to generate from the query
+         * \param RATE The weighting parameter \a p
+         *
+         * \remark The random number generator is used for partitioning the query.
+         * \remark Assumes that the CSeekCentral::Initialize() has been called.
+         */
+        bool CVSearch(gsl_rng *, const CSeekQuery::PartitionMode &, const utype &, const float &);
 
-	/*!
-	 * \brief Run Seek with the user-given dataset weights
-	 * \param weights A two-dimensional array that stores the user-given weights
-	 *
-	 * \remark The two-dimensional array \c weights is \a Q by \a D :
-	 * where \a Q is the number of queries, \a D is the number of datasets. \c weights[i][j]
-	 * stores the weight of dataset \a j in query \a i.
-	 *
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
-	 */
-	bool WeightSearch(const vector<vector<float> >&);
+        /*!
+         * \brief Run Seek with the custom dataset weighting
+         *
+         * \param newGoldStd The gold-standard gene-set that is used for weighting datasets
+         * \param rnd The random number generator
+         * \param PART_M Query partition mode
+         * \param FOLD Number of partitions to generate from the query
+         * \param RATE The weighting parameter \a p	 *
+         * Same as CVSearch, except that the weighting is not based on the coexpression
+         * of the query genes, but based on the similarity of the query genes to some custom gold
+         * standard gene-set.
+         *
+         * \remark The random number generator is used for partitioning the query.
+         * \remark Assumes that the CSeekCentral::Initialize() has been called.
+         */
+        bool CVCustomSearch(const vector <vector<string>> &, gsl_rng *,
+                            const CSeekQuery::PartitionMode &, const utype &, const float &);
 
-	/*!
-	 * \brief Run Seek with the variance weighted search
-	 *
-	 * Same as CSeekCentral::WeightSearch(), except that the user-given weights are the query gene expression variances.
-	 *
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
-	 */
-	bool VarianceWeightSearch();
+        /*!
+         * \brief Run Seek with the equal dataset weighting
+         * \remark Assumes that the CSeekCentral::Initialize() has been called.
+         */
+        bool EqualWeightSearch();
 
-	/*!
-	 * \brief Run Seek with the SPELL search
-	 *
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
-	 */
-	bool AverageWeightSearch();
+        /*!
+         * \brief Run Seek with the user-given dataset weights
+         * \param weights A two-dimensional array that stores the user-given weights
+         *
+         * \remark The two-dimensional array \c weights is \a Q by \a D :
+         * where \a Q is the number of queries, \a D is the number of datasets. \c weights[i][j]
+         * stores the weight of dataset \a j in query \a i.
+         *
+         * \remark Assumes that the CSeekCentral::Initialize() has been called.
+         */
+        bool WeightSearch(const vector <vector<float>> &);
 
-	/*!
-	 * \brief Run Seek with the order statistics dataset weighting algorithm
-	 *
-	 * \remark Assumes that the CSeekCentral::Initialize() has been called.
-	 */
-	bool OrderStatistics();
+        /*!
+         * \brief Run Seek with the variance weighted search
+         *
+         * Same as CSeekCentral::WeightSearch(), except that the user-given weights are the query gene expression variances.
+         *
+         * \remark Assumes that the CSeekCentral::Initialize() has been called.
+         */
+        bool VarianceWeightSearch();
 
-	/*!
-	 * \brief Get the final gene-ranking for all the queries
-	 * \return A two-dimensional array that stores the gene-rankings
-	 */
-	const vector< vector<AResultFloat> >& GetAllResult()const;
+        /*!
+         * \brief Run Seek with the SPELL search
+         *
+         * \remark Assumes that the CSeekCentral::Initialize() has been called.
+         */
+        bool AverageWeightSearch();
 
-	/*!
-	 * \brief Get all the queries
-	 * \return A vector of queries.
-	 */
-	const vector<CSeekQuery>& GetAllQuery() const;
+        /*!
+         * \brief Run Seek with the order statistics dataset weighting algorithm
+         *
+         * \remark Assumes that the CSeekCentral::Initialize() has been called.
+         */
+        bool OrderStatistics();
 
-	/*!
-	 * \brief Get the dataset weight vector for all the queries
-	 * \return A two-dimensional \c float array that stores the weights
-	 *
-	 * \remark The first dimension is the query. The second dimension is the dataset.
-	 */
-	const vector<vector<float> > &GetAllWeight() const;
+        /*!
+         * \brief Get the final gene-ranking for all the queries
+         * \return A two-dimensional array that stores the gene-rankings
+         */
+        const vector <vector<AResultFloat>> &GetAllResult() const;
 
-	/*!
-	 * \brief Get the gene-map ID for a given \a gene-name
-	 * \param strGene The \a gene-name as a \c string
-	 * \return The gene-map ID
-	 */
-	utype GetGene(const string &strGene) const;
+        /*!
+         * \brief Get all the queries
+         * \return A vector of queries.
+         */
+        const vector <CSeekQuery> &GetAllQuery() const;
 
-	/*!
-	 * \brief Get the \a gene-name for a given gene-map ID
-	 * \param geneID The gene-map ID
-	 * \return The \a gene-name as a \c string
-	 */
-	string GetGene(const utype &geneID) const;
+        /*!
+         * \brief Get the dataset weight vector for all the queries
+         * \return A two-dimensional \c float array that stores the weights
+         *
+         * \remark The first dimension is the query. The second dimension is the dataset.
+         */
+        const vector <vector<float>> &GetAllWeight() const;
 
-	/*!
-	 * \brief Destruct this search instance
-	 * \return True if successful.
-	 */
-	bool Destruct();
+        /*!
+         * \brief Get the gene-map ID for a given \a gene-name
+         * \param strGene The \a gene-name as a \c string
+         * \return The gene-map ID
+         */
+        utype GetGene(const string &strGene) const;
 
-	/*!
-	 * \brief Get the maximum genome coverage among the 
-	 * datasets in the compendium.
-	 */
-	int GetMaxGenomeCoverage();
+        /*!
+         * \brief Get the \a gene-name for a given gene-map ID
+         * \param geneID The gene-map ID
+         * \return The \a gene-name as a \c string
+         */
+        string GetGene(const utype &geneID) const;
 
-private:
-	//network mode
-	bool EnableNetwork(const int&);
-	bool CheckDatasets(const bool&);
+        /*!
+         * \brief Destruct this search instance
+         * \return True if successful.
+         */
+        bool Destruct();
 
-	/* Central search function */
-	bool Common(CSeekCentral::SearchMode&, gsl_rng* = NULL,
-		const CSeekQuery::PartitionMode* = NULL,
-		const utype* = NULL, const float* = NULL,
-		const vector< vector<float> >* = NULL,
-		const vector< vector<string> >* = NULL);
+        /*!
+         * \brief Get the maximum genome coverage among the
+         * datasets in the compendium.
+         */
+        int GetMaxGenomeCoverage();
 
-	bool CheckWeight(const utype &i);
-	bool CopyTopGenes(CSeekQuery&, const vector<AResultFloat>&, 
-		const utype);
-	bool SetQueryScoreNull(const CSeekQuery&);
-	bool PrepareQuery(const vector<string>&, CSeekQuery&);
-	bool CalculateRestart();
-	bool PrepareOneQuery(CSeekQuery &, CSeekIntIntMap &, vector<float>&);
-	bool AggregateThreads();
-	bool FilterResults(const utype &);
-	bool Sort(vector<AResultFloat> &);
-	bool Write(const utype &);
-	bool Display(CSeekQuery &, vector<AResultFloat>&);
+    private:
+        //network mode
+        bool EnableNetwork(const int &);
 
-	/* Gene, Dataset, and Platform Mapping*/
-	vector<string> m_vecstrGenes;
-	vector<string> m_vecstrDatasets;
-	vector<string> m_vecstrDP;
-	map<string, string> m_mapstrstrDatasetPlatform;
-	map<string, utype> m_mapstrintDataset;
-	map<string, utype> m_mapstrintGene;
-	vector<vector<string> > m_vecstrSearchDatasets;
-	vector<CSeekIntIntMap*> m_searchdsetMap;
+        bool CheckDatasets(const bool &);
 
-	/* Datasets */
-	vector<CSeekDataset*> m_vc;
+        /* Central search function */
+        bool Common(CSeekCentral::SearchMode &, gsl_rng * = NULL,
+                    const CSeekQuery::PartitionMode * = NULL,
+                    const utype * = NULL, const float * = NULL,
+                    const vector <vector<float>> * = NULL,
+                    const vector <vector<string>> * = NULL);
 
-	/* Output */
-	bool m_bOutputText;
+        bool CheckWeight(const utype &i);
 
-	/* If true, output random case (ie shuffle rankings per dataset)
-	   iNumRandom: number of repetitions (Oct 26, 2012) */
-	bool m_bRandom;
-	int m_iNumRandom;
-	gsl_rng *m_randRandom;
-	/* random dataset weight over all repetitions */
-	//vector<vector<float> > m_vecRandWeight; 
-	/* random gene scores over all repetitions */
-	//vector<vector<float> > m_vecRandScore; 
+        bool CopyTopGenes(CSeekQuery &, const vector <AResultFloat> &,
+                          const utype);
 
-	/* Gene-gene correlation matrix for all datasets
-	 Organized per thread */
-	utype ***m_rData;
+        bool SetQueryScoreNull(const CSeekQuery &);
 
-	/* Correlation discretization */
-	vector<float> m_quant;
+        bool PrepareQuery(const vector <string> &, CSeekQuery &);
 
-	/* Correlation transformation options */
-	bool m_bSubtractGeneAvg;
-	bool m_bNormPlatform;
-	enum CSeekDataset::DistanceMeasure m_eDistMeasure;
-	bool m_bLogit;
-	bool m_bSquareZ;
+        bool CalculateRestart();
 
-	/* multi-threaded programming */
-	float **m_master_rank_threads;
-	float **m_sum_weight_threads;
-	float **m_sum_sq_weight_threads;
-	utype **m_counts_threads;
-	vector<utype> *m_rank_normal_threads;
-	vector<utype> *m_rank_threads;
+        bool PrepareOneQuery(CSeekQuery &, CSeekIntIntMap &, vector<float> &);
 
-	/* Essential search results */
-	vector<float> m_master_rank;
-	vector<float> m_sum_weight;
-	vector<float> m_sum_sq_weight;
-	vector<utype> m_counts;
+        bool AggregateThreads();
 
-	/* Holds results for all queries */
-	vector< vector<float> > m_weight;
-	vector< vector<AResultFloat> > m_final;
+        bool FilterResults(const utype &);
 
-	/* Query */
-	vector< vector<string> > m_vecstrAllQuery;
-	vector<CSeekQuery> m_Query;
+        bool Sort(vector <AResultFloat> &);
 
-	/* Platform */
-	vector<CSeekPlatform> m_vp;
-	map<string, utype> m_mapstriPlatform;
-	vector<string> m_vecstrPlatform;
+        bool Write(const utype &);
 
-	//CDatabase reference
-	vector<CDatabase*> m_vecDB;
-	vector<vector<string> > m_vecDBDataset; //A list of dsets in each CDatabase
+        bool Display(CSeekQuery &, vector <AResultFloat> &);
 
-	size_t m_iDatasets;
-	size_t m_iGenes;
-	utype m_numThreads;
+        /* Gene, Dataset, and Platform Mapping*/
+        vector <string> m_vecstrGenes;
+        vector <string> m_vecstrDatasets;
+        vector <string> m_vecstrDP;
+        map <string, string> m_mapstrstrDatasetPlatform;
+        map <string, utype> m_mapstrintDataset;
+        map <string, utype> m_mapstrintGene;
+        vector <vector<string>> m_vecstrSearchDatasets;
+        vector<CSeekIntIntMap *> m_searchdsetMap;
 
-	utype m_maxNumDB;
-	map<utype, vector< vector<string> > > m_mapLoadTime;
-	bool DEBUG;
+        /* Datasets */
+        vector<CSeekDataset *> m_vc;
 
-	bool m_bOutputWeightComponent;
-	bool m_bSimulateWeight;
+        /* Output */
+        bool m_bOutputText;
 
-	string m_output_dir;
-	float m_fScoreCutOff;
-	float m_fPercentQueryAfterScoreCutOff;
-	float m_fPercentGenomeRequired;
+        /* If true, output random case (ie shuffle rankings per dataset)
+           iNumRandom: number of repetitions (Oct 26, 2012) */
+        bool m_bRandom;
+        int m_iNumRandom;
+        gsl_rng *m_randRandom;
+        /* random dataset weight over all repetitions */
+        //vector<vector<float> > m_vecRandWeight;
+        /* random gene scores over all repetitions */
+        //vector<vector<float> > m_vecRandScore;
 
-	/* for order statistics, a datasets-by-genes matrix */
-	utype **m_rank_d;
+        /* Gene-gene correlation matrix for all datasets
+         Organized per thread */
+        utype ***m_rData;
 
-	/* for network mode */
-	int m_iClient;
-	bool m_bEnableNetwork;
-	//bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
-	bool m_bNegativeCor;
+        /* Correlation discretization */
+        vector<float> m_quant;
 
-	vector<CSeekDBSetting*> m_vecDBSetting; //DBSetting
-	bool m_useNibble;
+        /* Correlation transformation options */
+        bool m_bSubtractGeneAvg;
+        bool m_bNormPlatform;
+        enum CSeekDataset::DistanceMeasure m_eDistMeasure;
+        bool m_bLogit;
+        bool m_bSquareZ;
 
-	float m_DEFAULT_NA;
+        /* multi-threaded programming */
+        float **m_master_rank_threads;
+        float **m_sum_weight_threads;
+        float **m_sum_sq_weight_threads;
+        utype **m_counts_threads;
+        vector <utype> *m_rank_normal_threads;
+        vector <utype> *m_rank_threads;
 
-	/* for specifying dataset size */
-	bool m_bCheckDsetSize;
-	int m_iNumSampleRequired;
-	map<string, utype> m_mapstrintDatasetSize;
-};
+        /* Essential search results */
+        vector<float> m_master_rank;
+        vector<float> m_sum_weight;
+        vector<float> m_sum_sq_weight;
+        vector <utype> m_counts;
 
+        /* Holds results for all queries */
+        vector <vector<float>> m_weight;
+        vector <vector<AResultFloat>> m_final;
 
+        /* Query */
+        vector <vector<string>> m_vecstrAllQuery;
+        vector <CSeekQuery> m_Query;
 
+        /* Platform */
+        vector <CSeekPlatform> m_vp;
+        map <string, utype> m_mapstriPlatform;
+        vector <string> m_vecstrPlatform;
+
+        //CDatabase reference
+        vector<CDatabase *> m_vecDB;
+        vector <vector<string>> m_vecDBDataset; //A list of dsets in each CDatabase
+
+        size_t m_iDatasets;
+        size_t m_iGenes;
+        utype m_numThreads;
+
+        utype m_maxNumDB;
+        map <utype, vector<vector < string>> >
+        m_mapLoadTime;
+        bool DEBUG;
+
+        bool m_bOutputWeightComponent;
+        bool m_bSimulateWeight;
+
+        string m_output_dir;
+        float m_fScoreCutOff;
+        float m_fPercentQueryAfterScoreCutOff;
+        float m_fPercentGenomeRequired;
+
+        /* for order statistics, a datasets-by-genes matrix */
+        utype **m_rank_d;
+
+        /* for network mode */
+        int m_iClient;
+        bool m_bEnableNetwork;
+        //bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
+        bool m_bNegativeCor;
+
+        vector<CSeekDBSetting *> m_vecDBSetting; //DBSetting
+        bool m_useNibble;
+
+        float m_DEFAULT_NA;
+
+        /* for specifying dataset size */
+        bool m_bCheckDsetSize;
+        int m_iNumSampleRequired;
+        map <string, utype> m_mapstrintDatasetSize;
+    };
 
 
 }

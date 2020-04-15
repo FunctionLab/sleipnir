@@ -34,58 +34,58 @@
 
 namespace Sleipnir {
 
-CSeekPlatform::CSeekPlatform(){
-	m_iNumGenes = 0;
-	m_vecfPlatformAvg.clear();
-	m_vecfPlatformStdev.clear();
-	m_strPlatformName = "";
-}
+    CSeekPlatform::CSeekPlatform() {
+        m_iNumGenes = 0;
+        m_vecfPlatformAvg.clear();
+        m_vecfPlatformStdev.clear();
+        m_strPlatformName = "";
+    }
 
-CSeekPlatform::~CSeekPlatform(){
-	m_vecfPlatformAvg.clear();
-	m_vecfPlatformStdev.clear();
-}
+    CSeekPlatform::~CSeekPlatform() {
+        m_vecfPlatformAvg.clear();
+        m_vecfPlatformStdev.clear();
+    }
 
-void CSeekPlatform::Copy(const CSeekPlatform &pl){
-	m_iNumGenes = pl.m_iNumGenes;
-	m_strPlatformName = pl.m_strPlatformName;
-	m_vecfPlatformAvg.resize(pl.m_vecfPlatformAvg.size());
-	m_vecfPlatformStdev.resize(pl.m_vecfPlatformStdev.size());
-	copy(pl.m_vecfPlatformAvg.begin(), pl.m_vecfPlatformAvg.end(),
-		m_vecfPlatformAvg.begin());
-	copy(pl.m_vecfPlatformStdev.begin(), pl.m_vecfPlatformStdev.end(),
-		m_vecfPlatformStdev.begin());
-}
+    void CSeekPlatform::Copy(const CSeekPlatform &pl) {
+        m_iNumGenes = pl.m_iNumGenes;
+        m_strPlatformName = pl.m_strPlatformName;
+        m_vecfPlatformAvg.resize(pl.m_vecfPlatformAvg.size());
+        m_vecfPlatformStdev.resize(pl.m_vecfPlatformStdev.size());
+        copy(pl.m_vecfPlatformAvg.begin(), pl.m_vecfPlatformAvg.end(),
+             m_vecfPlatformAvg.begin());
+        copy(pl.m_vecfPlatformStdev.begin(), pl.m_vecfPlatformStdev.end(),
+             m_vecfPlatformStdev.begin());
+    }
 
-void CSeekPlatform::InitializePlatform(const utype &numGenes,
-		const string &strPlatformName){
-	m_iNumGenes = numGenes;
-	CSeekTools::InitVector(m_vecfPlatformAvg, numGenes, (float) 0);
-	CSeekTools::InitVector(m_vecfPlatformStdev, numGenes, (float) 0);
-	m_strPlatformName = strPlatformName;
-}
+    void CSeekPlatform::InitializePlatform(const utype &numGenes,
+                                           const string &strPlatformName) {
+        m_iNumGenes = numGenes;
+        CSeekTools::InitVector(m_vecfPlatformAvg, numGenes, (float) 0);
+        CSeekTools::InitVector(m_vecfPlatformStdev, numGenes, (float) 0);
+        m_strPlatformName = strPlatformName;
+    }
 
-void CSeekPlatform::SetPlatformAvg(const utype &i, const float &val){
-	m_vecfPlatformAvg[i] = val;
-}
-	
-void CSeekPlatform::SetPlatformStdev(const utype &i, const float &val){
-	m_vecfPlatformStdev[i] = val;
-}
-	
-float CSeekPlatform::GetPlatformAvg(const utype &i) const{
-	return m_vecfPlatformAvg[i];
-}
+    void CSeekPlatform::SetPlatformAvg(const utype &i, const float &val) {
+        m_vecfPlatformAvg[i] = val;
+    }
 
-float CSeekPlatform::GetPlatformStdev(const utype &i) const{
-	return m_vecfPlatformStdev[i];
-}
+    void CSeekPlatform::SetPlatformStdev(const utype &i, const float &val) {
+        m_vecfPlatformStdev[i] = val;
+    }
 
-void CSeekPlatform::ResetPlatform(){
-	m_iNumGenes = 0;
-	m_vecfPlatformAvg.clear();
-	m_vecfPlatformStdev.clear();
-	m_strPlatformName = "";
-}
+    float CSeekPlatform::GetPlatformAvg(const utype &i) const {
+        return m_vecfPlatformAvg[i];
+    }
+
+    float CSeekPlatform::GetPlatformStdev(const utype &i) const {
+        return m_vecfPlatformStdev[i];
+    }
+
+    void CSeekPlatform::ResetPlatform() {
+        m_iNumGenes = 0;
+        m_vecfPlatformAvg.clear();
+        m_vecfPlatformStdev.clear();
+        m_strPlatformName = "";
+    }
 
 }

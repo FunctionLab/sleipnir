@@ -26,229 +26,267 @@
 
 namespace Sleipnir {
 
-class CCoalesceCluster;
-class CCoalesceGeneScores;
-class CCoalesceGroupHistograms;
-struct SMotifMatch;
+    class CCoalesceCluster;
 
-class CCoalesceClusterImpl {
-protected:
-	typedef std::vector<std::map<std::string, std::set<SMotifMatch> > >	TVecMapStrSetSMotifs;
+    class CCoalesceGeneScores;
 
-	static const char	c_cStar		= '*';
-	static const char	c_szMotifs[];
-	static const char	c_szConditions[];
-	static const char	c_szGenes[];
+    class CCoalesceGroupHistograms;
 
-	struct SDataset {
-		const SCoalesceDataset*	m_psDataset;
-		double					m_dP;
-		float					m_dZ;
-		std::vector<float>		m_vecdCentroid;
+    struct SMotifMatch;
 
-		size_t GetConditions( ) const {
+    class CCoalesceClusterImpl {
+    protected:
+        typedef std::vector <std::map<std::string, std::set < SMotifMatch>> >
+        TVecMapStrSetSMotifs;
 
-			return m_psDataset->GetConditions( ); }
+        static const char c_cStar = '*';
+        static const char c_szMotifs[];
+        static const char c_szConditions[];
+        static const char c_szGenes[];
 
-		size_t GetCondition( size_t iCondition ) const {
+        struct SDataset {
+            const SCoalesceDataset *m_psDataset;
+            double m_dP;
+            float m_dZ;
+            std::vector<float> m_vecdCentroid;
 
-			return m_psDataset->GetCondition( iCondition ); }
-	};
+            size_t GetConditions() const {
 
-	struct SThreadCentroid {
-		CCoalesceCluster*	m_pCluster;
-		const CPCL&			m_PCL;
+                return m_psDataset->GetConditions();
+            }
 
-		SThreadCentroid( CCoalesceCluster* pCluster, const CPCL& PCL ) : m_pCluster(pCluster), m_PCL(PCL) { }
-	};
+            size_t GetCondition(size_t iCondition) const {
 
-	struct SThreadSignificantGene {
-		size_t									m_iOffset;
-		size_t									m_iStep;
-		std::vector<bool>*						m_pvecfSignificant;
-		const CPCL*								m_pPCL;
-		const CCoalesceMotifLibrary*			m_pMotifs;
-		const CCoalesceGeneScores*				m_pGeneScores;
-		const CCoalesceGroupHistograms*			m_pHistsCluster;
-		const CCoalesceGroupHistograms*			m_pHistsPot;
-		const CCoalesceCluster*					m_pCluster;
-		const CCoalesceCluster*					m_pPot;
-		const std::vector<size_t>*				m_pveciDatasets;
-		const std::vector<float>*				m_pvecdStdevs;
-		float									m_dBeta;
-		size_t									m_iMinimum;
-		float									m_dProbability;
-	};
+                return m_psDataset->GetCondition(iCondition);
+            }
+        };
 
-	struct SThreadSelectMotif {
-		uint32_t						m_iOffset;
-		size_t							m_iStep;
-		const CCoalesceMotifLibrary*	m_pMotifs;
-		const CCoalesceGroupHistograms*	m_pHistsCluster;
-		const CCoalesceGroupHistograms*	m_pHistsPot;
-		float							m_dPValue;
-		float							m_dZScore;
-		const std::vector<uint32_t>*	m_pveciMotifs;
-		std::vector<SMotifMatch>		m_vecsMotifs;
-	};
+        struct SThreadCentroid {
+            CCoalesceCluster *m_pCluster;
+            const CPCL &m_PCL;
 
-	struct SThreadSeedPair {
-		size_t										m_iOffset;
-		size_t										m_iStep;
-		const CPCL*									m_pPCL;
-		float										m_dFraction;
-		const std::set<std::pair<size_t, size_t> >*	m_psetpriiSeeds;
-		double										m_dMaxCorr;
-		double										m_dMinP;
-		size_t										m_iOne;
-		size_t										m_iTwo;
-	};
+            SThreadCentroid(CCoalesceCluster *pCluster, const CPCL &PCL) : m_pCluster(pCluster), m_PCL(PCL) {}
+        };
 
-	struct SThreadSelectCondition {
-		size_t						m_iOffset;
-		size_t						m_iStep;
-		const std::vector<size_t>*	m_pveciCluster;
-		const std::vector<size_t>*	m_pveciPot;
-		std::vector<SDataset>*		m_pvecsDatasets;
-		const CPCL*					m_pPCL;
-	};
+        struct SThreadSignificantGene {
+            size_t m_iOffset;
+            size_t m_iStep;
+            std::vector<bool> *m_pvecfSignificant;
+            const CPCL *m_pPCL;
+            const CCoalesceMotifLibrary *m_pMotifs;
+            const CCoalesceGeneScores *m_pGeneScores;
+            const CCoalesceGroupHistograms *m_pHistsCluster;
+            const CCoalesceGroupHistograms *m_pHistsPot;
+            const CCoalesceCluster *m_pCluster;
+            const CCoalesceCluster *m_pPot;
+            const std::vector <size_t> *m_pveciDatasets;
+            const std::vector<float> *m_pvecdStdevs;
+            float m_dBeta;
+            size_t m_iMinimum;
+            float m_dProbability;
+        };
 
-	static void* ThreadCentroid( void* );
-	static void* ThreadSignificantGene( void* );
-	static void* ThreadSelectMotif( void* );
-	static void* ThreadSeedPair( void* );
-	static void* ThreadSelectCondition( void* );
-	static bool AddSignificant( const CCoalesceMotifLibrary&, uint32_t, const CCoalesceGroupHistograms&,
-		const CCoalesceGroupHistograms&, float, float, std::vector<SMotifMatch>& );
-	static size_t Open( const CHierarchy&, const std::vector<CCoalesceCluster>&,
-		const std::vector<std::string>&, std::map<size_t, size_t>&, std::map<size_t, size_t>&,
-		TVecMapStrSetSMotifs& );
-	static bool OpenMotifs( CCoalesceMotifLibrary&, const CHierarchy&, const std::vector<SMotifMatch>&, float,
-		std::set<SMotifMatch>& );
+        struct SThreadSelectMotif {
+            uint32_t m_iOffset;
+            size_t m_iStep;
+            const CCoalesceMotifLibrary *m_pMotifs;
+            const CCoalesceGroupHistograms *m_pHistsCluster;
+            const CCoalesceGroupHistograms *m_pHistsPot;
+            float m_dPValue;
+            float m_dZScore;
+            const std::vector <uint32_t> *m_pveciMotifs;
+            std::vector <SMotifMatch> m_vecsMotifs;
+        };
 
-	template<class tType>
-	static bool IsConverged( const std::set<tType>& setNew, std::vector<tType>& vecOld ) {
-		size_t				i;
-		std::vector<tType>	vecNew;
+        struct SThreadSeedPair {
+            size_t m_iOffset;
+            size_t m_iStep;
+            const CPCL *m_pPCL;
+            float m_dFraction;
+            const std::set <std::pair<size_t, size_t>> *m_psetpriiSeeds;
+            double m_dMaxCorr;
+            double m_dMinP;
+            size_t m_iOne;
+            size_t m_iTwo;
+        };
 
-		if( setNew.size( ) != vecOld.size( ) )
-			return false;
-		Snapshot( setNew, vecNew );
-		for( i = 0; i < vecNew.size( ); ++i )
-			if( vecNew[ i ] != vecOld[ i ] )
-				return false;
+        struct SThreadSelectCondition {
+            size_t m_iOffset;
+            size_t m_iStep;
+            const std::vector <size_t> *m_pveciCluster;
+            const std::vector <size_t> *m_pveciPot;
+            std::vector <SDataset> *m_pvecsDatasets;
+            const CPCL *m_pPCL;
+        };
 
-		return true; }
+        static void *ThreadCentroid(void *);
 
-	template<class tType>
-	static void Snapshot( const std::set<tType>& setNew, std::vector<tType>& vecOld ) {
+        static void *ThreadSignificantGene(void *);
 
-		vecOld.resize( setNew.size( ) );
-		std::copy( setNew.begin( ), setNew.end( ), vecOld.begin( ) );
-		std::sort( vecOld.begin( ), vecOld.end( ) ); }
+        static void *ThreadSelectMotif(void *);
 
-	template<class tType>
-	static size_t GetHash( const std::set<tType>& set ) {
-		size_t										iRet;
-		typename std::set<tType>::const_iterator	iter;
+        static void *ThreadSeedPair(void *);
 
-		for( iRet = 0,iter = set.begin( ); iter != set.end( ); ++iter )
-			iRet ^= GetHash( *iter );
+        static void *ThreadSelectCondition(void *);
 
-		return iRet; }
+        static bool AddSignificant(const CCoalesceMotifLibrary &, uint32_t, const CCoalesceGroupHistograms &,
+                                   const CCoalesceGroupHistograms &, float, float, std::vector <SMotifMatch> &);
 
-	static size_t GetHash( size_t iValue ) {
+        static size_t Open(const CHierarchy &, const std::vector <CCoalesceCluster> &,
+                           const std::vector <std::string> &, std::map <size_t, size_t> &, std::map <size_t, size_t> &,
+                           TVecMapStrSetSMotifs &);
 
-		return ( iValue * ( (size_t)-1 / 20000 ) ); }
+        static bool OpenMotifs(CCoalesceMotifLibrary &, const CHierarchy &, const std::vector <SMotifMatch> &, float,
+                               std::set <SMotifMatch> &);
 
-	static size_t GetHash( const SMotifMatch& sMotif ) {
+        template<class tType>
+        static bool IsConverged(const std::set <tType> &setNew, std::vector <tType> &vecOld) {
+            size_t i;
+            std::vector <tType> vecNew;
 
-		return sMotif.GetHash( ); }
+            if (setNew.size() != vecOld.size())
+                return false;
+            Snapshot(setNew, vecNew);
+            for (i = 0; i < vecNew.size(); ++i)
+                if (vecNew[i] != vecOld[i])
+                    return false;
 
-	void Add( size_t, CCoalesceCluster& );
-	bool AddCorrelatedGenes( const CPCL&, CCoalesceCluster&, const std::vector<float>&, float );
-	bool AddSeedPair( const CPCL&, CCoalesceCluster&, std::set<std::pair<size_t, size_t> >&, float, float,
-		size_t );
-	void CalculateCentroid( const CPCL& );
-	bool IsSignificant( size_t, const CPCL&, const std::vector<float>&, const CCoalesceMotifLibrary*,
-		const CCoalesceGeneScores&, const CCoalesceGroupHistograms&, const CCoalesceGroupHistograms&,
-		const CCoalesceCluster&, const std::vector<size_t>&, float, size_t, float ) const;
-	bool CalculateProbabilityExpression( size_t, const CPCL&, const std::vector<float>&,
-		const CCoalesceCluster&, const std::vector<size_t>&, bool, float&, float& ) const;
-	bool CalculateProbabilityMotifs( const CCoalesceGeneScores&, size_t, const CCoalesceGroupHistograms&,
-		const CCoalesceGroupHistograms&, bool, size_t, float&, float& ) const;
-	bool SaveCopy( const CPCL&, const std::set<size_t>&, size_t, CPCL&, size_t, bool ) const;
-	bool OpenMotifs( const std::set<SMotifMatch>&, CCoalesceMotifLibrary&, float );
-	bool OpenMotifsHeuristic( const std::set<SMotifMatch>&, CCoalesceMotifLibrary&, float, size_t );
+            return true;
+        }
 
-	size_t GetConditions( size_t iDataset ) const {
+        template<class tType>
+        static void Snapshot(const std::set <tType> &setNew, std::vector <tType> &vecOld) {
 
-		if( iDataset < m_vecsDatasets.size( ) ) {
-			const SDataset&	sDataset	= m_vecsDatasets[ iDataset ];
+            vecOld.resize(setNew.size());
+            std::copy(setNew.begin(), setNew.end(), vecOld.begin());
+            std::sort(vecOld.begin(), vecOld.end());
+        }
 
-			if( sDataset.m_psDataset )
-				return sDataset.m_psDataset->GetConditions( ); }
+        template<class tType>
+        static size_t GetHash(const std::set <tType> &set) {
+            size_t iRet;
+            typename std::set<tType>::const_iterator iter;
 
-		return 1; }
+            for (iRet = 0, iter = set.begin(); iter != set.end(); ++iter)
+                iRet ^= GetHash(*iter);
 
-	size_t GetCondition( size_t iDataset, size_t iCondition ) const {
+            return iRet;
+        }
 
-		if( iDataset < m_vecsDatasets.size( ) ) {
-			const SDataset&	sDataset	= m_vecsDatasets[ iDataset ];
+        static size_t GetHash(size_t iValue) {
 
-			if( sDataset.m_psDataset )
-				return sDataset.m_psDataset->GetCondition( iCondition ); }
+            return (iValue * ((size_t) - 1 / 20000));
+        }
 
-		return iDataset; }
+        static size_t GetHash(const SMotifMatch &sMotif) {
 
-	bool IsGene( size_t iGene ) const {
+            return sMotif.GetHash();
+        }
 
-		return ( m_setiGenes.find( iGene ) != m_setiGenes.end( ) ); }
+        void Add(size_t, CCoalesceCluster &);
 
-	size_t GetHash( ) const {
+        bool AddCorrelatedGenes(const CPCL &, CCoalesceCluster &, const std::vector<float> &, float);
 
-		return ( GetHash( m_setiDatasets ) ^ GetHash( m_setiGenes ) ^ GetHash( m_setsMotifs ) ); }
+        bool AddSeedPair(const CPCL &, CCoalesceCluster &, std::set <std::pair<size_t, size_t>> &, float, float,
+                         size_t);
 
-	void GetConditions( std::set<size_t>& setiConditions ) const {
-		set<size_t>::const_iterator	iterDataset;
-		size_t						i;
+        void CalculateCentroid(const CPCL &);
 
-		for( iterDataset = m_setiDatasets.begin( ); iterDataset != m_setiDatasets.end( ); ++iterDataset )
-			for( i = 0; i < GetConditions( *iterDataset ); ++i )
-				setiConditions.insert( GetCondition( *iterDataset, i ) ); }
+        bool IsSignificant(size_t, const CPCL &, const std::vector<float> &, const CCoalesceMotifLibrary *,
+                           const CCoalesceGeneScores &, const CCoalesceGroupHistograms &,
+                           const CCoalesceGroupHistograms &,
+                           const CCoalesceCluster &, const std::vector <size_t> &, float, size_t, float) const;
 
-	const std::set<size_t>& GetGenes( ) const {
+        bool CalculateProbabilityExpression(size_t, const CPCL &, const std::vector<float> &,
+                                            const CCoalesceCluster &, const std::vector <size_t> &, bool, float &,
+                                            float &) const;
 
-		return m_setiGenes; }
+        bool CalculateProbabilityMotifs(const CCoalesceGeneScores &, size_t, const CCoalesceGroupHistograms &,
+                                        const CCoalesceGroupHistograms &, bool, size_t, float &, float &) const;
 
-	void Clear( ) {
+        bool SaveCopy(const CPCL &, const std::set <size_t> &, size_t, CPCL &, size_t, bool) const;
 
-		m_setiDatasets.clear( );
-		m_setiGenes.clear( );
-		m_setsMotifs.clear( );
-		m_veciPrevDatasets.clear( );
-		m_veciPrevGenes.clear( );
-		m_vecsPrevMotifs.clear( );
-		m_veciCounts.clear( );
-		m_vecdCentroid.clear( );
-		m_vecdStdevs.clear( );
-		m_setiHistory.clear( );
-		m_vecdPriors.clear( );
-		m_vecsDatasets.clear( ); }
+        bool OpenMotifs(const std::set <SMotifMatch> &, CCoalesceMotifLibrary &, float);
 
-	std::set<size_t>			m_setiDatasets;
-	std::set<size_t>			m_setiGenes;
-	std::set<SMotifMatch>		m_setsMotifs;
-	std::vector<size_t>			m_veciPrevDatasets;
-	std::vector<size_t>			m_veciPrevGenes;
-	std::vector<SMotifMatch>	m_vecsPrevMotifs;
-	std::vector<size_t>			m_veciCounts;
-	std::vector<float>			m_vecdCentroid;
-	std::vector<float>			m_vecdStdevs;
-	std::set<size_t>			m_setiHistory;
-	std::vector<float>			m_vecdPriors;
-	std::vector<SDataset>		m_vecsDatasets;
-};
+        bool OpenMotifsHeuristic(const std::set <SMotifMatch> &, CCoalesceMotifLibrary &, float, size_t);
+
+        size_t GetConditions(size_t iDataset) const {
+
+            if (iDataset < m_vecsDatasets.size()) {
+                const SDataset &sDataset = m_vecsDatasets[iDataset];
+
+                if (sDataset.m_psDataset)
+                    return sDataset.m_psDataset->GetConditions();
+            }
+
+            return 1;
+        }
+
+        size_t GetCondition(size_t iDataset, size_t iCondition) const {
+
+            if (iDataset < m_vecsDatasets.size()) {
+                const SDataset &sDataset = m_vecsDatasets[iDataset];
+
+                if (sDataset.m_psDataset)
+                    return sDataset.m_psDataset->GetCondition(iCondition);
+            }
+
+            return iDataset;
+        }
+
+        bool IsGene(size_t iGene) const {
+
+            return (m_setiGenes.find(iGene) != m_setiGenes.end());
+        }
+
+        size_t GetHash() const {
+
+            return (GetHash(m_setiDatasets) ^ GetHash(m_setiGenes) ^ GetHash(m_setsMotifs));
+        }
+
+        void GetConditions(std::set <size_t> &setiConditions) const {
+            set<size_t>::const_iterator iterDataset;
+            size_t i;
+
+            for (iterDataset = m_setiDatasets.begin(); iterDataset != m_setiDatasets.end(); ++iterDataset)
+                for (i = 0; i < GetConditions(*iterDataset); ++i)
+                    setiConditions.insert(GetCondition(*iterDataset, i));
+        }
+
+        const std::set <size_t> &GetGenes() const {
+
+            return m_setiGenes;
+        }
+
+        void Clear() {
+
+            m_setiDatasets.clear();
+            m_setiGenes.clear();
+            m_setsMotifs.clear();
+            m_veciPrevDatasets.clear();
+            m_veciPrevGenes.clear();
+            m_vecsPrevMotifs.clear();
+            m_veciCounts.clear();
+            m_vecdCentroid.clear();
+            m_vecdStdevs.clear();
+            m_setiHistory.clear();
+            m_vecdPriors.clear();
+            m_vecsDatasets.clear();
+        }
+
+        std::set <size_t> m_setiDatasets;
+        std::set <size_t> m_setiGenes;
+        std::set <SMotifMatch> m_setsMotifs;
+        std::vector <size_t> m_veciPrevDatasets;
+        std::vector <size_t> m_veciPrevGenes;
+        std::vector <SMotifMatch> m_vecsPrevMotifs;
+        std::vector <size_t> m_veciCounts;
+        std::vector<float> m_vecdCentroid;
+        std::vector<float> m_vecdStdevs;
+        std::set <size_t> m_setiHistory;
+        std::vector<float> m_vecdPriors;
+        std::vector <SDataset> m_vecsDatasets;
+    };
 
 }
 

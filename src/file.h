@@ -24,28 +24,29 @@
 
 #ifdef _MSC_VER
 #define	FOR_EACH_DIRECTORY_FILE(strDir, strFile)											\
-	HANDLE			hSearch;																\
-	WIN32_FIND_DATA	sEntry;																	\
-	bool			fOk;																	\
-	for( fOk = ( ( hSearch = FindFirstFile( ( (strDir) + "/*" ).c_str( ), &sEntry ) )		\
-		!= INVALID_HANDLE_VALUE ); fOk; fOk = !!FindNextFile( hSearch, &sEntry ) ) {		\
-		if( sEntry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )							\
-			continue;																		\
-		(strFile) = sEntry.cFileName;
+    HANDLE			hSearch;																\
+    WIN32_FIND_DATA	sEntry;																	\
+    bool			fOk;																	\
+    for( fOk = ( ( hSearch = FindFirstFile( ( (strDir) + "/*" ).c_str( ), &sEntry ) )		\
+        != INVALID_HANDLE_VALUE ); fOk; fOk = !!FindNextFile( hSearch, &sEntry ) ) {		\
+        if( sEntry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )							\
+            continue;																		\
+        (strFile) = sEntry.cFileName;
 #else // _MSC_VER
+
 #include <dirent.h>
 #include <sys/stat.h>
 
-#define	FOR_EACH_DIRECTORY_FILE(strDir, strFile)											\
-	DIR*			pDir;																	\
-	struct dirent*	psEntry;																\
-	struct stat		sStat;																	\
-	pDir = opendir( (strDir).c_str( ) );													\
-	while( pDir && ( psEntry = readdir( pDir ) ) ) {										\
-		stat( ( (strDir) + '/' + psEntry->d_name ).c_str( ), &sStat );						\
-		if( S_ISDIR( sStat.st_mode ) )														\
-			continue;																		\
-		(strFile) = psEntry->d_name;
+#define    FOR_EACH_DIRECTORY_FILE(strDir, strFile)                                            \
+    DIR*            pDir;                                                                    \
+    struct dirent*    psEntry;                                                                \
+    struct stat        sStat;                                                                    \
+    pDir = opendir( (strDir).c_str( ) );                                                    \
+    while( pDir && ( psEntry = readdir( pDir ) ) ) {                                        \
+        stat( ( (strDir) + '/' + psEntry->d_name ).c_str( ), &sStat );                        \
+        if( S_ISDIR( sStat.st_mode ) )                                                        \
+            continue;                                                                        \
+        (strFile) = psEntry->d_name;
 #endif // _MSC_VER
 
 #include <iostream>
@@ -63,47 +64,50 @@ namespace Sleipnir {
  * There's not often a reason to use CFile directly; it's mainly used internally by Sleipnir classes that
  * have to read tab-delimited text files.
  */
-class CFile : protected CFileImpl {
-public:
-	static std::string OpenToken( std::istream& istm );
+    class CFile : protected CFileImpl {
+    public:
+        static std::string OpenToken(std::istream &istm);
 
-	static size_t GetBufferSize( ) {
+        static size_t GetBufferSize() {
 
-		return c_iBufferSize; }
+            return c_iBufferSize;
+        }
 
-	static bool IsNewline( char c ) {
+        static bool IsNewline(char c) {
 
-		return ( ( c == '\n' ) || ( c == '\r' ) ); }
+            return ((c == '\n') || (c == '\r'));
+        }
 
-	/*!
-	 * \brief
-	 * Return the next tab-delimited token from the given string.
-	 * 
-	 * \param szInput
-	 * String from which the token is read.
-	 * 
-	 * \param ppcEnd
-	 * If non-null, outputs a pointer to the end of the token in the given string.
-	 * 
-	 * \returns
-	 * String containing all characters up to (but excluding) the next tab or newline.
-	 */
-	static std::string OpenToken( const char* szInput, const char** ppcEnd = NULL ) {
-		const char*	pcStart;
-		const char*	pcEnd;
-		char		c;
+        /*!
+         * \brief
+         * Return the next tab-delimited token from the given string.
+         *
+         * \param szInput
+         * String from which the token is read.
+         *
+         * \param ppcEnd
+         * If non-null, outputs a pointer to the end of the token in the given string.
+         *
+         * \returns
+         * String containing all characters up to (but excluding) the next tab or newline.
+         */
+        static std::string OpenToken(const char *szInput, const char **ppcEnd = NULL) {
+            const char *pcStart;
+            const char *pcEnd;
+            char c;
 
-		do
-			c = *(szInput++);
-		while( c && ( c != -1 ) && ( c != '\t' ) && isspace( c ) );
-		pcStart = szInput - 1;
-		for( ; c && ( c != -1 ) && ( c != '\t' ) && !IsNewline( c ); c = *(szInput++) );
-		pcEnd = szInput;
-		if( ppcEnd )
-			*ppcEnd = pcEnd - ( ( !c || IsNewline( c ) ) ? 1 : 0 );
+            do
+                c = *(szInput++);
+            while (c && (c != -1) && (c != '\t') && isspace(c));
+            pcStart = szInput - 1;
+            for (; c && (c != -1) && (c != '\t') && !IsNewline(c); c = *(szInput++));
+            pcEnd = szInput;
+            if (ppcEnd)
+                *ppcEnd = pcEnd - ((!c || IsNewline(c)) ? 1 : 0);
 
-		return std::string( pcStart, pcEnd - pcStart - 1 ); }
-};
+            return std::string(pcStart, pcEnd - pcStart - 1);
+        }
+    };
 
 }
 

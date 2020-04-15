@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <sstream>
+
 using namespace std;
 
 #include "fasta.h"
@@ -31,6 +32,7 @@ using namespace std;
 #include "meta.h"
 #include "pcl.h"
 #include "statistics.h"
+
 using namespace Sleipnir;
 
 #endif // STDAFX_H

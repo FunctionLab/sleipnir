@@ -30,54 +30,52 @@ extern "C" {
 #endif
 
 /** @brief Where the command line options are stored */
-struct gengetopt_args_info
-{
-  const char *help_help; /**< @brief Print help and exit help description.  */
-  const char *version_help; /**< @brief Print version and exit help description.  */
-  char * output_arg;	/**< @brief Output file.  */
-  char * output_orig;	/**< @brief Output file original value given at command line.  */
-  const char *output_help; /**< @brief Output file help description.  */
-  int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
-  char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
-  const char *verbosity_help; /**< @brief Message verbosity help description.  */
-  char * directory_arg;	/**< @brief input directory (must only contain input files).  */
-  char * directory_orig;	/**< @brief input directory (must only contain input files) original value given at command line.  */
-  const char *directory_help; /**< @brief input directory (must only contain input files) help description.  */
-  int logit_flag;	/**< @brief logit transform the probability edge weights (default=off).  */
-  const char *logit_help; /**< @brief logit transform the probability edge weights help description.  */
-  int znormalize_flag;	/**< @brief z normalize edge weights (may not be probability values) (default=off).  */
-  const char *znormalize_help; /**< @brief z normalize edge weights (may not be probability values) help description.  */
-  int map_flag;	/**< @brief Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs) (default=on).  */
-  const char *map_help; /**< @brief Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs) help description.  */
-  char * weights_arg;	/**< @brief context weight file.  */
-  char * weights_orig;	/**< @brief context weight file original value given at command line.  */
-  const char *weights_help; /**< @brief context weight file help description.  */
-  char * prior_arg;	/**< @brief count file directory.  */
-  char * prior_orig;	/**< @brief count file directory original value given at command line.  */
-  const char *prior_help; /**< @brief count file directory help description.  */
-  
-  unsigned int help_given ;	/**< @brief Whether help was given.  */
-  unsigned int version_given ;	/**< @brief Whether version was given.  */
-  unsigned int output_given ;	/**< @brief Whether output was given.  */
-  unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
-  unsigned int directory_given ;	/**< @brief Whether directory was given.  */
-  unsigned int logit_given ;	/**< @brief Whether logit was given.  */
-  unsigned int znormalize_given ;	/**< @brief Whether znormalize was given.  */
-  unsigned int map_given ;	/**< @brief Whether map was given.  */
-  unsigned int weights_given ;	/**< @brief Whether weights was given.  */
-  unsigned int prior_given ;	/**< @brief Whether prior was given.  */
+struct gengetopt_args_info {
+    const char *help_help; /**< @brief Print help and exit help description.  */
+    const char *version_help; /**< @brief Print version and exit help description.  */
+    char *output_arg;    /**< @brief Output file.  */
+    char *output_orig;    /**< @brief Output file original value given at command line.  */
+    const char *output_help; /**< @brief Output file help description.  */
+    int verbosity_arg;    /**< @brief Message verbosity (default='5').  */
+    char *verbosity_orig;    /**< @brief Message verbosity original value given at command line.  */
+    const char *verbosity_help; /**< @brief Message verbosity help description.  */
+    char *directory_arg;    /**< @brief input directory (must only contain input files).  */
+    char *directory_orig;    /**< @brief input directory (must only contain input files) original value given at command line.  */
+    const char *directory_help; /**< @brief input directory (must only contain input files) help description.  */
+    int logit_flag;    /**< @brief logit transform the probability edge weights (default=off).  */
+    const char *logit_help; /**< @brief logit transform the probability edge weights help description.  */
+    int znormalize_flag;    /**< @brief z normalize edge weights (may not be probability values) (default=off).  */
+    const char *znormalize_help; /**< @brief z normalize edge weights (may not be probability values) help description.  */
+    int map_flag;    /**< @brief Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs) (default=on).  */
+    const char *map_help; /**< @brief Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs) help description.  */
+    char *weights_arg;    /**< @brief context weight file.  */
+    char *weights_orig;    /**< @brief context weight file original value given at command line.  */
+    const char *weights_help; /**< @brief context weight file help description.  */
+    char *prior_arg;    /**< @brief count file directory.  */
+    char *prior_orig;    /**< @brief count file directory original value given at command line.  */
+    const char *prior_help; /**< @brief count file directory help description.  */
 
-} ;
+    unsigned int help_given;    /**< @brief Whether help was given.  */
+    unsigned int version_given;    /**< @brief Whether version was given.  */
+    unsigned int output_given;    /**< @brief Whether output was given.  */
+    unsigned int verbosity_given;    /**< @brief Whether verbosity was given.  */
+    unsigned int directory_given;    /**< @brief Whether directory was given.  */
+    unsigned int logit_given;    /**< @brief Whether logit was given.  */
+    unsigned int znormalize_given;    /**< @brief Whether znormalize was given.  */
+    unsigned int map_given;    /**< @brief Whether map was given.  */
+    unsigned int weights_given;    /**< @brief Whether weights was given.  */
+    unsigned int prior_given;    /**< @brief Whether prior was given.  */
+
+};
 
 /** @brief The additional parameters to pass to parser functions */
-struct cmdline_parser_params
-{
-  int override; /**< @brief whether to override possibly already present options (default 0) */
-  int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
-  int check_required; /**< @brief whether to check that all required options were provided (default 1) */
-  int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
-  int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
-} ;
+struct cmdline_parser_params {
+    int override; /**< @brief whether to override possibly already present options (default 0) */
+    int initialize; /**< @brief whether to initialize the option structure gengetopt_args_info (default 1) */
+    int check_required; /**< @brief whether to check that all required options were provided (default 1) */
+    int check_ambiguity; /**< @brief whether to check for options already specified in the option structure gengetopt_args_info (default 0) */
+    int print_errors; /**< @brief whether getopt_long should print an error message for a bad option (default 1) */
+};
 
 /** @brief the purpose string of the program */
 extern const char *gengetopt_args_info_purpose;
@@ -93,8 +91,8 @@ extern const char *gengetopt_args_info_help[];
  * @param args_info the structure where option information will be stored
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info);
+int cmdline_parser(int argc, char *const *argv,
+                   struct gengetopt_args_info *args_info);
 
 /**
  * The command line parser (version with additional parameters - deprecated)
@@ -107,9 +105,9 @@ int cmdline_parser (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  * @deprecated use cmdline_parser_ext() instead
  */
-int cmdline_parser2 (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  int override, int initialize, int check_required);
+int cmdline_parser2(int argc, char *const *argv,
+                    struct gengetopt_args_info *args_info,
+                    int override, int initialize, int check_required);
 
 /**
  * The command line parser (version with additional parameters)
@@ -119,9 +117,9 @@ int cmdline_parser2 (int argc, char * const *argv,
  * @param params additional parameters for the parser
  * @return 0 if everything went fine, NON 0 if an error took place
  */
-int cmdline_parser_ext (int argc, char * const *argv,
-  struct gengetopt_args_info *args_info,
-  struct cmdline_parser_params *params);
+int cmdline_parser_ext(int argc, char *const *argv,
+                       struct gengetopt_args_info *args_info,
+                       struct cmdline_parser_params *params);
 
 /**
  * Save the contents of the option struct into an already open FILE stream.
@@ -130,7 +128,7 @@ int cmdline_parser_ext (int argc, char * const *argv,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_dump(FILE *outfile,
-  struct gengetopt_args_info *args_info);
+                        struct gengetopt_args_info *args_info);
 
 /**
  * Save the contents of the option struct into a (text) file.
@@ -140,12 +138,13 @@ int cmdline_parser_dump(FILE *outfile,
  * @return 0 if everything went fine, NON 0 if an error took place
  */
 int cmdline_parser_file_save(const char *filename,
-  struct gengetopt_args_info *args_info);
+                             struct gengetopt_args_info *args_info);
 
 /**
  * Print the help
  */
 void cmdline_parser_print_help(void);
+
 /**
  * Print the version
  */
@@ -170,13 +169,14 @@ struct cmdline_parser_params *cmdline_parser_params_create(void);
  * (also set default values for options that have a default)
  * @param args_info the structure to initialize
  */
-void cmdline_parser_init (struct gengetopt_args_info *args_info);
+void cmdline_parser_init(struct gengetopt_args_info *args_info);
+
 /**
  * Deallocates the string fields of the gengetopt_args_info structure
  * (but does not deallocate the structure itself)
  * @param args_info the structure to deallocate
  */
-void cmdline_parser_free (struct gengetopt_args_info *args_info);
+void cmdline_parser_free(struct gengetopt_args_info *args_info);
 
 /**
  * Checks that all the required options were specified
@@ -185,8 +185,8 @@ void cmdline_parser_free (struct gengetopt_args_info *args_info);
  *   possible errors
  * @return
  */
-int cmdline_parser_required (struct gengetopt_args_info *args_info,
-  const char *prog_name);
+int cmdline_parser_required(struct gengetopt_args_info *args_info,
+                            const char *prog_name);
 
 
 #ifdef __cplusplus

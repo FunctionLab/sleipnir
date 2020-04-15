@@ -39,99 +39,99 @@
 
 namespace Sleipnir {
 
-class CSeekDBSetting{
-public:
-	CSeekDBSetting(const string &gvar,
-		const string &sinfo, const string &plat,
-		const string &prep, const string &db,
-		const string &gene, const string &quant,
-		const string &dset, const string &dset_size,
-		const utype &numDB){
-		m_gvarDirectory = gvar;
-		m_sinfoDirectory = sinfo;
-		m_platformDirectory = plat;
-		m_prepDirectory = prep;
-		m_dbDirectory = db;
-		m_geneMapFile = gene;
-		m_quantFile = quant;
-		m_dsetFile = dset;
-		m_numDB = numDB;
-		m_dsetSizeFile = dset_size;
-	}
-	CSeekDBSetting(const char *gvar,
-		const char* sinfo, const char* plat,
-		const char* prep, const char* db,
-		const char* gene, const char* quant,
-		const char* dset, const char* dset_size,
-		const utype &numDB){
-		m_gvarDirectory = gvar;
-		m_sinfoDirectory = sinfo;
-		m_platformDirectory = plat;
-		m_prepDirectory = prep;
-		m_dbDirectory = db;
-		m_geneMapFile = gene;
-		m_quantFile = quant;
-		m_dsetFile = dset;
-		m_numDB = numDB;
-		m_dsetSizeFile = dset_size;
-	}
+    class CSeekDBSetting {
+    public:
+        CSeekDBSetting(const string &gvar,
+                       const string &sinfo, const string &plat,
+                       const string &prep, const string &db,
+                       const string &gene, const string &quant,
+                       const string &dset, const string &dset_size,
+                       const utype &numDB) {
+            m_gvarDirectory = gvar;
+            m_sinfoDirectory = sinfo;
+            m_platformDirectory = plat;
+            m_prepDirectory = prep;
+            m_dbDirectory = db;
+            m_geneMapFile = gene;
+            m_quantFile = quant;
+            m_dsetFile = dset;
+            m_numDB = numDB;
+            m_dsetSizeFile = dset_size;
+        }
 
-	CSeekDBSetting(CSeekDBSetting const *g){
-		m_gvarDirectory = g->m_gvarDirectory;
-		m_sinfoDirectory = g->m_sinfoDirectory;
-		m_platformDirectory = g->m_platformDirectory;
-		m_prepDirectory = g->m_prepDirectory;
-		m_dbDirectory = g->m_dbDirectory;
-		m_geneMapFile = g->m_geneMapFile;
-		m_quantFile = g->m_quantFile;
-		m_dsetFile = g->m_dsetFile;
-		m_numDB = g->m_numDB;
-		m_dsetSizeFile = g->m_dsetSizeFile;
-	}
+        CSeekDBSetting(const char *gvar,
+                       const char *sinfo, const char *plat,
+                       const char *prep, const char *db,
+                       const char *gene, const char *quant,
+                       const char *dset, const char *dset_size,
+                       const utype &numDB) {
+            m_gvarDirectory = gvar;
+            m_sinfoDirectory = sinfo;
+            m_platformDirectory = plat;
+            m_prepDirectory = prep;
+            m_dbDirectory = db;
+            m_geneMapFile = gene;
+            m_quantFile = quant;
+            m_dsetFile = dset;
+            m_numDB = numDB;
+            m_dsetSizeFile = dset_size;
+        }
 
-	~CSeekDBSetting(){
-	}
+        CSeekDBSetting(CSeekDBSetting const *g) {
+            m_gvarDirectory = g->m_gvarDirectory;
+            m_sinfoDirectory = g->m_sinfoDirectory;
+            m_platformDirectory = g->m_platformDirectory;
+            m_prepDirectory = g->m_prepDirectory;
+            m_dbDirectory = g->m_dbDirectory;
+            m_geneMapFile = g->m_geneMapFile;
+            m_quantFile = g->m_quantFile;
+            m_dsetFile = g->m_dsetFile;
+            m_numDB = g->m_numDB;
+            m_dsetSizeFile = g->m_dsetSizeFile;
+        }
 
-	string GetValue(const string &str){
-		if(str=="gene")
-			return m_geneMapFile;
-		else if(str=="dset")
-			return m_dsetFile;
-		else if(str=="quant")
-			return m_quantFile;
-		else if(str=="gvar")
-			return m_gvarDirectory;
-		else if(str=="sinfo")
-			return m_sinfoDirectory;
-		else if(str=="db")
-			return m_dbDirectory;
-		else if(str=="prep")
-			return m_prepDirectory;
-		else if(str=="platform")
-			return m_platformDirectory;
-		else if(str=="dset_size")
-			return m_dsetSizeFile;
-		else
-			return "NULL";
-	}
+        ~CSeekDBSetting() {
+        }
 
-	utype GetNumDB(){
-		return m_numDB;
-	}
+        string GetValue(const string &str) {
+            if (str == "gene")
+                return m_geneMapFile;
+            else if (str == "dset")
+                return m_dsetFile;
+            else if (str == "quant")
+                return m_quantFile;
+            else if (str == "gvar")
+                return m_gvarDirectory;
+            else if (str == "sinfo")
+                return m_sinfoDirectory;
+            else if (str == "db")
+                return m_dbDirectory;
+            else if (str == "prep")
+                return m_prepDirectory;
+            else if (str == "platform")
+                return m_platformDirectory;
+            else if (str == "dset_size")
+                return m_dsetSizeFile;
+            else
+                return "NULL";
+        }
 
-private:
-	string m_gvarDirectory;
-	string m_sinfoDirectory;
-	string m_platformDirectory;
-	string m_prepDirectory;
-	string m_dbDirectory;
-	string m_geneMapFile;
-	string m_quantFile;
-	string m_dsetFile;
-	string m_dsetSizeFile;
-	utype m_numDB;
-};
+        utype GetNumDB() {
+            return m_numDB;
+        }
 
+    private:
+        string m_gvarDirectory;
+        string m_sinfoDirectory;
+        string m_platformDirectory;
+        string m_prepDirectory;
+        string m_dbDirectory;
+        string m_geneMapFile;
+        string m_quantFile;
+        string m_dsetFile;
+        string m_dsetSizeFile;
+        utype m_numDB;
+    };
 
 
 /*!
@@ -160,307 +160,311 @@ private:
  * From here on, \a correlation always refers to the above z-score definition.
  */
 
-class CSeekDataset{
-public:
+    class CSeekDataset {
+    public:
 
-	/*!
-	 * \enum DistanceMeasure
-	 * \brief Distance measure (see main section for descriptions)
-	 */
-	enum DistanceMeasure{
-		CORRELATION = 0, /**< Pearson correlations */
-		Z_SCORE = CORRELATION + 1 /**< Z-score of Pearson correlations */
-	};
+        /*!
+         * \enum DistanceMeasure
+         * \brief Distance measure (see main section for descriptions)
+         */
+        enum DistanceMeasure {
+            CORRELATION = 0, /**< Pearson correlations */
+            Z_SCORE = CORRELATION + 1 /**< Z-score of Pearson correlations */
+        };
 
-	/*!
-	 * \brief
-	 * Constructor
-	 */
-	CSeekDataset();
+        /*!
+         * \brief
+         * Constructor
+         */
+        CSeekDataset();
 
-	/*!
-	 * \brief
-	 * Destructor
-	 */
-	~CSeekDataset();
+        /*!
+         * \brief
+         * Destructor
+         */
+        ~CSeekDataset();
 
-	/*!
-	 * \brief
-	 * Read the \c *.sinfo file
-	 *
-	 * \param strFileName The file name
-	 *
-	 * The \c *.sinfo file contains the mean and the standard deviation
-	 * of the global gene-gene Pearson distribution for this dataset.
-	 */
-	bool ReadDatasetAverageStdev(const string &);
+        /*!
+         * \brief
+         * Read the \c *.sinfo file
+         *
+         * \param strFileName The file name
+         *
+         * The \c *.sinfo file contains the mean and the standard deviation
+         * of the global gene-gene Pearson distribution for this dataset.
+         */
+        bool ReadDatasetAverageStdev(const string &);
 
-	/*!
-	 * \brief
-	 * Read the gene average \a correlation file \c *.gavg
-	 *
-	 * \param strFileName The file name
-	 *
-	 * The \c *.gavg is an array that stores the average \a correlation of each
-	 * gene.
-	 */
-	bool ReadGeneAverage(const string &);
+        /*!
+         * \brief
+         * Read the gene average \a correlation file \c *.gavg
+         *
+         * \param strFileName The file name
+         *
+         * The \c *.gavg is an array that stores the average \a correlation of each
+         * gene.
+         */
+        bool ReadGeneAverage(const string &);
 
-	/*!
-	 * \brief
-	 * Read the gene variance file \c *.gvar
-	 *
-	 * \param strFileName The file name
-	 *
-	 * The \c *.gvar file is an array that stores the expression variance of each
-	 * gene.
-	 */
-	bool ReadGeneVariance(const string &);
+        /*!
+         * \brief
+         * Read the gene variance file \c *.gvar
+         *
+         * \param strFileName The file name
+         *
+         * The \c *.gvar file is an array that stores the expression variance of each
+         * gene.
+         */
+        bool ReadGeneVariance(const string &);
 
-	/*!
-	 * \brief
-	 * Read the gene presence file \c *.gpres
-	 *
-	 * \param strFileName The file name
-	 *
-	 * The \c *.gpres is a 2-value array that contains the presence (1), absence (0)
-	 * status of genes.
-	 */
-	bool ReadGenePresence(const string &);
+        /*!
+         * \brief
+         * Read the gene presence file \c *.gpres
+         *
+         * \param strFileName The file name
+         *
+         * The \c *.gpres is a 2-value array that contains the presence (1), absence (0)
+         * status of genes.
+         */
+        bool ReadGenePresence(const string &);
 
-	/*!
-	 * \brief
-	 * Initialize the genome presence map
-	 *
-	 * Indicates which genes of the genome are present in the dataset.
-	 */
-	bool InitializeGeneMap();
+        /*!
+         * \brief
+         * Initialize the genome presence map
+         *
+         * Indicates which genes of the genome are present in the dataset.
+         */
+        bool InitializeGeneMap();
 
-	/*!
-	 * \brief
-	 * Initialize the query presence map
-	 *
-	 * \param query The query genes
-	 *
-	 * Indicates which query genes are present in the dataset.
-	 */
-	bool InitializeQuery(const vector<utype> &);
+        /*!
+         * \brief
+         * Initialize the query presence map
+         *
+         * \param query The query genes
+         *
+         * Indicates which query genes are present in the dataset.
+         */
+        bool InitializeQuery(const vector <utype> &);
 
-	/*!
-	 * \brief
-	 * Initialize a presence map for a block of queries
-	 *
-	 * \param queryBlock A vector of queries
-	 *
-	 * Flattens all the queries into one vector that contains only the unique query genes, then
-	 * constructs a presence map based on this vector.
-	 */
-	bool InitializeQueryBlock(const vector<utype> &);
+        /*!
+         * \brief
+         * Initialize a presence map for a block of queries
+         *
+         * \param queryBlock A vector of queries
+         *
+         * Flattens all the queries into one vector that contains only the unique query genes, then
+         * constructs a presence map based on this vector.
+         */
+        bool InitializeQueryBlock(const vector <utype> &);
 
-	/*!
-	 * \brief
-	 * Delete the query
-	 *
-	 * Resets all query-related data, such as dataset weight, query presence map, etc.
-	 */
-	bool DeleteQuery();
+        /*!
+         * \brief
+         * Delete the query
+         *
+         * Resets all query-related data, such as dataset weight, query presence map, etc.
+         */
+        bool DeleteQuery();
 
-	/*!
-	 * \brief
-	 * Delete query block
-	 *
-	 * Resets all query-block related data.
-	 */
-	bool DeleteQueryBlock();
+        /*!
+         * \brief
+         * Delete query block
+         *
+         * Resets all query-block related data.
+         */
+        bool DeleteQueryBlock();
 
-	/*!
-	 * \brief
-	 * Initialize the gene-gene \a correlation matrix
-	 *
-	 * \param rD A two-dimensional array storing the discretized gene-gene \a correlations
-	 * \param quant The discretization function
-	 * \param iRows The number of rows for the \a correlation matrix
-	 * \param iColumns The number of columns for the \a correlation matrix
-	 * \param bSubtractAvg If true, subtract the \a correlation by the dataset average
-	 * \param bNormPlatform If true, subtract the \a correlation by the platform average and divide by standard deviation
-	 * \param logit If true, apply the logit transform on \a correlations
-	 * \param dist_measure Distance measure: z-score or correlations
-	 * \param cutoff Apply a hard cutoff on \a correlations
-	 * \param bRandom If true, shuffle the \a correlation vector
-	 * \param rand The random generator for the shuffling operation above
-	 * \remarks
-	 * The discretized \a correlation in the matrix \c rD is bounded by 0 to 255 (the limit of
-	 * \c unsigned \c char). The parameter \c quant specifies how a \a correlation is
-	 * discretized. For example, if the \c quant has 5 bins:
-	 * \code 
-	 * [0, 1, 2, 3, 4]
-	 * \endcode
-	 * Then if a \a correlation is 2.5, the discretized value would be 2.
-	 */
-	bool InitializeDataMatrix(utype**, const vector<float> &,
-		const utype&, const utype&, const bool=true, 
-		const bool=false, const bool=false,
-		const enum DistanceMeasure=Z_SCORE,
-		const float cutoff=-1.0*CMeta::GetNaN(), 
-		const bool=false, gsl_rng *rand=NULL);
+        /*!
+         * \brief
+         * Initialize the gene-gene \a correlation matrix
+         *
+         * \param rD A two-dimensional array storing the discretized gene-gene \a correlations
+         * \param quant The discretization function
+         * \param iRows The number of rows for the \a correlation matrix
+         * \param iColumns The number of columns for the \a correlation matrix
+         * \param bSubtractAvg If true, subtract the \a correlation by the dataset average
+         * \param bNormPlatform If true, subtract the \a correlation by the platform average and divide by standard deviation
+         * \param logit If true, apply the logit transform on \a correlations
+         * \param dist_measure Distance measure: z-score or correlations
+         * \param cutoff Apply a hard cutoff on \a correlations
+         * \param bRandom If true, shuffle the \a correlation vector
+         * \param rand The random generator for the shuffling operation above
+         * \remarks
+         * The discretized \a correlation in the matrix \c rD is bounded by 0 to 255 (the limit of
+         * \c unsigned \c char). The parameter \c quant specifies how a \a correlation is
+         * discretized. For example, if the \c quant has 5 bins:
+         * \code
+         * [0, 1, 2, 3, 4]
+         * \endcode
+         * Then if a \a correlation is 2.5, the discretized value would be 2.
+         */
+        bool InitializeDataMatrix(utype **, const vector<float> &,
+                                  const utype &, const utype &, const bool= true,
+                                  const bool= false, const bool= false,
+                                  const enum DistanceMeasure= Z_SCORE,
+                                  const float cutoff = -1.0 * CMeta::GetNaN(),
+                                  const bool= false, gsl_rng *rand = NULL);
 
-	/*!
-	 * \brief
-	 * Copy constructor
-	 * \param src A given dataset
-	 */
-	bool Copy(CSeekDataset *);
+        /*!
+         * \brief
+         * Copy constructor
+         * \param src A given dataset
+         */
+        bool Copy(CSeekDataset *);
 
-	/*!
-	 * \brief
-	 * Get the gene-gene \a correlation matrix
-	 *
-	 * \return A two-dimensional array of type \c utype. Note that the
-	 * \a correlation has been scaled to a integer range from 0 to 640.
-	 * See CSeekDataset::InitializeDataMatrix.
-	 *
-	 */
-	utype** GetDataMatrix();
+        /*!
+         * \brief
+         * Get the gene-gene \a correlation matrix
+         *
+         * \return A two-dimensional array of type \c utype. Note that the
+         * \a correlation has been scaled to a integer range from 0 to 640.
+         * See CSeekDataset::InitializeDataMatrix.
+         *
+         */
+        utype **GetDataMatrix();
 
-	/*!
-	 * \brief
-	 * Get the gene-gene \a correlation matrix
-	 *
-	 * \return A two-dimensional array of type \c unsigned \c char**.
-	 */
-	unsigned char** GetMatrix();
+        /*!
+         * \brief
+         * Get the gene-gene \a correlation matrix
+         *
+         * \return A two-dimensional array of type \c unsigned \c char**.
+         */
+        unsigned char **GetMatrix();
 
-	/*!
-	 * \brief Get the genome presence map
-	 * \return The genome presence map
-	 */
-	CSeekIntIntMap* GetGeneMap();
+        /*!
+         * \brief Get the genome presence map
+         * \return The genome presence map
+         */
+        CSeekIntIntMap *GetGeneMap();
 
-	/*!
-	 * \brief Get the query-block presence map
-	 * \return The query-block presence map
-	 */
-	CSeekIntIntMap* GetDBMap();
+        /*!
+         * \brief Get the query-block presence map
+         * \return The query-block presence map
+         */
+        CSeekIntIntMap *GetDBMap();
 
-	/*!
-	 * \brief Get the query presence map
-	 * \return The query presence map
-	 */
-	CSeekIntIntMap* GetQueryMap();
+        /*!
+         * \brief Get the query presence map
+         * \return The query presence map
+         */
+        CSeekIntIntMap *GetQueryMap();
 
-	/*!
-	 * \brief Get the query genes
-	 * \return A vector of queries
-	 */
-	const vector<utype>& GetQuery() const;
+        /*!
+         * \brief Get the query genes
+         * \return A vector of queries
+         */
+        const vector <utype> &GetQuery() const;
 
-	/*!
-	 * \brief Get the query gene indices
-	 * \return A vector of query gene indices
-	 */
-	const vector<utype>& GetQueryIndex() const;
+        /*!
+         * \brief Get the query gene indices
+         * \return A vector of query gene indices
+         */
+        const vector <utype> &GetQueryIndex() const;
 
-	/*!
-	 * \brief Get the gene expression variance vector
-	 * \return The variance vector
-	 */
-	float GetGeneVariance(const utype&) const;
-	/*!
-	 * \brief Get the gene average \a correlation vector
-	 * \return The average \a correlation vector
-	 */
-	float GetGeneAverage(const utype&) const;
-	/*!
-	 * \brief Get the mean of the global gene-gene Pearson distribution
-	 * \return The mean Pearson for the dataset
-	 */
-	float GetDatasetAverage() const;
-	/*!
-	 * \brief Get the standard deviation of the global gene-gene Pearson distribution
-	 * \return The standard deviation of the Pearson distribution
-	 */
-	float GetDatasetStdev() const;
-	/*!
-	 * \brief Get the genome size
-	 * \return The genome size
-	 */
-	utype GetNumGenes() const;
+        /*!
+         * \brief Get the gene expression variance vector
+         * \return The variance vector
+         */
+        float GetGeneVariance(const utype &) const;
 
-	/*!
-	 * \brief Initialize the weight of the dataset
-	 *
-	 * \param i The number of cross-validations
-	 *
-	 * Initializes the total dataset weight, and the score of the
-	 * individual cross-validation (CV) runs. 
-	 */
-	bool InitializeCVWeight(const utype&);
+        /*!
+         * \brief Get the gene average \a correlation vector
+         * \return The average \a correlation vector
+         */
+        float GetGeneAverage(const utype &) const;
 
-	/*!
-	 * \brief Set the score for a particular cross-validation
-	 * \param i The index
-	 * \param f The validation score
-	 */
-	bool SetCVWeight(const utype&, const float&);
+        /*!
+         * \brief Get the mean of the global gene-gene Pearson distribution
+         * \return The mean Pearson for the dataset
+         */
+        float GetDatasetAverage() const;
 
-	/*!
-	 * \brief Get the score for a particular cross-validation
-	 * \param i The index
-	 */
-	float GetCVWeight(const utype&);
+        /*!
+         * \brief Get the standard deviation of the global gene-gene Pearson distribution
+         * \return The standard deviation of the Pearson distribution
+         */
+        float GetDatasetStdev() const;
 
-	/*!
-	 * \brief Get all the cross-validation scores
-	 * \return A vector of cross-validation scores
-	 */
-	const vector<float>& GetCVWeight() const;
+        /*!
+         * \brief Get the genome size
+         * \return The genome size
+         */
+        utype GetNumGenes() const;
 
-	/*!
-	 * \brief Get the dataset weight
-	 * \return The dataset weight
-	 */
-	float GetDatasetSumWeight();
+        /*!
+         * \brief Initialize the weight of the dataset
+         *
+         * \param i The number of cross-validations
+         *
+         * Initializes the total dataset weight, and the score of the
+         * individual cross-validation (CV) runs.
+         */
+        bool InitializeCVWeight(const utype &);
 
-	/*!
-	 * \brief Set the platform
-	 * \param cp The platform
-	 */
-	void SetPlatform(CSeekPlatform &);
-	/*!
-	 * \brief Get the platform
-	 * \return The platform of this dataset
-	 */
-	CSeekPlatform& GetPlatform() const;
+        /*!
+         * \brief Set the score for a particular cross-validation
+         * \param i The index
+         * \param f The validation score
+         */
+        bool SetCVWeight(const utype &, const float &);
 
-private:
-	CSeekPlatform *platform;
-	vector<float> geneAverage;
-	vector<float> geneVariance;
-	vector<char> genePresence;
-	CSeekIntIntMap *geneMap;
+        /*!
+         * \brief Get the score for a particular cross-validation
+         * \param i The index
+         */
+        float GetCVWeight(const utype &);
 
-	/* previously known as sinfo file */
-	float m_fDsetAverage;
-	float m_fDsetStdev;
+        /*!
+         * \brief Get all the cross-validation scores
+         * \return A vector of cross-validation scores
+         */
+        const vector<float> &GetCVWeight() const;
 
-	CSeekIntIntMap *dbMap;
-	CSeekIntIntMap *queryMap;
-	vector<utype> query;
-	vector<utype> queryIndex;
+        /*!
+         * \brief Get the dataset weight
+         * \return The dataset weight
+         */
+        float GetDatasetSumWeight();
 
-	utype iQuerySize;
-	utype iNumGenes;
-	utype iDBSize;
+        /*!
+         * \brief Set the platform
+         * \param cp The platform
+         */
+        void SetPlatform(CSeekPlatform &);
 
-	vector<float> weight;
+        /*!
+         * \brief Get the platform
+         * \return The platform of this dataset
+         */
+        CSeekPlatform &GetPlatform() const;
 
-	utype **rData;
-	unsigned char **r;
+    private:
+        CSeekPlatform *platform;
+        vector<float> geneAverage;
+        vector<float> geneVariance;
+        vector<char> genePresence;
+        CSeekIntIntMap *geneMap;
 
-	float sum_weight;
-	bool m_bIsNibble;
-};
+        /* previously known as sinfo file */
+        float m_fDsetAverage;
+        float m_fDsetStdev;
 
+        CSeekIntIntMap *dbMap;
+        CSeekIntIntMap *queryMap;
+        vector <utype> query;
+        vector <utype> queryIndex;
+
+        utype iQuerySize;
+        utype iNumGenes;
+        utype iDBSize;
+
+        vector<float> weight;
+
+        utype **rData;
+        unsigned char **r;
+
+        float sum_weight;
+        bool m_bIsNibble;
+    };
 
 
 }

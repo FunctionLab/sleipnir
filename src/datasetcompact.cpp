@@ -27,14 +27,16 @@
 
 namespace Sleipnir {
 
-CDatasetCompactImpl::CDatasetCompactImpl( ) : m_iData(0), m_aData(NULL) {
+    CDatasetCompactImpl::CDatasetCompactImpl() : m_iData(0), m_aData(NULL) {
 
-	m_fContinuous = false; }
+        m_fContinuous = false;
+    }
 
-CDatasetCompactImpl::~CDatasetCompactImpl( ) {
+    CDatasetCompactImpl::~CDatasetCompactImpl() {
 
-	if( m_aData )
-		delete[] m_aData; }
+        if (m_aData)
+            delete[] m_aData;
+    }
 
 /*!
  * \brief
@@ -51,34 +53,37 @@ CDatasetCompactImpl::~CDatasetCompactImpl( ) {
  * 
  * Creates a dataset with nodes corresponding to the given data files.
  */
-bool CDatasetCompact::Open( const std::vector<std::string>& vecstrDataFiles, bool fMemmap ) {
-	size_t	i;
+    bool CDatasetCompact::Open(const std::vector <std::string> &vecstrDataFiles, bool fMemmap) {
+        size_t i;
 
-	if( !OpenGenes( vecstrDataFiles ) )
-		return false;
-	if( m_aData )
-		delete[] m_aData;
-	m_aData = new CCompactMatrix[ m_iData = (uint32_t)vecstrDataFiles.size( ) ];
+        if (!OpenGenes(vecstrDataFiles))
+            return false;
+        if (m_aData)
+            delete[] m_aData;
+        m_aData = new CCompactMatrix[m_iData = (uint32_t) vecstrDataFiles.size()];
 
-	for( i = 0; i < vecstrDataFiles.size( ); ++i ) {
-		CDataPair	Datum;
+        for (i = 0; i < vecstrDataFiles.size(); ++i) {
+            CDataPair Datum;
 
-		if( !( Datum.Open( vecstrDataFiles[ i ].c_str( ), false, fMemmap ) &&
-			CDatasetCompactImpl::Open( Datum, i ) ) )
-			return false; }
+            if (!(Datum.Open(vecstrDataFiles[i].c_str(), false, fMemmap) &&
+                  CDatasetCompactImpl::Open(Datum, i)))
+                return false;
+        }
 
-	return true; }
+        return true;
+    }
 
-struct SIsGene {
-	const CGenes&	m_Genes;
-	bool			m_fIn;
+    struct SIsGene {
+        const CGenes &m_Genes;
+        bool m_fIn;
 
-	SIsGene( const CGenes& Genes, bool fIn ) : m_Genes(Genes), m_fIn(fIn) { }
+        SIsGene(const CGenes &Genes, bool fIn) : m_Genes(Genes), m_fIn(fIn) {}
 
-	bool operator()( const string& strGene ) {
+        bool operator()(const string &strGene) {
 
-		return ( m_fIn == m_Genes.IsGene( strGene ) ); }
-};
+            return (m_fIn == m_Genes.IsGene(strGene));
+        }
+    };
 
 /*!
  * \brief
@@ -109,12 +114,13 @@ struct SIsGene {
  * \see
  * CDataset::Open
  */
-bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDirectory, const IBayesNet* pBayesNet,
-	bool fEverything ) {
-	CGenome	Genome;
-	CGenes	GenesIn( Genome ), GenesEx( Genome );
+    bool CDatasetCompact::Open(const CDataPair &Answers, const char *szDataDirectory, const IBayesNet *pBayesNet,
+                               bool fEverything) {
+        CGenome Genome;
+        CGenes GenesIn(Genome), GenesEx(Genome);
 
-	return Open( Answers, szDataDirectory, pBayesNet, GenesIn, GenesEx, fEverything ); }
+        return Open(Answers, szDataDirectory, pBayesNet, GenesIn, GenesEx, fEverything);
+    }
 
 /*!
  * \brief
@@ -151,43 +157,45 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDirector
  * \see
  * CDataset::Open
  */
-bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDirectory, const IBayesNet* pBayesNet,
-	const CGenes& GenesInclude, const CGenes& GenesExclude, bool fEverything ) {
-	size_t			i;
-	vector<string>	vecstrData, vecstrNodes;
-	set<string>		setstrGenes;
+    bool CDatasetCompact::Open(const CDataPair &Answers, const char *szDataDirectory, const IBayesNet *pBayesNet,
+                               const CGenes &GenesInclude, const CGenes &GenesExclude, bool fEverything) {
+        size_t i;
+        vector <string> vecstrData, vecstrNodes;
+        set <string> setstrGenes;
 
-	if( pBayesNet->IsContinuous( ) )
-		return false;
+        if (pBayesNet->IsContinuous())
+            return false;
 
-	pBayesNet->GetNodes( vecstrNodes );
-	m_iData = 1 + (uint32_t)OpenMax( szDataDirectory, vecstrNodes, true, vecstrData, fEverything ?
-		&setstrGenes : NULL );
-	m_veccQuants.resize( m_iData );
-	if( m_aData )
-		delete[] m_aData;
-	m_aData = new CCompactMatrix[ m_iData ];
+        pBayesNet->GetNodes(vecstrNodes);
+        m_iData = 1 + (uint32_t) OpenMax(szDataDirectory, vecstrNodes, true, vecstrData, fEverything ?
+                                                                                         &setstrGenes : NULL);
+        m_veccQuants.resize(m_iData);
+        if (m_aData)
+            delete[] m_aData;
+        m_aData = new CCompactMatrix[m_iData];
 
-	if( fEverything ) {
-		m_vecstrGenes.resize( setstrGenes.size( ) );
-		copy( setstrGenes.begin( ), setstrGenes.end( ), m_vecstrGenes.begin( ) ); }
-	else {
-		m_vecstrGenes.resize( Answers.GetGenes( ) );
-		for( i = 0; i < m_vecstrGenes.size( ); ++i )
-			m_vecstrGenes[ i ] = Answers.GetGene( i ); }
-	if( GenesInclude.GetGenes( ) )
-		remove_if( m_vecstrGenes.begin( ), m_vecstrGenes.end( ), SIsGene( GenesInclude, false ) );
-	if( GenesExclude.GetGenes( ) )
-		remove_if( m_vecstrGenes.begin( ), m_vecstrGenes.end( ), SIsGene( GenesExclude, true ) );
+        if (fEverything) {
+            m_vecstrGenes.resize(setstrGenes.size());
+            copy(setstrGenes.begin(), setstrGenes.end(), m_vecstrGenes.begin());
+        } else {
+            m_vecstrGenes.resize(Answers.GetGenes());
+            for (i = 0; i < m_vecstrGenes.size(); ++i)
+                m_vecstrGenes[i] = Answers.GetGene(i);
+        }
+        if (GenesInclude.GetGenes())
+            remove_if(m_vecstrGenes.begin(), m_vecstrGenes.end(), SIsGene(GenesInclude, false));
+        if (GenesExclude.GetGenes())
+            remove_if(m_vecstrGenes.begin(), m_vecstrGenes.end(), SIsGene(GenesExclude, true));
 
-	if( !CDatasetCompactImpl::Open( Answers, 0 ) )
-		return false;
-	for( i = 0; i < vecstrData.size( ); ++i ) {
-		CDataPair	Datum;
+        if (!CDatasetCompactImpl::Open(Answers, 0))
+            return false;
+        for (i = 0; i < vecstrData.size(); ++i) {
+            CDataPair Datum;
 
-		if( !( Datum.Open( vecstrData[ i ].c_str( ), false ) &&
-			CDatasetCompactImpl::Open( Datum, i + 1 ) ) )
-			return false; }
+            if (!(Datum.Open(vecstrData[i].c_str(), false) &&
+                  CDatasetCompactImpl::Open(Datum, i + 1)))
+                return false;
+        }
 
 /*
 	for( i = 0; i < m_vecstrGenes.size( ); ++i )
@@ -199,7 +207,8 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDirector
 				m_aData[ 0 ].Set( i, j, 0 ); }
 */
 
-	return true; }
+        return true;
+    }
 
 /*!
  * \brief
@@ -232,118 +241,126 @@ bool CDatasetCompact::Open( const CDataPair& Answers, const char* szDataDirector
  * \remarks
  * The same number of skip columns and z-score setting will be used for all PCLs.
  */
-bool CDatasetCompact::Open( const CDataPair& Answers, const std::vector<std::string>& vecstrDataFiles,
-	bool fEverything, bool fMemmap, size_t iSkip, bool fZScore ) {
-	size_t	i, j, k;
+    bool CDatasetCompact::Open(const CDataPair &Answers, const std::vector <std::string> &vecstrDataFiles,
+                               bool fEverything, bool fMemmap, size_t iSkip, bool fZScore) {
+        size_t i, j, k;
 
-	if( Answers.GetGenes( ) && Answers.IsContinuous( ) )
-		return false;
+        if (Answers.GetGenes() && Answers.IsContinuous())
+            return false;
 
-	m_veciMapping.resize( m_iData = 1 + vecstrDataFiles.size( ) );
-	for( i = 0; i < m_veciMapping.size( ); ++i )
-		m_veciMapping[ i ] = i;
-	m_veccQuants.resize( m_iData );
-	if( m_aData )
-		delete[] m_aData;
-	m_aData = new CCompactMatrix[ m_iData ];
+        m_veciMapping.resize(m_iData = 1 + vecstrDataFiles.size());
+        for (i = 0; i < m_veciMapping.size(); ++i)
+            m_veciMapping[i] = i;
+        m_veccQuants.resize(m_iData);
+        if (m_aData)
+            delete[] m_aData;
+        m_aData = new CCompactMatrix[m_iData];
 
-	if( fEverything ) {
-		set<string>	setstrGenes;
+        if (fEverything) {
+            set <string> setstrGenes;
 
-		for( i = 0; i < Answers.GetGenes( ); ++i )
-			setstrGenes.insert( Answers.GetGene( i ) );
-		for( i = 0; i < vecstrDataFiles.size( ); ++i ) {
-			CDat	Dat;
+            for (i = 0; i < Answers.GetGenes(); ++i)
+                setstrGenes.insert(Answers.GetGene(i));
+            for (i = 0; i < vecstrDataFiles.size(); ++i) {
+                CDat Dat;
 
-			if( !Dat.OpenGenes( vecstrDataFiles[ i ].c_str( ), iSkip ) )
-					return false;
-			for( j = 0; j < Dat.GetGenes( ); ++j )
-				setstrGenes.insert( Dat.GetGene( j ) ); }
-		m_vecstrGenes.resize( setstrGenes.size( ) );
-		copy( setstrGenes.begin( ), setstrGenes.end( ), m_vecstrGenes.begin( ) ); }
-	else {
-		m_vecstrGenes.resize( Answers.GetGenes( ) );
-		for( i = 0; i < m_vecstrGenes.size( ); ++i )
-			m_vecstrGenes[ i ] = Answers.GetGene( i ); }
+                if (!Dat.OpenGenes(vecstrDataFiles[i].c_str(), iSkip))
+                    return false;
+                for (j = 0; j < Dat.GetGenes(); ++j)
+                    setstrGenes.insert(Dat.GetGene(j));
+            }
+            m_vecstrGenes.resize(setstrGenes.size());
+            copy(setstrGenes.begin(), setstrGenes.end(), m_vecstrGenes.begin());
+        } else {
+            m_vecstrGenes.resize(Answers.GetGenes());
+            for (i = 0; i < m_vecstrGenes.size(); ++i)
+                m_vecstrGenes[i] = Answers.GetGene(i);
+        }
 
-	if( !CDatasetCompactImpl::Open( Answers, 0 ) )
-		return false;
-	for( i = 0; i < vecstrDataFiles.size( ); ++i ) {
-		CDataPair	Datum;
+        if (!CDatasetCompactImpl::Open(Answers, 0))
+            return false;
+        for (i = 0; i < vecstrDataFiles.size(); ++i) {
+            CDataPair Datum;
 
-		if( !( Datum.Open( vecstrDataFiles[ i ].c_str( ), false, fMemmap, iSkip, fZScore ) &&
-			CDatasetCompactImpl::Open( Datum, i + 1 ) ) )
-			return false; }
+            if (!(Datum.Open(vecstrDataFiles[i].c_str(), false, fMemmap, iSkip, fZScore) &&
+                  CDatasetCompactImpl::Open(Datum, i + 1)))
+                return false;
+        }
 
-	if( !fEverything && ( m_iData > 1 ) )
-		for( i = 0; i < m_vecstrGenes.size( ); ++i )
-			for( j = ( i + 1 ); j < m_vecstrGenes.size( ); ++j ) {
-				for( k = 1; k < m_iData; ++k )
-					if( m_aData[ k ].Get( i, j ) )
-						break;
-				if( k >= m_iData )
-					m_aData[ 0 ].Set( i, j, 0 ); }
+        if (!fEverything && (m_iData > 1))
+            for (i = 0; i < m_vecstrGenes.size(); ++i)
+                for (j = (i + 1); j < m_vecstrGenes.size(); ++j) {
+                    for (k = 1; k < m_iData; ++k)
+                        if (m_aData[k].Get(i, j))
+                            break;
+                    if (k >= m_iData)
+                        m_aData[0].Set(i, j, 0);
+                }
 
-	return true; }
+        return true;
+    }
 
-bool CDatasetCompactImpl::Open( const CDataPair& Datum, size_t iExp ) {
-	vector<size_t>	veciGenes;
-	size_t			i, j, iOne, iTwo;
-	float			d;
-	CCompactMatrix&	Target	= m_aData[ iExp ];
+    bool CDatasetCompactImpl::Open(const CDataPair &Datum, size_t iExp) {
+        vector <size_t> veciGenes;
+        size_t i, j, iOne, iTwo;
+        float d;
+        CCompactMatrix &Target = m_aData[iExp];
 
-	m_veccQuants[ iExp ] = Datum.IsContinuous( ) ? -1 : Datum.GetValues( );
-	Target.Initialize( m_vecstrGenes.size( ), (unsigned char)( Datum.GetValues( ) + 1 ),
-		true );
-	veciGenes.resize( m_vecstrGenes.size( ) );
-	for( i = 0; i < veciGenes.size( ); ++i )
-		veciGenes[ i ] = Datum.GetGene( m_vecstrGenes[ i ] );
+        m_veccQuants[iExp] = Datum.IsContinuous() ? -1 : Datum.GetValues();
+        Target.Initialize(m_vecstrGenes.size(), (unsigned char) (Datum.GetValues() + 1),
+                          true);
+        veciGenes.resize(m_vecstrGenes.size());
+        for (i = 0; i < veciGenes.size(); ++i)
+            veciGenes[i] = Datum.GetGene(m_vecstrGenes[i]);
 
-	for( i = 0; i < veciGenes.size( ); ++i )
-		if( ( iOne = veciGenes[ i ] ) != -1 )
-			for( j = ( i + 1 ); j < veciGenes.size( ); ++j )
-				if( ( ( iTwo = veciGenes[ j ] ) != -1 ) &&
-					!CMeta::IsNaN( d = Datum.Get( iOne, iTwo ) ) )
-					Target.Set( i, j, (unsigned char)( Datum.Quantize( d ) + 1 ) );
+        for (i = 0; i < veciGenes.size(); ++i)
+            if ((iOne = veciGenes[i]) != -1)
+                for (j = (i + 1); j < veciGenes.size(); ++j)
+                    if (((iTwo = veciGenes[j]) != -1) &&
+                        !CMeta::IsNaN(d = Datum.Get(iOne, iTwo)))
+                        Target.Set(i, j, (unsigned char) (Datum.Quantize(d) + 1));
 
-	return true; }
+        return true;
+    }
 
-bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNet,
-	const CGenes* pGenesIn, const CGenes* pGenesEx ) {
-	size_t						i;
-	vector<string>				vecstrData, vecstrNodes;
-	set<string>					setstrGenes;
-	set<string>::const_iterator	iterGenes;
+    bool CDatasetCompactImpl::Open(const char *szDataDir, const IBayesNet *pBayesNet,
+                                   const CGenes *pGenesIn, const CGenes *pGenesEx) {
+        size_t i;
+        vector <string> vecstrData, vecstrNodes;
+        set <string> setstrGenes;
+        set<string>::const_iterator iterGenes;
 
-	if( pBayesNet->IsContinuous( ) )
-		return false;
+        if (pBayesNet->IsContinuous())
+            return false;
 
-	pBayesNet->GetNodes( vecstrNodes );
-	m_iData = (uint32_t)OpenMax( szDataDir, vecstrNodes, false, vecstrData, &setstrGenes );
-	m_veccQuants.resize( m_iData );
-	if( pGenesIn )
-		for( i = 0; i < pGenesIn->GetGenes( ); ++i )
-			setstrGenes.insert( pGenesIn->GetGene( i ).GetName( ) );
-	if( pGenesEx )
-		for( i = 0; i < pGenesEx->GetGenes( ); ++i )
-			setstrGenes.erase( pGenesEx->GetGene( i ).GetName( ) );
-	m_vecstrGenes.resize( setstrGenes.size( ) );
-	for( i = 0,iterGenes = setstrGenes.begin( ); iterGenes != setstrGenes.end( );
-		++iterGenes )
-		m_vecstrGenes[ i++ ] = *iterGenes;
+        pBayesNet->GetNodes(vecstrNodes);
+        m_iData = (uint32_t) OpenMax(szDataDir, vecstrNodes, false, vecstrData, &setstrGenes);
+        m_veccQuants.resize(m_iData);
+        if (pGenesIn)
+            for (i = 0; i < pGenesIn->GetGenes(); ++i)
+                setstrGenes.insert(pGenesIn->GetGene(i).GetName());
+        if (pGenesEx)
+            for (i = 0; i < pGenesEx->GetGenes(); ++i)
+                setstrGenes.erase(pGenesEx->GetGene(i).GetName());
+        m_vecstrGenes.resize(setstrGenes.size());
+        for (i = 0, iterGenes = setstrGenes.begin(); iterGenes != setstrGenes.end();
+             ++iterGenes)
+            m_vecstrGenes[i++] = *iterGenes;
 
-	if( m_aData )
-		delete[] m_aData;
-	m_aData = new CCompactMatrix[ m_iData ];
+        if (m_aData)
+            delete[] m_aData;
+        m_aData = new CCompactMatrix[m_iData];
 
-	for( i = 0; i < vecstrData.size( ); ++i ) {
-		CDataPair	Datum;
+        for (i = 0; i < vecstrData.size(); ++i) {
+            CDataPair Datum;
 
-		if( !( Datum.Open( vecstrData[ i ].c_str( ), false ) &&
-			CDatasetCompactImpl::Open( Datum, i ) ) )
-			return false; }
+            if (!(Datum.Open(vecstrData[i].c_str(), false) &&
+                  CDatasetCompactImpl::Open(Datum, i)))
+                return false;
+        }
 
-	return true; }
+        return true;
+    }
 
 /*!
  * \brief
@@ -364,17 +381,18 @@ bool CDatasetCompactImpl::Open( const char* szDataDir, const IBayesNet* pBayesNe
  * \see
  * CDat::FilterGenes
  */
-bool CDatasetCompact::FilterGenes( const char* szGenes, CDat::EFilter eFilter ) {
-	ifstream	ifsm;
-	CGenome		Genome;
-	CGenes		Genes( Genome );
+    bool CDatasetCompact::FilterGenes(const char *szGenes, CDat::EFilter eFilter) {
+        ifstream ifsm;
+        CGenome Genome;
+        CGenes Genes(Genome);
 
-	ifsm.open( szGenes );
-	if( !( ifsm.is_open( ) && Genes.Open( ifsm ) ) )
-		return false;
-	FilterGenes( Genes, eFilter );
+        ifsm.open(szGenes);
+        if (!(ifsm.is_open() && Genes.Open(ifsm)))
+            return false;
+        FilterGenes(Genes, eFilter);
 
-	return true; }
+        return true;
+    }
 
 /*!
  * \brief
@@ -383,53 +401,58 @@ bool CDatasetCompact::FilterGenes( const char* szGenes, CDat::EFilter eFilter ) 
  * \see
  * Remove
  */
-void CDatasetCompact::FilterAnswers( ) {
-	size_t	i, j;
+    void CDatasetCompact::FilterAnswers() {
+        size_t i, j;
 
-	for( i = 0; i < GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( IsExample( i, j ) && ( GetDiscrete( i, j, 0 ) == -1 ) )
-				Remove( i, j ); }
+        for (i = 0; i < GetGenes(); ++i)
+            for (j = (i + 1); j < GetGenes(); ++j)
+                if (IsExample(i, j) && (GetDiscrete(i, j, 0) == -1))
+                    Remove(i, j);
+    }
 
-size_t CDatasetCompactImpl::GetDiscrete( size_t iX, size_t iY, size_t iNode ) const {
-	size_t	iMap;
+    size_t CDatasetCompactImpl::GetDiscrete(size_t iX, size_t iY, size_t iNode) const {
+        size_t iMap;
 
-	if( ( iMap = m_veciMapping[ iNode ] ) == -1 )
-		return -1;
+        if ((iMap = m_veciMapping[iNode]) == -1)
+            return -1;
 
-	return ( m_aData[ iMap ].Get( iX, iY ) - 1 ); }
+        return (m_aData[iMap].Get(iX, iY) - 1);
+    }
 
-bool CDatasetCompactImpl::IsExample( size_t iX, size_t iY ) const {
-	size_t	i;
+    bool CDatasetCompactImpl::IsExample(size_t iX, size_t iY) const {
+        size_t i;
 
-	for( i = 0; i < m_iData; ++i )
-		if( m_aData[ i ].Get( iX, iY ) )
-			return true;
+        for (i = 0; i < m_iData; ++i)
+            if (m_aData[i].Get(iX, iY))
+                return true;
 
-	return false; }
+        return false;
+    }
 
-void CDatasetCompactImpl::Remove( size_t iX, size_t iY ) {
-	size_t	i;
+    void CDatasetCompactImpl::Remove(size_t iX, size_t iY) {
+        size_t i;
 
-	for( i = 0; i < m_iData; ++i )
-		m_aData[ i ].Set( iX, iY, 0 ); }
+        for (i = 0; i < m_iData; ++i)
+            m_aData[i].Set(iX, iY, 0);
+    }
 
-bool CDatasetCompactImpl::Open( const unsigned char* pbData ) {
-	size_t	i;
+    bool CDatasetCompactImpl::Open(const unsigned char *pbData) {
+        size_t i;
 
-	if( m_aData )
-		delete[] m_aData;
+        if (m_aData)
+            delete[] m_aData;
 
-	if( !( pbData = CDataImpl::OpenBinary( pbData ) ) )
-		return false;
-	m_iData = *(uint32_t*)pbData;
-	pbData += sizeof(m_iData);
-	m_aData = new CCompactMatrix[ m_iData ];
-	for( i = 0; i < m_iData; ++i )
-		if( !( pbData = m_aData[ i ].Open( pbData ) ) )
-			return false;
+        if (!(pbData = CDataImpl::OpenBinary(pbData)))
+            return false;
+        m_iData = *(uint32_t *) pbData;
+        pbData += sizeof(m_iData);
+        m_aData = new CCompactMatrix[m_iData];
+        for (i = 0; i < m_iData; ++i)
+            if (!(pbData = m_aData[i].Open(pbData)))
+                return false;
 
-	return true; }
+        return true;
+    }
 
 /*!
  * \brief
@@ -444,44 +467,49 @@ bool CDatasetCompactImpl::Open( const unsigned char* pbData ) {
  * \remarks
  * Should be generated by Save; only used with binary DADs.
  */
-bool CDatasetCompact::Open( std::istream& istm ) {
-	size_t	i;
+    bool CDatasetCompact::Open(std::istream &istm) {
+        size_t i;
 
-	if( m_aData )
-		delete[] m_aData;
+        if (m_aData)
+            delete[] m_aData;
 
-	if( !CDataImpl::OpenBinary( istm ) )
-		return false;
-	istm.read( (char*)&m_iData, sizeof(m_iData) );
-	m_aData = new CCompactMatrix[ m_iData ];
-	for( i = 0; i < m_iData; ++i )
-		if( !m_aData[ i ].Open( istm ) )
-			return false;
+        if (!CDataImpl::OpenBinary(istm))
+            return false;
+        istm.read((char *) &m_iData, sizeof(m_iData));
+        m_aData = new CCompactMatrix[m_iData];
+        for (i = 0; i < m_iData; ++i)
+            if (!m_aData[i].Open(istm))
+                return false;
 
-	return true; }
+        return true;
+    }
 
-void CDatasetCompactImpl::SaveBinary( std::ostream& ostm ) const {
-	size_t	i;
+    void CDatasetCompactImpl::SaveBinary(std::ostream &ostm) const {
+        size_t i;
 
-	CDataImpl::SaveBinary( ostm );
-	ostm.write( (char*)&m_iData, sizeof(m_iData) );
-	for( i = 0; i < m_iData; ++i )
-		m_aData[ i ].Save( ostm ); }
+        CDataImpl::SaveBinary(ostm);
+        ostm.write((char *) &m_iData, sizeof(m_iData));
+        for (i = 0; i < m_iData; ++i)
+            m_aData[i].Save(ostm);
+    }
 
-void CDatasetCompactImpl::SaveText( std::ostream& ostm ) const {
-	size_t	i, j, k, iVal;
+    void CDatasetCompactImpl::SaveText(std::ostream &ostm) const {
+        size_t i, j, k, iVal;
 
-	for( i = 0; i < GetGenes( ); ++i )
-		for( j = ( i + 1 ); j < GetGenes( ); ++j )
-			if( IsExample( i, j ) ) {
-				ostm << GetGene( i ) << '\t' << GetGene( j );
-				for( k = 0; k < GetExperiments( ); ++k ) {
-					ostm << '\t';
-					if( ( iVal = GetDiscrete( i, j, k ) ) == -1 )
-						ostm << "-1";
-					else
-						ostm << iVal; }
-				ostm << endl; } }
+        for (i = 0; i < GetGenes(); ++i)
+            for (j = (i + 1); j < GetGenes(); ++j)
+                if (IsExample(i, j)) {
+                    ostm << GetGene(i) << '\t' << GetGene(j);
+                    for (k = 0; k < GetExperiments(); ++k) {
+                        ostm << '\t';
+                        if ((iVal = GetDiscrete(i, j, k)) == -1)
+                            ostm << "-1";
+                        else
+                            ostm << iVal;
+                    }
+                    ostm << endl;
+                }
+    }
 
 /*!
  * \brief
@@ -522,108 +550,118 @@ void CDatasetCompactImpl::SaveText( std::ostream& ostm ) const {
  * \see
  * CPCL
  */
-bool CDatasetCompact::Open( const CGenes& GenesInclude, const CGenes& GenesExclude, const CDataPair& Answers,
-	const std::vector<std::string>& vecstrPCLs, size_t iSkip, const IMeasure* pMeasure,
-	const std::vector<float>& vecdBinEdges ) {
-	size_t					i, j, iPCL;
-	set<string>				setstrGenes;
-	set<string>::iterator	iterGene;
+    bool CDatasetCompact::Open(const CGenes &GenesInclude, const CGenes &GenesExclude, const CDataPair &Answers,
+                               const std::vector <std::string> &vecstrPCLs, size_t iSkip, const IMeasure *pMeasure,
+                               const std::vector<float> &vecdBinEdges) {
+        size_t i, j, iPCL;
+        set <string> setstrGenes;
+        set<string>::iterator iterGene;
 
-	g_CatSleipnir( ).notice( "CDatasetCompact::Open( %d ) opening PCL files",
-		iSkip );
+        g_CatSleipnir().notice("CDatasetCompact::Open( %d ) opening PCL files",
+                               iSkip);
 
-	m_veciMapping.resize( m_iData = 1 + (uint32_t)vecstrPCLs.size( ) );
-	for( i = 0; i < m_veciMapping.size( ); ++i )
-		m_veciMapping[ i ] = i;
-	m_veccQuants.resize( m_iData );
-	m_veccQuants[ 0 ] = Answers.GetValues( );
-	for( i = 1; i < m_veccQuants.size( ); ++i )
-		m_veccQuants[ i ] = (unsigned char)vecdBinEdges.size( );
+        m_veciMapping.resize(m_iData = 1 + (uint32_t) vecstrPCLs.size());
+        for (i = 0; i < m_veciMapping.size(); ++i)
+            m_veciMapping[i] = i;
+        m_veccQuants.resize(m_iData);
+        m_veccQuants[0] = Answers.GetValues();
+        for (i = 1; i < m_veccQuants.size(); ++i)
+            m_veccQuants[i] = (unsigned char) vecdBinEdges.size();
 
-	for( i = 0; i < Answers.GetGenes( ); ++i )
-		setstrGenes.insert( Answers.GetGene( i ) );
-	for( iPCL = 0; iPCL < vecstrPCLs.size( ); ++iPCL ) {
-		ifstream	ifsm;
+        for (i = 0; i < Answers.GetGenes(); ++i)
+            setstrGenes.insert(Answers.GetGene(i));
+        for (iPCL = 0; iPCL < vecstrPCLs.size(); ++iPCL) {
+            ifstream ifsm;
 
-		ifsm.open( vecstrPCLs[ iPCL ].c_str( ) );
-		if( !CDataImpl::OpenGenes( ifsm, false, true, setstrGenes ) ) {
-			g_CatSleipnir( ).error( "CDatasetCompact::Open( %d ) could not open: %s", iSkip,
-				vecstrPCLs[ iPCL ].c_str( ) );
-			return false; } }
-	if( GenesInclude.GetGenes( ) ) {
-		for( iterGene = setstrGenes.begin( ); iterGene != setstrGenes.end( ); ++iterGene )
-			if( !GenesInclude.IsGene( *iterGene ) )
-				setstrGenes.erase( iterGene );
-		for( i = 0; i < GenesInclude.GetGenes( ); ++i )
-			setstrGenes.insert( GenesInclude.GetGene( i ).GetName( ) ); }
-	if( GenesExclude.GetGenes( ) )
-		for( i = 0; i < GenesExclude.GetGenes( ); ++i )
-			setstrGenes.erase( GenesExclude.GetGene( i ).GetName( ) );
-	m_vecstrGenes.resize( setstrGenes.size( ) );
-	copy( setstrGenes.begin( ), setstrGenes.end( ), m_vecstrGenes.begin( ) );
+            ifsm.open(vecstrPCLs[iPCL].c_str());
+            if (!CDataImpl::OpenGenes(ifsm, false, true, setstrGenes)) {
+                g_CatSleipnir().error("CDatasetCompact::Open( %d ) could not open: %s", iSkip,
+                                      vecstrPCLs[iPCL].c_str());
+                return false;
+            }
+        }
+        if (GenesInclude.GetGenes()) {
+            for (iterGene = setstrGenes.begin(); iterGene != setstrGenes.end(); ++iterGene)
+                if (!GenesInclude.IsGene(*iterGene))
+                    setstrGenes.erase(iterGene);
+            for (i = 0; i < GenesInclude.GetGenes(); ++i)
+                setstrGenes.insert(GenesInclude.GetGene(i).GetName());
+        }
+        if (GenesExclude.GetGenes())
+            for (i = 0; i < GenesExclude.GetGenes(); ++i)
+                setstrGenes.erase(GenesExclude.GetGene(i).GetName());
+        m_vecstrGenes.resize(setstrGenes.size());
+        copy(setstrGenes.begin(), setstrGenes.end(), m_vecstrGenes.begin());
 
-	if( m_aData )
-		delete[] m_aData;
-	m_aData = new CCompactMatrix[ m_iData ];
-	if( !CDatasetCompactImpl::Open( Answers, 0 ) )
-		return false;
+        if (m_aData)
+            delete[] m_aData;
+        m_aData = new CCompactMatrix[m_iData];
+        if (!CDatasetCompactImpl::Open(Answers, 0))
+            return false;
 
-	for( iPCL = 0; iPCL < vecstrPCLs.size( ); ++iPCL ) {
-		CPCL			PCL;
-		ifstream		ifsm;
-		CDistanceMatrix	Dist;
-		CDataPair		Datum;
-		vector<size_t>	veciGenes;
-		vector<string>	vecstrGenes;
-		size_t			iGenes, iOne, iTwo;
-		const float*	adOne;
+        for (iPCL = 0; iPCL < vecstrPCLs.size(); ++iPCL) {
+            CPCL PCL;
+            ifstream ifsm;
+            CDistanceMatrix Dist;
+            CDataPair Datum;
+            vector <size_t> veciGenes;
+            vector <string> vecstrGenes;
+            size_t iGenes, iOne, iTwo;
+            const float *adOne;
 
-		g_CatSleipnir( ).notice( "CDatasetCompact::Open( %d ) opening: %s", iSkip, vecstrPCLs[ iPCL ].c_str( ) );
-		ifsm.open( vecstrPCLs[ iPCL ].c_str( ) );
-		if( !PCL.Open( ifsm, iSkip ) ) {
-			g_CatSleipnir( ).error( "CDatasetCompact::Open( %d ) could not open: %s", iSkip, vecstrPCLs[ iPCL ].c_str( ) );
-			return 1; }
-		if( pMeasure->IsRank( ) )
-			PCL.RankTransform( );
+            g_CatSleipnir().notice("CDatasetCompact::Open( %d ) opening: %s", iSkip, vecstrPCLs[iPCL].c_str());
+            ifsm.open(vecstrPCLs[iPCL].c_str());
+            if (!PCL.Open(ifsm, iSkip)) {
+                g_CatSleipnir().error("CDatasetCompact::Open( %d ) could not open: %s", iSkip,
+                                      vecstrPCLs[iPCL].c_str());
+                return 1;
+            }
+            if (pMeasure->IsRank())
+                PCL.RankTransform();
 
-		veciGenes.resize( PCL.GetGenes( ) );
-		if( GenesInclude.GetGenes( ) || GenesExclude.GetGenes( ) )
-			for( i = 0; i < PCL.GetGenes( ); ++i ) {
-				const string&	strGene	= PCL.GetGene( i );
+            veciGenes.resize(PCL.GetGenes());
+            if (GenesInclude.GetGenes() || GenesExclude.GetGenes())
+                for (i = 0; i < PCL.GetGenes(); ++i) {
+                    const string &strGene = PCL.GetGene(i);
 
-				if( GenesExclude.GetGenes( ) && GenesExclude.IsGene( strGene ) )
-					veciGenes[ i ] = -1;
-				else if( GenesInclude.GetGenes( ) )
-					veciGenes[ i ] = (unsigned int)( GenesInclude.IsGene( strGene ) ? iGenes++ : -1 );
-				else
-					veciGenes[ i ] = (unsigned int)iGenes++;
-				if( veciGenes[ i ] != -1 )
-					vecstrGenes.push_back( strGene ); }
-		else {
-			vecstrGenes.resize( PCL.GetGenes( ) );
-			copy( PCL.GetGeneNames( ).begin( ), PCL.GetGeneNames( ).end( ), vecstrGenes.begin( ) );
-			for( i = 0; i < veciGenes.size( ); ++i )
-				veciGenes[ i ] = i; }
-		Dist.Initialize( vecstrGenes.size( ) );
-		for( i = 0; i < Dist.GetSize( ); ++i )
-			for( j = ( i + 1 ); j < Dist.GetSize( ); ++j )
-				Dist.Set( i, j, CMeta::GetNaN( ) );
-		for( i = 0; i < PCL.GetGenes( ); ++i ) {
-			if( ( iOne = veciGenes[ i ] ) == -1 )
-				continue;
-			adOne = PCL.Get( i );
-			for( j = ( i + 1 ); j < PCL.GetGenes( ); ++j )
-				if( ( iTwo = veciGenes[ j ] ) != -1 )
-					Dist.Set( iOne, iTwo, (float)pMeasure->Measure( adOne, PCL.GetExperiments( ), PCL.Get( j ),
-						PCL.GetExperiments( ) ) ); }
+                    if (GenesExclude.GetGenes() && GenesExclude.IsGene(strGene))
+                        veciGenes[i] = -1;
+                    else if (GenesInclude.GetGenes())
+                        veciGenes[i] = (unsigned int) (GenesInclude.IsGene(strGene) ? iGenes++ : -1);
+                    else
+                        veciGenes[i] = (unsigned int) iGenes++;
+                    if (veciGenes[i] != -1)
+                        vecstrGenes.push_back(strGene);
+                }
+            else {
+                vecstrGenes.resize(PCL.GetGenes());
+                copy(PCL.GetGeneNames().begin(), PCL.GetGeneNames().end(), vecstrGenes.begin());
+                for (i = 0; i < veciGenes.size(); ++i)
+                    veciGenes[i] = i;
+            }
+            Dist.Initialize(vecstrGenes.size());
+            for (i = 0; i < Dist.GetSize(); ++i)
+                for (j = (i + 1); j < Dist.GetSize(); ++j)
+                    Dist.Set(i, j, CMeta::GetNaN());
+            for (i = 0; i < PCL.GetGenes(); ++i) {
+                if ((iOne = veciGenes[i]) == -1)
+                    continue;
+                adOne = PCL.Get(i);
+                for (j = (i + 1); j < PCL.GetGenes(); ++j)
+                    if ((iTwo = veciGenes[j]) != -1)
+                        Dist.Set(iOne, iTwo, (float) pMeasure->Measure(adOne, PCL.GetExperiments(), PCL.Get(j),
+                                                                       PCL.GetExperiments()));
+            }
 
-		Datum.Open( vecstrGenes, Dist );
-		Datum.Normalize( CDat::ENormalizeZScore );
-		Datum.SetQuants( vecdBinEdges );
-		if( !CDatasetCompactImpl::Open( Datum, iPCL + 1 ) )
-			return false; }
+            Datum.Open(vecstrGenes, Dist);
+            Datum.Normalize(CDat::ENormalizeZScore);
+            Datum.SetQuants(vecdBinEdges);
+            if (!CDatasetCompactImpl::Open(Datum, iPCL + 1))
+                return false;
+        }
 
-	return true; }
+        return true;
+    }
 
 /*!
  * \brief
@@ -635,20 +673,22 @@ bool CDatasetCompact::Open( const CGenes& GenesInclude, const CGenes& GenesExclu
  * \see
  * CCompactMatrix::Randomize
  */
-void CDatasetCompact::Randomize( ) {
-	size_t	i;
+    void CDatasetCompact::Randomize() {
+        size_t i;
 
-	if( !m_aData )
-		return;
+        if (!m_aData)
+            return;
 
-	for( i = 1; i < m_iData; ++i )
-		m_aData[ i ].Randomize( ); }
+        for (i = 1; i < m_iData; ++i)
+            m_aData[i].Randomize();
+    }
 
-CDatasetCompactMap::CDatasetCompactMap( ) : m_pbData(NULL), m_hndlMap(0) { }
+    CDatasetCompactMap::CDatasetCompactMap() : m_pbData(NULL), m_hndlMap(0) {}
 
-CDatasetCompactMap::~CDatasetCompactMap( ) {
+    CDatasetCompactMap::~CDatasetCompactMap() {
 
-	CMeta::Unmap( m_pbData, m_hndlMap, m_iData ); }
+        CMeta::Unmap(m_pbData, m_hndlMap, m_iData);
+    }
 
 /*!
  * \brief
@@ -660,18 +700,20 @@ CDatasetCompactMap::~CDatasetCompactMap( ) {
  * \returns
  * True if dataset was opened successfully.
  */
-bool CDatasetCompactMap::Open( const char* szFile ) {
-	size_t	i, j;
+    bool CDatasetCompactMap::Open(const char *szFile) {
+        size_t i, j;
 
-	CMeta::MapRead( m_pbData, m_hndlMap, m_iData, szFile );
-	if( !CDatasetCompactImpl::Open( m_pbData ) ) {
-		CMeta::Unmap( m_pbData, m_hndlMap, m_iData );
-		return false; }
+        CMeta::MapRead(m_pbData, m_hndlMap, m_iData, szFile);
+        if (!CDatasetCompactImpl::Open(m_pbData)) {
+            CMeta::Unmap(m_pbData, m_hndlMap, m_iData);
+            return false;
+        }
 
-	m_Mask.Initialize( GetGenes( ) );
-	for( i = 0; i < m_Mask.GetSize( ); ++i )
-		for( j = ( i + 1 ); j < m_Mask.GetSize( ); ++j )
-			m_Mask.Set( i, j, CDatasetCompact::IsExample( i, j ) );
-	return true; }
+        m_Mask.Initialize(GetGenes());
+        for (i = 0; i < m_Mask.GetSize(); ++i)
+            for (j = (i + 1); j < m_Mask.GetSize(); ++j)
+                m_Mask.Set(i, j, CDatasetCompact::IsExample(i, j));
+        return true;
+    }
 
 }

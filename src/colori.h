@@ -24,14 +24,14 @@
 
 namespace Sleipnir {
 
-class CColorImpl {
-protected:
-	static const size_t	c_iChannels	= 3;
+    class CColorImpl {
+    protected:
+        static const size_t c_iChannels = 3;
 
-	void ToHSV( float&, float&, float& ) const;
+        void ToHSV(float &, float &, float &) const;
 
-	unsigned char	m_abRGB[ c_iChannels ];
-};
+        unsigned char m_abRGB[c_iChannels];
+    };
 
 }
 

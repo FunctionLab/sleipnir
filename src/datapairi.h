@@ -26,51 +26,60 @@
 
 namespace Sleipnir {
 
-class CDataPair;
-class CDatFilter;
+    class CDataPair;
 
-class CPairImpl {
-protected:
-	static const char	c_szQuantExt[];
+    class CDatFilter;
 
-	static bool Open( const char*, std::ifstream& );
-	static bool Open( const char*, std::vector<float>& );
-};
+    class CPairImpl {
+    protected:
+        static const char c_szQuantExt[];
 
-class CDataPairImpl : protected CPairImpl, public CDat {
-protected:
-  	CDataPairImpl( ) : m_fQuantized(false) {}
-	void Reset( bool );
-	bool				m_fContinuous;
-	bool				m_fQuantized;
-	std::vector<float>	m_vecdQuant;
+        static bool Open(const char *, std::ifstream &);
 
-	static const char  c_acQdab[];
-	bool OpenQdab( const char* szDatafile );
-	void SetQuants( const float* adBinEdges, size_t iBins );
-	std::vector<float> GetQuants();
-};
+        static bool Open(const char *, std::vector<float> &);
+    };
 
-class CPCLPairImpl : protected CPairImpl, public CPCL {
-protected:
-	std::vector<std::vector<float> >	m_vecvecdQuants;
-};
+    class CDataPairImpl : protected CPairImpl, public CDat {
+    protected:
+        CDataPairImpl() : m_fQuantized(false) {}
 
-class CDatFilterImpl {
-protected:
-	CDatFilterImpl( ) : m_pDat(NULL), m_pFilter(NULL) { }
+        void Reset(bool);
 
-	bool Attach( const CDataPair*, const CDatFilter*, const CGenes*, CDat::EFilter, const CDat* );
-	size_t GetGenes( ) const;
-	std::string GetGene( size_t ) const;
+        bool m_fContinuous;
+        bool m_fQuantized;
+        std::vector<float> m_vecdQuant;
 
-	const CDat*			m_pAnswers;
-	const CDataPair*	m_pDat;
-	const CDatFilter*	m_pFilter;
-	CDat::EFilter		m_eFilter;
-	std::vector<bool>	m_vecfGenes;
-	std::vector<size_t>	m_veciAnswers;
-};
+        static const char c_acQdab[];
+
+        bool OpenQdab(const char *szDatafile);
+
+        void SetQuants(const float *adBinEdges, size_t iBins);
+
+        std::vector<float> GetQuants();
+    };
+
+    class CPCLPairImpl : protected CPairImpl, public CPCL {
+    protected:
+        std::vector <std::vector<float>> m_vecvecdQuants;
+    };
+
+    class CDatFilterImpl {
+    protected:
+        CDatFilterImpl() : m_pDat(NULL), m_pFilter(NULL) {}
+
+        bool Attach(const CDataPair *, const CDatFilter *, const CGenes *, CDat::EFilter, const CDat *);
+
+        size_t GetGenes() const;
+
+        std::string GetGene(size_t) const;
+
+        const CDat *m_pAnswers;
+        const CDataPair *m_pDat;
+        const CDatFilter *m_pFilter;
+        CDat::EFilter m_eFilter;
+        std::vector<bool> m_vecfGenes;
+        std::vector <size_t> m_veciAnswers;
+    };
 
 }
 

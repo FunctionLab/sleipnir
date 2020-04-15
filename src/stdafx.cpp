@@ -948,10 +948,10 @@ MIPS:
 namespace Sleipnir {
 
 #ifdef USE_LOG4CPP_STUB
-const char* Priority::c_aszPriorityLevels[]	= {"FATAL", "ALERT", "CRITICAL", "ERROR", "WARN",
-												"NOTICE", "INFO", "DEBUG", "NOTSET"};
+    const char* Priority::c_aszPriorityLevels[]	= {"FATAL", "ALERT", "CRITICAL", "ERROR", "WARN",
+                                                    "NOTICE", "INFO", "DEBUG", "NOTSET"};
 #else // USE_LOG4CPP_STUB
-const char	c_szSleipnir[]	= "Sleipnir";
+    const char c_szSleipnir[] = "Sleipnir";
 #endif // USE_LOG4CPP_STUB
 
 }
