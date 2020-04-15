@@ -1,0 +1,11 @@
+#!/bin/sh
+
+./configure --with-gengetopt=/Genomics/fgrid/function/sleipnir-extlib/gengetopt/ \
+	--with-log4cpp=/Genomics/fgrid/function/sleipnir-extlib/log4cpp/ \
+	--with-smile=/Genomics/fgrid/function/sleipnir-extlib/smile_linux_x64_gcc_4_4_5/ \
+	--with-svm-perf=/Genomics/fgrid/function/sleipnir-extlib/svm_perf/ \
+	--with-boost-includes=/Genomics/fgrid/function/sleipnir-extlib/boost/ \
+	--with-libsvm=/Genomics/Users/youngl/lib/libsvm-3.17/ \
+    --prefix=/home/youngl/software/sleipnir/ \ 
+	LDFLAGS=-static
+# CXXFLAGS=-fno-threadsafe-statics
