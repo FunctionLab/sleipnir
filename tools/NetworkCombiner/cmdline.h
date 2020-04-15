@@ -43,18 +43,30 @@ struct gengetopt_args_info
   char * directory_arg;	/**< @brief input directory (must only contain input files).  */
   char * directory_orig;	/**< @brief input directory (must only contain input files) original value given at command line.  */
   const char *directory_help; /**< @brief input directory (must only contain input files) help description.  */
+  int logit_flag;	/**< @brief logit transform the probability edge weights (default=off).  */
+  const char *logit_help; /**< @brief logit transform the probability edge weights help description.  */
+  int znormalize_flag;	/**< @brief z normalize edge weights (may not be probability values) (default=off).  */
+  const char *znormalize_help; /**< @brief z normalize edge weights (may not be probability values) help description.  */
   int map_flag;	/**< @brief Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs) (default=on).  */
   const char *map_help; /**< @brief Map gene index among the network dabs to combine. (Should be used when the gene intex are not identical among network dabs) help description.  */
+  char * weights_arg;	/**< @brief context weight file.  */
+  char * weights_orig;	/**< @brief context weight file original value given at command line.  */
+  const char *weights_help; /**< @brief context weight file help description.  */
+  char * prior_arg;	/**< @brief count file directory.  */
+  char * prior_orig;	/**< @brief count file directory original value given at command line.  */
+  const char *prior_help; /**< @brief count file directory help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
   unsigned int directory_given ;	/**< @brief Whether directory was given.  */
+  unsigned int logit_given ;	/**< @brief Whether logit was given.  */
+  unsigned int znormalize_given ;	/**< @brief Whether znormalize was given.  */
   unsigned int map_given ;	/**< @brief Whether map was given.  */
+  unsigned int weights_given ;	/**< @brief Whether weights was given.  */
+  unsigned int prior_given ;	/**< @brief Whether prior was given.  */
 
-  char **inputs ; /**< @brief unamed options (options without names) */
-  unsigned inputs_num ; /**< @brief unamed options number */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */

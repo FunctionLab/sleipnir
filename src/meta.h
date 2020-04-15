@@ -24,11 +24,10 @@
 
 #include <float.h>
 #include <math.h>
-
 #include <vector>
 
 #include "metai.h"
-
+#include "stdio.h"
 #ifdef _MSC_VER
 #include <windows.h>
 #include <winsock.h>
@@ -233,16 +232,55 @@ public:
 	 */
 	template <class tType>
 	static size_t Quantize( tType Value, const std::vector<tType>& vecQuants ) {
-		size_t	i;
 
 		if( IsNaN( Value ) )
 			return -1;
 
+		/*
+		size_t i;
 		for( i = 0; i < vecQuants.size( ); ++i )
 			if( Value <= vecQuants[ i ] )
 				break;
+		size_t r = min(i, vecQuants.size()-1);
+		return r;
+		 */
+		
+		size_t mid = vecQuants.size() / 2;
+		int i = mid;
 
-		return min( i, vecQuants.size( ) - 1 ); }
+		if(Value <= vecQuants[i]){
+			i--;
+			//LEFT direction
+			while(i>=0){
+				if(Value <= vecQuants[i]){
+					i--;
+				}else{
+					i++;
+					break;
+				}
+			}
+			if(i==-1){
+				i = 0;
+			}
+		}else{
+			i++;
+			//RIGHT direction
+			while(i<vecQuants.size()){
+				if(Value > vecQuants[i]){
+					i++;
+				}else{
+					break;
+				}
+			}
+			if(i==vecQuants.size()){
+				i = vecQuants.size() - 1;
+			}
+		}
+
+		size_t ii = i;
+
+		return ii;
+	}
 
 	/*!
 	 * \brief

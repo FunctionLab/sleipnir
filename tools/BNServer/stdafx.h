@@ -38,6 +38,8 @@ using namespace std;
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#include <omp.h>
+
 #define SOCKET		int
 
 inline bool _mktemp_s( char* szTemplate ) {

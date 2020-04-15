@@ -28,6 +28,7 @@ struct SBNServerData {
 	const IOntology**				m_apOntologies;
 	const CBayesNetMinimal&			m_BNDefault;
 	const CDatabase&				m_Database;
+	const CDatabase&				m_Answers;
 	const CGenome&					m_Genome;
 	size_t							m_iLimit;
 	const CDataMatrix&				m_MatBackgrounds;
@@ -43,6 +44,7 @@ struct SBNServerData {
 	const vector<float>&			m_vecdPriors;
 	const vector<size_t>&			m_veciContexts;
 	const vector<size_t>&			m_veciDiseases;
+	const vector<size_t>&			m_veciBins;
 	const vector<vector<size_t> >&	m_vecveciContexts;
 	const vector<vector<size_t> >&	m_vecveciDiseases;
 
@@ -50,6 +52,7 @@ struct SBNServerData {
 		const IOntology**				apOntologies,
 		const CBayesNetMinimal&			BNDefault,
 		const CDatabase&				Database,
+		const CDatabase&				Answers,
 		const CGenome&					Genome,
 		size_t							iLimit,
 		const CDataMatrix&				MatBackgrounds,
@@ -63,6 +66,7 @@ struct SBNServerData {
 		const string&					strGraphviz,
 		const vector<CBayesNetMinimal>&	vecBNs,
 		const vector<float>&			vecdPriors,
+		const vector<size_t>&			veciBins,
 		const vector<size_t>&			veciContexts,
 		const vector<size_t>&			veciDiseases,
 		const vector<vector<size_t> >&	vecveciContexts,
@@ -71,6 +75,7 @@ struct SBNServerData {
 		m_apOntologies		(apOntologies),
 		m_BNDefault			(BNDefault),
 		m_Database			(Database),
+		m_Answers			(Answers),
 		m_Genome			(Genome),
 		m_iLimit			(iLimit),
 		m_MatBackgrounds	(MatBackgrounds),
@@ -84,6 +89,7 @@ struct SBNServerData {
 		m_strGraphviz		(strGraphviz),
 		m_vecBNs			(vecBNs),
 		m_vecdPriors		(vecdPriors),
+		m_veciBins		(veciBins),
 		m_veciContexts		(veciContexts),
 		m_veciDiseases		(veciDiseases),
 		m_vecveciContexts	(vecveciContexts),
@@ -182,6 +188,7 @@ private:
 	bool Get( size_t, const std::vector<size_t>&, size_t, float* );
 	bool GetGenes( const std::vector<size_t>&, size_t, float );
 	bool GetWithin( const std::vector<size_t>&, size_t, float*, std::vector<float>* ) const;
+	float Evaluate( const vector<vector<float> >& binEffects, vector<unsigned char>& vecbData, size_t iOffset );
 	// Association processing
 	bool GetAssociationsSet( unsigned char, const std::vector<size_t>&, size_t ) const;
 	bool GetAssociationsDC( unsigned char, unsigned char, size_t, size_t, bool = false ) const;
@@ -201,6 +208,12 @@ private:
 	bool SendGenes( const std::vector<size_t>&, const std::vector<size_t>& ) const;
 	// Message processors
 	size_t ProcessInference( const std::vector<unsigned char>&, size_t );
+	size_t ProcessCPT( const std::vector<unsigned char>&, size_t, vector<vector<float> >& );
+	size_t ProcessInferenceOTF( const std::vector<unsigned char>&, size_t );
+	size_t ProcessMultiInferenceEdge( const std::vector<unsigned char>&, size_t );
+	size_t ProcessMultiInferenceGene( const std::vector<unsigned char>&, size_t );
+	size_t ProcessLearning( const std::vector<unsigned char>&, size_t );
+	size_t ProcessEdges( const std::vector<unsigned char>&, size_t );
 	size_t ProcessData( const std::vector<unsigned char>&, size_t );
 	size_t ProcessGraph( const std::vector<unsigned char>&, size_t );
 	size_t ProcessContexts( const std::vector<unsigned char>&, size_t );
@@ -327,6 +340,10 @@ cerr << dValue << ":	" << dRet << endl;
 
 		return m_sData.m_Database; }
 
+	const CDatabase& GetAnswers( ) const {
+
+		return m_sData.m_Answers; }
+
 	const string& GetFiles( ) const {
 
 		return m_sData.m_strFiles; }
@@ -356,6 +373,11 @@ cerr << dValue << ":	" << dRet << endl;
 	const vector<size_t>& GetDiseaseGenes( ) const {
 
 		return m_sData.m_veciDiseases; }
+
+	const vector<size_t>& GetBins( ) const {
+
+		return m_sData.m_veciBins; }
+
 
 	const vector<vector<size_t> >& GetGeneSets( unsigned char bDiseases ) const {
 

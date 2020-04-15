@@ -34,6 +34,7 @@ using namespace std;
 using namespace Sleipnir;
 
 #ifndef _MSC_VER
+#include <unistd.h>
 #define _unlink unlink
 #endif // _MSC_VER
 

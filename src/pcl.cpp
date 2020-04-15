@@ -166,7 +166,9 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 		const char* szSimilarityMeasure, bool fNormalize, bool fZScore,
 		bool fAutocorrelate, const char* szGeneFile, float dCutoff,
 		size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap,
-		bool fFrequencyWeight, float dAlpha) {
+		bool fFrequencyWeight, float dAlpha, int nThreads) {
+
+
 	size_t i, j, iOne, iTwo;
 	float d;
 	ifstream ifsm;
@@ -192,10 +194,13 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 	CMeasureRelativeAUC RelAuc;
 	CMeasurePearsonSignificance PearSig;
 	CMeasureDice Dice( dAlpha );
-
+	CMeasureDistanceCorrelation DCor;
+	CMeasureSignedDistanceCorrelation SDCor;
+	CMeasureCosine Cosine;
 	if (szFile) {
-		ifsm.open(szFile);
-		if (!PCL.Open(ifsm, iSkip)) {
+        g_CatSleipnir().debug("Opening PCL for distance");
+	g_CatSleipnir().debug("Method: %s ", szSimilarityMeasure);
+        if (!PCL.Open(szFile, iSkip, false, false)) {
 			g_CatSleipnir().error(
 					"CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL",
 					szFile, iSkip, szSimilarityMeasure, fNormalize, fZScore,
@@ -217,7 +222,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 			EuclideanSig(&Euclidean, false, 1.0f / PCL.GetExperiments());
 	IMeasure* apMeasures[] = { &Pearson, &EuclideanSig, &KendallsTau,
 			&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick,
-			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice, NULL };
+			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, &Cosine,NULL };
 
 	pMeasure = NULL;
 	for (i = 0; apMeasures[i]; ++i)
@@ -227,7 +232,7 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 		}
 	if (!pMeasure)
 		return 1;
-
+	g_CatSleipnir().info("Method: %s ", pMeasure->GetName(), i);
 	if (fFrequencyWeight) {
 		vecdWeights.resize(PCL.GetExperiments());
 		for (i = 0; i < vecdWeights.size(); ++i) {
@@ -265,6 +270,292 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 	if (pMeasure->IsRank())
 		PCL.RankTransform();
 
+	g_CatSleipnir().info("Number of Experiments: %d", PCL.GetExperiments());
+
+	if ((iLimit != -1) && (PCL.GetGenes() > iLimit))
+		Dat.Open(PCL, pMeasure->Clone(), true);
+	else {
+		Dat.Open(GenesIn.GetGeneNames());
+		for (i = 0; i < Dat.GetGenes(); ++i)
+			for (j = (i + 1); j < Dat.GetGenes(); ++j)
+				Dat.Set(i, j, CMeta::GetNaN());
+		int origNThreads = omp_get_num_threads();
+		omp_set_num_threads(nThreads);
+		for (i = 0; i < GenesIn.GetGenes(); ++i) {
+			if (!(i % 100))
+				g_CatSleipnir().info(
+						"CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) processing gene %d/%d",
+						szFile ? szFile : "stdin", iSkip, szSimilarityMeasure,
+						fNormalize, fZScore, fAutocorrelate,
+						szGeneFile ? szGeneFile : "", dCutoff, i,
+						GenesIn.GetGenes());
+			if ((iOne = veciGenes[i]) == -1)
+				continue;
+			adOne = PCL.Get(iOne);
+			for (j = (i + 1); j < GenesIn.GetGenes(); ++j){
+				if ((iTwo = veciGenes[j]) != -1){
+					Dat.Set(i, j, (float) pMeasure->Measure(adOne,
+							PCL.GetExperiments(), PCL.Get(iTwo),
+							PCL.GetExperiments(), eMap, adWeights, adWeights));
+				}
+			}
+		}
+		omp_set_num_threads(origNThreads);
+		if (fNormalize || fZScore)
+			Dat.Normalize(fZScore ? CDat::ENormalizeZScore
+					: CDat::ENormalizeMinMax);
+		if (!CMeta::IsNaN(dCutoff))
+			for (i = 0; i < Dat.GetGenes(); ++i)
+				for (j = (i + 1); j < Dat.GetGenes(); ++j)
+					if (!CMeta::IsNaN(d = Dat.Get(i, j)) && (d < dCutoff))
+						Dat.Set(i, j, CMeta::GetNaN());
+
+		if(pMeasure->GetName()=="pearson" || pMeasure->GetName()=="pearnorm"){
+			vector<unsigned long> bins;
+			bins.resize(55);
+			float upper = 0;
+			float lower = 0;
+			if(pMeasure->GetName()=="pearson"){
+				upper = 1.0;
+				lower = -1.0;
+			}else if(pMeasure->GetName()=="pearnorm"){
+				upper = 5.0;
+				lower = -5.0;
+			}
+			float bin_size = (upper - lower) / 50;
+			for(i=0; i<55; i++)
+				bins[i] = 0;
+			for(i=0; i<Dat.GetGenes(); i++){
+				for(j=i+1; j<Dat.GetGenes(); j++){
+					d = Dat.Get(i,j);
+					if(CMeta::IsNaN(d)) continue;
+					int b = (int) ((d - lower) / bin_size);
+					if(b<0){
+						bins[0]++;
+						continue;
+					}
+					if(b>=55){
+						bins[54]++;
+						continue;
+					}
+					bins[b]++;
+				}
+			}
+			g_CatSleipnir().info(
+			"Distribution of distances: bin size: %.5f, number of bins: %d, min bin value: %.5f, max bin value: %.5f",
+			bin_size, 55, lower, upper);
+			for(i=0; i<55; i++){
+				g_CatSleipnir().info("%lu\t%lu", i, bins[i]);
+			}
+		}
+
+	}
+
+	return 0;
+}
+
+/*!
+ * \brief
+ * Kitchen sink method for completely loading a PCL and calculating its pairwise similarity scores into a CDat.  This method supports weighted metrics as opposed to the above method which does not.  This allows distancer to take a weights vector (currently included in the documentation but it was not previously functioning).  The weights vector is used only if freqweight is false.
+ *
+ * \param szFile
+ * If non-null, file from which PCL is to be loaded; if null, standard input is used.
+ *
+ * \param iSkip
+ * Number of columns to skip in the PCL file between gene IDs and experimental data.
+ *
+ * \param szWeights
+ * If non-null, file from which weights are to be loaded; if null, this is ignored.
+ *
+ * \param szSimilarityMeasure
+ * String identifier of similarity measure to use for CDat generation.
+ *
+ * \param fNormalize
+ * If true, normalize the generated CDat to the range [0, 1].
+ *
+ * \param fZScore
+ * If true, normalize the generated CDat to z-scores (subtract mean, divide by standard deviation).
+ *
+ * \param fAutocorrelate
+ * If true, autocorrelate the requested similarity measure.
+ *
+ * \param szGeneFile
+ * If non-null, only convert genes in the given file to pairwise scores in the CDat.
+ *
+ * \param dCutoff
+ * If finite, remove all pairwise scores less than the given cutoff.
+ *
+ * \param iLimit
+ * If not equal to -1 and the PCL contains more genes than this limit, do not precalculate pairwise scores;
+ * instead, configure the CDat to calculate scores on the fly as needed from the PCL.
+ *
+ * \param PCL
+ * Output PCL with the loaded data.
+ *
+ * \param Dat
+ * Output CDat with the calculated pairwise scores.
+ *
+ * \param eMap
+ * Way in which returned value should be centered (implementation-specific).
+ *
+ * \param fFrequencyWeight
+ * If true, weight each condition by the frequency with which it is nonzero over all genes.
+ *
+ * \returns
+ * 0 on successes, a nonzero value on failure.
+ *
+ * The (many) steps performed by this method are as follows:
+ * <ol>
+ * <li>A PCL is loaded from szFile into PCL using Open.  If szFile is null, the PCL is loaded from
+ * standard input.</li>
+ * <li>An IMeasure object is constructed by iterating over the available implementations and finding
+ * one whose name corresponds with szSimilarityMeasure.  Names which are distance measures (e.g. Euclidean)
+ * are automatically inverted.  If requested, the measure is autocorrelated.</li>
+ * <li>If given, szGeneFile is loaded into a CGenes object.</li>
+ * <li>If iLimit is not -1 and the PCL contains more than the limiting number of genes, Dat is given a
+ * reference to PCL and configured to calculate pairwise scores as needed.  Processing then stops.</li>
+ * <li>Otherwise, an empty CDat is initialized to contain either the genes in szGeneFile (if given) or
+ * all of the genes in the PCL.</li>
+ * <li>Gene pairs are assigned scores in the CDat using the requested similarity measure.</li>
+ * <li>If given, scores below dCutoff are replaced with missing values.</li>
+ * <li>If requested, the remaining scores are normalized either to the range [0, 1] or to z-scores.</li>
+ * </ol>
+ *
+ * \remarks
+ * This method is written to make it easy to construct tools that must load a PCL and immediately convert
+ * it to pairwise scores using some user-selected similarity measure.
+ */
+int CPCL::Distance(const char* szFile, size_t iSkip, const char* szWeights,
+		const char* szSimilarityMeasure, bool fNormalize, bool fZScore,
+		bool fAutocorrelate, const char* szGeneFile, float dCutoff,
+		size_t iLimit, CPCL& PCL, CDat& Dat, IMeasure::EMap eMap,
+		bool fFrequencyWeight, float dAlpha, int nThreads) {
+	size_t i, j, iOne, iTwo;
+	float d;
+	ifstream ifsm;
+	vector<string> vecstrGenes;
+	CGenome Genome;
+	CGenes GenesIn(Genome);
+	vector<size_t> veciGenes;
+	const float* adOne;
+	const float* adWeights;
+	vector<float> vecdWeights;
+	vector<string> vecstrWeights;
+    string acStr;
+	IMeasure* pMeasure;
+	CMeasurePearson Pearson;
+	CMeasureEuclidean Euclidean;
+	CMeasureKendallsTau KendallsTau;
+	CMeasureKolmogorovSmirnov KolmSmir;
+	CMeasureSpearman Spearman(true);
+	CMeasurePearNorm PearNorm;
+	CMeasureHypergeometric Hypergeom;
+	CMeasureQuickPearson PearQuick;
+	CMeasureInnerProduct InnerProd;
+	CMeasureBinaryInnerProduct BinInnerProd;
+	CMeasureMutualInformation MutualInfo;
+	CMeasureRelativeAUC RelAuc;
+	CMeasurePearsonSignificance PearSig;
+	CMeasureDice Dice( dAlpha );
+	CMeasureDistanceCorrelation DCor;
+	CMeasureSignedDistanceCorrelation SDCor;
+	CMeasureCosine Cosine;
+	if (szFile) {
+        g_CatSleipnir().debug("Opening PCL for distance");
+        if (!PCL.Open(szFile, iSkip, false, false)) {
+			g_CatSleipnir().error(
+					"CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL",
+					szFile, iSkip, szSimilarityMeasure, fNormalize, fZScore,
+					fAutocorrelate, szGeneFile ? szGeneFile : "", dCutoff);
+			return 1;
+		}
+		ifsm.close();
+	} else if (!PCL.Open(cin, iSkip)) {
+		g_CatSleipnir().error(
+				"CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open PCL",
+				"stdin", iSkip, szSimilarityMeasure, fNormalize, fZScore,
+				fAutocorrelate, szGeneFile ? szGeneFile : "", dCutoff);
+		return 1;
+	}
+	if (!szSimilarityMeasure)
+		return 0;
+
+	CMeasureSigmoid
+			EuclideanSig(&Euclidean, false, 1.0f / PCL.GetExperiments());
+	IMeasure* apMeasures[] = { &Pearson, &EuclideanSig, &KendallsTau,
+			&KolmSmir, &Spearman, &PearNorm, &Hypergeom, &PearQuick,
+			&InnerProd, &BinInnerProd, &MutualInfo, &RelAuc, &PearSig, &Dice,&DCor,&SDCor, &Cosine, NULL };
+
+	pMeasure = NULL;
+	for (i = 0; apMeasures[i]; ++i)
+		if (!strcmp(apMeasures[i]->GetName(), szSimilarityMeasure)) {
+			pMeasure = apMeasures[i];
+			break;
+		}
+	if (!pMeasure)
+		return 1;
+	g_CatSleipnir().info("Method: %s ", pMeasure->GetName(), i);
+	if (fFrequencyWeight) {
+		vecdWeights.resize(PCL.GetExperiments());
+		for (i = 0; i < vecdWeights.size(); ++i) {
+			for (iOne = j = 0; j < PCL.GetGenes(); ++j)
+				if (!CMeta::IsNaN(d = PCL.Get(j, i)) && (d > 0))
+					iOne++;
+			vecdWeights[i] = (float) ((PCL.GetGenes() + 1) - iOne)
+					/ PCL.GetGenes();
+		}
+	}
+	adWeights = vecdWeights.empty() ? NULL : &vecdWeights[0];
+
+    if ( adWeights == NULL ) {
+        if (szWeights != NULL) {
+            ifsm.open(szWeights);
+            getline(ifsm, acStr);
+            ifsm.close();
+            CMeta::Tokenize( acStr.c_str(), vecstrWeights, CMeta::c_szWS, true);
+            if ( vecstrWeights.size() != PCL.GetExperiments()) {
+                g_CatSleipnir().error(
+                        "CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) length of weights file (%s, length: %d) did not match number of experiments (%d).",
+                        szFile, iSkip, szSimilarityMeasure, fNormalize, fZScore,
+                        fAutocorrelate, szGeneFile ? szGeneFile : "", dCutoff, szWeights,
+                        vecstrWeights.size(), PCL.GetExperiments());
+                return 1;
+            }
+		    vecdWeights.resize(PCL.GetExperiments());
+            for (i = 0; i < vecstrWeights.size(); ++i) {
+                vecdWeights[i] = atof(vecstrWeights[i].c_str());
+            }
+	        adWeights = vecdWeights.empty() ? NULL : &vecdWeights[0];
+        }
+    }
+
+	CMeasureAutocorrelate Autocorrelate(pMeasure, false);
+	if (fAutocorrelate)
+		pMeasure = &Autocorrelate;
+
+	if (szGeneFile) {
+		ifsm.clear();
+		ifsm.open(szGeneFile);
+		if (!GenesIn.Open(ifsm)) {
+			g_CatSleipnir().error(
+					"CPCL::Distance( %s, %d, %s, %d, %d, %d, %s, %g ) failed to open genes",
+					szFile ? szFile : "stdin", iSkip, szSimilarityMeasure,
+					fNormalize, fZScore, fAutocorrelate, szGeneFile, dCutoff);
+			return 1;
+		}
+		ifsm.close();
+	} else
+		GenesIn.Open(PCL.GetGeneNames());
+	veciGenes.resize(GenesIn.GetGenes());
+	for (i = 0; i < veciGenes.size(); ++i)
+		veciGenes[i] = szGeneFile ? PCL.GetGene(GenesIn.GetGene(i).GetName())
+				: i;
+
+	if (pMeasure->IsRank())
+		PCL.RankTransform();
+
+	g_CatSleipnir().info("Number of Experiments: %d", PCL.GetExperiments());
+
 	if ((iLimit != -1) && (PCL.GetGenes() > iLimit))
 		Dat.Open(PCL, pMeasure->Clone(), true);
 	else {
@@ -283,23 +574,65 @@ int CPCL::Distance(const char* szFile, size_t iSkip,
 			if ((iOne = veciGenes[i]) == -1)
 				continue;
 			adOne = PCL.Get(iOne);
-			for (j = (i + 1); j < GenesIn.GetGenes(); ++j)
-				if ((iTwo = veciGenes[j]) != -1)
+			#pragma omp parallel for num_threads(nThreads)
+			for (j = (i + 1); j < GenesIn.GetGenes(); ++j){
+				if ((iTwo = veciGenes[j]) != -1){
 					Dat.Set(i, j, (float) pMeasure->Measure(adOne,
 							PCL.GetExperiments(), PCL.Get(iTwo),
 							PCL.GetExperiments(), eMap, adWeights, adWeights));
+				}
+			}
 		}
 
 		if (fNormalize || fZScore)
 			Dat.Normalize(fZScore ? CDat::ENormalizeZScore
 					: CDat::ENormalizeMinMax);
+
 		if (!CMeta::IsNaN(dCutoff))
 			for (i = 0; i < Dat.GetGenes(); ++i)
 				for (j = (i + 1); j < Dat.GetGenes(); ++j)
 					if (!CMeta::IsNaN(d = Dat.Get(i, j)) && (d < dCutoff))
 						Dat.Set(i, j, CMeta::GetNaN());
-	}
 
+		if(pMeasure->GetName()=="pearson" || pMeasure->GetName()=="pearnorm"){
+			vector<unsigned long> bins;
+			bins.resize(55);
+			float upper = 0;
+			float lower = 0;
+			if(pMeasure->GetName()=="pearson"){
+				upper = 1.0;
+				lower = -1.0;
+			}else if(pMeasure->GetName()=="pearnorm"){
+				upper = 5.0;
+				lower = -5.0;
+			}
+			float bin_size = (upper - lower) / 50;
+			for(i=0; i<55; i++)
+				bins[i] = 0;
+			for(i=0; i<Dat.GetGenes(); i++){
+				for(j=i+1; j<Dat.GetGenes(); j++){
+					d = Dat.Get(i,j);
+					if(CMeta::IsNaN(d)) continue;
+					int b = (int) ((d - lower) / bin_size);
+					if(b<0){
+						bins[0]++;
+						continue;
+					}
+					if(b>=55){
+						bins[54]++;
+						continue;
+					}
+					bins[b]++;
+				}
+			}
+			g_CatSleipnir().info(
+			"Distribution of distances: bin size: %.5f, number of bins: %d, min bin value: %.5f, max bin value: %.5f",
+			bin_size, 55, lower, upper);
+			for(i=0; i<55; i++){
+				g_CatSleipnir().info("%lu\t%lu", i, bins[i]);
+			}
+		}
+	}
 	return 0;
 }
 
@@ -345,7 +678,7 @@ void CPCLImpl::Reset() {
 //}
 
 
-bool CPCL::Open(const char* szFile, size_t iSkip, bool Memmap) {
+bool CPCL::Open(const char* szFile, size_t iSkip, bool Memmap, bool rTable) {
 	bool isBinary = false;
 	bool isDAB = false;
 	ifstream ifsm;
@@ -395,8 +728,8 @@ bool CPCL::Open(const char* szFile, size_t iSkip, bool Memmap) {
 	} else {
 		ifstream ifsm;
 		if (szFile)
-			ifsm.open(szFile);
-		return Open(szFile ? ifsm : cin, iSkip);
+		  ifsm.open(szFile);
+		return Open(szFile ? ifsm : cin, iSkip, rTable);
 	}
 }
 
@@ -486,6 +819,9 @@ void CPCL::Open(const CPCL& PCL) {
  * \param iSkip
  * Number of feature columns to skip between the gene IDs and first experimental column.
  *
+ * \param rTable
+ * Is this PCL file generated by R language (This means its missing the "YORF" label in the first line, thus has 1 less token compared to sleipnir PCL format)
+ *
  * \returns
  * True if the PCL was opened successfully.
  *
@@ -493,7 +829,7 @@ void CPCL::Open(const CPCL& PCL) {
  * Save
  */
 
-bool CPCL::Open(std::istream& istm, size_t iSkip) {
+bool CPCL::Open(std::istream& istm, size_t iSkip, bool rTable) {
 	vector<float> vecdData;
 	size_t i;
 	char* acBuf;
@@ -504,8 +840,8 @@ bool CPCL::Open(std::istream& istm, size_t iSkip) {
 		return false;
 
 	acStr.reserve(c_iBufferSize);
-
-	if (!OpenExperiments(istm, iSkip, acStr))
+	
+	if (!OpenExperiments(istm, iSkip, acStr, rTable))
 		fRet = false;
 	else {
 		m_vecvecstrFeatures.resize(m_vecstrFeatures.size() - 1);
@@ -580,11 +916,11 @@ bool CPCLImpl::OpenMemmap(const unsigned char* pb) {
 }
 
 bool CPCLImpl::OpenExperiments(std::istream& istmInput, size_t iFeatures,
-		string& acStr) {
+			       string& acStr, bool rTable) {
 	const char* pc;
 	string strToken;
 	size_t iToken;
-
+	
 	Reset();
 	if (!m_fHeader) {
 		m_vecstrFeatures.resize(1 + iFeatures);
@@ -594,13 +930,20 @@ bool CPCLImpl::OpenExperiments(std::istream& istmInput, size_t iFeatures,
 	if (!acStr.size()) {
 		return false;
 	}
+	
+	if(rTable){	  
+	  m_vecstrFeatures.push_back("");
+	}
+	
 	for (iToken = 0, pc = acStr.c_str(); (strToken = OpenToken(pc, &pc)).length()
 			|| *pc; ++iToken)
-		if (iToken <= iFeatures)
-			m_vecstrFeatures.push_back(strToken);
-		else
-			m_vecstrExperiments.push_back(strToken);
-
+	  if (iToken < iFeatures)
+	    m_vecstrFeatures.push_back(strToken);
+	  else if (iToken <= iFeatures && !rTable)
+	    m_vecstrFeatures.push_back(strToken);
+	  else
+	    m_vecstrExperiments.push_back(strToken);
+	
 	return true;
 }
 
@@ -690,8 +1033,8 @@ void CPCL::SaveHeader(std::ostream& ostm, bool fCDT) const {
 		return;
 
 /*	if (fCDT)
-		ostm << c_szGID << '\t';
-	ostm << m_vecstrFeatures[0];*/
+		ostm << c_szGID << '\t'; */
+	ostm << m_vecstrFeatures[0]; //Gene name
 	for (i = 1; i < m_vecstrFeatures.size(); ++i)
 		ostm << '\t' << m_vecstrFeatures[i];
 	for (i = 0; i < m_vecstrExperiments.size(); ++i)
@@ -1546,4 +1889,58 @@ void CPCLImpl::MedianMultiplesMapped(
 		}
 	}
 }
+
+/**
+ * Fills a PCL object from a tab text file (gene1 gene2 val)
+ * gene1 is row, gene2 is col
+ * used for creating a directed gene-gene network
+ */
+  bool CPCL::populate(const char* szFile, float dDefault){
+  ifstream istm;
+  const char*	pc;
+  char*		pcTail;
+  char*		acBuf;
+  string		strToken, strCache, strValue;
+  size_t		iOne, iTwo, i;
+  float		dScore;
+  
+  istm.open( szFile );
+  
+  acBuf = new char[ c_iBufferSize ];
+  while( istm.peek( ) != EOF ) {
+    istm.getline( acBuf, c_iBufferSize - 1 );
+    strToken = OpenToken( acBuf, &pc );
+    if( !strToken.length( ) )
+      break;
+    //if( strToken == c_acComment )
+    //  continue;
+    if( strToken != strCache ) {
+      strCache = strToken;			
+      iOne = GetGene( strToken );
+    }
+    
+    strToken = OpenToken( pc, &pc );
+    if( !strToken.length( ) ) {
+      delete[] acBuf;
+      return false; }
+    iTwo = GetGene( strToken );
+    
+    strValue = OpenToken( pc );
+    if( !strValue.length( ) ) {
+      if( CMeta::IsNaN( dScore = dDefault ) ) {
+	delete[] acBuf;
+	return false; } }
+    else if( !( dScore = (float)strtod( strValue.c_str( ), &pcTail ) ) &&
+	     ( pcTail != ( strValue.c_str( ) + strValue.length( ) ) ) ) {
+      delete[] acBuf;
+      return false; }
+    
+    Set(iOne, iTwo, dScore);
+    
+  }
+  delete[] acBuf;
+  
+  return true;
+}
+  
 }

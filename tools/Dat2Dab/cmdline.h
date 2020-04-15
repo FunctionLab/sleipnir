@@ -45,14 +45,32 @@ struct gengetopt_args_info
   const char *quant_help; /**< @brief Input Quant file help description.  */
   int flip_flag;	/**< @brief Calculate one minus values (default=off).  */
   const char *flip_help; /**< @brief Calculate one minus values help description.  */
+  int abs_flag;	/**< @brief Calculate absolute values (default=off).  */
+  const char *abs_help; /**< @brief Calculate absolute values help description.  */
   int normalize_flag;	/**< @brief Normalize to the range [0,1] (default=off).  */
   const char *normalize_help; /**< @brief Normalize to the range [0,1] help description.  */
+  int normalizeNPone_flag;	/**< @brief Normalize to the range [-1,1] (default=off).  */
+  const char *normalizeNPone_help; /**< @brief Normalize to the range [-1,1] help description.  */
+  int normalizeDeg_flag;	/**< @brief Normalize by incident node degrees (default=off).  */
+  const char *normalizeDeg_help; /**< @brief Normalize by incident node degrees help description.  */
+  int normalizeLoc_flag;	/**< @brief Normalize by local neighborhood (default=off).  */
+  const char *normalizeLoc_help; /**< @brief Normalize by local neighborhood help description.  */
   int zscore_flag;	/**< @brief Convert values to z-scores (default=off).  */
   const char *zscore_help; /**< @brief Convert values to z-scores help description.  */
   int rank_flag;	/**< @brief Rank transform data (default=off).  */
   const char *rank_help; /**< @brief Rank transform data help description.  */
   int randomize_flag;	/**< @brief Randomize data (default=off).  */
   const char *randomize_help; /**< @brief Randomize data help description.  */
+  int NegExp_flag;	/**< @brief Transform all values to their negative exponential (converts -log of prob back to prob space) (default=off).  */
+  const char *NegExp_help; /**< @brief Transform all values to their negative exponential (converts -log of prob back to prob space) help description.  */
+  double prior_arg;	/**< @brief Prior of functional network (for rescaling -K).  */
+  char * prior_orig;	/**< @brief Prior of functional network (for rescaling -K) original value given at command line.  */
+  const char *prior_help; /**< @brief Prior of functional network (for rescaling -K) help description.  */
+  double newprior_arg;	/**< @brief New prior of functional network (use with -k).  */
+  char * newprior_orig;	/**< @brief New prior of functional network (use with -k) original value given at command line.  */
+  const char *newprior_help; /**< @brief New prior of functional network (use with -k) help description.  */
+  int logratio_flag;	/**< @brief Convert functional network to log likelihood ratio (use with -k) (default=off).  */
+  const char *logratio_help; /**< @brief Convert functional network to log likelihood ratio (use with -k) help description.  */
   char * genes_arg;	/**< @brief Process only genes from the given set.  */
   char * genes_orig;	/**< @brief Process only genes from the given set original value given at command line.  */
   const char *genes_help; /**< @brief Process only genes from the given set help description.  */
@@ -68,6 +86,9 @@ struct gengetopt_args_info
   char * exedges_arg;	/**< @brief Exclude edges from the given DAT/DAB.  */
   char * exedges_orig;	/**< @brief Exclude edges from the given DAT/DAB original value given at command line.  */
   const char *exedges_help; /**< @brief Exclude edges from the given DAT/DAB help description.  */
+  char * gexedges_arg;	/**< @brief Exclude all edges which both genes from the given set.  */
+  char * gexedges_orig;	/**< @brief Exclude all edges which both genes from the given set original value given at command line.  */
+  const char *gexedges_help; /**< @brief Exclude all edges which both genes from the given set help description.  */
   double cutoff_arg;	/**< @brief Exclude edges below cutoff.  */
   char * cutoff_orig;	/**< @brief Exclude edges below cutoff original value given at command line.  */
   const char *cutoff_help; /**< @brief Exclude edges below cutoff help description.  */
@@ -100,6 +121,14 @@ struct gengetopt_args_info
   const char *genelist_help; /**< @brief Only list genes help description.  */
   int paircount_flag;	/**< @brief Only count pairs above cutoff (default=off).  */
   const char *paircount_help; /**< @brief Only count pairs above cutoff help description.  */
+  int ccoeff_flag;	/**< @brief Output clustering coefficient for each gene (default=off).  */
+  const char *ccoeff_help; /**< @brief Output clustering coefficient for each gene help description.  */
+  int hubbiness_flag;	/**< @brief Output the average edge weight for each gene (default=off).  */
+  const char *hubbiness_help; /**< @brief Output the average edge weight for each gene help description.  */
+  int mar_flag;	/**< @brief Output the maximum adjacency ratio for each gene (default=off).  */
+  const char *mar_help; /**< @brief Output the maximum adjacency ratio for each gene help description.  */
+  int summary_flag;	/**< @brief Output the summary of values (mean, stand dev.) (default=off).  */
+  const char *summary_help; /**< @brief Output the summary of values (mean, stand dev.) help description.  */
   char * remap_arg;	/**< @brief Gene name remapping file.  */
   char * remap_orig;	/**< @brief Gene name remapping file original value given at command line.  */
   const char *remap_help; /**< @brief Gene name remapping file help description.  */
@@ -125,15 +154,24 @@ struct gengetopt_args_info
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int quant_given ;	/**< @brief Whether quant was given.  */
   unsigned int flip_given ;	/**< @brief Whether flip was given.  */
+  unsigned int abs_given ;	/**< @brief Whether abs was given.  */
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
+  unsigned int normalizeNPone_given ;	/**< @brief Whether normalizeNPone was given.  */
+  unsigned int normalizeDeg_given ;	/**< @brief Whether normalizeDeg was given.  */
+  unsigned int normalizeLoc_given ;	/**< @brief Whether normalizeLoc was given.  */
   unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int rank_given ;	/**< @brief Whether rank was given.  */
   unsigned int randomize_given ;	/**< @brief Whether randomize was given.  */
+  unsigned int NegExp_given ;	/**< @brief Whether NegExp was given.  */
+  unsigned int prior_given ;	/**< @brief Whether prior was given.  */
+  unsigned int newprior_given ;	/**< @brief Whether newprior was given.  */
+  unsigned int logratio_given ;	/**< @brief Whether logratio was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int genex_given ;	/**< @brief Whether genex was given.  */
   unsigned int genee_given ;	/**< @brief Whether genee was given.  */
   unsigned int edges_given ;	/**< @brief Whether edges was given.  */
   unsigned int exedges_given ;	/**< @brief Whether exedges was given.  */
+  unsigned int gexedges_given ;	/**< @brief Whether gexedges was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int zero_given ;	/**< @brief Whether zero was given.  */
   unsigned int dval_given ;	/**< @brief Whether dval was given.  */
@@ -146,6 +184,10 @@ struct gengetopt_args_info
   unsigned int lookups2_given ;	/**< @brief Whether lookups2 was given.  */
   unsigned int genelist_given ;	/**< @brief Whether genelist was given.  */
   unsigned int paircount_given ;	/**< @brief Whether paircount was given.  */
+  unsigned int ccoeff_given ;	/**< @brief Whether ccoeff was given.  */
+  unsigned int hubbiness_given ;	/**< @brief Whether hubbiness was given.  */
+  unsigned int mar_given ;	/**< @brief Whether mar was given.  */
+  unsigned int summary_given ;	/**< @brief Whether summary was given.  */
   unsigned int remap_given ;	/**< @brief Whether remap was given.  */
   unsigned int table_given ;	/**< @brief Whether table was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */

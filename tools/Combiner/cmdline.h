@@ -68,11 +68,11 @@ struct gengetopt_args_info
   int quantiles_arg;	/**< @brief Replace values with quantiles (default='0').  */
   char * quantiles_orig;	/**< @brief Replace values with quantiles original value given at command line.  */
   const char *quantiles_help; /**< @brief Replace values with quantiles help description.  */
-  int zscore_flag;	/**< @brief Z-score output after combining (default=off).  */
-  const char *zscore_help; /**< @brief Z-score output after combining help description.  */
+  int zscore_flag;	/**< @brief Z-score output after combining (applies to dat combination type) (default=off).  */
+  const char *zscore_help; /**< @brief Z-score output after combining (applies to dat combination type) help description.  */
   int zero_flag;	/**< @brief Default missing values to zero (default=off).  */
   const char *zero_help; /**< @brief Default missing values to zero help description.  */
-  int skip_arg;	/**< @brief Columns to skip in input PCLs (default='2').  */
+  int skip_arg;	/**< @brief Columns to skip in input PCLs (default='0').  */
   char * skip_orig;	/**< @brief Columns to skip in input PCLs original value given at command line.  */
   const char *skip_help; /**< @brief Columns to skip in input PCLs help description.  */
   int memmap_flag;	/**< @brief Memory map input files (default=off).  */

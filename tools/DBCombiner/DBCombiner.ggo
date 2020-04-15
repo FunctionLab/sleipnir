@@ -1,0 +1,35 @@
+package	"DBCombiner"
+version	"1.0"
+purpose	"Combines a list of DB files with the same gene content"
+
+section "Mode"
+option	"combine"			C	"Combine a set of DB's, each coming from a different dataset subset"
+								flag	off
+option	"reorganize"		R	"Reorganize a set of DB's, such as from 21000 DB files to 1000 DB files, ie expanding/shrinking the number of genes a DB contains"
+								flag	off
+
+section "Main"
+option	"input"				i	"Input gene mapping"
+								string	typestr="filename"	yes	
+
+section "Combine Mode"
+option	"db"				x	"Input a set of databaselet filenames (including path)"
+								string typestr="filename"
+option	"dir_out"			D	"Output database directory"
+								string	typestr="directory"	default="."
+option	"is_nibble"			N	"Whether the input DB is nibble type"
+								flag	off
+option	"split"				s	"Split to one-gene per file"
+								flag	off
+
+section "Reorganize Mode"
+option	"dataset"			A	"Dataset-platform mapping file"
+								string typestr="filename"
+option	"db_dir"			d	"Source DB collection directory"
+								string typestr="directory"
+option	"src_db_num"		n	"Source DB number of files"
+								int
+option	"dest_db_num"		b	"Destination DB number of files"
+								int
+option	"dest_db_dir"		B	"Destination DB directory"
+								string typestr="directory"

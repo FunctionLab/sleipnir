@@ -42,8 +42,12 @@ protected:
 		uint32_t	iLength;
 
 		istm.read( (char*)&iLength, sizeof(iLength) );
-		str.resize( iLength );
-		istm.read( &str[ 0 ], iLength ); }
+		char *tmp = new char[iLength+1];
+		istm.read( tmp, iLength ); 
+		tmp[iLength] = '\0';
+		str = string(tmp);
+		delete[] tmp;
+	}
 };
 
 }

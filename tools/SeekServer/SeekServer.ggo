@@ -1,0 +1,44 @@
+package	"SeekServer"
+version	"1.0"
+purpose	"Performs cross-platform microarray query-guided search in server mode"
+
+section "Main"
+option	"port"				t	"Port"
+								string default="9000"	yes
+option	"dset"				x	"Input a set of datasets"
+								string typestr="filename"	yes
+option	"input"				i	"Input gene mapping"
+								string	typestr="filename"	yes
+option	"dir_in"			d	"Database directory"
+								string	typestr="directory"	yes
+option	"dir_prep_in"		p	"Prep directory (containing .gavg, .gpres files)"
+								string	typestr="directory"	yes
+option	"dir_platform"		P	"Platform directory (containing .gplatavg, .gplatstdev, .gplatorder files)"
+								string	typestr="directory"	yes
+option	"dir_sinfo"			u	"Sinfo Directory (containing .sinfo files)"
+								string	typestr="directory"	default="NA"	yes
+option	"dir_gvar"			U	"Gene variance directory (containing .gexpvar files)"
+								string	typestr="directory"	default="NA"
+option	"quant"				Q	"quant file (assuming all datasets use the same quantization)"
+								string	typestr="filename"	yes					option	"dset_size_file"	R	"Dataset size file"
+								string	typestr="filename"	yes
+option	"num_db"			n	"Number of databaselets in database"
+								int	default="1000"	yes
+option	"num_threads"		T	"Number of threads"
+								int default="8"
+
+section "Optional - Parameter tweaking"
+option	"score_cutoff"		c	"Cutoff on the gene-gene score before adding, default: no cutoff"
+								float default="-9999"
+option	"square_z"			e	"If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff"							
+								flag	off
+
+section "MISC"								
+option	"is_nibble"			N	"If true, the input DB is nibble type"
+								flag	off
+option	"buffer"			b	"Number of Databaselets to store in memory"
+								int default="20"
+option	"output_text"		O	"Output results (gene list and dataset weights) as text"
+								flag	off
+option	"additional_db"		B	"Utilize a second CDatabase collection. Path to the second CDatabase's setting file."
+								string default="NA"	

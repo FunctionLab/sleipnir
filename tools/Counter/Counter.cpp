@@ -2,7 +2,7 @@
 * This file is provided under the Creative Commons Attribution 3.0 license.
 *
 * You are free to share, copy, distribute, transmit, or adapt this work
-* PROVIDED THAT you attribute the work to the authors listed below.
+* PROVIDED THAT you attribute the work to the authors listed below.flip
 * For more information, please see the following web page:
 * http://creativecommons.org/licenses/by/3.0/
 *
@@ -21,6 +21,10 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
+
+
+#define WT_MULTIPLIER 50
+#define WT_MULTIPLIERf 50.0
 
 class CRegularize;
 
@@ -47,6 +51,12 @@ struct SLearn {
     bool                    m_bBridgeNeg;
     bool                    m_bOutPos;
     bool                    m_bOutNeg;
+    bool		    m_isDatWeighted;
+    bool		    m_bFlipNeg;
+    bool		    m_bdWeightPos;
+    bool		    m_bNoWeightNeg;
+    float		    m_multiplier;
+    const CDat*	    m_pwDat;
 };
 
 struct SEvaluate {
@@ -60,6 +70,7 @@ struct SEvaluate {
     const vector<size_t>*	m_pveciGenes;
     bool			m_fFirst;
     string			m_strName;
+    bool			m_bLogratio;
 };
 
 struct SEvaluate2 {
@@ -276,7 +287,7 @@ void* evaluate( void* );
 void* evaluate2( void* );
 void* finalize( void* );
 int main_count( const gengetopt_args_info&, const map<string, size_t>&, const CGenes&, const CGenes&,
-                const CGenes&, const CGenes&, const CGenes& );
+                const CGenes&, const CGenes&, const CGenes&);
 int main_xdsls( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>&,
                 const vector<string>& );
 int main_inference( const gengetopt_args_info&, const map<string, size_t>&, const map<string, size_t>& );
@@ -299,9 +310,11 @@ int main( int iArgs, char** aszArgs ) {
         return 1;
     }
     CMeta Meta( sArgs.verbosity_arg );
+	if(sArgs.reggroups_given && sArgs.weights_flag){
+		cerr << "Regularization is not supported for weighted contexts." << endl;
+		return 1;}
     if( sArgs.pseudocounts_arg < 0 )
         sArgs.pseudocounts_arg = CMeta::GetNaN( );
-
     if( sArgs.zeros_arg ) {
         ifstream		ifsm;
         vector<string>	vecstrLine;
@@ -422,8 +435,10 @@ int main( int iArgs, char** aszArgs ) {
         }
     }
 
+
+
     if( sArgs.answers_arg )
-        iRet = main_count( sArgs, mapstriZeros, GenesIn, GenesEx, GenesTm, GenesEd, GenesUbik );
+        iRet = main_count( sArgs, mapstriZeros, GenesIn, GenesEx, GenesTm, GenesEd, GenesUbik);
     else if( sArgs.counts_arg )
         iRet = main_xdsls( sArgs, mapstriZeros, mapstriDatasets, vecstrContexts );
     else if( sArgs.networks_arg )
@@ -443,6 +458,7 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
     vector<CCountMatrix*>		vecpMatRoots;
     vector<CGenes*>			vecpGenes;
     CDataPair				Answers, Dat;
+	CDat					wDat;
     CDatFilter				Filter, FilterIn, FilterEx, FilterTm, FilterEd;
     CDatFilter*				pFilter;
     string	    			strFile;
@@ -450,8 +466,10 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
     vector<SLearn>			vecsData;
     map<string, size_t>::const_iterator	iterZero;
     CGenome			    	Genome;
+	vector<CGenome>			Genomes;
     vector<string>			vecstrNames;
     CRegularize			        Regularize;
+	bool					isDatWeighted=false;
     if( !Answers.Open( sArgs.answers_arg, false, !!sArgs.memmap_flag ) ) {
         cerr << "Could not open: " << sArgs.answers_arg << endl;
         return 1;
@@ -462,16 +480,32 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
     }
 
     vecpGenes.resize( sArgs.inputs_num );
+	Genomes.resize(vecpGenes.size( ));
     for( i = 0; i < vecpGenes.size( ); ++i ) {
         ifstream	ifsm;
 
         vecpGenes[ i ]  = new CGenes( Genome );
         ifsm.open( sArgs.inputs[ i ] );
-        if( !vecpGenes[ i ]->Open( ifsm ) ) {
-            cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-            return 1;
-        }
-    }
+
+		if(sArgs.weights_flag){
+			delete vecpGenes[ i ];
+			vecpGenes[ i ] = new CGenes(Genomes[ i ]);
+			if( !vecpGenes[ i ]->OpenWeighted( ifsm ) ) {
+				if(!wDat.Open(sArgs.inputs[i], !!sArgs.memmap_flag )){
+					cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+					return 1;	}
+				else{
+					isDatWeighted = true;
+					vecpGenes[ i ]->Open(wDat.GetGeneNames());}
+			}
+		}	
+		else{
+			if( !vecpGenes[ i ]->Open( ifsm ) ) {
+				cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+				return 1;	}	
+		}
+	}
+    
     if( !vecpGenes.size( ) ) {
         vecpGenes.insert( vecpGenes.begin( ), new CGenes( Genome ) );
         vecpGenes[ 0 ]->Open( Answers.GetGeneNames( ) );
@@ -498,6 +532,12 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_bBridgeNeg = sArgs.bridgeneg_flag;
             vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
             vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
+	    vecsData[ i ].m_isDatWeighted = false;
+	    vecsData[ i ].m_bFlipNeg =false;
+	    vecsData[ i ].m_bdWeightPos = false;
+	    vecsData[ i ].m_bNoWeightNeg = sArgs.noweightneg_flag;
+	    vecsData[ i ].m_pwDat = NULL;
+	    vecsData[ i ].m_multiplier = sArgs.multiplier_arg;		
             if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
                 return 1;
@@ -571,6 +611,12 @@ int main_count( const gengetopt_args_info& sArgs, const map<string, size_t>& map
             vecsData[ i ].m_bBridgeNeg = sArgs.bridgeneg_flag;
             vecsData[ i ].m_bOutPos = sArgs.outpos_flag;
             vecsData[ i ].m_bOutNeg = sArgs.outneg_flag;
+			vecsData[ i ].m_isDatWeighted = isDatWeighted;
+			vecsData[ i ].m_bFlipNeg = !!sArgs.flipneg_flag;
+			vecsData[ i ].m_bdWeightPos = !!sArgs.dweightpos_flag;
+			vecsData[ i ].m_bNoWeightNeg = !!sArgs.noweightneg_flag;
+			vecsData[ i ].m_pwDat = isDatWeighted? &wDat : NULL;
+	    vecsData[ i ].m_multiplier = sArgs.multiplier_arg;  
             if( pthread_create( &vecpthdThreads[ i ], NULL, learn, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create root thread: " << sArgs.inputs[ i ] << endl;
                 return 1;
@@ -591,8 +637,8 @@ for( i = 0; i < vecpMatRoots.size( ); ++i ) {
     ofstream	ofsm;
 
     ofsm.open( ( (string)sArgs.output_arg + '/' + ( sArgs.inputs ?
-                 CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) + c_acTxt ).c_str( ) );
-    ofsm << ( sArgs.inputs ? CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : "global" ) <<
+                 CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : sArgs.countname_arg ) + c_acTxt ).c_str( ) );
+    ofsm << ( sArgs.inputs ? CMeta::Deextension( CMeta::Basename( sArgs.inputs[ i ] ) ) : sArgs.countname_arg ) <<
          '\t' << vecpvecpMats.size( ) << endl;
     for( j = 0; j < vecpMatRoots[ i ]->GetRows( ); ++j )
         ofsm << ( j ? "\t" : "" ) << vecpMatRoots[ i ]->Get( j, 0 );
@@ -624,20 +670,29 @@ return 0;
 
 void* learn( void* pData ) {
     SLearn*		psData;
-    size_t		i, j, iAnswer, iVal, iOne, iTwo;
+    size_t		i, j, k, iAnswer, iVal, iOne, iTwo;
     vector<bool>	vecfGenes, vecfUbik;
-    vector<size_t>	veciGenes;
-
+    vector<size_t>	veciGenes, vecfiGenes;
+	vector<float>	vecGeneWeights;
     psData = (SLearn*)pData;
+	float			w;
+
     if (psData->m_pUbikGenes->GetGenes( )) {
-	vecfUbik.resize( psData->m_pAnswers->GetGenes( ) );
-	for( i = 0; i < vecfUbik.size( ); ++i) {
-	    vecfUbik[ i ] = psData->m_pUbikGenes->IsGene( psData->m_pAnswers->GetGene( i ) );
-	}
+		vecfUbik.resize( psData->m_pAnswers->GetGenes( ) );
+		for( i = 0; i < vecfUbik.size( ); ++i) {
+			vecfUbik[ i ] = psData->m_pUbikGenes->IsGene( psData->m_pAnswers->GetGene( i ) );
+		}
     }
     vecfGenes.resize( psData->m_pAnswers->GetGenes( ) );
-    for( i = 0; i < vecfGenes.size( ); ++i )
-        vecfGenes[ i ] = psData->m_pGenes->IsGene( psData->m_pAnswers->GetGene( i ) );
+	vecGeneWeights.resize( psData->m_pAnswers->GetGenes( ) );
+	vecfiGenes.resize(psData->m_pAnswers->GetGenes( ));
+    for( i = 0; i < vecfGenes.size( ); ++i ){
+		vecfGenes[ i ] = psData->m_pGenes->IsGene( psData->m_pAnswers->GetGene( i ) );}
+	for( i = 0; i < vecfGenes.size( ); ++i ){
+		vecfiGenes[ i ] = psData->m_pGenes->GetGene( psData->m_pAnswers->GetGene( i ) );}
+	if(psData->m_pGenes->IsWeighted()){
+		for( i = 0; i < vecfGenes.size( ); ++i ){
+			vecGeneWeights[ i ] = psData->m_pGenes->GetGeneWeight(psData->m_pGenes->GetGene( psData->m_pAnswers->GetGene( i ) ));}}
     if( psData->m_pDat ) {
         psData->m_pMatCounts->Initialize( psData->m_pDat->GetValues( ), psData->m_pAnswers->GetValues( ) );
         veciGenes.resize( psData->m_pAnswers->GetGenes( ) );
@@ -646,36 +701,88 @@ void* learn( void* pData ) {
     }
     else
         psData->m_pMatCounts->Initialize( psData->m_pAnswers->GetValues( ), 1 );
-    psData->m_pMatCounts->Clear( );
+	psData->m_pMatCounts->Clear( );
     for( i = 0; i < psData->m_pAnswers->GetGenes( ); ++i ) {
         if( psData->m_pDat )
             iOne = veciGenes[ i ];
         for( j = ( i + 1 ); j < psData->m_pAnswers->GetGenes( ); ++j ) {
-	    iAnswer = psData->m_pAnswers->Quantize( psData->m_pAnswers->Get( i, j ) );
-            if( iAnswer == -1 ) {
-                continue;
-            }
+			iAnswer = psData->m_pAnswers->Quantize( psData->m_pAnswers->Get( i, j ) );
+				if( iAnswer == -1 ) {
+					continue;
+				}
 	    
-	    if ( CMeta::SkipEdge( !!iAnswer, i, j, vecfGenes, vecfUbik, psData->m_bInPos, psData->m_bInNeg, psData->m_bBridgePos, psData->m_bBridgeNeg, psData->m_bOutPos, psData->m_bOutNeg ) ) {
-		continue;
-	    }
+			if ( CMeta::SkipEdge( !!iAnswer, i, j, vecfGenes, vecfUbik, psData->m_bInPos, psData->m_bInNeg, psData->m_bBridgePos, psData->m_bBridgeNeg, psData->m_bOutPos, psData->m_bOutNeg ) ) {
+			continue;
+			}
 
-            if( psData->m_pDat ) {
-                iTwo = veciGenes[ j ];
-                iVal = -1;
-                if( ( iOne != -1 ) && ( iTwo != -1 ) )
-                    iVal = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) );
-                if( iVal == -1 )
-                    iVal = psData->m_iZero;
-                if( iVal == -1 )
-                    continue;
-                psData->m_pMatCounts->Get( iVal, iAnswer )++;
-                psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );
-            }
-            else
-                psData->m_pMatCounts->Get( iAnswer, 0 )++;
+			if( psData->m_pDat ) {
+					iTwo = veciGenes[ j ];
+					iVal = -1;
+					iVal = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
+					if( iVal == -1 )
+						continue;
+					//When contexts are weighted, add counts = WT_MULTIPLIER * weight1 * weight 2 
+					if(psData->m_pGenes->IsWeighted()){ //use gene weights
+						if(iAnswer==1 || (!psData->m_bFlipNeg && !psData->m_bNoWeightNeg)){
+							for( k = 0; k <(vecGeneWeights[i]*vecGeneWeights[j]*psData->m_multiplier-0.5); k++){
+								psData->m_pMatCounts->Get( iVal, iAnswer )++;
+								}
+							if(iAnswer==1 && psData->m_bdWeightPos)
+								for( k = 0; k <( (1-vecGeneWeights[i]*vecGeneWeights[j])*psData->m_multiplier-0.5); k++){
+								psData->m_pMatCounts->Get( iVal, 0 )++;
+								}
+						}
+						else{
+							if(psData->m_bNoWeightNeg)
+								for( k = 0; k <(psData->m_multiplier-0.5); k++)
+									psData->m_pMatCounts->Get( iVal, iAnswer )++;
+							else
+								for( k = 0; k <((1-vecGeneWeights[i]*vecGeneWeights[j])*psData->m_multiplier-0.5); k++){
+									psData->m_pMatCounts->Get( iVal, iAnswer )++;
+									}
+						}
+					}	
+					else if(psData->m_isDatWeighted){ //use pair weights
+						if(CMeta::IsNaN(w = psData->m_pwDat->Get( vecfiGenes[i],vecfiGenes[j] )) || vecfiGenes[i] == -1 ||
+							vecfiGenes[j] == -1)
+							continue;
+						if(iAnswer==1 || (!psData->m_bFlipNeg && !psData->m_bNoWeightNeg)){
+							for( k = 0; k <(w *psData->m_multiplier-0.5); k++){
+								psData->m_pMatCounts->Get( iVal, iAnswer )++;
+								}
+							if(iAnswer==1 && psData->m_bdWeightPos)
+								for( k = 0; k <( (1-w)*psData->m_multiplier-0.5); k++){
+								psData->m_pMatCounts->Get( iVal, 0 )++;
+								}
+						}
+						else{
+							if(psData->m_bNoWeightNeg)
+								for( k = 0; k <(psData->m_multiplier-0.5); k++)
+									psData->m_pMatCounts->Get( iVal, iAnswer )++;
+							else
+								for( k = 0; k <((1-w) *psData->m_multiplier-0.5); k++){
+									psData->m_pMatCounts->Get( iVal, iAnswer )++;
+									}
+						}
+					}
+					//
+					else{
+					psData->m_pMatCounts->Get( iVal, iAnswer )++;
+					//FIXME: Regularization has not been supported for weighted context
+					psData->m_pRegularize->Add( psData->m_iDat, *psData->m_pDat, i, j, iVal );
+					}
+			}
+			else{
+				psData->m_pMatCounts->Get( iAnswer, 0 )++;}
         }
     }
+
+	//Recale counts 
+	if(psData->m_pGenes->IsWeighted()||psData->m_isDatWeighted){
+		for (i=0; i< psData->m_pMatCounts->GetRows();i++)
+			for(j=0; j<psData->m_pMatCounts->GetColumns();j++)
+				psData->m_pMatCounts->Get( i,j ) = int(psData->m_pMatCounts->Get( i,j )/ psData->m_multiplier + 0.5);
+	}
 
     return NULL;
 }
@@ -873,11 +980,11 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
         if( sArgs.inputs_num ) {
             ifstream	ifsm;
 
-            ifsm.open( sArgs.inputs[ i ] );
-            if( !vecpGenes[ i ]->Open( ifsm, false ) ) {
-                cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
-                return 1;
-            }
+            //ifsm.open( sArgs.inputs[ i ] );
+            //if( !vecpGenes[ i ]->Open( ifsm, false ) ) {
+            //    cerr << "Couldn't open: " << sArgs.inputs[ i ] << endl;
+            //    return 1;
+            //}
         }
         else
             vecpGenes[ i ]->Open( Genome.GetGeneNames( ), false );
@@ -978,6 +1085,7 @@ int main_inference( const gengetopt_args_info& sArgs, const map<string, size_t>&
             vecsData[ i ].m_pYes = vecpYes[ i ];
             vecsData[ i ].m_pNo = vecpNo[ i ];
             vecsData[ i ].m_strName = sArgs.inputs_num ? sArgs.inputs[ i ] : "global";
+	    vecsData[ i ].m_bLogratio = sArgs.logratio_flag;
             if( pthread_create( &vecpthdThreads[ i ], NULL, finalize, &vecsData[ i ] ) ) {
                 cerr << "Couldn't create finalization thread: " << sArgs.inputs[ i ] << endl;
                 return 1;
@@ -1048,9 +1156,8 @@ void* evaluate( void* pData ) {
         for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
             if( ( ( iTwo = (*psData->m_pveciGenes)[ j ] ) == -1 ) && ( psData->m_iZero == -1 ) )
                 continue;
-            if( ( iOne == -1 ) || ( iTwo == -1 ) ||
-                    ( ( iBin = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) ) ) == -1 ) )
-                iBin = psData->m_iZero;
+
+	    iBin = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
             if( iBin == -1 )
                 continue;
             if( CMeta::IsNaN( adYes[ iIndex = ( j - i - 1 ) ] ) ) {
@@ -1074,20 +1181,31 @@ void* finalize( void* pData ) {
     size_t		i, j;
     float*		adYes;
     float*		adNo;
-    float		dPrior;
+    float		dPrior, dYes, dNo;
 
     psData = (SEvaluate*)pData;
     dPrior = psData->m_pBN->GetCPT( 0 ).Get( 1, 0 );
     adYes = new float[ psData->m_pYes->GetGenes( ) ];
     adNo = new float[ psData->m_pNo->GetGenes( ) ];
+
+    dYes = log( dPrior );
+    dNo = log( psData->m_pBN->GetCPT( 0 ).Get( 0, 0 ) );
+
     for( i = 0; i < psData->m_pYes->GetGenes( ); ++i ) {
         if( !( i % 1000 ) )
             cerr << "F: " << psData->m_strName << ", " << i << endl;
         memcpy( adYes, psData->m_pYes->Get( i ), ( psData->m_pYes->GetGenes( ) - i - 1 ) * sizeof(*adYes) );
         memcpy( adNo, psData->m_pNo->Get( i ), ( psData->m_pNo->GetGenes( ) - i - 1 ) * sizeof(*adNo) );
-        for( j = 0; j < ( psData->m_pYes->GetGenes( ) - i - 1 ); ++j )
-            adYes[ j ] = CMeta::IsNaN( adYes[ j ] ) ? dPrior :
-                         (float)( 1 / ( 1 + exp( (double)adNo[ j ] - (double)adYes[ j ] ) ) );
+        for( j = 0; j < ( psData->m_pYes->GetGenes( ) - i - 1 ); ++j ) {
+	    if( psData->m_bLogratio ) {
+		adYes[ j ] = CMeta::IsNaN( adYes[ j ] ) ? 0.0 :
+		             (float)( (double)(adYes[ j ] - dYes) - (double)(adNo[ j ] - dNo) );
+	    }
+	    else {
+		adYes[ j ] = CMeta::IsNaN( adYes[ j ] ) ? dPrior :
+		             (float)( 1 / ( 1 + exp( (double)adNo[ j ] - (double)adYes[ j ] ) ) );
+	    }
+	}
         psData->m_pYes->Set( i, adYes );
     }
     delete[] adNo;
@@ -1333,10 +1451,11 @@ void* evaluate2( void* pData ) {
         for( j = ( i + 1 ); j < psData->m_pYes->GetGenes( ); ++j ) {
             if( ( ( iTwo = (*psData->m_pveciGenes)[ j ] ) == -1 ) && ( psData->m_iZero == -1 ) )
                 continue;
-            if( ( iOne == -1 ) || ( iTwo == -1 ) || ( ( iBin = psData->m_pDat->Quantize( psData->m_pDat->Get( iOne, iTwo ) ) ) == -1 ) )
-                iBin = psData->m_iZero;
+
+	    iBin = psData->m_pDat->Quantize( iOne, iTwo, psData->m_iZero );
             if( iBin == -1 )
                 continue;
+
             if( ( iBNTwo = (*psData->m_pveciBNs)[ j ] ) != -1 )
                 veciCur.push_back( iBNTwo );
             for( k = 0; k < max( (size_t)1, veciCur.size( ) ); ++k ) {

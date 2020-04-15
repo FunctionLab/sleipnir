@@ -1,5 +1,7 @@
 syntax: glob
 MyTools
+workspace
+.settings*
 .deps
 *.Po
 *.cache
@@ -8,6 +10,8 @@ MyTools
 *.o
 *~
 tools/*/*.am
+tools/PCLDistancer
+tools/FAer
 config.status
 Makefile
 aclocal.m4
@@ -16,6 +20,7 @@ history
 src/libSleipnir.a
 doc/html
 doc/latex
+bin/*
 
 extlib
 

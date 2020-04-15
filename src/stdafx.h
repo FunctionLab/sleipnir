@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #ifdef _MSC_VER
 #include <fcntl.h>
 #include <io.h>
@@ -48,6 +49,7 @@
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <omp.h>
 
 #define _isnan				isnan
 #define _lseek				lseek
@@ -57,6 +59,7 @@
 #define SOCKET				int
 #define strcpy_s(a,b,c)		strcpy(a,c)
 #define strncpy_s(a,b,c,d)	strncpy(a,c,d)
+
 
 inline char* _mktemp_s( char* szTemplate, size_t iSize ) {
 

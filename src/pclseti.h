@@ -35,7 +35,7 @@ protected:
 	typedef std::map<string,size_t>	TMapStrI;
 
 	CPCLSetImpl( );
-	~CPCLSetImpl( );
+	virtual ~CPCLSetImpl( );
 
 	void Reset( );
 

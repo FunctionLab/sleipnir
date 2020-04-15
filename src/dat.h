@@ -116,8 +116,13 @@ public:
 		 * \brief
 		 * Remove any positive edge including a node outside the given set. 
 		 */
-		EFilterIncludePos	= EFilterHefalmp +1
-		
+		EFilterIncludePos	= EFilterHefalmp +1,		
+		/*!
+		 * \brief
+		 * Remove edges which both gene is in the given set. 
+		 */
+		EFilterExEdge	= EFilterIncludePos +1
+
 	};
 
 	/*!
@@ -153,7 +158,8 @@ public:
 		 * \brief
 		 * Binary format listing null-terminated element name strings followed by bits representing the quantized bins.
 		 */		
-		EFormatQdab = EFormatSparse + 1 
+		EFormatQdab = EFormatSparse + 1
+
 	};
 
 	/*!
@@ -172,9 +178,14 @@ public:
 		ENormalizeMinMax	= ENormalizeNone + 1,
 		/*!
 		 * \brief
+		 * Linearly transform the minimum score to -1 and the maximum to 1.
+		 */
+		ENormalizeMinMaxNPone	= ENormalizeMinMax + 1,
+		/*!
+		 * \brief
 		 * Z-score all edges (subtract mean, divide by standard deviation).
 		 */
-		ENormalizeZScore	= ENormalizeMinMax + 1,
+		ENormalizeZScore	= ENormalizeMinMaxNPone + 1,
 		/*!
 		 * \brief
 		 * Sigmoid transform scores to the range [0, 1].
@@ -184,10 +195,11 @@ public:
 		ENormalizePCC		= ENormalizeNormCDF + 1
 	};
 
+
 	bool Open( const char* szFile, bool fMemmap = false, size_t iSkip = 2, bool fZScore = false,
-		bool fDuplicates = false );
+		bool fDuplicates = false, bool fSeek = false );
 	bool Open( std::istream& istm, EFormat eFormat = EFormatBinary, float dDefault = HUGE_VAL,
-		bool fDuplicates = false, size_t iSkip = 2, bool fZScore = false );
+		bool fDuplicates = false, size_t iSkip = 2, bool fZScore = false, bool fSeek = false );
 	bool Open( const CSlim& Slim );
 	bool Open( const CSlim& SlimPositives, const CSlim& SlimNonnegatives );
 	bool Open( const std::vector<std::string>& vecstrGenes, bool fClear = true, const char* szFile = NULL );
@@ -215,6 +227,21 @@ public:
 	void FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit = -1,
 			  float dEdgeAggressiveness = 0.5, bool fAbsolute = false, const std::vector<float>* pvecdWeights = NULL );
 	void NormalizeQuantiles( size_t iQuantiles );
+
+	float* GetRowSeek(const string &strGene) {
+		return CDatImpl::GetRowSeek(m_ifsm, strGene);
+	}
+	float* GetRowSeek(const size_t &i){
+		return CDatImpl::GetRowSeek(m_ifsm, i);
+	}
+
+	size_t GetGeneIndex(const string &strGene) const {
+		return CDatImpl::GetGeneIndex(strGene);
+	}
+
+	void AveStd( double& a, double& b, size_t& c){
+		 CDatImpl::AveStd(a, b, c);
+	}
 
 	void Clear( float dValue ) {
 		size_t	i;
@@ -256,6 +283,10 @@ public:
 				NormalizeMinmax( );
 				break;
 
+			case ENormalizeMinMaxNPone:
+				NormalizeMinmaxNPone( );
+				break;
+
 			case ENormalizeZScore:
 				NormalizeStdev( );
 				break;
@@ -287,6 +318,11 @@ public:
 	size_t GetGene( const std::string& strGene ) const {
 
 		return CDatImpl::GetGene( strGene ); }
+
+	float* GetFullRow( const size_t &iY ) {
+		return CDatImpl::GetFullRow(iY);
+	}
+
 
 	/*!
 	 * \brief
@@ -514,6 +550,8 @@ public:
 						break; }
 				Set( i, j, dTwo );
 				Set( iOne, iTwo, dOne ); } }
+
+
 };
 
 }

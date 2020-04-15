@@ -23,6 +23,7 @@
 #define STDAFX_H
 
 #include <fstream>
+
 using namespace std;
 
 #include <pthread.h>
@@ -35,6 +36,7 @@ using namespace Sleipnir;
 
 #ifndef _MSC_VER
 #include <dirent.h>
+#include <unistd.h>
 
 #define _unlink	unlink
 #endif // _MSC_VER

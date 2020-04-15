@@ -56,6 +56,8 @@ struct gengetopt_args_info
   const char *zscore_help; /**< @brief Convert correlations to z-scores help description.  */
   int flip_flag;	/**< @brief Calculate one minus values (default=off).  */
   const char *flip_help; /**< @brief Calculate one minus values help description.  */
+  int centering_flag;	/**< @brief Scale distance value to 0-1 (default=on).  */
+  const char *centering_help; /**< @brief Scale distance value to 0-1 help description.  */
   char * genes_arg;	/**< @brief Gene inclusion file.  */
   char * genes_orig;	/**< @brief Gene inclusion file original value given at command line.  */
   const char *genes_help; /**< @brief Gene inclusion file help description.  */
@@ -74,6 +76,9 @@ struct gengetopt_args_info
   int verbosity_arg;	/**< @brief Message verbosity (default='5').  */
   char * verbosity_orig;	/**< @brief Message verbosity original value given at command line.  */
   const char *verbosity_help; /**< @brief Message verbosity help description.  */
+  int threads_arg;	/**< @brief Number of threads to use (default='1').  */
+  char * threads_orig;	/**< @brief Number of threads to use original value given at command line.  */
+  const char *threads_help; /**< @brief Number of threads to use help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -86,12 +91,14 @@ struct gengetopt_args_info
   unsigned int normalize_given ;	/**< @brief Whether normalize was given.  */
   unsigned int zscore_given ;	/**< @brief Whether zscore was given.  */
   unsigned int flip_given ;	/**< @brief Whether flip was given.  */
+  unsigned int centering_given ;	/**< @brief Whether centering was given.  */
   unsigned int genes_given ;	/**< @brief Whether genes was given.  */
   unsigned int cutoff_given ;	/**< @brief Whether cutoff was given.  */
   unsigned int alpha_given ;	/**< @brief Whether alpha was given.  */
   unsigned int skip_given ;	/**< @brief Whether skip was given.  */
   unsigned int limit_given ;	/**< @brief Whether limit was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */
+  unsigned int threads_given ;	/**< @brief Whether threads was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

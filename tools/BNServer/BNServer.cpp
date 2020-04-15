@@ -24,6 +24,8 @@
 #include "BNServer.h"
 #include "dot.h"
 
+typedef CFullMatrix<size_t> CCountMatrix;
+
 static const char				c_szXDSL[]						= ".xdsl";
 static const char				c_szDSL[]						= ".dsl";
 static const char				c_szDOT[]						= ".dot";
@@ -36,7 +38,9 @@ const float						CBNServer::c_adColorMax[]		= {1, 0, 0};
 const CBNServer::TPFNProcessor	CBNServer::c_apfnProcessors[]	=
 	{&CBNServer::ProcessInference, &CBNServer::ProcessData, &CBNServer::ProcessGraph,
 	&CBNServer::ProcessContexts, &CBNServer::ProcessTermFinder, &CBNServer::ProcessDiseases,
-	&CBNServer::ProcessGenes, &CBNServer::ProcessAssociation, &CBNServer::ProcessAssociations};
+	&CBNServer::ProcessGenes, &CBNServer::ProcessAssociation, &CBNServer::ProcessAssociations,
+	&CBNServer::ProcessInferenceOTF, &CBNServer::ProcessEdges, &CBNServer::ProcessMultiInferenceEdge,
+	&CBNServer::ProcessMultiInferenceGene, &CBNServer::ProcessLearning };
 
 struct SPixie {
 	size_t	m_iNode;
@@ -50,11 +54,13 @@ struct SPixie {
 };
 
 int main( int iArgs, char** aszArgs ) {
+	static const size_t	c_iBuffer	= 1024;
+	char				acBuffer[ c_iBuffer ];
 	gengetopt_args_info			sArgs;
 	CServer						Server;
 	CBayesNetSmile				BNSmile;
 	ifstream					ifsm, ifsmGenes;
-	vector<string>				vecstrLine;
+	vector<string>				vecstrLine, vecstrDatasets;
 	size_t						i, j, k;
 	uint32_t					iSize;
 	ofstream					ofsm;
@@ -66,15 +72,19 @@ int main( int iArgs, char** aszArgs ) {
 	vector<float>				vecdPriors;
 	CBayesNetMinimal			BNDefault;
 	vector<CBayesNetMinimal>	vecBNs;
-	CDatabase					Database;
+
+
 	CDataMatrix					MatBackgrounds, MatParameters, MatWithinC, MatWithinD;
 	CDataMatrix					MatBetweenCC, MatBetweenDD, MatBetweenDC;
 	vector<vector<size_t> >		vecveciDiseases, vecveciContexts;
-	vector<size_t>				veciDiseases, veciContexts;
+	vector<size_t>				veciDiseases, veciContexts, veciBins;
 	CGenome						Genome;
 	const IOntology*			apOntologies[]	= {&GOBP, &GOMF, &GOCC, &KEGG, NULL };
 
 	iRet = cmdline_parser2( iArgs, aszArgs, &sArgs, 0, 1, 0 );
+	CDatabase Database(sArgs.is_nibble_flag);
+	CDatabase Answers(sArgs.is_nibble_flag);
+
 	if( sArgs.config_arg )
 		iRet = cmdline_parser_configfile( sArgs.config_arg, &sArgs, 0, 0, 1 ) && iRet;
 	if( iRet ) {
@@ -112,6 +122,25 @@ int main( int iArgs, char** aszArgs ) {
 	if( !Database.Open( sArgs.database_arg ) ) {
 		cerr << "Could not open: " << sArgs.database_arg << endl;
 		return 1; }
+
+
+	if(sArgs.datasets_arg){
+		ifsm.clear( );
+		ifsm.open(sArgs.datasets_arg);
+		while(!ifsm.eof()){
+			ifsm.getline(acBuffer, c_iBuffer -1);
+			if(acBuffer[0]==0)
+				break;
+			acBuffer[c_iBuffer-1] = 0;
+
+            		vector<string> tok;
+            		CMeta::Tokenize(acBuffer, tok, " \t");
+			vecstrDatasets.push_back(tok[0]);
+			veciBins.push_back(atoi(tok[1].c_str()));
+		}
+		ifsm.close();
+	}
+
 // Open Bayes networks
 	if( sArgs.minimal_in_flag ) {
 		cerr << "Loading minimal Bayesian classifiers..." << endl;
@@ -160,6 +189,7 @@ int main( int iArgs, char** aszArgs ) {
 				vecBNs[ i ].SetID( strContext ); } }
 	}
 // Open global p-value parameters
+	if( sArgs.global_given )
 	{
 		CPCL	PCLParams( false );
 
@@ -182,6 +212,7 @@ int main( int iArgs, char** aszArgs ) {
 			vecBNs[ i ].Save( ofsm );
 		ofsm.close( ); }
 // Open context<->gene mapping
+	if( sArgs.contexts_given )
 	{
 		CPCL	PCLContextGenes( false );
 
@@ -205,6 +236,7 @@ int main( int iArgs, char** aszArgs ) {
 		copy( setiContexts.begin( ), setiContexts.end( ), veciContexts.begin( ) );
 	}
 // Open disease<->gene mapping
+	if( sArgs.diseases_given )
 	{
 		CPCL		PCLDiseaseGenes( false );
 
@@ -231,6 +263,14 @@ int main( int iArgs, char** aszArgs ) {
 		veciDiseases.resize( setiContexts.size( ) );
 		copy( setiContexts.begin( ), setiContexts.end( ), veciDiseases.begin( ) );
 	}
+// Open global gold standard
+	if( sArgs.global_standard_given ) {
+	   if( !Answers.Open( sArgs.global_standard_arg) ) {
+		cerr << "Could not open: " << sArgs.global_standard_arg << endl;
+		return 1; }
+	}
+
+
 // Open gene backgrounds
 	cerr << "Loading gene backgrounds..." << endl;
 	if( sArgs.backgrounds_arg && !MatBackgrounds.Open( sArgs.backgrounds_arg ) ) {
@@ -278,6 +318,7 @@ int main( int iArgs, char** aszArgs ) {
 		apOntologies,
 		BNDefault,
 		Database,
+		Answers,
 		Genome,
 		sArgs.limit_arg,
 		MatBackgrounds,
@@ -291,6 +332,7 @@ int main( int iArgs, char** aszArgs ) {
 		sArgs.graphviz_arg,
 		vecBNs,
 		vecdPriors,
+		veciBins,
 		veciContexts,
 		veciDiseases,
 		vecveciContexts,
@@ -363,13 +405,16 @@ bool CBNServer::ProcessMessage( const vector<unsigned char>& vecbMessage ) {
 	size_t	i, iProcessed, iOffset;
 
 	for( iOffset = 0; iOffset < vecbMessage.size( ); iOffset += ( iProcessed + 1 ) ) {
-		cerr << "LOG	" << time( NULL ) << '\t' << m_strConnection << '\t' << hex;
-		for( i = 0; i < vecbMessage.size( ); ++i )
-			cerr << setfill( '0' ) << setw( 2 ) << (unsigned int)vecbMessage[ i ];
-		cerr << dec << endl;
+		cerr << "LOG	" << time( NULL ) << '\t' << m_strConnection << endl; //'\t' << hex;
+		//for( i = 0; i < vecbMessage.size( ); ++i )
+		//	cerr << setfill( '0' ) << setw( 2 ) << (unsigned int)vecbMessage[ i ];
+		//cerr << dec << endl;
 		if( vecbMessage[ iOffset ] >= ARRAYSIZE(c_apfnProcessors) ) {
 			cerr << m_strConnection << " unknown opcode: " << (int)vecbMessage[ iOffset ] << endl;
 			return false; }
+		else {
+			cerr << m_strConnection << " opcode: " << (int)vecbMessage[ iOffset ] << endl;
+		}
 		if( ( iProcessed = (this->*c_apfnProcessors[ vecbMessage[ iOffset ] ])( vecbMessage,
 			iOffset + 1 ) ) == -1 )
 			return false; }
@@ -391,9 +436,433 @@ size_t CBNServer::ProcessInference( const vector<unsigned char>& vecbMessage, si
 
 	return ( iOffset - iStart ); }
 
+
+size_t CBNServer::ProcessCPT( const vector<unsigned char>& vecbMessage, size_t iOffset, vector<vector<float> >& binEffects ) {
+	size_t		i, j, iStart;
+	uint32_t	iGene, iContext, iDataCount, iBinsCount, iData, iGenes, iChunk, iSize, iGeneOffset;
+	float	bineffect;
+	vector<unsigned char> vecbData;
+
+	cerr << "Processing CPT" << endl;
+
+	binEffects.resize(GetDatabase().GetDatasets());
+
+	iStart = iOffset;
+	iDataCount = *(uint32_t*)&vecbMessage[ iOffset ];
+	cerr << "Total datasets: " << iDataCount << endl;
+
+	// Load bin effects from message
+	for ( i = 0, iOffset += sizeof(iDataCount); i < iDataCount && iOffset < vecbMessage.size(); i++ ) {
+	    iData = *(uint32_t*)&vecbMessage[ iOffset ];
+	    iOffset += sizeof(iData);
+
+	    if ( iData >= binEffects.size() ) {
+		cerr << "Bad dataset ID: " << iData << endl;
+		return -1;
+	    }
+
+	    iBinsCount = *(uint32_t*)&vecbMessage[ iOffset ];
+	    iOffset += sizeof(iBinsCount);
+	    binEffects[iData].resize(iBinsCount);
+
+	    for ( j = 0; j < iBinsCount; j++, iOffset += sizeof(float) ) {
+		bineffect = *(float*)&vecbMessage[ iOffset ];
+		binEffects[iData][j] = bineffect;
+	    }
+	}
+	return iOffset;
+}
+
+
+size_t CBNServer::ProcessInferenceOTF( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+	size_t		i, j, iStart;
+	uint32_t	iGene, iContext, iData, iGenes, iChunk, iSize, iGeneOffset;
+	float	bineffect;
+	vector<vector<float> > binEffects;
+	vector<unsigned char> vecbData;
+	float* fVals;
+
+	cerr << "Inference OTF: " << vecbMessage.size() << endl;
+
+	iOffset = ProcessCPT( vecbMessage, iOffset, binEffects );
+
+	iGenes = GetDatabase().GetGenes();
+	iChunk = ( GetDatabase().GetDatasets() + 1 ) / 2;
+
+	// Load gene id
+	for ( ; iOffset < vecbMessage.size() ; iOffset += sizeof(uint32_t) ) {
+	    iGene = *(uint32_t*)&vecbMessage[ iOffset ];
+	    cerr << "Gene id: " << iGene << endl;
+
+	    // Arg -- BNServer genes are 1-indexed
+	    if( !iGene )
+		continue;
+	    iGene--;
+	
+	    // Infer posteriors
+	    vecbData.clear();
+	    GetDatabase().Get( iGene, vecbData );
+	    fVals = new float[iGenes];
+
+	    for ( i = 0, iGeneOffset = 0; i < iGenes; i++, iGeneOffset += iChunk ) {
+		fVals[i] = Evaluate( binEffects, vecbData, iGeneOffset ); 
+	    }
+
+	    // Send results back
+	    iSize = (uint32_t)( GetGenes( ) * sizeof(*fVals) );
+	    send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+	    send( m_iSocket, (char*)fVals, iSize, 0 ); 
+
+	    delete[] fVals;
+	}
+
+	return ( iOffset - iStart ); }
+
+
+size_t CBNServer::ProcessMultiInferenceGene( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+
+	size_t		i, j, k, iStart;
+	uint32_t	iNets, iGene, iData, iGenes, iChunk, iSize, iGeneOffset;
+	float	bineffect;
+	vector<vector<float> > binEffects;
+	vector<vector<vector<float> > > networks;
+	vector<unsigned char> vecbData;
+	vector<size_t> vecGenes;
+	unsigned char c;
+	float fLogOdds = 0;
+
+	vector<float*> fNetVals;
+
+	iChunk = ( GetDatabase().GetDatasets() + 1 ) / 2;
+
+	cerr << iOffset << endl;
+
+	iStart = iOffset;
+	iGenes = *(uint32_t*)&vecbMessage[ iOffset ];
+	iOffset += sizeof(iGenes);
+
+	vecGenes.resize(iGenes);
+
+	for ( i = 0; i < iGenes; i++, iOffset += sizeof(uint32_t) ) {
+	    iGene = *(uint32_t*)&vecbMessage[ iOffset ];
+	    cerr << "Gene id: " << iGene << endl;
+	    vecGenes[i] = iGene - 1;
+	}
+
+	iNets = *(uint32_t*)&vecbMessage[ iOffset ];
+	iOffset += sizeof(iNets);
+	networks.resize(iNets);
+
+	cerr << "Multi Inference Gene: " << vecbMessage.size() << endl;
+
+	for ( i = 0; i < iNets; i ++ ) { 
+	    iOffset = ProcessCPT( vecbMessage, iOffset, networks[i] );
+	}
+
+	for ( k = 0; k < iGenes; k++ ) {
+	    cerr << "Evaluating " << vecGenes[k] << endl;
+	    vecbData.clear();
+	    GetDatabase().Get( vecGenes[k], vecbData );
+
+	    fNetVals.clear();
+	    fNetVals.resize(iNets);
+
+	    #pragma omp parallel for private(j, i, iGeneOffset)
+	    for ( j = 0; j < iNets; j ++ ) { 
+		fNetVals[j] = new float[GetDatabase().GetGenes()];
+		for ( i = 0, iGeneOffset = 0; i < GetDatabase().GetGenes(); i++, iGeneOffset += iChunk ) {
+		    fNetVals[j][i] = Evaluate( networks[j], vecbData, iGeneOffset ); 
+		}
+	    }
+
+	    cerr << "Sending" << endl;
+	    for ( j = 0; j < iNets; j ++ ) { 
+		// Send results back
+		iSize = (uint32_t)( GetGenes() * sizeof(float) );
+		send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+		send( m_iSocket, (char*)fNetVals[j], iSize, 0 ); 
+
+		delete[] fNetVals[j];
+	    }
+	}
+
+	return ( iOffset - iStart ); }
+
+
+size_t CBNServer::ProcessMultiInferenceEdge( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+
+	size_t		i, j, iStart;
+	uint32_t	iNets, iGeneOne, iGeneTwo, iSize;
+	//vector<vector<float> > binEffects;
+	vector<unsigned char> vecbData;
+	vector<vector<vector<float> > > networks;
+	unsigned char c;
+	float fLogOdds = 0;
+	float* fVals;
+
+	iStart = iOffset;
+	iGeneOne = *(uint32_t*)&vecbMessage[ iOffset ];
+	iOffset += sizeof(iGeneOne);
+	iGeneTwo = *(uint32_t*)&vecbMessage[ iOffset ];
+	iOffset += sizeof(iGeneTwo);
+
+	iGeneOne -= 1;
+	iGeneTwo -= 1;
+	if ( iGeneOne < 0 or iGeneTwo < 0 )
+	    return ( iOffset = iStart );
+
+	iNets = *(uint32_t*)&vecbMessage[ iOffset ];
+	iOffset += sizeof(iNets);
+	fVals = new float[iNets];
+	networks.resize(iNets);
+
+	cerr << "Multi Inference Edge: " << iGeneOne << ", " << iGeneTwo << ", " << iNets << endl;
+	GetDatabase().Get(iGeneOne, iGeneTwo, vecbData);
+
+	for ( j = 0; j < iNets; j ++ ) { 
+	    iOffset = ProcessCPT( vecbMessage, iOffset, networks[j] );
+	}
+
+	for ( j = 0; j < iNets; j++ ) {
+	    for( i = 0, fLogOdds = 0; i < GetDatabase().GetDatasets(); ++i ) {
+		if ( networks[j][i].size() == 0 ) // Skip dataset - no bins
+		    continue;
+		c = vecbData[ ( i / 2 ) ];
+		if( i % 2 )
+		    c >>= 4;
+		if( ( c &= 0xF ) == 0xF ) // Skip missing data
+		    continue;
+		fLogOdds += networks[j][i][(size_t)c];
+	    }
+	    fVals[j] = fLogOdds;
+	}
+	
+	// Send results back
+	iSize = (uint32_t)( iNets * sizeof(float) );
+	send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+	send( m_iSocket, (char*)fVals, iSize, 0 ); 
+
+	delete[] fVals;
+
+	return ( iOffset - iStart ); }
+
+size_t CBNServer::ProcessEdges( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+	size_t		i, j, iStart;
+	uint32_t	iGeneOne, iGeneTwo, iGenes, iChunk, iSize, iGeneOffset, iEdges;
+	float	bineffect;
+	vector<vector<float> > binEffects;
+	float* fVals;
+	vector<unsigned char> vecbData;
+	unsigned char c;
+	float fLogOdds = 0;
+
+	iStart = iOffset;
+
+	iOffset = ProcessCPT( vecbMessage, iOffset, binEffects );
+
+	iEdges = *(uint32_t*)&vecbMessage[ iOffset ];
+	fVals = new float[iEdges];
+
+	cerr << "Edges: " << iEdges << endl;
+
+	// Load gene id pairs
+	for ( j = 0, iOffset += sizeof(iEdges); iOffset < vecbMessage.size() && j < iEdges ; j++ ) {
+	    iGeneOne = *(uint32_t*)&vecbMessage[ iOffset ];
+	    iOffset += sizeof(iGeneOne);
+	    iGeneTwo = *(uint32_t*)&vecbMessage[ iOffset ];
+	    iOffset += sizeof(iGeneTwo);
+	    //cerr << "Genes: " << iGeneOne << "\t" << iGeneTwo << endl;
+
+	    iGeneOne -= 1;
+	    iGeneTwo -= 1;
+	    if ( iGeneOne < 0 or iGeneTwo < 0 )
+		continue;
+
+	    fLogOdds = 0;
+	    vecbData.clear();
+	    GetDatabase().Get(iGeneOne, iGeneTwo, vecbData);
+	    for( i = 0; i < GetDatabase().GetDatasets(); ++i ) {
+		if ( binEffects[i].size() == 0 ) // Skip dataset
+		    continue;
+		c = vecbData[ ( i / 2 ) ];
+		if( i % 2 )
+			c >>= 4;
+		if( ( c &= 0xF ) == 0xF ) // Skip missing data
+			continue;
+		//if ( iGeneTwo == 1  || iGeneTwo == 0 )
+		//    cerr << i << "\t" << (size_t)c << endl;
+		fLogOdds += binEffects[i][(size_t)c];
+	    }
+	    fVals[j] = fLogOdds;
+	}
+
+	// Send results back
+	iSize = (uint32_t)( iEdges * sizeof(float) );
+	send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+	send( m_iSocket, (char*)fVals, iSize, 0 ); 
+
+	delete[] fVals;
+
+	return ( iOffset - iStart );
+}
+
+
+size_t CBNServer::ProcessLearning( const vector<unsigned char>& vecbMessage, size_t iOffset ) {
+	size_t		i, j, k, iStart, iAnswer, iVal, iCount;
+	uint32_t	iGene, iGenes, iChunk, iSize, iGeneOffset, iGeneOne, iGeneTwo, iDatasets;
+	unsigned char	c;
+	float	logratio;
+	vector<unsigned char> vecbData;
+	vector<size_t> veciGenes;
+	vector<bool> vecfGenes, vecfUbik;
+	vector<CCountMatrix*> vecpMatCounts; 
+	CCountMatrix matRoot;
+	vector<CFullMatrix<float>*> vecpMatProbs, vecpMatRatios;
+
+	iStart = iOffset;
+	iDatasets = GetDatabase().GetDatasets();
+
+	// Initialize matrices
+	matRoot.Initialize( 2, 1 );
+	matRoot.Clear();
+	vecpMatCounts.resize(iDatasets);
+	vecpMatProbs.resize(iDatasets);
+	vecpMatRatios.resize(iDatasets);
+	for ( i = 0; i < GetDatabase().GetDatasets(); i++ ) {
+	    vecpMatCounts[i] = new CCountMatrix();
+	    vecpMatCounts[i]->Initialize( GetBins()[i], 2 );
+	    vecpMatCounts[i]->Clear();
+
+	    vecpMatProbs[i] = new CFullMatrix<float>();
+	    vecpMatProbs[i]->Initialize( GetBins()[i], 2 );
+	    vecpMatProbs[i]->Clear();
+
+	    vecpMatRatios[i] = new CFullMatrix<float>();
+	    vecpMatRatios[i]->Initialize( 1, GetBins()[i] );
+	    vecpMatRatios[i]->Clear();
+	}
+
+	// Load context gene membership
+	vecfGenes.resize(GetAnswers().GetGenes());
+
+	// Load gene id pairs
+	for ( j = 0; iOffset < vecbMessage.size(); j++, iOffset += sizeof(iGene) ) {
+	    iGene = *(uint32_t*)&vecbMessage[ iOffset ];
+	    veciGenes.push_back(iGene-1);
+	    vecfGenes[iGene-1] = true;
+	}
+
+	for ( i = 0; i < veciGenes.size(); i++ ) {
+	    iGeneOne = veciGenes[i];
+
+	    for ( j = 0; j < GetAnswers().GetGenes(); j++ ) {
+		iGeneTwo = j;
+		
+		if ( vecfGenes[iGeneTwo] && iGeneTwo < iGeneOne )
+		    continue;
+
+		vecbData.clear();
+		GetAnswers().Get(iGeneOne, iGeneTwo, vecbData);
+
+		iAnswer = vecbData[0];
+		if ( ( iAnswer &= 0xF ) == 0xF )  
+		    continue; // Missing value
+
+		if ( CMeta::SkipEdge( iAnswer, iGeneOne, iGeneTwo, vecfGenes, vecfUbik, true, true, false, true, false, false) )
+		    continue;
+
+		matRoot.Get( iAnswer, 0 )++;
+
+		vecbData.clear();
+		GetDatabase().Get(iGeneOne, iGeneTwo, vecbData);
+		for( k = 0; k < GetDatabase().GetDatasets(); ++k ) {
+		    c = vecbData[ ( k / 2 ) ];
+		    if( k % 2 )
+		        c >>= 4;
+		    if( ( c &= 0xF ) == 0xF ) // Skip missing data
+		        continue;
+		    vecpMatCounts[k]->Get( (size_t)c, iAnswer )++;
+		}
+	    }
+	}
+
+	// Convert counts to probabilities
+	uint32_t iTotal, iBinTotal = 0;
+	for ( i = 0; i < vecpMatCounts.size(); i++ ) {
+	    for ( j = 0; j < vecpMatCounts[i]->GetColumns(); j++ ) {
+		iTotal = 0;
+		for( iVal = 0; iVal < vecpMatCounts[i]->GetRows(); ++iVal ) {
+		   iTotal += vecpMatCounts[i]->Get( iVal, j ); 
+		}	
+		for( iVal = 0; iVal < vecpMatCounts[i]->GetRows(); ++iVal ) {
+		    iCount = vecpMatCounts[i]->Get( iVal, j );
+		    vecpMatProbs[i]->Set( iVal, j, ((float)(iCount+1))/(iTotal+vecpMatCounts[i]->GetRows())); 
+		}	
+	    } 
+	    for( iVal = 0; iVal < vecpMatProbs[i]->GetRows(); ++iVal ) {
+	    	logratio = log( vecpMatProbs[i]->Get( iVal, 0 ) / vecpMatProbs[i]->Get( iVal, 1 ) );
+	    	vecpMatRatios[i]->Set( 0, iVal, logratio ); 
+	    }	
+	    iBinTotal += vecpMatCounts[i]->GetRows();
+	}
+/*
+	for ( i = 0; i < 5; i++ ) {
+	    cerr << "d: " << i << endl;
+	    for ( j = 0; j < vecpMatProbs[i]->GetColumns(); j++ ) {
+		for( iVal = 0; iVal < vecpMatProbs[i]->GetRows(); ++iVal ) {
+		    cerr << ( iVal ? "\t" : "" ) << vecpMatProbs[i]->Get( iVal, j );
+		}	
+		cerr << endl;
+	    } 
+	    for( iVal = 0; iVal < vecpMatRatios[i]->GetColumns(); ++iVal ) {
+	        cerr << ( iVal ? "\t" : "" ) << vecpMatRatios[i]->Get( 0, iVal );
+	    }	
+	    cerr << endl;
+	}
+*/
+	// Send results back
+	iSize = (uint32_t)( (iBinTotal + 1 + iDatasets) * sizeof(float) ); // [# datasets][[# bin in d0][bin0]*]*
+	send( m_iSocket, (char*)&iSize, sizeof(iSize), 0 );
+
+	send( m_iSocket, (char*)&iDatasets, sizeof(iDatasets), 0 );
+	for ( i = 0; i < iDatasets; i++ ) {
+	    iTotal =  vecpMatRatios[i]->GetColumns();
+	    send( m_iSocket, (char*)&iTotal, sizeof(iTotal), 0 );
+	    send( m_iSocket, (char*)(vecpMatRatios[i]->Get(0)), sizeof(float)*iTotal, 0);
+	}
+
+	return ( iOffset - iStart );
+}
+
+float CBNServer::Evaluate( const vector<vector<float> >& binEffects, vector<unsigned char>& vecbDatum, size_t iOffset ) {
+
+	unsigned char	c;
+	size_t	i;
+	float fLogOdds = 0;
+
+
+	for( i = 0; i < GetDatabase().GetDatasets(); ++i ) {
+		if ( binEffects[i].size() == 0 ) // Skip dataset
+		    continue;
+
+		c = vecbDatum[ ( i / 2 ) + iOffset ];
+		if( i % 2 )
+			c >>= 4;
+		if( ( c &= 0xF ) == 0xF ) // Skip missing data
+			continue;
+		//if ( debug ) 
+		//  cerr << i << "\t" << (size_t)c << endl;
+
+		fLogOdds += binEffects[i][(size_t)c];
+	}
+
+	return fLogOdds;
+
+}
+
 bool CBNServer::Get( size_t iGene, size_t iContext, float* adValues ) {
 	float*		adTarget;
-	uint32_t	iSize;
+			uint32_t	iSize;
 
 	cerr << m_strConnection << " inferring " << iGene  << " (" << GetGene( iGene ) << ") in " <<
 		iContext << endl;

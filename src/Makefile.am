@@ -1,9 +1,55 @@
 lib_LIBRARIES			= libSleipnir.a
 
-AM_CPPFLAGS = $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(PTHREAD_CFLAGS) $(VOWPAL_WABBIT_CFLAGS)
+AM_CPPFLAGS = $(BOOST_CFLAGS) $(GSL_CFLAGS) $(LOG4CPP_CFLAGS) $(SMILE_CFLAGS) $(SVM_PERF_CFLAGS) $(SVM_MULTICLASS_CFLAGS) $(SVM_HIERARCHY_CFLAGS) $(PTHREAD_CFLAGS) $(VOWPAL_WABBIT_CFLAGS) $(LIBSVM_CFLAGS)
 
-#LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_PERF_LIBS) $(PTHREAD_LIBS)
+#LDADD = $(LOG4CPP_LIBS) $(SMILE_LIBS) $(SVM_PERF_LIBS) $(SVM_MULTICLASS_LIBS) $(SVM_HIERARCHY_LIBS) $(PTHREAD_LIBS)
 
+if WITH_SVM_TOOLS
+libSleipnir_SVM_SOURCES = svm.cpp svmperf.cpp
+libSleipnir_SVM_INCLUDES = svm.h svmi.h svmperf.h
+endif
+
+if WITH_SVM_MULTICLASS_TOOLS
+libSleipnir_SVM_MULTICLASS_SOURCES = svmstruct.cpp
+libSleipnir_SVM_MULTICLASS_INCLUDES = svmstruct.h
+endif
+
+if WITH_SVM_HIERARCHY_TOOLS
+libSleipnir_SVM_HIERARCHY_SOURCES = svmstructtree.cpp
+libSleipnir_SVM_HIERARCHY_INCLUDES = svmstructtree.h
+endif
+
+if WITH_LIBSVM_TOOLS
+libSleipnir_LIBSVM_SOURCES = libsvm.cpp
+libSleipnir_LIBSVM_INCLUDES = libsvm.h
+endif
+
+if WITH_GSL_TOOLS
+libSleipnir_GSL_SOURCES = \
+	seekmap.cpp				\
+	seekdataset.cpp			\
+	seekweight.cpp			\
+	seekevaluate.cpp		\
+	seekquery.cpp			\
+	seekreader.cpp			\
+	seekwriter.cpp			\
+	seekplatform.cpp		\
+	seekcentral.cpp		\
+	seeknetwork.cpp
+libSleipnir_GSL_INCLUDES = \
+	seekplatform.h			\
+	seekcentral.h			\
+	seekreader.h			\
+	seekwriter.h			\
+	seekquery.h				\
+	seekevaluate.h			\
+	seekweight.h			\
+	seekreader.h			\
+	seekwriter.h			\
+	seekdataset.h			\
+	seekmap.h				\
+	seeknetwork.h			
+endif
 libSleipnir_a_SOURCES	=	\
 	annotation.cpp			\
 	annotationobo.cpp		\
@@ -46,9 +92,14 @@ libSleipnir_a_SOURCES	=	\
 	server.cpp				\
 	statistics.cpp			\
 	stdafx.cpp				\
-	svm.cpp					\
-	svmperf.cpp					\
-	vwb.cpp
+	$(libSleipnir_SVM_SOURCES) \
+	$(libSleipnir_GSL_SOURCES) \
+	$(libSleipnir_LIBSVM_SOURCES) \
+	$(libSleipnir_SVM_MULTICLASS_SOURCES)\
+	$(libSleipnir_SVM_HIERARCHY_SOURCES)\
+	vwb.cpp					\
+	strassen.cpp
+
 include_HEADERS			=	\
 	annotation.h			\
 	annotationi.h			\
@@ -116,9 +167,12 @@ include_HEADERS			=	\
 	statistics.h			\
 	statisticsi.h			\
 	stdafx.h				\
-	svm.h					\
-	svmi.h					\
-	svmperf.h					\
+	strassen.h				\
+	$(libSleipnir_SVM_INCLUDES)  \
+	$(libSleipnir_GSL_SOURCES) \
+	$(libSleipnir_LIBSVM_INCLUDES) \
+	$(libSleipnir_SVM_MULTICLASS_INCLUDES)\
+	$(libSleipnir_SVM_HIERARCHY_INCLUDES)\
 	trie.h					\
 	triei.h					\
 	typesi.h				\

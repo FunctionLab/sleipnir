@@ -36,7 +36,7 @@ class IOntology;
 class CGeneImpl {
 protected:
 	CGeneImpl( const std::string& );
-	~CGeneImpl( );
+	virtual ~CGeneImpl( );
 
 	CGeneImpl& operator=( const CGeneImpl& );
 	void IncrementOntologies( const IOntology* );
@@ -50,6 +50,7 @@ protected:
 	bool					m_fRNA;
 	bool					m_fDubious;
 	std::string				m_strGloss;
+	float					m_weight;
 };
 
 class CGenomeImpl : protected CFileImpl {
@@ -60,7 +61,7 @@ protected:
 	static const char	c_szORF[];
 	static const char*	c_aszRNA[];
 
-	~CGenomeImpl( );
+	virtual ~CGenomeImpl( );
 
 	std::vector<CGene*>	m_vecpGenes;
 	TMapStrI			m_mapGenes;
@@ -77,8 +78,8 @@ protected:
 	CGenome&			m_Genome;
 	std::vector<CGene*>	m_vecpGenes;
 	TMapStrI			m_mapGenes;
+	bool				isWeighted;
 };
-
 }
 
 #endif // GENOMEI_H

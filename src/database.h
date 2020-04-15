@@ -72,6 +72,7 @@ class IBayesNet;
  */
 class CDatabase : CDatabaseImpl {
 public:
+
 	/*!
 	 * \brief
 	 * Construct a new database over the given genes from the given datasets and Bayes net.
@@ -122,7 +123,24 @@ public:
 	 * SetBlockIn | SetBlockOut
 	 */
 	bool Open( const std::vector<std::string>& vecstrGenes, const std::string& strInputDirectory,
-		const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles );
+		const IBayesNet* pBayesNet, const std::string& strOutputDirectory, size_t iFiles, const map<string, size_t>& mapstriZeros);
+
+
+	//Qian
+	bool Open( const std::vector<std::string>& vecstrGenes, const std::vector<std::string>& vecstrDatasets,
+		const std::string& strInputDirectory, const std::string& strOutputDirectory, size_t iFiles, const map<string, size_t>& mapstriZeros);
+
+	//Qian
+	CDatabase(bool isNibble) : CDatabaseImpl(isNibble){
+	}
+
+	bool Reorganize(const char*, const size_t&);
+
+
+	bool GetGene(const string &, vector<unsigned char>&) const;
+	bool GetGene(const size_t &, vector<unsigned char>&) const;
+
+
 	/*!
 	 * \brief
 	 * Open an existing database from subfiles in the given directory.
@@ -134,6 +152,7 @@ public:
 	 * True if the database was opened successfully.
 	 */
 	bool Open( const std::string& strInputDirectory );
+
 
 	/*!
 	 * \brief
@@ -282,6 +301,11 @@ public:
 	size_t GetDatasets( ) const {
 
 		return ( m_vecpDBs.empty( ) ? 0 : m_vecpDBs[ 0 ]->GetDatasets( ) ); }
+
+	//Used by SeekMiner and SeekServer
+	bool Open(const string &, const vector<string> &, const size_t &, const size_t &);
+	bool Open(const char *, const vector<string> &, const size_t &, const size_t &);
+
 
 	/*!
 	 * \brief

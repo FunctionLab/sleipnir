@@ -20,3 +20,5 @@ Add to %tools_ggo_flags if the defaults are not sufficient. Also, add
 to %tools_other_packages if dependent on optional libraries.
 
 vi. Be sure to run gen_auto to recreate configure and Makefile.am files.
+
+vii. If added library in src direction, update src/Makefile.am file accordingly

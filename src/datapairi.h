@@ -48,6 +48,7 @@ protected:
 	static const char  c_acQdab[];
 	bool OpenQdab( const char* szDatafile );
 	void SetQuants( const float* adBinEdges, size_t iBins );
+	std::vector<float> GetQuants();
 };
 
 class CPCLPairImpl : protected CPairImpl, public CPCL {

@@ -22,6 +22,11 @@
 #ifndef COMPACTMATRIXI_H
 #define COMPACTMATRIXI_H
 
+//may need to enable the following lines for Cygwin compilation
+//#ifndef SIZE_MAX
+//#define SIZE_MAX (4294967295U) //assumes 32bit GCC
+//#endif
+
 #include "halfmatrixi.h"
 
 namespace Sleipnir {
@@ -30,7 +35,7 @@ class CCompactMatrixBase {
 protected:
 	CCompactMatrixBase( ) : m_cBits(0), m_aiData(NULL), m_fMemory(true) { }
 
-	~CCompactMatrixBase( ) {
+	virtual ~CCompactMatrixBase( ) {
 
 		if( m_fMemory && m_aiData )
 			delete[] m_aiData; }
@@ -52,7 +57,8 @@ protected:
 			cRet |= ( *( pi + 1 ) & ( SIZE_MAX >> ( ( 16 * sizeof(*m_aiData) ) - m_cBits -
 				cShift ) ) ) << ( ( 8 * sizeof(*m_aiData) ) - cShift );
 
-		return cRet; }
+		return cRet;
+	}
 
 	void Set( size_t iX, size_t iY, unsigned char cValue ) {
 		unsigned char	cShift;
@@ -68,7 +74,9 @@ protected:
 			pi++;
 			iMask = SIZE_MAX >> ( ( 16 * sizeof(*m_aiData) ) - m_cBits - cShift );
 			*pi = ( *pi & ~iMask ) |
-				( ( cValue >> ( ( 8 * sizeof(*m_aiData) ) - cShift ) ) & iMask ); } }
+				( ( cValue >> ( ( 8 * sizeof(*m_aiData) ) - cShift ) ) & iMask );
+		}
+	}
 
 	virtual size_t CountWords( ) const = 0;
 	virtual size_t* GetWord( size_t, size_t, unsigned char& ) const = 0;
@@ -108,9 +116,9 @@ protected:
 
 	size_t CountWords( ) const {
 		size_t	iRet;
-
 		iRet = m_iRows * m_iColumns;
-		return ( ( ( ( iRet * m_cBits ) - 1 ) / ( 8 * sizeof(*m_aiData) ) ) + 1 ); }
+		return ( ( ( ( iRet * m_cBits ) - 1 ) / ( 8 * sizeof(*m_aiData) ) ) + 1 );
+	}
 
 	size_t* GetWord( size_t iY, size_t iX, unsigned char& cShift ) const {
 		size_t	iIndex;

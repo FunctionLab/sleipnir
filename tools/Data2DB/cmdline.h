@@ -34,6 +34,9 @@ struct gengetopt_args_info
 {
   const char *help_help; /**< @brief Print help and exit help description.  */
   const char *version_help; /**< @brief Print version and exit help description.  */
+  char * dataset_arg;	/**< @brief Input a set of dataset filenames.  */
+  char * dataset_orig;	/**< @brief Input a set of dataset filenames original value given at command line.  */
+  const char *dataset_help; /**< @brief Input a set of dataset filenames help description.  */
   char * network_arg;	/**< @brief Input (X)DSL Bayes net.  */
   char * network_orig;	/**< @brief Input (X)DSL Bayes net original value given at command line.  */
   const char *network_help; /**< @brief Input (X)DSL Bayes net help description.  */
@@ -55,6 +58,11 @@ struct gengetopt_args_info
   int block_datasets_arg;	/**< @brief Number of datasets per block (default='-1').  */
   char * block_datasets_orig;	/**< @brief Number of datasets per block original value given at command line.  */
   const char *block_datasets_help; /**< @brief Number of datasets per block help description.  */
+  int use_nibble_flag;	/**< @brief Use nibble for compact storage (default=off).  */
+  const char *use_nibble_help; /**< @brief Use nibble for compact storage help description.  */
+  char * zeros_arg;	/**< @brief Read zeroed node IDs/outputs from the given file.  */
+  char * zeros_orig;	/**< @brief Read zeroed node IDs/outputs from the given file original value given at command line.  */
+  const char *zeros_help; /**< @brief Read zeroed node IDs/outputs from the given file help description.  */
   int buffer_flag;	/**< @brief Memory buffer disk writes (default=off).  */
   const char *buffer_help; /**< @brief Memory buffer disk writes help description.  */
   int memmap_flag;	/**< @brief Memory map input/output (default=off).  */
@@ -65,6 +73,7 @@ struct gengetopt_args_info
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
+  unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
   unsigned int network_given ;	/**< @brief Whether network was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int dir_in_given ;	/**< @brief Whether dir_in was given.  */
@@ -72,6 +81,8 @@ struct gengetopt_args_info
   unsigned int files_given ;	/**< @brief Whether files was given.  */
   unsigned int block_files_given ;	/**< @brief Whether block_files was given.  */
   unsigned int block_datasets_given ;	/**< @brief Whether block_datasets was given.  */
+  unsigned int use_nibble_given ;	/**< @brief Whether use_nibble was given.  */
+  unsigned int zeros_given ;	/**< @brief Whether zeros was given.  */
   unsigned int buffer_given ;	/**< @brief Whether buffer was given.  */
   unsigned int memmap_given ;	/**< @brief Whether memmap was given.  */
   unsigned int verbosity_given ;	/**< @brief Whether verbosity was given.  */

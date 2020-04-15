@@ -22,6 +22,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
+
 int main( int iArgs, char** aszArgs ) {
 	static const size_t	c_iBuffer	= 1024;
 #ifdef WIN32
@@ -30,11 +31,13 @@ int main( int iArgs, char** aszArgs ) {
 	gengetopt_args_info	sArgs;
 	ifstream			ifsm;
 	istream*			pistm;
-	vector<string>		vecstrLine, vecstrGenes;
+	vector<string>		vecstrLine, vecstrGenes, vecstrDatasets;
 	char				acBuffer[ c_iBuffer ];
-	CDatabase			DB;
+#ifndef NO_SMILE
 	CBayesNetSmile		BNSmile;
+#endif
 	size_t				i;
+	map<string, size_t>	mapstriZeros;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
 		cmdline_parser_print_help( );
@@ -64,17 +67,87 @@ int main( int iArgs, char** aszArgs ) {
 	if( sArgs.input_arg )
 		ifsm.close( );
 
-	if( !BNSmile.Open( sArgs.network_arg ) ) {
-		cerr << "Could not open: " << sArgs.network_arg << endl;
-		return 1; }
+	if( sArgs.zeros_arg ) {
+		ifstream		ifsm_zero;
+		vector<string>	vecstrLine;
+		char			acLine[ 1024 ];
+
+		ifsm_zero.open( sArgs.zeros_arg );
+		if( !ifsm_zero.is_open( ) ) {
+		    cerr << "Couldn't open: " << sArgs.zeros_arg << endl;
+		    return 1;
+		}
+		while( !ifsm_zero.eof( ) ) {
+		    ifsm_zero.getline( acLine, ARRAYSIZE(acLine) - 1 );
+		    acLine[ ARRAYSIZE(acLine) - 1 ] = 0;
+		    vecstrLine.clear( );
+		    CMeta::Tokenize( acLine, vecstrLine );
+		    if( vecstrLine.empty( ) )
+			continue;
+		    mapstriZeros[ vecstrLine[ 0 ] ] = atoi( vecstrLine[ 1 ].c_str( ) );
+		}
+	}
+
+
+	bool useNibble = false;
+	if(sArgs.use_nibble_flag==1){
+		useNibble = true;
+	}
+
+	CDatabase DB(useNibble);
 	DB.SetMemmap( !!sArgs.memmap_flag );
 	DB.SetBuffer( !!sArgs.buffer_flag );
 	DB.SetBlockOut( sArgs.block_files_arg );
 	DB.SetBlockIn( sArgs.block_datasets_arg );
-	if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
-		vecstrGenes.size( )) ) ) {
-		cerr << "Could not open data" << endl;
-		return 1; }
+
+	if(sArgs.network_arg){
+		if(sArgs.dataset_arg){
+			cerr << "Confused. Only network OR dataset list." << endl;
+			return 1;
+		}
+#ifdef NO_SMILE
+		cerr << "network option is disabled because SMILE was not used in building Data2DB."<< endl;
+		return 1;
+#endif
+
+#ifndef NO_SMILE
+		if( !BNSmile.Open( sArgs.network_arg ) ) {
+			cerr << "Could not open: " << sArgs.network_arg << endl;
+			return 1; }
+		if( !DB.Open( vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
+			vecstrGenes.size( )), mapstriZeros ) ) {
+			cerr << "Could not open data" << endl;
+			return 1;
+		}
+#endif
+	}else if(sArgs.dataset_arg){
+
+		ifsm.open(sArgs.dataset_arg);
+		while(!pistm->eof()){
+			pistm->getline(acBuffer, c_iBuffer -1);
+			if(acBuffer[0]==0)
+				break;
+			acBuffer[c_iBuffer-1] = 0;
+            //If line contains multiple columns,
+            //use the first column, which is the dataset column
+            vector<string> tok;
+            CMeta::Tokenize(acBuffer, tok, " \t");
+			vecstrDatasets.push_back(tok[0]);
+		}
+		vecstrDatasets.resize(vecstrDatasets.size());
+		ifsm.close();
+
+		if( !DB.Open( vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t)sArgs.files_arg,
+			vecstrGenes.size( )), mapstriZeros ) ) {
+			cerr << "Could not open data" << endl;
+			return 1;
+		}
+
+	}else{
+		cerr << "Must give a network or a dataset list." << endl;
+		return 1;
+
+	}
 
 #ifdef WIN32
 	pthread_win32_process_detach_np( );

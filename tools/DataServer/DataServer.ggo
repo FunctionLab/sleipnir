@@ -1,0 +1,25 @@
+package	"DataServer"
+version	"1.0"
+purpose	""
+
+section "Input"
+option  "database"  d   "Database directory"
+                        string  typestr="directory"
+option  "datasets"  I   "File of dataset names"   
+                        string typestr="filename"
+option  "dataname"  D   "Name of input dataset"
+                        string
+option  "variances" v   "PCL File of gene variances"
+                        string typestr="filename"
+option	"quant"		q	"Quant file for saving dabs"
+						string typestr="filename"
+
+section "Server"
+option	"port"			p	"Server port"
+	int	default="1234"
+option	"timeout"		t	"Server timeout"
+	int	default="100"
+option	"threads"		T	"Maximum number of threads"
+	int	default="1"
+
+

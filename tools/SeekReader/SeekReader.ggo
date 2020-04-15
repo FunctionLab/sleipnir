@@ -1,0 +1,128 @@
+package	"SeekReader"
+version	"1.0"
+purpose	"Reads db files"
+
+section "Diagnosis"
+option	"databaselet"		D	"Display values from databaselet(s)"
+								flag	off
+option	"dataset"			A	"Check which datasets contain query of interest, based on .gpres file"
+								flag	off
+option	"dataset2"			l	"Read datasets' sinfo files, requires -s, -x"
+								flag	off
+option	"weight"			W	"Test dataset weights"
+								flag	off
+option	"weight2"			U	"Test dataset weights 2"
+								flag	off
+option	"comp_ranking"		C	"Compare two rankings (*.gscore files)"
+								flag	off
+option	"convert_aracne"	J	"Convert Aracne output (.txt) to DAB file"
+								flag	off
+option	"convert_dab"		k	"Convert DAB to matrix"
+								flag	off
+option	"limit_hub"			Y	"Limit genes in the DAB to those that are hubby"
+								flag	off
+option	"combine_pcl"		B	"Combine PCL bin files"
+								flag	off
+option	"increase_gscore"	R	"Increase the gene scores"
+								flag	off
+option	"add_gscore"		g	"Add the gene scores"
+								flag	off
+option	"read_bin_vec"		j	"Display float vector"
+								flag    off
+
+section "Read a binary vector of float elements"
+option	"input_vec"			z	"Input file"
+								string typestr="filename" default="NA"
+
+section	"Increase the gene scores of given queries"
+option	"gscore_file"		S	"Gene score file (input)"
+								string typestr="filename" default="NA"
+option	"gscore_file_2"		T	"Gene score file (input 2)"
+								string typestr="filename" default="NA"
+option	"gscore_output"		t	"Gene score output file"
+								string typestr="filename" default="NA"
+
+section "Add the gene score for a bunch of files"
+option	"gscore_list"		a	"Gene score list"
+								string typestr="filename" default="NA"
+option	"gscore_dir"		c	"Gene score directory"
+								string typestr="directory" default="NA"
+option	"gscore_output2"	e	"Gene score output file"
+								string typestr="filename" default="NA"
+
+section	"Combine PCL"
+option	"pcl_list"			u	"File containing a list of pcl bin files (including path)"
+								string typestr="filename" default="NA"
+option	"binarize"			b	"Binarize the output matrix"
+								flag	off
+option	"output_pcl"		V	"Output file"
+								string typestr="filename" default="NA"
+
+section "Limit Hub"
+option	"dabinput"			y	"DAB input file"
+								string typestr="filename" default="NA"
+option	"hub_dab_output"	Z	"DAB output file"
+								string typestr="filename" default="NA"
+
+section	"Convert Aracne"
+option	"aracne_file"		K	"Aracne .txt output file"
+								string typestr="filename" default="NA"
+option	"output_dab_file"	L	"DAB file"
+								string typestr="filename" default="NA"
+
+section "Convert DAB to matrix"
+option	"dab_file"			f	"DAB file"
+								string typestr="filename" default="NA"
+option	"output_matrix"		m	"Output matrix filename"
+								string typestr="filename" default="NA"
+
+section "Weight"
+option	"dweight_dir"		E	"Dataset weight directory"
+								string typestr="directory" default="NA"
+option	"dweight_num"		n	"Number of .dweight files"
+								int	default="1000"
+option	"dweight_map"		M	"Dataset mapping file"
+								string typestr="filename" default="NA"
+option	"dweight_test_dir"	F	"Test dataset weight directory"
+								string typestr="directory" default="NA"
+option	"dweight_test_num"	G	"Test number of .dweight files"
+								int	default="1000"
+
+section "Compare Rankings"
+option	"gscore_dir1"		H	"Gene score directory 1"
+								string typestr="directory" default="NA"	
+option	"gscore_dir2"		h	"Gene score directory 2"	
+								string typestr="directory" default="NA"	
+option	"gscore_num1"		I	"Number of .gscore files"
+								int default="1000"
+
+
+section "Main"
+option	"order_stat_single_gene_query"		O	"Order statistics mode (single-gene query)"
+								flag	off
+option	"db"				x	"Input dataset-platform definition"
+								string	typestr="filename"
+option	"dset_list"			X	"Input a set of datasets"
+								string	typestr="filename"
+option	"input"				i	"Input gene mapping"
+								string	typestr="filename"
+option	"single_query"		q	"Query gene list"
+								string	typestr="filename"
+option	"dir_in"			d	"Database directory"
+								string	typestr="directory"
+option	"dir_prep_in"		p	"Prep directory (containing .gavg, .gpres files)"
+								string	typestr="directory"				
+option	"dir_gvar_in"		r	"Prep directory (containing .gexpvar files)"
+								string	typestr="directory"	default="NA"	
+option	"dir_sinfo_in"		s	"Sinfo directory (containing .sinfo files)"
+								string	typestr="directory"	default="NA"
+option	"is_nibble"			N	"Whether the input DB is nibble type"
+								flag	off
+option	"platform_dir"		P	"Platform directory"
+								string	typestr="directory"
+option	"gvar_cutoff"		v	"Query gene's variance in the dataset cutoff"
+								float	default="-1"
+option	"multi_query"		Q	"File containing multiple queries"
+								string	typestr="filename"	default="NA"
+option	"output_file"		o	"Output file"
+								string	typestr="filename"	default="NA"

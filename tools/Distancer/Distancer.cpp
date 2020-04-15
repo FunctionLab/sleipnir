@@ -33,10 +33,19 @@ int main( int iArgs, char** aszArgs ) {
 		return 1; }
 	CMeta Meta( sArgs.verbosity_arg );
 
-	if( iRet = CPCL::Distance( sArgs.input_arg, sArgs.skip_arg, sArgs.distance_arg, !!sArgs.normalize_flag,
+	IMeasure::EMap eM = IMeasure::EMapCenter;
+	
+	if(!!sArgs.centering_flag == false){
+		eM = IMeasure::EMapNone;
+		fprintf(stderr, "INFO: centering is off\n");
+	}
+		
+
+	if( iRet = CPCL::Distance( sArgs.input_arg, sArgs.skip_arg,sArgs.weights_arg, sArgs.distance_arg, !!sArgs.normalize_flag,
 		!!sArgs.zscore_flag, !!sArgs.autocorrelate_flag, sArgs.genes_arg, sArgs.cutoff_given ?
-		(float)sArgs.cutoff_arg : CMeta::GetNaN( ), sArgs.limit_arg, PCL, Dat, IMeasure::EMapCenter,
-		!!sArgs.freqweight_flag, sArgs.alpha_arg ) ) {
+		(float)sArgs.cutoff_arg : CMeta::GetNaN( ), sArgs.limit_arg, PCL, Dat, 
+		eM,
+		!!sArgs.freqweight_flag, sArgs.alpha_arg, sArgs.threads_arg) ) {
 		cmdline_parser_print_help( );
 		return iRet; }
 	if( sArgs.flip_flag )

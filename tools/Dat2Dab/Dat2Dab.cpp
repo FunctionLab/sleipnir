@@ -21,6 +21,7 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
+#include <cmath>
 
 #include "statistics.h"
 #include "datapair.h"
@@ -31,7 +32,7 @@ int main( int iArgs, char** aszArgs ) {
 	CGenes				Genes( Genome );
 	ifstream			ifsm;
 	CDat				Dat;
-	size_t				i, j;
+	size_t				i, j, k;
 	bool				fModified;
 
 	if( cmdline_parser( iArgs, aszArgs, &sArgs ) ) {
@@ -119,33 +120,252 @@ int main( int iArgs, char** aszArgs ) {
 		Dat.Set( i, j, d + CStatistics::SampleNormalStandard() );		  
 	      }	
 	}      
+	// Rescale prior
+	if( sArgs.prior_given && sArgs.newprior_given ){
+	    float r = sArgs.newprior_arg / sArgs.prior_arg;
+	    float rdiff = (1-sArgs.newprior_arg)/(1-sArgs.prior_arg);
+	    float d;
+	    for( i = 0; i < Dat.GetGenes( ); ++i ) {
+		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+		    if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ){
+			d = (d * r) / (d * r + (1-d) * rdiff);
+			Dat.Set( i, j, d );  
+		    }
+		}	
+	    }
+	}      
+	// Convert posterior to log-likelihood ratio
+	if( sArgs.prior_given && sArgs.logratio_flag ) {
+	    float logprior = log(sArgs.prior_arg/(1-sArgs.prior_arg));
+	    float d;
+	    for( i = 0; i < Dat.GetGenes( ); ++i ) {
+		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+		    if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ){
+			d = log(d/(1-d)) - logprior;
+			Dat.Set( i, j, d );  
+		    }
+		}	
+	    }
+
+	}
+
 	if( sArgs.randomize_flag )
 		Dat.Randomize( );
 	if( sArgs.rank_flag )
 		Dat.Rank( );
 	if( sArgs.normalize_flag || sArgs.zscore_flag )
 		Dat.Normalize( sArgs.zscore_flag ? CDat::ENormalizeZScore : CDat::ENormalizeMinMax );
-	if( sArgs.zero_flag || sArgs.dmissing_given )
-	  for( i = 0; i < Dat.GetGenes( ); ++i )
-	    for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
-	      if( CMeta::IsNaN( Dat.Get( i, j ) ) ){
-		if ( sArgs.zero_flag ){
-		  Dat.Set( i, j, 0 );
-		}
-		else{
-		  Dat.Set( i, j, sArgs.dmissing_arg );
-		}
-	      }
 	
+	if( sArgs.normalizeNPone_flag )
+	  Dat.Normalize( CDat::ENormalizeMinMaxNPone );
+
+	if( sArgs.zero_flag || sArgs.dmissing_given ) {
+        for( i = 0; i < Dat.GetGenes( ); ++i ) {
+            for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+                if( CMeta::IsNaN( Dat.Get( i, j ) ) ){
+                    if ( sArgs.zero_flag ){
+                        Dat.Set( i, j, 0 );
+                    }
+                    else{
+                        Dat.Set( i, j, sArgs.dmissing_arg );
+                    }
+                }
+            }
+        }
+    }
+	
+    if( sArgs.NegExp_flag ){
+        float d;
+        for( i = 0; i < Dat.GetGenes( ); ++i ) {
+            for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+                if( CMeta::IsNaN( d=Dat.Get( i, j ) ) )
+                    continue;
+                Dat.Set( i, j, exp(-d) );
+            }
+        }
+    }
+
+    if( sArgs.abs_flag ){
+        float d;
+        for( i = 0; i < Dat.GetGenes( ); ++i ) {
+            for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+                if( CMeta::IsNaN( d=Dat.Get( i, j ) ) )
+                    continue;
+                Dat.Set( i, j, abs(d) );
+            }
+        }
+    }
+
 	if( sArgs.flip_flag )
 		Dat.Invert( );
+
+    if( sArgs.normalizeDeg_flag ) {
+        size_t			    iCutoff;
+        float			    d;
+        vector<size_t>	    veciCounts;
+        vector<float>	    vecdTotals;
+
+        veciCounts.resize( Dat.GetGenes( ) );
+        fill( veciCounts.begin( ), veciCounts.end( ), 0 );
+        vecdTotals.resize( Dat.GetGenes( ) );
+        fill( vecdTotals.begin( ), vecdTotals.end( ), 0.0f );
+
+        for( iCutoff = i = 0; i < Dat.GetGenes( ); ++i ) {
+            for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+                if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
+                    if( !sArgs.cutoff_given || ( d >= sArgs.cutoff_arg ) ) {
+                        // d = abs (d);
+                        iCutoff++;
+                        veciCounts[ i ]++;
+                        veciCounts[ j ]++;
+                        vecdTotals[ i ] += d;
+                        vecdTotals[ j ] += d;
+                        d *= d;
+                    }
+                }
+            }
+        }
+
+        for( i = 0; i < Dat.GetGenes( ); ++i ) {
+            for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+                if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
+                    if( !sArgs.cutoff_given || ( d >= sArgs.cutoff_arg ) ) {
+                        d = d * veciCounts[ i ] / sqrt( vecdTotals[ i ] * vecdTotals[ j ] );
+                        Dat.Set( i, j, d );
+                    }
+                }
+            }
+        }
+    }
+
+    if( sArgs.normalizeLoc_flag ) {
+        size_t			    iCutoff;
+        float			    d, zi, zj;
+        vector<size_t>	    veciCounts;
+        vector<float>	    vecdTotals, vecdAvgs, vecdSquares;
+
+        veciCounts.resize( Dat.GetGenes( ) );
+        fill( veciCounts.begin( ), veciCounts.end( ), 0 );
+        vecdTotals.resize( Dat.GetGenes( ) );
+        fill( vecdTotals.begin( ), vecdTotals.end( ), 0.0f );
+        vecdAvgs.resize( Dat.GetGenes( ) );
+        fill( vecdAvgs.begin( ), vecdAvgs.end( ), 0.0f );
+        vecdSquares.resize( Dat.GetGenes( ) );
+        fill( vecdSquares.begin( ), vecdSquares.end( ), 0.0f );
+
+        for( iCutoff = i = 0; i < Dat.GetGenes( ); ++i ) {
+            for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+                if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
+                    if( !sArgs.cutoff_given || ( d >= sArgs.cutoff_arg ) ) {
+                        // d = abs (d);
+                        iCutoff++;
+                        veciCounts[ i ]++;
+                        veciCounts[ j ]++;
+                        vecdTotals[ i ] += d;
+                        vecdTotals[ j ] += d;
+
+                        d *= d;
+                        vecdSquares[ i ] += d;
+                        vecdSquares[ j ] += d;
+                    }
+                }
+            }
+        }
+
+        for( i = 0; i < vecdSquares.size( ); ++i ) {
+            d = vecdTotals[ i ] / veciCounts[ i ];
+            vecdAvgs[ i ] = d;
+            vecdSquares[ i ] = sqrt( ( vecdSquares[ i ] / veciCounts[ i ] ) - ( d * d ) );
+        }
+
+         for( i = 0; i < Dat.GetGenes( ); ++i ) {
+            for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
+                if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
+                    if( !sArgs.cutoff_given || ( d >= sArgs.cutoff_arg ) ) {
+                        if( vecdSquares[ i ] == 0 ) { zi = 0; }
+                        else { zi = (d - vecdAvgs[ i ]) / vecdSquares[ i ]; }
+
+                        if( vecdSquares[ j ] == 0 ) { zj = 0; }
+                        else { zj = (d - vecdAvgs[ j ]) / vecdSquares[ j ]; }
+                        
+                        d = ( zi + zj ) / sqrt(2);
+                        Dat.Set( i, j, d );
+                    }
+                }
+            }
+        }
+    }
+
 	if( Genes.GetGenes( ) )
 		Dat.FilterGenes( Genes, CDat::EFilterInclude );
 	if( sArgs.genex_arg )
 		Dat.FilterGenes( sArgs.genex_arg, CDat::EFilterExclude );
 	if( sArgs.genee_arg )
 		Dat.FilterGenes( sArgs.genee_arg, CDat::EFilterEdge );
+	if( sArgs.gexedges_arg )
+		Dat.FilterGenes( sArgs.gexedges_arg, CDat::EFilterExEdge );
+	
 
+	if( sArgs.ccoeff_flag ) {
+	  float sxy, sxxyy, sgxy;
+	  for( i = 0; i < Dat.GetGenes( ); ++i ){
+	    sxy = 0.0;
+	    sxxyy = 0.0;
+	    sgxy = 0.0;
+	    for( j = 0; j < Dat.GetGenes( ); ++j ){
+	      if( i == j )
+		continue;  
+	      
+	      sxy = sxy + Dat.Get(i, j);
+	      sxxyy = sxxyy + (Dat.Get(i, j)*Dat.Get(i, j));
+	      
+	      for( k = j+1; k < Dat.GetGenes( ); ++k ){
+		if( i == k || j == k)
+		  continue;		
+		sgxy = sgxy + Dat.Get(i, j)*Dat.Get(i, k)*Dat.Get(j, k);
+	      }
+	    }
+	    cout << Dat.GetGene( i ) << '\t' <<  sgxy/( sxy*sxy - sxxyy )  << endl;
+	  }
+	  
+	  return 0;
+	}
+	
+	if( sArgs.mar_flag ){
+	  float sxy, sxxyy;
+	  
+	  for( i = 0; i < Dat.GetGenes( ); ++i ){
+	    sxy = 0;
+	    sxxyy = 0;
+	    
+	    for( j = 0; j < Dat.GetGenes( ); ++j ){
+	      if( i == j )
+		continue;  
+	      
+	      sxxyy = sxxyy + (Dat.Get(i, j)*Dat.Get(i, j));
+	      sxy = sxy + Dat.Get(i, j);
+	    }
+	    cout << Dat.GetGene( i ) << '\t' << sxxyy/sxy << endl;
+	  }	  
+	  return 0;
+	}
+		
+	if( sArgs.hubbiness_flag ) {
+	  float sume;
+	  for( i = 0; i < Dat.GetGenes( ); ++i ){
+	    sume = 0.0;
+	    for( j = 0; j < Dat.GetGenes( ); ++j ){
+	      if( i == j )
+		continue;	      
+	      sume = sume + Dat.Get(i, j);
+	    }
+	    
+	    cout << Dat.GetGene( i ) << '\t' << sume/(Dat.GetGenes( )-1) << endl;
+	  }
+	  
+	  return 0;
+	}
+	
 	if( sArgs.paircount_flag ) {
 		size_t			iTotal, iCutoff;
 		float			d, dAve, dStd;
@@ -163,6 +383,7 @@ int main( int iArgs, char** aszArgs ) {
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
 					if( !sArgs.cutoff_given || ( d >= sArgs.cutoff_arg ) ) {
+                        // d = abs (d);
 						dAve += d;
 						iCutoff++;
 						veciCounts[ i ]++;
@@ -177,8 +398,8 @@ int main( int iArgs, char** aszArgs ) {
 		dAve /= iCutoff;
 		dStd = sqrt( ( dStd / iCutoff ) - ( dAve * dAve ) );
 		for( i = 0; i < vecdSquares.size( ); ++i ) {
-			d = vecdTotals[ i ] / iCutoff;
-			vecdSquares[ i ] = sqrt( ( vecdSquares[ i ] / iCutoff ) - ( d * d ) ); }
+			d = vecdTotals[ i ] / veciCounts[ i ];
+			vecdSquares[ i ] = sqrt( ( vecdSquares[ i ] / veciCounts[ i ] ) - ( d * d ) ); }
 
 		cout << iTotal << endl;
 		if( sArgs.cutoff_given )
@@ -188,11 +409,13 @@ int main( int iArgs, char** aszArgs ) {
 			cout << Dat.GetGene( i ) << '\t' << vecdTotals[ i ] << '\t' << veciCounts[ i ] << '\t' <<
 				vecdSquares[ i ] << endl;
 		return 0; }
+
 	if( sArgs.cutoff_given )
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
 				if( Dat.Get( i, j ) < sArgs.cutoff_arg )
 					Dat.Set( i, j, CMeta::GetNaN( ) );
+
 	if( sArgs.subsample_arg < 1 )
 		for( i = 0; i < Dat.GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
@@ -246,7 +469,29 @@ int main( int iArgs, char** aszArgs ) {
 			}			
 		} 
 	}
-
+	
+	if( sArgs.summary_flag ) {
+	  double sum, sq_sum, cTotal, mean, variance, d;
+	  
+	  sum = 0.0;
+	  sq_sum = 0.0;
+	  cTotal = 0.0;
+	  
+	  for( i = 0; i < Dat.GetGenes( ); ++i )
+	    for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j )
+	      if( !CMeta::IsNaN( d = Dat.Get( i, j ) ) ) {
+		sum += d;
+		sq_sum += (d*d);
+		cTotal += 1;
+	      }
+	  
+	  mean = sum / cTotal;	  	  
+	  variance = ( (sq_sum)  -   cTotal *(mean * mean) ) / ( cTotal - 1 );
+	  cout << mean << endl;
+	  cout << sqrt(variance) << endl;
+	  return 0;
+	}
+		
 	if( sArgs.lookups1_arg ) {
 		CGenes			GenesLk1( Genome );
 		vector<size_t>	veciGenesOne;

@@ -1,0 +1,17 @@
+#pre-requisite software: 
+
+#gcc (at least 4.5 for latest OpenMP support, get from http://hpc.sourceforge.net/, by default install in /usr/local
+#create .init startup script:
+#====sample====
+#export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+#export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig
+#export PATH=/usr/local/bin:$PATH
+#==============
+
+#smile (download from UPitts, get MacOS gcc 4.2 version)
+#svmperf, need to recompile (just type make)
+#log4cpp, install in /usr/local directory
+#gengetopt, install in /usr/local directory
+
+
+./configure --prefix=/Users/qzhu/sleipnir_build --with-svm-perf=/Users/qzhu/sleipnir_prerequisite/svmperf --with-smile=/Users/qzhu/sleipnir_prerequisite/smile

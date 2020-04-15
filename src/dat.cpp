@@ -473,6 +473,10 @@ void CDatImpl::OpenHelper( const CGenes* pOne, const CGenes* pTwo, float dValue 
  * \param fZScore
  * If true and the given stream contains a PCL, z-score similarity measures after pairwise calculation.
  * 
+ * \param fSeek
+ * If true, read by seeking in the file, particularly useful if reading a few values, since there is no
+ * need to read the entire file. (for binary format only)
+ *
  * \returns
  * True if CDat was successfully opened.
  * 
@@ -486,7 +490,7 @@ void CDatImpl::OpenHelper( const CGenes* pOne, const CGenes* pTwo, float dValue 
  * Save | CPCL
  */
 bool CDat::Open( std::istream& istm, EFormat eFormat, float dDefault, bool fDuplicates, size_t iSkip,
-	bool fZScore ) {
+	bool fZScore, bool fSeek ) {
 
 	switch( eFormat ) {
 		case EFormatText:
@@ -500,8 +504,15 @@ bool CDat::Open( std::istream& istm, EFormat eFormat, float dDefault, bool fDupl
 	
 		case EFormatQdab:
 			return OpenQdab( istm ); 		       
+
 	}
-	return OpenBinary( istm ); }
+
+	if(fSeek){
+		m_fSeek = true;
+	}
+
+	return OpenBinary( istm, fSeek );
+}
 
 bool CDatImpl::OpenPCL( std::istream& istm, size_t iSkip, bool fZScore ) {
 
@@ -623,12 +634,22 @@ bool CDatImpl::OpenText( std::istream& istm, float dDefault, bool fDuplicates ) 
 
 	return true; }
 
-bool CDatImpl::OpenBinary( std::istream& istm ) {
+bool CDatImpl::OpenBinary( std::istream& istm, bool fSeek ) {
 	size_t	i;
 	float*	adScores;
 
+	if(fSeek){
+		if(!OpenHeader(istm)){
+			cerr << "Error opening header" << endl;
+			return false;
+		}
+		return true;
+	}
+
 	if( !OpenGenes( istm, true, false ) )
 		return false;
+
+	fprintf(stderr, "Reading genes\n");
 	m_Data.Initialize( GetGenes( ) );
 	adScores = new float[ GetGenes( ) - 1 ];
 	for( i = 0; ( i + 1 ) < GetGenes( ); ++i ) {
@@ -638,10 +659,87 @@ bool CDatImpl::OpenBinary( std::istream& istm ) {
 
 	return true; }
 
+/* still to be tested
+ * used for BINARY mode, and DAB file only, ie Float matrix
+ */
+bool CDatImpl::OpenHeader(std::istream& istm){
+	if(!m_fSeek){
+		cerr << "Don't know how you got here" << endl;
+	}
+
+	if(!OpenGenes(istm, true, false)){
+		return false;
+	}
+	EstimateSeekPositions(istm);
+	return true;
+}
+
+/* still to be tested
+ * used for BINARY mode, and DAB file only, ie Float matrix
+ */
+float* CDatImpl::GetRowSeek(std::istream& istm, const size_t &ind) const {
+	if(!m_fSeek){
+		cerr << "Don't know how you got here" << endl;
+	}
+
+	size_t iRow, iColumn;
+	size_t i, iNumGenes;
+	iNumGenes = GetGenes();
+	float* adScores = (float*)malloc(iNumGenes * sizeof(float));
+
+	size_t j;
+	for(i=0; i<ind; i++){
+		iRow = i;
+		iColumn = ind - 1;
+		size_t offset1 = m_iHeader + m_veciSeekPos[iRow] + iColumn * sizeof(float);
+		istm.seekg(offset1, ios_base::beg);
+		float v;
+		char *p = (char*) &v;
+		istm.read(p, sizeof(float));
+		adScores[i] = v;
+	}
+
+	adScores[ind] = CMeta::GetNaN();
+
+	int iSize = iNumGenes - (ind+1);
+	if(iSize==0){
+		return adScores;
+	}
+
+	float *v = (float*)malloc(iSize*sizeof(float));
+	char *p = (char*) v;
+	istm.seekg(m_iHeader+m_veciSeekPos[ind], ios_base::beg);
+	istm.read(p, iSize*sizeof(float));
+	for(i=0; i<iSize; i++){
+		adScores[i+ind+1] = v[i];
+	}
+	free(v);
+
+	return adScores;
+}
+
+/* still to be tested
+ * used for BINARY mode, and DAB file only, ie Float matrix
+ */
+float* CDatImpl::GetRowSeek(std::istream& istm, const std::string &strGene) const{
+	if(!m_fSeek){
+		cerr << "Don't know how you got here" << endl;
+	}
+	size_t i;
+	size_t iNumGenes = GetGenes();
+	size_t ind;
+
+	if( (ind = GetGeneIndex(strGene) ) ==-1){
+		return NULL; //missing gene
+	}
+
+	return GetRowSeek(istm, ind);
+}
+
 bool CDatImpl::OpenQdab( std::istream& istm ) {
   size_t	iTotal, i, j, num_bins, num_bits, iPos;
 	float*	adScores;
-	char tmp;
+	unsigned char tmp;
 	float* bounds;
 	unsigned char btmpf;
 	unsigned char btmpb;
@@ -650,7 +748,7 @@ bool CDatImpl::OpenQdab( std::istream& istm ) {
 	unsigned char bufferB;
 	
 	float nan_val;
-
+	
 	if( !OpenGenes( istm, true, false ) )
 		return false;
 	m_Data.Initialize( GetGenes( ) );
@@ -827,7 +925,8 @@ bool CDatImpl::OpenGenes( std::istream& istm, bool fBinary, bool fPCL ) {
 		m_vecstrGenes.resize( iCount );
 		for( i = 0; i < iCount; ++i ) {
 			DabGene( istm, acBuf );
-			m_vecstrGenes[ i ] = acBuf; } }
+			m_vecstrGenes[ i ] = acBuf;
+			m_mapstrGenes[ acBuf ] = i; } }
 	else {
 		set<string>					setstrGenes;
 		set<string>::const_iterator	iterGenes;
@@ -1001,6 +1100,10 @@ bool CDat::Open( const std::vector<std::string>& vecstrGenes, bool fClear, const
 	m_vecstrGenes.resize( vecstrGenes.size( ) );
 	copy( vecstrGenes.begin( ), vecstrGenes.end( ), m_vecstrGenes.begin( ) );
 
+	m_mapstrGenes.clear();
+	for( i = 0; i < vecstrGenes.size(); ++i )
+		m_mapstrGenes[vecstrGenes[i]] = i; 
+
 	if( szFile ) {
 		iSize = sizeof(uint32_t);
 		for( i = 0; i < GetGenes( ); ++i )
@@ -1062,6 +1165,9 @@ bool CDat::Open( const std::vector<std::string>& vecstrGenes, const CDistanceMat
 	for( i = 0; i < vecstrGenes.size( ); ++i )
 		m_vecstrGenes.push_back( vecstrGenes[ i ] );
 
+	for( i = 0; i < vecstrGenes.size(); ++i )
+		m_mapstrGenes[vecstrGenes[i]] = i; 
+
 	m_Data.Initialize( MatScores );
 
 	return true; }
@@ -1111,8 +1217,7 @@ size_t CDatImpl::GetGene( const std::string& strGene ) const {
  * \see
  * Save | CPCL
  */
-bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore, bool fDuplicates ) {
-	ifstream	ifsm;
+bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore, bool fDuplicates, bool fSeek ) {
 	EFormat		eFormat;
 	size_t		i;
 
@@ -1132,11 +1237,20 @@ bool CDat::Open( const char* szFile, bool fMemmap, size_t iSkip, bool fZScore, b
 			return false; }
 		return OpenHelper( ); }
 
-	ifsm.open( szFile, ( ( eFormat == EFormatText ) || ( eFormat == EFormatPCL ) ) ? ios_base::in :
+	if(m_ifsm.is_open()){
+		m_ifsm.close();
+	}
+
+	m_ifsm.open( szFile, ( ( eFormat == EFormatText ) || ( eFormat == EFormatPCL ) ) ? ios_base::in :
 		ios_base::binary );
-	if( !ifsm.is_open( ) )
+	if( !m_ifsm.is_open( ) )
 		return false;
-	return Open( ifsm, eFormat, (float)HUGE_VAL, fDuplicates, iSkip, fZScore ); }
+
+	if(fSeek){
+		m_fSeek = true;
+	}
+
+	return Open( m_ifsm, eFormat, (float)HUGE_VAL, fDuplicates, iSkip, fZScore, fSeek ); }
 
 bool CDatImpl::OpenHelper( ) {
 	unsigned char*	pb;
@@ -1190,7 +1304,10 @@ void CDatImpl::AveStd( double& dAverage, double& dStdev, size_t& iN, size_t iApp
 		iN = i; }
 	if( iN ) {
 		dAverage /= iN;
-		dStdev = sqrt( ( dStdev / ( iN - ( ( iN > 1 ) ? 1 : 0 ) ) ) - ( dAverage * dAverage ) ); } }
+		dStdev = sqrt( ( dStdev / ( iN - ( ( iN > 1 ) ? 1 : 0 ) ) ) - ( dAverage * dAverage ) ); 
+	} 
+
+}
 
 void CDatImpl::NormalizeStdev( ) {
 	double	d, dAve, dDev;
@@ -1240,6 +1357,23 @@ void CDatImpl::NormalizeMinmax( ) {
 		for( i = 0; i < GetGenes( ); ++i )
 			for( j = ( i + 1 ); j < GetGenes( ); ++j )
 				Set( i, j, ( Get( i, j ) - dMin ) / dMax ); }
+
+void CDatImpl::NormalizeMinmaxNPone( ) {
+	float	d, dMin, dMax;
+	size_t	i, j;
+
+	dMax = -( dMin = FLT_MAX );
+	for( i = 0; i < GetGenes( ); ++i )
+		for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			if( !CMeta::IsNaN( d = Get( i, j ) ) ) {
+				if( d < dMin )
+					dMin = d;
+				if( d > dMax )
+					dMax = d; }
+	if( dMax -= dMin )
+		for( i = 0; i < GetGenes( ); ++i )
+			for( j = ( i + 1 ); j < GetGenes( ); ++j )
+			  Set( i, j, (  ( Get( i, j ) - dMin ) / dMax ) * 2.0 + -1.0 ); }
 
 void CDatImpl::NormalizePCC( ) {
 	size_t			i, j;
@@ -1376,6 +1510,8 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 			continue; }
 		if( ( eFilter == EFilterEdge ) && vecfGenes[ i ] )
 			continue;
+		if( ( eFilter == EFilterExEdge ) && !vecfGenes[ i ] )
+			continue;
 		for( j = ( i + 1 ); j < GetGenes( ); ++j )
 			switch( eFilter ) {
 				case EFilterInclude:
@@ -1391,8 +1527,11 @@ void CDat::FilterGenes( const CGenes& Genes, EFilter eFilter, size_t iLimit, flo
 					if( !( vecfGenes[ i ] && vecfGenes[ j ] ) &&
 						( !( vecfGenes[ i ] || vecfGenes[ j ] ) || Get( i, j ) ) )
 						Set( i, j, CMeta::GetNaN( ) );
-					break;
-
+					break;					
+			        case EFilterExEdge:
+				        if( vecfGenes[ j ] )
+					  Set( i, j, CMeta::GetNaN( ) );
+				        break;
 				case EFilterExclude:
 					if( vecfGenes[ j ] )
 						Set( i, j, CMeta::GetNaN( ) );
@@ -1601,7 +1740,10 @@ void CDat::SaveDOT( std::ostream& ostm, float dCutoff, const CGenome* pGenome, b
 				ostm << ", setlinewidth(" << (*pvecdBorders)[ i ] << ")";
 			ostm << "\"";
 			ostm << ", fillcolor = \"" << ( fHashes ? "#" : "" ) << ( pvecdColors ? CColor::Interpolate(
-				(*pvecdColors)[ i ], CColor::c_Cyan, CColor::c_White, CColor::c_Yellow ).ToRGB( ) :
+				(*pvecdColors)[ i ], 
+				CColor::c_Cyan, CColor::c_White, CColor::c_Yellow 
+				//CColor::c_White, CColor::c_Cyan, CColor::c_Yellow 
+				).ToRGB( ) :
 				"FFFFFF" ) << "\"";
 			if( fLabel )
 				ostm << ", label=\"" << strName << "\"";
@@ -1624,7 +1766,9 @@ void CDat::SaveDOT( std::ostream& ostm, float dCutoff, const CGenome* pGenome, b
 				d = 1.0f / ( 1 + exp( ( dAve - d ) / dStd ) );
 				ostm << vecstrNames[ i ] << " -- " << vecstrNames[ j ] << " [weight = " << d <<
 					", color = \"" << ( fHashes ? "#" : "" ) << CColor::Interpolate( d,
-					CColor::c_Green, CColor::c_Black, CColor::c_Red ).ToRGB( ) << "\"];" << endl; }
+					//CColor::c_Green, CColor::c_Black, CColor::c_Red ).ToRGB( ) 
+					CColor::c_Orange, CColor::c_DarkGreen, CColor::c_Blue ).ToRGB( ) 
+					<< "\"];" << endl; }
 
 	ostm << "}" << endl; }
 

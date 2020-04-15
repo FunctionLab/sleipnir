@@ -31,6 +31,7 @@
 namespace Sleipnir {
 
 class CDat;
+class CPCL;
 
 /*!
  * \brief
@@ -292,7 +293,7 @@ public:
 	static double Percentile(tType pBegin, tType pEnd, double dPercentile) {
 		size_t iOne, iTwo, iSize;
 		double d, dFrac;
-
+		
 		iSize = pEnd - pBegin;
 		std::sort(pBegin, pEnd);
 		while (iSize && CMeta::IsNaN(pBegin[iSize - 1]))
@@ -303,7 +304,7 @@ public:
 		dFrac = d - (size_t) d;
 		iOne = (size_t) d;
 		iTwo = (size_t) (d + 1);
-
+		
 		return ((iTwo >= iSize) ? pBegin[iOne] : ((pBegin[iOne] * (1
 				- dPercentile)) + (pBegin[iTwo] * dPercentile)));
 	}
@@ -1078,8 +1079,11 @@ public:
 	// Evaluation statistics
 	static double WilcoxonRankSum(const CDat& DatData, const CDat& DatAnswers,
 			const std::vector<bool>& vecfGenesOfInterest, bool fInvert = false);
+	
 	static double WilcoxonRankSum(const CDat& DatData, const CDat& DatAnswers, const std::vector<bool>& vecfGenesOfInterest, const std::vector<bool>& vecfUbik, bool fPosIn, bool fNegIn, bool fPosBridge, bool fNegBridge, bool fPosOut, bool fNegOut, bool fInvert = false);
-
+	static double WilcoxonRankSum(const CPCL& DatData, const CPCL& DatAnswers, const std::vector<bool>& vecfGenesOfInterest, const std::vector<bool>& vecfUbik, bool fPosIn, bool fNegIn, bool fPosBridge, bool fNegBridge, bool fPosOut, bool fNegOut, bool fInvert = false);
+	static double WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers, const vector<float>& vecGeneWeights, bool flipneg);
+	static double WilcoxonRankSum( const CDat& DatData, const CDat& DatAnswers,  const CDat& wDat, bool flipneg);
 	// Probability distributions
 	static double HypergeometricCDF(size_t iBoth, size_t iNonZeroInOne,
 			size_t iNonZeroInTwo, size_t iN);

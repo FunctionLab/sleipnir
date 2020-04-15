@@ -1,0 +1,44 @@
+package	"Dat2Dab"
+version	"1.0"
+purpose	"Performs recursive feature elimination with bagging"
+
+section "Main"
+option	"labels"			l	"labels_file"
+							string	typestr="filename"	yes
+option	"output"		o	"Output file "
+							string	typestr="filename"  yes
+option	"input"		i	"Input PCL file "
+							string	typestr="filename"  yes
+
+section "Options"
+
+
+
+option "skip"      s       "number of columns to skip in input pcls"   int default="0" no
+option	"normalize"		n	"Normalize PCLS to 0 mean 1 variance"
+							flag	off
+
+option	"mmap"	M	"Memory map binary input"
+							flag	off
+							
+							
+section "SVМ parameters"
+option "error_function" e   "Sets the loss function for SVM learning" int default="1" no
+option "k_value"    k   "k value used for prec_at_k and rekal_at_k in (0,1)" float default="0.5" no
+option "tradeoff"    C   "SVM tradeoff constant C" float default="0.01" no
+option	"slack"	S	"Use slack rescaling"
+							flag	off
+
+			
+section "Feature elimination"			
+option	"cross_validation"		c	"Number of cross-validation sets"			int default="5" no
+option  "bootstrap"       b       "Number of bootstraps to create per train set"  int default="5" no
+option "elim_fraction"  f   "Fraction of features to eliminate at every step" float default="0.5" no	
+option  "min"       N       "Take the miNimum weight value instead of averaging"  flag off	
+option  "max"       X       "Take the maXimun weight value instead of averaging"  flag off								
+option "min_left"	m     "Minimum number of features to leave"  int default="10"  no				
+option "iter_max"  x     "Maximum number of iterations to do" int default="1000"   no				
+option "random"   r  "Seed random generator" int default="1234" no 							
+section "Verbosity"
+option "svm_verbosity"  v     "sets the svm_struct verbosity" int default="0" no
+option "verbosity"  V     "sets the SVMfe verbosity" int default="0" no

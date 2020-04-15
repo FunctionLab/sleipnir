@@ -36,6 +36,7 @@ using namespace std;
 using namespace Sleipnir;
 
 #ifndef _MSC_VER
+#include <unistd.h>
 #define _tempnam	tempnam
 #define _unlink		unlink
 #endif // _MSC_VER

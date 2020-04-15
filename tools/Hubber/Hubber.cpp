@@ -344,16 +344,20 @@ size_t cliques( const CDat& Dat, size_t iGenes, const vector<SSummary>& vecsHubs
 			if( !pGenes->IsGene( Dat.GetGene( i ) ) )
 				vecfOutside[ i ] = true; }
 	vecsClique.resize( Dat.GetGenes( ) );
+	sDatum.Clear( );
 	for( i = 0; i < Dat.GetGenes( ); ++i )
 		for( j = ( i + 1 ); j < Dat.GetGenes( ); ++j ) {
 			if( CMeta::IsNaN( d = Dat.Get( i, j ) ) )
 				continue;
 			d *= get_weight( i, veciDat2PCL, PCLWeights ) * get_weight( j, veciDat2PCL, PCLWeights );
+            // Added 9/4/13 to fix Arjun Issue #17, ignore precomputed hubs -- avoids double counting with summary output
+            if (!vecfOutside[ i ] || !vecfOutside[ j ] ) {//if either is not outside, edge is incident to context
+                sDatum.m_sHubbiness.Add( d );
+            }
 			if( !vecfOutside[ i ] )
 				vecsClique[ j ].Add( d );
 			if( !vecfOutside[ j ] )
 				vecsClique[ i ].Add( d ); }
-	sDatum.Clear( );
 	for( iRet = i = 0; i < vecsClique.size( ); ++i )
 		if( !vecfOutside[ i ] ) {
 			if( vecsClique[ i ].m_iCount )
@@ -361,14 +365,17 @@ size_t cliques( const CDat& Dat, size_t iGenes, const vector<SSummary>& vecsHubs
 			sDatum.m_sCliquiness.Add( vecsClique[ i ] ); }
 	sDatum.m_sCliquiness.Multiply( 0.5 );
 
+    /* Removed 9/4/13 to fix Arjun Issue #17
 	for( i = 0; i < Dat.GetGenes( ); ++i )
 		if( !vecfOutside[ i ] )
 			sDatum.m_sHubbiness.Add( vecsHubs[ i ] );
+    */
 
 	if( iSort ) {
 		sDatum.m_vecprSpecific.resize( Dat.GetGenes( ) );
 		for( i = 0; i < sDatum.m_vecprSpecific.size( ); ++i ) {
 			sDatum.m_vecprSpecific[ i ].first = i;
+            //divide each genes cliquiness (within) by precomputed hubbiness (overall average) to calculate group membership
 			sDatum.m_vecprSpecific[ i ].second = vecsClique[ i ].GetAverage( ) / vecsHubs[ i ].GetAverage( ); }
 		if( iSort != -1 )
 			sort( sDatum.m_vecprSpecific.begin( ), sDatum.m_vecprSpecific.end( ), SSorter( ) ); }

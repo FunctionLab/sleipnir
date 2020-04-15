@@ -47,11 +47,12 @@ enum EMethod {
 	EMethodDiff		= EMethodMin + 1,
 	EMethodMeta		= EMethodDiff + 1,
 	EMethodQMeta	= EMethodMeta + 1,
-	EMethodEnd		= EMethodQMeta + 1
+	EMethodProd		= EMethodQMeta + 1,
+	EMethodEnd		= EMethodProd + 1
 };
 
 static const char*	c_aszMethods[]	= {
-	"mean", "sum", "gmean", "hmean", "max", "min", "diff", "meta", "qmeta", NULL
+	"mean", "sum", "gmean", "hmean", "max", "min", "diff", "meta", "qmeta","prod",  NULL
 };
 
 int main( int iArgs, char** aszArgs ) {
@@ -105,11 +106,10 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 	set<string>::const_iterator	iterGenes;
 	ifstream					ifsm;
 	ofstream					ofsm;
+	float d;
 
 	for( iArg = 0; iArg < input_files.size(); ++iArg ) {
-		ifsm.clear( );
-		ifsm.open( input_files[ iArg ].c_str() );
-		if( !PCL.Open( ifsm, sArgs.skip_arg ) ) {
+	  if( !PCL.Open(input_files[ iArg ].c_str(), sArgs.skip_arg, !!sArgs.memmap_flag)){
 			cerr << "Could not open: " << input_files[ iArg ] << endl;
 			return 1; }
 		if( !iArg )
@@ -129,14 +129,22 @@ int MainPCLs( const gengetopt_args_info& sArgs ) {
 		cerr << "Processing " << input_files[ iArg ] << "..." << endl;
 		ifsm.clear( );
 		ifsm.open( input_files[ iArg ].c_str() );
-		PCL.Open( ifsm, sArgs.skip_arg );
-		for( i = 0; i < PCLNew.GetGenes( ); ++i )
+		PCL.Open( input_files[ iArg ].c_str(), sArgs.skip_arg, !!sArgs.memmap_flag );
+	 if (sArgs.normalize_flag)
+                PCL.Normalize(CPCL::ENormalizeRow);
+
+	for( i = 0; i < PCLNew.GetGenes( ); ++i )
 			if( ( iGene = PCL.GetGene( vecstrGenes[ i ] ) ) != -1 ) {
 				if( !iArg )
 					for( j = 1; j < PCLNew.GetFeatures( ); ++j )
 						PCLNew.SetFeature( i, j, PCL.GetFeature( iGene, j ) );
 				for( j = 0; j < PCL.GetExperiments( ); ++j )
-					PCLNew.Set( i, iExp + j, PCL.Get( iGene, j ) ); }
+				  PCLNew.Set( i, iExp + j, PCL.Get( iGene, j )); }
+			else if (sArgs.zero_flag){
+			  for( j = 0; j < PCL.GetExperiments( ); ++j )
+				  PCLNew.Set( i, iExp + j, 0.0f); 
+			}
+
 		iExp += PCL.GetExperiments( );
 		ifsm.close( ); }
 
@@ -326,6 +334,11 @@ void callback_combine( SCallbackVars& sCallback ) {
 				sCallback.m_pDatOut->Set( sCallback.m_iOne, sCallback.m_iTwo, sCallback.m_dValue );
 			break;
 
+		case EMethodProd:
+			sCallback.m_pDatOut->Get( sCallback.m_iOne, sCallback.m_iTwo ) *= pow( sCallback.m_dValue, sCallback.m_dWeight );
+			sCallback.m_pMatCounts->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallback.m_dWeight;
+			break;
+		
 		default:
 			sCallback.m_pDatOut->Get( sCallback.m_iOne, sCallback.m_iTwo ) += sCallback.m_dWeight * sCallback.m_dValue *
 				( ( sCallback.m_iDataset && ( sCallback.m_eMethod == EMethodDiff ) ) ? -1 : 1 );
@@ -505,6 +518,10 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 		case EMethodGMean:
 			d = 1;
 			break;
+		
+		case EMethodProd:
+			d = 1;
+			break;
 
 		default:
 			d = 0; }
@@ -561,7 +578,13 @@ int MainDATs( const gengetopt_args_info& sArgs ) {
 
 				case EMethodMin:
 					if( DatOut.Get( i, j ) == FLT_MAX )
-						DatOut.Set( i, j, CMeta::GetNaN( ) ); }
+						DatOut.Set( i, j, CMeta::GetNaN( ) ); 
+					break;
+
+				case EMethodProd:
+					DatOut.Set( i, j, ( d = MatCounts.Get( i, j ) ) ?
+						(float) (double)DatOut.Get( i, j ) : CMeta::GetNaN( ) );
+			    }
 
 	if( sArgs.zscore_flag )
 		DatOut.Normalize( CDat::ENormalizeZScore );

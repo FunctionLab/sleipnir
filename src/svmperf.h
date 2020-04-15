@@ -28,7 +28,9 @@
 #include "dat.h"
 
 #include <stdio.h>
-#include <execinfo.h>
+
+/* removed to support cygwin */
+//#include <execinfo.h>
 
 namespace SVMLight {
 extern "C" {
@@ -67,6 +69,42 @@ public:
 		index = i;
 		hasIndex = true;
 	}
+};
+
+class SVMLabelPair {
+public:
+	double Target;
+	size_t iidx;
+	size_t jidx;
+	bool hasIndex;
+	DOC* pDoc;
+	
+	SVMLabelPair(double target, size_t i, size_t j) {
+		Target = target;
+		hasIndex = true;
+		iidx = i;
+		jidx = j;
+	}
+
+	SVMLabelPair() {
+		Target = 0;
+		hasIndex = false;
+	}
+	
+	void SetIndex(size_t i, size_t j) {
+		iidx = i;
+		jidx = j;
+		hasIndex = true;
+	}
+	
+	void SetDoc(DOC* inDoc) {
+	  pDoc = inDoc;
+	}
+	
+	DOC* GetDoc() {
+	  return pDoc;
+	}	
+	
 };
 
 class Result {
@@ -160,12 +198,12 @@ public:
 	}
 
 	void ReadModel(char* model_file) {
-		FreeModel();
+		//FreeModel();
 		structmodel = read_struct_model(model_file, &struct_parm);
 	}
 
-	void WriteModel(char* model_file) {
-		if (kernel_parm.kernel_type == LINEAR) {
+	void WriteModel(char* model_file, int simple_model_flag = 1) {
+		if (kernel_parm.kernel_type == LINEAR && simple_model_flag) {
 			ofstream ofsm;
 			ofsm.open(model_file);
 			for (size_t i = 0; i < structmodel.sizePsi; i++) {
@@ -175,6 +213,21 @@ public:
 			write_struct_model(model_file, &structmodel, &struct_parm);
 		}
 	}
+
+
+    size_t ReplaceModel(vector<WORD>& vecW) {
+
+            if (structmodel.svm_model->totwords == vecW.size()) {
+                    for (size_t i; i < vecW.size(); i++) {
+                            structmodel.svm_model->lin_weights[i] = vecW[i].weight;
+                    }
+                    return 0;
+            } else {
+                    cerr << "Could not replace model: Size mismatch" << endl;
+                    return 1;
+            }
+    }
+
 
 	void WriteWeights(ostream& osm) {
 		osm << structmodel.w[0];
@@ -294,7 +347,7 @@ public:
 		}
 		cerr << "ALG=" << Alg << endl;
 		svm_learn_struct_joint(sample, &struct_parm, &learn_parm, &kernel_parm,
-				&structmodel, Alg);
+				       &structmodel, Alg);
 		//
 	}
 
@@ -321,6 +374,32 @@ public:
 			string>& CVGenes);
 	bool parms_check();
 	bool initialize();
+	
+	
+	//Pair & Multiple dabs learning
+	static bool CreateDoc(vector<string>& vecstrDatasets,
+			      vector<SVMLabelPair*>& vecLabels,
+			      const vector<string>& LabelsGene,
+			      Sleipnir::CDat::ENormalize eNormalize = Sleipnir::CDat::ENormalizeNone);
+	
+	static SAMPLE* CreateSample(vector<SVMLabelPair*>& SVMLabels);	
+	void Classify(Sleipnir::CDat &Results,
+		      vector<SVMLabelPair*>& SVMLabels);
+	
+	// free the sample but don't free the Docs
+	static void FreeSample_leave_Doc(SAMPLE s);
+
+	// functions to convert probablity
+	void sigmoid_train(Sleipnir::CDat& Results, vector<SVMLabelPair*>& SVMLabels, float& A, float& B);
+	void sigmoid_predict(Sleipnir::CDat& Results, vector<SVMLabelPair*>& SVMLabels, float A, float B);
+
+	// read in a SVM model file that's only has the w vector written out for linear kernel
+	void ReadModelLinear(char* model_file) {
+	  FreeModel();
+	  structmodel = read_struct_model_w_linear(model_file, &struct_parm);
+	}
+	
+	STRUCTMODEL read_struct_model_w_linear(char *file, STRUCT_LEARN_PARM *sparm);
 };
 }
 

@@ -32,6 +32,9 @@ const CColor	CColor::c_Green		= CColor( 0x00, 0xFF, 0x00 );
 const CColor	CColor::c_Red		= CColor( 0xFF, 0x00, 0x00 );
 const CColor	CColor::c_White		= CColor( 0xFF, 0xFF, 0xFF );
 const CColor	CColor::c_Yellow	= CColor( 0xFF, 0xFF, 0x00 );
+const CColor	CColor::c_Blue		= CColor( 0x00, 0x00, 0xFF );
+const CColor	CColor::c_DarkGreen	= CColor( 0x00, 0x64, 0x00 );
+const CColor	CColor::c_Orange	= CColor( 0xFF, 0xA5, 0x00 );
 
 /*!
  * \brief

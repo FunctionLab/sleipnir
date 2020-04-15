@@ -55,7 +55,7 @@ class CSlim;
 class CDataPair : public CDataPairImpl {
 public:
 	bool Open( const char* szDatafile, bool fContinuous, bool fMemmap = false, size_t iSkip = 2,
-		bool fZScore = false );
+		bool fZScore = false, bool fSeek = false );
 	bool Open( const CSlim& Slim );
 	bool Open( const CDat& dat );
 	bool OpenQuants( const char* szDatafile );
@@ -63,8 +63,19 @@ public:
 	  SetQuants(adBinEdges, iBins );
 	}
 	void SetQuants( const std::vector<float>& vecdBinEdges );
+	std::vector<float> GetQuants(){
+		std::vector<float> v;
+		size_t i;
+		for(i=0; i<m_vecdQuant.size(); i++){
+			v.push_back(m_vecdQuant[i]);
+		}
+		return v;
+	}
+
 	size_t Quantize( float dValue ) const;
 	void Quantize( );
+	size_t Quantize( size_t iY, size_t iX, size_t iZero ) const;
+
 	void Save( const char* szFile ) const;
 	
 	
@@ -183,7 +194,6 @@ public:
 	bool Open( const char* szDatafile, size_t iSkip );
 	size_t Quantize( float dValue, size_t iExperiment ) const;
 	void Quantize( );
-
 
 	/*!
 	 * \brief
@@ -311,6 +321,20 @@ public:
 	size_t Quantize( float dValue ) const {
 
 		return ( m_pFilter ? m_pFilter->Quantize( dValue ) : ( m_pDat ? m_pDat->Quantize( dValue ) : -1 ) ); }
+
+
+	size_t Quantize( size_t iY, size_t iX, size_t iZero ) const {
+		float d;
+		if( iY == -1 || iX == -1 ) {
+			return -1;
+		}else if( CMeta::IsNaN( (d = Get( iY, iX )) ) ) {
+			return iZero;
+		}else {
+			return Quantize(d);
+		}
+	}
+
+
 
 	/*!
 	 * \brief

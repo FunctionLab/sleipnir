@@ -11,6 +11,12 @@ option	"contexts"		c	"Context/gene mapping"
 							string	typestr="filename"	yes
 option	"diseases"		s	"Disease/gene mapping"
 							string	typestr="filename"
+option	"is_nibble"		N	"Specify whether the database is nibble type"
+							flag	on
+option	"global_standard"	S	"Global gold standard dab file"
+							string	typestr="filename"
+option	"datasets"		I	"File dataset names and number of bins"
+							string	typestr="filename"
 
 section "Bayes nets"
 option	"networks"		n	"Bayes net directory"

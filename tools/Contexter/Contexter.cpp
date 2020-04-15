@@ -123,12 +123,18 @@ int main_database( const gengetopt_args_info& sArgs ) {
 	map<size_t, string>					mapistrBNs;
 	map<size_t, string>::const_iterator	iterBN;
 	size_t								i, iMax, iGene;
-	CDatabase							Database;
+	//CDatabase							Database;
 	uint32_t							iSize;
 	float*								adGenes;
 	CDat								Dat;
 	CCompactFullMatrix					MatContexts;
 	vector<string>						vecstrLine;
+
+	bool isNibble = true;
+	if(sArgs.is_nibble_arg==0){
+		isNibble = false;
+	}
+	CDatabase Database(isNibble);
 
 	if( !Database.Open( sArgs.database_arg ) ) {
 		cerr << "Could not open: " << sArgs.database_arg << endl;

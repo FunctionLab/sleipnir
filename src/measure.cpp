@@ -23,8 +23,139 @@
 #include "measure.h"
 #include "meta.h"
 #include "statistics.h"
+#include <stdlib.h>
+#include <float.h>
+#include <math.h>
 
 namespace Sleipnir {
+
+//Added for calculating distance correlation. Code partly adapted from R "energy" package by Maria L. Rizzo and Gabor J. Szekely.
+static inline void dCOV(const float *x,const float *y, int *dims, float *DCOV) {
+    /*  computes dCov(x,y), dCor(x,y), dVar(x), dVar(y)
+        V-statistic is n*dCov^2 where n*dCov^2 --> Q
+        dims = sample size
+        DCOV  : vector [dCov, dCor, dVar(x), dVar(y)]
+     */
+
+    int    i,j, k, n, n2;
+    float **Dx, **Dy, **A, **B;
+    float *akbar;
+    float abar;
+    float V;
+
+    n = *dims;
+
+    /* allocate a n*n matrix  */
+
+    Dx = (float **)calloc(n, sizeof(float *));
+    Dy = (float **)calloc(n, sizeof(float *));
+    A = (float **)calloc(n, sizeof(float *));
+    B = (float **)calloc(n, sizeof(float *));
+    for (i = 0; i < n; i++)
+    {
+    Dx[i] = (float *)calloc(n, sizeof(float));
+    Dy[i] = (float *)calloc(n, sizeof(float));
+    A[i] = (float *)calloc(n, sizeof(float));
+    B[i] = (float *)calloc(n, sizeof(float));
+    }
+
+    for (i=1; i<n; i++) {
+        Dx[i][i] = 0.0;
+        Dy[i][i] = 0.0;
+        for (j=0; j<i; j++) {
+            Dx[i][j] = Dx[j][i] = fabs(*(x+i) - *(x+j));
+            Dy[i][j] = Dy[j][i] = fabs(*(y+i) - *(y+j));
+        }
+    }
+
+
+
+    akbar = (float*)  calloc(n, sizeof(float));
+    abar = 0.0;
+    for (k=0; k<n; k++) {
+        akbar[k] = 0.0;
+        for (j=0; j<n; j++) {
+            akbar[k] += Dx[k][j];
+        }
+        abar += akbar[k];
+        akbar[k] /= (float) n;
+    }
+    abar /= (float) (n*n);
+
+    for (k=0; k<n; k++)
+        for (j=k; j<n; j++) {
+            A[k][j] = Dx[k][j] - akbar[k] - akbar[j] + abar;
+            A[j][k] = A[k][j];
+        }
+    free(akbar);
+
+
+    akbar = (float*)  calloc(n, sizeof(float));
+    abar = 0.0;
+    for (k=0; k<n; k++) {
+        akbar[k] = 0.0;
+        for (j=0; j<n; j++) {
+            akbar[k] += Dy[k][j];
+        }
+        abar += akbar[k];
+        akbar[k] /= (float) n;
+    }
+    abar /= (float) (n*n);
+
+    for (k=0; k<n; k++)
+        for (j=k; j<n; j++) {
+            B[k][j] = Dy[k][j] - akbar[k] - akbar[j] + abar;
+            B[j][k] = B[k][j];
+        }
+    free(akbar);
+
+
+    for (i = 0; i < n; i++) {
+    	free(Dx[i]);
+    	free(Dy[i]);
+    	}
+    free(Dx);
+    free(Dy);
+
+
+    n2 = ( n) * n;
+
+    /* compute dCov(x,y), dVar(x), dVar(y) */
+    for (k=0; k<4; k++)
+        DCOV[k] = 0.0;
+    for (k=0; k<n; k++)
+        for (j=0; j<n; j++) {
+            DCOV[0] += A[k][j]*B[k][j];
+            DCOV[2] += A[k][j]*A[k][j];
+            DCOV[3] += B[k][j]*B[k][j];
+        }
+
+    for (k=0; k<4; k++) {
+        DCOV[k] /= n2;
+        if (DCOV[k] > 0)
+            DCOV[k] = sqrt(DCOV[k]);
+            else DCOV[k] = 0.0;
+    }
+    /* compute dCor(x, y) */
+    V = DCOV[2]*DCOV[3];
+    if (V > DBL_EPSILON)
+        DCOV[1] = DCOV[0] / sqrt(V);
+        else DCOV[1] = 0.0;
+
+
+    for (i = 0; i < n; i++) {
+    	free(A[i]);
+    	free(B[i]);
+    	}
+    free(A);
+    free(B);
+
+}
+
+
+
+
+
 
 static inline float GetWeight(const float* adW, size_t iW) {
 
@@ -166,6 +297,45 @@ double CMeasureEuclidean::Measure(const float* adX, size_t iM,
 	return sqrt(dRet);
 }
 
+double CMeasureDistanceCorrelation::Measure(const float* adX, size_t iM,
+		const float* adY, size_t iN, EMap eMap, const float* adWX,
+		const float* adWY) const {
+	size_t i;
+	float dRet, d;
+	int size=iN;
+	float DCOV[4]={0,0,0,0};
+
+	if (iM != iN)
+		return CMeta::GetNaN();
+
+	dRet = 0;
+	dCOV(adX,adY,&size,DCOV);
+	dRet = DCOV[1];
+	return (double)dRet;
+}
+
+double CMeasureSignedDistanceCorrelation::Measure(const float* adX, size_t iM,
+		const float* adY, size_t iN, EMap eMap, const float* adWX,
+		const float* adWY) const {
+	size_t i;
+		float dRet, d;
+		int size=iN;
+		float DCOV[4]={0,0,0,0};
+		double dP;
+
+		if (iM != iN)
+			return CMeta::GetNaN();
+
+		dRet = 0;
+		dCOV(adX,adY,&size,DCOV);
+	dRet = DCOV[1];
+	dP=CMeasurePearson::Pearson(adX, iM, adY, iN, EMapNone, adWX, adWY);
+	if(dP<0)
+		dRet *=-1;
+
+	return (double)dRet;
+}
+
 double CMeasureEuclideanScaled::Measure(const float* adX, size_t iM,
 		const float* adY, size_t iN, EMap eMap, const float* adWX,
 		const float* adWY) const {
@@ -255,17 +425,14 @@ double CMeasurePearson::Pearson(const float* adX, size_t iM, const float* adY,
 			continue;
 		dX = adX[i] - dMX;
 		dY = adY[i] - dMY;
-		dRet += dX * dY * GetWeight(adWX, i) * GetWeight(adWY, i);
+		dRet += dX * dY * sqrt(GetWeight(adWX, i) * GetWeight(adWY, i));
 		dDX += dX * dX * GetWeight(adWX, i);
 		dDY += dY * dY * GetWeight(adWY, i);
 	}
 	if (!dDX || !dDY)
 		dRet = CMeta::GetNaN();
 	else {
-		if (dDX)
-			dRet /= sqrt(dDX);
-		if (dDY)
-			dRet /= sqrt(dDY);
+		dRet /= ( sqrt(dDX) * sqrt(dDY) );
 	}
 
 	switch (eMap) {
@@ -606,12 +773,24 @@ double CMeasureSpearman::Measure(const float* adX, size_t iM, const float* adY,
 		dRet = fabs(dRet);
 		break;
 	}
+    
+    static const float c_dBound = 0.9999f;
+    double dP = dRet;
 
-	return dRet;
+    if (fabs(dP) >= c_dBound)
+        dP *= c_dBound;
+    dP = CStatistics::FisherTransform(dP);
+    if (m_dAverage != HUGE_VAL){
+        dP = (dP - m_dAverage) / m_dStdDev;
+        fprintf(stderr, "Doing SpearmanNorm within measure.cpp\n"); //by default
+    }
+    return dP;
+
+	//return dRet;
 }
 
-double CMeasurePearNorm::Measure(const float* adX, size_t iM, const float* adY,
-		size_t iN, EMap eMap, const float* adWX, const float* adWY) const {
+double CMeasurePearNorm::Measure(const float* adX, size_t iM,
+		const float* adY,size_t iN, EMap eMap, const float* adWX, const float* adWY) const {
 	static const float c_dBound = 0.9999f;
 	double dP;
 
@@ -623,6 +802,44 @@ double CMeasurePearNorm::Measure(const float* adX, size_t iM, const float* adY,
 	if (m_dAverage != HUGE_VAL)
 		dP = (dP - m_dAverage) / m_dStdDev;
 	return dP;
+}
+
+
+double CMeasureBicor::Measure(const float* adX, size_t iM,
+		const float* adY,size_t iN, EMap eMap, const float* adWX, const float* adWY) const {
+
+	static const size_t c_iCache = 1024;
+	static size_t l_aiX[c_iCache];
+	static size_t l_aiY[c_iCache];
+	size_t* aiX;
+	size_t* aiY;
+	size_t i, j, iSum;
+	double dRet, d, dSum;
+
+	if (iM != iN)
+		return CMeta::GetNaN();
+
+	float xy = 0;
+	float xx = 0;
+	float yy = 0;
+	for (i = 0; i < iN; ++i) {
+		if (CMeta::IsNaN(adX[i]) || CMeta::IsNaN(adY[i]))
+			continue;
+		xy += adX[i] * adY[i];
+		xx += adX[i] * adX[i];
+		yy += adY[i] * adY[i];
+	}
+
+	float bicor = xy / (sqrt(xx) * sqrt(yy));
+	//fprintf(stderr, "%.2f %.2f %.2f %.2f\n", bicor, xy, xx, yy);
+	/*static const float c_dBound = 0.9999f;
+	double dP = bicor;
+
+	if (fabs(dP) >= c_dBound)
+		dP *= c_dBound;
+	dP = CStatistics::FisherTransform(dP);
+	return dP;*/
+	return bicor;
 }
 
 double CMeasureHypergeometric::Measure(const float* adX, size_t iM,
@@ -813,4 +1030,92 @@ double CMeasureDice::Measure( const float* adX, size_t iM, const float* adY,
 	dX = dDot + ( m_dAlpha * dXY ) + ( ( 1 - m_dAlpha ) * dYX );
 	return ( dX ? ( dDot / dX ) : CMeta::GetNaN( ) ); }
 
+
+/*!
+ * \brief
+ * Calculates the cosine similarity between the vectors.
+ * 
+ * \param adX
+ * First array of values.
+ * 
+ * \param iN
+ * Length of first array.
+ * 
+ * \param adY
+ * Second array of values.
+ * 
+ * \param iM
+ * Length of second array.
+ * 
+ * \param eMap
+ * Way in which returned value should be centered.
+ * 
+ * \param adWX
+ * If non-null, weights of elements in the first array.
+ * 
+ * \param adWY
+ * If non-null, weights of elements in the second array.
+ * 
+ * \param piCount
+ * If non-null, outputs the number of non-NaN elements used for the calculation.
+ * 
+ * \returns
+ * Cosine similarity calculated between the two input vectors and, optionally, weights.
+ * 
+ * Calculates cosine similarity between two vectors; if weights are given, the means and each pairwise
+ * product are also multiplied by the appropriate elements' weights.  Centering is performed as per EMap.
+ * derived from Pearson code (basically pearson w/o mean centering)
+ */
+double CMeasureCosine::Cosine(const float* adX, size_t iM, const float* adY,
+		size_t iN, EMap eMap, const float* adWX, const float* adWY,
+		size_t* piCount) {
+	double dMX, dMY, dRet, dDX, dDY, dX, dY;
+	size_t i, iCount;
+
+	if (piCount)
+		*piCount = 0;
+	if (iM != iN)
+		return CMeta::GetNaN();
+
+	dRet = dDX = dDY = 0;
+	for (iCount = i = 0; i < iN; ++i) {
+		if (CMeta::IsNaN(adX[i]) || CMeta::IsNaN(adY[i]))
+			continue;
+		iCount++;
+		dX = adX[i];
+		dY = adY[i];
+		dRet += adX[i] * adY[i] * sqrt(GetWeight(adWX, i) * GetWeight(adWY, i));
+		dDX += adX[i] * adX[i] * GetWeight(adWX, i);
+		dDY += adY[i] * adY[i] * GetWeight(adWY, i);
+	}
+	if (!dDX || !dDY)
+		dRet = CMeta::GetNaN();
+	else {
+		dRet /= ( sqrt(dDX) * sqrt(dDY) );
+	}
+
+	switch (eMap) {
+	case EMapCenter:
+		dRet = (1 + dRet) / 2;
+		break;
+
+	case EMapAbs:
+		dRet = fabs(dRet);
+		break;
+	}
+	if (piCount)
+		*piCount = iCount;
+
+	return dRet;
 }
+
+
+
+
+
+
+
+}
+
+
+

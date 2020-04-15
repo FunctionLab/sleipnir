@@ -112,31 +112,34 @@ bool CDataPair::Open( const CSlim& Slim ) {
  * CDat::Open
  */
 bool CDataPair::Open( const char* szDatafile, bool fContinuous, bool fMemmap, size_t iSkip,
-	bool fZScore ) {
+	bool fZScore, bool fSeek ) {
 
 
 	g_CatSleipnir( ).notice( "CDataPair::Open( %s, %d )", szDatafile, fContinuous );
-	
+
 	Reset( fContinuous );
 	m_fQuantized = false;
-	
+
 	const char* file_ext = NULL;
-	
+
 	if((file_ext = strstr(szDatafile, c_acQdab)) != NULL){
 
 	  return OpenQdab( szDatafile );
 	}
 	else{
-	  if( !CDat::Open( szDatafile, fMemmap, iSkip, fZScore ) )
+        if( m_fContinuous ? true : OpenQuants( szDatafile ) ) {
+	        if( CDat::Open( szDatafile, fMemmap, iSkip, fZScore, false, fSeek ) ) {
+	            return true;
+            }
+        }
 	    return false;
-	  return ( m_fContinuous ? true : OpenQuants( szDatafile ) ); 	  
 	}
 }
 
 bool CDataPairImpl::OpenQdab( const char* szDatafile ){
   size_t	iTotal, i, j, num_bins, num_bits, iPos;
   float*	adScores;
-  char tmp;
+  unsigned char tmp;
   float* bounds;
   unsigned char btmpf;
   unsigned char btmpb;
@@ -156,7 +159,7 @@ bool CDataPairImpl::OpenQdab( const char* szDatafile ){
   m_Data.Initialize( GetGenes( ) );
   
   // read the number of bins 
-  istm.read((char*)&tmp, sizeof(char));       
+  istm.read((char*)&tmp, sizeof(char));
   num_bins = (size_t)tmp;
   
   //read the bin boundaries
@@ -168,7 +171,7 @@ bool CDataPairImpl::OpenQdab( const char* szDatafile ){
   
   // number of bits required for each bin representation
   num_bits = (size_t)ceil(log( num_bins ) / log ( 2.0 ));	
-  
+
   // add one more bit for NaN case
   if( pow(2, num_bits) == num_bins )
     ++num_bits;
@@ -250,8 +253,10 @@ bool CDataPair::OpenQuants( const char* szDatafile ) {
 	char		szBuf[ c_iBuf ];
 	ifstream	ifsm;
 
-	if( !CPairImpl::Open( szDatafile, ifsm ) )
+	if( !CPairImpl::Open( szDatafile, ifsm ) ){
+		fprintf(stderr, "Quant file does not exist or error opening it.\n");
 		return false;
+	}
 	ifsm.getline( szBuf, c_iBuf - 1 );
 	ifsm.close( );
 	return CPairImpl::Open( szBuf, m_vecdQuant ); }
@@ -294,6 +299,45 @@ void CDataPair::Quantize() {
 	}
 	m_fQuantized = true;
 }
+
+
+/*!
+ * \brief
+ * Return the discretized form of the given value using the data pair's current bin edges, or
+ * return the provided missing data value.
+ *
+ * \param dValue
+ * Continuous value to be discretized.
+ * 
+ * \returns
+ * Discretized version of the given value, less than GetValues; -1 if the given value is not finite, or
+ * if either gene does not exist in dataset
+ * 
+ * Discretizes a given continuous value using the data pair's bin edges.  Standard usage is:
+ * \code
+ * DP.Quantize( DP.Get( i, j, 0 ) );
+ * \endcode
+ * 
+ * \see
+ * SetQuants | CMeta::Quantize
+ */
+
+
+size_t CDataPair::Quantize( size_t iY, size_t iX, size_t iZero ) const {
+    float d;
+    if( iY == -1 || iX == -1 ) {
+	return -1;
+    }
+    else if( CMeta::IsNaN( (d = Get( iY, iX )) ) ) {
+	return iZero;
+    }
+    else {
+	return Quantize(d); 
+    }
+}
+
+
+
 
 void CDataPairImpl::Reset( bool fContinuous ) {
 
@@ -344,7 +388,7 @@ void CDataPair::Save( const char* szFile ) const {
 		ofsm.open( szFile, ios_base::binary );		
 		CDat::SaveGenes( ofsm );
 		
-		unsigned char bins = (unsigned char)m_vecdQuant.size();
+		unsigned char bins = (unsigned char)m_vecdQuant.size();		
 		size_t bit_len = (size_t)ceil( log((size_t)bins)/log(2) );
 
 		//reserve largest value for NaN		

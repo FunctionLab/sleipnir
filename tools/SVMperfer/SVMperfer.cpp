@@ -158,6 +158,16 @@ int main(int iArgs, char** aszArgs) {
 	} else {
 		SVM.SetPrecisionFraction(sArgs.k_value_arg);
 	}
+
+	
+	if (sArgs.cross_validation_arg < 1){
+	  cerr << "cross_valid is <1. Must be set at least 1" << endl;
+	  return 1;
+	}
+	else if(sArgs.cross_validation_arg < 2){
+	  cerr << "cross_valid is set to 1. No cross validation holdouts will be run." << endl;
+	}
+	
 	SVM.SetTradeoff(sArgs.tradeoff_arg);
 	if (sArgs.slack_flag)
 		SVM.UseSlackRescaling();
@@ -178,6 +188,10 @@ int main(int iArgs, char** aszArgs) {
 			cerr << "Could not open input PCL" << endl;
 			return 1;
 		}
+        if (sArgs.normalize_flag)
+                PCL.Normalize(CPCL::ENormalizeRow);
+
+
 	}
 
 	vector<SVMLight::SVMLabel> vecLabels;
@@ -204,41 +218,113 @@ int main(int iArgs, char** aszArgs) {
 	if (sArgs.model_given && sArgs.labels_given) { //learn once and write to file
 		pTrainSample = CSVMPERF::CreateSample(PCL, vecLabels);
 		SVM.Learn(*pTrainSample);
-		SVM.WriteModel(sArgs.model_arg);
+		SVM.WriteModel(sArgs.model_arg,sArgs.simple_model_flag);
 	} else if (sArgs.model_given && sArgs.output_given) { //read model and classify all
-		vector<SVMLabel> vecAllLabels;
 
-		for (size_t i = 0; i < PCL.GetGenes(); i++)
-			vecAllLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
+		if(sArgs.test_labels_given && !sArgs.all_flag){
+		vector<SVMLight::SVMLabel> vecTestLabels;
+			ifsm.clear();
+			ifsm.open(sArgs.test_labels_arg);
+			if (ifsm.is_open())
+				vecTestLabels = ReadLabels(ifsm);
 
-		SVM.ReadModel(sArgs.model_arg);
-		AllResults = SVM.Classify(PCL, vecAllLabels);
-		ofstream ofsm;
-		ofsm.open(sArgs.output_arg);
-		if (ofsm.is_open())
+			else {
+				cerr << "Could not read label file" << endl;
+				exit(1);
+			}
+
+
+			cerr << "Loading Model" << endl;
+			SVM.ReadModel(sArgs.model_arg);
+			cerr << "Model Loaded" << endl;
+
+			pTestVector[0].reserve((size_t) vecTestLabels.size()+1 );
+			for (j = 0; j < vecTestLabels.size(); j++) {
+				pTestVector[0].push_back(vecTestLabels[j]);		      
+			}
+
+
+			tmpAllResults = SVM.Classify(PCL,	pTestVector[0]);
+			cerr << "Classified " << tmpAllResults.size() << " examples"<< endl;
+			AllResults.insert(AllResults.end(), tmpAllResults.begin(), tmpAllResults.end());
+			tmpAllResults.resize(0);
+			ofstream ofsm;
+			ofsm.clear();
+			ofsm.open(sArgs.output_arg);
 			PrintResults(AllResults, ofsm);
-		else {
-			cerr << "Could not open output file" << endl;
+			return 0;
+		}else{
+			vector<SVMLabel> vecAllLabels;
+
+			for (size_t i = 0; i < PCL.GetGenes(); i++)
+				vecAllLabels.push_back(SVMLabel(PCL.GetGene(i), 0));
+
+			SVM.ReadModel(sArgs.model_arg);
+			AllResults = SVM.Classify(PCL, vecAllLabels);
+			ofstream ofsm;
+			ofsm.open(sArgs.output_arg);
+			if (ofsm.is_open())
+				PrintResults(AllResults, ofsm);
+			else {
+				cerr << "Could not open output file" << endl;
+			}
 		}
 	} else if (sArgs.output_given && sArgs.labels_given) {
 		//do learning and classifying with cross validation
+	        if( sArgs.cross_validation_arg > 1){	    
+		  for (i = 0; i < sArgs.cross_validation_arg; i++) {
+		    pTestVector[i].reserve((size_t) vecLabels.size()
+					   / sArgs.cross_validation_arg + sArgs.cross_validation_arg);
+		    pTrainVector[i].reserve((size_t) vecLabels.size()
+					    / (sArgs.cross_validation_arg)
+					    * (sArgs.cross_validation_arg - 1)
+					    + sArgs.cross_validation_arg);
+		    for (j = 0; j < vecLabels.size(); j++) {
+		      if (j % sArgs.cross_validation_arg == i) {
+			pTestVector[i].push_back(vecLabels[j]);
+		      } else {
+			pTrainVector[i].push_back((vecLabels[j]));
+		      }
+		    }
+		  }
+		}
+		else{ // if you have less than 2 fold cross, no cross validation is done, all train genes are used. If test_labels are predicted if given, otherwise all genes are predicted.
+		  
+			if(sArgs.test_labels_given){
+					  pTrainVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
+					  for (j = 0; j < vecLabels.size(); j++) {
+						pTrainVector[0].push_back(vecLabels[j]);		    
+					  }
 
-		for (i = 0; i < sArgs.cross_validation_arg; i++) {
-			pTestVector[i].reserve((size_t) vecLabels.size()
-					/ sArgs.cross_validation_arg + sArgs.cross_validation_arg);
-			pTrainVector[i].reserve((size_t) vecLabels.size()
-					/ (sArgs.cross_validation_arg)
-					* (sArgs.cross_validation_arg - 1)
-					+ sArgs.cross_validation_arg);
-			for (j = 0; j < vecLabels.size(); j++) {
-				if (j % sArgs.cross_validation_arg == i) {
-					pTestVector[i].push_back(vecLabels[j]);
-				} else {
-					pTrainVector[i].push_back((vecLabels[j]));
-				}
+						ifstream ifsm2;
+						vector<SVMLight::SVMLabel> vecTestLabels;
+						ifsm2.clear();
+						ifsm2.open(sArgs.test_labels_arg);
+						if (ifsm2.is_open())
+							vecTestLabels = ReadLabels(ifsm2);
+						else {
+							cerr << "Could not read label file" << endl;
+							exit(1);
+						}
+
+						pTestVector[0].reserve((size_t) vecTestLabels.size()+1 );
+						for (j = 0; j < vecTestLabels.size(); j++) {
+							pTestVector[0].push_back(vecTestLabels[j]);		      
+						}
+						
+			}
+			else{// no holdout so train is the same as test gene set
+					  pTestVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
+					  pTrainVector[0].reserve((size_t) vecLabels.size() + sArgs.cross_validation_arg);
+		  
+					  for (j = 0; j < vecLabels.size(); j++) {
+						pTestVector[0].push_back(vecLabels[j]);		      
+						pTrainVector[0].push_back(vecLabels[j]);		    
+					  }
 			}
 		}
-
+		
+		
 		vector<SVMLabel> vec_allUnlabeledLabels;
 		vector<Result> vec_allUnlabeledResults;
 		vector<Result> vec_tmpUnlabeledResults;
@@ -269,11 +355,12 @@ int main(int iArgs, char** aszArgs) {
 			size_t iParams;
 			ofstream ofsm;
 			SVMLight::SAMPLE * ppTrainSample[sArgs.cross_validation_arg];
+			
 			//build all the samples since they are being reused
 			for (i = 0; i < sArgs.cross_validation_arg; i++)
 				ppTrainSample[i] = SVMLight::CSVMPERF::CreateSample(PCL,
 						pTrainVector[i]);
-
+			
 			for (iParams = 0; iParams < PStruct.vecTradeoff.size(); iParams++) {
 				SVM.SetLossFunction(PStruct.vecLoss[iParams]);
 				SVM.SetTradeoff(PStruct.vecTradeoff[iParams]);
@@ -283,7 +370,9 @@ int main(int iArgs, char** aszArgs) {
 				for (i = 0; i < sArgs.cross_validation_arg; i++) {
 					cerr << "Cross Validation Trial " << i << endl;
 					SVM.Learn(*ppTrainSample[i]);
-					cerr << "Learned" << endl;
+					
+					cerr << "Learned" << endl;					
+					
 					tmpAllResults = SVM.Classify(PCL, pTestVector[i]);
 					cerr << "Classified " << tmpAllResults.size()
 							<< " examples" << endl;
@@ -319,6 +408,7 @@ int main(int iArgs, char** aszArgs) {
 				AllResults.resize(0);
 			}
 		} else { //run once
+
 			for (i = 0; i < sArgs.cross_validation_arg; i++) {
 				pTrainSample = SVMLight::CSVMPERF::CreateSample(PCL,
 						pTrainVector[i]);
@@ -329,6 +419,7 @@ int main(int iArgs, char** aszArgs) {
 				cerr << "Learned" << endl;
 				tmpAllResults = SVM.Classify(PCL,
 						pTestVector[i]);
+
 				cerr << "Classified " << tmpAllResults.size() << " examples"
 						<< endl;
 				AllResults.insert(AllResults.end(), tmpAllResults.begin(),
