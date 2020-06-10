@@ -157,6 +157,7 @@ if __name__ == "__main__":
     plot1c.plot_curve(cfg.outputPath, cfg.outputPath)
 
     # Compare the results to known good
+    compare_errors = 0
     filepattern = os.path.join(cfg.goldStdPath, r'*.csv')
     for goldcsvfile in glob.iglob(filepattern):
         filename = os.path.basename(goldcsvfile)
@@ -165,4 +166,9 @@ if __name__ == "__main__":
                                          skiprows=1, skipcols=3)
         print('Compare: {}, pct_diff {}'.format(filename, pctdiff))
         if pctdiff > cfg.maxPctDiff:
+            compare_errors += 1
             print('Failed: pct diff exceeded {}'.format(testcsvfile))
+    if compare_errors > 0:
+        sys.exit(-1)
+    sys.exit(0)
+
