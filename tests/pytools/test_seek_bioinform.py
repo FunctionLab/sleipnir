@@ -18,6 +18,7 @@ import glob
 import time
 import argparse
 import utils
+from envbash import load_envbash
 import create_plot1a_filelists as filelist1a
 import create_plot1c_filelists as filelist1c
 import plot_seek1a as plot1a
@@ -61,6 +62,10 @@ if __name__ == "__main__":
 
     seekMinerBin = os.path.join(cfg.binPath, 'SeekMiner')
     seekEvaluatorBin = os.path.join(cfg.binPath, 'SeekEvaluator')
+
+    bashEnvironmentFile = os.path.join(cfg.seekPath, 'seek_env')
+    print('Load bash environment file {}'.format(bashEnvironmentFile))
+    load_envbash(bashEnvironmentFile)
 
     # The query files have the query strings to run (multiple queries per file 
     #   one query per line), located in query path

@@ -4,6 +4,7 @@ import time
 import glob
 import argparse
 import utils
+from envbash import load_envbash
 from rank_correlation import files_rank_correlation
 
 
@@ -67,6 +68,10 @@ if __name__ == "__main__":
 
     seekMinerBin = os.path.join(args.seekbin, 'SeekMiner')
 
+    bashEnvironmentFile = os.path.join(args.seekdir, 'seek_env')
+    print('Load bash environment file {}'.format(bashEnvironmentFile))
+    load_envbash(bashEnvironmentFile)
+
     goldStdDir = args.known_good_results
     queryfile = os.path.join(goldStdDir, 'param_test.query.txt')
     goldstd_list = os.path.join(goldStdDir, 'param_test.goldStd.txt')
@@ -77,13 +82,14 @@ if __name__ == "__main__":
     correlation_errors = 0
     for test, params in param_tests.items():
         params = params.format(dweight_filelist=dweight_filelist, goldStd=goldstd_list)
-        print("{}, {}".format(test, params))
+        print("{}, params {}".format(test, params))
         resultdir = os.path.join(args.outputdir, test)
-        os.mkdir(resultdir)
+        utils.checkAndMakePath(resultdir)
         cmd = "{seekminer} -x {db}/dataset.map -i {db}/gene_map.txt " \
               "-d {db}/db.combined -p {db}/prep.combined -P {db}/platform.combined " \
               "-Q {db}/quant2 -u {db}/sinfo.combined -R {db}/dataset_size " \
-              "-n 1000 -b 200 -q {queryfile} -o {resultdir} -O {params}". \
+              "-n 1000 -b 200 -q {queryfile} -o {resultdir} -O {params} " \
+              "&> {resultdir}/seekminer.out". \
               format(seekminer=seekMinerBin, db=args.seekdir, resultdir=resultdir, 
                      queryfile=queryfile, params=params)
         # print(cmd)

@@ -1,14 +1,18 @@
 #!/bin/bash
 
 usage() {
-  echo "$(basename $0): -t [tiny, short, medium, long]"
+  echo "$(basename $0): -t [tiny, short, medium, long] -s <seek_path> -b <seek_bin_dir>"
 }
+
+testdir=$(dirname $0)  # the path of this script
 
 seekdir="/data/gwallace/seek/Seek"
 
-while getopts t: option; do
+while getopts t:s:b: option; do
   case "${option}" in
     t) test_type=${OPTARG};;
+    s) seekdir=${OPTARG};;
+    b) seekbin=${OPTARG};;
     *) usage; exit -1;;
   esac
 done
@@ -21,8 +25,10 @@ fi
 
 testname="bioinform_"$test_type
 
-# Get the path of this script
-testdir=$(dirname $0)
+if [ -z $seekbin ]; then
+  seekbin="$seekdir/bin"
+fi
+
 
 # Requires a seek_env file that sets LD_LIBRARY_PATH for seek binaries
 source $seekdir/seek_env
@@ -44,8 +50,9 @@ if [ ! -d /tmp/$testname ]; then
 fi
 
 # Make the config file
-bash $testdir/make_bioinform_config.sh -t $testname -s $seekdir -d $testdir -o $tmpdir
+bash $testdir/make_bioinform_config.sh -t $testname -s $seekdir -b $seekbin -d $testdir -o $tmpdir
 
 # Run the test
-python $testdir/pytools/test_seek_bioinform.py -c $tmpdir/$testname"_config.toml" -o $tmpdir
+python $testdir/pytools/test_seek_bioinform.py -s $seekdir -b $seekbin -c $tmpdir/$testname"_config.toml" -o $tmpdir
+exit $?
 

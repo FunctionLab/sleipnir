@@ -13,7 +13,7 @@ import math
 import random
 import argparse
 from struct_dict import StructDict
-from utils import parse_gmt
+from utils import parse_gmt, makeAbsolutePath
 
 
 def create_queries(groups, query_count, max_query_genes, outBaseFilename,
@@ -25,6 +25,13 @@ def create_queries(groups, query_count, max_query_genes, outBaseFilename,
     indicates what how many of the gene group to use as the query, the rest
     will be the target result genes.
     """
+    outBaseFilename = makeAbsolutePath(outBaseFilename)
+
+    if os.path.basename(outBaseFilename) in ['', None]:
+        print('output basename is empty')
+        return
+
+    print("output to {}".format(outBaseFilename + '.query.txt'))
     queryFH = open(outBaseFilename + '.query.txt', 'w')
     goldStdFH = open(outBaseFilename + '.goldStd.txt', 'w')
     groupFH = open(outBaseFilename + '.group.txt', 'w')

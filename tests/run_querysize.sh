@@ -1,6 +1,6 @@
 #!/bin/bash
 
-testname="seek_paramtest"
+testname="seek_querysize"
 
 usage() {
   echo "$(basename $0): -s <seek_path> -b <seek_bin_dir>"
@@ -48,5 +48,5 @@ if [ ! -d /tmp/$testname ]; then
 fi
 
 # Run the test
-python $testdir/pytools/test_seek_params.py -s $seekdir -b $seekbin -g /tmp/$testname -o $tmpdir
+python $testdir/pytools/test_seek_querysizes.py -s $seekdir -b $seekbin -g /tmp/$testname -o $tmpdir
 exit $?

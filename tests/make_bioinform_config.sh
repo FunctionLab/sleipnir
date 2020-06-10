@@ -10,11 +10,13 @@ seek_path="/data/gwallace/seek/Seek"
 output_dir="/tmp/test_output"
 test_name="bioinform_tiny"
 
-while getopts t:s:d:o: option; do
+while getopts t:s:b:d:o: option; do
   case "${option}" in
     t) test_name=${OPTARG};;
-    # seek_path is the directory with the seek database and binaries
+    # seek_path is the directory with the seek database
     s) seek_path=${OPTARG};;
+    # seek_bin is the directory with the seek binaries
+    b) seek_bin=${OPTARG};;
     # test_src_dir is location of source code for running the tests
     d) test_src_dir=${OPTARG};;
     # output_dir is where the test output will be written
@@ -27,6 +29,10 @@ if [ $OPTIND -eq 1 ]; then
   echo "$0: No options were supplied";
   usage
   exit -1
+fi
+
+if [ -z $seek_bin ]; then
+  seek_bin="$seek_path/bin"
 fi
 
 # goldstd_path is where the gold standard expected results will be unpacked for reference
@@ -43,7 +49,7 @@ echo "# full path to seek database installation to test" >> $output_file
 echo "seekPath = \"$seek_path\"" >> $output_file
 
 echo "# full path to seek binaries to test" >> $output_file
-echo "binPath = \"$seek_path/bin\"" >> $output_file
+echo "binPath = \"$seek_bin\"" >> $output_file
 
 echo "# full path to the query input directory" >> $output_file
 echo "queryPath = \"$goldstd_path/queries\"" >> $output_file
