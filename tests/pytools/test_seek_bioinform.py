@@ -36,6 +36,8 @@ if __name__ == "__main__":
                            help='Seek binary files')
     argParser.add_argument('--outputdir', '-o', type=str, required=False,
                            help='output directory where results will be written')
+    argParser.add_argument('--verbose', '-v', default=False, action='store_true',
+                           help='verbose output')
     # TODO - put this in config file instead
     argParser.add_argument('--known-good-results', '-g', type=str, required=False,
                            help='Expected results files from a known-good run')
@@ -82,17 +84,25 @@ if __name__ == "__main__":
         queryFile = os.path.join(cfg.queryPath, file)
         resultDir = os.path.join(cfg.outputPath, queryName)
         utils.checkAndMakePath(resultDir)
+        outfile = os.path.join(resultDir, "seekminer.out")
+        utils.file_truncate(outfile)
         print('SeekMiner run query {}'.format(queryName))
         seekMinerCmd = 'time {seekminer} -x {db}/dataset.map -i {db}/gene_map.txt ' \
                        '-d {db}/db.combined -p {db}/prep.combined ' \
                        '-P {db}/platform.combined -Q {db}/quant2 ' \
                        '-u {db}/sinfo.combined -n 1000 -b 200  ' \
-                       '-R {db}/dataset_size -V CV -I LOI -z z_score -m -M -O ' \
-                       '-q {queryfile} -o {resultdir} ' \
-                       '&> {resultdir}/seekminer.out'.format(
+                       '-V CV -I LOI -z z_score -m -M -O ' \
+                       '-R {db}/dataset_size ' \
+                       '-q {queryfile} -o {resultdir} '.format(
                          seekminer=seekMinerBin, db=cfg.seekPath,
                          queryfile=queryFile, resultdir=resultDir
                        )
+        utils.file_appendline(outfile, seekMinerCmd)
+        if args.verbose:
+            seekMinerCmd += " |& tee -a {}".format(outfile)
+            print(seekMinerCmd, flush=True)
+        else:
+            seekMinerCmd += " &>> {}".format(outfile)
         os.system(seekMinerCmd)
 
     # Create filelists in preparation for running SeekEvaluator
@@ -136,6 +146,7 @@ if __name__ == "__main__":
                   resultdir=resultDir, recallpct=cfg.recallPct,
                   resultfile=resultfile, seekevaluator=seekEvaluatorBin
                 )
+            # print(seekEvalCmd)
             os.system(seekEvalCmd)
 
     # Run SeekEvaluator for plot 1c to get aggregate precision at different recall depth
@@ -152,6 +163,7 @@ if __name__ == "__main__":
                 seekevaluator=seekEvaluatorBin, rdir=cfg.outputPath,
                 genemap=cfg.geneMap, depth=depth, resultfile=resultfile
             )
+        # print(seekEvalCmd)
         os.system(seekEvalCmd)
 
     # Create the plots and result csv files

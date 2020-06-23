@@ -1,6 +1,6 @@
 #!/bin/bash
 
-testname="seek_querysize"
+testname="seek_basic_query"
 
 source core_run.sh "$@" -t $testname
 

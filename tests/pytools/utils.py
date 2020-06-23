@@ -20,6 +20,11 @@ def file_appendline(filename, data):
         fp.write(data+'\n')
 
 
+def file_truncate(filename):
+    if os.path.exists(filename):
+        os.truncate(filename, 0)
+
+
 def makeAbsolutePath(path):
     if not os.path.isabs(path):
         path = os.path.join(os.getcwd(), path)

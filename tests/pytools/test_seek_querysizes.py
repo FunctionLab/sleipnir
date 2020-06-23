@@ -21,6 +21,8 @@ if __name__ == "__main__":
                            help='Directory with known-good results files')
     argParser.add_argument('--outputdir', '-o', type=str, required=True,
                            help='output directory where results will be written')
+    argParser.add_argument('--verbose', '-v', default=False, action='store_true',
+                           help='verbose output')
     args = argParser.parse_args()
 
     utils.checkAndMakePath(args.outputdir)
@@ -43,6 +45,7 @@ if __name__ == "__main__":
     #   one query per line), located in goldStdDir
     filepattern = os.path.join(goldStdDir, r'*.query.txt')
     queryFiles = [queryfile for queryfile in glob.iglob(filepattern)]
+    print('queryFiles: ' + str(queryFiles))
 
     correlation_errors = 0
     # Run SeekMiner for all query files
@@ -52,17 +55,25 @@ if __name__ == "__main__":
         queryName = filename.split('.')[0]
         resultDir = os.path.join(args.outputdir, queryName)
         utils.checkAndMakePath(resultDir)
+        outfile = os.path.join(resultDir, "seekminer.out")
+        utils.file_truncate(outfile)
         print('SeekMiner run query {}'.format(queryName))
         seekMinerCmd = 'time {seekminer} -x {db}/dataset.map -i {db}/gene_map.txt ' \
                        '-d {db}/db.combined -p {db}/prep.combined ' \
                        '-P {db}/platform.combined -Q {db}/quant2 ' \
                        '-u {db}/sinfo.combined -n 1000 -b 200  ' \
-                       '-R {db}/dataset_size -V CV -I LOI -z z_score -m -M -O ' \
-                       '-q {queryfile} -o {resultdir} ' \
-                       '&> {resultdir}/seekminer.out'.format(
+                       '-V CV -I LOI -z z_score -m -M -O ' \
+                       '-R {db}/dataset_size ' \
+                       '-q {queryfile} -o {resultdir} '.format(
                          seekminer=seekMinerBin, db=args.seekdir,
                          queryfile=qfile, resultdir=resultDir
                        )
+        utils.file_appendline(outfile, seekMinerCmd)
+        if args.verbose:
+            seekMinerCmd += " |& tee -a {}".format(outfile)
+            print(seekMinerCmd, flush=True)
+        else:
+            seekMinerCmd += " &>> {}".format(outfile)
         os.system(seekMinerCmd)
 
         # compare output to gold standard results

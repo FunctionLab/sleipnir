@@ -26,7 +26,7 @@ param_tests = {
     "test5": "-V CV -I XFOLD",
     "test6": "-V EQUAL",
     "test7": "-V ORDER_STAT",
-    # "test8": "-V VAR -U {gene-var-dir}", # don't have a gene-var dir to use
+    "test8": "-L",  # dataset size must be > 10
     "test9": "-V USER -J {dweight_filelist}",
     "test10": "-V CV_CUSTOM -K {goldStd}",
     "test11": "-V AVERAGE_Z",
@@ -34,7 +34,8 @@ param_tests = {
     "test13": "-z z_score",
     "test14": "-z z_score -e",
     "test15": "-C 1.0",  # fraction of query genes required to be present
-    # "test16": "-S",   # generate random ranking score
+    # "test16": "-V VAR -U {gene-var-dir}", # don't have a gene-var dir to use
+    # "test17": "-S",   # generate random ranking score
 }
 
 
@@ -55,6 +56,8 @@ if __name__ == "__main__":
                            help='Directory with known-good results files')
     argParser.add_argument('--outputdir', '-o', type=str, required=True,
                            help='output directory where results will be written')
+    argParser.add_argument('--verbose', '-v', default=False, action='store_true',
+                           help='verbose output')
     args = argParser.parse_args()
 
     utils.checkAndMakePath(args.outputdir)
@@ -84,15 +87,23 @@ if __name__ == "__main__":
         params = params.format(dweight_filelist=dweight_filelist, goldStd=goldstd_list)
         print("{}, params {}".format(test, params))
         resultdir = os.path.join(args.outputdir, test)
+        outfile = os.path.join(resultdir, "seekminer.out")
         utils.checkAndMakePath(resultdir)
+        utils.file_truncate(outfile)
         cmd = "{seekminer} -x {db}/dataset.map -i {db}/gene_map.txt " \
               "-d {db}/db.combined -p {db}/prep.combined -P {db}/platform.combined " \
-              "-Q {db}/quant2 -u {db}/sinfo.combined -R {db}/dataset_size " \
-              "-n 1000 -b 200 -q {queryfile} -o {resultdir} -O {params} " \
-              "&> {resultdir}/seekminer.out". \
+              "-Q {db}/quant2 -u {db}/sinfo.combined " \
+              "-n 1000 -b 200 -q {queryfile} " \
+              "-R {db}/dataset_size " \
+              "-o {resultdir} -O {params} ". \
               format(seekminer=seekMinerBin, db=args.seekdir, resultdir=resultdir, 
                      queryfile=queryfile, params=params)
-        # print(cmd)
+        utils.file_appendline(outfile, cmd)
+        if args.verbose:
+            cmd += " |& tee -a {}".format(outfile)
+            print(cmd, flush=True)
+        else:
+            cmd += "&>> {}".format(outfile)
         os.system(cmd)
 
         # compare output to gold standard results
