@@ -12,8 +12,9 @@ import re
 import math
 import random
 import argparse
+from pathlib import Path
 from struct_dict import StructDict
-from utils import parse_gmt, makeAbsolutePath
+from utils import parse_gmt
 
 
 def create_queries(groups, query_count, max_query_genes, outBaseFilename,
@@ -25,7 +26,7 @@ def create_queries(groups, query_count, max_query_genes, outBaseFilename,
     indicates what how many of the gene group to use as the query, the rest
     will be the target result genes.
     """
-    outBaseFilename = makeAbsolutePath(outBaseFilename)
+    outBaseFilename = Path(outBaseFilename).resolve().as_posix()
 
     if os.path.basename(outBaseFilename) in ['', None]:
         print('output basename is empty')
@@ -62,19 +63,10 @@ def create_queries(groups, query_count, max_query_genes, outBaseFilename,
             assert qnum <= max_query_genes
             assert qnum <= group.size - 1
             query.qnum = qnum
-            # create a random list of index values for the query genes
-            query.q_indicies = random.sample(range(group.size), qnum)
-            # create the inverse list for the results genes
-            query.res_indicies = list(set(range(group.size)) - set(query.q_indicies))
-            assert len(query.q_indicies) == query.qnum
-            assert len(query.res_indicies) == group.size - query.qnum
-            assert set(query.q_indicies).isdisjoint(set(query.res_indicies))
-            assert len(group.genes) == group.size
-            assert max(query.q_indicies) < group.size
-            assert max(query.res_indicies) < group.size
-            # select the query genes and result genes
-            query.genes = [group.genes[i] for i in query.q_indicies]
-            query.results = [group.genes[i] for i in query.res_indicies]
+            # select a random subset of query genes
+            query.genes = random.sample(group.genes, qnum)
+            # The expected results list is the remaining genes from that group
+            query.results = set(group.genes) - set(query.genes)
             # write the query genes to a file
             queryFH.write("    ".join(query.genes) + "\n")
             # write the result genes to a file

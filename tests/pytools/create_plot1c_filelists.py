@@ -14,15 +14,15 @@ import sys
 import re
 import glob
 import argparse
-#sys.path.append(os.path.dirname(__file__))
+from pathlib import Path
 import utils
 
 
 def makePlot1cFilelists(golddir, resultdir, outputdir, genefile, queryNames):
-    golddir = utils.makeAbsolutePath(golddir)
-    resultdir = utils.makeAbsolutePath(resultdir)
-    outputdir = utils.makeAbsolutePath(outputdir)
-    genefile = utils.makeAbsolutePath(genefile)
+    golddir = Path(golddir).resolve().as_posix()
+    resultdir = Path(resultdir).resolve().as_posix()
+    outputdir = Path(outputdir).resolve().as_posix()
+    genefile = Path(genefile).resolve().as_posix()
 
     queryfilelist = os.path.join(outputdir, 'filelist_seek1c.query')
     goldfilelist = os.path.join(outputdir, 'filelist_seek1c.gold')

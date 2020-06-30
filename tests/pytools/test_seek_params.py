@@ -70,6 +70,7 @@ if __name__ == "__main__":
             sys.exit(-1)
 
     seekMinerBin = os.path.join(args.seekbin, 'SeekMiner')
+    dbDir = args.seekdir
 
     bashEnvironmentFile = os.path.join(args.seekdir, 'seek_env')
     print('Load bash environment file {}'.format(bashEnvironmentFile))
@@ -90,14 +91,12 @@ if __name__ == "__main__":
         outfile = os.path.join(resultdir, "seekminer.out")
         utils.checkAndMakePath(resultdir)
         utils.file_truncate(outfile)
-        cmd = "{seekminer} -x {db}/dataset.map -i {db}/gene_map.txt " \
-              "-d {db}/db.combined -p {db}/prep.combined -P {db}/platform.combined " \
-              "-Q {db}/quant2 -u {db}/sinfo.combined " \
-              "-n 1000 -b 200 -q {queryfile} " \
-              "-R {db}/dataset_size " \
-              "-o {resultdir} -O {params} ". \
-              format(seekminer=seekMinerBin, db=args.seekdir, resultdir=resultdir, 
-                     queryfile=queryfile, params=params)
+        cmd = f"{seekMinerBin} -x {dbDir}/dataset.map -i {dbDir}/gene_map.txt " \
+              f"-d {dbDir}/db.combined -p {dbDir}/prep.combined -P {dbDir}/platform.combined " \
+              f"-Q {dbDir}/quant2 -u {dbDir}/sinfo.combined " \
+              f"-n 1000 -b 200 -q {queryfile} " \
+              f"-R {dbDir}/dataset_size " \
+              f"-o {resultdir} -O {params} "
         utils.file_appendline(outfile, cmd)
         if args.verbose:
             cmd += " |& tee -a {}".format(outfile)

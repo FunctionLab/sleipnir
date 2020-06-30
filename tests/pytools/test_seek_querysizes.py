@@ -36,6 +36,7 @@ if __name__ == "__main__":
 
     seekMinerBin = os.path.join(args.seekbin, 'SeekMiner')
     goldStdDir = args.known_good_results
+    dbDir = args.seekdir
 
     bashEnvironmentFile = os.path.join(args.seekdir, 'seek_env')
     print('Load bash environment file {}'.format(bashEnvironmentFile))
@@ -49,8 +50,8 @@ if __name__ == "__main__":
 
     correlation_errors = 0
     # Run SeekMiner for all query files
-    for qfile in queryFiles:
-        path, filename = os.path.split(qfile)
+    for queryfile in queryFiles:
+        path, filename = os.path.split(queryfile)
         # the first part of the query file name will be used for the result directory name
         queryName = filename.split('.')[0]
         resultDir = os.path.join(args.outputdir, queryName)
@@ -58,16 +59,13 @@ if __name__ == "__main__":
         outfile = os.path.join(resultDir, "seekminer.out")
         utils.file_truncate(outfile)
         print('SeekMiner run query {}'.format(queryName))
-        seekMinerCmd = 'time {seekminer} -x {db}/dataset.map -i {db}/gene_map.txt ' \
-                       '-d {db}/db.combined -p {db}/prep.combined ' \
-                       '-P {db}/platform.combined -Q {db}/quant2 ' \
-                       '-u {db}/sinfo.combined -n 1000 -b 200  ' \
-                       '-V CV -I LOI -z z_score -m -M -O ' \
-                       '-R {db}/dataset_size ' \
-                       '-q {queryfile} -o {resultdir} '.format(
-                         seekminer=seekMinerBin, db=args.seekdir,
-                         queryfile=qfile, resultdir=resultDir
-                       )
+        seekMinerCmd = f'time {seekMinerBin} -x {dbDir}/dataset.map -i {dbDir}/gene_map.txt ' \
+                       f'-d {dbDir}/db.combined -p {dbDir}/prep.combined ' \
+                       f'-P {dbDir}/platform.combined -Q {dbDir}/quant2 ' \
+                       f'-u {dbDir}/sinfo.combined -n 1000 -b 200  ' \
+                       f'-V CV -I LOI -z z_score -m -M -O ' \
+                       f'-R {dbDir}/dataset_size ' \
+                       f'-q {queryfile} -o {resultDir} '
         utils.file_appendline(outfile, seekMinerCmd)
         if args.verbose:
             seekMinerCmd += " |& tee -a {}".format(outfile)

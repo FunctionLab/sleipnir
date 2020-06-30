@@ -18,15 +18,15 @@ import sys
 import re
 import glob
 import argparse
-# sys.path.append(os.path.dirname(__file__))
+from pathlib import Path
 import utils
 
 
 def makePlot1aFilelists(golddir, resultdir, outputdir, genefile):
-    golddir = utils.makeAbsolutePath(golddir)
-    resultdir = utils.makeAbsolutePath(resultdir)
-    outputdir = utils.makeAbsolutePath(outputdir)
-    genefile = utils.makeAbsolutePath(genefile)
+    golddir = Path(golddir).resolve().as_posix()
+    resultdir = Path(resultdir).resolve().as_posix()
+    outputdir = Path(outputdir).resolve().as_posix()
+    genefile = Path(genefile).resolve().as_posix()
 
     # Note: query and gold standard files will be from the known good results dir
     #  in this case the 'golddir'

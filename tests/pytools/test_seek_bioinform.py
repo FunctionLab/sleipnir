@@ -64,12 +64,13 @@ if __name__ == "__main__":
 
     seekMinerBin = os.path.join(cfg.binPath, 'SeekMiner')
     seekEvaluatorBin = os.path.join(cfg.binPath, 'SeekEvaluator')
+    dbDir = cfg.seekPath
 
     bashEnvironmentFile = os.path.join(cfg.seekPath, 'seek_env')
     print('Load bash environment file {}'.format(bashEnvironmentFile))
     load_envbash(bashEnvironmentFile)
 
-    # The query files have the query strings to run (multiple queries per file 
+    # The query files have the query strings to run (multiple queries per file
     #   one query per line), located in query path
     filepattern = os.path.join(cfg.queryPath, r'*.query.txt')
     queryFiles = [queryfile for queryfile in glob.iglob(filepattern)]
@@ -87,16 +88,13 @@ if __name__ == "__main__":
         outfile = os.path.join(resultDir, "seekminer.out")
         utils.file_truncate(outfile)
         print('SeekMiner run query {}'.format(queryName))
-        seekMinerCmd = 'time {seekminer} -x {db}/dataset.map -i {db}/gene_map.txt ' \
-                       '-d {db}/db.combined -p {db}/prep.combined ' \
-                       '-P {db}/platform.combined -Q {db}/quant2 ' \
-                       '-u {db}/sinfo.combined -n 1000 -b 200  ' \
-                       '-V CV -I LOI -z z_score -m -M -O ' \
-                       '-R {db}/dataset_size ' \
-                       '-q {queryfile} -o {resultdir} '.format(
-                         seekminer=seekMinerBin, db=cfg.seekPath,
-                         queryfile=queryFile, resultdir=resultDir
-                       )
+        seekMinerCmd = f'time {seekMinerBin} -x {dbDir}/dataset.map -i {dbDir}/gene_map.txt ' \
+                       f'-d {dbDir}/db.combined -p {dbDir}/prep.combined ' \
+                       f'-P {dbDir}/platform.combined -Q {dbDir}/quant2 ' \
+                       f'-u {dbDir}/sinfo.combined -n 1000 -b 200  ' \
+                       f'-V CV -I LOI -z z_score -m -M -O ' \
+                       f'-R {dbDir}/dataset_size ' \
+                       f'-q {queryFile} -o {resultDir} '
         utils.file_appendline(outfile, seekMinerCmd)
         if args.verbose:
             seekMinerCmd += " |& tee -a {}".format(outfile)
@@ -128,24 +126,18 @@ if __name__ == "__main__":
         print('SeekEvaluator for query {}'.format(queryName))
         resultDir = os.path.join(cfg.outputPath, queryName)
         filepattern = os.path.join(resultDir, r'filelist_q*.query')
-        for querylistfilename in glob.iglob(filepattern):
-            goldfilelist = re.sub('query$', 'gold', querylistfilename)
-            gscorefilelist = re.sub('query$', 'gscore', querylistfilename)
-            excludefilelist = re.sub('query$', 'exclude', querylistfilename)
-            includefilelist = re.sub('query$', 'include', querylistfilename)
-            resultfile = re.sub('filelist_q', 'result_qgroup.', querylistfilename)
+        for queryfilelist in glob.iglob(filepattern):
+            goldfilelist = re.sub('query$', 'gold', queryfilelist)
+            gscorefilelist = re.sub('query$', 'gscore', queryfilelist)
+            excludefilelist = re.sub('query$', 'exclude', queryfilelist)
+            includefilelist = re.sub('query$', 'include', queryfilelist)
+            resultfile = re.sub('filelist_q', 'result_qgroup.', queryfilelist)
             resultfile = re.sub(r'\.query$', '', resultfile)
             seekEvalCmd = \
-                '{seekevaluator} -S {goldfilelist} -G {gscorefilelist} ' \
-                '-Q {queryfilelist} -X {excludefilelist} -Y {includefilelist} ' \
-                '-i {genemap} -d {resultdir} --pr --x_per {recallpct} ' \
-                '-M -B -f &> {resultfile}'.format(
-                  queryfilelist=querylistfilename, goldfilelist=goldfilelist,
-                  gscorefilelist=gscorefilelist, includefilelist=includefilelist,
-                  excludefilelist=excludefilelist, genemap=cfg.geneMap,
-                  resultdir=resultDir, recallpct=cfg.recallPct,
-                  resultfile=resultfile, seekevaluator=seekEvaluatorBin
-                )
+                f'{seekEvaluatorBin} -S {goldfilelist} -G {gscorefilelist} ' \
+                f'-Q {queryfilelist} -X {excludefilelist} -Y {includefilelist} ' \
+                f'-i {cfg.geneMap} -d {resultDir} --pr --x_per {cfg.recallPct} ' \
+                f'-M -B -f &> {resultfile}'
             # print(seekEvalCmd)
             os.system(seekEvalCmd)
 
@@ -155,14 +147,14 @@ if __name__ == "__main__":
         print('SeekEvaluator for depth {}'.format(depth))
         resultfile = os.path.join(cfg.outputPath,
                                   'result_recall_curve.{}'.format(int(depth*100)))
-        seekEvalCmd = \
-            '{seekevaluator} -S {rdir}/filelist_seek1c.gold ' \
-            '-G {rdir}/filelist_seek1c.gscore -Q {rdir}/filelist_seek1c.query ' \
-            '-X {rdir}/filelist_seek1c.query -Y {rdir}/filelist_seek1c.include ' \
-            '-i {genemap} -M -B -f --pr --x_per {depth} -d {rdir} &> {resultfile}'.format(
-                seekevaluator=seekEvaluatorBin, rdir=cfg.outputPath,
-                genemap=cfg.geneMap, depth=depth, resultfile=resultfile
-            )
+        seekEvalCmd = f'{seekEvaluatorBin} ' \
+            f'-S {cfg.outputPath}/filelist_seek1c.gold ' \
+            f'-G {cfg.outputPath}/filelist_seek1c.gscore ' \
+            f'-Q {cfg.outputPath}/filelist_seek1c.query ' \
+            f'-X {cfg.outputPath}/filelist_seek1c.query ' \
+            f'-Y {cfg.outputPath}/filelist_seek1c.include ' \
+            f'-i {cfg.geneMap} -M -B -f --pr --x_per {depth} ' \
+            f'-d {cfg.outputPath} &> {resultfile}'
         # print(seekEvalCmd)
         os.system(seekEvalCmd)
 
@@ -188,4 +180,3 @@ if __name__ == "__main__":
     if compare_errors > 0:
         sys.exit(-1)
     sys.exit(0)
-

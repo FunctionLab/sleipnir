@@ -25,12 +25,6 @@ def file_truncate(filename):
         os.truncate(filename, 0)
 
 
-def makeAbsolutePath(path):
-    if not os.path.isabs(path):
-        path = os.path.join(os.getcwd(), path)
-    return path
-
-
 def checkAndMakePath(path):
     if not os.path.exists(path):
         os.mkdir(path)
@@ -64,9 +58,7 @@ def read_genes(gene_file):
     '''
     groups = []
     with open(gene_file, 'r') as fp:
-        for line in fp:
-            line = line.rstrip("\n")
-            groups.append(line)
+        groups = [line.rstrip("\n") for line in fp]
     return groups
 
 

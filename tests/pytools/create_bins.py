@@ -1,6 +1,8 @@
 '''
 Program to create the quantization bins for gene correlation values.
 Take in a value range such as 0,1 and the number of bins.
+Output the bin values to stdout which can be redirected to a file.
+These files are typically called quant.txt when used with seek db.
 example: create_bins.py --range 0,1 --num-bins 255
 Note: You will generally want to specify one less bins than the int type can hold
 to allow for a N/A or missing value.
