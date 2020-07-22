@@ -14,7 +14,7 @@ import scipy.stats as stats
 import utils
 
 
-def files_rank_correlation(fileA, fileB):
+def files_rank_correlation(fileA, fileB, remove_substr=None):
     # read in the file data lines
     A_lines = utils.file_read(fileA)
     B_lines = utils.file_read(fileB)
@@ -24,6 +24,9 @@ def files_rank_correlation(fileA, fileB):
     correlations = []
     # for each line calculate the correlation between the two files
     for i in range(len(A_lines)):
+        if remove_substr is not None:
+            A_lines[i] = A_lines[i].replace(remove_substr, "")
+            B_lines[i] = B_lines[i].replace(remove_substr, "")
         # assign an order rank to the values in the line
         A_dict_rank = {val: j for j, val in enumerate(A_lines[i].split())}
         B_dict_rank = {val: j for j, val in enumerate(B_lines[i].split())}
