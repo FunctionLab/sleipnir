@@ -113,6 +113,7 @@ namespace Sleipnir {
             iNumGenes = 0;
         }
 
+        // genePresence size is the total number of genes across the db collection
         utype iSize = genePresence.size();
         iNumGenes = iSize;
         geneMap = new CSeekIntIntMap(src->geneMap);

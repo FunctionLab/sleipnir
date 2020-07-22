@@ -168,7 +168,11 @@ namespace Sleipnir {
         return true;
     }
 
-/* original file writing method */
+    /* original file writing method */
+    // vecData - is a vector of matrices, one matrix per input dab file in this group
+    // iBaseGenes - is the row offset within the matrices vecData of the primary genes in this DB file
+    // iBaseDatasets - is the global datdaset index of the first dataset contained in vedData
+    // fBuffer - boolean whether to buffer data in memory or write directly to the file
     bool CDatabaselet::Open(const vector <CCompactFullMatrix> &vecData, size_t iBaseGenes, size_t iBaseDatasets,
                             bool fBuffer) {
         unsigned char *abImage;
@@ -186,7 +190,14 @@ namespace Sleipnir {
             abImage = nullptr;
 
         //vecData: # of genes in databaselet x # of genes user's list
-        //if this is not the first dataset in the dataset block
+        // The gene values are ouput to the DB file in pairs (for consecutive datasets)
+        //   to allow writing two nibbles at once to the same byte. This is because
+        //   dataset values (for gene-pairs) are written consecutively with each other, 
+        //   i.e. each row represents a gene-pair and each entry the value for a different dataset.
+        
+        // if the BaseDataset index is odd then we need to write the first one singleton so 
+        //   the rest will align two at a time. This happens when the input block size is odd
+        //   (i.e. num Dabs to handle at once is odd) with every other call to this function.
         if (iBaseDatasets % 2) {
             //iGeneOne: iterate over all genes in this databaselet (# of genes in each databaselet)
             for (iGeneOne = 0; iGeneOne < GetGenes(); ++iGeneOne) {
@@ -195,12 +206,14 @@ namespace Sleipnir {
                     //bOne, get the value of the gene located at the position (iBaseGene + iGeneOne, iGeneTwo)
                     if ((bOne = vecData[0].Get(iBaseGenes + iGeneOne, iGeneTwo))) {
                         //Offset is: m_iHeader + (GetSizeGene() * iOne) + (GetSizePair() * iTwo) + iDataset (for byte case)
+                        // ENibblesHigh writes only to the high nibble of the byte
                         OpenWrite(bOne - 1, GetOffset(iGeneOne, iGeneTwo, iBaseDatasets), ENibblesHigh, abImage);
                     }
                 }
             }
         }
 
+        // Loop through the rest of the datasets two at a time to facilitate writting nibbles together
         for (iDatum = (iBaseDatasets % 2); (iDatum + 1) < vecData.size(); iDatum += 2) {
             for (iGeneOne = 0; iGeneOne < GetGenes(); ++iGeneOne) {
                 for (iGeneTwo = 0; iGeneTwo < vecData[iDatum].GetColumns(); ++iGeneTwo) {
@@ -215,6 +228,7 @@ namespace Sleipnir {
                                                                                             iDatum), ENibblesBoth,
                                   abImage);
                     } else {
+                        // ENibblesBoth writes only to both the high and low nibble of the byte together
                         OpenWrite(bOne, GetOffset(iGeneOne, iGeneTwo, iBaseDatasets + iDatum), ENibblesBoth,
                                   abImage);
                         OpenWrite(bTwo, GetOffset(iGeneOne, iGeneTwo, iBaseDatasets + iDatum + 1), ENibblesBoth,
@@ -224,10 +238,13 @@ namespace Sleipnir {
             }
         }
 
+        // if number of datasets in a block is odd then we need to write the final
+        //   dataset values. In this case iDatum will be one less than vecData.size()
         if (iDatum < vecData.size()) {
             for (iGeneOne = 0; iGeneOne < GetGenes(); ++iGeneOne) {
                 for (iGeneTwo = 0; iGeneTwo < vecData[iDatum].GetColumns(); ++iGeneTwo) {
                     if ((bOne = vecData[iDatum].Get(iBaseGenes + iGeneOne, iGeneTwo))) {
+                        // ENibblesLow writes only to the low nibble of the byte
                         OpenWrite(bOne - 1, GetOffset(iGeneOne, iGeneTwo, iBaseDatasets + iDatum), ENibblesLow,
                                   abImage);
                     }
@@ -287,8 +304,9 @@ namespace Sleipnir {
             vecbData.resize(m_iDatasets * m_iGenes);
 
             for (j = 0; j < m_iGenes; j++) {
+                // Loop through each dataset value for the gene pair
                 for (i = 0; i < GetSizePair(); i++) {
-                    size_t offset = GetOffset(iOne, j) - m_iHeader;
+                    size_t offset = GetOffset(iOne, j) - m_iHeader;  // This should be moved to outer loop
                     unsigned char b = abImage[offset + i];
                     unsigned char bValue = -1;
                     if ((bValue = (b & 0xF)) == 0xF) {
@@ -799,13 +817,19 @@ namespace Sleipnir {
         for (i = 0; i < vecstrGenes.size(); ++i)
             m_mapstriGenes[m_vecpDBs[i % m_vecpDBs.size()]->GetGene(i / m_vecpDBs.size())] = i;
 
+        // Rename AddDataFromDabFiles
         return CDatabaseImpl::Open(vecstrGenes, vecstrNodes, mapstriZeros);
     }
 
-/* Version of Open() that takes a list of datasets as input. Key method */
-    bool CDatabase::Open(const std::vector <std::string> &vecstrGenes, const std::vector <std::string> &vecstrDatasets,
-                         const std::string &strInputDirectory, const std::string &strOutputDirectory, size_t iFiles,
-                         const map <string, size_t> &mapstriZeros) {
+    /* Version of Open() that takes a list of datasets as input. Key method */
+    // This version is used by Data2DB to create the database
+    // Rename to CreateDBFiles
+    bool CDatabase::Open(const std::vector <std::string> &vecstrGenes,
+                                  const std::vector <std::string> &vecstrDatasets,
+                                  const std::string &strInputDirectory,
+                                  const std::string &strOutputDirectory,
+                                  size_t iFiles,
+                                  const map <string, size_t> &mapstriZeros) {
 
         vector <string> vecstrNodes, vecstrSubset;
         size_t i, j;
@@ -814,13 +838,16 @@ namespace Sleipnir {
 
         Clear();
 
+        // Create a list of the dab files that are the inputs to create the DB
         vecstrNodes.resize(vecstrDatasets.size());
         for (i = 0; i < vecstrDatasets.size(); i++) {
+            // dataset names are the prefix of the dab file name
             vecstrNodes[i] = strInputDirectory + '/' + vecstrDatasets[i];
         }
 
+        // Number of DB files to create is iFiles
         m_vecpDBs.resize(iFiles);
-        int iNumFilesOpen = 1000;
+        int iNumFilesOpen = 1000;  // TODO - make configurable
 
         for (i = 0; i < m_vecpDBs.size(); ++i) {
             m_vecpDBs[i] = new CDatabaselet(m_useNibble);
@@ -828,21 +855,31 @@ namespace Sleipnir {
 
         size_t k;
 
+        // vecDBs is a vector of CDatabaselets each corresponding to one DB file
+        // Loop through each DB file that will be built
         for (i = 0; i < m_vecpDBs.size(); ++i) { //block size (such as 1000)
             if (i % iNumFilesOpen == 0 && i > 0) {
+                // We're at some increment of the allowed open files (i.e. 1000)
+                // Close the previous 1000 files so the next 1000 can be opened.
                 for (k = 0; k < iNumFilesOpen; k++) {
                     m_vecpDBs[i - k - 1]->CloseFile();
                 }
             }
+            // Create the subset of genes in this DB file
             vecstrSubset.clear();
-            for (j = i; j < vecstrGenes.size(); j += m_vecpDBs.size())
+            for (j = i; j < vecstrGenes.size(); j += m_vecpDBs.size()) {
+                // The first 1000 genes assigned round robin to the first 1000 files
+                // and by every increment of 1000 there after (or numDB files)
                 vecstrSubset.push_back(vecstrGenes[j]); //contains index for 1000, 2000, 3000th genes
+            }
             sprintf(acNumber, "%08lu", i);
             strFile = strOutputDirectory + '/' + acNumber + c_acExtension;
 
             if (!(i % 100))
                 g_CatSleipnir().notice("CDatabase::Open( %s, %d ) initializing file %d/%d",
                                        strOutputDirectory.c_str(), iFiles, i, m_vecpDBs.size());
+            // Open the new DB file and create the header
+            // vecstrSubset gives gene_ids, num genes in total, num datasets
             if (!m_vecpDBs[i]->Open(strFile, vecstrSubset, vecstrGenes.size(), vecstrNodes.size())) {
                 g_CatSleipnir().error("CDatabase::Open( %s, %d ) could not open file %s",
                                       strOutputDirectory.c_str(), iFiles, strFile.c_str());
@@ -854,41 +891,65 @@ namespace Sleipnir {
             m_vecpDBs[i]->CloseFile();
         }
 
-        for (i = 0; i < vecstrGenes.size(); ++i)
-            m_mapstriGenes[m_vecpDBs[i % m_vecpDBs.size()]->GetGene(i / m_vecpDBs.size())] = i;
+        for (i = 0; i < vecstrGenes.size(); ++i) {
+            // DB file number
+            size_t db_idx = i % m_vecpDBs.size();
+            // gene index within a DB file
+            size_t gene_idx = i / m_vecpDBs.size();
+            std::string gene_name = m_vecpDBs[db_idx]->GetGene(gene_idx);
+            m_mapstriGenes[gene_name] = i;
+        }
 
+        // Load the data from the input data files (Nodes) into the new CDatabaselet DB files
+        // Rename call AddDataFromDabFiles
         return CDatabaseImpl::Open(vecstrGenes, vecstrNodes, mapstriZeros);
     }
 
-/* the key Open() method for Data2DB conversion */
+    /* the key Open() method for Data2DB conversion */
+    // Creates the output DB file content from the input Dab files
+    // vecstrGenes - list of all genes
+    // vecstrFiles - list of all Dab files to build DB from
+    // Rename AddDataFromDabFiles
     bool CDatabaseImpl::Open(const std::vector <std::string> &vecstrGenes,
-                             const std::vector <std::string> &vecstrFiles, const map <string, size_t> &mapstriZeros) {
+                                         const std::vector <std::string> &vecstrFiles,
+                                         const map <string, size_t> &mapstriZeros) {
         size_t i, j, k, iOne, iTwo, iOutBlock, iOutBase, iOutOffset, iInBlock, iInBase, iInOffset;
         vector <size_t> veciGenes;
         float d;
         map<string, size_t>::const_iterator iterZero;
 
         veciGenes.resize(vecstrGenes.size());
+        // m_iBlockOut is number of output DB files to process at once - default to all
         iOutBlock = (m_iBlockOut == -1) ? m_vecpDBs.size() : m_iBlockOut;
+        // m_iBlockIn is number of input DAB files to process at once - default to all
         iInBlock = (m_iBlockIn == -1) ? vecstrFiles.size() : m_iBlockIn;
 
         int iNumFilesOpen = 1000;
 
         /* blocking parameter, iOutBase: number of databaselets to process at a time */
         for (iOutBase = 0; iOutBase < m_vecpDBs.size(); iOutBase += iOutBlock) {
-            vector <string> vecstrMyGenes;
-            vector <size_t> veciMyGenes;
+            vector <string> vecstrMyGenes;  // names of genes in this set (block) of output DB files
+            vector <size_t> veciMyGenes;  // Dab indices of genes in this block output DB file
 
+            // Iterate through the current set (block) of output databaselets
             for (iOutOffset = 0; (iOutOffset < iOutBlock) && ((iOutBase + iOutOffset) < m_vecpDBs.size());
                  ++iOutOffset) {
                 const CDatabaselet &DB = *m_vecpDBs[iOutBase + iOutOffset];
-
+                
+                // Gather all the gene names in the output set of DBs
                 for (i = 0; i < DB.GetGenes(); ++i)
                     vecstrMyGenes.push_back(DB.GetGene(i));
             }
 
             veciMyGenes.resize(vecstrMyGenes.size());
 
+            // Iterate through the input DAB files to get the correlation arrays for
+            //  the genes in the output set of DB files.
+            // Remember that each DAB file will be a dataset entry in the DB and there
+            //  will be a gene correlation array for each gene in the DB file for each
+            //  dataset. 
+            // The values will be stored in vecData[dataset] where each vecData[dataset]
+            //  will have InBlock primary genes and totalGene correlations per primary gene.
             for (iInBase = 0; iInBase < vecstrFiles.size(); iInBase += iInBlock) {
                 vector <CCompactFullMatrix> vecData;
                 vecData.resize(((iInBase + iInBlock) > vecstrFiles.size()) ?
@@ -907,8 +968,10 @@ namespace Sleipnir {
                         }
                     }
 
+                    // Loop through genes in output DB file and get corresponding gene indexes from the Dab file
                     for (i = 0; i < veciMyGenes.size(); ++i)
                         veciMyGenes[i] = Dat.GetGene(vecstrMyGenes[i]);
+                    // Loop through all genes in the collection and get corresponding indexes in the Dab file
                     for (i = 0; i < veciGenes.size(); ++i)
                         veciGenes[i] = Dat.GetGene(vecstrGenes[i]);
 
@@ -927,17 +990,22 @@ namespace Sleipnir {
 				private(j, i) \
 				schedule(static)
 
+                    // Loop through the genes for this output DB file (stored as Dab indices)
                     for (i = 0; i < veciMyGenes.size(); i++) {
                         size_t iOne = veciMyGenes[i];
+                        // Loop through all genes in the collection (as Dab indices)
                         for (j = 0; j < veciGenes.size(); j++) {
                             size_t iTwo = veciGenes[j];
                             size_t iVal = -1;
+                            // Get the correlation value between the two genes
                             if (iOne != -1 && iTwo != -1) {
                                 if (!CMeta::IsNaN(d = Dat.Get(iOne, iTwo)))
                                     iVal = Dat.Quantize(d);
                                 if (iVal == -1)
                                     iVal = iZero;
                             }
+                            // Write the correlation value to vecData for this inpub Dab
+                            //  in preparation for writing the DB file
                             if (iVal != -1)
                                 vecData[iInOffset].Set(i, j, iVal + 1);
                         }
@@ -946,6 +1014,7 @@ namespace Sleipnir {
 
                 }
 
+                // Output the data collected from the current set of input Dabs to all the output DB files
                 for (i = iOutOffset = 0; (iOutOffset < iOutBlock) && ((iOutBase + iOutOffset) <
                                                                       m_vecpDBs.size()); ++iOutOffset) {
                     CDatabaselet &DB = *m_vecpDBs[iOutBase + iOutOffset];
@@ -967,6 +1036,17 @@ namespace Sleipnir {
                         cerr << "Processing offset " << iOutOffset << '/' << iOutBlock << endl;
                     //iInBase, for B=2, iInBase = 0, 2, 4 (total 5 datasets)
                     //i = 0 18 36 ...
+                    // Write the vecData to the current output DB:
+                    //  - vecData is a set of matrices, one per input dataset with gene correlations
+                    //     for the primary genes of the output DB files
+                    //  - i is the index of the first row of primary genes in the vecData matrices
+                    //     corresponding to the current output DB. Since all output DBs have the
+                    //     same number of primary genes in them we increment i by that geneCount
+                    //     with each for loop iteration.
+                    //  - iInBase is the base index number of the input datasets, 
+                    //     the len of vecData will give the other index values
+                    //  - m_fBuffer - whether to buffer channges in memory before writing to DB file 
+                    
                     if (!DB.Open(vecData, i, iInBase, m_fBuffer)) {
                         return false;
                     }
@@ -1032,7 +1112,7 @@ namespace Sleipnir {
         return true;
     }
 
-//Create a copy of current CDatabase collection that has X number of CDatabaselets 
+//Create a copy of current CDatabase collection that has X number of CDatabaselets
     bool CDatabase::Reorganize(const char *dest_db_dir, const size_t &num_db) {
         int dest_db = num_db;
         size_t i, j, l;

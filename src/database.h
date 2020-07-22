@@ -126,8 +126,8 @@ namespace Sleipnir {
                   const IBayesNet *pBayesNet, const std::string &strOutputDirectory, size_t iFiles,
                   const map <string, size_t> &mapstriZeros);
 
-
         //Qian
+        // Rename to CreateDBFiles
         bool Open(const std::vector <std::string> &vecstrGenes, const std::vector <std::string> &vecstrDatasets,
                   const std::string &strInputDirectory, const std::string &strOutputDirectory, size_t iFiles,
                   const map <string, size_t> &mapstriZeros);

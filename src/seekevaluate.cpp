@@ -102,6 +102,7 @@ namespace Sleipnir {
 
         //ar should be same size as rank
         vector <AResult> *sing = ar;
+        // GRW - this sort isn't needed if using pre-sorted seek_db format
         bool ret =
                 CSeekPerformanceMeasure::SortRankVector(rank, mapG, *sing, bNegativeCor, top);
 
@@ -117,8 +118,8 @@ namespace Sleipnir {
         for (i = 0; i < TOP; i++) {
             aa = &(*sing)[i];
             if (aa->f == 0) break;
-            if (mask[aa->i] == 1) continue;
-            if (gold[aa->i] == 1) {
+            if (mask[aa->i] == 1) continue; // this is the held-out query gene
+            if (gold[aa->i] == 1) {  // these are the other query genes ranked to the held-out
                 x += pow(rate, (float) jj);
                 //fprintf(stderr, "Sorted %d %d %.5f\n", jj, aa->i, (aa->f-320)/100.0);
             }
