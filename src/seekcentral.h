@@ -426,8 +426,8 @@ namespace Sleipnir {
         vector <string> m_vecstrDatasets;
         vector <string> m_vecstrDP;
         map <string, string> m_mapstrstrDatasetPlatform;
-        map <string, utype> m_mapstrintDataset;
-        map <string, utype> m_mapstrintGene;
+        map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
+        map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
         vector <vector<string>> m_vecstrSearchDatasets;
         vector<CSeekIntIntMap *> m_searchdsetMap;
 
@@ -480,6 +480,7 @@ namespace Sleipnir {
         vector <vector<AResultFloat>> m_final;
 
         /* Query */
+        // vector of queries, each query is a vector of genes to query on
         vector <vector<string>> m_vecstrAllQuery;
         vector <CSeekQuery> m_Query;
 
@@ -497,6 +498,7 @@ namespace Sleipnir {
         utype m_numThreads;
 
         utype m_maxNumDB;
+        // map by index to sets of queries to be loaded together (databaselets)
         map <utype, vector<vector < string>> >
         m_mapLoadTime;
         bool DEBUG;

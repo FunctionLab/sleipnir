@@ -192,9 +192,10 @@ namespace Sleipnir {
             return (GetOffset(iOne, iTwo) + GetOffsetDataset(iDataset));
         }
 
-        uint32_t m_iGenes;
+        uint32_t m_iGenes;  // number of genes in the entire data collection
         uint32_t m_iDatasets;
-        std::vector <std::string> m_vecstrGenes;
+        // m_vecstrGenes.size() is also used to get number of primary genes in this file
+        std::vector <std::string> m_vecstrGenes; // names of the primary genes in this file
         std::string strFileName;
 
         mutable std::fstream m_fstm;
@@ -223,6 +224,7 @@ namespace Sleipnir {
             Clear();
         }
 
+        // Rename to AddDataFromDabFiles
         bool Open(const std::vector <std::string> &, const std::vector <std::string> &, const map <string, size_t> &);
 
         bool Open(const std::string &, size_t, bool = false);
