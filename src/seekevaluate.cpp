@@ -47,8 +47,10 @@ namespace Sleipnir {
         bool DEBUG = false;
 
         //a should be the same size as rank
-        if (top == 0) TOP = rank.size();
-        else TOP = top;
+        TOP = top;
+        if (TOP == 0 || TOP > rank.size() ) {
+          TOP = rank.size();
+        }
 
         vector<utype>::const_iterator itRank = rank.begin();
         vector<AResult>::iterator itA = a.begin();
