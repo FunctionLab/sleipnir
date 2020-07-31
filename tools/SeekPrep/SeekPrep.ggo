@@ -51,6 +51,8 @@ option	"gexpvarmean"		v	"Generates gene expression variance and mean files (.gex
 								flag	off
 option	"sinfo"				s	"Generates sinfo file (dataset z score mean and stdev)"
 								flag	off
+option	"datasetsize"			S	"Ouput dataset size, i.e. number of experiments"
+								flag	off
 
 section "DB mode"
 option	"gplat"				P	"Generates platform wide gene average and stdev file"

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# options: [-v] -s <seek_path> -b <seek_bin_dir>"
+
 testname="seek_basic_query"
 
 source core_run.sh "$@" -t $testname

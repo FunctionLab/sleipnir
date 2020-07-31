@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# usage:  echo "run_all.sh [-v] -s <seek_path> -b <seek_bin_dir>"
+
 testdir=$(dirname $(realpath -s $0))  # the path of this script
 
 failed_tests=()
