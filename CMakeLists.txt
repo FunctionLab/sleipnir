@@ -1,14 +1,15 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.14.5)
 project(sleipnir)
 
 add_compile_options(-fopenmp)
+add_link_options(-lgomp -lpthread)
 
 set(CMAKE_CXX_STANDARD 14)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Generating release config")
     set(CMAKE_BUILD_TYPE Release)
-    add_compile_options(-03)
+    add_compile_options(-O3)
 elseif(${CMAKE_BUILD_TYPE} MATCHES Debug)
     message(STATUS "Generating debug config")
     add_compile_options(-O0)
@@ -178,19 +179,6 @@ if(USE_GENGETOPT)
 endif()
 
 
-find_library(OPENMP_LIBRARY libomp.a)
-find_path(OPENMP_INCLUDE omp.h)
-if (OPENMP_LIBRARY AND OPENMP_INCLUDE)
-    target_link_libraries(sleipnir ${OPENMP_LIBRARY})
-    target_include_directories(sleipnir PUBLIC ${OPENMP_INCLUDE})
-
-    list(APPEND EXTRA_LIBRARIES ${OPENMP_LIBRARY})
-    list(APPEND EXTRA_INCLUDES ${OPENMP_INCLUDE})
-else()
-    message(SEND_ERROR "Missing required OpenMP library")
-endif ()
-
-
 option(USE_READLINE "Use readline" ON)
 if(USE_READLINE)
     find_library(READLINE_LIBRARY readline)
@@ -202,8 +190,6 @@ if(USE_READLINE)
     list(APPEND EXTRA_INCLUDES ${READLINE_INCLUDE})
 endif()
 
-find_library(PTHREAD_LIBRARY pthread)
-find_path(PTHREAD_INCLUDE pthread)
 
 option(USE_LOG4CPP "Use log4cpp" OFF)
 if(USE_LOG4CPP)
@@ -256,6 +242,18 @@ target_include_directories(sleipnir PUBLIC ${GSL_INCLUDE})
 
 find_library(SVM_LIBRARY svm)
 find_path(SVM_INCLUDE PATH_SUFFIXES libsvm NAMES svm.h)
+target_link_libraries(sleipnir ${SVM_LIBRARY})
+target_include_directories(sleipnir PUBLIC ${SVM_INCLUDE})
+
+find_package(OpenBLAS REQUIRED)
+
+target_link_libraries(sleipnir ${OpenBLAS_LIBRARIES})
+target_include_directories(sleipnir PUBLIC ${OpenBLAS_INCLUDE_DIRS})
+
+list(APPEND EXTRA_LIBRARIES ${SVM_LIBRARY})
+list(APPEND EXTRA_INCLUDES ${SVM_INCLUDE})
+list(APPEND EXTRA_LIBRARIES ${OpenBLAS_LIBRARIES})
+list(APPEND EXTRA_INCLUDES ${OpenBLAS_INCLUDE_DIRS})
 
 target_link_libraries(sleipnir ${SVM_LIBRARY})
 
@@ -350,7 +348,7 @@ set(SLEIPNIR_TOOLS
         Dab2Dad
         Dat2Dab
         Dat2Graph
-        #Dat2PCL
+        Dat2PCL
         Data2Bnt
         Data2DB
         Data2Features
@@ -381,7 +379,7 @@ set(SLEIPNIR_TOOLS
         OntoShell
         Orthologer
         Overlapper
-        #PCL2Bin
+        PCL2Bin
         PCLPlotter
         PCLServer
         Randomizer
@@ -392,7 +390,7 @@ set(SLEIPNIR_TOOLS
         SVMhierarchy
         SVMmulticlass
         SVMperfer
-        #SparseNetCombiner
+        SparseNetCombiner
         SeekAggregatedDataset
         SeekEvaluator
         SeekGeneRecommender
@@ -404,7 +402,7 @@ set(SLEIPNIR_TOOLS
         SeekServer
         SeekTest
         Seqs2Ngrams
-        #SVMperfing
+        SVMperfing
         SpeciesConnector
         Synthesizer
         Txt2Bin
@@ -428,8 +426,10 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
     else ()
         add_executable(${TOOL}
             tools/${TOOL}/${TOOL}.cpp
-            tools/${TOOL}/cmdline.c
-            tools/${TOOL}/stdafx.cpp)
+            tools/${TOOL}/cmdline.c)
+	  if (EXISTS tools/${TOOL}/stdafx.cpp)
+            add_executable(${TOOL} tools/${TOOL}/stdafx.cpp)
+	  endif()
     endif ()
     add_dependencies(${TOOL} sleipnir)
     target_include_directories(${TOOL} PUBLIC ${EXTRA_INCLUDES})
