@@ -11,6 +11,8 @@ option	"distance"		d	"Similarity measure"
 							values="pearson","euclidean","kendalls","kolm-smir","spearman","bicor",
 							"pearnorm","hypergeom","innerprod","bininnerprod","quickpear",
 							"mutinfo","relauc","pearsig","dice","dcor","sdcor","cosine"	default="pearnorm"
+option	"quant"			u	"Input Quant file"
+							string	typestr="filename"
 
 section "Miscellaneous"
 option	"weights"		w	"Input weights file"
