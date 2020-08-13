@@ -57,7 +57,15 @@ int main(int iArgs, char **aszArgs) {
     if (sArgs.flip_flag)
         Dat.Invert();
 
-    Dat.Save(sArgs.output_arg);
+    if (sArgs.quant_arg) {
+        CDataPair datOut;
+        datOut.Open(Dat);
+        datOut.OpenQuants(sArgs.quant_arg);
+        datOut.Quantize();
+        datOut.Save(sArgs.output_arg);
+    } else {
+        Dat.Save(sArgs.output_arg);
+    }
 
     return 0;
 }
