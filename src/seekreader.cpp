@@ -61,21 +61,31 @@ namespace Sleipnir {
         size_t i, j, k;
         vector<char> cAllQuery;
 
+        // cAllQuery indicates which genes are part of the query by gene map index
+        // It has one byte per gene in the collection if that byte is 0 that gene
+        // is not present in the query, if 1 it is present.
         CSeekTools::InitVector(cAllQuery, iGenes, (char) 0);
 
+        // loop through all queries
         for (i = 0; i < vecstrAllQuery.size(); i++) {
+            // in each query loop through all genes
             for (j = 0; j < vecstrAllQuery[i].size(); j++) {
+                // is the gene name contained in the gene_map file
                 if (mapstriGenes.find(vecstrAllQuery[i][j]) == mapstriGenes.end()) continue;
+                // get the gene_map index value associated with the gene name
                 utype k = mapstriGenes.find(vecstrAllQuery[i][j])->second;
+                // indicate this gene (by gene index) is present
                 cAllQuery[k] = 1;
             }
         }
 
+        // create a list of just the query genes from the cAllQuery presence map
         vector <utype> allQ;
         for (i = 0; i < cAllQuery.size(); i++) if (cAllQuery[i] == 1) allQ.push_back(i);
         allQ.resize(allQ.size());
 
         //for now
+        // reset all seek datasets that were previously loaded for other queries
         for (i = 0; i < iDatasets; i++) {
             if (vc[i]->GetDBMap() != NULL) {
                 vc[i]->DeleteQueryBlock();
@@ -94,6 +104,7 @@ namespace Sleipnir {
 #pragma omp parallel for \
     shared(allQ) private(i) schedule(dynamic)
         for (i = 0; i < iDatasets; i++) {
+            // initialize each dataset with the presence map of query genes
             vc[i]->InitializeQueryBlock(allQ);
         }
 
@@ -123,6 +134,8 @@ namespace Sleipnir {
             m = allQ[i];
             for (d = 0; d < DB.size(); d++) { //number of CDatabase collections
                 vector<unsigned char> Qi;
+                // reads into Qi this m gene's data (pair values for all datasets)
+                //  in same layout as on disk
                 if (!DB[d]->GetGene(m, Qi)) {
                     cerr << "Gene does not exist" << endl;
                     continue;
@@ -131,17 +144,26 @@ namespace Sleipnir {
                 CSeekIntIntMap *qu = NULL;
                 unsigned char **r = NULL;
                 vector <utype> vecDatasetID;
+                // loop through each dataset in this DB collection
                 for (j = 0; j < dbDatasets[d].size(); j++) {
+                    // get the index number of this dataset name add it to vecDatasetId
                     utype qq = mapstriDatasets.find(dbDatasets[d][j])->second;
                     vecDatasetID.push_back(qq);
                 }
 #pragma omp parallel for \
             shared(Qi) private(j, k) \
             firstprivate(m, qu, r, db) schedule(dynamic)
+                // loop through each dataset index
                 for (j = 0; j < vecDatasetID.size(); j++) {
+                    // get the gene presence map for the dataset into qu
                     if ((qu = vc[vecDatasetID[j]]->GetDBMap()) == NULL) continue;
+                    // get the index position of the query gene m in the query (db = qu->GetForward(m))
                     if (CSeekTools::IsNaN(db = (qu->GetForward(m)))) continue;
+                    // fill the qgene-gene correlation values
                     for (r = vc[vecDatasetID[j]]->GetMatrix(), k = 0; k < iGenes; k++)
+                        // data order is for query gene (db), all correlations with other genes for this dataset (j)
+                        //   followed by all gene correlations for the next dataset, etc.
+                        // GRW - change needed for different seek_db layout
                         r[db][k] = Qi[k * vecDatasetID.size() + j];
                 }
                 Qi.clear();
@@ -187,6 +209,7 @@ namespace Sleipnir {
         return true;
     }
 
+    // Called by the per-query version of CSeekCentral::Initialize()
     bool CSeekTools::LoadDatabase(const vector<CDatabase *> &DB,
                                   const size_t &iGenes, const size_t &iDatasets,
                                   vector<CSeekDataset *> &vc, const vector<CSeekDataset *> &vc_src,
@@ -226,6 +249,7 @@ namespace Sleipnir {
         return true;
     }
 
+    // Called by in-common (startup) version of CSeekCentral::Initialize()
     bool CSeekTools::LoadDatabase(const vector<CDatabase *> &DB,
                                   const size_t &iGenes, const size_t &iDatasets,
                                   const vector<CSeekDBSetting *> &DBSetting,

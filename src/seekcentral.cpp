@@ -227,6 +227,8 @@ namespace Sleipnir {
             }
         }
 
+        // Here it creates m_mapLoadTime which combines together multiple query
+        //  string genes whose data will be loaded into memory at the same time
         vector <vector<string>> *vv = NULL;
         m_mapLoadTime[prev] = vector < vector < string > > ();
         for (i = 0; i < m_vecstrAllQuery.size(); i++) {
@@ -261,11 +263,12 @@ namespace Sleipnir {
         return true;
     }
 
-//for SeekServer
-//assume DB has been read (with gvar, sinfo information)
-//assume datasets and genes have been read
-//assume m_enableNetwork is on
-//* CDatabaselet collection is shared between multiple clients (m_bSharedDB)
+    // Per-query version of Initialize() called by SeekServer
+    //for SeekServer
+    //assume DB has been read (with gvar, sinfo information)
+    //assume datasets and genes have been read
+    //assume m_enableNetwork is on
+    //* CDatabaselet collection is shared between multiple clients (m_bSharedDB)
     bool CSeekCentral::Initialize(
             const string &output_dir, const string &query,
             const string &search_dset, CSeekCentral *src, const int iClient,
@@ -596,7 +599,9 @@ namespace Sleipnir {
         return true;
     }
 
-//load everything except query, search datasets, output directory
+    // In-common version of Initialize(), to be called at startup time, no per-query info.
+    // load everything except query, search datasets, output directory
+    // called by SeekServer at startup time
     bool CSeekCentral::Initialize(const vector<CSeekDBSetting *> &vecDBSetting,
                                   const utype buffer, const bool to_output_text,
                                   const bool bOutputWeightComponent, const bool bSimulateWeight,
@@ -768,6 +773,7 @@ namespace Sleipnir {
         return true;
     }
 
+    // Version of Initialize called by SeekMiner - calls in-common intialize() and then does query-specific prep
     bool CSeekCentral::Initialize(
             const vector<CSeekDBSetting *> &vecDBSetting,
             const char *search_dset, const char *query,
@@ -1143,6 +1149,7 @@ namespace Sleipnir {
         //fprintf(stderr, "Min gene required %.2f %d %d\n", m_fPercentGenomeRequired,
         //	maxGCoverage, (int)(m_fPercentGenomeRequired*(float) maxGCoverage));
 
+        // m_vecstrAllQuery is vector of queries
         for (i = 0; i < m_vecstrAllQuery.size(); i++) {
             //simulated weight case ======================
             /*if(simulateWeight && redoWithEqual>=1) //1 or 2
@@ -1153,6 +1160,7 @@ namespace Sleipnir {
 
             if (m_mapLoadTime.find(i) != m_mapLoadTime.end()) {
                 if (!m_bRandom || l == 0) { //l==0: first random repetition
+                    // load query genes into m_vc a vector of CSeekDatasets
                     CSeekTools::ReadDatabaselets(m_vecDB, m_iGenes, m_iDatasets,
                                                  m_mapLoadTime[i], m_vc, m_mapstrintGene, m_vecDBDataset,
                                                  m_mapstrintDataset, m_iClient, m_bEnableNetwork);

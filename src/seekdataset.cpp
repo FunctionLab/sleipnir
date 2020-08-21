@@ -36,7 +36,7 @@
 namespace Sleipnir {
 
     CSeekDataset::CSeekDataset() {
-        r = NULL; //if declared, will be iDBSize * iNumGenes
+        r = NULL; //if declared, will be iDBSize * iNumGenes, i.e. number of query_genes present in dataset * total number of genes in DB
         rData = NULL;
         dbMap = NULL;
         geneMap = NULL;
@@ -113,6 +113,7 @@ namespace Sleipnir {
             iNumGenes = 0;
         }
 
+        // genePresence size is the total number of genes across the db collection
         utype iSize = genePresence.size();
         iNumGenes = iSize;
         geneMap = new CSeekIntIntMap(src->geneMap);
@@ -177,6 +178,7 @@ namespace Sleipnir {
             }
             dbMap->Add(*iterQ);
         }
+        // iDBSize - Number of query genes present in the dataset
         iDBSize = dbMap->GetNumSet();
 
         bool DEBUG = false;

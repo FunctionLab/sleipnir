@@ -460,6 +460,7 @@ namespace Sleipnir {
         vector<float> weight;
 
         utype **rData;
+        // r is gene-gene correlation matrix with gene correlations for one dataset followed by next dataset
         unsigned char **r;
 
         float sum_weight;
