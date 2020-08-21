@@ -88,8 +88,8 @@ struct gengetopt_args_info
   const char *gexpvarmean_help; /**< @brief Generates gene expression variance and mean files (.gexpvar, .gexpmean) help description.  */
   int sinfo_flag;	/**< @brief Generates sinfo file (dataset z score mean and stdev) (default=off).  */
   const char *sinfo_help; /**< @brief Generates sinfo file (dataset z score mean and stdev) help description.  */
-  int datasetsize_flag;	/**< @brief Ouput dataset size, i.e. number of experiments (default=off).  */
-  const char *datasetsize_help; /**< @brief Ouput dataset size, i.e. number of experiments help description.  */
+  int datasetsize_flag;	/**< @brief Ouput dataset sizes and exit, i.e. number of experiments (default=off).  */
+  const char *datasetsize_help; /**< @brief Ouput dataset sizes and exit, i.e. number of experiments help description.  */
   int gplat_flag;	/**< @brief Generates platform wide gene average and stdev file (default=off).  */
   const char *gplat_help; /**< @brief Generates platform wide gene average and stdev file help description.  */
   char * dblist_arg;	/**< @brief The DB file list (incl. file path).  */

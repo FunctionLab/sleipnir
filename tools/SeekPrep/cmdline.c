@@ -61,7 +61,7 @@ const char *gengetopt_args_info_help[] = {
   "  -V, --pclinput=filename      PCL BIN file",
   "  -v, --gexpvarmean            Generates gene expression variance and mean\n                                 files (.gexpvar, .gexpmean)  (default=off)",
   "  -s, --sinfo                  Generates sinfo file (dataset z score mean and\n                                 stdev)  (default=off)",
-  "  -S, --datasetsize            Ouput dataset size, i.e. number of experiments\n                                 (default=off)",
+  "  -S, --datasetsize            Ouput dataset sizes and exit, i.e. number of\n                                 experiments  (default=off)",
   "\nDB mode:",
   "  -P, --gplat                  Generates platform wide gene average and stdev\n                                 file  (default=off)",
   "  -b, --dblist=filename        The DB file list (incl. file path)",
@@ -1094,7 +1094,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'S':	/* Ouput dataset size, i.e. number of experiments.  */
+        case 'S':	/* Ouput dataset sizes and exit, i.e. number of experiments.  */
         
         
           if (update_arg((void *)&(args_info->datasetsize_flag), 0, &(args_info->datasetsize_given),
