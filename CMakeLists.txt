@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.14.5)
 project(sleipnir)
 
 add_compile_options(-fopenmp)
-add_link_options(-lgomp -lpthread)
+#add_link_options(-lgomp -lpthread)
+# Fix here
+add_link_options(-L/usr/local/Cellar/libomp/9.0.0/lib/ -lomp -lpthread)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -19,7 +21,16 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 include_directories(src)
 
-add_library(sleipnir STATIC
+option(PACKAGE_TESTS "Build the tests" ON)
+if(PACKAGE_TESTS)
+    enable_testing()
+    include(GoogleTest)
+    add_subdirectory(tests)
+endif()
+
+set(SLEIPNIR_SOURCES
+        src/example_gtest.cpp
+        src/example_gtest.h
         src/annotation.cpp
         src/annotation.h
         src/annotationi.h
@@ -154,15 +165,6 @@ add_library(sleipnir STATIC
         src/stdafx.h
         src/strassen.cpp
         src/strassen.h
-        src/svm.cpp
-        src/svm.h
-        src/svmi.h
-        src/svmperf.cpp
-        src/svmperf.h
-        src/svmstruct.cpp
-        src/svmstruct.h
-        src/svmstructtree.cpp
-        src/svmstructtree.h
         src/trie.h
         src/triei.h
         src/typesi.h
@@ -170,7 +172,9 @@ add_library(sleipnir STATIC
         src/vwb.h
         src/vwbi.h)
 
-
+# remove this line
+set(SLEIPNIR_SOURCES ${SLEIPNIR_SOURCES} src/svm_local.cpp src/svm_local.h src/svmi.h)
+add_library(sleipnir STATIC ${SLEIPNIR_SOURCES})
 
 option(USE_GENGETOPT "Use gengetopt" ON)
 if(USE_GENGETOPT)
@@ -204,7 +208,7 @@ else()
     target_compile_definitions(sleipnir PUBLIC USE_LOG4CPP_STUB)
 endif()
 
-option(USE_SMILE "Use SMILE" ON)
+option(USE_SMILE "Use SMILE" OFF)
 if(USE_SMILE)
     find_library(SMILE_LIBRARY smile)
     find_path(SMILE_INCLUDE smile.h)
@@ -213,6 +217,8 @@ if(USE_SMILE)
 
     list(APPEND EXTRA_LIBRARIES ${SMILE_LIBRARY})
     list(APPEND EXTRA_INCLUDES ${SMILE_INCLUDE})
+else()
+    target_compile_definitions(sleipnir PUBLIC NO_SMILE=1)
 endif()
 
 find_path(BOOST_INCLUDE boost)
@@ -240,25 +246,37 @@ find_path(GSL_INCLUDE gsl)
 target_link_libraries(sleipnir ${GSL_LIBRARY})
 target_include_directories(sleipnir PUBLIC ${GSL_INCLUDE})
 
-find_library(SVM_LIBRARY svm)
-find_path(SVM_INCLUDE PATH_SUFFIXES libsvm NAMES svm.h)
-target_link_libraries(sleipnir ${SVM_LIBRARY})
-target_include_directories(sleipnir PUBLIC ${SVM_INCLUDE})
 
-find_package(OpenBLAS REQUIRED)
 
-target_link_libraries(sleipnir ${OpenBLAS_LIBRARIES})
-target_include_directories(sleipnir PUBLIC ${OpenBLAS_INCLUDE_DIRS})
+option(USE_OPENBLAS "Use open_blas" OFF)
+if(USE_OPENBLAS)
+    find_package(OpenBLAS REQUIRED)
 
-list(APPEND EXTRA_LIBRARIES ${SVM_LIBRARY})
-list(APPEND EXTRA_INCLUDES ${SVM_INCLUDE})
-list(APPEND EXTRA_LIBRARIES ${OpenBLAS_LIBRARIES})
-list(APPEND EXTRA_INCLUDES ${OpenBLAS_INCLUDE_DIRS})
+    target_link_libraries(sleipnir ${OpenBLAS_LIBRARIES})
+    target_include_directories(sleipnir PUBLIC ${OpenBLAS_INCLUDE_DIRS})
+    list(APPEND EXTRA_LIBRARIES ${OpenBLAS_LIBRARIES})
+    list(APPEND EXTRA_INCLUDES ${OpenBLAS_INCLUDE_DIRS})
+endif()
 
-target_link_libraries(sleipnir ${SVM_LIBRARY})
 
-option(USE_SVMPERF "Use svm_perf" ON)
+option(USE_SVMLIB "Use svm_lib" ON)
+if(USE_SVMLIB)
+  #set(SLEIPNIR_SOURCES ${SLEIPNIR_SOURCES} src/svm2.cpp src/svm2.h src/svmi.h)
+    find_library(SVM_LIBRARY svm)
+    find_path(SVM_INCLUDE PATH_SUFFIXES libsvm NAMES svm.h)
+    target_link_libraries(sleipnir ${SVM_LIBRARY})
+    target_include_directories(sleipnir PUBLIC ${SVM_INCLUDE})
+    list(APPEND EXTRA_LIBRARIES ${SVM_LIBRARY})
+    list(APPEND EXTRA_INCLUDES ${SVM_INCLUDE})
+    target_link_libraries(sleipnir ${SVM_LIBRARY})
+else()
+    target_compile_definitions(sleipnir PUBLIC NO_LIBSVM=1)
+endif()
+
+
+option(USE_SVMPERF "Use svm_perf" OFF)
 if(USE_SVMPERF)
+  #  set(SLEIPNIR_SOURCES ${SLEIPNIR_SOURCES} src/svmperf.cpp src/svmperf.h src/svmstruct.cpp src/svmstruct.h src/svmstructtree.cpp src/svmstructtree.h)
     find_library(SVMPERF_LIBRARY libsvmperf.a)
     find_path(SVMPERF_INCLUDE PATH_SUFFIXES svm_light svm_struct
             NAMES svm_struct_api.h svm_common.h)
@@ -267,9 +285,12 @@ if(USE_SVMPERF)
 
     list(APPEND EXTRA_LIBRARIES ${SVMPERF_LIBRARY})
     list(APPEND EXTRA_INCLUDES ${SVMPERF_INCLUDE})
+else()
+    target_compile_definitions(sleipnir PUBLIC NO_SVM_PERF=1)
 endif()
 
-option(USE_SVM_MULTICLASS "Use svm_multiclass" ON)
+
+option(USE_SVM_MULTICLASS "Use svm_multiclass" OFF)
 if(USE_SVM_MULTICLASS)
     find_library(SVM_MULTICLASS_LIBRARY libsvmmulti.a)
     find_path(SVM_MULTICLASS_INCLUDE PATH_SUFFIXES svm_multiclass/svm_light
@@ -283,9 +304,12 @@ if(USE_SVM_MULTICLASS)
     else()
         list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_STRUCT)
     endif()
+else()
+    target_compile_definitions(sleipnir PUBLIC NO_SVM_MULTICLASS=1=1)
 endif()
 
-option(USE_SVM_HIERARCHY "Use svm_hierarchy" ON)
+
+option(USE_SVM_HIERARCHY "Use svm_hierarchy" OFF)
 if(USE_SVM_HIERARCHY)
     find_library(SVM_HIERARCHY_LIBRARY libsvmhierarchy.a)
     find_path(SVM_HIERARCHY_INCLUDE PATH_SUFFIXES svm_hierarchy/svm_light
@@ -299,6 +323,8 @@ if(USE_SVM_HIERARCHY)
     else()
         list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_STRUCTTREE)
     endif()
+else()
+    target_compile_definitions(sleipnir PUBLIC NO_SVM_HIERARCHY=1)
 endif()
 
 option(USE_VOWPAL_WABBIT "Use Vowpal Wabbit" ON)
@@ -315,98 +341,102 @@ if(USE_VOWPAL_WABBIT)
     else()
         list(APPEND SLEIPNIR_COMPILE_DEFS NO_VOWPAL_WABBIT)
     endif()
+else()
+    target_compile_definitions(sleipnir PUBLIC NO_VOWPAL_WABBIT=1)
 endif()
 
 target_compile_definitions(sleipnir PUBLIC ${SLEIPNIR_COMPILE_DEFS})
 target_link_libraries(sleipnir stdc++)
 
+
 # command line tools
 
 set(SLEIPNIR_TOOLS
-        Answerer
-        BNConverter
-        BNCreator
-        BNEvaluator
-        BNFunc
-        BNServer
-        BNTester
-        BNTruster
-        BNUnraveler
-        BNWeaver
-        BNs2Txt
-        COALESCE
-        Clinician
-        Cliquer
-        Clusterer
-        Clusters2Dab
-        Combiner
-        Contexter
-        Counter
-        DBCombiner
-        DChecker
-        DSLConverter
-        Dab2Dad
-        Dat2Dab
-        Dat2Graph
-        Dat2PCL
-        Data2Bnt
-        Data2DB
-        Data2Features
-        Data2Sql
-        Data2Svm
-        DataDumper
-        DataServer
-        Distancer
-        Edges2Posteriors
-        Explainer
-        Filterer
-        Funcaeologist
-        Funcifier
-        Funcographer
-        Hubber
-        KNNImputer
-        LibSVMer
-        MCluster
-        MEFIT
-        MIed
-        MIer
-        Mat2Txt
-        Matcher
-        NetMiner
-        NetworkCombiner
-        NetworkRanker
-        Normalizer
-        OntoShell
-        Orthologer
-        Overlapper
-        PCL2Bin
-        PCLPlotter
-        PCLServer
-        Randomizer
-        SMRF
-        SVDer
-        SVMer
-        SVMfe
-        SVMhierarchy
-        SVMmulticlass
-        SVMperfer
-        SparseNetCombiner
-        SeekAggregatedDataset
-        SeekEvaluator
-        SeekGeneRecommender
-        SeekIterative
-        SeekMiner
-        SeekPValue
-        SeekPrep
-        SeekReader
+        #Answerer
+        #BNConverter
+        #BNCreator
+        #BNEvaluator
+        #BNFunc
+        #BNServer
+        #BNTester
+        #BNTruster
+        #BNUnraveler
+        #BNWeaver
+        #BNs2Txt
+        #COALESCE
+        #Clinician
+        #Cliquer
+        #Clusterer
+        #Clusters2Dab
+        #Combiner
+        #Contexter
+        #Counter
+        #DBCombiner
+        #DChecker
+        #DSLConverter
+        #Dab2Dad
+        #Dat2Dab
+        #Dat2Graph
+        #Dat2PCL
+        #Data2Bnt
+        #Data2DB
+        #Data2Features
+        #Data2Sql
+        #Data2Svm
+        #DataDumper
+        #DataServer
+        #Distancer
+        #Edges2Posteriors
+        #Explainer
+        #Filterer
+        #Funcaeologist
+        #Funcifier
+        #Funcographer
+        #Hubber
+        #KNNImputer
+        #LibSVMer
+        #MCluster
+        #MEFIT
+        #MIed
+        #MIer
+        #Mat2Txt
+        #Matcher
+        #NetMiner
+        #NetworkCombiner
+        #NetworkRanker
+        #Normalizer
+        #OntoShell
+        #Orthologer
+        #Overlapper
+        #PCL2Bin
+        #PCLPlotter
+        #PCLServer
+        #Randomizer
+        #SMRF
+        #SVDer
+        #SVMer
+        #SVMfe
+        #SVMhierarchy
+        #SVMmulticlass
+        #SVMperfer
+        #SparseNetCombiner
+        #SeekAggregatedDataset
+        #SeekEvaluator
+        #SeekGeneRecommender
+        #SeekIterative
+        #SeekMiner
+        #SeekPValue
+        #SeekPrep
+        #SeekReader
         SeekServer
-        SeekTest
-        Seqs2Ngrams
-        SVMperfing
-        SpeciesConnector
-        Synthesizer
-        Txt2Bin
-        VWer)
+        #SeekTest
+        #Seqs2Ngrams
+        #SVMperfing
+        #SpeciesConnector
+        #Synthesizer
+        #Txt2Bin
+        #VWer
+        )
 
 foreach(TOOL ${SLEIPNIR_TOOLS})
     include_directories(tools/${TOOL})

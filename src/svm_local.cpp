@@ -20,7 +20,7 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "stdafx.h"
-#include "svm.h"
+#include "svm_local.h"
 #include "pclset.h"
 #include "dataset.h"
 #include "meta.h"
