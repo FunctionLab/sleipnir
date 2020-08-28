@@ -22,7 +22,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 #include <iomanip>
-
+#include <random>
 
 float **LoadGenes(const vector <string> struserGenes,
                   const vector <utype> &veciGenes, const vector <string> &vecstrGenes,
@@ -877,7 +877,9 @@ int main(int iArgs, char **aszArgs) {
             vector<int> dID;
             for (k = 0; k < iDatasets; k++)
                 dID.push_back(k);
-            random_shuffle(dID.begin(), dID.end());
+            random_device rng;
+            mt19937 urng(rng());
+            shuffle(dID.begin(), dID.end(), urng);
             utype kk;
             for (kk = 0; kk < 100; kk++) {
                 k = dID[kk];

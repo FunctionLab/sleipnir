@@ -21,6 +21,7 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
+#include <random>
 
 static inline float enrange(float d, double dEpsilon) {
     float dTmp;
@@ -64,7 +65,9 @@ int main(int iArgs, char **aszArgs) {
         veciShuffle[i] = i;
     for (iIter = 0; iIter < (size_t) sArgs.iterations_arg; ++iIter) {
         cerr << "Iteration: " << iIter << '/' << sArgs.iterations_arg << endl;
-        random_shuffle(veciShuffle.begin(), veciShuffle.end());
+        random_device rng;
+        mt19937 urng(rng());
+        shuffle(veciShuffle.begin(), veciShuffle.end(), urng);
         for (iCur = 0; iCur < veciShuffle.size(); ++iCur) {
             if (!(iCur % 1000))
                 cerr << "Gene: " << iCur << '/' << veciShuffle.size() << endl;

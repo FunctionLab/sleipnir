@@ -6,7 +6,7 @@ add_compile_options(-fopenmp)
 # Fix here
 add_link_options(-L/usr/local/Cellar/libomp/9.0.0/lib/ -lomp -lpthread)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Generating release config")

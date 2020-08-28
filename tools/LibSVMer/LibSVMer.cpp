@@ -27,6 +27,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 #include "statistics.h"
+#include <random>
 
 using namespace LIBSVM;
 
@@ -204,8 +205,11 @@ int main(int iArgs, char **aszArgs) {
             size_t ii, index;
 
             for (ii = 0; ii < sArgs.num_cv_runs_arg; ii++) {
-                if (ii > 0)
-                    std::random_shuffle(vecLabels.begin(), vecLabels.end());
+                if (ii > 0) {
+                    std::random_device rng;
+                    std::mt19937 urng(rng());
+                    std::shuffle(vecLabels.begin(), vecLabels.end(), urng);
+                }
 
                 for (i = 0; i < sArgs.cross_validation_arg; i++) {
                     index = sArgs.cross_validation_arg * ii + i;

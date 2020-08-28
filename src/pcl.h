@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <random>
 
 #include "pcli.h"
 #include "measure.h"
@@ -727,8 +728,11 @@ namespace Sleipnir {
         void Randomize() {
             size_t i;
 
-            for (i = 0; i < GetGenes(); ++i)
-                std::random_shuffle(Get(i), Get(i) + GetExperiments());
+            for (i = 0; i < GetGenes(); ++i) {
+                std::random_device rng;
+                std::mt19937 urng(rng());
+                std::shuffle(Get(i), Get(i) + GetExperiments(), urng);
+            }
         }
     };
 

@@ -21,6 +21,7 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
+#include <random>
 
 static const char c_szRBF[] = "rbf";
 static const char c_szPolynomial[] = "poly";
@@ -115,9 +116,11 @@ int main(int iArgs, char **aszArgs) {
         for (i = 0; i < Data.GetGenes(); ++i)
             Data.MaskGene(i, !Data.IsMasked(i));
     SVM.Evaluate(Data, vecdResults);
-    if (sArgs.random_output_flag)
-        random_shuffle(vecdResults.begin(), vecdResults.end());
-
+    if (sArgs.random_output_flag) {
+        random_device rng;
+        mt19937 urng(rng());
+        shuffle(vecdResults.begin(), vecdResults.end(), urng);
+    }
     dAve = (float) CStatistics::Average(vecdResults);
     dStd = (float) sqrt(CStatistics::Variance(vecdResults, dAve));
     for (i = 0; i < vecdResults.size(); ++i)
