@@ -110,7 +110,7 @@ if __name__ == "__main__":
         for goldResultFile in glob.iglob(filepattern):
             filename = os.path.basename(goldResultFile)
             testfile = os.path.join(resultdir, filename)
-            corrs = files_rank_correlation(goldResultFile, testfile)
+            corrs = files_rank_correlation(goldResultFile, testfile, remove_substr=".pcl")
             print('Result Correlations: {}'.format(corrs))
             for corr in corrs:
                 if corr < min_result_correlation:

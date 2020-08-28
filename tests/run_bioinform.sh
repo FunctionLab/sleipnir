@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# options: [-v] -s <seek_path> -b <seek_bin_dir> -t [long, medium, short, tiny]"
+
 # get args into array starting with first param
 # and pull out the -t for test_type option
 args=("${@:1}")
