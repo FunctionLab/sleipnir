@@ -25,9 +25,11 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <random>
 
 #include "pcli.h"
 #include "measure.h"
+#include "rng.h"
 
 namespace Sleipnir {
 
@@ -724,11 +726,11 @@ namespace Sleipnir {
          *
          * Randomly shuffles each gene's vector of values.
          */
-        void Randomize() {
+        void Randomize() const {
             size_t i;
 
             for (i = 0; i < GetGenes(); ++i)
-                std::random_shuffle(Get(i), Get(i) + GetExperiments());
+                std::shuffle(Get(i), Get(i) + GetExperiments(), g);
         }
     };
 

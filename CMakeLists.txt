@@ -124,6 +124,7 @@ set(SLEIPNIR_SOURCES
     src/pst.cpp
     src/pst.h
     src/psti.h
+    src/rng.h
     src/seekbasic.h
     src/seekcentral.cpp
     src/seekcentral.h
@@ -352,89 +353,89 @@ target_link_libraries(sleipnir stdc++)
 
 set(SLEIPNIR_TOOLS
     Answerer
-        #BNConverter
-        #BNCreator
-        #BNEvaluator
-        #BNFunc
-        #BNServer
-        #BNTester
-        #BNTruster
-        #BNUnraveler
-        #BNWeaver
-        #BNs2Txt
-        #COALESCE
-        #Clinician
-        #Cliquer
-        #Clusterer
-        #Clusters2Dab
-        #Combiner
-        #Contexter
-        #Counter
-        #DBCombiner
-        #DChecker
-        #DSLConverter
-        #Dab2Dad
-        #Dat2Dab
-        #Dat2Graph
-        #Dat2PCL
-        #Data2Bnt
-        #Data2DB
-        #Data2Features
-        #Data2Sql
-        #Data2Svm
-        #DataDumper
-        #DataServer
-        #Distancer
-        #Edges2Posteriors
-        #Explainer
-        #Filterer
-        #Funcaeologist
-        #Funcifier
-        #Funcographer
-        #Hubber
-        #KNNImputer
-        #LibSVMer
-        #MCluster
-        #MEFIT
-        #MIed
-        #MIer
-        #Mat2Txt
-        #Matcher
-        #NetMiner
-        #NetworkCombiner
-        #NetworkRanker
-        #Normalizer
-        #OntoShell
-        #Orthologer
-        #Overlapper
-        #PCL2Bin
-        #PCLPlotter
-        #PCLServer
-        #Randomizer
-        #SMRF
-        #SVDer
-        #SVMer
-        #SVMfe
-        #SVMhierarchy
-        #SVMmulticlass
-        #SVMperfer
-        #SparseNetCombiner
-        #SeekAggregatedDataset
-        #SeekEvaluator
-        #SeekGeneRecommender
-        #SeekIterative
-        #SeekMiner
-        #SeekPValue
-        #SeekPrep
-        #SeekReader
+        # BNConverter # needs smile
+        # BNCreator # needs smile
+        # BNEvaluator # needs smile
+        BNFunc
+        # BNServer # needs smile
+        # BNTester # needs smile
+        # BNTruster # needs smile
+        # BNUnraveler # needs smile
+        # BNWeaver # needs smile
+        # BNs2Txt # needs smile
+        COALESCE
+        Clinician
+        Cliquer
+        Clusterer
+        Clusters2Dab
+        Combiner
+        # Contexter # needs smile
+        # Counter # needs smile
+        DBCombiner
+        DChecker
+        # DSLConverter # needs smile
+        # Dab2Dad # needs smile
+        Dat2Dab
+        Dat2Graph
+        Dat2PCL
+        Data2Bnt
+        Data2DB
+        Data2Features
+        Data2Sql
+        # Data2Svm
+        DataDumper
+        DataServer
+        Distancer
+        # Edges2Posteriors # needs smile
+        Explainer
+        Filterer
+        Funcaeologist
+        Funcifier
+        Funcographer
+        Hubber
+        KNNImputer
+        # LibSVMer
+        MCluster
+        # MEFIT
+        MIed
+        MIer
+        Mat2Txt
+        Matcher
+        NetMiner
+        NetworkCombiner
+        NetworkRanker
+        Normalizer
+        OntoShell
+        Orthologer
+        Overlapper
+        PCL2Bin
+        PCLPlotter
+        PCLServer
+        Randomizer
+        SMRF
+        # SVDer
+        # SVMer
+        # SVMfe
+        # SVMhierarchy
+        # SVMmulticlass
+        # SVMperfer
+        SparseNetCombiner
+        SeekAggregatedDataset
+        SeekEvaluator
+        SeekGeneRecommender
+        SeekIterative
+        SeekMiner
+        SeekPValue
+        SeekPrep
+        SeekReader
         SeekServer
-        #SeekTest
-        #Seqs2Ngrams
-        #SVMperfing
-        #SpeciesConnector
-        #Synthesizer
-        #Txt2Bin
-        #VWer
+        SeekTest
+        Seqs2Ngrams
+        # SVMperfing
+        # SpeciesConnector # needs smile
+        Synthesizer
+        Txt2Bin
+        VWer
         )
 
 foreach(TOOL ${SLEIPNIR_TOOLS})

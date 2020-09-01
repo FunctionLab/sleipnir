@@ -23,6 +23,7 @@
 #define COMPACTMATRIX_H
 
 #include "compactmatrixi.h"
+#include "rng.h"
 
 namespace Sleipnir {
 
@@ -56,7 +57,7 @@ namespace Sleipnir {
         void Randomize() {
 
             if (m_aiData)
-                std::random_shuffle(m_aiData, m_aiData + CountWords());
+                std::shuffle(m_aiData, m_aiData + CountWords(), g);
         }
 
         /*!
