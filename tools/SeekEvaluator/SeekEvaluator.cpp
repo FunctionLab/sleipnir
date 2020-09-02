@@ -346,7 +346,7 @@ bool EvaluateOneQuery(const gengetopt_args_info &sArgs, const enum METRIC &met,
         if (sArgs.x_int_arg != -1 && sArgs.x_per_arg == 0) {
             X = sArgs.x_int_arg;
             if (X > vf->size()) {
-                fprintf(stderr, "Error: X is too large (>%d)\n", vf->size());
+                fprintf(stderr, "Error: X is too large (>%lu)\n", vf->size());
                 delete vf;
                 return false;
             }
@@ -1357,7 +1357,7 @@ int main(int iArgs, char **aszArgs) {
         int per95 = (int) (vecstrList.size() * 0.95);
         for (i = 0; i < dsetScore.size(); i++) {
             sort(dsetScore[i].begin(), dsetScore[i].end(), greater<int>());
-            fprintf(stderr, "Dataset %d %d\n", i, dsetScore[i][per95]);
+            fprintf(stderr, "Dataset %zu %d\n", i, dsetScore[i][per95]);
         }
         /*
         for(j=0; j<vecstrList.size(); j++){

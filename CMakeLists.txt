@@ -275,8 +275,9 @@ endif()
 
 
 option(USE_SVMPERF "Use svm_perf" OFF)
-if(USE_SVMPERF)
-    list(APPEND SLEIPNIR_SOURCES src/svmperf.cpp
+if(USE_SVMPERF AND USE_SVMLIB)
+    list(APPEND SLEIPNIR_SOURCES
+	src/svmperf.cpp
 	src/svmperf.h
 	src/svmstruct.cpp
 	src/svmstruct.h
@@ -289,13 +290,15 @@ if(USE_SVMPERF)
             NAMES svm_struct_api.h svm_common.h)
     list(APPEND EXTRA_LIBRARIES ${SVMPERF_LIBRARY})
     list(APPEND EXTRA_INCLUDES ${SVMPERF_INCLUDE})
+elseif(USE_SVMPERF AND NOT USE_SVMLIB)
+    message(SEND_ERROR "Cannot use svm_perf without svm_lib")
 else()
-    list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_PERF=1)
+    list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_PERF=1 NO_SVM_STRUCTTREE=1)
 endif()
 
 
 option(USE_SVM_MULTICLASS "Use svm_multiclass" OFF)
-if(USE_SVM_MULTICLASS)
+if(USE_SVM_MULTICLASS AND USE_SVMLIB)
     find_library(SVM_MULTICLASS_LIBRARY libsvmmulti.a)
     find_path(SVM_MULTICLASS_INCLUDE PATH_SUFFIXES svm_multiclass/svm_light
             NAMES svm_common.h)
@@ -305,13 +308,15 @@ if(USE_SVM_MULTICLASS)
     else()
         list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_STRUCT)
     endif()
+elseif(USE_SVM_MULTICLASS AND NOT USE_SVMLIB)
+    message(SEND_ERROR "Cannot use svm_multiclass without svm_lib")
 else()
     list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_MULTICLASS=1)
 endif()
 
 
 option(USE_SVM_HIERARCHY "Use svm_hierarchy" OFF)
-if(USE_SVM_HIERARCHY)
+if(USE_SVM_HIERARCHY AND USE_SVMLIB)
     find_library(SVM_HIERARCHY_LIBRARY libsvmhierarchy.a)
     find_path(SVM_HIERARCHY_INCLUDE PATH_SUFFIXES svm_hierarchy/svm_light
             NAMES svm_common.h)
@@ -319,8 +324,10 @@ if(USE_SVM_HIERARCHY)
         list(APPEND EXTRA_LIBRARIES ${SVM_HIERARCHY_LIBRARY})
         list(APPEND EXTRA_INCLUDES ${SVM_HIERARCHY_INCLUDE})
     else()
-        list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_STRUCTTREE)
+        list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_STRUCTTREE=1)
     endif()
+elseif(USE_SVM_HIERARCHY AND NOT USE_SVMLIB)
+    message(SEND_ERROR "Cannot use svm_hierarchy without svm_lib")
 else()
     list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_HIERARCHY=1)
 endif()
@@ -347,96 +354,127 @@ target_include_directories(sleipnir PUBLIC ${EXTRA_INCLUDES})
 target_compile_definitions(sleipnir PUBLIC ${SLEIPNIR_COMPILE_DEFS})
 target_link_libraries(sleipnir stdc++)
 
-
-
 # command line tools
+
+# these tools depend on having libsmile available to link
+
+if(SMILE_LIBRARY)
+    list(APPEND SLEIPNIR_TOOLS
+	BNConverter
+	BNCreator 
+	BNEvaluator
+	BNServer 
+	BNTester 
+	BNTruster 
+	BNUnraveler
+	BNWeaver 
+	BNs2Txt 
+	Contexter
+	Counter 
+	DSLConverter
+	Dab2Dad 
+	Edges2Posteriors
+	SpeciesConnector
+	MEFIT
+	)
+endif()
+
+# tools that depend on having svm_perf
+
+if(SVMPERF_LIBRARY)
+    list(APPEND SLEIPNIR_TOOLS
+	Data2SVM
+	SVMperfer
+	SVMperfing
+	SVMfe # svm perf
+	SVMer # svm perf
+	)
+endif()
+
+# tools that depend on having svm_multiclass
+
+if(SVM_MULTICLASS_LIBRARY)
+    list(APPEND SLEIPNIR_TOOLS
+	SVMmulticlass # svm perf
+	)
+endif()
+
+if(SVM_HIERARCHY_LIBRARY)
+    list(APPEND SLEIPNIR_TOOLS
+	SVMhierarchy # svm perf
+	)
+endif()
+
+
 
 set(SLEIPNIR_TOOLS
     Answerer
-        # BNConverter # needs smile
-        # BNCreator # needs smile
-        # BNEvaluator # needs smile
-        BNFunc
-        # BNServer # needs smile
-        # BNTester # needs smile
-        # BNTruster # needs smile
-        # BNUnraveler # needs smile
-        # BNWeaver # needs smile
-        # BNs2Txt # needs smile
-        COALESCE
-        Clinician
-        Cliquer
-        Clusterer
-        Clusters2Dab
-        Combiner
-        # Contexter # needs smile
-        # Counter # needs smile
-        DBCombiner
-        DChecker
-        # DSLConverter # needs smile
-        # Dab2Dad # needs smile
-        Dat2Dab
-        Dat2Graph
-        Dat2PCL
-        Data2Bnt
-        Data2DB
-        Data2Features
-        Data2Sql
-        # Data2Svm
-        DataDumper
-        DataServer
-        Distancer
-        # Edges2Posteriors # needs smile
-        Explainer
-        Filterer
-        Funcaeologist
-        Funcifier
-        Funcographer
-        Hubber
-        KNNImputer
-        # LibSVMer
-        MCluster
-        # MEFIT
-        MIed
-        MIer
-        Mat2Txt
-        Matcher
-        NetMiner
-        NetworkCombiner
-        NetworkRanker
-        Normalizer
-        OntoShell
-        Orthologer
-        Overlapper
-        PCL2Bin
-        PCLPlotter
-        PCLServer
-        Randomizer
-        SMRF
-        # SVDer
-        # SVMer
-        # SVMfe
-        # SVMhierarchy
-        # SVMmulticlass
-        # SVMperfer
-        SparseNetCombiner
-        SeekAggregatedDataset
-        SeekEvaluator
-        SeekGeneRecommender
-        SeekIterative
-        SeekMiner
-        SeekPValue
-        SeekPrep
-        SeekReader
-        SeekServer
-        SeekTest
-        Seqs2Ngrams
-        # SVMperfing
-        # SpeciesConnector # needs smile
-        Synthesizer
-        Txt2Bin
-        VWer
-        )
+    BNFunc
+    COALESCE
+    Clinician
+    Cliquer
+    Clusterer
+    Clusters2Dab
+    Combiner
+    DBCombiner
+    DChecker
+    Dat2Dab
+    Dat2Graph
+    Dat2PCL
+    Data2Bnt
+    Data2DB
+    Data2Features
+    Data2Sql
+    DataDumper
+    DataServer
+    Distancer
+    Explainer
+    Filterer
+    Funcaeologist
+    Funcifier
+    Funcographer
+    Hubber
+    KNNImputer
+    LibSVMer # svm perf?
+    MCluster
+    MIed
+    MIer
+    Mat2Txt
+    Matcher
+    NetMiner
+    NetworkCombiner
+    NetworkRanker
+    Normalizer
+    OntoShell
+    Orthologer
+    Overlapper
+    PCL2Bin
+    PCLPlotter
+    PCLServer
+    Randomizer
+    SMRF
+    SVDer # svm perf
+  
+
+   
+    # SVMperfer # svm perf
+    SparseNetCombiner
+    SeekAggregatedDataset
+    SeekEvaluator
+    SeekGeneRecommender
+    SeekIterative
+    SeekMiner
+    SeekPValue
+    SeekPrep
+    SeekReader
+    SeekServer
+    SeekTest
+    Seqs2Ngrams
+    # SVMperfing # svm perf
+    Synthesizer
+    Txt2Bin
+    VWer
+    )
 
 foreach(TOOL ${SLEIPNIR_TOOLS})
     include_directories(tools/${TOOL})

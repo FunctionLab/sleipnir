@@ -52,11 +52,11 @@ int main(int iArgs, char **aszArgs) {
     COntologyMIPSPhenotypes MIPSPhen;
     CGenome Genome;
     ifstream ifsmOnto, ifsmGenes;
-    gengetopt_args_info sArgs;
+    gengetopt_args_info sArgs{};
     char *szLine;
     int iRet;
     const IOntology *apOntologies[]
-            = {&KEGG, &GOBP, &GOMF, &GOCC, &MIPS, &MIPSPhen, NULL};
+            = {&KEGG, &GOBP, &GOMF, &GOCC, &MIPS, &MIPSPhen, nullptr};
     CParserConsole Parser(apOntologies, Genome);
 
     g_pParser = &Parser;
@@ -161,7 +161,7 @@ char **CompletionAll(const char *szText, int iStart, int iEnd) {
     if (!iStart)
         return rl_completion_matches(szText, CompletionCommands);
     if (!strncmp(rl_line_buffer, c_szFind, strlen(c_szFind)))
-        return NULL; // rl_completion_matches( szText, rl_filename_completion_function );
+        return nullptr; // rl_completion_matches( szText, rl_filename_completion_function );
 
     g_fGenes = !strncmp(rl_line_buffer, c_szCat, strlen(c_szCat));
     return rl_completion_matches(szText, CompletionMembers);
@@ -184,7 +184,7 @@ char *CompletionCommands(const char *szText, int iState) {
             return _strdup(szCur);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 char *CompletionMembers(const char *szText, int iState) {
@@ -203,7 +203,7 @@ char *CompletionMembers(const char *szText, int iState) {
         if (g_fGenes)
             CompletionGetGenes(sLoc, vecstrTries);
         strBase = szText;
-        if (szReal = strrchr(szText, CParser::c_cSep))
+        if ((szReal = strrchr(szText, CParser::c_cSep)))
             szReal++;
         else
             szReal = szText;
@@ -211,7 +211,7 @@ char *CompletionMembers(const char *szText, int iState) {
         iLen = strlen(szReal);
     }
     if (!sLoc.IsValid())
-        return NULL;
+        return nullptr;
 
     while (iTry < vecstrTries.size())
         if (!strncmp(szReal, vecstrTries[iTry++].c_str(), iLen)) {
@@ -219,7 +219,7 @@ char *CompletionMembers(const char *szText, int iState) {
             return _strdup((strBase + vecstrTries[iTry - 1]).c_str());
         }
 
-    return NULL;
+    return nullptr;
 }
 
 size_t CompletionGetParents(const CParser::SLocation &sLoc,

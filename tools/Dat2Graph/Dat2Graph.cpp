@@ -97,17 +97,17 @@ int main(int iArgs, char **aszArgs) {
         }
         ifsm.close();
     }
-    if (iRet = open_values(sArgs.colors_arg, vecdColors))
+    if ((iRet = open_values(sArgs.colors_arg, vecdColors)))
         return iRet;
-    if (iRet = open_values(sArgs.borders_arg, vecdBorders))
+    if ((iRet = open_values(sArgs.borders_arg, vecdBorders)))
         return iRet;
-    if (iRet = open_values(sArgs.genew_arg, vecdWeights))
+    if ((iRet = open_values(sArgs.genew_arg, vecdWeights)))
         return iRet;
-    if (iRet = open_genes(sArgs.genes_arg, GenesIn))
+    if ((iRet = open_genes(sArgs.genes_arg, GenesIn)))
         return iRet;
-    if (iRet = open_genes(sArgs.genex_arg, GenesEx))
+    if ((iRet = open_genes(sArgs.genex_arg, GenesEx)))
         return iRet;
-    if (iRet = open_genes(sArgs.geneq_arg, GenesQr))
+    if ((iRet = open_genes(sArgs.geneq_arg, GenesQr)))
         return iRet;
 
     if (sArgs.input_arg) {
@@ -212,8 +212,9 @@ int main(int iArgs, char **aszArgs) {
             for (i = 0; i < pDat->GetGenes(); ++i) {
                 for (j = 0; j < pDat->GetGenes(); ++j)
                     adCur[j] = pDat->Get(i, j);
-                vecdScores[i] = (float) MeasurePearson.Measure(adCentroid, pDat->GetGenes(), adCur,
-                                                               pDat->GetGenes(), IMeasure::EMapNone, NULL, NULL);
+                vecdScores[i] = (float) MeasurePearson.Measure(
+                        adCentroid, pDat->GetGenes(), adCur,
+                        pDat->GetGenes(), IMeasure::EMapNone, nullptr, nullptr);
             }
             delete[] adCur;
             delete[] adCentroid;
@@ -229,7 +230,7 @@ int main(int iArgs, char **aszArgs) {
             }
             pDat->FilterGenes(GenesQr, sArgs.hefalmp_flag ? CDat::EFilterHefalmp : CDat::EFilterPixie,
                               sArgs.neighbors_arg, (float) sArgs.edges_arg, !!sArgs.absolute_flag,
-                              vecdWeights.empty() ? NULL : &vecdWeights);
+                              vecdWeights.empty() ? nullptr : &vecdWeights);
         }
     }
     if (sArgs.knowns_arg) {
@@ -253,8 +254,9 @@ int main(int iArgs, char **aszArgs) {
     }
 
     if (!strcmp(sArgs.format_arg, "dot"))
-        pDat->SaveDOT(cout, dCutoff, &Genome, false, true, vecdColors.empty() ? NULL : &vecdColors,
-                      vecdBorders.empty() ? NULL : &vecdBorders);
+        pDat->SaveDOT(cout, dCutoff, &Genome, false, true,
+                      vecdColors.empty() ? nullptr : &vecdColors,
+                      vecdBorders.empty() ? nullptr : &vecdBorders);
     else if (!strcmp(sArgs.format_arg, "gdf"))
         pDat->SaveGDF(cout, dCutoff);
     else if (!strcmp(sArgs.format_arg, "net"))

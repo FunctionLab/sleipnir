@@ -19,8 +19,10 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
+#include <random>
 #include "stdafx.h"
 #include "cmdline.h"
+
 
 static inline float enrange(float d, double dEpsilon) {
     float dTmp;
@@ -64,7 +66,7 @@ int main(int iArgs, char **aszArgs) {
         veciShuffle[i] = i;
     for (iIter = 0; iIter < (size_t) sArgs.iterations_arg; ++iIter) {
         cerr << "Iteration: " << iIter << '/' << sArgs.iterations_arg << endl;
-        random_shuffle(veciShuffle.begin(), veciShuffle.end());
+        std::shuffle(veciShuffle.begin(), veciShuffle.end(), g);
         for (iCur = 0; iCur < veciShuffle.size(); ++iCur) {
             if (!(iCur % 1000))
                 cerr << "Gene: " << iCur << '/' << veciShuffle.size() << endl;

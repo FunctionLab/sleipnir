@@ -979,7 +979,7 @@ int main(int iArgs, char **aszArgs) {
         size_t l;
         for (l = 0; l < dab_list.size(); l++) {
             CDat Dat;
-            fprintf(stderr, "Reading %d: %s\n", l, dab_list[l].c_str());
+            fprintf(stderr, "Reading %zu: %s\n", l, dab_list[l].c_str());
             string dabfile = dab_dir + "/" + dab_list[l];
             Dat.Open(dabfile.c_str(), false, 2, false, false, false);
 
@@ -1053,9 +1053,7 @@ int main(int iArgs, char **aszArgs) {
                     continue;
                 }
                 int minRequired = 1;
-                if (search_mode == "cv_loi")
-                    minRequired = 2;
-                else if (search_mode == "spell")
+                if (search_mode == "cv_loi" or search_mode == "spell")
                     minRequired = 2;
                 int numThreshold = (int) (threshold_q * qq[j].size());
                 numThreshold = max(minRequired, numThreshold);

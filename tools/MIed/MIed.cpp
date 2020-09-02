@@ -99,10 +99,10 @@ int main(int iArgs, char **aszArgs) {
     // now collect the data files from directory if given
     if (sArgs.directory_given) {
         dp = opendir(sArgs.directory_arg);
-        if (dp != NULL) {
-            while (ep = readdir(dp)) {
-                if (strstr(ep->d_name, c_acDab) != NULL ||
-                    strstr(ep->d_name, c_acQDab) != NULL
+        if (dp != nullptr) {
+            while ((ep = readdir(dp))) {
+                if (strstr(ep->d_name, c_acDab) != nullptr ||
+                    strstr(ep->d_name, c_acQDab) != nullptr
                         ) {
                     vecstrInputs.push_back((string) sArgs.directory_arg + "/" + ep->d_name);
                 }
@@ -142,7 +142,7 @@ int main(int iArgs, char **aszArgs) {
             CMeta::Tokenize(acLine, vecstrZeros);
             if (vecstrZeros.empty())
                 continue;
-            mapZeros[vecstrZeros[0]] = atoi(vecstrZeros[1].c_str());
+            mapZeros[vecstrZeros[0]] = strtol(vecstrZeros[1].c_str(), nullptr, 10);
         }
     }
 
@@ -259,7 +259,7 @@ int main(int iArgs, char **aszArgs) {
 
                     // compute the Entropy
                     for (non_zero_bins = 0, dMI = 0, i = 0; i < veciOne.size(); ++i)
-                        if (dOne = (float) veciOne[i] / iCountOne) {
+                        if ((dOne = (float) veciOne[i] / iCountOne)) {
                             dMI += dOne * log(1 / dOne);
                             ++non_zero_bins;
                         }
@@ -406,7 +406,7 @@ int main(int iArgs, char **aszArgs) {
                 for (non_zero_bins = 0, dMI = 0, i = 0; i < veciOne.size(); ++i) {
                     dOne = (float) veciOne[i] / iCountOne;
                     for (j = 0; j < veciTwo.size(); ++j)
-                        if (iJoint = vecveciJoint[i][j]) {
+                        if ((iJoint = vecveciJoint[i][j])) {
                             ++non_zero_bins;
                             dJoint = (float) iJoint / iCountJoint;
                             dMI += dJoint * log(dJoint * iCountTwo / dOne / veciTwo[j]);
