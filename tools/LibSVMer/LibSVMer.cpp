@@ -203,13 +203,12 @@ int main(int iArgs, char **aszArgs) {
             //do learning and classifying with cross validation
             //
             size_t ii, index;
+            random_device rand_dev;
+            mt19937 rand_gen(rand_dev());
 
             for (ii = 0; ii < sArgs.num_cv_runs_arg; ii++) {
-                if (ii > 0) {
-                    std::random_device rng;
-                    std::mt19937 urng(rng());
-                    std::shuffle(vecLabels.begin(), vecLabels.end(), urng);
-                }
+                if (ii > 0)
+                    std::shuffle(vecLabels.begin(), vecLabels.end(), rand_gen);
 
                 for (i = 0; i < sArgs.cross_validation_arg; i++) {
                     index = sArgs.cross_validation_arg * ii + i;
