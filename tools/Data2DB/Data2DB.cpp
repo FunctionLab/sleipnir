@@ -22,7 +22,6 @@
 #include "stdafx.h"
 #include "cmdline.h"
 
-bool oneGenePerFile = true;  // TODO - make this an input param
 
 int main(int iArgs, char **aszArgs) {
     static const size_t c_iBuffer = 1024;
@@ -75,7 +74,6 @@ int main(int iArgs, char **aszArgs) {
         ifsm.close();
 
     // Read and process the zeros file
-    // TODO - What does it do?
     if (sArgs.zeros_arg) {
         ifstream ifsm_zero;
         vector <string> vecstrLine;
@@ -153,10 +151,10 @@ int main(int iArgs, char **aszArgs) {
         vecstrDatasets.resize(vecstrDatasets.size());
         ifsm.close();
 
-        // Create the CDatabase, note the last arg is the min of num_files or num_genes
+        // Create the CDatabase
         // Rename to CreateDBFiles
         if (!DB.Open(vecstrGenes, vecstrDatasets, sArgs.dir_in_arg,
-                              sArgs.dir_out_arg, numFiles, mapstriZeros)) {
+                     sArgs.dir_out_arg, numFiles, mapstriZeros)) {
             cerr << "Could not open data" << endl;
             return 1;
         }
