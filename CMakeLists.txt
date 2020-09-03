@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14.5)
 project(sleipnir)
 
-add_link_options(-L/usr/local/Cellar/libomp/9.0.0/lib/ -lomp -lpthread)
+add_link_options(-lpthread)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -172,8 +172,10 @@ set(SLEIPNIR_SOURCES
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     find_library(LIBOMP libomp.a)
+    add_link_options(-lomp)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    add_compile_option(-fopenmp)
+    add_compile_options(-fopenmp)
+    add_link_options(-lgomp)
     set(LIBOMP -lgomp)
 else()
     message(SEND_INFO "Found some weird compiler: ${CMAKE_CXX_COMPILER_ID}")
