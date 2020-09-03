@@ -124,7 +124,6 @@ set(SLEIPNIR_SOURCES
     src/pst.cpp
     src/pst.h
     src/psti.h
-    src/rng.h
     src/seekbasic.h
     src/seekcentral.cpp
     src/seekcentral.h

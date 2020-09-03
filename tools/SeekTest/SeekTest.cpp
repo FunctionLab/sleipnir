@@ -22,6 +22,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 #include <iomanip>
+#include <random>
 
 
 float **LoadGenes(const vector <string> struserGenes,
@@ -875,9 +876,13 @@ int main(int iArgs, char **aszArgs) {
         if (!!sArgs.histogram_flag) {
             srand(unsigned(time(0)));
             vector<int> dID;
-            for (k = 0; k < iDatasets; k++)
+
+            for (k = 0; k < iDatasets; k++) {
                 dID.push_back(k);
-            random_shuffle(dID.begin(), dID.end());
+            }
+            random_device rand_dev;
+            mt19937 rand_gen(rand_dev());
+            shuffle(dID.begin(), dID.end(), rand_gen);
             utype kk;
             for (kk = 0; kk < 100; kk++) {
                 k = dID[kk];
