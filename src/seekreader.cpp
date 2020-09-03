@@ -209,6 +209,7 @@ namespace Sleipnir {
         return true;
     }
 
+    // Called by the per-query version of CSeekCentral::Initialize()
     bool CSeekTools::LoadDatabase(const vector<CDatabase *> &DB,
                                   const size_t &iGenes, const size_t &iDatasets,
                                   vector<CSeekDataset *> &vc, const vector<CSeekDataset *> &vc_src,
@@ -248,6 +249,7 @@ namespace Sleipnir {
         return true;
     }
 
+    // Called by in-common (startup) version of CSeekCentral::Initialize()
     bool CSeekTools::LoadDatabase(const vector<CDatabase *> &DB,
                                   const size_t &iGenes, const size_t &iDatasets,
                                   const vector<CSeekDBSetting *> &DBSetting,
