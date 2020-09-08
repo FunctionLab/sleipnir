@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14.5)
 project(sleipnir)
 
-add_link_options(-L/usr/local/Cellar/libomp/9.0.0/lib/ -lomp -lpthread)
+add_link_options(-lpthread)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -124,7 +124,6 @@ set(SLEIPNIR_SOURCES
     src/pst.cpp
     src/pst.h
     src/psti.h
-    src/rng.h
     src/seekbasic.h
     src/seekcentral.cpp
     src/seekcentral.h
@@ -174,7 +173,7 @@ set(SLEIPNIR_SOURCES
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     find_library(LIBOMP libomp.a)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    add_compile_option(-fopenmp)
+    add_compile_options(-fopenmp)
     set(LIBOMP -lgomp)
 else()
     message(SEND_INFO "Found some weird compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -501,6 +500,6 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
     endif ()
     add_dependencies(${TOOL} sleipnir)
     target_include_directories(${TOOL} PUBLIC ${EXTRA_INCLUDES})
-    target_link_libraries(${TOOL} sleipnir ${EXTRA_LIBRARIES})
+    target_link_libraries(${TOOL} sleipnir ${EXTRA_LIBRARIES} ${LIBOMP})
 endforeach()
 

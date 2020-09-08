@@ -27,7 +27,7 @@
 #include "stdafx.h"
 #include "cmdline.h"
 #include "statistics.h"
-#include "rng.h"
+#include <random>
 
 using namespace LIBSVM;
 
@@ -51,8 +51,8 @@ vector <LIBSVM::SVMLabel> ReadLabels(ifstream &ifsm) {
                  << acBuffer << endl;
             continue;
         }
-        vecLabels.push_back(LIBSVM::SVMLabel(vecstrTokens[0], atof(
-                vecstrTokens[1].c_str())));
+        vecLabels.emplace_back(vecstrTokens[0], strtod(
+                vecstrTokens[1].c_str(), nullptr));
         if (vecLabels.back().Target > 0)
             numPositives++;
         else
@@ -73,9 +73,9 @@ struct SortResults {
 size_t PrintResults(vector <LIBSVM::Result> vecResults, ofstream &ofsm) {
     sort(vecResults.begin(), vecResults.end(), SortResults());
     int LabelVal;
-    for (size_t i = 0; i < vecResults.size(); i++) {
-        ofsm << vecResults[i].GeneName << '\t' << vecResults[i].Target << '\t'
-             << vecResults[i].Value << endl;
+    for (auto & vecResult : vecResults) {
+        ofsm << vecResult.GeneName << '\t' << vecResult.Target << '\t'
+             << vecResult.Value << endl;
     }
 };
 
@@ -87,7 +87,7 @@ struct ParamStruct {
 
 int main(int iArgs, char **aszArgs) {
 
-    gengetopt_args_info sArgs;
+    gengetopt_args_info sArgs{};
 
     CPCL PCL;//data
     LIBSVM::CLIBSVM SVM;//model
@@ -203,10 +203,12 @@ int main(int iArgs, char **aszArgs) {
             //do learning and classifying with cross validation
             //
             size_t ii, index;
+            random_device rand_dev;
+            mt19937 rand_gen(rand_dev());
 
             for (ii = 0; ii < sArgs.num_cv_runs_arg; ii++) {
                 if (ii > 0)
-                    std::shuffle(vecLabels.begin(), vecLabels.end(), g);
+                    std::shuffle(vecLabels.begin(), vecLabels.end(), rand_gen);
 
                 for (i = 0; i < sArgs.cross_validation_arg; i++) {
                     index = sArgs.cross_validation_arg * ii + i;
@@ -273,14 +275,14 @@ int main(int iArgs, char **aszArgs) {
 
             // merge testResults and AllResults
             // TODO: make more efficent
-            for (std::vector<LIBSVM::Result>::iterator it = testResults.begin();
+            for (auto it = testResults.begin();
                  it != testResults.end(); it++) {
 
                 added = false;
-                for (std::vector<LIBSVM::Result>::iterator ita = AllResults.begin();
+                for (auto ita = AllResults.begin();
                      ita != AllResults.end(); ita++) {
 
-                    if ((*it).GeneName.compare((*ita).GeneName) == 0) {
+                    if ((*it).GeneName == (*ita).GeneName) {
 
                         (*ita).Value += (*it).Value;
                         added = true;
@@ -316,7 +318,7 @@ int main(int iArgs, char **aszArgs) {
         }
 
         // average results (svm outputs) from multiple cv runs
-        for (std::vector<LIBSVM::Result>::iterator it = AllResults.begin();
+        for (auto it = AllResults.begin();
              it != AllResults.end(); ++it) {
             (*it).Value /= sArgs.num_cv_runs_arg;
 

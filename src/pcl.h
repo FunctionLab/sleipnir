@@ -29,7 +29,6 @@
 
 #include "pcli.h"
 #include "measure.h"
-#include "rng.h"
 
 namespace Sleipnir {
 
@@ -170,6 +169,7 @@ namespace Sleipnir {
          */
         CPCL(bool fHeader = true) :
                 CPCLImpl(fHeader) {
+            m_rnd_gen = std::mt19937(m_rnd_dev());
         }
 
         void Open(const CPCL &PCL);
@@ -726,12 +726,16 @@ namespace Sleipnir {
          *
          * Randomly shuffles each gene's vector of values.
          */
-        void Randomize() const {
+        void Randomize() {
             size_t i;
 
             for (i = 0; i < GetGenes(); ++i)
-                std::shuffle(Get(i), Get(i) + GetExperiments(), g);
+                std::shuffle(Get(i), Get(i) + GetExperiments(), m_rnd_gen);
         }
+
+    private:
+        std::random_device m_rnd_dev;
+        std::mt19937 m_rnd_gen; // random number generator
     };
 
 }

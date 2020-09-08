@@ -21,7 +21,6 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
-#include "rng.h"
 #include <random>
 
 enum ETFPN {
@@ -44,7 +43,7 @@ struct SDatum {
 struct SSorter {
     bool m_fInvert;
 
-    SSorter(bool fInvert) : m_fInvert(fInvert) {}
+    explicit SSorter(bool fInvert) : m_fInvert(fInvert) {}
 
     bool operator()(const SDatum &sOne, const SDatum &sTwo) const {
 
@@ -204,7 +203,10 @@ int main(int iArgs, char **aszArgs) {
         for (i = 0; i < sAnswers.GetGenes(); ++i) {
             veciIndex[i] = i;
         }
-        std::shuffle(veciIndex.begin(), veciIndex.end(), Sleipnir::g);
+
+        random_device rand_dev;
+        mt19937 rand_gen(rand_dev());
+        std::shuffle(veciIndex.begin(), veciIndex.end(), rand_gen);
 
         for (x = 0; x < sAnswers.GetGenes(); ++x) {
             i = veciIndex[x];

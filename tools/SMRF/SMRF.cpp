@@ -22,6 +22,7 @@
 #include <random>
 #include "stdafx.h"
 #include "cmdline.h"
+#include <random>
 
 
 static inline float enrange(float d, double dEpsilon) {
@@ -62,11 +63,14 @@ int main(int iArgs, char **aszArgs) {
         veciPCL2Dat[i] = Dat.GetGene(PCL.GetGene(i));
 
     veciShuffle.resize(PCL.GetGenes());
-    for (i = 0; i < veciShuffle.size(); ++i)
+    for (i = 0; i < veciShuffle.size(); ++i) {
         veciShuffle[i] = i;
+    }
+    random_device rand_dev;
+    mt19937 rand_gen(rand_dev());
     for (iIter = 0; iIter < (size_t) sArgs.iterations_arg; ++iIter) {
         cerr << "Iteration: " << iIter << '/' << sArgs.iterations_arg << endl;
-        std::shuffle(veciShuffle.begin(), veciShuffle.end(), g);
+        shuffle(veciShuffle.begin(), veciShuffle.end(), rand_gen);
         for (iCur = 0; iCur < veciShuffle.size(); ++iCur) {
             if (!(iCur % 1000))
                 cerr << "Gene: " << iCur << '/' << veciShuffle.size() << endl;
