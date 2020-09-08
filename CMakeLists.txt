@@ -3,7 +3,7 @@ project(sleipnir)
 
 add_link_options(-L/usr/local/Cellar/libomp/9.0.0/lib/ -lomp -lpthread)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Generating release config")
@@ -407,7 +407,7 @@ endif()
 
 
 
-set(SLEIPNIR_TOOLS
+list(APPEND SLEIPNIR_TOOLS
     Answerer
     BNFunc
     COALESCE
