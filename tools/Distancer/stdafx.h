@@ -29,6 +29,7 @@ using namespace std;
 #include "dat.h"
 #include "meta.h"
 #include "pcl.h"
+#include "datapair.h"
 
 using namespace Sleipnir;
 

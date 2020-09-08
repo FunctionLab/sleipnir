@@ -474,10 +474,11 @@ int main(int iArgs, char **aszArgs) {
                 atof(searchParameterTokens[3].c_str());
         thread_arg[d].distanceMeasure = searchParameterTokens[4];
         thread_arg[d].correlationSign = searchParameterTokens[5];
-        if (searchParameterTokens[6] == "true") { //true or false
+        // For backward compatibility, some previous java servelets may only send 6 arguments
+        // In that case, as the default, set check_dset_size to false.
+        thread_arg[d].check_dset_size = false;
+        if (searchParameterTokens.size() > 6 && searchParameterTokens[6] == "true") { //true or false
             thread_arg[d].check_dset_size = true;
-        } else {
-            thread_arg[d].check_dset_size = false;
         }
         //=========================================================
 

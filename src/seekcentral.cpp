@@ -263,11 +263,12 @@ namespace Sleipnir {
         return true;
     }
 
-//for SeekServer
-//assume DB has been read (with gvar, sinfo information)
-//assume datasets and genes have been read
-//assume m_enableNetwork is on
-//* CDatabaselet collection is shared between multiple clients (m_bSharedDB)
+    // Per-query version of Initialize() called by SeekServer
+    //for SeekServer
+    //assume DB has been read (with gvar, sinfo information)
+    //assume datasets and genes have been read
+    //assume m_enableNetwork is on
+    //* CDatabaselet collection is shared between multiple clients (m_bSharedDB)
     bool CSeekCentral::Initialize(
             const string &output_dir, const string &query,
             const string &search_dset, CSeekCentral *src, const int iClient,
@@ -598,7 +599,9 @@ namespace Sleipnir {
         return true;
     }
 
-//load everything except query, search datasets, output directory
+    // In-common version of Initialize(), to be called at startup time, no per-query info.
+    // load everything except query, search datasets, output directory
+    // called by SeekServer at startup time
     bool CSeekCentral::Initialize(const vector<CSeekDBSetting *> &vecDBSetting,
                                   const utype buffer, const bool to_output_text,
                                   const bool bOutputWeightComponent, const bool bSimulateWeight,
@@ -770,6 +773,7 @@ namespace Sleipnir {
         return true;
     }
 
+    // Version of Initialize called by SeekMiner - calls in-common intialize() and then does query-specific prep
     bool CSeekCentral::Initialize(
             const vector<CSeekDBSetting *> &vecDBSetting,
             const char *search_dset, const char *query,

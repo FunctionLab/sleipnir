@@ -396,17 +396,17 @@ int main(int iArgs, char **aszArgs) {
     }
 
     if (sArgs.datasetsize_flag == 1) {
-      // open pcl file and ouput number of expiements
+        // open pcl file and ouput number of expiements
         string pclfile = sArgs.pclinput_arg;
         if (pclfile.empty() || !CMeta::IsExtension(pclfile, ".bin")) {
           cerr << "Missing pcl input or input file is not bin type!" << endl;
-          return 1;
+          return -1;
         }
 
         CPCL pcl;
         if (!pcl.Open(pclfile.c_str())) {
           cerr << "Error opening pcl file " << pclfile << endl;
-          return 1;
+          return -1;
         } 
         string dsetName = CMeta::Deextension(CMeta::Basename(pclfile.c_str()));
         size_t numExp = pcl.GetExperiments();
