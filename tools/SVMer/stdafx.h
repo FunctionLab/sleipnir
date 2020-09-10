@@ -31,6 +31,7 @@ using namespace std;
 #include "meta.h"
 #include "pclset.h"
 #include "svm.h"
+#include "svm_local.h"
 
 using namespace Sleipnir;
 

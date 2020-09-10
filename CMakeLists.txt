@@ -261,6 +261,7 @@ option(USE_SVMLIB "Use svm_lib" ON)
 if(USE_SVMLIB)
     list(APPEND SLEIPNIR_SOURCES src/svm_local.cpp
 	src/svm_local.h
+	src/svm_local.cpp
 	src/svmi.h
 	src/libsvm.cpp
 	src/libsvm.h)
@@ -273,63 +274,53 @@ else()
 endif()
 
 
-option(USE_SVMPERF "Use svm_perf" OFF)
-if(USE_SVMPERF AND USE_SVMLIB)
+option(USE_SVM_PERF "Use svm_perf" OFF)
+if(USE_SVM_PERF)
     list(APPEND SLEIPNIR_SOURCES
 	src/svmperf.cpp
-	src/svmperf.h
-	src/svmstruct.cpp
-	src/svmstruct.h
-	src/svmstructtree.cpp
-	src/svmstructtree.h
-	src/libsvm.cpp
-	src/libsvm.h)
+	src/svmperf.h)
     find_library(SVMPERF_LIBRARY libsvmperf.a)
-    find_path(SVMPERF_INCLUDE PATH_SUFFIXES svm_light svm_struct
-            NAMES svm_struct_api.h svm_common.h)
+    find_path(SVMPERF_INCLUDE
+	PATH_SUFFIXES svm_perf
+	NAMES svm_common.h svm_struct_api.h)
     list(APPEND EXTRA_LIBRARIES ${SVMPERF_LIBRARY})
     list(APPEND EXTRA_INCLUDES ${SVMPERF_INCLUDE})
-elseif(USE_SVMPERF AND NOT USE_SVMLIB)
-    message(SEND_ERROR "Cannot use svm_perf without svm_lib")
 else()
-    list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_PERF=1 NO_SVM_STRUCTTREE=1)
+    list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_PERF=1 NO_SVM_STRUCTTREE=1 NO_SVM_STRUCT=1)
 endif()
 
+# we explicitly disable the hierarchical and multiclass svm_perfs because they don't work
 
-option(USE_SVM_MULTICLASS "Use svm_multiclass" OFF)
-if(USE_SVM_MULTICLASS AND USE_SVMLIB)
-    find_library(SVM_MULTICLASS_LIBRARY libsvmmulti.a)
-    find_path(SVM_MULTICLASS_INCLUDE PATH_SUFFIXES svm_multiclass/svm_light
-            NAMES svm_common.h)
-    if(SVM_MULTICLASS_LIBRARY AND SVM_MULTICLASS_INCLUDE)
-        list(APPEND EXTRA_LIBRARIES ${SVM_MULTICLASS_LIBRARY})
-        list(APPEND EXTRA_INCLUDES ${SVM_MULTICLASS_INCLUDE})
-    else()
-        list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_STRUCT)
-    endif()
-elseif(USE_SVM_MULTICLASS AND NOT USE_SVMLIB)
-    message(SEND_ERROR "Cannot use svm_multiclass without svm_lib")
-else()
-    list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_MULTICLASS=1)
-endif()
+list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_MULTICLASS=1 NO_SVM_STRUCTTREE=1)
 
 
-option(USE_SVM_HIERARCHY "Use svm_hierarchy" OFF)
-if(USE_SVM_HIERARCHY AND USE_SVMLIB)
-    find_library(SVM_HIERARCHY_LIBRARY libsvmhierarchy.a)
-    find_path(SVM_HIERARCHY_INCLUDE PATH_SUFFIXES svm_hierarchy/svm_light
-            NAMES svm_common.h)
-    if(SVM_HIERARCHY_LIBRARY AND SVM_HIERARCHY_INCLUDE)
-        list(APPEND EXTRA_LIBRARIES ${SVM_HIERARCHY_LIBRARY})
-        list(APPEND EXTRA_INCLUDES ${SVM_HIERARCHY_INCLUDE})
-    else()
-        list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_STRUCTTREE=1)
-    endif()
-elseif(USE_SVM_HIERARCHY AND NOT USE_SVMLIB)
-    message(SEND_ERROR "Cannot use svm_hierarchy without svm_lib")
-else()
-    list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_HIERARCHY=1)
-endif()
+# option(USE_SVM_MULTICLASS "Use svm_multiclass" OFF)
+# if(USE_SVM_MULTICLASS AND USE_SVM_PERF)
+#     list(APPEND SLEIPNIR_SOURCES
+# 	src/svmstruct.cpp
+# 	src/svmstruct.h
+# 	src/svmstructtree.cpp
+# 	src/svmstructtree.h)
+#     find_library(SVM_MULTICLASS_LIBRARY libsvmmulticlass.a)
+#     find_path(SVM_MULTICLASS_INCLUDE
+# 	PATH_SUFFIXES svm_multiclass
+# 	NAMES svm_common.h svm_struct_api.h)
+#     list(APPEND EXTRA_LIBRARIES ${SVM_MULTICLASS_LIBRARY})
+#     list(APPEND EXTRA_INCLUDES ${SVM_MULTICLASS_INCLUDE})
+# elseif(USE_SVM_MULTICLASS AND NOT USE_SVM_PERF)
+#     message(SEND_ERROR "Cannot use svm_multiclass without svm_perf")
+# elseif(NOT USE_SVM_MULTICLASS)
+#     list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_MULTICLASS=1 NO_SVM_STRUCTTREE=1 NO_SVM_STRUCT=1)
+# endif()
+
+
+# option(USE_SVM_HIERARCHY "Use svm_hierarchy" OFF)
+# if(USE_SVM_MULTICLASS AND NOT USE_SVMPERF)
+#     message(SEND_ERROR "Cannot use svm_hierarchy without svm_perf")
+# elseif(NOT USE_SVM_HIERARCHY)
+#     list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_HIERARCHY=1)
+# endif()
+
 
 option(USE_VOWPAL_WABBIT "Use Vowpal Wabbit" ON)
 if(USE_VOWPAL_WABBIT)
@@ -385,24 +376,24 @@ if(SVMPERF_LIBRARY)
 	Data2SVM
 	SVMperfer
 	SVMperfing
-	SVMfe # svm perf
-	SVMer # svm perf
+	SVMfe
+	SVMer
 	)
 endif()
 
 # tools that depend on having svm_multiclass
 
-if(SVM_MULTICLASS_LIBRARY)
-    list(APPEND SLEIPNIR_TOOLS
-	SVMmulticlass # svm perf
-	)
-endif()
+# if(SVM_MULTICLASS_LIBRARY)
+#     list(APPEND SLEIPNIR_TOOLS
+# 	SVMmulticlass # svm perf
+# 	)
+# endif()
 
-if(SVM_HIERARCHY_LIBRARY)
-    list(APPEND SLEIPNIR_TOOLS
-	SVMhierarchy # svm perf
-	)
-endif()
+# if(SVM_HIERARCHY_LIBRARY)
+#     list(APPEND SLEIPNIR_TOOLS
+# 	SVMhierarchy # svm perf
+# 	)
+# endif()
 
 
 

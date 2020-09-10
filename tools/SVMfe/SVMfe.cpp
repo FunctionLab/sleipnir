@@ -70,9 +70,9 @@ void PrintResults(vector <SVMLight::Result> vecResults, ofstream &ofsm) {
 }
 
 void EliminateSvec(SVMLight::SVECTOR *a, bool *p_bUseFeature) {
-    register SVMLight::WORD *ai;
+    SVMLight::WORD *ai;
     ai = a->words;
-    register bool *pUse = p_bUseFeature;
+    bool *pUse = p_bUseFeature;
     size_t zeroed = 0;
     pUse++; //the first one is junk since feature numbering starts at 1
     while (ai->wnum) {
@@ -87,7 +87,7 @@ void EliminateSvec(SVMLight::SVECTOR *a, bool *p_bUseFeature) {
 }
 
 void PrintSVec(SVMLight::SVECTOR *a) {
-    register SVMLight::WORD *ai;
+    SVMLight::WORD *ai;
     ai = a->words;
     while (ai->wnum) {
 
