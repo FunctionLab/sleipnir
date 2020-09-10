@@ -279,8 +279,8 @@ if(USE_SVM_PERF)
     list(APPEND SLEIPNIR_SOURCES
 	src/svmperf.cpp
 	src/svmperf.h)
-    find_library(SVMPERF_LIBRARY libsvmperf.a)
-    find_path(SVMPERF_INCLUDE
+    find_library(SVM_PERF_LIBRARY libsvmperf.a)
+    find_path(SVM_PERF_INCLUDE
 	PATH_SUFFIXES svm_perf
 	NAMES svm_common.h svm_struct_api.h)
     list(APPEND EXTRA_LIBRARIES ${SVM_PERF_LIBRARY})

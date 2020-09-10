@@ -19,11 +19,9 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#include <random>
 #include "stdafx.h"
 #include "cmdline.h"
 #include <random>
-
 
 static inline float enrange(float d, double dEpsilon) {
     float dTmp;

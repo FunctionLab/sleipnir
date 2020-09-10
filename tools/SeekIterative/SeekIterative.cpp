@@ -1053,7 +1053,7 @@ int main(int iArgs, char **aszArgs) {
                     continue;
                 }
                 int minRequired = 1;
-                if (search_mode == "cv_loi" or search_mode == "spell")
+                if (search_mode == "cv_loi" || search_mode == "spell")
                     minRequired = 2;
                 int numThreshold = (int) (threshold_q * qq[j].size());
                 numThreshold = max(minRequired, numThreshold);
