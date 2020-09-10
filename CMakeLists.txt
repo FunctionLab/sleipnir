@@ -283,8 +283,8 @@ if(USE_SVM_PERF)
     find_path(SVMPERF_INCLUDE
 	PATH_SUFFIXES svm_perf
 	NAMES svm_common.h svm_struct_api.h)
-    list(APPEND EXTRA_LIBRARIES ${SVMPERF_LIBRARY})
-    list(APPEND EXTRA_INCLUDES ${SVMPERF_INCLUDE})
+    list(APPEND EXTRA_LIBRARIES ${SVM_PERF_LIBRARY})
+    list(APPEND EXTRA_INCLUDES ${SVM_PERF_INCLUDE})
 else()
     list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_PERF=1 NO_SVM_STRUCTTREE=1 NO_SVM_STRUCT=1)
 endif()
@@ -292,34 +292,6 @@ endif()
 # we explicitly disable the hierarchical and multiclass svm_perfs because they don't work
 
 list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_MULTICLASS=1 NO_SVM_STRUCTTREE=1)
-
-
-# option(USE_SVM_MULTICLASS "Use svm_multiclass" OFF)
-# if(USE_SVM_MULTICLASS AND USE_SVM_PERF)
-#     list(APPEND SLEIPNIR_SOURCES
-# 	src/svmstruct.cpp
-# 	src/svmstruct.h
-# 	src/svmstructtree.cpp
-# 	src/svmstructtree.h)
-#     find_library(SVM_MULTICLASS_LIBRARY libsvmmulticlass.a)
-#     find_path(SVM_MULTICLASS_INCLUDE
-# 	PATH_SUFFIXES svm_multiclass
-# 	NAMES svm_common.h svm_struct_api.h)
-#     list(APPEND EXTRA_LIBRARIES ${SVM_MULTICLASS_LIBRARY})
-#     list(APPEND EXTRA_INCLUDES ${SVM_MULTICLASS_INCLUDE})
-# elseif(USE_SVM_MULTICLASS AND NOT USE_SVM_PERF)
-#     message(SEND_ERROR "Cannot use svm_multiclass without svm_perf")
-# elseif(NOT USE_SVM_MULTICLASS)
-#     list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_MULTICLASS=1 NO_SVM_STRUCTTREE=1 NO_SVM_STRUCT=1)
-# endif()
-
-
-# option(USE_SVM_HIERARCHY "Use svm_hierarchy" OFF)
-# if(USE_SVM_MULTICLASS AND NOT USE_SVMPERF)
-#     message(SEND_ERROR "Cannot use svm_hierarchy without svm_perf")
-# elseif(NOT USE_SVM_HIERARCHY)
-#     list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_HIERARCHY=1)
-# endif()
 
 
 option(USE_VOWPAL_WABBIT "Use Vowpal Wabbit" ON)
@@ -371,7 +343,7 @@ endif()
 
 # tools that depend on having svm_perf
 
-if(SVMPERF_LIBRARY)
+if(SVM_PERF_LIBRARY)
     list(APPEND SLEIPNIR_TOOLS
 	Data2SVM
 	SVMperfer
@@ -380,21 +352,6 @@ if(SVMPERF_LIBRARY)
 	SVMer
 	)
 endif()
-
-# tools that depend on having svm_multiclass
-
-# if(SVM_MULTICLASS_LIBRARY)
-#     list(APPEND SLEIPNIR_TOOLS
-# 	SVMmulticlass # svm perf
-# 	)
-# endif()
-
-# if(SVM_HIERARCHY_LIBRARY)
-#     list(APPEND SLEIPNIR_TOOLS
-# 	SVMhierarchy # svm perf
-# 	)
-# endif()
-
 
 
 list(APPEND SLEIPNIR_TOOLS
@@ -425,7 +382,7 @@ list(APPEND SLEIPNIR_TOOLS
     Funcographer
     Hubber
     KNNImputer
-    LibSVMer # svm perf?
+    LibSVMer
     MCluster
     MIed
     MIer
@@ -443,11 +400,7 @@ list(APPEND SLEIPNIR_TOOLS
     PCLServer
     Randomizer
     SMRF
-    SVDer # svm perf
-  
-
-   
-    # SVMperfer # svm perf
+    SVDer
     SparseNetCombiner
     SeekAggregatedDataset
     SeekEvaluator
@@ -460,7 +413,6 @@ list(APPEND SLEIPNIR_TOOLS
     SeekServer
     SeekTest
     Seqs2Ngrams
-    # SVMperfing # svm perf
     Synthesizer
     Txt2Bin
     VWer
