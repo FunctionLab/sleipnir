@@ -213,7 +213,7 @@ namespace Sleipnir {
     bool CSeekTools::LoadDatabase(const vector<CDatabase *> &DB,
                                   const size_t &iGenes, const size_t &iDatasets,
                                   vector<CSeekDataset *> &vc, const vector<CSeekDataset *> &vc_src,
-                                  vector <CSeekPlatform> &vp, const vector <CSeekPlatform> &vp_src,
+                                  vector <CSeekPlatform> &vp,
                                   const vector <string> &vecstrDatasets,
                                   const map <string, string> &mapstrstrDatasetPlatform,
                                   const map <string, utype> &mapstriPlatform) {
@@ -222,11 +222,6 @@ namespace Sleipnir {
 
         vc.clear();
         vc.resize(iDatasets);
-        vp.clear();
-        vp.resize(vp_src.size());
-
-        for (i = 0; i < vp.size(); i++)
-            vp[i].Copy(vp_src[i]);
 
         int ret; //system call returns
 
@@ -330,62 +325,6 @@ namespace Sleipnir {
 
         fprintf(stderr, "Done initializing gene map\n");
         ret = system("date +%s%N 1>&2");
-        return true;
-    }
-
-    bool CSeekTools::ReadPlatforms(const string &strPlatformDirectory,
-                                   vector <CSeekPlatform> &plat, vector <string> &vecstrPlatforms,
-                                   map <string, utype> &mapstriPlatforms, const int lineSize) {
-        return CSeekTools::ReadPlatforms(strPlatformDirectory.c_str(), plat,
-                                         vecstrPlatforms, mapstriPlatforms, lineSize);
-    }
-
-    bool CSeekTools::ReadPlatforms(const char *plat_dir,
-                                   vector <CSeekPlatform> &plat, vector <string> &vecstrPlatforms,
-                                   map <string, utype> &mapstriPlatforms, const int lineSize) {
-
-        string strPlatformDirectory = plat_dir;
-        string strAvgFile = strPlatformDirectory + "/" +
-                            "all_platforms.gplatavg";
-        string strStdevFile = strPlatformDirectory + "/" +
-                              "all_platforms.gplatstdev";
-        string strPlatformOrderFile = strPlatformDirectory + "/" +
-                                      "all_platforms.gplatorder";
-
-        CFullMatrix<float> plat_avg;
-        plat_avg.Open(strAvgFile.c_str());
-        CFullMatrix<float> plat_stdev;
-        plat_stdev.Open(strStdevFile.c_str());
-        plat.clear();
-        plat.resize(plat_avg.GetRows());
-        utype i, j;
-
-        vecstrPlatforms.clear();
-        mapstriPlatforms.clear();
-        ifstream ifsm;
-        ifsm.open(strPlatformOrderFile.c_str());
-        char acBuffer[lineSize];
-        utype c_iBuffer = lineSize;
-        i = 0;
-        while (!ifsm.eof()) {
-            ifsm.getline(acBuffer, c_iBuffer - 1);
-            if (acBuffer[0] == 0) break;
-            acBuffer[c_iBuffer - 1] = 0;
-            vecstrPlatforms.push_back(acBuffer);
-            mapstriPlatforms[acBuffer] = i;
-            i++;
-        }
-        vecstrPlatforms.resize(vecstrPlatforms.size());
-        ifsm.close();
-
-        for (i = 0; i < plat_avg.GetRows(); i++) {
-            plat[i].InitializePlatform(plat_avg.GetColumns(), vecstrPlatforms[i]);
-            for (j = 0; j < plat_avg.GetColumns(); j++) {
-                plat[i].SetPlatformAvg(j, plat_avg.Get(i, j));
-                plat[i].SetPlatformStdev(j, plat_stdev.Get(i, j));
-            }
-        }
-
         return true;
     }
 

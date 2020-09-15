@@ -327,7 +327,7 @@ namespace Sleipnir {
          * \see
          * Initialize
          */
-        bool Open(const CFullMatrix &Mat) {
+        bool Copy(const CFullMatrix &Mat) {
             size_t i;
 
             if ((GetRows() != Mat.GetRows()) || (GetColumns() != Mat.GetColumns()))
@@ -533,7 +533,7 @@ namespace Sleipnir {
                         MatTmp.Get(j, i) += Get(j, k) * (fTranspose ? MatRight.Get(i, k) :
                                                          MatRight.Get(k, i));
 
-            return Open(MatTmp);
+            return Copy(MatTmp);
         }
 
         /*!
@@ -576,7 +576,7 @@ namespace Sleipnir {
 
             vecE.resize(GetColumns());
             vecWork.resize(GetRows());
-            MatA.Open(*this);
+            MatA.Copy(*this);
 
             // Reduce A to bidiagonal form, storing the diagonal elements
             // in s and the super-diagonal elements in e.

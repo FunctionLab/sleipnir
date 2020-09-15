@@ -274,11 +274,13 @@ bool OpenDBFiles(string &DBFile, vector<unsigned char *> &cc, bool &useNibble) {
 
 
 bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
-            size_t &m_iGenes, vector <string> &vecstrGenes,
-            map <utype, utype> &mapiPlatform, const vector<float> &quant,
+            size_t &m_iGenes, vector<string> &vecstrGenes,
+            map<utype, utype> &mapiPlatform, const vector<float> &quant,
             vector<CSeekDataset *> &vc, CFullMatrix<float> &platform_avg,
-            CFullMatrix<float> &platform_stdev, vector <string> &vecstrQuery,
-            const bool &logit) {
+            CFullMatrix<float> &platform_stdev, CFullMatrix<uint32_t> &platform_count,
+            vector<string> &vecstrQuery,
+            const bool &logit)
+{
 
     size_t i, j, jj, k;
 
@@ -365,6 +367,7 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
             fprintf(stderr, "%s G%d P%d %.5f %.5f\n", thisGene.c_str(), geneID, k, mean[k], stdev[k]);
             platform_avg.Set(k, geneID, mean[k]);
             platform_stdev.Set(k, geneID, stdev[k]);
+            platform_count.Set(k, geneID, num[k]);
         }
     }
 
@@ -597,25 +600,31 @@ int main(int iArgs, char **aszArgs) {
 
     /* DB mode */
     if (sArgs.db_flag == 1) {
+        if (sArgs.combineplat_flag == 1) {
+            // combine the platform statistics (avg, stdev, count) from in_dir1 and in_dir2 and write to dir_out
+            assert(sArgs.in_dir1_arg != NULL);
+            assert(sArgs.in_dir2_arg != NULL);
+            assert(sArgs.dir_out_arg != NULL);
+            combinePlatformStatistics(sArgs.in_dir1_arg, sArgs.in_dir2_arg, sArgs.dir_out_arg);
+        } else if (sArgs.gplat_flag == 1) {
+            if (!sArgs.quant_arg)
+            {
+                fprintf(stderr, "Must give quant file\n");
+                return -1;
+            }
 
-        if (!sArgs.quant_arg) {
-            fprintf(stderr, "Must give quant file\n");
-            return -1;
-        }
+            vector<float> quant;
+            string strQuantFile = sArgs.quant_arg;
+            //fprintf(stderr, "%s\n", strQuantFile.c_str());
+            CSeekTools::ReadQuantFile(strQuantFile, quant);
 
-        vector<float> quant;
-        string strQuantFile = sArgs.quant_arg;
-        //fprintf(stderr, "%s\n", strQuantFile.c_str());
-        CSeekTools::ReadQuantFile(strQuantFile, quant);
+            //fprintf(stderr, "quant %d %.5f\n", 170, quant[170]);
+            //getchar();
 
-        //fprintf(stderr, "quant %d %.5f\n", 170, quant[170]);
-        //getchar();
-
-        if (sArgs.gplat_flag == 1) {
+        
             bool logit = false;
             if (sArgs.logit_flag == 1) logit = true;
 
-            vector <CSeekPlatform> vp;
             map <string, utype> mapstriPlatform;
             map <utype, string> mapistrPlatform;
             map <utype, utype> mapiPlatform;
@@ -667,20 +676,13 @@ int main(int iArgs, char **aszArgs) {
             size_t numPlatforms = mapstriPlatform.size();
             size_t iDatasets = vecstrDatasets.size();
             size_t m_iGenes = vecstrGenes.size();
-            CFullMatrix<float> platform_avg, platform_stdev;
-            platform_avg.Initialize(numPlatforms, m_iGenes);
-            platform_stdev.Initialize(numPlatforms, m_iGenes);
+
+            // Create a SeekPlatforms object to hold all the platform data
+            SeekPlatforms platforms(numPlatforms, m_iGenes);
+            platforms.setPlatformNames(vecstrPlatforms);
+            platforms.setPlatformNameMap(mapstriPlatform);
 
             //printf("Size: %d %d\n", numPlatforms, m_iGenes); getchar();
-
-            for (i = 0; i < numPlatforms; i++) {
-                for (j = 0; j < m_iGenes; j++) {
-                    platform_avg.Set(i, j, CMeta::GetNaN());
-                    platform_stdev.Set(i, j, CMeta::GetNaN());
-                    //platform_avg.Set(i, j, (float) 0);
-                    //platform_stdev.Set(i, j, (float) 1.0);
-                }
-            }
 
             /*if(iDatasets<numThreads){
                 numThreads = iDatasets;
@@ -693,16 +695,20 @@ int main(int iArgs, char **aszArgs) {
                     new CFullMatrix<float>[numThreads];
             CFullMatrix<float> *platform_stdev_threads =
                     new CFullMatrix<float>[numThreads];
+            CFullMatrix<uint32_t> *platform_count_threads =
+                new CFullMatrix<uint32_t>[numThreads];
 
             for (i = 0; i < numThreads; i++) {
                 InitializeDataset(iDatasets, vecstrDatasets,
                                   strPrepInputDirectory, vc[i]);
                 platform_avg_threads[i].Initialize(numPlatforms, m_iGenes);
                 platform_stdev_threads[i].Initialize(numPlatforms, m_iGenes);
+                platform_count_threads[i].Initialize(numPlatforms, m_iGenes);
                 for (j = 0; j < numPlatforms; j++) {
                     for (k = 0; k < m_iGenes; k++) {
                         platform_avg_threads[i].Set(j, k, CMeta::GetNaN());
                         platform_stdev_threads[i].Set(j, k, CMeta::GetNaN());
+                        platform_count_threads[i].Set(j, k, 0);
                         //platform_avg_threads[i].Set(j, k, (float) 0);
                         //platform_stdev_threads[i].Set(j, k, (float) 1.0);
                     }
@@ -723,6 +729,7 @@ int main(int iArgs, char **aszArgs) {
                 OpenDB(DBFile, useNibble, iDatasets, m_iGenes,
                        vecstrGenes, mapiPlatform, quant, vc[tid],
                        platform_avg_threads[tid], platform_stdev_threads[tid],
+                       platform_count_threads[tid],
                        vecstrQuery, logit);
                 fprintf(stderr, "finished opening db file %s\n",
                         DBFile.c_str());
@@ -733,12 +740,13 @@ int main(int iArgs, char **aszArgs) {
                     for (k = 0; k < m_iGenes; k++) {
                         float ca = platform_avg_threads[i].Get(j, k);
                         float cs = platform_stdev_threads[i].Get(j, k);
-
+                        uint32_t cn = platform_count_threads[i].Get(j, k);
                         if (ca == CMeta::GetNaN() || cs == CMeta::GetNaN()) {
                             continue;
                         }
-                        platform_avg.Set(j, k, ca);
-                        platform_stdev.Set(j, k, cs);
+                        platforms.platformAvgMatrix.Set(j, k, ca);
+                        platforms.platformStdevMatrix.Set(j, k, cs);
+                        platforms.platformCountMatrix.Set(j, k, cn);
                     }
                 }
             }
@@ -753,20 +761,8 @@ int main(int iArgs, char **aszArgs) {
                 }
             }*/
 
-            char outFile[125];
-            sprintf(outFile, "%s/all_platforms.gplatavg", sArgs.dir_out_arg);
-            platform_avg.Save(outFile);
-            sprintf(outFile, "%s/all_platforms.gplatstdev", sArgs.dir_out_arg);
-            platform_stdev.Save(outFile);
-            sprintf(outFile, "%s/all_platforms.gplatorder", sArgs.dir_out_arg);
-            ofstream outfile;
-            outfile.open(outFile);
-            for (i = 0; i < vecstrPlatforms.size(); i++) {
-                outfile << vecstrPlatforms[i] << "\n";
-            }
-            outfile.close();
+            platforms.savePlatformDataToFiles(sArgs.dir_out_arg);
         }
-
     } else if (sArgs.dab_flag == 1) {
 
         string norm_mode = sArgs.norm_mode_arg;

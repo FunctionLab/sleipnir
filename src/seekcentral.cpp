@@ -41,9 +41,7 @@ namespace Sleipnir {
         m_vc.clear();
         m_quant.clear();
         m_vecstrAllQuery.clear();
-        m_vp.clear();
-        m_mapstriPlatform.clear();
-        m_vecstrPlatform.clear();
+        m_seekPlatforms.clear();
         m_vecstrDP.clear();
         m_mapstrintDataset.clear();
         m_mapstrintGene.clear();
@@ -179,10 +177,7 @@ namespace Sleipnir {
         m_vecstrAllQuery.clear();
         m_Query.clear();
 
-        m_vp.clear();
-
-        m_mapstriPlatform.clear();
-        m_vecstrPlatform.clear();
+        m_seekPlatforms.clear();
 
         if (m_vecDB.size() != 0) {
             for (i = 0; i < m_vecDB.size(); i++) {
@@ -323,11 +318,9 @@ namespace Sleipnir {
 
         m_mapstrstrDatasetPlatform.insert(src->m_mapstrstrDatasetPlatform.begin(),
                                           src->m_mapstrstrDatasetPlatform.end());
-        m_mapstriPlatform.insert(src->m_mapstriPlatform.begin(), src->m_mapstriPlatform.end());
 
-        m_vecstrPlatform.resize(src->m_vecstrPlatform.size());
-        copy(src->m_vecstrPlatform.begin(), src->m_vecstrPlatform.end(), m_vecstrPlatform.begin());
-
+        m_seekPlatforms.copy(src->m_seekPlatforms);
+    
         m_vecstrDP.resize(src->m_vecstrDP.size());
         copy(src->m_vecstrDP.begin(), src->m_vecstrDP.end(), m_vecstrDP.begin());
 
@@ -398,8 +391,8 @@ namespace Sleipnir {
         }
 
         CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
-                                 m_vc, src->m_vc, m_vp, src->m_vp, m_vecstrDatasets,
-                                 m_mapstrstrDatasetPlatform, m_mapstriPlatform);
+                                 m_vc, src->m_vc, m_seekPlatforms.getCSeekPlatforms(), m_vecstrDatasets,
+                                 m_mapstrstrDatasetPlatform, m_seekPlatforms.getPlatformMap());
 
         if (!CalculateRestart()) {
             fprintf(stderr, "Error occurred during CalculateRestart()\n");
@@ -679,10 +672,10 @@ namespace Sleipnir {
 
         m_vecstrDatasets.clear();
         m_vecstrDP.clear();
-        m_mapstriPlatform.clear();
         m_mapstrstrDatasetPlatform.clear();
         m_mapstrintDataset.clear();
-        m_vp.clear();
+
+        m_seekPlatforms.clear();
 
         m_vecDB.resize(vecDBSetting.size());
         m_vecDBDataset.resize(vecDBSetting.size());
@@ -735,21 +728,13 @@ namespace Sleipnir {
                 }
             }
 
-            vector <string> vecstrPlatforms;
-            map <string, utype> mapstriPlatform;
-            vector <CSeekPlatform> vp;
-            CSeekTools::ReadPlatforms(vecDBSetting[i]->GetValue("platform"), vp,
-                                      vecstrPlatforms, mapstriPlatform);
-
-            int cur = m_vp.size();
-            for (map<string, utype>::iterator it = mapstriPlatform.begin();
-                 it != mapstriPlatform.end(); it++) {
-                m_mapstriPlatform[it->first] = it->second + cur;
-            }
-
-            m_vp.resize(cur + vp.size());
-            for (j = 0; j < vp.size(); j++)
-                m_vp[cur + j].Copy(vp[j]);
+            // Load the new database platform statistics
+            SeekPlatforms db_platforms;
+            string platformDir = vecDBSetting[i]->GetValue("platform");
+            assert(!platformDir.empty() && platformDir != "NA");
+            db_platforms.loadPlatformDataFromFiles(platformDir);
+            // Combine the new db platform statistics with the main db stats
+            m_seekPlatforms.combineWithPlatform(db_platforms);
         }
 
         for (i = 0; i < m_vecstrDatasets.size(); i++) {
@@ -767,7 +752,8 @@ namespace Sleipnir {
 
         CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
                                  vecDBSetting, m_vecstrDatasets, m_mapstrstrDatasetPlatform,
-                                 m_mapstriPlatform, m_vp, m_vc, m_vecDBDataset, m_mapstrintDataset,
+                                 m_seekPlatforms.getPlatformMap(), m_seekPlatforms.getCSeekPlatforms(),
+                                 m_vc, m_vecDBDataset, m_mapstrintDataset,
                                  bVariance, bCorrelation);
 
         return true;

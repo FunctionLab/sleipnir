@@ -485,9 +485,7 @@ namespace Sleipnir {
         vector <CSeekQuery> m_Query;
 
         /* Platform */
-        vector <CSeekPlatform> m_vp;
-        map <string, utype> m_mapstriPlatform;
-        vector <string> m_vecstrPlatform;
+        SeekPlatforms m_seekPlatforms;
 
         //CDatabase reference
         vector<CDatabase *> m_vecDB;

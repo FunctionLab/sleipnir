@@ -33,6 +33,7 @@
 #define SEEKPLATFORM_H
 
 #include "seekbasic.h"
+#include "fullmatrix.h"
 
 namespace Sleipnir {
 
@@ -93,6 +94,13 @@ namespace Sleipnir {
         void SetPlatformStdev(const utype &, const float &);
 
         /*!
+         * \brief Set the platform count of \a samples for a given gene
+         * \param i Gene index
+         * \param val The count
+         */
+        void SetPlatformCount(const utype &, const uint32_t &);
+
+        /*!
          * \brief Get the platform-wide \a correlation average for a given gene
          * \param i Gene index
          * \return The platform-wide average
@@ -105,6 +113,13 @@ namespace Sleipnir {
          * \return The platform-wide standard deviation
          */
         float GetPlatformStdev(const utype &) const;
+
+        /*!
+         * \brief Get the platform-wide count of \a samples for a given gene
+         * \param i Gene index
+         * \return The platform-wide count
+         */
+        uint32_t GetPlatformCount(const utype &) const;
 
         /*!
          * \brief Reset
@@ -120,9 +135,70 @@ namespace Sleipnir {
     private:
         vector<float> m_vecfPlatformAvg;
         vector<float> m_vecfPlatformStdev;
+        vector<uint32_t> m_vecPlatformCount;
         string m_strPlatformName;
         utype m_iNumGenes;
     };
 
+
+    /*!
+    * \brief
+    * SeekPlatforms stores the collection of SeekPlatform objects (one per plaftorm).
+    * This makes it easy to load and store all the platform data in one enclosing class.
+    * 
+    * Notes on why this change:
+    * We want to separate the seekplatform functionality into one class/file for unit testing.
+    * The code to compute, load and save seekplatform files uses fullMatrices, while the search 
+    * algorithm uses vector<CSeekPlatforms>. In this SeekPlatorms class we will combine both 
+    * of these together. The fullMatrices are public so the various parts of code can easily
+    * set them. The function setCSeekPlatformData() copies the fullMatrices into the 
+    * vector<CSeekPlatforms> format which can then be retrieved and used by the search algorithm.
+    * With this change we will now pass around a SeekPlatorms object rather than pass around
+    * differet individual components as was done before such as the platformNames, platformMap, 
+    * and vector<CSeekPlatforms>. We also add a combineWithPlatform() function to merge platform
+    * stats together. This is helpful not only when merging in new datasets, but also when 
+    * using multiple databases for a search.
+    * 
+    */
+    class SeekPlatforms {
+    public:
+        SeekPlatforms() { initialize(0, 0); }
+        SeekPlatforms(size_t numPlatforms, size_t numGenes);
+        void initialize(size_t numPlatforms, size_t numGenes);
+        void clear() { initialize(0, 0); }
+        void copy(SeekPlatforms &srcPlatform);
+        void setCSeekPlatformData();
+        void loadPlatformDataFromFiles(string platformDir);
+        void savePlatformDataToFiles(string platformDir);
+        void setPlatformNames(vector<string> &platformNames) {m_platformNames = platformNames;}
+        void setPlatformNameMap(map<string, utype> &mapstriPlatform) { m_mapPlatformNameToOrderID = mapstriPlatform; }
+        vector<CSeekPlatform> &getCSeekPlatforms() { return m_cseek_platforms; }
+        map<string, utype> &getPlatformMap() { return m_mapPlatformNameToOrderID; }
+        vector<string> &getPlatformNames() { return m_platformNames; }
+        uint32_t getNumPlatforms() { return m_numPlatforms; }
+        uint32_t getNumGenes() { return m_numGenes; }
+        bool bIncludesCounts() { return m_includeCounts; }
+        bool combineWithPlatform(SeekPlatforms &seekPlatforms2);
+
+        // Public Member Variables
+        CFullMatrix<float> platformAvgMatrix;
+        CFullMatrix<float> platformStdevMatrix;
+        CFullMatrix<uint32_t> platformCountMatrix;
+    private: 
+        // Private Member Variables
+        vector<CSeekPlatform> m_cseek_platforms;  // array of individual platform objects
+        vector<string> m_platformNames;
+        map<string, utype> m_mapPlatformNameToOrderID;
+        uint32_t m_numGenes;
+        uint32_t m_numPlatforms;
+        bool m_includeCounts = true; // TODO set based on file existence
+    };
+
 }
+
+/* *******  Utility Functions ******** */
+
+void combinePlatformStatistics(string platDir1, string platDir2, string outDir);
+
+
 #endif

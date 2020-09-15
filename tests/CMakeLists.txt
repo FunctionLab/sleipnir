@@ -2,9 +2,10 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/extern/googletest" "extern/googletest")
 
 add_executable(
     unit_tests
-    example_add.cpp
-    example_subtract.cpp
-    )
+    # example_add.cpp
+    # example_subtract.cpp
+    seekplatform_test.cpp
+)
 
   #add_library(example STATIC
   #  example_add.cpp

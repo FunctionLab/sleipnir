@@ -57,6 +57,8 @@ option	"datasetsize"			S	"Ouput dataset sizes and exit, i.e. number of experimen
 section "DB mode"
 option	"gplat"				P	"Generates platform wide gene average and stdev file"
 								flag	off
+option	"combineplat"				m	"Merges (combines) two platform wide gene average and stdev files"
+								flag	off
 option	"dblist"			b	"The DB file list (incl. file path)"
 								string typestr="filename"
 option	"dir_prep_in"		I	"The prep directory containing the .gavg and .gpres files"
@@ -87,6 +89,10 @@ option	"exp"				E	"Raise the z-score to the power of this value (for --norm_mode
 section "Input"
 option	"input"				i	"Gene mapping file"
 								string typestr="filename"	yes
+option	"in_dir1"			1	"Input directory 1"
+								string typestr="filename"
+option	"in_dir2"			2	"Input directory 2"
+								string typestr="filename"
 
 section "Output"
 option	"dir_out"			D	"Output directory"

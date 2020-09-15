@@ -146,7 +146,7 @@ namespace Sleipnir {
             m_vecdStdevs[i] = sqrt(MatSigma.Get(i, i));
         }
 
-        m_MatSigmaChol.Open(MatSigma);
+        m_MatSigmaChol.Copy(MatSigma);
         CStatistics::CholeskyDecomposition(m_MatSigmaChol);
 
         CStatistics::MatrixLUDecompose(MatSigma, veciIndices, fEven);
