@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "seekplatform.h"
+#include <filesystem>
 
 // forward declarations
 void calcPlatformStats(Sleipnir::SeekPlatforms &seekPlatforms, vector<vector<vector<float>>> &rawData, 
@@ -305,3 +306,4 @@ TEST_F(SeekPlatformsTest, combineUtilityFunction)
     compareSeekPlatforms(seekPlatforms3, seekPrepCombine);
   }
 }
+

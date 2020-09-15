@@ -31,6 +31,7 @@
 *****************************************************************************/
 #include "seekplatform.h"
 #include "seekreader.h"
+#include <filesystem>
 
 namespace Sleipnir {
 

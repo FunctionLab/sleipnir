@@ -346,7 +346,7 @@ add_library(sleipnir STATIC ${SLEIPNIR_SOURCES})
 
 target_include_directories(sleipnir PUBLIC ${EXTRA_INCLUDES})
 target_compile_definitions(sleipnir PUBLIC ${SLEIPNIR_COMPILE_DEFS})
-target_link_libraries(sleipnir stdc++)
+target_link_libraries(sleipnir stdc++fs)
 
 
 
