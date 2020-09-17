@@ -398,7 +398,7 @@ void *do_query(void *th_arg) {
             }
         }
 
-        fprintf(stderr, "allocating space %d %d...\n", geneName.size(),
+        fprintf(stderr, "allocating space %lu %d...\n", geneName.size(),
                 ps);
         ff = new CFullMatrix<float>();
         ff->Initialize(genes, ps);
@@ -609,7 +609,7 @@ void *do_query(void *th_arg) {
                 rbp *= (1.0 - RBP_P);
 
                 rbp = rbp / totQuery * 1000;
-                fprintf(stderr, "%d %.3e\n", i, rbp);
+                fprintf(stderr, "%zu %.3e\n", i, rbp);
                 vqCoexpression[k] = rbp;
                 d_vecqCoexpression[i].push_back(rbp);
             }

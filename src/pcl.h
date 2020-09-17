@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <random>
 
 #include "pcli.h"
 #include "measure.h"
@@ -168,6 +169,7 @@ namespace Sleipnir {
          */
         CPCL(bool fHeader = true) :
                 CPCLImpl(fHeader) {
+            m_rnd_gen = std::mt19937(m_rnd_dev());
         }
 
         void Open(const CPCL &PCL);
@@ -728,8 +730,12 @@ namespace Sleipnir {
             size_t i;
 
             for (i = 0; i < GetGenes(); ++i)
-                std::random_shuffle(Get(i), Get(i) + GetExperiments());
+                std::shuffle(Get(i), Get(i) + GetExperiments(), m_rnd_gen);
         }
+
+    private:
+        std::random_device m_rnd_dev;
+        std::mt19937 m_rnd_gen; // random number generator
     };
 
 }

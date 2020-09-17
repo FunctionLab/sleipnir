@@ -23,6 +23,7 @@
 #define COMPACTMATRIX_H
 
 #include "compactmatrixi.h"
+#include <random>
 
 namespace Sleipnir {
 
@@ -39,6 +40,8 @@ namespace Sleipnir {
  */
     class CCompactMatrix : CCompactMatrixImpl {
     public:
+        CCompactMatrix(): m_rnd_gen(m_rnd_dev()) {}
+
         bool Open(std::istream &istm);
 
         const unsigned char *Open(const unsigned char *pbData);
@@ -56,7 +59,7 @@ namespace Sleipnir {
         void Randomize() {
 
             if (m_aiData)
-                std::random_shuffle(m_aiData, m_aiData + CountWords());
+                std::shuffle(m_aiData, m_aiData + CountWords(), m_rnd_gen);
         }
 
         /*!
@@ -162,6 +165,9 @@ namespace Sleipnir {
             HalfIndex(iY, iX);
             return CCompactMatrixBase::Get(iY, iX);
         }
+    private:
+        std::random_device m_rnd_dev;
+        std::mt19937 m_rnd_gen; // random number generator
     };
 
 /*!

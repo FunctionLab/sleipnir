@@ -302,7 +302,7 @@ void *do_query(void *th_arg) {
 }
 //mode ends=========================================================
 
-bool ReadParameter(string param_file, vector<struct parameter> &v) {
+bool ReadParameter(const string& param_file, vector<struct parameter> &v) {
     ifstream ifsm;
     ifsm.open(param_file.c_str());
     if (!ifsm.is_open()) {
@@ -321,15 +321,15 @@ bool ReadParameter(string param_file, vector<struct parameter> &v) {
         vector <string> tok;
         CMeta::Tokenize(acBuffer, tok);
         struct parameter par;
-        par.size = atoi(tok[0].c_str());
-        par.portion = atof(tok[2].c_str());
-        par.threshold = atof(tok[3].c_str());
-        par.scale = atof(tok[5].c_str());
-        par.shape = atof(tok[6].c_str());
+        par.size = strtol(tok[0].c_str(), nullptr, 10);
+        par.portion = strtod(tok[2].c_str(), nullptr);
+        par.threshold = strtod(tok[3].c_str(), nullptr);
+        par.scale = strtod(tok[5].c_str(), nullptr);
+        par.shape = strtod(tok[6].c_str(), nullptr);
         par.quantile = vector<double>();
         //for(int k=8; k<tok.size(); k++){
         for (int k = 7; k < tok.size(); k++) {
-            par.quantile.push_back(atof(tok[k].c_str()));
+            par.quantile.push_back(strtod(tok[k].c_str(), nullptr));
             //fprintf(stderr, "This value is %d %.2f\n", k, atof(tok[k].c_str()));
         }
         v.push_back(par);
@@ -344,7 +344,7 @@ int main(int iArgs, char **aszArgs) {
 #ifdef WIN32
     pthread_win32_process_attach_np( );
 #endif // WIN32
-    gengetopt_args_info sArgs;
+    gengetopt_args_info sArgs{};
 
     if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
         cmdline_parser_print_help();
@@ -431,10 +431,10 @@ int main(int iArgs, char **aszArgs) {
 
     //find a free port and attempt binding to the port
     int sockfd, new_fd;
-    struct addrinfo hints, *servinfo, *p;
-    struct sockaddr_storage their_addr;
+    struct addrinfo hints{}, *servinfo, *p;
+    struct sockaddr_storage their_addr{};
     socklen_t sin_size;
-    struct sigaction sa;
+    struct sigaction sa{};
     char s[INET6_ADDRSTRLEN];
     char buf[10];
     int rv;
@@ -445,13 +445,13 @@ int main(int iArgs, char **aszArgs) {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo(nullptr, PORT, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
 
     // loop through all the results and bind to the first we can
-    for (p = servinfo; p != NULL; p = p->ai_next) {
+    for (p = servinfo; p != nullptr; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("server: socket");
             continue;
@@ -468,7 +468,7 @@ int main(int iArgs, char **aszArgs) {
         break;
     }
 
-    if (p == NULL) {
+    if (p == nullptr) {
         fprintf(stderr, "server: failed to bind\n");
         return 2;
     }
@@ -483,7 +483,7 @@ int main(int iArgs, char **aszArgs) {
     sa.sa_handler = sigchld_handler; // reap all dead processes
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
-    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+    if (sigaction(SIGCHLD, &sa, nullptr) == -1) {
         perror("sigaction");
         exit(1);
     }
@@ -492,7 +492,7 @@ int main(int iArgs, char **aszArgs) {
     struct thread_data thread_arg[NUM_THREADS];
     pthread_t th[NUM_THREADS];
 
-    pthread_mutex_init(&mutexGet, NULL);
+    pthread_mutex_init(&mutexGet, nullptr);
 
     while (1) {
         sin_size = sizeof their_addr;

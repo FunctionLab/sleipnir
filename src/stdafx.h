@@ -151,8 +151,8 @@ namespace Sleipnir {
 
         static void log4cpp( const char* szTag, const char* szFormat, va_list& valArgs ) {
 
-            fprintf( stderr, "%d ", time( NULL ) );
-            fprintf( stderr, szTag );
+            fprintf( stderr, "%ld ", time( nullptr ) );
+            fprintf( stderr, "%s", szTag );
             fprintf( stderr, " : " );
             vfprintf( stderr, szFormat, valArgs );
             fprintf( stderr, "\n" ); }

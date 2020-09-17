@@ -27,7 +27,7 @@ namespace SVMPerf {
     extern "C" {
 #undef int64_t
 
-#include <svm_light/svm_common.h>
+#include "svm_light/svm_common.h"
 
     }
 
