@@ -35,9 +35,9 @@ const SMotifMatch::EType c_aeMatchTypes[] =
 int main_postprocess(const gengetopt_args_info &, CCoalesceMotifLibrary &);
 
 bool recluster(const gengetopt_args_info &, size_t, CCoalesceMotifLibrary &, const CHierarchy &,
-               const vector <CCoalesceCluster> &, const vector <string> &, const CPCL &, size_t &);
+               const vector<CCoalesceCluster> &, const vector<string> &, const CPCL &, size_t &);
 
-bool trim(const gengetopt_args_info &, const CPCL &, vector <CCoalesceCluster> &);
+bool trim(const gengetopt_args_info &, const CPCL &, vector<CCoalesceCluster> &);
 
 EFile open_pclwig(const char *szFile, size_t iSkip, CFASTA &FASTA, CPCL &PCL) {
 
@@ -55,10 +55,10 @@ int main(int iArgs, char **aszArgs) {
     CFASTA FASTA;
     CPCL PCL, PCLSeed;
     CCoalesce Coalesce;
-    vector <CCoalesceCluster> vecClusters;
+    vector<CCoalesceCluster> vecClusters;
     size_t i, j;
-    set <string> setstrTypes;
-    vector < CFASTA * > vecpFASTAs;
+    set<string> setstrTypes;
+    vector<CFASTA *> vecpFASTAs;
 
 #ifdef WIN32
     pthread_win32_process_attach_np( );
@@ -78,7 +78,7 @@ int main(int iArgs, char **aszArgs) {
         return main_postprocess(sArgs, Motifs);
 
     if (sArgs.sequences_arg) {
-        vector <string> vecstrTypes;
+        vector<string> vecstrTypes;
 
         CMeta::Tokenize(sArgs.sequences_arg, vecstrTypes, ",");
         for (i = 0; i < vecstrTypes.size(); ++i)
@@ -109,8 +109,8 @@ int main(int iArgs, char **aszArgs) {
             return 1;
         }
         while (!ifsm.eof()) {
-            vector <string> vecstrLine;
-            set <size_t> setiConditions;
+            vector<string> vecstrLine;
+            set<size_t> setiConditions;
 
             ifsm.getline(acBuffer, c_iBuffer - 1);
             acBuffer[c_iBuffer - 1] = 0;
@@ -176,12 +176,12 @@ int main(int iArgs, char **aszArgs) {
 
 int main_postprocess(const gengetopt_args_info &sArgs, CCoalesceMotifLibrary &Motifs) {
     string strDir, strFile, strBase;
-    vector <CCoalesceCluster> vecClustersFrom, vecClustersTo;
+    vector<CCoalesceCluster> vecClustersFrom, vecClustersTo;
     bool fFailed;
     CDistanceMatrix MatSim;
     size_t i, j, iDatasets;
     CHierarchy *pHier;
-    vector <string> vecstrClusters;
+    vector<string> vecstrClusters;
     CPCL PCL;
     ifstream ifsm;
 
@@ -205,147 +205,103 @@ int main_postprocess(const gengetopt_args_info &sArgs, CCoalesceMotifLibrary &Mo
     fFailed = false;
     strDir = sArgs.postprocess_arg;
     FOR_EACH_DIRECTORY_FILE(strDir, strFile)
-    if (!CMeta::IsExtension(strFile, CPCL::GetExtension()))
-        continue;
-    strBase = CMeta::Deextension(strFile);
-    strFile = strDir + '/' + strFile;
+        if (!CMeta::IsExtension(strFile, CPCL::GetExtension()))
+            continue;
+        strBase = CMeta::Deextension(strFile);
+        strFile = strDir + '/' + strFile;
 
-    if (!fFailed)
-        vecClustersFrom.push_back(CCoalesceCluster());
-    if (fFailed = ((iDatasets = vecClustersFrom.back().Open(strFile, sArgs.skip_arg, PCL,
-                                                            &Motifs)) == -1)) {
-        cerr << "Could not open: " << strFile << endl;
-        continue;
+        if (!fFailed)
+            vecClustersFrom.emplace_back();
+        if ((fFailed = ((iDatasets = vecClustersFrom.back().Open(strFile, sArgs.skip_arg, PCL,
+                                                                 &Motifs)) == -1))) {
+            cerr << "Could not open: " << strFile << endl;
+            continue;
+        }
+        if (!(vecstrClusters.size() % 50))
+            cerr << "Opened cluster " << vecstrClusters.size() << "..." << endl;
+        vecstrClusters.push_back(strBase);
     }
-    if (!(vecstrClusters.size() % 50))
-        cerr << "Opened cluster " << vecstrClusters.size() << "..." << endl;
-    vecstrClusters.push_back(strBase);
+
+    if (fFailed)
+        vecClustersFrom.pop_back();
+
+    if (vecClustersFrom.empty()) {
+        char szBuffer[16];
+
+        fFailed = false;
+        ifsm.clear();
+
+        ifsm.open(sArgs.postprocess_arg);
+        while (!ifsm.eof()) {
+            if (!fFailed)
+                vecClustersFrom.emplace_back();
+
+            if ((fFailed = ((iDatasets = vecClustersFrom.back().Open(ifsm, PCL, &Motifs)) == -1)))
+                continue;
+            if (!(vecstrClusters.size() % 50))
+                cerr << "Opened cluster " << vecstrClusters.size() << "..." << endl;
+            sprintf_s(szBuffer,"c%06d", vecstrClusters.size());
+            vecstrClusters.emplace_back(szBuffer);
+        }
+        if (fFailed)
+            vecClustersFrom.pop_back();
+    }
+
+    cerr << "Trimming clusters..." << endl;
+    if (!trim(sArgs, PCL, vecClustersFrom))
+        return 1;
+
+    cerr << "Calculating cluster similarities..." << endl;
+    MatSim.Initialize(vecClustersFrom.size());
+    for (
+            i = 0;
+            i < MatSim.
+
+                    GetSize();
+
+            ++i)
+        for (
+                j = (i + 1);
+                j < MatSim.
+
+                        GetSize();
+
+                ++j) {
+            if (sArgs.verbosity_arg >= 7)
+                cerr << "Comparing clusters:	" << i << '\t' << j <<
+                     endl;
+            MatSim.
+                    Set(i, j, vecClustersFrom[i]
+                    .
+                            GetSimilarity(vecClustersFrom[j], PCL
+                                                  .
+
+                                                          GetGenes(),
+                                          iDatasets
+
+                    ));
+        }
+
+    i = 0;
+    return (((
+                     pHier = CClustHierarchical::Cluster(MatSim)
+             ) &&
+             recluster(sArgs, MatSim
+                                      .
+
+                                              GetSize()
+
+                              * (MatSim.
+
+                               GetSize()
+
+                                 - 1) / 2, Motifs, *pHier, vecClustersFrom,
+                       vecstrClusters, PCL, i)) ? 0 : 1);
 }
-
-if( fFailed )
-vecClustersFrom.
-
-pop_back();
-
-if( vecClustersFrom.
-
-empty()
-
-) {
-char szBuffer[16];
-
-fFailed = false;
-ifsm.
-
-clear();
-
-ifsm.
-open( sArgs
-.postprocess_arg );
-while( !ifsm.
-
-eof()
-
-) {
-if( !fFailed )
-vecClustersFrom.
-
-push_back ( CCoalesceCluster());
-
-if(
-fFailed = ((iDatasets = vecClustersFrom.back().Open(ifsm, PCL, &Motifs)) == -1)
-)
-continue;
-if( !( vecstrClusters.
-
-size()
-
-% 50 ))
-cerr << "Opened cluster " << vecstrClusters.
-
-size()
-
-<< "..." <<
-endl;
-sprintf_s( szBuffer,
-"c%06d", vecstrClusters.
-
-size()
-
-);
-vecstrClusters.
-push_back( szBuffer );
-}
-if( fFailed )
-vecClustersFrom.
-
-pop_back();
-
-}
-
-cerr << "Trimming clusters..." <<
-endl;
-if( !
-trim( sArgs, PCL, vecClustersFrom
-))
-return 1;
-
-cerr << "Calculating cluster similarities..." <<
-endl;
-MatSim.
-Initialize( vecClustersFrom
-.
-
-size()
-
-);
-for(
-i = 0;
-i<MatSim.
-
-GetSize();
-
-++i )
-for(
-j = (i + 1);
-j<MatSim.
-
-GetSize();
-
-++j ) {
-if( sArgs.verbosity_arg >= 7 )
-cerr << "Comparing clusters:	" << i << '\t' << j <<
-endl;
-MatSim.
-Set( i, j, vecClustersFrom[i]
-.
-GetSimilarity( vecClustersFrom[j], PCL
-.
-
-GetGenes(),
-        iDatasets
-
-)); }
-
-i = 0;
-return (((
-pHier = CClustHierarchical::Cluster(MatSim)
-) &&
-recluster( sArgs, MatSim
-.
-
-GetSize()
-
-* ( MatSim.
-
-GetSize()
-
-- 1 ) / 2, Motifs, *pHier, vecClustersFrom,
-vecstrClusters, PCL, i )) ? 0 : 1 ); }
 
 bool recluster(const gengetopt_args_info &sArgs, size_t iPairs, CCoalesceMotifLibrary &Motifs,
-               const CHierarchy &Hier, const vector <CCoalesceCluster> &vecClustersFrom,
-               const vector <string> &vecstrClustersFrom, const CPCL &PCL, size_t &iID) {
+               const CHierarchy &Hier, const vector<CCoalesceCluster> &vecClustersFrom,
+               const vector<string> &vecstrClustersFrom, const CPCL &PCL, size_t &iID) {
     SMotifMatch::EType eMatchType;
     size_t i;
 
@@ -383,9 +339,9 @@ bool recluster(const gengetopt_args_info &sArgs, size_t iPairs, CCoalesceMotifLi
                                         PCL, iID));
 }
 
-bool trim(const gengetopt_args_info &sArgs, const CPCL &PCL, vector <CCoalesceCluster> &vecClusters) {
-    vector <size_t> veciCounts, veciGenes, veciRemove;
-    CHalfMatrix <size_t> MatCounts;
+bool trim(const gengetopt_args_info &sArgs, const CPCL &PCL, vector<CCoalesceCluster> &vecClusters) {
+    vector<size_t> veciCounts, veciGenes, veciRemove;
+    CHalfMatrix<size_t> MatCounts;
     CDistanceMatrix MatScores;
     size_t i, j, iOne, iCluster;
     float dAve, dStd, d, dCutoff;
@@ -428,7 +384,7 @@ bool trim(const gengetopt_args_info &sArgs, const CPCL &PCL, vector <CCoalesceCl
         cerr << "Cutoff " << dCutoff << " (" << dAve << ',' << dStd << ')' << endl;
 
     for (iCluster = 0; iCluster < vecClusters.size(); ++iCluster) {
-        CCoalesceCluster & Cluster = vecClusters[iCluster];
+        CCoalesceCluster &Cluster = vecClusters[iCluster];
 
         if (sArgs.verbosity_arg >= 6)
             cerr << "Trimming cluster " << iCluster << endl;

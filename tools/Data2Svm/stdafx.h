@@ -32,6 +32,7 @@ using namespace std;
 #include "pclset.h"
 #include "statistics.h"
 #include "svm.h"
+#include "svm_local.h"
 
 using namespace Sleipnir;
 

@@ -38,7 +38,7 @@ enum EMethod {
 };
 
 static const char *c_aszMethods[] = {
-        "mean", "max", "quant", "median", "selectmean", NULL
+        "mean", "max", "quant", "median", "selectmean", nullptr
 };
 
 
@@ -174,8 +174,8 @@ float SelectMean(vector<float> &vecVals) {
 }
 
 int main(int iArgs, char **aszArgs) {
-    gengetopt_args_info sArgs;
-    int iRet;
+    gengetopt_args_info sArgs{};
+    int iRet = 0;
     size_t i, j, k, l;
     size_t iRuns, inputNums;
     float d, dout;
@@ -209,15 +209,15 @@ int main(int iArgs, char **aszArgs) {
     if (sArgs.directory_given) {
         dp = opendir(sArgs.directory_arg);
         i = 0;
-        if (dp != NULL) {
-            while (ep = readdir(dp)) {
-                if (strstr(ep->d_name, c_acDab) != NULL ||
-                    strstr(ep->d_name, c_acQDab) != NULL ||
-                    strstr(ep->d_name, c_acDat) != NULL
+        if (dp != nullptr) {
+            while ((ep = readdir(dp))) {
+                if (strstr(ep->d_name, c_acDab) != nullptr ||
+                    strstr(ep->d_name, c_acQDab) != nullptr ||
+                    strstr(ep->d_name, c_acDat) != nullptr
                         ) {
-                    if (strstr(ep->d_name, c_acSVM) != NULL)
+                    if (strstr(ep->d_name, c_acSVM) != nullptr)
                         continue;
-                    if (strstr(ep->d_name, c_acOUT) != NULL)
+                    if (strstr(ep->d_name, c_acOUT) != nullptr)
                         continue;
                     vecstrInputs.push_back((string) sArgs.directory_arg + "/" + ep->d_name);
                     vecstrDatasets.push_back(vecstrInputs[i]);
@@ -275,7 +275,7 @@ int main(int iArgs, char **aszArgs) {
             if ((iterDataset = mapstriDatasets.find(vecstrLine[0])) == mapstriDatasets.end())
                 cerr << "Dataset in weights but not database: " << vecstrLine[0] << endl;
             else
-                vecWeights[iterDataset->second] = (float) atof(vecstrLine[1].c_str());
+                vecWeights[iterDataset->second] = (float) strtol(vecstrLine[1].c_str(), nullptr, 10);
         }
         ifsm.close();
 
@@ -338,14 +338,13 @@ int main(int iArgs, char **aszArgs) {
                     vecVals.push_back(val);
                 }
 
-                if (vecVals.size() < 1)
+                if (vecVals.empty())
                     continue;
 
                 if (eMethod == EMethodMedian)
                     // find median or quantile
                     DatOut.Set(i, j, Median(vecVals, sArgs.quantile_arg));
-                else if (eMethod == EMethodSelectMean)
-                    DatOut.Set(i, j, SelectMean(vecVals));
+                else DatOut.Set(i, j, SelectMean(vecVals));
             }
         }
 
@@ -392,7 +391,7 @@ int main(int iArgs, char **aszArgs) {
                     vecVals.push_back(val);
                 }
 
-                if (vecVals.size() < 1)
+                if (vecVals.empty())
                     continue;
 
                 // debug
@@ -452,6 +451,8 @@ int main(int iArgs, char **aszArgs) {
                         case EMethodMean:
                             // keep track of denominator
                             DatTrack.Set(j, k, 1.0);
+                        default:
+                            break;
                     }
                 }
 
@@ -515,6 +516,9 @@ int main(int iArgs, char **aszArgs) {
                         else
                             DatOut.Set(j, k, DatOut.Get(j, k) + d);
                         break;
+
+                    default:
+                        break;
                 }
             }
     }
@@ -528,6 +532,9 @@ int main(int iArgs, char **aszArgs) {
                         continue;
                     DatOut.Set(j, k, d / DatTrack.Get(j, k));
                 }
+
+        default:
+            break;
     }
 
     // Filter dat

@@ -50,7 +50,7 @@ namespace Sleipnir {
         static bool ReadSeekSparseMatrixHeader(const char *fileName,
                                                CSeekIntIntMap &m) {
             FILE *f = fopen(fileName, "rb");
-            if (f == NULL) {
+            if (f == nullptr) {
                 cerr << "File not found" << endl;
                 return false;
             }
@@ -75,7 +75,7 @@ namespace Sleipnir {
                                          const float rbp_p, const vector <string> &vecstrGenes) {
 
             FILE *f = fopen(fileName, "rb");
-            if (f == NULL) {
+            if (f == nullptr) {
                 cerr << "File not found" << endl;
                 return false;
             }
@@ -274,7 +274,7 @@ namespace Sleipnir {
                                       const vector <string> &vecstrGenes, const char *fileName) {
 
             FILE *f = fopen(fileName, "wb");
-            if (f == NULL) {
+            if (f == nullptr) {
                 fprintf(stderr, "File not found %s\n", fileName);
                 return false;
             }
@@ -290,13 +290,13 @@ namespace Sleipnir {
                 if (veciGenes[i] != (tType) -1)
                     mm.Add((utype) i);
 
-            tType numPresent = (tType) mm.GetNumSet();
+            auto numPresent = (tType) mm.GetNumSet();
             //1 tType
             fwrite((char *) (&numPresent), 1, sizeof(numPresent), f);
             const vector <utype> &allR = mm.GetAllReverse();
             //numPresent tType
             for (i = 0; i < numPresent; i++) {
-                tType pr = (tType) allR[i];
+                auto pr = (tType) allR[i];
                 fwrite((char *) (&pr), 1, sizeof(pr), f);
             }
 
@@ -313,7 +313,7 @@ namespace Sleipnir {
                 if (numEntries == 0)
                     continue;
                 //1 tType
-                tType gi = (tType) i;
+                auto gi = (tType) i;
                 fwrite((char *) (&gi), 1, sizeof(gi), f);
                 //1 unsigned short
                 fwrite((char *) (&numEntries), 1, sizeof(numEntries), f);
@@ -350,7 +350,7 @@ namespace Sleipnir {
             tType s, t;
             for (i = 0; i < vecstrGenes.size(); i++) {
                 if ((s = veciGenes[i]) == (tType) -1) continue;
-                if (i % 1000 == 0) fprintf(stderr, "Start reading gene %d...\n", i);
+                if (i % 1000 == 0) fprintf(stderr, "Start reading gene %zu...\n", i);
 
                 float *v = Dat.GetFullRow(s);
                 vector <AResultFloat> vv;
@@ -368,8 +368,8 @@ namespace Sleipnir {
 
                 for (j = 0; j < vecstrGenes.size(); j++) {
                     if (j < maxRank) {
-                        tType first = (tType) i;
-                        tType second = (tType) vv[j].i;
+                        auto first = (tType) i;
+                        auto second = (tType) vv[j].i;
                         if ((tType) i >= (tType) vv[j].i) {
                             first = (tType) vv[j].i;
                             second = (tType) i;
@@ -405,7 +405,7 @@ namespace Sleipnir {
             tType s, t;
             for (i = 0; i < vecstrGenes.size(); i++) {
                 if ((s = veciGenes[i]) == (tType) -1) continue;
-                if (i % 1000 == 0) fprintf(stderr, "Start reading gene %d...\n", i);
+                if (i % 1000 == 0) fprintf(stderr, "Start reading gene %zu...\n", i);
 
                 for (j = i + 1; j < vecstrGenes.size(); j++) {
                     if ((t = veciGenes[j]) == (tType) -1) continue;
@@ -432,7 +432,7 @@ namespace Sleipnir {
             }
 
             FILE *f = fopen(fileName, "rb");
-            if (f == NULL) {
+            if (f == nullptr) {
                 cerr << "File not found" << endl;
                 return false;
             }
@@ -477,7 +477,7 @@ namespace Sleipnir {
         //not currently used
         static bool ReadSparseMatrix(const char *fileName,
                                      vector <map<utype, float>> &mat,
-                                     CSeekIntIntMap &m, const int maxRank, const float rbp_p,
+                                     CSeekIntIntMap &m, int maxRank, float rbp_p,
                                      const vector <string> &vecstrGenes);
 
         //not currently used
@@ -487,10 +487,10 @@ namespace Sleipnir {
 
         //================================================================
         static bool SumSparseMatrix(CSparseFlatMatrix<float> &mat1,
-                                    CSparseFlatHalfMatrix<float> &res, const CSeekIntIntMap &mi, const float w);
+                                    CSparseFlatHalfMatrix<float> &res, const CSeekIntIntMap &mi, float w);
 
         static bool SumSparseMatrix(CSparseFlatMatrix<float> &mat1,
-                                    CHalfMatrix<float> &res, const CSeekIntIntMap &mi, const float w);
+                                    CHalfMatrix<float> &res, const CSeekIntIntMap &mi, float w);
 
         static bool NormalizeDAB(CDataPair &Dat, const vector <string> &vecstrGenes,
                 //bool cutoff, float cutoff_val,

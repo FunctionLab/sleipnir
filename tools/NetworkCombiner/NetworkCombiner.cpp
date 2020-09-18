@@ -76,8 +76,8 @@ int main(int iArgs, char **aszArgs) {
     //	cout << sigmoid(logit(0)) << endl;
 
 
-    gengetopt_args_info sArgs;
-    int iRet;
+    gengetopt_args_info sArgs{};
+    int iRet = 0;
     size_t i, j, k, l;
     float d;
     DIR *dp;
@@ -166,12 +166,12 @@ int main(int iArgs, char **aszArgs) {
     } else {
 
         dp = opendir(dab_dir.c_str());
-        if (dp != NULL) {
-            while (ep = readdir(dp)) {
+        if (dp != nullptr) {
+            while ((ep = readdir(dp))) {
                 // skip . .. files and temp files with ~
                 if (ep->d_name[0] == '.' || ep->d_name[strlen(ep->d_name) - 1] == '~')
                     continue;
-                if (std::string(ep->d_name).substr(strlen(ep->d_name) - 4, 4).compare(string(".dab")) == 0)
+                if (std::string(ep->d_name).substr(strlen(ep->d_name) - 4, 4) == string(".dab"))
                     input_files.push_back((string) sArgs.directory_arg + "/" + ep->d_name);
             }
             (void) closedir(dp);

@@ -35,10 +35,10 @@ int main(int iArgs, char **aszArgs) {
     }
     CMeta Meta(sArgs.verbosity_arg);
 
-    if (iRet = CPCL::Distance(sArgs.input_arg, sArgs.skip_arg, sArgs.neighbors_arg ? sArgs.distance_arg : NULL,
+    if ((iRet = CPCL::Distance(sArgs.input_arg, sArgs.skip_arg, sArgs.neighbors_arg ? sArgs.distance_arg : NULL,
                               false, false, !!sArgs.autocorrelate_flag, sArgs.genes_arg, CMeta::GetNaN(),
                               sArgs.limit_arg, PCL,
-                              Dat)) {
+                              Dat))) {
         cmdline_parser_print_help();
         return iRet;
     }

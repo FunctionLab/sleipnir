@@ -268,11 +268,11 @@ int main(int iArgs, char **aszArgs) {
     }
 
     for (i = 0; i < PCL.GetExperiments(); ++i) {
-        if (j = veciCountsIn[i]) {
+        if ((j = veciCountsIn[i])) {
             d = (vecdSumsIn[i] /= j);
             vecdSumSqsIn[i] = sqrt((vecdSumSqsIn[i] / j) - (d * d));
         }
-        if (j = veciCountsOut[i]) {
+        if ((j = veciCountsOut[i])) {
             d = (vecdSumsOut[i] /= j);
             vecdSumSqsOut[i] = sqrt((vecdSumSqsOut[i] / j) - (d * d));
         }
