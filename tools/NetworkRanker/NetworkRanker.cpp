@@ -179,8 +179,8 @@ float score_correction(float d, size_t iNet, size_t iGene1, size_t iGene2, size_
 
 int main(int iArgs, char **aszArgs) {
 
-    gengetopt_args_info sArgs;
-    int iRet;
+    gengetopt_args_info sArgs{};
+    int iRet = 0;
     size_t i, j, k, l, iGene, iExp, iAnswer;
     float d, fScore, fSum, fAnswer, fDeg;
     DIR *dp;
@@ -212,7 +212,7 @@ int main(int iArgs, char **aszArgs) {
     // check if directory valid
     if (sArgs.directory_arg) {
         dp = opendir(sArgs.directory_arg);
-        if (dp != NULL) {
+        if (dp != nullptr) {
             (void) closedir(dp);
             dab_dir = sArgs.directory_arg;
         } else {
@@ -222,12 +222,12 @@ int main(int iArgs, char **aszArgs) {
     }
 
     dp = opendir(dab_dir.c_str());
-    if (dp != NULL) {
-        while (ep = readdir(dp)) {
+    if (dp != nullptr) {
+        while ((ep = readdir(dp))) {
             // skip . .. files and temp files with ~
             if (ep->d_name[0] == '.' || ep->d_name[strlen(ep->d_name) - 1] == '~')
                 continue;
-            if (std::string(ep->d_name).substr(strlen(ep->d_name) - 4, 4).compare(string(".dab")) == 0)
+            if (std::string(ep->d_name).substr(strlen(ep->d_name) - 4, 4) == string(".dab"))
                 input_files.push_back((string) sArgs.directory_arg + "/" + ep->d_name);
         }
         (void) closedir(dp);

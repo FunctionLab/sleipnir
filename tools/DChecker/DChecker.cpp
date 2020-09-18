@@ -43,7 +43,7 @@ struct SDatum {
 struct SSorter {
     bool m_fInvert;
 
-    SSorter(bool fInvert) : m_fInvert(fInvert) {}
+    explicit SSorter(bool fInvert) : m_fInvert(fInvert) {}
 
     bool operator()(const SDatum &sOne, const SDatum &sTwo) const {
 
@@ -56,7 +56,7 @@ double AUCMod(const CDat &, const CDat &, const vector<bool> &, const vector<boo
 
 int main(int iArgs, char **aszArgs) {
     CDat Answers, Data, wDat;
-    gengetopt_args_info sArgs;
+    gengetopt_args_info sArgs{};
     size_t i, j, k, m, iOne, iTwo, iGenes, iPositives, iNegatives, iBins, iRand;
     vector <size_t> veciGenes, veciRec, veciRecTerm;
     CFullMatrix<bool> MatGenes;
@@ -203,6 +203,7 @@ int main(int iArgs, char **aszArgs) {
         for (i = 0; i < sAnswers.GetGenes(); ++i) {
             veciIndex[i] = i;
         }
+
         random_device rand_dev;
         mt19937 rand_gen(rand_dev());
         std::shuffle(veciIndex.begin(), veciIndex.end(), rand_gen);
@@ -226,9 +227,9 @@ int main(int iArgs, char **aszArgs) {
 
             pj = -1;
             nj = -1;
-            if (veciPos.size() > 0)
+            if (!veciPos.empty())
                 pj = veciPos[rand() % veciPos.size()];
-            if (veciNeg.size() > 0)
+            if (!veciNeg.empty())
                 nj = veciNeg[rand() % veciNeg.size()];
 
             if (pj != -1)
@@ -357,7 +358,7 @@ int main(int iArgs, char **aszArgs) {
                 }
             }
 
-            if (mapValues.size()) {
+            if (!mapValues.empty()) {
                 for (i = 0; i < Answers.GetGenes(); ++i) {
                     if ((iOne = veciGenes[i]) == -1)
                         continue;
@@ -406,14 +407,14 @@ int main(int iArgs, char **aszArgs) {
                             iPositives++;
                         else
                             iNegatives++;
-                        vecsData.push_back(SDatum(dValue, i, j, dAnswer));
+                        vecsData.emplace_back(dValue, i, j, dAnswer);
                     }
                 }
                 sort(vecsData.begin(), vecsData.end(), SSorter(!!sArgs.invert_flag));
                 //instead of putting all of the uneveness in one bin, spread it out into each bin.
                 //N.B. only the part without the sse_flag is fixed in this regard
-                size_t perChunk = (size_t)(vecsData.size() / MatResults.GetRows());
-                size_t chnkRem = (size_t)(vecsData.size() % MatResults.GetRows());
+                auto perChunk = (size_t)(vecsData.size() / MatResults.GetRows());
+                auto chnkRem = (size_t)(vecsData.size() % MatResults.GetRows());
                 iChunk = (size_t)(0.5 + ((float) vecsData.size() / (MatResults.GetRows())));
                 if (sArgs.sse_flag) {
                     vecdSSE.resize(MatResults.GetRows());
@@ -628,7 +629,7 @@ int main(int iArgs, char **aszArgs) {
 struct SSorterMod {
     const vector<float> &m_vecdValues;
 
-    SSorterMod(const vector<float> &vecdValues) : m_vecdValues(vecdValues) {}
+    explicit SSorterMod(const vector<float> &vecdValues) : m_vecdValues(vecdValues) {}
 
     bool operator()(size_t iOne, size_t iTwo) {
 

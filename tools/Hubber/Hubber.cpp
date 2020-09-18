@@ -173,7 +173,7 @@ int main(int iArgs, char **aszArgs) {
 #ifdef WIN32
     pthread_win32_process_attach_np( );
 #endif // WIN32
-    gengetopt_args_info sArgs;
+    gengetopt_args_info sArgs{};
     CDat Dat;
     size_t i, j, iGenes, iTotal, iThread;
     vector <SSummary> vecsHubs;
@@ -226,10 +226,10 @@ int main(int iArgs, char **aszArgs) {
                 vecstrGenes[i] = PCLGenes.GetFeature(i, 1);
         }
         if (sArgs.genesets_arg) {
-            if (iRet = sets(sArgs.genesets_arg, vecstrGenes, vecvecstrSets1))
+            if ((iRet = sets(sArgs.genesets_arg, vecstrGenes, vecvecstrSets1)))
                 return iRet;
             if (sArgs.between_arg) {
-                if (iRet = sets(sArgs.between_arg, vecstrGenes, vecvecstrSets2))
+                if ((iRet = sets(sArgs.between_arg, vecstrGenes, vecvecstrSets2)))
                     return iRet;
                 pfnProcessor = between;
             } else
@@ -246,16 +246,16 @@ int main(int iArgs, char **aszArgs) {
         MatBackgrounds.Initialize(vecstrContexts.size() + 1, vecvecstrSets1.size() * max((size_t) 1,
                                                                                          vecvecstrSets2.size()));
         adResults = new long double[MatBackgrounds.GetColumns()];
-        if (iRet = process(sArgs.input_arg, !!sArgs.memmap_flag, !!sArgs.normalize_flag, vecvecstrSets1,
-                           vecvecstrSets2, adResults, pfnProcessor, sArgs.threads_arg))
+        if ((iRet = process(sArgs.input_arg, !!sArgs.memmap_flag, !!sArgs.normalize_flag, vecvecstrSets1,
+                           vecvecstrSets2, adResults, pfnProcessor, sArgs.threads_arg)))
             return iRet;
         for (i = 0; i < MatBackgrounds.GetColumns(); ++i)
             MatBackgrounds.Set(0, i, (float) adResults[i]);
         for (i = 1; i < MatBackgrounds.GetRows(); ++i) {
-            if (iRet = process(((string) sArgs.directory_arg + '/' +
+            if ((iRet = process(((string) sArgs.directory_arg + '/' +
                                 CMeta::Filename(vecstrContexts[i - 1]) + ".dab").c_str(), !!sArgs.memmap_flag,
                                !!sArgs.normalize_flag, vecvecstrSets1, vecvecstrSets2, adResults, pfnProcessor,
-                               sArgs.threads_arg))
+                               sArgs.threads_arg)))
                 return iRet;
             for (j = 0; j < MatBackgrounds.GetColumns(); ++j)
                 MatBackgrounds.Set(i, j, (float) adResults[j]);
@@ -302,7 +302,7 @@ int main(int iArgs, char **aszArgs) {
         for (i = 0; i < Dat.GetGenes(); ++i)
             cout << '\t' << Dat.GetGene(i);
     } else {
-        cliques(Dat, iTotal, vecsHubs, 0, sDatum, NULL, PCLWeights, veciDat2PCL);
+        cliques(Dat, iTotal, vecsHubs, 0, sDatum, nullptr, PCLWeights, veciDat2PCL);
         cout << "name	size	hubbiness	hubbiness std.	hubbiness n	cliquiness	cliquiness std.	cliquiness n"
              << endl;
         cout << "total	" << iTotal << '\t' << sDatum.m_sHubbiness.GetAverage() << '\t' <<
@@ -312,7 +312,7 @@ int main(int iArgs, char **aszArgs) {
     }
     cout << endl;
 
-    pthread_mutex_init(&mutxTerms, NULL);
+    pthread_mutex_init(&mutxTerms, nullptr);
     vecsTerms.resize(sArgs.threads_arg);
     vecpthdThreads.resize(sArgs.threads_arg);
     for (iGenes = 0; iGenes < sArgs.inputs_num; iGenes += sArgs.threads_arg) {
@@ -329,13 +329,13 @@ int main(int iArgs, char **aszArgs) {
             vecsTerms[iThread].m_pveciDat2PCL = &veciDat2PCL;
             vecsTerms[iThread].m_pvecsHubs = &vecsHubs;
             vecsTerms[iThread].m_pmutx = &mutxTerms;
-            if (pthread_create(&vecpthdThreads[iThread], NULL, term_thread, &vecsTerms[iThread])) {
+            if (pthread_create(&vecpthdThreads[iThread], nullptr, term_thread, &vecsTerms[iThread])) {
                 cerr << "Couldn't create thread for term: " << sArgs.input_arg[iGenes + iThread] << endl;
                 return 1;
             }
         }
         for (i = 0; (i < vecpthdThreads.size()) && ((i + iGenes) < sArgs.inputs_num); ++i)
-            pthread_join(vecpthdThreads[i], NULL);
+            pthread_join(vecpthdThreads[i], nullptr);
     }
     pthread_mutex_destroy(&mutxTerms);
 
@@ -476,13 +476,13 @@ int background(const SProcessor &sProcessor) {
         vecsBackground[i].m_iStart = i * iChunk;
         vecsBackground[i].m_pDat = &Dat;
         vecsBackground[i].m_pvecveciSets = &vecveciSets;
-        if (pthread_create(&vecpthdThreads[i], NULL, background_thread, &vecsBackground[i])) {
+        if (pthread_create(&vecpthdThreads[i], nullptr, background_thread, &vecsBackground[i])) {
             cerr << "Couldn't create thread for set group: " << i << endl;
             return 1;
         }
     }
     for (i = 0; i < vecpthdThreads.size(); ++i)
-        pthread_join(vecpthdThreads[i], NULL);
+        pthread_join(vecpthdThreads[i], nullptr);
 
     return 0;
 }
@@ -517,7 +517,7 @@ void *background_thread(void *pData) {
         psData->m_adResults[iSet] = CStatistics::Average(vecdBackgrounds);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 int within(const SProcessor &sProcessor) {
@@ -548,13 +548,13 @@ int within(const SProcessor &sProcessor) {
         vecsWithin[i].m_pvecveciSets = &vecveciSets;
         vecsWithin[i].m_iStart = i * iChunk;
         vecsWithin[i].m_iLength = iChunk;
-        if (pthread_create(&vecpthdThreads[i], NULL, within_thread, &vecsWithin[i])) {
+        if (pthread_create(&vecpthdThreads[i], nullptr, within_thread, &vecsWithin[i])) {
             cerr << "Couldn't create thread for set group: " << i << endl;
             return 1;
         }
     }
     for (i = 0; i < vecpthdThreads.size(); ++i)
-        pthread_join(vecpthdThreads[i], NULL);
+        pthread_join(vecpthdThreads[i], nullptr);
 
     return 0;
 }
@@ -584,7 +584,7 @@ void *within_thread(void *pData) {
     }
 //		psData->m_adResults[ iSet ] = CStatistics::Median( vecdWithin ); }
 
-    return NULL;
+    return nullptr;
 }
 
 int between(const SProcessor &sProcessor) {
@@ -606,13 +606,13 @@ int between(const SProcessor &sProcessor) {
         vecsBetween[i].m_pDat = &Dat;
         vecsBetween[i].m_pvecveciSets1 = &vecveciSets1;
         vecsBetween[i].m_pvecveciSets2 = &vecveciSets2;
-        if (pthread_create(&vecpthdThreads[i], NULL, between_thread, &vecsBetween[i])) {
+        if (pthread_create(&vecpthdThreads[i], nullptr, between_thread, &vecsBetween[i])) {
             cerr << "Couldn't create thread for set group: " << i << endl;
             return 1;
         }
     }
     for (i = 0; i < vecpthdThreads.size(); ++i)
-        pthread_join(vecpthdThreads[i], NULL);
+        pthread_join(vecpthdThreads[i], nullptr);
 
     return 0;
 }
@@ -654,7 +654,7 @@ void *between_thread(void *pData) {
     }
 //				iSetTwo ] = CStatistics::Median( vecdBetween ); } }
 
-    return NULL;
+    return nullptr;
 }
 
 int sets(const char *szFile, const vector <string> &vecstrGenes, vector <vector<string>> &vecvecstrSets) {
@@ -666,7 +666,7 @@ int sets(const char *szFile, const vector <string> &vecstrGenes, vector <vector<
         return 1;
     }
     for (iSets = i = 0; i < PCLSets.GetGenes(); ++i) {
-        if (!(iSet = atoi(PCLSets.GetGene(i).c_str()))) {
+        if (!(iSet = strtol(PCLSets.GetGene(i).c_str(), nullptr, 10))) {
             cerr << "Invalid set: " << PCLSets.GetGene(i) << endl;
             return 1;
         }
@@ -677,8 +677,8 @@ int sets(const char *szFile, const vector <string> &vecstrGenes, vector <vector<
     for (i = 0; i < PCLSets.GetGenes(); ++i) {
         size_t iGene;
 
-        iSet = atoi(PCLSets.GetGene(i).c_str()) - 1;
-        iGene = atoi(PCLSets.GetFeature(i, 1).c_str()) - 1;
+        iSet = strtol(PCLSets.GetGene(i).c_str(), nullptr, 10) - 1;
+        iGene = strtol(PCLSets.GetFeature(i, 1).c_str(), nullptr, 10) - 1;
         if (iGene >= vecstrGenes.size()) {
             cerr << "Unknown gene: " << iGene << " (" << PCLSets.GetFeature(i, 1) << ") in set " <<
                  PCLSets.GetGene(i) << endl;
@@ -728,7 +728,7 @@ void *term_thread(void *pData) {
     ifsm.open(psData->m_strFile.c_str());
     if (!Genes.Open(ifsm)) {
         cerr << "Could not open: " << psData->m_strFile << endl;
-        return NULL;
+        return nullptr;
     }
     ifsm.close();
     iCur = cliques(*psData->m_pDat, psData->m_iTotal, *psData->m_pvecsHubs, psData->m_iGenes, sDatum, &Genes,
@@ -769,5 +769,5 @@ void *term_thread(void *pData) {
                 psData->m_strFile.c_str())) + c_szDab).c_str());
     }
 
-    return NULL;
+    return nullptr;
 }

@@ -38,12 +38,12 @@ namespace SVMLight {
 
 #define class Class
 
-#include <svm_light/svm_common.h>
-#include <svm_light/svm_learn.h>
-#include <svm_struct_api_types.h>
-#include <svm_struct/svm_struct_common.h>
-#include <svm_struct_api.h>
-#include <svm_struct/svm_struct_learn.h>
+#include "svm_light/svm_common.h"
+#include "svm_light/svm_learn.h"
+#include "svm_struct_api_types.h"
+#include "svm_struct/svm_struct_common.h"
+#include "svm_struct_api.h"
+#include "svm_struct/svm_struct_learn.h"
 
 #undef class
 //#include "svm_struct_api.h"

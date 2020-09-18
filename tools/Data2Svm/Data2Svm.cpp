@@ -119,8 +119,9 @@ int main(int iArgs, char **aszArgs) {
     if (sArgs.random_output_flag) {
         random_device rand_dev;
         mt19937 rand_gen(rand_dev());
-        random_shuffle(vecdResults.begin(), vecdResults.end(), rand_gen);
+        std::shuffle(vecdResults.begin(), vecdResults.end(), rand_gen);
     }
+
     dAve = (float) CStatistics::Average(vecdResults);
     dStd = (float) sqrt(CStatistics::Variance(vecdResults, dAve));
     for (i = 0; i < vecdResults.size(); ++i)

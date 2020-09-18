@@ -20,7 +20,7 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "stdafx.h"
-
+#include <random>
 static int MainDABs(const gengetopt_args_info &);
 
 static int MainDATs(const gengetopt_args_info &);
@@ -56,12 +56,12 @@ enum EMethod {
 };
 
 static const char *c_aszMethods[] = {
-        "mean", "sum", "gmean", "hmean", "max", "min", "diff", "meta", "qmeta", "prod", NULL
+        "mean", "sum", "gmean", "hmean", "max", "min", "diff", "meta", "qmeta", "prod", nullptr
 };
 
 int main(int iArgs, char **aszArgs) {
-    gengetopt_args_info sArgs;
-    int iRet;
+    gengetopt_args_info sArgs{};
+    int iRet = 0;
     size_t i;
     DIR *dp;
     struct dirent *ep;
@@ -75,8 +75,8 @@ int main(int iArgs, char **aszArgs) {
     // now collect the data files from directory if given
     if (sArgs.directory_arg) {
         dp = opendir(sArgs.directory_arg);
-        if (dp != NULL) {
-            while (ep = readdir(dp)) {
+        if (dp != nullptr) {
+            while ((ep = readdir(dp))) {
                 // skip . .. files and temp files with ~
                 if (ep->d_name[0] == '.' || ep->d_name[strlen(ep->d_name) - 1] == '~')
                     continue;
@@ -303,7 +303,7 @@ float weight_weistar(const SCallbackVars &sCallback) {
     const SCallbackMeta &sCallbackMeta = sCallback.m_sCallbackMeta;
     float dDelta2;
 
-    if (dDelta2 = sCallbackMeta.m_DatDeltaeD.Get(sCallback.m_iOne, sCallback.m_iTwo)) {
+    if ((dDelta2 = sCallbackMeta.m_DatDeltaeD.Get(sCallback.m_iOne, sCallback.m_iTwo))) {
         if ((dDelta2 = (sCallbackMeta.m_DatQe.Get(sCallback.m_iOne, sCallback.m_iTwo) -
                         sCallback.m_iDatasets + 1) / dDelta2) < 0)
             dDelta2 = 0;
@@ -322,12 +322,15 @@ void callback_andersondarling(SCallbackVars &sCallback) {
     size_t i, j, iGenes;
     float d;
 
+    std::default_random_engine generator;
+    std::uniform_real_distribution<float> dist(0, RAND_MAX);
+
     iGenes = sCallback.m_pDatCur->GetGenes();
     vecdValues.reserve((size_t)(iGenes * iGenes * c_dFrac));
     for (i = 0; i < iGenes; ++i)
         for (j = (i + 1); j < iGenes; ++j)
             if (!CMeta::IsNaN(d = sCallback.m_pDatCur->Get(i, j)) &&
-                (((float) rand() / RAND_MAX) < c_dFrac))
+                (dist(generator) < c_dFrac))
                 vecdValues.push_back(d);
     sCallback.m_dWeight = (float) (log(CStatistics::AndersonDarlingScore<float>(
             vecdValues.begin(), vecdValues.end())) / log(2.0));
@@ -483,7 +486,7 @@ void initialize_meta(SCallback &sCallback) {
     sCallback.m_sCallbackVars.m_pDatOut = pDatOut;
     for (i = 0; i < sCallbackMeta.m_DatDeltaeD.GetGenes(); ++i)
         for (j = (i + 1); j < sCallbackMeta.m_DatDeltaeD.GetGenes(); ++j)
-            if (d = sCallbackMeta.m_DatDeltaeD.Get(i, j))
+            if ((d = sCallbackMeta.m_DatDeltaeD.Get(i, j)))
                 sCallbackMeta.m_DatDeltaeD.Get(i, j) -= DatTmp.Get(i, j) / d;
 
     sCallbackMeta.m_DatYBare.Open(vecstrGenes, false);
@@ -496,7 +499,7 @@ void initialize_meta(SCallback &sCallback) {
     sCallback.m_sCallbackVars.m_pMatCounts = pMatCounts;
     for (i = 0; i < sCallbackMeta.m_DatYBare.GetGenes(); ++i)
         for (j = (i + 1); j < sCallbackMeta.m_DatYBare.GetGenes(); ++j)
-            if (d = MatCounts.Get(i, j))
+            if ((d = MatCounts.Get(i, j)))
                 sCallbackMeta.m_DatYBare.Get(i, j) /= d;
 
     sCallbackMeta.m_DatQe.Open(vecstrGenes, false);
@@ -600,7 +603,7 @@ int MainDATs(const gengetopt_args_info &sArgs) {
         default:
             pfnInitialize = NULL;
     }
-    if (iRet = iterate_inputs(sCallback, callback_combine, pfnInitialize))
+    if ((iRet = iterate_inputs(sCallback, callback_combine, pfnInitialize)))
         return iRet;
     for (i = 0; i < DatOut.GetGenes(); ++i)
         for (j = (i + 1); j < DatOut.GetGenes(); ++j)
@@ -636,6 +639,8 @@ int MainDATs(const gengetopt_args_info &sArgs) {
                 case EMethodProd:
                     DatOut.Set(i, j, (d = MatCounts.Get(i, j)) ?
                                      (float) (double) DatOut.Get(i, j) : CMeta::GetNaN());
+                default:
+                    break;
             }
 
     if (sArgs.zscore_flag)
@@ -653,7 +658,7 @@ static int MainDABs(const gengetopt_args_info &sArgs) {
     size_t i;
     ofstream ofsm;
 
-    if (!input_files.size())
+    if (input_files.empty())
         return 1;
 
     if (!Dataset.Open(input_files)) {
@@ -699,7 +704,7 @@ struct SSimpleome {
 };
 
 struct SModule {
-    float m_dSpecificity;
+    float m_dSpecificity{};
     set <size_t> m_setiGenes;
     set<const SModule *> m_setpsChildren;
 
@@ -737,7 +742,7 @@ struct SModule {
             ifsm.getline(acBuffer, c_iBuffer - 1);
             acBuffer[c_iBuffer - 1] = 0;
             if (CMeta::IsNaN(dRet)) {
-                dRet = (float) atof(acBuffer);
+                dRet = (float) strtod(acBuffer, nullptr);
                 iModule--;
                 continue;
             }
@@ -748,7 +753,7 @@ struct SModule {
                 continue;
             }
             vecpsModules[iModule] = psModule = new SModule();
-            psModule->m_dSpecificity = (float) atof(vecstrLine[0].c_str());
+            psModule->m_dSpecificity = (float) strtod(vecstrLine[0].c_str(), nullptr);
             for (i = 1; i < vecstrLine.size(); ++i)
                 psModule->m_setiGenes.insert(sSimpleome.Get(vecstrLine[i]));
         }
@@ -814,7 +819,7 @@ struct SModule {
 struct SSorterModules {
     const vector<float> &m_vecdModules;
 
-    SSorterModules(const vector<float> &vecdModules) : m_vecdModules(vecdModules) {}
+    explicit SSorterModules(const vector<float> &vecdModules) : m_vecdModules(vecdModules) {}
 
     bool operator()(size_t iOne, size_t iTwo) const {
 
@@ -867,7 +872,7 @@ int MainModules(const gengetopt_args_info &sArgs) {
                              psTwo->m_setiGenes.size() << ')' << endl;
                         psOne->Merge(*psTwo);
                         delete vecpsModulesOne[iModuleTwo];
-                        vecpsModulesOne[iModuleTwo] = NULL;
+                        vecpsModulesOne[iModuleTwo] = nullptr;
                         iModuleTwo--;
                         fDone = false;
                     }
@@ -892,7 +897,7 @@ int MainModules(const gengetopt_args_info &sArgs) {
                                  " (" << psTwo->m_setiGenes.size() << ')' << endl;
                             psOne->Merge(*psTwo);
                             delete vecpsModulesTwo[iModuleTwo];
-                            vecpsModulesTwo[iModuleTwo] = NULL;
+                            vecpsModulesTwo[iModuleTwo] = nullptr;
                             iModuleTwo--;
                             fDone = false;
                         }
@@ -1030,7 +1035,7 @@ int MainRevDATs(const gengetopt_args_info &sArgs) {
 
     for (i = 0; i < DatOut.GetGenes(); ++i)
         for (j = (i + 1); j < DatOut.GetGenes(); ++j)
-            if (k = MatCounts.Get(i, j))
+            if ((k = MatCounts.Get(i, j)))
                 DatOut.Get(i, j) /= k;
             else
                 DatOut.Set(i, j, CMeta::GetNaN());

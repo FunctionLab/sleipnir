@@ -172,10 +172,9 @@ set(SLEIPNIR_SOURCES
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     find_library(LIBOMP libomp.a)
-    add_link_options(-lomp)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-fopenmp)
-    add_link_options(-lgomp -lgslcblas)
+    add_link_options(-lgslcblas)
     set(LIBOMP -lgomp)
 else()
     message(SEND_INFO "Found some weird compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -263,6 +262,7 @@ option(USE_SVMLIB "Use svm_lib" ON)
 if(USE_SVMLIB)
     list(APPEND SLEIPNIR_SOURCES src/svm_local.cpp
 	src/svm_local.h
+	src/svm_local.cpp
 	src/svmi.h
 	src/libsvm.cpp
 	src/libsvm.h)
@@ -275,56 +275,25 @@ else()
 endif()
 
 
-option(USE_SVMPERF "Use svm_perf" OFF)
-if(USE_SVMPERF)
-    list(APPEND SLEIPNIR_SOURCES src/svmperf.cpp
-	src/svmperf.h
-	src/svmstruct.cpp
-	src/svmstruct.h
-	src/svmstructtree.cpp
-	src/svmstructtree.h
-	src/libsvm.cpp
-	src/libsvm.h)
-    find_library(SVMPERF_LIBRARY libsvmperf.a)
-    find_path(SVMPERF_INCLUDE PATH_SUFFIXES svm_light svm_struct
-            NAMES svm_struct_api.h svm_common.h)
-    list(APPEND EXTRA_LIBRARIES ${SVMPERF_LIBRARY})
-    list(APPEND EXTRA_INCLUDES ${SVMPERF_INCLUDE})
+option(USE_SVM_PERF "Use svm_perf" OFF)
+if(USE_SVM_PERF)
+    list(APPEND SLEIPNIR_SOURCES
+	src/svmperf.cpp
+	src/svmperf.h)
+    find_library(SVM_PERF_LIBRARY libsvmperf.a)
+    find_path(SVM_PERF_INCLUDE
+	PATH_SUFFIXES svm_perf
+	NAMES svm_common.h svm_struct_api.h)
+    list(APPEND EXTRA_LIBRARIES ${SVM_PERF_LIBRARY})
+    list(APPEND EXTRA_INCLUDES ${SVM_PERF_INCLUDE})
 else()
-    list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_PERF=1)
+    list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_PERF=1 NO_SVM_STRUCTTREE=1 NO_SVM_STRUCT=1)
 endif()
 
+# we explicitly disable the hierarchical and multiclass svm_perfs because they don't work
 
-option(USE_SVM_MULTICLASS "Use svm_multiclass" OFF)
-if(USE_SVM_MULTICLASS)
-    find_library(SVM_MULTICLASS_LIBRARY libsvmmulti.a)
-    find_path(SVM_MULTICLASS_INCLUDE PATH_SUFFIXES svm_multiclass/svm_light
-            NAMES svm_common.h)
-    if(SVM_MULTICLASS_LIBRARY AND SVM_MULTICLASS_INCLUDE)
-        list(APPEND EXTRA_LIBRARIES ${SVM_MULTICLASS_LIBRARY})
-        list(APPEND EXTRA_INCLUDES ${SVM_MULTICLASS_INCLUDE})
-    else()
-        list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_STRUCT)
-    endif()
-else()
-    list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_MULTICLASS=1)
-endif()
+list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_MULTICLASS=1 NO_SVM_STRUCTTREE=1)
 
-
-option(USE_SVM_HIERARCHY "Use svm_hierarchy" OFF)
-if(USE_SVM_HIERARCHY)
-    find_library(SVM_HIERARCHY_LIBRARY libsvmhierarchy.a)
-    find_path(SVM_HIERARCHY_INCLUDE PATH_SUFFIXES svm_hierarchy/svm_light
-            NAMES svm_common.h)
-    if(SVM_HIERARCHY_LIBRARY AND SVM_HIERARCHY_INCLUDE)
-        list(APPEND EXTRA_LIBRARIES ${SVM_HIERARCHY_LIBRARY})
-        list(APPEND EXTRA_INCLUDES ${SVM_HIERARCHY_INCLUDE})
-    else()
-        list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_STRUCTTREE)
-    endif()
-else()
-    list(APPEND SLEIPNIR_COMPILE_DEFS NO_SVM_HIERARCHY=1)
-endif()
 
 option(USE_VOWPAL_WABBIT "Use Vowpal Wabbit" ON)
 if(USE_VOWPAL_WABBIT)
@@ -352,92 +321,104 @@ target_link_libraries(sleipnir stdc++fs)
 
 # command line tools
 
-set(SLEIPNIR_TOOLS
+# these tools depend on having libsmile available to link
+if(SMILE_LIBRARY)
+    list(APPEND SLEIPNIR_TOOLS
+	BNConverter
+	BNCreator 
+	BNEvaluator
+	BNServer 
+	BNTester 
+	BNTruster 
+	BNUnraveler
+	BNWeaver 
+	BNs2Txt 
+	Contexter
+	Counter 
+	DSLConverter
+	Dab2Dad 
+	Edges2Posteriors
+	SpeciesConnector
+	MEFIT
+	)
+endif()
+
+# tools that depend on having svm_perf
+
+if(SVM_PERF_LIBRARY)
+    list(APPEND SLEIPNIR_TOOLS
+	Data2SVM
+	SVMperfer
+	SVMperfing
+	SVMfe
+	SVMer
+	)
+endif()
+
+
+list(APPEND SLEIPNIR_TOOLS
     Answerer
-        # BNConverter # needs smile
-        # BNCreator # needs smile
-        # BNEvaluator # needs smile
-        BNFunc
-        # BNServer # needs smile
-        # BNTester # needs smile
-        # BNTruster # needs smile
-        # BNUnraveler # needs smile
-        # BNWeaver # needs smile
-        # BNs2Txt # needs smile
-        COALESCE
-        Clinician
-        Cliquer
-        Clusterer
-        Clusters2Dab
-        Combiner
-        # Contexter # needs smile
-        # Counter # needs smile
-        DBCombiner
-        DChecker
-        # DSLConverter # needs smile
-        # Dab2Dad # needs smile
-        Dat2Dab
-        Dat2Graph
-        Dat2PCL
-        Data2Bnt
-        Data2DB
-        Data2Features
-        Data2Sql
-        # Data2Svm
-        DataDumper
-        DataServer
-        Distancer
-        # Edges2Posteriors # needs smile
-        Explainer
-        Filterer
-        Funcaeologist
-        Funcifier
-        Funcographer
-        Hubber
-        KNNImputer
-        # LibSVMer
-        MCluster
-        # MEFIT
-        MIed
-        MIer
-        Mat2Txt
-        Matcher
-        NetMiner
-        NetworkCombiner
-        NetworkRanker
-        Normalizer
-        OntoShell
-        Orthologer
-        Overlapper
-        PCL2Bin
-        PCLPlotter
-        PCLServer
-        Randomizer
-        SMRF
-        # SVDer
-        # SVMer
-        # SVMfe
-        # SVMhierarchy
-        # SVMmulticlass
-        # SVMperfer
-        SparseNetCombiner
-        SeekAggregatedDataset
-        SeekEvaluator
-        SeekGeneRecommender
-        SeekIterative
-        SeekMiner
-        SeekPValue
-        SeekPrep
-        SeekReader
-        SeekServer
-        SeekTest
-        Seqs2Ngrams
-        # SVMperfing
-        # SpeciesConnector # needs smile
-        Synthesizer
-        Txt2Bin
-        VWer
-        )
+    BNFunc
+    COALESCE
+    Clinician
+    Cliquer
+    Clusterer
+    Clusters2Dab
+    Combiner
+    DBCombiner
+    DChecker
+    Dat2Dab
+    Dat2Graph
+    Dat2PCL
+    Data2Bnt
+    Data2DB
+    Data2Features
+    Data2Sql
+    DataDumper
+    DataServer
+    Distancer
+    Explainer
+    Filterer
+    Funcaeologist
+    Funcifier
+    Funcographer
+    Hubber
+    KNNImputer
+    LibSVMer
+    MCluster
+    MIed
+    MIer
+    Mat2Txt
+    Matcher
+    NetMiner
+    NetworkCombiner
+    NetworkRanker
+    Normalizer
+    OntoShell
+    Orthologer
+    Overlapper
+    PCL2Bin
+    PCLPlotter
+    PCLServer
+    Randomizer
+    SMRF
+    SVDer
+    SparseNetCombiner
+    SeekAggregatedDataset
+    SeekEvaluator
+    SeekGeneRecommender
+    SeekIterative
+    SeekMiner
+    SeekPValue
+    SeekPrep
+    SeekReader
+    SeekServer
+    SeekTest
+    Seqs2Ngrams
+    Synthesizer
+    Txt2Bin
+    VWer
+    )
 
 foreach(TOOL ${SLEIPNIR_TOOLS})
     include_directories(tools/${TOOL})
@@ -464,6 +445,6 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
     endif ()
     add_dependencies(${TOOL} sleipnir)
     target_include_directories(${TOOL} PUBLIC ${EXTRA_INCLUDES})
-    target_link_libraries(${TOOL} sleipnir ${EXTRA_LIBRARIES})
+    target_link_libraries(${TOOL} sleipnir ${EXTRA_LIBRARIES} ${LIBOMP})
 endforeach()
 

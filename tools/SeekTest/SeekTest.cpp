@@ -491,7 +491,7 @@ vector <string> Do_Mann_Whitney_U_Test_By_Gene(gsl_rng *rnd, float **vall,
         vector <string> vecstrRandom;
         GetRandomGenes(r, size, vecstrRandom, veciRandom, vecstrGenes, veciallGenes, gmap);
 
-        outstr.push_back("Process");
+        outstr.emplace_back("Process");
 
         //Process
         for (j = 0; j < size; j++) {
@@ -639,7 +639,7 @@ vector <string> Do_One(const char *file, gsl_rng *rnd, CSeekDataset *vcd, float 
         struserGenes.push_back(vecstrGenes[userGenes[i]]);
     }
 
-    if (struserGenes.size() == 0 || struserGenes.size() < 5) {
+    if (struserGenes.empty() || struserGenes.size() < 5) {
         return ostr;
     }
 
@@ -705,7 +705,7 @@ vector <string> Do_One(const char *file, gsl_rng *rnd, CSeekDataset *vcd, float 
 
 int main(int iArgs, char **aszArgs) {
     static const size_t c_iBuffer = 1024;
-    gengetopt_args_info sArgs;
+    gengetopt_args_info sArgs{};
     ifstream ifsm;
     istream *pistm;
     vector <string> vecstrLine, vecstrGenes, vecstrDatasets, vecstrQuery, vecstrUserDatasets;
@@ -751,9 +751,9 @@ int main(int iArgs, char **aszArgs) {
 
         if (!CSeekTools::ReadListTwoColumns(sArgs.dataset_list_arg,
                                             vecstrDataset, vDP))
-            return false;
+            return (int)false;
 
-        CDatabase *DB = new CDatabase(false);
+        auto *DB = new CDatabase(false);
         DB->Open(sArgs.db_dir_arg, vecstrGenes, vecstrDataset.size(), sArgs.db_num_arg);
 
         string strPrepInputDirectory = sArgs.prep_arg;
@@ -874,7 +874,7 @@ int main(int iArgs, char **aszArgs) {
         }
 
         if (!!sArgs.histogram_flag) {
-            srand(unsigned(time(0)));
+            srand(unsigned(time(nullptr)));
             vector<int> dID;
 
             for (k = 0; k < iDatasets; k++) {
@@ -888,7 +888,7 @@ int main(int iArgs, char **aszArgs) {
                 k = dID[kk];
                 CSeekIntIntMap *mapQ = vc[k]->GetDBMap();
                 CSeekIntIntMap *mapG = vc[k]->GetGeneMap();
-                if (mapQ == NULL) continue;
+                if (mapQ == nullptr) continue;
                 unsigned char **f = vc[k]->GetMatrix();
                 size_t qi, ii;
                 for (qi = 0; qi < allQ.size(); qi++) {
@@ -908,7 +908,7 @@ int main(int iArgs, char **aszArgs) {
                     }
                     sort(z_score.begin(), z_score.end());
                     float pts[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
-                    fprintf(stderr, "Query %s\tDataset %d\t", vecstrGenes[gene_qi].c_str(), k);
+                    fprintf(stderr, "Query %s\tDataset %zu\t", vecstrGenes[gene_qi].c_str(), k);
                     for (ii = 0; ii < 9; ii++)
                         fprintf(stderr, "%.2f\t", z_score[(int) (pts[ii] * z_score.size())]);
                     fprintf(stderr, "\n");
@@ -925,7 +925,7 @@ int main(int iArgs, char **aszArgs) {
         return 1;
 
     if (sArgs.dab_flag == 1) {
-        CSeekDataset *vcd = new CSeekDataset();
+        auto *vcd = new CSeekDataset();
 
         string strAvg = sArgs.gavg_input_arg;
         string strPres = sArgs.gpres_input_arg;

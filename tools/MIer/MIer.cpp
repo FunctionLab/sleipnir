@@ -79,7 +79,7 @@ int main(int iArgs, char **aszArgs) {
     CMeasureSigmoid EuclideanSig(&Euclidean, false, 1.0f / sArgs.inputs_num);
     IMeasure *apMeasures[] = {&Pearson, &EuclideanSig, &KendallsTau,
                               &KolmSmir, &Hypergeom, &PearQuick, &InnerProd,
-                              &BinInnerProd, NULL
+                              &BinInnerProd, nullptr
     };
 
 
@@ -116,7 +116,7 @@ int main(int iArgs, char **aszArgs) {
         veciSizes[i] = DatSize.GetValues();
     }
 
-    pMeasure = NULL;
+    pMeasure = nullptr;
     if (sArgs.distance_arg)
         for (size_t i = 0; apMeasures[i]; ++i)
             if (!strcmp(apMeasures[i]->GetName(), sArgs.distance_arg)) {
@@ -141,7 +141,7 @@ int main(int iArgs, char **aszArgs) {
             CMeta::Tokenize(acLine, vecstrZeros);
             if (vecstrZeros.empty())
                 continue;
-            mapZeros[vecstrZeros[0]] = atoi(vecstrZeros[1].c_str());
+            mapZeros[vecstrZeros[0]] = strtol(vecstrZeros[1].c_str(), nullptr, 10);
         }
     }
     veciDefaults.resize(vecstrInputs.size());
@@ -308,7 +308,7 @@ int main(int iArgs, char **aszArgs) {
                 for (size_t i = 0; i < veciOne.size(); ++i) {
                     float dOne = (float) veciOne[i] / iCountOne;
                     for (size_t j = 0; j < veciTwo.size(); ++j)
-                        if (iJoint = vecveciJoint[i][j]) {
+                        if ((iJoint = vecveciJoint[i][j])) {
                             float dJoint = (float) iJoint / iCountJoint;
                             dMeasure += dJoint * log(dJoint * iCountTwo / dOne / veciTwo[j]);
                         }

@@ -277,7 +277,7 @@ bool CParserConsole::ProcessLine(const char *szLine) {
 
     for (pcPrev = szLine; pcPrev && *pcPrev; pcPrev = pcNext) {
         vecstrLine.clear();
-        if (pcNext = strchr(pcPrev, c_cSemicolon))
+        if ((pcNext = strchr(pcPrev, c_cSemicolon)))
             strLine.assign(pcPrev, pcNext++ - pcPrev);
         else
             strLine.assign(pcPrev);
@@ -314,7 +314,7 @@ bool CParserConsole::ParseCat(const vector <string> &vecstrLine) {
     for (i = 1; i < vecstrLine.size(); ++i)
         if (!sArgs.Parse(vecstrLine[i]))
             vecstrGenes.push_back(vecstrLine[i]);
-    if (!vecstrGenes.size()) {
+    if (vecstrGenes.empty()) {
         cout << "Cat, no genes given" << endl;
         return false;
     }
@@ -402,7 +402,7 @@ bool CParserConsole::ParseFind(const vector <string> &vecstrLine) {
     }
     ifsm.close();
     if (strP.length())
-        dP = (float) atof(strP.c_str());
+        dP = (float) strtol(strP.c_str(), nullptr, 10);
     if (strBkg.length()) {
         ifsm.clear();
         ifsm.open(strBkg.c_str());
@@ -483,9 +483,9 @@ bool CParserConsole::ParseLs(const vector <string> &vecstrLine) {
     vector <SLocation> vecVisited;
 
     for (i = 1; i < vecstrLine.size(); ++i)
-        if (!(sArgs.Parse(vecstrLine[i]) || strLoc.size()))
+        if (!(sArgs.Parse(vecstrLine[i]) || !strLoc.empty()))
             strLoc = vecstrLine[i];
-    sLoc = strLoc.size() ? GetLocation(strLoc) : m_sLocation;
+    sLoc = !strLoc.empty() ? GetLocation(strLoc) : m_sLocation;
     if (!Recurse(sLoc, sArgs.m_fRecursive, sArgs.m_fZeroes, vecVisited)) {
         cout << "ls, illegal location: " << strLoc << endl;
         return false;
@@ -505,7 +505,7 @@ void CParserConsole::PrintLocations(const vector <SLocation> &vecVisited,
     for (i = 0; i < vecVisited.size(); ++i) {
         const SLocation &sLoc = vecVisited[i];
 
-        if (pOnto = sLoc.m_pOnto) {
+        if ((pOnto = sLoc.m_pOnto)) {
             if (sLoc.m_iNode == -1) {
                 PrintOntology(pOnto, '-');
                 if (sArgs.m_fSibs) {
@@ -531,7 +531,7 @@ void CParserConsole::PrintLocations(const vector <SLocation> &vecVisited,
                 }
             }
         } else {
-            PrintOntology(NULL, '-');
+            PrintOntology(nullptr, '-');
             if (sArgs.m_fSibs)
                 for (j = 0; j < m_vecpOntologies.size(); ++j)
                     PrintOntology(m_vecpOntologies[j], 'O');
@@ -588,7 +588,7 @@ bool CParserConsole::ParseParentage(const vector <string> &vecstrLine) {
             strFile = vecstrLine[i];
     }
 
-    pOnto = NULL;
+    pOnto = nullptr;
     for (i = 0; i < m_vecpOntologies.size(); ++i)
         if (strOnto == m_vecpOntologies[i]->GetID()) {
             pOnto = m_vecpOntologies[i];
