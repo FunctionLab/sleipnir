@@ -15,34 +15,12 @@ class SeekPlatformsTest : public ::testing::Test
 protected:
   void SetUp() override
   {
-    
     if (!filesystem::exists(testDir)) {
       filesystem::create_directories(testDir);
     }
-
     calcPlatformStats(seekPlatforms1, rawData1, platformNames1, platformMap1);
     calcPlatformStats(seekPlatforms2, rawData2, platformNames2, platformMap2);
     calcPlatformStats(seekPlatforms3, rawData3, platformNames3, platformMap3);
-
-    // // *** Create the data ***
-    // numPlatforms = 2;
-    // numGenes = 3;
-    // vector<string> platformNames = {"one", "two"};
-    // map<string, uint32_t> platNameToID = {{"one", 0}, {"two", 1}};
-
-    // // initialize some raw gene expression data
-    // uint32_t samplesPerGene = 4;
-    // uint32_t rawData[numPlatforms][numGenes][samplesPerGene];
-    // for (int plat = 0; plat < numPlatforms; plat++)
-    // {
-    //   for (int gene = 0; gene < numGenes; gene++)
-    //   {
-    //     for (int samp = 0; samp < samplesPerGene; samp++)
-    //     {
-    //       rawData[plat][gene][samp] = plat * 100 + gene * 10 + samp;
-    //     }
-    //   }
-    // }
   }
 
   // void TearDown() override {}
@@ -50,7 +28,7 @@ protected:
   // Sleipnir::SeekPlatforms seekPlatforms;
   string testDir = "/tmp/test/platform";
 
-  // data for 3 platforms, 3 genes, 4 samples per gene
+  // SeekPlat1: data for 3 platforms, 3 genes, 4 samples per gene
   Sleipnir::SeekPlatforms seekPlatforms1;
   vector<string> platformNames1 = {"zero", "one", "two"};
   map<string, uint32_t> platformMap1 = {{"zero", 0} , {"one", 1}, {"two", 2}};
@@ -59,7 +37,7 @@ protected:
       {{1, 2, 3, 4}, {11, 12, 13, 14}, {21, 22, 23, 24}},
       {{20, 22, 23, 24}, {31, 32, 33, 34}, {41, 42, 43, 44}}};
 
-  // data for 3 platforms, two of which overlap with rawData1 platforms
+  // SeekPlat2:  data for 3 platforms, two of which overlap with rawData1 platforms
   Sleipnir::SeekPlatforms seekPlatforms2;
   vector<string> platformNames2 = {"one", "two", "three"};
   map<string, uint32_t> platformMap2 = {{"one", 0}, {"two", 1}, {"three", 2}};

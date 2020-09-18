@@ -21,7 +21,6 @@
 *****************************************************************************/
 #ifndef COMPACTMATRIX_H
 #define COMPACTMATRIX_H
-#include <random>
 #include "compactmatrixi.h"
 #include <random>
 
