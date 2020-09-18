@@ -45,6 +45,8 @@ int main(int iArgs, char **aszArgs) {
     }
     CMeta Meta(sArgs.verbosity_arg);
 
+    // Open and read the gene_map file and create a vector of gene names
+    // (i.e. numeric Entrez names)
     if (sArgs.input_arg) {
         ifsm.open(sArgs.input_arg);
         pistm = &ifsm;
@@ -71,6 +73,7 @@ int main(int iArgs, char **aszArgs) {
     if (sArgs.input_arg)
         ifsm.close();
 
+    // Read and process the zeros file
     if (sArgs.zeros_arg) {
         ifstream ifsm_zero;
         vector <string> vecstrLine;
@@ -92,6 +95,10 @@ int main(int iArgs, char **aszArgs) {
         }
     }
 
+    size_t numFiles = min((size_t) sArgs.files_arg, vecstrGenes.size());
+    if (sArgs.one_gene_per_file_flag == 1) {
+        numFiles = vecstrGenes.size();
+    }
 
     bool useNibble = false;
     if (sArgs.use_nibble_flag == 1) {
@@ -119,15 +126,16 @@ int main(int iArgs, char **aszArgs) {
             cerr << "Could not open: " << sArgs.network_arg << endl;
             return 1;
         }
-        if (!DB.Open(vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg, min((size_t) sArgs.files_arg,
-                                                                                     vecstrGenes.size()),
-                     mapstriZeros)) {
+        if (!DB.Open(vecstrGenes, sArgs.dir_in_arg, &BNSmile, sArgs.dir_out_arg,
+                     numFiles, mapstriZeros)) {
             cerr << "Could not open data" << endl;
             return 1;
         }
 #endif
     } else if (sArgs.dataset_arg) {
-
+        // Read dataset_list file and create a vector of the datasets
+        // Note: the list entries are typically of form dataset.platform and
+        //  are the prefix of the file names for the dab fles.
         ifsm.open(sArgs.dataset_arg);
         while (!pistm->eof()) {
             pistm->getline(acBuffer, c_iBuffer - 1);
@@ -143,9 +151,10 @@ int main(int iArgs, char **aszArgs) {
         vecstrDatasets.resize(vecstrDatasets.size());
         ifsm.close();
 
-        if (!DB.Open(vecstrGenes, vecstrDatasets, sArgs.dir_in_arg, sArgs.dir_out_arg, min((size_t) sArgs.files_arg,
-                                                                                           vecstrGenes.size()),
-                     mapstriZeros)) {
+        // Create the CDatabase
+        // Rename to CreateDBFiles
+        if (!DB.Open(vecstrGenes, vecstrDatasets, sArgs.dir_in_arg,
+                     sArgs.dir_out_arg, numFiles, mapstriZeros)) {
             cerr << "Could not open data" << endl;
             return 1;
         }
