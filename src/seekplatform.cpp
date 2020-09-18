@@ -345,6 +345,7 @@ namespace Sleipnir {
         // append data rows from the new platforms to the existing data matrices
         uint32_t numNewPlatforms = newPlatformNames.size();
         if (numNewPlatforms > 0) {
+            bool doIncludeCounts = m_includeCounts && seekPlatforms2.bIncludesCounts();
             platformAvgMatrix.AddRows(numNewPlatforms, true);
             platformStdevMatrix.AddRows(numNewPlatforms, true);
             platformCountMatrix.AddRows(numNewPlatforms, true);
@@ -357,7 +358,9 @@ namespace Sleipnir {
                 m_mapPlatformNameToOrderID[newName] = newOrderId;
                 platformAvgMatrix.Set(newOrderId, seekPlatforms2.platformAvgMatrix.Get(prevOrderId));
                 platformStdevMatrix.Set(newOrderId, seekPlatforms2.platformStdevMatrix.Get(prevOrderId));
-                platformCountMatrix.Set(newOrderId, seekPlatforms2.platformCountMatrix.Get(prevOrderId));
+                if (doIncludeCounts) {
+                  platformCountMatrix.Set(newOrderId, seekPlatforms2.platformCountMatrix.Get(prevOrderId));
+                }
             }
         }
 
