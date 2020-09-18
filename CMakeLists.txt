@@ -175,6 +175,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-fopenmp)
     add_link_options(-lgslcblas)
+    list(APPEND EXTRA_LIBRARIES stdc++fs)
     set(LIBOMP -lgomp)
 else()
     message(SEND_INFO "Found some weird compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -315,7 +316,7 @@ add_library(sleipnir STATIC ${SLEIPNIR_SOURCES})
 
 target_include_directories(sleipnir PUBLIC ${EXTRA_INCLUDES})
 target_compile_definitions(sleipnir PUBLIC ${SLEIPNIR_COMPILE_DEFS})
-target_link_libraries(sleipnir stdc++fs)
+target_link_libraries(sleipnir)
 
 
 

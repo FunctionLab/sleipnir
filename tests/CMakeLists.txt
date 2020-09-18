@@ -16,6 +16,7 @@ target_link_libraries(
     unit_tests
     gtest_main
     sleipnir
+    stdc++fs
     )
 
 add_test(
