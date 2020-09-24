@@ -188,8 +188,8 @@ bool InitializeDataset(size_t &iDatasets, vector <string> &vecstrDatasets,
     for (i = 0; i < iDatasets; i++) {
         vc[i] = new CSeekDataset();
         string strFileStem = vecstrDatasets[i];
-        string strAvgPath = strPrepInputDirectory.append("/").append(strFileStem).append(".gavg");
-        string strPresencePath = strPrepInputDirectory.append("/").append(strFileStem).append(".gpres");
+        string strAvgPath = strPrepInputDirectory + "/" + strFileStem + ".gavg";
+        string strPresencePath = strPrepInputDirectory + "/" + strFileStem + ".gpres";
         vc[i]->ReadGeneAverage(strAvgPath);
         vc[i]->ReadGenePresence(strPresencePath);
         vc[i]->InitializeGeneMap();

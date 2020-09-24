@@ -666,18 +666,6 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
       error_occurred = 1;
     }
   
-  if (! args_info->in_dir1_given)
-    {
-      fprintf (stderr, "%s: '--in_dir1' ('-1') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error_occurred = 1;
-    }
-  
-  if (! args_info->in_dir2_given)
-    {
-      fprintf (stderr, "%s: '--in_dir2' ('-2') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error_occurred = 1;
-    }
-  
   if (! args_info->dir_out_given)
     {
       fprintf (stderr, "%s: '--dir_out' ('-D') option required%s\n", prog_name, (additional_error ? additional_error : ""));
