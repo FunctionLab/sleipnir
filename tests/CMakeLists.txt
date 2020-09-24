@@ -16,8 +16,11 @@ target_link_libraries(
     unit_tests
     gtest_main
     sleipnir
-    stdc++fs
     )
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  target_link_libraries( unit_tests stdc++fs)
+endif()
 
 add_test(
   NAME
