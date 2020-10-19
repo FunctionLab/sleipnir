@@ -21,7 +21,6 @@
 *****************************************************************************/
 #ifndef COMPACTMATRIX_H
 #define COMPACTMATRIX_H
-
 #include "compactmatrixi.h"
 #include <random>
 
@@ -61,7 +60,6 @@ namespace Sleipnir {
             if (m_aiData)
                 std::shuffle(m_aiData, m_aiData + CountWords(), m_rnd_gen);
         }
-
         /*!
          * \brief
          * Set the value at the requested matrix position.

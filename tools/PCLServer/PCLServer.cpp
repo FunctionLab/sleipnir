@@ -906,10 +906,12 @@ int main(int iArgs, char **aszArgs) {
             vecstrDP.push_back(vDP[j]);
             mapstrintDatasetDB[vD[j]] = (int) i;
         }
-        vector <string> vP;
-        map <string, utype> mP;
-        vector <CSeekPlatform> vpx;
-        CSeekTools::ReadPlatforms(cc[i]->GetValue("platform"), vpx, vP, mP);
+
+        SeekPlatforms platforms;
+        platforms.loadPlatformDataFromFiles(cc[i]->GetValue("platform"));
+        vector<CSeekPlatform> &vpx = platforms.getCSeekPlatforms();
+        map<string, utype> &mP = platforms.getPlatformMap();
+
         int cur = vp.size();
         for (map<string, utype>::iterator it = mP.begin();
              it != mP.end(); it++) {

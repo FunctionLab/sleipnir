@@ -392,39 +392,13 @@ namespace Sleipnir {
          * \param mapstrstrDatasetPlatform The dataset-platform mapping
          * \param mapstriPlatform Platform name-platform ID mapping
          */
+        // TODO (GW) - consider getting rid of this funciton altogehter, it is only called on place in seekcentral
         static bool LoadDatabase(
                 const vector<CDatabase *> &, const size_t &, const size_t &,
                 vector<CSeekDataset *> &,
-                const vector<CSeekDataset *> &, vector <CSeekPlatform> &,
-                const vector <CSeekPlatform> &, const vector <string> &,
+                const vector<CSeekDataset *> &,
+                vector <CSeekPlatform> &, const vector <string> &,
                 const map <string, string> &, const map <string, utype> &);
-
-        /*!
-         * \brief Read the platforms
-         *
-         * Reading the platforms mainly involves reading the correlation average and
-         * the correlation standard deviation for each platform in the database.
-         * The purpose is to correct the platform specific biases on the correlation values.
-         *
-         * \param strPlatformDirectory The directory that contains the platform average and standard deviation files
-         * \param plat The output
-         * \param vecstrPlatforms The platform names
-         * \param mapstriPlatform The platform name - platform ID mapping
-         * \param lineSize The maximum characters per line in the file (default 1024)
-         */
-        static bool ReadPlatforms(const string &strPlatformDirectory,
-                                  vector <CSeekPlatform> &plat, vector <string> &vecstrPlatforms,
-                                  map <string, utype> &mapstriPlatforms, const int lineSize = 1024);
-
-        /*!
-         * \brief Read the platforms
-         *
-         * This is the same as the previous CSeekTools::ReadPlatforms() declaration, except that the
-         * accepted string arguments are of the type \c const \c char \c *.
-         */
-        static bool ReadPlatforms(const char *plat_dir,
-                                  vector <CSeekPlatform> &plat, vector <string> &vecstrPlatforms,
-                                  map <string, utype> &mapstriPlatforms, const int lineSize = 1024);
 
         /*!
          * \brief Read a table with one column

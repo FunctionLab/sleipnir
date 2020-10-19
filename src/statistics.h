@@ -143,7 +143,7 @@ namespace Sleipnir {
         }
 
         template<class tType>
-        static double NormalizeMeanStd(const tType Begin, const tType End) {
+        static void NormalizeMeanStd(const tType Begin, const tType End) {
             double dSum, dSqSum;
             size_t iN;
             Sums(Begin, End, &dSum, &dSqSum, &iN);
@@ -153,6 +153,7 @@ namespace Sleipnir {
             for (Cur = Begin; Cur != End; Cur++) {
                 (*Cur) = (*Cur - dMean) / dStd;
             }
+            return;
         }
 
         /*!
@@ -1433,7 +1434,7 @@ namespace Sleipnir {
                 return CMeta::GetNaN();
 
             MatLU.Initialize(MatSigma.GetRows(), MatSigma.GetColumns());
-            MatLU.Open(MatSigma);
+            MatLU.Copy(MatSigma);
             MatrixLUDecompose(MatLU, veciIndices, fEven);
             MatrixLUInvert(MatLU, veciIndices, MatInv);
             dDet = MatrixLUDeterminant(MatLU, fEven);

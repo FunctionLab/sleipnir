@@ -951,11 +951,11 @@ int main(int iArgs, char **aszArgs) {
         //fprintf(stderr, "Finished reading dataset\n");
 
         size_t iDatasets = vecstrDatasets.size();
-        vector <string> vecstrPlatforms;
-        vector <CSeekPlatform> vp;
-        map <string, utype> mapstriPlatform;
-        CSeekTools::ReadPlatforms(sArgs.platform_dir_arg, vp, vecstrPlatforms,
-                                  mapstriPlatform);
+
+        SeekPlatforms platforms;
+        platforms.loadPlatformDataFromFiles(sArgs.platform_dir_arg);
+        vector<CSeekPlatform> &vp = platforms.getCSeekPlatforms();
+        map<string, utype> &mapstriPlatform = platforms.getPlatformMap();
         //fprintf(stderr, "Finished reading platform\n");
 
         vector < CSeekDataset * > vc;
