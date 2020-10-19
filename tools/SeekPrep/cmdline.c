@@ -672,7 +672,6 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
       error_occurred = 1;
     }
   
-  
   /* checks for dependences among options */
 
   return error_occurred;
