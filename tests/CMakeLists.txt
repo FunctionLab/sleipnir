@@ -12,16 +12,21 @@ add_executable(
   #  example_subtract.cpp
   #)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    list(APPEND EXTRA_LIBRARIES stdc++fs)
+endif()
+
+
 target_link_libraries(
     unit_tests
     gtest_main
     sleipnir
-    stdc++fs
-    )
+    ${EXTRA_LIBRARIES}
+)
 
 add_test(
   NAME
     unit
   COMMAND
     ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/unit_tests
-  )
+)
