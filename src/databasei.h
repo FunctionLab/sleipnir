@@ -147,6 +147,9 @@ namespace Sleipnir {
             return GetSizeGenes();
         }
 
+        size_t GetTotalNumGenesInCollection() {
+            return m_iGenes;
+        }
 
     private:
         size_t GetSizeGenes() const {

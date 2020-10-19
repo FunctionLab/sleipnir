@@ -53,6 +53,7 @@ namespace Sleipnir {
     }
 
 /* original method for initializing databaselets, including writing header + pre-allocation */
+// TODO (GW) - rename to Create() or indicate file will be written
     bool CDatabaselet::Open(const std::string &strFile, const std::vector <std::string> &vecstrGenes,
                             uint32_t iGenes, uint32_t iDatasets) {
         uint32_t iSize;
