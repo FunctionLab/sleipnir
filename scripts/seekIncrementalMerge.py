@@ -4,16 +4,15 @@ import glob
 from datetime import datetime
 from seekCreateDB import createSeekDB
 
-# This script will create a new database from PCL files that matches the parameters
-#   of an existing small and large database.
+# This script will create a new database from PCL files
+# It will use the parameters of an existing small and large database (which must agree).
 # It will then prepare the data for combining into the small database.
-# At the end it will print the command to run to merge the new database 
-#   into the small database.
+# At the end it will print the command to run to merge the new database into the small database.
 
 # Notes:
 # If you want to create smallDB, then specify the same referenace DB for large and small db inputs
 # If you want to create a newDB, then specify both small and large DB for reference to make sure no overlap in datasets
-# If you want to merge smallDB to largeDB - just seekDBCombine.sh script
+# If you want to merge smallDB to largeDB - just use seekDBCombine.sh script
 
 
 def loadDatasetPlatformMap(filename):
@@ -39,7 +38,7 @@ def loadDatasetPlatformMap(filename):
 
 
 def main(args):
-  # Step 1: Load the dataset lists for the new, small and large DBs and make sure the are all disjoint
+  # Step 1: Load the dataset lists for the new, small and large DBs and make sure they are all disjoint
   # check existence of the dataset map files
   if not os.path.exists(args.smallDsetFile):
     raise FileNotFoundError("Small DB dataset_platform map not found: " + args.smallDsetFile)
@@ -106,10 +105,9 @@ def main(args):
   print('\nOptional final step: verify the merged db contests')
   print('### COMMAND ###')
   print(f'bash {scriptPath}/seekVerifyMergeDB.sh -b {args.sleipnirBinDir} -d {args.dirSmallDB}/db -n {incrDBDirName}/db -c {args.outDir}/db')
+  
   # Step 4: 
   # Check size of small DB relative to large DB, and recommend combining at some size/percentage threshold
-
-
 
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser()
@@ -131,12 +129,3 @@ if __name__ == "__main__":
                            help='Output directory to write new database into')
     args = argParser.parse_args()
     main(args)
-
-
-## Previous
-  # smallDsetDict = loadDatasetPlatformMap(os.path.join(args.dirSmallDB, "dataset.map"))
-  # if smallDsetDict is None:
-  #   smallDsetDict = loadDatasetPlatformMap(os.path.join(args.dirSmallDB, "dataset_platform.txt"))
-
-  # smallDsetFile = os.path.join(args.dirSmallDB, "dataset_platform.txt")
-  # largeDsetFile = os.path.join(args.dirLargeDB, "dataset_platform.txt")

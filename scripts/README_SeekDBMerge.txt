@@ -1,6 +1,6 @@
 Steps to merge new datasets into and existing seek database
 
-The overall approach is to have two databases, a large one and a small one. SeekServer and SeekMiner can query across multiple databases. To enable multi-database mode a file is passed in with the config settings of the secondary databases. See SeekServer addtional DB file example below.
+The overall approach is to have two databases, a large one and a small one. SeekServer and SeekMiner can query across multiple databases. To enable multi-database mode a file is passed in with the config settings of the secondary databases. See SeekServer additional DB file example below.
 
 When new datasets are to be added, they are merged into the small database to reduce the merge time. When the small database exceeds 10% of the large database size it is merged into the large database and an empty small database is started.
 
@@ -22,7 +22,7 @@ You can then run a verify script to check that the *.db files have been merged c
   ```bash $sleipnir/scripts/seekVerifyMergeDB.sh -d small_db/db -n incr_dset_20201021_144003/db -c merged/db -b $sleipnir/Debug```
 
 4) Move the original small DB directory to small_db.prev.num
-   Rename the new merged db direcotry to small_db
+   Rename the new merged db directory to small_db
 
 
 

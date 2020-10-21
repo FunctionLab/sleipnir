@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-# This script will combine to Seek databases together into a new combined database
+# This script will combine two Seek databases together into a new combined database
 #  - provide the path to the existing database -d
 #  - provide the path to the new database to merge in -n
 #  - provide the path to output the combined database -o
@@ -62,9 +62,9 @@ echo "Combine dataset_platform text files..."
 read -p "Press enter to continue"
 # Step 1: Combine the dataset_platform files (sometimes called dataset.map)
 # Previously had it check for and remove duplicate datasets.
-# BUT this can't be done this way, can't change the order of the datasets because it is the order of entries in the DB files
+# BUT this can't be done, can't change the order of the datasets because it is the order of entries in the DB files
 # cat $dir1/dataset_platform $dir2/dataset_platform | unexpand -a | sort -b --unique > $outDir/dataset_platform
-# Note: check for dataset overlap must be done separtely, such as in dataset_incremental_merge.py
+# Note: seekIncrementalMerge.py will check for overlap between datasets in large_db, small_db and new_db.
 cat $dir1/dataset_platform $dir2/dataset_platform > $outDir/dataset_platform
 
 echo "Combine dataset_size text files..."
