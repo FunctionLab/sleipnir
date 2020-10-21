@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <iostream>
+#include <cassert>
 
 using namespace std;
 #include "databasei.h"

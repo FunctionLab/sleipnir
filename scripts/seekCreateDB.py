@@ -110,7 +110,7 @@ def createSeekDB(sleipnirBinDir, inputDatasetFile, pclDir, refDir, output_dir, n
     for (dataset, name, platform) in datasets:
         m = re.match("(.*).pcl", dataset)
         datasetName = m.group(1)
-        cmd = "%s/Distancer -i %s/%s.pcl -o %s.dab -s 0 -t 8" % (sleipnirBinDir, pclDir, datasetName, datasetName)
+        cmd = "%s/Distancer -i %s/%s.pcl -o %s.dab -s 0 -t 1" % (sleipnirBinDir, pclDir, datasetName, datasetName)
         sys.stdout.write("Distancer: Processing %s...\n" % dataset)
         print(cmd)
         os.system(cmd)
