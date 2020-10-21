@@ -16,6 +16,7 @@ while getopts b:c:d:n:v option; do
 done
 
 db_count=$(ls -1 $dir1/*.db | wc -l)
+db_count=$(expr $db_count - 1)
 echo "Checking $db_count db files"
 for i in $(seq -f "%08g" 0 $db_count); do 
   echo "verifying file $i.db"

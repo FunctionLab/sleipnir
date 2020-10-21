@@ -176,7 +176,6 @@ def createSeekDB(sleipnirBinDir, inputDatasetFile, pclDir, refDir, output_dir, n
         os.system(cmd)
     sys.stdout.write("Done!\n")
 
-    # TODO - create dataset size file
     sys.stdout.write("Creating dataset size...\n")
     os.chdir(output_dir)
     os.system("echo '' > ./dataset_size")

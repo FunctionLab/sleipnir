@@ -92,15 +92,20 @@ def main(args):
   # Step 3:
   # Merge the new DB into the small DB using bash script
   # Output directory must be specified
-  # Recommend do the following by hand
-  # Rename small DB directory to prev.num
-  # Rename combined DB directory to small DB name
-  # TODO call seekCombineDB.sh
+  # Recommend after completion of merge do the following by hand:
+  #   Rename small DB directory to prev.num
+  #   Rename combined DB directory to small DB name
+  scriptPath = os.path.dirname(os.path.realpath(__file__))
+
   print("Incremental Dataset Build Complete. Ready for merge!")
   print('*** NEXT STEP ***')
   print("Run the following command to perform the merge")
-  print(f'bash seekCombineDB.sh -o {args.outDir} -b {args.sleipnirBinDir} -d {args.dirSmallDB} -n {incrDBDirName}')
+  print('### COMMAND ###')
+  print(f'bash {scriptPath}/seekCombineDB.sh -o {args.outDir} -b {args.sleipnirBinDir} -d {args.dirSmallDB} -n {incrDBDirName}')
 
+  print('\nOptional final step: verify the merged db contests')
+  print('### COMMAND ###')
+  print(f'bash {scriptPath}/seekVerifyMergeDB.sh -b {args.sleipnirBinDir} -d {args.dirSmallDB}/db -n {incrDBDirName}/db -c {args.outDir}/db')
   # Step 4: 
   # Check size of small DB relative to large DB, and recommend combining at some size/percentage threshold
 
