@@ -54,6 +54,19 @@ def createSeekDB(sleipnirBinDir, inputDatasetFile, pclDir, refDir, output_dir, n
     sleipnirBinDir = os.path.abspath(sleipnirBinDir)
     refDir = os.path.abspath(refDir)
 
+    if not os.path.exists(os.path.join(sleipnirBinDir, "Distancer")):
+        print("Error: Distancer binary not found")
+        return False
+    if not os.path.exists(os.path.join(sleipnirBinDir, "SeekPrep")):
+        print("Error: SeekPrep binary not found")
+        return False
+    if not os.path.exists(os.path.join(sleipnirBinDir, "Data2DB")):
+        print("Error: Data2DB binary not found")
+        return False
+    if not os.path.exists(os.path.join(sleipnirBinDir, "PCL2Bin")):
+        print("Error: PCL2Bin binary not found")
+        return False
+    
     # check max open files setting is sufficient, i.e. ulimit -n
     softFileLimit, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
     if softFileLimit < numDBFiles:

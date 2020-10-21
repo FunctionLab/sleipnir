@@ -108,6 +108,8 @@ def main(args):
 
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser()
+    argParser.add_argument('--dirNewPCL', '-p', type=str, required=True,
+                           help='directory containing the PCL files for the new datasets')
     argParser.add_argument('--newDsetFile', '-dn', type=str, required=True,
                            help='text file listing the new datasets and corresponding platforms, one per line')
     argParser.add_argument('--largeDsetFile', '-dl', type=str, required=True,
@@ -118,8 +120,6 @@ if __name__ == "__main__":
                            help='directory of existing small DB')
     argParser.add_argument('--dirLargeDB', '-l', type=str, required=True,
                            help='directory of existing large DB')
-    argParser.add_argument('--dirNewPCL', '-p', type=str, required=True,
-                           help='directory containing the PCL files for the new datasets')
     argParser.add_argument('--sleipnirBinDir', '-b', type=str, required=True,
                            help='Directory where the Sleipnir binaries are installed')
     argParser.add_argument('--outDir', '-o', type=str, required=True,
