@@ -219,8 +219,9 @@ void *do_query(void *th_arg) {
             queryGeneID.push_back(mapstrintGene[queryGenes[i]]);
         //Query genes themselves have lowest score, to prevent
         //them from being counted in PR
-        for (i = 0; i < queryGeneID.size(); i++)
-            sortedGenes[queryGeneID[i]].f = nan;
+        //(disabled 6/6/2016) want the query to have scores
+        //for (i = 0; i < queryGeneID.size(); i++)
+        //    sortedGenes[queryGeneID[i]].f = nan;
 
         sort(sortedGenes.begin(), sortedGenes.end());
 
@@ -265,7 +266,7 @@ void *do_query(void *th_arg) {
                     }
                 }
             } else if (mode == 0) {
-                if (gene_rank < 17600 / 2) {
+                if (gene_rank < numGenes / 2) {
                     for (kk = 0; kk < rR.size(); kk++) {
                         if (gene_rank <= rR[kk] || kk == rR.size() - 1)
                             pval[gene] = (float) kk / (float) rR.size();
