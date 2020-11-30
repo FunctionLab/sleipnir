@@ -53,6 +53,7 @@ struct thread_data {
     string strQuery;
     string strOutputDir;
     string strSearchDatasets;
+    string strGuideGeneSet;
 
     bool check_dset_size; //check dataset size
     float rbp_p;
@@ -79,6 +80,7 @@ void *do_query(void *th_arg) {
     string searchMethod = my->searchMethod;
     //if "negative", then rank datasets and genes by most negative correlations
     string correlationSign = my->correlationSign;
+    string strGuideGeneSet = my->strGuideGeneSet;
 
     bool bCheckDsetSize = my->check_dset_size;
     float rbp_p = my->rbp_p;
@@ -131,7 +133,18 @@ void *do_query(void *th_arg) {
             utype FOLD = 5;
             //enum PartitionMode PART_M = CUSTOM_PARTITION;
             enum CSeekQuery::PartitionMode PART_M = CSeekQuery::LEAVE_ONE_IN;
-            csu->CVSearch(rnd, PART_M, FOLD, rbp_p);
+            if(searchMethod=="CVCUSTOM"){
+                vector<string> guide_g;
+                CMeta::Tokenize(strGuideGeneSet.c_str(), guide_g, "|", false);
+                vector<vector<string> > vecGuideGeneSet;
+                vecGuideGeneSet.resize(guide_g.size());
+                for(int i=0; i<guide_g.size(); i++){
+                        CMeta::Tokenize(guide_g[i].c_str(), vecGuideGeneSet[i], " ", false);
+                }
+                csu->CVCustomSearch(vecGuideGeneSet, rnd, PART_M, FOLD, rbp_p);
+            } else { //"RBP"
+                csu->CVSearch(rnd, PART_M, FOLD, rbp_p);
+            }
             gsl_rng_free(rnd);
         }
     }
@@ -436,11 +449,12 @@ int main(int iArgs, char **aszArgs) {
         string strSearchDataset;
         string strQuery;
         string strOutputDir;
+        string strGuideGeneSet;
 
         //search parameters
         string strSearchParameter;
         //format: _ delimited
-        //[0]: search_method ("RBP", "OrderStatistics", or "EqualWeighting")
+        //[0]: search_method ("RBP", "OrderStatistics", or "EqualWeighting", or "CVCUSTOM")
         //[1]: rbp_p
         //[2]: minimum fraction of query required
         //[3]: minimum fraction of genome required
@@ -463,10 +477,19 @@ int main(int iArgs, char **aszArgs) {
             fprintf(stderr, "Error receiving from client!\n");
         }
 
+        if (sArgs.guided_flag) {
+            if (CSeekNetwork::Receive(new_fd, strGuideGeneSet)==-1){
+                    fprintf(stderr, "Error receiving GeneGuideSet from client!\n");
+            }
+        }
+    
         vector <string> searchParameterTokens;
         fprintf(stderr, "%s\n", strSearchParameter.c_str());
         CMeta::Tokenize(strSearchParameter.c_str(), searchParameterTokens, "_");
         thread_arg[d].searchMethod = searchParameterTokens[0];
+        if (strGuideGeneSet!="null") {
+            thread_arg[d].searchMethod = "CVCUSTOM";
+        }
         thread_arg[d].rbp_p = atof(searchParameterTokens[1].c_str());
         thread_arg[d].query_fraction_required =
                 atof(searchParameterTokens[2].c_str());
@@ -487,6 +510,7 @@ int main(int iArgs, char **aszArgs) {
         thread_arg[d].strQuery = strQuery;
         thread_arg[d].strOutputDir = strOutputDir;
         thread_arg[d].strSearchDatasets = strSearchDataset;
+        thread_arg[d].strGuideGeneSet = strGuideGeneSet;
         //thread_arg[d].csfinal = &csfinal;
 
         int ret;
