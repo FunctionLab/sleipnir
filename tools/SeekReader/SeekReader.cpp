@@ -64,7 +64,7 @@ int main(int iArgs, char **aszArgs) {
     vector <string> vecstrGeneID;
     map <string, utype> mapstrintGene;
     if (!CSeekTools::ReadListTwoColumns(sArgs.input_arg, vecstrGeneID, vecstrGenes))
-        return false;
+        return -1;
 
     for (i = 0; i < vecstrGenes.size(); i++)
         mapstrintGene[vecstrGenes[i]] = i;
@@ -83,7 +83,7 @@ int main(int iArgs, char **aszArgs) {
     if (sArgs.add_gscore_flag == 1) {
         vector <string> vecstrGScore;
         if (!CSeekTools::ReadListOneColumn(sArgs.gscore_list_arg, vecstrGScore))
-            return false;
+            return -1;
         string gscoreDir = sArgs.gscore_dir_arg;
         vector<float> totalScore;
         totalScore.resize(vecstrGeneID.size());
@@ -171,7 +171,7 @@ int main(int iArgs, char **aszArgs) {
     if (sArgs.weight2_flag == 1) {
         vector <string> vecstrDataset;
         if (!CSeekTools::ReadListOneColumn(sArgs.dweight_map_arg, vecstrDataset))
-            return false;
+            return -1;
         vector <vector<float>> vec_score, orig_score;
         utype i, j;
         int num_query = sArgs.dweight_num_arg; //random query
@@ -216,7 +216,7 @@ int main(int iArgs, char **aszArgs) {
     if (sArgs.combine_pcl_flag == 1) {
         vector <string> vecstrPCL;
         if (!CSeekTools::ReadListOneColumn(sArgs.pcl_list_arg, vecstrPCL))
-            return false;
+            return -1;
         vector < CPCL * > vc;
         vc.resize(vecstrPCL.size());
         utype i, j, k;
@@ -526,7 +526,7 @@ int main(int iArgs, char **aszArgs) {
             delete vc[i];
         vc.clear();
 
-        return false;
+        return 1;
     }
 
     if (sArgs.convert_aracne_flag == 1) {
@@ -616,7 +616,7 @@ int main(int iArgs, char **aszArgs) {
     if (sArgs.weight_flag == 1) {
         vector <string> vecstrDataset;
         if (!CSeekTools::ReadListOneColumn(sArgs.dweight_map_arg, vecstrDataset))
-            return false;
+            return -1;
 
         vector <vector<float>> vec_score;
         vector <vector<float>> orig_score;
@@ -923,17 +923,17 @@ int main(int iArgs, char **aszArgs) {
         if (db == "NA" || dset_list == "NA" || dir_in == "NA" ||
             dir_prep == "NA") {
             fprintf(stderr, "Requires: -x, -X, -d -p\n");
-            return false;
+            return -1;
         }
 
         vector <string> vecstrDP, vecstrUserDP;
         //dataset-platform mapping (required)
         if (!CSeekTools::ReadListTwoColumns(sArgs.db_arg, vecstrDatasets, vecstrDP))
-            return false;
+            return -1;
 
         //dataset filter
         if (!CSeekTools::ReadListTwoColumns(sArgs.dset_list_arg, vecstrUserDatasets, vecstrUserDP))
-            return false;
+            return -1;
 
         map <string, utype> mapstrintDataset;
         map <string, string> mapstrstrDatasetPlatform;
@@ -1020,7 +1020,7 @@ int main(int iArgs, char **aszArgs) {
         }
 
         fprintf(stderr, "Done\n");
-        return false;
+        return 1;
 
         vector <vector<string>> vecstrQueries;
         string multiQuery = sArgs.multi_query_arg;
@@ -1028,10 +1028,10 @@ int main(int iArgs, char **aszArgs) {
         if (multiQuery == "NA") {
             vecstrQueries.resize(1);
             if (!CSeekTools::ReadMultiGeneOneLine(sArgs.single_query_arg, vecstrQueries[0]))
-                return false;
+                return -1;
         } else {
             if (!CSeekTools::ReadMultipleQueries(multiQuery, vecstrQueries))
-                return false;
+                return -1;
         }
 
         bool toOutput = false;
@@ -1057,11 +1057,11 @@ int main(int iArgs, char **aszArgs) {
         if (sArgs.order_stat_single_gene_query_flag == 1) {
             if (strGvarInputDirectory == "NA") {
                 fprintf(stderr, "Order statistics mode, but need to provide gvar!\n");
-                return false;
+                return -1;
             }
             if (cutoff < 0) {
                 fprintf(stderr, "Need to provide positive Gvar cutoff\n");
-                return false;
+                return -1;
             }
         }
 
@@ -1161,12 +1161,12 @@ int main(int iArgs, char **aszArgs) {
         //string dset_list = sArgs.dset_list_arg;
         vector <string> vecstrDP;
         if (!CSeekTools::ReadListTwoColumns(sArgs.db_arg, vecstrDatasets, vecstrDP))
-            return false;
+            return -1;
         size_t iDatasets = vecstrDatasets.size();
         string strSinfoInputDirectory = sArgs.dir_sinfo_in_arg;
         if (strSinfoInputDirectory == "NA") {
             fprintf(stderr, "Error: requires sinfo input directory\n");
-            return 1;
+            return -1;
         }
         for (i = 0; i < iDatasets; i++) {
             CSeekDataset *vc = new CSeekDataset();
@@ -1191,7 +1191,7 @@ int main(int iArgs, char **aszArgs) {
         if (db == "NA" || dset_list == "NA" || dir_in == "NA" ||
             dir_prep == "NA" || single_query == "NA") {
             fprintf(stderr, "Requires: -x, -X, -d -p -q\n");
-            return false;
+            return -1;
         }
 
         bool useNibble = false;
@@ -1200,9 +1200,9 @@ int main(int iArgs, char **aszArgs) {
         vector <string> vecstrDP;
         vector <string> vecstrQuery;
         if (!CSeekTools::ReadListTwoColumns(sArgs.db_arg, vecstrDatasets, vecstrDP))
-            return false;
+            return -1;
         if (!CSeekTools::ReadMultiGeneOneLine(sArgs.single_query_arg, vecstrQuery))
-            return false;
+            return -1;
 
         string strInputDirectory = sArgs.dir_in_arg;
         DB.Open(strInputDirectory);
