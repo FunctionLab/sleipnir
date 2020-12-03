@@ -1,19 +1,99 @@
-#include <fstream>
 #include <map>
 #include <vector>
-#include "seekdataset.h"
+#include <fstream>
+#include "toml.hpp"
+#include "seekhelper.h"
 
 using namespace std;
 using namespace Sleipnir;
 
-void readTomlConfig() {
 
+template <typename T>
+void tomlGetValue(toml::table tbl, string key, T &retVal) {
+    if (tbl[key]) {
+        optional<T> opval = tbl[key].value<T>();
+        if (opval.has_value()) {
+            retVal = opval.value();
+            return;
+        }
+        cerr << "Toml Config: unable to parse key: " << key << endl;
+    }
+    cerr << "Toml: No entry found for \'" << key << "\'" << ", default to: " << retVal << endl;
+}
+
+
+bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
+    toml::table tbl;
+    try
+    {
+        tbl = toml::parse_file(tomlConfigFile);
+    }
+    catch (const toml::parse_error& err)
+    {
+        cerr << "readTomlConf parsing failed:\n" << err << "\n";
+        return false;
+    }
+    // populate the settings
+    tomlGetValue<int64_t>(tbl, "port", settings.port);
+    tomlGetValue<int64_t>(tbl, "numThreads", settings.numThreads);
+    tomlGetValue<int64_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
+    tomlGetValue<double>(tbl, "scoreCutoff", settings.scoreCutoff);
+    tomlGetValue<bool>(tbl, "squareZ", settings.squareZ);
+    tomlGetValue<bool>(tbl, "isNibble", settings.isNibble);
+    tomlGetValue<bool>(tbl, "outputAsText", settings.outputAsText);
+
+    // get the database settings
+    if (tbl["Database"].is_table()) {
+        auto databaseTbl = tbl["Database"];
+        string key;
+        int idx = 0;
+        while(idx++, key="DB"+to_string(idx), databaseTbl[key].is_table()) {
+            // auto dbTbl = databaseTbl[key].value<toml::v2::table>().value();
+            toml::table *dbTbl = databaseTbl[key].as_table();
+            string db_dir = "NA";
+            string prep_dir = "NA";
+            string platform_dir = "NA";
+            string sinfo_dir = "NA";
+            string gvar_dir = "NA";
+            string quant_file = "NA";
+            string dset_map_file = "NA";
+            string gene_map_file = "NA";
+            string dset_size_file = "NA";
+            int64_t num_db = -1;
+
+            tomlGetValue<string>(*dbTbl, "DB_DIR", db_dir);
+            tomlGetValue<string>(*dbTbl, "PREP_DIR", prep_dir);
+            tomlGetValue<string>(*dbTbl, "PLATFORM_DIR",platform_dir);
+            tomlGetValue<string>(*dbTbl, "SINFO_DIR", sinfo_dir);
+            tomlGetValue<string>(*dbTbl, "GVAR_DIR", gvar_dir);
+            tomlGetValue<string>(*dbTbl, "QUANT_FILE", quant_file);
+            tomlGetValue<string>(*dbTbl, "DSET_MAP_FILE", dset_map_file);
+            tomlGetValue<string>(*dbTbl, "GENE_MAP_FILE", gene_map_file);
+            tomlGetValue<string>(*dbTbl, "DSET_SIZE_FILE", dset_size_file);
+            tomlGetValue<int64_t>(*dbTbl, "NUMBER_OF_DB", num_db);
+
+            CSeekDBSetting *dbSetting2 = 
+                new CSeekDBSetting(gvar_dir, sinfo_dir, platform_dir, 
+                                prep_dir, db_dir, gene_map_file, 
+                                quant_file, dset_map_file,
+                                dset_size_file, num_db);
+            settings.dbs.push_back(dbSetting2);
+        }
+    } else {
+        cerr << "Toml: expecting a section \'Database\' to have subsections for each DB" << endl;
+        return false;
+    }
+    if (settings.dbs.size() == 0) {
+        cerr << "Toml: No DB sections found, check spelling and capatilization, i.e. [Database.DB1]" << endl;
+        return false;
+    }
+    return true;
 }
 
 bool legacyReadDBConfigFile(string dbConfigFile,
                             vector<CSeekDBSetting*> &cc, 
-                            enum CSeekDataset::DistanceMeasure eDistMeasure = CSeekDataset::CORRELATION,
-                            bool check_dset_size_flag = true) {
+                            CSeekDataset::DistanceMeasure eDistMeasure,
+                            bool check_dset_size_flag) {
     const int lineSize = 1024;
     ifstream ifsm;
     ifsm.open(dbConfigFile.c_str());

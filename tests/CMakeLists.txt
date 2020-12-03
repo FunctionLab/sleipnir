@@ -5,6 +5,7 @@ add_executable(
     # example_add.cpp
     # example_subtract.cpp
     seekplatform_test.cpp
+    seekhelper_test.cpp
 )
 
   #add_library(example STATIC
