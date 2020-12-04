@@ -22,6 +22,7 @@
 #ifndef COMPACTMATRIX_H
 #define COMPACTMATRIX_H
 #include "compactmatrixi.h"
+#include <algorithm>
 #include <random>
 
 namespace Sleipnir {

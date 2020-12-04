@@ -451,3 +451,14 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
     target_link_libraries(${TOOL} sleipnir ${EXTRA_LIBRARIES} ${LIBOMP})
 endforeach()
 
+
+list(APPEND SINGLE_FILE_TOOLS
+    verifyMergedDBFiles
+)
+
+foreach(TOOL ${SINGLE_FILE_TOOLS})
+    add_executable(${TOOL} tools/${TOOL}.cpp)
+    add_dependencies(${TOOL} sleipnir)
+    target_include_directories(${TOOL} PUBLIC ${EXTRA_INCLUDES})
+    target_link_libraries(${TOOL} sleipnir ${EXTRA_LIBRARIES} ${LIBOMP})
+endforeach()
