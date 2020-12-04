@@ -90,9 +90,9 @@ section "Input"
 option	"input"				i	"Gene mapping file"
 								string typestr="filename"	yes
 option	"in_dir1"			1	"Input directory 1"
-								string typestr="filename"
+								string typestr="filename"	no
 option	"in_dir2"			2	"Input directory 2"
-								string typestr="filename"
+								string typestr="filename"	no
 
 section "Output"
 option	"dir_out"			D	"Output directory"
