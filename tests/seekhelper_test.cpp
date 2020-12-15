@@ -1,102 +1,35 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <ctime>
+#include <chrono>
 #include "gtest/gtest.h"
 #include "seekhelper.h"
 #include "seekdataset.h"
+#include "sampleConfigFiles.h"
 
 using namespace std;
 using namespace Sleipnir;
 
 // Forward declarations
 bool compareSeekDBSettings(CSeekDBSetting* cc1, CSeekDBSetting* cc2);
+bool compareSeekSettings(SeekSettings &s1, SeekSettings &s2);
+void printingAndTimingGetConfig(vector<string> &configFiles);
 
-string tomlConfigData =
-R"""(port = 1234
-numThreads = 12
-numBufferedDBs = 23  # Number of Databaselets to store in memory
-scoreCutoff = -3.1  # The gene-gene score cutoff to add, default: no cutoff
-squareZ = true  # If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff
-isNibble = true  # If CDatabase is stored in nibble or byte format
-outputAsText = true  # Output results (gene list and dataset weights) as text
-
-[Database]
-    [Database.DB1]
-    DB_DIR        = "/path/db1/db"
-    PREP_DIR      = "/path/db1/prep"
-    PLATFORM_DIR  = "/path/db1/plat"
-    SINFO_DIR     = "/path/db1/sinfo"
-    GVAR_DIR      = "/path/db1/gvar"
-    QUANT_FILE    = "/path/db1/quant2"
-    DSET_MAP_FILE = "/path/db1/dataset.map"
-    GENE_MAP_FILE = "/path/db1/gene_map.txt"
-    DSET_SIZE_FILE = "/path/db1/dataset_size"
-    NUMBER_OF_DB  = 1000
-
-    [Database.DB2]
-    PREP_DIR      = "/path/db2/prep"
-    PLATFORM_DIR  = "/path/db2/plat"
-    DB_DIR        = "/path/db2/db"
-    DSET_MAP_FILE = "/path/db2/dataset.map"
-    GENE_MAP_FILE = "/path/db2/gene_map.txt"
-    QUANT_FILE    = "/path/db2/quant2"
-    SINFO_DIR     = "/path/db2/sinfo"
-    GVAR_DIR      = "/path/db2/gvar"
-    DSET_SIZE_FILE = "/path/db2/dataset_size"
-    NUMBER_OF_DB  = 2000
-)""";
-
-// Note: legacy file must use tab separations
-string legacyDBConfigData = 
-R"""(START
-DB_DIR	/path/db1/db
-PREP_DIR	/path/db1/prep
-PLATFORM_DIR	/path/db1/plat
-SINFO_DIR	/path/db1/sinfo
-GVAR_DIR	/path/db1/gvar
-QUANT_FILE	/path/db1/quant2
-DSET_MAP_FILE	/path/db1/dataset.map
-GENE_MAP_FILE	/path/db1/gene_map.txt
-DSET_SIZE_FILE	/path/db1/dataset_size
-NUMBER_OF_DB	1000
-END
-START
-DB_DIR	/path/db2/db
-PREP_DIR	/path/db2/prep
-PLATFORM_DIR	/path/db2/plat
-SINFO_DIR	/path/db2/sinfo
-GVAR_DIR	/path/db2/gvar
-QUANT_FILE	/path/db2/quant2
-DSET_MAP_FILE	/path/db2/dataset.map
-GENE_MAP_FILE	/path/db2/gene_map.txt
-DSET_SIZE_FILE	/path/db2/dataset_size
-NUMBER_OF_DB	2000
-END
-)""";
 
 // Setup a fixture class of data for the tests
 class SeekHelperTest : public ::testing::Test
 {
 public:
     string testDir = "/tmp/test/";
-    string testTomlFile = testDir + "seekConfig.toml";
-    string testLegacyConfigFile = testDir + "seekAdditionalDB";
+    string humanTomlFile = testDir + humanTomlFilename;
+    string yeastTomlFile = testDir + yeastTomlFilename;
+    string testLegacyConfigFile = testDir + testLegacyConfigFilename;
 
 protected:
     void SetUp() override
     {
-        if (!filesystem::exists(testDir))
-        {
-            filesystem::create_directories(testDir);
-        }
-        ofstream tmpFile;
-        tmpFile.open(testTomlFile);
-        tmpFile << tomlConfigData;
-        tmpFile.close();
-
-        tmpFile.open(testLegacyConfigFile);
-        tmpFile << legacyDBConfigData;
-        tmpFile.close();
+        createConfigFiles(testDir);
     }
 };
 
@@ -107,8 +40,9 @@ TEST_F(SeekHelperTest, loadTomlConfigs)
     bool res;
 
     // load the toml file
-    res = parseTomlConfig(testTomlFile,  tomlSettings);
+    res = parseTomlConfig(humanTomlFile,  tomlSettings);
     ASSERT_TRUE(res);
+    ASSERT_EQ(tomlSettings.species, "human");
     ASSERT_EQ(tomlSettings.port, 1234);
     ASSERT_EQ(tomlSettings.numThreads, 12);
     ASSERT_EQ(tomlSettings.numBufferedDBs, 23);
@@ -124,7 +58,51 @@ TEST_F(SeekHelperTest, loadTomlConfigs)
     ASSERT_EQ(tomlSettings.dbs.size(), 2);
     ASSERT_EQ(legacyDBSettings.size(), 2);
     ASSERT_TRUE(compareSeekDBSettings(tomlSettings.dbs[0], legacyDBSettings[0]));
-    ASSERT_TRUE(compareSeekDBSettings(tomlSettings.dbs[0], legacyDBSettings[0]));
+    ASSERT_TRUE(compareSeekDBSettings(tomlSettings.dbs[1], legacyDBSettings[1]));
+}
+
+TEST_F(SeekHelperTest, loadSpeciesConfigs)
+{
+    vector<string> configFiles;
+    map<string, SeekSettings> speciesConfigs;
+
+    configFiles.push_back(humanTomlFile);
+    configFiles.push_back(yeastTomlFile);
+    getConfigs(configFiles, speciesConfigs);
+
+    // load the from the legacy config format
+    vector <CSeekDBSetting*> legacyDBSettings;
+    bool res = legacyReadDBConfigFile(testLegacyConfigFile, legacyDBSettings);
+    ASSERT_TRUE(res);
+    ASSERT_EQ(speciesConfigs["human"].dbs.size(), 2);
+    ASSERT_EQ(legacyDBSettings.size(), 2);
+    ASSERT_TRUE(compareSeekDBSettings(speciesConfigs["human"].dbs[0], legacyDBSettings[0]));
+    ASSERT_TRUE(compareSeekDBSettings(speciesConfigs["human"].dbs[1], legacyDBSettings[1]));
+
+    // load yeast separately and compare
+    SeekSettings yeastTomlSettings;
+    res = parseTomlConfig(yeastTomlFile,  yeastTomlSettings);
+    ASSERT_TRUE(compareSeekSettings(yeastTomlSettings, speciesConfigs["yeast"]));
+
+    printingAndTimingGetConfig(configFiles);
+}
+
+void printingAndTimingGetConfig(vector<string> &configFiles) {
+    using namespace chrono;
+    int iters = 10;
+    map<string, SeekSettings> speciesConfigs;
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    for (int i=0; i<iters; i++) {
+        getConfigs(configFiles, speciesConfigs);
+    }
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+    cout << "Time load config ("<< iters << " iters): " << time_span.count() << " seconds" << endl;
+
+    for( auto const& [key, val] : speciesConfigs ) {
+        cout << "CONFIG: " << key << endl;
+        cout << val << endl;
+    }
 }
 
 bool compareSeekDBSettings(CSeekDBSetting* cc1, CSeekDBSetting* cc2) {
@@ -148,4 +126,25 @@ bool compareSeekDBSettings(CSeekDBSetting* cc1, CSeekDBSetting* cc2) {
            return true;
        }
        return false;
+}
+
+bool compareSeekSettings(SeekSettings &s1, SeekSettings &s2) {
+    if (s1.species == s2.species &&
+        s1.port == s2.port &&
+        s1.numThreads == s2.numThreads &&
+        s1.numBufferedDBs == s2.numBufferedDBs &&
+        s1.squareZ == s2.squareZ &&
+        s1.scoreCutoff == s2.scoreCutoff &&
+        s1.outputAsText == s2.outputAsText) {
+            if (s1.dbs.size() != s2.dbs.size()) {
+                return false;
+            }
+            for (int i=0; i<s1.dbs.size(); i++) {
+                if (compareSeekDBSettings(s1.dbs[i], s2.dbs[i]) == false) {
+                    return false;
+                } 
+            }
+            return true;
+        }
+    return false;
 }

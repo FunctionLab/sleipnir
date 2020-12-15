@@ -32,8 +32,10 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     {
         cerr << "readTomlConf parsing failed:\n" << err << "\n";
         return false;
+        // throw err;
     }
     // populate the settings
+    tomlGetValue<string>(tbl, "species", settings.species);
     tomlGetValue<int64_t>(tbl, "port", settings.port);
     tomlGetValue<int64_t>(tbl, "numThreads", settings.numThreads);
     tomlGetValue<int64_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
@@ -89,6 +91,35 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     }
     return true;
 }
+
+// Loop through a set of config files and create map from species name to config settings
+void getConfigs(vector<string> &configFiles, map<string, SeekSettings> &configs) {
+    for (int i=0; i<configFiles.size(); i++) {
+        SeekSettings settings;
+        parseTomlConfig(configFiles[i], settings);
+        if (!settings.species.empty()) {
+            configs[settings.species] = settings;
+        }
+    }
+}
+
+void getConfigs_old(vector<string> &configFiles, map<string, SeekSettings> &configs) {
+    for (int i=0; i<configFiles.size(); i++) {
+        // cout << "Parse config file: " << configFiles[i] << endl;
+        // we don't know the species name yet so use a placeholder
+        SeekSettings &settings = configs["placeholder"];
+        parseTomlConfig(configFiles[i], settings);
+        if (!settings.species.empty()) {
+            // remap these settings using the species name as key
+            auto node = configs.extract("placeholder");
+            node.key() = settings.species;
+            configs.insert(std::move(node));
+        }
+        configs.erase("placeholder");
+    }
+}
+
+
 
 bool legacyReadDBConfigFile(string dbConfigFile,
                             vector<CSeekDBSetting*> &cc, 

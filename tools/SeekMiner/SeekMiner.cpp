@@ -296,7 +296,7 @@ int main(int iArgs, char **aszArgs) {
         return -1;
     }
 
-    if (!csfinal->Initialize(cc,
+    if (!csfinal->InitializeFromSeekMiner(cc,
                              sArgs.search_dset_arg,
             //"/tmp/ex_query2.txt",
                              sArgs.query_arg,

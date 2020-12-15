@@ -42,6 +42,7 @@
 #include "database.h"
 #include "datapair.h"
 #include "seekweight.h"
+#include "seekhelper.h"
 
 namespace Sleipnir {
 
@@ -168,7 +169,7 @@ namespace Sleipnir {
          * the contribution of each dataset, the simulated weight is computed from the distance of a dataset's coexpression ranking to the final gene ranking.
          * \remark This function is designed to be used by SeekMiner.
          */
-        bool Initialize(
+        bool InitializeFromSeekMiner(
                 const vector<CSeekDBSetting *> &vecDBSetting,
                 const char *search_dset, const char *query,
                 const char *output_dir,
@@ -239,6 +240,8 @@ namespace Sleipnir {
                 const bool bNegativeCor = false, const bool bCheckDsetSize = false,
                 gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
 
+        bool InitializeFromSeekConfig(const SeekSettings &settings);
+
         /*!
          * \brief Initialize function
          *
@@ -260,7 +263,7 @@ namespace Sleipnir {
          * \remark Assumes that the CDatabaselets have been read, and the \c *.gvar, \c *.sinfo files have been loaded.
          * \remark Assumes that the dataset and gene mapping files have been read.
          */
-        bool Initialize(const string &output_dir, const string &query,
+        bool InitializeQuery(const string &output_dir, const string &query,
                         const string &search_dset, CSeekCentral *src, const int iClient,
                         const float query_min_required = 0, const float genome_min_required = 0,
                         const enum CSeekDataset::DistanceMeasure = CSeekDataset::Z_SCORE,

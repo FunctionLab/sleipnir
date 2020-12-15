@@ -30,6 +30,7 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "seekcentral.h"
+#include <cassert>
 
 namespace Sleipnir {
 
@@ -264,7 +265,7 @@ namespace Sleipnir {
     //assume datasets and genes have been read
     //assume m_enableNetwork is on
     //* CDatabaselet collection is shared between multiple clients (m_bSharedDB)
-    bool CSeekCentral::Initialize(
+    bool CSeekCentral::InitializeQuery(
             const string &output_dir, const string &query,
             const string &search_dset, CSeekCentral *src, const int iClient,
             const float query_min_required, const float genome_min_required,
@@ -592,6 +593,54 @@ namespace Sleipnir {
         return true;
     }
 
+    bool CSeekCentral::InitializeFromSeekConfig(const SeekSettings &settings) {
+        bool bOutputWeightComponent = true;
+        bool bSimulateWeight = true;
+        bool bSubtractAvg = false;
+        bool bNormPlatform = false;
+        bool bLogit = false;
+        bool bVariance = false;
+        bool useNibble = false;
+
+        if (settings.isNibble == false) {
+            fprintf(stderr, "Nibble integration is not supported! Please use a non-nibble CDatabase.\n");
+            return false;
+        }
+        if (settings.dbs[0]->dsetSizeFile == "NA")
+        {
+            fprintf(stderr, "Dataset size file is missing\n");
+            return false;
+        }
+        if (settings.dbs[0]->gvarDir != "NA")
+        {
+            bVariance = true;
+        }
+
+        bool res;
+        res = Initialize(settings.dbs,
+                         settings.numBufferedDBs,
+                         settings.outputAsText,
+                         bOutputWeightComponent,
+                         bSimulateWeight,
+                         CSeekDataset::CORRELATION, //to be overwritten by individual search instance's setting
+                         bVariance, //decide whether or not to load gvar
+                         bSubtractAvg,
+                         bNormPlatform, //to be overwritten by individual search instance's settings
+                         bLogit, //always false
+                         settings.scoreCutoff,
+                         0.0, //min query fraction (to be overwrriten)
+                         0.0, //min genome fraction (to be overwrriten))
+                         settings.squareZ,
+                         false,  // bRandom
+                         1,  // iNumRandom
+                         false, //negative cor (to be overwritten)
+                         true, //check dataset size (to be overwritten)
+                         NULL,  // gsl_rng
+                         useNibble,
+                         settings.numThreads);
+        return res;
+    }
+
     // In-common version of Initialize(), to be called at startup time, no per-query info.
     // load everything except query, search datasets, output directory
     // called by SeekServer at startup time
@@ -760,7 +809,7 @@ namespace Sleipnir {
     }
 
     // Version of Initialize called by SeekMiner - calls in-common intialize() and then does query-specific prep
-    bool CSeekCentral::Initialize(
+    bool CSeekCentral::InitializeFromSeekMiner(
             const vector<CSeekDBSetting *> &vecDBSetting,
             const char *search_dset, const char *query,
             const char *output_dir, const utype buffer, const bool to_output_text,

@@ -112,7 +112,7 @@ void *do_query(void *th_arg) {
 
     //fprintf(stderr, "%s\n%s\n%s\n%.2f\n", strOutputDir.c_str(), strQuery.c_str(), strSearchDatasets.c_str(), query_fraction_required);
 
-    bool r = csu->Initialize(strOutputDir, strQuery, strSearchDatasets, csfinal,
+    bool r = csu->InitializeQuery(strOutputDir, strQuery, strSearchDatasets, csfinal,
                              new_fd, query_fraction_required, genome_fraction_required, eDM, bSubtractGeneAvg,
                              bNormPlatform, bNegativeCor, bCheckDsetSize);
 

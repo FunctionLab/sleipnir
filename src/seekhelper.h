@@ -7,6 +7,7 @@ using namespace Sleipnir;
 
 struct SeekSettings {
     vector <CSeekDBSetting*> dbs;
+    string species;
     int64_t port = 9000;
     int64_t numThreads = 8; 
     int64_t numBufferedDBs = 20;
@@ -14,11 +15,23 @@ struct SeekSettings {
     bool squareZ = false;
     bool isNibble = false;
     bool outputAsText = false;
+    friend ostream& operator<<(ostream& os, const SeekSettings& settings) {
+        os << "Species: " << settings.species << endl;
+        os << "Port: " << settings.port << endl;
+        os << "NumThreads: " << settings.numThreads << endl;
+        os << "NumBufferedDBs: " << settings.numBufferedDBs << endl;
+        os << "SquareZ: " << settings.squareZ << endl;
+        for (CSeekDBSetting *db : settings.dbs) {
+            os << *db;
+        }
+        return os;
+    }
 };
 
 /*
-Toml Config Format:
+Example Toml Config Format:
 
+species = "human"
 port = 9000
 numThreads = 8
 numBufferedDBs = 20  # Number of Databaselets to store in memory
@@ -55,6 +68,10 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
 // Read database config files
 bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings);
 
+// Read in a set of config files for different species
+// map [speciesName -> Configs]
+void getConfigs(vector<string> &configFiles, map<string, SeekSettings> &configs);
+void getConfigs_old(vector<string> &configFiles, map<string, SeekSettings> &configs);
 
 // Parse config file for invocation parameters
 // New db instances are pushed onto CSeekDBSetting cc

@@ -46,7 +46,18 @@ namespace Sleipnir {
                        const string &prep, const string &db,
                        const string &gene, const string &quant,
                        const string &dset, const string &dset_size,
-                       const utype &numDB) {
+                       const utype &numDB) :
+                            dbDir(m_dbDirectory),
+                            prepDir(m_prepDirectory),
+                            platDir(m_platformDirectory),
+                            sinfoDir(m_sinfoDirectory),
+                            gvarDir(m_gvarDirectory),
+                            geneMapFile(m_geneMapFile),
+                            datasetFile(m_dsetFile),
+                            dsetSizeFile(m_dsetSizeFile),
+                            quantFile(m_quantFile),
+                            numDBs(m_numDB)
+        {
             m_gvarDirectory = gvar;
             m_sinfoDirectory = sinfo;
             m_platformDirectory = plat;
@@ -64,7 +75,18 @@ namespace Sleipnir {
                        const char *prep, const char *db,
                        const char *gene, const char *quant,
                        const char *dset, const char *dset_size,
-                       const utype &numDB) {
+                       const utype &numDB) :
+                            dbDir(m_dbDirectory),
+                            prepDir(m_prepDirectory),
+                            platDir(m_platformDirectory),
+                            sinfoDir(m_sinfoDirectory),
+                            gvarDir(m_gvarDirectory),
+                            geneMapFile(m_geneMapFile),
+                            datasetFile(m_dsetFile),
+                            dsetSizeFile(m_dsetSizeFile),
+                            quantFile(m_quantFile),
+                            numDBs(m_numDB)
+        {
             m_gvarDirectory = gvar;
             m_sinfoDirectory = sinfo;
             m_platformDirectory = plat;
@@ -77,7 +99,18 @@ namespace Sleipnir {
             m_dsetSizeFile = dset_size;
         }
 
-        CSeekDBSetting(CSeekDBSetting const *g) {
+        CSeekDBSetting(CSeekDBSetting const *g) :
+                            dbDir(m_dbDirectory),
+                            prepDir(m_prepDirectory),
+                            platDir(m_platformDirectory),
+                            sinfoDir(m_sinfoDirectory),
+                            gvarDir(m_gvarDirectory),
+                            geneMapFile(m_geneMapFile),
+                            datasetFile(m_dsetFile),
+                            dsetSizeFile(m_dsetSizeFile),
+                            quantFile(m_quantFile),
+                            numDBs(m_numDB)
+        {
             m_gvarDirectory = g->m_gvarDirectory;
             m_sinfoDirectory = g->m_sinfoDirectory;
             m_platformDirectory = g->m_platformDirectory;
@@ -119,6 +152,31 @@ namespace Sleipnir {
         utype GetNumDB() {
             return m_numDB;
         }
+
+        friend ostream& operator<<(ostream& os, const CSeekDBSetting& dbs) {
+            os << "DB:" << dbs.m_dbDirectory << endl;
+            os << "Prep:" << dbs.m_prepDirectory << endl;
+            os << "Plat:" << dbs.m_platformDirectory << endl;
+            os << "Sinfo:" << dbs.m_sinfoDirectory << endl;
+            os << "GVar:" << dbs.m_gvarDirectory << endl;
+            os << "GeneMapFile:" << dbs.m_geneMapFile << endl;
+            os << "DatasetsFile:" << dbs.m_dsetFile << endl;
+            os << "DatasetSizes:" << dbs.m_dsetSizeFile << endl;
+            os << "QuantFile:" << dbs.m_quantFile << endl;
+            os << "NumDBFiles:" << dbs.m_numDB << endl;
+            return os;
+        }
+
+        const string &dbDir;
+        const string &prepDir;
+        const string &platDir;
+        const string &sinfoDir;
+        const string &gvarDir;
+        const string &geneMapFile;
+        const string &datasetFile;
+        const string &dsetSizeFile;
+        const string &quantFile;
+        const utype &numDBs;
 
     private:
         string m_gvarDirectory;
