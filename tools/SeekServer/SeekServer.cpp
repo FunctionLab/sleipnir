@@ -449,7 +449,7 @@ int main(int iArgs, char **aszArgs) {
         string strSearchDataset;
         string strQuery;
         string strOutputDir;
-        string strGuideGeneSet;
+        string strGuideGeneSet = "null";
 
         //search parameters
         string strSearchParameter;

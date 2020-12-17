@@ -1355,7 +1355,7 @@ namespace Sleipnir {
 
             //Display(query, final);
             //fprintf(stderr, "4 %lu\n", CMeta::GetMemoryUsage());
-            SetQueryScoreNull(query);
+            // SetQueryScoreNull(query);  // commented out 6/2016 by qzhu
             Sort(final);
             int ret; //for system calls
 
