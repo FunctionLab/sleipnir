@@ -31,8 +31,8 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     catch (const toml::parse_error& err)
     {
         cerr << "readTomlConf parsing failed:\n" << err << "\n";
-        return false;
-        // throw err;
+        // return false;
+        throw err;
     }
     // populate the settings
     tomlGetValue<string>(tbl, "species", settings.species);

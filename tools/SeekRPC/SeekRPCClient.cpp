@@ -25,16 +25,33 @@ int main(int argc, char **argv)
     seekClient.ping();
 
     SeekQuery query;
-    query.genes.push_back("gene1");
-    query.datasets.push_back("dataset1");
-    query.outputDir = "/tmp";
-    query.parameters.distance_measure = "z-score";
+    // QueryParams params;
+    // query.parameters.search_method = "CV";
+    // query.parameters.__set_distance_measure("z-score");
+    // query.parameters.min_genome_fraction = 0.2;
+    // query.parameters.useNegativeCorrelation = true;
+    // query.genes.push_back("gene1");
+    // query.datasets.push_back("dataset1");
+    // query.outputDir = "/tmp";
+    // query.parameters = params;
+    // query.__set_parameters(params);
+    // query.parameters.distance_measure = "z-score";
+
+    query.species = "mock";
+    query.genes.push_back("90634");
+    query.genes.push_back("23659");
 
     QueryResult result;
     seekClient.seek_query(result, query);
 
     for (auto gene: result.genes)
       cout << gene << endl;
+    
+    for (auto score: result.gene_scores)
+      cout << score << endl;
+
+    for (auto dset: result.datasets)
+      cout << dset << endl;
 
   } catch (TException& tx) {
     cout << "ERROR: " << tx.what() << endl;

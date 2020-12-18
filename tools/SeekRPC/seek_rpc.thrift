@@ -1,28 +1,32 @@
 namespace cpp SeekRPC
 
+
 struct QueryParams {
-    1: required string search_method;
-    2: optional string distance_measure;
-    3: optional double min_query_genes_fraction;
-    4: optional double min_genome_fraction;
-    5: optional string correlation_sign;
-    6: optional double rpb_param;
+    1: optional string search_method = "CV";
+    2: optional string distance_measure = "Zscore";
+    3: optional double min_query_genes_fraction = 0.0;
+    4: optional double min_genome_fraction = 0.0;
+    5: optional double rbp_param = 0.99;
+    6: optional bool useNegativeCorrelation = false;
+    7: optional bool check_dataset_size = false;
 }
 
 struct SeekQuery {
-    1: required string species;
+    1: required string species = "Unknown";
     2: required list<string> genes;
-    3: required list<string> datasets;
-    4: required string outputDir;
-    5: optional QueryParams parameters;
-    6: optional list<string> guideGenes;
+    3: optional list<string> datasets;
+    4: optional QueryParams parameters;
+    5: optional list<string> guideGenes;
+    6: optional string outputDir = "/tmp/seek";
 }
 
 struct QueryResult {
-    1: required list<string> genes;
-    2: required list<double> gene_scores;
-    3: required list<string> datasets;
-    4: required list<double> dataset_weights;
+    1: required bool success;
+    2: required list<string> genes;
+    3: optional list<double> gene_scores;
+    4: optional list<string> datasets;
+    5: optional list<double> dataset_weights;
+    6: optional string statusMsg;
     // string dataset_availability;  /* these will come through status channel instead */
     // string query_availability;    /* these will come through status channel instead */
 }

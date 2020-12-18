@@ -20,6 +20,7 @@ QueryParams::~QueryParams() noexcept {
 
 void QueryParams::__set_search_method(const std::string& val) {
   this->search_method = val;
+__isset.search_method = true;
 }
 
 void QueryParams::__set_distance_measure(const std::string& val) {
@@ -37,14 +38,19 @@ void QueryParams::__set_min_genome_fraction(const double val) {
 __isset.min_genome_fraction = true;
 }
 
-void QueryParams::__set_correlation_sign(const std::string& val) {
-  this->correlation_sign = val;
-__isset.correlation_sign = true;
+void QueryParams::__set_rbp_param(const double val) {
+  this->rbp_param = val;
+__isset.rbp_param = true;
 }
 
-void QueryParams::__set_rpb_param(const double val) {
-  this->rpb_param = val;
-__isset.rpb_param = true;
+void QueryParams::__set_useNegativeCorrelation(const bool val) {
+  this->useNegativeCorrelation = val;
+__isset.useNegativeCorrelation = true;
+}
+
+void QueryParams::__set_check_dataset_size(const bool val) {
+  this->check_dataset_size = val;
+__isset.check_dataset_size = true;
 }
 std::ostream& operator<<(std::ostream& out, const QueryParams& obj)
 {
@@ -65,7 +71,6 @@ uint32_t QueryParams::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   using ::apache::thrift::protocol::TProtocolException;
 
-  bool isset_search_method = false;
 
   while (true)
   {
@@ -78,7 +83,7 @@ uint32_t QueryParams::read(::apache::thrift::protocol::TProtocol* iprot) {
       case 1:
         if (ftype == ::apache::thrift::protocol::T_STRING) {
           xfer += iprot->readString(this->search_method);
-          isset_search_method = true;
+          this->__isset.search_method = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -108,17 +113,25 @@ uint32_t QueryParams::read(::apache::thrift::protocol::TProtocol* iprot) {
         }
         break;
       case 5:
-        if (ftype == ::apache::thrift::protocol::T_STRING) {
-          xfer += iprot->readString(this->correlation_sign);
-          this->__isset.correlation_sign = true;
+        if (ftype == ::apache::thrift::protocol::T_DOUBLE) {
+          xfer += iprot->readDouble(this->rbp_param);
+          this->__isset.rbp_param = true;
         } else {
           xfer += iprot->skip(ftype);
         }
         break;
       case 6:
-        if (ftype == ::apache::thrift::protocol::T_DOUBLE) {
-          xfer += iprot->readDouble(this->rpb_param);
-          this->__isset.rpb_param = true;
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->useNegativeCorrelation);
+          this->__isset.useNegativeCorrelation = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 7:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->check_dataset_size);
+          this->__isset.check_dataset_size = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -132,8 +145,6 @@ uint32_t QueryParams::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   xfer += iprot->readStructEnd();
 
-  if (!isset_search_method)
-    throw TProtocolException(TProtocolException::INVALID_DATA);
   return xfer;
 }
 
@@ -142,10 +153,11 @@ uint32_t QueryParams::write(::apache::thrift::protocol::TProtocol* oprot) const 
   ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
   xfer += oprot->writeStructBegin("QueryParams");
 
-  xfer += oprot->writeFieldBegin("search_method", ::apache::thrift::protocol::T_STRING, 1);
-  xfer += oprot->writeString(this->search_method);
-  xfer += oprot->writeFieldEnd();
-
+  if (this->__isset.search_method) {
+    xfer += oprot->writeFieldBegin("search_method", ::apache::thrift::protocol::T_STRING, 1);
+    xfer += oprot->writeString(this->search_method);
+    xfer += oprot->writeFieldEnd();
+  }
   if (this->__isset.distance_measure) {
     xfer += oprot->writeFieldBegin("distance_measure", ::apache::thrift::protocol::T_STRING, 2);
     xfer += oprot->writeString(this->distance_measure);
@@ -161,14 +173,19 @@ uint32_t QueryParams::write(::apache::thrift::protocol::TProtocol* oprot) const 
     xfer += oprot->writeDouble(this->min_genome_fraction);
     xfer += oprot->writeFieldEnd();
   }
-  if (this->__isset.correlation_sign) {
-    xfer += oprot->writeFieldBegin("correlation_sign", ::apache::thrift::protocol::T_STRING, 5);
-    xfer += oprot->writeString(this->correlation_sign);
+  if (this->__isset.rbp_param) {
+    xfer += oprot->writeFieldBegin("rbp_param", ::apache::thrift::protocol::T_DOUBLE, 5);
+    xfer += oprot->writeDouble(this->rbp_param);
     xfer += oprot->writeFieldEnd();
   }
-  if (this->__isset.rpb_param) {
-    xfer += oprot->writeFieldBegin("rpb_param", ::apache::thrift::protocol::T_DOUBLE, 6);
-    xfer += oprot->writeDouble(this->rpb_param);
+  if (this->__isset.useNegativeCorrelation) {
+    xfer += oprot->writeFieldBegin("useNegativeCorrelation", ::apache::thrift::protocol::T_BOOL, 6);
+    xfer += oprot->writeBool(this->useNegativeCorrelation);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.check_dataset_size) {
+    xfer += oprot->writeFieldBegin("check_dataset_size", ::apache::thrift::protocol::T_BOOL, 7);
+    xfer += oprot->writeBool(this->check_dataset_size);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -182,8 +199,9 @@ void swap(QueryParams &a, QueryParams &b) {
   swap(a.distance_measure, b.distance_measure);
   swap(a.min_query_genes_fraction, b.min_query_genes_fraction);
   swap(a.min_genome_fraction, b.min_genome_fraction);
-  swap(a.correlation_sign, b.correlation_sign);
-  swap(a.rpb_param, b.rpb_param);
+  swap(a.rbp_param, b.rbp_param);
+  swap(a.useNegativeCorrelation, b.useNegativeCorrelation);
+  swap(a.check_dataset_size, b.check_dataset_size);
   swap(a.__isset, b.__isset);
 }
 
@@ -192,8 +210,9 @@ QueryParams::QueryParams(const QueryParams& other0) {
   distance_measure = other0.distance_measure;
   min_query_genes_fraction = other0.min_query_genes_fraction;
   min_genome_fraction = other0.min_genome_fraction;
-  correlation_sign = other0.correlation_sign;
-  rpb_param = other0.rpb_param;
+  rbp_param = other0.rbp_param;
+  useNegativeCorrelation = other0.useNegativeCorrelation;
+  check_dataset_size = other0.check_dataset_size;
   __isset = other0.__isset;
 }
 QueryParams& QueryParams::operator=(const QueryParams& other1) {
@@ -201,20 +220,22 @@ QueryParams& QueryParams::operator=(const QueryParams& other1) {
   distance_measure = other1.distance_measure;
   min_query_genes_fraction = other1.min_query_genes_fraction;
   min_genome_fraction = other1.min_genome_fraction;
-  correlation_sign = other1.correlation_sign;
-  rpb_param = other1.rpb_param;
+  rbp_param = other1.rbp_param;
+  useNegativeCorrelation = other1.useNegativeCorrelation;
+  check_dataset_size = other1.check_dataset_size;
   __isset = other1.__isset;
   return *this;
 }
 void QueryParams::printTo(std::ostream& out) const {
   using ::apache::thrift::to_string;
   out << "QueryParams(";
-  out << "search_method=" << to_string(search_method);
+  out << "search_method="; (__isset.search_method ? (out << to_string(search_method)) : (out << "<null>"));
   out << ", " << "distance_measure="; (__isset.distance_measure ? (out << to_string(distance_measure)) : (out << "<null>"));
   out << ", " << "min_query_genes_fraction="; (__isset.min_query_genes_fraction ? (out << to_string(min_query_genes_fraction)) : (out << "<null>"));
   out << ", " << "min_genome_fraction="; (__isset.min_genome_fraction ? (out << to_string(min_genome_fraction)) : (out << "<null>"));
-  out << ", " << "correlation_sign="; (__isset.correlation_sign ? (out << to_string(correlation_sign)) : (out << "<null>"));
-  out << ", " << "rpb_param="; (__isset.rpb_param ? (out << to_string(rpb_param)) : (out << "<null>"));
+  out << ", " << "rbp_param="; (__isset.rbp_param ? (out << to_string(rbp_param)) : (out << "<null>"));
+  out << ", " << "useNegativeCorrelation="; (__isset.useNegativeCorrelation ? (out << to_string(useNegativeCorrelation)) : (out << "<null>"));
+  out << ", " << "check_dataset_size="; (__isset.check_dataset_size ? (out << to_string(check_dataset_size)) : (out << "<null>"));
   out << ")";
 }
 
@@ -233,10 +254,7 @@ void SeekQuery::__set_genes(const std::vector<std::string> & val) {
 
 void SeekQuery::__set_datasets(const std::vector<std::string> & val) {
   this->datasets = val;
-}
-
-void SeekQuery::__set_outputDir(const std::string& val) {
-  this->outputDir = val;
+__isset.datasets = true;
 }
 
 void SeekQuery::__set_parameters(const QueryParams& val) {
@@ -247,6 +265,11 @@ __isset.parameters = true;
 void SeekQuery::__set_guideGenes(const std::vector<std::string> & val) {
   this->guideGenes = val;
 __isset.guideGenes = true;
+}
+
+void SeekQuery::__set_outputDir(const std::string& val) {
+  this->outputDir = val;
+__isset.outputDir = true;
 }
 std::ostream& operator<<(std::ostream& out, const SeekQuery& obj)
 {
@@ -269,8 +292,6 @@ uint32_t SeekQuery::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   bool isset_species = false;
   bool isset_genes = false;
-  bool isset_datasets = false;
-  bool isset_outputDir = false;
 
   while (true)
   {
@@ -323,20 +344,12 @@ uint32_t SeekQuery::read(::apache::thrift::protocol::TProtocol* iprot) {
             }
             xfer += iprot->readListEnd();
           }
-          isset_datasets = true;
+          this->__isset.datasets = true;
         } else {
           xfer += iprot->skip(ftype);
         }
         break;
       case 4:
-        if (ftype == ::apache::thrift::protocol::T_STRING) {
-          xfer += iprot->readString(this->outputDir);
-          isset_outputDir = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 5:
         if (ftype == ::apache::thrift::protocol::T_STRUCT) {
           xfer += this->parameters.read(iprot);
           this->__isset.parameters = true;
@@ -344,7 +357,7 @@ uint32_t SeekQuery::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 6:
+      case 5:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->guideGenes.clear();
@@ -364,6 +377,14 @@ uint32_t SeekQuery::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
+      case 6:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->outputDir);
+          this->__isset.outputDir = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -376,10 +397,6 @@ uint32_t SeekQuery::read(::apache::thrift::protocol::TProtocol* iprot) {
   if (!isset_species)
     throw TProtocolException(TProtocolException::INVALID_DATA);
   if (!isset_genes)
-    throw TProtocolException(TProtocolException::INVALID_DATA);
-  if (!isset_datasets)
-    throw TProtocolException(TProtocolException::INVALID_DATA);
-  if (!isset_outputDir)
     throw TProtocolException(TProtocolException::INVALID_DATA);
   return xfer;
 }
@@ -405,29 +422,26 @@ uint32_t SeekQuery::write(::apache::thrift::protocol::TProtocol* oprot) const {
   }
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("datasets", ::apache::thrift::protocol::T_LIST, 3);
-  {
-    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->datasets.size()));
-    std::vector<std::string> ::const_iterator _iter18;
-    for (_iter18 = this->datasets.begin(); _iter18 != this->datasets.end(); ++_iter18)
+  if (this->__isset.datasets) {
+    xfer += oprot->writeFieldBegin("datasets", ::apache::thrift::protocol::T_LIST, 3);
     {
-      xfer += oprot->writeString((*_iter18));
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->datasets.size()));
+      std::vector<std::string> ::const_iterator _iter18;
+      for (_iter18 = this->datasets.begin(); _iter18 != this->datasets.end(); ++_iter18)
+      {
+        xfer += oprot->writeString((*_iter18));
+      }
+      xfer += oprot->writeListEnd();
     }
-    xfer += oprot->writeListEnd();
+    xfer += oprot->writeFieldEnd();
   }
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("outputDir", ::apache::thrift::protocol::T_STRING, 4);
-  xfer += oprot->writeString(this->outputDir);
-  xfer += oprot->writeFieldEnd();
-
   if (this->__isset.parameters) {
-    xfer += oprot->writeFieldBegin("parameters", ::apache::thrift::protocol::T_STRUCT, 5);
+    xfer += oprot->writeFieldBegin("parameters", ::apache::thrift::protocol::T_STRUCT, 4);
     xfer += this->parameters.write(oprot);
     xfer += oprot->writeFieldEnd();
   }
   if (this->__isset.guideGenes) {
-    xfer += oprot->writeFieldBegin("guideGenes", ::apache::thrift::protocol::T_LIST, 6);
+    xfer += oprot->writeFieldBegin("guideGenes", ::apache::thrift::protocol::T_LIST, 5);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->guideGenes.size()));
       std::vector<std::string> ::const_iterator _iter19;
@@ -437,6 +451,11 @@ uint32_t SeekQuery::write(::apache::thrift::protocol::TProtocol* oprot) const {
       }
       xfer += oprot->writeListEnd();
     }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.outputDir) {
+    xfer += oprot->writeFieldBegin("outputDir", ::apache::thrift::protocol::T_STRING, 6);
+    xfer += oprot->writeString(this->outputDir);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -449,9 +468,9 @@ void swap(SeekQuery &a, SeekQuery &b) {
   swap(a.species, b.species);
   swap(a.genes, b.genes);
   swap(a.datasets, b.datasets);
-  swap(a.outputDir, b.outputDir);
   swap(a.parameters, b.parameters);
   swap(a.guideGenes, b.guideGenes);
+  swap(a.outputDir, b.outputDir);
   swap(a.__isset, b.__isset);
 }
 
@@ -459,18 +478,18 @@ SeekQuery::SeekQuery(const SeekQuery& other20) {
   species = other20.species;
   genes = other20.genes;
   datasets = other20.datasets;
-  outputDir = other20.outputDir;
   parameters = other20.parameters;
   guideGenes = other20.guideGenes;
+  outputDir = other20.outputDir;
   __isset = other20.__isset;
 }
 SeekQuery& SeekQuery::operator=(const SeekQuery& other21) {
   species = other21.species;
   genes = other21.genes;
   datasets = other21.datasets;
-  outputDir = other21.outputDir;
   parameters = other21.parameters;
   guideGenes = other21.guideGenes;
+  outputDir = other21.outputDir;
   __isset = other21.__isset;
   return *this;
 }
@@ -479,10 +498,10 @@ void SeekQuery::printTo(std::ostream& out) const {
   out << "SeekQuery(";
   out << "species=" << to_string(species);
   out << ", " << "genes=" << to_string(genes);
-  out << ", " << "datasets=" << to_string(datasets);
-  out << ", " << "outputDir=" << to_string(outputDir);
+  out << ", " << "datasets="; (__isset.datasets ? (out << to_string(datasets)) : (out << "<null>"));
   out << ", " << "parameters="; (__isset.parameters ? (out << to_string(parameters)) : (out << "<null>"));
   out << ", " << "guideGenes="; (__isset.guideGenes ? (out << to_string(guideGenes)) : (out << "<null>"));
+  out << ", " << "outputDir="; (__isset.outputDir ? (out << to_string(outputDir)) : (out << "<null>"));
   out << ")";
 }
 
@@ -491,20 +510,32 @@ QueryResult::~QueryResult() noexcept {
 }
 
 
+void QueryResult::__set_success(const bool val) {
+  this->success = val;
+}
+
 void QueryResult::__set_genes(const std::vector<std::string> & val) {
   this->genes = val;
 }
 
 void QueryResult::__set_gene_scores(const std::vector<double> & val) {
   this->gene_scores = val;
+__isset.gene_scores = true;
 }
 
 void QueryResult::__set_datasets(const std::vector<std::string> & val) {
   this->datasets = val;
+__isset.datasets = true;
 }
 
 void QueryResult::__set_dataset_weights(const std::vector<double> & val) {
   this->dataset_weights = val;
+__isset.dataset_weights = true;
+}
+
+void QueryResult::__set_statusMsg(const std::string& val) {
+  this->statusMsg = val;
+__isset.statusMsg = true;
 }
 std::ostream& operator<<(std::ostream& out, const QueryResult& obj)
 {
@@ -525,10 +556,8 @@ uint32_t QueryResult::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   using ::apache::thrift::protocol::TProtocolException;
 
+  bool isset_success = false;
   bool isset_genes = false;
-  bool isset_gene_scores = false;
-  bool isset_datasets = false;
-  bool isset_dataset_weights = false;
 
   while (true)
   {
@@ -539,6 +568,14 @@ uint32_t QueryResult::read(::apache::thrift::protocol::TProtocol* iprot) {
     switch (fid)
     {
       case 1:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->success);
+          isset_success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->genes.clear();
@@ -558,7 +595,7 @@ uint32_t QueryResult::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 2:
+      case 3:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->gene_scores.clear();
@@ -573,12 +610,12 @@ uint32_t QueryResult::read(::apache::thrift::protocol::TProtocol* iprot) {
             }
             xfer += iprot->readListEnd();
           }
-          isset_gene_scores = true;
+          this->__isset.gene_scores = true;
         } else {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 3:
+      case 4:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->datasets.clear();
@@ -593,12 +630,12 @@ uint32_t QueryResult::read(::apache::thrift::protocol::TProtocol* iprot) {
             }
             xfer += iprot->readListEnd();
           }
-          isset_datasets = true;
+          this->__isset.datasets = true;
         } else {
           xfer += iprot->skip(ftype);
         }
         break;
-      case 4:
+      case 5:
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->dataset_weights.clear();
@@ -613,7 +650,15 @@ uint32_t QueryResult::read(::apache::thrift::protocol::TProtocol* iprot) {
             }
             xfer += iprot->readListEnd();
           }
-          isset_dataset_weights = true;
+          this->__isset.dataset_weights = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 6:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->statusMsg);
+          this->__isset.statusMsg = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -627,13 +672,9 @@ uint32_t QueryResult::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   xfer += iprot->readStructEnd();
 
+  if (!isset_success)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
   if (!isset_genes)
-    throw TProtocolException(TProtocolException::INVALID_DATA);
-  if (!isset_gene_scores)
-    throw TProtocolException(TProtocolException::INVALID_DATA);
-  if (!isset_datasets)
-    throw TProtocolException(TProtocolException::INVALID_DATA);
-  if (!isset_dataset_weights)
     throw TProtocolException(TProtocolException::INVALID_DATA);
   return xfer;
 }
@@ -643,7 +684,11 @@ uint32_t QueryResult::write(::apache::thrift::protocol::TProtocol* oprot) const 
   ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
   xfer += oprot->writeStructBegin("QueryResult");
 
-  xfer += oprot->writeFieldBegin("genes", ::apache::thrift::protocol::T_LIST, 1);
+  xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_BOOL, 1);
+  xfer += oprot->writeBool(this->success);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("genes", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->genes.size()));
     std::vector<std::string> ::const_iterator _iter42;
@@ -655,42 +700,50 @@ uint32_t QueryResult::write(::apache::thrift::protocol::TProtocol* oprot) const 
   }
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("gene_scores", ::apache::thrift::protocol::T_LIST, 2);
-  {
-    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->gene_scores.size()));
-    std::vector<double> ::const_iterator _iter43;
-    for (_iter43 = this->gene_scores.begin(); _iter43 != this->gene_scores.end(); ++_iter43)
+  if (this->__isset.gene_scores) {
+    xfer += oprot->writeFieldBegin("gene_scores", ::apache::thrift::protocol::T_LIST, 3);
     {
-      xfer += oprot->writeDouble((*_iter43));
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->gene_scores.size()));
+      std::vector<double> ::const_iterator _iter43;
+      for (_iter43 = this->gene_scores.begin(); _iter43 != this->gene_scores.end(); ++_iter43)
+      {
+        xfer += oprot->writeDouble((*_iter43));
+      }
+      xfer += oprot->writeListEnd();
     }
-    xfer += oprot->writeListEnd();
+    xfer += oprot->writeFieldEnd();
   }
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("datasets", ::apache::thrift::protocol::T_LIST, 3);
-  {
-    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->datasets.size()));
-    std::vector<std::string> ::const_iterator _iter44;
-    for (_iter44 = this->datasets.begin(); _iter44 != this->datasets.end(); ++_iter44)
+  if (this->__isset.datasets) {
+    xfer += oprot->writeFieldBegin("datasets", ::apache::thrift::protocol::T_LIST, 4);
     {
-      xfer += oprot->writeString((*_iter44));
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->datasets.size()));
+      std::vector<std::string> ::const_iterator _iter44;
+      for (_iter44 = this->datasets.begin(); _iter44 != this->datasets.end(); ++_iter44)
+      {
+        xfer += oprot->writeString((*_iter44));
+      }
+      xfer += oprot->writeListEnd();
     }
-    xfer += oprot->writeListEnd();
+    xfer += oprot->writeFieldEnd();
   }
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("dataset_weights", ::apache::thrift::protocol::T_LIST, 4);
-  {
-    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->dataset_weights.size()));
-    std::vector<double> ::const_iterator _iter45;
-    for (_iter45 = this->dataset_weights.begin(); _iter45 != this->dataset_weights.end(); ++_iter45)
+  if (this->__isset.dataset_weights) {
+    xfer += oprot->writeFieldBegin("dataset_weights", ::apache::thrift::protocol::T_LIST, 5);
     {
-      xfer += oprot->writeDouble((*_iter45));
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->dataset_weights.size()));
+      std::vector<double> ::const_iterator _iter45;
+      for (_iter45 = this->dataset_weights.begin(); _iter45 != this->dataset_weights.end(); ++_iter45)
+      {
+        xfer += oprot->writeDouble((*_iter45));
+      }
+      xfer += oprot->writeListEnd();
     }
-    xfer += oprot->writeListEnd();
+    xfer += oprot->writeFieldEnd();
   }
-  xfer += oprot->writeFieldEnd();
-
+  if (this->__isset.statusMsg) {
+    xfer += oprot->writeFieldBegin("statusMsg", ::apache::thrift::protocol::T_STRING, 6);
+    xfer += oprot->writeString(this->statusMsg);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -698,32 +751,43 @@ uint32_t QueryResult::write(::apache::thrift::protocol::TProtocol* oprot) const 
 
 void swap(QueryResult &a, QueryResult &b) {
   using ::std::swap;
+  swap(a.success, b.success);
   swap(a.genes, b.genes);
   swap(a.gene_scores, b.gene_scores);
   swap(a.datasets, b.datasets);
   swap(a.dataset_weights, b.dataset_weights);
+  swap(a.statusMsg, b.statusMsg);
+  swap(a.__isset, b.__isset);
 }
 
 QueryResult::QueryResult(const QueryResult& other46) {
+  success = other46.success;
   genes = other46.genes;
   gene_scores = other46.gene_scores;
   datasets = other46.datasets;
   dataset_weights = other46.dataset_weights;
+  statusMsg = other46.statusMsg;
+  __isset = other46.__isset;
 }
 QueryResult& QueryResult::operator=(const QueryResult& other47) {
+  success = other47.success;
   genes = other47.genes;
   gene_scores = other47.gene_scores;
   datasets = other47.datasets;
   dataset_weights = other47.dataset_weights;
+  statusMsg = other47.statusMsg;
+  __isset = other47.__isset;
   return *this;
 }
 void QueryResult::printTo(std::ostream& out) const {
   using ::apache::thrift::to_string;
   out << "QueryResult(";
-  out << "genes=" << to_string(genes);
-  out << ", " << "gene_scores=" << to_string(gene_scores);
-  out << ", " << "datasets=" << to_string(datasets);
-  out << ", " << "dataset_weights=" << to_string(dataset_weights);
+  out << "success=" << to_string(success);
+  out << ", " << "genes=" << to_string(genes);
+  out << ", " << "gene_scores="; (__isset.gene_scores ? (out << to_string(gene_scores)) : (out << "<null>"));
+  out << ", " << "datasets="; (__isset.datasets ? (out << to_string(datasets)) : (out << "<null>"));
+  out << ", " << "dataset_weights="; (__isset.dataset_weights ? (out << to_string(dataset_weights)) : (out << "<null>"));
+  out << ", " << "statusMsg="; (__isset.statusMsg ? (out << to_string(statusMsg)) : (out << "<null>"));
   out << ")";
 }
 

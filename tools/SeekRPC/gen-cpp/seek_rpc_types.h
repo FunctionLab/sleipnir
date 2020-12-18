@@ -28,12 +28,14 @@ class SeekQuery;
 class QueryResult;
 
 typedef struct _QueryParams__isset {
-  _QueryParams__isset() : distance_measure(false), min_query_genes_fraction(false), min_genome_fraction(false), correlation_sign(false), rpb_param(false) {}
+  _QueryParams__isset() : search_method(true), distance_measure(true), min_query_genes_fraction(true), min_genome_fraction(true), rbp_param(true), useNegativeCorrelation(true), check_dataset_size(true) {}
+  bool search_method :1;
   bool distance_measure :1;
   bool min_query_genes_fraction :1;
   bool min_genome_fraction :1;
-  bool correlation_sign :1;
-  bool rpb_param :1;
+  bool rbp_param :1;
+  bool useNegativeCorrelation :1;
+  bool check_dataset_size :1;
 } _QueryParams__isset;
 
 class QueryParams : public virtual ::apache::thrift::TBase {
@@ -41,7 +43,7 @@ class QueryParams : public virtual ::apache::thrift::TBase {
 
   QueryParams(const QueryParams&);
   QueryParams& operator=(const QueryParams&);
-  QueryParams() : search_method(), distance_measure(), min_query_genes_fraction(0), min_genome_fraction(0), correlation_sign(), rpb_param(0) {
+  QueryParams() : search_method("CV"), distance_measure("Zscore"), min_query_genes_fraction(0.0000000000000000), min_genome_fraction(0.0000000000000000), rbp_param(0.9900000000000000), useNegativeCorrelation(false), check_dataset_size(false) {
   }
 
   virtual ~QueryParams() noexcept;
@@ -49,8 +51,9 @@ class QueryParams : public virtual ::apache::thrift::TBase {
   std::string distance_measure;
   double min_query_genes_fraction;
   double min_genome_fraction;
-  std::string correlation_sign;
-  double rpb_param;
+  double rbp_param;
+  bool useNegativeCorrelation;
+  bool check_dataset_size;
 
   _QueryParams__isset __isset;
 
@@ -62,13 +65,17 @@ class QueryParams : public virtual ::apache::thrift::TBase {
 
   void __set_min_genome_fraction(const double val);
 
-  void __set_correlation_sign(const std::string& val);
+  void __set_rbp_param(const double val);
 
-  void __set_rpb_param(const double val);
+  void __set_useNegativeCorrelation(const bool val);
+
+  void __set_check_dataset_size(const bool val);
 
   bool operator == (const QueryParams & rhs) const
   {
-    if (!(search_method == rhs.search_method))
+    if (__isset.search_method != rhs.__isset.search_method)
+      return false;
+    else if (__isset.search_method && !(search_method == rhs.search_method))
       return false;
     if (__isset.distance_measure != rhs.__isset.distance_measure)
       return false;
@@ -82,13 +89,17 @@ class QueryParams : public virtual ::apache::thrift::TBase {
       return false;
     else if (__isset.min_genome_fraction && !(min_genome_fraction == rhs.min_genome_fraction))
       return false;
-    if (__isset.correlation_sign != rhs.__isset.correlation_sign)
+    if (__isset.rbp_param != rhs.__isset.rbp_param)
       return false;
-    else if (__isset.correlation_sign && !(correlation_sign == rhs.correlation_sign))
+    else if (__isset.rbp_param && !(rbp_param == rhs.rbp_param))
       return false;
-    if (__isset.rpb_param != rhs.__isset.rpb_param)
+    if (__isset.useNegativeCorrelation != rhs.__isset.useNegativeCorrelation)
       return false;
-    else if (__isset.rpb_param && !(rpb_param == rhs.rpb_param))
+    else if (__isset.useNegativeCorrelation && !(useNegativeCorrelation == rhs.useNegativeCorrelation))
+      return false;
+    if (__isset.check_dataset_size != rhs.__isset.check_dataset_size)
+      return false;
+    else if (__isset.check_dataset_size && !(check_dataset_size == rhs.check_dataset_size))
       return false;
     return true;
   }
@@ -109,9 +120,11 @@ void swap(QueryParams &a, QueryParams &b);
 std::ostream& operator<<(std::ostream& out, const QueryParams& obj);
 
 typedef struct _SeekQuery__isset {
-  _SeekQuery__isset() : parameters(false), guideGenes(false) {}
+  _SeekQuery__isset() : datasets(false), parameters(false), guideGenes(false), outputDir(true) {}
+  bool datasets :1;
   bool parameters :1;
   bool guideGenes :1;
+  bool outputDir :1;
 } _SeekQuery__isset;
 
 class SeekQuery : public virtual ::apache::thrift::TBase {
@@ -119,16 +132,16 @@ class SeekQuery : public virtual ::apache::thrift::TBase {
 
   SeekQuery(const SeekQuery&);
   SeekQuery& operator=(const SeekQuery&);
-  SeekQuery() : species(), outputDir() {
+  SeekQuery() : species("Unknown"), outputDir("/tmp/seek") {
   }
 
   virtual ~SeekQuery() noexcept;
   std::string species;
   std::vector<std::string>  genes;
   std::vector<std::string>  datasets;
-  std::string outputDir;
   QueryParams parameters;
   std::vector<std::string>  guideGenes;
+  std::string outputDir;
 
   _SeekQuery__isset __isset;
 
@@ -138,11 +151,11 @@ class SeekQuery : public virtual ::apache::thrift::TBase {
 
   void __set_datasets(const std::vector<std::string> & val);
 
-  void __set_outputDir(const std::string& val);
-
   void __set_parameters(const QueryParams& val);
 
   void __set_guideGenes(const std::vector<std::string> & val);
+
+  void __set_outputDir(const std::string& val);
 
   bool operator == (const SeekQuery & rhs) const
   {
@@ -150,9 +163,9 @@ class SeekQuery : public virtual ::apache::thrift::TBase {
       return false;
     if (!(genes == rhs.genes))
       return false;
-    if (!(datasets == rhs.datasets))
+    if (__isset.datasets != rhs.__isset.datasets)
       return false;
-    if (!(outputDir == rhs.outputDir))
+    else if (__isset.datasets && !(datasets == rhs.datasets))
       return false;
     if (__isset.parameters != rhs.__isset.parameters)
       return false;
@@ -161,6 +174,10 @@ class SeekQuery : public virtual ::apache::thrift::TBase {
     if (__isset.guideGenes != rhs.__isset.guideGenes)
       return false;
     else if (__isset.guideGenes && !(guideGenes == rhs.guideGenes))
+      return false;
+    if (__isset.outputDir != rhs.__isset.outputDir)
+      return false;
+    else if (__isset.outputDir && !(outputDir == rhs.outputDir))
       return false;
     return true;
   }
@@ -180,20 +197,33 @@ void swap(SeekQuery &a, SeekQuery &b);
 
 std::ostream& operator<<(std::ostream& out, const SeekQuery& obj);
 
+typedef struct _QueryResult__isset {
+  _QueryResult__isset() : gene_scores(false), datasets(false), dataset_weights(false), statusMsg(false) {}
+  bool gene_scores :1;
+  bool datasets :1;
+  bool dataset_weights :1;
+  bool statusMsg :1;
+} _QueryResult__isset;
 
 class QueryResult : public virtual ::apache::thrift::TBase {
  public:
 
   QueryResult(const QueryResult&);
   QueryResult& operator=(const QueryResult&);
-  QueryResult() {
+  QueryResult() : success(0), statusMsg() {
   }
 
   virtual ~QueryResult() noexcept;
+  bool success;
   std::vector<std::string>  genes;
   std::vector<double>  gene_scores;
   std::vector<std::string>  datasets;
   std::vector<double>  dataset_weights;
+  std::string statusMsg;
+
+  _QueryResult__isset __isset;
+
+  void __set_success(const bool val);
 
   void __set_genes(const std::vector<std::string> & val);
 
@@ -203,15 +233,29 @@ class QueryResult : public virtual ::apache::thrift::TBase {
 
   void __set_dataset_weights(const std::vector<double> & val);
 
+  void __set_statusMsg(const std::string& val);
+
   bool operator == (const QueryResult & rhs) const
   {
+    if (!(success == rhs.success))
+      return false;
     if (!(genes == rhs.genes))
       return false;
-    if (!(gene_scores == rhs.gene_scores))
+    if (__isset.gene_scores != rhs.__isset.gene_scores)
       return false;
-    if (!(datasets == rhs.datasets))
+    else if (__isset.gene_scores && !(gene_scores == rhs.gene_scores))
       return false;
-    if (!(dataset_weights == rhs.dataset_weights))
+    if (__isset.datasets != rhs.__isset.datasets)
+      return false;
+    else if (__isset.datasets && !(datasets == rhs.datasets))
+      return false;
+    if (__isset.dataset_weights != rhs.__isset.dataset_weights)
+      return false;
+    else if (__isset.dataset_weights && !(dataset_weights == rhs.dataset_weights))
+      return false;
+    if (__isset.statusMsg != rhs.__isset.statusMsg)
+      return false;
+    else if (__isset.statusMsg && !(statusMsg == rhs.statusMsg))
       return false;
     return true;
   }

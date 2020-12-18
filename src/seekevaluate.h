@@ -37,6 +37,24 @@
 
 namespace Sleipnir {
 
+    template <typename K, typename V>
+    struct PairedResult {
+        K key;
+        V val;
+
+        bool operator<(const PairedResult &item) const {
+            if (val < item.val) {
+                return false;
+            } else if (val > item.val) {
+                return true;
+            } else if (key < item.key) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+
     struct AResult {
         utype i;
         utype f;
