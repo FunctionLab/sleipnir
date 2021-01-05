@@ -31,25 +31,8 @@ void SeekInterface::seek_query(const SeekQuery &query, QueryResult &result)
         print_exception_stack(err);
         result.success = false;
         result.statusMsg = err.what();
-        // TODO - print stack to string to return in result
-        // TODO - add a result status to QueryResult and a statusString or errString
+        result.__isset.statusMsg = true;
     }
-
-    // printf("seek_query\n");
-    // for (auto gene: query.genes)
-    //   cout << gene << endl;
-    // const QueryParams &params = query.parameters;
-    // if (params.rbp_param) {
-    //     cout << "RPB Set: " << params.rbp_param << endl;
-    // }
-    // if (params.__isset.rbp_param) {
-    //     cout << "is set" << endl;
-    // }
-    // vector<string> rgenes;
-    // rgenes.push_back("a_separate_result");
-    // result.genes = rgenes;
-    // // result.__set_genes(rgenes);
-    // // result.genes.push_back("best_fit_gene");
     return;
 }
 
@@ -182,33 +165,27 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
         assert(querySC.numQueries() == 1);
     }
 
-    vector<double> gene_scores;
-    result.__set_gene_scores(gene_scores);
-    vector<string> datasets;
-    result.__set_datasets(datasets);
-    vector<double> weights;
-    result.__set_dataset_weights(weights);
-
     // get the genes and scores and add them to the rpc result reply
-    vector<PairedResult<string, float>> geneResults = querySC.getGeneResult(0);
+    vector<StrDoublePair> geneResults = querySC.getGeneResult(0);
     int numGenes = geneResults.size();
     for (int i=0; i<numGenes; i++) {
-        result.genes.push_back(geneResults[i].key);
-        result.gene_scores.push_back(geneResults[i].val);
+        SeekRPC::StringDoublePair pair;
+        pair.__set_name(geneResults[i].key);
+        pair.__set_value(geneResults[i].val);
+        result.gene_scores.push_back(pair);
     }
 
     // get the datasets and weigts and add them to the rpc result reply
-    vector<PairedResult<string, float>> datasetResults = querySC.getDatasetResult(0);
+    vector<StrDoublePair> datasetResults = querySC.getDatasetResult(0);
     int numDsets = datasetResults.size();
     for (int i=0; i<numDsets; i++) {
-        result.datasets.push_back(datasetResults[i].key);
-        result.dataset_weights.push_back(datasetResults[i].val);
+        SeekRPC::StringDoublePair pair;
+        pair.__set_name(datasetResults[i].key);
+        pair.__set_value(datasetResults[i].val);
+        result.dataset_weights.push_back(pair);
     }
-
-    // result.__set_genes();
-    // result.__set_gene_scores();
+    result.__isset.dataset_weights = true;
     result.success = true;
 
     querySC.Destruct();
-
 }

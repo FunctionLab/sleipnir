@@ -42,6 +42,10 @@ namespace Sleipnir {
         K key;
         V val;
 
+        PairedResult() {}
+
+        PairedResult(K _key, V _val) : key(_key), val(_val) {}
+
         bool operator<(const PairedResult &item) const {
             if (val < item.val) {
                 return false;
@@ -54,6 +58,8 @@ namespace Sleipnir {
             }
         }
     };
+
+    typedef PairedResult<string, double> StrDoublePair;
 
     struct AResult {
         utype i;

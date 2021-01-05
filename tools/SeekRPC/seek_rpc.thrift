@@ -20,13 +20,16 @@ struct SeekQuery {
     6: optional string outputDir = "/tmp/seek";
 }
 
+struct StringDoublePair {
+    1: required string name;
+    2: required double value;
+}
+
 struct QueryResult {
     1: required bool success;
-    2: required list<string> genes;
-    3: optional list<double> gene_scores;
-    4: optional list<string> datasets;
-    5: optional list<double> dataset_weights;
-    6: optional string statusMsg;
+    2: required list<StringDoublePair> gene_scores;
+    3: optional list<StringDoublePair> dataset_weights;
+    4: optional string statusMsg;
     // string dataset_availability;  /* these will come through status channel instead */
     // string query_availability;    /* these will come through status channel instead */
 }

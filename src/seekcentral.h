@@ -396,14 +396,14 @@ namespace Sleipnir {
         /*!
          * \brief Get the sorted gene scores in paired <geneName, score>
          */
-        vector<PairedResult<string, float>> & getGeneResult(uint32_t queryIndex) {
+        vector<StrDoublePair> & getGeneResult(uint32_t queryIndex) {
             return this->m_geneResults[queryIndex];
         }
 
         /*!
          * \brief Get the sorted dataset weights in paired <datasetName, weight>
          */
-        vector<PairedResult<string, float>> & getDatasetResult(uint32_t queryIndex) {
+        vector<StrDoublePair> & getDatasetResult(uint32_t queryIndex) {
             return this->m_datasetResults[queryIndex];
         }
 
@@ -533,9 +533,9 @@ namespace Sleipnir {
         vector <vector<float>> m_weight;
         vector <vector<AResultFloat>> m_final;
         // for each query, pairs of geneName and Score
-        vector<vector<PairedResult<string, float>>> m_geneResults;
+        vector<vector<StrDoublePair>> m_geneResults;
         // for each query<vec>, pairs of datasetName and Weight
-        vector<vector<PairedResult<string, float>>> m_datasetResults;
+        vector<vector<StrDoublePair>> m_datasetResults;
 
         /* Query */
         // vector of queries, each query is a vector of genes to query on

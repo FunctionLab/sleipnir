@@ -1101,20 +1101,25 @@ namespace Sleipnir {
     }
 
     void CSeekCentral::setGenePairedResult(uint32_t queryIndex, vector <AResultFloat> &sortedGeneScore) {
-        vector<PairedResult<string, float>> &geneResult = this->m_geneResults[queryIndex];
+        vector<StrDoublePair> &geneResult = this->m_geneResults[queryIndex];
         uint32_t numGenes = sortedGeneScore.size();
         geneResult.resize(numGenes);
-        for (int i = 0; i < numGenes; i++) {
-            uint32_t geneId = sortedGeneScore[i].i;
+        int i;
+        for (i = 0; i < numGenes; i++) {
             double geneScore = sortedGeneScore[i].f;
+            if (geneScore == m_DEFAULT_NA) {
+                break;
+            }
+            uint32_t geneId = sortedGeneScore[i].i;
             string geneName = m_vecstrGenes[geneId];
             geneResult[i].key = geneName;
             geneResult[i].val = geneScore;
         }
+        geneResult.resize(i);
     }
  
     void CSeekCentral::setDatasetPairedResult(uint32_t queryIndex, vector <AResultFloat> &sortedDatasetWeight) {
-        vector<PairedResult<string, float>> &datasetResult = this->m_datasetResults[queryIndex];
+        vector<StrDoublePair> &datasetResult = this->m_datasetResults[queryIndex];
         uint32_t numDatasets = sortedDatasetWeight.size();
         datasetResult.resize(numDatasets);
         for (int i = 0; i < numDatasets; i++) {

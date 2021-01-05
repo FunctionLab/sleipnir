@@ -25,6 +25,8 @@ class QueryParams;
 
 class SeekQuery;
 
+class StringDoublePair;
+
 class QueryResult;
 
 typedef struct _QueryParams__isset {
@@ -197,10 +199,49 @@ void swap(SeekQuery &a, SeekQuery &b);
 
 std::ostream& operator<<(std::ostream& out, const SeekQuery& obj);
 
+
+class StringDoublePair : public virtual ::apache::thrift::TBase {
+ public:
+
+  StringDoublePair(const StringDoublePair&);
+  StringDoublePair& operator=(const StringDoublePair&);
+  StringDoublePair() : name(), value(0) {
+  }
+
+  virtual ~StringDoublePair() noexcept;
+  std::string name;
+  double value;
+
+  void __set_name(const std::string& val);
+
+  void __set_value(const double val);
+
+  bool operator == (const StringDoublePair & rhs) const
+  {
+    if (!(name == rhs.name))
+      return false;
+    if (!(value == rhs.value))
+      return false;
+    return true;
+  }
+  bool operator != (const StringDoublePair &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const StringDoublePair & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(StringDoublePair &a, StringDoublePair &b);
+
+std::ostream& operator<<(std::ostream& out, const StringDoublePair& obj);
+
 typedef struct _QueryResult__isset {
-  _QueryResult__isset() : gene_scores(false), datasets(false), dataset_weights(false), statusMsg(false) {}
-  bool gene_scores :1;
-  bool datasets :1;
+  _QueryResult__isset() : dataset_weights(false), statusMsg(false) {}
   bool dataset_weights :1;
   bool statusMsg :1;
 } _QueryResult__isset;
@@ -215,23 +256,17 @@ class QueryResult : public virtual ::apache::thrift::TBase {
 
   virtual ~QueryResult() noexcept;
   bool success;
-  std::vector<std::string>  genes;
-  std::vector<double>  gene_scores;
-  std::vector<std::string>  datasets;
-  std::vector<double>  dataset_weights;
+  std::vector<StringDoublePair>  gene_scores;
+  std::vector<StringDoublePair>  dataset_weights;
   std::string statusMsg;
 
   _QueryResult__isset __isset;
 
   void __set_success(const bool val);
 
-  void __set_genes(const std::vector<std::string> & val);
+  void __set_gene_scores(const std::vector<StringDoublePair> & val);
 
-  void __set_gene_scores(const std::vector<double> & val);
-
-  void __set_datasets(const std::vector<std::string> & val);
-
-  void __set_dataset_weights(const std::vector<double> & val);
+  void __set_dataset_weights(const std::vector<StringDoublePair> & val);
 
   void __set_statusMsg(const std::string& val);
 
@@ -239,15 +274,7 @@ class QueryResult : public virtual ::apache::thrift::TBase {
   {
     if (!(success == rhs.success))
       return false;
-    if (!(genes == rhs.genes))
-      return false;
-    if (__isset.gene_scores != rhs.__isset.gene_scores)
-      return false;
-    else if (__isset.gene_scores && !(gene_scores == rhs.gene_scores))
-      return false;
-    if (__isset.datasets != rhs.__isset.datasets)
-      return false;
-    else if (__isset.datasets && !(datasets == rhs.datasets))
+    if (!(gene_scores == rhs.gene_scores))
       return false;
     if (__isset.dataset_weights != rhs.__isset.dataset_weights)
       return false;

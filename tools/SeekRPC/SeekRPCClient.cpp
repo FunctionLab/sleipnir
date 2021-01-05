@@ -44,13 +44,15 @@ int main(int argc, char **argv)
     QueryResult result;
     seekClient.seek_query(result, query);
 
-    for (auto gene: result.genes)
-      cout << gene << endl;
+    cout << "Gene Scores:" << endl;
+    for (auto gene_score: result.gene_scores)
+      cout << gene_score << endl;
     
-    for (auto score: result.gene_scores)
-      cout << score << endl;
+    // for (auto score: result.gene_scores)
+    //   cout << score << endl;
 
-    for (auto dset: result.datasets)
+    cout << "Dataset Weights:" << endl;
+    for (auto dset: result.dataset_weights)
       cout << dset << endl;
 
   } catch (TException& tx) {
