@@ -7,7 +7,7 @@
 #define FILELINE "(" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "): "
 
 
-void print_exception_stack(const std::exception& e, int level =  0);
+std::string print_exception_stack(const std::exception& e, int level =  0);
 
 
 // Define specific error types

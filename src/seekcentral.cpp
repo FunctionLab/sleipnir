@@ -400,7 +400,7 @@ namespace Sleipnir {
         for (i = 0; i < m_vecDB.size(); i++) {
             m_vecDB[i] = NULL;
             m_vecDB[i] = new CDatabase(m_useNibble);
-            m_vecDB[i]->Open(m_vecDBSetting[i]->GetValue("db"),
+            m_vecDB[i]->Open(m_vecDBSetting[i]->dbDir,
                              m_vecstrGenes, m_vecDBDataset[i].size(), m_vecDBSetting[i]->GetNumDB());
         }
 
@@ -746,14 +746,34 @@ namespace Sleipnir {
 
         //read genes
         vector <string> vecstrGeneID;
-        if (!CSeekTools::ReadListTwoColumns(vecDBSetting[0]->GetValue("gene"),
+        if (!CSeekTools::ReadListTwoColumns(vecDBSetting[0]->geneMapFile,
                                             vecstrGeneID, m_vecstrGenes))
             return false;
         for (i = 0; i < m_vecstrGenes.size(); i++)
             m_mapstrintGene[m_vecstrGenes[i]] = i;
 
+        // read gene symbol map if provided
+        if (vecDBSetting[0]->geneSymbolFile != "NA") {
+            vector <string> geneEntrez;
+            vector <string> geneSymbol;
+            if (!CSeekTools::ReadListTwoColumns(vecDBSetting[0]->geneSymbolFile,
+                                                geneEntrez, geneSymbol)) {
+                throw init_error(FILELINE + "Unable to read gene symbol file: " + vecDBSetting[0]->geneSymbolFile);
+            }
+            // create forward and reverse map
+            uint32_t numGenes = geneEntrez.size();
+            for (int i=0; i<numGenes; i++) {
+                m_geneEntrezToSymbolMap.insert({geneEntrez[i], geneSymbol[i]});
+                m_geneSymbolToEntrezMap.insert({geneSymbol[i], geneEntrez[i]});
+            }
+            if (m_geneEntrezToSymbolMap.size() != numGenes ||
+                m_geneSymbolToEntrezMap.size() != numGenes) {
+                throw init_error(FILELINE + "Parse error in gene symbol file: " + to_string(m_geneEntrezToSymbolMap.size()));
+            }
+        }
+
         //read quant file
-        CSeekTools::ReadQuantFile(vecDBSetting[0]->GetValue("quant"), m_quant);
+        CSeekTools::ReadQuantFile(vecDBSetting[0]->quantFile, m_quant);
 
         m_vecstrDatasets.clear();
         m_vecstrDP.clear();
@@ -775,7 +795,7 @@ namespace Sleipnir {
 
         for (i = 0; i < vecDBSetting.size(); i++) {
             if (dist_measure == CSeekDataset::CORRELATION &&
-                vecDBSetting[i]->GetValue("sinfo") == "NA") {
+                vecDBSetting[i]->sinfoDir == "NA") {
                 fprintf(stderr, "Error: not specifying sinfo!\n");
                 return false;
             }
@@ -783,7 +803,7 @@ namespace Sleipnir {
             m_vecDB[i] = new CDatabase(useNibble);
             //read datasets
             vector <string> vD, vDP;
-            if (!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->GetValue("dset"), vD, vDP))
+            if (!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->datasetFile, vD, vDP))
                 return false;
 
             for (j = 0; j < vD.size(); j++) {
@@ -792,10 +812,10 @@ namespace Sleipnir {
                 m_vecstrDP.push_back(vDP[j]);
             }
 
-            if (vecDBSetting[i]->GetValue("dset_size") != "NA") {
+            if (vecDBSetting[i]->dsetSizeFile != "NA") {
                 vector <string> col1, col2;
                 // TODO GW - fix finicky: dataset_size file must have tabs not spaces
-                if (!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->GetValue("dset_size"), col1, col2))
+                if (!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->dsetSizeFile, col1, col2))
                     return false;
                 set <string> currentD(vD.begin(), vD.end());
                 for (j = 0; j < col1.size(); j++) {
@@ -816,7 +836,7 @@ namespace Sleipnir {
 
             // Load the new database platform statistics
             SeekPlatforms db_platforms;
-            string platformDir = vecDBSetting[i]->GetValue("platform");
+            string platformDir = vecDBSetting[i]->platDir;
             assert(!platformDir.empty() && platformDir != "NA");
             db_platforms.loadPlatformDataFromFiles(platformDir);
             // Combine the new db platform statistics with the main db stats
@@ -832,7 +852,7 @@ namespace Sleipnir {
         m_iGenes = m_vecstrGenes.size();
 
         for (i = 0; i < vecDBSetting.size(); i++) {
-            m_vecDB[i]->Open(vecDBSetting[i]->GetValue("db"),
+            m_vecDB[i]->Open(vecDBSetting[i]->dbDir,
                              m_vecstrGenes, m_vecDBDataset[i].size(), vecDBSetting[i]->GetNumDB());
         }
 

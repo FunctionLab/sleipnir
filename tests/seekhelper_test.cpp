@@ -108,20 +108,21 @@ void printingAndTimingGetConfig(vector<string> &configFiles) {
 bool compareSeekDBSettings(CSeekDBSetting* cc1, CSeekDBSetting* cc2) {
     // Note could also add an == operator to CSeekDBSetting class
     // bool operator==(CSeekDBSetting &rhs) {
-    //     if (m_geneMapFile == rhs.GetValue("gene") && ...) {
+    //     if (m_geneMapFile == rhs.geneMapFile && ...) {
     //         return true;
     //     }
     //     return false;
     // }
-    if (cc1->GetValue("gene") == cc2->GetValue("gene") &&
-        cc1->GetValue("dset") == cc2->GetValue("dset") &&
-        cc1->GetValue("quant") == cc2->GetValue("quant") &&
-        cc1->GetValue("gvar") == cc2->GetValue("gvar") &&
-        cc1->GetValue("sinfo") == cc2->GetValue("sinfo") &&
-        cc1->GetValue("db") == cc2->GetValue("db") &&
-        cc1->GetValue("prep") == cc2->GetValue("prep") &&
-        cc1->GetValue("platform") == cc2->GetValue("platform") &&
-        cc1->GetValue("dset_size") == cc2->GetValue("dset_size") &&
+    if (cc1->geneMapFile == cc2->geneMapFile &&
+        cc1->geneSymbolFile == cc2->geneSymbolFile &&
+        cc1->datasetFile == cc2->datasetFile &&
+        cc1->quantFile == cc2->quantFile &&
+        cc1->gvarDir == cc2->gvarDir &&
+        cc1->sinfoDir == cc2->sinfoDir &&
+        cc1->dbDir == cc2->dbDir &&
+        cc1->prepDir == cc2->prepDir &&
+        cc1->platDir == cc2->platDir &&
+        cc1->dsetSizeFile == cc2->dsetSizeFile &&
         cc1->GetNumDB() == cc2->GetNumDB() ) {
            return true;
        }

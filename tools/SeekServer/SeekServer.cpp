@@ -221,7 +221,7 @@ int main(int iArgs, char **aszArgs) {
     csfinal = new CSeekCentral();
     CSeekDBSetting *dbSetting = new CSeekDBSetting(sArgs.dir_gvar_arg,
                                                    sArgs.dir_sinfo_arg, sArgs.dir_platform_arg, sArgs.dir_prep_in_arg,
-                                                   sArgs.dir_in_arg, sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
+                                                   sArgs.dir_in_arg, sArgs.input_arg, "NA", sArgs.quant_arg, sArgs.dset_arg,
                                                    sArgs.dset_size_file_arg,
                                                    sArgs.num_db_arg);
     vector < CSeekDBSetting * > cc;

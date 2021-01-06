@@ -26,11 +26,12 @@ class QueryParams(object):
      - rbp_param
      - useNegativeCorrelation
      - check_dataset_size
+     - use_gene_symbols
 
     """
 
 
-    def __init__(self, search_method="CV", distance_measure="Zscore", min_query_genes_fraction=0.0000000000000000, min_genome_fraction=0.0000000000000000, rbp_param=0.9900000000000000, useNegativeCorrelation=False, check_dataset_size=False,):
+    def __init__(self, search_method="CV", distance_measure="Zscore", min_query_genes_fraction=0.0000000000000000, min_genome_fraction=0.0000000000000000, rbp_param=0.9900000000000000, useNegativeCorrelation=False, check_dataset_size=False, use_gene_symbols=False,):
         self.search_method = search_method
         self.distance_measure = distance_measure
         self.min_query_genes_fraction = min_query_genes_fraction
@@ -38,6 +39,7 @@ class QueryParams(object):
         self.rbp_param = rbp_param
         self.useNegativeCorrelation = useNegativeCorrelation
         self.check_dataset_size = check_dataset_size
+        self.use_gene_symbols = use_gene_symbols
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -83,6 +85,11 @@ class QueryParams(object):
                     self.check_dataset_size = iprot.readBool()
                 else:
                     iprot.skip(ftype)
+            elif fid == 8:
+                if ftype == TType.BOOL:
+                    self.use_gene_symbols = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -120,6 +127,10 @@ class QueryParams(object):
         if self.check_dataset_size is not None:
             oprot.writeFieldBegin('check_dataset_size', TType.BOOL, 7)
             oprot.writeBool(self.check_dataset_size)
+            oprot.writeFieldEnd()
+        if self.use_gene_symbols is not None:
+            oprot.writeFieldBegin('use_gene_symbols', TType.BOOL, 8)
+            oprot.writeBool(self.use_gene_symbols)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -472,6 +483,7 @@ QueryParams.thrift_spec = (
     (5, TType.DOUBLE, 'rbp_param', None, 0.9900000000000000, ),  # 5
     (6, TType.BOOL, 'useNegativeCorrelation', None, False, ),  # 6
     (7, TType.BOOL, 'check_dataset_size', None, False, ),  # 7
+    (8, TType.BOOL, 'use_gene_symbols', None, False, ),  # 8
 )
 all_structs.append(SeekQuery)
 SeekQuery.thrift_spec = (

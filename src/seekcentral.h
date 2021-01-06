@@ -45,6 +45,7 @@
 #include "datapair.h"
 #include "seekweight.h"
 #include "seekhelper.h"
+#include "seekerror.h"
 
 namespace Sleipnir {
 
@@ -433,6 +434,38 @@ namespace Sleipnir {
             return msg;
         }
 
+        void convertGenesEntrezToSymbol(const vector<string> &entrez, vector<string> &symbols) {
+            uint32_t numGenes = entrez.size();
+            symbols.resize(numGenes);
+            for (int i=0; i<numGenes; i++) {
+                try {
+                    symbols[i] = m_geneEntrezToSymbolMap.at(entrez[i]);
+                } catch(exception &err) {
+                    throw_with_nested(request_error(FILELINE + "entrez id not found: " + entrez[i]));
+                }
+            }
+        }
+
+        void convertGenesSymbolToEntrez(const vector<string> &symbols, vector<string> &entrez) {
+            uint32_t numGenes = symbols.size();
+            entrez.resize(numGenes);
+            for (int i=0; i<numGenes; i++) {
+                try {
+                    entrez[i] = m_geneSymbolToEntrezMap.at(symbols[i]);
+                } catch(exception &err) {
+                    throw_with_nested(request_error(FILELINE + "symbol not found: " + symbols[i]));
+                }
+            }
+        }
+
+        string entrezToSymbol(string &entrez) {
+            try {
+                return m_geneEntrezToSymbolMap.at(entrez);
+            } catch(exception &err) {
+                throw_with_nested(request_error(FILELINE + "entrez not found: " + entrez));
+            }
+        }
+
     private:
         //network mode
         bool EnableNetwork(const int &);
@@ -482,6 +515,8 @@ namespace Sleipnir {
         map <string, string> m_mapstrstrDatasetPlatform;
         map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
         map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
+        map <string, string> m_geneEntrezToSymbolMap;
+        map <string, string> m_geneSymbolToEntrezMap;
         vector <vector<string>> m_vecstrSearchDatasets;
         vector<CSeekIntIntMap *> m_searchdsetMap;
 

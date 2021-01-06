@@ -30,7 +30,7 @@ class StringDoublePair;
 class QueryResult;
 
 typedef struct _QueryParams__isset {
-  _QueryParams__isset() : search_method(true), distance_measure(true), min_query_genes_fraction(true), min_genome_fraction(true), rbp_param(true), useNegativeCorrelation(true), check_dataset_size(true) {}
+  _QueryParams__isset() : search_method(true), distance_measure(true), min_query_genes_fraction(true), min_genome_fraction(true), rbp_param(true), useNegativeCorrelation(true), check_dataset_size(true), use_gene_symbols(true) {}
   bool search_method :1;
   bool distance_measure :1;
   bool min_query_genes_fraction :1;
@@ -38,6 +38,7 @@ typedef struct _QueryParams__isset {
   bool rbp_param :1;
   bool useNegativeCorrelation :1;
   bool check_dataset_size :1;
+  bool use_gene_symbols :1;
 } _QueryParams__isset;
 
 class QueryParams : public virtual ::apache::thrift::TBase {
@@ -45,7 +46,7 @@ class QueryParams : public virtual ::apache::thrift::TBase {
 
   QueryParams(const QueryParams&);
   QueryParams& operator=(const QueryParams&);
-  QueryParams() : search_method("CV"), distance_measure("Zscore"), min_query_genes_fraction(0.0000000000000000), min_genome_fraction(0.0000000000000000), rbp_param(0.9900000000000000), useNegativeCorrelation(false), check_dataset_size(false) {
+  QueryParams() : search_method("CV"), distance_measure("Zscore"), min_query_genes_fraction(0.0000000000000000), min_genome_fraction(0.0000000000000000), rbp_param(0.9900000000000000), useNegativeCorrelation(false), check_dataset_size(false), use_gene_symbols(false) {
   }
 
   virtual ~QueryParams() noexcept;
@@ -56,6 +57,7 @@ class QueryParams : public virtual ::apache::thrift::TBase {
   double rbp_param;
   bool useNegativeCorrelation;
   bool check_dataset_size;
+  bool use_gene_symbols;
 
   _QueryParams__isset __isset;
 
@@ -72,6 +74,8 @@ class QueryParams : public virtual ::apache::thrift::TBase {
   void __set_useNegativeCorrelation(const bool val);
 
   void __set_check_dataset_size(const bool val);
+
+  void __set_use_gene_symbols(const bool val);
 
   bool operator == (const QueryParams & rhs) const
   {
@@ -102,6 +106,10 @@ class QueryParams : public virtual ::apache::thrift::TBase {
     if (__isset.check_dataset_size != rhs.__isset.check_dataset_size)
       return false;
     else if (__isset.check_dataset_size && !(check_dataset_size == rhs.check_dataset_size))
+      return false;
+    if (__isset.use_gene_symbols != rhs.__isset.use_gene_symbols)
+      return false;
+    else if (__isset.use_gene_symbols && !(use_gene_symbols == rhs.use_gene_symbols))
       return false;
     return true;
   }

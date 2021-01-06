@@ -16,17 +16,21 @@ transport.open()
 #species = 'human'
 #genes = ['90634', '23659']
 
-species = 'fly'
-genes = ['35234', '35232']
+#species = 'fly'
+#genes = ['35234', '35232']
 #genes = ['34930', '35234', '35232']
 
 #species = 'yeast'
 #genes = ['YGL142C', 'YHR188C']
 
+species = 'mock'
+genes = ['six', 'four']
+
 
 params = QueryParams(distance_measure="ZscoreHubbinessCorrected",
                      min_query_genes_fraction=0.5,
-                     min_genome_fraction=0.5)
+                     min_genome_fraction=0.5,
+                     use_gene_symbols=True)
 query = SeekQuery(species=species, genes=genes, parameters=params)
 result = client.seek_query(query)
 if result.success is True:

@@ -266,7 +266,7 @@ int main(int iArgs, char **aszArgs) {
     CSeekCentral *csfinal = new CSeekCentral();
     CSeekDBSetting *dbSetting = new CSeekDBSetting(sArgs.dir_gvar_arg,
                                                    sArgs.dir_sinfo_arg, sArgs.dir_platform_arg, sArgs.dir_prep_in_arg,
-                                                   sArgs.dir_in_arg, sArgs.input_arg, sArgs.quant_arg, sArgs.dset_arg,
+                                                   sArgs.dir_in_arg, sArgs.input_arg, "NA", sArgs.quant_arg, sArgs.dset_arg,
                                                    sArgs.dset_size_file_arg, sArgs.num_db_arg);
     vector < CSeekDBSetting * > cc;
     cc.push_back(dbSetting);
@@ -339,7 +339,7 @@ int main(int iArgs, char **aszArgs) {
     } else if (method == "VAR") {
         for (i = 0; i < cc.size(); i++) {
             CSeekDBSetting *pc = cc[i];
-            if (pc->GetValue("gvar") == "NULL") {
+            if (pc->gvarDir == "NULL") {
                 fprintf(stderr, "Must specify gvar directory!\n");
                 return -1;
             }

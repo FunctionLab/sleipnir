@@ -261,7 +261,7 @@ namespace Sleipnir {
 
         if (bCorrelation) {
             for (i = 0; i < DB.size(); i++) {
-                if (DBSetting[i]->GetValue("sinfo") == "NA") {
+                if (DBSetting[i]->sinfoDir == "NA") {
                     fprintf(stderr, "sinfo parameter must be given.\n");
                     return false;
                 }
@@ -270,7 +270,7 @@ namespace Sleipnir {
 
         if (bVariance) {
             for (i = 0; i < DB.size(); i++) {
-                if (DBSetting[i]->GetValue("gvar") == "NA") {
+                if (DBSetting[i]->gvarDir == "NA") {
                     fprintf(stderr, "gene variance parameter must be given.\n");
                     return false;
                 }
@@ -283,9 +283,9 @@ namespace Sleipnir {
         ret = system("date +%s%N 1>&2");
         for (i = 0; i < DB.size(); i++) {
             const vector <string> &dset = dbDataset[i];
-            string strPrepInputDirectory = DBSetting[i]->GetValue("prep");
-            string strGvarInputDirectory = DBSetting[i]->GetValue("gvar");
-            string strSinfoInputDirectory = DBSetting[i]->GetValue("sinfo");
+            string strPrepInputDirectory = DBSetting[i]->prepDir;
+            string strGvarInputDirectory = DBSetting[i]->gvarDir;
+            string strSinfoInputDirectory = DBSetting[i]->sinfoDir;
 
             for (j = 0; j < dset.size(); j++) {
                 utype d = mapstriDataset.find(dset[j])->second;

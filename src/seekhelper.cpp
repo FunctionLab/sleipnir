@@ -36,6 +36,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     }
     // populate the settings
     tomlGetValue<string>(tbl, "species", settings.species);
+    tomlGetValue<int64_t>(tbl, "port", settings.port);
     tomlGetValue<int64_t>(tbl, "numThreads", settings.numThreads);
     tomlGetValue<int64_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
     tomlGetValue<double>(tbl, "scoreCutoff", settings.scoreCutoff);
@@ -57,8 +58,9 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
             string sinfo_dir = "NA";
             string gvar_dir = "NA";
             string quant_file = "NA";
-            string dset_map_file = "NA";
             string gene_map_file = "NA";
+            string gene_symbol_file = "NA";
+            string dset_map_file = "NA";
             string dset_size_file = "NA";
             int64_t num_db = -1;
 
@@ -68,14 +70,15 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
             tomlGetValue<string>(*dbTbl, "SINFO_DIR", sinfo_dir);
             tomlGetValue<string>(*dbTbl, "GVAR_DIR", gvar_dir);
             tomlGetValue<string>(*dbTbl, "QUANT_FILE", quant_file);
-            tomlGetValue<string>(*dbTbl, "DSET_MAP_FILE", dset_map_file);
             tomlGetValue<string>(*dbTbl, "GENE_MAP_FILE", gene_map_file);
+            tomlGetValue<string>(*dbTbl, "GENE_SYMBOL_FILE", gene_symbol_file);
+            tomlGetValue<string>(*dbTbl, "DSET_MAP_FILE", dset_map_file);
             tomlGetValue<string>(*dbTbl, "DSET_SIZE_FILE", dset_size_file);
             tomlGetValue<int64_t>(*dbTbl, "NUMBER_OF_DB", num_db);
 
             CSeekDBSetting *dbSetting2 = 
                 new CSeekDBSetting(gvar_dir, sinfo_dir, platform_dir, 
-                                prep_dir, db_dir, gene_map_file, 
+                                prep_dir, db_dir, gene_map_file, gene_symbol_file,
                                 quant_file, dset_map_file,
                                 dset_size_file, num_db);
             settings.dbs.push_back(dbSetting2);
@@ -170,6 +173,7 @@ bool legacyReadDBConfigFile(string dbConfigFile,
         string db_dir = "NA";
         string dset_map_file = "NA";
         string gene_map_file = "NA";
+        string gene_symbol_file = "NA";
         string quant_file = "NA";
         string dset_size_file = "NA";
         int num_db = -1;
@@ -214,8 +218,9 @@ bool legacyReadDBConfigFile(string dbConfigFile,
         num_db = atoi(parameters[i].find("NUMBER_OF_DB")->second.c_str());
 
         CSeekDBSetting *dbSetting2 = new CSeekDBSetting(gvar_dir, sinfo_dir,
-                                                        platform_dir, prep_dir, db_dir, gene_map_file, quant_file,
-                                                        dset_map_file,
+                                                        platform_dir, prep_dir, db_dir, 
+                                                        gene_map_file, gene_symbol_file,
+                                                        quant_file, dset_map_file,
                                                         dset_size_file, num_db);
         cc.push_back(dbSetting2);
     }

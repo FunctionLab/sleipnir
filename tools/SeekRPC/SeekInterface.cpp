@@ -28,9 +28,9 @@ void SeekInterface::seek_query(const SeekQuery &query, QueryResult &result)
     try {
         this->SeekQueryCommon(query, result);
     } catch (named_error &err) {
-        print_exception_stack(err);
+        string trace = print_exception_stack(err);
         result.success = false;
-        result.statusMsg = err.what();
+        result.statusMsg = trace;
         result.__isset.statusMsg = true;
     }
     return;
@@ -103,8 +103,18 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
         throw argument_error(FILELINE + "Unknown distance measure: " + params.distance_measure);
     }
 
+    vector<string> queryGenes(query.genes);
+    if (params.use_gene_symbols == true) {
+        // convert query genes from sybmol to entrez
+        try {
+            speciesSC.convertGenesSymbolToEntrez(query.genes, queryGenes);
+        } catch(exception &err) {
+            throw_with_nested(query_error(FILELINE + "Convert query genes from symbol to entrez id"));
+        }
+    }
+
     // seekcentral InitializeQuery expects a string with genes delimited by " " and multiple queries separated by "|"
-    std::string joinedGenes = boost::algorithm::join(query.genes, " ");
+    std::string joinedGenes = boost::algorithm::join(queryGenes, " ");
     std::string joinedDatasets;
     if (query.datasets.size() == 0) {
         // if query.datasets is empty then use all datasets, specified by "NA" string
@@ -170,7 +180,12 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
     int numGenes = geneResults.size();
     for (int i=0; i<numGenes; i++) {
         SeekRPC::StringDoublePair pair;
-        pair.__set_name(geneResults[i].key);
+        if (params.use_gene_symbols == true) {
+            string entrez = speciesSC.entrezToSymbol(geneResults[i].key);
+            pair.__set_name(entrez);
+        } else {
+            pair.__set_name(geneResults[i].key);
+        }
         pair.__set_value(geneResults[i].val);
         result.gene_scores.push_back(pair);
     }

@@ -1,5 +1,6 @@
 namespace cpp SeekRPC
 
+// TODO - make search_method and distance_measure an ENUM
 
 struct QueryParams {
     1: optional string search_method = "CV";
@@ -9,6 +10,7 @@ struct QueryParams {
     5: optional double rbp_param = 0.99;
     6: optional bool useNegativeCorrelation = false;
     7: optional bool check_dataset_size = false;
+    8: optional bool use_gene_symbols = false;
 }
 
 struct SeekQuery {
