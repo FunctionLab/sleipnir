@@ -36,7 +36,6 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     }
     // populate the settings
     tomlGetValue<string>(tbl, "species", settings.species);
-    tomlGetValue<int64_t>(tbl, "port", settings.port);
     tomlGetValue<int64_t>(tbl, "numThreads", settings.numThreads);
     tomlGetValue<int64_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
     tomlGetValue<double>(tbl, "scoreCutoff", settings.scoreCutoff);

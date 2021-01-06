@@ -1122,13 +1122,18 @@ namespace Sleipnir {
         vector<StrDoublePair> &datasetResult = this->m_datasetResults[queryIndex];
         uint32_t numDatasets = sortedDatasetWeight.size();
         datasetResult.resize(numDatasets);
-        for (int i = 0; i < numDatasets; i++) {
-            uint32_t datasetId = sortedDatasetWeight[i].i;
+        int i;
+        for (i = 0; i < numDatasets; i++) {
             double datasetWeight = sortedDatasetWeight[i].f;
+            if (datasetWeight == 0) {
+                break;
+            }
+            uint32_t datasetId = sortedDatasetWeight[i].i;
             string datasetName = m_vecstrDatasets[datasetId];
             datasetResult[i].key = datasetName;
             datasetResult[i].val = datasetWeight;
         }
+        datasetResult.resize(i);
     }
 
 

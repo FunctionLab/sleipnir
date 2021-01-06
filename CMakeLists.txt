@@ -176,7 +176,6 @@ set(SLEIPNIR_SOURCES
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     find_library(LIBOMP libomp.a)
-    find_library(LIBTHRIFT libthrift.a)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-fopenmp)
     add_link_options(-lgslcblas)
@@ -186,6 +185,12 @@ else()
     message(SEND_INFO "Found some weird compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
+
+option(USE_THRIFT "Use thrift" ON)
+if(USE_THRIFT)
+    find_library(LIBTHRIFT thrift)
+    # list(APPEND EXTRA_LIBRARIES ${LIBTHRIFT})
+endif()
 
 option(USE_GENGETOPT "Use gengetopt" ON)
 if(USE_GENGETOPT)
@@ -429,7 +434,7 @@ list(APPEND SLEIPNIR_TOOLS
     )
 
 foreach(TOOL ${SLEIPNIR_TOOLS})
-    include_directories(tools/${TOOL})
+    # include_directories(tools/${TOOL})
     if (${TOOL} MATCHES OntoShell)
         add_executable(${TOOL}
             tools/${TOOL}/${TOOL}.cpp
