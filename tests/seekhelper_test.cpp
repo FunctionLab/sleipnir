@@ -114,7 +114,7 @@ bool compareSeekDBSettings(CSeekDBSetting* cc1, CSeekDBSetting* cc2) {
     //     return false;
     // }
     if (cc1->geneMapFile == cc2->geneMapFile &&
-        cc1->geneSymbolFile == cc2->geneSymbolFile &&
+        // cc1->geneSymbolFile == cc2->geneSymbolFile &&
         cc1->datasetFile == cc2->datasetFile &&
         cc1->quantFile == cc2->quantFile &&
         cc1->gvarDir == cc2->gvarDir &&

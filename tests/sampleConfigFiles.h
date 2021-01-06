@@ -28,6 +28,7 @@ outputAsText = true  # Output results (gene list and dataset weights) as text
     QUANT_FILE    = "/path/human/db1/quant2"
     DSET_MAP_FILE = "/path/human/db1/dataset.map"
     GENE_MAP_FILE = "/path/human/db1/gene_map.txt"
+    GENE_SYMBOL_FILE = "/path/human/db1/gene_symbols.txt"
     DSET_SIZE_FILE = "/path/human/db1/dataset_size"
     NUMBER_OF_DB  = 1000
 
@@ -37,6 +38,7 @@ outputAsText = true  # Output results (gene list and dataset weights) as text
     DB_DIR        = "/path/human/db2/db"
     DSET_MAP_FILE = "/path/human/db2/dataset.map"
     GENE_MAP_FILE = "/path/human/db2/gene_map.txt"
+    GENE_SYMBOL_FILE = "/path/human/db2/gene_symbols.txt"
     QUANT_FILE    = "/path/human/db2/quant2"
     SINFO_DIR     = "/path/human/db2/sinfo"
     GVAR_DIR      = "/path/human/db2/gvar"
@@ -64,6 +66,7 @@ outputAsText = true  # Output results (gene list and dataset weights) as text
     QUANT_FILE    = "/path2/yeast/quant2"
     DSET_MAP_FILE = "/path2/yeast/dataset.map"
     GENE_MAP_FILE = "/path2/yeast/gene_map.txt"
+    GENE_SYMBOL_FILE = "/path2/yeast/gene_symbols.txt"
     DSET_SIZE_FILE = "/path2/yeast/dataset_size"
     NUMBER_OF_DB  = 1000
 
@@ -80,6 +83,7 @@ GVAR_DIR	/path/human/db1/gvar
 QUANT_FILE	/path/human/db1/quant2
 DSET_MAP_FILE	/path/human/db1/dataset.map
 GENE_MAP_FILE	/path/human/db1/gene_map.txt
+GENE_SYMBOL_FILE	/path/human/db1/gene_symbols.txt
 DSET_SIZE_FILE	/path/human/db1/dataset_size
 NUMBER_OF_DB	1000
 END
@@ -92,6 +96,7 @@ GVAR_DIR	/path/human/db2/gvar
 QUANT_FILE	/path/human/db2/quant2
 DSET_MAP_FILE	/path/human/db2/dataset.map
 GENE_MAP_FILE	/path/human/db2/gene_map.txt
+GENE_SYBMOL_FILE	/path/human/db2/gene_symbols.txt
 DSET_SIZE_FILE	/path/human/db2/dataset_size
 NUMBER_OF_DB	2000
 END

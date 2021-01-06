@@ -30,6 +30,7 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "seekreader.h"
+#include <regex>
 
 namespace Sleipnir {
 
@@ -348,13 +349,17 @@ namespace Sleipnir {
         utype c_iBuffer = lineSize;
         vecstrList1.clear();
         vecstrList2.clear();
+        regex ws_re("\\s+"); 
 
         while (!ifsm.eof()) {
             ifsm.getline(acBuffer, c_iBuffer - 1);
             if (acBuffer[0] == 0) break;
             acBuffer[c_iBuffer - 1] = 0;
-            vector <string> tok;
-            CMeta::Tokenize(acBuffer, tok);
+            string line(acBuffer);
+            vector<string> tok { 
+                sregex_token_iterator(line.begin(), line.end(), ws_re, -1), {} 
+            };
+            assert(tok.size() == 2);
             vecstrList1.push_back(tok[0]);
             vecstrList2.push_back(tok[1]);
         }

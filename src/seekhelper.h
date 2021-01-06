@@ -50,6 +50,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     QUANT_FILE    = "/path/db1/quant2"
     DSET_MAP_FILE = "/path/db1/dataset.map"
     GENE_MAP_FILE = "/path/db1/gene_map.txt"
+    GENE_SYMBOL_FILE = "/path/db1/gene_symbols.txt"
     DSET_SIZE_FILE = "/path/db1/dataset_size"
     NUMBER_OF_DB  = 1000
 
@@ -59,6 +60,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     DB_DIR        = "/path/db2/db"
     DSET_MAP_FILE = "/path/db2/dataset.map"
     GENE_MAP_FILE = "/path/db2/gene_map.txt"
+    GENE_SYMBOL_FILE = "/path/db2/gene_symbols.txt"
     QUANT_FILE    = "/path/db2/quant2"
     SINFO_DIR     = "/path/db2/sinfo"
     GVAR_DIR      = "/path/db2/gvar"
