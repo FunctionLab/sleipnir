@@ -766,9 +766,14 @@ namespace Sleipnir {
                 m_geneEntrezToSymbolMap.insert({geneEntrez[i], geneSymbol[i]});
                 m_geneSymbolToEntrezMap.insert({geneSymbol[i], geneEntrez[i]});
             }
-            if (m_geneEntrezToSymbolMap.size() != numGenes ||
-                m_geneSymbolToEntrezMap.size() != numGenes) {
-                throw init_error(FILELINE + "Parse error in gene symbol file: " + to_string(m_geneEntrezToSymbolMap.size()));
+            if (m_geneEntrezToSymbolMap.size() != numGenes) {
+                throw init_error(FILELINE + "entrezToSymbol map count mismatch: " +
+                                 to_string(m_geneEntrezToSymbolMap.size()) +
+                                 ", " + to_string(numGenes));
+            }
+            if (m_geneSymbolToEntrezMap.size() != numGenes) {
+                uint32_t numDups = numGenes - m_geneSymbolToEntrezMap.size();
+                cerr << "Warning: duplicate symbols in symbolToEntrez map: " << numDups << endl;
             }
         }
 

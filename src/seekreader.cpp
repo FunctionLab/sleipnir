@@ -30,6 +30,7 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "seekreader.h"
+#include "seekerror.h"
 #include <regex>
 
 namespace Sleipnir {
@@ -359,7 +360,9 @@ namespace Sleipnir {
             vector<string> tok { 
                 sregex_token_iterator(line.begin(), line.end(), ws_re, -1), {} 
             };
-            assert(tok.size() == 2);
+            if (tok.size() != 2) {
+                throw init_error(FILELINE + "Expecting two values per line in file: " + file + ", line: " + to_string(vecstrList1.size()));
+            }
             vecstrList1.push_back(tok[0]);
             vecstrList2.push_back(tok[1]);
         }

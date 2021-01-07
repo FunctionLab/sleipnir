@@ -15,6 +15,7 @@ SeekInterface::SeekInterface(vector<string> &configFiles) {
         // Initialize a seekCentral instance for each species.
         //  C++ automatically default inits the mapped CSeekCentral() values on first reference
         try {
+            cout << "Initialize " << speciesName << endl;
             this->speciesSeekCentrals[speciesName].InitializeFromSeekConfig(config);
         } catch(exception &err) {
             throw_with_nested(config_error(FILELINE + "Error initializing CSeekCentral for species " + speciesName));
@@ -204,3 +205,4 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
 
     querySC.Destruct();
 }
+

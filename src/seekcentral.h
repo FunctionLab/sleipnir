@@ -439,9 +439,13 @@ namespace Sleipnir {
             symbols.resize(numGenes);
             for (int i=0; i<numGenes; i++) {
                 try {
-                    symbols[i] = m_geneEntrezToSymbolMap.at(entrez[i]);
+                    if (m_geneEntrezToSymbolMap.count(entrez[i]) > 0) {
+                        symbols[i] = m_geneEntrezToSymbolMap.at(entrez[i]);
+                    } else {
+                        symbols[i] = entrez[i];
+                    }
                 } catch(exception &err) {
-                    throw_with_nested(request_error(FILELINE + "entrez id not found: " + entrez[i]));
+                    throw_with_nested(request_error(FILELINE + "geneEntrezToSymbolMap error for id:: " + entrez[i]));
                 }
             }
         }
@@ -460,9 +464,13 @@ namespace Sleipnir {
 
         string entrezToSymbol(string &entrez) {
             try {
-                return m_geneEntrezToSymbolMap.at(entrez);
+                if (m_geneEntrezToSymbolMap.count(entrez) > 0) {
+                    return m_geneEntrezToSymbolMap.at(entrez);
+                } else {
+                    return entrez;
+                }
             } catch(exception &err) {
-                throw_with_nested(request_error(FILELINE + "entrez not found: " + entrez));
+                throw_with_nested(request_error(FILELINE + "geneEntrezToSymbolMap error for id: " + entrez));
             }
         }
 
