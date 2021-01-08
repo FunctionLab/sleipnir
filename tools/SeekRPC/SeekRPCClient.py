@@ -1,3 +1,4 @@
+import argparse
 from thrift.transport import TTransport, TSocket
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
 
@@ -7,13 +8,56 @@ from pyseek.ttypes import SeekQuery, QueryParams, QueryResult
 host = 'localhost'
 port = 9090
 
-socket = TSocket.TSocket(host, port)
-transport = TTransport.TBufferedTransport(socket)
-protocol = TBinaryProtocol(transport)
-client = SeekRPC.Client(protocol)
-transport.open()
+def runQuery(args):
+    socket = TSocket.TSocket(host, port)
+    transport = TTransport.TBufferedTransport(socket)
+    protocol = TBinaryProtocol(transport)
+    client = SeekRPC.Client(protocol)
+    transport.open()
+
+    params = QueryParams(distance_measure="ZscoreHubbinessCorrected",
+                         min_query_genes_fraction=0.5,
+                         min_genome_fraction=0.5,
+                         use_gene_symbols=args.useSymbols)
+
+    query = SeekQuery(species=args.species, genes=args.genes, parameters=params)
+
+    result = client.seek_query(query)
+    if result.success is True:
+        for i, gs in enumerate(result.gene_scores):
+            print(f'gene: {gs.name}, {gs.value}')
+            if i > 100: break
+
+        for i, ds in enumerate(result.dataset_weights):
+            print(f'dset: {ds.name}, {ds.value}')
+            if i > 100: break
+    else:
+        print(f'query error: {result.statusMsg}')
+
+    transport.close()
+
+
+if __name__ == "__main__":
+    argParser = argparse.ArgumentParser()
+    argParser.add_argument('--species', '-s', default='human', type=str,
+                           help='species name')
+    argParser.add_argument('--genes', '-g', default=None, type=str,
+                           help='list of genes to query')
+    argParser.add_argument('--useSymbols', '-S', default=False, action='store_true',
+                           help='genes specified by symbol name')
+    args = argParser.parse_args()
+
+    if args.genes is None:
+        print('No query genes specified, use [-g gene1,gene2,...] option')
+        exit(-1)
+    args.genes = args.genes.split(',')
+
+    runQuery(args)
+    exit(0)
+
 
 #species = 'human'
+#genes = ['SMO', 'PTCH1', 'PTCH2', 'BOC'] - this one differs from web, ambiguous symbol->entrez?
 #genes = ['90634', '23659']
 
 #species = 'fly'
@@ -23,29 +67,6 @@ transport.open()
 #species = 'yeast'
 #genes = ['YGL142C', 'YHR188C']
 
-species = 'mock'
-genes = ['six', 'four']
-
-
-params = QueryParams(distance_measure="ZscoreHubbinessCorrected",
-                     min_query_genes_fraction=0.5,
-                     min_genome_fraction=0.5,
-                     use_gene_symbols=True)
-query = SeekQuery(species=species, genes=genes, parameters=params)
-result = client.seek_query(query)
-if result.success is True:
-    count = 0;
-    for gs in result.gene_scores:
-        print(f'gene: {gs.name}, {gs.value}')
-        count += 1
-        if count > 100: break
-
-    count = 0;
-    for ds in result.dataset_weights:
-        print(f'dset: {ds.name}, {ds.value}')
-        count += 1
-        if count > 100: break
-else:
-    print(f'query error: {result.statusMsg}')
-
-transport.close()
+# species = 'mock'
+# genes = ['six', 'four']
+# genes = ['90634', '23659']
