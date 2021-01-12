@@ -8,6 +8,30 @@ from pyseek.ttypes import SeekQuery, QueryParams, QueryResult
 host = 'localhost'
 port = 9090
 
+'''
+Query parameters and options:
+
+struct QueryParams {
+    string search_method: (default: "CV", "EqualWeighting", "OrderStatistics", "CVCUSTOM")
+    string distance_measure: (default: "Zscore", "ZscoreHubbinessCorrected", "Correlation")
+    double min_query_genes_fraction = 0.0;
+    double min_genome_fraction = 0.0;
+    double rbp_param = 0.99;
+    bool useNegativeCorrelation = false;
+    bool check_dataset_size = false;
+    bool use_gene_symbols = false;
+}
+
+struct SeekQuery {
+    string species: (default: "Unknown", "human", "fly", "mouse", "worm", "yeast", "zebrafish")
+    list<string> genes;
+    list<string> datasets;
+    QueryParams parameters;
+    list<string> guideGenes;
+    string outputDir = "/tmp/seek";
+}
+'''
+
 def runQuery(args):
     socket = TSocket.TSocket(host, port)
     transport = TTransport.TBufferedTransport(socket)
