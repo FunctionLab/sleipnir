@@ -11,7 +11,8 @@
 #include "SeekInterface.h"
 #include "SeekRPCHandler.h"
 #include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/server/TSimpleServer.h>
+//#include <thrift/server/TSimpleServer.h>
+#include <thrift/server/TThreadedServer.h>
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
 #include "seekerror.h"
@@ -25,25 +26,31 @@ using namespace ::apache::thrift::server;
 
 struct Args {
     vector<string> configFiles;
+    uint32_t port = 9090;
 };
 
 bool parseArgs(int argc, char **argv, Args &args)
 {
+    // parse options
     string usage = "Usage: seekService -c <species_1.toml> [-c <species_2.toml> ...]\n"
                    "Starts the SeekService to handle RPC requests. " 
                    "Initializes the species with provided config files.\n";
     static struct option long_options[] = {
         {"config", required_argument, 0, 'c'},
+        {"port", required_argument, 0, 'p'},
         {0, 0, 0, 0}};
     int opt = 0;
     int long_index = 0;
-    while ((opt = getopt_long(argc, argv, "c:",
+    while ((opt = getopt_long(argc, argv, "c:p:",
                               long_options, &long_index)) != -1)
     {
         switch (opt)
         {
         case 'c':
             args.configFiles.push_back(optarg);
+            break;
+        case 'p':
+            args.port = atoi(optarg);
             break;
         default:
             cout << "Error: unrecognized options: " << opt << endl;
@@ -64,7 +71,6 @@ bool parseArgs(int argc, char **argv, Args &args)
 int main(int argc, char** argv) 
 {
     Args args;
-    int port = 9090;
 
     bool res = parseArgs(argc, argv, args);
     if (res == false) {
@@ -78,11 +84,18 @@ int main(int argc, char** argv)
         if (startServer == true) {
             shared_ptr<SeekRPCHandler> handler(new SeekRPCHandler(seekInterface));
             shared_ptr<TProcessor> processor(new SeekRPCProcessor(handler));
-            shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
+            shared_ptr<TServerTransport> serverTransport(new TServerSocket(args.port));
             shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
             shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
-            TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+            /* Alternate server types
+               ## For single-threaded server
+               TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+               ## For multi-threaded with thread pool and reusing threads
+               TThreadPoolServer server(processor, serverTransport, transportFactory, protocolFactory, threadManager);
+            */
+            // For multi-threaded server
+            TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
             server.serve();
         }
     } catch(exception &err) {

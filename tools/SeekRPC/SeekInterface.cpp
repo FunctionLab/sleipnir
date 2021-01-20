@@ -26,6 +26,9 @@ SeekInterface::SeekInterface(vector<string> &configFiles) {
 void SeekInterface::seek_query(const SeekQuery &query, QueryResult &result)
 {
     // TODO - spin off a thread to run this query
+    // call seek_query_async()
+    // then seek_get_result()
+
     try {
         this->SeekQueryCommon(query, result);
     } catch (named_error &err) {

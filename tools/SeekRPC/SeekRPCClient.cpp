@@ -21,6 +21,7 @@ struct Args
     string species;
     vector<string> genes;
     bool useSymbols = false;
+    uint32_t port = 9090;
 };
 
 bool parseArgs(int argc, char **argv, Args &args)
@@ -31,11 +32,12 @@ bool parseArgs(int argc, char **argv, Args &args)
     static struct option long_options[] = {
         {"species", required_argument, 0, 's'},
         {"genes", required_argument, 0, 'g'},
+        {"port", required_argument, 0, 'p'},
         {"useSymbols", no_argument, 0, 'S'},
         {0, 0, 0, 0}};
     int opt = 0;
     int long_index = 0;
-    while ((opt = getopt_long(argc, argv, "s:g:S",
+    while ((opt = getopt_long(argc, argv, "s:g:p:S",
                               long_options, &long_index)) != -1)
     {
         switch (opt)
@@ -56,6 +58,9 @@ bool parseArgs(int argc, char **argv, Args &args)
         break;
         case 'S':
             args.useSymbols = true;
+            break;
+        case 'p':
+            args.port = atoi(optarg);
             break;
         default:
             cerr << "Error: unrecognized options: " << opt << endl;
@@ -87,7 +92,7 @@ int main(int argc, char **argv)
     }
     std::cout << endl;
 
-    shared_ptr<TTransport> socket(new TSocket("localhost", 9090));
+    shared_ptr<TTransport> socket(new TSocket("localhost", args.port));
     shared_ptr<TTransport> transport(new TBufferedTransport(socket));
     shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
     SeekRPCClient seekClient(protocol);
