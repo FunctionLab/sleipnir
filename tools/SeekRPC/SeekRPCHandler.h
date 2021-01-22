@@ -23,15 +23,15 @@ class SeekRPCHandler : virtual public SeekRPCIf {
     return seekInterface.seek_query(query, _return);
   }
 
-  int32_t seek_query_async(const SeekQuery& query) {
+  int64_t seek_query_async(const SeekQuery& query) {
     return seekInterface.seek_query_async(query);
   }
 
-  void seek_get_result(QueryResult& _return, const int32_t task_id) {
+  void seek_get_result(QueryResult& _return, const int64_t task_id) {
     return seekInterface.seek_get_result(task_id, _return);
   }
 
-  void get_progress_message(std::string& _return, const int32_t task_id) {
+  void get_progress_message(std::string& _return, const int64_t task_id) {
     _return = seekInterface.get_progress_message(task_id);
     return;
   }

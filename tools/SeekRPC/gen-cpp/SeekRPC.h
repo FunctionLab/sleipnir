@@ -23,9 +23,9 @@ class SeekRPCIf {
  public:
   virtual ~SeekRPCIf() {}
   virtual void seek_query(QueryResult& _return, const SeekQuery& query) = 0;
-  virtual int32_t seek_query_async(const SeekQuery& query) = 0;
-  virtual void seek_get_result(QueryResult& _return, const int32_t task_id) = 0;
-  virtual void get_progress_message(std::string& _return, const int32_t task_id) = 0;
+  virtual int64_t seek_query_async(const SeekQuery& query) = 0;
+  virtual void seek_get_result(QueryResult& _return, const int64_t task_id) = 0;
+  virtual void get_progress_message(std::string& _return, const int64_t task_id) = 0;
   virtual int32_t ping() = 0;
   virtual int32_t pvalue_genes() = 0;
   virtual int32_t pvalue_datasets() = 0;
@@ -62,14 +62,14 @@ class SeekRPCNull : virtual public SeekRPCIf {
   void seek_query(QueryResult& /* _return */, const SeekQuery& /* query */) {
     return;
   }
-  int32_t seek_query_async(const SeekQuery& /* query */) {
-    int32_t _return = 0;
+  int64_t seek_query_async(const SeekQuery& /* query */) {
+    int64_t _return = 0;
     return _return;
   }
-  void seek_get_result(QueryResult& /* _return */, const int32_t /* task_id */) {
+  void seek_get_result(QueryResult& /* _return */, const int64_t /* task_id */) {
     return;
   }
-  void get_progress_message(std::string& /* _return */, const int32_t /* task_id */) {
+  void get_progress_message(std::string& /* _return */, const int64_t /* task_id */) {
     return;
   }
   int32_t ping() {
@@ -257,11 +257,11 @@ class SeekRPC_seek_query_async_result {
   }
 
   virtual ~SeekRPC_seek_query_async_result() noexcept;
-  int32_t success;
+  int64_t success;
 
   _SeekRPC_seek_query_async_result__isset __isset;
 
-  void __set_success(const int32_t val);
+  void __set_success(const int64_t val);
 
   bool operator == (const SeekRPC_seek_query_async_result & rhs) const
   {
@@ -290,7 +290,7 @@ class SeekRPC_seek_query_async_presult {
 
 
   virtual ~SeekRPC_seek_query_async_presult() noexcept;
-  int32_t* success;
+  int64_t* success;
 
   _SeekRPC_seek_query_async_presult__isset __isset;
 
@@ -312,11 +312,11 @@ class SeekRPC_seek_get_result_args {
   }
 
   virtual ~SeekRPC_seek_get_result_args() noexcept;
-  int32_t task_id;
+  int64_t task_id;
 
   _SeekRPC_seek_get_result_args__isset __isset;
 
-  void __set_task_id(const int32_t val);
+  void __set_task_id(const int64_t val);
 
   bool operator == (const SeekRPC_seek_get_result_args & rhs) const
   {
@@ -341,7 +341,7 @@ class SeekRPC_seek_get_result_pargs {
 
 
   virtual ~SeekRPC_seek_get_result_pargs() noexcept;
-  const int32_t* task_id;
+  const int64_t* task_id;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -416,11 +416,11 @@ class SeekRPC_get_progress_message_args {
   }
 
   virtual ~SeekRPC_get_progress_message_args() noexcept;
-  int32_t task_id;
+  int64_t task_id;
 
   _SeekRPC_get_progress_message_args__isset __isset;
 
-  void __set_task_id(const int32_t val);
+  void __set_task_id(const int64_t val);
 
   bool operator == (const SeekRPC_get_progress_message_args & rhs) const
   {
@@ -445,7 +445,7 @@ class SeekRPC_get_progress_message_pargs {
 
 
   virtual ~SeekRPC_get_progress_message_pargs() noexcept;
-  const int32_t* task_id;
+  const int64_t* task_id;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -902,14 +902,14 @@ class SeekRPCClient : virtual public SeekRPCIf {
   void seek_query(QueryResult& _return, const SeekQuery& query);
   void send_seek_query(const SeekQuery& query);
   void recv_seek_query(QueryResult& _return);
-  int32_t seek_query_async(const SeekQuery& query);
+  int64_t seek_query_async(const SeekQuery& query);
   void send_seek_query_async(const SeekQuery& query);
-  int32_t recv_seek_query_async();
-  void seek_get_result(QueryResult& _return, const int32_t task_id);
-  void send_seek_get_result(const int32_t task_id);
+  int64_t recv_seek_query_async();
+  void seek_get_result(QueryResult& _return, const int64_t task_id);
+  void send_seek_get_result(const int64_t task_id);
   void recv_seek_get_result(QueryResult& _return);
-  void get_progress_message(std::string& _return, const int32_t task_id);
-  void send_get_progress_message(const int32_t task_id);
+  void get_progress_message(std::string& _return, const int64_t task_id);
+  void send_get_progress_message(const int64_t task_id);
   void recv_get_progress_message(std::string& _return);
   int32_t ping();
   void send_ping();
@@ -995,7 +995,7 @@ class SeekRPCMultiface : virtual public SeekRPCIf {
     return;
   }
 
-  int32_t seek_query_async(const SeekQuery& query) {
+  int64_t seek_query_async(const SeekQuery& query) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -1004,7 +1004,7 @@ class SeekRPCMultiface : virtual public SeekRPCIf {
     return ifaces_[i]->seek_query_async(query);
   }
 
-  void seek_get_result(QueryResult& _return, const int32_t task_id) {
+  void seek_get_result(QueryResult& _return, const int64_t task_id) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -1014,7 +1014,7 @@ class SeekRPCMultiface : virtual public SeekRPCIf {
     return;
   }
 
-  void get_progress_message(std::string& _return, const int32_t task_id) {
+  void get_progress_message(std::string& _return, const int64_t task_id) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -1095,14 +1095,14 @@ class SeekRPCConcurrentClient : virtual public SeekRPCIf {
   void seek_query(QueryResult& _return, const SeekQuery& query);
   int32_t send_seek_query(const SeekQuery& query);
   void recv_seek_query(QueryResult& _return, const int32_t seqid);
-  int32_t seek_query_async(const SeekQuery& query);
+  int64_t seek_query_async(const SeekQuery& query);
   int32_t send_seek_query_async(const SeekQuery& query);
-  int32_t recv_seek_query_async(const int32_t seqid);
-  void seek_get_result(QueryResult& _return, const int32_t task_id);
-  int32_t send_seek_get_result(const int32_t task_id);
+  int64_t recv_seek_query_async(const int32_t seqid);
+  void seek_get_result(QueryResult& _return, const int64_t task_id);
+  int32_t send_seek_get_result(const int64_t task_id);
   void recv_seek_get_result(QueryResult& _return, const int32_t seqid);
-  void get_progress_message(std::string& _return, const int32_t task_id);
-  int32_t send_get_progress_message(const int32_t task_id);
+  void get_progress_message(std::string& _return, const int64_t task_id);
+  int32_t send_get_progress_message(const int64_t task_id);
   void recv_get_progress_message(std::string& _return, const int32_t seqid);
   int32_t ping();
   int32_t send_ping();

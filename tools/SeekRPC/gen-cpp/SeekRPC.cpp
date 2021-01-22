@@ -301,8 +301,8 @@ uint32_t SeekRPC_seek_query_async_result::read(::apache::thrift::protocol::TProt
     switch (fid)
     {
       case 0:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->success);
+        if (ftype == ::apache::thrift::protocol::T_I64) {
+          xfer += iprot->readI64(this->success);
           this->__isset.success = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -327,8 +327,8 @@ uint32_t SeekRPC_seek_query_async_result::write(::apache::thrift::protocol::TPro
   xfer += oprot->writeStructBegin("SeekRPC_seek_query_async_result");
 
   if (this->__isset.success) {
-    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_I32, 0);
-    xfer += oprot->writeI32(this->success);
+    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_I64, 0);
+    xfer += oprot->writeI64(this->success);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -363,8 +363,8 @@ uint32_t SeekRPC_seek_query_async_presult::read(::apache::thrift::protocol::TPro
     switch (fid)
     {
       case 0:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32((*(this->success)));
+        if (ftype == ::apache::thrift::protocol::T_I64) {
+          xfer += iprot->readI64((*(this->success)));
           this->__isset.success = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -409,8 +409,8 @@ uint32_t SeekRPC_seek_get_result_args::read(::apache::thrift::protocol::TProtoco
     switch (fid)
     {
       case 1:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->task_id);
+        if (ftype == ::apache::thrift::protocol::T_I64) {
+          xfer += iprot->readI64(this->task_id);
           this->__isset.task_id = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -433,8 +433,8 @@ uint32_t SeekRPC_seek_get_result_args::write(::apache::thrift::protocol::TProtoc
   ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
   xfer += oprot->writeStructBegin("SeekRPC_seek_get_result_args");
 
-  xfer += oprot->writeFieldBegin("task_id", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32(this->task_id);
+  xfer += oprot->writeFieldBegin("task_id", ::apache::thrift::protocol::T_I64, 1);
+  xfer += oprot->writeI64(this->task_id);
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldStop();
@@ -452,8 +452,8 @@ uint32_t SeekRPC_seek_get_result_pargs::write(::apache::thrift::protocol::TProto
   ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
   xfer += oprot->writeStructBegin("SeekRPC_seek_get_result_pargs");
 
-  xfer += oprot->writeFieldBegin("task_id", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32((*(this->task_id)));
+  xfer += oprot->writeFieldBegin("task_id", ::apache::thrift::protocol::T_I64, 1);
+  xfer += oprot->writeI64((*(this->task_id)));
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldStop();
@@ -596,8 +596,8 @@ uint32_t SeekRPC_get_progress_message_args::read(::apache::thrift::protocol::TPr
     switch (fid)
     {
       case 1:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->task_id);
+        if (ftype == ::apache::thrift::protocol::T_I64) {
+          xfer += iprot->readI64(this->task_id);
           this->__isset.task_id = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -620,8 +620,8 @@ uint32_t SeekRPC_get_progress_message_args::write(::apache::thrift::protocol::TP
   ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
   xfer += oprot->writeStructBegin("SeekRPC_get_progress_message_args");
 
-  xfer += oprot->writeFieldBegin("task_id", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32(this->task_id);
+  xfer += oprot->writeFieldBegin("task_id", ::apache::thrift::protocol::T_I64, 1);
+  xfer += oprot->writeI64(this->task_id);
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldStop();
@@ -639,8 +639,8 @@ uint32_t SeekRPC_get_progress_message_pargs::write(::apache::thrift::protocol::T
   ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
   xfer += oprot->writeStructBegin("SeekRPC_get_progress_message_pargs");
 
-  xfer += oprot->writeFieldBegin("task_id", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32((*(this->task_id)));
+  xfer += oprot->writeFieldBegin("task_id", ::apache::thrift::protocol::T_I64, 1);
+  xfer += oprot->writeI64((*(this->task_id)));
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldStop();
@@ -1478,7 +1478,7 @@ void SeekRPCClient::recv_seek_query(QueryResult& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "seek_query failed: unknown result");
 }
 
-int32_t SeekRPCClient::seek_query_async(const SeekQuery& query)
+int64_t SeekRPCClient::seek_query_async(const SeekQuery& query)
 {
   send_seek_query_async(query);
   return recv_seek_query_async();
@@ -1498,7 +1498,7 @@ void SeekRPCClient::send_seek_query_async(const SeekQuery& query)
   oprot_->getTransport()->flush();
 }
 
-int32_t SeekRPCClient::recv_seek_query_async()
+int64_t SeekRPCClient::recv_seek_query_async()
 {
 
   int32_t rseqid = 0;
@@ -1523,7 +1523,7 @@ int32_t SeekRPCClient::recv_seek_query_async()
     iprot_->readMessageEnd();
     iprot_->getTransport()->readEnd();
   }
-  int32_t _return;
+  int64_t _return;
   SeekRPC_seek_query_async_presult result;
   result.success = &_return;
   result.read(iprot_);
@@ -1536,13 +1536,13 @@ int32_t SeekRPCClient::recv_seek_query_async()
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "seek_query_async failed: unknown result");
 }
 
-void SeekRPCClient::seek_get_result(QueryResult& _return, const int32_t task_id)
+void SeekRPCClient::seek_get_result(QueryResult& _return, const int64_t task_id)
 {
   send_seek_get_result(task_id);
   recv_seek_get_result(_return);
 }
 
-void SeekRPCClient::send_seek_get_result(const int32_t task_id)
+void SeekRPCClient::send_seek_get_result(const int64_t task_id)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("seek_get_result", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -1594,13 +1594,13 @@ void SeekRPCClient::recv_seek_get_result(QueryResult& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "seek_get_result failed: unknown result");
 }
 
-void SeekRPCClient::get_progress_message(std::string& _return, const int32_t task_id)
+void SeekRPCClient::get_progress_message(std::string& _return, const int64_t task_id)
 {
   send_get_progress_message(task_id);
   recv_get_progress_message(_return);
 }
 
-void SeekRPCClient::send_get_progress_message(const int32_t task_id)
+void SeekRPCClient::send_get_progress_message(const int64_t task_id)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("get_progress_message", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -2422,7 +2422,7 @@ void SeekRPCConcurrentClient::recv_seek_query(QueryResult& _return, const int32_
   } // end while(true)
 }
 
-int32_t SeekRPCConcurrentClient::seek_query_async(const SeekQuery& query)
+int64_t SeekRPCConcurrentClient::seek_query_async(const SeekQuery& query)
 {
   int32_t seqid = send_seek_query_async(query);
   return recv_seek_query_async(seqid);
@@ -2446,7 +2446,7 @@ int32_t SeekRPCConcurrentClient::send_seek_query_async(const SeekQuery& query)
   return cseqid;
 }
 
-int32_t SeekRPCConcurrentClient::recv_seek_query_async(const int32_t seqid)
+int64_t SeekRPCConcurrentClient::recv_seek_query_async(const int32_t seqid)
 {
 
   int32_t rseqid = 0;
@@ -2484,7 +2484,7 @@ int32_t SeekRPCConcurrentClient::recv_seek_query_async(const int32_t seqid)
         using ::apache::thrift::protocol::TProtocolException;
         throw TProtocolException(TProtocolException::INVALID_DATA);
       }
-      int32_t _return;
+      int64_t _return;
       SeekRPC_seek_query_async_presult result;
       result.success = &_return;
       result.read(iprot_);
@@ -2506,13 +2506,13 @@ int32_t SeekRPCConcurrentClient::recv_seek_query_async(const int32_t seqid)
   } // end while(true)
 }
 
-void SeekRPCConcurrentClient::seek_get_result(QueryResult& _return, const int32_t task_id)
+void SeekRPCConcurrentClient::seek_get_result(QueryResult& _return, const int64_t task_id)
 {
   int32_t seqid = send_seek_get_result(task_id);
   recv_seek_get_result(_return, seqid);
 }
 
-int32_t SeekRPCConcurrentClient::send_seek_get_result(const int32_t task_id)
+int32_t SeekRPCConcurrentClient::send_seek_get_result(const int64_t task_id)
 {
   int32_t cseqid = this->sync_->generateSeqId();
   ::apache::thrift::async::TConcurrentSendSentry sentry(this->sync_.get());
@@ -2590,13 +2590,13 @@ void SeekRPCConcurrentClient::recv_seek_get_result(QueryResult& _return, const i
   } // end while(true)
 }
 
-void SeekRPCConcurrentClient::get_progress_message(std::string& _return, const int32_t task_id)
+void SeekRPCConcurrentClient::get_progress_message(std::string& _return, const int64_t task_id)
 {
   int32_t seqid = send_get_progress_message(task_id);
   recv_get_progress_message(_return, seqid);
 }
 
-int32_t SeekRPCConcurrentClient::send_get_progress_message(const int32_t task_id)
+int32_t SeekRPCConcurrentClient::send_get_progress_message(const int64_t task_id)
 {
   int32_t cseqid = this->sync_->generateSeqId();
   ::apache::thrift::async::TConcurrentSendSentry sentry(this->sync_.get());

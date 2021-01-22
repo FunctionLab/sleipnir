@@ -734,8 +734,8 @@ class seek_query_async_result(object):
             if ftype == TType.STOP:
                 break
             if fid == 0:
-                if ftype == TType.I32:
-                    self.success = iprot.readI32()
+                if ftype == TType.I64:
+                    self.success = iprot.readI64()
                 else:
                     iprot.skip(ftype)
             else:
@@ -749,8 +749,8 @@ class seek_query_async_result(object):
             return
         oprot.writeStructBegin('seek_query_async_result')
         if self.success is not None:
-            oprot.writeFieldBegin('success', TType.I32, 0)
-            oprot.writeI32(self.success)
+            oprot.writeFieldBegin('success', TType.I64, 0)
+            oprot.writeI64(self.success)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -770,7 +770,7 @@ class seek_query_async_result(object):
         return not (self == other)
 all_structs.append(seek_query_async_result)
 seek_query_async_result.thrift_spec = (
-    (0, TType.I32, 'success', None, None, ),  # 0
+    (0, TType.I64, 'success', None, None, ),  # 0
 )
 
 
@@ -795,8 +795,8 @@ class seek_get_result_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
-                if ftype == TType.I32:
-                    self.task_id = iprot.readI32()
+                if ftype == TType.I64:
+                    self.task_id = iprot.readI64()
                 else:
                     iprot.skip(ftype)
             else:
@@ -810,8 +810,8 @@ class seek_get_result_args(object):
             return
         oprot.writeStructBegin('seek_get_result_args')
         if self.task_id is not None:
-            oprot.writeFieldBegin('task_id', TType.I32, 1)
-            oprot.writeI32(self.task_id)
+            oprot.writeFieldBegin('task_id', TType.I64, 1)
+            oprot.writeI64(self.task_id)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -832,7 +832,7 @@ class seek_get_result_args(object):
 all_structs.append(seek_get_result_args)
 seek_get_result_args.thrift_spec = (
     None,  # 0
-    (1, TType.I32, 'task_id', None, None, ),  # 1
+    (1, TType.I64, 'task_id', None, None, ),  # 1
 )
 
 
@@ -919,8 +919,8 @@ class get_progress_message_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
-                if ftype == TType.I32:
-                    self.task_id = iprot.readI32()
+                if ftype == TType.I64:
+                    self.task_id = iprot.readI64()
                 else:
                     iprot.skip(ftype)
             else:
@@ -934,8 +934,8 @@ class get_progress_message_args(object):
             return
         oprot.writeStructBegin('get_progress_message_args')
         if self.task_id is not None:
-            oprot.writeFieldBegin('task_id', TType.I32, 1)
-            oprot.writeI32(self.task_id)
+            oprot.writeFieldBegin('task_id', TType.I64, 1)
+            oprot.writeI64(self.task_id)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -956,7 +956,7 @@ class get_progress_message_args(object):
 all_structs.append(get_progress_message_args)
 get_progress_message_args.thrift_spec = (
     None,  # 0
-    (1, TType.I32, 'task_id', None, None, ),  # 1
+    (1, TType.I64, 'task_id', None, None, ),  # 1
 )
 
 

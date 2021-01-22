@@ -6,7 +6,6 @@ from pyseek import SeekRPC
 from pyseek.ttypes import SeekQuery, QueryParams, QueryResult
 
 host = 'localhost'
-port = 9090
 
 '''
 Query parameters and options:
@@ -33,7 +32,7 @@ struct SeekQuery {
 '''
 
 def runQuery(args):
-    socket = TSocket.TSocket(host, port)
+    socket = TSocket.TSocket(host, args.port)
     transport = TTransport.TBufferedTransport(socket)
     protocol = TBinaryProtocol(transport)
     client = SeekRPC.Client(protocol)
@@ -69,6 +68,8 @@ if __name__ == "__main__":
                            help='list of genes to query')
     argParser.add_argument('--useSymbols', '-S', default=False, action='store_true',
                            help='genes specified by symbol name')
+    argParser.add_argument('--port', '-p', default=9090, type=int,
+                           help='server port')
     args = argParser.parse_args()
 
     if args.genes is None:

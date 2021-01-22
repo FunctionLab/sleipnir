@@ -8,12 +8,18 @@
 using namespace std;
 using namespace SeekRPC;
 
-SeekInterface::SeekInterface(vector<string> &configFiles) {
+
+SeekInterface::SeekInterface(vector<string> &configFiles, 
+                             uint32_t maxConcurreny,
+                             uint32_t taskTimeoutSec) :
+                                querySemaphore(maxConcurreny, maxConcurreny),
+                                maxTaskTimeSec(taskTimeoutSec)
+{
     getConfigs(configFiles, this->speciesConfigs);
 
     for( auto const& [speciesName, config] : this->speciesConfigs ) {
         // Initialize a seekCentral instance for each species.
-        //  C++ automatically default inits the mapped CSeekCentral() values on first reference
+        //  C++ automatically default-inits the mapped CSeekCentral() values on first reference
         try {
             cout << "Initialize " << speciesName << endl;
             this->speciesSeekCentrals[speciesName].InitializeFromSeekConfig(config);
@@ -21,38 +27,79 @@ SeekInterface::SeekInterface(vector<string> &configFiles) {
             throw_with_nested(config_error(FILELINE + "Error initializing CSeekCentral for species " + speciesName));
         }
     }
+
+    // start the task cleaner thread
+    this->_cleanerThread = thread(&SeekInterface::runCleanTasksThread, this, taskTimeoutSec);
 }
 
 void SeekInterface::seek_query(const SeekQuery &query, QueryResult &result)
 {
-    // TODO - spin off a thread to run this query
-    // call seek_query_async()
-    // then seek_get_result()
-
-    try {
-        this->SeekQueryCommon(query, result);
-    } catch (named_error &err) {
-        string trace = print_exception_stack(err);
-        result.success = false;
-        result.statusMsg = trace;
-        result.__isset.statusMsg = true;
-    }
+    // spin off a thread to run this query but wait immediately for it
+    int64_t taskId = this->seek_query_async(query);
+    this->seek_get_result(taskId, result);
     return;
 }
 
-int32_t SeekInterface::seek_query_async(const SeekQuery &query)
-{ 
-    printf("seek_query_async\n");
-    return 0;
-}
-
-void SeekInterface::seek_get_result(int32_t task_id, QueryResult &result)
+int64_t SeekInterface::seek_query_async(const SeekQuery &query)
 {
-    printf("seek_get_result\n");
+    /* get next task_id using atomic increment counter */
+    int64_t task_id = this->next_task_id++;
+    /* if counter ever loops then throw exception, allows 4 billion queries */
+    assert(task_id > 0);
+
+    /* create a task and thread */
+    {
+        /* Use lock_guard to lock the mutex and guarantee 
+         *   that it unlocks when the scope exits
+         */
+        unique_lock mlock(this->taskMapMutex);
+        if (this->taskMap.count(task_id) != 0) {
+            /* taskMap for this id already exists
+             * this should never happen, program logic error
+             */
+            throw state_error("taskMap already contains task_id " + to_string(task_id));
+        } else {
+            /* add a new task to the map and start the thread */
+            TaskInfoPtrS task = make_shared<TaskInfo>();
+            task->seekQuery = query;
+            task->timestamp = time(0);
+            task->_thread = make_unique<thread>(&SeekInterface::runSeekQueryThread, this, task);
+            this->taskMap.emplace(task_id, move(task));
+        }
+        /* mutex automatically unlocks when scope exits */
+    }
+
+    return task_id;
+}
+
+
+void SeekInterface::seek_get_result(int64_t task_id, QueryResult &result)
+{
+    /* lookup the task */
+    TaskInfoPtrS task = this->getTask(task_id);
+    if (task == nullptr) {
+        result.success = false;
+        result.statusMsg = "Task not found or timed out: task_id: " + to_string(task_id);
+        result.__isset.statusMsg = true;
+        return;
+    }
+
+    /* join the task thread */
+    this->joinTask(*task);
+
+    /* populate the return results */
+    {
+        lock_guard tlock(task->taskMutex);
+        result = task->seekResult;
+    }
+
+    /* remove the task from the taskMap */
+    this->removeMappedTask(task_id);
+
     return;
 }
 
-string SeekInterface::get_progress_message(int32_t task_id)
+string SeekInterface::get_progress_message(int64_t task_id)
 {
     printf("get_progress_message\n");
     return "Status Message";
@@ -82,6 +129,31 @@ int32_t SeekInterface::pcl_data()
     return 0;
 }
 
+void SeekInterface::runSeekQueryThread(TaskInfoPtrS task) {
+    BoolFlag completionFlag(task->isComplete);
+    try {
+         /* Wait on semaphore if max queries already running,
+          *   the lock_guard will automatically free the semaphore
+          *   resource when the scope exits.
+          */
+        lock_guard<Semaphore> sem_lock(this->querySemaphore);
+        /* A lock_guard will automatically set the completionFlag
+         *  to true when the scope exits. This will allow other threads
+         *  such as the cleanerThread to know the execution has completed.
+         */
+        lock_guard<BoolFlag> flag_lock(completionFlag);
+        /* Run the query */
+        this->SeekQueryCommon(task->seekQuery, task->seekResult);
+    } catch (named_error &err) {
+        string trace = print_exception_stack(err);
+        task->seekResult.success = false;
+        task->seekResult.statusMsg = trace;
+        task->seekResult.__isset.statusMsg = true;
+        /* (for future) can use exception_ptr to return the exception to main thread */
+    }
+    assert(task->isComplete = true); // set by flag lock_guard
+    return;
+}
 
 void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result) {
     const QueryParams &params = query.parameters;
@@ -209,3 +281,114 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
     querySC.Destruct();
 }
 
+
+TaskInfoPtrS SeekInterface::getTask(int64_t taskId) {
+    shared_lock mlock(this->taskMapMutex);
+    if (this->taskMap.count(taskId) > 0) {
+        return this->taskMap[taskId];
+    } else {
+        return nullptr;
+    }
+}
+
+void SeekInterface::joinTask(TaskInfo &task) {
+    lock_guard tlock(task.taskMutex);
+    if (task._thread->joinable()) {
+        task._thread->join();
+        assert(task.isComplete == true);
+    }
+}
+
+int SeekInterface::removeMappedTask(int64_t taskId) {
+    // remove the task from the taskMap
+    unique_lock mlock(this->taskMapMutex);
+    uint32_t numRemoved = this->taskMap.erase(taskId);
+    assert(numRemoved == 0 || numRemoved == 1);
+    return numRemoved;
+}
+
+/* This cleaner thread handles cases where the client never calls get_result.
+ *   It will clean up abandoned threads and remove task from the taskMap
+ */
+void SeekInterface::runCleanTasksThread(uint32_t intervalSec) {
+    while (true) {
+        sleep(intervalSec);
+        // cout << "### cleaner running ###" << endl;
+        int64_t beginTaskId = 0;
+        {
+            /* find the oldes (lowest) taskId */
+            shared_lock mlock(this->taskMapMutex);
+            if (this->taskMap.size() == 0) { continue; } // empty
+            auto iter = this->taskMap.lower_bound(beginTaskId);
+            if (iter == this->taskMap.end()) { continue; } // empty
+            beginTaskId = iter->first;
+        }
+
+        /* loop starting from oldest taskid checking if task is stale */
+        for (int64_t idx = beginTaskId; idx < this->next_task_id; idx++) {
+            bool isStale = this->cleanStaleTask(idx);
+            if (isStale == false) {
+                /* remaining threads are newer so within time window */
+                break;
+            }
+        }
+    }
+}
+
+bool SeekInterface::cleanStaleTask(int64_t task_id) {
+    bool isTimedOut = false;
+
+    TaskInfoPtrS task = this->getTask(task_id);
+    if (task == nullptr) {
+        // thread completed, return true to continue checking other threads
+        return true;
+    }
+    // check elapsed time
+    double elapsed_time = difftime(time(0), task->timestamp);
+    // cout << "### Thread elapsed time: " << to_string(elapsed_time) << endl;
+    if (elapsed_time > this->maxTaskTimeSec) {
+        isTimedOut = true;
+        if (task->isComplete == true) {
+            // join the thread
+            this->joinTask(*task);
+
+            // remove the task from the taskMap
+            uint32_t numRemoved = removeMappedTask(task_id);
+            if (numRemoved > 0) {
+                // cout << "### Cleaned Task: " << to_string(task_id) << endl;
+            }
+        }
+    }
+    return isTimedOut;
+}
+
+
+// Old
+// From seek_query_async()
+// this->threadMap.emplace(piecewise_construct, 
+//                         make_tuple(task_id), 
+//                         make_tuple(SeekQueryCommon, 
+//                                    ref(query), 
+//                                    ref(this->resultMap[task_id]));
+
+// From seek_get_result()
+// {
+//     lock_guard tlock(task->taskMutex);
+//     if (task->_thread->joinable()) {
+//         task->_thread->join();
+//         assert(task->isComplete == true);
+//     }
+
+//     /* populate the return results */
+//     result = task->seekResult;
+// }
+
+// From seek_query()
+// try {
+//     this->SeekQueryCommon(query, result);
+// } catch (named_error &err) {
+//     string trace = print_exception_stack(err);
+//     result.success = false;
+//     result.statusMsg = trace;
+//     result.__isset.statusMsg = true;
+// }

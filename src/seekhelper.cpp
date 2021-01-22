@@ -226,3 +226,27 @@ bool legacyReadDBConfigFile(string dbConfigFile,
     }
     return true;
 }
+
+
+void Semaphore::notify() {
+    lock_guard<mutex> lock(_mutex);
+    ++_count;
+    if (_count > _maxCount) { _count = _maxCount; }
+    _condition.notify_one();
+}
+
+void Semaphore::wait() {
+    unique_lock<mutex> lock(_mutex);
+    while(!_count) // Handle spurious wake-ups.
+        _condition.wait(lock);
+    --_count;
+}
+
+bool Semaphore::try_wait() {
+    lock_guard<mutex> lock(_mutex);
+    if(_count) {
+        --_count;
+        return true;
+    }
+    return false;
+}

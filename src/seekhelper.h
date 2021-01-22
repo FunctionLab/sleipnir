@@ -1,6 +1,8 @@
 #ifndef SEEKHELPER_H
 #define SEEKHELPER_H
 
+#include <mutex>
+#include <condition_variable>
 #include "seekdataset.h"
 
 using namespace Sleipnir;
@@ -84,5 +86,34 @@ bool legacyReadDBConfigFile(string dbConfigFile,
                             CSeekDataset::DistanceMeasure eDistMeasure = CSeekDataset::CORRELATION,
                             bool check_dset_size_flag = true);
 
+
+class Semaphore
+{
+public:
+    Semaphore(int count, int maxCount) : 
+        _count(count), _maxCount(maxCount) {}
+    void notify();
+    void wait();
+    bool try_wait();
+    void lock() { this->wait(); }
+    void unlock() { this->notify(); }
+private:
+    mutex _mutex;
+    condition_variable _condition;
+    unsigned long _count = 0;
+    unsigned long _maxCount = 0;
+
+};
+
+// A class that implements BasicLockable and can be used with lock_guard
+//  to initalize a boolean false and automatically set it when the context exits
+class BoolFlag {
+public:
+    BoolFlag(bool &flag) : _flag(flag) {}
+    void lock() { this->_flag = false; }
+    void unlock() { this->_flag = true; }
+private:
+    bool &_flag;
+};
 
 #endif  // SEEKHELPER_H

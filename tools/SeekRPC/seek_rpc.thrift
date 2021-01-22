@@ -45,9 +45,9 @@ struct QueryResult {
 
 service SeekRPC {
     QueryResult seek_query(1: SeekQuery query);
-    i32 seek_query_async(1: SeekQuery query);  // returns a task id
-    QueryResult seek_get_result(1: i32 task_id);  // returns result from an async task
-    string get_progress_message(1: i32 task_id);  // to retrieve status info for async task given by id
+    i64 seek_query_async(1: SeekQuery query);  // returns a task id
+    QueryResult seek_get_result(1: i64 task_id);  // returns result from an async task
+    string get_progress_message(1: i64 task_id);  // to retrieve status info for async task given by id
     i32 ping();  // returns monotonic increasing int
     i32 pvalue_genes();  // input and return types to be determined
     i32 pvalue_datasets();  // input and return types to be determined
