@@ -43,6 +43,7 @@ def runQuery(args):
                          min_genome_fraction=0.5,
                          use_gene_symbols=args.useSymbols)
 
+    genes = [gene.upper() for gene in args.genes]
     query = SeekQuery(species=args.species, genes=args.genes, parameters=params)
 
     result = client.seek_query(query)

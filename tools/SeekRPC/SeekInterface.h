@@ -4,6 +4,7 @@
 #include <map>
 #include <thread>
 #include <mutex>
+#include <atomic>
 #include <shared_mutex>
 #include "seekcentral.h"
 #include "seekhelper.h"
