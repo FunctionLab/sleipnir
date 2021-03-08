@@ -7,5 +7,9 @@ dependencies:
   - matplotlib
   - scipy
   - toml
+  - ipython
+  - pytest
+  - pytest-dependency
+  - pip
   - pip:
     - envbash

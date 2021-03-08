@@ -2,6 +2,7 @@ import os
 import argparse
 import glob
 from datetime import datetime
+import seekUtils as sutils
 from seekCreateDB import createSeekDB
 
 # This script will create a new database from PCL files
@@ -23,13 +24,13 @@ def loadDatasetPlatformMap(filename):
       for line in fh:
         vals = line.strip().split()
         if len(vals) == 3:
-          # Likely of type (pcl_file, name, platform)
+          # Likely of type (pcl_file, name, platform) e.g. 'GSE13494.GPL570.pcl  GSE13494.GPL570  GPL570'
           assert 'pcl' in vals[0].lower(), "First of 3 columns should specify pcl file name"
           assert 'pcl' not in vals[1].lower(), "Reference to pcl found in 2nd column"
           assert 'pcl' not in vals[2].lower(), "Reference to pcl found in 3rd column"
           dsetDict[vals[1]] = vals[2]
         elif len(vals) == 2:
-          # Likely of type (pcl_file, name, platform)
+          # Likely of type (name, platform), such as 'GSE13494.GPL570  GPL570'
           assert 'pcl' not in line.lower(), "check dataset file, seems to reference pcl files"
           dsetDict[vals[0]] = vals[1]
         else:
@@ -38,76 +39,85 @@ def loadDatasetPlatformMap(filename):
 
 
 def main(args):
-  # Step 1: Load the dataset lists for the new, small and large DBs and make sure they are all disjoint
-  # check existence of the dataset map files
-  if not os.path.exists(args.smallDsetFile):
-    raise FileNotFoundError("Small DB dataset_platform map not found: " + args.smallDsetFile)
-  if not os.path.exists(args.largeDsetFile):
-    raise FileNotFoundError("Large DB dataset_platform map not found: " + args.largeDsetFile)
-  if not os.path.exists(args.newDsetFile):
-    raise FileNotFoundError("New dataset_platform map not found: " + args.newDsetFile)
+    # Step 1: Load the dataset lists for the new, small and large DBs and make sure they are all disjoint
+    # check existence of the dataset map files
+    if not os.path.exists(args.smallDsetFile):
+        raise FileNotFoundError("Small DB dataset_platform map not found: " + args.smallDsetFile)
+    if not os.path.exists(args.largeDsetFile):
+        raise FileNotFoundError("Large DB dataset_platform map not found: " + args.largeDsetFile)
+    if not os.path.exists(args.newDsetFile):
+        raise FileNotFoundError("New dataset_platform map not found: " + args.newDsetFile)
 
-  smallDsetDict = loadDatasetPlatformMap(args.smallDsetFile)
-  largeDsetDict = loadDatasetPlatformMap(args.largeDsetFile)
-  newDsetDict = loadDatasetPlatformMap(args.newDsetFile)
+    smallDsetDict = loadDatasetPlatformMap(args.smallDsetFile)
+    largeDsetDict = loadDatasetPlatformMap(args.largeDsetFile)
+    newDsetDict = loadDatasetPlatformMap(args.newDsetFile)
 
-  smallDsets = set(smallDsetDict.keys())
-  largeDsets = set(largeDsetDict.keys())
-  newDsets = set(newDsetDict.keys())
-  
-  large_small_overlap = largeDsets.intersection(smallDsets)
-  large_new_overlap = largeDsets.intersection(newDsets)
-  small_new_overlap = smallDsets.intersection(newDsets)
+    smallDsets = set(smallDsetDict.keys())
+    largeDsets = set(largeDsetDict.keys())
+    newDsets = set(newDsetDict.keys())
 
-  # Datasets must be disjoint between all the databases
-  assert not large_small_overlap, "large and small datasets overlap " + str(large_small_overlap)
-  assert not large_new_overlap, "large and new datasets overlap " + str(large_new_overlap)
-  assert not small_new_overlap, "small and new datasets overlap " + str(small_new_overlap)
+    large_small_overlap = largeDsets.intersection(smallDsets)
+    large_new_overlap = largeDsets.intersection(newDsets)
+    small_new_overlap = smallDsets.intersection(newDsets)
 
-  # Step 2:
-  # Make a new DB from the dataset PCL files
-  # check how many db files large and small db have
-  assert os.path.isdir(args.dirLargeDB)
-  assert os.path.isdir(args.dirSmallDB)
-  assert os.path.isdir(args.dirLargeDB+"/db")
-  assert os.path.isdir(args.dirSmallDB+"/db")
+    # Datasets must be disjoint between all the databases
+    assert not large_small_overlap, "large and small datasets overlap " + str(large_small_overlap)
+    assert not large_new_overlap, "large and new datasets overlap " + str(large_new_overlap)
+    assert not small_new_overlap, "small and new datasets overlap " + str(small_new_overlap)
 
-  numDBFiles = len(glob.glob1(args.dirLargeDB+"/db", "*.db"))
-  numSmallDBFiles = len(glob.glob1(args.dirSmallDB+"/db", "*.db"))
-  assert numDBFiles == numSmallDBFiles, "numDBFiles mismatch between large and small db"
-  # assert numDBFiles == 1000
+    # Step 2:
+    # Make a new DB from the dataset PCL files
+    # check how many db files large and small db have
+    assert os.path.isdir(args.dirLargeDB)
+    assert os.path.isdir(args.dirSmallDB)
+    assert os.path.isdir(args.dirLargeDB+"/db")
+    assert os.path.isdir(args.dirSmallDB+"/db")
 
-  dateStr = datetime.now().strftime("%Y%m%d_%H%M%S")
-  incrDBDirName = os.path.join(args.outDir, "incr_dset_" + dateStr)
-  res = createSeekDB(sleipnirBinDir=args.sleipnirBinDir,
-                     inputDatasetFile=args.newDsetFile,
-                     pclDir=args.dirNewPCL,
-                     refDir=args.dirLargeDB,
-                     output_dir=incrDBDirName,
-                     numDBFiles=numDBFiles)
-  assert res == True, "createSeekDB failed"
-  print(f'Incremental database created in {incrDBDirName}')
+    numDBFiles = len(glob.glob1(args.dirLargeDB+"/db", "*.db"))
+    numSmallDBFiles = len(glob.glob1(args.dirSmallDB+"/db", "*.db"))
+    assert numDBFiles == numSmallDBFiles, "numDBFiles mismatch between large and small db"
+    # assert numDBFiles == 1000
 
-  # Step 3:
-  # Merge the new DB into the small DB using bash script
-  # Output directory must be specified
-  # Recommend after completion of merge do the following by hand:
-  #   Rename small DB directory to prev.num
-  #   Rename combined DB directory to small DB name
-  scriptPath = os.path.dirname(os.path.realpath(__file__))
+    dateStr = datetime.now().strftime("%Y%m%d_%H%M%S")
+    incrDBDirName = os.path.join(args.outDir, "incr_dset_" + dateStr)
 
-  print("Incremental Dataset Build Complete. Ready for merge!")
-  print('*** NEXT STEP ***')
-  print("Run the following command to perform the merge")
-  print('### COMMAND ###')
-  print(f'bash {scriptPath}/seekCombineDB.sh -o {args.outDir} -b {args.sleipnirBinDir} -d {args.dirSmallDB} -n {incrDBDirName}')
+    # copy over geneMap and quant files needed from refDB
+    os.system(f"cp {args.dirLargeDB}/gene_map.txt {args.incrDBDirName}")
+    os.system(f"cp {args.dirLargeDB}/quant2 {args.incrDBDirName}")
 
-  print('\nOptional final step: verify the merged db contests')
-  print('### COMMAND ###')
-  print(f'bash {scriptPath}/seekVerifyMergeDB.sh -b {args.sleipnirBinDir} -d {args.dirSmallDB}/db -n {incrDBDirName}/db -c {args.outDir}/db')
-  
-  # Step 4: 
-  # Check size of small DB relative to large DB, and recommend combining at some size/percentage threshold
+    cfg = sutils.defaultConfig
+    cfg.binDir = args.sleipnirBinDir
+    cfg.inDir = incrDBDirName
+    cfg.outDir = incrDBDirName
+    cfg.pclDir = args.dirNewPCL
+    cfg.datasetsFile = args.newDsetFile
+    cfg.numDbFiles = numDBFiles
+    sutils.checkConfig(cfg)
+
+    res = createSeekDB(cfg, None, runAll=True, concurrency=8)
+    assert res == True, "createSeekDB failed"
+    print(f'Incremental database created in {incrDBDirName}')
+
+    # Step 3:
+    # Merge the new DB into the small DB using bash script
+    # Output directory must be specified
+    # Recommend after completion of merge do the following by hand:
+    #   Rename small DB directory to prev.num
+    #   Rename combined DB directory to small DB name
+    scriptPath = os.path.dirname(os.path.realpath(__file__))
+
+    print("Incremental Dataset Build Complete. Ready for merge!")
+    print('*** NEXT STEP ***')
+    print("Run the following command to perform the merge")
+    print('### COMMAND ###')
+    print(f'bash {scriptPath}/seekCombineDB.sh -o {args.outDir} -b {args.sleipnirBinDir} -d {args.dirSmallDB} -n {incrDBDirName}')
+
+    print('\nOptional final step: verify the merged db contests')
+    print('### COMMAND ###')
+    print(f'bash {scriptPath}/seekVerifyMergeDB.sh -b {args.sleipnirBinDir} -d {args.dirSmallDB}/db -n {incrDBDirName}/db -c {args.outDir}/db')
+
+    # Step 4: 
+    # Check size of small DB relative to large DB, and recommend combining at some size/percentage threshold
 
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser()

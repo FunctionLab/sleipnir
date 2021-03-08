@@ -10,6 +10,8 @@ To merge in new datasets, do the following:
 1) Make a directory with the PCL files and a dataset_list.txt file
 2) Activate a conda environment with python 3.x enabled
 3) Run the incremental merge script to create a new database out of the new PCL files. When it concludes it will indicate the command to run to then merge the new database into the small database.
+Note: the small and large dbs are referenced to make sure there is not overlap in the datasets and
+to make sure to use the same number of DB files.
 
   ```python $sleipnir/scripts/seekIncrementalMerge.py -p new/pcl/ -dn new/dataset.description.txt -ds small_db/dataset.description.txt -dl large_db/dataset.description.txt -s small_db/ -l large_db/ -b $sleipnir/Debug -o ./merged```
 
