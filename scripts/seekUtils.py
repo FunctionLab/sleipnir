@@ -1,4 +1,8 @@
-from genericpath import exists
+"""
+This module has a set of functions for make Seek DB files and metadata.
+The functions have been parallelized where possible.
+TODO - parallelize makeDsetSizeFile() and makePlatFiles()
+"""
 import os
 import re
 import sys
@@ -14,7 +18,7 @@ sys.path.append(currPath)
 from runParallelJobs import runParallelJobs
 from structDict import StructDict
 
-
+# Each funtion operates with a cfg struct that defines file and binary locations
 defaultConfig = StructDict({    
     'binDir': None,
     'inDir': None,
@@ -30,6 +34,9 @@ defaultConfig = StructDict({
 })
 
 def checkConfig(cfg):
+    """
+    Does checks on the cf and standardizes the file locations to absolute paths
+    """
     if not os.path.exists(cfg.outDir):
         os.makedirs(cfg.outDir)
     # set some paths relative to input directory if path missing
