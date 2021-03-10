@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <iostream>
-#include <cassert>
 #include <filesystem>
+#include <stdexcept>
 #include "seekhelper.h"
 #include "databasei.h"
 
@@ -59,6 +59,7 @@ bool parseArgs(int argc, char **argv, Args &args)
   }
   return true;
 }
+
 
 int main(int argc, char** argv) 
 {
@@ -122,9 +123,13 @@ int main(int argc, char** argv)
   // Verify gene names are the same
   size_t numDbletGenes = dbletCombined.GetGenes();
   for (auto & dblet: dblets) {
-    assert(dblet->GetGenes() == numDbletGenes);
+    if (dblet->GetGenes() != numDbletGenes) {
+      throw runtime_error("Num dbFile genes differ: " + string(args.dbFile));
+    }
     for (int i = 0; i < numDbletGenes; i++) {
-      assert(dblet->GetGene(i) == dbletCombined.GetGene(i));
+      if (dblet->GetGene(i) != dbletCombined.GetGene(i)) {
+        throw runtime_error("Gene names differ: " + string(args.dbFile));
+      }
     }
   }
 
@@ -150,7 +155,7 @@ int main(int argc, char** argv)
         for(int x = 0; x < numDatasets; x++) {
           if (data1[x] != dataCombined[dset_offset + x]) {
             printf("Gene data mismatch(2): gene: %d, dblet %d, co-gene: %d, dataset: %d\n", i, k, j, x);
-            assert(false);
+            throw runtime_error("Gene data mismatch: " + string(args.dbFile));
           }
           if (data1[x] != 0xFF) {
             numValidData++;
@@ -161,7 +166,9 @@ int main(int argc, char** argv)
     }
     printf("numValidData: %zu\n", numValidData);
   }
-  assert(numValidData != 0);
+  if (numValidData == 0) {
+    throw runtime_error("All data is NA: " + string(args.dbFile));
+  }
 }
 
 // Notes on CDatabaselet calls

@@ -5,7 +5,7 @@ import threading
 import subprocess
 
 
-def funcThread(work_queue, tid=0, returnQueue=None):
+def funcThread(work_queue, tid=0, returnCodeQueue=None):
     '''Runs python function jobs received from work_queue'''
     print('start thread')
     try:
@@ -22,18 +22,23 @@ def funcThread(work_queue, tid=0, returnQueue=None):
     return
 
 
-def jobThread(work_queue, tid=0, returnQueue=None):
+def jobThread(work_queue, tid=0, returnCodeQueue=None, outputQueue=None):
     '''Runs command line jobs received from the work_queue'''
     print('start thread')
+    captureOutput = False
+    if outputQueue is not None:
+        captureOutput = True
     try:
         while cmd := work_queue.get(block=False):
             useShell = False
             if type(cmd) is str:
                 useShell = True
             print(f'Thread {tid}: cmd: {cmd}')
-            ret = subprocess.run(cmd, shell=useShell)
-            if returnQueue is not None:
-                returnQueue.put(ret.returncode)
+            ret = subprocess.run(cmd, shell=useShell, capture_output=captureOutput)
+            if returnCodeQueue is not None:
+                returnCodeQueue.put(ret.returncode)
+            if outputQueue is not None:
+                outputQueue.put(ret.stdout.decode('utf-8'))
     except queue.Empty:
         pass
     return
@@ -64,15 +69,17 @@ def runParallelJobs(cmdlist, concurrency=2, isPyFunction=False):
         target = jobThread
         checkReturnCode = True
 
-    return_queue = None
+    returnCodeQueue = None
     if checkReturnCode is True:
-        return_queue = queue.Queue()
+        returnCodeQueue = queue.Queue()
 
     threads = []
     for idx in range(concurrency):
         jthread = threading.Thread(name=f'thread_{idx}',
                                    target=target,
-                                   args=(work_queue, idx, return_queue))
+                                   args=(work_queue,),
+                                   kwargs={'tid': idx,
+                                           'returnCodeQueue': returnCodeQueue,})
         jthread.setDaemon(True)
         jthread.start()
         threads.append(jthread)
@@ -82,7 +89,7 @@ def runParallelJobs(cmdlist, concurrency=2, isPyFunction=False):
     
     if checkReturnCode is True:
         for i in range(len(cmdlist)):
-            code = return_queue.get(block=False)
+            code = returnCodeQueue.get(block=False)
             if code != 0:
                 raise RuntimeError(f"Exit code {code} for cmd: {cmdlist[i]}")
 
