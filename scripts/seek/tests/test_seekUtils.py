@@ -7,8 +7,8 @@ import tempfile
 import seekUtils as sutils
 
 testDir = os.path.dirname(__file__)
-scriptsDir = os.path.dirname(testDir)
-sleipnirDir = os.path.dirname(scriptsDir)
+seekScriptsDir = os.path.dirname(testDir)
+sleipnirDir = os.path.dirname(os.path.dirname(seekScriptsDir))
 use_tempfile = False
 
 # import pdb; pdb.set_trace()

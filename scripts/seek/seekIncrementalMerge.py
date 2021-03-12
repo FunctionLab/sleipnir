@@ -85,6 +85,7 @@ def main(args):
     os.system(f"cp {args.dirLargeDB}/gene_map.txt {args.incrDBDirName}")
     os.system(f"cp {args.dirLargeDB}/quant2 {args.incrDBDirName}")
 
+    # create a new database from the new incremental pcl files
     cfg = sutils.defaultConfig
     cfg.binDir = args.sleipnirBinDir
     cfg.inDir = incrDBDirName
