@@ -1,4 +1,22 @@
-# This script is an adaptation of the prepare_seek.py script that 
+"""
+Create a new Seek DB from pcl files. The inputs are pcl files, a gene_map.txt file
+which is the ordered list of genes to include, a quant file which is the binning
+values to map floats to 8 bits values (bins), and a dataset list file which
+includes the pcl filename for the dataset and the platform type.
+
+When specifying the --all option, the output is a full Seek DB, including DB files,
+prep, plat, sinfo, dab and pclbin directories.
+
+Note: requires the python conda environment specified in the conda_environment.yml
+To create the env 'conda env create --file conda_environment.yml'
+
+Example usage:
+conda activate genomics
+python seekCreateDB -b <path_sleipnir_binaries> -i <input_dir> -o <output_dir> --all
+
+Where the gene_map.txt and quant2 and pcl files can be found in the input_dir.
+"""
+# This script is an adaptation of the prepare_seek.py script that
 # comes with the breast cancer example dataset on the Seek website
 import os
 import re
@@ -16,9 +34,15 @@ from structDict import StructDict
 def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
     sutils.checkConfig(cfg)
 
+    if tasksToRun is None:
+        tasksToRun = StructDict()
+
     # copy the geneMapFile and quant file to output dir
     os.system(f"cp {cfg.geneMapFile} {cfg.outDir}")
     os.system(f"cp {cfg.quantFile} {cfg.outDir}")
+    # output a dset list file
+    dsetFileName = os.path.join(cfg.outDir, os.path.basename(cfg.datasetsFile))
+    os.system(f"ls -1 {cfg.pclDir} > {dsetFileName}")
 
     if tasksToRun.all is True or runAll is True:
         tasksToRun.pclbin = True
@@ -57,7 +81,7 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
 
 #set up script for SEEK
 if __name__=="__main__":
-    cfg = sutils.defaultConfig
+    cfg = sutils.getDefaultConfig()
 
     #input directory (containing the PCL's)
     #input file: dataset list (3-column format: file, name, platform)
@@ -111,7 +135,6 @@ if __name__=="__main__":
         print("No task types specified: specify one or more, for example --dab or --all etc.")
         sys.exit(-1)
 
-    cfg = sutils.defaultConfig
     cfg.binDir = args.sleipnirBinDir
     cfg.inDir = args.inDir
     cfg.outDir = args.outDir

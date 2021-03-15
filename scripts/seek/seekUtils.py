@@ -1,7 +1,6 @@
 """
-This module has a set of functions for make Seek DB files and metadata.
+This module has a set of functions for making Seek DB files and metadata.
 The functions have been parallelized where possible.
-TODO - parallelize makeDsetSizeFile() and makePlatFiles()
 """
 import os
 import re
@@ -18,8 +17,10 @@ sys.path.append(currPath)
 from runParallelJobs import runParallelJobs
 from structDict import StructDict
 
+# TODO - parallelize makeDsetSizeFile() and makePlatFiles()
+
 # Each funtion operates with a cfg struct that defines file and binary locations
-defaultConfig = StructDict({    
+defaultConfig = StructDict({
     'binDir': None,
     'inDir': None,
     'outDir': None,
@@ -29,13 +30,18 @@ defaultConfig = StructDict({
     'geneMapFile': 'gene_map.txt',
     'quantFile': 'quant2',
     'datasetsFile': 'datasets.txt',
+    'dsetSizeFile': 'dset_size.txt',
     'numDbFiles': 1000,
     'configVerified': False,
 })
 
+def getDefaultConfig():
+    return defaultConfig.copy()
+
+
 def checkConfig(cfg):
     """
-    Does checks on the cf and standardizes the file locations to absolute paths
+    Does checks on the cfg and standardizes the file locations to absolute paths
     """
     if not os.path.exists(cfg.outDir):
         os.makedirs(cfg.outDir)
@@ -46,17 +52,33 @@ def checkConfig(cfg):
             # it doesn't contain a path, so set one
             cfg[elem] = os.path.join(cfg.inDir, cfg[elem])
         if not os.path.exists(cfg[elem]):
-            raise FileNotFoundError(f'{elem}: {cfg[elem]}') 
+            raise FileNotFoundError(f'{elem}: {cfg[elem]}')
     # set some paths relative to output directory if path missing
-    for elem in ('dabDir', 'dbDir'):
+    for elem in ('dabDir', 'dbDir', 'dsetSizeFile'):
         # check if the elem contains a path, i.e. '/'
         if not os.sep in cfg[elem]:
             # it doesn't contain a path, so set one
             cfg[elem] = os.path.join(cfg.outDir, cfg[elem])
         if not os.path.exists(cfg[elem]):
-            os.makedirs(cfg[elem])
+            if elem.endswith('Dir'):
+                os.makedirs(cfg[elem])
     cfg.configVerified = True
-   
+
+
+def prepCmd(funcName, executableName, cfg):
+    """
+    Does some checks and command prep:
+    - Verifies that checkConfig has been run
+    - Builds out the full path to the command binary
+    - Verifies the the command binary exists
+    """
+    if cfg.configVerified is False:
+        raise ValueError(f'Please run checkConfig(cfg) prior to calling {funcName}')
+    cmdName = os.path.join(cfg.binDir, executableName)
+    if not os.path.isfile(cmdName):
+        raise FileNotFoundError(f'Binary {cmdName} not found')
+    return cmdName
+
 
 def read_dataset_list(dsetFile):
     fp = open(dsetFile)
@@ -68,7 +90,7 @@ def read_dataset_list(dsetFile):
         # expecting first column like 'dataset.platform.pcl'
         parts = cols[0].split(".")
         if len(parts) < 2:
-            print(f"Error line({count}): expecting at least two columns per line")
+            print(f"Error line({count}): expecting at first column of form datasetName.platformName.pcl")
             break
         if len(cols) == 1:
             # next column is 'dataset.platform'
@@ -105,15 +127,6 @@ def write_dataset_platform_map(dset_list, dsetFile):
         # datasetName = m.group(1)
         fw.write("%s\t%s\n" % (name, platform))
     fw.close()
-
-
-def prepCmd(funcName, executableName, cfg):
-    if cfg.configVerified is False:
-        raise ValueError(f'Please run checkConfig(cfg) prior to calling {funcName}')
-    cmdName = os.path.join(cfg.binDir, executableName)
-    if not os.path.isfile(cmdName):
-        raise FileNotFoundError(f'Binary {cmdName} not found')
-    return cmdName
 
 
 def Pcl2Pclbin(cfg, concurrency=8):
@@ -218,7 +231,7 @@ def makePlatFiles(cfg, concurrency=8):
     '''
     Calculate platform-wide gene score averages - not parallelized
     TODO - this could be parallelized if SeekPrep combineplat is updated to take a list of input dirs
-    Requires: 
+    Requires:
         - DB files already made
         - gene prep files already made
     '''
@@ -262,17 +275,18 @@ def makeDsetSizeFile(cfg, concurrency=8):
 
 
 def dsetFileName(dbDirName):
-    return os.path.join(dbDirName + "_dataset_list.txt")
+    return dbDirName + "_dataset_list.txt"
 
 
-def dsetPlatMapFileName(dbDirName):
-    return os.path.join(dbDirName + "_dataset_map.txt")
+def dsetPlatMapFileName(dbDirName, cfg):
+    filename = os.path.basename(cfg.datasetsFile)
+    return dbDirName + "_" + filename
 
 
 def Task_DABToDBFiles(cfg, threadDbDir, threadDatasets: list):
     '''
     A task that creates a DB directory with a set of .db files from a subset of the datasets.
-    This is a parallel task which will be called from runParallelJobs, it will be invoked once 
+    This is a parallel task which will be called from runParallelJobs, it will be invoked once
     per task in the task queue.
     '''
     cmdName = os.path.join(cfg.binDir, 'Data2DB')
@@ -282,7 +296,7 @@ def Task_DABToDBFiles(cfg, threadDbDir, threadDatasets: list):
         os.makedirs(threadDbDir, exist_ok=True)
     threadDatasetFile = dsetFileName(threadDbDir)
     write_dataset_list(threadDatasets, threadDatasetFile)
-    write_dataset_platform_map(threadDatasets, dsetPlatMapFileName(threadDbDir))
+    write_dataset_platform_map(threadDatasets, dsetPlatMapFileName(threadDbDir, cfg))
     cmd = f"{cmdName} -i {cfg.geneMapFile} -d {cfg.dabDir} -D {threadDbDir} -u -B 50 -f {cfg.numDbFiles} -x {threadDatasetFile}"
     print(cmd)
     subprocess.run(cmd, shell=True)
@@ -315,6 +329,15 @@ def parallelMakePerThreadDB(cfg, concurrency=8):
     startTime = time.time()
     runParallelJobs(taskList, concurrency=concurrency, isPyFunction=True)
     print('parallelMakePerThreadDB: completion time {}s'.format(time.time() - startTime))
+    # Also concatenate the dataset_map files together
+    combinedListFile = os.path.join(cfg.outDir, 'combined_dataset_map.txt')
+    if os.path.isfile(combinedListFile):
+        os.remove(combinedListFile)
+    for dbDir in dbDirsToCombine:
+        partDsetFile =  dsetPlatMapFileName(dbDir, cfg)
+        if not os.path.isfile(partDsetFile):
+            raise FileNotFoundError(f"Error combining dataset lists, missing file {partDsetFile}")
+        os.system(f"cat {partDsetFile} >> {combinedListFile}")
     return dbDirsToCombine
 
 
@@ -322,7 +345,7 @@ def Task_CombineDBFiles(cfg, dbDirsToCombine, dbFileName):
     '''
     This task combines all instances of a db file (of the same name) across all DB directories.
     For example combine all 000000.db files from dbDirs [db000, db001, db002]. This is the
-    second step of making DB files in parallel, the first creates many DB dirs with part 
+    second step of making DB files in parallel, the first creates many DB dirs with part
     of the datasets represented in each. This step combines them all together into one DB dir.
     '''
     cmdName = os.path.join(cfg.binDir, 'DBCombiner')
@@ -330,11 +353,10 @@ def Task_CombineDBFiles(cfg, dbDirsToCombine, dbFileName):
         raise FileNotFoundError(f'Binary {cmdName} not found')
     # Create a temp file to write the dbFile paths into
     tmpFile = tempfile.NamedTemporaryFile(delete=False)
-    fp = open(tmpFile.name, 'w')
-    for dirName in dbDirsToCombine:
-        dbDirFile = os.path.join(dirName, dbFileName)
-        fp.write(dbDirFile + os.linesep)
-    fp.close()
+    with open(tmpFile.name, 'w') as fp:
+        for dirName in dbDirsToCombine:
+            dbDirFile = os.path.join(dirName, dbFileName)
+            fp.write(dbDirFile + os.linesep)
     cmd = f"{cmdName} -C -i {cfg.geneMapFile} --db {tmpFile.name} -D {cfg.dbDir}"
     print(f'{cmd}')
     subprocess.run(cmd, shell=True)
@@ -357,15 +379,6 @@ def parallelCombineThreadDBs(cfg, dbDirsToCombine, concurrency=8):
         taskList.append(task)
     startTime = time.time()
     runParallelJobs(taskList, concurrency=concurrency, isPyFunction=True)
-    # Also concatenate the dataset_map files together
-    combinedListFile = os.path.join(cfg.outDir, 'combined_dataset_map.txt')
-    if os.path.isfile(combinedListFile):
-        os.remove(combinedListFile)
-    for dbDir in dbDirsToCombine:
-        partDsetFile =  dsetPlatMapFileName(dbDir)
-        if not os.path.isfile(partDsetFile):
-            raise FileNotFoundError("Error combining dataset lists, missing file {partDsetFile}")
-        os.system(f"cat {partDsetFile} >> {combinedListFile}")
     print('parallelCombineThreadDBs: completion time {}s'.format(time.time() - startTime))
 
 

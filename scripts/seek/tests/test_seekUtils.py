@@ -11,8 +11,6 @@ seekScriptsDir = os.path.dirname(testDir)
 sleipnirDir = os.path.dirname(os.path.dirname(seekScriptsDir))
 use_tempfile = False
 
-# import pdb; pdb.set_trace()
-
 class TestSeekUtils:
     temp_dir = None
     mockDir = ''
@@ -37,7 +35,7 @@ class TestSeekUtils:
         mockDbDir = os.path.join(testDir, 'inputs/mockDb')
         os.system(f'cp -a {mockDbDir} {tmpDirName}')
         # setup the config file
-        cfg = sutils.defaultConfig
+        cfg = sutils.getDefaultConfig()
         cfg.inDir = f'{cls.mockDir}'
         cfg.outDir = os.path.join(cls.mockDir, 'outdir')
         cfg.binDir = os.path.join(sleipnirDir, 'Debug')
@@ -138,7 +136,8 @@ class TestSeekUtils:
                 numFilesPerCollection = len(dbFiles)
             else:
                 assert len(dbFiles) == numFilesPerCollection
-        threadDsetFiles = glob.glob(os.path.join(threadWorkDir, '*dataset_map.txt'))
+        dsetFilename = os.path.basename(cfg.datasetsFile)
+        threadDsetFiles = glob.glob(os.path.join(threadWorkDir, '*' + dsetFilename))
         threadDsetFiles.sort()
         assert len(threadDsetFiles) == len(threadDbList)
 

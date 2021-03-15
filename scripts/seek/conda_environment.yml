@@ -1,0 +1,15 @@
+name: genomics
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.8.2
+  - matplotlib
+  - scipy
+  - toml
+  - ipython
+  - pytest
+  - pytest-dependency
+  - pip
+  - pip:
+    - envbash
