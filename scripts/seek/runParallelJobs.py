@@ -7,6 +7,8 @@ import subprocess
 
 def funcThread(work_queue, tid=0, returnCodeQueue=None):
     '''Runs python function jobs received from work_queue'''
+    # TODO - switch to runinng the functions using the multiprocessing library
+    #  to avoid GIL global thread interpreter lock contention
     print('start thread')
     try:
         while job := work_queue.get(block=False):
