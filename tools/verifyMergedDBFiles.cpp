@@ -93,7 +93,6 @@ int main(int argc, char** argv)
   Sleipnir::CDatabaselet dbletCombined(false);
   dbletCombined.Open(fs::path(args.combinedDir) / args.dbFile);
 
-  // TODO - resume here
   // Verify number of datasets in combined is sum of parts
   size_t numDatasets = 0;
   size_t imgSize = 0;
@@ -132,18 +131,22 @@ int main(int argc, char** argv)
       }
     }
   }
+  printf("Num genes in dbFile %s: %zu\n", args.dbFile, numDbletGenes);
 
   // Loop through gene data and compare them, make sure the data isn't all 0xFF
     vector<unsigned char> data1, dataCombined;
   size_t iGenes = dbletCombined.GetTotalNumGenesInCollection();
   size_t numValidData = 0;
   for (int i = 0; i < numDbletGenes; i++) {
+    // For each gene stored in the db file
     printf("Compare data for gene %d:  \n", i);
     for (int j = 0; j < iGenes; j++) {
+      // for each of the dataset wide genes
       dataCombined.clear();
       dbletCombined.Get(i, j, dataCombined);
       size_t dset_offset = 0;
       for (int k=0; k<dblets.size(); k++) {
+        // for each of the partial db files to be combined
         // printf("Compare dblet %d:  ", k);
         data1.clear();
         dblets[k]->Get(i, j, data1);

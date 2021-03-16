@@ -10,5 +10,6 @@ cmake-build-debug/**
 *.o
 Makefile
 Makefile.*
-__pycache__/
+__pycache__/**
+tests/test_output/**
 
