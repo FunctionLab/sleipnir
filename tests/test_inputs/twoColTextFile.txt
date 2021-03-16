@@ -1,0 +1,7 @@
+ 	
+a alpha
+b  	beta
+  	   
+ 	  g	gamma
+
+	d  	    delta
