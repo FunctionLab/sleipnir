@@ -352,6 +352,7 @@ def Task_CombineDBFiles(cfg, dbDirsToCombine, dbFileName):
     if not os.path.isfile(cmdName):
         raise FileNotFoundError(f'Binary {cmdName} not found')
     # Create a temp file to write the dbFile paths into
+    #  This will be a list of, for example, all 00000.db files from each thread directory
     tmpFile = tempfile.NamedTemporaryFile(delete=False)
     with open(tmpFile.name, 'w') as fp:
         for dirName in dbDirsToCombine:

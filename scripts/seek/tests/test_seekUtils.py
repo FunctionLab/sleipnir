@@ -125,6 +125,7 @@ class TestSeekUtils:
         sutils.checkConfig(cfg)
         # first create the per-thread db files based on partial dataset lists
         dbDirsToCombine = sutils.parallelMakePerThreadDB(cfg, concurrency=4)
+        # check results
         threadWorkDir = os.path.join(cfg.outDir, 'thread_work')
         filePattern = os.path.join(threadWorkDir, 'db*')
         threadDbList = [d for d in glob.glob(filePattern) if os.path.isdir(d)]

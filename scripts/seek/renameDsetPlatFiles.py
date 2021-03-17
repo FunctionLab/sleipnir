@@ -2,7 +2,7 @@ import os
 import argparse
 
 """
-Program to rename experiment.ext to experiment.platform.ext
+Program to rename experiment.pcl to experiment.platform.pcl
 Input is a file with list of the final names to create
 """
 if __name__ == "__main__":

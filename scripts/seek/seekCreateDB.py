@@ -115,6 +115,8 @@ if __name__=="__main__":
                            help='Directory containing the PCL files for the new datasets')
     argParser.add_argument('--datasetFile', '-d', type=str, required=False, default=cfg.datasetsFile,
                            help='Text file listing the datasets, one dataset per line, three columns (pcl_file, name, platform)')
+    argParser.add_argument('--geneMapFile', '-g', type=str, required=False, default=cfg.geneMapFile,
+                           help='Text file containing the ordered (numbered) list of genes to be in the database')
     argParser.add_argument('--numDBFiles', '-n', type=int, required=False, default=cfg.numDbFiles,
                            help='Number of output DB files to spread gene data across (should match refDB number)')
     argParser.add_argument('--concurrency', '-m', type=int, required=False, default=4,
@@ -140,6 +142,7 @@ if __name__=="__main__":
     cfg.outDir = args.outDir
     cfg.pclDir = args.pclDir
     cfg.datasetsFile = args.datasetFile
+    cfg.geneMapFile = args.geneMapFile
     cfg.numDbFiles = args.numDBFiles
     sutils.checkConfig(cfg)
 
