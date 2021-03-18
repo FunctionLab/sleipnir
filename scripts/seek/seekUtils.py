@@ -81,6 +81,10 @@ def prepCmd(funcName, executableName, cfg):
 
 
 def read_dataset_list(dsetFile):
+    """
+    Read in datasets file and try to parse the various possible layouts, including
+    one, two or three column variations
+    """
     fp = open(dsetFile)
     count = 0
     dset_list = []
@@ -130,6 +134,9 @@ def write_dataset_platform_map(dset_list, dsetFile):
 
 
 def Pcl2Pclbin(cfg, concurrency=8):
+    """
+    Convert PCL files to PCL.bin files
+    """
     cmdName = prepCmd('Pcl2Pclbin', 'PCL2Bin', cfg)
     datasets = read_dataset_list(cfg.datasetsFile)
     pclBinDir = os.path.join(cfg.outDir, "pclbin")
@@ -146,12 +153,23 @@ def Pcl2Pclbin(cfg, concurrency=8):
     print('Pcl2Pclbin: completion time {}s'.format(time.time() - startTime))
 
 
-def PclToDabFiles(cfg, concurrency=8):
+def PclToDabFiles(cfg, limit_genes=False, concurrency=8):
+    """
+    Convert PCL files to DAB files, which computes gene correlation values across all
+    samples in a PCL file.
+    """
     print("DAB File Creation: Calculating correlation matrices...\n")
     cmdName = prepCmd('PclToDabFiles', 'Distancer', cfg)
     if not os.path.exists(cfg.dabDir):
         os.makedirs(cfg.dabDir, exist_ok=True)
     datasets = read_dataset_list(cfg.datasetsFile)
+    # Create the list of genes to include in the DABs from the gene_map.txt
+    # Distancer expects the input gene file to only contain one column of gene names
+    # so we cut and keep the second column from the gene_map file
+    if limit_genes is True:
+        tmpFile = tempfile.NamedTemporaryFile(delete=False)
+        tmpGeneFile = tmpFile.name
+        os.system(f'cut -f 2 {cfg.geneMapFile} > {tmpGeneFile}')
     # create the dab files
     taskList = []
     for (pclFile, dsetPlat, platform) in datasets:
@@ -160,13 +178,20 @@ def PclToDabFiles(cfg, concurrency=8):
         pclFileFullPath = os.path.join(cfg.pclDir, pclFile)
         dabFileFullPath = os.path.join(cfg.dabDir, f'{datasetName}.dab')
         cmd = f"{cmdName} -i {pclFileFullPath} -o {dabFileFullPath} -s 0 -t 1"
+        if limit_genes is True:
+            cmd += f" -g {tmpGeneFile}"
         taskList.append(cmd)
     startTime = time.time()
     runParallelJobs(taskList, concurrency=concurrency)
+    if limit_genes is True:
+        os.remove(tmpGeneFile)
     print('PclToDabFiles: completion time {}s'.format(time.time() - startTime))
 
 
 def linkQuantFilesForDabs(cfg):
+    """
+    Create a per-DAB file link to the quant file. This is needed later by Data2DB.
+    """
     # link to the new quant file
     if cfg.configVerified is False:
         raise ValueError('Please run checkConfig(cfg) prior to calling linkQuantFiles')
@@ -188,6 +213,10 @@ def linkQuantFilesForDabs(cfg):
 
 
 def makeGenePrepFiles(cfg, concurrency=8):
+    """
+    Make the Prep directory files, which contains the gene average values for each dataset
+    and the gene presence for each dataset.
+    """
     cmdName = prepCmd('makeGenePrepFiles', 'SeekPrep', cfg)
     prepDir = os.path.join(cfg.outDir, "prep")
     if not os.path.exists(prepDir):
@@ -209,6 +238,10 @@ def makeGenePrepFiles(cfg, concurrency=8):
 
 
 def sinfoCreate(cfg, concurrency=8):
+    """
+    Make sinfo directory contents, which contains the gene average and stddev values for
+    each dataset.
+    """
     cmdName = prepCmd('sinfoCreate', 'SeekPrep', cfg)
     pclBinDir = os.path.join(cfg.outDir, "pclbin")
     if not os.path.exists(pclBinDir):
@@ -228,13 +261,13 @@ def sinfoCreate(cfg, concurrency=8):
 
 
 def makePlatFiles(cfg, concurrency=8):
-    '''
-    Calculate platform-wide gene score averages - not parallelized
+    """
+    Calculate platform-wide gene average and stddev - not parallelized
     TODO - this could be parallelized if SeekPrep combineplat is updated to take a list of input dirs
     Requires:
         - DB files already made
         - gene prep files already made
-    '''
+    """
     cmdName = prepCmd('makePlatFiles', 'SeekPrep', cfg)
     platDir = os.path.join(cfg.outDir, "plat")
     if not os.path.exists(platDir):
@@ -256,7 +289,9 @@ def makePlatFiles(cfg, concurrency=8):
 
 
 def makeDsetSizeFile(cfg, concurrency=8):
-    '''Create dataset size file - not parallelized'''
+    """Create dataset size file, which contains the number of samples per dataset
+    TODO - add parallelization
+    """
     # TODO - this could be parallelized if multiprocess returns a value for each task
     #   have it return the dset size (in a result queue) and collect them all.
     cmdName = prepCmd('makeDsetSizeFile', 'SeekPrep', cfg)
@@ -284,11 +319,11 @@ def dsetPlatMapFileName(dbDirName, cfg):
 
 
 def Task_DABToDBFiles(cfg, threadDbDir, threadDatasets: list):
-    '''
+    """
     A task that creates a DB directory with a set of .db files from a subset of the datasets.
     This is a parallel task which will be called from runParallelJobs, it will be invoked once
-    per task in the task queue.
-    '''
+    per task in the task queue, thus there will be N out DB directories, one per thread.
+    """
     cmdName = os.path.join(cfg.binDir, 'Data2DB')
     if not os.path.isfile(cmdName):
         raise FileNotFoundError(f'Binary {cmdName} not found')
@@ -303,11 +338,12 @@ def Task_DABToDBFiles(cfg, threadDbDir, threadDatasets: list):
 
 
 def parallelMakePerThreadDB(cfg, concurrency=8):
-    ''' Divide datasets between the threads and build sets of DB files
-        Return:
-            The list of db directories which were created (one per thread).
-            These will need to be combined in a next step
-    '''
+    """
+    Divide datasets between the threads and build N sets of DB files
+    Return:
+        The list of db directories which were created (one per thread).
+        These will need to be combined in a next step
+    """
     cmdName = prepCmd('parallelMakePerThreadDB', 'Data2DB', cfg)
     datasets = read_dataset_list(cfg.datasetsFile)
     dbDir = os.path.join(cfg.outDir, 'thread_work', 'db')
@@ -342,12 +378,12 @@ def parallelMakePerThreadDB(cfg, concurrency=8):
 
 
 def Task_CombineDBFiles(cfg, dbDirsToCombine, dbFileName):
-    '''
+    """
     This task combines all instances of a db file (of the same name) across all DB directories.
     For example combine all 000000.db files from dbDirs [db000, db001, db002]. This is the
     second step of making DB files in parallel, the first creates many DB dirs with part
     of the datasets represented in each. This step combines them all together into one DB dir.
-    '''
+    """
     cmdName = os.path.join(cfg.binDir, 'DBCombiner')
     if not os.path.isfile(cmdName):
         raise FileNotFoundError(f'Binary {cmdName} not found')
@@ -366,7 +402,10 @@ def Task_CombineDBFiles(cfg, dbDirsToCombine, dbFileName):
 
 
 def parallelCombineThreadDBs(cfg, dbDirsToCombine, concurrency=8):
-    # merge the sets of DB files together
+    """
+    Merge the N sets of DB files created by the threads together into the
+    final single DB files
+    """
     # get the listing of db files
     cmdName = prepCmd('parallelCombineThreadDBs', 'DBCombiner', cfg)
     assert len(dbDirsToCombine) > 0
@@ -384,6 +423,10 @@ def parallelCombineThreadDBs(cfg, dbDirsToCombine, concurrency=8):
 
 
 def verifyCombinedDBs(cfg, dbDirsToCombine, concurrency=8):
+    """
+    Verifies that the per-thread sets of DB files were correctly merged into the 
+    final combined set fo DB files.
+    """
     cmdName = os.path.join(cfg.binDir, 'verifyMergedDBFiles')
     assert len(dbDirsToCombine) > 0
     dbFileList = fnmatch.filter(os.listdir(dbDirsToCombine[0]), '*.db')
@@ -402,6 +445,12 @@ def verifyCombinedDBs(cfg, dbDirsToCombine, concurrency=8):
     os.remove(tmpFile.name)
 
 def makeDBFiles(cfg, concurrency=8):
+    """
+    Function to make the database .db files in parallel, let N = concurrency
+        - First makes N sets of DB files (threads each create one)
+        - Second, combines (merges) the N set into the final single set of DB files
+        - Finally, verifies that the merged result matches the N inputs
+    """
     checkConfig(cfg)
     dbDirsToCombine = parallelMakePerThreadDB(cfg, concurrency)
     parallelCombineThreadDBs(cfg, dbDirsToCombine, concurrency)
