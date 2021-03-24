@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cassert>
+#include <filesystem>
 #include <boost/algorithm/string/join.hpp>
 #include "SeekInterface.h"
 #include "seekcentral.h"
@@ -179,6 +180,9 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
         throw argument_error(FILELINE + "Unknown distance measure: " + params.distance_measure);
     }
 
+    // Create the output directory if needed
+    filesystem::create_directory(query.outputDir);
+
     vector<string> queryGenes(query.genes);
     if (params.use_gene_symbols == true) {
         // convert query genes from sybmol to entrez
@@ -203,7 +207,7 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
 
     CSeekCentral querySC;
     querySC.setUsingRPC(true);
-    bool r = querySC.InitializeQuery(query.outputDir,
+    bool res = querySC.InitializeQuery(query.outputDir,
                                      joinedGenes,
                                      joinedDatasets,
                                      &speciesSC,
@@ -215,35 +219,41 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
                                      bNormPlatform,
                                      params.useNegativeCorrelation,
                                      params.check_dataset_size);
-
-    if (r) {
-        if (params.search_method == "EqualWeighting") {
-            querySC.EqualWeightSearch();
-        } else if (params.search_method == "OrderStatistics") {
-            querySC.OrderStatistics();
-        } else {
-            const gsl_rng_type *T;
-            gsl_rng *rnd;
-            gsl_rng_env_setup();
-            T = gsl_rng_default;
-            rnd = gsl_rng_alloc(T);
-            gsl_rng_set(rnd, 100);
-            utype FOLD = 5;
-            //enum PartitionMode PART_M = CUSTOM_PARTITION;
-            enum CSeekQuery::PartitionMode PART_M = CSeekQuery::LEAVE_ONE_IN;
-            if(params.search_method == "CVCUSTOM"){
-                if (query.guideGenes.size() == 0) {
-                    throw request_error(FILELINE + "No guide gene set specified for CVCustom search");
-                }
-                vector<vector<string> > vecGuideGeneSet;
-                vecGuideGeneSet.push_back(query.guideGenes);
-                querySC.CVCustomSearch(vecGuideGeneSet, rnd, PART_M, FOLD, params.rbp_param);
-            } else { //"RBP"
-                querySC.CVSearch(rnd, PART_M, FOLD, params.rbp_param);
-            }
-            gsl_rng_free(rnd);
-        }
+    if (res == false) {
+        result.success = false;
+        result.statusMsg = "Initialize query failed, check database settings";
+        result.__isset.statusMsg = true;
+        querySC.Destruct();
+        return;
     }
+
+    if (params.search_method == "EqualWeighting") {
+        querySC.EqualWeightSearch();
+    } else if (params.search_method == "OrderStatistics") {
+        querySC.OrderStatistics();
+    } else {
+        const gsl_rng_type *T;
+        gsl_rng *rnd;
+        gsl_rng_env_setup();
+        T = gsl_rng_default;
+        rnd = gsl_rng_alloc(T);
+        // gsl_rng_set(rnd, 100);
+        utype FOLD = 5;
+        //enum PartitionMode PART_M = CUSTOM_PARTITION;
+        enum CSeekQuery::PartitionMode PART_M = CSeekQuery::LEAVE_ONE_IN;
+        if(params.search_method == "CVCUSTOM"){
+            if (query.guideGenes.size() == 0) {
+                throw request_error(FILELINE + "No guide gene set specified for CVCustom search");
+            }
+            vector<vector<string> > vecGuideGeneSet;
+            vecGuideGeneSet.push_back(query.guideGenes);
+            querySC.CVCustomSearch(vecGuideGeneSet, rnd, PART_M, FOLD, params.rbp_param);
+        } else { //"RBP"
+            querySC.CVSearch(rnd, PART_M, FOLD, params.rbp_param);
+        }
+        gsl_rng_free(rnd);
+    }
+
 
     if (querySC.numQueries() > 1) {
         // Error - should only be running one query per RPC request

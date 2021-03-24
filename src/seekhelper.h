@@ -23,7 +23,7 @@ struct SeekSettings {
         os << "NumThreads: " << settings.numThreads << endl;
         os << "NumBufferedDBs: " << settings.numBufferedDBs << endl;
         os << "SquareZ: " << settings.squareZ << endl;
-        for (CSeekDBSetting *db : settings.dbs) {
+        for (const CSeekDBSetting *db : settings.dbs) {
             os << *db;
         }
         return os;
@@ -36,7 +36,7 @@ Example Toml Config Format:
 species = "human"
 port = 9000
 numThreads = 8
-numBufferedDBs = 20  # Number of Databaselets to store in memory
+numBufferedDBs = 20  # Max num genes per query and max num of Databaselets to store in memory
 scoreCutoff = -9999.0  # The gene-gene score cutoff to add, default: no cutoff
 squareZ = false  # If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff
 isNibble = false  # If CDatabase is stored in nibble or byte format

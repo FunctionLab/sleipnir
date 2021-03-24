@@ -3,6 +3,12 @@
 
 #include <stdexcept>
 
+#ifdef NDEBUG         // release build
+# define DEBUG(msg)
+#else                 // debug build
+# define DEBUG_MESSAGE(msg)   std::cout << "### DEBUG: " << msg << std::endl;
+#endif
+
 
 #define FILELINE "(" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "): "
 

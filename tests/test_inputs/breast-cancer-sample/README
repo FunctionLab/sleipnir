@@ -1,0 +1,20 @@
+How the bc-sample gene_map.txt was created:
+1) Get list of all unique genes in the human_go_slim.gmt file - about 5807
+2) Get lisf of all protein-coding genes in the bc-sample pcl files - about 18000
+3) Get list of all genes in the sample queries from Aaron human.cancer.exp.entrez.gmt - about 547
+Note: there are 183 in Aarons list that are not in the human_go_slim list
+4) Choose all genes from human_go_slim.gmt with more than 100 genes per group - about 3185
+Note: All but 2 genes in th bc-sample pcl files are in the human_go_slim (greater than 100 group size) set.
+Note: There are 260 in the Aaron sample groups not in the human_go sample groups
+5) Combine the Aaron sample and human_go sample (truncated gt 100 group size) as the new gene set - about 3445 genes
+6) This combined set is in file bc_gene_map.txt
+
+Create a set of queries from Aaron's GO terms (now renamed to human_cancer_slim.gmt). Pull queries of various sizes that produce non-None results for the similar genes.
+
+Run those queries using SeekMiner as the baseline gold standard.
+
+To run SeekMiner on the input queries:
+Debug/SeekMiner -x tests/test_outputs/sampleBC/datasets.txt -i tests/test_outputs/sampleBC/bc_gene_map.txt -d tests/test_outputs/sampleBC/db -p tests/test_outputs/sampleBC/prep -P tests/test_outputs/sampleBC/plat -Q tests/test_outputs/sampleBC/quant2 -u tests/test_outputs/sampleBC/sinfo -n 100 -b 200  -V CV -I LOI -z z_score -m -M -O  -q /tmp/q1.txt -o /tmp/t1 -Y -T 2 -t 1
+
+Then run SeekRPC on those queries and do rank comparison. Note that in theory the results should be identical, however I found there are a couple of small gene location swaps. Upon further investigation these swapped genes had scores equal out to 6 decimal places and I suspect the sort is not stable when the scores are essentially identical. For that reason the rank_correlation.py script is used to compare the rank order.
+

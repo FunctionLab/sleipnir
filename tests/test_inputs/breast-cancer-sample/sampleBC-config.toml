@@ -1,0 +1,22 @@
+species = "sampleBC"
+port = 9000
+numThreads = 2
+numBufferedDBs = 200  # Max num genes per query and max num of Databaselets to store in memory
+scoreCutoff = -9999.0  # The gene-gene score cutoff to add, default: no cutoff
+squareZ = false  # If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff
+isNibble = false  # If CDatabase is stored in nibble or byte format
+outputAsText = true  # Output results (gene list and dataset weights) as text
+
+[Database]
+    [Database.DB1]
+    DB_DIR        = "../tests/test_outputs/sampleBC/db"
+    PREP_DIR      = "../tests/test_outputs/sampleBC/prep"
+    PLATFORM_DIR  = "../tests/test_outputs/sampleBC/plat"
+    SINFO_DIR     = "../tests/test_outputs/sampleBC/sinfo"
+    # GVAR_DIR      = "../tests/test_outputs/sampleBC/gvar"
+    QUANT_FILE    = "../tests/test_outputs/sampleBC/quant2"
+    DSET_MAP_FILE = "../tests/test_outputs/sampleBC/datasets.txt"
+    GENE_MAP_FILE = "../tests/test_outputs/sampleBC/bc_gene_map.txt"
+    # GENE_SYMBOL_FILE = "../tests/test_outputs/sampleBC/gene_symbols.txt"
+    DSET_SIZE_FILE = "../tests/test_outputs/sampleBC/dset_size.txt"
+    NUMBER_OF_DB  = 100
