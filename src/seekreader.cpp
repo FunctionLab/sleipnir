@@ -350,15 +350,15 @@ namespace Sleipnir {
         utype c_iBuffer = lineSize;
         vecstrList1.clear();
         vecstrList2.clear();
-        regex ws_re("\\s+"); 
+        regex ws_re("\\s+");
 
         while (!ifsm.eof()) {
             ifsm.getline(acBuffer, c_iBuffer - 1);
             if (acBuffer[0] == 0) break;
             acBuffer[c_iBuffer - 1] = 0;
             string line(acBuffer);
-            vector<string> tok { 
-                sregex_token_iterator(line.begin(), line.end(), ws_re, -1), {} 
+            vector<string> tok {
+                sregex_token_iterator(line.begin(), line.end(), ws_re, -1), {}
             };
             if (tok.size() != 2) {
                 throw init_error(FILELINE + "Expecting two values per line in file: " + file + ", line: " + to_string(vecstrList1.size()));
@@ -425,6 +425,8 @@ namespace Sleipnir {
         int MAX_CHAR_PER_LINE = lineSize;
         int lineLen = MAX_CHAR_PER_LINE;
         acBuffer = (char *) malloc(lineLen);
+        // This is looping through the file to determine if lineLen is
+        //   ever exceeded and increasing/realloc lineLen if needed
         while (fgets(acBuffer, lineLen, infile) != NULL) {
             while (strlen(acBuffer) == lineLen - 1) {
                 int len = strlen(acBuffer);
@@ -436,10 +438,15 @@ namespace Sleipnir {
         }
         rewind(infile);
 
+        // Use regex to separate tokens on any number or type of spaces
+        regex ws_re("\\s+");
         while (fgets(acBuffer, lineLen, infile) != NULL) {
             char *p = strtok(acBuffer, "\n");
-            vector <string> tok;
-            CMeta::Tokenize(p, tok, " ");
+            if (p == NULL) continue;  // skip empty lines
+            string line(p);
+            vector<string> tok {
+                sregex_token_iterator(line.begin(), line.end(), ws_re, -1), {}
+            };
             qList.push_back(tok);
         }
         qList.resize(qList.size());
@@ -481,6 +488,7 @@ namespace Sleipnir {
 
         while (fgets(acBuffer, lineLen, infile) != NULL) {
             char *p = strtok(acBuffer, "\n");
+            if (p == NULL) continue;  // skip empty lines
             vector<vector<string>> aQ;
             vector<string> tok;
             CMeta::Tokenize(p, tok, "|");

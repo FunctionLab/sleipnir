@@ -312,8 +312,10 @@ int main(int iArgs, char **aszArgs) {
                              !!sArgs.random_flag, sArgs.num_random_arg, !!sArgs.neg_cor_flag,
                              !!sArgs.check_dset_size_flag,
                              random_ranking_rnd, useNibble,
-                             sArgs.num_threads_arg))
+                             sArgs.num_threads_arg)) {
+        fprintf(stderr, "Error initializing seek database\n");
         return -1;
+    }
 
     if (method == "CV") {
         csfinal->CVSearch(rnd, PART_M, FOLD, RATE);
@@ -332,6 +334,7 @@ int main(int iArgs, char **aszArgs) {
         fw.resize(uww.size());
         for (i = 0; i < uww.size(); i++) {
             if (!CSeekTools::ReadArray(uww[i].c_str(), fw[i])) {
+                fprintf(stderr, "ReadArray user weight file failed");
                 return -1;
             }
         }

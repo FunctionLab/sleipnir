@@ -31,6 +31,7 @@
 *****************************************************************************/
 #include "seekcentral.h"
 #include "seekerror.h"
+#include <filesystem>
 #include <cassert>
 
 namespace Sleipnir {
@@ -398,10 +399,15 @@ namespace Sleipnir {
         //for(i=0; i<m_vecDB.size(); i++)
         //	m_vecDB[i] = src->m_vecDB[i];
         for (i = 0; i < m_vecDB.size(); i++) {
+            bool res;
             m_vecDB[i] = NULL;
             m_vecDB[i] = new CDatabase(m_useNibble);
-            m_vecDB[i]->Open(m_vecDBSetting[i]->dbDir,
-                             m_vecstrGenes, m_vecDBDataset[i].size(), m_vecDBSetting[i]->GetNumDB());
+            res = m_vecDB[i]->Open(m_vecDBSetting[i]->dbDir,
+                                   m_vecstrGenes, m_vecDBDataset[i].size(),
+                                   m_vecDBSetting[i]->GetNumDB());
+            if (res == false) {
+                return false;
+            }
         }
 
         CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
@@ -857,8 +863,13 @@ namespace Sleipnir {
         m_iGenes = m_vecstrGenes.size();
 
         for (i = 0; i < vecDBSetting.size(); i++) {
-            m_vecDB[i]->Open(vecDBSetting[i]->dbDir,
-                             m_vecstrGenes, m_vecDBDataset[i].size(), vecDBSetting[i]->GetNumDB());
+            bool res;
+            res = m_vecDB[i]->Open(vecDBSetting[i]->dbDir,
+                                   m_vecstrGenes, m_vecDBDataset[i].size(),
+                                   vecDBSetting[i]->GetNumDB());
+            if (res == false) {
+                return false;
+            }
         }
 
         CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
@@ -1246,6 +1257,36 @@ namespace Sleipnir {
         return max;
     }
 
+    void CSeekCentral::PrintSettings() {
+        cout << "SeekCentral: " << endl;
+        cout << m_bRandom << endl;
+        cout << m_iNumRandom << endl;
+        cout << m_bSubtractGeneAvg << endl;
+        cout << m_bNormPlatform << endl;
+        cout << m_eDistMeasure << endl;
+        cout << m_bLogit << endl;
+        cout << m_bSquareZ << endl;
+        cout << m_iDatasets << endl;
+        cout << m_iGenes << endl;
+        cout << m_numThreads << endl;
+
+        cout << m_maxNumDB << endl;
+
+        cout << m_bOutputWeightComponent << endl;
+        cout << m_bSimulateWeight << endl;
+        cout << m_fScoreCutOff << endl;
+        cout << m_fPercentQueryAfterScoreCutOff << endl;
+        cout << m_fPercentGenomeRequired << endl;
+        cout << m_bNegativeCor << endl;
+
+        cout << m_useNibble << endl;
+
+        cout << m_DEFAULT_NA << endl;
+
+        /* for specifying dataset size */
+        cout << m_bCheckDsetSize << endl;
+        cout << m_iNumSampleRequired << endl;
+    }
 
     bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
                               gsl_rng *rnd, const CSeekQuery::PartitionMode *PART_M,
@@ -1257,6 +1298,14 @@ namespace Sleipnir {
         int k; //keeps track of genes (for random case)
         utype l; //keeps track of random repetition (for random case)
         char acBuffer[1024];
+
+        // GW uncomment to print out all search settings
+        // cout << "SeekCommon:" << endl;
+        // cout << sm << endl;
+        // cout << *PART_M << endl;
+        // cout << *FOLD << endl;
+        // cout << *RATE << endl;
+        // PrintSettings();
 
         m_Query.resize(m_vecstrAllQuery.size());
         m_weight.resize(m_vecstrAllQuery.size());
@@ -1638,6 +1687,7 @@ namespace Sleipnir {
 
             if (!m_bRandom) {
                 //if m_bRandom, write at the very end when all repetitions are done
+                // TODO GW - pass a tag in to write() to give the files distinct name
                 Write(i);
                 if (weightComponent) {
                     sprintf(acBuffer, "%s/%d.dweight_comp", m_output_dir.c_str(), i);
@@ -1787,7 +1837,7 @@ namespace Sleipnir {
         utype j;
         //for(j=0; j<m_iDatasets; j++) m_vc[j]->DeleteQueryBlock();
         for (j = 0; j < m_iDatasets; j++) {
-            if (m_vc[j] != NULL) continue;
+            if (m_vc[j] == NULL) continue;
             delete m_vc[j];
             m_vc[j] = NULL;
         }

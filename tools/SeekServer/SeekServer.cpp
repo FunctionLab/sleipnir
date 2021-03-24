@@ -148,6 +148,8 @@ void *do_query(void *th_arg) {
             }
             gsl_rng_free(rnd);
         }
+    } else {
+        fprintf(stderr, "Initialize query failed, check database settings\n");
     }
 
     csu->Destruct();

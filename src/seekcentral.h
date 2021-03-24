@@ -474,6 +474,8 @@ namespace Sleipnir {
             }
         }
 
+    void PrintSettings();
+
     private:
         //network mode
         bool EnableNetwork(const int &);
