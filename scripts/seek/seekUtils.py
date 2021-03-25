@@ -43,6 +43,8 @@ def checkConfig(cfg):
     """
     Does checks on the cfg and standardizes the file locations to absolute paths
     """
+    cfg.outDir = os.path.abspath(cfg.outDir)
+    cfg.inDir = os.path.abspath(cfg.inDir)
     if not os.path.exists(cfg.outDir):
         os.makedirs(cfg.outDir)
     # set some paths relative to input directory if path missing

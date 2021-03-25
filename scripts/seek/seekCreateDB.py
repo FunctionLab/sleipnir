@@ -58,7 +58,10 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
         sutils.Pcl2Pclbin(cfg, concurrency)
     if tasksToRun.dab:
         # Create the DAB files from pcl files
-        sutils.PclToDabFiles(cfg, concurrency)
+        useDabGeneSet = False
+        if tasksToRun.useDabGeneSet:
+            useDabGeneSet = True
+        sutils.PclToDabFiles(cfg, limit_genes=useDabGeneSet, concurrency=concurrency)
         # link the quant files for the DAB files
         sutils.linkQuantFilesForDabs(cfg)
     if tasksToRun.prep:
@@ -121,6 +124,8 @@ if __name__=="__main__":
                            help='Number of output DB files to spread gene data across (should match refDB number)')
     argParser.add_argument('--concurrency', '-m', type=int, required=False, default=4,
                            help='Number of parallel processes to run for each task')
+    argParser.add_argument('--dab-use-gene-set', default=False, action='store_true',
+                           help='When making dab files, limit to the genes specified in gene-map')
     args = argParser.parse_args()
 
     tasksToRun = StructDict()
@@ -132,6 +137,7 @@ if __name__=="__main__":
     tasksToRun.plat = args.plat
     tasksToRun.sinfo = args.sinfo
     tasksToRun.dsetSize = args.dsetSize
+    tasksToRun.useDabGeneSet = args.dab_use_gene_set
 
     if not any(tasksToRun.values()):
         print("No task types specified: specify one or more, for example --dab or --all etc.")
