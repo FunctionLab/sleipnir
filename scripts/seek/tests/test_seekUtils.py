@@ -18,7 +18,6 @@ class TestSeekUtils:
 
     def setup_class(cls):
         # Make a tmp directory and copy input mockDB files to it
-        # TODO uncomment
         if use_tempfile:
             cls.temp_dir = tempfile.TemporaryDirectory()
             tmpDirName = cls.temp_dir.name
@@ -39,7 +38,7 @@ class TestSeekUtils:
         cfg.inDir = f'{cls.mockDir}'
         cfg.outDir = os.path.join(cls.mockDir, 'outdir')
         cfg.binDir = os.path.join(sleipnirDir, 'Debug')
-        cfg.datasetsFile = 'dataset_pcl_list.txt'
+        cfg.datasetsFile = 'pcl_list.txt'
         cls.cfg = cfg
 
     def teardown_class(cls):

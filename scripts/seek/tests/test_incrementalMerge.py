@@ -76,7 +76,7 @@ class TestIncrDB:
         # cfg.binDir = os.path.join(sleipnirDir, 'Debug')
         # cfg.datasetsFile = 'dset_list.txt'
         # sutils.checkConfig(cfg)
-        cmd = f'python {seekScriptsDir}/seekCreateDb.py --all -d dataset_pcl_list.txt ' \
+        cmd = f'python {seekScriptsDir}/seekCreateDb.py --all -d pcl_list.txt ' \
               f'-i {mockDir} -o {mockDir} -b {sleipnirBin}'
         ret = subprocess.run(cmd, shell=True)
         assert ret.returncode == 0
@@ -101,7 +101,7 @@ class TestIncrDB:
         mergeDB = TestIncrDB.mergeDbDir
         incrDB = TestIncrDB.incrDbDir
         verifyDB = TestIncrDB.verifyDbDir
-        largeDset = os.path.join(largeDB, 'dataset_pcl_list.txt')
+        largeDset = os.path.join(largeDB, 'pcl_list.txt')
         smallDset = os.path.join(smallDB, 'dset_list.txt')
         incrDset = os.path.join(incrDB, 'dset_list.txt')
         incrPcl = os.path.join(incrDB, 'pcl')
@@ -115,6 +115,7 @@ class TestIncrDB:
         # Create the verifyDB from scratch from the combined small, incr dbs
         cmd = f'python {seekScriptsDir}/seekCreateDb.py --all -d dset_list.txt ' \
               f'-i {verifyDB} -o {verifyDB} -b {sleipnirBin}'
+        print(cmd)
         ret = subprocess.run(cmd, shell=True)
         assert ret.returncode == 0
 

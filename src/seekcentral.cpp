@@ -1065,7 +1065,7 @@ namespace Sleipnir {
             }
             vector <AResultFloat> wd;
             Sort(wd);
-            for (j = 0; j < 2000; j++) {
+            for (j = 0; j < 2000 && j < wd.size(); j++) {
                 if (wd[j].f == m_DEFAULT_NA) break;
                 vecOutput[1].push_back(m_vecstrGenes[wd[j].i]);
             }
