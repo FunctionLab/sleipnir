@@ -70,7 +70,6 @@ namespace Sleipnir {
             return false;
         }
 
-
         m_iGenes = iGenes;
         m_iDatasets = iDatasets;
         m_vecstrGenes.resize(vecstrGenes.size());
@@ -467,7 +466,7 @@ namespace Sleipnir {
             for (i = 0; i < vecDatabaselet.size(); i++) {
                 CDatabaselet *current = vecDatabaselet[i];
                 if (!current->m_fstm.is_open()) {
-                    cerr << "CDatabaselet is not opened. Opening..." << endl;
+                    cerr << "CDatabaselet is not opened. Opening: " << current->strFileName << endl;
                     current->m_fstm.open(current->strFileName.c_str(), ios_base::binary | ios_base::in);
                 }
                 current->m_fstm.seekg(current->m_iHeader + current->GetSizePair() * first->m_iGenes * sofar,
@@ -591,6 +590,7 @@ namespace Sleipnir {
                 if (bb == 0) {
                     DBS.Open(path.c_str(), first->m_vecstrGenes, first->m_iGenes, iDatasets);
                 } else {
+                    DBS.SetFile(path);
                     DBS.OpenNoOverwrite();
                 }
 

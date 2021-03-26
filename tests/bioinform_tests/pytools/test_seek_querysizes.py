@@ -10,6 +10,14 @@ from rank_correlation import files_rank_correlation
 
 min_result_correlation = 0.95
 
+datasetFile = 'dataset.map'
+geneMapFile = 'gene_map.txt'
+dsetSizeFile = 'dataset_size'
+dbDir = 'db.combined'
+prepDir =  'prep.combined'
+platDir = 'platform.combined'
+sinfoDir =  'sinfo.combined'
+
 
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser()
@@ -36,7 +44,7 @@ if __name__ == "__main__":
 
     seekMinerBin = os.path.join(args.seekbin, 'SeekMiner')
     goldStdDir = args.known_good_results
-    dbDir = args.seekdir
+    seekDir = args.seekdir
 
     bashEnvironmentFile = os.path.join(args.seekdir, 'seek_env')
     print('Load bash environment file {}'.format(bashEnvironmentFile))
@@ -59,12 +67,12 @@ if __name__ == "__main__":
         outfile = os.path.join(resultDir, "seekminer.out")
         utils.file_truncate(outfile)
         print('SeekMiner run query {}'.format(queryName))
-        seekMinerCmd = f'time {seekMinerBin} -x {dbDir}/dataset.map -i {dbDir}/gene_map.txt ' \
-                       f'-d {dbDir}/db.combined -p {dbDir}/prep.combined ' \
-                       f'-P {dbDir}/platform.combined -Q {dbDir}/quant2 ' \
-                       f'-u {dbDir}/sinfo.combined -n 1000 -b 200  ' \
+        seekMinerCmd = f'time {seekMinerBin} -x {seekDir}/{datasetFile} -i {seekDir}/{geneMapFile} ' \
+                       f'-d {seekDir}/{dbDir} -p {seekDir}/{prepDir} ' \
+                       f'-P {seekDir}/{platDir} -Q {seekDir}/quant2 ' \
+                       f'-u {seekDir}/{sinfoDir} -n 1000 -b 200  ' \
                        f'-V CV -I LOI -z z_score -m -M -O ' \
-                       f'-R {dbDir}/dataset_size ' \
+                       f'-R {seekDir}/{dsetSizeFile} ' \
                        f'-q {queryfile} -o {resultDir} '
         utils.file_appendline(outfile, seekMinerCmd)
         if args.verbose:
