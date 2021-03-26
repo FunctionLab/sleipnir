@@ -58,9 +58,9 @@ class TestSeekUtils:
         dsetTwoColFile = os.path.join(cfg.inDir, 'dset_two_col')
         os.system(f"cut -f 1 {datasetPclFile} > {dsetOneColFile}")
         os.system(f"cut -f 1,3 {datasetPclFile} > {dsetTwoColFile}")
-        d1 = sutils.read_dataset_list(dsetOneColFile)
-        d2 = sutils.read_dataset_list(dsetTwoColFile)
-        d3 = sutils.read_dataset_list(datasetPclFile)
+        d1 = sutils.readDatasetList(dsetOneColFile)
+        d2 = sutils.readDatasetList(dsetTwoColFile)
+        d3 = sutils.readDatasetList(datasetPclFile)
         assert d1 == d2
         assert d2 == d3
 

@@ -18,7 +18,17 @@ def funcThread(work_queue, tid=0, returnCodeQueue=None):
             if func is None:
                 raise ValueError('Function not defined')
             print(f'Thread {tid}: func: {func.__name__}, args: {args}, kwargs: {kwargs}')
-            func(*args, **kwargs)
+            try:
+                # Run the requested function
+                res = func(*args, **kwargs)
+                if res is False:
+                    returnCodeQueue.put(-1)
+                else:
+                    # Ran successully without exceptions
+                    returnCodeQueue.put(0)
+            except Exception as err:
+                print(f'Error: parallelJob: function {func.__name__}: {err}')
+                returnCodeQueue.put(-1)
     except queue.Empty:
         pass
     return
@@ -64,16 +74,12 @@ def runParallelJobs(cmdlist, concurrency=2, isPyFunction=False):
         work_queue.put(cmd)
 
     target = None
-    checkReturnCode = False
     if isPyFunction:
         target = funcThread
     else:
         target = jobThread
-        checkReturnCode = True
 
-    returnCodeQueue = None
-    if checkReturnCode is True:
-        returnCodeQueue = queue.Queue()
+    returnCodeQueue = queue.Queue()
 
     threads = []
     for idx in range(concurrency):
@@ -88,12 +94,11 @@ def runParallelJobs(cmdlist, concurrency=2, isPyFunction=False):
     
     for jthread in threads:
         jthread.join()
-    
-    if checkReturnCode is True:
-        for i in range(len(cmdlist)):
-            code = returnCodeQueue.get(block=False)
-            if code != 0:
-                raise RuntimeError(f"Exit code {code} for cmd: {cmdlist[i]}")
+
+    for i in range(len(cmdlist)):
+        code = returnCodeQueue.get(block=False)
+        if code != 0:
+            raise RuntimeError(f"Exit code {code} for cmd: {cmdlist[i]}")
 
     print("Complete")
     return

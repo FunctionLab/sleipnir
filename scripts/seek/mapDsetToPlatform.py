@@ -66,7 +66,6 @@ chip_plat_map = {
     'Xenopus_laevis': 'GPL1318',
     'Mapping10K_Xba131': 'GPL1266',
     'Mapping10K_Xba142': 'GPL2641',
-    'MG_U74C': 'GPL83',
     'HT_HG-U133A': 'GPL3921',
     'HT_HG-U133_Plus_PM': 'GPL13158',
     'Illumina_HumanHT-12_V3.0': ' GPL6947',

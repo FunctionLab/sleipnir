@@ -1,0 +1,9 @@
+To Run Tests:
+1) Install the conda environment (first time only)
+conda env create --file conda_environment.yml
+
+2) Activate the conda environment
+conda activate genomics
+
+3) Run the tests (from the sleipnir/scripts/seek/ dir)
+python -m pytest -s -v tests/

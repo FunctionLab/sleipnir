@@ -67,7 +67,7 @@ def checkConfig(cfg):
     cfg.configVerified = True
 
 
-def prepCmd(funcName, executableName, cfg):
+def prepCmd(executableName, tagName, cfg):
     """
     Does some checks and command prep:
     - Verifies that checkConfig has been run
@@ -75,14 +75,14 @@ def prepCmd(funcName, executableName, cfg):
     - Verifies the the command binary exists
     """
     if cfg.configVerified is False:
-        raise ValueError(f'Please run checkConfig(cfg) prior to calling {funcName}')
+        raise ValueError(f'Please run checkConfig(cfg) prior to calling {tagName}')
     cmdName = os.path.join(cfg.binDir, executableName)
     if not os.path.isfile(cmdName):
         raise FileNotFoundError(f'Binary {cmdName} not found')
     return cmdName
 
 
-def read_dataset_list(dsetFile):
+def readDatasetList(dsetFile):
     """
     Read in datasets file and try to parse the various possible layouts, including
     one, two or three column variations
@@ -117,7 +117,7 @@ def read_dataset_list(dsetFile):
     return dset_list
 
 
-def write_dataset_list(dset_list, dsetFile):
+def writeDatasetList(dset_list, dsetFile):
     fw = open(dsetFile, "w")
     for (file_name, name, platform) in dset_list:
         m = re.match("(.*).pcl", file_name)
@@ -126,7 +126,7 @@ def write_dataset_list(dset_list, dsetFile):
     fw.close()
 
 
-def write_dataset_platform_map(dset_list, dsetFile):
+def writeDatasetPlatformMap(dset_list, dsetFile):
     fw = open(dsetFile, "w")
     for (file_name, name, platform) in dset_list:
         # m = re.match("(.*).pcl", file_name)
@@ -139,8 +139,8 @@ def Pcl2Pclbin(cfg, concurrency=8):
     """
     Convert PCL files to PCL.bin files
     """
-    cmdName = prepCmd('Pcl2Pclbin', 'PCL2Bin', cfg)
-    datasets = read_dataset_list(cfg.datasetsFile)
+    cmdName = prepCmd('PCL2Bin', 'Pcl2Pclbin', cfg)
+    datasets = readDatasetList(cfg.datasetsFile)
     pclBinDir = os.path.join(cfg.outDir, "pclbin")
     if not os.path.exists(pclBinDir):
         os.makedirs(pclBinDir)
@@ -161,10 +161,10 @@ def PclToDabFiles(cfg, limit_genes=False, concurrency=8):
     samples in a PCL file.
     """
     print("DAB File Creation: Calculating correlation matrices...\n")
-    cmdName = prepCmd('PclToDabFiles', 'Distancer', cfg)
+    cmdName = prepCmd('Distancer', 'PclToDabFiles', cfg)
     if not os.path.exists(cfg.dabDir):
         os.makedirs(cfg.dabDir, exist_ok=True)
-    datasets = read_dataset_list(cfg.datasetsFile)
+    datasets = readDatasetList(cfg.datasetsFile)
     # Create the list of genes to include in the DABs from the gene_map.txt
     # Distancer expects the input gene file to only contain one column of gene names
     # so we cut and keep the second column from the gene_map file
@@ -202,7 +202,7 @@ def linkQuantFilesForDabs(cfg):
     baseName = os.path.basename(cfg.quantFile)
     targetQuantFile = os.path.join(cfg.outDir, baseName)
     os.system(f'cp {cfg.quantFile} {targetQuantFile}')
-    datasets = read_dataset_list(cfg.datasetsFile)
+    datasets = readDatasetList(cfg.datasetsFile)
     for (pclFile, dsetPlat, platform) in datasets:
         m = re.match("(.*).pcl", pclFile)
         datasetName = m.group(1)
@@ -219,11 +219,11 @@ def makeGenePrepFiles(cfg, concurrency=8):
     Make the Prep directory files, which contains the gene average values for each dataset
     and the gene presence for each dataset.
     """
-    cmdName = prepCmd('makeGenePrepFiles', 'SeekPrep', cfg)
+    cmdName = prepCmd('SeekPrep', 'makeGenePrepFiles', cfg)
     prepDir = os.path.join(cfg.outDir, "prep")
     if not os.path.exists(prepDir):
         os.makedirs(prepDir)
-    datasets = read_dataset_list(cfg.datasetsFile)
+    datasets = readDatasetList(cfg.datasetsFile)
     taskList = []
     for (pclFile, dsetPlat, platform) in datasets:
         m = re.match("(.*).pcl", pclFile)
@@ -244,14 +244,14 @@ def sinfoCreate(cfg, concurrency=8):
     Make sinfo directory contents, which contains the gene average and stddev values for
     each dataset.
     """
-    cmdName = prepCmd('sinfoCreate', 'SeekPrep', cfg)
+    cmdName = prepCmd('SeekPrep', 'sinfoCreate', cfg)
     pclBinDir = os.path.join(cfg.outDir, "pclbin")
     if not os.path.exists(pclBinDir):
         raise FileNotFoundError(f"Pclbin directory not found {pclBinDir}")
     sinfoDir = os.path.join(cfg.outDir, "sinfo")
     if not os.path.exists(sinfoDir):
         os.makedirs(sinfoDir)
-    datasets = read_dataset_list(cfg.datasetsFile)
+    datasets = readDatasetList(cfg.datasetsFile)
     taskList = []
     for (pclFile, dsetPlat, platform) in datasets:
         inputPclbinFile = os.path.join(pclBinDir, f'{pclFile}.bin')
@@ -270,15 +270,15 @@ def makePlatFiles(cfg, concurrency=8):
         - DB files already made
         - gene prep files already made
     """
-    cmdName = prepCmd('makePlatFiles', 'SeekPrep', cfg)
+    cmdName = prepCmd('SeekPrep', 'makePlatFiles', cfg)
     platDir = os.path.join(cfg.outDir, "plat")
     if not os.path.exists(platDir):
         os.makedirs(platDir)
     prepDir = os.path.join(cfg.outDir, "prep")
     # write out temporary files for the SeekPrep call
-    datasets = read_dataset_list(cfg.datasetsFile)
+    datasets = readDatasetList(cfg.datasetsFile)
     dsetPlatMapFile = os.path.join(cfg.outDir, 'dset_plat_map.txt')
-    write_dataset_platform_map(datasets, dsetPlatMapFile)
+    writeDatasetPlatformMap(datasets, dsetPlatMapFile)
     # write out the db file list
     dbList = glob.glob(os.path.join(cfg.dbDir, '*.db'))
     tmpFile1 = tempfile.NamedTemporaryFile(delete=False)
@@ -296,13 +296,13 @@ def makeDsetSizeFile(cfg, concurrency=8):
     """
     # TODO - this could be parallelized if multiprocess returns a value for each task
     #   have it return the dset size (in a result queue) and collect them all.
-    cmdName = prepCmd('makeDsetSizeFile', 'SeekPrep', cfg)
+    cmdName = prepCmd('SeekPrep', 'makeDsetSizeFile', cfg)
     pclBinDir = os.path.join(cfg.outDir, 'pclbin')
     dsetSizeFile = os.path.join(cfg.outDir, 'dset_size.txt')
     # create and truncate the dsetSize file
     with open(dsetSizeFile, 'w'):
         pass  # opening for write automatically truncates if it exists
-    datasets = read_dataset_list(cfg.datasetsFile)
+    datasets = readDatasetList(cfg.datasetsFile)
     for (pclFile, dsetPlat, platform) in datasets:
         if pclFile.endswith('.pcl'):
             pclFile = pclFile + '.bin'
@@ -332,11 +332,12 @@ def Task_DABToDBFiles(cfg, threadDbDir, threadDatasets: list):
     if not os.path.exists(threadDbDir):
         os.makedirs(threadDbDir, exist_ok=True)
     threadDatasetFile = dsetFileName(threadDbDir)
-    write_dataset_list(threadDatasets, threadDatasetFile)
-    write_dataset_platform_map(threadDatasets, dsetPlatMapFileName(threadDbDir, cfg))
+    writeDatasetList(threadDatasets, threadDatasetFile)
+    writeDatasetPlatformMap(threadDatasets, dsetPlatMapFileName(threadDbDir, cfg))
     cmd = f"{cmdName} -i {cfg.geneMapFile} -d {cfg.dabDir} -D {threadDbDir} -u -B 50 -f {cfg.numDbFiles} -x {threadDatasetFile}"
     print(cmd)
     subprocess.run(cmd, shell=True)
+    return True
 
 
 def parallelMakePerThreadDB(cfg, concurrency=8):
@@ -346,8 +347,8 @@ def parallelMakePerThreadDB(cfg, concurrency=8):
         The list of db directories which were created (one per thread).
         These will need to be combined in a next step
     """
-    cmdName = prepCmd('parallelMakePerThreadDB', 'Data2DB', cfg)
-    datasets = read_dataset_list(cfg.datasetsFile)
+    cmdName = prepCmd('Data2DB', 'parallelMakePerThreadDB', cfg)
+    datasets = readDatasetList(cfg.datasetsFile)
     dbDir = os.path.join(cfg.outDir, 'thread_work', 'db')
     dbDir = os.path.abspath(dbDir)
     numDsPerThread = math.ceil(len(datasets) / concurrency)
@@ -401,6 +402,7 @@ def Task_CombineDBFiles(cfg, dbDirsToCombine, dbFileName):
     subprocess.run(cmd, shell=True)
     os.remove(tmpFile.name)
     # TODO - perhaps remove the threadDB files after combined
+    return True
 
 
 def parallelCombineThreadDBs(cfg, dbDirsToCombine, concurrency=8):
@@ -409,7 +411,7 @@ def parallelCombineThreadDBs(cfg, dbDirsToCombine, concurrency=8):
     final single DB files
     """
     # get the listing of db files
-    cmdName = prepCmd('parallelCombineThreadDBs', 'DBCombiner', cfg)
+    cmdName = prepCmd('DBCombiner', 'parallelCombineThreadDBs', cfg)
     assert len(dbDirsToCombine) > 0
     # The list of db files should be identical for each db directory (same count and names)
     dbFileList = fnmatch.filter(os.listdir(dbDirsToCombine[0]), '*.db')

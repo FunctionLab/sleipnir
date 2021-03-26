@@ -100,9 +100,9 @@ def main(args):
     if not os.path.exists(args.newDsetFile):
         raise FileNotFoundError("New dataset_platform map not found: " + args.newDsetFile)
 
-    smallDsets = sutils.read_dataset_list(args.smallDsetFile)
-    largeDsets = sutils.read_dataset_list(args.largeDsetFile)
-    newDsets = sutils.read_dataset_list(args.newDsetFile)
+    smallDsets = sutils.readDatasetList(args.smallDsetFile)
+    largeDsets = sutils.readDatasetList(args.largeDsetFile)
+    newDsets = sutils.readDatasetList(args.newDsetFile)
 
     smallDsets = set([dset[1] for dset in smallDsets])
     largeDsets = set([dset[1] for dset in largeDsets])

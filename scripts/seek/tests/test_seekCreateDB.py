@@ -22,7 +22,7 @@ class TestSeekCreateDB:
             cls.temp_dir = tempfile.TemporaryDirectory()
             tmpDirName = cls.temp_dir.name
         else:
-            tmpDirName = '/tmp/testSeekUtils'
+            tmpDirName = '/tmp/testSeekCreateDb'
             if os.path.exists(tmpDirName):
                 os.system(f'rm -rf {tmpDirName}/*')
             else:
