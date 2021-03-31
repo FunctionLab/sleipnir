@@ -86,6 +86,9 @@ bool legacyReadDBConfigFile(string dbConfigFile,
                             CSeekDataset::DistanceMeasure eDistMeasure = CSeekDataset::CORRELATION,
                             bool check_dset_size_flag = true);
 
+void loadOneColumnTextFile(string filename, vector<string> &vals);
+
+void loadTwoColumnTextFile(string filename, map<string, string> &vals);
 
 class Semaphore
 {

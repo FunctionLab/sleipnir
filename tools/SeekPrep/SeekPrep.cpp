@@ -378,6 +378,13 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
     return true;
 }
 
+string getPclFileStem(string fileName) {
+    // match on substring '.pcl' will also match on '.pcl.bin'
+    int pos = fileName.rfind(".pcl");
+    string fileStem = fileName.substr(0, pos);
+    return fileStem;
+}
+
 
 int main(int iArgs, char **aszArgs) {
     static const size_t c_iBuffer = 1024;
@@ -408,8 +415,8 @@ int main(int iArgs, char **aszArgs) {
         if (!pcl.Open(pclfile.c_str())) {
           cerr << "Error opening pcl file " << pclfile << endl;
           return -1;
-        } 
-        string dsetName = CMeta::Deextension(CMeta::Basename(pclfile.c_str()));
+        }
+        string dsetName = getPclFileStem(CMeta::Basename(pclfile.c_str()));
         size_t numExp = pcl.GetExperiments();
         cout << dsetName << "\t" << numExp << endl;
         return 0;
@@ -462,7 +469,8 @@ int main(int iArgs, char **aszArgs) {
 
         if (sArgs.sinfo_flag == 1) {
             string fileName = CMeta::Basename(sArgs.pclinput_arg);
-            string fileStem = CMeta::Deextension(fileName);
+            string fileStem = getPclFileStem(fileName);
+
             char outFile[125];
             sprintf(outFile, "%s/%s.sinfo", sArgs.dir_out_arg, fileStem.c_str());
 
@@ -529,7 +537,7 @@ int main(int iArgs, char **aszArgs) {
             //if calculating gene variance per dataset
         else if (sArgs.gexpvarmean_flag == 1) {
             string fileName = CMeta::Basename(sArgs.pclinput_arg);
-            string fileStem = CMeta::Deextension(fileName);
+            string fileStem = getPclFileStem(fileName);
             char outFile[125];
 
             string pclfile = sArgs.pclinput_arg;
@@ -619,7 +627,7 @@ int main(int iArgs, char **aszArgs) {
             //fprintf(stderr, "quant %d %.5f\n", 170, quant[170]);
             //getchar();
 
-        
+
             bool logit = false;
             if (sArgs.logit_flag == 1) logit = true;
 

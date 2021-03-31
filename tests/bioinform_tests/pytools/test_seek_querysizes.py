@@ -10,13 +10,13 @@ from rank_correlation import files_rank_correlation
 
 min_result_correlation = 0.95
 
-datasetFile = 'datasets.txt'
-geneMapFile = 'bc_gene_map.txt'
-dsetSizeFile = 'dset_size.txt'
-dbDir = 'db'
-prepDir =  'prep'
-platDir = 'plat'
-sinfoDir =  'sinfo'
+datasetFile = 'dataset.map'
+geneMapFile = 'gene_map.txt'
+dsetSizeFile = 'dataset_size'
+dbDir = 'db.combined'
+prepDir =  'prep.combined'
+platDir = 'platform.combined'
+sinfoDir =  'sinfo.combined'
 
 
 if __name__ == "__main__":
