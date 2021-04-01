@@ -1,6 +1,7 @@
 import pytest
 import os
 import sys
+import time
 import glob
 import subprocess
 import tempfile
@@ -41,6 +42,7 @@ class TestSeekRPC:
         # Step 02: Start the SeekRPC server running
         cmd = f'pushd {sleipnirBin}; ./SeekRPC -c {sampleBcDir}/sampleBC-config.toml'
         cls.SeekServerProc = subprocess.Popen(cmd, shell=True)
+        time.sleep(.5)
 
 
     def teardown_class(cls):
@@ -60,6 +62,7 @@ class TestSeekRPC:
               f'-q {inputQueries} -o {outputResults}'
         clientProc = subprocess.Popen(cmd, shell=True)
         clientProc.wait()
+        assert clientProc.returncode == 0
         expectedResults = f'{sampleBcDir}/queries/seekminer_results.txt'
         corrs = files_rank_correlation(expectedResults, outputResults)
         print('Result Correlations: {}'.format(corrs))
