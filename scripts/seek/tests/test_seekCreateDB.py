@@ -1,5 +1,6 @@
 import pytest
 import os
+import time
 import filecmp
 import subprocess
 import tempfile
@@ -31,8 +32,8 @@ class TestSeekCreateDB:
         cls.mockDir = os.path.join(tmpDirName, 'mockDb')
         print(f'### Using temp directory {tmpDirName}')
         # copy the test mock directory to the temp directory
-        mockDbDir = os.path.join(testDir, 'inputs/mockDb')
-        os.system(f'cp -a {mockDbDir} {tmpDirName}')
+        inputMockDbDir = os.path.join(testDir, 'inputs/mockDb')
+        os.system(f'cp -a {inputMockDbDir} {tmpDirName}')
 
 
     def teardown_class(cls):
@@ -47,8 +48,10 @@ class TestSeekCreateDB:
         cmd = f'python {seekScriptsDir}/seekCreateDB.py --all ' \
               f'-b {sleipnirBinDir} -i {mockDbDir} -o {mockDbDir} ' \
               f'-d pcl_list.txt -m 2'
-        subprocess.run(cmd, shell=True)
+        ret = subprocess.run(cmd, shell=True)
+        assert ret.returncode == 0
 
+        # Test created db using SeekMiner
         cfg = sutils.getDefaultConfig()
         cfg.inDir = mockDbDir
         cfg.outDir = mockDbDir
@@ -56,17 +59,34 @@ class TestSeekCreateDB:
         cfg.datasetsFile = 'dset_plat_map.txt'
         sutils.checkConfig(cfg)
         # Run SeekMiner query
+        queryFile = os.path.join(mockDbDir, 'query.txt')
+        resultsDir = os.path.join(mockDbDir, 'results')
         os.makedirs(os.path.join(mockDbDir, 'results'))
         cmd = f'{sleipnirBinDir}/SeekMiner -x {cfg.datasetsFile} -i ' \
               f'{cfg.geneMapFile} -d {cfg.dbDir} -p {mockDbDir}/prep ' \
               f'-P {mockDbDir}/plat -Q {cfg.quantFile} -u {mockDbDir}/sinfo ' \
-              f'-n 100 -b 200  -V CV -I LOI -z z_score -m -M -O ' \
-              f'-q {mockDbDir}/query.txt -o {mockDbDir}/results -Y -T 2 -t 1'
-        subprocess.run(cmd, shell=True)
+              f'-n 6 -b 20  -V CV -I LOI -z z_score -m -M -O ' \
+              f'-q {queryFile} -o {resultsDir} -Y -T 2 -t 1'
+        print(f'run: {cmd}')
+        ret = subprocess.run(cmd, shell=True)
+        assert ret.returncode == 0
         expected_results = os.path.join(mockDbDir, 'query_result.txt')
         seekminer_results = os.path.join(mockDbDir, 'results', '0.results.txt')
         assert filecmp.cmp(expected_results, seekminer_results, shallow=False)
 
-    def test_seekRPC(self):
-        # TODO - run seekRPCServer and seekRPCClient with the same query agains mockDB
-        pass
+        # Test created db using SeekRPC
+        seekrpcConfigFile = os.path.join(mockDbDir, 'mockDb-config.toml')
+        # modify paths in config files
+        cmd = f"sed -i '' -e 's/\\/tmp/\\/tmp\\/testSeekCreateDb/' {seekrpcConfigFile}"
+        subprocess.run(cmd, shell=True)
+        seekrpcResultsFile = os.path.join(resultsDir, 'seekRPC_results.txt')
+        cmd = f'{sleipnirBinDir}/SeekRPC -c {mockDbDir}/mockDb-config.toml'
+        SeekServerProc = subprocess.Popen(cmd, shell=True)
+        time.sleep(.5)
+        cmd = f'{sleipnirBinDir}/SeekRPCClient -s mockDB ' \
+              f'-q {queryFile} -o {seekrpcResultsFile}'
+        clientProc = subprocess.Popen(cmd, shell=True)
+        clientProc.wait()
+        SeekServerProc.kill()
+        assert filecmp.cmp(expected_results, seekrpcResultsFile, shallow=False)
+

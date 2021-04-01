@@ -1,10 +1,8 @@
 import pytest
 import os
 import sys
-import time
 import glob
 import subprocess
-import filecmp
 import tempfile
 
 testDir = os.path.abspath(os.path.dirname(__file__))
@@ -23,7 +21,7 @@ from rank_correlation import files_rank_correlation
 use_tempfile = False
 min_result_correlation = 0.95
 
-class TestSeekUtils:
+class TestSeekRPC:
     cfg = None
 
     def setup_class(cls):
@@ -31,13 +29,12 @@ class TestSeekUtils:
         dbDir = os.path.join(sampleBcDir, 'db')
         dbFiles = glob.glob1(dbDir, '*.db')
         if len(dbFiles) < 100:
-            assert False  # don't do this for now
             os.makedirs(sampleBcDir, exist_ok=True)
             inputBCFiles = os.path.join(testInputsDir, 'breast-cancer-sample')
             os.system(f'cp -a {inputBCFiles}/* {sampleBcDir}')
             # Create the sample DB
             cmd = f'python {seekScriptsDir}/seekCreateDB.py --all -g bc_gene_map.txt ' \
-                f'-n 100 -m 4 -i {sampleBcDir} -o {sampBcDir} -b {sleipnirBin} --dab-use-gene-set'
+                f'-n 100 -m 4 -i {sampleBcDir} -o {sampleBcDir} -b {sleipnirBin} --dab-use-gene-set'
             ret = subprocess.run(cmd, shell=True)
             assert ret.returncode == 0
 
