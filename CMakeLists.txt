@@ -129,6 +129,8 @@ set(SLEIPNIR_SOURCES
     src/seekcentral.h
     src/seekdataset.cpp
     src/seekdataset.h
+    src/seekerror.cpp
+    src/seekerror.h
     src/seekevaluate.cpp
     src/seekevaluate.h
     src/seekhelper.cpp

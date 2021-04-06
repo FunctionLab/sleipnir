@@ -30,6 +30,8 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "seekreader.h"
+#include "seekerror.h"
+#include <regex>
 
 namespace Sleipnir {
 
@@ -261,7 +263,7 @@ namespace Sleipnir {
 
         if (bCorrelation) {
             for (i = 0; i < DB.size(); i++) {
-                if (DBSetting[i]->GetValue("sinfo") == "NA") {
+                if (DBSetting[i]->sinfoDir == "NA") {
                     fprintf(stderr, "sinfo parameter must be given.\n");
                     return false;
                 }
@@ -270,7 +272,7 @@ namespace Sleipnir {
 
         if (bVariance) {
             for (i = 0; i < DB.size(); i++) {
-                if (DBSetting[i]->GetValue("gvar") == "NA") {
+                if (DBSetting[i]->gvarDir == "NA") {
                     fprintf(stderr, "gene variance parameter must be given.\n");
                     return false;
                 }
@@ -283,9 +285,9 @@ namespace Sleipnir {
         ret = system("date +%s%N 1>&2");
         for (i = 0; i < DB.size(); i++) {
             const vector <string> &dset = dbDataset[i];
-            string strPrepInputDirectory = DBSetting[i]->GetValue("prep");
-            string strGvarInputDirectory = DBSetting[i]->GetValue("gvar");
-            string strSinfoInputDirectory = DBSetting[i]->GetValue("sinfo");
+            string strPrepInputDirectory = DBSetting[i]->prepDir;
+            string strGvarInputDirectory = DBSetting[i]->gvarDir;
+            string strSinfoInputDirectory = DBSetting[i]->sinfoDir;
 
             for (j = 0; j < dset.size(); j++) {
                 utype d = mapstriDataset.find(dset[j])->second;
@@ -348,13 +350,19 @@ namespace Sleipnir {
         utype c_iBuffer = lineSize;
         vecstrList1.clear();
         vecstrList2.clear();
+        regex ws_re("\\s+");
 
         while (!ifsm.eof()) {
             ifsm.getline(acBuffer, c_iBuffer - 1);
             if (acBuffer[0] == 0) break;
             acBuffer[c_iBuffer - 1] = 0;
-            vector <string> tok;
-            CMeta::Tokenize(acBuffer, tok);
+            string line(acBuffer);
+            vector<string> tok {
+                sregex_token_iterator(line.begin(), line.end(), ws_re, -1), {}
+            };
+            if (tok.size() != 2) {
+                throw init_error(FILELINE + "Expecting two values per line in file: " + file + ", line: " + to_string(vecstrList1.size()));
+            }
             vecstrList1.push_back(tok[0]);
             vecstrList2.push_back(tok[1]);
         }
@@ -417,6 +425,8 @@ namespace Sleipnir {
         int MAX_CHAR_PER_LINE = lineSize;
         int lineLen = MAX_CHAR_PER_LINE;
         acBuffer = (char *) malloc(lineLen);
+        // This is looping through the file to determine if lineLen is
+        //   ever exceeded and increasing/realloc lineLen if needed
         while (fgets(acBuffer, lineLen, infile) != NULL) {
             while (strlen(acBuffer) == lineLen - 1) {
                 int len = strlen(acBuffer);
@@ -428,10 +438,15 @@ namespace Sleipnir {
         }
         rewind(infile);
 
+        // Use regex to separate tokens on any number or type of spaces
+        regex ws_re("\\s+");
         while (fgets(acBuffer, lineLen, infile) != NULL) {
             char *p = strtok(acBuffer, "\n");
-            vector <string> tok;
-            CMeta::Tokenize(p, tok, " ");
+            if (p == NULL) continue;  // skip empty lines
+            string line(p);
+            vector<string> tok {
+                sregex_token_iterator(line.begin(), line.end(), ws_re, -1), {}
+            };
             qList.push_back(tok);
         }
         qList.resize(qList.size());
@@ -442,92 +457,55 @@ namespace Sleipnir {
     }
 
     bool CSeekTools::ReadMultipleNotQueries(const char *file,
-                                            vector <vector<vector < string>>
+                                            vector<vector<vector<string>>> &qList,
+                                            const int lineSize)
+    {
+        qList.clear();
+        FILE *infile;
+        if ((infile = fopen(file, "r")) == NULL)
+        {
+            fprintf(stderr,
+                    "Error opening file %s\n", file);
+            return false;
+        }
 
-    > &qList,
-    const int lineSize
-    ) {
-    qList.
+        char *acBuffer;
+        int MAX_CHAR_PER_LINE = lineSize;
+        int lineLen = MAX_CHAR_PER_LINE;
+        acBuffer = (char *)malloc(lineLen);
+        while (fgets(acBuffer, lineLen, infile) != NULL) {
+            while (strlen(acBuffer) == lineLen - 1) {
+                int len = strlen(acBuffer);
+                fseek(infile,
+                      -len, SEEK_CUR);
+                lineLen +=
+                    MAX_CHAR_PER_LINE;
+                acBuffer = (char *)realloc(acBuffer, lineLen);
+                char *ret = fgets(acBuffer, lineLen, infile);
+            }
+        }
+        rewind(infile);
 
-    clear();
-
-    FILE *infile;
-    if ((
-    infile = fopen(file, "r")
-    ) == NULL) {
-    fprintf(stderr,
-    "Error opening file %s\n", file);
-    return false;
-}
-
-char *acBuffer;
-int MAX_CHAR_PER_LINE = lineSize;
-int lineLen = MAX_CHAR_PER_LINE;
-acBuffer = (char *) malloc(lineLen);
-while (
-fgets(acBuffer, lineLen, infile
-) != NULL) {
-while (
-strlen(acBuffer)
-== lineLen - 1) {
-int len = strlen(acBuffer);
-fseek(infile,
--len, SEEK_CUR);
-lineLen +=
-MAX_CHAR_PER_LINE;
-acBuffer = (char *) realloc(acBuffer, lineLen);
-char *ret = fgets(acBuffer, lineLen, infile);
-}
-}
-rewind(infile);
-
-while (
-fgets(acBuffer, lineLen, infile
-) != NULL) {
-char *p = strtok(acBuffer, "\n");
-vector <vector<string>> aQ;
-vector <string> tok;
-CMeta::Tokenize(p, tok,
-"|");
-aQ.
-resize(tok
-.
-
-size()
-
-);
-int i;
-for (
-i = 0;
-i<tok.
-
-size();
-
-i++) {
-vector <string> tmp;
-CMeta::Tokenize(tok[i]
-.
-
-c_str(), tmp,
-
-" ");
-aQ[i] =
-tmp;
-}
-qList.
-push_back(aQ);
-}
-qList.
-resize(qList
-.
-
-size()
-
-);
-free(acBuffer);
-fclose(infile);
-return true;
-}
+        while (fgets(acBuffer, lineLen, infile) != NULL) {
+            char *p = strtok(acBuffer, "\n");
+            if (p == NULL) continue;  // skip empty lines
+            vector<vector<string>> aQ;
+            vector<string> tok;
+            CMeta::Tokenize(p, tok, "|");
+            aQ.resize(tok.size());
+            int i;
+            for ( i = 0; i < tok. size(); i++) {
+                vector<string> tmp;
+                CMeta::Tokenize(tok[i].c_str(), tmp, " ");
+                aQ[i] = tmp;
+            }
+            qList.push_back(aQ);
+        }
+        qList.resize(qList.size());
+        free(acBuffer);
+        fclose(infile);
+        return true;
+    }
 
 bool CSeekTools::ReadMultiGeneOneLine(const string &strFile,
                                       vector <string> &list, const int lineSize) {

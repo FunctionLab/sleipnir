@@ -60,9 +60,11 @@ class TestSeekCreateDB:
         cmd = f'{sleipnirBinDir}/SeekMiner -x {cfg.datasetsFile} -i ' \
               f'{cfg.geneMapFile} -d {cfg.dbDir} -p {mockDbDir}/prep ' \
               f'-P {mockDbDir}/plat -Q {cfg.quantFile} -u {mockDbDir}/sinfo ' \
-              f'-n 100 -b 200  -V CV -I LOI -z z_score -m -M -O ' \
+              f'-n 6 -b 20  -V CV -I LOI -z z_score -m -M -O ' \
               f'-q {mockDbDir}/query.txt -o {mockDbDir}/results -Y -T 2 -t 1'
-        subprocess.run(cmd, shell=True)
+        print(cmd)
+        ret = subprocess.run(cmd, shell=True)
+        assert ret.returncode == 0
         expected_results = os.path.join(mockDbDir, 'query_result.txt')
         seekminer_results = os.path.join(mockDbDir, 'results', '0.results.txt')
         assert filecmp.cmp(expected_results, seekminer_results, shallow=False)

@@ -1189,6 +1189,9 @@ namespace Sleipnir {
                 vecstrSubset.push_back(vecstrGenes[j]); //contains index for 1000, 2000, 3000th genes
             sprintf(acNumber, "%08lu", i);
             string strFile = strDBDirectory + '/' + acNumber + c_acExtension;
+            if (!std::filesystem::exists(strFile)) {
+                return false;
+            }
             uint32_t iGenes = vecstrGenes.size();
             uint32_t iDset = iDatasets;
             m_vecpDBs[i]->Set(iGenes, iDset, vecstrSubset);

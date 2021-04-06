@@ -37,16 +37,55 @@
 
 namespace Sleipnir {
 
+    template <typename K, typename V>
+    struct PairedResult {
+        K key;
+        V val;
+
+        PairedResult() {}
+
+        PairedResult(K _key, V _val) : key(_key), val(_val) {}
+
+        bool operator<(const PairedResult &item) const {
+            if (val == item.val && key == item.key) {
+                return false;
+            }
+            if (val < item.val) {
+                return false;
+            } else if (val > item.val) {
+                return true;
+            } else if (key < item.key) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+
+    typedef PairedResult<string, double> StrDoublePair;
+
     struct AResult {
         utype i;
         utype f;
 
+        // Note: This is implemented in a confusing way. operartor< (less than)
+        //  is supposed to return true when object_val < passed_in_val. This
+        //  method is implemented in reverse to achieve descending sort.
+        // TODO - Change this operator to the convential and achieve descending
+        //   sort by passing a greater_that operator> into the sort function.
+        //   Same with AResultFloat below
         bool operator<(const AResult &val) const {
             /*if(f<=val.f){
                 return false;
             }else{
                 return true;
             }*/
+            // Sort specifies that when elem a == b must return false
+            //  or an infinite loop can result. There are cases in
+            //  some sort algorithms where an element is compared to itself.
+            if (f == val.f && i == val.i) {
+                return false;
+            }
             if (f < val.f) {
                 return false;
             } else if (f > val.f) {
@@ -85,6 +124,9 @@ namespace Sleipnir {
             }else{
                 return true;
             }*/
+            if (f == val.f && i == val.i) {
+                return false;
+            }
             if (f < val.f) {
                 return false;
             } else if (f > val.f) {

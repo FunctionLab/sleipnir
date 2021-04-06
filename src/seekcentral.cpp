@@ -30,6 +30,9 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "seekcentral.h"
+#include "seekerror.h"
+#include <filesystem>
+#include <cassert>
 
 namespace Sleipnir {
 
@@ -258,13 +261,14 @@ namespace Sleipnir {
         return true;
     }
 
+
     // Per-query version of Initialize() called by SeekServer
     //for SeekServer
     //assume DB has been read (with gvar, sinfo information)
     //assume datasets and genes have been read
     //assume m_enableNetwork is on
     //* CDatabaselet collection is shared between multiple clients (m_bSharedDB)
-    bool CSeekCentral::Initialize(
+    bool CSeekCentral::InitializeQuery(
             const string &output_dir, const string &query,
             const string &search_dset, CSeekCentral *src, const int iClient,
             const float query_min_required, const float genome_min_required,
@@ -341,13 +345,24 @@ namespace Sleipnir {
         for (i = 0; i < sd.size(); i++) {
             m_vecstrSearchDatasets[i] = vector<string>();
             vector <string> vecsearchDset;
-            CMeta::Tokenize(sd[i].c_str(), vecsearchDset, " ", false);
-            for (j = 0; j < vecsearchDset.size(); j++) {
-                if (m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[j]] <
-                                        m_iNumSampleRequired) {
-                    continue;
+            if (sd[i] == "" or sd[i] == "NA") {
+                // include all datasets as part of search
+                for (j = 0; j < m_vecstrDatasets.size(); j++) {
+                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[m_vecstrDatasets[j]] <
+                                            m_iNumSampleRequired) {
+                        continue;
+                    }
+                    m_vecstrSearchDatasets[i].push_back(m_vecstrDatasets[j]);
                 }
-                m_vecstrSearchDatasets[i].push_back(vecsearchDset[j]);
+            } else {
+                CMeta::Tokenize(sd[i].c_str(), vecsearchDset, " ", false);
+                for (j = 0; j < vecsearchDset.size(); j++) {
+                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[j]] <
+                                            m_iNumSampleRequired) {
+                        continue;
+                    }
+                    m_vecstrSearchDatasets[i].push_back(vecsearchDset[j]);
+                }
             }
             m_vecstrSearchDatasets[i].resize(m_vecstrSearchDatasets[i].size());
         }
@@ -384,10 +399,15 @@ namespace Sleipnir {
         //for(i=0; i<m_vecDB.size(); i++)
         //	m_vecDB[i] = src->m_vecDB[i];
         for (i = 0; i < m_vecDB.size(); i++) {
+            bool res;
             m_vecDB[i] = NULL;
             m_vecDB[i] = new CDatabase(m_useNibble);
-            m_vecDB[i]->Open(m_vecDBSetting[i]->GetValue("db"),
-                             m_vecstrGenes, m_vecDBDataset[i].size(), m_vecDBSetting[i]->GetNumDB());
+            res = m_vecDB[i]->Open(m_vecDBSetting[i]->dbDir,
+                                   m_vecstrGenes, m_vecDBDataset[i].size(),
+                                   m_vecDBSetting[i]->GetNumDB());
+            if (res == false) {
+                return false;
+            }
         }
 
         CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
@@ -419,8 +439,19 @@ namespace Sleipnir {
 
 //network mode, meant to be run after Initialize()
     bool CSeekCentral::EnableNetwork(const int &iClient) {
-        m_bEnableNetwork = true;
-        m_iClient = iClient; //assume client connection is already open
+        if (iClient > 0) {
+            m_bEnableNetwork = true;
+            m_iClient = iClient; //assume client connection is already open
+        } else {
+            m_bEnableNetwork = false;
+            m_iClient = 0;
+            if (m_useRPC) {
+                // clear the log queue
+                while (!m_rpcLog.empty()) {
+                    m_rpcLog.pop();
+                }
+            }
+        }
         return true;
     }
 
@@ -491,8 +522,11 @@ namespace Sleipnir {
             if (isFirst) {
                 string err = "Error: no dataset contains any of the query genes";
                 fprintf(stderr, "%s\n", err.c_str());
-                if (m_bEnableNetwork)
+                if (m_bEnableNetwork) {
                     CSeekNetwork::Send(m_iClient, err);
+                } else if (m_useRPC) {
+                    throw query_error(FILELINE + err);
+                }
                 return false;
             }
 
@@ -519,8 +553,11 @@ namespace Sleipnir {
             if (isFirst) {
                 string err = "Error: no dataset contains any of the query genes";
                 fprintf(stderr, "%s\n", err.c_str());
-                if (m_bEnableNetwork)
+                if (m_bEnableNetwork) {
                     CSeekNetwork::Send(m_iClient, err);
+                } else if (m_useRPC) {
+                    throw query_error(FILELINE + err);
+                }
                 return false;
             }
 
@@ -539,6 +576,9 @@ namespace Sleipnir {
         if (m_bEnableNetwork) {
             CSeekNetwork::Send(m_iClient, refinedSearchDataset);
             CSeekNetwork::Send(m_iClient, refinedGeneCount);
+        } else if (m_useRPC) {
+            m_rpcLog.push(refinedSearchDataset);
+            m_rpcLog.push(refinedGeneCount);
         }
 
         if (replace) {
@@ -590,6 +630,57 @@ namespace Sleipnir {
         }
 
         return true;
+    }
+
+    void CSeekCentral::InitializeFromSeekConfig(const SeekSettings &settings) {
+        bool bOutputWeightComponent = true;
+        bool bSimulateWeight = false; // TODO GW - was true; why would we want this on by default?
+        bool bSubtractAvg = false;
+        bool bNormPlatform = false;
+        bool bLogit = false;
+        bool bVariance = false;
+        bool useNibble = false;
+
+        if (settings.isNibble == true) {
+            string errStr = "Nibble integration is not supported! Please use a non-nibble CDatabase";
+            throw config_error(FILELINE + errStr);
+        }
+        if (settings.dbs[0]->dsetSizeFile == "NA")
+        {
+            // Must be set so the query request can decide whether to use check dataset size
+            string errStr = "Dataset size file is missing";
+            throw config_error(FILELINE + errStr);
+        }
+        if (settings.dbs[0]->gvarDir != "NA")
+        {
+            bVariance = true;
+        }
+
+        bool res;
+        res = Initialize(settings.dbs,
+                         settings.numBufferedDBs,
+                         settings.outputAsText,
+                         bOutputWeightComponent,
+                         bSimulateWeight,
+                         CSeekDataset::CORRELATION, //to be overwritten by individual search instance's setting
+                         bVariance, //decide whether or not to load gvar
+                         bSubtractAvg,
+                         bNormPlatform, //to be overwritten by individual search instance's settings
+                         bLogit, //always false
+                         settings.scoreCutoff,
+                         0.0, //min query fraction (to be overwrriten)
+                         0.0, //min genome fraction (to be overwrriten))
+                         settings.squareZ,
+                         false,  // bRandom
+                         1,  // iNumRandom
+                         false, //negative cor (to be overwritten)
+                         true, //check dataset size (to be overwritten)
+                         NULL,  // gsl_rng
+                         useNibble,
+                         settings.numThreads);
+        if (res == false) {
+            throw init_error(FILELINE + "Seek Initialize");
+        }
     }
 
     // In-common version of Initialize(), to be called at startup time, no per-query info.
@@ -661,14 +752,39 @@ namespace Sleipnir {
 
         //read genes
         vector <string> vecstrGeneID;
-        if (!CSeekTools::ReadListTwoColumns(vecDBSetting[0]->GetValue("gene"),
+        if (!CSeekTools::ReadListTwoColumns(vecDBSetting[0]->geneMapFile,
                                             vecstrGeneID, m_vecstrGenes))
             return false;
         for (i = 0; i < m_vecstrGenes.size(); i++)
             m_mapstrintGene[m_vecstrGenes[i]] = i;
 
+        // read gene symbol map if provided
+        if (vecDBSetting[0]->geneSymbolFile != "NA") {
+            vector <string> geneEntrez;
+            vector <string> geneSymbol;
+            if (!CSeekTools::ReadListTwoColumns(vecDBSetting[0]->geneSymbolFile,
+                                                geneEntrez, geneSymbol)) {
+                throw init_error(FILELINE + "Unable to read gene symbol file: " + vecDBSetting[0]->geneSymbolFile);
+            }
+            // create forward and reverse map
+            uint32_t numGenes = geneEntrez.size();
+            for (int i=0; i<numGenes; i++) {
+                m_geneEntrezToSymbolMap.insert({geneEntrez[i], geneSymbol[i]});
+                m_geneSymbolToEntrezMap.insert({geneSymbol[i], geneEntrez[i]});
+            }
+            if (m_geneEntrezToSymbolMap.size() != numGenes) {
+                throw init_error(FILELINE + "entrezToSymbol map count mismatch: " +
+                                 to_string(m_geneEntrezToSymbolMap.size()) +
+                                 ", " + to_string(numGenes));
+            }
+            if (m_geneSymbolToEntrezMap.size() != numGenes) {
+                uint32_t numDups = numGenes - m_geneSymbolToEntrezMap.size();
+                cerr << "Warning: duplicate symbols in symbolToEntrez map: " << numDups << endl;
+            }
+        }
+
         //read quant file
-        CSeekTools::ReadQuantFile(vecDBSetting[0]->GetValue("quant"), m_quant);
+        CSeekTools::ReadQuantFile(vecDBSetting[0]->quantFile, m_quant);
 
         m_vecstrDatasets.clear();
         m_vecstrDP.clear();
@@ -690,7 +806,7 @@ namespace Sleipnir {
 
         for (i = 0; i < vecDBSetting.size(); i++) {
             if (dist_measure == CSeekDataset::CORRELATION &&
-                vecDBSetting[i]->GetValue("sinfo") == "NA") {
+                vecDBSetting[i]->sinfoDir == "NA") {
                 fprintf(stderr, "Error: not specifying sinfo!\n");
                 return false;
             }
@@ -698,7 +814,7 @@ namespace Sleipnir {
             m_vecDB[i] = new CDatabase(useNibble);
             //read datasets
             vector <string> vD, vDP;
-            if (!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->GetValue("dset"), vD, vDP))
+            if (!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->datasetFile, vD, vDP))
                 return false;
 
             for (j = 0; j < vD.size(); j++) {
@@ -707,9 +823,10 @@ namespace Sleipnir {
                 m_vecstrDP.push_back(vDP[j]);
             }
 
-            if (vecDBSetting[i]->GetValue("dset_size") != "NA") {
+            if (vecDBSetting[i]->dsetSizeFile != "NA") {
                 vector <string> col1, col2;
-                if (!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->GetValue("dset_size"), col1, col2))
+                // TODO GW - fix finicky: dataset_size file must have tabs not spaces
+                if (!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->dsetSizeFile, col1, col2))
                     return false;
                 set <string> currentD(vD.begin(), vD.end());
                 for (j = 0; j < col1.size(); j++) {
@@ -730,7 +847,7 @@ namespace Sleipnir {
 
             // Load the new database platform statistics
             SeekPlatforms db_platforms;
-            string platformDir = vecDBSetting[i]->GetValue("platform");
+            string platformDir = vecDBSetting[i]->platDir;
             assert(!platformDir.empty() && platformDir != "NA");
             db_platforms.loadPlatformDataFromFiles(platformDir);
             // Combine the new db platform statistics with the main db stats
@@ -746,8 +863,13 @@ namespace Sleipnir {
         m_iGenes = m_vecstrGenes.size();
 
         for (i = 0; i < vecDBSetting.size(); i++) {
-            m_vecDB[i]->Open(vecDBSetting[i]->GetValue("db"),
-                             m_vecstrGenes, m_vecDBDataset[i].size(), vecDBSetting[i]->GetNumDB());
+            bool res;
+            res = m_vecDB[i]->Open(vecDBSetting[i]->dbDir,
+                                   m_vecstrGenes, m_vecDBDataset[i].size(),
+                                   vecDBSetting[i]->GetNumDB());
+            if (res == false) {
+                return false;
+            }
         }
 
         CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
@@ -760,7 +882,7 @@ namespace Sleipnir {
     }
 
     // Version of Initialize called by SeekMiner - calls in-common intialize() and then does query-specific prep
-    bool CSeekCentral::Initialize(
+    bool CSeekCentral::InitializeFromSeekMiner(
             const vector<CSeekDBSetting *> &vecDBSetting,
             const char *search_dset, const char *query,
             const char *output_dir, const utype buffer, const bool to_output_text,
@@ -985,7 +1107,7 @@ namespace Sleipnir {
         return true;
     }
 
-    bool CSeekCentral::Sort(vector <AResultFloat> &final) {
+    bool CSeekCentral::getSortedGeneScores(vector <AResultFloat> &final) {
         if (DEBUG) fprintf(stderr, "Sorting genes\n");
         final.resize(m_iGenes);
         utype j;
@@ -1002,6 +1124,54 @@ namespace Sleipnir {
         }
         return true;
     }
+
+    bool CSeekCentral::getSortedDatasetScores(uint32_t queryIndex, vector <AResultFloat> &final)  {
+        final.resize(m_iDatasets);
+        utype j;
+        for (j = 0; j < m_iDatasets; j++) {
+            final[j].i = j;
+            final[j].f = m_weight[queryIndex][j];
+        }
+        sort(final.begin(), final.end());
+        return true;
+    }
+
+    void CSeekCentral::setGenePairedResult(uint32_t queryIndex, vector <AResultFloat> &sortedGeneScore) {
+        vector<StrDoublePair> &geneResult = this->m_geneResults[queryIndex];
+        uint32_t numGenes = sortedGeneScore.size();
+        geneResult.resize(numGenes);
+        int i;
+        for (i = 0; i < numGenes; i++) {
+            double geneScore = sortedGeneScore[i].f;
+            if (geneScore == m_DEFAULT_NA) {
+                break;
+            }
+            uint32_t geneId = sortedGeneScore[i].i;
+            string geneName = m_vecstrGenes[geneId];
+            geneResult[i].key = geneName;
+            geneResult[i].val = geneScore;
+        }
+        geneResult.resize(i);
+    }
+ 
+    void CSeekCentral::setDatasetPairedResult(uint32_t queryIndex, vector <AResultFloat> &sortedDatasetWeight) {
+        vector<StrDoublePair> &datasetResult = this->m_datasetResults[queryIndex];
+        uint32_t numDatasets = sortedDatasetWeight.size();
+        datasetResult.resize(numDatasets);
+        int i;
+        for (i = 0; i < numDatasets; i++) {
+            double datasetWeight = sortedDatasetWeight[i].f;
+            if (datasetWeight == 0) {
+                break;
+            }
+            uint32_t datasetId = sortedDatasetWeight[i].i;
+            string datasetName = m_vecstrDatasets[datasetId];
+            datasetResult[i].key = datasetName;
+            datasetResult[i].val = datasetWeight;
+        }
+        datasetResult.resize(i);
+    }
+
 
     bool CSeekCentral::Display(CSeekQuery &query, vector <AResultFloat> &final) {
         if (DEBUG) fprintf(stderr, "Results:\n");
@@ -1051,6 +1221,7 @@ namespace Sleipnir {
             vecOutput[0] = vector<string>();
             vecOutput[1] = vector<string>();
             sprintf(acBuffer, "%s/%d.results.txt", m_output_dir.c_str(), i);
+            // TODO GW - use getSortedDatasetScores here
             vector <AResultFloat> w;
             w.resize(m_iDatasets);
             utype j;
@@ -1064,7 +1235,7 @@ namespace Sleipnir {
                 vecOutput[0].push_back(m_vecstrDatasets[w[j].i]);
             }
             vector <AResultFloat> wd;
-            Sort(wd);
+            getSortedGeneScores(wd);
             for (j = 0; j < 2000 && j < wd.size(); j++) {
                 if (wd[j].f == m_DEFAULT_NA) break;
                 vecOutput[1].push_back(m_vecstrGenes[wd[j].i]);
@@ -1086,6 +1257,36 @@ namespace Sleipnir {
         return max;
     }
 
+    void CSeekCentral::PrintSettings() {
+        cout << "SeekCentral: " << endl;
+        cout << m_bRandom << endl;
+        cout << m_iNumRandom << endl;
+        cout << m_bSubtractGeneAvg << endl;
+        cout << m_bNormPlatform << endl;
+        cout << m_eDistMeasure << endl;
+        cout << m_bLogit << endl;
+        cout << m_bSquareZ << endl;
+        cout << m_iDatasets << endl;
+        cout << m_iGenes << endl;
+        cout << m_numThreads << endl;
+
+        cout << m_maxNumDB << endl;
+
+        cout << m_bOutputWeightComponent << endl;
+        cout << m_bSimulateWeight << endl;
+        cout << m_fScoreCutOff << endl;
+        cout << m_fPercentQueryAfterScoreCutOff << endl;
+        cout << m_fPercentGenomeRequired << endl;
+        cout << m_bNegativeCor << endl;
+
+        cout << m_useNibble << endl;
+
+        cout << m_DEFAULT_NA << endl;
+
+        /* for specifying dataset size */
+        cout << m_bCheckDsetSize << endl;
+        cout << m_iNumSampleRequired << endl;
+    }
 
     bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
                               gsl_rng *rnd, const CSeekQuery::PartitionMode *PART_M,
@@ -1098,9 +1299,19 @@ namespace Sleipnir {
         utype l; //keeps track of random repetition (for random case)
         char acBuffer[1024];
 
+        // GW uncomment to print out all search settings
+        // cout << "SeekCommon:" << endl;
+        // cout << sm << endl;
+        // cout << *PART_M << endl;
+        // cout << *FOLD << endl;
+        // cout << *RATE << endl;
+        // PrintSettings();
+
         m_Query.resize(m_vecstrAllQuery.size());
         m_weight.resize(m_vecstrAllQuery.size());
         m_final.resize(m_vecstrAllQuery.size());
+        m_geneResults.resize(m_vecstrAllQuery.size());
+        m_datasetResults.resize(m_vecstrAllQuery.size());
 
         //random-ranking case =========================
         vector <vector<float>> vecRandWeight, vecRandScore;
@@ -1356,7 +1567,7 @@ namespace Sleipnir {
             //Display(query, final);
             //fprintf(stderr, "4 %lu\n", CMeta::GetMemoryUsage());
             // SetQueryScoreNull(query);  // commented out 6/2016 by qzhu
-            Sort(final);
+            getSortedGeneScores(final);
             int ret; //for system calls
 
             if (m_bRandom) {
@@ -1370,9 +1581,12 @@ namespace Sleipnir {
                 if ((current_sm == EQUAL || current_sm == ORDER_STATISTICS) && !CheckWeight(i)) {
                     fprintf(stderr, "Calculate dataset ordering\n");
                     ret = system("date +%s%N 1>&2");
-                    if (m_bEnableNetwork && CSeekNetwork::Send(m_iClient,
-                                                               "Calculate dataset ordering") == -1) {
-                        fprintf(stderr, "Error sending message to client\n");
+                    if (m_bEnableNetwork) {
+                        if (CSeekNetwork::Send(m_iClient, "Calculate dataset ordering") == -1) {
+                            fprintf(stderr, "Error sending message to client\n");
+                        }
+                    } else if (m_useRPC) {
+                        m_rpcLog.push("Calculate dataset ordering");
                     }
                     CopyTopGenes(equalWeightGold, final, 100);
                     redoWithEqual = 1;
@@ -1386,9 +1600,12 @@ namespace Sleipnir {
                 } else if (current_sm == CV && !CheckWeight(i)) {
                     fprintf(stderr, "Redo with equal weighting\n");
                     ret = system("date +%s%N 1>&2");
-                    if (m_bEnableNetwork && CSeekNetwork::Send(m_iClient,
-                                                               "Redo with equal weighting") == -1) {
-                        fprintf(stderr, "Error sending message to client\n");
+                    if (m_bEnableNetwork) {
+                        if (CSeekNetwork::Send(m_iClient, "Redo with equal weighting") == -1) {
+                            fprintf(stderr, "Error sending message to client\n");
+                        }
+                    } else if (m_useRPC) {
+                        m_rpcLog.push("Redo with equal weighting");
                     }
                     current_sm = EQUAL;
                     i--;
@@ -1406,9 +1623,18 @@ namespace Sleipnir {
             fprintf(stderr, "Done search\n");
             ret = system("date +%s%N 1>&2");
 
-            if (m_bEnableNetwork && CSeekNetwork::Send(m_iClient, "Done Search") == -1) {
-                fprintf(stderr, "Error sending message to client\n");
+            if (m_bEnableNetwork) {
+                if (CSeekNetwork::Send(m_iClient, "Done Search") == -1) {
+                    fprintf(stderr, "Error sending message to client\n");
+                }
+            } else if (m_useRPC) {
+                m_rpcLog.push("Done Search");
             }
+
+            setGenePairedResult(i, final);
+            vector <AResultFloat> finalDatasetWeights;
+            getSortedDatasetScores(i, finalDatasetWeights);
+            setDatasetPairedResult(i, finalDatasetWeights);
 
             //random-ranking case =========================
             if (m_bRandom) {
@@ -1461,6 +1687,7 @@ namespace Sleipnir {
 
             if (!m_bRandom) {
                 //if m_bRandom, write at the very end when all repetitions are done
+                // TODO GW - pass a tag in to write() to give the files distinct name
                 Write(i);
                 if (weightComponent) {
                     sprintf(acBuffer, "%s/%d.dweight_comp", m_output_dir.c_str(), i);
@@ -1610,7 +1837,7 @@ namespace Sleipnir {
         utype j;
         //for(j=0; j<m_iDatasets; j++) m_vc[j]->DeleteQueryBlock();
         for (j = 0; j < m_iDatasets; j++) {
-            if (m_vc[j] != NULL) continue;
+            if (m_vc[j] == NULL) continue;
             delete m_vc[j];
             m_vc[j] = NULL;
         }
@@ -1625,13 +1852,13 @@ namespace Sleipnir {
         return m_Query;
     }
 
-    utype CSeekCentral::GetGene(const string &strGene) const {
+    utype CSeekCentral::GetGeneId(const string &strGene) const {
         if (m_mapstrintGene.find(strGene) == m_mapstrintGene.end())
             return CSeekTools::GetNaN();
         return m_mapstrintGene.find(strGene)->second;
     }
 
-    string CSeekCentral::GetGene(const utype &geneID) const {
+    string CSeekCentral::GetGeneName(const utype &geneID) const {
         return m_vecstrGenes[(size_t) geneID];
     }
 

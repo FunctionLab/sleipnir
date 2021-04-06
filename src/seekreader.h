@@ -117,7 +117,7 @@ namespace Sleipnir {
         static bool WriteArray(const char *fileName, const vector <tType> &vData) {
             FILE *f = fopen(fileName, "wb");
             if (f == NULL) {
-                fprintf(stderr, "File not found %s\n", fileName);
+                fprintf(stderr, "File or Directory not writeable: %s\n", fileName);
                 return false;
             }
             size_t i;
