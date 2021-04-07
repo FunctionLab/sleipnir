@@ -7,6 +7,8 @@
 
 using namespace Sleipnir;
 
+// Settings that specify a Seek Database configurations. There
+//  is typically a different database per species.
 struct SeekSettings {
     vector <CSeekDBSetting*> dbs;
     string species;
@@ -90,6 +92,8 @@ void loadOneColumnTextFile(string filename, vector<string> &vals);
 
 void loadTwoColumnTextFile(string filename, map<string, string> &vals);
 
+
+// Implementation of a basic semaphore class for resource management
 class Semaphore
 {
 public:
@@ -108,8 +112,9 @@ private:
 
 };
 
-// A class that implements BasicLockable and can be used with lock_guard
-//  to initalize a boolean false and automatically set it when the context exits
+
+// A class that implements BasicLockable and can be used with lock_guard primative
+//  to initalize a boolean false and automatically set it when the context exits.
 class BoolFlag {
 public:
     BoolFlag(bool &flag) : _flag(flag) {}

@@ -80,7 +80,7 @@ namespace Sleipnir {
             }else{
                 return true;
             }*/
-            // Sort specifies that when elem a == b must return false
+            // Sort specifies that when elem a == b it must return false
             //  or an infinite loop can result. There are cases in
             //  some sort algorithms where an element is compared to itself.
             if (f == val.f && i == val.i) {

@@ -350,7 +350,7 @@ namespace Sleipnir {
         utype c_iBuffer = lineSize;
         vecstrList1.clear();
         vecstrList2.clear();
-        regex ws_re("\\s+");
+        regex ws_re("\\s+");  // match on one or more space type values [tab, space]
 
         while (!ifsm.eof()) {
             ifsm.getline(acBuffer, c_iBuffer - 1);

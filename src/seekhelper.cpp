@@ -10,6 +10,7 @@ using namespace std;
 using namespace Sleipnir;
 
 
+// Helper function used by parseTomlConfig to get a named setting
 template <typename T>
 void tomlGetValue(toml::table tbl, string key, T &retVal) {
     if (tbl[key]) {
@@ -24,6 +25,12 @@ void tomlGetValue(toml::table tbl, string key, T &retVal) {
 }
 
 
+/*
+ * ParseTomlConfig:
+ * Seek can input it's invocation parameters from a TOML configuration
+ *   file as opposed to using command line switches.
+ * Parse the TOML config file and return the settings in SeekSettings
+ */
 bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     toml::table tbl;
     try
@@ -36,7 +43,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
         // return false;
         throw err;
     }
-    // populate the settings
+    // populate the top level settings
     tomlGetValue<string>(tbl, "species", settings.species);
     tomlGetValue<int64_t>(tbl, "port", settings.port);
     tomlGetValue<int64_t>(tbl, "numThreads", settings.numThreads);
@@ -46,11 +53,13 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     tomlGetValue<bool>(tbl, "isNibble", settings.isNibble);
     tomlGetValue<bool>(tbl, "outputAsText", settings.outputAsText);
 
+    // Database settings will be under the 'database' section
     // get the database settings
     if (tbl["Database"].is_table()) {
         auto databaseTbl = tbl["Database"];
         string key;
         int idx = 0;
+        // Multiple databases can be described, each in a 'DB' subsection
         while(idx++, key="DB"+to_string(idx), databaseTbl[key].is_table()) {
             // auto dbTbl = databaseTbl[key].value<toml::v2::table>().value();
             toml::table *dbTbl = databaseTbl[key].as_table();
@@ -96,35 +105,20 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     return true;
 }
 
-// Loop through a set of config files and create map from species name to config settings
+// Loop through a set of config files and create map: species name --> config settings
 void getConfigs(vector<string> &configFiles, map<string, SeekSettings> &configs) {
     for (int i=0; i<configFiles.size(); i++) {
         SeekSettings settings;
         parseTomlConfig(configFiles[i], settings);
         if (!settings.species.empty()) {
+            // move/copy the local settings variable to the map
             configs[settings.species] = settings;
         }
     }
 }
 
-void getConfigs_old(vector<string> &configFiles, map<string, SeekSettings> &configs) {
-    for (int i=0; i<configFiles.size(); i++) {
-        // cout << "Parse config file: " << configFiles[i] << endl;
-        // we don't know the species name yet so use a placeholder
-        SeekSettings &settings = configs["placeholder"];
-        parseTomlConfig(configFiles[i], settings);
-        if (!settings.species.empty()) {
-            // remap these settings using the species name as key
-            auto node = configs.extract("placeholder");
-            node.key() = settings.species;
-            configs.insert(std::move(node));
-        }
-        configs.erase("placeholder");
-    }
-}
-
-
-
+// Parse a legacy style seek db config file and load the CSeekDBSettings
+// An example of the legacy db config is in tests/sampleConfigFiles.h:legacyDBConfigData
 bool legacyReadDBConfigFile(string dbConfigFile,
                             vector<CSeekDBSetting*> &cc, 
                             CSeekDataset::DistanceMeasure eDistMeasure,
@@ -230,6 +224,7 @@ bool legacyReadDBConfigFile(string dbConfigFile,
 }
 
 
+// Loads a vector from a text file containing a single column of entries
 void loadOneColumnTextFile(string filename, vector<string> &vals) {
     ifstream fileHandle(filename);
     string line;
@@ -242,7 +237,8 @@ void loadOneColumnTextFile(string filename, vector<string> &vals) {
     }
 }
 
-
+// Loads a map from a text file containing two colunms of entries
+// Creates map: col1_vals --> col2_vals
 void loadTwoColumnTextFile(string filename, map<string, string> &vals) {
     ifstream fileHandle(filename);
     string line;

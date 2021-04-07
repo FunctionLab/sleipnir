@@ -1,6 +1,7 @@
 # To run the tests
-# Build the code and in the binaries from the build runt test/unit_tests
+# Build the code and in the binaries from the build run test/unit_tests
 cd Debug/
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 ./tests/unit_tests
 

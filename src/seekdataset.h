@@ -41,6 +41,8 @@ namespace Sleipnir {
 
     class CSeekDBSetting {
     public:
+        // For the default constructor create a link from the public reference
+        //  values to the private actual values
         CSeekDBSetting() : dbDir(m_dbDirectory),
                            prepDir(m_prepDirectory),
                            platDir(m_platformDirectory),
