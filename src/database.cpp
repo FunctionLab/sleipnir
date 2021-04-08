@@ -26,6 +26,7 @@
 #include "meta.h"
 #include "bayesnetint.h"
 #include "datapair.h"
+#include <filesystem>
 
 namespace Sleipnir {
 

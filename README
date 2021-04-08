@@ -1,4 +1,4 @@
-Overview:
+# **Overview:**
 Sleipnir is a C++ library enabling efficient analysis, integration, mining, and machine learning over genomic data. This includes a particular focus on microarrays, since they make up the bulk of available data for many organisms, but Sleipnir can also integrate a wide variety of other data types, from pairwise physical interactions to sequence similarity or shared transcription factor binding sites.
 
 The file README.developer has notes for Sleipnir developers.
@@ -25,7 +25,17 @@ Build:
 > brew install libsvm
 > brew install libomp
 
-3. Clone repository
+3.1 Install and init Git LFS (Large File Storage)
+On Mac:
+> brew install git-lfs
+On Centos:
+> yum install git-lfs
+On Ubuntu:
+> apt-get install git-lfs
+
+> git lfs install
+
+3.2 Clone repository
 > git clone https://github.com/FunctionLab/sleipnir.git
 > cd sleipnir
 > git submodule init
@@ -56,5 +66,19 @@ In case of errors:
 > conda env create --file conda_environment.yml
 > conda activate genomics
 > python -m pytest -s -v tests/
+
+8. Run Seek DB tests (test that the database give expected bio-informative results)
+#PREP: Install and init Git LFS (Large File Storage)
+    On Mac: brew install git-lfs
+    On Centos: yum install git-lfs
+    On Ubuntu: apt-get install git-lfs
+    > git lfs install
+    # Refresh the gold standard tgz files (should be multipe MB in size)
+    > rm sleipnir/tests/bioinform_tests/gold_standard_results/*
+    > git restore sleipnir/tests/bioinform_tests/gold_standard_results/*
+#Run the tests
+> bash run_paramtest.sh -v -s <path_to_seek_db> -b <path_to_seek_binaries>
+> bash run_querysize.sh -v -s <path_to_seek_db> -b <path_to_seek_binaries>
+> bash run_bioinform.sh -v -s <path_to_seek_db> -b <path_to_seek_binaries>
 
 
