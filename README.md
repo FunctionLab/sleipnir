@@ -58,7 +58,7 @@ git clone https://github.com/FunctionLab/sleipnir.git
     - <code>conda activate genomics </code>
     - <code>python -m pytest -s -v tests/ </code>
 
-3. Run Seek DB tests (test that the database gives expected bio-informative results)
+3. Run Seek DB tests (test that the database gives expected bio-informative results). These tests can only be run where the full SEEK database is installed.
     - ```cd tests/bioinform_tests```
     - PREP: Install and init Git LFS (Large File Storage)
         - On Mac: ```brew install git-lfs```
