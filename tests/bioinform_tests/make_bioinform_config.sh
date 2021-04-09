@@ -57,11 +57,11 @@ echo "queryPath = \"$goldstd_path/queries\"" >> $output_file
 echo "# full path to known-good output files and gold standard files for the test" >> $output_file
 echo "goldStdPath = \"$goldstd_path/results\"" >> $output_file
 
-echo "# file with list of genes to include when evaluating results" >> $output_file
-echo "geneFile = \"$test_src_dir/ref/genes.txt\"" >> $output_file
-
 echo "# file with gene map" >> $output_file
-echo "geneMap = \"$test_src_dir/ref/gene_map.txt\"" >> $output_file
+echo "geneMap = \"$seek_path/gene_map.txt\"" >> $output_file
+
+echo "# file with list of genes to include when evaluating results" >> $output_file
+echo "geneFile = \"$output_dir/include_genes.txt\"" >> $output_file
 
 echo "# output directory for the test results" >> $output_file
 echo "outputPath = \"$output_dir\"" >> $output_file
@@ -72,3 +72,10 @@ echo "recallPct = 0.1" >> $output_file
 echo "# Max diff between the test and gold standard results" >> $output_file
 echo "maxPctDiff = 10" >> $output_file
 
+if [ ! -f $seek_path/gene_map.txt ] then
+  echo "Error: gene_map.txt file not found: $seek_path/gene_map.txt"
+  exit -1
+fi
+# create the include genes by keeping the second column of gene_map.txt and 
+#  changing newlines to spaces.
+cut -f2 $seek_path/gene_map.txt | tr '\n' ' ' > $output_dir/include_genes.txt

@@ -841,6 +841,10 @@ int main(int iArgs, char **aszArgs) {
 
     /* reading gene-mapping file */
     ifsm.open(sArgs.input_arg);
+    if (!ifsm.good()) {
+        cerr << "Error opening gene map: " << sArgs.input_arg <<  endl;
+        return -1;
+    }
     pistm = &ifsm;
 
     map <string, size_t> mapstriGenes;
