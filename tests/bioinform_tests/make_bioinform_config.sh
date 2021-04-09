@@ -72,7 +72,7 @@ echo "recallPct = 0.1" >> $output_file
 echo "# Max diff between the test and gold standard results" >> $output_file
 echo "maxPctDiff = 10" >> $output_file
 
-if [ ! -f $seek_path/gene_map.txt ] then
+if [ ! -f $seek_path/gene_map.txt ]; then
   echo "Error: gene_map.txt file not found: $seek_path/gene_map.txt"
   exit -1
 fi
