@@ -19,6 +19,8 @@ while getopts t:s:b:d:o: option; do
     b) seek_bin=${OPTARG};;
     # test_src_dir is location of source code for running the tests
     d) test_src_dir=${OPTARG};;
+    # path to the gold standard result files
+    g) goldstd_path=${OPTARG};;
     # output_dir is where the test output will be written
     o) output_dir=${OPTARG};;
     *) usage; exit -1;;
@@ -35,8 +37,11 @@ if [ -z $seek_bin ]; then
   seek_bin="$seek_path/bin"
 fi
 
-# goldstd_path is where the gold standard expected results will be unpacked for reference
-goldstd_path=/tmp/$test_name
+if [ -z $goldstd_path ]; then
+  # goldstd_path is where the gold standard expected results will be unpacked for reference
+  goldstd_path=/tmp/$USER/$test_name
+fi
+
 output_file=$output_dir/$test_name"_config.toml"
 
 if [ ! -d $output_dir ]; then

@@ -21,7 +21,7 @@ testname="bioinform_"$test_type
 source core_run.sh "$@" -t $testname
 
 # Make the config file
-bash $testdir/make_bioinform_config.sh -t $testname -s $seekdir -b $seekbin -d $testdir -o $tmpdir
+bash $testdir/make_bioinform_config.sh -t $testname -s $seekdir -b $seekbin -d $testdir -o $tmpdir -g $goldStdDir
 if [ $? -ne 0 ]; then
   echo "Error running make_bioinform_config"
   exit -1
