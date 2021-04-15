@@ -79,3 +79,4 @@ fi
 # create the include genes by keeping the second column of gene_map.txt and 
 #  changing newlines to spaces.
 cut -f2 $seek_path/gene_map.txt | tr '\n' ' ' > $output_dir/include_genes.txt
+

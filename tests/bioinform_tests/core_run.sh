@@ -42,9 +42,15 @@ fi
 # Make a temp output directory for the results
 tmpdir=$(mktemp -d -t test_output_$testname-$(date +%Y-%m-%d-%H-%M-%S)-XXXX)
 
+if [ ! -d /tmp/$USER ]; then
+    mkdir /tmp/$USER
+fi
+
+goldStdDir=/tmp/$USER/$testname
+
 # Check if the gold standard result files are already unpacked
-if [ ! -d /tmp/$testname ]; then
+if [ ! -d $goldStdDir ] || [ $(ls -A1 $goldStdDir | wc -l) -eq 0 ]; then
   # Unpack the gold standard result files
-  tar xzvf $testdir/gold_standard_results/$testname"_goldstandard.tgz" --directory /tmp
+  tar xzvf $testdir/gold_standard_results/$testname"_goldstandard.tgz" --directory /tmp/$USER
 fi
 
