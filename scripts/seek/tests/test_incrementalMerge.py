@@ -23,7 +23,8 @@ class TestIncrDB:
             cls.temp_dir = tempfile.TemporaryDirectory()
             tmpDirName = cls.temp_dir.name
         else:
-            tmpDirName = '/tmp/testSeekIncrMerge'
+            username = os.environ.get('USER')
+            tmpDirName = os.path.join('/tmp', username, 'testSeekIncrMerge')
             if os.path.exists(tmpDirName):
                 os.system(f'rm -rf {tmpDirName}/*')
             else:
@@ -45,22 +46,25 @@ class TestIncrDB:
         # copy over incrDB files
         os.system(f'cp {testInputsDir}/gene_map.txt {cls.incrDbDir}')
         os.system(f'cp {testInputsDir}/quant2 {cls.incrDbDir}')
-        os.system(f'cp -a {testInputsDir}/incr_pcl/ {cls.incrDbDir}/pcl')
+        os.makedirs(f'{cls.incrDbDir}/pcl')
+        os.system(f'cp -a {testInputsDir}/incr_pcl/* {cls.incrDbDir}/pcl/')
         os.system(f'ls -1 {cls.incrDbDir}/pcl > {cls.incrDbDir}/dset_list.txt')
         # copy over smallDB files
         os.system(f'cp {testInputsDir}/gene_map.txt {cls.smallDbDir}')
         os.system(f'cp {testInputsDir}/quant2 {cls.smallDbDir}')
-        os.system(f'cp -a {testInputsDir}/smalldb_pcl/ {cls.smallDbDir}/pcl')
+        os.makedirs(f'{cls.smallDbDir}/pcl')
+        os.system(f'cp -a {testInputsDir}/smalldb_pcl/* {cls.smallDbDir}/pcl/')
         os.system(f'ls -1 {cls.smallDbDir}/pcl > {cls.smallDbDir}/dset_list.txt')
         # create a verifyDb from scratch from small and incr db
         os.system(f'cp {testInputsDir}/gene_map.txt {cls.verifyDbDir}')
         os.system(f'cp {testInputsDir}/quant2 {cls.verifyDbDir}')
-        os.system(f'cp -a {testInputsDir}/smalldb_pcl/ {cls.verifyDbDir}/pcl')
-        os.system(f'cp -a {testInputsDir}/incr_pcl/ {cls.verifyDbDir}/pcl')
+        os.makedirs(f'{cls.verifyDbDir}/pcl')
+        os.system(f'cp -a {testInputsDir}/smalldb_pcl/* {cls.verifyDbDir}/pcl/')
+        os.system(f'cp -a {testInputsDir}/incr_pcl/* {cls.verifyDbDir}/pcl/')
         os.system(f'ls -1 {cls.verifyDbDir}/pcl > {cls.verifyDbDir}/dset_list.txt')
         # copy over mockDB files
         mockInputs = os.path.join(testDir, 'inputs', 'mockDb')
-        os.system(f'cp -a {mockInputs}/ {cls.mockDbDir}')
+        os.system(f'cp -a {mockInputs}/* {cls.mockDbDir}/')
 
     def teardown_class(cls):
         if use_tempfile:
@@ -76,7 +80,7 @@ class TestIncrDB:
         # cfg.binDir = os.path.join(sleipnirDir, 'Debug')
         # cfg.datasetsFile = 'dset_list.txt'
         # sutils.checkConfig(cfg)
-        cmd = f'python {seekScriptsDir}/seekCreateDb.py --all -d pcl_list.txt ' \
+        cmd = f'python {seekScriptsDir}/seekCreateDB.py --all -d pcl_list.txt ' \
               f'-i {mockDir} -o {mockDir} -b {sleipnirBin}'
         ret = subprocess.run(cmd, shell=True)
         assert ret.returncode == 0
@@ -90,7 +94,7 @@ class TestIncrDB:
         # cfg.binDir = os.path.join(sleipnirDir, 'Debug')
         # cfg.datasetsFile = 'dset_list.txt'
         # sutils.checkConfig(cfg)
-        cmd = f'python {seekScriptsDir}/seekCreateDb.py --all -d dset_list.txt ' \
+        cmd = f'python {seekScriptsDir}/seekCreateDB.py --all -d dset_list.txt ' \
               f'-i {smallDir} -o {smallDir} -b {sleipnirBin}'
         ret = subprocess.run(cmd, shell=True)
         assert ret.returncode == 0
@@ -113,7 +117,7 @@ class TestIncrDB:
 
         # Combine all the PCL files and build the full database from scratch
         # Create the verifyDB from scratch from the combined small, incr dbs
-        cmd = f'python {seekScriptsDir}/seekCreateDb.py --all -d dset_list.txt ' \
+        cmd = f'python {seekScriptsDir}/seekCreateDB.py --all -d dset_list.txt ' \
               f'-i {verifyDB} -o {verifyDB} -b {sleipnirBin}'
         print(cmd)
         ret = subprocess.run(cmd, shell=True)
@@ -124,6 +128,7 @@ class TestIncrDB:
         dirs = ['db', 'plat', 'prep', 'sinfo']
         for d in dirs:
             files = glob.glob1(os.path.join(verifyDB, d),  '*')
+            files.sort()
             for f in files:
                 vfile = os.path.join(verifyDB, d, f)
                 ifile = os.path.join(mergeDB, d, f)

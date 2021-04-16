@@ -22,7 +22,8 @@ class TestSeekCreateDB:
             cls.temp_dir = tempfile.TemporaryDirectory()
             tmpDirName = cls.temp_dir.name
         else:
-            tmpDirName = '/tmp/testSeekCreateDb'
+            username = os.environ.get('USER')
+            tmpDirName = os.path.join('/tmp', username, 'testSeekCreateDb')
             if os.path.exists(tmpDirName):
                 os.system(f'rm -rf {tmpDirName}/*')
             else:

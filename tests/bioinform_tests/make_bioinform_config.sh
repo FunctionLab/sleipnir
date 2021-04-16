@@ -10,7 +10,7 @@ seek_path="/data/gwallace/seek/Seek"
 output_dir="/tmp/test_output"
 test_name="bioinform_tiny"
 
-while getopts t:s:b:d:o: option; do
+while getopts t:s:b:d:o:g: option; do
   case "${option}" in
     t) test_name=${OPTARG};;
     # seek_path is the directory with the seek database

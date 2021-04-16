@@ -22,14 +22,21 @@ void printingAndTimingGetConfig(vector<string> &configFiles);
 class SeekHelperTest : public ::testing::Test
 {
 public:
-    string testDir = "/tmp/test/";
-    string humanTomlFile = testDir + humanTomlFilename;
-    string yeastTomlFile = testDir + yeastTomlFilename;
-    string testLegacyConfigFile = testDir + testLegacyConfigFilename;
+    string testDir;
+    string humanTomlFile;
+    string yeastTomlFile;
+    string testLegacyConfigFile;
 
 protected:
     void SetUp() override
     {
+        char* username = getenv("USER");
+        assert(username != NULL);
+        testDir = "/tmp/" + string(username) + "/";
+        humanTomlFile = testDir + humanTomlFilename;
+        yeastTomlFile = testDir + yeastTomlFilename;
+        testLegacyConfigFile = testDir + testLegacyConfigFilename;
+
         createConfigFiles(testDir);
     }
 };
