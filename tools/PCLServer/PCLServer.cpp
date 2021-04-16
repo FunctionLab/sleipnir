@@ -255,7 +255,7 @@ void *do_query(void *th_arg) {
     vector<float> quant;
 
     //QUANT file must be consistent
-    CSeekTools::ReadQuantFile(cc[0]->GetValue("quant"), quant);
+    CSeekTools::ReadQuantFile(cc[0]->quantFile, quant);
     //CSeekTools::ReadQuantFile("/home/qzhu/Seek/quant2", quant);
 
 #pragma omp parallel for \
@@ -299,9 +299,9 @@ void *do_query(void *th_arg) {
             int dbID = mapstrintDatasetDB[strFileStem];
 
             string strAvgPath =
-                    cc[dbID]->GetValue("prep") + "/" + strFileStem + ".gavg"; //avg and prep path share same directory
-            string strPresencePath = cc[dbID]->GetValue("prep") + "/" + strFileStem + ".gpres";
-            string strSinfoPath = cc[dbID]->GetValue("sinfo") + "/" + strFileStem + ".sinfo";
+                    cc[dbID]->prepDir + "/" + strFileStem + ".gavg"; //avg and prep path share same directory
+            string strPresencePath = cc[dbID]->prepDir + "/" + strFileStem + ".gpres";
+            string strSinfoPath = cc[dbID]->sinfoDir + "/" + strFileStem + ".sinfo";
 
 
             vd->ReadGeneAverage(strAvgPath);
@@ -797,7 +797,7 @@ int main(int iArgs, char **aszArgs) {
             "NA", //default gvar arg, argument not needed for PCLServer
             sArgs.sinfo_arg, sArgs.platform_arg, sArgs.prep_arg,
             ".",  //default DB arg, argument not needed for PCLServer
-            sArgs.gene_arg, sArgs.quant_arg, sArgs.dset_arg, "NA",
+            sArgs.gene_arg, "NA", sArgs.quant_arg, sArgs.dset_arg, "NA",
             21702 //default num_db arg, argument not needed for PCLServer
     );
 
@@ -885,7 +885,8 @@ int main(int iArgs, char **aszArgs) {
             num_db = atoi(parameters[i].find("NUMBER_OF_DB")->second.c_str());
 
             CSeekDBSetting *dbSetting2 = new CSeekDBSetting(gvar_dir, sinfo_dir,
-                                                            platform_dir, prep_dir, db_dir, gene_map_file, quant_file,
+                                                            platform_dir, prep_dir, db_dir, 
+                                                            gene_map_file, "NA", quant_file,
                                                             dset_map_file, "NA",
                                                             num_db);
             cc.push_back(dbSetting2);
@@ -899,7 +900,7 @@ int main(int iArgs, char **aszArgs) {
 
     for (i = 0; i < cc.size(); i++) {
         vector <string> vD, vDP;
-        if (!CSeekTools::ReadListTwoColumns(cc[i]->GetValue("dset"), vD, vDP))
+        if (!CSeekTools::ReadListTwoColumns(cc[i]->datasetFile, vD, vDP))
             return false;
         for (j = 0; j < vD.size(); j++) {
             vecstrDatasets.push_back(vD[j]);
@@ -908,7 +909,7 @@ int main(int iArgs, char **aszArgs) {
         }
 
         SeekPlatforms platforms;
-        platforms.loadPlatformDataFromFiles(cc[i]->GetValue("platform"));
+        platforms.loadPlatformDataFromFiles(cc[i]->platDir);
         vector<CSeekPlatform> &vpx = platforms.getCSeekPlatforms();
         map<string, utype> &mP = platforms.getPlatformMap();
 

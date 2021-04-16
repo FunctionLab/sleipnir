@@ -15,6 +15,10 @@ class SeekPlatformsTest : public ::testing::Test
 protected:
   void SetUp() override
   {
+    char* username = getenv("USER");
+    assert(username != NULL);
+    testDir = "/tmp/" + string(username) + "/test/platform";
+
     if (!filesystem::exists(testDir)) {
       filesystem::create_directories(testDir);
     }
@@ -26,7 +30,7 @@ protected:
   // void TearDown() override {}
 
   // Sleipnir::SeekPlatforms seekPlatforms;
-  string testDir = "/tmp/test/platform";
+  string testDir;
 
   // SeekPlat1: data for 3 platforms, 3 genes, 4 samples per gene
   Sleipnir::SeekPlatforms seekPlatforms1;

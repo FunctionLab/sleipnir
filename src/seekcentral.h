@@ -32,6 +32,8 @@
 #ifndef SEEKCENTRAL_H
 #define SEEKCENTRAL_H
 
+#include <queue>
+
 #include "seekbasic.h"
 #include "seekdataset.h"
 #include "seekplatform.h"
@@ -42,6 +44,8 @@
 #include "database.h"
 #include "datapair.h"
 #include "seekweight.h"
+#include "seekhelper.h"
+#include "seekerror.h"
 
 namespace Sleipnir {
 
@@ -168,7 +172,7 @@ namespace Sleipnir {
          * the contribution of each dataset, the simulated weight is computed from the distance of a dataset's coexpression ranking to the final gene ranking.
          * \remark This function is designed to be used by SeekMiner.
          */
-        bool Initialize(
+        bool InitializeFromSeekMiner(
                 const vector<CSeekDBSetting *> &vecDBSetting,
                 const char *search_dset, const char *query,
                 const char *output_dir,
@@ -239,6 +243,11 @@ namespace Sleipnir {
                 const bool bNegativeCor = false, const bool bCheckDsetSize = false,
                 gsl_rng *rand = NULL, const bool useNibble = false, const int numThreads = 8);
 
+        /* Initialize a SeekCentral instance from config file settings
+         *  throws init_error
+         */
+        void InitializeFromSeekConfig(const SeekSettings &settings);
+
         /*!
          * \brief Initialize function
          *
@@ -260,7 +269,7 @@ namespace Sleipnir {
          * \remark Assumes that the CDatabaselets have been read, and the \c *.gvar, \c *.sinfo files have been loaded.
          * \remark Assumes that the dataset and gene mapping files have been read.
          */
-        bool Initialize(const string &output_dir, const string &query,
+        bool InitializeQuery(const string &output_dir, const string &query,
                         const string &search_dset, CSeekCentral *src, const int iClient,
                         const float query_min_required = 0, const float genome_min_required = 0,
                         const enum CSeekDataset::DistanceMeasure = CSeekDataset::Z_SCORE,
@@ -364,14 +373,14 @@ namespace Sleipnir {
          * \param strGene The \a gene-name as a \c string
          * \return The gene-map ID
          */
-        utype GetGene(const string &strGene) const;
+        utype GetGeneId(const string &strGene) const;
 
         /*!
          * \brief Get the \a gene-name for a given gene-map ID
          * \param geneID The gene-map ID
          * \return The \a gene-name as a \c string
          */
-        string GetGene(const utype &geneID) const;
+        string GetGeneName(const utype &geneID) const;
 
         /*!
          * \brief Destruct this search instance
@@ -384,6 +393,54 @@ namespace Sleipnir {
          * datasets in the compendium.
          */
         int GetMaxGenomeCoverage();
+
+        /*!
+         * \brief Get the sorted gene scores in paired <geneName, score>
+         */
+        vector<StrDoublePair> & getGeneResult(uint32_t queryIndex) {
+            return this->m_geneResults[queryIndex];
+        }
+
+        /*!
+         * \brief Get the sorted dataset weights in paired <datasetName, weight>
+         */
+        vector<StrDoublePair> & getDatasetResult(uint32_t queryIndex) {
+            return this->m_datasetResults[queryIndex];
+        }
+
+        /*!
+         * \brief Get number of queries performed
+         */
+        uint32_t numQueries() {
+            return m_vecstrAllQuery.size();
+        }
+
+        /*!
+         * \brief When using RPC communication, status messages will accumulate in the log queue
+         */
+        void setUsingRPC(bool val) {
+            m_useRPC = val;
+        }
+
+        /*!
+         * \brief Return status messages in order entered or nullptr if none.
+         */
+        string getRPCStatusMsg() {
+            string msg = nullptr;
+            if (!m_rpcLog.empty()) {
+                msg = m_rpcLog.front();
+                m_rpcLog.pop();
+            }
+            return msg;
+        }
+
+        void convertGenesEntrezToSymbol(const vector<string> &entrez, vector<string> &symbols);
+
+        void convertGenesSymbolToEntrez(const vector<string> &symbols, vector<string> &entrez);
+
+        string entrezToSymbol(string &entrez);
+
+    void PrintSettings();
 
     private:
         //network mode
@@ -415,7 +472,13 @@ namespace Sleipnir {
 
         bool FilterResults(const utype &);
 
-        bool Sort(vector <AResultFloat> &);
+        bool getSortedGeneScores(vector <AResultFloat> &);
+
+        bool getSortedDatasetScores(uint32_t queryIndex, vector <AResultFloat> &);
+
+        void setGenePairedResult(uint32_t queryIndex, vector <AResultFloat> &sortedGeneScore);
+
+        void setDatasetPairedResult(uint32_t queryIndex, vector <AResultFloat> &sortedDatasetWeights);
 
         bool Write(const utype &);
 
@@ -428,6 +491,8 @@ namespace Sleipnir {
         map <string, string> m_mapstrstrDatasetPlatform;
         map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
         map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
+        map <string, string> m_geneEntrezToSymbolMap;
+        map <string, string> m_geneSymbolToEntrezMap;
         vector <vector<string>> m_vecstrSearchDatasets;
         vector<CSeekIntIntMap *> m_searchdsetMap;
 
@@ -478,6 +543,10 @@ namespace Sleipnir {
         /* Holds results for all queries */
         vector <vector<float>> m_weight;
         vector <vector<AResultFloat>> m_final;
+        // for each query, pairs of geneName and Score
+        vector<vector<StrDoublePair>> m_geneResults;
+        // for each query<vec>, pairs of datasetName and Weight
+        vector<vector<StrDoublePair>> m_datasetResults;
 
         /* Query */
         // vector of queries, each query is a vector of genes to query on
@@ -515,6 +584,8 @@ namespace Sleipnir {
         /* for network mode */
         int m_iClient;
         bool m_bEnableNetwork;
+        bool m_useRPC;
+        queue<string> m_rpcLog;
         //bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
         bool m_bNegativeCor;
 

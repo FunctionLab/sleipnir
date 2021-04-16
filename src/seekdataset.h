@@ -41,49 +41,49 @@ namespace Sleipnir {
 
     class CSeekDBSetting {
     public:
-        CSeekDBSetting(const string &gvar,
-                       const string &sinfo, const string &plat,
-                       const string &prep, const string &db,
-                       const string &gene, const string &quant,
+        // For the default constructor create a link from the public reference
+        //  values to the private actual values
+        CSeekDBSetting() : dbDir(m_dbDirectory),
+                           prepDir(m_prepDirectory),
+                           platDir(m_platformDirectory),
+                           sinfoDir(m_sinfoDirectory),
+                           gvarDir(m_gvarDirectory),
+                           geneMapFile(m_geneMapFile),
+                           geneSymbolFile(m_geneSymbolFile),
+                           datasetFile(m_dsetFile),
+                           dsetSizeFile(m_dsetSizeFile),
+                           quantFile(m_quantFile),
+                           numDBs(m_numDB) {}
+
+        CSeekDBSetting(const string &gvar, const string &sinfo,
+                       const string &plat, const string &prep,
+                       const string &db, const string &gene,
+                       const string &gene_symbol, const string &quant,
                        const string &dset, const string &dset_size,
-                       const utype &numDB) {
+                       const utype &numDB) : CSeekDBSetting()
+        {
             m_gvarDirectory = gvar;
             m_sinfoDirectory = sinfo;
             m_platformDirectory = plat;
             m_prepDirectory = prep;
             m_dbDirectory = db;
             m_geneMapFile = gene;
+            m_geneSymbolFile = gene_symbol;
             m_quantFile = quant;
             m_dsetFile = dset;
             m_numDB = numDB;
             m_dsetSizeFile = dset_size;
         }
 
-        CSeekDBSetting(const char *gvar,
-                       const char *sinfo, const char *plat,
-                       const char *prep, const char *db,
-                       const char *gene, const char *quant,
-                       const char *dset, const char *dset_size,
-                       const utype &numDB) {
-            m_gvarDirectory = gvar;
-            m_sinfoDirectory = sinfo;
-            m_platformDirectory = plat;
-            m_prepDirectory = prep;
-            m_dbDirectory = db;
-            m_geneMapFile = gene;
-            m_quantFile = quant;
-            m_dsetFile = dset;
-            m_numDB = numDB;
-            m_dsetSizeFile = dset_size;
-        }
-
-        CSeekDBSetting(CSeekDBSetting const *g) {
+        CSeekDBSetting(CSeekDBSetting const *g) : CSeekDBSetting()
+        {
             m_gvarDirectory = g->m_gvarDirectory;
             m_sinfoDirectory = g->m_sinfoDirectory;
             m_platformDirectory = g->m_platformDirectory;
             m_prepDirectory = g->m_prepDirectory;
             m_dbDirectory = g->m_dbDirectory;
             m_geneMapFile = g->m_geneMapFile;
+            m_geneSymbolFile = g->m_geneSymbolFile;
             m_quantFile = g->m_quantFile;
             m_dsetFile = g->m_dsetFile;
             m_numDB = g->m_numDB;
@@ -93,32 +93,36 @@ namespace Sleipnir {
         ~CSeekDBSetting() {
         }
 
-        string GetValue(const string &str) {
-            if (str == "gene")
-                return m_geneMapFile;
-            else if (str == "dset")
-                return m_dsetFile;
-            else if (str == "quant")
-                return m_quantFile;
-            else if (str == "gvar")
-                return m_gvarDirectory;
-            else if (str == "sinfo")
-                return m_sinfoDirectory;
-            else if (str == "db")
-                return m_dbDirectory;
-            else if (str == "prep")
-                return m_prepDirectory;
-            else if (str == "platform")
-                return m_platformDirectory;
-            else if (str == "dset_size")
-                return m_dsetSizeFile;
-            else
-                return "NULL";
-        }
-
         utype GetNumDB() {
             return m_numDB;
         }
+
+        friend ostream& operator<<(ostream& os, const CSeekDBSetting& dbs) {
+            os << "DB:" << dbs.m_dbDirectory << endl;
+            os << "Prep:" << dbs.m_prepDirectory << endl;
+            os << "Plat:" << dbs.m_platformDirectory << endl;
+            os << "Sinfo:" << dbs.m_sinfoDirectory << endl;
+            os << "GVar:" << dbs.m_gvarDirectory << endl;
+            os << "GeneMapFile:" << dbs.m_geneMapFile << endl;
+            os << "GeneSymbolFile:" << dbs.m_geneSymbolFile << endl;
+            os << "DatasetsFile:" << dbs.m_dsetFile << endl;
+            os << "DatasetSizes:" << dbs.m_dsetSizeFile << endl;
+            os << "QuantFile:" << dbs.m_quantFile << endl;
+            os << "NumDBFiles:" << dbs.m_numDB << endl;
+            return os;
+        }
+
+        const string &dbDir;
+        const string &prepDir;
+        const string &platDir;
+        const string &sinfoDir;
+        const string &gvarDir;
+        const string &geneMapFile;
+        const string &geneSymbolFile;
+        const string &datasetFile;
+        const string &dsetSizeFile;
+        const string &quantFile;
+        const utype &numDBs;
 
     private:
         string m_gvarDirectory;
@@ -127,6 +131,7 @@ namespace Sleipnir {
         string m_prepDirectory;
         string m_dbDirectory;
         string m_geneMapFile;
+        string m_geneSymbolFile;
         string m_quantFile;
         string m_dsetFile;
         string m_dsetSizeFile;

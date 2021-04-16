@@ -79,9 +79,9 @@ def combineDirs(subDirName, dir1, dir2, outDir):
   d2 = os.path.join(dir2, subDirName)
   dst = os.path.join(outDir, subDirName)
   os.makedirs(dst, exist_ok=True)
-  ret = subprocess.run(f'cp -a {d1}/ {dst}', shell=True)
+  ret = subprocess.run(f'cp -a {d1}/* {dst}', shell=True)
   assert ret.returncode == 0
-  ret = subprocess.run(f'cp -a {d2}/ {dst}', shell=True)
+  ret = subprocess.run(f'cp -a {d2}/* {dst}', shell=True)
   assert ret.returncode == 0
 
 def main(args):
@@ -126,7 +126,9 @@ def main(args):
     assert os.path.isdir(largeDBFileDir)
     assert os.path.isdir(smallDBFileDir)
     largeDBFiles = glob.glob1(largeDBFileDir, "*.db")
+    largeDBFiles.sort()
     smallDBFiles = glob.glob1(smallDBFileDir, "*.db")
+    smallDBFiles.sort()
     assert largeDBFiles == smallDBFiles
     # assert numDBFiles == numSmallDBFiles, "numDBFiles mismatch between large and small db"
 
