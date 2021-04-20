@@ -10,8 +10,10 @@ std::string print_exception_stack(const std::exception& e, int level)
 {
     std::string trace;
     try {
+        // recurse through the nested exception, print deepest level first
         std::rethrow_if_nested(e);
     } catch(const std::exception& e2) {
+        // print out the exception with different print handling depending on the type
         std::string ctrace = print_exception_stack(e2, level+1);
         trace += ctrace + " | ";
     } catch(const std::string &errStr) {
@@ -27,6 +29,7 @@ std::string print_exception_stack(const std::exception& e, int level)
         std::cerr << ctrace << std::endl;
         trace += ctrace + " | ";
     }
+    // print out the top exception of this level
     std::string what = regex_replace(e.what(), regStripPathFromFILELINE, "($1:$2):");
     std::string ttrace = "Stack_level " + std::to_string(level) + ": " + what;
     std::cerr << ttrace << std::endl;

@@ -16,7 +16,7 @@
 std::string print_exception_stack(const std::exception& e, int level =  0);
 
 
-// Define specific error types
+// Generic named_error class
 class named_error : public std::runtime_error
 {
     private:
@@ -42,36 +42,42 @@ class named_error : public std::runtime_error
     }
 };
 
+// Argument Error
 class argument_error : public named_error
 {
     public:
     argument_error(std::string err) : named_error("Argument_Error", err) {};
 };
 
+// Initialization Error
 class init_error : public named_error
 {
     public:
     init_error(std::string err) : named_error("Init_Error", err) {};
 };
 
+// Configuration Error
 class config_error : public named_error
 {
     public:
     config_error(std::string err) : named_error("Config_Error", err) {};
 };
 
+// Request Error
 class request_error : public named_error
 {
     public:
     request_error(std::string err) : named_error("Request_Error", err) {};
 };
 
+// Query Error
 class query_error : public named_error
 {
     public:
     query_error(std::string err) : named_error("Query_Error", err) {};
 };
 
+// State Error
 class state_error : public named_error
 {
     public:

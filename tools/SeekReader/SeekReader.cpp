@@ -526,7 +526,7 @@ int main(int iArgs, char **aszArgs) {
             delete vc[i];
         vc.clear();
 
-        return 1;
+        return 0;
     }
 
     if (sArgs.convert_aracne_flag == 1) {
@@ -535,7 +535,7 @@ int main(int iArgs, char **aszArgs) {
         FILE *infile;
         if ((infile = fopen(sArgs.aracne_file_arg, "r")) == NULL) {
             fprintf(stderr, "Error no such file %s\n", sArgs.aracne_file_arg);
-            return 1;
+            return -1;
         }
         while (fgets(acBuffer, lineLen, infile) != NULL) {
             while (strlen(acBuffer) == lineLen - 1) {
@@ -555,7 +555,7 @@ int main(int iArgs, char **aszArgs) {
         ia.open(sArgs.aracne_file_arg);
         if (!ia.is_open()) {
             fprintf(stderr, "Error opening file %s\n", sArgs.aracne_file_arg);
-            return 1;
+            return -1;
         }
         set <string> allGenes;
         size_t ci = 0;
@@ -736,7 +736,7 @@ int main(int iArgs, char **aszArgs) {
         fprintf(stderr, "Opening file...\n");
         if (!Dat.Open(sArgs.dab_file_arg, false, false, 2, false, false)) {
             cerr << "error opening file" << endl;
-            return 1;
+            return -1;
         }
 
         vector<unsigned int> veciGenes;
@@ -822,7 +822,7 @@ int main(int iArgs, char **aszArgs) {
         fprintf(stderr, "Opening file...\n");
         if (!Dat.Open(sArgs.dabinput_arg, false, false, 2, false, false)) {
             cerr << "error opening file" << endl;
-            return 1;
+            return -1;
         }
         vector<unsigned int> veciGenes;
         veciGenes.resize(vecstrGenes.size());

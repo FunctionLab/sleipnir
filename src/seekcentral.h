@@ -434,45 +434,11 @@ namespace Sleipnir {
             return msg;
         }
 
-        void convertGenesEntrezToSymbol(const vector<string> &entrez, vector<string> &symbols) {
-            uint32_t numGenes = entrez.size();
-            symbols.resize(numGenes);
-            for (int i=0; i<numGenes; i++) {
-                try {
-                    if (m_geneEntrezToSymbolMap.count(entrez[i]) > 0) {
-                        symbols[i] = m_geneEntrezToSymbolMap.at(entrez[i]);
-                    } else {
-                        symbols[i] = entrez[i];
-                    }
-                } catch(exception &err) {
-                    throw_with_nested(request_error(FILELINE + "geneEntrezToSymbolMap error for id:: " + entrez[i]));
-                }
-            }
-        }
+        void convertGenesEntrezToSymbol(const vector<string> &entrez, vector<string> &symbols);
 
-        void convertGenesSymbolToEntrez(const vector<string> &symbols, vector<string> &entrez) {
-            uint32_t numGenes = symbols.size();
-            entrez.resize(numGenes);
-            for (int i=0; i<numGenes; i++) {
-                try {
-                    entrez[i] = m_geneSymbolToEntrezMap.at(symbols[i]);
-                } catch(exception &err) {
-                    throw_with_nested(request_error(FILELINE + "symbol not found: " + symbols[i]));
-                }
-            }
-        }
+        void convertGenesSymbolToEntrez(const vector<string> &symbols, vector<string> &entrez);
 
-        string entrezToSymbol(string &entrez) {
-            try {
-                if (m_geneEntrezToSymbolMap.count(entrez) > 0) {
-                    return m_geneEntrezToSymbolMap.at(entrez);
-                } else {
-                    return entrez;
-                }
-            } catch(exception &err) {
-                throw_with_nested(request_error(FILELINE + "geneEntrezToSymbolMap error for id: " + entrez));
-            }
-        }
+        string entrezToSymbol(string &entrez);
 
     void PrintSettings();
 

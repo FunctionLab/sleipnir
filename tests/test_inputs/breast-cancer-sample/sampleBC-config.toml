@@ -9,14 +9,14 @@ outputAsText = true  # Output results (gene list and dataset weights) as text
 
 [Database]
     [Database.DB1]
-    DB_DIR        = "../tests/test_outputs/sampleBC/db"
-    PREP_DIR      = "../tests/test_outputs/sampleBC/prep"
-    PLATFORM_DIR  = "../tests/test_outputs/sampleBC/plat"
-    SINFO_DIR     = "../tests/test_outputs/sampleBC/sinfo"
-    # GVAR_DIR      = "../tests/test_outputs/sampleBC/gvar"
-    QUANT_FILE    = "../tests/test_outputs/sampleBC/quant2"
-    DSET_MAP_FILE = "../tests/test_outputs/sampleBC/dset_plat_map.txt"
-    GENE_MAP_FILE = "../tests/test_outputs/sampleBC/bc_gene_map.txt"
-    # GENE_SYMBOL_FILE = "../tests/test_outputs/sampleBC/gene_symbols.txt"
-    DSET_SIZE_FILE = "../tests/test_outputs/sampleBC/dset_size.txt"
+    DB_DIR        = "/path/db"
+    PREP_DIR      = "/path/prep"
+    PLATFORM_DIR  = "/path/plat"
+    SINFO_DIR     = "/path/sinfo"
+    # GVAR_DIR      = "/path/gvar"
+    QUANT_FILE    = "/path/quant2"
+    DSET_MAP_FILE = "/path/dset_plat_map.txt"
+    GENE_MAP_FILE = "/path/bc_gene_map.txt"
+    # GENE_SYMBOL_FILE = "/path/gene_symbols.txt"
+    DSET_SIZE_FILE = "/path/dset_size.txt"
     NUMBER_OF_DB  = 100

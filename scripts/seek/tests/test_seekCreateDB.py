@@ -23,7 +23,8 @@ class TestSeekCreateDB:
             cls.temp_dir = tempfile.TemporaryDirectory()
             tmpDirName = cls.temp_dir.name
         else:
-            tmpDirName = '/tmp/testSeekCreateDb'
+            username = os.environ.get('USER')
+            tmpDirName = os.path.join('/tmp', username, 'testSeekCreateDb')
             if os.path.exists(tmpDirName):
                 os.system(f'rm -rf {tmpDirName}/*')
             else:
@@ -66,20 +67,21 @@ class TestSeekCreateDB:
               f'{cfg.geneMapFile} -d {cfg.dbDir} -p {mockDbDir}/prep ' \
               f'-P {mockDbDir}/plat -Q {cfg.quantFile} -u {mockDbDir}/sinfo ' \
               f'-n 6 -b 20  -V CV -I LOI -z z_score -m -M -O ' \
-              f'-q {queryFile} -o {resultsDir} -Y -T 2 -t 1'
-        print(f'run: {cmd}')
+              f'-q {mockDbDir}/query.txt -o {resultsDir} -Y -T 2 -t 1'
         ret = subprocess.run(cmd, shell=True)
         assert ret.returncode == 0
         expected_results = os.path.join(mockDbDir, 'query_result.txt')
-        seekminer_results = os.path.join(mockDbDir, 'results', '0.results.txt')
+        seekminer_results = os.path.join(resultsDir, '0.results.txt')
         assert filecmp.cmp(expected_results, seekminer_results, shallow=False)
 
         # Test created db using SeekRPC
         seekrpcConfigFile = os.path.join(mockDbDir, 'mockDb-config.toml')
-        # modify paths in config files
-        cmd = f"sed -i '' -e 's/\\/tmp/\\/tmp\\/testSeekCreateDb/' {seekrpcConfigFile}"
+        # modify paths in config files, sub '/path' with path to mockDbDir
+        mockDbDirEscaped = mockDbDir.replace('/', '\\/')
+        cmd = f"sed -i '' -e 's/\\/path/{mockDbDirEscaped}/' {seekrpcConfigFile}"
         subprocess.run(cmd, shell=True)
         seekrpcResultsFile = os.path.join(resultsDir, 'seekRPC_results.txt')
+        # Run the server
         cmd = f'{sleipnirBinDir}/SeekRPC -c {mockDbDir}/mockDb-config.toml'
         SeekServerProc = subprocess.Popen(cmd, shell=True)
         time.sleep(.5)

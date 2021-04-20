@@ -32,7 +32,7 @@ class TestSeekRPC:
         if len(dbFiles) < 100:
             os.makedirs(sampleBcDir, exist_ok=True)
             inputBCFiles = os.path.join(testInputsDir, 'breast-cancer-sample')
-            os.system(f'cp -a {inputBCFiles}/* {sampleBcDir}')
+            os.system(f'cp -a {inputBCFiles}/* {sampleBcDir}/')
             # Create the sample DB
             cmd = f'python {seekScriptsDir}/seekCreateDB.py --all -g bc_gene_map.txt ' \
                 f'-n 100 -m 4 -i {sampleBcDir} -o {sampleBcDir} -b {sleipnirBin} --dab-use-gene-set'
@@ -40,8 +40,15 @@ class TestSeekRPC:
             assert ret.returncode == 0
 
         # Step 02: Start the SeekRPC server running
-        cmd = f'pushd {sleipnirBin}; ./SeekRPC -c {sampleBcDir}/sampleBC-config.toml'
+        seekrpcConfigFile = os.path.join(sampleBcDir, 'sampleBC-config.toml')
+        # modify config file paths, sub '/path' with path to sampleBcDir
+        sampleBcDirEscaped = sampleBcDir.replace('/', '\\/')
+        cmd = f"sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}"
+        subprocess.run(cmd, shell=True)
+        # Run the server
+        cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile}'
         cls.SeekServerProc = subprocess.Popen(cmd, shell=True)
+        print(f'### {cmd}')
         time.sleep(.5)
 
 
@@ -58,8 +65,9 @@ class TestSeekRPC:
         print("## Run Client ##")
         inputQueries = f'{sampleBcDir}/queries/input_queries.txt'
         outputResults = f'{sampleBcDir}/queries/seekrpc_results.txt'
-        cmd = f'pushd {sleipnirBin}; ./SeekRPCClient -s sampleBC ' \
+        cmd = f'{sleipnirBin}/SeekRPCClient -s sampleBC ' \
               f'-q {inputQueries} -o {outputResults}'
+        print(f'### {cmd}')
         clientProc = subprocess.Popen(cmd, shell=True)
         clientProc.wait()
         assert clientProc.returncode == 0

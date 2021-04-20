@@ -1221,22 +1221,17 @@ namespace Sleipnir {
             vecOutput[0] = vector<string>();
             vecOutput[1] = vector<string>();
             sprintf(acBuffer, "%s/%d.results.txt", m_output_dir.c_str(), i);
-            // TODO GW - use getSortedDatasetScores here
+            // Get sorted dataset weights
             vector <AResultFloat> w;
-            w.resize(m_iDatasets);
-            utype j;
-            for (j = 0; j < m_iDatasets; j++) {
-                w[j].i = j;
-                w[j].f = m_weight[i][j];
-            }
-            sort(w.begin(), w.end());
-            for (j = 0; j < 200 && j < iSearchDatasets; j++) {
+            getSortedDatasetScores(i, w);
+            for (int j = 0; j < 200 && j < iSearchDatasets; j++) {
                 if (w[j].f == 0) break;
                 vecOutput[0].push_back(m_vecstrDatasets[w[j].i]);
             }
+            // Get sorted gene scores
             vector <AResultFloat> wd;
             getSortedGeneScores(wd);
-            for (j = 0; j < 2000 && j < wd.size(); j++) {
+            for (int j = 0; j < 2000 && j < wd.size(); j++) {
                 if (wd[j].f == m_DEFAULT_NA) break;
                 vecOutput[1].push_back(m_vecstrGenes[wd[j].i]);
             }
@@ -1259,33 +1254,33 @@ namespace Sleipnir {
 
     void CSeekCentral::PrintSettings() {
         cout << "SeekCentral: " << endl;
-        cout << m_bRandom << endl;
-        cout << m_iNumRandom << endl;
-        cout << m_bSubtractGeneAvg << endl;
-        cout << m_bNormPlatform << endl;
-        cout << m_eDistMeasure << endl;
-        cout << m_bLogit << endl;
-        cout << m_bSquareZ << endl;
-        cout << m_iDatasets << endl;
-        cout << m_iGenes << endl;
-        cout << m_numThreads << endl;
+        cout << "bRandom: " << m_bRandom << endl;
+        cout << "iNumRandom: " << m_iNumRandom << endl;
+        cout << "bSubtractGeneAvg: " << m_bSubtractGeneAvg << endl;
+        cout << "bNormPlatform: " << m_bNormPlatform << endl;
+        cout << "eDistMeasure: " << m_eDistMeasure << endl;
+        cout << "bLogit: " << m_bLogit << endl;
+        cout << "bSquareZ: " << m_bSquareZ << endl;
+        cout << "Datasets: " << m_iDatasets << endl;
+        cout << "iGenes: " << m_iGenes << endl;
+        cout << "numThreads: " << m_numThreads << endl;
 
-        cout << m_maxNumDB << endl;
+        cout << "maxNumDB: " << m_maxNumDB << endl;
 
-        cout << m_bOutputWeightComponent << endl;
-        cout << m_bSimulateWeight << endl;
-        cout << m_fScoreCutOff << endl;
-        cout << m_fPercentQueryAfterScoreCutOff << endl;
-        cout << m_fPercentGenomeRequired << endl;
-        cout << m_bNegativeCor << endl;
+        cout << "bOutputWeightComponent: " << m_bOutputWeightComponent << endl;
+        cout << "bSimulateWeight: " << m_bSimulateWeight << endl;
+        cout << "fScoreCutOff: " << m_fScoreCutOff << endl;
+        cout << "fPercentQueryAfterScoreCutOff: " << m_fPercentQueryAfterScoreCutOff << endl;
+        cout << "fPercentGenomeRequired: " << m_fPercentGenomeRequired << endl;
+        cout << "bNegativeCor: " << m_bNegativeCor << endl;
 
-        cout << m_useNibble << endl;
+        cout << "useNibble: " << m_useNibble << endl;
 
-        cout << m_DEFAULT_NA << endl;
+        cout << "DEFAULT_NA: " << m_DEFAULT_NA << endl;
 
         /* for specifying dataset size */
-        cout << m_bCheckDsetSize << endl;
-        cout << m_iNumSampleRequired << endl;
+        cout << "bCheckDsetSize: " << m_bCheckDsetSize << endl;
+        cout << "iNumSampleRequired: " << m_iNumSampleRequired << endl;
     }
 
     bool CSeekCentral::Common(CSeekCentral::SearchMode &sm,
@@ -1299,12 +1294,6 @@ namespace Sleipnir {
         utype l; //keeps track of random repetition (for random case)
         char acBuffer[1024];
 
-        // GW uncomment to print out all search settings
-        // cout << "SeekCommon:" << endl;
-        // cout << sm << endl;
-        // cout << *PART_M << endl;
-        // cout << *FOLD << endl;
-        // cout << *RATE << endl;
         // PrintSettings();
 
         m_Query.resize(m_vecstrAllQuery.size());
@@ -1864,6 +1853,46 @@ namespace Sleipnir {
 
     const vector <vector<float>> &CSeekCentral::GetAllWeight() const {
         return m_weight;
+    }
+
+    void CSeekCentral::convertGenesEntrezToSymbol(const vector<string> &entrez, vector<string> &symbols) {
+        uint32_t numGenes = entrez.size();
+        symbols.resize(numGenes);
+        for (int i=0; i<numGenes; i++) {
+            try {
+                if (m_geneEntrezToSymbolMap.count(entrez[i]) > 0) {
+                    symbols[i] = m_geneEntrezToSymbolMap.at(entrez[i]);
+                } else {
+                    symbols[i] = entrez[i];
+                }
+            } catch(exception &err) {
+                throw_with_nested(request_error(FILELINE + "geneEntrezToSymbolMap error for id:: " + entrez[i]));
+            }
+        }
+    }
+
+    void CSeekCentral::convertGenesSymbolToEntrez(const vector<string> &symbols, vector<string> &entrez) {
+        uint32_t numGenes = symbols.size();
+        entrez.resize(numGenes);
+        for (int i=0; i<numGenes; i++) {
+            try {
+                entrez[i] = m_geneSymbolToEntrezMap.at(symbols[i]);
+            } catch(exception &err) {
+                throw_with_nested(request_error(FILELINE + "symbol not found: " + symbols[i]));
+            }
+        }
+    }
+
+    string CSeekCentral::entrezToSymbol(string &entrez) {
+        try {
+            if (m_geneEntrezToSymbolMap.count(entrez) > 0) {
+                return m_geneEntrezToSymbolMap.at(entrez);
+            } else {
+                return entrez;
+            }
+        } catch(exception &err) {
+            throw_with_nested(request_error(FILELINE + "geneEntrezToSymbolMap error for id: " + entrez));
+        }
     }
 }
 

@@ -207,8 +207,10 @@ int main(int argc, char **argv)
         }
     } catch (TException &tx) {
         std::cout << "ERROR: " << tx.what() << endl;
+        exit(-1);
     } catch (exception &err) {
         std::cout << "ERROR: " << err.what() << endl;
+        exit(-1);
     }
 
     transport->close();
