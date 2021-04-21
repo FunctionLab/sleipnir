@@ -1,0 +1,7 @@
+1) Choose a subset of PCL files to use for the test. For example the breast-cancer example from the Seek website
+2) Create a go.gmt file that has groups of correlated genes for the example PCL files
+3) Assemble the set of genes that will be used. For example all go genes in the human_go.gmt
+4) Create the set of queries that will comprise the test
+    > python bioinform_tests/pytools/create_queries.py -max 1000 -c 8,12,16,20,25 -i human_cancer_slim.gmt -o queries
+5) Run the queries with known-good SeekMiner tool
+    > python bioinform_tests/pytools/test_seek_querysizes.py -s test_outputs/sampleBC/ -b ../Debug/ -g test_outputs/queries4/ -o test_outputs/results -v
