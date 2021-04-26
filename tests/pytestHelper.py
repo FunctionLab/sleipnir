@@ -15,8 +15,10 @@ def createSampleDatabase():
     dbFiles = glob.glob1(dbDir, '*.db')
     if len(dbFiles) < 100:
         os.makedirs(sampleBcDir, exist_ok=True)
-        inputBCFiles = os.path.join(testInputsDir, 'breast-cancer-sample')
-        os.system(f'cp -a {inputBCFiles}/* {sampleBcDir}/')
+        # Copy the reference files needed to create the breast cancer sample
+        #  project from the test_inputs directory to the destination in test_outputs
+        breastCancerRefDir = os.path.join(testInputsDir, 'breast-cancer-sample')
+        os.system(f'cp -a {breastCancerRefDir}/* {sampleBcDir}/')
         # Create the sample DB
         cmd = f'python {seekScriptsDir}/seekCreateDB.py --all -g bc_gene_map.txt ' \
             f'-n 100 -m 4 -i {sampleBcDir} -o {sampleBcDir} -b {sleipnirBin} --dab-use-gene-set'
