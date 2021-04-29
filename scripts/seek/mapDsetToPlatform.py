@@ -1,5 +1,5 @@
 """
-This utility parses refinebio metadata to extract the platform 
+This utility parses refinebio metadata to extract the platform
 type for each dataset. The chip_plat_map is a standard mapping
 from chip type to platform type.
 Example download command from refinebio:

@@ -38,8 +38,13 @@ def files_rank_correlation(fileA, fileB, remove_substr=None):
         for key in keys:
             A_rank.append(A_dict_rank[key])
             B_rank.append(B_dict_rank.get(key, max_rank))
-        # calculate the spearman's correlation coefficient between the two rankings
-        corr, _ = stats.spearmanr(A_rank, B_rank)
+        # check the correlation between the lists
+        if A_rank == B_rank:
+            # lists are identical
+            corr = 1
+        else:
+            # calculate the spearman's correlation coefficient between the two rankings
+            corr, _ = stats.spearmanr(A_rank, B_rank)
         # print(A_rank)
         # print(B_rank)
         correlations.append(corr)

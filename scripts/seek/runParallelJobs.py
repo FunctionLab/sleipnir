@@ -54,7 +54,7 @@ def jobThread(work_queue, tid=0, returnCodeQueue=None, outputQueue=None):
     except queue.Empty:
         pass
     return
-    
+
 
 def runParallelJobs(cmdlist, concurrency=2, isPyFunction=False):
     '''
@@ -91,7 +91,7 @@ def runParallelJobs(cmdlist, concurrency=2, isPyFunction=False):
         jthread.setDaemon(True)
         jthread.start()
         threads.append(jthread)
-    
+
     for jthread in threads:
         jthread.join()
 
@@ -102,7 +102,7 @@ def runParallelJobs(cmdlist, concurrency=2, isPyFunction=False):
 
     print("Complete")
     return
-     
+
 
 def test_func(a, b=0):
     print(f'a {a}, b {b}')

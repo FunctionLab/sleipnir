@@ -35,30 +35,37 @@ git clone https://github.com/FunctionLab/sleipnir.git
 
 4. Prep make files with cmake
     - <code> mkdir Debug </code>
-    - <code> cd Debug </code>
+    - <code> cd Debug/ </code>
     - <code> cmake -DCMAKE_BUILD_TYPE=Debug .. </code>
+    - Alternately replace *'Debug'* with *'Release'* in all the above commands to make the release build
 
 5. Build the code
     - (On Mac) - Edit sleipnir/src/libsvm.h
         - Replace: #include <libsvm/svm.h>
-        - With: #include <svm.h>
+        - With: #include <svm.h>\
+    - <code> cd Debug/ </code>
     - <code>make </code>
         - In case of errors:
             - <code> make clean </code>
             - <code> make VERBOSE=1 </code>
 
 ## **Tests:**
+0. One-time prep: create the conda environment (by default this will create the 'genomics' conda env)
+    - <code>conda env create --file scripts/seek/conda_environment.yml</code>
+
 1. Run the c++ unit tests
-    - <code>Debug/tests/unit_tests </code>
+    - <code>Debug/tests/unit_tests</code>
 
-2. Run Seek system tests
-    - <code>cd scripts/seek </code>
-    - Init conda environment (first time only)
-        - <code>conda env create --file conda_environment.yml </code>
-    - <code>conda activate genomics </code>
-    - <code>python -m pytest -s -v tests/ </code>
+2. Test the scripts for building and merging SEEK database compendiums
+    - <code>conda activate genomics</code>
+    - <code>python -m pytest -s -v scripts/seek/tests</code>
 
-3. Run Seek DB tests (test that the database gives expected bio-informative results). These tests can only be run where the full SEEK database is installed.
+3. Run the SEEK system tests (test SeekMiner and SeekRPC)
+    - <code>conda activate genomics</code>
+    - <code>python -m pytest -s -v tests/</code>
+
+
+4. Run Seek DB tests (test that the database gives expected bio-informative results). These tests can only be run where the full SEEK database is installed.
     - ```cd tests/bioinform_tests```
     - PREP: Install and init Git LFS (Large File Storage)
         - On Mac: ```brew install git-lfs```
@@ -69,8 +76,9 @@ git clone https://github.com/FunctionLab/sleipnir.git
             - <code> rm gold_standard_results/* </code>
             - <code> git restore gold_standard_results/* </code>
     - Run the tests:
+        (The bioinform test has an option for different lengths of test, i.e. how many queries are run)
         - <code>bash run_paramtest.sh -v -s <path_to_seek_db> -b <path_to_seek_binaries> </code>
         - <code>bash run_querysize.sh -v -s <path_to_seek_db> -b <path_to_seek_binaries> </code>
-        - <code>bash run_bioinform.sh -v -s <path_to_seek_db> -b <path_to_seek_binaries> </code>
+        - <code>bash run_bioinform.sh -v -s <path_to_seek_db> -b <path_to_seek_binaries> -t [tiny,short,medium,long]</code>
 
 

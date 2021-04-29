@@ -428,7 +428,7 @@ def parallelCombineThreadDBs(cfg, dbDirsToCombine, concurrency=8):
 
 def verifyCombinedDBs(cfg, dbDirsToCombine, concurrency=8):
     """
-    Verifies that the per-thread sets of DB files were correctly merged into the 
+    Verifies that the per-thread sets of DB files were correctly merged into the
     final combined set fo DB files.
     """
     cmdName = os.path.join(cfg.binDir, 'verifyMergedDBFiles')
