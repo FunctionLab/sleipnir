@@ -48,9 +48,15 @@ fi
 
 goldStdDir=/tmp/$USER/$testname
 
-# Check if the gold standard result files are already unpacked
-if [ ! -d $goldStdDir ] || [ $(ls -A1 $goldStdDir | wc -l) -eq 0 ]; then
-  # Unpack the gold standard result files
-  tar xzvf $testdir/gold_standard_results/$testname"_goldstandard.tgz" --directory /tmp/$USER
-fi
+# location of the tar packed gold standard files in the repositoy
+goldTarball=$testdir/gold_standard_results/$testname"_goldstandard.tgz"
+# size of the gold standard tar files
+tarBallSize=$(du -s -B 1 $goldTarball | cut -f1)
+# size of tmp unpacked test directory
+workSize=$(du -s -B 1 $goldStdDir | cut -f1)
 
+# Check if the gold standard result files are already unpacked and complete
+if [ ! -d $goldStdDir ] || [ $workSize -lt $tarBallSize ]; then
+  # Unpack the gold standard result files
+  tar xzvf $goldTarball --directory /tmp/$USER
+fi
