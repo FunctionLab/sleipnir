@@ -2,7 +2,6 @@ import pytest
 import os
 import sys
 import time
-import glob
 import subprocess
 import tempfile
 
@@ -16,7 +15,7 @@ seekScriptsDir = os.path.join(sleipnirDir, 'scripts', 'seek')
 sys.path.append(seekScriptsDir)
 pytoolsDir = os.path.join(testDir, 'bioinform_tests', 'pytools')
 sys.path.append(pytoolsDir)
-import seekUtils as sutils
+from pytestHelper import createSampleDatabase
 from rank_correlation import files_rank_correlation
 
 use_tempfile = False
@@ -27,17 +26,7 @@ class TestSeekRPC:
 
     def setup_class(cls):
         # Step 01: Make the breast cancer example DB if needed
-        dbDir = os.path.join(sampleBcDir, 'db')
-        dbFiles = glob.glob1(dbDir, '*.db')
-        if len(dbFiles) < 100:
-            os.makedirs(sampleBcDir, exist_ok=True)
-            inputBCFiles = os.path.join(testInputsDir, 'breast-cancer-sample')
-            os.system(f'cp -a {inputBCFiles}/* {sampleBcDir}/')
-            # Create the sample DB
-            cmd = f'python {seekScriptsDir}/seekCreateDB.py --all -g bc_gene_map.txt ' \
-                f'-n 100 -m 4 -i {sampleBcDir} -o {sampleBcDir} -b {sleipnirBin} --dab-use-gene-set'
-            ret = subprocess.run(cmd, shell=True)
-            assert ret.returncode == 0
+        sampleBcDir = createSampleDatabase()
 
         # Step 02: Start the SeekRPC server running
         seekrpcConfigFile = os.path.join(sampleBcDir, 'sampleBC-config.toml')

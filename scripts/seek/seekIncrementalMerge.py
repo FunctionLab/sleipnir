@@ -36,6 +36,7 @@ python seekIncrementalMerge.py -p <newPclDir> -dn <newDatasetList> \
 """
 
 import os
+import sys
 import argparse
 import glob
 import subprocess
@@ -209,6 +210,7 @@ def main(args):
     #   Rename combined DB directory to small DB name
     # Check size of small DB relative to large DB, and recommend combining
     #   at some size/percentage threshold.
+    return 0
 
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser()
@@ -231,4 +233,5 @@ if __name__ == "__main__":
     argParser.add_argument('--yesToPrompts', '-y', default=False, action='store_true',
                            help='Answer yes to all prompts')
     args = argParser.parse_args()
-    main(args)
+    res = main(args)
+    sys.exit(res)

@@ -109,7 +109,7 @@ class TestIncrDB:
         smallDset = os.path.join(smallDB, 'dset_list.txt')
         incrDset = os.path.join(incrDB, 'dset_list.txt')
         incrPcl = os.path.join(incrDB, 'pcl')
-        cmd = f'python seekIncrementalMerge.py -l {largeDB} -s {smallDB} ' \
+        cmd = f'python {seekScriptsDir}/seekIncrementalMerge.py -l {largeDB} -s {smallDB} ' \
               f'-o {mergeDB} -dl {largeDset} -ds {smallDset} -dn {incrDset} ' \
               f'-p {incrPcl} -b {sleipnirBin} -y'
         ret = subprocess.run(cmd, shell=True)
