@@ -208,17 +208,17 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
     CSeekCentral querySC;
     querySC.setUsingRPC(true);
     bool res = querySC.InitializeQuery(query.outputDir,
-                                     joinedGenes,
-                                     joinedDatasets,
-                                     &speciesSC,
-                                     networkConnection,
-                                     params.min_query_genes_fraction,
-                                     params.min_genome_fraction,
-                                     eDM,
-                                     bSubtractGeneAvg,
-                                     bNormPlatform,
-                                     params.useNegativeCorrelation,
-                                     params.check_dataset_size);
+                                       joinedGenes,
+                                       joinedDatasets,
+                                       &speciesSC,
+                                       networkConnection,
+                                       params.min_query_genes_fraction,
+                                       params.min_genome_fraction,
+                                       eDM,
+                                       bSubtractGeneAvg,
+                                       bNormPlatform,
+                                       params.useNegativeCorrelation,
+                                       params.check_dataset_size);
     if (res == false) {
         result.success = false;
         result.statusMsg = "Initialize query failed, check database settings";
@@ -326,7 +326,7 @@ void SeekInterface::runCleanTasksThread(uint32_t intervalSec) {
         // cout << "### cleaner running ###" << endl;
         int64_t beginTaskId = 0;
         {
-            /* find the oldes (lowest) taskId */
+            /* find the oldest (lowest) taskId */
             shared_lock mlock(this->taskMapMutex);
             if (this->taskMap.size() == 0) { continue; } // empty
             auto iter = this->taskMap.lower_bound(beginTaskId);
@@ -371,34 +371,3 @@ bool SeekInterface::cleanStaleTask(int64_t task_id) {
     }
     return isTimedOut;
 }
-
-
-// Old
-// From seek_query_async()
-// this->threadMap.emplace(piecewise_construct, 
-//                         make_tuple(task_id), 
-//                         make_tuple(SeekQueryCommon, 
-//                                    ref(query), 
-//                                    ref(this->resultMap[task_id]));
-
-// From seek_get_result()
-// {
-//     lock_guard tlock(task->taskMutex);
-//     if (task->_thread->joinable()) {
-//         task->_thread->join();
-//         assert(task->isComplete == true);
-//     }
-
-//     /* populate the return results */
-//     result = task->seekResult;
-// }
-
-// From seek_query()
-// try {
-//     this->SeekQueryCommon(query, result);
-// } catch (named_error &err) {
-//     string trace = print_exception_stack(err);
-//     result.success = false;
-//     result.statusMsg = trace;
-//     result.__isset.statusMsg = true;
-// }
