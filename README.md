@@ -25,6 +25,7 @@ git clone https://github.com/FunctionLab/sleipnir.git
     - *On Mac:*
         - <code> brew install libsvm</code>
         - <code> brew install libomp</code>
+        - <code> brew install thrift</code>
     - *On Linux:*
 
 3. Clone repository

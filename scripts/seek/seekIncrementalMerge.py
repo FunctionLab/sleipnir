@@ -41,6 +41,8 @@ import argparse
 import glob
 import subprocess
 from datetime import datetime
+currPath = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(currPath)
 import seekUtils as sutils
 from seekCreateDB import createSeekDB
 

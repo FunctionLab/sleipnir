@@ -1,13 +1,16 @@
 import pytest
 import os
+import sys
 import time
 import filecmp
+import resource
 import subprocess
 import tempfile
-import seekUtils as sutils
-
 testDir = os.path.dirname(__file__)
 seekScriptsDir = os.path.dirname(testDir)
+sys.path.append(seekScriptsDir)
+import seekUtils as sutils
+
 sleipnirDir = os.path.dirname(os.path.dirname(seekScriptsDir))
 sleipnirBinDir = os.path.join(sleipnirDir, 'Debug')
 use_tempfile = False
@@ -18,6 +21,11 @@ class TestSeekCreateDB:
     cfg = None
 
     def setup_class(cls):
+        # Check that os max open files is at least 1024
+        if resource.getrlimit(resource.RLIMIT_NOFILE)[0] < 1024:
+            print("Please increase max open files limit using bash command "
+                  "'ulimit -n 1024' in order to run tests")
+            assert(False)
         # Make a tmp directory and copy input mockDB files to it
         if use_tempfile:
             cls.temp_dir = tempfile.TemporaryDirectory()
