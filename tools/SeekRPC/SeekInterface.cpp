@@ -52,6 +52,9 @@ int64_t SeekInterface::seek_query_async(const SeekQuery &query)
     {
         /* Use lock_guard to lock the mutex and guarantee 
          *   that it unlocks when the scope exits
+         * Note: lock_guard or unique_lock could be used here.
+         *   Since this is a shared_mutex I'll use unique_lock
+         * and shared_lock operations.
          */
         unique_lock mlock(this->taskMapMutex);
         if (this->taskMap.count(task_id) != 0) {
@@ -147,6 +150,7 @@ void SeekInterface::runSeekQueryThread(TaskInfoPtrS task) {
         this->SeekQueryCommon(task->seekQuery, task->seekResult);
     } catch (named_error &err) {
         string trace = print_exception_stack(err);
+        lock_guard tlock(task->taskMutex);
         task->seekResult.success = false;
         task->seekResult.statusMsg = trace;
         task->seekResult.__isset.statusMsg = true;
