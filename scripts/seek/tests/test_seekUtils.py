@@ -1,13 +1,15 @@
 import pytest
 import os
+import sys
 import glob
 import fnmatch
 import filecmp
 import tempfile
-import seekUtils as sutils
-
 testDir = os.path.dirname(__file__)
 seekScriptsDir = os.path.dirname(testDir)
+sys.path.append(seekScriptsDir)
+import seekUtils as sutils
+
 sleipnirDir = os.path.dirname(os.path.dirname(seekScriptsDir))
 use_tempfile = False
 

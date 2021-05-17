@@ -1,13 +1,16 @@
 import pytest
 import os
+import sys
 import time
 import filecmp
+import resource
 import subprocess
 import tempfile
-import seekUtils as sutils
-
 testDir = os.path.dirname(__file__)
 seekScriptsDir = os.path.dirname(testDir)
+sys.path.append(seekScriptsDir)
+import seekUtils as sutils
+
 sleipnirDir = os.path.dirname(os.path.dirname(seekScriptsDir))
 sleipnirBinDir = os.path.join(sleipnirDir, 'Debug')
 use_tempfile = False
@@ -18,6 +21,11 @@ class TestSeekCreateDB:
     cfg = None
 
     def setup_class(cls):
+        # Check that os max open files is at least 1024
+        if resource.getrlimit(resource.RLIMIT_NOFILE)[0] < 1024:
+            print("Please increase max open files limit using bash command "
+                  "'ulimit -n 1024' in order to run tests")
+            assert(False)
         # Make a tmp directory and copy input mockDB files to it
         if use_tempfile:
             cls.temp_dir = tempfile.TemporaryDirectory()
@@ -74,21 +82,21 @@ class TestSeekCreateDB:
         seekminer_results = os.path.join(resultsDir, '0.results.txt')
         assert filecmp.cmp(expected_results, seekminer_results, shallow=False)
 
-        # # Test created db using SeekRPC
-        # seekrpcConfigFile = os.path.join(mockDbDir, 'mockDb-config.toml')
-        # # modify paths in config files, sub '/path' with path to mockDbDir
-        # mockDbDirEscaped = mockDbDir.replace('/', '\\/')
-        # cmd = f"sed -i '' -e 's/\\/path/{mockDbDirEscaped}/' {seekrpcConfigFile}"
-        # subprocess.run(cmd, shell=True)
-        # seekrpcResultsFile = os.path.join(resultsDir, 'seekRPC_results.txt')
-        # # Run the server
-        # cmd = f'{sleipnirBinDir}/SeekRPC -c {mockDbDir}/mockDb-config.toml'
-        # SeekServerProc = subprocess.Popen(cmd, shell=True)
-        # time.sleep(.5)
-        # cmd = f'{sleipnirBinDir}/SeekRPCClient -s mockDB ' \
-        #       f'-q {queryFile} -o {seekrpcResultsFile}'
-        # clientProc = subprocess.Popen(cmd, shell=True)
-        # clientProc.wait()
-        # SeekServerProc.kill()
-        # assert filecmp.cmp(expected_results, seekrpcResultsFile, shallow=False)
+        # Test created db using SeekRPC
+        seekrpcConfigFile = os.path.join(mockDbDir, 'mockDb-config.toml')
+        # modify paths in config files, sub '/path' with path to mockDbDir
+        mockDbDirEscaped = mockDbDir.replace('/', '\\/')
+        cmd = f"sed -i '' -e 's/\\/path/{mockDbDirEscaped}/' {seekrpcConfigFile}"
+        subprocess.run(cmd, shell=True)
+        seekrpcResultsFile = os.path.join(resultsDir, 'seekRPC_results.txt')
+        # Run the server
+        cmd = f'{sleipnirBinDir}/SeekRPC -c {mockDbDir}/mockDb-config.toml'
+        SeekServerProc = subprocess.Popen(cmd, shell=True)
+        time.sleep(.5)
+        cmd = f'{sleipnirBinDir}/SeekRPCClient -s mockDB ' \
+              f'-q {queryFile} -o {seekrpcResultsFile}'
+        clientProc = subprocess.Popen(cmd, shell=True)
+        clientProc.wait()
+        SeekServerProc.kill()
+        assert filecmp.cmp(expected_results, seekrpcResultsFile, shallow=False)
 

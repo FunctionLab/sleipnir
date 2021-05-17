@@ -186,6 +186,12 @@ else()
 endif()
 
 
+option(USE_THRIFT "Use thrift" ON)
+if(USE_THRIFT)
+    find_library(LIBTHRIFT thrift)
+    # list(APPEND EXTRA_LIBRARIES ${LIBTHRIFT})
+endif()
+
 option(USE_GENGETOPT "Use gengetopt" ON)
 if(USE_GENGETOPT)
     find_program(GENGETOPT gengetopt)
@@ -417,6 +423,8 @@ list(APPEND SLEIPNIR_TOOLS
     SeekPValue
     SeekPrep
     SeekReader
+    SeekRPC
+    SeekRPCClient
     SeekServer
     SeekTest
     Seqs2Ngrams
@@ -426,7 +434,7 @@ list(APPEND SLEIPNIR_TOOLS
     )
 
 foreach(TOOL ${SLEIPNIR_TOOLS})
-    include_directories(tools/${TOOL})
+    # include_directories(tools/${TOOL})
     if (${TOOL} MATCHES OntoShell)
         add_executable(${TOOL}
             tools/${TOOL}/${TOOL}.cpp
@@ -440,6 +448,23 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
             tools/${TOOL}/cmdline.c
             tools/${TOOL}/stdafx.cpp
             tools/${TOOL}/dot.cpp)
+    elseif (${TOOL} STREQUAL SeekRPC)
+        add_executable(${TOOL}
+            tools/${TOOL}/SeekRPCServer.cpp
+            tools/${TOOL}/SeekInterface.cpp
+            tools/${TOOL}/gen-cpp/seek_rpc_constants.cpp
+            tools/${TOOL}/gen-cpp/seek_rpc_types.cpp
+            tools/${TOOL}/gen-cpp/SeekRPC.cpp
+            )
+        list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
+    elseif (${TOOL} STREQUAL SeekRPCClient)
+        add_executable(${TOOL}
+            tools/SeekRPC/SeekRPCClient.cpp
+            tools/SeekRPC/gen-cpp/seek_rpc_constants.cpp
+            tools/SeekRPC/gen-cpp/seek_rpc_types.cpp
+            tools/SeekRPC/gen-cpp/SeekRPC.cpp
+            )
+        list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
     else ()
         add_executable(${TOOL}
             tools/${TOOL}/${TOOL}.cpp
@@ -450,7 +475,8 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
     endif ()
     add_dependencies(${TOOL} sleipnir)
     target_include_directories(${TOOL} PUBLIC ${EXTRA_INCLUDES})
-    target_link_libraries(${TOOL} sleipnir ${EXTRA_LIBRARIES} ${LIBOMP})
+    target_link_libraries(${TOOL} sleipnir ${EXTRA_LIBRARIES} ${TMP_LIBRARIES} ${LIBOMP})
+    set(TMP_LIBRARIES "")
 endforeach()
 
 

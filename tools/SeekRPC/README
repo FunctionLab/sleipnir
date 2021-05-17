@@ -1,0 +1,40 @@
+
+####
+Example Toml Config Format:
+
+species = "human"
+port = 9000
+numThreads = 8
+numBufferedDBs = 20  # Max num genes per query and max num of Databaselets to store in memory
+scoreCutoff = -9999.0  # The gene-gene score cutoff to add, default: no cutoff
+squareZ = false  # If using z-score, square-transform z-scores. Usually used in conjunction with --score-cutoff
+isNibble = false  # If CDatabase is stored in nibble or byte format
+outputAsText = false  # Output results (gene list and dataset weights) as text
+
+[Database]
+    [Database.DB1]
+    DB_DIR        = "/path/db1/db"
+    PREP_DIR      = "/path/db1/prep"
+    PLATFORM_DIR  = "/path/db1/plat"
+    SINFO_DIR     = "/path/db1/sinfo"
+    GVAR_DIR      = "/path/db1/gvar"
+    QUANT_FILE    = "/path/db1/quant2"
+    DSET_MAP_FILE = "/path/db1/dataset.map"
+    GENE_MAP_FILE = "/path/db1/gene_map.txt"
+    GENE_SYMBOL_FILE = "/path/db1/gene_symbols.txt"
+    DSET_SIZE_FILE = "/path/db1/dataset_size"
+    NUMBER_OF_DB  = 1000
+
+    [Database.DB2]
+    PREP_DIR      = "/path/db2/prep"
+    PLATFORM_DIR  = "/path/db2/plat"
+    DB_DIR        = "/path/db2/db"
+    DSET_MAP_FILE = "/path/db2/dataset.map"
+    GENE_MAP_FILE = "/path/db2/gene_map.txt"
+    GENE_SYMBOL_FILE = "/path/db2/gene_symbols.txt"
+    QUANT_FILE    = "/path/db2/quant2"
+    SINFO_DIR     = "/path/db2/sinfo"
+    GVAR_DIR      = "/path/db2/gvar"
+    DSET_SIZE_FILE = "/path/db2/dataset_size"
+    NUMBER_OF_DB  = 1000
+####

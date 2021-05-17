@@ -25,6 +25,7 @@ git clone https://github.com/FunctionLab/sleipnir.git
     - *On Mac:*
         - <code> brew install libsvm</code>
         - <code> brew install libomp</code>
+        - <code> brew install thrift</code>
     - *On Linux:*
 
 3. Clone repository
@@ -42,7 +43,7 @@ git clone https://github.com/FunctionLab/sleipnir.git
 5. Build the code
     - (On Mac) - Edit sleipnir/src/libsvm.h
         - Replace: #include <libsvm/svm.h>
-        - With: #include <svm.h>\
+        - With: #include <svm.h>
     - <code> cd Debug/ </code>
     - <code>make </code>
         - In case of errors:
