@@ -10,13 +10,7 @@ from rank_correlation import files_rank_correlation
 
 min_result_correlation = 0.95
 
-datasetFile = 'dataset.map'
-geneMapFile = 'gene_map.txt'
-dsetSizeFile = 'dataset_size'
-dbDir = 'db.combined'
-prepDir =  'prep.combined'
-platDir = 'platform.combined'
-sinfoDir =  'sinfo.combined'
+
 
 
 if __name__ == "__main__":
@@ -49,6 +43,19 @@ if __name__ == "__main__":
     bashEnvironmentFile = os.path.join(args.seekdir, 'seek_env')
     print('Load bash environment file {}'.format(bashEnvironmentFile))
     load_envbash(bashEnvironmentFile)
+    dbDir = os.environ.get('DB')
+    platDir = os.environ.get('PLAT')
+    prepDir = os.environ.get('PREP')
+    sinfoDir = os.environ.get('SINFO')
+    if None in (dbDir, platDir, prepDir, sinfoDir):
+        print('Please set seek_env with the DB directory names')
+        sys.exit(-1)
+    dsetFile = os.environ.get('DSET_FILE')
+    geneMapFile = os.environ.get('GENE_MAP_FILE')
+    dsetSizeFile = os.environ.get('DSET_SIZE_FILE')
+    if None in (dsetFile, geneMapFile, dsetSizeFile):
+        print('Please set seek_env with the dataset file names')
+        sys.exit(-1)
 
     # The query files have the query strings to run (multiple queries per file
     #   one query per line), located in goldStdDir
@@ -67,7 +74,7 @@ if __name__ == "__main__":
         outfile = os.path.join(resultDir, "seekminer.out")
         utils.file_truncate(outfile)
         print('SeekMiner run query {}'.format(queryName))
-        seekMinerCmd = f'time {seekMinerBin} -x {seekDir}/{datasetFile} -i {seekDir}/{geneMapFile} ' \
+        seekMinerCmd = f'time {seekMinerBin} -x {seekDir}/{dsetFile} -i {seekDir}/{geneMapFile} ' \
                        f'-d {seekDir}/{dbDir} -p {seekDir}/{prepDir} ' \
                        f'-P {seekDir}/{platDir} -Q {seekDir}/quant2 ' \
                        f'-u {seekDir}/{sinfoDir} -n 1000 -b 200  ' \
