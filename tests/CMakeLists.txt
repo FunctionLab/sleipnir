@@ -9,13 +9,10 @@ add_executable(
     seekerror_test.cpp
 )
 
-  #add_library(example STATIC
-  #  example_add.cpp
-  #  example_subtract.cpp
-  #)
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    list(APPEND EXTRA_LIBRARIES stdc++fs)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    list(APPEND EXTRA_LIBRARIES omp)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    list(APPEND EXTRA_LIBRARIES stdc++fs gomp)
 endif()
 
 
@@ -25,10 +22,6 @@ target_link_libraries(
     sleipnir
     ${EXTRA_LIBRARIES}
 )
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  target_link_libraries( unit_tests stdc++fs)
-endif()
 
 add_test(
   NAME

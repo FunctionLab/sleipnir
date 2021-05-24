@@ -7,6 +7,8 @@
 
 using namespace Sleipnir;
 
+uint32_t omp_enabled_test();
+
 // Settings that specify a Seek Database configurations. There
 //  is typically a different database per species.
 struct SeekSettings {

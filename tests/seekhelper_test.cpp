@@ -175,3 +175,8 @@ TEST_F(SeekHelperTest, loadTwoColumnTextFile)
     loadTwoColumnTextFile(inputFilePath, vals);
     ASSERT_EQ(vals.size(), 4);
 }
+
+TEST_F(SeekHelperTest, openmpEnabledTest) {
+    uint32_t thread_count = omp_enabled_test();
+    ASSERT_EQ(thread_count, 4);
+}

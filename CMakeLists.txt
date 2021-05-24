@@ -5,7 +5,7 @@ add_link_options(-lpthread)
 
 set(CMAKE_CXX_STANDARD 17)
 
-if(NOT CMAKE_BUILD_TYPE)
+if((NOT CMAKE_BUILD_TYPE) OR (${CMAKE_BUILD_TYPE} MATCHES Release))
     message(STATUS "Generating release config")
     set(CMAKE_BUILD_TYPE Release)
     add_compile_options(-O3)
@@ -175,7 +175,9 @@ set(SLEIPNIR_SOURCES
 # compiler-specific logic for building multithreaded code
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    find_library(LIBOMP libomp.a)
+    add_compile_options(-Xpreprocessor -fopenmp)
+    set(LIBOMP -lomp)
+    # find_library(LIBOMP libomp.a)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-fopenmp)
     add_link_options(-lgslcblas)
@@ -189,7 +191,6 @@ endif()
 option(USE_THRIFT "Use thrift" ON)
 if(USE_THRIFT)
     find_library(LIBTHRIFT thrift)
-    # list(APPEND EXTRA_LIBRARIES ${LIBTHRIFT})
 endif()
 
 option(USE_GENGETOPT "Use gengetopt" ON)
