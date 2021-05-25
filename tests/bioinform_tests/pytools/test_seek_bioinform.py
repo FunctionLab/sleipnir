@@ -83,6 +83,8 @@ if __name__ == "__main__":
         print('Please set seek_env with the dataset file names')
         sys.exit(-1)
 
+    assert cfg.geneMap == os.path.join(dataDir, geneMapFile)
+
     # The query files have the query strings to run (multiple queries per file
     #   one query per line), located in query path
     filepattern = os.path.join(cfg.queryPath, r'*.query.txt')
@@ -102,7 +104,7 @@ if __name__ == "__main__":
         utils.file_truncate(outfile)
         print('SeekMiner run query {}'.format(queryName))
         seekMinerCmd = f'time {seekMinerBin} -x {dataDir}/{dsetFile} -i {dataDir}/{geneMapFile} ' \
-                       f'-d {dataDir}/{dbDir} -p {dataDir}/{prepDir}' \
+                       f'-d {dataDir}/{dbDir} -p {dataDir}/{prepDir} ' \
                        f'-P {dataDir}/{platDir} -Q {dataDir}/quant2 ' \
                        f'-u {dataDir}/{sinfoDir} -n 1000 -b 200  ' \
                        f'-V CV -I LOI -z z_score -m -M -O ' \
