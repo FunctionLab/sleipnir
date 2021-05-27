@@ -10,6 +10,7 @@
 #include "seekreader.h"
 #include "seekerror.h"
 #include "gen-cpp/SeekRPC.h"
+#include "gen-cpp/seek_rpc_constants.h"
 
 using namespace std;
 using namespace SeekRPC;
@@ -147,7 +148,9 @@ int main(int argc, char **argv)
         transport->open();
         seekClient.ping();
 
-
+        // Check for version compatibility
+        int32_t version = seekClient.get_rpc_version();
+        assert(version == g_seek_rpc_constants.RPC_Version);
 
         if (!args.outputFile.empty()) {
             // output file is specified
@@ -159,8 +162,8 @@ int main(int argc, char **argv)
             QueryResult result;
             query.species = args.species;
             query.__isset.parameters = true;
-            query.parameters.__set_search_method("CV");
-            query.parameters.__set_distance_measure("ZscoreHubbinessCorrected");
+            query.parameters.__set_search_method(SearchMethod::CV);
+            query.parameters.__set_distance_measure(DistanceMeasure::ZScoreHubbinessCorrected);
             // query.parameters.__set_min_genome_fraction(0.5);
             query.parameters.__set_min_genome_fraction(0);
             // query.parameters.__set_min_query_genes_fraction(0.5);

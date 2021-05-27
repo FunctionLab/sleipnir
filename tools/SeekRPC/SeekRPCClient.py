@@ -2,8 +2,8 @@ import argparse
 from thrift.transport import TTransport, TSocket
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
 
-from pyseek import SeekRPC
-from pyseek.ttypes import SeekQuery, QueryParams, QueryResult
+from pyseek import SeekRPC, constants
+from pyseek.ttypes import SeekQuery, QueryParams, QueryResult, SearchMethod, DistanceMeasure
 
 host = 'localhost'
 
@@ -37,8 +37,11 @@ def runQuery(args):
     protocol = TBinaryProtocol(transport)
     client = SeekRPC.Client(protocol)
     transport.open()
+    version = client.get_rpc_version()
+    assert version == constants.RPC_Version
 
-    params = QueryParams(distance_measure="ZscoreHubbinessCorrected",
+    params = QueryParams(search_method=SearchMethod.CV,
+                         distance_measure=DistanceMeasure.ZScoreHubbinessCorrected,
                          min_query_genes_fraction=0.5,
                          min_genome_fraction=0.5,
                          use_gene_symbols=args.useSymbols)
@@ -46,6 +49,7 @@ def runQuery(args):
     genes = [gene.upper() for gene in args.genes]
     query = SeekQuery(species=args.species, genes=args.genes, parameters=params)
 
+    retval = -1
     result = client.seek_query(query)
     if result.success is True:
         for i, gs in enumerate(result.gene_scores):
@@ -55,10 +59,13 @@ def runQuery(args):
         for i, ds in enumerate(result.dataset_weights):
             print(f'dset: {ds.name}, {ds.value}')
             if i > 100: break
+        retval = 0
     else:
         print(f'query error: {result.statusMsg}')
+        retval = -1
 
     transport.close()
+    return retval
 
 
 if __name__ == "__main__":
@@ -78,8 +85,8 @@ if __name__ == "__main__":
         exit(-1)
     args.genes = args.genes.split(',')
 
-    runQuery(args)
-    exit(0)
+    retval = runQuery(args)
+    exit(retval)
 
 
 #species = 'human'
