@@ -44,7 +44,8 @@ def runQuery(args):
                          distance_measure=DistanceMeasure.ZScoreHubbinessCorrected,
                          min_query_genes_fraction=0.5,
                          min_genome_fraction=0.5,
-                         use_gene_symbols=args.useSymbols)
+                         use_gene_symbols=args.useSymbols,
+                         simulate_weights=False)
 
     genes = [gene.upper() for gene in args.genes]
     query = SeekQuery(species=args.species, genes=args.genes, parameters=params)

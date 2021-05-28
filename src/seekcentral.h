@@ -440,6 +440,10 @@ namespace Sleipnir {
 
         string entrezToSymbol(string &entrez);
 
+        void setSimulateWeightFlag(bool bSimulateWeight) {
+            m_bSimulateWeight = bSimulateWeight;
+        }
+
     void PrintSettings();
 
     private:

@@ -73,7 +73,7 @@ class StringDoublePair;
 class QueryResult;
 
 typedef struct _QueryParams__isset {
-  _QueryParams__isset() : search_method(true), distance_measure(true), min_query_genes_fraction(true), min_genome_fraction(true), rbp_param(true), useNegativeCorrelation(true), check_dataset_size(true), use_gene_symbols(true) {}
+  _QueryParams__isset() : search_method(true), distance_measure(true), min_query_genes_fraction(true), min_genome_fraction(true), rbp_param(true), useNegativeCorrelation(true), check_dataset_size(true), use_gene_symbols(true), simulate_weights(true) {}
   bool search_method :1;
   bool distance_measure :1;
   bool min_query_genes_fraction :1;
@@ -82,6 +82,7 @@ typedef struct _QueryParams__isset {
   bool useNegativeCorrelation :1;
   bool check_dataset_size :1;
   bool use_gene_symbols :1;
+  bool simulate_weights :1;
 } _QueryParams__isset;
 
 class QueryParams : public virtual ::apache::thrift::TBase {
@@ -89,7 +90,7 @@ class QueryParams : public virtual ::apache::thrift::TBase {
 
   QueryParams(const QueryParams&);
   QueryParams& operator=(const QueryParams&);
-  QueryParams() : search_method((SearchMethod::type)1), distance_measure((DistanceMeasure::type)2), min_query_genes_fraction(0.0000000000000000), min_genome_fraction(0.0000000000000000), rbp_param(0.9900000000000000), useNegativeCorrelation(false), check_dataset_size(false), use_gene_symbols(false) {
+  QueryParams() : search_method((SearchMethod::type)1), distance_measure((DistanceMeasure::type)2), min_query_genes_fraction(0.0000000000000000), min_genome_fraction(0.0000000000000000), rbp_param(0.9900000000000000), useNegativeCorrelation(false), check_dataset_size(false), use_gene_symbols(false), simulate_weights(false) {
     search_method = (SearchMethod::type)1;
 
     distance_measure = (DistanceMeasure::type)2;
@@ -113,6 +114,7 @@ class QueryParams : public virtual ::apache::thrift::TBase {
   bool useNegativeCorrelation;
   bool check_dataset_size;
   bool use_gene_symbols;
+  bool simulate_weights;
 
   _QueryParams__isset __isset;
 
@@ -131,6 +133,8 @@ class QueryParams : public virtual ::apache::thrift::TBase {
   void __set_check_dataset_size(const bool val);
 
   void __set_use_gene_symbols(const bool val);
+
+  void __set_simulate_weights(const bool val);
 
   bool operator == (const QueryParams & rhs) const
   {
@@ -165,6 +169,10 @@ class QueryParams : public virtual ::apache::thrift::TBase {
     if (__isset.use_gene_symbols != rhs.__isset.use_gene_symbols)
       return false;
     else if (__isset.use_gene_symbols && !(use_gene_symbols == rhs.use_gene_symbols))
+      return false;
+    if (__isset.simulate_weights != rhs.__isset.simulate_weights)
+      return false;
+    else if (__isset.simulate_weights && !(simulate_weights == rhs.simulate_weights))
       return false;
     return true;
   }

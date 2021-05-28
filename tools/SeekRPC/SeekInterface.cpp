@@ -262,6 +262,8 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
         return;
     }
 
+    querySC.setSimulateWeightFlag(params.simulate_weights);
+
     if (params.search_method == SearchMethod::EqualWeighting) {
         querySC.EqualWeightSearch();
     } else if (params.search_method == SearchMethod::OrderStatistics) {

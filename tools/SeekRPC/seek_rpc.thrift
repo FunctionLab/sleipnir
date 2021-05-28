@@ -24,6 +24,7 @@ struct QueryParams {
     6: optional bool useNegativeCorrelation = false;
     7: optional bool check_dataset_size = false;
     8: optional bool use_gene_symbols = false;
+    9: optional bool simulate_weights = false;
 }
 
 struct SeekQuery {

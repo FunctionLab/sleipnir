@@ -634,7 +634,7 @@ namespace Sleipnir {
 
     void CSeekCentral::InitializeFromSeekConfig(const SeekSettings &settings) {
         bool bOutputWeightComponent = true;
-        bool bSimulateWeight = false; // TODO GW - was true; why would we want this on by default?
+        bool bSimulateWeight = false;
         bool bSubtractAvg = false;
         bool bNormPlatform = false;
         bool bLogit = false;

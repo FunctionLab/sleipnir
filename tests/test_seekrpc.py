@@ -21,7 +21,8 @@ sys.path.append(seekRpcPyDir)
 from pytestHelper import createSampleDatabase
 from rank_correlation import files_rank_correlation
 from seek_rpc import SeekRPC
-from seek_rpc.ttypes import SeekQuery, QueryParams, QueryStatus, DistanceMeasure
+from seek_rpc.ttypes import SeekQuery, QueryParams, QueryStatus 
+from seek_rpc.ttypes import SearchMethod, DistanceMeasure
 
 use_tempfile = False
 min_result_correlation = 0.95
@@ -118,7 +119,8 @@ class TestSeekRPC:
                             min_genome_fraction=0.5,
                             use_gene_symbols=False)
         genes = ['55755', '64859', '348654', '79791', '7756', '8555', '835', '5347']
-        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
+        datasets = ['GSE45584.GPL6480', 'GSE24468.GPL570', 'GSE3744.GPL570']
+        query = SeekQuery(species='sampleBC', genes=genes, datasets=datasets, parameters=params)
 
         # Do and async query using is_query_complete to test
         task_id = client.seek_query_async(query)
@@ -131,10 +133,11 @@ class TestSeekRPC:
         result = client.seek_get_result(task_id, block=True)
         assert result.success is True
         assert len(result.gene_scores) > 0
-        assert len(result.dataset_weights) > 0
+        assert len(result.dataset_weights) == 3  # because query specified 3 datasets
 
         # Do and async query using non-blocking seek_get_result()
         genes = ['5884', '9575', '51343', '57805', '29980', '8091', '6154', '51776']
+        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
         task_id = client.seek_query_async(query)
         while True:
             result = client.seek_get_result(task_id, block=False)
@@ -147,3 +150,51 @@ class TestSeekRPC:
         assert len(result.dataset_weights) > 0
 
         transport.close()
+
+    def test_simulate_weight(self):
+        # Run the query through the python rpc client
+        from thrift.transport import TTransport, TSocket
+        from thrift.protocol.TBinaryProtocol import TBinaryProtocol
+        socket = TSocket.TSocket('localhost', testPort)
+        transport = TTransport.TBufferedTransport(socket)
+        transport.open()
+        protocol = TBinaryProtocol(transport)
+        client = SeekRPC.Client(protocol)
+
+        genes = ['55755', '64859', '348654', '79791', '7756', '8555', '835', '5347']
+
+        # Run EqualWeighting without simulate_weights
+        params = QueryParams(search_method=SearchMethod.EqualWeighting,
+                            simulate_weights=False)
+        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
+        result = client.seek_query(query)
+        assert result.success is True
+        assert len(result.gene_scores) > 0
+        assert len(result.dataset_weights) == 0  # because no simulate weights
+
+        # Run EqualWeighting with simulate_weights
+        params = QueryParams(search_method=SearchMethod.EqualWeighting,
+                            simulate_weights=True)
+        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
+        result = client.seek_query(query)
+        assert result.success is True
+        assert len(result.gene_scores) > 0
+        assert len(result.dataset_weights) > 0  # because no simulate weights
+
+        # Run OrderStatistics without simulate_weights
+        params = QueryParams(search_method=SearchMethod.OrderStatistics,
+                            simulate_weights=False)
+        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
+        result = client.seek_query(query)
+        assert result.success is True
+        assert len(result.gene_scores) > 0
+        assert len(result.dataset_weights) == 0  # because no simulate weights
+
+        # Run OrderStatistics with simulate_weights
+        params = QueryParams(search_method=SearchMethod.OrderStatistics,
+                            simulate_weights=True)
+        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
+        result = client.seek_query(query)
+        assert result.success is True
+        assert len(result.gene_scores) > 0
+        assert len(result.dataset_weights) > 0  # because no simulate weights

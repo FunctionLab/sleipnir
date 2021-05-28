@@ -152,6 +152,11 @@ void QueryParams::__set_use_gene_symbols(const bool val) {
   this->use_gene_symbols = val;
 __isset.use_gene_symbols = true;
 }
+
+void QueryParams::__set_simulate_weights(const bool val) {
+  this->simulate_weights = val;
+__isset.simulate_weights = true;
+}
 std::ostream& operator<<(std::ostream& out, const QueryParams& obj)
 {
   obj.printTo(out);
@@ -248,6 +253,14 @@ uint32_t QueryParams::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
+      case 9:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->simulate_weights);
+          this->__isset.simulate_weights = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -305,6 +318,11 @@ uint32_t QueryParams::write(::apache::thrift::protocol::TProtocol* oprot) const 
     xfer += oprot->writeBool(this->use_gene_symbols);
     xfer += oprot->writeFieldEnd();
   }
+  if (this->__isset.simulate_weights) {
+    xfer += oprot->writeFieldBegin("simulate_weights", ::apache::thrift::protocol::T_BOOL, 9);
+    xfer += oprot->writeBool(this->simulate_weights);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -320,6 +338,7 @@ void swap(QueryParams &a, QueryParams &b) {
   swap(a.useNegativeCorrelation, b.useNegativeCorrelation);
   swap(a.check_dataset_size, b.check_dataset_size);
   swap(a.use_gene_symbols, b.use_gene_symbols);
+  swap(a.simulate_weights, b.simulate_weights);
   swap(a.__isset, b.__isset);
 }
 
@@ -332,6 +351,7 @@ QueryParams::QueryParams(const QueryParams& other2) {
   useNegativeCorrelation = other2.useNegativeCorrelation;
   check_dataset_size = other2.check_dataset_size;
   use_gene_symbols = other2.use_gene_symbols;
+  simulate_weights = other2.simulate_weights;
   __isset = other2.__isset;
 }
 QueryParams& QueryParams::operator=(const QueryParams& other3) {
@@ -343,6 +363,7 @@ QueryParams& QueryParams::operator=(const QueryParams& other3) {
   useNegativeCorrelation = other3.useNegativeCorrelation;
   check_dataset_size = other3.check_dataset_size;
   use_gene_symbols = other3.use_gene_symbols;
+  simulate_weights = other3.simulate_weights;
   __isset = other3.__isset;
   return *this;
 }
@@ -357,6 +378,7 @@ void QueryParams::printTo(std::ostream& out) const {
   out << ", " << "useNegativeCorrelation="; (__isset.useNegativeCorrelation ? (out << to_string(useNegativeCorrelation)) : (out << "<null>"));
   out << ", " << "check_dataset_size="; (__isset.check_dataset_size ? (out << to_string(check_dataset_size)) : (out << "<null>"));
   out << ", " << "use_gene_symbols="; (__isset.use_gene_symbols ? (out << to_string(use_gene_symbols)) : (out << "<null>"));
+  out << ", " << "simulate_weights="; (__isset.simulate_weights ? (out << to_string(simulate_weights)) : (out << "<null>"));
   out << ")";
 }
 
