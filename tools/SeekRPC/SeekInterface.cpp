@@ -10,6 +10,7 @@
 using namespace std;
 using namespace SeekRPC;
 
+string getLogMessages(queue<string> &messageLog);
 
 SeekInterface::SeekInterface(vector<string> &configFiles, 
                              uint32_t maxConcurreny,
@@ -129,8 +130,12 @@ int32_t SeekInterface::get_rpc_version()
 
 string SeekInterface::get_progress_message(int64_t task_id)
 {
-    printf("get_progress_message\n");
-    return "Status Message";
+    /* lookup the task */
+    TaskInfoPtrS task = this->getTask(task_id);
+    if (task == nullptr) {
+        return "";
+    }
+    return getLogMessages(task->messageLog);
 }
 
 int32_t SeekInterface::ping()
@@ -174,7 +179,7 @@ void SeekInterface::runSeekQueryThread(TaskInfoPtrS task) {
             */
             lock_guard<Semaphore> sem_lock(this->querySemaphore);
             /* Run the query */
-            this->SeekQueryCommon(task->seekQuery, task->seekResult);
+            this->SeekQueryCommon(task->seekQuery, task->seekResult, task->messageLog);
         } catch (named_error &err) {
             string trace = print_exception_stack(err);
             task->seekResult.success = false;
@@ -189,7 +194,7 @@ void SeekInterface::runSeekQueryThread(TaskInfoPtrS task) {
     return;
 }
 
-void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result) {
+void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result, queue<string> &log) {
     const QueryParams &params = query.parameters;
 
     if (this->speciesSeekCentrals.find(query.species) == this->speciesSeekCentrals.end()) {
@@ -239,7 +244,7 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
     int networkConnection = 0;  // no direct network connection to client
 
     CSeekCentral querySC;
-    querySC.setUsingRPC(true);
+    querySC.setUsingRPC(true, log);
     bool res = querySC.InitializeQuery(query.outputDir,
                                        joinedGenes,
                                        joinedDatasets,
@@ -326,6 +331,8 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
     result.status = QueryStatus::Complete;
     result.__isset.status = true;
     result.success = true;
+    result.statusMsg = getLogMessages(log);
+    result.__isset.statusMsg = true;
 
     querySC.Destruct();
 }
@@ -410,3 +417,23 @@ bool SeekInterface::cleanStaleTask(int64_t task_id) {
     }
     return isTimedOut;
 }
+
+string getLogMessages(queue<string> &messageLog) {
+    // TODO - implement messageLog as a thread safe queue
+    string joinedMessages;
+    while (!messageLog.empty()) {
+        string msg = messageLog.front();
+        messageLog.pop();
+        joinedMessages += msg + "\n";
+    }
+    return joinedMessages;
+}
+
+// TODO - implement a thread safe queue for message log
+// class SafeQueue:queue {
+//     // Lock for each operation
+//     private:
+//     mutex
+//     <T> pop() {} // return the next item (atomically)
+//     push(<T>) {} // push and item atomically
+// }

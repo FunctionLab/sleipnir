@@ -1,3 +1,4 @@
+import time
 import argparse
 from thrift.transport import TTransport, TSocket
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
@@ -11,14 +12,15 @@ host = 'localhost'
 Query parameters and options:
 
 struct QueryParams {
-    string search_method: (default: "CV", "EqualWeighting", "OrderStatistics", "CVCUSTOM")
-    string distance_measure: (default: "Zscore", "ZscoreHubbinessCorrected", "Correlation")
+    string search_method: SearchMethods.(default: CV, EqualWeighting, OrderStatistics, CVCustom)
+    string distance_measure: DistanceMeasure.(default: ZScore, ZScoreHubbinessCorrected, Correlation)
     double min_query_genes_fraction = 0.0;
     double min_genome_fraction = 0.0;
     double rbp_param = 0.99;
     bool useNegativeCorrelation = false;
     bool check_dataset_size = false;
     bool use_gene_symbols = false;
+    bool simulate_weights = false;
 }
 
 struct SeekQuery {
@@ -51,15 +53,26 @@ def runQuery(args):
     query = SeekQuery(species=args.species, genes=args.genes, parameters=params)
 
     retval = -1
-    result = client.seek_query(query)
+    taskId = client.seek_query_async(query)
+    result = client.seek_get_result(taskId, block=True)
+    print(f'Status: {result.statusMsg}')
+    # Alternate non-blocking code, checking periodically if complete
+    # taskId = client.seek_query_async(query)
+    # while client.is_query_complete(taskId) is False:
+    #     # get status messages
+    #     statusMsg = client.get_progress_message(taskId)
+    #     if len(statusMsg) > 0:
+    #         print(f'Status: {statusMsg}')
+    #     time.sleep(0.1)
+    # result = client.seek_get_result(taskId, block=True)
     if result.success is True:
         for i, gs in enumerate(result.gene_scores):
             print(f'gene: {gs.name}, {gs.value}')
-            if i > 100: break
+            if i > 10: break
 
         for i, ds in enumerate(result.dataset_weights):
             print(f'dset: {ds.name}, {ds.value}')
-            if i > 100: break
+            if i > 10: break
         retval = 0
     else:
         print(f'query error: {result.statusMsg}')

@@ -4,6 +4,7 @@
 #include <map>
 #include <thread>
 #include <mutex>
+#include <queue>
 #include <atomic>
 #include <shared_mutex>
 #include "seekcentral.h"
@@ -22,6 +23,7 @@ public:
     bool isComplete = false;
     time_t timestamp;
     mutex taskMutex;
+    queue<string> messageLog;
     unique_ptr<thread> _thread;
 };
 
@@ -41,7 +43,7 @@ class SeekInterface {
     int32_t pvalue_datasets();
     int32_t pcl_data();
   private:
-    void SeekQueryCommon(const SeekQuery &query, QueryResult &result);
+    void SeekQueryCommon(const SeekQuery &query, QueryResult &result, queue<string> &log);
     void runSeekQueryThread(TaskInfoPtrS task);
     void runCleanTasksThread(uint32_t intervalSec);
     bool cleanStaleTask(int64_t task_id);

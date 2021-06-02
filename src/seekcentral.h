@@ -418,20 +418,9 @@ namespace Sleipnir {
         /*!
          * \brief When using RPC communication, status messages will accumulate in the log queue
          */
-        void setUsingRPC(bool val) {
+        void setUsingRPC(bool val, queue<string> &log) {
             m_useRPC = val;
-        }
-
-        /*!
-         * \brief Return status messages in order entered or nullptr if none.
-         */
-        string getRPCStatusMsg() {
-            string msg = nullptr;
-            if (!m_rpcLog.empty()) {
-                msg = m_rpcLog.front();
-                m_rpcLog.pop();
-            }
-            return msg;
+            m_rpcLog = &log;
         }
 
         void convertGenesEntrezToSymbol(const vector<string> &entrez, vector<string> &symbols);
@@ -589,7 +578,7 @@ namespace Sleipnir {
         int m_iClient;
         bool m_bEnableNetwork;
         bool m_useRPC;
-        queue<string> m_rpcLog;
+        queue<string> *m_rpcLog;
         //bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
         bool m_bNegativeCor;
 
