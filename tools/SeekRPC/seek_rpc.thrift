@@ -16,15 +16,15 @@ enum DistanceMeasure {
 }
 
 struct QueryParams {
-    1: optional SearchMethod search_method = SearchMethod.CV;
-    2: optional DistanceMeasure distance_measure = DistanceMeasure.ZScoreHubbinessCorrected;
-    3: optional double min_query_genes_fraction = 0.0;
-    4: optional double min_genome_fraction = 0.0;
-    5: optional double rbp_param = 0.99;
+    1: optional SearchMethod searchMethod = SearchMethod.CV;
+    2: optional DistanceMeasure distanceMeasure = DistanceMeasure.ZScoreHubbinessCorrected;
+    3: optional double minQueryGenesFraction = 0.0;
+    4: optional double minGenomeFraction = 0.0;
+    5: optional double rbpParam = 0.99;
     6: optional bool useNegativeCorrelation = false;
-    7: optional bool check_dataset_size = false;
-    8: optional bool use_gene_symbols = false;
-    9: optional bool simulate_weights = false;
+    7: optional bool checkDatasetSize = false;
+    8: optional bool useGeneSymbols = false;
+    9: optional bool simulateWeights = false;
 }
 
 struct SeekQuery {
@@ -49,32 +49,32 @@ enum QueryStatus {
 
 struct QueryResult {
     1: required bool success;
-    2: required list<StringDoublePair> gene_scores;
-    3: optional list<StringDoublePair> dataset_weights;
+    2: required list<StringDoublePair> geneScores;
+    3: optional list<StringDoublePair> datasetWeights;
     4: optional QueryStatus status;
     5: optional string statusMsg;
-    // string dataset_availability;  /* these will come through status channel instead */
-    // string query_availability;    /* these will come through status channel instead */
+    // string datasetAvailability;  /* these will come through status channel instead */
+    // string queryAvailability;    /* these will come through status channel instead */
 }
 
 // Version to track compatibility across changes to the RPC interface
-const i32 RPC_Version = 1;
+const i32 RPCVersion = 1;
 
-/* Make seek_query an asynchronous call and have a get_status() call that returns
+/* Make seekQuery an asynchronous call and have a getStatus() call that returns
  *  status strings while the query is processing and then returns "Done Search"
  *  when it's complete.
- *  dataset_availability and query_availability strings will come through status channel.
+ *  datasetAvailability and queryAvailability strings will come through status channel.
  */
 
 service SeekRPC {
-    QueryResult seek_query(1: SeekQuery query);
-    i64 seek_query_async(1: SeekQuery query);  // returns a task id
-    QueryResult seek_get_result(1: i64 task_id, 2: bool block=true);  // returns result from an async task
-    bool is_query_complete(1: i64 task_id),  // returns true if get_result won't block
-    string get_progress_message(1: i64 task_id);  // to retrieve status info for async task given by id
-    i32 get_rpc_version();
+    QueryResult seekQuery(1: SeekQuery query);
+    i64 seekQueryAsync(1: SeekQuery query);  // returns a task id
+    QueryResult getQueryResult(1: i64 taskId, 2: bool block=true);  // returns result from an async task
+    bool isQueryComplete(1: i64 taskId),  // returns true if getResult won't block
+    string getProgressMessage(1: i64 taskId);  // to retrieve status info for async task given by id
+    i32 getRpcVersion();
     i32 ping();  // returns monotonic increasing int
-    i32 pvalue_genes();  // input and return types to be determined
-    i32 pvalue_datasets();  // input and return types to be determined
-    i32 pcl_data();  // input and return types to be determined
+    i32 pvalueGenes();  // input and return types to be determined
+    i32 pvalueDatasets();  // input and return types to be determined
+    i32 pclData();  // input and return types to be determined
 }

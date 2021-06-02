@@ -76,29 +76,29 @@ class QueryStatus(object):
 class QueryParams(object):
     """
     Attributes:
-     - search_method
-     - distance_measure
-     - min_query_genes_fraction
-     - min_genome_fraction
-     - rbp_param
+     - searchMethod
+     - distanceMeasure
+     - minQueryGenesFraction
+     - minGenomeFraction
+     - rbpParam
      - useNegativeCorrelation
-     - check_dataset_size
-     - use_gene_symbols
-     - simulate_weights
+     - checkDatasetSize
+     - useGeneSymbols
+     - simulateWeights
 
     """
 
 
-    def __init__(self, search_method=1, distance_measure=2, min_query_genes_fraction=0.0000000000000000, min_genome_fraction=0.0000000000000000, rbp_param=0.9900000000000000, useNegativeCorrelation=False, check_dataset_size=False, use_gene_symbols=False, simulate_weights=False,):
-        self.search_method = search_method
-        self.distance_measure = distance_measure
-        self.min_query_genes_fraction = min_query_genes_fraction
-        self.min_genome_fraction = min_genome_fraction
-        self.rbp_param = rbp_param
+    def __init__(self, searchMethod=1, distanceMeasure=2, minQueryGenesFraction=0.0000000000000000, minGenomeFraction=0.0000000000000000, rbpParam=0.9900000000000000, useNegativeCorrelation=False, checkDatasetSize=False, useGeneSymbols=False, simulateWeights=False,):
+        self.searchMethod = searchMethod
+        self.distanceMeasure = distanceMeasure
+        self.minQueryGenesFraction = minQueryGenesFraction
+        self.minGenomeFraction = minGenomeFraction
+        self.rbpParam = rbpParam
         self.useNegativeCorrelation = useNegativeCorrelation
-        self.check_dataset_size = check_dataset_size
-        self.use_gene_symbols = use_gene_symbols
-        self.simulate_weights = simulate_weights
+        self.checkDatasetSize = checkDatasetSize
+        self.useGeneSymbols = useGeneSymbols
+        self.simulateWeights = simulateWeights
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -111,27 +111,27 @@ class QueryParams(object):
                 break
             if fid == 1:
                 if ftype == TType.I32:
-                    self.search_method = iprot.readI32()
+                    self.searchMethod = iprot.readI32()
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.I32:
-                    self.distance_measure = iprot.readI32()
+                    self.distanceMeasure = iprot.readI32()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.DOUBLE:
-                    self.min_query_genes_fraction = iprot.readDouble()
+                    self.minQueryGenesFraction = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
                 if ftype == TType.DOUBLE:
-                    self.min_genome_fraction = iprot.readDouble()
+                    self.minGenomeFraction = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
             elif fid == 5:
                 if ftype == TType.DOUBLE:
-                    self.rbp_param = iprot.readDouble()
+                    self.rbpParam = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
             elif fid == 6:
@@ -141,17 +141,17 @@ class QueryParams(object):
                     iprot.skip(ftype)
             elif fid == 7:
                 if ftype == TType.BOOL:
-                    self.check_dataset_size = iprot.readBool()
+                    self.checkDatasetSize = iprot.readBool()
                 else:
                     iprot.skip(ftype)
             elif fid == 8:
                 if ftype == TType.BOOL:
-                    self.use_gene_symbols = iprot.readBool()
+                    self.useGeneSymbols = iprot.readBool()
                 else:
                     iprot.skip(ftype)
             elif fid == 9:
                 if ftype == TType.BOOL:
-                    self.simulate_weights = iprot.readBool()
+                    self.simulateWeights = iprot.readBool()
                 else:
                     iprot.skip(ftype)
             else:
@@ -164,41 +164,41 @@ class QueryParams(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('QueryParams')
-        if self.search_method is not None:
-            oprot.writeFieldBegin('search_method', TType.I32, 1)
-            oprot.writeI32(self.search_method)
+        if self.searchMethod is not None:
+            oprot.writeFieldBegin('searchMethod', TType.I32, 1)
+            oprot.writeI32(self.searchMethod)
             oprot.writeFieldEnd()
-        if self.distance_measure is not None:
-            oprot.writeFieldBegin('distance_measure', TType.I32, 2)
-            oprot.writeI32(self.distance_measure)
+        if self.distanceMeasure is not None:
+            oprot.writeFieldBegin('distanceMeasure', TType.I32, 2)
+            oprot.writeI32(self.distanceMeasure)
             oprot.writeFieldEnd()
-        if self.min_query_genes_fraction is not None:
-            oprot.writeFieldBegin('min_query_genes_fraction', TType.DOUBLE, 3)
-            oprot.writeDouble(self.min_query_genes_fraction)
+        if self.minQueryGenesFraction is not None:
+            oprot.writeFieldBegin('minQueryGenesFraction', TType.DOUBLE, 3)
+            oprot.writeDouble(self.minQueryGenesFraction)
             oprot.writeFieldEnd()
-        if self.min_genome_fraction is not None:
-            oprot.writeFieldBegin('min_genome_fraction', TType.DOUBLE, 4)
-            oprot.writeDouble(self.min_genome_fraction)
+        if self.minGenomeFraction is not None:
+            oprot.writeFieldBegin('minGenomeFraction', TType.DOUBLE, 4)
+            oprot.writeDouble(self.minGenomeFraction)
             oprot.writeFieldEnd()
-        if self.rbp_param is not None:
-            oprot.writeFieldBegin('rbp_param', TType.DOUBLE, 5)
-            oprot.writeDouble(self.rbp_param)
+        if self.rbpParam is not None:
+            oprot.writeFieldBegin('rbpParam', TType.DOUBLE, 5)
+            oprot.writeDouble(self.rbpParam)
             oprot.writeFieldEnd()
         if self.useNegativeCorrelation is not None:
             oprot.writeFieldBegin('useNegativeCorrelation', TType.BOOL, 6)
             oprot.writeBool(self.useNegativeCorrelation)
             oprot.writeFieldEnd()
-        if self.check_dataset_size is not None:
-            oprot.writeFieldBegin('check_dataset_size', TType.BOOL, 7)
-            oprot.writeBool(self.check_dataset_size)
+        if self.checkDatasetSize is not None:
+            oprot.writeFieldBegin('checkDatasetSize', TType.BOOL, 7)
+            oprot.writeBool(self.checkDatasetSize)
             oprot.writeFieldEnd()
-        if self.use_gene_symbols is not None:
-            oprot.writeFieldBegin('use_gene_symbols', TType.BOOL, 8)
-            oprot.writeBool(self.use_gene_symbols)
+        if self.useGeneSymbols is not None:
+            oprot.writeFieldBegin('useGeneSymbols', TType.BOOL, 8)
+            oprot.writeBool(self.useGeneSymbols)
             oprot.writeFieldEnd()
-        if self.simulate_weights is not None:
-            oprot.writeFieldBegin('simulate_weights', TType.BOOL, 9)
-            oprot.writeBool(self.simulate_weights)
+        if self.simulateWeights is not None:
+            oprot.writeFieldBegin('simulateWeights', TType.BOOL, 9)
+            oprot.writeBool(self.simulateWeights)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -435,18 +435,18 @@ class QueryResult(object):
     """
     Attributes:
      - success
-     - gene_scores
-     - dataset_weights
+     - geneScores
+     - datasetWeights
      - status
      - statusMsg
 
     """
 
 
-    def __init__(self, success=None, gene_scores=None, dataset_weights=None, status=None, statusMsg=None,):
+    def __init__(self, success=None, geneScores=None, datasetWeights=None, status=None, statusMsg=None,):
         self.success = success
-        self.gene_scores = gene_scores
-        self.dataset_weights = dataset_weights
+        self.geneScores = geneScores
+        self.datasetWeights = datasetWeights
         self.status = status
         self.statusMsg = statusMsg
 
@@ -466,23 +466,23 @@ class QueryResult(object):
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.LIST:
-                    self.gene_scores = []
+                    self.geneScores = []
                     (_etype24, _size21) = iprot.readListBegin()
                     for _i25 in range(_size21):
                         _elem26 = StringDoublePair()
                         _elem26.read(iprot)
-                        self.gene_scores.append(_elem26)
+                        self.geneScores.append(_elem26)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.LIST:
-                    self.dataset_weights = []
+                    self.datasetWeights = []
                     (_etype30, _size27) = iprot.readListBegin()
                     for _i31 in range(_size27):
                         _elem32 = StringDoublePair()
                         _elem32.read(iprot)
-                        self.dataset_weights.append(_elem32)
+                        self.datasetWeights.append(_elem32)
                     iprot.readListEnd()
                 else:
                     iprot.skip(ftype)
@@ -510,17 +510,17 @@ class QueryResult(object):
             oprot.writeFieldBegin('success', TType.BOOL, 1)
             oprot.writeBool(self.success)
             oprot.writeFieldEnd()
-        if self.gene_scores is not None:
-            oprot.writeFieldBegin('gene_scores', TType.LIST, 2)
-            oprot.writeListBegin(TType.STRUCT, len(self.gene_scores))
-            for iter33 in self.gene_scores:
+        if self.geneScores is not None:
+            oprot.writeFieldBegin('geneScores', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRUCT, len(self.geneScores))
+            for iter33 in self.geneScores:
                 iter33.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
-        if self.dataset_weights is not None:
-            oprot.writeFieldBegin('dataset_weights', TType.LIST, 3)
-            oprot.writeListBegin(TType.STRUCT, len(self.dataset_weights))
-            for iter34 in self.dataset_weights:
+        if self.datasetWeights is not None:
+            oprot.writeFieldBegin('datasetWeights', TType.LIST, 3)
+            oprot.writeListBegin(TType.STRUCT, len(self.datasetWeights))
+            for iter34 in self.datasetWeights:
                 iter34.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
@@ -538,8 +538,8 @@ class QueryResult(object):
     def validate(self):
         if self.success is None:
             raise TProtocolException(message='Required field success is unset!')
-        if self.gene_scores is None:
-            raise TProtocolException(message='Required field gene_scores is unset!')
+        if self.geneScores is None:
+            raise TProtocolException(message='Required field geneScores is unset!')
         return
 
     def __repr__(self):
@@ -555,15 +555,15 @@ class QueryResult(object):
 all_structs.append(QueryParams)
 QueryParams.thrift_spec = (
     None,  # 0
-    (1, TType.I32, 'search_method', None, 1, ),  # 1
-    (2, TType.I32, 'distance_measure', None, 2, ),  # 2
-    (3, TType.DOUBLE, 'min_query_genes_fraction', None, 0.0000000000000000, ),  # 3
-    (4, TType.DOUBLE, 'min_genome_fraction', None, 0.0000000000000000, ),  # 4
-    (5, TType.DOUBLE, 'rbp_param', None, 0.9900000000000000, ),  # 5
+    (1, TType.I32, 'searchMethod', None, 1, ),  # 1
+    (2, TType.I32, 'distanceMeasure', None, 2, ),  # 2
+    (3, TType.DOUBLE, 'minQueryGenesFraction', None, 0.0000000000000000, ),  # 3
+    (4, TType.DOUBLE, 'minGenomeFraction', None, 0.0000000000000000, ),  # 4
+    (5, TType.DOUBLE, 'rbpParam', None, 0.9900000000000000, ),  # 5
     (6, TType.BOOL, 'useNegativeCorrelation', None, False, ),  # 6
-    (7, TType.BOOL, 'check_dataset_size', None, False, ),  # 7
-    (8, TType.BOOL, 'use_gene_symbols', None, False, ),  # 8
-    (9, TType.BOOL, 'simulate_weights', None, False, ),  # 9
+    (7, TType.BOOL, 'checkDatasetSize', None, False, ),  # 7
+    (8, TType.BOOL, 'useGeneSymbols', None, False, ),  # 8
+    (9, TType.BOOL, 'simulateWeights', None, False, ),  # 9
 )
 all_structs.append(SeekQuery)
 SeekQuery.thrift_spec = (
@@ -585,8 +585,8 @@ all_structs.append(QueryResult)
 QueryResult.thrift_spec = (
     None,  # 0
     (1, TType.BOOL, 'success', None, None, ),  # 1
-    (2, TType.LIST, 'gene_scores', (TType.STRUCT, [StringDoublePair, None], False), None, ),  # 2
-    (3, TType.LIST, 'dataset_weights', (TType.STRUCT, [StringDoublePair, None], False), None, ),  # 3
+    (2, TType.LIST, 'geneScores', (TType.STRUCT, [StringDoublePair, None], False), None, ),  # 2
+    (3, TType.LIST, 'datasetWeights', (TType.STRUCT, [StringDoublePair, None], False), None, ),  # 3
     (4, TType.I32, 'status', None, None, ),  # 4
     (5, TType.STRING, 'statusMsg', 'UTF8', None, ),  # 5
 )

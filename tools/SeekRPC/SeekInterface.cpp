@@ -35,15 +35,15 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
     this->_cleanerThread = thread(&SeekInterface::runCleanTasksThread, this, taskTimeoutSec);
 }
 
-void SeekInterface::seek_query(const SeekQuery &query, QueryResult &result)
+void SeekInterface::seekQuery(const SeekQuery &query, QueryResult &result)
 {
     // spin off a thread to run this query but wait immediately for it
-    int64_t taskId = this->seek_query_async(query);
-    this->seek_get_result(taskId, true, result);
+    int64_t taskId = this->seekQueryAsync(query);
+    this->getQueryResult(taskId, true, result);
     return;
 }
 
-int64_t SeekInterface::seek_query_async(const SeekQuery &query)
+int64_t SeekInterface::seekQueryAsync(const SeekQuery &query)
 {
     /* get next task_id using atomic increment counter */
     int64_t task_id = this->next_task_id++;
@@ -79,7 +79,7 @@ int64_t SeekInterface::seek_query_async(const SeekQuery &query)
 }
 
 
-void SeekInterface::seek_get_result(int64_t task_id, bool block, QueryResult &result)
+void SeekInterface::getQueryResult(int64_t task_id, bool block, QueryResult &result)
 {
     /* lookup the task */
     TaskInfoPtrS task = this->getTask(task_id);
@@ -114,7 +114,7 @@ void SeekInterface::seek_get_result(int64_t task_id, bool block, QueryResult &re
     return;
 }
 
-bool SeekInterface::is_query_complete(int64_t task_id) {
+bool SeekInterface::isQueryComplete(int64_t task_id) {
     /* lookup the task */
     TaskInfoPtrS task = this->getTask(task_id);
     if (task == nullptr || task->isComplete) {
@@ -123,12 +123,12 @@ bool SeekInterface::is_query_complete(int64_t task_id) {
     return false;
   }
 
-int32_t SeekInterface::get_rpc_version()
+int32_t SeekInterface::getRpcVersion()
 {
-    return g_seek_rpc_constants.RPC_Version;
+    return g_seek_rpc_constants.RPCVersion;
 }
 
-string SeekInterface::get_progress_message(int64_t task_id)
+string SeekInterface::getProgressMessage(int64_t task_id)
 {
     /* lookup the task */
     TaskInfoPtrS task = this->getTask(task_id);
@@ -144,21 +144,21 @@ int32_t SeekInterface::ping()
     return 1;
 }
 
-int32_t SeekInterface::pvalue_genes()
+int32_t SeekInterface::pvalueGenes()
 {
-    printf("pvalue_genes\n");
+    printf("pvalueGenes\n");
     return 0;
 }
 
-int32_t SeekInterface::pvalue_datasets()
+int32_t SeekInterface::pvalueDatasets()
 {
-    printf("pvalue_datasets\n");
+    printf("pvalueDatasets\n");
     return 0;
 }
 
-int32_t SeekInterface::pcl_data()
+int32_t SeekInterface::pclData()
 {
-    printf("pcl_data\n");
+    printf("pclData\n");
     return 0;
 }
 
@@ -206,23 +206,23 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result,
     bool bSubtractGeneAvg = false;
     bool bNormPlatform = false;
     enum CSeekDataset::DistanceMeasure eDM;
-    if (params.distance_measure == DistanceMeasure::Correlation) {
+    if (params.distanceMeasure == DistanceMeasure::Correlation) {
         eDM = CSeekDataset::CORRELATION;
-    } else if (params.distance_measure == DistanceMeasure::ZScore) {
+    } else if (params.distanceMeasure == DistanceMeasure::ZScore) {
         eDM = CSeekDataset::Z_SCORE;
-    } else if (params.distance_measure == DistanceMeasure::ZScoreHubbinessCorrected) {
+    } else if (params.distanceMeasure == DistanceMeasure::ZScoreHubbinessCorrected) {
         eDM = CSeekDataset::Z_SCORE;
         bSubtractGeneAvg = true;
         bNormPlatform = true;
     } else {
-        throw argument_error(FILELINE + "Unknown distance measure: " + to_string(params.distance_measure));
+        throw argument_error(FILELINE + "Unknown distance measure: " + to_string(params.distanceMeasure));
     }
 
     // Create the output directory if needed
     filesystem::create_directory(query.outputDir);
 
     vector<string> queryGenes(query.genes);
-    if (params.use_gene_symbols == true) {
+    if (params.useGeneSymbols == true) {
         // convert query genes from sybmol to entrez
         try {
             speciesSC.convertGenesSymbolToEntrez(query.genes, queryGenes);
@@ -250,13 +250,13 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result,
                                        joinedDatasets,
                                        &speciesSC,
                                        networkConnection,
-                                       params.min_query_genes_fraction,
-                                       params.min_genome_fraction,
+                                       params.minQueryGenesFraction,
+                                       params.minGenomeFraction,
                                        eDM,
                                        bSubtractGeneAvg,
                                        bNormPlatform,
                                        params.useNegativeCorrelation,
-                                       params.check_dataset_size);
+                                       params.checkDatasetSize);
     if (res == false) {
         result.success = false;
         result.status = QueryStatus::Error;
@@ -267,11 +267,11 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result,
         return;
     }
 
-    querySC.setSimulateWeightFlag(params.simulate_weights);
+    querySC.setSimulateWeightFlag(params.simulateWeights);
 
-    if (params.search_method == SearchMethod::EqualWeighting) {
+    if (params.searchMethod == SearchMethod::EqualWeighting) {
         querySC.EqualWeightSearch();
-    } else if (params.search_method == SearchMethod::OrderStatistics) {
+    } else if (params.searchMethod == SearchMethod::OrderStatistics) {
         querySC.OrderStatistics();
     } else {
         const gsl_rng_type *T;
@@ -283,15 +283,15 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result,
         utype FOLD = 5;
         //enum PartitionMode PART_M = CUSTOM_PARTITION;
         enum CSeekQuery::PartitionMode PART_M = CSeekQuery::LEAVE_ONE_IN;
-        if(params.search_method == SearchMethod::CVCustom){
+        if(params.searchMethod == SearchMethod::CVCustom){
             if (query.guideGenes.size() == 0) {
                 throw request_error(FILELINE + "No guide gene set specified for CVCustom search");
             }
             vector<vector<string> > vecGuideGeneSet;
             vecGuideGeneSet.push_back(query.guideGenes);
-            querySC.CVCustomSearch(vecGuideGeneSet, rnd, PART_M, FOLD, params.rbp_param);
+            querySC.CVCustomSearch(vecGuideGeneSet, rnd, PART_M, FOLD, params.rbpParam);
         } else { //"RBP"
-            querySC.CVSearch(rnd, PART_M, FOLD, params.rbp_param);
+            querySC.CVSearch(rnd, PART_M, FOLD, params.rbpParam);
         }
         gsl_rng_free(rnd);
     }
@@ -308,14 +308,14 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result,
     int numGenes = geneResults.size();
     for (int i=0; i<numGenes; i++) {
         SeekRPC::StringDoublePair pair;
-        if (params.use_gene_symbols == true) {
+        if (params.useGeneSymbols == true) {
             string entrez = speciesSC.entrezToSymbol(geneResults[i].key);
             pair.__set_name(entrez);
         } else {
             pair.__set_name(geneResults[i].key);
         }
         pair.__set_value(geneResults[i].val);
-        result.gene_scores.push_back(pair);
+        result.geneScores.push_back(pair);
     }
 
     // get the datasets and weigts and add them to the rpc result reply
@@ -325,9 +325,9 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result,
         SeekRPC::StringDoublePair pair;
         pair.__set_name(datasetResults[i].key);
         pair.__set_value(datasetResults[i].val);
-        result.dataset_weights.push_back(pair);
+        result.datasetWeights.push_back(pair);
     }
-    result.__isset.dataset_weights = true;
+    result.__isset.datasetWeights = true;
     result.status = QueryStatus::Complete;
     result.__isset.status = true;
     result.success = true;

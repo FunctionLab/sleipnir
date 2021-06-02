@@ -73,16 +73,16 @@ class StringDoublePair;
 class QueryResult;
 
 typedef struct _QueryParams__isset {
-  _QueryParams__isset() : search_method(true), distance_measure(true), min_query_genes_fraction(true), min_genome_fraction(true), rbp_param(true), useNegativeCorrelation(true), check_dataset_size(true), use_gene_symbols(true), simulate_weights(true) {}
-  bool search_method :1;
-  bool distance_measure :1;
-  bool min_query_genes_fraction :1;
-  bool min_genome_fraction :1;
-  bool rbp_param :1;
+  _QueryParams__isset() : searchMethod(true), distanceMeasure(true), minQueryGenesFraction(true), minGenomeFraction(true), rbpParam(true), useNegativeCorrelation(true), checkDatasetSize(true), useGeneSymbols(true), simulateWeights(true) {}
+  bool searchMethod :1;
+  bool distanceMeasure :1;
+  bool minQueryGenesFraction :1;
+  bool minGenomeFraction :1;
+  bool rbpParam :1;
   bool useNegativeCorrelation :1;
-  bool check_dataset_size :1;
-  bool use_gene_symbols :1;
-  bool simulate_weights :1;
+  bool checkDatasetSize :1;
+  bool useGeneSymbols :1;
+  bool simulateWeights :1;
 } _QueryParams__isset;
 
 class QueryParams : public virtual ::apache::thrift::TBase {
@@ -90,10 +90,10 @@ class QueryParams : public virtual ::apache::thrift::TBase {
 
   QueryParams(const QueryParams&);
   QueryParams& operator=(const QueryParams&);
-  QueryParams() : search_method((SearchMethod::type)1), distance_measure((DistanceMeasure::type)2), min_query_genes_fraction(0.0000000000000000), min_genome_fraction(0.0000000000000000), rbp_param(0.9900000000000000), useNegativeCorrelation(false), check_dataset_size(false), use_gene_symbols(false), simulate_weights(false) {
-    search_method = (SearchMethod::type)1;
+  QueryParams() : searchMethod((SearchMethod::type)1), distanceMeasure((DistanceMeasure::type)2), minQueryGenesFraction(0.0000000000000000), minGenomeFraction(0.0000000000000000), rbpParam(0.9900000000000000), useNegativeCorrelation(false), checkDatasetSize(false), useGeneSymbols(false), simulateWeights(false) {
+    searchMethod = (SearchMethod::type)1;
 
-    distance_measure = (DistanceMeasure::type)2;
+    distanceMeasure = (DistanceMeasure::type)2;
 
   }
 
@@ -102,77 +102,77 @@ class QueryParams : public virtual ::apache::thrift::TBase {
    * 
    * @see SearchMethod
    */
-  SearchMethod::type search_method;
+  SearchMethod::type searchMethod;
   /**
    * 
    * @see DistanceMeasure
    */
-  DistanceMeasure::type distance_measure;
-  double min_query_genes_fraction;
-  double min_genome_fraction;
-  double rbp_param;
+  DistanceMeasure::type distanceMeasure;
+  double minQueryGenesFraction;
+  double minGenomeFraction;
+  double rbpParam;
   bool useNegativeCorrelation;
-  bool check_dataset_size;
-  bool use_gene_symbols;
-  bool simulate_weights;
+  bool checkDatasetSize;
+  bool useGeneSymbols;
+  bool simulateWeights;
 
   _QueryParams__isset __isset;
 
-  void __set_search_method(const SearchMethod::type val);
+  void __set_searchMethod(const SearchMethod::type val);
 
-  void __set_distance_measure(const DistanceMeasure::type val);
+  void __set_distanceMeasure(const DistanceMeasure::type val);
 
-  void __set_min_query_genes_fraction(const double val);
+  void __set_minQueryGenesFraction(const double val);
 
-  void __set_min_genome_fraction(const double val);
+  void __set_minGenomeFraction(const double val);
 
-  void __set_rbp_param(const double val);
+  void __set_rbpParam(const double val);
 
   void __set_useNegativeCorrelation(const bool val);
 
-  void __set_check_dataset_size(const bool val);
+  void __set_checkDatasetSize(const bool val);
 
-  void __set_use_gene_symbols(const bool val);
+  void __set_useGeneSymbols(const bool val);
 
-  void __set_simulate_weights(const bool val);
+  void __set_simulateWeights(const bool val);
 
   bool operator == (const QueryParams & rhs) const
   {
-    if (__isset.search_method != rhs.__isset.search_method)
+    if (__isset.searchMethod != rhs.__isset.searchMethod)
       return false;
-    else if (__isset.search_method && !(search_method == rhs.search_method))
+    else if (__isset.searchMethod && !(searchMethod == rhs.searchMethod))
       return false;
-    if (__isset.distance_measure != rhs.__isset.distance_measure)
+    if (__isset.distanceMeasure != rhs.__isset.distanceMeasure)
       return false;
-    else if (__isset.distance_measure && !(distance_measure == rhs.distance_measure))
+    else if (__isset.distanceMeasure && !(distanceMeasure == rhs.distanceMeasure))
       return false;
-    if (__isset.min_query_genes_fraction != rhs.__isset.min_query_genes_fraction)
+    if (__isset.minQueryGenesFraction != rhs.__isset.minQueryGenesFraction)
       return false;
-    else if (__isset.min_query_genes_fraction && !(min_query_genes_fraction == rhs.min_query_genes_fraction))
+    else if (__isset.minQueryGenesFraction && !(minQueryGenesFraction == rhs.minQueryGenesFraction))
       return false;
-    if (__isset.min_genome_fraction != rhs.__isset.min_genome_fraction)
+    if (__isset.minGenomeFraction != rhs.__isset.minGenomeFraction)
       return false;
-    else if (__isset.min_genome_fraction && !(min_genome_fraction == rhs.min_genome_fraction))
+    else if (__isset.minGenomeFraction && !(minGenomeFraction == rhs.minGenomeFraction))
       return false;
-    if (__isset.rbp_param != rhs.__isset.rbp_param)
+    if (__isset.rbpParam != rhs.__isset.rbpParam)
       return false;
-    else if (__isset.rbp_param && !(rbp_param == rhs.rbp_param))
+    else if (__isset.rbpParam && !(rbpParam == rhs.rbpParam))
       return false;
     if (__isset.useNegativeCorrelation != rhs.__isset.useNegativeCorrelation)
       return false;
     else if (__isset.useNegativeCorrelation && !(useNegativeCorrelation == rhs.useNegativeCorrelation))
       return false;
-    if (__isset.check_dataset_size != rhs.__isset.check_dataset_size)
+    if (__isset.checkDatasetSize != rhs.__isset.checkDatasetSize)
       return false;
-    else if (__isset.check_dataset_size && !(check_dataset_size == rhs.check_dataset_size))
+    else if (__isset.checkDatasetSize && !(checkDatasetSize == rhs.checkDatasetSize))
       return false;
-    if (__isset.use_gene_symbols != rhs.__isset.use_gene_symbols)
+    if (__isset.useGeneSymbols != rhs.__isset.useGeneSymbols)
       return false;
-    else if (__isset.use_gene_symbols && !(use_gene_symbols == rhs.use_gene_symbols))
+    else if (__isset.useGeneSymbols && !(useGeneSymbols == rhs.useGeneSymbols))
       return false;
-    if (__isset.simulate_weights != rhs.__isset.simulate_weights)
+    if (__isset.simulateWeights != rhs.__isset.simulateWeights)
       return false;
-    else if (__isset.simulate_weights && !(simulate_weights == rhs.simulate_weights))
+    else if (__isset.simulateWeights && !(simulateWeights == rhs.simulateWeights))
       return false;
     return true;
   }
@@ -312,8 +312,8 @@ void swap(StringDoublePair &a, StringDoublePair &b);
 std::ostream& operator<<(std::ostream& out, const StringDoublePair& obj);
 
 typedef struct _QueryResult__isset {
-  _QueryResult__isset() : dataset_weights(false), status(false), statusMsg(false) {}
-  bool dataset_weights :1;
+  _QueryResult__isset() : datasetWeights(false), status(false), statusMsg(false) {}
+  bool datasetWeights :1;
   bool status :1;
   bool statusMsg :1;
 } _QueryResult__isset;
@@ -328,8 +328,8 @@ class QueryResult : public virtual ::apache::thrift::TBase {
 
   virtual ~QueryResult() noexcept;
   bool success;
-  std::vector<StringDoublePair>  gene_scores;
-  std::vector<StringDoublePair>  dataset_weights;
+  std::vector<StringDoublePair>  geneScores;
+  std::vector<StringDoublePair>  datasetWeights;
   /**
    * 
    * @see QueryStatus
@@ -341,9 +341,9 @@ class QueryResult : public virtual ::apache::thrift::TBase {
 
   void __set_success(const bool val);
 
-  void __set_gene_scores(const std::vector<StringDoublePair> & val);
+  void __set_geneScores(const std::vector<StringDoublePair> & val);
 
-  void __set_dataset_weights(const std::vector<StringDoublePair> & val);
+  void __set_datasetWeights(const std::vector<StringDoublePair> & val);
 
   void __set_status(const QueryStatus::type val);
 
@@ -353,11 +353,11 @@ class QueryResult : public virtual ::apache::thrift::TBase {
   {
     if (!(success == rhs.success))
       return false;
-    if (!(gene_scores == rhs.gene_scores))
+    if (!(geneScores == rhs.geneScores))
       return false;
-    if (__isset.dataset_weights != rhs.__isset.dataset_weights)
+    if (__isset.datasetWeights != rhs.__isset.datasetWeights)
       return false;
-    else if (__isset.dataset_weights && !(dataset_weights == rhs.dataset_weights))
+    else if (__isset.datasetWeights && !(datasetWeights == rhs.datasetWeights))
       return false;
     if (__isset.status != rhs.__isset.status)
       return false;

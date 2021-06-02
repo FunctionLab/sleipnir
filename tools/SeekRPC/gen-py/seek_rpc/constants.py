@@ -12,4 +12,4 @@ from thrift.TRecursive import fix_spec
 
 import sys
 from .ttypes import *
-RPC_Version = 1
+RPCVersion = 1

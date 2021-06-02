@@ -12,15 +12,15 @@ host = 'localhost'
 Query parameters and options:
 
 struct QueryParams {
-    string search_method: SearchMethods.(default: CV, EqualWeighting, OrderStatistics, CVCustom)
-    string distance_measure: DistanceMeasure.(default: ZScore, ZScoreHubbinessCorrected, Correlation)
-    double min_query_genes_fraction = 0.0;
-    double min_genome_fraction = 0.0;
-    double rbp_param = 0.99;
+    string searchMethod: SearchMethods.(default: CV, EqualWeighting, OrderStatistics, CVCustom)
+    string DistanceMeasure: DistanceMeasure.(default: ZScore, ZScoreHubbinessCorrected, Correlation)
+    double minQueryGenesFraction = 0.0;
+    double minGenomeFraction = 0.0;
+    double rbpParam = 0.99;
     bool useNegativeCorrelation = false;
-    bool check_dataset_size = false;
-    bool use_gene_symbols = false;
-    bool simulate_weights = false;
+    bool checkDatasetSize = false;
+    bool useGeneSymbols = false;
+    bool simulateWeights = false;
 }
 
 struct SeekQuery {
@@ -39,38 +39,38 @@ def runQuery(args):
     protocol = TBinaryProtocol(transport)
     client = SeekRPC.Client(protocol)
     transport.open()
-    version = client.get_rpc_version()
-    assert version == constants.RPC_Version
+    version = client.getRpcVersion()
+    assert version == constants.RPCVersion
 
-    params = QueryParams(search_method=SearchMethod.CV,
-                         distance_measure=DistanceMeasure.ZScoreHubbinessCorrected,
-                         min_query_genes_fraction=0.5,
-                         min_genome_fraction=0.5,
-                         use_gene_symbols=args.useSymbols,
-                         simulate_weights=False)
+    params = QueryParams(searchMethod=SearchMethod.CV,
+                         distanceMeasure=DistanceMeasure.ZScoreHubbinessCorrected,
+                         minQueryGenesFraction=0.5,
+                         minGenomeFraction=0.5,
+                         useGeneSymbols=args.useSymbols,
+                         simulateWeights=False)
 
     genes = [gene.upper() for gene in args.genes]
     query = SeekQuery(species=args.species, genes=args.genes, parameters=params)
 
     retval = -1
-    taskId = client.seek_query_async(query)
-    result = client.seek_get_result(taskId, block=True)
+    taskId = client.seekQueryAsync(query)
+    result = client.getQueryResult(taskId, block=True)
     print(f'Status: {result.statusMsg}')
     # Alternate non-blocking code, checking periodically if complete
-    # taskId = client.seek_query_async(query)
-    # while client.is_query_complete(taskId) is False:
+    # taskId = client.seekQueryAsync(query)
+    # while client.isQueryComplete(taskId) is False:
     #     # get status messages
-    #     statusMsg = client.get_progress_message(taskId)
+    #     statusMsg = client.getProgressMessage(taskId)
     #     if len(statusMsg) > 0:
     #         print(f'Status: {statusMsg}')
     #     time.sleep(0.1)
-    # result = client.seek_get_result(taskId, block=True)
+    # result = client.getQueryResult(taskId, block=True)
     if result.success is True:
-        for i, gs in enumerate(result.gene_scores):
+        for i, gs in enumerate(result.geneScores):
             print(f'gene: {gs.name}, {gs.value}')
             if i > 10: break
 
-        for i, ds in enumerate(result.dataset_weights):
+        for i, ds in enumerate(result.datasetWeights):
             print(f'dset: {ds.name}, {ds.value}')
             if i > 10: break
         retval = 0

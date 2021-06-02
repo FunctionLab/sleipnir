@@ -11,7 +11,7 @@ namespace SeekRPC {
 const seek_rpcConstants g_seek_rpc_constants;
 
 seek_rpcConstants::seek_rpcConstants() {
-  RPC_Version = 1;
+  RPCVersion = 1;
 
 }
 
