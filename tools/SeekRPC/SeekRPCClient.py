@@ -1,10 +1,13 @@
 import time
 import argparse
+import importlib
 from thrift.transport import TTransport, TSocket
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
-
-from pyseek import SeekRPC, constants
-from pyseek.ttypes import SeekQuery, QueryParams, QueryResult, SearchMethod, DistanceMeasure
+# Since the path gen-py/seek_rpc has a hyphen in it we need to use
+#   the import_module() function rather than the usual import call
+SeekRPC = importlib.import_module('gen-py.seek_rpc.SeekRPC')
+ttypes = importlib.import_module('gen-py.seek_rpc.ttypes')
+constants = importlib.import_module('gen-py.seek_rpc.constants')
 
 host = 'localhost'
 
@@ -13,7 +16,7 @@ Query parameters and options:
 
 struct QueryParams {
     string searchMethod: SearchMethods.(default: CV, EqualWeighting, OrderStatistics, CVCustom)
-    string DistanceMeasure: DistanceMeasure.(default: ZScore, ZScoreHubbinessCorrected, Correlation)
+    string distanceMeasure: DistanceMeasure.(default: ZScore, ZScoreHubbinessCorrected, Correlation)
     double minQueryGenesFraction = 0.0;
     double minGenomeFraction = 0.0;
     double rbpParam = 0.99;
@@ -42,15 +45,17 @@ def runQuery(args):
     version = client.getRpcVersion()
     assert version == constants.RPCVersion
 
-    params = QueryParams(searchMethod=SearchMethod.CV,
-                         distanceMeasure=DistanceMeasure.ZScoreHubbinessCorrected,
-                         minQueryGenesFraction=0.5,
-                         minGenomeFraction=0.5,
-                         useGeneSymbols=args.useSymbols,
-                         simulateWeights=False)
+    params = SeekRPC.QueryParams(
+        searchMethod = ttypes.SearchMethod.CV,
+        distanceMeasure = ttypes.DistanceMeasure.ZScoreHubbinessCorrected,
+        minQueryGenesFraction = 0.5,
+        minGenomeFraction = 0.5,
+        useGeneSymbols = args.useSymbols,
+        simulateWeights = False,
+    )
 
     genes = [gene.upper() for gene in args.genes]
-    query = SeekQuery(species=args.species, genes=args.genes, parameters=params)
+    query = SeekRPC.SeekQuery(species=args.species, genes=args.genes, parameters=params)
 
     retval = -1
     taskId = client.seekQueryAsync(query)
