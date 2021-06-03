@@ -10,6 +10,7 @@
 #include "seekreader.h"
 #include "seekerror.h"
 #include "gen-cpp/SeekRPC.h"
+#include "gen-cpp/seek_rpc_constants.h"
 
 using namespace std;
 using namespace SeekRPC;
@@ -147,7 +148,9 @@ int main(int argc, char **argv)
         transport->open();
         seekClient.ping();
 
-
+        // Check for version compatibility
+        int32_t version = seekClient.getRpcVersion();
+        assert(version == g_seek_rpc_constants.RPCVersion);
 
         if (!args.outputFile.empty()) {
             // output file is specified
@@ -159,16 +162,16 @@ int main(int argc, char **argv)
             QueryResult result;
             query.species = args.species;
             query.__isset.parameters = true;
-            query.parameters.__set_search_method("CV");
-            query.parameters.__set_distance_measure("ZscoreHubbinessCorrected");
-            // query.parameters.__set_min_genome_fraction(0.5);
-            query.parameters.__set_min_genome_fraction(0);
-            // query.parameters.__set_min_query_genes_fraction(0.5);
-            query.parameters.__set_min_query_genes_fraction(0);
-            query.parameters.__set_use_gene_symbols(args.useSymbols);
+            query.parameters.__set_searchMethod(SearchMethod::CV);
+            query.parameters.__set_distanceMeasure(DistanceMeasure::ZScoreHubbinessCorrected);
+            // query.parameters.__set_minGenomeFraction(0.5);
+            query.parameters.__set_minGenomeFraction(0);
+            // query.parameters.__set_minQueryGenesFraction(0.5);
+            query.parameters.__set_minQueryGenesFraction(0);
+            query.parameters.__set_useGeneSymbols(args.useSymbols);
 
             query.genes = queries[i];
-            seekClient.seek_query(result, query);
+            seekClient.seekQuery(result, query);
 
             if (result.success == false) {
                 throw query_error(result.statusMsg);
@@ -176,28 +179,28 @@ int main(int argc, char **argv)
 
             if (args.verbose == true || args.outputFile.empty()) {
                 std::cout << "Query " << i << ": Gene Scores:" << endl;
-                // for (auto gene_score : result.gene_scores) {
-                for (int i=0; i<result.gene_scores.size() && i < 10; i++) {
-                    std::cout << result.gene_scores[i] << endl;
+                // for (auto gene_score : result.geneScores) {
+                for (int i=0; i<result.geneScores.size() && i < 10; i++) {
+                    std::cout << result.geneScores[i] << endl;
                 }
 
                 std::cout << "Query " << i << ": Dataset Weights:" << endl;
-                // for (auto dset : result.dataset_weights)
-                for (int i=0; i<result.dataset_weights.size() && i < 10; i++) {
-                    std::cout << result.dataset_weights[i] << endl;
+                // for (auto dset : result.datasetWeights)
+                for (int i=0; i<result.datasetWeights.size() && i < 10; i++) {
+                    std::cout << result.datasetWeights[i] << endl;
                 }
             }
 
             if (outFile.is_open()) {
                 // print results to a file
-                for (int i=0; i<result.dataset_weights.size() && i < args.maxResults; i++) {
+                for (int i=0; i<result.datasetWeights.size() && i < args.maxResults; i++) {
                     if (i > 0) outFile << " ";
-                    outFile << result.dataset_weights[i].name;
+                    outFile << result.datasetWeights[i].name;
                 }
                 outFile << endl;
-                for (int i=0; i<result.gene_scores.size() && i < args.maxResults; i++) {
+                for (int i=0; i<result.geneScores.size() && i < args.maxResults; i++) {
                     if (i > 0) outFile << " ";
-                    outFile << result.gene_scores[i].name;
+                    outFile << result.geneScores[i].name;
                 }
                 outFile << endl;
             }

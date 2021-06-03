@@ -5,10 +5,12 @@
 #include "SeekInterface.h"
 #include "seekcentral.h"
 #include "seekerror.h"
+#include "gen-cpp/seek_rpc_constants.h"
 
 using namespace std;
 using namespace SeekRPC;
 
+string getLogMessages(queue<string> &messageLog);
 
 SeekInterface::SeekInterface(vector<string> &configFiles, 
                              uint32_t maxConcurreny,
@@ -33,15 +35,15 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
     this->_cleanerThread = thread(&SeekInterface::runCleanTasksThread, this, taskTimeoutSec);
 }
 
-void SeekInterface::seek_query(const SeekQuery &query, QueryResult &result)
+void SeekInterface::seekQuery(const SeekQuery &query, QueryResult &result)
 {
     // spin off a thread to run this query but wait immediately for it
-    int64_t taskId = this->seek_query_async(query);
-    this->seek_get_result(taskId, result);
+    int64_t taskId = this->seekQueryAsync(query);
+    this->getQueryResult(taskId, true, result);
     return;
 }
 
-int64_t SeekInterface::seek_query_async(const SeekQuery &query)
+int64_t SeekInterface::seekQueryAsync(const SeekQuery &query)
 {
     /* get next task_id using atomic increment counter */
     int64_t task_id = this->next_task_id++;
@@ -77,14 +79,23 @@ int64_t SeekInterface::seek_query_async(const SeekQuery &query)
 }
 
 
-void SeekInterface::seek_get_result(int64_t task_id, QueryResult &result)
+void SeekInterface::getQueryResult(int64_t task_id, bool block, QueryResult &result)
 {
     /* lookup the task */
     TaskInfoPtrS task = this->getTask(task_id);
     if (task == nullptr) {
         result.success = false;
+        result.status = QueryStatus::Error;
         result.statusMsg = "Task not found or timed out: task_id: " + to_string(task_id);
+        result.__isset.status = true;
         result.__isset.statusMsg = true;
+        return;
+    }
+
+    if (!block && !task->isComplete) {
+        result.success = false;
+        result.status = QueryStatus::Incomplete;
+        result.__isset.status = true;
         return;
     }
 
@@ -103,10 +114,28 @@ void SeekInterface::seek_get_result(int64_t task_id, QueryResult &result)
     return;
 }
 
-string SeekInterface::get_progress_message(int64_t task_id)
+bool SeekInterface::isQueryComplete(int64_t task_id) {
+    /* lookup the task */
+    TaskInfoPtrS task = this->getTask(task_id);
+    if (task == nullptr || task->isComplete) {
+        return true;
+    }
+    return false;
+  }
+
+int32_t SeekInterface::getRpcVersion()
 {
-    printf("get_progress_message\n");
-    return "Status Message";
+    return g_seek_rpc_constants.RPCVersion;
+}
+
+string SeekInterface::getProgressMessage(int64_t task_id)
+{
+    /* lookup the task */
+    TaskInfoPtrS task = this->getTask(task_id);
+    if (task == nullptr) {
+        return "";
+    }
+    return getLogMessages(task->messageLog);
 }
 
 int32_t SeekInterface::ping()
@@ -115,52 +144,57 @@ int32_t SeekInterface::ping()
     return 1;
 }
 
-int32_t SeekInterface::pvalue_genes()
+int32_t SeekInterface::pvalueGenes()
 {
-    printf("pvalue_genes\n");
+    printf("pvalueGenes\n");
     return 0;
 }
 
-int32_t SeekInterface::pvalue_datasets()
+int32_t SeekInterface::pvalueDatasets()
 {
-    printf("pvalue_datasets\n");
+    printf("pvalueDatasets\n");
     return 0;
 }
 
-int32_t SeekInterface::pcl_data()
+int32_t SeekInterface::pclData()
 {
-    printf("pcl_data\n");
+    printf("pclData\n");
     return 0;
 }
 
 void SeekInterface::runSeekQueryThread(TaskInfoPtrS task) {
-    BoolFlag completionFlag(task->isComplete);
-    try {
-         /* Wait on semaphore if max queries already running,
-          *   the lock_guard will automatically free the semaphore
-          *   resource when the scope exits.
-          */
-        lock_guard<Semaphore> sem_lock(this->querySemaphore);
+    // block with completionFlag lock_guard
+    {
         /* A lock_guard will automatically set the completionFlag
          *  to true when the scope exits. This will allow other threads
          *  such as the cleanerThread to know the execution has completed.
          */
+        BoolFlag completionFlag(task->isComplete);
         lock_guard<BoolFlag> flag_lock(completionFlag);
-        /* Run the query */
-        this->SeekQueryCommon(task->seekQuery, task->seekResult);
-    } catch (named_error &err) {
-        string trace = print_exception_stack(err);
-        lock_guard tlock(task->taskMutex);
-        task->seekResult.success = false;
-        task->seekResult.statusMsg = trace;
-        task->seekResult.__isset.statusMsg = true;
-        /* (for future) can use exception_ptr to return the exception to main thread */
+
+        try {
+            /* Wait on semaphore if max queries already running,
+            *   the lock_guard will automatically free the semaphore
+            *   resource when the scope exits.
+            */
+            lock_guard<Semaphore> sem_lock(this->querySemaphore);
+            /* Run the query */
+            this->SeekQueryCommon(task->seekQuery, task->seekResult, task->messageLog);
+        } catch (named_error &err) {
+            string trace = print_exception_stack(err);
+            task->seekResult.success = false;
+            task->seekResult.status = QueryStatus::Error;
+            task->seekResult.statusMsg = trace;
+            task->seekResult.__isset.status = true;
+            task->seekResult.__isset.statusMsg = true;
+            /* (for future) can use exception_ptr to return the exception to main thread */
+        }
     }
     assert(task->isComplete = true); // set by flag lock_guard
     return;
 }
 
-void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result) {
+void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result, queue<string> &log) {
     const QueryParams &params = query.parameters;
 
     if (this->speciesSeekCentrals.find(query.species) == this->speciesSeekCentrals.end()) {
@@ -172,23 +206,23 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
     bool bSubtractGeneAvg = false;
     bool bNormPlatform = false;
     enum CSeekDataset::DistanceMeasure eDM;
-    if (params.distance_measure == "Correlation") {
+    if (params.distanceMeasure == DistanceMeasure::Correlation) {
         eDM = CSeekDataset::CORRELATION;
-    } else if (params.distance_measure == "Zscore") {
+    } else if (params.distanceMeasure == DistanceMeasure::ZScore) {
         eDM = CSeekDataset::Z_SCORE;
-    } else if (params.distance_measure == "ZscoreHubbinessCorrected") {
+    } else if (params.distanceMeasure == DistanceMeasure::ZScoreHubbinessCorrected) {
         eDM = CSeekDataset::Z_SCORE;
         bSubtractGeneAvg = true;
         bNormPlatform = true;
     } else {
-        throw argument_error(FILELINE + "Unknown distance measure: " + params.distance_measure);
+        throw argument_error(FILELINE + "Unknown distance measure: " + to_string(params.distanceMeasure));
     }
 
     // Create the output directory if needed
     filesystem::create_directory(query.outputDir);
 
     vector<string> queryGenes(query.genes);
-    if (params.use_gene_symbols == true) {
+    if (params.useGeneSymbols == true) {
         // convert query genes from sybmol to entrez
         try {
             speciesSC.convertGenesSymbolToEntrez(query.genes, queryGenes);
@@ -210,30 +244,34 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
     int networkConnection = 0;  // no direct network connection to client
 
     CSeekCentral querySC;
-    querySC.setUsingRPC(true);
+    querySC.setUsingRPC(true, log);
     bool res = querySC.InitializeQuery(query.outputDir,
                                        joinedGenes,
                                        joinedDatasets,
                                        &speciesSC,
                                        networkConnection,
-                                       params.min_query_genes_fraction,
-                                       params.min_genome_fraction,
+                                       params.minQueryGenesFraction,
+                                       params.minGenomeFraction,
                                        eDM,
                                        bSubtractGeneAvg,
                                        bNormPlatform,
                                        params.useNegativeCorrelation,
-                                       params.check_dataset_size);
+                                       params.checkDatasetSize);
     if (res == false) {
         result.success = false;
+        result.status = QueryStatus::Error;
         result.statusMsg = "Initialize query failed, check database settings";
+        result.__isset.status = true;
         result.__isset.statusMsg = true;
         querySC.Destruct();
         return;
     }
 
-    if (params.search_method == "EqualWeighting") {
+    querySC.setSimulateWeightFlag(params.simulateWeights);
+
+    if (params.searchMethod == SearchMethod::EqualWeighting) {
         querySC.EqualWeightSearch();
-    } else if (params.search_method == "OrderStatistics") {
+    } else if (params.searchMethod == SearchMethod::OrderStatistics) {
         querySC.OrderStatistics();
     } else {
         const gsl_rng_type *T;
@@ -245,15 +283,15 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
         utype FOLD = 5;
         //enum PartitionMode PART_M = CUSTOM_PARTITION;
         enum CSeekQuery::PartitionMode PART_M = CSeekQuery::LEAVE_ONE_IN;
-        if(params.search_method == "CVCUSTOM"){
+        if(params.searchMethod == SearchMethod::CVCustom){
             if (query.guideGenes.size() == 0) {
                 throw request_error(FILELINE + "No guide gene set specified for CVCustom search");
             }
             vector<vector<string> > vecGuideGeneSet;
             vecGuideGeneSet.push_back(query.guideGenes);
-            querySC.CVCustomSearch(vecGuideGeneSet, rnd, PART_M, FOLD, params.rbp_param);
+            querySC.CVCustomSearch(vecGuideGeneSet, rnd, PART_M, FOLD, params.rbpParam);
         } else { //"RBP"
-            querySC.CVSearch(rnd, PART_M, FOLD, params.rbp_param);
+            querySC.CVSearch(rnd, PART_M, FOLD, params.rbpParam);
         }
         gsl_rng_free(rnd);
     }
@@ -270,14 +308,14 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
     int numGenes = geneResults.size();
     for (int i=0; i<numGenes; i++) {
         SeekRPC::StringDoublePair pair;
-        if (params.use_gene_symbols == true) {
+        if (params.useGeneSymbols == true) {
             string entrez = speciesSC.entrezToSymbol(geneResults[i].key);
             pair.__set_name(entrez);
         } else {
             pair.__set_name(geneResults[i].key);
         }
         pair.__set_value(geneResults[i].val);
-        result.gene_scores.push_back(pair);
+        result.geneScores.push_back(pair);
     }
 
     // get the datasets and weigts and add them to the rpc result reply
@@ -287,10 +325,14 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result)
         SeekRPC::StringDoublePair pair;
         pair.__set_name(datasetResults[i].key);
         pair.__set_value(datasetResults[i].val);
-        result.dataset_weights.push_back(pair);
+        result.datasetWeights.push_back(pair);
     }
-    result.__isset.dataset_weights = true;
+    result.__isset.datasetWeights = true;
+    result.status = QueryStatus::Complete;
+    result.__isset.status = true;
     result.success = true;
+    result.statusMsg = getLogMessages(log);
+    result.__isset.statusMsg = true;
 
     querySC.Destruct();
 }
@@ -375,3 +417,23 @@ bool SeekInterface::cleanStaleTask(int64_t task_id) {
     }
     return isTimedOut;
 }
+
+string getLogMessages(queue<string> &messageLog) {
+    // TODO - implement messageLog as a thread safe queue
+    string joinedMessages;
+    while (!messageLog.empty()) {
+        string msg = messageLog.front();
+        messageLog.pop();
+        joinedMessages += msg + "\n";
+    }
+    return joinedMessages;
+}
+
+// TODO - implement a thread safe queue for message log
+// class SafeQueue:queue {
+//     // Lock for each operation
+//     private:
+//     mutex
+//     <T> pop() {} // return the next item (atomically)
+//     push(<T>) {} // push and item atomically
+// }

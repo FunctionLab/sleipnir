@@ -4,6 +4,7 @@
 #include <map>
 #include <thread>
 #include <mutex>
+#include <queue>
 #include <atomic>
 #include <shared_mutex>
 #include "seekcentral.h"
@@ -22,6 +23,7 @@ public:
     bool isComplete = false;
     time_t timestamp;
     mutex taskMutex;
+    queue<string> messageLog;
     unique_ptr<thread> _thread;
 };
 
@@ -30,16 +32,18 @@ using TaskInfoPtrS = shared_ptr<TaskInfo>;
 class SeekInterface {
   public:
     SeekInterface(vector<string> &configFiles, uint32_t maxConcurreny, uint32_t taskTimeoutSec);
-    void seek_query(const SeekQuery &query, QueryResult &result);
-    int64_t seek_query_async(const SeekQuery &query);
-    void seek_get_result(int64_t task_id, QueryResult &result);
-    string get_progress_message(int64_t task_id);
+    void seekQuery(const SeekQuery &query, QueryResult &result);
+    int64_t seekQueryAsync(const SeekQuery &query);
+    bool isQueryComplete(int64_t task_id);
+    void getQueryResult(int64_t task_id, bool block, QueryResult &result);
+    string getProgressMessage(int64_t task_id);
+    int32_t getRpcVersion();
     int32_t ping();
-    int32_t pvalue_genes();
-    int32_t pvalue_datasets();
-    int32_t pcl_data();
+    int32_t pvalueGenes();
+    int32_t pvalueDatasets();
+    int32_t pclData();
   private:
-    void SeekQueryCommon(const SeekQuery &query, QueryResult &result);
+    void SeekQueryCommon(const SeekQuery &query, QueryResult &result, queue<string> &log);
     void runSeekQueryThread(TaskInfoPtrS task);
     void runCleanTasksThread(uint32_t intervalSec);
     bool cleanStaleTask(int64_t task_id);

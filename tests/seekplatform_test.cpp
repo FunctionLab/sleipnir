@@ -60,8 +60,6 @@ protected:
       {{20, 22, 23, 24, 24, 31, 26, 30}, {31, 32, 33, 34, 38, 42, 31, 44}, {41, 42, 43, 44, 32, 31, 30, 40}},
       {{301, 302, 303, 304}, {311, 312, 313, 314}, {321, 322, 323, 324}}};
 
-  // TODO (GW) - here, uses these rawData to make two different platforms and combine them
-  // and also to make a 3rd already combined platform to compare to.
 };
 
 
