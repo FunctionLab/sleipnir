@@ -1,9 +1,13 @@
+import time
 import argparse
+import importlib
 from thrift.transport import TTransport, TSocket
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
-
-from pyseek import SeekRPC
-from pyseek.ttypes import SeekQuery, QueryParams, QueryResult
+# Since the path gen-py/seek_rpc has a hyphen in it we need to use
+#   the import_module() function rather than the usual import call
+SeekRPC = importlib.import_module('gen-py.seek_rpc.SeekRPC')
+ttypes = importlib.import_module('gen-py.seek_rpc.ttypes')
+constants = importlib.import_module('gen-py.seek_rpc.constants')
 
 host = 'localhost'
 
@@ -11,14 +15,15 @@ host = 'localhost'
 Query parameters and options:
 
 struct QueryParams {
-    string search_method: (default: "CV", "EqualWeighting", "OrderStatistics", "CVCUSTOM")
-    string distance_measure: (default: "Zscore", "ZscoreHubbinessCorrected", "Correlation")
-    double min_query_genes_fraction = 0.0;
-    double min_genome_fraction = 0.0;
-    double rbp_param = 0.99;
+    string searchMethod: SearchMethods.(default: CV, EqualWeighting, OrderStatistics, CVCustom)
+    string distanceMeasure: DistanceMeasure.(default: ZScore, ZScoreHubbinessCorrected, Correlation)
+    double minQueryGenesFraction = 0.0;
+    double minGenomeFraction = 0.0;
+    double rbpParam = 0.99;
     bool useNegativeCorrelation = false;
-    bool check_dataset_size = false;
-    bool use_gene_symbols = false;
+    bool checkDatasetSize = false;
+    bool useGeneSymbols = false;
+    bool simulateWeights = false;
 }
 
 struct SeekQuery {
@@ -37,28 +42,49 @@ def runQuery(args):
     protocol = TBinaryProtocol(transport)
     client = SeekRPC.Client(protocol)
     transport.open()
+    version = client.getRpcVersion()
+    assert version == constants.RPCVersion
 
-    params = QueryParams(distance_measure="ZscoreHubbinessCorrected",
-                         min_query_genes_fraction=0.5,
-                         min_genome_fraction=0.5,
-                         use_gene_symbols=args.useSymbols)
+    params = SeekRPC.QueryParams(
+        searchMethod = ttypes.SearchMethod.CV,
+        distanceMeasure = ttypes.DistanceMeasure.ZScoreHubbinessCorrected,
+        minQueryGenesFraction = 0.5,
+        minGenomeFraction = 0.5,
+        useGeneSymbols = args.useSymbols,
+        simulateWeights = False,
+    )
 
     genes = [gene.upper() for gene in args.genes]
-    query = SeekQuery(species=args.species, genes=args.genes, parameters=params)
+    query = SeekRPC.SeekQuery(species=args.species, genes=args.genes, parameters=params)
 
-    result = client.seek_query(query)
+    retval = -1
+    taskId = client.seekQueryAsync(query)
+    result = client.getQueryResult(taskId, block=True)
+    print(f'Status: {result.statusMsg}')
+    # Alternate non-blocking code, checking periodically if complete
+    # taskId = client.seekQueryAsync(query)
+    # while client.isQueryComplete(taskId) is False:
+    #     # get status messages
+    #     statusMsg = client.getProgressMessage(taskId)
+    #     if len(statusMsg) > 0:
+    #         print(f'Status: {statusMsg}')
+    #     time.sleep(0.1)
+    # result = client.getQueryResult(taskId, block=True)
     if result.success is True:
-        for i, gs in enumerate(result.gene_scores):
+        for i, gs in enumerate(result.geneScores):
             print(f'gene: {gs.name}, {gs.value}')
-            if i > 100: break
+            if i > 10: break
 
-        for i, ds in enumerate(result.dataset_weights):
+        for i, ds in enumerate(result.datasetWeights):
             print(f'dset: {ds.name}, {ds.value}')
-            if i > 100: break
+            if i > 10: break
+        retval = 0
     else:
         print(f'query error: {result.statusMsg}')
+        retval = -1
 
     transport.close()
+    return retval
 
 
 if __name__ == "__main__":
@@ -78,8 +104,8 @@ if __name__ == "__main__":
         exit(-1)
     args.genes = args.genes.split(',')
 
-    runQuery(args)
-    exit(0)
+    retval = runQuery(args)
+    exit(retval)
 
 
 #species = 'human'

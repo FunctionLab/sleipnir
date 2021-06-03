@@ -373,7 +373,7 @@ int main(int iArgs, char **aszArgs) {
         //search parameters
         string strSearchParameter;
         //format: _ delimited
-        //[0]: search_method ("RBP", "OrderStatistics", or "EqualWeighting", or "CVCUSTOM")
+        //[0]: searchMethod ("RBP", "OrderStatistics", or "EqualWeighting", or "CVCUSTOM")
         //[1]: rbp_p
         //[2]: minimum fraction of query required
         //[3]: minimum fraction of genome required
