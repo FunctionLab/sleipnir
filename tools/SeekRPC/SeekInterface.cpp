@@ -283,7 +283,7 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result,
         utype FOLD = 5;
         //enum PartitionMode PART_M = CUSTOM_PARTITION;
         enum CSeekQuery::PartitionMode PART_M = CSeekQuery::LEAVE_ONE_IN;
-        if(params.searchMethod == SearchMethod::CVCustom){
+        if (params.searchMethod == SearchMethod::CVCustom){
             if (query.guideGenes.size() == 0) {
                 throw request_error(FILELINE + "No guide gene set specified for CVCustom search");
             }
