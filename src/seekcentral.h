@@ -418,7 +418,7 @@ namespace Sleipnir {
         /*!
          * \brief When using RPC communication, status messages will accumulate in the log queue
          */
-        void setUsingRPC(bool val, queue<string> &log) {
+        void setUsingRPC(bool val, ThreadSafeQueue<string> &log) {
             m_useRPC = val;
             m_rpcLog = &log;
         }
@@ -578,7 +578,7 @@ namespace Sleipnir {
         int m_iClient;
         bool m_bEnableNetwork;
         bool m_useRPC;
-        queue<string> *m_rpcLog;
+        ThreadSafeQueue<string> *m_rpcLog;
         //bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
         bool m_bNegativeCor;
 
