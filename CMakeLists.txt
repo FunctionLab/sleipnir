@@ -176,8 +176,7 @@ set(SLEIPNIR_SOURCES
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Xpreprocessor -fopenmp)
-    set(LIBOMP -lomp)
-    # find_library(LIBOMP libomp.a)
+    find_library(LIBOMP libomp.a)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-fopenmp)
     add_link_options(-lgslcblas)

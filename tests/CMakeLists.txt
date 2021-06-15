@@ -10,7 +10,8 @@ add_executable(
 )
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    list(APPEND EXTRA_LIBRARIES omp)
+    find_library(LIBOMP libomp.a)
+    list(APPEND EXTRA_LIBRARIES ${LIBOMP})
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     list(APPEND EXTRA_LIBRARIES stdc++fs gomp)
 endif()
