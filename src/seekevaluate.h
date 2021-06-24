@@ -47,6 +47,11 @@ namespace Sleipnir {
         PairedResult(K _key, V _val) : key(_key), val(_val) {}
 
         bool operator<(const PairedResult &item) const {
+            /* This less-than operator is generally used for sorting vectors.
+             * A return value of true implies that they are out of order.
+             * But when the two are equal we need to return false or we can get
+             * into an infinite loop where it keeps swapping the two equal values.
+             */
             if (val == item.val && key == item.key) {
                 return false;
             }

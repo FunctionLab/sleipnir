@@ -122,7 +122,7 @@ class TestSeekRPC:
         datasets = ['GSE45584.GPL6480', 'GSE24468.GPL570', 'GSE3744.GPL570']
         query = SeekQuery(species='sampleBC', genes=genes, datasets=datasets, parameters=params)
 
-        # Do and async query using isQueryComplete to test
+        # Do an async query using isQueryComplete to test
         task_id = client.seekQueryAsync(query)
         while True:
             complete = client.isQueryComplete(task_id)
@@ -135,7 +135,7 @@ class TestSeekRPC:
         assert len(result.geneScores) > 0
         assert len(result.datasetWeights) == 3  # because query specified 3 datasets
 
-        # Do and async query using non-blocking getQueryResult()
+        # Do an async query using non-blocking getQueryResult()
         genes = ['5884', '9575', '51343', '57805', '29980', '8091', '6154', '51776']
         query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
         task_id = client.seekQueryAsync(query)
@@ -179,7 +179,7 @@ class TestSeekRPC:
         result = client.seekQuery(query)
         assert result.success is True
         assert len(result.geneScores) > 0
-        assert len(result.datasetWeights) > 0  # because no simulate weights
+        assert len(result.datasetWeights) > 0  # because simulate weights set
 
         # Run OrderStatistics without simulateWeights
         params = QueryParams(searchMethod=SearchMethod.OrderStatistics,
@@ -197,4 +197,4 @@ class TestSeekRPC:
         result = client.seekQuery(query)
         assert result.success is True
         assert len(result.geneScores) > 0
-        assert len(result.datasetWeights) > 0  # because no simulate weights
+        assert len(result.datasetWeights) > 0  # because simulate weights set

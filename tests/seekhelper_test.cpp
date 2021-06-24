@@ -176,6 +176,11 @@ TEST_F(SeekHelperTest, loadTwoColumnTextFile)
     ASSERT_EQ(vals.size(), 4);
 }
 
+TEST_F(SeekHelperTest, openmpEnabledTest) {
+    uint32_t thread_count = omp_enabled_test();
+    ASSERT_EQ(thread_count, 4);
+}
+
 TEST_F(SeekHelperTest, threadSafeQueueTest) {
     ThreadSafeQueue<string> msgLog;
     EXPECT_THROW(msgLog.dequeue(), state_error);

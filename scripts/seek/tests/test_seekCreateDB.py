@@ -14,6 +14,7 @@ import seekUtils as sutils
 sleipnirDir = os.path.dirname(os.path.dirname(seekScriptsDir))
 sleipnirBinDir = os.path.join(sleipnirDir, 'Debug')
 use_tempfile = False
+testPort = 9123
 
 class TestSeekCreateDB:
     temp_dir = None
@@ -90,10 +91,10 @@ class TestSeekCreateDB:
         subprocess.run(cmd, shell=True)
         seekrpcResultsFile = os.path.join(resultsDir, 'seekRPC_results.txt')
         # Run the server
-        cmd = f'{sleipnirBinDir}/SeekRPC -c {mockDbDir}/mockDb-config.toml'
+        cmd = f'{sleipnirBinDir}/SeekRPC -p {testPort} -c {mockDbDir}/mockDb-config.toml'
         SeekServerProc = subprocess.Popen(cmd, shell=True)
         time.sleep(.5)
-        cmd = f'{sleipnirBinDir}/SeekRPCClient -s mockDB ' \
+        cmd = f'{sleipnirBinDir}/SeekRPCClient -p {testPort} -s mockDB ' \
               f'-q {queryFile} -o {seekrpcResultsFile}'
         clientProc = subprocess.Popen(cmd, shell=True)
         clientProc.wait()

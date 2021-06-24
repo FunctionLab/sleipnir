@@ -33,6 +33,8 @@ if [ $OPTIND -eq 1 ]; then
   exit -1
 fi
 
+source $seek_path/seek_env
+
 if [ -z $seek_bin ]; then
   seek_bin="$seek_path/bin"
 fi
@@ -41,6 +43,13 @@ if [ -z $goldstd_path ]; then
   # goldstd_path is where the gold standard expected results will be unpacked for reference
   goldstd_path=/tmp/$USER/$test_name
 fi
+
+if [ -z $GENE_MAP_FILE ]; then
+  # gene_map_file env var should be set in seek_env
+  GENE_MAP_FILE="gene_map.txt"
+fi
+
+gene_map_full_path="$seek_path/$GENE_MAP_FILE"
 
 output_file=$output_dir/$test_name"_config.toml"
 
@@ -63,7 +72,7 @@ echo "# full path to known-good output files and gold standard files for the tes
 echo "goldStdPath = \"$goldstd_path/results\"" >> $output_file
 
 echo "# file with gene map" >> $output_file
-echo "geneMap = \"$seek_path/gene_map.txt\"" >> $output_file
+echo "geneMap = \"$gene_map_full_path\"" >> $output_file
 
 echo "# file with list of genes to include when evaluating results" >> $output_file
 echo "geneFile = \"$output_dir/include_genes.txt\"" >> $output_file
@@ -77,11 +86,11 @@ echo "recallPct = 0.1" >> $output_file
 echo "# Max diff between the test and gold standard results" >> $output_file
 echo "maxPctDiff = 10" >> $output_file
 
-if [ ! -f $seek_path/gene_map.txt ]; then
-  echo "Error: gene_map.txt file not found: $seek_path/gene_map.txt"
+if [ ! -f $gene_map_full_path ]; then
+  echo "Error: gene_map.txt file not found: $gene_map_full_path"
   exit -1
 fi
 # create the include genes by keeping the second column of gene_map.txt and 
 #  changing newlines to spaces.
-cut -f2 $seek_path/gene_map.txt | tr '\n' ' ' > $output_dir/include_genes.txt
+cut -f2 $gene_map_full_path | tr '\n' ' ' > $output_dir/include_genes.txt
 
