@@ -70,11 +70,24 @@ if __name__ == "__main__":
             sys.exit(-1)
 
     seekMinerBin = os.path.join(args.seekbin, 'SeekMiner')
-    dbDir = args.seekdir
+    dataDir = args.seekdir
 
     bashEnvironmentFile = os.path.join(args.seekdir, 'seek_env')
     print('Load bash environment file {}'.format(bashEnvironmentFile))
     load_envbash(bashEnvironmentFile)
+    dbDir = os.environ.get('DB')
+    platDir = os.environ.get('PLAT')
+    prepDir = os.environ.get('PREP')
+    sinfoDir = os.environ.get('SINFO')
+    if None in (dbDir, platDir, prepDir, sinfoDir):
+        print('Please set seek_env with the DB directory names')
+        sys.exit(-1)
+    dsetFile = os.environ.get('DSET_FILE')
+    geneMapFile = os.environ.get('GENE_MAP_FILE')
+    dsetSizeFile = os.environ.get('DSET_SIZE_FILE')
+    if None in (dsetFile, geneMapFile, dsetSizeFile):
+        print('Please set seek_env with the dataset file names')
+        sys.exit(-1)
 
     goldStdDir = args.known_good_results
     queryfile = os.path.join(goldStdDir, 'param_test.query.txt')
@@ -91,11 +104,11 @@ if __name__ == "__main__":
         outfile = os.path.join(resultdir, "seekminer.out")
         utils.checkAndMakePath(resultdir)
         utils.file_truncate(outfile)
-        cmd = f"{seekMinerBin} -x {dbDir}/dataset.map -i {dbDir}/gene_map.txt " \
-              f"-d {dbDir}/db.combined -p {dbDir}/prep.combined -P {dbDir}/platform.combined " \
-              f"-Q {dbDir}/quant2 -u {dbDir}/sinfo.combined " \
+        cmd = f"{seekMinerBin} -x {dataDir}/{dsetFile} -i {dataDir}/{geneMapFile} " \
+              f"-d {dataDir}/{dbDir} -p {dataDir}/{prepDir} -P {dataDir}/{platDir} " \
+              f"-Q {dataDir}/quant2 -u {dataDir}/{sinfoDir} " \
               f"-n 1000 -b 200 -q {queryfile} " \
-              f"-R {dbDir}/dataset_size " \
+              f"-R {dataDir}/{dsetSizeFile} " \
               f"-o {resultdir} -O {params} "
         utils.file_appendline(outfile, cmd)
         if args.verbose:

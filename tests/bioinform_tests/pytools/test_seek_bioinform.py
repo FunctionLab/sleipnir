@@ -64,11 +64,26 @@ if __name__ == "__main__":
 
     seekMinerBin = os.path.join(cfg.binPath, 'SeekMiner')
     seekEvaluatorBin = os.path.join(cfg.binPath, 'SeekEvaluator')
-    dbDir = cfg.seekPath
+    dataDir = cfg.seekPath
 
     bashEnvironmentFile = os.path.join(cfg.seekPath, 'seek_env')
     print('Load bash environment file {}'.format(bashEnvironmentFile))
     load_envbash(bashEnvironmentFile)
+    dbDir = os.environ.get('DB')
+    platDir = os.environ.get('PLAT')
+    prepDir = os.environ.get('PREP')
+    sinfoDir = os.environ.get('SINFO')
+    if None in (dbDir, platDir, prepDir, sinfoDir):
+        print('Please set seek_env with the DB directory names')
+        sys.exit(-1)
+    dsetFile = os.environ.get('DSET_FILE')
+    geneMapFile = os.environ.get('GENE_MAP_FILE')
+    dsetSizeFile = os.environ.get('DSET_SIZE_FILE')
+    if None in (dsetFile, geneMapFile, dsetSizeFile):
+        print('Please set seek_env with the dataset file names')
+        sys.exit(-1)
+
+    assert cfg.geneMap == os.path.join(dataDir, geneMapFile)
 
     # The query files have the query strings to run (multiple queries per file
     #   one query per line), located in query path
@@ -88,12 +103,12 @@ if __name__ == "__main__":
         outfile = os.path.join(resultDir, "seekminer.out")
         utils.file_truncate(outfile)
         print('SeekMiner run query {}'.format(queryName))
-        seekMinerCmd = f'time {seekMinerBin} -x {dbDir}/dataset.map -i {dbDir}/gene_map.txt ' \
-                       f'-d {dbDir}/db.combined -p {dbDir}/prep.combined ' \
-                       f'-P {dbDir}/platform.combined -Q {dbDir}/quant2 ' \
-                       f'-u {dbDir}/sinfo.combined -n 1000 -b 200  ' \
+        seekMinerCmd = f'time {seekMinerBin} -x {dataDir}/{dsetFile} -i {dataDir}/{geneMapFile} ' \
+                       f'-d {dataDir}/{dbDir} -p {dataDir}/{prepDir} ' \
+                       f'-P {dataDir}/{platDir} -Q {dataDir}/quant2 ' \
+                       f'-u {dataDir}/{sinfoDir} -n 1000 -b 200  ' \
                        f'-V CV -I LOI -z z_score -m -M -O ' \
-                       f'-R {dbDir}/dataset_size ' \
+                       f'-R {dataDir}/{dsetSizeFile} ' \
                        f'-q {queryFile} -o {resultDir} '
         utils.file_appendline(outfile, seekMinerCmd)
         if args.verbose:

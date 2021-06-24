@@ -287,3 +287,16 @@ bool Semaphore::try_wait() {
 }
 
 
+#include <omp.h>
+uint32_t omp_enabled_test() {
+    uint32_t thread_count = 0;
+    #pragma omp parallel num_threads(4)
+    {
+        #pragma omp critical
+        {
+            thread_count++;
+            std::cout << "tid = " << omp_get_thread_num() << std::endl;
+        }
+    }
+    return thread_count;
+}
