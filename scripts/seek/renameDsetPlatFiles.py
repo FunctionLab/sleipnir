@@ -20,5 +20,8 @@ if __name__ == "__main__":
             name, plat, ext = line.split('.', 3)
             src = f'{name}.{ext}'
             dst = line
+            if not os.path.exists(src):
+                print(f'Skipping missing file: {src}')
+                continue
             print(f'mv {src} {dst}')
             os.rename(src, dst)

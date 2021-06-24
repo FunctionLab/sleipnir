@@ -51,6 +51,8 @@ if __name__ == "__main__":
                         help="directory of .pcl or .pcl.bin files to parse, can specify -d multiple times for multiple directories")
     parser.add_argument('--geneInfoFile', '-g', default=None,
                         help="Trim set of genes to protein-encoding and rRNa from this list")
+    parser.add_argument('--geneLimitList', '-l', default=None,
+                        help="Limit set of genes to ones in this list")
     parser.add_argument('--pcl2bin', '-p', default=None, required=True,
                         help="path to the pcl2bin program")
     parser.add_argument('--outfile', '-o', default=None,
@@ -96,6 +98,13 @@ if __name__ == "__main__":
             if category in ('protein-coding', 'rRNA'):
                 filteredList.append(gene)
         gene_list = filteredList
+
+    if args.geneLimitList is not None:
+        with open(args.geneLimitList) as fp:
+            limitGenes = fp.read().splitlines()
+        filteredList = set(limitGenes).intersection(gene_list)
+        gene_list = list(filteredList)
+        gene_list.sort(key=int)
 
     # outpult the results
     fp = sys.stdout
