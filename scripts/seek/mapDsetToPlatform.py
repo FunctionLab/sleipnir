@@ -70,21 +70,27 @@ chip_plat_map = {
     'HT_HG-U133_Plus_PM': 'GPL13158',
     'Illumina_HumanHT-12_V3.0': ' GPL6947',
     'U133AAofAv2':  'GPL4685',
+    'ZebGene-1_1-st': 'GPL18378',
 }
 
 def getGsePlatform(metadata):
     platform = metadata['annotations'][0]['data']['platform_id'][0]
     return platform
 
-def getE_Platform(metadata):
-    chip = metadata['samples'][0]['platform_name']
-    result = re.search('\[(.*)\]', chip)
+def getE_Platform(platformName):
+    # platformName = metadata['samples'][0]['platform_name']
+    result = re.search('\[(.*)\]', platformName)
     if result is not None:
         chip = result.group(1)
-    platform = chip_plat_map[chip]
-    # else:
-    #     raise Exception('chip string not found')
-    return platform
+        platform = chip_plat_map.get(chip)
+        if platform is None:
+            print(f'No platformId map for \'{chip}\'')
+            platform = 'Missing'
+        return platform
+    else:
+        print(f'No platformName in for \'{platformName}\'')
+        # raise Exception('chip string not found')
+        return 'Missing'
 
 
 if __name__ == "__main__":
@@ -111,7 +117,8 @@ if __name__ == "__main__":
                     if file.startswith("GSE"):
                         platform = getGsePlatform(metadata)
                     elif file.startswith("E-"):
-                        platform = getE_Platform(metadata)
+                        platName = metadata['samples'][0]['platform_name']
+                        platform = getE_Platform(platName)
                     else:
                         print(f'Error: Filename {file} doesnt match expected pattern')
                 except Exception as err:

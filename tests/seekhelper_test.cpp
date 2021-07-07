@@ -180,3 +180,13 @@ TEST_F(SeekHelperTest, openmpEnabledTest) {
     uint32_t thread_count = omp_enabled_test();
     ASSERT_EQ(thread_count, 4);
 }
+
+TEST_F(SeekHelperTest, threadSafeQueueTest) {
+    ThreadSafeQueue<string> msgLog;
+    EXPECT_THROW(msgLog.dequeue(), state_error);
+    ASSERT_EQ(msgLog.size(), 0);
+    msgLog.enqueue("element 1");
+    ASSERT_EQ(msgLog.size(), 1);
+    ASSERT_TRUE(msgLog.dequeue() == "element 1");
+    ASSERT_EQ(msgLog.size(), 0);
+}

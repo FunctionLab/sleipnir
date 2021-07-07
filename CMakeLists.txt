@@ -11,7 +11,7 @@ if((NOT CMAKE_BUILD_TYPE) OR (${CMAKE_BUILD_TYPE} MATCHES Release))
     add_compile_options(-O3)
 elseif(${CMAKE_BUILD_TYPE} MATCHES Debug)
     message(STATUS "Generating debug config")
-    add_compile_options(-O0)
+    add_compile_options(-g)
 endif()
 
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")

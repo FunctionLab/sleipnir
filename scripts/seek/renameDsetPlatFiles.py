@@ -8,7 +8,7 @@ Input is a file with list of the final names to create
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--filelist', '-l', default=None,
-                        help="directory of metadata files to parse")
+                        help="Text file with datasets to copy")
     args = parser.parse_args()
 
     if args.filelist is None:
