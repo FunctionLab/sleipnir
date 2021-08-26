@@ -180,3 +180,26 @@ TEST_F(SeekHelperTest, openmpEnabledTest) {
     uint32_t thread_count = omp_enabled_test();
     ASSERT_EQ(thread_count, 4);
 }
+
+TEST_F(SeekHelperTest, LRUCacheTest) {
+    int val;
+    bool ret;
+    LRUCache <string, int> cache(5);
+    cache.set("one", 1);
+    cache.set("two", 2);
+    cache.set("three", 3);
+    cache.set("four", 4);
+    cache.set("five", 5);
+
+    ret = cache.get("five", val);
+    ASSERT_EQ(ret, true);
+    ASSERT_EQ(val, 5);
+    // cout << "got " << val << endl;
+
+    cache.set("six", 6);
+
+    ret = cache.get("one", val);
+    // should have been evicted when 6 was added
+    ASSERT_EQ(ret, false);
+
+}

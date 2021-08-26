@@ -28,6 +28,7 @@ SeekServer Additional DB Settings File Example:
 START
 SINFO_DIR       /data/db_small/sinfo
 GVAR_DIR        NA
+PCL_DIR         data/db_small/pcl
 PREP_DIR        data/db_small/prep
 PLATFORM_DIR    data/db_small/plat
 DB_DIR          data/db_small/db

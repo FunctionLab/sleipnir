@@ -46,6 +46,7 @@ namespace Sleipnir {
         m_vecstrAllQuery.clear();
         m_seekPlatforms.clear();
         m_vecstrDP.clear();
+        m_mapstrintDatasetDB.clear();
         m_mapstrintDataset.clear();
         m_mapstrintGene.clear();
         m_searchdsetMap.clear();
@@ -107,6 +108,7 @@ namespace Sleipnir {
         m_vecstrSearchDatasets.clear();
         m_mapstrstrDatasetPlatform.clear();
         m_vecstrDP.clear();
+        m_mapstrintDatasetDB.clear();
         m_mapstrintDataset.clear();
         m_mapstrintGene.clear();
 
@@ -322,6 +324,9 @@ namespace Sleipnir {
 
         m_mapstrstrDatasetPlatform.insert(src->m_mapstrstrDatasetPlatform.begin(),
                                           src->m_mapstrstrDatasetPlatform.end());
+
+        m_mapstrintDatasetDB.insert(src->m_mapstrintDatasetDB.begin(),
+                                          src->m_mapstrintDatasetDB.end());
 
         m_seekPlatforms.copy(src->m_seekPlatforms);
     
@@ -645,12 +650,12 @@ namespace Sleipnir {
             string errStr = "Nibble integration is not supported! Please use a non-nibble CDatabase";
             throw config_error(FILELINE + errStr);
         }
-        if (settings.dbs[0]->dsetSizeFile == "NA")
-        {
-            // Must be set so the query request can decide whether to use check dataset size
-            string errStr = "Dataset size file is missing";
-            throw config_error(FILELINE + errStr);
-        }
+        // if (settings.dbs[0]->dsetSizeFile == "NA")
+        // {
+        //     // Must be set so the query request can decide whether to use check dataset size
+        //     string errStr = "Dataset size file is missing";
+        //     throw config_error(FILELINE + errStr);
+        // }
         if (settings.dbs[0]->gvarDir != "NA")
         {
             bVariance = true;
@@ -788,6 +793,7 @@ namespace Sleipnir {
 
         m_vecstrDatasets.clear();
         m_vecstrDP.clear();
+        m_mapstrintDatasetDB.clear();
         m_mapstrstrDatasetPlatform.clear();
         m_mapstrintDataset.clear();
 
@@ -821,6 +827,7 @@ namespace Sleipnir {
                 m_vecstrDatasets.push_back(vD[j]);
                 m_vecDBDataset[i].push_back(vD[j]);
                 m_vecstrDP.push_back(vDP[j]);
+                m_mapstrintDatasetDB[vD[j]] = (int) i;
             }
 
             if (vecDBSetting[i]->dsetSizeFile != "NA") {
@@ -863,12 +870,14 @@ namespace Sleipnir {
         m_iGenes = m_vecstrGenes.size();
 
         for (i = 0; i < vecDBSetting.size(); i++) {
-            bool res;
-            res = m_vecDB[i]->Open(vecDBSetting[i]->dbDir,
-                                   m_vecstrGenes, m_vecDBDataset[i].size(),
-                                   vecDBSetting[i]->GetNumDB());
-            if (res == false) {
-                return false;
+            if (vecDBSetting[i]->dbDir != "NA") { 
+                bool res;
+                res = m_vecDB[i]->Open(vecDBSetting[i]->dbDir,
+                                    m_vecstrGenes, m_vecDBDataset[i].size(),
+                                    vecDBSetting[i]->GetNumDB());
+                if (res == false) {
+                    return false;
+                }
             }
         }
 

@@ -18,6 +18,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     PLATFORM_DIR  = "/path/db1/plat"
     SINFO_DIR     = "/path/db1/sinfo"
     GVAR_DIR      = "/path/db1/gvar"
+    PCL_DIR      = "/path/db1/pcl"
     QUANT_FILE    = "/path/db1/quant2"
     DSET_MAP_FILE = "/path/db1/dataset.map"
     GENE_MAP_FILE = "/path/db1/gene_map.txt"
@@ -34,7 +35,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     GENE_SYMBOL_FILE = "/path/db2/gene_symbols.txt"
     QUANT_FILE    = "/path/db2/quant2"
     SINFO_DIR     = "/path/db2/sinfo"
-    GVAR_DIR      = "/path/db2/gvar"
+    PCL_DIR      = "/path/db2/pcl"
     DSET_SIZE_FILE = "/path/db2/dataset_size"
     NUMBER_OF_DB  = 1000
 ####

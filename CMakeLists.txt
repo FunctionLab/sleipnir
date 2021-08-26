@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.14.5)
 project(sleipnir)
 
+message(STATUS "SOURCE DIR: " ${CMAKE_CURRENT_SOURCE_DIR})
+message(STATUS "ROOT DIR: " ${ROOT})
+
 add_link_options(-lpthread)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -11,7 +14,7 @@ if((NOT CMAKE_BUILD_TYPE) OR (${CMAKE_BUILD_TYPE} MATCHES Release))
     add_compile_options(-O3)
 elseif(${CMAKE_BUILD_TYPE} MATCHES Debug)
     message(STATUS "Generating debug config")
-    add_compile_options(-O0)
+    add_compile_options(-g)
 endif()
 
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
@@ -411,6 +414,8 @@ list(APPEND SLEIPNIR_TOOLS
     PCL2Bin
     PCLPlotter
     PCLServer
+    PclRPCServer
+    PclRpcClient
     Randomizer
     SMRF
     SVDer
@@ -465,13 +470,36 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
             tools/SeekRPC/gen-cpp/SeekRPC.cpp
             )
         list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
-    else ()
+    elseif (${TOOL} STREQUAL PclRPCServer)
         add_executable(${TOOL}
+            tools/PCLServer/PclRPCServer.cpp
+            tools/PCLServer/PclInterface.cpp
+            tools/PCLServer/PclServer.cpp
+            tools/PCLServer/gen-cpp/pcl_rpc_constants.cpp
+            tools/PCLServer/gen-cpp/pcl_rpc_types.cpp
+            tools/PCLServer/gen-cpp/PclRPC.cpp
+            )
+        list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
+    elseif (${TOOL} STREQUAL PclRpcClient)
+        add_executable(${TOOL}
+            tools/PCLServer/PclRpcClient.cpp
+            tools/PCLServer/gen-cpp/pcl_rpc_constants.cpp
+            tools/PCLServer/gen-cpp/pcl_rpc_types.cpp
+            tools/PCLServer/gen-cpp/PclRPC.cpp
+            )
+        list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
+    else ()
+        list(APPEND ${TOOL}_SOURCES
             tools/${TOOL}/${TOOL}.cpp
-            tools/${TOOL}/cmdline.c)
-	  if (EXISTS tools/${TOOL}/stdafx.cpp)
-            add_executable(${TOOL} tools/${TOOL}/stdafx.cpp)
-	  endif()
+            tools/${TOOL}/cmdline.c
+        )
+        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/stdafx.cpp)
+            list(APPEND ${TOOL}_SOURCES tools/${TOOL}/stdafx.cpp)
+        endif()
+        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/${TOOL}Main.cpp)
+            list(APPEND ${TOOL}_SOURCES tools/${TOOL}/${TOOL}Main.cpp)
+        endif()
+        add_executable(${TOOL} ${${TOOL}_SOURCES})
     endif ()
     add_dependencies(${TOOL} sleipnir)
     target_include_directories(${TOOL} PUBLIC ${EXTRA_INCLUDES})

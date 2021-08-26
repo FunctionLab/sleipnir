@@ -435,6 +435,8 @@ namespace Sleipnir {
 
     void PrintSettings();
 
+    void *do_query(void *th_arg);
+
     private:
         //network mode
         bool EnableNetwork(const int &);
@@ -477,6 +479,7 @@ namespace Sleipnir {
 
         bool Display(CSeekQuery &, vector <AResultFloat> &);
 
+    public:
         /* Gene, Dataset, and Platform Mapping*/
         vector <string> m_vecstrGenes;
         vector <string> m_vecstrDatasets;
@@ -484,11 +487,18 @@ namespace Sleipnir {
         map <string, string> m_mapstrstrDatasetPlatform;
         map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
         map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
+        map<string, int> m_mapstrintDatasetDB; // map from dataset name to DB index containing that dataset
         map <string, string> m_geneEntrezToSymbolMap;
         map <string, string> m_geneSymbolToEntrezMap;
         vector <vector<string>> m_vecstrSearchDatasets;
         vector<CSeekIntIntMap *> m_searchdsetMap;
+        vector<CSeekDBSetting *> m_vecDBSetting; //DBSetting
+        /* Platform */
+        SeekPlatforms m_seekPlatforms;
+        /* Correlation discretization */
+        vector<float> m_quant;
 
+    private:
         /* Datasets */
         vector<CSeekDataset *> m_vc;
 
@@ -509,8 +519,6 @@ namespace Sleipnir {
          Organized per thread */
         utype ***m_rData;
 
-        /* Correlation discretization */
-        vector<float> m_quant;
 
         /* Correlation transformation options */
         bool m_bSubtractGeneAvg;
@@ -546,9 +554,6 @@ namespace Sleipnir {
         vector <vector<string>> m_vecstrAllQuery;
         vector <CSeekQuery> m_Query;
 
-        /* Platform */
-        SeekPlatforms m_seekPlatforms;
-
         //CDatabase reference
         vector<CDatabase *> m_vecDB;
         vector <vector<string>> m_vecDBDataset; //A list of dsets in each CDatabase
@@ -582,7 +587,6 @@ namespace Sleipnir {
         //bool m_bSharedDB; //if m_DB is shared between multiple CSeekCentral instances
         bool m_bNegativeCor;
 
-        vector<CSeekDBSetting *> m_vecDBSetting; //DBSetting
         bool m_useNibble;
 
         float m_DEFAULT_NA;
