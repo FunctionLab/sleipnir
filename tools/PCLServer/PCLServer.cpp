@@ -19,16 +19,8 @@
 * Olga G. Troyanskaya.
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
-#include "stdafx.h"
-#include "cmdline.h"
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <list>
-#include <cassert>
+#include <filesystem>
+#include <unistd.h>
 #include "seekerror.h"
 #include "PCLServer.h"
 

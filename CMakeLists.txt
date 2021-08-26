@@ -414,7 +414,7 @@ list(APPEND SLEIPNIR_TOOLS
     PCL2Bin
     PCLPlotter
     PCLServer
-    PclRPCServer
+    PclRpcServer
     PclRpcClient
     Randomizer
     SMRF
@@ -470,11 +470,11 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
             tools/SeekRPC/gen-cpp/SeekRPC.cpp
             )
         list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
-    elseif (${TOOL} STREQUAL PclRPCServer)
+    elseif (${TOOL} STREQUAL PclRpcServer)
         add_executable(${TOOL}
-            tools/PCLServer/PclRPCServer.cpp
+            tools/PCLServer/PclRpcServer.cpp
             tools/PCLServer/PclInterface.cpp
-            tools/PCLServer/PclServer.cpp
+            tools/PCLServer/PCLServer.cpp
             tools/PCLServer/gen-cpp/pcl_rpc_constants.cpp
             tools/PCLServer/gen-cpp/pcl_rpc_types.cpp
             tools/PCLServer/gen-cpp/PclRPC.cpp
