@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 #include <getopt.h>
 #include <sstream>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/transport/TSocket.h>
@@ -22,6 +25,7 @@ struct Args
     string species;
     vector<string> genes;
     vector<string> datasets;
+    string outputFile;
     uint32_t port = 9010;
     bool verbose = false;
 };
@@ -35,12 +39,13 @@ bool parseArgs(int argc, char **argv, Args &args)
         {"species", required_argument, 0, 's'},
         {"genes", required_argument, 0, 'g'},
         {"datasets", required_argument, 0, 'd'},
+        {"output", required_argument, 0, 'o'},
         {"port", required_argument, 0, 'p'},
         {"verbose", no_argument, 0, 'v'},
         {0, 0, 0, 0}};
     int opt = 0;
     int long_index = 0;
-    while ((opt = getopt_long(argc, argv, "s:g:d:p:v",
+    while ((opt = getopt_long(argc, argv, "s:g:d:o:p:v",
                               long_options, &long_index)) != -1)
     {
         switch (opt)
@@ -70,6 +75,9 @@ bool parseArgs(int argc, char **argv, Args &args)
             }
         }
         break;
+        case 'o':
+            args.outputFile = optarg;
+            break;
         case 'p':
             args.port = atoi(optarg);
             break;
@@ -156,6 +164,18 @@ int main(int argc, char **argv)
                     offset++;
                 }
             }
+        }
+        if (!args.outputFile.empty()) {
+            // output file is specified
+            using boost::algorithm::join;
+            using boost::adaptors::transformed;
+            std::ofstream outFile;
+            outFile.open(args.outputFile, ofstream::out | ofstream::trunc);
+            auto tostr = static_cast<std::string(*)(double)>(std::to_string);
+            std::string joinedVals =  join(result.geneExpressions | transformed(tostr), "\n");
+            outFile << joinedVals;
+            outFile.close();
+
         }
 
     } catch (TException &tx) {

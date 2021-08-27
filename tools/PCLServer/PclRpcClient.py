@@ -66,6 +66,11 @@ def runQuery(args):
     retval = -1
     result = client.pclQuery(pclArgs)
     if result.success is True:
+        # Output to file if requested
+        if args.outfile is not None:
+            with open(args.outfile, "w") as fp:
+                fp.write("\n".join(str(round(item, 6)) for item in result.geneExpressions))
+        # Print to command line
         numGenes = len(args.genes)
         offset = 0;
         for i, numSamples in enumerate(result.datasetSizes):
@@ -91,6 +96,8 @@ if __name__ == "__main__":
                            help='list of genes to query')
     argParser.add_argument('--datasets', '-d', default=None, type=str,
                            help='list of datasets to query')
+    argParser.add_argument('--outfile', '-o', default=None, type=str,
+                           help='filename to output results')
     argParser.add_argument('--port', '-p', default=9010, type=int,
                            help='server port')
     args = argParser.parse_args()
