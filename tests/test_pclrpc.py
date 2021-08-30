@@ -142,7 +142,7 @@ class TestSeekRPC:
             datasets=datasets,
             settings=settings)
         result = TestSeekRPC.runQuery(client, pclArgs)
-        TestSeekRPC.checkVals(result.queryCoexpressions, "pclTestQueryCoexpr.txt")
+        TestSeekRPC.checkVals(result.queryCoexpressions, "pclTestQueryCoExpr.txt")
 
 # Test that uses different dataset names, like with .pcl, .pcl.bin and no pcl.
 # Also within settings file specifying pcl dir as /pcl and /pclbin
