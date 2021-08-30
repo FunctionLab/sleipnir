@@ -39,7 +39,7 @@ class TestSeekRPC:
         pclRpcConfigFile = os.path.join(sampleBcDir, 'sampleBC-config.toml')
         # modify config file paths, sub '/path' with path to sampleBcDir
         sampleBcDirEscaped = sampleBcDir.replace('/', '\\/')
-        cmd = f"sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {pclRpcConfigFile}"
+        cmd = f"sed -i -e 's/\\/path/{sampleBcDirEscaped}/' {pclRpcConfigFile}"
         subprocess.run(cmd, shell=True)
         # Run the server
         cmd = f'{sleipnirBin}/PclRpcServer -c {pclRpcConfigFile} -p {testPort}'
