@@ -55,6 +55,21 @@ class TestSeekRPC:
             if cls.temp_dir is not None:
                 cls.temp_dir.cleanup()
 
+    def runQuery(client, pclArgs):
+        result = client.pclQuery(pclArgs)
+        assert result.success is True
+        assert len(result.datasetSizes) > 0
+        return result
+
+    def checkVals(vals, expectedOutputFile):
+        # Read in expected result from test_input file
+        with open(os.path.join(testInputsDir, expectedOutputFile)) as fp:
+            lines = fp.readlines()
+        expectedVals = [float(item) for item in lines]
+        assert np.allclose(vals, expectedVals, atol=1e-6)
+        print("Success!")
+
+
     def test_queries(self):
         # Run the various example tests againt the PclRPC server and verify
         #   we get the expected results.
@@ -70,21 +85,88 @@ class TestSeekRPC:
 
         datasets = ['GSE13494.GPL570.pcl', 'GSE17215.GPL3921.pcl']
         genes = ['10998', '10994']
+        queryGenes = ['23658', '23659']
 
+        # Test gene expression
         settings = PclRPC.PclSettings(
+            rbp = -1,
             outputNormalized = True,
             outputGeneExpression = True,
-            rbp = -1,
         )
-        pclArgs = PclRPC.PclQueryArgs(species='sampleBC', genes=genes, 
-                                      datasets=datasets, settings=settings)
-        result = client.pclQuery(pclArgs)
-        assert result.success is True
-        assert len(result.geneExpressions) > 0
-        assert len(result.datasetSizes) == len(datasets)
-        # Read in expected result from test_input file
-        with open(os.path.join(testInputsDir, "pclTestGeneExpr.txt")) as fp:
-            lines = fp.readlines()
-        expectedVals = [float(item) for item in lines]
-        assert np.allclose(result.geneExpressions, expectedVals)
-        print("Success!")
+        pclArgs = PclRPC.PclQueryArgs(
+            species='sampleBC',
+            genes=genes,
+            datasets=datasets,
+            settings=settings)
+        result = TestSeekRPC.runQuery(client, pclArgs)
+        TestSeekRPC.checkVals(result.geneExpressions, "pclTestGeneExpr.txt")
+
+        # Test gene coexpression
+        settings = PclRPC.PclSettings(
+            rbp = -1,
+            outputNormalized = True,
+            outputGeneCoexpression = True,
+        )
+        pclArgs = PclRPC.PclQueryArgs(
+            species='sampleBC',
+            genes=genes,
+            queryGenes=queryGenes,  # queryGenes must be present for geneCoexpression calc
+            datasets=datasets,
+            settings=settings)
+        result = TestSeekRPC.runQuery(client, pclArgs)
+        TestSeekRPC.checkVals(result.geneCoexpressions, "pclTestGeneCoExpr.txt")
+
+        # test query expression
+        settings = PclRPC.PclSettings(
+            rbp = -1,
+            outputNormalized = True,
+            outputQueryExpression = True,
+        )
+        pclArgs = PclRPC.PclQueryArgs(
+            species='sampleBC',
+            queryGenes=queryGenes,
+            datasets=datasets,
+            settings=settings)
+        result = TestSeekRPC.runQuery(client, pclArgs)
+        TestSeekRPC.checkVals(result.queryExpressions, "pclTestQueryExpr.txt")
+
+        # test query Coexpression
+        settings = PclRPC.PclSettings(
+            rbp = -1,
+            outputNormalized = True,
+            outputQueryCoexpression = True,
+        )
+        pclArgs = PclRPC.PclQueryArgs(
+            species='sampleBC',
+            queryGenes=queryGenes,
+            datasets=datasets,
+            settings=settings)
+        result = TestSeekRPC.runQuery(client, pclArgs)
+        TestSeekRPC.checkVals(result.queryCoexpressions, "pclTestQueryCoexpr.txt")
+
+# Test that uses different dataset names, like with .pcl, .pcl.bin and no pcl.
+# Also within settings file specifying pcl dir as /pcl and /pclbin
+    def test_settings(self):
+        # Test using the python client
+        cmd = f'python {pclServerDir}/PclRpcClient.py -p {testPort} -s sampleBC ' \
+              f'-d GSE13494.GPL570.pcl,GSE17215.GPL3921.pcl ' \
+              f'-g 10998,10994 -q 23658,23659 --zexp --zcoexp'
+        print(f'### {cmd}')
+        clientProc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        clientProc.wait()
+        assert clientProc.returncode == 0
+        output1, err = clientProc.communicate()
+
+        cmd = f'python {pclServerDir}/PclRpcClient.py -p {testPort} -s sampleBC ' \
+              f'-d GSE13494.GPL570,GSE17215.GPL3921 ' \
+              f'-g 10998,10994 -q 23658,23659 --zexp --zcoexp'
+        print(f'### {cmd}')
+        clientProc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        clientProc.wait()
+        assert clientProc.returncode == 0
+        output2, err = clientProc.communicate()
+        out2 = output2.decode("utf-8")
+        assert out2.find('Gene Expressions') > 0
+        assert output1 == output2
+
+

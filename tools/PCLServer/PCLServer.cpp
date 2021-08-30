@@ -21,6 +21,7 @@
 *****************************************************************************/
 #include <filesystem>
 #include <unistd.h>
+#include <boost/algorithm/string/predicate.hpp>
 #include "seekerror.h"
 #include "PCLServer.h"
 
@@ -32,6 +33,21 @@ pthread_mutex_t mutexGet; // TODO - make this per species
 // Initialize context for the PCLServer
 void pclServerInit() {
     pthread_mutex_init(&mutexGet, NULL);
+}
+
+
+string stripPclExtensions(string pclDsetName) {
+    // Remove .pcl and .bin extensions
+    size_t pos;
+    pos = pclDsetName.find(".bin");
+    if (pos != string::npos) {
+        pclDsetName = pclDsetName.substr(0, pos);
+    }
+    pos = pclDsetName.find(".pcl");
+    if (pos != string::npos) {
+        pclDsetName = pclDsetName.substr(0, pos);
+    }
+    return pclDsetName;
 }
 
 
@@ -83,9 +99,18 @@ void *do_query(void *th_arg) {
             }
             // open the new pcl in the cache
             bool res;
-            // TODO - some checking logic here for if pcl or pclbin is used
-            //  and which extension we need for the file name, maybe use fileexists
-            string pcl_path = pcl_input_dir + "/" + datasetName[idx] + ".bin";
+            // Some checking logic here for if pcl or pclbin is used
+            //  and which extension we need for the file name
+            // TODO - Note, opening CPCP with /pcl instead of /pclbin give
+            //  different expression results - bug in PCLServer algorithm?
+            string pcl_path;
+            string pclBasename = stripPclExtensions(datasetName[idx]);
+            using boost::algorithm::ends_with;
+            if (ends_with(pcl_input_dir, "pcl")) {
+                pcl_path = pcl_input_dir + "/" + pclBasename + ".pcl";
+            } else {
+                pcl_path = pcl_input_dir + "/" + pclBasename + ".pcl.bin";
+            }
             PclPtrS dsetPcl = make_shared<CPCL>();
             res = dsetPcl->Open(pcl_path.c_str());
             if (res == false) {
@@ -163,27 +188,23 @@ void *do_query(void *th_arg) {
 
         set <string> absent;
 
+        if (outputQueryExpression || outputQueryCoexpression) {
+            fq = new CFullMatrix<float>();
+            fq->Initialize(queryName.size(), ps);
+        }
+
         if (outputCoexpression || outputQueryCoexpression) {
             vd = new CSeekDataset();
-            //string strFileStem = datasetName[i].substr(0, datasetName[i].find(".bin")); //for human-SEEK
-            string strFileStem = datasetName[i]; //for model-organism-SEEK
-            // Remove .pcl and .bin extensions
-            size_t pos;
-            pos = strFileStem.find(".bin");
-            if (pos != string::npos) {
-                strFileStem = strFileStem.substr(0, pos);
-            }
-            pos = strFileStem.find(".pcl");
-            if (pos != string::npos) {
-                strFileStem = strFileStem.substr(0, pos);
-            }
+            string pclBasename = stripPclExtensions(datasetName[i]);
+            // string strFileStem = datasetName[i].substr(0, datasetName[i].find(".bin")); //for human-SEEK
+            // string strFileStem = datasetName[i]; //for model-organism-SEEK
 
-            int dbID = cc->m_mapstrintDatasetDB[datasetName[i]];
+            int dbID = cc->m_mapstrintDatasetDB[pclBasename];
 
             string strAvgPath =
-                    cc->m_vecDBSetting[dbID]->prepDir + "/" + strFileStem + ".gavg"; //avg and prep path share same directory
-            string strPresencePath = cc->m_vecDBSetting[dbID]->prepDir + "/" + strFileStem + ".gpres";
-            string strSinfoPath = cc->m_vecDBSetting[dbID]->sinfoDir + "/" + strFileStem + ".sinfo";
+                    cc->m_vecDBSetting[dbID]->prepDir + "/" + pclBasename + ".gavg"; //avg and prep path share same directory
+            string strPresencePath = cc->m_vecDBSetting[dbID]->prepDir + "/" + pclBasename + ".gpres";
+            string strSinfoPath = cc->m_vecDBSetting[dbID]->sinfoDir + "/" + pclBasename + ".sinfo";
 
             if (!filesystem::exists(strAvgPath) ||  !filesystem::exists(strPresencePath) || 
                 !filesystem::exists(strSinfoPath)) {
@@ -195,13 +216,10 @@ void *do_query(void *th_arg) {
             vd->ReadDatasetAverageStdev(strSinfoPath);
             vd->InitializeGeneMap();
 
-            string strPlatform = cc->m_mapstrstrDatasetPlatform.find(datasetName[i])->second;
+            string strPlatform = cc->m_mapstrstrDatasetPlatform.find(pclBasename)->second;
             utype platform_id = platformMap.find(strPlatform)->second;
             vd->SetPlatform(seekPlatforms[platform_id]);
             pl = &vd->GetPlatform();
-
-            fq = new CFullMatrix<float>();
-            fq->Initialize(queryName.size(), ps);
 
             //NEW 3/5/2013====================================
             if (outputQueryCoexpression) {
@@ -241,48 +259,48 @@ void *do_query(void *th_arg) {
                 //fprintf(stderr, "%d X2\n", i);
             }
             //====================================================
+        }
 
-
-            if (outputQueryExpression) {
-                for (k = 0; k < queryName.size(); k++) {
-                    int g = pp->GetGene(queryName[k]);
-                    if (g == -1) { //does not contain the gene in the dataset
-                        for (j = 0; j < gs; j++) {
-                            fq->Set(k, j, NaN);
-                            d_vecQ[i].push_back(fq->Get(k, j));
-                        }
-                        continue;
-                    }
-                    float *vv = pp->Get(g);
-                    for (j = 0; j < gs; j++)
-                        fq->Set(k, j, vv[j]);
-                    if (!outputNormalized) {
-                        for (j = 0; j < gs; j++)
-                            d_vecQ[i].push_back(fq->Get(k, j));
-                    }
-
-                    //normalize
-                    float mean = 0;
-                    for (j = 0; j < gs; j++)
-                        mean += fq->Get(k, j);
-                    mean /= (float) (gs);
-                    float stdev = 0;
-                    for (j = 0; j < gs; j++)
-                        stdev += (fq->Get(k, j) - mean) * (fq->Get(k, j) - mean);
-                    stdev /= (float) (gs);
-                    stdev = sqrt(stdev);
+        if (outputQueryExpression) {
+            for (k = 0; k < queryName.size(); k++) {
+                int g = pp->GetGene(queryName[k]);
+                if (g == -1) { //does not contain the gene in the dataset
                     for (j = 0; j < gs; j++) {
-                        float t1 = fq->Get(k, j);
-                        fq->Set(k, j, (t1 - mean) / stdev);
+                        fq->Set(k, j, NaN);
+                        d_vecQ[i].push_back(fq->Get(k, j));
                     }
+                    continue;
+                }
+                float *vv = pp->Get(g);
+                for (j = 0; j < gs; j++)
+                    fq->Set(k, j, vv[j]);
+                if (!outputNormalized) {
+                    for (j = 0; j < gs; j++)
+                        d_vecQ[i].push_back(fq->Get(k, j));
+                }
 
-                    if (outputNormalized) {
-                        for (j = 0; j < gs; j++)
-                            d_vecQ[i].push_back(fq->Get(k, j));
-                    }
+                //normalize
+                float mean = 0;
+                for (j = 0; j < gs; j++)
+                    mean += fq->Get(k, j);
+                mean /= (float) (gs);
+                float stdev = 0;
+                for (j = 0; j < gs; j++)
+                    stdev += (fq->Get(k, j) - mean) * (fq->Get(k, j) - mean);
+                stdev /= (float) (gs);
+                stdev = sqrt(stdev);
+                for (j = 0; j < gs; j++) {
+                    float t1 = fq->Get(k, j);
+                    fq->Set(k, j, (t1 - mean) / stdev);
+                }
+
+                if (outputNormalized) {
+                    for (j = 0; j < gs; j++)
+                        d_vecQ[i].push_back(fq->Get(k, j));
                 }
             }
         }
+
 
         fprintf(stderr, "allocating space %lu %d...\n", geneName.size(),
                 ps);
@@ -487,7 +505,7 @@ void *do_query(void *th_arg) {
                     if (qMap[ar[kk].i] == 0) continue;
                     if (ar[kk].f == 0) break;
                     rbp += pow(RBP_P, kk);
-                    fprintf(stderr, "Sorted %zu %d %d %.5f\n", i, kk, ar[kk].i, (ar[kk].f - 320) / 100.0f);
+                    // fprintf(stderr, "Sorted %zu %d %d %.5f\n", i, kk, ar[kk].i, (ar[kk].f - 320) / 100.0f);
                     //jj++;
                     //fprintf(stderr, "Good %d %d\n", i, kk);
                     //jj++;
@@ -582,9 +600,11 @@ void *do_query(void *th_arg) {
 
         if (outputCoexpression || outputQueryCoexpression) {
             delete vd;
-            delete fq;
             if (outputQueryCoexpression)
                 delete fq_RBP;
+        }
+        if (outputQueryExpression || outputQueryCoexpression) {
+            delete fq;
         }
 
         delete ff;

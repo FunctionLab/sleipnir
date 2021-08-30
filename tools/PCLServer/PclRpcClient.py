@@ -1,3 +1,4 @@
+import sys
 import time
 import argparse
 import importlib
@@ -43,6 +44,25 @@ struct PclResult {
 }
 '''
 
+def writeResults(fp, args, result):
+    if args.zexp is True:
+        fp.write('==Gene Expressions==\n')
+        fp.write("\n".join(str(round(item, 6)) for item in result.geneExpressions))
+        fp.write("\n")
+    if args.zcoexp is True:
+        fp.write('==Gene Coexpressions==\n')
+        fp.write("\n".join(str(round(item, 6)) for item in result.geneCoexpressions))
+        fp.write("\n")
+    if args.zqexp is True:
+        fp.write('==Query Expressions==\n')
+        fp.write("\n".join(str(round(item, 6)) for item in result.queryExpressions))
+        fp.write("\n")
+    if args.zqcoexp is True:
+        fp.write('==Query Coexpressions==\n')
+        fp.write("\n".join(str(round(item, 6)) for item in result.queryCoexpressions))
+        fp.write("\n")
+
+
 def runQuery(args):
     socket = TSocket.TSocket(host, args.port)
     transport = TTransport.TBufferedTransport(socket)
@@ -51,34 +71,43 @@ def runQuery(args):
     transport.open()
     version = client.getRpcVersion()
     assert version == constants.PclRPCVersion
+    retval = -1
 
     settings = PclRPC.PclSettings(
         outputNormalized = True,
-        outputGeneExpression = True,
-        outputQueryExpression = False,
-        outputGeneCoexpression = False,
-        outputQueryCoexpression = False,
+        outputGeneExpression = args.zexp,
+        outputGeneCoexpression = args.zcoexp,
+        outputQueryExpression = args.zqexp,
+        outputQueryCoexpression = args.zqcoexp,
         rbp = -1,
     )
 
-    pclArgs = PclRPC.PclQueryArgs(species=args.species, genes=args.genes, datasets=args.datasets, settings=settings)
-
-    retval = -1
+    pclArgs = PclRPC.PclQueryArgs(species=args.species,
+                                  genes=args.genes,
+                                  queryGenes=args.queryGenes,
+                                  datasets=args.datasets,
+                                  settings=settings)
     result = client.pclQuery(pclArgs)
     if result.success is True:
+        print(f'result: {result}')
         # Output to file if requested
         if args.outfile is not None:
             with open(args.outfile, "w") as fp:
-                fp.write("\n".join(str(round(item, 6)) for item in result.geneExpressions))
+                writeResults(fp, args, result)
+
         # Print to command line
-        numGenes = len(args.genes)
-        offset = 0;
-        for i, numSamples in enumerate(result.datasetSizes):
-            for j in range(numGenes):
-                print(f'dset: {i}, gene: {j}')
-                for k in range(numSamples):
-                    print(f'val: {result.geneExpressions[offset]}')
-                    offset += 1
+        writeResults(sys.stdout, args, result)
+        # Example of accessing expressions in a gene ordered way
+        # if result.geneExpressions and len(result.geneExpressions) > 0:
+        #     print('## Ordered Printout ##')
+        #     numGenes = len(args.genes)
+        #     offset = 0;
+        #     for i, numSamples in enumerate(result.datasetSizes):
+        #         for j in range(numGenes):
+        #             print(f'dset: {i}, gene: {j}')
+        #             for k in range(numSamples):
+        #                 print(f'val: {result.geneExpressions[offset]}')
+        #                 offset += 1
         retval = 0
     else:
         print(f'query error: {result.statusMsg}')
@@ -94,35 +123,50 @@ if __name__ == "__main__":
                            help='species name')
     argParser.add_argument('--genes', '-g', default=None, type=str,
                            help='list of genes to query')
-    argParser.add_argument('--datasets', '-d', default=None, type=str,
+    argParser.add_argument('--queryGenes', '-q', default=None, type=str,
+                           help='list of qurey genes')
+    argParser.add_argument('--datasets', '-d', default=None, type=str, required=True,
                            help='list of datasets to query')
+    argParser.add_argument('--zexp', default=False, action='store_true',
+                           help='output gene expression values')
+    argParser.add_argument('--zcoexp', default=False, action='store_true',
+                           help='output gene Coexpression values')
+    argParser.add_argument('--zqexp', default=False, action='store_true',
+                           help='output query expression values')
+    argParser.add_argument('--zqcoexp', default=False, action='store_true',
+                           help='output query Coexpression values')
     argParser.add_argument('--outfile', '-o', default=None, type=str,
                            help='filename to output results')
     argParser.add_argument('--port', '-p', default=9010, type=int,
                            help='server port')
     args = argParser.parse_args()
 
-    if args.genes is None or args.datasets is None:
-        print('Please specify both genes and datasets, use [-g gene1,gene2,...] [-d dset1,dset2,...]')
+
+    if args.genes is not None:
+        args.genes = args.genes.split(',')
+
+    if args.queryGenes is not None:
+        args.queryGenes = args.queryGenes.split(',')
+
+    if args.datasets is not None:
+        args.datasets = args.datasets.split(',')
+
+    if args.genes is None and args.queryGenes is None:
+        print('Please specify genes and/or queryGenes, use [-g gene1,gene2,...] [-q gene1,gene2,...]')
         exit(-1)
-    args.genes = args.genes.split(',')
-    args.datasets = args.datasets.split(',')
+
+    if not any([args.zexp, args.zcoexp, args.zqexp, args.zqcoexp]):
+        # no output type set, set gene expression by default
+        print("No output type specified, default to gene expressions")
+        args.zexp = True
+
+    if any([args.zexp, args.zcoexp]) and args.genes is None:
+        print("Must specify list of genes for gene expressions")
+        exit(-1)
+
+    if any([args.zqexp, args.zqcoexp]) and args.queryGenes is None:
+        print("Must specify list of queryGenes for query expressions")
+        exit(-1)
 
     retval = runQuery(args)
     exit(retval)
-
-
-#species = 'human'
-#genes = ['SMO', 'PTCH1', 'PTCH2', 'BOC'] - this one differs from web, ambiguous symbol->entrez?
-#genes = ['90634', '23659']
-
-#species = 'fly'
-#genes = ['35234', '35232']
-#genes = ['34930', '35234', '35232']
-
-#species = 'yeast'
-#genes = ['YGL142C', 'YHR188C']
-
-# species = 'mock'
-# genes = ['six', 'four']
-# genes = ['90634', '23659']
