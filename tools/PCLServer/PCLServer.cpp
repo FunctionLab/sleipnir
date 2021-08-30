@@ -53,7 +53,7 @@ string stripPclExtensions(string pclDsetName) {
 
 void *do_query(void *th_arg) {
     struct thread_data *my = (struct thread_data *) th_arg;
-    vector <string> datasetName = my->datasetNames;
+    vector <string> datasetNames = my->datasetNames;
     vector <string> geneName = my->geneNames;
     vector <string> queryName = my->queryGeneNames;
     CSeekCentral *cc = my->seekCentral;
@@ -72,7 +72,7 @@ void *do_query(void *th_arg) {
     BoolFlag completionFlag(my->isComplete);
     lock_guard<BoolFlag> flag_lock(completionFlag);
 
-    assert(datasetName.size() <= CACHE_SIZE);
+    assert(datasetNames.size() <= CACHE_SIZE);
 
     fprintf(stderr, "start processing...\n");
 
@@ -81,20 +81,22 @@ void *do_query(void *th_arg) {
     pthread_mutex_lock(&mutexGet); //QZ disabled 1/31/2015
 
     // GW New Caching Algo
-    int numDatasets = datasetName.size();
+    int numDatasets = datasetNames.size();
     // A vector to hold the datasets we need for the query
-    vector<PclPtrS> dsetPcls(datasetName.size(), nullptr);
+    vector<PclPtrS> dsetPcls(datasetNames.size(), nullptr);
     // Check for datasets already cached before adding new ones which might evict ones we need already loaded
-    // for (auto & dataset : datasetName) {
+    // for (auto & dataset : datasetNames) {
     for (int idx = 0; idx < numDatasets; idx++) {
-        if (my->pclCache->get(datasetName[idx], dsetPcls[idx]) == false) {
+        // strip any trailing .pcl or .pcl.bin from the dataset names
+        datasetNames[idx] = stripPclExtensions(datasetNames[idx]);
+        if (my->pclCache->get(datasetNames[idx], dsetPcls[idx]) == false) {
             dsetPcls[idx] = nullptr;
         }
     }
     for (int idx = 0; idx < numDatasets; idx++) {
         if (dsetPcls[idx] == nullptr) {
             // check cache again in case it was added in the mean time
-            if (my->pclCache->get(datasetName[idx], dsetPcls[idx]) == true) {
+            if (my->pclCache->get(datasetNames[idx], dsetPcls[idx]) == true) {
                 continue;
             }
             // open the new pcl in the cache
@@ -104,12 +106,11 @@ void *do_query(void *th_arg) {
             // TODO - Note, opening CPCP with /pcl instead of /pclbin give
             //  different expression results - bug in PCLServer algorithm?
             string pcl_path;
-            string pclBasename = stripPclExtensions(datasetName[idx]);
             using boost::algorithm::ends_with;
             if (ends_with(pcl_input_dir, "pcl")) {
-                pcl_path = pcl_input_dir + "/" + pclBasename + ".pcl";
+                pcl_path = pcl_input_dir + "/" + datasetNames[idx] + ".pcl";
             } else {
-                pcl_path = pcl_input_dir + "/" + pclBasename + ".pcl.bin";
+                pcl_path = pcl_input_dir + "/" + datasetNames[idx] + ".pcl.bin";
             }
             PclPtrS dsetPcl = make_shared<CPCL>();
             res = dsetPcl->Open(pcl_path.c_str());
@@ -117,7 +118,7 @@ void *do_query(void *th_arg) {
                 cerr << "Failed to open CPCL " << pcl_path << endl;
                 throw argument_error("Failed to open CPCL " + pcl_path);
             }
-            my->pclCache->set(datasetName[idx], dsetPcl);
+            my->pclCache->set(datasetNames[idx], dsetPcl);
             dsetPcls[idx] = move(dsetPcl);
         }
     }
@@ -126,7 +127,7 @@ void *do_query(void *th_arg) {
 
     int genes = geneName.size();
     int queries = queryName.size(); //(EXTRA)
-    int datasets = datasetName.size();
+    int datasets = datasetNames.size();
 
     vector<float> vecG, vecQ, vecCoexpression, vecqCoexpression;
     vector<float> sizeD;
@@ -158,7 +159,7 @@ void *do_query(void *th_arg) {
     private(i) \
     firstprivate(genes, queries, datasets, outputCoexpression, outputQueryCoexpression, outputNormalized, outputExpression, \
     outputQueryExpression, NaN) \
-    shared(sizeD, datasetName, queryName, geneName, d_vecG, d_vecQ, d_vecCoexpression, d_vecqCoexpression, \
+    shared(sizeD, datasetNames, queryName, geneName, d_vecG, d_vecQ, d_vecCoexpression, d_vecqCoexpression, \
     cc, platformMap, seekPlatforms) \
     schedule(dynamic)
     for (i = 0; i < datasets; i++) {
@@ -195,16 +196,19 @@ void *do_query(void *th_arg) {
 
         if (outputCoexpression || outputQueryCoexpression) {
             vd = new CSeekDataset();
-            string pclBasename = stripPclExtensions(datasetName[i]);
-            // string strFileStem = datasetName[i].substr(0, datasetName[i].find(".bin")); //for human-SEEK
-            // string strFileStem = datasetName[i]; //for model-organism-SEEK
+            // string strFileStem = datasetNames[i].substr(0, datasetNames[i].find(".bin")); //for human-SEEK
+            // string strFileStem = datasetNames[i]; //for model-organism-SEEK
+            string dsetName = datasetNames[i];
+            if (cc->m_hasPclInDatasetName) {
+                dsetName += ".pcl";
+            }
 
-            int dbID = cc->m_mapstrintDatasetDB[pclBasename];
+            int dbID = cc->m_mapstrintDatasetDB[dsetName];
 
             string strAvgPath =
-                    cc->m_vecDBSetting[dbID]->prepDir + "/" + pclBasename + ".gavg"; //avg and prep path share same directory
-            string strPresencePath = cc->m_vecDBSetting[dbID]->prepDir + "/" + pclBasename + ".gpres";
-            string strSinfoPath = cc->m_vecDBSetting[dbID]->sinfoDir + "/" + pclBasename + ".sinfo";
+                    cc->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gavg"; //avg and prep path share same directory
+            string strPresencePath = cc->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gpres";
+            string strSinfoPath = cc->m_vecDBSetting[dbID]->sinfoDir + "/" + dsetName + ".sinfo";
 
             if (!filesystem::exists(strAvgPath) ||  !filesystem::exists(strPresencePath) || 
                 !filesystem::exists(strSinfoPath)) {
@@ -216,7 +220,7 @@ void *do_query(void *th_arg) {
             vd->ReadDatasetAverageStdev(strSinfoPath);
             vd->InitializeGeneMap();
 
-            string strPlatform = cc->m_mapstrstrDatasetPlatform.find(pclBasename)->second;
+            string strPlatform = cc->m_mapstrstrDatasetPlatform.find(dsetName)->second;
             utype platform_id = platformMap.find(strPlatform)->second;
             vd->SetPlatform(seekPlatforms[platform_id]);
             pl = &vd->GetPlatform();

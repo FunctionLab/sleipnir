@@ -497,6 +497,7 @@ namespace Sleipnir {
         SeekPlatforms m_seekPlatforms;
         /* Correlation discretization */
         vector<float> m_quant;
+        bool m_hasPclInDatasetName = false;
 
     private:
         /* Datasets */

@@ -33,6 +33,7 @@
 #include "seekerror.h"
 #include <filesystem>
 #include <cassert>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace Sleipnir {
 
@@ -96,6 +97,7 @@ namespace Sleipnir {
 
         m_iClient = -1;
         m_bEnableNetwork = false;
+        m_hasPclInDatasetName = false;
 
         m_bCheckDsetSize = false;
         m_iNumSampleRequired = 10; //if checking for dataset size
@@ -823,6 +825,14 @@ namespace Sleipnir {
             if (!CSeekTools::ReadListTwoColumns(vecDBSetting[i]->datasetFile, vD, vDP))
                 return false;
 
+            if (vD.size() > 0) {
+                using boost::algorithm::ends_with;
+                if (ends_with(vD[0], "pcl")) {
+                    m_hasPclInDatasetName = true;
+                } else {
+                    m_hasPclInDatasetName = false;
+                }
+            }
             for (j = 0; j < vD.size(); j++) {
                 m_vecstrDatasets.push_back(vD[j]);
                 m_vecDBDataset[i].push_back(vD[j]);

@@ -116,7 +116,17 @@ void PclInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result) 
     thread_arg.resQueryExpression = &result.queryExpressions;
     thread_arg.resQueryCoexpression = &result.queryCoexpressions;
 
-    do_query(&thread_arg);
+    try {
+        do_query(&thread_arg);
+    } catch (named_error &err) {
+        string trace = print_exception_stack(err);
+        result.success = false;
+        result.status = PclStatus::Error;
+        result.statusMsg = trace;
+        result.__isset.status = true;
+        result.__isset.statusMsg = true;
+        /* (for future) can use exception_ptr to return the exception to main thread */
+    }
 
     result.success = true;
     result.status = PclStatus::Complete;
