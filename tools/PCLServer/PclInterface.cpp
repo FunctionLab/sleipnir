@@ -126,6 +126,7 @@ void PclInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result) 
         result.__isset.status = true;
         result.__isset.statusMsg = true;
         /* (for future) can use exception_ptr to return the exception to main thread */
+        return;
     }
 
     result.success = true;

@@ -37,13 +37,19 @@ void pclServerInit() {
 
 
 string stripPclExtensions(string pclDsetName) {
-    // Remove .pcl and .bin extensions
+    // Remove .pcl extensions
     size_t pos;
-    pos = pclDsetName.find(".bin");
+    pos = pclDsetName.find(".pcl");
     if (pos != string::npos) {
         pclDsetName = pclDsetName.substr(0, pos);
     }
-    pos = pclDsetName.find(".pcl");
+    return pclDsetName;
+}
+
+string stripBinExtensions(string pclDsetName) {
+    // Remove .bin extensions
+    size_t pos;
+    pos = pclDsetName.find(".bin");
     if (pos != string::npos) {
         pclDsetName = pclDsetName.substr(0, pos);
     }
@@ -87,30 +93,38 @@ void *do_query(void *th_arg) {
     // Check for datasets already cached before adding new ones which might evict ones we need already loaded
     // for (auto & dataset : datasetNames) {
     for (int idx = 0; idx < numDatasets; idx++) {
-        // strip any trailing .pcl or .pcl.bin from the dataset names
-        datasetNames[idx] = stripPclExtensions(datasetNames[idx]);
-        if (my->pclCache->get(datasetNames[idx], dsetPcls[idx]) == false) {
+        // strip any trailing .pcl or .pcl.bin for cache lookup
+        // Note: don't change the datasetNames[] themselves as those will be needed for opening
+        //  other types of files and there can be many types of extension.
+        string dsetCacheName = stripPclExtensions(datasetNames[idx]);
+        dsetCacheName = stripBinExtensions(dsetCacheName);
+        if (my->pclCache->get(dsetCacheName, dsetPcls[idx]) == false) {
             dsetPcls[idx] = nullptr;
         }
     }
     for (int idx = 0; idx < numDatasets; idx++) {
+        string dsetCacheName = stripPclExtensions(datasetNames[idx]);
+        dsetCacheName = stripBinExtensions(dsetCacheName);
         if (dsetPcls[idx] == nullptr) {
             // check cache again in case it was added in the mean time
-            if (my->pclCache->get(datasetNames[idx], dsetPcls[idx]) == true) {
+            if (my->pclCache->get(dsetCacheName, dsetPcls[idx]) == true) {
                 continue;
             }
             // open the new pcl in the cache
             bool res;
-            // Some checking logic here for if pcl or pclbin is used
-            //  and which extension we need for the file name
-            // TODO - Note, opening CPCP with /pcl instead of /pclbin give
+            // TODO - Note, opening CPCP with /pcl instead of /pclbin gives
             //  different expression results - bug in PCLServer algorithm?
-            string pcl_path;
-            using boost::algorithm::ends_with;
-            if (ends_with(pcl_input_dir, "pcl")) {
-                pcl_path = pcl_input_dir + "/" + datasetNames[idx] + ".pcl";
-            } else {
-                pcl_path = pcl_input_dir + "/" + datasetNames[idx] + ".pcl.bin";
+            // Check if pclbin file name is the dsetname.bin
+            string pcl_path = pcl_input_dir + "/" + datasetNames[idx] + ".bin";
+            if (!filesystem::exists(pcl_path)) {
+                // if datasetName doesn't have .pcl in it, try adding that
+                if (datasetNames[idx].find(".pcl") == string::npos) {
+                    pcl_path = pcl_input_dir + "/" + datasetNames[idx] + ".pcl.bin";
+                    if (!filesystem::exists(pcl_path)) {
+                        cerr << "Failed to find PCL file (.bin or .pcl.bin) " << pcl_path << endl;
+                        throw argument_error("Failed to find PCL (.bin or .pcl.bin) " + pcl_path);
+                    }
+                }
             }
             PclPtrS dsetPcl = make_shared<CPCL>();
             res = dsetPcl->Open(pcl_path.c_str());
@@ -118,7 +132,7 @@ void *do_query(void *th_arg) {
                 cerr << "Failed to open CPCL " << pcl_path << endl;
                 throw argument_error("Failed to open CPCL " + pcl_path);
             }
-            my->pclCache->set(datasetNames[idx], dsetPcl);
+            my->pclCache->set(dsetCacheName, dsetPcl);
             dsetPcls[idx] = move(dsetPcl);
         }
     }
@@ -155,12 +169,15 @@ void *do_query(void *th_arg) {
 
     size_t i;
 
+    bool hasError = false;
+    string anError;
+
 #pragma omp parallel for \
     private(i) \
     firstprivate(genes, queries, datasets, outputCoexpression, outputQueryCoexpression, outputNormalized, outputExpression, \
     outputQueryExpression, NaN) \
     shared(sizeD, datasetNames, queryName, geneName, d_vecG, d_vecQ, d_vecCoexpression, d_vecqCoexpression, \
-    cc, platformMap, seekPlatforms) \
+    cc, platformMap, seekPlatforms, hasError, anError) \
     schedule(dynamic)
     for (i = 0; i < datasets; i++) {
         // CPCL *pp = vc[i];
@@ -199,11 +216,20 @@ void *do_query(void *th_arg) {
             // string strFileStem = datasetNames[i].substr(0, datasetNames[i].find(".bin")); //for human-SEEK
             // string strFileStem = datasetNames[i]; //for model-organism-SEEK
             string dsetName = datasetNames[i];
-            if (cc->m_hasPclInDatasetName) {
-                dsetName += ".pcl";
-            }
+            dsetName = stripBinExtensions(dsetName);
 
-            int dbID = cc->m_mapstrintDatasetDB[dsetName];
+            auto dbid_iter = cc->m_mapstrintDatasetDB.find(dsetName);
+            if (dbid_iter == cc->m_mapstrintDatasetDB.end()) {
+                // Try stripping .pcl extension
+                string tmpName = stripPclExtensions(dsetName);
+                dbid_iter = cc->m_mapstrintDatasetDB.find(tmpName);
+                if (dbid_iter == cc->m_mapstrintDatasetDB.end()) {
+                    hasError = true;
+                    anError = "DbID not found in m_mapstrintDatasetDB: " + dsetName;
+                    continue;
+                }
+            }
+            int dbID = dbid_iter->second;
 
             string strAvgPath =
                     cc->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gavg"; //avg and prep path share same directory
@@ -212,16 +238,45 @@ void *do_query(void *th_arg) {
 
             if (!filesystem::exists(strAvgPath) ||  !filesystem::exists(strPresencePath) || 
                 !filesystem::exists(strSinfoPath)) {
-                throw argument_error("Missing one of files: " + strAvgPath + ", " +
-                                     strPresencePath + ", " + strSinfoPath);
+                // Try stripping .pcl extension
+                string tmpName = stripPclExtensions(dsetName);
+                strAvgPath = cc->m_vecDBSetting[dbID]->prepDir + "/" + tmpName + ".gavg";
+                strPresencePath = cc->m_vecDBSetting[dbID]->prepDir + "/" + tmpName + ".gpres";
+                strSinfoPath = cc->m_vecDBSetting[dbID]->sinfoDir + "/" + tmpName + ".sinfo";
+                if (!filesystem::exists(strAvgPath) ||  !filesystem::exists(strPresencePath) || 
+                    !filesystem::exists(strSinfoPath)) {
+                    hasError = true;
+                    anError = "Missing one of files: " + strAvgPath + ", " +
+                              strPresencePath + ", " + strSinfoPath;
+                    continue;
+                }
             }
             vd->ReadGeneAverage(strAvgPath);
             vd->ReadGenePresence(strPresencePath);
             vd->ReadDatasetAverageStdev(strSinfoPath);
             vd->InitializeGeneMap();
 
-            string strPlatform = cc->m_mapstrstrDatasetPlatform.find(dsetName)->second;
-            utype platform_id = platformMap.find(strPlatform)->second;
+            auto dp_iter = cc->m_mapstrstrDatasetPlatform.find(dsetName);
+            if (dp_iter == cc->m_mapstrstrDatasetPlatform.end()) {
+                // Try stripping .pcl extension
+                string tmpName = stripPclExtensions(dsetName);
+                dp_iter = cc->m_mapstrstrDatasetPlatform.find(tmpName);
+                if (dp_iter == cc->m_mapstrstrDatasetPlatform.end()) {
+                    hasError = true;
+                    anError = "Dataset not found in datasetPlatformMap: " + dsetName;
+                    continue;
+                }
+            }
+            string strPlatform = dp_iter->second;
+
+            auto p_iter = platformMap.find(strPlatform);
+            if (p_iter == platformMap.end()) {
+                hasError = true;
+                anError = "Platform not found in PlatformMap: " + strPlatform;
+                continue;
+            }
+            utype platform_id = p_iter->second;
+
             vd->SetPlatform(seekPlatforms[platform_id]);
             pl = &vd->GetPlatform();
 
@@ -304,7 +359,6 @@ void *do_query(void *th_arg) {
                 }
             }
         }
-
 
         fprintf(stderr, "allocating space %lu %d...\n", geneName.size(),
                 ps);
@@ -598,8 +652,6 @@ void *do_query(void *th_arg) {
                 d_vecqCoexpression[i].push_back(avgP);
             }*/
 
-
-
         }
 
         if (outputCoexpression || outputQueryCoexpression) {
@@ -612,6 +664,10 @@ void *do_query(void *th_arg) {
         }
 
         delete ff;
+    }
+
+    if (hasError == true) {
+        throw named_error(anError);
     }
 
     for (i = 0; i < datasets; i++) {
