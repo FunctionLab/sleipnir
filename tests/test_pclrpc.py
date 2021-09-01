@@ -45,7 +45,7 @@ class TestSeekRPC:
         cmd = f'{sleipnirBin}/PclRpcServer -c {pclRpcConfigFile} -p {testPort}'
         cls.PclServerProc = subprocess.Popen(cmd, shell=True)
         print(f'### {cmd}')
-        time.sleep(.5)
+        time.sleep(1)
 
 
     def teardown_class(cls):

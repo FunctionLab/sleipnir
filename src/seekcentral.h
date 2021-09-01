@@ -435,8 +435,6 @@ namespace Sleipnir {
 
     void PrintSettings();
 
-    void *do_query(void *th_arg);
-
     private:
         //network mode
         bool EnableNetwork(const int &);

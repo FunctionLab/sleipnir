@@ -15,7 +15,10 @@
 
 #include "PCLServer.h"
 
+#define DEFAULT_CACHE_SIZE 100
+#define NUM_THREADS 16
 char THREAD_OCCUPIED[NUM_THREADS];
+pthread_mutex_t mutexGet;
 
 #define BACKLOG 20   // how many pending connections queue will hold
 char const *PORT = "9000";
@@ -91,7 +94,7 @@ int main(int iArgs, char **aszArgs) {
     // Make a cache from string to shared_ptr CPCL - that way
     //  a returned shared pointer can be used without worrying
     //  if it will be evicted from the cache during use.
-    LRUCache <string, PclPtrS> pclCache(CACHE_SIZE);
+    LRUCache <string, PclPtrS> pclCache(DEFAULT_CACHE_SIZE);
 
     //==================================================
 
@@ -161,7 +164,7 @@ int main(int iArgs, char **aszArgs) {
     pthread_attr_t attr[NUM_THREADS];
     int d = 0;
 
-    pclServerInit();
+    pthread_mutex_init(&mutexGet, NULL);
 
     fprintf(stderr, "Finished initializations.\n");
     printf("server: waiting for connections...\n");

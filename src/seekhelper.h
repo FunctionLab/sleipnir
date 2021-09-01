@@ -3,6 +3,7 @@
 
 #include <list>
 #include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 #include <condition_variable>
 #include "seekdataset.h"
@@ -16,9 +17,10 @@ uint32_t omp_enabled_test();
 struct SeekSettings {
     vector <CSeekDBSetting*> dbs;
     string species;
-    int64_t port = 9000;
-    int64_t numThreads = 8; 
-    int64_t numBufferedDBs = 20;
+    int32_t port = 9000;
+    int32_t numThreads = 8;
+    int32_t numBufferedDBs = 20;
+    int32_t pclCacheSize = 100;
     double scoreCutoff = -9999;
     bool squareZ = false;
     bool isNibble = false;
@@ -28,6 +30,7 @@ struct SeekSettings {
         os << "Port: " << settings.port << endl;
         os << "NumThreads: " << settings.numThreads << endl;
         os << "NumBufferedDBs: " << settings.numBufferedDBs << endl;
+        os << "PclCacheSize: " << settings.pclCacheSize << endl;
         os << "SquareZ: " << settings.squareZ << endl;
         for (const CSeekDBSetting *db : settings.dbs) {
             os << *db;
@@ -134,10 +137,12 @@ private:
 template <typename K, typename V = K>
 class LRUCache
 {
-// TODO add thread safe locking
 public:
     LRUCache(uint32_t s) :csize(s) {};
     void set(const K key, const V value) {
+        // Take unique lock. It is automatically released
+        //  on scope exit
+        unique_lock ulock(this->cacheMutex);
         auto pos = keyValuesMap.find(key);
         if (pos == keyValuesMap.end()) {
             items.push_front(key);
@@ -153,6 +158,9 @@ public:
         }
     }
     bool get(const K key, V &value) {
+        // Take shared lock. It is automatically released
+        //  on scope exit
+        shared_lock slock(this->cacheMutex);
         auto pos = keyValuesMap.find(key);
         if (pos == keyValuesMap.end()) {
             return false;
@@ -163,11 +171,13 @@ public:
         value = pos->second.first;
         return true;
     }
+    uint32_t cacheSize() { return csize; }
 
 private:
     list<K>items;
     unordered_map <K, pair<V, typename list<K>::iterator>> keyValuesMap;
     uint32_t csize;
+    shared_mutex cacheMutex;
 };
 
 #endif  // SEEKHELPER_H

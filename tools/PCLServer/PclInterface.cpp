@@ -24,8 +24,7 @@ PclInterface::PclInterface(vector<string> &configFiles,
         try {
             cout << "Initialize " << speciesName << endl;
             this->speciesSeekCentrals[speciesName].InitializeFromSeekConfig(config);
-            // TODO - implement different cache size for different species
-            this->speciesPclCache.emplace(speciesName, CACHE_SIZE);
+            this->speciesPclCache.emplace(speciesName, config.pclCacheSize);
         } catch(exception &err) {
             throw_with_nested(config_error(FILELINE + "Error initializing CSeekCentral for species " + speciesName));
         }

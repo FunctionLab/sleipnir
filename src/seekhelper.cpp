@@ -45,9 +45,10 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     }
     // populate the top level settings
     tomlGetValue<string>(tbl, "species", settings.species);
-    tomlGetValue<int64_t>(tbl, "port", settings.port);
-    tomlGetValue<int64_t>(tbl, "numThreads", settings.numThreads);
-    tomlGetValue<int64_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
+    tomlGetValue<int32_t>(tbl, "port", settings.port);
+    tomlGetValue<int32_t>(tbl, "numThreads", settings.numThreads);
+    tomlGetValue<int32_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
+    tomlGetValue<int32_t>(tbl, "pclCacheSize", settings.pclCacheSize);
     tomlGetValue<double>(tbl, "scoreCutoff", settings.scoreCutoff);
     tomlGetValue<bool>(tbl, "squareZ", settings.squareZ);
     tomlGetValue<bool>(tbl, "isNibble", settings.isNibble);
@@ -74,7 +75,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
             string gene_symbol_file = "NA";
             string dset_map_file = "NA";
             string dset_size_file = "NA";
-            int64_t num_db = -1;
+            int32_t num_db = -1;
 
             tomlGetValue<string>(*dbTbl, "DB_DIR", db_dir);
             tomlGetValue<string>(*dbTbl, "PREP_DIR", prep_dir);
@@ -87,7 +88,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
             tomlGetValue<string>(*dbTbl, "GENE_SYMBOL_FILE", gene_symbol_file);
             tomlGetValue<string>(*dbTbl, "DSET_MAP_FILE", dset_map_file);
             tomlGetValue<string>(*dbTbl, "DSET_SIZE_FILE", dset_size_file);
-            tomlGetValue<int64_t>(*dbTbl, "NUMBER_OF_DB", num_db);
+            tomlGetValue<int32_t>(*dbTbl, "NUMBER_OF_DB", num_db);
 
             CSeekDBSetting *dbSetting2 = 
                 new CSeekDBSetting(gvar_dir, sinfo_dir, platform_dir, 
@@ -294,6 +295,22 @@ bool Semaphore::try_wait() {
     return false;
 }
 
+
+#include <omp.h>
+uint32_t omp_enabled_test() {
+    uint32_t thread_count = 0;
+    #pragma omp parallel num_threads(4)
+    {
+        #pragma omp critical
+        {
+            thread_count++;
+            std::cout << "tid = " << omp_get_thread_num() << std::endl;
+        }
+    }
+    return thread_count;
+}
+
+
 // Note: If the function implementation is here instead of 
 //  in the header, then you must explicitly instantiate
 //  each template type you will use, such as:
@@ -328,20 +345,3 @@ bool Semaphore::try_wait() {
 //     value = pos->second.first;
 //     return true;
 // }
-
-
-#include <omp.h>
-uint32_t omp_enabled_test() {
-    uint32_t thread_count = 0;
-    #pragma omp parallel num_threads(4)
-    {
-        #pragma omp critical
-        {
-            thread_count++;
-            std::cout << "tid = " << omp_get_thread_num() << std::endl;
-        }
-    }
-    return thread_count;
-}
-
-

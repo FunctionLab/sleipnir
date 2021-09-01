@@ -11,13 +11,6 @@ using namespace Sleipnir;
 
 using PclPtrS = shared_ptr<CPCL>;
 
-#define CACHE_SIZE 100
-
-#define NUM_THREADS 2 // 16  // TODO - change back to 16
-extern char THREAD_OCCUPIED[NUM_THREADS];
-
-extern pthread_mutex_t mutexGet;
-
 // These all became part of the CSeekCentral datastructure that is initialized
 // vector<CSeekDBSetting *> cc;
 // vector <string> vecstrGenes;

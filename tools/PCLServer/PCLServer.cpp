@@ -28,13 +28,6 @@
 using namespace Sleipnir;
 using namespace std;
 
-pthread_mutex_t mutexGet; // TODO - make this per species
-
-// Initialize context for the PCLServer
-void pclServerInit() {
-    pthread_mutex_init(&mutexGet, NULL);
-}
-
 
 string stripPclExtensions(string pclDsetName) {
     // Remove .pcl extensions
@@ -45,6 +38,7 @@ string stripPclExtensions(string pclDsetName) {
     }
     return pclDsetName;
 }
+
 
 string stripBinExtensions(string pclDsetName) {
     // Remove .bin extensions
@@ -78,13 +72,9 @@ void *do_query(void *th_arg) {
     BoolFlag completionFlag(my->isComplete);
     lock_guard<BoolFlag> flag_lock(completionFlag);
 
-    assert(datasetNames.size() <= CACHE_SIZE);
-
     fprintf(stderr, "start processing...\n");
 
     string pcl_input_dir = cc->m_vecDBSetting[0]->pclDir;
-
-    pthread_mutex_lock(&mutexGet); //QZ disabled 1/31/2015
 
     // GW New Caching Algo
     int numDatasets = datasetNames.size();
@@ -136,8 +126,6 @@ void *do_query(void *th_arg) {
             dsetPcls[idx] = move(dsetPcl);
         }
     }
-
-    pthread_mutex_unlock(&mutexGet); //QZ disabled 1/31
 
     int genes = geneName.size();
     int queries = queryName.size(); //(EXTRA)
