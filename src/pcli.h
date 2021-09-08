@@ -26,6 +26,8 @@
 #include <set>
 #include <vector>
 
+using namespace std;
+
 #include "meta.h"
 #include "file.h"
 #include "fullmatrix.h"

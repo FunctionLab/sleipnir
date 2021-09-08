@@ -1,7 +1,10 @@
 #ifndef SEEKHELPER_H
 #define SEEKHELPER_H
 
+#include <list>
 #include <mutex>
+#include <shared_mutex>
+#include <unordered_map>
 #include <condition_variable>
 #include "seekdataset.h"
 
@@ -14,9 +17,10 @@ uint32_t omp_enabled_test();
 struct SeekSettings {
     vector <CSeekDBSetting*> dbs;
     string species;
-    int64_t port = 9000;
-    int64_t numThreads = 8; 
-    int64_t numBufferedDBs = 20;
+    int32_t port = 9000;
+    int32_t numThreads = 8;
+    int32_t numBufferedDBs = 20;
+    int32_t pclCacheSize = 100;
     double scoreCutoff = -9999;
     bool squareZ = false;
     bool isNibble = false;
@@ -26,6 +30,7 @@ struct SeekSettings {
         os << "Port: " << settings.port << endl;
         os << "NumThreads: " << settings.numThreads << endl;
         os << "NumBufferedDBs: " << settings.numBufferedDBs << endl;
+        os << "PclCacheSize: " << settings.pclCacheSize << endl;
         os << "SquareZ: " << settings.squareZ << endl;
         for (const CSeekDBSetting *db : settings.dbs) {
             os << *db;
@@ -53,6 +58,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     PLATFORM_DIR  = "/path/db1/plat"
     SINFO_DIR     = "/path/db1/sinfo"
     GVAR_DIR      = "/path/db1/gvar"
+    PCL_DIR      = "/path/db1/pcl"
     QUANT_FILE    = "/path/db1/quant2"
     DSET_MAP_FILE = "/path/db1/dataset.map"
     GENE_MAP_FILE = "/path/db1/gene_map.txt"
@@ -69,6 +75,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     GENE_SYMBOL_FILE = "/path/db2/gene_symbols.txt"
     QUANT_FILE    = "/path/db2/quant2"
     SINFO_DIR     = "/path/db2/sinfo"
+    PCL_DIR     = "/path/db2/pcl"
     GVAR_DIR      = "/path/db2/gvar"
     DSET_SIZE_FILE = "/path/db2/dataset_size"
     NUMBER_OF_DB  = 1000
@@ -124,6 +131,53 @@ public:
     void unlock() { this->_flag = true; }
 private:
     bool &_flag;
+};
+
+
+template <typename K, typename V = K>
+class LRUCache
+{
+public:
+    LRUCache(uint32_t s) :csize(s) {};
+    void set(const K key, const V value) {
+        // Take unique lock. It is automatically released
+        //  on scope exit
+        unique_lock ulock(this->cacheMutex);
+        auto pos = keyValuesMap.find(key);
+        if (pos == keyValuesMap.end()) {
+            items.push_front(key);
+            keyValuesMap[key] = { value, items.begin() };
+            if (keyValuesMap.size() > csize) {
+                keyValuesMap.erase(items.back());
+                items.pop_back();
+            }
+        } else {
+            items.erase(pos->second.second);
+            items.push_front(key);
+            keyValuesMap[key] = { value, items.begin() };
+        }
+    }
+    bool get(const K key, V &value) {
+        // Take shared lock. It is automatically released
+        //  on scope exit
+        shared_lock slock(this->cacheMutex);
+        auto pos = keyValuesMap.find(key);
+        if (pos == keyValuesMap.end()) {
+            return false;
+        }
+        items.erase(pos->second.second);
+        items.push_front(key);
+        keyValuesMap[key] = { pos->second.first, items.begin() };
+        value = pos->second.first;
+        return true;
+    }
+    uint32_t cacheSize() { return csize; }
+
+private:
+    list<K>items;
+    unordered_map <K, pair<V, typename list<K>::iterator>> keyValuesMap;
+    uint32_t csize;
+    shared_mutex cacheMutex;
 };
 
 #endif  // SEEKHELPER_H

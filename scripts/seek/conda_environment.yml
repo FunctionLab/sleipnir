@@ -11,5 +11,6 @@ dependencies:
   - pytest
   - pytest-dependency
   - pip
+  - thrift
   - pip:
     - envbash

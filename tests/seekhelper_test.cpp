@@ -54,6 +54,7 @@ TEST_F(SeekHelperTest, loadTomlConfigs)
     ASSERT_EQ(tomlSettings.port, 1234);
     ASSERT_EQ(tomlSettings.numThreads, 12);
     ASSERT_EQ(tomlSettings.numBufferedDBs, 23);
+    ASSERT_EQ(tomlSettings.pclCacheSize, 32);
     ASSERT_EQ(tomlSettings.scoreCutoff, -3.1);
     ASSERT_TRUE(tomlSettings.squareZ);
     ASSERT_TRUE(tomlSettings.isNibble);
@@ -142,6 +143,7 @@ bool compareSeekSettings(SeekSettings &s1, SeekSettings &s2) {
         s1.port == s2.port &&
         s1.numThreads == s2.numThreads &&
         s1.numBufferedDBs == s2.numBufferedDBs &&
+        s1.pclCacheSize == s2.pclCacheSize &&
         s1.squareZ == s2.squareZ &&
         s1.scoreCutoff == s2.scoreCutoff &&
         s1.outputAsText == s2.outputAsText) {
@@ -179,4 +181,27 @@ TEST_F(SeekHelperTest, loadTwoColumnTextFile)
 TEST_F(SeekHelperTest, openmpEnabledTest) {
     uint32_t thread_count = omp_enabled_test();
     ASSERT_EQ(thread_count, 4);
+}
+
+TEST_F(SeekHelperTest, LRUCacheTest) {
+    int val;
+    bool ret;
+    LRUCache <string, int> cache(5);
+    cache.set("one", 1);
+    cache.set("two", 2);
+    cache.set("three", 3);
+    cache.set("four", 4);
+    cache.set("five", 5);
+
+    ret = cache.get("five", val);
+    ASSERT_EQ(ret, true);
+    ASSERT_EQ(val, 5);
+    // cout << "got " << val << endl;
+
+    cache.set("six", 6);
+
+    ret = cache.get("one", val);
+    // should have been evicted when 6 was added
+    ASSERT_EQ(ret, false);
+
 }
