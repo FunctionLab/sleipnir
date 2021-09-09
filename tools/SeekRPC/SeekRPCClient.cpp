@@ -158,8 +158,8 @@ int main(int argc, char **argv)
         }
 
         for (int i=0; i<queries.size(); i++) {
-            SeekQuery query;
-            QueryResult result;
+            SeekQueryArgs query;
+            SeekResult result;
             query.species = args.species;
             query.__isset.parameters = true;
             query.parameters.__set_searchMethod(SearchMethod::CV);

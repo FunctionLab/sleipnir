@@ -652,6 +652,8 @@ namespace Sleipnir {
             string errStr = "Nibble integration is not supported! Please use a non-nibble CDatabase";
             throw config_error(FILELINE + errStr);
         }
+        // Commented out to allow PCL Server to use SeekCentral
+        // TODO: check where dsetSize is used
         // if (settings.dbs[0]->dsetSizeFile == "NA")
         // {
         //     // Must be set so the query request can decide whether to use check dataset size

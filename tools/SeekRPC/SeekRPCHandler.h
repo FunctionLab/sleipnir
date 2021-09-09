@@ -23,11 +23,11 @@ class SeekRPCHandler : virtual public SeekRPCIf {
     return seekInterface.getRpcVersion();
   }
 
-  void seekQuery(QueryResult& _return, const SeekQuery& query) {
+  void seekQuery(SeekResult& _return, const SeekQueryArgs& query) {
     return seekInterface.seekQuery(query, _return);
   }
 
-  int64_t seekQueryAsync(const SeekQuery& query) {
+  int64_t seekQueryAsync(const SeekQueryArgs& query) {
     return seekInterface.seekQueryAsync(query);
   }
 
@@ -35,8 +35,8 @@ class SeekRPCHandler : virtual public SeekRPCIf {
     return seekInterface.isQueryComplete(task_id);
   }
 
-  void getQueryResult(QueryResult& _return, const int64_t task_id, const bool block) {
-    return seekInterface.getQueryResult(task_id, block, _return);
+  void getSeekResult(SeekResult& _return, const int64_t task_id, const bool block) {
+    return seekInterface.getSeekResult(task_id, block, _return);
   }
 
   void getProgressMessage(std::string& _return, const int64_t task_id) {
@@ -56,9 +56,8 @@ class SeekRPCHandler : virtual public SeekRPCIf {
     return seekInterface.pvalueDatasets();
   }
 
-  int32_t pclData() {
-    // Your implementation goes here
-    return seekInterface.pclData();
+  void pclQuery(PclResult& _return, const PclQueryArgs& query) {
+    return seekInterface.pclQuery(query, _return);
   }
 
 };

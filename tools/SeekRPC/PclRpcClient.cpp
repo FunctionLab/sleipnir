@@ -11,11 +11,11 @@
 #include <thrift/transport/TTransportUtils.h>
 
 #include "seekerror.h"
-#include "gen-cpp/PclRPC.h"
-#include "gen-cpp/pcl_rpc_constants.h"
+#include "gen-cpp/SeekRPC.h"
+#include "gen-cpp/seek_rpc_constants.h"
 
 using namespace std;
-using namespace PclRPC;
+using namespace SeekRPC;
 using namespace apache::thrift;
 using namespace apache::thrift::protocol;
 using namespace apache::thrift::transport;
@@ -26,7 +26,7 @@ struct Args
     vector<string> genes;
     vector<string> datasets;
     string outputFile;
-    uint32_t port = 9010;
+    uint32_t port = 9090;
     bool verbose = false;
 };
 
@@ -120,16 +120,16 @@ int main(int argc, char **argv)
     shared_ptr<TTransport> socket(new TSocket("localhost", args.port));
     shared_ptr<TTransport> transport(new TBufferedTransport(socket));
     shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
-    PclRPCClient pclClient(protocol);
+    SeekRPCClient seekClient(protocol);
 
     try
     {
         transport->open();
-        pclClient.ping();
+        seekClient.ping();
 
         // // Check for version compatibility
-        int32_t version = pclClient.getRpcVersion();
-        assert(version == g_pcl_rpc_constants.PclRPCVersion);
+        int32_t version = seekClient.getRpcVersion();
+        assert(version == g_seek_rpc_constants.RPCVersion);
 
         PclQueryArgs pclQueryArgs;
         PclResult result;
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
         pclQueryArgs.__set_genes(args.genes);
         pclQueryArgs.__set_datasets(args.datasets);
 
-        pclClient.pclQuery(result, pclQueryArgs);
+        seekClient.pclQuery(result, pclQueryArgs);
         if (result.success == false) {
             throw query_error(result.statusMsg);
         }

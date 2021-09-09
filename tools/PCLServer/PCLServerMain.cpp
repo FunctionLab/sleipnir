@@ -13,7 +13,7 @@
 #include "seekhelper.h"
 #include "seekcentral.h"
 
-#include "PCLServer.h"
+#include "PclQuery.h"
 
 #define DEFAULT_CACHE_SIZE 100
 #define NUM_THREADS 16
