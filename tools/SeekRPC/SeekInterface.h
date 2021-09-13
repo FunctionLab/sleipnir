@@ -16,11 +16,20 @@
 using namespace std;
 using namespace SeekRPC;
 
+enum QueryType {
+  Seek,
+  Pcl,
+  Pvalue
+};
 
 class TaskInfo {
 public:
     SeekQueryArgs seekQuery;
     SeekResult seekResult;
+    PclQueryArgs pclQuery;
+    PclResult pclResult;
+    QueryType queryType;
+    int64_t taskId;
     bool isComplete = false;
     time_t timestamp;
     mutex taskMutex;
@@ -43,10 +52,13 @@ class SeekInterface {
     int32_t pvalueGenes();
     int32_t pvalueDatasets();
     void pclQuery(const PclQueryArgs &query, PclResult &result);
+    int64_t pclQueryAsync(const PclQueryArgs &query);
+    void getPclResult(int64_t task_id, bool block, PclResult &result);
   private:
-    void SeekQueryCommon(const SeekQueryArgs &query, SeekResult &result, queue<string> &log);
+    void seekQueryCommon(const SeekQueryArgs &query, SeekResult &result, queue<string> &log);
     void pclQueryCommon(const PclQueryArgs &query, PclResult &result);
-    void runSeekQueryThread(TaskInfoPtrS task);
+    int64_t commonAsync(TaskInfoPtrS task);
+    void runQueryThread(TaskInfoPtrS task);
     void runCleanTasksThread(uint32_t intervalSec);
     bool cleanStaleTask(int64_t task_id);
     TaskInfoPtrS getTask(int64_t taskId);

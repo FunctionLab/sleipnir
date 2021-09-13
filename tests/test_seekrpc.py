@@ -313,3 +313,60 @@ class TestSeekRPC:
         out2 = output2.decode("utf-8")
         assert out2.find('Gene Expressions') > 0
         assert output1 == output2
+
+    def test_pclAsyncClient(self):
+        # Run the query through the python rpc client
+        from thrift.transport import TTransport, TSocket
+        from thrift.protocol.TBinaryProtocol import TBinaryProtocol
+        socket = TSocket.TSocket('localhost', testPort)
+        transport = TTransport.TBufferedTransport(socket)
+        protocol = TBinaryProtocol(transport)
+        client = SeekRPC.Client(protocol)
+        transport.open()
+
+        datasets = ['GSE13494.GPL570.pcl', 'GSE17215.GPL3921.pcl']
+        genes = ['10998', '10994']
+        queryGenes = ['23658', '23659']
+
+        # Test gene expression
+        settings = SeekRPC.PclSettings(
+            rbp = -1,
+            outputNormalized = True,
+            outputGeneExpression = True,
+        )
+        pclArgs = SeekRPC.PclQueryArgs(
+            species='sampleBC',
+            genes=genes,
+            datasets=datasets,
+            settings=settings
+        )
+
+        # Do an async query using isQueryComplete to test
+        task_id = client.pclQueryAsync(pclArgs)
+        while True:
+            complete = client.isQueryComplete(task_id)
+            if complete:
+                break;
+            print("### Waiting for query to complete ...")
+            time.sleep(.1)
+        result = client.getPclResult(task_id, block=True)
+        assert result.success is True
+        assert len(result.datasetSizes) > 0
+        TestSeekRPC.checkPclVals(result.geneExpressions, "pclTestGeneExpr.txt")
+
+        # Do an async query using non-blocking getPclResult()
+        pclArgs.settings.outputGeneExpression = False
+        pclArgs.settings.outputGeneCoexpression = True
+        pclArgs.queryGenes = queryGenes
+        task_id = client.pclQueryAsync(pclArgs)
+        while True:
+            result = client.getPclResult(task_id, block=False)
+            if result.status is not QueryStatus.Incomplete:
+                break;
+            print("### Waiting for query to complete ...")
+            time.sleep(.1)
+        assert result.success is True
+        assert len(result.datasetSizes) > 0
+        TestSeekRPC.checkPclVals(result.geneCoexpressions, "pclTestGeneCoExpr.txt")
+
+        transport.close()
