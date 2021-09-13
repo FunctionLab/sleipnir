@@ -318,30 +318,8 @@ uint32_t omp_enabled_test() {
 
 // template <typename K, typename V>
 // void LRUCache<K, V>::set(const K key, const V value) {
-//     auto pos = keyValuesMap.find(key);
-//     if (pos == keyValuesMap.end()) {
-//         items.push_front(key);
-//         keyValuesMap[key] = { value, items.begin() };
-//         if (keyValuesMap.size() > csize) {
-//             keyValuesMap.erase(items.back());
-//             items.pop_back();
-//         }
-//     }
-//     else {
-//         items.erase(pos->second.second);
-//         items.push_front(key);
-//         keyValuesMap[key] = { value, items.begin() };
-//     }
 // }
 
 // template <typename K, typename V>
 // bool LRUCache<K, V>::get(const K key, V &value) {
-//     auto pos = keyValuesMap.find(key);
-//     if (pos == keyValuesMap.end())
-//         return false;
-//     items.erase(pos->second.second);
-//     items.push_front(key);
-//     keyValuesMap[key] = { pos->second.first, items.begin() };
-//     value = pos->second.first;
-//     return true;
 // }

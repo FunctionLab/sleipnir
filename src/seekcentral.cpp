@@ -345,6 +345,10 @@ namespace Sleipnir {
         m_iDatasets = m_vecstrDatasets.size();
         m_iGenes = m_vecstrGenes.size();
 
+        if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+            throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
+        }
+
         //read search datasets
         vector <string> sd;
         CMeta::Tokenize(search_dset.c_str(), sd, "|", false);
@@ -596,6 +600,10 @@ namespace Sleipnir {
             for (i = 0; i < qq.size(); i++) {
                 m_vecstrAllQuery[i].clear();
                 CMeta::Tokenize(qq[i].c_str(), m_vecstrAllQuery[i], " ", true);
+            }
+
+            if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+                throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
             }
 
             //Change the search datasets
@@ -928,6 +936,10 @@ namespace Sleipnir {
         utype i, j;
         omp_set_num_threads(m_numThreads);
         m_output_dir = output_dir;
+
+        if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+            throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
+        }
 
         //fprintf(stderr, "Reading query...\n");
         //read queries
