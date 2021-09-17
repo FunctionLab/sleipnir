@@ -14,7 +14,7 @@ host = 'localhost'
 '''
 Query parameters and options:
 
-struct QueryParams {
+struct SeekQueryParams {
     string searchMethod: SearchMethods.(default: CV, EqualWeighting, OrderStatistics, CVCustom)
     string distanceMeasure: DistanceMeasure.(default: ZScore, ZScoreHubbinessCorrected, Correlation)
     double minQueryGenesFraction = 0.0;
@@ -26,11 +26,11 @@ struct QueryParams {
     bool simulateWeights = false;
 }
 
-struct SeekQuery {
+struct SeekQueryArgs {
     string species: (default: "Unknown", "human", "fly", "mouse", "worm", "yeast", "zebrafish")
     list<string> genes;
     list<string> datasets;
-    QueryParams parameters;
+    SeekQueryParams parameters;
     list<string> guideGenes;
     string outputDir = "/tmp/seek";
 }
@@ -45,7 +45,7 @@ def runQuery(args):
     version = client.getRpcVersion()
     assert version == constants.RPCVersion
 
-    params = SeekRPC.QueryParams(
+    params = SeekRPC.SeekQueryParams(
         searchMethod = ttypes.SearchMethod.CV,
         distanceMeasure = ttypes.DistanceMeasure.ZScoreHubbinessCorrected,
         minQueryGenesFraction = 0.5,
@@ -55,11 +55,11 @@ def runQuery(args):
     )
 
     genes = [gene.upper() for gene in args.genes]
-    query = SeekRPC.SeekQuery(species=args.species, genes=args.genes, parameters=params)
+    query = SeekRPC.SeekQueryArgs(species=args.species, genes=args.genes, parameters=params)
 
     retval = -1
     taskId = client.seekQueryAsync(query)
-    result = client.getQueryResult(taskId, block=True)
+    result = client.getSeekResult(taskId, block=True)
     print(f'Status: {result.statusMsg}')
     # Alternate non-blocking code, checking periodically if complete
     # taskId = client.seekQueryAsync(query)
@@ -69,7 +69,7 @@ def runQuery(args):
     #     if len(statusMsg) > 0:
     #         print(f'Status: {statusMsg}')
     #     time.sleep(0.1)
-    # result = client.getQueryResult(taskId, block=True)
+    # result = client.getSeekResult(taskId, block=True)
     if result.success is True:
         for i, gs in enumerate(result.geneScores):
             print(f'gene: {gs.name}, {gs.value}')

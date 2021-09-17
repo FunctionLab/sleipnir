@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.14.5)
 project(sleipnir)
 
+message(STATUS "SOURCE DIR: " ${CMAKE_CURRENT_SOURCE_DIR})
+message(STATUS "ROOT DIR: " ${ROOT})
+
 add_link_options(-lpthread)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -118,6 +121,8 @@ set(SLEIPNIR_SOURCES
     src/pcl.cpp
     src/pcl.h
     src/pcli.h
+    src/PclQuery.cpp
+    src/PclQuery.h
     src/pclset.cpp
     src/pclset.h
     src/pclseti.h
@@ -411,6 +416,7 @@ list(APPEND SLEIPNIR_TOOLS
     PCL2Bin
     PCLPlotter
     PCLServer
+    PclRpcClient
     Randomizer
     SMRF
     SVDer
@@ -465,13 +471,28 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
             tools/SeekRPC/gen-cpp/SeekRPC.cpp
             )
         list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
-    else ()
+    elseif (${TOOL} STREQUAL PclRpcClient)
         add_executable(${TOOL}
-            tools/${TOOL}/${TOOL}.cpp
-            tools/${TOOL}/cmdline.c)
-	  if (EXISTS tools/${TOOL}/stdafx.cpp)
-            add_executable(${TOOL} tools/${TOOL}/stdafx.cpp)
-	  endif()
+            tools/SeekRPC/PclRpcClient.cpp
+            tools/SeekRPC/gen-cpp/seek_rpc_constants.cpp
+            tools/SeekRPC/gen-cpp/seek_rpc_types.cpp
+            tools/SeekRPC/gen-cpp/SeekRPC.cpp
+            )
+        list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
+    else ()
+        list(APPEND ${TOOL}_SOURCES
+            tools/${TOOL}/cmdline.c
+        )
+        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/${TOOL}.cpp)
+            list(APPEND ${TOOL}_SOURCES tools/${TOOL}/${TOOL}.cpp)
+        endif()
+        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/${TOOL}Main.cpp)
+            list(APPEND ${TOOL}_SOURCES tools/${TOOL}/${TOOL}Main.cpp)
+        endif()
+        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/stdafx.cpp)
+            list(APPEND ${TOOL}_SOURCES tools/${TOOL}/stdafx.cpp)
+        endif()
+        add_executable(${TOOL} ${${TOOL}_SOURCES})
     endif ()
     add_dependencies(${TOOL} sleipnir)
     target_include_directories(${TOOL} PUBLIC ${EXTRA_INCLUDES})

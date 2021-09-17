@@ -8,17 +8,27 @@
 #include <shared_mutex>
 #include "seekcentral.h"
 #include "seekhelper.h"
+#include "PclQuery.h"
 #include "gen-cpp/SeekRPC.h"
 
 
 using namespace std;
 using namespace SeekRPC;
 
+enum QueryType {
+  Seek,
+  Pcl,
+  Pvalue
+};
 
 class TaskInfo {
 public:
-    SeekQuery seekQuery;
-    QueryResult seekResult;
+    SeekQueryArgs seekQuery;
+    SeekResult seekResult;
+    PclQueryArgs pclQuery;
+    PclResult pclResult;
+    QueryType queryType;
+    int64_t taskId;  // Apache Thrift doesn't have uint64 so use int64
     bool isComplete = false;
     time_t timestamp;
     mutex taskMutex;
@@ -31,19 +41,23 @@ using TaskInfoPtrS = shared_ptr<TaskInfo>;
 class SeekInterface {
   public:
     SeekInterface(vector<string> &configFiles, uint32_t maxConcurreny, uint32_t taskTimeoutSec);
-    void seekQuery(const SeekQuery &query, QueryResult &result);
-    int64_t seekQueryAsync(const SeekQuery &query);
+    void seekQuery(const SeekQueryArgs &query, SeekResult &result);
+    int64_t seekQueryAsync(const SeekQueryArgs &query);
     bool isQueryComplete(int64_t task_id);
-    void getQueryResult(int64_t task_id, bool block, QueryResult &result);
+    void getSeekResult(int64_t task_id, bool block, SeekResult &result);
     string getProgressMessage(int64_t task_id);
     int32_t getRpcVersion();
     int32_t ping();
     int32_t pvalueGenes();
     int32_t pvalueDatasets();
-    int32_t pclData();
+    void pclQuery(const PclQueryArgs &query, PclResult &result);
+    int64_t pclQueryAsync(const PclQueryArgs &query);
+    void getPclResult(int64_t task_id, bool block, PclResult &result);
   private:
-    void SeekQueryCommon(const SeekQuery &query, QueryResult &result, ThreadSafeQueue<string> &log);
-    void runSeekQueryThread(TaskInfoPtrS task);
+    void seekQueryCommon(const SeekQueryArgs &query, SeekResult &result, ThreadSafeQueue<string>  &log);
+    void pclQueryCommon(const PclQueryArgs &query, PclResult &result);
+    int64_t commonAsync(TaskInfoPtrS task);
+    void runQueryThread(TaskInfoPtrS task);
     void runCleanTasksThread(uint32_t intervalSec);
     bool cleanStaleTask(int64_t task_id);
     TaskInfoPtrS getTask(int64_t taskId);
@@ -53,6 +67,7 @@ class SeekInterface {
     // Class variables
     map<string, SeekSettings> speciesConfigs;  // speciesName --> Config
     map<string, CSeekCentral> speciesSeekCentrals; // speciesName --> SeekCentralStruct
+    map<string, LRUCache <string, PclPtrS>> speciesPclCache; // speciesName --> PclCache
     map<int64_t, TaskInfoPtrS> taskMap;  // task_id --> TaskInfo
     shared_mutex taskMapMutex;
     Semaphore querySemaphore;

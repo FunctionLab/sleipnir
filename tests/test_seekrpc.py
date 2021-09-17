@@ -4,6 +4,7 @@ import sys
 import time
 import subprocess
 import tempfile
+import numpy as np
 
 testDir = os.path.abspath(os.path.dirname(__file__))
 sleipnirDir = os.path.dirname(testDir)
@@ -21,7 +22,7 @@ sys.path.append(seekRpcPyDir)
 from pytestHelper import createSampleDatabase
 from rank_correlation import files_rank_correlation
 from seek_rpc import SeekRPC
-from seek_rpc.ttypes import SeekQuery, QueryParams, QueryStatus 
+from seek_rpc.ttypes import SeekQueryArgs, SeekQueryParams, QueryStatus
 from seek_rpc.ttypes import SearchMethod, DistanceMeasure
 
 use_tempfile = False
@@ -45,7 +46,7 @@ class TestSeekRPC:
         cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile} -p {testPort}'
         cls.SeekServerProc = subprocess.Popen(cmd, shell=True)
         print(f'### {cmd}')
-        time.sleep(.5)
+        time.sleep(1)
 
 
     def teardown_class(cls):
@@ -114,33 +115,33 @@ class TestSeekRPC:
         client = SeekRPC.Client(protocol)
         transport.open()
 
-        params = QueryParams(distanceMeasure=DistanceMeasure.ZScoreHubbinessCorrected,
+        params = SeekQueryParams(distanceMeasure=DistanceMeasure.ZScoreHubbinessCorrected,
                             minQueryGenesFraction=0.5,
                             minGenomeFraction=0.5,
                             useGeneSymbols=False)
         genes = ['55755', '64859', '348654', '79791', '7756', '8555', '835', '5347']
         datasets = ['GSE45584.GPL6480', 'GSE24468.GPL570', 'GSE3744.GPL570']
-        query = SeekQuery(species='sampleBC', genes=genes, datasets=datasets, parameters=params)
+        queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, datasets=datasets, parameters=params)
 
         # Do an async query using isQueryComplete to test
-        task_id = client.seekQueryAsync(query)
+        task_id = client.seekQueryAsync(queryArgs)
         while True:
             complete = client.isQueryComplete(task_id)
             if complete:
                 break;
             print("### Waiting for query to complete ...")
             time.sleep(.1)
-        result = client.getQueryResult(task_id, block=True)
+        result = client.getSeekResult(task_id, block=True)
         assert result.success is True
         assert len(result.geneScores) > 0
         assert len(result.datasetWeights) == 3  # because query specified 3 datasets
 
-        # Do an async query using non-blocking getQueryResult()
+        # Do an async query using non-blocking getSeekResult()
         genes = ['5884', '9575', '51343', '57805', '29980', '8091', '6154', '51776']
-        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
-        task_id = client.seekQueryAsync(query)
+        queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, parameters=params)
+        task_id = client.seekQueryAsync(queryArgs)
         while True:
-            result = client.getQueryResult(task_id, block=False)
+            result = client.getSeekResult(task_id, block=False)
             if result.status is not QueryStatus.Incomplete:
                 break;
             print("### Waiting for query to complete ...")
@@ -164,37 +165,208 @@ class TestSeekRPC:
         genes = ['55755', '64859', '348654', '79791', '7756', '8555', '835', '5347']
 
         # Run EqualWeighting without simulateWeights
-        params = QueryParams(searchMethod=SearchMethod.EqualWeighting,
+        params = SeekQueryParams(searchMethod=SearchMethod.EqualWeighting,
                             simulateWeights=False)
-        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
-        result = client.seekQuery(query)
+        queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, parameters=params)
+        result = client.seekQuery(queryArgs)
         assert result.success is True
         assert len(result.geneScores) > 0
         assert len(result.datasetWeights) == 0  # because no simulate weights
 
         # Run EqualWeighting with simulateWeights
-        params = QueryParams(searchMethod=SearchMethod.EqualWeighting,
+        params = SeekQueryParams(searchMethod=SearchMethod.EqualWeighting,
                             simulateWeights=True)
-        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
-        result = client.seekQuery(query)
+        queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, parameters=params)
+        result = client.seekQuery(queryArgs)
         assert result.success is True
         assert len(result.geneScores) > 0
         assert len(result.datasetWeights) > 0  # because simulate weights set
 
         # Run OrderStatistics without simulateWeights
-        params = QueryParams(searchMethod=SearchMethod.OrderStatistics,
+        params = SeekQueryParams(searchMethod=SearchMethod.OrderStatistics,
                             simulateWeights=False)
-        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
-        result = client.seekQuery(query)
+        queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, parameters=params)
+        result = client.seekQuery(queryArgs)
         assert result.success is True
         assert len(result.geneScores) > 0
         assert len(result.datasetWeights) == 0  # because no simulate weights
 
         # Run OrderStatistics with simulateWeights
-        params = QueryParams(searchMethod=SearchMethod.OrderStatistics,
+        params = SeekQueryParams(searchMethod=SearchMethod.OrderStatistics,
                             simulateWeights=True)
-        query = SeekQuery(species='sampleBC', genes=genes, parameters=params)
-        result = client.seekQuery(query)
+        queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, parameters=params)
+        result = client.seekQuery(queryArgs)
         assert result.success is True
         assert len(result.geneScores) > 0
         assert len(result.datasetWeights) > 0  # because simulate weights set
+
+    def runPclQuery(client, pclArgs):
+        result = client.pclQuery(pclArgs)
+        assert result.success is True
+        assert len(result.datasetSizes) > 0
+        return result
+
+    def checkPclVals(vals, expectedOutputFile):
+        # Read in expected result from test_input file
+        with open(os.path.join(testInputsDir, expectedOutputFile)) as fp:
+            lines = fp.readlines()
+        expectedVals = [float(item) for item in lines]
+        assert np.allclose(vals, expectedVals, atol=1e-6)
+        print("Success!")
+
+
+    def test_pclQueries(self):
+        # Run the various example tests againt the PclRPC server and verify
+        #   we get the expected results.
+        print("## Run Client ##")
+        # Run the query through the python rpc client
+        from thrift.transport import TTransport, TSocket
+        from thrift.protocol.TBinaryProtocol import TBinaryProtocol
+        socket = TSocket.TSocket('localhost', testPort)
+        transport = TTransport.TBufferedTransport(socket)
+        transport.open()
+        protocol = TBinaryProtocol(transport)
+        client = SeekRPC.Client(protocol)
+
+        datasets = ['GSE13494.GPL570.pcl', 'GSE17215.GPL3921.pcl']
+        genes = ['10998', '10994']
+        queryGenes = ['23658', '23659']
+
+        # Test gene expression
+        settings = SeekRPC.PclSettings(
+            rbp = -1,
+            outputNormalized = True,
+            outputGeneExpression = True,
+        )
+        pclArgs = SeekRPC.PclQueryArgs(
+            species='sampleBC',
+            genes=genes,
+            datasets=datasets,
+            settings=settings)
+        result = TestSeekRPC.runPclQuery(client, pclArgs)
+        TestSeekRPC.checkPclVals(result.geneExpressions, "pclTestGeneExpr.txt")
+
+        # Test gene coexpression
+        settings = SeekRPC.PclSettings(
+            rbp = -1,
+            outputNormalized = True,
+            outputGeneCoexpression = True,
+        )
+        pclArgs = SeekRPC.PclQueryArgs(
+            species='sampleBC',
+            genes=genes,
+            queryGenes=queryGenes,  # queryGenes must be present for geneCoexpression calc
+            datasets=datasets,
+            settings=settings)
+        result = TestSeekRPC.runPclQuery(client, pclArgs)
+        TestSeekRPC.checkPclVals(result.geneCoexpressions, "pclTestGeneCoExpr.txt")
+
+        # test query expression
+        settings = SeekRPC.PclSettings(
+            rbp = -1,
+            outputNormalized = True,
+            outputQueryExpression = True,
+        )
+        pclArgs = SeekRPC.PclQueryArgs(
+            species='sampleBC',
+            queryGenes=queryGenes,
+            datasets=datasets,
+            settings=settings)
+        result = TestSeekRPC.runPclQuery(client, pclArgs)
+        TestSeekRPC.checkPclVals(result.queryExpressions, "pclTestQueryExpr.txt")
+
+        # test query Coexpression
+        settings = SeekRPC.PclSettings(
+            rbp = -1,
+            outputNormalized = True,
+            outputQueryCoexpression = True,
+        )
+        pclArgs = SeekRPC.PclQueryArgs(
+            species='sampleBC',
+            queryGenes=queryGenes,
+            datasets=datasets,
+            settings=settings)
+        result = TestSeekRPC.runPclQuery(client, pclArgs)
+        TestSeekRPC.checkPclVals(result.queryCoexpressions, "pclTestQueryCoExpr.txt")
+
+# Test that uses different dataset names, like with .pcl, .pcl.bin and no pcl.
+# Also within settings file specifying pcl dir as /pcl and /pclbin
+    def test_pclSettings(self):
+        # Test using the python client
+        cmd = f'python {seekRpcDir}/PclRpcClient.py -p {testPort} -s sampleBC ' \
+              f'-d GSE13494.GPL570.pcl,GSE17215.GPL3921.pcl ' \
+              f'-g 10998,10994 -q 23658,23659 --zexp --zcoexp'
+        print(f'### {cmd}')
+        clientProc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        clientProc.wait()
+        assert clientProc.returncode == 0
+        output1, err = clientProc.communicate()
+
+        cmd = f'python {seekRpcDir}/PclRpcClient.py -p {testPort} -s sampleBC ' \
+              f'-d GSE13494.GPL570,GSE17215.GPL3921 ' \
+              f'-g 10998,10994 -q 23658,23659 --zexp --zcoexp'
+        print(f'### {cmd}')
+        clientProc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        clientProc.wait()
+        assert clientProc.returncode == 0
+        output2, err = clientProc.communicate()
+        out2 = output2.decode("utf-8")
+        assert out2.find('Gene Expressions') > 0
+        assert output1 == output2
+
+    def test_pclAsyncClient(self):
+        # Run the query through the python rpc client
+        from thrift.transport import TTransport, TSocket
+        from thrift.protocol.TBinaryProtocol import TBinaryProtocol
+        socket = TSocket.TSocket('localhost', testPort)
+        transport = TTransport.TBufferedTransport(socket)
+        protocol = TBinaryProtocol(transport)
+        client = SeekRPC.Client(protocol)
+        transport.open()
+
+        datasets = ['GSE13494.GPL570.pcl', 'GSE17215.GPL3921.pcl']
+        genes = ['10998', '10994']
+        queryGenes = ['23658', '23659']
+
+        # Test gene expression
+        settings = SeekRPC.PclSettings(
+            rbp = -1,
+            outputNormalized = True,
+            outputGeneExpression = True,
+        )
+        pclArgs = SeekRPC.PclQueryArgs(
+            species='sampleBC',
+            genes=genes,
+            datasets=datasets,
+            settings=settings
+        )
+
+        # Do an async query using isQueryComplete to test
+        task_id = client.pclQueryAsync(pclArgs)
+        while True:
+            complete = client.isQueryComplete(task_id)
+            if complete:
+                break;
+            print("### Waiting for query to complete ...")
+            time.sleep(.1)
+        result = client.getPclResult(task_id, block=True)
+        assert result.success is True
+        assert len(result.datasetSizes) > 0
+        TestSeekRPC.checkPclVals(result.geneExpressions, "pclTestGeneExpr.txt")
+
+        # Do an async query using non-blocking getPclResult()
+        pclArgs.settings.outputGeneExpression = False
+        pclArgs.settings.outputGeneCoexpression = True
+        pclArgs.queryGenes = queryGenes
+        task_id = client.pclQueryAsync(pclArgs)
+        while True:
+            result = client.getPclResult(task_id, block=False)
+            if result.status is not QueryStatus.Incomplete:
+                break;
+            print("### Waiting for query to complete ...")
+            time.sleep(.1)
+        assert result.success is True
+        assert len(result.datasetSizes) > 0
+        TestSeekRPC.checkPclVals(result.geneCoexpressions, "pclTestGeneCoExpr.txt")
+
+        transport.close()

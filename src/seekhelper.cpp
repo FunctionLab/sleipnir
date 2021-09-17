@@ -45,9 +45,10 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     }
     // populate the top level settings
     tomlGetValue<string>(tbl, "species", settings.species);
-    tomlGetValue<int64_t>(tbl, "port", settings.port);
-    tomlGetValue<int64_t>(tbl, "numThreads", settings.numThreads);
-    tomlGetValue<int64_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
+    tomlGetValue<int32_t>(tbl, "port", settings.port);
+    tomlGetValue<int32_t>(tbl, "numThreads", settings.numThreads);
+    tomlGetValue<int32_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
+    tomlGetValue<int32_t>(tbl, "pclCacheSize", settings.pclCacheSize);
     tomlGetValue<double>(tbl, "scoreCutoff", settings.scoreCutoff);
     tomlGetValue<bool>(tbl, "squareZ", settings.squareZ);
     tomlGetValue<bool>(tbl, "isNibble", settings.isNibble);
@@ -68,30 +69,33 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
             string platform_dir = "NA";
             string sinfo_dir = "NA";
             string gvar_dir = "NA";
+            string pcl_dir = "NA";
             string quant_file = "NA";
             string gene_map_file = "NA";
             string gene_symbol_file = "NA";
             string dset_map_file = "NA";
             string dset_size_file = "NA";
-            int64_t num_db = -1;
+            int32_t num_db = -1;
 
             tomlGetValue<string>(*dbTbl, "DB_DIR", db_dir);
             tomlGetValue<string>(*dbTbl, "PREP_DIR", prep_dir);
             tomlGetValue<string>(*dbTbl, "PLATFORM_DIR",platform_dir);
             tomlGetValue<string>(*dbTbl, "SINFO_DIR", sinfo_dir);
             tomlGetValue<string>(*dbTbl, "GVAR_DIR", gvar_dir);
+            tomlGetValue<string>(*dbTbl, "PCL_DIR", pcl_dir);
             tomlGetValue<string>(*dbTbl, "QUANT_FILE", quant_file);
             tomlGetValue<string>(*dbTbl, "GENE_MAP_FILE", gene_map_file);
             tomlGetValue<string>(*dbTbl, "GENE_SYMBOL_FILE", gene_symbol_file);
             tomlGetValue<string>(*dbTbl, "DSET_MAP_FILE", dset_map_file);
             tomlGetValue<string>(*dbTbl, "DSET_SIZE_FILE", dset_size_file);
-            tomlGetValue<int64_t>(*dbTbl, "NUMBER_OF_DB", num_db);
+            tomlGetValue<int32_t>(*dbTbl, "NUMBER_OF_DB", num_db);
 
             CSeekDBSetting *dbSetting2 = 
                 new CSeekDBSetting(gvar_dir, sinfo_dir, platform_dir, 
                                 prep_dir, db_dir, gene_map_file, gene_symbol_file,
                                 quant_file, dset_map_file,
                                 dset_size_file, num_db);
+            dbSetting2->setPclDir(pcl_dir);
             settings.dbs.push_back(dbSetting2);
         }
     } else {
@@ -166,6 +170,7 @@ bool legacyReadDBConfigFile(string dbConfigFile,
         string gvar_dir = "NA";
         string platform_dir = "NA";
         string prep_dir = "NA";
+        string pcl_dir = "NA";
         string db_dir = "NA";
         string dset_map_file = "NA";
         string gene_map_file = "NA";
@@ -184,6 +189,9 @@ bool legacyReadDBConfigFile(string dbConfigFile,
         }
         if (parameters[i].find("GVAR_DIR") != parameters[i].end())
             gvar_dir = parameters[i].find("GVAR_DIR")->second;
+
+        if (parameters[i].find("PCL_DIR") != parameters[i].end())
+            pcl_dir = parameters[i].find("PCL_DIR")->second;
 
         if (check_dset_size_flag == true) {
             if (parameters[i].find("DSET_SIZE_FILE") == parameters[i].end() ||
@@ -218,6 +226,7 @@ bool legacyReadDBConfigFile(string dbConfigFile,
                                                         gene_map_file, gene_symbol_file,
                                                         quant_file, dset_map_file,
                                                         dset_size_file, num_db);
+        dbSetting2->setPclDir(pcl_dir);
         cc.push_back(dbSetting2);
     }
     return true;
@@ -300,3 +309,17 @@ uint32_t omp_enabled_test() {
     }
     return thread_count;
 }
+
+
+// Note: If the function implementation is here instead of 
+//  in the header, then you must explicitly instantiate
+//  each template type you will use, such as:
+// template class LRUCache<string, int>;
+
+// template <typename K, typename V>
+// void LRUCache<K, V>::set(const K key, const V value) {
+// }
+
+// template <typename K, typename V>
+// bool LRUCache<K, V>::get(const K key, V &value) {
+// }

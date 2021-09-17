@@ -48,6 +48,7 @@ namespace Sleipnir {
                            platDir(m_platformDirectory),
                            sinfoDir(m_sinfoDirectory),
                            gvarDir(m_gvarDirectory),
+                           pclDir(m_pclDirectory),
                            geneMapFile(m_geneMapFile),
                            geneSymbolFile(m_geneSymbolFile),
                            datasetFile(m_dsetFile),
@@ -88,6 +89,7 @@ namespace Sleipnir {
             m_dsetFile = g->m_dsetFile;
             m_numDB = g->m_numDB;
             m_dsetSizeFile = g->m_dsetSizeFile;
+            m_pclDirectory = g->m_pclDirectory;
         }
 
         ~CSeekDBSetting() {
@@ -97,12 +99,17 @@ namespace Sleipnir {
             return m_numDB;
         }
 
+        void setPclDir(string pclDir) {
+            m_pclDirectory = pclDir;
+        }
+
         friend ostream& operator<<(ostream& os, const CSeekDBSetting& dbs) {
             os << "DB:" << dbs.m_dbDirectory << endl;
             os << "Prep:" << dbs.m_prepDirectory << endl;
             os << "Plat:" << dbs.m_platformDirectory << endl;
             os << "Sinfo:" << dbs.m_sinfoDirectory << endl;
             os << "GVar:" << dbs.m_gvarDirectory << endl;
+            os << "PCL:" << dbs.m_pclDirectory << endl;
             os << "GeneMapFile:" << dbs.m_geneMapFile << endl;
             os << "GeneSymbolFile:" << dbs.m_geneSymbolFile << endl;
             os << "DatasetsFile:" << dbs.m_dsetFile << endl;
@@ -117,6 +124,7 @@ namespace Sleipnir {
         const string &platDir;
         const string &sinfoDir;
         const string &gvarDir;
+        const string &pclDir;
         const string &geneMapFile;
         const string &geneSymbolFile;
         const string &datasetFile;
@@ -130,6 +138,7 @@ namespace Sleipnir {
         string m_platformDirectory;
         string m_prepDirectory;
         string m_dbDirectory;
+        string m_pclDirectory;
         string m_geneMapFile;
         string m_geneSymbolFile;
         string m_quantFile;

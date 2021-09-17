@@ -380,8 +380,12 @@ bool OpenDB(string &DBFile, bool &useNibble, size_t &iDatasets,
 
 string getPclFileStem(string fileName) {
     // match on substring '.pcl' will also match on '.pcl.bin'
-    int pos = fileName.rfind(".pcl");
-    string fileStem = fileName.substr(0, pos);
+    string fileStem = fileName;
+    int pos;
+    pos = fileStem.rfind(".pcl");
+    fileStem = fileStem.substr(0, pos);
+    pos = fileStem.rfind(".bin");
+    fileStem = fileStem.substr(0, pos);
     return fileStem;
 }
 
