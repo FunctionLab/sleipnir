@@ -345,6 +345,10 @@ namespace Sleipnir {
         m_iDatasets = m_vecstrDatasets.size();
         m_iGenes = m_vecstrGenes.size();
 
+        if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+            throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
+        }
+
         //read search datasets
         vector <string> sd;
         CMeta::Tokenize(search_dset.c_str(), sd, "|", false);
@@ -598,6 +602,10 @@ namespace Sleipnir {
                 CMeta::Tokenize(qq[i].c_str(), m_vecstrAllQuery[i], " ", true);
             }
 
+            if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+                throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
+            }
+
             //Change the search datasets
             vector <string> sd;
             CMeta::Tokenize(refinedSearchDataset.c_str(), sd, "|", false);
@@ -652,6 +660,9 @@ namespace Sleipnir {
             string errStr = "Nibble integration is not supported! Please use a non-nibble CDatabase";
             throw config_error(FILELINE + errStr);
         }
+        // Commented out to allow PCL Server to use SeekCentral
+        // Added checks that when m_bCheckDsetSize is true
+        // then m_mapstrintDatasetSize isn't empty
         // if (settings.dbs[0]->dsetSizeFile == "NA")
         // {
         //     // Must be set so the query request can decide whether to use check dataset size
@@ -926,6 +937,10 @@ namespace Sleipnir {
         utype i, j;
         omp_set_num_threads(m_numThreads);
         m_output_dir = output_dir;
+
+        if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+            throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
+        }
 
         //fprintf(stderr, "Reading query...\n");
         //read queries

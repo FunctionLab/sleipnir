@@ -6,9 +6,9 @@ from thrift.transport import TTransport, TSocket
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
 # Since the path gen-py/seek_rpc has a hyphen in it we need to use
 #   the import_module() function rather than the usual import call
-PclRPC = importlib.import_module('gen-py.pcl_rpc.PclRPC')
-ttypes = importlib.import_module('gen-py.pcl_rpc.ttypes')
-constants = importlib.import_module('gen-py.pcl_rpc.constants')
+SeekRPC = importlib.import_module('gen-py.seek_rpc.SeekRPC')
+ttypes = importlib.import_module('gen-py.seek_rpc.ttypes')
+constants = importlib.import_module('gen-py.seek_rpc.constants')
 
 host = 'localhost'
 
@@ -67,13 +67,13 @@ def runQuery(args):
     socket = TSocket.TSocket(host, args.port)
     transport = TTransport.TBufferedTransport(socket)
     protocol = TBinaryProtocol(transport)
-    client = PclRPC.Client(protocol)
+    client = SeekRPC.Client(protocol)
     transport.open()
     version = client.getRpcVersion()
-    assert version == constants.PclRPCVersion
+    assert version == constants.RPCVersion
     retval = -1
 
-    settings = PclRPC.PclSettings(
+    settings = SeekRPC.PclSettings(
         outputNormalized = True,
         outputGeneExpression = args.zexp,
         outputGeneCoexpression = args.zcoexp,
@@ -82,7 +82,7 @@ def runQuery(args):
         rbp = -1,
     )
 
-    pclArgs = PclRPC.PclQueryArgs(species=args.species,
+    pclArgs = SeekRPC.PclQueryArgs(species=args.species,
                                   genes=args.genes,
                                   queryGenes=args.queryGenes,
                                   datasets=args.datasets,
@@ -137,7 +137,7 @@ if __name__ == "__main__":
                            help='output query Coexpression values')
     argParser.add_argument('--outfile', '-o', default=None, type=str,
                            help='filename to output results')
-    argParser.add_argument('--port', '-p', default=9010, type=int,
+    argParser.add_argument('--port', '-p', default=9090, type=int,
                            help='server port')
     args = argParser.parse_args()
 

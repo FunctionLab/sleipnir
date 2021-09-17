@@ -121,6 +121,8 @@ set(SLEIPNIR_SOURCES
     src/pcl.cpp
     src/pcl.h
     src/pcli.h
+    src/PclQuery.cpp
+    src/PclQuery.h
     src/pclset.cpp
     src/pclset.h
     src/pclseti.h
@@ -414,7 +416,6 @@ list(APPEND SLEIPNIR_TOOLS
     PCL2Bin
     PCLPlotter
     PCLServer
-    PclRpcServer
     PclRpcClient
     Randomizer
     SMRF
@@ -470,34 +471,26 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
             tools/SeekRPC/gen-cpp/SeekRPC.cpp
             )
         list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
-    elseif (${TOOL} STREQUAL PclRpcServer)
-        add_executable(${TOOL}
-            tools/PCLServer/PclRpcServer.cpp
-            tools/PCLServer/PclInterface.cpp
-            tools/PCLServer/PCLServer.cpp
-            tools/PCLServer/gen-cpp/pcl_rpc_constants.cpp
-            tools/PCLServer/gen-cpp/pcl_rpc_types.cpp
-            tools/PCLServer/gen-cpp/PclRPC.cpp
-            )
-        list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
     elseif (${TOOL} STREQUAL PclRpcClient)
         add_executable(${TOOL}
-            tools/PCLServer/PclRpcClient.cpp
-            tools/PCLServer/gen-cpp/pcl_rpc_constants.cpp
-            tools/PCLServer/gen-cpp/pcl_rpc_types.cpp
-            tools/PCLServer/gen-cpp/PclRPC.cpp
+            tools/SeekRPC/PclRpcClient.cpp
+            tools/SeekRPC/gen-cpp/seek_rpc_constants.cpp
+            tools/SeekRPC/gen-cpp/seek_rpc_types.cpp
+            tools/SeekRPC/gen-cpp/SeekRPC.cpp
             )
         list(APPEND TMP_LIBRARIES ${LIBTHRIFT})
     else ()
         list(APPEND ${TOOL}_SOURCES
-            tools/${TOOL}/${TOOL}.cpp
             tools/${TOOL}/cmdline.c
         )
-        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/stdafx.cpp)
-            list(APPEND ${TOOL}_SOURCES tools/${TOOL}/stdafx.cpp)
+        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/${TOOL}.cpp)
+            list(APPEND ${TOOL}_SOURCES tools/${TOOL}/${TOOL}.cpp)
         endif()
         if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/${TOOL}Main.cpp)
             list(APPEND ${TOOL}_SOURCES tools/${TOOL}/${TOOL}Main.cpp)
+        endif()
+        if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/stdafx.cpp)
+            list(APPEND ${TOOL}_SOURCES tools/${TOOL}/stdafx.cpp)
         endif()
         add_executable(${TOOL} ${${TOOL}_SOURCES})
     endif ()

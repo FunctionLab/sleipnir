@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include "seekerror.h"
-#include "PCLServer.h"
+#include "PclQuery.h"
 
 using namespace Sleipnir;
 using namespace std;

@@ -5,6 +5,7 @@
 #include "SeekInterface.h"
 #include "seekcentral.h"
 #include "seekerror.h"
+#include "PclQuery.h"
 #include "gen-cpp/seek_rpc_constants.h"
 
 using namespace std;
@@ -12,7 +13,7 @@ using namespace SeekRPC;
 
 string getLogMessages(queue<string> &messageLog);
 
-SeekInterface::SeekInterface(vector<string> &configFiles, 
+SeekInterface::SeekInterface(vector<string> &configFiles,
                              uint32_t maxConcurreny,
                              uint32_t taskTimeoutSec) :
                                 querySemaphore(maxConcurreny, maxConcurreny),
@@ -26,6 +27,7 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
         try {
             cout << "Initialize " << speciesName << endl;
             this->speciesSeekCentrals[speciesName].InitializeFromSeekConfig(config);
+            this->speciesPclCache.emplace(speciesName, config.pclCacheSize);
         } catch(exception &err) {
             throw_with_nested(config_error(FILELINE + "Error initializing CSeekCentral for species " + speciesName));
         }
@@ -35,83 +37,39 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
     this->_cleanerThread = thread(&SeekInterface::runCleanTasksThread, this, taskTimeoutSec);
 }
 
-void SeekInterface::seekQuery(const SeekQuery &query, QueryResult &result)
+void SeekInterface::seekQuery(const SeekQueryArgs &query, SeekResult &result)
 {
     // spin off a thread to run this query but wait immediately for it
     int64_t taskId = this->seekQueryAsync(query);
-    this->getQueryResult(taskId, true, result);
+    this->getSeekResult(taskId, true, result);
     return;
 }
 
-int64_t SeekInterface::seekQueryAsync(const SeekQuery &query)
+int64_t SeekInterface::seekQueryAsync(const SeekQueryArgs &query)
 {
-    /* get next task_id using atomic increment counter */
-    int64_t task_id = this->next_task_id++;
-    /* if counter ever loops then throw exception, allows 4 billion queries */
-    assert(task_id > 0);
-
-    /* create a task and thread */
-    {
-        /* Use lock_guard to lock the mutex and guarantee 
-         *   that it unlocks when the scope exits
-         * Note: lock_guard or unique_lock could be used here.
-         *   Since this is a shared_mutex I'll use unique_lock
-         * and shared_lock operations.
-         */
-        unique_lock mlock(this->taskMapMutex);
-        if (this->taskMap.count(task_id) != 0) {
-            /* taskMap for this id already exists
-             * this should never happen, program logic error
-             */
-            throw state_error("taskMap already contains task_id " + to_string(task_id));
-        } else {
-            /* add a new task to the map and start the thread */
-            TaskInfoPtrS task = make_shared<TaskInfo>();
-            task->seekQuery = query;
-            task->timestamp = time(0);
-            task->_thread = make_unique<thread>(&SeekInterface::runSeekQueryThread, this, task);
-            this->taskMap.emplace(task_id, move(task));
-        }
-        /* mutex automatically unlocks when scope exits */
-    }
-
-    return task_id;
+    TaskInfoPtrS task = make_shared<TaskInfo>();
+    task->queryType = QueryType::Seek;
+    task->seekQuery = query;
+    return commonAsync(task);
 }
 
 
-void SeekInterface::getQueryResult(int64_t task_id, bool block, QueryResult &result)
+
+
+void SeekInterface::pclQuery(const PclQueryArgs &query, PclResult &result)
 {
-    /* lookup the task */
-    TaskInfoPtrS task = this->getTask(task_id);
-    if (task == nullptr) {
-        result.success = false;
-        result.status = QueryStatus::Error;
-        result.statusMsg = "Task not found or timed out: task_id: " + to_string(task_id);
-        result.__isset.status = true;
-        result.__isset.statusMsg = true;
-        return;
-    }
-
-    if (!block && !task->isComplete) {
-        result.success = false;
-        result.status = QueryStatus::Incomplete;
-        result.__isset.status = true;
-        return;
-    }
-
-    /* join the task thread */
-    this->joinTask(*task);
-
-    /* populate the return results */
-    {
-        lock_guard tlock(task->taskMutex);
-        result = task->seekResult;
-    }
-
-    /* remove the task from the taskMap */
-    this->removeMappedTask(task_id);
-
+    // spin off a thread to run this query but wait immediately for it
+    int64_t taskId = this->pclQueryAsync(query);
+    this->getPclResult(taskId, true, result);
     return;
+}
+
+int64_t SeekInterface::pclQueryAsync(const PclQueryArgs &query)
+{
+    TaskInfoPtrS task = make_shared<TaskInfo>();
+    task->queryType = QueryType::Pcl;
+    task->pclQuery = query;
+    return commonAsync(task);
 }
 
 bool SeekInterface::isQueryComplete(int64_t task_id) {
@@ -156,13 +114,37 @@ int32_t SeekInterface::pvalueDatasets()
     return 0;
 }
 
-int32_t SeekInterface::pclData()
+
+int64_t SeekInterface::commonAsync(TaskInfoPtrS task)
 {
-    printf("pclData\n");
-    return 0;
+    /* create a task and thread */
+    /* Use lock_guard to lock the mutex and guarantee
+        *   that it unlocks when the scope exits
+        * Note: lock_guard or unique_lock could be used here.
+        *   Since this is a shared_mutex I'll use unique_lock
+        * and shared_lock operations.
+        */
+    unique_lock mlock(this->taskMapMutex);
+
+    /* get next task_id using atomic increment counter */
+    int64_t task_id = this->next_task_id++;
+    task->taskId = task_id;
+    if (this->taskMap.count(task_id) != 0) {
+        /* taskMap for this id already exists
+            * this should never happen, program logic error
+            */
+        throw state_error("taskMap already contains task_id " + to_string(task_id));
+    } else {
+        /* add a new task to the map and start the thread */
+        task->timestamp = time(0);
+        task->_thread = make_unique<thread>(&SeekInterface::runQueryThread, this, task);
+        this->taskMap.emplace(task_id, move(task));
+    }
+    return task_id;
+    /* mutex automatically unlocks when scope exits */
 }
 
-void SeekInterface::runSeekQueryThread(TaskInfoPtrS task) {
+void SeekInterface::runQueryThread(TaskInfoPtrS task) {
     // block with completionFlag lock_guard
     {
         /* A lock_guard will automatically set the completionFlag
@@ -179,7 +161,11 @@ void SeekInterface::runSeekQueryThread(TaskInfoPtrS task) {
             */
             lock_guard<Semaphore> sem_lock(this->querySemaphore);
             /* Run the query */
-            this->SeekQueryCommon(task->seekQuery, task->seekResult, task->messageLog);
+            if (task->queryType == QueryType::Seek) {
+                this->seekQueryCommon(task->seekQuery, task->seekResult, task->messageLog);
+            } else if (task->queryType == QueryType::Pcl) {
+                this->pclQueryCommon(task->pclQuery, task->pclResult);
+            }
         } catch (named_error &err) {
             string trace = print_exception_stack(err);
             task->seekResult.success = false;
@@ -194,8 +180,8 @@ void SeekInterface::runSeekQueryThread(TaskInfoPtrS task) {
     return;
 }
 
-void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result, queue<string> &log) {
-    const QueryParams &params = query.parameters;
+void SeekInterface::seekQueryCommon(const SeekQueryArgs &query, SeekResult &result, queue<string> &log) {
+    const SeekQueryParams &params = query.parameters;
 
     if (this->speciesSeekCentrals.find(query.species) == this->speciesSeekCentrals.end()) {
         // no matching species initialized
@@ -337,6 +323,134 @@ void SeekInterface::SeekQueryCommon(const SeekQuery &query, QueryResult &result,
     querySC.Destruct();
 }
 
+
+void SeekInterface::getSeekResult(int64_t task_id, bool block, SeekResult &result)
+{
+    /* lookup the task */
+    TaskInfoPtrS task = this->getTask(task_id);
+    if (task == nullptr) {
+        result.success = false;
+        result.status = QueryStatus::Error;
+        result.statusMsg = "Task not found or timed out: task_id: " + to_string(task_id);
+        result.__isset.status = true;
+        result.__isset.statusMsg = true;
+        return;
+    }
+
+    if (!block && !task->isComplete) {
+        result.success = false;
+        result.status = QueryStatus::Incomplete;
+        result.__isset.status = true;
+        return;
+    }
+
+    /* join the task thread */
+    this->joinTask(*task);
+
+    /* populate the return results */
+    {
+        lock_guard tlock(task->taskMutex);
+        result = task->seekResult;
+    }
+
+    /* remove the task from the taskMap */
+    this->removeMappedTask(task_id);
+
+    return;
+}
+
+// TODO - not obvious how to combine getSeekResult (above) and getPclResult
+void SeekInterface::getPclResult(int64_t task_id, bool block, PclResult &result)
+{
+    /* lookup the task */
+    TaskInfoPtrS task = this->getTask(task_id);
+    if (task == nullptr) {
+        result.success = false;
+        result.status = QueryStatus::Error;
+        result.statusMsg = "Task not found or timed out: task_id: " + to_string(task_id);
+        result.__isset.status = true;
+        result.__isset.statusMsg = true;
+        return;
+    }
+
+    if (!block && !task->isComplete) {
+        result.success = false;
+        result.status = QueryStatus::Incomplete;
+        result.__isset.status = true;
+        return;
+    }
+
+    /* join the task thread */
+    this->joinTask(*task);
+
+    /* populate the return results */
+    {
+        lock_guard tlock(task->taskMutex);
+        result = task->pclResult;
+    }
+
+    /* remove the task from the taskMap */
+    this->removeMappedTask(task_id);
+
+    return;
+}
+
+
+void SeekInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result) {
+    const PclSettings &settings = query.settings;
+
+    if (this->speciesSeekCentrals.count(query.species) == 0) {
+        // no matching species initialized
+        throw query_error(FILELINE + "Invalid species name: " + query.species);
+    }
+
+    if (this->speciesPclCache.count(query.species) == 0) {
+        // no matching species initialized
+        throw query_error(FILELINE + "No cache found for species: " + query.species);
+    }
+
+    thread_data thread_arg;
+    thread_arg.new_fd = -1; // used by original main() server, -1 indicates don't send
+    thread_arg.isComplete = false;
+    thread_arg.geneNames = query.genes;
+    thread_arg.datasetNames = query.datasets;
+    thread_arg.queryGeneNames = query.queryGenes;
+    thread_arg.outputNormalized = settings.outputNormalized;
+    thread_arg.outputExpression = settings.outputGeneExpression;
+    thread_arg.outputCoexpression = settings.outputGeneCoexpression;
+    thread_arg.outputQueryExpression = settings.outputQueryExpression;
+    thread_arg.outputQueryCoexpression = settings.outputQueryCoexpression;
+    thread_arg.rbp_p = settings.rbp;
+    thread_arg.seekCentral = &this->speciesSeekCentrals[query.species];
+    thread_arg.pclCache = &this->speciesPclCache.at(query.species);
+    // structs to hold results if new_fd == -1 (so results not sent back within do_query)
+    thread_arg.resDatasetSizes = &result.datasetSizes;
+    thread_arg.resGeneExpression = &result.geneExpressions;
+    thread_arg.resGeneCoexpression = &result.geneCoexpressions;
+    thread_arg.resQueryExpression = &result.queryExpressions;
+    thread_arg.resQueryCoexpression = &result.queryCoexpressions;
+
+    try {
+        do_query(&thread_arg);
+    } catch (named_error &err) {
+        string trace = print_exception_stack(err);
+        result.success = false;
+        result.status = QueryStatus::Error;
+        result.statusMsg = trace;
+        result.__isset.status = true;
+        result.__isset.statusMsg = true;
+        /* (for future) can use exception_ptr to return the exception to main thread */
+        return;
+    }
+
+    result.success = true;
+    result.status = QueryStatus::Complete;
+    result.__isset.status = true;
+    result.__isset.geneExpressions = settings.outputGeneExpression;
+    result.__isset.geneCoexpressions = settings.outputGeneCoexpression;
+    result.__isset.queryExpressions = settings.outputQueryExpression;
+    result.__isset.queryCoexpressions = settings.outputQueryCoexpression;
+}
 
 TaskInfoPtrS SeekInterface::getTask(int64_t taskId) {
     shared_lock mlock(this->taskMapMutex);
