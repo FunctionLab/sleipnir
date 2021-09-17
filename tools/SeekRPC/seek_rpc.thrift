@@ -110,7 +110,6 @@ service SeekRPC {
     i32 ping();  // returns monotonic increasing int
     i32 pvalueGenes();  // input and return types to be determined
     i32 pvalueDatasets();  // input and return types to be determined
-    // i32 pclData();  // input and return types to be determined
     PclResult pclQuery(1: PclQueryArgs query);
     i64 pclQueryAsync(1: PclQueryArgs query);  // returns a task id
     PclResult getPclResult(1: i64 taskId, 2: bool block=true);  // returns result from an async task

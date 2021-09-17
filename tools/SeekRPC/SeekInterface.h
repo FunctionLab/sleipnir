@@ -29,7 +29,7 @@ public:
     PclQueryArgs pclQuery;
     PclResult pclResult;
     QueryType queryType;
-    int64_t taskId;
+    int64_t taskId;  // Apache Thrift doesn't have uint64 so use int64
     bool isComplete = false;
     time_t timestamp;
     mutex taskMutex;

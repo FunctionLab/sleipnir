@@ -661,7 +661,8 @@ namespace Sleipnir {
             throw config_error(FILELINE + errStr);
         }
         // Commented out to allow PCL Server to use SeekCentral
-        // TODO: check where dsetSize is used
+        // Added checks that when m_bCheckDsetSize is true
+        // then m_mapstrintDatasetSize isn't empty
         // if (settings.dbs[0]->dsetSizeFile == "NA")
         // {
         //     // Must be set so the query request can decide whether to use check dataset size
