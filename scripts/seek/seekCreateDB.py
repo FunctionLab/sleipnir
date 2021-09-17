@@ -5,7 +5,7 @@ values to map floats to 8 bits values (bins), and a dataset list file which
 includes the pcl filename for the dataset and the platform type.
 
 When specifying the --all option, the output is a full Seek DB, including DB files,
-prep, plat, sinfo, dab and pclbin directories.
+prep, plat, sinfo, gvar, dab and pclbin directories.
 
 Note: requires the python conda environment specified in the conda_environment.yml
 To create the env 'conda env create --file conda_environment.yml'
@@ -29,7 +29,7 @@ sys.path.append(currPath)
 import seekUtils as sutils
 from structDict import StructDict
 
-# TODO - command line args: --all --sinfo --prep --plat --db --dab --dsetsize --pclbin
+# TODO - command line args: --all --sinfo --gvar --prep --plat --db --dab --dsetsize --pclbin
 
 def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
     sutils.checkConfig(cfg)
@@ -52,6 +52,7 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
         tasksToRun.makeDB = True
         tasksToRun.plat = True
         tasksToRun.sinfo = True
+        tasksToRun.gvar = True
         tasksToRun.dsetSize = True
 
     if tasksToRun.pclbin:
@@ -77,6 +78,9 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
     if tasksToRun.sinfo:
         # Calculate the avg and stddev gene correleations per dataset (sinfo)
         sutils.sinfoCreate(cfg, concurrency)
+    if tasksToRun.gvar:
+        # Calculate the avg and var gene expressions per dataset (gvar)
+        sutils.gvarCreate(cfg, concurrency)
     if tasksToRun.dsetSize:
         # Create the dataset size file
         sutils.makeDsetSizeFile(cfg)
@@ -106,6 +110,8 @@ if __name__=="__main__":
                            help='create platform directory files')
     argParser.add_argument('--sinfo', default=False, action='store_true',
                            help='create sinfo directory files')
+    argParser.add_argument('--gvar', default=False, action='store_true',
+                           help='create gvar directory files')
     argParser.add_argument('--dsetSize', default=False, action='store_true',
                            help='create dataset size file')
 
@@ -137,6 +143,7 @@ if __name__=="__main__":
     tasksToRun.makeDB = args.makeDB
     tasksToRun.plat = args.plat
     tasksToRun.sinfo = args.sinfo
+    tasksToRun.gvar = args.gvar
     tasksToRun.dsetSize = args.dsetSize
     tasksToRun.useDabGeneSet = args.dab_use_gene_set
 

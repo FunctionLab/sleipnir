@@ -89,6 +89,20 @@ class TestSeekUtils:
         pclbinFileList = fnmatch.filter(os.listdir(pclBinDir), '*.pcl.bin')
         assert len(sinfoFileList) == len(pclbinFileList)
 
+    @pytest.mark.dependency(depends=['pclbin'])
+    def test_gvar(self):
+        cfg = TestSeekUtils.cfg
+        sutils.checkConfig(cfg)
+        # next test creating the gvar files from pclbin files
+        sutils.gvarCreate(cfg, concurrency=6)
+        gvarDir = os.path.join(cfg.outDir, 'gvar')
+        pclBinDir = os.path.join(cfg.outDir, 'pclbin')
+        gvarFileList = fnmatch.filter(os.listdir(gvarDir), '*.gexpvar')
+        gavgFileList = fnmatch.filter(os.listdir(gvarDir), '*.gexpmean')
+        pclbinFileList = fnmatch.filter(os.listdir(pclBinDir), '*.pcl.bin')
+        assert len(gvarFileList) == len(pclbinFileList)
+        assert len(gvarFileList) == len(gavgFileList)
+
     @pytest.mark.dependency(name='pclToDab')
     def test_PclToDabFiles(self):
         cfg = TestSeekUtils.cfg
