@@ -43,7 +43,8 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
     # output a dset list file
     dsetFileName = os.path.join(cfg.outDir, os.path.basename(cfg.datasetsFile))
     if not os.path.exists(dsetFileName):
-        os.system(f"ls -1 {cfg.pclDir} > {dsetFileName}")
+        print("Create output datasets file {dsetFileName}")
+        os.system(f"ls -1 {cfg.pclDir}/*.pcl | xargs -n1 basename > {dsetFileName}")
 
     if tasksToRun.all is True or runAll is True:
         tasksToRun.pclbin = True
