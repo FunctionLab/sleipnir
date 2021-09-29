@@ -183,6 +183,16 @@ TEST_F(SeekHelperTest, openmpEnabledTest) {
     ASSERT_EQ(thread_count, 4);
 }
 
+TEST_F(SeekHelperTest, threadSafeQueueTest) {
+    ThreadSafeQueue<string> msgLog;
+    EXPECT_THROW(msgLog.dequeue(), state_error);
+    ASSERT_EQ(msgLog.size(), 0);
+    msgLog.enqueue("element 1");
+    ASSERT_EQ(msgLog.size(), 1);
+    ASSERT_TRUE(msgLog.dequeue() == "element 1");
+    ASSERT_EQ(msgLog.size(), 0);
+}
+
 TEST_F(SeekHelperTest, LRUCacheTest) {
     int val;
     bool ret;
@@ -203,5 +213,4 @@ TEST_F(SeekHelperTest, LRUCacheTest) {
     ret = cache.get("one", val);
     // should have been evicted when 6 was added
     ASSERT_EQ(ret, false);
-
 }

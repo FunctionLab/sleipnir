@@ -133,7 +133,7 @@ class TestIncrDB:
 
         # Compare the full build DB files to the incremental build DB files
         # dbFiles = glob.glob1(os.path.join(verifyDB , 'db'),  '*.db')
-        dirs = ['db', 'plat', 'prep', 'sinfo']
+        dirs = ['db', 'plat', 'prep', 'sinfo', 'gvar']
         for d in dirs:
             files = glob.glob1(os.path.join(verifyDB, d),  '*')
             files.sort()

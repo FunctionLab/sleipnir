@@ -3,10 +3,12 @@
 
 #include <list>
 #include <mutex>
+#include <queue>
 #include <shared_mutex>
 #include <unordered_map>
 #include <condition_variable>
 #include "seekdataset.h"
+#include "seekerror.h"
 
 using namespace Sleipnir;
 
@@ -131,6 +133,36 @@ public:
     void unlock() { this->_flag = true; }
 private:
     bool &_flag;
+};
+
+
+template <typename T>
+class ThreadSafeQueue {
+public:
+    void enqueue(T element) {
+        lock_guard tlock(m_mutex);
+        m_queue.push(element);
+    }
+    T dequeue() {
+        lock_guard tlock(m_mutex);
+        if (m_queue.empty()) {
+            throw state_error("ThreadSafeQueue: Dequeue called on an empty queue");
+        }
+        T element = m_queue.front();
+        m_queue.pop();
+        return element;
+    }
+    uint32_t size() {
+        lock_guard tlock(m_mutex);
+        return m_queue.size();
+    }
+    bool empty() {
+        lock_guard tlock(m_mutex);
+        return (m_queue.size() == 0);
+    }
+private:
+    queue<T> m_queue;
+    mutex m_mutex;
 };
 
 

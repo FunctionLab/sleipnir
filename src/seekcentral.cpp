@@ -459,7 +459,7 @@ namespace Sleipnir {
             if (m_useRPC) {
                 // clear the log queue
                 while (!m_rpcLog->empty()) {
-                    m_rpcLog->pop();
+                    m_rpcLog->dequeue();
                 }
             }
         }
@@ -588,8 +588,8 @@ namespace Sleipnir {
             CSeekNetwork::Send(m_iClient, refinedSearchDataset);
             CSeekNetwork::Send(m_iClient, refinedGeneCount);
         } else if (m_useRPC) {
-            m_rpcLog->push(refinedSearchDataset);
-            m_rpcLog->push(refinedGeneCount);
+            m_rpcLog->enqueue(refinedSearchDataset);
+            m_rpcLog->enqueue(refinedGeneCount);
         }
 
         if (replace) {
@@ -1609,7 +1609,7 @@ namespace Sleipnir {
                             fprintf(stderr, "Error sending message to client\n");
                         }
                     } else if (m_useRPC) {
-                        m_rpcLog->push("Calculate dataset ordering");
+                        m_rpcLog->enqueue("Calculate dataset ordering");
                     }
                     CopyTopGenes(equalWeightGold, final, 100);
                     redoWithEqual = 1;
@@ -1628,7 +1628,7 @@ namespace Sleipnir {
                             fprintf(stderr, "Error sending message to client\n");
                         }
                     } else if (m_useRPC) {
-                        m_rpcLog->push("Redo with equal weighting");
+                        m_rpcLog->enqueue("Redo with equal weighting");
                     }
                     current_sm = EQUAL;
                     i--;
@@ -1651,7 +1651,7 @@ namespace Sleipnir {
                     fprintf(stderr, "Error sending message to client\n");
                 }
             } else if (m_useRPC) {
-                m_rpcLog->push("Done Search");
+                m_rpcLog->enqueue("Done Search");
             }
 
             setGenePairedResult(i, final);

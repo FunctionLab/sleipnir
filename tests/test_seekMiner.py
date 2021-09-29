@@ -47,8 +47,8 @@ class TestSeekMiner:
         cmd = f'{sleipnirBin}/SeekMiner -x {cfg.datasetsFile} -i ' \
               f'{cfg.geneMapFile} -d {cfg.dbDir} -p {sampleBcDir}/prep ' \
               f'-P {sampleBcDir}/plat -Q {cfg.quantFile} -u {sampleBcDir}/sinfo ' \
-              f'-n 100 -b 100  -V CV -I LOI -z z_score -m -M -O ' \
-              f'-q {inputQueries} -o {outputResults} -Y -T 2 -t 1'
+              f'-U {sampleBcDir}/gvar -n 100 -b 100  -V CV -I LOI -z z_score ' \
+              f'-m -M -O -q {inputQueries} -o {outputResults} -Y -T 2 -t 1'
         print(f'### {cmd}')
         ret = subprocess.run(cmd, shell=True)
         assert ret.returncode == 0

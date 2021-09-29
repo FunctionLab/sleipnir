@@ -11,7 +11,7 @@
 using namespace std;
 using namespace SeekRPC;
 
-string getLogMessages(queue<string> &messageLog);
+string getLogMessages(ThreadSafeQueue<string> &messageLog);
 
 SeekInterface::SeekInterface(vector<string> &configFiles,
                              uint32_t maxConcurreny,
@@ -180,7 +180,7 @@ void SeekInterface::runQueryThread(TaskInfoPtrS task) {
     return;
 }
 
-void SeekInterface::seekQueryCommon(const SeekQueryArgs &query, SeekResult &result, queue<string> &log) {
+void SeekInterface::seekQueryCommon(const SeekQueryArgs &query, SeekResult &result, ThreadSafeQueue<string>  &log) {
     const SeekQueryParams &params = query.parameters;
 
     if (this->speciesSeekCentrals.find(query.species) == this->speciesSeekCentrals.end()) {
@@ -532,22 +532,16 @@ bool SeekInterface::cleanStaleTask(int64_t task_id) {
     return isTimedOut;
 }
 
-string getLogMessages(queue<string> &messageLog) {
-    // TODO - implement messageLog as a thread safe queue
+string getLogMessages(ThreadSafeQueue<string> &messageLog) {
     string joinedMessages;
-    while (!messageLog.empty()) {
-        string msg = messageLog.front();
-        messageLog.pop();
-        joinedMessages += msg + "\n";
+    try {
+        while (!messageLog.empty()) {
+            string msg = messageLog.dequeue();
+            joinedMessages += msg + "\n";
+        }
+    } catch (state_error e) {
+        // catch if dequeue called on empty queue
     }
     return joinedMessages;
 }
 
-// TODO - implement a thread safe queue for message log
-// class SafeQueue:queue {
-//     // Lock for each operation
-//     private:
-//     mutex
-//     <T> pop() {} // return the next item (atomically)
-//     push(<T>) {} // push and item atomically
-// }

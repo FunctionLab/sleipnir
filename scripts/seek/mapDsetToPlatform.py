@@ -70,20 +70,59 @@ chip_plat_map = {
     'HT_HG-U133_Plus_PM': 'GPL13158',
     'Illumina_HumanHT-12_V3.0': ' GPL6947',
     'U133AAofAv2':  'GPL4685',
+    'ZebGene-1_1-st': 'GPL18378',
+    'Illumina_MouseWG-6_v2.0': 'GPL6887',
+    'Illumina_Mouse-6_v1.1': 'GPL6105',
+    'Illumina_MouseRef-8_V1.1': 'GPL6103',
+    'MoGene-1_0-st': 'GPL6246',
+    'MoGene-2_0-st': 'GPL16570',
+
 }
+# TODO - these are potential chipsets to add to map above
+"""
+Clariom_S_Mouse {GPL23038, GPL26644}
+DroGene-1_0-st {GPL18094, GPL20842}
+DroGene-1_1-st {GPL20767, GPL17506}
+EleGene-1_0-st {GPL19230}
+Hs_PromPR {GPL5082}
+HT_MG-430A {GPL8759}
+HT_MG-430_PM
+HuEx-1_0-st
+HuGene-1_0-st
+HuGene-1_1-st
+HuGene-2_0-st
+miRNA-3
+Mm_PromPR
+MoEx-1_0-st
+MoGene-1_0-st {many chose most samples}
+MoGene-1_1-st
+MoGene-2_0-st {many chose most samples}
+MoGene-2_1-st
+MOUSEDIVm520650
+PrimeView
+ZebGene-1_0-st
+# Up to here the also have GPL Ids in refine_bio.json,
+# below they do not
+Illumina_MouseWG-6_v2.0 {GPL6887, GPL17543}
+Illumina_Mouse-6_v1.1 {GPL6105, GPL6481}
+Illumina_MouseRef-8_V1.1 {GPL6103}
+"""
 
 def getGsePlatform(metadata):
     platform = metadata['annotations'][0]['data']['platform_id'][0]
     return platform
 
-def getE_Platform(metadata):
-    chip = metadata['samples'][0]['platform_name']
-    result = re.search('\[(.*)\]', chip)
+def getE_Platform(platformName):
+    # platformName = metadata['samples'][0]['platform_name']
+    result = re.search('\[(.*)\]', platformName)
     if result is not None:
         chip = result.group(1)
-    platform = chip_plat_map[chip]
-    # else:
-    #     raise Exception('chip string not found')
+    else:
+        chip = platformName
+    platform = chip_plat_map.get(chip)
+    if platform is None:
+        print(f'No platformId map for \'{chip}\'')
+        platform = 'Missing'
     return platform
 
 
@@ -111,7 +150,8 @@ if __name__ == "__main__":
                     if file.startswith("GSE"):
                         platform = getGsePlatform(metadata)
                     elif file.startswith("E-"):
-                        platform = getE_Platform(metadata)
+                        platName = metadata['samples'][0]['platform_name']
+                        platform = getE_Platform(platName)
                     else:
                         print(f'Error: Filename {file} doesnt match expected pattern')
                 except Exception as err:
