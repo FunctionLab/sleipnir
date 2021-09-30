@@ -168,6 +168,7 @@ def main(args):
     concatenateFiles(refCfg.dsetSizeFile, args.dirSmallDB, incrDBDirName, args.outDir)
     combineDirs('prep', args.dirSmallDB, incrDBDirName, args.outDir)
     combineDirs('sinfo', args.dirSmallDB, incrDBDirName, args.outDir)
+    combineDirs('gvar', args.dirSmallDB, incrDBDirName, args.outDir)
     combineDirs('pclbin', args.dirSmallDB, incrDBDirName, args.outDir)
 
 

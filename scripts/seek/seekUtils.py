@@ -262,6 +262,29 @@ def sinfoCreate(cfg, concurrency=8):
     print('sinfoCreate: completion time {}s'.format(time.time() - startTime))
 
 
+def gvarCreate(cfg, concurrency=8):
+    """
+    Make gvar directory contents, which contains the gene average and var values for
+    each dataset.
+    """
+    cmdName = prepCmd('SeekPrep', 'gvarCreate', cfg)
+    pclBinDir = os.path.join(cfg.outDir, "pclbin")
+    if not os.path.exists(pclBinDir):
+        raise FileNotFoundError(f"Pclbin directory not found {pclBinDir}")
+    gvarDir = os.path.join(cfg.outDir, "gvar")
+    if not os.path.exists(gvarDir):
+        os.makedirs(gvarDir)
+    datasets = readDatasetList(cfg.datasetsFile)
+    taskList = []
+    for (pclFile, dsetPlat, platform) in datasets:
+        inputPclbinFile = os.path.join(pclBinDir, f'{pclFile}.bin')
+        cmd = f"{cmdName} -i {cfg.geneMapFile} -D {gvarDir} -e -V {inputPclbinFile} -v"
+        taskList.append(cmd)
+    startTime = time.time()
+    runParallelJobs(taskList, concurrency=concurrency)
+    print('gvarCreate: completion time {}s'.format(time.time() - startTime))
+
+
 def makePlatFiles(cfg, concurrency=8):
     """
     Calculate platform-wide gene average and stddev - not parallelized
