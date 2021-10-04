@@ -21,71 +21,31 @@
 *****************************************************************************/
 #include "stdafx.h"
 #include "cmdline.h"
+#include "SeekPValue.h"
+#include <filesystem>
+namespace fs = std::filesystem;
 
-#define BACKLOG 10   // how many pending connections queue will hold
-char *PORT;
 
-pthread_mutex_t mutexGet;
-
-void sigchld_handler(int s) {
-    while (waitpid(-1, NULL, WNOHANG) > 0);
-}
-
-// get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa) {
-    if (sa->sa_family == AF_INET)
-        return &(((struct sockaddr_in *) sa)->sin_addr);
-    return &(((struct sockaddr_in6 *) sa)->sin6_addr);
-}
-
-#define NUM_THREADS 8
-char THREAD_OCCUPIED[NUM_THREADS];
-
-//mode is genes============================================
-map<string, int> mapstrintGene;
-vector <string> vecstrGenes;
-vector <string> vecstrGeneID;
 vector <vector<int>> randomRank;
 vector <vector<float>> randomSc;
-vector<int> querySize;
-int numGenes;
-//=========================================================
-struct parameter {
-    int size;
-    double scale;
-    double shape;
-    double threshold;
-    double portion;
-    vector<double> quantile;
-};
-map<string, int> mapstrintDataset;
-vector <string> vecstrDataset;
-vector <vector<struct parameter>> dsetScore; //co-expression score for dataset i, query-size j
-//=========================================================
+vector <vector<struct parameter>> dsetScore;
 
-struct thread_data {
-    int section; //0 - genes, 1 - datasets (which mode to turn on)
-    //Section "genes"
-    vector <string> query;
-    vector<float> gene_score;
-    int mode; //0 - p-value on rank, 1 - p-value on score
-    float nan;
-    //Section "datasets"
-    vector <string> dset;
-    vector<float> dset_score; //scores to test
-    vector<int> dset_qsize; //number of genes for which coexpression score is calculated, for all dset
-    //============================================
-    int threadid;
-    int new_fd;
-};
-
-void *do_query(void *th_arg) {
+void *do_pvalue_query(void *th_arg) {
     struct thread_data *my = (struct thread_data *) th_arg;
+    /* A lock_guard will automatically set the completionFlag
+     *  to true when the scope exits. This will allow other threads
+     *  such as the main thread to know the execution has completed.
+     */
+    BoolFlag completionFlag(my->isComplete);
+    lock_guard<BoolFlag> flag_lock(completionFlag);
+
     int new_fd = my->new_fd;
     int threadid = my->threadid;
     float nan = my->nan;
     int mode = my->mode;
     int section = my->section;
+    CSeekCentral *cc = my->seekCentral;
+    int numGenes = cc->m_vecstrGenes.size();
 
     vector <string> dset = my->dset;
     vector<float> dset_score = my->dset_score;
@@ -99,7 +59,7 @@ void *do_query(void *th_arg) {
     if (section == 1) { //dataset
         vector<float> pval;
         for (i = 0; i < dset.size(); i++) {
-            if (mapstrintDataset.find(dset[i]) == mapstrintDataset.end()) {
+            if (cc->m_mapstrintDataset.find(dset[i]) == cc->m_mapstrintDataset.end()) {
                 fprintf(stderr, "Error: cannot find dataset %s\n", dset[i].c_str());
                 pval.push_back(-1);
                 continue;
@@ -112,7 +72,7 @@ void *do_query(void *th_arg) {
                 pval.push_back(0.99);
                 continue;
             }
-            int pi = mapstrintDataset[dset[i]];
+            int pi = cc->m_mapstrintDataset[dset[i]];
             float sc = log(dset_score[i]);
             int qsize = dset_qsize[i];
             if (dsetScore[pi].size() == 0) {
@@ -216,7 +176,7 @@ void *do_query(void *th_arg) {
 
         vector<int> queryGeneID;
         for (i = 0; i < queryGenes.size(); i++)
-            queryGeneID.push_back(mapstrintGene[queryGenes[i]]);
+            queryGeneID.push_back(cc->m_mapstrintGene[queryGenes[i]]);
         //Query genes themselves have lowest score, to prevent
         //them from being counted in PR
         //(disabled 6/6/2016) want the query to have scores
@@ -288,20 +248,17 @@ void *do_query(void *th_arg) {
             }
         }
 
-        if (CSeekNetwork::Send(new_fd, pval) == -1) {
-            fprintf(stderr, "Error sending message to client!\n");
+        if (new_fd >= 0) {
+            if (CSeekNetwork::Send(new_fd, pval) == -1) {
+                fprintf(stderr, "Error sending message to client!\n");
+            }
+            close(new_fd);
         }
     }
 
-
-    pthread_mutex_lock(&mutexGet);
-    close(new_fd);
-    THREAD_OCCUPIED[threadid] = 0;
-    pthread_mutex_unlock(&mutexGet);
-    int ret = 0;
-    pthread_exit((void *) ret);
+    return 0;
 }
-//mode ends=========================================================
+
 
 bool ReadParameter(const string& param_file, vector<struct parameter> &v) {
     ifstream ifsm;
@@ -340,254 +297,68 @@ bool ReadParameter(const string& param_file, vector<struct parameter> &v) {
 }
 
 
-int main(int iArgs, char **aszArgs) {
-    static const size_t c_iBuffer = 1024;
-#ifdef WIN32
-    pthread_win32_process_attach_np( );
-#endif // WIN32
-    gengetopt_args_info sArgs{};
+bool initializePvalue(CSeekCentral &seekCentral) {
+    int numGenes = seekCentral.m_vecstrGenes.size();
+    int numRandFiles = 0;
+    vector <string> gscoreFiles;
+    string random_directory = seekCentral.m_vecDBSetting[0]->randomDir;
+    for (const auto & entry : fs::directory_iterator(random_directory)) {
+        if (entry.path().extension() == ".gscore") {
+            numRandFiles++;
+            gscoreFiles.push_back(entry.path());
+            // cout << entry.path() << endl;
+        }
+    }
+    int num_random = numRandFiles;
+    int ii, jj;
+    char ac[256];
 
-    if (cmdline_parser(iArgs, aszArgs, &sArgs)) {
-        cmdline_parser_print_help();
-        return 1;
+    randomRank.resize(numGenes);
+    randomSc.resize(numGenes);
+    for (ii = 0; ii < numGenes; ii++) {
+        randomRank[ii].resize(num_random);
+        randomSc[ii].resize(num_random);
     }
 
-    signal(SIGPIPE, SIG_IGN);
-    size_t i;
-    for (i = 0; i < NUM_THREADS; i++) {
-        THREAD_OCCUPIED[i] = 0;
-    }
-
-    PORT = sArgs.port_arg;
-    string strMode = sArgs.mode_arg;
-    float nan = sArgs.nan_arg; //only used for strMode=="genes"
-
-    //preparation=====================================================
-    if (strMode == "genes") {
-        if (!CSeekTools::ReadListTwoColumns(sArgs.input_arg, vecstrGeneID, vecstrGenes))
-            return false;
-        for (i = 0; i < vecstrGenes.size(); i++)
-            mapstrintGene[vecstrGenes[i]] = (int) i;
-
-        numGenes = vecstrGenes.size();
-
-        string random_directory = sArgs.random_dir_arg;
-        int num_random = sArgs.random_num_arg;
-        int ii, jj;
-        char ac[256];
-
-        randomRank.resize(numGenes);
-        randomSc.resize(numGenes);
-        for (ii = 0; ii < numGenes; ii++) {
-            randomRank[ii].resize(num_random);
-            randomSc[ii].resize(num_random);
+    for (ii = 0; ii < num_random; ii++) {
+        vector<float> randomScores;
+        // sprintf(ac, "%s/%d.gscore", random_directory.c_str(), ii);
+        CSeekTools::ReadArray(gscoreFiles[ii].c_str(), randomScores);
+        assert (randomScores.size() == numGenes);
+        /*vector<string> queryGenes;
+        sprintf(ac, "%s/%d.query", random_directory.c_str(), ii);
+        CSeekTools::ReadMultiGeneOneLine(ac, queryGenes);
+        querySize.push_back(queryGenes.size());
+        */
+        vector <AResultFloat> sortedRandom;
+        sortedRandom.resize(randomScores.size());
+        for (jj = 0; jj < randomScores.size(); jj++) {
+            sortedRandom[jj].i = jj;
+            sortedRandom[jj].f = randomScores[jj];
         }
-
-        for (ii = 0; ii < num_random; ii++) {
-            vector<float> randomScores;
-            sprintf(ac, "%s/%d.gscore", random_directory.c_str(), ii);
-            CSeekTools::ReadArray(ac, randomScores);
-            /*vector<string> queryGenes;
-            sprintf(ac, "%s/%d.query", random_directory.c_str(), ii);
-            CSeekTools::ReadMultiGeneOneLine(ac, queryGenes);
-            querySize.push_back(queryGenes.size());
-            */
-            vector <AResultFloat> sortedRandom;
-            sortedRandom.resize(randomScores.size());
-            for (jj = 0; jj < randomScores.size(); jj++) {
-                sortedRandom[jj].i = jj;
-                sortedRandom[jj].f = randomScores[jj];
-            }
-            sort(sortedRandom.begin(), sortedRandom.end());
-            for (jj = 0; jj < randomScores.size(); jj++) {
-                randomRank[sortedRandom[jj].i][ii] = jj;
-                randomSc[sortedRandom[jj].i][ii] = sortedRandom[jj].f;
-            }
-        }
-
-        for (jj = 0; jj < numGenes; jj++) {
-            sort(randomRank[jj].begin(), randomRank[jj].end());
-            sort(randomSc[jj].begin(), randomSc[jj].end(), std::greater<float>());
-        }
-    } else if (strMode == "datasets") {
-        vector <string> vD, vDP;
-        if (!CSeekTools::ReadListTwoColumns(sArgs.dset_platform_arg, vD, vDP))
-            return false;
-        for (i = 0; i < vD.size(); i++) {
-            vecstrDataset.push_back(vD[i]);
-        }
-        for (i = 0; i < vecstrDataset.size(); i++) {
-            mapstrintDataset[vecstrDataset[i]] = i;
-        }
-        string param_dir = sArgs.param_dir_arg;
-        dsetScore.resize(vecstrDataset.size());
-        for (i = 0; i < vecstrDataset.size(); i++) {
-            string param_file = param_dir + "/" + vecstrDataset[i] + ".param";
-            dsetScore[i] = vector<struct parameter>();
-            if (!ReadParameter(param_file, dsetScore[i])) {
-                fprintf(stderr, "Making this dataset null... (will always return insignificant)\n");
-            }
+        sort(sortedRandom.begin(), sortedRandom.end());
+        for (jj = 0; jj < randomScores.size(); jj++) {
+            randomRank[sortedRandom[jj].i][ii] = jj;
+            randomSc[sortedRandom[jj].i][ii] = sortedRandom[jj].f;
         }
     }
 
-    //find a free port and attempt binding to the port
-    int sockfd, new_fd;
-    struct addrinfo hints{}, *servinfo, *p;
-    struct sockaddr_storage their_addr{};
-    socklen_t sin_size;
-    struct sigaction sa{};
-    char s[INET6_ADDRSTRLEN];
-    char buf[10];
-    int rv;
-    int yes = 1;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-
-    if ((rv = getaddrinfo(nullptr, PORT, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        return 1;
+    for (jj = 0; jj < numGenes; jj++) {
+        sort(randomRank[jj].begin(), randomRank[jj].end());
+        sort(randomSc[jj].begin(), randomSc[jj].end(), std::greater<float>());
     }
 
-    // loop through all the results and bind to the first we can
-    for (p = servinfo; p != nullptr; p = p->ai_next) {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            perror("server: socket");
-            continue;
+// comment out loading dataset parameter file for now
+#if 0
+    string param_dir = sArgs.param_dir_arg;
+    int numDatasets = seekCentral.m_vecstrDatasets.size();
+    dsetScore.resize(numDatasets);
+    for (i = 0; i < numDatasets; i++) {
+        string param_file = param_dir + "/" + seekCentral.m_vecstrDatasets[i] + ".param";
+        dsetScore[i] = vector<struct parameter>();
+        if (!ReadParameter(param_file, dsetScore[i])) {
+            fprintf(stderr, "Making this dataset null... (will always return insignificant)\n");
         }
-        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-            perror("setsockopt");
-            exit(1);
-        }
-        if (::bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            close(sockfd);
-            perror("server: bind");
-            continue;
-        }
-        break;
     }
-
-    if (p == nullptr) {
-        fprintf(stderr, "server: failed to bind\n");
-        return 2;
-    }
-
-    freeaddrinfo(servinfo); // all done with this structure
-
-    if (listen(sockfd, BACKLOG) == -1) {
-        perror("listen");
-        exit(1);
-    }
-
-    sa.sa_handler = sigchld_handler; // reap all dead processes
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART;
-    if (sigaction(SIGCHLD, &sa, nullptr) == -1) {
-        perror("sigaction");
-        exit(1);
-    }
-
-    printf("server: waiting for connections...\n");
-    struct thread_data thread_arg[NUM_THREADS];
-    pthread_t th[NUM_THREADS];
-
-    pthread_mutex_init(&mutexGet, nullptr);
-
-    while (1) {
-        sin_size = sizeof their_addr;
-        new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &sin_size);
-        if (new_fd == -1) {
-            perror("accept");
-            continue;
-        }
-        inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *) &their_addr), s, sizeof s);
-        printf("server, got connection from %s\n", s);
-
-        int d = 0;
-        pthread_mutex_lock(&mutexGet);
-        for (d = 0; d < NUM_THREADS; d++) {
-            if (THREAD_OCCUPIED[d] == 0) break;
-        }
-
-        if (d == NUM_THREADS) {
-            close(new_fd);
-            pthread_mutex_unlock(&mutexGet);
-            continue;
-        }
-
-        THREAD_OCCUPIED[d] = 1;
-        pthread_mutex_unlock(&mutexGet);
-
-        thread_arg[d].threadid = d;
-        thread_arg[d].new_fd = new_fd;
-
-        if (strMode == "genes") {
-            string strQuery;
-            vector<float> vf;
-            vector <string> query;
-            string sMode;
-            int mode;
-
-            if (CSeekNetwork::Receive(new_fd, sMode) == -1) {
-                fprintf(stderr, "Error receiving from client\n");
-            }
-
-            if (sMode == "rank")
-                mode = 0;
-            else if (sMode == "score")
-                mode = 1;
-
-            if (CSeekNetwork::Receive(new_fd, strQuery) == -1) {
-                fprintf(stderr, "Error receiving from client!\n");
-            }
-
-            if (CSeekNetwork::Receive(new_fd, vf) == -1) {
-                fprintf(stderr, "Error receiving from client!\n");
-            }
-
-            CMeta::Tokenize(strQuery.c_str(), query, " ");
-            //=========================================================
-            thread_arg[d].section = 0; //genes section
-            thread_arg[d].query = query;
-            thread_arg[d].gene_score = vf;
-            thread_arg[d].nan = nan;
-            thread_arg[d].mode = mode;
-        } else if (strMode == "datasets") {
-            string strDataset;
-            vector <string> dataset;
-            vector<float> qsize;
-            vector<float> vf;
-            if (CSeekNetwork::Receive(new_fd, strDataset) == -1) {
-                fprintf(stderr, "Error receiving from client!\n");
-            }
-            if (CSeekNetwork::Receive(new_fd, vf) == -1) {
-                fprintf(stderr, "Error receiving from client!\n");
-            }
-            if (CSeekNetwork::Receive(new_fd, qsize) == -1) {
-                fprintf(stderr, "Error receiving from client!\n");
-            }
-            vector<int> vi;
-            vi.resize(qsize.size());
-            for (int ki = 0; ki < qsize.size(); ki++)
-                vi[ki] = (int) qsize[ki];
-
-            CMeta::Tokenize(strDataset.c_str(), dataset, " ");
-            //========================================================
-            thread_arg[d].dset = dataset;
-            thread_arg[d].dset_score = vf;
-            thread_arg[d].dset_qsize = vi;
-            thread_arg[d].section = 1;
-        }
-
-        int ret;
-        pthread_create(&th[d], NULL, do_query, (void *) &thread_arg[d]);
-    }
-
-#ifdef WIN32
-    pthread_win32_process_detach_np( );
-#endif // WIN32
-    return 0;
-
+#endif
 }

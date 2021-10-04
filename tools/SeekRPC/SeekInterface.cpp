@@ -53,9 +53,6 @@ int64_t SeekInterface::seekQueryAsync(const SeekQueryArgs &query)
     return commonAsync(task);
 }
 
-
-
-
 void SeekInterface::pclQuery(const PclQueryArgs &query, PclResult &result)
 {
     // spin off a thread to run this query but wait immediately for it

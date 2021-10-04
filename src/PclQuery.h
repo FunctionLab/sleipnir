@@ -45,8 +45,6 @@ struct thread_data {
     vector <double> *resQueryCoexpression;
 };
 
-void pclServerInit();
-
 void *do_query(void *th_arg);
 
 #endif  // PCLSERVER_H
