@@ -140,11 +140,11 @@ template <typename T>
 class ThreadSafeQueue {
 public:
     void enqueue(T element) {
-        lock_guard tlock(m_mutex);
+        lock_guard<mutex> tlock(m_mutex);
         m_queue.push(element);
     }
     T dequeue() {
-        lock_guard tlock(m_mutex);
+        lock_guard<mutex> tlock(m_mutex);
         if (m_queue.empty()) {
             throw state_error("ThreadSafeQueue: Dequeue called on an empty queue");
         }
@@ -153,11 +153,11 @@ public:
         return element;
     }
     uint32_t size() {
-        lock_guard tlock(m_mutex);
+        lock_guard<mutex> tlock(m_mutex);
         return m_queue.size();
     }
     bool empty() {
-        lock_guard tlock(m_mutex);
+        lock_guard<mutex> tlock(m_mutex);
         return (m_queue.size() == 0);
     }
 private:
@@ -174,7 +174,7 @@ public:
     void set(const K key, const V value) {
         // Take unique lock. It is automatically released
         //  on scope exit
-        unique_lock ulock(this->cacheMutex);
+        unique_lock<shared_mutex> ulock(this->cacheMutex);
         auto pos = keyValuesMap.find(key);
         if (pos == keyValuesMap.end()) {
             items.push_front(key);
@@ -192,7 +192,7 @@ public:
     bool get(const K key, V &value) {
         // Take shared lock. It is automatically released
         //  on scope exit
-        shared_lock slock(this->cacheMutex);
+        shared_lock<shared_mutex> slock(this->cacheMutex);
         auto pos = keyValuesMap.find(key);
         if (pos == keyValuesMap.end()) {
             return false;

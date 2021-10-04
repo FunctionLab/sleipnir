@@ -913,11 +913,13 @@ namespace Sleipnir {
             }
         }
 
-        CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
-                                 vecDBSetting, m_vecstrDatasets, m_mapstrstrDatasetPlatform,
-                                 m_seekPlatforms.getPlatformMap(), m_seekPlatforms.getCSeekPlatforms(),
-                                 m_vc, m_vecDBDataset, m_mapstrintDataset,
-                                 bVariance, bCorrelation);
+        if (!m_missingInitParams) {
+            CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
+                                    vecDBSetting, m_vecstrDatasets, m_mapstrstrDatasetPlatform,
+                                    m_seekPlatforms.getPlatformMap(), m_seekPlatforms.getCSeekPlatforms(),
+                                    m_vc, m_vecDBDataset, m_mapstrintDataset,
+                                    bVariance, bCorrelation);
+        }
 
         return true;
     }

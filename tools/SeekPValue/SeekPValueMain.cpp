@@ -89,7 +89,8 @@ int main(int iArgs, char **aszArgs) {
 
     CSeekCentral seekCentral;
     seekCentral.InitializeFromSeekConfig(settings);
-    initializePvalue(seekCentral);
+    int numRandQueries = sArgs.random_num_arg;
+    initializePvalue(seekCentral, numRandQueries);
 
 
     //find a free port and attempt binding to the port

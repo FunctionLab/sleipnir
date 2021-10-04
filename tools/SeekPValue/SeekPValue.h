@@ -45,6 +45,6 @@ extern vector <vector<struct parameter>> dsetScore; //co-expression score for da
 // Functions Definitions
 void *do_pvalue_query(void *th_arg);
 bool ReadParameter(const string& param_file, vector<struct parameter> &v);
-bool initializePvalue(CSeekCentral &seekCentral);
+bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries);
 
 #endif  // SEEKPVALUE_H

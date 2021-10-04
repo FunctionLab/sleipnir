@@ -297,7 +297,7 @@ bool ReadParameter(const string& param_file, vector<struct parameter> &v) {
 }
 
 
-bool initializePvalue(CSeekCentral &seekCentral) {
+bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries) {
     int numGenes = seekCentral.m_vecstrGenes.size();
     int numRandFiles = 0;
     vector <string> gscoreFiles;
@@ -309,9 +309,13 @@ bool initializePvalue(CSeekCentral &seekCentral) {
             // cout << entry.path() << endl;
         }
     }
-    int num_random = numRandFiles;
     int ii, jj;
     char ac[256];
+    int num_random = numRandFiles;
+
+    if (numRandQueries > 0) {
+        num_random = numRandQueries;
+    }
 
     randomRank.resize(numGenes);
     randomSc.resize(numGenes);
@@ -323,6 +327,7 @@ bool initializePvalue(CSeekCentral &seekCentral) {
     for (ii = 0; ii < num_random; ii++) {
         vector<float> randomScores;
         // sprintf(ac, "%s/%d.gscore", random_directory.c_str(), ii);
+        cout << gscoreFiles[ii] << endl;
         CSeekTools::ReadArray(gscoreFiles[ii].c_str(), randomScores);
         assert (randomScores.size() == numGenes);
         /*vector<string> queryGenes;
@@ -347,6 +352,7 @@ bool initializePvalue(CSeekCentral &seekCentral) {
         sort(randomRank[jj].begin(), randomRank[jj].end());
         sort(randomSc[jj].begin(), randomSc[jj].end(), std::greater<float>());
     }
+    cout << "Done initializing PValue arrays" << endl;
 
 // comment out loading dataset parameter file for now
 #if 0
@@ -361,4 +367,6 @@ bool initializePvalue(CSeekCentral &seekCentral) {
         }
     }
 #endif
+
+    return true;
 }
