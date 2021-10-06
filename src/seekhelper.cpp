@@ -310,6 +310,66 @@ uint32_t omp_enabled_test() {
     return thread_count;
 }
 
+typedef struct Header2DFloat_s {
+  unsigned char magic1 = 0x00;
+  unsigned char magic2 = 0x2D;
+  unsigned char magic3 = 0xFE;
+  unsigned char magic4 = 0xED;
+  int rows;
+  int cols;
+} Header2DVector;
+
+template <typename T>
+void write2DVector(vector<vector<T>> &vec, string filename) {
+    Header2DVector hdr;
+    if (typeid(T) == typeid(int)) {
+        hdr.magic1 = 0xAE;
+    } else if (typeid(T) == typeid(float)) {
+        hdr.magic1 = 0xFA;
+    }
+    int rows = vec.size();
+    int cols = vec[0].size();
+    hdr.rows = htonl(rows);
+    hdr.cols = htonl(cols);
+    ofstream out(filename, ofstream::binary);
+    out.write((char*)&hdr, sizeof(hdr));
+    for (int i=0; i<rows; i++) {
+        auto data = vec[i].data();
+        if (vec[i].size() != cols) {
+            throw runtime_error("write2DVectorFloat(): columns sizes differ");
+        }
+        out.write((char*)data, cols * sizeof(T));
+    }
+    out.close();
+    return;
+}
+// Instantions of the template function for float and int
+template void write2DVector(vector<vector<float>> &vec, string filename);
+template void write2DVector(vector<vector<int>> &vec, string filename);
+
+template <typename T>
+void read2DVector(vector<vector<T>> &vec, string filename) {
+    Header2DVector hdr;
+    ifstream in(filename, ifstream::binary);
+    in.read((char*)&hdr, sizeof(hdr));
+    if (typeid(T) == typeid(int) && hdr.magic1 != 0xAE) {
+        throw runtime_error("read2DVector(): wrong header type for int");
+    } else if (typeid(T) == typeid(float) && hdr.magic1 != 0xFA) {
+        throw runtime_error("read2DVector(): wrong header type for float");
+    }
+    int rows = ntohl(hdr.rows);
+    int cols = ntohl(hdr.cols);
+    vec.resize(rows);
+    for (int i=0; i<rows; i++) {
+        vec[i].resize(cols);
+        auto data = vec[i].data();
+        in.read((char*)data, cols * sizeof(float));
+    }
+    in.close();
+}
+// Instantions of the template function for float and int
+template void read2DVector(vector<vector<float>> &vec, string filename);
+template void read2DVector(vector<vector<int>> &vec, string filename);
 
 // Note: If the function implementation is here instead of 
 //  in the header, then you must explicitly instantiate

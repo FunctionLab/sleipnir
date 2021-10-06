@@ -212,4 +212,10 @@ private:
     shared_mutex cacheMutex;
 };
 
+template <typename T>
+void write2DVector(vector<vector<T>> &vec, string filename);
+
+template <typename T>
+void read2DVector(vector<vector<T>> &vec, string filename);
+
 #endif  // SEEKHELPER_H

@@ -186,11 +186,12 @@ void *do_pvalue_query(void *th_arg) {
         sort(sortedGenes.begin(), sortedGenes.end());
 
         //comparison
-        vector<int> geneRank;
-        geneRank.resize(numGenes);
-        for (jj = 0; jj < numGenes; jj++) {
-            geneRank[sortedGenes[jj].i] = jj;
-        }
+        // TODO - Remove this unused code
+        // vector<int> geneRank;
+        // geneRank.resize(numGenes);
+        // for (jj = 0; jj < numGenes; jj++) {
+        //     geneRank[sortedGenes[jj].i] = jj;
+        // }
 
         vector<float> pval;
         CSeekTools::InitVector(pval, geneScores.size(), (float) nan);
@@ -353,6 +354,14 @@ bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries) {
         sort(randomSc[jj].begin(), randomSc[jj].end(), std::greater<float>());
     }
     cout << "Done initializing PValue arrays" << endl;
+
+    fs::path scoreFile = random_directory;
+    fs::path rankFile = random_directory;
+    scoreFile /= "randomScoreFile.bin";
+    rankFile /= "randomRankFile.bin";
+
+    write2DVector(randomSc, scoreFile);
+    write2DVector(randomRank, rankFile);
 
 // comment out loading dataset parameter file for now
 #if 0
