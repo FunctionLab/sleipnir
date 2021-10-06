@@ -23,3 +23,5 @@ option	"random_num"		N	"Number of random trials"
 								int 	default="-1"
 option	"nan"				n	"Define NaN score"
 								float	default="-320"
+option	"load"				L	"If true, load the random arrays from files"
+								flag	off

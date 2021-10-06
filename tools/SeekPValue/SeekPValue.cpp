@@ -297,6 +297,14 @@ bool ReadParameter(const string& param_file, vector<struct parameter> &v) {
     return true;
 }
 
+bool loadPvalueArrays(string dirname) {
+    fs::path scoreFile = dirname;
+    fs::path rankFile = dirname;
+    scoreFile /= "randomScoreFile.bin";
+    rankFile /= "randomRankFile.bin";
+    read2DVector(randomSc, scoreFile);
+    read2DVector(randomRank, rankFile);
+}
 
 bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries) {
     int numGenes = seekCentral.m_vecstrGenes.size();

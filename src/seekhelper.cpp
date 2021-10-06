@@ -2,6 +2,7 @@
 #include <regex>
 #include <vector>
 #include <fstream>
+#include <arpa/inet.h>
 #include <boost/algorithm/string.hpp>
 #include "toml.hpp"
 #include "seekhelper.h"

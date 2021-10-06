@@ -63,6 +63,8 @@ struct gengetopt_args_info
   float nan_arg;	/**< @brief Define NaN score (default='-320').  */
   char * nan_orig;	/**< @brief Define NaN score original value given at command line.  */
   const char *nan_help; /**< @brief Define NaN score help description.  */
+  int load_flag;	/**< @brief If true, load the random arrays from files (default=off).  */
+  const char *load_help; /**< @brief If true, load the random arrays from files help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -74,6 +76,7 @@ struct gengetopt_args_info
   unsigned int random_dir_given ;	/**< @brief Whether random_dir was given.  */
   unsigned int random_num_given ;	/**< @brief Whether random_num was given.  */
   unsigned int nan_given ;	/**< @brief Whether nan was given.  */
+  unsigned int load_given ;	/**< @brief Whether load was given.  */
 
   char **inputs ; /**< @brief unnamed options (options without names) */
   unsigned inputs_num ; /**< @brief unnamed options number */

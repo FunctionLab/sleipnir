@@ -47,10 +47,12 @@ const char *gengetopt_args_info_help[] = {
   "  -R, --random_dir=directory    Random directory",
   "  -N, --random_num=INT          Number of random trials  (default=`-1')",
   "  -n, --nan=FLOAT               Define NaN score  (default=`-320')",
+  "  -L, --load                    If true, load the random arrays from files\n                                  (default=off)",
     0
 };
 
 typedef enum {ARG_NO
+  , ARG_FLAG
   , ARG_STRING
   , ARG_INT
   , ARG_FLOAT
@@ -84,6 +86,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->random_dir_given = 0 ;
   args_info->random_num_given = 0 ;
   args_info->nan_given = 0 ;
+  args_info->load_given = 0 ;
 }
 
 static
@@ -106,6 +109,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->random_num_orig = NULL;
   args_info->nan_arg = -320;
   args_info->nan_orig = NULL;
+  args_info->load_flag = 0;
   
 }
 
@@ -124,6 +128,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->random_dir_help = gengetopt_args_info_help[10] ;
   args_info->random_num_help = gengetopt_args_info_help[11] ;
   args_info->nan_help = gengetopt_args_info_help[12] ;
+  args_info->load_help = gengetopt_args_info_help[13] ;
   
 }
 
@@ -326,6 +331,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "random_num", args_info->random_num_orig, 0);
   if (args_info->nan_given)
     write_into_file(outfile, "nan", args_info->nan_orig, 0);
+  if (args_info->load_given)
+    write_into_file(outfile, "load", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -491,6 +498,9 @@ int update_arg(void *field, char **orig_field,
     val = possible_values[found];
 
   switch(arg_type) {
+  case ARG_FLAG:
+    *((int *)field) = !*((int *)field);
+    break;
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
@@ -525,6 +535,7 @@ int update_arg(void *field, char **orig_field,
   /* store the original value */
   switch(arg_type) {
   case ARG_NO:
+  case ARG_FLAG:
     break;
   default:
     if (value && orig_field) {
@@ -595,10 +606,11 @@ cmdline_parser_internal (
         { "random_dir",	1, NULL, 'R' },
         { "random_num",	1, NULL, 'N' },
         { "nan",	1, NULL, 'n' },
+        { "load",	0, NULL, 'L' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVm:t:d:i:p:R:N:n:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVm:t:d:i:p:R:N:n:L", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -715,6 +727,16 @@ cmdline_parser_internal (
               &(local_args_info.nan_given), optarg, 0, "-320", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "nan", 'n',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'L':	/* If true, load the random arrays from files.  */
+        
+        
+          if (update_arg((void *)&(args_info->load_flag), 0, &(args_info->load_given),
+              &(local_args_info.load_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "load", 'L',
               additional_error))
             goto failure;
         

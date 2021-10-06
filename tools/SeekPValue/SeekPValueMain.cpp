@@ -89,8 +89,12 @@ int main(int iArgs, char **aszArgs) {
 
     CSeekCentral seekCentral;
     seekCentral.InitializeFromSeekConfig(settings);
-    int numRandQueries = sArgs.random_num_arg;
-    initializePvalue(seekCentral, numRandQueries);
+    if (sArgs.load_flag == 1) {
+        loadPvalueArrays(seekCentral.m_vecDBSetting[0]->randomDir);
+    } else {
+        int numRandQueries = sArgs.random_num_arg;
+        initializePvalue(seekCentral, numRandQueries);
+    }
 
 
     //find a free port and attempt binding to the port
