@@ -53,9 +53,9 @@ void *do_pvalue_query(void *th_arg) {
     vector<int> geneIds;
 
     size_t i, j, jj, k;
+    vector<float> pval;
 
     if (queryType == 1) { //dataset
-        vector<float> pval;
         for (i = 0; i < dset.size(); i++) {
             if (cc->m_mapstrintDataset.find(dset[i]) == cc->m_mapstrintDataset.end()) {
                 fprintf(stderr, "Error: cannot find dataset %s\n", dset[i].c_str());
@@ -159,147 +159,156 @@ void *do_pvalue_query(void *th_arg) {
             //fprintf(stderr, "original %.2e pval %.2e\n", sc, pv);
         }
 
+    } else if (queryType == 0) { //genes
+        try {
+            if (rankBased == true) {
+                if (geneRanks.size() == 0) {
+                    // Sort geneScores and populate the geneRanks array
+                    if (geneScores.size() != numGenes) {
+                        // To calculate the geneRanks we need the scores for all genes
+                        throw runtime_error("PValue: rank-based requested but num geneScores!=numGenes");
+                    }
+                    // Sort the geneScores to populate the geneRanks
+                    vector <AResultFloat> sortedGenes;
+                    sortedGenes.resize(geneScores.size());
+                    for (i = 0; i < sortedGenes.size(); i++) {
+                        sortedGenes[i].i = i;
+                        sortedGenes[i].f = geneScores[i];
+                    }
+                    sort(sortedGenes.begin(), sortedGenes.end());
+                    geneIds.resize(sortedGenes.size());
+                    geneRanks.resize(sortedGenes.size());
+                    for (i = 0; i < sortedGenes.size(); i++) {
+                        geneIds[i] = sortedGenes[i].i;
+                        geneRanks[i] = i;
+                    }
+                } else {
+                    if (geneRanks.size() != geneEntrezIds.size()) {
+                        throw runtime_error("PValue: rank-based requested but num geneRanks!=geneEntrezIds");
+                    }
+                    geneIds.resize(geneEntrezIds.size());
+                    for (i = 0; i < geneIds.size(); i++) {
+                        geneIds[i] = cc->m_mapstrintGene[geneEntrezIds[i]];
+                    }
+                }
+                assert(geneRanks.size() == geneIds.size());
+            } else { // score based prep
+                if (geneEntrezIds.size() == 0) {
+                    // assumption is that the geneScores are provided in the gene_map order
+                    // and there are as many geneScores as numGenes
+                    if (geneScores.size() != numGenes) {
+                        throw runtime_error("PValue: score-based, no geneEntrezIds provided, numGeneScores!=numGenes");
+                    }
+                    geneIds.resize(geneScores.size());
+                    for (i = 0; i < geneIds.size(); i++) {
+                        geneIds[i] = i;
+                    }
+                } else { // geneEntrezIds.size() > 0
+                    // convert entrezIds to geneIds
+                    geneIds.resize(geneEntrezIds.size());
+                    for (i=0; i<geneEntrezIds.size(); i++) {
+                        geneIds[i] = cc->m_mapstrintGene[geneEntrezIds[i]];
+                    }
+                }
+                assert(geneScores.size() == geneIds.size());
+            }
+
+            // TODO: Remove this, not used
+            // vector<int> queryGeneID;
+            // for (i = 0; i < queryGenes.size(); i++)
+            //     queryGeneID.push_back(cc->m_mapstrintGene[queryGenes[i]]);
+
+            //Query genes themselves have lowest score, to prevent
+            //them from being counted in PR
+            //(disabled 6/6/2016) want the query to have scores
+            //for (i = 0; i < queryGeneID.size(); i++)
+            //    sortedGenes[queryGeneID[i]].f = nan;
+
+
+            //comparison
+            // TODO - Remove this unused code
+            // vector<int> geneRank;
+            // geneRank.resize(numGenes);
+            // for (jj = 0; jj < numGenes; jj++) {
+            //     geneRank[sortedGenes[jj].i] = jj;
+            // }
+
+            CSeekTools::InitVector(pval, geneIds.size(), (float) nan);
+            if (my->useGeneMapOrder == true && pval.size() != numGenes) {
+                throw runtime_error("PValue: useGeneMapOrder result array insufficient size");
+            }
+
+            for (jj = 0; jj < pval.size(); jj++) {
+                int geneId = geneIds[jj];
+                vector<int> &rR = pvalueData->randomRank[geneId];
+                vector<float> &rF = pvalueData->randomSc[geneId];
+                int pvalIdx = jj;
+                if (my->useGeneMapOrder == true) {
+                    // Return results in geneMapOrder, put this result in geneId slot
+                    pvalIdx = geneId;
+                }
+                int kk = 0;
+                if (rankBased == false) {  // score based
+                    // float gene_score = sortedGenes[jj].f;
+                    float gene_score = geneScores[jj];
+                    if (gene_score == nan) break;
+                    if (gene_score >= 0) {
+                        for (kk = 0; kk < rF.size(); kk++) {
+                            if (gene_score >= rF[kk] || kk == rF.size() - 1)
+                                pval[pvalIdx] = (float) kk / (float) rF.size();
+                            //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
+                            //gene_rank, kk, gene_score, randomSc[gene][kk]);
+                            if (gene_score >= rF[kk])
+                                break;
+                        }
+                    } else {
+                        for (kk = rF.size() - 1; kk >= 0; kk--) {
+                            if (gene_score <= rF[kk] || kk == 0)
+                                pval[pvalIdx] = (float) (rF.size() - 1 - kk) / (float) rF.size();
+                            //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
+                            //gene_rank, rF.size()-1-kk, gene_score, randomSc[gene][kk]);
+                            if (gene_score <= rF[kk])
+                                break;
+                        }
+                    }
+                } else if (rankBased == true) {
+                    int gene_rank = geneRanks[jj];
+                    if (gene_rank < numGenes / 2) {
+                        for (kk = 0; kk < rR.size(); kk++) {
+                            if (gene_rank <= rR[kk] || kk == rR.size() - 1)
+                                pval[pvalIdx] = (float) kk / (float) rR.size();
+                            //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
+                            //gene_rank, kk, gene_score, randomSc[gene][kk]);
+                            if (gene_rank <= rR[kk])
+                                break;
+                        }
+                    } else {
+                        for (kk = rR.size() - 1; kk >= 0; kk--) {
+                            if (gene_rank >= rR[kk] || kk == 0)
+                                pval[pvalIdx] = (float) (rR.size() - 1 - kk) / (float) rF.size();
+                            //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
+                            //gene_rank, rR.size()-1-kk, gene_score, randomSc[gene][kk]);
+                            if (gene_rank >= rR[kk])
+                                break;
+                        }
+                    }
+                }
+            }
+        } catch (exception &err) {
+            std::cerr << "ERROR: " << err.what() << endl;
+            my->error = true;
+            my->errorMsg = err.what();
+        }
+    }
+
+    if (new_fd >= 0) {
         if (CSeekNetwork::Send(new_fd, pval) == -1) {
             fprintf(stderr, "Error sending message to client!\n");
         }
-
-    } else if (queryType == 0) { //genes
-        if (rankBased == true) {
-            if (geneRanks.size() == 0) {
-                // Sort geneScores and populate the geneRanks array
-                if (geneScores.size() != numGenes) {
-                    // To calculate the geneRanks we need the scores for all genes
-                    throw runtime_error("PValue: rank-based requested but num geneScores!=numGenes");
-                }
-                // Sort the geneScores to populate the geneRanks
-                vector <AResultFloat> sortedGenes;
-                sortedGenes.resize(geneScores.size());
-                for (i = 0; i < sortedGenes.size(); i++) {
-                    sortedGenes[i].i = i;
-                    sortedGenes[i].f = geneScores[i];
-                }
-                sort(sortedGenes.begin(), sortedGenes.end());
-                geneIds.resize(sortedGenes.size());
-                geneRanks.resize(sortedGenes.size());
-                for (i = 0; i < sortedGenes.size(); i++) {
-                    geneIds[i] = sortedGenes[i].i;
-                    geneRanks[i] = i;
-                }
-            } else {
-                if (geneRanks.size() != geneEntrezIds.size()) {
-                    throw runtime_error("PValue: rank-based requested but num geneRanks!=geneEntrezIds");
-                }
-                geneIds.resize(geneEntrezIds.size());
-                for (i = 0; i < geneIds.size(); i++) {
-                    geneIds[i] = cc->m_mapstrintGene[geneEntrezIds[i]];
-                }
-            }
-            assert(geneRanks.size() == geneIds.size());
-        } else { // score based prep
-            if (geneEntrezIds.size() == 0) {
-                // assumption is that the geneScores are provided in the gene_map order
-                // and there are as many geneScores as numGenes
-                if (geneScores.size() != numGenes) {
-                    throw runtime_error("PValue: score-based, no geneEntrezIds provided, numGeneScores!=numGenes");
-                }
-                geneIds.resize(geneScores.size());
-                for (i = 0; i < geneIds.size(); i++) {
-                    geneIds[i] = i;
-                }
-            } else { // geneEntrezIds.size() > 0
-                // convert entrezIds to geneIds
-                geneIds.resize(geneEntrezIds.size());
-                for (i=0; i<geneEntrezIds.size(); i++) {
-                    geneIds[i] = cc->m_mapstrintGene[geneEntrezIds[i]];
-                }
-            }
-            assert(geneScores.size() == geneIds.size());
-        }
-
-        // TODO: Remove this, not used
-        // vector<int> queryGeneID;
-        // for (i = 0; i < queryGenes.size(); i++)
-        //     queryGeneID.push_back(cc->m_mapstrintGene[queryGenes[i]]);
-
-        //Query genes themselves have lowest score, to prevent
-        //them from being counted in PR
-        //(disabled 6/6/2016) want the query to have scores
-        //for (i = 0; i < queryGeneID.size(); i++)
-        //    sortedGenes[queryGeneID[i]].f = nan;
-
-
-        //comparison
-        // TODO - Remove this unused code
-        // vector<int> geneRank;
-        // geneRank.resize(numGenes);
-        // for (jj = 0; jj < numGenes; jj++) {
-        //     geneRank[sortedGenes[jj].i] = jj;
-        // }
-
-        vector<float> pval;
-        CSeekTools::InitVector(pval, geneIds.size(), (float) nan);
-
-        for (jj = 0; jj < pval.size(); jj++) {
-            int geneId = geneIds[jj];
-            vector<int> &rR = pvalueData->randomRank[geneId];
-            vector<float> &rF = pvalueData->randomSc[geneId];
-            int kk = 0;
-            if (rankBased == false) {  // score based
-                // float gene_score = sortedGenes[jj].f;
-                float gene_score = geneScores[jj];
-                if (gene_score == nan) break;
-                if (gene_score >= 0) {
-                    for (kk = 0; kk < rF.size(); kk++) {
-                        if (gene_score >= rF[kk] || kk == rF.size() - 1)
-                            pval[jj] = (float) kk / (float) rF.size();
-                        //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
-                        //gene_rank, kk, gene_score, randomSc[gene][kk]);
-                        if (gene_score >= rF[kk])
-                            break;
-                    }
-                } else {
-                    for (kk = rF.size() - 1; kk >= 0; kk--) {
-                        if (gene_score <= rF[kk] || kk == 0)
-                            pval[jj] = (float) (rF.size() - 1 - kk) / (float) rF.size();
-                        //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
-                        //gene_rank, rF.size()-1-kk, gene_score, randomSc[gene][kk]);
-                        if (gene_score <= rF[kk])
-                            break;
-                    }
-                }
-            } else if (rankBased == true) {
-                int gene_rank = geneRanks[jj];
-                if (gene_rank < numGenes / 2) {
-                    for (kk = 0; kk < rR.size(); kk++) {
-                        if (gene_rank <= rR[kk] || kk == rR.size() - 1)
-                            pval[jj] = (float) kk / (float) rR.size();
-                        //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
-                        //gene_rank, kk, gene_score, randomSc[gene][kk]);
-                        if (gene_rank <= rR[kk])
-                            break;
-                    }
-                } else {
-                    for (kk = rR.size() - 1; kk >= 0; kk--) {
-                        if (gene_rank >= rR[kk] || kk == 0)
-                            pval[jj] = (float) (rR.size() - 1 - kk) / (float) rF.size();
-                        //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
-                        //gene_rank, rR.size()-1-kk, gene_score, randomSc[gene][kk]);
-                        if (gene_rank >= rR[kk])
-                            break;
-                    }
-                }
-            }
-        }
-
-        if (new_fd >= 0) {
-            if (CSeekNetwork::Send(new_fd, pval) == -1) {
-                fprintf(stderr, "Error sending message to client!\n");
-            }
-            close(new_fd);
-        } else {
-            my->resPvalues->insert(my->resPvalues->end(),
-                                   pval.begin(), pval.end());
-        }
+        close(new_fd);
+    } else {
+        my->resPvalues->insert(my->resPvalues->end(),
+                                pval.begin(), pval.end());
     }
 
     return 0;

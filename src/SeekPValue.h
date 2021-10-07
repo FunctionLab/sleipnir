@@ -31,6 +31,7 @@ struct pvalue_thread_data {
     int queryType; //0 - genes, 1 - datasets (which mode to turn on)
     //Section "genes"
     bool rankBased; //true - p-value on rank, false - p-value on score
+    bool useGeneMapOrder = false;
     vector <string> query;
     vector<string> gene_entrezIds;
     vector<double> gene_scores;
@@ -43,6 +44,8 @@ struct pvalue_thread_data {
     //============================================
     int new_fd;
     bool isComplete = false;
+    bool error = false;
+    string errorMsg;
     vector<double> *resPvalues; // resulting pvalues
     PValueData *pvalueData;
     CSeekCentral *seekCentral;

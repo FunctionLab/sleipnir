@@ -41,6 +41,23 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6 *) sa)->sin6_addr);
 }
 
+void clearThreadArgs(struct pvalue_thread_data &arg) {
+    arg.query.clear();
+    arg.gene_entrezIds.clear();
+    arg.gene_scores.clear();
+    arg.gene_ranks.clear();
+    //Section "datasets"
+    arg.dset.clear();
+    arg.dset_score.clear(); //scores to test
+    arg.dset_qsize.clear(); //number of genes for which coexpression score is calculated, for all dset
+    //============================================
+    arg.isComplete = false;
+    arg.error = false;
+    arg.resPvalues = NULL; // resulting pvalues
+    arg.pvalueData = NULL;
+    arg.seekCentral = NULL;
+}
+
 
 int main(int iArgs, char **aszArgs) {
     static const size_t c_iBuffer = 1024;
@@ -190,10 +207,10 @@ int main(int iArgs, char **aszArgs) {
 
         THREAD_OCCUPIED[d] = 1;
         thread_arg[d].isComplete = false;
+        clearThreadArgs(thread_arg[d]);
         pthread_mutex_unlock(&mutexGet);
 
         thread_arg[d].new_fd = new_fd;
-        thread_arg[d].pvalueData = &pvalueData;
 
         if (strMode == "genes") {
             string strQuery;
@@ -206,10 +223,11 @@ int main(int iArgs, char **aszArgs) {
                 fprintf(stderr, "Error receiving from client\n");
             }
 
-            if (sMode == "rank")
+            if (sMode == "rank") {
                 rankBased = true;
-            else if (sMode == "score")
+            } else if (sMode == "score") {
                 rankBased = false;
+            }
 
             if (CSeekNetwork::Receive(new_fd, strQuery) == -1) {
                 fprintf(stderr, "Error receiving from client!\n");
@@ -228,6 +246,7 @@ int main(int iArgs, char **aszArgs) {
                                             vf.begin(), vf.end());
             thread_arg[d].nan = nan;
             thread_arg[d].rankBased = rankBased;
+            thread_arg[d].useGeneMapOrder = true;
         } else if (strMode == "datasets") {
             string strDataset;
             vector <string> dataset;
@@ -255,7 +274,7 @@ int main(int iArgs, char **aszArgs) {
             thread_arg[d].queryType = 1;
         }
         thread_arg[d].seekCentral = &seekCentral;
-        thread_arg[d].isComplete = false;
+        thread_arg[d].pvalueData = &pvalueData;
 
         int ret;
         pthread_create(&th[d], NULL, do_pvalue_query, (void *) &thread_arg[d]);
