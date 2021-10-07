@@ -24,7 +24,7 @@ using PclPtrS = shared_ptr<CPCL>;
 // map <string, utype> mapstriPlatform;  // Part of SeekPlatforms
 // map<string, int> mapstrintDatasetDB;  // Perhaps add this to CSeekCentral
 
-struct thread_data {
+struct pcl_thread_data {
     vector <string> datasetNames;
     vector <string> geneNames;
     vector <string> queryGeneNames;
@@ -45,6 +45,6 @@ struct thread_data {
     vector <double> *resQueryCoexpression;
 };
 
-void *do_query(void *th_arg);
+void *do_pcl_query(void *th_arg);
 
 #endif  // PCLSERVER_H

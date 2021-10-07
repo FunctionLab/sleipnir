@@ -146,6 +146,8 @@ set(SLEIPNIR_SOURCES
     src/seeknetwork.h
     src/seekplatform.cpp
     src/seekplatform.h
+    src/SeekPValue.cpp
+    src/SeekPValue.h
     src/seekquery.cpp
     src/seekquery.h
     src/seekreader.cpp

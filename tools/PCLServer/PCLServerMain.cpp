@@ -159,7 +159,7 @@ int main(int iArgs, char **aszArgs) {
         exit(1);
     }
 
-    struct thread_data thread_arg[NUM_THREADS];
+    struct pcl_thread_data thread_arg[NUM_THREADS];
     pthread_t th[NUM_THREADS];
     pthread_attr_t attr[NUM_THREADS];
     int d = 0;
@@ -282,7 +282,7 @@ int main(int iArgs, char **aszArgs) {
         }
 
         int ret;
-        pthread_create(&th[d], &attr[d], do_query, (void *) &thread_arg[d]);
+        pthread_create(&th[d], &attr[d], do_pcl_query, (void *) &thread_arg[d]);
         pthread_detach(th[d]);
         pthread_attr_destroy(&attr[d]);
     }

@@ -51,11 +51,11 @@ string stripBinExtensions(string pclDsetName) {
 }
 
 
-void *do_query(void *th_arg) {
-    struct thread_data *my = (struct thread_data *) th_arg;
-    vector <string> datasetNames = my->datasetNames;
-    vector <string> geneName = my->geneNames;
-    vector <string> queryName = my->queryGeneNames;
+void *do_pcl_query(void *th_arg) {
+    struct pcl_thread_data *my = (struct pcl_thread_data *) th_arg;
+    vector <string> &datasetNames = my->datasetNames;
+    vector <string> &geneName = my->geneNames;
+    vector <string> &queryName = my->queryGeneNames;
     CSeekCentral *cc = my->seekCentral;
     bool outputNormalized = my->outputNormalized;
     bool outputCoexpression = my->outputCoexpression;

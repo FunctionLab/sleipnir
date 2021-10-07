@@ -6,6 +6,7 @@
 #include "seekcentral.h"
 #include "seekerror.h"
 #include "PclQuery.h"
+#include "SeekPValue.h"
 #include "gen-cpp/seek_rpc_constants.h"
 
 using namespace std;
@@ -28,6 +29,14 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
             cout << "Initialize " << speciesName << endl;
             this->speciesSeekCentrals[speciesName].InitializeFromSeekConfig(config);
             this->speciesPclCache.emplace(speciesName, config.pclCacheSize);
+            // Load Pvalue metadata array
+            CSeekCentral &speciesSC = this->speciesSeekCentrals[speciesName];
+            try {
+                loadPvalueArrays(speciesSC.m_vecDBSetting[0]->randomDir, this->speciesPvalueData[speciesName]);
+            } catch(exception &err) {
+                // Try loading the creating the metadata from the raw random score outputs
+                initializePvalue(speciesSC, -1, this->speciesPvalueData[speciesName]);
+            }
         } catch(exception &err) {
             throw_with_nested(config_error(FILELINE + "Error initializing CSeekCentral for species " + speciesName));
         }
@@ -76,7 +85,19 @@ bool SeekInterface::isQueryComplete(int64_t task_id) {
         return true;
     }
     return false;
-  }
+}
+
+void SeekInterface::pvalueGenes(const PValueGeneArgs& query, PValueResult& result) {
+    // TaskInfoPtrS task = make_shared<TaskInfo>();
+    // task->queryType = QueryType::Pvalue;
+    // task->pvalueGeneQuery = query;
+    pvalueGenesCommon(query, result);
+    return;
+}
+
+void SeekInterface::pvalueDatasets(const PValueDatasetArgs& query, PValueResult& result) {
+    printf("pvalueDatasets\n");
+}
 
 int32_t SeekInterface::getRpcVersion()
 {
@@ -97,18 +118,6 @@ int32_t SeekInterface::ping()
 {
     printf("ping\n");
     return 1;
-}
-
-int32_t SeekInterface::pvalueGenes()
-{
-    printf("pvalueGenes\n");
-    return 0;
-}
-
-int32_t SeekInterface::pvalueDatasets()
-{
-    printf("pvalueDatasets\n");
-    return 0;
 }
 
 
@@ -406,7 +415,7 @@ void SeekInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result)
         throw query_error(FILELINE + "No cache found for species: " + query.species);
     }
 
-    thread_data thread_arg;
+    pcl_thread_data thread_arg;
     thread_arg.new_fd = -1; // used by original main() server, -1 indicates don't send
     thread_arg.isComplete = false;
     thread_arg.geneNames = query.genes;
@@ -428,7 +437,7 @@ void SeekInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result)
     thread_arg.resQueryCoexpression = &result.queryCoexpressions;
 
     try {
-        do_query(&thread_arg);
+        do_pcl_query(&thread_arg);
     } catch (named_error &err) {
         string trace = print_exception_stack(err);
         result.success = false;
@@ -447,6 +456,48 @@ void SeekInterface::pclQueryCommon(const PclQueryArgs &query, PclResult &result)
     result.__isset.geneCoexpressions = settings.outputGeneCoexpression;
     result.__isset.queryExpressions = settings.outputQueryExpression;
     result.__isset.queryCoexpressions = settings.outputQueryCoexpression;
+}
+
+
+void SeekInterface::pvalueGenesCommon(const PValueGeneArgs &query, PValueResult &result) {
+    if (this->speciesSeekCentrals.count(query.species) == 0) {
+        // no matching species initialized
+        throw query_error(FILELINE + "Invalid species name: " + query.species);
+    }
+
+    if (this->speciesPvalueData.count(query.species) == 0) {
+        // no matching species initialized
+        throw query_error(FILELINE + "No cache found for species: " + query.species);
+    }
+
+    pvalue_thread_data thread_arg;
+    thread_arg.new_fd = -1; // used by original main() server, -1 indicates don't send
+    thread_arg.isComplete = false;
+    thread_arg.gene_entrezIds = query.genes;
+    thread_arg.gene_scores = query.geneScores;
+    thread_arg.gene_ranks = query.geneRanks;
+    thread_arg.seekCentral = &this->speciesSeekCentrals[query.species];
+    thread_arg.pvalueData = &this->speciesPvalueData.at(query.species);
+    // structs to hold results if new_fd == -1 (so results not sent back within do_query)
+    thread_arg.resPvalues = &result.pvalues;
+
+    try {
+        do_pvalue_query(&thread_arg);
+    } catch (named_error &err) {
+        string trace = print_exception_stack(err);
+        result.success = false;
+        result.status = QueryStatus::Error;
+        result.statusMsg = trace;
+        result.__isset.status = true;
+        result.__isset.statusMsg = true;
+        /* (for future) can use exception_ptr to return the exception to main thread */
+        return;
+    }
+
+    result.success = true;
+    result.status = QueryStatus::Complete;
+    result.__isset.status = true;
+    result.__isset.pvalues = true;
 }
 
 TaskInfoPtrS SeekInterface::getTask(int64_t taskId) {

@@ -20,18 +20,13 @@
 * "The Sleipnir library for computational functional genomics"
 *****************************************************************************/
 #include "stdafx.h"
-#include "cmdline.h"
 #include "SeekPValue.h"
 #include <filesystem>
 namespace fs = std::filesystem;
 
 
-vector <vector<int>> randomRank;
-vector <vector<float>> randomSc;
-vector <vector<struct parameter>> dsetScore;
-
 void *do_pvalue_query(void *th_arg) {
-    struct thread_data *my = (struct thread_data *) th_arg;
+    struct pvalue_thread_data *my = (struct pvalue_thread_data *) th_arg;
     /* A lock_guard will automatically set the completionFlag
      *  to true when the scope exits. This will allow other threads
      *  such as the main thread to know the execution has completed.
@@ -40,23 +35,26 @@ void *do_pvalue_query(void *th_arg) {
     lock_guard<BoolFlag> flag_lock(completionFlag);
 
     int new_fd = my->new_fd;
-    int threadid = my->threadid;
     float nan = my->nan;
-    int mode = my->mode;
-    int section = my->section;
+    int rankBased = my->rankBased;
+    int queryType = my->queryType;
     CSeekCentral *cc = my->seekCentral;
+    PValueData *pvalueData = my->pvalueData;
     int numGenes = cc->m_vecstrGenes.size();
 
-    vector <string> dset = my->dset;
-    vector<float> dset_score = my->dset_score;
-    vector<int> dset_qsize = my->dset_qsize;
+    vector <string> &dset = my->dset;
+    vector<float> &dset_score = my->dset_score;
+    vector<int> &dset_qsize = my->dset_qsize;
 
-    vector <string> queryGenes = my->query;
-    vector<float> geneScores = my->gene_score;
+    vector <string> &queryGenes = my->query;
+    vector <string> &geneEntrezIds = my->gene_entrezIds;
+    vector<double> &geneScores = my->gene_scores;
+    vector<int> &geneRanks = my->gene_ranks;
+    vector<int> geneIds;
 
     size_t i, j, jj, k;
 
-    if (section == 1) { //dataset
+    if (queryType == 1) { //dataset
         vector<float> pval;
         for (i = 0; i < dset.size(); i++) {
             if (cc->m_mapstrintDataset.find(dset[i]) == cc->m_mapstrintDataset.end()) {
@@ -75,17 +73,17 @@ void *do_pvalue_query(void *th_arg) {
             int pi = cc->m_mapstrintDataset[dset[i]];
             float sc = log(dset_score[i]);
             int qsize = dset_qsize[i];
-            if (dsetScore[pi].size() == 0) {
+            if (pvalueData->dsetScore[pi].size() == 0) {
                 //This dataset is a dummy, null dataset (because it is bad or low quality
                 pval.push_back(0.99);
                 continue;
             }
-            if (qsize - 2 >= dsetScore[pi].size()) {
+            if (qsize - 2 >= pvalueData->dsetScore[pi].size()) {
                 //Don't have modeling for this query size, most likely because query size > 100
                 pval.push_back(0.99);
                 continue;
             }
-            struct parameter &par = dsetScore[pi][qsize - 2];
+            struct parameter &par = pvalueData->dsetScore[pi][qsize - 2];
             vector<double> &quantile = par.quantile;
             //fprintf(stderr, "threshold %.2e, scale %.2e, shape %.2e, qsize %d\n", par.threshold, par.scale, par.shape, qsize);
 
@@ -165,25 +163,70 @@ void *do_pvalue_query(void *th_arg) {
             fprintf(stderr, "Error sending message to client!\n");
         }
 
-
-    } else if (section == 0) { //genes
-        vector <AResultFloat> sortedGenes;
-        sortedGenes.resize(geneScores.size());
-        for (i = 0; i < sortedGenes.size(); i++) {
-            sortedGenes[i].i = i;
-            sortedGenes[i].f = geneScores[i];
+    } else if (queryType == 0) { //genes
+        if (rankBased == true) {
+            if (geneRanks.size() == 0) {
+                // Sort geneScores and populate the geneRanks array
+                if (geneScores.size() != numGenes) {
+                    // To calculate the geneRanks we need the scores for all genes
+                    throw runtime_error("PValue: rank-based requested but num geneScores!=numGenes");
+                }
+                // Sort the geneScores to populate the geneRanks
+                vector <AResultFloat> sortedGenes;
+                sortedGenes.resize(geneScores.size());
+                for (i = 0; i < sortedGenes.size(); i++) {
+                    sortedGenes[i].i = i;
+                    sortedGenes[i].f = geneScores[i];
+                }
+                sort(sortedGenes.begin(), sortedGenes.end());
+                geneIds.resize(sortedGenes.size());
+                geneRanks.resize(sortedGenes.size());
+                for (i = 0; i < sortedGenes.size(); i++) {
+                    geneIds[i] = sortedGenes[i].i;
+                    geneRanks[i] = i;
+                }
+            } else {
+                if (geneRanks.size() != geneEntrezIds.size()) {
+                    throw runtime_error("PValue: rank-based requested but num geneRanks!=geneEntrezIds");
+                }
+                geneIds.resize(geneEntrezIds.size());
+                for (i = 0; i < geneIds.size(); i++) {
+                    geneIds[i] = cc->m_mapstrintGene[geneEntrezIds[i]];
+                }
+            }
+            assert(geneRanks.size() == geneIds.size());
+        } else { // score based prep
+            if (geneEntrezIds.size() == 0) {
+                // assumption is that the geneScores are provided in the gene_map order
+                // and there are as many geneScores as numGenes
+                if (geneScores.size() != numGenes) {
+                    throw runtime_error("PValue: score-based, no geneEntrezIds provided, numGeneScores!=numGenes");
+                }
+                geneIds.resize(geneScores.size());
+                for (i = 0; i < geneIds.size(); i++) {
+                    geneIds[i] = i;
+                }
+            } else { // geneEntrezIds.size() > 0
+                // convert entrezIds to geneIds
+                geneIds.resize(geneEntrezIds.size());
+                for (i=0; i<geneEntrezIds.size(); i++) {
+                    geneIds[i] = cc->m_mapstrintGene[geneEntrezIds[i]];
+                }
+            }
+            assert(geneScores.size() == geneIds.size());
         }
 
-        vector<int> queryGeneID;
-        for (i = 0; i < queryGenes.size(); i++)
-            queryGeneID.push_back(cc->m_mapstrintGene[queryGenes[i]]);
+        // TODO: Remove this, not used
+        // vector<int> queryGeneID;
+        // for (i = 0; i < queryGenes.size(); i++)
+        //     queryGeneID.push_back(cc->m_mapstrintGene[queryGenes[i]]);
+
         //Query genes themselves have lowest score, to prevent
         //them from being counted in PR
         //(disabled 6/6/2016) want the query to have scores
         //for (i = 0; i < queryGeneID.size(); i++)
         //    sortedGenes[queryGeneID[i]].f = nan;
 
-        sort(sortedGenes.begin(), sortedGenes.end());
 
         //comparison
         // TODO - Remove this unused code
@@ -194,23 +237,21 @@ void *do_pvalue_query(void *th_arg) {
         // }
 
         vector<float> pval;
-        CSeekTools::InitVector(pval, geneScores.size(), (float) nan);
+        CSeekTools::InitVector(pval, geneIds.size(), (float) nan);
 
-        for (jj = 0; jj < geneScores.size(); jj++) {
-            int gene = sortedGenes[jj].i;
-            int gene_rank = jj;
-            float gene_score = sortedGenes[jj].f;
-            if (gene_score == nan) break;
-            //if(gene_score<0)
-            //	continue;
-            vector<int> &rR = randomRank[gene];
-            vector<float> &rF = randomSc[gene];
+        for (jj = 0; jj < pval.size(); jj++) {
+            int geneId = geneIds[jj];
+            vector<int> &rR = pvalueData->randomRank[geneId];
+            vector<float> &rF = pvalueData->randomSc[geneId];
             int kk = 0;
-            if (mode == 1) {
+            if (rankBased == false) {  // score based
+                // float gene_score = sortedGenes[jj].f;
+                float gene_score = geneScores[jj];
+                if (gene_score == nan) break;
                 if (gene_score >= 0) {
                     for (kk = 0; kk < rF.size(); kk++) {
                         if (gene_score >= rF[kk] || kk == rF.size() - 1)
-                            pval[gene] = (float) kk / (float) rF.size();
+                            pval[jj] = (float) kk / (float) rF.size();
                         //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
                         //gene_rank, kk, gene_score, randomSc[gene][kk]);
                         if (gene_score >= rF[kk])
@@ -219,18 +260,19 @@ void *do_pvalue_query(void *th_arg) {
                 } else {
                     for (kk = rF.size() - 1; kk >= 0; kk--) {
                         if (gene_score <= rF[kk] || kk == 0)
-                            pval[gene] = (float) (rF.size() - 1 - kk) / (float) rF.size();
+                            pval[jj] = (float) (rF.size() - 1 - kk) / (float) rF.size();
                         //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
                         //gene_rank, rF.size()-1-kk, gene_score, randomSc[gene][kk]);
                         if (gene_score <= rF[kk])
                             break;
                     }
                 }
-            } else if (mode == 0) {
+            } else if (rankBased == true) {
+                int gene_rank = geneRanks[jj];
                 if (gene_rank < numGenes / 2) {
                     for (kk = 0; kk < rR.size(); kk++) {
                         if (gene_rank <= rR[kk] || kk == rR.size() - 1)
-                            pval[gene] = (float) kk / (float) rR.size();
+                            pval[jj] = (float) kk / (float) rR.size();
                         //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
                         //gene_rank, kk, gene_score, randomSc[gene][kk]);
                         if (gene_rank <= rR[kk])
@@ -239,7 +281,7 @@ void *do_pvalue_query(void *th_arg) {
                 } else {
                     for (kk = rR.size() - 1; kk >= 0; kk--) {
                         if (gene_rank >= rR[kk] || kk == 0)
-                            pval[gene] = (float) (rR.size() - 1 - kk) / (float) rF.size();
+                            pval[jj] = (float) (rR.size() - 1 - kk) / (float) rF.size();
                         //fprintf(stderr, "%s\t%d\t%d\t%.5e\t%.5e\n", vecstrGenes[gene].c_str(),
                         //gene_rank, rR.size()-1-kk, gene_score, randomSc[gene][kk]);
                         if (gene_rank >= rR[kk])
@@ -254,6 +296,9 @@ void *do_pvalue_query(void *th_arg) {
                 fprintf(stderr, "Error sending message to client!\n");
             }
             close(new_fd);
+        } else {
+            my->resPvalues->insert(my->resPvalues->end(),
+                                   pval.begin(), pval.end());
         }
     }
 
@@ -297,16 +342,17 @@ bool ReadParameter(const string& param_file, vector<struct parameter> &v) {
     return true;
 }
 
-bool loadPvalueArrays(string dirname) {
+bool loadPvalueArrays(string dirname, PValueData &pvalueData) {
     fs::path scoreFile = dirname;
     fs::path rankFile = dirname;
     scoreFile /= "randomScoreFile.bin";
     rankFile /= "randomRankFile.bin";
-    read2DVector(randomSc, scoreFile);
-    read2DVector(randomRank, rankFile);
+    read2DVector(pvalueData.randomSc, scoreFile);
+    read2DVector(pvalueData.randomRank, rankFile);
+    return true;
 }
 
-bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries) {
+bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries, PValueData &pvalueData) {
     int numGenes = seekCentral.m_vecstrGenes.size();
     int numRandFiles = 0;
     vector <string> gscoreFiles;
@@ -326,11 +372,11 @@ bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries) {
         num_random = numRandQueries;
     }
 
-    randomRank.resize(numGenes);
-    randomSc.resize(numGenes);
+    pvalueData.randomRank.resize(numGenes);
+    pvalueData.randomSc.resize(numGenes);
     for (ii = 0; ii < numGenes; ii++) {
-        randomRank[ii].resize(num_random);
-        randomSc[ii].resize(num_random);
+        pvalueData.randomRank[ii].resize(num_random);
+        pvalueData.randomSc[ii].resize(num_random);
     }
 
     for (ii = 0; ii < num_random; ii++) {
@@ -352,14 +398,14 @@ bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries) {
         }
         sort(sortedRandom.begin(), sortedRandom.end());
         for (jj = 0; jj < randomScores.size(); jj++) {
-            randomRank[sortedRandom[jj].i][ii] = jj;
-            randomSc[sortedRandom[jj].i][ii] = sortedRandom[jj].f;
+            pvalueData.randomRank[sortedRandom[jj].i][ii] = jj;
+            pvalueData.randomSc[sortedRandom[jj].i][ii] = sortedRandom[jj].f;
         }
     }
 
     for (jj = 0; jj < numGenes; jj++) {
-        sort(randomRank[jj].begin(), randomRank[jj].end());
-        sort(randomSc[jj].begin(), randomSc[jj].end(), std::greater<float>());
+        sort(pvalueData.randomRank[jj].begin(), pvalueData.randomRank[jj].end());
+        sort(pvalueData.randomSc[jj].begin(), pvalueData.randomSc[jj].end(), std::greater<float>());
     }
     cout << "Done initializing PValue arrays" << endl;
 
@@ -368,18 +414,18 @@ bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries) {
     scoreFile /= "randomScoreFile.bin";
     rankFile /= "randomRankFile.bin";
 
-    write2DVector(randomSc, scoreFile);
-    write2DVector(randomRank, rankFile);
+    write2DVector(pvalueData.randomSc, scoreFile);
+    write2DVector(pvalueData.randomRank, rankFile);
 
 // comment out loading dataset parameter file for now
 #if 0
     string param_dir = sArgs.param_dir_arg;
     int numDatasets = seekCentral.m_vecstrDatasets.size();
-    dsetScore.resize(numDatasets);
+    pvalueData.dsetScore.resize(numDatasets);
     for (i = 0; i < numDatasets; i++) {
         string param_file = param_dir + "/" + seekCentral.m_vecstrDatasets[i] + ".param";
-        dsetScore[i] = vector<struct parameter>();
-        if (!ReadParameter(param_file, dsetScore[i])) {
+        pvalueData.dsetScore[i] = vector<struct parameter>();
+        if (!ReadParameter(param_file, pvalueData.dsetScore[i])) {
             fprintf(stderr, "Making this dataset null... (will always return insignificant)\n");
         }
     }

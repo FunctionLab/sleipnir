@@ -89,11 +89,12 @@ int main(int iArgs, char **aszArgs) {
 
     CSeekCentral seekCentral;
     seekCentral.InitializeFromSeekConfig(settings);
+    PValueData pvalueData;
     if (sArgs.load_flag == 1) {
-        loadPvalueArrays(seekCentral.m_vecDBSetting[0]->randomDir);
+        loadPvalueArrays(seekCentral.m_vecDBSetting[0]->randomDir, pvalueData);
     } else {
         int numRandQueries = sArgs.random_num_arg;
-        initializePvalue(seekCentral, numRandQueries);
+        initializePvalue(seekCentral, numRandQueries, pvalueData);
     }
 
 
@@ -157,7 +158,7 @@ int main(int iArgs, char **aszArgs) {
     }
 
     printf("server: waiting for connections...\n");
-    struct thread_data thread_arg[NUM_THREADS];
+    struct pvalue_thread_data thread_arg[NUM_THREADS];
     pthread_t th[NUM_THREADS];
 
     pthread_mutex_init(&mutexGet, nullptr);
@@ -191,24 +192,24 @@ int main(int iArgs, char **aszArgs) {
         thread_arg[d].isComplete = false;
         pthread_mutex_unlock(&mutexGet);
 
-        thread_arg[d].threadid = d;
         thread_arg[d].new_fd = new_fd;
+        thread_arg[d].pvalueData = &pvalueData;
 
         if (strMode == "genes") {
             string strQuery;
             vector<float> vf;
             vector <string> query;
             string sMode;
-            int mode;
+            bool rankBased;
 
             if (CSeekNetwork::Receive(new_fd, sMode) == -1) {
                 fprintf(stderr, "Error receiving from client\n");
             }
 
             if (sMode == "rank")
-                mode = 0;
+                rankBased = true;
             else if (sMode == "score")
-                mode = 1;
+                rankBased = false;
 
             if (CSeekNetwork::Receive(new_fd, strQuery) == -1) {
                 fprintf(stderr, "Error receiving from client!\n");
@@ -220,11 +221,13 @@ int main(int iArgs, char **aszArgs) {
 
             CMeta::Tokenize(strQuery.c_str(), query, " ");
             //=========================================================
-            thread_arg[d].section = 0; //genes section
+            thread_arg[d].queryType = 0; //genes section
             thread_arg[d].query = query;
-            thread_arg[d].gene_score = vf;
+            thread_arg[d].gene_scores.clear();
+            thread_arg[d].gene_scores.insert(thread_arg[d].gene_scores.begin(), 
+                                            vf.begin(), vf.end());
             thread_arg[d].nan = nan;
-            thread_arg[d].mode = mode;
+            thread_arg[d].rankBased = rankBased;
         } else if (strMode == "datasets") {
             string strDataset;
             vector <string> dataset;
@@ -249,7 +252,7 @@ int main(int iArgs, char **aszArgs) {
             thread_arg[d].dset = dataset;
             thread_arg[d].dset_score = vf;
             thread_arg[d].dset_qsize = vi;
-            thread_arg[d].section = 1;
+            thread_arg[d].queryType = 1;
         }
         thread_arg[d].seekCentral = &seekCentral;
         thread_arg[d].isComplete = false;

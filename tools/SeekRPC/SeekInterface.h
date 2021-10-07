@@ -9,6 +9,7 @@
 #include "seekcentral.h"
 #include "seekhelper.h"
 #include "PclQuery.h"
+#include "SeekPValue.h"
 #include "gen-cpp/SeekRPC.h"
 
 
@@ -27,6 +28,9 @@ public:
     SeekResult seekResult;
     PclQueryArgs pclQuery;
     PclResult pclResult;
+    PValueGeneArgs pvalueGeneQuery;
+    PValueDatasetArgs pvalueDatasetQuery;
+    PValueResult pvalueResult;
     QueryType queryType;
     int64_t taskId;  // Apache Thrift doesn't have uint64 so use int64
     bool isComplete = false;
@@ -46,16 +50,17 @@ class SeekInterface {
     bool isQueryComplete(int64_t task_id);
     void getSeekResult(int64_t task_id, bool block, SeekResult &result);
     string getProgressMessage(int64_t task_id);
-    int32_t getRpcVersion();
-    int32_t ping();
-    int32_t pvalueGenes();
-    int32_t pvalueDatasets();
+    void pvalueGenes(const PValueGeneArgs& query, PValueResult& result);
+    void pvalueDatasets(const PValueDatasetArgs& query, PValueResult& result);
     void pclQuery(const PclQueryArgs &query, PclResult &result);
     int64_t pclQueryAsync(const PclQueryArgs &query);
     void getPclResult(int64_t task_id, bool block, PclResult &result);
+    int32_t getRpcVersion();
+    int32_t ping();
   private:
     void seekQueryCommon(const SeekQueryArgs &query, SeekResult &result, ThreadSafeQueue<string>  &log);
     void pclQueryCommon(const PclQueryArgs &query, PclResult &result);
+    void pvalueGenesCommon(const PValueGeneArgs &query, PValueResult &result);
     int64_t commonAsync(TaskInfoPtrS task);
     void runQueryThread(TaskInfoPtrS task);
     void runCleanTasksThread(uint32_t intervalSec);
@@ -68,6 +73,7 @@ class SeekInterface {
     map<string, SeekSettings> speciesConfigs;  // speciesName --> Config
     map<string, CSeekCentral> speciesSeekCentrals; // speciesName --> SeekCentralStruct
     map<string, LRUCache <string, PclPtrS>> speciesPclCache; // speciesName --> PclCache
+    map<string, PValueData> speciesPvalueData; // speciesName --> PclCache
     map<int64_t, TaskInfoPtrS> taskMap;  // task_id --> TaskInfo
     shared_mutex taskMapMutex;
     Semaphore querySemaphore;
