@@ -114,7 +114,7 @@ struct PValueResult {
 
 
 // Version to track compatibility across changes to the RPC interface
-const i32 RPCVersion = 1;
+const double RPCVersion = 1.2;
 
 /* Make seekQuery an asynchronous call and have a getStatus() call that returns
  *  status strings while the query is processing and then returns "Done Search"
@@ -133,6 +133,6 @@ service SeekRPC {
     PclResult getPclResult(1: i64 taskId, 2: bool block=true);  // returns result from an async task
     PValueResult pvalueGenes(1: PValueGeneArgs query);
     PValueResult pvalueDatasets(1: PValueDatasetArgs query);
-    i32 getRpcVersion();
+    double getRpcVersion();
     i32 ping();  // returns monotonic increasing int
 }

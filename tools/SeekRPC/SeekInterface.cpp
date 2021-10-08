@@ -27,15 +27,25 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
         //  C++ automatically default-inits the mapped CSeekCentral() values on first reference
         try {
             cout << "Initialize " << speciesName << endl;
+            // Initialize the SeekCentral struct
             this->speciesSeekCentrals[speciesName].InitializeFromSeekConfig(config);
+            // Initialize the PCL cache
             this->speciesPclCache.emplace(speciesName, config.pclCacheSize);
-            // Load Pvalue metadata array
+            // Initialize the Pvalue struct
+            bool res;
             CSeekCentral &speciesSC = this->speciesSeekCentrals[speciesName];
-            try {
-                loadPvalueArrays(speciesSC.m_vecDBSetting[0]->randomDir, this->speciesPvalueData[speciesName]);
-            } catch(exception &err) {
-                // Try loading the creating the metadata from the raw random score outputs
-                initializePvalue(speciesSC, -1, this->speciesPvalueData[speciesName]);
+            string pvalueDir = speciesSC.m_vecDBSetting[0]->pvalueDir;
+            pvalueEnabled = true;
+            // Try loading the pvalue metadata arrays
+            res = loadPvalueArrays(pvalueDir, this->speciesPvalueData[speciesName]);
+            if (res == false) {
+                // Try creating the metadata from the raw random score outputs
+                res = initializePvalue(speciesSC, -1, this->speciesPvalueData[speciesName]);
+                if (res == false) {
+                    // Disable pvalue queries
+                    cout << "WARNING: PValue queries disabled, unable to initialize" << endl;
+                    pvalueEnabled = false;
+                }
             }
         } catch(exception &err) {
             throw_with_nested(config_error(FILELINE + "Error initializing CSeekCentral for species " + speciesName));
@@ -91,7 +101,15 @@ void SeekInterface::pvalueGenes(const PValueGeneArgs& query, PValueResult& resul
     // TaskInfoPtrS task = make_shared<TaskInfo>();
     // task->queryType = QueryType::Pvalue;
     // task->pvalueGeneQuery = query;
-    pvalueGenesCommon(query, result);
+    if (this->pvalueEnabled == true) {
+        pvalueGenesCommon(query, result);
+    } else {
+        result.success = false;
+        result.status = QueryStatus::Error;
+        result.statusMsg = "Pvalue server not initialized properly, check pvalue directory";
+        result.__isset.status = true;
+        result.__isset.statusMsg = true;
+    }
     return;
 }
 
@@ -99,7 +117,7 @@ void SeekInterface::pvalueDatasets(const PValueDatasetArgs& query, PValueResult&
     printf("pvalueDatasets\n");
 }
 
-int32_t SeekInterface::getRpcVersion()
+double SeekInterface::getRpcVersion()
 {
     return g_seek_rpc_constants.RPCVersion;
 }
@@ -343,6 +361,15 @@ void SeekInterface::getSeekResult(int64_t task_id, bool block, SeekResult &resul
         return;
     }
 
+    if (task->queryType != QueryType::Seek) {
+        result.success = false;
+        result.status = QueryStatus::Error;
+        result.statusMsg = "Wrong getResult() function called for this TaskID's query type";
+        result.__isset.status = true;
+        result.__isset.statusMsg = true;
+        return;
+    }
+
     if (!block && !task->isComplete) {
         result.success = false;
         result.status = QueryStatus::Incomplete;
@@ -374,6 +401,15 @@ void SeekInterface::getPclResult(int64_t task_id, bool block, PclResult &result)
         result.success = false;
         result.status = QueryStatus::Error;
         result.statusMsg = "Task not found or timed out: task_id: " + to_string(task_id);
+        result.__isset.status = true;
+        result.__isset.statusMsg = true;
+        return;
+    }
+
+    if (task->queryType != QueryType::Pcl) {
+        result.success = false;
+        result.status = QueryStatus::Error;
+        result.statusMsg = "Wrong getResult() function called for this TaskID's query type";
         result.__isset.status = true;
         result.__isset.statusMsg = true;
         return;

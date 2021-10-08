@@ -15,6 +15,7 @@ outputAsText = true  # Output results (gene list and dataset weights) as text
     PLATFORM_DIR  = "/path/plat"
     SINFO_DIR     = "/path/sinfo"
     PCL_DIR       = "/path/pclbin"
+    PVAL_DIR       = "/path/pvalue"
     GVAR_DIR      = "/path/gvar"
     QUANT_FILE    = "/path/quant2"
     DSET_MAP_FILE = "/path/dset_plat_map.txt"

@@ -83,7 +83,7 @@ int main(int iArgs, char **aszArgs) {
 
     SeekSettings settings;
     settings.species = "human";
-    settings.port = atol(PORT);
+    // settings.port = atol(PORT);
     settings.numThreads = NUM_THREADS;
     settings.numBufferedDBs = 1;
 
@@ -101,14 +101,14 @@ int main(int iArgs, char **aszArgs) {
             "NA", // dataset size file, not needed for PCLServer
             99999 // num_db arg, argument not needed for PCLServer
     );
-    dbSetting->setRandomDir(sArgs.random_dir_arg);
+    dbSetting->setPvalueDir(sArgs.random_dir_arg);
     settings.dbs.push_back(dbSetting);
 
     CSeekCentral seekCentral;
     seekCentral.InitializeFromSeekConfig(settings);
     PValueData pvalueData;
     if (sArgs.load_flag == 1) {
-        loadPvalueArrays(seekCentral.m_vecDBSetting[0]->randomDir, pvalueData);
+        loadPvalueArrays(seekCentral.m_vecDBSetting[0]->pvalueDir, pvalueData);
     } else {
         int numRandQueries = sArgs.random_num_arg;
         initializePvalue(seekCentral, numRandQueries, pvalueData);

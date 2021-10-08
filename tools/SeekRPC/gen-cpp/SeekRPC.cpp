@@ -1995,8 +1995,8 @@ uint32_t SeekRPC_getRpcVersion_result::read(::apache::thrift::protocol::TProtoco
     switch (fid)
     {
       case 0:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->success);
+        if (ftype == ::apache::thrift::protocol::T_DOUBLE) {
+          xfer += iprot->readDouble(this->success);
           this->__isset.success = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -2021,8 +2021,8 @@ uint32_t SeekRPC_getRpcVersion_result::write(::apache::thrift::protocol::TProtoc
   xfer += oprot->writeStructBegin("SeekRPC_getRpcVersion_result");
 
   if (this->__isset.success) {
-    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_I32, 0);
-    xfer += oprot->writeI32(this->success);
+    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_DOUBLE, 0);
+    xfer += oprot->writeDouble(this->success);
     xfer += oprot->writeFieldEnd();
   }
   xfer += oprot->writeFieldStop();
@@ -2057,8 +2057,8 @@ uint32_t SeekRPC_getRpcVersion_presult::read(::apache::thrift::protocol::TProtoc
     switch (fid)
     {
       case 0:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32((*(this->success)));
+        if (ftype == ::apache::thrift::protocol::T_DOUBLE) {
+          xfer += iprot->readDouble((*(this->success)));
           this->__isset.success = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -2824,7 +2824,7 @@ void SeekRPCClient::recv_pvalueDatasets(PValueResult& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "pvalueDatasets failed: unknown result");
 }
 
-int32_t SeekRPCClient::getRpcVersion()
+double SeekRPCClient::getRpcVersion()
 {
   send_getRpcVersion();
   return recv_getRpcVersion();
@@ -2843,7 +2843,7 @@ void SeekRPCClient::send_getRpcVersion()
   oprot_->getTransport()->flush();
 }
 
-int32_t SeekRPCClient::recv_getRpcVersion()
+double SeekRPCClient::recv_getRpcVersion()
 {
 
   int32_t rseqid = 0;
@@ -2868,7 +2868,7 @@ int32_t SeekRPCClient::recv_getRpcVersion()
     iprot_->readMessageEnd();
     iprot_->getTransport()->readEnd();
   }
-  int32_t _return;
+  double _return;
   SeekRPC_getRpcVersion_presult result;
   result.success = &_return;
   result.read(iprot_);
@@ -4454,7 +4454,7 @@ void SeekRPCConcurrentClient::recv_pvalueDatasets(PValueResult& _return, const i
   } // end while(true)
 }
 
-int32_t SeekRPCConcurrentClient::getRpcVersion()
+double SeekRPCConcurrentClient::getRpcVersion()
 {
   int32_t seqid = send_getRpcVersion();
   return recv_getRpcVersion(seqid);
@@ -4477,7 +4477,7 @@ int32_t SeekRPCConcurrentClient::send_getRpcVersion()
   return cseqid;
 }
 
-int32_t SeekRPCConcurrentClient::recv_getRpcVersion(const int32_t seqid)
+double SeekRPCConcurrentClient::recv_getRpcVersion(const int32_t seqid)
 {
 
   int32_t rseqid = 0;
@@ -4515,7 +4515,7 @@ int32_t SeekRPCConcurrentClient::recv_getRpcVersion(const int32_t seqid)
         using ::apache::thrift::protocol::TProtocolException;
         throw TProtocolException(TProtocolException::INVALID_DATA);
       }
-      int32_t _return;
+      double _return;
       SeekRPC_getRpcVersion_presult result;
       result.success = &_return;
       result.read(iprot_);

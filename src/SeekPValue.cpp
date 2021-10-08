@@ -166,7 +166,7 @@ void *do_pvalue_query(void *th_arg) {
                     // Sort geneScores and populate the geneRanks array
                     if (geneScores.size() != numGenes) {
                         // To calculate the geneRanks we need the scores for all genes
-                        throw runtime_error("PValue: rank-based requested but num geneScores!=numGenes");
+                        throw request_error("PValue: rank-based requested but num geneScores!=numGenes");
                     }
                     // Sort the geneScores to populate the geneRanks
                     vector <AResultFloat> sortedGenes;
@@ -181,10 +181,13 @@ void *do_pvalue_query(void *th_arg) {
                     for (i = 0; i < sortedGenes.size(); i++) {
                         geneIds[i] = sortedGenes[i].i;
                         geneRanks[i] = i;
+                        if (sortedGenes[i].f == nan) {
+                            geneRanks[i] = nan;
+                        }
                     }
                 } else {
                     if (geneRanks.size() != geneEntrezIds.size()) {
-                        throw runtime_error("PValue: rank-based requested but num geneRanks!=geneEntrezIds");
+                        throw request_error("PValue: rank-based requested but num geneRanks!=geneEntrezIds");
                     }
                     geneIds.resize(geneEntrezIds.size());
                     for (i = 0; i < geneIds.size(); i++) {
@@ -197,7 +200,7 @@ void *do_pvalue_query(void *th_arg) {
                     // assumption is that the geneScores are provided in the gene_map order
                     // and there are as many geneScores as numGenes
                     if (geneScores.size() != numGenes) {
-                        throw runtime_error("PValue: score-based, no geneEntrezIds provided, numGeneScores!=numGenes");
+                        throw request_error("PValue: score-based, no geneEntrezIds provided, numGeneScores!=numGenes");
                     }
                     geneIds.resize(geneScores.size());
                     for (i = 0; i < geneIds.size(); i++) {
@@ -235,7 +238,7 @@ void *do_pvalue_query(void *th_arg) {
 
             CSeekTools::InitVector(pval, geneIds.size(), (float) nan);
             if (my->useGeneMapOrder == true && pval.size() != numGenes) {
-                throw runtime_error("PValue: useGeneMapOrder result array insufficient size");
+                throw request_error("PValue: useGeneMapOrder result array insufficient size");
             }
 
             for (jj = 0; jj < pval.size(); jj++) {
@@ -251,7 +254,7 @@ void *do_pvalue_query(void *th_arg) {
                 if (rankBased == false) {  // score based
                     // float gene_score = sortedGenes[jj].f;
                     float gene_score = geneScores[jj];
-                    if (gene_score == nan) break;
+                    if (gene_score == nan) continue;
                     if (gene_score >= 0) {
                         for (kk = 0; kk < rF.size(); kk++) {
                             if (gene_score >= rF[kk] || kk == rF.size() - 1)
@@ -273,6 +276,7 @@ void *do_pvalue_query(void *th_arg) {
                     }
                 } else if (rankBased == true) {
                     int gene_rank = geneRanks[jj];
+                    if (gene_rank == nan) break;
                     if (gene_rank < numGenes / 2) {
                         for (kk = 0; kk < rR.size(); kk++) {
                             if (gene_rank <= rR[kk] || kk == rR.size() - 1)
@@ -356,6 +360,10 @@ bool loadPvalueArrays(string dirname, PValueData &pvalueData) {
     fs::path rankFile = dirname;
     scoreFile /= "randomScoreFile.bin";
     rankFile /= "randomRankFile.bin";
+    if (!filesystem::exists(scoreFile) || !filesystem::exists(rankFile)) {
+        cerr << "WARNING: PValue parameter files not found: " << scoreFile << ", " << rankFile << endl;
+        return false;
+    }
     read2DVector(pvalueData.randomSc, scoreFile);
     read2DVector(pvalueData.randomRank, rankFile);
     return true;
@@ -365,7 +373,11 @@ bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries, PValueData 
     int numGenes = seekCentral.m_vecstrGenes.size();
     int numRandFiles = 0;
     vector <string> gscoreFiles;
-    string random_directory = seekCentral.m_vecDBSetting[0]->randomDir;
+    string random_directory = seekCentral.m_vecDBSetting[0]->pvalueDir;
+    if (!filesystem::exists(random_directory)) {
+        cerr << "WARNING: Random query directory doesn't exist: " << random_directory << endl;
+        return false;
+    }
     for (const auto & entry : fs::directory_iterator(random_directory)) {
         if (entry.path().extension() == ".gscore") {
             numRandFiles++;

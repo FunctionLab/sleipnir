@@ -61,7 +61,7 @@ int main(int iArgs, char **aszArgs) {
 
     SeekSettings settings;
     settings.species = "human";
-    settings.port = atol(PORT);
+    // settings.port = atol(PORT);
     settings.numThreads = NUM_THREADS;
     settings.numBufferedDBs = 1;
 

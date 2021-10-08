@@ -19,7 +19,7 @@ uint32_t omp_enabled_test();
 struct SeekSettings {
     vector <CSeekDBSetting*> dbs;
     string species;
-    int32_t port = 9000;
+    // int32_t port = 9000;
     int32_t numThreads = 8;
     int32_t numBufferedDBs = 20;
     int32_t pclCacheSize = 100;
@@ -29,7 +29,7 @@ struct SeekSettings {
     bool outputAsText = false;
     friend ostream& operator<<(ostream& os, const SeekSettings& settings) {
         os << "Species: " << settings.species << endl;
-        os << "Port: " << settings.port << endl;
+        // os << "Port: " << settings.port << endl;
         os << "NumThreads: " << settings.numThreads << endl;
         os << "NumBufferedDBs: " << settings.numBufferedDBs << endl;
         os << "PclCacheSize: " << settings.pclCacheSize << endl;
@@ -45,7 +45,7 @@ struct SeekSettings {
 Example Toml Config Format:
 
 species = "human"
-port = 9000
+// port = 9000
 numThreads = 8
 numBufferedDBs = 20  # Max num genes per query and max num of Databaselets to store in memory
 scoreCutoff = -9999.0  # The gene-gene score cutoff to add, default: no cutoff
@@ -61,6 +61,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     SINFO_DIR     = "/path/db1/sinfo"
     GVAR_DIR      = "/path/db1/gvar"
     PCL_DIR      = "/path/db1/pcl"
+    PVAL_DIR      = "/path/db1/pvalue"
     QUANT_FILE    = "/path/db1/quant2"
     DSET_MAP_FILE = "/path/db1/dataset.map"
     GENE_MAP_FILE = "/path/db1/gene_map.txt"
@@ -78,6 +79,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     QUANT_FILE    = "/path/db2/quant2"
     SINFO_DIR     = "/path/db2/sinfo"
     PCL_DIR     = "/path/db2/pcl"
+    PVAL_DIR     = "/path/db2/pvalue"
     GVAR_DIR      = "/path/db2/gvar"
     DSET_SIZE_FILE = "/path/db2/dataset_size"
     NUMBER_OF_DB  = 1000

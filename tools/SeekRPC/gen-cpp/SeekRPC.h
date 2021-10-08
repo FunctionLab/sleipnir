@@ -32,7 +32,7 @@ class SeekRPCIf {
   virtual void getPclResult(PclResult& _return, const int64_t taskId, const bool block) = 0;
   virtual void pvalueGenes(PValueResult& _return, const PValueGeneArgs& query) = 0;
   virtual void pvalueDatasets(PValueResult& _return, const PValueDatasetArgs& query) = 0;
-  virtual int32_t getRpcVersion() = 0;
+  virtual double getRpcVersion() = 0;
   virtual int32_t ping() = 0;
 };
 
@@ -96,8 +96,8 @@ class SeekRPCNull : virtual public SeekRPCIf {
   void pvalueDatasets(PValueResult& /* _return */, const PValueDatasetArgs& /* query */) {
     return;
   }
-  int32_t getRpcVersion() {
-    int32_t _return = 0;
+  double getRpcVersion() {
+    double _return = (double)0;
     return _return;
   }
   int32_t ping() {
@@ -1211,11 +1211,11 @@ class SeekRPC_getRpcVersion_result {
   }
 
   virtual ~SeekRPC_getRpcVersion_result() noexcept;
-  int32_t success;
+  double success;
 
   _SeekRPC_getRpcVersion_result__isset __isset;
 
-  void __set_success(const int32_t val);
+  void __set_success(const double val);
 
   bool operator == (const SeekRPC_getRpcVersion_result & rhs) const
   {
@@ -1244,7 +1244,7 @@ class SeekRPC_getRpcVersion_presult {
 
 
   virtual ~SeekRPC_getRpcVersion_presult() noexcept;
-  int32_t* success;
+  double* success;
 
   _SeekRPC_getRpcVersion_presult__isset __isset;
 
@@ -1399,9 +1399,9 @@ class SeekRPCClient : virtual public SeekRPCIf {
   void pvalueDatasets(PValueResult& _return, const PValueDatasetArgs& query);
   void send_pvalueDatasets(const PValueDatasetArgs& query);
   void recv_pvalueDatasets(PValueResult& _return);
-  int32_t getRpcVersion();
+  double getRpcVersion();
   void send_getRpcVersion();
-  int32_t recv_getRpcVersion();
+  double recv_getRpcVersion();
   int32_t ping();
   void send_ping();
   int32_t recv_ping();
@@ -1572,7 +1572,7 @@ class SeekRPCMultiface : virtual public SeekRPCIf {
     return;
   }
 
-  int32_t getRpcVersion() {
+  double getRpcVersion() {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
@@ -1652,9 +1652,9 @@ class SeekRPCConcurrentClient : virtual public SeekRPCIf {
   void pvalueDatasets(PValueResult& _return, const PValueDatasetArgs& query);
   int32_t send_pvalueDatasets(const PValueDatasetArgs& query);
   void recv_pvalueDatasets(PValueResult& _return, const int32_t seqid);
-  int32_t getRpcVersion();
+  double getRpcVersion();
   int32_t send_getRpcVersion();
-  int32_t recv_getRpcVersion(const int32_t seqid);
+  double recv_getRpcVersion(const int32_t seqid);
   int32_t ping();
   int32_t send_ping();
   int32_t recv_ping(const int32_t seqid);

@@ -15,7 +15,7 @@ class seek_rpcConstants {
  public:
   seek_rpcConstants();
 
-  int32_t RPCVersion;
+  double RPCVersion;
 };
 
 extern const seek_rpcConstants g_seek_rpc_constants;

@@ -19,7 +19,7 @@ class SeekRPCHandler : virtual public SeekRPCIf {
   SeekRPCHandler(SeekInterface &_seekInterface) : seekInterface(_seekInterface) {
   }
 
-  int32_t getRpcVersion() {
+  double getRpcVersion() {
     return seekInterface.getRpcVersion();
   }
 

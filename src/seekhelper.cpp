@@ -46,7 +46,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     }
     // populate the top level settings
     tomlGetValue<string>(tbl, "species", settings.species);
-    tomlGetValue<int32_t>(tbl, "port", settings.port);
+    // tomlGetValue<int32_t>(tbl, "port", settings.port);
     tomlGetValue<int32_t>(tbl, "numThreads", settings.numThreads);
     tomlGetValue<int32_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
     tomlGetValue<int32_t>(tbl, "pclCacheSize", settings.pclCacheSize);
@@ -71,6 +71,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
             string sinfo_dir = "NA";
             string gvar_dir = "NA";
             string pcl_dir = "NA";
+            string pvalue_dir = "NA";
             string quant_file = "NA";
             string gene_map_file = "NA";
             string gene_symbol_file = "NA";
@@ -84,6 +85,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
             tomlGetValue<string>(*dbTbl, "SINFO_DIR", sinfo_dir);
             tomlGetValue<string>(*dbTbl, "GVAR_DIR", gvar_dir);
             tomlGetValue<string>(*dbTbl, "PCL_DIR", pcl_dir);
+            tomlGetValue<string>(*dbTbl, "PVAL_DIR", pvalue_dir);
             tomlGetValue<string>(*dbTbl, "QUANT_FILE", quant_file);
             tomlGetValue<string>(*dbTbl, "GENE_MAP_FILE", gene_map_file);
             tomlGetValue<string>(*dbTbl, "GENE_SYMBOL_FILE", gene_symbol_file);
@@ -97,6 +99,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
                                 quant_file, dset_map_file,
                                 dset_size_file, num_db);
             dbSetting2->setPclDir(pcl_dir);
+            dbSetting2->setPvalueDir(pvalue_dir);
             settings.dbs.push_back(dbSetting2);
         }
     } else {
@@ -172,6 +175,7 @@ bool legacyReadDBConfigFile(string dbConfigFile,
         string platform_dir = "NA";
         string prep_dir = "NA";
         string pcl_dir = "NA";
+        string pvalue_dir = "NA";
         string db_dir = "NA";
         string dset_map_file = "NA";
         string gene_map_file = "NA";
@@ -193,6 +197,9 @@ bool legacyReadDBConfigFile(string dbConfigFile,
 
         if (parameters[i].find("PCL_DIR") != parameters[i].end())
             pcl_dir = parameters[i].find("PCL_DIR")->second;
+
+        if (parameters[i].find("PVAL_DIR") != parameters[i].end())
+            pvalue_dir = parameters[i].find("PVAL_DIR")->second;
 
         if (check_dset_size_flag == true) {
             if (parameters[i].find("DSET_SIZE_FILE") == parameters[i].end() ||
@@ -228,6 +235,7 @@ bool legacyReadDBConfigFile(string dbConfigFile,
                                                         quant_file, dset_map_file,
                                                         dset_size_file, num_db);
         dbSetting2->setPclDir(pcl_dir);
+        dbSetting2->setPvalueDir(pvalue_dir);
         cc.push_back(dbSetting2);
     }
     return true;

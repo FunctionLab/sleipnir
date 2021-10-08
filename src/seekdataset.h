@@ -49,7 +49,7 @@ namespace Sleipnir {
                            sinfoDir(m_sinfoDirectory),
                            gvarDir(m_gvarDirectory),
                            pclDir(m_pclDirectory),
-                           randomDir(m_randomDirectory),
+                           pvalueDir(m_pvalueDirectory),
                            geneMapFile(m_geneMapFile),
                            geneSymbolFile(m_geneSymbolFile),
                            datasetFile(m_dsetFile),
@@ -91,7 +91,7 @@ namespace Sleipnir {
             m_numDB = g->m_numDB;
             m_dsetSizeFile = g->m_dsetSizeFile;
             m_pclDirectory = g->m_pclDirectory;
-            m_randomDirectory = g->m_randomDirectory;
+            m_pvalueDirectory = g->m_pvalueDirectory;
         }
 
         ~CSeekDBSetting() {
@@ -105,8 +105,8 @@ namespace Sleipnir {
             m_pclDirectory = pclDir;
         }
 
-        void setRandomDir(string randomDir) {
-            m_randomDirectory = randomDir;
+        void setPvalueDir(string pvalueDir) {
+            m_pvalueDirectory = pvalueDir;
         }
 
         friend ostream& operator<<(ostream& os, const CSeekDBSetting& dbs) {
@@ -116,7 +116,7 @@ namespace Sleipnir {
             os << "Sinfo:" << dbs.m_sinfoDirectory << endl;
             os << "GVar:" << dbs.m_gvarDirectory << endl;
             os << "PCL:" << dbs.m_pclDirectory << endl;
-            os << "Rand:" << dbs.m_randomDirectory << endl;
+            os << "Pvalue:" << dbs.m_pvalueDirectory << endl;
             os << "GeneMapFile:" << dbs.m_geneMapFile << endl;
             os << "GeneSymbolFile:" << dbs.m_geneSymbolFile << endl;
             os << "DatasetsFile:" << dbs.m_dsetFile << endl;
@@ -132,7 +132,7 @@ namespace Sleipnir {
         const string &sinfoDir;
         const string &gvarDir;
         const string &pclDir;
-        const string &randomDir;
+        const string &pvalueDir;
         const string &geneMapFile;
         const string &geneSymbolFile;
         const string &datasetFile;
@@ -147,7 +147,7 @@ namespace Sleipnir {
         string m_prepDirectory;
         string m_dbDirectory;
         string m_pclDirectory;
-        string m_randomDirectory;
+        string m_pvalueDirectory;
         string m_geneMapFile;
         string m_geneSymbolFile;
         string m_quantFile;
