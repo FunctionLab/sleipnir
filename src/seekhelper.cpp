@@ -319,13 +319,14 @@ uint32_t omp_enabled_test() {
     return thread_count;
 }
 
-typedef struct Header2DFloat_s {
+typedef struct __attribute__((packed)) Header2DFloat_s {
   unsigned char magic1 = 0x00;
   unsigned char magic2 = 0x2D;
   unsigned char magic3 = 0xFE;
   unsigned char magic4 = 0xED;
   int rows;
   int cols;
+  int pad = 0xEEEEEEEE;
 } Header2DVector;
 
 template <typename T>
@@ -359,12 +360,19 @@ template void write2DVector(vector<vector<int>> &vec, string filename);
 template <typename T>
 void read2DVector(vector<vector<T>> &vec, string filename) {
     Header2DVector hdr;
+    Header2DVector defaultHdr;
     ifstream in(filename, ifstream::binary);
     in.read((char*)&hdr, sizeof(hdr));
+    // Check header magic numbers
     if (typeid(T) == typeid(int) && hdr.magic1 != 0xAE) {
-        throw runtime_error("read2DVector(): wrong header type for int");
+        throw state_error("read2DVector(): wrong header type for int");
     } else if (typeid(T) == typeid(float) && hdr.magic1 != 0xFA) {
-        throw runtime_error("read2DVector(): wrong header type for float");
+        throw state_error("read2DVector(): wrong header type for float");
+    }
+    // Check remainder of header magic numbers
+    int val = memcmp(&hdr.magic2, &defaultHdr.magic2, sizeof(unsigned char)*3);
+    if (val != 0) {
+        throw state_error("read2DVector(): header magic numbers don't match");
     }
     int rows = ntohl(hdr.rows);
     int cols = ntohl(hdr.cols);
@@ -376,7 +384,7 @@ void read2DVector(vector<vector<T>> &vec, string filename) {
     }
     in.close();
 }
-// Instantions of the template function for float and int
+// Instantiations of the template function for float and int
 template void read2DVector(vector<vector<float>> &vec, string filename);
 template void read2DVector(vector<vector<int>> &vec, string filename);
 

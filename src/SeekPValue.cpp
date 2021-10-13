@@ -194,7 +194,9 @@ void *do_pvalue_query(void *th_arg) {
                         geneIds[i] = cc->m_mapstrintGene[geneEntrezIds[i]];
                     }
                 }
-                assert(geneRanks.size() == geneIds.size());
+                if (geneRanks.size() != geneIds.size()) {
+                    throw request_error("PValue: Num genes provided should equal num geneRanks provided");
+                }
             } else { // score based prep
                 if (geneEntrezIds.size() == 0) {
                     // assumption is that the geneScores are provided in the gene_map order
@@ -213,7 +215,9 @@ void *do_pvalue_query(void *th_arg) {
                         geneIds[i] = cc->m_mapstrintGene[geneEntrezIds[i]];
                     }
                 }
-                assert(geneScores.size() == geneIds.size());
+                if (geneScores.size() != geneIds.size()) {
+                    throw request_error("PValue: Num genes provided should equal num geneScores provided");
+                }
             }
 
             // TODO: Remove this, not used
@@ -276,7 +280,7 @@ void *do_pvalue_query(void *th_arg) {
                     }
                 } else if (rankBased == true) {
                     int gene_rank = geneRanks[jj];
-                    if (gene_rank == nan) break;
+                    if (gene_rank == nan) continue;
                     if (gene_rank < numGenes / 2) {
                         for (kk = 0; kk < rR.size(); kk++) {
                             if (gene_rank <= rR[kk] || kk == rR.size() - 1)

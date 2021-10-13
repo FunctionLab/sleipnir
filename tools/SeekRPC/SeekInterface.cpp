@@ -506,12 +506,27 @@ void SeekInterface::pvalueGenesCommon(const PValueGeneArgs &query, PValueResult 
         throw query_error(FILELINE + "No cache found for species: " + query.species);
     }
 
+    int numReqGenes = query.genes.size();
+    if (query.useRank == true) {
+        if (numReqGenes > 0 && numReqGenes != query.geneRanks.size()) {
+            throw request_error("Error: PValue rank-based query should have "
+                                "equal num genes and num ranks provided. Perhaps "
+                                "the useRanks flag was not set.");
+        }
+     } else {
+        if (numReqGenes > 0 && numReqGenes != query.geneScores.size()) {
+            throw request_error("Error: PValue score-based query should have "
+                                "equal num genes and num scores provided");
+        }
+     }
+
     pvalue_thread_data thread_arg;
     thread_arg.new_fd = -1; // used by original main() server, -1 indicates don't send
     thread_arg.isComplete = false;
     thread_arg.gene_entrezIds = query.genes;
     thread_arg.gene_scores = query.geneScores;
     thread_arg.gene_ranks = query.geneRanks;
+    thread_arg.rankBased = query.useRank;
     thread_arg.seekCentral = &this->speciesSeekCentrals[query.species];
     thread_arg.pvalueData = &this->speciesPvalueData.at(query.species);
     // structs to hold results if new_fd == -1 (so results not sent back within do_query)
