@@ -180,7 +180,7 @@ void *do_pvalue_query(void *th_arg) {
                     geneRanks.resize(sortedGenes.size());
                     for (i = 0; i < sortedGenes.size(); i++) {
                         geneIds[i] = sortedGenes[i].i;
-                        geneRanks[i] = i;
+                        geneRanks[i] = i + 1; // ones based ranking
                         if (sortedGenes[i].f == nan) {
                             geneRanks[i] = nan;
                         }
