@@ -40,11 +40,13 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
     # copy the geneMapFile and quant file to output dir
     os.system(f"cp {cfg.geneMapFile} {cfg.outDir}")
     os.system(f"cp {cfg.quantFile} {cfg.outDir}")
-    # output a dset list file
-    dsetFileName = os.path.join(cfg.outDir, os.path.basename(cfg.datasetsFile))
-    if not os.path.exists(dsetFileName):
-        print("Create output datasets file {dsetFileName}")
-        os.system(f"ls -1 {cfg.pclDir}/*.pcl | xargs -n1 basename > {dsetFileName}")
+    # output a dset list file if needed
+    if not os.path.exists(cfg.datasetsFile):
+        cfg.datasetsFile = os.path.join(cfg.outDir, os.path.basename(cfg.datasetsFile))
+        print("Create output datasets file {cfg.datasetsFile}")
+        os.system(f"ls -1 {cfg.pclDir}/*.pcl | xargs -n1 basename > {cfg.datasetsFile}")
+    else:
+        os.system(f"cp {cfg.datasetsFile} {cfg.outDir}")
 
     if tasksToRun.all is True or runAll is True:
         tasksToRun.pclbin = True
@@ -55,6 +57,7 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
         tasksToRun.sinfo = True
         tasksToRun.gvar = True
         tasksToRun.dsetSize = True
+        tasksToRun.random = True
 
     if tasksToRun.pclbin:
         # Convert pcl to pclbin
@@ -85,13 +88,21 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
     if tasksToRun.dsetSize:
         # Create the dataset size file
         sutils.makeDsetSizeFile(cfg)
+    if tasksToRun.random:
+        # Create the random query result files for pvalue calculations
+        numRandomQueries = 1000
+        randDir = os.path.join(cfg.outDir, "random")
+        os.makedirs(randDir, exist_ok=True)
+        queryFile = os.path.join(randDir, "randQueries.txt")
+        # Make the list of random queries
+        sutils.makeRandomQueryFile(cfg, numRandomQueries, queryFile)
+        # Run the random queries
+        sutils.runSeekMiner(cfg, queryFile, randDir, concurrency)
     return True
 
 
 #set up script for SEEK
 if __name__=="__main__":
-    cfg = sutils.getDefaultConfig()
-
     #input directory (containing the PCL's)
     #input file: dataset list (3-column format: file, name, platform)
     #input directory (containing the setting file: quant2, gene_map.txt)
@@ -115,6 +126,8 @@ if __name__=="__main__":
                            help='create gvar directory files')
     argParser.add_argument('--dsetSize', default=False, action='store_true',
                            help='create dataset size file')
+    argParser.add_argument('--random', default=False, action='store_true',
+                           help='Create random query files used for pvalue calculations')
 
     argParser.add_argument('--sleipnirBinDir', '-b', type=str, required=True,
                            help='Directory where the Sleipnir binaries are installed')
@@ -122,13 +135,17 @@ if __name__=="__main__":
                            help='Directory of existing reference files (i.e. for reference gene_list and quant files)')
     argParser.add_argument('--outDir', '-o', type=str, required=True,
                            help='Output directory to write new database into')
-    argParser.add_argument('--pclDir', '-p', type=str, required=False, default=cfg.pclDir,
+    argParser.add_argument('--config', '-c', type=str, required=False, default=None,
                            help='Directory containing the PCL files for the new datasets')
-    argParser.add_argument('--datasetFile', '-d', type=str, required=False, default=cfg.datasetsFile,
-                           help='Text file listing the datasets, one dataset per line, three columns (pcl_file, name, platform)')
-    argParser.add_argument('--geneMapFile', '-g', type=str, required=False, default=cfg.geneMapFile,
+    argParser.add_argument('--pclDir', '-p', type=str, required=False, default=None,
+                           help='Directory containing the PCL files for the new datasets')
+    argParser.add_argument('--datasetFile', '-d', type=str, required=False, default=None,
+                           help='Text file listing the datasets, one dataset per line, one to three columns (pcl_file, name, platform)')
+    argParser.add_argument('--datasetPlatMapFile', '-P', type=str, required=False, default=None,
+                           help='Text file listing the datasets, one dataset per line, two columns (dsetName, platform)')
+    argParser.add_argument('--geneMapFile', '-g', type=str, required=False, default=None,
                            help='Text file containing the ordered (numbered) list of genes to be in the database')
-    argParser.add_argument('--numDBFiles', '-n', type=int, required=False, default=cfg.numDbFiles,
+    argParser.add_argument('--numDBFiles', '-n', type=int, required=False, default=None,
                            help='Number of output DB files to spread gene data across (should match refDB number)')
     argParser.add_argument('--concurrency', '-m', type=int, required=False, default=4,
                            help='Number of parallel processes to run for each task')
@@ -146,24 +163,35 @@ if __name__=="__main__":
     tasksToRun.sinfo = args.sinfo
     tasksToRun.gvar = args.gvar
     tasksToRun.dsetSize = args.dsetSize
+    tasksToRun.random = args.random
     tasksToRun.useDabGeneSet = args.dab_use_gene_set
 
     if not any(tasksToRun.values()):
         print("No task types specified: specify one or more, for example --dab or --all etc.")
         sys.exit(-1)
 
+    cfg = sutils.getDefaultConfig()
+    if args.config is not None:
+        cfg = sutils.loadConfig(args.config)
+
     cfg.binDir = args.sleipnirBinDir
     cfg.inDir = args.inDir
     cfg.outDir = args.outDir
-    cfg.pclDir = args.pclDir
-    cfg.datasetsFile = args.datasetFile
-    cfg.geneMapFile = args.geneMapFile
-    cfg.numDbFiles = args.numDBFiles
+    if args.pclDir is not None:
+        cfg.pclDir = args.pclDir
+    if args.datasetFile is not None:
+        cfg.datasetsFile = args.datasetFile
+    if args.datasetPlatMapFile is not None:
+        cfg.datasetPlatMapFile = args.datasetPlatMapFile
+    if args.geneMapFile is not None:
+        cfg.geneMapFile = args.geneMapFile
+    if args.numDBFiles is not None:
+        cfg.numDbFiles = args.numDBFiles
     sutils.checkConfig(cfg)
 
     # check max open files setting is sufficient, i.e. ulimit -n
     softFileLimit, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
-    if softFileLimit < args.numDBFiles:
+    if softFileLimit < cfg.numDbFiles:
         print("Max open files limit is insufficient: {}".format(softFileLimit))
         sys.exit(-1)
 

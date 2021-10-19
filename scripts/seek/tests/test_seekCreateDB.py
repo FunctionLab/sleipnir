@@ -66,13 +66,13 @@ class TestSeekCreateDB:
         cfg.inDir = mockDbDir
         cfg.outDir = mockDbDir
         cfg.binDir = os.path.join(sleipnirDir, 'Debug')
-        cfg.datasetsFile = 'dset_plat_map.txt'
+        cfg.datasetsFile = 'pcl_list.txt'
         sutils.checkConfig(cfg)
         # Run SeekMiner query
         queryFile = os.path.join(mockDbDir, 'query.txt')
         resultsDir = os.path.join(mockDbDir, 'results')
         os.makedirs(os.path.join(mockDbDir, 'results'))
-        cmd = f'{sleipnirBinDir}/SeekMiner -x {cfg.datasetsFile} -i ' \
+        cmd = f'{sleipnirBinDir}/SeekMiner -x {cfg.datasetPlatMapFile} -i ' \
               f'{cfg.geneMapFile} -d {cfg.dbDir} -p {mockDbDir}/prep ' \
               f'-P {mockDbDir}/plat -Q {cfg.quantFile} -u {mockDbDir}/sinfo ' \
               f'-U {mockDbDir}/gvar -n 6 -b 20  -V CV -I LOI -z z_score ' \
@@ -98,6 +98,7 @@ class TestSeekCreateDB:
               f'-q {queryFile} -o {seekrpcResultsFile}'
         clientProc = subprocess.Popen(cmd, shell=True)
         clientProc.wait()
-        SeekServerProc.kill()
         assert filecmp.cmp(expected_results, seekrpcResultsFile, shallow=False)
+        # TODO - run a Pvalue query and and PCL query using python
+        SeekServerProc.kill()
 

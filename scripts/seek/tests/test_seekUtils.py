@@ -183,7 +183,7 @@ class TestSeekUtils:
         assert len(platFiles) == 4
 
     @pytest.mark.dependency(depends=['pclbin'])
-    def teste_makeDsetSizeFile(self):
+    def test_makeDsetSizeFile(self):
         cfg = TestSeekUtils.cfg
         sutils.checkConfig(cfg)
         sutils.makeDsetSizeFile(cfg)
@@ -191,3 +191,12 @@ class TestSeekUtils:
         lineCount = len(open(dsetSizeFile).readlines())
         pclFileList = fnmatch.filter(os.listdir(cfg.pclDir), '*.pcl')
         assert lineCount == len(pclFileList)
+
+    def test_runSeekMiner(self):
+        pass
+
+    def test_splitFile(self):
+        pass
+
+    def test_renumberMoveFiles(self):
+        pass

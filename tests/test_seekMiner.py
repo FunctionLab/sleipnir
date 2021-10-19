@@ -39,12 +39,11 @@ class TestSeekMiner:
         cfg.inDir = sampleBcDir
         cfg.outDir = sampleBcDir
         cfg.binDir = sleipnirBin
-        cfg.datasetsFile = 'dset_plat_map.txt'
         cfg.geneMapFile = 'bc_gene_map.txt'
         sutils.checkConfig(cfg)
 
         print("## Run SeekMiner Queries ##")
-        cmd = f'{sleipnirBin}/SeekMiner -x {cfg.datasetsFile} -i ' \
+        cmd = f'{sleipnirBin}/SeekMiner -x {cfg.datasetPlatMapFile} -i ' \
               f'{cfg.geneMapFile} -d {cfg.dbDir} -p {sampleBcDir}/prep ' \
               f'-P {sampleBcDir}/plat -Q {cfg.quantFile} -u {sampleBcDir}/sinfo ' \
               f'-U {sampleBcDir}/gvar -n 100 -b 100  -V CV -I LOI -z z_score ' \

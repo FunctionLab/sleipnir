@@ -1191,6 +1191,7 @@ namespace Sleipnir {
             sprintf(acNumber, "%08lu", i);
             string strFile = strDBDirectory + '/' + acNumber + c_acExtension;
             if (!std::filesystem::exists(strFile)) {
+                cerr << "ERROR: DB file not found: " << strFile << endl;
                 return false;
             }
             uint32_t iGenes = vecstrGenes.size();

@@ -54,6 +54,7 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
 
     // start the task cleaner thread
     this->_cleanerThread = thread(&SeekInterface::runCleanTasksThread, this, taskTimeoutSec);
+    cout << "## Done Initializing SeekRPC ##" << endl;
 }
 
 void SeekInterface::seekQuery(const SeekQueryArgs &query, SeekResult &result)
@@ -523,6 +524,8 @@ void SeekInterface::pvalueGenesCommon(const PValueGeneArgs &query, PValueResult 
     pvalue_thread_data thread_arg;
     thread_arg.new_fd = -1; // used by original main() server, -1 indicates don't send
     thread_arg.isComplete = false;
+    thread_arg.useGeneMapOrder = (numReqGenes == 0); // true if no gene supplied
+    thread_arg.queryType = 0; // genes
     thread_arg.gene_entrezIds = query.genes;
     thread_arg.gene_scores = query.geneScores;
     thread_arg.gene_ranks = query.geneRanks;

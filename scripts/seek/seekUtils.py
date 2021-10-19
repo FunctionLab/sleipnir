@@ -8,6 +8,9 @@ import sys
 import math
 import glob
 import time
+import toml
+import shutil
+import random
 import fnmatch
 import resource
 import tempfile
@@ -27,9 +30,13 @@ defaultConfig = StructDict({
     'pclDir': 'pcl',
     'dabDir': 'dab',
     'dbDir': 'db',
+    'sinfoDir': 'sinfo',
+    'prepDir': 'prep',
+    'platformDir': 'plat',
     'geneMapFile': 'gene_map.txt',
     'quantFile': 'quant2',
     'datasetsFile': 'datasets.txt',
+    'datasetPlatMapFile': 'dsetPlatMap.txt',
     'dsetSizeFile': 'dset_size.txt',
     'numDbFiles': 1000,
     'configVerified': False,
@@ -38,6 +45,21 @@ defaultConfig = StructDict({
 def getDefaultConfig():
     return defaultConfig.copy()
 
+def to_camel_case(snake_str):
+    components = snake_str.split('_')
+    # Capitalize the first letter of each component except the first one
+    # Use the 'title' method and join them together.
+    return components[0].lower() + ''.join(x.title() for x in components[1:])
+
+def loadConfig(configFilename):
+    tomlCfg = toml.load(configFilename)
+    DB1 = tomlCfg['Database']['DB1']
+    cfg = getDefaultConfig()
+    for k, v in DB1.items():
+        newKey = to_camel_case(k)
+        cfg[newKey] = v
+    cfg.numDbFiles = cfg.numberOfDb
+    return cfg
 
 def checkConfig(cfg):
     """
@@ -56,7 +78,7 @@ def checkConfig(cfg):
         if not os.path.exists(cfg[elem]):
             raise FileNotFoundError(f'{elem}: {cfg[elem]}')
     # set some paths relative to output directory if path missing
-    for elem in ('dabDir', 'dbDir', 'dsetSizeFile'):
+    for elem in ('dabDir', 'dbDir', 'dsetSizeFile', 'sinfoDir', 'prepDir', 'platformDir', 'datasetPlatMapFile'):
         # check if the elem contains a path, i.e. '/'
         if not os.sep in cfg[elem]:
             # it doesn't contain a path, so set one
@@ -134,6 +156,26 @@ def writeDatasetPlatformMap(dset_list, dsetFile):
         fw.write("%s\t%s\n" % (name, platform))
     fw.close()
 
+def makeRandomQueryFile(cfg, numQueries, outFile):
+    """
+    Make random queries between 1 and 100 genes
+    The number of queries made is always increment of 100
+    """
+    genes = []
+    with open(cfg.geneMapFile) as fp:
+        for line in fp:
+            id, gene = line.split('\t')
+            gene = gene.rstrip("\n")
+            genes.append(gene)
+    # Will create queries of size between 1 and 100
+    # A set of queries will have one of each size
+    numSets = math.ceil(numQueries / 100)
+    with open(outFile, 'w') as fp:
+        for _ in range(numSets):
+            for querySize in range(1, 101):
+                random.shuffle(genes)
+                fp.write(" ".join(genes[:querySize]) + "\n")
+    return
 
 def Pcl2Pclbin(cfg, concurrency=8):
     """
@@ -298,17 +340,19 @@ def makePlatFiles(cfg, concurrency=8):
     if not os.path.exists(platDir):
         os.makedirs(platDir)
     prepDir = os.path.join(cfg.outDir, "prep")
-    # write out temporary files for the SeekPrep call
     datasets = readDatasetList(cfg.datasetsFile)
-    dsetPlatMapFile = os.path.join(cfg.outDir, 'dset_plat_map.txt')
-    writeDatasetPlatformMap(datasets, dsetPlatMapFile)
+    # write out dsetPlatMap if needed
+    if not os.path.exists(cfg.datasetPlatMapFile):
+        writeDatasetPlatformMap(datasets, cfg.datasetPlatMapFile)
+    # write out temporary files for the SeekPrep call
     # write out the db file list
     dbList = glob.glob(os.path.join(cfg.dbDir, '*.db'))
     tmpFile1 = tempfile.NamedTemporaryFile(delete=False)
     dbListFile = tmpFile1.name
     with open(dbListFile, 'w') as fp:
         fp.write(os.linesep.join(dbList))
-    cmd = f"{cmdName} -i {cfg.geneMapFile} -D {platDir} -f -P -b {dbListFile} -I {prepDir} -A {dsetPlatMapFile} -Q {cfg.quantFile}"
+    cmd = f"{cmdName} -i {cfg.geneMapFile} -D {platDir} -f -P -b {dbListFile} -I {prepDir} " \
+          f"-A {cfg.datasetPlatMapFile} -Q {cfg.quantFile}"
     os.system(cmd)
     os.remove(dbListFile)
 
@@ -374,6 +418,7 @@ def parallelMakePerThreadDB(cfg, concurrency=8):
     datasets = readDatasetList(cfg.datasetsFile)
     dbDir = os.path.join(cfg.outDir, 'thread_work', 'db')
     dbDir = os.path.abspath(dbDir)
+    # Number of datasets per thread
     numDsPerThread = math.ceil(len(datasets) / concurrency)
     taskList = []
     dbDirsToCombine = []
@@ -438,6 +483,7 @@ def parallelCombineThreadDBs(cfg, dbDirsToCombine, concurrency=8):
     assert len(dbDirsToCombine) > 0
     # The list of db files should be identical for each db directory (same count and names)
     dbFileList = fnmatch.filter(os.listdir(dbDirsToCombine[0]), '*.db')
+    cfg.numDbFiles = len(dbFileList)
     # We will create one task per db file name (i.e. combine all 00000001.db files together)
     taskList = []
     for dbFileName in dbFileList:
@@ -483,4 +529,86 @@ def makeDBFiles(cfg, concurrency=8):
     parallelCombineThreadDBs(cfg, dbDirsToCombine, concurrency)
     verifyCombinedDBs(cfg, dbDirsToCombine, concurrency)
 
+def runSeekMiner(cfg, queryFile, outputDir, concurrency=8):
+    """Run SeekMiner on a set of queries specified in a file"""
+    # Divide the queries into N files for the concurrent tasks
+    # Alternate: Unix command 'split --number=l/5 inputfile outputprefix'
+    tmpFiles = splitFile(queryFile, concurrency)
+    # Create the list of commands for to run concurrently
+    seekMinerBin = os.path.join(cfg.binDir, 'SeekMiner')
+    seekMinerCmd = \
+        f'time {seekMinerBin} ' \
+        f'-x {cfg.datasetPlatMapFile} -i {cfg.geneMapFile} ' \
+        f'-d {cfg.dbDir} -p {cfg.prepDir} -n {cfg.numDbFiles} ' \
+        f'-P {cfg.platformDir} -Q {cfg.quantFile} ' \
+        f'-u {cfg.sinfoDir} -R {cfg.dsetSizeFile} ' \
+        f'-b 200 -V CV -I LOI -z z_score -m -M -O '
+    # Add to a list of tasks
+    resDirs = []
+    taskList = []
+    for idx, qFile in enumerate(tmpFiles):
+        resDir = os.path.join(outputDir, f'{idx:02d}')
+        os.makedirs(resDir, exist_ok=True)
+        resDirs.append(resDir)
+        task = seekMinerCmd + f'-q {qFile} -o {resDir}'
+        taskList.append(task)
+    # Run the tasks
+    startTime = time.time()
+    runParallelJobs(taskList, concurrency=concurrency)
+    print('runSeekMiner: completion time {}s'.format(time.time() - startTime))
+    # Move all the result files to the top-level directory
+    renumberMoveFiles(resDirs, outputDir)
+    # remove all the tmp result directories
+    for resDir in resDirs:
+        shutil.rmtree(resDir)
+    # remove the tmp queryFiles
+    for tfile in tmpFiles:
+        os.remove(tfile)
+    return
 
+def splitFile(origFile, numParts):
+    """
+    Split a text file into N different parts
+    Returns list of filenames of the partial files
+    """
+    outputDir = os.path.dirname(origFile)
+    filename = os.path.basename(origFile)
+    # Read in all the file lines
+    lines = []
+    with open(origFile, 'r') as fp:
+        lines = fp.readlines()
+    numPerFile = math.ceil(len(lines) / numParts)
+    partialFiles = []
+    for idx in range(numParts):
+        pFile = os.path.join(outputDir, f'{idx:02d}_{filename}')
+        partialFiles.append(pFile)
+        with open(pFile, 'w') as fp:
+            startPoint = numPerFile * idx
+            endPoint = startPoint + numPerFile
+            fp.writelines(lines[startPoint:endPoint])
+    return partialFiles
+
+def renumberMoveFiles(dirs, outputDir):
+    """
+    Given a set of directories, each containing files with numeric
+    names (e.g. 1.gscore, 10.gscore, etc.), move the files to
+    the output directory and renumber such that the first dir
+    will be 0 to N, the second N+1 to M, etc.
+    """
+    prevNum = 0
+    totalIdx = 0
+    for fromDir in dirs:
+        # list all files starting with a number (in numeric order)
+        pattern = os.path.join(fromDir, "[0-9]*.*")
+        files = glob.glob(pattern)
+        # Sort the files by number
+        files.sort(key=lambda k: int(os.path.basename(k).split('.')[0]))
+        # rename and move them to output directory
+        for file in files:
+            filename = os.path.basename(file)
+            filenum, rest = filename.split('.', 1)
+            if int(filenum) != prevNum:
+                prevNum = int(filenum)
+                totalIdx += 1
+            newName = os.path.join(outputDir, f'{totalIdx}.{rest}')
+            os.rename(file, newName)

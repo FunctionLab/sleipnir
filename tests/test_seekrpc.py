@@ -48,7 +48,6 @@ class TestSeekRPC:
         print(f'### {cmd}')
         time.sleep(1)
 
-
     def teardown_class(cls):
         if cls.SeekServerProc:
             cls.SeekServerProc.kill()
@@ -289,9 +288,9 @@ class TestSeekRPC:
         result = TestSeekRPC.runPclQuery(client, pclArgs)
         TestSeekRPC.checkPclVals(result.queryCoexpressions, "pclTestQueryCoExpr.txt")
 
-# Test that uses different dataset names, like with .pcl, .pcl.bin and no pcl.
-# Also within settings file specifying pcl dir as /pcl and /pclbin
     def test_pclSettings(self):
+    # Test that uses different dataset names, like with .pcl, .pcl.bin and no pcl.
+    # Also within settings file specifying pcl dir as /pcl and /pclbin
         # Test using the python client
         cmd = f'python {seekRpcDir}/PclRpcClient.py -p {testPort} -s sampleBC ' \
               f'-d GSE13494.GPL570.pcl,GSE17215.GPL3921.pcl ' \
@@ -370,3 +369,11 @@ class TestSeekRPC:
         TestSeekRPC.checkPclVals(result.geneCoexpressions, "pclTestGeneCoExpr.txt")
 
         transport.close()
+
+    def test_pvalueQuery(self):
+        # Need a consistent queryFile to generate the random query results
+        # Generate the rand results
+        # Take one specific query and get the gscores and ranks
+        # Using the legacy pvalue server get the pvalues for scores and ranks for that query
+        # Run the new pvalue server and query all and parial
+        pass
