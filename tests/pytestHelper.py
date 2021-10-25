@@ -21,7 +21,8 @@ def createSampleDatabase():
         os.system(f'cp -a {breastCancerRefDir}/* {sampleBcDir}/')
         # Create the sample DB
         cmd = f'python {seekScriptsDir}/seekCreateDB.py --all -g bc_gene_map.txt ' \
-            f'-n 100 -m 4 -i {sampleBcDir} -o {sampleBcDir} -b {sleipnirBin} --dab-use-gene-set'
+            f'-n 100 -m 4 -i {sampleBcDir} -o {sampleBcDir} -b {sleipnirBin} ' \
+            f'-q randQueries.txt --dab-use-gene-set'
         ret = subprocess.run(cmd, shell=True)
         assert ret.returncode == 0
     return sampleBcDir

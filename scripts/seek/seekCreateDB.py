@@ -93,11 +93,18 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
         numRandomQueries = 1000
         randDir = os.path.join(cfg.outDir, "random")
         os.makedirs(randDir, exist_ok=True)
-        queryFile = os.path.join(randDir, "randQueries.txt")
-        # Make the list of random queries
-        sutils.makeRandomQueryFile(cfg, numRandomQueries, queryFile)
+        if cfg.queryFile is None:
+            cfg.queryFile = os.path.join(randDir, "randQueries.txt")
+            # Make the list of random queries
+            sutils.makeRandomQueryFile(cfg, numRandomQueries, cfg.queryFile)
+        else:
+            if os.path.dirname(cfg.queryFile) in [None, '']:
+                tmpPath = os.path.join(cfg.outDir, cfg.queryFile)
+                if not os.path.exists(tmpPath):
+                    raise FileNotFoundError(f'{cfg.queryFile}')
+                cfg.queryFile = tmpPath
         # Run the random queries
-        sutils.runSeekMiner(cfg, queryFile, randDir, concurrency)
+        sutils.runSeekMiner(cfg, cfg.queryFile, randDir, concurrency)
     return True
 
 
@@ -145,6 +152,8 @@ if __name__=="__main__":
                            help='Text file listing the datasets, one dataset per line, two columns (dsetName, platform)')
     argParser.add_argument('--geneMapFile', '-g', type=str, required=False, default=None,
                            help='Text file containing the ordered (numbered) list of genes to be in the database')
+    argParser.add_argument('--queryFile', '-q', type=str, required=False, default=None,
+                           help='Text file containing list of queries for making the random pvalue queries')
     argParser.add_argument('--numDBFiles', '-n', type=int, required=False, default=None,
                            help='Number of output DB files to spread gene data across (should match refDB number)')
     argParser.add_argument('--concurrency', '-m', type=int, required=False, default=4,
@@ -177,6 +186,7 @@ if __name__=="__main__":
     cfg.binDir = args.sleipnirBinDir
     cfg.inDir = args.inDir
     cfg.outDir = args.outDir
+    cfg.queryFile = args.queryFile
     if args.pclDir is not None:
         cfg.pclDir = args.pclDir
     if args.datasetFile is not None:

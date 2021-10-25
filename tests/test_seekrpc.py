@@ -46,7 +46,7 @@ class TestSeekRPC:
         cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile} -p {testPort}'
         cls.SeekServerProc = subprocess.Popen(cmd, shell=True)
         print(f'### {cmd}')
-        time.sleep(1)
+        time.sleep(3)
 
     def teardown_class(cls):
         if cls.SeekServerProc:
@@ -370,10 +370,74 @@ class TestSeekRPC:
 
         transport.close()
 
+    def readSeekBinaryResultFile(dataFile):
+        vals = []
+        with open(dataFile, 'rb') as f:
+            # The first 8 byte (long int) is the number of elements stored
+            headerVals = np.fromfile(f, count=1, dtype=np.ulonglong)
+            numVals = headerVals[0]
+            # The remaining are 4 byte float values, numVal of them
+            vals = np.fromfile(f, dtype=np.float32)
+            assert len(vals) == numVals
+        return vals
+
     def test_pvalueQuery(self):
-        # Need a consistent queryFile to generate the random query results
-        # Generate the rand results
-        # Take one specific query and get the gscores and ranks
-        # Using the legacy pvalue server get the pvalues for scores and ranks for that query
-        # Run the new pvalue server and query all and parial
+        # x - Need a consistent queryFile to generate the random query results
+        # x - Need a query and query results file (use one from random dir)
+        # x - Take the specific query and get the gscores and ranks (take one from random dir)
+        # x - Using the legacy pvalue server get the pvalues for scores and ranks for that query
+        # Run the new pvalue server and query all and partial
+
+        # Query gene score pvalues with all gscores
+        # Run the queries through the python rpc client
+        from thrift.transport import TTransport, TSocket
+        from thrift.protocol.TBinaryProtocol import TBinaryProtocol
+        socket = TSocket.TSocket('localhost', testPort)
+        transport = TTransport.TBufferedTransport(socket)
+        transport.open()
+        protocol = TBinaryProtocol(transport)
+        client = SeekRPC.Client(protocol)
+
+        # Load the query results from a pre-selected canned query.
+        randInputsDir = os.path.join(sampleBcDir, 'randTestInputs')
+        # The results include the list of genes and gene scores.
+        # Read in the gene scores from a seek .gscore binary file:
+        gscoreFile = os.path.join(randInputsDir, '3.gscore')
+        gscores = TestSeekRPC.readSeekBinaryResultFile(gscoreFile)
+
+        # Given 1000 random queries used to build the pvalue tables, accuracy
+        #  should only be to about .001.
+        scorePvalueFile = os.path.join(randInputsDir, '3.score_pvalues')
+        expectedScorePvalues = TestSeekRPC.readSeekBinaryResultFile(scorePvalueFile)
+        rankPvalueFile = os.path.join(randInputsDir, '3.rank_pvalues')
+        expectedRankPvalues = TestSeekRPC.readSeekBinaryResultFile(rankPvalueFile)
+
+        # Do the score based pvalue query for all genes
+        pvalueArgs = SeekRPC.PValueGeneArgs(
+            species = 'sampleBC',
+            # don't specify the geneIDs if getting scores for all genes, in which
+            #  case it is assumed the gscores are in the gene_map order
+            geneScores = gscores,
+            useRank = False
+        )
+        result = client.pvalueGenes(pvalueArgs)
+        assert result.success is True
+        resPvalues = np.array(result.pvalues, dtype=np.float32)
+        isEquivalent = np.allclose(resPvalues, expectedScorePvalues, rtol=.05, atol=.001)
+        assert isEquivalent == True
+
+        # Do the rank based pvalue query for all genes
+        pvalueArgs = SeekRPC.PValueGeneArgs(
+            species = 'sampleBC',
+            # don't specify the geneIDs if getting scores for all genes, in which
+            #  case it is assumed the gscores are in the gene_map order
+            geneScores = gscores,
+            useRank = True
+        )
+        result = client.pvalueGenes(pvalueArgs)
+        assert result.success is True
+        resPvalues = np.array(result.pvalues, dtype=np.float32)
+        isEquivalent = np.allclose(resPvalues, expectedRankPvalues, rtol=.05, atol=.001)
+        import pdb; pdb.set_trace()
+        assert isEquivalent == True
         pass

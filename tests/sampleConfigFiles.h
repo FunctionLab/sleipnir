@@ -27,7 +27,7 @@ outputAsText = true  # Output results (gene list and dataset weights) as text
     SINFO_DIR     = "/path/human/db1/sinfo"
     GVAR_DIR      = "/path/human/db1/gvar"
     PCL_DIR      = "/path/human/db1/pcl"
-    PVAL_DIR      = "/path/human/db1/pvalue"
+    PVAL_DIR      = "/path/human/db1/random"
     QUANT_FILE    = "/path/human/db1/quant2"
     DSET_MAP_FILE = "/path/human/db1/dataset.map"
     GENE_MAP_FILE = "/path/human/db1/gene_map.txt"
@@ -40,7 +40,7 @@ outputAsText = true  # Output results (gene list and dataset weights) as text
     PLATFORM_DIR  = "/path/human/db2/plat"
     DB_DIR        = "/path/human/db2/db"
     PCL_DIR        = "/path/human/db2/pcl"
-    PVAL_DIR        = "/path/human/db2/pvalue"
+    PVAL_DIR        = "/path/human/db2/random"
     DSET_MAP_FILE = "/path/human/db2/dataset.map"
     GENE_MAP_FILE = "/path/human/db2/gene_map.txt"
     GENE_SYMBOL_FILE = "/path/human/db2/gene_symbols.txt"
@@ -70,7 +70,7 @@ outputAsText = true  # Output results (gene list and dataset weights) as text
     SINFO_DIR     = "/path2/yeast/sinfo"
     GVAR_DIR      = "/path2/yeast/gvar"
     PCL_DIR      = "/path2/yeast/pcl"
-    PVAL_DIR      = "/path2/yeast/pvalue"
+    PVAL_DIR      = "/path2/yeast/random"
     QUANT_FILE    = "/path2/yeast/quant2"
     DSET_MAP_FILE = "/path2/yeast/dataset.map"
     GENE_MAP_FILE = "/path2/yeast/gene_map.txt"
@@ -89,7 +89,7 @@ PLATFORM_DIR	/path/human/db1/plat
 SINFO_DIR	/path/human/db1/sinfo
 GVAR_DIR	/path/human/db1/gvar
 PCL_DIR	/path/human/db1/pcl
-PVAL_DIR	/path/human/db1/pvalue
+PVAL_DIR	/path/human/db1/random
 QUANT_FILE	/path/human/db1/quant2
 DSET_MAP_FILE	/path/human/db1/dataset.map
 GENE_MAP_FILE	/path/human/db1/gene_map.txt
@@ -103,7 +103,7 @@ PREP_DIR	/path/human/db2/prep
 PLATFORM_DIR	/path/human/db2/plat
 SINFO_DIR	/path/human/db2/sinfo
 PCL_DIR	/path/human/db2/pcl
-PVAL_DIR	/path/human/db2/pvalue
+PVAL_DIR	/path/human/db2/random
 GVAR_DIR	/path/human/db2/gvar
 QUANT_FILE	/path/human/db2/quant2
 DSET_MAP_FILE	/path/human/db2/dataset.map

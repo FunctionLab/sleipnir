@@ -20,7 +20,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     SINFO_DIR     = "/path/db1/sinfo"
     GVAR_DIR      = "/path/db1/gvar"
     PCL_DIR      = "/path/db1/pcl"
-    PVAL_DIR      = "/path/db1/pvalue"
+    PVAL_DIR      = "/path/db1/random"
     QUANT_FILE    = "/path/db1/quant2"
     DSET_MAP_FILE = "/path/db1/dataset.map"
     GENE_MAP_FILE = "/path/db1/gene_map.txt"
@@ -38,7 +38,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     QUANT_FILE    = "/path/db2/quant2"
     SINFO_DIR     = "/path/db2/sinfo"
     PCL_DIR      = "/path/db2/pcl"
-    PVAL_DIR      = "/path/db2/pvalue"
+    PVAL_DIR      = "/path/db2/random"
     DSET_SIZE_FILE = "/path/db2/dataset_size"
     NUMBER_OF_DB  = 1000
 ####
