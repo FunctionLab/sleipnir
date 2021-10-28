@@ -113,6 +113,7 @@ class PValue():
         rankData = np.empty((numTrials, numGenes))
         for idx in range(numTrials):
             # np.argsort will give the indicies that would sort the array
+            # TODO - this isn't working the way you think, use scipy.stats.rankdata instead
             rankData[idx] = np.argsort(randomTrialData[idx])
 
         # Next transpose the data and sort each genes rank scores in acending order
@@ -143,9 +144,9 @@ class PValue():
 
         # get number of gene scores entries in each file
         numGenes = 0
-        with open(fileList[0], 'rb') as f:
+        with open(fileList[0], 'rb') as fp:
             # The first 8 byte long int is the number of elements stored
-            vals = np.fromfile(f, count=1, dtype=np.ulonglong)
+            vals = np.fromfile(fp, count=1, dtype=np.ulonglong)
             numGenes = vals[0]
 
         self.numGenes = numGenes
@@ -154,12 +155,12 @@ class PValue():
         data = np.empty((len(fileList), numGenes))
 
         for idx, file in enumerate(fileList):
-            with open(file, 'rb') as f:
+            with open(file, 'rb') as fp:
                 # The first 8 byte long int is the number of elements (gene scores) stored
-                vals = np.fromfile(f, count=1, dtype=np.ulonglong)
+                vals = np.fromfile(fp, count=1, dtype=np.ulonglong)
                 numElems = vals[0]
                 # The remaining are 4 byte float values, i.e. the gene scores for each gene
-                row = np.fromfile(f, dtype=np.float32)
+                row = np.fromfile(fp, dtype=np.float32)
             assert len(row) == numElems
             # A row contains the random gene scores for one query, one score per gene
             data[idx] = row

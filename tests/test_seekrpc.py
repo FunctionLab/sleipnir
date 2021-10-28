@@ -2,9 +2,11 @@ import pytest
 import os
 import sys
 import time
+import random
 import subprocess
 import tempfile
 import numpy as np
+import scipy.stats as stats
 
 testDir = os.path.abspath(os.path.dirname(__file__))
 sleipnirDir = os.path.dirname(testDir)
@@ -19,6 +21,7 @@ sys.path.append(pytoolsDir)
 seekRpcDir = os.path.join(sleipnirDir, 'tools', 'SeekRPC')
 seekRpcPyDir = os.path.join(seekRpcDir, 'gen-py')
 sys.path.append(seekRpcPyDir)
+import seekUtils as sutils
 from pytestHelper import createSampleDatabase
 from rank_correlation import files_rank_correlation
 from seek_rpc import SeekRPC
@@ -30,7 +33,7 @@ min_result_correlation = 0.95
 testPort = 9123
 
 class TestSeekRPC:
-    cfg = None
+    cfgFile = None
 
     def setup_class(cls):
         # Step 01: Make the breast cancer example DB if needed
@@ -38,6 +41,7 @@ class TestSeekRPC:
 
         # Step 02: Start the SeekRPC server running
         seekrpcConfigFile = os.path.join(sampleBcDir, 'sampleBC-config.toml')
+        TestSeekRPC.cfgFile = seekrpcConfigFile
         # modify config file paths, sub '/path' with path to sampleBcDir
         sampleBcDirEscaped = sampleBcDir.replace('/', '\\/')
         cmd = f"sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}"
@@ -46,7 +50,9 @@ class TestSeekRPC:
         cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile} -p {testPort}'
         cls.SeekServerProc = subprocess.Popen(cmd, shell=True)
         print(f'### {cmd}')
-        time.sleep(3)
+        # sleep for 5 secs to accomodate initial run of a new db which builds
+        #   pvalue bins from the random queries
+        time.sleep(5)
 
     def teardown_class(cls):
         if cls.SeekServerProc:
@@ -370,25 +376,14 @@ class TestSeekRPC:
 
         transport.close()
 
-    def readSeekBinaryResultFile(dataFile):
-        vals = []
-        with open(dataFile, 'rb') as f:
-            # The first 8 byte (long int) is the number of elements stored
-            headerVals = np.fromfile(f, count=1, dtype=np.ulonglong)
-            numVals = headerVals[0]
-            # The remaining are 4 byte float values, numVal of them
-            vals = np.fromfile(f, dtype=np.float32)
-            assert len(vals) == numVals
-        return vals
-
     def test_pvalueQuery(self):
-        # x - Need a consistent queryFile to generate the random query results
-        # x - Need a query and query results file (use one from random dir)
-        # x - Take the specific query and get the gscores and ranks (take one from random dir)
-        # x - Using the legacy pvalue server get the pvalues for scores and ranks for that query
-        # Run the new pvalue server and query all and partial
+        # How this test was set up:
+        # Made a consistent queryFile to generate the random query results, randQueries.txt
+        # Build the pvalue bins from the randQueries, done by seekCreateDB in createSampleDatabase()
+        # Take one query and get the gscores and ranks (take one from random dir, i.e. 3.gscore)
+        # Offline, one time, used the legacy pvalue server to get the score and rank based pvalues for that query
+        # Run the new pvalue server and query agains all genes and a partial set of genes
 
-        # Query gene score pvalues with all gscores
         # Run the queries through the python rpc client
         from thrift.transport import TTransport, TSocket
         from thrift.protocol.TBinaryProtocol import TBinaryProtocol
@@ -398,21 +393,20 @@ class TestSeekRPC:
         protocol = TBinaryProtocol(transport)
         client = SeekRPC.Client(protocol)
 
-        # Load the query results from a pre-selected canned query.
+        # Load the previoulsy-run query results from a pre-selected query.
+        # Will use the 3rd random query 3.*
         randInputsDir = os.path.join(sampleBcDir, 'randTestInputs')
         # The results include the list of genes and gene scores.
         # Read in the gene scores from a seek .gscore binary file:
         gscoreFile = os.path.join(randInputsDir, '3.gscore')
-        gscores = TestSeekRPC.readSeekBinaryResultFile(gscoreFile)
-
-        # Given 1000 random queries used to build the pvalue tables, accuracy
-        #  should only be to about .001.
+        gscores = sutils.readSeekBinaryResultFile(gscoreFile)
         scorePvalueFile = os.path.join(randInputsDir, '3.score_pvalues')
-        expectedScorePvalues = TestSeekRPC.readSeekBinaryResultFile(scorePvalueFile)
+        expectedScorePvalues = sutils.readSeekBinaryResultFile(scorePvalueFile)
         rankPvalueFile = os.path.join(randInputsDir, '3.rank_pvalues')
-        expectedRankPvalues = TestSeekRPC.readSeekBinaryResultFile(rankPvalueFile)
+        expectedRankPvalues = sutils.readSeekBinaryResultFile(rankPvalueFile)
 
-        # Do the score based pvalue query for all genes
+        # Do the score-based pvalue query for all genes
+        # Note: when doing for all genes no need to provide the gene entrez id list
         pvalueArgs = SeekRPC.PValueGeneArgs(
             species = 'sampleBC',
             # don't specify the geneIDs if getting scores for all genes, in which
@@ -423,6 +417,8 @@ class TestSeekRPC:
         result = client.pvalueGenes(pvalueArgs)
         assert result.success is True
         resPvalues = np.array(result.pvalues, dtype=np.float32)
+        # Given 1000 random queries used to build the pvalue tables, accuracy
+        #  should only be to about .001.
         isEquivalent = np.allclose(resPvalues, expectedScorePvalues, rtol=.05, atol=.001)
         assert isEquivalent == True
 
@@ -437,7 +433,90 @@ class TestSeekRPC:
         result = client.pvalueGenes(pvalueArgs)
         assert result.success is True
         resPvalues = np.array(result.pvalues, dtype=np.float32)
+        # For some reason the gscores vary with each seek query run. I think because
+        #  OMP makes it non-deterministic order float operations. I would think that
+        #  absolute of .001 difference would work, but one out of 3500 was .025 away.
         isEquivalent = np.allclose(resPvalues, expectedRankPvalues, rtol=.05, atol=.001)
-        import pdb; pdb.set_trace()
         assert isEquivalent == True
+
+        # Next try running queries with a partial set of genes
+        # Load the list of gene entrez IDs
+        cfg = sutils.loadConfig(TestSeekRPC.cfgFile)
+        genes = sutils.readGeneMapFile(cfg.geneMapFile)
+        # generate a random list of indexes into the geneIDs and geneScores
+        geneIndices = random.sample(range(0, len(genes)), 100)
+        # geneIndices = list(range(0,10)) # for debugging
+        geneSample = [genes[idx] for idx in geneIndices]
+
+        # Do a pvalue score query with the partial list of genes
+        scoreSample = [gscores[idx] for idx in geneIndices]
+        # Do the score-based pvalue query for the sampled genes
+        pvalueArgs = SeekRPC.PValueGeneArgs(
+            species = 'sampleBC',
+            genes = geneSample,
+            geneScores = scoreSample,
+            useRank = False
+        )
+        result = client.pvalueGenes(pvalueArgs)
+        assert result.success is True
+        resPvalues = np.array(result.pvalues, dtype=np.float32)
+        expectedScoreSample = [expectedScorePvalues[idx] for idx in geneIndices]
+        isEquivalent = np.allclose(resPvalues, expectedScoreSample, rtol=.05, atol=.001)
+        assert isEquivalent == True
+
+        # Do a pvalue rank query with the partial list of genes
+        # First need to sort the scores to get the ranks
+        # Using scipy.rankdata will rank from lowest to highest, but we
+        #  want rank from higest to lowest. len(A) - rankdata(A) + 1
+        #  will give this reverse ranking
+        rankIndices = len(gscores) - stats.rankdata(gscores, method='ordinal') + 1
+        # ranks are ones-based rather than 0-based, so increment rankIndices by one
+        rankValues = rankIndices + 1
+        # If the gene score is NaN (-320) then set the rank to NaN also
+        for idx, score in enumerate(gscores):
+            if score == -320:
+                rankValues[idx] = -320
+        # keep only the sampled ranks from the randomly generated indices
+        rankSample = [rankValues[idx] for idx in geneIndices]
+        assert len(geneSample) == len(rankSample)
+        # Do the rank-based pvalue query for the sampled genes
+        pvalueArgs = SeekRPC.PValueGeneArgs(
+            species = 'sampleBC',
+            genes = geneSample,
+            geneRanks = rankSample,
+            useRank = True
+        )
+        result = client.pvalueGenes(pvalueArgs)
+        assert result.success is True
+        resPvalues = np.array(result.pvalues, dtype=np.float32)
+        expectedRankSample = [expectedRankPvalues[idx] for idx in geneIndices]
+        isEquivalent = np.allclose(resPvalues, expectedRankSample, rtol=.05, atol=.002)
+        assert isEquivalent == True
+
+        # Test when NaN values are in the ranks and scores - should get back NaN as the result
+        # Do the score-based pvalue query with all NaN rank values
+        scoreSample = [-320] * len(geneSample)
+        pvalueArgs = SeekRPC.PValueGeneArgs(
+            species = 'sampleBC',
+            genes = geneSample,
+            geneScores = scoreSample,
+            useRank = False
+        )
+        result = client.pvalueGenes(pvalueArgs)
+        assert result.success is True
+        # Results should all be NaN (-320)
+        assert result.pvalues == scoreSample
+
+        # Do the rank-based pvalue query with all NaN rank values
+        rankSample = [-320] * len(geneSample)
+        pvalueArgs = SeekRPC.PValueGeneArgs(
+            species = 'sampleBC',
+            genes = geneSample,
+            geneRanks = rankSample,
+            useRank = True
+        )
+        result = client.pvalueGenes(pvalueArgs)
+        assert result.success is True
+        resPvalues = np.array(result.pvalues, dtype=np.float32)
+        assert result.pvalues == rankSample
         pass

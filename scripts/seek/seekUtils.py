@@ -15,6 +15,7 @@ import fnmatch
 import resource
 import tempfile
 import subprocess
+import numpy as np
 currPath = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currPath)
 from runParallelJobs import runParallelJobs
@@ -103,6 +104,25 @@ def prepCmd(executableName, tagName, cfg):
         raise FileNotFoundError(f'Binary {cmdName} not found')
     return cmdName
 
+def readGeneMapFile(geneFile):
+    genes = []
+    with open(geneFile) as fp:
+        for line in fp:
+            id, gene = line.split('\t')
+            gene = gene.rstrip("\n")
+            genes.append(gene)
+    return genes
+
+def readSeekBinaryResultFile(dataFile):
+    vals = []
+    with open(dataFile, 'rb') as fp:
+        # The first 8 byte (long int) is the number of elements stored
+        headerVals = np.fromfile(fp, count=1, dtype=np.ulonglong)
+        numVals = headerVals[0]
+        # The remaining are 4 byte float values, numVal of them
+        vals = np.fromfile(fp, dtype=np.float32)
+        assert len(vals) == numVals
+    return vals
 
 def readDatasetList(dsetFile):
     """
@@ -161,12 +181,7 @@ def makeRandomQueryFile(cfg, numQueries, outFile):
     Make random queries between 1 and 100 genes
     The number of queries made is always increment of 100
     """
-    genes = []
-    with open(cfg.geneMapFile) as fp:
-        for line in fp:
-            id, gene = line.split('\t')
-            gene = gene.rstrip("\n")
-            genes.append(gene)
+    genes = readGeneMapFile(cfg.geneMapFile)
     # Will create queries of size between 1 and 100
     # A set of queries will have one of each size
     numSets = math.ceil(numQueries / 100)

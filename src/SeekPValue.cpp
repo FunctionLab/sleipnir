@@ -422,7 +422,7 @@ bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries, PValueData 
             sortedRandom[jj].f = randomScores[jj];
         }
         sort(sortedRandom.begin(), sortedRandom.end());
-        for (jj = 0; jj < randomScores.size(); jj++) {
+        for (jj = 0; jj < sortedRandom.size(); jj++) {
             pvalueData.randomRank[sortedRandom[jj].i][ii] = jj;
             pvalueData.randomSc[sortedRandom[jj].i][ii] = sortedRandom[jj].f;
         }
