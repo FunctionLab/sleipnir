@@ -27,6 +27,10 @@ class TestSeekMiner:
         # Step 01: Make the breast cancer example DB if needed
         sampleBcDir = createSampleDatabase()
         sampleConfigFile = os.path.join(sampleBcDir, 'sampleBC-config.toml')
+        # modify config file paths, sub '/path' with path to sampleBcDir
+        sampleBcDirEscaped = sampleBcDir.replace('/', '\\/')
+        cmd = f"sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {sampleConfigFile}"
+        subprocess.run(cmd, shell=True)
         cfg = sutils.loadConfig(sampleConfigFile)
         cfg.inDir = sampleBcDir
         cfg.outDir = sampleBcDir
@@ -74,7 +78,6 @@ class TestSeekMiner:
                 correlation_errors += 1
                 print('ERROR: Result correlation too low')
         assert correlation_errors == 0
-
 
     def test_utilsRunSeekMiner(self):
         sampleBcDir = TestSeekMiner.sampleBcDir

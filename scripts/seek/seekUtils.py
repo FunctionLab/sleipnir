@@ -565,6 +565,9 @@ def makeDBFiles(cfg, concurrency=8):
     dbDirsToCombine = parallelMakePerThreadDB(cfg, concurrency)
     parallelCombineThreadDBs(cfg, dbDirsToCombine, concurrency)
     verifyCombinedDBs(cfg, dbDirsToCombine, concurrency)
+    # Remove the temp dbDirs created by the threads
+    for tmpDir in dbDirsToCombine:
+        shutil.rmtree(tmpDir)
 
 def runSeekMiner(cfg, queryFile, outputDir, concurrency=8):
     """Run SeekMiner on a set of queries specified in a file"""
