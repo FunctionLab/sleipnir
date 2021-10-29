@@ -176,6 +176,28 @@ def writeDatasetPlatformMap(dset_list, dsetFile):
         fw.write("%s\t%s\n" % (name, platform))
     fw.close()
 
+def splitFile(origFile, numParts):
+    """
+    Split a text file into N different parts
+    Returns list of filenames of the partial files
+    """
+    outputDir = os.path.dirname(origFile)
+    filename = os.path.basename(origFile)
+    # Read in all the file lines
+    lines = []
+    with open(origFile, 'r') as fp:
+        lines = fp.readlines()
+    numPerFile = math.ceil(len(lines) / numParts)
+    partialFiles = []
+    for idx in range(numParts):
+        pFile = os.path.join(outputDir, f'{idx:02d}_{filename}')
+        partialFiles.append(pFile)
+        with open(pFile, 'w') as fp:
+            startPoint = numPerFile * idx
+            endPoint = startPoint + numPerFile
+            fp.writelines(lines[startPoint:endPoint])
+    return partialFiles
+
 def makeRandomQueryFile(cfg, numQueries, outFile):
     """
     Make random queries between 1 and 100 genes
@@ -581,49 +603,31 @@ def runSeekMiner(cfg, queryFile, outputDir, concurrency=8):
         os.remove(tfile)
     return
 
-def splitFile(origFile, numParts):
-    """
-    Split a text file into N different parts
-    Returns list of filenames of the partial files
-    """
-    outputDir = os.path.dirname(origFile)
-    filename = os.path.basename(origFile)
-    # Read in all the file lines
-    lines = []
-    with open(origFile, 'r') as fp:
-        lines = fp.readlines()
-    numPerFile = math.ceil(len(lines) / numParts)
-    partialFiles = []
-    for idx in range(numParts):
-        pFile = os.path.join(outputDir, f'{idx:02d}_{filename}')
-        partialFiles.append(pFile)
-        with open(pFile, 'w') as fp:
-            startPoint = numPerFile * idx
-            endPoint = startPoint + numPerFile
-            fp.writelines(lines[startPoint:endPoint])
-    return partialFiles
-
 def renumberMoveFiles(dirs, outputDir):
     """
     Given a set of directories, each containing files with numeric
     names (e.g. 1.gscore, 10.gscore, etc.), move the files to
     the output directory and renumber such that the first dir
-    will be 0 to N, the second N+1 to M, etc.
+    will be 0 to N, the second dir files will become N+1 to M, etc.
     """
-    prevNum = 0
-    totalIdx = 0
+    totalIdx = -1
     for fromDir in dirs:
         # list all files starting with a number (in numeric order)
         pattern = os.path.join(fromDir, "[0-9]*.*")
         files = glob.glob(pattern)
         # Sort the files by number
         files.sort(key=lambda k: int(os.path.basename(k).split('.')[0]))
+        # There may be multiple files with the same numbered name, like
+        #   0.results.txt, 0.gscores, 0.dweights etc.
+        # So track the prevFileNum and only change when we encounter a new num
+        prevFileNum = None
         # rename and move them to output directory
         for file in files:
             filename = os.path.basename(file)
             filenum, rest = filename.split('.', 1)
-            if int(filenum) != prevNum:
-                prevNum = int(filenum)
+            assert filenum is not None
+            if int(filenum) != prevFileNum:
+                prevFileNum = int(filenum)
                 totalIdx += 1
             newName = os.path.join(outputDir, f'{totalIdx}.{rest}')
             os.rename(file, newName)

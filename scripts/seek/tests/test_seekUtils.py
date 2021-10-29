@@ -192,11 +192,54 @@ class TestSeekUtils:
         pclFileList = fnmatch.filter(os.listdir(cfg.pclDir), '*.pcl')
         assert lineCount == len(pclFileList)
 
-    def test_runSeekMiner(self):
-        pass
-
     def test_splitFile(self):
-        pass
+        tmpDirObj = tempfile.TemporaryDirectory()
+        tmpDir = tmpDirObj.name
+        # create a file with 100 lines
+        origFile = os.path.join(tmpDir, 'origFile')
+        nums = list(range(0,100))
+        numStr = [f'{val}\n' for val in nums]
+        with open(origFile, 'w') as fp:
+            fp.writelines(numStr)
+        # call split file to break it into 9 smaller files
+        splitFiles = sutils.splitFile(origFile, 9)
+        newFile = os.path.join(tmpDir, 'newFile')
+        # concatenate the splitFiles together
+        os.system(f"cat {' '.join(splitFiles)} > {newFile}")
+        # read in newFile
+        with open(newFile, 'r') as fp:
+            newVals = fp.readlines()
+        # the concatenated values should match original values
+        assert numStr == newVals
 
     def test_renumberMoveFiles(self):
+        # create a set of directories with numbered files in them 1-10
+        topDirObj = tempfile.TemporaryDirectory()
+        topDir = topDirObj.name
+        # make a set of sub directories
+        numDirs = 10
+        numFilesPerDir = 10
+        dirs = []
+        for idx in range(0, numDirs):
+            subDir = os.path.join(topDir, f'dir_{idx}')
+            dirs.append(subDir)
+            os.makedirs(subDir)
+        # add a set of files in each directory
+        cnt = 0
+        for subDir in dirs:
+            for idx in range(0, numFilesPerDir):
+                subFile = os.path.join(subDir, f'{idx}.txt')
+                os.system(f'echo {cnt} > {subFile}')
+                cnt += 1
+        # call renumber move function to grouth the files
+        sutils.renumberMoveFiles(dirs, topDir)
+        # check that the files were moved properly.
+        totalFiles = numDirs * numFilesPerDir
+        for idx in range(totalFiles):
+            nfile = os.path.join(topDir, f'{idx}.txt')
+            with open(nfile, 'r') as fp:
+                val = fp.read()
+            val = val.rstrip('/n')
+            assert int(val) == idx
         pass
+
