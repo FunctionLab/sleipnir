@@ -214,3 +214,32 @@ TEST_F(SeekHelperTest, LRUCacheTest) {
     // should have been evicted when 6 was added
     ASSERT_EQ(ret, false);
 }
+
+TEST_F(SeekHelperTest, WriteRead2DVectorTest) {
+    // Write out and read back a 2D vector and make sure they are equal
+    vector<vector<float>> testVector;
+    int xDim = 15;
+    int yDim = 7;
+    testVector.resize(xDim);
+    for (int i=0; i<xDim; i++) {
+        testVector[i].resize(yDim);
+        for (int j=0; j<yDim; j++) {
+            float val = i*j;
+            testVector[i][j] = val;
+        }
+    }
+
+    // write out the testVector
+    string vecFilename = testDir + "/testVector.bin";
+    write2DVector(testVector, vecFilename);
+
+    // read back the testVector
+    vector<vector<float>> readVector;
+    read2DVector(readVector, vecFilename);
+
+    for (int i=0; i<xDim; i++) {
+        for (int j=0; j<yDim; j++) {
+            ASSERT_EQ(testVector[i][j], readVector[i][j]);
+        }
+    }
+}
