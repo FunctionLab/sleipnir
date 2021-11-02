@@ -51,7 +51,6 @@ TEST_F(SeekHelperTest, loadTomlConfigs)
     res = parseTomlConfig(humanTomlFile,  tomlSettings);
     ASSERT_TRUE(res);
     ASSERT_EQ(tomlSettings.species, "human");
-    // ASSERT_EQ(tomlSettings.port, 1234);
     ASSERT_EQ(tomlSettings.numThreads, 12);
     ASSERT_EQ(tomlSettings.numBufferedDBs, 23);
     ASSERT_EQ(tomlSettings.pclCacheSize, 32);
@@ -140,7 +139,6 @@ bool compareSeekDBSettings(CSeekDBSetting* cc1, CSeekDBSetting* cc2) {
 
 bool compareSeekSettings(SeekSettings &s1, SeekSettings &s2) {
     if (s1.species == s2.species &&
-        // s1.port == s2.port &&
         s1.numThreads == s2.numThreads &&
         s1.numBufferedDBs == s2.numBufferedDBs &&
         s1.pclCacheSize == s2.pclCacheSize &&

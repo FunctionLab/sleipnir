@@ -1,4 +1,7 @@
 """
+NOTE: This script is a work in progress and not completed or working
+correctly yet.
+
 P-value steps
 1) Run 10,000 random queries 0-9999 (use the existing ones for now)
 2) From python open the .gscore files and read in the values
@@ -27,9 +30,10 @@ Then (1 - bindIdx / totalBins) to get the p-value number.
 import os
 import sys
 import time
-import numpy as np
 import glob
 import argparse
+import numpy as np
+import scipy.stats as stats
 
 """
 The general strategy will be to group the results of a set of random queries into
@@ -112,9 +116,18 @@ class PValue():
         numTrials, numGenes = np.shape(randomTrialData)
         rankData = np.empty((numTrials, numGenes))
         for idx in range(numTrials):
+            # Using scipy.rankdata will rank from lowest to highest, but we
+            #  want rank from higest to lowest. len(A) - rankdata(A) + 1
+            #  will give this reverse ranking
+            gscores = randomTrialData[idx]
+            rankIndices = len(gscores) - stats.rankdata(gscores, method='ordinal') + 1
+            # ranks are ones-based rather than 0-based, so increment rankIndices by one
+            rankData[idx] = rankIndices + 1
+
             # np.argsort will give the indicies that would sort the array
-            # TODO - this isn't working the way you think, use scipy.stats.rankdata instead
-            rankData[idx] = np.argsort(randomTrialData[idx])
+            # np.argsort twice will give the rank (of values sorted in ascending order)
+            # we would need rank of values sorted in descending order
+            # rankData[idx] = np.argsort(np.argsort(randomTrialData[idx]))
 
         # Next transpose the data and sort each genes rank scores in acending order
         data = rankData.transpose()

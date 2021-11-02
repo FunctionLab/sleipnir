@@ -1,5 +1,4 @@
 species = "sampleBC"
-port = 9000
 numThreads = 2
 numBufferedDBs = 200  # Max num genes per query and max num of Databaselets to store in memory
 pclCacheSize = 32  # Max CPCLs to keep open in cached memory (for PCL Server queries)

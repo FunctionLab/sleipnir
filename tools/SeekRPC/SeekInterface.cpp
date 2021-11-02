@@ -115,7 +115,7 @@ void SeekInterface::pvalueGenes(const PValueGeneArgs& query, PValueResult& resul
 }
 
 void SeekInterface::pvalueDatasets(const PValueDatasetArgs& query, PValueResult& result) {
-    printf("pvalueDatasets\n");
+    printf("pvalueDatasets query not implemented in RPC server yet\n");
 }
 
 double SeekInterface::getRpcVersion()

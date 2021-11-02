@@ -231,7 +231,7 @@ class TestSeekUtils:
                 subFile = os.path.join(subDir, f'{idx}.txt')
                 os.system(f'echo {cnt} > {subFile}')
                 cnt += 1
-        # call renumber move function to grouth the files
+        # call renumber move function to group the files together
         sutils.renumberMoveFiles(dirs, topDir)
         # check that the files were moved properly.
         totalFiles = numDirs * numFilesPerDir

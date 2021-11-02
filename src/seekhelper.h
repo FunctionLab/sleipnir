@@ -19,7 +19,6 @@ uint32_t omp_enabled_test();
 struct SeekSettings {
     vector <CSeekDBSetting*> dbs;
     string species;
-    // int32_t port = 9000;
     int32_t numThreads = 8;
     int32_t numBufferedDBs = 20;
     int32_t pclCacheSize = 100;
@@ -29,7 +28,6 @@ struct SeekSettings {
     bool outputAsText = false;
     friend ostream& operator<<(ostream& os, const SeekSettings& settings) {
         os << "Species: " << settings.species << endl;
-        // os << "Port: " << settings.port << endl;
         os << "NumThreads: " << settings.numThreads << endl;
         os << "NumBufferedDBs: " << settings.numBufferedDBs << endl;
         os << "PclCacheSize: " << settings.pclCacheSize << endl;
@@ -45,7 +43,6 @@ struct SeekSettings {
 Example Toml Config Format:
 
 species = "human"
-// port = 9000
 numThreads = 8
 numBufferedDBs = 20  # Max num genes per query and max num of Databaselets to store in memory
 scoreCutoff = -9999.0  # The gene-gene score cutoff to add, default: no cutoff

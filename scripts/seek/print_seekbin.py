@@ -1,3 +1,12 @@
+"""
+Seek generates binary results files such as 0.gscore or 0.dweight.
+These files are a list of float values stored in binary format,
+with a header consisting of the count of values.
+
+This script reads in a binary result file and outputs the values
+to a text file.
+"""
+
 import sys
 import argparse
 import numpy as np

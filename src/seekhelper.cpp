@@ -46,7 +46,6 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     }
     // populate the top level settings
     tomlGetValue<string>(tbl, "species", settings.species);
-    // tomlGetValue<int32_t>(tbl, "port", settings.port);
     tomlGetValue<int32_t>(tbl, "numThreads", settings.numThreads);
     tomlGetValue<int32_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
     tomlGetValue<int32_t>(tbl, "pclCacheSize", settings.pclCacheSize);

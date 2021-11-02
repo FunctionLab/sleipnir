@@ -108,7 +108,7 @@ def readGeneMapFile(geneFile):
     genes = []
     with open(geneFile) as fp:
         for line in fp:
-            id, gene = line.split('\t')
+            id, gene = line.split()
             gene = gene.rstrip("\n")
             genes.append(gene)
     return genes

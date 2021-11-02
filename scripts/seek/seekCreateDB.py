@@ -99,10 +99,9 @@ def createSeekDB(cfg, tasksToRun, runAll=False, concurrency=8):
             sutils.makeRandomQueryFile(cfg, numRandomQueries, cfg.queryFile)
         else:
             if os.path.dirname(cfg.queryFile) in [None, '']:
-                tmpPath = os.path.join(cfg.outDir, cfg.queryFile)
-                if not os.path.exists(tmpPath):
-                    raise FileNotFoundError(f'{cfg.queryFile}')
-                cfg.queryFile = tmpPath
+                cfg.queryFile = os.path.join(cfg.outDir, cfg.queryFile)
+            if not os.path.exists(cfg.queryFile):
+                raise FileNotFoundError(f'{cfg.queryFile}')
         # Run the random queries
         sutils.runSeekMiner(cfg, cfg.queryFile, randDir, concurrency)
     return True
@@ -143,7 +142,7 @@ if __name__=="__main__":
     argParser.add_argument('--outDir', '-o', type=str, required=True,
                            help='Output directory to write new database into')
     argParser.add_argument('--config', '-c', type=str, required=False, default=None,
-                           help='Directory containing the PCL files for the new datasets')
+                           help='Configuration toml file for the database')
     argParser.add_argument('--pclDir', '-p', type=str, required=False, default=None,
                            help='Directory containing the PCL files for the new datasets')
     argParser.add_argument('--datasetFile', '-d', type=str, required=False, default=None,
@@ -154,7 +153,7 @@ if __name__=="__main__":
                            help='Text file containing the ordered (numbered) list of genes to be in the database')
     argParser.add_argument('--queryFile', '-q', type=str, required=False, default=None,
                            help='Text file containing list of queries for making the random pvalue queries')
-    argParser.add_argument('--numDBFiles', '-n', type=int, required=False, default=None,
+    argParser.add_argument('--numDbFiles', '-n', type=int, required=False, default=None,
                            help='Number of output DB files to spread gene data across (should match refDB number)')
     argParser.add_argument('--concurrency', '-m', type=int, required=False, default=4,
                            help='Number of parallel processes to run for each task')
@@ -195,8 +194,8 @@ if __name__=="__main__":
         cfg.datasetPlatMapFile = args.datasetPlatMapFile
     if args.geneMapFile is not None:
         cfg.geneMapFile = args.geneMapFile
-    if args.numDBFiles is not None:
-        cfg.numDbFiles = args.numDBFiles
+    if args.numDbFiles is not None:
+        cfg.numDbFiles = args.numDbFiles
     sutils.checkConfig(cfg)
 
     # check max open files setting is sufficient, i.e. ulimit -n

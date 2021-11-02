@@ -295,8 +295,8 @@ class TestSeekRPC:
         TestSeekRPC.checkPclVals(result.queryCoexpressions, "pclTestQueryCoExpr.txt")
 
     def test_pclSettings(self):
-    # Test that uses different dataset names, like with .pcl, .pcl.bin and no pcl.
-    # Also within settings file specifying pcl dir as /pcl and /pclbin
+        # Test that uses different dataset names, like with .pcl, .pcl.bin and no pcl.
+        # Also within settings file specifying pcl dir as /pcl and /pclbin
         # Test using the python client
         cmd = f'python {seekRpcDir}/PclRpcClient.py -p {testPort} -s sampleBC ' \
               f'-d GSE13494.GPL570.pcl,GSE17215.GPL3921.pcl ' \
@@ -382,7 +382,7 @@ class TestSeekRPC:
         # Build the pvalue bins from the randQueries, done by seekCreateDB in createSampleDatabase()
         # Take one query and get the gscores and ranks (take one from random dir, i.e. 3.gscore)
         # Offline, one time, used the legacy pvalue server to get the score and rank based pvalues for that query
-        # Run the new pvalue server and query agains all genes and a partial set of genes
+        # Run the new pvalue server and query against all genes and a partial set of genes
 
         # Run the queries through the python rpc client
         from thrift.transport import TTransport, TSocket
@@ -435,7 +435,7 @@ class TestSeekRPC:
         resPvalues = np.array(result.pvalues, dtype=np.float32)
         # For some reason the gscores vary with each seek query run. I think because
         #  OMP makes it non-deterministic order float operations. I would think that
-        #  absolute of .001 difference would work, but one out of 3500 was .025 away.
+        #  absolute of .001 difference would work, but occassionally it is higher.
         isEquivalent = np.allclose(resPvalues, expectedRankPvalues, rtol=.05, atol=.001)
         assert isEquivalent == True
 

@@ -56,6 +56,7 @@ void *do_pvalue_query(void *th_arg) {
     vector<float> pval;
 
     if (queryType == 1) { //dataset
+        // TODO - dataset pvalues not completely adapted or tested to SeekRPCServer yet
         for (i = 0; i < dset.size(); i++) {
             if (cc->m_mapstrintDataset.find(dset[i]) == cc->m_mapstrintDataset.end()) {
                 fprintf(stderr, "Error: cannot find dataset %s\n", dset[i].c_str());
@@ -219,26 +220,6 @@ void *do_pvalue_query(void *th_arg) {
                     throw request_error("PValue: Num genes provided should equal num geneScores provided");
                 }
             }
-
-            // TODO: Remove this, not used
-            // vector<int> queryGeneID;
-            // for (i = 0; i < queryGenes.size(); i++)
-            //     queryGeneID.push_back(cc->m_mapstrintGene[queryGenes[i]]);
-
-            //Query genes themselves have lowest score, to prevent
-            //them from being counted in PR
-            //(disabled 6/6/2016) want the query to have scores
-            //for (i = 0; i < queryGeneID.size(); i++)
-            //    sortedGenes[queryGeneID[i]].f = nan;
-
-
-            //comparison
-            // TODO - Remove this unused code
-            // vector<int> geneRank;
-            // geneRank.resize(numGenes);
-            // for (jj = 0; jj < numGenes; jj++) {
-            //     geneRank[sortedGenes[jj].i] = jj;
-            // }
 
             CSeekTools::InitVector(pval, geneIds.size(), (float) nan);
             if (my->useGeneMapOrder == true && pval.size() != numGenes) {
@@ -410,11 +391,7 @@ bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries, PValueData 
         cout << gscoreFiles[ii] << endl;
         CSeekTools::ReadArray(gscoreFiles[ii].c_str(), randomScores);
         assert (randomScores.size() == numGenes);
-        /*vector<string> queryGenes;
-        sprintf(ac, "%s/%d.query", random_directory.c_str(), ii);
-        CSeekTools::ReadMultiGeneOneLine(ac, queryGenes);
-        querySize.push_back(queryGenes.size());
-        */
+
         vector <AResultFloat> sortedRandom;
         sortedRandom.resize(randomScores.size());
         for (jj = 0; jj < randomScores.size(); jj++) {
@@ -442,7 +419,7 @@ bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries, PValueData 
     write2DVector(pvalueData.randomSc, scoreFile);
     write2DVector(pvalueData.randomRank, rankFile);
 
-// comment out loading dataset parameter file for now
+// GW - comment out loading dataset parameter file for now
 #if 0
     string param_dir = sArgs.param_dir_arg;
     int numDatasets = seekCentral.m_vecstrDatasets.size();
