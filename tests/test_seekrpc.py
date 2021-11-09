@@ -423,6 +423,8 @@ class TestSeekRPC:
         assert isEquivalent == True
 
         # Do the rank based pvalue query for all genes
+        # Note that by passing in all genes the server will sort them to
+        #  get the ranks and then return the rank-based pvalues (when useRank=True)
         pvalueArgs = SeekRPC.PValueGeneArgs(
             species = 'sampleBC',
             # don't specify the geneIDs if getting scores for all genes, in which

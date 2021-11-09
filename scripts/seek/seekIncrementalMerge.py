@@ -44,6 +44,7 @@ from datetime import datetime
 currPath = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currPath)
 import seekUtils as sutils
+from structDict import StructDict
 from seekCreateDB import createSeekDB
 
 # This script will create a new database from PCL files
@@ -159,7 +160,16 @@ def main(args):
     newCfg.numDbFiles = len(largeDBFiles)
     sutils.checkConfig(newCfg)
     #  create the db
-    res = createSeekDB(newCfg, None, runAll=True, concurrency=8)
+    tasksToRun = StructDict()
+    tasksToRun.pclbin = True
+    tasksToRun.dab = True
+    tasksToRun.prep = True
+    tasksToRun.makeDB = True
+    tasksToRun.plat = True
+    tasksToRun.sinfo = True
+    tasksToRun.gvar = True
+    tasksToRun.dsetSize = True
+    res = createSeekDB(newCfg, tasksToRun, runAll=False, concurrency=8)
     assert res == True, "createSeekDB failed"
     print(f'Incremental database created in {incrDBDirName}')
 
@@ -216,6 +226,8 @@ def main(args):
     #   Rename combined DB directory to small DB name
     # Check size of small DB relative to large DB, and recommend combining
     #   at some size/percentage threshold.
+    # After small and large DB are combined, rerun the pvalue random queries
+    #  to get more accurate pvalue results.
     return 0
 
 if __name__ == "__main__":

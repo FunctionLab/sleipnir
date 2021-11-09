@@ -91,6 +91,13 @@ struct PclResult {
     8: optional string statusMsg;
 }
 
+// Note that for backward compatibility if the geneScores for all
+//  genes are passed in, then the gene entrezIDs don't need to be
+//  provided and it will use the gene_map gene order to match
+//  scores to genes. In addition, if all genes are passed in and
+//  useRank=true the server will sort and rank the gene scores
+//  and return the pvalues based on the ranks (in that case no
+//  geneRanks need to be passed in).
 struct PValueGeneArgs {
     1: required string species = "Unknown";
     2: optional list<string> genes;   // EntrezIDs
