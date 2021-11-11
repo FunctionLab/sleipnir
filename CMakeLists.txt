@@ -5,6 +5,7 @@ message(STATUS "SOURCE DIR: " ${CMAKE_CURRENT_SOURCE_DIR})
 message(STATUS "ROOT DIR: " ${ROOT})
 
 add_link_options(-lpthread)
+add_link_options(-pthread)  # for Ubuntu
 
 set(CMAKE_CXX_STANDARD 17)
 
