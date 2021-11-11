@@ -19,6 +19,10 @@ jobs:
       with:
         submodules: recursive
 
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
     - name: Install libraries
       run: |
         sudo apt-get update
@@ -32,7 +36,6 @@ jobs:
         sudo apt-get install libboost-graph-dev
         sudo apt-get install libboost-regex-dev
         sudo apt-get install libreadline-dev
-
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -48,12 +51,7 @@ jobs:
       # Execute c++ based tests
       run: tests/unit_tests
 
-    -name: Setup Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-
-    -name: Install Python Dependencies
+    - name: Install Python Dependencies
       working-directory: ${{github.workspace}}
       run: $CONDA/bin/conda env create --file scripts/seek/conda_environment.yml
 
