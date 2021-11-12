@@ -3,6 +3,8 @@ import os
 import sys
 import time
 import glob
+import filecmp
+import tempfile
 import subprocess
 
 testDir = os.path.abspath(os.path.dirname(__file__))
@@ -23,31 +25,36 @@ class TestSeekMiner:
 
     def setup_class(cls):
         # Step 01: Make the breast cancer example DB if needed
-        cls.sampleBcDir = createSampleDatabase()
+        sampleBcDir = createSampleDatabase()
+        sampleConfigFile = os.path.join(sampleBcDir, 'sampleBC-config.toml')
+        # modify config file paths, sub '/path' with path to sampleBcDir
+        sampleBcDirEscaped = sampleBcDir.replace('/', '\\/')
+        cmd = f"sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {sampleConfigFile}"
+        subprocess.run(cmd, shell=True)
+        cfg = sutils.loadConfig(sampleConfigFile)
+        cfg.inDir = sampleBcDir
+        cfg.outDir = sampleBcDir
+        cfg.binDir = sleipnirBin
+        sutils.checkConfig(cfg)
+        cls.sampleBcDir = sampleBcDir
+        cls.cfg = cfg
 
 
     def test_queries(self):
         # Run the various example tests againt the seekRPC server and verify
         #   we get the expected results.
         sampleBcDir = TestSeekMiner.sampleBcDir
+        cfg = TestSeekMiner.cfg
 
         inputQueries = f'{sampleBcDir}/queries/input_queries.txt'
         outputResults = f'{sampleBcDir}/results'
         os.makedirs(outputResults, exist_ok=True)
 
-        cfg = sutils.getDefaultConfig()
-        cfg.inDir = sampleBcDir
-        cfg.outDir = sampleBcDir
-        cfg.binDir = sleipnirBin
-        cfg.datasetsFile = 'dset_plat_map.txt'
-        cfg.geneMapFile = 'bc_gene_map.txt'
-        sutils.checkConfig(cfg)
-
         print("## Run SeekMiner Queries ##")
-        cmd = f'{sleipnirBin}/SeekMiner -x {cfg.datasetsFile} -i ' \
-              f'{cfg.geneMapFile} -d {cfg.dbDir} -p {sampleBcDir}/prep ' \
-              f'-P {sampleBcDir}/plat -Q {cfg.quantFile} -u {sampleBcDir}/sinfo ' \
-              f'-U {sampleBcDir}/gvar -n 100 -b 100  -V CV -I LOI -z z_score ' \
+        cmd = f'{sleipnirBin}/SeekMiner -x {cfg.datasetPlatMapFile} ' \
+              f'-i {cfg.geneMapFile} -d {cfg.dbDir} -p {cfg.prepDir} ' \
+              f'-P {cfg.platformDir} -Q {cfg.quantFile} -u {cfg.sinfoDir} ' \
+              f'-U {cfg.gvarDir} -n {cfg.numDbFiles} -b 100 -V CV -I LOI -z z_score ' \
               f'-m -M -O -q {inputQueries} -o {outputResults} -Y -T 2 -t 1'
         print(f'### {cmd}')
         ret = subprocess.run(cmd, shell=True)
@@ -71,3 +78,17 @@ class TestSeekMiner:
                 correlation_errors += 1
                 print('ERROR: Result correlation too low')
         assert correlation_errors == 0
+
+    def test_utilsRunSeekMiner(self):
+        sampleBcDir = TestSeekMiner.sampleBcDir
+        tmpDirObj = tempfile.TemporaryDirectory()
+        tmpDir = tmpDirObj.name
+        # grab 10 queries to run
+        inputQFile = os.path.join(sampleBcDir, 'randQueries.txt')
+        randQFile = os.path.join(tmpDir, 'shortQFile.txt')
+        os.system(f'head -4 {inputQFile} > {randQFile}')
+        sutils.runSeekMiner(TestSeekMiner.cfg, randQFile, tmpDir, concurrency=3)
+        # See if 3.result.txt matches
+        file1 = os.path.join(tmpDir, '3.results.txt')
+        file2 = os.path.join(sampleBcDir, 'randTestInputs/3.results.txt')
+        assert filecmp.cmp(file1, file2, shallow=False)

@@ -27,13 +27,13 @@ class SeekRPCIf {
   virtual void getSeekResult(SeekResult& _return, const int64_t taskId, const bool block) = 0;
   virtual bool isQueryComplete(const int64_t taskId) = 0;
   virtual void getProgressMessage(std::string& _return, const int64_t taskId) = 0;
-  virtual int32_t getRpcVersion() = 0;
-  virtual int32_t ping() = 0;
-  virtual int32_t pvalueGenes() = 0;
-  virtual int32_t pvalueDatasets() = 0;
   virtual void pclQuery(PclResult& _return, const PclQueryArgs& query) = 0;
   virtual int64_t pclQueryAsync(const PclQueryArgs& query) = 0;
   virtual void getPclResult(PclResult& _return, const int64_t taskId, const bool block) = 0;
+  virtual void pvalueGenes(PValueResult& _return, const PValueGeneArgs& query) = 0;
+  virtual void pvalueDatasets(PValueResult& _return, const PValueDatasetArgs& query) = 0;
+  virtual double getRpcVersion() = 0;
+  virtual int32_t ping() = 0;
 };
 
 class SeekRPCIfFactory {
@@ -80,22 +80,6 @@ class SeekRPCNull : virtual public SeekRPCIf {
   void getProgressMessage(std::string& /* _return */, const int64_t /* taskId */) {
     return;
   }
-  int32_t getRpcVersion() {
-    int32_t _return = 0;
-    return _return;
-  }
-  int32_t ping() {
-    int32_t _return = 0;
-    return _return;
-  }
-  int32_t pvalueGenes() {
-    int32_t _return = 0;
-    return _return;
-  }
-  int32_t pvalueDatasets() {
-    int32_t _return = 0;
-    return _return;
-  }
   void pclQuery(PclResult& /* _return */, const PclQueryArgs& /* query */) {
     return;
   }
@@ -105,6 +89,20 @@ class SeekRPCNull : virtual public SeekRPCIf {
   }
   void getPclResult(PclResult& /* _return */, const int64_t /* taskId */, const bool /* block */) {
     return;
+  }
+  void pvalueGenes(PValueResult& /* _return */, const PValueGeneArgs& /* query */) {
+    return;
+  }
+  void pvalueDatasets(PValueResult& /* _return */, const PValueDatasetArgs& /* query */) {
+    return;
+  }
+  double getRpcVersion() {
+    double _return = (double)0;
+    return _return;
+  }
+  int32_t ping() {
+    int32_t _return = 0;
+    return _return;
   }
 };
 
@@ -635,374 +633,6 @@ class SeekRPC_getProgressMessage_presult {
 
 };
 
-
-class SeekRPC_getRpcVersion_args {
- public:
-
-  SeekRPC_getRpcVersion_args(const SeekRPC_getRpcVersion_args&);
-  SeekRPC_getRpcVersion_args& operator=(const SeekRPC_getRpcVersion_args&);
-  SeekRPC_getRpcVersion_args() {
-  }
-
-  virtual ~SeekRPC_getRpcVersion_args() noexcept;
-
-  bool operator == (const SeekRPC_getRpcVersion_args & /* rhs */) const
-  {
-    return true;
-  }
-  bool operator != (const SeekRPC_getRpcVersion_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const SeekRPC_getRpcVersion_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class SeekRPC_getRpcVersion_pargs {
- public:
-
-
-  virtual ~SeekRPC_getRpcVersion_pargs() noexcept;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _SeekRPC_getRpcVersion_result__isset {
-  _SeekRPC_getRpcVersion_result__isset() : success(false) {}
-  bool success :1;
-} _SeekRPC_getRpcVersion_result__isset;
-
-class SeekRPC_getRpcVersion_result {
- public:
-
-  SeekRPC_getRpcVersion_result(const SeekRPC_getRpcVersion_result&);
-  SeekRPC_getRpcVersion_result& operator=(const SeekRPC_getRpcVersion_result&);
-  SeekRPC_getRpcVersion_result() : success(0) {
-  }
-
-  virtual ~SeekRPC_getRpcVersion_result() noexcept;
-  int32_t success;
-
-  _SeekRPC_getRpcVersion_result__isset __isset;
-
-  void __set_success(const int32_t val);
-
-  bool operator == (const SeekRPC_getRpcVersion_result & rhs) const
-  {
-    if (!(success == rhs.success))
-      return false;
-    return true;
-  }
-  bool operator != (const SeekRPC_getRpcVersion_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const SeekRPC_getRpcVersion_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _SeekRPC_getRpcVersion_presult__isset {
-  _SeekRPC_getRpcVersion_presult__isset() : success(false) {}
-  bool success :1;
-} _SeekRPC_getRpcVersion_presult__isset;
-
-class SeekRPC_getRpcVersion_presult {
- public:
-
-
-  virtual ~SeekRPC_getRpcVersion_presult() noexcept;
-  int32_t* success;
-
-  _SeekRPC_getRpcVersion_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-};
-
-
-class SeekRPC_ping_args {
- public:
-
-  SeekRPC_ping_args(const SeekRPC_ping_args&);
-  SeekRPC_ping_args& operator=(const SeekRPC_ping_args&);
-  SeekRPC_ping_args() {
-  }
-
-  virtual ~SeekRPC_ping_args() noexcept;
-
-  bool operator == (const SeekRPC_ping_args & /* rhs */) const
-  {
-    return true;
-  }
-  bool operator != (const SeekRPC_ping_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const SeekRPC_ping_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class SeekRPC_ping_pargs {
- public:
-
-
-  virtual ~SeekRPC_ping_pargs() noexcept;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _SeekRPC_ping_result__isset {
-  _SeekRPC_ping_result__isset() : success(false) {}
-  bool success :1;
-} _SeekRPC_ping_result__isset;
-
-class SeekRPC_ping_result {
- public:
-
-  SeekRPC_ping_result(const SeekRPC_ping_result&);
-  SeekRPC_ping_result& operator=(const SeekRPC_ping_result&);
-  SeekRPC_ping_result() : success(0) {
-  }
-
-  virtual ~SeekRPC_ping_result() noexcept;
-  int32_t success;
-
-  _SeekRPC_ping_result__isset __isset;
-
-  void __set_success(const int32_t val);
-
-  bool operator == (const SeekRPC_ping_result & rhs) const
-  {
-    if (!(success == rhs.success))
-      return false;
-    return true;
-  }
-  bool operator != (const SeekRPC_ping_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const SeekRPC_ping_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _SeekRPC_ping_presult__isset {
-  _SeekRPC_ping_presult__isset() : success(false) {}
-  bool success :1;
-} _SeekRPC_ping_presult__isset;
-
-class SeekRPC_ping_presult {
- public:
-
-
-  virtual ~SeekRPC_ping_presult() noexcept;
-  int32_t* success;
-
-  _SeekRPC_ping_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-};
-
-
-class SeekRPC_pvalueGenes_args {
- public:
-
-  SeekRPC_pvalueGenes_args(const SeekRPC_pvalueGenes_args&);
-  SeekRPC_pvalueGenes_args& operator=(const SeekRPC_pvalueGenes_args&);
-  SeekRPC_pvalueGenes_args() {
-  }
-
-  virtual ~SeekRPC_pvalueGenes_args() noexcept;
-
-  bool operator == (const SeekRPC_pvalueGenes_args & /* rhs */) const
-  {
-    return true;
-  }
-  bool operator != (const SeekRPC_pvalueGenes_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const SeekRPC_pvalueGenes_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class SeekRPC_pvalueGenes_pargs {
- public:
-
-
-  virtual ~SeekRPC_pvalueGenes_pargs() noexcept;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _SeekRPC_pvalueGenes_result__isset {
-  _SeekRPC_pvalueGenes_result__isset() : success(false) {}
-  bool success :1;
-} _SeekRPC_pvalueGenes_result__isset;
-
-class SeekRPC_pvalueGenes_result {
- public:
-
-  SeekRPC_pvalueGenes_result(const SeekRPC_pvalueGenes_result&);
-  SeekRPC_pvalueGenes_result& operator=(const SeekRPC_pvalueGenes_result&);
-  SeekRPC_pvalueGenes_result() : success(0) {
-  }
-
-  virtual ~SeekRPC_pvalueGenes_result() noexcept;
-  int32_t success;
-
-  _SeekRPC_pvalueGenes_result__isset __isset;
-
-  void __set_success(const int32_t val);
-
-  bool operator == (const SeekRPC_pvalueGenes_result & rhs) const
-  {
-    if (!(success == rhs.success))
-      return false;
-    return true;
-  }
-  bool operator != (const SeekRPC_pvalueGenes_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const SeekRPC_pvalueGenes_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _SeekRPC_pvalueGenes_presult__isset {
-  _SeekRPC_pvalueGenes_presult__isset() : success(false) {}
-  bool success :1;
-} _SeekRPC_pvalueGenes_presult__isset;
-
-class SeekRPC_pvalueGenes_presult {
- public:
-
-
-  virtual ~SeekRPC_pvalueGenes_presult() noexcept;
-  int32_t* success;
-
-  _SeekRPC_pvalueGenes_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-};
-
-
-class SeekRPC_pvalueDatasets_args {
- public:
-
-  SeekRPC_pvalueDatasets_args(const SeekRPC_pvalueDatasets_args&);
-  SeekRPC_pvalueDatasets_args& operator=(const SeekRPC_pvalueDatasets_args&);
-  SeekRPC_pvalueDatasets_args() {
-  }
-
-  virtual ~SeekRPC_pvalueDatasets_args() noexcept;
-
-  bool operator == (const SeekRPC_pvalueDatasets_args & /* rhs */) const
-  {
-    return true;
-  }
-  bool operator != (const SeekRPC_pvalueDatasets_args &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const SeekRPC_pvalueDatasets_args & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-
-class SeekRPC_pvalueDatasets_pargs {
- public:
-
-
-  virtual ~SeekRPC_pvalueDatasets_pargs() noexcept;
-
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _SeekRPC_pvalueDatasets_result__isset {
-  _SeekRPC_pvalueDatasets_result__isset() : success(false) {}
-  bool success :1;
-} _SeekRPC_pvalueDatasets_result__isset;
-
-class SeekRPC_pvalueDatasets_result {
- public:
-
-  SeekRPC_pvalueDatasets_result(const SeekRPC_pvalueDatasets_result&);
-  SeekRPC_pvalueDatasets_result& operator=(const SeekRPC_pvalueDatasets_result&);
-  SeekRPC_pvalueDatasets_result() : success(0) {
-  }
-
-  virtual ~SeekRPC_pvalueDatasets_result() noexcept;
-  int32_t success;
-
-  _SeekRPC_pvalueDatasets_result__isset __isset;
-
-  void __set_success(const int32_t val);
-
-  bool operator == (const SeekRPC_pvalueDatasets_result & rhs) const
-  {
-    if (!(success == rhs.success))
-      return false;
-    return true;
-  }
-  bool operator != (const SeekRPC_pvalueDatasets_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const SeekRPC_pvalueDatasets_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-typedef struct _SeekRPC_pvalueDatasets_presult__isset {
-  _SeekRPC_pvalueDatasets_presult__isset() : success(false) {}
-  bool success :1;
-} _SeekRPC_pvalueDatasets_presult__isset;
-
-class SeekRPC_pvalueDatasets_presult {
- public:
-
-
-  virtual ~SeekRPC_pvalueDatasets_presult() noexcept;
-  int32_t* success;
-
-  _SeekRPC_pvalueDatasets_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-
-};
-
 typedef struct _SeekRPC_pclQuery_args__isset {
   _SeekRPC_pclQuery_args__isset() : query(false) {}
   bool query :1;
@@ -1322,6 +952,398 @@ class SeekRPC_getPclResult_presult {
 
 };
 
+typedef struct _SeekRPC_pvalueGenes_args__isset {
+  _SeekRPC_pvalueGenes_args__isset() : query(false) {}
+  bool query :1;
+} _SeekRPC_pvalueGenes_args__isset;
+
+class SeekRPC_pvalueGenes_args {
+ public:
+
+  SeekRPC_pvalueGenes_args(const SeekRPC_pvalueGenes_args&);
+  SeekRPC_pvalueGenes_args& operator=(const SeekRPC_pvalueGenes_args&);
+  SeekRPC_pvalueGenes_args() {
+  }
+
+  virtual ~SeekRPC_pvalueGenes_args() noexcept;
+  PValueGeneArgs query;
+
+  _SeekRPC_pvalueGenes_args__isset __isset;
+
+  void __set_query(const PValueGeneArgs& val);
+
+  bool operator == (const SeekRPC_pvalueGenes_args & rhs) const
+  {
+    if (!(query == rhs.query))
+      return false;
+    return true;
+  }
+  bool operator != (const SeekRPC_pvalueGenes_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const SeekRPC_pvalueGenes_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class SeekRPC_pvalueGenes_pargs {
+ public:
+
+
+  virtual ~SeekRPC_pvalueGenes_pargs() noexcept;
+  const PValueGeneArgs* query;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _SeekRPC_pvalueGenes_result__isset {
+  _SeekRPC_pvalueGenes_result__isset() : success(false) {}
+  bool success :1;
+} _SeekRPC_pvalueGenes_result__isset;
+
+class SeekRPC_pvalueGenes_result {
+ public:
+
+  SeekRPC_pvalueGenes_result(const SeekRPC_pvalueGenes_result&);
+  SeekRPC_pvalueGenes_result& operator=(const SeekRPC_pvalueGenes_result&);
+  SeekRPC_pvalueGenes_result() {
+  }
+
+  virtual ~SeekRPC_pvalueGenes_result() noexcept;
+  PValueResult success;
+
+  _SeekRPC_pvalueGenes_result__isset __isset;
+
+  void __set_success(const PValueResult& val);
+
+  bool operator == (const SeekRPC_pvalueGenes_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const SeekRPC_pvalueGenes_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const SeekRPC_pvalueGenes_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _SeekRPC_pvalueGenes_presult__isset {
+  _SeekRPC_pvalueGenes_presult__isset() : success(false) {}
+  bool success :1;
+} _SeekRPC_pvalueGenes_presult__isset;
+
+class SeekRPC_pvalueGenes_presult {
+ public:
+
+
+  virtual ~SeekRPC_pvalueGenes_presult() noexcept;
+  PValueResult* success;
+
+  _SeekRPC_pvalueGenes_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _SeekRPC_pvalueDatasets_args__isset {
+  _SeekRPC_pvalueDatasets_args__isset() : query(false) {}
+  bool query :1;
+} _SeekRPC_pvalueDatasets_args__isset;
+
+class SeekRPC_pvalueDatasets_args {
+ public:
+
+  SeekRPC_pvalueDatasets_args(const SeekRPC_pvalueDatasets_args&);
+  SeekRPC_pvalueDatasets_args& operator=(const SeekRPC_pvalueDatasets_args&);
+  SeekRPC_pvalueDatasets_args() {
+  }
+
+  virtual ~SeekRPC_pvalueDatasets_args() noexcept;
+  PValueDatasetArgs query;
+
+  _SeekRPC_pvalueDatasets_args__isset __isset;
+
+  void __set_query(const PValueDatasetArgs& val);
+
+  bool operator == (const SeekRPC_pvalueDatasets_args & rhs) const
+  {
+    if (!(query == rhs.query))
+      return false;
+    return true;
+  }
+  bool operator != (const SeekRPC_pvalueDatasets_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const SeekRPC_pvalueDatasets_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class SeekRPC_pvalueDatasets_pargs {
+ public:
+
+
+  virtual ~SeekRPC_pvalueDatasets_pargs() noexcept;
+  const PValueDatasetArgs* query;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _SeekRPC_pvalueDatasets_result__isset {
+  _SeekRPC_pvalueDatasets_result__isset() : success(false) {}
+  bool success :1;
+} _SeekRPC_pvalueDatasets_result__isset;
+
+class SeekRPC_pvalueDatasets_result {
+ public:
+
+  SeekRPC_pvalueDatasets_result(const SeekRPC_pvalueDatasets_result&);
+  SeekRPC_pvalueDatasets_result& operator=(const SeekRPC_pvalueDatasets_result&);
+  SeekRPC_pvalueDatasets_result() {
+  }
+
+  virtual ~SeekRPC_pvalueDatasets_result() noexcept;
+  PValueResult success;
+
+  _SeekRPC_pvalueDatasets_result__isset __isset;
+
+  void __set_success(const PValueResult& val);
+
+  bool operator == (const SeekRPC_pvalueDatasets_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const SeekRPC_pvalueDatasets_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const SeekRPC_pvalueDatasets_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _SeekRPC_pvalueDatasets_presult__isset {
+  _SeekRPC_pvalueDatasets_presult__isset() : success(false) {}
+  bool success :1;
+} _SeekRPC_pvalueDatasets_presult__isset;
+
+class SeekRPC_pvalueDatasets_presult {
+ public:
+
+
+  virtual ~SeekRPC_pvalueDatasets_presult() noexcept;
+  PValueResult* success;
+
+  _SeekRPC_pvalueDatasets_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+
+class SeekRPC_getRpcVersion_args {
+ public:
+
+  SeekRPC_getRpcVersion_args(const SeekRPC_getRpcVersion_args&);
+  SeekRPC_getRpcVersion_args& operator=(const SeekRPC_getRpcVersion_args&);
+  SeekRPC_getRpcVersion_args() {
+  }
+
+  virtual ~SeekRPC_getRpcVersion_args() noexcept;
+
+  bool operator == (const SeekRPC_getRpcVersion_args & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const SeekRPC_getRpcVersion_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const SeekRPC_getRpcVersion_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class SeekRPC_getRpcVersion_pargs {
+ public:
+
+
+  virtual ~SeekRPC_getRpcVersion_pargs() noexcept;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _SeekRPC_getRpcVersion_result__isset {
+  _SeekRPC_getRpcVersion_result__isset() : success(false) {}
+  bool success :1;
+} _SeekRPC_getRpcVersion_result__isset;
+
+class SeekRPC_getRpcVersion_result {
+ public:
+
+  SeekRPC_getRpcVersion_result(const SeekRPC_getRpcVersion_result&);
+  SeekRPC_getRpcVersion_result& operator=(const SeekRPC_getRpcVersion_result&);
+  SeekRPC_getRpcVersion_result() : success(0) {
+  }
+
+  virtual ~SeekRPC_getRpcVersion_result() noexcept;
+  double success;
+
+  _SeekRPC_getRpcVersion_result__isset __isset;
+
+  void __set_success(const double val);
+
+  bool operator == (const SeekRPC_getRpcVersion_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const SeekRPC_getRpcVersion_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const SeekRPC_getRpcVersion_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _SeekRPC_getRpcVersion_presult__isset {
+  _SeekRPC_getRpcVersion_presult__isset() : success(false) {}
+  bool success :1;
+} _SeekRPC_getRpcVersion_presult__isset;
+
+class SeekRPC_getRpcVersion_presult {
+ public:
+
+
+  virtual ~SeekRPC_getRpcVersion_presult() noexcept;
+  double* success;
+
+  _SeekRPC_getRpcVersion_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+
+class SeekRPC_ping_args {
+ public:
+
+  SeekRPC_ping_args(const SeekRPC_ping_args&);
+  SeekRPC_ping_args& operator=(const SeekRPC_ping_args&);
+  SeekRPC_ping_args() {
+  }
+
+  virtual ~SeekRPC_ping_args() noexcept;
+
+  bool operator == (const SeekRPC_ping_args & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const SeekRPC_ping_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const SeekRPC_ping_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class SeekRPC_ping_pargs {
+ public:
+
+
+  virtual ~SeekRPC_ping_pargs() noexcept;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _SeekRPC_ping_result__isset {
+  _SeekRPC_ping_result__isset() : success(false) {}
+  bool success :1;
+} _SeekRPC_ping_result__isset;
+
+class SeekRPC_ping_result {
+ public:
+
+  SeekRPC_ping_result(const SeekRPC_ping_result&);
+  SeekRPC_ping_result& operator=(const SeekRPC_ping_result&);
+  SeekRPC_ping_result() : success(0) {
+  }
+
+  virtual ~SeekRPC_ping_result() noexcept;
+  int32_t success;
+
+  _SeekRPC_ping_result__isset __isset;
+
+  void __set_success(const int32_t val);
+
+  bool operator == (const SeekRPC_ping_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const SeekRPC_ping_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const SeekRPC_ping_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _SeekRPC_ping_presult__isset {
+  _SeekRPC_ping_presult__isset() : success(false) {}
+  bool success :1;
+} _SeekRPC_ping_presult__isset;
+
+class SeekRPC_ping_presult {
+ public:
+
+
+  virtual ~SeekRPC_ping_presult() noexcept;
+  int32_t* success;
+
+  _SeekRPC_ping_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 class SeekRPCClient : virtual public SeekRPCIf {
  public:
   SeekRPCClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
@@ -1362,18 +1384,6 @@ class SeekRPCClient : virtual public SeekRPCIf {
   void getProgressMessage(std::string& _return, const int64_t taskId);
   void send_getProgressMessage(const int64_t taskId);
   void recv_getProgressMessage(std::string& _return);
-  int32_t getRpcVersion();
-  void send_getRpcVersion();
-  int32_t recv_getRpcVersion();
-  int32_t ping();
-  void send_ping();
-  int32_t recv_ping();
-  int32_t pvalueGenes();
-  void send_pvalueGenes();
-  int32_t recv_pvalueGenes();
-  int32_t pvalueDatasets();
-  void send_pvalueDatasets();
-  int32_t recv_pvalueDatasets();
   void pclQuery(PclResult& _return, const PclQueryArgs& query);
   void send_pclQuery(const PclQueryArgs& query);
   void recv_pclQuery(PclResult& _return);
@@ -1383,6 +1393,18 @@ class SeekRPCClient : virtual public SeekRPCIf {
   void getPclResult(PclResult& _return, const int64_t taskId, const bool block);
   void send_getPclResult(const int64_t taskId, const bool block);
   void recv_getPclResult(PclResult& _return);
+  void pvalueGenes(PValueResult& _return, const PValueGeneArgs& query);
+  void send_pvalueGenes(const PValueGeneArgs& query);
+  void recv_pvalueGenes(PValueResult& _return);
+  void pvalueDatasets(PValueResult& _return, const PValueDatasetArgs& query);
+  void send_pvalueDatasets(const PValueDatasetArgs& query);
+  void recv_pvalueDatasets(PValueResult& _return);
+  double getRpcVersion();
+  void send_getRpcVersion();
+  double recv_getRpcVersion();
+  int32_t ping();
+  void send_ping();
+  int32_t recv_ping();
  protected:
   std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -1403,13 +1425,13 @@ class SeekRPCProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_getSeekResult(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_isQueryComplete(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_getProgressMessage(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_getRpcVersion(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_ping(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_pvalueGenes(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
-  void process_pvalueDatasets(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_pclQuery(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_pclQueryAsync(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_getPclResult(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_pvalueGenes(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_pvalueDatasets(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_getRpcVersion(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_ping(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   SeekRPCProcessor(::std::shared_ptr<SeekRPCIf> iface) :
     iface_(iface) {
@@ -1418,13 +1440,13 @@ class SeekRPCProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["getSeekResult"] = &SeekRPCProcessor::process_getSeekResult;
     processMap_["isQueryComplete"] = &SeekRPCProcessor::process_isQueryComplete;
     processMap_["getProgressMessage"] = &SeekRPCProcessor::process_getProgressMessage;
-    processMap_["getRpcVersion"] = &SeekRPCProcessor::process_getRpcVersion;
-    processMap_["ping"] = &SeekRPCProcessor::process_ping;
-    processMap_["pvalueGenes"] = &SeekRPCProcessor::process_pvalueGenes;
-    processMap_["pvalueDatasets"] = &SeekRPCProcessor::process_pvalueDatasets;
     processMap_["pclQuery"] = &SeekRPCProcessor::process_pclQuery;
     processMap_["pclQueryAsync"] = &SeekRPCProcessor::process_pclQueryAsync;
     processMap_["getPclResult"] = &SeekRPCProcessor::process_getPclResult;
+    processMap_["pvalueGenes"] = &SeekRPCProcessor::process_pvalueGenes;
+    processMap_["pvalueDatasets"] = &SeekRPCProcessor::process_pvalueDatasets;
+    processMap_["getRpcVersion"] = &SeekRPCProcessor::process_getRpcVersion;
+    processMap_["ping"] = &SeekRPCProcessor::process_ping;
   }
 
   virtual ~SeekRPCProcessor() {}
@@ -1501,42 +1523,6 @@ class SeekRPCMultiface : virtual public SeekRPCIf {
     return;
   }
 
-  int32_t getRpcVersion() {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->getRpcVersion();
-    }
-    return ifaces_[i]->getRpcVersion();
-  }
-
-  int32_t ping() {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->ping();
-    }
-    return ifaces_[i]->ping();
-  }
-
-  int32_t pvalueGenes() {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->pvalueGenes();
-    }
-    return ifaces_[i]->pvalueGenes();
-  }
-
-  int32_t pvalueDatasets() {
-    size_t sz = ifaces_.size();
-    size_t i = 0;
-    for (; i < (sz - 1); ++i) {
-      ifaces_[i]->pvalueDatasets();
-    }
-    return ifaces_[i]->pvalueDatasets();
-  }
-
   void pclQuery(PclResult& _return, const PclQueryArgs& query) {
     size_t sz = ifaces_.size();
     size_t i = 0;
@@ -1564,6 +1550,44 @@ class SeekRPCMultiface : virtual public SeekRPCIf {
     }
     ifaces_[i]->getPclResult(_return, taskId, block);
     return;
+  }
+
+  void pvalueGenes(PValueResult& _return, const PValueGeneArgs& query) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->pvalueGenes(_return, query);
+    }
+    ifaces_[i]->pvalueGenes(_return, query);
+    return;
+  }
+
+  void pvalueDatasets(PValueResult& _return, const PValueDatasetArgs& query) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->pvalueDatasets(_return, query);
+    }
+    ifaces_[i]->pvalueDatasets(_return, query);
+    return;
+  }
+
+  double getRpcVersion() {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->getRpcVersion();
+    }
+    return ifaces_[i]->getRpcVersion();
+  }
+
+  int32_t ping() {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->ping();
+    }
+    return ifaces_[i]->ping();
   }
 
 };
@@ -1613,18 +1637,6 @@ class SeekRPCConcurrentClient : virtual public SeekRPCIf {
   void getProgressMessage(std::string& _return, const int64_t taskId);
   int32_t send_getProgressMessage(const int64_t taskId);
   void recv_getProgressMessage(std::string& _return, const int32_t seqid);
-  int32_t getRpcVersion();
-  int32_t send_getRpcVersion();
-  int32_t recv_getRpcVersion(const int32_t seqid);
-  int32_t ping();
-  int32_t send_ping();
-  int32_t recv_ping(const int32_t seqid);
-  int32_t pvalueGenes();
-  int32_t send_pvalueGenes();
-  int32_t recv_pvalueGenes(const int32_t seqid);
-  int32_t pvalueDatasets();
-  int32_t send_pvalueDatasets();
-  int32_t recv_pvalueDatasets(const int32_t seqid);
   void pclQuery(PclResult& _return, const PclQueryArgs& query);
   int32_t send_pclQuery(const PclQueryArgs& query);
   void recv_pclQuery(PclResult& _return, const int32_t seqid);
@@ -1634,6 +1646,18 @@ class SeekRPCConcurrentClient : virtual public SeekRPCIf {
   void getPclResult(PclResult& _return, const int64_t taskId, const bool block);
   int32_t send_getPclResult(const int64_t taskId, const bool block);
   void recv_getPclResult(PclResult& _return, const int32_t seqid);
+  void pvalueGenes(PValueResult& _return, const PValueGeneArgs& query);
+  int32_t send_pvalueGenes(const PValueGeneArgs& query);
+  void recv_pvalueGenes(PValueResult& _return, const int32_t seqid);
+  void pvalueDatasets(PValueResult& _return, const PValueDatasetArgs& query);
+  int32_t send_pvalueDatasets(const PValueDatasetArgs& query);
+  void recv_pvalueDatasets(PValueResult& _return, const int32_t seqid);
+  double getRpcVersion();
+  int32_t send_getRpcVersion();
+  double recv_getRpcVersion(const int32_t seqid);
+  int32_t ping();
+  int32_t send_ping();
+  int32_t recv_ping(const int32_t seqid);
  protected:
   std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;

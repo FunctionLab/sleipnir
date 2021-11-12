@@ -44,6 +44,7 @@ from datetime import datetime
 currPath = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currPath)
 import seekUtils as sutils
+from structDict import StructDict
 from seekCreateDB import createSeekDB
 
 # This script will create a new database from PCL files
@@ -59,18 +60,21 @@ from seekCreateDB import createSeekDB
 
 
 def copyFile(fileName, srcDir, destDir):
+  fileName = os.path.basename(fileName)
   src = os.path.join(srcDir, fileName)
   dst = os.path.join(destDir, fileName)
   ret = subprocess.run(f'cp {src} {dst}', shell=True)
   assert ret.returncode == 0
 
 def checkFilesMatch(fileName, dir1, dir2):
+  fileName = os.path.basename(fileName)
   f1 = os.path.join(dir1, fileName)
   f2 = os.path.join(dir2, fileName)
   ret = subprocess.run(f'diff {f1} {f2}', shell=True)
   assert ret.returncode == 0
 
 def concatenateFiles(fileName, dir1, dir2, outDir):
+  fileName = os.path.basename(fileName)
   f1 = os.path.join(dir1, fileName)
   f2 = os.path.join(dir2, fileName)
   dst = os.path.join(outDir, fileName)
@@ -156,15 +160,24 @@ def main(args):
     newCfg.numDbFiles = len(largeDBFiles)
     sutils.checkConfig(newCfg)
     #  create the db
-    res = createSeekDB(newCfg, None, runAll=True, concurrency=8)
+    tasksToRun = StructDict()
+    tasksToRun.pclbin = True
+    tasksToRun.dab = True
+    tasksToRun.prep = True
+    tasksToRun.makeDB = True
+    tasksToRun.plat = True
+    tasksToRun.sinfo = True
+    tasksToRun.gvar = True
+    tasksToRun.dsetSize = True
+    res = createSeekDB(newCfg, tasksToRun, runAll=False, concurrency=8)
     assert res == True, "createSeekDB failed"
     print(f'Incremental database created in {incrDBDirName}')
 
     # STEP 04: Combine metadata
     copyFile(refCfg.geneMapFile, args.dirLargeDB, args.outDir)
     copyFile(refCfg.quantFile, args.dirLargeDB, args.outDir)
-    dsetFileBaseName = os.path.basename(args.smallDsetFile)
-    concatenateFiles(dsetFileBaseName, args.dirSmallDB, incrDBDirName, args.outDir)
+    concatenateFiles(refCfg.datasetsFile, args.dirSmallDB, incrDBDirName, args.outDir)
+    concatenateFiles(refCfg.datasetPlatMapFile, args.dirSmallDB, incrDBDirName, args.outDir)
     concatenateFiles(refCfg.dsetSizeFile, args.dirSmallDB, incrDBDirName, args.outDir)
     combineDirs('prep', args.dirSmallDB, incrDBDirName, args.outDir)
     combineDirs('sinfo', args.dirSmallDB, incrDBDirName, args.outDir)
@@ -182,7 +195,7 @@ def main(args):
     mergedCfg.binDir = args.sleipnirBinDir
     mergedCfg.inDir = args.dirSmallDB
     mergedCfg.outDir = args.outDir
-    mergedCfg.datasetsFile = dsetFileBaseName
+    mergedCfg.datasetsFile = refCfg.datasetsFile
     mergedCfg.numDbFiles = len(largeDBFiles)
     sutils.checkConfig(mergedCfg)
     dbDirsToCombine = [smallDBFileDir, newCfg.dbDir]
@@ -213,6 +226,8 @@ def main(args):
     #   Rename combined DB directory to small DB name
     # Check size of small DB relative to large DB, and recommend combining
     #   at some size/percentage threshold.
+    # After small and large DB are combined, rerun the pvalue random queries
+    #  to get more accurate pvalue results.
     return 0
 
 if __name__ == "__main__":

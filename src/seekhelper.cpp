@@ -2,6 +2,7 @@
 #include <regex>
 #include <vector>
 #include <fstream>
+#include <arpa/inet.h>
 #include <boost/algorithm/string.hpp>
 #include "toml.hpp"
 #include "seekhelper.h"
@@ -45,7 +46,6 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
     }
     // populate the top level settings
     tomlGetValue<string>(tbl, "species", settings.species);
-    tomlGetValue<int32_t>(tbl, "port", settings.port);
     tomlGetValue<int32_t>(tbl, "numThreads", settings.numThreads);
     tomlGetValue<int32_t>(tbl, "numBufferedDBs", settings.numBufferedDBs);
     tomlGetValue<int32_t>(tbl, "pclCacheSize", settings.pclCacheSize);
@@ -70,6 +70,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
             string sinfo_dir = "NA";
             string gvar_dir = "NA";
             string pcl_dir = "NA";
+            string pvalue_dir = "NA";
             string quant_file = "NA";
             string gene_map_file = "NA";
             string gene_symbol_file = "NA";
@@ -83,6 +84,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
             tomlGetValue<string>(*dbTbl, "SINFO_DIR", sinfo_dir);
             tomlGetValue<string>(*dbTbl, "GVAR_DIR", gvar_dir);
             tomlGetValue<string>(*dbTbl, "PCL_DIR", pcl_dir);
+            tomlGetValue<string>(*dbTbl, "PVAL_DIR", pvalue_dir);
             tomlGetValue<string>(*dbTbl, "QUANT_FILE", quant_file);
             tomlGetValue<string>(*dbTbl, "GENE_MAP_FILE", gene_map_file);
             tomlGetValue<string>(*dbTbl, "GENE_SYMBOL_FILE", gene_symbol_file);
@@ -96,6 +98,7 @@ bool parseTomlConfig(string tomlConfigFile, SeekSettings &settings) {
                                 quant_file, dset_map_file,
                                 dset_size_file, num_db);
             dbSetting2->setPclDir(pcl_dir);
+            dbSetting2->setPvalueDir(pvalue_dir);
             settings.dbs.push_back(dbSetting2);
         }
     } else {
@@ -171,6 +174,7 @@ bool legacyReadDBConfigFile(string dbConfigFile,
         string platform_dir = "NA";
         string prep_dir = "NA";
         string pcl_dir = "NA";
+        string pvalue_dir = "NA";
         string db_dir = "NA";
         string dset_map_file = "NA";
         string gene_map_file = "NA";
@@ -192,6 +196,9 @@ bool legacyReadDBConfigFile(string dbConfigFile,
 
         if (parameters[i].find("PCL_DIR") != parameters[i].end())
             pcl_dir = parameters[i].find("PCL_DIR")->second;
+
+        if (parameters[i].find("PVAL_DIR") != parameters[i].end())
+            pvalue_dir = parameters[i].find("PVAL_DIR")->second;
 
         if (check_dset_size_flag == true) {
             if (parameters[i].find("DSET_SIZE_FILE") == parameters[i].end() ||
@@ -227,6 +234,7 @@ bool legacyReadDBConfigFile(string dbConfigFile,
                                                         quant_file, dset_map_file,
                                                         dset_size_file, num_db);
         dbSetting2->setPclDir(pcl_dir);
+        dbSetting2->setPvalueDir(pvalue_dir);
         cc.push_back(dbSetting2);
     }
     return true;
@@ -310,6 +318,74 @@ uint32_t omp_enabled_test() {
     return thread_count;
 }
 
+typedef struct __attribute__((packed)) Header2DFloat_s {
+  unsigned char magic1 = 0x00;
+  unsigned char magic2 = 0x2D;
+  unsigned char magic3 = 0xFE;
+  unsigned char magic4 = 0xED;
+  int rows;
+  int cols;
+  int pad = 0xEEEEEEEE;
+} Header2DVector;
+
+template <typename T>
+void write2DVector(vector<vector<T>> &vec, string filename) {
+    Header2DVector hdr;
+    if (typeid(T) == typeid(int)) {
+        hdr.magic1 = 0xAE;
+    } else if (typeid(T) == typeid(float)) {
+        hdr.magic1 = 0xFA;
+    }
+    int rows = vec.size();
+    int cols = vec[0].size();
+    hdr.rows = htonl(rows);
+    hdr.cols = htonl(cols);
+    ofstream out(filename, ofstream::binary);
+    out.write((char*)&hdr, sizeof(hdr));
+    for (int i=0; i<rows; i++) {
+        auto data = vec[i].data();
+        if (vec[i].size() != cols) {
+            throw runtime_error("write2DVectorFloat(): columns sizes differ");
+        }
+        out.write((char*)data, cols * sizeof(T));
+    }
+    out.close();
+    return;
+}
+// Instantions of the template function for float and int
+template void write2DVector(vector<vector<float>> &vec, string filename);
+template void write2DVector(vector<vector<int>> &vec, string filename);
+
+template <typename T>
+void read2DVector(vector<vector<T>> &vec, string filename) {
+    Header2DVector hdr;
+    Header2DVector defaultHdr;
+    ifstream in(filename, ifstream::binary);
+    in.read((char*)&hdr, sizeof(hdr));
+    // Check header magic numbers
+    if (typeid(T) == typeid(int) && hdr.magic1 != 0xAE) {
+        throw state_error("read2DVector(): wrong header type for int");
+    } else if (typeid(T) == typeid(float) && hdr.magic1 != 0xFA) {
+        throw state_error("read2DVector(): wrong header type for float");
+    }
+    // Check remainder of header magic numbers
+    int val = memcmp(&hdr.magic2, &defaultHdr.magic2, sizeof(unsigned char)*3);
+    if (val != 0) {
+        throw state_error("read2DVector(): header magic numbers don't match");
+    }
+    int rows = ntohl(hdr.rows);
+    int cols = ntohl(hdr.cols);
+    vec.resize(rows);
+    for (int i=0; i<rows; i++) {
+        vec[i].resize(cols);
+        auto data = vec[i].data();
+        in.read((char*)data, cols * sizeof(float));
+    }
+    in.close();
+}
+// Instantiations of the template function for float and int
+template void read2DVector(vector<vector<float>> &vec, string filename);
+template void read2DVector(vector<vector<int>> &vec, string filename);
 
 // Note: If the function implementation is here instead of 
 //  in the header, then you must explicitly instantiate

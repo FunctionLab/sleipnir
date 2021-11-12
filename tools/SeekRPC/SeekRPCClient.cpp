@@ -149,7 +149,7 @@ int main(int argc, char **argv)
         seekClient.ping();
 
         // Check for version compatibility
-        int32_t version = seekClient.getRpcVersion();
+        double version = seekClient.getRpcVersion();
         assert(version == g_seek_rpc_constants.RPCVersion);
 
         if (!args.outputFile.empty()) {

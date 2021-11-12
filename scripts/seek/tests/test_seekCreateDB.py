@@ -13,6 +13,7 @@ import seekUtils as sutils
 
 sleipnirDir = os.path.dirname(os.path.dirname(seekScriptsDir))
 sleipnirBinDir = os.path.join(sleipnirDir, 'Debug')
+seekRpcDir = os.path.join(sleipnirDir, 'tools/SeekRPC')
 use_tempfile = False
 testPort = 9123
 
@@ -61,21 +62,28 @@ class TestSeekCreateDB:
         ret = subprocess.run(cmd, shell=True)
         assert ret.returncode == 0
 
+        # fix up the config file paths
+        seekrpcConfigFile = os.path.join(mockDbDir, 'mockDb-config.toml')
+        # modify paths in config files, sub '/path' with path to mockDbDir
+        mockDbDirEscaped = mockDbDir.replace('/', '\\/')
+        cmd = f"sed -i '' -e 's/\\/path/{mockDbDirEscaped}/' {seekrpcConfigFile}"
+        subprocess.run(cmd, shell=True)
+
         # Test created db using SeekMiner
-        cfg = sutils.getDefaultConfig()
+        cfg = sutils.loadConfig(seekrpcConfigFile)
         cfg.inDir = mockDbDir
         cfg.outDir = mockDbDir
         cfg.binDir = os.path.join(sleipnirDir, 'Debug')
-        cfg.datasetsFile = 'dset_plat_map.txt'
+        cfg.datasetsFile = 'pcl_list.txt'
         sutils.checkConfig(cfg)
         # Run SeekMiner query
         queryFile = os.path.join(mockDbDir, 'query.txt')
         resultsDir = os.path.join(mockDbDir, 'results')
         os.makedirs(os.path.join(mockDbDir, 'results'))
-        cmd = f'{sleipnirBinDir}/SeekMiner -x {cfg.datasetsFile} -i ' \
-              f'{cfg.geneMapFile} -d {cfg.dbDir} -p {mockDbDir}/prep ' \
-              f'-P {mockDbDir}/plat -Q {cfg.quantFile} -u {mockDbDir}/sinfo ' \
-              f'-U {mockDbDir}/gvar -n 6 -b 20  -V CV -I LOI -z z_score ' \
+        cmd = f'{sleipnirBinDir}/SeekMiner -x {cfg.datasetPlatMapFile} -i ' \
+              f'{cfg.geneMapFile} -d {cfg.dbDir} -p {cfg.prepDir} ' \
+              f'-P {cfg.platformDir} -Q {cfg.quantFile} -u {cfg.sinfoDir} ' \
+              f'-U {cfg.gvarDir} -n 6 -b 20  -V CV -I LOI -z z_score ' \
               f'-m -M -O -q {queryFile} -o {resultsDir} -Y -T 2 -t 1'
         ret = subprocess.run(cmd, shell=True)
         assert ret.returncode == 0
@@ -84,20 +92,40 @@ class TestSeekCreateDB:
         assert filecmp.cmp(expected_results, seekminer_results, shallow=False)
 
         # Test created db using SeekRPC
-        seekrpcConfigFile = os.path.join(mockDbDir, 'mockDb-config.toml')
-        # modify paths in config files, sub '/path' with path to mockDbDir
-        mockDbDirEscaped = mockDbDir.replace('/', '\\/')
-        cmd = f"sed -i '' -e 's/\\/path/{mockDbDirEscaped}/' {seekrpcConfigFile}"
-        subprocess.run(cmd, shell=True)
-        seekrpcResultsFile = os.path.join(resultsDir, 'seekRPC_results.txt')
         # Run the server
-        cmd = f'{sleipnirBinDir}/SeekRPC -p {testPort} -c {mockDbDir}/mockDb-config.toml'
+        cmd = f'{sleipnirBinDir}/SeekRPC -p {testPort} -c {seekrpcConfigFile}'
+        print(f'Run: {cmd}')
         SeekServerProc = subprocess.Popen(cmd, shell=True)
         time.sleep(.5)
+
+        # Run the SeekRPC clients
+        seekrpcResultsFile = os.path.join(resultsDir, 'seekRPC_results.txt')
         cmd = f'{sleipnirBinDir}/SeekRPCClient -p {testPort} -s mockDB ' \
               f'-q {queryFile} -o {seekrpcResultsFile}'
         clientProc = subprocess.Popen(cmd, shell=True)
         clientProc.wait()
-        SeekServerProc.kill()
         assert filecmp.cmp(expected_results, seekrpcResultsFile, shallow=False)
+
+        # run the pcl python client
+        pclResultsFile = os.path.join(resultsDir, 'pclClientResults.txt')
+        cmd = f'python {seekRpcDir}/PclRpcClient.py -p {testPort} -s mockDB ' \
+              f'-g 10998,90634 -q 23658,23659 -d GSE13494.GPL570,GSE17215.GPL3921 -o {pclResultsFile}'
+        print(f"Run: {cmd}")
+        clientProc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        clientProc.wait()
+        output1, err = clientProc.communicate()
+        print(f"## OUTPUT: {output1}")
+        assert clientProc.returncode == 0
+
+        # run the pvalue python client
+        cmd = f'python {seekRpcDir}/PvalueRpcClient.py -p {testPort} -s mockDB ' \
+              f'-g 10998,90634 -v 0.45,0.95'
+        clientProc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        clientProc.wait()
+        output1, err = clientProc.communicate()
+        print(f"## OUTPUT: {output1}")
+        assert clientProc.returncode == 0
+
+        # Stop the RPC server
+        SeekServerProc.kill()
 

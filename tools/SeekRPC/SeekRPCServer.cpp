@@ -111,6 +111,7 @@ int main(int argc, char** argv)
             */
             // For multi-threaded server
             TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
+            cout << "Listen on port: " << args.port << endl;
             server.serve();
         }
     } catch(exception &err) {

@@ -146,6 +146,8 @@ set(SLEIPNIR_SOURCES
     src/seeknetwork.h
     src/seekplatform.cpp
     src/seekplatform.h
+    src/SeekPValue.cpp
+    src/SeekPValue.h
     src/seekquery.cpp
     src/seekquery.h
     src/seekreader.cpp
@@ -487,6 +489,7 @@ foreach(TOOL ${SLEIPNIR_TOOLS})
             list(APPEND ${TOOL}_SOURCES tools/${TOOL}/${TOOL}.cpp)
         endif()
         if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/${TOOL}Main.cpp)
+            message(STATUS "### Adding ${TOOL}Main.cpp")
             list(APPEND ${TOOL}_SOURCES tools/${TOOL}/${TOOL}Main.cpp)
         endif()
         if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/${TOOL}/stdafx.cpp)

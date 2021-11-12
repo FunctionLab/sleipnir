@@ -19,8 +19,12 @@ class SeekRPCHandler : virtual public SeekRPCIf {
   SeekRPCHandler(SeekInterface &_seekInterface) : seekInterface(_seekInterface) {
   }
 
-  int32_t getRpcVersion() {
+  double getRpcVersion() {
     return seekInterface.getRpcVersion();
+  }
+
+  int32_t ping() {
+    return seekInterface.ping();
   }
 
   void seekQuery(SeekResult& _return, const SeekQueryArgs& query) {
@@ -44,16 +48,12 @@ class SeekRPCHandler : virtual public SeekRPCIf {
     return;
   }
 
-  int32_t ping() {
-    return seekInterface.ping();
+  void pvalueGenes(PValueResult& _return, const PValueGeneArgs& query) {
+    return seekInterface.pvalueGenes(query, _return);
   }
 
-  int32_t pvalueGenes() {
-    return seekInterface.pvalueGenes();
-  }
-
-  int32_t pvalueDatasets() {
-    return seekInterface.pvalueDatasets();
+  void pvalueDatasets(PValueResult& _return, const PValueDatasetArgs& query) {
+    return seekInterface.pvalueDatasets(query, _return);
   }
 
   void pclQuery(PclResult& _return, const PclQueryArgs& query) {

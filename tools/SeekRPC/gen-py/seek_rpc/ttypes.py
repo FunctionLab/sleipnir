@@ -983,6 +983,330 @@ class PclResult(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class PValueGeneArgs(object):
+    """
+    Attributes:
+     - species
+     - genes
+     - geneScores
+     - geneRanks
+     - useRank
+
+    """
+
+
+    def __init__(self, species="Unknown", genes=None, geneScores=None, geneRanks=None, useRank=False,):
+        self.species = species
+        self.genes = genes
+        self.geneScores = geneScores
+        self.geneRanks = geneRanks
+        self.useRank = useRank
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.species = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.genes = []
+                    (_etype94, _size91) = iprot.readListBegin()
+                    for _i95 in range(_size91):
+                        _elem96 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        self.genes.append(_elem96)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.geneScores = []
+                    (_etype100, _size97) = iprot.readListBegin()
+                    for _i101 in range(_size97):
+                        _elem102 = iprot.readDouble()
+                        self.geneScores.append(_elem102)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.LIST:
+                    self.geneRanks = []
+                    (_etype106, _size103) = iprot.readListBegin()
+                    for _i107 in range(_size103):
+                        _elem108 = iprot.readI32()
+                        self.geneRanks.append(_elem108)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.BOOL:
+                    self.useRank = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('PValueGeneArgs')
+        if self.species is not None:
+            oprot.writeFieldBegin('species', TType.STRING, 1)
+            oprot.writeString(self.species.encode('utf-8') if sys.version_info[0] == 2 else self.species)
+            oprot.writeFieldEnd()
+        if self.genes is not None:
+            oprot.writeFieldBegin('genes', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRING, len(self.genes))
+            for iter109 in self.genes:
+                oprot.writeString(iter109.encode('utf-8') if sys.version_info[0] == 2 else iter109)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.geneScores is not None:
+            oprot.writeFieldBegin('geneScores', TType.LIST, 3)
+            oprot.writeListBegin(TType.DOUBLE, len(self.geneScores))
+            for iter110 in self.geneScores:
+                oprot.writeDouble(iter110)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.geneRanks is not None:
+            oprot.writeFieldBegin('geneRanks', TType.LIST, 4)
+            oprot.writeListBegin(TType.I32, len(self.geneRanks))
+            for iter111 in self.geneRanks:
+                oprot.writeI32(iter111)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.useRank is not None:
+            oprot.writeFieldBegin('useRank', TType.BOOL, 5)
+            oprot.writeBool(self.useRank)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.species is None:
+            raise TProtocolException(message='Required field species is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class PValueDatasetArgs(object):
+    """
+    Attributes:
+     - species
+     - datasets
+     - datasetWeights
+
+    """
+
+
+    def __init__(self, species="Unknown", datasets=None, datasetWeights=None,):
+        self.species = species
+        self.datasets = datasets
+        self.datasetWeights = datasetWeights
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.species = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.datasets = []
+                    (_etype115, _size112) = iprot.readListBegin()
+                    for _i116 in range(_size112):
+                        _elem117 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        self.datasets.append(_elem117)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.datasetWeights = []
+                    (_etype121, _size118) = iprot.readListBegin()
+                    for _i122 in range(_size118):
+                        _elem123 = iprot.readDouble()
+                        self.datasetWeights.append(_elem123)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('PValueDatasetArgs')
+        if self.species is not None:
+            oprot.writeFieldBegin('species', TType.STRING, 1)
+            oprot.writeString(self.species.encode('utf-8') if sys.version_info[0] == 2 else self.species)
+            oprot.writeFieldEnd()
+        if self.datasets is not None:
+            oprot.writeFieldBegin('datasets', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRING, len(self.datasets))
+            for iter124 in self.datasets:
+                oprot.writeString(iter124.encode('utf-8') if sys.version_info[0] == 2 else iter124)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.datasetWeights is not None:
+            oprot.writeFieldBegin('datasetWeights', TType.LIST, 3)
+            oprot.writeListBegin(TType.DOUBLE, len(self.datasetWeights))
+            for iter125 in self.datasetWeights:
+                oprot.writeDouble(iter125)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.species is None:
+            raise TProtocolException(message='Required field species is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class PValueResult(object):
+    """
+    Attributes:
+     - success
+     - pvalues
+     - status
+     - statusMsg
+
+    """
+
+
+    def __init__(self, success=None, pvalues=None, status=None, statusMsg=None,):
+        self.success = success
+        self.pvalues = pvalues
+        self.status = status
+        self.statusMsg = statusMsg
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.BOOL:
+                    self.success = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.pvalues = []
+                    (_etype129, _size126) = iprot.readListBegin()
+                    for _i130 in range(_size126):
+                        _elem131 = iprot.readDouble()
+                        self.pvalues.append(_elem131)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.I32:
+                    self.status = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.statusMsg = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('PValueResult')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.BOOL, 1)
+            oprot.writeBool(self.success)
+            oprot.writeFieldEnd()
+        if self.pvalues is not None:
+            oprot.writeFieldBegin('pvalues', TType.LIST, 2)
+            oprot.writeListBegin(TType.DOUBLE, len(self.pvalues))
+            for iter132 in self.pvalues:
+                oprot.writeDouble(iter132)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.status is not None:
+            oprot.writeFieldBegin('status', TType.I32, 3)
+            oprot.writeI32(self.status)
+            oprot.writeFieldEnd()
+        if self.statusMsg is not None:
+            oprot.writeFieldBegin('statusMsg', TType.STRING, 4)
+            oprot.writeString(self.statusMsg.encode('utf-8') if sys.version_info[0] == 2 else self.statusMsg)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.success is None:
+            raise TProtocolException(message='Required field success is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(StringDoublePair)
 StringDoublePair.thrift_spec = (
     None,  # 0
@@ -1052,6 +1376,30 @@ PclResult.thrift_spec = (
     (6, TType.LIST, 'queryCoexpressions', (TType.DOUBLE, None, False), None, ),  # 6
     (7, TType.I32, 'status', None, None, ),  # 7
     (8, TType.STRING, 'statusMsg', 'UTF8', None, ),  # 8
+)
+all_structs.append(PValueGeneArgs)
+PValueGeneArgs.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'species', 'UTF8', "Unknown", ),  # 1
+    (2, TType.LIST, 'genes', (TType.STRING, 'UTF8', False), None, ),  # 2
+    (3, TType.LIST, 'geneScores', (TType.DOUBLE, None, False), None, ),  # 3
+    (4, TType.LIST, 'geneRanks', (TType.I32, None, False), None, ),  # 4
+    (5, TType.BOOL, 'useRank', None, False, ),  # 5
+)
+all_structs.append(PValueDatasetArgs)
+PValueDatasetArgs.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'species', 'UTF8', "Unknown", ),  # 1
+    (2, TType.LIST, 'datasets', (TType.STRING, 'UTF8', False), None, ),  # 2
+    (3, TType.LIST, 'datasetWeights', (TType.DOUBLE, None, False), None, ),  # 3
+)
+all_structs.append(PValueResult)
+PValueResult.thrift_spec = (
+    None,  # 0
+    (1, TType.BOOL, 'success', None, None, ),  # 1
+    (2, TType.LIST, 'pvalues', (TType.DOUBLE, None, False), None, ),  # 2
+    (3, TType.I32, 'status', None, None, ),  # 3
+    (4, TType.STRING, 'statusMsg', 'UTF8', None, ),  # 4
 )
 fix_spec(all_structs)
 del all_structs

@@ -91,8 +91,37 @@ struct PclResult {
     8: optional string statusMsg;
 }
 
+// Note that for backward compatibility if the geneScores for all
+//  genes are passed in, then the gene entrezIDs don't need to be
+//  provided and it will use the gene_map gene order to match
+//  scores to genes. In addition, if all genes are passed in and
+//  useRank=true the server will sort and rank the gene scores
+//  and return the pvalues based on the ranks (in that case no
+//  geneRanks need to be passed in).
+struct PValueGeneArgs {
+    1: required string species = "Unknown";
+    2: optional list<string> genes;   // EntrezIDs
+    3: optional list<double> geneScores;  // Seek query gene scores
+    4: optional list<i32> geneRanks;  // Seek query gene ranks
+    5: optional bool useRank = false;
+}
+
+struct PValueDatasetArgs {
+    1: required string species = "Unknown";
+    2: optional list<string> datasets;   // dataset names
+    3: optional list<double> datasetWeights;  // Seek query result weights
+}
+
+struct PValueResult {
+    1: required bool success;
+    2: optional list<double> pvalues;
+    3: optional QueryStatus status;
+    4: optional string statusMsg;
+}
+
+
 // Version to track compatibility across changes to the RPC interface
-const i32 RPCVersion = 1;
+const double RPCVersion = 1.2;
 
 /* Make seekQuery an asynchronous call and have a getStatus() call that returns
  *  status strings while the query is processing and then returns "Done Search"
@@ -106,11 +135,11 @@ service SeekRPC {
     SeekResult getSeekResult(1: i64 taskId, 2: bool block=true);  // returns result from an async task
     bool isQueryComplete(1: i64 taskId),  // returns true if getResult won't block
     string getProgressMessage(1: i64 taskId);  // to retrieve status info for async task given by id
-    i32 getRpcVersion();
-    i32 ping();  // returns monotonic increasing int
-    i32 pvalueGenes();  // input and return types to be determined
-    i32 pvalueDatasets();  // input and return types to be determined
     PclResult pclQuery(1: PclQueryArgs query);
     i64 pclQueryAsync(1: PclQueryArgs query);  // returns a task id
     PclResult getPclResult(1: i64 taskId, 2: bool block=true);  // returns result from an async task
+    PValueResult pvalueGenes(1: PValueGeneArgs query);
+    PValueResult pvalueDatasets(1: PValueDatasetArgs query);
+    double getRpcVersion();
+    i32 ping();  // returns monotonic increasing int
 }

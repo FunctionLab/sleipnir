@@ -496,6 +496,7 @@ namespace Sleipnir {
         /* Correlation discretization */
         vector<float> m_quant;
         bool m_hasPclInDatasetName = false;
+        bool m_missingInitParams = false;
 
     private:
         /* Datasets */

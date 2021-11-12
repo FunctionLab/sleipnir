@@ -107,6 +107,7 @@ int main(int iArgs, char **aszArgs) {
     T = gsl_rng_default;
 
     gsl_rng *rnd = gsl_rng_alloc(T);
+    gsl_rng_set(rnd, 100);
 
     const gsl_rng_type *T2;
     T2 = gsl_rng_default;
