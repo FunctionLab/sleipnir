@@ -15,9 +15,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
 
     - uses: actions/setup-python@v2
       with:
@@ -26,12 +23,19 @@ jobs:
     - name: Install Python Dependencies
       working-directory: ${{github.workspace}}
       run: |
+        echo $CONDA/bin >> $GITHUB_PATH
         $CONDA/bin/conda init bash
-        source ~/.bashrc
-        $CONDA/bin/conda activate base
+        # source ~/.bashrc
+        $CONDA/bin/activate base
+        conda info --envs
+        conda list
         $CONDA/bin/conda install numpy
         # $CONDA/bin/conda env update --file scripts/seek/conda_environment.yml --name base
         python -c 'import numpy as np'
+
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - name: Install libraries
       run: |
