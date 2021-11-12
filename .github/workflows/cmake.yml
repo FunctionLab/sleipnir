@@ -23,6 +23,10 @@ jobs:
       with:
         python-version: 3.8
 
+    - name: Install Python Dependencies
+      working-directory: ${{github.workspace}}
+      run: $CONDA/bin/conda env update --file scripts/seek/conda_environment.yml --name base
+
     - name: Install libraries
       run: |
         sudo apt-get update
@@ -51,9 +55,6 @@ jobs:
       # Execute c++ based tests
       run: tests/unit_tests
 
-    - name: Install Python Dependencies
-      working-directory: ${{github.workspace}}
-      run: $CONDA/bin/conda env create --file scripts/seek/conda_environment.yml
 
     - name: Run Python Test Suites
       working-directory: ${{github.workspace}}
