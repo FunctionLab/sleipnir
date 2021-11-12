@@ -23,10 +23,15 @@ jobs:
       with:
         python-version: 3.8
 
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the
+        # miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+
     - name: Install Python Dependencies
       working-directory: ${{github.workspace}}
       run: |
-        echo $CONDA/bin >> $GITHUB_PATH
         conda env update --name base --file scripts/seek/conda_environment.yml
 
     - name: Install Libraries
@@ -57,10 +62,15 @@ jobs:
       # Execute c++ based tests
       run: tests/unit_tests
 
-    - name: Run Python Test Suites
+    - name: Test Seek Utils
       working-directory: ${{github.workspace}}
       # Execute python based tests
       run: |
-        # $CONDA/bin/activate genomics
-        python -m pytest -s -v scripts/seek/tests
+        # $CONDA/bin/activate base
+        python -m pytest -s -v scripts/seek/tests/
+
+    - name: Test Seek Tools
+      working-directory: ${{github.workspace}}
+      # Execute python based tests
+      run: |
         python -m pytest -s -v tests/
