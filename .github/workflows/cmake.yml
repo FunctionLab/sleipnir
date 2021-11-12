@@ -27,7 +27,7 @@ jobs:
       working-directory: ${{github.workspace}}
       run: |
         $CONDA/bin/conda init bash
-        cat ~/.bashrc
+        source ~/.bashrc
         $CONDA/bin/conda activate base
         $CONDA/bin/conda install numpy
         # $CONDA/bin/conda env update --file scripts/seek/conda_environment.yml --name base
