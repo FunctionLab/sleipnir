@@ -15,30 +15,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - uses: actions/setup-python@v2
       with:
         python-version: 3.8
 
-    # $CONDA/bin/conda init bash
-    # source ~/.bashrc
-    # $CONDA/bin/conda env update --file scripts/seek/conda_environment.yml --name base
     - name: Install Python Dependencies
       working-directory: ${{github.workspace}}
       run: |
         echo $CONDA/bin >> $GITHUB_PATH
-        conda info --envs
-        $CONDA/bin/activate base
-        $CONDA/bin/conda install -y numpy
-        conda info --envs
-        conda list
-        python -c 'import numpy as np'
+        conda env update --name base --file scripts/seek/conda_environment.yml
 
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - name: Install libraries
+    - name: Install Libraries
       run: |
         sudo apt-get update
         sudo apt-get install build-essential
@@ -66,11 +57,10 @@ jobs:
       # Execute c++ based tests
       run: tests/unit_tests
 
-
     - name: Run Python Test Suites
       working-directory: ${{github.workspace}}
       # Execute python based tests
       run: |
-        # $CONDA/bin/conda activate genomics
+        # $CONDA/bin/activate genomics
         python -m pytest -s -v scripts/seek/tests
         python -m pytest -s -v tests/
