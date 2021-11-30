@@ -6,6 +6,10 @@ message(STATUS "ROOT DIR: " ${ROOT})
 
 add_link_options(-lpthread)
 
+# For profiling and checking memory leaks
+# list(APPEND EXTRA_LIBRARIES "/usr/local/Cellar/gperftools/2.9.1_1/lib/libtcmalloc.a")
+# add_link_options(-ltcmalloc)
+
 set(CMAKE_CXX_STANDARD 17)
 
 if((NOT CMAKE_BUILD_TYPE) OR (${CMAKE_BUILD_TYPE} MATCHES Release))

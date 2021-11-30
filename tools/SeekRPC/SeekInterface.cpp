@@ -8,6 +8,7 @@
 #include "PclQuery.h"
 #include "SeekPValue.h"
 #include "gen-cpp/seek_rpc_constants.h"
+// #include "/usr/local/Cellar/gperftools/2.9.1_1/include/gperftools/heap-profiler.h"
 
 using namespace std;
 using namespace SeekRPC;
@@ -59,9 +60,11 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
 
 void SeekInterface::seekQuery(const SeekQueryArgs &query, SeekResult &result)
 {
+    // HeapProfilerStart("/tmp/heap");
     // spin off a thread to run this query but wait immediately for it
     int64_t taskId = this->seekQueryAsync(query);
     this->getSeekResult(taskId, true, result);
+    // HeapProfilerDump("seekQuery");
     return;
 }
 
@@ -582,6 +585,12 @@ int SeekInterface::removeMappedTask(int64_t taskId) {
     uint32_t numRemoved = this->taskMap.erase(taskId);
     assert(numRemoved == 0 || numRemoved == 1);
     return numRemoved;
+}
+
+int SeekInterface::numTasksOutstanding() {
+    shared_lock mlock(this->taskMapMutex);
+    int numTasks = this->taskMap.size();
+    return numTasks;
 }
 
 /* This cleaner thread handles cases where the client never calls get_result.

@@ -31,6 +31,7 @@ from seek_rpc.ttypes import SearchMethod, DistanceMeasure
 use_tempfile = False
 min_result_correlation = 0.95
 testPort = 9123
+taskTimeOut = 5
 
 class TestSeekRPC:
     cfgFile = None
@@ -47,7 +48,7 @@ class TestSeekRPC:
         cmd = f"sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}"
         subprocess.run(cmd, shell=True)
         # Run the server
-        cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile} -p {testPort}'
+        cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile} -p {testPort} -t {taskTimeOut}'
         cls.SeekServerProc = subprocess.Popen(cmd, shell=True)
         print(f'### {cmd}')
         # sleep for 5 secs to accomodate initial run of a new db which builds
@@ -109,7 +110,6 @@ class TestSeekRPC:
         clientProc.wait()
         assert clientProc.returncode == 255  # retval of -1
 
-
     def test_async_client(self):
         # Run the query through the python rpc client
         from thrift.transport import TTransport, TSocket
@@ -154,6 +154,21 @@ class TestSeekRPC:
         assert result.success is True
         assert len(result.geneScores) > 0
         assert len(result.datasetWeights) > 0
+
+        # Test task cleanup when client doesn't call getResult
+        # Add several tasks, wait taskTimeout seconds and then check task queue
+        taskIds = []
+        numTasks = 5
+        for idx in range(numTasks):
+            task_id = client.seekQueryAsync(queryArgs)
+            taskIds.append(task_id)
+        tasksOutstanding = client.numTasksOutstanding()
+        assert tasksOutstanding == numTasks
+        # wait for cleaner to run
+        print("### Wait for task cleaner to run ...")
+        time.sleep(2 * taskTimeOut + 1)
+        tasksOutstanding = client.numTasksOutstanding()
+        assert tasksOutstanding == 0
 
         transport.close()
 

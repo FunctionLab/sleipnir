@@ -67,4 +67,8 @@ class SeekRPCHandler : virtual public SeekRPCIf {
   void getPclResult(PclResult& _return, const int64_t taskId, const bool block) {
     return seekInterface.getPclResult(taskId, block, _return);
   }
+
+  int32_t numTasksOutstanding() {
+    return seekInterface.numTasksOutstanding();
+  }
 };

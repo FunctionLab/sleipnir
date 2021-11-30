@@ -114,6 +114,7 @@ int main(int argc, char** argv)
             cout << "Listen on port: " << args.port << endl;
             server.serve();
         }
+        printf("Existing Server ...\n");
     } catch(exception &err) {
         print_exception_stack(err);
         return -1;
