@@ -170,6 +170,11 @@ class TestSeekRPC:
         tasksOutstanding = client.numTasksOutstanding()
         assert tasksOutstanding == 0
 
+        # Try getting the result of a task that has since been cleaned up
+        result = client.getSeekResult(taskIds[0], block=True)
+        assert result.success is False
+        assert result.status is QueryStatus.Error
+
         transport.close()
 
     def test_simulate_weight(self):

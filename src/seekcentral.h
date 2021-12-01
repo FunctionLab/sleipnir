@@ -48,6 +48,7 @@
 #include "seekerror.h"
 
 namespace Sleipnir {
+    class ReadOnlyAttributes;
 
 /*!
  * \brief A suite of search algorithms that are supported by Seek
@@ -479,13 +480,13 @@ namespace Sleipnir {
 
     public:
         /* Gene, Dataset, and Platform Mapping*/
-        vector <string> m_vecstrGenes;
-        vector <string> m_vecstrDatasets;
+        // vector <string> m_vecstrGenes;
+        // vector <string> m_vecstrDatasets;
         vector <string> m_vecstrDP;
-        map <string, string> m_mapstrstrDatasetPlatform;
-        map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
-        map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
-        map<string, int> m_mapstrintDatasetDB; // map from dataset name to DB index containing that dataset
+        // map <string, string> m_mapstrstrDatasetPlatform;
+        // map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
+        // map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
+        // map<string, int> m_mapstrintDatasetDB; // map from dataset name to DB index containing that dataset
         map <string, string> m_geneEntrezToSymbolMap;
         map <string, string> m_geneSymbolToEntrezMap;
         vector <vector<string>> m_vecstrSearchDatasets;
@@ -497,6 +498,7 @@ namespace Sleipnir {
         vector<float> m_quant;
         bool m_hasPclInDatasetName = false;
         bool m_missingInitParams = false;
+        shared_ptr<const ReadOnlyAttributes> roAttr;
 
     private:
         /* Datasets */
@@ -597,6 +599,34 @@ namespace Sleipnir {
         map <string, utype> m_mapstrintDatasetSize;
     };
 
+    // Read-Only Attributes which query threads use but don't change
+    class ReadOnlyAttributes {
+    public:
+        ReadOnlyAttributes() {
+            m_vecstrGenes.clear();
+            m_vecstrDatasets.clear();
+            m_mapstrintDatasetDB.clear();
+            m_mapstrintDataset.clear();
+            m_mapstrintGene.clear();
+            m_mapstrstrDatasetPlatform.clear();
+        }
+
+        ~ReadOnlyAttributes() {
+            m_vecstrGenes.clear();
+            m_vecstrDatasets.clear();
+            m_mapstrintDatasetDB.clear();
+            m_mapstrintDataset.clear();
+            m_mapstrintGene.clear();
+            m_mapstrstrDatasetPlatform.clear();
+        }
+
+        vector <string> m_vecstrGenes;
+        vector <string> m_vecstrDatasets;
+        map <string, int> m_mapstrintDatasetDB; // map from dataset name to DB index containing that dataset
+        map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
+        map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
+        map <string, string> m_mapstrstrDatasetPlatform;
+    };
 
 }
 #endif
