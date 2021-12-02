@@ -35,7 +35,7 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
             // Initialize the Pvalue struct
             bool res;
             CSeekCentral &speciesSC = this->speciesSeekCentrals[speciesName];
-            string pvalueDir = speciesSC.m_vecDBSetting[0]->pvalueDir;
+            string pvalueDir = speciesSC.roAttr->m_vecDBSetting[0]->pvalueDir;
             pvalueEnabled = true;
             // Try loading the pvalue metadata arrays
             res = loadPvalueArrays(pvalueDir, this->speciesPvalueData[speciesName]);

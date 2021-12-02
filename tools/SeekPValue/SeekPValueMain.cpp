@@ -107,7 +107,7 @@ int main(int iArgs, char **aszArgs) {
     seekCentral.InitializeFromSeekConfig(settings);
     PValueData pvalueData;
     if (sArgs.load_flag == 1) {
-        loadPvalueArrays(seekCentral.m_vecDBSetting[0]->pvalueDir, pvalueData);
+        loadPvalueArrays(seekCentral.roAttr->m_vecDBSetting[0]->pvalueDir, pvalueData);
     } else {
         int numRandQueries = sArgs.random_num_arg;
         initializePvalue(seekCentral, numRandQueries, pvalueData);

@@ -487,11 +487,11 @@ namespace Sleipnir {
         // map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
         // map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
         // map<string, int> m_mapstrintDatasetDB; // map from dataset name to DB index containing that dataset
-        map <string, string> m_geneEntrezToSymbolMap;
-        map <string, string> m_geneSymbolToEntrezMap;
+        // map <string, string> m_geneEntrezToSymbolMap;
+        // map <string, string> m_geneSymbolToEntrezMap;
         vector <vector<string>> m_vecstrSearchDatasets;
         vector<CSeekIntIntMap *> m_searchdsetMap;
-        vector<CSeekDBSetting *> m_vecDBSetting; //DBSetting
+        // vector<CSeekDBSetting *> m_vecDBSetting; //DBSetting
         /* Platform */
         // SeekPlatforms m_seekPlatforms;
         /* Correlation discretization */
@@ -558,7 +558,7 @@ namespace Sleipnir {
 
         //CDatabase reference
         vector<CDatabase *> m_vecDB;
-        vector <vector<string>> m_vecDBDataset; //A list of dsets in each CDatabase
+        // vector <vector<string>> m_vecDBDataset; //A list of dsets in each CDatabase
 
         size_t m_iDatasets;
         size_t m_iGenes;
@@ -612,6 +612,8 @@ namespace Sleipnir {
             m_seekPlatforms.clear();
             m_vecstrDP.clear();
             m_mapstrintDatasetSize.clear();
+            m_vecDBDataset.clear();
+            m_vecDBSetting.clear();
         }
 
         ~ReadOnlyAttributes() {
@@ -624,17 +626,29 @@ namespace Sleipnir {
             m_seekPlatforms.clear();
             m_vecstrDP.clear();
             m_mapstrintDatasetSize.clear();
+            m_vecDBDataset.clear();
+            for (int i = 0; i < m_vecDBSetting.size(); i++) {
+                if (m_vecDBSetting[i] != NULL) {
+                    delete m_vecDBSetting[i];
+                    m_vecDBSetting[i] = NULL;
+                }
+            }
+            m_vecDBSetting.clear();
         }
 
-        vector <string> m_vecstrGenes;
-        vector <string> m_vecstrDatasets;
+        vector <string> m_vecstrGenes;  // Gene names
+        vector <string> m_vecstrDatasets;  // Dataset names
+        vector <string> m_vecstrDP; // Dataset.Platform names
+        vector <vector<string>> m_vecDBDataset; // A list of dsets in each CDatabase
+        vector <CSeekDBSetting *> m_vecDBSetting; // DBSetting
         map <string, int> m_mapstrintDatasetDB; // map from dataset name to DB index containing that dataset
         map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
         map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
-        map <string, string> m_mapstrstrDatasetPlatform;
+        map <string, string> m_mapstrstrDatasetPlatform;  // map from dataset name to platform name
+        map <string, utype> m_mapstrintDatasetSize; // map from dataset name to num experiments in dataset
+        map <string, string> m_geneEntrezToSymbolMap;
+        map <string, string> m_geneSymbolToEntrezMap;
         SeekPlatforms m_seekPlatforms;
-        vector <string> m_vecstrDP;
-        map <string, utype> m_mapstrintDatasetSize;
     };
 
 }

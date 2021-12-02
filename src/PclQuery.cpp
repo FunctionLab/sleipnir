@@ -74,7 +74,7 @@ void *do_pcl_query(void *th_arg) {
 
     fprintf(stderr, "start processing...\n");
 
-    string pcl_input_dir = cc->m_vecDBSetting[0]->pclDir;
+    string pcl_input_dir = cc->roAttr->m_vecDBSetting[0]->pclDir;
 
     // GW New Caching Algo
     int numDatasets = datasetNames.size();
@@ -220,17 +220,17 @@ void *do_pcl_query(void *th_arg) {
             int dbID = dbid_iter->second;
 
             string strAvgPath =
-                    cc->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gavg"; //avg and prep path share same directory
-            string strPresencePath = cc->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gpres";
-            string strSinfoPath = cc->m_vecDBSetting[dbID]->sinfoDir + "/" + dsetName + ".sinfo";
+                    cc->roAttr->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gavg"; //avg and prep path share same directory
+            string strPresencePath = cc->roAttr->m_vecDBSetting[dbID]->prepDir + "/" + dsetName + ".gpres";
+            string strSinfoPath = cc->roAttr->m_vecDBSetting[dbID]->sinfoDir + "/" + dsetName + ".sinfo";
 
             if (!filesystem::exists(strAvgPath) ||  !filesystem::exists(strPresencePath) || 
                 !filesystem::exists(strSinfoPath)) {
                 // Try stripping .pcl extension
                 string tmpName = stripPclExtensions(dsetName);
-                strAvgPath = cc->m_vecDBSetting[dbID]->prepDir + "/" + tmpName + ".gavg";
-                strPresencePath = cc->m_vecDBSetting[dbID]->prepDir + "/" + tmpName + ".gpres";
-                strSinfoPath = cc->m_vecDBSetting[dbID]->sinfoDir + "/" + tmpName + ".sinfo";
+                strAvgPath = cc->roAttr->m_vecDBSetting[dbID]->prepDir + "/" + tmpName + ".gavg";
+                strPresencePath = cc->roAttr->m_vecDBSetting[dbID]->prepDir + "/" + tmpName + ".gpres";
+                strSinfoPath = cc->roAttr->m_vecDBSetting[dbID]->sinfoDir + "/" + tmpName + ".sinfo";
                 if (!filesystem::exists(strAvgPath) ||  !filesystem::exists(strPresencePath) || 
                     !filesystem::exists(strSinfoPath)) {
                     hasError = true;

@@ -358,7 +358,7 @@ bool initializePvalue(CSeekCentral &seekCentral, int numRandQueries, PValueData 
     int numGenes = seekCentral.roAttr->m_vecstrGenes.size();
     int numRandFiles = 0;
     vector <string> gscoreFiles;
-    string random_directory = seekCentral.m_vecDBSetting[0]->pvalueDir;
+    string random_directory = seekCentral.roAttr->m_vecDBSetting[0]->pvalueDir;
     if (!filesystem::exists(random_directory)) {
         cerr << "WARNING: Random query directory doesn't exist: " << random_directory << endl;
         return false;
