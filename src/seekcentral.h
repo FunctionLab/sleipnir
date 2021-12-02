@@ -482,7 +482,7 @@ namespace Sleipnir {
         /* Gene, Dataset, and Platform Mapping*/
         // vector <string> m_vecstrGenes;
         // vector <string> m_vecstrDatasets;
-        vector <string> m_vecstrDP;
+        // vector <string> m_vecstrDP;
         // map <string, string> m_mapstrstrDatasetPlatform;
         // map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
         // map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
@@ -596,7 +596,7 @@ namespace Sleipnir {
         /* for specifying dataset size */
         bool m_bCheckDsetSize;
         int m_iNumSampleRequired;
-        map <string, utype> m_mapstrintDatasetSize;
+        // map <string, utype> m_mapstrintDatasetSize;
     };
 
     // Read-Only Attributes which query threads use but don't change
@@ -610,6 +610,8 @@ namespace Sleipnir {
             m_mapstrintGene.clear();
             m_mapstrstrDatasetPlatform.clear();
             m_seekPlatforms.clear();
+            m_vecstrDP.clear();
+            m_mapstrintDatasetSize.clear();
         }
 
         ~ReadOnlyAttributes() {
@@ -620,6 +622,8 @@ namespace Sleipnir {
             m_mapstrintGene.clear();
             m_mapstrstrDatasetPlatform.clear();
             m_seekPlatforms.clear();
+            m_vecstrDP.clear();
+            m_mapstrintDatasetSize.clear();
         }
 
         vector <string> m_vecstrGenes;
@@ -629,6 +633,8 @@ namespace Sleipnir {
         map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
         map <string, string> m_mapstrstrDatasetPlatform;
         SeekPlatforms m_seekPlatforms;
+        vector <string> m_vecstrDP;
+        map <string, utype> m_mapstrintDatasetSize;
     };
 
 }

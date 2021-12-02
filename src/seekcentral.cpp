@@ -46,7 +46,7 @@ namespace Sleipnir {
         m_quant.clear();
         m_vecstrAllQuery.clear();
         // m_seekPlatforms.clear();
-        m_vecstrDP.clear();
+        // m_vecstrDP.clear();
         // m_mapstrintDatasetDB.clear();
         // m_mapstrintDataset.clear();
         // m_mapstrintGene.clear();
@@ -101,7 +101,7 @@ namespace Sleipnir {
 
         m_bCheckDsetSize = false;
         m_iNumSampleRequired = 10; //if checking for dataset size
-        m_mapstrintDatasetSize.clear();
+        // m_mapstrintDatasetSize.clear();
     }
 
     CSeekCentral::~CSeekCentral() {
@@ -109,7 +109,7 @@ namespace Sleipnir {
         // m_vecstrDatasets.clear();
         m_vecstrSearchDatasets.clear();
         // m_mapstrstrDatasetPlatform.clear();
-        m_vecstrDP.clear();
+        // m_vecstrDP.clear();
         // m_mapstrintDatasetDB.clear();
         // m_mapstrintDataset.clear();
         // m_mapstrintGene.clear();
@@ -214,7 +214,7 @@ namespace Sleipnir {
 
         m_bCheckDsetSize = false;
         m_iNumSampleRequired = 0;
-        m_mapstrintDatasetSize.clear();
+        // m_mapstrintDatasetSize.clear();
     }
 
     bool CSeekCentral::CalculateRestart() {
@@ -336,11 +336,11 @@ namespace Sleipnir {
 
         // m_seekPlatforms.copy(src->m_seekPlatforms);
     
-        m_vecstrDP.resize(src->m_vecstrDP.size());
-        copy(src->m_vecstrDP.begin(), src->m_vecstrDP.end(), m_vecstrDP.begin());
+        // m_vecstrDP.resize(src->m_vecstrDP.size());
+        // copy(src->m_vecstrDP.begin(), src->m_vecstrDP.end(), m_vecstrDP.begin());
 
-        m_mapstrintDatasetSize.insert(src->m_mapstrintDatasetSize.begin(),
-                                      src->m_mapstrintDatasetSize.end());
+        // m_mapstrintDatasetSize.insert(src->m_mapstrintDatasetSize.begin(),
+        //                               src->m_mapstrintDatasetSize.end());
 
         m_quant = src->m_quant;
         utype i, j;
@@ -349,7 +349,7 @@ namespace Sleipnir {
         m_iDatasets = roAttr->m_vecstrDatasets.size();
         m_iGenes = roAttr->m_vecstrGenes.size();
 
-        if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+        if (m_bCheckDsetSize && roAttr->m_mapstrintDatasetSize.size() == 0) {
             throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
         }
 
@@ -363,18 +363,24 @@ namespace Sleipnir {
             if (sd[i] == "" or sd[i] == "NA") {
                 // include all datasets as part of search
                 for (j = 0; j < roAttr->m_vecstrDatasets.size(); j++) {
-                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[roAttr->m_vecstrDatasets[j]] <
+                    if (m_bCheckDsetSize) {
+                        if (roAttr->m_mapstrintDatasetSize.count(roAttr->m_vecstrDatasets[j]) == 0 ||
+                            roAttr->m_mapstrintDatasetSize.at(roAttr->m_vecstrDatasets[j]) <
                                             m_iNumSampleRequired) {
-                        continue;
+                            continue;
+                        }
                     }
                     m_vecstrSearchDatasets[i].push_back(roAttr->m_vecstrDatasets[j]);
                 }
             } else {
                 CMeta::Tokenize(sd[i].c_str(), vecsearchDset, " ", false);
                 for (j = 0; j < vecsearchDset.size(); j++) {
-                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[j]] <
+                    if (m_bCheckDsetSize) {
+                        if (roAttr->m_mapstrintDatasetSize.count(vecsearchDset[j]) == 0 ||
+                            roAttr->m_mapstrintDatasetSize.at(vecsearchDset[j]) <
                                             m_iNumSampleRequired) {
-                        continue;
+                            continue;
+                        }
                     }
                     m_vecstrSearchDatasets[i].push_back(vecsearchDset[j]);
                 }
@@ -606,7 +612,7 @@ namespace Sleipnir {
                 CMeta::Tokenize(qq[i].c_str(), m_vecstrAllQuery[i], " ", true);
             }
 
-            if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+            if (m_bCheckDsetSize && roAttr->m_mapstrintDatasetSize.size() == 0) {
                 throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
             }
 
@@ -619,9 +625,12 @@ namespace Sleipnir {
                 vector <string> vecsearchDset;
                 CMeta::Tokenize(sd[i].c_str(), vecsearchDset, " ", false);
                 for (j = 0; j < vecsearchDset.size(); j++) {
-                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[j]] <
+                    if (m_bCheckDsetSize) {
+                        if (roAttr->m_mapstrintDatasetSize.count(vecsearchDset[j]) == 0 ||
+                            roAttr->m_mapstrintDatasetSize.at(vecsearchDset[j]) <
                                             m_iNumSampleRequired) {
-                        continue;
+                            continue;
+                        }
                     }
                     m_vecstrSearchDatasets[i].push_back(vecsearchDset[j]);
                 }
@@ -815,7 +824,7 @@ namespace Sleipnir {
         }
 
         attr->m_vecstrDatasets.clear();
-        m_vecstrDP.clear();
+        attr->m_vecstrDP.clear();
         attr->m_mapstrintDatasetDB.clear();
         attr->m_mapstrstrDatasetPlatform.clear();
         attr->m_mapstrintDataset.clear();
@@ -857,7 +866,7 @@ namespace Sleipnir {
             for (j = 0; j < vD.size(); j++) {
                 attr->m_vecstrDatasets.push_back(vD[j]);
                 m_vecDBDataset[i].push_back(vD[j]);
-                m_vecstrDP.push_back(vDP[j]);
+                attr->m_vecstrDP.push_back(vDP[j]);
                 attr->m_mapstrintDatasetDB[vD[j]] = (int) i;
             }
 
@@ -873,10 +882,10 @@ namespace Sleipnir {
                                 col1[j].c_str());
                         return false;
                     }
-                    m_mapstrintDatasetSize[col1[j]] = (utype) atoi(col2[j].c_str());
+                    attr->m_mapstrintDatasetSize[col1[j]] = (utype) atoi(col2[j].c_str());
                 }
                 for (j = 0; j < vD.size(); j++) {
-                    if (m_mapstrintDatasetSize.find(vD[j]) == m_mapstrintDatasetSize.end()) {
+                    if (attr->m_mapstrintDatasetSize.find(vD[j]) == attr->m_mapstrintDatasetSize.end()) {
                         fprintf(stderr, "There is no dataset size entry for %s\n", vD[j].c_str());
                         return false;
                     }
@@ -897,7 +906,7 @@ namespace Sleipnir {
         }
 
         for (i = 0; i < attr->m_vecstrDatasets.size(); i++) {
-            attr->m_mapstrstrDatasetPlatform[attr->m_vecstrDatasets[i]] = m_vecstrDP[i];
+            attr->m_mapstrstrDatasetPlatform[attr->m_vecstrDatasets[i]] = attr->m_vecstrDP[i];
             attr->m_mapstrintDataset[attr->m_vecstrDatasets[i]] = i;
         }
 
@@ -957,7 +966,7 @@ namespace Sleipnir {
         omp_set_num_threads(m_numThreads);
         m_output_dir = output_dir;
 
-        if (m_bCheckDsetSize && m_mapstrintDatasetSize.size() == 0) {
+        if (m_bCheckDsetSize && roAttr->m_mapstrintDatasetSize.size() == 0) {
             throw config_error("Error: Check_dataset_size requested with no dataset size file configured");
         }
 
@@ -977,9 +986,12 @@ namespace Sleipnir {
         if (strSearchDset == "NA") {
             for (i = 0; i < m_vecstrAllQuery.size(); i++) {
                 for (j = 0; j < roAttr->m_vecstrDatasets.size(); j++) {
-                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[roAttr->m_vecstrDatasets[j]] <
+                    if (m_bCheckDsetSize) {
+                        if (roAttr->m_mapstrintDatasetSize.count(roAttr->m_vecstrDatasets[j]) == 0 ||
+                            roAttr->m_mapstrintDatasetSize.at(roAttr->m_vecstrDatasets[j]) <
                                             m_iNumSampleRequired) {
-                        continue;
+                            continue;
+                        }
                     }
                     m_vecstrSearchDatasets[i].push_back(roAttr->m_vecstrDatasets[j]);
                 }
@@ -996,9 +1008,12 @@ namespace Sleipnir {
             }
             for (i = 0; i < m_vecstrAllQuery.size(); i++) {
                 for (j = 0; j < vecsearchDset.size(); j++) {
-                    if (m_bCheckDsetSize && m_mapstrintDatasetSize[vecsearchDset[i][j]] <
+                    if (m_bCheckDsetSize) {
+                        if (roAttr->m_mapstrintDatasetSize.count(vecsearchDset[i][j]) == 0 ||
+                            roAttr->m_mapstrintDatasetSize.at(vecsearchDset[i][j]) <
                                             m_iNumSampleRequired) {
-                        continue;
+                            continue;
+                        }
                     }
                     m_vecstrSearchDatasets[i].push_back(vecsearchDset[i][j]);
                 }
