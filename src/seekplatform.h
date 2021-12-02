@@ -172,8 +172,8 @@ namespace Sleipnir {
         void savePlatformDataToFiles(string platformDir);
         void setPlatformNames(vector<string> &platformNames) {m_platformNames = platformNames;}
         void setPlatformNameMap(map<string, utype> &mapstriPlatform) { m_mapPlatformNameToOrderID = mapstriPlatform; }
-        vector<CSeekPlatform> &getCSeekPlatforms() { return m_cseek_platforms; }
-        map<string, utype> &getPlatformMap() { return m_mapPlatformNameToOrderID; }
+        const vector<CSeekPlatform> &getCSeekPlatforms() const { return m_cseek_platforms; }
+        const map<string, utype> &getPlatformMap() const { return m_mapPlatformNameToOrderID; }
         vector<string> &getPlatformNames() { return m_platformNames; }
         uint32_t getNumPlatforms() { return m_numPlatforms; }
         uint32_t getNumGenes() { return m_numGenes; }

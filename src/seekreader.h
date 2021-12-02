@@ -372,7 +372,7 @@ namespace Sleipnir {
                                  const vector<CSeekDBSetting *> &,
                                  const vector <string> &,
                                  const map <string, string> &,
-                                 const map <string, utype> &, vector <CSeekPlatform> &,
+                                 const map <string, utype> &, const vector <CSeekPlatform> &,
                                  vector<CSeekDataset *> &, const vector <vector<string>> &,
                                  const map <string, utype> &,
                                  const bool= false, const bool= false);
@@ -397,7 +397,7 @@ namespace Sleipnir {
                 const vector<CDatabase *> &, const size_t &, const size_t &,
                 vector<CSeekDataset *> &,
                 const vector<CSeekDataset *> &,
-                vector <CSeekPlatform> &, const vector <string> &,
+                const vector <CSeekPlatform> &, const vector <string> &,
                 const map <string, string> &, const map <string, utype> &);
 
         /*!

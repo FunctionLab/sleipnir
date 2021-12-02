@@ -452,16 +452,16 @@ namespace Sleipnir {
          * \brief Set the platform
          * \param cp The platform
          */
-        void SetPlatform(CSeekPlatform &);
+        void SetPlatform(const CSeekPlatform &);
 
         /*!
          * \brief Get the platform
          * \return The platform of this dataset
          */
-        CSeekPlatform &GetPlatform() const;
+        const CSeekPlatform &GetPlatform() const;
 
     private:
-        CSeekPlatform *platform;
+        const CSeekPlatform *platform;
         vector<float> geneAverage;
         vector<float> geneVariance;
         vector<char> genePresence;

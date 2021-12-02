@@ -152,8 +152,8 @@ void *do_pcl_query(void *th_arg) {
 
     float NaN = -9999;
 
-    map<string, utype> & platformMap = cc->m_seekPlatforms.getPlatformMap();
-    vector<CSeekPlatform> & seekPlatforms = cc->m_seekPlatforms.getCSeekPlatforms();
+    const map<string, utype> & platformMap = cc->roAttr->m_seekPlatforms.getPlatformMap();
+    const vector<CSeekPlatform> & seekPlatforms = cc->roAttr->m_seekPlatforms.getCSeekPlatforms();
 
     size_t i;
 
@@ -185,7 +185,7 @@ void *do_pcl_query(void *th_arg) {
         vqCoexpression.resize(queryName.size());
 
         CSeekDataset *vd = NULL;
-        CSeekPlatform *pl = NULL;
+        const CSeekPlatform *pl = NULL;
         sizeD[i] = (float) ps;
         d_vecG[i] = vector<float>();
         d_vecQ[i] = vector<float>();

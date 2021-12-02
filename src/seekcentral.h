@@ -493,7 +493,7 @@ namespace Sleipnir {
         vector<CSeekIntIntMap *> m_searchdsetMap;
         vector<CSeekDBSetting *> m_vecDBSetting; //DBSetting
         /* Platform */
-        SeekPlatforms m_seekPlatforms;
+        // SeekPlatforms m_seekPlatforms;
         /* Correlation discretization */
         vector<float> m_quant;
         bool m_hasPclInDatasetName = false;
@@ -609,6 +609,7 @@ namespace Sleipnir {
             m_mapstrintDataset.clear();
             m_mapstrintGene.clear();
             m_mapstrstrDatasetPlatform.clear();
+            m_seekPlatforms.clear();
         }
 
         ~ReadOnlyAttributes() {
@@ -618,6 +619,7 @@ namespace Sleipnir {
             m_mapstrintDataset.clear();
             m_mapstrintGene.clear();
             m_mapstrstrDatasetPlatform.clear();
+            m_seekPlatforms.clear();
         }
 
         vector <string> m_vecstrGenes;
@@ -626,6 +628,7 @@ namespace Sleipnir {
         map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
         map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
         map <string, string> m_mapstrstrDatasetPlatform;
+        SeekPlatforms m_seekPlatforms;
     };
 
 }

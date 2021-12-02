@@ -160,7 +160,7 @@ namespace Sleipnir {
         m_mapPlatformNameToOrderID.insert(srcMap.begin(), srcMap.end());
 
         // copy m_cseek_platforms
-        vector<CSeekPlatform> &srcCSeekPlatforms = srcPlatforms.getCSeekPlatforms();
+        const vector<CSeekPlatform> &srcCSeekPlatforms = srcPlatforms.getCSeekPlatforms();
         m_cseek_platforms.clear();
         m_cseek_platforms.resize(m_numPlatforms);
         for (int i = 0; i < m_numPlatforms; i++) {

@@ -45,7 +45,7 @@ namespace Sleipnir {
         m_vc.clear();
         m_quant.clear();
         m_vecstrAllQuery.clear();
-        m_seekPlatforms.clear();
+        // m_seekPlatforms.clear();
         m_vecstrDP.clear();
         // m_mapstrintDatasetDB.clear();
         // m_mapstrintDataset.clear();
@@ -184,7 +184,7 @@ namespace Sleipnir {
         m_vecstrAllQuery.clear();
         m_Query.clear();
 
-        m_seekPlatforms.clear();
+        // m_seekPlatforms.clear();
 
         if (m_vecDB.size() != 0) {
             for (i = 0; i < m_vecDB.size(); i++) {
@@ -334,7 +334,7 @@ namespace Sleipnir {
         // m_mapstrintDatasetDB.insert(src->m_mapstrintDatasetDB.begin(),
         //                                   src->m_mapstrintDatasetDB.end());
 
-        m_seekPlatforms.copy(src->m_seekPlatforms);
+        // m_seekPlatforms.copy(src->m_seekPlatforms);
     
         m_vecstrDP.resize(src->m_vecstrDP.size());
         copy(src->m_vecstrDP.begin(), src->m_vecstrDP.end(), m_vecstrDP.begin());
@@ -426,8 +426,8 @@ namespace Sleipnir {
         }
 
         CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
-                                 m_vc, src->m_vc, m_seekPlatforms.getCSeekPlatforms(), roAttr->m_vecstrDatasets,
-                                 roAttr->m_mapstrstrDatasetPlatform, m_seekPlatforms.getPlatformMap());
+                                 m_vc, src->m_vc, roAttr->m_seekPlatforms.getCSeekPlatforms(), roAttr->m_vecstrDatasets,
+                                 roAttr->m_mapstrstrDatasetPlatform, roAttr->m_seekPlatforms.getPlatformMap());
 
         if (!CalculateRestart()) {
             fprintf(stderr, "Error occurred during CalculateRestart()\n");
@@ -814,13 +814,13 @@ namespace Sleipnir {
             m_missingInitParams = true;
         }
 
-        // m_vecstrDatasets.clear();
+        attr->m_vecstrDatasets.clear();
         m_vecstrDP.clear();
-        // m_mapstrintDatasetDB.clear();
-        // m_mapstrstrDatasetPlatform.clear();
+        attr->m_mapstrintDatasetDB.clear();
+        attr->m_mapstrstrDatasetPlatform.clear();
         attr->m_mapstrintDataset.clear();
 
-        m_seekPlatforms.clear();
+        attr->m_seekPlatforms.clear();
 
         m_vecDB.resize(vecDBSetting.size());
         m_vecDBDataset.resize(vecDBSetting.size());
@@ -890,7 +890,7 @@ namespace Sleipnir {
                 assert(!platformDir.empty() && platformDir != "NA");
                 db_platforms.loadPlatformDataFromFiles(platformDir);
                 // Combine the new db platform statistics with the main db stats
-                m_seekPlatforms.combineWithPlatform(db_platforms);
+                attr->m_seekPlatforms.combineWithPlatform(db_platforms);
             } else {
                 m_missingInitParams = true;
             }
@@ -921,7 +921,7 @@ namespace Sleipnir {
         if (!m_missingInitParams) {
             CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
                                     vecDBSetting, attr->m_vecstrDatasets, attr->m_mapstrstrDatasetPlatform,
-                                    m_seekPlatforms.getPlatformMap(), m_seekPlatforms.getCSeekPlatforms(),
+                                    attr->m_seekPlatforms.getPlatformMap(), attr->m_seekPlatforms.getCSeekPlatforms(),
                                     m_vc, m_vecDBDataset, attr->m_mapstrintDataset,
                                     bVariance, bCorrelation);
         }
