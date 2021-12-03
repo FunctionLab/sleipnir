@@ -40,6 +40,14 @@ class TestSeekRPC:
         seekrpcConfigFile = os.path.join(sampleBcDir, 'sampleBC-config.toml')
         # modify config file paths, sub '/path' with path to sampleBcDir
         sampleBcDirEscaped = sampleBcDir.replace('/', '\\/')
+        
+        print(f"### CMD: sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}")
+        if os.path.exists(seekrpcConfigFile):
+            with open(seekrpcConfigFile, 'r') as fp:
+                print(fp.read())
+        else:
+            print(f"### FILE doesn't exist {seekrpcConfigFile}")
+
         cmd = f"sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}"
         subprocess.run(cmd, shell=True)
         # Run the server
