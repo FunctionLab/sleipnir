@@ -398,9 +398,12 @@ namespace Sleipnir {
         m_searchdsetMap.resize(m_vecstrAllQuery.size());
         for (i = 0; i < m_vecstrAllQuery.size(); i++) {
             m_searchdsetMap[i] = new CSeekIntIntMap(roAttr->m_vecstrDatasets.size());
-            for (j = 0; j < m_vecstrSearchDatasets[i].size(); j++)
-                m_searchdsetMap[i]->Add(
-                        roAttr->m_mapstrintDataset.at(m_vecstrSearchDatasets[i][j]));
+            for (j = 0; j < m_vecstrSearchDatasets[i].size(); j++) {
+                if (roAttr->m_mapstrintDataset.count(m_vecstrSearchDatasets[i][j]) > 0) {
+                    m_searchdsetMap[i]->Add(
+                            roAttr->m_mapstrintDataset.at(m_vecstrSearchDatasets[i][j]));
+                }
+            }
         }
 
         // m_vecDBDataset.resize(src->m_vecDB.size());
@@ -651,9 +654,12 @@ namespace Sleipnir {
             m_searchdsetMap.resize(m_vecstrAllQuery.size());
             for (i = 0; i < m_vecstrAllQuery.size(); i++) {
                 m_searchdsetMap[i] = new CSeekIntIntMap(roAttr->m_vecstrDatasets.size());
-                for (j = 0; j < m_vecstrSearchDatasets[i].size(); j++)
-                    m_searchdsetMap[i]->Add(
-                            roAttr->m_mapstrintDataset.at(m_vecstrSearchDatasets[i][j]));
+                for (j = 0; j < m_vecstrSearchDatasets[i].size(); j++) {
+                    if (roAttr->m_mapstrintDataset.count(m_vecstrSearchDatasets[i][j]) > 0) {
+                        m_searchdsetMap[i]->Add(
+                                roAttr->m_mapstrintDataset.at(m_vecstrSearchDatasets[i][j]));
+                    }
+                }
             }
 
         }
@@ -1030,8 +1036,10 @@ namespace Sleipnir {
         for (i = 0; i < m_vecstrAllQuery.size(); i++) {
             m_searchdsetMap[i] = new CSeekIntIntMap(roAttr->m_vecstrDatasets.size());
             for (j = 0; j < m_vecstrSearchDatasets[i].size(); j++) {
-                m_searchdsetMap[i]->Add(
-                        roAttr->m_mapstrintDataset.at(m_vecstrSearchDatasets[i][j]));
+                if (roAttr->m_mapstrintDataset.count(m_vecstrSearchDatasets[i][j]) > 0) {
+                    m_searchdsetMap[i]->Add(
+                            roAttr->m_mapstrintDataset.at(m_vecstrSearchDatasets[i][j]));
+                }
             }
         }
 

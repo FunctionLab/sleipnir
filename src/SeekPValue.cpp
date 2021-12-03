@@ -71,7 +71,10 @@ void *do_pvalue_query(void *th_arg) {
                 pval.push_back(0.99);
                 continue;
             }
-            int pi = cc->roAttr->m_mapstrintDataset.at(dset[i]);
+            int pi = 0; // previous default case when []operator was used for m_mapstrintDataset
+            if (cc->roAttr->m_mapstrintDataset.count(dset[i]) > 0) {
+                pi = cc->roAttr->m_mapstrintDataset.at(dset[i]);
+            }
             float sc = log(dset_score[i]);
             int qsize = dset_qsize[i];
             if (pvalueData->dsetScore[pi].size() == 0) {
@@ -192,7 +195,11 @@ void *do_pvalue_query(void *th_arg) {
                     }
                     geneIds.resize(geneEntrezIds.size());
                     for (i = 0; i < geneIds.size(); i++) {
-                        geneIds[i] = cc->roAttr->m_mapstrintGene.at(geneEntrezIds[i]);
+                        int id = 0;
+                        if (cc->roAttr->m_mapstrintGene.count(geneEntrezIds[i]) > 0) {
+                            id = cc->roAttr->m_mapstrintGene.at(geneEntrezIds[i]);
+                        }
+                        geneIds[i] = id;
                     }
                 }
                 if (geneRanks.size() != geneIds.size()) {
@@ -213,7 +220,11 @@ void *do_pvalue_query(void *th_arg) {
                     // convert entrezIds to geneIds
                     geneIds.resize(geneEntrezIds.size());
                     for (i=0; i<geneEntrezIds.size(); i++) {
-                        geneIds[i] = cc->roAttr->m_mapstrintGene.at(geneEntrezIds[i]);
+                        int id = 0;
+                        if (cc->roAttr->m_mapstrintGene.count(geneEntrezIds[i]) > 0) {
+                            id = cc->roAttr->m_mapstrintGene.at(geneEntrezIds[i]);
+                        }
+                        geneIds[i] = id;
                     }
                 }
                 if (geneScores.size() != geneIds.size()) {
