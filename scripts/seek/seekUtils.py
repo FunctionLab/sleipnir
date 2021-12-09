@@ -137,9 +137,11 @@ def readDatasetList(dsetFile):
         cols = line.rstrip("\n").split("\t")
         # expecting first column like 'dataset.platform.pcl'
         parts = cols[0].split(".")
-        if len(parts) < 2:
-            print(f"Error line({count}): expecting at first column of form datasetName.platformName.pcl")
+        if len(parts) < 3:
+            print(f"Error line({count}): {cols[0]}: expecting at first column of form datasetName.platformName.pcl")
             break
+        if parts[-1] != 'pcl':
+            print(f'Skipping non-pcl file {cols[0]}')
         if len(cols) == 1:
             # next column is 'dataset.platform'
             cols.append(f'{parts[0]}.{parts[1]}')

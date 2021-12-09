@@ -70,7 +70,7 @@ if __name__ == "__main__":
         perSpeciesDsetList(data, args.outdir)
 
     if args.make_dset_map:
-        dsetPlatformMap(data, args.outdir, args.species)
+        dsetPlatformMap(data, args.outdir, args.species.upper())
 
 
     

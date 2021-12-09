@@ -81,7 +81,7 @@ if __name__ == "__main__":
                     elif file_ext == '.pcl':
                         getGenesFromPcl(fullpath, gene_set)
                     else:
-                        print(f'Error: file extension not recognized {file_ext}, {fullpath}')
+                        print(f'Skipping file {fullpath}, file extension not recognized {file_ext}')
             else:
                 print(f'Error: file not found: {fullpath}')
 
