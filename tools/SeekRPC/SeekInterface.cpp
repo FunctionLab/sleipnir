@@ -36,16 +36,16 @@ SeekInterface::SeekInterface(vector<string> &configFiles,
             bool res;
             CSeekCentral &speciesSC = this->speciesSeekCentrals[speciesName];
             string pvalueDir = speciesSC.roAttr->m_vecDBSetting[0]->pvalueDir;
-            pvalueEnabled = true;
             // Try loading the pvalue metadata arrays
             res = loadPvalueArrays(pvalueDir, this->speciesPvalueData[speciesName]);
             if (res == false) {
                 // Try creating the metadata from the raw random score outputs
                 res = initializePvalue(speciesSC, -1, this->speciesPvalueData[speciesName]);
                 if (res == false) {
-                    // Disable pvalue queries
-                    cout << "WARNING: PValue queries disabled, unable to initialize" << endl;
-                    pvalueEnabled = false;
+                    // Disable pvalue queries for this species
+                    cerr << "WARNING: PValue queries disabled for (" << speciesName;
+                    cerr << "): unable to initialize data structures" << endl;
+                    this->speciesPvalueData.erase(speciesName);
                 }
             }
         } catch(exception &err) {
@@ -105,12 +105,13 @@ void SeekInterface::pvalueGenes(const PValueGeneArgs& query, PValueResult& resul
     // TaskInfoPtrS task = make_shared<TaskInfo>();
     // task->queryType = QueryType::Pvalue;
     // task->pvalueGeneQuery = query;
-    if (this->pvalueEnabled == true) {
+    if (this->speciesPvalueData.count(query.species) > 0) {
         pvalueGenesCommon(query, result);
     } else {
         result.success = false;
         result.status = QueryStatus::Error;
-        result.statusMsg = "Pvalue server not initialized properly, check pvalue directory";
+        result.statusMsg = "Pvalue data not initialized properly for species (" + 
+            query.species + "), check pvalue directory";
         result.__isset.status = true;
         result.__isset.statusMsg = true;
     }

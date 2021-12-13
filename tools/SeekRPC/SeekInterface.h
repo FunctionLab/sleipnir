@@ -81,7 +81,6 @@ class SeekInterface {
     double maxTaskTimeSec;
     thread _cleanerThread;
     atomic_int64_t next_task_id = 1;  // first task_id
-    bool pvalueEnabled = false;
  };
 
 #endif  // SEEKINTERFACE_H

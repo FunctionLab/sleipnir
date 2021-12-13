@@ -358,6 +358,7 @@ bool loadPvalueArrays(string dirname, PValueData &pvalueData) {
     rankFile /= "randomRankFile.bin";
     if (!filesystem::exists(scoreFile) || !filesystem::exists(rankFile)) {
         cerr << "WARNING: PValue parameter files not found: " << scoreFile << ", " << rankFile << endl;
+        cerr << "Will try building Pvalue parameter files from the random queries" << endl;
         return false;
     }
     read2DVector(pvalueData.randomSc, scoreFile);
