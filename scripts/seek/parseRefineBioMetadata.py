@@ -28,12 +28,33 @@ def perSpeciesDsetList(data, outdir):
             fp.write("\n")
 
 
+def getPlatformFromSamples(dsetName, item):
+    samples = item.get("samples")
+    if samples is not None and len(samples) > 0:
+        platformList = []
+        for key, val in samples:
+            plat = val.get('platform_name')
+            if plat is not None:
+                platformList.push(plat)
+        numPlatforms = len(set(platformList)) # consolidate identical items
+        if numPlatforms == 1:
+            return platformList[0]
+        elif numPlatforms > 1:
+            print(f'Multiple platform names in samples for dataset {dsetName}')
+            # fall through and return None
+        elif numPlatforms == 0:
+            print(f'No platform names in samples for dataset {dsetName}')
+            # fall through and return None
+    return None
+
+
 def dsetPlatformMap(data, outdir, matchSpecies=None):
     with open(os.path.join(outdir, 'dset_map.txt'), 'w') as fp:
         for key, val in data.items():
             if matchSpecies and matchSpecies not in val['organism_names']:
                 continue
             platformIdList = val.get("platform_ids")
+            platformId = None
             if platformIdList is not None and len(platformIdList) > 0:
                 if len(platformIdList) > 1:
                     print(f'More than one entry in platformIdList: {key}')
@@ -42,9 +63,19 @@ def dsetPlatformMap(data, outdir, matchSpecies=None):
             else:
                 # fall back to getting from the platform name
                 platformNames = val.get("platform_names")
-                platformId = getE_Platform(platformNames[0])
-                if platformId == 'Missing':
+                if platformNames is not None and len(platformNames) > 0:
+                    numPlatforms = len(set(platformNames)) # consolidate identical items
+                    if numPlatforms == 1:
+                        platformId = getE_Platform(platformNames[0])
+                    else:
+                        assert numPlatforms > 1
+                        print(f'Multiple platform names for dataset {key}')
+                else:
+                    # fall back to looking at the samples
+                    platformId = getPlatformFromSamples(key, val)
+                if platformId is None or platformId == 'Missing':
                     print(f'No platform_id for dataset {key}')
+                    continue
             line = f"{key}\t{key}.{platformId}.pcl\t{key}.{platformId}\t{platformId}"
             fp.write(line + os.linesep)
 

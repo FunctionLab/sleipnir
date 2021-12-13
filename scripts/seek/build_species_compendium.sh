@@ -21,7 +21,7 @@ fi
 
 # 1. mkdir or cd to species dir
 cd ${SHORT_NAME}
-
+cp ../quant2 .
 
 # 2. Get the gene info
 wget ${NCBI_GENE_INFO} -O ${SPECIES_NAME}.gene_info.gz
@@ -35,6 +35,7 @@ grep -e protein-coding -e rRNA gene_types_map.txt | cut -f 1 > coding_gene_list.
 
 
 # 3. Parse refine_bio info and make the dsetPlatMap file
+# Note: first command below outputs file dset_map.txt
 python ${SCRIPTS_DIR}/parseJsonData.py  \
     -f ../refine_bio_nonhuman_meta.json \
     -s ${SPECIES_NAME} \
@@ -44,7 +45,7 @@ cut -f 3,4 dset_map.txt > dsetPlatMap.txt
 
 # 4. Copy the PCL files and rename them to includ platform in file name
 mkdir pcl
-python ${SCRIPTS_DIR}/copyDatasetPcl.py \
+python ${SCRIPTS_DIR}/copyDatasetPcls.py \
     -m dsetPlatMap.txt -i ${NEW_PCL_DATA}/${SPECIES_NAME}/ -o pcl/
 # 4.1 Copy the datasets and revised dsetPlatMap from pcl dir to species dir
 cp pcl/datasets.txt .
@@ -64,4 +65,4 @@ awk 'BEGIN { FS = "[ \t]+" }; FNR==NR {a[$1]=toupper($0); next}; $2 in a {print 
 
 # 7. Build the species compendium
 python ${SCRIPTS_DIR}/seekCreateDB.py --all --dab-use-gene-set \
-    -b ${SEEK_BIN} -i ./ -o ./ -p ./pcl -m 30
+    -b ${SEEK_BIN} -i ./ -o ./ -p ./pcl -m 30 | tee out.txt
