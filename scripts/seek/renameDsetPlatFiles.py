@@ -26,14 +26,18 @@ if __name__ == "__main__":
             sys.exit(-1)
         cmdType = 'mv'
 
-    # Get dataset list
-    datasets = utils.readDatasetList(args.dsetMap)
-    # make map from dataset name to platform
-    dsetPlatMap = {}
-    for (pclFile, dsetPlat, platform) in datasets:
-        dset = pclFile.split('.')[0]
-        dsetPlatMap[dset] = platform
-    # dsetSet = set([dset[0].split('.')[0] for dset in dsetList])
+    # Get the dataset platform map
+    dsetPlatMap = utils.readPlatMap(args.dsetMap)
+
+    # # Get dataset list
+    # datasets = utils.readDatasetList(args.dsetMap)
+    # # make map from dataset name to platform
+    # dsetPlatMap = {}
+    # for (pclFile, dsetPlat, platform) in datasets:
+    #     dset = pclFile.split('.')[0]
+    #     dsetPlatMap[dset] = platform
+    # # dsetSet = set([dset[0].split('.')[0] for dset in dsetList])
+
     dsetSet = set(dsetPlatMap.keys())
 
     # Get list of pcl files in input directory
@@ -67,15 +71,22 @@ if __name__ == "__main__":
             fp.write("\n".join(missingPclFiles))
 
     datasetList = []
+    mapList = []
     # copy or move the pcl files to the output directory
     for dset in dsetNames:
         platform = dsetPlatMap[dset]
         inFile = os.path.join(args.inDir, dset + '.pcl')
         outFile = os.path.join(args.outDir, f'{dset}.{platform}.pcl')
         datasetList.append(f'{dset}.{platform}.pcl')
+        mapList.append(f'{dset}.{platform}\t{platform}')
         cmd = f'{cmdType} {inFile} {outFile}'
         os.system(cmd)
 
     # write out the dataset list
     with open(os.path.join(args.outDir, 'datasets.txt'), 'w') as fp:
-        fp.write("\n".join(datasetList)
+        fp.write("\n".join(datasetList))
+
+    # write out revised dset_platform_map
+    platMapFilename = os.path.basename(args.dsetMap)
+    with open(os.path.join(args.outDir, platMapFilename), 'w') as fp:
+        fp.write("\n".join(mapList))
