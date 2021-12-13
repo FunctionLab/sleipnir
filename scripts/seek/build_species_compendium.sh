@@ -36,7 +36,7 @@ grep -e protein-coding -e rRNA gene_types_map.txt | cut -f 1 > coding_gene_list.
 
 # 3. Parse refine_bio info and make the dsetPlatMap file
 # Note: first command below outputs file dset_map.txt
-python ${SCRIPTS_DIR}/parseJsonData.py  \
+python ${SCRIPTS_DIR}/parseRefineBioMetadata.py  \
     -f ../refine_bio_nonhuman_meta.json \
     -s ${SPECIES_NAME} \
     --make-dset-map -o .

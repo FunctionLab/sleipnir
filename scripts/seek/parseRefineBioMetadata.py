@@ -31,19 +31,27 @@ def perSpeciesDsetList(data, outdir):
 def getPlatformFromSamples(dsetName, item):
     samples = item.get("samples")
     if samples is not None and len(samples) > 0:
-        platformList = []
-        for key, val in samples:
-            plat = val.get('platform_name')
-            if plat is not None:
-                platformList.push(plat)
-        numPlatforms = len(set(platformList)) # consolidate identical items
-        if numPlatforms == 1:
-            return platformList[0]
-        elif numPlatforms > 1:
-            print(f'Multiple platform names in samples for dataset {dsetName}')
+        platformNameList = []
+        platformIdList = []
+        for key, val in samples.items():
+            platName = val.get('platform_name')
+            platId = val.get('platform_id')
+            if platName is not None:
+                platformNameList.append(platName)
+            if platId is not None:
+                platformIdList.append(platId)
+        numPlatformNames = len(set(platformNameList)) # consolidate identical items
+        numPlatformIds = len(set(platformIdList)) # consolidate identical items
+        if numPlatformIds == 1:
+            return platformIdList[0]
+        if numPlatformNames == 1:
+            return getE_Platform(platformNameList[0])
+
+        if numPlatformNames > 1 or numPlatformIds > 1:
+            print(f'Multiple platform names or Ids in samples for dataset {dsetName}')
             # fall through and return None
-        elif numPlatforms == 0:
-            print(f'No platform names in samples for dataset {dsetName}')
+        elif numPlatformNames == 0 or numPlatformIds == 0:
+            print(f'No platform names or Ids in samples for dataset {dsetName}')
             # fall through and return None
     return None
 
