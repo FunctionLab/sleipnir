@@ -5,7 +5,14 @@ import argparse
 import seekUtils as utils
 
 """
-Program to rename experiment.pcl to experiment.platform.pcl
+Program to copy pcl files for datasets which appear in the dataset_platform_map
+from a source diretory into an output pcl directory and name them in the
+format experiment.platform.pcl.
+Note:
+1. Pcl files in the source directory that aren't in the dset_platform_map will
+be copied into the excludedPcls subdirectory.
+2. Datasets in the dset_platform_map with no corresponding pcl file in the source
+directory will be listed in the missingPclFiles.txt file
 """
 
 if __name__ == "__main__":
@@ -28,23 +35,13 @@ if __name__ == "__main__":
 
     # Get the dataset platform map
     dsetPlatMap = utils.readPlatMap(args.dsetMap)
-
-    # # Get dataset list
-    # datasets = utils.readDatasetList(args.dsetMap)
-    # # make map from dataset name to platform
-    # dsetPlatMap = {}
-    # for (pclFile, dsetPlat, platform) in datasets:
-    #     dset = pclFile.split('.')[0]
-    #     dsetPlatMap[dset] = platform
-    # # dsetSet = set([dset[0].split('.')[0] for dset in dsetList])
-
     dsetSet = set(dsetPlatMap.keys())
 
     # Get list of pcl files in input directory
     pclList = glob.glob1(args.inDir, '*.pcl')
     pclSet = set([pclFile.split('.')[0] for pclFile in pclList])
 
-    # Intersection of these sets
+    # Intersection of sets from pcl files and dataset list
     dsetNames = pclSet.intersection(dsetSet)
 
     # pcl files not found in dsetSet list
