@@ -65,4 +65,4 @@ awk 'BEGIN { FS = "[ \t]+" }; FNR==NR {a[$1]=toupper($0); next}; $2 in a {print 
 
 # 7. Build the species compendium
 python ${SCRIPTS_DIR}/seekCreateDB.py --all --dab-use-gene-set \
-    -b ${SEEK_BIN} -i ./ -o ./ -p ./pcl -m 30 | tee out.txt
+    -b ${SEEK_BIN} -i ./ -o ./ -p ./pcl -m 30 |& tee out.txt

@@ -122,7 +122,6 @@ def getE_Platform(platformName):
     platform = chip_plat_map.get(chip)
     if platform is None:
         print(f'No platformId map for \'{chip}\'')
-        platform = 'Missing'
     return platform
 
 

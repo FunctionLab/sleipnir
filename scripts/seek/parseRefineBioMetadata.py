@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import argparse
 from mapDsetToPlatform import getE_Platform
@@ -43,16 +44,19 @@ def getPlatformFromSamples(dsetName, item):
         numPlatformNames = len(set(platformNameList)) # consolidate identical items
         numPlatformIds = len(set(platformIdList)) # consolidate identical items
         if numPlatformIds == 1:
-            return platformIdList[0]
+            # check there are no spaces in the platformId
+            if bool(re.search(r"\s", platformIdList[0])) is False:
+                return platformIdList[0]
         if numPlatformNames == 1:
             return getE_Platform(platformNameList[0])
-
         if numPlatformNames > 1 or numPlatformIds > 1:
-            print(f'Multiple platform names or Ids in samples for dataset {dsetName}')
+            # print(f'Multiple platform names or Ids in samples for dataset {dsetName}')
             # fall through and return None
+            pass
         elif numPlatformNames == 0 or numPlatformIds == 0:
-            print(f'No platform names or Ids in samples for dataset {dsetName}')
+            # print(f'No platform names or Ids in samples for dataset {dsetName}')
             # fall through and return None
+            pass
     return None
 
 
@@ -61,15 +65,20 @@ def dsetPlatformMap(data, outdir, matchSpecies=None):
         for key, val in data.items():
             if matchSpecies and matchSpecies not in val['organism_names']:
                 continue
-            platformIdList = val.get("platform_ids")
             platformId = None
-            if platformIdList is not None and len(platformIdList) > 0:
-                if len(platformIdList) > 1:
-                    print(f'More than one entry in platformIdList: {key}')
-                    continue
+            # First try the platform_id list
+            platformIdList = val.get("platform_ids")
+            if platformIdList is not None and len(platformIdList) == 1:
                 platformId = platformIdList[0]
-            else:
-                # fall back to getting from the platform name
+                # check if platformId has spaces in it
+                if bool(re.search(r"\s", platformId)):
+                    # not a valid platformId, it has spaces in the name
+                    platformId = None
+            if platformId is None:
+                # Next try the platform ids included with the samples
+                platformId = getPlatformFromSamples(key, val)
+            if platformId is None:
+                # Finally try the platform_names list
                 platformNames = val.get("platform_names")
                 if platformNames is not None and len(platformNames) > 0:
                     numPlatforms = len(set(platformNames)) # consolidate identical items
@@ -77,13 +86,10 @@ def dsetPlatformMap(data, outdir, matchSpecies=None):
                         platformId = getE_Platform(platformNames[0])
                     else:
                         assert numPlatforms > 1
-                        print(f'Multiple platform names for dataset {key}')
-                else:
-                    # fall back to looking at the samples
-                    platformId = getPlatformFromSamples(key, val)
-                if platformId is None or platformId == 'Missing':
-                    print(f'No platform_id for dataset {key}')
-                    continue
+                        # print(f'Multiple platform names for dataset {key}')
+            if platformId is None or platformId == 'Missing':
+                print(f'No or non-unique platform_id for dataset {key}')
+                continue
             line = f"{key}\t{key}.{platformId}.pcl\t{key}.{platformId}\t{platformId}"
             fp.write(line + os.linesep)
 
