@@ -134,6 +134,15 @@ private:
     bool &_flag;
 };
 
+// Another BasicLockable class to keep track of a count of threads in a region
+class CounterFlag {
+public:
+    CounterFlag(atomic<int> &counter) : _counter(counter) {}
+    void lock() { this->_counter++; }
+    void unlock() { this->_counter--; }
+private:
+    atomic<int> &_counter;
+};
 
 template <typename T>
 class ThreadSafeQueue {
@@ -189,9 +198,9 @@ public:
         }
     }
     bool get(const K key, V &value) {
-        // Take shared lock. It is automatically released
+        // Take unique lock. It is automatically released
         //  on scope exit
-        shared_lock<shared_mutex> slock(this->cacheMutex);
+        unique_lock<shared_mutex> ulock(this->cacheMutex);
         auto pos = keyValuesMap.find(key);
         if (pos == keyValuesMap.end()) {
             return false;

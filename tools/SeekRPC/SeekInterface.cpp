@@ -239,6 +239,7 @@ void SeekInterface::seekQueryCommon(const SeekQueryArgs &query, SeekResult &resu
     }
 
     // Create the output directory if needed
+    // TODO - check if directory exists first
     filesystem::create_directory(query.outputDir);
 
     vector<string> queryGenes(query.genes);

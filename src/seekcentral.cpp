@@ -1901,13 +1901,40 @@ namespace Sleipnir {
     }
 
     bool CSeekCentral::Destruct() {
-        utype j;
-        //for(j=0; j<m_iDatasets; j++) m_vc[j]->DeleteQueryBlock();
-        for (j = 0; j < m_iDatasets; j++) {
-            if (m_vc[j] == NULL) continue;
-            delete m_vc[j];
-            m_vc[j] = NULL;
+        int i;
+        for (i = 0; i < m_vc.size(); i++) {
+            if (m_vc[i] == NULL) continue;
+            delete m_vc[i];
+            m_vc[i] = NULL;
         }
+        m_vc.clear();
+
+        for (i = 0; i < m_searchdsetMap.size(); i++) {
+            if (m_searchdsetMap[i] == NULL) continue;
+            delete m_searchdsetMap[i];
+            m_searchdsetMap[i] = NULL;
+        }
+        m_searchdsetMap.clear();
+
+        for (i = 0; i < m_vecDB.size(); i++) {
+            delete m_vecDB[i];
+            m_vecDB[i] = NULL;
+        }
+        m_vecDB.clear();
+
+        if (m_rank_normal_threads != NULL) {
+            for (i = 0; i < m_numThreads; i++)
+                m_rank_normal_threads[i].clear();
+            delete[] m_rank_normal_threads;
+            m_rank_normal_threads = NULL;
+        }
+        if (m_rank_threads != NULL) {
+            for (i = 0; i < m_numThreads; i++)
+                m_rank_threads[i].clear();
+            delete[] m_rank_threads;
+            m_rank_threads = NULL;
+        }
+
         return true;
     }
 
