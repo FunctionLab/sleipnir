@@ -38,21 +38,12 @@
 namespace Sleipnir {
 
     CSeekCentral::CSeekCentral() {
-        // m_vecstrGenes.clear();
-        // m_vecstrDatasets.clear();
         m_vecstrSearchDatasets.clear();
-        // m_mapstrstrDatasetPlatform.clear();
         m_vc.clear();
         m_quant.clear();
         m_vecstrAllQuery.clear();
-        // m_seekPlatforms.clear();
-        // m_vecstrDP.clear();
-        // m_mapstrintDatasetDB.clear();
-        // m_mapstrintDataset.clear();
-        // m_mapstrintGene.clear();
         m_searchdsetMap.clear();
         m_vecDB.clear();
-        // m_vecDBDataset.clear();
         m_rData = NULL;
         m_maxNumDB = 50;
 
@@ -89,7 +80,6 @@ namespace Sleipnir {
         m_bNegativeCor = false;
         m_DEFAULT_NA = -320;
 
-        // m_vecDBSetting.clear();
         m_useNibble = false;
 
         DEBUG = false;
@@ -101,77 +91,20 @@ namespace Sleipnir {
 
         m_bCheckDsetSize = false;
         m_iNumSampleRequired = 10; //if checking for dataset size
-        // m_mapstrintDatasetSize.clear();
     }
 
     CSeekCentral::~CSeekCentral() {
-        // m_vecstrGenes.clear();
-        // m_vecstrDatasets.clear();
+        // call common destructor
+        this->Destruct();
+
         m_vecstrSearchDatasets.clear();
-        // m_mapstrstrDatasetPlatform.clear();
-        // m_vecstrDP.clear();
-        // m_mapstrintDatasetDB.clear();
-        // m_mapstrintDataset.clear();
-        // m_mapstrintGene.clear();
-
-        utype i, j;
-
-        for (i = 0; i < m_vc.size(); i++) {
-            if (m_vc[i] == NULL) continue;
-            delete m_vc[i];
-            m_vc[i] = NULL;
-        }
-        m_vc.clear();
 
         m_quant.clear();
-
-        for (i = 0; i < m_searchdsetMap.size(); i++) {
-            if (m_searchdsetMap[i] == NULL) continue;
-            delete m_searchdsetMap[i];
-            m_searchdsetMap[i] = NULL;
-        }
-        m_searchdsetMap.clear();
 
         //m_rData, m_master_rank_threads,
         //m_sum_weight_threads, m_counts_threads
         //m_rank_normal_threads, and m_rank_threads
         //should be already freed
-        if (m_master_rank_threads != NULL) {
-            CSeekTools::Free2DArray(m_master_rank_threads);
-            m_master_rank_threads = NULL;
-        }
-        if (m_sum_weight_threads != NULL) {
-            CSeekTools::Free2DArray(m_sum_weight_threads);
-            m_sum_weight_threads = NULL;
-        }
-        if (m_sum_sq_weight_threads != NULL) {
-            CSeekTools::Free2DArray(m_sum_sq_weight_threads);
-            m_sum_sq_weight_threads = NULL;
-        }
-        if (m_counts_threads != NULL) {
-            CSeekTools::Free2DArray(m_counts_threads);
-            m_counts_threads = NULL;
-        }
-        if (m_rank_normal_threads != NULL) {
-            for (j = 0; j < m_numThreads; j++)
-                m_rank_normal_threads[j].clear();
-            delete[] m_rank_normal_threads;
-            m_rank_normal_threads = NULL;
-        }
-        if (m_rank_threads != NULL) {
-            for (j = 0; j < m_numThreads; j++)
-                m_rank_threads[j].clear();
-            delete[] m_rank_threads;
-            m_rank_threads = NULL;
-        }
-
-        //m_rank_d is for Order Statistics aggregation only! Should be null already.
-        /*
-        if(m_rank_d!=NULL){
-            CSeekTools::Free2DArray(m_rank_d);
-            m_rank_d = NULL;
-        }*/
-        //note that m_rData already deleted after search
 
         m_master_rank.clear();
         m_sum_weight.clear();
@@ -179,20 +112,9 @@ namespace Sleipnir {
         m_counts.clear();
         m_weight.clear();
         m_final.clear();
-        // m_vecDBDataset.clear();
 
         m_vecstrAllQuery.clear();
         m_Query.clear();
-
-        // m_seekPlatforms.clear();
-
-        if (m_vecDB.size() != 0) {
-            for (i = 0; i < m_vecDB.size(); i++) {
-                delete m_vecDB[i];
-                m_vecDB[i] = NULL;
-            }
-            m_vecDB.clear();
-        }
 
         m_iDatasets = 0;
         m_iGenes = 0;
@@ -201,20 +123,11 @@ namespace Sleipnir {
         m_output_dir = "";
         DEBUG = false;
 
-        // for (i = 0; i < m_vecDBSetting.size(); i++) {
-        //     if (m_vecDBSetting[i] != NULL) {
-        //         delete m_vecDBSetting[i];
-        //         m_vecDBSetting[i] = NULL;
-        //     }
-        // }
-
-        // m_vecDBSetting.clear();
         m_useNibble = false;
         m_bNegativeCor = false;
 
         m_bCheckDsetSize = false;
         m_iNumSampleRequired = 0;
-        // m_mapstrintDatasetSize.clear();
     }
 
     bool CSeekCentral::CalculateRestart() {
@@ -317,31 +230,6 @@ namespace Sleipnir {
         m_iNumRandom = 1;
         m_randRandom = NULL;
 
-        // m_vecstrGenes.resize(src->m_vecstrGenes.size());
-        // copy(src->m_vecstrGenes.begin(), src->m_vecstrGenes.end(), m_vecstrGenes.begin());
-
-        // m_vecstrDatasets.resize(src->m_vecstrDatasets.size());
-        // copy(src->m_vecstrDatasets.begin(), src->m_vecstrDatasets.end(), m_vecstrDatasets.begin());
-
-        // m_mapstrintDataset.insert(src->m_mapstrintDataset.begin(),
-        //                           src->m_mapstrintDataset.end());
-
-        // m_mapstrintGene.insert(src->m_mapstrintGene.begin(), src->m_mapstrintGene.end());
-
-        // m_mapstrstrDatasetPlatform.insert(src->m_mapstrstrDatasetPlatform.begin(),
-        //                                   src->m_mapstrstrDatasetPlatform.end());
-
-        // m_mapstrintDatasetDB.insert(src->m_mapstrintDatasetDB.begin(),
-        //                                   src->m_mapstrintDatasetDB.end());
-
-        // m_seekPlatforms.copy(src->m_seekPlatforms);
-    
-        // m_vecstrDP.resize(src->m_vecstrDP.size());
-        // copy(src->m_vecstrDP.begin(), src->m_vecstrDP.end(), m_vecstrDP.begin());
-
-        // m_mapstrintDatasetSize.insert(src->m_mapstrintDatasetSize.begin(),
-        //                               src->m_mapstrintDatasetSize.end());
-
         m_quant = src->m_quant;
         utype i, j;
         omp_set_num_threads(m_numThreads);
@@ -405,17 +293,6 @@ namespace Sleipnir {
                 }
             }
         }
-
-        // m_vecDBDataset.resize(src->m_vecDB.size());
-        // for (i = 0; i < src->m_vecDB.size(); i++) {
-        //     m_vecDBDataset[i].resize(src->m_vecDBDataset[i].size());
-        //     copy(src->m_vecDBDataset[i].begin(), src->m_vecDBDataset[i].end(),
-        //          m_vecDBDataset[i].begin());
-        // }
-
-        // m_vecDBSetting.resize(src->m_vecDBSetting.size());
-        // for (i = 0; i < m_vecDBSetting.size(); i++)
-        //     m_vecDBSetting[i] = new CSeekDBSetting(src->m_vecDBSetting[i]);
 
         m_useNibble = src->m_useNibble;
 
@@ -1917,11 +1794,28 @@ namespace Sleipnir {
         m_searchdsetMap.clear();
 
         for (i = 0; i < m_vecDB.size(); i++) {
+            if (m_vecDB[i] == NULL) continue;
             delete m_vecDB[i];
             m_vecDB[i] = NULL;
         }
         m_vecDB.clear();
 
+        if (m_master_rank_threads != NULL) {
+            CSeekTools::Free2DArray(m_master_rank_threads);
+            m_master_rank_threads = NULL;
+        }
+        if (m_sum_weight_threads != NULL) {
+            CSeekTools::Free2DArray(m_sum_weight_threads);
+            m_sum_weight_threads = NULL;
+        }
+        if (m_sum_sq_weight_threads != NULL) {
+            CSeekTools::Free2DArray(m_sum_sq_weight_threads);
+            m_sum_sq_weight_threads = NULL;
+        }
+        if (m_counts_threads != NULL) {
+            CSeekTools::Free2DArray(m_counts_threads);
+            m_counts_threads = NULL;
+        }
         if (m_rank_normal_threads != NULL) {
             for (i = 0; i < m_numThreads; i++)
                 m_rank_normal_threads[i].clear();
@@ -1933,6 +1827,13 @@ namespace Sleipnir {
                 m_rank_threads[i].clear();
             delete[] m_rank_threads;
             m_rank_threads = NULL;
+        }
+
+        //m_rank_d is for Order Statistics aggregation only! Should be null already.
+        //note that m_rData already deleted after search
+        if (m_rank_d != NULL){
+            CSeekTools::Free2DArray(m_rank_d);
+            m_rank_d = NULL;
         }
 
         return true;

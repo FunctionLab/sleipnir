@@ -479,21 +479,8 @@ namespace Sleipnir {
         bool Display(CSeekQuery &, vector <AResultFloat> &);
 
     public:
-        /* Gene, Dataset, and Platform Mapping*/
-        // vector <string> m_vecstrGenes;
-        // vector <string> m_vecstrDatasets;
-        // vector <string> m_vecstrDP;
-        // map <string, string> m_mapstrstrDatasetPlatform;
-        // map <string, utype> m_mapstrintDataset; // map from dataset name to index in dset file
-        // map <string, utype> m_mapstrintGene;  // map from geneName to index in gene_map file
-        // map<string, int> m_mapstrintDatasetDB; // map from dataset name to DB index containing that dataset
-        // map <string, string> m_geneEntrezToSymbolMap;
-        // map <string, string> m_geneSymbolToEntrezMap;
         vector <vector<string>> m_vecstrSearchDatasets;
         vector<CSeekIntIntMap *> m_searchdsetMap;
-        // vector<CSeekDBSetting *> m_vecDBSetting; //DBSetting
-        /* Platform */
-        // SeekPlatforms m_seekPlatforms;
         /* Correlation discretization */
         vector<float> m_quant;
         bool m_hasPclInDatasetName = false;
@@ -558,7 +545,6 @@ namespace Sleipnir {
 
         //CDatabase reference
         vector<CDatabase *> m_vecDB;
-        // vector <vector<string>> m_vecDBDataset; //A list of dsets in each CDatabase
 
         size_t m_iDatasets;
         size_t m_iGenes;
@@ -596,7 +582,6 @@ namespace Sleipnir {
         /* for specifying dataset size */
         bool m_bCheckDsetSize;
         int m_iNumSampleRequired;
-        // map <string, utype> m_mapstrintDatasetSize;
     };
 
     // Read-Only Attributes which query threads use but don't change
