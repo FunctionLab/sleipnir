@@ -47,7 +47,7 @@ cut -f 3,4 dset_map.txt > dsetPlatMap.txt
 mkdir pcl
 python ${SCRIPTS_DIR}/copyDatasetPcls.py \
     -m dsetPlatMap.txt -i ${NEW_PCL_DATA}/${SPECIES_NAME}/ -o pcl/
-# 4.1 Copy the datasets and revised dsetPlatMap from pcl dir to species dir
+# 4.1 Copy the dataset list and revised dsetPlatMap file from pcl dir to species dir
 cp pcl/datasets.txt .
 cp pcl/dsetPlatMap.txt .
 
@@ -59,6 +59,8 @@ python ${SCRIPTS_DIR}/geneSetFromPcls.py -p ${SEEK_BIN}/PCL2Bin \
 
 # 6. Get the corresponding symbol names for the genes, make the symbol map file
 cut -f 2,3 ${SPECIES_NAME}.gene_info > gene_symbols_all.txt
+# Note FNR==NR is only true while processing the first file. And the last part
+# of the command (after next) is only done while processing the second file.
 awk 'BEGIN { FS = "[ \t]+" }; FNR==NR {a[$1]=toupper($0); next}; $2 in a {print a[$2]}' \
     gene_symbols_all.txt gene_map.txt > gene_symbols.txt
 

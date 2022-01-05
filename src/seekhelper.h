@@ -3,6 +3,7 @@
 
 #include <list>
 #include <mutex>
+#include <atomic>
 #include <queue>
 #include <shared_mutex>
 #include <unordered_map>
