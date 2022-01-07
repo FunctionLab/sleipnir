@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
+
+# This script starts multiple clients running randomSeekRpcClient.py
+# The parameters to this script get passed through to randomSeekRpcClient.py
+#   except for -c which is the number of randomSeekRpcClient clients to run.
 # EXAMPLE USAGE:
-# bash tests/runRandomClients.sh -c 1 -s sampleBC -p 9123 -t .005\
+# bash tests/runRandomClients.sh -c 10 -s sampleBC -p 9123 -t .1 \
 #   -g tests/test_outputs/sampleBC/bc_gene_map.txt \
 #   -d tests/test_outputs/sampleBC/datasets.txt
+# In this example it will run 10 (-c) randomSeekRpcClient clients, with each
+#   client running for .1 hours (-t), and will connect to the server running on
+#   port 9123, and make queries to species sampleBC.
 
 # get commandline args - process the -h help arg
 args=("${@}")
