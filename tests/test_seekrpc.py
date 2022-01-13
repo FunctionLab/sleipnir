@@ -54,13 +54,17 @@ class TestSeekRPC:
 
         cmd = f"sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}"
         subprocess.run(cmd, shell=True)
+        print("===================")
+        with open(seekrpcConfigFile, 'r') as fp:
+            print(fp.read())
         # Run the server
         cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile} -p {testPort}'
-        cls.SeekServerProc = subprocess.Popen(cmd, shell=True)
         print(f'### {cmd}')
+        cls.SeekServerProc = subprocess.Popen(cmd, shell=True)
         # sleep for 5 secs to accomodate initial run of a new db which builds
         #   pvalue bins from the random queries
         time.sleep(5)
+        print(f'### Sleep completed, server started')
 
     def teardown_class(cls):
         if cls.SeekServerProc:
