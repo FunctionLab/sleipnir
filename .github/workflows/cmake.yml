@@ -87,4 +87,4 @@ jobs:
       # Execute python based tests
       # python -m pytest -s -v tests/test_new2.py
       run: |
-        # python -m pytest -s -v tests/test_seekrpc.py
+        python -m pytest -s -v tests/test_seekrpc.py
