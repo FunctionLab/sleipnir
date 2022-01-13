@@ -58,10 +58,10 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/Debug --config ${{env.BUILD_TYPE}}
 
-    # - name: C++ Tests
-    #   working-directory: ${{github.workspace}}/Debug
-    #   # Execute c++ based tests
-    #   run: tests/unit_tests
+    - name: C++ Tests
+      working-directory: ${{github.workspace}}/Debug
+      # Execute c++ based tests
+      run: tests/unit_tests
 
     - name: Cache the sampleBC SEEK DB built and used by the tests
       uses: actions/cache@v2
@@ -75,12 +75,12 @@ jobs:
             hashFiles('scripts/seek/seekCreateDB.py') }}-${{
             hashFiles('scripts/seek/seekUtils.py') }}
 
-    # - name: Test Seek Utils
-    #   working-directory: ${{github.workspace}}
-    #   # Execute python based tests
-    #   run: |
-    #     # $CONDA/bin/activate base
-    #     python -m pytest -s -v scripts/seek/tests/
+    - name: Test Seek Utils
+      working-directory: ${{github.workspace}}
+      # Execute python based tests
+      run: |
+        # $CONDA/bin/activate base
+        python -m pytest -s -v scripts/seek/tests/
 
     - name: Test Seek Tools
       working-directory: ${{github.workspace}}
