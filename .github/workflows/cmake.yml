@@ -85,5 +85,6 @@ jobs:
     - name: Test Seek Tools
       working-directory: ${{github.workspace}}
       # Execute python based tests
+      # python -m pytest -s -v tests/test_new2.py
       run: |
-        python -m pytest -s -v tests/test_new2.py
+        # python -m pytest -s -v tests/test_seekrpc.py
