@@ -115,3 +115,81 @@ class TestSeekRPC:
         assert len(result.datasetWeights) == 3  # because query specified 3 datasets
 
         transport.close()
+
+    def test_async_client(self):
+        # Run the query through the python rpc client
+        from thrift.transport import TTransport, TSocket
+        from thrift.protocol.TBinaryProtocol import TBinaryProtocol
+        socket = TSocket.TSocket('localhost', testPort)
+        transport = TTransport.TBufferedTransport(socket)
+        protocol = TBinaryProtocol(transport)
+        client = SeekRPC.Client(protocol)
+        transport.open()
+
+        params = SeekQueryParams(distanceMeasure=DistanceMeasure.ZScoreHubbinessCorrected,
+                            minQueryGenesFraction=0.5,
+                            minGenomeFraction=0.5,
+                            useGeneSymbols=False)
+        genes = ['55755', '64859', '348654', '79791', '7756', '8555', '835', '5347']
+        datasets = ['GSE45584.GPL6480', 'GSE24468.GPL570', 'GSE3744.GPL570']
+        queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, datasets=datasets, parameters=params)
+
+        # Do an async query using isQueryComplete to test
+        task_id = client.seekQueryAsync(queryArgs)
+        while True:
+            complete = client.isQueryComplete(task_id)
+            if complete:
+                break;
+            print("### Waiting for query to complete ...")
+            time.sleep(.1)
+        result = client.getSeekResult(task_id, block=True)
+        assert result.success is True
+        assert len(result.geneScores) > 0
+        assert len(result.datasetWeights) == 3  # because query specified 3 datasets
+
+        # Do an async query using non-blocking getSeekResult()
+        genes = ['5884', '9575', '51343', '57805', '29980', '8091', '6154', '51776']
+        queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, parameters=params)
+        task_id = client.seekQueryAsync(queryArgs)
+        while True:
+            result = client.getSeekResult(task_id, block=False)
+            if result.status is not QueryStatus.Incomplete:
+                break;
+            print("### Waiting for query to complete ...")
+            time.sleep(.1)
+        assert result.success is True
+        assert len(result.geneScores) > 0
+        assert len(result.datasetWeights) > 0
+
+        transport.close()
+
+    def test_queries(self):
+        # Run the various example tests againt the seekRPC server and verify
+        #   we get the expected results.
+        print("## Run Client ##")
+        # Test the cpp client
+        inputQueries = f'{sampleBcDir}/queries/input_queries.txt'
+        outputResults = f'{sampleBcDir}/queries/seekrpc_results.txt'
+        cmd = f'{sleipnirBin}/SeekRPCClient -p {testPort} -s sampleBC ' \
+              f'-q {inputQueries} -o {outputResults}'
+        print(f'### {cmd}')
+        clientProc = subprocess.Popen(cmd, shell=True)
+        clientProc.wait()
+        assert clientProc.returncode == 0
+        expectedResults = f'{sampleBcDir}/queries/seekminer_results.txt'
+        corrs = files_rank_correlation(expectedResults, outputResults)
+        print('Result Correlations: {}'.format(corrs))
+        correlation_errors = 0
+        for corr in corrs:
+            if corr < min_result_correlation:
+                correlation_errors += 1
+                print('ERROR: Result correlation too low')
+        assert correlation_errors == 0
+
+        # Test the python client
+        cmd = f'python {seekRpcDir}/SeekRPCClient.py -p {testPort} -s sampleBC ' \
+              f'-g 8091,6154,5810,9183'
+        print(f'### {cmd}')
+        clientProc = subprocess.Popen(cmd, shell=True)
+        clientProc.wait()
+        assert clientProc.returncode == 0
