@@ -19,7 +19,6 @@ uint32_t omp_enabled_test();
 struct SeekSettings {
     vector <CSeekDBSetting*> dbs;
     string species;
-    int32_t port = 9000;
     int32_t numThreads = 8;
     int32_t numBufferedDBs = 20;
     int32_t pclCacheSize = 100;
@@ -29,7 +28,6 @@ struct SeekSettings {
     bool outputAsText = false;
     friend ostream& operator<<(ostream& os, const SeekSettings& settings) {
         os << "Species: " << settings.species << endl;
-        os << "Port: " << settings.port << endl;
         os << "NumThreads: " << settings.numThreads << endl;
         os << "NumBufferedDBs: " << settings.numBufferedDBs << endl;
         os << "PclCacheSize: " << settings.pclCacheSize << endl;
@@ -45,7 +43,6 @@ struct SeekSettings {
 Example Toml Config Format:
 
 species = "human"
-port = 9000
 numThreads = 8
 numBufferedDBs = 20  # Max num genes per query and max num of Databaselets to store in memory
 scoreCutoff = -9999.0  # The gene-gene score cutoff to add, default: no cutoff
@@ -61,6 +58,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     SINFO_DIR     = "/path/db1/sinfo"
     GVAR_DIR      = "/path/db1/gvar"
     PCL_DIR      = "/path/db1/pcl"
+    PVAL_DIR      = "/path/db1/random"
     QUANT_FILE    = "/path/db1/quant2"
     DSET_MAP_FILE = "/path/db1/dataset.map"
     GENE_MAP_FILE = "/path/db1/gene_map.txt"
@@ -78,6 +76,7 @@ outputAsText = false  # Output results (gene list and dataset weights) as text
     QUANT_FILE    = "/path/db2/quant2"
     SINFO_DIR     = "/path/db2/sinfo"
     PCL_DIR     = "/path/db2/pcl"
+    PVAL_DIR     = "/path/db2/random"
     GVAR_DIR      = "/path/db2/gvar"
     DSET_SIZE_FILE = "/path/db2/dataset_size"
     NUMBER_OF_DB  = 1000
@@ -140,11 +139,11 @@ template <typename T>
 class ThreadSafeQueue {
 public:
     void enqueue(T element) {
-        lock_guard tlock(m_mutex);
+        lock_guard<mutex> tlock(m_mutex);
         m_queue.push(element);
     }
     T dequeue() {
-        lock_guard tlock(m_mutex);
+        lock_guard<mutex> tlock(m_mutex);
         if (m_queue.empty()) {
             throw state_error("ThreadSafeQueue: Dequeue called on an empty queue");
         }
@@ -153,11 +152,11 @@ public:
         return element;
     }
     uint32_t size() {
-        lock_guard tlock(m_mutex);
+        lock_guard<mutex> tlock(m_mutex);
         return m_queue.size();
     }
     bool empty() {
-        lock_guard tlock(m_mutex);
+        lock_guard<mutex> tlock(m_mutex);
         return (m_queue.size() == 0);
     }
 private:
@@ -174,7 +173,7 @@ public:
     void set(const K key, const V value) {
         // Take unique lock. It is automatically released
         //  on scope exit
-        unique_lock ulock(this->cacheMutex);
+        unique_lock<shared_mutex> ulock(this->cacheMutex);
         auto pos = keyValuesMap.find(key);
         if (pos == keyValuesMap.end()) {
             items.push_front(key);
@@ -192,7 +191,7 @@ public:
     bool get(const K key, V &value) {
         // Take shared lock. It is automatically released
         //  on scope exit
-        shared_lock slock(this->cacheMutex);
+        shared_lock<shared_mutex> slock(this->cacheMutex);
         auto pos = keyValuesMap.find(key);
         if (pos == keyValuesMap.end()) {
             return false;
@@ -211,5 +210,11 @@ private:
     uint32_t csize;
     shared_mutex cacheMutex;
 };
+
+template <typename T>
+void write2DVector(vector<vector<T>> &vec, string filename);
+
+template <typename T>
+void read2DVector(vector<vector<T>> &vec, string filename);
 
 #endif  // SEEKHELPER_H

@@ -281,6 +281,7 @@ namespace Sleipnir {
             const bool bNegativeCor, const bool bCheckDsetSize) {
 
         fprintf(stderr, "Request received from client\n");
+        assert(m_missingInitParams == false);
 
         m_output_dir = output_dir; //LATER, TO BE DELETED
         m_maxNumDB = src->m_maxNumDB;
@@ -802,7 +803,11 @@ namespace Sleipnir {
         }
 
         //read quant file
-        CSeekTools::ReadQuantFile(vecDBSetting[0]->quantFile, m_quant);
+        if (vecDBSetting[0]->quantFile != "NA") {
+            CSeekTools::ReadQuantFile(vecDBSetting[0]->quantFile, m_quant);
+        } else {
+            m_missingInitParams = true;
+        }
 
         m_vecstrDatasets.clear();
         m_vecstrDP.clear();
@@ -826,8 +831,8 @@ namespace Sleipnir {
         for (i = 0; i < vecDBSetting.size(); i++) {
             if (dist_measure == CSeekDataset::CORRELATION &&
                 vecDBSetting[i]->sinfoDir == "NA") {
-                fprintf(stderr, "Error: not specifying sinfo!\n");
-                return false;
+                fprintf(stderr, "WARNING: sinfo dir not specified!\n");
+                m_missingInitParams = true;
             }
 
             m_vecDB[i] = new CDatabase(useNibble);
@@ -873,13 +878,17 @@ namespace Sleipnir {
                 }
             }
 
-            // Load the new database platform statistics
-            SeekPlatforms db_platforms;
-            string platformDir = vecDBSetting[i]->platDir;
-            assert(!platformDir.empty() && platformDir != "NA");
-            db_platforms.loadPlatformDataFromFiles(platformDir);
-            // Combine the new db platform statistics with the main db stats
-            m_seekPlatforms.combineWithPlatform(db_platforms);
+            if (vecDBSetting[i]->platDir != "NA") {
+                // Load the new database platform statistics
+                SeekPlatforms db_platforms;
+                string platformDir = vecDBSetting[i]->platDir;
+                assert(!platformDir.empty() && platformDir != "NA");
+                db_platforms.loadPlatformDataFromFiles(platformDir);
+                // Combine the new db platform statistics with the main db stats
+                m_seekPlatforms.combineWithPlatform(db_platforms);
+            } else {
+                m_missingInitParams = true;
+            }
         }
 
         for (i = 0; i < m_vecstrDatasets.size(); i++) {
@@ -899,14 +908,18 @@ namespace Sleipnir {
                 if (res == false) {
                     return false;
                 }
+            } else {
+                m_missingInitParams = true;
             }
         }
 
-        CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
-                                 vecDBSetting, m_vecstrDatasets, m_mapstrstrDatasetPlatform,
-                                 m_seekPlatforms.getPlatformMap(), m_seekPlatforms.getCSeekPlatforms(),
-                                 m_vc, m_vecDBDataset, m_mapstrintDataset,
-                                 bVariance, bCorrelation);
+        if (!m_missingInitParams) {
+            CSeekTools::LoadDatabase(m_vecDB, m_iGenes, m_iDatasets,
+                                    vecDBSetting, m_vecstrDatasets, m_mapstrstrDatasetPlatform,
+                                    m_seekPlatforms.getPlatformMap(), m_seekPlatforms.getCSeekPlatforms(),
+                                    m_vc, m_vecDBDataset, m_mapstrintDataset,
+                                    bVariance, bCorrelation);
+        }
 
         return true;
     }
@@ -1328,6 +1341,7 @@ namespace Sleipnir {
         utype l; //keeps track of random repetition (for random case)
         char acBuffer[1024];
 
+        assert(m_missingInitParams == false);
         // PrintSettings();
 
         m_Query.resize(m_vecstrAllQuery.size());

@@ -78,6 +78,12 @@ class PclQueryArgs;
 
 class PclResult;
 
+class PValueGeneArgs;
+
+class PValueDatasetArgs;
+
+class PValueResult;
+
 
 class StringDoublePair : public virtual ::apache::thrift::TBase {
  public:
@@ -650,6 +656,205 @@ class PclResult : public virtual ::apache::thrift::TBase {
 void swap(PclResult &a, PclResult &b);
 
 std::ostream& operator<<(std::ostream& out, const PclResult& obj);
+
+typedef struct _PValueGeneArgs__isset {
+  _PValueGeneArgs__isset() : genes(false), geneScores(false), geneRanks(false), useRank(true) {}
+  bool genes :1;
+  bool geneScores :1;
+  bool geneRanks :1;
+  bool useRank :1;
+} _PValueGeneArgs__isset;
+
+class PValueGeneArgs : public virtual ::apache::thrift::TBase {
+ public:
+
+  PValueGeneArgs(const PValueGeneArgs&);
+  PValueGeneArgs& operator=(const PValueGeneArgs&);
+  PValueGeneArgs() : species("Unknown"), useRank(false) {
+  }
+
+  virtual ~PValueGeneArgs() noexcept;
+  std::string species;
+  std::vector<std::string>  genes;
+  std::vector<double>  geneScores;
+  std::vector<int32_t>  geneRanks;
+  bool useRank;
+
+  _PValueGeneArgs__isset __isset;
+
+  void __set_species(const std::string& val);
+
+  void __set_genes(const std::vector<std::string> & val);
+
+  void __set_geneScores(const std::vector<double> & val);
+
+  void __set_geneRanks(const std::vector<int32_t> & val);
+
+  void __set_useRank(const bool val);
+
+  bool operator == (const PValueGeneArgs & rhs) const
+  {
+    if (!(species == rhs.species))
+      return false;
+    if (__isset.genes != rhs.__isset.genes)
+      return false;
+    else if (__isset.genes && !(genes == rhs.genes))
+      return false;
+    if (__isset.geneScores != rhs.__isset.geneScores)
+      return false;
+    else if (__isset.geneScores && !(geneScores == rhs.geneScores))
+      return false;
+    if (__isset.geneRanks != rhs.__isset.geneRanks)
+      return false;
+    else if (__isset.geneRanks && !(geneRanks == rhs.geneRanks))
+      return false;
+    if (__isset.useRank != rhs.__isset.useRank)
+      return false;
+    else if (__isset.useRank && !(useRank == rhs.useRank))
+      return false;
+    return true;
+  }
+  bool operator != (const PValueGeneArgs &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const PValueGeneArgs & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(PValueGeneArgs &a, PValueGeneArgs &b);
+
+std::ostream& operator<<(std::ostream& out, const PValueGeneArgs& obj);
+
+typedef struct _PValueDatasetArgs__isset {
+  _PValueDatasetArgs__isset() : datasets(false), datasetWeights(false) {}
+  bool datasets :1;
+  bool datasetWeights :1;
+} _PValueDatasetArgs__isset;
+
+class PValueDatasetArgs : public virtual ::apache::thrift::TBase {
+ public:
+
+  PValueDatasetArgs(const PValueDatasetArgs&);
+  PValueDatasetArgs& operator=(const PValueDatasetArgs&);
+  PValueDatasetArgs() : species("Unknown") {
+  }
+
+  virtual ~PValueDatasetArgs() noexcept;
+  std::string species;
+  std::vector<std::string>  datasets;
+  std::vector<double>  datasetWeights;
+
+  _PValueDatasetArgs__isset __isset;
+
+  void __set_species(const std::string& val);
+
+  void __set_datasets(const std::vector<std::string> & val);
+
+  void __set_datasetWeights(const std::vector<double> & val);
+
+  bool operator == (const PValueDatasetArgs & rhs) const
+  {
+    if (!(species == rhs.species))
+      return false;
+    if (__isset.datasets != rhs.__isset.datasets)
+      return false;
+    else if (__isset.datasets && !(datasets == rhs.datasets))
+      return false;
+    if (__isset.datasetWeights != rhs.__isset.datasetWeights)
+      return false;
+    else if (__isset.datasetWeights && !(datasetWeights == rhs.datasetWeights))
+      return false;
+    return true;
+  }
+  bool operator != (const PValueDatasetArgs &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const PValueDatasetArgs & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(PValueDatasetArgs &a, PValueDatasetArgs &b);
+
+std::ostream& operator<<(std::ostream& out, const PValueDatasetArgs& obj);
+
+typedef struct _PValueResult__isset {
+  _PValueResult__isset() : pvalues(false), status(false), statusMsg(false) {}
+  bool pvalues :1;
+  bool status :1;
+  bool statusMsg :1;
+} _PValueResult__isset;
+
+class PValueResult : public virtual ::apache::thrift::TBase {
+ public:
+
+  PValueResult(const PValueResult&);
+  PValueResult& operator=(const PValueResult&);
+  PValueResult() : success(0), status((QueryStatus::type)0), statusMsg() {
+  }
+
+  virtual ~PValueResult() noexcept;
+  bool success;
+  std::vector<double>  pvalues;
+  /**
+   * 
+   * @see QueryStatus
+   */
+  QueryStatus::type status;
+  std::string statusMsg;
+
+  _PValueResult__isset __isset;
+
+  void __set_success(const bool val);
+
+  void __set_pvalues(const std::vector<double> & val);
+
+  void __set_status(const QueryStatus::type val);
+
+  void __set_statusMsg(const std::string& val);
+
+  bool operator == (const PValueResult & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (__isset.pvalues != rhs.__isset.pvalues)
+      return false;
+    else if (__isset.pvalues && !(pvalues == rhs.pvalues))
+      return false;
+    if (__isset.status != rhs.__isset.status)
+      return false;
+    else if (__isset.status && !(status == rhs.status))
+      return false;
+    if (__isset.statusMsg != rhs.__isset.statusMsg)
+      return false;
+    else if (__isset.statusMsg && !(statusMsg == rhs.statusMsg))
+      return false;
+    return true;
+  }
+  bool operator != (const PValueResult &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const PValueResult & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(PValueResult &a, PValueResult &b);
+
+std::ostream& operator<<(std::ostream& out, const PValueResult& obj);
 
 } // namespace
 

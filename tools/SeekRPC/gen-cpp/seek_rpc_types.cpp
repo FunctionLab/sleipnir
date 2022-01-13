@@ -1811,4 +1811,609 @@ void PclResult::printTo(std::ostream& out) const {
   out << ")";
 }
 
+
+PValueGeneArgs::~PValueGeneArgs() noexcept {
+}
+
+
+void PValueGeneArgs::__set_species(const std::string& val) {
+  this->species = val;
+}
+
+void PValueGeneArgs::__set_genes(const std::vector<std::string> & val) {
+  this->genes = val;
+__isset.genes = true;
+}
+
+void PValueGeneArgs::__set_geneScores(const std::vector<double> & val) {
+  this->geneScores = val;
+__isset.geneScores = true;
+}
+
+void PValueGeneArgs::__set_geneRanks(const std::vector<int32_t> & val) {
+  this->geneRanks = val;
+__isset.geneRanks = true;
+}
+
+void PValueGeneArgs::__set_useRank(const bool val) {
+  this->useRank = val;
+__isset.useRank = true;
+}
+std::ostream& operator<<(std::ostream& out, const PValueGeneArgs& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+
+uint32_t PValueGeneArgs::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  ::apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_species = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->species);
+          isset_species = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->genes.clear();
+            uint32_t _size96;
+            ::apache::thrift::protocol::TType _etype99;
+            xfer += iprot->readListBegin(_etype99, _size96);
+            this->genes.resize(_size96);
+            uint32_t _i100;
+            for (_i100 = 0; _i100 < _size96; ++_i100)
+            {
+              xfer += iprot->readString(this->genes[_i100]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.genes = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->geneScores.clear();
+            uint32_t _size101;
+            ::apache::thrift::protocol::TType _etype104;
+            xfer += iprot->readListBegin(_etype104, _size101);
+            this->geneScores.resize(_size101);
+            uint32_t _i105;
+            for (_i105 = 0; _i105 < _size101; ++_i105)
+            {
+              xfer += iprot->readDouble(this->geneScores[_i105]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.geneScores = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->geneRanks.clear();
+            uint32_t _size106;
+            ::apache::thrift::protocol::TType _etype109;
+            xfer += iprot->readListBegin(_etype109, _size106);
+            this->geneRanks.resize(_size106);
+            uint32_t _i110;
+            for (_i110 = 0; _i110 < _size106; ++_i110)
+            {
+              xfer += iprot->readI32(this->geneRanks[_i110]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.geneRanks = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->useRank);
+          this->__isset.useRank = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_species)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t PValueGeneArgs::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("PValueGeneArgs");
+
+  xfer += oprot->writeFieldBegin("species", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->species);
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.genes) {
+    xfer += oprot->writeFieldBegin("genes", ::apache::thrift::protocol::T_LIST, 2);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->genes.size()));
+      std::vector<std::string> ::const_iterator _iter111;
+      for (_iter111 = this->genes.begin(); _iter111 != this->genes.end(); ++_iter111)
+      {
+        xfer += oprot->writeString((*_iter111));
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.geneScores) {
+    xfer += oprot->writeFieldBegin("geneScores", ::apache::thrift::protocol::T_LIST, 3);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->geneScores.size()));
+      std::vector<double> ::const_iterator _iter112;
+      for (_iter112 = this->geneScores.begin(); _iter112 != this->geneScores.end(); ++_iter112)
+      {
+        xfer += oprot->writeDouble((*_iter112));
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.geneRanks) {
+    xfer += oprot->writeFieldBegin("geneRanks", ::apache::thrift::protocol::T_LIST, 4);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->geneRanks.size()));
+      std::vector<int32_t> ::const_iterator _iter113;
+      for (_iter113 = this->geneRanks.begin(); _iter113 != this->geneRanks.end(); ++_iter113)
+      {
+        xfer += oprot->writeI32((*_iter113));
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.useRank) {
+    xfer += oprot->writeFieldBegin("useRank", ::apache::thrift::protocol::T_BOOL, 5);
+    xfer += oprot->writeBool(this->useRank);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(PValueGeneArgs &a, PValueGeneArgs &b) {
+  using ::std::swap;
+  swap(a.species, b.species);
+  swap(a.genes, b.genes);
+  swap(a.geneScores, b.geneScores);
+  swap(a.geneRanks, b.geneRanks);
+  swap(a.useRank, b.useRank);
+  swap(a.__isset, b.__isset);
+}
+
+PValueGeneArgs::PValueGeneArgs(const PValueGeneArgs& other114) {
+  species = other114.species;
+  genes = other114.genes;
+  geneScores = other114.geneScores;
+  geneRanks = other114.geneRanks;
+  useRank = other114.useRank;
+  __isset = other114.__isset;
+}
+PValueGeneArgs& PValueGeneArgs::operator=(const PValueGeneArgs& other115) {
+  species = other115.species;
+  genes = other115.genes;
+  geneScores = other115.geneScores;
+  geneRanks = other115.geneRanks;
+  useRank = other115.useRank;
+  __isset = other115.__isset;
+  return *this;
+}
+void PValueGeneArgs::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "PValueGeneArgs(";
+  out << "species=" << to_string(species);
+  out << ", " << "genes="; (__isset.genes ? (out << to_string(genes)) : (out << "<null>"));
+  out << ", " << "geneScores="; (__isset.geneScores ? (out << to_string(geneScores)) : (out << "<null>"));
+  out << ", " << "geneRanks="; (__isset.geneRanks ? (out << to_string(geneRanks)) : (out << "<null>"));
+  out << ", " << "useRank="; (__isset.useRank ? (out << to_string(useRank)) : (out << "<null>"));
+  out << ")";
+}
+
+
+PValueDatasetArgs::~PValueDatasetArgs() noexcept {
+}
+
+
+void PValueDatasetArgs::__set_species(const std::string& val) {
+  this->species = val;
+}
+
+void PValueDatasetArgs::__set_datasets(const std::vector<std::string> & val) {
+  this->datasets = val;
+__isset.datasets = true;
+}
+
+void PValueDatasetArgs::__set_datasetWeights(const std::vector<double> & val) {
+  this->datasetWeights = val;
+__isset.datasetWeights = true;
+}
+std::ostream& operator<<(std::ostream& out, const PValueDatasetArgs& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+
+uint32_t PValueDatasetArgs::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  ::apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_species = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->species);
+          isset_species = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->datasets.clear();
+            uint32_t _size116;
+            ::apache::thrift::protocol::TType _etype119;
+            xfer += iprot->readListBegin(_etype119, _size116);
+            this->datasets.resize(_size116);
+            uint32_t _i120;
+            for (_i120 = 0; _i120 < _size116; ++_i120)
+            {
+              xfer += iprot->readString(this->datasets[_i120]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.datasets = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->datasetWeights.clear();
+            uint32_t _size121;
+            ::apache::thrift::protocol::TType _etype124;
+            xfer += iprot->readListBegin(_etype124, _size121);
+            this->datasetWeights.resize(_size121);
+            uint32_t _i125;
+            for (_i125 = 0; _i125 < _size121; ++_i125)
+            {
+              xfer += iprot->readDouble(this->datasetWeights[_i125]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.datasetWeights = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_species)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t PValueDatasetArgs::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("PValueDatasetArgs");
+
+  xfer += oprot->writeFieldBegin("species", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->species);
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.datasets) {
+    xfer += oprot->writeFieldBegin("datasets", ::apache::thrift::protocol::T_LIST, 2);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->datasets.size()));
+      std::vector<std::string> ::const_iterator _iter126;
+      for (_iter126 = this->datasets.begin(); _iter126 != this->datasets.end(); ++_iter126)
+      {
+        xfer += oprot->writeString((*_iter126));
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.datasetWeights) {
+    xfer += oprot->writeFieldBegin("datasetWeights", ::apache::thrift::protocol::T_LIST, 3);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->datasetWeights.size()));
+      std::vector<double> ::const_iterator _iter127;
+      for (_iter127 = this->datasetWeights.begin(); _iter127 != this->datasetWeights.end(); ++_iter127)
+      {
+        xfer += oprot->writeDouble((*_iter127));
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(PValueDatasetArgs &a, PValueDatasetArgs &b) {
+  using ::std::swap;
+  swap(a.species, b.species);
+  swap(a.datasets, b.datasets);
+  swap(a.datasetWeights, b.datasetWeights);
+  swap(a.__isset, b.__isset);
+}
+
+PValueDatasetArgs::PValueDatasetArgs(const PValueDatasetArgs& other128) {
+  species = other128.species;
+  datasets = other128.datasets;
+  datasetWeights = other128.datasetWeights;
+  __isset = other128.__isset;
+}
+PValueDatasetArgs& PValueDatasetArgs::operator=(const PValueDatasetArgs& other129) {
+  species = other129.species;
+  datasets = other129.datasets;
+  datasetWeights = other129.datasetWeights;
+  __isset = other129.__isset;
+  return *this;
+}
+void PValueDatasetArgs::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "PValueDatasetArgs(";
+  out << "species=" << to_string(species);
+  out << ", " << "datasets="; (__isset.datasets ? (out << to_string(datasets)) : (out << "<null>"));
+  out << ", " << "datasetWeights="; (__isset.datasetWeights ? (out << to_string(datasetWeights)) : (out << "<null>"));
+  out << ")";
+}
+
+
+PValueResult::~PValueResult() noexcept {
+}
+
+
+void PValueResult::__set_success(const bool val) {
+  this->success = val;
+}
+
+void PValueResult::__set_pvalues(const std::vector<double> & val) {
+  this->pvalues = val;
+__isset.pvalues = true;
+}
+
+void PValueResult::__set_status(const QueryStatus::type val) {
+  this->status = val;
+__isset.status = true;
+}
+
+void PValueResult::__set_statusMsg(const std::string& val) {
+  this->statusMsg = val;
+__isset.statusMsg = true;
+}
+std::ostream& operator<<(std::ostream& out, const PValueResult& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+
+uint32_t PValueResult::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  ::apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_success = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->success);
+          isset_success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->pvalues.clear();
+            uint32_t _size130;
+            ::apache::thrift::protocol::TType _etype133;
+            xfer += iprot->readListBegin(_etype133, _size130);
+            this->pvalues.resize(_size130);
+            uint32_t _i134;
+            for (_i134 = 0; _i134 < _size130; ++_i134)
+            {
+              xfer += iprot->readDouble(this->pvalues[_i134]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.pvalues = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          int32_t ecast135;
+          xfer += iprot->readI32(ecast135);
+          this->status = (QueryStatus::type)ecast135;
+          this->__isset.status = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->statusMsg);
+          this->__isset.statusMsg = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_success)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t PValueResult::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("PValueResult");
+
+  xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_BOOL, 1);
+  xfer += oprot->writeBool(this->success);
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.pvalues) {
+    xfer += oprot->writeFieldBegin("pvalues", ::apache::thrift::protocol::T_LIST, 2);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_DOUBLE, static_cast<uint32_t>(this->pvalues.size()));
+      std::vector<double> ::const_iterator _iter136;
+      for (_iter136 = this->pvalues.begin(); _iter136 != this->pvalues.end(); ++_iter136)
+      {
+        xfer += oprot->writeDouble((*_iter136));
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.status) {
+    xfer += oprot->writeFieldBegin("status", ::apache::thrift::protocol::T_I32, 3);
+    xfer += oprot->writeI32((int32_t)this->status);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.statusMsg) {
+    xfer += oprot->writeFieldBegin("statusMsg", ::apache::thrift::protocol::T_STRING, 4);
+    xfer += oprot->writeString(this->statusMsg);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(PValueResult &a, PValueResult &b) {
+  using ::std::swap;
+  swap(a.success, b.success);
+  swap(a.pvalues, b.pvalues);
+  swap(a.status, b.status);
+  swap(a.statusMsg, b.statusMsg);
+  swap(a.__isset, b.__isset);
+}
+
+PValueResult::PValueResult(const PValueResult& other137) {
+  success = other137.success;
+  pvalues = other137.pvalues;
+  status = other137.status;
+  statusMsg = other137.statusMsg;
+  __isset = other137.__isset;
+}
+PValueResult& PValueResult::operator=(const PValueResult& other138) {
+  success = other138.success;
+  pvalues = other138.pvalues;
+  status = other138.status;
+  statusMsg = other138.statusMsg;
+  __isset = other138.__isset;
+  return *this;
+}
+void PValueResult::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "PValueResult(";
+  out << "success=" << to_string(success);
+  out << ", " << "pvalues="; (__isset.pvalues ? (out << to_string(pvalues)) : (out << "<null>"));
+  out << ", " << "status="; (__isset.status ? (out << to_string(status)) : (out << "<null>"));
+  out << ", " << "statusMsg="; (__isset.statusMsg ? (out << to_string(statusMsg)) : (out << "<null>"));
+  out << ")";
+}
+
 } // namespace
