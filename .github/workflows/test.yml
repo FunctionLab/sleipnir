@@ -38,4 +38,4 @@ jobs:
       working-directory: ${{github.workspace}}
       # Execute python based tests
       run: |
-        python -m pytest -s -v tests/test_new.py
+        python -m pytest -s -v tests/test_new2.py

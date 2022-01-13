@@ -63,6 +63,18 @@ jobs:
     #   # Execute c++ based tests
     #   run: tests/unit_tests
 
+    - name: Cache the sampleBC SEEK DB built and used by the tests
+      uses: actions/cache@v2
+      env:
+        # Increase this value to reset cache if environment.yml has not changed
+        CACHE_NUMBER: 0
+      with:
+        path: ${{github.workspace}}/tests/test_outputs/sampleBC
+        key:
+          seek_cache-${{ runner.os }}-${{ env.CACHE_NUMBER }}-${{
+            hashFiles('scripts/seek/seekCreateDB.py') }}-${{
+            hashFiles('scripts/seek/seekUtils.py') }}
+
     # - name: Test Seek Utils
     #   working-directory: ${{github.workspace}}
     #   # Execute python based tests

@@ -74,5 +74,18 @@ class TestSeekRPC:
                 cls.temp_dir.cleanup()
 
 
-    def test_queries(self):
+    def test_client(self):
+        # Run the query through the python rpc client
+        from thrift.transport import TTransport, TSocket
+        from thrift.protocol.TBinaryProtocol import TBinaryProtocol
+        print('### Test Client')
+        socket = TSocket.TSocket('localhost', testPort)
+        transport = TTransport.TBufferedTransport(socket)
+        protocol = TBinaryProtocol(transport)
+        client = SeekRPC.Client(protocol)
+        transport.open()
+        val = client.ping()
+        assert val == 1
+        transport.close()
+        print('### Client successful')
         pass
