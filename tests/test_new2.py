@@ -89,3 +89,29 @@ class TestSeekRPC:
         transport.close()
         print('### Client successful')
         pass
+
+    def test_sync_client(self):
+        # Run the query through the python rpc client
+        from thrift.transport import TTransport, TSocket
+        from thrift.protocol.TBinaryProtocol import TBinaryProtocol
+        socket = TSocket.TSocket('localhost', testPort)
+        transport = TTransport.TBufferedTransport(socket)
+        protocol = TBinaryProtocol(transport)
+        client = SeekRPC.Client(protocol)
+        transport.open()
+
+        params = SeekQueryParams(distanceMeasure=DistanceMeasure.ZScoreHubbinessCorrected,
+                            minQueryGenesFraction=0.5,
+                            minGenomeFraction=0.5,
+                            useGeneSymbols=False)
+        genes = ['55755', '64859', '348654', '79791', '7756', '8555', '835', '5347']
+        datasets = ['GSE45584.GPL6480', 'GSE24468.GPL570', 'GSE3744.GPL570']
+        queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, datasets=datasets, parameters=params)
+
+        # Do an async query using isQueryComplete to test
+        result = client.seekQuery(queryArgs)
+        assert result.success is True
+        assert len(result.geneScores) > 0
+        assert len(result.datasetWeights) == 3  # because query specified 3 datasets
+
+        transport.close()
