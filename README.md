@@ -37,7 +37,6 @@ git clone https://github.com/FunctionLab/sleipnir.git
     - *On Ubuntu Linux:*
         - <code> apt-get update</code>
         - <code> apt-get install build-essential</code>
-        - <code> apt-get install python3</code>
         - <code> apt-get install libsvm-dev</code>
         - <code> apt-get install libomp-dev</code>
         - <code> apt-get install libthrift-dev</code>

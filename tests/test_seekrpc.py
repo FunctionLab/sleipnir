@@ -46,10 +46,7 @@ class TestSeekRPC:
         sampleBcDirEscaped = sampleBcDir.replace('/', '\\/')
         
         print(f"### CMD: sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}")
-        if os.path.exists(seekrpcConfigFile):
-            with open(seekrpcConfigFile, 'r') as fp:
-                print(fp.read())
-        else:
+        if not os.path.exists(seekrpcConfigFile):
             print(f"### FILE doesn't exist {seekrpcConfigFile}")
 
         cmd = f"sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}"
@@ -59,8 +56,9 @@ class TestSeekRPC:
             print(fp.read())
         # Run the server
         cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile} -p {testPort}'
+        cmdlist = [f'{sleipnirBin}/SeekRPC', '-c', f'{seekrpcConfigFile}', '-p', f'{testPort}']
         print(f'### {cmd}')
-        cls.SeekServerProc = subprocess.Popen(cmd, shell=True)
+        cls.SeekServerProc = subprocess.Popen(cmdlist, shell=False)
         # sleep for 5 secs to accomodate initial run of a new db which builds
         #   pvalue bins from the random queries
         time.sleep(5)
@@ -113,6 +111,37 @@ class TestSeekRPC:
         assert len(result.geneScores) > 0
         assert len(result.datasetWeights) == 3  # because query specified 3 datasets
         transport.close()
+
+    def test_queries(self):
+        # Run the various example tests againt the seekRPC server and verify
+        #   we get the expected results.
+        print("## Run Client ##")
+        # Test the cpp client
+        inputQueries = f'{sampleBcDir}/queries/input_queries.txt'
+        outputResults = f'{sampleBcDir}/queries/seekrpc_results.txt'
+        cmd = f'{sleipnirBin}/SeekRPCClient -p {testPort} -s sampleBC ' \
+              f'-q {inputQueries} -o {outputResults}'
+        print(f'### {cmd}')
+        clientProc = subprocess.Popen(cmd, shell=True)
+        clientProc.wait()
+        assert clientProc.returncode == 0
+        expectedResults = f'{sampleBcDir}/queries/seekminer_results.txt'
+        corrs = files_rank_correlation(expectedResults, outputResults)
+        print('Result Correlations: {}'.format(corrs))
+        correlation_errors = 0
+        for corr in corrs:
+            if corr < min_result_correlation:
+                correlation_errors += 1
+                print('ERROR: Result correlation too low')
+        assert correlation_errors == 0
+
+        # Test the python client
+        cmd = f'python {seekRpcDir}/SeekRPCClient.py -p {testPort} -s sampleBC ' \
+              f'-g 8091,6154,5810,9183'
+        print(f'### {cmd}')
+        clientProc = subprocess.Popen(cmd, shell=True)
+        clientProc.wait()
+        assert clientProc.returncode == 0
 
     def test_failed_query(self):
         # Test failed request through cpp client
@@ -177,38 +206,6 @@ class TestSeekRPC:
         assert len(result.datasetWeights) > 0
 
         transport.close()
-
-
-    def test_queries(self):
-        # Run the various example tests againt the seekRPC server and verify
-        #   we get the expected results.
-        print("## Run Client ##")
-        # Test the cpp client
-        inputQueries = f'{sampleBcDir}/queries/input_queries.txt'
-        outputResults = f'{sampleBcDir}/queries/seekrpc_results.txt'
-        cmd = f'{sleipnirBin}/SeekRPCClient -p {testPort} -s sampleBC ' \
-              f'-q {inputQueries} -o {outputResults}'
-        print(f'### {cmd}')
-        clientProc = subprocess.Popen(cmd, shell=True)
-        clientProc.wait()
-        assert clientProc.returncode == 0
-        expectedResults = f'{sampleBcDir}/queries/seekminer_results.txt'
-        corrs = files_rank_correlation(expectedResults, outputResults)
-        print('Result Correlations: {}'.format(corrs))
-        correlation_errors = 0
-        for corr in corrs:
-            if corr < min_result_correlation:
-                correlation_errors += 1
-                print('ERROR: Result correlation too low')
-        assert correlation_errors == 0
-
-        # Test the python client
-        cmd = f'python {seekRpcDir}/SeekRPCClient.py -p {testPort} -s sampleBC ' \
-              f'-g 8091,6154,5810,9183'
-        print(f'### {cmd}')
-        clientProc = subprocess.Popen(cmd, shell=True)
-        clientProc.wait()
-        assert clientProc.returncode == 0
 
     def test_simulate_weight(self):
         # Run the query through the python rpc client
