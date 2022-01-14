@@ -28,7 +28,23 @@ git clone https://github.com/FunctionLab/sleipnir.git
         - <code> brew install thrift</code>
         - <code> brew install gsl</code>
         - <code> brew install boost</code>
-    - *On Linux:*
+    - *On CentOS Linux:*
+        - <code> sudo yum install libsvm</code>
+        - <code> sudo yum install libgomp</code>
+        - <code> sudo yum install thrift-devel</code>
+        - <code> sudo yum install gsl</code>
+        - <code> sudo yum install boost</code>
+    - *On Ubuntu Linux:*
+        - <code> apt-get update</code>
+        - <code> apt-get install build-essential</code>
+        - <code> apt-get install libsvm-dev</code>
+        - <code> apt-get install libomp-dev</code>
+        - <code> apt-get install libthrift-dev</code>
+        - <code> apt-get install libgsl-dev</code>
+        - <code> apt-get install libboost-dev</code>
+        - <code> apt-get install libboost-graph-dev</code>
+        - <code> apt-get install libboost-regex-dev</code>
+        - <code> apt-get install libreadline-dev</code>
 
 3. Clone repository
     - <code> git clone https://github.com/FunctionLab/sleipnir.git </code>

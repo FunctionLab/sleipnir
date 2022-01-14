@@ -49,16 +49,25 @@ class TestSeekRPC:
         TestSeekRPC.cfgFile = seekrpcConfigFile
         # modify config file paths, sub '/path' with path to sampleBcDir
         sampleBcDirEscaped = sampleBcDir.replace('/', '\\/')
+        
+        print(f"### CMD: sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}")
+        if not os.path.exists(seekrpcConfigFile):
+            print(f"### FILE doesn't exist {seekrpcConfigFile}")
+
         cmd = f"sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}"
         subprocess.run(cmd, shell=True)
-
+        print("===================")
+        with open(seekrpcConfigFile, 'r') as fp:
+            print(fp.read())
         # Run the server
-        cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile} -p {testPort} -t {taskTimeOut}'
-        cls.SeekServerProc = subprocess.Popen(cmd, shell=True)
+        cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile} -p {testPort}'
+        cmdlist = [f'{sleipnirBin}/SeekRPC', '-c', f'{seekrpcConfigFile}', '-p', f'{testPort}']
         print(f'### {cmd}')
+        cls.SeekServerProc = subprocess.Popen(cmdlist, shell=False)
         # sleep for 5 secs to accomodate initial run of a new db which builds
         #   pvalue bins from the random queries
         time.sleep(5)
+        print(f'### Sleep completed, server started')
 
         # Make the client connection the tests will use
         socket = TSocket.TSocket('localhost', testPort)
@@ -80,6 +89,30 @@ class TestSeekRPC:
         if use_tempfile:
             if cls.temp_dir is not None:
                 cls.temp_dir.cleanup()
+
+    def test_ping(self):
+        # Use Internal Client Connection
+        client = TestSeekRPC.client
+        val = client.ping()
+        assert val == 1
+        print('### Client successful')
+        pass
+
+    def test_sync_client(self):
+        # Use Internal Client Connection
+        client = TestSeekRPC.client
+        params = SeekQueryParams(distanceMeasure=DistanceMeasure.ZScoreHubbinessCorrected,
+                            minQueryGenesFraction=0.5,
+                            minGenomeFraction=0.5,
+                            useGeneSymbols=False)
+        genes = ['55755', '64859', '348654', '79791', '7756', '8555', '835', '5347']
+        datasets = ['GSE45584.GPL6480', 'GSE24468.GPL570', 'GSE3744.GPL570']
+        queryArgs = SeekQueryArgs(species='sampleBC', genes=genes, datasets=datasets, parameters=params)
+        # Do an async query using isQueryComplete to test
+        result = client.seekQuery(queryArgs)
+        assert result.success is True
+        assert len(result.geneScores) > 0
+        assert len(result.datasetWeights) == 3  # because query specified 3 datasets
 
     def test_queries(self):
         # Run the various example tests againt the seekRPC server and verify
