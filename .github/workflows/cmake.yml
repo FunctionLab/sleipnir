@@ -3,7 +3,7 @@ name: Build and Run Tests
 on: [workflow_dispatch]
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  # Customize the CMake build type here (Release, Debug, etc.)
   BUILD_TYPE: Debug
 
 jobs:
@@ -23,23 +23,11 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Add conda to system path
-      run: |
-        # $CONDA is an environment variable pointing to the root of the
-        # miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-
-    - name: Install Python Dependencies
-      working-directory: ${{github.workspace}}
-      # Install python libraries to "base" conda env
-      run: |
-        conda env update --name base --file scripts/seek/conda_environment.yml
-
-    - name: Install Libraries
+    - name: Install C/C++ Libraries
+      # sudo apt-get install python3
       run: |
         sudo apt-get update
         sudo apt-get install build-essential
-        sudo apt-get install python3
         sudo apt-get install libsvm-dev
         sudo apt-get install libomp-dev
         sudo apt-get install libthrift-dev
@@ -52,18 +40,33 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/Debug -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -B ${{github.workspace}}/${{env.BUILD_TYPE}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/Debug --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/${{env.BUILD_TYPE}} --config ${{env.BUILD_TYPE}}
 
-    - name: C++ Tests
-      working-directory: ${{github.workspace}}/Debug
+    - name: Run C++ Tests
+      working-directory: ${{github.workspace}}/${{env.BUILD_TYPE}}
       # Execute c++ based tests
       run: tests/unit_tests
 
-    - name: Cache the sampleBC SEEK DB built and used by the tests
+    - name: Add conda to system path
+      # $CONDA is an environment variable pointing to the root of the
+      #   miniconda directory.
+      run: |
+        echo $CONDA/bin >> $GITHUB_PATH
+
+    - name: Install Python Test Dependencies
+      working-directory: ${{github.workspace}}
+      # Install python libraries to "base" conda env which is used by default
+      run: |
+        conda env update --name base --file scripts/seek/conda_environment.yml
+
+    - name: Load SampleBC Cache
+      # Caches and reuses the sampleBC DB used in the SEEK python tests.
+      # The tests check is the DB files exist and if they don't it
+      #   rebuilds them, which would then be cached for future runs.
       uses: actions/cache@v2
       env:
         # Increase this value to reset cache if environment.yml has not changed
@@ -75,14 +78,14 @@ jobs:
             hashFiles('scripts/seek/seekCreateDB.py') }}-${{
             hashFiles('scripts/seek/seekUtils.py') }}
 
-    - name: Test Seek Utils
+    - name: Test SEEK Scripts
       working-directory: ${{github.workspace}}
       # Execute python based tests
       run: |
         # $CONDA/bin/activate base
         python -m pytest -s -v scripts/seek/tests/
 
-    - name: Test Seek Tools
+    - name: Test SEEK Tools
       working-directory: ${{github.workspace}}
       # Execute python based tests
       # python -m pytest -s -v tests/test_new2.py
