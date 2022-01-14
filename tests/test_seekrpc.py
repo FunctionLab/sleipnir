@@ -49,7 +49,7 @@ class TestSeekRPC:
         TestSeekRPC.cfgFile = seekrpcConfigFile
         # modify config file paths, sub '/path' with path to sampleBcDir
         sampleBcDirEscaped = sampleBcDir.replace('/', '\\/')
-        
+
         print(f"### CMD: sed -i '' -e 's/\\/path/{sampleBcDirEscaped}/' {seekrpcConfigFile}")
         if not os.path.exists(seekrpcConfigFile):
             print(f"### FILE doesn't exist {seekrpcConfigFile}")
@@ -60,9 +60,10 @@ class TestSeekRPC:
         with open(seekrpcConfigFile, 'r') as fp:
             print(fp.read())
         # Run the server
-        cmd = f'{sleipnirBin}/SeekRPC -c {seekrpcConfigFile} -p {testPort}'
-        cmdlist = [f'{sleipnirBin}/SeekRPC', '-c', f'{seekrpcConfigFile}', '-p', f'{testPort}']
-        print(f'### {cmd}')
+        cmdlist = [f'{sleipnirBin}/SeekRPC', '-c', f'{seekrpcConfigFile}', \
+                   '-p', f'{testPort}', '-t', f'{taskTimeOut}']
+        # print command line
+        print(f'### {" ".join(cmdlist)}')
         cls.SeekServerProc = subprocess.Popen(cmdlist, shell=False)
         # sleep for 5 secs to accomodate initial run of a new db which builds
         #   pvalue bins from the random queries
