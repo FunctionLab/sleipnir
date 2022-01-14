@@ -51,6 +51,7 @@ jobs:
       run: tests/unit_tests
 
     - name: Add conda to system path
+      # Miniconda is already installed on Github Actions runners
       # $CONDA is an environment variable pointing to the root of the
       #   miniconda directory.
       run: |
@@ -88,4 +89,4 @@ jobs:
       # Execute python based tests
       working-directory: ${{github.workspace}}
       run: |
-        python -m pytest -s -v tests/test_seekrpc.py
+        python -m pytest -s -v tests/
