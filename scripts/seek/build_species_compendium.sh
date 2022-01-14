@@ -19,7 +19,12 @@ if [ -z $CONDA_DEFAULT_ENV ] || [ $CONDA_DEFAULT_ENV != "genomics" ]; then
   conda activate genomics
 fi
 
-# 1. mkdir or cd to species dir
+# 1. make the species dir
+if [ -d ${SHORT_NAME} ]; then
+    echo "Error: species directory '${SHORT_NAME}' already exists!"
+    exit -1
+fi
+mkdir ${SHORT_NAME}
 cd ${SHORT_NAME}
 cp ../quant2 .
 
