@@ -91,10 +91,4 @@ class TestSeekMiner:
         # See if 3.result.txt matches
         file1 = os.path.join(tmpDir, '3.results.txt')
         file2 = os.path.join(sampleBcDir, 'randTestInputs/3.results.txt')
-        print(f"==========FILE 1===========")
-        with open (file1, 'r') as fp:
-            print(fp.read())
-        print(f"==========FILE 2===========")
-        with open (file2, 'r') as fp:
-            print(fp.read())
         assert filecmp.cmp(file1, file2, shallow=False)
