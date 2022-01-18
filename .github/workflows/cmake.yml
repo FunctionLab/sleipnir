@@ -78,15 +78,15 @@ jobs:
             hashFiles('scripts/seek/seekCreateDB.py') }}-${{
             hashFiles('scripts/seek/seekUtils.py') }}
 
-    - name: Test SEEK Scripts
-      # Execute python based tests
-      working-directory: ${{github.workspace}}
-      run: |
-        # $CONDA/bin/activate base
-        python -m pytest -s -v scripts/seek/tests/
-
-    # - name: Test SEEK Tools
+    # - name: Test SEEK Scripts
     #   # Execute python based tests
     #   working-directory: ${{github.workspace}}
     #   run: |
-    #     python -m pytest -s -v tests/
+    #     # $CONDA/bin/activate base
+    #     python -m pytest -s -v scripts/seek/tests/
+
+    - name: Test SEEK Tools
+      # Execute python based tests
+      working-directory: ${{github.workspace}}
+      run: |
+        python -m pytest -s -v tests/
