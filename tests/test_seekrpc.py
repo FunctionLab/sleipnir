@@ -533,7 +533,7 @@ class TestSeekRPC:
         assert result.success is True
         resPvalues = np.array(result.pvalues, dtype=np.float32)
         expectedRankSample = [expectedRankPvalues[idx] for idx in geneIndices]
-        isEquivalent = np.allclose(resPvalues, expectedRankSample, rtol=.05, atol=.002)
+        isEquivalent = np.allclose(resPvalues, expectedRankSample, rtol=.07, atol=.003)
         assert isEquivalent == True
 
         # Test when NaN values are in the ranks and scores - should get back NaN as the result
